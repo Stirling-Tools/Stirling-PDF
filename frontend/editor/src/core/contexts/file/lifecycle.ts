@@ -3,11 +3,19 @@
  */
 
 import { FileId } from "@app/types/file";
+import { releaseSharedDocumentWhenIdle } from "@app/services/pdfiumService";
+import { releaseDocumentBytes } from "@app/services/documentBytesCache";
 import {
   FileContextAction,
+  FileContextState,
   StirlingFileStub,
   ProcessedFilePage,
 } from "@app/types/fileContext";
+import {
+  forgetFile,
+  noteFileSaved,
+  persistedSourceFields,
+} from "@app/contexts/file/storedFileReconciler";
 
 const DEBUG = process.env.NODE_ENV === "development";
 
@@ -20,7 +28,7 @@ export class FileLifecycleManager {
   private fileGenerations = new Map<string, number>(); // Generation tokens to prevent stale cleanup
 
   constructor(
-    private filesRef: React.MutableRefObject<Map<FileId, File>>,
+    private filesRef: React.RefObject<Map<FileId, File>>,
     private dispatch: React.Dispatch<FileContextAction>,
   ) {}
 
@@ -34,13 +42,24 @@ export class FileLifecycleManager {
     }
   };
 
+  private revokeBlobUrl = (url: string): void => {
+    if (!url.startsWith("blob:")) return;
+    try {
+      URL.revokeObjectURL(url);
+    } catch {
+      // Ignore revocation errors.
+    }
+    this.blobUrls.delete(url);
+  };
+
   /**
    * Clean up resources for a specific file (with stateRef access for complete cleanup)
    */
   cleanupFile = (
     fileId: FileId,
-    stateRef?: React.MutableRefObject<any>,
+    stateRef?: React.RefObject<FileContextState>,
   ): void => {
+    forgetFile(fileId);
     // Use comprehensive cleanup (same as removeFiles)
     this.cleanupAllResourcesForFile(fileId, stateRef);
 
@@ -67,6 +86,9 @@ export class FileLifecycleManager {
     this.cleanupTimers.clear();
     this.fileGenerations.clear();
 
+    // No file survives teardown, so neither should its shared document.
+    releaseSharedDocumentWhenIdle();
+
     // Clear files ref
     this.filesRef.current.clear();
   };
@@ -77,7 +99,7 @@ export class FileLifecycleManager {
   scheduleCleanup = (
     fileId: FileId,
     delay: number = 30000,
-    stateRef?: React.MutableRefObject<any>,
+    stateRef?: React.RefObject<FileContextState>,
   ): void => {
     // Cancel existing timer
     const existingTimer = this.cleanupTimers.get(fileId);
@@ -116,9 +138,10 @@ export class FileLifecycleManager {
    */
   removeFiles = (
     fileIds: FileId[],
-    stateRef?: React.MutableRefObject<any>,
+    stateRef?: React.RefObject<FileContextState>,
   ): void => {
     fileIds.forEach((fileId) => {
+      forgetFile(fileId);
       // Clean up all resources for this file
       this.cleanupAllResourcesForFile(fileId, stateRef);
     });
@@ -132,9 +155,9 @@ export class FileLifecycleManager {
    */
   private cleanupAllResourcesForFile = (
     fileId: FileId,
-    stateRef?: React.MutableRefObject<any>,
+    stateRef?: React.RefObject<FileContextState>,
   ): void => {
-    // Remove from files ref
+    const file = this.filesRef.current.get(fileId);
     this.filesRef.current.delete(fileId);
 
     // Cancel cleanup timer and generation
@@ -145,37 +168,25 @@ export class FileLifecycleManager {
     }
     this.fileGenerations.delete(fileId);
 
+    // A scan queued before this removal can still open the document, so the
+    // release runs behind the queue. The byte cache entry is keyed by the file
+    // and cannot be reused once it leaves the workbench.
+    releaseSharedDocumentWhenIdle();
+    if (file) releaseDocumentBytes(file);
+
     // Clean up blob URLs from file record if we have access to state
     if (stateRef) {
       const record = stateRef.current.files.byId[fileId];
       if (record) {
         // Clean up thumbnail blob URLs
-        if (record.thumbnailUrl && record.thumbnailUrl.startsWith("blob:")) {
-          try {
-            URL.revokeObjectURL(record.thumbnailUrl);
-          } catch {
-            // Ignore revocation errors
-          }
-        }
+        if (record.thumbnailUrl) this.revokeBlobUrl(record.thumbnailUrl);
 
-        if (record.blobUrl && record.blobUrl.startsWith("blob:")) {
-          try {
-            URL.revokeObjectURL(record.blobUrl);
-          } catch {
-            // Ignore revocation errors
-          }
-        }
+        if (record.blobUrl) this.revokeBlobUrl(record.blobUrl);
 
         // Clean up processed file thumbnails
         if (record.processedFile?.pages) {
           record.processedFile.pages.forEach((page: ProcessedFilePage) => {
-            if (page.thumbnail && page.thumbnail.startsWith("blob:")) {
-              try {
-                URL.revokeObjectURL(page.thumbnail);
-              } catch {
-                // Ignore revocation errors
-              }
-            }
+            if (page.thumbnail) this.revokeBlobUrl(page.thumbnail);
           });
         }
       }
@@ -188,7 +199,7 @@ export class FileLifecycleManager {
   updateStirlingFileStub = (
     fileId: FileId,
     updates: Partial<StirlingFileStub>,
-    stateRef?: React.MutableRefObject<any>,
+    stateRef?: React.RefObject<FileContextState>,
   ): void => {
     // Guard against updating removed files (race condition protection)
     if (!this.filesRef.current.has(fileId)) {
@@ -210,6 +221,29 @@ export class FileLifecycleManager {
       type: "UPDATE_FILE_RECORD",
       payload: { id: fileId, updates },
     });
+
+    // Fire-and-forget: the dispatch above is what the UI reads, and a storage
+    // hiccup must not stall it. Worst case the link reverts to its stored value.
+    const linkUpdates = persistedSourceFields(updates);
+    if (linkUpdates) {
+      void import("@app/services/fileStorage")
+        .then(({ fileStorage }) =>
+          fileStorage.updateFileMetadata(fileId, linkUpdates),
+        )
+        .catch((error) =>
+          console.error(
+            `[Lifecycle] Failed to persist disk link for ${fileId}:`,
+            error,
+          ),
+        );
+    }
+
+    noteFileSaved(fileId, updates, (patch) =>
+      this.dispatch({
+        type: "UPDATE_FILE_RECORD",
+        payload: { id: fileId, updates: patch },
+      }),
+    );
   };
 
   /**

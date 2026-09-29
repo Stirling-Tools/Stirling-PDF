@@ -96,6 +96,28 @@ public class MetadataEncryptionService {
         }
     }
 
+    /**
+     * Encodes raw bytes to Base64 and encrypts them for at-rest storage (e.g. keystore files held
+     * in JSONB metadata). Returns {@code null} for {@code null} input.
+     */
+    public String encryptBytes(byte[] data) {
+        if (data == null) {
+            return null;
+        }
+        return encrypt(Base64.getEncoder().encodeToString(data));
+    }
+
+    /**
+     * Reverses {@link #encryptBytes}. Also accepts legacy values stored as plain Base64 before
+     * encryption was introduced — {@link #decrypt} returns those unchanged, so they still decode.
+     */
+    public byte[] decryptBytes(String stored) {
+        if (stored == null) {
+            return null;
+        }
+        return Base64.getDecoder().decode(decrypt(stored));
+    }
+
     // ── Internals ───────────────────────────────────────────────────────────
 
     private SecretKeySpec deriveKey() throws Exception {

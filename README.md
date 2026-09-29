@@ -53,8 +53,8 @@ For full installation options (including desktop and Kubernetes), see our [Docum
 
 ## Support
 
-- **Community** [Discord](https://discord.gg/HYmhKj45pU)
-- **Bug Reports**: [Github issues](https://github.com/Stirling-Tools/Stirling-PDF/issues)
+- **Community**: [Discord](https://discord.gg/HYmhKj45pU)
+- **Bug Reports**: [GitHub Issues](https://github.com/Stirling-Tools/Stirling-PDF/issues)
 
 ## Contributing
 

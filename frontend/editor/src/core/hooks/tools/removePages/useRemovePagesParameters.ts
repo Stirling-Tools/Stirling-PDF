@@ -16,10 +16,18 @@ export const defaultParameters: RemovePagesParameters = {
 export type RemovePagesParametersHook =
   BaseParametersHook<RemovePagesParameters>;
 
+/** Whether these parameters are complete enough to run. Shared by the tool's settings hook
+ * and its operationConfig, so the editor and the pipeline builder agree. */
+export function validateRemovePagesParameters(
+  params: RemovePagesParameters,
+): boolean {
+  return validatePageNumbers(params.pageNumbers);
+}
+
 export const useRemovePagesParameters = (): RemovePagesParametersHook => {
   return useBaseParameters({
     defaultParameters,
     endpointName: "remove-pages",
-    validateFn: (p) => validatePageNumbers(p.pageNumbers),
+    validateFn: validateRemovePagesParameters,
   });
 };

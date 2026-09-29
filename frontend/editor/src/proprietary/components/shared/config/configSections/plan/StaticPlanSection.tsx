@@ -1,13 +1,6 @@
 import React, { useState } from "react";
-import {
-  Card,
-  Text,
-  Stack,
-  Button,
-  Collapse,
-  Divider,
-  Tooltip,
-} from "@mantine/core";
+import { Card, Text, Stack, Collapse, Divider, Tooltip } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { alert } from "@app/components/toast";
 import { LicenseInfo, mapLicenseToTier } from "@app/services/licenseService";
@@ -55,10 +48,10 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
     if (currentTier === "free" && plan === "enterprise") {
       alert({
         alertType: "warning",
-        title: t("plan.enterprise.requiresServer", "Server Plan Required"),
+        title: t("plan.enterprise.requiresServer", "Requires Team plan"),
         body: t(
           "plan.enterprise.requiresServerMessage",
-          "Please upgrade to the Server plan first before upgrading to Enterprise.",
+          "Please upgrade to the Team plan first before upgrading to Enterprise.",
         ),
       });
       return;
@@ -99,14 +92,14 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
     },
     {
       id: "server",
-      name: "Server",
+      name: t("plan.team.name", "Team"),
       price: 0,
       currency: "",
       period: "",
       popular: false,
       highlights: planHighlights.SERVER_MONTHLY,
       features: planFeatures.SERVER,
-      maxUsers: "Unlimited users",
+      maxUsers: t("plan.team.maxUsers", "100 users"),
     },
     {
       id: "enterprise",
@@ -222,7 +215,7 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
                   if (plan.id === "free") {
                     return (
                       <Button
-                        variant="filled"
+                        variant="primary"
                         disabled
                         fullWidth
                         className="plan-button"
@@ -234,12 +227,12 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
                     );
                   }
 
-                  // Server Plan
+                  // Team plan
                   if (plan.id === "server") {
                     if (currentTier === "free") {
                       return (
                         <Button
-                          variant="filled"
+                          variant="primary"
                           fullWidth
                           onClick={() => handleOpenCheckout("server", false)}
                           className="plan-button"
@@ -251,7 +244,7 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
                     if (isCurrent) {
                       return (
                         <Button
-                          variant="filled"
+                          variant="primary"
                           fullWidth
                           onClick={handleManageBilling}
                           className="plan-button"
@@ -263,7 +256,7 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
                     if (isDowngradePlan) {
                       return (
                         <Button
-                          variant="filled"
+                          variant="primary"
                           disabled
                           fullWidth
                           className="plan-button"
@@ -281,13 +274,13 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
                         <Tooltip
                           label={t(
                             "plan.enterprise.requiresServer",
-                            "Requires Server plan",
+                            "Requires Team plan",
                           )}
                           position="top"
                           withArrow
                         >
                           <Button
-                            variant="filled"
+                            variant="primary"
                             disabled
                             fullWidth
                             className="plan-button"
@@ -304,7 +297,7 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
                       // TODO: Re-enable checkout flow when account syncing is ready
                       // return (
                       //   <Button
-                      //     variant="filled"
+                      //     variant="primary"
                       //     fullWidth
                       //     onClick={() => handleOpenCheckout('enterprise', true)}
                       //     className="plan-button"
@@ -314,7 +307,7 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
                       // );
                       return (
                         <Button
-                          variant="filled"
+                          variant="primary"
                           fullWidth
                           disabled
                           className="plan-button"
@@ -326,7 +319,7 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
                     if (isCurrent) {
                       return (
                         <Button
-                          variant="filled"
+                          variant="primary"
                           fullWidth
                           onClick={handleManageBilling}
                           className="plan-button"
@@ -347,7 +340,7 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
         {/* Feature Comparison Toggle */}
         <div style={{ textAlign: "center", marginTop: "1rem" }}>
           <Button
-            variant="subtle"
+            variant="tertiary"
             onClick={() => setShowComparison(!showComparison)}
           >
             {showComparison

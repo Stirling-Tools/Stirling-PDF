@@ -3,6 +3,7 @@ import {
   useContext,
   useReducer,
   useCallback,
+  useMemo,
   useRef,
   type ReactNode,
 } from "react";
@@ -13,6 +14,10 @@ import apiClient from "@app/services/apiClient";
 import { getAiBaseUrl } from "@app/services/aiBaseUrl";
 import { getAuthHeaders } from "@app/services/apiClientSetup";
 import { dispatchPaygLimitReached } from "@app/services/usageLimitBridge";
+import {
+  reportAccountLinkBlock,
+  reportFreeTierExhausted,
+} from "@app/services/accountLinkBlock";
 import { createChildStub } from "@app/contexts/file/fileActions";
 import {
   createNewStirlingFileStub,
@@ -161,6 +166,11 @@ interface AiWorkflowResultFile {
   fileId: string;
   fileName: string;
   contentType: string;
+  /**
+   * Index into the files we sent that this output was derived from, or null/undefined when it has
+   * no single source (merge, generated file). Used to replace that input in place as a new version.
+   */
+  sourceIndex?: number | null;
 }
 
 interface AiWorkflowResponse {
@@ -396,21 +406,30 @@ const initialState: ChatState = {
 };
 
 export function ChatProvider({ children }: { children: ReactNode }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [state, dispatch] = useReducer(chatReducer, initialState);
   const { files: activeFiles, fileStubs: activeFileStubs } = useAllFiles();
   const { actions: fileActions } = useFileActions();
   const abortRef = useRef<AbortController | null>(null);
   const messagesRef = useRef<ChatMessage[]>(state.messages);
   messagesRef.current = state.messages;
+  // Hold the latest files in refs so sendMessage's identity does not change on
+  // every file operation. Otherwise a new sendMessage (and thus a new context
+  // value) would be created on each file change, re-rendering every useChat()
+  // consumer. sendMessage reads .current at call time, so it still sees the
+  // current files.
+  const activeFilesRef = useRef(activeFiles);
+  activeFilesRef.current = activeFiles;
+  const activeFileStubsRef = useRef(activeFileStubs);
+  activeFileStubsRef.current = activeFileStubs;
 
   // Download a File from the Stirling files endpoint.
   const downloadFile = useCallback(
     async (descriptor: AiWorkflowResultFile): Promise<File> => {
-      // AI result files live on the backend that ran the workflow (the SaaS
-      // engine on desktop), so fetch from the AI base, not the local backend.
+      // AI result files live on the backend that ran the workflow (the connected
+      // server on desktop), so fetch from the AI base, not the local backend.
       const response = await apiClient.get<Blob>(
-        `${getAiBaseUrl()}/api/v1/general/files/${descriptor.fileId}`,
+        `${await getAiBaseUrl()}/api/v1/general/files/${descriptor.fileId}`,
         { responseType: "blob" },
       );
       return new File([response.data], descriptor.fileName, {
@@ -422,9 +441,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
   // Import the files produced by an AI workflow result into FileContext.
   //
-  // If the workflow produced the same number of outputs as inputs, map each output to its
-  // corresponding input as a new version in the same chain. Otherwise (merge, split, etc.)
-  // add the outputs as new root files.
+  // Each output carries a sourceIndex telling us which input it came from. An input that produced
+  // exactly one output is replaced in place as a new version of that file; everything else (merge,
+  // split, generated files, or an input that produced nothing) is added as a fresh root and leaves
+  // the original files untouched — we never remove or deselect a file the workflow didn't clearly
+  // transform 1:1.
   const importResultFile = useCallback(
     async (
       result: AiWorkflowResponse,
@@ -446,27 +467,43 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       const files = await Promise.all(descriptors.map(downloadFile));
 
       if (sourceStubs.length > 0) {
-        // Always consume the inputs so merge/split inputs are removed from the workbench.
-        // For 1:1 operations (rotate, compress) the outputs carry the version chain; for
-        // merge/split they're fresh roots.
         const operation: ToolOperation = {
           toolId: "ai-workflow",
           timestamp: Date.now(),
         };
-        const isVersionMapping = files.length === sourceStubs.length;
-        const stubs = files.map((file, i) =>
-          isVersionMapping
-            ? createChildStub(sourceStubs[i], operation, file)
-            : createNewStirlingFileStub(file),
-        );
+        // Resolve each output to the input it came from (sourceIndex, from the backend).
+        const sourceForOutput = descriptors.map((descriptor) => {
+          const idx = descriptor.sourceIndex;
+          return typeof idx === "number" && idx >= 0 && idx < sourceStubs.length
+            ? sourceStubs[idx]
+            : null;
+        });
+        // Only replace a source in place when it maps to exactly one output (a clean 1:1 transform).
+        // A split (one input → many outputs) or a source shared by several outputs stays a set of
+        // fresh roots so we don't collapse them onto one version chain.
+        const outputsPerSource = new Map<StirlingFileStub["id"], number>();
+        for (const source of sourceForOutput) {
+          if (source) {
+            outputsPerSource.set(
+              source.id,
+              (outputsPerSource.get(source.id) ?? 0) + 1,
+            );
+          }
+        }
+        const consumedIds: StirlingFileStub["id"][] = [];
+        const stubs = files.map((file, i) => {
+          const source = sourceForOutput[i];
+          if (source && outputsPerSource.get(source.id) === 1) {
+            consumedIds.push(source.id);
+            return createChildStub(source, operation, file);
+          }
+          return createNewStirlingFileStub(file);
+        });
         const stirlingFiles = files.map((file, i) =>
           createStirlingFile(file, stubs[i].id),
         );
-        await fileActions.consumeFiles(
-          sourceStubs.map((s) => s.id),
-          stirlingFiles,
-          stubs,
-        );
+        // Consume only the inputs we actually versioned; unrelated files are left in place.
+        await fileActions.consumeFiles(consumedIds, stirlingFiles, stubs);
       } else {
         // No inputs: pass raw files so addFiles assigns consistent IDs. Pre-assigning stub IDs
         // here would cause a fileId mismatch in filesRef, making getFiles() clone the file
@@ -495,6 +532,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       abortRef.current = controller;
 
       const priorMessages = messagesRef.current;
+      // Snapshot the files at send time so the upload AND the result-import both
+      // act on what the user actually sent — not on whatever the workbench holds
+      // when the (possibly many-seconds-later) result arrives.
+      const sourceFiles = activeFilesRef.current;
+      const sourceStubs = activeFileStubsRef.current;
       const startTime = Date.now();
       // Mirror every progress event locally so we can attach the full log to
       // the assistant message when the result arrives — without needing a ref
@@ -514,7 +556,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       try {
         const formData = new FormData();
         formData.append("userMessage", content);
-        activeFiles.forEach((file, i) => {
+        // The engine replies in this language instead of guessing.
+        if (i18n.language) formData.append("locale", i18n.language);
+        sourceFiles.forEach((file, i) => {
           formData.append(`fileInputs[${i}].fileInput`, file);
         });
         priorMessages.forEach((message, i) => {
@@ -522,7 +566,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           formData.append(`conversationHistory[${i}].content`, message.content);
         });
         const response = await fetch(
-          `${getAiBaseUrl()}/api/v1/ai/orchestrate/stream`,
+          `${await getAiBaseUrl()}/api/v1/ai/orchestrate/stream`,
           {
             method: "POST",
             body: formData,
@@ -541,7 +585,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             // A 402 carrying a usage-limit sentinel means the agent call itself was gated.
             // Fire the usage-limit modal (free → subscribe, subscribed → raise cap) and show a
             // brief line below — not a generic "engine failed" error.
-            if (response.status === 402 && isPaygLimitCode(code)) {
+            if (reportAccountLinkBlock({ status: response.status, body })) {
+              limitHandled = true;
+            } else if (response.status === 402 && isPaygLimitCode(code)) {
               dispatchPaygLimitReached(
                 typeof body?.subscribed === "boolean" ? body.subscribed : null,
               );
@@ -607,8 +653,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             // result (not via the apiClient interceptor that pops the modal for direct calls).
             // Fire the matching modal and replace the raw "tool failed: 402…" reason with a
             // brief, non-alarming line.
-            const isLimit = isPaygLimitCode(data.errorCode);
-            if (isLimit) {
+            const localLimit = data.errorCode === "FREE_TIER_EXHAUSTED";
+            const isLimit = localLimit || isPaygLimitCode(data.errorCode);
+            if (localLimit) {
+              reportFreeTierExhausted();
+            } else if (isLimit) {
               dispatchPaygLimitReached(data.errorSubscribed ?? null);
             }
             const replyContent = isLimit
@@ -633,7 +682,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
               },
             });
             if (data.fileId || data.resultFiles?.length) {
-              importResultFile(data, activeFileStubs).catch((err) => {
+              importResultFile(data, sourceStubs).catch((err) => {
                 console.error("Failed to import AI result file", err);
                 dispatch({
                   type: "ADD_MESSAGE",
@@ -693,24 +742,34 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         }
       }
     },
-    [activeFiles, activeFileStubs, importResultFile],
+    [importResultFile],
   );
 
-  return (
-    <ChatContext.Provider
-      value={{
-        messages: state.messages,
-        isLoading: state.isLoading,
-        progress: state.progress,
-        progressLog: state.progressLog,
-        sendMessage,
-        cancelMessage,
-        clearChat,
-      }}
-    >
-      {children}
-    </ChatContext.Provider>
+  // Memoize the context value so it only changes when chat state changes — not
+  // on every file operation. With sendMessage/cancelMessage/clearChat all stable,
+  // useChat() consumers re-render only when messages/loading/progress change.
+  const value = useMemo<ChatContextValue>(
+    () => ({
+      messages: state.messages,
+      isLoading: state.isLoading,
+      progress: state.progress,
+      progressLog: state.progressLog,
+      sendMessage,
+      cancelMessage,
+      clearChat,
+    }),
+    [
+      state.messages,
+      state.isLoading,
+      state.progress,
+      state.progressLog,
+      sendMessage,
+      cancelMessage,
+      clearChat,
+    ],
   );
+
+  return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
 }
 
 export function useChat(): ChatContextValue {

@@ -1,0 +1,191 @@
+import { AccountConnectionNotice } from "@app/portal/components/account-link/AccountConnectionNotice";
+import { useCallback, useState } from "react";
+import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
+import { SaasSessionBanner } from "@app/portal/components/account-link/SaasSessionBanner";
+import { useTranslation } from "react-i18next";
+import { Banner, Button, InfoTooltip, Skeleton } from "@app/ui";
+import { Icon } from "@app/ui/Icon";
+import { AccountConnectionLayout } from "@app/components/settings/AccountConnectionLayout";
+import { useAsync } from "@app/portal/hooks/useAsync";
+import { useAccountLinkContext } from "@app/portal/contexts/AccountLinkContext";
+import { SaasSessionRequiredError } from "@app/portal/auth/portalSaasSession";
+import { HttpError } from "@app/portal/api/http";
+import { usePortalSaasSession } from "@app/portal/hooks/usePortalSaasSession";
+import {
+  fetchInstances,
+  revokeInstance as apiRevokeInstance,
+  type LinkedInstanceRow,
+} from "@app/portal/api/link";
+import { LinkAccountCard } from "@app/portal/components/account-link/LinkAccountCard";
+import { LinkedInstancesTable } from "@app/portal/components/account-link/LinkedInstancesTable";
+import "@app/portal/views/AccountLink.css";
+
+/** Self-hosted connection status plus the owning team's connected instances. */
+export function AccountLinkPanel() {
+  const isOwner = useAccountLinkOwner();
+  return isOwner ? <OwnerAccountLinkPanel /> : null;
+}
+
+function OwnerAccountLinkPanel() {
+  const { t } = useTranslation();
+  const { revision: sessionRevision } = usePortalSaasSession();
+  const link = useAccountLinkContext();
+
+  const linked = link.status?.linked ?? false;
+  const [reloadKey, setReloadKey] = useState(0);
+  // Only fetch the team-wide instance list when THIS instance is linked. When
+  // unlinked, the portal has no team to display — the admin's SaaS session may
+  // still be valid in the browser, but the local instance isn't part of a team
+  // (so showing the team's other instances would be confusing).
+  const instancesState = useAsync<LinkedInstanceRow[]>(
+    () => (linked ? fetchInstances() : Promise.resolve([])),
+    [reloadKey, linked, sessionRevision],
+  );
+
+  const [revokingId, setRevokingId] = useState<number | null>(null);
+  const [revokeError, setRevokeError] = useState<string | null>(null);
+  const deviceId = link.status?.deviceId;
+  const currentInstance = deviceId
+    ? instancesState.data?.find((instance) => instance.deviceId === deviceId)
+    : undefined;
+  const otherInstances = (instancesState.data ?? []).filter(
+    (instance) => !deviceId || instance.deviceId !== deviceId,
+  );
+  const cloudBaseUrl = import.meta.env.VITE_SAAS_FRONTEND_URL?.replace(
+    /\/+$/,
+    "",
+  );
+  const cloudSettingsUrl = cloudBaseUrl
+    ? `${cloudBaseUrl}/settings/account-link`
+    : null;
+
+  const revoke = useCallback(async (instance: LinkedInstanceRow) => {
+    setRevokingId(instance.instanceId);
+    setRevokeError(null);
+    try {
+      await apiRevokeInstance(instance.instanceId);
+      setReloadKey((k) => k + 1);
+    } catch (e) {
+      setRevokeError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setRevokingId(null);
+    }
+  }, []);
+
+  return (
+    <AccountConnectionLayout
+      title={t("portal.settings.sections.account-link", "Account connection")}
+      description={t(
+        "portal.accountLink.panel.sub",
+        "Manage this server’s connection to your Stirling Cloud account.",
+      )}
+      actions={
+        cloudSettingsUrl && (
+          <Button
+            fat
+            as="a"
+            href={cloudSettingsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            rightSection={<Icon name="external-link" size={20} />}
+          >
+            {t(
+              "portal.accountLink.panel.manageCloud",
+              "Manage on stirling.com",
+            )}
+          </Button>
+        )
+      }
+    >
+      <SaasSessionBanner />
+      <AccountConnectionNotice />
+      <LinkAccountCard link={link} instanceName={currentInstance?.name} />
+
+      {linked && (
+        <section className="account-connection__body">
+          <div className="portal-link__section-head">
+            <h2 className="portal-link__section-title">
+              {t(
+                deviceId
+                  ? "portal.accountLink.panel.otherInstancesTitle"
+                  : "portal.accountLink.panel.instancesTitle",
+                deviceId ? "Other connected instances" : "Connected instances",
+              )}
+            </h2>
+            <InfoTooltip
+              label={t(
+                deviceId
+                  ? "portal.accountLink.panel.otherInstancesSub"
+                  : "portal.accountLink.panel.instancesSub",
+                deviceId
+                  ? "Other self-hosted servers connected to the same team in Stirling Cloud."
+                  : "Self-hosted servers connected to the same team.",
+              )}
+            />
+          </div>
+          {instancesState.loading ? (
+            <div className="portal-link__skeleton" aria-hidden>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} height="3rem" />
+              ))}
+            </div>
+          ) : instancesState.error instanceof SaasSessionRequiredError ? (
+            <p>
+              {t(
+                "portal.accountLink.panel.sessionRequired",
+                "Connected instances will appear after you renew billing access.",
+              )}
+            </p>
+          ) : instancesState.error ? (
+            <Banner
+              tone="danger"
+              title={t(
+                "portal.accountLink.panel.loadError.title",
+                "Couldn’t load connected instances",
+              )}
+              action={
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setReloadKey((key) => key + 1)}
+                >
+                  {t("settings.connectedInstances.retry", "Try again")}
+                </Button>
+              }
+            >
+              {instancesState.error instanceof HttpError &&
+              instancesState.error.status === 403
+                ? t(
+                    "portal.accountLink.panel.loadError.forbidden",
+                    "Only the team owner can manage connected instances.",
+                  )
+                : t(
+                    "portal.accountLink.panel.loadError.generic",
+                    "Your connections could not be checked. Try again.",
+                  )}
+            </Banner>
+          ) : (
+            <LinkedInstancesTable
+              instances={otherInstances}
+              excludingCurrent={Boolean(deviceId)}
+              onRevoke={revoke}
+              revokingId={revokingId}
+            />
+          )}
+
+          {revokeError && (
+            <Banner
+              tone="danger"
+              title={t(
+                "portal.accountLink.panel.revokeError",
+                "Couldn't revoke instance",
+              )}
+            >
+              {revokeError}
+            </Banner>
+          )}
+        </section>
+      )}
+    </AccountConnectionLayout>
+  );
+}

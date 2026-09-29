@@ -5,7 +5,13 @@
       "@app/*": ["./src/prototypes/*", "./src/proprietary/*", "./src/core/*"],
       "@proprietary/*": ["./src/proprietary/*"],
       "@core/*": ["./src/core/*"],
-      "@shared/*": ["../shared/*"]
+      "@app/portal/*": [
+        "./src/prototypes/portal/*",
+        "./src/proprietary/portal/*",
+        "./src/core/portal/*",
+        "./src/portal/*"
+      ],
+      "@portal/*": ["./src/portal/*"]
     }
   },
   "exclude": [

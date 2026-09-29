@@ -1,4 +1,5 @@
-import { Stack, TextInput, Button, Group, Text } from "@mantine/core";
+import { Stack, TextInput, Group, Text } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { ChangeMetadataParameters } from "@app/hooks/tools/changeMetadata/useChangeMetadataParameters";
 
@@ -30,8 +31,8 @@ const CustomMetadataStep = ({
           {t("changeMetadata.customFields.title", "Custom Metadata")}
         </Text>
         <Button
-          size="xs"
-          variant="light"
+          variant="secondary"
+          size="sm"
           onClick={() => addCustomMetadata()}
           disabled={disabled}
         >
@@ -73,9 +74,9 @@ const CustomMetadataStep = ({
             disabled={disabled}
           />
           <Button
-            size="xs"
-            variant="light"
-            color="red"
+            variant="secondary"
+            accent="danger"
+            size="sm"
             onClick={() => removeCustomMetadata(entry.id)}
             disabled={disabled}
           >

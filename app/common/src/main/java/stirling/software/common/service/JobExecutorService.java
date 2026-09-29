@@ -1,7 +1,11 @@
 package stirling.software.common.service;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -19,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import jakarta.annotation.PreDestroy;
 import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +36,14 @@ import stirling.software.common.util.RegexPatternUtils;
 @Service
 @Slf4j
 public class JobExecutorService {
+
+    /**
+     * Request attribute holding the FileStorage ids of persistent input copies made for the job
+     * about to be created. Populated before the job id exists (the aspect copies the upload while
+     * processing arguments), drained onto the JobResult as soon as the task is created so cleanup
+     * can delete them.
+     */
+    public static final String PENDING_INPUT_FILE_IDS_ATTR = "autoJobPendingInputFileIds";
 
     private final TaskManager taskManager;
     private final FileStorage fileStorage;
@@ -61,6 +74,21 @@ public class JobExecutorService {
         this.effectiveTimeoutMs = Math.min(asyncRequestTimeoutMs, sessionTimeoutMs);
         log.debug(
                 "Job executor configured with effective timeout of {} ms", this.effectiveTimeoutMs);
+    }
+
+    /** Stop the service-owned executor when the application context is closed or restarted. */
+    @PreDestroy
+    public void shutdown() {
+        log.debug("Shutting down job executor");
+        executor.shutdown();
+        try {
+            if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
+                executor.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            executor.shutdownNow();
+        }
     }
 
     public ResponseEntity<?> runJobGeneric(boolean async, Supplier<Object> work) {
@@ -117,6 +145,7 @@ public class JobExecutorService {
                     resourceWeight);
 
             taskManager.createTask(jobId);
+            registerPendingInputFiles(jobId);
 
             final String capturedJobIdForQueue = jobId;
             Supplier<Object> wrappedWork =
@@ -147,6 +176,7 @@ public class JobExecutorService {
             return ResponseEntity.ok().body(new JobResponse<>(true, jobId, null));
         } else if (async) {
             taskManager.createTask(jobId);
+            registerPendingInputFiles(jobId);
 
             final String capturedJobId = jobId;
 
@@ -191,6 +221,14 @@ public class JobExecutorService {
                 return ResponseEntity.internalServerError()
                         .body(Map.of("error", "Job timed out after " + timeoutToUse + " ms"));
             } catch (RuntimeException e) {
+                Set<Throwable> seen = Collections.newSetFromMap(new IdentityHashMap<>());
+                for (Throwable nested = e;
+                        nested != null && seen.add(nested);
+                        nested = nested.getCause()) {
+                    if (nested instanceof org.springframework.web.ErrorResponseException response) {
+                        throw response;
+                    }
+                }
                 Throwable cause = e.getCause();
                 if (e instanceof IllegalArgumentException
                         || cause
@@ -467,5 +505,31 @@ public class JobExecutorService {
             return jobOwnershipService.createScopedJobKey(baseJobId);
         }
         return baseJobId;
+    }
+
+    /**
+     * Hand the input copies made while processing arguments to the freshly created job, so job
+     * cleanup deletes them. Drains the attribute so a retry cannot attribute the same ids twice.
+     */
+    @SuppressWarnings("unchecked")
+    private void registerPendingInputFiles(String jobId) {
+        if (request == null) {
+            return;
+        }
+        Object pending;
+        try {
+            pending = request.getAttribute(PENDING_INPUT_FILE_IDS_ATTR);
+            request.removeAttribute(PENDING_INPUT_FILE_IDS_ATTR);
+        } catch (RuntimeException ex) {
+            // No request bound to this thread (e.g. an internally dispatched job).
+            log.debug("Could not read pending input file ids: {}", ex.getMessage());
+            return;
+        }
+        if (!(pending instanceof List<?> ids)) {
+            return;
+        }
+        for (String fileId : (List<String>) ids) {
+            taskManager.registerInputFile(jobId, fileId);
+        }
     }
 }

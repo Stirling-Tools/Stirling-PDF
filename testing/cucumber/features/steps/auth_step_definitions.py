@@ -16,7 +16,7 @@ import json as json_module
 import requests
 from behave import given, then, when
 
-BASE_URL = "http://localhost:8080"
+from api_base import BASE_URL
 
 # Default test credentials (set in docker-compose-security-with-login.yml)
 ADMIN_USERNAME = "admin"

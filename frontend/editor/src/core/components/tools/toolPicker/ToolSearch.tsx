@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect, useMemo } from "react";
-import { Stack, Button, Text } from "@mantine/core";
+import { Stack, Text } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 import { TextInput } from "@app/components/shared/TextInput";
 import "@app/components/tools/toolPicker/ToolPicker.css";
@@ -99,9 +100,7 @@ const ToolSearch = ({
       }
       icon={
         iconOverride ??
-        (hideIcon ? undefined : (
-          <LocalIcon icon="search-rounded" width="1.25rem" height="1.25rem" />
-        ))
+        (hideIcon ? undefined : <Icon name="search" size="1.25rem" />)
       }
       iconClickable={!!iconOverride}
       autoComplete="off"
@@ -141,21 +140,19 @@ const ToolSearch = ({
             {filteredTools.map(({ id, tool }) => (
               <Button
                 key={id}
-                variant="subtle"
+                variant="tertiary"
                 onClick={() => {
                   onToolSelect?.(id as ToolId);
                   setDropdownOpen(false);
                 }}
                 leftSection={
-                  <div style={{ color: "var(--tools-text-and-icon-color)" }}>
-                    {tool.icon}
-                  </div>
+                  <div style={{ color: "var(--c-text)" }}>{tool.icon}</div>
                 }
                 fullWidth
-                justify="flex-start"
+                justify="start"
                 style={{
                   borderRadius: "6px",
-                  color: "var(--tools-text-and-icon-color)",
+                  color: "var(--c-text)",
                   padding: "8px 12px",
                 }}
               >

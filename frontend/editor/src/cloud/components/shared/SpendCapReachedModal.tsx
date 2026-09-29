@@ -1,7 +1,8 @@
 import { useMemo } from "react";
-import { Modal, Stack, Button } from "@mantine/core";
+import { Modal, Stack } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
-import TrendingUpIcon from "@mui/icons-material/TrendingUpOutlined";
+import { Icon } from "@app/ui/Icon";
 import AnimatedSlideBackground from "@app/components/onboarding/slides/AnimatedSlideBackground";
 import styles from "@app/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css";
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
@@ -86,7 +87,7 @@ export function SpendCapReachedModal({ onClose }: SpendCapReachedModalProps) {
         content: {
           overflow: "hidden",
           border: "none",
-          background: "var(--bg-surface)",
+          background: "var(--c-surface)",
           maxHeight: "90vh",
           display: "flex",
           flexDirection: "column",
@@ -112,7 +113,7 @@ export function SpendCapReachedModal({ onClose }: SpendCapReachedModalProps) {
           />
           <div className={styles.heroLogo}>
             <div className={styles.heroLogoCircle}>
-              <TrendingUpIcon sx={{ fontSize: 64, color: "#000000" }} />
+              <Icon name="trending-up" size={64} style={{ color: "#000000" }} />
             </div>
           </div>
         </div>
@@ -167,7 +168,7 @@ export function SpendCapReachedModal({ onClose }: SpendCapReachedModalProps) {
               >
                 <Button
                   onClick={onClose}
-                  variant="default"
+                  variant="secondary"
                   size="sm"
                   className="spend-cap-modal-button"
                   style={{

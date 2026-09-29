@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Button, Group, Text } from "@mantine/core";
+import { Group, Text } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
-import LocalIcon from "@app/components/shared/LocalIcon";
-import { InfoBanner } from "@app/components/shared/InfoBanner";
+import { Icon } from "@app/ui/Icon";
+import { AppBanner } from "@app/components/shared/AppBanner";
 import { useSaaSTeam } from "@app/contexts/SaaSTeamContext";
 
 /**
@@ -75,30 +76,24 @@ export function TeamInvitationBanner() {
   const actionButtons = (
     <Group gap="xs" wrap="nowrap">
       <Button
-        variant="white"
-        color="gray"
-        size="xs"
+        variant="secondary"
+        accent="neutral"
+        size="sm"
         onClick={handleAccept}
         loading={processing}
         leftSection={
-          <LocalIcon
-            icon="check"
-            width="0.9rem"
-            height="0.9rem"
+          <Icon
+            name="check"
+            size="0.9rem"
             style={{ color: "var(--mantine-color-dark-9)" }}
           />
         }
-        styles={{
-          label: {
-            color: "var(--mantine-color-dark-9)",
-          },
-        }}
       >
         {t("team.invitationBanner.acceptButton", "Accept")}
       </Button>
       <Button
-        variant="subtle"
-        size="xs"
+        variant="tertiary"
+        size="sm"
         onClick={handleReject}
         loading={processing}
         style={{ color: "rgba(255, 255, 255, 0.7)" }}
@@ -109,7 +104,7 @@ export function TeamInvitationBanner() {
   );
 
   return (
-    <InfoBanner
+    <AppBanner
       icon="mail"
       message={
         <Group
@@ -124,10 +119,6 @@ export function TeamInvitationBanner() {
       }
       show={shouldShow}
       dismissible={false}
-      background="var(--mantine-color-dark-7)"
-      borderColor="var(--mantine-color-dark-5)"
-      textColor="rgba(255, 255, 255, 0.95)"
-      iconColor="rgba(255, 255, 255, 0.95)"
     />
   );
 }

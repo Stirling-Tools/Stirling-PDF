@@ -1,10 +1,15 @@
 package stirling.software.proprietary.security.controller.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,6 +31,7 @@ import stirling.software.common.util.GeneralUtils;
 import stirling.software.proprietary.security.model.api.admin.SettingValueResponse;
 import stirling.software.proprietary.security.model.api.admin.UpdateSettingValueRequest;
 import stirling.software.proprietary.security.model.api.admin.UpdateSettingsRequest;
+import stirling.software.proprietary.service.AiEngineConfigSync;
 
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
@@ -37,6 +43,7 @@ class AdminSettingsControllerTest {
     private ApplicationProperties applicationProperties;
     private ObjectMapper objectMapper;
     private ApplicationContext applicationContext;
+    private AiEngineConfigSync aiEngineConfigSync;
 
     private AdminSettingsController controller;
 
@@ -45,9 +52,13 @@ class AdminSettingsControllerTest {
         applicationProperties = new ApplicationProperties();
         objectMapper = JsonMapper.builder().build();
         applicationContext = org.mockito.Mockito.mock(ApplicationContext.class);
+        aiEngineConfigSync = org.mockito.Mockito.mock(AiEngineConfigSync.class);
         controller =
                 new AdminSettingsController(
-                        applicationProperties, objectMapper, applicationContext);
+                        applicationProperties,
+                        objectMapper,
+                        applicationContext,
+                        aiEngineConfigSync);
         clearPendingChanges();
     }
 
@@ -99,14 +110,14 @@ class AdminSettingsControllerTest {
         @Test
         @DisplayName("merges pending changes when includePending is true")
         void mergesPendingChanges() {
-            putPending("ui.logoStyle", "modern");
+            putPending("ui.appNameNavbar", "Custom Name");
 
             ResponseEntity<?> response = controller.getSettings(true);
 
             assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
             Map<?, ?> body = (Map<?, ?>) response.getBody();
             Map<?, ?> ui = (Map<?, ?>) body.get("ui");
-            assertThat(ui.get("logoStyle")).isEqualTo("modern");
+            assertThat(ui.get("appNameNavbar")).isEqualTo("Custom Name");
         }
 
         @Test
@@ -187,6 +198,33 @@ class AdminSettingsControllerTest {
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
             assertThat(response.getBody().get("error").toString()).contains("Invalid setting key");
+        }
+
+        @Test
+        @DisplayName("rejects an out-of-range aiEngine numeric with 400")
+        void rejectsOutOfRangeAiEngineNumeric() {
+            // An out-of-range value would make the engine reject every later push, including the
+            // one that fixes it.
+            UpdateSettingsRequest request = new UpdateSettingsRequest();
+            request.setSettings(Map.of("aiEngine.limits.modelMaxConcurrency", 0));
+
+            ResponseEntity<Map<String, Object>> response = controller.updateSettings(request);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(response.getBody().get("error").toString()).contains("at least 1");
+        }
+
+        @Test
+        @DisplayName("accepts zero maxSearches, which legitimately means no retrieval")
+        void acceptsZeroMaxSearches() {
+            UpdateSettingsRequest request = new UpdateSettingsRequest();
+            request.setSettings(Map.of("aiEngine.rag.maxSearches", 0));
+
+            try (MockedStatic<GeneralUtils> mocked = mockStatic(GeneralUtils.class)) {
+                ResponseEntity<Map<String, Object>> response = controller.updateSettings(request);
+
+                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            }
         }
 
         @Test
@@ -277,6 +315,51 @@ class AdminSettingsControllerTest {
                 assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
             }
         }
+
+        @Test
+        @DisplayName("drops a masked ******** secret so a UI round-trip can't overwrite a real key")
+        void dropsMaskedSecretValue() {
+            UpdateSettingsRequest request = new UpdateSettingsRequest();
+            Map<String, Object> settings = new HashMap<>();
+            settings.put("aiEngine.models.apiKey", "********");
+            settings.put("ui.appName", "My App");
+            request.setSettings(settings);
+
+            try (MockedStatic<GeneralUtils> mocked = mockStatic(GeneralUtils.class)) {
+                ResponseEntity<Map<String, Object>> response = controller.updateSettings(request);
+
+                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+                // The masked secret is stripped; only the real change is persisted.
+                mocked.verify(
+                        () ->
+                                GeneralUtils.updateSettingsTransactional(
+                                        argThat(
+                                                (Map<String, Object> m) ->
+                                                        !m.containsKey("aiEngine.models.apiKey")
+                                                                && m.containsKey("ui.appName"))));
+            }
+        }
+
+        @Test
+        @DisplayName("forwards only aiEngine.* pending keys to the engine live-push")
+        void forwardsOnlyAiEngineKeysToLivePush() {
+            UpdateSettingsRequest request = new UpdateSettingsRequest();
+            Map<String, Object> settings = new HashMap<>();
+            settings.put("aiEngine.models.provider", "ollama");
+            settings.put("ui.appName", "My App");
+            request.setSettings(settings);
+
+            try (MockedStatic<GeneralUtils> mocked = mockStatic(GeneralUtils.class)) {
+                controller.updateSettings(request);
+
+                verify(aiEngineConfigSync)
+                        .pushLiveAfterSave(
+                                argThat(
+                                        (Map<String, Object> m) ->
+                                                m.containsKey("aiEngine.models.provider")
+                                                        && !m.containsKey("ui.appName")));
+            }
+        }
     }
 
     @Nested
@@ -348,7 +431,57 @@ class AdminSettingsControllerTest {
 
                 assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
                 assertThat(response.getBody().get("message").toString()).contains("Successfully");
-                mocked.verify(() -> GeneralUtils.saveKeyToSettings("ui.appName", "New"));
+                mocked.verify(
+                        () ->
+                                GeneralUtils.updateSettingsTransactional(
+                                        Map.of("ui.appName", "New")));
+            }
+        }
+
+        @Test
+        @DisplayName("flattens nested blocks to leaf keys so partial saves keep siblings")
+        void flattensNestedBlocks() {
+            java.util.Map<String, Object> section = new java.util.HashMap<>();
+            section.put("sharing", new java.util.HashMap<>(Map.of("emailEnabled", true)));
+
+            try (MockedStatic<GeneralUtils> mocked = mockStatic(GeneralUtils.class)) {
+                ResponseEntity<Map<String, Object>> response =
+                        controller.updateSettingsSection("storage", section);
+
+                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+                mocked.verify(
+                        () ->
+                                GeneralUtils.updateSettingsTransactional(
+                                        Map.of("storage.sharing.emailEnabled", true)));
+                // The whole "storage.sharing" block is never written, so its siblings survive.
+                mocked.verify(
+                        () ->
+                                GeneralUtils.updateSettingsTransactional(
+                                        argThat(
+                                                (Map<String, Object> m) ->
+                                                        m.containsKey("storage.sharing"))),
+                        never());
+            }
+        }
+
+        @Test
+        @DisplayName("rejects section payloads deeper than the setting key limit")
+        void rejectsExcessivelyNestedBlocks() {
+            java.util.Map<String, Object> section = new java.util.HashMap<>();
+            java.util.Map<String, Object> current = section;
+            for (int i = 0; i < 10; i++) {
+                java.util.Map<String, Object> nested = new java.util.HashMap<>();
+                current.put("level" + i, nested);
+                current = nested;
+            }
+            current.put("value", true);
+
+            try (MockedStatic<GeneralUtils> mocked = mockStatic(GeneralUtils.class)) {
+                ResponseEntity<Map<String, Object>> response =
+                        controller.updateSettingsSection("storage", section);
+
+                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+                mocked.verify(() -> GeneralUtils.updateSettingsTransactional(any()), never());
             }
         }
 
@@ -364,7 +497,37 @@ class AdminSettingsControllerTest {
 
                 assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
                 // enabled flag auto-added and persisted
-                mocked.verify(() -> GeneralUtils.saveKeyToSettings("premium.enabled", true));
+                mocked.verify(
+                        () ->
+                                GeneralUtils.updateSettingsTransactional(
+                                        argThat(
+                                                (Map<String, Object> m) ->
+                                                        Boolean.TRUE.equals(
+                                                                m.get("premium.enabled")))));
+            }
+        }
+
+        @Test
+        @DisplayName("a null leaf value is persisted and does not blow up pendingChanges")
+        void nullLeafValueStillReturns200() {
+            String leafKey = "storage.sharing.emailEnabled";
+            java.util.Map<String, Object> sharing = new java.util.HashMap<>();
+            sharing.put("emailEnabled", null);
+            java.util.Map<String, Object> section = new java.util.HashMap<>();
+            section.put("sharing", sharing);
+
+            try (MockedStatic<GeneralUtils> mocked = mockStatic(GeneralUtils.class)) {
+                ResponseEntity<Map<String, Object>> response =
+                        controller.updateSettingsSection("storage", section);
+
+                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+                mocked.verify(
+                        () ->
+                                GeneralUtils.updateSettingsTransactional(
+                                        argThat(
+                                                (Map<String, Object> m) ->
+                                                        m.containsKey(leafKey)
+                                                                && m.get(leafKey) == null)));
             }
         }
 
@@ -372,7 +535,7 @@ class AdminSettingsControllerTest {
         @DisplayName("returns 500 when persistence throws IOException")
         void persistenceIOException() {
             try (MockedStatic<GeneralUtils> mocked = mockStatic(GeneralUtils.class)) {
-                mocked.when(() -> GeneralUtils.saveKeyToSettings("ui.appName", "New"))
+                mocked.when(() -> GeneralUtils.updateSettingsTransactional(any()))
                         .thenThrow(new IOException("io"));
 
                 ResponseEntity<Map<String, Object>> response =
@@ -409,14 +572,14 @@ class AdminSettingsControllerTest {
         @Test
         @DisplayName("returns value for an existing key")
         void existingKey() {
-            applicationProperties.getUi().setLogoStyle("modern");
+            applicationProperties.getUi().setAppNameNavbar("Custom Name");
 
-            ResponseEntity<?> response = controller.getSettingValue("ui.logoStyle");
+            ResponseEntity<?> response = controller.getSettingValue("ui.appNameNavbar");
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             SettingValueResponse body = (SettingValueResponse) response.getBody();
-            assertThat(body.getKey()).isEqualTo("ui.logoStyle");
-            assertThat(body.getValue()).isEqualTo("modern");
+            assertThat(body.getKey()).isEqualTo("ui.appNameNavbar");
+            assertThat(body.getValue()).isEqualTo("Custom Name");
         }
 
         @Test
@@ -429,6 +592,25 @@ class AdminSettingsControllerTest {
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             SettingValueResponse body = (SettingValueResponse) response.getBody();
             assertThat(body.getValue()).isEqualTo("********");
+        }
+
+        @Test
+        @DisplayName("masks aiEngine apiKey but NOT the maxTokens numeric fields")
+        void masksApiKeyButNotMaxTokens() {
+            applicationProperties.getAiEngine().getModels().setApiKey("sk-real-key");
+            applicationProperties.getAiEngine().getModels().setSmartMaxTokens(8192);
+
+            // "token" as a substring of maxTokens must not trigger masking (would break the UI
+            // and flip the integer to a "********" string).
+            ResponseEntity<?> tokensResp =
+                    controller.getSettingValue("aiEngine.models.smartMaxTokens");
+            SettingValueResponse tokens = (SettingValueResponse) tokensResp.getBody();
+            assertThat(tokens.getValue()).isEqualTo(8192);
+
+            // The real credential is still masked.
+            ResponseEntity<?> keyResp = controller.getSettingValue("aiEngine.models.apiKey");
+            SettingValueResponse key = (SettingValueResponse) keyResp.getBody();
+            assertThat(key.getValue()).isEqualTo("********");
         }
     }
 

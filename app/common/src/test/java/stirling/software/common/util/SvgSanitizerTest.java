@@ -97,4 +97,51 @@ class SvgSanitizerTest {
         byte[] invalid = "not xml at all".getBytes(StandardCharsets.UTF_8);
         assertThrows(IOException.class, () -> sanitizer.sanitize(invalid));
     }
+
+    @Test
+    void testSanitize_removesRootRelativeLocalPath() throws IOException {
+        when(ssrfProtectionService.isUrlAllowed(anyString())).thenReturn(false);
+        String svg =
+                "<svg xmlns=\"http://www.w3.org/2000/svg\">"
+                        + "<image href=\"/tmp/image.png\" width=\"10\" height=\"10\"/></svg>";
+        byte[] result = sanitizer.sanitize(svg.getBytes(StandardCharsets.UTF_8));
+        String output = new String(result, StandardCharsets.UTF_8);
+        assertFalse(output.contains("/tmp/image.png"), "Root-relative local path must be stripped");
+    }
+
+    @Test
+    void testSanitize_removesRelativeLocalPath() throws IOException {
+        when(ssrfProtectionService.isUrlAllowed(anyString())).thenReturn(false);
+        String svg =
+                "<svg xmlns=\"http://www.w3.org/2000/svg\">"
+                        + "<image href=\"../../assets/image.png\" width=\"10\" height=\"10\"/></svg>";
+        byte[] result = sanitizer.sanitize(svg.getBytes(StandardCharsets.UTF_8));
+        String output = new String(result, StandardCharsets.UTF_8);
+        assertFalse(output.contains("assets/image.png"), "Relative local path must be stripped");
+    }
+
+    @Test
+    void testSanitize_removesRootRelativeWindowsDrivePath() throws IOException {
+        when(ssrfProtectionService.isUrlAllowed(anyString())).thenReturn(false);
+        String svg =
+                "<svg xmlns=\"http://www.w3.org/2000/svg\" "
+                        + "xmlns:xlink=\"http://www.w3.org/1999/xlink\">"
+                        + "<image xlink:href=\"/C:/Users/x/external-image.svg\""
+                        + " width=\"10\" height=\"10\"/></svg>";
+        byte[] result = sanitizer.sanitize(svg.getBytes(StandardCharsets.UTF_8));
+        String output = new String(result, StandardCharsets.UTF_8);
+        assertFalse(
+                output.contains("external-image"), "Root-relative Windows path must be stripped");
+    }
+
+    @Test
+    void testSanitize_keepsInDocumentFragmentReference() throws IOException {
+        String svg =
+                "<svg xmlns=\"http://www.w3.org/2000/svg\">"
+                        + "<use href=\"#gradient\"/><rect width=\"10\" height=\"10\"/></svg>";
+        byte[] result = sanitizer.sanitize(svg.getBytes(StandardCharsets.UTF_8));
+        String output = new String(result, StandardCharsets.UTF_8);
+        assertTrue(
+                output.contains("#gradient"), "In-document fragment references must be preserved");
+    }
 }

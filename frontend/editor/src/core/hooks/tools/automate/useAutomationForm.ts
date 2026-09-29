@@ -33,7 +33,7 @@ export function useAutomationForm({
 
   const getToolName = useCallback(
     (operation: string) => {
-      const tool = toolRegistry?.[operation as ToolId] as any;
+      const tool = toolRegistry?.[operation as ToolId];
       return tool?.name || t(`tools.${operation}.name`, operation);
     },
     [toolRegistry, t],

@@ -13,7 +13,7 @@ interface CompressedObject {
 }
 
 const getData = (zipEntry: JSZipObject): CompressedObject | undefined => {
-  return (zipEntry as any)._data as CompressedObject;
+  return (zipEntry as JSZipObject & { _data: CompressedObject })._data;
 };
 
 export interface ZipExtractionResult {
@@ -236,7 +236,7 @@ export class ZipFileService {
 
           // Create File object
           const extractedFile = new File(
-            [content as any],
+            [content as Uint8Array<ArrayBuffer>],
             this.sanitizeFilename(filename),
             {
               type: "application/pdf",

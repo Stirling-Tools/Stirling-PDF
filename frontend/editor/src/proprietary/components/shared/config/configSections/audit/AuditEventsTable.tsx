@@ -4,7 +4,6 @@ import {
   Text,
   Group,
   Stack,
-  Button,
   Pagination,
   Modal,
   Code,
@@ -12,8 +11,8 @@ import {
   Alert,
   Table,
   Badge,
-  UnstyledButton,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import auditService, {
   AuditEvent,
@@ -22,8 +21,7 @@ import auditService, {
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import { useAuditFilters } from "@app/hooks/useAuditFilters";
 import AuditFiltersForm from "@app/components/shared/config/configSections/audit/AuditFiltersForm";
-import LocalIcon from "@app/components/shared/LocalIcon";
-
+import { Icon } from "@app/ui/Icon";
 interface AuditEventsTableProps {
   loginEnabled?: boolean;
   captureFileHash?: boolean;
@@ -163,8 +161,8 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
   const getSortIcon = (
     key: "timestamp" | "eventType" | "username" | "ipAddress",
   ) => {
-    if (sortKey !== key) return "unfold-more";
-    return sortDir === "asc" ? "expand-less" : "expand-more";
+    if (sortKey !== key) return "chevrons-up-down";
+    return sortDir === "asc" ? "chevron-up" : "chevron-down";
   };
 
   // Event type colors
@@ -258,11 +256,9 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
                 verticalSpacing="sm"
                 withRowBorders
                 highlightOnHover
-                style={
-                  {
-                    "--table-border-color": "var(--mantine-color-gray-3)",
-                  } as React.CSSProperties
-                }
+                style={{
+                  "--table-border-color": "var(--mantine-color-gray-3)",
+                }}
               >
                 <Table.Thead>
                   <Table.Tr
@@ -276,7 +272,10 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
                       }}
                       fz="sm"
                     >
-                      <UnstyledButton
+                      <Button
+                        type="button"
+                        variant="tertiary"
+                        hover={false}
                         onClick={() => toggleSort("timestamp")}
                         style={{
                           display: "flex",
@@ -287,12 +286,8 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
                         }}
                       >
                         {t("audit.events.timestamp", "Timestamp")}
-                        <LocalIcon
-                          icon={getSortIcon("timestamp")}
-                          width="0.9rem"
-                          height="0.9rem"
-                        />
-                      </UnstyledButton>
+                        <Icon name={getSortIcon("timestamp")} size="0.9rem" />
+                      </Button>
                     </Table.Th>
                     <Table.Th
                       style={{
@@ -302,7 +297,10 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
                       }}
                       fz="sm"
                     >
-                      <UnstyledButton
+                      <Button
+                        type="button"
+                        variant="tertiary"
+                        hover={false}
                         onClick={() => toggleSort("eventType")}
                         style={{
                           display: "flex",
@@ -313,12 +311,8 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
                         }}
                       >
                         {t("audit.events.type", "Type")}
-                        <LocalIcon
-                          icon={getSortIcon("eventType")}
-                          width="0.9rem"
-                          height="0.9rem"
-                        />
-                      </UnstyledButton>
+                        <Icon name={getSortIcon("eventType")} size="0.9rem" />
+                      </Button>
                     </Table.Th>
                     <Table.Th
                       style={{
@@ -328,7 +322,10 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
                       }}
                       fz="sm"
                     >
-                      <UnstyledButton
+                      <Button
+                        type="button"
+                        variant="tertiary"
+                        hover={false}
                         onClick={() => toggleSort("username")}
                         style={{
                           display: "flex",
@@ -339,12 +336,8 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
                         }}
                       >
                         {t("audit.events.user", "User")}
-                        <LocalIcon
-                          icon={getSortIcon("username")}
-                          width="0.9rem"
-                          height="0.9rem"
-                        />
-                      </UnstyledButton>
+                        <Icon name={getSortIcon("username")} size="0.9rem" />
+                      </Button>
                     </Table.Th>
                     <Table.Th
                       style={{
@@ -395,10 +388,9 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
                       <Table.Td colSpan={totalColumns}>
                         <Group justify="center" py="xl">
                           <Stack align="center" gap={0}>
-                            <LocalIcon
-                              icon="search"
-                              width="2rem"
-                              height="2rem"
+                            <Icon
+                              name="search"
+                              size="2rem"
                               style={{ opacity: 0.4 }}
                             />
                             <Text ta="center" c="dimmed" size="sm">
@@ -415,10 +407,7 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
                       let author = "";
                       let fileHash = "";
                       if (event.details && typeof event.details === "object") {
-                        const details = event.details as Record<
-                          string,
-                          unknown
-                        >;
+                        const details = event.details;
                         const files = details.files;
                         if (Array.isArray(files) && files.length > 0) {
                           const firstFile = files[0] as Record<string, unknown>;
@@ -482,8 +471,8 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
                           )}
                           <Table.Td ta="center">
                             <Button
-                              variant="subtle"
-                              size="xs"
+                              variant="tertiary"
+                              size="sm"
                               onClick={() => setSelectedEvent(event)}
                               disabled={!loginEnabled}
                             >

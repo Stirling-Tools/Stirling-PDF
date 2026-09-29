@@ -1,6 +1,7 @@
-import { ActionIcon } from "@mantine/core";
-import CloseIcon from "@mui/icons-material/Close";
-import { useLogoAssets } from "@app/hooks/useLogoAssets";
+import { Icon } from "@app/ui/Icon";
+import { useTranslation } from "react-i18next";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { Logo } from "@app/ui/Logo";
 
 interface LoginHeaderProps {
   title: string;
@@ -19,7 +20,7 @@ export default function LoginHeader({
   centerOnly = false,
   onClose,
 }: LoginHeaderProps) {
-  const { tooltipLogo } = useLogoAssets();
+  const { t } = useTranslation();
 
   return (
     <div
@@ -43,10 +44,11 @@ export default function LoginHeader({
             minWidth: 0,
           }}
         >
-          <img
-            src={tooltipLogo}
+          <Logo
+            variant="iconOnly"
+            iconHeight="2rem"
             alt="Stirling PDF"
-            style={{ width: 36, height: 36, flexShrink: 0 }}
+            style={{ flexShrink: 0 }}
           />
           {title && (
             <h1 className="login-title" style={{ margin: 0 }}>
@@ -57,16 +59,15 @@ export default function LoginHeader({
         {onClose && (
           <ActionIcon
             onClick={onClose}
-            radius="md"
-            size={32}
-            variant="subtle"
+            variant="tertiary"
+            aria-label={t("common.close", "Close")}
             style={{
               flexShrink: 0,
-              color: "var(--text-secondary)",
+              color: "var(--c-text-muted)",
               outline: "none",
             }}
           >
-            <CloseIcon fontSize="small" />
+            <Icon name="x" size={20} />
           </ActionIcon>
         )}
       </div>

@@ -1,7 +1,8 @@
 import React from "react";
-import { Button, Group, Paper, Stack, Text } from "@mantine/core";
+import { Group, Paper, Stack, Text } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { requestStartTour } from "@app/constants/events";
 
 interface HelpSectionProps {
@@ -37,15 +38,9 @@ const HelpSection: React.FC<HelpSectionProps> = ({
               </Text>
             </div>
             <Button
-              variant="default"
+              variant="secondary"
               size="sm"
-              leftSection={
-                <LocalIcon
-                  icon="build-outline-rounded"
-                  width="1rem"
-                  height="1rem"
-                />
-              }
+              leftSection={<Icon name="wrench" size="1rem" />}
               onClick={() => startTour("tools")}
             >
               {t("settings.help.toolsTour.start", "Start")}
@@ -66,11 +61,9 @@ const HelpSection: React.FC<HelpSectionProps> = ({
                 </Text>
               </div>
               <Button
-                variant="default"
+                variant="secondary"
                 size="sm"
-                leftSection={
-                  <LocalIcon icon="person-rounded" width="1rem" height="1rem" />
-                }
+                leftSection={<Icon name="user" size="1rem" />}
                 onClick={() => startTour("admin")}
               >
                 {t("settings.help.adminTour.start", "Start")}

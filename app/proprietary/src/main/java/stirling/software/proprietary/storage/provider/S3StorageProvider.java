@@ -4,10 +4,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
@@ -34,6 +35,7 @@ import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequ
 @Slf4j
 public class S3StorageProvider implements StorageProvider, AutoCloseable {
 
+    private static final Pattern CONTROL_CHARACTER_PATTERN = Pattern.compile("\\p{Cntrl}");
     private final S3Client s3Client;
     private final S3Presigner s3Presigner;
     private final String bucket;
@@ -152,7 +154,7 @@ public class S3StorageProvider implements StorageProvider, AutoCloseable {
         }
         // Strip CR/LF and other control chars before path parsing (Path.of throws on them on
         // Windows, and they defeat header parsers).
-        String stripped = originalFilename.replaceAll("\\p{Cntrl}", "");
+        String stripped = CONTROL_CHARACTER_PATTERN.matcher(originalFilename).replaceAll("");
         // Use only the basename to avoid leaking directory structure into the header.
         int lastSeparator = Math.max(stripped.lastIndexOf('/'), stripped.lastIndexOf('\\'));
         if (lastSeparator >= 0) {
@@ -184,7 +186,10 @@ public class S3StorageProvider implements StorageProvider, AutoCloseable {
         if (filename == null || filename.isBlank()) {
             return "file";
         }
-        String stripped = Path.of(filename).getFileName().toString().replaceAll("\\p{Cntrl}", "");
+        String stripped =
+                CONTROL_CHARACTER_PATTERN
+                        .matcher(Paths.get(filename).getFileName().toString())
+                        .replaceAll("");
         return stripped.isBlank() ? "file" : stripped;
     }
 }

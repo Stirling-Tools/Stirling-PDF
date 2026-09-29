@@ -7,10 +7,16 @@
         "../../src/proprietary/*",
         "../../src/core/*"
       ],
+      "@portal/*": ["../../src/portal/*"],
       "@cloud/*": ["../../src/cloud/*"],
       "@proprietary/*": ["../../src/proprietary/*"],
       "@core/*": ["../../src/core/*"],
-      "@shared/*": ["../../../shared/*"]
+      "@app/portal/*": [
+        "../../src/cloud/portal/*",
+        "../../src/proprietary/portal/*",
+        "../../src/core/portal/*",
+        "../../src/portal/*"
+      ]
     }
   },
   "include": [

@@ -16,20 +16,19 @@
  *     V1 — so it shows a real empty state, not fabricated rows
  */
 import React, { useState } from "react";
-import { Button, Group, Stack, Text } from "@mantine/core";
+import { Alert, Badge, Group, Stack, Text } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useRenderCount } from "@app/hooks/useRenderCount";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import LockIcon from "@mui/icons-material/LockOutlined";
-import CheckIcon from "@mui/icons-material/CheckRounded";
-import HelpOutlineIcon from "@mui/icons-material/HelpOutlineRounded";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMoreRounded";
-import BoltIcon from "@mui/icons-material/BoltRounded";
-import AllInclusiveIcon from "@mui/icons-material/AllInclusiveRounded";
+import { Icon } from "@app/ui/Icon";
 import { alert as showToast } from "@app/components/toast";
+import {
+  PrepaidCapacityMeterPanel,
+  prepaidSnapshotFromWallet,
+} from "@app/components/shared/config/configSections/usageMeters";
 // Relative (not @app/*) so the co-located CSS + sibling component resolve directly.
-// eslint-disable-next-line no-restricted-imports
+// oxlint-disable-next-line no-restricted-imports
 import "./Payg.css";
-// eslint-disable-next-line no-restricted-imports
+// oxlint-disable-next-line no-restricted-imports
 import SpendCapControl from "./SpendCapControl";
 import { useTranslation } from "react-i18next";
 import type { Wallet } from "@app/hooks/useWallet";
@@ -59,12 +58,12 @@ interface PaygProps {
 
 // Stable-ish avatar colour from a string.
 const AVATAR_COLORS = [
-  "#0a8bff",
-  "#8b5cf6",
-  "#ec4899",
-  "#10b981",
-  "#f59e0b",
-  "#06b6d4",
+  "var(--c-avatar-1)",
+  "var(--c-avatar-2)",
+  "var(--c-avatar-3)",
+  "var(--c-avatar-4)",
+  "var(--c-avatar-5)",
+  "var(--c-avatar-6)",
 ];
 function avatarColor(seed: string): string {
   let h = 0;
@@ -110,16 +109,16 @@ export function DocHelp() {
   const [open, setOpen] = useState(false);
   return (
     <div className="payg-help">
-      <button
-        type="button"
+      <Button
+        variant="tertiary"
         className="payg-help__toggle"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
+        leftSection={<Icon name="circle-question-mark" size={15} />}
       >
-        <HelpOutlineIcon sx={{ fontSize: 15 }} />
         {t("payg.docHelp.toggle", "What counts as a PDF?")}
-        <ExpandMoreIcon className="payg-help__chevron" sx={{ fontSize: 16 }} />
-      </button>
+        <Icon name="chevron-down" size={16} className="payg-help__chevron" />
+      </Button>
       {open && (
         <div className="payg-help__panel">
           <ul>
@@ -446,16 +445,16 @@ function CapReachedHelp() {
   const [open, setOpen] = useState(false);
   return (
     <div className="payg-help">
-      <button
-        type="button"
+      <Button
+        variant="tertiary"
         className="payg-help__toggle"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
+        leftSection={<Icon name="circle-question-mark" size={15} />}
       >
-        <HelpOutlineIcon sx={{ fontSize: 15 }} />
         {t("payg.gates.title", "What happens when the cap is reached")}
-        <ExpandMoreIcon className="payg-help__chevron" sx={{ fontSize: 16 }} />
-      </button>
+        <Icon name="chevron-down" size={16} className="payg-help__chevron" />
+      </Button>
       {open && (
         <div className="payg-help__panel">
           <div className="payg-gates">
@@ -463,9 +462,9 @@ function CapReachedHelp() {
               <div className="payg-gate" data-enabled={staysAtCap} key={gate}>
                 <span className="payg-gate__chip">
                   {staysAtCap ? (
-                    <CheckIcon sx={{ fontSize: 18 }} />
+                    <Icon name="check" size={18} />
                   ) : (
-                    <LockIcon sx={{ fontSize: 16 }} />
+                    <Icon name="lock" size={16} />
                   )}
                 </span>
                 <span className="payg-gate__label">{gateLabel(gate, t)}</span>
@@ -655,12 +654,65 @@ function StripePortalLink({
       <Button
         onClick={handleClick}
         loading={loading}
-        rightSection={<OpenInNewIcon sx={{ fontSize: 16 }} />}
-        variant="light"
+        rightSection={<Icon name="external-link" size={16} />}
+        variant="secondary"
       >
         {t("payg.stripe.open", "Open billing portal")}
       </Button>
     </div>
+  );
+}
+
+// ─── Prepaid bundle ───────────────────────────────────────────────────────
+
+function daysUntil(iso: string | null): number | null {
+  if (!iso) return null;
+  const end = new Date(iso).getTime();
+  if (Number.isNaN(end)) return null;
+  return Math.ceil((end - Date.now()) / 86_400_000);
+}
+
+/**
+ * Contextual nudge when prepaid capacity is running low, exhausted, or its term
+ * is nearly up (the demo's "top up to keep processing" strip). Leader-only CTA —
+ * members can't buy. Returns null when nothing needs saying.
+ */
+function PrepaidBanner({
+  snap,
+}: {
+  snap: NonNullable<ReturnType<typeof prepaidSnapshotFromWallet>>;
+}) {
+  const { t } = useTranslation();
+  const pctLeft = snap.total > 0 ? (snap.remaining / snap.total) * 100 : 0;
+  const days = daysUntil(snap.expiresAt);
+  const exhausted = snap.remaining <= 0;
+  const low = !exhausted && pctLeft <= 20;
+  const expiringSoon = days != null && days >= 0 && days <= 30;
+  if (!exhausted && !low && !expiringSoon) return null;
+
+  const message = exhausted
+    ? t(
+        "payg.prepaid.banner.exhausted",
+        "Your prepaid capacity is used up — metered billing has resumed. Top up to keep the discount.",
+      )
+    : low
+      ? t(
+          "payg.prepaid.banner.low",
+          "You're down to {{pct}}% of your prepaid capacity. Top up any time to keep processing uninterrupted.",
+          { pct: Math.max(1, Math.round(pctLeft)) },
+        )
+      : t(
+          "payg.prepaid.banner.expiring",
+          "Your prepaid year ends in {{count}} days. Unused capacity expires — top up to start a fresh year.",
+          // This arm only renders when expiringSoon (days is a valid number); ?? 0 satisfies the
+          // count option's number type.
+          { count: days ?? 0 },
+        );
+
+  return (
+    <Alert color={exhausted ? "red" : "yellow"} variant="light">
+      <span>{message}</span>
+    </Alert>
   );
 }
 
@@ -675,6 +727,10 @@ const Payg: React.FC<PaygProps> = ({
   useRenderCount(role === "LEADER" ? "PaygLeader" : "PaygMember");
   const { t } = useTranslation();
   const isLeader = role === "LEADER";
+  const prepaid = prepaidSnapshotFromWallet(wallet);
+  // Read-only prepaid display. The buy/top-up flow lives on the portal Processor page (the
+  // create-payg-bundle-checkout edge fn is driven from there); this editor Plan page only shows an
+  // existing prepaid balance and is slated for removal on a separate branch.
 
   const fmt = (iso: string) =>
     new Date(iso).toLocaleDateString(undefined, {
@@ -685,6 +741,8 @@ const Payg: React.FC<PaygProps> = ({
   return (
     <div className="payg">
       <Stack gap="md">
+        {prepaid && <PrepaidBanner snap={prepaid} />}
+
         {/* The modal chrome already renders the section title ("Billing &
             usage"), so we lead with the descriptive subtitle + role pill. */}
         <div className="payg-planhead">
@@ -699,19 +757,27 @@ const Payg: React.FC<PaygProps> = ({
                 },
               )}
             </span>
-            <span className="payg-role-pill" data-leader={isLeader}>
-              {isLeader
-                ? t("payg.role.leader", "Team owner")
-                : t("payg.role.member", "Member")}
-            </span>
+            <Group gap="xs" wrap="nowrap">
+              {wallet.billingMode === "prepaid" && (
+                <Badge color="blue" variant="light" radius="sm">
+                  {t("payg.prepaid.chip", "Prepaid year")}
+                </Badge>
+              )}
+              <span className="payg-role-pill" data-leader={isLeader}>
+                {isLeader
+                  ? t("payg.role.leader", "Team owner")
+                  : t("payg.role.member", "Member")}
+              </span>
+            </Group>
           </div>
 
           <div className="payg-planhead__split">
             <div className="payg-planhead__col">
               <div className="payg-planhead__lbl payg-planhead__lbl--free">
-                <AllInclusiveIcon
+                <Icon
+                  name="infinity"
+                  size={16}
                   className="payg-planhead__lbl-icon"
-                  fontSize="small"
                 />
                 {t("payg.header.freeLabel", "Always free")}
               </div>
@@ -728,9 +794,10 @@ const Payg: React.FC<PaygProps> = ({
 
             <div className="payg-planhead__col payg-planhead__col--meter">
               <div className="payg-planhead__lbl payg-planhead__lbl--meter">
-                <BoltIcon
+                <Icon
+                  name="zap"
+                  size={16}
                   className="payg-planhead__lbl-icon"
-                  fontSize="small"
                 />
                 {t("payg.header.meterLabel", "Metered")}
               </div>
@@ -749,6 +816,25 @@ const Payg: React.FC<PaygProps> = ({
         </div>
 
         <UsageHero wallet={wallet} />
+
+        {prepaid && (
+          <div className="payg-card">
+            <Stack gap="sm">
+              <div>
+                <div className="payg-card__title">
+                  {t("payg.prepaid.card.title", "Prepaid capacity")}
+                </div>
+                <div className="payg-card__subtitle">
+                  {t(
+                    "payg.prepaid.card.subtitle",
+                    "Used before metered billing and outside your spend cap.",
+                  )}
+                </div>
+              </div>
+              <PrepaidCapacityMeterPanel snap={prepaid} />
+            </Stack>
+          </div>
+        )}
 
         {isLeader ? (
           <CapEditor

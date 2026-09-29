@@ -8,14 +8,8 @@
  * - Better visual hierarchy and spacing
  */
 import React, { useCallback, useEffect, useRef } from "react";
-import {
-  Box,
-  Text,
-  ScrollArea,
-  Badge,
-  Tooltip,
-  ActionIcon,
-} from "@mantine/core";
+import { Box, Text, ScrollArea, Badge, Tooltip } from "@mantine/core";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import { useFormFill } from "@app/tools/formFill/FormFillContext";
 import { FieldInput } from "@app/tools/formFill/FieldInput";
@@ -24,8 +18,7 @@ import {
   FIELD_TYPE_COLOR,
 } from "@app/tools/formFill/fieldMeta";
 import type { FormField } from "@app/tools/formFill/types";
-import CloseIcon from "@mui/icons-material/Close";
-import TextFieldsIcon from "@mui/icons-material/TextFields";
+import { Icon } from "@app/ui/Icon";
 import styles from "@app/tools/formFill/FormFill.module.css";
 
 interface FormFieldSidebarProps {
@@ -88,9 +81,9 @@ export function FormFieldSidebar({ visible, onToggle }: FormFieldSidebarProps) {
         zIndex: 999,
         display: "flex",
         flexDirection: "column",
-        background: "var(--bg-toolbar, var(--mantine-color-body))",
+        background: "var(--c-bg-raised, var(--mantine-color-body))",
         borderLeft:
-          "1px solid var(--border-subtle, var(--mantine-color-default-border))",
+          "1px solid var(--c-border-subtle, var(--mantine-color-default-border))",
         boxShadow: "-4px 0 16px rgba(0,0,0,0.08)",
       }}
     >
@@ -102,12 +95,12 @@ export function FormFieldSidebar({ visible, onToggle }: FormFieldSidebarProps) {
           justifyContent: "space-between",
           padding: "0.625rem 0.75rem",
           borderBottom:
-            "1px solid var(--border-subtle, var(--mantine-color-default-border))",
+            "1px solid var(--c-border-subtle, var(--mantine-color-default-border))",
           flexShrink: 0,
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <TextFieldsIcon sx={{ fontSize: 18, opacity: 0.7 }} />
+          <Icon name="type" size={18} style={{ opacity: 0.7 }} />
           <Text fw={600} size="sm">
             Form Fields
           </Text>
@@ -116,12 +109,12 @@ export function FormFieldSidebar({ visible, onToggle }: FormFieldSidebarProps) {
           </Badge>
         </div>
         <ActionIcon
-          variant="subtle"
+          variant="tertiary"
           size="sm"
           onClick={onToggle}
           aria-label={t("formFill.sidebar.close", "Close sidebar")}
         >
-          <CloseIcon sx={{ fontSize: 16 }} />
+          <Icon name="x" size={16} />
         </ActionIcon>
       </div>
 
@@ -172,10 +165,12 @@ export function FormFieldSidebar({ visible, onToggle }: FormFieldSidebarProps) {
                             className={styles.fieldTypeIcon}
                             style={{
                               color: `var(--mantine-color-${FIELD_TYPE_COLOR[field.type]}-6)`,
-                              fontSize: "0.875rem",
                             }}
                           >
-                            {FIELD_TYPE_ICON[field.type]}
+                            <Icon
+                              name={FIELD_TYPE_ICON[field.type]}
+                              size={14}
+                            />
                           </span>
                         </Tooltip>
                         <span className={styles.fieldName}>

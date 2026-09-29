@@ -7,51 +7,27 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useWallet, type Wallet } from "@app/hooks/useWallet";
+import {
+  currencySymbol,
+  formatPeriodDate,
+  MeterBar,
+  meterState,
+  remainingMeter,
+} from "@app/billing";
 import "@app/components/shared/config/configSections/Payg.css";
 import "@app/components/shared/config/configSections/PaygFree.css";
 
-export type MeterState = "FULL" | "WARNED" | "DEGRADED";
-
-/** Warn/degrade band for a usage meter (mirrors the BE thresholds). */
-export function meterState(
-  used: number,
-  limit: number,
-): { state: MeterState; pct: number } {
-  const pct = limit > 0 ? Math.min(100, (used / limit) * 100) : 100;
-  const state: MeterState =
-    pct >= 100 ? "DEGRADED" : pct >= 80 ? "WARNED" : "FULL";
-  return { state, pct };
-}
-
-/** Currency symbol for compact inline use; falls back to the ISO code. */
-function currencySymbol(currency: string | null): string {
-  switch ((currency ?? "").toLowerCase()) {
-    case "usd":
-      return "$";
-    case "eur":
-      return "€";
-    case "gbp":
-      return "£";
-    default:
-      return currency ? currency.toUpperCase() + " " : "$";
-  }
-}
-
-// ─── One-time free grant meter ──────────────────────────────────────────────
-
 export interface FreeSnapshot {
-  /** One-time free documents used so far (grant − remaining). */
+  /** Free documents used so far this period (grant − remaining). */
   billableUsed: number;
-  /** The team's one-time free grant size in documents. */
+  /** The team's free grant size in documents, per billing period. */
   billableLimit: number;
 }
 
 /**
- * Derive the free-grant snapshot from a wallet. Null (not yet loaded) yields a
- * zeroed view over the default 500 grant, the brief first-paint placeholder.
+ * Derive usage from the wallet's current allowance and remaining balance.
  */
-export function freeSnapshotFromWallet(wallet: Wallet | null): FreeSnapshot {
-  if (!wallet) return { billableUsed: 0, billableLimit: 500 };
+export function freeSnapshotFromWallet(wallet: Wallet): FreeSnapshot {
   return {
     billableUsed: Math.max(0, wallet.freeAllowance - wallet.freeRemaining),
     billableLimit: wallet.freeAllowance,
@@ -59,17 +35,21 @@ export function freeSnapshotFromWallet(wallet: Wallet | null): FreeSnapshot {
 }
 
 /**
- * Read the free-grant snapshot from the live wallet. Falls back to a zeroed
- * view over the default grant until the wallet loads.
+ * Returns null until the live wallet supplies the team's allowance.
  */
-export function useFreeSnapshot(): FreeSnapshot {
+export function useFreeSnapshot(): FreeSnapshot | null {
   const { wallet } = useWallet();
-  return useMemo(() => freeSnapshotFromWallet(wallet), [wallet]);
+  return useMemo(
+    () => (wallet ? freeSnapshotFromWallet(wallet) : null),
+    [wallet],
+  );
 }
 
-export function FreeMeterPanel({ snap }: { snap: FreeSnapshot }) {
+export function FreeMeterPanel({ snap }: { snap: FreeSnapshot | null }) {
   const { t } = useTranslation();
-  const { state, pct } = meterState(snap.billableUsed, snap.billableLimit);
+  if (!snap) return null;
+  const remaining = Math.max(0, snap.billableLimit - snap.billableUsed);
+  const { state, pct } = remainingMeter(remaining, snap.billableLimit);
   const stateLabel =
     state === "DEGRADED"
       ? t("payg.free.state.limitReached", "Limit reached")
@@ -78,42 +58,25 @@ export function FreeMeterPanel({ snap }: { snap: FreeSnapshot }) {
         : t("payg.free.state.plentyLeft", "Plenty left");
 
   return (
-    <div className="paygf-meter" data-state={state}>
-      <div className="paygf-meter__top">
-        <div className="paygf-meter__figure">
-          <span className="paygf-meter__num">
-            {snap.billableUsed.toLocaleString()}
-          </span>
-          <span className="paygf-meter__cap">
-            {t("payg.free.hero.capSuffix", "/ {{limit}} free PDFs", {
-              limit: snap.billableLimit.toLocaleString(),
-            })}
-          </span>
-        </div>
-        <span className="payg-status" data-state={state}>
-          <span className="payg-status__dot" />
-          {stateLabel}
-        </span>
-      </div>
-
-      <div className="payg-bar">
-        <div
-          className="payg-bar__fill"
-          data-state={state}
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-
-      <div className="paygf-meter__meta">
+    <MeterBar
+      state={state}
+      pct={pct}
+      barLabel={t("payg.free.hero.barAria", "Free PDFs remaining")}
+      figure={remaining.toLocaleString()}
+      capSuffix={t(
+        "payg.free.hero.capSuffix",
+        "of {{limit}} free PDFs left this month",
+        { limit: snap.billableLimit.toLocaleString() },
+      )}
+      statusLabel={stateLabel}
+      meta={
         <span>
           {t("payg.free.hero.metaCategories", "Automation · AI · API requests")}
         </span>
-      </div>
-    </div>
+      }
+    />
   );
 }
-
-// ─── Monthly spend-cap meter ────────────────────────────────────────────────
 
 export interface SpendCapSnapshot {
   /** Money spent so far this billing period, in major currency units. */
@@ -142,8 +105,8 @@ export function spendCapSnapshotFromWallet(
 }
 
 /**
- * Sibling of {@link FreeMeterPanel} for the money cap rather than the one-time
- * free grant. Shares the same bar/status styling and the cap-state labels
+ * Sibling of {@link FreeMeterPanel} for the money cap rather than the free
+ * grant. Shares the same bar/status styling and the cap-state labels
  * ({@code payg.state.*}) used by the Plan hero, so it reads as the same meter.
  */
 export function SpendCapMeterPanel({ snap }: { snap: SpendCapSnapshot }) {
@@ -158,45 +121,98 @@ export function SpendCapMeterPanel({ snap }: { snap: SpendCapSnapshot }) {
   const symbol = currencySymbol(snap.currency);
 
   return (
-    <div className="paygf-meter" data-state={state}>
-      <div className="paygf-meter__top">
-        <div className="paygf-meter__figure">
-          <span className="paygf-meter__num">
-            {symbol}
-            {snap.spent.toLocaleString()}
+    <MeterBar
+      state={state}
+      pct={pct}
+      barLabel={t("payg.spendCapMeter.barAria", "Spend against cap")}
+      figure={`${symbol}${snap.spent.toLocaleString()}`}
+      capSuffix={t("payg.spendCapMeter.capSuffix", "/ {{amount}} cap", {
+        amount: `${symbol}${snap.cap.toLocaleString()}`,
+      })}
+      statusLabel={stateLabel}
+      meta={
+        <>
+          <span>
+            {t(
+              "payg.spendCapMeter.metaCategories",
+              "Automation · AI · API spend",
+            )}
           </span>
-          <span className="paygf-meter__cap">
-            {t("payg.spendCapMeter.capSuffix", "/ {{amount}} cap", {
-              amount: `${symbol}${snap.cap.toLocaleString()}`,
+          <span className="payg-hero__meta-dot">•</span>
+          <span>
+            {t("payg.spendCapMeter.resets", "Resets each billing period")}
+          </span>
+        </>
+      }
+    />
+  );
+}
+
+export interface PrepaidSnapshot {
+  /** Prepaid units still available across the team's in-term pools. */
+  remaining: number;
+  /** Total capacity of in-term pools — the "X of Y" denominator. */
+  total: number;
+  /** ISO date the soonest pool expires; null when no bundle. */
+  expiresAt: string | null;
+}
+
+/**
+ * Derive the prepaid-capacity snapshot from a wallet. Returns null when the team
+ * holds no in-term bundle ({@code prepaidUnitsTotal === 0}) so callers can skip
+ * the card entirely rather than render an empty meter.
+ */
+export function prepaidSnapshotFromWallet(
+  wallet: Wallet | null,
+): PrepaidSnapshot | null {
+  if (!wallet || wallet.prepaidUnitsTotal <= 0) return null;
+  return {
+    remaining: wallet.prepaidUnitsRemaining,
+    total: wallet.prepaidUnitsTotal,
+    expiresAt: wallet.prepaidExpiresAt,
+  };
+}
+
+/**
+ * Prepaid capacity meter. The bar shows what is left and drains towards empty,
+ * while the bands still key on what is gone ({@code used = total − remaining}), so
+ * it WARNs when the pool is running low and DEGRADEs once exhausted — same bands
+ * as the free/cap meters. Prepaid is consumed ahead of the meter and outside the
+ * spend cap, so it reads as its own dimension.
+ */
+export function PrepaidCapacityMeterPanel({ snap }: { snap: PrepaidSnapshot }) {
+  const { t } = useTranslation();
+  const { state, pct } = remainingMeter(snap.remaining, snap.total);
+  const stateLabel =
+    state === "DEGRADED"
+      ? t("payg.prepaid.state.exhausted", "Used up")
+      : state === "WARNED"
+        ? t("payg.prepaid.state.low", "Running low")
+        : t("payg.prepaid.state.healthy", "Plenty left");
+
+  return (
+    <MeterBar
+      state={state}
+      pct={pct}
+      barLabel={t("payg.prepaid.card.title", "Prepaid capacity")}
+      figure={snap.remaining.toLocaleString()}
+      capSuffix={t(
+        "payg.prepaid.meter.capSuffix",
+        "of {{total}} prepaid credits",
+        {
+          total: snap.total.toLocaleString(),
+        },
+      )}
+      statusLabel={stateLabel}
+      meta={
+        snap.expiresAt ? (
+          <span>
+            {t("payg.prepaid.meter.expires", "Expires {{date}}", {
+              date: formatPeriodDate(snap.expiresAt, { year: true }),
             })}
           </span>
-        </div>
-        <span className="payg-status" data-state={state}>
-          <span className="payg-status__dot" />
-          {stateLabel}
-        </span>
-      </div>
-
-      <div className="payg-bar">
-        <div
-          className="payg-bar__fill"
-          data-state={state}
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-
-      <div className="paygf-meter__meta">
-        <span>
-          {t(
-            "payg.spendCapMeter.metaCategories",
-            "Automation · AI · API spend",
-          )}
-        </span>
-        <span className="payg-hero__meta-dot">•</span>
-        <span>
-          {t("payg.spendCapMeter.resets", "Resets each billing period")}
-        </span>
-      </div>
-    </div>
+        ) : undefined
+      }
+    />
   );
 }

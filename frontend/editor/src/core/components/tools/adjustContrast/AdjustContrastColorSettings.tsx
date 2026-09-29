@@ -24,19 +24,19 @@ export default function AdjustContrastColorSettings({
       <SliderWithInput
         label={t("adjustContrast.red", "Red")}
         value={parameters.red}
-        onChange={(v) => onParameterChange("red", v as any)}
+        onChange={(v) => onParameterChange("red", v)}
         disabled={disabled}
       />
       <SliderWithInput
         label={t("adjustContrast.green", "Green")}
         value={parameters.green}
-        onChange={(v) => onParameterChange("green", v as any)}
+        onChange={(v) => onParameterChange("green", v)}
         disabled={disabled}
       />
       <SliderWithInput
         label={t("adjustContrast.blue", "Blue")}
         value={parameters.blue}
-        onChange={(v) => onParameterChange("blue", v as any)}
+        onChange={(v) => onParameterChange("blue", v)}
         disabled={disabled}
       />
     </Stack>

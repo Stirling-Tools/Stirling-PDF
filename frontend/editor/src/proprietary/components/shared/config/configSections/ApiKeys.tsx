@@ -1,14 +1,13 @@
 import React, { useState } from "react";
 import { Anchor, Group, Stack, Text, Paper, Skeleton } from "@mantine/core";
-// eslint-disable-next-line no-restricted-imports
+// oxlint-disable-next-line no-restricted-imports
 import ApiKeySection from "./apiKeys/ApiKeySection";
-// eslint-disable-next-line no-restricted-imports
+// oxlint-disable-next-line no-restricted-imports
 import RefreshModal from "./apiKeys/RefreshModal";
-// eslint-disable-next-line no-restricted-imports
+// oxlint-disable-next-line no-restricted-imports
 import useApiKey from "./apiKeys/hooks/useApiKey";
 import { useTranslation } from "react-i18next";
-import LocalIcon from "@app/components/shared/LocalIcon";
-
+import { Icon } from "@app/ui/Icon";
 export default function ApiKeys() {
   const [copied, setCopied] = useState<string | null>(null);
   const [showRefreshModal, setShowRefreshModal] = useState(false);
@@ -72,15 +71,14 @@ export default function ApiKeys() {
         p="md"
         radius="md"
         style={{
-          background: "var(--bg-muted)",
-          border: "1px solid var(--border-subtle)",
+          background: "var(--c-surface-sunken)",
+          border: "1px solid var(--c-border-subtle)",
         }}
       >
         <Group gap="xs" wrap="nowrap" align="flex-start">
-          <LocalIcon
-            icon="info-rounded"
-            width={18}
-            height={18}
+          <Icon
+            name="info"
+            size={18}
             style={{ marginTop: 2, flexShrink: 0, opacity: 0.7 }}
           />
           <Stack gap={8} style={{ flex: 1 }}>
@@ -106,11 +104,7 @@ export default function ApiKeys() {
                   }}
                 >
                   {t("config.apiKeys.docsLink", "API Documentation")}
-                  <LocalIcon
-                    icon="open-in-new-rounded"
-                    width={14}
-                    height={14}
-                  />
+                  <Icon name="external-link" size={14} />
                 </Anchor>
               </Text>
               <Text size="sm">
@@ -125,11 +119,7 @@ export default function ApiKeys() {
                   }}
                 >
                   {t("config.apiKeys.schemaLink", "API Schema Reference")}
-                  <LocalIcon
-                    icon="open-in-new-rounded"
-                    width={14}
-                    height={14}
-                  />
+                  <Icon name="external-link" size={14} />
                 </Anchor>
               </Text>
             </Stack>
@@ -159,8 +149,8 @@ export default function ApiKeys() {
           style={{
             padding: 18,
             borderRadius: 12,
-            background: "var(--api-keys-card-bg)",
-            border: "1px solid var(--api-keys-card-border)",
+            background: "var(--c-surface)",
+            border: "1px solid var(--c-border)",
             boxShadow: "0 2px 8px var(--api-keys-card-shadow)",
           }}
         >

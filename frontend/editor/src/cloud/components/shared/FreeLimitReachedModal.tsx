@@ -1,7 +1,8 @@
 import { useMemo } from "react";
-import { Modal, Stack, Button } from "@mantine/core";
+import { Modal, Stack } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
-import CelebrationIcon from "@mui/icons-material/CelebrationOutlined";
+import { Icon } from "@app/ui/Icon";
 import AnimatedSlideBackground from "@app/components/onboarding/slides/AnimatedSlideBackground";
 import styles from "@app/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css";
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
@@ -86,7 +87,7 @@ export function FreeLimitReachedModal({ onClose }: FreeLimitReachedModalProps) {
         content: {
           overflow: "hidden",
           border: "none",
-          background: "var(--bg-surface)",
+          background: "var(--c-surface)",
           maxHeight: "90vh",
           display: "flex",
           flexDirection: "column",
@@ -112,7 +113,11 @@ export function FreeLimitReachedModal({ onClose }: FreeLimitReachedModalProps) {
           />
           <div className={styles.heroLogo}>
             <div className={styles.heroLogoCircle}>
-              <CelebrationIcon sx={{ fontSize: 64, color: "#000000" }} />
+              <Icon
+                name="party-popper"
+                size={64}
+                style={{ color: "#000000" }}
+              />
             </div>
           </div>
         </div>
@@ -137,7 +142,7 @@ export function FreeLimitReachedModal({ onClose }: FreeLimitReachedModalProps) {
               <div className={`${styles.bodyCopy} ${styles.bodyCopyInner}`}>
                 {t(
                   "plan.freeLimit.message",
-                  "That's your whole free allowance for automation, AI and the API. Seriously impressive! Keep the momentum going for just pennies a day.",
+                  "That's your whole free allowance for automation, AI and the API this month. Seriously impressive! It resets next month, or keep the momentum going now for just pennies a day.",
                 )}
               </div>
             </div>
@@ -169,7 +174,7 @@ export function FreeLimitReachedModal({ onClose }: FreeLimitReachedModalProps) {
               >
                 <Button
                   onClick={onClose}
-                  variant="default"
+                  variant="secondary"
                   size="sm"
                   className="free-limit-modal-button"
                   style={{

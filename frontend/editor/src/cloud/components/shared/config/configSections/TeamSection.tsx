@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import {
-  Button,
   TextInput,
   Group,
   Text,
@@ -8,12 +7,15 @@ import {
   Alert,
   Table,
   Badge,
-  ActionIcon,
   Menu,
+  Modal,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { StatusBadge } from "@app/ui/StatusBadge";
 import { useTranslation } from "react-i18next";
 import { useSaaSTeam } from "@app/contexts/SaaSTeamContext";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import apiClient from "@app/services/apiClient";
 
@@ -28,9 +30,17 @@ const TeamSection: React.FC = () => {
     inviteUser,
     cancelInvitation,
     removeMember,
+    transferLeadership,
+    claimLeadership,
     leaveTeam,
     refreshTeams,
   } = useSaaSTeam();
+
+  const [transferTarget, setTransferTarget] = useState<{
+    id: number;
+    email: string;
+  } | null>(null);
+  const [transferring, setTransferring] = useState(false);
 
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviting, setInviting] = useState(false);
@@ -215,6 +225,98 @@ const TeamSection: React.FC = () => {
 
   return (
     <Stack gap="lg">
+      <Modal
+        opened={transferTarget !== null}
+        onClose={() => !transferring && setTransferTarget(null)}
+        title={t("team.transferTitle", "Transfer team ownership")}
+        zIndex={Z_INDEX_OVER_CONFIG_MODAL + 1}
+      >
+        <Stack>
+          {error && <Alert color="red">{error}</Alert>}
+          <Text>
+            {t(
+              "team.transferBody",
+              "Make {{email}} the team owner? They will control team membership and organization billing settings. You will become a member. The team's subscription and wallet stay with the team.",
+              { email: transferTarget?.email },
+            )}
+          </Text>
+          <Group justify="flex-end">
+            <Button
+              variant="tertiary"
+              disabled={transferring}
+              onClick={() => setTransferTarget(null)}
+            >
+              {t("common.cancel", "Cancel")}
+            </Button>
+            <Button
+              accent="danger"
+              disabled={transferring}
+              onClick={async () => {
+                if (!transferTarget) return;
+                setTransferring(true);
+                setError(null);
+                try {
+                  await transferLeadership(transferTarget.id);
+                  setTransferTarget(null);
+                  setSuccess(
+                    t(
+                      "team.transferSuccess",
+                      "Team ownership transferred. Your role is now member.",
+                    ),
+                  );
+                } catch {
+                  setError(
+                    t(
+                      "team.transferError",
+                      "Ownership could not be transferred. Refresh the team and try again.",
+                    ),
+                  );
+                } finally {
+                  setTransferring(false);
+                }
+              }}
+            >
+              {t("team.makeOwner", "Make owner")}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      {!isPersonalTeam &&
+        teamMembers.length > 0 &&
+        !teamMembers.some((m) => m.role === "LEADER") && (
+          <Alert title={t("team.noOwner", "This team has no owner")}>
+            <Text>
+              {t(
+                "team.recoverBody",
+                "An existing member can recover ownership to manage the team and its billing settings.",
+              )}
+            </Text>
+            <Button
+              disabled={transferring}
+              onClick={async () => {
+                setTransferring(true);
+                try {
+                  await claimLeadership();
+                  setSuccess(
+                    t("team.recoverSuccess", "You are now the team owner."),
+                  );
+                } catch {
+                  setError(
+                    t(
+                      "team.transferError",
+                      "Ownership could not be transferred. Refresh the team and try again.",
+                    ),
+                  );
+                } finally {
+                  setTransferring(false);
+                }
+              }}
+            >
+              {t("team.recoverOwner", "Become team owner")}
+            </Button>
+          </Alert>
+        )}
       {/* Header */}
       <div>
         <Group justify="space-between" align="center">
@@ -233,21 +335,20 @@ const TeamSection: React.FC = () => {
                   }}
                 />
                 <ActionIcon
-                  variant="filled"
-                  color="blue"
                   onClick={handleRenameSubmit}
                   loading={renamingTeam}
                   disabled={!newTeamName.trim()}
+                  aria-label={t("team.renameSubmit", "Save team name")}
                 >
-                  <LocalIcon icon="check" width="1rem" height="1rem" />
+                  <Icon name="check" size="1rem" />
                 </ActionIcon>
                 <ActionIcon
-                  variant="subtle"
-                  color="gray"
+                  variant="tertiary"
                   onClick={handleCancelRename}
                   disabled={renamingTeam}
+                  aria-label={t("team.renameCancel", "Cancel rename")}
                 >
-                  <LocalIcon icon="close" width="1rem" height="1rem" />
+                  <Icon name="x" size="1rem" />
                 </ActionIcon>
               </Group>
             ) : (
@@ -257,21 +358,23 @@ const TeamSection: React.FC = () => {
                 </Text>
                 {isTeamLeader && !isPersonalTeam && (
                   <ActionIcon
-                    variant="subtle"
+                    variant="tertiary"
                     size="sm"
                     onClick={handleStartRename}
                     aria-label={t("team.editName", "Edit team name")}
                   >
-                    <LocalIcon icon="edit" width="1rem" height="1rem" />
+                    <Icon name="pencil" size="1rem" />
                   </ActionIcon>
                 )}
                 {isTeamLeader && (
-                  <Badge color="blue">{t("team.leader", "LEADER")}</Badge>
+                  <StatusBadge tone="info" showDot={false}>
+                    {t("team.leader", "LEADER")}
+                  </StatusBadge>
                 )}
                 {isPersonalTeam && (
-                  <Badge color="gray" variant="light" size="xs">
+                  <StatusBadge tone="neutral" showDot={false}>
                     {t("team.personal", "Personal")}
-                  </Badge>
+                  </StatusBadge>
                 )}
               </Group>
             )}
@@ -285,13 +388,11 @@ const TeamSection: React.FC = () => {
           </div>
           {!isPersonalTeam && !isTeamLeader && !isEditingName && (
             <Button
-              color="red"
-              variant="outline"
-              size="xs"
+              accent="danger"
+              variant="secondary"
+              size="sm"
               onClick={handleLeaveTeam}
-              leftSection={
-                <LocalIcon icon="logout" width="1rem" height="1rem" />
-              }
+              leftSection={<Icon name="log-out" size="1rem" />}
             >
               {t("team.leaveButton", "Leave Team")}
             </Button>
@@ -358,11 +459,9 @@ const TeamSection: React.FC = () => {
           verticalSpacing="sm"
           withRowBorders
           highlightOnHover
-          style={
-            {
-              "--table-border-color": "var(--mantine-color-gray-3)",
-            } as React.CSSProperties
-          }
+          style={{
+            "--table-border-color": "var(--mantine-color-gray-3)",
+          }}
         >
           <Table.Thead>
             <Table.Tr
@@ -431,13 +530,15 @@ const TeamSection: React.FC = () => {
                         style={
                           member.role !== "LEADER"
                             ? {
-                                backgroundColor: "var(--tool-header-badge-bg)",
-                                color: "var(--tool-header-badge-text)",
+                                backgroundColor: "var(--c-surface-raised)",
+                                color: "var(--c-accent-fg)",
                               }
                             : undefined
                         }
                       >
-                        {member.role}
+                        {member.role === "LEADER"
+                          ? t("users.role.orgOwner", "Org Owner")
+                          : t("users.role.member", "Member")}
                       </Badge>
                     </Table.Td>
                     {isTeamLeader && !isPersonalTeam && (
@@ -449,23 +550,31 @@ const TeamSection: React.FC = () => {
                             zIndex={Z_INDEX_OVER_CONFIG_MODAL}
                           >
                             <Menu.Target>
-                              <ActionIcon variant="subtle">
-                                <LocalIcon
-                                  icon="more-vert"
-                                  width="1rem"
-                                  height="1rem"
-                                />
+                              <ActionIcon
+                                variant="tertiary"
+                                aria-label={t(
+                                  "team.members.actions",
+                                  "Member actions",
+                                )}
+                              >
+                                <Icon name="ellipsis-vertical" size="1rem" />
                               </ActionIcon>
                             </Menu.Target>
                             <Menu.Dropdown>
                               <Menu.Item
+                                onClick={() =>
+                                  setTransferTarget({
+                                    id: member.id,
+                                    email: member.email,
+                                  })
+                                }
+                              >
+                                {t("team.makeOwner", "Make owner")}
+                              </Menu.Item>
+                              <Menu.Item
                                 color="red"
                                 leftSection={
-                                  <LocalIcon
-                                    icon="person-remove"
-                                    width="1rem"
-                                    height="1rem"
-                                  />
+                                  <Icon name="user-minus" size="1rem" />
                                 }
                                 onClick={() =>
                                   handleRemove(member.id, member.email)
@@ -504,8 +613,8 @@ const TeamSection: React.FC = () => {
                       {isTeamLeader && !isPersonalTeam && (
                         <Table.Td>
                           <ActionIcon
-                            variant="subtle"
-                            color="red"
+                            variant="tertiary"
+                            accent="danger"
                             onClick={() =>
                               handleCancelInvitation(
                                 invitation.invitationId,
@@ -517,11 +626,7 @@ const TeamSection: React.FC = () => {
                               "Cancel invitation",
                             )}
                           >
-                            <LocalIcon
-                              icon="close"
-                              width="1rem"
-                              height="1rem"
-                            />
+                            <Icon name="x" size="1rem" />
                           </ActionIcon>
                         </Table.Td>
                       )}

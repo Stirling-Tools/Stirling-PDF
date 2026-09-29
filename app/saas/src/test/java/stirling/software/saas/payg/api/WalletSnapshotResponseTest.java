@@ -19,6 +19,8 @@ class WalletSnapshotResponseTest {
         return new WalletSnapshotResponse(
                 7L,
                 "subscribed",
+                new WalletSnapshotResponse.TeamHolding(true, 100, 12),
+                new WalletSnapshotResponse.ProcessorHolding(true),
                 "leader",
                 "2026-06-01",
                 "2026-07-01",
@@ -26,6 +28,7 @@ class WalletSnapshotResponseTest {
                 /* billableLimit= */ 100,
                 /* freeAllowance= */ 500,
                 /* freeRemaining= */ 488,
+                /* freeUserAllowance= */ 5,
                 new BigDecimal("1.5"),
                 "usd",
                 /* estimatedBillMinor= */ 1800L,
@@ -35,7 +38,18 @@ class WalletSnapshotResponseTest {
                 /* spendUnitsThisPeriod= */ 12,
                 new CategoryBreakdown(5, 4, 3),
                 List.of(new MemberRow("u1", "Ann", "ann@example.com", 8)),
-                List.of(new ActivityRow(1L, "api", "API usage", "2026-06-02T10:00", 4)));
+                List.of(new ActivityRow(1L, "api", "API usage", "2026-06-02T10:00", 4)),
+                /* categoryDocs= */ new CategoryBreakdown(3, 2, 1),
+                /* docsProcessedThisPeriod= */ 6,
+                /* uniquePdfsThisPeriod= */ 5,
+                /* sizeMultiplierPdfsThisPeriod= */ 2,
+                /* prepaidUnitsRemaining= */ 40_000L,
+                /* prepaidUnitsTotal= */ 120_000L,
+                /* prepaidExpiresAt= */ "2027-06-01",
+                /* billingMode= */ "prepaid",
+                /* bundleRatePerCreditMinor= */ new BigDecimal("1"),
+                null,
+                null);
     }
 
     @Test
@@ -51,6 +65,7 @@ class WalletSnapshotResponseTest {
         assertThat(r.billableLimit()).isEqualTo(100);
         assertThat(r.freeAllowance()).isEqualTo(500);
         assertThat(r.freeRemaining()).isEqualTo(488);
+        assertThat(r.freeUserAllowance()).isEqualTo(5);
         assertThat(r.pricePerDocMinor()).isEqualByComparingTo("1.5");
         assertThat(r.currency()).isEqualTo("usd");
         assertThat(r.estimatedBillMinor()).isEqualTo(1800L);
@@ -91,6 +106,8 @@ class WalletSnapshotResponseTest {
                 new WalletSnapshotResponse(
                         7L,
                         "free",
+                        new WalletSnapshotResponse.TeamHolding(false, null, 1),
+                        new WalletSnapshotResponse.ProcessorHolding(false),
                         "member",
                         "2026-06-01",
                         "2026-07-01",
@@ -98,6 +115,7 @@ class WalletSnapshotResponseTest {
                         null,
                         500,
                         500,
+                        5,
                         null,
                         null,
                         null,
@@ -107,10 +125,22 @@ class WalletSnapshotResponseTest {
                         0,
                         new CategoryBreakdown(0, 0, 0),
                         List.of(),
-                        List.of());
+                        List.of(),
+                        new CategoryBreakdown(0, 0, 0),
+                        0,
+                        0,
+                        0,
+                        0L,
+                        0L,
+                        null,
+                        "payg",
+                        null,
+                        null,
+                        null);
 
         assertThat(free.billableLimit()).isNull();
         assertThat(free.pricePerDocMinor()).isNull();
+        assertThat(free.bundleRatePerCreditMinor()).isNull();
         assertThat(free.currency()).isNull();
         assertThat(free.estimatedBillMinor()).isNull();
         assertThat(free.capUsd()).isNull();

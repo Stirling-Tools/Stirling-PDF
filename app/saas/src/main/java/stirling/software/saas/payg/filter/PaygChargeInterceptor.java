@@ -33,11 +33,13 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.service.AutomationRunContext;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.saas.accountlink.LinkedInstanceAuthenticationToken;
 import stirling.software.saas.payg.cap.AiToolRoutes;
 import stirling.software.saas.payg.cap.RequiresFeature;
 import stirling.software.saas.payg.charge.ChargeContext;
@@ -64,7 +66,7 @@ import stirling.software.saas.util.AuthenticationUtils;
  * service.
  *
  * <p>{@code afterCompletion}: branches on HTTP status — 2xx hashes the response body for OUTPUT
- * lineage; 4xx records a step append for audit; 5xx triggers refund-and-close (OPENED) or
+ * lineage; any error (4xx or 5xx) is never charged and triggers refund-and-close (OPENED) or
  * step-quota return (JOINED). Closes all input temp files and the response wrapper at the end.
  *
  * <p>Fail-open everywhere: any unexpected {@link RuntimeException} is swallowed, logged at WARN,
@@ -201,7 +203,14 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
             // AI document tools (/api/v1/ai/tools/**) live in the proprietary module and can't
             // carry @RequiresFeature, so they're recognised by path — see AiToolRoutes.
             boolean aiToolRoute = AiToolRoutes.matches(request);
-            if (!hasAutoJobPostMapping && !hasRequiresFeature && !aiToolRoute) {
+            // Any internal automation sub-step (X-Stirling-Automation) is billable automation
+            // whatever controller it lands on: integration/third-party steps and other proprietary
+            // tools carry no annotation. Matches self-hosted, which bills by the header regardless.
+            boolean automationSubStep = hasAutomationHeader(request);
+            if (!hasAutoJobPostMapping
+                    && !hasRequiresFeature
+                    && !aiToolRoute
+                    && !automationSubStep) {
                 callsShortCircuit.increment();
                 return true;
             }
@@ -284,13 +293,25 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
         request.setAttribute(ATTR_INPUT_BYTES, totalInputBytes);
         request.setAttribute(ATTR_TOOL_ID, resolveToolId(request));
 
+        // Automation-run correlation id, honoured ONLY from an internal automation dispatch.
+        // InternalApiClient stamps X-Stirling-Automation on every loopback sub-step alongside the
+        // run id, so a genuine pipeline / policy / AI run always carries both. A raw external
+        // request that sets X-Stirling-Run-Id on its own is ignored (each such call stays its own
+        // charge): otherwise an API caller could pin a constant run id to collapse separate
+        // same-content calls into one charge, defeating "charge per API call". Null → standalone.
+        String headerRunId = request.getHeader(AutomationRunContext.RUN_ID_HEADER);
+        String runId =
+                (hasAutomationHeader(request) && headerRunId != null && !headerRunId.isBlank())
+                        ? headerRunId
+                        : null;
         ChargeContext ctx =
                 new ChargeContext(
                         currentUser.getId(),
                         currentUser.getTeam() == null ? null : currentUser.getTeam().getId(),
                         determineSource(request, auth),
                         ProcessType.SINGLE_TOOL,
-                        category);
+                        category,
+                        runId);
 
         ChargeOutcome outcome;
         try {
@@ -372,9 +393,14 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
             return;
         }
         if (status >= 400) {
-            // 4xx: customer paid for the attempt. No OUTPUT recording, no refund.
-            // Still a successful-from-billing-standpoint OPENED process — meter it below.
-            meterIfOpened(jobId, disposition);
+            // Errored work is never charged: refund the request that opened the process, or drop
+            // the added step for a joined follow-up.
+            if (disposition == ChargeOutcome.Disposition.OPENED) {
+                chargeService.markFirstStepFailed(jobId, "first-step-4xx:" + status);
+                refundsCounter.increment();
+            } else {
+                chargeService.decrementStepCount(jobId);
+            }
             return;
         }
 
@@ -485,6 +511,11 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
         if (auth instanceof ApiKeyAuthenticationToken && auth.getPrincipal() instanceof User u) {
             return u;
         }
+        // InstanceAiUsageService meters linked instances; their instance-id principal would only
+        // fail the UUID parse below and log a spurious error per call.
+        if (auth instanceof LinkedInstanceAuthenticationToken) {
+            return null;
+        }
         try {
             String supabaseId = AuthenticationUtils.extractSupabaseId(auth);
             if (supabaseId == null) {
@@ -498,9 +529,20 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
         }
     }
 
+    /**
+     * True when the request carries the internal-dispatch marker InternalApiClient stamps on every
+     * loopback sub-step ({@code X-Stirling-Automation: true}). This is the trust boundary for both
+     * the AUTOMATION billing category and for honouring {@code X-Stirling-Run-Id}: an external
+     * caller can't group charges via a run id without also declaring itself automation (which
+     * changes its own billing category).
+     */
+    private static boolean hasAutomationHeader(HttpServletRequest request) {
+        String header = request.getHeader(AUTOMATION_HEADER);
+        return header != null && "true".equalsIgnoreCase(header.trim());
+    }
+
     private static JobSource determineSource(HttpServletRequest request, Authentication auth) {
-        String automationHeader = request.getHeader(AUTOMATION_HEADER);
-        if (automationHeader != null && "true".equalsIgnoreCase(automationHeader.trim())) {
+        if (hasAutomationHeader(request)) {
             return JobSource.PIPELINE;
         }
         String desktopHeader = request.getHeader(DESKTOP_CLIENT_HEADER);
@@ -527,8 +569,7 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
      */
     private static BillingCategory determineCategory(
             HandlerMethod handler, HttpServletRequest request, Authentication auth) {
-        String automationHeader = request.getHeader(AUTOMATION_HEADER);
-        if (automationHeader != null && "true".equalsIgnoreCase(automationHeader.trim())) {
+        if (hasAutomationHeader(request)) {
             return BillingCategory.AUTOMATION;
         }
         RequiresFeature ann =

@@ -1,14 +1,14 @@
 import { useEffect, useRef } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { message } from "@tauri-apps/plugin-dialog";
-import { useFileState, useFileActions } from "@app/contexts/FileContext";
+import { useFileSelectors, useFileActions } from "@app/contexts/FileContext";
 import { downloadFile } from "@app/services/downloadService";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import { useTranslation } from "react-i18next";
 
 export function useExitWarning() {
   const { t } = useTranslation();
-  const { selectors } = useFileState();
+  const selectors = useFileSelectors();
   const { actions: fileActions } = useFileActions();
   const selectorsRef = useRef(selectors);
   const isClosingRef = useRef(false);
@@ -21,14 +21,21 @@ export function useExitWarning() {
     const handleCloseRequested = async (event: {
       preventDefault: () => void;
     }) => {
-      event.preventDefault();
-
       if (isClosingRef.current) {
         return;
       }
 
       const allStubs = selectorsRef.current.getStirlingFileStubs();
       const dirtyStubs = allStubs.filter((stub) => stub.isDirty);
+
+      // Nothing unsaved: don't preventDefault, so the window closes natively
+      // without depending on the JS dialog/destroy round-trip below.
+      if (dirtyStubs.length === 0) {
+        isClosingRef.current = true;
+        return;
+      }
+
+      event.preventDefault();
 
       if (dirtyStubs.length > 0) {
         const fileList = dirtyStubs.map((f) => `• ${f.name}`).join("\n");

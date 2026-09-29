@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
-import { Button, Collapse, Select, Group } from "@mantine/core";
+import { Collapse, Select, Group } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import licenseService, {
   PlanTier,
@@ -88,6 +89,7 @@ const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
         </div>
         {currency && onCurrencyChange && currencyOptions && (
           <Select
+            aria-label={t("plan.availablePlans.currency", "Billing currency")}
             value={currency}
             onChange={(value) => onCurrencyChange(value || "usd")}
             data={currencyOptions}
@@ -128,7 +130,7 @@ const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
 
       <div style={{ textAlign: "center" }}>
         <Button
-          variant="subtle"
+          variant="tertiary"
           onClick={() => setShowComparison(!showComparison)}
         >
           {showComparison

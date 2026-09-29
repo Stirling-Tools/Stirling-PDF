@@ -14,6 +14,27 @@ tasks:
     deps: [ ':frontend:prepare' ]
     cmds:
       - npx playwright test --project=stubbed {{.CLI_ARGS}}
+      # One worker pool serves every project in an invocation, so the
+      # frame-sampling viewer swap specs get their own run with one worker.
+      - npx playwright test --project=stubbed-viewer-swap {{.CLI_ARGS}} --workers=1
+
+  stubbed-desktop:
+    desc: "Run the disk-link E2E suite against a desktop-mode build"
+    dir: frontend/editor
+    deps: [ ':frontend:prepare' ]
+    env:
+      PW_DESKTOP: "1"
+    cmds:
+      - npx playwright test --project=stubbed-desktop {{.CLI_ARGS}}
+
+  stubbed-project:
+    desc: "Run the stubbed E2E suite for a single Playwright project"
+    dir: frontend/editor
+    deps: [ ':frontend:prepare' ]
+    vars:
+      PROJECT: '{{.PROJECT | default "stubbed"}}'
+    cmds:
+      - npx playwright test --project={{.PROJECT}} {{.CLI_ARGS}}
 
   live:
     desc: "Run live E2E tests"
@@ -162,6 +183,7 @@ tasks:
     deps: [ ':frontend:prepare' ]
     cmds:
       - npx playwright test --project=stubbed --project=stubbed-firefox --project=stubbed-webkit {{.CLI_ARGS}}
+      - npx playwright test --project=stubbed-viewer-swap --project=stubbed-viewer-swap-firefox --project=stubbed-viewer-swap-webkit {{.CLI_ARGS}} --workers=1
 
   check:
     desc: "Run all E2E tests not requiring Docker"

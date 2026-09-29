@@ -84,8 +84,6 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/safari-pinned-tab.svg",
                         "/icons/**",
                         "/modern-logo/**",
-                        "/classic-logo/**",
-                        "/robots.txt",
                         "/3rdPartyLicenses.json",
                         "/pdfjs/**",
                         "/pdfjs-legacy/**",
@@ -96,8 +94,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/vendor/**",
                         "/samples/**",
                         "/og_images/**",
-                        "/Login/**",
-                        "/manifest-classic.json")
+                        "/Login/**")
                 .addResourceLocations(
                         staticPath,
                         "classpath:/static/",
@@ -124,9 +121,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         staticPath + "icons/",
                         "classpath:/static/icons/",
                         staticPath + "modern-logo/",
-                        "classpath:/static/modern-logo/",
-                        staticPath + "classic-logo/",
-                        "classpath:/static/classic-logo/")
+                        "classpath:/static/modern-logo/")
                 .setCacheControl(
                         CacheControl.maxAge(Duration.ofDays(1))
                                 .cachePublic()
@@ -184,7 +179,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
                             "X-Page-Number",
                             "X-Page-Size",
                             "Content-Disposition",
-                            "Content-Type")
+                            "Content-Type",
+                            "X-Stirling-Skipped-Field-Edits",
+                            "X-Stirling-Skipped-Field-Edits-Total",
+                            "X-Stirling-Detected-Fields")
                     .allowCredentials(true)
                     .maxAge(3600);
         } else if (hasConfiguredOrigins) {
@@ -230,7 +228,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
                             "X-Page-Number",
                             "X-Page-Size",
                             "Content-Disposition",
-                            "Content-Type")
+                            "Content-Type",
+                            "X-Stirling-Skipped-Field-Edits",
+                            "X-Stirling-Skipped-Field-Edits-Total",
+                            "X-Stirling-Detected-Fields")
                     .allowCredentials(true)
                     .maxAge(3600);
         } else {
@@ -257,7 +258,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
                             "X-Page-Number",
                             "X-Page-Size",
                             "Content-Disposition",
-                            "Content-Type")
+                            "Content-Type",
+                            "X-Stirling-Skipped-Field-Edits",
+                            "X-Stirling-Skipped-Field-Edits-Total",
+                            "X-Stirling-Detected-Fields")
                     .allowCredentials(true)
                     .maxAge(3600);
         }

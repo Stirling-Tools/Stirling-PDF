@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import { Group, Button, Text, ActionIcon, Stack, Select } from "@mantine/core";
+import { Group, Text, Stack, Select } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import SortIcon from "@mui/icons-material/Sort";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import { Icon } from "@app/ui/Icon";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 interface MergeFileSorterProps {
@@ -67,8 +67,8 @@ const MergeFileSorter: React.FC<MergeFileSorterProps> = ({
           />
 
           <ActionIcon
-            variant="light"
-            size="md"
+            variant="secondary"
+            size="sm"
             onClick={handleDirectionToggle}
             disabled={disabled}
             title={
@@ -76,15 +76,20 @@ const MergeFileSorter: React.FC<MergeFileSorterProps> = ({
                 ? t("merge.sortBy.ascending", "Ascending")
                 : t("merge.sortBy.descending", "Descending")
             }
+            aria-label={
+              ascending
+                ? t("merge.sortBy.ascending", "Ascending")
+                : t("merge.sortBy.descending", "Descending")
+            }
           >
-            {ascending ? <ArrowUpwardIcon /> : <ArrowDownwardIcon />}
+            {ascending ? <Icon name="arrow-up" /> : <Icon name="arrow-down" />}
           </ActionIcon>
         </Group>
 
         <Button
-          variant="light"
-          size="xs"
-          leftSection={<SortIcon />}
+          variant="secondary"
+          size="sm"
+          leftSection={<Icon name="list-sort-descending" />}
           onClick={handleSort}
           disabled={disabled}
           fullWidth

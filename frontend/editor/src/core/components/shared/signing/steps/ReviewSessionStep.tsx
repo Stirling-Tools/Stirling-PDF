@@ -1,13 +1,10 @@
-import { Button, Stack, Text, Group, Divider, TextInput } from "@mantine/core";
+import { Stack, Text, Group, Divider, TextInput } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
-import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
-import PeopleIcon from "@mui/icons-material/People";
-import DrawIcon from "@mui/icons-material/Draw";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import SendIcon from "@mui/icons-material/Send";
-import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import { Icon } from "@app/ui/Icon";
 import type { SignatureSettings } from "@app/components/tools/certSign/SignatureSettingsInput";
 import type { FileState } from "@app/types/file";
+import { formatFileSize } from "@app/utils/fileUtils";
 
 interface ReviewSessionStepProps {
   selectedFile: FileState;
@@ -41,8 +38,10 @@ export const ReviewSessionStep: React.FC<ReviewSessionStepProps> = ({
       {/* Document Info */}
       <div>
         <Group gap="xs" mb="xs">
-          <PictureAsPdfIcon
-            sx={{ fontSize: 18, color: "var(--mantine-color-red-6)" }}
+          <Icon
+            name="file-pdf"
+            size={18}
+            style={{ color: "var(--mantine-color-red-6)" }}
           />
           <Text size="sm" fw={600}>
             {t("groupSigning.steps.review.document", "Document")}
@@ -56,10 +55,12 @@ export const ReviewSessionStep: React.FC<ReviewSessionStepProps> = ({
             backgroundColor: "var(--mantine-color-default-hover)",
           }}
         >
-          <Text size="sm">{selectedFile.name}</Text>
+          <Text size="sm" style={{ overflowWrap: "anywhere" }}>
+            {selectedFile.name}
+          </Text>
           {selectedFile.size && (
             <Text size="xs" c="dimmed">
-              {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+              {formatFileSize(selectedFile.size)}
             </Text>
           )}
         </div>
@@ -70,7 +71,7 @@ export const ReviewSessionStep: React.FC<ReviewSessionStepProps> = ({
       {/* Participants */}
       <div>
         <Group gap="xs" mb="xs">
-          <PeopleIcon sx={{ fontSize: 18 }} />
+          <Icon name="users" size={18} />
           <Text size="sm" fw={600}>
             {t("groupSigning.steps.review.participants", "Participants")}
           </Text>
@@ -88,7 +89,7 @@ export const ReviewSessionStep: React.FC<ReviewSessionStepProps> = ({
       {/* Signature Settings */}
       <div>
         <Group gap="xs" mb="xs">
-          <DrawIcon sx={{ fontSize: 18 }} />
+          <Icon name="pen-tool" size={18} />
           <Text size="sm" fw={600}>
             {t(
               "groupSigning.steps.review.signatureSettings",
@@ -149,7 +150,7 @@ export const ReviewSessionStep: React.FC<ReviewSessionStepProps> = ({
       {/* Due Date */}
       <div>
         <Group gap="xs" mb="xs">
-          <CalendarTodayIcon sx={{ fontSize: 18 }} />
+          <Icon name="calendar" size={18} />
           <Text size="sm" fw={600}>
             {t("groupSigning.steps.review.dueDate", "Due Date (Optional)")}
           </Text>
@@ -168,9 +169,9 @@ export const ReviewSessionStep: React.FC<ReviewSessionStepProps> = ({
 
       <Group gap="sm" mt="md">
         <Button
-          variant="default"
+          variant="secondary"
           onClick={onBack}
-          leftSection={<ArrowBackIcon sx={{ fontSize: 16 }} />}
+          leftSection={<Icon name="arrow-left" size={16} />}
         >
           {t("groupSigning.steps.back", "Back")}
         </Button>
@@ -178,8 +179,8 @@ export const ReviewSessionStep: React.FC<ReviewSessionStepProps> = ({
           onClick={onSubmit}
           disabled={disabled}
           style={{ flex: 1 }}
-          leftSection={<SendIcon sx={{ fontSize: 16 }} />}
-          color="green"
+          leftSection={<Icon name="send" size={16} />}
+          accent="success"
         >
           {t("groupSigning.steps.review.send", "Send Signing Requests")}
         </Button>

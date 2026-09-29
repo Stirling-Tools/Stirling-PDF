@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Stack, Text, Group, Badge } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import CheckIcon from "@mui/icons-material/Check";
+import { Icon } from "@app/ui/Icon";
 import { SelectDocumentStep } from "@app/components/shared/signing/steps/SelectDocumentStep";
 import { SelectParticipantsStep } from "@app/components/shared/signing/steps/SelectParticipantsStep";
 import { ConfigureSignatureDefaultsStep } from "@app/components/shared/signing/steps/ConfigureSignatureDefaultsStep";
@@ -47,11 +47,14 @@ const StepWrapper: React.FC<StepWrapperProps> = ({
           : "1px solid var(--mantine-color-default-border)",
         borderRadius: "var(--mantine-radius-default)",
         backgroundColor: isActive
-          ? "var(--mantine-color-blue-0)"
+          ? "var(--mantine-color-blue-light)"
           : isCompleted
-            ? "var(--mantine-color-gray-0)"
+            ? "var(--mantine-color-gray-light)"
             : "transparent",
-        opacity: !isActive && !isCompleted ? 0.6 : 1,
+        // Pending steps recede via a muted text colour rather than opacity,
+        // which would drag their labels below the contrast floor.
+        color:
+          !isActive && !isCompleted ? "var(--c-text-muted)" : "var(--c-text)",
       }}
     >
       <Group gap="sm" mb={isActive ? "md" : 0}>
@@ -73,7 +76,7 @@ const StepWrapper: React.FC<StepWrapperProps> = ({
             fontSize: "14px",
           }}
         >
-          {isCompleted ? <CheckIcon sx={{ fontSize: 18 }} /> : number}
+          {isCompleted ? <Icon name="check" size={18} /> : number}
         </div>
         <div style={{ flex: 1 }}>
           <Text size="sm" fw={600}>

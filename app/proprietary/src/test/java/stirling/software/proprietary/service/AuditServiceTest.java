@@ -35,6 +35,8 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.InternalApiClient;
+import stirling.software.proprietary.audit.AuditContext;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.audit.Audited;
@@ -84,6 +86,61 @@ class AuditServiceTest {
     }
 
     @Nested
+    @DisplayName("captureCurrentSource()")
+    class CaptureSource {
+
+        @Test
+        @DisplayName("a plain authenticated web tool call is WEB")
+        void plainWebIsWeb() {
+            authenticateAs("alice");
+            bindRequest(new MockHttpServletRequest("POST", "/api/v1/general/merge-pdfs"));
+
+            assertThat(service.captureCurrentSource()).isEqualTo("WEB");
+        }
+
+        @Test
+        @DisplayName("the automation marker header demotes WEB to AUTOMATION")
+        void automationHeaderIsAutomation() {
+            authenticateAs("alice");
+            MockHttpServletRequest req =
+                    new MockHttpServletRequest("POST", "/api/v1/general/merge");
+            req.addHeader(InternalApiClient.AUTOMATION_HEADER, "true");
+            bindRequest(req);
+
+            assertThat(service.captureCurrentSource()).isEqualTo("AUTOMATION");
+        }
+
+        @Test
+        @DisplayName("the AI surface demotes WEB to AI")
+        void aiSurfaceIsAi() {
+            authenticateAs("alice");
+            bindRequest(new MockHttpServletRequest("POST", "/api/v1/ai/tools/ask"));
+
+            assertThat(service.captureCurrentSource()).isEqualTo("AI");
+        }
+
+        @Test
+        @DisplayName("the AI surface is matched after stripping the deployment context path")
+        void aiSurfaceWithContextPathIsAi() {
+            authenticateAs("alice");
+            MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/ai/tools/ask");
+            req.setContextPath("/stirling");
+            req.setRequestURI("/stirling/api/v1/ai/tools/ask");
+            bindRequest(req);
+
+            assertThat(service.captureCurrentSource()).isEqualTo("AI");
+        }
+
+        @Test
+        @DisplayName("an unauthenticated request is SYSTEM, not WEB")
+        void anonymousIsSystem() {
+            bindRequest(new MockHttpServletRequest("POST", "/api/v1/general/merge-pdfs"));
+
+            assertThat(service.captureCurrentSource()).isEqualTo("SYSTEM");
+        }
+    }
+
+    @Nested
     @DisplayName("audit() gating")
     class AuditGating {
 
@@ -107,6 +164,42 @@ class AuditServiceTest {
             nonEe.audit(AuditEventType.USER_LOGIN, new HashMap<>(), AuditLevel.BASIC);
 
             verify(repository, never()).add(any(AuditEvent.class));
+        }
+
+        @Test
+        @DisplayName("records document-processing events even without EE (Documents feed)")
+        void recordsDocumentEventsWithoutEE() {
+            AuditService nonEe =
+                    new AuditService(
+                            repository, auditConfig, false, pdfDocumentFactory, jwtService);
+            authenticateAs("alice");
+
+            nonEe.audit(AuditEventType.PDF_PROCESS, new HashMap<>(), AuditLevel.BASIC);
+            nonEe.audit(AuditEventType.FILE_OPERATION, new HashMap<>(), AuditLevel.BASIC);
+
+            org.mockito.ArgumentCaptor<AuditEvent> captor =
+                    org.mockito.ArgumentCaptor.forClass(AuditEvent.class);
+            verify(repository, org.mockito.Mockito.times(2)).add(captor.capture());
+            assertThat(captor.getAllValues())
+                    .extracting(AuditEvent::getType)
+                    .containsExactly(
+                            AuditEventType.PDF_PROCESS.name(),
+                            AuditEventType.FILE_OPERATION.name());
+        }
+
+        @Test
+        @DisplayName("type-aware shouldAudit lets doc events through without EE, blocks others")
+        void typeAwareShouldAuditWithoutEE() throws Exception {
+            AuditService nonEe =
+                    new AuditService(
+                            repository, auditConfig, false, pdfDocumentFactory, jwtService);
+            Method m = Object.class.getMethod("toString");
+
+            assertThat(nonEe.shouldAudit(AuditEventType.PDF_PROCESS, m, auditConfig)).isTrue();
+            assertThat(nonEe.shouldAudit(AuditEventType.FILE_OPERATION, m, auditConfig)).isTrue();
+            assertThat(nonEe.shouldAudit(AuditEventType.USER_LOGIN, m, auditConfig)).isFalse();
+            // With EE, non-doc events at/under the configured level audit too.
+            assertThat(service.shouldAudit(AuditEventType.USER_LOGIN, m, auditConfig)).isTrue();
         }
 
         @Test
@@ -659,6 +752,57 @@ class AuditServiceTest {
             when(jwtService.extractClaimsAllowExpired("tok")).thenReturn(Map.of("authType", "API"));
 
             assertThat(service.captureCurrentOrigin()).isEqualTo("API");
+        }
+    }
+
+    @Nested
+    @DisplayName("addAutomationContext")
+    class AddAutomationContext {
+
+        @Test
+        @DisplayName("caps and strips newlines from a spoofable policy-name header")
+        void capsPolicyNameHeader() {
+            MockHttpServletRequest req =
+                    new MockHttpServletRequest("POST", "/api/v1/misc/compress-pdf");
+            req.addHeader(InternalApiClient.POLICY_NAME_HEADER, "evil\r\nname" + "x".repeat(500));
+            Map<String, Object> data = new HashMap<>();
+
+            service.addAutomationContext(data, req);
+
+            String stored = (String) data.get("policyName");
+            assertThat(stored).hasSize(200);
+            assertThat(stored).doesNotContain("\r").doesNotContain("\n");
+        }
+
+        @Test
+        @DisplayName("caps the number of persisted policy steps")
+        void capsPolicySteps() {
+            MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/policies/run");
+            req.setAttribute(
+                    AuditContext.REQ_ATTR_POLICY_STEPS,
+                    java.util.stream.IntStream.range(0, 100)
+                            .mapToObj(i -> "/api/v1/misc/step-" + i)
+                            .toList());
+            Map<String, Object> data = new HashMap<>();
+
+            service.addAutomationContext(data, req);
+
+            @SuppressWarnings("unchecked")
+            java.util.List<String> stored = (java.util.List<String>) data.get("policySteps");
+            assertThat(stored).hasSize(50);
+        }
+
+        @Test
+        @DisplayName("marks automation from the header")
+        void marksAutomationHeader() {
+            MockHttpServletRequest req =
+                    new MockHttpServletRequest("POST", "/api/v1/misc/compress-pdf");
+            req.addHeader(InternalApiClient.AUTOMATION_HEADER, "true");
+            Map<String, Object> data = new HashMap<>();
+
+            service.addAutomationContext(data, req);
+
+            assertThat(data).containsEntry("automation", Boolean.TRUE);
         }
     }
 

@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import {
   Modal,
   Text,
-  Button,
   Group,
   Stack,
   Checkbox,
@@ -11,15 +10,24 @@ import {
   Badge,
   SimpleGrid,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import DocumentThumbnail from "@app/components/shared/filePreview/DocumentThumbnail";
 import { FileId } from "@app/types/file";
+import type { StoredStirlingFileRecord } from "@app/services/fileStorage";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
+
+type StoredFileItem = Partial<StoredStirlingFileRecord> & {
+  id: FileId;
+  file?: File;
+  arrayBuffer?: () => Promise<ArrayBuffer>;
+  processedFile?: { isEncrypted?: boolean };
+};
 
 interface FilePickerModalProps {
   opened: boolean;
   onClose: () => void;
-  storedFiles: any[]; // Files from storage (various formats supported)
+  storedFiles: StoredFileItem[];
   onSelectFiles: (selectedFiles: File[]) => void;
 }
 
@@ -84,7 +92,7 @@ const FilePickerModal = ({
             const blob = new Blob([arrayBuffer], {
               type: fileItem.type || "application/pdf",
             });
-            return new File([blob], fileItem.name, {
+            return new File([blob], fileItem.name ?? "", {
               type: fileItem.type || "application/pdf",
               lastModified: fileItem.lastModified || Date.now(),
             });
@@ -95,7 +103,7 @@ const FilePickerModal = ({
             const blob = new Blob([fileItem.data], {
               type: fileItem.type || "application/pdf",
             });
-            return new File([blob], fileItem.name, {
+            return new File([blob], fileItem.name ?? "", {
               type: fileItem.type || "application/pdf",
               lastModified: fileItem.lastModified || Date.now(),
             });
@@ -151,10 +159,10 @@ const FilePickerModal = ({
                 )}
               </Text>
               <Group gap="xs">
-                <Button size="xs" variant="light" onClick={selectAll}>
+                <Button size="sm" variant="secondary" onClick={selectAll}>
                   {t("pageEdit.selectAll", "Select All")}
                 </Button>
-                <Button size="xs" variant="light" onClick={selectNone}>
+                <Button size="sm" variant="secondary" onClick={selectNone}>
                   {t("pageEdit.deselectAll", "Select None")}
                 </Button>
               </Group>
@@ -189,6 +197,13 @@ const FilePickerModal = ({
                           checked={isSelected}
                           onChange={() => toggleFileSelection(fileId)}
                           onClick={(e) => e.stopPropagation()}
+                          aria-label={t(
+                            "fileUpload.selectFile",
+                            "Select {{name}}",
+                            {
+                              name: file.name,
+                            },
+                          )}
                         />
 
                         {/* Thumbnail */}
@@ -204,7 +219,7 @@ const FilePickerModal = ({
                           }}
                         >
                           <DocumentThumbnail
-                            file={file}
+                            file={file.file ?? null}
                             thumbnail={
                               file.processedFile?.isEncrypted
                                 ? undefined
@@ -239,7 +254,7 @@ const FilePickerModal = ({
 
             {/* Selection summary */}
             {selectedFileIds.length > 0 && (
-              <Text size="sm" c="blue" ta="center">
+              <Text size="sm" c="var(--c-accent-text)" ta="center">
                 {selectedFileIds.length}{" "}
                 {t("fileManager.filesSelected", "files selected")}
               </Text>
@@ -249,7 +264,7 @@ const FilePickerModal = ({
 
         {/* Action buttons */}
         <Group justify="flex-end" mt="md">
-          <Button variant="light" onClick={onClose}>
+          <Button variant="secondary" onClick={onClose}>
             {t("close", "Cancel")}
           </Button>
           <Button

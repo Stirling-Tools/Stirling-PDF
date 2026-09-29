@@ -9,7 +9,13 @@
       ],
       "@proprietary/*": ["../../src/proprietary/*"],
       "@core/*": ["../../src/core/*"],
-      "@shared/*": ["../../../shared/*"]
+      "@app/portal/*": [
+        "../../src/prototypes/portal/*",
+        "../../src/proprietary/portal/*",
+        "../../src/core/portal/*",
+        "../../src/portal/*"
+      ],
+      "@portal/*": ["../../src/portal/*"]
     }
   },
   "include": [

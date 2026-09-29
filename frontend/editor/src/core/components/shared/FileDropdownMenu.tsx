@@ -1,9 +1,8 @@
 import React from "react";
-import { Menu, Loader, Group, Text, ActionIcon, Tooltip } from "@mantine/core";
+import { Menu, Loader, Group, Text, Tooltip } from "@mantine/core";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import CloseIcon from "@mui/icons-material/Close";
+import { Icon } from "@app/ui/Icon";
 import FitText from "@app/components/shared/FitText";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import { FileId } from "@app/types/file";
@@ -33,13 +32,18 @@ export const FileDropdownMenu: React.FC<FileDropdownMenuProps> = ({
   return (
     <Menu trigger="click" position="bottom" width="30rem">
       <Menu.Target>
+        {/* Menu.Target stamps aria-haspopup/aria-expanded on its child; those are
+            only permitted once the element declares a control role. It stays a
+            div because it renders inside the workbench SegmentedControl's
+            <label>, which may not contain interactive content. */}
         <div
+          role="button"
           style={{ ...viewOptionStyle, cursor: "pointer", maxWidth: "100%" }}
         >
           {switchingTo === "viewer" ? (
             <Loader size="xs" />
           ) : (
-            <InsertDriveFileIcon fontSize="small" style={{ flexShrink: 0 }} />
+            <Icon name="file" size={20} style={{ flexShrink: 0 }} />
           )}
           <PrivateContent>
             <FitText
@@ -48,13 +52,13 @@ export const FileDropdownMenu: React.FC<FileDropdownMenuProps> = ({
               style={{ maxWidth: "12rem", display: "inline-block" }}
             />
           </PrivateContent>
-          <KeyboardArrowDownIcon fontSize="small" style={{ flexShrink: 0 }} />
+          <Icon name="chevron-down" size={20} style={{ flexShrink: 0 }} />
         </div>
       </Menu.Target>
       <Menu.Dropdown
         style={{
-          backgroundColor: "var(--bg-file-manager)",
-          border: "1px solid var(--border-subtle)",
+          backgroundColor: "var(--c-bg)",
+          border: "1px solid var(--c-border-subtle)",
           borderRadius: "8px",
           boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
           maxHeight: "50vh",
@@ -102,17 +106,21 @@ export const FileDropdownMenu: React.FC<FileDropdownMenuProps> = ({
                       withArrow
                     >
                       <ActionIcon
-                        component="div"
-                        size="xs"
-                        variant="subtle"
-                        color="red"
+                        as="span"
+                        size="sm"
+                        variant="tertiary"
+                        accent="danger"
+                        aria-label={t(
+                          "fileDropdownMenu.closeFile",
+                          "Close file",
+                        )}
                         onClick={(e) => {
                           e.stopPropagation();
                           onFileRemove(file.fileId as FileId);
                         }}
                         style={{ flexShrink: 0 }}
                       >
-                        <CloseIcon style={{ fontSize: 14 }} />
+                        <Icon name="x" size={14} />
                       </ActionIcon>
                     </Tooltip>
                   )}

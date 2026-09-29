@@ -1,14 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
-import {
-  Stack,
-  Group,
-  Text,
-  Button,
-  SegmentedControl,
-  Loader,
-  Alert,
-  Card,
-} from "@mantine/core";
+import { SettingsEmptyState } from "@app/components/shared/config/SettingsEmptyState";
+import { Stack, Group, Text, Loader, Alert, Card } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import usageAnalyticsService, {
@@ -16,9 +10,8 @@ import usageAnalyticsService, {
 } from "@app/services/usageAnalyticsService";
 import UsageAnalyticsChart from "@app/components/shared/config/configSections/usage/UsageAnalyticsChart";
 import UsageAnalyticsTable from "@app/components/shared/config/configSections/usage/UsageAnalyticsTable";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
-import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import EnterpriseRequiredBanner from "@app/components/shared/config/EnterpriseRequiredBanner";
 
@@ -236,12 +229,15 @@ const AdminUsageSection: React.FC = () => {
 
   if (!data) {
     return (
-      <Alert color="yellow" title={t("usage.noData", "No data available")}>
+      <SettingsEmptyState
+        icon="chart-line"
+        title={t("usage.noData", "No usage yet")}
+      >
         {t(
           "usage.noDataMessage",
-          "No usage statistics are currently available.",
+          "Endpoint activity appears here once people start running tools.",
         )}
-      </Alert>
+      </SettingsEmptyState>
     );
   }
 
@@ -274,7 +270,6 @@ const AdminUsageSection: React.FC = () => {
 
   return (
     <Stack gap="lg">
-      <LoginRequiredBanner show={!loginEnabled} />
       <EnterpriseRequiredBanner
         show={!hasEnterpriseLicense}
         featureName={t(
@@ -286,7 +281,7 @@ const AdminUsageSection: React.FC = () => {
       {/* Info banner about usage analytics and audit relationship */}
       {loginEnabled && hasEnterpriseLicense && (
         <Alert
-          icon={<LocalIcon icon="info" width="1.2rem" height="1.2rem" />}
+          icon={<Icon name="info" size="1.2rem" />}
           title={t("usage.aboutUsageAnalytics", "About Usage Analytics")}
           color="cyan"
           variant="light"
@@ -300,30 +295,18 @@ const AdminUsageSection: React.FC = () => {
             </Text>
             <Group gap="sm">
               <Button
-                variant="light"
-                size="xs"
+                variant="secondary"
+                size="sm"
                 onClick={() => navigate("/settings/adminSecurity")}
-                rightSection={
-                  <LocalIcon
-                    icon="arrow-forward"
-                    width="0.9rem"
-                    height="0.9rem"
-                  />
-                }
+                rightSection={<Icon name="arrow-right" size="0.9rem" />}
               >
                 {t("usage.configureSettings", "Configure Analytics Settings")}
               </Button>
               <Button
-                variant="light"
-                size="xs"
+                variant="secondary"
+                size="sm"
                 onClick={() => navigate("/settings/adminSecurity#auditLogging")}
-                rightSection={
-                  <LocalIcon
-                    icon="arrow-forward"
-                    width="0.9rem"
-                    height="0.9rem"
-                  />
-                }
+                rightSection={<Icon name="arrow-right" size="0.9rem" />}
               >
                 {t("usage.viewAuditLogs", "View Audit Logs")}
               </Button>
@@ -339,30 +322,28 @@ const AdminUsageSection: React.FC = () => {
             <Group>
               <SegmentedControl
                 value={displayMode}
-                onChange={(value) =>
-                  setDisplayMode(value as "top10" | "top20" | "all")
-                }
-                disabled={showDemoData}
-                data={[
+                onChange={(value) => setDisplayMode(value)}
+                options={[
                   {
                     value: "top10",
                     label: t("usage.controls.top10", "Top 10"),
+                    disabled: showDemoData,
                   },
                   {
                     value: "top20",
                     label: t("usage.controls.top20", "Top 20"),
+                    disabled: showDemoData,
                   },
                   {
                     value: "all",
                     label: t("usage.controls.all", "All"),
+                    disabled: showDemoData,
                   },
                 ]}
               />
               <Button
-                variant="outline"
-                leftSection={
-                  <LocalIcon icon="refresh" width="1rem" height="1rem" />
-                }
+                variant="secondary"
+                leftSection={<Icon name="refresh-cw" size="1rem" />}
                 onClick={handleRefresh}
                 loading={loading}
                 disabled={showDemoData}
@@ -378,20 +359,22 @@ const AdminUsageSection: React.FC = () => {
             </Text>
             <SegmentedControl
               value={dataType}
-              onChange={(value) => setDataType(value as "all" | "api" | "ui")}
-              disabled={showDemoData}
-              data={[
+              onChange={(value) => setDataType(value)}
+              options={[
                 {
                   value: "all",
                   label: t("usage.controls.dataType.all", "All"),
+                  disabled: showDemoData,
                 },
                 {
                   value: "api",
                   label: t("usage.controls.dataType.api", "API"),
+                  disabled: showDemoData,
                 },
                 {
                   value: "ui",
                   label: t("usage.controls.dataType.ui", "UI"),
+                  disabled: showDemoData,
                 },
               ]}
             />

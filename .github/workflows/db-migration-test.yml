@@ -1,12 +1,13 @@
 name: DB migration smoke test
 
-# Boots the current Stirling-PDF JAR against H2 fixtures captured from past
-# releases (v2.0.0 / v2.5.0 / v2.10.0) and verifies admin login still works.
+# Tests all H2 fixtures and native PostgreSQL upgrades from v2.5.0 onwards.
+# Historical releases need PREMIUM_KEY_ENTERPRISE to connect to PostgreSQL.
 # Catches schema changes that would break existing user databases under
 # Hibernate's `ddl-auto=update` upgrade path.
 
 on:
   workflow_call:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -17,42 +18,55 @@ jobs:
 
   migration-test:
     needs: pick
-    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-8' }}
-    timeout-minutes: 30
-    env:
-      DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
+    name: DB upgrade (${{ matrix.database }})
+    strategy:
+      fail-fast: false
+      matrix:
+        # Historical releases require a license secret unavailable to fork PRs.
+        database: ${{ fromJSON(needs.pick.outputs.is_fork == 'true' && '["h2"]' || '["h2", "postgresql"]') }}
+    environment:
+      name: ci-unsigned
+      deployment: false
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
           egress-policy: audit
 
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Set up JDK 25
-        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
-        with:
-          java-version: 25
-          distribution: temurin
+      - name: Report PostgreSQL coverage unavailable for forks
+        if: needs.pick.outputs.is_fork == 'true'
+        run: echo 'PostgreSQL upgrade tests skipped on this fork PR because the enterprise license secret is unavailable. H2 upgrade tests still run.' >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Cache Gradle dependency artifacts
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      - name: Require license for historical PostgreSQL releases
+        if: matrix.database == 'postgresql'
+        env:
+          PREMIUM_KEY: ${{ secrets.PREMIUM_KEY_ENTERPRISE }}
+        run: |
+          if [[ -z "$PREMIUM_KEY" ]]; then
+            echo '::error::PREMIUM_KEY_ENTERPRISE is required for the PostgreSQL upgrade test.'
+            exit 1
+          fi
+
+      - name: Restore cache Gradle User Home
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
+            ~/.gradle/caches
             ~/.gradle/wrapper
-            ~/.gradle/caches/modules-2/files-2.1
-            ~/.gradle/caches/modules-2/metadata-2.*
-          key: gradle-deps-${{ runner.os }}-jdk-25-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties', '**/*.gradle', '**/*.gradle.kts', 'settings.gradle', 'settings.gradle.kts', 'gradle/libs.versions.toml') }}
+          key: gradle-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
+      - name: Set up JDK 25
+        uses: ./.github/actions/java
         with:
-          gradle-version: 9.5.1
-          cache-disabled: true
+          java-version: 25
 
-      # No `-PnoSpotless` here yet because the upstream cache layer matches the
-      # backend build's; reuse keeps cold-cache cost identical.
+      # Keep the normal formatting path here so this smoke test exercises the
+      # same Gradle configuration as the backend build.
       - name: Build Stirling-PDF JAR
         env:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
@@ -76,18 +90,34 @@ jobs:
           echo "path=$jar" >> "$GITHUB_OUTPUT"
           echo "Built JAR: $jar"
 
-      - name: Run migration smoke test
+      - name: Run H2 migration smoke test
+        if: matrix.database == 'h2'
         env:
           STIRLING_JAR: ${{ steps.jar.outputs.path }}
         run: bash scripts/db-migration/run-migration-test.sh
+
+      - name: Run PostgreSQL migration smoke test
+        if: matrix.database == 'postgresql'
+        env:
+          STIRLING_JAR: ${{ steps.jar.outputs.path }}
+          PREMIUM_KEY: ${{ secrets.PREMIUM_KEY_ENTERPRISE }}
+        run: python3 scripts/db-migration/run-postgres-migration-test.py --work-dir "${{ runner.temp }}/db-migration/postgresql"
 
       - name: Upload app logs on failure
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: db-migration-app-logs
+          name: db-migration-${{ matrix.database }}-logs
           # Path matches the preserved workdir in run-migration-test.sh -
           # only failing fixtures leave a directory behind.
-          path: /tmp/stirling-migration-failed-*/app.log
+          path: |
+            /tmp/stirling-migration-failed-*/app.log
+            ${{ runner.temp }}/db-migration/postgresql/**/app.log
+            ${{ runner.temp }}/db-migration/postgresql/**/postgres.log
           retention-days: 7
           if-no-files-found: warn
+
+      - name: Cleanup temporary files
+        if: always()
+        run: rm -rf /tmp/stirling-migration-failed-*
+        continue-on-error: true

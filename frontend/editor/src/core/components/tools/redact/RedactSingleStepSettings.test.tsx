@@ -34,10 +34,9 @@ describe("RedactSingleStepSettings", () => {
     );
 
     expect(screen.getByText("Mode")).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Automatic" }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Manual" })).toBeInTheDocument();
+    // Mode selector renders as a radio-group (shared SegmentedControl)
+    expect(screen.getByText("Automatic")).toBeInTheDocument();
+    expect(screen.getByText("Manual")).toBeInTheDocument();
   });
 
   test("should render automatic mode settings when mode is automatic", () => {
@@ -126,7 +125,7 @@ describe("RedactSingleStepSettings", () => {
   });
 
   test("should disable all controls when disabled prop is true", () => {
-    render(
+    const { container } = render(
       <TestWrapper>
         <RedactSingleStepSettings
           parameters={defaultParameters}
@@ -136,9 +135,14 @@ describe("RedactSingleStepSettings", () => {
       </TestWrapper>,
     );
 
-    // Mode selector buttons should be disabled
-    expect(screen.getByRole("button", { name: "Automatic" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Manual" })).toBeDisabled();
+    // Mode selector renders as radio inputs (shared SegmentedControl); both
+    // radios should be disabled when the control is disabled.
+    expect(
+      container.querySelector('input[type="radio"][value="automatic"]'),
+    ).toBeDisabled();
+    expect(
+      container.querySelector('input[type="radio"][value="manual"]'),
+    ).toBeDisabled();
 
     // Automatic settings controls should be disabled
     expect(screen.getByPlaceholderText("Enter a word")).toBeDisabled();

@@ -9,6 +9,7 @@ export interface AccountData {
   oAuth2Login: boolean;
   saml2Login: boolean;
   mfaEnabled?: boolean;
+  mfaRequired?: boolean;
 }
 
 export interface LoginPageData {

@@ -56,7 +56,11 @@ const RedactSingleStepSettings = ({
           <Divider />
           <Stack gap="md">
             <div
-              style={{ padding: "20px", textAlign: "center", color: "#666" }}
+              style={{
+                padding: "20px",
+                textAlign: "center",
+                color: "var(--c-text-muted)",
+              }}
             >
               Manual redaction interface will be available here when
               implemented.

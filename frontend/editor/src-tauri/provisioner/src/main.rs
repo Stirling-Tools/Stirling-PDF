@@ -10,6 +10,8 @@ struct ProvisioningConfig<'a> {
     server_url: Option<&'a str>,
     #[serde(skip_serializing_if = "Option::is_none")]
     lock_connection_mode: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    login_agreement_enabled: Option<bool>,
     /// Optional headless-install update policy.
     /// One of `"prompt"` (default), `"auto"`, or `"disabled"`.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -44,6 +46,7 @@ fn main() -> Result<(), String> {
     let mut output: Option<PathBuf> = None;
     let mut url: Option<String> = None;
     let mut lock_value: Option<String> = None;
+    let mut login_agreement_value: Option<String> = None;
     let mut update_mode_arg: Option<String> = None;
 
     let mut args = env::args().skip(1);
@@ -67,6 +70,12 @@ fn main() -> Result<(), String> {
                     .ok_or_else(|| "--lock requires a value".to_string())?;
                 lock_value = Some(value);
             }
+            "--login-agreement" => {
+                let value = args
+                    .next()
+                    .ok_or_else(|| "--login-agreement requires a value".to_string())?;
+                login_agreement_value = Some(value);
+            }
             "--update-mode" => {
                 let value = args
                     .next()
@@ -84,6 +93,15 @@ fn main() -> Result<(), String> {
     let url = url
         .map(|value| value.trim().to_string())
         .filter(|value| !value.is_empty());
+    // Treat an empty/whitespace value as "not supplied" (None), matching url and
+    // update-mode. The MSI always passes --login-agreement "[STIRLING_LOGIN_AGREEMENT]",
+    // which expands to "" when the property is unset; that must NOT write
+    // loginAgreementEnabled:false and clobber a previously-provisioned true.
+    let login_agreement = login_agreement_value
+        .as_deref()
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .map(parse_bool);
 
     let update_mode = update_mode_arg
         .as_deref()
@@ -91,9 +109,10 @@ fn main() -> Result<(), String> {
         .transpose()?
         .flatten();
 
-    // Nothing to write — avoid clobbering an existing provisioning file when
-    // the MSI is invoked without any of STIRLING_SERVER_URL / STIRLING_UPDATE_MODE.
-    if url.is_none() && update_mode.is_none() {
+    // Nothing to write — avoid clobbering an existing provisioning file when the
+    // MSI is invoked without any provisioning directives
+    // (STIRLING_SERVER_URL / STIRLING_LOGIN_AGREEMENT / STIRLING_UPDATE_MODE).
+    if url.is_none() && login_agreement.is_none() && update_mode.is_none() {
         return Ok(());
     }
 
@@ -111,6 +130,7 @@ fn main() -> Result<(), String> {
     let config = ProvisioningConfig {
         server_url: url.as_deref(),
         lock_connection_mode: lock,
+        login_agreement_enabled: login_agreement,
         update_mode,
     };
 

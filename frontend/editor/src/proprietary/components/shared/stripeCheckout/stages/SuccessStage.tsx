@@ -1,18 +1,11 @@
 import React from "react";
-import {
-  Alert,
-  Stack,
-  Text,
-  Paper,
-  Code,
-  Button,
-  Group,
-  Loader,
-} from "@mantine/core";
+import { Alert, Stack, Text, Paper, Code, Group, Loader } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { PollingStatus } from "@app/components/shared/stripeCheckout/types/checkout";
 
 interface SuccessStageProps {
+  isTeam?: boolean;
   pollingStatus: PollingStatus;
   currentLicenseKey: string | null;
   licenseKey: string | null;
@@ -20,6 +13,7 @@ interface SuccessStageProps {
 }
 
 export const SuccessStage: React.FC<SuccessStageProps> = ({
+  isTeam = false,
   pollingStatus,
   currentLicenseKey,
   licenseKey,
@@ -31,10 +25,14 @@ export const SuccessStage: React.FC<SuccessStageProps> = ({
     <Alert color="green" title={t("payment.success", "Payment Successful!")}>
       <Stack gap="md">
         <Text size="sm">
-          {t(
-            "payment.successMessage",
-            "Your subscription has been activated successfully.",
-          )}
+          {isTeam
+            ? pollingStatus === "ready"
+              ? t("payment.teamActivated", "Your Team capacity is active")
+              : t("payment.teamActivating", "Confirming your Team capacity...")
+            : t(
+                "payment.successMessage",
+                "Your subscription has been activated successfully.",
+              )}
         </Text>
 
         {/* License Key Polling Status */}
@@ -42,44 +40,52 @@ export const SuccessStage: React.FC<SuccessStageProps> = ({
           <Group gap="xs">
             <Loader size="sm" />
             <Text size="sm" c="dimmed">
-              {currentLicenseKey
+              {isTeam
                 ? t(
-                    "payment.syncingLicense",
-                    "Syncing your upgraded license...",
+                    "payment.teamActivating",
+                    "Confirming your Team capacity...",
                   )
-                : t(
-                    "payment.generatingLicense",
-                    "Generating your license key...",
-                  )}
+                : currentLicenseKey
+                  ? t(
+                      "payment.syncingLicense",
+                      "Syncing your upgraded license...",
+                    )
+                  : t(
+                      "payment.generatingLicense",
+                      "Generating your license key...",
+                    )}
             </Text>
           </Group>
         )}
 
-        {pollingStatus === "ready" && !currentLicenseKey && licenseKey && (
-          <Paper withBorder p="md" radius="md" bg="gray.1">
-            <Stack gap="sm">
-              <Text size="sm" fw={600}>
-                {t("payment.licenseKey", "Your License Key")}
-              </Text>
-              <Code block>{licenseKey}</Code>
-              <Button
-                variant="light"
-                size="sm"
-                onClick={() => navigator.clipboard.writeText(licenseKey)}
-              >
-                {t("common.copy", "Copy to Clipboard")}
-              </Button>
-              <Text size="xs" c="dimmed">
-                {t(
-                  "payment.licenseInstructions",
-                  "This has been added to your installation. You will receive a copy in your email as well.",
-                )}
-              </Text>
-            </Stack>
-          </Paper>
-        )}
+        {!isTeam &&
+          pollingStatus === "ready" &&
+          !currentLicenseKey &&
+          licenseKey && (
+            <Paper withBorder p="md" radius="md" bg="gray.1">
+              <Stack gap="sm">
+                <Text size="sm" fw={600}>
+                  {t("payment.licenseKey", "Your License Key")}
+                </Text>
+                <Code block>{licenseKey}</Code>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => navigator.clipboard.writeText(licenseKey)}
+                >
+                  {t("common.copy", "Copy to Clipboard")}
+                </Button>
+                <Text size="xs" c="dimmed">
+                  {t(
+                    "payment.licenseInstructions",
+                    "This has been added to your installation. You will receive a copy in your email as well.",
+                  )}
+                </Text>
+              </Stack>
+            </Paper>
+          )}
 
-        {pollingStatus === "ready" && currentLicenseKey && (
+        {!isTeam && pollingStatus === "ready" && currentLicenseKey && (
           <Alert
             color="green"
             title={t("payment.upgradeComplete", "Upgrade Complete")}
@@ -96,13 +102,22 @@ export const SuccessStage: React.FC<SuccessStageProps> = ({
         {pollingStatus === "timeout" && (
           <Alert
             color="yellow"
-            title={t("payment.licenseDelayed", "License Key Processing")}
+            title={
+              isTeam
+                ? t("payment.teamProcessing", "Team purchase processing")
+                : t("payment.licenseDelayed", "License Key Processing")
+            }
           >
             <Text size="sm">
-              {t(
-                "payment.licenseDelayedMessage",
-                "Your license key is being generated. Please check your email shortly or contact support.",
-              )}
+              {isTeam
+                ? t(
+                    "payment.teamPending",
+                    "Your Team purchase is still processing. Refresh this page shortly.",
+                  )
+                : t(
+                    "payment.licenseDelayedMessage",
+                    "Your license key is being generated. Please check your email shortly or contact support.",
+                  )}
             </Text>
           </Alert>
         )}
@@ -113,7 +128,10 @@ export const SuccessStage: React.FC<SuccessStageProps> = ({
           </Text>
         )}
 
-        <Button onClick={onClose} mt="md">
+        <Button
+          onClick={onClose}
+          style={{ marginTop: "var(--mantine-spacing-md)" }}
+        >
           {t("common.close", "Close")}
         </Button>
       </Stack>

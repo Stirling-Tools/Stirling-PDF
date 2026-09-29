@@ -1,15 +1,15 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, afterEach, beforeEach, vi } from "vitest";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { BrowserRouter, MemoryRouter } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
 import Login from "@app/routes/Login";
 import { useAuth } from "@app/auth/UseSession";
-import { springAuth } from "@shared/auth/spring/springAuthClient";
+import { springAuth } from "@app/auth/spring/springAuthClient";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
+import { TestQueryProvider } from "@app/tests/utils/TestQueryProvider";
 import apiClient from "@app/services/apiClient";
-import { configureSpringAuth } from "@shared/auth/config";
-import type { AxiosInstance } from "axios";
+import { configureSpringAuth } from "@app/auth/config";
 
 // Mock i18n to return fallback text
 vi.mock("react-i18next", () => ({
@@ -43,10 +43,10 @@ vi.mock("@app/auth/UseSession", () => ({
 }));
 
 // Mock springAuth; keep the real redirect-path helpers.
-vi.mock("@shared/auth/spring/springAuthClient", async () => {
+vi.mock("@app/auth/spring/springAuthClient", async () => {
   const actual = await vi.importActual<
-    typeof import("@shared/auth/spring/springAuthClient")
-  >("@shared/auth/spring/springAuthClient");
+    typeof import("@app/auth/spring/springAuthClient")
+  >("@app/auth/spring/springAuthClient");
   return {
     ...actual,
     springAuth: {
@@ -92,11 +92,14 @@ vi.mock("react-router-dom", async () => {
   };
 });
 
-// Test wrapper with MantineProvider
+// AuthLayout renders <Footer>, which reads useFooterInfo. In the real router
+// /login sits inside AppProviders, which supplies the client.
 const TestWrapper = ({ children }: { children: React.ReactNode }) => (
-  <MantineProvider>
-    <PreferencesProvider>{children}</PreferencesProvider>
-  </MantineProvider>
+  <TestQueryProvider>
+    <MantineProvider>
+      <PreferencesProvider>{children}</PreferencesProvider>
+    </MantineProvider>
+  </TestQueryProvider>
 );
 
 describe("Login", () => {
@@ -114,6 +117,7 @@ describe("Login", () => {
       displayName: null,
       isAnonymous: false,
       isAdmin: false,
+      portalAccess: false,
       role: null,
       loading: false,
       error: null,
@@ -132,7 +136,7 @@ describe("Login", () => {
     // The shared login hook reads getSpringAuthConfig().http; in the real app,
     // startup points that at apiClient. Mirror that here so the mocked apiClient
     // serves the login-ui-data fetch.
-    configureSpringAuth({ http: apiClient as unknown as AxiosInstance });
+    configureSpringAuth({ http: apiClient });
   });
 
   it("should render login form", async () => {
@@ -151,7 +155,7 @@ describe("Login", () => {
     });
   });
 
-  it("should redirect authenticated user to home", async () => {
+  it("should land an authenticated user on the editor", async () => {
     const mockSession = {
       user: {
         id: "123",
@@ -169,6 +173,7 @@ describe("Login", () => {
       displayName: mockSession.user.username,
       isAnonymous: false,
       isAdmin: false,
+      portalAccess: false,
       role: mockSession.user.role,
       loading: false,
       error: null,
@@ -185,7 +190,98 @@ describe("Login", () => {
     );
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith("/", { replace: true });
+      expect(mockNavigate).toHaveBeenCalledWith("/editor", { replace: true });
+    });
+  });
+
+  // Landing bounces an unauthenticated visitor to /login?from=<where they were>,
+  // so signing in returns them there instead of re-running the role routing.
+  describe("return path", () => {
+    const signedIn = () => {
+      const mockSession = {
+        user: {
+          id: "123",
+          email: "test@example.com",
+          username: "testuser",
+          role: "USER",
+        },
+        access_token: "mock-token",
+        expires_in: 3600,
+      };
+      vi.mocked(useAuth).mockReturnValue({
+        session: mockSession,
+        user: mockSession.user,
+        displayName: mockSession.user.username,
+        isAnonymous: false,
+        isAdmin: false,
+        portalAccess: false,
+        role: mockSession.user.role,
+        loading: false,
+        error: null,
+        signOut: vi.fn(),
+        refreshSession: vi.fn(),
+      });
+    };
+
+    const renderAtLogin = (search: string) => {
+      window.history.replaceState({}, "", `/login${search}`);
+      return render(
+        <TestWrapper>
+          <BrowserRouter>
+            <Login />
+          </BrowserRouter>
+        </TestWrapper>,
+      );
+    };
+
+    afterEach(() => {
+      window.history.replaceState({}, "", "/");
+      sessionStorage.clear();
+    });
+
+    it("returns to where the user came from", async () => {
+      signedIn();
+      renderAtLogin(`?from=${encodeURIComponent("/compress")}`);
+
+      await waitFor(() => {
+        expect(mockNavigate).toHaveBeenCalledWith("/compress", {
+          replace: true,
+        });
+      });
+    });
+
+    // A full-page 401 redirect drops router state and Spring can strip ?from=,
+    // leaving the return path only in the sessionStorage stash. Without reading
+    // it here a processor user refreshing /editor falls through to the role
+    // router and lands on the processor.
+    it("returns to the stashed path when there is no ?from=", async () => {
+      signedIn();
+      sessionStorage.setItem("stirling_post_login_path", "/compress");
+      renderAtLogin("");
+
+      await waitFor(() => {
+        expect(mockNavigate).toHaveBeenCalledWith("/compress", {
+          replace: true,
+        });
+      });
+      // Consumed, so a later sign-in can't reuse a stale path.
+      expect(sessionStorage.getItem("stirling_post_login_path")).toBeNull();
+    });
+
+    // Delegated to the shared isSafePostLoginRedirect, so the backslash form
+    // (browsers normalise "\" to "/") and auth routes are covered too.
+    it.each([
+      ["protocol-relative", "//evil.example.com"],
+      ["backslash-escaped", "/\\evil.example.com"],
+      ["an auth route", "/login"],
+    ])("rejects %s and lands normally", async (_label, from) => {
+      signedIn();
+      renderAtLogin(`?from=${encodeURIComponent(from)}`);
+
+      await waitFor(() => {
+        expect(mockNavigate).toHaveBeenCalledWith("/editor", { replace: true });
+      });
+      expect(mockNavigate).not.toHaveBeenCalledWith(from, expect.anything());
     });
   });
 
@@ -196,6 +292,7 @@ describe("Login", () => {
       displayName: null,
       isAnonymous: false,
       isAdmin: false,
+      portalAccess: false,
       role: null,
       loading: true,
       error: null,
@@ -323,13 +420,13 @@ describe("Login", () => {
     // Wait for OAuth button to appear
     await waitFor(
       () => {
-        const button = screen.queryByText("Authentik");
+        const button = screen.queryByText(/Authentik/);
         expect(button).toBeTruthy();
       },
       { timeout: 3000 },
     );
 
-    const oauthButton = screen.getByText("Authentik");
+    const oauthButton = screen.getByText(/Authentik/);
     await user.click(oauthButton);
 
     await waitFor(() => {
@@ -369,13 +466,13 @@ describe("Login", () => {
     // Wait for OAuth button to appear (will show 'Mycompany' as label)
     await waitFor(
       () => {
-        const button = screen.queryByText("Mycompany");
+        const button = screen.queryByText(/Mycompany/);
         expect(button).toBeTruthy();
       },
       { timeout: 3000 },
     );
 
-    const oauthButton = screen.getByText("Mycompany");
+    const oauthButton = screen.getByText(/Mycompany/);
     await user.click(oauthButton);
 
     await waitFor(() => {
@@ -416,13 +513,13 @@ describe("Login", () => {
     // Wait for OAuth button to appear
     await waitFor(
       () => {
-        const button = screen.queryByText("OIDC");
+        const button = screen.queryByText(/OIDC/);
         expect(button).toBeTruthy();
       },
       { timeout: 3000 },
     );
 
-    const oauthButton = screen.getByText("OIDC");
+    const oauthButton = screen.getByText(/OIDC/);
     await user.click(oauthButton);
 
     await waitFor(() => {
@@ -573,7 +670,7 @@ describe("Login", () => {
     });
   });
 
-  it("should redirect to home when login disabled", async () => {
+  it("should redirect to the editor when login disabled", async () => {
     mockBackendProbeState.loginDisabled = true;
     mockProbe.mockResolvedValueOnce({
       status: "up",
@@ -596,7 +693,7 @@ describe("Login", () => {
     );
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith("/", { replace: true });
+      expect(mockNavigate).toHaveBeenCalledWith("/editor", { replace: true });
     });
   });
 
@@ -758,12 +855,12 @@ describe("Login", () => {
 
     await waitFor(
       () => {
-        expect(screen.getByText("Authentik")).toBeTruthy();
+        expect(screen.getByText(/Authentik/)).toBeTruthy();
       },
       { timeout: 3000 },
     );
 
-    await user.click(screen.getByText("Authentik"));
+    await user.click(screen.getByText(/Authentik/));
 
     await waitFor(() => {
       expect(springAuth.signInWithOAuth).toHaveBeenCalled();

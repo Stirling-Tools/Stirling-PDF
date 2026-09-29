@@ -4,16 +4,15 @@ import {
   Stack,
   Text,
   PasswordInput,
-  Button,
   Group,
   Alert,
   Code,
   Badge,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import auditService from "@app/services/auditService";
-import LocalIcon from "@app/components/shared/LocalIcon";
-
+import { Icon } from "@app/ui/Icon";
 interface AuditClearDataSectionProps {
   loginEnabled?: boolean;
 }
@@ -72,9 +71,7 @@ const AuditClearDataSection: React.FC<AuditClearDataSectionProps> = ({
       <Stack gap="lg">
         <Alert
           color="green"
-          icon={
-            <LocalIcon icon="check-circle" width="1.2rem" height="1.2rem" />
-          }
+          icon={<Icon name="circle-check" size="1.2rem" />}
           title={t("audit.clearData.success", "Success")}
           onClose={() => setSuccess(false)}
           closeButtonLabel="Close alert"
@@ -94,7 +91,7 @@ const AuditClearDataSection: React.FC<AuditClearDataSectionProps> = ({
       <Stack gap="lg">
         <Alert
           color="orange"
-          icon={<LocalIcon icon="warning" width="1.2rem" height="1.2rem" />}
+          icon={<Icon name="triangle-alert" size="1.2rem" />}
           title={t(
             "audit.clearData.confirmTitle",
             "Please confirm you want to delete",
@@ -165,18 +162,22 @@ const AuditClearDataSection: React.FC<AuditClearDataSectionProps> = ({
             {error && (
               <Alert
                 color="red"
-                icon={<LocalIcon icon="error" width="1.2rem" height="1.2rem" />}
+                icon={<Icon name="circle-alert" size="1.2rem" />}
               >
                 {error}
               </Alert>
             )}
 
             <Group justify="space-between">
-              <Button variant="default" onClick={resetForm} disabled={clearing}>
+              <Button
+                variant="secondary"
+                onClick={resetForm}
+                disabled={clearing}
+              >
                 {t("audit.clearData.cancel", "Cancel")}
               </Button>
               <Button
-                color="red"
+                accent="danger"
                 onClick={handleClearData}
                 loading={clearing}
                 disabled={
@@ -198,7 +199,7 @@ const AuditClearDataSection: React.FC<AuditClearDataSectionProps> = ({
     <Stack gap="lg">
       <Alert
         color="red"
-        icon={<LocalIcon icon="warning" width="1.2rem" height="1.2rem" />}
+        icon={<Icon name="triangle-alert" size="1.2rem" />}
         title={t("audit.clearData.warning1", "This action cannot be undone")}
       >
         <Text size="sm">
@@ -229,7 +230,7 @@ const AuditClearDataSection: React.FC<AuditClearDataSectionProps> = ({
           </Group>
 
           <Button
-            color="red"
+            accent="danger"
             onClick={handleInitiateDeletion}
             disabled={!loginEnabled}
             fullWidth

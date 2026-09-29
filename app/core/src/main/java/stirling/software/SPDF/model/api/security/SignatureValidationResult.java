@@ -18,6 +18,11 @@ public class SignatureValidationResult {
     // Time validation
     private boolean notExpired;
 
+    // Whether the document's signatures cover all of its bytes. False when content was appended
+    // outside every signature's ByteRange (i.e. added after signing), which the signature can't
+    // attest to even though the signed bytes themselves remain cryptographically intact.
+    private boolean coversEntireDocument = true;
+
     // Revocation validation
     private boolean revocationChecked; // true if PKIX revocation was enabled
     private String revocationStatus; // "not-checked" | "good" | "revoked" | "soft-fail" | "unknown"

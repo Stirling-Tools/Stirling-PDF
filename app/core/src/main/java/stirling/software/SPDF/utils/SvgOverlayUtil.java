@@ -45,6 +45,10 @@ public class SvgOverlayUtil {
                         @Override
                         public void checkLoadExternalResource(
                                 ParsedURL resourceURL, ParsedURL docURL) {
+                            // Inline data: URIs are self-contained (no network/file fetch).
+                            if (resourceURL != null && "data".equals(resourceURL.getProtocol())) {
+                                return;
+                            }
                             throw new SecurityException(
                                     "External resource loading is disabled for SVG overlays: "
                                             + resourceURL);

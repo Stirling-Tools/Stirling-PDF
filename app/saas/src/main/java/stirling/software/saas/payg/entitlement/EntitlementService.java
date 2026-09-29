@@ -18,18 +18,20 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.saas.payg.billing.TeamBillingContext;
 import stirling.software.saas.payg.billing.TeamBillingService;
+import stirling.software.saas.payg.bundle.PrepaidBundleService;
 import stirling.software.saas.payg.cap.CapEvaluator;
 import stirling.software.saas.payg.cap.CapEvaluator.Evaluation;
 import stirling.software.saas.payg.model.EntitlementState;
 import stirling.software.saas.payg.model.FeatureSet;
-import stirling.software.saas.payg.repository.WalletLedgerRepository;
+import stirling.software.saas.payg.repository.PaygShadowChargeRepository;
 import stirling.software.saas.payg.repository.WalletPolicyRepository;
 import stirling.software.saas.payg.wallet.WalletPolicy;
 
 /**
  * Hot-path entitlement lookup. Returns the {@link EntitlementSnapshot} for a team: the billing
  * facts (window, free allowance, document cap) come from {@link TeamBillingService}; this service
- * layers the period spend (ledger SUM over that window) and the warn/degrade evaluation on top.
+ * layers metered spend (excluding included and prepaid units) and the warn/degrade evaluation on
+ * top.
  *
  * <p>Backed by a per-team Caffeine cache with {@value #CACHE_TTL_SECONDS}s TTL and {@value
  * #CACHE_MAX_SIZE}-entry cap. The TTL is the correctness floor — a cap change becomes visible on
@@ -50,18 +52,22 @@ public class EntitlementService {
 
     private final TeamBillingService teamBillingService;
     private final WalletPolicyRepository walletPolicyRepository;
-    private final WalletLedgerRepository ledgerRepository;
+    private final PaygShadowChargeRepository shadowRepository;
+    private final PrepaidBundleService prepaidBundleService;
 
     private final Cache<Long, EntitlementSnapshot> snapshotCache;
 
     public EntitlementService(
             TeamBillingService teamBillingService,
             WalletPolicyRepository walletPolicyRepository,
-            WalletLedgerRepository ledgerRepository) {
+            PaygShadowChargeRepository shadowRepository,
+            PrepaidBundleService prepaidBundleService) {
         this.teamBillingService = Objects.requireNonNull(teamBillingService, "teamBillingService");
         this.walletPolicyRepository =
                 Objects.requireNonNull(walletPolicyRepository, "walletPolicyRepository");
-        this.ledgerRepository = Objects.requireNonNull(ledgerRepository, "ledgerRepository");
+        this.shadowRepository = Objects.requireNonNull(shadowRepository, "shadowRepository");
+        this.prepaidBundleService =
+                Objects.requireNonNull(prepaidBundleService, "prepaidBundleService");
         this.snapshotCache =
                 Caffeine.newBuilder()
                         .maximumSize(CACHE_MAX_SIZE)
@@ -72,7 +78,7 @@ public class EntitlementService {
 
     /**
      * Returns the entitlement snapshot for {@code teamId}. Caches per-team for {@value
-     * #CACHE_TTL_SECONDS}s — burst requests share a single SUM query against the ledger.
+     * #CACHE_TTL_SECONDS}s — burst requests share a single query over charged usage.
      *
      * <p>{@code null} teamId throws — the guard short-circuits team-less requests upstream so a
      * null reach here is a programming error.
@@ -128,28 +134,34 @@ public class EntitlementService {
         Long snapshotCap;
 
         if (billing.subscribed()) {
-            // Subscribed: gate on the monthly spending cap. Spend = this period's net billable
-            // documents (DEBIT minus REFUND so a refunded job doesn't read as spent). The one-time
-            // free grant doesn't gate a paying team — it only reduced what they were metered.
-            long signedNet = ledgerRepository.sumPeriodNetBillable(teamId, periodStart, periodEnd);
-            long periodSpend = signedNet < 0 ? -signedNet : 0L;
+            long periodSpend =
+                    Math.max(0, shadowRepository.sumPaidUnits(teamId, periodStart, periodEnd));
             Long cap = billing.monthlyCapDocUnits();
             eval = CapEvaluator.evaluate(periodSpend, cap, warnAtPct, degradeAtPct, degradedSet);
+            if (eval.state() == EntitlementState.DEGRADED
+                    && (billing.freeRemainingUnits() > 0L
+                            || prepaidBundleService.prepaidRemainingUnits(teamId) > 0L)) {
+                eval = fullyEntitledOnPrepaid();
+            }
             snapshotSpend = periodSpend;
             snapshotCap = cap;
         } else {
-            // Unsubscribed: gate on the one-time lifetime free grant. Exhausted (remaining ≤ 0, or
-            // no grant configured) → DEGRADED so billable categories hard-stop; otherwise evaluate
-            // the warn/degrade band on used-of-grant.
+            // A prepaid pool outranks an exhausted grant: paid-for capacity is usable on its own
+            // merit, with no subscription. Only with both gone do billable categories hard-stop.
             long grant = billing.freeGrantUnits();
             long remaining = billing.freeRemainingUnits();
             long used = Math.max(0L, grant - remaining);
             if (remaining <= 0L) {
-                eval =
-                        new Evaluation(
-                                EntitlementState.DEGRADED,
-                                degradedSet,
-                                CapEvaluator.gatesFor(degradedSet));
+                long prepaidRemaining = prepaidBundleService.prepaidRemainingUnits(teamId);
+                if (prepaidRemaining > 0L) {
+                    eval = fullyEntitledOnPrepaid();
+                } else {
+                    eval =
+                            new Evaluation(
+                                    EntitlementState.DEGRADED,
+                                    degradedSet,
+                                    CapEvaluator.gatesFor(degradedSet));
+                }
             } else {
                 eval = CapEvaluator.evaluate(used, grant, warnAtPct, degradeAtPct, degradedSet);
             }
@@ -166,6 +178,17 @@ public class EntitlementService {
                 periodStart,
                 periodEnd,
                 billing.subscribed());
+    }
+
+    /**
+     * A team holding a live prepaid pool is fully entitled regardless of the free-grant or the
+     * monthly-cap gate: the pool is drawn in the charge pipeline and its units are netted out of
+     * metered spend, so it sits OUTSIDE both gates. All feature gates are on. Shared by the
+     * unsubscribed (grant-exhausted) and subscribed (over-cap) branches.
+     */
+    private static Evaluation fullyEntitledOnPrepaid() {
+        return new Evaluation(
+                EntitlementState.FULL, FeatureSet.FULL, CapEvaluator.gatesFor(FeatureSet.FULL));
     }
 
     /**

@@ -17,6 +17,8 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.store.InProcessPolicyStore;
+import stirling.software.proprietary.policy.store.PolicyStore;
 
 /**
  * {@link PolicyAccessGuard}: policies are scoped to the caller's team. A user sees/accesses only
@@ -36,18 +38,27 @@ class PolicyAccessGuardTest {
     }
 
     @Test
-    void visibleFiltersToTheCallersTeam() {
+    void visibleFromLoadsOnlyTheCallersTeam() {
         when(policyManagementAuthority.currentUserTeamId()).thenReturn(1L);
-        List<Policy> all = List.of(inTeam(1L), inTeam(2L), inTeam(1L), inTeam(null));
-        List<Policy> visible = guard(true).visible(all);
+        PolicyStore store = new InProcessPolicyStore();
+        store.save(inTeam(1L));
+        store.save(inTeam(2L));
+        store.save(inTeam(1L));
+        store.save(inTeam(null));
+
+        List<Policy> visible = guard(true).visibleFrom(store);
+
         assertEquals(2, visible.size());
         assertTrue(visible.stream().allMatch(p -> Long.valueOf(1L).equals(p.teamId())));
     }
 
     @Test
-    void visibleReturnsEverythingWhenLoginDisabled() {
-        List<Policy> all = List.of(inTeam(1L), inTeam(2L));
-        assertEquals(all, guard(false).visible(all));
+    void visibleFromReturnsEverythingWhenLoginDisabled() {
+        PolicyStore store = new InProcessPolicyStore();
+        store.save(inTeam(1L));
+        store.save(inTeam(2L));
+
+        assertEquals(2, guard(false).visibleFrom(store).size());
     }
 
     @Test
@@ -77,8 +88,62 @@ class PolicyAccessGuardTest {
         assertNull(guard(false).teamForNewPolicy());
     }
 
+    @Test
+    void policiesSurfaceNeverSeesProcessingFolderRows() {
+        when(policyManagementAuthority.currentUserTeamId()).thenReturn(1L);
+        PolicyStore store = new InProcessPolicyStore();
+        store.save(inTeam(1L));
+        store.save(folderPair(1L, "alice"));
+
+        assertEquals(1, guard(true).visibleFrom(store).size());
+        assertEquals(1, guard(false).visibleFrom(store).size()); // login off hides them too
+    }
+
+    @Test
+    void processingFoldersAreScopedToTheirOwnerNotTheirTeam() {
+        when(policyManagementAuthority.currentUserTeamId()).thenReturn(1L);
+        when(userService.getCurrentUsername()).thenReturn("alice");
+        PolicyStore store = new InProcessPolicyStore();
+        store.save(folderPair(1L, "alice"));
+        store.save(folderPair(1L, "bob")); // same team, different person
+        store.save(inTeam(1L)); // ordinary policy, not a folder
+
+        List<Policy> visible = guard(true).visibleProcessingFolders(store);
+
+        assertEquals(1, visible.size());
+        assertEquals("alice", visible.get(0).owner());
+    }
+
+    @Test
+    void canAccessAProcessingFolderOnlyAsItsOwner() {
+        when(userService.getCurrentUsername()).thenReturn("alice");
+        assertTrue(guard(true).canAccess(folderPair(1L, "alice")));
+        assertFalse(guard(true).canAccess(folderPair(1L, "bob")));
+        assertTrue(guard(false).canAccess(folderPair(1L, "bob"))); // local operator
+    }
+
+    @Test
+    void aNullOwnerProcessingFolderIsNotReachableUnderLogin() {
+        // Nobody, not every authenticated user. The null-owner short-circuit returns false
+        // without reading the current user, so there is no username to stub.
+        assertFalse(guard(true).canAccess(folderPair(1L, null)));
+    }
+
+    private static Policy folderPair(Long teamId, String owner) {
+        return new Policy(
+                        null,
+                        "pair",
+                        owner,
+                        true,
+                        List.of(),
+                        List.of(),
+                        OutputSpec.inline(),
+                        teamId)
+                .withSurface(Policy.SURFACE_PROCESSING_FOLDER);
+    }
+
     private static Policy inTeam(Long teamId) {
         return new Policy(
-                "p1", "p", "owner", true, null, List.of(), List.of(), OutputSpec.inline(), teamId);
+                null, "p", "owner", true, List.of(), List.of(), OutputSpec.inline(), teamId);
     }
 }

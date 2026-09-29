@@ -1,9 +1,7 @@
 import React, { useState, useCallback, useMemo } from "react";
-import { SegmentedControl, Loader } from "@mantine/core";
-import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
-import GridViewIcon from "@mui/icons-material/GridView";
-import FolderIcon from "@mui/icons-material/Folder";
-import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
+import { Loader } from "@mantine/core";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
+import { Icon } from "@app/ui/Icon";
 import { WorkbenchType, isValidWorkbench } from "@app/types/workbench";
 import { PageEditorFileDropdown } from "@app/components/shared/PageEditorFileDropdown";
 import type { CustomWorkbenchViewInstance } from "@app/contexts/ToolWorkflowContext";
@@ -54,11 +52,7 @@ const createViewOptions = (
       />
     ) : (
       <div style={viewOptionStyle}>
-        {switchingTo === "viewer" ? (
-          <Loader size="sm" />
-        ) : (
-          <InsertDriveFileIcon fontSize="medium" />
-        )}
+        {switchingTo === "viewer" ? <Loader size="sm" /> : <Icon name="file" />}
       </div>
     ),
     value: "viewer",
@@ -72,21 +66,21 @@ const createViewOptions = (
   const pageEditorOption = {
     label: showPageEditorDropdown ? (
       <PageEditorFileDropdown
-        files={pageEditorState!.files}
-        onToggleSelection={pageEditorState!.onToggleSelection}
-        onReorder={pageEditorState!.onReorder}
+        files={pageEditorState.files}
+        onToggleSelection={pageEditorState.onToggleSelection}
+        onReorder={pageEditorState.onReorder}
         switchingTo={switchingTo}
         viewOptionStyle={viewOptionStyle}
-        fileColorMap={pageEditorState!.fileColorMap}
-        selectedCount={pageEditorState!.selectedCount}
-        totalCount={pageEditorState!.totalCount}
+        fileColorMap={pageEditorState.fileColorMap}
+        selectedCount={pageEditorState.selectedCount}
+        totalCount={pageEditorState.totalCount}
       />
     ) : (
       <div style={viewOptionStyle}>
         {switchingTo === "pageEditor" ? (
           <Loader size="sm" />
         ) : (
-          <GridViewIcon fontSize="medium" />
+          <Icon name="layout-grid" />
         )}
       </div>
     ),
@@ -99,7 +93,7 @@ const createViewOptions = (
         {switchingTo === "fileEditor" ? (
           <Loader size="sm" />
         ) : (
-          <FolderIcon fontSize="medium" />
+          <Icon name="folder" />
         )}
       </div>
     ),
@@ -112,11 +106,11 @@ const createViewOptions = (
     .filter((view) => view.data != null)
     .map((view) => ({
       label: (
-        <div style={viewOptionStyle as React.CSSProperties}>
+        <div style={viewOptionStyle}>
           {switchingTo === view.workbenchId ? (
             <Loader size="sm" />
           ) : (
-            view.icon || <PictureAsPdfIcon fontSize="medium" />
+            view.icon || <Icon name="file-pdf" />
           )}
           <span>{view.label}</span>
         </div>
@@ -205,45 +199,15 @@ const TopControls = ({
       <div className="flex justify-center">
         <SegmentedControl
           data-tour="view-switcher"
-          data={viewOptions}
+          options={viewOptions}
           value={currentView}
           onChange={handleViewChange}
-          color="blue"
+          variant="secondary"
           fullWidth
           style={{
             transition: "all 0.2s ease",
             opacity: switchingTo ? 0.8 : 1,
             pointerEvents: "auto",
-          }}
-          styles={{
-            root: {
-              borderRadius: "0 0 16px 16px",
-              height: "1.8rem",
-              backgroundColor: "var(--bg-toolbar)",
-              border: "1px solid var(--border-default)",
-              borderTop: "none",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-              outline: "1px solid rgba(0, 0, 0, 0.1)",
-              outlineOffset: "-1px",
-              padding: "0 0",
-              gap: "0",
-            },
-            control: {
-              borderRadius: "0 0 16px 16px",
-              padding: "0",
-              border: "none",
-            },
-            indicator: {
-              borderRadius: "0 0 16px 16px",
-              height: "100%",
-              top: "0rem",
-              margin: "0",
-              border: "none",
-            },
-            label: {
-              paddingTop: "0",
-              paddingBottom: "0",
-            },
           }}
         />
       </div>

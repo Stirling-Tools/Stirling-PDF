@@ -47,7 +47,13 @@ class DatabaseServiceMoreTest {
                 new DriverManagerDataSource(
                         "jdbc:h2:mem:" + UUID.randomUUID() + ";DB_CLOSE_DELAY=-1", "sa", "");
 
-        databaseService = new DatabaseService(datasourceProps, dataSource, notificationService);
+        databaseService =
+                new DatabaseService(
+                        datasourceProps,
+                        dataSource,
+                        notificationService,
+                        org.mockito.Mockito.mock(
+                                org.springframework.context.ApplicationEventPublisher.class));
         ReflectionTestUtils.setField(databaseService, "BACKUP_DIR", tempDir);
     }
 
@@ -166,6 +172,63 @@ class DatabaseServiceMoreTest {
         void resolvesSafeName() {
             Path resolved = databaseService.getBackupFilePath("backup_ok.sql");
             assertThat(resolved.startsWith(tempDir)).isTrue();
+        }
+    }
+
+    @Nested
+    @DisplayName("SQL import validation")
+    class SqlValidation {
+
+        private Path writeScript(String sql) throws IOException {
+            Path script = Files.createTempFile("import", ".sql");
+            Files.writeString(script, sql);
+            return script;
+        }
+
+        @Test
+        @DisplayName("rejects FILE_WRITE")
+        void rejectsFileWrite() throws IOException {
+            Path script = writeScript("CREATE TABLE X AS SELECT FILE_WRITE('data', '/tmp/out');");
+            assertThatThrownBy(() -> databaseService.importDatabaseFromUI(script))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        @DisplayName("rejects FILE_READ in an INSERT")
+        void rejectsFileRead() throws IOException {
+            Path script = writeScript("INSERT INTO PUBLIC.X(D) VALUES (FILE_READ('/tmp/in'));");
+            assertThatThrownBy(() -> databaseService.importDatabaseFromUI(script))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        @DisplayName("rejects CREATE ALIAS")
+        void rejectsCreateAlias() throws IOException {
+            Path script =
+                    writeScript(
+                            "CREATE ALIAS MYALIAS AS 'String run(String c) throws Exception"
+                                    + " { return c; }';");
+            assertThatThrownBy(() -> databaseService.importDatabaseFromUI(script))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        @DisplayName("rejects RUNSCRIPT FROM")
+        void rejectsRunscript() throws IOException {
+            Path script = writeScript("RUNSCRIPT FROM '/tmp/other.sql';");
+            assertThatThrownBy(() -> databaseService.importDatabaseFromUI(script))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        @DisplayName("allows a backup whose data mentions a keyword")
+        void allowsKeywordInsideStringData() throws IOException {
+            Path script =
+                    writeScript(
+                            "CREATE TABLE PUBLIC.NOTES(ID INT, BODY CHARACTER VARYING);"
+                                    + " INSERT INTO PUBLIC.NOTES(ID, BODY)"
+                                    + " VALUES(1, 'plain text with FILE_WRITE() inside');");
+            assertThat(databaseService.importDatabaseFromUI(script)).isTrue();
         }
     }
 }
