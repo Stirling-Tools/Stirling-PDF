@@ -157,6 +157,9 @@ export const ProfilePictureCropper: React.FC<ProfilePictureCropperProps> = ({
               crop={crop}
               zoom={zoom}
               aspect={1}
+              // Every surface draws the result as a circle, so frame one: a square
+              // guide hands back corners that are then cropped away.
+              cropShape="round"
               onCropChange={onCropChange}
               onZoomChange={onZoomChange}
               onCropComplete={onCropCompleteCallback}

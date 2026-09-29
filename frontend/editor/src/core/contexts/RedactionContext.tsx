@@ -10,6 +10,7 @@ import React, {
 import { RedactParameters } from "@app/hooks/tools/redact/useRedactParameters";
 import { useNavigationGuard } from "@app/contexts/NavigationContext";
 import { RedactionMode } from "@embedpdf/plugin-redaction";
+import { leaveRedactionMode } from "@app/components/viewer/leaveRedactionMode";
 
 /**
  * API interface that the EmbedPDF bridge will implement
@@ -20,7 +21,7 @@ export interface RedactionAPI {
   isRedactActive: () => boolean;
   endRedact: () => void;
   // Common methods
-  commitAllPending: () => void;
+  commitAllPending: () => Promise<void>;
   getActiveType: () => RedactionMode | null;
   getPendingCount: () => number;
 }
@@ -64,7 +65,7 @@ interface RedactionActions {
   // Unified redaction actions (v2.5.0)
   activateRedact: () => void;
   deactivateRedact: () => void;
-  commitAllPending: () => void;
+  commitAllPending: () => Promise<void>;
   // Unified manual redaction action
   activateManualRedact: () => void;
   // Legacy UI actions (for backwards compatibility with UI)
@@ -166,14 +167,15 @@ export const RedactionProvider: React.FC<{ children: ReactNode }> = ({
     }));
   }, []);
 
-  // Keep navigation guard aware of pending or applied redactions so we block navigation
-  // Also clear the flag when all redactions have been saved
+  // Cleared only when redaction armed the flag, so manual mode cannot drop a
+  // dirty state owned by annotations, comments or form fill.
+  const redactionDirtyRef = useRef(false);
   useEffect(() => {
     if (state.pendingCount > 0 || state.redactionsApplied) {
+      redactionDirtyRef.current = true;
       setHasUnsavedChanges(true);
-    } else if (state.isRedactionMode) {
-      // Only clear if we're in redaction mode - this avoids interfering with annotation changes
-      // When there are no pending redactions and nothing has been applied, we're "clean"
+    } else if (state.isRedactionMode && redactionDirtyRef.current) {
+      redactionDirtyRef.current = false;
       setHasUnsavedChanges(false);
     }
   }, [
@@ -191,14 +193,12 @@ export const RedactionProvider: React.FC<{ children: ReactNode }> = ({
   }, []);
 
   const deactivateRedact = useCallback(() => {
-    if (redactionApiRef.current) {
-      redactionApiRef.current.endRedact();
-    }
+    leaveRedactionMode(redactionApiRef.current);
   }, []);
 
-  const commitAllPending = useCallback(() => {
+  const commitAllPending = useCallback(async () => {
     if (redactionApiRef.current) {
-      redactionApiRef.current.commitAllPending();
+      await redactionApiRef.current.commitAllPending();
       // Mark redactions as applied (but not yet saved) so the Save Changes button stays enabled
       // The button will only be disabled after the file is successfully saved
       setRedactionsApplied(true);

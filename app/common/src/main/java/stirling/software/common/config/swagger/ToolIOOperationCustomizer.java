@@ -4,7 +4,10 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+
+import javax.imageio.ImageIO;
 
 import org.springdoc.core.customizers.GlobalOpenApiCustomizer;
 import org.springdoc.core.customizers.GlobalOperationCustomizer;
@@ -41,6 +44,11 @@ public class ToolIOOperationCustomizer
     public void customise(OpenAPI openApi) {
         Map<String, Object> vocabulary = new LinkedHashMap<>();
         vocabulary.put("formats", names(ToolFormat.values()));
+        Map<String, List<String>> extensions = new LinkedHashMap<>();
+        for (ToolFormat format : ToolFormat.values()) {
+            extensions.put(format.name(), format.getExtensions());
+        }
+        vocabulary.put("extensions", extensions);
         vocabulary.put("arities", names(ToolArity.values()));
         openApi.addExtension(VOCABULARY_EXTENSION_NAME, vocabulary);
     }
@@ -61,6 +69,20 @@ public class ToolIOOperationCustomizer
         extension.put("accepts", names(declaration.accepts()));
         extension.put("produces", declaration.produces().name());
         extension.put("arity", declaration.arity().name());
+        if (declaration.imageIOInput()) {
+            extension.put(
+                    "inputExtensions",
+                    Arrays.stream(ImageIO.getReaderFileSuffixes())
+                            .map(suffix -> suffix.toLowerCase(Locale.ROOT))
+                            // The raw reader requires dimensions supplied out of band, not an
+                            // uploaded file.
+                            .filter(suffix -> !suffix.equals("raw"))
+                            .distinct()
+                            .sorted()
+                            .toList());
+        } else if (declaration.inputExtensions().length > 0) {
+            extension.put("inputExtensions", List.of(declaration.inputExtensions()));
+        }
         if (declaration.cases().length > 0) {
             extension.put("cases", cases(declaration, handler));
         }

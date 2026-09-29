@@ -18,7 +18,7 @@ For desktop app development, see the [Tauri](#tauri) section below.
 `frontend/` is a workspace containing one or more apps. Today it holds the
 PDF editor under `frontend/editor/`; new apps (the developer portal, etc.)
 will sit alongside it as siblings. Shared tooling — `package.json`, `node_modules`,
-`.storybook/`, oxlint, Prettier — lives at `frontend/` so every app installs
+`.storybook/`, oxlint, oxfmt — lives at `frontend/` so every app installs
 once and lints with the same config.
 
 ## Environment Variables

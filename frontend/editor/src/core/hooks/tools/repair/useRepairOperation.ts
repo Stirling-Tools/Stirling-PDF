@@ -6,15 +6,13 @@ import {
 import {
   fileOnlyMapping,
   objectToFormData,
-  type ToolEndpoint,
 } from "@app/hooks/tools/shared/toolApiMapping";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 import {
   RepairParameters,
   defaultParameters,
 } from "@app/hooks/tools/repair/useRepairParameters";
-
-const ENDPOINT = "/api/v1/misc/repair" satisfies ToolEndpoint;
+import { REPAIR_ENDPOINT } from "@app/constants/toolEndpoints";
 
 // Repair takes only a file; there are no request parameters to map.
 const { toApiParams, fromApiParams } = fileOnlyMapping();
@@ -30,7 +28,7 @@ export const repairOperationConfig = defineSingleFileTool({
   toApiParams,
   fromApiParams,
   operationType: "repair",
-  endpoint: ENDPOINT,
+  endpoint: REPAIR_ENDPOINT,
   defaultParameters,
 });
 

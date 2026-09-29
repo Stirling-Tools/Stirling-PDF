@@ -9,12 +9,7 @@ import {
   TextInput,
   Tooltip,
 } from "@mantine/core";
-import HomeIcon from "@mui/icons-material/Home";
-import FolderIcon from "@mui/icons-material/Folder";
-import FolderOpenIcon from "@mui/icons-material/FolderOpen";
-import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
-import ErrorOutlineIcon from "@mui/icons-material/ErrorOutlined";
-
+import { Icon } from "@app/ui/Icon";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { FolderId, FolderRecord, ROOT_FOLDER_ID } from "@app/types/folder";
@@ -47,12 +42,10 @@ export function MoveToFolderDialog({
   const [target, setTarget] = useState<FolderId | null>(initialFolderId);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Inline create-folder state; revealed by the toggle.
   const [creatingFolder, setCreatingFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
   const [creating, setCreating] = useState(false);
 
-  // Reset when reopening with a new initial.
   React.useEffect(() => {
     if (opened) {
       setTarget(initialFolderId);
@@ -64,7 +57,6 @@ export function MoveToFolderDialog({
     }
   }, [opened, initialFolderId]);
 
-  /** Single-pass build of parent index, depths, and blocked descendants. */
   const { depthById, blocked, treeOrder } = useMemo(() => {
     const byParent = new Map<FolderId | null, FolderRecord[]>();
     for (const folder of folders) {
@@ -78,7 +70,6 @@ export function MoveToFolderDialog({
       );
     }
 
-    // Pre-order DFS; truncates past MAX_TREE_DEPTH to prevent stack overflow.
     const MAX_TREE_DEPTH = 50;
     const order: FolderRecord[] = [];
     const depths = new Map<FolderId, number>();
@@ -134,7 +125,7 @@ export function MoveToFolderDialog({
           }}
         >
           <FolderPick
-            label={t("filesPage.allFiles", "All files")}
+            label={t("filesPage.allFiles", "Stirling library")}
             isActive={target === ROOT_FOLDER_ID}
             disabled={false}
             depth={0}
@@ -153,7 +144,6 @@ export function MoveToFolderDialog({
             />
           ))}
         </div>
-        {/* Inline Create new folder; new folder becomes the move target. */}
         {onCreateFolder &&
           (() => {
             const trimmedName = newFolderName.trim();
@@ -164,7 +154,6 @@ export function MoveToFolderDialog({
               try {
                 const created = await onCreateFolder(
                   trimmedName,
-                  // ROOT becomes null parent.
                   target === ROOT_FOLDER_ID ? null : target,
                 );
                 setTarget(created.id);
@@ -221,7 +210,6 @@ export function MoveToFolderDialog({
                 >
                   {t("filesPage.moveDialog.newFolderCreate", "Create")}
                 </Button>
-                {/* X collapses the inline create row only. */}
                 <Tooltip
                   label={t("filesPage.moveDialog.newFolderCancel", "Discard")}
                   withinPortal
@@ -244,7 +232,7 @@ export function MoveToFolderDialog({
               <Button
                 variant="tertiary"
                 size="sm"
-                leftSection={<CreateNewFolderIcon fontSize="small" />}
+                leftSection={<Icon name="folder-plus" size={20} />}
                 onClick={() => {
                   setCreatingFolder(true);
                   setNewFolderName("");
@@ -262,7 +250,7 @@ export function MoveToFolderDialog({
         {error && (
           <Alert
             color="red"
-            icon={<ErrorOutlineIcon fontSize="small" />}
+            icon={<Icon name="circle-alert" size={20} />}
             variant="light"
             role="alert"
           >
@@ -275,6 +263,7 @@ export function MoveToFolderDialog({
           </Button>
           <Button
             loading={submitting}
+            disabled={creating || (target !== null && blocked.has(target))}
             onClick={async () => {
               setSubmitting(true);
               setError(null);
@@ -331,11 +320,11 @@ function FolderPick({
       disabled={disabled}
       leftSection={
         isRoot ? (
-          <HomeIcon fontSize="small" />
+          <Icon name="house" size={20} />
         ) : isActive ? (
-          <FolderOpenIcon fontSize="small" style={{ color }} />
+          <Icon name="folder-open" size={20} style={{ color }} />
         ) : (
-          <FolderIcon fontSize="small" style={{ color }} />
+          <Icon name="folder" size={20} style={{ color }} />
         )
       }
       style={{

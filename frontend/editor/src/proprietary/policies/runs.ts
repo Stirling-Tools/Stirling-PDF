@@ -47,7 +47,7 @@ function activityAction(run: PolicyRunView): string {
 
 export function runsToActivity(runs: PolicyRunView[]): PolicyActivityItem[] {
   return runs.map((run) => ({
-    doc: run.outputs[0]?.fileName ?? "Policy run",
+    doc: run.outputs?.[0]?.fileName ?? "Policy run",
     action: activityAction(run),
     time: relativeTime(run.createdAt),
     status: activityStatus(run),

@@ -1,5 +1,7 @@
 package stirling.software.SPDF.config;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -49,6 +51,9 @@ public class CleanUrlInterceptor implements HandlerInterceptor {
         String queryString = request.getQueryString();
         if (queryString != null && !queryString.isEmpty()) {
             Map<String, String> allowedParameters = new HashMap<>();
+            // The frontend needs state to bind the SaaS response to the initiating browser.
+            boolean accountLinkCallback =
+                    requestURI.equals(request.getContextPath() + "/account-link/callback");
 
             // Keep only the allowed parameters
             String[] queryParameters = queryString.split("&");
@@ -57,7 +62,8 @@ public class CleanUrlInterceptor implements HandlerInterceptor {
                 if (keyValuePair.length != 2) {
                     continue;
                 }
-                if (ALLOWED_PARAMS.contains(keyValuePair[0])) {
+                if (ALLOWED_PARAMS.contains(keyValuePair[0])
+                        || (accountLinkCallback && "state".equals(keyValuePair[0]))) {
                     allowedParameters.put(keyValuePair[0], keyValuePair[1]);
                 }
             }
@@ -76,7 +82,20 @@ public class CleanUrlInterceptor implements HandlerInterceptor {
                 // Redirect to the URL with only allowed query parameters
                 String redirectUrl = requestURI + "?" + newQueryString;
 
-                response.sendRedirect(request.getContextPath() + redirectUrl);
+                try {
+                    URI redirectUri = new URI(redirectUrl);
+                    // Relative URIs can still name another host through a leading //.
+                    if (redirectUri.isAbsolute()
+                            || redirectUri.getRawAuthority() != null
+                            || !redirectUrl.startsWith("/")
+                            || redirectUrl.startsWith("//")) {
+                        response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+                        return false;
+                    }
+                    response.sendRedirect(redirectUri.toString());
+                } catch (URISyntaxException ex) {
+                    response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+                }
                 return false;
             }
         }

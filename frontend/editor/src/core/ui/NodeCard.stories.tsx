@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import { Icon } from "@app/ui/Icon";
 import { NodeCard } from "@app/ui/NodeCard";
 import { ActionIcon } from "@app/ui/ActionIcon";
 
@@ -9,7 +8,7 @@ const meta = {
   component: NodeCard,
   parameters: { layout: "padded" },
   args: {
-    icon: <TuneRoundedIcon style={{ fontSize: "1.125rem" }} />,
+    icon: <Icon name="sliders-horizontal" size={"1.125rem"} />,
     title: "Compress",
     detail: "level 7",
     onSelect: () => {},
@@ -46,7 +45,7 @@ export const WithTrailing: Story = {
         shape="circle"
         aria-label="Remove"
       >
-        <CloseRoundedIcon style={{ fontSize: "0.875rem" }} />
+        <Icon name="x" size={"0.875rem"} />
       </ActionIcon>
     ),
   },

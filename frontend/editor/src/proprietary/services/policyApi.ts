@@ -6,9 +6,11 @@
  */
 
 import apiClient from "@app/services/apiClient";
+import { uploadableFile } from "@app/utils/uploadableFile";
 import { getPolicyOutputBaseUrl } from "@app/services/policyOutputBaseUrl";
+import type { AccountLinkBlockSource } from "@app/services/accountLinkBlock";
+import { policyCreditContext } from "@app/services/policyCreditContext";
 import type {
-  BackendPipelineDefinition,
   BackendPolicy,
   PolicyExecutionTarget,
   PolicyRunView,
@@ -20,16 +22,6 @@ interface JobResponse {
   result: unknown;
 }
 
-// --- Policy config persistence (server-side store, JPA-backed) ---
-
-/** Create or update a policy; the backend assigns a blank id and returns it. */
-export async function savePolicy(
-  policy: BackendPolicy,
-): Promise<BackendPolicy> {
-  const res = await apiClient.post<BackendPolicy>("/api/v1/policies", policy);
-  return res.data;
-}
-
 /** List all stored policies. */
 export async function listPolicies(): Promise<BackendPolicy[]> {
   const res = await apiClient.get<BackendPolicy[]>("/api/v1/policies", {
@@ -38,65 +30,30 @@ export async function listPolicies(): Promise<BackendPolicy[]> {
   return res.data;
 }
 
-/** Fetch a stored policy by id. */
-export async function getPolicy(id: string): Promise<BackendPolicy> {
-  const res = await apiClient.get<BackendPolicy>(
-    `/api/v1/policies/${encodeURIComponent(id)}`,
-  );
-  return res.data;
-}
-
-/** Delete a stored policy by id. */
-export async function deletePolicy(id: string): Promise<void> {
-  await apiClient.delete(`/api/v1/policies/${encodeURIComponent(id)}`);
-}
-
 /**
- * Persist the team's run order (server-side, shared by the whole team). Sends the
- * ordered backend policy ids; the backend maps position → order and ignores any
- * id outside the caller's team. Team-leader/admin only (403 otherwise).
+ * Run a stored policy by id; returns the run id. `fileId` is this workspace's own opaque id, recorded
+ * against any failure of the run. Only honoured for a single-document run, and never a filename.
  */
-export async function reorderPolicies(orderedIds: string[]): Promise<void> {
-  await apiClient.put("/api/v1/policies/order", orderedIds);
-}
-
-/** Run a stored policy by id on the supplied files; returns the run id. */
 export async function runStoredPolicy(
   id: string,
   files: File[],
+  fileId?: string,
+  source: AccountLinkBlockSource = "foreground",
 ): Promise<string> {
   const form = new FormData();
-  for (const file of files) form.append("fileInput", file);
+  for (const file of files) form.append("fileInput", uploadableFile(file));
+  if (fileId) form.append("fileId", fileId);
   // Don't set Content-Type: the HTTP client must generate multipart/form-data
   // WITH its boundary from the FormData body. A manual boundary-less header makes
   // the server reject the request ("no multipart boundary parameter").
   const res = await apiClient.post<JobResponse>(
     `/api/v1/policies/${encodeURIComponent(id)}/run`,
     form,
-    { suppressErrorToast: true },
+    {
+      suppressErrorToast: true,
+      accountLinkBlockContext: policyCreditContext(id, source),
+    },
   );
-  return res.data.jobId;
-}
-
-// --- Ad-hoc pipeline runs (no stored policy) ---
-
-/**
- * Run an ad-hoc pipeline on the backend over the given documents. Returns the
- * run id; poll {@link getPolicyRun} for status + output file ids.
- */
-export async function runPolicyPipeline(
-  definition: BackendPipelineDefinition,
-  files: File[],
-): Promise<string> {
-  const form = new FormData();
-  for (const file of files) form.append("fileInput", file);
-  // The backend binds this as a typed @RequestPart, so it must be an application/json part.
-  form.append(
-    "json",
-    new Blob([JSON.stringify(definition)], { type: "application/json" }),
-  );
-  // No Content-Type: let the client set multipart/form-data with its boundary.
-  const res = await apiClient.post<JobResponse>("/api/v1/policies/run", form);
   return res.data.jobId;
 }
 
@@ -116,10 +73,12 @@ export async function downloadPolicyOutput(
   fileId: string,
   target: PolicyExecutionTarget,
 ): Promise<Blob> {
-  const base = getPolicyOutputBaseUrl(target);
+  const base = await getPolicyOutputBaseUrl(target);
   const res = await apiClient.get<Blob>(
     `${base}/api/v1/general/files/${encodeURIComponent(fileId)}`,
-    { responseType: "blob" },
+    {
+      responseType: "blob",
+    },
   );
   return res.data;
 }

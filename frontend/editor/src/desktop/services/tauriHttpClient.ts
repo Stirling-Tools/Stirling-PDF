@@ -31,10 +31,13 @@ export interface TauriHttpRequestConfig {
   withCredentials?: boolean;
   // Custom properties for desktop
   operationName?: string;
+  /** Pins background automation requests to the account and server that started them. */
+  automationSession?: string;
   skipBackendReadyCheck?: boolean;
   skipAuthRedirect?: boolean;
   // Axios compatibility properties (ignored by Tauri HTTP)
   suppressErrorToast?: boolean;
+  accountLinkBlockContext?: import("@app/services/accountLinkBlock").AccountLinkBlockContext;
   cancelToken?: any;
   signal?: AbortSignal;
 }
@@ -227,6 +230,16 @@ class TauriHttpClient {
             delete headers[key];
           }
         }
+      } else if (finalConfig.data instanceof URLSearchParams) {
+        body = finalConfig.data.toString();
+        if (
+          !Object.keys(headers).some(
+            (key) => key.toLowerCase() === "content-type",
+          )
+        ) {
+          headers["Content-Type"] =
+            "application/x-www-form-urlencoded;charset=UTF-8";
+        }
       } else if (typeof finalConfig.data === "object") {
         // Serialize as JSON
         body = JSON.stringify(finalConfig.data);
@@ -253,7 +266,11 @@ class TauriHttpClient {
         };
       } = {
         method,
-        headers,
+        // The dev webview has a Vite origin; cloud CORS accepts the packaged app origin.
+        // task desktop:dev alone enables the plugin feature needed to override Origin.
+        headers: import.meta.env.DEV
+          ? { Origin: "tauri://localhost", ...headers }
+          : headers,
         body,
         credentials,
         ...(finalConfig.signal ? { signal: finalConfig.signal } : {}),
