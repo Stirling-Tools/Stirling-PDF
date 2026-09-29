@@ -38,7 +38,12 @@ ext {
     gsonVersion = "2.14.0"
     guavaVersion = "33.6.0-jre"
     jinjavaVersion = "2.8.4"
-    jackson2Version = "2.22.2"
+    jackson2Version = "2.22.3"
+    // jackson-annotations uses 2-part versions
+    jackson2AnnotationsVersion = "2.22"
+    // Stays on Spring Boot 4's 3.1.x line
+    jackson3Version = "3.1.7"
+    nettyVersion = "4.2.18.Final"
     bucket4jVersion = "8.19.0"
     archunitVersion = "1.5.0"
     batikVersion = "1.19"
@@ -253,19 +258,26 @@ subprojects {
         resolutionStrategy.force "org.apache.commons:commons-lang3:${commonsLang3}"
         // CVE-2024-47554: commons-io DoS prevention
         resolutionStrategy.force "commons-io:commons-io:${commonsIoVersion}"
-        // Jackson 2 is transitive-only here (jinjava, opensaml, jjwt request older versions);
-        // pin the family to a current release and keep modules aligned.
-        resolutionStrategy.force "com.fasterxml.jackson.core:jackson-core:${jackson2Version}"
-        resolutionStrategy.force "com.fasterxml.jackson.core:jackson-databind:${jackson2Version}"
-        resolutionStrategy.force "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${jackson2Version}"
-        resolutionStrategy.force "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:${jackson2Version}"
-        resolutionStrategy.force "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jackson2Version}"
         // Keep BouncyCastle modules aligned to avoid runtime linkage errors
         resolutionStrategy.force "org.bouncycastle:bcprov-jdk18on:${bouncycastleVersion}"
         resolutionStrategy.force "org.bouncycastle:bcpkix-jdk18on:${bouncycastleVersion}"
         resolutionStrategy.force "org.bouncycastle:bcutil-jdk18on:${bouncycastleVersion}"
         resolutionStrategy.force "org.apache.santuario:xmlsec:4.0.4"
         resolutionStrategy.force "com.google.guava:guava:${guavaVersion}"
+        // useVersion, not force: the Spring BOM's eachDependency rule overrides force
+        resolutionStrategy.eachDependency { details ->
+            def group = details.requested.group
+            if (group == "io.netty") {
+                details.useVersion nettyVersion
+                details.because "netty CVE fixes"
+            } else if (group.startsWith("com.fasterxml.jackson")) {
+                details.useVersion(details.requested.name == "jackson-annotations" ? jackson2AnnotationsVersion : jackson2Version)
+                details.because "jackson 2.x CVE fixes"
+            } else if (group.startsWith("tools.jackson")) {
+                details.useVersion jackson3Version
+                details.because "jackson 3.x CVE fixes"
+            }
+        }
     }
 
     dependencyManagement {
