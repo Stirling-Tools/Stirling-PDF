@@ -1,30 +1,28 @@
 import { useTranslation } from "react-i18next";
 import { Banner, Button, EmptyState, Skeleton } from "@app/ui";
-import { useUI } from "@portal/contexts/UIContext";
-import { useLinkedAccountEmail } from "@portal/hooks/useLinkedAccountEmail";
-import { FLOW_JOURNEY } from "@portal/api/procurement";
-import { ProcurementAgreement } from "@portal/components/procurement/ProcurementAgreement";
+import { useUI } from "@app/portal/contexts/UIContext";
+import { useLinkedAccountEmail } from "@app/portal/hooks/useLinkedAccountEmail";
+import { ProcurementAgreement } from "@app/portal/components/procurement/ProcurementAgreement";
 import {
+  DocumentsModal,
   LicenseModal,
   ScheduleCallModal,
   TrialManageModal,
   TrialSetupModal,
-} from "@portal/components/procurement/ProcurementExtras";
-import { ProcurementModal } from "@portal/components/procurement/ProcurementModal";
+} from "@app/portal/components/procurement/ProcurementExtras";
+import { ProcurementModal } from "@app/portal/components/procurement/ProcurementModal";
 import {
   LiveStageCard,
   PaymentStageCard,
-} from "@portal/components/procurement/ProcurementStages";
-import { QuoteBuilder } from "@portal/components/procurement/QuoteBuilder";
-import { StageStepper } from "@portal/components/procurement/StageStepper";
-import type { ProcurementController } from "@portal/components/procurement/useProcurement";
+} from "@app/portal/components/procurement/ProcurementStages";
+import { QuoteBuilder } from "@app/portal/components/procurement/QuoteBuilder";
+import type { ProcurementController } from "@app/portal/components/procurement/useProcurement";
 
 /**
  * The procurement takeover flow: the full-screen journey modal (quote builder →
  * quote & agreement → payment → live) plus the licence-key, schedule-call, trial-setup,
  * and trial-management modals. Driven entirely by a shared ProcurementController
- * so it can sit next to a deal-status hero rendered elsewhere (e.g. inside the
- * tier hero card on Home).
+ * so it can sit alongside the deal-status section in Usage & Billing.
  */
 export function ProcurementFlow({
   controller,
@@ -32,7 +30,7 @@ export function ProcurementFlow({
   controller: ProcurementController;
 }) {
   const { t } = useTranslation();
-  const { openLinkModal } = useUI();
+  const { openLinkModal, linkModalOpen } = useUI();
   const scheduleEmail = useLinkedAccountEmail();
   const {
     isLinked,
@@ -42,7 +40,6 @@ export function ProcurementFlow({
     stage,
     latest,
     isIssued,
-    isDraft,
     busy,
     downloading,
     downloadingLicense,
@@ -62,15 +59,31 @@ export function ProcurementFlow({
     onAgree,
     onDownloadPdf,
     onDownloadOfflineLicense,
+    downloadingAgreement,
+    onDownloadSignedAgreement,
   } = controller;
+
+  // The builder owns the dialog's chrome while it is the visible step. It spans the whole quote
+  // stage now, not just the draft part of it: issuing turns its last step into the review of the
+  // issued paper rather than handing off to a separate card.
+  const builderShowing =
+    isLinked && started && (editing || stage === "trial" || stage === "quote");
+  const agreementShowing =
+    isLinked && started && !editing && stage === "security" && latest != null;
+  // Both of these name their own document in the header and carry its download there, so the shell
+  // must not stack a second header (nor a second close) above them.
+  const ownsHeader = builderShowing || agreementShowing;
 
   return (
     <>
       <ProcurementModal
-        open={open}
+        open={open && !linkModalOpen}
         onClose={() => setOpen(false)}
         title={t("portal.procurement.title")}
         subtitle={t("portal.procurement.subtitle")}
+        // The builder and the agreement render their own heading and close; the payment and live
+        // steps have none, so they keep the shell's header.
+        headerless={ownsHeader}
       >
         {error && (
           <Banner
@@ -88,11 +101,7 @@ export function ProcurementFlow({
             title={t("portal.procurement.link.title")}
             description={t("portal.procurement.link.description")}
             actions={
-              <Button
-                variant="primary"
-                accent="premium"
-                onClick={() => openLinkModal()}
-              >
+              <Button variant="primary" onClick={() => openLinkModal()}>
                 {t("portal.procurement.link.cta")}
               </Button>
             }
@@ -103,59 +112,78 @@ export function ProcurementFlow({
 
         {isLinked && started && (
           <>
-            <div className="portal-proc__modal-stepper">
-              <StageStepper journey={FLOW_JOURNEY} currentStage={stage!} />
-            </div>
-
-            {(editing ||
-              (isDraft && (stage === "trial" || stage === "quote"))) && (
+            {builderShowing && (
               <QuoteBuilder
                 deployment={data?.deployment ?? "cloud"}
                 seats={data?.seats ?? 0}
+                email={scheduleEmail}
+                dealDetails={
+                  data
+                    ? {
+                        businessName: data.businessName,
+                        contactName: data.contactName,
+                        contactEmail: data.contactEmail,
+                      }
+                    : undefined
+                }
                 initial={latest?.config}
+                eulaAlreadyAgreed={data?.trialStartedAt != null}
+                onClose={() => setOpen(false)}
                 onGenerate={onGenerate}
+                // Null while re-editing: the buyer asked for the form, not the paper they just left.
+                issued={!editing && isIssued ? latest : null}
+                downloading={downloading}
+                onDownload={onDownloadPdf}
               />
             )}
 
-            {/* Quote + agreement are one step: review the itemised quote and the agreement, then
-                accept straight into a committed subscription. Once accepted you can't go back.
-                ("security" is the retired agreement stage — still handled so an older deal that
-                stopped there isn't left blank.) */}
-            {!editing &&
-              isIssued &&
-              (stage === "quote" || stage === "security") &&
-              latest && (
-                <ProcurementAgreement
-                  quote={latest}
-                  busy={busy}
-                  downloading={downloading}
-                  onAgree={onAgree}
-                  onDownload={onDownloadPdf}
-                  onEdit={() => setEditing(true)}
-                />
-              )}
+            {/* Agreement step: review and sign the enterprise agreement. Signing accepts the quote
+                into a committed subscription (Stripe). */}
+            {agreementShowing && latest && (
+              <ProcurementAgreement
+                quote={latest}
+                busy={busy}
+                onAgree={onAgree}
+                onRequestChanges={() => {
+                  setOpen(false);
+                  setExtra("schedule");
+                }}
+                onClose={() => setOpen(false)}
+              />
+            )}
 
             {!editing && stage === "procurement" && latest && (
               <PaymentStageCard
                 invoiceUrl={latest.invoiceUrl}
                 invoicePdf={latest.invoicePdf ?? invoicePdf}
+                signedAgreementVersion={data?.agreementSignedVersion}
+                downloadingAgreement={downloadingAgreement}
+                onDownloadSignedAgreement={onDownloadSignedAgreement}
               />
             )}
 
-            {!editing && stage === "active" && <LiveStageCard />}
+            {!editing && stage === "active" && (
+              <LiveStageCard
+                signedAgreementVersion={data?.agreementSignedVersion}
+                downloadingAgreement={downloadingAgreement}
+                onDownloadSignedAgreement={onDownloadSignedAgreement}
+              />
+            )}
           </>
         )}
       </ProcurementModal>
 
       <TrialSetupModal
-        open={extra === "setup"}
+        open={extra === "setup" && !linkModalOpen}
         onClose={() => setExtra(null)}
         busy={busy}
+        email={scheduleEmail ?? undefined}
+        onScheduleCall={() => setExtra("schedule")}
         onConfirm={onConfirmSetup}
       />
       {data?.licenseKey && (
         <LicenseModal
-          open={extra === "license"}
+          open={extra === "license" && !linkModalOpen}
           onClose={() => setExtra(null)}
           licenseKey={data.licenseKey}
           offlineAvailable={data.deployment === "airgap"}
@@ -165,13 +193,13 @@ export function ProcurementFlow({
         />
       )}
       <ScheduleCallModal
-        open={extra === "schedule"}
+        open={extra === "schedule" && !linkModalOpen}
         onClose={() => setExtra(null)}
         email={scheduleEmail}
       />
       {data && (
         <TrialManageModal
-          open={extra === "trial"}
+          open={extra === "trial" && !linkModalOpen}
           onClose={() => setExtra(null)}
           snapshot={data}
           busy={busy}
@@ -185,6 +213,23 @@ export function ProcurementFlow({
           }}
         />
       )}
+      <DocumentsModal
+        open={extra === "documents" && !linkModalOpen}
+        onClose={() => setExtra(null)}
+        agreementVersion={data?.agreementSignedVersion}
+        downloadingAgreement={downloadingAgreement}
+        onDownloadAgreement={onDownloadSignedAgreement}
+        onViewAgreement={() => {
+          setExtra(null);
+          setEditing(false);
+          setOpen(true);
+        }}
+        quoteAvailable={!!latest?.stripeQuoteId}
+        downloadingQuote={downloading}
+        onDownloadQuote={onDownloadPdf}
+        invoiceUrl={latest?.invoiceUrl}
+        invoicePdf={latest?.invoicePdf ?? invoicePdf}
+      />
     </>
   );
 }

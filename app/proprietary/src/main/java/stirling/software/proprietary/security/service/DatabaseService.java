@@ -109,15 +109,18 @@ public class DatabaseService implements DatabaseServiceInterface {
 
     private final ApplicationProperties.Datasource datasourceProps;
     private final DataSource dataSource;
+    private final org.springframework.context.ApplicationEventPublisher events;
     private final DatabaseNotificationServiceInterface backupNotificationService;
 
     public DatabaseService(
             ApplicationProperties.Datasource datasourceProps,
             DataSource dataSource,
-            DatabaseNotificationServiceInterface backupNotificationService) {
+            DatabaseNotificationServiceInterface backupNotificationService,
+            org.springframework.context.ApplicationEventPublisher events) {
         this.BACKUP_DIR = Path.of(InstallationPathConfig.getBackupPath()).normalize();
         this.datasourceProps = datasourceProps;
         this.dataSource = dataSource;
+        this.events = events;
         this.backupNotificationService = backupNotificationService;
         moveBackupFiles();
     }
@@ -232,7 +235,7 @@ public class DatabaseService implements DatabaseServiceInterface {
         List<FileInfo> backupList = this.getBackupList();
         backupList.sort(Comparator.comparing(FileInfo::getModificationDate).reversed());
 
-        Path latestExport = Path.of(backupList.get(0).getFilePath());
+        Path latestExport = Path.of(backupList.getFirst().getFilePath());
 
         executeDatabaseScript(latestExport);
     }
@@ -267,6 +270,7 @@ public class DatabaseService implements DatabaseServiceInterface {
                         BACKUP_PREFIX + "user_" + dateNow.format(myFormatObj) + SQL_SUFFIX);
         Files.copy(tempTemplatePath, insertOutputFilePath);
         Files.deleteIfExists(tempTemplatePath);
+        events.publishEvent(new stirling.software.proprietary.service.DatabaseRestored());
         return true;
     }
 
@@ -376,7 +380,7 @@ public class DatabaseService implements DatabaseServiceInterface {
         List<FileInfo> backupList = this.getBackupList();
         List<Pair<FileInfo, Boolean>> deletedFiles = new ArrayList<>();
         if (!backupList.isEmpty()) {
-            FileInfo lastBackup = backupList.get(backupList.size() - 1);
+            FileInfo lastBackup = backupList.getLast();
             try {
                 Files.deleteIfExists(Path.of(lastBackup.getFilePath()));
                 deletedFiles.add(Pair.of(lastBackup, true));
@@ -399,7 +403,7 @@ public class DatabaseService implements DatabaseServiceInterface {
                     Comparator.comparing(
                             p -> p.getFileName().substring(7, p.getFileName().length() - 4)));
 
-            FileInfo oldestFile = filteredBackupList.get(0);
+            FileInfo oldestFile = filteredBackupList.getFirst();
             Files.deleteIfExists(Path.of(oldestFile.getFilePath()));
             log.info("Deleted oldest backup: {}", oldestFile.getFileName());
         } catch (IOException e) {

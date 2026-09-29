@@ -8,13 +8,14 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  color: var(--c-text) !important;
 }
 
 .field-value {
-  border: 1px solid rgb(var(--pdf-light-box-border));
+  border: 1px solid var(--c-border) !important;
   border-radius: 8px;
   padding: 0.65rem 0.75rem;
-  background-color: rgb(var(--pdf-light-box-bg));
+  background-color: var(--c-surface-raised) !important;
   min-height: 44px;
 }
 
@@ -63,16 +64,6 @@
   background: var(--c-bg) !important;
   padding: 32px 24px 48px;
   overflow-y: auto;
-}
-
-/* Keep field blocks stable colors across themes */
-.field-value {
-  border: 1px solid var(--c-border) !important;
-  background-color: var(--c-surface-raised) !important;
-}
-
-.field-container {
-  color: var(--c-text) !important;
 }
 
 /* Thumbnail preview styles */

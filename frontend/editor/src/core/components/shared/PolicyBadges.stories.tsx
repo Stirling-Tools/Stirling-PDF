@@ -2,10 +2,14 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { PolicyBadges } from "@app/components/shared/PolicyBadges";
 import type { FileItemPolicyRef } from "@app/components/shared/PolicyBadges";
 
+// Real catalog category ids, so each badge renders its own shared glyph
+// (policyCategoryIcon) rather than the unknown-category fallback. Accents mirror
+// policyAccentVar's mapping — that lives in the proprietary layer, which a core
+// story can't import.
 const mockPolicies: FileItemPolicyRef[] = [
-  { id: "policy-1", name: "Redact PII", accentColor: "#e03131", recent: true },
-  { id: "policy-2", name: "Sanitize", accentColor: "#2f9e44", recent: false },
-  { id: "policy-3", name: "Watermark", accentColor: "#4263eb", recent: false },
+  { id: "security", name: "Redact PII", accentColor: "var(--color-purple)" },
+  { id: "compliance", name: "Sanitize", accentColor: "var(--color-green)" },
+  { id: "ingestion", name: "Watermark", accentColor: "var(--color-blue)" },
 ];
 
 const meta = {
@@ -22,15 +26,25 @@ export const Default: Story = {
   },
 };
 
+/** A blocking policy mid-run: spinner, and the file's exit points are gated. */
 export const Enforcing: Story = {
   args: {
     policies: [
+      { ...mockPolicies[0], enforcing: true },
+      ...mockPolicies.slice(1),
+    ],
+  },
+};
+
+/** A non-blocking run (classification tagging): same spinner, nothing gated. */
+export const Background: Story = {
+  args: {
+    policies: [
       {
-        id: "policy-1",
-        name: "Redact PII",
-        accentColor: "#e03131",
-        recent: false,
-        enforcing: true,
+        id: "classification",
+        name: "Classification",
+        accentColor: "var(--color-orange)",
+        background: true,
       },
       ...mockPolicies.slice(1),
     ],

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { useSpread, SpreadMode } from "@embedpdf/plugin-spread/react";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
@@ -17,7 +17,12 @@ export function SpreadAPIBridge() {
     return null;
   }
 
-  return <SpreadAPIBridgeInner documentId={activeDocumentId} />;
+  return (
+    <SpreadAPIBridgeInner
+      key={activeDocumentId}
+      documentId={activeDocumentId}
+    />
+  );
 }
 
 function SpreadAPIBridgeInner({ documentId }: { documentId: string }) {
@@ -26,11 +31,11 @@ function SpreadAPIBridgeInner({ documentId }: { documentId: string }) {
 
   // Keep spread ref updated to avoid re-running effect when object reference changes
   const spreadRef = useRef(spread);
-  useEffect(() => {
+  useLayoutEffect(() => {
     spreadRef.current = spread;
   }, [spread]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const currentSpread = spreadRef.current;
     if (!currentSpread || spreadMode === undefined) {
       return;

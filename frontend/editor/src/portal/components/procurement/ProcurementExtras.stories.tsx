@@ -31,6 +31,10 @@ const SNAPSHOT: ProcurementSnapshot = {
   trialExtensionsUsed: 0,
   licensed: false,
   licenseKey: null,
+  agreementSignedVersion: null,
+  businessName: null,
+  contactName: null,
+  contactEmail: null,
   latestQuote: null,
 };
 
@@ -72,13 +76,14 @@ export const ScheduleCall: Story = {
   ),
 };
 
-// Deployment + seat count captured before the trial starts.
+// Two steps before the trial starts: how they'll run it, then who is buying.
 export const TrialSetup: Story = {
   render: () => (
     <TrialSetupModal
       open
       onClose={() => {}}
       busy={false}
+      onScheduleCall={() => {}}
       onConfirm={() => {}}
     />
   ),

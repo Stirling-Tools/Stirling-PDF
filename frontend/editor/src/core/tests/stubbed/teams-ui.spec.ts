@@ -42,7 +42,7 @@ async function setUpAdminWithTeams(
   await page.route("**/api/v1/proprietary/ui-data/teams", (route) =>
     route.fulfill({ json: teams }),
   );
-  await page.goto("/");
+  await page.goto("/editor");
 }
 
 test.describe("Teams management UI", () => {

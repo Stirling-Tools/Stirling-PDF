@@ -1,4 +1,4 @@
-import React, { CSSProperties, useMemo, useRef } from "react";
+import React, { CSSProperties, useCallback, useMemo, useRef } from "react";
 import { useAdjustFontSizeToFit } from "@app/components/shared/fitText/textFit";
 
 type FitTextProps = {
@@ -28,8 +28,14 @@ const FitText: React.FC<FitTextProps> = ({
 }) => {
   const ref = useRef<HTMLElement | null>(null);
 
+  // Callback ref: an HTMLElement handler satisfies span's/div's differing ref
+  // types (callback refs are contravariant), so the tag can stay polymorphic.
+  const setRef = useCallback((node: HTMLElement | null) => {
+    ref.current = node;
+  }, []);
+
   // Hook runs after mount and on size/text changes; uses observers internally
-  useAdjustFontSizeToFit(ref as any, {
+  useAdjustFontSizeToFit(ref, {
     maxFontSizePx: fontSize,
     minFontScale: minimumFontScale,
     maxLines: lines,
@@ -38,7 +44,7 @@ const FitText: React.FC<FitTextProps> = ({
 
   // Memoize the HTML tag to render (span/div) from the `as` prop so
   // React doesn't create a new component function on each render.
-  const ElementTag: any = useMemo(() => as, [as]);
+  const ElementTag: React.ElementType = useMemo(() => as, [as]);
 
   // For the / character, insert zero-width soft breaks to prefer wrapping at them
   const displayText = useMemo(() => {
@@ -70,7 +76,7 @@ const FitText: React.FC<FitTextProps> = ({
 
   return (
     <ElementTag
-      ref={ref}
+      ref={setRef}
       className={className}
       style={{ ...clampStyles, ...style }}
     >

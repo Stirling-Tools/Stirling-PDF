@@ -41,6 +41,8 @@ class ApiKeyManagementServiceTest {
     @Mock private UserRepository userRepository;
     @Mock private UserService userService;
     @Mock private ApiKeyLegacyMigrator legacyMigrator;
+    @org.mockito.Mock private stirling.software.proprietary.service.OrgOwnerService orgOwnerService;
+
     @InjectMocks private ApiKeyManagementService service;
 
     private User caller;

@@ -325,7 +325,7 @@
 
 .v2Badge {
   background: var(--c-primary-tint);
-  color: var(--c-accent-fg);
+  color: var(--c-accent-text);
   padding: 3px 9px;
   border-radius: 6px;
   font-size: 12px;

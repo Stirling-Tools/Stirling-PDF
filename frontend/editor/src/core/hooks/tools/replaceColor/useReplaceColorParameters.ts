@@ -29,13 +29,19 @@ export const defaultParameters: ReplaceColorParameters = {
 export type ReplaceColorParametersHook =
   BaseParametersHook<ReplaceColorParameters>;
 
+/** Whether these parameters are complete enough to run. Shared by the tool's settings
+ * hook and its operationConfig, so the editor and the pipeline builder agree. */
+export function validateReplaceColorParameters(
+  _params: ReplaceColorParameters,
+): boolean {
+  // All parameters are always valid as they have defaults
+  return true;
+}
+
 export const useReplaceColorParameters = (): ReplaceColorParametersHook => {
   return useBaseParameters({
     defaultParameters,
     endpointName: "replace-invert-pdf",
-    validateFn: () => {
-      // All parameters are always valid as they have defaults
-      return true;
-    },
+    validateFn: validateReplaceColorParameters,
   });
 };

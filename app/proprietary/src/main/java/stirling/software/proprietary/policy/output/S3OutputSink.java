@@ -34,6 +34,7 @@ import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
+import software.amazon.awssdk.services.s3.model.ObjectLockMode;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 import software.amazon.awssdk.services.s3.model.S3Exception;
@@ -176,6 +177,7 @@ public class S3OutputSink implements PolicyOutputSink {
             if (conditionalPuts) {
                 put.ifNoneMatch("*");
             }
+            applyObjectLock(put, config);
             try {
                 PutObjectResponse response =
                         client.putObject(put.build(), RequestBody.fromFile(staged));
@@ -266,5 +268,25 @@ public class S3OutputSink implements PolicyOutputSink {
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException("MD5 unavailable", e);
         }
+    }
+
+    /**
+     * Write the object under Object Lock retention when the connection asks for it.
+     *
+     * <p>The retain-until date is computed per object from "now", so a policy that runs daily gives
+     * each document its own full retention window rather than a shared deadline.
+     *
+     * <p>Requires the bucket to have Object Lock enabled; S3 rejects the PUT otherwise, which is
+     * the correct outcome - silently storing a deletable object while an operator believes it is
+     * locked would be worse than failing.
+     */
+    private static void applyObjectLock(PutObjectRequest.Builder put, S3Config config) {
+        if (config.objectLockMode() == null || config.retentionDays() == null) {
+            return;
+        }
+        put.objectLockMode(ObjectLockMode.fromValue(config.objectLockMode()))
+                .objectLockRetainUntilDate(
+                        java.time.Instant.now()
+                                .plus(config.retentionDays(), java.time.temporal.ChronoUnit.DAYS));
     }
 }

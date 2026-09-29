@@ -2,10 +2,12 @@ package stirling.software.proprietary.policy.trigger;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -19,8 +21,10 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
 import stirling.software.proprietary.policy.engine.SweepKind;
 import stirling.software.proprietary.policy.model.OutputSpec;
+import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.model.PolicyBinding;
 import stirling.software.proprietary.policy.model.TriggerConfig;
 import stirling.software.proprietary.policy.source.InProcessSourceStore;
 import stirling.software.proprietary.policy.source.Source;
@@ -46,37 +50,45 @@ class WebhookTriggerTest {
     }
 
     @Test
-    void firesOnlyPoliciesReferencingTheDeliveredWebhook() {
+    void firesOnlyInputsReferencingTheDeliveredWebhook() {
         Policy matching = webhookPolicy("a", "whkA");
         Policy other = webhookPolicy("b", "whkB");
-        when(policyStore.findByTriggerType(TYPE)).thenReturn(List.of(matching, other));
+        when(policyStore.findBindingsByTriggerType(TYPE)).thenReturn(bindings(matching, other));
 
         trigger.fireForWebhook("whkA");
 
-        verify(policyRunner).run(matching, SweepKind.LIGHT);
-        verify(policyRunner, never()).run(other, SweepKind.LIGHT);
+        verify(policyRunner).runInput(matching, matching.inputs().get(0), SweepKind.LIGHT);
+        verify(policyRunner, never()).runInput(eq(other), any(), any());
     }
 
     @Test
     void ignoresADeliveryForAnUnknownWebhookId() {
         Policy policy = webhookPolicy("a", "whkA");
-        when(policyStore.findByTriggerType(TYPE)).thenReturn(List.of(policy));
+        when(policyStore.findBindingsByTriggerType(TYPE)).thenReturn(bindings(policy));
 
         trigger.fireForWebhook("whkZ");
 
-        verify(policyRunner, never()).run(any(), any(SweepKind.class));
+        verify(policyRunner, never()).runInput(any(), any(), any());
     }
 
     @Test
     void validateRequiresAWebhookSource() {
+        // A non-webhook source (here: an id that resolves to nothing) is rejected.
+        Policy notWebhook = policy("p", PipelineInput.manual("missing-source"));
         assertThrows(
                 IllegalArgumentException.class,
-                () -> trigger.validate(policy("p", webhookTriggerConfig(), List.of())));
-        trigger.validate(webhookPolicy("p", "whkA"));
+                () -> trigger.validate(notWebhook, notWebhook.inputs().get(0)));
+
+        Policy hooked = webhookPolicy("p", "whkA");
+        trigger.validate(hooked, hooked.inputs().get(0));
     }
 
-    private static TriggerConfig webhookTriggerConfig() {
-        return new TriggerConfig(TYPE, Map.of());
+    /** Every (policy, input) binding across the given policies, as the store would return them. */
+    private static List<PolicyBinding> bindings(Policy... policies) {
+        return Arrays.stream(policies)
+                .flatMap(
+                        policy -> policy.inputs().stream().map(in -> new PolicyBinding(policy, in)))
+                .toList();
     }
 
     private Policy webhookPolicy(String id, String webhookId) {
@@ -98,17 +110,16 @@ class WebhookTriggerTest {
                                         "owner",
                                         null))
                         .id();
-        return policy(id, webhookTriggerConfig(), List.of(sourceId));
+        return policy(id, new PipelineInput(sourceId, new TriggerConfig(TYPE, Map.of())));
     }
 
-    private static Policy policy(String id, TriggerConfig trigger, List<String> sourceIds) {
+    private static Policy policy(String id, PipelineInput input) {
         return new Policy(
                 id,
                 "hook",
                 "owner",
                 true,
-                trigger,
-                sourceIds,
+                List.of(input),
                 List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
                 OutputSpec.inline());
     }

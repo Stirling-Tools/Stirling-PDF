@@ -72,6 +72,18 @@ class S3InputSourceTest {
     }
 
     @Test
+    void trackKeepsOriginalsAndOnlyClaimsChangedObjects() throws IOException {
+        listingReturns(object("doc.pdf", "etag-1"));
+        InputSpec tracked = new InputSpec("s3", options(Map.of("mode", "track")));
+        source.resolve(tracked, ctx).getFirst().onComplete().accept(true);
+        assertTrue(source.resolve(tracked, ctx).isEmpty());
+        verify(s3Client, never()).deleteObject(any(DeleteObjectRequest.class));
+        verify(s3Client, never()).headObject(any(HeadObjectRequest.class));
+        listingReturns(object("doc.pdf", "etag-2"));
+        assertEquals(1, source.resolve(tracked, ctx).size());
+    }
+
+    @Test
     void consumeRemovesTheObjectOnceProcessed() throws IOException {
         listingReturns(object("doc.pdf", "\"etag-1\""));
         headReturns("doc.pdf", "\"etag-1\"");

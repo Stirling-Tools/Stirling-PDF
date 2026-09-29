@@ -5,11 +5,10 @@
   width: 56px;
   height: 56px;
   border-radius: 16px;
-  border: none;
-  background: var(--c-primary);
-  color: var(--c-text-on-primary);
+  border: 1px solid var(--c-btn-secondary-border);
+  background: var(--c-btn-secondary);
   cursor: pointer;
-  box-shadow: 0 4px 16px color-mix(in srgb, var(--c-primary) 40%, transparent);
+  box-shadow: var(--shadow-md);
   transition:
     transform 180ms cubic-bezier(0.32, 0.72, 0, 1),
     box-shadow 180ms ease;
@@ -20,7 +19,7 @@
 
 .chat-fab-btn:hover {
   transform: scale(1.09);
-  box-shadow: 0 6px 22px color-mix(in srgb, var(--c-primary) 52%, transparent);
+  box-shadow: var(--shadow-lg);
 }
 
 .chat-fab-btn:active {

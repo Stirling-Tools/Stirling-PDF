@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import EmailPasswordForm from "@app/auth/ui/EmailPasswordForm";
 import "@app/auth/ui/auth.css";
 

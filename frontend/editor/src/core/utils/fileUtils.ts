@@ -1,4 +1,9 @@
-// Pure utility functions for file operations
+import {
+  TOOL_FORMATS,
+  TOOL_FORMAT_EXTENSIONS,
+  type ToolFormat,
+} from "@app/types/toolIO";
+import type { StirlingFileStub } from "@app/types/fileContext";
 
 /**
  * Consolidated file size formatting utility
@@ -74,6 +79,17 @@ export function getFilenameWithoutExtension(
 }
 
 /**
+ * Splits a filename into its base and extension, keeping the dot on the
+ * extension so `base + extension` round-trips. A name with no extension (or a
+ * leading-dot name like ".env") gets an empty extension.
+ * @example splitFileName('report.pdf') // ['report', '.pdf']
+ */
+export function splitFileName(name: string): [string, string] {
+  const dot = name.lastIndexOf(".");
+  return dot > 0 ? [name.slice(0, dot), name.slice(dot)] : [name, ""];
+}
+
+/**
  * Checks if a file is a PDF based on extension and MIME type
  * @param file - File or file-like object with name and type properties
  * @returns true if the file appears to be a PDF
@@ -96,6 +112,21 @@ export function isPdfFile(
   }
 
   return false;
+}
+
+/**
+ * Uses FileContext's detected password protection when present; no file bytes are read.
+ * Multiple categories can match (for example DOCX is both WORD and EBOOK); unknown files match none.
+ */
+export function getFileFormats(
+  file: Pick<StirlingFileStub, "name" | "type" | "processedFile">,
+): ToolFormat[] {
+  if (file.processedFile?.isEncrypted) return ["PDF_ENCRYPTED"];
+  if (isPdfFile(file)) return ["PDF"];
+  const extension = detectFileExtension(file.name);
+  return TOOL_FORMATS.filter((format) =>
+    TOOL_FORMAT_EXTENSIONS[format].includes(extension),
+  );
 }
 
 export type NonPdfFileType =

@@ -9,8 +9,284 @@
   flex-shrink: 0;
 }
 
-/* CSS Custom Properties for Fullscreen Mode */
+.tool-panel {
+  position: relative;
+  background: var(--c-surface);
+  transition:
+    width 0.3s ease,
+    max-width 0.3s ease;
+  view-transition-name: tool-rail;
+  user-select: none;
+}
+
+/* Off the trailing edge and back, mirroring the file sidebar. Out of flow while
+   it leaves, so the reader's rail takes the slot without waiting for it. */
+[data-wings="leaving"] .tool-panel {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  z-index: var(--z-dropdown);
+  animation: tool-panel-leave var(--wings-ms) ease-in both;
+}
+
+[data-wings="returning"] .tool-panel {
+  animation: tool-panel-return var(--wings-ms) ease-out both;
+}
+
+/* Mirrored in RTL, where the panel sits on the leading edge. */
+[dir="rtl"] [data-wings="leaving"] .tool-panel {
+  animation-name: file-sidebar-leave;
+}
+
+[dir="rtl"] [data-wings="returning"] .tool-panel {
+  animation-name: file-sidebar-return;
+}
+
+@keyframes tool-panel-leave {
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes tool-panel-return {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-wings] .tool-panel {
+    animation: none;
+  }
+}
+
+/* Flush, with a rule on the workbench side mirroring the file sidebar's. */
+.tool-panel--floating {
+  /* Tracks the frame, which is dvh; vh would cut the bottom off on mobile. */
+  height: 100%;
+  background: var(--c-surface);
+  border-inline-start: 1px solid var(--c-border-subtle);
+}
+
+.tool-panel__expand-btn {
+  flex-shrink: 0;
+  color: var(--c-text-muted) !important;
+  border-color: var(--c-border-subtle) !important;
+}
+
+.tool-panel__expand-btn svg {
+  color: var(--c-text-muted) !important;
+}
+
+.tool-panel__expand-btn:hover {
+  color: var(--c-text) !important;
+  border-color: var(--border) !important;
+}
+
+.tool-panel__back-btn {
+  flex-shrink: 0;
+}
+
+.tool-panel__back-bar {
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--c-border-subtle) !important;
+}
+
+.tool-panel--fullscreen-active {
+  overflow: visible !important;
+}
+
+.tool-panel__search-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  height: 48px;
+  padding: 0 0.5rem;
+  box-sizing: border-box;
+}
+
+.tool-panel__search-row .search-input-container {
+  flex: 1 1 auto;
+}
+
+.tool-panel__compact-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 52px;
+  padding: 0.5rem 0.75rem;
+  box-sizing: border-box;
+}
+
+.tool-panel__compact-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--c-text);
+}
+
+/* On mobile the "Tools" tab sits directly above this panel, so the heading
+   just repeats it. The header stays for its actions, but shrinks to fit them -
+   at the desktop 52px it would read as an empty band once the title is gone. */
+@media (max-width: 64rem) {
+  .tool-panel__compact-title {
+    display: none;
+  }
+  .tool-panel__compact-header {
+    min-height: 44px;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+  }
+}
+
+/* In-panel tool filter. Aligned with .tool-picker__compact's inline padding so
+   the field lines up with the tool rows underneath it. */
+.tool-panel__search {
+  flex-shrink: 0;
+  padding: 0.5rem var(--mantine-spacing-sm) 0;
+}
+
+.tool-panel__search .search-input-container {
+  margin: 0;
+}
+
+/* Title inset matches the section headings' text below it. */
+.tool-panel__list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  padding: 0.5rem var(--mantine-spacing-sm) 0.25rem
+    calc(var(--mantine-spacing-sm) + 0.5rem);
+}
+
+.tool-panel__list-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--c-text);
+}
+
+.tool-panel__compact-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* Search that separates the Policies section from the Tools list below it. */
+.tool-panel__between-search {
+  padding: 0.5rem 0.75rem 0.25rem;
+  border-top: 1px solid var(--c-border-subtle, var(--c-border));
+}
+
+.tool-panel__between-search .search-input-container {
+  width: 100%;
+  margin-bottom: 0;
+}
+
+/* Slightly recessed search field so it reads as distinct from the panel. */
+.tool-panel__between-search input {
+  background-color: var(--c-surface-sunken);
+}
+
+::view-transition-old(tool-rail) {
+  animation: vt-rail-fade-out 180ms ease-out forwards;
+}
+
+::view-transition-new(tool-rail) {
+  animation: vt-rail-fade-in 220ms ease-in forwards;
+}
+
+@keyframes vt-rail-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes vt-rail-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(tool-rail),
+  ::view-transition-new(tool-rail) {
+    animation-duration: 1ms !important;
+  }
+}
+
+.tool-panel__mode-toggle {
+  transition: transform 0.2s ease;
+}
+
+.tool-panel__mode-toggle:hover {
+  transform: scale(1.04);
+}
+
+.tool-panel--fullscreen {
+  background: var(--c-bg-raised);
+}
+
+.tool-panel__placeholder {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--c-text-subtle);
+  font-size: 0.9rem;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.tool-panel__fullscreen-surface {
+  position: fixed;
+  display: flex;
+  pointer-events: none;
+  z-index: var(--z-fullscreen-surface);
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+}
+
 .tool-panel__fullscreen-surface-inner {
+  pointer-events: auto;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border-radius: 0;
+  background: linear-gradient(
+      140deg,
+      var(--fullscreen-bg-surface-1),
+      var(--fullscreen-bg-surface-2)
+    )
+    padding-box;
+  border: 1px solid var(--fullscreen-border-subtle-75);
+  box-shadow: none;
+  backdrop-filter: blur(18px);
+  overflow: hidden;
+  /* Shared animation durations for JS + CSS (sourced from theme.css) */
+  --fullscreen-anim-in-duration: var(--fullscreen-anim-duration-in);
+  --fullscreen-anim-out-duration: var(--fullscreen-anim-duration-out);
+  animation: tool-panel-fullscreen-slide-in var(--fullscreen-anim-in-duration)
+    ease forwards;
+
   --fullscreen-bg-surface-1: color-mix(
     in srgb,
     var(--c-bg-raised) 96%,
@@ -116,265 +392,6 @@
   --fullscreen-text-icon-compact: var(--c-text);
 }
 
-.tool-panel {
-  position: relative;
-  transition:
-    width 0.3s ease,
-    max-width 0.3s ease;
-  view-transition-name: tool-rail;
-  user-select: none;
-}
-
-.tool-panel__collapsed-strip {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  padding-top: 10px;
-  height: 100%;
-  width: 100%;
-  min-height: 0;
-}
-
-.tool-panel__collapsed-top {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 0 0 10px;
-}
-
-.tool-panel__collapsed-divider {
-  height: 1px;
-  background: var(--c-border-subtle);
-  margin: 0 0.5rem 8px;
-}
-
-.tool-panel__collapsed-tools {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 0 0 12px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  flex: 1 1 auto;
-  min-height: 0;
-}
-
-.tool-panel__collapsed-tool-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  border: 1px solid transparent;
-  border-radius: 0.5rem;
-  background: transparent;
-  color: var(--c-text);
-  cursor: pointer;
-  transition:
-    background 120ms ease-out,
-    border-color 120ms ease-out;
-  padding: 0;
-  flex-shrink: 0;
-}
-
-.tool-panel__collapsed-tool-btn:hover {
-  background: var(--mantine-color-default-hover);
-}
-
-.tool-panel__collapsed-tool-btn[data-selected="true"] {
-  background: var(--mantine-color-default-hover);
-  border-color: var(--mantine-color-default-border);
-}
-
-.tool-panel__expand-btn {
-  flex-shrink: 0;
-  color: var(--c-text-muted) !important;
-  border-color: var(--c-border-subtle) !important;
-}
-
-/* The collapse/expand toggle keeps a stable identity across the collapsed strip
-   and the expanded header, so a view transition translates it between the two
-   (same size) instead of cross-fading/scaling it ("big then small"). */
-.tool-panel__toggle-vt {
-  view-transition-name: sidebar-toggle;
-}
-
-.tool-panel__expand-btn svg {
-  color: var(--c-text-muted) !important;
-}
-
-.tool-panel__expand-btn:hover {
-  color: var(--c-text) !important;
-  border-color: var(--border) !important;
-}
-
-.tool-panel__collapsed-search-btn {
-  flex-shrink: 0;
-  color: var(--c-text-muted) !important;
-}
-
-.tool-panel__collapsed-search-btn svg {
-  color: var(--c-text-muted) !important;
-}
-
-.tool-panel__collapsed-search-btn:hover {
-  color: var(--c-text) !important;
-}
-
-.tool-panel__back-btn {
-  flex-shrink: 0;
-}
-
-.tool-panel__back-bar {
-  flex-shrink: 0;
-  border-bottom: 1px solid var(--c-border-subtle) !important;
-}
-
-.tool-panel--fullscreen-active {
-  overflow: visible !important;
-}
-
-.tool-panel__search-row {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  height: 48px;
-  padding: 0 0.5rem;
-  box-sizing: border-box;
-}
-
-.tool-panel__search-row .search-input-container {
-  flex: 1 1 auto;
-}
-
-.tool-panel__compact-header {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  min-height: 52px;
-  padding: 0.5rem 0.75rem;
-  box-sizing: border-box;
-}
-
-.tool-panel__compact-header .tool-panel__expand-btn {
-  margin-left: auto;
-}
-
-.tool-panel__compact-header-search {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.tool-panel__compact-header-search .search-input-container {
-  width: 100%;
-}
-
-/* Search that separates the Policies section from the Tools list below it. */
-.tool-panel__between-search {
-  padding: 0.5rem 0.75rem 0.25rem;
-  border-top: 1px solid var(--c-border-subtle, var(--c-border));
-}
-
-.tool-panel__between-search .search-input-container {
-  width: 100%;
-  margin-bottom: 0;
-}
-
-/* Slightly recessed search field so it reads as distinct from the panel. */
-.tool-panel__between-search input {
-  background-color: var(--c-surface-sunken);
-}
-
-::view-transition-old(tool-rail) {
-  animation: vt-rail-fade-out 180ms ease-out forwards;
-}
-
-::view-transition-new(tool-rail) {
-  animation: vt-rail-fade-in 220ms ease-in forwards;
-}
-
-@keyframes vt-rail-fade-out {
-  to {
-    opacity: 0;
-  }
-}
-
-@keyframes vt-rail-fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  ::view-transition-old(tool-rail),
-  ::view-transition-new(tool-rail) {
-    animation-duration: 1ms !important;
-  }
-}
-
-.tool-panel__mode-toggle {
-  transition: transform 0.2s ease;
-}
-
-.tool-panel__mode-toggle:hover {
-  transform: scale(1.04);
-}
-
-.tool-panel--fullscreen {
-  background: var(--c-bg-raised);
-}
-
-.tool-panel__placeholder {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--c-text-subtle);
-  font-size: 0.9rem;
-  padding: 1.5rem;
-  text-align: center;
-}
-
-.tool-panel__fullscreen-surface {
-  position: fixed;
-  display: flex;
-  pointer-events: none;
-  z-index: var(--z-fullscreen-surface);
-  top: 0;
-  left: 0;
-  width: 0;
-  height: 0;
-}
-
-.tool-panel__fullscreen-surface-inner {
-  pointer-events: auto;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  border-radius: 0;
-  background: linear-gradient(
-      140deg,
-      var(--fullscreen-bg-surface-1),
-      var(--fullscreen-bg-surface-2)
-    )
-    padding-box;
-  border: 1px solid var(--fullscreen-border-subtle-75);
-  box-shadow: none;
-  backdrop-filter: blur(18px);
-  overflow: hidden;
-  /* Shared animation durations for JS + CSS (sourced from theme.css) */
-  --fullscreen-anim-in-duration: var(--fullscreen-anim-duration-in);
-  --fullscreen-anim-out-duration: var(--fullscreen-anim-duration-out);
-  animation: tool-panel-fullscreen-slide-in var(--fullscreen-anim-in-duration)
-    ease forwards;
-}
-
 .tool-panel__fullscreen-surface-inner--exiting {
   animation: tool-panel-fullscreen-slide-out var(--fullscreen-anim-out-duration)
     ease forwards;
@@ -428,8 +445,15 @@
   flex: 1 1 auto;
 }
 
+/* Used by both FullscreenToolSurface and DetailedToolItem. */
 .tool-panel__fullscreen-body {
-  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  text-align: left;
+  /* Prevent long content (names, descriptions, shortcuts) from overflowing */
+  flex: 1 1 auto;
+  min-width: 0;
   min-height: 0;
   background: transparent;
 }
@@ -637,16 +661,6 @@
   font-size: 1.65rem;
   position: relative;
   z-index: var(--z-fullscreen-icon-svg);
-}
-
-.tool-panel__fullscreen-body {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  text-align: left;
-  /* Prevent long content (names, descriptions, shortcuts) from overflowing */
-  flex: 1 1 auto;
-  min-width: 0;
 }
 
 .tool-panel__fullscreen-name {

@@ -3,30 +3,24 @@
 /* ──────────────────────────────────────────────────────────────────────── */
 
 .portal-editor-hero {
-  border-radius: var(--radius-xl);
-  border: 1px solid var(--c-border);
-  background: var(--c-surface);
-  box-shadow: var(--shadow-sm);
   overflow: hidden;
 }
 
 .portal-editor-hero__row {
   display: flex;
   align-items: center;
-  gap: 1.25rem;
-  padding: 1rem 1.25rem;
-  background: color-mix(in srgb, var(--c-primary) 22%, var(--c-hero-dark));
+  gap: 0.75rem;
+  padding: 0.625rem 0.875rem;
+  background: var(--c-surface);
 }
 
 .portal-editor-hero__logo {
-  width: 3.5rem;
-  height: 3.5rem;
-  border-radius: 0.875rem;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
   overflow: hidden;
   flex-shrink: 0;
-  box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.1),
-    0 0 0 1px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-sm);
 }
 .portal-editor-hero__mark {
   width: 100%;
@@ -39,7 +33,7 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.25rem;
 }
 
 .portal-editor-hero__title-row {
@@ -50,31 +44,36 @@
 }
 
 .portal-editor-hero__name {
-  font-size: 1.125rem;
+  font-size: 0.9375rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--c-text);
   margin-right: 0.125rem;
 }
 
-.portal-editor-hero__chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3125rem;
-  padding: 0.25rem 0.6875rem;
-  border-radius: var(--radius-pill);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 0.71875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background var(--motion-fast);
+/* The deployment host, sat inline with the name as the rail's subject. */
+.portal-editor-hero__host {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--c-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.portal-editor-hero__chip:hover {
-  background: rgba(255, 255, 255, 0.16);
+
+/* Quiet separator between the host and the adoption count. */
+.portal-editor-hero__dot {
+  width: 0.3125rem;
+  height: 0.3125rem;
+  border-radius: 999px;
+  background: var(--c-border);
+  flex-shrink: 0;
 }
-.portal-editor-hero__chip svg {
-  color: rgba(255, 255, 255, 0.6);
+
+.portal-editor-hero__actives {
+  font-size: 0.75rem;
+  color: var(--c-text-muted);
+  white-space: nowrap;
 }
 
 .portal-editor-hero__meta {
@@ -83,15 +82,10 @@
   gap: 0.5rem;
   flex-wrap: wrap;
   font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.5);
-}
-.portal-editor-hero__host {
-  color: rgba(255, 255, 255, 0.92);
-  font-family: var(--font-mono);
-  font-weight: 500;
+  color: var(--c-text-subtle);
 }
 .portal-editor-hero__meta-sep {
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--c-border);
 }
 
 .portal-editor-hero__action {
@@ -99,35 +93,6 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-}
-
-/* Icon-only actions (e.g. install) on the dark header. */
-.portal-editor-hero__icon-btn {
-  display: grid;
-  place-items: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  flex-shrink: 0;
-  border-radius: var(--radius-md);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
-  cursor: pointer;
-  transition: background var(--motion-fast);
-}
-.portal-editor-hero__icon-btn:hover {
-  background: rgba(255, 255, 255, 0.16);
-}
-
-/* White CTA on the dark header, matching the marketing card. */
-.portal-editor-hero__action .portal-editor-hero__cta.sui-btn {
-  background: #ffffff;
-  border-color: #ffffff;
-  color: var(--c-hero-dark-cta-text);
-}
-.portal-editor-hero__action .portal-editor-hero__cta.sui-btn:hover {
-  background: rgba(255, 255, 255, 0.88);
-  border-color: rgba(255, 255, 255, 0.88);
 }
 
 @media (max-width: 48rem) {

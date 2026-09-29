@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { TextInput, Combobox, useCombobox } from "@mantine/core";
 
 interface PenSizeSelectorProps {
@@ -18,10 +19,12 @@ const PenSizeSelector = ({
   onValueChange,
   onInputChange,
   disabled = false,
-  placeholder = "Type or select pen size (1-200)",
+  placeholder,
   style,
   size,
 }: PenSizeSelectorProps) => {
+  const { t } = useTranslation();
+  const resolvedPlaceholder = placeholder ?? t("sign.penSizePlaceholder");
   const combobox = useCombobox();
 
   const penSizeOptions = ["1", "2", "3", "4", "5", "8", "10", "12", "15", "20"];
@@ -41,7 +44,7 @@ const PenSizeSelector = ({
     >
       <Combobox.Target>
         <TextInput
-          placeholder={placeholder}
+          placeholder={resolvedPlaceholder}
           size={size}
           value={inputValue}
           onChange={(event) => {

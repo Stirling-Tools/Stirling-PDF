@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Card, SegmentedControl, Skeleton, StatusBadge } from "@app/ui";
+import "@app/ui/Surface.css";
 import {
   useView,
   VIEW_PATHS,
@@ -41,15 +42,14 @@ export function ProcessorFlow({ dataOverride }: ProcessorFlowProps = {}) {
   const [lens, setLens] = useState<Lens>("flow");
   const isLoading = loading && data === null;
 
-  /** Deep-link to the Policies page and auto-open that policy's setup wizard. */
+  /** Deep-link to the Pipelines page and auto-open that suggested policy's setup wizard. */
   const openPolicySetup = (key: string) =>
     navigate(
-      `${toPortalPath(VIEW_PATHS.policies)}?setup=${encodeURIComponent(key)}`,
+      `${toPortalPath(VIEW_PATHS.pipelines)}?setup=${encodeURIComponent(key)}`,
     );
 
-  /** Deep-link to Infrastructure with the audit-log tab open. */
-  const openAuditLog = () =>
-    navigate(`${toPortalPath(VIEW_PATHS.infrastructure)}?tab=audit`);
+  /** Deep-link to the audit log in settings (a build-neutral key; see PORTAL_SECTION_ALIASES). */
+  const openAuditLog = () => navigate("/settings/audit");
 
   const sources = data?.sources ?? [];
   const policies = data?.policies ?? [];
@@ -102,7 +102,9 @@ export function ProcessorFlow({ dataOverride }: ProcessorFlowProps = {}) {
 
   return (
     <Card padding="loose" className="portal-pf">
-      <header className="portal-pf__head">
+      {/* A div, not <header>: the card sits in page content, and a <header> here
+          would register a second banner landmark alongside the page's own. */}
+      <div className="portal-pf__head">
         <div className="portal-pf__head-text">
           <span
             className={
@@ -130,7 +132,7 @@ export function ProcessorFlow({ dataOverride }: ProcessorFlowProps = {}) {
             ]}
           />
         </div>
-      </header>
+      </div>
 
       {isLoading ? (
         <div className="portal-pf__loading" aria-hidden>
@@ -140,6 +142,7 @@ export function ProcessorFlow({ dataOverride }: ProcessorFlowProps = {}) {
         <FlowSankey sources={sources} outcomes={outcomes} policies={policies} />
       ) : (
         <div className="portal-pf__stage" ref={wrapRef}>
+          {/* icon-lint-disable -- connector geometry is computed from node positions */}
           <svg className="portal-pf__wires" aria-hidden>
             {wires}
           </svg>
@@ -165,6 +168,7 @@ export function ProcessorFlow({ dataOverride }: ProcessorFlowProps = {}) {
             />
           </div>
 
+          {/* icon-lint-disable -- connector geometry is computed from node positions */}
           <svg className="portal-pf__particles" aria-hidden>
             <g ref={pGroupRef} />
           </svg>

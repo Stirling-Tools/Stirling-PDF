@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { Stack, Text, NumberInput, Checkbox } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
@@ -17,6 +18,7 @@ const ConvertFromEmailSettings = ({
   disabled = false,
 }: ConvertFromEmailSettingsProps) => {
   const { t } = useTranslation();
+  const maxSizeLabelId = useId();
 
   return (
     <Stack gap="sm" data-testid="email-settings">
@@ -39,10 +41,11 @@ const ConvertFromEmailSettings = ({
 
       {parameters.emailOptions.includeAttachments && (
         <Stack gap="xs">
-          <Text size="xs" fw={500}>
+          <Text id={maxSizeLabelId} size="xs" fw={500}>
             {t("convert.maxAttachmentSize", "Maximum attachment size (MB)")}:
           </Text>
           <NumberInput
+            aria-labelledby={maxSizeLabelId}
             value={parameters.emailOptions.maxAttachmentSizeMB}
             onChange={(value) =>
               onParameterChange("emailOptions", {

@@ -171,7 +171,11 @@ fn set_default_macos() -> Result<String, String> {
     use core_foundation::string::{CFString, CFStringRef};
     use std::os::raw::c_int;
 
-    // Define the LSSetDefaultRoleHandlerForContentType function
+    // LSSetDefaultRoleHandlerForContentType is deprecated and has no public
+    // replacement for document UTIs (unlike default browser/mail). It is still
+    // the only one-click option. Prefer Finder Get Info → Change All when
+    // switching *away* from Stirling — Open With → Always Open With can trip a
+    // Gatekeeper false positive (LSRiskCategoryHasRedirectedBinding).
     #[link(name = "CoreServices", kind = "framework")]
     extern "C" {
         fn LSSetDefaultRoleHandlerForContentType(
@@ -184,7 +188,6 @@ fn set_default_macos() -> Result<String, String> {
     const K_LS_ROLES_ALL: c_int = 0xFFFFFFFF_u32 as c_int;
 
     unsafe {
-        // Set our app as the default handler for PDF files
         let pdf_uti = CFString::new("com.adobe.pdf");
         let our_bundle_id = CFString::new("stirling.pdf.dev");
 
@@ -195,7 +198,7 @@ fn set_default_macos() -> Result<String, String> {
         );
 
         if status == 0 {
-            add_log("Successfully triggered default app dialog".to_string());
+            add_log("Successfully set as default PDF handler on macOS".to_string());
             Ok("set_successfully".to_string())
         } else {
             let error_msg = format!("LaunchServices returned status: {}", status);
@@ -208,6 +211,48 @@ fn set_default_macos() -> Result<String, String> {
 // ============================================================================
 // Linux Implementation
 // ============================================================================
+
+/// Installed desktop entry names vary by packaging (template vs binary name).
+#[cfg(target_os = "linux")]
+const LINUX_DESKTOP_CANDIDATES: &[&str] =
+    &["Stirling-PDF.desktop", "stirling-pdf.desktop"];
+
+#[cfg(target_os = "linux")]
+fn is_stirling_desktop_handler(handler: &str) -> bool {
+    let name = handler.trim().to_lowercase();
+    name.contains("stirling") && name.ends_with(".desktop")
+}
+
+#[cfg(target_os = "linux")]
+fn linux_desktop_file_exists(name: &str) -> bool {
+    use std::path::PathBuf;
+
+    let mut dirs = Vec::new();
+    if let Ok(home) = std::env::var("HOME") {
+        dirs.push(PathBuf::from(home).join(".local/share/applications"));
+    }
+    if let Ok(xdg_data_dirs) = std::env::var("XDG_DATA_DIRS") {
+        for dir in xdg_data_dirs.split(':').filter(|d| !d.is_empty()) {
+            dirs.push(PathBuf::from(dir).join("applications"));
+        }
+    } else {
+        dirs.push(PathBuf::from("/usr/local/share/applications"));
+        dirs.push(PathBuf::from("/usr/share/applications"));
+    }
+
+    dirs.iter().any(|dir| dir.join(name).is_file())
+}
+
+#[cfg(target_os = "linux")]
+fn resolve_linux_desktop_file() -> String {
+    for name in LINUX_DESKTOP_CANDIDATES {
+        if linux_desktop_file_exists(name) {
+            return (*name).to_string();
+        }
+    }
+    // Matches tauri.conf.json desktopTemplate
+    "stirling-pdf.desktop".to_string()
+}
 
 #[cfg(target_os = "linux")]
 fn check_default_linux() -> Result<bool, String> {
@@ -222,18 +267,23 @@ fn check_default_linux() -> Result<bool, String> {
     let handler = String::from_utf8_lossy(&output.stdout);
     add_log(format!("Linux PDF handler: {}", handler.trim()));
 
-    // Check if it's our .desktop file
-    let is_default = handler.trim() == "stirling-pdf.desktop";
-    Ok(is_default)
+    // Accept stirling-pdf.desktop and Stirling-PDF.desktop (and similar)
+    Ok(is_stirling_desktop_handler(&handler))
 }
 
 #[cfg(target_os = "linux")]
 fn set_default_linux() -> Result<String, String> {
     use std::process::Command;
 
+    let desktop_file = resolve_linux_desktop_file();
+    add_log(format!(
+        "Setting Linux default PDF handler to {}",
+        desktop_file
+    ));
+
     // Use xdg-mime to set the default application for PDF files
     let result = Command::new("xdg-mime")
-        .args(["default", "stirling-pdf.desktop", "application/pdf"])
+        .args(["default", &desktop_file, "application/pdf"])
         .output()
         .map_err(|e| format!("Failed to set default app: {}", e))?;
 

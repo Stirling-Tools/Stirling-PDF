@@ -66,7 +66,6 @@ export function PdfsProcessedCard({
   const docs = wallet.docsProcessedThisPeriod;
   const uniquePdfs = wallet.uniquePdfsThisPeriod;
   const meterUnits = wallet.spendUnitsThisPeriod + pendingUnits;
-  const sizeMultiplierPdfs = wallet.sizeMultiplierPdfsThisPeriod;
 
   // Per-category PDF counts drive the split ("this many PDFs ran automation / AI /
   // API"); units are surfaced in the aggregate summary line, not per bucket.
@@ -169,15 +168,6 @@ export function PdfsProcessedCard({
                 ))}
               </div>
             </>
-          ) : null}
-          {sizeMultiplierPdfs > 0 ? (
-            <p className="portal-billing__section-sub">
-              {t(
-                "portal.billing.pdfsProcessed.sizeMultiplier",
-                "{{formatted}} PDFs used a size multiplier",
-                { formatted: sizeMultiplierPdfs.toLocaleString() },
-              )}
-            </p>
           ) : null}
         </>
       ) : pendingUnits > 0 ? (

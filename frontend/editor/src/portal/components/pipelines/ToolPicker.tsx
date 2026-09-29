@@ -1,12 +1,16 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui";
+import { Icon } from "@app/ui/Icon";
+import { Button, Input } from "@app/ui";
 import {
   getSubcategoryLabel,
   SUBCATEGORY_ORDER,
   type SubcategoryId,
 } from "@app/data/toolsTaxonomy";
 import { type ExecutableTool } from "@app/hooks/tools/shared/toolAutomation";
+import { toolAcceptsFormat } from "@app/utils/toolIOCompat";
+import { getToolFormatLabel } from "@app/utils/toolIOLabels";
+import { type ToolFormat } from "@app/types/toolIO";
 import {
   searchOperations,
   type StepOperation,
@@ -24,6 +28,14 @@ interface ToolPickerProps {
    */
   operations?: StepOperation[];
   onPickOperation?: (operation: StepOperation) => void;
+  /**
+   * What the step before this one produces, when known. Tools that cannot run on it are marked
+   * rather than hidden: the chain is still editable in any order, and the builder explains the
+   * problem once the step is added.
+   */
+  precedingOutput?: ToolFormat;
+  /** Keeps an unavailable tool visible and explains why it cannot be added. */
+  unavailableReason?: (tool: ExecutableTool) => string | undefined;
 }
 
 /**
@@ -36,9 +48,25 @@ export function ToolPicker({
   onClose,
   operations = [],
   onPickOperation,
+  precedingOutput,
+  unavailableReason,
 }: ToolPickerProps) {
   const { t } = useTranslation();
   const [query, setQuery] = useState("");
+
+  // A format-routed tool (convert) can follow the previous step if ANY endpoint in its routing set
+  // accepts that output; a single-endpoint tool is judged on its one endpoint. Unknown when there
+  // is no preceding output yet.
+  const acceptsPreceding = (tool: ExecutableTool): boolean => {
+    if (!precedingOutput) return true;
+    const endpoints =
+      tool.endpoints && tool.endpoints.length > 0
+        ? tool.endpoints
+        : [tool.endpoint];
+    return endpoints.some((endpoint) =>
+      toolAcceptsFormat(endpoint, precedingOutput),
+    );
+  };
 
   const matchedOperations = useMemo(
     () =>
@@ -67,16 +95,15 @@ export function ToolPicker({
   }, [tools, query, t]);
 
   return (
-    <div
-      className="portal-pipelines__picker"
-      role="dialog"
-      aria-label={t("portal.pipelines.builder.addStep")}
-    >
+    <div className="portal-pipelines__picker">
       <div className="portal-pipelines__picker-search">
-        <input
+        <Input
           autoFocus
+          inputSize="sm"
           value={query}
+          aria-label={t("portal.pipelines.builder.searchTools")}
           placeholder={t("portal.pipelines.builder.searchTools")}
+          leadingIcon={<Icon name="search" size={"1.125rem"} />}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Escape") onClose();
@@ -94,28 +121,54 @@ export function ToolPicker({
               <div className="portal-pipelines__picker-group-label">
                 {group.label}
               </div>
-              {group.tools.map((tool) => (
-                <Button
-                  key={tool.toolId}
-                  variant="quiet"
-                  justify="start"
-                  fullWidth
-                  className="portal-pipelines__picker-item"
-                  onClick={() => onPick(tool)}
-                  leftSection={
-                    <span
-                      className="portal-pipelines__picker-icon"
-                      aria-hidden="true"
-                    >
-                      {tool.icon}
+              {group.tools.map((tool) => {
+                const incompatible = Boolean(
+                  precedingOutput && !acceptsPreceding(tool),
+                );
+                const unavailable = unavailableReason?.(tool);
+                return (
+                  <Button
+                    key={tool.toolId}
+                    variant="quiet"
+                    justify="start"
+                    fullWidth
+                    className={[
+                      "portal-pipelines__picker-item",
+                      incompatible ? "is-incompatible" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                    disabled={Boolean(unavailable)}
+                    onClick={() => onPick(tool)}
+                    leftSection={
+                      <span
+                        className="portal-pipelines__picker-icon"
+                        aria-hidden="true"
+                      >
+                        {tool.icon}
+                      </span>
+                    }
+                  >
+                    <span className="portal-pipelines__picker-text">
+                      <span className="portal-pipelines__picker-name">
+                        {tool.name}
+                      </span>
+                      {incompatible && precedingOutput && (
+                        <span className="portal-pipelines__picker-note">
+                          {t("portal.pipelines.builder.cannotFollow", {
+                            produced: getToolFormatLabel(t, precedingOutput),
+                          })}
+                        </span>
+                      )}
+                      {unavailable && (
+                        <span className="portal-pipelines__picker-note">
+                          {unavailable}
+                        </span>
+                      )}
                     </span>
-                  }
-                >
-                  <span className="portal-pipelines__picker-name">
-                    {tool.name}
-                  </span>
-                </Button>
-              ))}
+                  </Button>
+                );
+              })}
             </div>
           ))
         )}
@@ -140,7 +193,7 @@ export function ToolPicker({
                   >
                     <BrandMark
                       id={op.custom ? "api" : op.connectionTypeId}
-                      size={17}
+                      size={18}
                     />
                   </span>
                 }

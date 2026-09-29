@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import {
   PIPELINE_OPS,
   LIBRARY_OPS,
@@ -27,7 +27,7 @@ const STAGE_ORDER: OpKind[] = [
 const STAGE_COLOUR: Record<OpKind, string> = {
   ingest: "var(--color-green)",
   validate: "var(--c-primary)",
-  modify: "#F97316",
+  modify: "var(--color-orange)",
   secure: "var(--color-red)",
   store: "var(--color-purple)",
   alert: "var(--color-amber)",
@@ -80,7 +80,7 @@ export const PipelineOps: Story = {
                   borderRadius: 999,
                   border: `1px solid ${STAGE_COLOUR[stage]}33`,
                   background: `${STAGE_COLOUR[stage]}12`,
-                  color: STAGE_COLOUR[stage],
+                  color: "var(--c-text)",
                   fontFamily: "var(--font-mono)",
                 }}
               >
@@ -166,7 +166,7 @@ export const LibraryByCategory: Story = {
                     borderRadius: 999,
                     border: `1px solid ${cat.color}33`,
                     background: `${cat.color}12`,
-                    color: cat.color,
+                    color: "var(--c-text)",
                     fontFamily: "var(--font-mono)",
                   }}
                 >

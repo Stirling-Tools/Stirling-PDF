@@ -1,18 +1,28 @@
-# All PRs must be approved by Frooodle or Ludy87
-* @Frooodle @Ludy87 @jbrunton96 @ConnorYoh
+# Review ownership is assigned to teams where possible.
+# Teams can only contain org members, so outside collaborators are listed by hand.
+#
+#   @Stirling-Tools/maintainers          - Frooodle, jbrunton96, ConnorYoh
+#   @Stirling-Tools/backend-reviewers    - Frooodle, jbrunton96, ConnorYoh
+#   @Stirling-Tools/frontend-reviewers   - Frooodle, jbrunton96, ConnorYoh, reecebrowne, EthanHealy01
+#   @Stirling-Tools/devops-reviewers     - Frooodle, jbrunton96, ConnorYoh
+#   @Stirling-Tools/all                  - all of the above
+#
+# Outside collaborators (need Write access to count as owners): @Ludy87 @balazs-szucs
+
+# Default owners for everything
+* @Stirling-Tools/maintainers @Ludy87
 
 # Backend
-/app/** @DarioGii @Frooodle @Ludy87 @jbrunton96 @ConnorYoh @balazs-szucs
+/app/** @Stirling-Tools/backend-reviewers @Ludy87 @balazs-szucs
 
-#V2 frontend
-/frontend/** @reecebrowne @ConnorYoh @EthanHealy01 @jbrunton96 @Frooodle @balazs-szucs
-/app/core/src/main/resources/static/** @reecebrowne @ConnorYoh @EthanHealy01 @jbrunton96 @Frooodle @Ludy87 @balazs-szucs
+# V2 frontend
+/frontend/** @Stirling-Tools/frontend-reviewers @balazs-szucs
+/app/core/src/main/resources/static/** @Stirling-Tools/frontend-reviewers @Ludy87 @balazs-szucs
 
-#V2 docker
-/docker/backend/** @Frooodle @Ludy87 @DarioGii
-/docker/frontend/** @reecebrowne @ConnorYoh @EthanHealy01 @jbrunton96 @Frooodle @Ludy87
-/docker/compose/** @reecebrowne @ConnorYoh @EthanHealy01 @DarioGii @jbrunton96 @Frooodle @Ludy87
+# V2 docker
+/docker/backend/** @Stirling-Tools/devops-reviewers @Ludy87
+/docker/frontend/** @Stirling-Tools/frontend-reviewers @Stirling-Tools/devops-reviewers @Ludy87
+/docker/compose/** @Stirling-Tools/frontend-reviewers @Stirling-Tools/devops-reviewers @Ludy87
 
-
-#GHA (All users)
-/.github/** @reecebrowne @ConnorYoh @EthanHealy01 @DarioGii @jbrunton96 @Frooodle @Ludy87 @balazs-szucs
+# GHA (all users)
+/.github/** @Stirling-Tools/all @Ludy87 @balazs-szucs

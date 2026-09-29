@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import { MethodBadge, type HttpMethod } from "@app/ui/MethodBadge";
 
 const meta: Meta<typeof MethodBadge> = {

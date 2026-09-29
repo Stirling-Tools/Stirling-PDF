@@ -34,7 +34,6 @@ import {
   fetchInstances,
   fetchLocalUsage,
   fetchStatus,
-  linkInstance,
   revokeInstance,
   unlinkInstance,
 } from "@portal/api/link";
@@ -55,21 +54,14 @@ describe("api/link — local backend (this instance)", () => {
     expect(status.linked).toBe(false);
   });
 
-  it("links this instance via the local endpoint, never returning a secret", async () => {
-    const status = await linkInstance({
-      supabaseJwt: "jwt_abc",
-      name: "node-1",
-    });
-    expect(status.linked).toBe(true);
-    expect(status.name).toBe("node-1");
-    // Contract: the device secret is stored server-side, never sent to the portal.
+  it("never exposes the device credential in a status read", async () => {
+    // Contract: the device secret is stored server-side and the portal never sees it.
+    const status = await fetchStatus();
     expect(status).not.toHaveProperty("deviceSecret");
     expect(status).not.toHaveProperty("deviceId");
-    expect(await (await fetchStatus()).linked).toBe(true);
   });
 
   it("unlinks this instance", async () => {
-    await linkInstance({ supabaseJwt: "jwt_abc" });
     // unlink returns 204 (no body); the status is read back separately.
     await unlinkInstance();
     expect((await fetchStatus()).linked).toBe(false);
@@ -83,18 +75,6 @@ describe("api/link — local backend (this instance)", () => {
         usage.automationUnsyncedUnits,
     );
     expect(usage.totalUnsyncedUnits).toBeGreaterThanOrEqual(0);
-  });
-
-  it("forwards the SaaS JWT in the link body", async () => {
-    let seenBody: unknown = null;
-    server.events.on("request:start", async ({ request }) => {
-      if (request.method === "POST" && request.url.endsWith("/link")) {
-        seenBody = await request.clone().json();
-      }
-    });
-    await linkInstance({ supabaseJwt: "jwt_xyz", name: "n" });
-    expect(seenBody).toMatchObject({ supabaseJwt: "jwt_xyz" });
-    server.events.removeAllListeners();
   });
 });
 

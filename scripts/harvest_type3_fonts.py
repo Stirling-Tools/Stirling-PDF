@@ -27,16 +27,14 @@ import re
 import shlex
 import subprocess
 import sys
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Dict, List, Sequence, Tuple
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Bulk collect Type3 font signatures from PDFs."
-    )
+    parser = argparse.ArgumentParser(description="Bulk collect Type3 font signatures from PDFs.")
     parser.add_argument(
         "--input",
         nargs="+",
@@ -72,8 +70,8 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def discover_pdfs(paths: Sequence[str]) -> List[Path]:
-    pdfs: List[Path] = []
+def discover_pdfs(paths: Sequence[str]) -> list[Path]:
+    pdfs: list[Path] = []
     for raw in paths:
         path = Path(raw).resolve()
         if path.is_file():
@@ -113,8 +111,8 @@ def load_signature_file(path: Path) -> dict:
         return json.load(handle)
 
 
-def collect_known_signatures(signatures_dir: Path) -> Dict[str, dict]:
-    known: Dict[str, dict] = {}
+def collect_known_signatures(signatures_dir: Path) -> dict[str, dict]:
+    known: dict[str, dict] = {}
     if not signatures_dir.exists():
         return known
     for json_file in signatures_dir.rglob("*.json"):
@@ -139,9 +137,7 @@ def collect_known_signatures(signatures_dir: Path) -> Dict[str, dict]:
     return known
 
 
-def run_signature_tool(
-    gradle_cmd: str, pdf: Path, output_path: Path, pretty: bool, cwd: Path
-) -> None:
+def run_signature_tool(gradle_cmd: str, pdf: Path, output_path: Path, pretty: bool, cwd: Path) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     args = f"--pdf {shlex.quote(str(pdf))} --output {shlex.quote(str(output_path))}"
     if pretty:
@@ -157,12 +153,10 @@ def run_signature_tool(
         text=True,
     )
     if completed.returncode != 0:
-        raise RuntimeError(
-            f"Gradle Type3SignatureTool failed for {pdf}:\n{completed.stderr.strip()}"
-        )
+        raise RuntimeError(f"Gradle Type3SignatureTool failed for {pdf}:\n{completed.stderr.strip()}")
 
 
-def extract_fonts_from_payload(payload: dict) -> List[dict]:
+def extract_fonts_from_payload(payload: dict) -> list[dict]:
     pdf = payload.get("pdf")
     fonts = []
     for font in payload.get("fonts", []):
@@ -182,7 +176,7 @@ def extract_fonts_from_payload(payload: dict) -> List[dict]:
     return fonts
 
 
-def write_report(report_path: Path, fonts_by_signature: Dict[str, dict]) -> None:
+def write_report(report_path: Path, fonts_by_signature: dict[str, dict]) -> None:
     ordered = sorted(fonts_by_signature.values(), key=lambda entry: entry["signature"])
     report = {
         "generatedAt": dt.datetime.utcnow().isoformat(timespec="seconds") + "Z",
@@ -201,7 +195,7 @@ def main() -> None:
     pdfs = discover_pdfs(args.input)
 
     known = collect_known_signatures(signatures_dir)
-    newly_added: List[Tuple[str, str]] = []
+    newly_added: list[tuple[str, str]] = []
 
     for pdf in pdfs:
         signature_path = derive_signature_path(pdf, signatures_dir)
@@ -209,15 +203,11 @@ def main() -> None:
             try:
                 payload = load_signature_file(signature_path)
             except Exception as exc:
-                print(
-                    f"[WARN] Failed to parse cached signature {signature_path}: {exc}"
-                )
+                print(f"[WARN] Failed to parse cached signature {signature_path}: {exc}")
                 payload = None
         else:
             try:
-                run_signature_tool(
-                    args.gradle_cmd, pdf, signature_path, args.pretty, REPO_ROOT
-                )
+                run_signature_tool(args.gradle_cmd, pdf, signature_path, args.pretty, REPO_ROOT)
             except Exception as exc:
                 print(f"[ERROR] Harvest failed for {pdf}: {exc}", file=sys.stderr)
                 continue

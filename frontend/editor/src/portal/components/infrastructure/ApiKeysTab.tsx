@@ -12,6 +12,7 @@ import { errorMessage } from "@portal/api/http";
 import { ApiKeyCard } from "@portal/components/infrastructure/ApiKeyCard";
 import { CreateKeyModal } from "@portal/components/infrastructure/CreateKeyModal";
 import { SectionHeader } from "@portal/components/infrastructure/SectionHeader";
+import "@portal/components/infrastructure/infrastructure.css";
 
 export function ApiKeysTab() {
   const { t } = useTranslation();
@@ -52,6 +53,7 @@ export function ApiKeysTab() {
           sub={t("portal.infrastructure.apiKeys.subheading")}
         />
         <Button
+          variant="secondary"
           size="sm"
           onClick={() => setModalOpen(true)}
           leftSection={<span aria-hidden>+</span>}

@@ -1,9 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 
-/**
- * Service for managing default PDF handler settings
- * Note: Uses localStorage for machine-specific preferences (not synced to server)
- */
+/** Service for managing default PDF handler settings */
 export const defaultAppService = {
   /**
    * Check if Stirling PDF is the default PDF handler
@@ -32,46 +29,5 @@ export const defaultAppService = {
       console.error("[DefaultApp] Failed to set default handler:", error);
       return "error";
     }
-  },
-
-  /**
-   * Check if user has dismissed the default app prompt (machine-specific)
-   */
-  hasUserDismissedPrompt(): boolean {
-    try {
-      const dismissed = localStorage.getItem(
-        "stirlingpdf_default_app_prompt_dismissed",
-      );
-      return dismissed === "true";
-    } catch {
-      return false;
-    }
-  },
-
-  /**
-   * Mark that user has dismissed the default app prompt (machine-specific)
-   */
-  setPromptDismissed(dismissed: boolean): void {
-    try {
-      localStorage.setItem(
-        "stirlingpdf_default_app_prompt_dismissed",
-        dismissed ? "true" : "false",
-      );
-    } catch (error) {
-      console.error("[DefaultApp] Failed to save prompt preference:", error);
-    }
-  },
-
-  /**
-   * Check if we should show the default app prompt
-   * Returns true if: user hasn't dismissed it AND app is not default handler
-   */
-  async shouldShowPrompt(): Promise<boolean> {
-    if (this.hasUserDismissedPrompt()) {
-      return false;
-    }
-
-    const isDefault = await this.isDefaultPdfHandler();
-    return !isDefault;
   },
 };

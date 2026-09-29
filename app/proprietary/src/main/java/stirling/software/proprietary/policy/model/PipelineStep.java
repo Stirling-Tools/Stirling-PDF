@@ -9,7 +9,9 @@ import java.util.Map;
  *
  * <p>{@code fileParameters} maps a tool's named file field (e.g. {@code stampImage}, beyond the
  * primary {@code fileInput} stream) to an asset key in the run's supporting-file store, keeping
- * supporting inputs out of the document stream that flows step to step.
+ * supporting inputs out of the document stream that flows step to step. The key is either {@code
+ * asset:<id>} for a stored supporting file or a plain name supplied with the run itself; see {@code
+ * PolicyAssetRefs}.
  */
 public record PipelineStep(
         String operation, Map<String, Object> parameters, Map<String, String> fileParameters) {

@@ -52,6 +52,7 @@
   user-select: none;
   font-weight: 600;
   position: relative;
+  padding: 8px;
 }
 
 /* Position numbers at edges within each tile with extra top/bottom spacing */
@@ -98,11 +99,6 @@
   padding-bottom: 4px;
 } /* bottom-right */
 
-/* Base padding for all tiles */
-.gridTile {
-  padding: 8px;
-}
-
 .gridTileSelected,
 .gridTileHovered {
   border: 2px solid var(--c-primary);
@@ -130,6 +126,6 @@
 /* Preview disclaimer */
 .previewDisclaimer {
   margin-top: 8px;
-  opacity: 0.7;
+  color: var(--c-text-muted);
   font-size: 12px;
 }

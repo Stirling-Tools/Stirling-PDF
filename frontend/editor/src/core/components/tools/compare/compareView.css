@@ -1,5 +1,6 @@
 .compare-dropdown-scrollwrap {
   position: relative;
+  margin: 0;
 }
 
 .compare-dropdown-sticky {
@@ -138,18 +139,9 @@
   border-radius: 8px !important; /* match dropdown container radius */
 }
 
-/* Ensure options text uses full width inside wider dropdown */
-.compare-dropdown-option__text {
-  max-width: 100%;
-}
-
 /* Remove default padding inside Mantine options list so sticky header touches edges */
 .compare-changes-dropdown .mantine-Combobox-options {
   padding: 0 !important;
-}
-
-.compare-dropdown-scrollwrap {
-  margin: 0;
 }
 
 /* Ensure search field sits flush and does not overflow */
@@ -435,6 +427,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   line-clamp: 3;
+  max-width: 100%;
 }
 
 /* Non-sticky in-flow group headers; sticky handled by floating header */

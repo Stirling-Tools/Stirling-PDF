@@ -13,6 +13,7 @@ import type {
   ClearDocumentAnnotationsResult,
 } from "@app/components/viewer/viewerTypes";
 import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
+import { MARKUP_ANNOTATION_COLORS } from "@app/components/viewer/annotationDefaults";
 
 type NoteIcon = NonNullable<AnnotationToolOptions["icon"]>;
 
@@ -154,10 +155,7 @@ const NOTE_ICON_MAP: Record<NoteIcon, PdfAnnotationIcon> = {
 };
 
 const DEFAULTS = {
-  highlight: "#ffd54f",
-  underline: "#ffb300",
-  strikeout: "#e53935",
-  squiggly: "#00acc1",
+  ...MARKUP_ANNOTATION_COLORS,
   ink: "#1f2933",
   inkHighlighter: "#ffd54f",
   text: "#111111",

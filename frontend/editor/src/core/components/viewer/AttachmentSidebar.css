@@ -5,6 +5,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  animation: attachment-fade-in 0.2s ease;
 }
 
 /* Attachment Items */
@@ -54,7 +55,7 @@
 }
 
 .attachment-item:hover .attachment-item__download-icon {
-  color: var(--mantine-color-blue-6);
+  color: var(--c-accent-text);
   transform: scale(1.1);
 }
 
@@ -91,10 +92,6 @@
   }
 }
 
-.attachment-list {
-  animation: attachment-fade-in 0.2s ease;
-}
-
 /* Accessibility & Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
   .attachment-item,
@@ -102,4 +99,11 @@
     transition: none;
     animation: none;
   }
+}
+
+/* The portfolio member currently open in the viewer. */
+.attachment-item--current {
+  background: color-mix(in srgb, var(--c-accent-text) 10%, var(--c-bg-raised));
+  border-color: color-mix(in srgb, var(--c-accent-text) 35%, transparent);
+  box-shadow: inset 0.125rem 0 0 0 var(--c-accent-text);
 }

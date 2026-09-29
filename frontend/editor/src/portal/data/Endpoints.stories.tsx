@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import { VERTICALS, ALL_ENDPOINTS } from "@portal/data/endpoints";
 import { MethodBadge } from "@app/ui/MethodBadge";
 import { StatusBadge } from "@app/ui/StatusBadge";

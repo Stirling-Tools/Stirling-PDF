@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import ErrorMessage from "@app/auth/ui/ErrorMessage";
 import "@app/auth/ui/auth.css";
 

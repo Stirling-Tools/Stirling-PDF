@@ -57,12 +57,15 @@ public class IntegrationConfigService {
         OwnerScope scope = request.scope() == null ? OwnerScope.USER : request.scope();
         IntegrationConfig cfg = new IntegrationConfig();
         cfg.setIntegrationType(require(request.integrationType(), "integrationType"));
-        // S3 is infrastructure, not self-serve: no personal S3 for regular users. TEAM/SERVER
-        // scopes are already restricted to admins/team owners by assignOwnership.
-        if (cfg.getIntegrationType() == IntegrationType.S3
+        // S3 and network file servers are infrastructure, not self-serve: they hold shared host
+        // credentials, so no personal connection for regular users. TEAM/SERVER scopes are already
+        // restricted to admins/team owners by assignOwnership.
+        if (isInfrastructureType(cfg.getIntegrationType())
                 && scope == OwnerScope.USER
                 && !ownership.isAdmin(currentUser)) {
-            throw forbidden("S3 connections can only be created by administrators or team owners");
+            throw forbidden(
+                    "Storage connections can only be created by administrators or team"
+                            + " owners");
         }
         requireCustomApiAllowed(cfg.getIntegrationType(), currentUser);
         cfg.setName(require(request.name(), "name"));
@@ -147,6 +150,13 @@ public class IntegrationConfigService {
         }
     }
 
+    /** Types holding shared host credentials, restricted to admins/team owners like S3. */
+    private static boolean isInfrastructureType(IntegrationType type) {
+        return type == IntegrationType.S3
+                || type == IntegrationType.NETWORK
+                || type == IntegrationType.VECTOR_DB;
+    }
+
     /** Whether this caller may author custom API integrations, for the UI to offer or hide it. */
     public boolean canAuthorCustomApi(User currentUser) {
         return applicationProperties.getPolicies().isAllowCustomApiIntegrations()
@@ -158,6 +168,9 @@ public class IntegrationConfigService {
         IntegrationConfig cfg = load(id);
         if (!ownership.canManage(TYPE, cfg, currentUser)) {
             throw forbidden("You cannot manage this integration");
+        }
+        if (cfg.isLocked() && !ownership.isAdmin(currentUser)) {
+            throw forbidden("This integration is locked by an administrator");
         }
         // Refuse to pull a connection out from under whatever still references it.
         List<String> usages =

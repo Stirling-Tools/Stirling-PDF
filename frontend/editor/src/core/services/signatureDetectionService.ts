@@ -4,13 +4,6 @@
  * without needing to make API calls
  */
 
-// PDF.js types (simplified)
-declare global {
-  interface Window {
-    pdfjsLib?: any;
-  }
-}
-
 export interface SignatureDetectionResult {
   hasSignatures: boolean;
   signatureCount?: number;
@@ -53,7 +46,7 @@ const detectSignaturesInFile = async (
 
       // Count signature annotations (Type: /Sig)
       const signatureAnnotations = annotations.filter(
-        (annotation: any) =>
+        (annotation: { subtype?: string; fieldType?: string }) =>
           annotation.subtype === "Widget" && annotation.fieldType === "Sig",
       );
 
@@ -62,7 +55,11 @@ const detectSignaturesInFile = async (
 
     // Also check for document-level signatures in AcroForm
     const metadata = await pdf.getMetadata();
-    if (metadata?.info?.Signature || metadata?.metadata?.has("dc:signature")) {
+    const info = metadata?.info as { Signature?: unknown } | undefined;
+    const xmpMetadata = metadata?.metadata as
+      | { has?: (name: string) => boolean }
+      | undefined;
+    if (info?.Signature || xmpMetadata?.has?.("dc:signature")) {
       totalSignatures = Math.max(totalSignatures, 1);
     }
 
@@ -98,54 +95,3 @@ export const detectSignaturesInFiles = async (
 
   return results;
 };
-
-/**
- * Hook for managing signature detection state
- */
-export const useSignatureDetection = () => {
-  const [detectionResults, setDetectionResults] = React.useState<
-    FileSignatureStatus[]
-  >([]);
-  const [isDetecting, setIsDetecting] = React.useState(false);
-
-  const detectSignatures = async (files: File[]) => {
-    if (files.length === 0) {
-      setDetectionResults([]);
-      return;
-    }
-
-    setIsDetecting(true);
-    try {
-      const results = await detectSignaturesInFiles(files);
-      setDetectionResults(results);
-    } finally {
-      setIsDetecting(false);
-    }
-  };
-
-  const getFileSignatureStatus = (
-    file: File,
-  ): SignatureDetectionResult | null => {
-    const result = detectionResults.find((r) => r.file === file);
-    return result ? result.result : null;
-  };
-
-  const hasAnySignatures = detectionResults.some((r) => r.result.hasSignatures);
-  const totalSignatures = detectionResults.reduce(
-    (sum, r) => sum + (r.result.signatureCount || 0),
-    0,
-  );
-
-  return {
-    detectionResults,
-    isDetecting,
-    detectSignatures,
-    getFileSignatureStatus,
-    hasAnySignatures,
-    totalSignatures,
-    reset: () => setDetectionResults([]),
-  };
-};
-
-// Import React for the hook
-import React from "react";

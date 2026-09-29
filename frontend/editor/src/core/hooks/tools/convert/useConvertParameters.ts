@@ -46,6 +46,15 @@ export interface ConvertParameters extends BaseParameters {
     outputFormat: string;
     strict?: boolean;
   };
+  pdfUaOptions: {
+    profile: string;
+    language: string;
+    overrideLanguage: boolean;
+    title: string;
+    embedFonts: boolean;
+    /** Descriptions as `pageIndex:ordinal=text` lines, keyed as the backend hands them out. */
+    altText: string;
+  };
   pdfxOptions: {
     outputFormat: string;
   };
@@ -108,6 +117,14 @@ export const defaultParameters: ConvertParameters = {
     outputFormat: "pdfa-2b",
     strict: false,
   },
+  pdfUaOptions: {
+    profile: "ua1",
+    language: "en-GB",
+    overrideLanguage: false,
+    title: "",
+    embedFonts: true,
+    altText: "",
+  },
   pdfxOptions: {
     outputFormat: "pdfx",
   },
@@ -138,7 +155,9 @@ export const defaultParameters: ConvertParameters = {
   smartDetectionType: "none",
 };
 
-const validateParameters = (params: ConvertParameters): boolean => {
+export const validateConvertParameters = (
+  params: ConvertParameters,
+): boolean => {
   const { fromExtension, toExtension } = params;
 
   if (!fromExtension || !toExtension) return false;
@@ -191,7 +210,7 @@ export const useConvertParameters = (): ConvertParametersHook => {
     () => ({
       defaultParameters,
       endpointName: getEndpointName,
-      validateFn: validateParameters,
+      validateFn: validateConvertParameters,
     }),
     [],
   );
