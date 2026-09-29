@@ -12,8 +12,8 @@ import { Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { Chip } from "@app/ui/Chip";
 import { TextInput } from "@app/components/shared/TextInput";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import { isMacLike } from "@app/utils/hotkeys";
+import { useIsMobile } from "@app/hooks/useIsMobile";
 import {
   useSuperSearch,
   SuperSearchResult,
@@ -25,8 +25,13 @@ import {
   parseSuperSearchQuery,
   rebuildSuperSearchQuery,
 } from "@app/components/shared/superSearch/superSearchFilters";
+import {
+  SUPER_SEARCH_FOCUS_EVENT,
+  type SuperSearchFocusDetail,
+} from "@app/components/shared/superSearch/openSuperSearch";
 import "@app/components/shared/superSearch/SuperSearch.css";
 
+import { Icon } from "@app/ui/Icon";
 /** Rows shown per group before a "show more" toggle reveals the rest. */
 const COLLAPSED_GROUP_SIZE = 5;
 
@@ -279,7 +284,7 @@ export default function SuperSearch({
       // Leave the shortcut alone while a modal owns the screen — focusing an
       // input underneath the overlay would strand keyboard focus. Modals that
       // want to cede to the search (the settings modal does) close themselves
-      // and dispatch "superSearch:focus" instead.
+      // and call openSuperSearch() instead.
       const target = e.target as HTMLElement | null;
       if (target?.closest('[role="dialog"]')) return;
       e.preventDefault();
@@ -287,25 +292,44 @@ export default function SuperSearch({
       inputRef.current?.focus();
       inputRef.current?.select();
     };
-    // Focus handover from a closing dialog. Only the on-screen instance
-    // responds (offsetParent is null while display:none / unmounted hosts),
-    // and focus waits two frames so the dialog's own return-focus runs first.
-    const onFocusRequest = () => {
+    // Focus handover from a closing dialog or a search button elsewhere. Only
+    // the on-screen instance responds (offsetParent is null while a host is
+    // display:none / unmounted).
+    const onFocusRequest = (e: Event) => {
       const input = inputRef.current;
       if (!input || input.offsetParent === null) return;
+      const detail: SuperSearchFocusDetail | null =
+        e instanceof CustomEvent ? e.detail : null;
+      if (detail?.scopeIds) setManualScopeIds([...detail.scopeIds]);
       setOpen(true);
+      // Skips when already focused: re-selecting would let the next keystroke
+      // replace whatever was typed since the first grab.
+      const grab = () => {
+        if (document.activeElement === input) return;
+        input.focus();
+        input.select();
+      };
+      // Immediately, so typing straight after a button click lands in the
+      // input rather than on the button.
+      grab();
       requestAnimationFrame(() =>
         requestAnimationFrame(() => {
-          input.focus();
-          input.select();
+          grab();
+          // The dialog's return-focus fires shortly after it closes and steals
+          // focus back once; re-grab it if that happens.
+          input.addEventListener("focusout", grab, { once: true });
+          window.setTimeout(
+            () => input.removeEventListener("focusout", grab),
+            250,
+          );
         }),
       );
     };
     window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("superSearch:focus", onFocusRequest);
+    window.addEventListener(SUPER_SEARCH_FOCUS_EVENT, onFocusRequest);
     return () => {
       window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("superSearch:focus", onFocusRequest);
+      window.removeEventListener(SUPER_SEARCH_FOCUS_EVENT, onFocusRequest);
     };
   }, []);
 
@@ -373,6 +397,7 @@ export default function SuperSearch({
     }
   };
 
+  const isMobile = useIsMobile();
   const shortcutHint = useMemo(() => (isMacLike() ? "⌘K" : "Ctrl+K"), []);
 
   const toggleScope = useCallback(
@@ -510,11 +535,7 @@ export default function SuperSearch({
                         }`}
                         aria-hidden="true"
                       >
-                        <LocalIcon
-                          icon="expand-more-rounded"
-                          width="1rem"
-                          height="1rem"
-                        />
+                        <Icon name="chevron-down" size="1rem" />
                       </span>
                     }
                   >
@@ -570,10 +591,9 @@ export default function SuperSearch({
                               >
                                 <span className="super-search-item-icon">
                                   {result.icon ?? (
-                                    <LocalIcon
-                                      icon={result.iconName ?? "search-rounded"}
-                                      width="1.1rem"
-                                      height="1.1rem"
+                                    <Icon
+                                      name={result.iconName ?? "search"}
+                                      size="1.1rem"
                                     />
                                   )}
                                 </span>
@@ -627,10 +647,12 @@ export default function SuperSearch({
           ref={inputRef}
           value={query}
           onChange={setQuery}
-          placeholder={t("superSearch.placeholder", "Search Stirling")}
-          icon={
-            <LocalIcon icon="search-rounded" width="1.1rem" height="1.1rem" />
+          placeholder={
+            isMobile
+              ? t("superSearch.placeholderShort", "Search")
+              : t("superSearch.placeholder", "Search Stirling")
           }
+          icon={<Icon name="search" size="1.1rem" />}
           autoComplete="off"
           role="combobox"
           aria-label={t("superSearch.ariaLabel", "Super search")}

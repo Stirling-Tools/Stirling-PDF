@@ -47,7 +47,13 @@ class DatabaseServiceTest {
                 new DriverManagerDataSource(
                         "jdbc:h2:mem:" + UUID.randomUUID() + ";DB_CLOSE_DELAY=-1", "sa", "");
 
-        databaseService = new DatabaseService(datasourceProps, dataSource, notificationService);
+        databaseService =
+                new DatabaseService(
+                        datasourceProps,
+                        dataSource,
+                        notificationService,
+                        org.mockito.Mockito.mock(
+                                org.springframework.context.ApplicationEventPublisher.class));
         ReflectionTestUtils.setField(databaseService, "BACKUP_DIR", tempDir);
     }
 

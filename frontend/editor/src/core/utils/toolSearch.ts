@@ -15,7 +15,11 @@ export function filterToolRegistryByQuery(
   toolRegistry: Partial<ToolRegistry>,
   query: string,
 ): RankedToolItem[] {
-  const entries = Object.entries(toolRegistry) as [ToolId, ToolRegistryEntry][];
+  // The single funnel into the editor's tool list, so hiding here hides it everywhere the user
+  // browses - while getExecutableTools still offers it to a pipeline.
+  const entries = (
+    Object.entries(toolRegistry) as [ToolId, ToolRegistryEntry][]
+  ).filter(([, tool]) => !tool?.hiddenFromToolList);
   if (!query.trim()) {
     return entries.map(([id, tool]) => ({
       item: [id, tool] as [ToolId, ToolRegistryEntry],
@@ -115,10 +119,10 @@ export function filterToolRegistryByQuery(
     ordered.push({ item: [id, tool], matchedText });
   };
 
-  for (const { id, tool } of exactName) push(id as ToolId, tool, tool.name);
-  for (const { id, tool, text } of exactSyn) push(id as ToolId, tool, text);
-  for (const { id, tool, text } of fuzzyName) push(id as ToolId, tool, text);
-  for (const { id, tool, text } of fuzzySyn) push(id as ToolId, tool, text);
+  for (const { id, tool } of exactName) push(id, tool, tool.name);
+  for (const { id, tool, text } of exactSyn) push(id, tool, text);
+  for (const { id, tool, text } of fuzzyName) push(id, tool, text);
+  for (const { id, tool, text } of fuzzySyn) push(id, tool, text);
 
   if (ordered.length > 0) return ordered;
 

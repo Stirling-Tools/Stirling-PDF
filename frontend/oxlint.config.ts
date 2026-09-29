@@ -72,24 +72,11 @@ const modernGlobals: OxlintGlobals = {
   SuppressedError: "readonly",
 };
 
-// Folders not yet conformant to the stricter no-explicit-any rule
-const noExplicitAnyExcludes = [
-  "editor/src/core/components/shared/*.{js,mjs,jsx,ts,tsx}",
-  "editor/src/core/components/shared/config/configSections/*.{js,mjs,jsx,ts,tsx}",
-  "editor/src/core/components/tools/addStamp/*.{js,mjs,jsx,ts,tsx}",
-  "editor/src/core/components/tools/automate/*.{js,mjs,jsx,ts,tsx}",
-  "editor/src/core/components/viewer/*.{js,mjs,jsx,ts,tsx}",
-  "editor/src/core/contexts/*.{js,mjs,jsx,ts,tsx}",
-  "editor/src/core/contexts/viewer/*.{js,mjs,jsx,ts,tsx}",
-  "editor/src/core/hooks/*.{js,mjs,jsx,ts,tsx}",
-  "editor/src/core/services/*.{js,mjs,jsx,ts,tsx}",
-  "editor/src/core/tools/annotate/useAnnotationSelection.ts",
-  "editor/src/core/types/*.{js,mjs,jsx,ts,tsx}",
-  "editor/src/core/utils/*.{js,mjs,jsx,ts,tsx}",
-];
-
 export default defineConfig({
-  plugins: ["typescript", "import"],
+  plugins: ["typescript", "import", "react"],
+  options: {
+    typeAware: true,
+  },
   categories: {
     correctness: "off",
   },
@@ -197,12 +184,14 @@ export default defineConfig({
         allowInterfaces: "with-single-extends",
       },
     ],
+    "typescript/no-explicit-any": "error",
     "typescript/no-extra-non-null-assertion": "error",
     "typescript/no-misused-new": "error",
     "typescript/no-namespace": "error",
     "typescript/no-non-null-asserted-optional-chain": "error",
     "typescript/no-require-imports": "error",
     "typescript/no-this-alias": "error",
+    "typescript/no-unnecessary-type-assertion": "error",
     "typescript/no-unnecessary-type-constraint": "error",
     "typescript/no-unsafe-declaration-merging": "error",
     "typescript/no-unsafe-function-type": "error",
@@ -210,6 +199,7 @@ export default defineConfig({
     "typescript/prefer-as-const": "error",
     "typescript/prefer-namespace-keyword": "error",
     "typescript/triple-slash-reference": "error",
+    "react/jsx-max-depth": ["error", { max: 10 }],
   },
   overrides: [
     {
@@ -395,12 +385,11 @@ export default defineConfig({
       },
     },
     {
-      // Stricter no-explicit-any, enabled everywhere in the editor app EXCEPT
-      // the folders that are not yet conformant (migrated incrementally).
-      files: [APP_SOURCE],
-      excludeFiles: noExplicitAnyExcludes,
+      // A provider stack nests one context per level in dependency order, so its
+      // depth counts providers rather than measuring how hard the tree is to read.
+      files: ["editor/src/core/components/AppProviders.tsx"],
       rules: {
-        "typescript/no-explicit-any": "error",
+        "react/jsx-max-depth": "off",
       },
     },
     {

@@ -42,8 +42,8 @@ export function useLoginRequired() {
    * Wrap an async handler to check login state before executing
    */
   const withLoginCheck = useCallback(
-    <T extends (...args: any[]) => Promise<any>>(handler: T): T => {
-      return (async (...args: any[]) => {
+    <T extends (...args: never[]) => Promise<unknown>>(handler: T): T => {
+      return (async (...args: Parameters<T>) => {
         if (!validateLoginEnabled()) {
           return;
         }
@@ -71,11 +71,11 @@ export function useLoginRequired() {
    * Wrap fetch function to skip API call when login disabled
    */
   const withLoginCheckForFetch = useCallback(
-    <T extends (...args: any[]) => Promise<any>>(
+    <T extends (...args: never[]) => Promise<unknown>>(
       fetchHandler: T,
       skipWhenDisabled: boolean = true,
     ): T => {
-      return (async (...args: any[]) => {
+      return (async (...args: Parameters<T>) => {
         if (!loginEnabled && skipWhenDisabled) {
           // Skip fetch when login disabled - component will use default/empty values
           return;

@@ -951,8 +951,7 @@ public class CompressController {
         Double lineArtThreshold = request.getLineArtThreshold();
         Integer lineArtEdgeLevel = request.getLineArtEdgeLevel();
         if (expectedOutputSizeString == null && optimizeLevel == null) {
-            throw ExceptionUtils.createIllegalArgumentException(
-                    ExceptionUtils.ErrorCode.COMPRESSION_OPTIONS);
+            throw ExceptionUtils.createCompressionOptionsRequiredException();
         }
 
         Long expectedOutputSize = 0L;
@@ -1417,10 +1416,7 @@ public class CompressController {
 
             } catch (IOException e) {
                 if (returnCode != null && returnCode.getRc() != 3) {
-                    throw ExceptionUtils.createIOException(
-                            ExceptionUtils.ErrorCode.QPDF_COMPRESSION.getMessageKey(),
-                            ExceptionUtils.ErrorCode.QPDF_COMPRESSION.getDefaultMessage(),
-                            e);
+                    throw ExceptionUtils.createQpdfCompressionException(e);
                 }
                 // If QPDF fails, keep using the current file
                 log.warn("QPDF compression failed, continuing with current file", e);

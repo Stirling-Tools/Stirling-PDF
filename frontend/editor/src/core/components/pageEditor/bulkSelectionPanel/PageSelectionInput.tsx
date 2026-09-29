@@ -1,7 +1,7 @@
 import { TextInput, Text, Flex, Switch } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { usePageSelectionTips } from "@app/components/tooltips/usePageSelectionTips";
 import classes from "@app/components/pageEditor/bulkSelectionPanel/BulkSelectionPanel.module.css";
@@ -40,10 +40,9 @@ const PageSelectionInput = ({
           tips={pageSelectionTips.tips}
         >
           <Flex onClick={(e) => e.stopPropagation()} align="center" gap="xs">
-            <LocalIcon
-              icon="gpp-maybe-outline-rounded"
-              width="1rem"
-              height="1rem"
+            <Icon
+              name="shield-alert"
+              size="1rem"
               style={{ color: "var(--c-accent-fg)" }}
             />
             <Text>

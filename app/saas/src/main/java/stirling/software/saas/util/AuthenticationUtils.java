@@ -1,7 +1,9 @@
 package stirling.software.saas.util;
 
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
@@ -13,6 +15,22 @@ import stirling.software.saas.security.EnhancedJwtAuthenticationToken;
  * to user identifiers across different authentication types.
  */
 public class AuthenticationUtils {
+
+    /** Supabase guests have authenticated JWTs; authentication alone does not confer an account. */
+    public static boolean isAnonymous(Authentication authentication) {
+        if (authentication == null
+                || !authentication.isAuthenticated()
+                || authentication instanceof AnonymousAuthenticationToken
+                || "anonymousUser".equals(authentication.getName())) {
+            return true;
+        }
+        if (authentication instanceof JwtAuthenticationToken jwt
+                && Boolean.TRUE.equals(jwt.getToken().getClaimAsBoolean("is_anonymous"))) {
+            return true;
+        }
+        return authentication.getPrincipal() instanceof User user
+                && "ANONYMOUS".equalsIgnoreCase(user.getAuthenticationType());
+    }
 
     private AuthenticationUtils() {
         // Utility class - no instances

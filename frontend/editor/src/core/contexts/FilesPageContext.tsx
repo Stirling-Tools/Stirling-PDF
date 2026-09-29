@@ -1,5 +1,3 @@
-/** Shared state for the My Files view. */
-
 import React, {
   createContext,
   useCallback,
@@ -10,14 +8,23 @@ import React, {
   useState,
 } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 
 import { FileId } from "@app/types/file";
 import { StirlingFileStub } from "@app/types/fileContext";
-import { FolderId, FolderRecord, ROOT_FOLDER_ID } from "@app/types/folder";
+import {
+  FolderId,
+  FolderKind,
+  FolderRecord,
+  ROOT_FOLDER_ID,
+  folderKind,
+} from "@app/types/folder";
 import { fileStorage } from "@app/services/fileStorage";
+import { writeIntoMount } from "@app/services/mountWrites";
 import { folderSyncService } from "@app/services/folderSyncService";
 import { uploadHistoryChain } from "@app/services/serverStorageUpload";
 import { reconcileServerFiles } from "@app/services/fileSyncService";
+import { pruneMissingRecentFiles } from "@app/services/pruneMissingRecentFiles";
 import {
   deleteServerFile,
   type DeleteScope,
@@ -27,11 +34,13 @@ import {
   useIndexedDBRevision,
 } from "@app/contexts/IndexedDBContext";
 import { useFileActions } from "@app/contexts/file/fileHooks";
+import { useDiskLinkReconcile } from "@app/hooks/useDiskLinkReconcile";
 import { useFolders } from "@app/contexts/FolderContext";
+import { getFileOrigin } from "@app/components/filesPage/fileOrigin";
+import { useRoutedLibraryViewState } from "@app/components/filesPage/useRoutedLibraryViewState";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useAuth } from "@app/auth/UseSession";
 
-/** View-toggle modes; tuple keeps the union and iterator in sync. */
 export const FILES_PAGE_VIEW_MODES = ["grid", "list"] as const;
 export type FilesPageViewMode = (typeof FILES_PAGE_VIEW_MODES)[number];
 export type FilesPageSortMode =
@@ -47,18 +56,13 @@ export type FilesPageOriginFilter =
   | "cloud"
   | "shared-with-me";
 
-/** all|local|cloud|recent|shared filter presets. */
-export type FilesPageTab =
-  | "all"
-  | "local"
-  | "cloud"
-  | "recent"
-  | "shared"
-  | "sharedByMe";
+export type FilesPageTab = "all" | "cloud" | "recent" | "shared" | "sharedByMe";
 
 export interface FolderNameDialogState {
   mode: "new" | "rename" | null;
   parentId?: FolderId | null;
+  /** For a root-level create: the kind the caller chose (menu, not dialog). */
+  kind?: FolderKind;
   folder?: FolderRecord;
 }
 
@@ -69,20 +73,33 @@ export interface MoveDialogState {
   initial: FolderId | null;
 }
 
+const VIEW_MODE_STORAGE_KEY = "stirling.filesPageViewMode";
+
+function readPersistedViewMode(): FilesPageViewMode {
+  try {
+    const stored = localStorage.getItem(VIEW_MODE_STORAGE_KEY);
+    if (stored === "grid" || stored === "list") return stored;
+  } catch {
+    // Private mode, or storage denied: the default stands.
+  }
+  return "list";
+}
+
 interface FilesPageContextValue {
-  // Cached files (leaf-only)
+  /** Leaf versions only; includes local and server library entries. */
   allFiles: StirlingFileStub[];
   fileMap: Map<FileId, StirlingFileStub>;
   fileCountsByFolder: Map<FolderId | null, number>;
   loading: boolean;
   refresh: () => Promise<void>;
+  /** Invalidates disk listings, which cannot observe IndexedDB revisions. */
+  diskRevision: number;
+  bumpDiskRevision: () => void;
 
-  // Selection
   selectedFileIds: Set<FileId>;
   setSelectedFileIds: React.Dispatch<React.SetStateAction<Set<FileId>>>;
   clearSelection: () => void;
 
-  // View + sort + search + filters
   viewMode: FilesPageViewMode;
   setViewMode: (mode: FilesPageViewMode) => void;
   sortMode: FilesPageSortMode;
@@ -96,13 +113,13 @@ interface FilesPageContextValue {
   typeFilter: string[];
   setTypeFilter: (next: string[]) => void;
 
-  /** Active filter-tab. Drives which files appear and which UI affordances enable. */
   currentTab: FilesPageTab;
   setCurrentTab: (tab: FilesPageTab) => void;
+  /** Opens the folder in Stirling library with one browser history entry. */
+  openFolder: (id: FolderId | null) => void;
 
-  // Dialog state
   folderNameDialog: FolderNameDialogState;
-  openNewFolderDialog: (parentId?: FolderId | null) => void;
+  openNewFolderDialog: (parentId?: FolderId | null, kind?: FolderKind) => void;
   openRenameFolderDialog: (folder: FolderRecord) => void;
   closeFolderNameDialog: () => void;
   submitFolderName: (name: string) => Promise<void>;
@@ -111,13 +128,21 @@ interface FilesPageContextValue {
   promptMoveFiles: (fileIds: FileId[]) => void;
   closeMoveDialog: () => void;
 
-  // Action helpers
-  moveFilesTo: (fileIds: FileId[], folderId: FolderId | null) => Promise<void>;
+  /**
+   * Server folders upload local files; moving to root uploads only with uploadToRoot.
+   * Can reject after partial completion; successful uploads and moves are not rolled back.
+   * Mounted and browser-only destinations report skipped files through FolderContext.
+   */
+  moveFilesTo: (
+    fileIds: FileId[],
+    folderId: FolderId | null,
+    options?: { uploadToRoot?: boolean },
+  ) => Promise<void>;
   moveFolderTo: (
     folderId: FolderId,
     newParentId: FolderId | null,
   ) => Promise<void>;
-  /** Queue files for deletion - opens the DeleteFilesDialog. */
+  /** Prompts for a scope if any selected server copy is owned; otherwise deletes browser copies. */
   removeFiles: (fileIds: FileId[]) => Promise<void>;
   /** Files currently queued in the delete dialog (empty when closed). */
   deleteDialogFileIds: FileId[];
@@ -147,6 +172,7 @@ const FilesPageContext = createContext<FilesPageContextValue | null>(null);
 
 export function FilesPageProvider({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const indexedDB = useIndexedDB();
   const indexedDBRevision = useIndexedDBRevision();
   const folders = useFolders();
@@ -154,26 +180,35 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
   const { config: appConfig } = useAppConfig();
   const { isAnonymous } = useAuth();
 
+  // Refs keep workspace changes from restarting library refreshes.
+  const { openFileIdsRef, onOpenFilesDetached } = useDiskLinkReconcile();
+
   const [allFiles, setAllFiles] = useState<StirlingFileStub[]>([]);
   const [loading, setLoading] = useState(true);
-  // Generation counter to drop stale reconcile results when a second refresh
-  // overlaps the first. Mirrors the pattern FolderContext.pullFromServer uses
-  // via pullInFlight, but kept as a counter so we can also discard results
-  // from clearly-out-of-date calls instead of just serializing them.
+  // Only the newest refresh may publish results or clear loading.
   const refreshGenRef = useRef(0);
 
-  // Narrow dep so refresh isn't recreated on every folders field change.
   const setFoldersError = folders.setError;
   const storageEnabled = appConfig?.storageEnabled === true;
   const shareLinksEnabled = appConfig?.storageShareLinksEnabled === true;
+  const [diskRevision, setDiskRevision] = useState(0);
+  const bumpDiskRevision = useCallback(() => setDiskRevision((n) => n + 1), []);
+
   const refresh = useCallback(async () => {
     const gen = ++refreshGenRef.current;
     setLoading(true);
     try {
       const localStubs = await fileStorage.getAllStirlingFileStubs();
-      // Bail if a newer refresh started while IDB was reading.
       if (gen !== refreshGenRef.current) return;
-      const localLeaf = localStubs.filter((s) => s.isLeaf !== false);
+      // Reconcile disk deletions before displaying leaves; checking every version repeats the same IO.
+      const localLeaf = await pruneMissingRecentFiles(
+        localStubs.filter((s) => s.isLeaf !== false),
+        {
+          openFileIds: new Set(openFileIdsRef.current),
+          onOpenFilesDetached,
+        },
+      );
+      if (gen !== refreshGenRef.current) return;
       // Render the cache immediately while the server fetch is in flight.
       setAllFiles(localLeaf);
       const merged = await reconcileServerFiles(localLeaf, {
@@ -181,8 +216,6 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
         shareLinksEnabled,
         isAnonymous,
       });
-      // Drop the merged result if a newer refresh has already started -
-      // otherwise its stale snapshot will clobber the newer one's state.
       if (gen !== refreshGenRef.current) return;
       setAllFiles(merged);
     } catch (err) {
@@ -192,10 +225,16 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
         err instanceof Error ? err.message : "Failed to load files",
       );
     } finally {
-      // Only the latest refresh should clear the loading state.
       if (gen === refreshGenRef.current) setLoading(false);
     }
-  }, [setFoldersError, storageEnabled, shareLinksEnabled, isAnonymous]);
+  }, [
+    setFoldersError,
+    storageEnabled,
+    shareLinksEnabled,
+    isAnonymous,
+    openFileIdsRef,
+    onOpenFilesDetached,
+  ]);
 
   useEffect(() => {
     void refresh();
@@ -213,38 +252,50 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
     for (const f of folders.folders) map.set(f.id, 0);
     for (const file of allFiles) {
       const fid = file.folderId ?? null;
+      if (fid === null && getFileOrigin(file) === "local") continue;
       map.set(fid, (map.get(fid) ?? 0) + 1);
     }
     return map;
   }, [allFiles, folders.folders]);
 
-  // Selection ---------------------------------------------------------------
-  const [selectedFileIds, setSelectedFileIds] = useState<Set<FileId>>(
-    () => new Set(),
+  const {
+    selectedFileIds,
+    setSelectedFileIds,
+    clearSelection,
+    sortMode,
+    setSortMode,
+    search,
+    setSearch,
+    originFilter,
+    setOriginFilter,
+    typeFilter,
+    setTypeFilter,
+    currentTab,
+    setCurrentTab,
+    openFolder,
+  } = useRoutedLibraryViewState();
+
+  const [viewMode, setViewModeState] = useState<FilesPageViewMode>(
+    readPersistedViewMode,
   );
-  const clearSelection = useCallback(() => setSelectedFileIds(new Set()), []);
+  const setViewMode = useCallback((mode: FilesPageViewMode) => {
+    setViewModeState(mode);
+    try {
+      localStorage.setItem(VIEW_MODE_STORAGE_KEY, mode);
+    } catch {
+      // A browser that refuses storage still gets the choice for this session.
+    }
+  }, []);
 
-  // Clear selection when folder changes.
-  useEffect(() => {
-    clearSelection();
-  }, [folders.currentFolderId, clearSelection]);
-
-  // View + sort + search + filters ----------------------------------------
-  const [viewMode, setViewMode] = useState<FilesPageViewMode>("grid");
-  const [sortMode, setSortMode] = useState<FilesPageSortMode>("modified-desc");
-  const [search, setSearch] = useState("");
-  const [originFilter, setOriginFilter] =
-    useState<FilesPageOriginFilter>("all");
-  const [typeFilter, setTypeFilter] = useState<string[]>([]);
-  const [currentTab, setCurrentTab] = useState<FilesPageTab>("all");
-
-  // Dialog: folder name -----------------------------------------------------
   const [folderNameDialog, setFolderNameDialog] =
     useState<FolderNameDialogState>({ mode: null });
 
   const openNewFolderDialog = useCallback(
-    (parentId: FolderId | null = folders.currentFolderId) => {
-      setFolderNameDialog({ mode: "new", parentId });
+    (
+      parentId: FolderId | null = folders.currentFolderId,
+      kind?: FolderKind,
+    ) => {
+      setFolderNameDialog({ mode: "new", parentId, kind });
     },
     [folders.currentFolderId],
   );
@@ -260,10 +311,12 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
   const submitFolderName = useCallback(
     async (name: string) => {
       if (folderNameDialog.mode === "new") {
-        await folders.createFolder(
+        const created = await folders.createFolder(
           name,
           folderNameDialog.parentId ?? folders.currentFolderId,
+          folderNameDialog.kind,
         );
+        navigate(`/files/${created.id}`);
       } else if (
         folderNameDialog.mode === "rename" &&
         folderNameDialog.folder
@@ -271,10 +324,9 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
         await folders.renameFolder(folderNameDialog.folder.id, name);
       }
     },
-    [folderNameDialog, folders],
+    [folderNameDialog, folders, navigate],
   );
 
-  // Dialog: move ------------------------------------------------------------
   const [moveDialog, setMoveDialog] = useState<MoveDialogState>({
     open: false,
     initial: ROOT_FOLDER_ID,
@@ -282,7 +334,11 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
 
   const promptMoveFiles = useCallback(
     (fileIds: FileId[]) => {
-      setMoveDialog({ open: true, fileIds, initial: folders.currentFolderId });
+      setMoveDialog({
+        open: true,
+        fileIds,
+        initial: folders.currentFolderId,
+      });
     },
     [folders.currentFolderId],
   );
@@ -291,23 +347,100 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
     setMoveDialog((m) => ({ ...m, open: false }));
   }, []);
 
-  // Action helpers ----------------------------------------------------------
-
-  /** Cloud files move server-first; local files auto-upload then move. */
   const moveFilesTo = useCallback(
-    async (fileIds: FileId[], folderId: FolderId | null) => {
+    async (
+      fileIds: FileId[],
+      folderId: FolderId | null,
+      options?: { uploadToRoot?: boolean },
+    ) => {
       if (fileIds.length === 0) return;
-      const stubs = fileIds
-        .map((id) => fileMap.get(id))
-        .filter((s): s is StirlingFileStub => Boolean(s));
+      // Newly imported files may not be in the render snapshot yet; read them from storage.
+      const fetched = await Promise.all(
+        fileIds.map(
+          (id) => fileMap.get(id) ?? fileStorage.getStirlingFileStub(id),
+        ),
+      );
+      const stubs = fetched.filter((s): s is StirlingFileStub => Boolean(s));
       const localOnly = stubs.filter((s) => s.remoteStorageId == null);
-      // Cloud list is mutated below with newly-promoted local files.
       const cloudFiles = stubs.filter((s) => s.remoteStorageId != null);
 
-      if (folderId !== null && localOnly.length > 0) {
-        // Per-file uploadHistoryChain so each gets its own remoteStorageId.
-        try {
-          for (const stub of localOnly) {
+      const targetFolder =
+        folderId === null ? null : folders.foldersById.get(folderId);
+      const targetKind = targetFolder ? folderKind(targetFolder) : null;
+
+      if (targetKind === "local") {
+        // Retire app-side copies only after their bytes have been written into the mounted directory.
+        const { written, failedCount } = await writeIntoMount(
+          targetFolder?.directory,
+          localOnly.map((stub) => ({
+            name: stub.name,
+            bytes: () => fileStorage.getStirlingFile(stub.id),
+          })),
+        );
+        const movedIds = localOnly
+          .filter((_, i) => written[i])
+          .map((stub) => stub.id);
+        if (movedIds.length > 0) {
+          // Superseded versions go too, or their bytes sit in storage unseen.
+          const orphans = await fileStorage.orphanedAncestorIds(movedIds);
+          await fileActions.removeFiles([...movedIds, ...orphans], true);
+        }
+        const notices: string[] = [];
+        if (failedCount > 0) {
+          notices.push(
+            t("filesPage.moveIntoMountFailed", {
+              count: failedCount,
+              defaultValue:
+                "{{count}} file(s) could not be written into the folder.",
+            }),
+          );
+        }
+        if (cloudFiles.length > 0) {
+          notices.push(
+            t("filesPage.moveIntoMountCloudSkipped", {
+              count: cloudFiles.length,
+              defaultValue:
+                "{{count}} server file(s) stayed in your files. They live on the server, not on this disk.",
+            }),
+          );
+        }
+        if (notices.length > 0) {
+          folders.setError(notices.join(" "));
+        }
+        await refresh();
+        return;
+      }
+
+      if (targetKind === "virtual") {
+        // A browser-owned folder cannot hold server files: the next sync would snap
+        // them back, so they are left where they are and reported.
+        if (cloudFiles.length > 0) {
+          folders.setError(
+            t(
+              "filesPage.moveIntoVirtualCloudSkipped",
+              "{{count}} server file(s) were left in place. Server files can't live in browser-only folders.",
+              { count: cloudFiles.length },
+            ),
+          );
+        }
+        if (localOnly.length > 0) {
+          await indexedDB.moveFilesToFolder(
+            localOnly.map((s) => s.id),
+            folderId,
+          );
+        }
+        await refresh();
+        return;
+      }
+
+      const uploadErrors: string[] = [];
+      if (
+        (folderId !== null || options?.uploadToRoot) &&
+        localOnly.length > 0
+      ) {
+        // Independent files keep separate server records and can succeed independently.
+        for (const stub of localOnly) {
+          try {
             const rootId = (stub.originalFileId || stub.id) as FileId;
             const { remoteId, updatedAt, chain } =
               await uploadHistoryChain(rootId);
@@ -325,7 +458,6 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
                 remoteSharedViaLink: false,
               });
             }
-            // Promoted file joins the bulk-move round.
             cloudFiles.push({
               ...stub,
               remoteStorageId: remoteId,
@@ -333,14 +465,11 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
               remoteOwnedByCurrentUser: true,
               remoteSharedViaLink: false,
             });
+          } catch (err) {
+            uploadErrors.push(
+              `${stub.name}: ${err instanceof Error ? err.message : String(err)}`,
+            );
           }
-        } catch (err) {
-          folders.setError(
-            err instanceof Error
-              ? `Could not save files to server: ${err.message}`
-              : "Could not save files to server.",
-          );
-          throw err;
         }
       }
 
@@ -354,13 +483,13 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
             folderId,
           );
           if (result.skippedFileIds.length > 0) {
-            folders.setError(
-              t(
-                "filesPage.moveSkippedRemote",
-                "{{count}} file(s) couldn't be moved on the server (no permission or already deleted).",
-                { count: result.skippedFileIds.length },
-              ),
+            const message = t(
+              "filesPage.moveSkippedRemote",
+              "{{count}} file(s) couldn't be moved on the server (no permission or already deleted).",
+              { count: result.skippedFileIds.length },
             );
+            folders.setError(message);
+            if (options?.uploadToRoot) uploadErrors.push(message);
           }
           const movedRemoteSet = new Set(result.movedFileIds);
           const idsToCacheMove = cloudFiles
@@ -379,15 +508,23 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      // Local files moving to ROOT need no cloud write.
+      // Moving a browser copy to root must not implicitly upload it.
+      if (folderId === null && !options?.uploadToRoot && localOnly.length > 0) {
+        const leaving = localOnly
+          .filter((s) => (s.folderId ?? null) !== null)
+          .map((s) => s.id);
+        if (leaving.length > 0) {
+          await indexedDB.moveFilesToFolder(leaving, null);
+        }
+      }
       await refresh();
+      if (uploadErrors.length) throw new Error(uploadErrors.join("\n"));
     },
     [indexedDB, refresh, fileMap, folders, t, fileActions],
   );
 
   const moveFolderTo = useCallback(
     async (folderId: FolderId, newParentId: FolderId | null) => {
-      // Client-side cycle guard.
       if (newParentId !== null && folders.isDescendant(newParentId, folderId)) {
         folders.setError(
           t(
@@ -397,18 +534,28 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
         );
         return;
       }
+      // Each folder kind has its own storage authority, so moves cannot cross kinds.
+      if (newParentId !== null) {
+        const source = folders.foldersById.get(folderId);
+        const target = folders.foldersById.get(newParentId);
+        if (source && target && folderKind(source) !== folderKind(target)) {
+          folders.setError(
+            t(
+              "filesPage.moveAcrossKindsBlocked",
+              "These folders live in different places, so one can't go inside the other.",
+            ),
+          );
+          return;
+        }
+      }
       await folders.moveFolder(folderId, newParentId);
     },
     [folders, t],
   );
 
-  // Delete dialog state. removeFiles only queues + opens when a cloud copy is
-  // involved; local-only deletes skip the dialog and run immediately.
   const [deleteDialogFileIds, setDeleteDialogFileIds] = useState<FileId[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  // The actual deletion for a chosen scope. Shared by the direct (local-only)
-  // path and the dialog's confirm.
   const performDelete = useCallback(
     async (fileIds: FileId[], scope: DeleteScope) => {
       const stubs = fileIds
@@ -446,7 +593,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      // Local delete - skip ephemeral server-/shared- stubs (no IDB row).
+      // Server/shared placeholders have no IndexedDB row to delete.
       if (scope === "device" || scope === "everywhere") {
         const localIds = stubs
           .filter((s) => {
@@ -471,14 +618,12 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
       // reconcile picks up the cloud deletions and strips stale remote pointers.
       await refresh();
     },
-    [fileMap, fileActions, folders, refresh, t],
+    [fileMap, fileActions, folders, refresh, setSelectedFileIds, t],
   );
 
   const removeFiles = useCallback(
     async (fileIds: FileId[]) => {
       if (fileIds.length === 0) return;
-      // Only prompt when a cloud copy is in play (the user must pick where to
-      // delete). Local-only files have nothing to choose - delete immediately.
       const hasDeletableCloud = fileIds.some((id) => {
         const s = fileMap.get(id);
         return (
@@ -554,10 +699,27 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
 
   const promptDeleteFolder = useCallback(
     (folder: FolderRecord) => {
+      if (folderKind(folder) === "local") {
+        // Unmounting only removes the mapping; the directory and its files remain on disk.
+        void folders.deleteFolder(folder.id).catch((err) => {
+          folders.setError(
+            err instanceof Error
+              ? t("filesPage.error.removeFolderFailedDetail", {
+                  message: err.message,
+                  defaultValue: `Could not remove folder: ${err.message}`,
+                })
+              : t(
+                  "filesPage.error.removeFolderFailed",
+                  "Could not remove folder.",
+                ),
+          );
+        });
+        return;
+      }
       const fileCount = filesInSubtree(folder.id).length;
       setDeleteFolderDialog({ folder, fileCount });
     },
-    [filesInSubtree],
+    [filesInSubtree, folders, t],
   );
 
   const deleteFolder = useCallback(
@@ -574,7 +736,6 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
     [fileActions, filesInSubtree, folders, refresh],
   );
 
-  // Memoise to avoid re-rendering every FileCard on unrelated state churn.
   const value = useMemo<FilesPageContextValue>(
     () => ({
       allFiles,
@@ -582,6 +743,8 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
       fileCountsByFolder,
       loading,
       refresh,
+      diskRevision,
+      bumpDiskRevision,
       selectedFileIds,
       setSelectedFileIds,
       clearSelection,
@@ -597,6 +760,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
       setTypeFilter,
       currentTab,
       setCurrentTab,
+      openFolder,
       folderNameDialog,
       openNewFolderDialog,
       openRenameFolderDialog,
@@ -624,14 +788,23 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
       fileCountsByFolder,
       loading,
       refresh,
+      diskRevision,
+      bumpDiskRevision,
       selectedFileIds,
+      setSelectedFileIds,
       clearSelection,
       viewMode,
       sortMode,
+      setSortMode,
       search,
+      setSearch,
       originFilter,
+      setOriginFilter,
       typeFilter,
+      setTypeFilter,
       currentTab,
+      setCurrentTab,
+      openFolder,
       folderNameDialog,
       openNewFolderDialog,
       openRenameFolderDialog,

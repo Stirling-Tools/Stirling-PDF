@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert, Checkbox, Group, Modal, Stack, Text } from "@mantine/core";
-import ErrorOutlineIcon from "@mui/icons-material/ErrorOutlined";
-
+import { Icon } from "@app/ui/Icon";
 import { Button } from "@app/ui/Button";
-import { FolderRecord } from "@app/types/folder";
+import { folderKind, FolderRecord } from "@app/types/folder";
 
 interface DeleteFolderDialogProps {
   opened: boolean;
@@ -37,22 +36,35 @@ export function DeleteFolderDialog({
   }, [opened]);
 
   if (!folder) return null;
+  // A mount is a mapping, not storage: removing it never touches the disk, so
+  // the dialog must not read like a deletion or offer to delete contents.
+  const isMount = folderKind(folder) === "local";
 
   return (
     <Modal
       opened={opened}
       onClose={onClose}
-      title={t("filesPage.deleteFolderTitle", "Delete folder?")}
+      title={
+        isMount
+          ? t("filesPage.unmountFolderTitle", "Unmount from Stirling?")
+          : t("filesPage.deleteFolderTitle", "Delete folder?")
+      }
       centered
       size="md"
     >
       <Stack gap="md">
         <Text size="sm">
-          {t("filesPage.deleteFolderBody", 'Delete folder "{{name}}"?', {
-            name: folder.name,
-          })}
+          {isMount
+            ? t(
+                "filesPage.unmountFolderBody",
+                'Unmount "{{name}}"? The folder and its files stay on your disk.',
+                { name: folder.name },
+              )
+            : t("filesPage.deleteFolderBody", 'Delete folder "{{name}}"?', {
+                name: folder.name,
+              })}
         </Text>
-        {fileCount > 0 && (
+        {!isMount && fileCount > 0 && (
           <Checkbox
             checked={deleteContents}
             onChange={(e) => setDeleteContents(e.currentTarget.checked)}
@@ -64,7 +76,7 @@ export function DeleteFolderDialog({
             )}
           />
         )}
-        {fileCount > 0 && (
+        {!isMount && fileCount > 0 && (
           <Text size="xs" c="dimmed">
             {deleteContents
               ? t(
@@ -73,14 +85,14 @@ export function DeleteFolderDialog({
                 )
               : t(
                   "filesPage.deleteFolderKeepHint",
-                  "Files inside will be moved to All files.",
+                  "Files inside will be moved to Stirling library.",
                 )}
           </Text>
         )}
         {error && (
           <Alert
             color="red"
-            icon={<ErrorOutlineIcon fontSize="small" />}
+            icon={<Icon name="circle-alert" size={20} />}
             variant="light"
             role="alert"
           >
@@ -114,7 +126,9 @@ export function DeleteFolderDialog({
               }
             }}
           >
-            {t("filesPage.delete", "Delete")}
+            {isMount
+              ? t("filesPage.unmount", "Unmount")
+              : t("filesPage.delete", "Delete")}
           </Button>
         </Group>
       </Stack>

@@ -2,11 +2,14 @@ import {
   openRawDocumentSafe,
   closeRawDocument,
   getPdfiumModule,
+  PdfiumOpenError,
+  FPDF_ERR_PASSWORD,
 } from "@app/services/pdfiumService";
 import {
   renderPdfiumPageDataUrl,
   readPdfiumPageMetadata,
 } from "@app/utils/pdfiumPageRender";
+import { getDocumentBytes } from "@app/services/documentBytesCache";
 
 export interface ThumbnailWithMetadata {
   thumbnail: string; // Always returns a thumbnail (placeholder if needed)
@@ -27,9 +30,6 @@ export function calculateScaleFromFileSize(fileSize: number): number {
   if (fileSize < 500 * MB) return 0.4; // Readable quality for large but manageable files
   return 0.3; // Still usable quality, not tiny
 }
-
-/** PDFium error code 4 = password required (encrypted PDF). */
-const PDFIUM_ERR_PASSWORD = 4;
 
 /** Callers still get a placeholder, but log the cause: an empty thumbnail is
  *  indistinguishable from "no raster preview", so an outage hides as a nicety. */
@@ -101,10 +101,7 @@ async function renderPdfThumbnailPdfium(
   try {
     docPtr = await openRawDocumentSafe(data);
   } catch (error) {
-    if (
-      error instanceof Error &&
-      new RegExp(`error ${PDFIUM_ERR_PASSWORD}`).test(error.message)
-    ) {
+    if (error instanceof PdfiumOpenError && error.code === FPDF_ERR_PASSWORD) {
       return {
         thumbnail: "",
         pageCount: 1,
@@ -163,10 +160,7 @@ async function renderPdfThumbnailPairPdfium(
   try {
     docPtr = await openRawDocumentSafe(data);
   } catch (error) {
-    if (
-      error instanceof Error &&
-      new RegExp(`error ${PDFIUM_ERR_PASSWORD}`).test(error.message)
-    ) {
+    if (error instanceof PdfiumOpenError && error.code === FPDF_ERR_PASSWORD) {
       const encrypted: PdfiumRenderResult = {
         thumbnail: "",
         pageCount: 1,
@@ -265,7 +259,7 @@ export async function generateThumbnailForFile(file: File): Promise<string> {
       // chunk can fail to open for PDFs larger than that. Retry with the
       // full buffer before falling back to an empty thumbnail.
       try {
-        const fullArrayBuffer = await file.arrayBuffer();
+        const fullArrayBuffer = await getDocumentBytes(file);
         return await generatePDFThumbnail(fullArrayBuffer, scale);
       } catch (error) {
         reportThumbnailFailure(file, error);
@@ -327,7 +321,7 @@ export async function generateThumbnailWithMetadata(
   }
 
   try {
-    const arrayBuffer = await file.arrayBuffer();
+    const arrayBuffer = await getDocumentBytes(file);
     // Always read per-page rotation: PageEditor renders thumbnails upright and
     // uses this as the rotation baseline, so skipping it corrupts saves.
     const result = await renderPdfThumbnailPdfium(
@@ -381,7 +375,7 @@ export async function generateThumbnailPairWithMetadata(file: File): Promise<{
     }
     const buffer = isLarge
       ? await file.slice(0, LINEARIZED_PREFIX_BYTES).arrayBuffer()
-      : await file.arrayBuffer();
+      : await getDocumentBytes(file);
     const pair = await renderPdfThumbnailPairPdfium(buffer, scale, !isLarge);
 
     const toPublic = (r: PdfiumRenderResult): ThumbnailWithMetadata =>

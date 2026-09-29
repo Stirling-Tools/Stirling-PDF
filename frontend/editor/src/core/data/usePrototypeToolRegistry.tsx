@@ -11,5 +11,5 @@ import { type PrototypeToolRegistry } from "@app/data/toolsTaxonomy";
 
 // Empty hook that returns an empty registry (overridden in the prototypes overlay).
 export function usePrototypeToolRegistry(): PrototypeToolRegistry {
-  return useMemo(() => ({}) as PrototypeToolRegistry, []);
+  return useMemo(() => ({}), []);
 }

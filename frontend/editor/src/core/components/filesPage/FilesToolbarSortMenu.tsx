@@ -1,0 +1,86 @@
+import { Menu } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import { Icon } from "@app/ui/Icon";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { Tooltip } from "@app/components/shared/Tooltip";
+import type { FilesPageSortMode } from "@app/contexts/FilesPageContext";
+
+interface FilesToolbarSortMenuProps {
+  value: FilesPageSortMode;
+  onChange: (mode: FilesPageSortMode) => void;
+  zIndex?: number;
+}
+
+export function FilesToolbarSortMenu({
+  value,
+  onChange,
+  zIndex,
+}: FilesToolbarSortMenuProps) {
+  const { t } = useTranslation();
+
+  const options: { value: FilesPageSortMode; label: string }[] = [
+    {
+      value: "modified-desc",
+      label: t("filesPage.sort.modifiedDesc", "Recent first"),
+    },
+    {
+      value: "modified-asc",
+      label: t("filesPage.sort.modifiedAsc", "Oldest first"),
+    },
+    { value: "name-asc", label: t("filesPage.sort.nameAsc", "Name A→Z") },
+    { value: "name-desc", label: t("filesPage.sort.nameDesc", "Name Z→A") },
+    {
+      value: "size-desc",
+      label: t("filesPage.sort.sizeDesc", "Largest first"),
+    },
+    { value: "size-asc", label: t("filesPage.sort.sizeAsc", "Smallest first") },
+  ];
+
+  const label = t("filesPage.sort.label", "Sort files");
+  const current = options.find((o) => o.value === value)?.label ?? "";
+
+  return (
+    <Menu
+      shadow="md"
+      width={200}
+      position="bottom-end"
+      withinPortal
+      zIndex={zIndex}
+    >
+      <Menu.Target>
+        <div>
+          <Tooltip content={`${label} · ${current}`} position="bottom">
+            <ActionIcon
+              variant="tertiary"
+              size="sm"
+              aria-label={`${label}: ${current}`}
+              className="files-page-toolbar-icon-btn"
+            >
+              <Icon name="arrow-up-down" size={"1.1rem"} />
+            </ActionIcon>
+          </Tooltip>
+        </div>
+      </Menu.Target>
+      <Menu.Dropdown>
+        <Menu.Label>{label}</Menu.Label>
+        {options.map((option) => (
+          <Menu.Item
+            key={option.value}
+            onClick={() => onChange(option.value)}
+            leftSection={
+              option.value === value ? (
+                <Icon name="check" size={"1rem"} />
+              ) : (
+                <span style={{ display: "inline-block", width: "1rem" }} />
+              )
+            }
+          >
+            {option.label}
+          </Menu.Item>
+        ))}
+      </Menu.Dropdown>
+    </Menu>
+  );
+}
+
+export default FilesToolbarSortMenu;

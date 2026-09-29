@@ -1,78 +1,153 @@
 package stirling.software.proprietary.accountlink;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import stirling.software.proprietary.accountlink.AccountLinkController.LinkRequest;
-
 /**
- * The local (self-hosted) account-link controller's error mapping: an upstream auth rejection
- * surfaces as 401/403 (so the portal can prompt a re-sign-in) while other upstream / transport
- * faults are a 502.
+ * The local (self-hosted) account-link controller's error mapping. Every upstream or transport
+ * failure is a 502, and the response body never echoes the exception, because a DNS or TLS message
+ * can carry the configured SaaS host.
  */
 class AccountLinkControllerTest {
 
     private AccountLinkService service;
+    private ConnectService connectService;
     private UsageSyncService syncService;
     private ObjectProvider<UsageSyncService> syncProvider;
+    private FreeTierUsageService freeTierService;
     private AccountLinkController controller;
 
     @BeforeEach
     @SuppressWarnings("unchecked")
     void setUp() {
         service = mock(AccountLinkService.class);
+        connectService = mock(ConnectService.class);
         syncService = mock(UsageSyncService.class);
         syncProvider = mock(ObjectProvider.class);
+        freeTierService = mock(FreeTierUsageService.class);
         controller =
-                new AccountLinkController(service, mock(LocalUsageService.class), syncProvider);
+                new AccountLinkController(
+                        service,
+                        connectService,
+                        mock(LocalUsageService.class),
+                        freeTierService,
+                        syncProvider);
     }
 
-    @Test
-    void link_missingJwt_returns400() {
-        ResponseEntity<?> resp = controller.link(new LinkRequest("  ", null));
-        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-    }
+    // These asserted POST /link's error mapping, which distinguished 401/403 so the portal could
+    // prompt a re-sign-in. That endpoint is gone with the JWT relay, and the distinction went with
+    // it: connect/start carries no user token, so an upstream refusal is never the admin's session
+    // and everything non-transport is a plain gateway failure.
 
     @Test
-    void link_upstreamUnauthorized_maps401() throws Exception {
-        when(service.link("jwt", null))
-                .thenThrow(new AccountLinkClient.UpstreamException(401, "bad token"));
-        ResponseEntity<?> resp = controller.link(new LinkRequest("jwt", null));
-        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
-    }
-
-    @Test
-    void link_upstreamForbidden_maps403() throws Exception {
-        when(service.link("jwt", null))
-                .thenThrow(new AccountLinkClient.UpstreamException(403, "forbidden"));
-        ResponseEntity<?> resp = controller.link(new LinkRequest("jwt", null));
-        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
-    }
-
-    @Test
-    void link_upstreamServerError_maps502() throws Exception {
-        when(service.link("jwt", null))
+    void connectStart_upstreamFailure_maps502() throws Exception {
+        when(connectService.start(any(), any()))
                 .thenThrow(new AccountLinkClient.UpstreamException(500, "boom"));
-        ResponseEntity<?> resp = controller.link(new LinkRequest("jwt", null));
+
+        ResponseEntity<?> resp = controller.connectStart(null, request());
+
         assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.BAD_GATEWAY);
     }
 
     @Test
-    void link_transportFailure_maps502() throws Exception {
-        when(service.link("jwt", null)).thenThrow(new IOException("connection refused"));
-        ResponseEntity<?> resp = controller.link(new LinkRequest("jwt", null));
+    void connectStart_transportFailure_maps502WithoutLeakingTheHost() throws Exception {
+        when(connectService.start(any(), any()))
+                .thenThrow(new IOException("connection refused to saas.internal:8081"));
+
+        ResponseEntity<?> resp = controller.connectStart(null, request());
+
         assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.BAD_GATEWAY);
+        // The body must not echo the exception: a DNS/TLS message can carry the configured SaaS
+        // host.
+        assertThat(String.valueOf(resp.getBody())).doesNotContain("saas.internal");
+    }
+
+    @Test
+    void connectReauth_onAnUnlinkedServer_maps502() throws Exception {
+        when(connectService.startReauth(any())).thenThrow(new IOException("not linked"));
+
+        ResponseEntity<?> resp = controller.connectReauth(null, request());
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.BAD_GATEWAY);
+    }
+
+    /** Minimal request: the controller only reads Origin and the forwarded/host details from it. */
+    private static jakarta.servlet.http.HttpServletRequest request() {
+        return new org.springframework.mock.web.MockHttpServletRequest();
+    }
+
+    @Test
+    void connectComplete_reportsSeatsAfterTheLinkCommits() {
+        var linked = new ConnectService.ConnectStatus(ConnectService.Phase.LINKED, null, null, 42L);
+        when(connectService.complete("nonce")).thenReturn(linked);
+        when(syncProvider.getIfAvailable()).thenReturn(syncService);
+
+        var response =
+                controller.connectComplete(
+                        new AccountLinkController.ConnectCompleteRequest("nonce"));
+
+        assertThat(response.getBody()).isEqualTo(linked);
+        var order = inOrder(connectService, syncService);
+        order.verify(connectService).complete("nonce");
+        order.verify(syncService).syncNow();
+    }
+
+    @ParameterizedTest
+    @EnumSource(
+            value = ConnectService.Phase.class,
+            names = "LINKED",
+            mode = EnumSource.Mode.EXCLUDE)
+    void connectComplete_doesNotSyncAnUnfinishedOrRejectedLink(ConnectService.Phase phase) {
+        when(connectService.complete("nonce")).thenReturn(ConnectService.ConnectStatus.of(phase));
+
+        controller.connectComplete(new AccountLinkController.ConnectCompleteRequest("nonce"));
+
+        verify(syncProvider, never()).getIfAvailable();
+        verify(syncService, never()).syncNow();
+    }
+
+    @Test
+    void connectComplete_keepsTheCommittedLinkWhenInitialSyncFails() {
+        var linked = new ConnectService.ConnectStatus(ConnectService.Phase.LINKED, null, null, 42L);
+        when(connectService.complete("nonce")).thenReturn(linked);
+        when(syncProvider.getIfAvailable()).thenReturn(syncService);
+        doThrow(new IllegalStateException("Sync unavailable")).when(syncService).syncNow();
+
+        var response =
+                controller.connectComplete(
+                        new AccountLinkController.ConnectCompleteRequest("nonce"));
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isEqualTo(linked);
+    }
+
+    @Test
+    void connectComplete_toleratesAnUnavailableSyncService() {
+        var linked = new ConnectService.ConnectStatus(ConnectService.Phase.LINKED, null, null, 42L);
+        when(connectService.complete("nonce")).thenReturn(linked);
+
+        var response =
+                controller.connectComplete(
+                        new AccountLinkController.ConnectCompleteRequest("nonce"));
+
+        assertThat(response.getBody()).isEqualTo(linked);
     }
 
     @Test
@@ -86,8 +161,24 @@ class AccountLinkControllerTest {
     }
 
     @Test
-    void syncNow_returns409WhenMeteringOff() {
-        when(syncProvider.getIfAvailable()).thenReturn(null); // metering disabled → bean absent
+    void freeTier_reportsTheLocalGrant() {
+        LocalDateTime start = LocalDateTime.of(2026, 9, 1, 0, 0);
+        when(freeTierService.balance())
+                .thenReturn(
+                        new FreeTierUsageService.FreeTierBalance(
+                                500, 120, 380, start, start.plusMonths(1)));
+
+        ResponseEntity<FreeTierUsageService.FreeTierBalance> resp = controller.freeTier();
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(resp.getBody()).isNotNull();
+        assertThat(resp.getBody().remainingUnits()).isEqualTo(380);
+        assertThat(resp.getBody().periodEnd()).isEqualTo(start.plusMonths(1));
+    }
+
+    @Test
+    void syncNow_returns409WhenSyncUnavailable() {
+        when(syncProvider.getIfAvailable()).thenReturn(null);
 
         ResponseEntity<Void> resp = controller.syncNow();
 
