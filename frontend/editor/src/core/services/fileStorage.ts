@@ -166,6 +166,12 @@ export function onRecordUnreadable(
 const PROBE_UNANSWERED = { unanswered: true } as const;
 const PROBE_DEADLINE_MS = 3000;
 
+/** A listing audits every record it reads, and each audit reads through a stream
+ *  that Chromium backs with a pipe the size of the blob, up to megabytes, however
+ *  little is read. All at once, a library of a thousand files runs the page out of
+ *  memory; a few at a time costs a few pipes. */
+const AUDIT_CONCURRENCY = 4;
+
 /**
  * Bytes for a record whose blob the engine will not store. Probes the backing store
  * first: WebKit can lose a File's handle and then never answer a read (see
@@ -266,6 +272,9 @@ class FileStorageService {
   /** Ids whose blob bytes this session has already audited (either way), so
    *  listings don't re-probe every record on every refresh. */
   private readonly auditedRecords = new Set<FileId>();
+  /** Records waiting for one of the {@link AUDIT_CONCURRENCY} audit slots. */
+  private readonly auditQueue: StoredStirlingFileRecord[] = [];
+  private activeAudits = 0;
 
   /**
    * Get database connection using centralized manager
@@ -502,15 +511,36 @@ class FileStorageService {
     if (!(record.data instanceof Blob)) return;
     if (this.auditedRecords.has(record.id)) return;
     this.auditedRecords.add(record.id);
-    void blobReadFailure(record.data).then((failure) => {
-      if (!failure) {
-        this.blobReadbackVerified = true;
-        if (!this.blobValuesSupported) void this.rescueBlobRecord(record.id);
-        return;
-      }
-      this.noteBlobUnreadable(failure);
-      this.reportUnreadableRecord(record, failure);
-    });
+    this.auditQueue.push(record);
+    this.drainAuditQueue();
+  }
+
+  private drainAuditQueue(): void {
+    while (this.activeAudits < AUDIT_CONCURRENCY) {
+      const record = this.auditQueue.shift();
+      if (!record) return;
+      this.activeAudits++;
+      void this.auditRecord(record).finally(() => {
+        this.activeAudits--;
+        this.drainAuditQueue();
+      });
+    }
+  }
+
+  private async auditRecord(record: StoredStirlingFileRecord): Promise<void> {
+    // Under a deadline so a read WebKit leaves pending gives its slot back.
+    // Unanswered proves nothing, so it reports nothing.
+    const failure = await withProbeDeadline(
+      blobReadFailure(record.data as Blob),
+    );
+    if (failure === PROBE_UNANSWERED) return;
+    if (!failure) {
+      this.blobReadbackVerified = true;
+      if (!this.blobValuesSupported) void this.rescueBlobRecord(record.id);
+      return;
+    }
+    this.noteBlobUnreadable(failure);
+    this.reportUnreadableRecord(record, failure);
   }
 
   /**

@@ -3,8 +3,9 @@ import { isStoredBlob } from "@app/utils/storedBlob";
 /**
  * Bytes `[start, end)` of `blob`, with `Blob.slice` index semantics, read
  * without building a Blob over a stored one (see storedBlob). Reads from the
- * start always stream: a Blob sent through postMessage loses its stored mark,
- * and streaming a prefix costs no more than slicing it.
+ * start always stream, because a Blob sent through postMessage loses its stored
+ * mark. Chromium backs a stream with a pipe sized to the blob, not to `end`, so a
+ * caller that reads many Blobs at once must run a few at a time.
  */
 export async function readBlobSlice(
   blob: Blob,
