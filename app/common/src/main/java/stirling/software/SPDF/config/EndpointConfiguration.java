@@ -451,6 +451,9 @@ public class EndpointConfiguration {
         addEndpointToGroup("Automation", "automate"); // Alias for handleData (user-friendly name)
         addEndpointToGroup("Automation", "pipeline");
 
+        // Adding endpoints to "DocParse" group (ingestion: chunk + index + export)
+        addEndpointToGroup("DocParse", "ingest");
+
         // Adding endpoints to "DeveloperTools" group
         addEndpointToGroup("DeveloperTools", "show-javascript");
 

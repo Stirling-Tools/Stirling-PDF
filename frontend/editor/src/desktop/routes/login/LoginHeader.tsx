@@ -1,4 +1,4 @@
-import CloseIcon from "@mui/icons-material/Close";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Logo } from "@app/ui/Logo";
@@ -67,7 +67,7 @@ export default function LoginHeader({
               outline: "none",
             }}
           >
-            <CloseIcon fontSize="small" />
+            <Icon name="x" size={20} />
           </ActionIcon>
         )}
       </div>

@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { StirlingFileStub } from "@app/types/fileContext";
 import { useIndexedDB } from "@app/contexts/IndexedDBContext";
 import { generateThumbnailForFile } from "@app/utils/thumbnailUtils";
-import { FileId } from "@app/types/fileContext";
 import { useFileManagement } from "@app/contexts/FileContext";
 
 /**
@@ -53,7 +52,7 @@ export function useIndexedDBThumbnail(
           );
         }
 
-        const loadedFile = await indexedDB.loadFile(file.id as FileId);
+        const loadedFile = await indexedDB.loadFile(file.id);
         if (!loadedFile) {
           throw new Error("not in IndexedDB (likely remote-only stub)");
         }
@@ -65,12 +64,12 @@ export function useIndexedDBThumbnail(
 
         if (file.id && indexedDB && thumbnail) {
           try {
-            await indexedDB.updateThumbnail(file.id as FileId, thumbnail);
+            await indexedDB.updateThumbnail(file.id, thumbnail);
             // Also sync the in-memory stub so subsequent re-mounts hit tier 1
             // instead of regenerating. IndexedDB persistence alone only helps
             // the next page load; the current session reads file.thumbnailUrl
             // from the FileContext stub.
-            updateStirlingFileStub(file.id as FileId, {
+            updateStirlingFileStub(file.id, {
               thumbnailUrl: thumbnail,
             });
           } catch (error) {

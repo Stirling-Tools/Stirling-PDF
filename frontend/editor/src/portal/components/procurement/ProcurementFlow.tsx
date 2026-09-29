@@ -1,22 +1,22 @@
 import { useTranslation } from "react-i18next";
 import { Banner, Button, EmptyState, Skeleton } from "@app/ui";
-import { useUI } from "@portal/contexts/UIContext";
-import { useLinkedAccountEmail } from "@portal/hooks/useLinkedAccountEmail";
-import { ProcurementAgreement } from "@portal/components/procurement/ProcurementAgreement";
+import { useUI } from "@app/portal/contexts/UIContext";
+import { useLinkedAccountEmail } from "@app/portal/hooks/useLinkedAccountEmail";
+import { ProcurementAgreement } from "@app/portal/components/procurement/ProcurementAgreement";
 import {
   DocumentsModal,
   LicenseModal,
   ScheduleCallModal,
   TrialManageModal,
   TrialSetupModal,
-} from "@portal/components/procurement/ProcurementExtras";
-import { ProcurementModal } from "@portal/components/procurement/ProcurementModal";
+} from "@app/portal/components/procurement/ProcurementExtras";
+import { ProcurementModal } from "@app/portal/components/procurement/ProcurementModal";
 import {
   LiveStageCard,
   PaymentStageCard,
-} from "@portal/components/procurement/ProcurementStages";
-import { QuoteBuilder } from "@portal/components/procurement/QuoteBuilder";
-import type { ProcurementController } from "@portal/components/procurement/useProcurement";
+} from "@app/portal/components/procurement/ProcurementStages";
+import { QuoteBuilder } from "@app/portal/components/procurement/QuoteBuilder";
+import type { ProcurementController } from "@app/portal/components/procurement/useProcurement";
 
 /**
  * The procurement takeover flow: the full-screen journey modal (quote builder →
@@ -30,7 +30,7 @@ export function ProcurementFlow({
   controller: ProcurementController;
 }) {
   const { t } = useTranslation();
-  const { openLinkModal } = useUI();
+  const { openLinkModal, linkModalOpen } = useUI();
   const scheduleEmail = useLinkedAccountEmail();
   const {
     isLinked,
@@ -77,7 +77,7 @@ export function ProcurementFlow({
   return (
     <>
       <ProcurementModal
-        open={open}
+        open={open && !linkModalOpen}
         onClose={() => setOpen(false)}
         title={t("portal.procurement.title")}
         subtitle={t("portal.procurement.subtitle")}
@@ -174,7 +174,7 @@ export function ProcurementFlow({
       </ProcurementModal>
 
       <TrialSetupModal
-        open={extra === "setup"}
+        open={extra === "setup" && !linkModalOpen}
         onClose={() => setExtra(null)}
         busy={busy}
         email={scheduleEmail ?? undefined}
@@ -183,7 +183,7 @@ export function ProcurementFlow({
       />
       {data?.licenseKey && (
         <LicenseModal
-          open={extra === "license"}
+          open={extra === "license" && !linkModalOpen}
           onClose={() => setExtra(null)}
           licenseKey={data.licenseKey}
           offlineAvailable={data.deployment === "airgap"}
@@ -193,13 +193,13 @@ export function ProcurementFlow({
         />
       )}
       <ScheduleCallModal
-        open={extra === "schedule"}
+        open={extra === "schedule" && !linkModalOpen}
         onClose={() => setExtra(null)}
         email={scheduleEmail}
       />
       {data && (
         <TrialManageModal
-          open={extra === "trial"}
+          open={extra === "trial" && !linkModalOpen}
           onClose={() => setExtra(null)}
           snapshot={data}
           busy={busy}
@@ -214,7 +214,7 @@ export function ProcurementFlow({
         />
       )}
       <DocumentsModal
-        open={extra === "documents"}
+        open={extra === "documents" && !linkModalOpen}
         onClose={() => setExtra(null)}
         agreementVersion={data?.agreementSignedVersion}
         downloadingAgreement={downloadingAgreement}

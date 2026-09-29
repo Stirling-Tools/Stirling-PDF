@@ -1,16 +1,13 @@
 import { useState, type ReactNode } from "react";
 import { useTranslation } from "@app/hooks/useTranslation";
 import { Banner, Button, Checkbox, Spinner } from "@app/ui";
-import { LocalIcon } from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { Tooltip } from "@app/components/shared/Tooltip";
-import { StepModalHeader } from "@portal/components/shared/StepModalHeader";
+import { StepModalHeader } from "@app/portal/components/shared/StepModalHeader";
 
 /**
  * This page is step 2 of a flow that started on the instance, so it wears the same chrome: the admin
  * is being asked for a security decision by what would otherwise look like a different product.
- *
- * <p>TODO: re-auth still wears the first link's copy and consent checkbox, which asks the approver
- * to agree to a binding that already exists.
  */
 const TOTAL_STEPS = 3;
 
@@ -58,7 +55,7 @@ export interface PendingConnect {
   requestId: string;
   callbackOrigin: string;
   insecureTransport: boolean;
-  /** REAUTH cannot rebind: the team is pinned from the device credential at request time. */
+  /** REAUTH can only confirm the original account and team authenticated by the device credential. */
   mode?: "LINK" | "REAUTH";
   canApprove: boolean;
   canDeny: boolean;
@@ -67,7 +64,7 @@ export interface PendingConnect {
 export interface ConnectApproveViewProps {
   phase: ApprovePhase;
   pending: PendingConnect | null;
-  /** Email of the account the server would be connected to. */
+  /** Email of the current signed-in account; never another account's email. */
   signedInEmail: string | null;
   busy: boolean;
   error: string | null;
@@ -93,7 +90,8 @@ export function ConnectApproveView({
   // Gates the primary action: anyone can create a request, so the approver reading
   // the address is the only thing between one and a linked team.
   const [acknowledged, setAcknowledged] = useState(false);
-  const stepped = pending?.mode !== "REAUTH";
+  const renewal = pending?.mode === "REAUTH";
+  const stepped = !renewal;
 
   if (phase === "loading" || phase === "redirecting") {
     return (
@@ -153,18 +151,32 @@ export function ConnectApproveView({
   return (
     <ApproveShell
       stepped={stepped}
-      title={t("connect.confirm.title", "Connect this server?")}
+      title={
+        renewal
+          ? t("connect.renewal.title", "Renew your server sign-in")
+          : t("connect.confirm.title", "Connect this server?")
+      }
     >
       <p className="saas-connect__lead">
-        {pending?.canApprove
-          ? t(
-              "connect.confirm.lead",
-              "A Stirling server is asking to connect to your team. Check the address below is yours before you approve.",
-            )
-          : t(
-              "connect.confirm.cannotDecide",
-              "Only a team owner can approve or decline this connection. Use a different account or dismiss this prompt to continue using Stirling.",
-            )}
+        {renewal
+          ? pending?.canApprove
+            ? t(
+                "connect.renewal.lead",
+                "This server is already linked to your account. Renew your sign-in to return to billing and usage on your server.",
+              )
+            : t(
+                "connect.renewal.wrongAccount",
+                "This account cannot renew this server's sign-in. Switch to the account originally used to link the server. That account must still own the linked team.",
+              )
+          : pending?.canApprove
+            ? t(
+                "connect.confirm.lead",
+                "A Stirling server is asking to connect to your team. Check the address below is yours before you approve.",
+              )
+            : t(
+                "connect.confirm.cannotDecide",
+                "Only a team owner can approve or decline this connection. Use a different account or dismiss this prompt to continue using Stirling.",
+              )}
       </p>
 
       {/* One panel, because the account and the address are two halves of the same
@@ -206,7 +218,7 @@ export function ConnectApproveView({
                   "Not an encrypted address",
                 )}
               >
-                <LocalIcon icon="warning-rounded" width="1rem" />
+                <Icon name="triangle-alert" size="1rem" />
               </span>
             </Tooltip>
           ) : null}
@@ -216,7 +228,7 @@ export function ConnectApproveView({
 
       {error ? <Banner tone="danger">{error}</Banner> : null}
 
-      {pending?.canApprove ? (
+      {pending?.canApprove && !renewal ? (
         <Checkbox
           checked={acknowledged}
           disabled={busy}
@@ -229,7 +241,7 @@ export function ConnectApproveView({
       ) : null}
 
       <div className="saas-connect__actions">
-        {pending?.canDeny ? (
+        {pending?.canDeny && !renewal ? (
           <Button
             variant="secondary"
             disabled={busy}
@@ -245,10 +257,12 @@ export function ConnectApproveView({
         {pending?.canApprove ? (
           <Button
             variant="primary"
-            disabled={busy || !acknowledged}
+            disabled={busy || (!renewal && !acknowledged)}
             onClick={() => onDecide(true)}
           >
-            {t("connect.confirm.approve", "Connect server")}
+            {renewal
+              ? t("connect.renewal.approve", "Renew sign-in")
+              : t("connect.confirm.approve", "Connect server")}
           </Button>
         ) : null}
       </div>

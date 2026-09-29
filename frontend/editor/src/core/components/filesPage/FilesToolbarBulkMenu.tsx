@@ -6,21 +6,16 @@ import { Button } from "@app/ui/Button";
 interface FilesToolbarBulkMenuProps {
   selectedCount: number;
   onAddToWorkspace: () => void;
-  /** Local-only files in the selection; omit when there are none to upload. */
+  /** Omit when the selection has no files to upload. */
   onSaveToServer?: () => void;
-  /** Set when storage is off - the item stays listed but disabled. */
+  /** Keeps Add to library visible but disabled. */
   saveToServerDisabledReason?: string;
   onShowDetails?: () => void;
-  onMove: () => void;
+  onMove?: () => void;
   onRemove: () => void;
   onClearSelection: () => void;
 }
 
-/**
- * Everything that acts on the current selection, behind one trigger. A strip of
- * five buttons only fits the widest viewports, and shrinking it to icons costs
- * every label; one menu reads the same at any width.
- */
 export function FilesToolbarBulkMenu({
   selectedCount,
   onAddToWorkspace,
@@ -45,7 +40,8 @@ export function FilesToolbarBulkMenu({
       <Menu.Target>
         <Button
           size="sm"
-          variant="secondary"
+          variant="tertiary"
+          shape="pill"
           className="files-page-toolbar-bulk-trigger"
           rightSection={<Icon name="chevron-down" size={"1.1rem"} />}
           aria-label={t("filesPage.bulkActions", "Actions")}
@@ -66,7 +62,7 @@ export function FilesToolbarBulkMenu({
             disabled={Boolean(saveToServerDisabledReason)}
             onClick={onSaveToServer}
           >
-            {t("filesPage.saveToServer", "Save to server")}
+            {t("filesPage.addToLibrary", "Add to Stirling library…")}
           </Menu.Item>
         )}
         {onShowDetails && (
@@ -77,12 +73,14 @@ export function FilesToolbarBulkMenu({
             {t("filesPage.showDetails", "Show details")}
           </Menu.Item>
         )}
-        <Menu.Item
-          leftSection={<Icon name="folder-input" size={"1.1rem"} />}
-          onClick={onMove}
-        >
-          {t("filesPage.moveTo", "Move to…")}
-        </Menu.Item>
+        {onMove && (
+          <Menu.Item
+            leftSection={<Icon name="folder-input" size={"1.1rem"} />}
+            onClick={onMove}
+          >
+            {t("filesPage.moveTo", "Move to…")}
+          </Menu.Item>
+        )}
         <Menu.Item
           leftSection={<Icon name="x" size={"1.1rem"} />}
           onClick={onClearSelection}

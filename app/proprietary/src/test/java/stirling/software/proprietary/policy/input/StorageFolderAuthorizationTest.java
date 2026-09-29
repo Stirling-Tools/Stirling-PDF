@@ -34,6 +34,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.failure.PolicyFailureRecorder;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.policy.engine.PolicyEngine;
@@ -147,7 +148,8 @@ class StorageFolderAuthorizationTest {
                         authority,
                         mock(PolicyTriggerManager.class),
                         properties,
-                        List.of(input));
+                        List.of(input),
+                        List.of());
         runner =
                 new PolicyRunner(
                         engine,
@@ -158,6 +160,7 @@ class StorageFolderAuthorizationTest {
                         properties,
                         policies,
                         mock(DatabaseLicenseGuard.class),
+                        mock(PolicyFailureRecorder.class),
                         mock(org.springframework.context.ApplicationEventPublisher.class));
     }
 

@@ -119,10 +119,22 @@ async function openCompressPanel(page: import("@playwright/test").Page) {
 }
 
 async function applyCompress(page: import("@playwright/test").Page) {
+  await page.locator("[data-page-index]").evaluateAll((pages) => {
+    for (const node of pages) node.setAttribute("data-outgoing-page", "true");
+  });
+  const response = page.waitForResponse(
+    (response) =>
+      response.url().includes("/api/v1/misc/compress-pdf") && response.ok(),
+  );
   await page
     .getByRole("button", { name: "Compress", exact: true })
     .first()
     .click();
+  await response;
+  // Page counts and toolbar values can still describe the outgoing document.
+  await expect(page.locator("[data-outgoing-page]")).toHaveCount(0, {
+    timeout: 30_000,
+  });
 }
 
 test("a rotated document saves annotations without reopening", async ({
@@ -166,21 +178,20 @@ test("rotated and landscape pages reload a tool output in place", async ({
   await page.mouse.wheel(0, 200);
   await page.waitForTimeout(500);
 
-  const pageInput = page.getByRole("textbox").first();
-  const pageBefore = await pageInput.inputValue();
   await mockCompress(page, ROTATED_PAGES_PDF);
   await openCompressPanel(page);
+  const topBefore = await pageTopOf(page, 1);
   const zoomBefore = await page.getByText(/%$/).first().textContent();
   await applyCompress(page);
 
   await expect
     .poll(() => page.locator("[data-page-index]").count(), { timeout: 60_000 })
     .toBe(4);
-  // The reload keeps the reader on the same page at the same zoom; the tool
-  // panel itself can reset the pixel offset, which predates this work.
   await expect
-    .poll(async () => pageInput.inputValue(), { timeout: 15_000 })
-    .toBe(pageBefore);
+    .poll(async () => Math.abs((await pageTopOf(page, 1)) - topBefore), {
+      timeout: 15_000,
+    })
+    .toBeLessThanOrEqual(3);
   await expect
     .poll(async () => page.getByText(/%$/).first().textContent(), {
       timeout: 15_000,
@@ -188,7 +199,10 @@ test("rotated and landscape pages reload a tool output in place", async ({
     .toBe(zoomBefore);
 });
 
-test("dual page view survives a save and a tool output", async ({ page }) => {
+test("dual page view survives a save and a tool output", async ({
+  page,
+  browserName,
+}) => {
   test.setTimeout(300_000);
   await loadFixture(page, MULTIPAGE_PDF, 3);
 
@@ -205,20 +219,80 @@ test("dual page view survives a save and a tool output", async ({ page }) => {
 
   await mockCompress(page, MULTIPAGE_PDF);
   await openCompressPanel(page);
-  const pageInput = page.getByRole("textbox").first();
+  if (browserName === "chromium") {
+    const session = await page.context().newCDPSession(page);
+    await session.send("Emulation.setCPUThrottlingRate", { rate: 4 });
+  }
+  const topBefore = await pageTopOf(page, 0);
+  const zoomBefore = await page.getByText(/%$/).first().textContent();
   await applyCompress(page);
 
   await expect
     .poll(() => page.locator("[data-page-index]").count(), { timeout: 60_000 })
     .toBe(3);
-  // Dual mode holds across the byte swap, and the reader stays on page one.
+  // Either page in a dual spread can be reported as current; its geometry is
+  // the reading position, not the page counter's tie-break between neighbours.
   await expect(
     page.getByRole("button", { name: "Single Page View" }).first(),
   ).toBeVisible({ timeout: 15_000 });
   await expect
-    .poll(async () => pageInput.inputValue(), { timeout: 15_000 })
-    .toBe("1");
+    .poll(async () => Math.abs((await pageTopOf(page, 0)) - topBefore), {
+      timeout: 15_000,
+    })
+    .toBeLessThanOrEqual(3);
+  await expect(page.getByText(/%$/).first()).toHaveText(zoomBefore ?? "");
 });
+
+for (const dualRotated of [false, true]) {
+  test(`a shorter replacement restores the last available page (${dualRotated ? "dual rotated" : "single"})`, async ({
+    page,
+  }) => {
+    await loadFixture(page, MULTIPAGE_PDF, 3);
+    await mockCompress(page, FORM_PDF);
+    await openCompressPanel(page);
+    if (dualRotated) {
+      await page
+        .getByRole("button", { name: "Dual Page View" })
+        .first()
+        .click();
+      await page.getByRole("button", { name: "Rotate Left" }).first().click();
+      await expect
+        .poll(async () => {
+          const box = await page.locator('[data-page-index="2"]').boundingBox();
+          return !!box && box.width > box.height;
+        })
+        .toBe(true);
+    }
+    const zoom = page.getByText(/%$/).first();
+    const initialZoom = await zoom.textContent();
+    await page.getByRole("button", { name: "Zoom In" }).first().click();
+    await expect(zoom).not.toHaveText(initialZoom ?? "");
+    await page.getByRole("button", { name: "Last Page" }).first().click();
+    const pageInput = page.locator(".pdf-viewer-toolbar").getByRole("textbox");
+    await expect(pageInput).toHaveValue("3");
+    await expect(page.locator('[data-page-index="2"]')).toBeInViewport();
+    const zoomBefore = await zoom.textContent();
+
+    await applyCompress(page);
+
+    await expect(page.locator("[data-page-index]")).toHaveCount(2);
+    await expect(zoom).toHaveText(zoomBefore ?? "");
+    await expect(page.locator('[data-page-index="1"]')).toBeInViewport();
+    if (dualRotated) {
+      await expect(
+        page.getByRole("button", { name: "Single Page View" }).first(),
+      ).toBeVisible();
+      await expect
+        .poll(async () => {
+          const box = await page.locator('[data-page-index="1"]').boundingBox();
+          return !!box && box.width > box.height;
+        })
+        .toBe(true);
+    } else {
+      await expect(pageInput).toHaveValue("2");
+    }
+  });
+}
 
 test("a tool output keeps the page width and zoom readout steady", async ({
   page,
@@ -492,13 +566,16 @@ test("a form apply reloads the new value and keeps the position", async ({
     .first();
   await expect(field).toBeVisible({ timeout: 20_000 });
   await field.fill("updated value");
-  await page.keyboard.press("Tab");
+  // Tab can start an asynchronous scroll to the next field in WebKit.
+  await field.blur();
 
   // Filling can scroll the field into view, so the baseline is read once the
   // edit is done, right before the apply.
   const zoomBefore = await page.getByText(/%$/).first().textContent();
   const pageTopBefore = await pageTopOf(page, 0);
-  await page.getByRole("button", { name: "Apply Changes" }).first().click();
+  const apply = page.getByRole("button", { name: "Apply Changes" }).first();
+  await apply.click();
+  await expect(apply).toBeHidden({ timeout: 20_000 });
 
   // The reloaded document carries the value the round trip produced, and the
   // apply does not rescale the page or move the reader.

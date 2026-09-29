@@ -1,6 +1,7 @@
 package stirling.software.common.pdf;
 
 import java.io.IOException;
+import java.util.List;
 
 import stirling.software.jpdfium.PdfDocument;
 
@@ -10,5 +11,10 @@ import stirling.software.jpdfium.PdfDocument;
  */
 public interface PdfMarkdownExtractor {
 
-    String convert(PdfDocument doc) throws IOException;
+    /** Page-attributed Markdown elements in reading order; the one source of truth. */
+    List<MarkdownBlock> extractBlocks(PdfDocument doc) throws IOException;
+
+    default String convert(PdfDocument doc) throws IOException {
+        return MarkdownBlocks.join(extractBlocks(doc));
+    }
 }
