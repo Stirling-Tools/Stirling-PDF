@@ -256,9 +256,19 @@
       </Component>
     </DirectoryRef>
 
-    <Property Id="OCRRUNTIMEPATH">
+    <!--
+      An upgrade uninstalls the old product first (MajorUpgrade runs
+      afterInstallInitialize), and RemoveFolderEx would delete the engine and
+      every language with it; the new product installs OCR again only if the
+      wizard is ticked once more. RemoveFolderEx takes no condition in WiX 3, so
+      the path is found into a property of its own and handed on only when this
+      removal is not part of an upgrade. An empty property removes nothing.
+    -->
+    <Property Id="OCRRUNTIMEPATH_SAVED">
       <RegistrySearch Id="OcrRuntimePathSearch" Root="HKLM"
                       Key="SOFTWARE\Stirling-PDF\OCR" Name="RuntimePath" Type="raw" />
     </Property>
+    <SetProperty Id="OCRRUNTIMEPATH" Value="[OCRRUNTIMEPATH_SAVED]"
+                 After="AppSearch" Sequence="execute">NOT UPGRADINGPRODUCTCODE</SetProperty>
   </Fragment>
 </Wix>
