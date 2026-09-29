@@ -376,7 +376,7 @@ export default function StampPreview({
       <div
         ref={containerRef}
         className={`${styles.container} ${styles.containerBorder} ${pageThumbnail ? styles.containerWithThumbnail : styles.containerWithoutThumbnail}`}
-        style={style.container as React.CSSProperties}
+        style={style.container}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
       >
@@ -393,7 +393,7 @@ export default function StampPreview({
         {parameters.stampType === "text" && (
           <div
             className={`${styles.stampItem} ${styles.stampItemGridMode}`}
-            style={style.item as React.CSSProperties}
+            style={style.item}
             data-user-content-preview=""
           >
             {(parameters.stampText || "").split("\n").map((line, idx) => (
@@ -415,7 +415,7 @@ export default function StampPreview({
         {parameters.stampType === "image" && imageMeta && (
           <div
             className={`${styles.stampItem} ${showQuickGrid ? styles.stampItemGridMode : styles.stampItemDraggable}`}
-            style={style.item as React.CSSProperties}
+            style={style.item}
             onPointerDown={(e) => handlePointerDown(e, "move")}
           >
             <img
@@ -444,10 +444,7 @@ export default function StampPreview({
                     // Clear overrides to use grid positioning and set position
                     onParameterChange("overrideX", -1);
                     onParameterChange("overrideY", -1);
-                    onParameterChange(
-                      "position",
-                      idx as AddStampParameters["position"],
-                    );
+                    onParameterChange("position", idx);
                   }}
                   onMouseEnter={() => setHoverTile(idx)}
                   onMouseLeave={() => setHoverTile(null)}

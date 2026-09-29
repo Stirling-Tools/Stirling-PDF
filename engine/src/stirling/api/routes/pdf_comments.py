@@ -17,6 +17,7 @@ from fastapi import APIRouter, Depends
 
 from stirling.agents.pdf_comment import PdfCommentAgent
 from stirling.api.dependencies import get_pdf_comment_agent
+from stirling.api.linked_instance import LINKED_INSTANCE
 from stirling.contracts.pdf_comments import PdfCommentRequest, PdfCommentResponse
 
 logger = logging.getLogger(__name__)
@@ -24,7 +25,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/ai/pdf-comment-agent", tags=["pdf-comment-agent"])
 
 
-@router.post("/generate", response_model=PdfCommentResponse)
+@router.post("/generate", response_model=PdfCommentResponse, openapi_extra=LINKED_INSTANCE)
 async def generate_endpoint(
     request: PdfCommentRequest,
     agent: Annotated[PdfCommentAgent, Depends(get_pdf_comment_agent)],

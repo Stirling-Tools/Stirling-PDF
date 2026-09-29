@@ -1149,36 +1149,7 @@
   color: var(--c-text-subtle);
 }
 
-/* ── Prepaid bundle: buy nudge + top-up + purchase modal ───────────────────── */
-
-/* Slim commit-nudge card shown when the team holds no bundle: title/subtitle
-   left, "Review offer" CTA right. Mirrors the demo's prepay nudge. */
-.portal-billing__prepaid-offer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-.portal-billing__prepaid-offer-sub {
-  margin: 0.25rem 0 0;
-  font-size: 0.875rem;
-  line-height: 1.5;
-  color: var(--c-text-subtle);
-  max-width: 46ch;
-}
-
-/* Meter card foot: the "used before metered billing" note + a leader Top-up. */
-.portal-billing__prepaid-foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-top: 0.75rem;
-}
-.portal-billing__prepaid-foot .portal-billing__section-sub {
-  margin: 0;
-}
+/* ── Prepaid bundle: purchase modal ────────────────────────────────────────── */
 
 /* Purchase modal — calculator step. */
 .portal-billing__bundle-calc {

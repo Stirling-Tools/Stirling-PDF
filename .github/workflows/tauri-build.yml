@@ -93,7 +93,7 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
           egress-policy: audit
 
@@ -193,7 +193,7 @@ jobs:
       SIGN_BUNDLE: ${{ inputs.sign && (matrix.platform == 'macos-15' && secrets.APPLE_CERTIFICATE != '' || github.ref == 'refs/heads/main') }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
           egress-policy: audit
 
@@ -382,11 +382,12 @@ jobs:
 
           # Decode client certificate
           $certBytes = [Convert]::FromBase64String("$env:SM_CLIENT_CERT_FILE_B64")
-          $certPath = "D:\Certificate_pkcs12.p12"
+          # RUNNER_TEMP, not D:\ - windows-11-arm runners have no D: drive
+          $certPath = Join-Path $env:RUNNER_TEMP "Certificate_pkcs12.p12"
           [IO.File]::WriteAllBytes($certPath, $certBytes)
 
           # Set environment variables
-          echo "SM_CLIENT_CERT_FILE=D:\Certificate_pkcs12.p12" >> $env:GITHUB_ENV
+          echo "SM_CLIENT_CERT_FILE=$certPath" >> $env:GITHUB_ENV
           echo "SM_HOST=$env:SM_HOST" >> $env:GITHUB_ENV
           echo "SM_API_KEY=$env:SM_API_KEY" >> $env:GITHUB_ENV
           echo "SM_CLIENT_CERT_PASSWORD=$env:SM_CLIENT_CERT_PASSWORD" >> $env:GITHUB_ENV
@@ -406,6 +407,15 @@ jobs:
             } else {
               Write-Host "Warning: Could not find PKCS11 config file"
             }
+          }
+
+          # Tauri's signtool lookup has no ARM64 case ("SignTool not found"), so pass it explicitly
+          if ($env:RUNNER_ARCH -eq "ARM64") {
+            $signtool = (Get-Command signtool.exe -ErrorAction SilentlyContinue).Source
+            if (-not $signtool) { $signtool = Join-Path $env:RUNNER_TOOL_CACHE "signtool/latest/arm64/signtool.exe" }
+            if (-not (Test-Path $signtool)) { throw "signtool.exe not found for ARM64 signing" }
+            Write-Host "Using signtool: $signtool"
+            echo "TAURI_WINDOWS_SIGNTOOL_PATH=$signtool" >> $env:GITHUB_ENV
           }
 
       - name: Import Apple Developer Certificate
@@ -827,7 +837,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
           egress-policy: audit
 
@@ -918,7 +928,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Harden the runner
-        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
           egress-policy: audit
 
@@ -1011,7 +1021,7 @@ jobs:
     if: always()
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
           egress-policy: audit
 

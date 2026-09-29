@@ -5,7 +5,7 @@ import type { PlanTier } from "@app/services/licenseService";
 const FEATURES = [
   { name: "PDF conversion", included: true },
   { name: "Digital signatures", included: true },
-  { name: "SSO", included: false },
+  { name: "SSO (OAuth2/OIDC)", included: true },
 ];
 
 const PLANS: PlanTier[] = [
@@ -16,7 +16,7 @@ const PLANS: PlanTier[] = [
     currency: "$",
     period: "month",
     features: FEATURES,
-    highlights: ["Core PDF tools", "Single user"],
+    highlights: ["Core PDF tools", "Up to 5 users", "SSO (OAuth2/OIDC)"],
     lookupKey: "free",
   },
   {
@@ -39,7 +39,7 @@ const PLANS: PlanTier[] = [
     seatPrice: 12,
     requiresSeats: true,
     features: FEATURES,
-    highlights: ["Everything in Server", "SSO", "Dedicated support"],
+    highlights: ["Everything in Server", "SAML SSO", "Dedicated support"],
     lookupKey: "selfhosted:enterprise:monthly",
   },
 ];

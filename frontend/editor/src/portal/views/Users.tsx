@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@app/auth/UseSession";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Button, EmptyState, Skeleton } from "@app/ui";
+import { Button, EmptyState, Skeleton, StatusBadge, Tooltip } from "@app/ui";
 import {
   transferOwnership,
   transferTeamOwnership,
@@ -22,10 +22,11 @@ import {
   revokeGrant,
   type ResourceGrant,
 } from "@portal/api/access";
-import { deleteTeam as apiDeleteTeam } from "@portal/api/teams";
+import { deleteTeam as apiDeleteTeam, type Team } from "@portal/api/teams";
 import { errorMessage } from "@portal/api/http";
 import { usersCapabilities as buildCaps } from "@app/portal/usersCapabilities";
 import type { UsersCapabilities } from "@portal/api/usersCapabilities";
+import { useSeatManagement } from "@app/portal/seatManagement";
 import { UsersDirectory } from "@portal/components/users/UsersDirectory";
 import { PendingInvitations } from "@portal/components/users/PendingInvitations";
 import { InviteMemberModal } from "@portal/components/users/InviteMemberModal";
@@ -34,7 +35,7 @@ import { ResetPasswordModal } from "@portal/components/users/ResetPasswordModal"
 import { MoveToTeamModal } from "@portal/components/users/MoveToTeamModal";
 import { RenameTeamModal } from "@portal/components/users/RenameTeamModal";
 import { ConfirmModal } from "@portal/components/users/ConfirmModal";
-import type { TeamGroup } from "@portal/components/users/directory";
+import { seatsLabel } from "@portal/components/users/format";
 import { useUsersData } from "@portal/views/usersData";
 
 interface Confirm {
@@ -193,6 +194,25 @@ export function Users() {
   // Either route to a new member: an emailed invite, or creating the account
   // outright. With neither, the invite controls have nothing to open.
   const canAddMembers = canEmailInvite || caps.directCreate;
+  // Licence seats, from the same roster fetch. A null limit is an unlimited
+  // licence, which still shows the count; no summary at all (SaaS) shows nothing.
+  const summary = usersState.data?.summary;
+  const seats = summary
+    ? {
+        used: summary.seatsUsed,
+        limit: summary.seatLimit,
+        full:
+          summary.seatLimit !== null && summary.seatsUsed >= summary.seatLimit,
+      }
+    : null;
+  const seatManagement = useSeatManagement();
+  // A full licence blocks every route to a new member: the backend rejects the
+  // create/invite either way, so the controls say so instead of failing late.
+  const seatsFull = seats?.full === true;
+  const seatsFullHint = t(
+    "users.seats.full",
+    "Every licensed seat is in use. Free one up, or raise the seat count, to add anyone else.",
+  );
   const loading = usersState.loading && usersState.data === null;
   const loadError = !usersState.loading && usersState.error !== null;
   const isEmpty = !usersState.loading && !loadError && members.length === 0;
@@ -231,7 +251,7 @@ export function Users() {
     run(() => revokeGrant(member.portalGrantId!));
   }
   // Grant/revoke Processor for a whole team (a TEAM-principal PORTAL grant).
-  function grantTeamProcessor(team: TeamGroup) {
+  function grantTeamProcessor(team: Team) {
     run(() =>
       createGrant({
         resourceType: "PORTAL",
@@ -242,7 +262,7 @@ export function Users() {
       }),
     );
   }
-  function revokeTeamProcessor(team: TeamGroup) {
+  function revokeTeamProcessor(team: Team) {
     const grant = grantByTeam.get(team.id);
     if (!grant) return;
     run(() => revokeGrant(grant.id));
@@ -337,7 +357,7 @@ export function Users() {
       action: () => usersBackend.cancelInvitation(invitation.id),
     });
   }
-  function deleteTeamAction(team: TeamGroup) {
+  function deleteTeamAction(team: Team) {
     setConfirm({
       title: t("users.confirm.deleteTeamTitle", "Delete team"),
       body: t(
@@ -357,23 +377,42 @@ export function Users() {
         <div>
           <h1 className="portal-users__title">{t("users.title", "Users")}</h1>
           <p className="portal-users__sub">
-            {t("users.subtitle2", "Your people, teams, and access levels.")}{" "}
-            <a className="portal-users__link" href="/docs">
-              {t("users.learnMore", "Learn more about roles and access.")}
-            </a>
+            {t("users.subtitle2", "Your people, teams, and access levels.")}
           </p>
         </div>
         <div className="portal-users__head-actions">
+          {seats && (
+            <StatusBadge tone={seats.full ? "warning" : "neutral"}>
+              {seatsLabel(t, seats.used, seats.limit)}
+            </StatusBadge>
+          )}
+          {seatManagement.available && (
+            <Button
+              fat
+              variant="secondary"
+              loading={seatManagement.busy}
+              onClick={() => seatManagement.open(refresh)}
+            >
+              {t("users.seats.update", "Update seats")}
+            </Button>
+          )}
           {caps.createTeam && (
             <Button fat variant="secondary" onClick={openNewTeam}>
               {t("users.newTeam.action", "+ New team")}
             </Button>
           )}
-          {canAddMembers && (
-            <Button fat onClick={() => openInvite(null)}>
-              {t("users.invite.action", "Invite people")}
-            </Button>
-          )}
+          {canAddMembers &&
+            (seatsFull ? (
+              <Tooltip content={seatsFullHint} placement="bottom">
+                <Button fat disabled className="portal-users__blocked">
+                  {t("users.invite.action", "Invite people")}
+                </Button>
+              </Tooltip>
+            ) : (
+              <Button fat onClick={() => openInvite(null)}>
+                {t("users.invite.action", "Invite people")}
+              </Button>
+            ))}
         </div>
       </header>
 
@@ -451,7 +490,7 @@ export function Users() {
             "Invite your team to start collaborating.",
           )}
           actions={
-            canAddMembers ? (
+            canAddMembers && !seatsFull ? (
               <Button onClick={() => openInvite(null)}>
                 {t("users.invite.action", "Invite people")}
               </Button>
@@ -477,6 +516,7 @@ export function Users() {
             onGrantTeamProcessor={grantTeamProcessor}
             onRevokeTeamProcessor={revokeTeamProcessor}
             onAddToTeam={canAddMembers ? (team) => openInvite(team.id) : null}
+            seatsFull={seatsFull}
             onResetPassword={setResetPwMember}
             onMoveToTeam={setMoveMember}
             onToggleEnabled={toggleEnabled}
