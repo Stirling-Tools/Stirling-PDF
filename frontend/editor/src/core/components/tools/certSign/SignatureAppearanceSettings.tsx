@@ -139,6 +139,16 @@ const SignatureAppearanceSettings = ({
   // back, since the button that cancels it has gone.
   useEffect(() => cancelPlacement, [cancelPlacement]);
 
+  // The request sends the marks only with a box, so the panel shows them only then.
+  const repeatsOnEveryPage =
+    parameters.markAllPages && !!parameters.signatureArea;
+
+  // Cleared with the box, so the next box does not bring the marks back unasked.
+  const clearArea = useCallback(() => {
+    onParameterChange("signatureArea", undefined);
+    onParameterChange("markAllPages", false);
+  }, [onParameterChange]);
+
   return (
     <Stack gap="md">
       {/* Signature Visibility */}
@@ -344,7 +354,7 @@ const SignatureAppearanceSettings = ({
                   user finished drawing. Same reset the thumbnail picker already uses. */}
               <ActionIcon
                 variant="secondary"
-                onClick={() => onParameterChange("signatureArea", undefined)}
+                onClick={clearArea}
                 disabled={disabled || isPlacing || !parameters.signatureArea}
                 title={t(
                   "certSign.placement.reset",
@@ -399,7 +409,7 @@ const SignatureAppearanceSettings = ({
                 "certSign.markAllPages.label",
                 "Repeat it on every page",
               )}
-              checked={parameters.markAllPages}
+              checked={repeatsOnEveryPage}
               onChange={(event) =>
                 onParameterChange("markAllPages", event.currentTarget.checked)
               }
@@ -413,7 +423,7 @@ const SignatureAppearanceSettings = ({
                 )}
               </Text>
             )}
-            {parameters.markAllPages && (
+            {repeatsOnEveryPage && (
               <Alert color="yellow" variant="light" p="xs">
                 <Text size="xs">
                   {t(
@@ -427,14 +437,14 @@ const SignatureAppearanceSettings = ({
 
           {/* The page thumbnail is only useful when the same position repeats on every
               page; for a single page the user places the box on the document itself. */}
-          {parameters.markAllPages && (
+          {repeatsOnEveryPage && (
             <>
               <Divider />
               <SignaturePlacementPickerForTool
                 pageNumber={parameters.pageNumber}
                 signatureArea={parameters.signatureArea}
                 onSignatureAreaChange={(area) =>
-                  onParameterChange("signatureArea", area)
+                  area ? onParameterChange("signatureArea", area) : clearArea()
                 }
                 disabled={disabled}
               />

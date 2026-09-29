@@ -21,9 +21,20 @@ vi.mock("@app/contexts/FileContext", () => ({
 }));
 
 // The thumbnail picker pulls in the PDF worker, which has no business being started
-// by a test about panel layout. It only renders in the "every page" mode anyway.
+// by a test about panel layout. It only renders in the "every page" mode anyway, and
+// only its reset is kept.
 vi.mock("@app/components/tools/certSign/SignaturePlacementPicker", () => ({
-  default: () => <div data-testid="placement-picker" />,
+  default: ({
+    onSignatureAreaChange,
+  }: {
+    onSignatureAreaChange: (area: undefined) => void;
+  }) => (
+    <div data-testid="placement-picker">
+      <button onClick={() => onSignatureAreaChange(undefined)}>
+        picker-reset
+      </button>
+    </div>
+  ),
 }));
 
 const TestWrapper = ({ children }: { children: React.ReactNode }) => (
@@ -40,12 +51,17 @@ const withBox: CertSignParameters = {
   signatureArea: { x: 320, y: 60, width: 200, height: 60 },
 };
 
-const renderSettings = (parameters: CertSignParameters) =>
+const repeating: CertSignParameters = { ...withBox, markAllPages: true };
+
+const renderSettings = (
+  parameters: CertSignParameters,
+  onParameterChange = vi.fn(),
+) =>
   render(
     <TestWrapper>
       <SignatureAppearanceSettings
         parameters={parameters}
-        onParameterChange={vi.fn()}
+        onParameterChange={onParameterChange}
       />
     </TestWrapper>,
   );
@@ -79,6 +95,32 @@ describe("SignatureAppearanceSettings", () => {
 
     renderSettings(withBox);
     expect(screen.getByRole("button", { name: label })).not.toBeDisabled();
+  });
+
+  test.each([
+    ["the panel", "mock-certSign.placement.reset"],
+    ["the thumbnail", "picker-reset"],
+  ])("clearing the box from %s stops repeating it on every page", (_, name) => {
+    const onParameterChange = vi.fn();
+    renderSettings(repeating, onParameterChange);
+
+    fireEvent.click(screen.getByRole("button", { name }));
+
+    expect(onParameterChange).toHaveBeenCalledWith("signatureArea", undefined);
+    expect(onParameterChange).toHaveBeenCalledWith("markAllPages", false);
+  });
+
+  /** The request sends the marks only with a box, so the panel must not promise them. */
+  test("without a box, repeating on every page shows as off", () => {
+    renderSettings({ ...visible, markAllPages: true });
+
+    expect(
+      screen.getByRole("checkbox", {
+        name: "mock-certSign.markAllPages.label",
+      }),
+    ).not.toBeChecked();
+    expect(screen.queryByText("mock-certSign.markAllPages.warning")).toBeNull();
+    expect(screen.queryByTestId("placement-picker")).toBeNull();
   });
 
   test("the certificate fields start folded away and open on demand", () => {
