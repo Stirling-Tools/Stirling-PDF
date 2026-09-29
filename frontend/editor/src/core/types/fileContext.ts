@@ -225,7 +225,7 @@ export function extractFileIds(files: StirlingFile[]): FileId[] {
 
 // Extract regular File objects from StirlingFile array
 export function extractFiles(files: StirlingFile[]): File[] {
-  return files as File[];
+  return files;
 }
 
 // Check if an object is a File or StirlingFile (replaces instanceof File checks)

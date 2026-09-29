@@ -8,6 +8,13 @@ const meterAutomationRun = vi.fn();
 const listDirectory = vi.fn();
 const readDiskFile = vi.fn();
 
+vi.mock("@app/services/serverAutomationSession", () => ({
+  getServerAutomationSession: vi
+    .fn()
+    .mockResolvedValue({ key: "session", baseUrl: "https://server.test" }),
+  requireAutomationSession: vi.fn().mockResolvedValue(undefined),
+}));
+
 vi.mock("@app/services/localFolderContents", () => ({
   canListDirectory: true,
   listDirectory: (...args: unknown[]) => listDirectory(...args),
@@ -124,6 +131,7 @@ describe("runClassificationDemoSweep", () => {
           { pages: 0, bytes: 1 },
         ],
       }),
+      { key: "session", baseUrl: "https://server.test" },
     );
   });
 
@@ -478,6 +486,7 @@ describe("settling swept documents locally", () => {
 
     expect(meterAutomationRun).toHaveBeenCalledWith(
       expect.objectContaining({ automationName: "Onboarding classification" }),
+      { key: "session", baseUrl: "https://server.test" },
     );
   });
 });

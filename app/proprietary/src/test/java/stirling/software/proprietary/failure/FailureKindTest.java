@@ -240,10 +240,11 @@ class FailureKindTest {
 
         @Test
         void offersARetryToItsOwnerAndTheRunToWhoeverReviews() {
-            // No known fix, so no resolution; a retry is still worth offering for a one-off.
+            // No known fix, so the retry is the resolution: these are often one-offs. One offer
+            // wherever the document is; FileRunEventService says per row which side runs it.
             assertThat(FailureKind.UNKNOWN.getOfferedActions())
                     .containsExactly(
-                            offered(FailureActionId.OPEN_IN_TOOL, OWNER, SECONDARY, "openInTool"),
+                            offered(FailureActionId.OPEN_IN_TOOL, OWNER, RESOLUTION, "openInTool"),
                             offered(FailureActionId.VIEW_FILE, OWNER, SECONDARY, "viewFile"),
                             offered(
                                     FailureActionId.VIEW_IN_PROCESSOR,
@@ -349,12 +350,56 @@ class FailureKindTest {
         }
 
         @Test
-        void aCodeARetryCouldClearIsLeftToUnknown() {
-            // E051 is the bucket analyzeGhostscriptOutput falls back to for output it cannot
-            // recognise, so it also carries killed processes and full disks; E053 is an outright
-            // interruption. Claiming either would tell an owner a rerunnable failure is permanent.
-            assertThat(FailureKind.byErrorCode("E051")).isEmpty();
-            assertThat(FailureKind.byErrorCode("E053")).isEmpty();
+        void aCodeARetryCouldClearSaysSoRatherThanPermanent() {
+            // E053 is an outright interruption, and E051 is the bucket unrecognised Ghostscript
+            // output falls into, so both are rerunnable. Their kinds lead with the retry.
+            assertThat(FailureKind.byErrorCode("E053"))
+                    .hasValueSatisfying(
+                            kind ->
+                                    assertThat(kind.getRemedy())
+                                            .isEqualTo(FailureRemedy.TRANSIENT));
+            assertThat(FailureKind.byErrorCode("E051"))
+                    .hasValueSatisfying(
+                            kind ->
+                                    assertThat(kind.getActions())
+                                            .first()
+                                            .isEqualTo(FailureActionId.OPEN_IN_TOOL));
+        }
+
+        /**
+         * Codes no kind claims, each with the reason. Anything else the enum names must be claimed:
+         * a coded failure nobody claims lands in the bell as unrecognised.
+         */
+        private static final Map<String, String> UNCLAIMED_ON_PURPOSE =
+                Map.of(
+                        "E031",
+                                "the catch-all a step throws with nothing more specific to say;"
+                                        + " UNKNOWN describes it accurately",
+                        "E071",
+                                "a null argument is a programming error, not something an owner or"
+                                        + " reviewer can act on",
+                        "E080",
+                                "MD5 unavailable is swallowed by its one caller for a fallback hash,"
+                                        + " so it never reaches a run");
+
+        @Test
+        void everyErrorCodeIsClaimedOrLeftUnclaimedForAStatedReason() {
+            Set<String> claimed =
+                    Stream.of(FailureKind.values())
+                            .flatMap(kind -> kind.getErrorCodes().stream())
+                            .collect(Collectors.toSet());
+            List<String> unaccounted =
+                    Arrays.stream(ExceptionUtils.ErrorCode.values())
+                            .filter(code -> !claimed.contains(code.getCode()))
+                            .filter(code -> !UNCLAIMED_ON_PURPOSE.containsKey(code.getCode()))
+                            .map(code -> code.getCode() + " (" + code.name() + ")")
+                            .toList();
+            assertThat(unaccounted)
+                    .as("codes no kind claims; claim them, or list them with a reason")
+                    .isEmpty();
+            assertThat(UNCLAIMED_ON_PURPOSE.keySet())
+                    .as("a reason for a code some kind now claims is stale")
+                    .doesNotContainAnyElementsOf(claimed);
         }
     }
 
@@ -395,8 +440,8 @@ class FailureKindTest {
         void aKindWithNothingToOfferDeclaresNoResolutionRatherThanAWeakOne() {
             // Zero resolutions is legal, so nothing else would notice one of these quietly
             // gaining a button. Each is here because no action the client can run would change
-            // the outcome: the file is the wrong type, empty, gone, or the server is missing a
-            // binary. A retry belongs to UNKNOWN, which says plainly that we do not know.
+            // the outcome, or because the only one that might is a plain retry, which is an
+            // offer rather than a fix.
             assertThat(
                             Stream.of(FailureKind.values())
                                     .filter(
@@ -415,8 +460,24 @@ class FailureKindTest {
                             FailureKind.INPUT_EMPTY,
                             FailureKind.INPUT_UNAVAILABLE,
                             FailureKind.TOOL_NOT_INSTALLED,
+                            FailureKind.SOURCE_UNREADABLE,
                             FailureKind.STEP_CANNOT_RENDER_PAGE,
-                            FailureKind.UNKNOWN);
+                            FailureKind.STEP_TOOL_FAILED,
+                            FailureKind.STEP_INTERRUPTED,
+                            FailureKind.STEP_PAGE_TOO_LARGE,
+                            FailureKind.STEP_MISCONFIGURED);
+        }
+
+        @Test
+        void unknownsOnlyResolutionIsThePlainRetry() {
+            // The exception to the rule above: an unrecognised failure may well be a one-off.
+            // Other retry-first kinds offer it as an action, a guess rather than the fix.
+            assertThat(
+                            FailureKind.UNKNOWN.getOfferedActions().stream()
+                                    .filter(offer -> offer.slot() == RESOLUTION)
+                                    .map(FailureKind.OfferedAction::id)
+                                    .toList())
+                    .containsExactly(FailureActionId.OPEN_IN_TOOL);
         }
 
         @Test

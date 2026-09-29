@@ -13,6 +13,7 @@ import type {
   ViewportScale,
 } from "@app/utils/measurementTypes";
 import { getUnitFactor } from "@app/utils/measurementUtils";
+import { getDocumentBytes } from "@app/services/documentBytesCache";
 
 type PdfMeasurementObjects = Pick<
   typeof import("@cantoo/pdf-lib"),
@@ -162,7 +163,7 @@ export async function extractPageMeasureScales(
   try {
     const pdfLib = await import("@cantoo/pdf-lib");
     const { PDFDocument, PDFArray, PDFDict, PDFName } = pdfLib;
-    const pdfDoc = await PDFDocument.load(await file.arrayBuffer(), {
+    const pdfDoc = await PDFDocument.load(await getDocumentBytes(file), {
       ignoreEncryption: true,
     });
 

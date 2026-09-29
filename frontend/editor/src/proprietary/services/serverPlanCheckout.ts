@@ -9,7 +9,7 @@ import { getAccessToken } from "@app/auth/session";
  * context, so a plain-HTTP instance asks for `"hosted"` and supplies the two return URLs.
  */
 export interface ServerPlanCheckoutRequest {
-  /** Stripe price lookup key for the chosen period, e.g. `selfhosted:server:yearly`. */
+  /** Stripe price lookup key for the chosen period, e.g. `selfhosted:team:yearly`. */
   lookupKey: string;
   /** User blocks being bought. One block is the Team plan's user allowance. */
   serverQuantity: number;
