@@ -41,10 +41,6 @@ import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
 import org.apache.pdfbox.util.Matrix;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
-import org.bouncycastle.asn1.x500.RDN;
-import org.bouncycastle.asn1.x500.X500Name;
-import org.bouncycastle.asn1.x500.style.BCStyle;
-import org.bouncycastle.asn1.x500.style.IETFUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMDecryptorProvider;
 import org.bouncycastle.openssl.PEMEncryptedKeyPair;
@@ -761,9 +757,9 @@ public class CertSignController {
         }
 
         /**
-         * The appearance produced before the signature box was configurable. Kept byte-for-byte so
-         * callers that ask for neither a box nor a field selection get exactly what they got
-         * before.
+         * What callers that ask for neither a box nor a field selection get, laid out as it has
+         * always been because their documents already carry it. The name is read as every other
+         * field is, as written; a certificate without one shows its whole subject instead.
          */
         private void drawLegacyText(
                 PDPageContentStream cs,
@@ -780,10 +776,12 @@ public class CertSignController {
             cs.newLineAtOffset(fontSize, height - leading);
             cs.setLeading(leading);
 
-            // https://stackoverflow.com/questions/2914521/
-            X500Name x500Name = new X500Name(cert.getSubjectX500Principal().getName());
-            RDN cn = x500Name.getRDNs(BCStyle.CN)[0];
-            String name = IETFUtils.valueToString(cn.getFirst().getValue());
+            String name =
+                    new CertificateAttributeService()
+                            .extract(cert)
+                            .getOrDefault(
+                                    CertificateAttribute.SUBJECT_COMMON_NAME,
+                                    cert.getSubjectX500Principal().getName());
 
             cs.showText("Signed by " + name);
             cs.newLine();

@@ -11,6 +11,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import javax.security.auth.x500.X500Principal;
+
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.ASN1String;
+import org.bouncycastle.asn1.x500.AttributeTypeAndValue;
 import org.bouncycastle.asn1.x500.RDN;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.style.BCStyle;
@@ -54,8 +59,8 @@ public class CertificateAttributeService {
             return attributes;
         }
 
-        X500Name subject = parseName(certificate.getSubjectX500Principal().getName());
-        X500Name issuer = parseName(certificate.getIssuerX500Principal().getName());
+        X500Name subject = parseName(certificate.getSubjectX500Principal());
+        X500Name issuer = parseName(certificate.getIssuerX500Principal());
 
         putIfPresent(
                 attributes, CertificateAttribute.SUBJECT_COMMON_NAME, rdn(subject, BCStyle.CN));
@@ -156,25 +161,37 @@ public class CertificateAttributeService {
         };
     }
 
-    private X500Name parseName(String distinguishedName) {
+    private X500Name parseName(X500Principal principal) {
         try {
-            return new X500Name(distinguishedName);
+            return X500Name.getInstance(principal.getEncoded());
         } catch (IllegalArgumentException e) {
             // A malformed DN must not stop the signature: the remaining fields are still usable.
-            log.debug("Could not parse distinguished name '{}'", distinguishedName, e);
+            log.debug("Could not parse distinguished name '{}'", principal.getName(), e);
             return null;
         }
     }
 
-    private String rdn(X500Name name, org.bouncycastle.asn1.ASN1ObjectIdentifier oid) {
+    /**
+     * The value of {@code oid} as written: a printed name escapes commas and the like, and the
+     * escapes would be drawn into the signature. The attribute may share its RDN with others, as in
+     * {@code SERIALNUMBER=...+CN=...}. When the type repeats, the one taken is the last in the
+     * encoding, which is the one RFC 4514 prints first.
+     */
+    private String rdn(X500Name name, ASN1ObjectIdentifier oid) {
         if (name == null) {
             return null;
         }
         RDN[] rdns = name.getRDNs(oid);
-        if (rdns == null || rdns.length == 0) {
-            return null;
+        for (int i = rdns.length - 1; i >= 0; i--) {
+            for (AttributeTypeAndValue attribute : rdns[i].getTypesAndValues()) {
+                if (oid.equals(attribute.getType())) {
+                    return attribute.getValue() instanceof ASN1String text
+                            ? text.getString()
+                            : IETFUtils.valueToString(attribute.getValue());
+                }
+            }
         }
-        return IETFUtils.valueToString(rdns[0].getFirst().getValue());
+        return null;
     }
 
     private String format(Date date) {

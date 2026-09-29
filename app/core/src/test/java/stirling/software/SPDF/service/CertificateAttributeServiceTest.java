@@ -109,6 +109,41 @@ class CertificateAttributeServiceTest {
         }
 
         @Test
+        @DisplayName("Reads a value as written, not in its escaped DN form")
+        void readsEscapedCharactersAsWritten() throws Exception {
+            X509Certificate cert =
+                    certificate("CN=Doe\\, John,O=Acme\\, Inc.", "CN=Emisor\\, S.A.");
+
+            Map<CertificateAttribute, String> attributes = service.extract(cert);
+
+            assertEquals("Doe, John", attributes.get(CertificateAttribute.SUBJECT_COMMON_NAME));
+            assertEquals("Acme, Inc.", attributes.get(CertificateAttribute.SUBJECT_ORGANISATION));
+            assertEquals("Emisor, S.A.", attributes.get(CertificateAttribute.ISSUER_COMMON_NAME));
+        }
+
+        @Test
+        @DisplayName("Takes the requested attribute out of a multi-valued RDN")
+        void readsOneAttributeOfAMultiValuedRdn() throws Exception {
+            X509Certificate cert =
+                    certificate("SERIALNUMBER=12345678Z+CN=GARCIA PEREZ JUAN,C=ES", "CN=Emisor");
+
+            assertEquals(
+                    "GARCIA PEREZ JUAN",
+                    service.extract(cert).get(CertificateAttribute.SUBJECT_COMMON_NAME));
+        }
+
+        @Test
+        @DisplayName("When a type repeats, reads the one the printed name shows first")
+        void repeatedTypeReadsTheOnePrintedFirst() throws Exception {
+            // Encoded in this order, so printed as OU=Segunda,OU=Primera,CN=Nombre.
+            X509Certificate cert = certificate("CN=Nombre,OU=Primera,OU=Segunda", "CN=Emisor");
+
+            assertEquals(
+                    "Segunda",
+                    service.extract(cert).get(CertificateAttribute.SUBJECT_ORGANISATIONAL_UNIT));
+        }
+
+        @Test
         @DisplayName("A null certificate yields no attributes instead of failing")
         void nullCertificate() {
             assertTrue(service.extract(null).isEmpty());
