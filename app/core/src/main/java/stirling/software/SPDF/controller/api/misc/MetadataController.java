@@ -184,25 +184,14 @@ public class MetadataController {
         try (PDDocument document = pdfDocumentFactory.load(pdfFile, true)) {
 
             PDDocumentInformation info = document.getDocumentInformation();
-            if (info == null) {
-                info = new PDDocumentInformation();
-                document.setDocumentInformation(info);
-            }
 
             if (deleteAll) {
-                Set<String> existingKeys = info.getMetadataKeys();
-                if (existingKeys != null) {
-                    for (String key : existingKeys) {
-                        info.setCustomMetadataValue(key, null);
-                    }
+                for (String key : info.getMetadataKeys()) {
+                    info.setCustomMetadataValue(key, null);
                 }
                 PDDocumentCatalog catalog = document.getDocumentCatalog();
-                if (catalog != null) {
-                    catalog.setMetadata(null);
-                    if (catalog.getCOSObject() != null) {
-                        catalog.getCOSObject().removeItem(COSName.getPDFName("PieceInfo"));
-                    }
-                }
+                catalog.setMetadata(null);
+                catalog.getCOSObject().removeItem(COSName.getPDFName("PieceInfo"));
                 info.setAuthor(null);
                 info.setCreationDate(null);
                 info.setCreator(null);
@@ -217,13 +206,10 @@ public class MetadataController {
                     // PDF names are case-sensitive, so an existing key differing
                     // only in case would survive as a second property with a stale
                     // value.
-                    Set<String> existingKeys = info.getMetadataKeys();
-                    if (existingKeys != null) {
-                        for (String existingKey : existingKeys) {
-                            if (!existingKey.equals(entry.getKey())
-                                    && existingKey.equalsIgnoreCase(entry.getKey())) {
-                                info.setCustomMetadataValue(existingKey, null);
-                            }
+                    for (String existingKey : info.getMetadataKeys()) {
+                        if (!existingKey.equals(entry.getKey())
+                                && existingKey.equalsIgnoreCase(entry.getKey())) {
+                            info.setCustomMetadataValue(existingKey, null);
                         }
                     }
                     info.setCustomMetadataValue(entry.getKey(), entry.getValue());

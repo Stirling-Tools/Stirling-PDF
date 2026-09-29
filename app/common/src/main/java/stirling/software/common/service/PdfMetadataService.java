@@ -21,6 +21,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
+import javax.xml.transform.TransformerException;
+
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
@@ -347,15 +349,8 @@ public class PdfMetadataService {
     public void synchronizeXmpMetadata(PDDocument document, Map<String, String> customMetadata)
             throws IOException {
         PDDocumentCatalog catalog = document.getDocumentCatalog();
-        if (catalog == null) {
-            return;
-        }
         validateCustomMetadataKeys(customMetadata);
         PDDocumentInformation info = document.getDocumentInformation();
-        if (info == null) {
-            info = new PDDocumentInformation();
-            document.setDocumentInformation(info);
-        }
 
         PDMetadata existingPdMetadata = catalog.getMetadata();
         XMPMetadata xmp = null;
@@ -544,7 +539,7 @@ public class PdfMetadataService {
             // withXpacket = true writes the <?xpacket ... ?> processing instructions required by
             // ISO 32000-1 §14.3.2
             new XmpSerializer().serialize(xmp, baos, true);
-        } catch (Exception e) {
+        } catch (TransformerException e) {
             throw new IOException("Failed to serialize XMP metadata", e);
         }
         PDMetadata pdMetadata = new PDMetadata(document);
