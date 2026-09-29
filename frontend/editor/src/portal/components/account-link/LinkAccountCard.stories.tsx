@@ -9,6 +9,7 @@ const base: UseAccountLink = {
   status: { linked: false, name: null },
   phase: "idle",
   error: null,
+  statusError: null,
 
   unlink: async () => {},
   refresh: async () => {},

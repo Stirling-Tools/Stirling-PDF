@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
-import UndoIcon from "@mui/icons-material/Undo";
+import { Icon } from "@app/ui/Icon";
 import ErrorNotification from "@app/components/tools/shared/ErrorNotification";
 import ResultsPreview from "@app/components/tools/shared/ResultsPreview";
 import { SuggestedToolsSection } from "@app/components/tools/shared/SuggestedToolsSection";
@@ -55,7 +55,6 @@ function ReviewStepContent<TParams = unknown>({
   const { t } = useTranslation();
   const terminology = useFileActionTerminology();
   const icons = useFileActionIcons();
-  const DownloadIcon = icons.download;
   const stepRef = useRef<HTMLDivElement>(null);
   const { actions: fileActions } = useFileActions();
   const selectors = useFileSelectors();
@@ -157,7 +156,7 @@ function ReviewStepContent<TParams = unknown>({
           )}
         >
           <Button
-            leftSection={<UndoIcon />}
+            leftSection={<Icon name="undo-2" />}
             variant="secondary"
             accent="neutral"
             onClick={handleUndo}
@@ -170,7 +169,7 @@ function ReviewStepContent<TParams = unknown>({
       {operation.downloadUrl && (
         <Button
           data-testid="download-result-button"
-          leftSection={<DownloadIcon />}
+          leftSection={<Icon name={icons.download} />}
           fullWidth
           style={{ marginBottom: "1rem" }}
           onClick={handleDownload}

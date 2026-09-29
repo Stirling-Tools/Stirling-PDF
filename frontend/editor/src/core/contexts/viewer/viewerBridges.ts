@@ -55,7 +55,6 @@ export interface PanAPIWrapper {
   enable: () => void;
   disable: () => void;
   toggle: () => void;
-  makePanDefault: () => void;
 }
 
 export interface SelectionAPIWrapper {
@@ -131,6 +130,8 @@ export interface ScrollState {
 export interface ZoomState {
   currentZoom: number;
   zoomPercent: number;
+  /** Active zoom as the plugin reports it: a mode or a numeric user level. */
+  level?: ZoomLevel;
 }
 
 export interface PanState {

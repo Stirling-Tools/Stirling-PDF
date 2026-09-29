@@ -230,3 +230,12 @@ whoever touches a file first.
 To turn the editor hook off, put `{ "env": { "COMMENT_LINT_HOOK": "0" } }` in
 `.claude/settings.local.json`. The commit-time gate still applies, so you lose the
 early warning rather than the check.
+
+## The review pass
+
+The linter only reaches the mechanical half. The `/comment-review` skill
+(`.claude/skills/comment-review/`) is the pass for the rest: the comment that is
+accurate and three times longer than the fact it carries, the fact already stated by
+the type above it, and the public surface a change left undocumented. It scopes to
+what the branch adds, edits comments only, and reports its verdicts rather than
+posting them anywhere.

@@ -14,6 +14,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.time.ZoneOffset;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -77,7 +79,8 @@ class JobChargeServiceTest {
     private TeamBillingService teamBillingService;
     private JobChargeService service;
 
-    private static final LocalDateTime PERIOD_START = LocalDateTime.of(2026, 8, 1, 0, 0);
+    private static final LocalDateTime PERIOD_START =
+            YearMonth.now(ZoneOffset.UTC).atDay(1).atStartOfDay();
 
     private static final long GRANT = 500L;
 
@@ -99,6 +102,7 @@ class JobChargeServiceTest {
         // close, so the meter tests just set free_units_consumed on the shadow row directly.
         teamBillingService = Mockito.mock(TeamBillingService.class);
         when(teamBillingService.forTeam(Mockito.anyLong())).thenReturn(billingContext(GRANT));
+        when(teamBillingService.resolveGrant(Mockito.anyLong(), any())).thenReturn(GRANT);
         service =
                 new JobChargeService(
                         jobService,
@@ -124,7 +128,9 @@ class JobChargeServiceTest {
                 null,
                 null,
                 null,
-                null);
+                null,
+                PERIOD_START,
+                PERIOD_START.plusMonths(1));
     }
 
     @AfterEach
@@ -470,6 +476,7 @@ class JobChargeServiceTest {
     void openProcess_zeroGrantRollover_stampsWithoutDrawing(@TempDir Path tmp) throws IOException {
         // A zero grant still advances the stamp, or every later charge re-evaluates a stale row.
         when(teamBillingService.forTeam(100L)).thenReturn(billingContext(0L));
+        when(teamBillingService.resolveGrant(Mockito.eq(100L), any())).thenReturn(0L);
         PricingPolicy policy = stubPolicy(1, Map.of(JobSource.WEB, 10));
         when(policyService.getEffectivePolicy(100L)).thenReturn(policy);
         ProcessingJob newJob = openJob(UUID.randomUUID());
@@ -528,9 +535,8 @@ class JobChargeServiceTest {
     }
 
     @Test
-    void openProcess_exhaustedGrant_storesZeroFreeAndLeavesCounterUntouched(@TempDir Path tmp)
+    void openProcess_exhaustedGrant_storesZeroFreeAndPersistsTerm(@TempDir Path tmp)
             throws IOException {
-        // Grant already at 0 → nothing free, full units bill, counter not re-saved.
         PricingPolicy policy = stubPolicy(1, Map.of(JobSource.WEB, 10));
         when(policyService.getEffectivePolicy(100L)).thenReturn(policy);
         ProcessingJob newJob = openJob(UUID.randomUUID());
@@ -553,7 +559,8 @@ class JobChargeServiceTest {
         ArgumentCaptor<PaygShadowCharge> captor = ArgumentCaptor.forClass(PaygShadowCharge.class);
         verify(shadowRepo).save(captor.capture());
         assertThat(captor.getValue().getFreeUnitsConsumed()).isZero();
-        verify(teamExtRepo, never()).save(any());
+        verify(teamExtRepo).save(ext);
+        assertThat(ext.getFreeUnitsGranted()).isEqualTo(GRANT);
     }
 
     @Test
@@ -671,6 +678,8 @@ class JobChargeServiceTest {
         // charge time. The refund must hand exactly those free units back to the team's counter.
         UUID jobId = UUID.randomUUID();
         PaygShadowCharge row = chargedShadowRow(jobId, 100L, 10, 3, BillingCategory.API);
+        row.setIncludedPeriodStart(PERIOD_START);
+        row.setOccurredAt(PERIOD_START.plusMonths(1));
         when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId)).thenReturn(Optional.of(row));
         when(jobRepo.findById(jobId)).thenReturn(Optional.of(openJob(jobId)));
         PaygTeamExtensions ext = new PaygTeamExtensions();
@@ -687,21 +696,23 @@ class JobChargeServiceTest {
 
     @Test
     void markFirstStepFailed_refundAfterPeriodTurned_doesNotExceedTheGrant() {
-        // The charge's period is over and the grant already reset, so the restore is capped.
         UUID jobId = UUID.randomUUID();
         PaygShadowCharge row = chargedShadowRow(jobId, 100L, 10, 3, BillingCategory.API);
+        row.setOccurredAt(PERIOD_START.minusDays(1));
+        row.setIncludedPeriodStart(PERIOD_START.minusMonths(1));
         when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId)).thenReturn(Optional.of(row));
         when(jobRepo.findById(jobId)).thenReturn(Optional.of(openJob(jobId)));
         PaygTeamExtensions ext = new PaygTeamExtensions();
         ext.setTeamId(100L);
-        ext.setFreeUnitsRemaining(0L);
-        ext.setFreeUnitsPeriodStart(PERIOD_START.minusMonths(1));
+        ext.setFreeUnitsRemaining(100L);
+        ext.setFreeUnitsPeriodStart(PERIOD_START);
         when(teamExtRepo.findByIdForUpdate(100L)).thenReturn(Optional.of(ext));
 
         service.markFirstStepFailed(jobId, "first-step-5xx:503");
 
-        assertThat(ext.getFreeUnitsRemaining()).isEqualTo(GRANT);
+        assertThat(ext.getFreeUnitsRemaining()).isEqualTo(100L);
         assertThat(ext.getFreeUnitsPeriodStart()).isEqualTo(PERIOD_START);
+        verify(teamExtRepo, never()).save(any());
     }
 
     @Test
@@ -1172,6 +1183,7 @@ class JobChargeServiceTest {
         row.setTeamId(teamId);
         row.setPaygUnits(units);
         row.setFreeUnitsConsumed(freeUnitsConsumed);
+        row.setOccurredAt(PERIOD_START.plusDays(1));
         row.setStatus(ShadowChargeStatus.CHARGED);
         row.setBillingCategory(category);
         return row;

@@ -66,6 +66,31 @@ function processQueue(error: Error | null, token: string | null = null): void {
   failedQueue = [];
 }
 
+/**
+ * Did the server reject the refresh, or did the call merely not get through?
+ *
+ * Only a rejection proves the session is dead. A network drop, timeout or 5xx
+ * says nothing about the credentials, and signing the user out over one would
+ * lose whatever they had unsaved.
+ */
+function isSessionRejected(error: unknown): boolean {
+  const status = (error as AxiosError)?.response?.status;
+  return status === 401 || status === 403;
+}
+
+function redirectToLogin(): void {
+  const loginPath = withBasePath("/login");
+  // Already there: another assignment would just reload the login page.
+  if (window.location.pathname === loginPath) return;
+  // Router-relative: Login replays this through navigate(), which applies
+  // the basename itself. See the same note in httpErrorHandler.
+  setPostLoginRedirectPath(
+    stripBasePath(window.location.pathname) + window.location.search,
+  );
+  console.log("[API Client] Redirecting to login page...");
+  window.location.href = loginPath;
+}
+
 async function refreshAuthToken(client: AxiosInstance): Promise<string> {
   console.log("[API Client] Refreshing expired JWT token...");
 
@@ -89,18 +114,15 @@ async function refreshAuthToken(client: AxiosInstance): Promise<string> {
     return newToken;
   } catch (error) {
     console.error("[API Client] ❌ Token refresh failed:", error);
-    clearJwtTokenFromStorage();
 
-    // Redirect to login
-    const loginPath = withBasePath("/login");
-    if (window.location.pathname !== loginPath) {
-      // Router-relative: Login replays this through navigate(), which applies
-      // the basename itself. See the same note in httpErrorHandler.
-      setPostLoginRedirectPath(
-        stripBasePath(window.location.pathname) + window.location.search,
+    if (isSessionRejected(error)) {
+      clearJwtTokenFromStorage();
+      redirectToLogin();
+    } else {
+      // Keep the token: the session may well still be good once the network is.
+      console.warn(
+        "[API Client] Refresh did not complete; keeping the session and failing the request",
       );
-      console.log("[API Client] Redirecting to login page...");
-      window.location.href = loginPath;
     }
 
     throw error;
@@ -193,7 +215,10 @@ export function setupApiInterceptors(client: AxiosInstance): void {
           return client(originalRequest);
         } catch (refreshError) {
           processQueue(refreshError as Error, null);
-          return Promise.reject(refreshError);
+          // The caller asked for its own endpoint, so hand back its own failure;
+          // a refresh error here would make every `catch` branch read the wrong
+          // status.
+          return Promise.reject(error);
         } finally {
           isRefreshing = false;
         }

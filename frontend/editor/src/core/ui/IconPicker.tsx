@@ -21,12 +21,14 @@ export interface IconPickerProps {
   /** Accessible name for the trigger (e.g. "Icon"). */
   ariaLabel: string;
   size?: "sm" | "md" | "lg";
+  /** Lock the picker: the trigger is disabled and the menu can't open. */
+  disabled?: boolean;
 }
 
 /**
  * Pick an icon from a caller-supplied set. The chosen glyph is the trigger; the menu is a grid. The
- * icon set is injected (via {@link options}) rather than baked in, so any surface - a pipeline, a
- * watched folder, an automation - passes its own vocabulary and shares the one control.
+ * icon set is injected (via {@link options}) rather than baked in, so any surface - a pipeline, an
+ * automation - passes its own vocabulary and shares the one control.
  */
 export function IconPicker({
   value,
@@ -34,6 +36,7 @@ export function IconPicker({
   options,
   ariaLabel,
   size = "sm",
+  disabled = false,
 }: IconPickerProps) {
   // Controlled so a grid button (not a Dropdown.Item) can close the menu on pick.
   const [open, setOpen] = useState(false);
@@ -45,9 +48,18 @@ export function IconPicker({
   }
 
   return (
-    <Dropdown.Root open={open} onOpenChange={setOpen} align="start">
+    <Dropdown.Root
+      open={open}
+      onOpenChange={disabled ? () => {} : setOpen}
+      align="start"
+    >
       <Dropdown.Trigger>
-        <ActionIcon variant="secondary" size={size} aria-label={ariaLabel}>
+        <ActionIcon
+          variant="secondary"
+          size={size}
+          aria-label={ariaLabel}
+          disabled={disabled}
+        >
           {selected?.node}
         </ActionIcon>
       </Dropdown.Trigger>

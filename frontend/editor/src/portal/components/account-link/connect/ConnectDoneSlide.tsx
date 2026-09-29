@@ -6,7 +6,7 @@ import { fetchWallet, type Wallet } from "@portal/api/billing";
 import { useLinkedAccountEmail } from "@portal/hooks/useLinkedAccountEmail";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import "@portal/components/billing/billing.css";
-import "@portal/components/account-link/connect/connect.css";
+import "@app/components/account-link/connect.css";
 
 interface Props {
   /** Closes the dialog first, so a next step does not land behind the overlay. */
@@ -78,7 +78,7 @@ export function ConnectDoneSlide({ onNavigate }: Props) {
               "portal.accountLink.connect.done.switchOnProcessor",
               "Switch on the Processor",
             ),
-            path: toPortalPath(VIEW_PATHS.usage),
+            path: "/settings/billing",
           },
         ]
       : []),
@@ -88,7 +88,7 @@ export function ConnectDoneSlide({ onNavigate }: Props) {
         "portal.accountLink.connect.done.inviteTeam",
         "Invite your team",
       ),
-      path: toPortalPath(VIEW_PATHS.users),
+      path: "/settings/users",
     },
     {
       key: "pipeline",

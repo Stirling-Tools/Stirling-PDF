@@ -43,7 +43,7 @@ describe("AppConfigContext", () => {
     vi.mocked(apiClient.get).mockResolvedValueOnce({
       status: 200,
       data: mockConfig,
-    } as any);
+    });
 
     const { result } = renderHook(() => useAppConfig(), { wrapper });
 
@@ -181,7 +181,7 @@ describe("AppConfigContext", () => {
     vi.mocked(apiClient.get).mockResolvedValueOnce({
       status: 200,
       data: initialConfig,
-    } as any);
+    });
 
     const { result } = renderHook(() => useAppConfig(), { wrapper });
 
@@ -193,7 +193,7 @@ describe("AppConfigContext", () => {
     vi.mocked(apiClient.get).mockResolvedValueOnce({
       status: 200,
       data: updatedConfig,
-    } as any);
+    });
 
     // Trigger jwt-available event wrapped in act
     await act(async () => {
@@ -218,7 +218,7 @@ describe("AppConfigContext", () => {
     vi.mocked(apiClient.get).mockResolvedValue({
       status: 200,
       data: mockConfig,
-    } as any);
+    });
 
     const { result } = renderHook(() => useAppConfig(), { wrapper });
 
@@ -242,7 +242,7 @@ describe("AppConfigContext", () => {
     vi.mocked(apiClient.get).mockResolvedValue({
       status: 200,
       data: mockConfig,
-    } as any);
+    });
 
     const { result } = renderHook(() => useAppConfig(), { wrapper });
 
@@ -299,7 +299,7 @@ describe("AppConfigContext", () => {
     vi.mocked(apiClient.get).mockReturnValue(
       new Promise((resolve) => {
         resolveFetch = resolve;
-      }) as never,
+      }),
     );
 
     const { result } = renderHook(() => useAppConfig(), { wrapper });
@@ -365,7 +365,7 @@ describe("AppConfigContext", () => {
     vi.mocked(apiClient.get).mockReturnValue(
       new Promise((resolve) => {
         resolveFetch = resolve;
-      }) as never,
+      }),
     );
 
     const { result } = renderHook(() => useAppConfig(), {
@@ -399,7 +399,7 @@ describe("AppConfigContext", () => {
     vi.mocked(apiClient.get).mockResolvedValue({
       status: 200,
       data: { enableLogin: false },
-    } as any);
+    });
 
     const client = new QueryClient({
       defaultOptions: { queries: { retry: false } },
@@ -510,7 +510,7 @@ describe("AppConfigContext", () => {
     vi.mocked(apiClient.get).mockResolvedValueOnce({
       status: 200,
       data: mockConfig,
-    } as any);
+    });
 
     renderHook(() => useAppConfig(), { wrapper });
 

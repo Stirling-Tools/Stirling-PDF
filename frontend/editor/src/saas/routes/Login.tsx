@@ -15,13 +15,18 @@ import {
   withBasePath,
 } from "@app/constants/app";
 import { isSafePostLoginRedirect } from "@app/services/postLoginRedirect";
-import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
+import {
+  rememberPendingDestination,
+  takePendingDestination,
+} from "@app/services/pendingDestination";
+import { Icon } from "@app/ui/Icon";
 
 // Import login components
 import ErrorMessage from "@app/auth/ui/ErrorMessage";
 import EmailPasswordForm from "@app/routes/login/EmailPasswordForm";
 import OAuthButtons from "@app/routes/login/OAuthButtons";
 import LoggedInState from "@app/routes/login/LoggedInState";
+import { LoadingFallback } from "@app/components/shared/LoadingFallback";
 import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg";
 
 export default function Login() {
@@ -68,23 +73,33 @@ export default function Login() {
     }
   }, [session, loading, nextPath, navigate]);
 
+  // Stashed as well as held in the URL: leaving to create an account loses the
+  // query string, and the confirmation link cannot carry a `next`.
+  useEffect(() => {
+    if (nextPath) rememberPendingDestination(nextPath);
+  }, [nextPath]);
+
   const baseUrl = getBaseUrl();
 
-  // Set document meta
   useDocumentMeta({
     title: `${t("login.title", "Sign in")} - Stirling PDF`,
     description: t(
       "app.description",
-      "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "A free, private PDF editor you can run on any infrastructure.",
     ),
     ogTitle: `${t("login.title", "Sign in")} - Stirling PDF`,
     ogDescription: t(
       "app.description",
-      "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "A free, private PDF editor you can run on any infrastructure.",
     ),
     ogImage: `${baseUrl}/og_images/saas/app.png`,
     ogUrl: `${window.location.origin}${window.location.pathname}`,
   });
+
+  // The form is only for visitors known to be signed out; splash until then.
+  if (loading) {
+    return <LoadingFallback />;
+  }
 
   // Show logged in state if authenticated (unless bouncing back to `next`)
   if (session && !loading) {
@@ -166,10 +181,15 @@ export default function Login() {
         setError(error.message);
       } else if (data.user) {
         console.log("[Login] Email sign in successful");
-        // No explicit destination: land team leads on the processor and everyone
-        // else on the editor. Resolved here rather than by bouncing through "/"
-        // so the app isn't torn down and remounted on the way.
-        if (!nextPath) navigate(await resolveLandingPath(), { replace: true });
+        // Claimed even when `nextPath` wins: the detour is over either way.
+        const remembered = takePendingDestination();
+        // Resolved here rather than by bouncing through "/", which would tear the app
+        // down and remount it on the way.
+        if (!nextPath) {
+          navigate(remembered ?? (await resolveLandingPath()), {
+            replace: true,
+          });
+        }
       }
     } catch (err) {
       console.error("[Login] Unexpected error]:", err);
@@ -303,7 +323,8 @@ export default function Login() {
             className={`oauth-button-fullwidth auth-expandable-trigger ${showMagicLinkForm ? "auth-expandable-trigger--active" : ""}`}
           >
             <span className="oauth-btn-group">
-              <LinkRoundedIcon
+              <Icon
+                name="link"
                 style={{
                   width: "1.75rem",
                   height: "1.75rem",

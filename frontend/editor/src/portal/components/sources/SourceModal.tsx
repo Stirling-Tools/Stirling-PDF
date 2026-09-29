@@ -1,4 +1,5 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { availableOutputModes } from "@portal/components/pipelines/outputModes";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Banner,
@@ -19,7 +20,7 @@ import {
   isFolderAccessDeniedError,
   type Source,
 } from "@portal/api/sources";
-import { useUI } from "@portal/contexts/UIContext";
+import { getSettingsUrl } from "@app/utils/settingsNavigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { qk } from "@portal/queries/keys";
 import { creatableSourceTypes } from "@portal/components/sources/creatableSourceTypes";
@@ -96,6 +97,9 @@ function connectionTypeById(id: string): CreatableConnectionType {
 
 interface SourceModalProps {
   open: boolean;
+  direction?: "input" | "output";
+  allowedTypes?: string[];
+  initialOptions?: Record<string, string>;
   /** When set, edit this source; otherwise create a new one. */
   sourceId?: string | null;
   onClose: () => void;
@@ -104,6 +108,7 @@ interface SourceModalProps {
    * regardless, so hosts on the query layer need no handler.
    */
   onSaved?: () => void;
+  onCreated?: (source: Source) => void;
 }
 
 /**
@@ -117,11 +122,27 @@ export function SourceModal({
   sourceId,
   onClose,
   onSaved,
+  onCreated,
+  direction,
+  allowedTypes,
+  initialOptions,
 }: SourceModalProps) {
   const { t } = useTranslation();
-  const { openSettings } = useUI();
   const queryClient = useQueryClient();
   const isEdit = Boolean(sourceId);
+  const offeredTypes = useMemo(
+    () =>
+      OFFERED_TYPES.filter(
+        (entry) => !allowedTypes || allowedTypes.includes(entry.type),
+      ).filter((entry) =>
+        direction === "input"
+          ? entry.readable !== false
+          : direction === "output"
+            ? (availableOutputModes() as string[]).includes(entry.type)
+            : true,
+      ),
+    [direction, allowedTypes],
+  );
 
   // The list is a shared cache entry (Sources view + Home's ProcessorFlow), so
   // a create/delete here must invalidate it before the host re-renders it.
@@ -168,13 +189,13 @@ export function SourceModal({
     setSubmitting(false);
     setDeleting(false);
     if (!sourceId) {
-      setStage("type");
-      setType(OFFERED_TYPES[0]);
+      setStage(offeredTypes.length === 1 ? "configure" : "type");
+      setType(offeredTypes[0]);
       setName("");
-      setOptions(defaultOptions(OFFERED_TYPES[0]));
+      setOptions({ ...defaultOptions(offeredTypes[0]), ...initialOptions });
       setEnabled(true);
       setLoaded(null);
-      setShowAdvanced(false);
+      setShowAdvanced(Boolean(initialOptions?.mode));
       return;
     }
     setStage("configure");
@@ -196,12 +217,12 @@ export function SourceModal({
       })
       .catch((e) => setError(errorMessage(e)))
       .finally(() => setLoading(false));
-  }, [open, sourceId]);
+  }, [open, sourceId, offeredTypes, initialOptions]);
 
   function chooseType(next: CreatableSourceType) {
     setType(next);
-    setOptions(defaultOptions(next));
-    setShowAdvanced(false);
+    setOptions({ ...defaultOptions(next), ...initialOptions });
+    setShowAdvanced(Boolean(initialOptions?.mode));
     setStage("configure");
   }
 
@@ -271,6 +292,7 @@ export function SourceModal({
         enabled,
       });
       await invalidateSources();
+      if (!isEdit) onCreated?.(saved);
       if (!isEdit && type.type === WEBHOOK_SOURCE_TYPE) {
         const webhookId = String(saved.options?.webhookId ?? "");
         const secret = String(saved.options?.signingSecret ?? "");
@@ -349,7 +371,7 @@ export function SourceModal({
         backLabel: t("portal.sources.builder.backToSource"),
       };
     }
-    if (stage === "configure" && !isEdit) {
+    if (stage === "configure" && !isEdit && offeredTypes.length > 1) {
       return {
         onBack: () => setStage("type"),
         backLabel: t("portal.sources.builder.backToTypes"),
@@ -516,10 +538,10 @@ export function SourceModal({
   }
 
   // A field can gate itself on another's current value (e.g. change detection
-  // only applies in consume mode), so a knob that does nothing never shows.
+  // applies to the tracked modes), so a knob that does nothing never shows.
   function fieldVisible(field: SourceFieldDef): boolean {
     const cond = field.visibleWhen;
-    return !cond || (options[cond.key] ?? "") === cond.equals;
+    return !cond || cond.oneOf.includes(options[cond.key] ?? "");
   }
 
   const visibleFields = type.fields.filter(fieldVisible);
@@ -540,14 +562,18 @@ export function SourceModal({
       {stage === "type" && (
         <div className="portal-source-modal__catalog">
           <p className="portal-source-modal__hint">
-            {t("portal.sources.builder.chooseHint")}
+            {t(
+              direction === "output"
+                ? "portal.sources.builder.chooseOutputHint"
+                : "portal.sources.builder.chooseHint",
+            )}
           </p>
           <div
             className="portal-source-modal__grid"
             role="listbox"
             aria-label={t("portal.sources.wizard.type")}
           >
-            {OFFERED_TYPES.map((ct) => (
+            {offeredTypes.map((ct) => (
               <button
                 key={ct.type}
                 type="button"
@@ -675,7 +701,15 @@ export function SourceModal({
                       <Button
                         variant="secondary"
                         size="sm"
-                        onClick={() => openSettings("adminFolderAccess")}
+                        // A new tab: this dialog holds an unsaved draft, and
+                        // settings is a route now, not an overlay over it.
+                        onClick={() =>
+                          window.open(
+                            getSettingsUrl("adminFolderAccess"),
+                            "_blank",
+                            "noopener,noreferrer",
+                          )
+                        }
                       >
                         {t("portal.sources.builder.folderAccess.openSettings")}
                       </Button>

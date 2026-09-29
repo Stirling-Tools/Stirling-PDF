@@ -45,7 +45,10 @@ class ToolIODeclarationCoverageTest {
                     "/api/v1/security/",
                     "/api/v1/convert/",
                     "/api/v1/filter/",
-                    "/api/v1/integration/");
+                    "/api/v1/integration/",
+                    // Just this corner of /api/v1/form/: the only endpoint there that takes a
+                    // document and returns one, so the only one a chain can contain.
+                    "/api/v1/form/form-detection/");
 
     /**
      * Not document transforms, so nothing to declare. A path exempts everything nested under it.

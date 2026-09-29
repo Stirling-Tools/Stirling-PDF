@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  type Location,
   Navigate,
   useLocation,
   useNavigate,
@@ -24,7 +25,7 @@ import { updateSupportedLanguages } from "@app/i18n";
 import SpringLoginForm from "@app/auth/ui/SpringLoginForm";
 import AuthDefaultCredentials from "@app/auth/ui/AuthDefaultCredentials";
 import { useSpringLogin } from "@app/auth/ui/useSpringLogin";
-import LoggedInState from "@app/routes/login/LoggedInState";
+import { LoadingFallback } from "@app/components/shared/LoadingFallback";
 import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg";
 
 export default function Login() {
@@ -41,12 +42,15 @@ export default function Login() {
   // Where to return to after signing in. Router state first (set when Landing
   // bounces an unauthenticated visitor), then the query, which is what survives
   // a reload of /login. Null means "no specific destination" and the caller
-  // falls back to role-based landing.
+  // falls back to the default landing.
   const resolveReturnPath = (): string | null => {
-    const fromState = (
-      location.state as { from?: { pathname?: string } } | null
-    )?.from?.pathname;
-    if (fromState) return safePath(fromState);
+    const fromState = (location.state as { from?: Partial<Location> } | null)
+      ?.from;
+    if (fromState?.pathname) {
+      return safePath(
+        fromState.pathname + (fromState.search ?? "") + (fromState.hash ?? ""),
+      );
+    }
     const fromQuery = searchParams.get("from");
     if (!fromQuery) return null;
     try {
@@ -161,7 +165,6 @@ export default function Login() {
     onConfigLoaded: (data) => {
       // If login is disabled, redirect to home (anonymous mode)
       if (data.enableLogin === false) {
-        console.debug("[Login] Login disabled, going to the editor");
         navigate(EDITOR_BASENAME);
         return;
       }
@@ -216,15 +219,21 @@ export default function Login() {
       navigate(returnPath, { replace: true });
       return;
     }
-    // No explicit destination: land processor users on the processor and
-    // everyone else on the editor. Resolved here rather than by bouncing
-    // through "/" so the app isn't torn down and remounted on the way.
+    // No explicit destination: the editor, unless this account opted in to the
+    // processor. Resolved here rather than by bouncing through "/" so the app
+    // isn't torn down and remounted on the way.
     let active = true;
-    void resolveLandingPath().then((path) => {
-      if (!active) return;
-      console.debug("[Login] Authenticated, landing on", path);
-      navigate(path, { replace: true });
-    });
+    // Warm the editor chunk while /me resolves so the landing paints at once.
+    void import("@app/routes/Landing").catch(() => {});
+    void resolveLandingPath().then(
+      (path) => {
+        if (!active) return;
+        navigate(path, { replace: true });
+      },
+      () => {
+        if (active) navigate(EDITOR_BASENAME, { replace: true });
+      },
+    );
     return () => {
       active = false;
     };
@@ -242,12 +251,6 @@ export default function Login() {
       return () => clearTimeout(id);
     }
   }, [backendProbe.loginDisabled, navigate]);
-
-  useEffect(() => {
-    if (backendProbe.status === "up") {
-      void refetch();
-    }
-  }, [backendProbe.status, refetch]);
 
   // The email/password form is always shown when username/password auth is
   // allowed; SSO-only mode hides it.
@@ -391,12 +394,12 @@ export default function Login() {
     title: `${t("login.title", "Sign in")} - Stirling PDF`,
     description: t(
       "app.description",
-      "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "A free, private PDF editor you can run on any infrastructure.",
     ),
     ogTitle: `${t("login.title", "Sign in")} - Stirling PDF`,
     ogDescription: t(
       "app.description",
-      "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "A free, private PDF editor you can run on any infrastructure.",
     ),
     ogImage: `${baseUrl}/og_images/home.png`,
     ogUrl: `${window.location.origin}${window.location.pathname}`,
@@ -407,9 +410,17 @@ export default function Login() {
     return <Navigate to={EDITOR_BASENAME} replace />;
   }
 
-  // Show logged in state if authenticated
-  if (session && !loading) {
-    return <LoggedInState />;
+  // The form is only for visitors known to be signed out; splash until then.
+  if (loading) {
+    return <LoadingFallback />;
+  }
+
+  if (session) {
+    return <LoadingFallback />;
+  }
+
+  if (backendProbe.loading) {
+    return <LoadingFallback />;
   }
 
   // If backend isn't ready yet, show a lightweight status screen instead of the form

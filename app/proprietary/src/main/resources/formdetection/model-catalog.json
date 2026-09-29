@@ -1,0 +1,127 @@
+[
+  {
+    "id": "ffdetr",
+    "displayName": "CommonForms FFDetr (Apache-2.0)",
+    "description": "Permissively licensed detector trained on the same CommonForms data. Finds text inputs, checkboxes and signature fields. Quantised to int8, so it is the smallest option as well as the only one with a licence grant.",
+    "license": "Apache-2.0. Weights https://huggingface.co/jbarrow/FFDetr, base model Roboflow RF-DETR, CommonForms dataset - all Apache-2.0. Converted to ONNX by Stirling via scripts/export-ffdetr-onnx.py and republished at https://huggingface.co/Frooodle/ffdetr-int8; see the NOTICE beside this file.",
+    "sizeBytes": 37116529,
+    "onnxUrl": "https://huggingface.co/Frooodle/ffdetr-int8/resolve/ad3223d7c3ae25ce1d1ec8fe972c8ff7630aff45/ffdetr-int8.onnx",
+    "sha256": "de43bb39adb08459fe62fa1a7be6bfb4f2d397bb034c46055f3b8fa3d04fc8f4",
+    "decoder": "rfdetr",
+    "inputSize": 1024,
+    "resizeMode": "stretch",
+    "padColor": [
+      114,
+      114,
+      114
+    ],
+    "channelOrder": "rgb",
+    "normMean": [
+      0.485,
+      0.456,
+      0.406
+    ],
+    "normStd": [
+      0.229,
+      0.224,
+      0.225
+    ],
+    "classNames": [
+      "text",
+      "choice",
+      "signature"
+    ],
+    "classFieldTypes": [
+      "text",
+      "checkbox",
+      "signature"
+    ],
+    "scoreThreshold": 0.3,
+    "nms": "classAgnostic",
+    "iou": 0.45
+  },
+  {
+    "id": "ffdnet-s",
+    "displayName": "CommonForms FFDNet-S (Small)",
+    "description": "Small, fast detector with lower memory use - a good default for most forms. Finds text inputs, checkboxes, and signature fields.",
+    "license": "No licence declared by the publisher (all rights reserved). Trained on the CommonForms dataset (Apache-2.0) with Ultralytics YOLO11, whose AGPL-3.0 terms the publisher asserts no grant over.",
+    "sizeBytes": 38370092,
+    "onnxUrl": "https://huggingface.co/jbarrow/FFDNet-S-cpu/resolve/d6cb18cb4bf31d7f5adfe8fbc7cc3744b516d1fe/FFDNet-S.onnx",
+    "sha256": "93bccf47c048f9f947f9b1b52d002edf144a8a583dae39f164d9e5725321acc0",
+    "inputSize": 1216,
+    "resizeMode": "stretch",
+    "padColor": [
+      114,
+      114,
+      114
+    ],
+    "channelOrder": "bgr",
+    "normMean": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "normStd": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "outputLayout": "nc_first",
+    "hasObjectness": false,
+    "classNames": [
+      "text",
+      "choice",
+      "signature"
+    ],
+    "classFieldTypes": [
+      "text",
+      "checkbox",
+      "signature"
+    ],
+    "scoreThreshold": 0.3,
+    "nms": "perClass",
+    "iou": 0.45
+  },
+  {
+    "id": "ffdnet-l",
+    "displayName": "CommonForms FFDNet-L (Large)",
+    "description": "Larger, higher-accuracy detector (~25M parameters) with better recall on dense or complex forms - uses more memory. Finds text inputs, checkboxes, and signature fields.",
+    "license": "No licence declared by the publisher (all rights reserved). Trained on the CommonForms dataset (Apache-2.0) with Ultralytics YOLO11, whose AGPL-3.0 terms the publisher asserts no grant over.",
+    "sizeBytes": 101944542,
+    "onnxUrl": "https://huggingface.co/jbarrow/FFDNet-L-cpu/resolve/f411267bf3472e451946897f3b17f1a72e6f67aa/FFDNet-L.onnx",
+    "sha256": "e00c59edd9a5275dab5847d38f042c8ecc827063650c8aac22b0e486c414cd35",
+    "inputSize": 1216,
+    "resizeMode": "stretch",
+    "padColor": [
+      114,
+      114,
+      114
+    ],
+    "channelOrder": "bgr",
+    "normMean": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "normStd": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "outputLayout": "nc_first",
+    "hasObjectness": false,
+    "classNames": [
+      "text",
+      "choice",
+      "signature"
+    ],
+    "classFieldTypes": [
+      "text",
+      "checkbox",
+      "signature"
+    ],
+    "scoreThreshold": 0.3,
+    "nms": "perClass",
+    "iou": 0.45
+  }
+]

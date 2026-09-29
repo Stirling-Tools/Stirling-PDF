@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+import { InfoTooltip } from "@app/ui/InfoTooltip";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import {
@@ -129,13 +130,13 @@ export default function AdminMailSection() {
             <Group justify="space-between" align="flex-start" wrap="nowrap">
               <div>
                 <Text fw={500} size="sm">
-                  {t("admin.settings.mail.enabled.label", "Enable Mail")}
-                </Text>
-                <Text size="xs" c="dimmed" mt={4}>
-                  {t(
-                    "admin.settings.mail.enabled.description",
-                    "Enable email notifications and SMTP functionality",
-                  )}
+                  {t("admin.settings.mail.enabled.label", "Enable Mail")}{" "}
+                  <InfoTooltip
+                    label={t(
+                      "admin.settings.mail.enabled.description",
+                      "Enable email notifications and SMTP functionality",
+                    )}
+                  />
                 </Text>
               </div>
               <Group gap="xs">
@@ -155,13 +156,13 @@ export default function AdminMailSection() {
                   {t(
                     "admin.settings.mail.enableInvites.label",
                     "Enable Email Invites",
-                  )}
-                </Text>
-                <Text size="xs" c="dimmed" mt={4}>
-                  {t(
-                    "admin.settings.mail.enableInvites.description",
-                    "Allow admins to invite users via email with auto-generated passwords",
-                  )}
+                  )}{" "}
+                  <InfoTooltip
+                    label={t(
+                      "admin.settings.mail.enableInvites.description",
+                      "Allow admins to invite users via email with auto-generated passwords",
+                    )}
+                  />
                 </Text>
                 <Text size="xs" c="var(--color-amber-dark)" mt={8} fw={500}>
                   {t(
@@ -207,12 +208,14 @@ export default function AdminMailSection() {
                       {t("admin.settings.mail.host.label", "SMTP Host")}
                     </span>
                     <PendingBadge show={isFieldPending("host")} />
+                    <InfoTooltip
+                      label={t(
+                        "admin.settings.mail.host.description",
+                        "SMTP server hostname",
+                      )}
+                    />
                   </Group>
                 }
-                description={t(
-                  "admin.settings.mail.host.description",
-                  "SMTP server hostname",
-                )}
                 value={settings.host || ""}
                 onChange={(e) =>
                   setSettings({ ...settings, host: e.target.value })
@@ -229,12 +232,14 @@ export default function AdminMailSection() {
                       {t("admin.settings.mail.port.label", "SMTP Port")}
                     </span>
                     <PendingBadge show={isFieldPending("port")} />
+                    <InfoTooltip
+                      label={t(
+                        "admin.settings.mail.port.description",
+                        "SMTP server port (typically 587 for TLS, 465 for SSL)",
+                      )}
+                    />
                   </Group>
                 }
-                description={t(
-                  "admin.settings.mail.port.description",
-                  "SMTP server port (typically 587 for TLS, 465 for SSL)",
-                )}
                 value={settings.port || 587}
                 onChange={(value) =>
                   setSettings({ ...settings, port: Number(value) })
@@ -252,12 +257,14 @@ export default function AdminMailSection() {
                       {t("admin.settings.mail.username.label", "SMTP Username")}
                     </span>
                     <PendingBadge show={isFieldPending("username")} />
+                    <InfoTooltip
+                      label={t(
+                        "admin.settings.mail.username.description",
+                        "SMTP authentication username",
+                      )}
+                    />
                   </Group>
                 }
-                description={t(
-                  "admin.settings.mail.username.description",
-                  "SMTP authentication username",
-                )}
                 value={settings.username || ""}
                 onChange={(e) =>
                   setSettings({ ...settings, username: e.target.value })
@@ -296,12 +303,14 @@ export default function AdminMailSection() {
                       {t("admin.settings.mail.from.label", "From Address")}
                     </span>
                     <PendingBadge show={isFieldPending("from")} />
+                    <InfoTooltip
+                      label={t(
+                        "admin.settings.mail.from.description",
+                        "Email address to use as sender",
+                      )}
+                    />
                   </Group>
                 }
-                description={t(
-                  "admin.settings.mail.from.description",
-                  "Email address to use as sender",
-                )}
                 value={settings.from || ""}
                 onChange={(e) =>
                   setSettings({ ...settings, from: e.target.value })

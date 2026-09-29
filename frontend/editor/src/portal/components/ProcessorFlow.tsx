@@ -48,9 +48,8 @@ export function ProcessorFlow({ dataOverride }: ProcessorFlowProps = {}) {
       `${toPortalPath(VIEW_PATHS.pipelines)}?setup=${encodeURIComponent(key)}`,
     );
 
-  /** Deep-link to Infrastructure with the audit-log tab open. */
-  const openAuditLog = () =>
-    navigate(`${toPortalPath(VIEW_PATHS.infrastructure)}?tab=audit`);
+  /** Deep-link to the audit log in settings (a build-neutral key; see PORTAL_SECTION_ALIASES). */
+  const openAuditLog = () => navigate("/settings/audit");
 
   const sources = data?.sources ?? [];
   const policies = data?.policies ?? [];
@@ -143,6 +142,7 @@ export function ProcessorFlow({ dataOverride }: ProcessorFlowProps = {}) {
         <FlowSankey sources={sources} outcomes={outcomes} policies={policies} />
       ) : (
         <div className="portal-pf__stage" ref={wrapRef}>
+          {/* icon-lint-disable -- connector geometry is computed from node positions */}
           <svg className="portal-pf__wires" aria-hidden>
             {wires}
           </svg>
@@ -168,6 +168,7 @@ export function ProcessorFlow({ dataOverride }: ProcessorFlowProps = {}) {
             />
           </div>
 
+          {/* icon-lint-disable -- connector geometry is computed from node positions */}
           <svg className="portal-pf__particles" aria-hidden>
             <g ref={pGroupRef} />
           </svg>

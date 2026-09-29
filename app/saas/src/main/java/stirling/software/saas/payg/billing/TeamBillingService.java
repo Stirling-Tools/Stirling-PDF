@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -30,8 +31,7 @@ import stirling.software.saas.payg.wallet.WalletPolicy;
  * entitlement hot path and the wallet endpoint read from here, so what the customer sees is what
  * the guard enforces.
  *
- * <p>The free grant and the spending cap are separate pools measured over one window: the Stripe
- * subscription period when subscribed, the calendar month otherwise.
+ * <p>Included credits renew monthly in UTC, independently of the Stripe metered billing window.
  *
  * <p>Cached per team for {@value #CACHE_TTL_SECONDS}s. {@code EntitlementService.invalidate}
  * cascades into {@link #invalidate(Long)} so both caches drop together on cap edits / webhooks.
@@ -133,18 +133,12 @@ public class TeamBillingService {
                 billing.map(b -> new LocalDateTime[] {b.periodStart(), b.periodEnd()})
                         .orElseGet(TeamBillingService::calendarMonthWindow);
 
-        long freeGrant = resolveGrant(teamId);
-        // The reset is persisted lazily by the charge pipeline, so the raw counter still reads as
-        // last period's for a team that has run nothing since the boundary.
-        long freeRemaining =
+        long freeGrant = resolveGrant(teamId, extOpt.orElse(null));
+        Optional<IncludedAllowance> allowance =
                 extOpt.map(
-                                ext ->
-                                        remainingForPeriod(
-                                                ext.getFreeUnitsPeriodStart(),
-                                                ext.getFreeUnitsRemaining(),
-                                                freeGrant,
-                                                window[0]))
-                        .orElse(0L);
+                        ext ->
+                                IncludedAllowance.resolve(
+                                        ext, freeGrant, LocalDateTime.now(ZoneOffset.UTC)));
 
         BigDecimal perDocMinor = billing.map(SubscriptionBilling::perDocMinor).orElse(null);
         String currency = billing.map(SubscriptionBilling::currency).orElse(null);
@@ -174,18 +168,33 @@ public class TeamBillingService {
                 subscriptionId,
                 window[0],
                 window[1],
-                freeGrant,
-                freeRemaining,
+                allowance.map(IncludedAllowance::granted).orElse(0L),
+                allowance.map(IncludedAllowance::remaining).orElse(0L),
                 perDocMinor,
                 currency,
                 capMoneyMinor,
-                monthlyCapDocUnits);
+                monthlyCapDocUnits,
+                allowance.map(IncludedAllowance::start).orElse(null),
+                allowance.map(IncludedAllowance::end).orElse(null));
     }
 
-    private long resolveGrant(Long teamId) {
+    /** Resolves the target for the locked row, so webhook changes bypass the balance cache. */
+    public long resolveGrant(Long teamId, PaygTeamExtensions ext) {
         try {
             PricingPolicy policy = pricingPolicyService.getEffectivePolicy(teamId);
             Long grant = policy.getFreeTierUnits();
+            if (ext != null && Boolean.TRUE.equals(ext.getTeamCreditsEligible())) {
+                grant = policy.getTeamIncludedUnits();
+                if (grant == null) {
+                    grant = pricingPolicyService.getEffectivePolicy(null).getTeamIncludedUnits();
+                }
+                if (grant == null) {
+                    log.warn(
+                            "Team included-credit allowance missing for team {}; using its free-tier allowance",
+                            teamId);
+                    grant = policy.getFreeTierUnits();
+                }
+            }
             return grant == null ? 0L : grant;
         } catch (RuntimeException e) {
             log.warn("No effective pricing policy for team {}: {}", teamId, e.getMessage());
@@ -277,33 +286,11 @@ public class TeamBillingService {
     }
 
     /**
-     * The team's free balance for the period starting at {@code currentPeriodStart}: a full grant
-     * when the counter is stale, the counter otherwise. Shared with the decrement in {@code
-     * JobChargeService} so displayed and enforced balances cannot diverge.
-     */
-    public static long remainingForPeriod(
-            LocalDateTime stampedPeriodStart,
-            Long storedRemaining,
-            long grant,
-            LocalDateTime currentPeriodStart) {
-        if (isStale(stampedPeriodStart, currentPeriodStart)) {
-            return Math.max(0L, grant);
-        }
-        return storedRemaining == null ? 0L : Math.max(0L, storedRemaining);
-    }
-
-    public static boolean isStale(
-            LocalDateTime stampedPeriodStart, LocalDateTime currentPeriodStart) {
-        return currentPeriodStart != null
-                && (stampedPeriodStart == null || stampedPeriodStart.isBefore(currentPeriodStart));
-    }
-
-    /**
      * Inclusive-start / exclusive-end window for the calendar month — the monthly billing window
      * used when there's no Stripe subscription period to anchor on.
      */
     static LocalDateTime[] calendarMonthWindow() {
-        return calendarMonthWindow(LocalDateTime.now());
+        return calendarMonthWindow(LocalDateTime.now(ZoneOffset.UTC));
     }
 
     /** Test seam — accepts a clock value so tests don't race the calendar boundary. */

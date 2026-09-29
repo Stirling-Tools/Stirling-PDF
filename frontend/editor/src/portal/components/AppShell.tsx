@@ -5,13 +5,14 @@ import { ActionIcon } from "@app/ui";
 import { Sidebar } from "@portal/components/Sidebar";
 import { PortalSearchBar } from "@portal/components/PortalSearchBar";
 import { useUI } from "@portal/contexts/UIContext";
-import { MenuIcon, SearchIcon } from "@portal/components/icons";
+import { Icon } from "@app/ui/Icon";
 import { Logo } from "@app/ui/Logo";
 import "@app/components/layout/WorkspaceFrame.css";
 import { QuickNavHostBridge } from "@app/components/shared/quickNav/QuickNavHostBridge";
 import "@portal/components/AppShell.css";
 import { NotificationBell } from "@app/components/notifications/NotificationBell";
 import { useIsPhone } from "@app/hooks/useIsMobile";
+import { ConnectAccountRail } from "@portal/components/ConnectAccountRail";
 
 /**
  * Compact header shown only under the mobile breakpoint (CSS-hidden on
@@ -30,7 +31,7 @@ function MobileTopbar() {
         aria-expanded={mobileNavOpen}
         onClick={toggleMobileNav}
       >
-        <MenuIcon size={20} />
+        <Icon name="menu" size={20} />
       </ActionIcon>
       <Logo
         variant="iconAndText"
@@ -47,7 +48,7 @@ function MobileTopbar() {
           document.getElementById("portal-search-input")?.focus();
         }}
       >
-        <SearchIcon size={19} />
+        <Icon name="search" size={19} />
       </ActionIcon>
     </header>
   );
@@ -61,7 +62,7 @@ function MobileTopbar() {
  * prop-free.
  */
 export function AppShell({ children }: { children: ReactNode }) {
-  const { mobileNavOpen, closeMobileNav, openSettings } = useUI();
+  const { mobileNavOpen, closeMobileNav } = useUI();
   const { pathname } = useLocation();
   // Below this width the rail, and the bell it carries, is gone.
   const isPhone = useIsPhone();
@@ -84,8 +85,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="portal-shell">
-      {/* portalAccess: being here is proof the processor is available. */}
-      <QuickNavHostBridge portalAccess onOpenSettings={() => openSettings()} />
+      <QuickNavHostBridge />
       <div className="workspace-frame">
         <Sidebar />
       </div>
@@ -105,7 +105,10 @@ export function AppShell({ children }: { children: ReactNode }) {
             <NotificationBell />
           </div>
         )}
-        <main className="portal-shell__view">{children}</main>
+        <main className="portal-shell__view">
+          <ConnectAccountRail />
+          {children}
+        </main>
       </div>
     </div>
   );

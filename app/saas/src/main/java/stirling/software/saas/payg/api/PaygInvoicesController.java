@@ -20,13 +20,12 @@ import io.swagger.v3.oas.annotations.Hidden;
 
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
-import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.saas.payg.policy.PaygTeamExtensions;
 import stirling.software.saas.payg.repository.PaygTeamExtensionsRepository;
 import stirling.software.saas.payg.stripe.StripeInvoiceDao;
+import stirling.software.saas.security.UserTeamResolver;
 import stirling.software.saas.util.AuthenticationUtils;
 
 /**
@@ -57,17 +56,17 @@ public class PaygInvoicesController {
 
     private final StripeInvoiceDao invoiceDao;
     private final PaygTeamExtensionsRepository extRepo;
-    private final TeamMembershipRepository memberRepo;
+    private final UserTeamResolver userTeamResolver;
     private final UserRepository userRepository;
 
     public PaygInvoicesController(
             StripeInvoiceDao invoiceDao,
             PaygTeamExtensionsRepository extRepo,
-            TeamMembershipRepository memberRepo,
+            UserTeamResolver userTeamResolver,
             UserRepository userRepository) {
         this.invoiceDao = Objects.requireNonNull(invoiceDao, "invoiceDao");
         this.extRepo = Objects.requireNonNull(extRepo, "extRepo");
-        this.memberRepo = Objects.requireNonNull(memberRepo, "memberRepo");
+        this.userTeamResolver = Objects.requireNonNull(userTeamResolver, "userTeamResolver");
         this.userRepository = Objects.requireNonNull(userRepository, "userRepository");
     }
 
@@ -99,13 +98,12 @@ public class PaygInvoicesController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        // Resolve the caller's team from their primary membership — same pattern as
-        // PaygWalletController. The team id NEVER comes from the request.
-        List<TeamMembership> rows = memberRepo.findPrimaryMembership(user.getId());
-        if (rows.isEmpty()) {
+        // The team id NEVER comes from the request.
+        Optional<Long> resolvedTeam = userTeamResolver.teamId(user);
+        if (resolvedTeam.isEmpty()) {
             return ResponseEntity.ok(List.of());
         }
-        Long teamId = rows.getFirst().getTeam().getId();
+        Long teamId = resolvedTeam.get();
 
         // No PAYG extension row OR no Stripe customer id → team has never subscribed → no
         // invoices. Empty list, not 404 — the UI distinguishes "no invoices yet" from a

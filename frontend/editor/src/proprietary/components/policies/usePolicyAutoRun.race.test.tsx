@@ -146,7 +146,7 @@ beforeEach(() => {
   // for it to pick up rather than driving a dispatch.
   recordRunStart({
     runId: "run-0",
-    categoryId: "classification",
+    policyKey: "classification",
     fileId: "file-0",
     fileName: "doc.pdf",
     fileSize: 100,

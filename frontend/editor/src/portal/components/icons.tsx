@@ -87,6 +87,17 @@ export function DocumentsIcon(props: IconProps) {
   );
 }
 
+/** A checklist, not a warning sign: the tab is a queue to work through, not an alert. */
+export function ReviewIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M9 4H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2" />
+      <rect x="9" y="2" width="6" height="4" rx="1" />
+      <polyline points="9 13 11 15 15 11" />
+    </Svg>
+  );
+}
+
 export function InfrastructureIcon(props: IconProps) {
   return (
     <Svg {...props}>

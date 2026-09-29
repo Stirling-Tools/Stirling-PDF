@@ -13,10 +13,7 @@ import {
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
-import DownloadIcon from "@mui/icons-material/Download";
-import LoginIcon from "@mui/icons-material/Login";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-
+import { Icon } from "@app/ui/Icon";
 import { useFileActions } from "@app/contexts/FileContext";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { alert } from "@app/components/toast";
@@ -225,7 +222,7 @@ export default function ShareLinkPage() {
               )}
               <Group justify="flex-start" gap="sm" pt="sm">
                 <Button
-                  leftSection={<OpenInNewIcon style={{ fontSize: 18 }} />}
+                  leftSection={<Icon name="external-link" size={18} />}
                   onClick={handleOpen}
                   loading={isWorking}
                   disabled={!canOpen}
@@ -234,7 +231,7 @@ export default function ShareLinkPage() {
                 </Button>
                 <Button
                   variant="secondary"
-                  leftSection={<DownloadIcon style={{ fontSize: 18 }} />}
+                  leftSection={<Icon name="download" size={18} />}
                   onClick={handleDownload}
                   loading={isWorking}
                   disabled={!canDownload}
@@ -275,7 +272,7 @@ export default function ShareLinkPage() {
               </Text>
               <Group mt="md">
                 <Button
-                  leftSection={<LoginIcon style={{ fontSize: 18 }} />}
+                  leftSection={<Icon name="log-in" size={18} />}
                   onClick={handleLogin}
                 >
                   {t("storageShare.goToLogin", "Go to login")}

@@ -49,6 +49,18 @@ function renderHeader(overrides: Partial<PipelineEditHeaderProps> = {}) {
 }
 
 describe("PipelineEditHeader", () => {
+  it("shows the enforce toggle only for an editor-sourced pipeline", () => {
+    renderHeader({ runsOnEditor: false });
+    expect(
+      screen.queryByRole("switch", { name: "portal.pipelines.enforce.label" }),
+    ).not.toBeInTheDocument();
+
+    renderHeader({ runsOnEditor: true });
+    expect(
+      screen.getByRole("switch", { name: "portal.pipelines.enforce.label" }),
+    ).toBeInTheDocument();
+  });
+
   it("shows the name as the title and renames it in place", () => {
     const handlers = renderHeader();
     expect(screen.getByText("Claims redaction")).toBeInTheDocument();
@@ -145,6 +157,24 @@ describe("PipelineEditHeader", () => {
     renderHeader({ togglingEnabled: true });
     expect(
       screen.getByText("portal.pipelines.composer.save").closest("button"),
+    ).toBeDisabled();
+  });
+
+  it("is read-only for a required policy a non-manager can't manage", () => {
+    renderHeader({ required: true, canManagePolicies: false });
+    // No rename affordance and the icon picker is locked (edits would never persist)...
+    expect(
+      screen.queryByLabelText("portal.pipelines.builder.rename"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByLabelText("portal.pipelines.builder.icon.label"),
+    ).toBeDisabled();
+    // ...and the mutating actions are disabled.
+    expect(
+      screen.getByText("portal.pipelines.composer.save").closest("button"),
+    ).toBeDisabled();
+    expect(
+      screen.getByText("portal.pipelines.builder.pause").closest("button"),
     ).toBeDisabled();
   });
 

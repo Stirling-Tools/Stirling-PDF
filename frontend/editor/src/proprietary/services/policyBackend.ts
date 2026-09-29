@@ -3,9 +3,9 @@
  * (grouped by catalog category) and decode them onto the frontend's per-category
  * state for the editor's enforcement path.
  *
- * The frontend is category-keyed (one policy per catalog category); the backend
- * is a flat list with assigned ids. The bridge is `trigger.options.categoryId`,
- * which `policyPipeline` decodes on read.
+ * The frontend is keyed by policy (one policy per catalog entry); the backend is a
+ * flat list with assigned ids. The bridge is `output.options.categoryId`, which
+ * `policyPipeline` decodes on read.
  */
 
 import * as policyApi from "@app/services/policyApi";
@@ -18,7 +18,7 @@ import type { PolicyState } from "@app/types/policies";
 /**
  * Fetch every stored policy and decode it, keyed by its catalog category. If two
  * stored policies share a category (shouldn't happen — one per category), the
- * last one wins; policies with no recognised categoryId are skipped.
+ * last one wins; policies with no recognised key are skipped.
  */
 export async function fetchPoliciesByCategory(): Promise<
   Map<string, DecodedPolicy>
@@ -31,27 +31,23 @@ export async function fetchPoliciesByCategory(): Promise<
     const decoded = fromBackendPolicy(policy);
     // A pipeline built on the Pipelines page has no category tile, so it keys by its own id
     // rather than being dropped - one set to run on the editor still has to reach the auto-run.
-    const key = decoded.categoryId || decoded.id;
+    const key = decoded.policyKey || decoded.id;
     if (key) byCategory.set(key, { ...decoded, order: index });
   });
   return byCategory;
 }
 
-/**
- * Project a decoded backend policy onto the frontend per-category state. The
- * locally-cached `folderId` (the editable-automation link, which the backend
- * doesn't track) is preserved by the caller via `localFolderId`.
- */
-export function decodedToState(
-  decoded: DecodedPolicy,
-  localFolderId: string | undefined,
-): PolicyState {
+/** Project backend policy settings onto the editor's cached enforcement state. */
+export function decodedToState(decoded: DecodedPolicy): PolicyState {
   return {
     configured: true,
     enabled: decoded.enabled,
     name: decoded.name,
+    owner: decoded.owner,
     sources: decoded.sources,
     runsOnEditor: decoded.runsOnEditor,
+    externalOutput: decoded.externalOutput,
+    required: decoded.required,
     scopeTypes: decoded.scopeTypes,
     reviewerEmail: decoded.reviewerEmail,
     fieldValues: decoded.fieldValues,
@@ -59,11 +55,11 @@ export function decodedToState(
     outputName: decoded.folder.outputName,
     outputNamePosition: decoded.folder.outputNamePosition,
     runOn: decoded.folder.runOn,
-    folderId: localFolderId,
     backendId: decoded.id,
+    firstOperation: decoded.firstOperation,
     // Server-side run-order position (team-wide); drives the settings reorder list.
     order: decoded.order,
     // Catalog-category policies are built-in defaults (not deletable); a builder pipeline is not.
-    isDefault: Boolean(decoded.categoryId),
+    isDefault: Boolean(decoded.policyKey),
   };
 }

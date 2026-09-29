@@ -4,10 +4,8 @@
 // forms no group, so its files fall to "Other".
 
 import { useTranslation } from "react-i18next";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import { Icon } from "@app/ui/Icon";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import { LocalIcon } from "@app/components/shared/LocalIcon";
 import type { SidebarCategory } from "@app/services/fileSidebarCategories";
 import "@app/components/policies/ClassificationCategoryManager.css";
 
@@ -38,7 +36,7 @@ export function ClassificationCategoryManager({
             }
           >
             <span className="category-visibility-icon">
-              <LocalIcon icon={category.icon} width="1.1rem" />
+              <Icon name={category.icon} size="1.1rem" />
             </span>
             <span className="category-visibility-name">
               {t(`classification.families.${category.id}`, category.name)}
@@ -57,9 +55,9 @@ export function ClassificationCategoryManager({
               onClick={() => onToggleHidden(category.id, !category.hidden)}
             >
               {category.hidden ? (
-                <VisibilityOffIcon sx={{ fontSize: "1.1rem" }} />
+                <Icon name="eye-off" size={"1.1rem"} />
               ) : (
-                <VisibilityIcon sx={{ fontSize: "1.1rem" }} />
+                <Icon name="eye" size={"1.1rem"} />
               )}
             </ActionIcon>
           </li>
