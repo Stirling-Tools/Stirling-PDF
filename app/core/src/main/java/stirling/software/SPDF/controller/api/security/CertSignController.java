@@ -15,6 +15,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -773,7 +774,8 @@ public class CertSignController {
             cs.newLine();
             cs.showText(signature.getSignDate().getTime().toString());
             cs.newLine();
-            cs.showText(signature.getReason());
+            // The API makes reason optional; PDFBox cannot show a null string.
+            cs.showText(Objects.toString(signature.getReason(), ""));
             cs.endText();
         }
 
