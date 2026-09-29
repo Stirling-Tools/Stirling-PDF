@@ -31,6 +31,7 @@ import {
   useNavigationGuard,
   useNavigationState,
 } from "@app/contexts/NavigationContext";
+import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useSignature } from "@app/contexts/SignatureContext";
 import { useRedaction } from "@app/contexts/RedactionContext";
 import type { RedactionPendingTrackerAPI } from "@app/components/viewer/RedactionPendingTracker";
@@ -533,7 +534,13 @@ const EmbedPdfViewerContent = ({
     setRedactionsApplied,
     deactivateRedact,
     setRedactionMode,
+    isRedactionMode,
   } = useRedaction();
+
+  // Annotation edits outside the Annotate tool open its panel so the save
+  // affordance is never hidden; forced because the dirty state is what is
+  // being surfaced, not a navigation the user asked to guard.
+  const { handleToolSelectForced } = useToolWorkflow();
 
   // Ref for redaction pending tracker API
   const redactionTrackerRef = useRef<RedactionPendingTrackerAPI>(null);
@@ -991,6 +998,27 @@ const EmbedPdfViewerContent = ({
     redactionsApplied,
     redactionTrackerRef,
   ]);
+
+  // Surface the Annotate panel when a committed annotation edit lands while it
+  // is closed, mirroring what creating an annotation already does: nothing else
+  // on screen says the edit is unsaved. The ref keeps the callback stable for
+  // the bridge while always reading the latest tool state.
+  const annotationUiOpenerRef = useRef<() => void>(() => {});
+  annotationUiOpenerRef.current = () => {
+    if (
+      previewFile ||
+      selectedTool === "annotate" ||
+      selectedTool === "sign" ||
+      isManualRedactMode ||
+      isRedactionMode
+    ) {
+      return;
+    }
+    handleToolSelectForced("annotate");
+  };
+  const openAnnotationUi = useCallback(() => {
+    annotationUiOpenerRef.current();
+  }, []);
 
   // Register checker for unsaved changes (annotations only for now)
   useEffect(() => {
@@ -2031,6 +2059,7 @@ const EmbedPdfViewerContent = ({
               isManualRedactionMode={isManualRedactMode}
               signatureApiRef={signatureApiRef}
               annotationApiRef={annotationApiRef}
+              onAnnotationEditCommitted={openAnnotationUi}
               historyApiRef={historyApiRef}
               redactionTrackerRef={
                 redactionTrackerRef as React.RefObject<RedactionPendingTrackerAPI>

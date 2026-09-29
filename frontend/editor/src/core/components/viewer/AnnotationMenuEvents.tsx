@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useAnnotationCapability } from "@embedpdf/plugin-annotation/react";
+import { PdfAnnotationSubtype } from "@embedpdf/models";
 import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
 import type { AnnotationMenuAnchor } from "@app/components/viewer/viewerTypes";
 
@@ -7,12 +8,17 @@ interface AnnotationMenuEventsProps {
   /** Last on-screen anchor for an annotation, even after it was deselected. */
   getAnchor: (annotationId: string) => AnnotationMenuAnchor | null;
   onDeleted: (anchor: AnnotationMenuAnchor) => void;
+  /** A user-driven annotation edit landed; the caller surfaces the save UI.
+   *  Redaction marks and signatures have their own save flows and are skipped. */
+  onEditCommitted?: () => void;
 }
 
-/** Opens the menu for a committed edit, or an undo menu for a committed delete. */
+/** Opens the menu for a committed edit, an undo menu for a committed delete,
+ *  and reports user edits so the caller can surface the save UI. */
 export function AnnotationMenuEvents({
   getAnchor,
   onDeleted,
+  onEditCommitted,
 }: AnnotationMenuEventsProps) {
   const documentId = useActiveDocumentId();
   const { provides } = useAnnotationCapability();
@@ -23,6 +29,14 @@ export function AnnotationMenuEvents({
     return provides.onAnnotationEvent((event) => {
       if (event.type === "loaded") return;
       if (!event.committed) return;
+
+      const type = event.annotation?.type;
+      if (
+        type !== PdfAnnotationSubtype.REDACT &&
+        type !== PdfAnnotationSubtype.STAMP
+      ) {
+        onEditCommitted?.();
+      }
 
       if (event.type === "delete") {
         const anchor = getAnchor(event.annotation.id);
@@ -37,7 +51,7 @@ export function AnnotationMenuEvents({
       if (selected.includes(event.annotation.id)) return;
       provides.selectAnnotation?.(event.pageIndex, event.annotation.id);
     });
-  }, [provides, documentId, getAnchor, onDeleted]);
+  }, [provides, documentId, getAnchor, onDeleted, onEditCommitted]);
 
   return null;
 }

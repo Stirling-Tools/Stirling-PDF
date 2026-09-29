@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { Icon } from "@app/ui/Icon";
-import { useRedaction } from "@app/contexts/RedactionContext";
+import { useViewer } from "@app/contexts/ViewerContext";
 import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
 import "@app/components/viewer/TextSelectionMenu.css";
 
@@ -39,7 +39,7 @@ function RedactionSelectionMenuInner({
   const pageIndex = context?.pageIndex;
   const { t } = useTranslation();
   const { provides } = useEmbedPdfRedaction(documentId);
-  const { setRedactionsApplied } = useRedaction();
+  const { applyChanges } = useViewer();
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [menuPosition, setMenuPosition] = useState<{
     top: number;
@@ -62,14 +62,16 @@ function RedactionSelectionMenuInner({
     }
   }, [provides, item, pageIndex]);
 
-  const handleApply = useCallback(() => {
-    if (provides?.commitPending && item && pageIndex !== undefined) {
-      provides.commitPending(pageIndex, item.id);
-      // Mark redactions as applied (but not yet saved) so the Save Changes button stays enabled
-      // This ensures the button doesn't become disabled when pendingCount decreases
-      setRedactionsApplied(true);
+  // Applying a mark is permanent, so it also saves: every pending mark is
+  // committed first (a pending mark would otherwise ride into the exported file
+  // as a stale annotation), then the viewer exports and replaces the file.
+  const handleApply = useCallback(async () => {
+    const task = provides?.commitAllPending?.();
+    if (task && typeof task.toPromise === "function") {
+      await task.toPromise();
     }
-  }, [provides, item, pageIndex, setRedactionsApplied]);
+    await applyChanges?.();
+  }, [provides, applyChanges]);
 
   // Calculate position for portal based on wrapper element
   useEffect(() => {
@@ -150,7 +152,7 @@ function RedactionSelectionMenuInner({
         <button
           type="button"
           className="embedpdf-floating-badge-btn"
-          onClick={handleApply}
+          onClick={() => void handleApply()}
         >
           <Icon name="circle-check" size={16} />
           <span>{t("redact.manual.apply", "Apply")}</span>
