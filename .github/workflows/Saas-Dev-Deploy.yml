@@ -40,7 +40,7 @@ jobs:
           echo "meter_endpoint=https://${PROJECT_REF}.supabase.co/functions/v1/meter-payg-units" >> "$GITHUB_OUTPUT"
 
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
