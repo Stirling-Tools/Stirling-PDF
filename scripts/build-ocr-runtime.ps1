@@ -81,6 +81,10 @@ $ProgressPreference = 'SilentlyContinue'
 $TESSERACT_VERSION = '5.4.0.20240606'
 $ENGINE_VERSION = '5.4.0'
 $INSTALLER_URL = "https://github.com/UB-Mannheim/tesseract/releases/download/v$TESSERACT_VERSION/tesseract-ocr-w64-setup-$TESSERACT_VERSION.exe"
+# The upstream release publishes no digest for this file, and the manifest's
+# SHA-256 only vouches for whatever this script packs, so the installer is pinned
+# here. It is the file the published ocr-runtime-v1 engine was built from.
+$INSTALLER_SHA256 = 'c885fff6998e0608ba4bb8ab51436e1c6775c2bafc2559a19b423e18678b60c9'
 
 # Pinned, not 'main': the manifest carries a SHA-256 per model, and those digests
 # only mean anything if the bytes they describe cannot move under them.
@@ -188,12 +192,19 @@ if (-not (Test-Path $installer)) {
     Invoke-WebRequest -Uri $INSTALLER_URL -OutFile $installer -UseBasicParsing
 }
 
-if (-not (Test-Path (Join-Path $unpacked 'tesseract.exe'))) {
-    Write-Host 'Unpacking installer ...'
-    Remove-Item $unpacked -Recurse -Force -ErrorAction SilentlyContinue
-    & $sevenZip x $installer "-o$unpacked" -y -bso0 -bsp0
-    if ($LASTEXITCODE -ne 0) { throw "7-Zip failed to unpack the installer (exit $LASTEXITCODE)." }
+# Checked on every run, the cached copy under %TEMP% included, and unpacked
+# afresh after the check: the binaries are copied out of $unpacked, so a folder
+# left from an earlier run would bypass the check altogether.
+$installerHash = Get-Sha256 $installer
+if ($installerHash -ne $INSTALLER_SHA256) {
+    Remove-Item $installer -Force
+    throw "Tesseract installer SHA-256 mismatch: expected $INSTALLER_SHA256, got $installerHash. The file was deleted; run again to download it."
 }
+
+Write-Host 'Unpacking installer ...'
+Remove-Item $unpacked -Recurse -Force -ErrorAction SilentlyContinue
+& $sevenZip x $installer "-o$unpacked" -y -bso0 -bsp0
+if ($LASTEXITCODE -ne 0) { throw "7-Zip failed to unpack the installer (exit $LASTEXITCODE)." }
 
 Write-Host 'Assembling the engine ...'
 Remove-Item $engine -Recurse -Force -ErrorAction SilentlyContinue
