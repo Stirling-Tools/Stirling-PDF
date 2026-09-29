@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,12 +15,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import io.swagger.v3.oas.annotations.Operation;
 
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.ocr.OcrManifest;
 import stirling.software.SPDF.service.OcrRuntimeService;
 import stirling.software.common.annotations.api.UiDataApi;
+import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.service.UserServiceInterface;
 
 /**
  * Lets a user install the OCR engine and pick language models from inside the application.
@@ -29,16 +31,49 @@ import stirling.software.common.annotations.api.UiDataApi;
  * out of the generated tool model table - {@code /api/v1/misc/} is in the generator's allow list,
  * so a POST there would be published as a pipeline step, which none of this is.
  *
- * <p>Deliberately not behind {@code hasRole('ADMIN')}. The desktop app starts the backend with
- * {@code security.enableLogin=false}, so an admin-only endpoint is unreachable exactly where this
- * feature is needed - which is what makes the existing tessdata downloader useless on the desktop.
+ * <p>The status is readable by anyone. Installing the engine and adding or removing languages
+ * change what every user's OCR runs on, so with login on they are for admins only; the check is
+ * made here, the way {@code ConfigController} decides who is an admin, because core carries no
+ * method security of its own. With login off, which is how the desktop app starts the backend, they
+ * stay open: an admin-only endpoint would be unreachable exactly where this feature is needed.
  */
 @UiDataApi
 @Slf4j
-@RequiredArgsConstructor
 public class OcrRuntimeController {
 
     private final OcrRuntimeService ocrRuntimeService;
+    private final ApplicationProperties applicationProperties;
+    private final UserServiceInterface userService;
+
+    public OcrRuntimeController(
+            OcrRuntimeService ocrRuntimeService,
+            ApplicationProperties applicationProperties,
+            @Autowired(required = false) UserServiceInterface userService) {
+        this.ocrRuntimeService = ocrRuntimeService;
+        this.applicationProperties = applicationProperties;
+        this.userService = userService;
+    }
+
+    /**
+     * Whether the caller may change the shared runtime. Login counts as on only when the user
+     * service is present too, as in {@code ConfigController}; without it there is no one to ask.
+     */
+    private boolean mayChangeRuntime() {
+        if (!applicationProperties.getSecurity().isEnableLogin() || userService == null) {
+            return true;
+        }
+        try {
+            return userService.isCurrentUserAdmin();
+        } catch (RuntimeException e) {
+            log.debug("Could not tell whether the caller is an admin", e);
+            return false;
+        }
+    }
+
+    private static ResponseEntity<Map<String, Object>> adminsOnly() {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(Map.of("error", "Only an administrator can change the OCR installation"));
+    }
 
     @Data
     public static class OcrLanguagesRequest {
@@ -90,6 +125,9 @@ public class OcrRuntimeController {
                             + " it next to the application. Language models already installed are"
                             + " carried over.")
     public ResponseEntity<Map<String, Object>> installEngine() {
+        if (!mayChangeRuntime()) {
+            return adminsOnly();
+        }
         try {
             ocrRuntimeService.installEngine();
         } catch (IOException e) {
@@ -111,6 +149,9 @@ public class OcrRuntimeController {
                     "Takes effect immediately: the language list is read from disk on every OCR"
                             + " request, so no restart is needed.")
     public ResponseEntity<Map<String, Object>> languages(@RequestBody OcrLanguagesRequest request) {
+        if (!mayChangeRuntime()) {
+            return adminsOnly();
+        }
         Map<String, String> failures = new TreeMap<>();
 
         for (String code : safe(request.getInstall())) {
