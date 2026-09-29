@@ -437,6 +437,9 @@ class CropParams(ApiModel):
 
     auto_crop: bool | None = Field(None, description="Enable auto-crop to detect and remove white space")
     height: float | None = Field(None, description="The height of the crop area")
+    page_numbers: str = Field(
+        "all", description="Pages to crop (e.g. '1, 3, 5-8' or 'all'). Omit or leave blank for all pages."
+    )
     remove_data_outside_crop: bool | None = Field(
         None, description="Whether to remove text outside the crop area (keeps images)"
     )
