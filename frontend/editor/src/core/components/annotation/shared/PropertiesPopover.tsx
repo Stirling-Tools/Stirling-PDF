@@ -8,7 +8,7 @@ import type { PdfAnnotationObject } from "@embedpdf/models";
 import type { AnnotationPatch } from "@app/components/viewer/viewerTypes";
 import { Icon } from "@app/ui/Icon";
 import { ValueSlider } from "@app/components/annotation/shared/ValueSlider";
-import { useStableHandler } from "@app/components/annotation/shared/useStableHandler";
+import { useEventCallback } from "@app/hooks/useEventCallback";
 export type PropertiesAnnotationType = "text" | "note" | "shape";
 
 interface PropertiesPopoverProps {
@@ -24,17 +24,17 @@ export function PropertiesPopover({
   onUpdate,
   disabled = false,
 }: PropertiesPopoverProps) {
-  const updateFontSize = useStableHandler((val: number) =>
+  const updateFontSize = useEventCallback((val: number) =>
     onUpdate({ fontSize: val }),
   );
-  const updateOpacity = useStableHandler((val: number) =>
+  const updateOpacity = useEventCallback((val: number) =>
     onUpdate({ opacity: val / 100 }),
   );
-  const updateOpacityGroup = useStableHandler((val: number) => {
+  const updateOpacityGroup = useEventCallback((val: number) => {
     const o = val / 100;
     onUpdate({ opacity: o, strokeOpacity: o, fillOpacity: o });
   });
-  const updateStrokeWidth = useStableHandler((val: number) =>
+  const updateStrokeWidth = useEventCallback((val: number) =>
     onUpdate({ borderWidth: val, strokeWidth: val, lineWidth: val }),
   );
   const { t } = useTranslation();

@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { Icon } from "@app/ui/Icon";
 import { ValueSlider } from "@app/components/annotation/shared/ValueSlider";
-import { useStableHandler } from "@app/components/annotation/shared/useStableHandler";
+import { useEventCallback } from "@app/hooks/useEventCallback";
 
 interface WidthControlProps {
   value: number;
@@ -22,7 +22,7 @@ export function WidthControl({
 }: WidthControlProps) {
   const { t } = useTranslation();
   const [opened, setOpened] = useState(false);
-  const handleChange = useStableHandler(onChange);
+  const handleChange = useEventCallback(onChange);
 
   return (
     <Popover opened={opened} onChange={setOpened} position="top" withArrow>

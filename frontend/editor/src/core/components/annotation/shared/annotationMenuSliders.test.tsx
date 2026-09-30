@@ -2,7 +2,7 @@ import { describe, expect, test, vi, beforeEach } from "vitest";
 import { render, renderHook, act } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import { ValueSlider } from "@app/components/annotation/shared/ValueSlider";
-import { useStableHandler } from "@app/components/annotation/shared/useStableHandler";
+import { useEventCallback } from "@app/hooks/useEventCallback";
 import { VALUE_SLIDER_RENDER_LABEL } from "@app/constants/renderLabels";
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -23,7 +23,7 @@ function Harness({
   value: number;
   onChange: (n: number) => void;
 }) {
-  const stable = useStableHandler(onChange);
+  const stable = useEventCallback(onChange);
   return <ValueSlider value={value} min={10} max={100} onChange={stable} />;
 }
 
@@ -76,12 +76,12 @@ describe("annotation menu slider", () => {
   });
 });
 
-describe("useStableHandler", () => {
+describe("useEventCallback", () => {
   test("keeps one identity while calling the newest function", () => {
     const first = vi.fn();
     const second = vi.fn();
     const { result, rerender } = renderHook(
-      ({ fn }: { fn: (n: number) => void }) => useStableHandler(fn),
+      ({ fn }: { fn: (n: number) => void }) => useEventCallback(fn),
       { initialProps: { fn: first } },
     );
     const identity = result.current;

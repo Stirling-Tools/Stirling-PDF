@@ -1,5 +1,6 @@
 import { useRenderCount } from "@app/hooks/useRenderCount";
 import { COLOUR_PICKER_RENDER_LABEL } from "@app/constants/renderLabels";
+import { useEventCallback } from "@app/hooks/useEventCallback";
 import {
   Tooltip,
   Popover,
@@ -8,7 +9,7 @@ import {
   ColorPicker as MantineColorPicker,
   Group,
 } from "@mantine/core";
-import { memo, useRef, useState, useCallback, useEffect } from "react";
+import { memo, useCallback, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
 import { ActionIcon } from "@app/ui/ActionIcon";
@@ -86,16 +87,10 @@ export function ColorControl({
   // Only propagate to the parent (which triggers expensive annotation updates)
   // on onChangeEnd (mouse-up / swatch click), preventing infinite re-render loops.
   const [localColor, setLocalColor] = useState(value);
-  // Latest-callback refs: keeps Picker memoised while the parent's handlers
-  // change identity on every viewer re-render.
-  const handlersRef = useRef({ onChange, setLocalColor });
-  handlersRef.current = { onChange, setLocalColor };
-  const stableSetLocalColor = useCallback((color: string) => {
-    handlersRef.current.setLocalColor(color);
-  }, []);
-  const stableOnChange = useCallback((color: string) => {
-    handlersRef.current.onChange(color);
-  }, []);
+  // Stable identities keep Picker memoised while the parent's handlers change on
+  // every viewer re-render.
+  const stableSetLocalColor = useEventCallback(setLocalColor);
+  const stableOnChange = useEventCallback(onChange);
   useEffect(() => {
     setLocalColor(value);
   }, [value]);

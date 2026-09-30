@@ -7,7 +7,7 @@ interface ValueSliderProps {
   value: number;
   min: number;
   max: number;
-  /** Changing this must not rebuild the track; use `useStableHandler`. */
+  /** Changing this must not rebuild the track; use `useEventCallback`. */
   onChange: (value: number) => void;
   /** Appended to the readout, e.g. "%" or "px". Omit for no label. */
   suffix?: string;
