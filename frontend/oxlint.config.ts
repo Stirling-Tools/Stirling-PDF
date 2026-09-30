@@ -389,6 +389,7 @@ export default defineConfig({
       // depth counts providers rather than measuring how hard the tree is to read.
       files: [
         "editor/src/core/components/AppProviders.tsx",
+        "editor/src/portal/PortalProviders.tsx",
         ".storybook/preview.tsx",
       ],
       rules: {
