@@ -1,9 +1,11 @@
 import { describe, expect, test, vi, beforeEach } from "vitest";
 import { render, renderHook, act } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
-import { ValueSlider } from "@app/components/annotation/shared/ValueSlider";
+import {
+  ValueSlider,
+  VALUE_SLIDER_RENDER_LABEL,
+} from "@app/components/annotation/shared/ValueSlider";
 import { useEventCallback } from "@app/hooks/useEventCallback";
-import { VALUE_SLIDER_RENDER_LABEL } from "@app/constants/renderLabels";
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
   <MantineProvider>{children}</MantineProvider>

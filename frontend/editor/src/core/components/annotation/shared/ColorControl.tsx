@@ -1,5 +1,3 @@
-import { useRenderCount } from "@app/hooks/useRenderCount";
-import { COLOUR_PICKER_RENDER_LABEL } from "@app/constants/renderLabels";
 import { useEventCallback } from "@app/hooks/useEventCallback";
 import {
   Tooltip,
@@ -61,7 +59,6 @@ const Picker = memo(function Picker({
   onChange: (color: string) => void;
   onChangeEnd: (color: string) => void;
 }) {
-  useRenderCount(COLOUR_PICKER_RENDER_LABEL);
   return (
     <MantineColorPicker
       format="hex"

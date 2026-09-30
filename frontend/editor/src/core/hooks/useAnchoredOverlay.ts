@@ -34,23 +34,12 @@ interface UseAnchoredOverlayOptions {
 }
 
 /**
- * Positions one anchored overlay under an element, without re-rendering it to do
+ * Positions one anchored overlay under an element without re-rendering it to do
  * so.
  *
- * The three viewer menus (text selection, annotation selection, redaction
- * selection) each grew their own copy of this: a capture-phase `window` scroll
- * listener that measured on every event and wrote a fresh object into state.
- * Consolidating them here fixes three things at once:
- *
- * - **Imperative positioning.** The fixed-position node is moved directly, so an
- *   open Mantine colour picker is never reconstructed because its anchor moved.
- *   React state only changes when the overlay opens or closes. For that to hold,
- *   the overlay must **not** declare `top`/`left` in its `style` prop: React
- *   re-applies style objects on every render and would overwrite the writes.
- * - **Cancellation.** A frame queued before the overlay closed is dropped, so a
- *   pending measurement cannot resurrect a menu the user just dismissed.
- * - **One measurement per frame.** rAF coalesces scroll, resize and observer
- *   notifications; it is not treated as a scroll throttle.
+ * Callers must not declare `top`/`left` on the overlay's `style`: React
+ * re-applies style objects on every render and would overwrite the writes made
+ * here, which is what leaves the menu stranded off-screen.
  */
 export function useAnchoredOverlay({
   anchorRef,
@@ -66,8 +55,8 @@ export function useAnchoredOverlay({
   const onPositionRef = useRef(onPosition);
   onPositionRef.current = onPosition;
 
-  // Whether the overlay should exist at all. Kept out of the position state so
-  // that repositioning never touches React state at all.
+  // Whether the overlay exists. Separate from the position so that moving it
+  // never touches React state.
   const [mounted, setMounted] = useState(false);
 
   const cancelPendingFrame = useCallback(() => {
