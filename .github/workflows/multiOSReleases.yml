@@ -266,7 +266,7 @@ jobs:
       # Windows ARM64 runners have no preinstalled JDK 25; Microsoft provides an ARM64 build.
       - name: Set up JDK 25 (Windows ARM64)
         if: matrix.platform == 'windows-11-arm'
-        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
           java-version: "25"
           distribution: "microsoft"
@@ -888,7 +888,7 @@ jobs:
       # Gate publish on valid updater sigs. Runs after the review upload (so
       # artifacts survive for debugging) and before action-gh-release.
       - name: Install uv
-        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
           enable-cache: true
           cache-dependency-glob: |
