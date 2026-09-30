@@ -257,17 +257,6 @@ const SignRequestPanel = ({ data }: SignRequestPanelProps) => {
 
   return (
     <Stack gap="md" p="md">
-      <Button
-        leftSection={<Icon name="arrow-left" size={20} />}
-        variant="tertiary"
-        size="sm"
-        onClick={onBack}
-        justify="start"
-        style={{ alignSelf: "flex-start" }}
-      >
-        {t("certSign.collab.signRequest.backToList", "Back to Sign Requests")}
-      </Button>
-
       <Stack gap={2}>
         <Text size="sm" fw={600} style={{ overflowWrap: "anywhere" }}>
           {signRequest.documentName}

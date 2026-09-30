@@ -23,7 +23,6 @@ export const SessionDetailPanel = ({ data }: SessionDetailPanelProps) => {
     onAddParticipants,
     onRemoveParticipant,
     onDelete,
-    onBack,
     onRefresh,
   } = data;
 
@@ -149,17 +148,6 @@ export const SessionDetailPanel = ({ data }: SessionDetailPanelProps) => {
 
   return (
     <Stack gap="md" p="md" h="100%" style={{ minHeight: 0 }}>
-      <Button
-        leftSection={<Icon name="arrow-left" size={20} />}
-        variant="tertiary"
-        size="sm"
-        onClick={onBack}
-        justify="start"
-        style={{ alignSelf: "flex-start" }}
-      >
-        {t("certSign.collab.sessionDetail.backToList", "Back to Sessions")}
-      </Button>
-
       <Stack gap={4}>
         <Group gap="sm" wrap="nowrap">
           <Text

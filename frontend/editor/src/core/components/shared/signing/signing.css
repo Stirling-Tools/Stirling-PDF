@@ -56,27 +56,37 @@
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 16px;
-  padding: 24px 32px;
+  flex-shrink: 0;
+  gap: 12px;
+  padding: 8px 20px;
   border-bottom: 1px solid var(--c-border);
   background: var(--c-surface);
 }
-.signing-workspace__title {
+.signing-workspace__navigation {
+  min-width: 0;
+  flex: 1;
+}
+.signing-workspace__path {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   min-width: 0;
-}
-.signing-workspace h1 {
   margin: 0;
-  font-size: 22px;
-  font-weight: 600;
-  letter-spacing: -0.025em;
+  font-size: 14px;
+  font-weight: 500;
 }
-.signing-workspace__subtitle {
-  margin: 4px 0 0;
+.signing-workspace__path > button,
+.signing-workspace__path > svg {
+  flex-shrink: 0;
+}
+.signing-workspace__path > svg {
   color: var(--c-text-muted);
-  font-size: 13px;
+}
+.signing-workspace__current {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .signing-workspace__body {
   flex: 1;
@@ -197,7 +207,7 @@
 }
 @media (max-width: 800px) {
   .signing-workspace__header {
-    padding: 16px;
+    padding: 8px 12px;
   }
   .signing-workspace__body {
     padding: 16px;

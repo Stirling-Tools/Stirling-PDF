@@ -10,6 +10,7 @@ import { useGroupSigningEnabled } from "@app/hooks/useGroupSigningEnabled";
 import { useSigningSessionController } from "@app/hooks/signing/useSigningSessionController";
 import { useAllFiles } from "@app/contexts/FileContext";
 import { useViewer } from "@app/contexts/ViewerContext";
+import { useNavigationGuard } from "@app/contexts/NavigationContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import { useSigningOverlay } from "@app/contexts/SigningOverlayContext";
 import { CreateSessionFlow } from "@app/components/shared/signing/CreateSessionFlow";
@@ -34,6 +35,7 @@ export default function SigningWorkspace() {
   const { t } = useTranslation();
   const enabled = useGroupSigningEnabled();
   const navigate = useNavigate();
+  const { requestNavigation } = useNavigationGuard();
   const controller = useSigningSessionController(enabled, () =>
     navigate(EDITOR_BASENAME),
   );
@@ -128,6 +130,12 @@ export default function SigningWorkspace() {
     return text.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase());
   });
   const detail = controller.view !== "list" && !showCreate;
+  const currentLocation = showCreate
+    ? t("signMenu.request", "Request signatures")
+    : detail
+      ? (controller.detailData?.session.documentName ??
+        controller.requestData?.signRequest.documentName)
+      : null;
 
   return (
     <section
@@ -135,38 +143,47 @@ export default function SigningWorkspace() {
       aria-label={t("signMenu.sessions", "Signing sessions")}
     >
       <header className="signing-workspace__header">
-        <div className="signing-workspace__title">
-          <Icon name="pen-tool" size={24} />
-          <div>
-            <h1>
-              {showCreate
-                ? t("signMenu.request", "Request signatures")
-                : t("signMenu.sessions", "Signing sessions")}
-            </h1>
-            <p className="signing-workspace__subtitle">
-              {t(
-                "signWorkspace.description",
-                "Send documents, collect signatures and follow their progress.",
-              )}
-            </p>
-          </div>
-        </div>
+        <nav
+          className="signing-workspace__navigation"
+          aria-label={t("signWorkspace.navigation", "Signing navigation")}
+        >
+          <h1 className="signing-workspace__path">
+            <Button
+              variant={currentLocation ? "tertiary" : "primary"}
+              shape="pill"
+              size="sm"
+              aria-current={currentLocation ? undefined : "page"}
+              disabled={controller.creating || opening}
+              onClick={() =>
+                requestNavigation(() => {
+                  controller.backToList();
+                  setShowCreate(false);
+                  setError(null);
+                })
+              }
+            >
+              {t("signMenu.sessions", "Signing sessions")}
+            </Button>
+            {currentLocation && (
+              <>
+                <Icon name="chevron-right" size={16} aria-hidden="true" />
+                <span
+                  className="signing-workspace__current"
+                  aria-current="page"
+                  title={currentLocation}
+                >
+                  {currentLocation}
+                </span>
+              </>
+            )}
+          </h1>
+        </nav>
         {!detail && !showCreate && enabled && (
           <Button
             leftSection={<Icon name="plus" size={18} />}
             onClick={() => setShowCreate(true)}
           >
             {t("signMenu.request", "Request signatures")}
-          </Button>
-        )}
-        {showCreate && (
-          <Button
-            variant="tertiary"
-            disabled={controller.creating}
-            leftSection={<Icon name="arrow-left" size={16} />}
-            onClick={() => setShowCreate(false)}
-          >
-            {t("sharedSign.backToSessions", "Back to sessions")}
           </Button>
         )}
       </header>
