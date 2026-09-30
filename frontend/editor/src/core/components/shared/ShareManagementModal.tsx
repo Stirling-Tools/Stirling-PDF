@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import {
   Modal,
   Stack,
@@ -15,6 +21,7 @@ import {
 import { Button } from "@app/ui/Button";
 import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 
 import apiClient from "@app/services/apiClient";
 import { absoluteWithBasePath } from "@app/constants/app";
@@ -37,17 +44,710 @@ interface ShareLinkAccessResponse {
   accessedAt?: string | null;
 }
 
+interface SharedUser {
+  username: string;
+  accessRole?: string | null;
+}
+
 interface StoredFileResponse {
   shareLinks?: ShareLinkResponse[];
   ownedByCurrentUser?: boolean;
   sharedWithUsers?: string[];
-  sharedUsers?: Array<{ username: string; accessRole?: string | null }>;
+  sharedUsers?: SharedUser[];
 }
+
+type ShareRole = "editor" | "commenter" | "viewer";
+
+const SHARE_ROLES: ShareRole[] = ["editor", "commenter", "viewer"];
 
 interface ShareManagementModalProps {
   opened: boolean;
   onClose: () => void;
   file: StirlingFileStub;
+}
+
+function roleLabel(t: TFunction, role: string): string {
+  if (role === "editor") return t("storageShare.roleEditor", "Editor");
+  if (role === "commenter") return t("storageShare.roleCommenter", "Commenter");
+  return t("storageShare.roleViewer", "Viewer");
+}
+
+function accessTypeLabel(
+  t: TFunction,
+  accessType: string | null | undefined,
+): string {
+  if (accessType === "VIEW") return t("storageShare.viewed", "Viewed");
+  if (accessType === "DOWNLOAD") {
+    return t("storageShare.downloaded", "Downloaded");
+  }
+  return t("storageShare.accessed", "Accessed");
+}
+
+interface RoleSelectProps {
+  label?: string;
+  value: string;
+  onChange: (role: ShareRole) => void;
+  size?: "xs";
+}
+
+function RoleSelect({ label, value, onChange, size }: RoleSelectProps) {
+  const { t } = useTranslation();
+  return (
+    <Select
+      label={label}
+      value={value}
+      onChange={(next) => onChange((next as ShareRole) || "editor")}
+      comboboxProps={{
+        withinPortal: true,
+        zIndex: Z_INDEX_OVER_FILE_MANAGER_MODAL + 10,
+      }}
+      data={SHARE_ROLES.map((role) => ({
+        value: role,
+        label: roleLabel(t, role),
+      }))}
+      size={size}
+    />
+  );
+}
+
+function RoleBadge({ role }: { role: string | null | undefined }) {
+  const { t } = useTranslation();
+  if (!role) return null;
+  return (
+    <Badge variant="light" color="gray">
+      {roleLabel(t, role)}
+    </Badge>
+  );
+}
+
+function CommenterHint({ role }: { role: string | null | undefined }) {
+  const { t } = useTranslation();
+  if (role !== "commenter") return null;
+  return (
+    <Text size="xs" c="dimmed">
+      {t("storageShare.commenterHint", "Commenting is coming soon.")}
+    </Text>
+  );
+}
+
+interface ConfirmRemoveButtonProps {
+  label: string;
+  confirming: boolean;
+  loading: boolean;
+  onRequest: () => void;
+  onCancel: () => void;
+  onConfirm: () => void;
+}
+
+function ConfirmRemoveButton({
+  label,
+  confirming,
+  loading,
+  onRequest,
+  onCancel,
+  onConfirm,
+}: ConfirmRemoveButtonProps) {
+  const { t } = useTranslation();
+  if (confirming) {
+    return (
+      <Group gap="xs">
+        <Button accent="danger" size="sm" onClick={onConfirm} loading={loading}>
+          {t("confirm", "Confirm")}
+        </Button>
+        <Button variant="secondary" size="sm" onClick={onCancel}>
+          {t("cancel", "Cancel")}
+        </Button>
+      </Group>
+    );
+  }
+  return (
+    <Button
+      variant="secondary"
+      accent="danger"
+      size="sm"
+      leftSection={<Icon name="trash" size={16} />}
+      onClick={onRequest}
+      disabled={loading}
+    >
+      {label}
+    </Button>
+  );
+}
+
+function ShareModalIntro({ fileName }: { fileName: string }) {
+  const { t } = useTranslation();
+  return (
+    <Group justify="space-between" align="center" gap="md" mt="md">
+      <Text size="sm" c="dimmed">
+        {t(
+          "storageShare.manageDescription",
+          "Create and manage links to share this file.",
+        )}
+      </Text>
+      <Text size="sm">
+        {t("storageShare.fileLabel", "File")}:{" "}
+        <Text span fw={600}>
+          {fileName}
+        </Text>
+      </Text>
+    </Group>
+  );
+}
+
+function SharingErrorAlert({ message }: { message: string | null }) {
+  const { t } = useTranslation();
+  if (!message) return null;
+  return (
+    <Alert color="red" title={t("storageShare.errorTitle", "Sharing error")}>
+      {message}
+    </Alert>
+  );
+}
+
+function SharingDisabledAlert({ show }: { show: boolean }) {
+  const { t } = useTranslation();
+  if (!show) return null;
+  return (
+    <Alert
+      color="yellow"
+      title={t("storageShare.sharingDisabled", "Sharing is disabled.")}
+    >
+      {t(
+        "storageShare.sharingDisabledBody",
+        "Sharing has been disabled by your server settings.",
+      )}
+    </Alert>
+  );
+}
+
+interface LinkAccessCardProps {
+  show: boolean;
+  role: ShareRole;
+  loading: boolean;
+  onRoleChange: (role: ShareRole) => void;
+  onGenerate: () => void;
+}
+
+function LinkAccessCard({
+  show,
+  role,
+  loading,
+  onRoleChange,
+  onGenerate,
+}: LinkAccessCardProps) {
+  const { t } = useTranslation();
+  if (!show) return null;
+  return (
+    <Paper withBorder radius="md" p="md">
+      <Stack gap="sm">
+        <Group justify="space-between">
+          <Text size="sm" fw={600}>
+            {t("storageShare.linkAccessTitle", "Share link access")}
+          </Text>
+        </Group>
+        <RoleSelect
+          label={t("storageShare.roleLabel", "Role")}
+          value={role}
+          onChange={onRoleChange}
+        />
+        <CommenterHint role={role} />
+        <Group justify="flex-end" gap="sm">
+          <Button
+            leftSection={<Icon name="link" size={18} />}
+            onClick={onGenerate}
+            loading={loading}
+          >
+            {t("storageShare.generate", "Generate Link")}
+          </Button>
+        </Group>
+      </Stack>
+    </Paper>
+  );
+}
+
+function SharedUsersCard({ children }: { children: ReactNode }) {
+  const { t } = useTranslation();
+  return (
+    <Paper withBorder radius="md" p="md">
+      <Stack gap="sm">
+        <Text size="sm" fw={600}>
+          {t("storageShare.sharedUsersTitle", "Shared users")}
+        </Text>
+        {children}
+      </Stack>
+    </Paper>
+  );
+}
+
+interface AddUserFormProps {
+  value: string;
+  error: string | null;
+  disabled: boolean;
+  canSubmit: boolean;
+  onChange: (value: string) => void;
+  onSubmit: () => void;
+}
+
+function AddUserForm({
+  value,
+  error,
+  disabled,
+  canSubmit,
+  onChange,
+  onSubmit,
+}: AddUserFormProps) {
+  const { t } = useTranslation();
+  return (
+    <Group align="flex-end" gap="sm" wrap="nowrap">
+      <TextInput
+        style={{ flex: 1 }}
+        label={t("storageShare.usernameLabel", "Username or email")}
+        placeholder={t(
+          "storageShare.usernamePlaceholder",
+          "Enter a username or email",
+        )}
+        value={value}
+        onChange={(event) => onChange(event.currentTarget.value)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            onSubmit();
+          }
+        }}
+        disabled={disabled}
+        error={error}
+      />
+      <Button onClick={onSubmit} disabled={!canSubmit}>
+        {t("storageShare.addUser", "Add")}
+      </Button>
+    </Group>
+  );
+}
+
+interface EmailWarningAlertProps {
+  show: boolean;
+  loading: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+}
+
+function EmailWarningAlert({
+  show,
+  loading,
+  onCancel,
+  onConfirm,
+}: EmailWarningAlertProps) {
+  const { t } = useTranslation();
+  if (!show) return null;
+  return (
+    <Alert
+      color="yellow"
+      title={t("storageShare.emailWarningTitle", "Email address")}
+      variant="light"
+    >
+      <Stack gap="xs">
+        <Text size="sm">
+          {t(
+            "storageShare.emailWarningBody",
+            "This looks like an email address. If this person is not already a Stirling PDF user, they will not be able to access the file.",
+          )}
+        </Text>
+        <Group justify="flex-end" gap="sm">
+          <Button variant="secondary" onClick={onCancel} disabled={loading}>
+            {t("cancel", "Cancel")}
+          </Button>
+          <Button onClick={onConfirm} loading={loading}>
+            {t("storageShare.emailWarningConfirm", "Share anyway")}
+          </Button>
+        </Group>
+      </Stack>
+    </Alert>
+  );
+}
+
+interface SharedUserRowProps {
+  user: SharedUser;
+  confirmingRemove: boolean;
+  loading: boolean;
+  onRoleChange: (role: ShareRole) => void;
+  onRequestRemove: () => void;
+  onCancelRemove: () => void;
+  onRemove: () => void;
+}
+
+function SharedUserRow({
+  user,
+  confirmingRemove,
+  loading,
+  onRoleChange,
+  onRequestRemove,
+  onCancelRemove,
+  onRemove,
+}: SharedUserRowProps) {
+  const { t } = useTranslation();
+  return (
+    <Group justify="space-between" align="flex-start">
+      <Stack gap={2}>
+        <Text size="sm">{user.username}</Text>
+        <CommenterHint role={user.accessRole} />
+      </Stack>
+      <Group gap="xs" align="center">
+        <RoleSelect
+          value={user.accessRole ?? "editor"}
+          onChange={onRoleChange}
+          size="xs"
+        />
+        <ConfirmRemoveButton
+          label={t("storageShare.removeUser", "Remove")}
+          confirming={confirmingRemove}
+          loading={loading}
+          onRequest={onRequestRemove}
+          onCancel={onCancelRemove}
+          onConfirm={onRemove}
+        />
+      </Group>
+    </Group>
+  );
+}
+
+interface SharedUserListProps {
+  users: SharedUser[];
+  confirmRemoveUser: string | null;
+  loading: boolean;
+  onRoleChange: (username: string, role: ShareRole) => void;
+  onRequestRemove: (username: string) => void;
+  onCancelRemove: () => void;
+  onRemove: (username: string) => void;
+}
+
+function SharedUserList({
+  users,
+  confirmRemoveUser,
+  loading,
+  onRoleChange,
+  onRequestRemove,
+  onCancelRemove,
+  onRemove,
+}: SharedUserListProps) {
+  const { t } = useTranslation();
+  if (users.length === 0) {
+    return (
+      <Text size="sm" c="dimmed">
+        {t("storageShare.noSharedUsers", "No users have access yet.")}
+      </Text>
+    );
+  }
+  return (
+    <Stack gap="xs">
+      {users.map((user) => (
+        <SharedUserRow
+          key={user.username}
+          user={user}
+          confirmingRemove={confirmRemoveUser === user.username}
+          loading={loading}
+          onRoleChange={(role) => onRoleChange(user.username, role)}
+          onRequestRemove={() => onRequestRemove(user.username)}
+          onCancelRemove={onCancelRemove}
+          onRemove={() => onRemove(user.username)}
+        />
+      ))}
+    </Stack>
+  );
+}
+
+interface ShareLinksCardProps {
+  show: boolean;
+  count: number;
+  children: ReactNode;
+}
+
+function ShareLinksCard({ show, count, children }: ShareLinksCardProps) {
+  const { t } = useTranslation();
+  if (!show) return null;
+  return (
+    <Paper withBorder radius="md" p="md">
+      <Stack gap="sm">
+        <Group justify="space-between">
+          <Text size="sm" fw={600}>
+            {t("storageShare.linkLabel", "Share link")}
+          </Text>
+          {count > 0 && (
+            <Badge variant="light" color="blue">
+              {count}
+            </Badge>
+          )}
+        </Group>
+        {children}
+      </Stack>
+    </Paper>
+  );
+}
+
+interface ShareLinkStatsProps {
+  role: string | null | undefined;
+  activity: ShareLinkAccessResponse[] | undefined;
+}
+
+function ShareLinkStats({ role, activity }: ShareLinkStatsProps) {
+  const { t } = useTranslation();
+  const viewCount =
+    activity?.filter((entry) => entry.accessType === "VIEW").length ?? 0;
+  const downloadCount =
+    activity?.filter((entry) => entry.accessType === "DOWNLOAD").length ?? 0;
+  const lastAccessedAt = activity?.[0]?.accessedAt;
+  return (
+    <Stack gap={4}>
+      <Group gap="xs">
+        <RoleBadge role={role} />
+      </Group>
+      <Group gap="sm" align="center">
+        <Text size="xs" c="dimmed">
+          {t("storageShare.viewsCount", "Views: {{count}}", {
+            count: viewCount,
+          })}
+        </Text>
+        <Text size="xs" c="dimmed">
+          {t("storageShare.downloadsCount", "Downloads: {{count}}", {
+            count: downloadCount,
+          })}
+        </Text>
+        {lastAccessedAt && (
+          <Text size="xs" c="dimmed">
+            {t("storageShare.lastAccessed", "Last accessed")}:{" "}
+            {new Date(lastAccessedAt).toLocaleString()}
+          </Text>
+        )}
+      </Group>
+    </Stack>
+  );
+}
+
+interface ShareLinkItemProps {
+  link: ShareLinkResponse;
+  url: string;
+  activity: ShareLinkAccessResponse[] | undefined;
+  isSelected: boolean;
+  confirmingRevoke: boolean;
+  loading: boolean;
+  onCopy: () => void;
+  onToggleActivity: () => void;
+  onRequestRevoke: () => void;
+  onCancelRevoke: () => void;
+  onRevoke: () => void;
+}
+
+function ShareLinkItem({
+  link,
+  url,
+  activity,
+  isSelected,
+  confirmingRevoke,
+  loading,
+  onCopy,
+  onToggleActivity,
+  onRequestRevoke,
+  onCancelRevoke,
+  onRevoke,
+}: ShareLinkItemProps) {
+  const { t } = useTranslation();
+  return (
+    <Paper withBorder radius="md" p="sm">
+      <Stack gap="xs">
+        <TextInput
+          readOnly
+          value={url}
+          label={t("storageShare.linkLabel", "Share link")}
+          rightSection={
+            <Button
+              variant="tertiary"
+              size="sm"
+              leftSection={<Icon name="copy" size={16} />}
+              onClick={onCopy}
+            >
+              {t("storageShare.copy", "Copy")}
+            </Button>
+          }
+        />
+        <Group justify="space-between" align="center">
+          <ShareLinkStats role={link.accessRole} activity={activity} />
+          <Group gap="xs">
+            <Button
+              variant={isSelected ? "secondary" : "primary"}
+              size="sm"
+              leftSection={<Icon name="rotate-ccw-clock" size={16} />}
+              onClick={onToggleActivity}
+            >
+              {isSelected
+                ? t("storageShare.hideActivity", "Hide activity")
+                : t("storageShare.viewActivity", "View activity")}
+            </Button>
+            <ConfirmRemoveButton
+              label={t("storageShare.removeLink", "Remove link")}
+              confirming={confirmingRevoke}
+              loading={loading}
+              onRequest={onRequestRevoke}
+              onCancel={onCancelRevoke}
+              onConfirm={onRevoke}
+            />
+          </Group>
+        </Group>
+      </Stack>
+    </Paper>
+  );
+}
+
+interface ShareLinkListProps {
+  links: ShareLinkResponse[];
+  loading: boolean;
+  baseUrl: string;
+  activityMap: Record<string, ShareLinkAccessResponse[]>;
+  selectedToken: string | null;
+  confirmRevokeToken: string | null;
+  onCopy: (token: string) => void;
+  onToggleActivity: (token: string) => void;
+  onRequestRevoke: (token: string) => void;
+  onCancelRevoke: () => void;
+  onRevoke: (token: string) => void;
+}
+
+function ShareLinkList({
+  links,
+  loading,
+  baseUrl,
+  activityMap,
+  selectedToken,
+  confirmRevokeToken,
+  onCopy,
+  onToggleActivity,
+  onRequestRevoke,
+  onCancelRevoke,
+  onRevoke,
+}: ShareLinkListProps) {
+  const { t } = useTranslation();
+  if (links.length === 0 && loading) return null;
+  if (links.length === 0) {
+    return (
+      <Text size="sm" c="dimmed">
+        {t("storageShare.noLinks", "No active share links yet.")}
+      </Text>
+    );
+  }
+  return (
+    <>
+      {links.map((link) => (
+        <ShareLinkItem
+          key={link.token}
+          link={link}
+          url={`${baseUrl}${link.token}`}
+          activity={activityMap[link.token]}
+          isSelected={selectedToken === link.token}
+          confirmingRevoke={confirmRevokeToken === link.token}
+          loading={loading}
+          onCopy={() => onCopy(link.token)}
+          onToggleActivity={() => onToggleActivity(link.token)}
+          onRequestRevoke={() => onRequestRevoke(link.token)}
+          onCancelRevoke={onCancelRevoke}
+          onRevoke={() => onRevoke(link.token)}
+        />
+      ))}
+    </>
+  );
+}
+
+function NoActivityText() {
+  const { t } = useTranslation();
+  return (
+    <Text size="sm" c="dimmed">
+      {t("storageShare.noActivity", "No activity yet.")}
+    </Text>
+  );
+}
+
+function ShareActivityEntry({ entry }: { entry: ShareLinkAccessResponse }) {
+  const { t } = useTranslation();
+  return (
+    <Paper radius="md" p="xs" withBorder>
+      <Group justify="space-between">
+        <Stack gap={2}>
+          <Text size="xs" c="dimmed">
+            {entry.accessedAt
+              ? new Date(entry.accessedAt).toLocaleString()
+              : t("unknown", "Unknown")}
+          </Text>
+          <Text size="sm">
+            {entry.username || t("storageShare.unknownUser", "Unknown user")}
+          </Text>
+        </Stack>
+        <Badge size="sm" variant="light">
+          {accessTypeLabel(t, entry.accessType)}
+        </Badge>
+      </Group>
+    </Paper>
+  );
+}
+
+function ShareActivityEntries({
+  token,
+  entries,
+}: {
+  token: string;
+  entries: ShareLinkAccessResponse[];
+}) {
+  if (entries.length === 0) return <NoActivityText />;
+  return (
+    <>
+      {entries.map((entry, index) => (
+        <ShareActivityEntry key={`${token}-${index}`} entry={entry} />
+      ))}
+    </>
+  );
+}
+
+function ShareActivityLog({
+  token,
+  activity,
+}: {
+  token: string | null;
+  activity: ShareLinkAccessResponse[] | undefined;
+}) {
+  if (!token) return <NoActivityText />;
+  return (
+    <ScrollArea h={360} offsetScrollbars>
+      <Stack gap="xs">
+        <ShareActivityEntries token={token} entries={activity ?? []} />
+      </Stack>
+    </ScrollArea>
+  );
+}
+
+interface ShareActivityCardProps {
+  show: boolean;
+  token: string | null;
+  link: ShareLinkResponse | undefined;
+  activity: ShareLinkAccessResponse[] | undefined;
+}
+
+function ShareActivityCard({
+  show,
+  token,
+  link,
+  activity,
+}: ShareActivityCardProps) {
+  const { t } = useTranslation();
+  if (!show) return null;
+  return (
+    <Paper withBorder radius="md" p="md">
+      <Stack gap="sm">
+        <Group justify="space-between">
+          <Text size="sm" fw={600}>
+            {t("storageShare.viewActivity", "View activity")}
+          </Text>
+          <RoleBadge role={link?.accessRole} />
+        </Group>
+        <ShareActivityLog token={token} activity={activity} />
+      </Stack>
+    </Paper>
+  );
 }
 
 const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
@@ -66,13 +766,9 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
   const [activityMap, setActivityMap] = useState<
     Record<string, ShareLinkAccessResponse[]>
   >({});
-  const [sharedUsers, setSharedUsers] = useState<
-    Array<{ username: string; accessRole?: string | null }>
-  >([]);
+  const [sharedUsers, setSharedUsers] = useState<SharedUser[]>([]);
   const [shareUsername, setShareUsername] = useState("");
-  const [shareRole, setShareRole] = useState<"editor" | "commenter" | "viewer">(
-    "editor",
-  );
+  const [shareRole, setShareRole] = useState<ShareRole>("editor");
   const [showEmailWarning, setShowEmailWarning] = useState(false);
   const [selectedActivityToken, setSelectedActivityToken] = useState<
     string | null
@@ -395,7 +1091,7 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
   );
 
   const handleUpdateUserRole = useCallback(
-    async (username: string, nextRole: "editor" | "commenter" | "viewer") => {
+    async (username: string, nextRole: ShareRole) => {
       if (!file.remoteStorageId) return;
       setIsLoading(true);
       setErrorMessage(null);
@@ -496,510 +1192,86 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
       overlayProps={{ blur: 8 }}
     >
       <Stack gap="lg">
-        <Group justify="space-between" align="center" gap="md" mt="md">
-          <Text size="sm" c="dimmed">
-            {t(
-              "storageShare.manageDescription",
-              "Create and manage links to share this file.",
-            )}
-          </Text>
-          <Text size="sm">
-            {t("storageShare.fileLabel", "File")}:{" "}
-            <Text span fw={600}>
-              {file.name}
-            </Text>
-          </Text>
-        </Group>
-
-        {errorMessage && (
-          <Alert
-            color="red"
-            title={t("storageShare.errorTitle", "Sharing error")}
-          >
-            {errorMessage}
-          </Alert>
-        )}
-        {!sharingEnabled && (
-          <Alert
-            color="yellow"
-            title={t("storageShare.sharingDisabled", "Sharing is disabled.")}
-          >
-            {t(
-              "storageShare.sharingDisabledBody",
-              "Sharing has been disabled by your server settings.",
-            )}
-          </Alert>
-        )}
+        <ShareModalIntro fileName={file.name} />
+        <SharingErrorAlert message={errorMessage} />
+        <SharingDisabledAlert show={!sharingEnabled} />
 
         <SimpleGrid
           cols={{ base: 1, md: shareLinksEnabled ? 2 : 1 }}
           spacing="lg"
         >
           <Stack gap="lg">
-            {shareLinksEnabled && (
-              <Paper withBorder radius="md" p="md">
-                <Stack gap="sm">
-                  <Group justify="space-between">
-                    <Text size="sm" fw={600}>
-                      {t("storageShare.linkAccessTitle", "Share link access")}
-                    </Text>
-                  </Group>
-                  <Select
-                    label={t("storageShare.roleLabel", "Role")}
-                    value={shareRole}
-                    onChange={(value) =>
-                      setShareRole((value as typeof shareRole) || "editor")
-                    }
-                    comboboxProps={{
-                      withinPortal: true,
-                      zIndex: Z_INDEX_OVER_FILE_MANAGER_MODAL + 10,
-                    }}
-                    data={[
-                      {
-                        value: "editor",
-                        label: t("storageShare.roleEditor", "Editor"),
-                      },
-                      {
-                        value: "commenter",
-                        label: t("storageShare.roleCommenter", "Commenter"),
-                      },
-                      {
-                        value: "viewer",
-                        label: t("storageShare.roleViewer", "Viewer"),
-                      },
-                    ]}
-                  />
-                  {shareRole === "commenter" && (
-                    <Text size="xs" c="dimmed">
-                      {t(
-                        "storageShare.commenterHint",
-                        "Commenting is coming soon.",
-                      )}
-                    </Text>
-                  )}
-                  <Group justify="flex-end" gap="sm">
-                    <Button
-                      leftSection={<Icon name="link" size={18} />}
-                      onClick={() => createShareLink()}
-                      loading={isLoading}
-                    >
-                      {t("storageShare.generate", "Generate Link")}
-                    </Button>
-                  </Group>
-                </Stack>
-              </Paper>
-            )}
+            <LinkAccessCard
+              show={shareLinksEnabled}
+              role={shareRole}
+              loading={isLoading}
+              onRoleChange={setShareRole}
+              onGenerate={() => createShareLink()}
+            />
 
-            <Paper withBorder radius="md" p="md">
-              <Stack gap="sm">
-                <Text size="sm" fw={600}>
-                  {t("storageShare.sharedUsersTitle", "Shared users")}
-                </Text>
-                <Group align="flex-end" gap="sm" wrap="nowrap">
-                  <TextInput
-                    style={{ flex: 1 }}
-                    label={t("storageShare.usernameLabel", "Username or email")}
-                    placeholder={t(
-                      "storageShare.usernamePlaceholder",
-                      "Enter a username or email",
-                    )}
-                    value={shareUsername}
-                    onChange={(event) => {
-                      setShareUsername(event.currentTarget.value);
-                      setShowEmailWarning(false);
-                    }}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter") {
-                        event.preventDefault();
-                        void handleAddUser();
-                      }
-                    }}
-                    disabled={!sharingEnabled || isLoading}
-                    error={shareUsernameError}
-                  />
-                  <Button
-                    onClick={() => handleAddUser()}
-                    disabled={
-                      !sharingEnabled ||
-                      isLoading ||
-                      !normalizedShareUsername ||
-                      !!shareUsernameError
-                    }
-                  >
-                    {t("storageShare.addUser", "Add")}
-                  </Button>
-                </Group>
-                {showEmailWarning && (
-                  <Alert
-                    color="yellow"
-                    title={t("storageShare.emailWarningTitle", "Email address")}
-                    variant="light"
-                  >
-                    <Stack gap="xs">
-                      <Text size="sm">
-                        {t(
-                          "storageShare.emailWarningBody",
-                          "This looks like an email address. If this person is not already a Stirling PDF user, they will not be able to access the file.",
-                        )}
-                      </Text>
-                      <Group justify="flex-end" gap="sm">
-                        <Button
-                          variant="secondary"
-                          onClick={() => setShowEmailWarning(false)}
-                          disabled={isLoading}
-                        >
-                          {t("cancel", "Cancel")}
-                        </Button>
-                        <Button
-                          onClick={() => handleAddUser(true)}
-                          loading={isLoading}
-                        >
-                          {t(
-                            "storageShare.emailWarningConfirm",
-                            "Share anyway",
-                          )}
-                        </Button>
-                      </Group>
-                    </Stack>
-                  </Alert>
-                )}
-                {sharedUsers.length === 0 ? (
-                  <Text size="sm" c="dimmed">
-                    {t(
-                      "storageShare.noSharedUsers",
-                      "No users have access yet.",
-                    )}
-                  </Text>
-                ) : (
-                  <Stack gap="xs">
-                    {sharedUsers.map((user) => (
-                      <Group
-                        key={user.username}
-                        justify="space-between"
-                        align="flex-start"
-                      >
-                        <Stack gap={2}>
-                          <Text size="sm">{user.username}</Text>
-                          {user.accessRole === "commenter" && (
-                            <Text size="xs" c="dimmed">
-                              {t(
-                                "storageShare.commenterHint",
-                                "Commenting is coming soon.",
-                              )}
-                            </Text>
-                          )}
-                        </Stack>
-                        <Group gap="xs" align="center">
-                          <Select
-                            value={user.accessRole ?? "editor"}
-                            onChange={(value) => {
-                              const nextRole =
-                                (value as "editor" | "commenter" | "viewer") ||
-                                "editor";
-                              void handleUpdateUserRole(
-                                user.username,
-                                nextRole,
-                              );
-                            }}
-                            comboboxProps={{
-                              withinPortal: true,
-                              zIndex: Z_INDEX_OVER_FILE_MANAGER_MODAL + 10,
-                            }}
-                            data={[
-                              {
-                                value: "editor",
-                                label: t("storageShare.roleEditor", "Editor"),
-                              },
-                              {
-                                value: "commenter",
-                                label: t(
-                                  "storageShare.roleCommenter",
-                                  "Commenter",
-                                ),
-                              },
-                              {
-                                value: "viewer",
-                                label: t("storageShare.roleViewer", "Viewer"),
-                              },
-                            ]}
-                            size="xs"
-                          />
-                          {confirmRemoveUser === user.username ? (
-                            <Group gap="xs">
-                              <Button
-                                accent="danger"
-                                size="sm"
-                                onClick={() => {
-                                  void handleRemoveUser(user.username);
-                                }}
-                                loading={isLoading}
-                              >
-                                {t("confirm", "Confirm")}
-                              </Button>
-                              <Button
-                                variant="secondary"
-                                size="sm"
-                                onClick={() => setConfirmRemoveUser(null)}
-                              >
-                                {t("cancel", "Cancel")}
-                              </Button>
-                            </Group>
-                          ) : (
-                            <Button
-                              variant="secondary"
-                              accent="danger"
-                              size="sm"
-                              leftSection={<Icon name="trash" size={16} />}
-                              onClick={() =>
-                                setConfirmRemoveUser(user.username)
-                              }
-                              disabled={isLoading}
-                            >
-                              {t("storageShare.removeUser", "Remove")}
-                            </Button>
-                          )}
-                        </Group>
-                      </Group>
-                    ))}
-                  </Stack>
-                )}
-              </Stack>
-            </Paper>
+            <SharedUsersCard>
+              <AddUserForm
+                value={shareUsername}
+                error={shareUsernameError}
+                disabled={!sharingEnabled || isLoading}
+                canSubmit={
+                  sharingEnabled &&
+                  !isLoading &&
+                  !!normalizedShareUsername &&
+                  !shareUsernameError
+                }
+                onChange={(value) => {
+                  setShareUsername(value);
+                  setShowEmailWarning(false);
+                }}
+                onSubmit={() => void handleAddUser()}
+              />
+              <EmailWarningAlert
+                show={showEmailWarning}
+                loading={isLoading}
+                onCancel={() => setShowEmailWarning(false)}
+                onConfirm={() => handleAddUser(true)}
+              />
+              <SharedUserList
+                users={sharedUsers}
+                confirmRemoveUser={confirmRemoveUser}
+                loading={isLoading}
+                onRoleChange={(username, role) =>
+                  void handleUpdateUserRole(username, role)
+                }
+                onRequestRemove={setConfirmRemoveUser}
+                onCancelRemove={() => setConfirmRemoveUser(null)}
+                onRemove={(username) => void handleRemoveUser(username)}
+              />
+            </SharedUsersCard>
 
-            {shareLinksEnabled && (
-              <Paper withBorder radius="md" p="md">
-                <Stack gap="sm">
-                  <Group justify="space-between">
-                    <Text size="sm" fw={600}>
-                      {t("storageShare.linkLabel", "Share link")}
-                    </Text>
-                    {shareLinks.length > 0 && (
-                      <Badge variant="light" color="blue">
-                        {shareLinks.length}
-                      </Badge>
-                    )}
-                  </Group>
-
-                  {shareLinks.length === 0 && !isLoading && (
-                    <Text size="sm" c="dimmed">
-                      {t("storageShare.noLinks", "No active share links yet.")}
-                    </Text>
-                  )}
-
-                  {shareLinks.map((link) => {
-                    const activity = activityMap[link.token];
-                    const viewCount =
-                      activity?.filter((entry) => entry.accessType === "VIEW")
-                        .length ?? 0;
-                    const downloadCount =
-                      activity?.filter(
-                        (entry) => entry.accessType === "DOWNLOAD",
-                      ).length ?? 0;
-                    const lastAccessedAt = activity?.[0]?.accessedAt;
-                    const isSelected = selectedActivityToken === link.token;
-                    return (
-                      <Paper key={link.token} withBorder radius="md" p="sm">
-                        <Stack gap="xs">
-                          <TextInput
-                            readOnly
-                            value={`${shareBaseUrl}${link.token}`}
-                            label={t("storageShare.linkLabel", "Share link")}
-                            rightSection={
-                              <Button
-                                variant="tertiary"
-                                size="sm"
-                                leftSection={<Icon name="copy" size={16} />}
-                                onClick={() => handleCopyLink(link.token)}
-                              >
-                                {t("storageShare.copy", "Copy")}
-                              </Button>
-                            }
-                          />
-                          <Group justify="space-between" align="center">
-                            <Stack gap={4}>
-                              <Group gap="xs">
-                                {link.accessRole && (
-                                  <Badge variant="light" color="gray">
-                                    {link.accessRole === "editor"
-                                      ? t("storageShare.roleEditor", "Editor")
-                                      : link.accessRole === "commenter"
-                                        ? t(
-                                            "storageShare.roleCommenter",
-                                            "Commenter",
-                                          )
-                                        : t(
-                                            "storageShare.roleViewer",
-                                            "Viewer",
-                                          )}
-                                  </Badge>
-                                )}
-                              </Group>
-                              <Group gap="sm" align="center">
-                                <Text size="xs" c="dimmed">
-                                  {t(
-                                    "storageShare.viewsCount",
-                                    "Views: {{count}}",
-                                    { count: viewCount },
-                                  )}
-                                </Text>
-                                <Text size="xs" c="dimmed">
-                                  {t(
-                                    "storageShare.downloadsCount",
-                                    "Downloads: {{count}}",
-                                    { count: downloadCount },
-                                  )}
-                                </Text>
-                                {lastAccessedAt && (
-                                  <Text size="xs" c="dimmed">
-                                    {t(
-                                      "storageShare.lastAccessed",
-                                      "Last accessed",
-                                    )}
-                                    :{" "}
-                                    {new Date(lastAccessedAt).toLocaleString()}
-                                  </Text>
-                                )}
-                              </Group>
-                            </Stack>
-                            <Group gap="xs">
-                              <Button
-                                variant={isSelected ? "secondary" : "primary"}
-                                size="sm"
-                                leftSection={
-                                  <Icon name="rotate-ccw-clock" size={16} />
-                                }
-                                onClick={() =>
-                                  setSelectedActivityToken((prev) =>
-                                    prev === link.token ? null : link.token,
-                                  )
-                                }
-                              >
-                                {isSelected
-                                  ? t(
-                                      "storageShare.hideActivity",
-                                      "Hide activity",
-                                    )
-                                  : t(
-                                      "storageShare.viewActivity",
-                                      "View activity",
-                                    )}
-                              </Button>
-                              {confirmRevokeToken === link.token ? (
-                                <Group gap="xs">
-                                  <Button
-                                    accent="danger"
-                                    size="sm"
-                                    onClick={() => {
-                                      void handleRevokeLink(link.token);
-                                    }}
-                                    loading={isLoading}
-                                  >
-                                    {t("confirm", "Confirm")}
-                                  </Button>
-                                  <Button
-                                    variant="secondary"
-                                    size="sm"
-                                    onClick={() => setConfirmRevokeToken(null)}
-                                  >
-                                    {t("cancel", "Cancel")}
-                                  </Button>
-                                </Group>
-                              ) : (
-                                <Button
-                                  variant="secondary"
-                                  accent="danger"
-                                  size="sm"
-                                  leftSection={<Icon name="trash" size={16} />}
-                                  onClick={() =>
-                                    setConfirmRevokeToken(link.token)
-                                  }
-                                  disabled={isLoading}
-                                >
-                                  {t("storageShare.removeLink", "Remove link")}
-                                </Button>
-                              )}
-                            </Group>
-                          </Group>
-                        </Stack>
-                      </Paper>
-                    );
-                  })}
-                </Stack>
-              </Paper>
-            )}
+            <ShareLinksCard show={shareLinksEnabled} count={shareLinks.length}>
+              <ShareLinkList
+                links={shareLinks}
+                loading={isLoading}
+                baseUrl={shareBaseUrl}
+                activityMap={activityMap}
+                selectedToken={selectedActivityToken}
+                confirmRevokeToken={confirmRevokeToken}
+                onCopy={handleCopyLink}
+                onToggleActivity={(token) =>
+                  setSelectedActivityToken((prev) =>
+                    prev === token ? null : token,
+                  )
+                }
+                onRequestRevoke={setConfirmRevokeToken}
+                onCancelRevoke={() => setConfirmRevokeToken(null)}
+                onRevoke={(token) => void handleRevokeLink(token)}
+              />
+            </ShareLinksCard>
           </Stack>
 
-          {shareLinksEnabled && (
-            <Paper withBorder radius="md" p="md">
-              <Stack gap="sm">
-                <Group justify="space-between">
-                  <Text size="sm" fw={600}>
-                    {t("storageShare.viewActivity", "View activity")}
-                  </Text>
-                  {selectedLink && selectedLink.accessRole && (
-                    <Badge variant="light" color="gray">
-                      {selectedLink.accessRole === "editor"
-                        ? t("storageShare.roleEditor", "Editor")
-                        : selectedLink.accessRole === "commenter"
-                          ? t("storageShare.roleCommenter", "Commenter")
-                          : t("storageShare.roleViewer", "Viewer")}
-                    </Badge>
-                  )}
-                </Group>
-                {!selectedActivityToken && (
-                  <Text size="sm" c="dimmed">
-                    {t("storageShare.noActivity", "No activity yet.")}
-                  </Text>
-                )}
-                {selectedActivityToken && (
-                  <ScrollArea h={360} offsetScrollbars>
-                    <Stack gap="xs">
-                      {(selectedActivity ?? []).length > 0 ? (
-                        selectedActivity?.map((entry, index) => (
-                          <Paper
-                            key={`${selectedActivityToken}-${index}`}
-                            radius="md"
-                            p="xs"
-                            withBorder
-                          >
-                            <Group justify="space-between">
-                              <Stack gap={2}>
-                                <Text size="xs" c="dimmed">
-                                  {entry.accessedAt
-                                    ? new Date(
-                                        entry.accessedAt,
-                                      ).toLocaleString()
-                                    : t("unknown", "Unknown")}
-                                </Text>
-                                <Text size="sm">
-                                  {entry.username ||
-                                    t(
-                                      "storageShare.unknownUser",
-                                      "Unknown user",
-                                    )}
-                                </Text>
-                              </Stack>
-                              <Badge size="sm" variant="light">
-                                {entry.accessType === "VIEW"
-                                  ? t("storageShare.viewed", "Viewed")
-                                  : entry.accessType === "DOWNLOAD"
-                                    ? t("storageShare.downloaded", "Downloaded")
-                                    : t("storageShare.accessed", "Accessed")}
-                              </Badge>
-                            </Group>
-                          </Paper>
-                        ))
-                      ) : (
-                        <Text size="sm" c="dimmed">
-                          {t("storageShare.noActivity", "No activity yet.")}
-                        </Text>
-                      )}
-                    </Stack>
-                  </ScrollArea>
-                )}
-              </Stack>
-            </Paper>
-          )}
+          <ShareActivityCard
+            show={shareLinksEnabled}
+            token={selectedActivityToken}
+            link={selectedLink}
+            activity={selectedActivity}
+          />
         </SimpleGrid>
       </Stack>
     </Modal>

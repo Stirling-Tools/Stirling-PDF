@@ -12,7 +12,7 @@ engine = [
     "fastapi>=0.141.1",
     "opentelemetry-sdk>=1.39.1",
     "pgvector>=0.5.0",
-    "posthog>=7.38.3",
+    "posthog>=7.53.0",
     "psycopg[binary,pool]>=3.3.4",
     "pydantic>=2.13.5",
     # <2 cap: 1.99.0 patches CVE-2026-46678; 2.0 is an untested major migration.
@@ -22,7 +22,7 @@ engine = [
     "pydantic-settings>=2.15.0",
     "python-dotenv>=1.2.3",
     "sqlite-vec>=0.1.9",
-    "uvicorn>=0.52.3",
+    "uvicorn>=0.52.4",
 ]
 # Type checking, testing, model generation, and formatting tools for the engine.
 engine-dev = [

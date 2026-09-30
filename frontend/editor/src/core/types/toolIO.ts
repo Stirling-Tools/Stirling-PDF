@@ -458,9 +458,22 @@ export const TOOL_IO: ToolIOTable = {
     arity: "SISO",
   },
   "/api/v1/general/merge-pdfs": {
-    accepts: ["PDF"],
+    accepts: ["PDF", "IMAGE"],
     produces: "PDF",
     arity: "MISO",
+    inputExtensions: [
+      "pdf",
+      "png",
+      "jpg",
+      "jpeg",
+      "gif",
+      "bmp",
+      "tif",
+      "tiff",
+      "webp",
+      "svg",
+      "psd",
+    ],
   },
   "/api/v1/general/multi-page-layout": {
     accepts: ["PDF"],

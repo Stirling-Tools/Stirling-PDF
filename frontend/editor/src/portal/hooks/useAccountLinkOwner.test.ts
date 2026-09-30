@@ -1,11 +1,12 @@
 import { renderHook } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
+import type { AuthContextValue, AuthUser } from "@app/auth";
 
-const auth = vi.hoisted(() => ({
-  isAdmin: true,
-  loading: false,
-  user: { orgOwner: true as boolean | undefined },
-}));
+const auth = vi.hoisted<
+  Pick<AuthContextValue, "isAdmin" | "loading"> & {
+    user: Pick<AuthUser, "orgOwner">;
+  }
+>(() => ({ isAdmin: true, loading: false, user: { orgOwner: true } }));
 vi.mock("@app/auth", () => ({ useAuth: () => auth }));
 import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
 

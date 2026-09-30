@@ -1,7 +1,11 @@
 import type { ReactNode } from "react";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Skeleton } from "@app/ui";
+import {
+  ComparePlansModal,
+  type ComparePlan,
+} from "@app/billing/ComparePlansModal";
 import { formatMinor } from "@app/billing/format";
 import { KvRow } from "@app/billing/KvRow";
 import { TeamPlanRow } from "@app/billing/TeamPlanRow";
@@ -127,6 +131,7 @@ export function BillingScreen({
   extras,
 }: BillingScreenProps) {
   const { t } = useTranslation();
+  const [comparing, setComparing] = useState(false);
 
   const jump = useCallback((id: string) => {
     document
@@ -271,6 +276,36 @@ export function BillingScreen({
     t,
   ]);
 
+  /**
+   * The column the matrix marks as the caller's own. A Server licence sits in the Team column:
+   * it is the same hundred-user deal the cloud sells, bought locally instead.
+   */
+  const currentPlan: ComparePlan | null = serverPlan
+    ? serverPlan.licenseType === "ENTERPRISE"
+      ? "enterprise"
+      : "team"
+    : !wallet
+      ? null
+      : paying || teamHeld
+        ? "team"
+        : "free";
+
+  /**
+   * {@code freeAllowance} is whatever grant the WALLET carries, so it describes the Team column
+   * only where the wallet itself is paying. A local Server licence puts the caller in the Team
+   * column while its wallet is still free, and quoting that free grant as Team's included
+   * allowance would overstate what the plan buys. The user ceiling is not overloaded this way —
+   * it stays the free one whatever is held — so it always describes the Free column.
+   */
+  const walletPays = Boolean(wallet) && (teamHeld || paying);
+  const compareTeamAllowance = walletPays
+    ? (wallet?.freeAllowance ?? null)
+    : null;
+  const compareFreeAllowance = walletPays
+    ? null
+    : (wallet?.freeAllowance ?? null);
+  const compareFreeUsers = wallet?.freeUserAllowance ?? null;
+
   const creditUnits = (wallet?.spendUnitsThisPeriod ?? 0) + pendingUnits;
   const occupiedSeats = serverPlan
     ? serverPlan.usersInUse
@@ -354,9 +389,20 @@ export function BillingScreen({
             {(identity || legacyPlan) && (
               <>
                 <section id="ub-plan" className="billing-sec">
-                  <span className="billing-eyebrow">
-                    {t("portal.billing.section.plan", "Your plan")}
-                  </span>
+                  <div className="billing-eyebrow-row">
+                    <span className="billing-eyebrow">
+                      {t("portal.billing.section.plan", "Your plan")}
+                    </span>
+                    {identity && (
+                      <button
+                        type="button"
+                        className="billing-compare-open"
+                        onClick={() => setComparing(true)}
+                      >
+                        {t("portal.billing.compare.open", "Compare plans")}
+                      </button>
+                    )}
+                  </div>
                   {legacyPlan}
                   {identity && (
                     <div className="billing-id">
@@ -587,6 +633,31 @@ export function BillingScreen({
             </button>
           </div>
         )}
+
+        <ComparePlansModal
+          open={comparing}
+          onClose={() => setComparing(false)}
+          currentPlan={currentPlan}
+          freeUserLimit={compareFreeUsers}
+          freeAllowance={compareFreeAllowance}
+          teamAllowance={compareTeamAllowance}
+          onUpgradeTeam={
+            onAddCapacity && currentPlan === "free"
+              ? () => {
+                  setComparing(false);
+                  onAddCapacity();
+                }
+              : undefined
+          }
+          onExploreEnterprise={
+            onEnterpriseQuote && currentPlan !== "enterprise"
+              ? () => {
+                  setComparing(false);
+                  onEnterpriseQuote();
+                }
+              : undefined
+          }
+        />
 
         {extras}
       </div>

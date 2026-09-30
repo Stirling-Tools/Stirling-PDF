@@ -4,7 +4,7 @@ import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
 
 function makeCmd(type = "test"): Command {
-  return { type, apply: vi.fn(), revert: vi.fn() } as unknown as Command;
+  return { type, apply: vi.fn(), revert: vi.fn() };
 }
 
 function makeKeyedCmd(key: string): Command {
@@ -13,7 +13,7 @@ function makeKeyedCmd(key: string): Command {
     apply: vi.fn(),
     revert: vi.fn(),
     coalesceKey: () => key,
-  } as unknown as Command;
+  };
 }
 
 function makeDoc(): EditorDocument {

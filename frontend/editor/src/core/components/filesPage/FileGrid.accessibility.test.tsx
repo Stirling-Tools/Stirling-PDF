@@ -72,6 +72,27 @@ describe("file library accessibility", () => {
     expect(screen.getByRole("listitem", { name: "README" })).toBeVisible();
   });
 
+  it("marks selected list rows without giving them checkboxes", () => {
+    const other = createNewStirlingFileStub(new File(["text"], "notes.pdf"));
+    render(
+      grid({
+        viewMode: "list",
+        entries: [
+          { kind: "file", file: stored },
+          { kind: "file", file: other },
+        ],
+        selectedFileIds: new Set([stored.id, other.id]),
+        onSetSelection: () => {},
+      }),
+    );
+    const [header, ...rows] = screen.getAllByRole("row");
+    expect(within(header).getByRole("checkbox")).toBeChecked();
+    for (const row of rows) {
+      expect(row).toHaveAttribute("aria-selected", "true");
+      expect(within(row).queryByRole("checkbox")).not.toBeInTheDocument();
+    }
+  });
+
   it("announces native picker selection through its label and checkbox", () => {
     render(
       grid({
