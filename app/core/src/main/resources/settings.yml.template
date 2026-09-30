@@ -380,6 +380,16 @@ processExecutor:
     ghostscriptTimeoutMinutes: 30
     ocrMyPdfTimeoutMinutes: 30
 
+officeToPdf:
+  engine: STIRLING # STIRLING converts DOCX, PPTX, XLSX, XLS and PPT in process (other formats use LibreOffice); LIBREOFFICE uses LibreOffice for everything
+  fallbackToLibreOffice: true # Retry with LibreOffice when the in-process converter cannot convert a file
+  maxConcurrent: 0 # Conversions running at once; 0 = automatic from CPU count and heap size
+  maxQueued: 16 # Requests waiting for a free slot; further requests are refused with 503 and Retry-After
+  maxFileSizeMB: 100 # Largest input converted in process; larger files go to LibreOffice when fallback is on (0 = its own 512 MB cap)
+  maxPages: 5000 # Documents with more pages are refused, never retried with LibreOffice (0 = no limit)
+  maxScratchMB: 1024 # Memory plus scratch file for one output PDF; larger ones are refused (0 = no limit)
+  timeoutSeconds: 300 # Deadline for waiting, converting and any LibreOffice fallback, kept inside the request timeout; 0 = libreOfficeTimeoutMinutes
+
 aiEngine:
   enabled: false # Set to 'true' to enable the AI engine integration
   mode: SELF_HOSTED # 'SELF_HOSTED' uses the url below; 'CLOUD' runs AI on Stirling Cloud via the account link

@@ -24,6 +24,7 @@ class PDFWorkerManager {
   private activeDocuments = new Set<PDFDocumentProxy>();
   private destroyingDocuments = new WeakSet<PDFDocumentProxy>();
   private workerCount = 0;
+  private openingDocuments = 0;
   private maxWorkers = 10; // Limit concurrent workers
   private isInitialized = false;
 
@@ -71,11 +72,6 @@ class PDFWorkerManager {
       openTimeoutMs?: number;
     } = {},
   ): Promise<PDFDocumentProxy> {
-    // Wait if we've hit the worker limit
-    if (this.activeDocuments.size >= this.maxWorkers) {
-      await this.waitForAvailableWorker(options.signal);
-    }
-
     // Normalize input data to PDF.js format
     let pdfData: string | { data: ArrayBuffer | Uint8Array };
     if (data instanceof ArrayBuffer || data instanceof Uint8Array) {
@@ -88,31 +84,33 @@ class PDFWorkerManager {
       pdfData = data; // Pass through as-is
     }
 
-    const loadingTask = getDocument(
-      typeof pdfData === "string"
-        ? {
-            url: pdfData,
-            disableAutoFetch: options.disableAutoFetch ?? true,
-            disableStream: options.disableStream ?? true,
-            stopAtErrors: options.stopAtErrors ?? false,
-            verbosity: options.verbosity ?? 0,
-            // Suppress warnings about unimplemented widget types and other non-critical issues
-            isEvalSupported: false,
-          }
-        : {
-            ...pdfData,
-            disableAutoFetch: options.disableAutoFetch ?? true,
-            disableStream: options.disableStream ?? true,
-            stopAtErrors: options.stopAtErrors ?? false,
-            verbosity: options.verbosity ?? 0,
-            // Suppress warnings about unimplemented widget types and other non-critical issues
-            isEvalSupported: false,
-          },
-    );
-
+    await this.waitForAvailableWorker(options.signal);
+    let loadingTask: ReturnType<typeof getDocument> | undefined;
     const openTimeoutMs = options.openTimeoutMs;
     let timer: ReturnType<typeof setTimeout> | null = null;
     try {
+      loadingTask = getDocument(
+        typeof pdfData === "string"
+          ? {
+              url: pdfData,
+              disableAutoFetch: options.disableAutoFetch ?? true,
+              disableStream: options.disableStream ?? true,
+              stopAtErrors: options.stopAtErrors ?? false,
+              verbosity: options.verbosity ?? 0,
+              // Suppress warnings about unimplemented widget types and other non-critical issues
+              isEvalSupported: false,
+            }
+          : {
+              ...pdfData,
+              disableAutoFetch: options.disableAutoFetch ?? true,
+              disableStream: options.disableStream ?? true,
+              stopAtErrors: options.stopAtErrors ?? false,
+              verbosity: options.verbosity ?? 0,
+              // Suppress warnings about unimplemented widget types and other non-critical issues
+              isEvalSupported: false,
+            },
+      );
+
       const opened =
         openTimeoutMs === undefined
           ? loadingTask.promise
@@ -134,13 +132,14 @@ class PDFWorkerManager {
       // If document creation fails, make sure to clean up the loading task
       if (loadingTask) {
         try {
-          void loadingTask.destroy();
+          void Promise.resolve(loadingTask.destroy()).catch(() => undefined);
         } catch {
           // Ignore errors
         }
       }
       throw error;
     } finally {
+      this.openingDocuments--;
       if (timer !== null) clearTimeout(timer);
     }
   }
@@ -188,7 +187,11 @@ class PDFWorkerManager {
           reject(new Error("CANCELLED"));
           return;
         }
-        if (this.activeDocuments.size < this.maxWorkers) {
+        if (
+          this.activeDocuments.size + this.openingDocuments <
+          this.maxWorkers
+        ) {
+          this.openingDocuments++;
           resolve();
         } else {
           timer = setTimeout(checkAvailability, 100);
@@ -204,6 +207,7 @@ class PDFWorkerManager {
   getWorkerStats() {
     return {
       active: this.activeDocuments.size,
+      opening: this.openingDocuments,
       max: this.maxWorkers,
       total: this.workerCount,
     };

@@ -286,7 +286,22 @@ def _pages(text: str) -> list[PageText]:
     return [PageText(page_number=1, text=text)]
 
 
+async def fail_embedding(self: StubEmbeddingService, texts: list[str]) -> list[list[float]]:
+    raise RuntimeError("embedding service unavailable")
+
+
 class TestDocumentService:
+    @pytest.mark.anyio
+    async def test_failed_embedding_preserves_the_previous_document(
+        self, documents: DocumentService, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        await documents.ingest(FileId("doc"), _pages("old document"), "old.pdf", OWNER, OWNER_PRINCIPALS, None)
+        monkeypatch.setattr(StubEmbeddingService, "embed_documents", fail_embedding)
+        with pytest.raises(RuntimeError, match="embedding service unavailable"):
+            await documents.ingest(FileId("doc"), _pages("replacement"), "new.pdf", OWNER, OWNER_PRINCIPALS, None)
+        stored = await documents.read_pages(FileId("doc"), principals=OWNER_PRINCIPALS)
+        assert [page.text for page in stored] == ["old document"]
+
     @pytest.mark.anyio
     async def test_ingest_and_search(self, documents: DocumentService) -> None:
         text = "Python is great for data science. It has many libraries like pandas and numpy."

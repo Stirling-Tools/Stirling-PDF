@@ -31,8 +31,10 @@ interface CachedThumbnail {
 
 interface CachedPDFDocument {
   docPtr: number;
+  opening: Promise<number>;
   lastUsed: number;
   refCount: number;
+  invalidated: boolean;
 }
 
 export class ThumbnailGenerationService {
@@ -47,6 +49,7 @@ export class ThumbnailGenerationService {
   // PDF document cache to reuse PDF instances and avoid creating multiple workers
   private pdfDocumentCache = new Map<FileId, CachedPDFDocument>();
   private maxPdfCacheSize = 10; // Keep up to 10 PDF documents cached
+  private documentWaiters = new Set<() => void>();
 
   constructor(private maxWorkers: number = 10) {
     // PDF rendering requires DOM access, so we use optimized main thread processing
@@ -58,46 +61,57 @@ export class ThumbnailGenerationService {
   private async getCachedPDFDocument(
     fileId: FileId,
     pdfArrayBuffer: ArrayBuffer,
-  ): Promise<number> {
-    const cached = this.pdfDocumentCache.get(fileId);
-    if (cached) {
-      cached.lastUsed = Date.now();
-      cached.refCount++;
-      return cached.docPtr;
+  ): Promise<CachedPDFDocument> {
+    let cached: CachedPDFDocument;
+    for (;;) {
+      const existing = this.pdfDocumentCache.get(fileId);
+      if (existing && !existing.invalidated) {
+        cached = existing;
+        cached.refCount++;
+        cached.lastUsed = Date.now();
+        break;
+      }
+      if (!existing && this.pdfDocumentCache.size < this.maxPdfCacheSize) {
+        cached = {
+          docPtr: 0,
+          opening: Promise.resolve().then(() =>
+            openRawDocumentSafe(pdfArrayBuffer),
+          ),
+          lastUsed: Date.now(),
+          refCount: 1,
+          invalidated: false,
+        };
+        this.pdfDocumentCache.set(fileId, cached);
+        break;
+      }
+      if (this.evictLeastRecentlyUsedPDF()) continue;
+      await new Promise<void>((resolve) => this.documentWaiters.add(resolve));
     }
-
-    while (this.pdfDocumentCache.size >= this.maxPdfCacheSize) {
-      this.evictLeastRecentlyUsedPDF();
+    try {
+      cached.docPtr = await cached.opening;
+      return cached;
+    } catch (error) {
+      this.releasePDFDocument(fileId, cached);
+      throw error;
     }
-
-    const docPtr = await openRawDocumentSafe(pdfArrayBuffer);
-
-    this.pdfDocumentCache.set(fileId, {
-      docPtr,
-      lastUsed: Date.now(),
-      refCount: 1,
-    });
-
-    return docPtr;
   }
 
   /**
    * Release a reference to a cached PDF document
    */
-  private releasePDFDocument(fileId: FileId): void {
-    const cached = this.pdfDocumentCache.get(fileId);
-    if (cached) {
-      cached.refCount--;
-      // Don't destroy immediately - keep in cache for potential reuse
+  private releasePDFDocument(fileId: FileId, cached: CachedPDFDocument): void {
+    cached.refCount--;
+    if (cached.refCount === 0) {
+      this.cleanupCompletedDocument(fileId);
     }
   }
 
   /**
    * Evict the least recently used PDF document
    */
-  private evictLeastRecentlyUsedPDF(): void {
+  private evictLeastRecentlyUsedPDF(): boolean {
     let oldestEntry: [FileId, CachedPDFDocument] | null = null;
-    let oldestTime = Date.now();
+    let oldestTime = Infinity;
 
     for (const [key, value] of this.pdfDocumentCache.entries()) {
       if (value.lastUsed < oldestTime && value.refCount === 0) {
@@ -107,9 +121,10 @@ export class ThumbnailGenerationService {
     }
 
     if (oldestEntry) {
-      void closeRawDocument(oldestEntry[1].docPtr);
-      this.pdfDocumentCache.delete(oldestEntry[0]);
+      this.cleanupCompletedDocument(oldestEntry[0]);
+      return true;
     }
+    return false;
   }
 
   /**
@@ -166,64 +181,65 @@ export class ThumbnailGenerationService {
       thumbnails: ThumbnailResult[];
     }) => void,
   ): Promise<ThumbnailResult[]> {
-    const docPtr = await this.getCachedPDFDocument(fileId, pdfArrayBuffer);
+    const cached = await this.getCachedPDFDocument(fileId, pdfArrayBuffer);
+    const docPtr = cached.docPtr;
+    try {
+      const allResults: ThumbnailResult[] = [];
+      let completed = 0;
+      const batchSize = 3; // Smaller batches for better UI responsiveness
 
-    const allResults: ThumbnailResult[] = [];
-    let completed = 0;
-    const batchSize = 3; // Smaller batches for better UI responsiveness
+      // Process pages in small batches
+      for (let i = 0; i < pageNumbers.length; i += batchSize) {
+        const batch = pageNumbers.slice(i, i + batchSize);
 
-    // Process pages in small batches
-    for (let i = 0; i < pageNumbers.length; i += batchSize) {
-      const batch = pageNumbers.slice(i, i + batchSize);
-
-      // Process batch sequentially (to avoid canvas conflicts)
-      for (const pageNumber of batch) {
-        try {
-          const thumbnail = await renderPdfiumPageDataUrl(
-            docPtr,
-            pageNumber - 1,
-            scale,
-            { applyRotation: false, format: "jpeg", quality },
-          );
-          if (!thumbnail) {
-            throw new Error(`Could not render page ${pageNumber}`);
+        // Process batch sequentially (to avoid canvas conflicts)
+        for (const pageNumber of batch) {
+          try {
+            const thumbnail = await renderPdfiumPageDataUrl(
+              docPtr,
+              pageNumber - 1,
+              scale,
+              { applyRotation: false, format: "jpeg", quality },
+            );
+            if (!thumbnail) {
+              throw new Error(`Could not render page ${pageNumber}`);
+            }
+            allResults.push({ pageNumber, thumbnail, success: true });
+          } catch (error) {
+            console.error(
+              `Failed to generate thumbnail for page ${pageNumber}:`,
+              error,
+            );
+            allResults.push({
+              pageNumber,
+              thumbnail: "",
+              success: false,
+              error: error instanceof Error ? error.message : "Unknown error",
+            });
           }
-          allResults.push({ pageNumber, thumbnail, success: true });
-        } catch (error) {
-          console.error(
-            `Failed to generate thumbnail for page ${pageNumber}:`,
-            error,
-          );
-          allResults.push({
-            pageNumber,
-            thumbnail: "",
-            success: false,
-            error: error instanceof Error ? error.message : "Unknown error",
+        }
+
+        completed += batch.length;
+
+        // Report progress
+        if (onProgress) {
+          onProgress({
+            completed,
+            total: pageNumbers.length,
+            thumbnails: allResults
+              .slice(-batch.length)
+              .filter((r) => r.success),
           });
         }
+
+        // Yield control to prevent UI blocking
+        await new Promise((resolve) => setTimeout(resolve, 1));
       }
 
-      completed += batch.length;
-
-      // Report progress
-      if (onProgress) {
-        onProgress({
-          completed,
-          total: pageNumbers.length,
-          thumbnails: allResults.slice(-batch.length).filter((r) => r.success),
-        });
-      }
-
-      // Yield control to prevent UI blocking
-      await new Promise((resolve) => setTimeout(resolve, 1));
+      return allResults;
+    } finally {
+      this.releasePDFDocument(fileId, cached);
     }
-
-    // Release reference to PDF document (don't destroy - keep in cache)
-    this.releasePDFDocument(fileId);
-
-    this.cleanupCompletedDocument(fileId);
-
-    return allResults;
   }
 
   /**
@@ -240,6 +256,12 @@ export class ThumbnailGenerationService {
 
   addThumbnailToCache(pageId: string, thumbnail: string): void {
     const sizeBytes = thumbnail.length * 2; // Rough estimate for base64 string
+    const previous = this.thumbnailCache.get(pageId);
+    if (previous) {
+      this.currentCacheSize -= previous.sizeBytes;
+      this.thumbnailCache.delete(pageId);
+    }
+    if (sizeBytes > this.maxCacheSizeBytes) return;
 
     // Enforce cache size limits
     while (
@@ -260,7 +282,7 @@ export class ThumbnailGenerationService {
 
   private evictLeastRecentlyUsed(): void {
     let oldestEntry: [string, CachedThumbnail] | null = null;
-    let oldestTime = Date.now();
+    let oldestTime = Infinity;
 
     for (const [key, value] of this.thumbnailCache.entries()) {
       if (value.lastUsed < oldestTime) {
@@ -293,18 +315,16 @@ export class ThumbnailGenerationService {
   }
 
   clearPDFCache(): void {
-    // Destroy all cached PDF documents using worker manager
-    for (const [, cached] of this.pdfDocumentCache) {
-      void closeRawDocument(cached.docPtr);
+    for (const fileId of this.pdfDocumentCache.keys()) {
+      this.clearPDFCacheForFile(fileId);
     }
-    this.pdfDocumentCache.clear();
   }
 
   clearPDFCacheForFile(fileId: FileId): void {
     const cached = this.pdfDocumentCache.get(fileId);
     if (cached) {
-      void closeRawDocument(cached.docPtr);
-      this.pdfDocumentCache.delete(fileId);
+      cached.invalidated = true;
+      this.cleanupCompletedDocument(fileId);
     }
   }
 
@@ -315,8 +335,11 @@ export class ThumbnailGenerationService {
   cleanupCompletedDocument(fileId: FileId): void {
     const cached = this.pdfDocumentCache.get(fileId);
     if (cached && cached.refCount <= 0) {
-      void closeRawDocument(cached.docPtr);
       this.pdfDocumentCache.delete(fileId);
+      if (cached.docPtr)
+        void closeRawDocument(cached.docPtr).catch(() => undefined);
+      for (const wake of this.documentWaiters) wake();
+      this.documentWaiters.clear();
     }
   }
 

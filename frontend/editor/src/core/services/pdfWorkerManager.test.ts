@@ -57,14 +57,49 @@ describe("createDocument openTimeoutMs", () => {
   });
 
   test("without a timeout the caller waits as long as the worker takes", async () => {
-    getDocument.mockReturnValue(stalledTask());
+    let resolve!: (pdf: never) => void;
+    const promise = new Promise<never>((done) => {
+      resolve = done;
+    });
+    getDocument.mockReturnValue({ promise, destroy: vi.fn() });
 
     const settled = vi.fn();
-    void pdfWorkerManager
-      .createDocument(new ArrayBuffer(8))
-      .then(settled, settled);
+    const opening = pdfWorkerManager.createDocument(new ArrayBuffer(8));
+    void opening.then(settled, settled);
     await vi.advanceTimersByTimeAsync(60_000);
 
     expect(settled).not.toHaveBeenCalled();
+    const pdf = { numPages: 1, destroy: () => Promise.resolve() };
+    resolve(pdf as never);
+    await opening;
+    await pdfWorkerManager.destroyDocument(pdf as never);
   });
+});
+
+test("opening documents reserve worker slots before PDF.js resolves", async () => {
+  pdfWorkerManager.setMaxWorkers(2);
+  const resolvers: Array<(pdf: never) => void> = [];
+  getDocument.mockImplementation(() => ({
+    promise: new Promise((resolve) => resolvers.push(resolve)),
+    destroy: vi.fn(),
+  }));
+  const signal = { cancelled: false };
+  const requests = Array.from({ length: 20 }, () =>
+    pdfWorkerManager
+      .createDocument(new ArrayBuffer(8), { signal })
+      .catch(() => null),
+  );
+  await vi.advanceTimersByTimeAsync(0);
+  expect(getDocument).toHaveBeenCalledTimes(2);
+  signal.cancelled = true;
+  for (const resolve of resolvers) {
+    resolve({ numPages: 1, destroy: () => Promise.resolve() } as never);
+  }
+  await vi.advanceTimersByTimeAsync(101);
+  const documents = await Promise.all(requests);
+  for (const document of documents) {
+    if (document) await pdfWorkerManager.destroyDocument(document);
+  }
+  expect(pdfWorkerManager.getWorkerStats().opening).toBe(0);
+  pdfWorkerManager.setMaxWorkers(10);
 });

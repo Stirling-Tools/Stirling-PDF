@@ -168,7 +168,7 @@ public enum FailureKind {
             FailureScope.SERVER,
             // E080 (MD5 unavailable) is deliberately not claimed: its one thrower has no throws
             // clause and its caller swallows it for a fallback hash, so it cannot reach a run.
-            errorCodes("E042", "E062", "E063", "E064"),
+            errorCodes("E042", "E062", "E063", "E064", "E065"),
             fallback("This server is missing software the step needs, so it could not be run."),
             // Nothing for an owner to press: their document is fine, and a retry fails the same
             // way until someone installs the binary.

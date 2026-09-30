@@ -22,6 +22,7 @@ import org.mockito.quality.Strictness;
 import org.springframework.context.MessageSource;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
@@ -164,6 +165,30 @@ class GlobalExceptionHandlerMoreTest {
             // null reason falls back to the status reason phrase
             assertThat(resp.getBody().getDetail())
                     .isEqualTo(HttpStatus.BAD_GATEWAY.getReasonPhrase());
+        }
+
+        @Test
+        @DisplayName("keeps the Retry-After header of a load-shedding 503")
+        void retryAfter() {
+            ResponseStatusException ex =
+                    new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "busy") {
+                        private final HttpHeaders headers = new HttpHeaders();
+
+                        {
+                            headers.set(HttpHeaders.RETRY_AFTER, "5");
+                        }
+
+                        @Override
+                        public HttpHeaders getHeaders() {
+                            return headers;
+                        }
+                    };
+
+            ResponseEntity<ProblemDetail> resp = handler.handleResponseStatusException(ex, request);
+
+            assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+            assertThat(resp.getHeaders().getFirst(HttpHeaders.RETRY_AFTER)).isEqualTo("5");
+            assertThat(resp.getBody().getDetail()).isEqualTo("busy");
         }
     }
 

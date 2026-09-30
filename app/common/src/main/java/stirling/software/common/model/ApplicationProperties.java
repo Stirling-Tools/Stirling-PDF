@@ -78,6 +78,7 @@ public class ApplicationProperties {
 
     private AutoPipeline autoPipeline = new AutoPipeline();
     private ProcessExecutor processExecutor = new ProcessExecutor();
+    private OfficeToPdf officeToPdf = new OfficeToPdf();
     private PdfEditor pdfEditor = new PdfEditor();
     private AiEngine aiEngine = new AiEngine();
     private FormDetection formDetection = new FormDetection();
@@ -1937,6 +1938,48 @@ public class ApplicationProperties {
                 private boolean enabled;
                 private int retentionDays;
             }
+        }
+    }
+
+    /** Word, PowerPoint and Excel to PDF: Stirling Office Convert first, LibreOffice otherwise. */
+    @Data
+    public static class OfficeToPdf {
+        /**
+         * STIRLING converts DOCX, PPTX, XLSX, XLS and PPT in process; LIBREOFFICE uses LibreOffice
+         * only.
+         */
+        private Engine engine = Engine.STIRLING;
+
+        /** Retry with LibreOffice when Stirling Office Convert cannot convert a file. */
+        private boolean fallbackToLibreOffice = true;
+
+        /** Conversions running at once; 0 picks from the CPU count and heap size. */
+        private int maxConcurrent = 0;
+
+        /** Requests allowed to wait for a free slot; later ones are refused. */
+        private int maxQueued = 16;
+
+        /**
+         * Largest input converted in process, in megabytes, larger files go to LibreOffice when
+         * fallback is on; 0 means the converter's own 512 MB cap.
+         */
+        private long maxFileSizeMB = 100;
+
+        /** Documents longer than this are refused, never cut short or retried; 0 = no limit. */
+        private int maxPages = 5000;
+
+        /** Memory plus scratch file for one output PDF, in megabytes; larger ones are refused. */
+        private long maxScratchMB = 1024;
+
+        /**
+         * Deadline for queueing, converting and any fallback, kept inside the request timeout; 0
+         * uses the LibreOffice timeout.
+         */
+        private long timeoutSeconds = 300;
+
+        public enum Engine {
+            STIRLING,
+            LIBREOFFICE
         }
     }
 

@@ -2,7 +2,9 @@ package stirling.software.SPDF.controller.api.converters;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -10,7 +12,10 @@ import static org.mockito.Mockito.when;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.zip.ZipOutputStream;
 
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -35,6 +40,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
+import stirling.software.officeconvert.OfficeConvert;
 
 /**
  * Additional coverage for {@link ConvertPDFToExcelController}. Stirling Office Convert runs
@@ -164,6 +170,46 @@ class ConvertPDFToExcelControllerMoreTest {
     @Nested
     @DisplayName("workbook-writing branch")
     class WorkbookWriting {
+
+        @Test
+        void nonconsecutivePagesPreserveInheritedFontResources() throws Exception {
+            PDFWithPageNums request = new PDFWithPageNums();
+            request.setFileInput(pdf("inherited.pdf"));
+            request.setPageNumbers("1,3");
+            PDDocument document = borderedTableDoc();
+            var resources = document.getPage(0).getResources();
+            document.getPages().getCOSObject().setItem(COSName.RESOURCES, resources);
+            document.getPage(0).getCOSObject().removeItem(COSName.RESOURCES);
+            document.addPage(new PDPage());
+            document.addPage(new PDPage());
+            when(pdfDocumentFactory.load(request)).thenReturn(document);
+            OfficeConversionService conversion = mock(OfficeConversionService.class);
+            when(conversion.settings()).thenReturn(OfficeConvert.Settings.defaults());
+            doAnswer(
+                            inv -> {
+                                PDDocument selected = inv.getArgument(0);
+                                assertThat(selected.getNumberOfPages()).isEqualTo(2);
+                                for (PDPage page : selected.getPages()) {
+                                    assertThat(page.getResources()).isNotNull();
+                                    assertThat(
+                                                    page.getResources()
+                                                            .getFont(COSName.getPDFName("F1")))
+                                            .isNotNull();
+                                }
+                                Path output = inv.getArgument(1);
+                                try (var zip = new ZipOutputStream(Files.newOutputStream(output))) {
+                                    zip.finish();
+                                }
+                                return null;
+                            })
+                    .when(conversion)
+                    .convert(any(), any(), anyString(), any());
+            var selectedController =
+                    new ConvertPDFToExcelController(
+                            pdfDocumentFactory, tempFileManager, conversion);
+            assertThat(selectedController.pdfToExcel(request).getStatusCode())
+                    .isEqualTo(HttpStatus.NO_CONTENT);
+        }
 
         @Test
         @DisplayName("a bordered table page produces an xlsx holding its cells")

@@ -9,6 +9,7 @@ import java.util.List;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -1139,8 +1140,16 @@ public class GlobalExceptionHandler {
         problemDetail.setType(URI.create("/errors/" + status.value()));
         problemDetail.setTitle(status.getReasonPhrase());
         problemDetail.setProperty("title", status.getReasonPhrase());
-        // 5xx is operator-relevant; 4xx is a normal client-rejection - log at the right level.
-        if (status.is5xxServerError()) {
+        HttpHeaders headers = ex.getHeaders();
+        boolean retryable = headers.containsHeader(HttpHeaders.RETRY_AFTER);
+        // Load shedding (Retry-After) is expected, 5xx is operator-relevant, 4xx is the client's.
+        if (retryable) {
+            log.warn(
+                    "ResponseStatusException {} at {}: {}",
+                    status.value(),
+                    request.getRequestURI(),
+                    reason);
+        } else if (status.is5xxServerError()) {
             log.error(
                     "ResponseStatusException {} at {}: {}",
                     status.value(),
@@ -1154,7 +1163,10 @@ public class GlobalExceptionHandler {
                     request.getRequestURI(),
                     reason);
         }
-        return ResponseEntity.status(status).contentType(PROBLEM_JSON).body(problemDetail);
+        return ResponseEntity.status(status)
+                .headers(headers)
+                .contentType(PROBLEM_JSON)
+                .body(problemDetail);
     }
 
     @ExceptionHandler(RuntimeException.class)

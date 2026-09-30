@@ -13,7 +13,9 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.*;
 import org.slf4j.MDC;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
+import org.springframework.web.ErrorResponseException;
 import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -84,10 +86,7 @@ public class AutoJobAspect {
                                     // for REST API queries, not WebSocket notifications
                                     return joinPoint.proceed(args);
                                 } catch (Throwable ex) {
-                                    log.error(
-                                            "AutoJobAspect caught exception during job execution: {}",
-                                            ex.getMessage(),
-                                            ex);
+                                    logFailure(ex);
                                     // Rethrow RuntimeException as-is to preserve exception type
                                     if (ex instanceof RuntimeException) {
                                         throw (RuntimeException) ex;
@@ -245,6 +244,16 @@ public class AutoJobAspect {
      * @param async Whether this is an async operation
      * @return The original array with processed arguments
      */
+    /** A refusal carrying Retry-After is load shedding, not a failure worth a stack trace. */
+    private static void logFailure(Throwable ex) {
+        if (ex instanceof ErrorResponseException response
+                && response.getHeaders().containsHeader(HttpHeaders.RETRY_AFTER)) {
+            log.warn("AutoJobAspect refused a job while busy: {}", ex.getMessage());
+            return;
+        }
+        log.error("AutoJobAspect caught exception during job execution: {}", ex.getMessage(), ex);
+    }
+
     private Object[] processArgsInPlace(Object[] originalArgs, boolean async) {
         if (originalArgs == null || originalArgs.length == 0) {
             return originalArgs;

@@ -41,7 +41,9 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
+import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.converters.PdfToPresentationRequest;
 import stirling.software.SPDF.model.api.converters.PdfToTextOrRTFRequest;
 import stirling.software.SPDF.model.api.converters.PdfToWordRequest;
@@ -58,8 +60,8 @@ import stirling.software.common.util.TempFileManager;
 /**
  * Coverage for {@link ConvertPDFToOffice}. Word, presentation, RTF and text run through Stirling
  * Office Convert in process, on a real one-page PDF, and the files that come back are checked. XML
- * still shells out to LibreOffice through the static {@link ProcessExecutor} factory, mocked with
- * {@code mockStatic} so that no LibreOffice runs.
+ * falls back to LibreOffice through the static {@link ProcessExecutor} factory, mocked with {@code
+ * mockStatic} so that no LibreOffice runs.
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -71,6 +73,7 @@ class ConvertPDFToOfficeMoreTest {
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private TempFileManager tempFileManager;
     @Mock private RuntimePathConfig runtimePathConfig;
+    @Mock private EndpointConfiguration endpointConfiguration;
 
     private ConvertPDFToOffice controller;
 
@@ -81,7 +84,8 @@ class ConvertPDFToOfficeMoreTest {
                         pdfDocumentFactory,
                         tempFileManager,
                         runtimePathConfig,
-                        new OfficeConversionService(new ApplicationProperties()));
+                        new OfficeConversionService(new ApplicationProperties()),
+                        endpointConfiguration);
 
         // Real temp files backing TempFileManager so the file-backed response can be read back.
         lenient()
@@ -350,18 +354,74 @@ class ConvertPDFToOfficeMoreTest {
     class XmlConversion {
 
         @Test
-        @DisplayName("xml output streams the converted file back with 200")
-        void xmlSuccess() throws Exception {
+        @DisplayName("xml is flat OpenDocument Text converted in process, without LibreOffice")
+        void xmlConvertsInProcess() throws Exception {
             PDFFile file = new PDFFile();
             file.setFileInput(pdfFile());
+
+            try (MockedStatic<ProcessExecutor> mockedFactory = mockStatic(ProcessExecutor.class)) {
+                String xml =
+                        new String(
+                                ok(controller.processPdfToXML(file), "document.xml"),
+                                StandardCharsets.UTF_8);
+
+                assertTrue(xml.contains("<office:document "), xml);
+                assertTrue(
+                        xml.contains(
+                                "office:mimetype=\"application/vnd.oasis.opendocument.text\""));
+                assertTrue(xml.contains(HEADING) && xml.contains(LINE));
+                mockedFactory.verifyNoInteractions();
+            }
+        }
+
+        @Test
+        @DisplayName("xml falls back to LibreOffice when the in-process conversion fails")
+        void xmlFallsBackToLibreOffice() throws Exception {
+            PDFFile file = new PDFFile();
+            file.setFileInput(pdfFile());
+            when(pdfDocumentFactory.load(any(MultipartFile.class)))
+                    .thenThrow(new IOException("cannot parse pdf"));
+            when(endpointConfiguration.isGroupEnabled("LibreOffice")).thenReturn(true);
 
             try (MockedStatic<ProcessExecutor> mockedFactory = mockStatic(ProcessExecutor.class)) {
                 stubLibreOfficeWritesOutput(mockedFactory, "xml");
 
                 ResponseEntity<Resource> response = controller.processPdfToXML(file);
 
-                assertEquals(HttpStatus.OK, response.getStatusCode());
-                assertTrue(readResource(response.getBody()).length > 0);
+                assertEquals(
+                        "converted-bytes",
+                        new String(ok(response, "document.xml"), StandardCharsets.UTF_8));
+            }
+        }
+
+        @Test
+        @DisplayName("xml fails without LibreOffice when the in-process conversion fails")
+        void xmlFailureWithoutLibreOfficePropagates() throws Exception {
+            PDFFile file = new PDFFile();
+            file.setFileInput(pdfFile());
+            when(pdfDocumentFactory.load(any(MultipartFile.class)))
+                    .thenThrow(new IOException("cannot parse pdf"));
+
+            try (MockedStatic<ProcessExecutor> mockedFactory = mockStatic(ProcessExecutor.class)) {
+                IOException thrown =
+                        assertThrows(IOException.class, () -> controller.processPdfToXML(file));
+                assertEquals("cannot parse pdf", thrown.getMessage());
+                mockedFactory.verifyNoInteractions();
+            }
+        }
+
+        @Test
+        @DisplayName("an xml conversion stopped for memory never falls back to LibreOffice")
+        void xmlMemoryStopDoesNotFallBack() throws Exception {
+            PDFFile file = new PDFFile();
+            file.setFileInput(pdfFile());
+            when(pdfDocumentFactory.load(any(MultipartFile.class)))
+                    .thenThrow(new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE));
+            when(endpointConfiguration.isGroupEnabled("LibreOffice")).thenReturn(true);
+
+            try (MockedStatic<ProcessExecutor> mockedFactory = mockStatic(ProcessExecutor.class)) {
+                assertThrows(ResponseStatusException.class, () -> controller.processPdfToXML(file));
+                mockedFactory.verifyNoInteractions();
             }
         }
 

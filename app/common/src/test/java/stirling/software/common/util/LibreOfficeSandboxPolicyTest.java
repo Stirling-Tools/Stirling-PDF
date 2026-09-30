@@ -18,6 +18,8 @@ import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
+// The Docker sandbox uses Unix paths and colon-delimited grants.
+@EnabledOnOs(OS.LINUX)
 class LibreOfficeSandboxPolicyTest {
 
     @TempDir Path tmp;

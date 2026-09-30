@@ -3,12 +3,9 @@ package stirling.software.common.util;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
-/**
- * Factory for creating executors backed by virtual threads (Java 21+). Virtual threads are
- * lightweight, managed by the JVM, and ideal for I/O-bound tasks. They eliminate the need for
- * thread pool sizing since thousands can run concurrently with minimal overhead.
- */
+/** Creates background executors and cancellation schedulers with independent execution capacity. */
 public final class ExecutorFactory {
 
     private ExecutorFactory() {}
@@ -25,5 +22,17 @@ public final class ExecutorFactory {
     public static ScheduledExecutorService newSingleVirtualThreadScheduledExecutor() {
         return Executors.newSingleThreadScheduledExecutor(
                 Thread.ofVirtual().name("scheduled-vt-", 0).factory());
+    }
+
+    /**
+     * Cancellation deadlines use a platform thread so CPU-bound virtual workers cannot prevent
+     * their own interruption. Cancelled deadlines release the captured work immediately.
+     */
+    public static ScheduledExecutorService newTimeoutScheduler(String name) {
+        ScheduledThreadPoolExecutor executor =
+                new ScheduledThreadPoolExecutor(
+                        1, Thread.ofPlatform().daemon().name(name).factory());
+        executor.setRemoveOnCancelPolicy(true);
+        return executor;
     }
 }

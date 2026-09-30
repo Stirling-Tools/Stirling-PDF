@@ -343,6 +343,100 @@ class OfficeDocumentSanitizerTest {
         assertTrue(out.contains("#anchor"));
     }
 
+    @Test
+    void sanitize_refusesADoctypeRatherThanPassingItOnUnchecked() throws IOException {
+        String doctype =
+                "<?xml version=\"1.0\"?><!DOCTYPE r [<!ENTITY e \""
+                        + EXTERNAL_URL
+                        + "\">]><Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/"
+                        + "relationships\"><Relationship Id=\"rId1\" Type=\"t\" Target=\"&e;\""
+                        + " TargetMode=\"External\"/></Relationships>";
+        Map<String, byte[]> entries = new LinkedHashMap<>();
+        entries.put("word/_rels/document.xml.rels", doctype.getBytes(StandardCharsets.UTF_8));
+        byte[] docx = zip(entries);
+
+        OfficeDocumentSanitizer.DoctypeRefused e =
+                assertThrows(
+                        OfficeDocumentSanitizer.DoctypeRefused.class,
+                        () -> sanitizer.sanitize(docx, "docx"));
+        assertTrue(e.getMessage().contains("word/_rels/document.xml.rels"), e.getMessage());
+    }
+
+    @Test
+    void sanitize_streamsALargeRelationshipsPartThatInflatesFromASmallUpload() throws IOException {
+        StringBuilder rels =
+                new StringBuilder(
+                        "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Relationships"
+                                + " xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">");
+        int count = 0;
+        while (rels.length() < 3 * OfficeDocumentSanitizer.IN_MEMORY_XML_BYTES) {
+            rels.append("<Relationship Id=\"rId")
+                    .append(count++)
+                    .append("\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/")
+                    .append("relationships/image\" Target=\"media/image1.png\"/>");
+        }
+        rels.append("<Relationship Id=\"rIdX\" Type=\"t\" Target=\"")
+                .append(EXTERNAL_URL)
+                .append("\" TargetMode=\"External\"/></Relationships>");
+        Map<String, byte[]> entries = new LinkedHashMap<>();
+        entries.put(
+                "word/_rels/document.xml.rels", rels.toString().getBytes(StandardCharsets.UTF_8));
+        entries.put("word/document.xml", DOCX_DOCUMENT.getBytes(StandardCharsets.UTF_8));
+        byte[] docx = zip(entries);
+        assertTrue(docx.length < rels.length() / 20, "the upload is small: " + docx.length);
+
+        ByteArrayOutputStream cleaned = new ByteArrayOutputStream();
+        sanitizer.sanitize(new ByteArrayInputStream(docx), cleaned, "docx");
+
+        Map<String, byte[]> result = unzip(cleaned.toByteArray());
+        String out = new String(result.get("word/_rels/document.xml.rels"), StandardCharsets.UTF_8);
+        assertFalse(out.contains(EXTERNAL_URL));
+        assertTrue(out.contains("Id=\"rId" + (count - 1) + "\""), "every internal one is kept");
+        assertArrayEquals(
+                DOCX_DOCUMENT.getBytes(StandardCharsets.UTF_8), result.get("word/document.xml"));
+    }
+
+    @Test
+    void sanitize_streamVariantMatchesTheByteVariantAndLeavesOutputOpen() throws IOException {
+        Map<String, byte[]> entries = new LinkedHashMap<>();
+        entries.put("word/_rels/document.xml.rels", DOCX_RELS.getBytes(StandardCharsets.UTF_8));
+        entries.put("word/document.xml", DOCX_DOCUMENT.getBytes(StandardCharsets.UTF_8));
+        byte[] docx = zip(entries);
+        ByteArrayOutputStream streamed = new ByteArrayOutputStream();
+        sanitizer.sanitize(new ByteArrayInputStream(docx), streamed, "docx");
+        streamed.write(0);
+
+        Map<String, byte[]> a = unzip(sanitizer.sanitize(docx, "docx"));
+        Map<String, byte[]> b =
+                unzip(java.util.Arrays.copyOf(streamed.toByteArray(), streamed.size() - 1));
+        assertArrayEquals(
+                a.get("word/_rels/document.xml.rels"), b.get("word/_rels/document.xml.rels"));
+        assertThrows(
+                IOException.class,
+                () ->
+                        sanitizer.sanitize(
+                                new ByteArrayInputStream(new byte[0]),
+                                new ByteArrayOutputStream(),
+                                "docx"));
+    }
+
+    @Test
+    void sanitize_keepsNamespacesAndTextWhenStrippingAnOdfHref() throws IOException {
+        Map<String, byte[]> entries = new LinkedHashMap<>();
+        String content =
+                ODF_CONTENT_EXTERNAL.replace(
+                        "<office:body>",
+                        "<office:body><text:p xmlns:text=\"t\">A &amp; B</text:p>");
+        entries.put("content.xml", content.getBytes(StandardCharsets.UTF_8));
+        byte[] cleaned = sanitizer.sanitize(zip(entries), "odt");
+
+        String out = new String(unzip(cleaned).get("content.xml"), StandardCharsets.UTF_8);
+        assertFalse(out.contains(EXTERNAL_URL));
+        assertTrue(out.contains("xmlns:xlink=\"http://www.w3.org/1999/xlink\""), out);
+        assertTrue(out.contains("A &amp; B"), out);
+        assertTrue(out.contains("xlink:href=\"Pictures/image1.png\""), out);
+    }
+
     private static byte[] zip(Map<String, byte[]> entries) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (ZipOutputStream zos = new ZipOutputStream(baos)) {

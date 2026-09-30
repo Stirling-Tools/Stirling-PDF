@@ -49,6 +49,8 @@ dependencies {
     // PDF to Word, OpenDocument, RTF, text, PowerPoint and Excel; legacy adds binary .ppt through POI.
     implementation "com.stirling:stirling-office-convert:$officeConvertVersion"
     implementation "com.stirling:stirling-office-convert-legacy:$officeConvertVersion"
+    // Word, PowerPoint and Excel (DOCX, PPTX, XLSX) to PDF without LibreOffice.
+    implementation "com.stirling:stirling-office-convert-topdf:$officeConvertVersion"
 
     // General PDF dependencies
     implementation "org.apache.pdfbox:preflight:$pdfboxVersion"

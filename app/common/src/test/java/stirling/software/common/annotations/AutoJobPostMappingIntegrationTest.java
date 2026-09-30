@@ -20,8 +20,11 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -138,6 +141,40 @@ class AutoJobPostMappingIntegrationTest {
 
         // Verify that proceed was called twice (initial attempt + 1 retry)
         verify(joinPoint, times(2)).proceed(any());
+    }
+
+    @Test
+    void passesABusyRefusalThroughUnchanged() throws Throwable {
+        when(joinPoint.getArgs()).thenReturn(new Object[0]);
+        when(request.getParameter("async")).thenReturn("false");
+        when(autoJobPostMapping.timeout()).thenReturn(-1L);
+        when(autoJobPostMapping.retryCount()).thenReturn(1);
+        when(autoJobPostMapping.resourceWeight()).thenReturn(50);
+        ResponseStatusException busy =
+                new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "busy") {
+                    private final HttpHeaders headers = new HttpHeaders();
+
+                    {
+                        headers.set(HttpHeaders.RETRY_AFTER, "5");
+                    }
+
+                    @Override
+                    public HttpHeaders getHeaders() {
+                        return headers;
+                    }
+                };
+        when(joinPoint.proceed(any())).thenThrow(busy);
+        when(jobExecutorService.runJobGeneric(
+                        anyBoolean(), any(Supplier.class), anyLong(), anyBoolean(), anyInt()))
+                .thenAnswer(invocation -> ((Supplier<Object>) invocation.getArgument(1)).get());
+
+        ResponseStatusException thrown =
+                assertThrows(
+                        ResponseStatusException.class,
+                        () -> autoJobAspect.wrapWithJobExecution(joinPoint, autoJobPostMapping));
+
+        assertSame(busy, thrown);
+        verify(joinPoint, times(1)).proceed(any());
     }
 
     @Test

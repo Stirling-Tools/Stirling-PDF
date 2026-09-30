@@ -1,6 +1,7 @@
 package stirling.software.common.util;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -86,6 +87,55 @@ public class ZipBombGuard {
                 }
             }
             addToTotal(written);
+        }
+
+        /** One entry's data, counted against the limits as it is read; closing it is a no-op. */
+        public InputStream entryStream(InputStream entryStream) throws IOException {
+            countEntry();
+            return new FilterInputStream(entryStream) {
+                private long read;
+
+                @Override
+                public int read() throws IOException {
+                    int b = super.read();
+                    if (b >= 0) {
+                        counted(1);
+                    }
+                    return b;
+                }
+
+                @Override
+                public int read(byte[] b, int off, int len) throws IOException {
+                    int n = super.read(b, off, len);
+                    if (n > 0) {
+                        counted(n);
+                    }
+                    return n;
+                }
+
+                @Override
+                public long skip(long n) throws IOException {
+                    long skipped = super.skip(n);
+                    if (skipped > 0) {
+                        counted(skipped);
+                    }
+                    return skipped;
+                }
+
+                @Override
+                public void close() {}
+
+                private void counted(long n) throws ZipBombException {
+                    read += n;
+                    if (read > maxEntryBytes) {
+                        throw new ZipBombException(
+                                "Archive entry exceeds the maximum allowed size of "
+                                        + maxEntryBytes
+                                        + " bytes");
+                    }
+                    addToTotal(n);
+                }
+            };
         }
 
         private void countEntry() throws ZipBombException {

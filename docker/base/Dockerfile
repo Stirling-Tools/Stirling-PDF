@@ -367,6 +367,19 @@ RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
     find /opt/venv -name '*.so' -exec strip --strip-unneeded {} + 2>/dev/null || true
 
 
+# Stage 5: Free stand-ins for Office fonts with TrueType outlines (OFL, Apache, GPL/AGPL with font exception, GUST)
+# URW base35 and TeX Gyre ship CFF outlines, which PDFBox cannot embed, so they are converted here
+FROM ubuntu:noble@sha256:33ceb71981b602c1a7443a53469e4dba065f7503eab3078a2d7a57a2ab987517 AS office-fonts
+
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
+      ca-certificates python3-fonttools fonts-urw-base35 fonts-texgyre && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY office-fonts.py office-fonts.sha256 /build/
+RUN python3 /build/office-fonts.py /build/office-fonts.sha256 /out /conf/31-office-compat.conf
+
+
 FROM ubuntu:noble@sha256:33ceb71981b602c1a7443a53469e4dba065f7503eab3078a2d7a57a2ab987517 AS lo-sandbox-build
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
@@ -409,8 +422,9 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       fonts-liberation2 \
       fonts-crosextra-caladea fonts-crosextra-carlito \
       fonts-noto-core fonts-noto-mono fonts-noto-extra \
-      fonts-noto-cjk poppler-data \
+      fonts-noto-cjk fonts-noto-color-emoji poppler-data \
       fonts-freefont-ttf fonts-terminus \
+      fonts-open-sans fonts-lato \
       # Python runtime & UNO bridge
       python3 python3-uno python3-packaging \
       # OCR
@@ -574,13 +588,14 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     \
     # Noto fonts: keep Regular weight only (~370MB savings)
     find /usr/share/fonts/truetype/noto -type f \
-        ! -name '*Regular*' -delete 2>/dev/null || true; \
+        ! -name '*Regular*' ! -name 'NotoColorEmoji.ttf' -delete 2>/dev/null || true; \
     find /usr/share/fonts/opentype -type f \
         ! -name '*Regular*' -delete 2>/dev/null || true; \
     # DejaVu: keep Regular and Bold only
     find /usr/share/fonts/truetype -name '*DejaVu*' \
         ! -name '*-Regular*' ! -name '*-Bold*' ! -name '*Bold.ttf' \
         ! -name 'DejaVuSans.ttf' ! -name 'DejaVuSerif.ttf' ! -name 'DejaVuSansMono.ttf' \
+        ! -name 'DejaVuSansCondensed.ttf' \
         -type f -delete 2>/dev/null || true; \
     # Remove empty font directories after cleanup
     find /usr/share/fonts -type d -empty -delete 2>/dev/null || true; \
@@ -613,6 +628,8 @@ COPY --link --from=pdf-tools-build /usr/local/bin/qpdf    /usr/bin/qpdf
 COPY --link --from=pdf-tools-build /magick-export/        /
 COPY --link --from=gs-build        /usr/local/bin/gs                /usr/local/bin/gs
 COPY --link --from=gs-build        /usr/local/share/ghostscript     /usr/local/share/ghostscript
+COPY --link --from=office-fonts    /out                   /usr/share/fonts/truetype/office-compat
+COPY --link --from=office-fonts    /conf/31-office-compat.conf /etc/fonts/conf.d/31-office-compat.conf
 # Python venv pre-built (no pip install at runtime, no build tools needed)
 COPY --link --from=python-venv-build /opt/venv /opt/venv
 

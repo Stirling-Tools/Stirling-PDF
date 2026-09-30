@@ -470,7 +470,6 @@ public class EndpointConfiguration {
         addEndpointToGroup("CLI", "pdf-to-pdfa");
         addEndpointToGroup("CLI", "file-to-pdf");
         addEndpointToGroup("CLI", "pdf-to-html");
-        addEndpointToGroup("CLI", "pdf-to-xml");
         addEndpointToGroup("CLI", "ocr-pdf");
         addEndpointToGroup("CLI", "html-to-pdf");
         addEndpointToGroup("CLI", "url-to-pdf");
@@ -486,8 +485,6 @@ public class EndpointConfiguration {
 
         // LibreOffice
         addEndpointToGroup("LibreOffice", "file-to-pdf");
-        addEndpointToGroup("LibreOffice", "pdf-to-html");
-        addEndpointToGroup("LibreOffice", "pdf-to-xml");
         addEndpointToGroup("LibreOffice", "pdf-to-pdfa");
 
         // Unoconvert
@@ -537,6 +534,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "pdf-to-word");
         addEndpointToGroup("Java", "pdf-to-presentation");
         addEndpointToGroup("Java", "pdf-to-rtf");
+        addEndpointToGroup("Java", "pdf-to-xml");
         addEndpointToGroup("Java", "pdf-to-markdown");
         addEndpointToGroup("Java", "add-attachments");
         addEndpointToGroup("Java", "compress-pdf");
@@ -603,9 +601,12 @@ public class EndpointConfiguration {
         // file-to-pdf has multiple implementations
         addEndpointAlternative("file-to-pdf", "LibreOffice");
         addEndpointAlternative("file-to-pdf", "Unoconvert");
+        // Stirling Office Convert takes DOCX, PPTX, XLSX, XLS and PPT without LibreOffice.
+        if (convertsOfficeInProcess()) {
+            addEndpointAlternative("file-to-pdf", "Java");
+        }
 
-        // pdf-to-html and pdf-to-markdown can use either LibreOffice or Pdftohtml
-        addEndpointAlternative("pdf-to-html", "LibreOffice");
+        // pdf-to-html and pdf-to-markdown run Poppler's pdftohtml
         addEndpointAlternative("pdf-to-html", "Pdftohtml");
         addEndpointAlternative("pdf-to-markdown", "Pdftohtml");
 
@@ -631,6 +632,13 @@ public class EndpointConfiguration {
 
         // Calibre dependent endpoints
         addEndpointToGroup("Calibre", "pdf-to-epub");
+    }
+
+    private boolean convertsOfficeInProcess() {
+        return applicationProperties != null
+                && applicationProperties.getOfficeToPdf() != null
+                && applicationProperties.getOfficeToPdf().getEngine()
+                        == ApplicationProperties.OfficeToPdf.Engine.STIRLING;
     }
 
     private void processEnvironmentConfigs() {

@@ -32,6 +32,21 @@ class ZipBombGuardTest {
     }
 
     @Test
+    void entryStream_countsWhatIsReadAgainstBothLimits() throws Exception {
+        ZipBombGuard.Budget budget = new ZipBombGuard.Budget(1000, 1500, 100);
+        assertEquals(
+                900,
+                budget.entryStream(new ByteArrayInputStream(new byte[900])).readAllBytes().length);
+        assertThrows(
+                ZipBombGuard.ZipBombException.class,
+                () -> budget.entryStream(new ByteArrayInputStream(new byte[900])).readAllBytes());
+        ZipBombGuard.Budget single = new ZipBombGuard.Budget(1000, 1_000_000, 100);
+        assertThrows(
+                ZipBombGuard.ZipBombException.class,
+                () -> single.entryStream(new ByteArrayInputStream(new byte[2000])).readAllBytes());
+    }
+
+    @Test
     void budget_perEntryCap_throws() {
         ZipBombGuard.Budget budget = new ZipBombGuard.Budget(1000, 1_000_000, 100);
         assertThrows(

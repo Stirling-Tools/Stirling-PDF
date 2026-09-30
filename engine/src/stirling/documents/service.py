@@ -82,13 +82,6 @@ class DocumentService:
         if not read_principals:
             raise ValueError("read_principals must not be empty - every doc needs at least one reader")
 
-        await self._store.delete_collection(collection, owner_id)
-        await self._store.ensure_collection(collection, source, owner_id, expires_at)
-
-        stored_pages = [StoredPage(page_number=p.page_number, text=p.text, char_count=len(p.text)) for p in pages]
-        await self._store.add_pages(collection, stored_pages, owner_id)
-        await self._store.grant_read(collection, owner_id, read_principals)
-
         chunks: list[Document] = []
         for page in pages:
             if not page.text.strip():
@@ -104,10 +97,15 @@ class DocumentService:
                 )
             )
 
-        if not chunks:
-            return 0
-        embeddings = await self._embedder.embed_documents([doc.text for doc in chunks])
-        await self._store.add_documents(collection, chunks, embeddings, owner_id)
+        # A failed embedding request must not erase the document being replaced.
+        embeddings = await self._embedder.embed_documents([doc.text for doc in chunks]) if chunks else []
+        await self._store.delete_collection(collection, owner_id)
+        await self._store.ensure_collection(collection, source, owner_id, expires_at)
+        stored_pages = [StoredPage(page_number=p.page_number, text=p.text, char_count=len(p.text)) for p in pages]
+        await self._store.add_pages(collection, stored_pages, owner_id)
+        await self._store.grant_read(collection, owner_id, read_principals)
+        if chunks:
+            await self._store.add_documents(collection, chunks, embeddings, owner_id)
         return len(chunks)
 
     async def ingest_prepared(

@@ -96,3 +96,16 @@ if (enableSaas) {
     include 'saas'
     project(':saas').projectDir = file('app/saas')
 }
+
+// Build Stirling Office Convert from a local checkout instead of Maven Central,
+// e.g. OFFICE_CONVERT_BUILD=../pdf2office, to test unreleased converter changes.
+def officeConvertBuild = lookupEnvOrProperty('OFFICE_CONVERT_BUILD')
+if (officeConvertBuild != null && !officeConvertBuild.isEmpty()) {
+    includeBuild(officeConvertBuild) {
+        dependencySubstitution {
+            substitute module('com.stirling:stirling-office-convert') using project(':core')
+            substitute module('com.stirling:stirling-office-convert-legacy') using project(':legacy')
+            substitute module('com.stirling:stirling-office-convert-topdf') using project(':topdf')
+        }
+    }
+}

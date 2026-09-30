@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api.converters;
 
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.util.Set;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -9,11 +10,14 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import io.swagger.v3.oas.annotations.Operation;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.model.api.converters.PdfToPresentationRequest;
 import stirling.software.SPDF.model.api.converters.PdfToTextOrRTFRequest;
 import stirling.software.SPDF.model.api.converters.PdfToWordRequest;
@@ -34,15 +38,18 @@ import stirling.software.common.util.PDFToFile;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.officeconvert.OfficeConvert;
 
 @ConvertApi
 @RequiredArgsConstructor
+@Slf4j
 public class ConvertPDFToOffice {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
     private final RuntimePathConfig runtimePathConfig;
     private final OfficeConversionService officeConversionService;
+    private final EndpointConfiguration endpointConfiguration;
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
@@ -109,12 +116,39 @@ public class ConvertPDFToOffice {
     @ToolIO(produces = ToolFormat.XML)
     @Operation(
             summary = "Convert PDF to XML",
-            description = "This endpoint converts a PDF file to an XML file.")
+            description =
+                    "This endpoint converts a PDF file to flat OpenDocument Text XML, the XML"
+                            + " LibreOffice writes for a PDF.")
     public ResponseEntity<Resource> processPdfToXML(@ModelAttribute PDFFile file) throws Exception {
         MultipartFile inputFile = file.getFileInput();
+        try {
+            return convert(inputFile, "xml", Set.of("xml"), MediaType.APPLICATION_OCTET_STREAM);
+        } catch (IOException | RuntimeException e) {
+            if (!retriesWithLibreOffice(e)) {
+                throw e;
+            }
+            log.warn(
+                    "Stirling Office Convert could not convert the PDF to XML ({}); retrying with"
+                            + " LibreOffice",
+                    e.getMessage());
+            try {
+                return new PDFToFile(tempFileManager, runtimePathConfig)
+                        .processPdfToOfficeFormat(inputFile, "xml", "writer_pdf_import");
+            } catch (Exception libreOffice) {
+                e.addSuppressed(libreOffice);
+                throw e;
+            }
+        }
+    }
 
-        PDFToFile pdfToFile = new PDFToFile(tempFileManager, runtimePathConfig);
-        return pdfToFile.processPdfToOfficeFormat(inputFile, "xml", "writer_pdf_import");
+    /** A memory stop, a timeout or an interrupt is final, as for Office to PDF. */
+    private boolean retriesWithLibreOffice(Exception e) {
+        return !(e instanceof ResponseStatusException
+                        || e instanceof OfficeConvert.TimedOut
+                        || e instanceof InterruptedIOException)
+                && endpointConfiguration != null
+                && (endpointConfiguration.isGroupEnabled("LibreOffice")
+                        || endpointConfiguration.isGroupEnabled("Unoconvert"));
     }
 
     private ResponseEntity<Resource> convert(

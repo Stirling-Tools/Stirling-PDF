@@ -30,12 +30,16 @@ import stirling.software.officeconvert.legacy.PdfToPpt;
 @RequiredArgsConstructor
 public class OfficeConversionService {
 
-    /** Output formats by extension; a .doc is RTF, which Word opens as a document. */
+    /**
+     * Output formats by extension; a .doc is RTF, which Word opens as a document, and a .xml is
+     * flat OpenDocument Text, as LibreOffice writes it.
+     */
     private static final Map<String, OfficeConvert.Format> FORMATS =
             Map.of(
                     "docx", OfficeConvert.Format.DOCX,
                     "doc", OfficeConvert.Format.RTF,
                     "odt", OfficeConvert.Format.ODT,
+                    "xml", OfficeConvert.Format.XML,
                     "rtf", OfficeConvert.Format.RTF,
                     "txt", OfficeConvert.Format.TXT,
                     "pptx", OfficeConvert.Format.PPTX,
@@ -74,6 +78,11 @@ public class OfficeConversionService {
             } else {
                 OfficeConvert.convert(document, out, FORMATS.get(format), settings);
             }
+        } catch (IOException | RuntimeException e) {
+            if (OfficeToPdfService.stoppedForMemory(e)) {
+                throw OfficeToPdfService.needsMemory(e);
+            }
+            throw e;
         }
     }
 

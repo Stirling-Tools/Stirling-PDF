@@ -48,9 +48,11 @@ public class JobQueue implements SmartLifecycle {
             Executors.newSingleThreadScheduledExecutor(
                     Thread.ofVirtual().name("job-queue-scheduler-", 0).factory());
     private final ExecutorService jobExecutor = ExecutorFactory.newVirtualThreadExecutor();
+    private final ScheduledExecutorService timeoutExecutor =
+            ExecutorFactory.newTimeoutScheduler("queued-job-timeouts");
     private final Object queueLock = new Object(); // Lock for synchronizing queue operations
 
-    private boolean shuttingDown = false;
+    private volatile boolean shuttingDown = false;
 
     @Getter private int rejectedJobs = 0;
 
@@ -102,20 +104,24 @@ public class JobQueue implements SmartLifecycle {
     // Remove @PreDestroy to let SmartLifecycle control shutdown
     private void shutdownSchedulers() {
         log.info("Shutting down job queue");
-        shuttingDown = true;
-
-        // Complete any futures that are still waiting
-        jobMap.forEach(
-                (id, job) -> {
-                    if (!job.future.isDone()) {
-                        job.future.completeExceptionally(
-                                new RuntimeException("Server shutting down, job cancelled"));
-                    }
-                });
+        synchronized (queueLock) {
+            shuttingDown = true;
+            jobMap.forEach(
+                    (id, job) -> {
+                        if (!job.future.isDone()) {
+                            job.future.completeExceptionally(
+                                    new RuntimeException("Server shutting down, job cancelled"));
+                        }
+                    });
+            jobMap.clear();
+            jobQueue.clear();
+            currentQueueSize = 0;
+        }
 
         // Shutdown schedulers and wait for termination
         try {
             scheduler.shutdown();
+            timeoutExecutor.shutdownNow();
             if (!scheduler.awaitTermination(5, TimeUnit.SECONDS)) {
                 scheduler.shutdownNow();
             }
@@ -189,14 +195,17 @@ public class JobQueue implements SmartLifecycle {
         QueuedJob job =
                 new QueuedJob(jobId, resourceWeight, work, timeoutMs, Instant.now(), future, false);
 
-        // Store in our map for lookup
-        jobMap.put(jobId, job);
-
-        // Update stats
-        totalQueuedJobs++;
-
-        // Synchronize access to the queue
         synchronized (queueLock) {
+            if (shuttingDown) {
+                future.completeExceptionally(
+                        new RejectedExecutionException("Server shutting down"));
+                return future;
+            }
+            if (jobMap.putIfAbsent(jobId, job) != null) {
+                future.completeExceptionally(new RejectedExecutionException("Job already queued"));
+                return future;
+            }
+            totalQueuedJobs++;
             currentQueueSize = jobQueue.size();
 
             // Try to add to the queue
@@ -256,7 +265,10 @@ public class JobQueue implements SmartLifecycle {
                     // Double-check that capacity still needs to be updated
                     // Use the cached currentCapacity to avoid calling getQueueCapacity() again
                     if (newCapacity != currentCapacity) {
-                        // Create new queue with updated capacity
+                        // Accepted jobs must remain reachable until enough have drained to shrink.
+                        if (newCapacity < jobQueue.size()) {
+                            return;
+                        }
                         BlockingQueue<QueuedJob> newQueue = new LinkedBlockingQueue<>(newCapacity);
 
                         // Transfer jobs from old queue to new queue
@@ -384,10 +396,13 @@ public class JobQueue implements SmartLifecycle {
                             job.future.complete(ResponseEntity.ok(result));
                         }
 
-                    } catch (Exception e) {
+                    } catch (Throwable e) {
                         log.error(
                                 "Error executing queued job {}: {}", job.jobId, e.getMessage(), e);
                         job.future.completeExceptionally(e);
+                        if (e instanceof Error error) {
+                            throw error;
+                        }
                     }
                 });
     }
@@ -401,24 +416,35 @@ public class JobQueue implements SmartLifecycle {
      * @throws Exception If there is an execution error
      */
     private <T> T executeWithTimeout(Supplier<T> supplier, long timeoutMs) throws Exception {
-        CompletableFuture<T> future = CompletableFuture.supplyAsync(supplier, jobExecutor);
+        Future<T> future = jobExecutor.submit(supplier::get);
+        ScheduledFuture<?> deadline =
+                timeoutMs > 0
+                        ? timeoutExecutor.schedule(
+                                () -> future.cancel(true), timeoutMs, TimeUnit.MILLISECONDS)
+                        : null;
 
         try {
             if (timeoutMs <= 0) {
                 // No timeout
-                return future.join();
+                return future.get();
             } else {
                 // With timeout
                 return future.get(timeoutMs, TimeUnit.MILLISECONDS);
             }
-        } catch (TimeoutException e) {
+        } catch (TimeoutException | CancellationException e) {
             future.cancel(true);
             throw new TimeoutException("Job timed out after " + timeoutMs + "ms");
         } catch (ExecutionException e) {
+            if (e.getCause() instanceof Error error) {
+                throw error;
+            }
             throw (Exception) e.getCause();
         } catch (InterruptedException e) {
+            future.cancel(true);
             Thread.currentThread().interrupt();
             throw new InterruptedException("Job was interrupted");
+        } finally {
+            if (deadline != null) deadline.cancel(false);
         }
     }
 

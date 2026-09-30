@@ -66,7 +66,10 @@ public class ConvertPDFToExcelController {
             } else {
                 try (PDDocument chosen = new PDDocument()) {
                     for (int page : pages) {
-                        chosen.importPage(document.getPage(page - 1));
+                        var source = document.getPage(page - 1);
+                        var imported = chosen.importPage(source);
+                        // importPage copies the page dictionary, but not inherited resources.
+                        imported.setResources(source.getResources());
                     }
                     convert(chosen, tempOut, settings);
                 }

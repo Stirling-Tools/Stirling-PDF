@@ -55,6 +55,10 @@ class ExceptionUtilsCodedFactoriesTest {
                         () -> ExceptionUtils.createGhostscriptRequiredException("PDF/X"),
                         IOException.class),
                 coded(
+                        "E065",
+                        () -> ExceptionUtils.createLibreOfficeRequiredException("odt"),
+                        IOException.class),
+                coded(
                         "E040",
                         ExceptionUtils::createOcrLanguageRequiredException,
                         IllegalArgumentException.class),

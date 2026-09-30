@@ -20,12 +20,16 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.MockedConstruction;
 import org.mockito.Mockito;
 
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 
+// Retry policy is installed by the Linux Docker sandbox.
+@EnabledOnOs(OS.LINUX)
 class ProcessExecutorLibreOfficeRetryTest {
 
     @TempDir Path tmp;

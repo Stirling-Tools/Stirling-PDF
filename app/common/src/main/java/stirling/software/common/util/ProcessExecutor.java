@@ -348,8 +348,8 @@ public class ProcessExecutor {
             Process process = processBuilder.start();
 
             // Read the error stream and standard output stream concurrently
-            List<String> errorLines = new ArrayList<>();
-            List<String> outputLines = new ArrayList<>();
+            BoundedProcessOutput errorLines = new BoundedProcessOutput();
+            BoundedProcessOutput outputLines = new BoundedProcessOutput();
 
             Thread errorReaderThread =
                     Thread.ofVirtual()
@@ -365,8 +365,15 @@ public class ProcessExecutor {
                                                             BoundedLineReader.readLine(
                                                                     errorReader, 5_000_000))
                                                     != null) {
-                                                errorLines.add(line);
-                                                if (liveUpdates) log.info(line);
+                                                boolean withinBudget = errorLines.add(line);
+                                                if (liveUpdates && withinBudget) {
+                                                    log.info(
+                                                            line.substring(
+                                                                    0,
+                                                                    Math.min(
+                                                                            line.length(),
+                                                                            16_384)));
+                                                }
                                             }
                                         } catch (InterruptedIOException e) {
                                             log.warn(
@@ -390,8 +397,15 @@ public class ProcessExecutor {
                                                             BoundedLineReader.readLine(
                                                                     outputReader, 5_000_000))
                                                     != null) {
-                                                outputLines.add(line);
-                                                if (liveUpdates) log.info(line);
+                                                boolean withinBudget = outputLines.add(line);
+                                                if (liveUpdates && withinBudget) {
+                                                    log.info(
+                                                            line.substring(
+                                                                    0,
+                                                                    Math.min(
+                                                                            line.length(),
+                                                                            16_384)));
+                                                }
                                             }
                                         } catch (InterruptedIOException e) {
                                             log.warn(
@@ -461,7 +475,7 @@ public class ProcessExecutor {
                             && commandToRun.getFirst().contains("qpdf");
 
             if (!outputLines.isEmpty()) {
-                String outputMessage = String.join("\n", outputLines);
+                String outputMessage = outputLines.toString();
                 messages += outputMessage;
                 if (!liveUpdates) {
                     log.info("Command output:\n{}", outputMessage);
@@ -469,7 +483,7 @@ public class ProcessExecutor {
             }
 
             if (!errorLines.isEmpty()) {
-                String errorMessage = String.join("\n", errorLines);
+                String errorMessage = errorLines.toString();
                 messages += errorMessage;
                 if (!liveUpdates) {
                     log.warn("Command error output:\n{}", errorMessage);

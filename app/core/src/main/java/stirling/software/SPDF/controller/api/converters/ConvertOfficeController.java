@@ -2,6 +2,8 @@ package stirling.software.SPDF.controller.api.converters;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -26,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
+import stirling.software.SPDF.service.OfficeToPdfService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.configuration.RuntimePathConfig;
@@ -56,6 +59,7 @@ public class ConvertOfficeController {
     private final OfficeDocumentSanitizer officeDocumentSanitizer;
     private final EndpointConfiguration endpointConfiguration;
     private final TempFileManager tempFileManager;
+    private final OfficeToPdfService officeToPdfService;
 
     private boolean isUnoconvertAvailable() {
         return endpointConfiguration.isGroupEnabled("Unoconvert")
@@ -82,31 +86,78 @@ public class ConvertOfficeController {
             baseName = "input";
         }
 
+        long deadline = officeToPdfService.deadline();
+        boolean inProcess = officeToPdfService.handles(extensionLower);
+        if (!inProcess && officeToPdfService.enabled() && !isLibreOfficeAvailable()) {
+            throw ExceptionUtils.createLibreOfficeRequiredException(extensionLower);
+        }
+
         // create temporary working directory
         Path workDir = Files.createTempDirectory("office2pdf_");
         Path inputPath = workDir.resolve(baseName + "." + extensionLower);
         Path outputPath = workDir.resolve(baseName + ".pdf");
 
-        // Sanitize input before LibreOffice sees it so embedded URLs can't trigger SSRF.
-        if ("html".equals(extensionLower) || "htm".equals(extensionLower)) {
-            String htmlContent = new String(inputFile.getBytes(), StandardCharsets.UTF_8);
-            String sanitizedHtml = customHtmlSanitizer.sanitize(htmlContent);
-            Files.writeString(inputPath, sanitizedHtml, StandardCharsets.UTF_8);
-        } else if (officeDocumentSanitizer.isSanitizableExtension(extensionLower)) {
-            byte[] sanitized =
-                    officeDocumentSanitizer.sanitize(inputFile.getBytes(), extensionLower);
-            Files.write(inputPath, sanitized);
-        } else {
-            Files.copy(inputFile.getInputStream(), inputPath, StandardCopyOption.REPLACE_EXISTING);
-        }
+        boolean converted = false;
+        try {
+            // Sanitize input before any converter sees it so embedded URLs can't trigger SSRF.
+            if ("html".equals(extensionLower) || "htm".equals(extensionLower)) {
+                String htmlContent = new String(inputFile.getBytes(), StandardCharsets.UTF_8);
+                String sanitizedHtml = customHtmlSanitizer.sanitize(htmlContent);
+                Files.writeString(inputPath, sanitizedHtml, StandardCharsets.UTF_8);
+            } else if (officeDocumentSanitizer.isSanitizableExtension(extensionLower)) {
+                try (InputStream in = inputFile.getInputStream();
+                        OutputStream out = Files.newOutputStream(inputPath)) {
+                    officeDocumentSanitizer.sanitize(in, out, extensionLower);
+                }
+            } else {
+                Files.copy(
+                        inputFile.getInputStream(), inputPath, StandardCopyOption.REPLACE_EXISTING);
+            }
 
+            if (inProcess) {
+                officeToPdfService.convert(
+                        inputPath,
+                        outputPath,
+                        deadline,
+                        isLibreOfficeAvailable(),
+                        () -> convertWithLibreOffice(workDir, inputPath, outputPath, false));
+            } else {
+                convertWithLibreOffice(workDir, inputPath, outputPath, true);
+            }
+            converted = true;
+            return outputPath.toFile();
+        } finally {
+            // Clean up the temporary files
+            try {
+                Files.deleteIfExists(inputPath);
+            } catch (IOException e) {
+                log.warn("Failed to delete temp input file: {}", inputPath, e);
+            }
+            if (!converted) {
+                FileUtils.deleteQuietly(workDir.toFile());
+            }
+        }
+    }
+
+    private boolean isLibreOfficeAvailable() {
+        return endpointConfiguration.isGroupEnabled("LibreOffice")
+                || endpointConfiguration.isGroupEnabled("Unoconvert");
+    }
+
+    /**
+     * A fallback under a deadline skips the shared unoserver: stopping the unoconvert client would
+     * leave the server converting, so it runs its own soffice, which the deadline stops.
+     */
+    private void convertWithLibreOffice(
+            Path workDir, Path inputPath, Path outputPath, boolean viaUnoServer)
+            throws IOException, InterruptedException {
         Path libreOfficeProfile = null;
         try {
             ProcessExecutorResult result = null;
             IOException unoconvertException = null;
 
             // Try unoconvert first if available
-            if (isUnoconvertAvailable()) {
+            if (viaUnoServer && isUnoconvertAvailable()) {
                 try {
                     List<String> command = new ArrayList<>();
                     command.add(runtimePathConfig.getUnoConvertPath());
@@ -186,14 +237,7 @@ public class ConvertOfficeController {
                 throw new IllegalStateException("Produced PDF is empty");
             }
 
-            return outputPath.toFile();
         } finally {
-            // Clean up the temporary files
-            try {
-                Files.deleteIfExists(inputPath);
-            } catch (IOException e) {
-                log.warn("Failed to delete temp input file: {}", inputPath, e);
-            }
             if (libreOfficeProfile != null) {
                 FileUtils.deleteQuietly(libreOfficeProfile.toFile());
             }
@@ -213,8 +257,10 @@ public class ConvertOfficeController {
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @ToolIO(accepts = ToolFormat.ANY, produces = ToolFormat.PDF)
     @Operation(
-            summary = "Convert a file to a PDF using LibreOffice",
-            description = "This endpoint converts a given file to a PDF using LibreOffice API")
+            summary = "Convert a file to a PDF",
+            description =
+                    "Converts Word, PowerPoint and Excel files (DOCX, PPTX, XLSX, XLS, PPT) in process with"
+                            + " Stirling Office Convert, and other files with LibreOffice")
     public ResponseEntity<Resource> processFileToPDF(@ModelAttribute GeneralFile generalFile)
             throws Exception {
         MultipartFile inputFile = generalFile.getFileInput();

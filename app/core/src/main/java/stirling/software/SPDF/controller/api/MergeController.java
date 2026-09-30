@@ -11,6 +11,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
+import org.apache.pdfbox.io.IOUtils;
+import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
@@ -440,6 +442,7 @@ public class MergeController {
         int[] pageOffsets = new int[inputPaths.size()];
         List<List<Bookmark>> sourceBookmarks = new ArrayList<>(inputPaths.size());
         int runningOffset = 0;
+        RuntimeException nativeFailure = null;
         try {
             for (int i = 0; i < inputPaths.size(); i++) {
                 Path p = inputPaths.get(i);
@@ -455,6 +458,9 @@ public class MergeController {
                     buildCombinedBookmarkTree(files, pageOffsets, sourceBookmarks, generateToc);
 
             try (PdfDocument merged = PdfMerge.merge(docs)) {
+                if (merged.pageCount() != runningOffset) {
+                    throw new IllegalStateException("Merged page count does not match the inputs");
+                }
                 if (combinedTree.entries().isEmpty()) {
                     merged.save(outputPath);
                 } else {
@@ -462,7 +468,7 @@ public class MergeController {
                 }
             }
         } catch (RuntimeException e) {
-            throw new IOException("JPDFium merge failed", e);
+            nativeFailure = e;
         } finally {
             for (PdfDocument doc : docs) {
                 try {
@@ -471,7 +477,57 @@ public class MergeController {
                 }
             }
         }
+        if (nativeFailure != null) {
+            log.warn("Native PDF merge failed; retrying with PDFBox: {}", nativeFailure.toString());
+            try {
+                return mergeWithPdfBox(inputPaths, files, generateToc, outputPath);
+            } catch (IOException | RuntimeException e) {
+                e.addSuppressed(nativeFailure);
+                throw e;
+            }
+        }
         return pageCounts;
+    }
+
+    private int[] mergeWithPdfBox(
+            List<Path> inputPaths, MultipartFile[] files, boolean generateToc, Path outputPath)
+            throws IOException {
+        int[] counts = new int[inputPaths.size()];
+        PDFMergerUtility merger = new PDFMergerUtility();
+        for (int i = 0; i < inputPaths.size(); i++) {
+            try (PDDocument source = pdfDocumentFactory.load(inputPaths.get(i).toFile())) {
+                counts[i] = source.getNumberOfPages();
+            }
+            merger.addSource(inputPaths.get(i).toFile());
+        }
+        try (TempFile mergedFile = new TempFile(tempFileManager, ".pdf")) {
+            merger.setDestinationFileName(mergedFile.getPath().toString());
+            merger.mergeDocuments(IOUtils.createTempFileOnlyStreamCache());
+            try (PDDocument merged = pdfDocumentFactory.load(mergedFile.getFile())) {
+                if (merged.getNumberOfPages() != java.util.Arrays.stream(counts).sum()) {
+                    throw new IOException("Merged page count does not match the inputs");
+                }
+                if (generateToc) {
+                    PDDocumentOutline outline = merged.getDocumentCatalog().getDocumentOutline();
+                    if (outline == null) {
+                        outline = new PDDocumentOutline();
+                        merged.getDocumentCatalog().setDocumentOutline(outline);
+                    }
+                    int offset = merged.getNumberOfPages();
+                    for (int i = files.length - 1; i >= 0; i--) {
+                        offset -= counts[i];
+                        String title = GeneralUtils.removeExtension(files[i].getOriginalFilename());
+                        PDOutlineItem entry = new PDOutlineItem();
+                        entry.setTitle(
+                                title == null || title.isBlank() ? "Document " + (i + 1) : title);
+                        if (counts[i] > 0) entry.setDestination(merged.getPage(offset));
+                        outline.addFirst(entry);
+                    }
+                }
+                merged.save(outputPath.toFile());
+            }
+        }
+        return counts;
     }
 
     private BookmarkTree buildCombinedBookmarkTree(

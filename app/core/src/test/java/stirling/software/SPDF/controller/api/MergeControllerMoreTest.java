@@ -64,6 +64,50 @@ class MergeControllerMoreTest {
     }
 
     // ---- helpers ------------------------------------------------------------
+    @Test
+    void nativeFailureFallsBackWithoutDroppingPagesOrBookmarks() throws Exception {
+        byte[] bytes;
+        try (PDDocument source = new PDDocument();
+                ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            for (int i = 0; i < 100; i++) source.addPage(new PDPage());
+            PDDocumentOutline outline = new PDDocumentOutline();
+            source.getDocumentCatalog().setDocumentOutline(outline);
+            var bookmark =
+                    new org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline
+                            .PDOutlineItem();
+            bookmark.setTitle("Original");
+            bookmark.setDestination(source.getPage(50));
+            outline.addLast(bookmark);
+            source.save(out);
+            bytes = out.toByteArray();
+        }
+        var files =
+                new MockMultipartFile[] {
+                    new MockMultipartFile("fileInput", "first.pdf", "application/pdf", bytes),
+                    new MockMultipartFile("fileInput", "second.pdf", "application/pdf", bytes)
+                };
+        try (var nativeMerge =
+                org.mockito.Mockito.mockStatic(stirling.software.jpdfium.PdfMerge.class)) {
+            nativeMerge
+                    .when(
+                            () ->
+                                    stirling.software.jpdfium.PdfMerge.merge(
+                                            org.mockito.ArgumentMatchers.anyList()))
+                    .thenThrow(new IllegalArgumentException("invalid native page tree"));
+            var response =
+                    mergeController.mergePdfs(request(files, "orderProvided", false, true), null);
+            try (var input = response.getBody().getInputStream();
+                    PDDocument merged = Loader.loadPDF(input.readAllBytes())) {
+                assertThat(merged.getNumberOfPages()).isEqualTo(200);
+                var outline = merged.getDocumentCatalog().getDocumentOutline();
+                assertThat(outline.getFirstChild().getTitle()).isEqualTo("first");
+                assertThat(outline.getFirstChild().getNextSibling().getTitle()).isEqualTo("second");
+                assertThat(outline.getLastChild().getTitle()).isEqualTo("Original");
+                assertThat(outline.getLastChild().findDestinationPage(merged))
+                        .isEqualTo(merged.getPage(150));
+            }
+        }
+    }
 
     private static byte[] buildPdf(int pageCount, String title, Long modMillis) throws IOException {
         try (PDDocument document = new PDDocument();

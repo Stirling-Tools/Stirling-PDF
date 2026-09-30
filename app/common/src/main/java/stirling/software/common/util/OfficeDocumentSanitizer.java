@@ -1,34 +1,31 @@
 package stirling.software.common.util;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.SequenceInputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Locale;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
-import javax.xml.XMLConstants;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
+import javax.xml.namespace.QName;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamConstants;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
+import javax.xml.stream.XMLStreamWriter;
 
+import org.apache.commons.io.output.CloseShieldOutputStream;
 import org.springframework.stereotype.Component;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
 import io.github.pixee.security.ZipSecurity;
 
@@ -38,6 +35,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.SsrfProtectionService;
 
 // Strips external refs from OOXML/ODF uploads so LibreOffice can't be made to fetch them.
+// Streams every part (XML with StAX), so a small upload that inflates hugely stays cheap.
 @Component
 @Slf4j
 public class OfficeDocumentSanitizer {
@@ -55,6 +53,13 @@ public class OfficeDocumentSanitizer {
     private static final Set<String> ODF_XML_PARTS =
             Set.of("content.xml", "styles.xml", "meta.xml", "settings.xml");
 
+    // Larger XML parts are checked from a temporary file rather than held in memory
+    static final int IN_MEMORY_XML_BYTES = 1 << 20;
+
+    private static final XMLInputFactory INPUT = inputFactory();
+
+    private static final XMLOutputFactory OUTPUT = XMLOutputFactory.newDefaultFactory();
+
     private final SsrfProtectionService ssrfProtectionService;
     private final ApplicationProperties applicationProperties;
 
@@ -63,6 +68,16 @@ public class OfficeDocumentSanitizer {
             ApplicationProperties applicationProperties) {
         this.ssrfProtectionService = ssrfProtectionService;
         this.applicationProperties = applicationProperties;
+    }
+
+    /** A part that declares a DOCTYPE, which no Office file has and LibreOffice would process. */
+    public static class DoctypeRefused extends IllegalArgumentException {
+        DoctypeRefused(String part) {
+            super(
+                    "The document has a DOCTYPE declaration in "
+                            + part
+                            + ", which Office documents never contain, so it was not converted");
+        }
     }
 
     public boolean isSanitizableExtension(String extension) {
@@ -77,30 +92,44 @@ public class OfficeDocumentSanitizer {
         if (documentBytes == null || documentBytes.length == 0) {
             throw new IOException("Office document input is empty or null");
         }
+        if (skip(extension)) {
+            return documentBytes;
+        }
+        ByteArrayOutputStream out = new ByteArrayOutputStream(documentBytes.length);
+        sanitizeZip(new ByteArrayInputStream(documentBytes), out);
+        return out.toByteArray();
+    }
+
+    /** Copies {@code in} to {@code out}, sanitized; {@code out} is left open. */
+    public void sanitize(InputStream in, OutputStream out, String extension) throws IOException {
+        byte[] first = in.readNBytes(1);
+        if (first.length == 0) {
+            throw new IOException("Office document input is empty or null");
+        }
+        InputStream all = new SequenceInputStream(new ByteArrayInputStream(first), in);
+        if (skip(extension)) {
+            all.transferTo(out);
+            return;
+        }
+        sanitizeZip(all, out);
+    }
+
+    private boolean skip(String extension) {
         if (applicationProperties.getSystem().isDisableSanitize()) {
             log.debug("Office document sanitization disabled by configuration");
-            return documentBytes;
+            return true;
         }
-        if (!isSanitizableExtension(extension)) {
-            return documentBytes;
-        }
+        return !isSanitizableExtension(extension);
+    }
 
-        ByteArrayOutputStream out = new ByteArrayOutputStream(documentBytes.length);
-        try (ZipInputStream zipIn =
-                        ZipSecurity.createHardenedInputStream(
-                                new ByteArrayInputStream(documentBytes));
-                ZipOutputStream zipOut = new ZipOutputStream(out)) {
-
+    private void sanitizeZip(InputStream in, OutputStream out) throws IOException {
+        try (ZipInputStream zipIn = ZipSecurity.createHardenedInputStream(in);
+                ZipOutputStream zipOut =
+                        new ZipOutputStream(buffered(CloseShieldOutputStream.wrap(out)))) {
             ZipBombGuard.Budget budget = new ZipBombGuard.Budget();
             ZipEntry entry;
             while ((entry = zipIn.getNextEntry()) != null) {
                 String name = entry.getName();
-                byte[] bytes = entry.isDirectory() ? new byte[0] : budget.readEntry(zipIn);
-
-                if (!entry.isDirectory()) {
-                    bytes = sanitizeEntry(name, bytes);
-                }
-
                 ZipEntry outEntry = new ZipEntry(name);
                 if (entry.getComment() != null) {
                     outEntry.setComment(entry.getComment());
@@ -110,136 +139,249 @@ public class OfficeDocumentSanitizer {
                 }
                 zipOut.putNextEntry(outEntry);
                 if (!entry.isDirectory()) {
-                    zipOut.write(bytes);
+                    InputStream data = budget.entryStream(zipIn);
+                    Kind kind = kindOf(name);
+                    if (kind == null) {
+                        data.transferTo(zipOut);
+                    } else {
+                        sanitizeXml(name, kind, data, zipOut);
+                    }
                 }
                 zipOut.closeEntry();
             }
         }
-        return out.toByteArray();
     }
 
-    private byte[] sanitizeEntry(String entryName, byte[] entryBytes) {
+    private enum Kind {
+        RELS,
+        ODF
+    }
+
+    private static Kind kindOf(String entryName) {
         String lower = entryName.toLowerCase(Locale.ROOT);
+        if (lower.endsWith(".rels")) {
+            return Kind.RELS;
+        }
+        int slash = lower.lastIndexOf('/');
+        return ODF_XML_PARTS.contains(slash >= 0 ? lower.substring(slash + 1) : lower)
+                ? Kind.ODF
+                : null;
+    }
+
+    private void sanitizeXml(String name, Kind kind, InputStream data, OutputStream out)
+            throws IOException {
+        byte[] head = data.readNBytes(IN_MEMORY_XML_BYTES + 1);
+        if (head.length <= IN_MEMORY_XML_BYTES) {
+            if (!needsChanges(name, kind, new ByteArrayInputStream(head))) {
+                out.write(head);
+                return;
+            }
+            ByteArrayOutputStream cleaned = new ByteArrayOutputStream(head.length);
+            if (strip(name, kind, new ByteArrayInputStream(head), cleaned)) {
+                cleaned.writeTo(out);
+            } else {
+                out.write(head);
+            }
+            return;
+        }
+        Path spill = Files.createTempFile("office-sanitize-", ".xml");
         try {
-            if (lower.endsWith(".rels")) {
-                return sanitizeOoxmlRels(entryBytes);
+            try (OutputStream file = buffered(Files.newOutputStream(spill))) {
+                file.write(head);
+                data.transferTo(file);
             }
-            if (isOdfXmlPart(lower)) {
-                return sanitizeOdfXml(entryBytes);
+            boolean changes;
+            try (InputStream file = buffered(Files.newInputStream(spill))) {
+                changes = needsChanges(name, kind, file);
             }
-        } catch (ParserConfigurationException
-                | SAXException
-                | IOException
-                | TransformerException e) {
+            if (changes) {
+                Path cleaned = Files.createTempFile("office-sanitized-", ".xml");
+                try {
+                    boolean stripped;
+                    try (InputStream file = buffered(Files.newInputStream(spill));
+                            OutputStream to = buffered(Files.newOutputStream(cleaned))) {
+                        stripped = strip(name, kind, file, to);
+                    }
+                    Files.copy(stripped ? cleaned : spill, out);
+                } finally {
+                    Files.deleteIfExists(cleaned);
+                }
+            } else {
+                Files.copy(spill, out);
+            }
+        } finally {
+            Files.deleteIfExists(spill);
+        }
+    }
+
+    // A part that is not well-formed XML is left as it is, as LibreOffice cannot read it either
+    private boolean needsChanges(String name, Kind kind, InputStream xml) throws IOException {
+        XMLStreamReader reader = null;
+        try {
+            reader = INPUT.createXMLStreamReader(xml);
+            while (reader.hasNext()) {
+                int event = reader.next();
+                if (event == XMLStreamConstants.DTD) {
+                    throw new DoctypeRefused(name);
+                }
+                if (event == XMLStreamConstants.START_ELEMENT && strips(kind, reader)) {
+                    return true;
+                }
+            }
+            return false;
+        } catch (XMLStreamException e) {
             log.warn(
                     "Failed to parse XML part '{}' for sanitization, leaving as-is: {}",
-                    entryName,
+                    name,
                     e.getMessage());
+            return false;
+        } finally {
+            close(reader);
         }
-        return entryBytes;
     }
 
-    private boolean isOdfXmlPart(String lowerName) {
-        int slash = lowerName.lastIndexOf('/');
-        String base = slash >= 0 ? lowerName.substring(slash + 1) : lowerName;
-        return ODF_XML_PARTS.contains(base);
+    private boolean strips(Kind kind, XMLStreamReader reader) {
+        if (kind == Kind.RELS) {
+            return "Relationship".equals(reader.getLocalName())
+                    && external(
+                            reader.getAttributeValue(null, "TargetMode"),
+                            reader.getAttributeValue(null, "Target"));
+        }
+        for (int i = 0; i < reader.getAttributeCount(); i++) {
+            if (strippedHref(reader.getAttributeName(i), reader.getAttributeValue(i))) {
+                return true;
+            }
+        }
+        return false;
     }
 
-    private byte[] sanitizeOoxmlRels(byte[] xmlBytes)
-            throws IOException, ParserConfigurationException, SAXException, TransformerException {
-        Document doc = parseSecurely(xmlBytes);
-        Element root = doc.getDocumentElement();
-        if (root == null) {
-            return xmlBytes;
-        }
-        NodeList relationships = root.getElementsByTagNameNS("*", "Relationship");
-        List<Node> toRemove = new ArrayList<>();
-        for (int i = 0; i < relationships.getLength(); i++) {
-            Node node = relationships.item(i);
-            NamedNodeMap attrs = node.getAttributes();
-            if (attrs == null) {
-                continue;
+    private boolean external(String targetMode, String target) {
+        return "external".equalsIgnoreCase(targetMode)
+                && !isAdminAllowed(target == null ? "" : target);
+    }
+
+    private boolean strippedHref(QName attribute, String value) {
+        return "href".equalsIgnoreCase(attribute.getLocalPart())
+                && isExternalUrl(value)
+                && !isAdminAllowed(value);
+    }
+
+    // Writes the part without external relationships or hrefs; false if it cannot be read
+    private boolean strip(String name, Kind kind, InputStream xml, OutputStream out)
+            throws IOException {
+        XMLStreamReader reader = null;
+        XMLStreamWriter writer = null;
+        try {
+            reader = INPUT.createXMLStreamReader(xml);
+            writer = OUTPUT.createXMLStreamWriter(out, "UTF-8");
+            int skipping = 0;
+            for (int event = reader.getEventType(); ; event = reader.next()) {
+                if (skipping > 0) {
+                    if (event == XMLStreamConstants.START_ELEMENT) {
+                        skipping++;
+                    } else if (event == XMLStreamConstants.END_ELEMENT) {
+                        skipping--;
+                    }
+                } else if (event == XMLStreamConstants.START_ELEMENT
+                        && kind == Kind.RELS
+                        && droppedRelationship(reader)) {
+                    skipping = 1;
+                } else {
+                    copy(name, kind, reader, writer, event);
+                }
+                if (event == XMLStreamConstants.END_DOCUMENT || !reader.hasNext()) {
+                    break;
+                }
             }
-            Node targetMode = attrs.getNamedItem("TargetMode");
-            if (targetMode == null || !"external".equalsIgnoreCase(targetMode.getNodeValue())) {
-                continue;
-            }
-            Node target = attrs.getNamedItem("Target");
-            String targetValue = target == null ? "" : target.getNodeValue();
-            if (isAdminAllowed(targetValue)) {
-                continue;
-            }
+            writer.flush();
+            return true;
+        } catch (XMLStreamException e) {
             log.warn(
-                    "Stripping OOXML external relationship target: {}",
-                    truncateForLog(targetValue));
-            toRemove.add(node);
+                    "Failed to rewrite XML part '{}' for sanitization, leaving as-is: {}",
+                    name,
+                    e.getMessage());
+            return false;
+        } finally {
+            close(writer);
+            close(reader);
         }
-        if (toRemove.isEmpty()) {
-            return xmlBytes;
-        }
-        for (Node n : toRemove) {
-            n.getParentNode().removeChild(n);
-        }
-        return serializeDocument(doc);
     }
 
-    private byte[] sanitizeOdfXml(byte[] xmlBytes)
-            throws IOException, ParserConfigurationException, SAXException, TransformerException {
-        Document doc = parseSecurely(xmlBytes);
-        Element root = doc.getDocumentElement();
-        if (root == null) {
-            return xmlBytes;
+    private void copy(
+            String name, Kind kind, XMLStreamReader reader, XMLStreamWriter writer, int event)
+            throws XMLStreamException {
+        switch (event) {
+            case XMLStreamConstants.START_DOCUMENT ->
+                    writer.writeStartDocument(
+                            "UTF-8", reader.getVersion() == null ? "1.0" : reader.getVersion());
+            case XMLStreamConstants.START_ELEMENT -> startElement(kind, reader, writer);
+            case XMLStreamConstants.END_ELEMENT -> writer.writeEndElement();
+            case XMLStreamConstants.CHARACTERS, XMLStreamConstants.SPACE ->
+                    writer.writeCharacters(
+                            reader.getTextCharacters(),
+                            reader.getTextStart(),
+                            reader.getTextLength());
+            case XMLStreamConstants.CDATA -> writer.writeCData(reader.getText());
+            case XMLStreamConstants.COMMENT -> writer.writeComment(reader.getText());
+            case XMLStreamConstants.PROCESSING_INSTRUCTION ->
+                    writer.writeProcessingInstruction(
+                            reader.getPITarget(),
+                            reader.getPIData() == null ? "" : reader.getPIData());
+            case XMLStreamConstants.ENTITY_REFERENCE ->
+                    writer.writeEntityRef(reader.getLocalName());
+            case XMLStreamConstants.DTD -> throw new DoctypeRefused(name);
+            case XMLStreamConstants.END_DOCUMENT -> writer.writeEndDocument();
+            default -> {
+                // nothing else can appear in a part without a DTD
+            }
         }
-        boolean modified = stripExternalHrefs(root);
-        if (!modified) {
-            return xmlBytes;
-        }
-        return serializeDocument(doc);
     }
 
-    private boolean stripExternalHrefs(Node node) {
-        boolean modified = false;
-        if (node.getNodeType() == Node.ELEMENT_NODE) {
-            NamedNodeMap attrs = node.getAttributes();
-            List<String> hrefAttrsToRemove = new ArrayList<>();
-            for (int i = 0; i < attrs.getLength(); i++) {
-                Node attr = attrs.item(i);
-                String name = attr.getNodeName();
-                if (name == null) {
-                    continue;
-                }
-                String lower = name.toLowerCase(Locale.ROOT);
-                if (!(lower.equals("xlink:href")
-                        || lower.endsWith(":href")
-                        || lower.equals("href"))) {
-                    continue;
-                }
-                String value = attr.getNodeValue();
-                if (!isExternalUrl(value)) {
-                    continue;
-                }
-                if (isAdminAllowed(value)) {
-                    continue;
-                }
+    private void startElement(Kind kind, XMLStreamReader reader, XMLStreamWriter writer)
+            throws XMLStreamException {
+        writer.writeStartElement(
+                prefix(reader.getPrefix()),
+                reader.getLocalName(),
+                reader.getNamespaceURI() == null ? "" : reader.getNamespaceURI());
+        for (int i = 0; i < reader.getNamespaceCount(); i++) {
+            String prefix = reader.getNamespacePrefix(i);
+            String uri = reader.getNamespaceURI(i) == null ? "" : reader.getNamespaceURI(i);
+            if (prefix == null || prefix.isEmpty()) {
+                writer.writeDefaultNamespace(uri);
+            } else {
+                writer.writeNamespace(prefix, uri);
+            }
+        }
+        for (int i = 0; i < reader.getAttributeCount(); i++) {
+            QName attribute = reader.getAttributeName(i);
+            String value = reader.getAttributeValue(i);
+            if (kind == Kind.ODF && strippedHref(attribute, value)) {
                 log.warn(
                         "Stripping ODF external href attribute ({}): {}",
-                        name,
+                        attribute,
                         truncateForLog(value));
-                hrefAttrsToRemove.add(name);
+                continue;
             }
-            Element element = (Element) node;
-            for (String attrName : hrefAttrsToRemove) {
-                element.removeAttribute(attrName);
-                modified = true;
-            }
+            writer.writeAttribute(
+                    prefix(attribute.getPrefix()),
+                    attribute.getNamespaceURI() == null ? "" : attribute.getNamespaceURI(),
+                    attribute.getLocalPart(),
+                    value);
         }
-        NodeList children = node.getChildNodes();
-        for (int i = 0; i < children.getLength(); i++) {
-            if (stripExternalHrefs(children.item(i))) {
-                modified = true;
-            }
+    }
+
+    private static String prefix(String prefix) {
+        return prefix == null ? "" : prefix;
+    }
+
+    private boolean droppedRelationship(XMLStreamReader reader) {
+        if (!strips(Kind.RELS, reader)) {
+            return false;
         }
-        return modified;
+        log.warn(
+                "Stripping OOXML external relationship target: {}",
+                truncateForLog(reader.getAttributeValue(null, "Target")));
+        return true;
     }
 
     private boolean isExternalUrl(String url) {
@@ -275,31 +417,44 @@ public class OfficeDocumentSanitizer {
         return ssrfProtectionService.isUrlAllowed(url);
     }
 
-    private Document parseSecurely(byte[] xmlBytes)
-            throws ParserConfigurationException, SAXException, IOException {
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-        factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
-        factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
-        factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
-        factory.setXIncludeAware(false);
-        factory.setExpandEntityReferences(false);
-        factory.setNamespaceAware(true);
-        DocumentBuilder builder = factory.newDocumentBuilder();
-        return builder.parse(new ByteArrayInputStream(xmlBytes));
+    private static InputStream buffered(InputStream in) {
+        return new BufferedInputStream(in, 1 << 16);
     }
 
-    private byte[] serializeDocument(Document doc) throws TransformerException {
-        TransformerFactory tf = TransformerFactory.newInstance();
-        tf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-        Transformer transformer = tf.newTransformer();
-        transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-        transformer.setOutputProperty(OutputKeys.INDENT, "no");
-        transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        transformer.transform(new DOMSource(doc), new StreamResult(baos));
-        return baos.toByteArray();
+    private static OutputStream buffered(OutputStream out) {
+        return new BufferedOutputStream(out, 1 << 16);
+    }
+
+    private static XMLInputFactory inputFactory() {
+        XMLInputFactory factory = XMLInputFactory.newDefaultFactory();
+        factory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
+        factory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false);
+        factory.setProperty(XMLInputFactory.IS_REPLACING_ENTITY_REFERENCES, false);
+        factory.setXMLResolver(
+                (publicId, systemId, baseUri, namespace) -> {
+                    throw new XMLStreamException("External entities are not allowed");
+                });
+        return factory;
+    }
+
+    private static void close(XMLStreamReader reader) {
+        if (reader != null) {
+            try {
+                reader.close();
+            } catch (XMLStreamException ignored) {
+                // nothing left to release
+            }
+        }
+    }
+
+    private static void close(XMLStreamWriter writer) {
+        if (writer != null) {
+            try {
+                writer.close();
+            } catch (XMLStreamException ignored) {
+                // nothing left to release
+            }
+        }
     }
 
     private String truncateForLog(String value) {

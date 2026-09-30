@@ -57,10 +57,12 @@ public class PdfUaConversionService {
         // Ghostscript over the whole file, which discards the structure tree, /Lang and XFA, so
         // every guard and every "what did the source say" question must be answered from here.
         SourceFacts facts;
+        boolean fillable;
         try (PDDocument original = load(input)) {
             rejectUnsupportedSource(original);
             warnSignatures(original, warnings);
             facts = SourceFacts.of(original);
+            fillable = hasFields(original);
         }
 
         byte[] source = input;
@@ -72,6 +74,7 @@ public class PdfUaConversionService {
                 warnings.add(fonts.warning());
             }
             source = keepTagsOverFonts(input, source, facts, options, warnings);
+            source = keepFormOverFonts(input, source, fillable, warnings);
         }
 
         TaggingOptions effective = options.toBuilder().sourceFacts(facts).build();
@@ -207,6 +210,29 @@ public class PdfUaConversionService {
                         + " the tags were kept and the fonts left unembedded. Turn off font"
                         + " embedding to silence this, or rebuild the tags to embed them.");
         return input;
+    }
+
+    /** Ghostscript flattens form fields into the page, so a fillable form keeps them instead. */
+    private byte[] keepFormOverFonts(
+            byte[] input, byte[] embedded, boolean fillable, List<String> warnings)
+            throws IOException {
+        if (!fillable || embedded == input) {
+            return embedded;
+        }
+        try (PDDocument rewritten = load(embedded)) {
+            if (hasFields(rewritten)) {
+                return embedded;
+            }
+        }
+        warnings.add(
+                "Embedding the missing fonts would have flattened the document's form fields, so"
+                        + " the form was kept and the fonts left unembedded.");
+        return input;
+    }
+
+    private static boolean hasFields(PDDocument document) {
+        PDAcroForm form = document.getDocumentCatalog().getAcroForm();
+        return form != null && !form.getFields().isEmpty();
     }
 
     /**

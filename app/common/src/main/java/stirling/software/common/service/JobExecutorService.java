@@ -51,6 +51,8 @@ public class JobExecutorService {
     private final ResourceMonitor resourceMonitor;
     private final JobQueue jobQueue;
     private final ExecutorService executor = ExecutorFactory.newVirtualThreadExecutor();
+    private final java.util.concurrent.ScheduledExecutorService timeoutExecutor =
+            ExecutorFactory.newTimeoutScheduler("job-timeouts");
     private final long effectiveTimeoutMs;
 
     @Autowired(required = false)
@@ -81,6 +83,7 @@ public class JobExecutorService {
     public void shutdown() {
         log.debug("Shutting down job executor");
         executor.shutdown();
+        timeoutExecutor.shutdownNow();
         try {
             if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
                 executor.shutdownNow();
@@ -172,6 +175,12 @@ public class JobExecutorService {
 
             CompletableFuture<ResponseEntity<?>> future =
                     jobQueue.queueJob(jobId, resourceWeight, wrappedWork, timeoutToUse);
+            future.whenComplete(
+                    (result, failure) -> {
+                        if (failure != null) {
+                            taskManager.setError(capturedJobIdForQueue, failure.getMessage());
+                        }
+                    });
 
             return ResponseEntity.ok().body(new JobResponse<>(true, jobId, null));
         } else if (async) {
@@ -209,6 +218,7 @@ public class JobExecutorService {
                 log.debug("Running sync job with timeout {} ms", timeoutToUse);
 
                 stirling.software.common.util.JobContext.setJobId(jobId);
+                stirling.software.common.util.JobContext.setOwner(jobOwner);
                 Object result = executeWithTimeout(() -> work.get(), timeoutToUse);
 
                 if (result instanceof ResponseEntity) {
@@ -468,35 +478,43 @@ public class JobExecutorService {
     private <T> T executeWithTimeout(Supplier<T> supplier, long timeoutMs)
             throws TimeoutException, Exception {
         String currentJobId = stirling.software.common.util.JobContext.getJobId();
+        String currentOwner = stirling.software.common.util.JobContext.getOwner();
 
-        java.util.concurrent.CompletableFuture<T> future =
-                java.util.concurrent.CompletableFuture.supplyAsync(
+        java.util.concurrent.Future<T> future =
+                executor.submit(
                         () -> {
                             if (currentJobId != null) {
                                 stirling.software.common.util.JobContext.setJobId(currentJobId);
                             }
+                            stirling.software.common.util.JobContext.setOwner(currentOwner);
                             try {
                                 return supplier.get();
                             } finally {
-                                if (currentJobId != null) {
-                                    stirling.software.common.util.JobContext.clear();
-                                }
+                                stirling.software.common.util.JobContext.clear();
                             }
-                        },
-                        executor);
+                        });
 
+        var deadline =
+                timeoutExecutor.schedule(
+                        () -> future.cancel(true), timeoutMs, TimeUnit.MILLISECONDS);
         try {
             return future.get(timeoutMs, TimeUnit.MILLISECONDS);
         } catch (java.util.concurrent.TimeoutException e) {
             future.cancel(true);
             throw new TimeoutException("Execution timed out after " + timeoutMs + " ms");
         } catch (java.util.concurrent.ExecutionException e) {
+            if (e.getCause() instanceof Error error) {
+                throw error;
+            }
             throw (Exception) e.getCause();
         } catch (java.util.concurrent.CancellationException e) {
-            throw new Exception("Execution was cancelled", e);
+            throw new TimeoutException("Execution timed out after " + timeoutMs + " ms");
         } catch (InterruptedException e) {
+            future.cancel(true);
             Thread.currentThread().interrupt();
             throw new Exception("Execution was interrupted", e);
+        } finally {
+            deadline.cancel(false);
         }
     }
 
