@@ -2,9 +2,11 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import "fake-indexeddb/auto";
 
 /**
- * A listing audits every record it reads, and each audit reads through a stream
- * Chromium backs with a pipe the size of the blob. Started all at once, the
- * audits of a library of 1,800 files ran the desktop page out of memory.
+ * The work a read starts in the background. A listing audits every record it
+ * reads, and each audit reads through a stream Chromium backs with a pipe the
+ * size of the blob; started all at once, the audits of a library of 1,800 files
+ * ran the desktop page out of memory. A record whose file has drifted from its
+ * name is also rewritten, and that must not land over newer bytes.
  */
 
 vi.mock("@app/components/toast", () => ({ alert: vi.fn() }));
@@ -146,5 +148,70 @@ describe("auditing stored records", () => {
     expect(readBlobSlice).toHaveBeenCalledTimes(4);
     await vi.advanceTimersByTimeAsync(3000);
     await vi.waitFor(() => expect(readBlobSlice).toHaveBeenCalledTimes(6));
+  });
+});
+
+describe("rewriting a record under its current name", () => {
+  const nativePut = IDBObjectStore.prototype.put;
+
+  /** The bytes of every put of record `id` from here on. */
+  function bodiesPutFor(id: string): unknown[] {
+    const bodies: unknown[] = [];
+    IDBObjectStore.prototype.put = function (
+      this: IDBObjectStore,
+      value: { id?: string; data?: unknown },
+      key?: IDBValidKey,
+    ) {
+      if (value?.id === id) bodies.push(value.data);
+      return nativePut.call(this, value, key);
+    } as typeof nativePut;
+    return bodies;
+  }
+
+  /** The rewrite's copy: the eight bytes of "%PDF-1.7" served on read, named. */
+  const isCopy = (data: unknown) =>
+    data instanceof File && data.size === 8 && data.name === "file-0.pdf";
+
+  afterEach(() => {
+    IDBObjectStore.prototype.put = nativePut;
+  });
+
+  test("stores the copy when nothing else wrote the bytes", async () => {
+    const { fileStorage, ids } = await storeFiles(1);
+    const [id] = ids;
+    readBlobSlice.mockResolvedValue(new Uint8Array(1));
+    serveBlobsOnRead();
+    const bodies = bodiesPutFor(id);
+
+    // A plain Blob comes back without the record's name, so this starts the rewrite.
+    await fileStorage.getStirlingFile(id);
+
+    await vi.waitFor(() => expect(bodies.some(isCopy)).toBe(true));
+  });
+
+  test("gives up when the bytes were replaced while its copy was made", async () => {
+    const { fileStorage, ids } = await storeFiles(1);
+    const [id] = ids;
+    // Probes wait until released: the audit and the rewrite each read one byte.
+    const held: Array<() => void> = [];
+    readBlobSlice.mockImplementation(
+      () =>
+        new Promise<Uint8Array>((resolve) =>
+          held.push(() => resolve(new Uint8Array(1))),
+        ),
+    );
+    serveBlobsOnRead();
+    const bodies = bodiesPutFor(id);
+
+    await fileStorage.getStirlingFile(id);
+    await vi.waitFor(() => expect(held.length).toBe(2));
+    const newer = new File(["newer"], "file-0.pdf", {
+      type: "application/pdf",
+    });
+    await fileStorage.updateFileMetadata(id, { data: newer });
+    held.splice(0).forEach((release) => release());
+    await new Promise((settled) => setTimeout(settled, 250));
+
+    expect(bodies.some(isCopy)).toBe(false);
   });
 });
