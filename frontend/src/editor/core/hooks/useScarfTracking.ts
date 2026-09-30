@@ -20,9 +20,12 @@ export function useScarfTracking() {
   // Update scarf config whenever config or consent changes
   useEffect(() => {
     if (config && config.enableScarf !== undefined) {
-      setScarfConfig(config.enableScarf, isServiceAccepted);
+      setScarfConfig(
+        config.enableAnalytics === false ? false : config.enableScarf,
+        isServiceAccepted,
+      );
     }
-  }, [config?.enableScarf, isServiceAccepted]);
+  }, [config?.enableAnalytics, config?.enableScarf, isServiceAccepted]);
 
   // Listen to cookie consent changes and auto-fire pixel when consent is granted
   useEffect(() => {
