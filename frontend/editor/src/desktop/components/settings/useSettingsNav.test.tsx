@@ -8,6 +8,8 @@ const state = vi.hoisted(() => ({
   roster: false,
   owner: false,
   loading: false,
+  connectionFails: false,
+  workspace: true,
 }));
 vi.mock("@proprietary/components/shared/config/configNavSections", () => ({
   useConfigNavSections: () => [
@@ -16,14 +18,19 @@ vi.mock("@proprietary/components/shared/config/configNavSections", () => ({
       title: "Preferences",
       items: [{ key: "general", label: "Preferences", component: null }],
     },
-    {
-      id: "workspace",
-      title: "Workspace",
-      items: [
-        { key: "plan", label: "Old plan", component: null },
-        { key: "adminPlan", label: "Old admin plan", component: null },
-      ],
-    },
+    ...(state.workspace
+      ? [
+          {
+            id: "workspace",
+            title: "Workspace",
+            items: [
+              { key: "users", label: "Users", component: null },
+              { key: "plan", label: "Old plan", component: null },
+              { key: "adminPlan", label: "Old admin plan", component: null },
+            ],
+          },
+        ]
+      : []),
   ],
 }));
 vi.mock("@app/components/shared/config/configSections/GeneralSection", () => ({
@@ -41,7 +48,11 @@ vi.mock("@app/components/shared/config/cloudConfigNavSections", () => ({
 }));
 vi.mock("@app/services/connectionModeService", () => ({
   connectionModeService: {
-    getCurrentMode: async () => state.mode,
+    getCurrentMode: async () => {
+      if (state.connectionFails)
+        throw new Error("Connection config unavailable");
+      return state.mode;
+    },
     subscribeToModeChanges: () => () => {},
   },
 }));
@@ -83,6 +94,54 @@ beforeEach(() => {
   state.roster = false;
   state.owner = false;
   state.loading = false;
+  state.connectionFails = false;
+  state.workspace = true;
+});
+
+it("finishes loading without billing when the connection lookup fails", async () => {
+  state.connectionFails = true;
+  state.owner = true;
+  const { result } = renderHook(() => useSettingsNav(vi.fn()));
+  await waitFor(() => expect(result.current.pending).toBe(false));
+  const keys = result.current.sections.flatMap((group) =>
+    group.items.map((item) => item.key),
+  );
+  expect(keys).toContain("general");
+  expect(keys).toContain("connectionMode");
+  expect(keys).not.toContain("billing");
+  expect(result.current.aliases?.plan).toBeUndefined();
+});
+
+it.each([false, true])(
+  "keeps one Workspace group for a self-hosted owner with roster=%s",
+  async (roster) => {
+    state.mode = "selfhosted";
+    state.owner = true;
+    state.roster = roster;
+    const { result, rerender } = renderHook(() => useSettingsNav(vi.fn()));
+    await waitFor(() => expect(result.current.pending).toBe(false));
+    rerender();
+    const workspaces = result.current.sections.filter(
+      (group) => group.id === "workspace",
+    );
+    expect(workspaces).toHaveLength(1);
+    const keys = workspaces[0].items.map((item) => item.key);
+    expect(keys).toContain("users");
+    expect(keys.filter((key) => key === "billing")).toHaveLength(1);
+  },
+);
+
+it("creates a Workspace group when the self-hosted owner has none", async () => {
+  state.mode = "selfhosted";
+  state.owner = true;
+  state.workspace = false;
+  const { result } = renderHook(() => useSettingsNav(vi.fn()));
+  await waitFor(() => expect(result.current.pending).toBe(false));
+  const workspaces = result.current.sections.filter(
+    (group) => group.id === "workspace",
+  );
+  expect(workspaces).toHaveLength(1);
+  expect(workspaces[0].items.map((item) => item.key)).toEqual(["billing"]);
 });
 
 it("waits for the connection before resolving an old billing bookmark", async () => {

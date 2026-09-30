@@ -33,10 +33,20 @@ export const useConfigNavSections = (
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   useEffect(() => {
-    void connectionModeService.getCurrentMode().then(setConnectionMode);
-    return connectionModeService.subscribeToModeChanges((config) =>
+    let active = true;
+    void connectionModeService.getCurrentMode().then(
+      (mode) => {
+        if (active) setConnectionMode(mode);
+      },
+      () => undefined,
+    );
+    const unsubscribe = connectionModeService.subscribeToModeChanges((config) =>
       setConnectionMode(config.mode),
     );
+    return () => {
+      active = false;
+      unsubscribe();
+    };
   }, []);
 
   // Subscribe to auth changes
@@ -57,7 +67,7 @@ export const useConfigNavSections = (
     loginEnabled,
     onRequestClose,
     showSettingsWhenNoLogin,
-  );
+  ).slice();
 
   // Desktop adds file-association defaults and its own update controls to the
   // Preferences page; core builds the page, desktop supplies its extras.
@@ -121,7 +131,7 @@ export const useConfigNavSections = (
     isAuthenticated &&
     (isSaasMode || (connectionMode === "selfhosted" && isOwner))
   ) {
-    result.push({
+    const billingSection: ConfigNavSection = {
       id: "workspace",
       title: t("settings.workspace.title", "Workspace"),
       items: [
@@ -134,7 +144,19 @@ export const useConfigNavSections = (
           ),
         },
       ],
-    });
+    };
+    const workspace = isSaasMode
+      ? undefined
+      : sections.find((section) => section.id === "workspace");
+    if (workspace) {
+      const index = sections.indexOf(workspace);
+      sections[index] = {
+        ...workspace,
+        items: [...workspace.items, ...billingSection.items],
+      };
+    } else {
+      result.push(billingSection);
+    }
   }
   if (isSaasMode && isAuthenticated) {
     result.push({

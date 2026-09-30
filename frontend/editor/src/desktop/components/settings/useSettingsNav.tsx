@@ -11,9 +11,12 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
   const [connectionReady, setConnectionReady] = useState(false);
   useEffect(() => {
     let active = true;
-    void connectionModeService.getCurrentMode().then(() => {
-      if (active) setConnectionReady(true);
-    });
+    void connectionModeService
+      .getCurrentMode()
+      .catch(() => undefined)
+      .finally(() => {
+        if (active) setConnectionReady(true);
+      });
     return () => {
       active = false;
     };

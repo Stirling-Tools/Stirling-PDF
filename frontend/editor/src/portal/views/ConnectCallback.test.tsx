@@ -344,7 +344,7 @@ describe("account-link callback", () => {
     await waitFor(() => expect(lastOutcome()?.state).toBe("retry"));
 
     await act(async () => {
-      await lastOutcome()!.reclaim!();
+      await lastOutcome().reclaim!();
     });
 
     // Re-claims rather than opening a new handshake, which would spend a leader's approval.
@@ -427,7 +427,7 @@ describe("account-link callback", () => {
     renderFlow();
     await waitFor(() => expect(lastOutcome()?.state).toBe("retry"));
     await act(async () => {
-      await lastOutcome()!.reclaim!();
+      await lastOutcome().reclaim!();
     });
     await waitFor(() => expect(lastOutcome()?.sessionRestored).toBe(true));
     expect(completeConnect).toHaveBeenCalledTimes(1);
