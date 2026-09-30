@@ -8,6 +8,7 @@ import OutputOutlinedIcon from "@mui/icons-material/OutputOutlined";
 import { usePortalAccess } from "@app/hooks/usePortalAccess";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { PORTAL_BASENAME } from "@app/routes/portalBasename";
+import { HAS_PORTAL } from "@app/routes/hasPortal";
 import { saveEditorReturnPath } from "@app/services/workbenchSession";
 import { policyCategoryIcon } from "@app/components/policies/policyCategoryIcon";
 import {
@@ -187,13 +188,15 @@ export function EditorPipelinesPanel() {
   const navigate = useNavigate();
   const { actions } = useNavigationActions();
 
-  const openProcessor = portalAccess
-    ? () =>
-        actions.requestNavigation(() => {
-          saveEditorReturnPath();
-          navigate(PIPELINES_PATH);
-        })
-    : null;
+  // Builds without the processor have no /processor route to land on.
+  const openProcessor =
+    HAS_PORTAL && portalAccess
+      ? () =>
+          actions.requestNavigation(() => {
+            saveEditorReturnPath();
+            navigate(PIPELINES_PATH);
+          })
+      : null;
 
   return (
     <EditorPipelinesPanelView {...pipelines} onOpenProcessor={openProcessor} />
