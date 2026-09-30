@@ -57,12 +57,14 @@ function PipelineRow({
         {policyCategoryIcon(pipeline.policyKey, ICON_SIZE)}
       </span>
       <span className="editor-pipelines__row-label">{pipeline.label}</span>
-      <Icon
-        name={triggerIcon}
-        className="editor-pipelines__row-trigger"
-        size={TRIGGER_SIZE}
-        title={trigger}
-      />
+      {onOpen && (
+        <Icon
+          name={triggerIcon}
+          className="editor-pipelines__row-trigger"
+          size={TRIGGER_SIZE}
+          title={trigger}
+        />
+      )}
       {pipeline.runsToday > 0 && (
         <span
           className="editor-pipelines__row-count"

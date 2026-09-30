@@ -1,9 +1,7 @@
 import { remove } from "@tauri-apps/plugin-fs";
+import { directoryKey } from "@app/services/localFolderStorage";
 import {
-  localFolderStorage,
-  directoryKey,
-} from "@app/services/localFolderStorage";
-import {
+  isWithinMount,
   listDirectory,
   readDiskFile,
   writeDiskFile,
@@ -66,11 +64,8 @@ export async function requireLocalProcessingFolder(
   const folder = await storage.folder(id);
   if (!folder) throw new Error("Processing folder not found");
   await requireAutomationSession(folder.sessionKey);
-  const mounted = (await localFolderStorage.getAllFolders()).some(
-    (mount) =>
-      directoryKey(mount.directory ?? "") === directoryKey(folder.directory),
-  );
-  if (!mounted) throw new Error("The processing folder is no longer mounted");
+  if (!(await isWithinMount(folder.directory)))
+    throw new Error("The processing folder is no longer mounted");
   return folder;
 }
 
@@ -89,11 +84,7 @@ export async function saveLocalProcessingFolder(
   const directory = existing?.directory ?? request.directory?.trim();
   if (!directory || request.folderId)
     throw new Error("A desktop folder needs a local directory");
-  const mounted = (await localFolderStorage.getAllFolders()).some(
-    (folder) =>
-      directoryKey(folder.directory ?? "") === directoryKey(directory),
-  );
-  if (!mounted)
+  if (!(await isWithinMount(directory)))
     throw new Error("Mount the directory before enabling processing");
   const folder: LocalProcessingFolder = {
     id: existing?.id ?? `desktop:${generateId()}`,

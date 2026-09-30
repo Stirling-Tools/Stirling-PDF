@@ -101,11 +101,10 @@ export const useConfigNavSections = (
   // Identifies self-hosted admin sections by their first item's stable key.
   // Using item keys avoids dependency on translated section titles (#17).
   const SELF_HOSTED_SECTION_FIRST_KEYS = new Set([
-    "people", // Workspace section
-    "adminGeneral", // Configuration section
-    "adminSecurity", // Security & Authentication section
-    "adminPlan", // Licensing & Analytics section
-    "adminLegal", // Policies & Privacy section
+    "users", // Workspace section, once the roster supersedes People/Teams
+    "people", // Workspace section, before it does
+    "adminGeneral", // Server section
+    "adminUsage", // Monitoring section
   ]);
 
   // Build the result array explicitly instead of splice with hardcoded indices (#18).

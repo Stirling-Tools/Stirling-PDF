@@ -511,3 +511,134 @@
 .billing-id__action {
   margin-left: auto;
 }
+
+/* The plan matrix. Column widths are equal and fixed so a long cell wraps instead of
+   stealing width from its neighbours, which is what keeps the three plans comparable. */
+.billing-compare {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.billing-compare__head {
+  width: 26%;
+  padding: 0 0 0.75rem 1.125rem;
+  text-align: start;
+  vertical-align: bottom;
+}
+
+.billing-compare__plan {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4375rem;
+  align-items: center;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.billing-compare__current {
+  padding: 0.0625rem 0.4375rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--c-accent-text);
+  border: 1px solid var(--c-primary-subtle);
+  border-radius: 1.25rem;
+}
+
+.billing-compare__price {
+  display: block;
+  margin-top: 0.1875rem;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--c-text-subtle);
+}
+
+.billing-compare__label {
+  width: 22%;
+  padding: 0.8125rem 0.75rem 0.8125rem 0;
+  font-size: 0.75rem;
+  font-weight: 400;
+  text-align: start;
+  vertical-align: top;
+  color: var(--c-text-subtle);
+}
+
+.billing-compare__cell {
+  padding: 0.8125rem 0.75rem 0.8125rem 1.125rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  vertical-align: top;
+  color: var(--c-text);
+}
+
+.billing-compare thead th {
+  border-bottom: 1px solid var(--c-border);
+}
+
+.billing-compare tbody tr + tr th,
+.billing-compare tbody tr + tr td {
+  border-top: 1px solid var(--c-border-subtle);
+}
+
+.billing-compare__note {
+  display: block;
+  margin-top: 0.125rem;
+  font-size: 0.71875rem;
+  color: var(--c-text-subtle);
+}
+
+.billing-compare__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+}
+
+/* Sits on the eyebrow row, so it reads as a quiet aside to the plan rather than a fourth CTA. */
+.billing-compare-open {
+  padding: 0;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--c-accent-text);
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.billing-compare-open:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 40rem) {
+  /* Three plans cannot stay side by side on a phone; the label column goes and each
+     cell carries its own heading instead. */
+  .billing-compare,
+  .billing-compare tbody,
+  .billing-compare tbody tr,
+  .billing-compare__cell {
+    display: block;
+  }
+
+  .billing-compare thead {
+    display: none;
+  }
+
+  .billing-compare__label {
+    display: block;
+    width: auto;
+    padding: 0.875rem 0 0.25rem;
+    font-weight: 600;
+    color: var(--c-text);
+  }
+
+  .billing-compare__cell {
+    padding: 0.25rem 0 0.25rem 0.875rem;
+  }
+
+  .billing-compare tbody tr + tr td {
+    border-top: none;
+  }
+}
