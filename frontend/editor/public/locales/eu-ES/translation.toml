@@ -729,6 +729,8 @@ permissionNotice = "tessdata bidea ez da idazgarria. Deskargak nabigatzailean ir
 
 [admin.settings.ai]
 description = "Konektatu Stirling Python AI motorrera, aukeratu haren ereduak eta ezarri exekutatzeko babes-mugak."
+managedByCloud = "Modu honetan Stirling Cloud-ek kudeatzen du."
+managedByCloudShort = "Stirling Cloud-ek kudeatua"
 
 [admin.settings.ai.documents]
 description = "Konfiguratu dokumentuei buruzko galderei erantzuteko erabiltzen diren embedding eredua eta berreskuratze-ezarpenak. Gordetzean AI motorrari aplikatzen zaio."
@@ -771,11 +773,24 @@ label = "Top K"
 [admin.settings.ai.general]
 connection = "Konexioa"
 description = "Konektatu Stirling Python AI motorrarekin eta aukeratu zein AI gaitasun erakutsiko diren. Aldaketak berrabiaraztean aplikatzen dira."
+restartNote = "URL-a edo edozein denbora-muga aldatzeak berrabiarazi ondoren izango du eragina."
 title = "AI motorra"
 
 [admin.settings.ai.general.capabilities]
 description = "Aktibatu edo desaktibatu AI eginbide bakoitza. Desaktibatutako eginbideak aplikazioan ezkutatzen dira."
 title = "Gaitasunak"
+
+[admin.settings.ai.general.cloud]
+note = "Ereduak eta hornitzaileen gakoak Stirling Cloud-ek kudeatzen ditu; beraz, ezarpen horiek ez dira aplikatzen modu honetan."
+
+[admin.settings.ai.general.cloud.indexing]
+description = "AI tresna bakoitzak erantzuteko behar duen orrialde-testua bidaltzen du. Honek erabakitzen du Stirling Cloud-ek testu hori ere gorde dezakeen, indexatuta, ondorengo galderek dokumentuan bilatu ahal izan dezaten."
+help = "Desaktibatuta badago, dokumentu-galderak ez dira erabilgarri egongo. Horrek ez du testua bidaltzea eragozten, gordetzea bakarrik."
+label = "Utzi Stirling Cloud-i dokumentu indexatuak gordetzen"
+
+[admin.settings.ai.general.cloudNote]
+body = "Arrazonamendua Stirling-en azpiegituran exekutatzen da, zerbitzari hau lotuta dagoen kontuan fakturatuta. Ez dago exekutatu beharreko edukiontzirik, ezta hemen gordetzeko hornitzaile-gakorik ere. AI-k irakurtzen duen guztia Stirling Cloud-ek prozesatzen du, ez zure hardware propioan."
+title = "Stirling Cloud AI-ri buruz"
 
 [admin.settings.ai.general.enabled]
 description = "Etengailu nagusia. Desaktibatuta dagoenean, ez dago AI tresnarik, agenterik edo motor-deirik erabilgarri."
@@ -809,9 +824,28 @@ label = "PDF iruzkin-agentea"
 description = "Agente-eragiketa astunagoetarako denbora-muga, hala nola dokumentuen sorkuntza."
 label = "Iraupen luzeko denbora-muga (segundoak)"
 
+[admin.settings.ai.general.mode]
+label = "AI non exekutatzen den"
+
+[admin.settings.ai.general.mode.cloud]
+description = "Ez dago edukiontzirik, ez hornitzaile-gakorik, ez eredu-aukerarik: lana Stirling Cloud-en exekutatzen da eta zerbitzari hau lotuta dagoen kontuan fakturatzen da."
+linkCta = "Konektatu zerbitzari hau Stirling kontu batera"
+notLinked = "Lotu kontu bat lehenik"
+ownerOnly = "Erakundearen jabeak bakarrik lotu dezake zerbitzari hau Stirling kontu batera."
+title = "Erabili Stirling Cloud AI"
+
+[admin.settings.ai.general.mode.off]
+description = "Ez dago AI tresnarik aplikazioko inon, eta ezer ez da zerbitzari honetatik irteten."
+title = "Desaktibatuta"
+
+[admin.settings.ai.general.mode.self]
+description = "Zuk ostatatzen duzun edukiontzi bat, zuk aukeratutako eredu-hornitzaile batera zuzendua. Zure gakoa, zure faktura, zure datu-bidea."
+title = "Exekutatu zure motor propioa"
+
 [admin.settings.ai.general.note]
-body = "AI motorra aparteko zerbitzu gisa exekutatzen da. Bere sekretu partekatua"
-body2 = "edukiontziaren ingurune-aldagai baten bidez ezartzen da. Hornitzaileen API gakoak orri hauetan sar daitezke edo motorraren ingurune-aldagai gisa eman; hemen sartutako gakoak motorra bidaltzen dira gordetzean."
+docs = "Konfigurazio-gida"
+intro = "Stirling-en ondoan exekutatzen duzun edukiontzi bereizi bat. Hark egiten du arrazonamendua; Stirling-ek oraindik orrialde-eragiketa guztiak berak egiten ditu. Berbera behar du"
+outro = "bi edukiontzietan eta eredu-hornitzaile baten gakoa. AI-k irakurtzen duen guztia zuk aukeratutako hornitzailera bidaltzen da; zuk ostatatutako Ollama batek orrialde guztiak etxe barruan mantentzen ditu."
 title = "AI motorrari buruz"
 
 [admin.settings.ai.general.streamTimeoutSeconds]
@@ -890,6 +924,67 @@ label = "Eredu adimentsua"
 body = "Aldaketak automatikoki bidaltzen zaizkio AI motorrari."
 bodyNoPush = "Ezarpenak gordeta. AI motorrak bere konfigurazioa hurrengoan hartzen duenean aplikatuko dira."
 title = "AI ezarpenak gordeta"
+
+[admin.settings.ai.status]
+capabilities = "Gaitasunak"
+capabilitiesValue = "{{on}}/{{total}} aktibatuta"
+checked = "egiaztatuta"
+checking = "Motorra egiaztatzen…"
+description = "Motorra eskuragarri dagoen, zerbitzari hau onartzen duen eta zer exekutatzen ari den."
+fastModel = "Eredu azkarra"
+justNow = "oraintxe"
+latency = "Erantzun-denbora"
+linkLabel = "Kontu-lotura"
+minutesAgo = "{{count}} min duela"
+recheck = "Egiaztatu berriro"
+runningOn = "Hemen exekutatzen"
+secondsAgo = "{{count}} s duela"
+secretLabel = "Sekretu partekatua"
+smartModel = "Eredu adimenduna"
+title = "Egoera"
+url = "Motor URL-a"
+
+[admin.settings.ai.status.cloud]
+hostDown = "Erorita"
+hostLabel = "Stirling.com"
+hostUp = "Aktibo"
+name = "Stirling Cloud"
+sharingLabel = "AI partekatzea"
+sharingOff = "Desgaituta"
+sharingOn = "Gaituta"
+
+[admin.settings.ai.status.cloud.degraded]
+body = "Stirling Cloud-ek erantzun du, baina zerbitzari hau baztertu du. Baliteke kontu-lotura baliogabetu izana."
+title = "Stirling Cloud-ek zerbitzari hau baztertzen ari da"
+
+[admin.settings.ai.status.cloud.down]
+body = "Zerbitzari honek ezin izan du Stirling Cloud-era iritsi. Egiaztatu kontu-lotura eta zerbitzari honek internetera irits daitekeela."
+title = "Stirling Cloud ez dago eskuragarri"
+
+[admin.settings.ai.status.cloud.ok]
+body = "Stirling Cloud-ek zerbitzari hau onartu du. Ez dago hemen exekutatu edo adabakia jarri beharreko ezer."
+title = "Stirling Cloud-en exekutatzen"
+
+[admin.settings.ai.status.degraded]
+body = "Osasun-egiaztapenari erantzun dio, baina benetako eskaera bat baztertu du. Bi aldeek sekretu partekatu desberdinak erabiltzen dituzte."
+title = "Motorra martxan dago, baina zerbitzari hau baztertzen ari da"
+
+[admin.settings.ai.status.down]
+body = "Egiaztatu URL-a, motor-edukiontzia exekutatzen ari dela eta AI gaitzean berrabiarazi duzula."
+title = "Motorra ez dago eskuragarri"
+
+[admin.settings.ai.status.off]
+body = "Aukeratu behean AI nola exekutatzen den, ondoren gorde eta berrabiarazi."
+title = "AI desaktibatuta dago"
+
+[admin.settings.ai.status.ok]
+body = "Osasun-egiaztapena eta autentifikatutako eskaera bat behar bezala osatu dira."
+title = "Motorra martxan"
+
+[admin.settings.ai.status.secret]
+no = "Baztertua"
+unknown = "Ezezaguna"
+yes = "Onartua"
 
 [admin.settings.badge]
 clickToUpgrade = "Egin klik planaren xehetasunak ikusteko"
@@ -4453,6 +4548,7 @@ openFromComputer = "Ireki ordenagailutik"
 openSettings = "Ireki ezarpenak"
 other = "Besteak"
 recent = "Azkenak"
+searchFiles = "Bilatu fitxategiak"
 uploadFailedBody = "Ezin izan dira hautatutako fitxategiak gehitu."
 uploadFailedTitle = "Kargatzeak huts egin du"
 viewAll = "Ikusi {{count}} fitxategi guztiak"
@@ -5827,6 +5923,8 @@ label = "Free credits"
 adoptFailed = "Dokumentua desblokeatu da, baina ezin izan da hemen ireki. Saiatu tresna zuzenean erabiltzen."
 empty = "Ez dago jakinaraztekorik."
 handoffUnavailable = "Arakatzaile honek ez dio prozesadoreari dokumentua editoreari pasatzen utziko. Ireki editoretik horren ordez."
+inSmartFolder = "Dokumentu hau karpeta adimendun batean dago; beraz, zerbitzarian kudeatzen da, ez hemen."
+inSmartFolderNamed = "{{name}} karpeta adimendun batean dago; beraz, zerbitzarian kudeatzen da, ez hemen."
 noDocumentLinked = "Hutsegite hau ez dago dokumentu zehatz bati lotuta; beraz, hemen ez dago irekitzeko ezer."
 notOnThisDevice = "Dokumentu hau ez dago gailu honetan; beraz, ezin da hemen ireki."
 occurrences = "{{count}} aldiz"
@@ -5837,6 +5935,7 @@ repairedRerunNotAdopted = "Konpondutako dokumentua prozesatu da, baina haren ema
 repairedRerunUndelivered = "Dokumentua konpondu da eta gidalerroaren berriz exekuzioa hasi da, baina haren emaitza ezin da hemen entregatu; beraz, hutsegite hau irekita geratzen da."
 rerunRejected = "Gidalerroa ezin izan da berriro exekutatu oraintxe. Saiatu berriro une batean."
 rerunUndelivered = "Gidalerroaren berriz exekuzioa hasi da, baina haren emaitza ezin da hemen entregatu; beraz, hutsegite hau irekita geratzen da."
+retryInFolderFailed = "Dokumentu hori ezin izan da berriro exekutatu oraintxe bertan."
 retryUnavailable = "Dokumentu hau ezin da gehiago arakatzaile honetatik berriro saiatu."
 title = "Jakinarazpenak"
 unlockedNotRerun = "Dokumentua desblokeatu eta hemen ireki da, baina gidalerroa ezin izan da berriro exekutatu bertan."
@@ -6625,9 +6724,11 @@ title = "Doitu Team plana"
 [payment.capacityStage]
 adjustmentNote = "Stripe-k kargu zehatza, hainbanaketak eta hurrengo fakturazio-data erakutsiko ditu baieztatu aurretik. Gordetako ordainketa-metodoa erabiliko da erabilgarri badago."
 continue = "Jarraitu ordainketara"
+currencyAtCheckout = "Stripe-k azken zenbatekoa eta ordainketaren moneta baieztatzen ditu ordainketa amaitzean."
 customLabel = "Erabiltzaile kopurua"
 dueToday = "Gaur ordaindu beharrekoa"
 enterpriseQuote = "Eskatu enpresa-aurrekontua"
+estimatedTotal = "Zenbatetsitako guztizkoa"
 lineItem = "Team · {{price}}{{period}} {{block}} erabiltzaileko"
 minimumForCurrentUsers = "{{users}} erabiltzaile dituzu; beraz, planak gutxienez {{minimum}} estali behar ditu."
 modalTitle = "Bertsio-berritu {{planName}} planera"
@@ -6865,6 +6966,25 @@ width = "Zabalera"
 widthHint = "Testu-koadro baten zabalerak bere edukia eta lerro-itzulera jarraitzen ditu."
 x = "X"
 y = "Y"
+
+[pdfTextEditor.mobile]
+actions = "Editorearen ekintzak"
+addImage = "Irudia"
+addText = "Testua"
+cancel = "Utzi"
+delete = "Ezabatu"
+details = "Xehetasunak"
+document = "Dokumentua"
+done = "Eginda"
+download = "Gorde eta deskargatu"
+find = "Bilatu"
+lock = "Blokeatu"
+openPdf = "Ireki PDF bat"
+panelHint = "Editatzea Workspace ikuspegian egiten da. Ukitu orrialdeko testua aldatzeko."
+save = "Gorde"
+style = "Estiloa"
+tapToPlace = "Ukitu orrialdea testua jarri behar den tokian"
+unlock = "Desblokeatu"
 
 [pdfTextEditor.password]
 cancel = "Utzi"
@@ -7574,6 +7694,49 @@ plan = "Plana"
 procurement = "Erosketa"
 usage = "Erabilera"
 
+[portal.billing.compare]
+current = "Unekoa"
+enterpriseData = "Datuen egoitza eta SCIM"
+enterpriseName = "Enterprise"
+enterprisePrice = "Zure akordioaren arabera"
+enterpriseProcessing = "Neurtua edo tarifa finkoa"
+enterpriseSignIn = "SAML eta auditoria"
+enterpriseSupport = "Erabilgarritasun-denboraren SLAk, inplementazio-laguntza"
+enterpriseUsers = "Mugarik gabe"
+enterpriseWhere = "Gainera, nodo anitzeko eta air-gapped"
+exploreEnterprise = "Arakatu Enterprise"
+freeData = "Exekutatzen duzun tokian geratzen da"
+freeName = "Doakoa"
+freePrice = "Txartelik gabe, iraungitzerik gabe"
+freeProcessing = "{{allowance}} kreditu hilean"
+freeProcessingUnknown = "Hileko kreditu-kopuru bat"
+freeSignIn = "Posta elektronikoa, Google eta SSO"
+freeSignInNote = "OAuth2/OIDC"
+freeSupport = "Komunitatea"
+freeUsers = "Gehienez {{users}}"
+freeUsersUnknown = "Talde txiki bat"
+freeWhere = "Hodeian, mahaigainean edo auto-ostatatuta"
+lede = "Plan guztiek PDF tresna guztiak eta SSO barne dituzte. Aldatzen dena da zenbat pertsonak erabiltzen duten, non exekutatzen den eta zer laguntza jasotzen duzun."
+open = "Konparatu planak"
+rowData = "Zure datuak"
+rowHeader = "Ezaugarria"
+rowProcessing = "Prozesatzea"
+rowSignIn = "Saio-hasiera"
+rowSupport = "Laguntza"
+rowUsers = "Erabiltzaileak"
+rowWhere = "Non exekutatzen den"
+teamData = "Google Drive, zure datu-base propioa"
+teamName = "Team"
+teamPrice = "100 erabiltzaileko $99/hil."
+teamProcessing = "{{allowance}} hilean, ondoren neurtuta"
+teamProcessingUnknown = "Kopuru handiagoa, ondoren neurtuta"
+teamSignIn = "Berdina"
+teamSupport = "Posta elektronikoa"
+teamUsers = "100 blokeko"
+teamWhere = "Hodeian, mahaigainean edo auto-ostatatuta"
+title = "Konparatu planak"
+upgradeTeam = "Bertsio-berritu Team-era"
+
 [portal.billing.cycle]
 credits = "Kredituak"
 creditsNote = "{{units}} erabilita · doako eta aurrez ordaindutako kredituak barne"
@@ -7679,6 +7842,8 @@ payTitle = "Ordaindu zure urtea"
 step = "{{current}}/{{total}} urratsa"
 
 [portal.billing.prepaid.calc]
+currency = "Aurrekontuaren moneta"
+currencyLocked = "Zure egungo Stripe fakturazio-moneta erabiltzen du."
 rateUnknown = "Prezio zehatza checkout-ean erakutsiko dugu."
 
 [portal.billing.prepaid.consent]
@@ -8481,6 +8646,10 @@ title = "Fitxategia ezin izan da konpondu"
 [portal.failures.kind.inputWrongType]
 description = "Zure fitxategia ez da urrats honek ireki dezakeen formatu bat; beraz, exekuzioak ezin izan du irakurri."
 title = "Fitxategi mota okerra"
+
+[portal.failures.kind.sourceUnreadable]
+description = "Zure karpeta adimenduna ezin izan da irakurri; beraz, bertako ezer ez da prozesatu."
+title = "Karpeta ezin izan da irakurri"
 
 [portal.failures.kind.stepCannotRenderPage]
 description = "Zure fitxategiko orri bat ezin izan da marraztu; beraz, exekuzioa ezin izan da amaitu."
@@ -12235,6 +12404,7 @@ goBack = "Itzuli atzera"
 pdfTools = "PDF tresnak"
 placeholder = "Aukeratu tresna bat hasteko"
 premiumFeature = "Premium ezaugarria:"
+searchTools = "Bilatu tresnak"
 toolsHeader = "Tresnak"
 viewAllTools = "Ikusi tresna guztiak"
 
@@ -12399,13 +12569,10 @@ visits = "Bisitak"
 
 [users]
 lastActive = "Azken jarduera"
-learnMore = "Ikasi gehiago rolei eta sarbideari buruz."
 locked = "Blokeatuta"
 ownerSetupRequired = "Erakundearen jabeak ez du lehen saioa osatu. Osatu konfigurazioa edo eskatu zerbitzariaren operadoreari jabetza berreskuratzeko, jabetza transferitu aurretik."
 roleFor = "{{name}}-ren rola"
 rowActions = "{{name}}-ren ekintzak"
-showAll = "Erakutsi {{count}} guztiak"
-showLess = "Erakutsi gutxiago"
 subtitle2 = "Zure pertsonak, taldeak eta sarbide-mailak."
 suspended = "Etenda"
 teamActions = "Taldearen ekintzak"
@@ -12414,6 +12581,7 @@ you = "(zu)"
 
 [users.action]
 cancelInvite = "Utzi gonbidapena bertan behera"
+createFromDefault = "Sortu taldea Default-etik"
 deleteTeam = "Ezabatu taldea"
 disableMfa = "Berrezarri MFA"
 move = "Mugitu taldera"
@@ -12451,6 +12619,7 @@ email = "Email"
 person = "Person"
 role = "Role"
 status = "Status"
+team = "Taldea"
 
 [users.confirm]
 cancelInviteBody = "{{email}} helbiderako gonbidapena bertan behera utzi? Ezingo dute uneko estekarekin bat egin."
@@ -12469,15 +12638,12 @@ transferOwnershipTitle = "Transferitu erakundearen jabetza"
 description = "Gonbidatu zure taldea elkarlanean hasteko."
 title = "Oraindik ez dago kiderik"
 
+[users.filters]
+noMatches = "Inor ez dator bat iragazki hauekin."
+search = "Bilatu pertsonak"
+
 [users.group]
 addToTeam = "Gehitu taldera"
-administrators = "{{count}} administratzaile"
-guestCount = "{{count}} gonbidatu"
-guests = "Gonbidatuak"
-ledBy = "{{owner}}-k gidatua"
-org = "Erakundea"
-team = "{{name}} taldea"
-teamMeta = "{{count}} pertsona"
 
 [users.invite]
 access = "Sarbidea"
@@ -12542,6 +12708,9 @@ title = "Talde berria"
 
 [users.renameTeam]
 apply = "Aldatu izena"
+defaultApply = "Sortu eta mugitu"
+defaultDescription = "Default erabilgarri egongo da erabiltzaile berrientzat. Une honetan Default-en dauden guztiak talde berrira mugituko dira."
+defaultTitle = "Sortu taldea Default-etik"
 name = "Taldearen izena"
 title = "Aldatu taldearen izena"
 
@@ -12566,6 +12735,15 @@ guest = "Gonbidatua"
 member = "Kidea"
 orgOwner = "Erakundearen jabea"
 teamOwner = "Taldearen jabea"
+
+[users.seats]
+full = "Lizentziadun eserleku guztiak erabiltzen ari dira. Askatu bat, edo handitu eserleku kopurua, beste norbait gehitzeko."
+update = "Eguneratu eserlekuak"
+
+[users.tabs]
+all = "Guztiak"
+label = "Iragazi taldearen arabera"
+unassigned = "Talderik gabe"
 
 [users.team]
 grantProcessor = "Eman Prozesatzailea taldeari"
@@ -13216,232 +13394,14 @@ submitSignature = "Bidali sinadura"
 title = "Lan-espazioa"
 
 [workspace.people]
-active = "Aktibo"
-activeSession = "Saio aktiboa"
-addMembers = "Gehitu kideak"
-admin = "Admin"
-confirmDelete = "Ziur erabiltzaile hau ezabatu nahi duzula? Ekintza hau ezin da desegin."
-confirmUnlock = "Ziur al zaude erabiltzaile-kontu hau desblokeatu nahi duzula?"
-deleteUser = "Ezabatu erabiltzailea"
-deleteUserError = "Ezin izan da erabiltzailea ezabatu"
-deleteUserSuccess = "Erabiltzailea ongi ezabatu da"
 description = "Kudeatu lan-espazioko kideak eta haien baimenak"
-disable = "Desgaitu"
-disabled = "Desgaituta"
-editRole = "Rola editatu"
-enable = "Gaitu"
-loading = "Pertsonak kargatzen..."
-locked = "blokeatuta"
-lockedBadge = "Blokeatuta"
-loginRequired = "Gaitu saio-hasiera modua lehenik"
-memberActions = "Kidearen ekintzak"
-noMembersFound = "Ez da kiderik aurkitu"
-ownerLocked = "Transferitu erakundearen jabetza Ezarpenak → Lan-eremua → Erabiltzaileak atalean, jabearen rola edo kontua aldatu aurretik."
-role = "Rola"
-searchMembers = "Bilatu kideak..."
-team = "Taldea"
-unlockAccount = "Desblokeatu kontua"
-unlockUserError = "Erabiltzaile-kontua desblokeatzeak huts egin du"
-unlockUserSuccess = "Erabiltzaile-kontua arrakastaz desblokeatu da"
-user = "Erabiltzailea"
-userInfo = "Erabiltzailearen informazioa"
-
-[workspace.people.actions]
-upgrade = "Eguneratu"
-
-[workspace.people.addMember]
-authType = "Autentifikazio mota"
-error = "Ezin izan da erabiltzailea sortu"
-forceMFA = "Behartu MFA konfigurazioa hurrengo saio-hasieran"
-forcePasswordChange = "Behartu pasahitza aldatzera lehen saio-hasieran"
-password = "Pasahitza"
-passwordPlaceholder = "Sartu pasahitza"
-passwordRequired = "Pasahitza beharrezkoa da"
-role = "Rola"
-submit = "Gehitu kidea"
-success = "Erabiltzailea ongi sortu da"
-team = "Taldea (aukerakoa)"
-teamPlaceholder = "Aukeratu talde bat"
-username = "Erabiltzaile-izena (Helbide elektronikoa)"
-usernamePlaceholder = "user@example.com"
-usernameRequired = "Erabiltzaile-izena eta pasahitza beharrezkoak dira"
-
-[workspace.people.authType]
-oauth = "OAuth2"
-password = "Pasahitza"
-saml = "SAML2"
-ssoDescription = "Erabiltzailea SSO hornitzailearen bidez autentifikatuko da"
-
-[workspace.people.changePassword]
-action = "Pasahitza aldatu"
-confirmPassword = "Berretsi pasahitza"
-confirmPlaceholder = "Sartu berriro pasahitz berria"
-copiedToClipboard = "Pasahitza arbelera kopiatu da"
-copyFailed = "Pasahitza kopiatzeak huts egin du"
-copyTooltip = "Kopiatu arbelera"
-emailUnavailable = "Erabiltzaile honen helbide elektronikoa ez da baliozkoa. Jakinarazpenak desgaituta daude."
-error = "Pasahitza eguneratzeak huts egin du"
-forcePasswordChange = "Behartu erabiltzailea hurrengo saio-hasieran pasahitza aldatzera"
-generatedPreview = "Sortutako pasahitza:"
-generateRandom = "Sortu pasahitz segurua"
-includePassword = "Sartu pasahitz berria mezu elektronikoan"
-newPassword = "Pasahitz berria"
-notifyOnly = "Pasahitzik gabe bidaliko da mezu elektronikoa; erabiltzaileari jakinaraziko zaio administratzaile batek aldatu duela."
-passwordMismatch = "Pasahitzak ez datoz bat"
-passwordRequired = "Sartu pasahitz berria"
-placeholder = "Sartu pasahitz berria"
-sendEmail = "Bidali mezu elektronikoa erabiltzaileari aldaketa honi buruz"
-smtpDisabled = "Posta elektroniko bidezko jakinarazpenek SMTP gaituta egotea eskatzen dute ezarpenetan."
-submit = "Eguneratu pasahitza"
-subtitle = "Honetarako pasahitza eguneratu"
-success = "Pasahitza ongi eguneratu da"
-title = "Pasahitza aldatu"
-
-[workspace.people.editMember]
-editing = "Editing: <0>{{username}}</0>"
-error = "Ezin izan da erabiltzailea eguneratu"
-role = "Rola"
-submit = "Update User"
-success = "Erabiltzailea ongi eguneratu da"
-team = "Taldea (aukerakoa)"
-teamPlaceholder = "Aukeratu talde bat"
-title = "Edit User"
-
-[workspace.people.emailInvite]
-allFailed = "Ezin izan da erabiltzaileak gonbidatu"
-emails = "Helbide elektronikoak"
-emailsPlaceholder = "user1@example.com, user2@example.com"
-emailsRequired = "Gutxienez helbide elektroniko bat behar da"
-error = "Ezin izan dira gonbidapenak bidali"
-partialFailure = "Gonbidapen batzuk huts egin dute"
-submit = "Bidali gonbidapenak"
-success = "erabiltzaile(a)(k) ongi gonbidatu dira"
-
-[workspace.people.inviteLink]
-copied = "Esteka arbelean kopiatu da"
-email = "Helbide elektronikoa"
-emailDescription = "Aukerakoa - utzi hutsik edonork erabil dezakeen gonbidapen orokorrerako"
-emailPlaceholder = "user@example.com (aukerakoa)"
-emailSent = "Gonbidapen-esteka sortu eta e-postaz bidali da"
-error = "Ezin izan da gonbidapen-esteka sortu"
-expiryHours = "Iraungitze orduak"
-generate = "Sortu esteka"
-generated = "Gonbidapen-esteka sortu da"
-sendEmail = "Bidali gonbidapen-esteka e-postaz"
-sendEmailDescription = "Gaituta badago, gonbidapen-esteka zehaztutako helbide elektronikora bidaliko da"
-submit = "Sortu gonbidapen-esteka"
-
-[workspace.people.inviteMembers]
-label = "Gonbidatu kideak"
-subtitle = "Idatzi edo itsatsi behean helbide elektronikoak, komaz bereizita. Zure lan-espazioari kideen arabera fakturatuko zaio."
-
-[workspace.people.inviteMode]
-email = "E-posta"
-emailDisabled = "E-posta bidezko gonbidapenek SMTP konfigurazioa eta ezarpenetan mail.enableInvites=true behar dute"
-link = "Esteka"
-username = "Erabiltzaile-izena"
 
 [workspace.people.license]
-currentUsage = "Une honetan {{current}}/{{max}} erabiltzaile-lizentzia erabiltzen"
-fromLicense = "lizentziatik"
-grandfathered = "Aurre-eskubidez"
-grandfatheredShort = "{{count}} aurre-eskubidez"
-slotsAvailable_one = "{{count}} user slot available"
-slotsAvailable_other = "{{count}} user slots available"
-slotsAvailable_zero = "No slots available"
 users_one = "user"
 users_other = "users"
 
-[workspace.people.mfa]
-adminDisableError = "Erabiltzailearentzat MFA desgaitzea huts egin du"
-adminDisableSuccess = "Erabiltzailearentzat MFA behar bezala desgaitu da"
-disableByAdmin = "Desgaitu MFA"
-
-[workspace.people.roleDescriptions]
-admin = "Ezarpenak kudeatu eta kideak gonbidatu ditzake, administrazio-eskumen osoekin."
-currentRole = "Uneko esleitutako rola."
-user = "Can view and edit shared files, but cannot manage workspace settings or users."
-
-[workspace.people.toggleEnabled]
-error = "Ezin izan da erabiltzailearen egoera eguneratu"
-success = "Erabiltzailearen egoera ongi eguneratu da"
-
 [workspace.teams]
-addMember = "Gehitu kidea"
-backToTeams = "Itzuli Taldeetara"
-cannotAddToInternal = "Ezin dira kideak gehitu Barneko taldera"
-cannotDeleteInternal = "Ezin da Barneko taldea ezabatu"
-cannotRenameInternal = "Ezin da Barneko taldea berrizendatu"
-confirmDelete = "Ziur taldea ezabatu nahi duzula? Taldea hutsik egon behar da ezabatzeko."
-confirmRemove = "Kendu erabiltzailea talde honetatik?"
-createNewTeam = "Sortu talde berria"
-deleteTeamLabel = "Taldea ezabatu"
 description = "Kudeatu taldeak eta antolatu lan-espazioko kideak"
-loadError = "Ezin izan dira taldearen xehetasunak kargatu"
-loading = "Taldeak kargatzen..."
-loadingDetails = "Taldearen xehetasunak kargatzen..."
-memberCount_one = "{{count}} member"
-memberCount_other = "{{count}} members"
-memberCount_zero = "no members"
-noMembers = "Ez dago kiderik talde honetan"
-noTeamsFound = "Ez da talderik aurkitu"
-removeMember = "Kendu taldetik"
-removeMemberError = "Ezin izan da erabiltzailea taldetik kendu"
-removeMemberSuccess = "Erabiltzailea taldetik kendu da"
-renameTeamLabel = "Taldea berrizendatu"
-system = "Sistema"
-teamActions = "Taldearen ekintzak"
-teamName = "Taldearen izena"
-teamNotFound = "Ez da taldea aurkitu"
-totalMembers = "Kideak guztira"
-viewTeam = "Ikusi taldea"
-
-[workspace.teams.addMemberToTeam]
-addingTo = "Hona gehitzen"
-currentlyIn = "une honetan"
-error = "Ezin izan da kidea taldera gehitu"
-selectUser = "Hautatu erabiltzailea"
-selectUserPlaceholder = "Aukeratu erabiltzaile bat"
-selectUserRequired = "Mesedez, hautatu erabiltzaile bat"
-submit = "Gehitu kidea"
-success = "Kidea ongi gehitu da taldera"
-title = "Gehitu kidea taldera"
-userRequired = "Mesedez, hautatu erabiltzaile bat"
-willBeMoved = "Oharra: Erabiltzaile hau bere egungo taldetik talde honetara eramango da."
-
-[workspace.teams.changeTeam]
-changing = "Lekuz aldatzen"
-error = "Ezin izan da taldea aldatu"
-label = "Taldea aldatu"
-selectTeam = "Hautatu taldea"
-selectTeamPlaceholder = "Aukeratu talde bat"
-selectTeamRequired = "Mesedez, hautatu talde bat"
-submit = "Aldatu taldea"
-success = "Taldea ongi aldatu da"
-title = "Taldea aldatu"
-
-[workspace.teams.createTeam]
-error = "Ezin izan da taldea sortu"
-nameRequired = "Taldearen izena beharrezkoa da"
-submit = "Sortu taldea"
-success = "Taldea ongi sortu da"
-teamName = "Taldearen izena"
-teamNamePlaceholder = "Sartu taldearen izena"
-title = "Sortu talde berria"
-
-[workspace.teams.deleteTeam]
-error = "Ezin izan da taldea ezabatu. Ziurtatu taldea hutsik dagoela."
-success = "Taldea ongi ezabatu da"
-
-[workspace.teams.renameTeam]
-error = "Ezin izan da taldea berrizendatu"
-nameRequired = "Taldearen izena beharrezkoa da"
-newTeamName = "Taldearen izen berria"
-newTeamNamePlaceholder = "Sartu taldearen izen berria"
-renaming = "Berrizendatzen:"
-submit = "Taldea berrizendatu"
-success = "Taldea ongi berrizendatu da"
-title = "Taldea berrizendatu"
 
 [zipWarning]
 cancel = "Utzi"

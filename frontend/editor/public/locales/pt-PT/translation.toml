@@ -729,6 +729,8 @@ permissionNotice = "O caminho tessdata não é gravável. As transferências ser
 
 [admin.settings.ai]
 description = "Ligue o Stirling ao motor de IA Python, escolha os respetivos modelos e defina as restrições sob as quais é executado."
+managedByCloud = "Gerido pelo Stirling Cloud neste modo."
+managedByCloudShort = "Gerido pelo Stirling Cloud"
 
 [admin.settings.ai.documents]
 description = "Configure o modelo de embeddings e as definições de recuperação usadas para responder a perguntas sobre documentos. Aplicado ao motor de IA quando guardado."
@@ -771,11 +773,24 @@ label = "Top K"
 [admin.settings.ai.general]
 connection = "Ligação"
 description = "Ligue o Stirling ao motor de IA Python e escolha que capacidades de IA são disponibilizadas. As alterações aplicam-se ao reiniciar."
+restartNote = "Alterar o URL ou qualquer tempo limite entra em vigor após reiniciar."
 title = "Motor de IA"
 
 [admin.settings.ai.general.capabilities]
 description = "Ative ou desative funcionalidades individuais de IA. As funcionalidades desativadas ficam ocultas na aplicação."
 title = "Capacidades"
+
+[admin.settings.ai.general.cloud]
+note = "Os modelos e as chaves de fornecedor são geridos pelo Stirling Cloud, por isso essas definições não se aplicam neste modo."
+
+[admin.settings.ai.general.cloud.indexing]
+description = "Cada ferramenta de IA envia o texto da página de que precisa para responder. Isto decide se o Stirling Cloud também pode manter esse texto, indexado, para que perguntas posteriores possam pesquisar no documento."
+help = "Desativado significa que as perguntas sobre documentos não estão disponíveis. Não impede o envio de texto — apenas o seu armazenamento."
+label = "Permitir que o Stirling Cloud mantenha documentos indexados"
+
+[admin.settings.ai.general.cloudNote]
+body = "O raciocínio é executado na infraestrutura da Stirling, faturado à conta a que este servidor está ligado. Não há nenhum container para executar nem nenhuma chave de fornecedor para guardar aqui. Tudo o que a IA lê é processado pelo Stirling Cloud, e não no seu próprio hardware."
+title = "Sobre a IA do Stirling Cloud"
 
 [admin.settings.ai.general.enabled]
 description = "Interruptor principal. Quando desativado, não estão disponíveis ferramentas de IA, agentes ou chamadas ao motor."
@@ -809,9 +824,28 @@ label = "Agente de comentários PDF"
 description = "Tempo limite para operações de agente mais pesadas, como geração de documentos."
 label = "Tempo limite prolongado (segundos)"
 
+[admin.settings.ai.general.mode]
+label = "Onde a IA é executada"
+
+[admin.settings.ai.general.mode.cloud]
+description = "Sem container, sem chave de fornecedor, sem escolha de modelo — o trabalho é executado no Stirling Cloud e faturado à conta a que este servidor está ligado."
+linkCta = "Ligar este servidor a uma conta Stirling"
+notLinked = "Ligue primeiro uma conta"
+ownerOnly = "Apenas o proprietário da organização pode ligar este servidor a uma conta Stirling."
+title = "Usar a IA do Stirling Cloud"
+
+[admin.settings.ai.general.mode.off]
+description = "Sem ferramentas de IA em qualquer parte da aplicação, e nada sai deste servidor."
+title = "Desativado"
+
+[admin.settings.ai.general.mode.self]
+description = "Um container alojado por si, apontado para um fornecedor de modelos à sua escolha. A sua chave, a sua fatura, o seu caminho de dados."
+title = "Executar o seu próprio motor"
+
 [admin.settings.ai.general.note]
-body = "O motor de IA é executado como um serviço separado. O respetivo segredo partilhado"
-body2 = "é definido através de uma variável de ambiente do contentor. As chaves API dos fornecedores podem ser introduzidas nestas páginas ou fornecidas como variáveis de ambiente do motor; as chaves introduzidas aqui são enviadas para o motor quando guardadas."
+docs = "Guia de configuração"
+intro = "Um container separado que executa ao lado do Stirling. Faz o raciocínio; o Stirling continua a realizar todas as operações de página por si. Precisa do mesmo"
+outro = "em ambos os containers e de uma chave de fornecedor de modelos. Tudo o que a IA lê é enviado para o fornecedor que escolher — um Ollama alojado por si mantém todas as páginas internamente."
 title = "Sobre o motor de IA"
 
 [admin.settings.ai.general.streamTimeoutSeconds]
@@ -890,6 +924,67 @@ label = "Modelo inteligente"
 body = "As alterações são enviadas automaticamente para o motor de IA."
 bodyNoPush = "Definições guardadas. Serão aplicadas da próxima vez que o motor de IA recolher a sua configuração."
 title = "Definições de IA guardadas"
+
+[admin.settings.ai.status]
+capabilities = "Capacidades"
+capabilitiesValue = "{{on}} de {{total}} ativadas"
+checked = "verificado"
+checking = "A verificar o motor…"
+description = "Se o motor está acessível, se aceita este servidor e o que está a executar."
+fastModel = "Modelo rápido"
+justNow = "agora mesmo"
+latency = "Tempo de resposta"
+linkLabel = "Ligação da conta"
+minutesAgo = "há {{count}} min"
+recheck = "Verificar novamente"
+runningOn = "Em execução em"
+secondsAgo = "há {{count}} s"
+secretLabel = "Segredo partilhado"
+smartModel = "Modelo inteligente"
+title = "Estado"
+url = "URL do motor"
+
+[admin.settings.ai.status.cloud]
+hostDown = "Inativo"
+hostLabel = "Stirling.com"
+hostUp = "Ativo"
+name = "Stirling Cloud"
+sharingLabel = "Partilha de IA"
+sharingOff = "Desativada"
+sharingOn = "Ativada"
+
+[admin.settings.ai.status.cloud.degraded]
+body = "O Stirling Cloud respondeu, mas recusou este servidor. A ligação da conta pode ter sido revogada."
+title = "O Stirling Cloud está a recusar este servidor"
+
+[admin.settings.ai.status.cloud.down]
+body = "Este servidor não conseguiu contactar o Stirling Cloud. Verifique a ligação da conta e se este servidor consegue aceder à internet."
+title = "Stirling Cloud inacessível"
+
+[admin.settings.ai.status.cloud.ok]
+body = "O Stirling Cloud aceitou este servidor. Não há nada para executar ou corrigir aqui."
+title = "Em execução no Stirling Cloud"
+
+[admin.settings.ai.status.degraded]
+body = "Respondeu à verificação de estado, mas rejeitou um pedido real. Os dois lados estão a usar segredos partilhados diferentes."
+title = "O motor está ativo, mas recusa este servidor"
+
+[admin.settings.ai.status.down]
+body = "Verifique o URL, se o container do motor está em execução e se reiniciou depois de ativar a IA."
+title = "Motor inacessível"
+
+[admin.settings.ai.status.off]
+body = "Escolha abaixo como a IA é executada, depois guarde e reinicie."
+title = "A IA está desativada"
+
+[admin.settings.ai.status.ok]
+body = "A verificação de estado e um pedido autenticado foram ambos bem-sucedidos."
+title = "Motor em execução"
+
+[admin.settings.ai.status.secret]
+no = "Rejeitado"
+unknown = "Desconhecido"
+yes = "Aceite"
 
 [admin.settings.badge]
 clickToUpgrade = "Clique para ver os detalhes do plano"
@@ -4453,6 +4548,7 @@ openFromComputer = "Abrir do computador"
 openSettings = "Abrir definições"
 other = "Outro"
 recent = "Recente"
+searchFiles = "Pesquisar ficheiros"
 uploadFailedBody = "Não foi possível adicionar os ficheiros selecionados."
 uploadFailedTitle = "Carregamento falhou"
 viewAll = "Ver todos os {{count}} ficheiros"
@@ -5827,6 +5923,8 @@ label = "Free credits"
 adoptFailed = "O documento foi desbloqueado, mas não foi possível abri-lo aqui. Experimente a ferramenta diretamente."
 empty = "Nada a comunicar."
 handoffUnavailable = "Este navegador não permite que o processador passe o documento para o editor. Abra-o antes a partir do editor."
+inSmartFolder = "Este documento está numa pasta inteligente, por isso é processado no servidor em vez de aqui."
+inSmartFolderNamed = "{{name}} está numa pasta inteligente, por isso é processado no servidor em vez de aqui."
 noDocumentLinked = "Esta falha não está associada a um documento específico, por isso não há nada para abrir aqui."
 notOnThisDevice = "Este documento não está neste dispositivo, por isso não pode ser aberto aqui."
 occurrences = "{{count}} vezes"
@@ -5837,6 +5935,7 @@ repairedRerunNotAdopted = "O documento reparado foi processado, mas não foi pos
 repairedRerunUndelivered = "O documento foi reparado e a reexecução da política foi iniciada, mas o respetivo resultado não pode ser entregue aqui, pelo que esta falha permanece aberta."
 rerunRejected = "Não foi possível executar a política novamente neste momento. Tente novamente dentro de momentos."
 rerunUndelivered = "A reexecução da política foi iniciada, mas o respetivo resultado não pode ser entregue aqui, pelo que esta falha permanece aberta."
+retryInFolderFailed = "Não foi possível executar novamente esse documento neste momento."
 retryUnavailable = "Este documento já não pode ser tentado novamente a partir deste browser."
 title = "Notificações"
 unlockedNotRerun = "O documento foi desbloqueado e aberto aqui, mas não foi possível executar a política novamente nele."
@@ -6625,9 +6724,11 @@ title = "Ajustar plano Team"
 [payment.capacityStage]
 adjustmentNote = "O Stripe mostrará o valor exato, quaisquer rateios e a próxima data de faturação antes de confirmar. O seu método de pagamento guardado será usado, se disponível."
 continue = "Continuar para pagamento"
+currencyAtCheckout = "A Stripe confirma o montante final e a moeda de pagamento na finalização da compra."
 customLabel = "Número de utilizadores"
 dueToday = "A pagar hoje"
 enterpriseQuote = "Obter orçamento empresarial"
+estimatedTotal = "Total estimado"
 lineItem = "Team · {{price}}{{period}} por {{block}} utilizadores"
 minimumForCurrentUsers = "Tem {{users}} utilizadores, pelo que o plano deve cobrir pelo menos {{minimum}}."
 modalTitle = "Atualizar para {{planName}}"
@@ -6865,6 +6966,25 @@ width = "Largura"
 widthHint = "A largura de uma caixa de texto segue o conteúdo e a quebra de linha."
 x = "X"
 y = "Y"
+
+[pdfTextEditor.mobile]
+actions = "Ações do editor"
+addImage = "Imagem"
+addText = "Texto"
+cancel = "Cancelar"
+delete = "Eliminar"
+details = "Detalhes"
+document = "Documento"
+done = "Concluído"
+download = "Guardar e transferir"
+find = "Procurar"
+lock = "Bloquear"
+openPdf = "Abrir um PDF"
+panelHint = "A edição acontece na vista Área de trabalho. Toque no texto na página para o alterar."
+save = "Guardar"
+style = "Estilo"
+tapToPlace = "Toque na página onde o texto deve ficar"
+unlock = "Desbloquear"
 
 [pdfTextEditor.password]
 cancel = "Cancelar"
@@ -7574,6 +7694,49 @@ plan = "Plano"
 procurement = "Aquisição"
 usage = "Utilização"
 
+[portal.billing.compare]
+current = "Atual"
+enterpriseData = "Residência de dados e SCIM"
+enterpriseName = "Enterprise"
+enterprisePrice = "Ao abrigo do seu acordo"
+enterpriseProcessing = "Medido ou fixo"
+enterpriseSignIn = "SAML e auditoria"
+enterpriseSupport = "SLA de disponibilidade, ajuda na implementação"
+enterpriseUsers = "Sem limite"
+enterpriseWhere = "Mais multi-node e isolado da rede"
+exploreEnterprise = "Explorar Enterprise"
+freeData = "Fica onde o executar"
+freeName = "Gratuito"
+freePrice = "Sem cartão, sem expiração"
+freeProcessing = "{{allowance}} créditos por mês"
+freeProcessingUnknown = "Uma atribuição mensal de créditos"
+freeSignIn = "Email, Google e SSO"
+freeSignInNote = "OAuth2/OIDC"
+freeSupport = "Comunidade"
+freeUsers = "Até {{users}}"
+freeUsersUnknown = "Uma equipa pequena"
+freeWhere = "Cloud, desktop ou autoalojado"
+lede = "Todos os planos incluem todas as ferramentas PDF e SSO. O que muda é quantas pessoas o usam, onde é executado e que suporte recebe."
+open = "Comparar planos"
+rowData = "Os seus dados"
+rowHeader = "Funcionalidade"
+rowProcessing = "Processamento"
+rowSignIn = "Início de sessão"
+rowSupport = "Suporte"
+rowUsers = "Utilizadores"
+rowWhere = "Onde é executado"
+teamData = "Google Drive, a sua própria base de dados"
+teamName = "Team"
+teamPrice = "$99/mês por 100 utilizadores"
+teamProcessing = "{{allowance}} por mês, depois medido"
+teamProcessingUnknown = "Uma atribuição maior, depois medido"
+teamSignIn = "O mesmo"
+teamSupport = "Email"
+teamUsers = "100 por bloco"
+teamWhere = "Cloud, desktop ou autoalojado"
+title = "Comparar planos"
+upgradeTeam = "Atualizar para Team"
+
 [portal.billing.cycle]
 credits = "Créditos"
 creditsNote = "{{units}} utilizados · inclui créditos gratuitos e pré-pagos"
@@ -7679,6 +7842,8 @@ payTitle = "Pague o seu ano"
 step = "Passo {{current}} de {{total}}"
 
 [portal.billing.prepaid.calc]
+currency = "Moeda da cotação"
+currencyLocked = "Usa a sua moeda de faturação Stripe existente."
 rateUnknown = "Mostraremos o preço exato no checkout."
 
 [portal.billing.prepaid.consent]
@@ -8481,6 +8646,10 @@ title = "Não foi possível reparar o ficheiro"
 [portal.failures.kind.inputWrongType]
 description = "O seu ficheiro não está num formato que este passo consiga abrir, pelo que a execução não conseguiu lê-lo."
 title = "Tipo de ficheiro errado"
+
+[portal.failures.kind.sourceUnreadable]
+description = "Não foi possível ler a sua pasta inteligente, por isso nada nela foi processado."
+title = "Não foi possível ler a pasta"
 
 [portal.failures.kind.stepCannotRenderPage]
 description = "Não foi possível desenhar uma página no seu ficheiro, pelo que a execução não pôde terminar."
@@ -12235,6 +12404,7 @@ goBack = "Voltar"
 pdfTools = "Ferramentas PDF"
 placeholder = "Escolha uma ferramenta para começar"
 premiumFeature = "Funcionalidade premium:"
+searchTools = "Pesquisar ferramentas"
 toolsHeader = "Ferramentas"
 viewAllTools = "Ver todas as ferramentas"
 
@@ -12399,13 +12569,10 @@ visits = "Visitas"
 
 [users]
 lastActive = "Última atividade"
-learnMore = "Saiba mais sobre funções e acesso."
 locked = "Bloqueado"
 ownerSetupRequired = "O proprietário da organização não concluiu o primeiro início de sessão. Conclua a configuração ou peça ao operador do servidor para recuperar a propriedade antes de transferir a propriedade."
 roleFor = "Função de {{name}}"
 rowActions = "Ações para {{name}}"
-showAll = "Mostrar todos {{count}}"
-showLess = "Mostrar menos"
 subtitle2 = "As suas pessoas, equipas e níveis de acesso."
 suspended = "Suspenso"
 teamActions = "Ações da equipa"
@@ -12414,6 +12581,7 @@ you = "(você)"
 
 [users.action]
 cancelInvite = "Cancelar convite"
+createFromDefault = "Criar equipa a partir de Default"
 deleteTeam = "Eliminar equipa"
 disableMfa = "Repor MFA"
 move = "Mover para equipa"
@@ -12451,6 +12619,7 @@ email = "Email"
 person = "Person"
 role = "Role"
 status = "Status"
+team = "Equipa"
 
 [users.confirm]
 cancelInviteBody = "Cancelar o convite para {{email}}? A pessoa não poderá aderir com a ligação atual."
@@ -12469,15 +12638,12 @@ transferOwnershipTitle = "Transferir propriedade da organização"
 description = "Convide a sua equipa para começar a colaborar."
 title = "Ainda sem membros"
 
+[users.filters]
+noMatches = "Ninguém corresponde a estes filtros."
+search = "Pesquisar pessoas"
+
 [users.group]
 addToTeam = "Adicionar à equipa"
-administrators = "{{count}} administradores"
-guestCount = "{{count}} convidado"
-guests = "Convidados"
-ledBy = "liderada por {{owner}}"
-org = "Organização"
-team = "Equipa {{name}}"
-teamMeta = "{{count}} pessoas"
 
 [users.invite]
 access = "Acesso"
@@ -12542,6 +12708,9 @@ title = "Nova equipa"
 
 [users.renameTeam]
 apply = "Renomear"
+defaultApply = "Criar e mover"
+defaultDescription = "Default continuará disponível para novos utilizadores. Todos os que estão atualmente em Default serão movidos para a nova equipa."
+defaultTitle = "Criar equipa a partir de Default"
 name = "Nome da equipa"
 title = "Renomear equipa"
 
@@ -12566,6 +12735,15 @@ guest = "Convidado"
 member = "Membro"
 orgOwner = "Proprietário da organização"
 teamOwner = "Proprietário da equipa"
+
+[users.seats]
+full = "Todos os lugares licenciados estão em uso. Liberte um ou aumente o número de lugares para adicionar mais alguém."
+update = "Atualizar lugares"
+
+[users.tabs]
+all = "Todos"
+label = "Filtrar por equipa"
+unassigned = "Sem equipa"
 
 [users.team]
 grantProcessor = "Conceder Processor à equipa"
@@ -13216,232 +13394,14 @@ submitSignature = "Submeter assinatura"
 title = "Espaço de trabalho"
 
 [workspace.people]
-active = "Ativo"
-activeSession = "Sessão ativa"
-addMembers = "Adicionar membros"
-admin = "Administrador"
-confirmDelete = "Tem a certeza de que pretende eliminar este utilizador? Esta ação não pode ser anulada."
-confirmUnlock = "Tem a certeza de que pretende desbloquear esta conta de utilizador?"
-deleteUser = "Eliminar utilizador"
-deleteUserError = "Falha ao eliminar utilizador"
-deleteUserSuccess = "Utilizador eliminado com sucesso"
 description = "Gerir membros do espaço de trabalho e as respetivas permissões"
-disable = "Desativar"
-disabled = "Desativado"
-editRole = "Editar função"
-enable = "Ativar"
-loading = "A carregar pessoas..."
-locked = "bloqueado"
-lockedBadge = "Bloqueado"
-loginRequired = "Ative primeiro o modo de login"
-memberActions = "Ações de membro"
-noMembersFound = "Nenhum membro encontrado"
-ownerLocked = "Transfira a propriedade da organização em Definições → Espaço de trabalho → Utilizadores antes de alterar a função ou conta do proprietário."
-role = "Função"
-searchMembers = "Procurar membros..."
-team = "Equipa"
-unlockAccount = "Desbloquear conta"
-unlockUserError = "Falha ao desbloquear a conta de utilizador"
-unlockUserSuccess = "Conta de utilizador desbloqueada com sucesso"
-user = "Utilizador"
-userInfo = "Informações do utilizador"
-
-[workspace.people.actions]
-upgrade = "Atualizar"
-
-[workspace.people.addMember]
-authType = "Tipo de autenticação"
-error = "Falha ao criar utilizador"
-forceMFA = "Forçar configuração de MFA no próximo início de sessão"
-forcePasswordChange = "Forçar alteração de palavra‑passe no primeiro início de sessão"
-password = "Palavra‑passe"
-passwordPlaceholder = "Introduza a palavra‑passe"
-passwordRequired = "A palavra-passe é obrigatória"
-role = "Função"
-submit = "Adicionar membro"
-success = "Utilizador criado com sucesso"
-team = "Equipa (Opcional)"
-teamPlaceholder = "Selecione uma equipa"
-username = "Nome de utilizador (Email)"
-usernamePlaceholder = "user@example.com"
-usernameRequired = "Nome de utilizador e palavra‑passe são obrigatórios"
-
-[workspace.people.authType]
-oauth = "OAuth2"
-password = "Palavra-passe"
-saml = "SAML2"
-ssoDescription = "O utilizador irá autenticar-se através do fornecedor de SSO"
-
-[workspace.people.changePassword]
-action = "Alterar palavra-passe"
-confirmPassword = "Confirmar palavra-passe"
-confirmPlaceholder = "Introduza novamente a nova palavra-passe"
-copiedToClipboard = "Palavra-passe copiada para a área de transferência"
-copyFailed = "Falha ao copiar a palavra-passe"
-copyTooltip = "Copiar para a área de transferência"
-emailUnavailable = "O email deste utilizador não é um endereço válido. As notificações estão desativadas."
-error = "Falha ao atualizar a palavra-passe"
-forcePasswordChange = "Obrigar o utilizador a alterar a palavra-passe no próximo início de sessão"
-generatedPreview = "Palavra-passe gerada:"
-generateRandom = "Gerar palavra-passe segura"
-includePassword = "Incluir a nova palavra-passe no email"
-newPassword = "Nova palavra-passe"
-notifyOnly = "Será enviado um email sem a palavra-passe, informando o utilizador de que um administrador a alterou."
-passwordMismatch = "As palavras-passe não coincidem"
-passwordRequired = "Por favor, introduza uma nova palavra-passe"
-placeholder = "Introduza uma nova palavra-passe"
-sendEmail = "Enviar email ao utilizador sobre esta alteração"
-smtpDisabled = "As notificações por email requerem que o SMTP esteja ativado nas definições."
-submit = "Guardar palavra-passe"
-subtitle = "Atualizar a palavra-passe de"
-success = "Palavra-passe atualizada com sucesso"
-title = "Alterar palavra-passe"
-
-[workspace.people.editMember]
-editing = "Editing: <0>{{username}}</0>"
-error = "Falha ao atualizar utilizador"
-role = "Função"
-submit = "Update User"
-success = "Utilizador atualizado com sucesso"
-team = "Equipa (Opcional)"
-teamPlaceholder = "Selecione uma equipa"
-title = "Edit User"
-
-[workspace.people.emailInvite]
-allFailed = "Falha ao convidar utilizadores"
-emails = "Endereços de email"
-emailsPlaceholder = "user1@example.com, user2@example.com"
-emailsRequired = "É necessário pelo menos um endereço de email"
-error = "Falha ao enviar convites"
-partialFailure = "Alguns convites falharam"
-submit = "Enviar convites"
-success = "utilizador(es) convidado(s) com sucesso"
-
-[workspace.people.inviteLink]
-copied = "Link copiado para a área de transferência"
-email = "Endereço de email"
-emailDescription = "Opcional - deixe em branco para um link de convite geral que pode ser usado por qualquer pessoa"
-emailPlaceholder = "user@example.com (opcional)"
-emailSent = "Link de convite gerado e enviado por email"
-error = "Falha ao gerar link de convite"
-expiryHours = "Horas de expiração"
-generate = "Gerar link"
-generated = "Link de convite gerado"
-sendEmail = "Enviar link de convite por email"
-sendEmailDescription = "Se ativado, o link de convite será enviado para o endereço de email especificado"
-submit = "Gerar link de convite"
-
-[workspace.people.inviteMembers]
-label = "Convidar membros"
-subtitle = "Escreva ou cole emails abaixo, separados por vírgulas. O seu espaço de trabalho será faturado pelo número de membros."
-
-[workspace.people.inviteMode]
-email = "Email"
-emailDisabled = "Convites por email requerem configuração de SMTP e mail.enableInvites=true nas definições"
-link = "Link"
-username = "Nome de utilizador"
 
 [workspace.people.license]
-currentUsage = "A utilizar {{current}} de {{max}} licenças de utilizador"
-fromLicense = "da licença"
-grandfathered = "Com direitos adquiridos"
-grandfatheredShort = "{{count}} com direitos adquiridos"
-slotsAvailable_one = "{{count}} user slot available"
-slotsAvailable_other = "{{count}} user slots available"
-slotsAvailable_zero = "No slots available"
 users_one = "user"
 users_other = "users"
 
-[workspace.people.mfa]
-adminDisableError = "Não foi possível desativar o MFA para o utilizador"
-adminDisableSuccess = "MFA desativado com sucesso para o utilizador"
-disableByAdmin = "Desativar MFA"
-
-[workspace.people.roleDescriptions]
-admin = "Pode gerir definições e convidar membros, com acesso administrativo total."
-currentRole = "Função atualmente atribuída."
-user = "Can view and edit shared files, but cannot manage workspace settings or users."
-
-[workspace.people.toggleEnabled]
-error = "Falha ao atualizar o estado do utilizador"
-success = "Estado do utilizador atualizado com sucesso"
-
 [workspace.teams]
-addMember = "Adicionar membro"
-backToTeams = "Voltar às equipas"
-cannotAddToInternal = "Não é possível adicionar membros à equipa Interna"
-cannotDeleteInternal = "Não é possível eliminar a equipa Interna"
-cannotRenameInternal = "Não é possível renomear a equipa Interna"
-confirmDelete = "Tem a certeza de que pretende eliminar esta equipa? Esta equipa deve estar vazia para ser eliminada."
-confirmRemove = "Remover o utilizador desta equipa?"
-createNewTeam = "Criar nova equipa"
-deleteTeamLabel = "Eliminar equipa"
 description = "Gerir equipas e organizar membros do espaço de trabalho"
-loadError = "Falha ao carregar detalhes da equipa"
-loading = "A carregar equipas..."
-loadingDetails = "A carregar detalhes da equipa..."
-memberCount_one = "{{count}} member"
-memberCount_other = "{{count}} members"
-memberCount_zero = "no members"
-noMembers = "Sem membros nesta equipa"
-noTeamsFound = "Nenhuma equipa encontrada"
-removeMember = "Remover da equipa"
-removeMemberError = "Falha ao remover utilizador da equipa"
-removeMemberSuccess = "Utilizador removido da equipa"
-renameTeamLabel = "Renomear equipa"
-system = "Sistema"
-teamActions = "Ações de equipa"
-teamName = "Nome da equipa"
-teamNotFound = "Equipa não encontrada"
-totalMembers = "Total de membros"
-viewTeam = "Ver equipa"
-
-[workspace.teams.addMemberToTeam]
-addingTo = "A adicionar a"
-currentlyIn = "atualmente em"
-error = "Falha ao adicionar membro à equipa"
-selectUser = "Selecionar utilizador"
-selectUserPlaceholder = "Escolha um utilizador"
-selectUserRequired = "Selecione um utilizador"
-submit = "Adicionar membro"
-success = "Membro adicionado à equipa com sucesso"
-title = "Adicionar membro à equipa"
-userRequired = "Selecione um utilizador"
-willBeMoved = "Nota: Este utilizador será movido da sua equipa atual para esta equipa."
-
-[workspace.teams.changeTeam]
-changing = "A mover"
-error = "Falha ao alterar equipa"
-label = "Mudar de equipa"
-selectTeam = "Selecionar equipa"
-selectTeamPlaceholder = "Escolha uma equipa"
-selectTeamRequired = "Selecione uma equipa"
-submit = "Mudar de equipa"
-success = "Equipa alterada com sucesso"
-title = "Mudar de equipa"
-
-[workspace.teams.createTeam]
-error = "Falha ao criar equipa"
-nameRequired = "O nome da equipa é obrigatório"
-submit = "Criar equipa"
-success = "Equipa criada com sucesso"
-teamName = "Nome da equipa"
-teamNamePlaceholder = "Introduza o nome da equipa"
-title = "Criar nova equipa"
-
-[workspace.teams.deleteTeam]
-error = "Falha ao eliminar equipa. Certifique-se de que a equipa está vazia."
-success = "Equipa eliminada com sucesso"
-
-[workspace.teams.renameTeam]
-error = "Falha ao renomear equipa"
-nameRequired = "O nome da equipa é obrigatório"
-newTeamName = "Novo nome da equipa"
-newTeamNamePlaceholder = "Introduza o novo nome da equipa"
-renaming = "A renomear:"
-submit = "Renomear equipa"
-success = "Equipa renomeada com sucesso"
-title = "Renomear equipa"
 
 [zipWarning]
 cancel = "Cancelar"

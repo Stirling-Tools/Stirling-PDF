@@ -729,6 +729,8 @@ permissionNotice = "Пътят към tessdata няма права за запи
 
 [admin.settings.ai]
 description = "Свържете Stirling с Python AI двигателя, изберете моделите му и задайте ограниченията, под които работи."
+managedByCloud = "Управлява се от Stirling Cloud в този режим."
+managedByCloudShort = "Управлява се от Stirling Cloud"
 
 [admin.settings.ai.documents]
 description = "Конфигурирайте модела за вграждания и настройките за извличане, използвани за отговаряне на въпроси по документи. Прилага се към AI engine при запазване."
@@ -771,11 +773,24 @@ label = "Top K"
 [admin.settings.ai.general]
 connection = "Връзка"
 description = "Свържете Stirling с Python AI engine и изберете кои AI възможности да са достъпни. Промените се прилагат при рестартиране."
+restartNote = "Промяната на URL или който и да е timeout влиза в сила след рестарт."
 title = "AI Engine"
 
 [admin.settings.ai.general.capabilities]
 description = "Включвайте или изключвайте отделни AI функции. Изключените функции са скрити в приложението."
 title = "Възможности"
+
+[admin.settings.ai.general.cloud]
+note = "Моделите и ключовете на доставчика се управляват от Stirling Cloud, така че тези настройки не се прилагат в този режим."
+
+[admin.settings.ai.general.cloud.indexing]
+description = "Всеки AI инструмент изпраща текста от страницата, който му е необходим, за да отговори. Това определя дали Stirling Cloud може също да запази този текст индексиран, така че по-късни въпроси да могат да търсят в документа."
+help = "Изключено означава, че въпросите към документи не са налични. Това не спира изпращането на текст - само съхраняването му."
+label = "Позволете на Stirling Cloud да пази индексирани документи"
+
+[admin.settings.ai.general.cloudNote]
+body = "Разсъжденията се изпълняват в инфраструктурата на Stirling и се таксуват към акаунта, към който е свързан този сървър. Няма контейнер за стартиране и няма ключ на доставчик за съхранение тук. Всичко, което AI прочете, се обработва от Stirling Cloud, а не на вашия собствен хардуер."
+title = "Относно Stirling Cloud AI"
 
 [admin.settings.ai.general.enabled]
 description = "Главен превключвател. Когато е изключен, няма достъпни AI инструменти, агенти или извиквания към engine."
@@ -809,9 +824,28 @@ label = "PDF агент за коментари"
 description = "Време за изчакване за по-тежки операции на агента, като генериране на документи."
 label = "Време за изчакване при дълги операции (секунди)"
 
+[admin.settings.ai.general.mode]
+label = "Къде работи AI"
+
+[admin.settings.ai.general.mode.cloud]
+description = "Без контейнер, без ключ на доставчик, без избор на модел - работата се изпълнява в Stirling Cloud и се таксува към акаунта, към който е свързан този сървър."
+linkCta = "Свържете този сървър с акаунт в Stirling"
+notLinked = "Първо свържете акаунт"
+ownerOnly = "Само собственикът на организацията може да свърже този сървър с акаунт в Stirling."
+title = "Използване на Stirling Cloud AI"
+
+[admin.settings.ai.general.mode.off]
+description = "Няма AI инструменти никъде в приложението и нищо не напуска този сървър."
+title = "Изключено"
+
+[admin.settings.ai.general.mode.self]
+description = "Контейнер, който хоствате, насочен към доставчик на модел по ваш избор. Вашият ключ, вашата сметка, вашият път на данните."
+title = "Стартирайте собствен механизъм"
+
 [admin.settings.ai.general.note]
-body = "AI engine работи като отделна услуга. Неговата споделена тайна"
-body2 = "се задава чрез променлива на средата в container. API keys на доставчиците могат да бъдат въведени на тези страници или предоставени като променливи на средата за engine; въведените тук ключове се изпращат към engine при запазване."
+docs = "Ръководство за настройка"
+intro = "Отделен контейнер, който стартирате до Stirling. Той извършва разсъжденията; Stirling все още извършва сам всички операции със страници. Необходимо е едно и също"
+outro = "и в двата контейнера, както и ключ на доставчик на модел. Всичко, което AI прочете, се изпраща към доставчика, който изберете - Ollama, който хоствате, запазва всяка страница вътрешно."
 title = "Относно AI engine"
 
 [admin.settings.ai.general.streamTimeoutSeconds]
@@ -890,6 +924,67 @@ label = "Smart модел"
 body = "Промените се изпращат автоматично към AI engine."
 bodyNoPush = "Настройките са запазени. Те ще се приложат следващия път, когато AI engine зареди конфигурацията си."
 title = "AI настройките са запазени"
+
+[admin.settings.ai.status]
+capabilities = "Възможности"
+capabilitiesValue = "{{on}} от {{total}} включени"
+checked = "проверено"
+checking = "Проверка на механизма…"
+description = "Дали механизмът е достъпен, дали приема този сървър и какво изпълнява."
+fastModel = "Бърз модел"
+justNow = "току-що"
+latency = "Време за отговор"
+linkLabel = "Връзка с акаунт"
+minutesAgo = "преди {{count}} мин."
+recheck = "Проверете отново"
+runningOn = "Работи на"
+secondsAgo = "преди {{count}} сек."
+secretLabel = "Споделена тайна"
+smartModel = "Умен модел"
+title = "Състояние"
+url = "URL на механизма"
+
+[admin.settings.ai.status.cloud]
+hostDown = "Недостъпен"
+hostLabel = "Stirling.com"
+hostUp = "Наличен"
+name = "Stirling Cloud"
+sharingLabel = "AI споделяне"
+sharingOff = "Деактивирано"
+sharingOn = "Активирано"
+
+[admin.settings.ai.status.cloud.degraded]
+body = "Stirling Cloud отговори, но отказа този сървър. Връзката с акаунта може да е била отменена."
+title = "Stirling Cloud отказва този сървър"
+
+[admin.settings.ai.status.cloud.down]
+body = "Този сървър не можа да достигне Stirling Cloud. Проверете връзката с акаунта и дали този сървър има достъп до интернет."
+title = "Stirling Cloud е недостъпен"
+
+[admin.settings.ai.status.cloud.ok]
+body = "Stirling Cloud прие този сървър. Тук няма нищо за стартиране или обновяване."
+title = "Работи в Stirling Cloud"
+
+[admin.settings.ai.status.degraded]
+body = "Отговори на проверката на състоянието, но отхвърли реална заявка. Двете страни използват различни споделени тайни."
+title = "Механизмът работи, но отказва този сървър"
+
+[admin.settings.ai.status.down]
+body = "Проверете URL, дали контейнерът на механизма работи и дали сте рестартирали след активиране на AI."
+title = "Механизмът е недостъпен"
+
+[admin.settings.ai.status.off]
+body = "Изберете по-долу как работи AI, след това запазете и рестартирайте."
+title = "AI е изключен"
+
+[admin.settings.ai.status.ok]
+body = "Проверката на състоянието и удостоверена заявка бяха успешни."
+title = "Механизмът работи"
+
+[admin.settings.ai.status.secret]
+no = "Отхвърлено"
+unknown = "Неизвестно"
+yes = "Прието"
 
 [admin.settings.badge]
 clickToUpgrade = "Щракнете, за да видите подробности за плана"
@@ -4453,6 +4548,7 @@ openFromComputer = "Отваряне от компютър"
 openSettings = "Отваряне на настройките"
 other = "Други"
 recent = "Скорошни"
+searchFiles = "Търсене на файлове"
 uploadFailedBody = "Избраните файлове не можаха да бъдат добавени."
 uploadFailedTitle = "Качването е неуспешно"
 viewAll = "Виж всички {{count}} файла"
@@ -5827,6 +5923,8 @@ label = "Free credits"
 adoptFailed = "Документът беше отключен, но не можа да бъде отворен тук. Опитайте инструмента директно."
 empty = "Няма нищо за докладване."
 handoffUnavailable = "Този браузър няма да позволи на процесора да предаде документа на редактора. Вместо това го отворете от редактора."
+inSmartFolder = "Този документ е в интелигентна папка, затова се обработва на сървъра, а не тук."
+inSmartFolderNamed = "{{name}} е в интелигентна папка, затова се обработва на сървъра, а не тук."
 noDocumentLinked = "Тази грешка не е свързана с конкретен документ, така че тук няма какво да се отвори."
 notOnThisDevice = "Този документ не е на това устройство, така че не може да бъде отворен тук."
 occurrences = "{{count}} пъти"
@@ -5837,6 +5935,7 @@ repairedRerunNotAdopted = "Поправеният документ премин�
 repairedRerunUndelivered = "Документът беше поправен и повторното изпълнение на политиката започна, но резултатът му не може да бъде доставен тук, така че тази грешка остава отворена."
 rerunRejected = "Политиката не можа да бъде изпълнена отново точно сега. Опитайте пак след малко."
 rerunUndelivered = "Повторното изпълнение на политиката започна, но резултатът му не може да бъде доставен тук, така че тази грешка остава отворена."
+retryInFolderFailed = "Този документ не можа да бъде стартиран отново в момента."
 retryUnavailable = "Този документ вече не може да бъде повторен от този браузър."
 title = "Известия"
 unlockedNotRerun = "Документът беше отключен и отворен тук, но политиката не можа да бъде изпълнена отново върху него."
@@ -6625,9 +6724,11 @@ title = "Коригиране на Team плана"
 [payment.capacityStage]
 adjustmentNote = "Stripe ще покаже точната такса, всички пропорционални корекции и следващата дата на фактуриране, преди да потвърдите. Запазеният ви метод на плащане ще бъде използван, ако е наличен."
 continue = "Продължаване към плащане"
+currencyAtCheckout = "Stripe потвърждава окончателната сума и валутата на плащане при финализиране."
 customLabel = "Брой потребители"
 dueToday = "Дължимо днес"
 enterpriseQuote = "Получаване на корпоративна оферта"
+estimatedTotal = "Прогнозна обща сума"
 lineItem = "Team · {{price}}{{period}} за {{block}} потребители"
 minimumForCurrentUsers = "Имате {{users}} потребители, така че планът трябва да покрива поне {{minimum}}."
 modalTitle = "Надграждане до {{planName}}"
@@ -6865,6 +6966,25 @@ width = "Ширина"
 widthHint = "Ширината на текстово поле следва съдържанието му и пренасянето на редове."
 x = "X"
 y = "Y"
+
+[pdfTextEditor.mobile]
+actions = "Действия на редактора"
+addImage = "Изображение"
+addText = "Текст"
+cancel = "Отказ"
+delete = "Изтриване"
+details = "Подробности"
+document = "Документ"
+done = "Готово"
+download = "Запазване и изтегляне"
+find = "Намиране"
+lock = "Заключване"
+openPdf = "Отваряне на PDF"
+panelHint = "Редактирането се извършва в изгледа Workspace. Докоснете текст на страницата, за да го промените."
+save = "Запазване"
+style = "Стил"
+tapToPlace = "Докоснете страницата там, където трябва да се постави текстът"
+unlock = "Отключване"
 
 [pdfTextEditor.password]
 cancel = "Отказ"
@@ -7574,6 +7694,49 @@ plan = "План"
 procurement = "Снабдяване"
 usage = "Употреба"
 
+[portal.billing.compare]
+current = "Текущ"
+enterpriseData = "Местонахождение на данните и SCIM"
+enterpriseName = "Корпоративен"
+enterprisePrice = "Според вашето споразумение"
+enterpriseProcessing = "Според използването или фиксирано"
+enterpriseSignIn = "SAML и одит"
+enterpriseSupport = "SLA за наличност, помощ при внедряване"
+enterpriseUsers = "Без горна граница"
+enterpriseWhere = "Плюс много възли и изолирани среди"
+exploreEnterprise = "Разгледайте корпоративния план"
+freeData = "Остават там, където го изпълнявате"
+freeName = "Безплатен"
+freePrice = "Без карта, без срок на изтичане"
+freeProcessing = "{{allowance}} кредита на месец"
+freeProcessingUnknown = "Месечен лимит от кредити"
+freeSignIn = "Имейл, Google и SSO"
+freeSignInNote = "OAuth2/OIDC"
+freeSupport = "Общност"
+freeUsers = "До {{users}}"
+freeUsersUnknown = "Малък екип"
+freeWhere = "Облак, настолен компютър или самостоятелно хоствано"
+lede = "Всеки план включва всеки PDF инструмент и SSO. Това, което се променя, е колко хора го използват, къде работи и каква поддръжка получавате."
+open = "Сравняване на планове"
+rowData = "Вашите данни"
+rowHeader = "Функция"
+rowProcessing = "Обработка"
+rowSignIn = "Вход"
+rowSupport = "Поддръжка"
+rowUsers = "Потребители"
+rowWhere = "Къде работи"
+teamData = "Google Drive, ваша собствена база данни"
+teamName = "Екип"
+teamPrice = "$99/месец за 100 потребители"
+teamProcessing = "{{allowance}} на месец, след това според използването"
+teamProcessingUnknown = "По-голям лимит, след това според използването"
+teamSignIn = "Същото"
+teamSupport = "Имейл"
+teamUsers = "100 на блок"
+teamWhere = "Облак, настолен компютър или самостоятелно хоствано"
+title = "Сравняване на планове"
+upgradeTeam = "Надграждане до Екип"
+
 [portal.billing.cycle]
 credits = "Кредити"
 creditsNote = "Използвани {{units}} · включва безплатни и предплатени кредити"
@@ -7679,6 +7842,8 @@ payTitle = "Платете за годината си"
 step = "Стъпка {{current}} от {{total}}"
 
 [portal.billing.prepaid.calc]
+currency = "Валута на офертата"
+currencyLocked = "Използва вашата съществуваща валута за фактуриране в Stripe."
 rateUnknown = "Ще покажем точната цена при checkout."
 
 [portal.billing.prepaid.consent]
@@ -8481,6 +8646,10 @@ title = "Файлът не можа да бъде поправен"
 [portal.failures.kind.inputWrongType]
 description = "Файлът ви не е във формат, който тази стъпка може да отвори, затова изпълнението не можа да го прочете."
 title = "Грешен тип файл"
+
+[portal.failures.kind.sourceUnreadable]
+description = "Вашата интелигентна папка не можа да бъде прочетена, затова нищо в нея не беше обработено."
+title = "Папката не можа да бъде прочетена"
 
 [portal.failures.kind.stepCannotRenderPage]
 description = "Страница във файла ви не можа да бъде изчертана, затова изпълнението не можа да завърши."
@@ -12235,6 +12404,7 @@ goBack = "Върнете се"
 pdfTools = "PDF инструменти"
 placeholder = "Изберете инструмент, за да започнете"
 premiumFeature = "Премиум функция:"
+searchTools = "Търсене на инструменти"
 toolsHeader = "Инструменти"
 viewAllTools = "Виж всички инструменти"
 
@@ -12399,13 +12569,10 @@ visits = "Посещения"
 
 [users]
 lastActive = "Последна активност"
-learnMore = "Научете повече за ролите и достъпа."
 locked = "Заключен"
 ownerSetupRequired = "Собственикът на организацията не е завършил първото влизане. Завършете настройката или помолете оператора на сървъра да възстанови собствеността, преди да прехвърлите собствеността."
 roleFor = "Роля за {{name}}"
 rowActions = "Действия за {{name}}"
-showAll = "Показване на всички {{count}}"
-showLess = "Показване на по-малко"
 subtitle2 = "Вашите хора, екипи и нива на достъп."
 suspended = "Спрян"
 teamActions = "Действия за екип"
@@ -12414,6 +12581,7 @@ you = "(вие)"
 
 [users.action]
 cancelInvite = "Отмяна на поканата"
+createFromDefault = "Създаване на екип от Default"
 deleteTeam = "Изтриване на екип"
 disableMfa = "Нулиране на MFA"
 move = "Преместване в екип"
@@ -12451,6 +12619,7 @@ email = "Email"
 person = "Person"
 role = "Role"
 status = "Status"
+team = "Екип"
 
 [users.confirm]
 cancelInviteBody = "Да се отмени ли поканата до {{email}}? Те няма да могат да се присъединят с текущата връзка."
@@ -12469,15 +12638,12 @@ transferOwnershipTitle = "Прехвърляне на собствеността
 description = "Поканете екипа си, за да започнете сътрудничество."
 title = "Все още няма членове"
 
+[users.filters]
+noMatches = "Никой не съответства на тези филтри."
+search = "Търсене на хора"
+
 [users.group]
 addToTeam = "Добавяне към екип"
-administrators = "{{count}} администратори"
-guestCount = "{{count}} гост"
-guests = "Гости"
-ledBy = "воден от {{owner}}"
-org = "Организация"
-team = "Екип {{name}}"
-teamMeta = "{{count}} души"
 
 [users.invite]
 access = "Достъп"
@@ -12542,6 +12708,9 @@ title = "Нов екип"
 
 [users.renameTeam]
 apply = "Преименувай"
+defaultApply = "Създаване и преместване"
+defaultDescription = "Default ще остане наличен за нови потребители. Всички, които в момента са в Default, ще бъдат преместени в новия екип."
+defaultTitle = "Създаване на екип от Default"
 name = "Име на екипа"
 title = "Преименуване на екип"
 
@@ -12566,6 +12735,15 @@ guest = "Гост"
 member = "Член"
 orgOwner = "Собственик на организацията"
 teamOwner = "Собственик на екипа"
+
+[users.seats]
+full = "Всички лицензирани места се използват. Освободете едно или увеличете броя места, за да добавите още някого."
+update = "Актуализиране на местата"
+
+[users.tabs]
+all = "Всички"
+label = "Филтриране по екип"
+unassigned = "Без екип"
 
 [users.team]
 grantProcessor = "Предостави Processor на екипа"
@@ -13216,232 +13394,14 @@ submitSignature = "Изпратете подписа"
 title = "Работно пространство"
 
 [workspace.people]
-active = "Активен"
-activeSession = "Активна сесия"
-addMembers = "Добавяне на членове"
-admin = "Админ"
-confirmDelete = "Сигурни ли сте, че искате да изтриете този потребител? Това действие не може да бъде отменено."
-confirmUnlock = "Сигурни ли сте, че искате да отключите този потребителски акаунт?"
-deleteUser = "Изтрий потребител"
-deleteUserError = "Неуспешно изтриване на потребител"
-deleteUserSuccess = "Потребителят е изтрит успешно"
 description = "Управлявайте членовете на работното пространство и техните разрешения"
-disable = "Деактивирай"
-disabled = "Деактивиран"
-editRole = "Редактиране на роля"
-enable = "Активирай"
-loading = "Зареждане на хора..."
-locked = "заключен"
-lockedBadge = "Заключен"
-loginRequired = "Първо активирайте режима за вход"
-memberActions = "Действия за член"
-noMembersFound = "Няма намерени членове"
-ownerLocked = "Прехвърлете собствеността на организацията в Настройки → Работно пространство → Потребители, преди да промените ролята или акаунта на собственика."
-role = "Роля"
-searchMembers = "Търсене на членове..."
-team = "Екип"
-unlockAccount = "Отключване на акаунт"
-unlockUserError = "Неуспешно отключване на потребителски акаунт"
-unlockUserSuccess = "Потребителският акаунт е отключен успешно"
-user = "Потребител"
-userInfo = "Информация за потребителя"
-
-[workspace.people.actions]
-upgrade = "Надграждане"
-
-[workspace.people.addMember]
-authType = "Тип удостоверяване"
-error = "Неуспешно създаване на потребител"
-forceMFA = "Задължително настройване на MFA при следващо влизане"
-forcePasswordChange = "Изисквай смяна на паролата при първи вход"
-password = "Парола"
-passwordPlaceholder = "Въведете парола"
-passwordRequired = "Изисква се парола"
-role = "Роля"
-submit = "Добавяне на член"
-success = "Потребителят е създаден успешно"
-team = "Екип (незадължително)"
-teamPlaceholder = "Изберете екип"
-username = "Потребителско име (имейл)"
-usernamePlaceholder = "user@example.com"
-usernameRequired = "Потребителско име и парола са задължителни"
-
-[workspace.people.authType]
-oauth = "OAuth2"
-password = "Парола"
-saml = "SAML2"
-ssoDescription = "Потребителят ще се удостоверява чрез SSO доставчик"
-
-[workspace.people.changePassword]
-action = "Промяна на парола"
-confirmPassword = "Потвърдете паролата"
-confirmPlaceholder = "Въведете отново новата парола"
-copiedToClipboard = "Паролата е копирана в клипборда"
-copyFailed = "Неуспешно копиране на паролата"
-copyTooltip = "Копиране в клипборда"
-emailUnavailable = "Имейлът на този потребител не е валиден адрес. Известията са изключени."
-error = "Неуспешно актуализиране на паролата"
-forcePasswordChange = "Принудете потребителя да смени паролата при следващо влизане"
-generatedPreview = "Генерирана парола:"
-generateRandom = "Генерирайте сигурна парола"
-includePassword = "Включете новата парола в имейла"
-newPassword = "Нова парола"
-notifyOnly = "Ще бъде изпратен имейл без паролата, за да уведоми потребителя, че администратор я е променил."
-passwordMismatch = "Паролите не съвпадат"
-passwordRequired = "Моля, въведете нова парола"
-placeholder = "Въведете нова парола"
-sendEmail = "Изпратете имейл на потребителя за тази промяна"
-smtpDisabled = "Имейл известията изискват SMTP да е активиран в настройките."
-submit = "Актуализиране на паролата"
-subtitle = "Актуализирайте паролата за"
-success = "Паролата е актуализирана успешно"
-title = "Промяна на парола"
-
-[workspace.people.editMember]
-editing = "Editing: <0>{{username}}</0>"
-error = "Неуспешно обновяване на потребител"
-role = "Роля"
-submit = "Update User"
-success = "Потребителят е обновен успешно"
-team = "Екип (незадължително)"
-teamPlaceholder = "Изберете екип"
-title = "Edit User"
-
-[workspace.people.emailInvite]
-allFailed = "Неуспешно канене на потребители"
-emails = "Имейл адреси"
-emailsPlaceholder = "user1@example.com, user2@example.com"
-emailsRequired = "Изисква се поне един имейл адрес"
-error = "Неуспешно изпращане на покани"
-partialFailure = "Някои покани бяха неуспешни"
-submit = "Изпрати покани"
-success = "Потребител(и) поканени успешно"
-
-[workspace.people.inviteLink]
-copied = "Връзката е копирана в клипборда"
-email = "Имейл адрес"
-emailDescription = "Незадължително – оставете празно за обща покана, която може да се използва от всеки"
-emailPlaceholder = "user@example.com (незадължително)"
-emailSent = "Връзката за покана е генерирана и изпратена по имейл"
-error = "Неуспешно генериране на връзка за покана"
-expiryHours = "Часове до изтичане"
-generate = "Генерирай връзка"
-generated = "Покана чрез връзка е генерирана"
-sendEmail = "Изпрати поканата по имейл"
-sendEmailDescription = "Ако е включено, поканата ще бъде изпратена на посочения имейл адрес"
-submit = "Генерирай връзка за покана"
-
-[workspace.people.inviteMembers]
-label = "Покани членове"
-subtitle = "Въведете или поставете имейли по-долу, разделени със запетаи. Таксуването на работното ви пространство е според броя на членовете."
-
-[workspace.people.inviteMode]
-email = "Имейл"
-emailDisabled = "Имейл поканите изискват конфигурация на SMTP и mail.enableInvites=true в настройките"
-link = "Връзка"
-username = "Потребителско име"
 
 [workspace.people.license]
-currentUsage = "В момента се използват {{current}} от {{max}} потребителски лицензи"
-fromLicense = "от лиценз"
-grandfathered = "Запазени по старите правила"
-grandfatheredShort = "{{count}} запазени по старите правила"
-slotsAvailable_one = "{{count}} user slot available"
-slotsAvailable_other = "{{count}} user slots available"
-slotsAvailable_zero = "No slots available"
 users_one = "user"
 users_other = "users"
 
-[workspace.people.mfa]
-adminDisableError = "Неуспешно деактивиране на MFA за потребителя"
-adminDisableSuccess = "MFA е деактивирана успешно за потребителя"
-disableByAdmin = "Деактивиране на MFA"
-
-[workspace.people.roleDescriptions]
-admin = "Може да управлява настройки и да кани членове, с пълен административен достъп."
-currentRole = "Текущо назначена роля."
-user = "Can view and edit shared files, but cannot manage workspace settings or users."
-
-[workspace.people.toggleEnabled]
-error = "Неуспешно обновяване на статус на потребител"
-success = "Статусът на потребителя е обновен успешно"
-
 [workspace.teams]
-addMember = "Добавяне на член"
-backToTeams = "Назад към екипите"
-cannotAddToInternal = "Не могат да се добавят членове към екипа Internal"
-cannotDeleteInternal = "Не може да се изтрие екипът Internal"
-cannotRenameInternal = "Не може да се преименува екипът Internal"
-confirmDelete = "Сигурни ли сте, че искате да изтриете този екип? Екипът трябва да е празен, за да бъде изтрит."
-confirmRemove = "Да се премахне ли потребителят от този екип?"
-createNewTeam = "Създаване на нов екип"
-deleteTeamLabel = "Изтриване на екипа"
 description = "Управлявайте екипи и организирайте членовете на работното пространство"
-loadError = "Неуспешно зареждане на данните за екипа"
-loading = "Зареждане на екипи..."
-loadingDetails = "Зареждане на детайли за екип..."
-memberCount_one = "{{count}} member"
-memberCount_other = "{{count}} members"
-memberCount_zero = "no members"
-noMembers = "Няма членове в този екип"
-noTeamsFound = "Няма намерени екипи"
-removeMember = "Премахване от екипа"
-removeMemberError = "Неуспешно премахване на потребител от екипа"
-removeMemberSuccess = "Потребителят е премахнат от екипа"
-renameTeamLabel = "Преименуване на екипа"
-system = "Система"
-teamActions = "Действия за екип"
-teamName = "Име на екипа"
-teamNotFound = "Екипът не е намерен"
-totalMembers = "Общ брой членове"
-viewTeam = "Преглед на екипа"
-
-[workspace.teams.addMemberToTeam]
-addingTo = "Добавяне към"
-currentlyIn = "в момента в"
-error = "Неуспешно добавяне на член към екипа"
-selectUser = "Изберете потребител"
-selectUserPlaceholder = "Изберете потребител"
-selectUserRequired = "Моля, изберете потребител"
-submit = "Добавяне на член"
-success = "Членът е добавен към екипа успешно"
-title = "Добавяне на член към екип"
-userRequired = "Моля, изберете потребител"
-willBeMoved = "Забележка: Този потребител ще бъде преместен от текущия си екип в този екип."
-
-[workspace.teams.changeTeam]
-changing = "Преместване"
-error = "Неуспешна смяна на екип"
-label = "Смяна на екип"
-selectTeam = "Изберете екип"
-selectTeamPlaceholder = "Изберете екип"
-selectTeamRequired = "Моля, изберете екип"
-submit = "Смени екипа"
-success = "Екипът е сменен успешно"
-title = "Смяна на екип"
-
-[workspace.teams.createTeam]
-error = "Неуспешно създаване на екип"
-nameRequired = "Изисква се име на екипа"
-submit = "Създай екип"
-success = "Екипът е създаден успешно"
-teamName = "Име на екипа"
-teamNamePlaceholder = "Въведете име на екипа"
-title = "Създаване на нов екип"
-
-[workspace.teams.deleteTeam]
-error = "Неуспешно изтриване на екипа. Уверете се, че екипът е празен."
-success = "Екипът е изтрит успешно"
-
-[workspace.teams.renameTeam]
-error = "Неуспешно преименуване на екипа"
-nameRequired = "Изисква се име на екипа"
-newTeamName = "Ново име на екипа"
-newTeamNamePlaceholder = "Въведете ново име на екипа"
-renaming = "Преименуване:"
-submit = "Преименувай екипа"
-success = "Екипът е преименуван успешно"
-title = "Преименуване на екипа"
 
 [zipWarning]
 cancel = "Отказ"

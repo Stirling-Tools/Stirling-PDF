@@ -729,6 +729,8 @@ permissionNotice = "tessdata पाथ पर लिखना संभव न�
 
 [admin.settings.ai]
 description = "Stirling को Python AI इंजन से कनेक्ट करें, इसके मॉडल चुनें, और इसके चलने के लिए guardrails सेट करें।"
+managedByCloud = "इस मोड में Stirling Cloud द्वारा प्रबंधित।"
+managedByCloudShort = "Stirling Cloud द्वारा प्रबंधित"
 
 [admin.settings.ai.documents]
 description = "दस्तावेज़ों पर प्रश्नों के उत्तर देने के लिए उपयोग किए जाने वाले एम्बेडिंग मॉडल और रिट्रीवल सेटिंग्स कॉन्फ़िगर करें। सहेजने पर AI engine पर लागू होता है।"
@@ -771,11 +773,24 @@ label = "Top K"
 [admin.settings.ai.general]
 connection = "कनेक्शन"
 description = "Stirling को Python AI engine से कनेक्ट करें और चुनें कि कौन-सी AI क्षमताएँ उपलब्ध कराई जाएँ। बदलाव restart पर लागू होते हैं।"
+restartNote = "URL या किसी भी टाइमआउट को बदलना रीस्टार्ट के बाद प्रभावी होता है।"
 title = "AI Engine"
 
 [admin.settings.ai.general.capabilities]
 description = "व्यक्तिगत AI सुविधाओं को चालू या बंद करें। अक्षम सुविधाएँ app में छिपी रहती हैं।"
 title = "क्षमताएँ"
+
+[admin.settings.ai.general.cloud]
+note = "मॉडल और प्रदाता कुंजियाँ Stirling Cloud द्वारा प्रबंधित की जाती हैं, इसलिए ये सेटिंग्स इस मोड में लागू नहीं होतीं।"
+
+[admin.settings.ai.general.cloud.indexing]
+description = "हर AI टूल उत्तर देने के लिए आवश्यक पेज टेक्स्ट भेजता है। यह तय करता है कि Stirling Cloud उस टेक्स्ट को अनुक्रमित रूप में रख सकता है या नहीं, ताकि बाद के प्रश्न पूरे दस्तावेज़ में खोज सकें।"
+help = "बंद का मतलब है कि दस्तावेज़ संबंधी प्रश्न उपलब्ध नहीं हैं। यह टेक्स्ट भेजे जाने को नहीं रोकता - केवल उसे संग्रहित किए जाने को रोकता है।"
+label = "Stirling Cloud को अनुक्रमित दस्तावेज़ रखने दें"
+
+[admin.settings.ai.general.cloudNote]
+body = "तर्क-प्रक्रिया Stirling के इंफ़्रास्ट्रक्चर पर चलती है, और इसका बिल उस खाते में जाता है जिससे यह सर्वर लिंक है। यहाँ चलाने के लिए कोई कंटेनर नहीं है और रखने के लिए कोई प्रदाता कुंजी नहीं है। AI जो भी पढ़ता है, वह आपके अपने हार्डवेयर के बजाय Stirling Cloud द्वारा प्रोसेस किया जाता है।"
+title = "Stirling Cloud AI के बारे में"
 
 [admin.settings.ai.general.enabled]
 description = "मुख्य switch। बंद होने पर कोई AI tools, agents, या engine calls उपलब्ध नहीं होते।"
@@ -809,9 +824,28 @@ label = "PDF comment agent"
 description = "दस्तावेज़ generation जैसे भारी agent operations के लिए timeout।"
 label = "लंबे समय तक चलने वाला timeout (seconds)"
 
+[admin.settings.ai.general.mode]
+label = "AI कहाँ चलता है"
+
+[admin.settings.ai.general.mode.cloud]
+description = "कोई कंटेनर नहीं, कोई प्रदाता कुंजी नहीं, कोई मॉडल चयन नहीं - काम Stirling Cloud पर चलता है और इसका बिल उस खाते में जाता है जिससे यह सर्वर लिंक है।"
+linkCta = "इस सर्वर को Stirling खाते से कनेक्ट करें"
+notLinked = "पहले एक खाता लिंक करें"
+ownerOnly = "केवल संगठन का मालिक इस सर्वर को Stirling खाते से लिंक कर सकता है।"
+title = "Stirling Cloud AI का उपयोग करें"
+
+[admin.settings.ai.general.mode.off]
+description = "ऐप में कहीं भी कोई AI टूल नहीं, और इस सर्वर से कुछ भी बाहर नहीं जाता।"
+title = "बंद"
+
+[admin.settings.ai.general.mode.self]
+description = "आपके द्वारा होस्ट किया गया एक कंटेनर, जो आपकी पसंद के मॉडल प्रदाता की ओर इंगित करता है। आपकी कुंजी, आपका बिल, आपका डेटा पथ।"
+title = "अपना खुद का इंजन चलाएँ"
+
 [admin.settings.ai.general.note]
-body = "AI engine एक अलग service के रूप में चलता है। इसका shared secret"
-body2 = "container environment variable के माध्यम से सेट किया जाता है। Provider API keys इन pages पर दर्ज की जा सकती हैं या engine environment variables के रूप में दी जा सकती हैं; यहाँ दर्ज keys सहेजने पर engine को भेजी जाती हैं।"
+docs = "सेटअप गाइड"
+intro = "एक अलग कंटेनर जिसे आप Stirling के साथ चलाते हैं। यह तर्क-प्रक्रिया करता है; Stirling फिर भी हर पेज ऑपरेशन खुद करता है। दोनों कंटेनरों पर वही"
+outro = "और एक मॉडल प्रदाता कुंजी चाहिए। AI जो भी पढ़ता है, वह आपके चुने हुए प्रदाता को भेजा जाता है - आपके द्वारा होस्ट किया गया Ollama हर पेज को इन-हाउस रखता है।"
 title = "AI engine के बारे में"
 
 [admin.settings.ai.general.streamTimeoutSeconds]
@@ -890,6 +924,67 @@ label = "Smart model"
 body = "बदलाव AI engine को स्वचालित रूप से भेज दिए जाते हैं।"
 bodyNoPush = "Settings सहेजी गईं। अगली बार जब AI engine अपनी configuration लेगा, तब वे लागू होंगी।"
 title = "AI settings सहेजी गईं"
+
+[admin.settings.ai.status]
+capabilities = "क्षमताएँ"
+capabilitiesValue = "{{total}} में से {{on}} चालू"
+checked = "जाँचा गया"
+checking = "इंजन की जाँच हो रही है…"
+description = "इंजन उपलब्ध है या नहीं, यह इस सर्वर को स्वीकार करता है या नहीं, और यह क्या चला रहा है।"
+fastModel = "तेज़ मॉडल"
+justNow = "अभी-अभी"
+latency = "प्रतिक्रिया समय"
+linkLabel = "खाता लिंक"
+minutesAgo = "{{count}} मिनट पहले"
+recheck = "फिर से जाँचें"
+runningOn = "चल रहा है"
+secondsAgo = "{{count}} सेकंड पहले"
+secretLabel = "साझा सीक्रेट"
+smartModel = "स्मार्ट मॉडल"
+title = "स्थिति"
+url = "इंजन URL"
+
+[admin.settings.ai.status.cloud]
+hostDown = "डाउन"
+hostLabel = "Stirling.com"
+hostUp = "अप"
+name = "Stirling Cloud"
+sharingLabel = "AI साझाकरण"
+sharingOff = "अक्षम"
+sharingOn = "सक्षम"
+
+[admin.settings.ai.status.cloud.degraded]
+body = "Stirling Cloud ने जवाब दिया, लेकिन इस सर्वर को अस्वीकार कर दिया। खाता लिंक निरस्त किया गया हो सकता है।"
+title = "Stirling Cloud इस सर्वर को अस्वीकार कर रहा है"
+
+[admin.settings.ai.status.cloud.down]
+body = "यह सर्वर Stirling Cloud तक नहीं पहुँच सका। खाता लिंक जाँचें और सुनिश्चित करें कि यह सर्वर इंटरनेट तक पहुँच सकता है।"
+title = "Stirling Cloud पहुँच से बाहर है"
+
+[admin.settings.ai.status.cloud.ok]
+body = "Stirling Cloud ने इस सर्वर को स्वीकार किया। यहाँ चलाने या पैच करने के लिए कुछ नहीं है।"
+title = "Stirling Cloud पर चल रहा है"
+
+[admin.settings.ai.status.degraded]
+body = "इसने हेल्थ चेक का जवाब दिया, लेकिन वास्तविक अनुरोध को अस्वीकार कर दिया। दोनों पक्ष अलग-अलग साझा सीक्रेट का उपयोग कर रहे हैं।"
+title = "इंजन चालू है, लेकिन इस सर्वर को अस्वीकार कर रहा है"
+
+[admin.settings.ai.status.down]
+body = "URL जाँचें, सुनिश्चित करें कि इंजन कंटेनर चल रहा है, और AI सक्षम करने के बाद आपने रीस्टार्ट किया है।"
+title = "इंजन पहुँच से बाहर है"
+
+[admin.settings.ai.status.off]
+body = "नीचे चुनें कि AI कैसे चलेगा, फिर सहेजें और रीस्टार्ट करें।"
+title = "AI बंद है"
+
+[admin.settings.ai.status.ok]
+body = "हेल्थ चेक और प्रमाणित अनुरोध दोनों सफल रहे।"
+title = "इंजन चल रहा है"
+
+[admin.settings.ai.status.secret]
+no = "अस्वीकृत"
+unknown = "अज्ञात"
+yes = "स्वीकृत"
 
 [admin.settings.badge]
 clickToUpgrade = "प्लान विवरण देखने के लिए क्लिक करें"
@@ -4453,6 +4548,7 @@ openFromComputer = "कंप्यूटर से खोलें"
 openSettings = "सेटिंग्स खोलें"
 other = "अन्य"
 recent = "हाल के"
+searchFiles = "फ़ाइलें खोजें"
 uploadFailedBody = "चुनी गई फ़ाइलें जोड़ी नहीं जा सकीं।"
 uploadFailedTitle = "अपलोड विफल"
 viewAll = "सभी {{count}} फ़ाइलें देखें"
@@ -5827,6 +5923,8 @@ label = "Free credits"
 adoptFailed = "दस्तावेज़ अनलॉक हो गया था लेकिन यहाँ खोला नहीं जा सका। टूल को सीधे आज़माएँ।"
 empty = "रिपोर्ट करने के लिए कुछ नहीं।"
 handoffUnavailable = "यह ब्राउज़र प्रोसेसर को दस्तावेज़ संपादक को पास करने नहीं देगा। इसके बजाय इसे संपादक से खोलें।"
+inSmartFolder = "यह दस्तावेज़ एक स्मार्ट फ़ोल्डर में है, इसलिए इसे यहाँ के बजाय सर्वर पर संभाला जाता है।"
+inSmartFolderNamed = "{{name}} एक स्मार्ट फ़ोल्डर में है, इसलिए इसे यहाँ के बजाय सर्वर पर संभाला जाता है।"
 noDocumentLinked = "यह विफलता किसी विशिष्ट दस्तावेज़ से जुड़ी नहीं है, इसलिए यहाँ खोलने के लिए कुछ नहीं है।"
 notOnThisDevice = "यह दस्तावेज़ इस डिवाइस पर नहीं है, इसलिए इसे यहाँ नहीं खोला जा सकता।"
 occurrences = "{{count}} बार"
@@ -5837,6 +5935,7 @@ repairedRerunNotAdopted = "रिपेयर किया गया दस्�
 repairedRerunUndelivered = "दस्तावेज़ रिपेयर हो गया और नीति फिर से चलना शुरू हुई, लेकिन उसका परिणाम यहाँ डिलीवर नहीं किया जा सकता, इसलिए यह विफलता खुली रहती है।"
 rerunRejected = "नीति अभी फिर से नहीं चलाई जा सकी। थोड़ी देर में फिर प्रयास करें।"
 rerunUndelivered = "नीति फिर से चलना शुरू हुई, लेकिन उसका परिणाम यहाँ डिलीवर नहीं किया जा सकता, इसलिए यह विफलता खुली रहती है।"
+retryInFolderFailed = "उस दस्तावेज़ को अभी फिर से नहीं चलाया जा सका।"
 retryUnavailable = "इस दस्तावेज़ का अब इस ब्राउज़र से पुनः प्रयास नहीं किया जा सकता।"
 title = "सूचनाएँ"
 unlockedNotRerun = "दस्तावेज़ अनलॉक होकर यहाँ खुल गया, लेकिन उस पर नीति फिर से नहीं चलाई जा सकी।"
@@ -6625,9 +6724,11 @@ title = "टीम प्लान समायोजित करें"
 [payment.capacityStage]
 adjustmentNote = "पुष्टि करने से पहले Stripe सटीक शुल्क, कोई भी prorations और आपकी अगली बिलिंग तिथि दिखाएगा। उपलब्ध होने पर आपकी सहेजी गई भुगतान विधि का उपयोग किया जाएगा।"
 continue = "भुगतान पर जारी रखें"
+currencyAtCheckout = "Stripe चेकआउट पर अंतिम राशि और भुगतान मुद्रा की पुष्टि करता है।"
 customLabel = "उपयोगकर्ताओं की संख्या"
 dueToday = "आज देय"
 enterpriseQuote = "enterprise कोट प्राप्त करें"
+estimatedTotal = "अनुमानित कुल"
 lineItem = "टीम · {{price}}{{period}} प्रति {{block}} उपयोगकर्ता"
 minimumForCurrentUsers = "आपके पास {{users}} उपयोगकर्ता हैं, इसलिए प्लान में कम से कम {{minimum}} कवर होना चाहिए।"
 modalTitle = "{{planName}} में अपग्रेड करें"
@@ -6865,6 +6966,25 @@ width = "चौड़ाई"
 widthHint = "टेक्स्ट बॉक्स की चौड़ाई उसकी सामग्री और wrapping के अनुसार होती है।"
 x = "X"
 y = "Y"
+
+[pdfTextEditor.mobile]
+actions = "एडिटर कार्रवाइयाँ"
+addImage = "छवि"
+addText = "टेक्स्ट"
+cancel = "रद्द करें"
+delete = "हटाएँ"
+details = "विवरण"
+document = "दस्तावेज़"
+done = "हो गया"
+download = "सहेजें और डाउनलोड करें"
+find = "खोजें"
+lock = "लॉक करें"
+openPdf = "PDF खोलें"
+panelHint = "संपादन Workspace दृश्य में होता है। पेज पर टेक्स्ट बदलने के लिए उस पर टैप करें।"
+save = "सहेजें"
+style = "शैली"
+tapToPlace = "जहाँ टेक्स्ट जाना चाहिए, वहाँ पेज पर टैप करें"
+unlock = "अनलॉक करें"
 
 [pdfTextEditor.password]
 cancel = "रद्द करें"
@@ -7574,6 +7694,49 @@ plan = "Plan"
 procurement = "Procurement"
 usage = "Usage"
 
+[portal.billing.compare]
+current = "वर्तमान"
+enterpriseData = "डेटा रेजिडेंसी और SCIM"
+enterpriseName = "Enterprise"
+enterprisePrice = "आपके अनुबंध के अनुसार"
+enterpriseProcessing = "मीटर-आधारित या फ्लैट"
+enterpriseSignIn = "SAML और ऑडिटिंग"
+enterpriseSupport = "अपटाइम SLAs, डिप्लॉयमेंट सहायता"
+enterpriseUsers = "कोई सीमा नहीं"
+enterpriseWhere = "साथ ही multi-node और air-gapped"
+exploreEnterprise = "Enterprise देखें"
+freeData = "जहाँ आप इसे चलाते हैं, वहीं रहता है"
+freeName = "Free"
+freePrice = "कोई कार्ड नहीं, कोई समाप्ति नहीं"
+freeProcessing = "हर महीने {{allowance}} क्रेडिट"
+freeProcessingUnknown = "मासिक क्रेडिट भत्ता"
+freeSignIn = "ईमेल, Google और SSO"
+freeSignInNote = "OAuth2/OIDC"
+freeSupport = "समुदाय"
+freeUsers = "{{users}} तक"
+freeUsersUnknown = "एक छोटी टीम"
+freeWhere = "Cloud, डेस्कटॉप या self-hosted"
+lede = "हर प्लान में हर PDF टूल और SSO शामिल है। फर्क यह है कि कितने लोग इसका उपयोग करते हैं, यह कहाँ चलता है, और आपको कैसी सहायता मिलती है।"
+open = "प्लान की तुलना करें"
+rowData = "आपका डेटा"
+rowHeader = "फ़ीचर"
+rowProcessing = "प्रोसेसिंग"
+rowSignIn = "साइन-इन"
+rowSupport = "सहायता"
+rowUsers = "उपयोगकर्ता"
+rowWhere = "यह कहाँ चलता है"
+teamData = "Google Drive, आपका अपना डेटाबेस"
+teamName = "Team"
+teamPrice = "प्रति 100 उपयोगकर्ता $99/mo"
+teamProcessing = "हर महीने {{allowance}}, फिर मीटर-आधारित"
+teamProcessingUnknown = "बड़ा भत्ता, फिर मीटर-आधारित"
+teamSignIn = "वही"
+teamSupport = "ईमेल"
+teamUsers = "प्रति ब्लॉक 100"
+teamWhere = "Cloud, डेस्कटॉप या self-hosted"
+title = "प्लान की तुलना करें"
+upgradeTeam = "Team में अपग्रेड करें"
+
 [portal.billing.cycle]
 credits = "क्रेडिट्स"
 creditsNote = "{{units}} उपयोग किए गए · मुफ्त और prepaid क्रेडिट्स शामिल हैं"
@@ -7679,6 +7842,8 @@ payTitle = "अपने year के लिए pay करें"
 step = "Step {{current}} of {{total}}"
 
 [portal.billing.prepaid.calc]
+currency = "कोटेशन मुद्रा"
+currencyLocked = "आपकी मौजूदा Stripe बिलिंग मुद्रा का उपयोग करता है।"
 rateUnknown = "checkout पर हम exact price दिखाएँगे।"
 
 [portal.billing.prepaid.consent]
@@ -8481,6 +8646,10 @@ title = "फ़ाइल repair नहीं हो सकी"
 [portal.failures.kind.inputWrongType]
 description = "आपकी फ़ाइल ऐसा format नहीं है जिसे यह step खोल सके, इसलिए run इसे पढ़ नहीं सका।"
 title = "गलत फ़ाइल type"
+
+[portal.failures.kind.sourceUnreadable]
+description = "आपका स्मार्ट फ़ोल्डर पढ़ा नहीं जा सका, इसलिए उसमें मौजूद कुछ भी प्रोसेस नहीं हुआ।"
+title = "फ़ोल्डर पढ़ा नहीं जा सका"
 
 [portal.failures.kind.stepCannotRenderPage]
 description = "आपकी फ़ाइल में एक page draw नहीं किया जा सका, इसलिए run पूरा नहीं हो सका।"
@@ -12235,6 +12404,7 @@ goBack = "वापस जाएं"
 pdfTools = "PDF Tools"
 placeholder = "शुरू करने के लिए कोई टूल चुनें"
 premiumFeature = "प्रीमियम फीचर:"
+searchTools = "टूल खोजें"
 toolsHeader = "उपकरण"
 viewAllTools = "सभी उपकरण देखें"
 
@@ -12399,13 +12569,10 @@ visits = "विज़िट"
 
 [users]
 lastActive = "अंतिम सक्रिय"
-learnMore = "Roles और access के बारे में अधिक जानें।"
 locked = "Locked"
 ownerSetupRequired = "Organization owner ने first login पूरा नहीं किया है। Ownership transfer करने से पहले setup पूरा करें या server operator से ownership recover करने को कहें।"
 roleFor = "{{name}} के लिए role"
 rowActions = "{{name}} के लिए कार्रवाइयां"
-showAll = "सभी {{count}} दिखाएं"
-showLess = "कम दिखाएं"
 subtitle2 = "आपके लोग, teams, और access levels।"
 suspended = "Suspended"
 teamActions = "Team actions"
@@ -12414,6 +12581,7 @@ you = "(आप)"
 
 [users.action]
 cancelInvite = "आमंत्रण रद्द करें"
+createFromDefault = "Default से टीम बनाएँ"
 deleteTeam = "Team हटाएं"
 disableMfa = "MFA रीसेट करें"
 move = "Team में ले जाएं"
@@ -12451,6 +12619,7 @@ email = "Email"
 person = "Person"
 role = "Role"
 status = "Status"
+team = "टीम"
 
 [users.confirm]
 cancelInviteBody = "{{email}} को भेजा गया आमंत्रण रद्द करें? वे मौजूदा लिंक से शामिल नहीं हो पाएँगे।"
@@ -12469,15 +12638,12 @@ transferOwnershipTitle = "Organization ownership transfer करें"
 description = "सहयोग शुरू करने के लिए अपनी team को आमंत्रित करें।"
 title = "अभी तक कोई member नहीं"
 
+[users.filters]
+noMatches = "इन फ़िल्टर से कोई मेल नहीं खाता।"
+search = "लोग खोजें"
+
 [users.group]
 addToTeam = "Team में जोड़ें"
-administrators = "{{count}} administrators"
-guestCount = "{{count}} guest"
-guests = "Guests"
-ledBy = "{{owner}} द्वारा नेतृत्व"
-org = "Organization"
-team = "{{name}} team"
-teamMeta = "{{count}} लोग"
 
 [users.invite]
 access = "Access"
@@ -12542,6 +12708,9 @@ title = "नई टीम"
 
 [users.renameTeam]
 apply = "नाम बदलें"
+defaultApply = "बनाएँ और स्थानांतरित करें"
+defaultDescription = "Default नए उपयोगकर्ताओं के लिए उपलब्ध रहेगा। वर्तमान में Default में मौजूद सभी लोगों को नई टीम में स्थानांतरित किया जाएगा।"
+defaultTitle = "Default से टीम बनाएँ"
 name = "टीम का नाम"
 title = "टीम का नाम बदलें"
 
@@ -12566,6 +12735,15 @@ guest = "अतिथि"
 member = "सदस्य"
 orgOwner = "संगठन स्वामी"
 teamOwner = "टीम स्वामी"
+
+[users.seats]
+full = "हर लाइसेंस प्राप्त सीट उपयोग में है। किसी और को जोड़ने के लिए एक सीट खाली करें, या सीट संख्या बढ़ाएँ।"
+update = "सीटें अपडेट करें"
+
+[users.tabs]
+all = "सभी"
+label = "टीम के अनुसार फ़िल्टर करें"
+unassigned = "कोई टीम नहीं"
 
 [users.team]
 grantProcessor = "टीम को Processor प्रदान करें"
@@ -13216,232 +13394,14 @@ submitSignature = "हस्ताक्षर सबमिट करें"
 title = "वर्कस्पेस"
 
 [workspace.people]
-active = "सक्रिय"
-activeSession = "सक्रिय सत्र"
-addMembers = "सदस्य जोड़ें"
-admin = "प्रशासक"
-confirmDelete = "क्या आप वाकई इस उपयोगकर्ता को हटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती।"
-confirmUnlock = "क्या आप सुनिश्चित हैं कि आप इस उपयोगकर्ता खाते को अनलॉक करना चाहते हैं?"
-deleteUser = "उपयोगकर्ता हटाएँ"
-deleteUserError = "उपयोगकर्ता हटाने में विफल"
-deleteUserSuccess = "उपयोगकर्ता सफलतापूर्वक हटाया गया"
 description = "वर्कस्पेस सदस्यों और उनकी अनुमतियाँ प्रबंधित करें"
-disable = "अक्षम करें"
-disabled = "अक्षम"
-editRole = "भूमिका संपादित करें"
-enable = "सक्रिय करें"
-loading = "लोग लोड हो रहे हैं..."
-locked = "लॉक्ड"
-lockedBadge = "लॉक्ड"
-loginRequired = "पहले लॉगिन मोड सक्षम करें"
-memberActions = "सदस्य कार्रवाइयाँ"
-noMembersFound = "कोई सदस्य नहीं मिला"
-ownerLocked = "Owner की role या account बदलने से पहले Settings → Workspace → Users में organization ownership transfer करें।"
-role = "भूमिका"
-searchMembers = "सदस्यों को खोजें..."
-team = "टीम"
-unlockAccount = "खाता अनलॉक करें"
-unlockUserError = "उपयोगकर्ता खाता अनलॉक करने में विफल"
-unlockUserSuccess = "उपयोगकर्ता खाता सफलतापूर्वक अनलॉक किया गया"
-user = "उपयोगकर्ता"
-userInfo = "उपयोगकर्ता जानकारी"
-
-[workspace.people.actions]
-upgrade = "अपग्रेड"
-
-[workspace.people.addMember]
-authType = "प्रमाणीकरण प्रकार"
-error = "उपयोगकर्ता बनाने में विफल"
-forceMFA = "अगले लॉगिन पर MFA सेटअप अनिवार्य करें"
-forcePasswordChange = "पहली लॉगिन पर पासवर्ड बदलना अनिवार्य करें"
-password = "पासवर्ड"
-passwordPlaceholder = "पासवर्ड दर्ज करें"
-passwordRequired = "पासवर्ड आवश्यक है"
-role = "भूमिका"
-submit = "सदस्य जोड़ें"
-success = "उपयोगकर्ता सफलतापूर्वक बनाया गया"
-team = "टीम (वैकल्पिक)"
-teamPlaceholder = "एक टीम चुनें"
-username = "यूज़रनेम (ईमेल)"
-usernamePlaceholder = "user@example.com"
-usernameRequired = "यूज़रनेम और पासवर्ड आवश्यक हैं"
-
-[workspace.people.authType]
-oauth = "OAuth2"
-password = "पासवर्ड"
-saml = "SAML2"
-ssoDescription = "उपयोगकर्ता SSO प्रदाता के माध्यम से प्रमाणीकरण करेगा"
-
-[workspace.people.changePassword]
-action = "पासवर्ड बदलें"
-confirmPassword = "पासवर्ड की पुष्टि करें"
-confirmPlaceholder = "नया पासवर्ड फिर से दर्ज करें"
-copiedToClipboard = "पासवर्ड क्लिपबोर्ड पर कॉपी किया गया"
-copyFailed = "पासवर्ड कॉपी करने में विफल"
-copyTooltip = "क्लिपबोर्ड पर कॉपी करें"
-emailUnavailable = "इस उपयोगकर्ता का ईमेल एक मान्य ईमेल पता नहीं है। सूचनाएँ अक्षम हैं।"
-error = "पासवर्ड अपडेट करने में विफल"
-forcePasswordChange = "अगले लॉगिन पर उपयोगकर्ता को पासवर्ड बदलने के लिए बाध्य करें"
-generatedPreview = "जनरेट किया गया पासवर्ड:"
-generateRandom = "सुरक्षित पासवर्ड जनरेट करें"
-includePassword = "ईमेल में नया पासवर्ड शामिल करें"
-newPassword = "नया पासवर्ड"
-notifyOnly = "पासवर्ड के बिना एक ईमेल भेजा जाएगा, जिससे उपयोगकर्ता को पता चलेगा कि किसी व्यवस्थापक ने इसे बदला है।"
-passwordMismatch = "पासवर्ड मेल नहीं खाते"
-passwordRequired = "कृपया नया पासवर्ड दर्ज करें"
-placeholder = "नया पासवर्ड दर्ज करें"
-sendEmail = "इस बदलाव के बारे में उपयोगकर्ता को ईमेल करें"
-smtpDisabled = "ईमेल सूचनाओं के लिए सेटिंग्स में SMTP सक्षम होना आवश्यक है।"
-submit = "पासवर्ड अपडेट करें"
-subtitle = "के लिए पासवर्ड अपडेट करें"
-success = "पासवर्ड सफलतापूर्वक अपडेट किया गया"
-title = "पासवर्ड बदलें"
-
-[workspace.people.editMember]
-editing = "Editing: <0>{{username}}</0>"
-error = "उपयोगकर्ता अपडेट करने में विफल"
-role = "भूमिका"
-submit = "Update User"
-success = "उपयोगकर्ता सफलतापूर्वक अपडेट किया गया"
-team = "टीम (वैकल्पिक)"
-teamPlaceholder = "एक टीम चुनें"
-title = "Edit User"
-
-[workspace.people.emailInvite]
-allFailed = "उपयोगकर्ताओं को आमंत्रित करने में विफल"
-emails = "ईमेल पते"
-emailsPlaceholder = "user1@example.com, user2@example.com"
-emailsRequired = "कम से कम एक ईमेल पता आवश्यक है"
-error = "आमंत्रण भेजने में विफल"
-partialFailure = "कुछ निमंत्रण विफल हुए"
-submit = "आमंत्रण भेजें"
-success = "उपयोगकर्ता(ओं) को सफलतापूर्वक आमंत्रित किया गया"
-
-[workspace.people.inviteLink]
-copied = "लिंक क्लिपबोर्ड पर कॉपी हुआ"
-email = "ईमेल पता"
-emailDescription = "वैकल्पिक - किसी के द्वारा उपयोग किए जा सकने वाले सामान्य आमंत्रण लिंक के लिए खाली छोड़ दें"
-emailPlaceholder = "user@example.com (वैकल्पिक)"
-emailSent = "आमंत्रण लिंक जनरेट हुआ और ईमेल से भेजा गया"
-error = "आमंत्रण लिंक जनरेट करने में विफल"
-expiryHours = "समाप्ति घंटे"
-generate = "लिंक जनरेट करें"
-generated = "आमंत्रण लिंक जनरेट हुआ"
-sendEmail = "आमंत्रण लिंक ईमेल से भेजें"
-sendEmailDescription = "सक्रिय होने पर, आमंत्रण लिंक निर्दिष्ट ईमेल पते पर भेजा जाएगा"
-submit = "आमंत्रण लिंक जनरेट करें"
-
-[workspace.people.inviteMembers]
-label = "सदस्यों को आमंत्रित करें"
-subtitle = "नीचे ईमेल टाइप या पेस्ट करें, अल्पविराम से अलग करें। आपके वर्कस्पेस का बिल सदस्यों की संख्या के आधार पर लगेगा।"
-
-[workspace.people.inviteMode]
-email = "ईमेल"
-emailDisabled = "ईमेल आमंत्रण के लिए सेटिंग्स में SMTP कॉन्फ़िगरेशन और mail.enableInvites=true आवश्यक है"
-link = "लिंक"
-username = "यूज़रनेम"
 
 [workspace.people.license]
-currentUsage = "वर्तमान में {{max}} में से {{current}} उपयोगकर्ता लाइसेंस उपयोग में"
-fromLicense = "लाइसेंस से"
-grandfathered = "ग्रैंडफादर्ड"
-grandfatheredShort = "{{count}} ग्रैंडफादर्ड"
-slotsAvailable_one = "{{count}} user slot available"
-slotsAvailable_other = "{{count}} user slots available"
-slotsAvailable_zero = "No slots available"
 users_one = "user"
 users_other = "users"
 
-[workspace.people.mfa]
-adminDisableError = "उपयोगकर्ता के लिए MFA अक्षम करने में विफल"
-adminDisableSuccess = "उपयोगकर्ता के लिए MFA सफलतापूर्वक अक्षम किया गया"
-disableByAdmin = "MFA अक्षम करें"
-
-[workspace.people.roleDescriptions]
-admin = "सेटिंग्स और आमंत्रण प्रबंधित कर सकता है, पूर्ण प्रशासनिक पहुंच के साथ।"
-currentRole = "वर्तमान सौंपी गई भूमिका।"
-user = "Can view and edit shared files, but cannot manage workspace settings or users."
-
-[workspace.people.toggleEnabled]
-error = "उपयोगकर्ता स्थिति अपडेट करने में विफल"
-success = "उपयोगकर्ता स्थिति सफलतापूर्वक अपडेट की गई"
-
 [workspace.teams]
-addMember = "सदस्य जोड़ें"
-backToTeams = "टीम्स पर वापस जाएँ"
-cannotAddToInternal = "Internal टीम में सदस्य नहीं जोड़े जा सकते"
-cannotDeleteInternal = "Internal टीम को हटाया नहीं जा सकता"
-cannotRenameInternal = "Internal टीम का नाम नहीं बदला जा सकता"
-confirmDelete = "क्या आप वाकई इस टीम को हटाना चाहते हैं? हटाने के लिए टीम खाली होनी चाहिए।"
-confirmRemove = "उपयोगकर्ता को इस टीम से हटाएँ?"
-createNewTeam = "नई टीम बनाएँ"
-deleteTeamLabel = "टीम हटाएँ"
 description = "टीम्स प्रबंधित करें और वर्कस्पेस सदस्यों को व्यवस्थित करें"
-loadError = "टीम विवरण लोड करने में विफल"
-loading = "टीम्स लोड हो रही हैं..."
-loadingDetails = "टीम विवरण लोड हो रहे हैं..."
-memberCount_one = "{{count}} member"
-memberCount_other = "{{count}} members"
-memberCount_zero = "no members"
-noMembers = "इस टीम में कोई सदस्य नहीं"
-noTeamsFound = "कोई टीम नहीं मिली"
-removeMember = "टीम से हटाएँ"
-removeMemberError = "उपयोगकर्ता को टीम से हटाने में विफल"
-removeMemberSuccess = "उपयोगकर्ता टीम से हटाया गया"
-renameTeamLabel = "टीम का नाम बदलें"
-system = "सिस्टम"
-teamActions = "टीम कार्रवाइयाँ"
-teamName = "टीम का नाम"
-teamNotFound = "टीम नहीं मिली"
-totalMembers = "कुल सदस्य"
-viewTeam = "टीम देखें"
-
-[workspace.teams.addMemberToTeam]
-addingTo = "जोड़ रहे हैं"
-currentlyIn = "वर्तमान में"
-error = "सदस्य को टीम में जोड़ने में विफल"
-selectUser = "उपयोगकर्ता चुनें"
-selectUserPlaceholder = "एक उपयोगकर्ता चुनें"
-selectUserRequired = "कृपया एक उपयोगकर्ता चुनें"
-submit = "सदस्य जोड़ें"
-success = "सदस्य सफलतापूर्वक टीम में जोड़ा गया"
-title = "टीम में सदस्य जोड़ें"
-userRequired = "कृपया एक उपयोगकर्ता चुनें"
-willBeMoved = "नोट: इस उपयोगकर्ता को उनकी वर्तमान टीम से इस टीम में स्थानांतरित किया जाएगा।"
-
-[workspace.teams.changeTeam]
-changing = "स्थानांतरित कर रहे हैं"
-error = "टीम बदलने में विफल"
-label = "टीम बदलें"
-selectTeam = "टीम चुनें"
-selectTeamPlaceholder = "एक टीम चुनें"
-selectTeamRequired = "कृपया एक टीम चुनें"
-submit = "टीम बदलें"
-success = "टीम सफलतापूर्वक बदली गई"
-title = "टीम बदलें"
-
-[workspace.teams.createTeam]
-error = "टीम बनाने में विफल"
-nameRequired = "टीम का नाम आवश्यक है"
-submit = "टीम बनाएँ"
-success = "टीम सफलतापूर्वक बनाई गई"
-teamName = "टीम का नाम"
-teamNamePlaceholder = "टीम का नाम दर्ज करें"
-title = "नई टीम बनाएँ"
-
-[workspace.teams.deleteTeam]
-error = "टीम हटाने में विफल। सुनिश्चित करें कि टीम खाली है।"
-success = "टीम सफलतापूर्वक हटाई गई"
-
-[workspace.teams.renameTeam]
-error = "टीम का नाम बदलने में विफल"
-nameRequired = "टीम का नाम आवश्यक है"
-newTeamName = "नई टीम का नाम"
-newTeamNamePlaceholder = "नया टीम नाम दर्ज करें"
-renaming = "नाम बदलना:"
-submit = "टीम का नाम बदलें"
-success = "टीम का नाम सफलतापूर्वक बदला गया"
-title = "टीम का नाम बदलें"
 
 [zipWarning]
 cancel = "रद्द करें"

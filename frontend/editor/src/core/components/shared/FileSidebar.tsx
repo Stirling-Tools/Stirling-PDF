@@ -5,12 +5,13 @@ import React, {
   useRef,
   useEffect,
   forwardRef,
+  type RefCallback,
 } from "react";
 import { Loader, Tooltip } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { NavSurface } from "@app/ui/NavSurface";
 import { Button } from "@app/ui/Button";
-import { Icon } from "@app/ui/Icon";
+import { Icon, type IconName } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { useFileState, useFileActions } from "@app/contexts/file/fileHooks";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
@@ -34,13 +35,13 @@ import {
 import { SidebarHeader } from "@app/components/shared/SidebarHeader";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import type { FileId } from "@app/types/file";
-import type { WatchedFolderViewData } from "@app/types/watchedFolders";
 import { FileItem } from "@app/components/shared/FileSidebarFileItem";
 import { useLabelName } from "@app/data/labelDisplay";
 import { useClassificationEnabled } from "@app/hooks/useClassificationEnabled";
 import {
   FileSidebarGroupControls,
   useFileSidebarGroups,
+  type FileSidebarGroup,
 } from "@app/components/shared/fileSidebarGrouping";
 import BulkUploadToServerModal from "@app/components/shared/BulkUploadToServerModal";
 import { getFileOrigin } from "@app/components/filesPage/fileOrigin";
@@ -49,7 +50,6 @@ import { DeleteFilesDialog } from "@app/components/filesPage/DeleteFilesDialog";
 import { RenameFileDialog } from "@app/components/shared/RenameFileDialog";
 import { duplicateStoredFile } from "@app/utils/duplicateFile";
 import { SidebarChecklistSlot } from "@app/components/shared/SidebarChecklistSlot";
-import { SidebarProcessingSlot } from "@app/components/shared/SidebarProcessingSlot";
 import {
   deleteServerFile,
   type DeleteScope,
@@ -60,32 +60,19 @@ import { useOpenInNewWindow } from "@app/extensions/openInNewWindow";
 import { openSuperSearch } from "@app/components/shared/superSearch/openSuperSearch";
 import { alert } from "@app/components/toast";
 import { useBulkAddProgress } from "@app/services/bulkAddProgress";
-import { useFolderMembership } from "@app/hooks/useFolderMembership";
 import { useIsScrolled } from "@app/hooks/useIsScrolled";
-import { useAllWatchedFolders } from "@app/hooks/useAllWatchedFolders";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
-import {
-  setWatchedFolderDraggedFileIds,
-  clearWatchedFolderDraggedFileIds,
-} from "@app/components/watchedFolders/watchedFolderDragState";
-import { WATCHED_FOLDERS_ENABLED } from "@app/constants/featureFlags";
 import { FolderTreeSidebar } from "@app/components/filesPage/FolderTreeSidebar";
 import { useFilesPage } from "@app/contexts/FilesPageContext";
 import type { FolderId, FolderRecord } from "@app/types/folder";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useToolEligibleFileIds } from "@app/contexts/ToolFileEligibilityContext";
 import "@app/components/shared/FileSidebar.css";
 
 // Shared with the processor sidebar via tokens, so the two cannot drift.
 const SIDEBAR_WIDTH = "var(--sidebar-w)";
 
-// Inlined to avoid a circular import with WatchedFoldersRegistration.
-const WATCHED_FOLDER_VIEW_ID = "watchedFolder";
-const WATCHED_FOLDER_WORKBENCH_ID = "custom:watchedFolder";
-
-// Stable empty props for rows without folders/policies, so the memoized
+// Stable empty props for rows without policies, so the memoized
 // FileItem isn't re-rendered by a fresh `?? []` identity on every list render.
-const NO_FOLDERS: never[] = [];
 const NO_POLICIES: never[] = [];
 
 /** Show pre-dispatch progress only for large drops; small imports finish before it paints. */
@@ -165,6 +152,343 @@ function FolderTreeSection() {
   );
 }
 
+type SidebarAction = NonNullable<FileSidebarProps["extraActions"]>[number];
+
+function SidebarActionRow({ action }: { action: SidebarAction }) {
+  if (action.render) return <>{action.render()}</>;
+  const explainsDisabled = Boolean(action.disabled && action.disabledTooltip);
+  return (
+    <Tooltip
+      label={action.disabledTooltip ?? action.label}
+      position="right"
+      withinPortal
+      multiline={explainsDisabled}
+      w={explainsDisabled ? 220 : undefined}
+      // The tooltip explains why an already-labelled action is disabled.
+      disabled={!explainsDisabled}
+    >
+      <div
+        className={`file-sidebar-action-row${action.disabled ? " disabled" : ""}`}
+        data-testid={action.testId}
+        onClick={() => {
+          if (action.disabled) return;
+          action.onClick();
+        }}
+        role="button"
+        tabIndex={action.disabled ? -1 : 0}
+        aria-disabled={action.disabled}
+        aria-label={action.label}
+        onKeyDown={(e) => {
+          if (action.disabled) return;
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            action.onClick();
+          }
+        }}
+      >
+        <span className="file-sidebar-action-icon">{action.icon}</span>
+        <span className="file-sidebar-action-label sidebar-content-fade">
+          {action.label}
+        </span>
+      </div>
+    </Tooltip>
+  );
+}
+
+function FileDropOverlay({ show }: { show: boolean }) {
+  const { t } = useTranslation();
+  if (!show) return null;
+  return (
+    <div className="file-sidebar-drop-overlay" aria-hidden="true">
+      <Icon name="file-up" className="file-sidebar-drop-overlay-icon" />
+      <span className="file-sidebar-drop-overlay-text">
+        {t("fileSidebar.dropToAdd", "Drop files to add")}
+      </span>
+    </div>
+  );
+}
+
+interface LibraryHeaderProps {
+  stubs: StirlingFileStub[];
+  scrolled: boolean;
+  isGoogleDriveEnabled: boolean;
+  onGoogleDrive: () => void;
+  onAddFiles: () => void;
+  onOpenFilesPage: () => void;
+}
+
+function LibraryHeader({
+  stubs,
+  scrolled,
+  isGoogleDriveEnabled,
+  onGoogleDrive,
+  onAddFiles,
+  onOpenFilesPage,
+}: LibraryHeaderProps) {
+  const { t } = useTranslation();
+  return (
+    <div
+      className="file-sidebar-section-header"
+      data-scrolled={scrolled || undefined}
+    >
+      <span className="file-sidebar-section-label">
+        {t("fileSidebar.library", "PDF Library")}
+      </span>
+      <FileSidebarGroupControls stubs={stubs} />
+      <ActionIcon
+        variant="quiet"
+        className="file-sidebar-section-btn file-sidebar-section-btn-external"
+        onClick={onOpenFilesPage}
+        title={t("fileSidebar.openFileManager", "Browse all files & folders")}
+        aria-label={t(
+          "fileSidebar.openFileManager",
+          "Browse all files & folders",
+        )}
+        data-testid="open-files-page"
+      >
+        <Icon name="maximize-2" size={"1rem"} />
+      </ActionIcon>
+      <ActionIcon
+        variant="quiet"
+        className="file-sidebar-section-btn file-sidebar-section-btn-search"
+        onClick={() => openSuperSearch(["files"])}
+        title={t("fileSidebar.searchFiles", "Search files")}
+        aria-label={t("fileSidebar.searchFiles", "Search files")}
+        data-testid="file-sidebar-search"
+      >
+        <Icon name="search" size={"1rem"} />
+      </ActionIcon>
+      {isGoogleDriveEnabled && (
+        <ActionIcon
+          variant="quiet"
+          className="file-sidebar-section-btn file-sidebar-section-btn-drive"
+          onClick={onGoogleDrive}
+          title={t("fileSidebar.googleDrive", "Open from Google Drive")}
+          aria-label={t("fileSidebar.googleDrive", "Open from Google Drive")}
+          data-testid="google-drive-button"
+        >
+          <Icon name="googledrive" size={16} />
+        </ActionIcon>
+      )}
+      <ActionIcon
+        variant="quiet"
+        className="file-sidebar-section-btn file-sidebar-section-btn-add"
+        data-testid="pdf-library-add-files"
+        onClick={onAddFiles}
+        title={t("fileSidebar.addFiles", "Add files")}
+        aria-label={t("fileSidebar.addFiles", "Add files")}
+      >
+        <Icon name="plus" size={"1rem"} />
+      </ActionIcon>
+    </div>
+  );
+}
+
+interface FileGroupSymbolProps {
+  icon?: IconName;
+  color?: string;
+  isOpen: boolean;
+}
+
+function FileGroupSymbol({ icon, color, isOpen }: FileGroupSymbolProps) {
+  return (
+    <span
+      className="file-sidebar-group-symbol"
+      data-has-icon={!!icon}
+      aria-hidden="true"
+    >
+      {icon && (
+        <Icon
+          name={icon}
+          size="1.05rem"
+          className="file-sidebar-group-icon"
+          style={color ? { color } : undefined}
+        />
+      )}
+      <Icon
+        name={isOpen ? "chevron-down" : "chevron-right"}
+        size="1.1rem"
+        className="file-sidebar-group-disclosure"
+      />
+    </span>
+  );
+}
+
+type RenderFileRow = (stub: StirlingFileStub) => React.ReactNode;
+
+interface FileGroupProps {
+  group: FileSidebarGroup;
+  isOpen: boolean;
+  onToggle: () => void;
+  renderFileRow: RenderFileRow;
+}
+
+function FileGroup({ group, isOpen, onToggle, renderFileRow }: FileGroupProps) {
+  return (
+    <div className="file-sidebar-group">
+      <Button
+        variant="quiet"
+        fullWidth
+        justify="between"
+        className="file-sidebar-group-header"
+        onClick={onToggle}
+        aria-expanded={isOpen}
+        leftSection={
+          <FileGroupSymbol
+            icon={group.icon}
+            color={group.color}
+            isOpen={isOpen}
+          />
+        }
+        rightSection={
+          <span className="file-sidebar-group-count">{group.stubs.length}</span>
+        }
+      >
+        <span className="file-sidebar-group-label">{group.label}</span>
+      </Button>
+      <div className="file-sidebar-group-items">
+        {isOpen && group.stubs.map(renderFileRow)}
+      </div>
+    </div>
+  );
+}
+
+interface GroupedFileListProps {
+  groups: FileSidebarGroup[];
+  /** Owned by the sidebar so collapse state survives visits to the files page. */
+  groupOpen: Record<string, boolean>;
+  onGroupOpenChange: (id: string, open: boolean) => void;
+  renderFileRow: RenderFileRow;
+  total: number;
+  onViewAll: () => void;
+}
+
+function GroupedFileList({
+  groups,
+  groupOpen,
+  onGroupOpenChange,
+  renderFileRow,
+  total,
+  onViewAll,
+}: GroupedFileListProps) {
+  const { t } = useTranslation();
+  return (
+    <>
+      {groups.map((group) => {
+        const isOpen = groupOpen[group.id] ?? group.defaultExpanded;
+        return (
+          <FileGroup
+            key={group.id}
+            group={group}
+            isOpen={isOpen}
+            onToggle={() => onGroupOpenChange(group.id, !isOpen)}
+            renderFileRow={renderFileRow}
+          />
+        );
+      })}
+      <Button
+        variant="quiet"
+        fullWidth
+        justify="between"
+        className="file-sidebar-view-all"
+        onClick={onViewAll}
+        rightSection={<Icon name="chevron-right" size={"1rem"} />}
+      >
+        {t("fileSidebar.viewAll", "View all {{count}} files", {
+          count: total,
+        })}
+      </Button>
+    </>
+  );
+}
+
+interface LibraryFileListProps extends Omit<
+  GroupedFileListProps,
+  "groups" | "total" | "onViewAll"
+> {
+  loaded: boolean;
+  stubs: StirlingFileStub[];
+  groups: FileSidebarGroup[] | null;
+  scrollRef: RefCallback<HTMLElement>;
+  onOpenFilesPage: () => void;
+}
+
+function LibraryFileList({
+  loaded,
+  stubs,
+  groups,
+  scrollRef,
+  onOpenFilesPage,
+  ...grouping
+}: LibraryFileListProps) {
+  const { t } = useTranslation();
+  if (!loaded) {
+    return (
+      <div className="file-sidebar-loading">
+        <Loader size="sm" color="var(--c-text-subtle)" />
+      </div>
+    );
+  }
+  if (stubs.length === 0) {
+    return (
+      <div className="file-sidebar-empty">
+        <p className="file-sidebar-empty-text">
+          {t("fileSidebar.noFiles", "No files yet")}
+        </p>
+        <p className="file-sidebar-empty-hint">
+          {t("fileSidebar.dropHint", "Open files to get started")}
+        </p>
+      </div>
+    );
+  }
+  return (
+    <div className="file-sidebar-file-list" ref={scrollRef}>
+      {groups ? (
+        <GroupedFileList
+          groups={groups}
+          total={stubs.length}
+          onViewAll={onOpenFilesPage}
+          {...grouping}
+        />
+      ) : (
+        stubs.map(grouping.renderFileRow)
+      )}
+    </div>
+  );
+}
+
+interface FileLibrarySectionProps extends Omit<
+  LibraryFileListProps,
+  "scrollRef"
+> {
+  isGoogleDriveEnabled: boolean;
+  onGoogleDrive: () => void;
+  onAddFiles: () => void;
+}
+
+function FileLibrarySection({
+  isGoogleDriveEnabled,
+  onGoogleDrive,
+  onAddFiles,
+  ...list
+}: FileLibrarySectionProps) {
+  const { scrolled, scrollRef } = useIsScrolled();
+  return (
+    <div className="file-sidebar-files-section sidebar-content-fade">
+      <LibraryHeader
+        stubs={list.stubs}
+        scrolled={scrolled}
+        isGoogleDriveEnabled={isGoogleDriveEnabled}
+        onGoogleDrive={onGoogleDrive}
+        onAddFiles={onAddFiles}
+        onOpenFilesPage={list.onOpenFilesPage}
+      />
+      <BulkAddProgressRow />
+      <LibraryFileList scrollRef={scrollRef} {...list} />
+    </div>
+  );
+}
+
 const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
   function FileSidebar(
     {
@@ -187,8 +511,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const [pendingViewFileId, setPendingViewFileId] = useState<string | null>(
       null,
     );
-    const { scrolled: fileListScrolled, scrollRef: fileListScrollRef } =
-      useIsScrolled();
 
     const { config } = useAppConfig();
     const {
@@ -198,52 +520,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const { state } = useFileState();
     const { actions: fileActions } = useFileActions();
     const { actions: navActions } = useNavigationActions();
-    const { setCustomWorkbenchViewData, customWorkbenchViews } =
-      useToolWorkflow();
     const { workbench: currentWorkbench, selectedTool } = useNavigationState();
-    const isWatchedFoldersActive =
-      currentWorkbench === WATCHED_FOLDER_WORKBENCH_ID;
-    const watchedFolderView = customWorkbenchViews.find(
-      (v) => v.id === WATCHED_FOLDER_VIEW_ID,
-    );
-    const activeWatchedFolderId =
-      (watchedFolderView?.data as WatchedFolderViewData | undefined)
-        ?.folderId ?? null;
-    // In Watched Folders, selection means membership of the open folder, not the workspace.
-    const folderMembership = useFolderMembership();
-    const allFolders = useAllWatchedFolders();
     const policyFileBadges = usePolicyFileBadges();
-    const folderById = useMemo(
-      () => new Map(allFolders.map((f) => [f.id, f])),
-      [allFolders],
-    );
-
-    const openWatchedFolder = useCallback(
-      (folderId: string) => {
-        setCustomWorkbenchViewData(WATCHED_FOLDER_VIEW_ID, { folderId });
-        navActions.setWorkbench(WATCHED_FOLDER_WORKBENCH_ID);
-      },
-      [setCustomWorkbenchViewData, navActions],
-    );
-
-    // In Watched Folders view, sidebar files can be dragged onto a folder card / drop
-    // zone (which read the watchedFolderFileId dataTransfer key).
-    const handleWatchedFolderDragStart = useCallback(
-      (e: React.DragEvent, fileId: FileId) => {
-        e.dataTransfer.setData("watchedFolderFileId", String(fileId));
-        e.dataTransfer.effectAllowed = "copy";
-        // Publish the id so drop targets can detect "already in folder" during
-        // dragover (dataTransfer values are unreadable then). Clear on dragend
-        // regardless of whether the drag ended in a drop or was cancelled.
-        setWatchedFolderDraggedFileIds([String(fileId)]);
-        const clear = () => {
-          clearWatchedFolderDraggedFileIds();
-          document.removeEventListener("dragend", clear);
-        };
-        document.addEventListener("dragend", clear);
-      },
-      [],
-    );
     const isMultiTool =
       currentWorkbench === "pageEditor" && selectedTool === "multiTool";
     const { requestNavigation } = useNavigationGuard();
@@ -264,7 +542,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     useEffect(
       () =>
         onRecordUnreadable((fileId) =>
-          setLostFileIds((prev) => new Set(prev).add(fileId as string)),
+          setLostFileIds((prev) => new Set(prev).add(fileId)),
         ),
       [],
     );
@@ -438,7 +716,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           await downloadFileWithPolicy({
             data: file,
             filename: stub?.name ?? file.name,
-            fileId: fileId as string,
+            fileId: fileId,
           });
         } catch (error) {
           console.error("[FileSidebar] Download failed:", error);
@@ -546,7 +824,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const lineageCounts = useMemo(() => {
       const counts = new Map<string, number>();
       for (const s of allFileStubs) {
-        const k = (s.originalFileId ?? s.id) as string;
+        const k = s.originalFileId ?? s.id;
         counts.set(k, (counts.get(k) ?? 0) + 1);
       }
       return counts;
@@ -586,7 +864,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
 
         // Its bytes are gone; opening it can only fail. Say so instead of a
         // click that goes nowhere.
-        if (stub.dataUnavailable || lostFileIds.has(fileId as string)) {
+        if (stub.dataUnavailable || lostFileIds.has(fileId)) {
           alert({
             alertType: "warning",
             title: t("fileSidebar.dataLostTitle", "File data is unavailable"),
@@ -597,19 +875,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             expandable: false,
             durationMs: 6000,
           });
-          return;
-        }
-
-        // In the Watched Folders view a click sends the file into the open folder
-        // (mirrors how a click toggles a file into the active workbench elsewhere).
-        // On the folder list (no folder open) it's a no-op so browsing isn't disrupted.
-        if (isWatchedFoldersActive) {
-          if (activeWatchedFolderId) {
-            setCustomWorkbenchViewData(WATCHED_FOLDER_VIEW_ID, {
-              folderId: activeWatchedFolderId,
-              pendingFileId: stub.id,
-            });
-          }
           return;
         }
 
@@ -664,9 +929,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         activeFileId,
         requestNavigation,
         isMultiTool,
-        isWatchedFoldersActive,
-        activeWatchedFolderId,
-        setCustomWorkbenchViewData,
       ],
     );
 
@@ -680,8 +942,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         if (!stub) return;
 
         const isCurrentlyViewed = !!(
-          viewedWorkbenchId &&
-          (viewedWorkbenchId as string) === (stub.id as string)
+          viewedWorkbenchId && viewedWorkbenchId === (stub.id as string)
         );
 
         if (isCurrentlyViewed) {
@@ -705,7 +966,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           }
 
           // Route through pendingViewFileId so both setActiveFileIndex + setWorkbench fire together.
-          setPendingViewFileId(stub.id as string);
+          setPendingViewFileId(stub.id);
         };
 
         if (currentWorkbench === "viewer" && viewedWorkbenchId) {
@@ -831,29 +1092,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const eligibleFileIds = useToolEligibleFileIds();
 
     const renderFileRow = (stub: StirlingFileStub) => {
-      const isInWorkbench = workbenchIds.has(stub.id as string);
-      const workbenchFileId = isInWorkbench ? (stub.id as FileId) : undefined;
-      const isSelected = isWatchedFoldersActive
-        ? activeWatchedFolderId != null &&
-          (folderMembership
-            .get(stub.id as string)
-            ?.includes(activeWatchedFolderId) ??
-            false)
-        : isInWorkbench;
-      const showFolderDots =
-        WATCHED_FOLDERS_ENABLED &&
-        isWatchedFoldersActive &&
-        activeWatchedFolderId === null;
-      const memberFolders = showFolderDots
-        ? (folderMembership.get(stub.id as string) ?? [])
-            .map((fid) => folderById.get(fid))
-            .filter((f): f is NonNullable<typeof f> => !!f)
-            .map((f) => ({
-              id: f.id,
-              name: f.name,
-              accentColor: f.accentColor,
-            }))
-        : NO_FOLDERS;
+      const isInWorkbench = workbenchIds.has(stub.id);
+      const workbenchFileId = isInWorkbench ? stub.id : undefined;
       const isViewedInViewer = !!(
         viewedWorkbenchId && viewedWorkbenchId === (stub.id as string)
       );
@@ -866,9 +1106,9 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             : undefined) || stub.thumbnailUrl;
       const fileOrigin = getFileOrigin(stub);
       const dataUnavailable =
-        stub.dataUnavailable === true || lostFileIds.has(stub.id as string);
+        stub.dataUnavailable === true || lostFileIds.has(stub.id);
       // Lineage keys preserve rows across version changes; split siblings need unique leaf IDs.
-      const lineageKey = (stub.originalFileId ?? stub.id) as string;
+      const lineageKey = stub.originalFileId ?? stub.id;
       const rowKey =
         (lineageCounts.get(lineageKey) ?? 0) > 1
           ? (stub.id as string)
@@ -877,7 +1117,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         <FileItem
           isToolSkipped={
             isInWorkbench &&
-            !isWatchedFoldersActive &&
             eligibleFileIds !== null &&
             !eligibleFileIds.has(stub.id)
           }
@@ -886,31 +1125,25 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           name={stub.name}
           size={stub.size}
           lastModified={stub.lastModified}
-          isSelected={isSelected}
+          isSelected={isInWorkbench}
           isActive={isActive}
           isViewedInViewer={isViewedInViewer}
           thumbnailUrl={thumbnailUrl}
           onClick={handleFileClick}
           onEyeClick={handleEyeClick}
           dataUnavailable={dataUnavailable}
-          draggable={isWatchedFoldersActive}
-          onDragStart={handleWatchedFolderDragStart}
-          folders={memberFolders}
-          onFolderClick={openWatchedFolder}
-          policies={policyFileBadges.get(stub.id as string) ?? NO_POLICIES}
-          onDelete={isWatchedFoldersActive ? undefined : handleSidebarDelete}
+          policies={policyFileBadges.get(stub.id) ?? NO_POLICIES}
+          onDelete={handleSidebarDelete}
           onDownload={handleDownload}
-          onRename={isWatchedFoldersActive ? undefined : handleRename}
-          onDuplicate={isWatchedFoldersActive ? undefined : handleDuplicate}
+          onRename={handleRename}
+          onDuplicate={handleDuplicate}
           onOpenInNewWindow={
             canOpenInNewWindow(stub) ? handleOpenInNewWindow : undefined
           }
-          onSaveToCloud={isWatchedFoldersActive ? undefined : handleSaveToCloud}
+          onSaveToCloud={handleSaveToCloud}
           canSaveToCloud={storageEnabled && fileOrigin !== "shared-with-me"}
           isUploadedToCloud={fileOrigin === "cloud"}
-          onVersionHistory={
-            isWatchedFoldersActive ? undefined : handleVersionHistory
-          }
+          onVersionHistory={handleVersionHistory}
           hasVersionHistory={(stub.versionNumber ?? 1) > 1}
           primaryLabel={
             classificationEnabled && stub.classificationLabels?.[0]
@@ -948,33 +1181,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       ...(extraActions ?? []),
     ];
 
-    const importActions = (
-      <>
-        {isGoogleDriveEnabled && (
-          <ActionIcon
-            variant="quiet"
-            className="file-sidebar-section-btn file-sidebar-section-btn-drive"
-            onClick={handleGoogleDriveClick}
-            title={t("fileSidebar.googleDrive", "Open from Google Drive")}
-            aria-label={t("fileSidebar.googleDrive", "Open from Google Drive")}
-            data-testid="google-drive-button"
-          >
-            <Icon name="googledrive" size={16} />
-          </ActionIcon>
-        )}
-        <ActionIcon
-          variant="quiet"
-          className="file-sidebar-section-btn file-sidebar-section-btn-add"
-          data-testid="pdf-library-add-files"
-          onClick={openNativeFilePicker}
-          title={t("fileSidebar.addFiles", "Add files")}
-          aria-label={t("fileSidebar.addFiles", "Add files")}
-        >
-          <Icon name="plus" size={"1rem"} />
-        </ActionIcon>
-      </>
-    );
-
     return (
       <div
         ref={ref}
@@ -992,14 +1198,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
-        {isFileDragOver && (
-          <div className="file-sidebar-drop-overlay" aria-hidden="true">
-            <Icon name="file-up" className="file-sidebar-drop-overlay-icon" />
-            <span className="file-sidebar-drop-overlay-text">
-              {t("fileSidebar.dropToAdd", "Drop files to add")}
-            </span>
-          </div>
-        )}
+        <FileDropOverlay show={isFileDragOver} />
         <div className="file-sidebar-inner">
           <SidebarHeader />
 
@@ -1018,214 +1217,30 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             hidden={sidebarActions.length === 0}
           >
             {sidebarActions.map((action) => (
-              <React.Fragment key={action.label}>
-                {action.render ? (
-                  action.render()
-                ) : (
-                  <Tooltip
-                    label={action.disabledTooltip ?? action.label}
-                    position="right"
-                    withinPortal
-                    multiline={Boolean(
-                      action.disabled && action.disabledTooltip,
-                    )}
-                    w={
-                      action.disabled && action.disabledTooltip
-                        ? 220
-                        : undefined
-                    }
-                    // The tooltip explains why an already-labelled action is disabled.
-                    disabled={!(action.disabled && action.disabledTooltip)}
-                  >
-                    <div
-                      className={`file-sidebar-action-row${action.disabled ? " disabled" : ""}`}
-                      data-testid={action.testId}
-                      onClick={() => {
-                        if (action.disabled) return;
-                        action.onClick();
-                      }}
-                      role="button"
-                      tabIndex={action.disabled ? -1 : 0}
-                      aria-disabled={action.disabled}
-                      aria-label={action.label}
-                      onKeyDown={(e) => {
-                        if (action.disabled) return;
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          action.onClick();
-                        }
-                      }}
-                    >
-                      <span className="file-sidebar-action-icon">
-                        {action.icon}
-                      </span>
-                      <span className="file-sidebar-action-label sidebar-content-fade">
-                        {action.label}
-                      </span>
-                    </div>
-                  </Tooltip>
-                )}
-              </React.Fragment>
+              <SidebarActionRow key={action.label} action={action} />
             ))}
           </NavSurface>
 
           <NavSurface className="file-sidebar-files-box">
             <div className="file-sidebar-scroll">
-              {currentWorkbench === "myFiles" && <FolderTreeSection />}
-
-              {currentWorkbench !== "myFiles" && (
-                <div className="file-sidebar-files-section sidebar-content-fade">
-                  <div
-                    className="file-sidebar-section-header"
-                    data-scrolled={fileListScrolled || undefined}
-                  >
-                    <span className="file-sidebar-section-label">
-                      {t("fileSidebar.library", "PDF Library")}
-                    </span>
-                    <FileSidebarGroupControls stubs={allFileStubs} />
-                    <ActionIcon
-                      variant="quiet"
-                      className="file-sidebar-section-btn file-sidebar-section-btn-external"
-                      onClick={() => navActions.setWorkbench("myFiles")}
-                      title={t(
-                        "fileSidebar.openFileManager",
-                        "Browse all files & folders",
-                      )}
-                      aria-label={t(
-                        "fileSidebar.openFileManager",
-                        "Browse all files & folders",
-                      )}
-                      data-testid="open-files-page"
-                    >
-                      <Icon name="maximize-2" size={"1rem"} />
-                    </ActionIcon>
-                    <ActionIcon
-                      variant="quiet"
-                      className="file-sidebar-section-btn file-sidebar-section-btn-search"
-                      onClick={() => openSuperSearch(["files"])}
-                      title={t("fileSidebar.searchFiles", "Search files")}
-                      aria-label={t("fileSidebar.searchFiles", "Search files")}
-                      data-testid="file-sidebar-search"
-                    >
-                      <Icon name="search" size={"1rem"} />
-                    </ActionIcon>
-                    {importActions}
-                  </div>
-
-                  <BulkAddProgressRow />
-
-                  {!stubsLoaded ? (
-                    <div className="file-sidebar-loading">
-                      <Loader size="sm" color="var(--c-text-subtle)" />
-                    </div>
-                  ) : allFileStubs.length > 0 ? (
-                    <div
-                      className="file-sidebar-file-list"
-                      ref={fileListScrollRef}
-                    >
-                      {fileGroups ? (
-                        <>
-                          {fileGroups.map((group) => {
-                            const isOpen =
-                              groupOpen[group.id] ?? group.defaultExpanded;
-                            return (
-                              <div
-                                className="file-sidebar-group"
-                                key={group.id}
-                              >
-                                <Button
-                                  variant="quiet"
-                                  fullWidth
-                                  justify="between"
-                                  className="file-sidebar-group-header"
-                                  onClick={() =>
-                                    setGroupOpenState(group.id, !isOpen)
-                                  }
-                                  aria-expanded={isOpen}
-                                  leftSection={
-                                    <span
-                                      className="file-sidebar-group-symbol"
-                                      data-has-icon={!!group.icon}
-                                      aria-hidden="true"
-                                    >
-                                      {group.icon && (
-                                        <Icon
-                                          name={group.icon}
-                                          size="1.05rem"
-                                          className="file-sidebar-group-icon"
-                                          style={
-                                            group.color
-                                              ? { color: group.color }
-                                              : undefined
-                                          }
-                                        />
-                                      )}
-                                      <Icon
-                                        name={
-                                          isOpen
-                                            ? "chevron-down"
-                                            : "chevron-right"
-                                        }
-                                        size="1.1rem"
-                                        className="file-sidebar-group-disclosure"
-                                      />
-                                    </span>
-                                  }
-                                  rightSection={
-                                    <span className="file-sidebar-group-count">
-                                      {group.stubs.length}
-                                    </span>
-                                  }
-                                >
-                                  <span className="file-sidebar-group-label">
-                                    {group.label}
-                                  </span>
-                                </Button>
-                                <div className="file-sidebar-group-items">
-                                  {isOpen && group.stubs.map(renderFileRow)}
-                                </div>
-                              </div>
-                            );
-                          })}
-                          <Button
-                            variant="quiet"
-                            fullWidth
-                            justify="between"
-                            className="file-sidebar-view-all"
-                            onClick={() => navActions.setWorkbench("myFiles")}
-                            rightSection={
-                              <Icon name="chevron-right" size={"1rem"} />
-                            }
-                          >
-                            {t(
-                              "fileSidebar.viewAll",
-                              "View all {{count}} files",
-                              {
-                                count: allFileStubs.length,
-                              },
-                            )}
-                          </Button>
-                        </>
-                      ) : (
-                        allFileStubs.map(renderFileRow)
-                      )}
-                    </div>
-                  ) : (
-                    <div className="file-sidebar-empty">
-                      <p className="file-sidebar-empty-text">
-                        {t("fileSidebar.noFiles", "No files yet")}
-                      </p>
-                      <p className="file-sidebar-empty-hint">
-                        {t("fileSidebar.dropHint", "Open files to get started")}
-                      </p>
-                    </div>
-                  )}
-                </div>
+              {currentWorkbench === "myFiles" ? (
+                <FolderTreeSection />
+              ) : (
+                <FileLibrarySection
+                  loaded={stubsLoaded}
+                  stubs={allFileStubs}
+                  groups={fileGroups}
+                  groupOpen={groupOpen}
+                  onGroupOpenChange={setGroupOpenState}
+                  renderFileRow={renderFileRow}
+                  isGoogleDriveEnabled={isGoogleDriveEnabled}
+                  onGoogleDrive={handleGoogleDriveClick}
+                  onAddFiles={openNativeFilePicker}
+                  onOpenFilesPage={() => navActions.setWorkbench("myFiles")}
+                />
               )}
             </div>
           </NavSurface>
-
-          <SidebarProcessingSlot />
         </div>
 
         <BulkUploadToServerModal

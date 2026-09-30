@@ -729,6 +729,8 @@ permissionNotice = "Níl cosán an tessdata inscríofa. Osclófar íoslódálach
 
 [admin.settings.ai]
 description = "Ceangail Stirling leis an inneall Python AI, roghnaigh a shamhlacha, agus socraigh na cosaintí faoina ritheann sé."
+managedByCloud = "Á bhainistiú ag Stirling Cloud sa mhód seo."
+managedByCloudShort = "Á bhainistiú ag Stirling Cloud"
 
 [admin.settings.ai.documents]
 description = "Cumraigh an tsamhail leabaithe agus na socruithe aisghabhála a úsáidtear chun ceisteanna faoi dhoiciméid a fhreagairt. Cuirtear i bhfeidhm ar an inneall AI nuair a shábháiltear iad."
@@ -771,11 +773,24 @@ label = "Top K"
 [admin.settings.ai.general]
 connection = "Ceangal"
 description = "Ceangail Stirling leis an inneall Python AI agus roghnaigh cé na cumais AI atá le nochtadh. Cuirtear athruithe i bhfeidhm ar atosú."
+restartNote = "Tiocfaidh athrú ar an URL nó ar aon teorainn ama i bhfeidhm tar éis atosaithe."
 title = "Inneall AI"
 
 [admin.settings.ai.general.capabilities]
 description = "Cas gnéithe AI aonair air nó as. Bíonn gnéithe díchumasaithe i bhfolach san aip."
 title = "Cumais"
+
+[admin.settings.ai.general.cloud]
+note = "Bainistíonn Stirling Cloud samhlacha agus eochracha soláthraithe, mar sin ní bhaineann na socruithe sin leis an mód seo."
+
+[admin.settings.ai.general.cloud.indexing]
+description = "Seolann gach uirlis AI téacs an leathanaigh atá de dhíth uirthi chun freagra a thabhairt. Socraíonn sé seo an bhféadfaidh Stirling Cloud an téacs sin a choinneáil freisin, innéacsaithe, ionas gur féidir le ceisteanna níos déanaí cuardach a dhéanamh ar fud an doiciméid."
+help = "Ciallaíonn múchta nach bhfuil ceisteanna doiciméid ar fáil. Ní stopann sé téacs a bheith á sheoladh - ní dhéanann sé ach é a stóráil."
+label = "Lig do Stirling Cloud doiciméid innéacsaithe a choinneáil"
+
+[admin.settings.ai.general.cloudNote]
+body = "Ritheann an réasúnú ar bhonneagar Stirling, billeáilte don chuntas a bhfuil an freastalaí seo nasctha leis. Níl aon choimeádán le rith agus níl aon eochair soláthraí le coinneáil anseo. Próiseálann Stirling Cloud cibé rud a léann an AI seachas ar do chrua-earraí féin."
+title = "Maidir le Stirling Cloud AI"
 
 [admin.settings.ai.general.enabled]
 description = "Príomhlasc. Nuair atá sé as, níl aon uirlisí AI, gníomhairí ná glaonna innill ar fáil."
@@ -809,9 +824,28 @@ label = "Gníomhaire tráchta PDF"
 description = "Teorainn ama d'oibríochtaí gníomhaire níos troime amhail giniúint doiciméad."
 label = "Teorainn ama fhada (soicindí)"
 
+[admin.settings.ai.general.mode]
+label = "Cá ritheann AI"
+
+[admin.settings.ai.general.mode.cloud]
+description = "Gan choimeádán, gan eochair soláthraí, gan rogha samhla - ritheann an obair ar Stirling Cloud agus billeáiltear í don chuntas a bhfuil an freastalaí seo nasctha leis."
+linkCta = "Ceangail an freastalaí seo le cuntas Stirling"
+notLinked = "Nasc cuntas ar dtús"
+ownerOnly = "Ní féidir ach le húinéir na heagraíochta an freastalaí seo a nascadh le cuntas Stirling."
+title = "Úsáid Stirling Cloud AI"
+
+[admin.settings.ai.general.mode.off]
+description = "Gan aon uirlisí AI áit ar bith san aip, agus ní fhágann aon rud an freastalaí seo."
+title = "Múchta"
+
+[admin.settings.ai.general.mode.self]
+description = "Coimeádán a óstálann tú, dírithe ar sholáthraí samhla de do rogha. D'eochair féin, do bhille féin, do chonair sonraí féin."
+title = "Rith d'inneall féin"
+
 [admin.settings.ai.general.note]
-body = "Ritheann an t-inneall AI mar sheirbhís ar leith. A rún comhroinnte"
-body2 = "socraítear é trí athróg timpeallachta coimeádáin. Is féidir API keys soláthraithe a iontráil ar na leathanaigh seo nó a sholáthar mar athróga timpeallachta innill; brúitear eochracha a iontráiltear anseo chuig an inneall nuair a shábháiltear iad."
+docs = "Treoir suiteála"
+intro = "Coimeádán ar leith a ritheann tú in aice le Stirling. Déanann sé an réasúnú; déanann Stirling gach oibríocht leathanaigh é féin fós. Teastaíonn an rud céanna uaidh"
+outro = "ar an dá choimeádán agus eochair soláthraí samhla. Seoltar cibé rud a léann an AI chuig an soláthraí a roghnaíonn tú - coimeádann Ollama a óstálann tú gach leathanach istigh."
 title = "Maidir leis an inneall AI"
 
 [admin.settings.ai.general.streamTimeoutSeconds]
@@ -890,6 +924,67 @@ label = "Samhail chliste"
 body = "Brúitear athruithe chuig an inneall AI go huathoibríoch."
 bodyNoPush = "Sábháladh na socruithe. Cuirfear i bhfeidhm iad an chéad uair eile a phiocfaidh an t-inneall AI suas a chumraíocht."
 title = "Sábháladh socruithe AI"
+
+[admin.settings.ai.status]
+capabilities = "Cumais"
+capabilitiesValue = "{{on}} as {{total}} ar siúl"
+checked = "seiceáilte"
+checking = "An t-inneall á sheiceáil…"
+description = "An bhfuil an t-inneall inrochtana, an nglacann sé leis an bhfreastalaí seo, agus cad atá á rith aige."
+fastModel = "Samhail thapa"
+justNow = "anois díreach"
+latency = "Am freagartha"
+linkLabel = "Nasc cuntais"
+minutesAgo = "{{count}}n ó shin"
+recheck = "Seiceáil arís"
+runningOn = "Ag rith ar"
+secondsAgo = "{{count}}s ó shin"
+secretLabel = "Rún comhroinnte"
+smartModel = "Samhail chliste"
+title = "Stádas"
+url = "URL an innill"
+
+[admin.settings.ai.status.cloud]
+hostDown = "Síos"
+hostLabel = "Stirling.com"
+hostUp = "Suas"
+name = "Stirling Cloud"
+sharingLabel = "Comhroinnt AI"
+sharingOff = "Díchumasaithe"
+sharingOn = "Cumasaithe"
+
+[admin.settings.ai.status.cloud.degraded]
+body = "D'fhreagair Stirling Cloud ach dhiúltaigh sé don fhreastalaí seo. B'fhéidir gur cúlghaireadh an nasc cuntais."
+title = "Tá Stirling Cloud ag diúltú don fhreastalaí seo"
+
+[admin.settings.ai.status.cloud.down]
+body = "Ní raibh an freastalaí seo in ann Stirling Cloud a bhaint amach. Seiceáil an nasc cuntais agus go bhfuil an freastalaí seo in ann an t-idirlíon a bhaint amach."
+title = "Ní féidir Stirling Cloud a bhaint amach"
+
+[admin.settings.ai.status.cloud.ok]
+body = "Ghlac Stirling Cloud leis an bhfreastalaí seo. Níl aon rud le rith ná le paisteáil anseo."
+title = "Ag rith ar Stirling Cloud"
+
+[admin.settings.ai.status.degraded]
+body = "D'fhreagair sé an tseiceáil sláinte ach dhiúltaigh sé d'fhíor-iarratas. Tá an dá thaobh ag úsáid rúin chomhroinnte éagsúla."
+title = "Tá an t-inneall suas, ach tá sé ag diúltú don fhreastalaí seo"
+
+[admin.settings.ai.status.down]
+body = "Seiceáil an URL, go bhfuil coimeádán an innill ag rith, agus gur atosaigh tú tar éis AI a chumasú."
+title = "Ní féidir an t-inneall a bhaint amach"
+
+[admin.settings.ai.status.off]
+body = "Roghnaigh conas a ritheann AI thíos, ansin sábháil agus atosaigh."
+title = "Tá AI múchta"
+
+[admin.settings.ai.status.ok]
+body = "D'éirigh leis an tseiceáil sláinte agus le hiarratas fíordheimhnithe araon."
+title = "Inneall ag rith"
+
+[admin.settings.ai.status.secret]
+no = "Diúltaithe"
+unknown = "Anaithnid"
+yes = "Glactha"
 
 [admin.settings.badge]
 clickToUpgrade = "Cliceáil chun sonraí an phlean a fheiceáil"
@@ -4453,6 +4548,7 @@ openFromComputer = "Oscail ón ríomhaire"
 openSettings = "Oscail socruithe"
 other = "Eile"
 recent = "Le déanaí"
+searchFiles = "Cuardaigh comhaid"
 uploadFailedBody = "Níorbh fhéidir na comhaid roghnaithe a chur leis."
 uploadFailedTitle = "Theip ar uaslódáil"
 viewAll = "Amharc ar gach {{count}} comhad"
@@ -5827,6 +5923,8 @@ label = "Free credits"
 adoptFailed = "Díghlasáladh an doiciméad ach níorbh fhéidir é a oscailt anseo. Bain triail as an uirlis go díreach."
 empty = "Níl aon rud le tuairisciú."
 handoffUnavailable = "Ní ligfidh an brabhsálaí seo don phróiseálaí an doiciméad a chur ar aghaidh chuig an eagarthóir. Oscail ón eagarthóir ina ionad sin é."
+inSmartFolder = "Tá an doiciméad seo i bhfillteán cliste, mar sin láimhseáiltear é ar an bhfreastalaí seachas anseo."
+inSmartFolderNamed = "Tá {{name}} i bhfillteán cliste, mar sin láimhseáiltear é ar an bhfreastalaí seachas anseo."
 noDocumentLinked = "Níl an teip seo nasctha le doiciméad ar leith, mar sin níl aon rud le hoscailt anseo."
 notOnThisDevice = "Níl an doiciméad seo ar an ngléas seo, mar sin ní féidir é a oscailt anseo."
 occurrences = "{{count}} uair"
@@ -5837,6 +5935,7 @@ repairedRerunNotAdopted = "Chuaigh an doiciméad deisithe tríd, ach níorbh fh�
 repairedRerunUndelivered = "Deisíodh an doiciméad agus cuireadh tús leis an bpolasaí a rith arís, ach ní féidir a thoradh a sheachadadh anseo, mar sin fanann an teip seo oscailte."
 rerunRejected = "Níorbh fhéidir an polasaí a rith arís díreach anois. Bain triail eile as i gceann nóiméid."
 rerunUndelivered = "Cuireadh tús leis an bpolasaí a rith arís, ach ní féidir a thoradh a sheachadadh anseo, mar sin fanann an teip seo oscailte."
+retryInFolderFailed = "Níorbh fhéidir an doiciméad sin a rith arís anois díreach."
 retryUnavailable = "Ní féidir an doiciméad seo a atriail ón mbrabhsálaí seo a thuilleadh."
 title = "Fógraí"
 unlockedNotRerun = "Díghlasáladh an doiciméad agus osclaíodh anseo é, ach níorbh fhéidir an polasaí a rith air arís."
@@ -6625,9 +6724,11 @@ title = "Coigeartaigh plean Foirne"
 [payment.capacityStage]
 adjustmentNote = "Taispeánfaidh Stripe an muirear cruinn, aon phrótáiliú agus do chéad dáta billeála eile sula ndeimhníonn tú. Úsáidfear do mhodh íocaíochta sábháilte má tá sé ar fáil."
 continue = "Lean ar aghaidh chuig íocaíocht"
+currencyAtCheckout = "Deimhníonn Stripe an méid deiridh agus an t-airgeadra íocaíochta ag an tseiceáil amach."
 customLabel = "Líon úsáideoirí"
 dueToday = "Le híoc inniu"
 enterpriseQuote = "Faigh luachan fiontair"
+estimatedTotal = "Iomlán measta"
 lineItem = "Foireann · {{price}}{{period}} in aghaidh gach {{block}} úsáideoir"
 minimumForCurrentUsers = "Tá {{users}} úsáideoir agat, mar sin caithfidh an plean {{minimum}} ar a laghad a chlúdach."
 modalTitle = "Uasghrádaigh go {{planName}}"
@@ -6865,6 +6966,25 @@ width = "Leithead"
 widthHint = "Leanann leithead bosca téacs a ábhar agus timfhilleadh."
 x = "X"
 y = "Y"
+
+[pdfTextEditor.mobile]
+actions = "Gníomhartha eagarthóra"
+addImage = "Íomhá"
+addText = "Téacs"
+cancel = "Cealaigh"
+delete = "Scrios"
+details = "Sonraí"
+document = "Doiciméad"
+done = "Déanta"
+download = "Sábháil agus íoslódáil"
+find = "Aimsigh"
+lock = "Cuir faoi ghlas"
+openPdf = "Oscail PDF"
+panelHint = "Tarlaíonn an eagarthóireacht san amharc Workspace. Tapáil téacs ar an leathanach chun é a athrú."
+save = "Sábháil"
+style = "Stíl"
+tapToPlace = "Tapáil an leathanach san áit ar cheart don téacs dul"
+unlock = "Díghlasáil"
 
 [pdfTextEditor.password]
 cancel = "Cealaigh"
@@ -7574,6 +7694,49 @@ plan = "Plean"
 procurement = "Soláthar"
 usage = "Úsáid"
 
+[portal.billing.compare]
+current = "Reatha"
+enterpriseData = "Cónaitheacht sonraí agus SCIM"
+enterpriseName = "Enterprise"
+enterprisePrice = "Faoi do chomhaontú"
+enterpriseProcessing = "Tomhaiste nó comhréidh"
+enterpriseSignIn = "SAML agus iniúchadh"
+enterpriseSupport = "SLAanna aga fónaimh, cabhair imlonnaithe"
+enterpriseUsers = "Gan uasteorainn"
+enterpriseWhere = "Móide il-nód agus air-gapped"
+exploreEnterprise = "Fiosraigh Enterprise"
+freeData = "Fanann sé san áit a ritheann tú é"
+freeName = "Saor in aisce"
+freePrice = "Gan chárta, gan dul in éag"
+freeProcessing = "{{allowance}} creidmheas sa mhí"
+freeProcessingUnknown = "Liúntas creidmheasa míosúil"
+freeSignIn = "Ríomhphost, Google agus SSO"
+freeSignInNote = "OAuth2/OIDC"
+freeSupport = "Pobal"
+freeUsers = "Suas le {{users}}"
+freeUsersUnknown = "Foireann bheag"
+freeWhere = "Cloud, deasc nó féinóstáilte"
+lede = "Áirítear gach uirlis PDF agus SSO le gach plean. Is é an rud a athraíonn ná cé mhéad duine a úsáideann é, cá ritheann sé, agus cén tacaíocht a fhaigheann tú."
+open = "Cuir pleananna i gcomparáid"
+rowData = "Do shonraí"
+rowHeader = "Gné"
+rowProcessing = "Próiseáil"
+rowSignIn = "Síniú isteach"
+rowSupport = "Tacaíocht"
+rowUsers = "Úsáideoirí"
+rowWhere = "Cá ritheann sé"
+teamData = "Google Drive, do bhunachar sonraí féin"
+teamName = "Team"
+teamPrice = "$99/mo in aghaidh 100 úsáideoir"
+teamProcessing = "{{allowance}} sa mhí, ansin tomhaiste"
+teamProcessingUnknown = "Liúntas níos mó, ansin tomhaiste"
+teamSignIn = "Mar an gcéanna"
+teamSupport = "Ríomhphost"
+teamUsers = "100 in aghaidh an bhloic"
+teamWhere = "Cloud, deasc nó féinóstáilte"
+title = "Cuir pleananna i gcomparáid"
+upgradeTeam = "Uasghrádaigh go Team"
+
 [portal.billing.cycle]
 credits = "Creidmheasanna"
 creditsNote = "{{units}} úsáidte · áirítear creidmheasanna saor in aisce agus réamhíoctha"
@@ -7679,6 +7842,8 @@ payTitle = "Íoc as do bhliain"
 step = "Céim {{current}} as {{total}}"
 
 [portal.billing.prepaid.calc]
+currency = "Airgeadra luachana"
+currencyLocked = "Úsáideann sé d'airgeadra billeála Stripe atá ann cheana."
 rateUnknown = "Taispeánfaimid an praghas cruinn ag an tseiceáil amach."
 
 [portal.billing.prepaid.consent]
@@ -8481,6 +8646,10 @@ title = "Níorbh fhéidir an comhad a dheisiú"
 [portal.failures.kind.inputWrongType]
 description = "Níl do chomhad i bhformáid ar féidir leis an gcéim seo a oscailt, mar sin níorbh fhéidir leis an rith é a léamh."
 title = "Cineál comhaid mícheart"
+
+[portal.failures.kind.sourceUnreadable]
+description = "Níorbh fhéidir d'fhillteán cliste a léamh, mar sin níor próiseáladh aon rud ann."
+title = "Níorbh fhéidir an fillteán a léamh"
 
 [portal.failures.kind.stepCannotRenderPage]
 description = "Níorbh fhéidir leathanach i do chomhad a tharraingt, mar sin níorbh fhéidir leis an rith críochnú."
@@ -12235,6 +12404,7 @@ goBack = "Téigh ar ais"
 pdfTools = "Uirlisí PDF"
 placeholder = "Roghnaigh uirlis chun tosú"
 premiumFeature = "Gné Préimhe:"
+searchTools = "Cuardaigh uirlisí"
 toolsHeader = "Uirlisí"
 viewAllTools = "Féach ar gach uirlis"
 
@@ -12399,13 +12569,10 @@ visits = "Cuairteanna"
 
 [users]
 lastActive = "Gníomhach go deireanach"
-learnMore = "Foghlaim tuilleadh faoi róil agus rochtain."
 locked = "Faoi ghlas"
 ownerSetupRequired = "Níor chríochnaigh úinéir na heagraíochta an chéad logáil isteach. Críochnaigh an socrú nó iarr ar oibreoir an fhreastalaí úinéireacht a aisghabháil sula n-aistrítear úinéireacht."
 roleFor = "Ról do {{name}}"
 rowActions = "Gníomhartha do {{name}}"
-showAll = "Taispeáin gach {{count}}"
-showLess = "Taispeáin níos lú"
 subtitle2 = "Do dhaoine, foirne, agus leibhéil rochtana."
 suspended = "Ar fionraí"
 teamActions = "Gníomhartha foirne"
@@ -12414,6 +12581,7 @@ you = "(tusa)"
 
 [users.action]
 cancelInvite = "Cealaigh cuireadh"
+createFromDefault = "Cruthaigh foireann ó Default"
 deleteTeam = "Scrios foireann"
 disableMfa = "Athshocraigh MFA"
 move = "Bog chuig foireann"
@@ -12451,6 +12619,7 @@ email = "Email"
 person = "Person"
 role = "Role"
 status = "Status"
+team = "Foireann"
 
 [users.confirm]
 cancelInviteBody = "Cealaigh an cuireadh chuig {{email}}? Ní bheidh siad in ann dul isteach leis an nasc reatha."
@@ -12469,15 +12638,12 @@ transferOwnershipTitle = "Aistrigh úinéireacht eagraíochta"
 description = "Tabhair cuireadh do d’fhoireann chun tosú ag comhoibriú."
 title = "Níl aon bhaill fós"
 
+[users.filters]
+noMatches = "Ní mheaitseálann aon duine na scagairí seo."
+search = "Cuardaigh daoine"
+
 [users.group]
 addToTeam = "Cuir le foireann"
-administrators = "{{count}} riarthóir"
-guestCount = "{{count}} aoi"
-guests = "Aíonna"
-ledBy = "faoi stiúir {{owner}}"
-org = "Eagraíocht"
-team = "foireann {{name}}"
-teamMeta = "{{count}} duine"
 
 [users.invite]
 access = "Rochtain"
@@ -12542,6 +12708,9 @@ title = "Foireann nua"
 
 [users.renameTeam]
 apply = "Athainmnigh"
+defaultApply = "Cruthaigh agus bog"
+defaultDescription = "Fanfaidh Default ar fáil d'úsáideoirí nua. Bogfar gach duine atá in Default faoi láthair go dtí an fhoireann nua."
+defaultTitle = "Cruthaigh foireann ó Default"
 name = "Ainm foirne"
 title = "Athainmnigh foireann"
 
@@ -12566,6 +12735,15 @@ guest = "Aoi"
 member = "Ball"
 orgOwner = "Úinéir Eagraíochta"
 teamOwner = "Úinéir Foirne"
+
+[users.seats]
+full = "Tá gach suíochán ceadúnaithe in úsáid. Scaoil ceann saor, nó méadaigh líon na suíochán, chun duine eile a chur leis."
+update = "Nuashonraigh suíocháin"
+
+[users.tabs]
+all = "Gach ceann"
+label = "Scag de réir foirne"
+unassigned = "Gan fhoireann"
 
 [users.team]
 grantProcessor = "Deonaigh Processor don fhoireann"
@@ -13216,232 +13394,14 @@ submitSignature = "Cuir an síniú isteach"
 title = "Spás Oibre"
 
 [workspace.people]
-active = "Gníomhach"
-activeSession = "Seisiún gníomhach"
-addMembers = "Cuir Baill Leis"
-admin = "Riarthóir"
-confirmDelete = "An bhfuil tú cinnte gur mian leat an t-úsáideoir seo a scriosadh? Ní féidir an gníomh seo a chur ar ceal."
-confirmUnlock = "An bhfuil tú cinnte gur mian leat an cuntas úsáideora seo a dhíghlasáil?"
-deleteUser = "Scrios Úsáideoir"
-deleteUserError = "Theip ar an úsáideoir a scriosadh"
-deleteUserSuccess = "Scriosadh an t-úsáideoir go rathúil"
 description = "Bainistigh baill an spáis oibre agus a gceadanna"
-disable = "Díchumasaigh"
-disabled = "Díchumasaithe"
-editRole = "Cuir Ról in Eagar"
-enable = "Cumasaigh"
-loading = "Daoine á lódáil..."
-locked = "faoi ghlas"
-lockedBadge = "Faoi ghlas"
-loginRequired = "Cumasaigh mód logála isteach ar dtús"
-memberActions = "Gníomhartha baill"
-noMembersFound = "Níor aimsíodh baill"
-ownerLocked = "Aistrigh úinéireacht eagraíochta i Socruithe → Spás oibre → Úsáideoirí sula n-athraítear ról nó cuntas an úinéara."
-role = "Ról"
-searchMembers = "Cuardaigh baill..."
-team = "Foireann"
-unlockAccount = "Díghlasáil an cuntas"
-unlockUserError = "Theip ar dhíghlasáil an chuntais úsáideora"
-unlockUserSuccess = "Díghlasáladh an cuntas úsáideora go rathúil"
-user = "Úsáideoir"
-userInfo = "Eolas úsáideora"
-
-[workspace.people.actions]
-upgrade = "Uasghrádú"
-
-[workspace.people.addMember]
-authType = "Cineál Fíordheimhnithe"
-error = "Theip ar úsáideoir a chruthú"
-forceMFA = "Cuir iallach ar shocrú MFA ag an gcéad logáil isteach eile"
-forcePasswordChange = "Cuir iallach ar athrú focail faire ag an gcéad logáil isteach"
-password = "Focal Faire"
-passwordPlaceholder = "Cuir isteach focal faire"
-passwordRequired = "Tá focal faire riachtanach"
-role = "Ról"
-submit = "Cuir Ball Leis"
-success = "Cruthaíodh an t-úsáideoir go rathúil"
-team = "Foireann (Roghnach)"
-teamPlaceholder = "Roghnaigh foireann"
-username = "Ainm Úsáideora (R-phost)"
-usernamePlaceholder = "úsáideoir@sampla.com"
-usernameRequired = "Tá ainm úsáideora agus focal faire ag teastáil"
-
-[workspace.people.authType]
-oauth = "OAuth2"
-password = "Focal faire"
-saml = "SAML2"
-ssoDescription = "Déanfaidh an t-úsáideoir fíordheimhniú trí sholáthraí SSO"
-
-[workspace.people.changePassword]
-action = "Athraigh an focal faire"
-confirmPassword = "Deimhnigh an focal faire"
-confirmPlaceholder = "Cuir an focal faire nua isteach arís"
-copiedToClipboard = "Cóipeáladh an focal faire chuig an ngearrthaisce"
-copyFailed = "Níor éirigh le cóipeáil an fhocail fhaire"
-copyTooltip = "Cóipeáil chuig an ngearrthaisce"
-emailUnavailable = "Níl seoladh ríomhphoist bailí ag an úsáideoir seo. Tá fógraí díchumasaithe."
-error = "Níor éirigh le focal faire a nuashonrú"
-forcePasswordChange = "Cuir iallach ar an úsáideoir an focal faire a athrú ag an gcéad logáil isteach eile"
-generatedPreview = "Focal faire ginte:"
-generateRandom = "Gin focal faire slán"
-includePassword = "Cuir an focal faire nua san ríomhphost"
-newPassword = "Focal faire nua"
-notifyOnly = "Seolfar ríomhphost gan an focal faire, ag cur in iúl don úsáideoir gur d’athraigh riarthóir é."
-passwordMismatch = "Ní hionann na focail faire"
-passwordRequired = "Cuir focal faire nua isteach le do thoil"
-placeholder = "Cuir focal faire nua isteach"
-sendEmail = "Seol ríomhphost chuig an úsáideoir faoin athrú seo"
-smtpDisabled = "Teastaíonn SMTP cumasaithe sna socruithe le haghaidh fógraí ríomhphoist."
-submit = "Nuashonraigh an focal faire"
-subtitle = "Nuashonraigh an focal faire do"
-success = "Nuashonraíodh an focal faire go rathúil"
-title = "Athraigh an focal faire"
-
-[workspace.people.editMember]
-editing = "Editing: <0>{{username}}</0>"
-error = "Theip ar an úsáideoir a nuashonrú"
-role = "Ról"
-submit = "Update User"
-success = "Nuashonraíodh an t-úsáideoir go rathúil"
-team = "Foireann (Roghnach)"
-teamPlaceholder = "Roghnaigh foireann"
-title = "Edit User"
-
-[workspace.people.emailInvite]
-allFailed = "Theip ar úsáideoirí a thabhairt isteach"
-emails = "Seoltaí Ríomhphoist"
-emailsPlaceholder = "úsáideoir1@sampla.com, úsáideoir2@sampla.com"
-emailsRequired = "Tá ar a laghad seoladh ríomhphoist amháin de dhíth"
-error = "Theip ar churí a sheoladh"
-partialFailure = "Níor éirigh le roinnt cuirí"
-submit = "Seol Cuirí"
-success = "Tugadh cuireadh d’úsáideoir(í) go rathúil"
-
-[workspace.people.inviteLink]
-copied = "Cóipeáladh an nasc chuig an ngearrthaisce"
-email = "Seoladh Ríomhphoist"
-emailDescription = "Roghnach - fág bán é le haghaidh nasc cuireadh ginearálta is féidir le duine ar bith a úsáid"
-emailPlaceholder = "user@example.com (roghnach)"
-emailSent = "Gineadh nasc cuireadh agus seoladh é trí r-phost"
-error = "Theip ar nasc cuireadh a ghiniúint"
-expiryHours = "Uaireanta Éaga"
-generate = "Gin Nasc"
-generated = "Gineadh Nasc Cuireadh"
-sendEmail = "Seol nasc cuireadh trí r-phost"
-sendEmailDescription = "Má chumasaítear é, seolfar an nasc cuireadh chuig an seoladh ríomhphoist sonraithe"
-submit = "Gin Nasc Cuireadh"
-
-[workspace.people.inviteMembers]
-label = "Tabhair Cuireadh do Bhaill"
-subtitle = "Clóscríobh nó greamaigh seoltaí ríomhphoist thíos, scartha le camóga. Cuirfear billeáil ar do spás oibre de réir líon na mball."
-
-[workspace.people.inviteMode]
-email = "R-phost"
-emailDisabled = "Teastaíonn cumraíocht SMTP agus mail.enableInvites=true sna socruithe le haghaidh cuirí ríomhphoist"
-link = "Nasc"
-username = "Ainm Úsáideora"
 
 [workspace.people.license]
-currentUsage = "Faoi láthair tá {{current}} as {{max}} ceadúnas úsáideora in úsáid"
-fromLicense = "ón gceadúnas"
-grandfathered = "Ceadaithe roimhe seo"
-grandfatheredShort = "{{count}} ceadaithe roimhe seo"
-slotsAvailable_one = "{{count}} user slot available"
-slotsAvailable_other = "{{count}} user slots available"
-slotsAvailable_zero = "No slots available"
 users_one = "user"
 users_other = "users"
 
-[workspace.people.mfa]
-adminDisableError = "Níorbh fhéidir MFA a dhíchumasú don úsáideoir"
-adminDisableSuccess = "Díchumasaíodh MFA don úsáideoir go rathúil"
-disableByAdmin = "Díchumasaigh MFA"
-
-[workspace.people.roleDescriptions]
-admin = "Is féidir socruithe a bhainistiú agus baill a thabhairt isteach, le rochtain riaracháin iomlán."
-currentRole = "Ról sannta faoi láthair."
-user = "Can view and edit shared files, but cannot manage workspace settings or users."
-
-[workspace.people.toggleEnabled]
-error = "Theip ar stádas úsáideora a nuashonrú"
-success = "Nuashonraíodh stádas úsáideora go rathúil"
-
 [workspace.teams]
-addMember = "Cuir Ball Leis"
-backToTeams = "Ar ais go Foirne"
-cannotAddToInternal = "Ní féidir baill a chur leis an bhfoireann Inmheánach"
-cannotDeleteInternal = "Ní féidir an fhoireann Inmheánach a scriosadh"
-cannotRenameInternal = "Ní féidir an fhoireann Inmheánach a athainmniú"
-confirmDelete = "An bhfuil tú cinnte gur mian leat an fhoireann seo a scriosadh? Ní mór an fhoireann a bheith folamh chun í a scriosadh."
-confirmRemove = "Bain úsáideoir den fhoireann seo?"
-createNewTeam = "Cruthaigh Foireann Nua"
-deleteTeamLabel = "Scrios an Fhoireann"
 description = "Bainistigh foirne agus eagraigh baill an spáis oibre"
-loadError = "Theip ar luchtú sonraí an fhoirne"
-loading = "Foirne á lódáil..."
-loadingDetails = "Sonraí foirne á lódáil..."
-memberCount_one = "{{count}} member"
-memberCount_other = "{{count}} members"
-memberCount_zero = "no members"
-noMembers = "Níl aon bhaill sa fhoireann seo"
-noTeamsFound = "Níor aimsíodh foirne"
-removeMember = "Bain den fhoireann"
-removeMemberError = "Theip ar an úsáideoir a bhaint den fhoireann"
-removeMemberSuccess = "Baineadh an t-úsáideoir den fhoireann"
-renameTeamLabel = "Athainmnigh an Fhoireann"
-system = "Córas"
-teamActions = "Gníomhartha foirne"
-teamName = "Ainm Foirne"
-teamNotFound = "Níor aimsíodh an fhoireann"
-totalMembers = "Iomlán na mBall"
-viewTeam = "Féach ar an bhFoireann"
-
-[workspace.teams.addMemberToTeam]
-addingTo = "Á chur le"
-currentlyIn = "faoi láthair i"
-error = "Theip ar bhall a chur leis an bhfoireann"
-selectUser = "Roghnaigh Úsáideoir"
-selectUserPlaceholder = "Roghnaigh úsáideoir"
-selectUserRequired = "Roghnaigh úsáideoir le do thoil"
-submit = "Cuir Ball Leis"
-success = "Cuireadh an ball leis an bhfoireann go rathúil"
-title = "Cuir Ball leis an bhFoireann"
-userRequired = "Roghnaigh úsáideoir le do thoil"
-willBeMoved = "Nóta: Bogfar an t-úsáideoir seo óna fhoireann reatha chuig an bhfoireann seo."
-
-[workspace.teams.changeTeam]
-changing = "Á bhogadh"
-error = "Theip ar an bhfoireann a athrú"
-label = "Athraigh Foireann"
-selectTeam = "Roghnaigh Foireann"
-selectTeamPlaceholder = "Roghnaigh foireann"
-selectTeamRequired = "Roghnaigh foireann, le do thoil"
-submit = "Athraigh Foireann"
-success = "Athraíodh an fhoireann go rathúil"
-title = "Athraigh Foireann"
-
-[workspace.teams.createTeam]
-error = "Theip ar fhoireann a chruthú"
-nameRequired = "Tá ainm foirne riachtanach"
-submit = "Cruthaigh Foireann"
-success = "Cruthaíodh an fhoireann go rathúil"
-teamName = "Ainm Foirne"
-teamNamePlaceholder = "Cuir isteach ainm foirne"
-title = "Cruthaigh Foireann Nua"
-
-[workspace.teams.deleteTeam]
-error = "Theip ar an bhfoireann a scriosadh. Cinntigh go bhfuil an fhoireann folamh."
-success = "Scriosadh an fhoireann go rathúil"
-
-[workspace.teams.renameTeam]
-error = "Theip ar an bhfoireann a athainmniú"
-nameRequired = "Tá ainm foirne riachtanach"
-newTeamName = "Ainm Foirne Nua"
-newTeamNamePlaceholder = "Cuir isteach ainm foirne nua"
-renaming = "Á athainmniú:"
-submit = "Athainmnigh an Fhoireann"
-success = "Athainmníodh an fhoireann go rathúil"
-title = "Athainmnigh an Fhoireann"
 
 [zipWarning]
 cancel = "Cealaigh"

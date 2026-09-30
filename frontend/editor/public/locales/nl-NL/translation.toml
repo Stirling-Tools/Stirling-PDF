@@ -729,6 +729,8 @@ permissionNotice = "Het tessdata-pad is niet schrijfbaar. Downloads worden in de
 
 [admin.settings.ai]
 description = "Verbind Stirling met de Python AI-engine, kies de modellen en stel de richtlijnen in waaronder deze draait."
+managedByCloud = "Beheerd door Stirling Cloud in deze modus."
+managedByCloudShort = "Beheerd door Stirling Cloud"
 
 [admin.settings.ai.documents]
 description = "Configureer het embedding-model en de ophaalinstellingen die worden gebruikt om vragen over documenten te beantwoorden. Toegepast op de AI engine bij opslaan."
@@ -771,11 +773,24 @@ label = "Top K"
 [admin.settings.ai.general]
 connection = "Verbinding"
 description = "Verbind Stirling met de Python AI engine en kies welke AI-mogelijkheden beschikbaar zijn. Wijzigingen worden toegepast na herstart."
+restartNote = "Het wijzigen van de URL of een time-out wordt van kracht na een herstart."
 title = "AI Engine"
 
 [admin.settings.ai.general.capabilities]
 description = "Schakel afzonderlijke AI-functies in of uit. Uitgeschakelde functies worden verborgen in de app."
 title = "Mogelijkheden"
+
+[admin.settings.ai.general.cloud]
+note = "Modellen en providersleutels worden beheerd door Stirling Cloud, dus die instellingen zijn niet van toepassing in deze modus."
+
+[admin.settings.ai.general.cloud.indexing]
+description = "Elke AI-tool verzendt de paginatekst die nodig is om te antwoorden. Dit bepaalt of Stirling Cloud die tekst ook geïndexeerd mag bewaren, zodat latere vragen in het document kunnen zoeken."
+help = "Uit betekent dat documentvragen niet beschikbaar zijn. Het voorkomt niet dat tekst wordt verzonden - alleen dat deze wordt opgeslagen."
+label = "Laat Stirling Cloud geïndexeerde documenten bewaren"
+
+[admin.settings.ai.general.cloudNote]
+body = "Het redeneren draait op de infrastructuur van Stirling en wordt gefactureerd aan het account waaraan deze server is gekoppeld. Er is hier geen container om uit te voeren en geen providersleutel om te bewaren. Alles wat de AI leest, wordt verwerkt door Stirling Cloud in plaats van op uw eigen hardware."
+title = "Over Stirling Cloud AI"
 
 [admin.settings.ai.general.enabled]
 description = "Hoofdschakelaar. Wanneer uitgeschakeld, zijn er geen AI-tools, agents of engine-aanroepen beschikbaar."
@@ -809,9 +824,28 @@ label = "PDF-opmerkingenagent"
 description = "Time-out voor zwaardere agentbewerkingen zoals documentgeneratie."
 label = "Time-out voor langlopende taken (seconden)"
 
+[admin.settings.ai.general.mode]
+label = "Waar AI draait"
+
+[admin.settings.ai.general.mode.cloud]
+description = "Geen container, geen providersleutel, geen modelkeuze - het werk draait op Stirling Cloud en wordt gefactureerd aan het account waaraan deze server is gekoppeld."
+linkCta = "Koppel deze server aan een Stirling-account"
+notLinked = "Koppel eerst een account"
+ownerOnly = "Alleen de organisatie-eigenaar kan deze server aan een Stirling-account koppelen."
+title = "Stirling Cloud AI gebruiken"
+
+[admin.settings.ai.general.mode.off]
+description = "Geen AI-tools ergens in de app, en niets verlaat deze server."
+title = "Uit"
+
+[admin.settings.ai.general.mode.self]
+description = "Een container die u host, gericht op een modelprovider naar keuze. Uw sleutel, uw rekening, uw gegevenspad."
+title = "Uw eigen engine uitvoeren"
+
 [admin.settings.ai.general.note]
-body = "De AI engine draait als een aparte service. Het gedeelde geheim"
-body2 = "wordt ingesteld via een containeromgevingsvariabele. Provider API keys kunnen op deze pagina's worden ingevoerd of als engine-omgevingsvariabelen worden opgegeven; keys die hier worden ingevoerd, worden bij opslaan naar de engine gepusht."
+docs = "Installatiehandleiding"
+intro = "Een aparte container die u naast Stirling uitvoert. Deze doet het redeneren; Stirling doet nog steeds elke paginabewerking zelf. Deze heeft dezelfde"
+outro = "op beide containers en een modelprovidersleutel nodig. Alles wat de AI leest, wordt verzonden naar de provider die u kiest - een Ollama die u host houdt elke pagina binnenshuis."
 title = "Over de AI engine"
 
 [admin.settings.ai.general.streamTimeoutSeconds]
@@ -890,6 +924,67 @@ label = "Slim model"
 body = "Wijzigingen worden automatisch naar de AI engine gepusht."
 bodyNoPush = "Instellingen opgeslagen. Ze worden toegepast de volgende keer dat de AI engine de configuratie ophaalt."
 title = "AI-instellingen opgeslagen"
+
+[admin.settings.ai.status]
+capabilities = "Mogelijkheden"
+capabilitiesValue = "{{on}} van {{total}} aan"
+checked = "gecontroleerd"
+checking = "De engine wordt gecontroleerd…"
+description = "Of de engine bereikbaar is, of deze deze server accepteert en waarop deze draait."
+fastModel = "Snel model"
+justNow = "zojuist"
+latency = "Responstijd"
+linkLabel = "Accountkoppeling"
+minutesAgo = "{{count}} min geleden"
+recheck = "Opnieuw controleren"
+runningOn = "Draait op"
+secondsAgo = "{{count}} sec geleden"
+secretLabel = "Gedeeld geheim"
+smartModel = "Slim model"
+title = "Status"
+url = "Engine-URL"
+
+[admin.settings.ai.status.cloud]
+hostDown = "Niet beschikbaar"
+hostLabel = "Stirling.com"
+hostUp = "Beschikbaar"
+name = "Stirling Cloud"
+sharingLabel = "AI-delen"
+sharingOff = "Uitgeschakeld"
+sharingOn = "Ingeschakeld"
+
+[admin.settings.ai.status.cloud.degraded]
+body = "Stirling Cloud heeft geantwoord, maar heeft deze server geweigerd. De accountkoppeling is mogelijk ingetrokken."
+title = "Stirling Cloud weigert deze server"
+
+[admin.settings.ai.status.cloud.down]
+body = "Deze server kon Stirling Cloud niet bereiken. Controleer de accountkoppeling en of deze server internet kan bereiken."
+title = "Stirling Cloud onbereikbaar"
+
+[admin.settings.ai.status.cloud.ok]
+body = "Stirling Cloud heeft deze server geaccepteerd. Hier hoeft niets te worden uitgevoerd of gepatcht."
+title = "Draait op Stirling Cloud"
+
+[admin.settings.ai.status.degraded]
+body = "De health check werd beantwoord, maar een echte aanvraag werd geweigerd. De twee kanten gebruiken verschillende gedeelde geheimen."
+title = "Engine is actief, maar weigert deze server"
+
+[admin.settings.ai.status.down]
+body = "Controleer de URL, of de engine-container draait en of u opnieuw hebt gestart nadat u AI hebt ingeschakeld."
+title = "Engine onbereikbaar"
+
+[admin.settings.ai.status.off]
+body = "Kies hieronder hoe AI draait, sla op en herstart."
+title = "AI is uitgeschakeld"
+
+[admin.settings.ai.status.ok]
+body = "Health check en een geauthenticeerde aanvraag zijn beide geslaagd."
+title = "Engine draait"
+
+[admin.settings.ai.status.secret]
+no = "Geweigerd"
+unknown = "Onbekend"
+yes = "Geaccepteerd"
 
 [admin.settings.badge]
 clickToUpgrade = "Click to view plan details"
@@ -4453,6 +4548,7 @@ openFromComputer = "Openen vanaf computer"
 openSettings = "Instellingen openen"
 other = "Overig"
 recent = "Recent"
+searchFiles = "Bestanden zoeken"
 uploadFailedBody = "Kon de geselecteerde bestanden niet toevoegen."
 uploadFailedTitle = "Uploaden mislukt"
 viewAll = "Alle {{count}} bestanden bekijken"
@@ -5827,6 +5923,8 @@ label = "Free credits"
 adoptFailed = "Het document is ontgrendeld, maar kon hier niet worden geopend. Probeer de tool rechtstreeks."
 empty = "Niets te melden."
 handoffUnavailable = "Deze browser staat niet toe dat de verwerker het document aan de editor doorgeeft. Open het in plaats daarvan vanuit de editor."
+inSmartFolder = "Dit document bevindt zich in een slimme map, dus het wordt op de server verwerkt in plaats van hier."
+inSmartFolderNamed = "{{name}} bevindt zich in een slimme map, dus het wordt op de server verwerkt in plaats van hier."
 noDocumentLinked = "Deze fout is niet gekoppeld aan een specifiek document, dus er is hier niets om te openen."
 notOnThisDevice = "Dit document staat niet op dit apparaat, dus het kan hier niet worden geopend."
 occurrences = "{{count}} keer"
@@ -5837,6 +5935,7 @@ repairedRerunNotAdopted = "Het gerepareerde document is verwerkt, maar het resul
 repairedRerunUndelivered = "Het document is gerepareerd en het opnieuw uitvoeren van het beleid is gestart, maar het resultaat kan hier niet worden afgeleverd, dus deze fout blijft open."
 rerunRejected = "Het beleid kon zojuist niet opnieuw worden uitgevoerd. Probeer het zo meteen opnieuw."
 rerunUndelivered = "Het opnieuw uitvoeren van het beleid is gestart, maar het resultaat kan hier niet worden afgeleverd, dus deze fout blijft open."
+retryInFolderFailed = "Dat document kon zojuist niet opnieuw worden uitgevoerd."
 retryUnavailable = "Dit document kan niet meer opnieuw worden geprobeerd vanuit deze browser."
 title = "Meldingen"
 unlockedNotRerun = "Het document is ontgrendeld en hier geopend, maar het beleid kon er niet opnieuw op worden uitgevoerd."
@@ -6625,9 +6724,11 @@ title = "Team-plan aanpassen"
 [payment.capacityStage]
 adjustmentNote = "Stripe toont de exacte kosten, eventuele pro rata verrekeningen en je volgende factuurdatum voordat je bevestigt. Je opgeslagen betaalmethode wordt gebruikt als die beschikbaar is."
 continue = "Doorgaan naar betaling"
+currencyAtCheckout = "Stripe bevestigt het definitieve bedrag en de betaalvaluta bij het afrekenen."
 customLabel = "Aantal gebruikers"
 dueToday = "Vandaag verschuldigd"
 enterpriseQuote = "Enterprise-offerte aanvragen"
+estimatedTotal = "Geschat totaal"
 lineItem = "Team · {{price}}{{period}} per {{block}} gebruikers"
 minimumForCurrentUsers = "Je hebt {{users}} gebruikers, dus het plan moet ten minste {{minimum}} dekken."
 modalTitle = "Upgraden naar {{planName}}"
@@ -6865,6 +6966,25 @@ width = "Breedte"
 widthHint = "De breedte van een tekstvak volgt de inhoud en tekstterugloop."
 x = "X"
 y = "Y"
+
+[pdfTextEditor.mobile]
+actions = "Editoracties"
+addImage = "Afbeelding"
+addText = "Tekst"
+cancel = "Annuleren"
+delete = "Verwijderen"
+details = "Details"
+document = "Document"
+done = "Gereed"
+download = "Opslaan en downloaden"
+find = "Zoeken"
+lock = "Vergrendelen"
+openPdf = "Een PDF openen"
+panelHint = "Bewerken gebeurt in de Workspace-weergave. Tik op tekst op de pagina om deze te wijzigen."
+save = "Opslaan"
+style = "Stijl"
+tapToPlace = "Tik op de pagina waar de tekst moet komen"
+unlock = "Ontgrendelen"
 
 [pdfTextEditor.password]
 cancel = "Annuleren"
@@ -7574,6 +7694,49 @@ plan = "Plan"
 procurement = "Inkoop"
 usage = "Gebruik"
 
+[portal.billing.compare]
+current = "Huidig"
+enterpriseData = "Dataresidentie en SCIM"
+enterpriseName = "Enterprise"
+enterprisePrice = "Volgens uw overeenkomst"
+enterpriseProcessing = "Op basis van verbruik of vast"
+enterpriseSignIn = "SAML en auditing"
+enterpriseSupport = "Uptime-SLA's, implementatiehulp"
+enterpriseUsers = "Geen limiet"
+enterpriseWhere = "Plus multi-node en air-gapped"
+exploreEnterprise = "Enterprise verkennen"
+freeData = "Blijft waar u het uitvoert"
+freeName = "Gratis"
+freePrice = "Geen kaart, geen vervaldatum"
+freeProcessing = "{{allowance}} credits per maand"
+freeProcessingUnknown = "Een maandelijkse creditlimiet"
+freeSignIn = "E-mail, Google en SSO"
+freeSignInNote = "OAuth2/OIDC"
+freeSupport = "Community"
+freeUsers = "Tot {{users}}"
+freeUsersUnknown = "Een klein team"
+freeWhere = "Cloud, desktop of self-hosted"
+lede = "Elk abonnement bevat elke PDF-tool en SSO. Wat verandert, is hoeveel mensen het gebruiken, waar het draait en welke ondersteuning u krijgt."
+open = "Abonnementen vergelijken"
+rowData = "Uw gegevens"
+rowHeader = "Functie"
+rowProcessing = "Verwerking"
+rowSignIn = "Aanmelden"
+rowSupport = "Ondersteuning"
+rowUsers = "Gebruikers"
+rowWhere = "Waar het draait"
+teamData = "Google Drive, uw eigen database"
+teamName = "Team"
+teamPrice = "$99/mnd per 100 gebruikers"
+teamProcessing = "{{allowance}} per maand, daarna op basis van verbruik"
+teamProcessingUnknown = "Een hogere limiet, daarna op basis van verbruik"
+teamSignIn = "Hetzelfde"
+teamSupport = "E-mail"
+teamUsers = "100 per blok"
+teamWhere = "Cloud, desktop of self-hosted"
+title = "Abonnementen vergelijken"
+upgradeTeam = "Upgraden naar Team"
+
 [portal.billing.cycle]
 credits = "Credits"
 creditsNote = "{{units}} gebruikt · inclusief gratis en vooruitbetaalde credits"
@@ -7679,6 +7842,8 @@ payTitle = "Betaal voor je jaar"
 step = "Stap {{current}} van {{total}}"
 
 [portal.billing.prepaid.calc]
+currency = "Offertevaluta"
+currencyLocked = "Gebruikt uw bestaande Stripe-factureringsvaluta."
 rateUnknown = "We tonen de exacte prijs bij het afrekenen."
 
 [portal.billing.prepaid.consent]
@@ -8481,6 +8646,10 @@ title = "Bestand kon niet worden gerepareerd"
 [portal.failures.kind.inputWrongType]
 description = "Je bestand heeft geen formaat dat deze stap kan openen, waardoor de run het niet kon lezen."
 title = "Verkeerd bestandstype"
+
+[portal.failures.kind.sourceUnreadable]
+description = "Uw slimme map kon niet worden gelezen, dus niets erin is verwerkt."
+title = "Map kon niet worden gelezen"
 
 [portal.failures.kind.stepCannotRenderPage]
 description = "Een pagina in je bestand kon niet worden getekend, waardoor de run niet kon worden voltooid."
@@ -12235,6 +12404,7 @@ goBack = "Ga terug"
 pdfTools = "PDF-tools"
 placeholder = "Kies een tool om te beginnen"
 premiumFeature = "Premiumfunctie:"
+searchTools = "Tools zoeken"
 toolsHeader = "Tools"
 viewAllTools = "Alle tools weergeven"
 
@@ -12399,13 +12569,10 @@ visits = "Bezoeken"
 
 [users]
 lastActive = "Laatst actief"
-learnMore = "Meer informatie over rollen en toegang."
 locked = "Vergrendeld"
 ownerSetupRequired = "De eigenaar van de organisatie heeft de eerste login niet voltooid. Voltooi de installatie of vraag de serverbeheerder om het eigendom te herstellen voordat je het eigendom overdraagt."
 roleFor = "Rol voor {{name}}"
 rowActions = "Acties voor {{name}}"
-showAll = "Alle {{count}} tonen"
-showLess = "Minder tonen"
 subtitle2 = "Je mensen, teams en toegangsniveaus."
 suspended = "Geschorst"
 teamActions = "Teamacties"
@@ -12414,6 +12581,7 @@ you = "(jij)"
 
 [users.action]
 cancelInvite = "Uitnodiging annuleren"
+createFromDefault = "Team maken vanuit Default"
 deleteTeam = "Team verwijderen"
 disableMfa = "MFA resetten"
 move = "Naar team verplaatsen"
@@ -12451,6 +12619,7 @@ email = "Email"
 person = "Person"
 role = "Role"
 status = "Status"
+team = "Team"
 
 [users.confirm]
 cancelInviteBody = "Uitnodiging voor {{email}} annuleren? Deze persoon kan niet deelnemen met de huidige link."
@@ -12469,15 +12638,12 @@ transferOwnershipTitle = "Eigendom van organisatie overdragen"
 description = "Nodig je team uit om samen te werken."
 title = "Nog geen leden"
 
+[users.filters]
+noMatches = "Niemand komt overeen met deze filters."
+search = "Mensen zoeken"
+
 [users.group]
 addToTeam = "Toevoegen aan team"
-administrators = "{{count}} beheerders"
-guestCount = "{{count}} gast"
-guests = "Gasten"
-ledBy = "geleid door {{owner}}"
-org = "Organisatie"
-team = "Team {{name}}"
-teamMeta = "{{count}} personen"
 
 [users.invite]
 access = "Toegang"
@@ -12542,6 +12708,9 @@ title = "Nieuw team"
 
 [users.renameTeam]
 apply = "Hernoemen"
+defaultApply = "Maken en verplaatsen"
+defaultDescription = "Default blijft beschikbaar voor nieuwe gebruikers. Iedereen die momenteel in Default zit, wordt naar het nieuwe team verplaatst."
+defaultTitle = "Team maken vanuit Default"
 name = "Teamnaam"
 title = "Team hernoemen"
 
@@ -12566,6 +12735,15 @@ guest = "Gast"
 member = "Lid"
 orgOwner = "Organisatie-eigenaar"
 teamOwner = "Teameigenaar"
+
+[users.seats]
+full = "Elke gelicentieerde seat is in gebruik. Maak er een vrij of verhoog het aantal seats om iemand anders toe te voegen."
+update = "Seats bijwerken"
+
+[users.tabs]
+all = "Alles"
+label = "Filteren op team"
+unassigned = "Geen team"
 
 [users.team]
 grantProcessor = "Processor aan team toekennen"
@@ -13216,232 +13394,14 @@ submitSignature = "Handtekening indienen"
 title = "Werkruimte"
 
 [workspace.people]
-active = "Actief"
-activeSession = "Actieve sessie"
-addMembers = "Leden toevoegen"
-admin = "Beheerder"
-confirmDelete = "Weet u zeker dat u deze gebruiker wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt."
-confirmUnlock = "Weet u zeker dat u dit gebruikersaccount wilt ontgrendelen?"
-deleteUser = "Gebruiker verwijderen"
-deleteUserError = "Gebruiker verwijderen is mislukt"
-deleteUserSuccess = "Gebruiker succesvol verwijderd"
 description = "Beheer leden van de werkruimte en hun machtigingen"
-disable = "Uitschakelen"
-disabled = "Uitgeschakeld"
-editRole = "Rol bewerken"
-enable = "Inschakelen"
-loading = "Personen laden..."
-locked = "vergrendeld"
-lockedBadge = "Vergrendeld"
-loginRequired = "Schakel eerst de loginmodus in"
-memberActions = "Lidacties"
-noMembersFound = "Geen leden gevonden"
-ownerLocked = "Draag het eigendom van de organisatie over via Instellingen → Werkruimte → Gebruikers voordat je de rol of het account van de eigenaar wijzigt."
-role = "Rol"
-searchMembers = "Leden zoeken..."
-team = "Team"
-unlockAccount = "Account ontgrendelen"
-unlockUserError = "Gebruikersaccount ontgrendelen mislukt"
-unlockUserSuccess = "Gebruikersaccount succesvol ontgrendeld"
-user = "Gebruiker"
-userInfo = "Gebruikersinfo"
-
-[workspace.people.actions]
-upgrade = "Opwaarderen"
-
-[workspace.people.addMember]
-authType = "Authenticatietype"
-error = "Gebruiker aanmaken is mislukt"
-forceMFA = "MFA-instelling forceren bij volgende aanmelding"
-forcePasswordChange = "Wachtwoordwijziging afdwingen bij eerste aanmelding"
-password = "Wachtwoord"
-passwordPlaceholder = "Voer wachtwoord in"
-passwordRequired = "Wachtwoord is vereist"
-role = "Rol"
-submit = "Lid toevoegen"
-success = "Gebruiker succesvol aangemaakt"
-team = "Team (optioneel)"
-teamPlaceholder = "Selecteer een team"
-username = "Gebruikersnaam (e-mail)"
-usernamePlaceholder = "user@example.com"
-usernameRequired = "Gebruikersnaam en wachtwoord zijn vereist"
-
-[workspace.people.authType]
-oauth = "OAuth2"
-password = "Wachtwoord"
-saml = "SAML2"
-ssoDescription = "De gebruiker authenticeert via SSO-provider"
-
-[workspace.people.changePassword]
-action = "Wachtwoord wijzigen"
-confirmPassword = "Wachtwoord bevestigen"
-confirmPlaceholder = "Voer het nieuwe wachtwoord opnieuw in"
-copiedToClipboard = "Wachtwoord gekopieerd naar klembord"
-copyFailed = "Kopiëren van wachtwoord mislukt"
-copyTooltip = "Kopiëren naar klembord"
-emailUnavailable = "Het e-mailadres van deze gebruiker is ongeldig. Meldingen zijn uitgeschakeld."
-error = "Bijwerken van wachtwoord mislukt"
-forcePasswordChange = "Gebruiker dwingen het wachtwoord bij de volgende aanmelding te wijzigen"
-generatedPreview = "Gegenereerd wachtwoord:"
-generateRandom = "Beveiligd wachtwoord genereren"
-includePassword = "Nieuw wachtwoord in de e-mail opnemen"
-newPassword = "Nieuw wachtwoord"
-notifyOnly = "Er wordt een e-mail verzonden zonder het wachtwoord, om de gebruiker te laten weten dat een beheerder het heeft gewijzigd."
-passwordMismatch = "Wachtwoorden komen niet overeen"
-passwordRequired = "Voer een nieuw wachtwoord in"
-placeholder = "Voer een nieuw wachtwoord in"
-sendEmail = "Gebruiker per e-mail informeren over deze wijziging"
-smtpDisabled = "E-mailmeldingen vereisen dat SMTP is ingeschakeld in de instellingen."
-submit = "Wachtwoord bijwerken"
-subtitle = "Wachtwoord bijwerken voor"
-success = "Wachtwoord succesvol bijgewerkt"
-title = "Wachtwoord wijzigen"
-
-[workspace.people.editMember]
-editing = "Editing: <0>{{username}}</0>"
-error = "Gebruiker bijwerken is mislukt"
-role = "Rol"
-submit = "Update User"
-success = "Gebruiker succesvol bijgewerkt"
-team = "Team (optioneel)"
-teamPlaceholder = "Selecteer een team"
-title = "Edit User"
-
-[workspace.people.emailInvite]
-allFailed = "Uitnodigen van gebruikers is mislukt"
-emails = "E-mailadressen"
-emailsPlaceholder = "user1@example.com, user2@example.com"
-emailsRequired = "Er is minstens één e-mailadres vereist"
-error = "Uitnodigingen verzenden is mislukt"
-partialFailure = "Sommige uitnodigingen zijn mislukt"
-submit = "Uitnodigingen verzenden"
-success = "Gebruiker(s) succesvol uitgenodigd"
-
-[workspace.people.inviteLink]
-copied = "Link gekopieerd naar klembord"
-email = "E-mailadres"
-emailDescription = "Optioneel - laat leeg voor een algemene uitnodigingslink die door iedereen kan worden gebruikt"
-emailPlaceholder = "user@example.com (optioneel)"
-emailSent = "Uitnodigingslink gegenereerd en per e-mail verzonden"
-error = "Uitnodigingslink genereren is mislukt"
-expiryHours = "Verlooptijd (uren)"
-generate = "Link genereren"
-generated = "Uitnodigingslink gegenereerd"
-sendEmail = "Uitnodigingslink per e-mail verzenden"
-sendEmailDescription = "Indien ingeschakeld, wordt de uitnodigingslink naar het opgegeven e-mailadres verzonden"
-submit = "Uitnodigingslink genereren"
-
-[workspace.people.inviteMembers]
-label = "Leden uitnodigen"
-subtitle = "Typ of plak hieronder e-mailadressen, gescheiden door komma's. Uw werkruimte wordt per lid gefactureerd."
-
-[workspace.people.inviteMode]
-email = "E-mail"
-emailDisabled = "E-mailuitnodigingen vereisen SMTP-configuratie en mail.enableInvites=true in de instellingen"
-link = "Link"
-username = "Gebruikersnaam"
 
 [workspace.people.license]
-currentUsage = "Momenteel {{current}} van {{max}} gebruikerslicenties in gebruik"
-fromLicense = "van licentie"
-grandfathered = "Bestaande rechten"
-grandfatheredShort = "{{count}} bestaande rechten"
-slotsAvailable_one = "{{count}} user slot available"
-slotsAvailable_other = "{{count}} user slots available"
-slotsAvailable_zero = "No slots available"
 users_one = "user"
 users_other = "users"
 
-[workspace.people.mfa]
-adminDisableError = "MFA uitschakelen voor gebruiker mislukt"
-adminDisableSuccess = "MFA succesvol uitgeschakeld voor gebruiker"
-disableByAdmin = "MFA uitschakelen"
-
-[workspace.people.roleDescriptions]
-admin = "Kan instellingen beheren en leden uitnodigen, met volledige beheerdersrechten."
-currentRole = "Momenteel toegewezen rol."
-user = "Can view and edit shared files, but cannot manage workspace settings or users."
-
-[workspace.people.toggleEnabled]
-error = "Bijwerken van gebruikersstatus is mislukt"
-success = "Gebruikersstatus succesvol bijgewerkt"
-
 [workspace.teams]
-addMember = "Lid toevoegen"
-backToTeams = "Terug naar Teams"
-cannotAddToInternal = "Kan geen leden toevoegen aan het team Internal"
-cannotDeleteInternal = "Kan het team Internal niet verwijderen"
-cannotRenameInternal = "Kan het team Internal niet hernoemen"
-confirmDelete = "Weet u zeker dat u dit team wilt verwijderen? Dit team moet leeg zijn om te kunnen verwijderen."
-confirmRemove = "Gebruiker uit dit team verwijderen?"
-createNewTeam = "Nieuw team maken"
-deleteTeamLabel = "Team verwijderen"
 description = "Beheer teams en organiseer leden van de werkruimte"
-loadError = "Teamdetails laden mislukt"
-loading = "Teams laden..."
-loadingDetails = "Teamdetails laden..."
-memberCount_one = "{{count}} member"
-memberCount_other = "{{count}} members"
-memberCount_zero = "no members"
-noMembers = "Geen leden in dit team"
-noTeamsFound = "Geen teams gevonden"
-removeMember = "Uit team verwijderen"
-removeMemberError = "Gebruiker uit team verwijderen is mislukt"
-removeMemberSuccess = "Gebruiker uit team verwijderd"
-renameTeamLabel = "Team hernoemen"
-system = "Systeem"
-teamActions = "Teamacties"
-teamName = "Teamnaam"
-teamNotFound = "Team niet gevonden"
-totalMembers = "Totaal aantal leden"
-viewTeam = "Team bekijken"
-
-[workspace.teams.addMemberToTeam]
-addingTo = "Toevoegen aan"
-currentlyIn = "momenteel in"
-error = "Lid toevoegen aan team is mislukt"
-selectUser = "Gebruiker selecteren"
-selectUserPlaceholder = "Kies een gebruiker"
-selectUserRequired = "Selecteer een gebruiker"
-submit = "Lid toevoegen"
-success = "Lid succesvol aan team toegevoegd"
-title = "Lid toevoegen aan team"
-userRequired = "Selecteer een gebruiker"
-willBeMoved = "Opmerking: deze gebruiker wordt verplaatst van het huidige team naar dit team."
-
-[workspace.teams.changeTeam]
-changing = "Verplaatsen"
-error = "Team wijzigen is mislukt"
-label = "Team wijzigen"
-selectTeam = "Team selecteren"
-selectTeamPlaceholder = "Kies een team"
-selectTeamRequired = "Selecteer een team"
-submit = "Team wijzigen"
-success = "Team succesvol gewijzigd"
-title = "Team wijzigen"
-
-[workspace.teams.createTeam]
-error = "Team maken is mislukt"
-nameRequired = "Teamnaam is vereist"
-submit = "Team maken"
-success = "Team succesvol gemaakt"
-teamName = "Teamnaam"
-teamNamePlaceholder = "Voer teamnaam in"
-title = "Nieuw team maken"
-
-[workspace.teams.deleteTeam]
-error = "Team verwijderen is mislukt. Zorg dat het team leeg is."
-success = "Team succesvol verwijderd"
-
-[workspace.teams.renameTeam]
-error = "Team hernoemen is mislukt"
-nameRequired = "Teamnaam is vereist"
-newTeamName = "Nieuwe teamnaam"
-newTeamNamePlaceholder = "Voer nieuwe teamnaam in"
-renaming = "Hernoemen:"
-submit = "Team hernoemen"
-success = "Team succesvol hernoemd"
-title = "Team hernoemen"
 
 [zipWarning]
 cancel = "Annuleren"
