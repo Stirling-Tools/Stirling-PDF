@@ -61,7 +61,7 @@ jobs:
         run: echo "app_short=$(git rev-parse --short=8 HEAD)" >> $GITHUB_OUTPUT
 
       - name: Build and push backend image
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
           file: ./docker/backend/Dockerfile
@@ -77,7 +77,7 @@ jobs:
           platforms: linux/amd64
 
       - name: Build and push frontend image
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
           file: ./docker/frontend/Dockerfile
@@ -97,7 +97,7 @@ jobs:
           platforms: linux/amd64
 
       - name: Build and push AI engine image
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
           file: ./docker/engine/Dockerfile
