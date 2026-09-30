@@ -32,13 +32,10 @@
     "@embedpdf/plugin-tiling": "^2.15.1",
     "@embedpdf/plugin-viewport": "^2.15.1",
     "@embedpdf/plugin-zoom": "^2.15.1",
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.1",
     "@mantine/core": "^8.3.1",
     "@mantine/dates": "^8.3.1",
     "@mantine/dropzone": "^8.3.1",
     "@mantine/hooks": "^8.3.1",
-    "@mui/material": "^9.0.0",
     "@posthog/react": "^1.8.2",
     "@reactour/tour": "^3.8.0",
     "@stripe/react-stripe-js": "^6.8.0",
@@ -162,7 +159,6 @@
   },
   "depcheck": {
     "ignoreMatches": [
-      "@emotion/*",
       "tailwindcss",
       "@testing-library/user-event",
       "@vitest/coverage-v8"
