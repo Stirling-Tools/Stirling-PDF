@@ -96,21 +96,11 @@ test("entering manual redact mode keeps annotation work dirty", async ({
     .poll(() => viewerCursor(page), { timeout: 15_000 })
     .toBe("crosshair");
 
-  // The redaction panel no longer carries a save of its own — redactions are
-  // applied from the panel's single apply action. Annotation work stays dirty on
-  // the persistent save surface and must still trip the navigation guard.
-  await expect(
-    page
-      .locator("[data-annotation-save-surface]")
-      .getByRole("button", { name: "Save Changes" }),
-  ).toHaveCount(1);
-  await expect(
-    page.getByRole("button", { name: "Save Changes" }).filter({
-      hasNot: page.locator(
-        "xpath=ancestor-or-self::*[@data-annotation-save-surface]",
-      ),
-    }),
-  ).toHaveCount(0);
+  // The redaction panel no longer carries a separate save; annotation work
+  // stays dirty and must still trip the guard instead of being dropped.
+  await expect(page.getByRole("button", { name: "Save Changes" })).toHaveCount(
+    0,
+  );
   await switchToFormEditor(page);
   await expect(page.getByText("Unsaved changes").first()).toBeVisible({
     timeout: 5_000,

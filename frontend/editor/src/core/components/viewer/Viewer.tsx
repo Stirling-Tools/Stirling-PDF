@@ -6,7 +6,6 @@ import {
   type ViewerProps,
 } from "@app/components/viewer/NonPdfViewer";
 import { AttachmentSidebar } from "@app/components/viewer/AttachmentSidebar";
-import { AnnotationSaveBar } from "@app/components/viewer/AnnotationSaveBar";
 import { DocumentEditSessionProvider } from "@app/contexts/documentEdit/DocumentEditSessionContext";
 import { usePortfolioSession } from "@app/components/viewer/hooks/usePortfolioSession";
 import { useAllFiles } from "@app/contexts/FileContext";
@@ -70,8 +69,7 @@ const Viewer = (props: ViewerProps & SignatureOverlayPassThrough) => {
   // The session resets itself on a document swap through one DOCUMENT_REPLACED
   // transition. It is deliberately NOT keyed: a keyed provider remounts its whole
   // subtree, which tears down the live viewer on an in-place save — the exact
-  // thing the in-place reload path exists to avoid. The save surface is
-  // absolutely positioned, so appearing never resizes the viewport.
+  // thing the in-place reload path exists to avoid.
 
   return (
     <DocumentEditSessionProvider documentId={activeFileId}>
@@ -102,8 +100,6 @@ const Viewer = (props: ViewerProps & SignatureOverlayPassThrough) => {
             portfolio={portfolio}
           />
         )}
-
-        <AnnotationSaveBar />
       </div>
     </DocumentEditSessionProvider>
   );

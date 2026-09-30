@@ -12917,10 +12917,6 @@ zoom = "Zoom"
 zoomIn = "Zoom In"
 zoomOut = "Zoom Out"
 
-[viewer.annotation]
-dirty = "Unsaved annotation changes"
-failed = "The document could not be saved. Try again."
-
 [viewer.attachments]
 addAttachment = "Add attachment"
 close = "Close attachments"

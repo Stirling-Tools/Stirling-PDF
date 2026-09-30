@@ -1,12 +1,10 @@
 /**
  * Canonical edit state for one open document.
  *
- * This replaces the loose `isDirty` / `redactionsApplied` / `isManualRedactMode`
- * flags that used to be spread across the viewer bridges, the annotation menus
- * and the redaction panel. Those flags admit invalid combinations — a committed
- * redaction whose save failed, an apply in flight while the UI still offers it, a
- * dirty document described as saved. Phases make the invalid states
- * unrepresentable instead of guarding them at each call site.
+ * The phases exist because independent booleans admit invalid combinations: a
+ * committed redaction whose save failed, an apply in flight while the UI still
+ * offers it, a document called saved before the output was persisted. A reducer
+ * makes those states unrepresentable rather than guarding each call site.
  *
  * The session owns decisions. It never owns DOM geometry, menu state, or tool
  * selection; only the persistence pipeline changes the durable document.

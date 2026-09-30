@@ -45,48 +45,28 @@ async function changeSelectedAnnotationColor(
   await page.waitForTimeout(400);
 }
 
-/** The save action on the persistent save surface, scoped so it cannot be
- *  confused with the Annotate panel's own Save Changes button. */
 function saveChangesButton(page: import("@playwright/test").Page) {
-  return page
-    .locator("[data-annotation-save-surface]")
-    .getByRole("button", { name: "Save Changes" })
-    .first();
+  return page.getByRole("button", { name: "Save Changes" }).first();
 }
 
-/** Any Save Changes outside the save surface means the Annotate panel opened. */
-function panelSaveChangesButton(page: import("@playwright/test").Page) {
-  return page
-    .getByRole("button", { name: "Save Changes" })
-    .filter({
-      hasNot: page.locator(
-        "xpath=ancestor-or-self::*[@data-annotation-save-surface]",
-      ),
-    })
-    .first();
-}
-
-test("editing a pre-existing annotation surfaces a save action without switching tools", async ({
+test("editing a pre-existing annotation opens the Annotate UI", async ({
   page,
 }) => {
   test.setTimeout(180_000);
   await loadAnnotatedViewer(page);
 
-  // Nothing is dirty yet, so no save action is offered anywhere.
-  await expect(page.locator("[data-annotation-save-surface]")).toHaveCount(0);
+  // Nothing is dirty yet, so the panel is closed and has no save action.
+  await expect(saveChangesButton(page)).toHaveCount(0);
 
   await selectAnnotationA(page);
   await changeSelectedAnnotationColor(page);
 
-  // The save action appears on the persistent surface...
+  // The edit was made from the viewer; the annotation UI must appear so its
+  // Save Changes button is visible and enabled instead of the change reading
+  // as autosaved.
   const save = saveChangesButton(page);
   await expect(save).toBeVisible({ timeout: 10_000 });
   await expect(save).toBeEnabled();
-
-  // ...without the Annotate panel being dragged open. Force-selecting the tool
-  // moved the whole layout and rebuilt any open colour picker, which read as a
-  // flicker, so the panel must stay closed.
-  await expect(panelSaveChangesButton(page)).toHaveCount(0);
 });
 
 test("deleting a pre-existing annotation opens the Annotate UI", async ({
@@ -107,10 +87,11 @@ test("deleting a pre-existing annotation opens the Annotate UI", async ({
   const save = saveChangesButton(page);
   await expect(save).toBeVisible({ timeout: 10_000 });
   await expect(save).toBeEnabled();
-  await expect(panelSaveChangesButton(page)).toHaveCount(0);
 });
 
-test("saving from the surface clears the dirty state", async ({ page }) => {
+test("saving from the auto-opened Annotate UI clears the dirty state", async ({
+  page,
+}) => {
   test.setTimeout(180_000);
   const firstPage = await loadAnnotatedViewer(page);
 
