@@ -1386,19 +1386,16 @@ fi
 STIRLING_ENGINE_HOME="${STIRLING_ENGINE_HOME:-/opt/stirling-engine}"
 ENGINE_PID=""
 
-# Prints aiEngine.enabled from a YAML file; the bare-key reader can't tell the many "enabled:" keys apart.
+# Prints aiEngine.enabled from a settings file, parsed as real YAML by the engine's own Python.
 read_ai_engine_enabled() {
   [ -f "$1" ] || return
-  awk '
-    /^[^[:space:]#]/ { in_ai = ($0 ~ /^aiEngine:/); child_indent = -1; next }
-    in_ai && /^[[:space:]]+[^[:space:]#]/ {
-      match($0, /^[[:space:]]+/)
-      if (child_indent < 0) child_indent = RLENGTH
-      if (RLENGTH == child_indent && $1 == "enabled:") {
-        val = $2; gsub(/["'"'"']/, "", val); print tolower(val); exit
-      }
-    }
-  ' "$1"
+  env -u PYTHONPATH "$STIRLING_ENGINE_HOME/.venv/bin/python" -c '
+import sys, yaml
+doc = yaml.safe_load(open(sys.argv[1], encoding="utf-8"))
+ai = doc.get("aiEngine") if isinstance(doc, dict) else None
+if isinstance(ai, dict) and "enabled" in ai:
+    print(str(ai["enabled"]).lower())
+' "$1" 2>/dev/null
 }
 
 # Env wins over the files, as in Spring; custom_settings.yml overrides settings.yml.
@@ -1407,9 +1404,11 @@ ai_engine_wanted() {
     [ "$(printf '%s' "$AIENGINE_ENABLED" | tr '[:upper:]' '[:lower:]')" = "true" ]
     return
   fi
-  local value
-  value=$(read_ai_engine_enabled "$(dirname "$CONFIG_FILE")/custom_settings.yml")
-  [ -n "$value" ] || value=$(read_ai_engine_enabled "$CONFIG_FILE")
+  local dir value
+  dir="${STIRLING_BASE_PATH:+${STIRLING_BASE_PATH%/}/configs}"
+  dir="${dir:-$(dirname "$CONFIG_FILE")}"
+  value=$(read_ai_engine_enabled "$dir/custom_settings.yml")
+  [ -n "$value" ] || value=$(read_ai_engine_enabled "$dir/settings.yml")
   [ "$value" = "true" ]
 }
 
