@@ -1,5 +1,7 @@
 use tauri_plugin_shell::ShellExt;
 use tauri::Manager;
+use rand::distr::Alphanumeric;
+use rand::RngExt;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
 use std::path::{Path, PathBuf};
@@ -31,6 +33,7 @@ fn sweep_stale_shutdown_files(work_dir: &Path, keep: &Path) {
 static BACKEND_PROCESS: Mutex<Option<tauri_plugin_shell::process::CommandChild>> = Mutex::new(None);
 static BACKEND_STARTING: Mutex<bool> = Mutex::new(false);
 static BACKEND_PORT: Mutex<Option<u16>> = Mutex::new(None);
+static BACKEND_TOKEN: Mutex<Option<String>> = Mutex::new(None);
 // Set by the event loop when the backend exits, so cleanup can wait for it.
 static BACKEND_EXITED: AtomicBool = AtomicBool::new(true);
 static BACKEND_SHUTDOWN_FILE: Mutex<Option<PathBuf>> = Mutex::new(None);
@@ -392,6 +395,13 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
     sweep_stale_shutdown_files(&work_dir, &shutdown_file);
     *BACKEND_SHUTDOWN_FILE.lock().unwrap() = Some(shutdown_file.clone());
 
+    let backend_token: String = rand::rng()
+        .sample_iter(Alphanumeric)
+        .take(64)
+        .map(char::from)
+        .collect();
+    *BACKEND_TOKEN.lock().unwrap() = Some(backend_token.clone());
+
     let sidecar_command = app
         .shell()
         .command(java_path.to_str().unwrap())
@@ -401,6 +411,7 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
         .env("STIRLING_PDF_CONFIG_DIR", config_dir.to_str().unwrap())
         .env("STIRLING_PDF_LOG_DIR", log_dir.to_str().unwrap())
         .env("STIRLING_PDF_WORK_DIR", work_dir.to_str().unwrap())
+        .env("STIRLING_PDF_DESKTOP_TOKEN", backend_token)
         .env("STIRLING_PDF_SHUTDOWN_FILE", shutdown_file.to_str().unwrap());
 
     add_log("⚙️ Starting backend with bundled JRE...".to_string());
@@ -597,6 +608,11 @@ pub async fn start_backend(
 pub fn get_backend_port() -> Option<u16> {
     let port_guard = BACKEND_PORT.lock().unwrap();
     *port_guard
+}
+
+#[tauri::command]
+pub fn get_backend_token() -> Option<String> {
+    BACKEND_TOKEN.lock().unwrap().clone()
 }
 
 // Stop the backend on app exit: request a graceful Spring shutdown, then force.
