@@ -45,8 +45,7 @@ export default function ManualRedactionControls({
   const { signatureApiRef } = useSignature();
 
   // Check if user is navigating away (modal shown) — don't fight the save/leave process
-  const { showNavigationWarning, hasUnsavedChanges: navHasUnsavedChanges } =
-    useNavigationGuard();
+  const { showNavigationWarning } = useNavigationGuard();
 
   const isLeavingRef = useRef(false);
   const prevFileIndexRef = useRef(activeFileIndex);
@@ -131,9 +130,9 @@ export default function ManualRedactionControls({
 
   // pendingCount drops to zero the moment the commit lands, so gating on it
   // alone would unmount this button before a failed export could be retried.
-  // redactionsApplied stays set until a save succeeds.
-  const hasUnsavedChanges =
-    pendingCount > 0 || redactionsApplied || navHasUnsavedChanges;
+  // redactionsApplied stays set until a save succeeds. Annotation dirty state is
+  // deliberately not included: that is saved from the Annotate panel, not here.
+  const hasUnsavedChanges = pendingCount > 0 || redactionsApplied;
   const applyLabel =
     pendingCount > 0
       ? `${t("viewer.redaction.applyAll", "Apply Redactions")} (${pendingCount})`

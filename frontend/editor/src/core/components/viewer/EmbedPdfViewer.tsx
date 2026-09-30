@@ -1001,11 +1001,25 @@ const EmbedPdfViewerContent = ({
 
   // Surface the Annotate panel when a committed annotation edit lands while it
   // is closed, mirroring what creating an annotation already does: nothing else
-  // on screen says the edit is unsaved. The ref keeps the callback stable for
-  // the bridge while always reading the latest tool state.
+  // on screen says the edit is unsaved. The ref keeps the callback stable for the
+  // bridge while always reading the latest tool state.
+  //
+  // Committed events keep arriving while the page settles and scrolls, so the
+  // panel is opened at most once: re-selecting the tool each time rebuilt it
+  // and made the view flicker. The latch clears on a new document, and again once
+  // the user leaves the panel, so a later edit can surface the save UI again.
+  const annotationUiOpenedRef = useRef(false);
+  useEffect(() => {
+    annotationUiOpenedRef.current = false;
+  }, [activeFileId]);
+  useEffect(() => {
+    if (selectedTool !== "annotate") annotationUiOpenedRef.current = false;
+  }, [selectedTool]);
+
   const annotationUiOpenerRef = useRef<() => void>(() => {});
   annotationUiOpenerRef.current = () => {
     if (
+      annotationUiOpenedRef.current ||
       previewFile ||
       selectedTool === "annotate" ||
       selectedTool === "sign" ||
@@ -1014,6 +1028,7 @@ const EmbedPdfViewerContent = ({
     ) {
       return;
     }
+    annotationUiOpenedRef.current = true;
     handleToolSelectForced("annotate");
   };
   const openAnnotationUi = useCallback(() => {
