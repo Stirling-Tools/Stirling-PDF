@@ -106,7 +106,34 @@ describe("auditing stored records", () => {
     expect(peak).toBe(4);
   });
 
-  test("a read that never answers gives its slot back after the deadline", async () => {
+  test("a read past its deadline is cancelled before its slot is reused", async () => {
+    const { fileStorage, ids } = await storeFiles(6);
+    let open = 0;
+    let peak = 0;
+    // Pending until its signal aborts, as a stream read ends once cancelled.
+    readBlobSlice.mockImplementation(
+      (_blob: Blob, _start: number, _end: number, signal?: AbortSignal) =>
+        new Promise<Uint8Array>((_resolve, reject) => {
+          open++;
+          peak = Math.max(peak, open);
+          signal?.addEventListener("abort", () => {
+            open--;
+            reject(signal.reason);
+          });
+        }),
+    );
+    serveBlobsOnRead();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+
+    await Promise.all(ids.map((id) => fileStorage.getStirlingFileStub(id)));
+    await vi.waitFor(() => expect(readBlobSlice).toHaveBeenCalledTimes(4));
+    await vi.advanceTimersByTimeAsync(3000);
+    await vi.waitFor(() => expect(readBlobSlice).toHaveBeenCalledTimes(6));
+
+    expect(peak).toBe(4);
+  });
+
+  test("a read that ignores its cancel still gives its slot back", async () => {
     const { fileStorage, ids } = await storeFiles(6);
     readBlobSlice.mockImplementation(() => new Promise(() => {}));
     serveBlobsOnRead();
@@ -114,6 +141,9 @@ describe("auditing stored records", () => {
 
     await Promise.all(ids.map((id) => fileStorage.getStirlingFileStub(id)));
     await vi.waitFor(() => expect(readBlobSlice).toHaveBeenCalledTimes(4));
+    // One deadline for the read, and one for the cancel it never answers.
+    await vi.advanceTimersByTimeAsync(3000);
+    expect(readBlobSlice).toHaveBeenCalledTimes(4);
     await vi.advanceTimersByTimeAsync(3000);
     await vi.waitFor(() => expect(readBlobSlice).toHaveBeenCalledTimes(6));
   });

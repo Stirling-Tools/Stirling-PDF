@@ -141,9 +141,12 @@ export function maintenanceMayRewrite(
 
 /** WebKit loses backing stores for blobs it accepted, and only a real read shows
  *  it. One byte is enough: what fails is opening the store, not the length. */
-async function blobReadFailure(data: Blob): Promise<unknown> {
+async function blobReadFailure(
+  data: Blob,
+  signal?: AbortSignal,
+): Promise<unknown> {
   try {
-    await readBlobSlice(data, 0, 1);
+    await readBlobSlice(data, 0, 1, signal);
     return null;
   } catch (error) {
     return error ?? new Error("Reading a stored blob's bytes failed");
@@ -180,7 +183,9 @@ const AUDIT_CONCURRENCY = 4;
  * of a very large file, which this app supports.
  */
 export async function copyBlobBytes(source: Blob): Promise<ArrayBuffer> {
-  const failure = await withProbeDeadline(blobReadFailure(source));
+  const failure = await withProbeDeadline((signal) =>
+    blobReadFailure(source, signal),
+  );
   if (failure === PROBE_UNANSWERED) {
     throw new Error("Blob backing store did not answer a read probe");
   }
@@ -188,15 +193,34 @@ export async function copyBlobBytes(source: Blob): Promise<ArrayBuffer> {
   return source.arrayBuffer();
 }
 
-function withProbeDeadline(
-  probe: Promise<unknown>,
-): Promise<unknown | typeof PROBE_UNANSWERED> {
+/**
+ * Runs `probe` with a signal that aborts at the deadline, and then waits for the
+ * probe to stop: the stream it read through holds a blob-sized pipe until then,
+ * and an audit slot is only free once that is released. The wait is bounded too,
+ * since a read WebKit has lost may not answer the cancel either.
+ */
+async function withProbeDeadline<T>(
+  probe: (signal: AbortSignal) => Promise<T>,
+): Promise<T | typeof PROBE_UNANSWERED> {
+  const controller = new AbortController();
+  const running = probe(controller.signal);
+  const outcome = await beforeDeadline(running);
+  if (outcome !== PROBE_UNANSWERED) return outcome;
+  controller.abort();
+  await beforeDeadline(running.catch(() => undefined));
+  return PROBE_UNANSWERED;
+}
+
+function beforeDeadline<T>(
+  promise: Promise<T>,
+): Promise<T | typeof PROBE_UNANSWERED> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
   return Promise.race([
-    probe,
-    new Promise<typeof PROBE_UNANSWERED>((resolve) =>
-      setTimeout(() => resolve(PROBE_UNANSWERED), PROBE_DEADLINE_MS),
-    ),
-  ]);
+    promise,
+    new Promise<typeof PROBE_UNANSWERED>((resolve) => {
+      timer = setTimeout(() => resolve(PROBE_UNANSWERED), PROBE_DEADLINE_MS);
+    }),
+  ]).finally(() => clearTimeout(timer));
 }
 
 /**
@@ -434,9 +458,12 @@ class FileStorageService {
   ): Promise<void> {
     // A record we can't read back at all is the caller's problem, not the probe's.
     const stored = await this.readRecord(db, record.id).catch(() => undefined);
-    if (!(stored?.data instanceof Blob)) return;
+    const storedData = stored?.data;
+    if (!(storedData instanceof Blob)) return;
 
-    const failure = await withProbeDeadline(blobReadFailure(stored.data));
+    const failure = await withProbeDeadline((signal) =>
+      blobReadFailure(storedData, signal),
+    );
     if (!failure) {
       this.blobReadbackVerified = true;
       return;
@@ -530,8 +557,8 @@ class FileStorageService {
   private async auditRecord(record: StoredStirlingFileRecord): Promise<void> {
     // Under a deadline so a read WebKit leaves pending gives its slot back.
     // Unanswered proves nothing, so it reports nothing.
-    const failure = await withProbeDeadline(
-      blobReadFailure(record.data as Blob),
+    const failure = await withProbeDeadline((signal) =>
+      blobReadFailure(record.data as Blob, signal),
     );
     if (failure === PROBE_UNANSWERED) return;
     if (!failure) {
@@ -554,7 +581,8 @@ class FileStorageService {
       const db = await this.getDatabase();
       const record = await this.readRecord(db, fileId);
       if (!(record?.data instanceof Blob)) return;
-      const bytes = await withProbeDeadline(record.data.arrayBuffer());
+      const data = record.data;
+      const bytes = await withProbeDeadline(() => data.arrayBuffer());
       if (bytes === PROBE_UNANSWERED || !(bytes instanceof ArrayBuffer)) return;
       record.data = bytes;
       await this.putRecord(db, record);
@@ -755,7 +783,8 @@ class FileStorageService {
   ): Promise<void> {
     try {
       // Unreadable or unanswered is reportIfUnreadable's to report.
-      if (await withProbeDeadline(blobReadFailure(data))) return;
+      if (await withProbeDeadline((signal) => blobReadFailure(data, signal)))
+        return;
       const renamed = await detachedFile(data, {
         name: record.name,
         type: record.type,

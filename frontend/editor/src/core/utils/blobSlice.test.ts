@@ -107,4 +107,24 @@ describe("readBlobSlice", () => {
     });
     await expect(readBlobSlice(blob, 0, 1)).rejects.toThrow("gone");
   });
+
+  it("cancels the stream and rejects when its signal aborts mid-read", async () => {
+    const blob = blobOf();
+    const cancelled = vi.fn();
+    Object.defineProperty(blob, "stream", {
+      // Never delivers, like a store WebKit has lost.
+      value: () =>
+        new ReadableStream<Uint8Array>({
+          pull: () => new Promise(() => {}),
+          cancel: cancelled,
+        }),
+    });
+    const controller = new AbortController();
+
+    const read = readBlobSlice(blob, 0, 1, controller.signal);
+    controller.abort();
+
+    await expect(read).rejects.toThrow();
+    expect(cancelled).toHaveBeenCalled();
+  });
 });
