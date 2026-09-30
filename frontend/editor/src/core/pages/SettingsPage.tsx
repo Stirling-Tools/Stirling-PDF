@@ -146,12 +146,8 @@ const SettingsPageInner: React.FC = () => {
       const key = (ev as CustomEvent<{ key?: NavKey }>).detail?.key;
       if (key) switchSection(key);
     };
-    window.addEventListener("appConfig:navigate", handler as EventListener);
-    return () =>
-      window.removeEventListener(
-        "appConfig:navigate",
-        handler as EventListener,
-      );
+    window.addEventListener("appConfig:navigate", handler);
+    return () => window.removeEventListener("appConfig:navigate", handler);
   }, [switchSection]);
 
   const headings = useSectionHeadings(activeItem?.key, contentRef);

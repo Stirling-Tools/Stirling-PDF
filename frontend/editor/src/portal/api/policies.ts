@@ -19,12 +19,7 @@ import {
 } from "@app/policies/operations";
 import { HttpError } from "@portal/api/http";
 import type { Policy } from "@portal/api/pipelines";
-import type {
-  PolicyRunView,
-  WireOutputOptions,
-  WirePipelineStep,
-  WirePolicy,
-} from "@app/policies/types";
+import type { PolicyRunView, WirePolicy } from "@app/policies/types";
 
 export type { PolicyRunView, WirePolicy } from "@app/policies/types";
 
@@ -123,7 +118,7 @@ export function parseSimplePolicy(
   const canonical = config.defaultOperations.map((op) => op.toolId);
   const toolIds: PolicyToolId[] = [];
   for (const step of policy.steps) {
-    const parsed = policyStepFromWire(step as WirePipelineStep);
+    const parsed = policyStepFromWire(step);
     if (!parsed || !canonical.includes(parsed.toolId)) return null;
     toolIds.push(parsed.toolId);
   }
@@ -138,11 +133,11 @@ export function parseSimplePolicy(
     inputs: policy.inputs ?? [],
     outputIds: policy.outputIds ?? [],
     routingRules: policy.routingRules ?? [],
-    steps: policy.steps as WirePipelineStep[],
+    steps: policy.steps,
     // The options bag is untyped on the pipeline record; the codec reads it defensively.
     output: {
       type: "inline",
-      options: (policy.output?.options ?? {}) as Partial<WireOutputOptions>,
+      options: policy.output?.options ?? {},
     },
     editor: policy.editor,
   };
