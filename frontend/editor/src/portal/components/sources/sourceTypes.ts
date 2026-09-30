@@ -25,6 +25,10 @@ export const EDITOR_SOURCE_TYPE = "editor";
 export const WEBHOOK_SOURCE_TYPE = "webhook";
 
 const SOURCE_TYPE_META: Record<string, SourceTypeMeta> = {
+  vectordb: {
+    labelKey: "portal.sources.types.vectordb.label",
+    accent: "brand",
+  },
   folder: {
     labelKey: "portal.sources.types.folder.label",
     accent: "default",
@@ -91,6 +95,7 @@ export interface CreatableSourceType {
   labelKey: string;
   descriptionKey: string;
   fields: SourceFieldDef[];
+  readable?: boolean;
 }
 
 /**
@@ -308,6 +313,42 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
     descriptionKey: "portal.sources.types.webhook.description",
     fields: [],
   },
+  {
+    type: "vectordb",
+    readable: false,
+    labelKey: "portal.sources.types.vectordb.label",
+    descriptionKey: "portal.sources.types.vectordb.description",
+    fields: [
+      {
+        key: "connectionId",
+        control: "connection",
+        connectionTypeId: "vectordb",
+        required: true,
+        labelKey: "portal.sources.types.vectordb.connection",
+      },
+      {
+        key: "collection",
+        control: "text",
+        required: true,
+        labelKey: "portal.sources.types.vectordb.collection",
+        helperTextKey: "portal.sources.types.vectordb.collectionHint",
+      },
+      {
+        key: "namespace",
+        control: "text",
+        labelKey: "portal.sources.types.vectordb.namespace",
+        helperTextKey: "portal.sources.types.vectordb.namespaceHint",
+      },
+      {
+        key: "textField",
+        control: "text",
+        required: true,
+        defaultValue: "text",
+        labelKey: "portal.sources.types.vectordb.textField",
+        helperTextKey: "portal.sources.types.vectordb.textFieldHint",
+      },
+    ],
+  },
 ];
 
 /** A source type on the roadmap: shown greyed out in the picker, not creatable. */
@@ -344,4 +385,12 @@ export function defaultOptions(
     out[field.key] = field.defaultValue ?? "";
   }
   return out;
+}
+
+/** Whether a saved location can supply documents to a pipeline. */
+export function isReadableSource(source: { type: string }): boolean {
+  return (
+    CREATABLE_SOURCE_TYPES.find((entry) => entry.type === source.type)
+      ?.readable !== false
+  );
 }

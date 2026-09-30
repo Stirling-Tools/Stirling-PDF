@@ -1,13 +1,7 @@
 import React, { useState } from "react";
+import { Icon } from "@app/ui/Icon";
 import { Menu } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import DeleteIcon from "@mui/icons-material/Delete";
-import DriveFileRenameOutlineIcon from "@mui/icons-material/DriveFileRenameOutline";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import PaletteIcon from "@mui/icons-material/Palette";
-import SettingsIcon from "@mui/icons-material/Settings";
 
 import { FolderRecord } from "@app/types/folder";
 import { ProcessingFolderState } from "@app/hooks/useProcessingFolders";
@@ -19,22 +13,15 @@ import { Button } from "@app/ui/Button";
 interface FolderMenuProps {
   folder: FolderRecord;
   processing: ProcessingFolderState | undefined;
-  /**
-   * A folder whose engine picks up arrivals on its own, where an explicit
-   * "retry failed" has nothing to act on.
-   */
+  /** Arrival-driven engine with no explicit retry-failed action. */
   continuous: boolean;
-  /**
-   * A mounted disk directory. The disk owns its name, colour and existence, so
-   * the rename, appearance and delete entries do not apply to it.
-   */
+  /** Disk-owned folders cannot be renamed, recoloured or deleted here. */
   isMount: boolean;
   /** Mount roots can be unmounted; a subdirectory below one cannot. */
   canUnmount: boolean;
   editsDisabled: boolean;
   editsDisabledHint?: string;
-  /** Why processing cannot run, or null. Gates the processing entries alone: a
-   *  build with no server behind it can still rename and recolour a folder. */
+  /** Disables only processing actions; library edits remain available. */
   processingBlock?: string | null;
   onStartProcessing: () => void;
   onRunProcessing: () => void;
@@ -57,11 +44,6 @@ interface FolderMenuProps {
   triggerRef?: React.Ref<HTMLButtonElement>;
 }
 
-/**
- * Everything that acts on one folder, behind a single trigger. The folder you
- * are inside and every folder in a row open this same menu; only the trigger
- * and the Open entry differ.
- */
 export function FolderMenu({
   folder,
   processing,
@@ -106,16 +88,17 @@ export function FolderMenu({
               onClick={(e) => e.stopPropagation()}
               aria-label={t("filesPage.folderMenu", "Folder actions")}
             >
-              <MoreVertIcon fontSize="small" />
+              <Icon name="ellipsis-vertical" size={20} />
             </ActionIcon>
           ) : (
             <Button
               ref={triggerRef}
               size="sm"
-              variant="secondary"
+              variant="tertiary"
+              shape="pill"
               className="files-page-toolbar-bulk-trigger"
-              leftSection={<SettingsIcon sx={{ fontSize: "1.1rem" }} />}
-              rightSection={<ExpandMoreIcon sx={{ fontSize: "1.1rem" }} />}
+              leftSection={<Icon name="settings" size={"1.1rem"} />}
+              rightSection={<Icon name="chevron-down" size={"1.1rem"} />}
               aria-label={settingsLabel}
             >
               {settingsLabel}
@@ -125,7 +108,7 @@ export function FolderMenu({
         <Menu.Dropdown>
           {onOpen && (
             <Menu.Item
-              leftSection={<OpenInNewIcon sx={{ fontSize: "1.1rem" }} />}
+              leftSection={<Icon name="external-link" size={"1.1rem"} />}
               onClick={onOpen}
             >
               {t("filesPage.open", "Open")}
@@ -135,9 +118,7 @@ export function FolderMenu({
             <>
               <Menu.Label>{t("filesPage.folder", "Folder")}</Menu.Label>
               <Menu.Item
-                leftSection={
-                  <DriveFileRenameOutlineIcon sx={{ fontSize: "1.1rem" }} />
-                }
+                leftSection={<Icon name="file-pen" size={"1.1rem"} />}
                 onClick={onRename}
                 disabled={editsDisabled}
                 title={editsDisabled ? editsDisabledHint : undefined}
@@ -145,7 +126,7 @@ export function FolderMenu({
                 {t("filesPage.rename", "Rename")}
               </Menu.Item>
               <Menu.Item
-                leftSection={<PaletteIcon sx={{ fontSize: "1.1rem" }} />}
+                leftSection={<Icon name="palette" size={"1.1rem"} />}
                 onClick={() => setAppearanceOpen(true)}
                 disabled={editsDisabled}
                 title={editsDisabled ? editsDisabledHint : undefined}
@@ -173,7 +154,7 @@ export function FolderMenu({
               <Menu.Divider />
               <Menu.Item
                 color="red"
-                leftSection={<DeleteIcon sx={{ fontSize: "1.1rem" }} />}
+                leftSection={<Icon name="trash" size={"1.1rem"} />}
                 onClick={onDelete}
                 disabled={editsDisabled}
                 title={editsDisabled ? editsDisabledHint : undefined}

@@ -15,7 +15,7 @@ const yearlyPlan: PlanTier = {
   period: "/year",
   features: [],
   highlights: [],
-  lookupKey: "selfhosted:server:yearly",
+  lookupKey: "selfhosted:team:yearly",
 };
 
 const monthlyPlan: PlanTier = {

@@ -13,8 +13,8 @@ import stirling.software.saas.model.SaasTeamExtensions;
 import stirling.software.saas.repository.SaasTeamExtensionsRepository;
 
 /**
- * Read/write access to {@link SaasTeamExtensions}. Reads return safe defaults (non-personal team,
- * seat fields zeroed) when no row exists; writes create the row lazily.
+ * Missing rows use display defaults, but cannot admit users without a persisted capacity record.
+ * Writes create the row lazily.
  */
 @Service
 @Profile("saas")
@@ -77,22 +77,15 @@ public class SaasTeamExtensionService {
                 .orElse(null);
     }
 
-    /** Whether the team has unused seats. See {@link SaasTeamExtensions#hasAvailableSeats()}. */
+    /**
+     * Checks shared fleet capacity; a missing record blocks admission, as does the atomic claim.
+     */
     public boolean hasAvailableSeats(Team team) {
-        return repository
-                .findByTeamId(team.getId())
-                .map(SaasTeamExtensions::hasAvailableSeats)
-                .orElse(true);
+        return Boolean.TRUE.equals(repository.fleetHasAvailableSeats(team.getId()));
     }
 
-    /**
-     * Whether the team accepts new invitations. See {@link SaasTeamExtensions#canInviteMembers()}.
-     */
     public boolean canInviteMembers(Team team) {
-        return repository
-                .findByTeamId(team.getId())
-                .map(SaasTeamExtensions::canInviteMembers)
-                .orElse(true);
+        return !isPersonal(team) && hasAvailableSeats(team);
     }
 
     /** Atomic seat increment with personal-team cap enforcement. */

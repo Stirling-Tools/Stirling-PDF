@@ -38,13 +38,7 @@ export function ingestStepConfigured(
 ): boolean {
   if (!isIngestStep(step)) return true;
   const params = step.params as IngestStepParams;
-  if (
-    editorInput &&
-    (params.exportChunksJsonl === true ||
-      params.exportMarkdown === true ||
-      params.includeOriginal === false)
-  )
-    return false;
+  if (editorInput && ingestRequiresExternalDelivery(params)) return false;
   const doesSomething =
     params.index !== false ||
     params.exportMarkdown === true ||
@@ -54,4 +48,54 @@ export function ingestStepConfigured(
     params.exportMarkdown === true ||
     params.exportChunksJsonl === true;
   return doesSomething && hasFiles && ingestChunkingConfigured(params);
+}
+
+/** Vector destinations consume only the final step's chunks export. */
+export function vectorDestinationConfigured(steps: WorkingToolStep[]): boolean {
+  const last = steps.at(-1);
+  if (!last || !isIngestStep(last)) return false;
+  const params = last.params as IngestStepParams;
+  return (
+    params.exportChunksJsonl === true &&
+    params.includeOriginal === false &&
+    params.exportMarkdown !== true
+  );
+}
+
+export function prepareVectorDestination(
+  steps: WorkingToolStep[],
+): WorkingToolStep[] {
+  const last = steps.at(-1);
+  const existing = last && isIngestStep(last);
+  const step = existing ? last : newIngestStep();
+  const params = step.params as IngestStepParams;
+  return [
+    ...(existing ? steps.slice(0, -1) : steps),
+    {
+      ...step,
+      params: {
+        ...params,
+        index: existing ? params.index : false,
+        includeOriginal: false,
+        exportMarkdown: false,
+        exportChunksJsonl: true,
+      } as unknown as ErasedToolParams,
+    },
+  ];
+}
+/** Corpus exports need a saved destination when the editor supplies the input. */
+export function needsCorpusDestination(steps: WorkingToolStep[]): boolean {
+  return steps.some((step) => {
+    if (!isIngestStep(step)) return false;
+    const params = step.params as IngestStepParams;
+    return ingestRequiresExternalDelivery(params);
+  });
+}
+
+function ingestRequiresExternalDelivery(params: IngestStepParams): boolean {
+  return (
+    params.exportChunksJsonl === true ||
+    params.exportMarkdown === true ||
+    params.includeOriginal === false
+  );
 }

@@ -1,5 +1,7 @@
 import { useEffect, useRef } from "react";
+import { HttpError } from "@app/portal/api/http";
 import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
+import { clearAccountLinkBlock } from "@app/services/accountLinkBlock";
 import { useLocation, useNavigate } from "react-router-dom";
 import { completeConnect, type ConnectPhase } from "@app/portal/api/link";
 import { ensureSaasSupabase } from "@app/portal/auth/saasSupabase";
@@ -131,6 +133,7 @@ export function ConnectCallbackHost() {
             return;
           }
           accepted = true;
+          clearAccountLinkBlock();
           await refreshRef.current();
           if (!current()) return;
         }
@@ -152,7 +155,12 @@ export function ConnectCallbackHost() {
         discardTokens();
         publishRef.current({ ...metadata, state: "linked", sessionRestored });
       } catch (error) {
-        if (current() && isTerminalSaasAuthError(error)) {
+        if (
+          current() &&
+          (isTerminalSaasAuthError(error) ||
+            (error instanceof HttpError &&
+              (error.status === 403 || error.status === 409)))
+        ) {
           discardTokens();
           publishRef.current({
             ...metadata,

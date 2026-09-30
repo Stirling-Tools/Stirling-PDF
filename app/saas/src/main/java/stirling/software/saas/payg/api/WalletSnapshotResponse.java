@@ -155,9 +155,23 @@ public record WalletSnapshotResponse(
      *     rather than meaning capacity is unknown.
      * @param licensedUsers how many users the holding covers; {@code null} when the team has no
      *     user limit.
-     * @param usersInUse team members occupying capacity right now.
+     * @param usersInUse counted cloud members plus deployment reports; linked teams exclude one
+     *     required cloud owner.
      */
-    public record TeamHolding(boolean held, Integer licensedUsers, int usersInUse) {}
+    public record TeamHolding(
+            boolean held,
+            Integer licensedUsers,
+            int usersInUse,
+            boolean fleet,
+            stirling.software.saas.accountlink.FleetSeatService.Breakdown breakdown) {
+        public TeamHolding(boolean held, Integer licensedUsers, int usersInUse, boolean fleet) {
+            this(held, licensedUsers, usersInUse, fleet, null);
+        }
+
+        public TeamHolding(boolean held, Integer licensedUsers, int usersInUse) {
+            this(held, licensedUsers, usersInUse, false);
+        }
+    }
 
     /**
      * The Processor holding: metered document automation beyond the free grant.
