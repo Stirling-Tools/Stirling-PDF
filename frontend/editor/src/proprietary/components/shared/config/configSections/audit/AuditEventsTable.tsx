@@ -70,7 +70,11 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
         setEvents(response.events);
         setTotalPages(response.totalPages);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load events");
+        setError(
+          err instanceof Error
+            ? err.message
+            : t("audit.events.loadFailed", "Failed to load events"),
+        );
       } finally {
         setLoading(false);
       }

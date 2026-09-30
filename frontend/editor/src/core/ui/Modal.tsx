@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { FocusTrap } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
 import { useIsOverflowing } from "@app/hooks/useIsOverflowing";
 import "@app/ui/Modal.css";
@@ -43,6 +44,7 @@ export function Modal({
   className,
   children,
 }: ModalProps) {
+  const { t } = useTranslation();
   const titleId = useId();
   const bodyRef = useRef<HTMLDivElement>(null);
   // A body that overflows must be reachable by keyboard to scroll; only its non-focusable
@@ -104,7 +106,7 @@ export function Modal({
                   shape="circle"
                   className="sui-modal__back"
                   onClick={onBack}
-                  aria-label={backLabel ?? "Back"}
+                  aria-label={backLabel ?? t("common.back", "Back")}
                   leftSection={
                     <svg
                       viewBox="0 0 24 24"
@@ -138,7 +140,7 @@ export function Modal({
                 shape="circle"
                 className="sui-modal__close"
                 onClick={onClose}
-                aria-label="Close"
+                aria-label={t("common.close", "Close")}
                 leftSection={
                   <svg
                     viewBox="0 0 24 24"

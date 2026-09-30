@@ -44,13 +44,19 @@ const AdminPlanSection: React.FC = () => {
   }, [error]);
 
   const currencyOptions = [
-    { value: "gbp", label: "British pound (GBP, £)" },
-    { value: "usd", label: "US dollar (USD, $)" },
-    { value: "eur", label: "Euro (EUR, €)" },
-    { value: "cny", label: "Chinese yuan (CNY, ¥)" },
-    { value: "inr", label: "Indian rupee (INR, ₹)" },
-    { value: "brl", label: "Brazilian real (BRL, R$)" },
-    { value: "idr", label: "Indonesian rupiah (IDR, Rp)" },
+    { value: "gbp", label: t("plan.currencies.gbp", "British pound (GBP, £)") },
+    { value: "usd", label: t("plan.currencies.usd", "US dollar (USD, $)") },
+    { value: "eur", label: t("plan.currencies.eur", "Euro (EUR, €)") },
+    { value: "cny", label: t("plan.currencies.cny", "Chinese yuan (CNY, ¥)") },
+    { value: "inr", label: t("plan.currencies.inr", "Indian rupee (INR, ₹)") },
+    {
+      value: "brl",
+      label: t("plan.currencies.brl", "Brazilian real (BRL, R$)"),
+    },
+    {
+      value: "idr",
+      label: t("plan.currencies.idr", "Indonesian rupiah (IDR, Rp)"),
+    },
   ];
 
   const handleManageClick = useCallback(async () => {
@@ -63,12 +69,20 @@ const AdminPlanSection: React.FC = () => {
       // Only allow PRO or ENTERPRISE licenses to access billing portal
       if (!licenseInfo?.licenseType || licenseInfo.licenseType === "NORMAL") {
         throw new Error(
-          "No valid license found. Please purchase a license before accessing the billing portal.",
+          t(
+            "billing.portal.noLicense",
+            "No valid license found. Please purchase a license before accessing the billing portal.",
+          ),
         );
       }
 
       if (!licenseInfo?.licenseKey) {
-        throw new Error("License key missing. Please contact support.");
+        throw new Error(
+          t(
+            "billing.portal.licenseKeyMissing",
+            "License key missing. Please contact support.",
+          ),
+        );
       }
 
       // Create billing portal session with license key
@@ -86,7 +100,10 @@ const AdminPlanSection: React.FC = () => {
         title: t("billing.portal.error", "Failed to open billing portal"),
         body:
           (error instanceof Error ? error.message : undefined) ||
-          "Please try again or contact support.",
+          t(
+            "billing.portal.errorFallback",
+            "Please try again or contact support.",
+          ),
       });
     }
   }, [licenseInfo, t, validateLoginEnabled]);

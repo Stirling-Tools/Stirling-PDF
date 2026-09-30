@@ -650,7 +650,7 @@ const StampSetupSettings = ({
               onParameterChange("fontSize", nextDefault);
             }}
             data={[
-              { value: "roman", label: "Roman" },
+              { value: "roman", label: t("alphabetOptions.roman", "Roman") },
               { value: "arabic", label: "العربية" },
               { value: "japanese", label: "日本語" },
               { value: "korean", label: "한국어" },
@@ -691,7 +691,10 @@ const StampSetupSettings = ({
             <Stack gap="xs">
               <img
                 src={stampImageWithUrl.url}
-                alt="Selected stamp image"
+                alt={t(
+                  "AddStampRequest.selectedImageAlt",
+                  "Selected stamp image",
+                )}
                 className="max-h-24 w-full object-contain border border-gray-200 rounded bg-gray-50"
               />
               <Text size="xs" c="dimmed">

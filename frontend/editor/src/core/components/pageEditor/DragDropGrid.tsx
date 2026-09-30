@@ -6,6 +6,7 @@ import React, {
   useMemo,
 } from "react";
 import { Box } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { GRID_CONSTANTS } from "@app/components/pageEditor/constants";
 import styles from "@app/components/pageEditor/DragDropGrid.module.css";
@@ -381,6 +382,7 @@ const DragDropGrid = <T extends DragDropItem>({
   selectedPageIds,
   onVisibleItemsChange,
 }: DragDropGridProps<T>) => {
+  const { t } = useTranslation();
   const itemRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -992,7 +994,7 @@ const DragDropGrid = <T extends DragDropItem>({
             {dragPreview ? (
               <img
                 src={dragPreview.src}
-                alt="Dragging"
+                alt={t("pageEditor.dragPreviewAlt", "Dragging")}
                 style={{
                   width: `calc(20rem * ${zoomLevel})`,
                   height: `calc(20rem * ${zoomLevel})`,
