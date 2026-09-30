@@ -1398,18 +1398,14 @@ if isinstance(ai, dict) and "enabled" in ai:
 ' "$1" 2>/dev/null
 }
 
-# Env wins over the files, as in Spring; custom_settings.yml overrides settings.yml.
+# Env wins over settings.yml, as in Spring.
 ai_engine_wanted() {
   if [ -n "${AIENGINE_ENABLED:-}" ]; then
     [ "$(printf '%s' "$AIENGINE_ENABLED" | tr '[:upper:]' '[:lower:]')" = "true" ]
     return
   fi
-  local dir value
-  dir="${STIRLING_BASE_PATH:+${STIRLING_BASE_PATH%/}/configs}"
-  dir="${dir:-$(dirname "$CONFIG_FILE")}"
-  value=$(read_ai_engine_enabled "$dir/custom_settings.yml")
-  [ -n "$value" ] || value=$(read_ai_engine_enabled "$dir/settings.yml")
-  [ "$value" = "true" ]
+  local settings="${STIRLING_BASE_PATH:+${STIRLING_BASE_PATH%/}/configs/settings.yml}"
+  [ "$(read_ai_engine_enabled "${settings:-$CONFIG_FILE}")" = "true" ]
 }
 
 if [ -x "$STIRLING_ENGINE_HOME/.venv/bin/python" ] && ! ai_engine_wanted; then
