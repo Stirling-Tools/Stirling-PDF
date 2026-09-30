@@ -5,8 +5,6 @@ import tsconfigPaths from "vite-tsconfig-paths";
 import { iconSvgr } from "../editor/scripts/icons/svgrOptions.mts";
 // By path, not @app/*: this file runs in node, before the aliases exist.
 // oxlint-disable-next-line no-restricted-imports -- config runs before aliases exist
-import { legacyIconsPlugin } from "../editor/scripts/icons/legacyIcons.vite.mts";
-// oxlint-disable-next-line no-restricted-imports -- config runs before aliases exist
 import { usedIconsPlugin } from "../editor/scripts/icons/usedIcons.vite.mts";
 
 /**
@@ -25,7 +23,7 @@ import { usedIconsPlugin } from "../editor/scripts/icons/usedIcons.vite.mts";
  * here. Built per pass: the main bundle and the worker bundle each need their own.
  *
  * The plugin picks the first project whose include/exclude covers the importing
- * file. The proprietary project excludes src/desktop, so files under it fall
+ * file. The proprietary project excludes src/desktop and src/cloud, so both fall
  * through to the desktop project and get the desktop→cloud→proprietary→core
  * cascade their own imports need; every other file still resolves as before.
  */
@@ -81,8 +79,6 @@ const config: StorybookConfig = {
     config.plugins = config.plugins ?? [];
     config.plugins.push(iconSvgr());
     config.plugins.push(editorPathAliases());
-    // Reads the audit's "before" glyphs from the icon packages, so none of their artwork is checked in.
-    config.plugins.push(legacyIconsPlugin(resolve(__dirname, "..")));
     // Scanned at startup rather than committed, so the gallery's "in use" view cannot go stale.
     config.plugins.push(usedIconsPlugin(resolve(__dirname, "../editor/src")));
     // Worker bundles are a separate Rollup pass and do NOT inherit `plugins`, so

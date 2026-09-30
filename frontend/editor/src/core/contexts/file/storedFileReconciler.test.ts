@@ -37,6 +37,8 @@ describe("reconciling a record with no source", () => {
   });
 
   it("leaves a newly added file unlinked", async () => {
-    await expect(sourceLinkForNewFile("k")).resolves.toEqual({});
+    await expect(
+      sourceLinkForNewFile(new File(["pdf"], "a.pdf")),
+    ).resolves.toEqual({});
   });
 });

@@ -110,7 +110,7 @@ if [ "$FORCE_ALL_LOGIN" = true ]; then
     echo -e "${GREEN}✓ Login method forced to all providers${NC}"
     echo ""
 elif [ "$AUTO_LOGIN" = true ]; then
-    export PREMIUM_PROFEATURES_SSOAUTOLOGIN=true
+    export SECURITY_SSOAUTOLOGIN=true
     export SECURITY_LOGINMETHOD=oauth2
     COMPOSE_UP_ARGS+=(--force-recreate)
     echo -e "${GREEN}✓ SSO auto-login enabled (OAuth-only)${NC}"

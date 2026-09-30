@@ -223,3 +223,11 @@ export interface AnnotationToolOptions {
     | "toggleNoView"
   )[];
 }
+
+/** Screen anchor of the selection menu, retained by a delete so an undo menu can sit in its place. */
+export interface AnnotationMenuAnchor {
+  annotationId: string;
+  pageIndex: number;
+  top: number;
+  left: number;
+}

@@ -21,7 +21,7 @@ const PIPELINES: PipelineView[] = [
     name: "Archive reprocess",
     enabled: false,
     required: true,
-    icon: "compress",
+    icon: "shrink",
     status: "paused",
     trigger: "manual",
     sources: [],

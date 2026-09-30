@@ -21,6 +21,16 @@
   z-index: 50;
 }
 
+/* When the top row is portalled into a title-bar strip, only the tool row stays
+   inline. It sits directly under the strip (which carries its own bottom
+   hairline), so drop the tool row's own top hairline to avoid doubling. */
+.workbench-bar[data-portaled="true"] {
+  min-height: 0;
+}
+.workbench-bar[data-portaled="true"] .workbench-bar-center {
+  border-top: none;
+}
+
 /* ---- View switcher (left) ---- */
 /* Follows the view switcher, which claims order 1 in the bar's reflow. */
 .workbench-bar-lead {
@@ -250,6 +260,12 @@
   min-width: 24px !important;
   min-height: 24px !important;
   background: transparent !important;
+}
+
+/* Dark mode: the quick-nav rail's selected-pill white, a step below full text
+ * colour so hover still has somewhere brighter to go. */
+[data-mantine-color-scheme="dark"] .workbench-bar-action-icon {
+  color: color-mix(in srgb, var(--c-text) 80%, var(--c-surface)) !important;
 }
 
 .workbench-bar-action-icon svg,

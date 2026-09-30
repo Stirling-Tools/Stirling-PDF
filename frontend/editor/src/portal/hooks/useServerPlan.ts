@@ -7,6 +7,7 @@ import type { ServerPlan } from "@app/billing/serverPlan";
 export function useServerPlan(enabled: boolean) {
   const { licenseInfo, loading } = useLicense();
   const [usersInUse, setUsersInUse] = useState<number | null>(null);
+  const [userLimit, setUserLimit] = useState<number | null>(null);
   const installedKey = licenseInfo?.licenseKey?.trim();
   const licenseType =
     enabled &&
@@ -20,15 +21,22 @@ export function useServerPlan(enabled: boolean) {
   useEffect(() => {
     let cancelled = false;
     setUsersInUse(null);
+    setUserLimit(null);
     const refreshUsers = () => {
       if (!enabled) return;
       usersBackend
         .fetchUsers(licenseType === "ENTERPRISE" ? "enterprise" : "pro")
         .then(({ summary }) => {
-          if (!cancelled) setUsersInUse(summary.seatsUsed);
+          if (!cancelled) {
+            setUsersInUse(summary.seatsUsed);
+            setUserLimit(summary.seatLimit);
+          }
         })
         .catch(() => {
-          if (!cancelled) setUsersInUse(null);
+          if (!cancelled) {
+            setUsersInUse(null);
+            setUserLimit(null);
+          }
         });
     };
     refreshUsers();
@@ -42,5 +50,10 @@ export function useServerPlan(enabled: boolean) {
     licenseType && licenseInfo
       ? { licenseType, maxUsers: licenseInfo.maxUsers, usersInUse }
       : undefined;
-  return { serverPlan, usersInUse, loading: loading && !licenseInfo };
+  return {
+    serverPlan,
+    usersInUse,
+    userLimit,
+    loading: loading && !licenseInfo,
+  };
 }

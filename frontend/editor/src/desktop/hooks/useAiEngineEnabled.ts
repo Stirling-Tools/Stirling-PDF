@@ -1,16 +1,13 @@
-import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useSaasAppConfig } from "@app/hooks/useSaasAppConfig";
-import { useSelfHostedAuth } from "@app/hooks/useSelfHostedAuth";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
+import { useSaaSMode } from "@app/hooks/useSaaSMode";
 
-/** Desktop: the engine runs on the connected server, so the flag comes from that server's own
- *  app-config. Local mode reaches neither and reports the engine off. */
+/** AI availability comes from the connected server's configuration. */
 export function useAiEngineEnabled(): boolean {
-  const saasConfig = useSaasAppConfig();
+  const cloudConfig = useSaasAppConfig();
   const { config } = useAppConfig();
-  const { isSelfHosted, isAuthenticated } = useSelfHostedAuth();
-
-  if (isSelfHosted && isAuthenticated) {
-    return config?.aiEngineEnabled === true;
-  }
-  return Boolean(saasConfig?.aiEngineEnabled);
+  const saas = useSaaSMode();
+  const enabled = usePoliciesEnabled();
+  return enabled && Boolean((saas ? cloudConfig : config)?.aiEngineEnabled);
 }

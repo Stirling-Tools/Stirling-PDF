@@ -5,6 +5,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import stirling.software.common.pdf.MarkdownBlocks;
+
 /**
  * Joins what a page break split: a sentence running into the next page, and a table whose rows
  * continue on it.
@@ -13,20 +15,24 @@ final class PageStitcher {
 
     private PageStitcher() {}
 
-    static void mergeAcrossPageBoundary(List<Object> output, List<Object> pageItems) {
+    static void mergeAcrossPageBoundary(List<Element> output, List<Element> pageItems) {
         if (output.isEmpty() || pageItems.isEmpty()) {
             return;
         }
         // Only merge a sentence continuation between two text paragraphs, never into/out of a
         // table.
-        if (!(output.getLast() instanceof String last)
-                || !(pageItems.getFirst() instanceof String first)) {
+        if (!(output.getLast().value() instanceof String last)
+                || !(pageItems.getFirst().value() instanceof String first)) {
             return;
         }
         if (!first.isEmpty()
                 && Character.isLowerCase(first.charAt(0))
                 && !MarkdownText.endsWithSentencePunctuation(last)) {
-            output.set(output.size() - 1, last + " " + first);
+            Element head = output.getLast();
+            Element tail = pageItems.getFirst();
+            output.set(
+                    output.size() - 1,
+                    new Element(last + " " + first, head.pageStart(), tail.pageEnd()));
             pageItems.remove(0);
         }
     }
@@ -35,18 +41,18 @@ final class PageStitcher {
      * Joins tables split across a page break: two consecutive blocks with no text between them
      * merge when their column layouts match, dropping a repeated header.
      */
-    static List<Object> stitchTables(List<Object> elements) {
-        List<Object> out = new ArrayList<>();
+    static List<Element> stitchTables(List<Element> elements) {
+        List<Element> out = new ArrayList<>();
         // Column geometry of the trailing TableBlock in `out`, carried forward across merges so a
         // table running page-to-page is not re-projected from every accumulated row at each break.
         ColumnAccumulator acc = null;
         // Row list we own and may append to in place; null while the trailing block still holds a
         // list belonging to `elements`.
         List<List<Line>> ownedRows = null;
-        for (Object e : elements) {
-            if (e instanceof TableBlock tb
+        for (Element e : elements) {
+            if (e.value() instanceof TableBlock tb
                     && !out.isEmpty()
-                    && out.getLast() instanceof TableBlock prev) {
+                    && out.getLast().value() instanceof TableBlock prev) {
                 if (acc == null) {
                     acc = ColumnAccumulator.of(prev.rows());
                 }
@@ -72,16 +78,20 @@ final class PageStitcher {
                     merged.addAll(tail);
                     // A stitched table belongs to where it started, so keep the earlier block's
                     // page and columns; its ruling lines are dropped as they are one page's only.
+                    Element prevEl = out.getLast();
                     out.set(
                             out.size() - 1,
-                            new TableBlock(
-                                    merged,
-                                    prev.top(),
-                                    tb.bottom(),
-                                    prev.cols(),
-                                    prev.ruled(),
-                                    prev.rowSource(),
-                                    prev.page()));
+                            new Element(
+                                    new TableBlock(
+                                            merged,
+                                            prev.top(),
+                                            tb.bottom(),
+                                            prev.cols(),
+                                            prev.ruled(),
+                                            prev.rowSource(),
+                                            prev.page()),
+                                    prevEl.pageStart(),
+                                    Math.max(prevEl.pageEnd(), e.pageEnd())));
                     continue;
                 }
             }
@@ -100,10 +110,10 @@ final class PageStitcher {
      * Header text of a table at the very bottom of a page, or null. Trailing image placeholders are
      * skipped; any other text means it is not a continuation.
      */
-    static String trailingTableHeader(List<Object> pageItems) {
+    static String trailingTableHeader(List<Element> pageItems) {
         for (int i = pageItems.size() - 1; i >= 0; i--) {
-            Object e = pageItems.get(i);
-            if (e instanceof String s && s.strip().startsWith("<image redacted")) {
+            Object e = pageItems.get(i).value();
+            if (e instanceof String s && MarkdownBlocks.isImagePlaceholder(s)) {
                 continue;
             }
             if (e instanceof TableBlock tb && !tb.rows().isEmpty()) {

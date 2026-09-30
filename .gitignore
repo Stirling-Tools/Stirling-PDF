@@ -26,9 +26,6 @@ pipeline/
 customFiles/
 configs/
 watchedFolders/
-# The rule above targets the app's runtime watched-folders working dir, but it
-# also matches this frontend source component dir; keep the source tracked.
-!frontend/editor/src/proprietary/components/watchedFolders/
 clientWebUI/
 policy-webhook-spool/
 # Scratch dir used by local fixture-regeneration runs (see
@@ -45,6 +42,9 @@ exampleYmlFiles/stirling/
 /testing/cucumber/report.html
 /testing/cucumber/.parallel/
 /testing/.failed_tests
+# Runtime artifacts of the multi-node test scripts
+/testing/compose/multinode/.active-topology
+/testing/compose/multinode/regression-report/
 /.test-state/
 SwaggerDoc.json
 
@@ -70,7 +70,6 @@ app/core/src/main/resources/static/samples/
 app/core/src/main/resources/static/og-metadata.json
 app/core/src/main/resources/static/og-metadata.saas.json
 app/core/src/main/resources/static/sitemap.xml
-app/core/src/main/resources/static/sw-folder-retry.js
 app/core/src/main/resources/static/robots.txt
 app/core/src/main/resources/static/android-chrome-*.png
 app/core/src/main/resources/static/mstile-*.png
@@ -209,6 +208,7 @@ venv.bak/
 
 # Env files (secrets / local overrides). Subproject .gitignore files whitelist any committed defaults.
 .env*
+!/.env
 
 # VS Code
 /.vscode/**/*

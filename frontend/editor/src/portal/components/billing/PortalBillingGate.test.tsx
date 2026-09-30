@@ -1,4 +1,4 @@
-vi.mock("@portal/hooks/useServerPlan", () => ({
+vi.mock("@app/portal/hooks/useServerPlan", () => ({
   useServerPlan: () => ({ serverPlan: undefined, loading: false }),
 }));
 
@@ -14,8 +14,15 @@ import { MantineProvider } from "@mantine/core";
  * with no link to this server, so loading a wallet there would flip the whole portal to linked.
  */
 const gate = { gated: false, loading: false, available: true };
-// Administrator by default: the page is theirs, and one case below is the member.
 const admin = { is: true };
+const owner = { is: true, loading: false };
+vi.mock("@app/auth/UseSession", () => ({
+  useAuth: () => ({
+    isAdmin: admin.is,
+    user: { orgOwner: owner.is },
+    loading: owner.loading,
+  }),
+}));
 const link = { is: false };
 const connect = vi.fn();
 const applyLinkFacts = vi.fn();
@@ -46,41 +53,48 @@ vi.mock("@app/services/licenseService", () => ({
 }));
 vi.mock("@app/components/toast", () => ({ alert: vi.fn() }));
 
-vi.mock("@portal/hooks/useConnectGate", () => ({
+vi.mock("@app/portal/hooks/useConnectGate", () => ({
   useConnectGate: () => ({ ...gate, connect, guard: (f: unknown) => f }),
 }));
-vi.mock("@portal/contexts/LinkContext", () => ({
+vi.mock("@app/portal/contexts/LinkContext", () => ({
   useApplyLinkFacts: () => applyLinkFacts,
   useLinkOptional: () => ({ isLinked: link.is }),
 }));
-vi.mock("@portal/contexts/UIContext", () => ({
+vi.mock("@app/portal/contexts/UIContext", () => ({
   useUI: () => ({ openLinkModal: vi.fn() }),
 }));
-vi.mock("@portal/hooks/usePortalAdmin", () => ({
-  usePortalAdmin: () => admin.is,
+vi.mock("@app/portal/hooks/useAccountLinkOwner", () => ({
+  useAccountLinkOwner: () => admin.is && owner.is && !owner.loading,
 }));
-vi.mock("@portal/views/Usage", () => ({
+vi.mock("@app/portal/views/Usage", () => ({
   Usage: ({
     onWalletLoaded,
     renderLicenseSection,
+    sessionRecovery,
   }: {
     onWalletLoaded?: (w: unknown) => void;
+    sessionRecovery?: ReactNode;
     renderLicenseSection?: (onSaved: () => void) => ReactNode;
   }) => {
     onWalletLoaded?.({ status: "free" });
     return (
-      <div data-testid="usage">{renderLicenseSection?.(onLicenseSaved)}</div>
+      <div
+        data-testid="usage"
+        data-session-recovery-in-shell={Boolean(sessionRecovery)}
+      >
+        {renderLicenseSection?.(onLicenseSaved)}
+      </div>
     );
   },
 }));
 
-vi.mock("@portal/components/billing/FreeTierPlanView", () => ({
+vi.mock("@app/portal/components/billing/FreeTierPlanView", () => ({
   FreeTierPlanView: ({ licenseSection }: { licenseSection?: ReactNode }) => (
     <div data-testid="free-tier">{licenseSection}</div>
   ),
 }));
 
-import { BillingSettingsSection } from "@portal/components/settings/BillingSettingsSection";
+import { BillingSettingsSection } from "@app/portal/components/settings/BillingSettingsSection";
 
 function Location() {
   const location = useLocation();
@@ -106,6 +120,8 @@ const renderGate = () => render(<GateTree />);
 describe("PortalBillingGate — self-hosted", () => {
   beforeEach(() => {
     admin.is = true;
+    owner.is = true;
+    owner.loading = false;
     link.is = false;
     connect.mockReset();
     applyLinkFacts.mockReset();
@@ -127,6 +143,39 @@ describe("PortalBillingGate — self-hosted", () => {
     renderGate();
     expect(screen.getByTestId("free-tier")).toBeInTheDocument();
     expect(screen.queryByTestId("usage")).toBeNull();
+  });
+
+  it.each([false, true])(
+    "blocks direct billing access for another admin with linked=%s",
+    (linked) => {
+      owner.is = false;
+      link.is = linked;
+      renderGate();
+      expect(screen.queryByTestId("usage")).toBeNull();
+      expect(screen.queryByTestId("free-tier")).toBeNull();
+      expect(applyLinkFacts).not.toHaveBeenCalled();
+      expect(connect).not.toHaveBeenCalled();
+    },
+  );
+
+  it("removes billing on transfer and allows the successor after the session refresh", () => {
+    link.is = true;
+    const view = renderGate();
+    expect(screen.getByTestId("usage")).toBeInTheDocument();
+    owner.is = false;
+    view.rerender(<GateTree />);
+    expect(screen.queryByTestId("usage")).toBeNull();
+    owner.is = true;
+    view.rerender(<GateTree />);
+    expect(screen.getByTestId("usage")).toBeInTheDocument();
+  });
+
+  it("does not load billing while ownership is being refreshed", () => {
+    owner.loading = true;
+    link.is = true;
+    renderGate();
+    expect(screen.queryByTestId("usage")).toBeNull();
+    expect(applyLinkFacts).not.toHaveBeenCalled();
   });
 
   it("asks for nothing on the way in", () => {
@@ -153,6 +202,10 @@ describe("PortalBillingGate — self-hosted", () => {
     link.is = true;
     renderGate();
     expect(screen.getByTestId("usage")).toBeInTheDocument();
+    expect(screen.getByTestId("usage")).toHaveAttribute(
+      "data-session-recovery-in-shell",
+      "true",
+    );
     expect(screen.queryByTestId("free-tier")).toBeNull();
     expect(applyLinkFacts).toHaveBeenCalledWith(true, false);
   });
@@ -335,20 +388,20 @@ describe("PortalBillingGate — self-hosted", () => {
     expect(applyLinkFacts).not.toHaveBeenCalled();
   });
 
-  it("prompts once for a procurement link and preserves it when linking completes", () => {
-    gate.gated = true;
-    const view = render(
-      <GateTree entry="/settings/billing?procurement=start" />,
-    );
-    expect(connect).toHaveBeenCalledTimes(1);
-    view.rerender(<GateTree entry="/settings/billing?procurement=start" />);
-    expect(connect).toHaveBeenCalledTimes(1);
-    link.is = true;
-    gate.gated = false;
-    view.rerender(<GateTree entry="/settings/billing?procurement=start" />);
-    expect(screen.getByTestId("usage")).toBeInTheDocument();
-    expect(screen.getByTestId("location")).toHaveTextContent(
-      "/settings/billing?procurement=start",
-    );
-  });
+  it.each(["procurement=start", "upgrade=team"])(
+    "prompts once for %s and preserves it when linking completes",
+    (intent) => {
+      gate.gated = true;
+      const entry = `/settings/billing?${intent}`;
+      const view = render(<GateTree entry={entry} />);
+      expect(connect).toHaveBeenCalledTimes(1);
+      view.rerender(<GateTree entry={entry} />);
+      expect(connect).toHaveBeenCalledTimes(1);
+      link.is = true;
+      gate.gated = false;
+      view.rerender(<GateTree entry={entry} />);
+      expect(screen.getByTestId("usage")).toBeInTheDocument();
+      expect(screen.getByTestId("location")).toHaveTextContent(entry);
+    },
+  );
 });

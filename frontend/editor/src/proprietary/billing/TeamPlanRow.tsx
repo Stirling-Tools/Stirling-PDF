@@ -2,6 +2,9 @@ import { useTranslation } from "react-i18next";
 import { MeterRow } from "@app/billing/MeterRow";
 import type { ServerPlan } from "@app/billing/serverPlan";
 import type { Wallet } from "@app/billing/types";
+import { SeatBreakdown } from "@app/billing/SeatBreakdown";
+import { fleetUsersInUse } from "@app/billing/fleetSeats";
+import type { LegacyTeamAllowance } from "@app/types/legacyBilling";
 
 /**
  * The Team product, as a row: users against the capacity the plan covers.
@@ -18,6 +21,9 @@ export function TeamPlanRow({
   serverPlan,
   onAddCapacity,
   usersInUse: occupiedSeats,
+  userLimit,
+  deviceId,
+  legacyAllowance,
 }: {
   wallet: Wallet | null;
   serverPlan?: ServerPlan;
@@ -25,8 +31,13 @@ export function TeamPlanRow({
   selfHosted?: boolean;
   /** Leader-only: the door that sells Team capacity. Omit for members. */
   onAddCapacity?: () => void;
-  /** Undefined uses cloud membership; null hides an unavailable local count. */
+  /** Live local roster replaces this deployment's report in the fleet total. */
   usersInUse?: number | null;
+  /** Used only for standalone servers; linked fleets show the full plan capacity. */
+  userLimit?: number | null;
+  deviceId?: string | null;
+  /** Applied only when the historical subscription belongs to the displayed wallet's team. */
+  legacyAllowance?: LegacyTeamAllowance;
 }) {
   const { t } = useTranslation();
   if (serverPlan) {
@@ -70,37 +81,80 @@ export function TeamPlanRow({
     );
   }
   if (!wallet) return null;
+  if (legacyAllowance && legacyAllowance.teamId === wallet.teamId) {
+    const { usersInUse, maxUsers } = legacyAllowance;
+    return (
+      <MeterRow
+        name={t("portal.billing.team.rowName", "Users")}
+        mid={t(
+          "legacyBilling.currentTeamAllowance",
+          "Current allowance for your legacy team",
+        )}
+        showTrack={maxUsers != null && maxUsers > 0}
+        pct={maxUsers ? (usersInUse / maxUsers) * 100 : 0}
+        tone="paid"
+        fact={
+          maxUsers == null
+            ? t("portal.users.seats.unlimited", "{{used}} · Unlimited", {
+                used: usersInUse,
+              })
+            : t("portal.billing.team.fact", "{{users}} of {{licensed}} users", {
+                users: usersInUse,
+                licensed: maxUsers,
+              })
+        }
+      />
+    );
+  }
   const { held, licensedUsers } = wallet.team;
-  const usersInUse =
-    occupiedSeats === undefined ? wallet.team.usersInUse : occupiedSeats;
+  const usersInUse = wallet.team.fleet
+    ? fleetUsersInUse(wallet.team, deviceId, occupiedSeats)
+    : occupiedSeats === undefined
+      ? wallet.team.usersInUse
+      : occupiedSeats;
   const processorActive = Boolean(wallet.processor?.active);
 
-  const mid = !held
-    ? selfHosted
+  const mid =
+    !wallet.team.fleet && userLimit !== undefined
       ? t(
-          "portal.billing.team.midFreeSelfHosted",
-          "The free tier covers your first users",
+          "portal.billing.team.midLocalCapacity",
+          "Capacity available to this server",
         )
-      : t("portal.billing.team.midFree", "The Team plan covers 100 users")
-    : processorActive
-      ? t("portal.billing.team.midIncluded", "Included with your Team base")
-      : t("portal.billing.team.midPrice", "$99/mo per 100 users");
+      : !held
+        ? selfHosted
+          ? t(
+              "portal.billing.team.midFreeSelfHosted",
+              "The free tier covers your first users",
+            )
+          : t("portal.billing.team.midFree", "The Team plan covers 100 users")
+        : processorActive
+          ? t("portal.billing.team.midIncluded", "Included with your Team base")
+          : t("portal.billing.team.midPrice", "$99/mo per 100 users");
 
   const door = onAddCapacity
     ? t("portal.billing.team.addCapacity", "Add capacity")
     : undefined;
   const name = t("portal.billing.team.rowName", "Users");
+  const details = wallet.team.breakdown ? (
+    <SeatBreakdown
+      breakdown={wallet.team.breakdown}
+      deviceId={deviceId}
+      localUsers={occupiedSeats}
+    />
+  ) : undefined;
 
-  // One number in charge at a time: the server's free allowance until a plan is held, the
-  // plan's own limit after.
-  const limit = held
-    ? licensedUsers
-    : (licensedUsers ?? wallet.freeUserAllowance ?? null);
+  const limit =
+    !wallet.team.fleet && userLimit !== undefined
+      ? userLimit
+      : held
+        ? licensedUsers
+        : (licensedUsers ?? wallet.freeUserAllowance ?? null);
 
   if (usersInUse == null) {
     return (
       <MeterRow
         name={name}
+        details={details}
         mid={mid}
         showTrack={false}
         tone={held ? "paid" : "free"}
@@ -117,11 +171,11 @@ export function TeamPlanRow({
     );
   }
 
-  // A non-positive limit is an absent one, not a full meter: nothing to divide by either way.
-  if (limit == null || limit <= 0) {
+  if (limit == null) {
     return (
       <MeterRow
         name={name}
+        details={details}
         mid={mid}
         showTrack={false}
         tone={held ? "paid" : "free"}
@@ -134,13 +188,15 @@ export function TeamPlanRow({
     );
   }
 
-  const pct = (usersInUse / limit) * 100;
+  const pct =
+    limit === 0 ? (usersInUse > 0 ? 100 : 0) : (usersInUse / limit) * 100;
   // A free tier filling up is the product working, not a warning, so amber is for paid capacity.
   const tone = held ? (pct >= 90 ? "warn" : "paid") : "free";
 
   return (
     <MeterRow
       name={name}
+      details={details}
       mid={mid}
       pct={pct}
       tone={tone}

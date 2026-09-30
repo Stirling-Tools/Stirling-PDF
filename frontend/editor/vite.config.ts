@@ -251,7 +251,7 @@ export default defineConfig(async ({ mode, command }) => {
   const flavor = (process.env.STIRLING_FLAVOR ?? "").toLowerCase();
   const flavorMode: BuildMode | null =
     flavor === "core" || flavor === "proprietary" || flavor === "saas"
-      ? (flavor as BuildMode)
+      ? flavor
       : null;
   const effectiveMode: BuildMode =
     explicitMode ??
@@ -431,19 +431,11 @@ export default defineConfig(async ({ mode, command }) => {
       },
       rollupOptions: {
         output: {
-          manualChunks(id) {
-            if (id.includes("material-symbols-icons.json"))
-              return "vendor-iconset";
+          manualChunks(id: string) {
             if (id.includes("node_modules")) {
               if (id.includes("pdfjs-dist")) return "vendor-pdfjs";
               if (id.includes("@embedpdf")) return "vendor-embedpdf";
-              if (
-                id.includes("react") ||
-                id.includes("@mantine") ||
-                id.includes("@emotion") ||
-                id.includes("@mui") ||
-                id.includes("@iconify")
-              ) {
+              if (id.includes("react") || id.includes("@mantine")) {
                 return "vendor-ui";
               }
               if (id.includes("@supabase")) return "vendor-supabase";
