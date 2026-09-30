@@ -64,6 +64,12 @@ export interface PendingField extends NewFieldDefinition {
 
 type Listener = () => void;
 
+interface StagedEdits {
+  pending: PendingField[];
+  modified: Record<string, ModifyFieldDefinition>;
+  deleted: string[];
+}
+
 /**
  * External store that holds form values outside of React state.
  *
@@ -411,18 +417,12 @@ export function FormFillProvider({
 
   // Undo covers the staged edits, which is what the user has been doing here; the applied
   // document keeps its own version history elsewhere.
-  const undoStackRef = useRef<
-    {
-      pending: PendingField[];
-      modified: Record<string, ModifyFieldDefinition>;
-      deleted: string[];
-    }[]
-  >([]);
+  const undoStackRef = useRef<StagedEdits[]>([]);
   const [canUndo, setCanUndo] = useState(false);
-  const liveEditsRef = useRef({
-    pending: [] as PendingField[],
-    modified: {} as Record<string, ModifyFieldDefinition>,
-    deleted: [] as string[],
+  const liveEditsRef = useRef<StagedEdits>({
+    pending: [],
+    modified: {},
+    deleted: [],
   });
 
   const rememberForUndo = useCallback(() => {
@@ -784,7 +784,7 @@ export function FormFillProvider({
         field.options ?? (needsOptions ? ["Option 1", "Option 2"] : undefined);
       setPendingFields((prev) => [
         ...prev,
-        { ...field, name: defaultName, options, id } as PendingField,
+        { ...field, name: defaultName, options, id },
       ]);
       return id;
     },
