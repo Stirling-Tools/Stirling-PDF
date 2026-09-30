@@ -1,4 +1,4 @@
-import JSZip from "jszip";
+import type JSZipClass from "jszip";
 
 import type { ShareBundleManifest } from "@app/services/serverStorageBundle";
 
@@ -94,12 +94,22 @@ export function resolveShareBundleOrder(manifest: ShareBundleManifest): {
   return { rootOrder, sortedEntries };
 }
 
+// JSZip loads on demand: share bundles are built or read only when a user
+// shares or opens one, and the module is ~140 KB.
+let jsZipPromise: Promise<typeof JSZipClass> | null = null;
+
+function loadJSZip(): Promise<typeof JSZipClass> {
+  jsZipPromise ??= import("jszip").then((mod) => mod.default);
+  return jsZipPromise;
+}
+
 export async function loadShareBundleEntries(blob: Blob): Promise<{
   manifest: ShareBundleManifest;
   rootOrder: string[];
   sortedEntries: ShareBundleManifest["entries"];
   files: File[];
 } | null> {
+  const JSZip = await loadJSZip();
   const zip = await JSZip.loadAsync(blob);
   const manifestEntry = zip.file(MANIFEST_FILENAME);
   if (!manifestEntry) {

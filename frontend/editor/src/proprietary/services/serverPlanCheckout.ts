@@ -1,6 +1,9 @@
 /** Account-owned Team checkout and the separate installed Enterprise licence checkout. */
-import { supabase, isSupabaseConfigured } from "@app/services/supabaseClient";
 import { getAccessToken } from "@app/auth/session";
+
+// Loaded on demand: a static import puts the Supabase SDK on the startup path
+// of every build, including installs that never reach checkout.
+const loadSupabaseClient = () => import("@app/services/supabaseClient");
 
 /**
  * A Team-plan checkout, sized in user blocks rather than seats.
@@ -47,6 +50,7 @@ interface CheckoutResponse {
 export async function createServerPlanCheckoutSession(
   request: ServerPlanCheckoutRequest,
 ): Promise<ServerPlanCheckoutSession> {
+  const { supabase, isSupabaseConfigured } = await loadSupabaseClient();
   if (!isSupabaseConfigured || !supabase) {
     throw new Error("Supabase is not configured. Checkout is not available.");
   }
@@ -122,6 +126,7 @@ export async function teamSubscriptionChange(
   pending: PendingTeamChange | null;
   unsupportedSchedule?: boolean;
 }> {
+  const { supabase } = await loadSupabaseClient();
   if (!supabase) throw new Error("Checkout is not configured");
   const token = await getAccessToken();
   if (!token) throw new Error("Sign in to manage your Team plan");
@@ -141,6 +146,7 @@ export async function verifyTeamCheckout(
   sessionId: string,
   quantity: number,
 ): Promise<number | PendingTeamChange | null> {
+  const { supabase } = await loadSupabaseClient();
   if (!supabase) throw new Error("Checkout is not configured");
   const token = await getAccessToken();
   if (!token) throw new Error("Sign in to verify the Team purchase");

@@ -27,6 +27,7 @@ ARG VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY=""
 
 # Build vite from editor/, output lands in editor/dist/.
 RUN set -eu; \
+    export UV_THREADPOOL_SIZE="${UV_THREADPOOL_SIZE:-16}"; \
     export STIRLING_FLAVOR="${STIRLING_FLAVOR}"; \
     if [ -n "${VITE_SUPABASE_URL}" ]; then export VITE_SUPABASE_URL="${VITE_SUPABASE_URL}"; fi; \
     if [ -n "${VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY}" ]; then export VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY="${VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY}"; fi; \

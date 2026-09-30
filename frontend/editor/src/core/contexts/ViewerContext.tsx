@@ -59,7 +59,15 @@ import {
   DocumentPermissionsState,
   PdfPermissionFlag,
 } from "@app/contexts/viewer/viewerBridges";
-import { SpreadMode } from "@embedpdf/plugin-spread/react";
+import type { SpreadMode } from "@embedpdf/plugin-spread/react";
+
+/**
+ * SpreadMode.None as a literal. This context sits at the app root, and a runtime
+ * import of any embedpdf module loads the whole viewer engine chunk, so
+ * importing the enum put all of it on the initial load. `satisfies` keeps the
+ * literal checked against the library's own values.
+ */
+const SPREAD_NONE = "none" satisfies `${SpreadMode}` as SpreadMode;
 
 function useImmediateNotifier<Args extends unknown[]>() {
   const callbacksRef = useRef(new Set<(...args: Args) => void>());
@@ -341,7 +349,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   );
 
   const triggerImmediateSpreadUpdate = useCallback(
-    (mode: SpreadMode, isDualPage: boolean = mode !== SpreadMode.None) => {
+    (mode: SpreadMode, isDualPage: boolean = mode !== SPREAD_NONE) => {
       triggerImmediateSpreadInternal(mode, isDualPage);
     },
     [triggerImmediateSpreadInternal],
@@ -464,7 +472,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   const getSpreadState = (): SpreadState => {
     return (
       bridgeRefs.current.spread?.state || {
-        spreadMode: SpreadMode.None,
+        spreadMode: SPREAD_NONE,
         isDualPage: false,
       }
     );

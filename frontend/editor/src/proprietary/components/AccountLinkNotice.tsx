@@ -1,12 +1,19 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@app/auth";
 import apiClient from "@app/services/apiClient";
 import { PORTAL_BASENAME } from "@app/routes/portalBasename";
-import { EditorLinkModal } from "@app/components/account-link/EditorLinkModal";
 import { FreeTierBalanceSummary } from "@app/components/account-link/FreeTierBalanceSummary";
 import type { FreeTierBalance } from "@app/components/account-link/FreeTierBalanceSummary";
+
+// Lazy: the linking UI drags in the account-link context tree and the Supabase
+// SDK, neither of which the notice needs until a prompt actually opens.
+const EditorLinkModal = lazy(() =>
+  import("@app/components/account-link/EditorLinkModal").then((module) => ({
+    default: module.EditorLinkModal,
+  })),
+);
 
 import {
   acknowledgeAccountLinkPrompt,
@@ -71,19 +78,25 @@ export function AccountLinkNotice({
 
   if (!open || !exhausted || hasLinkDialog) return null;
   return (
-    <EditorLinkModal
-      open
-      failureContext={context}
-      onClose={() => setOpen(false)}
-      onStart={onShowOptions}
-      onManagePipeline={onManagePipeline}
-      summary={
-        <FreeTierBalanceSummary
-          balance={
-            onShowOptions ? balance : ledger.isSuccess ? ledger.data : undefined
-          }
-        />
-      }
-    />
+    <Suspense fallback={null}>
+      <EditorLinkModal
+        open
+        failureContext={context}
+        onClose={() => setOpen(false)}
+        onStart={onShowOptions}
+        onManagePipeline={onManagePipeline}
+        summary={
+          <FreeTierBalanceSummary
+            balance={
+              onShowOptions
+                ? balance
+                : ledger.isSuccess
+                  ? ledger.data
+                  : undefined
+            }
+          />
+        }
+      />
+    </Suspense>
   );
 }

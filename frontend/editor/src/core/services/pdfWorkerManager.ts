@@ -3,13 +3,23 @@
  *
  * Prevents infinite worker creation by managing PDF.js workers globally
  * and ensuring proper cleanup when operations complete.
+ *
+ * The pdf.js module itself loads on first use, not on import: the editor's
+ * startup graph reaches this module (upload classification, tool previews),
+ * and pdf.js is a 450 KB chunk most sessions never need. Type-only import so
+ * the bundler keeps the runtime edge dynamic.
  */
 
-import {
-  GlobalWorkerOptions,
-  getDocument,
-  PDFDocumentProxy,
-} from "pdfjs-dist/legacy/build/pdf.mjs";
+import type { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api";
+
+type PdfJsModule = typeof import("pdfjs-dist/legacy/build/pdf.mjs");
+
+let pdfJsPromise: Promise<PdfJsModule> | null = null;
+
+function loadPdfJs(): Promise<PdfJsModule> {
+  pdfJsPromise ??= import("pdfjs-dist/legacy/build/pdf.mjs");
+  return pdfJsPromise;
+}
 
 /** A document did not open inside the caller's `openTimeoutMs`. */
 export class PdfOpenTimeout extends Error {
@@ -25,11 +35,7 @@ class PDFWorkerManager {
   private destroyingDocuments = new WeakSet<PDFDocumentProxy>();
   private workerCount = 0;
   private maxWorkers = 10; // Limit concurrent workers
-  private isInitialized = false;
-
-  private constructor() {
-    this.initializeWorker();
-  }
+  private workerReady: Promise<void> | null = null;
 
   static getInstance(): PDFWorkerManager {
     if (!PDFWorkerManager.instance) {
@@ -39,17 +45,17 @@ class PDFWorkerManager {
   }
 
   /**
-   * Initialize PDF.js worker once globally
+   * Load pdf.js and point it at the bundled worker on first use.
    */
-  private initializeWorker(): void {
-    if (!this.isInitialized) {
+  private ensureWorker(): Promise<void> {
+    this.workerReady ??= loadPdfJs().then(({ GlobalWorkerOptions }) => {
       GlobalWorkerOptions.workerSrc = new URL(
         "pdfjs-dist/legacy/build/pdf.worker.min.mjs",
         import.meta.url,
       ).toString();
       (GlobalWorkerOptions as { docBaseUrl?: string }).docBaseUrl = undefined;
-      this.isInitialized = true;
-    }
+    });
+    return this.workerReady;
   }
 
   /**
@@ -75,6 +81,11 @@ class PDFWorkerManager {
     if (this.activeDocuments.size >= this.maxWorkers) {
       await this.waitForAvailableWorker(options.signal);
     }
+
+    const [{ getDocument }] = await Promise.all([
+      loadPdfJs(),
+      this.ensureWorker(),
+    ]);
 
     // Normalize input data to PDF.js format
     let pdfData: string | { data: ArrayBuffer | Uint8Array };

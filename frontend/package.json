@@ -85,6 +85,8 @@
     "web-vitals": "^5.1.0"
   },
   "scripts": {
+    "postinstall": "node scripts/ensure-embedpdf-patches.mjs",
+    "check:embedpdf-patch": "node scripts/patch-embedpdf-engines.mjs --check",
     "docs:sync": "tsx editor/scripts/sync-portal-docs.mts",
     "update:minor": "node scripts/update-minor.js",
     "update:major": "npx npm-check-updates -u && npm install",

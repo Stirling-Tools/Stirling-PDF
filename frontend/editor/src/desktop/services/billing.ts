@@ -12,7 +12,6 @@
  * server / tauri:// origin Stripe can't return to. We pass the app's deep-link
  * scheme (stirlingpdf://) so Stripe can bring the user back into the app.
  */
-import { supabase } from "@app/auth/supabase";
 import { authService } from "@app/services/authService";
 import type {
   CheckoutParams,
@@ -27,6 +26,10 @@ export type {
   PortalParams,
   PortalSession,
 } from "@cloud/services/billing";
+
+// Loaded on demand: a static import puts the Supabase SDK on the startup path
+// even for users who never open a billing flow.
+const loadSupabase = async () => (await import("@app/auth/supabase")).supabase;
 
 /**
  * Deep-link the SaaS billing backend uses as Stripe's success/cancel/return
@@ -55,6 +58,7 @@ export async function createCheckoutSession(
   params: CheckoutParams,
 ): Promise<CheckoutSession> {
   const token = await requireToken();
+  const supabase = await loadSupabase();
 
   const { data, error } = await supabase.functions.invoke<{
     client_secret?: string;
@@ -98,6 +102,7 @@ export async function createPortalSession(
   params: PortalParams,
 ): Promise<PortalSession> {
   const token = await requireToken();
+  const supabase = await loadSupabase();
 
   const { data, error } = await supabase.functions.invoke<{
     url?: string;
