@@ -1025,23 +1025,6 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         ),
         synonyms: getSynonyms(t, "replaceColor"),
       },
-      scannerEffect: {
-        icon: <Icon name="scan-line" size="1.5rem" />,
-        name: t("home.scannerEffect.title", "Scanner Effect"),
-        component: null,
-        description: t(
-          "home.scannerEffect.desc",
-          "Create a PDF that looks like it was scanned",
-        ),
-        categoryId: ToolCategoryId.ADVANCED_TOOLS,
-        subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
-        endpoints: ["scanner-effect"],
-        synonyms: getSynonyms(t, "scannerEffect"),
-        // No frontend implementation yet (component is null), so it has no
-        // operationConfig to execute as an automation step.
-        supportsAutomate: false,
-        automationSettings: null,
-      },
 
       // Developer Tools
 

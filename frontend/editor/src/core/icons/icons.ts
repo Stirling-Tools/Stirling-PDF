@@ -22,6 +22,7 @@ import BadgeCheck from "lucide-static/icons/badge-check.svg?react";
 import BadgeDollarSign from "lucide-static/icons/badge-dollar-sign.svg?react";
 import Banknote from "lucide-static/icons/banknote.svg?react";
 import Bell from "lucide-static/icons/bell.svg?react";
+import Blocks from "lucide-static/icons/blocks.svg?react";
 import Bolt from "lucide-static/icons/bolt.svg?react";
 import BookOpen from "lucide-static/icons/book-open.svg?react";
 import BookOpenText from "lucide-static/icons/book-open-text.svg?react";
@@ -222,7 +223,6 @@ import Pipette from "lucide-static/icons/pipette.svg?react";
 import Plane from "lucide-static/icons/plane.svg?react";
 import Play from "lucide-static/icons/play.svg?react";
 import Plug from "lucide-static/icons/plug.svg?react";
-import PlugZap from "lucide-static/icons/plug-zap.svg?react";
 import Plus from "lucide-static/icons/plus.svg?react";
 import Pointer from "lucide-static/icons/pointer.svg?react";
 import Power from "lucide-static/icons/power.svg?react";
@@ -235,6 +235,7 @@ import ReceiptText from "lucide-static/icons/receipt-text.svg?react";
 import Recycle from "lucide-static/icons/recycle.svg?react";
 import Redo2 from "lucide-static/icons/redo-2.svg?react";
 import RefreshCw from "lucide-static/icons/refresh-cw.svg?react";
+import RefreshCwOff from "lucide-static/icons/refresh-cw-off.svg?react";
 import Replace from "lucide-static/icons/replace.svg?react";
 import Rocket from "lucide-static/icons/rocket.svg?react";
 import RotateCcw from "lucide-static/icons/rotate-ccw.svg?react";
@@ -427,6 +428,7 @@ export const ICONS = {
   "badge-dollar-sign": { Component: BadgeDollarSign, kind: "lucide" },
   banknote: { Component: Banknote, kind: "lucide" },
   bell: { Component: Bell, kind: "lucide" },
+  blocks: { Component: Blocks, kind: "lucide" },
   bolt: { Component: Bolt, kind: "lucide" },
   "book-open": { Component: BookOpen, kind: "lucide" },
   "book-open-text": { Component: BookOpenText, kind: "lucide" },
@@ -627,7 +629,6 @@ export const ICONS = {
   plane: { Component: Plane, kind: "lucide" },
   play: { Component: Play, kind: "lucide" },
   plug: { Component: Plug, kind: "lucide" },
-  "plug-zap": { Component: PlugZap, kind: "lucide" },
   plus: { Component: Plus, kind: "lucide" },
   pointer: { Component: Pointer, kind: "lucide" },
   power: { Component: Power, kind: "lucide" },
@@ -640,6 +641,7 @@ export const ICONS = {
   recycle: { Component: Recycle, kind: "lucide" },
   "redo-2": { Component: Redo2, kind: "lucide" },
   "refresh-cw": { Component: RefreshCw, kind: "lucide" },
+  "refresh-cw-off": { Component: RefreshCwOff, kind: "lucide" },
   replace: { Component: Replace, kind: "lucide" },
   rocket: { Component: Rocket, kind: "lucide" },
   "rotate-ccw": { Component: RotateCcw, kind: "lucide" },

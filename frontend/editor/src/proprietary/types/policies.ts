@@ -1,11 +1,8 @@
 /**
  * Types for Policies — a proprietary, automation-backed enforcement feature.
  *
- * A Policy is conceptually like a Watch Folder (a configured automation that
- * runs over documents) but backend-driven and triggered by *sources/events*
- * (editor save/export, device sweeps, cloud connectors) rather than just a
- * folder. Per-policy state is persisted locally (localStorage). Activity + stats
- * shown in the detail view are derived live from the user's real uploaded files.
+ * Policies run on the backend in response to sources/events (editor save/export,
+ * device sweeps, cloud connectors). Per-policy state is cached locally in localStorage.
  */
 
 import type { ReactNode } from "react";
@@ -82,14 +79,6 @@ export interface PolicyState {
    */
   order?: number;
   /**
-   * The backing folder-trigger record (a Watched Folders `WatchedFolder`) that
-   * holds this policy's editable steps (its automation), output config and run
-   * state. Present once the policy is configured. The folder trigger reuses the
-   * Watched Folders engine; this is the link to it. Maps to the backend's
-   * `Policy.trigger` (folder) + `steps` + `output`.
-   */
-  folderId?: string;
-  /**
    * Id of this policy's record on the backend (the source of truth). Present once
    * it has been persisted server-side; used to update/delete/run it.
    */
@@ -106,10 +95,7 @@ export interface PolicyState {
 
 export type PoliciesByKey = Record<string, PolicyState>;
 
-/**
- * Output + retry settings applied by the Watch Folders engine to a policy's
- * backing folder (the real, working settings reused from the folder setup).
- */
+/** Editor trigger, output and retry settings decoded from a backend policy. */
 export interface PolicyFolderSettings {
   /** The editor event the policy runs on: "upload" or "export". */
   runOn: "upload" | "export";

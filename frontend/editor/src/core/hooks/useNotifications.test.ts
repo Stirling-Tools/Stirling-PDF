@@ -66,6 +66,9 @@ function notification(
     defaultTitle: id,
     detail: "boom",
     fileId: "f-1",
+    documentName: null,
+    documentLocation: "BROWSER",
+    heldByServer: false,
     sourceId: null,
     policyId: null,
     occurrences: 1,
@@ -125,7 +128,9 @@ describe("useNotifications", () => {
         notification("unattended", {
           origin: "POLICY",
           sourceId: "src-s3-invoices",
-          fileId: "hashed-identity",
+          documentLocation: "SMART_FOLDER",
+          heldByServer: true,
+          fileId: null,
         }),
       ]),
     );
@@ -167,15 +172,18 @@ describe("useNotifications", () => {
     expect(result.current.unreadCount).toBe(1);
   });
 
-  it("hides a member's unattended row even when its id happens to be stored here", async () => {
-    // Storage answering for a source-fed row's hash is a collision, not the document.
-    hasLocalFile.mockResolvedValue(true);
+  it("still asks this device about a smart-folder policy the member ran from the editor", async () => {
+    // The policy is a smart folder's, but the run was attended and the document is the browser's.
+    // Only the server's word makes a row held by it; the policy's kind alone does not.
+    hasLocalFile.mockResolvedValue(false);
     fetchNotifications.mockResolvedValue(
       feed(
         [
-          notification("unattended", {
-            sourceId: "src-s3-invoices",
-            fileId: "collides-with-a-local-id",
+          notification("attended", {
+            policyId: "folder-policy",
+            documentLocation: "BROWSER",
+            heldByServer: false,
+            fileId: "elsewhere",
           }),
         ],
         false,
@@ -184,8 +192,59 @@ describe("useNotifications", () => {
 
     const { result } = renderHook(() => useNotifications());
 
-    await waitFor(() => expect(fetchNotifications).toHaveBeenCalled());
-    expect(result.current.notifications).toHaveLength(0);
+    await waitFor(() => expect(hasLocalFile).toHaveBeenCalledWith("elsewhere"));
+    await waitFor(() => expect(result.current.notifications).toHaveLength(0));
+  });
+
+  it("shows a member the rows a smart folder produced, which reach nobody else", async () => {
+    // Their own folder, their own documents: hidden, the person who set it up hears nothing when it
+    // stops working. Storage is never asked either: a hit on a server-side reference is a collision.
+    hasLocalFile.mockResolvedValue(true);
+    fetchNotifications.mockResolvedValue(
+      feed(
+        [
+          notification("smart-folder", {
+            sourceId: "src-downloads",
+            documentLocation: "SMART_FOLDER",
+            heldByServer: true,
+            fileId: null,
+          }),
+        ],
+        false,
+      ),
+    );
+
+    const { result } = renderHook(() => useNotifications());
+
+    await waitFor(() => expect(result.current.notifications).toHaveLength(1));
+    expect(result.current.notifications[0].id).toBe("smart-folder");
+    expect(hasLocalFile).not.toHaveBeenCalled();
+  });
+
+  it("shows a member the row about their folder itself, which names no document at all", async () => {
+    // An unreadable folder processes nothing, so there is no document row to carry the news. The
+    // row is about the folder, and its owner is the one person it was recorded for.
+    fetchNotifications.mockResolvedValue(
+      feed(
+        [
+          notification("folder-unreadable", {
+            kindId: "SOURCE_UNREADABLE",
+            origin: "POLICY",
+            sourceId: "src-downloads",
+            documentLocation: "UNREACHABLE",
+            heldByServer: true,
+            fileId: null,
+          }),
+        ],
+        false,
+      ),
+    );
+
+    const { result } = renderHook(() => useNotifications());
+
+    await waitFor(() => expect(result.current.notifications).toHaveLength(1));
+    expect(result.current.notifications[0].id).toBe("folder-unreadable");
+    expect(hasLocalFile).not.toHaveBeenCalled();
   });
 
   it("shows a reviewer both rows, document here or not", async () => {

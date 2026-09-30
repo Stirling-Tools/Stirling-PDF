@@ -1,10 +1,9 @@
 /** The sweep, rendered in place of the workbench canvas with the rails either side.
  *  A takeover, not a registered view: unregistering an active view ejects mid-sweep. */
 
+import { Icon } from "@app/ui/Icon";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Button } from "@app/ui/Button";
 import { BrandMark } from "@app/components/shared/BrandMark";
@@ -97,7 +96,7 @@ export function ClassificationDemoWorkbenchView({
         onClick={dismiss}
         aria-label={t("common.close", "Close")}
       >
-        <CloseRoundedIcon fontSize="small" />
+        <Icon name="x" size={20} />
       </ActionIcon>
       {children}
     </div>
@@ -134,10 +133,7 @@ export function ClassificationDemoWorkbenchView({
             {t("classificationDemo.results.heading", "Your Downloads, sorted")}
           </h2>
           <p className={styles.viewLead}>
-            <CheckCircleRoundedIcon
-              className={styles.resultTick}
-              fontSize="inherit"
-            />
+            <Icon name="circle-check" className={styles.resultTick} />
             {/* Two pluralised fragments: i18next pluralises on a single `count`, so one
                 string with two counts gets one wrong ("read 1 PDFs into 1 types"). */}
             {t("classificationDemo.results.summary", {
