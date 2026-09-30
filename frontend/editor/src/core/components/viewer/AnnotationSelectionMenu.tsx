@@ -1,5 +1,5 @@
 import { createPortal } from "react-dom";
-import { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import { useEffect, useRef, useCallback, useMemo } from "react";
 import { useAnnotation } from "@embedpdf/plugin-annotation/react";
 import type { TrackedAnnotation } from "@embedpdf/plugin-annotation";
 import {
@@ -13,8 +13,8 @@ import type {
 import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useAnnotationMenuHandlers } from "@app/components/viewer/useAnnotationMenuHandlers";
+import { useAnchoredOverlay } from "@app/hooks/useAnchoredOverlay";
 import { AnnotationTypeButtons } from "@app/components/viewer/AnnotationTypeButtons";
-import { useAnimationFrameCallback } from "@app/hooks/useAnimationFrameCallback";
 import "@app/components/viewer/TextSelectionMenu.css";
 
 /**
@@ -57,10 +57,6 @@ function AnnotationSelectionMenuInner({
   const { state, provides } = useAnnotation(documentId);
   const { scrollActions, requestCommentFocus } = useViewer();
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const [menuPosition, setMenuPosition] = useState<{
-    top: number;
-    left: number;
-  } | null>(null);
 
   const handlers = useAnnotationMenuHandlers({
     annotation,
@@ -171,69 +167,38 @@ function AnnotationSelectionMenuInner({
     [annotation, onAnchor, pageIndex],
   );
 
-  // Track menu position via MutationObserver (handles drag repositioning)
-  const updatePosition = useCallback(() => {
-    const wrapper = wrapperRef.current;
-    if (!wrapper) {
-      setMenuPosition(null);
-      return;
-    }
-    const rect = wrapper.getBoundingClientRect();
-    const top = rect.bottom + 8;
-    const left = rect.left + rect.width / 2;
-    // Keeping the previous object when nothing moved lets React skip the
-    // render, which is what keeps an open colour picker from rebuilding.
-    setMenuPosition((prev) =>
-      prev && prev.top === top && prev.left === left ? prev : { top, left },
-    );
-    updateAnchor({ top, left });
-  }, [updateAnchor]);
+  const { overlayRef, mounted, measure } = useAnchoredOverlay({
+    anchorRef: wrapperRef,
+    enabled: Boolean(selected && annotation),
+    onPosition: updateAnchor,
+  });
 
-  const scheduleUpdatePosition = useAnimationFrameCallback(updatePosition);
-
+  // Dragging an annotation moves its wrapper without any scroll or resize, so a
+  // MutationObserver on its style attribute is the only signal; positioning itself
+  // is shared with the other viewer menus.
   useEffect(() => {
     if (!selected || !annotation || !wrapperRef.current) {
-      setMenuPosition(null);
       onAnchor?.(null);
       return;
     }
-
-    updatePosition();
-
-    const observer = new MutationObserver(scheduleUpdatePosition);
+    const observer = new MutationObserver(() => measure());
     observer.observe(wrapperRef.current, {
       attributes: true,
       attributeFilter: ["style"],
     });
-    window.addEventListener("scroll", scheduleUpdatePosition, {
-      capture: true,
-      passive: true,
-    });
-    window.addEventListener("resize", scheduleUpdatePosition);
-
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("scroll", scheduleUpdatePosition, true);
-      window.removeEventListener("resize", scheduleUpdatePosition);
-    };
-  }, [
-    selected,
-    annotation,
-    updateAnchor,
-    updatePosition,
-    scheduleUpdatePosition,
-  ]);
+    return () => observer.disconnect();
+  }, [selected, annotation, onAnchor, measure]);
 
   if (!selected || !annotation) return null;
 
-  const menuContent = menuPosition ? (
+  const menuContent = mounted ? (
     <div
+      ref={overlayRef}
       data-annotation-selection-menu
       className="embedpdf-floating-menu"
       style={{
         position: "fixed",
-        top: `${menuPosition.top}px`,
-        left: `${menuPosition.left}px`,
+        // top/left are owned by useAnchoredOverlay; see the note there.
         transform: "translateX(-50%)",
         pointerEvents: "auto",
         zIndex: 10000,

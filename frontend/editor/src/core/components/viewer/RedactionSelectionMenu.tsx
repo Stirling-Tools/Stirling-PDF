@@ -5,11 +5,11 @@ import {
 import { Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useRef, useCallback } from "react";
 import { Icon } from "@app/ui/Icon";
-import { useViewer } from "@app/contexts/ViewerContext";
+import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
-import { useAnimationFrameCallback } from "@app/hooks/useAnimationFrameCallback";
+import { useAnchoredOverlay } from "@app/hooks/useAnchoredOverlay";
 import "@app/components/viewer/TextSelectionMenu.css";
 
 export type { RedactionSelectionMenuProps };
@@ -40,12 +40,8 @@ function RedactionSelectionMenuInner({
   const pageIndex = context?.pageIndex;
   const { t } = useTranslation();
   const { provides } = useEmbedPdfRedaction(documentId);
-  const { applyChanges } = useViewer();
+  const { handleToolSelect } = useToolWorkflow();
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const [menuPosition, setMenuPosition] = useState<{
-    top: number;
-    left: number;
-  } | null>(null);
 
   // Merge refs - menuWrapperProps.ref is a callback ref
   const setRef = useCallback(
@@ -63,70 +59,32 @@ function RedactionSelectionMenuInner({
     }
   }, [provides, item, pageIndex]);
 
-  // Applying a mark is permanent, so it also saves. This sits next to a
-  // single-mark "Remove", which is why the label and warning name the wider
-  // scope: commitAllPending touches every mark, not just the selected one.
-  const handleApply = useCallback(async () => {
-    const task = provides?.commitAllPending?.();
-    if (task && typeof task.toPromise === "function") {
-      await task.toPromise();
-    }
-    await applyChanges?.();
-  }, [provides, applyChanges]);
+  // This menu is scoped to one pending mark, so it only offers actions that
+  // affect that mark. Applying is permanent and applies *every* pending mark, so
+  // it lives in the redaction review panel where that scope is visible.
 
-  // Calculate position for portal based on wrapper element
-  const updatePosition = useCallback(() => {
-    const wrapper = wrapperRef.current;
-    if (!wrapper) {
-      setMenuPosition(null);
-      return;
-    }
+  // Hands the decision to the redaction review panel rather than applying from a
+  // menu attached to a single mark.
+  const onReviewPanel = useCallback(() => {
+    handleToolSelect?.("redact");
+  }, [handleToolSelect]);
 
-    const wrapperRect = wrapper.getBoundingClientRect();
-    // Position menu below the wrapper, centered
-    // Use getBoundingClientRect which gives viewport-relative coordinates
-    // Since we're using fixed positioning in the portal, we don't need to add scroll offsets
-    const top = wrapperRect.bottom + 8;
-    const left = wrapperRect.left + wrapperRect.width / 2;
-    setMenuPosition((prev) =>
-      prev && prev.top === top && prev.left === left ? prev : { top, left },
-    );
-  }, []);
-
-  const scheduleUpdatePosition = useAnimationFrameCallback(updatePosition);
-
-  useEffect(() => {
-    if (!selected || !isRedaction || !item || !wrapperRef.current) {
-      setMenuPosition(null);
-      return;
-    }
-
-    updatePosition();
-
-    // Update position on scroll/resize
-    window.addEventListener("scroll", scheduleUpdatePosition, {
-      capture: true,
-      passive: true,
-    });
-    window.addEventListener("resize", scheduleUpdatePosition);
-
-    return () => {
-      window.removeEventListener("scroll", scheduleUpdatePosition, true);
-      window.removeEventListener("resize", scheduleUpdatePosition);
-    };
-  }, [selected, item, updatePosition, scheduleUpdatePosition]);
+  const { overlayRef, mounted } = useAnchoredOverlay({
+    anchorRef: wrapperRef,
+    enabled: Boolean(selected && isRedaction && item),
+  });
 
   // Early return AFTER all hooks have been called
   if (!selected || !isRedaction || !item) return null;
 
-  const menuContent = menuPosition ? (
+  const menuContent = mounted ? (
     <div
+      ref={overlayRef}
       data-redaction-selection-menu
       className="embedpdf-floating-menu"
       style={{
         position: "fixed",
-        top: `${menuPosition.top}px`,
-        left: `${menuPosition.left}px`,
+        // top/left are owned by useAnchoredOverlay; see the note there.
         transform: "translateX(-50%)",
         pointerEvents: "auto",
         zIndex: 10000,
@@ -150,21 +108,21 @@ function RedactionSelectionMenuInner({
 
       <Tooltip
         label={t(
-          "viewer.redaction.applyAllPendingWarning",
-          "⚠️ Applies and saves every pending mark. Permanent, cannot be undone, and the data underneath will be deleted",
+          "viewer.redaction.reviewAll",
+          "Review and apply all redactions in the tool panel",
         )}
         withArrow
-        position="top"
       >
         <button
           type="button"
-          className="embedpdf-floating-badge-btn"
-          onClick={() => void handleApply()}
+          className="embedpdf-floating-btn"
+          onClick={onReviewPanel}
+          aria-label={t(
+            "viewer.redaction.reviewAll",
+            "Review and apply all redactions in the tool panel",
+          )}
         >
-          <Icon name="circle-check" size={16} />
-          <span>
-            {t("viewer.redaction.applyAllPending", "Apply All Redactions")}
-          </span>
+          <Icon name="list" size={18} />
         </button>
       </Tooltip>
     </div>

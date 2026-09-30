@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useAnchoredOverlay } from "@app/hooks/useAnchoredOverlay";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { Tooltip, Popover, TextInput, Stack } from "@mantine/core";
@@ -23,7 +24,6 @@ import {
   RedactParameters,
 } from "@app/hooks/tools/redact/useRedactParameters";
 import { MARKUP_ANNOTATION_COLORS } from "@app/components/viewer/annotationDefaults";
-import { useAnimationFrameCallback } from "@app/hooks/useAnimationFrameCallback";
 import { alert } from "@app/components/toast";
 import { getExternalHref } from "@app/utils/externalUrl";
 import "@app/components/viewer/TextSelectionMenu.css";
@@ -65,10 +65,6 @@ function TextSelectionMenuInner({
   const { actions: navActions } = useNavigationActions();
 
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState<{
-    top: number;
-    left: number;
-  } | null>(null);
 
   const [linkPopoverOpen, setLinkPopoverOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
@@ -93,39 +89,17 @@ function TextSelectionMenuInner({
     [menuWrapperProps],
   );
 
-  const showAbove = placement?.suggestTop ?? true;
-
-  const update = useCallback(() => {
-    const wrapper = wrapperRef.current;
-    if (!wrapper) return;
-    const r = wrapper.getBoundingClientRect();
-    const top = showAbove ? r.top - 8 : r.bottom + 8;
-    const left = r.left + r.width / 2;
-    // An unchanged position keeps the previous object so React can skip the
-    // render rather than rebuilding this menu's controls on every scroll event.
-    setPosition((prev) =>
-      prev && prev.top === top && prev.left === left ? prev : { top, left },
-    );
-  }, [showAbove]);
-
-  const scheduleUpdate = useAnimationFrameCallback(update);
-
-  useEffect(() => {
-    if (!selected || !wrapperRef.current) {
-      setPosition(null);
-      return;
-    }
-    update();
-    window.addEventListener("scroll", scheduleUpdate, {
-      capture: true,
-      passive: true,
-    });
-    window.addEventListener("resize", scheduleUpdate);
-    return () => {
-      window.removeEventListener("scroll", scheduleUpdate, true);
-      window.removeEventListener("resize", scheduleUpdate);
-    };
-  }, [selected, update, scheduleUpdate]);
+  const overlayPlacement = placement?.suggestTop ? "above" : "below";
+  const {
+    overlayRef,
+    mounted,
+    placement: resolvedPlacement,
+  } = useAnchoredOverlay({
+    anchorRef: wrapperRef,
+    enabled: Boolean(selected),
+    placement: overlayPlacement,
+  });
+  const showAbove = resolvedPlacement === "above";
 
   const handleCopy = useCallback(() => {
     if (documentId) {
@@ -296,14 +270,16 @@ function TextSelectionMenuInner({
   ]);
 
   const portalContent =
-    position &&
+    mounted &&
     createPortal(
       <div
+        ref={overlayRef}
         data-text-selection-menu
         style={{
           position: "fixed",
-          top: position.top,
-          left: position.left,
+          // top/left are deliberately absent: useAnchoredOverlay writes them on
+          // the node. Declaring them here would make React re-apply this style
+          // object on every render and wipe the measured position.
           transform: `translate(-50%, ${showAbove ? "-100%" : "0"})`,
           zIndex: 10000,
           pointerEvents: "auto",
