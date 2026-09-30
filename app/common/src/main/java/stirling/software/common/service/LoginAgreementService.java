@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
@@ -94,6 +95,9 @@ public class LoginAgreementService {
         }
         if (content == null || content.isBlank()) {
             Files.deleteIfExists(file);
+            for (Path variant : findLocaleVariants(locale)) {
+                Files.deleteIfExists(variant);
+            }
             return;
         }
         Files.createDirectories(file.getParent());
@@ -162,6 +166,20 @@ public class LoginAgreementService {
         if (file == null) {
             return null;
         }
+        String content = readRegularFile(file, locale);
+        if (content != null) {
+            return content;
+        }
+        for (Path variant : findLocaleVariants(locale)) {
+            content = readRegularFile(variant, locale);
+            if (content != null) {
+                return content;
+            }
+        }
+        return null;
+    }
+
+    private String readRegularFile(Path file, String locale) {
         try {
             // NOFOLLOW_LINKS: a symlinked entry is treated as non-regular and skipped, so a
             // planted symlink can't expose files outside the disclaimer dir via the public read.
@@ -179,6 +197,27 @@ public class LoginAgreementService {
             log.warn("Failed reading login agreement file for locale {}", locale, e);
         }
         return null;
+    }
+
+    // Locale tags are case-insensitive, so sr-LATN-RS.md or sr_Latn_RS.md also serve sr-Latn-RS.
+    private List<Path> findLocaleVariants(String locale) {
+        Path dir = disclaimerDir();
+        if (!isValidLocale(locale) || !Files.isDirectory(dir)) {
+            return List.of();
+        }
+        String wanted = localeKey(locale) + ".md";
+        try (Stream<Path> files = Files.list(dir)) {
+            return files.filter(path -> localeKey(path.getFileName().toString()).equals(wanted))
+                    .sorted()
+                    .toList();
+        } catch (IOException e) {
+            log.warn("Failed listing login agreement files", e);
+            return List.of();
+        }
+    }
+
+    private static String localeKey(String name) {
+        return name.replace('_', '-').toLowerCase(Locale.ROOT);
     }
 
     private Path resolveLocaleFile(String locale) {
