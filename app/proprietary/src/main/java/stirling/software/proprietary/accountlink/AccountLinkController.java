@@ -1,6 +1,7 @@
 package stirling.software.proprietary.accountlink;
 
 import java.io.IOException;
+import java.util.Map;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -23,8 +24,9 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Same-origin account-link surface on the self-hosted instance (combined billing).
  *
- * <p>Owner-only class-wide: everything here is server-scoped, the free-tier meter included. Other
- * users learn of the wall from the {@code reason} on the 402, not from here.
+ * <p>Owner-only class-wide except {@link #linked()}: everything else is server-scoped, the
+ * free-tier meter included. Other users learn of the wall from the {@code reason} on the 402.
+ * Linking and unlinking recheck ownership under the service's lock.
  */
 @Slf4j
 @Hidden
@@ -42,7 +44,6 @@ public class AccountLinkController {
     private final ConnectService connectService;
     private final LocalUsageService localUsageService;
     private final FreeTierUsageService freeTierUsageService;
-    // Present only when metering is on (its own flag); absent → /sync-now reports 409.
     private final ObjectProvider<UsageSyncService> syncServiceProvider;
 
     public AccountLinkController(
@@ -102,11 +103,23 @@ public class AccountLinkController {
         }
     }
 
-    /** Called by the callback page with the nonce it found in the fragment. */
+    /** Finishes the link, then reports seats after the credential transaction has committed. */
     @PostMapping("/connect/complete")
     public ResponseEntity<ConnectService.ConnectStatus> connectComplete(
             @RequestBody(required = false) ConnectCompleteRequest req) {
-        return ResponseEntity.ok(connectService.complete(req != null ? req.nonce() : null));
+        ConnectService.ConnectStatus result =
+                connectService.complete(req != null ? req.nonce() : null);
+        if (result.phase() == ConnectService.Phase.LINKED) {
+            UsageSyncService sync = syncServiceProvider.getIfAvailable();
+            if (sync != null) {
+                try {
+                    sync.syncNow();
+                } catch (RuntimeException e) {
+                    log.warn("Initial account-link sync failed; the scheduled sync will retry", e);
+                }
+            }
+        }
+        return ResponseEntity.ok(result);
     }
 
     /** Everything we know about where the admin's browser is, for the callback. */
@@ -149,6 +162,13 @@ public class AccountLinkController {
     @GetMapping("/status")
     public ResponseEntity<AccountLinkService.LinkStatus> status() {
         return ResponseEntity.ok(service.status());
+    }
+
+    /** Any admin, not only the owner: the AI settings page needs it and a bare flag is harmless. */
+    @GetMapping("/linked")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, Boolean>> linked() {
+        return ResponseEntity.ok(Map.of("linked", service.isLinked()));
     }
 
     /** Refreshes cloud entitlement without changing the linked account. */

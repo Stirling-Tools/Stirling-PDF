@@ -3,15 +3,32 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   mode: null as "saas" | "selfhosted" | "local" | null,
   serverConfig: null as { url: string } | null,
+  authenticated: true,
 }));
 
-// NB: vi.mock factories are hoisted above top-level consts, so they must use
-// literals to avoid a TDZ ReferenceError.
 vi.mock("@app/services/connectionModeService", () => ({
   connectionModeService: {
-    getCachedMode: () => mocks.mode,
-    getCachedServerConfig: () => mocks.serverConfig,
+    getCurrentMode: async () => mocks.mode,
+    getServerConfig: async () => mocks.serverConfig,
   },
+}));
+vi.mock("@app/services/authService", () => ({
+  authService: {
+    isAuthenticated: async () => mocks.authenticated,
+    awaitRefreshIfInProgress: async () => {},
+  },
+}));
+vi.mock("@app/services/tauriBackendService", () => ({
+  tauriBackendService: {},
+}));
+vi.mock("@app/services/endpointAvailabilityService", () => ({
+  endpointAvailabilityService: {},
+}));
+vi.mock("@app/services/selfHostedServerMonitor", () => ({
+  selfHostedServerMonitor: {},
+}));
+vi.mock("@app/i18n", () => ({
+  default: { t: (_key: string, fallback: string) => fallback },
 }));
 vi.mock("@app/constants/connection", () => ({
   STIRLING_SAAS_BACKEND_API_URL: "https://api.saas.test/",
@@ -23,43 +40,58 @@ describe("getPolicyOutputBaseUrl", () => {
   beforeEach(() => {
     mocks.mode = null;
     mocks.serverConfig = null;
+    mocks.authenticated = true;
   });
 
-  test("SaaS run in SaaS mode resolves the cloud base", () => {
+  test("SaaS run in SaaS mode resolves the cloud base", async () => {
     mocks.mode = "saas";
-    expect(getPolicyOutputBaseUrl("saas")).toBe("https://api.saas.test");
+    await expect(getPolicyOutputBaseUrl("saas")).resolves.toBe(
+      "https://api.saas.test",
+    );
   });
 
-  test("self-hosted names its own server", () => {
+  test("self-hosted names its own server", async () => {
     mocks.mode = "selfhosted";
     mocks.serverConfig = { url: "https://pdf.example.internal/" };
-    expect(getPolicyOutputBaseUrl("saas")).toBe("https://pdf.example.internal");
+    await expect(getPolicyOutputBaseUrl("saas")).resolves.toBe(
+      "https://pdf.example.internal",
+    );
   });
 
-  test("self-hosted stays absolute so an offline blip cannot divert the download to the bundled backend", () => {
+  test("self-hosted stays absolute so an offline blip cannot divert the download to the bundled backend", async () => {
     // Outputs come from a tool endpoint, which the router diverts to the bundled backend
     // while the server is unreachable.
     mocks.mode = "selfhosted";
     mocks.serverConfig = { url: "https://pdf.example.internal" };
-    expect(getPolicyOutputBaseUrl("saas").startsWith("https://")).toBe(true);
+    await expect(getPolicyOutputBaseUrl("saas")).resolves.toMatch(
+      /^https:\/\//,
+    );
   });
 
-  test("self-hosted with no server recorded yields no base", () => {
+  test("self-hosted with no server recorded rejects the request", async () => {
     mocks.mode = "selfhosted";
-    expect(getPolicyOutputBaseUrl("saas")).toBe("");
+    await expect(getPolicyOutputBaseUrl("saas")).rejects.toThrow();
   });
 
-  test("local mode never resolves the cloud base", () => {
+  test("local mode never resolves the cloud base", async () => {
     mocks.mode = "local";
-    expect(getPolicyOutputBaseUrl("saas")).toBe("");
+    await expect(getPolicyOutputBaseUrl("saas")).rejects.toThrow();
   });
 
-  test("unresolved mode fails closed", () => {
-    expect(getPolicyOutputBaseUrl("saas")).toBe("");
+  test("unresolved mode fails closed", async () => {
+    await expect(getPolicyOutputBaseUrl("saas")).rejects.toThrow();
   });
 
-  test("a browser-computed run is always relative", () => {
+  test("desktop pipeline outputs stay on the server regardless of the target label", async () => {
     mocks.mode = "saas";
-    expect(getPolicyOutputBaseUrl("local")).toBe("");
+    await expect(getPolicyOutputBaseUrl("local")).resolves.toBe(
+      "https://api.saas.test",
+    );
+  });
+
+  test("rejects a configured server without authentication", async () => {
+    mocks.mode = "saas";
+    mocks.authenticated = false;
+    await expect(getPolicyOutputBaseUrl("saas")).rejects.toThrow("Sign in");
   });
 });

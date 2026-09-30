@@ -28,6 +28,11 @@ export function rawStoredPolicies(): string | null {
 }
 export const POLICIES_CHANGE_EVENT = "stirling:policies-changed";
 
+/** Clears server-owned policy settings before connecting to another server or account. */
+export function clearPolicies(): void {
+  persist({});
+}
+
 function defaultState(policyKey: string): PolicyState {
   // Unconfigured by default. The backend is the source of truth for what's
   // actually configured + active; this is just the empty local-cache shape.
@@ -91,7 +96,7 @@ export function loadPolicies(): PoliciesByKey {
   // Builder pipelines key by their own id, so the walk above misses them. Carried through as
   // stored: a tile's defaults would mark them built-in and put them on the editor uninvited.
   for (const [key, state] of Object.entries(parsed)) {
-    if (!out[key] && state) out[key] = state as PolicyState;
+    if (!out[key] && state) out[key] = state;
   }
   // Cached endpoints can come from a different frontend version.
   for (const state of Object.values(out)) {

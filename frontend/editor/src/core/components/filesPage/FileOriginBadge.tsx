@@ -6,6 +6,7 @@ import { FileOrigin } from "@app/components/filesPage/fileOrigin";
 
 interface FileOriginBadgeProps {
   origin: FileOrigin;
+  onDisk?: boolean;
   /** Compact (icon-only) vs full (icon + text). */
   compact?: boolean;
   tooltip?: string;
@@ -41,6 +42,7 @@ const styles = {
 
 export function FileOriginBadge({
   origin,
+  onDisk = false,
   compact = false,
   tooltip,
 }: FileOriginBadgeProps) {
@@ -69,12 +71,13 @@ export function FileOriginBadge({
       default:
         return {
           label: t("filesPage.origin.local", "Local"),
-          icon: <Icon name="monitor" size={"0.85rem"} />,
-          style: styles.local,
-          tooltip: t(
-            "filesPage.origin.localHint",
-            "Only stored in this browser",
+          icon: (
+            <Icon name={onDisk ? "monitor" : "cloud-off"} size={"0.85rem"} />
           ),
+          style: styles.local,
+          tooltip: onDisk
+            ? t("filesPage.origin.diskFileHint", "Stored on your computer")
+            : t("filesPage.origin.localHint", "Not backed up"),
         };
     }
   })();

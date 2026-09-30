@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { Icon } from "@app/ui/Icon";
 import { InfoTooltip } from "@app/ui/InfoTooltip";
 import {
   TextInput,
@@ -13,7 +14,6 @@ import {
   Code,
   List,
 } from "@mantine/core";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import PendingBadge from "@app/components/shared/config/PendingBadge";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import type { McpAuthData } from "@app/components/shared/config/configSections/server/serverSettings";
@@ -365,7 +365,7 @@ export function McpCard({
         variant="light"
         color="blue"
         title={t("admin.settings.mcp.guide.title", "Connect an MCP client")}
-        icon={<LocalIcon icon="info-rounded" width="1rem" height="1rem" />}
+        icon={<Icon name="info" size="1rem" />}
       >
         <Stack gap={6}>
           <List size="xs" type="ordered" spacing={4}>

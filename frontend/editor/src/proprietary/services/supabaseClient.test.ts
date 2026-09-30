@@ -138,7 +138,7 @@ it("uses only the validated owner session for Team checkout despite callback cre
   const { createServerPlanCheckoutSession } =
     await import("@app/services/serverPlanCheckout");
   await createServerPlanCheckoutSession({
-    lookupKey: "selfhosted:server:monthly",
+    lookupKey: "selfhosted:team:monthly",
     serverQuantity: 1,
     uiMode: "hosted",
   });
