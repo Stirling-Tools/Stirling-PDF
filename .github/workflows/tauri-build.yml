@@ -245,11 +245,11 @@ jobs:
           manifest-path: .github/cache-data
           multi-cache: |
             cargo-registry:
-              path: ${{ env.CARGO_HOME }}/registry
+              path: .cache/cargo/registry
             cargo-git:
-              path: ${{ env.CARGO_HOME }}/git
+              path: .cache/cargo/git
             cargo-bin:
-              path: ${{ env.CARGO_HOME }}/bin
+              path: .cache/cargo/bin
             gradle-caches:
               path: .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/caches
             gradle-wrapper:
