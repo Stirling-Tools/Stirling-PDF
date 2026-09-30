@@ -259,7 +259,7 @@ export function WorkbenchSessionPersistence() {
           const active = saved.activeFileId
             ? leaves.get(saved.activeFileId)?.id
             : undefined;
-          if (active) setActiveFileId(active as string);
+          if (active) setActiveFileId(active);
           if (view && held !== null) {
             reopenView(store, navigationActions.restoreWorkbench, {
               view,
