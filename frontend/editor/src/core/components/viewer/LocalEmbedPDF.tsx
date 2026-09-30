@@ -172,9 +172,7 @@ interface LocalEmbedPDFProps {
   onDocumentSwapFailed?: (error: unknown) => void;
   /** True while a view restore is in flight; gates the per-page layout hook. */
   restorePending?: boolean;
-  /** Carried view state DocumentRestoreBridge lands on the replacement. */
   restoreRequest?: DocumentRestoreRequest | null;
-  /** Restore progress reported by DocumentRestoreBridge. */
   onRestoreEvent?: (event: DocumentRestoreEvent) => void;
 }
 

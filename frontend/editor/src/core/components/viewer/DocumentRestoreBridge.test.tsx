@@ -31,9 +31,7 @@ const fixture = vi.hoisted(() => {
     };
   };
 
-  // Fakes the plugin scopes' contract: a request applies synchronously and
-  // the scope's change hook fires, unless the plugin drops it (no viewport
-  // size yet) or clamps it (a value it will not accept).
+  // Requests apply synchronously and fire the change hook unless dropped or clamped.
   const zoomScope = () => {
     const state = {
       zoomLevel: "fit-width" as string | number,
@@ -113,8 +111,6 @@ const fixture = vi.hoisted(() => {
     const layoutReady = emitter<{ documentId: string; totalPages: number }>();
     const layoutChange = emitter<{ documentId: string }>();
     const viewportResize = emitter<{ documentId: string }>();
-    // The viewport plugin keys scroll requests by document, so listeners
-    // only ever see their own document's requests.
     const scrollRequests = perDocument(() =>
       emitter<{ x: number; y: number }>(),
     );
@@ -179,7 +175,6 @@ const request = (
   ...overrides,
 });
 
-/** The replacement's layout becoming ready is what lets the bridge act. */
 function layoutReady(documentId = "second", totalPages = 3) {
   act(() => fixture.current.layoutReady.emit({ documentId, totalPages }));
 }
@@ -201,7 +196,6 @@ function renderBridge(props: {
   if (props.laidOut ?? true) layoutReady();
   return {
     events,
-    // The carried-value events, without the layout event that unlocked them.
     types: () =>
       events
         .map((event) => event.type)
@@ -272,8 +266,6 @@ describe("DocumentRestoreBridge", () => {
     zoom.drop = true;
 
     renderBridge({ request: request({ spread: null, rotation: null }) });
-    // The plugin's fit pass lands first (its layout became ready), so the
-    // state changes to something other than the carried value.
     zoom.drop = false;
     act(() => zoom.requestZoom("fit-width"));
 
@@ -282,8 +274,6 @@ describe("DocumentRestoreBridge", () => {
   });
 
   it("confirms a carried mode only once the plugin has fitted the replacement", () => {
-    // The replacement opens in the same mode, but at a placeholder scale
-    // until the plugin can measure its viewport.
     const zoom = fixture.current.zoom.forDocument("second");
     zoom.preset("fit-width", 1);
     zoom.drop = true;

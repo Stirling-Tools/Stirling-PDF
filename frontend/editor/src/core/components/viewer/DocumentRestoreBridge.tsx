@@ -21,10 +21,7 @@ export interface DocumentRestoreRequest {
   rotation: number | null;
 }
 
-/** What the bridge reports while a restore is in flight: a carried value
- *  that landed (or was given up), the scroll plugin laying the document out
- *  (ready: its own offset reset just ran and the page count is final) or
- *  reflowing it, and a scroll the viewport will apply on its next frame. */
+/** `scroll-request` fires before the viewport applies that scroll, on its next frame. */
 export type DocumentRestoreEvent =
   | { type: "zoom" }
   | { type: "spread" }
@@ -37,15 +34,11 @@ type CarriedKind = "zoom" | "spread" | "rotation";
 
 interface DocumentRestoreBridgeProps {
   request: DocumentRestoreRequest | null;
-  /** Keeps the layout and scroll events flowing while a position restore is in flight. */
   restorePending: boolean;
   onEvent?: (event: DocumentRestoreEvent) => void;
 }
 
-// A plugin that keeps answering a request with something other than the
-// carried value (a clamp, the reader zooming during the swap) is left alone
-// after this many answers rather than fought for it. A request the plugin
-// drops without answering does not count.
+// Answers that are not the carried value; a dropped request does not count.
 const MAX_REFUSALS = 5;
 
 const zoomMatches = (state: ZoomDocumentState, target: ZoomLevel) =>
@@ -55,16 +48,10 @@ const zoomMatches = (state: ZoomDocumentState, target: ZoomLevel) =>
     : state.zoomLevel === target;
 
 /**
- * Carries the viewer's zoom, spread and rotation onto a replacement document.
- *
- * Nothing here runs on a clock. Each value is requested once the replacement
- * is active, confirmed in the commit that renders the plugin's own change,
- * and requested again only when a later plugin event shows the request was
- * dropped or overridden: the zoom plugin silently ignores a request made
- * before the viewport has a size or the pages a layout, and its own fit pass
- * can land after a request. The scroll plugin's layout events and the
- * viewport's scroll requests are forwarded so the viewer re-lands the reading
- * position on the same commits and frames.
+ * Carries zoom, spread and rotation onto a replacement document. The zoom
+ * plugin silently drops a request made before the viewport is measured, so
+ * every later plugin event re-checks; the viewport applies plugin scrolls a
+ * frame later, so those requests are forwarded for the viewer to correct.
  */
 export function DocumentRestoreBridge({
   request,
@@ -97,16 +84,13 @@ function DocumentRestoreBridgeInner({
   request: DocumentRestoreRequest | null;
   onEvent?: (event: DocumentRestoreEvent) => void;
 }) {
-  // Capabilities are stable; a per-document scope is a fresh object per call,
-  // so scopes are derived inside the effects rather than held as deps.
+  // forDocument() returns a fresh object per call: derive scopes inside effects.
   const { provides: zoom } = useZoomCapability();
   const { provides: spread } = useSpreadCapability();
   const { provides: rotate } = useRotateCapability();
   const { provides: scroll } = useScrollCapability();
   const { provides: viewport } = useViewportCapability();
   const { plugin: viewportPlugin } = useViewportPlugin();
-  // Bumped by every plugin event that can change the outcome; the reconcile
-  // below re-runs on it in the same commit.
   const [tick, setTick] = useState(0);
   const bump = useCallback(() => setTick((value) => value + 1), []);
   const onEventRef = useRef(onEvent);
@@ -126,23 +110,15 @@ function DocumentRestoreBridgeInner({
     spread: 0,
     rotation: 0,
   });
-  // A replacement opens at the default mode with a placeholder scale; the
-  // plugin only fits it once its viewport is measured. A carried mode is
-  // confirmed by a zoom pass the plugin actually ran, not by the mode alone.
+  // Until measured, a replacement sits at a placeholder scale in its default mode.
   const zoomPassSeenRef = useRef(false);
-  // Nothing is requested before the replacement's pages are laid out: the
-  // bridges that publish viewer state mount alongside this one, and a value
-  // changed underneath their first registration reaches the toolbar out of
-  // order. The ready pass is also the earliest point a request can land.
+  // A spread changed while the state bridges mount reaches the toolbar out of order.
   const layoutReadyRef = useRef(false);
 
-  // Subscribed in a layout effect, before the first reconcile, so a change the
-  // reconcile causes is observed and rendered before paint.
   useLayoutEffect(() => {
     const forDocument = (event: { documentId: string }) =>
       event.documentId === documentId;
     const emit = (event: DocumentRestoreEvent) => onEventRef.current?.(event);
-    // A change after a request is the plugin's answer to it, matching or not.
     const answered = (kind: CarriedKind) => () => {
       if (requestedRef.current[kind]) {
         requestedRef.current[kind] = false;
@@ -172,8 +148,6 @@ function DocumentRestoreBridgeInner({
       viewport?.onViewportResize((event) => {
         if (forDocument(event)) bump();
       }),
-      // The viewport applies these on its next animation frame, after the
-      // layout effect that requested them has already positioned the pages.
       viewportPlugin?.onScrollRequest(documentId, (scrollRequest) => {
         emit({ type: "scroll-request", top: scrollRequest.y });
       }),
@@ -201,9 +175,7 @@ function DocumentRestoreBridgeInner({
       landed[kind] = true;
       onEventRef.current?.({ type: kind });
     };
-    // A value is never confirmed in the run that requested it: the pages have
-    // not re-rendered at the new geometry yet. The plugin's change re-runs
-    // this, and the value is confirmed in the commit that shows it.
+    // Never confirmed in the run that requested it: the pages have not re-rendered.
     const reconcile = (
       kind: CarriedKind,
       matches: () => boolean,
@@ -218,13 +190,11 @@ function DocumentRestoreBridgeInner({
       try {
         apply();
       } catch {
-        // The next plugin event re-runs this.
         requested[kind] = false;
       }
     };
 
-    // Rotation and spread reflow the pages, and a fit zoom is computed
-    // against that layout, so they go first.
+    // Rotation and spread first: a fit zoom is computed against their layout.
     if (request.rotation === null) {
       landed.rotation = true;
     } else if (rotate) {

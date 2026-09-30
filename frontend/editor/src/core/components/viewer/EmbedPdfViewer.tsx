@@ -90,8 +90,7 @@ export interface EmbedPdfViewerProps {
 const documentCacheKey = (file: StirlingFile): string =>
   `${file.fileId}|${file.quickKey}`;
 
-// Guard only: a restore completes on plugin events, but a replacement that
-// never reports must not leave the viewer hidden and the toolbar frozen.
+// Guard only; a restore completes on plugin events.
 const RESTORE_SETTLE_CAP_MS = 30_000;
 
 const findScrollableAncestor = (el: HTMLElement | null): HTMLElement | null => {
@@ -201,25 +200,15 @@ const EmbedPdfViewerContent = ({
   const pendingScrollRestoreRef = useRef<number | null>(null);
   const scrollRestoreAttemptsRef = useRef<number>(0);
 
-  // View state carried across an in-place reload. A replacement opens at the
-  // plugin defaults, which reads as the rotation, zoom or spread changing under
-  // the reader; DocumentRestoreBridge lands each value on the replacement and
-  // reports back through handleRestoreEvent.
   const pendingRotationRestoreRef = useRef<number | null>(null);
   const pendingZoomRestoreRef = useRef<ZoomLevel | null>(null);
   const pendingSpreadRestoreRef = useRef<SpreadMode | null>(null);
-  // The carried values, addressed to the replacement the swap bridge activated.
   const [restoreRequest, setRestoreRequest] =
     useState<DocumentRestoreRequest | null>(null);
-  // The replacement's scroll plugin resets the offset when its layout becomes
-  // ready, so the position is only final once that has happened.
   const replacementLayoutReadyRef = useRef(false);
-  // Page count the replacement was laid out with; the scroll bridge's state
-  // can still describe the outgoing document when the first apply runs.
+  // From layout-ready; the scroll bridge can still hold the outgoing document's.
   const replacementTotalPagesRef = useRef(0);
-  // Scrolls the plugins asked for that the viewport has not applied yet: it
-  // applies each on its next animation frame, after any layout effect that
-  // positioned the pages, so the position is put back once each has landed.
+  // Plugin scrolls the viewport has yet to apply on its next animation frame.
   const pluginScrollsRef = useRef(0);
   const restoreCapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // The toolbar must not show the plugin's intermediate fit pass while a
@@ -243,18 +232,9 @@ const EmbedPdfViewerContent = ({
   // Content key of a just-saved file whose visual state the live document
   // already shows: skip the reopen so a save cannot move the view.
   const skipReloadContentKeyRef = useRef<string | null>(null);
-  // Bumped when a replacement seeds the pending refs, so the page-level
-  // fallback runs even when the page count does not change across the swap.
   const [restoreTick, setRestoreTick] = useState(0);
-  // True only while a restore is in flight, so the per-page layout hook, the
-  // restore bridge and the swap backstop cost nothing during ordinary scrolling.
   const [restorePending, setRestorePending] = useState(false);
-  // A replacement renders at the wrong scale until its zoom lands, so the
-  // scroller is hidden from its first frame until the carried state settles.
   const hiddenScrollerRef = useRef<HTMLElement | null>(null);
-  // Last scroll target the restore computed and the layout signature (page
-  // height + content height) it was computed against, so a repeat apply on an
-  // unchanged layout skips the rect reads.
   const swapTargetRef = useRef<number | null>(null);
   const swapLayoutRef = useRef<string | null>(null);
   // Activation and the replacement pages' React commit happen separately.
@@ -281,8 +261,6 @@ const EmbedPdfViewerContent = ({
     }
   }, []);
 
-  // Single release path for the position: drop the target, stop listening for
-  // intent and show the content again.
   const clearPendingScrollRestore = useCallback(() => {
     pendingScrollPositionRef.current = null;
     detachScrollIntentListeners();
@@ -290,8 +268,6 @@ const EmbedPdfViewerContent = ({
     setRestorePending(false);
   }, [detachScrollIntentListeners, revealSwappedDocument]);
 
-  // The page-level fallback and the reader's own scrolling end the position
-  // restore; carried values keep landing on their own events.
   const finishScrollRestore = useCallback(() => {
     pendingScrollRestoreRef.current = null;
     scrollRestoreAttemptsRef.current = 0;
@@ -300,8 +276,6 @@ const EmbedPdfViewerContent = ({
     clearPendingScrollRestore();
   }, [clearPendingScrollRestore]);
 
-  // Everything landed, or nothing is left to wait for: release the bridge and
-  // the guard along with the position.
   const completeRestore = useCallback(() => {
     clearRestoreCap();
     documentSwappedRef.current = false;
@@ -312,8 +286,6 @@ const EmbedPdfViewerContent = ({
     finishScrollRestore();
   }, [clearRestoreCap, finishScrollRestore]);
 
-  // A failed swap, an unmount or the guard: the carried values will never
-  // land, so drop them and unfreeze the toolbar readout.
   const abandonRestore = useCallback(() => {
     pendingZoomRestoreRef.current = null;
     pendingSpreadRestoreRef.current = null;
@@ -390,9 +362,6 @@ const EmbedPdfViewerContent = ({
         scroller,
         expectSwap,
       };
-      // Arm the pre-paint restore gates (the per-page layout hook, the restore
-      // bridge and the swap backstop); every completion path clears through
-      // clearPendingScrollRestore.
       setRestorePending(true);
       armRestoreCap();
       swapTargetRef.current = null;
@@ -406,11 +375,9 @@ const EmbedPdfViewerContent = ({
     const pending = pendingScrollPositionRef.current;
     if (!pending) return null;
     if (pending.expectSwap) {
-      // The replacement's own ready pass resets the offset and fixes the page
-      // count, so nothing before it is worth applying to.
+      // The ready pass resets the offset and fixes the page count.
       if (!replacementLayoutReadyRef.current) return null;
-      // A clamped index can also exist in the outgoing document. Wait for its
-      // captured node to detach before resolving any replacement page.
+      // A clamped index can also exist in the outgoing document.
       if (pending.element?.isConnected) return null;
     }
     const totalPages = pending.expectSwap
@@ -437,8 +404,6 @@ const EmbedPdfViewerContent = ({
       return false;
     }
     const pageEl = resolvePendingScrollPage();
-    // The scroller survives document swaps; walking ancestors on every apply
-    // is what made this expensive.
     const scroller =
       pending.scroller && pending.scroller.isConnected
         ? pending.scroller
@@ -446,7 +411,6 @@ const EmbedPdfViewerContent = ({
     if (!pageEl || !scroller) return false;
     pending.scroller = scroller;
 
-    // Nothing moved since the last apply: no rect reads needed.
     const layoutSignature = `${pageEl.clientHeight}|${scroller.scrollHeight}`;
     const lastTarget = swapTargetRef.current;
     if (
@@ -456,9 +420,6 @@ const EmbedPdfViewerContent = ({
     ) {
       return true;
     }
-    // The captured pixel offset is exact while the page keeps its height; a
-    // page that changed size (a different scale, a tool that resized it)
-    // keeps the same fraction of itself above the fold instead.
     const heightChanged =
       pending.pageHeight !== null &&
       Math.abs(pageEl.clientHeight - pending.pageHeight) > 1;
@@ -475,10 +436,6 @@ const EmbedPdfViewerContent = ({
     return true;
   }, [finishScrollRestore, resolvePendingScrollPage]);
 
-  // Re-apply the captured position to the document as it is laid out now.
-  // Returns false until the target page node exists and while no offset was
-  // captured. Called from every layout pass and restore event while the
-  // restore is pending, so each geometry change re-lands the position.
   const applyPendingScrollPosition = useCallback((): boolean => {
     const pending = pendingScrollPositionRef.current;
     if (!pending) return false;
@@ -490,8 +447,6 @@ const EmbedPdfViewerContent = ({
         pending.scroller = findScrollableAncestor(pageEl);
       }
       if (pending.expectSwap) {
-        // First frame of the replacement: hide it until it settles so no
-        // wrong-scale or wrong-position frame can be seen.
         hideSwappedDocument(pending.scroller);
       }
       attachScrollIntentListeners();
@@ -1392,9 +1347,7 @@ const EmbedPdfViewerContent = ({
       queueScrollRestore(page, true);
     }
 
-    // A second reload while a restore is in flight would read intermediate
-    // values (the plugin default the carried zoom has not replaced yet), so
-    // in-flight targets are kept rather than re-read.
+    // In-flight targets are kept: a re-read would see the plugin defaults.
     if (pendingRotationRestoreRef.current === null) {
       pendingRotationRestoreRef.current = getRotationState().rotation ?? 0;
     }
@@ -1465,9 +1418,7 @@ const EmbedPdfViewerContent = ({
       if (cancelled) return;
       const currentState = getScrollState();
       const targetPage = Math.min(pageToRestore, currentState.totalPages);
-      // An exact capture is restored by the layout pass and the restore
-      // events, and a restore that already finished (or that the reader
-      // released) must not be snapped to the page top afterwards.
+      // A captured, finished or released restore is never snapped to the page top.
       if (
         pendingScrollPositionRef.current ||
         pendingScrollRestoreRef.current === null
@@ -1512,8 +1463,6 @@ const EmbedPdfViewerContent = ({
     finishScrollRestore,
   ]);
 
-  // Activation precedes React's commit; the carried values are addressed to
-  // the replacement and land through DocumentRestoreBridge.
   const handleDocumentSwapped = useCallback((documentId: string) => {
     documentSwappedRef.current = true;
     replacementLayoutReadyRef.current = false;
@@ -1533,8 +1482,6 @@ const EmbedPdfViewerContent = ({
     abandonRestore();
   }, [abandonRestore]);
 
-  // Reveals once every carried value landed and the position was applied
-  // against the settled layout, after the replacement's own ready pass.
   const maybeFinishRestore = useCallback(() => {
     if (
       pendingZoomRestoreRef.current !== null ||
@@ -1553,8 +1500,6 @@ const EmbedPdfViewerContent = ({
     completeRestore();
   }, [completeRestore]);
 
-  // Every restore event either moved the page geometry or the offset, so the
-  // position is re-applied against the layout as it now stands.
   const handleRestoreEvent = useCallback(
     (event: DocumentRestoreEvent) => {
       switch (event.type) {
@@ -1575,9 +1520,7 @@ const EmbedPdfViewerContent = ({
         case "layout-change":
           break;
         case "scroll-request": {
-          // Queued behind the viewport's own animation-frame callback, this
-          // puts the position back in the same frame the plugin's scroll
-          // lands, before it paints; the reveal waits for it.
+          // Queued behind the viewport's own rAF callback: same frame, before paint.
           if (!pendingScrollPositionRef.current) return;
           pluginScrollsRef.current += 1;
           const correct = (retry: boolean) => {
@@ -1614,8 +1557,6 @@ const EmbedPdfViewerContent = ({
     applyPendingScrollPosition();
   });
 
-  // Runs from the layout pass that mounts or re-lays out the pages, so the
-  // saved position lands before the frame paints.
   const handleViewerPageLayout = useCallback(() => {
     if (pendingScrollRestoreRef.current === null) return;
     if (!pendingScrollPositionRef.current) return;
@@ -1624,8 +1565,6 @@ const EmbedPdfViewerContent = ({
     maybeFinishRestore();
   }, [applyPendingScrollPosition, maybeFinishRestore, replacementPagesMounted]);
 
-  // Never leave the viewer hidden, holding a scroll or with a frozen readout
-  // if this unmounts mid-swap.
   useEffect(() => abandonRestore, [abandonRestore]);
   // Uses polling with retries to ensure the scroll succeeds
   useEffect(() => {
@@ -1639,9 +1578,6 @@ const EmbedPdfViewerContent = ({
       const currentState = getScrollState();
       const targetPage = Math.min(pageToRestore, currentState.totalPages);
 
-      // Same guard as above: this timer can fire after a fast event-driven
-      // restore completed, and the page-level fallback would snap to the
-      // page top.
       if (
         pendingScrollPositionRef.current ||
         pendingScrollRestoreRef.current === null
