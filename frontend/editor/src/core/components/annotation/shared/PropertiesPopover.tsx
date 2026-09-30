@@ -1,4 +1,4 @@
-import { Tooltip, Popover, Stack, Slider, Text, Group } from "@mantine/core";
+import { Tooltip, Popover, Stack, Text, Group } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
@@ -7,6 +7,8 @@ import type { TrackedAnnotation } from "@embedpdf/plugin-annotation";
 import type { PdfAnnotationObject } from "@embedpdf/models";
 import type { AnnotationPatch } from "@app/components/viewer/viewerTypes";
 import { Icon } from "@app/ui/Icon";
+import { ValueSlider } from "@app/components/annotation/shared/ValueSlider";
+import { useStableHandler } from "@app/components/annotation/shared/useStableHandler";
 export type PropertiesAnnotationType = "text" | "note" | "shape";
 
 interface PropertiesPopoverProps {
@@ -22,6 +24,19 @@ export function PropertiesPopover({
   onUpdate,
   disabled = false,
 }: PropertiesPopoverProps) {
+  const updateFontSize = useStableHandler((val: number) =>
+    onUpdate({ fontSize: val }),
+  );
+  const updateOpacity = useStableHandler((val: number) =>
+    onUpdate({ opacity: val / 100 }),
+  );
+  const updateOpacityGroup = useStableHandler((val: number) => {
+    const o = val / 100;
+    onUpdate({ opacity: o, strokeOpacity: o, fillOpacity: o });
+  });
+  const updateStrokeWidth = useStableHandler((val: number) =>
+    onUpdate({ borderWidth: val, strokeWidth: val, lineWidth: val }),
+  );
   const { t } = useTranslation();
   const [opened, setOpened] = useState(false);
 
@@ -64,12 +79,12 @@ export function PropertiesPopover({
         <Text size="xs" fw={500} mb={4}>
           {t("annotation.fontSize", "Font size")}
         </Text>
-        <Slider
+        <ValueSlider
           value={fontSize}
-          onChange={(val) => onUpdate({ fontSize: val })}
+          onChange={updateFontSize}
           min={8}
           max={32}
-          label={(val) => `${val}pt`}
+          suffix="pt"
         />
       </div>
 
@@ -78,12 +93,12 @@ export function PropertiesPopover({
         <Text size="xs" fw={500} mb={4}>
           {t("annotation.opacity", "Opacity")}
         </Text>
-        <Slider
+        <ValueSlider
           value={Math.round((obj?.opacity ?? 1) * 100)}
-          onChange={(val) => onUpdate({ opacity: val / 100 })}
+          onChange={updateOpacity}
           min={10}
           max={100}
-          label={(val) => `${val}%`}
+          suffix="%"
         />
       </div>
 
@@ -129,19 +144,12 @@ export function PropertiesPopover({
         <Text size="xs" fw={500} mb={4}>
           {t("annotation.opacity", "Opacity")}
         </Text>
-        <Slider
+        <ValueSlider
           value={opacity}
-          onChange={(val) => {
-            const newOpacity = val / 100;
-            onUpdate({
-              opacity: newOpacity,
-              strokeOpacity: newOpacity,
-              fillOpacity: newOpacity,
-            });
-          }}
+          onChange={updateOpacityGroup}
           min={10}
           max={100}
-          label={(val) => `${val}%`}
+          suffix="%"
         />
       </div>
 
@@ -152,18 +160,12 @@ export function PropertiesPopover({
             <Text size="xs" fw={500} mb={4}>
               {t("annotation.strokeWidth", "Stroke")}
             </Text>
-            <Slider
+            <ValueSlider
               value={strokeWidth}
-              onChange={(val) => {
-                onUpdate({
-                  borderWidth: val,
-                  strokeWidth: val,
-                  lineWidth: val,
-                });
-              }}
+              onChange={updateStrokeWidth}
               min={0}
               max={12}
-              label={(val) => `${val}pt`}
+              suffix="pt"
             />
           </div>
           <Button

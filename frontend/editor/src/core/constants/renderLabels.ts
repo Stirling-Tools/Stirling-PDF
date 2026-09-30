@@ -7,3 +7,10 @@
  * lookup in Node.
  */
 export const COLOUR_PICKER_RENDER_LABEL = "annotationColorPicker";
+
+/**
+ * Render-count label shared by the annotation menu's sliders. They are counted
+ * together because they are one memoised component, so a budget on the label
+ * covers every slider on screen at once.
+ */
+export const VALUE_SLIDER_RENDER_LABEL = "annotationValueSlider";

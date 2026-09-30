@@ -65,4 +65,31 @@ describe("surfacesAnnotationSaveUi", () => {
   it("does nothing for an event without an annotation", () => {
     expect(surfacesAnnotationSaveUi(undefined)).toBe(false);
   });
+
+  // A redaction mark the signature flow also authored is still a redaction:
+  // the subtype decides, not the author.
+  it("skips a redaction mark even when it carries the signature author", () => {
+    expect(
+      surfacesAnnotationSaveUi(
+        annotation({
+          type: PdfAnnotationSubtype.REDACT,
+          author: SIGNATURE_ANNOTATION_AUTHOR,
+        }),
+      ),
+    ).toBe(false);
+  });
+
+  // Only a stamp counts as a signature. Signature-shaped authors on other
+  // subtypes (HistoryAPIBridge defaults them to "Digital Signature" when
+  // recreating an annotation) must not silence their save UI.
+  it("surfaces a non-stamp that happens to carry the signature author", () => {
+    expect(
+      surfacesAnnotationSaveUi(
+        annotation({
+          type: PdfAnnotationSubtype.TEXT,
+          author: SIGNATURE_ANNOTATION_AUTHOR,
+        }),
+      ),
+    ).toBe(true);
+  });
 });

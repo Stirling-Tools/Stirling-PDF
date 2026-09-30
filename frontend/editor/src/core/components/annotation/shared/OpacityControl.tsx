@@ -1,7 +1,9 @@
-import { Tooltip, Popover, Stack, Slider, Text } from "@mantine/core";
+import { Tooltip, Popover, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { Icon } from "@app/ui/Icon";
+import { ValueSlider } from "@app/components/annotation/shared/ValueSlider";
+import { useStableHandler } from "@app/components/annotation/shared/useStableHandler";
 
 interface OpacityControlProps {
   value: number; // 0-100
@@ -16,6 +18,7 @@ export function OpacityControl({
 }: OpacityControlProps) {
   const { t } = useTranslation();
   const [opened, setOpened] = useState(false);
+  const handleChange = useStableHandler(onChange);
 
   return (
     <Popover opened={opened} onChange={setOpened} position="top" withArrow>
@@ -37,12 +40,12 @@ export function OpacityControl({
           <Text size="xs" fw={500}>
             {t("annotation.opacity", "Opacity")}
           </Text>
-          <Slider
+          <ValueSlider
             value={value}
-            onChange={onChange}
             min={10}
             max={100}
-            label={(val) => `${val}%`}
+            onChange={handleChange}
+            suffix="%"
           />
         </Stack>
       </Popover.Dropdown>
