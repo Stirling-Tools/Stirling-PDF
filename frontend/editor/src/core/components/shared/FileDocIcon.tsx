@@ -1,8 +1,4 @@
-import FileDocArchive from "@app/assets/file-types/file-doc-archive.svg?react";
-import FileDocCode from "@app/assets/file-types/file-doc-code.svg?react";
-import FileDocImage from "@app/assets/file-types/file-doc-image.svg?react";
-import FileDocSheet from "@app/assets/file-types/file-doc-sheet.svg?react";
-import FileDocText from "@app/assets/file-types/file-doc-text.svg?react";
+import { Icon, type IconName } from "@app/ui/Icon";
 import { accentColor } from "@app/utils/accentColors";
 
 export type FileDocVariant =
@@ -25,42 +21,38 @@ export const VARIANT_COLORS: Record<FileDocVariant, string> = {
   generic: accentColor("gray"),
 };
 
-const DRAWINGS: Record<FileDocVariant, typeof FileDocText> = {
-  pdf: FileDocText,
-  spreadsheet: FileDocSheet,
-  doc: FileDocText,
-  image: FileDocImage,
-  archive: FileDocArchive,
-  code: FileDocCode,
-  generic: FileDocText,
+const DRAWINGS: Record<FileDocVariant, IconName> = {
+  pdf: "file-doc-text",
+  spreadsheet: "file-doc-sheet",
+  doc: "file-doc-text",
+  image: "file-doc-image",
+  archive: "file-doc-archive",
+  code: "file-doc-code",
+  generic: "file-doc-text",
 };
 
-/** Portrait (16x20) rather than a square registry icon: callers size it by one edge and rely on that shape. */
+/** The page is drawn 16x20 inside the 24x24 frame, so at `size` it matches a lucide glyph's ink height. */
 export function FileDocIcon({
   color,
   variant,
+  size,
   className,
   style,
 }: {
   color?: string;
   variant: FileDocVariant;
+  size?: number | string;
   className?: string;
   style?: React.CSSProperties;
 }) {
-  const Drawing = DRAWINGS[variant];
   return (
-    <Drawing
+    <Icon
+      name={DRAWINGS[variant]}
+      size={size}
       className={className}
       // The accent flows through `color` (var() resolves in CSS, not in SVG
       // presentation attributes) and the shapes pick it up via currentColor.
-      style={{
-        width: 16,
-        height: 20,
-        color: color ?? VARIANT_COLORS[variant],
-        ...style,
-      }}
-      aria-hidden="true"
-      focusable={false}
+      style={{ color: color ?? VARIANT_COLORS[variant], ...style }}
     />
   );
 }

@@ -350,6 +350,11 @@ import Api from "@app/icons/svg/stirling/api.svg?react";
 import Cpu from "@app/icons/svg/stirling/cpu.svg?react";
 import Editor from "@app/icons/svg/stirling/editor.svg?react";
 import FileConvert from "@app/icons/svg/stirling/file-convert.svg?react";
+import FileDocArchive from "@app/icons/svg/stirling/file-doc-archive.svg?react";
+import FileDocCode from "@app/icons/svg/stirling/file-doc-code.svg?react";
+import FileDocImage from "@app/icons/svg/stirling/file-doc-image.svg?react";
+import FileDocSheet from "@app/icons/svg/stirling/file-doc-sheet.svg?react";
+import FileDocText from "@app/icons/svg/stirling/file-doc-text.svg?react";
 import FileHtml from "@app/icons/svg/stirling/file-html.svg?react";
 import FileLockOpen from "@app/icons/svg/stirling/file-lock-open.svg?react";
 import FormScan from "@app/icons/svg/stirling/form-scan.svg?react";
@@ -769,6 +774,11 @@ export const ICONS = {
   cpu: { Component: Cpu, kind: "stirling" },
   editor: { Component: Editor, kind: "stirling" },
   "file-convert": { Component: FileConvert, kind: "stirling" },
+  "file-doc-archive": { Component: FileDocArchive, kind: "stirling" },
+  "file-doc-code": { Component: FileDocCode, kind: "stirling" },
+  "file-doc-image": { Component: FileDocImage, kind: "stirling" },
+  "file-doc-sheet": { Component: FileDocSheet, kind: "stirling" },
+  "file-doc-text": { Component: FileDocText, kind: "stirling" },
   "file-html": { Component: FileHtml, kind: "stirling" },
   "file-lock-open": { Component: FileLockOpen, kind: "stirling" },
   "file-pdf": { Component: FilePdf, kind: "stirling" },

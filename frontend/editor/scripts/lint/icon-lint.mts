@@ -19,6 +19,7 @@ const BANNED_IMPORTS = [
 ];
 
 const ICON_SVG_DIR = path.join(ICONS_DIR, "svg");
+const REGISTRY = path.join(ICONS_DIR, "icons.ts");
 
 /** The frame every icon is drawn on, so one `size` renders them all alike. */
 const ICON_FRAME = "0 0 24 24";
@@ -200,6 +201,16 @@ for (const file of files) {
         `${rel(file)}:${i + 1}: "${name}" is a Material Symbols name, not a registry ` +
           `icon; <Icon> would draw the placeholder. Use the lucide equivalent, or ` +
           `add "// icon-lint-disable -- <reason>" if it is not an icon name.`,
+      );
+    }
+
+    // Only the registry turns an svg into a component: one made anywhere else skips the name
+    // check, the frame and the gallery, which is how a second icon system starts. No opt-out.
+    if (/\.svg\?react\b/.test(line) && file !== REGISTRY) {
+      problems.push(
+        `${rel(file)}:${i + 1}: imports an svg as a component. Add it to ` +
+          `src/core/icons/icons.ts and render <Icon name="…" />, or import the file as a ` +
+          `URL for an <img> if it is a picture rather than an icon.`,
       );
     }
 
