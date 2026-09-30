@@ -432,18 +432,10 @@ export default defineConfig(async ({ mode, command }) => {
       rollupOptions: {
         output: {
           manualChunks(id: string) {
-            if (id.includes("material-symbols-icons.json"))
-              return "vendor-iconset";
             if (id.includes("node_modules")) {
               if (id.includes("pdfjs-dist")) return "vendor-pdfjs";
               if (id.includes("@embedpdf")) return "vendor-embedpdf";
-              if (
-                id.includes("react") ||
-                id.includes("@mantine") ||
-                id.includes("@emotion") ||
-                id.includes("@mui") ||
-                id.includes("@iconify")
-              ) {
+              if (id.includes("react") || id.includes("@mantine")) {
                 return "vendor-ui";
               }
               if (id.includes("@supabase")) return "vendor-supabase";

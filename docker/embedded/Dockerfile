@@ -58,9 +58,8 @@ COPY . .
 ARG PROTOTYPES_BUILD=false
 ARG STIRLING_FLAVOR=proprietary
 ENV STIRLING_FLAVOR=${STIRLING_FLAVOR}
-# Embed the admin portal app at /portal. Set true by the deploy workflow when the
-# portal or AI layers change; defaults false so normal builds skip the extra app.
-ARG BUILD_PORTAL=false
+# Include the processor (admin portal) in the bundled editor; false leaves it out.
+ARG BUILD_PORTAL=true
 
 # Which Stirling account the portal connects to. Build-time because Vite inlines VITE_* into the
 # bundle; there is no runtime override. Empty leaves the committed .env.proprietary defaults, which
