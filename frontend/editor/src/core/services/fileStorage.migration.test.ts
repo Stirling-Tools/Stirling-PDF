@@ -26,7 +26,7 @@ function record(
     versionNumber: 1,
     data: new ArrayBuffer(0),
     ...overrides,
-  } as StoredStirlingFileRecord;
+  };
 }
 
 describe("legacyDerivedFromTool — IndexedDB backfill for pre-upgrade files", () => {
