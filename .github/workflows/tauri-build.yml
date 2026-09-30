@@ -237,7 +237,7 @@ jobs:
 
       - name: Restore cache sftp
         id: cache-cargo
-        uses: Ludy87/cache-the-planet/multi-cache@b2dd2fd8ebfbeff73b35fb117a22fdd70dfd8e63
+        uses: Ludy87/cache-the-planet/multi-cache@7ca5e4595e8265847724b2ecc68fd9c8995171c4
         with:
           storage: github-artifact
           artifact-retention-days: 1
