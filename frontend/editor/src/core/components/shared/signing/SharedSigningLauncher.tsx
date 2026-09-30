@@ -4,17 +4,17 @@ import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
 import { useGroupSigningEnabled } from "@app/hooks/useGroupSigningEnabled";
 import { useSigningSessions } from "@app/hooks/signing/useSigningSessions";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import { useOpenSigning } from "@app/hooks/signing/useOpenSigning";
 
 /**
  * Content for the optional "Request signatures" step in the Sign tool: a short
- * explanation plus a link to the standalone Shared Signing tool. Renders
+ * explanation plus a link to the signing workspace. Renders
  * nothing unless group signing is enabled on the server.
  */
 export default function SharedSigningLauncher() {
   const { t } = useTranslation();
   const groupSigningEnabled = useGroupSigningEnabled();
-  const { handleToolSelect } = useToolWorkflow();
+  const openSigning = useOpenSigning();
 
   // Surfaces the count of sign requests awaiting this user's action.
   const { signRequests } = useSigningSessions({
@@ -48,7 +48,7 @@ export default function SharedSigningLauncher() {
             </Badge>
           ) : undefined
         }
-        onClick={() => handleToolSelect("sharedSign")}
+        onClick={() => openSigning("create")}
       >
         {t("sign.sharedSigningOpen", "Open shared signing")}
       </Button>

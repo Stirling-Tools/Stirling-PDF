@@ -1,3 +1,5 @@
+import type { SigningItem } from "@app/utils/signingItems";
+
 export interface QuickNavIdentity {
   displayName: string;
   profilePictureUrl: string | null;
@@ -9,6 +11,7 @@ export interface QuickNavAccount {
   isAnonymous: boolean;
   identity: QuickNavIdentity | null;
   signingBadge: number;
+  signingItems: SigningItem[];
   portalAccess: boolean;
 }
 
@@ -20,6 +23,7 @@ export const EMPTY_QUICK_NAV_ACCOUNT: QuickNavAccount = {
   isAnonymous: false,
   identity: null,
   signingBadge: 0,
+  signingItems: [],
   portalAccess: false,
 };
 
@@ -38,6 +42,7 @@ export function updateQuickNavAccount(
     identity:
       update.identity === undefined ? current.identity : update.identity,
     signingBadge: update.signingBadge ?? current.signingBadge,
+    signingItems: update.signingItems ?? current.signingItems,
     portalAccess: update.portalAccess ?? current.portalAccess,
   };
 
@@ -45,6 +50,7 @@ export function updateQuickNavAccount(
     next.accountId === previous.accountId &&
     next.isAnonymous === previous.isAnonymous &&
     next.signingBadge === previous.signingBadge &&
+    next.signingItems === previous.signingItems &&
     next.portalAccess === previous.portalAccess &&
     next.identity?.displayName === previous.identity?.displayName &&
     next.identity?.profilePictureUrl === previous.identity?.profilePictureUrl;

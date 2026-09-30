@@ -1,6 +1,6 @@
 # Shared Signing: customer guide supplement
 
-24 September 2026 | Updated local demonstration build
+30 September 2026 | Updated local demonstration build
 
 This supplement covers the navigation and practical decisions verified in the local signing patch. It is not a statement that these changes are already in a published release. Use synthetic documents for the demonstration; confirm the customer deployment separately.
 
@@ -8,7 +8,7 @@ This supplement covers the navigation and practical decisions verified in the lo
 
 | Topic | Official reference | What this supplement adds |
 |---|---|---|
-| Shared Signing | [Shared Signing guide](https://docs.stirlingpdf.com/Functionality/Security/Shared-Signing/) | Current Sign menu, compact request form and finalization safeguards. |
+| Shared Signing | [Shared Signing guide](https://docs.stirlingpdf.com/Functionality/Security/Shared-Signing/) | Current Sign menu, expanded session workspace and finalization safeguards. |
 | Accounts and login | [System and Security](https://docs.stirlingpdf.com/Configuration/Security/System%20and%20Security/) | Check ordinary participant accounts before the meeting. |
 | Persistent files | [File Sharing and Storage](https://docs.stirlingpdf.com/Configuration/Storage/File-Sharing-Storage/) | Preserve PDFs, database and configuration together. |
 | Certificates and trust | [Certificate Signing](https://docs.stirlingpdf.com/Functionality/Security/Certificate-Signing/) | Distinguish a submitted contribution, a finalized PDF and recipient trust. |
@@ -18,10 +18,10 @@ The official feature remains alpha. The tested setup uses ordinary registered ac
 
 ## Owner: create and complete a request
 
-1. Open one PDF. Click **Sign** in the permanent navigation rail, then **Request signatures**. The current PDF is carried into the form. When no PDF is selected, sending is disabled; choose a file from the library.
+1. Open one PDF. Click **Sign** in the permanent navigation rail, then **Request signatures**. The current PDF is carried into the form. Choose an open PDF in the form or use **Upload a PDF** if none is loaded. The form remains open after uploading.
 2. Choose the named participants. Their names stay visible in the picker beside the document and optional due date. Expand **Appearance and summary page (optional)** only when needed, then **Send signing request**.
-3. Tell participants to open **Sign > Signing sessions** on the same server. Sending a request creates the session; it does not establish that an email was delivered. All participants may sign in any order. The due date is advisory.
-4. Open your session to review individual statuses and the signature count. **Mine + Overdue** finds your sessions with past due dates. A submitted signature stays in Active until the owner finalizes.
+3. Tell participants to open **Sign > Expand signing sessions** on the same server. Sending a request creates the session; it does not establish that an email was delivered. All participants may sign in any order. The due date is advisory.
+4. Open your session to review individual statuses and the signature count. Use **Created by me**, **Needs your signature** or **Overdue**, and search by document or owner. Session names and statuses are shown in the full workbench. A submitted signature stays in Active until the owner finalizes.
 5. Finalize when the required people have signed. At least one signature is required. Early finalization asks you to confirm which people are included and which will be left out. Cancel if an outstanding signature is still needed.
 6. Open the final PDF from Completed or load it into Active Files. Download it and use **Validate PDF Signature** to check the expected signer count, identities and integrity. Check certificate trust separately in the recipient's intended PDF reader.
 
@@ -29,7 +29,7 @@ Finalization closes the request: outstanding participants cannot sign afterward.
 
 ## Participant: review, sign or decline
 
-1. Open **Sign > Signing sessions**, select the request, and review the owner and PDF.
+1. Click **Sign** and open a recent request directly, or choose **Expand signing sessions** to search the full list. Review the owner and PDF. The document and signing controls have their own workspace; on smaller screens the controls sit below the document.
 2. Optionally draw, type or upload a visible mark, select **Use signature**, and click the page. Move, resize or delete marks before submission. Check their position and size at normal zoom. Typed marks now export without the large empty preview canvas.
 3. Choose **Complete & Sign**. This also works without a visible mark. Select your uploaded certificate format: PKCS12/PFX, JKS, or PEM with both certificate and private-key files. The certificate password is separate from your Stirling password.
 4. Wait for validation and check the displayed certificate subject and validity dates. Invalid or still-checking uploads cannot be submitted. Correct the file/password and retry; existing placed marks remain. **Sign Document** submits your contribution.

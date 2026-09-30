@@ -1,6 +1,9 @@
 import { useSyncExternalStore } from "react";
 
-type SigningIntent = "create" | "list";
+export type SigningIntent =
+  | "create"
+  | "list"
+  | { kind: "request" | "session"; sessionId: string };
 let pending: SigningIntent | null = null;
 const listeners = new Set<() => void>();
 const subscribe = (listener: () => void) => {
@@ -11,13 +14,13 @@ const subscribe = (listener: () => void) => {
 };
 const snapshot = () => pending;
 
-/** Carries the rail action across an editor mount, including when the signing tool is already open. */
+/** Carries a rail action across an editor mount; session details are fetched in the workspace. */
 export function requestSigningIntent(intent: SigningIntent | null): void {
   pending = intent;
   listeners.forEach((listener) => listener());
 }
 
-/** Read and clear after the tool receives the action; no document or account data is retained. */
+/** Read and clear after the workspace receives the action. */
 export function usePendingSigningIntent(): SigningIntent | null {
   return useSyncExternalStore(subscribe, snapshot, snapshot);
 }

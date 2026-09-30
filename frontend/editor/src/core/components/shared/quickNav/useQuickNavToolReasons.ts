@@ -4,7 +4,10 @@ import { useMultipleEndpointsEnabled } from "@app/hooks/useEndpointConfig";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useGroupSigningEnabled } from "@app/hooks/useGroupSigningEnabled";
 import { getDisabledLabel } from "@app/components/tools/fullscreen/shared";
-import type { QuickNavToolReasons } from "@app/contexts/QuickNavHostContext";
+import type {
+  QuickNavToolReasons,
+  QuickNavEntryId,
+} from "@app/contexts/QuickNavHostContext";
 import type { ToolId } from "@app/types/toolId";
 
 const ENTRY_ENDPOINTS = {
@@ -21,7 +24,7 @@ const ENDPOINT_ENTRIES = Object.keys(
 /** Shared signing is a feature toggle rather than an endpoint, so it has its own cause. */
 type EndpointCause = "missingDependency" | "disabledByAdmin";
 type Cause = EndpointCause | "groupSigningOff";
-type Causes = Partial<Record<ToolId, Cause>>;
+type Causes = Partial<Record<QuickNavEntryId, Cause>>;
 const CAUSES: Cause[] = [
   "missingDependency",
   "disabledByAdmin",
@@ -41,7 +44,7 @@ function readRemembered(): Causes | null {
     }
     const known = Object.entries(parsed as Record<string, unknown>).filter(
       ([, cause]) => CAUSES.includes(cause as Cause),
-    ) as [ToolId, Cause][];
+    ) as [QuickNavEntryId, Cause][];
     return Object.fromEntries(known);
   } catch {
     return null;
@@ -113,7 +116,7 @@ export function useQuickNavToolReasons(): QuickNavToolReasons | null {
   return useMemo(() => {
     if (!causes) return null;
     const reasons: QuickNavToolReasons = {};
-    for (const entry of Object.keys(causes) as ToolId[]) {
+    for (const entry of Object.keys(causes) as QuickNavEntryId[]) {
       const cause = causes[entry];
       if (cause === "groupSigningOff") {
         // The tool's own wording, minus the full stop.

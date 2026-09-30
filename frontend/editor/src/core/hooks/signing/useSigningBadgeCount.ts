@@ -1,4 +1,9 @@
-import { useSyncExternalStore } from "react";
+import { useMemo, useSyncExternalStore } from "react";
+import {
+  collectSigningItems,
+  recentSigningItems,
+  type SigningItem,
+} from "@app/utils/signingItems";
 import { useAuth } from "@app/auth/UseSession";
 import { useGroupSigningState } from "@app/hooks/useGroupSigningEnabled";
 import { useSigningSessions } from "@app/hooks/signing/useSigningSessions";
@@ -15,7 +20,11 @@ import {
  * while enabled. Unsettled while auth, config or sessions load, or the session
  * lookup fails; consumers may retain their previous count until it settles.
  */
-export function useSigningBadgeState(): { count: number; settled: boolean } {
+export function useSigningBadgeState(): {
+  count: number;
+  settled: boolean;
+  items: SigningItem[];
+} {
   const { loading: authLoading } = useAuth();
   const { enabled, settled: availabilitySettled } = useGroupSigningState();
   const { signRequests, mySessions, settled } = useSigningSessions({
@@ -43,7 +52,16 @@ export function useSigningBadgeState(): { count: number; settled: boolean } {
       session.signedCount > getLastSeenSignedCount(session.sessionId),
   ).length;
 
+  const items = useMemo(
+    () =>
+      enabled
+        ? recentSigningItems(collectSigningItems(signRequests, mySessions))
+        : [],
+    [enabled, signRequests, mySessions],
+  );
+
   return {
+    items,
     count: enabled ? incoming + ownerUpdates : 0,
     settled: !authLoading && availabilitySettled && (!enabled || settled),
   };

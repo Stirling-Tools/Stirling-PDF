@@ -5581,7 +5581,6 @@ tags = "detect,split,photos,auto detect,detect photos,split photos,separate phot
 title = "Detect & Split Scanned Photos"
 
 [home.sharedSign]
-desc = "Request signatures from others and track signing sessions"
 title = "Shared Signing"
 
 [home.showJS]
@@ -11654,21 +11653,12 @@ label = "Server URL"
 
 [sharedSign]
 backToSessions = "Back to sessions"
-createdOn = "Created {{date}}"
 disabledBody = "Collaborative signing isn't enabled on this server."
-disabledTitle = "Not enabled"
 due = "Due {{date}}"
 filterDeclined = "Declined"
-filterMine = "Mine"
 filterOverdue = "Overdue"
 filterSigned = "Signed"
 fromOwner = "From {{owner}}"
-newRequest = "Request signatures"
-signedCount = "{{signed}}/{{total}} signed"
-
-[sharedSign.empty]
-active = "No pending sign requests or active sessions"
-completed = "No completed sessions"
 
 [sharedSign.tab]
 active = "Active"
@@ -11914,6 +11904,29 @@ skip = "Skip"
 subtitle = "Join Stirling PDF to get started"
 title = "Create an account"
 unexpectedError = "Unexpected error: {{message}}"
+
+[signWorkspace]
+all = "All sessions"
+chooseDocument = "Choose an open PDF"
+createdByMe = "Created by me"
+description = "Send documents, collect signatures and follow their progress."
+document = "Document"
+empty = "No sessions here yet."
+expand = "Expand signing sessions"
+filter = "Filter sessions"
+needsYou = "Needs your signature"
+noMatches = "No sessions match your search or filter."
+noPreview = "Document preview unavailable"
+noRecent = "Your active sessions will appear here."
+personalHeading = "Sign a document"
+recent = "Recent activity"
+refresh = "Refresh sessions"
+search = "Search documents or people"
+submitted = "Response submitted"
+unavailable = "This session is no longer available. Refresh the list to see your current sessions."
+upload = "Upload a PDF"
+uploadFailed = "Could not open this PDF. Please try again."
+yourRequest = "Your request"
 
 [sizes]
 large = "Large"

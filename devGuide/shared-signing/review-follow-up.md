@@ -45,6 +45,17 @@ Remaining release work:
 - Finalized sessions retain both PDFs with no automatic expiry or owner deletion. A retention/purge policy and implementation are still needed for production requirements that demand deletion.
 - Signing-specific mobile/touch, accessibility and browser coverage remains narrower than the repository's general browser suite.
 - Invitations/reminders and enforced signing order are not implemented by this patch. Normal shared-signing participants remain registered users; token support alone is not evidence of a complete guest-signing journey.
-- The Sign menu is restored, but inline recent sessions and one combined personal signing editor remain design work. Decline in the normal user interface still lacks confirmation, reason capture and undo.
+- Personal wet-signature and certificate editors remain separate. Decline in the normal user interface still lacks confirmation, reason capture and undo.
 
 These limitations leave full production sign-off open. They do not invalidate the tested controlled demo described in the [demo plan](./demo-plan.md).
+
+
+## Signing workspace revision
+
+The 30 September UI revision removes Shared Signing from the tool registry and picker. Sign now groups personal signing above request creation and recent session shortcuts, with an Expand action for the full session workspace. The same menu is available in the mobile bottom bar.
+
+The workspace has searchable, wrapping document rows, active/completed tabs and status/ownership filters. Owner and signer details use a document-and-controls layout with a 360–480 px controls column on desktop and a stacked layout on narrow screens. Request creation can choose an open PDF or upload one without leaving the form. The existing `/shared-sign` address remains valid. No API schema, storage setting, entitlement or certificate rules change in this revision.
+
+Browser checks on the local instance covered personal signing, current-document carryover, uploading, creating a synthetic request for a local account, owner controls, request review, the certificate dialog, recent-session shortcuts, search, library/editor navigation and the 390 px layout. Automated regressions cover menu destinations, recent-session selection, duplicate historical invitation rows, clearing account-scoped names, upload navigation, unsaved-work prompts and discarded document loads after leaving the workspace. All frontend variants typecheck. The final frontend quality gate passes lint and formatting, with 5,813/5,815 tests passing; the two previously reproduced baseline failures remain. This is UI acceptance; the full certificate/final-artifact matrix remains the separately recorded 24 September acceptance run.
+
+The responsive shell still remounts its workbench when switching between desktop and mobile layouts. Changing across that breakpoint returns the signing workspace to its list; keep a stable viewport during signature placement. A combined personal-signing editor and broader device/accessibility acceptance remain follow-up work.

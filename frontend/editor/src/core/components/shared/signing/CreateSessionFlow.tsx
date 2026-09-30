@@ -40,21 +40,11 @@ export function CreateSessionFlow({
   const file = selectedFiles.length === 1 ? selectedFiles[0] : null;
   return (
     <Stack gap="md">
-      <Text fw={600}>{t("signMenu.request", "Request signatures")}</Text>
-      <Text size="sm" style={{ overflowWrap: "anywhere" }}>
-        {file?.name ??
-          t(
-            "groupSigning.steps.selectDocument.noFile",
-            "Please select a single PDF file from your active files to create a signing session.",
-          )}
-      </Text>
-      <Text size="sm">
-        {t(
+      <UserSelector
+        label={t(
           "groupSigning.steps.selectParticipants.label",
           "Select participants",
         )}
-      </Text>
-      <UserSelector
         value={selectedUserIds}
         onChange={onSelectedUserIdsChange}
         disabled={creating}

@@ -14,6 +14,7 @@ interface UserSelectorProps {
   value: number[];
   onChange: (userIds: number[]) => void;
   placeholder?: string;
+  label?: string;
   size?: "xs" | "sm" | "md" | "lg" | "xl";
   disabled?: boolean;
 }
@@ -25,6 +26,7 @@ const UserSelector = ({
   value,
   onChange,
   placeholder,
+  label,
   size = "sm",
   disabled = false,
 }: UserSelectorProps) => {
@@ -110,10 +112,11 @@ const UserSelector = ({
 
   return (
     <MultiSelect
-      aria-label={t(
-        "certSign.collab.userSelector.placeholder",
-        "Select users...",
-      )}
+      label={label}
+      aria-label={
+        label ??
+        t("certSign.collab.userSelector.placeholder", "Select users...")
+      }
       data={selectData}
       value={stringValue}
       onChange={(selectedIds) => {

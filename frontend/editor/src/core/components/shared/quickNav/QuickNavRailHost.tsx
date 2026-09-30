@@ -108,7 +108,11 @@ export function QuickNavRailHost() {
     icon: <Icon name="pencil" size={SIZE} filled={inEditor} />,
     // The library and reading are places of their own, not the editor with a
     // different centre.
-    current: inEditor && !host?.fileLibrary && !host?.readerMode,
+    current:
+      inEditor &&
+      !host?.fileLibrary &&
+      !host?.readerMode &&
+      path !== "/shared-sign",
     onClick: () => {
       if (inEditor) {
         returnHome();
@@ -227,7 +231,7 @@ export function QuickNavRailHost() {
       current:
         host?.activeTool === "sign" ||
         host?.activeTool === "certSign" ||
-        host?.activeTool === "sharedSign",
+        path === "/shared-sign",
       expanded: signMenuOpen,
       onClick: () => setSignMenuOpen((open) => !open),
       wrap: (button) => (
@@ -236,18 +240,16 @@ export function QuickNavRailHost() {
           onClose={() => setSignMenuOpen(false)}
           reasons={host?.toolReasons ?? {}}
           badge={host?.signingBadge ?? 0}
-          onSelect={(tool, create) => {
-            if (tool === "sharedSign")
-              requestSigningIntent(create ? "create" : "list");
-            openTool(
-              tool,
-              tool === "sharedSign"
-                ? "/shared-sign"
-                : tool === "certSign"
-                  ? "/cert-sign"
-                  : "/sign",
-            );
-          }}
+          items={host?.signingItems ?? []}
+          onOpenSigning={(intent) =>
+            guarded(() => {
+              requestSigningIntent(intent);
+              navigate("/shared-sign");
+            })
+          }
+          onSelect={(tool) =>
+            openTool(tool, tool === "certSign" ? "/cert-sign" : "/sign")
+          }
         >
           {button}
         </SignMenu>

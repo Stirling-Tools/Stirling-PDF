@@ -13,7 +13,7 @@ import {
 } from "@app/types/signingSession";
 import type { SignaturePreview } from "@app/components/viewer/viewerTypes";
 import { getFileColor } from "@app/components/pageEditor/fileColors";
-import { useNavigationActions } from "@app/contexts/NavigationContext";
+import type { StirlingFile } from "@app/types/fileContext";
 import { useFileActions } from "@app/contexts/FileContext";
 import { useSigningOverlay } from "@app/contexts/SigningOverlayContext";
 import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
@@ -21,7 +21,7 @@ import { useSigningSessions } from "@app/hooks/signing/useSigningSessions";
 import { markSessionSeen } from "@app/services/signingSeenStore";
 import type { SignatureSettings } from "@app/components/tools/certSign/SignatureSettingsInput";
 
-/** Which Shared Signing screen the sidebar tool is currently showing. */
+/** The session workflow currently shown in the workspace. */
 export type SigningView = "list" | "detail" | "request";
 
 /** The owner's appearance settings as session workflowMetadata; unset keys are omitted, not null. */
@@ -40,7 +40,7 @@ export function buildWorkflowMetadata(
   );
 }
 
-/** Data the session-detail sidebar panel needs to render and act. */
+/** Data the session-detail panel needs to render and act. */
 export interface SigningDetailData {
   session: SessionDetail;
   pdfFile: File | null;
@@ -56,13 +56,14 @@ export interface SigningDetailData {
   onRefresh: () => Promise<void>;
 }
 
-/** Data the sign-request sidebar panel needs to render and act. */
+/** Data the sign-request panel needs to render and act. */
 export interface SigningRequestData {
   signRequest: SignRequestDetail;
   pdfFile: File;
   onSign: (certificateData: FormData) => Promise<void>;
   onDecline: () => Promise<void>;
   onBack: () => void;
+  onOpenFiles?: () => void;
   canSign: boolean;
 }
 
@@ -99,8 +100,11 @@ function computeWetSignaturePreviews(
   return previews;
 }
 
-/** Owns Shared Signing state: data fetch, session creation, and opening a request/session into the sidebar tool (driving the viewer overlay). */
-export function useSigningSessionController(enabled: boolean) {
+/** Fetches sessions, creates requests and supplies documents and overlays to the signing workspace. */
+export function useSigningSessionController(
+  enabled: boolean,
+  onOpenFiles?: () => void,
+) {
   const { t } = useTranslation();
   const { signRequests, mySessions, loading, refetch } = useSigningSessions({
     enabled,
@@ -111,7 +115,6 @@ export function useSigningSessionController(enabled: boolean) {
   // their input (see useBaseTool / useViewScopedFiles). Creating a session
   // requires exactly one file.
   const selectedFiles = useViewScopedFiles();
-  const { actions: navigationActions } = useNavigationActions();
   const { setOverlay } = useSigningOverlay();
 
   const [creating, setCreating] = useState(false);
@@ -124,22 +127,24 @@ export function useSigningSessionController(enabled: boolean) {
   // resolve time so a request dispatched before navigation is discarded rather
   // than painting its data onto whatever is now on screen.
   const openDetailSessionIdRef = useRef<string | null>(null);
+  const openVersion = useRef(0);
 
-  // Leaving the tool (panel unmounts) must not leave the signing document and
-  // overlays lingering on the shared viewer.
+  // Leaving the workspace releases its document and signature overlays.
   useEffect(() => {
-    return () => setOverlay(null);
+    return () => {
+      openVersion.current += 1;
+      setOverlay(null);
+    };
   }, [setOverlay]);
 
   const backToList = useCallback(() => {
+    openVersion.current += 1;
     openDetailSessionIdRef.current = null;
     setOverlay(null);
     setDetailData(null);
     setRequestData(null);
     setView("list");
   }, [setOverlay]);
-
-  // --- Action handlers (invoked from the sidebar panels) ---
 
   const handleSign = async (sessionId: string, certificateData: FormData) => {
     await apiClient.post(
@@ -193,6 +198,7 @@ export function useSigningSessionController(enabled: boolean) {
       durationMs: 2500,
     });
     backToList();
+    onOpenFiles?.();
     await refetch();
   };
 
@@ -218,6 +224,7 @@ export function useSigningSessionController(enabled: boolean) {
       durationMs: 2500,
     });
     backToList();
+    onOpenFiles?.();
   };
 
   const handleRefreshSession = async (sessionId: string) => {
@@ -278,9 +285,8 @@ export function useSigningSessionController(enabled: boolean) {
     await refetch();
   };
 
-  // --- Open into the sidebar detail/request views ---
-
   const openSignRequest = async (request: SignRequestSummary) => {
+    const version = ++openVersion.current;
     try {
       const [detailResponse, pdfResponse] = await Promise.all([
         apiClient.get<SignRequestDetail>(
@@ -291,6 +297,7 @@ export function useSigningSessionController(enabled: boolean) {
           { responseType: "blob" },
         ),
       ]);
+      if (version !== openVersion.current) return;
       const pdfFile = new File(
         [pdfResponse.data],
         detailResponse.data.documentName,
@@ -306,6 +313,7 @@ export function useSigningSessionController(enabled: boolean) {
       setOverlay({ file: pdfFile });
       setRequestData({
         signRequest: detailResponse.data,
+        onOpenFiles,
         pdfFile,
         onSign: (certData: FormData) => handleSign(request.sessionId, certData),
         onDecline: () => handleDecline(request.sessionId),
@@ -313,8 +321,8 @@ export function useSigningSessionController(enabled: boolean) {
         canSign,
       });
       setView("request");
-      navigationActions.setWorkbench("viewer");
     } catch (error) {
+      if (version !== openVersion.current) return;
       console.error(
         "Failed to load sign request:",
         error instanceof Error ? error.message : error,
@@ -330,14 +338,10 @@ export function useSigningSessionController(enabled: boolean) {
   };
 
   const openSession = async (session: SessionSummary) => {
+    const version = ++openVersion.current;
     try {
       const detailResponse = await apiClient.get<SessionDetail>(
         `/api/v1/security/cert-sign/sessions/${session.sessionId}`,
-      );
-      // Owner is now viewing this session — clear its "new signatures" badge.
-      markSessionSeen(
-        session.sessionId,
-        countSignedParticipants(detailResponse.data),
       );
       let pdfFile: File | null = null;
       if (detailResponse.data.finalized) {
@@ -350,6 +354,7 @@ export function useSigningSessionController(enabled: boolean) {
             type: "application/pdf",
           });
         } catch (pdfError) {
+          if (version !== openVersion.current) return;
           if (isAxiosError(pdfError) && pdfError.response?.status === 404) {
             alert({
               alertType: "warning",
@@ -379,6 +384,12 @@ export function useSigningSessionController(enabled: boolean) {
         }
       }
 
+      if (version !== openVersion.current) return;
+      // Owner is now viewing this session — clear its "new signatures" badge.
+      markSessionSeen(
+        session.sessionId,
+        countSignedParticipants(detailResponse.data),
+      );
       openDetailSessionIdRef.current = session.sessionId;
       setOverlay({
         file: pdfFile,
@@ -401,8 +412,8 @@ export function useSigningSessionController(enabled: boolean) {
         onRefresh: () => handleRefreshSession(session.sessionId),
       });
       setView("detail");
-      navigationActions.setWorkbench("viewer");
     } catch (error) {
+      if (version !== openVersion.current) return;
       console.error(
         "Failed to load session:",
         error instanceof Error ? error.message : error,
@@ -420,19 +431,19 @@ export function useSigningSessionController(enabled: boolean) {
     }
   };
 
-  // --- Create a new signing request from the currently selected file ---
-
   const createSession = async (
     signatureSettings: SignatureSettings,
     selectedUserIds: number[],
     dueDate: string,
+    document?: StirlingFile,
   ): Promise<boolean> => {
-    if (selectedUserIds.length === 0 || selectedFiles.length !== 1) {
+    const selectedFile =
+      document ?? (selectedFiles.length === 1 ? selectedFiles[0] : null);
+    if (selectedUserIds.length === 0 || !selectedFile) {
       return false;
     }
     setCreating(true);
     try {
-      const selectedFile = selectedFiles[0];
       const stirlingFile = await fileStorage.getStirlingFile(
         selectedFile.fileId,
       );

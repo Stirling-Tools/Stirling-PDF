@@ -162,7 +162,11 @@ export const SessionDetailPanel = ({ data }: SessionDetailPanelProps) => {
 
       <Stack gap={4}>
         <Group gap="sm" wrap="nowrap">
-          <Text size="sm" fw={600} truncate style={{ flex: 1, minWidth: 0 }}>
+          <Text
+            size="sm"
+            fw={600}
+            style={{ flex: 1, minWidth: 0, overflowWrap: "anywhere" }}
+          >
             {session.documentName}
           </Text>
           <Badge

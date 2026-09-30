@@ -20,7 +20,7 @@ interface SignRequestPanelProps {
   data: SigningRequestData;
 }
 
-/** Sidebar controls for a sign request: drives viewer placement via the overlay context and reads placed signatures via the overlay API ref. */
+/** Controls for a sign request: drives viewer placement via the overlay context and reads placed signatures via the overlay API ref. */
 const SignRequestPanel = ({ data }: SignRequestPanelProps) => {
   const { t } = useTranslation();
   const { signRequest, pdfFile, onSign, onDecline, onBack, canSign } = data;
@@ -248,6 +248,7 @@ const SignRequestPanel = ({ data }: SignRequestPanelProps) => {
       durationMs: 2500,
     });
     onBack();
+    data.onOpenFiles?.();
   };
 
   const handleDeleteSelected = () => {
@@ -268,7 +269,7 @@ const SignRequestPanel = ({ data }: SignRequestPanelProps) => {
       </Button>
 
       <Stack gap={2}>
-        <Text size="sm" fw={600} truncate>
+        <Text size="sm" fw={600} style={{ overflowWrap: "anywhere" }}>
           {signRequest.documentName}
         </Text>
         <Text size="xs" c="dimmed">

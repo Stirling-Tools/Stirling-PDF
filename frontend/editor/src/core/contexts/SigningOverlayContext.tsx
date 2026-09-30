@@ -4,7 +4,7 @@ import type {
   SignatureOverlayAPI,
 } from "@app/components/viewer/viewerTypes";
 
-/** Signing document + signature-overlay props the Shared Signing sidebar tool feeds to the main Workbench Viewer. */
+/** Document and signature placement state shared by the signing workspace viewer and its controls. */
 export interface SigningOverlay {
   file: File | null;
   signaturePreviews?: SignaturePreview[];

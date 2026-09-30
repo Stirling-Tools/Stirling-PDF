@@ -1,0 +1,238 @@
+.sign-menu {
+  width: min(360px, calc(100vw - 24px));
+  padding: 8px;
+}
+.sign-menu__heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 10px 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--c-text-muted);
+}
+.sign-menu__hint {
+  margin: 0;
+  padding: 8px 10px;
+  font-size: 12px;
+  color: var(--c-text-muted);
+  line-height: 1.5;
+}
+.sign-menu__count {
+  border-radius: 20px;
+  padding: 1px 6px;
+  background: var(--c-hover);
+  color: var(--c-text);
+}
+.sign-menu .sui-dd__item {
+  padding: 8px 10px;
+  align-items: center;
+}
+.sign-menu .sui-dd__item-label {
+  min-width: 0;
+  white-space: normal;
+}
+.sign-menu__document {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sign-menu__meta {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  color: var(--c-text-muted);
+}
+.signing-workspace {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  color: var(--c-text);
+}
+.signing-workspace__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 24px 32px;
+  border-bottom: 1px solid var(--c-border);
+  background: var(--c-surface);
+}
+.signing-workspace__title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.signing-workspace h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+.signing-workspace__subtitle {
+  margin: 4px 0 0;
+  color: var(--c-text-muted);
+  font-size: 13px;
+}
+.signing-workspace__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 24px 32px;
+}
+.signing-workspace__content {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+.signing-workspace__toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.signing-workspace__search {
+  margin-left: auto;
+  width: 280px;
+}
+.signing-workspace__list {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--c-surface);
+}
+.signing-workspace__row {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) minmax(170px, 240px) 24px;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 18px 20px;
+  text-align: left;
+  color: inherit;
+  border: 0;
+  border-bottom: 1px solid var(--c-border);
+  background: transparent;
+  cursor: pointer;
+}
+.signing-workspace__row:last-child {
+  border-bottom: 0;
+}
+.signing-workspace__row:hover {
+  background: var(--c-hover);
+}
+.signing-workspace__row:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: -3px;
+}
+.signing-workspace__name {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.signing-workspace__meta {
+  display: block;
+  margin-top: 5px;
+  font-size: 12px;
+  color: var(--c-text-muted);
+}
+.signing-workspace__status {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--c-text-muted);
+}
+.signing-workspace__status[data-attention="true"] {
+  color: var(--c-accent-fg);
+  font-weight: 600;
+}
+.signing-workspace__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 72px 24px;
+  text-align: center;
+  color: var(--c-text-muted);
+}
+.signing-workspace__detail {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(360px, 32%, 480px);
+  flex: 1;
+  min-height: 0;
+}
+.signing-workspace__preview {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+.signing-workspace__panel {
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  border-left: 1px solid var(--c-border);
+  background: var(--c-surface);
+  padding: 8px;
+}
+.signing-workspace__create {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 28px;
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  background: var(--c-surface);
+}
+.signing-workspace__document-picker {
+  padding-bottom: 24px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--c-border);
+}
+@media (max-width: 800px) {
+  .signing-workspace__header {
+    padding: 16px;
+  }
+  .signing-workspace__body {
+    padding: 16px;
+  }
+  .signing-workspace__search {
+    margin-left: 0;
+    width: 100%;
+  }
+  .signing-workspace__row {
+    grid-template-columns: 24px minmax(0, 1fr) 16px;
+    gap: 12px;
+    padding: 16px;
+  }
+  .signing-workspace__status {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .signing-workspace__row > svg:last-child {
+    grid-column: 3;
+    grid-row: 1;
+  }
+  .signing-workspace__detail {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .signing-workspace__preview {
+    flex: 0 0 55vh;
+  }
+  .signing-workspace__panel {
+    overflow: visible;
+    border-left: 0;
+    border-top: 1px solid var(--c-border);
+  }
+  .signing-workspace__create {
+    padding: 20px;
+  }
+}

@@ -48,6 +48,9 @@ import { PolicyAutoRunController } from "@app/components/policies/PolicyAutoRunC
 import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
 import { QuickNavHostBridge } from "@app/components/shared/quickNav/QuickNavHostBridge";
 import type { QuickNavToolReasons } from "@app/contexts/QuickNavHostContext";
+import { useQuickNavHost } from "@app/contexts/QuickNavHostContext";
+import { SignMenu } from "@app/components/shared/signing/SignMenu";
+import { useOpenSigning } from "@app/hooks/signing/useOpenSigning";
 import {
   getToolDisabledReason,
   getDisabledLabel,
@@ -158,6 +161,9 @@ export default function HomePage() {
   const { activeFiles } = useFileContext();
   const navigationState = useNavigationState();
   const { requestNavigation } = useNavigationGuard();
+  const quickNavHost = useQuickNavHost();
+  const openSigning = useOpenSigning();
+  const [mobileSignOpen, setMobileSignOpen] = useState(false);
 
   // From the processor's Reader entry. Ref-guarded: one-shot, and StrictMode double-invokes.
   const consumedReaderRequest = useRef(false);
@@ -190,9 +196,16 @@ export default function HomePage() {
   }, [readerMode, searchInterfaceActions]);
 
   const goToDefaultState = useCallback(() => {
+    if (navigationState.workbench === "signing") navigate(EDITOR_BASENAME);
     handleBackToTools();
     actions.setWorkbench(getDefaultWorkbenchForFileCount(activeFiles.length));
-  }, [handleBackToTools, actions, activeFiles.length]);
+  }, [
+    handleBackToTools,
+    actions,
+    activeFiles.length,
+    navigationState.workbench,
+    navigate,
+  ]);
 
   // Reconcile route and workspace only on transitions, or the old route can undo a view change.
   const derivedFromPath = actions.viewDerivedFromPathRef;
@@ -202,7 +215,12 @@ export default function HomePage() {
       if (navigationState.workbench !== "myFiles") {
         actions.setWorkbench("myFiles");
       }
-    } else if (navigationState.workbench === "myFiles") {
+    } else if (location.pathname === "/shared-sign") {
+      actions.setToolAndWorkbench(null, "signing");
+    } else if (
+      navigationState.workbench === "myFiles" ||
+      navigationState.workbench === "signing"
+    ) {
       // A restore is reopening a recorded view onto files still loading. Leave the
       // path unmarked so the correction runs once those files land.
       if (isApplyingRestoredView()) return;
@@ -321,8 +339,11 @@ export default function HomePage() {
     isMobile,
   ]);
 
-  const hideToolPanel =
+  const isWorkspaceHub =
     navigationState.workbench === "myFiles" ||
+    navigationState.workbench === "signing";
+  const hideToolPanel =
+    isWorkspaceHub ||
     (customWorkbenchViews.find(
       (v) => v.workbenchId === navigationState.workbench,
     )?.hideToolPanel ??
@@ -332,7 +353,7 @@ export default function HomePage() {
 
   const quickNavToolReasons = useMemo(() => {
     const reasons: QuickNavToolReasons = {};
-    for (const id of ["automate", "sharedSign"] as const) {
+    for (const id of ["automate"] as const) {
       const tool = toolRegistry[id];
       if (!tool) continue;
       const disabledReason = getToolDisabledReason(
@@ -403,7 +424,7 @@ export default function HomePage() {
   // Mobile's bottom bar sets no view of its own, so leaving the library is the path
   // moving; the reconciliation effect takes the view with it.
   const leaveMyFiles = useCallback(() => {
-    if (navigationState.workbench === "myFiles") navigate(EDITOR_BASENAME);
+    if (isWorkspaceHub) navigate(EDITOR_BASENAME);
   }, [navigationState.workbench, navigate]);
 
   useEffect(() => {
@@ -563,14 +584,11 @@ export default function HomePage() {
       />
       <FilesPageProvider>
         {isMobile ? (
-          <div
-            className="mobile-layout"
-            data-files-mode={navigationState.workbench === "myFiles"}
-          >
+          <div className="mobile-layout" data-files-mode={isWorkspaceHub}>
             {/* The library brings its own tabs and folder path, so the
               tools/workspace toggle would only cost it vertical space. Every
               other view keeps the toggle. */}
-            {navigationState.workbench !== "myFiles" && (
+            {!isWorkspaceHub && (
               <div className="mobile-toggle">
                 <div className="mobile-brand">
                   <LogoIcon className="mobile-brand-icon" />
@@ -605,7 +623,7 @@ export default function HomePage() {
                 </div>
               </div>
             )}
-            {navigationState.workbench === "myFiles" ? (
+            {isWorkspaceHub ? (
               /* /files takes the whole viewport. Skipping the slider keeps
                 the FileManagerView from being trapped inside a 100vw
                 horizontal-scroll container (which truncated buttons and
@@ -657,6 +675,30 @@ export default function HomePage() {
               </div>
             )}
             <div className="mobile-bottom-bar">
+              <SignMenu
+                opened={mobileSignOpen}
+                onClose={() => setMobileSignOpen(false)}
+                reasons={quickNavHost?.toolReasons ?? {}}
+                items={quickNavHost?.signingItems ?? []}
+                badge={quickNavHost?.signingBadge ?? 0}
+                onOpenSigning={openSigning}
+                onSelect={(tool) => {
+                  handleToolSelect(tool);
+                  setActiveMobileView("tools");
+                }}
+              >
+                <Button
+                  variant="tertiary"
+                  className="mobile-bottom-button"
+                  aria-label={t("signMenu.title", "Sign")}
+                  onClick={() => setMobileSignOpen((open) => !open)}
+                >
+                  <Icon name="pen-tool" size="1.5rem" />
+                  <span className="mobile-bottom-button-label">
+                    {t("signMenu.title", "Sign")}
+                  </span>
+                </Button>
+              </SignMenu>
               <Button
                 variant="tertiary"
                 className="mobile-bottom-button"
@@ -728,7 +770,7 @@ export default function HomePage() {
           >
             {/* Reading leaves the document and nothing beside it, so the wing goes
                 rather than shrinking to a rail. Everywhere else it is fixed open. */}
-            {wingsMounted && (
+            {wingsMounted && navigationState.workbench !== "signing" && (
               <div className="workspace-frame">
                 <MyFilesAwareFileSidebar
                   ref={quickAccessRef}
