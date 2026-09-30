@@ -23,6 +23,7 @@ vi.mock("@app/services/fileStorage", () => ({
 vi.mock("@app/components/toast", () => ({ alert: vi.fn() }));
 
 import { pendingFilePathMappings } from "@app/services/pendingFilePathMappings";
+import { expectConsole } from "@app/tests/failOnConsole";
 import {
   persistedSourceFields,
   inheritedSourceLink,
@@ -181,6 +182,27 @@ describe("storedCopiesForNewFiles", () => {
   ])("stores the file again when the record %s", async (_, over) => {
     getLeafStubsNamed.mockResolvedValue([copy(over)]);
     expect((await storedCopiesForNewFiles([file])).size).toBe(0);
+  });
+
+  it("stores a file again when its lookup fails, and still finds the others", async () => {
+    expectConsole.warn(/lookup failed/);
+    const other = new File(["pdf"], "other.pdf", { lastModified: 5000 });
+    pendingFilePathMappings.set(other, "C:/docs/other.pdf");
+    getLeafStubsNamed.mockImplementation(async (name: string) => {
+      if (name === "report.pdf") throw new Error("IndexedDB read failed");
+      return [
+        copy({
+          id: "f2" as FileId,
+          name: "other.pdf",
+          localFilePath: "C:/docs/other.pdf",
+        }),
+      ];
+    });
+
+    const copies = await storedCopiesForNewFiles([file, other]);
+
+    expect(copies.has(file)).toBe(false);
+    expect(copies.get(other)?.id).toBe("f2");
   });
 
   it("does not look for a file that came from nowhere", async () => {

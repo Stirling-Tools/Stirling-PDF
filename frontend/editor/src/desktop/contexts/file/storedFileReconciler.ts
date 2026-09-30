@@ -158,14 +158,24 @@ export async function storedCopiesForNewFiles(
   const copies = new Map<File, StirlingFileStub>();
   await Promise.all(
     files.map(async (file) => {
-      const path = await sourcePathForFile(file);
-      if (!path) return;
-      const state = await getDiskFileState(path);
-      if (state.availability !== "present" || file.size !== state.size) return;
-      const [newest] = (await fileStorage.getLeafStubsNamed(file.name))
-        .filter((stub) => isStoredCopyOf(stub, path, state))
-        .sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
-      if (newest) copies.set(file, newest);
+      // A file whose lookup fails is stored again: the caller opens every file
+      // left out of the map, so one bad read must not keep the others shut.
+      try {
+        const path = await sourcePathForFile(file);
+        if (!path) return;
+        const state = await getDiskFileState(path);
+        if (state.availability !== "present" || file.size !== state.size)
+          return;
+        const [newest] = (await fileStorage.getLeafStubsNamed(file.name))
+          .filter((stub) => isStoredCopyOf(stub, path, state))
+          .sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
+        if (newest) copies.set(file, newest);
+      } catch (error) {
+        console.warn(
+          `[storedCopiesForNewFiles] lookup failed for ${file.name}; storing it again`,
+          error,
+        );
+      }
     }),
   );
   return copies;
