@@ -1,6 +1,7 @@
 package stirling.software.proprietary.failure;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -63,11 +64,13 @@ public class FileRunEventController {
         // and a leader the team's.
         int cappedLimit = Math.min(limit == null ? DEFAULT_LIMIT : Math.max(1, limit), MAX_LIMIT);
 
+        // One policy lookup per distinct policy for the whole page, not one per row.
+        Map<String, ProducingSurface> sources = new HashMap<>();
         List<FileRunEventView> events =
                 // The kind filter is part of the query, before the limit is applied: filtering an
                 // already-limited page could return nothing while matching rows exist.
                 service.list(status, closed, kindId, cappedLimit).stream()
-                        .map(event -> FileRunEventView.of(event, service.availableActions(event)))
+                        .map(event -> view(event, service.producingSurfaceOf(event, sources)))
                         .toList();
         return new FileRunEventsResponse(events);
     }
@@ -89,7 +92,7 @@ public class FileRunEventController {
         Map<String, String> inputs = request == null ? Map.of() : request.safeInputs();
         try {
             FileRunEvent updated = service.dispatch(eventId, actionId, inputs);
-            return FileRunEventView.of(updated, service.availableActions(updated));
+            return view(updated, service.producingSurfaceOf(updated));
         } catch (FailureActionException e) {
             throw new ResponseStatusException(
                     FailureActionException.statusOf(e.getReason()), e.getMessage(), e);
@@ -180,5 +183,9 @@ public class FileRunEventController {
         public Map<String, String> safeInputs() {
             return inputs == null ? Map.of() : inputs;
         }
+    }
+
+    private FileRunEventView view(FileRunEvent event, ProducingSurface source) {
+        return FileRunEventView.of(event, source, service.availableActions(event, source));
     }
 }

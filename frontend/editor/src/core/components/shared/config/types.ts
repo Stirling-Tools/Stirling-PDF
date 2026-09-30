@@ -1,4 +1,5 @@
 import type React from "react";
+import type { IconName } from "@app/ui/Icon";
 
 // Single source of truth for all valid nav keys
 export const VALID_NAV_KEYS = [
@@ -68,7 +69,7 @@ export interface ConfigNavItem {
   label: string;
   /** One line under the page title. The page owns the header; sections don't repeat it. */
   description?: string;
-  icon: string;
+  icon: IconName;
   component: React.ReactNode;
   disabled?: boolean;
   disabledTooltip?: string;

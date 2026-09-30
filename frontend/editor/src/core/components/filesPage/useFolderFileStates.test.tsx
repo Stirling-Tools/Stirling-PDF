@@ -1,6 +1,13 @@
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, test, vi } from "vitest";
-import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
+import { Profiler, type ReactElement } from "react";
+import {
+  act,
+  cleanup,
+  render,
+  renderHook,
+  waitFor,
+} from "@testing-library/react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { createAppQueryClient } from "@app/query/queryClient";
 import { useFolderFileStates } from "@app/components/filesPage/useFolderFileStates";
@@ -175,4 +182,57 @@ describe("processing file locks", () => {
     rerender({ id: "folder-two", enabled: false });
     expect(result.current.processingLockedFor("new.pdf")).toBe(false);
   });
+});
+
+/**
+ * The files page renders a row per file and a card per folder, so anything this
+ * hook re-renders for is paid many times over. A poll that found nothing new is
+ * the common case and has to cost nothing.
+ */
+test("a poll that changed nothing does not re-render its readers", async () => {
+  vi.useFakeTimers({ shouldAdvanceTime: true });
+  const Wrapper = queryWrapper();
+  let commits = 0;
+
+  function Probe() {
+    const { fileStates } = useFolderFileStates("rec-quiet", true);
+    return <span>{fileStates.size}</span>;
+  }
+
+  const settle = async () => {
+    for (let i = 0; i < 4; i += 1) {
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0);
+      });
+    }
+  };
+
+  render(
+    (
+      <Wrapper>
+        <Profiler
+          id="files"
+          onRender={() => {
+            commits += 1;
+          }}
+        >
+          <Probe />
+        </Profiler>
+      </Wrapper>
+    ) as ReactElement,
+  );
+  await settle();
+  const reads = listFiles.mock.calls.length;
+  commits = 0;
+
+  // Ten ticks, the same answer every time.
+  for (let i = 0; i < 10; i += 1) {
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(3000);
+    });
+    await settle();
+  }
+
+  expect(listFiles.mock.calls.length).toBeGreaterThan(reads);
+  expect(commits).toBe(0);
 });

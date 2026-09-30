@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { useTranslation } from "@app/hooks/useTranslation";
 import { Banner, Button, Checkbox, Spinner } from "@app/ui";
-import { LocalIcon } from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { StepModalHeader } from "@app/portal/components/shared/StepModalHeader";
 
@@ -165,8 +165,8 @@ export function ConnectApproveView({
                 "This server is already linked to your account. Renew your sign-in to return to billing and usage on your server.",
               )
             : t(
-                "connect.renewal.wrongAccount",
-                "This account cannot renew this server's sign-in. Switch to the account originally used to link the server. That account must still own the linked team.",
+                "connect.renewal.currentOwnerRequired",
+                "Sign in as the current owner of the linked cloud team to renew this server's sign-in. If ownership was transferred, use the new owner's account.",
               )
           : pending?.canApprove
             ? t(
@@ -218,7 +218,7 @@ export function ConnectApproveView({
                   "Not an encrypted address",
                 )}
               >
-                <LocalIcon icon="warning-rounded" width="1rem" />
+                <Icon name="triangle-alert" size="1rem" />
               </span>
             </Tooltip>
           ) : null}

@@ -105,7 +105,10 @@ vi.mock("@app/hooks/useGoogleDrivePicker", () => ({
     clearError: state.clearDriveError,
   }),
 }));
-vi.mock("@app/hooks/useIsMobile", () => ({ useIsMobile: () => false }));
+vi.mock("@app/hooks/useIsMobile", () => ({
+  useIsMobile: () => false,
+  useIsTouch: () => false,
+}));
 vi.mock("@app/hooks/usePolicyFileBadges", () => ({
   usePolicyFileBadges: () => new Map(),
 }));

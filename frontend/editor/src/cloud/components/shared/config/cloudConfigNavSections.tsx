@@ -45,7 +45,7 @@ export function createCloudTeamNavItem(t: Translate): ConfigNavItem {
       "config.teamDescription",
       "Who shares this workspace, and invitations still waiting on an answer.",
     ),
-    icon: "groups-rounded",
+    icon: "users",
     component: <TeamSection />,
   };
 }

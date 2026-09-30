@@ -44,7 +44,6 @@ public class ToolKeyRegistry {
                     "annotate",
                     "scannerImageSplit",
                     "editTableOfContents",
-                    "scannerEffect",
                     "autoRename",
                     "pageLayout",
                     "scalePages",

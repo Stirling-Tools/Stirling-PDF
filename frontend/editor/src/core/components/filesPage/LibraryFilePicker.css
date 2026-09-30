@@ -55,6 +55,20 @@
     minmax(9.5rem, 1.5fr) 2.5rem;
   min-width: 47.5rem;
 }
+@container files-list (max-width: 40rem) {
+  .library-file-picker .files-page-list-row {
+    grid-template-columns: 0 minmax(0, 1fr) 2.5rem;
+    min-width: 0;
+    padding-left: 0.25rem;
+  }
+  .library-file-picker
+    .files-page-list--adaptive:has(
+      .files-page-list-row:not(.is-header) .mantine-Checkbox-root
+    )
+    .files-page-list-row {
+    grid-template-columns: 2rem minmax(0, 1fr) 2.5rem;
+  }
+}
 .library-picker-footer {
   border-top: 1px solid var(--c-border-subtle);
   background: var(--c-surface);
