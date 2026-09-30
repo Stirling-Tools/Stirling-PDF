@@ -12917,6 +12917,10 @@ zoom = "Zoom"
 zoomIn = "Zoom In"
 zoomOut = "Zoom Out"
 
+[viewer.annotation]
+dirty = "Unsaved annotation changes"
+failed = "The document could not be saved. Try again."
+
 [viewer.attachments]
 addAttachment = "Add attachment"
 close = "Close attachments"
@@ -13026,14 +13030,10 @@ preview = "Preview"
 searchPlaceholder = "Search files"
 title = "Portfolio"
 
-[viewer.annotation]
-dirty = "Unsaved annotation changes"
-failed = "The document could not be saved. Try again."
-
 [viewer.redaction]
 applyAll = "Apply Redactions"
-reviewAll = "Review and apply all redactions in the tool panel"
 removeMark = "Remove this mark"
+reviewAll = "Review and apply all redactions in the tool panel"
 
 [viewer.search]
 clear = "Clear search"
