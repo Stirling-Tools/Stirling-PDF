@@ -2,6 +2,8 @@
 
 24 September 2026 | local patch based on `910b5d012f`
 
+This is the dated local acceptance assessment. See the [30 September follow-up](./review-follow-up.md) for review fixes and API changes; the local broad-suite failures below are historical, not the current GitHub CI status.
+
 **4.3/5 overall: 52/60 across 12 equally weighted stories**, versus 3.7/5 after the first repair batch and 2.4/5 initially. Ratings are review judgments within the tested scope; untested deployments are not counted as passes. A high mean cannot override a release gate.
 
 Scale: 5 = acceptance met in the tested scope; 4 = works with a limited caveat; 3 = usable with material friction; 2 = important acceptance fails; 1 = core outcome fails.

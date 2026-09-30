@@ -670,7 +670,11 @@ public class WorkflowSessionService {
     /** Deletes a workflow session and associated files. */
     @Transactional
     public void deleteSession(String sessionId, User owner) {
-        WorkflowSession session = lockActiveSessionForOwner(sessionId, owner);
+        WorkflowSession session = lockSession(sessionId);
+        if (!session.getOwner().equals(owner)) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "Not authorized to access this workflow session");
+        }
 
         if (session.isFinalized()) {
             throw new ResponseStatusException(
@@ -717,30 +721,6 @@ public class WorkflowSessionService {
         if (originalFile != null) storedFileRepository.delete(originalFile);
         if (processedFile != null) storedFileRepository.delete(processedFile);
         log.info("Deleted workflow session {}", sessionId);
-    }
-
-    /**
-     * Deletes the original (presigned) file from storage after finalization. The original file is
-     * no longer needed once the signed document has been stored. Non-fatal: logs errors but does
-     * not fail finalization.
-     */
-    public void deleteOriginalFile(WorkflowSession session) {
-        if (session.getOriginalFile() == null) {
-            return;
-        }
-        try {
-            storageProvider.delete(session.getOriginalFile().getStorageKey());
-            StoredFile originalFile = session.getOriginalFile();
-            session.setOriginalFile(null);
-            workflowSessionRepository.save(session);
-            storedFileRepository.delete(originalFile);
-            log.info("Deleted original presigned file for session {}", session.getSessionId());
-        } catch (Exception e) {
-            log.error(
-                    "Failed to delete original file for session {}: {}",
-                    session.getSessionId(),
-                    e.getMessage());
-        }
     }
 
     // ===== SIGN REQUEST METHODS (Participant View) =====

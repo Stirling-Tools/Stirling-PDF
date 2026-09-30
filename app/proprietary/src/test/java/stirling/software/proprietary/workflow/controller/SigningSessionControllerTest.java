@@ -269,7 +269,7 @@ class SigningSessionControllerTest {
         }
 
         @Test
-        void serviceThrows_returnsForbidden() {
+        void finalizedSession_preservesBadRequestAndReason() {
             User owner = user("alice");
             when(userService.findByUsernameIgnoreCase("alice")).thenReturn(Optional.of(owner));
             doThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST, "finalized"))
@@ -278,7 +278,22 @@ class SigningSessionControllerTest {
 
             ResponseEntity<?> response = controller.deleteSession("s1", principal("alice"));
 
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(response.getBody()).isEqualTo("finalized");
+        }
+
+        @Test
+        void wrongOwner_preservesForbidden() {
+            User owner = user("alice");
+            when(userService.findByUsernameIgnoreCase("alice")).thenReturn(Optional.of(owner));
+            doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Not authorized"))
+                    .when(workflowSessionService)
+                    .deleteSession("s1", owner);
+
+            ResponseEntity<?> response = controller.deleteSession("s1", principal("alice"));
+
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+            assertThat(response.getBody()).isEqualTo("Not authorized");
         }
     }
 

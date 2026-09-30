@@ -10,23 +10,26 @@ export const useGroupSigningTips = (): TooltipContent => {
     },
     tips: [
       {
-        title: t("groupSigning.tooltip.sequential.title", "Sequential Signing"),
+        title: t(
+          "groupSigning.tooltip.sequential.title",
+          "Signing in Any Order",
+        ),
         description: t(
           "groupSigning.tooltip.sequential.description",
-          "Participants sign documents in the order you specify. Each signer receives a notification when it is their turn.",
+          "Assigned participants can review and sign independently, in any order.",
         ),
         bullets: [
           t(
             "groupSigning.tooltip.sequential.bullet1",
-            "First participant must sign before the second can access the document",
+            "Participants do not need to wait for another signer",
           ),
           t(
             "groupSigning.tooltip.sequential.bullet2",
-            "Ensures proper signing order for legal compliance",
+            "Track each participant's progress in Signing Sessions",
           ),
           t(
             "groupSigning.tooltip.sequential.bullet3",
-            "You can reorder participants by dragging them in the list",
+            "A due date is a reminder; it does not expire access",
           ),
         ],
       },
@@ -34,7 +37,7 @@ export const useGroupSigningTips = (): TooltipContent => {
         title: t("groupSigning.tooltip.roles.title", "Participant Roles"),
         description: t(
           "groupSigning.tooltip.roles.description",
-          "You control the signature appearance settings for all participants.",
+          "The owner sets request defaults; each participant chooses their certificate and optional visible mark.",
         ),
         bullets: [
           t(
@@ -43,11 +46,11 @@ export const useGroupSigningTips = (): TooltipContent => {
           ),
           t(
             "groupSigning.tooltip.roles.bullet2",
-            "Participants: Create their signature, choose certificate, place on PDF",
+            "Participants: Choose a certificate and optionally place a visible signature on the PDF",
           ),
           t(
             "groupSigning.tooltip.roles.bullet3",
-            "Participants cannot modify signature visibility, reason, or location settings",
+            "Participants can adjust their signature reason and location before submitting",
           ),
         ],
       },
@@ -58,20 +61,20 @@ export const useGroupSigningTips = (): TooltipContent => {
         ),
         description: t(
           "groupSigning.tooltip.finalization.description",
-          "Once all participants have signed (or you choose to finalize early), you can generate the final signed PDF.",
+          "After at least one participant has signed, the owner can finalize the request and generate the signed PDF.",
         ),
         bullets: [
           t(
             "groupSigning.tooltip.finalization.bullet1",
-            "All signatures are applied in the participant order you specified",
+            "The final PDF includes all accepted signatures",
           ),
           t(
             "groupSigning.tooltip.finalization.bullet2",
-            "You can finalize with partial signatures if needed",
+            "Review outstanding participants before finalizing with partial signatures",
           ),
           t(
             "groupSigning.tooltip.finalization.bullet3",
-            "Once finalized, the session cannot be modified",
+            "Finalization closes the request; outstanding participants can no longer sign",
           ),
         ],
       },

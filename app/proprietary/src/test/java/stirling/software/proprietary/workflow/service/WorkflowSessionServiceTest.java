@@ -665,6 +665,30 @@ class WorkflowSessionServiceTest {
     }
 
     @Test
+    void deleteSession_cancelledSession_deletesFilesAndSession() throws Exception {
+        User owner = user("alice");
+        owner.setId(1L);
+        WorkflowSession session = new WorkflowSession();
+        session.setSessionId("cancelled");
+        session.setOwner(owner);
+        session.setStatus(WorkflowStatus.CANCELLED);
+        StoredFile original = new StoredFile();
+        original.setStorageKey("cancelled-original");
+        original.setWorkflowSession(session);
+        session.setOriginalFile(original);
+        when(workflowSessionRepository.findBySessionIdForUpdate("cancelled"))
+                .thenReturn(Optional.of(session));
+
+        service.deleteSession("cancelled", owner);
+
+        verify(storageProvider).delete("cancelled-original");
+        assertThat(original.getWorkflowSession()).isNull();
+        verify(workflowSessionRepository).delete(session);
+        verify(storedFileRepository).delete(original);
+        verify(workflowSessionRepository, never()).save(any());
+    }
+
+    @Test
     void deleteSession_finalizedSession_throwsBadRequest() {
         User owner = user("alice");
         owner.setId(1L);
@@ -678,10 +702,12 @@ class WorkflowSessionServiceTest {
 
         assertThatThrownBy(() -> service.deleteSession("s3c", owner))
                 .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("Cannot delete a finalized session")
                 .extracting(e -> ((ResponseStatusException) e).getStatusCode())
-                .isEqualTo(HttpStatus.CONFLICT);
+                .isEqualTo(HttpStatus.BAD_REQUEST);
 
         verify(workflowSessionRepository, never()).delete(any());
+        verifyNoInteractions(storageProvider, storedFileRepository);
     }
 
     @Test
@@ -711,7 +737,7 @@ class WorkflowSessionServiceTest {
     }
 
     @Test
-    void deleteSession_notOwner_throwsForbidden() {
+    void deleteSession_cancelledSessionNotOwner_throwsForbidden() {
         User owner = user("alice");
         owner.setId(1L);
         User other = user("bob");
@@ -720,6 +746,7 @@ class WorkflowSessionServiceTest {
         WorkflowSession session = new WorkflowSession();
         session.setSessionId("s5");
         session.setOwner(owner);
+        session.setStatus(WorkflowStatus.CANCELLED);
         when(workflowSessionRepository.findBySessionIdForUpdate("s5"))
                 .thenReturn(Optional.of(session));
 

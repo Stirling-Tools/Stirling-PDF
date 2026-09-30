@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -145,6 +146,25 @@ class SigningSessionFinalizationDbTest {
         participant.setAccessRole(ShareAccessRole.EDITOR);
         participant.setShareToken(UUID.randomUUID().toString());
         return participant;
+    }
+
+    @Test
+    void successfulFinalizationRetainsOriginalAndSignedDocumentAfterCommit() throws Exception {
+        when(storage.load(outputKey)).thenReturn(new ByteArrayResource(new byte[] {2, 3}));
+
+        assertThat(finalization.finalizeSession(sessionId, owner).bytes()).containsExactly(2, 3);
+
+        transactions.executeWithoutResult(
+                status -> {
+                    WorkflowSession session = sessions.findBySessionId(sessionId).orElseThrow();
+                    assertThat(session.isFinalized()).isTrue();
+                    assertThat(session.getOriginalFile().getStorageKey())
+                            .isEqualTo("original-" + sessionId);
+                    assertThat(session.getProcessedFile().getStorageKey()).isEqualTo(outputKey);
+                });
+        assertThat(workflows.getOriginalFile(sessionId)).containsExactly(1);
+        assertThat(workflows.getProcessedFile(sessionId, owner)).containsExactly(2, 3);
+        verify(storage, never()).delete("original-" + sessionId);
     }
 
     @Test

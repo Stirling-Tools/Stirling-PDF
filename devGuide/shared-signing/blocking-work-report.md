@@ -2,6 +2,8 @@
 
 24 September 2026 | Evaluated base `910b5d012f` plus this signing patch
 
+Historical acceptance record. The [30 September review follow-up](./review-follow-up.md) documents subsequent fixes and API compatibility. The full-suite failures below describe the local Windows run; GitHub CI at `b08b1c0913` passed the substantive test/build/browser jobs and failed only generated-model synchronization and its rollup. Use the current PR checks for current CI status.
+
 **The remaining reproducible blockers in the tested local signing path are closed. The permanent Sign entry and compact request form restore a useful part of the original concept. A controlled internal-user demo is supported; full production release approval remains open.**
 
 All 12 stories have been reassessed at **4.3/5 (52/60)**, up from 3.7/5 after the first repair batch and 2.4/5 initially. This is a reviewer judgment, not a statistical assurance or a substitute for release gates. See the [story scorecard](./user-stories-closure.md).

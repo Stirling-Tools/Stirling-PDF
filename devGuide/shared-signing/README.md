@@ -7,6 +7,7 @@ These documents accompany the signing reliability and navigation changes. They r
 - [Customer demo plan](./demo-plan.md)
 - [User stories and acceptance assessment](./user-stories-closure.md)
 - [Implementation, verification and remaining gates](./blocking-work-report.md)
+- [PR review fixes, API compatibility and remaining gaps](./review-follow-up.md)
 - [Detailed release-gate plan](./release-gate-plan.md)
 - [Original Sign experience and next design steps](./sign-experience-history.md)
 

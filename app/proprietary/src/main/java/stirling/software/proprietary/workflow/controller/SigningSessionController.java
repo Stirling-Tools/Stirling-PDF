@@ -151,6 +151,8 @@ public class SigningSessionController {
             User owner = getCurrentUser(principal);
             workflowSessionService.deleteSession(sessionId, owner);
             return ResponseEntity.noContent().build();
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(e.getReason());
         } catch (Exception e) {
             log.error("Error deleting session {}", sessionId, e);
             return ResponseEntity.status(HttpStatus.FORBIDDEN)

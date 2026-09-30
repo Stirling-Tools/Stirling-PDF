@@ -20,7 +20,10 @@ public class SigningSessionFinalizationService {
     private final WorkflowSessionService workflowSessionService;
     private final SigningFinalizationService signingFinalizationService;
 
-    /** Requires at least one accepted signature; any failure leaves the session open for retry. */
+    /**
+     * Requires at least one accepted signature; any failure leaves the session open for retry.
+     * Retains the original PDF and its required database reference for session history.
+     */
     @Transactional(rollbackFor = Exception.class)
     public FinalizedDocument finalizeSession(String sessionId, User owner) throws Exception {
         WorkflowSession session =
