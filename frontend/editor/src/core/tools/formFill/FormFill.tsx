@@ -485,7 +485,7 @@ const FormFill = (_props: BaseToolProps) => {
       <div className={styles.modeTabs}>
         <SegmentedControl
           value={mode}
-          onChange={(val) => requestMode(val as FormMode)}
+          onChange={(val) => requestMode(val)}
           options={MODE_TABS.map((tab) => ({
             value: tab.id,
             label: (
@@ -503,14 +503,10 @@ const FormFill = (_props: BaseToolProps) => {
       </div>
 
       {/* ---- Create mode ---- */}
-      {mode === "create" && (
-        <FormFieldCreatePanel currentFile={currentFile as File | Blob | null} />
-      )}
+      {mode === "create" && <FormFieldCreatePanel currentFile={currentFile} />}
 
       {/* ---- Modify mode ---- */}
-      {mode === "modify" && (
-        <FormFieldModifyPanel currentFile={currentFile as File | Blob | null} />
-      )}
+      {mode === "modify" && <FormFieldModifyPanel currentFile={currentFile} />}
 
       {/* ---- Fill Form content ---- */}
       {mode === "fill" && (

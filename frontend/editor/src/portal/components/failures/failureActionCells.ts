@@ -83,7 +83,7 @@ export function buildFailureActionCells({
     });
   }
   if (diagnostics.length > 0) {
-    diagnostics[0]!.dividerBefore = menu.length > 0;
+    diagnostics[0].dividerBefore = menu.length > 0;
     menu.push(...diagnostics);
   }
 

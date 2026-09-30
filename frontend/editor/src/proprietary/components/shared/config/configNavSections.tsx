@@ -5,7 +5,6 @@ import {
   useConfigNavSections as useCoreConfigNavSections,
   ConfigNavSection,
 } from "@core/components/shared/config/configNavSections";
-import AdminPlanSection from "@app/components/shared/config/configSections/AdminPlanSection";
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
 import PreferencesSection from "@core/components/shared/config/configSections/preferences/PreferencesSection";
 
@@ -112,26 +111,6 @@ export const useConfigNavSections = (
     disabled: requiresLogin,
     disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
   };
-
-  if (showAdmin) {
-    sections.push({
-      id: "workspace",
-      title: t("settings.workspace.title", "Workspace"),
-      items: [
-        {
-          key: "adminPlan",
-          label: t("settings.licensingAnalytics.plan", "Plan"),
-          description: t(
-            "settings.licensingAnalytics.planDescription",
-            "Your licence, seats and what the current plan unlocks.",
-          ),
-          icon: "star",
-          component: <AdminPlanSection />,
-          ...gated,
-        },
-      ],
-    });
-  }
 
   if (showAdmin) {
     sections.push(
