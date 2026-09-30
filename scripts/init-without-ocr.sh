@@ -1385,8 +1385,36 @@ fi
 # Only the fat image ships it. The backend already defaults to http://localhost:5001.
 STIRLING_ENGINE_HOME="${STIRLING_ENGINE_HOME:-/opt/stirling-engine}"
 ENGINE_PID=""
-if [ -x "$STIRLING_ENGINE_HOME/.venv/bin/python" ] && [ "${AIENGINE_ENABLED:-true}" = "false" ]; then
-  log "AI engine bundled but AIENGINE_ENABLED=false; not starting it."
+
+# Prints aiEngine.enabled from a YAML file; the bare-key reader can't tell the many "enabled:" keys apart.
+read_ai_engine_enabled() {
+  [ -f "$1" ] || return
+  awk '
+    /^[^[:space:]#]/ { in_ai = ($0 ~ /^aiEngine:/); child_indent = -1; next }
+    in_ai && /^[[:space:]]+[^[:space:]#]/ {
+      match($0, /^[[:space:]]+/)
+      if (child_indent < 0) child_indent = RLENGTH
+      if (RLENGTH == child_indent && $1 == "enabled:") {
+        val = $2; gsub(/["'"'"']/, "", val); print tolower(val); exit
+      }
+    }
+  ' "$1"
+}
+
+# Env wins over the files, as in Spring; custom_settings.yml overrides settings.yml.
+ai_engine_wanted() {
+  if [ -n "${AIENGINE_ENABLED:-}" ]; then
+    [ "$(printf '%s' "$AIENGINE_ENABLED" | tr '[:upper:]' '[:lower:]')" = "true" ]
+    return
+  fi
+  local value
+  value=$(read_ai_engine_enabled "$(dirname "$CONFIG_FILE")/custom_settings.yml")
+  [ -n "$value" ] || value=$(read_ai_engine_enabled "$CONFIG_FILE")
+  [ "$value" = "true" ]
+}
+
+if [ -x "$STIRLING_ENGINE_HOME/.venv/bin/python" ] && ! ai_engine_wanted; then
+  log "AI engine bundled but aiEngine.enabled is not true; not starting it (enabling it later needs a container restart)."
 elif [ -x "$STIRLING_ENGINE_HOME/.venv/bin/python" ]; then
   log "Starting bundled AI engine on port ${STIRLING_ENGINE_PORT:-5001}..."
   ENGINE_CMD=(
