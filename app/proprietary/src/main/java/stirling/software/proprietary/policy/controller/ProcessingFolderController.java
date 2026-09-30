@@ -1,6 +1,9 @@
 package stirling.software.proprietary.policy.controller;
 
+import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
+
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -392,10 +395,8 @@ public class ProcessingFolderController {
                                             states.get(
                                                     FolderIdentities.identity(
                                                             canonicalDir, permitted, f)),
-                                            Files.isRegularFile(
-                                                    FolderOutputSink.originalPath(
-                                                            canonicalDir,
-                                                            f.getFileName().toString()))))
+                                            FolderOutputSink.hasOriginal(
+                                                    canonicalDir, f.getFileName().toString())))
                     .filter(Objects::nonNull)
                     .toList();
         } catch (IOException e) {
@@ -600,14 +601,13 @@ public class ProcessingFolderController {
         }
         try {
             Path canonicalDir = FolderIdentities.canonicalDir(permitted);
-            if (!Files.isRegularFile(FolderOutputSink.originalPath(canonicalDir, name))) {
+            if (!FolderOutputSink.hasOriginal(canonicalDir, name)) {
                 throw new ResponseStatusException(
                         HttpStatus.CONFLICT, "'" + name + "' has no original to restore");
             }
             policy = pauseForRevert(policy);
             synchronized (FolderOutputSink.originalLock(canonicalDir)) {
-                Path archived = FolderOutputSink.originalPath(canonicalDir, name);
-                if (!Files.isRegularFile(archived)) {
+                if (!FolderOutputSink.hasOriginal(canonicalDir, name)) {
                     throw new ResponseStatusException(
                             HttpStatus.CONFLICT, "'" + name + "' has no original to restore");
                 }
@@ -706,17 +706,21 @@ public class ProcessingFolderController {
             return false;
         }
         Path archived = FolderOutputSink.originalPath(canonicalDir, name);
+        if (!FolderOutputSink.hasOriginal(canonicalDir, name)) {
+            throw new IOException("Original archive is not a regular file: " + archived);
+        }
         String identity = FolderIdentities.identity(canonicalDir, permitted, target);
         ClaimState state = processedLedger.statesFor(policy.id(), List.of(identity)).get(identity);
         if (state != null && state.status() == ProcessedFileStatus.PROCESSING) {
             return false;
         }
         FolderOutputSink.clearOriginalExpiry(canonicalDir, name);
-        Path staging = FolderOutputSink.originalsDir(canonicalDir).resolve("tmp");
-        Files.createDirectories(staging);
+        Path staging = FolderOutputSink.originalStagingDir(canonicalDir);
         Path pending = Files.createTempFile(staging, "restore-", ".tmp");
         try {
-            Files.copy(archived, pending, StandardCopyOption.REPLACE_EXISTING);
+            try (InputStream original = Files.newInputStream(archived, NOFOLLOW_LINKS)) {
+                Files.copy(original, pending, StandardCopyOption.REPLACE_EXISTING);
+            }
             Files.move(
                     pending,
                     target,

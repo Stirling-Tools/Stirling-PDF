@@ -2,6 +2,7 @@ package stirling.software.proprietary.policy.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -15,6 +16,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
@@ -986,6 +988,59 @@ class ProcessingFolderControllerTest {
 
         assertThat(Files.readString(tempDir.resolve("doc.pdf"))).isEqualTo("original");
         assertThat(Files.readString(original)).isEqualTo("original");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"file", "legacyFile", "archive", "legacyDirectory"})
+    void linkedOriginalsAreNeitherListedNorRestored(String linkType) throws Exception {
+        lenient()
+                .when(folderAccessGuard.requirePermitted(any(Path.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        var view = controller.save(diskRequest()).getBody();
+        Path target = tempDir.resolve("doc.pdf");
+        Files.writeString(target, "processed");
+        Path privateDir = Files.createDirectory(tempDir.resolve("private"));
+        Path secret = Files.writeString(privateDir.resolve("doc.pdf"), "private contents");
+        Path archive = tempDir.resolve(".stirling");
+        Path link;
+        Path source;
+        if (linkType.equals("archive")) {
+            link = archive;
+            source = privateDir;
+        } else {
+            Files.createDirectory(archive);
+            if (linkType.equals("legacyDirectory")) {
+                link = archive.resolve("originals");
+                source = privateDir;
+            } else {
+                Path parent =
+                        linkType.equals("legacyFile")
+                                ? Files.createDirectory(archive.resolve("originals"))
+                                : archive;
+                link = parent.resolve("doc.pdf");
+                source = secret;
+            }
+        }
+        try {
+            Files.createSymbolicLink(link, source);
+        } catch (UnsupportedOperationException | FileSystemException e) {
+            assumeTrue(false, "Symbolic links are unavailable: " + e.getMessage());
+        }
+
+        assertThat(controller.files(view.id()))
+                .singleElement()
+                .satisfies(file -> assertThat(file.hasOriginal()).isFalse());
+        assertThat(FolderOutputSink.originalNames(tempDir)).isEmpty();
+        assertThatThrownBy(
+                        () ->
+                                controller.revertFile(
+                                        view.id(),
+                                        new ProcessingFolderController.RevertFileRequest(
+                                                "doc.pdf")))
+                .isInstanceOf(ResponseStatusException.class);
+        assertThat(controller.revertAllFiles(view.id()).restored()).isZero();
+        assertThat(Files.readString(target)).isEqualTo("processed");
+        assertThat(Files.readString(secret)).isEqualTo("private contents");
     }
 
     @Test

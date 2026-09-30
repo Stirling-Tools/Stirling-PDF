@@ -88,8 +88,7 @@ public class FolderOutputSink implements PolicyOutputSink {
         Path targetDir = accessGuard.requirePermitted(directoryOf(spec));
         Files.createDirectories(targetDir);
         Path canonicalDir = FolderIdentities.canonicalDir(targetDir);
-        Path tmpDir = stirlingDir(canonicalDir).resolve("tmp");
-        Files.createDirectories(tmpDir);
+        Path tmpDir = originalStagingDir(canonicalDir);
         sweepStaleTmp(tmpDir);
 
         boolean replace = Boolean.parseBoolean(String.valueOf(spec.options().get(REPLACE_OPTION)));
@@ -268,16 +267,26 @@ public class FolderOutputSink implements PolicyOutputSink {
         return originalsDir(dir).resolve(reservedName(name) ? ".original-" + name : name);
     }
 
+    /** Only regular backups inside real archive directories are eligible for restore. */
+    public static boolean hasOriginal(Path dir, String name) {
+        Path archived = originalPath(dir, name);
+        return Files.isDirectory(originalsDir(dir), NOFOLLOW_LINKS)
+                && Files.isDirectory(archived.getParent(), NOFOLLOW_LINKS)
+                && Files.isRegularFile(archived, NOFOLLOW_LINKS);
+    }
+
     /** Lists restorable filenames, excluding staging files and nested backup history. */
     public static List<String> originalNames(Path dir) throws IOException {
         var names = new LinkedHashSet<String>();
         Path originals = originalsDir(dir);
+        if (!Files.isDirectory(originals, NOFOLLOW_LINKS)) return List.of();
         for (Path archive : List.of(originals, originals.resolve("originals"))) {
-            if (!Files.isDirectory(archive)) continue;
+            if (!Files.isDirectory(archive, NOFOLLOW_LINKS)) continue;
             try (Stream<Path> entries = Files.list(archive)) {
-                entries.filter(Files::isRegularFile)
+                entries.filter(path -> Files.isRegularFile(path, NOFOLLOW_LINKS))
                         .map(FolderOutputSink::originalName)
                         .filter(java.util.Objects::nonNull)
+                        .filter(name -> hasOriginal(dir, name))
                         .forEach(names::add);
             }
         }
@@ -303,12 +312,25 @@ public class FolderOutputSink implements PolicyOutputSink {
     private static Path stirlingDir(Path dir) throws IOException {
         Path root = dir.resolve(".stirling");
         Files.createDirectories(root);
+        if (!Files.isDirectory(root, NOFOLLOW_LINKS)) {
+            throw new IOException("Original archive is not a directory: " + root);
+        }
         try {
             Files.setAttribute(root, "dos:hidden", true);
         } catch (UnsupportedOperationException | IOException e) {
             // Not a DOS filesystem; the dot prefix already hides it there.
         }
         return root;
+    }
+
+    /** Staging must stay inside the archive rather than follow a substituted directory link. */
+    public static Path originalStagingDir(Path dir) throws IOException {
+        Path staging = stirlingDir(dir).resolve("tmp");
+        Files.createDirectories(staging);
+        if (!Files.isDirectory(staging, NOFOLLOW_LINKS)) {
+            throw new IOException("Original staging is not a directory: " + staging);
+        }
+        return staging;
     }
 
     private static void archiveOriginal(Path dir, Path target) throws IOException {
@@ -321,7 +343,7 @@ public class FolderOutputSink implements PolicyOutputSink {
         Path existing = originalPath(dir, name);
         Path archived = flatOriginalPath(dir, name);
         if (!Files.notExists(existing, NOFOLLOW_LINKS)) {
-            if (!Files.isRegularFile(existing, NOFOLLOW_LINKS)) {
+            if (!hasOriginal(dir, name)) {
                 throw new IOException("Original archive is not a regular file: " + existing);
             }
             if (!existing.equals(archived)) {

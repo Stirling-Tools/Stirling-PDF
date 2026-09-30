@@ -23,6 +23,8 @@ const mocks = vi.hoisted(() => ({
   wait: vi.fn(),
   download: vi.fn(),
   replace: vi.fn(),
+  restore: vi.fn(),
+  removeOutput: vi.fn(),
   archive: vi.fn(),
   remove: vi.fn(),
   original: vi.fn(),
@@ -90,6 +92,8 @@ vi.mock("@app/services/serverPipeline", () => ({
 vi.mock("@app/services/localProcessingDelivery", () => ({
   archiveProcessingInput: mocks.archive,
   replaceProcessingFile: mocks.replace,
+  restoreProcessingFile: mocks.restore,
+  removeProcessingOutput: mocks.removeOutput,
   processingFileState: async () => mocks.disk,
   processingPath: (directory: string, name: string) => `${directory}/${name}`,
   sameProcessingFile: (a: DiskFileEntry, b: DiskFileEntry) =>
@@ -157,6 +161,12 @@ describe("desktop processing folder handoff", () => {
     );
     mocks.archive.mockResolvedValue("/downloads/.stirling/a.pdf");
     mocks.original.mockResolvedValue(new File(["original"], "a.pdf"));
+    mocks.restore.mockImplementation(async (_path, file) =>
+      mocks.replace(mocks.disk, file),
+    );
+    mocks.removeOutput.mockImplementation(async (entry) =>
+      mocks.remove(entry.path),
+    );
     mocks.replace.mockImplementation(async () => {
       mocks.disk = { ...mocks.disk, lastModified: 2, sizeBytes: 5 };
       return { ...mocks.disk };
@@ -290,11 +300,7 @@ describe("desktop processing folder handoff", () => {
       await waitFor(() => expect(onlyFile()?.run.status).toBe("COMPLETED"));
 
       expect(folder.directory).toBe(directory);
-      expect(mocks.archive).toHaveBeenCalledWith(
-        directory,
-        expect.any(File),
-        true,
-      );
+      expect(mocks.archive).toHaveBeenCalledWith(directory, expect.any(File));
       expect(onlyFile().run.outputs?.[0].fileName).toBe(`${directory}/a.pdf`);
       await sweepLocalProcessingFolder(folder.id);
       expect(mocks.submit).toHaveBeenCalledTimes(1);
@@ -405,6 +411,31 @@ describe("desktop processing folder handoff", () => {
 
     expect(mocks.remove).not.toHaveBeenCalled();
     expect(mocks.files.size).toBe(1);
+  });
+
+  test("a partially removed split output set can be restored again", async () => {
+    const folder = await saveLocalProcessingFolder(request);
+    await waitFor(() => expect(onlyFile()?.run.status).toBe("COMPLETED"));
+    const outputs = ["part-1.pdf", "part-2.pdf"].map((name) => ({
+      ...mocks.disk,
+      name,
+      path: `/downloads/${name}`,
+    }));
+    onlyFile().outputs = outputs;
+    mocks.removeOutput
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(new Error("Permission denied"));
+
+    await expect(revertLocalProcessingFile(folder.id, "a.pdf")).rejects.toThrow(
+      "Permission denied",
+    );
+    expect(onlyFile().outputs).toEqual(outputs);
+    expect(onlyFile().restored).not.toBe(true);
+
+    await revertLocalProcessingFile(folder.id, "a.pdf");
+    expect(onlyFile().outputs).toEqual([]);
+    expect(onlyFile().restored).toBe(true);
+    expect(onlyFile().originalPath).toBe("/downloads/.stirling/a.pdf");
   });
 
   test("reconnect resumes an existing server run without charging another submission", async () => {

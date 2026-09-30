@@ -1,4 +1,3 @@
-import { remove } from "@tauri-apps/plugin-fs";
 import { directoryKey } from "@app/services/localFolderStorage";
 import {
   isWithinMount,
@@ -27,6 +26,8 @@ import {
   processingPath,
   readProcessingOriginal,
   replaceProcessingFile,
+  restoreProcessingFile,
+  removeProcessingOutput,
   requireUnchangedProcessingFile,
   sameProcessingFile,
 } from "@app/services/localProcessingDelivery";
@@ -410,16 +411,15 @@ export async function revertLocalProcessingFile(
       }
       for (const output of entry.outputs) {
         if (directoryKey(output.path) !== directoryKey(entry.input.path))
-          await requireUnchangedProcessingFile(output);
+          await requireUnchangedProcessingFile(output, true);
       }
-      const replacement = await processingFileState(entry.input.path);
-      const restored = await replaceProcessingFile(
-        replacement,
+      const restored = await restoreProcessingFile(
+        entry.input.path,
         await readProcessingOriginal(entry.originalPath),
       );
       for (const output of entry.outputs) {
         if (directoryKey(output.path) !== directoryKey(entry.input.path))
-          await remove(output.path);
+          await removeProcessingOutput(output);
       }
       await storage.saveFile({
         ...entry,
