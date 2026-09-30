@@ -82,6 +82,32 @@ public class DocParseService {
         }
     }
 
+    /** Live readiness for guided setup; unavailable engines cannot enable ingestion policies. */
+    public record Capabilities(
+            boolean enabled, boolean engineReachable, boolean indexingConfigured) {}
+
+    private record EngineCapabilities(boolean indexingConfigured) {}
+
+    /**
+     * Probe current engine readiness without ingesting documents or calling an embedding provider.
+     */
+    public Capabilities capabilities() {
+        boolean enabled = applicationProperties.getDocparse().isEnabled();
+        if (!enabled || !applicationProperties.getAiEngine().isEnabled()) {
+            return new Capabilities(enabled, false, false);
+        }
+        try {
+            EngineCapabilities result =
+                    objectMapper.readValue(
+                            aiEngineClient.get("/api/v1/docparse/capabilities", currentUserId()),
+                            EngineCapabilities.class);
+            return new Capabilities(enabled, true, result.indexingConfigured());
+        } catch (IOException | RuntimeException e) {
+            log.debug("Could not check ingestion readiness: {}", e.getMessage());
+            return new Capabilities(enabled, false, false);
+        }
+    }
+
     /**
      * Convert the document to Markdown blocks, then chunk, embed, and index them into the engine's
      * knowledge base and/or hand them back for corpus export.
@@ -144,6 +170,10 @@ public class DocParseService {
         // Chunking lives in the engine, so an export-markdown-only run needs no round trip at all.
         if (index || includeChunks) {
             String callerId = currentUserId();
+            if (callerId == null || callerId.isBlank()) {
+                throw new ResponseStatusException(
+                        HttpStatus.UNAUTHORIZED, "Sign in to index documents or export chunks");
+            }
             // Null expiresAt = persistent until explicit delete; ingest here is a deliberate
             // knowledge-base action, unlike the TTL'd auto-ingest in AiWorkflowService.
             IngestRequest request =
@@ -151,9 +181,7 @@ public class DocParseService {
                             docId,
                             fileName(file),
                             callerId,
-                            // Engine forbids an empty list here (min_length=1); null means
-                            // "default to the owner" on the engine side.
-                            callerId == null ? null : List.of(callerId),
+                            List.of(callerId),
                             null,
                             blocks,
                             size,

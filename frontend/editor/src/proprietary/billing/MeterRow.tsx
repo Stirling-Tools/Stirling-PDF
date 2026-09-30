@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Tooltip } from "@app/ui/Tooltip";
 
 export type MeterRowTone = "free" | "paid" | "warn";
 
@@ -22,6 +23,8 @@ export interface MeterRowProps {
   onDoor?: () => void;
   /** Tooltip on the middle line, for a fact that needs one qualifier and no more. */
   midTitle?: string;
+  /** Breakdown available on hover, keyboard focus and touch. */
+  details?: ReactNode;
 }
 
 /**
@@ -40,10 +43,16 @@ export function MeterRow({
   door,
   onDoor,
   midTitle,
+  details,
 }: MeterRowProps) {
   const cls = `billing-meter${tone === "paid" ? " billing-meter--paid" : tone === "warn" ? " billing-meter--warn" : ""}`;
-  return (
-    <div className={cls}>
+  const row = (
+    <div
+      className={cls}
+      tabIndex={details ? 0 : undefined}
+      role={details ? "group" : undefined}
+      aria-label={details ? name : undefined}
+    >
       <span className="billing-meter__dot" aria-hidden />
       <span className="billing-meter__name">{name}</span>
       <span className="billing-meter__mid" title={midTitle}>
@@ -76,5 +85,12 @@ export function MeterRow({
         <span className="billing-meter__door" aria-hidden />
       )}
     </div>
+  );
+  return details ? (
+    <Tooltip content={details} className="billing-meter-tooltip">
+      {row}
+    </Tooltip>
+  ) : (
+    row
   );
 }

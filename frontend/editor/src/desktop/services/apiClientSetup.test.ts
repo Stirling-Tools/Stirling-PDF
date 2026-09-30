@@ -268,6 +268,19 @@ describe("desktop request interceptor - auth for SaaS-backend requests", () => {
     });
     expect(result.headers.Authorization).toBeUndefined();
   });
+
+  test("rejects routing failures before a request can reach the default backend", async () => {
+    vi.mocked(operationRouter.getBaseUrl).mockRejectedValueOnce(
+      new Error("Sign in required"),
+    );
+    await expect(
+      runRequestInterceptor({
+        url: "/api/v1/policies/run",
+        method: "post",
+        headers: {},
+      }),
+    ).rejects.toThrow("Sign in required");
+  });
 });
 
 describe("desktop getAuthHeaders (raw fetch / AI SSE stream)", () => {

@@ -3,7 +3,11 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { BillingScreen } from "@app/billing/BillingScreen";
 import { KvRow } from "@app/billing/KvRow";
 import { InvoiceRow } from "@app/billing/InvoiceRow";
-import { freeWallet, subscribedWallet } from "@app/billing/walletFixtures";
+import {
+  freeWallet,
+  prepaidWallet,
+  subscribedWallet,
+} from "@app/billing/walletFixtures";
 import { AppConfigProvider } from "@app/contexts/AppConfigContext";
 import { LicenseProvider } from "@app/contexts/LicenseContext";
 import { ServerLicenseSection } from "@portal/components/billing/ServerLicenseSection";
@@ -248,6 +252,36 @@ export const TeamAndProcessor: Story = {
     editorsDeployed: 6,
     paymentSection: payment,
     invoicesSection: invoices,
+  },
+};
+
+/** A live prepaid pool leads the Processor row; the meter it is spent ahead of sits in the hover. */
+export const PrepaidPool: Story = {
+  args: {
+    wallet: prepaidWallet,
+    onAddCapacity: () => {},
+    onGovernSpend: () => {},
+    onEnterpriseQuote: () => {},
+    paymentSection: payment,
+    invoicesSection: invoices,
+  },
+};
+
+/** Prepay bought without metering switched on: the pool still governs, activation is still the door. */
+export const PrepaidPoolNotActivated: Story = {
+  args: {
+    wallet: {
+      ...prepaidWallet,
+      status: "free",
+      processor: { active: false },
+      estimatedBillMinor: null,
+      capUsd: null,
+      stripeSubscriptionId: null,
+      prepaidUnitsRemaining: 9_400,
+      prepaidUnitsTotal: 120_000,
+    },
+    onActivateProcessor: () => {},
+    onEnterpriseQuote: () => {},
   },
 };
 

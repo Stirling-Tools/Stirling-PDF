@@ -30,8 +30,11 @@ export function seatsLabel(
   limit: number | null,
 ): string {
   return limit === null
-    ? t("portal.users.seats.unlimited", { used })
-    : t("portal.users.seats.limited", { used, limit });
+    ? t("portal.users.seats.unlimited", "{{used}} seats · Unlimited", { used })
+    : t("portal.users.seats.limited", "{{used}} / {{limit}} seats", {
+        used,
+        limit,
+      });
 }
 
 /**

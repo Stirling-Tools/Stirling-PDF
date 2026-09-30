@@ -9,6 +9,7 @@ import { fetchIntegrations } from "@portal/api/integrations";
 import { errorMessage } from "@portal/api/http";
 import { useAsync } from "@portal/hooks/useAsync";
 import { useMemo } from "react";
+import { PolicySetupConnections } from "@portal/components/policies/PolicySetupConnections";
 import { PolicyPurviewConfig } from "@portal/components/policies/PolicyPurviewConfig";
 import { PolicyRoutingConfig } from "@portal/components/policies/PolicyRoutingConfig";
 
@@ -40,6 +41,12 @@ export function PolicySetupWizard(props: PolicySetupWizardProps) {
       {...props}
       hasPurviewConnection={hasPurviewConnection}
       formatError={errorMessage}
+      setupConfig={(config) => (
+        <PolicySetupConnections
+          {...config}
+          readOnly={props.canManagePolicies === false}
+        />
+      )}
       purviewConfig={({ parameters, onChange }) => (
         <PolicyPurviewConfig parameters={parameters} onChange={onChange} />
       )}

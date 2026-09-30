@@ -12,8 +12,9 @@ public interface DeviceCredentialRepository extends JpaRepository<DeviceCredenti
     /** Updates only the current device, so an old response cannot refresh a replacement link. */
     @Modifying(clearAutomatically = true)
     @Query(
-            "update DeviceCredential c set c.lastEntitlementSuccessAt = :at, c.entitlementRevoked = :revoked where c.deviceId = :deviceId and (c.lastEntitlementSuccessAt is null or c.lastEntitlementSuccessAt <= :at)")
-    int recordEntitlementContact(String deviceId, Instant at, boolean revoked);
+            "update DeviceCredential c set c.lastEntitlementSuccessAt = :at, c.entitlementRevoked = :revoked, c.fleetUserLimit = :fleetUserLimit where c.deviceId = :deviceId and (c.lastEntitlementSuccessAt is null or c.lastEntitlementSuccessAt <= :at)")
+    int recordEntitlementContact(
+            String deviceId, Instant at, boolean revoked, Integer fleetUserLimit);
 
     /** The singleton credential, if this instance has linked. */
     default Optional<DeviceCredential> findCredential() {

@@ -60,6 +60,8 @@ export interface ProcessingFoldersApi {
   /** Remove the processing behaviour and its history; the folder and files stay. */
   remove: (folder: FolderRecord) => Promise<void>;
   sweep: (folder: FolderRecord) => Promise<void>;
+  /** Re-read the list — for a caller that created a folder outside these actions. */
+  refresh: () => Promise<void>;
 }
 
 const EMPTY_IDS: ReadonlySet<string> = new Set();
@@ -85,6 +87,7 @@ const INERT: ProcessingFoldersApi = {
   disable: async () => {},
   remove: async () => {},
   sweep: async () => {},
+  refresh: async () => {},
 };
 
 /**
@@ -93,9 +96,4 @@ const INERT: ProcessingFoldersApi = {
  */
 export function useProcessingFolders(): ProcessingFoldersApi {
   return INERT;
-}
-
-/** Reload the shared list. No-op in core, which has no processing folders. */
-export function refreshProcessingFolders(): Promise<void> {
-  return Promise.resolve();
 }

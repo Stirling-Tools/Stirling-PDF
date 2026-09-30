@@ -145,13 +145,13 @@ class ExceptionUtilsTest {
 
         @Test
         void testCreateOcrLanguageRequiredException() {
-            IOException ex = ExceptionUtils.createOcrLanguageRequiredException();
+            IllegalArgumentException ex = ExceptionUtils.createOcrLanguageRequiredException();
             assertTrue(ex.getMessage().contains("OCR language"));
         }
 
         @Test
         void testCreateOcrInvalidLanguagesException() {
-            IOException ex = ExceptionUtils.createOcrInvalidLanguagesException();
+            IllegalArgumentException ex = ExceptionUtils.createOcrInvalidLanguagesException();
             assertTrue(ex.getMessage().contains("none of the selected languages"));
         }
 
@@ -175,7 +175,7 @@ class ExceptionUtilsTest {
 
         @Test
         void testCreatePdfaConversionFailedException() {
-            RuntimeException ex = ExceptionUtils.createPdfaConversionFailedException();
+            IOException ex = ExceptionUtils.createPdfaConversionFailedException();
             assertTrue(ex.getMessage().contains("PDF/A conversion failed"));
         }
 
