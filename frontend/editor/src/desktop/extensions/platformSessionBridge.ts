@@ -6,10 +6,8 @@ import type { PlatformSessionUser } from "@proprietary/extensions/platformSessio
 export async function isDesktopSaaSAuthMode(): Promise<boolean> {
   try {
     const mode = await connectionModeService.getCurrentMode();
-    // Return true for ANY desktop auth mode (SaaS or self-hosted with desktop authService)
-    // This skips redundant backend validation in springAuthClient since desktop authService
-    // already manages the token lifecycle
-    return mode === "saas" || mode === "selfhosted";
+    // Self-hosted sessions need the server profile for roles and organisation ownership.
+    return mode === "saas";
   } catch {
     return false;
   }
