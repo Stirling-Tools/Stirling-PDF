@@ -1224,8 +1224,8 @@ class FileStorageService {
   }
 
   /**
-   * Persist output files as versions of their inputs: mark each input non-leaf (unless the
-   * outputs are v1 originals, i.e. nothing was versioned) and store each output with its stub.
+   * Persist output files as versions of their inputs: store each output with its stub, then
+   * mark each input non-leaf (unless the outputs are v1 originals, or an output failed to store).
    * This is the durable half of {@link consumeFiles}, shared so a versioned result can be written
    * even when the input isn't in the active workspace (e.g. a policy run recovered after a reload).
    * Storage-only callers must bump the IndexedDB revision afterwards so the file views re-read;
@@ -1242,30 +1242,36 @@ class FileStorageService {
       );
     }
 
-    const allV1 = outputStirlingFileStubs.every(
-      (stub) => stub.versionNumber === 1,
-    );
-    if (!allV1) {
-      await Promise.all(
-        inputFileIds.map((fileId) =>
-          this.markFileAsProcessed(fileId).catch((error) => {
-            // Best-effort: a missing/locked input shouldn't block storing the outputs.
-            console.warn(`Failed to mark file ${fileId} as processed:`, error);
-          }),
-        ),
-      );
-    }
-
-    await Promise.all(
+    // Outputs are written before inputs are retired: a crash or failed write in between
+    // must leave a leaf in the chain, or the file can never be reopened.
+    const stored = await Promise.all(
       outputStirlingFiles.map((file, i) =>
-        this.storeStirlingFile(file, outputStirlingFileStubs[i]).catch(
-          (error) =>
+        this.storeStirlingFile(file, outputStirlingFileStubs[i]).then(
+          () => true,
+          (error) => {
             console.error(
               "Failed to persist output file to storage:",
               file.name,
               error,
-            ),
+            );
+            return false;
+          },
         ),
+      ),
+    );
+
+    const allV1 = outputStirlingFileStubs.every(
+      (stub) => stub.versionNumber === 1,
+    );
+    if (allV1 || !stored.every(Boolean)) {
+      return;
+    }
+    await Promise.all(
+      inputFileIds.map((fileId) =>
+        this.markFileAsProcessed(fileId).catch((error) => {
+          // Best-effort: the outputs are already stored as leaves.
+          console.warn(`Failed to mark file ${fileId} as processed:`, error);
+        }),
       ),
     );
   }
