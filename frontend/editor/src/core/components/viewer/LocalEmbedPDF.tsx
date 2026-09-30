@@ -132,7 +132,6 @@ interface LocalEmbedPDFProps {
   signatureApiRef?: React.RefObject<SignatureAPI | null>;
   annotationApiRef?: React.RefObject<AnnotationAPI | null>;
   /** A committed annotation edit landed (redaction marks and signatures excluded). */
-  onAnnotationEditCommitted?: () => void;
   historyApiRef?: React.RefObject<HistoryAPI | null>;
   redactionTrackerRef?: React.RefObject<RedactionPendingTrackerAPI>;
   /** File identity passed through to FormFieldOverlay for stale-field guards */
@@ -606,7 +605,6 @@ type EditingBridgesProps = Pick<
   | "signatureApiRef"
   | "annotationApiRef"
   | "redactionTrackerRef"
-  | "onAnnotationEditCommitted"
 > & {
   enableAnnotations: boolean;
   enableRedaction: boolean;
@@ -628,7 +626,6 @@ function EditingBridges({
   signatureApiRef,
   annotationApiRef,
   redactionTrackerRef,
-  onAnnotationEditCommitted,
   getAnnotationAnchor,
   onAnnotationDeleted,
   deletedAnnotationMenu,
@@ -642,7 +639,6 @@ function EditingBridges({
       <AnnotationMenuEvents
         getAnchor={getAnnotationAnchor}
         onDeleted={onAnnotationDeleted}
-        onEditCommitted={onAnnotationEditCommitted}
       />
       <AnnotationDeletedMenu
         anchor={deletedAnnotationMenu}
@@ -671,7 +667,6 @@ export function LocalEmbedPDF({
   onSignatureAdded,
   signatureApiRef,
   annotationApiRef,
-  onAnnotationEditCommitted,
   historyApiRef,
   redactionTrackerRef,
   fileId,
@@ -1302,7 +1297,6 @@ export function LocalEmbedPDF({
             signatureApiRef={signatureApiRef}
             annotationApiRef={annotationApiRef}
             redactionTrackerRef={redactionTrackerRef}
-            onAnnotationEditCommitted={onAnnotationEditCommitted}
             getAnnotationAnchor={getAnnotationAnchor}
             onAnnotationDeleted={handleAnnotationDeleted}
             deletedAnnotationMenu={deletedAnnotationMenu}

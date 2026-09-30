@@ -13026,10 +13026,13 @@ preview = "Preview"
 searchPlaceholder = "Search files"
 title = "Portfolio"
 
+[viewer.annotation]
+dirty = "Unsaved annotation changes"
+failed = "The document could not be saved. Try again."
+
 [viewer.redaction]
 applyAll = "Apply Redactions"
-applyAllPending = "Apply All Redactions"
-applyAllPendingWarning = "⚠️ Applies and saves every pending mark. Permanent, cannot be undone, and the data underneath will be deleted"
+reviewAll = "Review and apply all redactions in the tool panel"
 removeMark = "Remove this mark"
 
 [viewer.search]

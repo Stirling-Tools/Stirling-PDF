@@ -79,7 +79,7 @@ test("changing colour from the reader UI does not flicker the open palette", asy
   expect(after - before).toBeLessThanOrEqual(3);
 });
 
-test("the Annotate panel is opened at most once per edit session", async ({
+test("scrolling keeps one save surface and does not rebuild the palette", async ({
   page,
 }) => {
   test.setTimeout(180_000);
@@ -92,24 +92,24 @@ test("the Annotate panel is opened at most once per edit session", async ({
   const swatch = page.locator(".mantine-ColorPicker-swatch").nth(2);
   await expect(swatch).toBeVisible({ timeout: 10_000 });
   await swatch.click();
-  await expect(page.getByRole("button", { name: "Save Changes" })).toHaveCount(
-    1,
-    {
-      timeout: 10_000,
-    },
-  );
 
-  // Scrolling keeps producing committed annotation events as the page settles.
-  // Each one used to re-select the Annotate tool, rebuilding the panel.
+  // The save action lives on the persistent surface now, not behind a tool
+  // switch, so exactly one must exist and scrolling must not add or drop it.
+  const surfaces = page.locator("[data-annotation-save-surface]");
+  await expect(surfaces).toHaveCount(1);
+  await expect(surfaces).toBeVisible();
+
   const before = (await readRenderCounts(page))[COLOUR_PICKER_RENDER_LABEL];
   for (let i = 0; i < 8; i++) {
     await page.mouse.wheel(0, 140);
     await page.waitForTimeout(120);
   }
-  const after = (await readRenderCounts(page))[COLOUR_PICKER_RENDER_LABEL];
 
+  await expect(surfaces).toHaveCount(1);
+  await expect(
+    page.getByRole("button", { name: "Save Changes" }),
+  ).toBeVisible();
+
+  const after = (await readRenderCounts(page))[COLOUR_PICKER_RENDER_LABEL];
   expect(after - before).toBeLessThanOrEqual(3);
-  await expect(page.getByRole("button", { name: "Save Changes" })).toHaveCount(
-    1,
-  );
 });

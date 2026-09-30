@@ -6,6 +6,8 @@ import {
   type ViewerProps,
 } from "@app/components/viewer/NonPdfViewer";
 import { AttachmentSidebar } from "@app/components/viewer/AttachmentSidebar";
+import { AnnotationSaveBar } from "@app/components/viewer/AnnotationSaveBar";
+import { DocumentEditSessionProvider } from "@app/contexts/documentEdit/DocumentEditSessionContext";
 import { usePortfolioSession } from "@app/components/viewer/hooks/usePortfolioSession";
 import { useAllFiles } from "@app/contexts/FileContext";
 import { useViewer } from "@app/contexts/ViewerContext";
@@ -65,37 +67,45 @@ const Viewer = (props: ViewerProps & SignatureOverlayPassThrough) => {
     [session, activeMemberName],
   );
 
-  const viewer =
-    activeFile && !isPdfFile(activeFile) ? (
-      <NonPdfViewerWrapper {...props} />
-    ) : (
-      <EmbedPdfViewer {...props} portfolioPinned={portfolio !== null} />
-    );
+  // The session resets itself on a document swap through one DOCUMENT_REPLACED
+  // transition. It is deliberately NOT keyed: a keyed provider remounts its whole
+  // subtree, which tears down the live viewer on an in-place save — the exact
+  // thing the in-place reload path exists to avoid. The save surface is
+  // absolutely positioned, so appearing never resizes the viewport.
 
-  if (!portfolio) return viewer;
-
-  // The panel is fixed-positioned against its nearest contained ancestor, which
-  // inside the PDF viewer is that viewer's own root. Above both viewers it needs
-  // an equivalent, or it anchors to the window and covers the tool rail.
   return (
-    <div
-      style={{
-        position: "relative",
-        height: "100%",
-        display: "flex",
-        flexDirection: "column",
-        overflow: "hidden",
-        contain: "content",
-      }}
-    >
-      {viewer}
-      <AttachmentSidebar
-        visible={isAttachmentSidebarVisible}
-        thumbnailVisible={isThumbnailSidebarVisible}
-        bookmarkVisible={isBookmarkSidebarVisible}
-        portfolio={portfolio}
-      />
-    </div>
+    <DocumentEditSessionProvider documentId={activeFileId}>
+      <div
+        // Matches the wrapper the portfolio branch already used. Its geometry is
+        // load-bearing: the in-place reload specs assert page position and zoom
+        // across a swap, so this must not gain a width the scroller did not have.
+        style={{
+          position: "relative",
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+          contain: "content",
+        }}
+      >
+        {activeFile && !isPdfFile(activeFile) ? (
+          <NonPdfViewerWrapper {...props} />
+        ) : (
+          <EmbedPdfViewer {...props} portfolioPinned={portfolio !== null} />
+        )}
+
+        {portfolio && (
+          <AttachmentSidebar
+            visible={isAttachmentSidebarVisible}
+            thumbnailVisible={isThumbnailSidebarVisible}
+            bookmarkVisible={isBookmarkSidebarVisible}
+            portfolio={portfolio}
+          />
+        )}
+
+        <AnnotationSaveBar />
+      </div>
+    </DocumentEditSessionProvider>
   );
 };
 

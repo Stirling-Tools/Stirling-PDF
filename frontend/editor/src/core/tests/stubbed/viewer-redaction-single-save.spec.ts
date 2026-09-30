@@ -38,14 +38,18 @@ async function markRedaction(page: import("@playwright/test").Page) {
 
 /** Annotations per page of the saved file. sample.pdf has none, so any count
  *  left after applying means a redaction mark survived as a stale object. */
-async function exportedAnnotationCounts(page: import("@playwright/test").Page) {
-  const downloadPromise = page.waitForEvent("download", { timeout: 20_000 });
+async function exportAndCountAnnotations(
+  page: import("@playwright/test").Page,
+  target: string,
+): Promise<number[]> {
+  // Exported once, outside any poll: a retrying poll would click export again
+  // and leave a download per attempt behind.
+  const downloadPromise = page.waitForEvent("download", { timeout: 30_000 });
   await page
     .getByRole("button", { name: /download|export/i })
     .first()
     .click();
   const download = await downloadPromise;
-  const target = path.join("/tmp", "stirling-redact-single-save.pdf");
   await download.saveAs(target);
   const { PDFDocument } = await import("@cantoo/pdf-lib");
   const exported = await PDFDocument.load(fs.readFileSync(target));
@@ -70,7 +74,7 @@ test("manual redaction offers a single apply-and-save action", async ({
 
 test("applying redactions saves a clean document without stale objects", async ({
   page,
-}) => {
+}, testInfo) => {
   test.setTimeout(240_000);
   const firstPage = await loadViewer(page);
   await markRedaction(page);
@@ -95,13 +99,107 @@ test("applying redactions saves a clean document without stale objects", async (
 
   // The persisted file carries no annotation: the mark was burned in, not left
   // as a stale object for a second save.
-  await expect
-    .poll(() => exportedAnnotationCounts(page), { timeout: 30_000 })
-    .toEqual([0]);
+  const counts = await exportAndCountAnnotations(
+    page,
+    testInfo.outputPath("redact-single-save.pdf"),
+  );
+  expect(counts).toEqual([0]);
 
   // Nothing is unsaved after the apply; leaving must not warn.
   await page.getByRole("button", { name: "Form Editor" }).first().click();
   await expect(page.getByText("Unsaved changes").first()).not.toBeVisible({
     timeout: 5_000,
   });
+});
+
+/** Drags out a redaction mark at a given height fraction. */
+async function markRedactionAt(
+  page: import("@playwright/test").Page,
+  yFraction: number,
+) {
+  const firstPage = page.locator('[data-page-index="0"]').first();
+  const box = await firstPage.boundingBox();
+  if (!box) throw new Error("Page wrapper has no bounding box");
+  const y = box.y + box.height * yFraction;
+  await page.mouse.move(box.x + box.width * 0.15, y);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width * 0.6, y, { steps: 15 });
+  await page.mouse.up();
+
+  // The reader offers Redact on the text-selection menu. Once redaction mode is
+  // armed — which the first mark does — the drag itself queues the mark and no
+  // menu appears, so both paths have to be handled.
+  const redactInMenu = page
+    .locator('[data-text-selection-menu] button[aria-label="Redact"]')
+    .first();
+  if (await redactInMenu.isVisible({ timeout: 3_000 }).catch(() => false)) {
+    await redactInMenu.click();
+  }
+  await page.waitForTimeout(1_500);
+}
+
+/**
+ * Adds redaction marks until the apply action reports `target`, so the test does
+ * not depend on which lines of the sample happen to carry text.
+ */
+async function markRedactionsUpTo(
+  page: import("@playwright/test").Page,
+  target: number,
+) {
+  const apply = page.getByRole("button", { name: /Apply Redactions/ }).first();
+  await expect(apply).toBeVisible({ timeout: 10_000 });
+  for (const yFraction of [0.105, 0.16, 0.22, 0.28, 0.34, 0.4, 0.46]) {
+    if ((await apply.textContent())?.includes(`(${target})`)) return;
+    await markRedactionAt(page, yFraction);
+  }
+  await expect(apply).toContainText(`(${target})`);
+}
+
+test("one apply burns in every pending mark", async ({ page }) => {
+  test.setTimeout(300_000);
+  await loadViewer(page);
+  await markRedaction(page);
+  await markRedactionsUpTo(page, 2);
+
+  // Both marks are counted, so the user can see the apply covers all of them.
+  const apply = page.getByRole("button", { name: /Apply Redactions/ }).first();
+  await expect(apply).toContainText("(2)");
+  await apply.click();
+
+  // A single apply clears every pending mark, not just the selected one.
+  await expect(page.getByText(/Apply Redactions/).first()).not.toBeVisible({
+    timeout: 30_000,
+  });
+  await expect(page.getByRole("button", { name: "Save Changes" })).toHaveCount(
+    0,
+  );
+});
+
+test("a double click on apply does not start two commit/save passes", async ({
+  page,
+}) => {
+  test.setTimeout(300_000);
+  await loadViewer(page);
+  await markRedaction(page);
+
+  const apply = page.getByRole("button", { name: /Apply Redactions/ }).first();
+  await expect(apply).toBeVisible({ timeout: 10_000 });
+
+  // The apply is permanent and irreversible, so the second click has to be
+  // swallowed rather than running a second commit/save over the same marks.
+  await apply.dblclick({ delay: 10 }).catch(() => {
+    // The button disables itself mid-flight, which can abort the dblclick; that
+    // is the protection working.
+  });
+
+  await expect(
+    page.getByText(/Apply Redactions|Applying/).first(),
+  ).not.toBeVisible({
+    timeout: 30_000,
+  });
+  // A failed second pass would leave the action available with the marks gone.
+  await expect(page.getByRole("button", { name: "Save Changes" })).toHaveCount(
+    0,
+  );
+  await expect(page.getByRole("alert")).toHaveCount(0);
 });

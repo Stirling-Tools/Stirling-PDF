@@ -3,14 +3,12 @@ import { useAnnotationCapability } from "@embedpdf/plugin-annotation/react";
 import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
 import { surfacesAnnotationSaveUi } from "@app/components/viewer/annotationSaveSurface";
 import type { AnnotationMenuAnchor } from "@app/components/viewer/viewerTypes";
+import { useDocumentEditDispatch } from "@app/contexts/documentEdit/DocumentEditSessionContext";
 
 interface AnnotationMenuEventsProps {
   /** Last on-screen anchor for an annotation, even after it was deselected. */
   getAnchor: (annotationId: string) => AnnotationMenuAnchor | null;
   onDeleted: (anchor: AnnotationMenuAnchor) => void;
-  /** A user-driven annotation edit landed; the caller surfaces the save UI.
-   *  Redaction marks and signatures have their own save flows and are skipped. */
-  onEditCommitted?: () => void;
 }
 
 /** Opens the menu for a committed edit, an undo menu for a committed delete,
@@ -18,10 +16,10 @@ interface AnnotationMenuEventsProps {
 export function AnnotationMenuEvents({
   getAnchor,
   onDeleted,
-  onEditCommitted,
 }: AnnotationMenuEventsProps) {
   const documentId = useActiveDocumentId();
   const { provides } = useAnnotationCapability();
+  const dispatchEdit = useDocumentEditDispatch();
 
   useEffect(() => {
     if (!provides || !documentId) return;
@@ -31,7 +29,7 @@ export function AnnotationMenuEvents({
       if (!event.committed) return;
 
       if (surfacesAnnotationSaveUi(event.annotation)) {
-        onEditCommitted?.();
+        dispatchEdit({ type: "ANNOTATION_EDIT_COMMITTED" });
       }
 
       if (event.type === "delete") {
@@ -47,7 +45,7 @@ export function AnnotationMenuEvents({
       if (selected.includes(event.annotation.id)) return;
       provides.selectAnnotation?.(event.pageIndex, event.annotation.id);
     });
-  }, [provides, documentId, getAnchor, onDeleted, onEditCommitted]);
+  }, [provides, documentId, getAnchor, onDeleted, dispatchEdit]);
 
   return null;
 }

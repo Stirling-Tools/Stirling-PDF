@@ -1,24 +1,24 @@
 import { PdfAnnotationSubtype } from "@embedpdf/models";
 import type { PdfAnnotationObject } from "@embedpdf/models";
-import { SIGNATURE_ANNOTATION_AUTHOR } from "@app/constants/app";
 
 /**
  * Whether an edit to this annotation must make the Annotate panel's save action
  * appear.
  *
- * Redaction marks and signatures are applied by their own flows, so surfacing
- * the panel for them would promise a save that those flows do not use. A STAMP
- * is only a signature when SignatureAPIBridge placed it: an image stamp from the
- * Annotate panel, or one already in an uploaded PDF, is saved from the panel
- * like any other annotation.
+ * A redaction mark is applied by the redaction flow, which owns its own save, so
+ * surfacing the panel for one would promise a save that flow never makes.
+ *
+ * Stamps are deliberately *not* excluded. The only thing that distinguishes a
+ * signature stamp from an image stamp is provenance, and provenance read off the
+ * annotation is not trustworthy: an imported PDF can carry any author string, and
+ * the signature image store also holds ordinary image stamps. Guessing wrong here
+ * hides the save affordance for a real unsaved edit, so every stamp surfaces it —
+ * the safe direction. The Sign tool opens the Annotate panel itself, so the
+ * signature flow is unaffected.
  */
 export function surfacesAnnotationSaveUi(
   annotation?: PdfAnnotationObject,
 ): boolean {
   if (!annotation) return false;
-  if (annotation.type === PdfAnnotationSubtype.REDACT) return false;
-  const isSignature =
-    annotation.type === PdfAnnotationSubtype.STAMP &&
-    annotation.author === SIGNATURE_ANNOTATION_AUTHOR;
-  return !isSignature;
+  return annotation.type !== PdfAnnotationSubtype.REDACT;
 }
