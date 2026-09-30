@@ -199,7 +199,7 @@ export default defineConfig({
     "typescript/prefer-as-const": "error",
     "typescript/prefer-namespace-keyword": "error",
     "typescript/triple-slash-reference": "error",
-    "react/jsx-max-depth": ["error", { max: 9 }],
+    "react/jsx-max-depth": ["error", { max: 8 }],
   },
   overrides: [
     {
