@@ -116,9 +116,6 @@ updates:
       lucide:
         patterns:
           - "lucide-static"
-      iconify:
-        patterns:
-          - "@iconify-json/*"
       stripe:
         patterns:
           - "@stripe/*"
