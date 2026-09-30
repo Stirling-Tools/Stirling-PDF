@@ -1648,6 +1648,10 @@ class TimestampPdfParams(ApiModel):
     Contacts a trusted Time Stamp Authority (TSA) server and embeds an RFC 3161 document timestamp into the PDF. Only a SHA-256 hash of the document is sent to the TSA - the PDF itself never leaves the server. Input:PDF Output:PDF Type:SISO
     """
 
+    document_password: SecretStr | None = Field(
+        None,
+        description="(Optional) password that opens the input PDF when it is encrypted. It only opens the file: the uploaded bytes are used as they are.",
+    )
     tsa_url: str = Field(
         "http://timestamp.digicert.com",
         description="URL of the RFC 3161 Time Stamp Authority (TSA) server. Must be one of the built-in presets (DigiCert, Sectigo, SSL.com, FreeTSA, MeSign) or an admin-configured URL in settings.yml (security.timestamp.customTsaUrls). If omitted, the server default is used.",

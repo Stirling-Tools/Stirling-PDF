@@ -4360,8 +4360,10 @@ title = "Open the tool to start editing"
 description = "This PDF is password protected. Enter the password so you can continue working with it."
 emptyResponse = "Password removal did not produce a file."
 incorrectPassword = "Incorrect password"
+keepLocked = "Keep locked"
 missingFile = "The selected file is no longer available."
 required = "Enter the password to continue."
+signedWarning = "This PDF is digitally signed. Removing the password rewrites the file, so its signature will no longer be valid. To check the signature or add another one, keep it locked: those tools will ask for the password."
 skip = "Skip for now"
 successBody = "Password removed successfully."
 successBodyWithName = "Password removed from {{fileName}}"
@@ -5733,6 +5735,18 @@ toolUnavailable = "This tool requires an account. Sign in to Stirling Cloud or c
 [localMode.toolPicker]
 message = "Sign in to unlock all tools."
 signIn = "Sign In"
+
+[lockedDocument]
+stepTitle = "Locked PDF"
+usingOriginalAppend = "Using the original locked file you uploaded, so existing signatures stay valid."
+usingOriginalAudit = "Using the original locked file you uploaded, so its signatures are checked exactly as they were signed."
+
+[lockedDocument.password]
+appendDescription = "This PDF is still locked. Enter its password; the new signature is added to the locked file, so existing signatures stay valid and the result stays password protected."
+auditDescription = "This PDF is still locked. Enter its password to check its signatures; the file is not changed."
+label = "PDF password"
+placeholder = "Enter the PDF password"
+rejected = "That password did not open this PDF. Check it and try again."
 
 [login]
 accountCreatedSuccess = "Account created successfully! You can now sign in."

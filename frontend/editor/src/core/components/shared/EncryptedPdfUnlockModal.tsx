@@ -1,4 +1,4 @@
-import { Modal, Stack, Text, PasswordInput, Group } from "@mantine/core";
+import { Alert, Modal, Stack, Text, PasswordInput, Group } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { type KeyboardEventHandler } from "react";
@@ -14,6 +14,8 @@ interface EncryptedPdfUnlockModalProps {
   remainingCount?: number;
   /** Confirm wording, where the caller's own reads better than the default. */
   confirmLabel?: string;
+  /** The file is digitally signed, which removing its password invalidates. */
+  isSigned?: boolean;
   onPasswordChange: (value: string) => void;
   onUnlock: () => void;
   /** Only needed alongside a non-zero {@link EncryptedPdfUnlockModalProps.remainingCount}. */
@@ -29,6 +31,7 @@ const EncryptedPdfUnlockModal = ({
   isProcessing,
   remainingCount = 0,
   confirmLabel,
+  isSigned = false,
   onPasswordChange,
   onUnlock,
   onUnlockAll,
@@ -63,6 +66,18 @@ const EncryptedPdfUnlockModal = ({
             "This PDF is password protected. Enter the password so you can continue working with it.",
           )}
         </Text>
+        {isSigned && (
+          <Alert
+            color="yellow"
+            variant="light"
+            data-testid="unlock-signed-warning"
+          >
+            {t(
+              "encryptedPdfUnlock.signedWarning",
+              "This PDF is digitally signed. Removing the password rewrites the file, so its signature will no longer be valid. To check the signature or add another one, keep it locked: those tools will ask for the password.",
+            )}
+          </Alert>
+        )}
 
         <Stack gap={4}>
           <PasswordInput
@@ -91,7 +106,9 @@ const EncryptedPdfUnlockModal = ({
             onClick={onSkip}
             disabled={isProcessing}
           >
-            {t("encryptedPdfUnlock.skip", "Skip for now")}
+            {isSigned
+              ? t("encryptedPdfUnlock.keepLocked", "Keep locked")
+              : t("encryptedPdfUnlock.skip", "Skip for now")}
           </Button>
           <Group gap="xs">
             {remainingCount > 0 && onUnlockAll && (

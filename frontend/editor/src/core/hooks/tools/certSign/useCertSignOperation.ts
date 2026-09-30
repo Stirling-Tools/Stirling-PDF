@@ -145,6 +145,7 @@ export const certSignOperationConfig = defineSingleFileTool({
   operationType: "certSign",
   endpoint: ENDPOINT,
   defaultParameters,
+  lockedDocuments: "append",
 });
 
 export const useCertSignOperation = () => {

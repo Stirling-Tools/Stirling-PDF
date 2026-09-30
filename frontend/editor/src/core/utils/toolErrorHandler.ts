@@ -34,6 +34,42 @@ export const extractErrorMessage = (error: unknown): string => {
   return "There was an error processing your request.";
 };
 
+/** The server refused to open a PDF because its password was missing or wrong. */
+export async function isPdfPasswordError(error: unknown): Promise<boolean> {
+  try {
+    if (!axios.isAxiosError(error)) return false;
+    const data = await normalizeAxiosErrorData(error.response?.data);
+    const { type, title } = (data ?? {}) as { type?: unknown; title?: unknown };
+    return (
+      (typeof type === "string" && type.endsWith("/pdf-password")) ||
+      title === "PDF Password Required"
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The reason a server gave for a failed request: the problem-detail `detail`, or a `message`.
+ * Reads a blob body too, since file endpoints are called with `responseType: "blob"`.
+ */
+export async function extractServerErrorReason(
+  error: unknown,
+): Promise<string | undefined> {
+  // Runs while reporting another failure, so it must never throw one of its own.
+  try {
+    if (!axios.isAxiosError(error)) return undefined;
+    const data = await normalizeAxiosErrorData(error.response?.data);
+    if (!data || typeof data !== "object") return undefined;
+    const { detail, message } = data as { detail?: unknown; message?: unknown };
+    if (typeof detail === "string" && detail) return detail;
+    if (typeof message === "string" && message) return message;
+  } catch {
+    // Fall through: the caller keeps its own message.
+  }
+  return undefined;
+}
+
 /**
  * Creates a standardized error handler for tool operations
  * @param fallbackMessage - Message to show when no specific error can be extracted

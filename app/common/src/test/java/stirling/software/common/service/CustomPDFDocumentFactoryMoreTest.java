@@ -27,6 +27,8 @@ import org.junit.jupiter.api.io.TempDir;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 
+import stirling.software.common.util.ExceptionUtils.PdfPasswordException;
+
 class CustomPDFDocumentFactoryMoreTest {
 
     private CustomPDFDocumentFactory factory;
@@ -150,6 +152,48 @@ class CustomPDFDocumentFactoryMoreTest {
             // Re-loading with no password proves security was stripped.
             try (PDDocument reloaded = org.apache.pdfbox.Loader.loadPDF(decryptedSaved)) {
                 assertThat(reloaded.isEncrypted()).isFalse();
+            }
+        }
+
+        @Test
+        @DisplayName("a wrong password is a PdfPasswordException on every password load path")
+        void wrongPasswordIsPasswordException() throws IOException {
+            byte[] encrypted = buildEncryptedPdf("ownerpw", "userpw");
+            MockMultipartFile multipart =
+                    new MockMultipartFile(
+                            "file", "locked.pdf", MediaType.APPLICATION_PDF_VALUE, encrypted);
+
+            assertThatThrownBy(() -> factory.load(new ByteArrayInputStream(encrypted), "wrong"))
+                    .isInstanceOf(PdfPasswordException.class);
+            assertThatThrownBy(() -> factory.load(multipart, "wrong"))
+                    .isInstanceOf(PdfPasswordException.class);
+            assertThatThrownBy(() -> factory.load(multipart, "wrong", true))
+                    .isInstanceOf(PdfPasswordException.class);
+            assertThatThrownBy(() -> factory.loadForIncrementalUpdate(multipart, "wrong"))
+                    .isInstanceOf(PdfPasswordException.class);
+            // Same answer as a missing password, which the no-password path already gave.
+            assertThatThrownBy(() -> factory.load(multipart))
+                    .isInstanceOf(PdfPasswordException.class);
+            assertThatThrownBy(() -> factory.loadForIncrementalUpdate(multipart, null))
+                    .isInstanceOf(PdfPasswordException.class);
+        }
+
+        @Test
+        @DisplayName("loadForIncrementalUpdate keeps encryption and still sets default metadata")
+        void incrementalLoadKeepsEncryption() throws IOException {
+            PdfMetadataService svc = mock(PdfMetadataService.class);
+            CustomPDFDocumentFactory f = new CustomPDFDocumentFactory(svc);
+            MockMultipartFile multipart =
+                    new MockMultipartFile(
+                            "file",
+                            "locked.pdf",
+                            MediaType.APPLICATION_PDF_VALUE,
+                            buildEncryptedPdf("ownerpw", "userpw"));
+
+            try (PDDocument doc = f.loadForIncrementalUpdate(multipart, "userpw")) {
+                assertThat(doc.isEncrypted()).isTrue();
+                assertThat(doc.isAllSecurityToBeRemoved()).isFalse();
+                verify(svc).setDefaultMetadata(doc);
             }
         }
 

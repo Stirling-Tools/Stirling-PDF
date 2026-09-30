@@ -13,6 +13,7 @@ import { useCertificateTypeTips } from "@app/components/tooltips/useCertificateT
 import { useSignatureAppearanceTips } from "@app/components/tooltips/useSignatureAppearanceTips";
 import { useSignModeTips } from "@app/components/tooltips/useSignModeTips";
 import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
+import { useLockedDocumentStep } from "@app/components/tools/shared/LockedDocumentPasswordField";
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
 
 const CertSign = (props: BaseToolProps) => {
@@ -43,6 +44,16 @@ const CertSign = (props: BaseToolProps) => {
     base.params.parameters.signMode,
     base.params.updateParameter,
   ]);
+
+  const lockedDocuments = useLockedDocumentStep({
+    files: base.selectedFiles,
+    mode: "append",
+    disabled: base.endpointLoading,
+    isCollapsed: base.settingsCollapsed,
+    onCollapsedClick: base.settingsCollapsed
+      ? base.handleSettingsReset
+      : undefined,
+  });
 
   const certTypeTips = useCertificateTypeTips();
   const appearanceTips = useSignatureAppearanceTips();
@@ -82,6 +93,7 @@ const CertSign = (props: BaseToolProps) => {
       isCollapsed: base.hasResults,
     },
     steps: [
+      lockedDocuments.step,
       {
         title: t("certSign.source.stepTitle", "Certificate source"),
         isVisible: hasCertSourceChoice,
@@ -176,7 +188,7 @@ const CertSign = (props: BaseToolProps) => {
       loadingText: t("loading"),
       onClick: base.handleExecute,
       endpointEnabled: base.endpointEnabled,
-      paramsValid: base.params.validateParameters(),
+      paramsValid: base.params.validateParameters() && lockedDocuments.ready,
     },
     review: {
       isVisible: base.hasResults,

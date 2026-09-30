@@ -7,11 +7,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import stirling.software.common.model.api.PDFFile;
+import stirling.software.common.model.api.PDFFileWithDocumentPassword;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class SignPDFWithCertRequest extends PDFFile {
+public class SignPDFWithCertRequest extends PDFFileWithDocumentPassword {
 
     @Schema(
             description =

@@ -134,7 +134,9 @@ public class TimestampController {
         }
 
         TempFile tempOutputFile = tempFileManager.createManagedTempFile(".pdf");
-        try (PDDocument document = pdfDocumentFactory.load(inputFile);
+        try (PDDocument document =
+                        pdfDocumentFactory.loadForIncrementalUpdate(
+                                inputFile, request.getDocumentPassword());
                 OutputStream outputStream =
                         java.nio.file.Files.newOutputStream(tempOutputFile.getPath())) {
             PDSignature signature = new PDSignature();

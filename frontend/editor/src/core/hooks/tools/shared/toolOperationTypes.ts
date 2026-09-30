@@ -2,6 +2,7 @@ import { lazy, type ComponentType } from "react";
 import { StirlingFile } from "@app/types/fileContext";
 import type { ResponseHandler } from "@app/utils/toolResponseProcessor";
 import { ToolId } from "@app/types/toolId";
+import type { LockedDocumentMode } from "@app/hooks/tools/shared/useLockedDocuments";
 import type { ProcessingProgress } from "@app/hooks/tools/shared/useToolState";
 import {
   TOOL_FILE_FIELDS,
@@ -159,6 +160,12 @@ interface BaseToolOperationConfig<TParams, TEndpoint extends ToolEndpoint> {
    * and exact input-output mapping is difficult.
    */
   consumesAllInputs?: boolean;
+
+  /**
+   * Single-file tools that must see or append to a PDF as uploaded: locked PDFs are eligible and
+   * go out as their locked original plus `documentPassword`; "append" outputs keep that password.
+   */
+  lockedDocuments?: LockedDocumentMode;
 }
 
 interface SingleFileToolBody<

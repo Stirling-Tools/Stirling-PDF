@@ -4,7 +4,15 @@ import apiClient from "@app/services/apiClient";
 import { useFileContext } from "@app/contexts/file/fileHooks";
 import { ToolOperationHook } from "@app/hooks/tools/shared/useToolOperation";
 import type { StirlingFile } from "@app/types/fileContext";
-import { extractErrorMessage } from "@app/utils/toolErrorHandler";
+import {
+  extractErrorMessage,
+  extractServerErrorReason,
+  isPdfPasswordError,
+} from "@app/utils/toolErrorHandler";
+import {
+  lockedDocumentRequest,
+  rejectLockedDocumentPassword,
+} from "@app/services/lockedDocumentAccess";
 import {
   SignatureValidationBackendResult,
   SignatureValidationFileResult,
@@ -92,8 +100,13 @@ export const useValidateSignatureOperation =
               break;
             }
 
+            // Signatures only verify on the bytes as signed, never on an unlocked re-save.
+            const request = lockedDocumentRequest(file);
             const formData = new FormData();
-            formData.append("fileInput", file);
+            formData.append("fileInput", request.file);
+            if (request.documentPassword) {
+              formData.append("documentPassword", request.documentPassword);
+            }
             if (params.certFile) {
               formData.append("certFile", params.certFile);
             }
@@ -120,11 +133,16 @@ export const useValidateSignatureOperation =
                 lastModified: file.lastModified ?? null,
               });
             } catch (error) {
+              if (await isPdfPasswordError(error)) {
+                rejectLockedDocumentPassword(file.fileId);
+              }
               aggregated.push({
                 fileId: file.fileId,
                 fileName: file.name,
                 signatures: [],
-                error: extractErrorMessage(error),
+                error:
+                  (await extractServerErrorReason(error)) ??
+                  extractErrorMessage(error),
                 fileSize: file.size ?? null,
                 lastModified: file.lastModified ?? null,
               });

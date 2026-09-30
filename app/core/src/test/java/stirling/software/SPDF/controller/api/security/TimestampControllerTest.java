@@ -81,7 +81,8 @@ class TimestampControllerTest {
         void shouldAcceptPresetUrls(String presetUrl) throws Exception {
             // Mock PDF loading to avoid actual TSA call — we only test validation here
             PDDocument mockDoc = mock(PDDocument.class);
-            when(pdfDocumentFactory.load(any(MockMultipartFile.class))).thenReturn(mockDoc);
+            when(pdfDocumentFactory.loadForIncrementalUpdate(any(MockMultipartFile.class), any()))
+                    .thenReturn(mockDoc);
             doAnswer(
                             inv -> {
                                 ByteArrayOutputStream baos = inv.getArgument(0);
@@ -148,7 +149,8 @@ class TimestampControllerTest {
             tsConfig.setCustomTsaUrls(new ArrayList<>(List.of(customUrl)));
 
             PDDocument mockDoc = mock(PDDocument.class);
-            when(pdfDocumentFactory.load(any(MockMultipartFile.class))).thenReturn(mockDoc);
+            when(pdfDocumentFactory.loadForIncrementalUpdate(any(MockMultipartFile.class), any()))
+                    .thenReturn(mockDoc);
             doNothing().when(mockDoc).close();
 
             TimestampPdfRequest request = createRequest(customUrl);
@@ -186,7 +188,8 @@ class TimestampControllerTest {
             tsConfig.setDefaultTsaUrl("http://timestamp.digicert.com");
 
             PDDocument mockDoc = mock(PDDocument.class);
-            when(pdfDocumentFactory.load(any(MockMultipartFile.class))).thenReturn(mockDoc);
+            when(pdfDocumentFactory.loadForIncrementalUpdate(any(MockMultipartFile.class), any()))
+                    .thenReturn(mockDoc);
             doNothing().when(mockDoc).close();
 
             TimestampPdfRequest request = createRequest(null);
@@ -207,7 +210,8 @@ class TimestampControllerTest {
             tsConfig.setDefaultTsaUrl("http://timestamp.digicert.com");
 
             PDDocument mockDoc = mock(PDDocument.class);
-            when(pdfDocumentFactory.load(any(MockMultipartFile.class))).thenReturn(mockDoc);
+            when(pdfDocumentFactory.loadForIncrementalUpdate(any(MockMultipartFile.class), any()))
+                    .thenReturn(mockDoc);
             doNothing().when(mockDoc).close();
 
             TimestampPdfRequest request = createRequest("   ");
@@ -270,7 +274,8 @@ class TimestampControllerTest {
         @DisplayName("Should match URLs regardless of case")
         void shouldMatchCaseInsensitive() throws Exception {
             PDDocument mockDoc = mock(PDDocument.class);
-            when(pdfDocumentFactory.load(any(MockMultipartFile.class))).thenReturn(mockDoc);
+            when(pdfDocumentFactory.loadForIncrementalUpdate(any(MockMultipartFile.class), any()))
+                    .thenReturn(mockDoc);
             doNothing().when(mockDoc).close();
 
             TimestampPdfRequest request = createRequest("HTTP://TIMESTAMP.DIGICERT.COM");

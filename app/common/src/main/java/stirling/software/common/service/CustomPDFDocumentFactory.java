@@ -244,6 +244,23 @@ public class CustomPDFDocumentFactory {
     }
 
     /**
+     * Loads a PDF to append a signature to with {@code saveIncremental}. Keeps its encryption, so
+     * the increment is written with the original key and earlier signatures stay valid.
+     */
+    public PDDocument loadForIncrementalUpdate(MultipartFile fileInput, String password)
+            throws IOException {
+        if (fileInput == null) throw ExceptionUtils.createNullArgumentException("MultipartFile");
+        PDDocument doc = streamToTemp(fileInput.getInputStream(), password, true);
+        try {
+            pdfMetadataService.setDefaultMetadata(doc);
+            return doc;
+        } catch (RuntimeException ex) {
+            doc.close();
+            throw ex;
+        }
+    }
+
+    /**
      * Returns the {@link StreamCacheCreateFunction} appropriate for a document of the given byte
      * size given the current heap state. Captures a fresh {@link MemorySnapshot} on each call.
      *
@@ -666,24 +683,19 @@ public class CustomPDFDocumentFactory {
             boolean success = false;
             try {
                 Files.write(tmp, bytes);
-                DeletingRandomAccessFile raf = new DeletingRandomAccessFile(tmp.toFile());
-                try {
-                    PDDocument doc = Loader.loadPDF(raf, password, null, null, cache);
-                    success = true;
-                    return doc;
-                } catch (IOException e) {
-                    try {
-                        raf.close();
-                    } catch (IOException ce) {
-                        e.addSuppressed(ce);
-                    }
-                    throw e;
-                }
+                PDDocument doc = loadFromFileWithPassword(tmp.toFile(), cache, password);
+                success = true;
+                return doc;
             } finally {
                 if (!success) Files.deleteIfExists(tmp);
             }
         }
-        return Loader.loadPDF(bytes, password, null, null, cache);
+        try {
+            return Loader.loadPDF(bytes, password, null, null, cache);
+        } catch (IOException e) {
+            ExceptionUtils.logException("PDF loading from bytes with password", e);
+            throw ExceptionUtils.handlePdfException(e);
+        }
     }
 
     private PDDocument maybePostProcess(PDDocument doc, boolean readOnly) throws IOException {

@@ -8,7 +8,16 @@ import {
 import { isEmptyOutput } from "@app/services/errorUtils";
 import type { ProcessingProgress } from "@app/hooks/tools/shared/useToolState";
 import type { StirlingFile, FileId } from "@app/types/fileContext";
-import { isSignupRequiredError } from "@app/utils/toolErrorHandler";
+import {
+  extractServerErrorReason,
+  isPdfPasswordError,
+  isSignupRequiredError,
+} from "@app/utils/toolErrorHandler";
+import {
+  lockedDocumentRequest,
+  rejectLockedDocumentPassword,
+} from "@app/services/lockedDocumentAccess";
+import type { LockedDocumentMode } from "@app/hooks/tools/shared/useLockedDocuments";
 
 /** An input that did not survive the batch, with the error it failed on. */
 export interface FailedInput {
@@ -23,6 +32,19 @@ export interface ApiCallsConfig<TParams = void> {
   filePrefix?: string;
   responseHandler?: ResponseHandler;
   preserveBackendFilename?: boolean;
+  /** Send each file as its locked original with a `documentPassword`, when one is known. */
+  lockedDocuments?: LockedDocumentMode;
+}
+
+/** The server's reason when every failure gave the same one, else undefined. */
+async function sharedServerReason(
+  failures: FailedInput[],
+): Promise<string | undefined> {
+  const reasons = await Promise.all(
+    failures.map((failure) => extractServerErrorReason(failure.error)),
+  );
+  const distinct = new Set(reasons);
+  return distinct.size === 1 ? reasons[0] : undefined;
 }
 
 export const useToolApiCalls = <TParams = void>() => {
@@ -80,7 +102,13 @@ export const useToolApiCalls = <TParams = void>() => {
         onStatus(`Processing ${file.name} (${i + 1}/${total})`);
 
         try {
-          const formData = config.buildFormData(params, file);
+          const request = config.lockedDocuments
+            ? lockedDocumentRequest(file)
+            : { file };
+          const formData = config.buildFormData(params, request.file);
+          if (request.documentPassword) {
+            formData.append("documentPassword", request.documentPassword);
+          }
           console.debug("[processFiles] POST", { endpoint, name: file.name });
           const response = await apiClient.post(endpoint, formData, {
             responseType: "blob",
@@ -137,6 +165,9 @@ export const useToolApiCalls = <TParams = void>() => {
             throw new Error("Operation was cancelled", { cause: error });
           }
           console.error("[processFiles] Failed", { name: file.name, error });
+          if (config.lockedDocuments && (await isPdfPasswordError(error))) {
+            rejectLockedDocumentPassword(file.fileId);
+          }
           failedFiles.push(file.name);
           failedInputs.push({ fileId: file.fileId, name: file.name, error });
           // mark errored file so UI can highlight
@@ -149,9 +180,14 @@ export const useToolApiCalls = <TParams = void>() => {
       }
 
       if (failedFiles.length > 0 && processedFiles.length === 0) {
-        throw new Error(
-          `Failed to process all files: ${failedFiles.join(", ")}`,
-        );
+        // A blob response hides the server's reason (a wrong password, say), so read it back.
+        const reason = config.lockedDocuments
+          ? await sharedServerReason(failedInputs)
+          : undefined;
+        const names = failedFiles.join(", ");
+        let message = `Failed to process all files: ${names}`;
+        if (reason) message = total === 1 ? reason : `${reason} (${names})`;
+        throw new Error(message);
       }
 
       if (failedFiles.length > 0) {

@@ -146,7 +146,7 @@ class CertSignControllerTest {
         }
 
         lenient()
-                .when(pdfDocumentFactory.load(any(MultipartFile.class)))
+                .when(pdfDocumentFactory.loadForIncrementalUpdate(any(MultipartFile.class), any()))
                 .thenAnswer(
                         invocation -> {
                             MultipartFile file = invocation.getArgument(0);

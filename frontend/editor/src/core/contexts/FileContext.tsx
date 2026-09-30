@@ -63,6 +63,7 @@ import { onRecordUnreadable } from "@app/services/fileStorage";
 import { useZipConfirmation } from "@app/hooks/useZipConfirmation";
 import ZipWarningModal from "@app/components/shared/ZipWarningModal";
 import EncryptedPdfUnlockModal from "@app/components/shared/EncryptedPdfUnlockModal";
+import { hasDigitalSignature } from "@app/utils/pdfSignatureSniff";
 import { useTranslation } from "react-i18next";
 import { alert } from "@app/components/toast";
 import { buildRemovePasswordFormData } from "@app/hooks/tools/removePassword/buildRemovePasswordFormData";
@@ -71,6 +72,11 @@ import { useResolutionContinuation } from "@app/hooks/tools/shared/useResolution
 import apiClient from "@app/services/apiClient";
 import { reportFilesRemoved } from "@app/services/failureReporting";
 import { setPendingUnlocks } from "@app/services/pendingUnlocks";
+import {
+  clearLockedDocumentAccess,
+  retainLockedDocumentAccess,
+  setLockedDocumentAccess,
+} from "@app/services/lockedDocumentAccess";
 import { processResponse } from "@app/utils/toolResponseProcessor";
 import { ToolOperation } from "@app/types/file";
 import { handlePasswordError } from "@app/utils/toolErrorHandler";
@@ -125,6 +131,7 @@ function FileContextInner({
   const [unlockPassword, setUnlockPassword] = useState("");
   const [unlockError, setUnlockError] = useState<string | null>(null);
   const [isUnlocking, setIsUnlocking] = useState(false);
+  const [activeFileSigned, setActiveFileSigned] = useState(false);
   const dismissedEncryptedFilesRef = useRef<Set<FileId>>(new Set());
   const observedFileIdsRef = useRef<Set<FileId>>(new Set());
 
@@ -203,8 +210,30 @@ function FileContextInner({
   useEffect(() => () => setPendingUnlocks([]), []);
 
   useEffect(() => {
+    retainLockedDocumentAccess(state.files.ids);
+  }, [state.files.ids]);
+  useEffect(() => () => clearLockedDocumentAccess(), []);
+
+  useEffect(() => {
     setUnlockPassword("");
     setUnlockError(null);
+  }, [activeEncryptedFileId]);
+
+  useEffect(() => {
+    setActiveFileSigned(false);
+    const file = activeEncryptedFileId
+      ? filesRef.current.get(activeEncryptedFileId)
+      : undefined;
+    if (!file) return;
+    let cancelled = false;
+    hasDigitalSignature(file)
+      .then((signed) => {
+        if (!cancelled) setActiveFileSigned(signed);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
   }, [activeEncryptedFileId]);
 
   // Storage proved a file's bytes unreadable (WebKit losing a blob's backing
@@ -481,7 +510,16 @@ function FileContextInner({
         childStub.id,
       );
 
+      const signed = await hasDigitalSignature(file).catch(() => false);
       await consumeFilesWrapper([fileId], [stirlingUnlockedFile], [childStub]);
+      // Signature tools need the untouched encrypted bytes of a signed file; memory only.
+      if (signed) {
+        setLockedDocumentAccess(childStub.id, {
+          source: file,
+          password,
+          origin: "unlocked",
+        });
+      }
 
       // The modal is the remove-password tool by another door, so it resolves the same.
       continueResolutions({
@@ -802,6 +840,7 @@ function FileContextInner({
           errorMessage={unlockError}
           isProcessing={isUnlocking}
           remainingCount={encryptedQueue.length}
+          isSigned={activeFileSigned}
           onPasswordChange={setUnlockPassword}
           onUnlock={handleUnlockSubmit}
           onUnlockAll={handleUnlockAll}

@@ -61,6 +61,24 @@ class SecretMaskerTest {
         }
 
         @Test
+        @DisplayName("should mask camelCase and prefixed password keys, e.g. audited form params")
+        void shouldMaskCompoundPasswordKeys() {
+            Map<String, Object> input =
+                    Map.of(
+                            "documentPassword", "open-sesame",
+                            "ownerPassword", "owner",
+                            "user_password", "user",
+                            "passwordless", "keepme");
+
+            Map<String, Object> result = SecretMasker.mask(input);
+
+            assertEquals(SecretMasker.REDACTED, result.get("documentPassword"));
+            assertEquals(SecretMasker.REDACTED, result.get("ownerPassword"));
+            assertEquals(SecretMasker.REDACTED, result.get("user_password"));
+            assertEquals("keepme", result.get("passwordless"));
+        }
+
+        @Test
         @DisplayName("restoreRedacted swaps sentinels for stored values, leaves the rest")
         void restoreRedactedRoundTripsAnEdit() {
             Map<String, Object> stored =

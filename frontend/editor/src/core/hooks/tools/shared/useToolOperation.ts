@@ -36,6 +36,12 @@ import { stashRetryPayload } from "@app/services/notificationRetry";
 import { refreshNotificationsNow } from "@app/hooks/useNotifications";
 import { useResolutionContinuation } from "@app/hooks/tools/shared/useResolutionContinuation";
 import { useNotificationsAvailable } from "@app/components/notifications/useNotificationsAvailable";
+import {
+  getLockedDocumentAccess,
+  setLockedDocumentAccess,
+  type LockedDocumentAccess,
+} from "@app/services/lockedDocumentAccess";
+import type { LockedDocumentMode } from "@app/hooks/tools/shared/useLockedDocuments";
 import { zipFileService } from "@app/services/zipFileService";
 import { getFilenameWithoutExtension } from "@app/utils/fileUtils";
 import {
@@ -89,6 +95,42 @@ export type {
 
 // Re-export for backwards compatibility
 export { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
+
+/** The known access for each input a locked-document tool will send, or null for other tools. */
+function captureLockedInputs(
+  mode: LockedDocumentMode | undefined,
+  inputs: readonly StirlingFile[],
+): Map<FileId, LockedDocumentAccess> | null {
+  if (!mode) return null;
+  const captured = new Map<FileId, LockedDocumentAccess>();
+  for (const input of inputs) {
+    const access = getLockedDocumentAccess(input.fileId);
+    if (access) captured.set(input.fileId, access);
+  }
+  return captured;
+}
+
+/**
+ * An append tool writes onto the locked original, so each output is locked with its source's
+ * password. Recorded so the next tool can open it without asking again.
+ */
+function rememberAppendedOutputs(
+  lockedInputs: ReadonlyMap<FileId, LockedDocumentAccess>,
+  sourceIds: readonly FileId[],
+  outputIds: readonly FileId[],
+  outputs: readonly File[],
+): void {
+  outputIds.forEach((outputId, index) => {
+    const source = lockedInputs.get(sourceIds[index]);
+    if (source && outputs[index]) {
+      setLockedDocumentAccess(outputId, {
+        source: outputs[index],
+        password: source.password,
+        origin: "appended",
+      });
+    }
+  });
+}
 
 /**
  * Shared hook for tool operations providing consistent error handling, progress tracking,
@@ -145,6 +187,7 @@ export const useToolOperation = <TParams>(
     inputFiles: File[];
     inputStirlingFileStubs: StirlingFileStub[];
     outputFileIds: FileId[];
+    lockedInputs?: Map<FileId, LockedDocumentAccess>;
   } | null>(null);
 
   /**
@@ -201,14 +244,20 @@ export const useToolOperation = <TParams>(
         typeof config.endpoint === "function"
           ? config.endpoint(params)
           : config.endpoint;
-      return selectedFiles.filter((file) =>
-        toolAcceptsFile(
-          endpoint ?? undefined,
-          selectors.getStirlingFileStub(file.fileId) ?? file,
-        ),
-      );
+      return selectedFiles.filter((file) => {
+        const stub = selectors.getStirlingFileStub(file.fileId);
+        // These tools open a locked PDF with its password, so judge it as the PDF inside.
+        const judged =
+          config.lockedDocuments && stub?.processedFile?.isEncrypted
+            ? {
+                ...stub,
+                processedFile: { ...stub.processedFile, isEncrypted: false },
+              }
+            : (stub ?? file);
+        return toolAcceptsFile(endpoint ?? undefined, judged);
+      });
     },
-    [config.endpoint, selectors],
+    [config.endpoint, config.lockedDocuments, selectors],
   );
 
   const eligibleFilesRef = useRef<StirlingFile[]>([]);
@@ -327,6 +376,11 @@ export const useToolOperation = <TParams>(
 
         // Use original files directly (no PDF metadata injection - history stored in IndexedDB)
         const filesForAPI = extractFiles(validFiles);
+        // Captured now: consuming the inputs drops their entries, and outputs and undo need them.
+        const lockedInputs = captureLockedInputs(
+          config.lockedDocuments,
+          validFiles,
+        );
 
         switch (config.toolType) {
           case ToolType.singleFile: {
@@ -337,6 +391,7 @@ export const useToolOperation = <TParams>(
               filePrefix: config.filePrefix,
               responseHandler: config.responseHandler,
               preserveBackendFilename: config.preserveBackendFilename,
+              lockedDocuments: config.lockedDocuments,
             };
             console.debug("[useToolOperation] Multi-file start", {
               count: filesForAPI.length,
@@ -619,6 +674,14 @@ export const useToolOperation = <TParams>(
             // to the list, so activeFileIndex would point to the wrong file without this.
             if (outputFileIds.length === 1) setActiveFileId(outputFileIds[0]);
             producedFileIds = outputFileIds;
+            if (config.lockedDocuments === "append" && lockedInputs) {
+              rememberAppendedOutputs(
+                lockedInputs,
+                successSourceIds,
+                outputFileIds,
+                processedFiles,
+              );
+            }
 
             // Notify on desktop when processing completes
             await notifyPdfProcessingComplete(outputFileIds.length);
@@ -648,6 +711,7 @@ export const useToolOperation = <TParams>(
                 ...record,
               })),
               outputFileIds,
+              lockedInputs: lockedInputs ?? undefined,
             };
 
             // Outputs pair with the inputs that produced them, index for index, in this branch.
@@ -830,7 +894,7 @@ export const useToolOperation = <TParams>(
       return;
     }
 
-    const { inputFiles, inputStirlingFileStubs, outputFileIds } =
+    const { inputFiles, inputStirlingFileStubs, outputFileIds, lockedInputs } =
       lastOperationRef.current;
 
     // Validate that we have data to undo
@@ -854,6 +918,10 @@ export const useToolOperation = <TParams>(
     try {
       // Undo the consume operation
       await undoConsumeFiles(inputFiles, inputStirlingFileStubs, outputFileIds);
+      // The restored inputs are the same versions, so they open the same way again.
+      lockedInputs?.forEach((access, fileId) =>
+        setLockedDocumentAccess(fileId, access),
+      );
 
       // Clear results and operation tracking
       resetResults();

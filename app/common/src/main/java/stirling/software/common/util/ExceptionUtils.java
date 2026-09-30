@@ -13,6 +13,7 @@ import java.util.regex.Pattern;
 
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -1119,6 +1120,9 @@ public class ExceptionUtils {
     public static IOException handlePdfException(IOException e, String context) {
         requireNonNull(e, "exception");
 
+        if (e instanceof PdfPasswordException) {
+            return e;
+        }
         // Most specific first: corruption's patterns cover almost anything PDFBox gives up on,
         // so testing it earlier reported every document that would not decrypt as damaged.
         if (isPasswordError(e)) {
@@ -1593,6 +1597,9 @@ public class ExceptionUtils {
      * @return true if it's a password error, false otherwise
      */
     public static boolean isPasswordError(IOException e) {
+        if (e instanceof InvalidPasswordException || e instanceof PdfPasswordException) {
+            return true;
+        }
         String message = e.getMessage();
         if (message == null) return false;
 

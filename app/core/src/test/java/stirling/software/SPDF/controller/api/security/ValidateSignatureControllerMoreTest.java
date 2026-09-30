@@ -20,8 +20,11 @@ import java.util.Calendar;
 import java.util.List;
 
 import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdfwriter.compress.CompressParameters;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
+import org.apache.pdfbox.pdmodel.encryption.StandardProtectionPolicy;
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.PDSignature;
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.SignatureInterface;
 import org.bouncycastle.cert.jcajce.JcaCertStore;
@@ -66,6 +69,8 @@ class ValidateSignatureControllerMoreTest {
     private X509Certificate testCert;
     private byte[] testCertDer;
     private byte[] signedPdfBytes;
+    private PrivateKey privateKey;
+    private Certificate[] chain;
 
     @BeforeAll
     static void registerBc() {
@@ -92,8 +97,8 @@ class ValidateSignatureControllerMoreTest {
             ks.load(is, PASSWORD);
         }
         String alias = ks.aliases().nextElement();
-        PrivateKey privateKey = (PrivateKey) ks.getKey(alias, PASSWORD);
-        Certificate[] chain = ks.getCertificateChain(alias);
+        privateKey = (PrivateKey) ks.getKey(alias, PASSWORD);
+        chain = ks.getCertificateChain(alias);
         testCert = (X509Certificate) chain[0];
         testCertDer = testCert.getEncoded();
 
@@ -110,7 +115,13 @@ class ValidateSignatureControllerMoreTest {
             doc.save(baos);
             base = baos.toByteArray();
         }
+        return signPdf(base, "", privateKey, chain);
+    }
 
+    /** Incrementally signs {@code base}, opening it with {@code openPassword} when encrypted. */
+    private static byte[] signPdf(
+            byte[] base, String openPassword, PrivateKey privateKey, Certificate[] chain)
+            throws Exception {
         X509Certificate signer = (X509Certificate) chain[0];
         SignatureInterface signatureInterface =
                 content -> {
@@ -135,7 +146,7 @@ class ValidateSignatureControllerMoreTest {
                     }
                 };
 
-        try (PDDocument doc = Loader.loadPDF(base)) {
+        try (PDDocument doc = Loader.loadPDF(base, openPassword)) {
             PDSignature signature = new PDSignature();
             signature.setFilter(PDSignature.FILTER_ADOBE_PPKLITE);
             signature.setSubFilter(PDSignature.SUBFILTER_ADBE_PKCS7_DETACHED);
@@ -310,6 +321,101 @@ class ValidateSignatureControllerMoreTest {
             assertThat(contents[contents.length - 1]).isZero();
             CMSSignedData parsed = new CMSSignedData(new ByteArrayInputStream(contents));
             assertThat(parsed.getSignerInfos().size()).isEqualTo(1);
+        }
+    }
+
+    @Nested
+    @DisplayName("Encrypted signed PDFs")
+    class EncryptedSignedPdfTests {
+
+        /** Many small objects saved uncompressed, so a compressed re-save comes out shorter. */
+        private byte[] encryptedBase(String userPassword) throws IOException {
+            try (PDDocument doc = new PDDocument()) {
+                for (int i = 0; i < 300; i++) {
+                    doc.addPage(new PDPage());
+                }
+                StandardProtectionPolicy policy =
+                        new StandardProtectionPolicy("owner", userPassword, new AccessPermission());
+                policy.setEncryptionKeyLength(128);
+                doc.protect(policy);
+                ByteArrayOutputStream out = new ByteArrayOutputStream();
+                doc.save(out, CompressParameters.NO_COMPRESSION);
+                return out.toByteArray();
+            }
+        }
+
+        /** What the upload unlock prompt does: decrypt and fully re-save via remove-password. */
+        private byte[] removePassword(byte[] encrypted, String password) throws IOException {
+            try (PDDocument doc = Loader.loadPDF(encrypted, password)) {
+                doc.setAllSecurityToBeRemoved(true);
+                ByteArrayOutputStream out = new ByteArrayOutputStream();
+                doc.save(out);
+                return out.toByteArray();
+            }
+        }
+
+        private SignatureValidationRequest requestFor(byte[] pdf) {
+            SignatureValidationRequest request = new SignatureValidationRequest();
+            request.setFileInput(
+                    new MockMultipartFile(
+                            "fileInput", "signed.pdf", MediaType.APPLICATION_PDF_VALUE, pdf));
+            return request;
+        }
+
+        @Test
+        @DisplayName("Owner-password-only encrypted signed PDF validates from its raw bytes")
+        void ownerPasswordOnlyEncryptedSignedPdfValidates() throws Exception {
+            byte[] signed = signPdf(encryptedBase(""), "", privateKey, chain);
+            when(pdfDocumentFactory.load(any(InputStream.class)))
+                    .thenAnswer(inv -> Loader.loadPDF(signed));
+
+            SignatureValidationResult result =
+                    controller.validateSignature(requestFor(signed)).getBody().get(0);
+
+            assertThat(result.getErrorMessage()).isNull();
+            assertThat(result.isValid()).isTrue();
+            assertThat(result.isCoversEntireDocument()).isTrue();
+        }
+
+        @Test
+        @DisplayName("Password-removed copy reports modification instead of a skip() error")
+        void passwordRemovedCopyReportsModifiedAfterSigning() throws Exception {
+            byte[] signed = signPdf(encryptedBase("user"), "user", privateKey, chain);
+            byte[] unlocked = removePassword(signed, "user");
+            int[] byteRange;
+            try (PDDocument doc = Loader.loadPDF(unlocked)) {
+                byteRange = doc.getSignatureDictionaries().get(0).getByteRange();
+            }
+            // The re-save keeps the old ByteRange but moves every byte, like the e-Aadhaar report.
+            assertThat(unlocked.length).isLessThan(byteRange[2]);
+            when(pdfDocumentFactory.load(any(InputStream.class)))
+                    .thenAnswer(inv -> Loader.loadPDF(unlocked));
+
+            SignatureValidationResult result =
+                    controller.validateSignature(requestFor(unlocked)).getBody().get(0);
+
+            assertThat(result.isValid()).isFalse();
+            assertThat(result.getErrorMessage())
+                    .doesNotContain("skip()")
+                    .contains("modified after it was signed");
+        }
+
+        @Test
+        @DisplayName("Re-saved copy longer than the signed range is reported, not a hex error")
+        void resavedCopyWithinByteRangeReportsModifiedAfterSigning() throws Exception {
+            byte[] signed = signPdf(encryptedBase("user"), "user", privateKey, chain);
+            byte[] unlocked = removePassword(signed, "user");
+            // Pad past the old ByteRange so its offsets land inside the file but on other bytes
+            byte[] padded = Arrays.copyOf(unlocked, signed.length + 1024);
+            Arrays.fill(padded, unlocked.length, padded.length, (byte) ' ');
+            when(pdfDocumentFactory.load(any(InputStream.class)))
+                    .thenAnswer(inv -> Loader.loadPDF(unlocked));
+
+            SignatureValidationResult result =
+                    controller.validateSignature(requestFor(padded)).getBody().get(0);
+
+            assertThat(result.isValid()).isFalse();
+            assertThat(result.getErrorMessage()).contains("modified after it was signed");
         }
     }
 

@@ -131,7 +131,8 @@ class TimestampControllerMoreTest {
                         MediaType.APPLICATION_PDF_VALUE,
                         new byte[] {0x25, 0x50, 0x44, 0x46});
 
-        when(pdfDocumentFactory.load(any(MockMultipartFile.class))).thenReturn(realPdfDocument());
+        when(pdfDocumentFactory.loadForIncrementalUpdate(any(MockMultipartFile.class), any()))
+                .thenReturn(realPdfDocument());
 
         TimestampPdfRequest request = new TimestampPdfRequest();
         request.setFileInput(pdf);

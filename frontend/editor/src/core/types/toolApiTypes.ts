@@ -1427,6 +1427,10 @@ export interface SignPDFWithCertRequest {
     | "SERVER"
     | "WINDOWS_STORE"
     | "PKCS11";
+  /**
+   * (Optional) password that opens the input PDF when it is encrypted. It only opens the file: the uploaded bytes are used as they are.
+   */
+  documentPassword?: string;
   jksFile?: File;
   /**
    * The location where the PDF is signed
@@ -1469,6 +1473,10 @@ export interface SignPDFWithCertRequest {
 }
 export interface SignatureValidationRequest {
   certFile?: File;
+  /**
+   * (Optional) password that opens the input PDF when it is encrypted. It only opens the file: the uploaded bytes are used as they are.
+   */
+  documentPassword?: string;
 }
 export interface SplitPagesRequest {
   /**
@@ -1540,6 +1548,10 @@ export interface SvgToPdfRequest {
   combineIntoSinglePdf?: boolean;
 }
 export interface TimestampPdfRequest {
+  /**
+   * (Optional) password that opens the input PDF when it is encrypted. It only opens the file: the uploaded bytes are used as they are.
+   */
+  documentPassword?: string;
   /**
    * URL of the RFC 3161 Time Stamp Authority (TSA) server. Must be one of the built-in presets (DigiCert, Sectigo, SSL.com, FreeTSA, MeSign) or an admin-configured URL in settings.yml (security.timestamp.customTsaUrls). If omitted, the server default is used.
    */

@@ -127,6 +127,7 @@ public class CertSignController {
         this.hardwareKeyStoreService = hardwareKeyStoreService;
     }
 
+    /** Signs an input that needs no password to open; see the overload taking one. */
     public static void sign(
             CustomPDFDocumentFactory pdfDocumentFactory,
             MultipartFile input,
@@ -137,8 +138,41 @@ public class CertSignController {
             String name,
             String location,
             String reason,
-            Boolean showLogo) {
-        try (PDDocument doc = pdfDocumentFactory.load(input)) {
+            Boolean showLogo)
+            throws ExceptionUtils.PdfPasswordException {
+        sign(
+                pdfDocumentFactory,
+                input,
+                null,
+                output,
+                instance,
+                showSignature,
+                pageNumber,
+                name,
+                location,
+                reason,
+                showLogo);
+    }
+
+    /**
+     * Appends a signature as an incremental update, so earlier signatures stay valid and an
+     * encrypted input stays encrypted; {@code documentPassword} opens it and may be null.
+     */
+    public static void sign(
+            CustomPDFDocumentFactory pdfDocumentFactory,
+            MultipartFile input,
+            String documentPassword,
+            OutputStream output,
+            CreateSignature instance,
+            Boolean showSignature,
+            Integer pageNumber,
+            String name,
+            String location,
+            String reason,
+            Boolean showLogo)
+            throws ExceptionUtils.PdfPasswordException {
+        try (PDDocument doc =
+                pdfDocumentFactory.loadForIncrementalUpdate(input, documentPassword)) {
             PDSignature signature = new PDSignature();
             signature.setFilter(PDSignature.FILTER_ADOBE_PPKLITE);
             signature.setSubFilter(PDSignature.SUBFILTER_ADBE_PKCS7_DETACHED);
@@ -159,6 +193,8 @@ public class CertSignController {
                 doc.addSignature(signature, instance);
                 doc.saveIncremental(output);
             }
+        } catch (ExceptionUtils.PdfPasswordException e) {
+            throw e;
         } catch (Exception e) {
             ExceptionUtils.logException("PDF signing", e);
         }
@@ -297,6 +333,7 @@ public class CertSignController {
             sign(
                     pdfDocumentFactory,
                     pdf,
+                    request.getDocumentPassword(),
                     os,
                     createSignature,
                     showSignature,

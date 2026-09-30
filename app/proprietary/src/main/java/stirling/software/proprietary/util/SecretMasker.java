@@ -21,8 +21,8 @@ public final class SecretMasker {
             RegexPatternUtils.getInstance()
                     .getPattern(
                             // secret[_-]?access[_-]?key precedes plain secret so camelCase keys
-                            // like secretAccessKey (no word boundary after "secret") still match.
-                            "(?i)\\b(password|token|secret[_-]?access[_-]?key|signing[_-]?secret|secret|api[_-]?key|authorization|auth|jwt|cred|cert)\\b");
+                            // like secretAccessKey still match; \w*password catches ownerPassword.
+                            "(?i)\\b(\\w*password|token|secret[_-]?access[_-]?key|signing[_-]?secret|secret|api[_-]?key|authorization|auth|jwt|cred|cert)\\b");
 
     private SecretMasker() {}
 

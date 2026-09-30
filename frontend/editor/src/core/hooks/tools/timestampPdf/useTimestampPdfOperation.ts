@@ -44,6 +44,7 @@ export const timestampPdfOperationConfig = defineSingleFileTool({
   operationType: "timestampPdf",
   endpoint: ENDPOINT,
   defaultParameters,
+  lockedDocuments: "append",
 });
 
 export const useTimestampPdfOperation = () => {

@@ -3,12 +3,14 @@ package stirling.software.SPDF.controller.api.security;
 import java.beans.PropertyEditorSupport;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.security.MessageDigest;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.PKIXCertPathBuilderResult;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPublicKey;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -107,7 +109,14 @@ public class ValidateSignatureController {
             }
         }
 
-        try (PDDocument document = pdfDocumentFactory.load(file.getInputStream())) {
+        // Parsed only for signature dictionaries; digests use the raw upload bytes, read by
+        // offset (a stream skip() may legally return 0), so encrypted PDFs check as signed.
+        byte[] pdfBytes = file.getBytes();
+        String password = request.getDocumentPassword();
+        try (PDDocument document =
+                password == null || password.isEmpty()
+                        ? pdfDocumentFactory.load(new ByteArrayInputStream(pdfBytes))
+                        : pdfDocumentFactory.load(new ByteArrayInputStream(pdfBytes), password)) {
             List<PDSignature> signatures = document.getSignatureDictionaries();
 
             // Detect content appended outside every signature's ByteRange (added after signing). A
@@ -115,16 +124,10 @@ public class ValidateSignatureController {
             // furthest any signature reaches stops short of the file length, the tail is unsigned.
             // Taking the max across all signatures avoids false positives on legitimately
             // multi-signed PDFs, where an earlier signature intentionally omits later revisions.
-            long fileLength = file.getSize();
+            long fileLength = pdfBytes.length;
             long maxCovered = 0;
             for (PDSignature sig : signatures) {
-                int[] byteRange = sig.getByteRange();
-                if (byteRange != null && byteRange.length == 4) {
-                    long end = (long) byteRange[2] + byteRange[3];
-                    if (end > maxCovered) {
-                        maxCovered = end;
-                    }
-                }
+                maxCovered = Math.max(maxCovered, byteRangeEnd(sig.getByteRange()));
             }
             boolean documentCovered = maxCovered <= 0 || maxCovered >= fileLength;
 
@@ -132,9 +135,21 @@ public class ValidateSignatureController {
                 SignatureValidationResult result = new SignatureValidationResult();
                 result.setCoversEntireDocument(documentCovered);
 
+                // A ByteRange that no longer lines up with the file means a re-save (typically a
+                // removed password); PDFBox would report only skip() or hex-parsing failures.
+                if (!byteRangeFitsFile(sig.getByteRange(), pdfBytes)) {
+                    result.setValid(false);
+                    result.setErrorMessage(
+                            "This file was modified after it was signed (for example its password"
+                                    + " was removed), so the signed byte range no longer matches."
+                                    + " Validate the original signed file.");
+                    results.add(result);
+                    continue;
+                }
+
                 try {
-                    byte[] signedContent = sig.getSignedContent(file.getInputStream());
-                    byte[] signatureBytes = sig.getContents(file.getInputStream());
+                    byte[] signedContent = extractSignedContent(sig.getByteRange(), pdfBytes);
+                    byte[] signatureBytes = sig.getContents(pdfBytes);
 
                     // An RFC 3161 document timestamp (PAdES-LTV) carries its signed content
                     // *inside* the CMS - a TSTInfo - rather than being detached over the document.
@@ -147,7 +162,14 @@ public class ValidateSignatureController {
                     if (isDocTimeStamp) {
                         signedData = new CMSSignedData(new ByteArrayInputStream(signatureBytes));
                     } else {
-                        CMSProcessable content = new CMSProcessableByteArray(signedContent);
+                        // adbe.pkcs7.sha1 signs the SHA-1 digest of the byte range, not the range.
+                        byte[] cmsContent =
+                                PDSignature.SUBFILTER_ADBE_PKCS7_SHA1
+                                                .getName()
+                                                .equals(sig.getSubFilter())
+                                        ? MessageDigest.getInstance("SHA-1").digest(signedContent)
+                                        : signedContent;
+                        CMSProcessable content = new CMSProcessableByteArray(cmsContent);
                         signedData =
                                 new CMSSignedData(
                                         content, new ByteArrayInputStream(signatureBytes));
@@ -352,6 +374,56 @@ public class ValidateSignatureController {
         return ResponseEntity.ok(results);
     }
 
+    /** Per ISO 32000 the ByteRange gap holds exactly the {@code <hex>} Contents string. */
+    private static boolean byteRangeFitsFile(int[] byteRange, byte[] pdfBytes) {
+        if (byteRange == null || byteRange.length != 4) {
+            return true;
+        }
+        long gapStart = (long) byteRange[0] + byteRange[1];
+        long gapEnd = byteRange[2];
+        if (byteRange[0] < 0
+                || byteRange[1] < 0
+                || byteRange[3] < 0
+                || gapEnd - gapStart < 2
+                || byteRangeEnd(byteRange) > pdfBytes.length) {
+            return false;
+        }
+        return pdfBytes[(int) gapStart] == '<' && pdfBytes[(int) gapEnd - 1] == '>';
+    }
+
+    /** Concatenates the (offset, length) pairs of a ByteRange, bounds-checked against the file. */
+    static byte[] extractSignedContent(int[] byteRange, byte[] pdfBytes) throws IOException {
+        if (byteRange == null || byteRange.length == 0 || byteRange.length % 2 != 0) {
+            throw new IOException("signature has a missing or malformed /ByteRange");
+        }
+        long total = 0;
+        for (int i = 0; i < byteRange.length; i += 2) {
+            long start = byteRange[i];
+            long end = start + byteRange[i + 1];
+            if (start < 0 || end < start || end > pdfBytes.length) {
+                throw new IOException(
+                        "signature /ByteRange "
+                                + Arrays.toString(byteRange)
+                                + " does not fit the "
+                                + pdfBytes.length
+                                + "-byte file");
+            }
+            total += end - start;
+        }
+        byte[] content = new byte[Math.toIntExact(total)];
+        int pos = 0;
+        for (int i = 0; i < byteRange.length; i += 2) {
+            System.arraycopy(pdfBytes, byteRange[i], content, pos, byteRange[i + 1]);
+            pos += byteRange[i + 1];
+        }
+        return content;
+    }
+
+    /** Offset just past the last byte a signature covers, or 0 for a malformed ByteRange. */
+    private static long byteRangeEnd(int[] byteRange) {
+        return byteRange != null && byteRange.length == 4 ? (long) byteRange[2] + byteRange[3] : 0;
+    }
+
     /**
      * True when the timestamp token was issued over exactly these bytes.
      *
@@ -365,6 +437,6 @@ public class ValidateSignatureController {
         try (java.io.OutputStream out = digest.getOutputStream()) {
             out.write(signedContent);
         }
-        return java.util.Arrays.equals(digest.getDigest(), info.getMessageImprintDigest());
+        return Arrays.equals(digest.getDigest(), info.getMessageImprintDigest());
     }
 }

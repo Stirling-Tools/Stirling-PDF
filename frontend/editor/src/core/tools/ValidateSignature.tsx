@@ -21,6 +21,7 @@ import {
   useNavigationState,
 } from "@app/contexts/NavigationContext";
 import type { SignatureValidationReportData } from "@app/types/validateSignature";
+import { useLockedDocumentStep } from "@app/components/tools/shared/LockedDocumentPasswordField";
 
 const ValidateSignature = (props: BaseToolProps) => {
   const { t } = useTranslation();
@@ -45,6 +46,15 @@ const ValidateSignature = (props: BaseToolProps) => {
   );
 
   const operation = base.operation as ValidateSignatureOperationHook;
+  const lockedDocuments = useLockedDocumentStep({
+    files: base.selectedFiles,
+    mode: "audit",
+    disabled: base.operation.isLoading || base.endpointLoading,
+    isCollapsed: base.settingsCollapsed,
+    onCollapsedClick: base.settingsCollapsed
+      ? base.handleSettingsReset
+      : undefined,
+  });
   const hasResults = operation.results.length > 0;
   const showResultsStep =
     hasResults || base.operation.isLoading || !!base.operation.errorMessage;
@@ -123,6 +133,7 @@ const ValidateSignature = (props: BaseToolProps) => {
       isCollapsed: hasResults,
     },
     steps: [
+      lockedDocuments.step,
       {
         title: t("validateSignature.settings.title", "Validation Settings"),
         isCollapsed: base.settingsCollapsed,
@@ -157,7 +168,7 @@ const ValidateSignature = (props: BaseToolProps) => {
       loadingText: t("loading", "Loading..."),
       onClick: base.handleExecute,
       endpointEnabled: base.endpointEnabled,
-      paramsValid: base.params.validateParameters(),
+      paramsValid: base.params.validateParameters() && lockedDocuments.ready,
       isVisible: true,
     },
     review: {
