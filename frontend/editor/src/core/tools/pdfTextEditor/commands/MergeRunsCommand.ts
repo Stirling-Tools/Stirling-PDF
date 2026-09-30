@@ -1,3 +1,4 @@
+import i18n from "i18next";
 import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
 import {
@@ -151,7 +152,11 @@ export class MergeRunsCommand implements Command {
   }
 
   describe(): string {
-    return `Merge ${this.runIds.length} runs into a paragraph`;
+    return i18n.t(
+      "pdfTextEditor.commands.mergeRuns",
+      "Merge {{count}} runs into a paragraph",
+      { count: this.runIds.length },
+    );
   }
 }
 
