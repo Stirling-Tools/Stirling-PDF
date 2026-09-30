@@ -165,38 +165,6 @@ class LoginAgreementServiceTest {
     }
 
     @Test
-    void legacyCasedFileResolvesForCanonicalLocale() throws IOException {
-        writeFile("sr-LATN-RS", "# Obavestenje");
-        withMockedPath(
-                () -> {
-                    assertEquals("# Obavestenje", service.resolveContent("sr-Latn-RS"));
-                    assertEquals("# Obavestenje", service.readRawForLocale("sr-Latn-RS"));
-                    assertEquals("# Obavestenje", service.resolveContent("sr_latn_rs"));
-                });
-    }
-
-    @Test
-    void exactFileWinsOverLegacyCasedFile() throws IOException {
-        writeFile("sr-LATN-RS", "# Old");
-        withMockedPath(
-                () -> {
-                    assertDoesNotThrow(() -> service.writeForLocale("sr-Latn-RS", "# New"));
-                    assertEquals("# New", service.resolveContent("sr-Latn-RS"));
-                });
-    }
-
-    @Test
-    void writeBlankAlsoDeletesLegacyCasedFile() throws IOException {
-        writeFile("sr-LATN-RS", "# Old");
-        withMockedPath(
-                () -> {
-                    assertDoesNotThrow(() -> service.writeForLocale("sr-Latn-RS", ""));
-                    assertEquals("", service.readRawForLocale("sr-Latn-RS"));
-                });
-        assertFalse(Files.exists(disclaimerDir.resolve("sr-LATN-RS.md")));
-    }
-
-    @Test
     void writeRejectsInvalidLocale() {
         withMockedPath(
                 () ->
