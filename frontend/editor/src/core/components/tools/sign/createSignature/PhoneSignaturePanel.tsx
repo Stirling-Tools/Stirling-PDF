@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { QRCodeSVG } from "qrcode.react";
 import { useMobileTransferSession } from "@app/hooks/useMobileTransferSession";
@@ -12,7 +12,7 @@ import styles from "@app/components/tools/sign/createSignature/PhoneSignaturePan
 interface PhoneSignaturePanelProps {
   active: boolean;
   received: string | null;
-  onReceived: (payload: MobileSignaturePayload) => void;
+  onReceived: (payload: MobileSignaturePayload) => Promise<void>;
 }
 
 function formatRemaining(ms: number): string {
@@ -26,28 +26,48 @@ export function PhoneSignaturePanel({
   onReceived,
 }: PhoneSignaturePanelProps) {
   const { t } = useTranslation();
+  const [receiveError, setReceiveError] = useState<string | null>(null);
+  const regenerateRef = useRef<() => void>(() => {});
 
   const handleFile = useCallback(
     async (file: File) => {
       const payload = await parseMobileSignatureFile(file);
-      if (payload) onReceived(payload);
+      if (!payload) return;
+      try {
+        await onReceived(payload);
+        setReceiveError(null);
+      } catch (err) {
+        console.error("[PhoneSignaturePanel] could not use signature:", err);
+        setReceiveError(
+          t(
+            "sign.wallet.phone.receiveFailed",
+            "Could not read that signature. Scan the new code to try again.",
+          ),
+        );
+        // Fresh session so the phone can send again.
+        regenerateRef.current();
+      }
     },
-    [onReceived],
+    [onReceived, t],
   );
 
-  const { mobileUrl, error, timeRemaining } = useMobileTransferSession({
-    active: active && !received,
-    routePath: "mobile-sign",
-    onFileReceived: handleFile,
-    sessionCreateErrorMessage: t(
-      "sign.mobile.sessionCreateError",
-      "Failed to create session",
-    ),
-    pollingErrorMessage: t(
-      "sign.mobile.pollingError",
-      "Error checking for the signature",
-    ),
-  });
+  const { mobileUrl, error, timeRemaining, regenerateSession } =
+    useMobileTransferSession({
+      active: active && !received,
+      routePath: "mobile-sign",
+      onFileReceived: handleFile,
+      sessionCreateErrorMessage: t(
+        "sign.mobile.sessionCreateError",
+        "Failed to create session",
+      ),
+      pollingErrorMessage: t(
+        "sign.mobile.pollingError",
+        "Error checking for the signature",
+      ),
+    });
+  regenerateRef.current = regenerateSession;
+
+  const shownError = receiveError ?? error;
 
   if (received) {
     return (
@@ -127,10 +147,13 @@ export function PhoneSignaturePanel({
           ))}
         </ol>
         <Banner
-          tone={error ? "danger" : "info"}
-          icon={<Icon name={error ? "circle-alert" : "refresh-cw"} size={16} />}
+          tone={shownError ? "danger" : "info"}
+          icon={
+            <Icon name={shownError ? "circle-alert" : "refresh-cw"} size={16} />
+          }
           description={
-            error ?? t("sign.wallet.phone.waiting", "Waiting for your phone...")
+            shownError ??
+            t("sign.wallet.phone.waiting", "Waiting for your phone...")
           }
         />
       </div>

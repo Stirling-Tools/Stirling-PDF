@@ -136,12 +136,14 @@ export const useSavedSignatures = () => {
     [isAtCapacity, storageType],
   );
 
-  const removeSignature = useCallback(async (id: string) => {
+  const removeSignature = useCallback(async (id: string): Promise<boolean> => {
     try {
       await signatureStorageService.deleteSignature(id);
       setSavedSignatures((prev) => prev.filter((entry) => entry.id !== id));
+      return true;
     } catch (error) {
       console.error("[useSavedSignatures] Failed to delete signature:", error);
+      return false;
     }
   }, []);
 

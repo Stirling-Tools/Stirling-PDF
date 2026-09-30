@@ -126,7 +126,7 @@ export function useSignatureLibrary() {
       signature.label,
       "shared",
     );
-    if (!result.success) {
+    const failShare = () => {
       alert({
         alertType: "error",
         title: t(
@@ -135,8 +135,13 @@ export function useSignatureLibrary() {
         ),
       });
       return null;
+    };
+    if (!result.success) return failShare();
+    if (!(await removeSignature(signature.id))) {
+      // Roll back so the user is not left with two copies.
+      await removeSignature(result.signature.id);
+      return failShare();
     }
-    await removeSignature(signature.id);
     if (defaultId === signature.id) setDefaultId(result.signature.id);
     alert({
       alertType: "success",

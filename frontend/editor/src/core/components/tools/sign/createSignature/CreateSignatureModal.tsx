@@ -78,7 +78,7 @@ export function CreateSignatureModal({
   const defaultLabel = uniqueName(defaultSignatureName(t, tab), existingLabels);
 
   const handlePhoneReceived = useCallback(
-    (payload: MobileSignaturePayload) => {
+    async (payload: MobileSignaturePayload) => {
       if (payload.kind === "photo") {
         uploadRef.current?.loadSource(payload.dataUrl, "phone-photo.png");
         setTab("upload");
@@ -89,12 +89,18 @@ export function CreateSignatureModal({
         setTab("type");
         return;
       }
-      cleanUpSignatureImage(payload.dataUrl, PHONE_DRAWING_CLEANUP).then(
-        (dataUrl) => {
-          setPhoneResult(dataUrl);
-          handlers.phone(true);
-        },
-      );
+      try {
+        const dataUrl = await cleanUpSignatureImage(
+          payload.dataUrl,
+          PHONE_DRAWING_CLEANUP,
+        );
+        setPhoneResult(dataUrl);
+        handlers.phone(true);
+      } catch (error) {
+        setPhoneResult(null);
+        handlers.phone(false);
+        throw error;
+      }
     },
     [handlers],
   );

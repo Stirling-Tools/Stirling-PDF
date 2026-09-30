@@ -48,6 +48,8 @@ export function usePlacedSignatureTracking() {
   const placedRef = useRef<PlacedSignature[]>([]);
 
   useEffect(() => {
+    placedRef.current = [];
+    setPlacedSignatures([]);
     if (!annotationApi?.onAnnotationEvent || !documentReady) return;
     return annotationApi.onAnnotationEvent((event) => {
       const next = nextPlacedSignatures(placedRef.current, event, getImageData);

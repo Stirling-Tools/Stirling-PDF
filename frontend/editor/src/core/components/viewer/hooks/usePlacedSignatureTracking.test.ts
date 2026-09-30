@@ -18,14 +18,13 @@ const event = (
   type: "create" | "delete",
   annotation: PdfAnnotationObject,
   pageIndex = 0,
-): AnnotationEvent =>
-  ({
-    type,
-    documentId: "doc",
-    annotation,
-    pageIndex,
-    committed: true,
-  }) as AnnotationEvent;
+): AnnotationEvent => ({
+  type,
+  documentId: "doc",
+  annotation,
+  pageIndex,
+  committed: true,
+});
 
 const imageFor = (id: string) => `data:image/png;base64,${id}`;
 
