@@ -74,15 +74,9 @@ updates:
         patterns:
           - "@mantine/*"
           - "postcss-preset-mantine"
-      mui:
-        patterns:
-          - "@mui/*"
       tauri-js:
         patterns:
           - "@tauri-apps/*"
-      emotion:
-        patterns:
-          - "@emotion/*"
       react:
         patterns:
           - "react"

@@ -51,10 +51,9 @@ current branch diff. Flags: `--fix`, `--theme light|dark|both` (default both),
   permission/role variants. Write the list down before capturing - it's the report's spine.
 
 ### 2. Prepare the harness (worktree-safe)
-Worktrees have no `node_modules` and no generated icons. From repo root:
+Worktrees have no `node_modules`. From repo root:
 ```
 cd frontend && npm ci                       # or junction main's node_modules (see memory)
-cd frontend/editor && node scripts/generate-icons.js
 ```
 Kill any stale dev server first (it serves old modules):
 `Get-NetTCPConnection -LocalPort 5173 -State Listen | %{ Stop-Process -Id $_.OwningProcess -Force }`

@@ -435,12 +435,7 @@ export default defineConfig(async ({ mode, command }) => {
             if (id.includes("node_modules")) {
               if (id.includes("pdfjs-dist")) return "vendor-pdfjs";
               if (id.includes("@embedpdf")) return "vendor-embedpdf";
-              if (
-                id.includes("react") ||
-                id.includes("@mantine") ||
-                id.includes("@emotion") ||
-                id.includes("@mui")
-              ) {
+              if (id.includes("react") || id.includes("@mantine")) {
                 return "vendor-ui";
               }
               if (id.includes("@supabase")) return "vendor-supabase";
