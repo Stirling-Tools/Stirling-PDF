@@ -114,3 +114,27 @@ test("saving from the auto-opened Annotate UI clears the dirty state", async ({
     timeout: 5_000,
   });
 });
+
+test("the Annotate UI comes back after leaving it and editing again", async ({
+  page,
+}) => {
+  test.setTimeout(180_000);
+  await loadAnnotatedViewer(page);
+
+  await selectAnnotationA(page);
+  await changeSelectedAnnotationColor(page);
+  await expect(saveChangesButton(page)).toBeVisible({ timeout: 10_000 });
+
+  // Leave the Annotate tool without saving.
+  await page.getByRole("button", { name: "Reader" }).first().click();
+  await expect(saveChangesButton(page)).toHaveCount(0, { timeout: 10_000 });
+
+  // Editing again must surface the panel once more. Keying this off the dirty
+  // flag rather than the edit revision meant it only ever fired for the first
+  // edit, because the flag stays set after leaving.
+  await selectAnnotationA(page);
+  await changeSelectedAnnotationColor(page);
+
+  await expect(saveChangesButton(page)).toBeVisible({ timeout: 10_000 });
+  await expect(saveChangesButton(page)).toBeEnabled();
+});

@@ -540,7 +540,7 @@ const EmbedPdfViewerContent = ({
   } = useRedaction();
 
   const { handleToolSelectForced } = useToolWorkflow();
-  const { annotation } = useDocumentEditSession();
+  const { workingRevision } = useDocumentEditSession();
 
   // Ref for redaction pending tracker API
   const redactionTrackerRef = useRef<RedactionPendingTrackerAPI>(null);
@@ -1000,9 +1000,10 @@ const EmbedPdfViewerContent = ({
   ]);
 
   // A dirty annotation surfaces the Annotate panel, which carries the save
-  // action. Opened at most once per document: committed events keep arriving as
-  // the page settles and scrolls, and re-selecting the tool each time rebuilt
-  // the panel. The latch clears when the user leaves it again.
+  // action. Keyed on the edit revision rather than the dirty flag: the flag stays
+  // set after a cancel, so it would only ever fire for the first edit. The latch
+  // stops the tool being re-selected while the panel is already open, and clears
+  // once the user leaves it, so a later edit surfaces it again.
   const annotationUiOpenedRef = useRef(false);
   useEffect(() => {
     if (selectedTool !== "annotate") annotationUiOpenedRef.current = false;
@@ -1024,8 +1025,8 @@ const EmbedPdfViewerContent = ({
   });
 
   useEffect(() => {
-    if (annotation.dirty) openAnnotationUi();
-  }, [annotation.dirty, openAnnotationUi]);
+    if (workingRevision > 0) openAnnotationUi();
+  }, [workingRevision, openAnnotationUi]);
 
   // Register checker for unsaved changes (annotations only for now)
   useEffect(() => {
