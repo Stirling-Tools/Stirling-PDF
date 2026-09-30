@@ -483,8 +483,8 @@ export async function materializeServerStubs(
         skipUploadTracking: true,
       });
       if (ingested.length === 0) continue;
-      const primary = ingested[ingested.length - 1]!;
-      const newId = primary.fileId as FileId;
+      const primary = ingested[ingested.length - 1];
+      const newId = primary.fileId;
       const remoteUpdates = {
         // The ingest above made a new local file, which starts in no folder. Without
         // carrying membership across, materialising a file to open it moves it to the
@@ -512,7 +512,7 @@ export async function materializeServerStubs(
   if (failed.length > 0) {
     // Single summarized toast - far less noisy than per-stub alerts but
     // still surfaces what would otherwise be a silent drop from the grid.
-    const first = failed[0]!;
+    const first = failed[0];
     const bodyText =
       failed.length === 1
         ? `Couldn't open "${first.name}"${first.status ? ` (HTTP ${first.status})` : ""}.`
