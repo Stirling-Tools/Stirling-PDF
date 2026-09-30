@@ -467,8 +467,16 @@ export default function HomePage() {
     };
   }, [isMobile, dismissSwipeHint]);
 
+  // Full-screen tools own the mobile viewport, so opening one selects the
+  // workbench slide. The text editor is included because it manages its own
+  // state instead of going through the startup-navigation heuristic.
   useEffect(() => {
-    if (isMobile && (readerMode || selectedToolKey === "multiTool")) {
+    if (
+      isMobile &&
+      (readerMode ||
+        selectedToolKey === "multiTool" ||
+        selectedToolKey === "pdfTextEditor")
+    ) {
       setActiveMobileView("workbench");
     }
   }, [isMobile, readerMode, selectedToolKey]);

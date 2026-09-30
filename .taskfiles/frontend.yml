@@ -43,13 +43,6 @@ tasks:
       - editor/.env.local
       - editor/.env{{if .MODE}}.{{.MODE}}{{end}}.local
 
-  prepare:icons:
-    internal: true
-    run: once
-    deps: [install]
-    cmds:
-      - node editor/scripts/generate-icons.js
-
   prepare:og:
     internal: true
     run: when_changed
@@ -77,7 +70,6 @@ tasks:
     deps:
       - task: prepare:env
         vars: { MODE: '{{.MODE}}' }
-      - prepare:icons
       - prepare:og
 
   # ============================================================

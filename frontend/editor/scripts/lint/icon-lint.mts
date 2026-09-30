@@ -110,32 +110,6 @@ if (lucidePath.size) {
   }
 }
 
-// Every Material Symbols name, so a leftover is caught wherever it sits, not only in `<Icon name>`.
-function legacyIconNames(): Set<string> {
-  try {
-    const set: { icons: Record<string, unknown> } = JSON.parse(
-      fs.readFileSync(
-        path.join(
-          EDITOR,
-          "../node_modules/@iconify-json/material-symbols/icons.json",
-        ),
-        "utf8",
-      ),
-    );
-    return new Set(Object.keys(set.icons));
-  } catch {
-    try {
-      const map: { materialSymbols?: Record<string, string> } = JSON.parse(
-        fs.readFileSync(path.join(ICONS_DIR, "icon-map.json"), "utf8"),
-      );
-      return new Set(Object.keys(map.materialSymbols ?? {}));
-    } catch {
-      return new Set();
-    }
-  }
-}
-const legacy = legacyIconNames();
-
 // Positions where a hyphenated literal is an identifier, not an icon name.
 const NOT_AN_ICON_POSITION =
   /(?:\b(?:id|key|type|kind|variant|mode|status|action|value|label|className|class|href|path|to|for|role)|data-[\w-]*|aria-[\w-]*|testid)\s*[:=]\s*$/i;
@@ -221,8 +195,7 @@ for (const file of files) {
     for (const m of line.matchAll(/"([a-z0-9]+(?:-[a-z0-9]+)+)"/g)) {
       if (!MIGRATION_COMPLETE) break;
       const name = m[1];
-      const isLegacy =
-        /-(?:rounded|outlined|sharp|twotone)$/.test(name) || legacy.has(name);
+      const isLegacy = /-(?:rounded|outlined|sharp|twotone)$/.test(name);
       if (!isLegacy || known.has(name)) continue;
       if (NOT_AN_ICON_POSITION.test(line.slice(0, m.index))) continue;
       if (OPT_OUT.test(line)) continue;

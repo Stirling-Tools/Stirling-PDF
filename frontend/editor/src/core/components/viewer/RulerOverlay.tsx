@@ -71,7 +71,7 @@ function dist(a: Point, b: Point): number {
 function normalizeRotation(rotation: number | null | undefined): Rotation {
   const value =
     typeof rotation === "number" && Number.isFinite(rotation) ? rotation : 0;
-  return (((Math.round(value) % 4) + 4) % 4) as Rotation;
+  return ((Math.round(value) % 4) + 4) % 4;
 }
 
 function getPageRotation(pageEl: HTMLElement): Rotation {

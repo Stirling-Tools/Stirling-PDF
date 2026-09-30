@@ -141,5 +141,5 @@ export function pickFolderColor(seed: string): FolderPaletteColor {
     hash = (hash * 31 + seed.charCodeAt(i)) | 0;
   }
   const idx = Math.abs(hash) % FOLDER_COLOR_PALETTE.length;
-  return FOLDER_COLOR_PALETTE[idx]!;
+  return FOLDER_COLOR_PALETTE[idx];
 }

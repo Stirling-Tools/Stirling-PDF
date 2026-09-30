@@ -729,6 +729,8 @@ permissionNotice = "tessdata-stien er ikke skrivbar. Nedlastinger åpnes i nettl
 
 [admin.settings.ai]
 description = "Koble Stirling til Python AI-motoren, velg modellene dens og angi sikkerhetsrammene den kjører under."
+managedByCloud = "Administreres av Stirling Cloud i denne modusen."
+managedByCloudShort = "Administreres av Stirling Cloud"
 
 [admin.settings.ai.documents]
 description = "Konfigurer embedding-modellen og innstillingene for henting som brukes til å svare på spørsmål om dokumenter. Brukes på AI-motoren når det lagres."
@@ -771,11 +773,24 @@ label = "Topp K"
 [admin.settings.ai.general]
 connection = "Tilkobling"
 description = "Koble Stirling til Python AI-motoren og velg hvilke AI-funksjoner som eksponeres. Endringer gjelder ved omstart."
+restartNote = "Endring av URL eller tidsavbrudd trer i kraft etter en omstart."
 title = "AI-motor"
 
 [admin.settings.ai.general.capabilities]
 description = "Slå individuelle AI-funksjoner av eller på. Deaktiverte funksjoner skjules i appen."
 title = "Funksjoner"
+
+[admin.settings.ai.general.cloud]
+note = "Modeller og leverandørnøkler administreres av Stirling Cloud, så disse innstillingene gjelder ikke i denne modusen."
+
+[admin.settings.ai.general.cloud.indexing]
+description = "Hvert KI-verktøy sender sideteksten det trenger for å svare. Dette bestemmer om Stirling Cloud også kan beholde teksten, indeksert, slik at senere spørsmål kan søke i dokumentet."
+help = "Av betyr at dokumentspørsmål ikke er tilgjengelige. Det stopper ikke tekst fra å bli sendt – bare lagret."
+label = "La Stirling Cloud beholde indekserte dokumenter"
+
+[admin.settings.ai.general.cloudNote]
+body = "Resonneringen kjører på Stirlings infrastruktur, fakturert til kontoen denne serveren er koblet til. Det er ingen container å kjøre og ingen leverandørnøkkel å oppbevare her. Det KI leser, behandles av Stirling Cloud i stedet for på din egen maskinvare."
+title = "Om Stirling Cloud KI"
 
 [admin.settings.ai.general.enabled]
 description = "Hovedbryter. Når den er av, er ingen AI-verktøy, agenter eller motorkall tilgjengelige."
@@ -809,9 +824,28 @@ label = "PDF-kommentaragent"
 description = "Tidsavbrudd for tyngre agentoperasjoner som dokumentgenerering."
 label = "Tidsavbrudd for langvarige operasjoner (sekunder)"
 
+[admin.settings.ai.general.mode]
+label = "Hvor KI kjører"
+
+[admin.settings.ai.general.mode.cloud]
+description = "Ingen container, ingen leverandørnøkkel, ingen modellvalg – arbeidet kjører på Stirling Cloud og faktureres til kontoen denne serveren er koblet til."
+linkCta = "Koble denne serveren til en Stirling-konto"
+notLinked = "Koble til en konto først"
+ownerOnly = "Bare organisasjonseieren kan koble denne serveren til en Stirling-konto."
+title = "Bruk Stirling Cloud KI"
+
+[admin.settings.ai.general.mode.off]
+description = "Ingen KI-verktøy noe sted i appen, og ingenting forlater denne serveren."
+title = "Av"
+
+[admin.settings.ai.general.mode.self]
+description = "En container du drifter, koblet til en modellleverandør du velger. Din nøkkel, din regning, din datavei."
+title = "Kjør din egen motor"
+
 [admin.settings.ai.general.note]
-body = "AI-motoren kjører som en separat tjeneste. Dens delte hemmelighet"
-body2 = "angis via en containermiljøvariabel. Leverandør-API keys kan angis på disse sidene eller leveres som motormiljøvariabler; nøkler som angis her, sendes til motoren når de lagres."
+docs = "Oppsettsveiledning"
+intro = "En separat container du kjører ved siden av Stirling. Den gjør resonneringen; Stirling gjør fortsatt alle sideoperasjoner selv. Den trenger samme"
+outro = "på begge containere og en modellleverandørnøkkel. Det KI leser, sendes til leverandøren du velger – en Ollama du drifter holder hver side internt."
 title = "Om AI-motoren"
 
 [admin.settings.ai.general.streamTimeoutSeconds]
@@ -890,6 +924,67 @@ label = "Smart modell"
 body = "Endringer sendes automatisk til AI-motoren."
 bodyNoPush = "Innstillinger lagret. De tas i bruk neste gang AI-motoren henter konfigurasjonen sin."
 title = "AI-innstillinger lagret"
+
+[admin.settings.ai.status]
+capabilities = "Egenskaper"
+capabilitiesValue = "{{on}} av {{total}} aktivert"
+checked = "kontrollert"
+checking = "Kontrollerer motoren…"
+description = "Om motoren er tilgjengelig, om den godtar denne serveren, og hva den kjører."
+fastModel = "Rask modell"
+justNow = "akkurat nå"
+latency = "Svartid"
+linkLabel = "Kontokobling"
+minutesAgo = "for {{count}} min siden"
+recheck = "Kontroller igjen"
+runningOn = "Kjører på"
+secondsAgo = "for {{count}} s siden"
+secretLabel = "Delt hemmelighet"
+smartModel = "Smart modell"
+title = "Status"
+url = "Motor-URL"
+
+[admin.settings.ai.status.cloud]
+hostDown = "Nede"
+hostLabel = "Stirling.com"
+hostUp = "Oppe"
+name = "Stirling Cloud"
+sharingLabel = "KI-deling"
+sharingOff = "Deaktivert"
+sharingOn = "Aktivert"
+
+[admin.settings.ai.status.cloud.degraded]
+body = "Stirling Cloud svarte, men avviste denne serveren. Kontokoblingen kan ha blitt tilbakekalt."
+title = "Stirling Cloud avviser denne serveren"
+
+[admin.settings.ai.status.cloud.down]
+body = "Denne serveren kunne ikke nå Stirling Cloud. Kontroller kontokoblingen og at denne serveren kan nå internett."
+title = "Stirling Cloud er utilgjengelig"
+
+[admin.settings.ai.status.cloud.ok]
+body = "Stirling Cloud godtok denne serveren. Ingenting å kjøre eller oppdatere her."
+title = "Kjører på Stirling Cloud"
+
+[admin.settings.ai.status.degraded]
+body = "Den svarte på helsesjekken, men avviste en ekte forespørsel. De to sidene bruker forskjellige delte hemmeligheter."
+title = "Motoren er oppe, men avviser denne serveren"
+
+[admin.settings.ai.status.down]
+body = "Kontroller URL, at motorcontaineren kjører, og at du startet på nytt etter at du aktiverte KI."
+title = "Motoren er utilgjengelig"
+
+[admin.settings.ai.status.off]
+body = "Velg hvordan KI kjører nedenfor, lagre og start på nytt."
+title = "KI er slått av"
+
+[admin.settings.ai.status.ok]
+body = "Helsesjekk og en autentisert forespørsel lyktes begge."
+title = "Motoren kjører"
+
+[admin.settings.ai.status.secret]
+no = "Avvist"
+unknown = "Ukjent"
+yes = "Godtatt"
 
 [admin.settings.badge]
 clickToUpgrade = "Klikk for å se plandetaljer"
@@ -4453,6 +4548,7 @@ openFromComputer = "Åpne fra datamaskin"
 openSettings = "Åpne innstillinger"
 other = "Annet"
 recent = "Nylig"
+searchFiles = "Søk i filer"
 uploadFailedBody = "Kunne ikke legge til de valgte filene."
 uploadFailedTitle = "Opplasting mislyktes"
 viewAll = "Vis alle {{count}} filer"
@@ -5827,6 +5923,8 @@ label = "Free credits"
 adoptFailed = "Dokumentet ble låst opp, men kunne ikke åpnes her. Prøv verktøyet direkte."
 empty = "Ingenting å rapportere."
 handoffUnavailable = "Denne nettleseren lar ikke behandleren overføre dokumentet til redigeringsprogrammet. Åpne det fra redigeringsprogrammet i stedet."
+inSmartFolder = "Dette dokumentet er i en smartmappe, så det håndteres på serveren i stedet for her."
+inSmartFolderNamed = "{{name}} er i en smartmappe, så det håndteres på serveren i stedet for her."
 noDocumentLinked = "Denne feilen er ikke knyttet til et bestemt dokument, så det er ingenting å åpne her."
 notOnThisDevice = "Dette dokumentet er ikke på denne enheten, så det kan ikke åpnes her."
 occurrences = "{{count}} ganger"
@@ -5837,6 +5935,7 @@ repairedRerunNotAdopted = "Det reparerte dokumentet gikk gjennom, men resultatet
 repairedRerunUndelivered = "Dokumentet ble reparert og ny policykjøring startet, men resultatet kan ikke leveres her, så denne feilen forblir åpen."
 rerunRejected = "Policyen kunne ikke kjøres på nytt akkurat nå. Prøv igjen om et øyeblikk."
 rerunUndelivered = "Ny policykjøring startet, men resultatet kan ikke leveres her, så denne feilen forblir åpen."
+retryInFolderFailed = "Det dokumentet kunne ikke kjøres på nytt akkurat nå."
 retryUnavailable = "Dette dokumentet kan ikke lenger prøves på nytt fra denne nettleseren."
 title = "Varsler"
 unlockedNotRerun = "Dokumentet ble låst opp og åpnet her, men policyen kunne ikke kjøres på det igjen."
@@ -6625,9 +6724,11 @@ title = "Juster Team-plan"
 [payment.capacityStage]
 adjustmentNote = "Stripe viser nøyaktig kostnad, eventuelle forholdsmessige justeringer og neste faktureringsdato før du bekrefter. Den lagrede betalingsmåten din brukes hvis den er tilgjengelig."
 continue = "Fortsett til betaling"
+currencyAtCheckout = "Stripe bekrefter det endelige beløpet og betalingsvalutaen i kassen."
 customLabel = "Antall brukere"
 dueToday = "Forfaller i dag"
 enterpriseQuote = "Få et bedriftstilbud"
+estimatedTotal = "Estimert total"
 lineItem = "Team · {{price}}{{period}} per {{block}} brukere"
 minimumForCurrentUsers = "Du har {{users}} brukere, så planen må dekke minst {{minimum}}."
 modalTitle = "Oppgrader til {{planName}}"
@@ -6865,6 +6966,25 @@ width = "Bredde"
 widthHint = "Bredden på en tekstboks følger innholdet og tekstbrytingen."
 x = "X"
 y = "Y"
+
+[pdfTextEditor.mobile]
+actions = "Redigeringshandlinger"
+addImage = "Bilde"
+addText = "Tekst"
+cancel = "Avbryt"
+delete = "Slett"
+details = "Detaljer"
+document = "Dokument"
+done = "Ferdig"
+download = "Lagre og last ned"
+find = "Finn"
+lock = "Lås"
+openPdf = "Åpne en PDF"
+panelHint = "Redigering skjer i Workspace-visningen. Trykk på tekst på siden for å endre den."
+save = "Lagre"
+style = "Stil"
+tapToPlace = "Trykk på siden der teksten skal plasseres"
+unlock = "Lås opp"
 
 [pdfTextEditor.password]
 cancel = "Avbryt"
@@ -7574,6 +7694,49 @@ plan = "Plan"
 procurement = "Innkjøp"
 usage = "Bruk"
 
+[portal.billing.compare]
+current = "Gjeldende"
+enterpriseData = "Datalokalisering og SCIM"
+enterpriseName = "Enterprise"
+enterprisePrice = "I henhold til avtalen din"
+enterpriseProcessing = "Målt eller fastpris"
+enterpriseSignIn = "SAML og revisjon"
+enterpriseSupport = "Oppetids-SLA-er, hjelp med utrulling"
+enterpriseUsers = "Ingen øvre grense"
+enterpriseWhere = "Pluss multi-node og air-gapped"
+exploreEnterprise = "Utforsk Enterprise"
+freeData = "Blir der du kjører det"
+freeName = "Gratis"
+freePrice = "Ingen kort, ingen utløpsdato"
+freeProcessing = "{{allowance}} kreditter i måneden"
+freeProcessingUnknown = "En månedlig kredittkvote"
+freeSignIn = "E-post, Google og SSO"
+freeSignInNote = "OAuth2/OIDC"
+freeSupport = "Fellesskap"
+freeUsers = "Opptil {{users}}"
+freeUsersUnknown = "Et lite team"
+freeWhere = "Cloud, skrivebord eller selvdriftet"
+lede = "Hver plan inkluderer alle PDF-verktøy og SSO. Det som endres, er hvor mange som bruker den, hvor den kjører, og hvilken støtte du får."
+open = "Sammenlign planer"
+rowData = "Dine data"
+rowHeader = "Funksjon"
+rowProcessing = "Behandling"
+rowSignIn = "Innlogging"
+rowSupport = "Støtte"
+rowUsers = "Brukere"
+rowWhere = "Hvor den kjører"
+teamData = "Google Drive, din egen database"
+teamName = "Team"
+teamPrice = "$99/md per 100 brukere"
+teamProcessing = "{{allowance}} i måneden, deretter målt"
+teamProcessingUnknown = "En større kvote, deretter målt"
+teamSignIn = "Det samme"
+teamSupport = "E-post"
+teamUsers = "100 per blokk"
+teamWhere = "Cloud, skrivebord eller selvdriftet"
+title = "Sammenlign planer"
+upgradeTeam = "Oppgrader til Team"
+
 [portal.billing.cycle]
 credits = "Kreditter"
 creditsNote = "{{units}} brukt · inkluderer gratis og forhåndsbetalte kreditter"
@@ -7679,6 +7842,8 @@ payTitle = "Betal for året ditt"
 step = "Trinn {{current}} av {{total}}"
 
 [portal.billing.prepaid.calc]
+currency = "Tilbudsvaluta"
+currencyLocked = "Bruker din eksisterende Stripe-faktureringsvaluta."
 rateUnknown = "Vi viser nøyaktig pris i kassen."
 
 [portal.billing.prepaid.consent]
@@ -8481,6 +8646,10 @@ title = "Filen kunne ikke repareres"
 [portal.failures.kind.inputWrongType]
 description = "Filen din er ikke i et format dette trinnet kan åpne, så kjøringen kunne ikke lese den."
 title = "Feil filtype"
+
+[portal.failures.kind.sourceUnreadable]
+description = "Smartmappen din kunne ikke leses, så ingenting i den ble behandlet."
+title = "Mappen kunne ikke leses"
 
 [portal.failures.kind.stepCannotRenderPage]
 description = "En side i filen din kunne ikke tegnes, så kjøringen kunne ikke fullføres."
@@ -12235,6 +12404,7 @@ goBack = "Gå tilbake"
 pdfTools = "PDF-verktøy"
 placeholder = "Velg et verktøy for å komme i gang"
 premiumFeature = "Premium-funksjon:"
+searchTools = "Søk i verktøy"
 toolsHeader = "Verktøy"
 viewAllTools = "Vis alle verktøy"
 
@@ -12399,13 +12569,10 @@ visits = "Besøk"
 
 [users]
 lastActive = "Sist aktiv"
-learnMore = "Lær mer om roller og tilgang."
 locked = "Låst"
 ownerSetupRequired = "Organisasjonseieren har ikke fullført første pålogging. Fullfør oppsettet eller be serveroperatøren om å gjenopprette eierskapet før eierskapet overføres."
 roleFor = "Rolle for {{name}}"
 rowActions = "Handlinger for {{name}}"
-showAll = "Vis alle {{count}}"
-showLess = "Vis mindre"
 subtitle2 = "Personene dine, teamene og tilgangsnivåene."
 suspended = "Suspendert"
 teamActions = "Teamhandlinger"
@@ -12414,6 +12581,7 @@ you = "(deg)"
 
 [users.action]
 cancelInvite = "Avbryt invitasjon"
+createFromDefault = "Opprett team fra Standard"
 deleteTeam = "Slett team"
 disableMfa = "Tilbakestill MFA"
 move = "Flytt til team"
@@ -12451,6 +12619,7 @@ email = "Email"
 person = "Person"
 role = "Role"
 status = "Status"
+team = "Team"
 
 [users.confirm]
 cancelInviteBody = "Avbryt invitasjonen til {{email}}? De vil ikke kunne bli med med den nåværende lenken."
@@ -12469,15 +12638,12 @@ transferOwnershipTitle = "Overfør organisasjonseierskap"
 description = "Inviter teamet ditt for å begynne å samarbeide."
 title = "Ingen medlemmer ennå"
 
+[users.filters]
+noMatches = "Ingen samsvarer med disse filtrene."
+search = "Søk etter personer"
+
 [users.group]
 addToTeam = "Legg til i team"
-administrators = "{{count}} administratorer"
-guestCount = "{{count}} gjest"
-guests = "Gjester"
-ledBy = "ledet av {{owner}}"
-org = "Organisasjon"
-team = "{{name}}-team"
-teamMeta = "{{count}} personer"
 
 [users.invite]
 access = "Tilgang"
@@ -12542,6 +12708,9 @@ title = "Nytt team"
 
 [users.renameTeam]
 apply = "Gi nytt navn"
+defaultApply = "Opprett og flytt"
+defaultDescription = "Standard vil fortsatt være tilgjengelig for nye brukere. Alle som nå er i Standard, flyttes til det nye teamet."
+defaultTitle = "Opprett team fra Standard"
 name = "Teamnavn"
 title = "Gi team nytt navn"
 
@@ -12566,6 +12735,15 @@ guest = "Gjest"
 member = "Medlem"
 orgOwner = "Organisasjonseier"
 teamOwner = "Teameier"
+
+[users.seats]
+full = "Alle lisensierte plasser er i bruk. Frigjør en plass, eller øk antall plasser, for å legge til noen andre."
+update = "Oppdater plasser"
+
+[users.tabs]
+all = "Alle"
+label = "Filtrer etter team"
+unassigned = "Ingen team"
 
 [users.team]
 grantProcessor = "Gi Processor til team"
@@ -13216,232 +13394,14 @@ submitSignature = "Send inn signatur"
 title = "Arbeidsområde"
 
 [workspace.people]
-active = "Aktiv"
-activeSession = "Aktiv økt"
-addMembers = "Legg til medlemmer"
-admin = "Admin"
-confirmDelete = "Er du sikker på at du vil slette denne brukeren? Denne handlingen kan ikke angres."
-confirmUnlock = "Er du sikker på at du vil låse opp denne brukerkontoen?"
-deleteUser = "Slett bruker"
-deleteUserError = "Kunne ikke slette bruker"
-deleteUserSuccess = "Bruker slettet"
 description = "Administrer arbeidsområdets medlemmer og deres tillatelser"
-disable = "Deaktiver"
-disabled = "Deaktivert"
-editRole = "Rediger rolle"
-enable = "Aktiver"
-loading = "Laster personer..."
-locked = "låst"
-lockedBadge = "Låst"
-loginRequired = "Aktiver innloggingsmodus først"
-memberActions = "Medlemshandlinger"
-noMembersFound = "Ingen medlemmer funnet"
-ownerLocked = "Overfør organisasjonseierskap i Innstillinger → Arbeidsområde → Brukere før du endrer eierens rolle eller konto."
-role = "Rolle"
-searchMembers = "Søk i medlemmer..."
-team = "Team"
-unlockAccount = "Lås opp konto"
-unlockUserError = "Kunne ikke låse opp brukerkonto"
-unlockUserSuccess = "Brukerkonto låst opp"
-user = "Bruker"
-userInfo = "Brukerinformasjon"
-
-[workspace.people.actions]
-upgrade = "Oppgrader"
-
-[workspace.people.addMember]
-authType = "Autentiseringstype"
-error = "Kunne ikke opprette bruker"
-forceMFA = "Krev MFA-oppsett ved neste pålogging"
-forcePasswordChange = "Tving passordendring ved første innlogging"
-password = "Passord"
-passwordPlaceholder = "Angi passord"
-passwordRequired = "Passord er påkrevd"
-role = "Rolle"
-submit = "Legg til medlem"
-success = "Bruker opprettet"
-team = "Team (valgfritt)"
-teamPlaceholder = "Velg et team"
-username = "Brukernavn (e-post)"
-usernamePlaceholder = "user@example.com"
-usernameRequired = "Brukernavn og passord er påkrevd"
-
-[workspace.people.authType]
-oauth = "OAuth2"
-password = "Passord"
-saml = "SAML2"
-ssoDescription = "Brukeren autentiseres via SSO-leverandør"
-
-[workspace.people.changePassword]
-action = "Endre passord"
-confirmPassword = "Bekreft passord"
-confirmPlaceholder = "Skriv inn det nye passordet på nytt"
-copiedToClipboard = "Passord kopiert til utklippstavle"
-copyFailed = "Kunne ikke kopiere passord"
-copyTooltip = "Kopier til utklippstavle"
-emailUnavailable = "Denne brukerens e-post er ikke en gyldig e-postadresse. Varsler er deaktivert."
-error = "Kunne ikke oppdatere passord"
-forcePasswordChange = "Tving brukeren til å endre passord ved neste innlogging"
-generatedPreview = "Generert passord:"
-generateRandom = "Generer sikkert passord"
-includePassword = "Inkluder det nye passordet i e-posten"
-newPassword = "Nytt passord"
-notifyOnly = "Det sendes en e-post uten passordet som informerer brukeren om at en admin har endret det."
-passwordMismatch = "Passordene samsvarer ikke"
-passwordRequired = "Angi et nytt passord"
-placeholder = "Angi et nytt passord"
-sendEmail = "Send e-post til brukeren om denne endringen"
-smtpDisabled = "E-postvarsler krever at SMTP er aktivert i innstillingene."
-submit = "Oppdater passord"
-subtitle = "Oppdater passordet for"
-success = "Passord oppdatert"
-title = "Endre passord"
-
-[workspace.people.editMember]
-editing = "Editing: <0>{{username}}</0>"
-error = "Kunne ikke oppdatere bruker"
-role = "Rolle"
-submit = "Update User"
-success = "Bruker oppdatert"
-team = "Team (valgfritt)"
-teamPlaceholder = "Velg et team"
-title = "Edit User"
-
-[workspace.people.emailInvite]
-allFailed = "Kunne ikke invitere brukere"
-emails = "E-postadresser"
-emailsPlaceholder = "user1@example.com, user2@example.com"
-emailsRequired = "Minst én e-postadresse er påkrevd"
-error = "Kunne ikke sende invitasjoner"
-partialFailure = "Noen invitasjoner mislyktes"
-submit = "Send invitasjoner"
-success = "bruker(e) invitert"
-
-[workspace.people.inviteLink]
-copied = "Lenke kopiert til utklippstavlen"
-email = "E-postadresse"
-emailDescription = "Valgfritt - la stå tomt for en generell invitasjonslenke som kan brukes av hvem som helst"
-emailPlaceholder = "user@example.com (valgfritt)"
-emailSent = "Invitasjonslenke generert og sendt via e-post"
-error = "Kunne ikke generere invitasjonslenke"
-expiryHours = "Utløpstid (timer)"
-generate = "Generer lenke"
-generated = "Invitasjonslenke generert"
-sendEmail = "Send invitasjonslenke via e-post"
-sendEmailDescription = "Hvis aktivert, sendes invitasjonslenken til den angitte e-postadressen"
-submit = "Generer invitasjonslenke"
-
-[workspace.people.inviteMembers]
-label = "Inviter medlemmer"
-subtitle = "Skriv eller lim inn e-poster nedenfor, separert med komma. Arbeidsområdet ditt vil bli fakturert per medlem."
-
-[workspace.people.inviteMode]
-email = "E-post"
-emailDisabled = "E-postinvitasjoner krever SMTP-konfigurasjon og mail.enableInvites=true i innstillinger"
-link = "Lenke"
-username = "Brukernavn"
 
 [workspace.people.license]
-currentUsage = "Bruker for tiden {{current}} av {{max}} brukerlisenser"
-fromLicense = "fra lisens"
-grandfathered = "Videreført"
-grandfatheredShort = "{{count}} videreført"
-slotsAvailable_one = "{{count}} user slot available"
-slotsAvailable_other = "{{count}} user slots available"
-slotsAvailable_zero = "No slots available"
 users_one = "user"
 users_other = "users"
 
-[workspace.people.mfa]
-adminDisableError = "Kunne ikke deaktivere MFA for brukeren"
-adminDisableSuccess = "MFA ble deaktivert for brukeren"
-disableByAdmin = "Deaktiver MFA"
-
-[workspace.people.roleDescriptions]
-admin = "Kan administrere innstillinger og invitere medlemmer, med full administrativ tilgang."
-currentRole = "Gjeldende tildelt rolle."
-user = "Can view and edit shared files, but cannot manage workspace settings or users."
-
-[workspace.people.toggleEnabled]
-error = "Kunne ikke oppdatere brukerstatus"
-success = "Brukerstatus oppdatert"
-
 [workspace.teams]
-addMember = "Legg til medlem"
-backToTeams = "Tilbake til team"
-cannotAddToInternal = "Kan ikke legge til medlemmer i det interne teamet"
-cannotDeleteInternal = "Kan ikke slette det interne teamet"
-cannotRenameInternal = "Kan ikke gi det interne teamet nytt navn"
-confirmDelete = "Er du sikker på at du vil slette dette teamet? Dette teamet må være tomt for å kunne slettes."
-confirmRemove = "Fjerne bruker fra dette teamet?"
-createNewTeam = "Opprett nytt team"
-deleteTeamLabel = "Slett team"
 description = "Administrer team og organiser medlemmer i arbeidsområdet"
-loadError = "Kunne ikke laste teamdetaljer"
-loading = "Laster team..."
-loadingDetails = "Laster teamdetaljer..."
-memberCount_one = "{{count}} member"
-memberCount_other = "{{count}} members"
-memberCount_zero = "no members"
-noMembers = "Ingen medlemmer i dette teamet"
-noTeamsFound = "Ingen team funnet"
-removeMember = "Fjern fra team"
-removeMemberError = "Kunne ikke fjerne bruker fra team"
-removeMemberSuccess = "Bruker fjernet fra team"
-renameTeamLabel = "Gi team nytt navn"
-system = "System"
-teamActions = "Teamhandlinger"
-teamName = "Teamnavn"
-teamNotFound = "Team ikke funnet"
-totalMembers = "Totalt antall medlemmer"
-viewTeam = "Vis team"
-
-[workspace.teams.addMemberToTeam]
-addingTo = "Legger til i"
-currentlyIn = "for tiden i"
-error = "Kunne ikke legge til medlem i team"
-selectUser = "Velg bruker"
-selectUserPlaceholder = "Velg en bruker"
-selectUserRequired = "Vennligst velg en bruker"
-submit = "Legg til medlem"
-success = "Medlem lagt til i team"
-title = "Legg til medlem i team"
-userRequired = "Vennligst velg en bruker"
-willBeMoved = "Merk: Denne brukeren flyttes fra sitt nåværende team til dette teamet."
-
-[workspace.teams.changeTeam]
-changing = "Flytter"
-error = "Kunne ikke endre team"
-label = "Bytt team"
-selectTeam = "Velg team"
-selectTeamPlaceholder = "Velg et team"
-selectTeamRequired = "Vennligst velg et team"
-submit = "Bytt team"
-success = "Team endret"
-title = "Bytt team"
-
-[workspace.teams.createTeam]
-error = "Kunne ikke opprette team"
-nameRequired = "Teamnavn er påkrevd"
-submit = "Opprett team"
-success = "Team opprettet"
-teamName = "Teamnavn"
-teamNamePlaceholder = "Skriv inn teamnavn"
-title = "Opprett nytt team"
-
-[workspace.teams.deleteTeam]
-error = "Kunne ikke slette team. Sørg for at teamet er tomt."
-success = "Team slettet"
-
-[workspace.teams.renameTeam]
-error = "Kunne ikke gi team nytt navn"
-nameRequired = "Teamnavn er påkrevd"
-newTeamName = "Nytt teamnavn"
-newTeamNamePlaceholder = "Skriv inn nytt teamnavn"
-renaming = "Gi nytt navn:"
-submit = "Gi team nytt navn"
-success = "Teamnavn endret"
-title = "Gi team nytt navn"
 
 [zipWarning]
 cancel = "Avbryt"

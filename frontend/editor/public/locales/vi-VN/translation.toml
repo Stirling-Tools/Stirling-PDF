@@ -729,6 +729,8 @@ permissionNotice = "Đường dẫn tessdata không thể ghi. Tệp tải xuố
 
 [admin.settings.ai]
 description = "Kết nối Stirling với công cụ AI Python, chọn mô hình và đặt các giới hạn vận hành cho nó."
+managedByCloud = "Được Stirling Cloud quản lý ở chế độ này."
+managedByCloudShort = "Được Stirling Cloud quản lý"
 
 [admin.settings.ai.documents]
 description = "Cấu hình mô hình embedding và cài đặt truy xuất dùng để trả lời câu hỏi trên tài liệu. Được áp dụng cho AI engine khi lưu."
@@ -771,11 +773,24 @@ label = "Top K"
 [admin.settings.ai.general]
 connection = "Kết nối"
 description = "Kết nối Stirling với Python AI engine và chọn các khả năng AI được hiển thị. Thay đổi áp dụng khi khởi động lại."
+restartNote = "Việc thay đổi URL hoặc bất kỳ thời gian chờ nào sẽ có hiệu lực sau khi khởi động lại."
 title = "AI Engine"
 
 [admin.settings.ai.general.capabilities]
 description = "Bật hoặc tắt từng tính năng AI. Các tính năng bị tắt sẽ bị ẩn trong ứng dụng."
 title = "Khả năng"
+
+[admin.settings.ai.general.cloud]
+note = "Các mô hình và khóa nhà cung cấp được Stirling Cloud quản lý, nên các cài đặt đó không áp dụng ở chế độ này."
+
+[admin.settings.ai.general.cloud.indexing]
+description = "Mỗi công cụ AI gửi phần văn bản trang cần thiết để trả lời. Tùy chọn này quyết định liệu Stirling Cloud có thể giữ văn bản đó, đã được lập chỉ mục, để các câu hỏi sau này có thể tìm kiếm trong toàn bộ tài liệu hay không."
+help = "Tắt nghĩa là không thể đặt câu hỏi về tài liệu. Điều này không ngăn việc gửi văn bản - chỉ ngăn lưu trữ."
+label = "Cho phép Stirling Cloud giữ tài liệu đã lập chỉ mục"
+
+[admin.settings.ai.general.cloudNote]
+body = "Quá trình suy luận chạy trên hạ tầng của Stirling, được tính phí vào tài khoản mà máy chủ này được liên kết. Không có container nào để chạy và không có khóa nhà cung cấp nào cần giữ ở đây. Bất cứ nội dung nào AI đọc đều được xử lý bởi Stirling Cloud thay vì trên phần cứng của riêng bạn."
+title = "Giới thiệu về Stirling Cloud AI"
 
 [admin.settings.ai.general.enabled]
 description = "Công tắc chính. Khi tắt, không có công cụ AI, agent hoặc lệnh gọi engine nào khả dụng."
@@ -809,9 +824,28 @@ label = "PDF comment agent"
 description = "Thời gian chờ cho các thao tác agent nặng hơn như tạo tài liệu."
 label = "Thời gian chờ tác vụ dài (giây)"
 
+[admin.settings.ai.general.mode]
+label = "AI chạy ở đâu"
+
+[admin.settings.ai.general.mode.cloud]
+description = "Không cần container, không cần khóa nhà cung cấp, không cần chọn mô hình - tác vụ chạy trên Stirling Cloud và được tính phí vào tài khoản mà máy chủ này được liên kết."
+linkCta = "Kết nối máy chủ này với tài khoản Stirling"
+notLinked = "Trước tiên hãy liên kết một tài khoản"
+ownerOnly = "Chỉ chủ sở hữu tổ chức mới có thể liên kết máy chủ này với tài khoản Stirling."
+title = "Sử dụng Stirling Cloud AI"
+
+[admin.settings.ai.general.mode.off]
+description = "Không có công cụ AI nào trong ứng dụng, và không có gì rời khỏi máy chủ này."
+title = "Tắt"
+
+[admin.settings.ai.general.mode.self]
+description = "Một container do bạn lưu trữ, trỏ đến nhà cung cấp mô hình do bạn chọn. Khóa của bạn, hóa đơn của bạn, đường dẫn dữ liệu của bạn."
+title = "Chạy engine của riêng bạn"
+
 [admin.settings.ai.general.note]
-body = "AI engine chạy như một dịch vụ riêng biệt. Bí mật dùng chung của nó"
-body2 = "được đặt qua biến môi trường container. Provider API key có thể được nhập trên các trang này hoặc cung cấp dưới dạng biến môi trường của engine; các key nhập tại đây sẽ được đẩy tới engine khi lưu."
+docs = "Hướng dẫn thiết lập"
+intro = "Một container riêng biệt mà bạn chạy bên cạnh Stirling. Nó thực hiện suy luận; Stirling vẫn tự thực hiện mọi thao tác trên trang. Nó cần cùng"
+outro = "trên cả hai container và khóa nhà cung cấp mô hình. Bất cứ nội dung nào AI đọc sẽ được gửi đến nhà cung cấp bạn chọn - một Ollama do bạn lưu trữ sẽ giữ mọi trang trong nội bộ."
 title = "Giới thiệu về AI engine"
 
 [admin.settings.ai.general.streamTimeoutSeconds]
@@ -890,6 +924,67 @@ label = "Mô hình thông minh"
 body = "Thay đổi được tự động đẩy tới AI engine."
 bodyNoPush = "Đã lưu cài đặt. Chúng sẽ được áp dụng vào lần tới khi AI engine nhận cấu hình."
 title = "Đã lưu cài đặt AI"
+
+[admin.settings.ai.status]
+capabilities = "Khả năng"
+capabilitiesValue = "{{on}} trong số {{total}} đang bật"
+checked = "đã kiểm tra"
+checking = "Đang kiểm tra engine…"
+description = "Engine có thể truy cập được hay không, có chấp nhận máy chủ này hay không, và đang chạy gì."
+fastModel = "Mô hình nhanh"
+justNow = "vừa xong"
+latency = "Thời gian phản hồi"
+linkLabel = "Liên kết tài khoản"
+minutesAgo = "{{count}} phút trước"
+recheck = "Kiểm tra lại"
+runningOn = "Đang chạy trên"
+secondsAgo = "{{count}} giây trước"
+secretLabel = "Bí mật chia sẻ"
+smartModel = "Mô hình thông minh"
+title = "Trạng thái"
+url = "URL engine"
+
+[admin.settings.ai.status.cloud]
+hostDown = "Ngừng hoạt động"
+hostLabel = "Stirling.com"
+hostUp = "Hoạt động"
+name = "Stirling Cloud"
+sharingLabel = "Chia sẻ AI"
+sharingOff = "Đã tắt"
+sharingOn = "Đã bật"
+
+[admin.settings.ai.status.cloud.degraded]
+body = "Stirling Cloud đã phản hồi nhưng từ chối máy chủ này. Liên kết tài khoản có thể đã bị thu hồi."
+title = "Stirling Cloud đang từ chối máy chủ này"
+
+[admin.settings.ai.status.cloud.down]
+body = "Máy chủ này không thể kết nối tới Stirling Cloud. Hãy kiểm tra liên kết tài khoản và đảm bảo máy chủ này có thể truy cập internet."
+title = "Không thể truy cập Stirling Cloud"
+
+[admin.settings.ai.status.cloud.ok]
+body = "Stirling Cloud đã chấp nhận máy chủ này. Không có gì cần chạy hoặc vá ở đây."
+title = "Đang chạy trên Stirling Cloud"
+
+[admin.settings.ai.status.degraded]
+body = "Nó đã phản hồi kiểm tra tình trạng nhưng từ chối một yêu cầu thực. Hai bên đang sử dụng các bí mật chia sẻ khác nhau."
+title = "Engine đang hoạt động, nhưng từ chối máy chủ này"
+
+[admin.settings.ai.status.down]
+body = "Hãy kiểm tra URL, đảm bảo container engine đang chạy, và bạn đã khởi động lại sau khi bật AI."
+title = "Không thể truy cập engine"
+
+[admin.settings.ai.status.off]
+body = "Chọn cách AI chạy bên dưới, sau đó lưu và khởi động lại."
+title = "AI đã được tắt"
+
+[admin.settings.ai.status.ok]
+body = "Kiểm tra tình trạng và một yêu cầu đã xác thực đều thành công."
+title = "Engine đang chạy"
+
+[admin.settings.ai.status.secret]
+no = "Bị từ chối"
+unknown = "Không rõ"
+yes = "Được chấp nhận"
 
 [admin.settings.badge]
 clickToUpgrade = "Nhấp để xem chi tiết gói"
@@ -4453,6 +4548,7 @@ openFromComputer = "Mở từ máy tính"
 openSettings = "Mở cài đặt"
 other = "Khác"
 recent = "Gần đây"
+searchFiles = "Tìm kiếm tệp"
 uploadFailedBody = "Không thể thêm các tệp đã chọn."
 uploadFailedTitle = "Tải lên thất bại"
 viewAll = "Xem tất cả {{count}} tệp"
@@ -5827,6 +5923,8 @@ label = "Free credits"
 adoptFailed = "Tài liệu đã được mở khóa nhưng không thể mở tại đây. Hãy thử trực tiếp công cụ này."
 empty = "Không có gì để báo cáo."
 handoffUnavailable = "Trình duyệt này không cho phép bộ xử lý chuyển tài liệu sang trình chỉnh sửa. Thay vào đó, hãy mở tài liệu từ trình chỉnh sửa."
+inSmartFolder = "Tài liệu này nằm trong một thư mục thông minh, nên nó được xử lý trên máy chủ thay vì tại đây."
+inSmartFolderNamed = "{{name}} nằm trong một thư mục thông minh, nên nó được xử lý trên máy chủ thay vì tại đây."
 noDocumentLinked = "Lỗi này không được liên kết với tài liệu cụ thể nào, nên không có gì để mở ở đây."
 notOnThisDevice = "Tài liệu này không có trên thiết bị này, nên không thể mở tại đây."
 occurrences = "{{count}} lần"
@@ -5837,6 +5935,7 @@ repairedRerunNotAdopted = "Tài liệu đã sửa chữa đã được xử lý,
 repairedRerunUndelivered = "Tài liệu đã được sửa chữa và quá trình chạy lại chính sách đã bắt đầu, nhưng kết quả không thể được gửi đến đây, nên lỗi này vẫn mở."
 rerunRejected = "Hiện không thể chạy lại chính sách. Hãy thử lại sau giây lát."
 rerunUndelivered = "Quá trình chạy lại chính sách đã bắt đầu, nhưng kết quả không thể được gửi đến đây, nên lỗi này vẫn mở."
+retryInFolderFailed = "Không thể chạy lại tài liệu đó ngay lúc này."
 retryUnavailable = "Tài liệu này không còn có thể được thử lại từ trình duyệt này."
 title = "Thông báo"
 unlockedNotRerun = "Tài liệu đã được mở khóa và mở tại đây, nhưng không thể chạy lại chính sách trên tài liệu đó."
@@ -6625,9 +6724,11 @@ title = "Điều chỉnh gói Team"
 [payment.capacityStage]
 adjustmentNote = "Stripe sẽ hiển thị khoản phí chính xác, mọi khoản tính theo tỷ lệ và ngày thanh toán tiếp theo của bạn trước khi bạn xác nhận. Phương thức thanh toán đã lưu của bạn sẽ được sử dụng nếu có."
 continue = "Tiếp tục đến thanh toán"
+currencyAtCheckout = "Stripe xác nhận số tiền cuối cùng và đơn vị tiền tệ thanh toán khi thanh toán."
 customLabel = "Số người dùng"
 dueToday = "Đến hạn hôm nay"
 enterpriseQuote = "Nhận báo giá doanh nghiệp"
+estimatedTotal = "Tổng ước tính"
 lineItem = "Team · {{price}}{{period}} mỗi {{block}} người dùng"
 minimumForCurrentUsers = "Bạn có {{users}} người dùng, nên gói phải bao phủ ít nhất {{minimum}}."
 modalTitle = "Nâng cấp lên {{planName}}"
@@ -6865,6 +6966,25 @@ width = "Chiều rộng"
 widthHint = "Chiều rộng của hộp văn bản theo nội dung và xuống dòng."
 x = "X"
 y = "Y"
+
+[pdfTextEditor.mobile]
+actions = "Hành động trình chỉnh sửa"
+addImage = "Hình ảnh"
+addText = "Văn bản"
+cancel = "Hủy"
+delete = "Xóa"
+details = "Chi tiết"
+document = "Tài liệu"
+done = "Xong"
+download = "Lưu và tải xuống"
+find = "Tìm"
+lock = "Khóa"
+openPdf = "Mở PDF"
+panelHint = "Việc chỉnh sửa diễn ra trong chế độ xem Workspace. Nhấn vào văn bản trên trang để thay đổi."
+save = "Lưu"
+style = "Kiểu"
+tapToPlace = "Nhấn vào trang tại nơi văn bản sẽ được đặt"
+unlock = "Mở khóa"
 
 [pdfTextEditor.password]
 cancel = "Hủy"
@@ -7574,6 +7694,49 @@ plan = "Gói"
 procurement = "Mua sắm"
 usage = "Mức sử dụng"
 
+[portal.billing.compare]
+current = "Hiện tại"
+enterpriseData = "Lưu trú dữ liệu và SCIM"
+enterpriseName = "Enterprise"
+enterprisePrice = "Theo thỏa thuận của bạn"
+enterpriseProcessing = "Theo mức sử dụng hoặc cố định"
+enterpriseSignIn = "SAML và kiểm tra"
+enterpriseSupport = "SLA thời gian hoạt động, hỗ trợ triển khai"
+enterpriseUsers = "Không giới hạn"
+enterpriseWhere = "Thêm đa nút và tách biệt mạng"
+exploreEnterprise = "Khám phá Enterprise"
+freeData = "Ở lại nơi bạn chạy nó"
+freeName = "Miễn phí"
+freePrice = "Không cần thẻ, không hết hạn"
+freeProcessing = "{{allowance}} tín dụng mỗi tháng"
+freeProcessingUnknown = "Hạn mức tín dụng hàng tháng"
+freeSignIn = "Email, Google và SSO"
+freeSignInNote = "OAuth2/OIDC"
+freeSupport = "Cộng đồng"
+freeUsers = "Tối đa {{users}}"
+freeUsersUnknown = "Một nhóm nhỏ"
+freeWhere = "Cloud, desktop hoặc tự lưu trữ"
+lede = "Mọi gói đều bao gồm mọi công cụ PDF và SSO. Điểm khác biệt là số người sử dụng, nơi chạy và hỗ trợ bạn nhận được."
+open = "So sánh các gói"
+rowData = "Dữ liệu của bạn"
+rowHeader = "Tính năng"
+rowProcessing = "Xử lý"
+rowSignIn = "Đăng nhập"
+rowSupport = "Hỗ trợ"
+rowUsers = "Người dùng"
+rowWhere = "Nơi chạy"
+teamData = "Google Drive, cơ sở dữ liệu của riêng bạn"
+teamName = "Team"
+teamPrice = "$99/tháng cho mỗi 100 người dùng"
+teamProcessing = "{{allowance}} mỗi tháng, sau đó tính theo mức sử dụng"
+teamProcessingUnknown = "Hạn mức lớn hơn, sau đó tính theo mức sử dụng"
+teamSignIn = "Tương tự"
+teamSupport = "Email"
+teamUsers = "100 mỗi khối"
+teamWhere = "Cloud, desktop hoặc tự lưu trữ"
+title = "So sánh các gói"
+upgradeTeam = "Nâng cấp lên Team"
+
 [portal.billing.cycle]
 credits = "Tín dụng"
 creditsNote = "Đã dùng {{units}} · bao gồm tín dụng miễn phí và trả trước"
@@ -7679,6 +7842,8 @@ payTitle = "Thanh toán cho năm của bạn"
 step = "Bước {{current}} trên {{total}}"
 
 [portal.billing.prepaid.calc]
+currency = "Đơn vị tiền tệ báo giá"
+currencyLocked = "Sử dụng đơn vị tiền tệ thanh toán Stripe hiện có của bạn."
 rateUnknown = "Chúng tôi sẽ hiển thị giá chính xác khi thanh toán."
 
 [portal.billing.prepaid.consent]
@@ -8481,6 +8646,10 @@ title = "Không thể sửa chữa file"
 [portal.failures.kind.inputWrongType]
 description = "File của bạn không phải định dạng mà bước này có thể mở, nên lần chạy không thể đọc được."
 title = "Sai loại file"
+
+[portal.failures.kind.sourceUnreadable]
+description = "Không thể đọc thư mục thông minh của bạn, nên không có gì trong đó được xử lý."
+title = "Không thể đọc thư mục"
 
 [portal.failures.kind.stepCannotRenderPage]
 description = "Không thể vẽ một trang trong file của bạn, nên lần chạy không thể hoàn tất."
@@ -12235,6 +12404,7 @@ goBack = "Quay lại"
 pdfTools = "Công cụ PDF"
 placeholder = "Chọn một công cụ để bắt đầu"
 premiumFeature = "Tính năng Premium:"
+searchTools = "Tìm kiếm công cụ"
 toolsHeader = "Công cụ"
 viewAllTools = "Xem tất cả công cụ"
 
@@ -12399,13 +12569,10 @@ visits = "Lượt truy cập"
 
 [users]
 lastActive = "Hoạt động lần cuối"
-learnMore = "Tìm hiểu thêm về vai trò và quyền truy cập."
 locked = "Đã khóa"
 ownerSetupRequired = "Chủ sở hữu tổ chức chưa hoàn tất lần đăng nhập đầu tiên. Hoàn tất thiết lập hoặc yêu cầu người vận hành máy chủ khôi phục quyền sở hữu trước khi chuyển quyền sở hữu."
 roleFor = "Vai trò cho {{name}}"
 rowActions = "Hành động cho {{name}}"
-showAll = "Hiển thị tất cả {{count}}"
-showLess = "Hiển thị ít hơn"
 subtitle2 = "Con người, đội và cấp truy cập của bạn."
 suspended = "Đã đình chỉ"
 teamActions = "Hành động đội"
@@ -12414,6 +12581,7 @@ you = "(bạn)"
 
 [users.action]
 cancelInvite = "Hủy lời mời"
+createFromDefault = "Tạo nhóm từ Default"
 deleteTeam = "Xóa đội"
 disableMfa = "Đặt lại MFA"
 move = "Chuyển sang đội"
@@ -12451,6 +12619,7 @@ email = "Email"
 person = "Person"
 role = "Role"
 status = "Status"
+team = "Nhóm"
 
 [users.confirm]
 cancelInviteBody = "Hủy lời mời đến {{email}}? Họ sẽ không thể tham gia bằng liên kết hiện tại."
@@ -12469,15 +12638,12 @@ transferOwnershipTitle = "Chuyển quyền sở hữu tổ chức"
 description = "Mời đội ngũ của bạn để bắt đầu cộng tác."
 title = "Chưa có thành viên"
 
+[users.filters]
+noMatches = "Không ai khớp với các bộ lọc này."
+search = "Tìm kiếm người"
+
 [users.group]
 addToTeam = "Thêm vào đội"
-administrators = "{{count}} quản trị viên"
-guestCount = "{{count}} khách"
-guests = "Khách"
-ledBy = "do {{owner}} dẫn dắt"
-org = "Tổ chức"
-team = "Đội {{name}}"
-teamMeta = "{{count}} người"
 
 [users.invite]
 access = "Quyền truy cập"
@@ -12542,6 +12708,9 @@ title = "Nhóm mới"
 
 [users.renameTeam]
 apply = "Đổi tên"
+defaultApply = "Tạo và di chuyển"
+defaultDescription = "Default sẽ vẫn khả dụng cho người dùng mới. Mọi người hiện đang ở Default sẽ được chuyển sang nhóm mới."
+defaultTitle = "Tạo nhóm từ Default"
 name = "Tên nhóm"
 title = "Đổi tên nhóm"
 
@@ -12566,6 +12735,15 @@ guest = "Khách"
 member = "Thành viên"
 orgOwner = "Chủ sở hữu tổ chức"
 teamOwner = "Chủ sở hữu nhóm"
+
+[users.seats]
+full = "Mọi chỗ ngồi được cấp phép đều đang được sử dụng. Hãy giải phóng một chỗ, hoặc tăng số lượng chỗ ngồi, để thêm người khác."
+update = "Cập nhật chỗ ngồi"
+
+[users.tabs]
+all = "Tất cả"
+label = "Lọc theo nhóm"
+unassigned = "Không có nhóm"
 
 [users.team]
 grantProcessor = "Cấp Processor cho nhóm"
@@ -13216,232 +13394,14 @@ submitSignature = "Gửi chữ ký"
 title = "Không gian làm việc"
 
 [workspace.people]
-active = "Đang hoạt động"
-activeSession = "Phiên hoạt động"
-addMembers = "Thêm thành viên"
-admin = "Quản trị viên"
-confirmDelete = "Bạn có chắc muốn xóa người dùng này? Thao tác này không thể hoàn tác."
-confirmUnlock = "Bạn có chắc muốn mở khóa tài khoản người dùng này không?"
-deleteUser = "Xóa người dùng"
-deleteUserError = "Xóa người dùng thất bại"
-deleteUserSuccess = "Xóa người dùng thành công"
 description = "Quản lý thành viên không gian làm việc và quyền của họ"
-disable = "Tắt"
-disabled = "Đã tắt"
-editRole = "Chỉnh sửa vai trò"
-enable = "Bật"
-loading = "Đang tải danh sách..."
-locked = "đã khóa"
-lockedBadge = "Đã khóa"
-loginRequired = "Hãy bật chế độ đăng nhập trước"
-memberActions = "Hành động thành viên"
-noMembersFound = "Không tìm thấy thành viên"
-ownerLocked = "Chuyển quyền sở hữu tổ chức trong Cài đặt → Không gian làm việc → Người dùng trước khi thay đổi vai trò hoặc tài khoản của chủ sở hữu."
-role = "Vai trò"
-searchMembers = "Tìm thành viên..."
-team = "Nhóm"
-unlockAccount = "Mở khóa tài khoản"
-unlockUserError = "Mở khóa tài khoản người dùng không thành công"
-unlockUserSuccess = "Đã mở khóa tài khoản người dùng thành công"
-user = "Người dùng"
-userInfo = "Thông tin người dùng"
-
-[workspace.people.actions]
-upgrade = "Nâng cấp"
-
-[workspace.people.addMember]
-authType = "Loại xác thực"
-error = "Tạo người dùng thất bại"
-forceMFA = "Bắt buộc thiết lập MFA ở lần đăng nhập tiếp theo"
-forcePasswordChange = "Buộc đổi mật khẩu khi đăng nhập lần đầu"
-password = "Mật khẩu"
-passwordPlaceholder = "Nhập mật khẩu"
-passwordRequired = "Mật khẩu là bắt buộc"
-role = "Vai trò"
-submit = "Thêm thành viên"
-success = "Tạo người dùng thành công"
-team = "Nhóm (Tùy chọn)"
-teamPlaceholder = "Chọn một nhóm"
-username = "Tên đăng nhập (Email)"
-usernamePlaceholder = "user@example.com"
-usernameRequired = "Yêu cầu tên đăng nhập và mật khẩu"
-
-[workspace.people.authType]
-oauth = "OAuth2"
-password = "Mật khẩu"
-saml = "SAML2"
-ssoDescription = "Người dùng sẽ xác thực thông qua nhà cung cấp SSO"
-
-[workspace.people.changePassword]
-action = "Đổi mật khẩu"
-confirmPassword = "Xác nhận mật khẩu"
-confirmPlaceholder = "Nhập lại mật khẩu mới"
-copiedToClipboard = "Đã sao chép mật khẩu vào bộ nhớ tạm"
-copyFailed = "Không thể sao chép mật khẩu"
-copyTooltip = "Sao chép vào bộ nhớ tạm"
-emailUnavailable = "Email của người dùng này không phải là địa chỉ email hợp lệ. Đã tắt thông báo."
-error = "Không thể cập nhật mật khẩu"
-forcePasswordChange = "Buộc người dùng đổi mật khẩu ở lần đăng nhập tiếp theo"
-generatedPreview = "Mật khẩu đã tạo:"
-generateRandom = "Tạo mật khẩu an toàn"
-includePassword = "Bao gồm mật khẩu mới trong email"
-newPassword = "Mật khẩu mới"
-notifyOnly = "Sẽ gửi một email không kèm mật khẩu, cho người dùng biết quản trị viên đã thay đổi mật khẩu."
-passwordMismatch = "Mật khẩu không khớp"
-passwordRequired = "Vui lòng nhập mật khẩu mới"
-placeholder = "Nhập mật khẩu mới"
-sendEmail = "Gửi email cho người dùng về thay đổi này"
-smtpDisabled = "Thông báo email yêu cầu bật SMTP trong cài đặt."
-submit = "Cập nhật mật khẩu"
-subtitle = "Cập nhật mật khẩu cho"
-success = "Cập nhật mật khẩu thành công"
-title = "Đổi mật khẩu"
-
-[workspace.people.editMember]
-editing = "Editing: <0>{{username}}</0>"
-error = "Cập nhật người dùng thất bại"
-role = "Vai trò"
-submit = "Update User"
-success = "Cập nhật người dùng thành công"
-team = "Nhóm (Tùy chọn)"
-teamPlaceholder = "Chọn một nhóm"
-title = "Edit User"
-
-[workspace.people.emailInvite]
-allFailed = "Mời người dùng thất bại"
-emails = "Địa chỉ email"
-emailsPlaceholder = "user1@example.com, user2@example.com"
-emailsRequired = "Yêu cầu ít nhất một địa chỉ email"
-error = "Gửi lời mời thất bại"
-partialFailure = "Một số lời mời không thành công"
-submit = "Gửi lời mời"
-success = "Mời người dùng thành công"
-
-[workspace.people.inviteLink]
-copied = "Đã sao chép liên kết vào clipboard"
-email = "Địa chỉ email"
-emailDescription = "Tùy chọn - để trống để tạo liên kết mời chung có thể dùng bởi bất kỳ ai"
-emailPlaceholder = "user@example.com (tùy chọn)"
-emailSent = "Đã tạo và gửi liên kết mời qua email"
-error = "Tạo liên kết mời thất bại"
-expiryHours = "Giờ hết hạn"
-generate = "Tạo liên kết"
-generated = "Đã tạo liên kết mời"
-sendEmail = "Gửi liên kết mời qua email"
-sendEmailDescription = "Nếu bật, liên kết mời sẽ được gửi đến địa chỉ email chỉ định"
-submit = "Tạo liên kết mời"
-
-[workspace.people.inviteMembers]
-label = "Mời thành viên"
-subtitle = "Nhập hoặc dán email bên dưới, phân tách bằng dấu phẩy. Không gian làm việc của bạn sẽ tính phí theo số thành viên."
-
-[workspace.people.inviteMode]
-email = "Email"
-emailDisabled = "Lời mời qua email yêu cầu cấu hình SMTP và mail.enableInvites=true trong cài đặt"
-link = "Liên kết"
-username = "Tên đăng nhập"
 
 [workspace.people.license]
-currentUsage = "Đang dùng {{current}}/{{max}} giấy phép người dùng"
-fromLicense = "từ giấy phép"
-grandfathered = "Kế thừa"
-grandfatheredShort = "{{count}} kế thừa"
-slotsAvailable_one = "{{count}} user slot available"
-slotsAvailable_other = "{{count}} user slots available"
-slotsAvailable_zero = "No slots available"
 users_one = "user"
 users_other = "users"
 
-[workspace.people.mfa]
-adminDisableError = "Tắt MFA cho người dùng không thành công"
-adminDisableSuccess = "Đã tắt MFA cho người dùng thành công"
-disableByAdmin = "Tắt MFA"
-
-[workspace.people.roleDescriptions]
-admin = "Có thể quản lý cài đặt và mời thành viên, với quyền quản trị đầy đủ."
-currentRole = "Vai trò hiện được gán."
-user = "Can view and edit shared files, but cannot manage workspace settings or users."
-
-[workspace.people.toggleEnabled]
-error = "Cập nhật trạng thái người dùng thất bại"
-success = "Cập nhật trạng thái người dùng thành công"
-
 [workspace.teams]
-addMember = "Thêm thành viên"
-backToTeams = "Quay lại Nhóm"
-cannotAddToInternal = "Không thể thêm thành viên vào nhóm Internal"
-cannotDeleteInternal = "Không thể xóa nhóm Internal"
-cannotRenameInternal = "Không thể đổi tên nhóm Internal"
-confirmDelete = "Bạn có chắc muốn xóa nhóm này? Nhóm phải trống thì mới có thể xóa."
-confirmRemove = "Xóa người dùng khỏi nhóm này?"
-createNewTeam = "Tạo nhóm mới"
-deleteTeamLabel = "Xóa nhóm"
 description = "Quản lý nhóm và tổ chức thành viên trong không gian làm việc"
-loadError = "Không thể tải chi tiết nhóm"
-loading = "Đang tải nhóm..."
-loadingDetails = "Đang tải chi tiết nhóm..."
-memberCount_one = "{{count}} member"
-memberCount_other = "{{count}} members"
-memberCount_zero = "no members"
-noMembers = "Không có thành viên trong nhóm này"
-noTeamsFound = "Không tìm thấy nhóm"
-removeMember = "Xóa khỏi nhóm"
-removeMemberError = "Không thể xóa người dùng khỏi nhóm"
-removeMemberSuccess = "Đã xóa người dùng khỏi nhóm"
-renameTeamLabel = "Đổi tên nhóm"
-system = "Hệ thống"
-teamActions = "Hành động nhóm"
-teamName = "Tên nhóm"
-teamNotFound = "Không tìm thấy nhóm"
-totalMembers = "Tổng số thành viên"
-viewTeam = "Xem nhóm"
-
-[workspace.teams.addMemberToTeam]
-addingTo = "Đang thêm vào"
-currentlyIn = "hiện ở"
-error = "Không thể thêm thành viên vào nhóm"
-selectUser = "Chọn người dùng"
-selectUserPlaceholder = "Chọn một người dùng"
-selectUserRequired = "Vui lòng chọn một người dùng"
-submit = "Thêm thành viên"
-success = "Đã thêm thành viên vào nhóm thành công"
-title = "Thêm thành viên vào nhóm"
-userRequired = "Vui lòng chọn một người dùng"
-willBeMoved = "Lưu ý: Người dùng này sẽ được chuyển từ nhóm hiện tại sang nhóm này."
-
-[workspace.teams.changeTeam]
-changing = "Đang chuyển"
-error = "Không thể chuyển nhóm"
-label = "Chuyển nhóm"
-selectTeam = "Chọn nhóm"
-selectTeamPlaceholder = "Chọn một nhóm"
-selectTeamRequired = "Vui lòng chọn một nhóm"
-submit = "Chuyển nhóm"
-success = "Chuyển nhóm thành công"
-title = "Chuyển nhóm"
-
-[workspace.teams.createTeam]
-error = "Không thể tạo nhóm"
-nameRequired = "Yêu cầu tên nhóm"
-submit = "Tạo nhóm"
-success = "Tạo nhóm thành công"
-teamName = "Tên nhóm"
-teamNamePlaceholder = "Nhập tên nhóm"
-title = "Tạo nhóm mới"
-
-[workspace.teams.deleteTeam]
-error = "Không thể xóa nhóm. Hãy đảm bảo nhóm đang trống."
-success = "Xóa nhóm thành công"
-
-[workspace.teams.renameTeam]
-error = "Không thể đổi tên nhóm"
-nameRequired = "Yêu cầu tên nhóm"
-newTeamName = "Tên nhóm mới"
-newTeamNamePlaceholder = "Nhập tên nhóm mới"
-renaming = "Đang đổi tên:"
-submit = "Đổi tên nhóm"
-success = "Đổi tên nhóm thành công"
-title = "Đổi tên nhóm"
 
 [zipWarning]
 cancel = "Hủy"

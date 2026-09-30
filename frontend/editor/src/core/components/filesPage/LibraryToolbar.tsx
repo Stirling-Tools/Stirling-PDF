@@ -129,7 +129,7 @@ export function LibraryToolbar({
         value={viewMode}
         onChange={(v) => {
           if (!(FILES_PAGE_VIEW_MODES as readonly string[]).includes(v)) return;
-          setViewMode(v as FilesPageViewMode);
+          setViewMode(v);
         }}
         aria-label={t("filesPage.viewMode.label", "View mode")}
         options={[
