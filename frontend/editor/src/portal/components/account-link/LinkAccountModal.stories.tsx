@@ -16,6 +16,15 @@ const meta: Meta<typeof LinkAccountModal> = {
           value={{
             ...auth,
             isAdmin: context.parameters.accountLinkAdmin !== false,
+            user: {
+              id: "1",
+              email: "owner@example.com",
+              username: "owner",
+              role: "ROLE_ADMIN",
+              orgOwner:
+                context.parameters.accountLinkAdmin !== false &&
+                context.parameters.orgOwner !== false,
+            },
             loading: false,
           }}
         >
@@ -38,6 +47,10 @@ type Story = StoryObj<typeof LinkAccountModal>;
  * the provider will not redirect back to a hostname it does not know.
  */
 export const Default: Story = {};
+
+export const OtherAdministrator: Story = {
+  parameters: { orgOwner: false },
+};
 
 /** "reauth" mode — the server stays linked; only the browser session is renewed. */
 export const Reauth: Story = {
