@@ -55,7 +55,9 @@ export function orderedRewritingPolicies(policies: PoliciesByKey): string[] {
   return Object.entries(policies)
     .filter(
       ([id, s]) =>
-        editorTriggerOf(s) === "upload" && policyDeliversOutputFiles(id),
+        editorTriggerOf(s) === "upload" &&
+        !s.externalOutput &&
+        policyDeliversOutputFiles(id),
     )
     .sort(([, a], [, b]) => (a.order ?? 0) - (b.order ?? 0))
     .map(([id]) => id);

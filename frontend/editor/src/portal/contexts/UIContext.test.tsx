@@ -33,6 +33,16 @@ function probe() {
 }
 
 describe("UIContext — the trial-setup signal reaches consumers", () => {
+  it("opens banner prompts without a previous pipeline failure context", () => {
+    const p = probe();
+    const cause = { pipelineId: "rotate", trigger: "upload" as const };
+    act(() => p.api.openLinkModal("exhausted", cause));
+    expect(p.api.linkModalFailureContext).toEqual(cause);
+    act(() => p.api.closeLinkModal());
+    act(() => p.api.openLinkModal("exhausted"));
+    expect(p.api.linkModalOpen).toBe(true);
+    expect(p.api.linkModalFailureContext).toBeUndefined();
+  });
   it("re-renders consumers when the request is raised and cleared", () => {
     const p = probe();
     expect(p.api.trialSetupRequested).toBe(false);
