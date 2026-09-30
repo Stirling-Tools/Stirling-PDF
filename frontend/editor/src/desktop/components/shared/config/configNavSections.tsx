@@ -10,6 +10,7 @@ import {
 } from "@app/components/shared/config/cloudConfigNavSections";
 import { connectionModeService } from "@app/services/connectionModeService";
 import { authService } from "@app/services/authService";
+import PrivacySection from "@app/components/shared/config/configSections/PrivacySection";
 
 export type {
   ConfigNavSection,
@@ -94,7 +95,20 @@ export const useConfigNavSections = (
     // Matched on the group id: its items were four rows and are now one, and a
     // miss here drops the group silently.
     const aboutSection = sections.find((section) => section.id === "about");
-    if (aboutSection) result.push(aboutSection);
+    if (aboutSection) {
+      result.push({
+        ...aboutSection,
+        items: [
+          {
+            key: "privacy",
+            label: t("settings.privacy.title", "Privacy"),
+            icon: "shield",
+            component: <PrivacySection />,
+          },
+          ...aboutSection.items,
+        ],
+      });
+    }
     return result;
   }
 
