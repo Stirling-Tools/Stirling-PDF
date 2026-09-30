@@ -27,12 +27,7 @@ const ICON_SVG_DIR = path.join(ICONS_DIR, "svg");
 const ICON_FRAME = "0 0 24 24";
 
 /** Directories where a .svg file is allowed to live. */
-const SVG_ALLOWED = [
-  ICON_SVG_DIR,
-  path.join(SRC, "core/assets"),
-  path.join(SRC, "assets"),
-  path.join(SRC, "core/tests"),
-];
+const SVG_ALLOWED = [ICON_SVG_DIR, path.join(SRC, "core/assets"), path.join(SRC, "assets"), path.join(SRC, "core/tests")];
 
 const OPT_OUT = /icon-lint-disable/;
 
@@ -58,11 +53,7 @@ const licenceFile = path.join(ICONS_DIR, "LICENSE-lucide.txt");
 const citing = fs
   .readdirSync(path.join(ICONS_DIR, "svg/stirling"))
   .filter((f) => f.endsWith(".svg"))
-  .filter((f) =>
-    fs
-      .readFileSync(path.join(ICONS_DIR, "svg/stirling", f), "utf8")
-      .includes("LICENSE-lucide.txt"),
-  );
+  .filter((f) => fs.readFileSync(path.join(ICONS_DIR, "svg/stirling", f), "utf8").includes("LICENSE-lucide.txt"));
 if (citing.length && !fs.existsSync(licenceFile)) {
   problems.push(
     `src/core/icons/LICENSE-lucide.txt is missing, but ${citing.join(", ")} ` +
@@ -74,32 +65,20 @@ if (citing.length && !fs.existsSync(licenceFile)) {
 const lucidePath = new Map<string, string>();
 try {
   const nodes: Record<string, [string, Record<string, string>][]> = JSON.parse(
-    fs.readFileSync(
-      path.join(EDITOR, "../node_modules/lucide-static/icon-nodes.json"),
-      "utf8",
-    ),
+    fs.readFileSync(path.join(EDITOR, "../node_modules/lucide-static/icon-nodes.json"), "utf8"),
   );
   for (const [name, els] of Object.entries(nodes))
-    for (const [, a] of els)
-      if (a.d) lucidePath.set(a.d.replace(/\s+/g, " ").trim(), name);
+    for (const [, a] of els) if (a.d) lucidePath.set(a.d.replace(/\s+/g, " ").trim(), name);
 } catch {
   // lucide not installed: the icons still carry their notices, nothing to check
 }
 if (lucidePath.size) {
-  for (const svg of fs
-    .readdirSync(path.join(ICONS_DIR, "svg/stirling"))
-    .filter((f) => f.endsWith(".svg"))) {
-    const raw = fs.readFileSync(
-      path.join(ICONS_DIR, "svg/stirling", svg),
-      "utf8",
-    );
+  for (const svg of fs.readdirSync(path.join(ICONS_DIR, "svg/stirling")).filter((f) => f.endsWith(".svg"))) {
+    const raw = fs.readFileSync(path.join(ICONS_DIR, "svg/stirling", svg), "utf8");
     const copied = [...raw.matchAll(/\sd="([^"]+)"/g)]
       .map((m) => m[1].replace(/\s+/g, " ").trim())
       .filter((d) => lucidePath.has(d))
-      .filter(
-        (d) =>
-          /[aAcCsSqQtT]/.test(d) || d.split(/[ ,]/).filter(Boolean).length > 6,
-      );
+      .filter((d) => /[aAcCsSqQtT]/.test(d) || d.split(/[ ,]/).filter(Boolean).length > 6);
     if (copied.length && !raw.includes("LICENSE-lucide.txt")) {
       problems.push(
         `src/core/icons/svg/stirling/${svg}: undeclared lucide geometry ` +
@@ -109,32 +88,6 @@ if (lucidePath.size) {
     }
   }
 }
-
-// Every Material Symbols name, so a leftover is caught wherever it sits, not only in `<Icon name>`.
-function legacyIconNames(): Set<string> {
-  try {
-    const set: { icons: Record<string, unknown> } = JSON.parse(
-      fs.readFileSync(
-        path.join(
-          EDITOR,
-          "../node_modules/@iconify-json/material-symbols/icons.json",
-        ),
-        "utf8",
-      ),
-    );
-    return new Set(Object.keys(set.icons));
-  } catch {
-    try {
-      const map: { materialSymbols?: Record<string, string> } = JSON.parse(
-        fs.readFileSync(path.join(ICONS_DIR, "icon-map.json"), "utf8"),
-      );
-      return new Set(Object.keys(map.materialSymbols ?? {}));
-    } catch {
-      return new Set();
-    }
-  }
-}
-const legacy = legacyIconNames();
 
 // Positions where a hyphenated literal is an identifier, not an icon name.
 const NOT_AN_ICON_POSITION =
@@ -179,11 +132,7 @@ for (const file of files) {
   }
 
   // A stylesheet fill beats <Icon>'s fill="none" attribute and solidifies every stroke icon in scope.
-  if (
-    MIGRATION_COMPLETE &&
-    file.endsWith(".css") &&
-    !file.startsWith(ICONS_DIR)
-  ) {
+  if (MIGRATION_COMPLETE && file.endsWith(".css") && !file.startsWith(ICONS_DIR)) {
     const css = fs.readFileSync(file, "utf8");
     for (const m of css.matchAll(/([^{}]*svg[^{}]*)\{([^}]*)\}/g)) {
       const decl = /(^|[;\s])fill\s*:\s*(?!none|transparent)/.test(m[2]);
@@ -221,8 +170,7 @@ for (const file of files) {
     for (const m of line.matchAll(/"([a-z0-9]+(?:-[a-z0-9]+)+)"/g)) {
       if (!MIGRATION_COMPLETE) break;
       const name = m[1];
-      const isLegacy =
-        /-(?:rounded|outlined|sharp|twotone)$/.test(name) || legacy.has(name);
+      const isLegacy = /-(?:rounded|outlined|sharp|twotone)$/.test(name);
       if (!isLegacy || known.has(name)) continue;
       if (NOT_AN_ICON_POSITION.test(line.slice(0, m.index))) continue;
       if (OPT_OUT.test(line)) continue;
@@ -234,19 +182,10 @@ for (const file of files) {
     }
 
     // No retired icon library
-    if (
-      MIGRATION_COMPLETE &&
-      (/^\s*(import|export)\b/.test(line) || /\brequire\(/.test(line))
-    ) {
+    if (MIGRATION_COMPLETE && (/^\s*(import|export)\b/.test(line) || /\brequire\(/.test(line))) {
       for (const banned of BANNED_IMPORTS) {
-        if (
-          line.includes(banned) &&
-          !inIconsDir &&
-          !OPT_OUT.test(lines[i - 1] ?? "")
-        ) {
-          problems.push(
-            `${rel(file)}:${i + 1}: imports ${banned}. Use <Icon name="…" /> from @app/ui/Icon.`,
-          );
+        if (line.includes(banned) && !inIconsDir && !OPT_OUT.test(lines[i - 1] ?? "")) {
+          problems.push(`${rel(file)}:${i + 1}: imports ${banned}. Use <Icon name="…" /> from @app/ui/Icon.`);
         }
       }
     }

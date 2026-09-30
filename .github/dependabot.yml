@@ -113,10 +113,6 @@ updates:
           - "i18next"
           - "i18next-*"
           - "react-i18next"
-      iconify:
-        patterns:
-          - "@iconify/*"
-          - "@iconify-json/*"
       stripe:
         patterns:
           - "@stripe/*"

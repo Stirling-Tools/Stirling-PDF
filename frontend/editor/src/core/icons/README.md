@@ -39,7 +39,6 @@ The component lives with the other shared primitives, in `core/ui/Icon.tsx` — 
 | `colorless.ts` / `colorless.css` | The `colorless` class, which dims a brand mark for a disabled source. |
 | `svg/stirling/*.svg` | Our own drawings, for glyphs lucide has no equivalent for. |
 | `svg/third-party/*.svg` | Brand marks (S3, Slack, Jira…), which keep their own colours. |
-| `icon-map.json` | Temporary: legacy name → lucide name, for the migration audit story only. |
 
 `?react` compiles each svg into a component at build time, configured once in `editor/scripts/icons/svgrOptions.mts` so the app, Storybook and the tests transform them the same way. Lucide's own svgs are read from `lucide-static` in `node_modules`, so none of its artwork is checked in.
 
@@ -72,4 +71,4 @@ For a prop that takes *either* a name or your own node, narrow with `isIconName(
 - **`iconMap.ts` keys are persisted.** A saved automation stores `"SettingsIcon"`, so those keys must never be renamed — only their values.
 - **The classification label palette is mirrored in the backend** (`app/proprietary/src/main/resources/classification/classification-labels.json`) and a drift test enforces icon parity. Change both sides together.
 - **Brand marks look unreferenced.** They resolve from connector ids the API returns, never from literals; the unused report and the gallery's *In use* view both allow for that.
-- **No third-party icon artwork is checked in.** `Migration/Icon audit` gets its "before" glyphs from `virtual:legacy-icons`, served straight out of the icon packages by `editor/scripts/icons/legacyIcons.vite.mts`; never commit another icon set's geometry. The audit and everything it needs go once the mapping is signed off.
+- **No third-party icon artwork is checked in.** Lucide's svgs come from `lucide-static` in `node_modules`; never commit another icon set's geometry.

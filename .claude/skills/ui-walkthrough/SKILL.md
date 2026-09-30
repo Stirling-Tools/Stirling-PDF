@@ -114,7 +114,5 @@ Optionally `SendUserFile` the `walkthrough.html`.
 
 ## Gotchas
 - Stale `:5173` server serves old bundles - kill it before capturing (see step 2).
-- Missing `material-symbols-icons.json` → blank app → every shot times out. Run
-  `generate-icons.js` first.
 - `await settle(page)` before shots or portals/transitions tear mid-capture.
 - Don't commit the generated `screenshots/` or the throwaway spec unless asked.

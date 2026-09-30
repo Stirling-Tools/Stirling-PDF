@@ -109,8 +109,6 @@
     ]
   },
   "devDependencies": {
-    "@iconify-json/material-symbols": "^1.2.89",
-    "@mui/icons-material": "^9.3.1",
     "@playwright/test": "^1.55.0",
     "@storybook/addon-a11y": "^9.1.20",
     "@storybook/addon-docs": "^9.1.20",
