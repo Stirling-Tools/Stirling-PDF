@@ -31,6 +31,7 @@ vi.mock("@portal/api/access", () => ({ createGrant: vi.fn() }));
 import { InviteMemberModal } from "@portal/components/users/InviteMemberModal";
 import { createMember } from "@portal/api/users";
 import type { Team } from "@portal/api/teams";
+import { usersBackend } from "@app/portal/usersBackend";
 
 const TEAMS: Team[] = [{ id: 1, name: "Default", userCount: 1, owners: [] }];
 
@@ -192,6 +193,44 @@ describe("InviteMemberModal — direct account creation", () => {
         forceChange: false,
         forceMFA: false,
       }),
+    );
+  });
+});
+
+describe("InviteMemberModal - email invite notices", () => {
+  it("preserves delivery and partial-failure warnings when Processor access is deferred", async () => {
+    const user = userEvent.setup();
+    const onNotice = vi.fn();
+    const onClose = vi.fn();
+    vi.mocked(usersBackend.inviteMember).mockResolvedValueOnce({
+      successCount: 1,
+      warning: "The invite email could not be delivered.",
+      errors: "Another address could not be invited.",
+    });
+    renderModal({
+      canDirectCreate: false,
+      canEmailInvite: true,
+      manageGrants: true,
+      onNotice,
+      onClose,
+    });
+    await user.type(
+      screen.getByPlaceholderText("name@company.com"),
+      "priya@acme.com",
+    );
+    await user.click(screen.getByRole("checkbox", { name: /^Processor/ }));
+    await user.click(screen.getByRole("button", { name: "Send invite" }));
+
+    await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
+    expect(onNotice).toHaveBeenCalledOnce();
+    expect(onNotice).toHaveBeenCalledWith(
+      expect.stringContaining("The invite email could not be delivered."),
+    );
+    expect(onNotice).toHaveBeenCalledWith(
+      expect.stringContaining("Another address could not be invited."),
+    );
+    expect(onNotice).toHaveBeenCalledWith(
+      expect.stringContaining("Processor access couldn't be granted yet"),
     );
   });
 });

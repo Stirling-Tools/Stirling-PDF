@@ -77,6 +77,17 @@ import stirling.software.proprietary.workflow.service.UserServerCertificateServi
 @RequiredArgsConstructor
 public class UserService implements UserServiceInterface {
 
+    /**
+     * Present and {@code "true"} only on an account created by the email-invite path whose
+     * temporary password nobody has used yet, which is the sole state in which re-issuing (and so
+     * rotating) that password is safe. Removed once the owner sets their own password.
+     *
+     * <p>Deliberately a {@code user_settings} row rather than a {@code users} column: SaaS declares
+     * {@code users} migration-owned, so {@code MigrationOwnedSchemaFilter} keeps Hibernate out of
+     * it and a new column would never exist there.
+     */
+    public static final String INVITE_PENDING_KEY = "invitePending";
+
     private final UserRepository userRepository;
     private final stirling.software.proprietary.service.OrgOwnerService orgOwnerService;
     private final TeamRepository teamRepository;
@@ -439,10 +450,26 @@ public class UserService implements UserServiceInterface {
     @Transactional(rollbackFor = Exception.class)
     public void changePassword(User user, String newPassword)
             throws SQLException, UnsupportedProviderException {
+        savePassword(user, newPassword);
+        exportAfterCommit();
+    }
+
+    // One transaction, so a resend can never rotate a password its owner chose. Deletes the row
+    // directly: callers hold the user with its settings collection unloaded.
+    @Transactional(rollbackFor = Exception.class)
+    public void changePasswordAndClearInvite(User user, String newPassword)
+            throws SQLException, UnsupportedProviderException {
+        savePassword(user, newPassword);
+        if (user.getId() != null) {
+            userRepository.deleteSettingsByUserIdAndKeys(user.getId(), List.of(INVITE_PENDING_KEY));
+        }
+        exportAfterCommit();
+    }
+
+    private void savePassword(User user, String newPassword) {
         orgOwnerService.protect(user.getId(), true);
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
-        exportAfterCommit();
     }
 
     public void changeFirstUse(User user, boolean firstUse)
@@ -450,6 +477,11 @@ public class UserService implements UserServiceInterface {
         user.setFirstLogin(firstUse);
         userRepository.save(user);
         databaseService.exportDatabase();
+    }
+
+    /** Whether one user's {@code user_settings} rows carry a live invite marker. */
+    public static boolean isInvitePending(Map<String, String> settings) {
+        return settings != null && "true".equals(settings.get(INVITE_PENDING_KEY));
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -562,8 +594,12 @@ public class UserService implements UserServiceInterface {
         // Set first login flag
         user.setFirstLogin(request.isFirstLogin());
 
-        // Set MFA requirement
         Map<String, String> settings = user.getSettings();
+        if (request.isInvitePending()) {
+            settings.put(INVITE_PENDING_KEY, "true");
+        }
+
+        // Set MFA requirement
         settings.put(MFA_REQUIRED_KEY, String.valueOf(request.isRequireMfa()));
         settings.put(MFA_ENABLED_KEY, String.valueOf(request.isMfaEnabled()));
         if (request.getMfaSecret() != null && !request.getMfaSecret().isEmpty()) {

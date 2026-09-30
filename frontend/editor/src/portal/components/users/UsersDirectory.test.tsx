@@ -51,6 +51,7 @@ function renderDirectory(
   onTransferOwnership = vi.fn(),
   onChangeRole = vi.fn(),
   seatsFull = false,
+  emailInvitesEnabled = true,
 ) {
   const onRemove = vi.fn();
   render(
@@ -72,6 +73,8 @@ function renderDirectory(
         onToggleEnabled={vi.fn()}
         onUnlock={vi.fn()}
         onDisableMfa={vi.fn()}
+        onResendInvite={vi.fn()}
+        emailInvitesEnabled={emailInvitesEnabled}
         onRemove={onRemove}
         onTransferOwnership={onTransferOwnership}
         onRenameTeam={vi.fn()}
@@ -198,6 +201,7 @@ describe("UsersDirectory — team strip", () => {
           onToggleEnabled={vi.fn()}
           onUnlock={vi.fn()}
           onDisableMfa={vi.fn()}
+          onResendInvite={vi.fn()}
           onRemove={vi.fn()}
           onRenameTeam={vi.fn()}
           onDeleteTeam={vi.fn()}
@@ -212,6 +216,58 @@ describe("UsersDirectory — team strip", () => {
     fireEvent.click(teamTab("Acme", 1));
     expect(screen.getByText("Priya")).toBeInTheDocument();
     expect(screen.queryByText("Tom")).not.toBeInTheDocument();
+  });
+});
+
+describe("UsersDirectory - never-used invites", () => {
+  const INVITED: Member = { ...MEMBER, invitePending: true };
+
+  it("self-hosted marks an unused invite and offers Resend invite", async () => {
+    renderDirectory(selfHostedCaps, TEAMS, [INVITED]);
+    expect(screen.getByText("Invited")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Actions for Priya" }));
+    expect(await screen.findByText("Resend invite")).toBeInTheDocument();
+  });
+
+  it("leaves a directly-created account alone: forcing a password change is not an invite", async () => {
+    renderDirectory(selfHostedCaps);
+    expect(screen.queryByText("Invited")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Actions for Priya" }));
+    await screen.findByText("Remove from org");
+    expect(screen.queryByText("Resend invite")).not.toBeInTheDocument();
+  });
+
+  it("hides the resend when the server has no working invite mail config", async () => {
+    renderDirectory(
+      selfHostedCaps,
+      TEAMS,
+      [INVITED],
+      vi.fn(),
+      vi.fn(),
+      false,
+      false,
+    );
+    expect(screen.getByText("Invited")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Actions for Priya" }));
+    await screen.findByText("Remove from org");
+    expect(screen.queryByText("Resend invite")).not.toBeInTheDocument();
+  });
+
+  it("SaaS has no resend path: its invites are pending records, not accounts", async () => {
+    renderDirectory(saasCaps, TEAMS, [INVITED]);
+    fireEvent.click(screen.getByRole("button", { name: "Actions for Priya" }));
+    await screen.findByText("Remove from team");
+    expect(screen.queryByText("Resend invite")).not.toBeInTheDocument();
+  });
+
+  it("hides resend for a suspended invite", async () => {
+    renderDirectory(selfHostedCaps, TEAMS, [
+      { ...INVITED, status: "suspended" },
+    ]);
+    expect(screen.queryByText("Invited")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Actions for Priya" }));
+    await screen.findByText("Remove from org");
+    expect(screen.queryByText("Resend invite")).not.toBeInTheDocument();
   });
 });
 

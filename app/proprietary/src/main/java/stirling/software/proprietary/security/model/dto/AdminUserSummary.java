@@ -44,6 +44,12 @@ public class AdminUserSummary {
     @Schema(description = "Whether this is the user's first login")
     private Boolean isFirstLogin;
 
+    @Schema(
+            description =
+                    "Whether the account is an email invitation that has never been used, so its"
+                            + " invite can be re-sent")
+    private Boolean invitePending;
+
     @Schema(description = "Authentication type (WEB, OAUTH2, SAML2)")
     private String authenticationType;
 

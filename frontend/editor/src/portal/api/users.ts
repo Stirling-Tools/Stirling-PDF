@@ -55,6 +55,8 @@ export interface Member {
   authType?: string;
   /** Raw stored authority (e.g. ROLE_USER, ROLE_WEB_ONLY_USER); preserved on team moves. */
   authority?: string;
+  /** Account created by an email invite and never signed into; its invitation can be resent. */
+  invitePending?: boolean;
 }
 
 export interface Role {
@@ -230,6 +232,8 @@ interface AdminUserSummaryDto {
   authenticationType?: string;
   /** Authoritative server-side portal access (honors the configured default policy). */
   portalAccess?: boolean;
+  /** Account created by an email invite whose temporary password has never been used. */
+  invitePending?: boolean;
 }
 
 interface AdminSettingsDto {
@@ -308,6 +312,7 @@ export async function fetchUsers(tier: Tier): Promise<UsersResponse> {
     mfaEnabled: data.userSettings?.[u.username]?.mfaEnabled === "true",
     authType: u.authenticationType,
     authority: u.rolesAsString,
+    invitePending: u.invitePending === true,
   }));
   const seatLimit = normalizeSeatLimit(data.maxAllowedUsers);
   const seatsUsed = data.totalUsers ?? members.length;
@@ -562,9 +567,17 @@ export async function createMember(p: CreateMemberParams): Promise<string> {
 }
 
 export interface InviteResult {
+  /** Accounts created, whether or not their invite email was delivered. */
   successCount?: number;
+  /** Addresses that produced no account at all. */
   failureCount?: number;
+  /** Accounts whose invite email actually reached the mail server. */
+  deliveredCount?: number;
+  /** Addresses whose account exists but whose invite email failed; resend targets. */
+  undelivered?: string[];
   message?: string;
+  /** Set when accounts were created but some invite emails never went out. */
+  warning?: string;
   errors?: string;
   error?: string;
 }
@@ -584,6 +597,18 @@ export async function inviteMember(
     "/api/v1/user/admin/inviteUsers",
     params,
   );
+}
+
+/**
+ * Re-issue the invitation for an account that was created but never signed into.
+ * The temporary password is regenerated server-side, so the previous invitation
+ * (whether or not it arrived) stops working.
+ */
+export async function resendInvite(member: Member): Promise<void> {
+  if (!member.username) throw new Error("Member has no backend identity");
+  await apiClient.local.form("/api/v1/user/admin/resendInvite", {
+    username: member.username,
+  });
 }
 
 /** Transfers deployment ownership; the target becomes an admin and the caller remains one. */
