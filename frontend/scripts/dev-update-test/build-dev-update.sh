@@ -50,7 +50,7 @@ echo ""
 cd "$FRONTEND_DIR/editor"
 
 # Prepare desktop env/assets before building
-npx tsx scripts/setup-env.mts --desktop && node scripts/generate-icons.js
+npx tsx scripts/setup-env.mts --desktop && npx tsx scripts/generate-icon-registry.mts
 # Build the Windows installer provisioner + thumbnail-handler (no-op on macOS/Linux).
 # The WiX fragment references these binaries, so light.exe fails to bind without them.
 node scripts/build-provisioner.mjs
