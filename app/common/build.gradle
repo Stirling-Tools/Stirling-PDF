@@ -10,7 +10,7 @@ dependencies {
     api "com.google.guava:guava:${guavaVersion}"
     api 'org.springframework.boot:spring-boot-starter-webmvc'
     api 'org.springframework.boot:spring-boot-starter-aspectj'
-    api 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20260313.1'
+    api 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20260922.1'
     api 'com.fathzer:javaluator:3.0.6'
     api 'com.posthog.java:posthog:1.2.0'
     api "org.apache.commons:commons-lang3:${commonsLang3}"
