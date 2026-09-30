@@ -103,6 +103,7 @@ function CreditsRing({
   const filled = Math.min(1, Math.max(0, fraction)) * circumference;
 
   return (
+    // icon-lint-disable -- ring dash length is computed from the credit balance
     <svg
       className="nav-footer__credits-ring"
       viewBox="0 0 20 20"

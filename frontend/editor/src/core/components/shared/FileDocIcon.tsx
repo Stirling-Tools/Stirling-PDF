@@ -177,6 +177,7 @@ export function FileDocIcon({
   }
 
   return (
+    // icon-lint-disable -- fold geometry is computed per file type
     <svg
       className={className}
       // The accent flows through `color` (var() resolves in CSS, not in SVG

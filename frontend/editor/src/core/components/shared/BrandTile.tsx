@@ -7,6 +7,7 @@ interface BrandTileProps {
 /** The mark in a rounded square. Decorative: call sites carry the accessible name. */
 export function BrandTile({ size, className }: BrandTileProps) {
   return (
+    // icon-lint-disable -- the logo, tinted by --c-brand-mark
     <svg
       className={className}
       viewBox="0 0 256 256"

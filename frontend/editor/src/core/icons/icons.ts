@@ -207,6 +207,8 @@ import Package from "lucide-static/icons/package.svg?react";
 import Package2 from "lucide-static/icons/package-2.svg?react";
 import PaintBucket from "lucide-static/icons/paint-bucket.svg?react";
 import Palette from "lucide-static/icons/palette.svg?react";
+import PanelLeft from "lucide-static/icons/panel-left.svg?react";
+import PanelRight from "lucide-static/icons/panel-right.svg?react";
 import Paperclip from "lucide-static/icons/paperclip.svg?react";
 import PartyPopper from "lucide-static/icons/party-popper.svg?react";
 import Pause from "lucide-static/icons/pause.svg?react";
@@ -368,7 +370,10 @@ import SinglePage from "@app/icons/svg/stirling/single-page.svg?react";
 import UsersPlus from "@app/icons/svg/stirling/users-plus.svg?react";
 import Watermark from "@app/icons/svg/stirling/watermark.svg?react";
 
+import Apple from "@app/icons/svg/third-party/apple.svg?react";
 import Box from "@app/icons/svg/third-party/box.svg?react";
+import Linux from "@app/icons/svg/third-party/linux.svg?react";
+import Windows from "@app/icons/svg/third-party/windows.svg?react";
 import Clamav from "@app/icons/svg/third-party/clamav.svg?react";
 import Cloudmersive from "@app/icons/svg/third-party/cloudmersive.svg?react";
 import Cloudmersiveadvanced from "@app/icons/svg/third-party/cloudmersiveadvanced.svg?react";
@@ -613,6 +618,8 @@ export const ICONS = {
   "package-2": { Component: Package2, kind: "lucide" },
   "paint-bucket": { Component: PaintBucket, kind: "lucide" },
   palette: { Component: Palette, kind: "lucide" },
+  "panel-left": { Component: PanelLeft, kind: "lucide" },
+  "panel-right": { Component: PanelRight, kind: "lucide" },
   paperclip: { Component: Paperclip, kind: "lucide" },
   "party-popper": { Component: PartyPopper, kind: "lucide" },
   pause: { Component: Pause, kind: "lucide" },
@@ -772,7 +779,10 @@ export const ICONS = {
   "single-page": { Component: SinglePage, kind: "stirling" },
   "users-plus": { Component: UsersPlus, kind: "stirling" },
   watermark: { Component: Watermark, kind: "stirling" },
+  apple: { Component: Apple, kind: "brand" },
   box: { Component: Box, kind: "brand" },
+  linux: { Component: Linux, kind: "brand" },
+  windows: { Component: Windows, kind: "brand" },
   clamav: { Component: Clamav, kind: "brand" },
   cloudmersive: { Component: Cloudmersive, kind: "brand" },
   cloudmersiveadvanced: { Component: Cloudmersiveadvanced, kind: "brand" },

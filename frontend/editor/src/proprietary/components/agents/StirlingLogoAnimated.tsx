@@ -2,6 +2,7 @@ import "@app/components/chat/ChatPanel.css";
 
 export function StirlingLogoAnimated({ size = 20 }: { size?: number }) {
   return (
+    // icon-lint-disable -- the logo, animated path by path
     <svg
       xmlns="http://www.w3.org/2000/svg"
       width={size}

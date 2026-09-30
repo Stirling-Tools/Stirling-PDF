@@ -1,4 +1,5 @@
 import { Fragment, type ReactNode } from "react";
+import { Icon } from "@app/ui/Icon";
 import { StatusBadge, type StatusTone } from "@app/ui/StatusBadge";
 import { Chip, type ChipAccent } from "@app/ui/Chip";
 import { Button } from "@app/ui/Button";
@@ -48,19 +49,7 @@ export interface DataTableColumn<T> {
 export type CellGlyph = "kebab";
 
 function KebabGlyph() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      aria-hidden
-    >
-      <circle cx="12" cy="5" r="1.6" />
-      <circle cx="12" cy="12" r="1.6" />
-      <circle cx="12" cy="19" r="1.6" />
-    </svg>
-  );
+  return <Icon name="ellipsis-vertical" size={16} filled />;
 }
 
 /** An item in a kebab action menu. */

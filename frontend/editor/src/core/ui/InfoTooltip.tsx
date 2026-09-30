@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Icon } from "@app/ui/Icon";
 import { Tooltip, type FloatingPosition } from "@mantine/core";
 import "@app/ui/InfoTooltip.css";
 
@@ -37,21 +38,7 @@ export function InfoTooltip({
           ariaLabel ?? (typeof label === "string" ? label : "More information")
         }
       >
-        <svg
-          viewBox="0 0 24 24"
-          width="14"
-          height="14"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={2}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden
-        >
-          <circle cx="12" cy="12" r="10" />
-          <line x1="12" y1="16" x2="12" y2="12" />
-          <line x1="12" y1="8" x2="12.01" y2="8" />
-        </svg>
+        <Icon name="info" size={14} strokeWidth={2} />
       </button>
     </Tooltip>
   );

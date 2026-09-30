@@ -15,6 +15,7 @@ interface BrandMarkProps {
  */
 export function BrandMark({ height = "1.6rem", className }: BrandMarkProps) {
   return (
+    // icon-lint-disable -- the logo morphs path by path in BrandMark.css
     <svg
       className={`sui-brandmark${className ? ` ${className}` : ""}`}
       viewBox="0 0 71 79"

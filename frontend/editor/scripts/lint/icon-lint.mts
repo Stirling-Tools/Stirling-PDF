@@ -173,7 +173,7 @@ for (const file of files) {
 
   lines.forEach((line, i) => {
     // No inline svg outside core/icons
-    if (/<svg[\s>]/.test(line) && !inIconsDir) {
+    if (/<svg(?:[\s>]|$)/.test(line) && !inIconsDir) {
       const context = lines.slice(Math.max(0, i - 6), i + 1).join("\n");
       if (!OPT_OUT.test(context)) {
         problems.push(
