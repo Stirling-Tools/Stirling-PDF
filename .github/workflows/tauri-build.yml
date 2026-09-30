@@ -71,9 +71,9 @@ env:
     gradle/**/*.gradle
   GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-25
   CARGO_FILES_TO_HASH: |
-    frontend/editor/src-tauri/Cargo.toml
-    frontend/editor/src-tauri/Cargo.lock
-    frontend/editor/src-tauri/target
+    frontend/editor/src-tauri
+  # frontend/editor/src-tauri/Cargo.toml
+  # frontend/editor/src-tauri/Cargo.lock
   CARGO_HOME: ${{ github.workspace }}/.cache/cargo
   CACHE_MANIFEST_BRANCH: dev-cache
   CACHE_MANIFEST_PATH: .github/cache-data
@@ -248,8 +248,8 @@ jobs:
               path: ${{ env.CARGO_HOME }}/registry
             cargo-git:
               path: ${{ env.CARGO_HOME }}/git
-            cargo-target:
-              path: frontend/editor/src-tauri/target
+            cargo-bin:
+              path: ${{ env.CARGO_HOME }}/bin
             gradle-caches:
               path: .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/caches
             gradle-wrapper:
@@ -260,7 +260,7 @@ jobs:
             gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}
             cargo-registry=${{ needs.hash_pr.outputs.cargo_files_hash }}
             cargo-git=${{ needs.hash_pr.outputs.cargo_files_hash }}
-            cargo-target=${{ needs.hash_pr.outputs.cargo_files_hash }}
+            cargo-bin=${{ needs.hash_pr.outputs.cargo_files_hash }}
           allow-shared-restore: true
           strict: false
 
