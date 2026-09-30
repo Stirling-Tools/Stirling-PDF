@@ -39,7 +39,7 @@ test("a pattern colour space fill survives regeneration", async ({ page }) => {
       const buf = m.FPDFBitmap_GetBuffer(bmp);
       const stride = m.FPDFBitmap_GetStride(bmp);
       const heap = new Uint8Array(
-        (m.pdfium.wasmExports as any).memory.buffer,
+        m.pdfium.wasmExports.memory.buffer,
         buf,
         stride * h,
       );
