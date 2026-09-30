@@ -8,8 +8,10 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
@@ -261,6 +263,10 @@ public class MergeController {
         if (files == null) {
             files = new MultipartFile[0];
         }
+        Map<MultipartFile, Integer> inputPositions = new IdentityHashMap<>();
+        for (int index = 0; index < files.length; index++) {
+            inputPositions.putIfAbsent(files[index], index + 1);
+        }
 
         if (fileOrder != null && !fileOrder.isBlank()) {
             log.info("Reordering files based on fileOrder parameter");
@@ -273,7 +279,10 @@ public class MergeController {
         try (TempFile mt = new TempFile(tempFileManager, ".pdf")) {
 
             List<Path> inputPaths = new ArrayList<>(files.length);
-            List<Integer> invalidIndexes = new ArrayList<>();
+            List<String> lockedNames = new ArrayList<>();
+            List<String> unreadableNames = new ArrayList<>();
+            Exception lockedCause = null;
+            Exception unreadableCause = null;
             for (int index = 0; index < files.length; index++) {
                 MultipartFile multipartFile = files[index];
                 File tempFile;
@@ -295,8 +304,32 @@ public class MergeController {
                 try (PdfDocument ignored = PdfDocument.open(tempFile.toPath())) {
                 } catch (Exception e) {
                     ExceptionUtils.logException("PDF pre-validate", e);
-                    invalidIndexes.add(index);
+                    if (ExceptionUtils.isPasswordError(e)) {
+                        lockedNames.add("file " + inputPositions.get(multipartFile));
+                        if (lockedCause == null) {
+                            lockedCause = e;
+                        }
+                    } else if (ExceptionUtils.isEncryptionError(e)) {
+                        throw ExceptionUtils.createPdfEncryptionException(e);
+                    } else if (PdfErrorUtils.isCorruptedPdfError(e)) {
+                        unreadableNames.add("file " + inputPositions.get(multipartFile));
+                        if (unreadableCause == null) {
+                            unreadableCause = e;
+                        }
+                    } else {
+                        throw e;
+                    }
                 }
+            }
+
+            // Password first: it is the one the user can act on without repairing anything.
+            if (lockedCause != null) {
+                throw ExceptionUtils.createPdfPasswordException(
+                        String.join(", ", lockedNames), lockedCause);
+            }
+            if (unreadableCause != null) {
+                throw ExceptionUtils.createPdfCorruptedException(
+                        String.join(", ", unreadableNames), unreadableCause);
             }
 
             int[] pageCounts;
