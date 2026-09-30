@@ -16,7 +16,7 @@ describe("isSafePostLoginRedirect (core base)", () => {
     expect(isSafePostLoginRedirect(null)).toBe(false);
     expect(isSafePostLoginRedirect(undefined)).toBe(false);
     expect(isSafePostLoginRedirect("")).toBe(false);
-    expect(isSafePostLoginRedirect(42 as unknown)).toBe(false);
+    expect(isSafePostLoginRedirect(42)).toBe(false);
   });
 
   it("rejects off-origin and protocol-relative forms", () => {
