@@ -36,7 +36,7 @@ const asStirlingFile = (name: string): StirlingFile =>
   Object.assign(new File(["%PDF-1.7"], name, { type: "application/pdf" }), {
     fileId: "new-id" as FileId,
     quickKey: "k",
-  }) as StirlingFile;
+  });
 
 type AddFilesOptions = {
   selectFiles?: boolean;
