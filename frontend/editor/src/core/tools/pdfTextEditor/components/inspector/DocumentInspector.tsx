@@ -95,7 +95,7 @@ function FontsSection({ pages }: { pages: PageSnapshot[] }) {
       label: t("pdfTextEditor.fonts.pill.ok", "All glyphs"),
       hint: t(
         "pdfTextEditor.fonts.compat.ok",
-        "Every font includes the full alphabet and digits - type freely.",
+        "Every font includes the full alphabet and digits.",
       ),
     },
     info: {
@@ -113,7 +113,7 @@ function FontsSection({ pages }: { pages: PageSnapshot[] }) {
       }),
       hint: t(
         "pdfTextEditor.fonts.compat.warnOther",
-        "{{count}} fonts missing some letters or numbers - typing those uses a standard fallback font.",
+        "{{count}} fonts are missing some letters or numbers. Those characters use a standard fallback font.",
         { count: withGaps.length },
       ),
     },

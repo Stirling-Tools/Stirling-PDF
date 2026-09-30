@@ -68,7 +68,7 @@ export const useSplitSettingsTips = (
           title: t("split.tooltip.bySize.title", "Split by File Size"),
           description: t(
             "split.tooltip.bySize.text",
-            "Create multiple PDFs that don't exceed a specified file size. Ideal for file size limitations or email attachments.",
+            "Create multiple PDFs that each stay under a set file size, for example to fit email attachment limits.",
           ),
           bullets: [
             t(
@@ -97,7 +97,7 @@ export const useSplitSettingsTips = (
           title: t("split.tooltip.byPageCount.title", "Split by Page Count"),
           description: t(
             "split.tooltip.byPageCount.text",
-            "Create multiple PDFs with a specific number of pages each. Perfect for creating uniform document chunks.",
+            "Create multiple PDFs with a set number of pages each.",
           ),
           bullets: [
             t(
@@ -187,7 +187,7 @@ export const useSplitSettingsTips = (
           ),
           description: t(
             "split.tooltip.byPageDivider.text",
-            "Automatically split scanned documents using physical divider sheets with QR codes. Perfect for processing multiple documents scanned together.",
+            "Split a batch of scanned documents using QR code divider sheets placed between them.",
           ),
           bullets: [
             t(
@@ -204,7 +204,7 @@ export const useSplitSettingsTips = (
             ),
             t(
               "split.tooltip.byPageDivider.bullet4",
-              "Upload - divider pages are automatically detected and removed",
+              "Upload the scan. Divider pages are detected and removed automatically.",
             ),
             t(
               "split.tooltip.byPageDivider.bullet5",
@@ -224,7 +224,7 @@ export const useSplitSettingsTips = (
           title: t("split.tooltip.byPoster.title", "Split for Poster Print"),
           description: t(
             "split.tooltip.byPoster.text",
-            "Split large PDF pages into smaller printable chunks suitable for standard paper sizes. Perfect for creating poster prints from oversized pages.",
+            "Split large pages into pieces that fit standard paper, so you can print them as a poster.",
           ),
           bullets: [
             t(

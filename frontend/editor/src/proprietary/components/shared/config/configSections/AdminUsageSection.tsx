@@ -290,7 +290,7 @@ const AdminUsageSection: React.FC = () => {
             <Text size="sm">
               {t(
                 "usage.usageAnalyticsExplanation",
-                "Usage analytics track endpoint requests and tool usage patterns. Combined with the Audit Logging dashboard, you get complete visibility into system activity, performance, and security events.",
+                "Usage analytics track endpoint requests and tool usage. Use them with the Audit Logging dashboard to see system activity and security events.",
               )}
             </Text>
             <Group gap="sm">

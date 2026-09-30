@@ -13,7 +13,7 @@ export const useScannerImageSplitTips = (): TooltipContent => {
         title: t("scannerImageSplit.tooltip.whatThisDoes", "What this does"),
         description: t(
           "scannerImageSplit.tooltip.whatThisDoesDesc",
-          "Automatically finds and extracts each photo from a scanned page or composite image—no manual cropping.",
+          "Finds and extracts each photo from a scanned page or composite image, with no manual cropping.",
         ),
       },
       {
@@ -75,7 +75,7 @@ export const useScannerImageSplitTips = (): TooltipContent => {
         title: t("scannerImageSplit.tooltip.headsUp", "Heads-up"),
         description: t(
           "scannerImageSplit.tooltip.headsUpDesc",
-          "Overlapping photos or backgrounds very close in colour to the photos can reduce accuracy—try a lighter or darker background and leave more space.",
+          "Overlapping photos, or a background close in color to the photos, can reduce accuracy. Try a lighter or darker background and leave more space.",
         ),
       },
     ],

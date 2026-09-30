@@ -403,7 +403,7 @@ export default function BookmarkEditor({
           <Text size="sm" c="dimmed">
             {t(
               "editTableOfContents.editor.description",
-              "Add, nest, and reorder bookmarks to craft your PDF outline.",
+              "Add, nest, and reorder bookmarks to build your PDF outline.",
             )}
           </Text>
         </div>

@@ -20,7 +20,7 @@ const WelcomeSlideBody = () => (
     <Trans
       i18nKey="onboarding.welcomeSlide.body"
       components={{ strong: <strong /> }}
-      defaults="Stirling PDF is now ready for teams of all sizes. This update includes a new layout, powerful new admin capabilities, and our most requested feature - <strong>Edit Text</strong>."
+      defaults="This update adds a new layout, new admin tools and our most requested feature, <strong>Edit Text</strong>."
     />
   </span>
 );

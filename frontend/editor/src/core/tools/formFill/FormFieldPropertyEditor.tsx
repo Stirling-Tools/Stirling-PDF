@@ -170,7 +170,7 @@ export function FormFieldPropertyEditor({
           <Text size="xs">
             {t(
               "formFill.editor.signatureNote",
-              "Placeholder only - you don't sign here. It marks where a signature belongs so a PDF signer (Adobe Acrobat, a signing service, etc.) places the signature in this spot when the document is signed.",
+              "Placeholder only. You don't sign here; it marks where a PDF signer (Adobe Acrobat, a signing service, etc.) places the signature when the document is signed.",
             )}
           </Text>
         </Alert>

@@ -253,7 +253,7 @@ const BookletImpositionSettings = ({
                     {!parameters.doubleSided
                       ? t(
                           "bookletImposition.flipOnShortEdge.manualNote",
-                          "Not needed in manual mode - you flip the stack yourself",
+                          "Not needed in manual mode, where you flip the stack yourself",
                         )
                       : t(
                           "bookletImposition.flipOnShortEdge.tooltip",

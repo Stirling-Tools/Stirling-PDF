@@ -23,7 +23,7 @@ export function createCloudPlanNavItem(t: Translate): ConfigNavItem {
     label: t("config.plan", "Plan"),
     description: t(
       "config.planDescription",
-      "Your plan, credits and spend limit, and the invoices behind them.",
+      "Your plan, credits, spend limit and invoices.",
     ),
     icon: "credit-card",
     component: <Plan />,
@@ -43,7 +43,7 @@ export function createCloudTeamNavItem(t: Translate): ConfigNavItem {
     label: t("portal.nav.users", "Users"),
     description: t(
       "config.teamDescription",
-      "Who shares this workspace, and invitations still waiting on an answer.",
+      "Workspace members and pending invitations.",
     ),
     icon: "users",
     component: <TeamSection />,

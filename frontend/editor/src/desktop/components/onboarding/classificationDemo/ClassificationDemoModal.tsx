@@ -92,7 +92,7 @@ export function ClassificationDemoModal({
         ),
         body: t(
           "classificationDemo.defaultApp.body",
-          "Make Stirling your default PDF app. Every PDF you open, from email, your browser, or your desktop, lands here, ready to read or edit. You can change this any time in Settings.",
+          "Make Stirling your default PDF app so PDFs you open anywhere open here. You can change this any time in Settings.",
         ),
         buttons: [
           {

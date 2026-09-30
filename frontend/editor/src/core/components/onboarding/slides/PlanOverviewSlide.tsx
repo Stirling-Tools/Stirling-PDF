@@ -50,7 +50,7 @@ const UserOverviewBody: React.FC = () => {
     <span>
       {t(
         "onboarding.planOverview.userBody",
-        "Invite teammates, assign roles, and keep your documents organized in one secure workspace. Enable login mode whenever you're ready to grow beyond solo use.",
+        "Invite teammates, assign roles and share documents in one workspace. Enable login mode to add more users.",
       )}
     </span>
   );

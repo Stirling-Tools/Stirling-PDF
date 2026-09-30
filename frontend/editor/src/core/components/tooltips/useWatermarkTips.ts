@@ -85,7 +85,7 @@ export const useWatermarkTypeTips = (): TooltipContent => {
         title: t("watermark.tooltip.type.text.title", "Text Watermarks"),
         description: t(
           "watermark.tooltip.type.text.text",
-          "Perfect for adding copyright notices, company names, or confidentiality labels. Supports multiple languages and custom colors.",
+          "Add copyright notices, company names, or confidentiality labels. Supports multiple languages and custom colors.",
         ),
         bullets: [
           t(
@@ -106,7 +106,7 @@ export const useWatermarkTypeTips = (): TooltipContent => {
         title: t("watermark.tooltip.type.image.title", "Image Watermarks"),
         description: t(
           "watermark.tooltip.type.image.text",
-          "Use logos, stamps, or any image as a watermark. Great for branding and visual identification.",
+          "Use a logo, stamp, or any image as a watermark.",
         ),
         bullets: [
           t("watermark.tooltip.type.image.bullet1", "Upload any image format"),

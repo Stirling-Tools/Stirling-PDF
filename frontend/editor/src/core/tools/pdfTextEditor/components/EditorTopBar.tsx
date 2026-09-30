@@ -167,7 +167,7 @@ export function EditorTopBar({
               <Tooltip
                 label={t(
                   "pdfTextEditor.toolbar.addTextTooltip",
-                  "Add a text box - then click the page",
+                  "Add a text box, then click the page",
                 )}
               >
                 <Button
