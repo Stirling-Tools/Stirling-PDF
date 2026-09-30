@@ -24,7 +24,7 @@ ext {
     springBootVersion = "4.1.1"
     pdfboxVersion = "3.0.8"
     imageioVersion = "3.15.2"
-    lombokVersion = "1.18.46"
+    lombokVersion = "1.18.48"
     bouncycastleVersion = "1.85"
     springSecuritySamlVersion = "7.1.0"
     openSamlVersion = "5.2.1"
