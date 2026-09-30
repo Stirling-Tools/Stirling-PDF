@@ -121,7 +121,7 @@ springBoot {
 
 allprojects {
     group = 'stirling.software'
-    version = '3.0.1'
+    version = '3.0.2'
 
     configurations.configureEach {
         exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
@@ -638,9 +638,9 @@ sonar {
         property "sonar.projectKey", "Stirling-Tools_Stirling-PDF"
         property "sonar.organization", "stirling-tools"
 
-        property "sonar.exclusions", "**/build-wrapper-dump.json, **/src/main/java/org/apache/**, **/src/main/resources/static/pdfjs/**, **/src/main/resources/static/pdfjs-legacy/**, **/src/main/resources/static/js/thirdParty/**"
-        property "sonar.coverage.exclusions", "**/src/main/java/org/apache/**, **/src/main/resources/static/pdfjs/**, **/src/main/resources/static/pdfjs-legacy/**, **/src/main/resources/static/js/thirdParty/**"
-        property "sonar.cpd.exclusions", "**/src/main/java/org/apache/**, **/src/main/resources/static/pdfjs/**, **/src/main/resources/static/pdfjs-legacy/**, **/src/main/resources/static/js/thirdParty/**"
+        property "sonar.exclusions", "**/build-wrapper-dump.json, **/src/main/java/org/apache/**, **/src/main/resources/static/pdfjs/**, **/src/main/resources/static/js/thirdParty/**"
+        property "sonar.coverage.exclusions", "**/src/main/java/org/apache/**, **/src/main/resources/static/pdfjs/**, **/src/main/resources/static/js/thirdParty/**"
+        property "sonar.cpd.exclusions", "**/src/main/java/org/apache/**, **/src/main/resources/static/pdfjs/**, **/src/main/resources/static/js/thirdParty/**"
     }
 }
 
