@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { Alert, Center, Loader, Select, Stack, TextInput } from "@mantine/core";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { Alert, Center, Loader, Select, TextInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
 import { Icon } from "@app/ui/Icon";
@@ -11,7 +11,7 @@ import { useSigningSessionController } from "@app/hooks/signing/useSigningSessio
 import { useAllFiles } from "@app/contexts/FileContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useNavigationGuard } from "@app/contexts/NavigationContext";
-import { useFileHandler } from "@app/hooks/useFileHandler";
+import { SigningDocumentPicker } from "@app/components/shared/signing/SigningDocumentPicker";
 import { useSigningOverlay } from "@app/contexts/SigningOverlayContext";
 import { CreateSessionFlow } from "@app/components/shared/signing/CreateSessionFlow";
 import { SessionDetailPanel } from "@app/components/tools/certSign/panels/SessionDetailPanel";
@@ -42,7 +42,6 @@ export default function SigningWorkspace() {
   const { overlay } = useSigningOverlay();
   const { files } = useAllFiles();
   const { activeFileIndex } = useViewer();
-  const { addFiles } = useFileHandler();
   const pdfs = files.filter((file) => file.name.toLowerCase().endsWith(".pdf"));
   const [documentId, setDocumentId] = useState<string | null>(
     files[activeFileIndex]?.fileId ?? null,
@@ -50,7 +49,6 @@ export default function SigningWorkspace() {
   const document =
     pdfs.find((file) => file.fileId === documentId) ??
     (pdfs.length === 1 ? pdfs[0] : null);
-  const uploadRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
@@ -153,7 +151,7 @@ export default function SigningWorkspace() {
               shape="pill"
               size="sm"
               aria-current={currentLocation ? undefined : "page"}
-              disabled={controller.creating || opening}
+              disabled={controller.creating || uploading || opening}
               onClick={() =>
                 requestNavigation(() => {
                   controller.backToList();
@@ -246,65 +244,20 @@ export default function SigningWorkspace() {
           )}
           {showCreate ? (
             <div className="signing-workspace__create">
-              <Stack className="signing-workspace__document-picker" gap="sm">
-                <Select
-                  label={t("signWorkspace.document", "Document")}
-                  placeholder={t(
-                    "signWorkspace.chooseDocument",
-                    "Choose an open PDF",
-                  )}
-                  data={pdfs.map((file) => ({
-                    value: file.fileId,
-                    label: file.name,
-                  }))}
-                  value={document?.fileId ?? null}
-                  onChange={setDocumentId}
-                  disabled={controller.creating || uploading}
-                  searchable
-                />
-                <input
-                  ref={uploadRef}
-                  type="file"
-                  accept="application/pdf,.pdf"
-                  hidden
-                  onChange={(event) => {
-                    const file = event.currentTarget.files?.[0];
-                    event.currentTarget.value = "";
-                    if (!file) return;
-                    setUploading(true);
-                    setError(null);
-                    void addFiles([file])
-                      .then((added) => {
-                        if (added[0]) setDocumentId(added[0].fileId);
-                      })
-                      .catch(() =>
-                        setError(
-                          t(
-                            "signWorkspace.uploadFailed",
-                            "Could not open this PDF. Please try again.",
-                          ),
-                        ),
-                      )
-                      .finally(() => setUploading(false));
-                  }}
-                />
-                <Button
-                  variant="secondary"
-                  loading={uploading}
-                  disabled={controller.creating}
-                  leftSection={<Icon name="file-up" size={18} />}
-                  onClick={() => uploadRef.current?.click()}
-                >
-                  {t("signWorkspace.upload", "Upload a PDF")}
-                </Button>
-              </Stack>
+              <SigningDocumentPicker
+                value={document?.fileId ?? null}
+                onChange={setDocumentId}
+                disabled={controller.creating}
+                loading={uploading}
+                onLoadingChange={setUploading}
+              />
               <CreateSessionFlow
                 selectedFiles={document ? [document] : []}
                 selectedUserIds={selectedUserIds}
                 onSelectedUserIdsChange={setSelectedUserIds}
                 dueDate={dueDate}
                 onDueDateChange={setDueDate}
-                creating={controller.creating}
+                creating={controller.creating || uploading}
                 onSubmit={(settings) => {
                   if (!document) return;
                   void controller

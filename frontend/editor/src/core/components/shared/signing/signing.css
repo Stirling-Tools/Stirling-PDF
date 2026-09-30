@@ -205,6 +205,95 @@
   margin-bottom: 24px;
   border-bottom: 1px solid var(--c-border);
 }
+.signing-document-picker__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.signing-document-picker__heading h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+.signing-document-picker__files {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.signing-document-picker__files legend,
+.signing-document-picker__empty {
+  margin: 0 0 12px;
+  padding: 0;
+  font-size: 12px;
+  color: var(--c-text-muted);
+}
+.signing-document-picker__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+  gap: 12px;
+  max-height: 360px;
+  overflow-y: auto;
+  padding: 3px;
+}
+.signing-document-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  cursor: pointer;
+}
+.signing-document-card:hover {
+  background: var(--c-hover);
+}
+.signing-document-card[data-selected="true"] {
+  border-color: var(--c-primary);
+  background: var(--c-primary-subtle);
+}
+.signing-document-card:focus-within {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 1px;
+}
+.signing-document-card:has(input:disabled) {
+  opacity: 0.6;
+  cursor: default;
+}
+.signing-document-card input {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  z-index: 2;
+  accent-color: var(--c-primary);
+}
+.signing-document-card__preview {
+  height: 180px;
+  aspect-ratio: auto;
+  max-width: 180px;
+  pointer-events: none;
+}
+.signing-document-card__name {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  width: 100%;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
+  text-align: center;
+}
 @media (max-width: 800px) {
   .signing-workspace__header {
     padding: 8px 12px;

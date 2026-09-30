@@ -18,7 +18,7 @@ The official feature remains alpha. The tested setup uses ordinary registered ac
 
 ## Owner: create and complete a request
 
-1. Open one PDF. Click **Sign** in the permanent navigation rail, then **Request signatures**. The current PDF is carried into the form. Choose an open PDF in the form or use **Upload a PDF** if none is loaded. The form remains open after uploading.
+1. Click **Sign** in the permanent navigation rail, then **Request signatures**. The current PDF is selected automatically. Click a thumbnail to choose another open PDF, or **Choose from library** to open the library picker. Select one PDF there, or use **From your computer** to add one, then **Add 1 file**. The form stays open with that PDF selected.
 2. Choose the named participants. Their names stay visible in the picker beside the document and optional due date. Expand **Appearance and summary page (optional)** only when needed, then **Send signing request**.
 3. Tell participants to open **Sign > Expand signing sessions** on the same server. Sending a request creates the session; it does not establish that an email was delivered. All participants may sign in any order. The due date is advisory.
 4. Open your session to review individual statuses and the signature count. Use **Created by me**, **Needs your signature** or **Overdue**, and search by document or owner. Session names and statuses are shown in the full workbench. A submitted signature stays in Active until the owner finalizes.
