@@ -1,0 +1,90 @@
+name: Stale PR triage
+
+# Warns, then closes, PRs that have been waiting on their author for too long.
+# Dry run unless the STALE_PR_BOT_LIVE repository variable is "true"; unsetting it
+# is the kill switch. The rules live in .github/scripts/stale-prs.mjs.
+
+on:
+  schedule:
+    - cron: "40 7 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Report what would happen without changing any PR"
+        type: boolean
+        default: true
+  pull_request:
+    paths:
+      - ".github/workflows/stale-prs.yml"
+      - ".github/scripts/stale-prs*.mjs"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stale-prs-${{ github.event_name == 'pull_request' && github.event.pull_request.number || 'triage' }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    name: Test the triage rules
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: read
+      pull-requests: read
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - name: Check out the repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22"
+
+      - name: Run unit tests
+        run: node --test .github/scripts/stale-prs.test.mjs
+
+      - name: Dry run against open PRs
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const { default: triage } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/stale-prs.mjs`);
+            await triage({ github, context, core, live: false });
+
+  triage:
+    name: Warn and close stale PRs
+    if: github.event_name != 'pull_request' && vars.CI_PROFILE != 'lite'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # actions/checkout
+      issues: write # comment on PRs and add/remove the Stale PR label
+      pull-requests: write # close PRs
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - name: Check out the repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Triage open PRs
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          LIVE: ${{ vars.STALE_PR_BOT_LIVE == 'true' && !(github.event_name == 'workflow_dispatch' && inputs.dry_run) }}
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const { default: triage } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/stale-prs.mjs`);
+            await triage({ github, context, core, live: process.env.LIVE === "true" });
