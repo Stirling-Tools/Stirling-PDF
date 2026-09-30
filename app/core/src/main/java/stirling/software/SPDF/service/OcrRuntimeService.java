@@ -10,6 +10,7 @@ import java.net.UnknownHostException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.file.FileSystemNotFoundException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -508,9 +509,12 @@ public class OcrRuntimeService {
             return;
         }
         URI catalogue = validatedUri(manifestUrl());
+        Path catalogueRoot = rootOf(catalogue);
         boolean sameMirror =
                 "file".equalsIgnoreCase(catalogue.getScheme())
-                        && Objects.equals(authorityOf(catalogue), authorityOf(artefact));
+                        && Objects.equals(authorityOf(catalogue), authorityOf(artefact))
+                        && catalogueRoot != null
+                        && catalogueRoot.equals(rootOf(artefact));
         if (!sameMirror) {
             throw new IOException(
                     "Only a catalogue that is itself a local file may name local files, and only on"
@@ -521,6 +525,15 @@ public class OcrRuntimeService {
 
     private static String authorityOf(URI uri) {
         return uri.getAuthority() == null ? null : uri.getAuthority().toLowerCase(Locale.ROOT);
+    }
+
+    /** The drive or share a {@code file:} address sits on; a local address has no authority. */
+    private static Path rootOf(URI uri) {
+        try {
+            return Path.of(uri).getRoot();
+        } catch (IllegalArgumentException | FileSystemNotFoundException e) {
+            return null;
+        }
     }
 
     /**

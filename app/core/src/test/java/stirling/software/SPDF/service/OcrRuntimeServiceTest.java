@@ -18,6 +18,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 import com.sun.net.httpserver.HttpServer;
@@ -214,6 +216,28 @@ class OcrRuntimeServiceTest {
 
             assertThrows(IOException.class, () -> remote.download(artifact, target, "engine"));
             assertFalse(Files.exists(target));
+        }
+
+        /** Drive letters exist on Windows only; elsewhere every local path shares one root. */
+        @Test
+        @EnabledOnOs(OS.WINDOWS)
+        @DisplayName("a catalogue on one drive may not name a file on another")
+        void aLocalCatalogueMayNotNameAnotherDrive() {
+            String drive = tmp.getRoot().toString().substring(0, 1).toUpperCase();
+            String other = "Q".equals(drive) ? "R" : "Q";
+            OcrArtifact artifact =
+                    new OcrArtifact(
+                            "file:///" + other + ":/mirror/eng.traineddata",
+                            11,
+                            "0".repeat(64),
+                            null,
+                            "eng");
+
+            IOException e =
+                    assertThrows(
+                            IOException.class,
+                            () -> service.download(artifact, tmp.resolve("out.bin"), "eng"));
+            assertTrue(e.getMessage().startsWith("Only a catalogue"), e.getMessage());
         }
 
         @Test
