@@ -23,6 +23,7 @@ import {
   RedactParameters,
 } from "@app/hooks/tools/redact/useRedactParameters";
 import { MARKUP_ANNOTATION_COLORS } from "@app/components/viewer/annotationDefaults";
+import { useAnimationFrameCallback } from "@app/hooks/useAnimationFrameCallback";
 import { alert } from "@app/components/toast";
 import { getExternalHref } from "@app/utils/externalUrl";
 import "@app/components/viewer/TextSelectionMenu.css";
@@ -94,28 +95,37 @@ function TextSelectionMenuInner({
 
   const showAbove = placement?.suggestTop ?? true;
 
+  const update = useCallback(() => {
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return;
+    const r = wrapper.getBoundingClientRect();
+    const top = showAbove ? r.top - 8 : r.bottom + 8;
+    const left = r.left + r.width / 2;
+    // An unchanged position keeps the previous object so React can skip the
+    // render rather than rebuilding this menu's controls on every scroll event.
+    setPosition((prev) =>
+      prev && prev.top === top && prev.left === left ? prev : { top, left },
+    );
+  }, [showAbove]);
+
+  const scheduleUpdate = useAnimationFrameCallback(update);
+
   useEffect(() => {
     if (!selected || !wrapperRef.current) {
       setPosition(null);
       return;
     }
-    const update = () => {
-      const wrapper = wrapperRef.current;
-      if (!wrapper) return;
-      const r = wrapper.getBoundingClientRect();
-      setPosition({
-        top: showAbove ? r.top - 8 : r.bottom + 8,
-        left: r.left + r.width / 2,
-      });
-    };
     update();
-    window.addEventListener("scroll", update, true);
-    window.addEventListener("resize", update);
+    window.addEventListener("scroll", scheduleUpdate, {
+      capture: true,
+      passive: true,
+    });
+    window.addEventListener("resize", scheduleUpdate);
     return () => {
-      window.removeEventListener("scroll", update, true);
-      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", scheduleUpdate, true);
+      window.removeEventListener("resize", scheduleUpdate);
     };
-  }, [selected, showAbove]);
+  }, [selected, update, scheduleUpdate]);
 
   const handleCopy = useCallback(() => {
     if (documentId) {

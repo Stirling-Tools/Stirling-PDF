@@ -27,6 +27,10 @@ export const BASE_PATH = getBasePath();
 export const ANNOTATION_RECREATION_DELAY_MS = 50;
 export const ANNOTATION_VERIFICATION_DELAY_MS = 100;
 
+// Every stamp SignatureAPIBridge places carries this author. An Image Stamp the
+// user adds is a STAMP too, so the author is the only thing telling them apart.
+export const SIGNATURE_ANNOTATION_AUTHOR = "Digital Signature";
+
 /** For in-app navigations when you must touch window.location (rare). */
 export const withBasePath = (path: string): string => {
   const clean = path.startsWith("/") ? path : `/${path}`;

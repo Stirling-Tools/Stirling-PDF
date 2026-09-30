@@ -9,6 +9,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { Icon } from "@app/ui/Icon";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
+import { useAnimationFrameCallback } from "@app/hooks/useAnimationFrameCallback";
 import "@app/components/viewer/TextSelectionMenu.css";
 
 export type { RedactionSelectionMenuProps };
@@ -62,9 +63,9 @@ function RedactionSelectionMenuInner({
     }
   }, [provides, item, pageIndex]);
 
-  // Applying a mark is permanent, so it also saves: every pending mark is
-  // committed first (a pending mark would otherwise ride into the exported file
-  // as a stale annotation), then the viewer exports and replaces the file.
+  // Applying a mark is permanent, so it also saves. This sits next to a
+  // single-mark "Remove", which is why the label and warning name the wider
+  // scope: commitAllPending touches every mark, not just the selected one.
   const handleApply = useCallback(async () => {
     const task = provides?.commitAllPending?.();
     if (task && typeof task.toPromise === "function") {
@@ -74,40 +75,46 @@ function RedactionSelectionMenuInner({
   }, [provides, applyChanges]);
 
   // Calculate position for portal based on wrapper element
+  const updatePosition = useCallback(() => {
+    const wrapper = wrapperRef.current;
+    if (!wrapper) {
+      setMenuPosition(null);
+      return;
+    }
+
+    const wrapperRect = wrapper.getBoundingClientRect();
+    // Position menu below the wrapper, centered
+    // Use getBoundingClientRect which gives viewport-relative coordinates
+    // Since we're using fixed positioning in the portal, we don't need to add scroll offsets
+    const top = wrapperRect.bottom + 8;
+    const left = wrapperRect.left + wrapperRect.width / 2;
+    setMenuPosition((prev) =>
+      prev && prev.top === top && prev.left === left ? prev : { top, left },
+    );
+  }, []);
+
+  const scheduleUpdatePosition = useAnimationFrameCallback(updatePosition);
+
   useEffect(() => {
     if (!selected || !isRedaction || !item || !wrapperRef.current) {
       setMenuPosition(null);
       return;
     }
 
-    const updatePosition = () => {
-      const wrapper = wrapperRef.current;
-      if (!wrapper) {
-        setMenuPosition(null);
-        return;
-      }
-
-      const wrapperRect = wrapper.getBoundingClientRect();
-      // Position menu below the wrapper, centered
-      // Use getBoundingClientRect which gives viewport-relative coordinates
-      // Since we're using fixed positioning in the portal, we don't need to add scroll offsets
-      setMenuPosition({
-        top: wrapperRect.bottom + 8,
-        left: wrapperRect.left + wrapperRect.width / 2,
-      });
-    };
-
     updatePosition();
 
     // Update position on scroll/resize
-    window.addEventListener("scroll", updatePosition, true);
-    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", scheduleUpdatePosition, {
+      capture: true,
+      passive: true,
+    });
+    window.addEventListener("resize", scheduleUpdatePosition);
 
     return () => {
-      window.removeEventListener("scroll", updatePosition, true);
-      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", scheduleUpdatePosition, true);
+      window.removeEventListener("resize", scheduleUpdatePosition);
     };
-  }, [selected, item]);
+  }, [selected, item, updatePosition, scheduleUpdatePosition]);
 
   // Early return AFTER all hooks have been called
   if (!selected || !isRedaction || !item) return null;
@@ -143,8 +150,8 @@ function RedactionSelectionMenuInner({
 
       <Tooltip
         label={t(
-          "redact.manual.applyWarning",
-          "⚠️ Permanent application, cannot be undone and the data underneath will be deleted",
+          "viewer.redaction.applyAllPendingWarning",
+          "⚠️ Applies and saves every pending mark. Permanent, cannot be undone, and the data underneath will be deleted",
         )}
         withArrow
         position="top"
@@ -155,7 +162,9 @@ function RedactionSelectionMenuInner({
           onClick={() => void handleApply()}
         >
           <Icon name="circle-check" size={16} />
-          <span>{t("redact.manual.apply", "Apply")}</span>
+          <span>
+            {t("viewer.redaction.applyAllPending", "Apply All Redactions")}
+          </span>
         </button>
       </Tooltip>
     </div>

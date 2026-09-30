@@ -13,7 +13,7 @@ interface ManualRedactionControlsProps {
 
 /**
  * ManualRedactionControls provides UI for manual PDF redaction in the tool panel.
- * Marking queues redactions; the single Apply action commits them and saves the
+ * Marking queues redactions; the single action commits them and saves the
  * document, so an applied redaction is never left dirty in memory.
  */
 export default function ManualRedactionControls({
@@ -27,6 +27,7 @@ export default function ManualRedactionControls({
     commitAllPending,
     setActiveType,
     setManualRedactColor,
+    redactionsApplied,
   } = useRedaction();
   const {
     pendingCount,
@@ -44,7 +45,8 @@ export default function ManualRedactionControls({
   const { signatureApiRef } = useSignature();
 
   // Check if user is navigating away (modal shown) — don't fight the save/leave process
-  const { showNavigationWarning } = useNavigationGuard();
+  const { showNavigationWarning, hasUnsavedChanges: navHasUnsavedChanges } =
+    useNavigationGuard();
 
   const isLeavingRef = useRef(false);
   const prevFileIndexRef = useRef(activeFileIndex);
@@ -127,6 +129,16 @@ export default function ManualRedactionControls({
     }
   }, [applyChanges, commitAllPending]);
 
+  // pendingCount drops to zero the moment the commit lands, so gating on it
+  // alone would unmount this button before a failed export could be retried.
+  // redactionsApplied stays set until a save succeeds.
+  const hasUnsavedChanges =
+    pendingCount > 0 || redactionsApplied || navHasUnsavedChanges;
+  const applyLabel =
+    pendingCount > 0
+      ? `${t("viewer.redaction.applyAll", "Apply Redactions")} (${pendingCount})`
+      : t("annotation.saveChanges", "Save Changes");
+
   const isApiReady = isBridgeReady;
 
   return (
@@ -154,7 +166,7 @@ export default function ManualRedactionControls({
           popoverProps={{ withinPortal: true }}
         />
 
-        {pendingCount > 0 && (
+        {hasUnsavedChanges && (
           <Button
             fullWidth
             size="md"
@@ -162,8 +174,7 @@ export default function ManualRedactionControls({
             loading={isApplying}
             onClick={handleApplyRedactions}
           >
-            {t("viewer.redaction.applyAll", "Apply Redactions")} ({pendingCount}
-            )
+            {applyLabel}
           </Button>
         )}
       </Stack>

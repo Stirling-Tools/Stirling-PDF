@@ -14,6 +14,7 @@ import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId"
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useAnnotationMenuHandlers } from "@app/components/viewer/useAnnotationMenuHandlers";
 import { AnnotationTypeButtons } from "@app/components/viewer/AnnotationTypeButtons";
+import { useAnimationFrameCallback } from "@app/hooks/useAnimationFrameCallback";
 import "@app/components/viewer/TextSelectionMenu.css";
 
 /**
@@ -171,6 +172,25 @@ function AnnotationSelectionMenuInner({
   );
 
   // Track menu position via MutationObserver (handles drag repositioning)
+  const updatePosition = useCallback(() => {
+    const wrapper = wrapperRef.current;
+    if (!wrapper) {
+      setMenuPosition(null);
+      return;
+    }
+    const rect = wrapper.getBoundingClientRect();
+    const top = rect.bottom + 8;
+    const left = rect.left + rect.width / 2;
+    // Keeping the previous object when nothing moved lets React skip the
+    // render, which is what keeps an open colour picker from rebuilding.
+    setMenuPosition((prev) =>
+      prev && prev.top === top && prev.left === left ? prev : { top, left },
+    );
+    updateAnchor({ top, left });
+  }, [updateAnchor]);
+
+  const scheduleUpdatePosition = useAnimationFrameCallback(updatePosition);
+
   useEffect(() => {
     if (!selected || !annotation || !wrapperRef.current) {
       setMenuPosition(null);
@@ -178,37 +198,31 @@ function AnnotationSelectionMenuInner({
       return;
     }
 
-    const updatePosition = () => {
-      const wrapper = wrapperRef.current;
-      if (!wrapper) {
-        setMenuPosition(null);
-        return;
-      }
-      const rect = wrapper.getBoundingClientRect();
-      const position = {
-        top: rect.bottom + 8,
-        left: rect.left + rect.width / 2,
-      };
-      setMenuPosition(position);
-      updateAnchor(position);
-    };
-
     updatePosition();
 
-    const observer = new MutationObserver(updatePosition);
+    const observer = new MutationObserver(scheduleUpdatePosition);
     observer.observe(wrapperRef.current, {
       attributes: true,
       attributeFilter: ["style"],
     });
-    window.addEventListener("scroll", updatePosition, true);
-    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", scheduleUpdatePosition, {
+      capture: true,
+      passive: true,
+    });
+    window.addEventListener("resize", scheduleUpdatePosition);
 
     return () => {
       observer.disconnect();
-      window.removeEventListener("scroll", updatePosition, true);
-      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", scheduleUpdatePosition, true);
+      window.removeEventListener("resize", scheduleUpdatePosition);
     };
-  }, [selected, updateAnchor]);
+  }, [
+    selected,
+    annotation,
+    updateAnchor,
+    updatePosition,
+    scheduleUpdatePosition,
+  ]);
 
   if (!selected || !annotation) return null;
 

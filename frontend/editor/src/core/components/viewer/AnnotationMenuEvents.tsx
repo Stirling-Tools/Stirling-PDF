@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useAnnotationCapability } from "@embedpdf/plugin-annotation/react";
-import { PdfAnnotationSubtype } from "@embedpdf/models";
 import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
+import { surfacesAnnotationSaveUi } from "@app/components/viewer/annotationSaveSurface";
 import type { AnnotationMenuAnchor } from "@app/components/viewer/viewerTypes";
 
 interface AnnotationMenuEventsProps {
@@ -30,11 +30,7 @@ export function AnnotationMenuEvents({
       if (event.type === "loaded") return;
       if (!event.committed) return;
 
-      const type = event.annotation?.type;
-      if (
-        type !== PdfAnnotationSubtype.REDACT &&
-        type !== PdfAnnotationSubtype.STAMP
-      ) {
+      if (surfacesAnnotationSaveUi(event.annotation)) {
         onEditCommitted?.();
       }
 
