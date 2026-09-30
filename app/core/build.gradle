@@ -138,7 +138,6 @@ bootJar {
     exclude 'META-INF/*.EC'
 
     // Exclude source maps from production JAR, dev-only debugging artifacts, not needed at runtime
-    exclude 'static/pdfjs-legacy/**/*.map'
     exclude 'static/**/*.map'
 
     manifest {
