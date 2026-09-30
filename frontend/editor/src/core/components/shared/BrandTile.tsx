@@ -1,4 +1,4 @@
-import BrandTileDrawing from "@app/assets/brand/mark/brand-tile.svg?react";
+import { Icon } from "@app/ui/Icon";
 
 interface BrandTileProps {
   /** CSS length. Omit to let the caller's CSS size it. */
@@ -8,11 +8,5 @@ interface BrandTileProps {
 
 /** The mark in a rounded square. Decorative: call sites carry the accessible name. */
 export function BrandTile({ size, className }: BrandTileProps) {
-  return (
-    <BrandTileDrawing
-      className={className}
-      style={size ? { width: size, height: size } : undefined}
-      aria-hidden
-    />
-  );
+  return <Icon name="stirling-tile" size={size} className={className} />;
 }

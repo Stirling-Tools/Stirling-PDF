@@ -1,6 +1,6 @@
-import ThinkingMark from "@app/assets/brand/mark/brand-mark-thinking.svg?react";
+import { Icon } from "@app/ui/Icon";
 import "@app/components/chat/ChatPanel.css";
 
 export function StirlingLogoAnimated({ size = 20 }: { size?: number }) {
-  return <ThinkingMark width={size} height={size} aria-hidden="true" />;
+  return <Icon name="stirling-mark-thinking" size={size} />;
 }

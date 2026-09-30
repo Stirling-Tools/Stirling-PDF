@@ -2,7 +2,7 @@ import { oauthProviders } from "@app/constants/authProviders";
 import { useTranslation } from "@app/hooks/useTranslation";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { Button } from "@app/ui/Button";
-import { oauthIconUrl } from "@app/auth/ui/oauthIcons";
+import { ProviderMark } from "@app/auth/ui/ProviderMark";
 
 // Exports for compatibility with proprietary code
 export const DEBUG_SHOW_ALL_PROVIDERS = false;
@@ -46,9 +46,9 @@ export default function OAuthButtons({
               className="oauth-button-icon"
               aria-label={`${t("login.signInWith", "Sign in with")} ${p.label}`}
             >
-              <img
-                src={oauthIconUrl(p.file)}
-                alt={p.label}
+              <ProviderMark
+                file={p.file}
+                label={p.label}
                 className={`oauth-icon-small oauth-icon--${p.id} ${p.isDisabled ? "opacity-20" : ""}`}
               />
             </Button>
@@ -74,9 +74,9 @@ export default function OAuthButtons({
               className="oauth-button-grid"
               aria-label={`${t("login.signInWith", "Sign in with")} ${p.label}`}
             >
-              <img
-                src={oauthIconUrl(p.file)}
-                alt={p.label}
+              <ProviderMark
+                file={p.file}
+                label={p.label}
                 className={`oauth-icon-medium oauth-icon--${p.id} ${p.isDisabled ? "opacity-20" : ""}`}
               />
             </Button>
@@ -99,9 +99,9 @@ export default function OAuthButtons({
             title={p.label}
           >
             <span className="oauth-btn-group">
-              <img
-                src={oauthIconUrl(p.file)}
-                alt={p.label}
+              <ProviderMark
+                file={p.file}
+                label={p.label}
                 className={`oauth-icon-medium oauth-icon--${p.id} ${p.isDisabled ? "opacity-20" : ""}`}
                 style={{ marginRight: "0.5rem", flexShrink: 0 }}
               />
@@ -127,9 +127,9 @@ export default function OAuthButtons({
           className="oauth-button-vertical"
           title={p.label}
         >
-          <img
-            src={oauthIconUrl(p.file)}
-            alt={p.label}
+          <ProviderMark
+            file={p.file}
+            label={p.label}
             className={`oauth-icon-tiny oauth-icon--${p.id} ${p.isDisabled ? "opacity-20" : ""}`}
           />
           {p.label}

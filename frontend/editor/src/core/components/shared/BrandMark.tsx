@@ -1,4 +1,4 @@
-import BrandMarkDrawing from "@app/assets/brand/mark/brand-mark.svg?react";
+import { Icon } from "@app/ui/Icon";
 import "@app/components/shared/BrandMark.css";
 
 interface BrandMarkProps {
@@ -17,11 +17,11 @@ interface BrandMarkProps {
  */
 export function BrandMark({ height = "1.6rem", className }: BrandMarkProps) {
   return (
-    <BrandMarkDrawing
+    <Icon
+      name="stirling-mark"
+      size={height}
       className={`sui-brandmark${className ? ` ${className}` : ""}`}
-      style={{ height }}
-      role="img"
-      aria-label="Stirling"
+      title="Stirling"
     />
   );
 }
