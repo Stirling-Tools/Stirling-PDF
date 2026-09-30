@@ -1,9 +1,12 @@
-import { Tooltip, Popover, Stack, Text } from "@mantine/core";
+import { Tooltip, Popover, Stack, Text, Group } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { Icon } from "@app/ui/Icon";
-import { ValueSlider } from "@app/components/annotation/shared/ValueSlider";
-import { useEventCallback } from "@app/hooks/useEventCallback";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
+import {
+  nearestOpacityPreset,
+  OPACITY_PRESETS,
+} from "@app/components/annotation/shared/opacityPresets";
 
 interface OpacityControlProps {
   value: number; // 0-100
@@ -18,34 +21,44 @@ export function OpacityControl({
 }: OpacityControlProps) {
   const { t } = useTranslation();
   const [opened, setOpened] = useState(false);
-  const handleChange = useEventCallback(onChange);
+  const label = t("annotation.opacity", "Opacity");
 
   return (
     <Popover opened={opened} onChange={setOpened} position="top" withArrow>
       <Popover.Target>
-        <Tooltip label={t("annotation.opacity", "Opacity")} withArrow>
+        <Tooltip label={label} withArrow>
           <button
             type="button"
             className="embedpdf-floating-btn"
             onClick={() => setOpened(!opened)}
             disabled={disabled}
-            aria-label={t("annotation.opacity", "Opacity")}
+            aria-label={label}
           >
             <Icon name="droplet" size={18} />
           </button>
         </Tooltip>
       </Popover.Target>
       <Popover.Dropdown>
-        <Stack gap="xs" style={{ minWidth: 150 }}>
-          <Text size="xs" fw={500}>
-            {t("annotation.opacity", "Opacity")}
-          </Text>
-          <ValueSlider
-            value={value}
-            min={10}
-            max={100}
-            onChange={handleChange}
-            suffix="%"
+        <Stack gap="xs" style={{ minWidth: 180 }}>
+          <Group justify="space-between" align="baseline">
+            <Text size="xs" fw={500}>
+              {label}
+            </Text>
+            {/* The exact value, which the presets only approximate. */}
+            <Text size="xs" c="dimmed">
+              {Math.round(value)}%
+            </Text>
+          </Group>
+          <SegmentedControl
+            ariaLabel={label}
+            size="xs"
+            fullWidth
+            value={String(nearestOpacityPreset(value))}
+            onChange={(next) => onChange(Number(next))}
+            options={OPACITY_PRESETS.map((preset) => ({
+              value: String(preset),
+              label: `${preset}%`,
+            }))}
           />
         </Stack>
       </Popover.Dropdown>
