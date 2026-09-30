@@ -33,6 +33,11 @@ const SVG_ALLOWED = [
 
 const OPT_OUT = /icon-lint-disable/;
 
+/** Inside `dir` itself, not merely a sibling that shares its prefix (`core/icons-old`). */
+function isWithin(file: string, dir: string): boolean {
+  return file === dir || file.startsWith(dir + path.sep);
+}
+
 const mode = process.argv[2];
 const problems: string[] = [];
 const files: string[] = [];
@@ -123,13 +128,13 @@ for (const file of files) {
   const isCode = /\.tsx?$/.test(file);
 
   if (file.endsWith(".svg")) {
-    if (!SVG_ALLOWED.some((dir) => file.startsWith(dir))) {
+    if (!SVG_ALLOWED.some((dir) => isWithin(file, dir))) {
       problems.push(
         `${rel(file)}: .svg outside src/core/icons/svg/. Icons belong there so ` +
           `icons.ts can map them; other artwork belongs under assets/.`,
       );
     }
-    if (file.startsWith(ICON_SVG_DIR)) {
+    if (isWithin(file, ICON_SVG_DIR)) {
       const viewBox = fs
         .readFileSync(file, "utf8")
         .match(/<svg\b[^>]*\bviewBox="([^"]*)"/)?.[1]
@@ -150,7 +155,7 @@ for (const file of files) {
   }
 
   // A stylesheet fill beats <Icon>'s fill="none" attribute and solidifies every stroke icon in scope.
-  if (file.endsWith(".css") && !file.startsWith(ICONS_DIR)) {
+  if (file.endsWith(".css") && !isWithin(file, ICONS_DIR)) {
     const css = fs.readFileSync(file, "utf8");
     for (const m of css.matchAll(/([^{}]*svg[^{}]*)\{([^}]*)\}/g)) {
       const decl = /(^|[;\s])fill\s*:\s*(?!none|transparent)/.test(m[2]);
@@ -169,7 +174,7 @@ for (const file of files) {
   if (!isCode) continue;
   const text = fs.readFileSync(file, "utf8");
   const lines = text.split("\n");
-  const inIconsDir = file.startsWith(ICONS_DIR);
+  const inIconsDir = isWithin(file, ICONS_DIR);
 
   lines.forEach((line, i) => {
     // No inline svg outside core/icons
