@@ -806,6 +806,29 @@ class FileStorageService {
     });
   }
 
+  /** Leaf stubs of the records stored under `name`, found through the name
+   *  index so no other record is read. */
+  async getLeafStubsNamed(name: string): Promise<StirlingFileStub[]> {
+    const db = await this.getDatabase();
+    const ids = await new Promise<IDBValidKey[]>((resolve, reject) => {
+      const transaction = db.transaction([this.storeName], "readonly");
+      settleOnAbort(transaction, reject);
+      const request = transaction
+        .objectStore(this.storeName)
+        .index("name")
+        .getAllKeys(IDBKeyRange.only(name));
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result);
+    });
+    const stubs = await Promise.all(
+      ids.map((id) => this.getStirlingFileStub(id as FileId)),
+    );
+    return stubs.filter(
+      (stub): stub is StirlingFileStub =>
+        stub !== null && stub.isLeaf !== false,
+    );
+  }
+
   /**
    * Get all StirlingFileStubs (metadata only) - for FileManager browsing
    */

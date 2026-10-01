@@ -2,9 +2,16 @@ import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useOpenedFile } from "@app/hooks/useOpenedFile";
 import { fileOpenService } from "@app/services/fileOpenService";
-import { useFileManagement } from "@app/contexts/file/fileHooks";
+import {
+  useFileActions,
+  useFileManagement,
+  useFileSelectors,
+} from "@app/contexts/file/fileHooks";
+import { storedCopiesForNewFiles } from "@app/contexts/file/storedFileReconciler";
 import { pendingFilePathMappings } from "@app/services/pendingFilePathMappings";
 import { captureDroppedFilePaths } from "@app/services/fileImportPaths";
+import { getDiskFileState } from "@app/services/desktopFileLink";
+import { diskLastModified } from "@app/services/diskFileSync";
 
 /**
  * App initialization hook
@@ -22,6 +29,8 @@ export function useAppInitialization(): void {
 
   // Get file management actions
   const { addFiles } = useFileManagement();
+  const { actions } = useFileActions();
+  const selectors = useFileSelectors();
 
   // Handle files opened with app (Tauri mode)
   const {
@@ -46,8 +55,10 @@ export function useAppInitialization(): void {
           await Promise.all(
             filePaths.map(async (filePath) => {
               try {
-                const fileData =
-                  await fileOpenService.readFileAsArrayBuffer(filePath);
+                const [fileData, disk] = await Promise.all([
+                  fileOpenService.readFileAsArrayBuffer(filePath),
+                  getDiskFileState(filePath),
+                ]);
                 if (!fileData) return null;
 
                 const file = new File(
@@ -55,6 +66,7 @@ export function useAppInitialization(): void {
                   fileData.fileName,
                   {
                     type: "application/pdf",
+                    lastModified: diskLastModified(disk),
                   },
                 );
 
@@ -74,10 +86,34 @@ export function useAppInitialization(): void {
         ).filter((file): file is File => Boolean(file));
 
         if (loadedFiles.length > 0) {
-          await addFiles(loadedFiles, { selectFiles: true });
+          // Reopen the stored copy of a file disk has not changed, or every
+          // open from Explorer stores the same file again.
+          const storedCopies = await storedCopiesForNewFiles(loadedFiles);
+          const reopened = [...storedCopies.values()];
+          if (reopened.length > 0) await actions.addStirlingFileStubs(reopened);
+          const fresh = loadedFiles.filter((file) => !storedCopies.has(file));
+          // The lookup above is the dedupe for these, by path: the name, size
+          // and date key would take an identical copy from another folder for
+          // the one already open and never link it.
+          const added =
+            fresh.length > 0
+              ? await addFiles(fresh, { allowDuplicates: true })
+              : [];
+
+          // Read after both adds: the selection may have moved while they ran.
+          const selected = selectors
+            .getSelectedStirlingFileStubs()
+            .map((stub) => stub.id);
+          actions.setSelectedFiles([
+            ...new Set([
+              ...selected,
+              ...reopened.map((stub) => stub.id),
+              ...added.map((file) => file.fileId),
+            ]),
+          ]);
 
           console.log(
-            `[Desktop] ${loadedFiles.length} opened file(s) added to FileContext`,
+            `[Desktop] ${loadedFiles.length} opened file(s) added to FileContext (${reopened.length} from storage)`,
           );
         }
       } catch (error) {
@@ -86,7 +122,14 @@ export function useAppInitialization(): void {
     };
 
     loadOpenedFiles();
-  }, [openedFilePaths, openedFileLoading, addFiles, consumeOpenedFilePaths]);
+  }, [
+    openedFilePaths,
+    openedFileLoading,
+    addFiles,
+    actions,
+    selectors,
+    consumeOpenedFilePaths,
+  ]);
 }
 
 export function useSetupCompletion(): (completed: boolean) => void {

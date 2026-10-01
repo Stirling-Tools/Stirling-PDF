@@ -391,6 +391,7 @@ export interface FileContextActions {
     options?: {
       insertAfterPageId?: string;
       selectFiles?: boolean;
+      allowDuplicates?: boolean;
       skipUploadTracking?: boolean;
       /**
        * Produced in-app rather than uploaded, which stops the policy auto-run enforcing an upload
