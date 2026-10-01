@@ -6,6 +6,7 @@ import React, {
   useMemo,
 } from "react";
 import { Text, Checkbox } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { Icon } from "@app/ui/Icon";
 import { PDFPage, PDFDocument } from "@app/types/pageEditor";
@@ -94,6 +95,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   zoomLevel = 1.0,
   justMoved = false,
 }: PageThumbnailProps) => {
+  const { t } = useTranslation();
   const pageIndex = page.pageNumber - 1;
   const isSelected = Array.isArray(selectedPageIds)
     ? selectedPageIds.includes(page.id)
@@ -321,7 +323,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
       {
         id: "move-left",
         icon: <Icon name="arrow-left" size={20} />,
-        label: "Move Left",
+        label: t("pageEditor.actions.moveLeft", "Move Left"),
         onClick: (e) => {
           e.stopPropagation();
           if (pageIndex > 0 && !isAnimating) {
@@ -334,7 +336,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
       {
         id: "move-right",
         icon: <Icon name="arrow-right" size={20} />,
-        label: "Move Right",
+        label: t("pageEditor.actions.moveRight", "Move Right"),
         onClick: (e) => {
           e.stopPropagation();
           if (pageIndex < totalPages - 1 && !isAnimating) {
@@ -348,33 +350,33 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
       {
         id: "rotate-left",
         icon: <Icon name="rotate-ccw" size={20} />,
-        label: "Rotate Left",
+        label: t("pageEditor.actions.rotateLeft", "Rotate Left"),
         onClick: handleRotateLeft,
       },
       {
         id: "rotate-right",
         icon: <Icon name="rotate-cw" size={20} />,
-        label: "Rotate Right",
+        label: t("pageEditor.actions.rotateRight", "Rotate Right"),
         onClick: handleRotateRight,
       },
       {
         id: "delete",
         icon: <Icon name="trash" size={20} />,
-        label: "Delete Page",
+        label: t("pageEditor.actions.deletePage", "Delete Page"),
         onClick: handleDelete,
         color: "red",
       },
       {
         id: "split",
         icon: <Icon name="scissors" size={20} />,
-        label: "Split After",
+        label: t("pageEditor.actions.splitAfter", "Split After"),
         onClick: handleSplit,
         hidden: pageIndex >= totalPages - 1,
       },
       {
         id: "insert",
         icon: <Icon name="plus" size={20} />,
-        label: "Insert File After",
+        label: t("pageEditor.actions.insertFileAfter", "Insert File After"),
         onClick: handleInsertFileAfter,
       },
     ],
@@ -390,6 +392,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
       handleInsertFileAfter,
       onReorderPages,
       onSetStatus,
+      t,
     ],
   );
 
@@ -505,7 +508,9 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
               <img
                 className="ph-no-capture"
                 src={thumbnailUrl}
-                alt={`Page ${page.pageNumber}`}
+                alt={t("pageEditor.pageLabel", "Page {{page}}", {
+                  page: page.pageNumber,
+                })}
                 draggable={false}
                 data-original-rotation={page.rotation}
                 style={{
@@ -524,7 +529,9 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
                 📄
               </Text>
               <Text size="xs" c="dimmed" mt={4}>
-                Page {page.pageNumber}
+                {t("pageEditor.pageLabel", "Page {{page}}", {
+                  page: page.pageNumber,
+                })}
               </Text>
             </div>
           )}

@@ -13,6 +13,11 @@ import {
 import PendingBadge from "@app/components/shared/config/PendingBadge";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import type { SecurityCardProps } from "@app/components/shared/config/configSections/security/securityCardProps";
+import type { SecuritySettingsData } from "@app/components/shared/config/configSections/security/securitySettingsTypes";
+
+type UrlSecurity = NonNullable<
+  NonNullable<SecuritySettingsData["html"]>["urlSecurity"]
+>;
 
 /** Where HTML-to-PDF conversions are allowed to fetch from (SSRF guard). */
 export function HtmlUrlSecurityCard({
@@ -22,6 +27,17 @@ export function HtmlUrlSecurityCard({
   loginEnabled,
 }: SecurityCardProps) {
   const { t } = useTranslation();
+  const urlSecurity = settings?.html?.urlSecurity;
+
+  function updateUrlSecurity(patch: Partial<UrlSecurity>) {
+    setSettings({
+      ...settings,
+      html: {
+        ...settings?.html,
+        urlSecurity: { ...urlSecurity, ...patch },
+      },
+    });
+  }
 
   return (
     <Paper withBorder p="md" radius="md">
@@ -36,19 +52,8 @@ export function HtmlUrlSecurityCard({
             "Enable URL security restrictions for HTML to PDF conversions",
           )}
           pending={isFieldPending("html.urlSecurity.enabled")}
-          checked={settings?.html?.urlSecurity?.enabled || false}
-          onChange={(checked) =>
-            setSettings({
-              ...settings,
-              html: {
-                ...settings?.html,
-                urlSecurity: {
-                  ...settings?.html?.urlSecurity,
-                  enabled: checked,
-                },
-              },
-            })
-          }
+          checked={urlSecurity?.enabled || false}
+          onChange={(checked) => updateUrlSecurity({ enabled: checked })}
           disabled={!loginEnabled}
         />
 
@@ -56,34 +61,21 @@ export function HtmlUrlSecurityCard({
           <Select
             name="html_urlSecurity_level"
             label={
-              <Group component="span" gap="xs">
-                <span>
-                  {t(
-                    "admin.settings.security.htmlUrlSecurity.level.label",
-                    "Security Level",
-                  )}
-                </span>
-                <PendingBadge show={isFieldPending("html.urlSecurity.level")} />
-                <InfoTooltip
-                  label={t(
-                    "admin.settings.security.htmlUrlSecurity.level.description",
-                    "MAX: whitelist only, MEDIUM: block internal networks, OFF: no restrictions",
-                  )}
-                />
-              </Group>
+              <UrlSecurityFieldLabel
+                label={t(
+                  "admin.settings.security.htmlUrlSecurity.level.label",
+                  "Security Level",
+                )}
+                info={t(
+                  "admin.settings.security.htmlUrlSecurity.level.description",
+                  "MAX: whitelist only, MEDIUM: block internal networks, OFF: no restrictions",
+                )}
+                pending={isFieldPending("html.urlSecurity.level")}
+              />
             }
-            value={settings?.html?.urlSecurity?.level || "MEDIUM"}
+            value={urlSecurity?.level || "MEDIUM"}
             onChange={(value) =>
-              setSettings({
-                ...settings,
-                html: {
-                  ...settings?.html,
-                  urlSecurity: {
-                    ...settings?.html?.urlSecurity,
-                    level: value || "MEDIUM",
-                  },
-                },
-              })
+              updateUrlSecurity({ level: value || "MEDIUM" })
             }
             data={[
               {
@@ -125,285 +117,212 @@ export function HtmlUrlSecurityCard({
               )}
             </Accordion.Control>
             <Accordion.Panel>
-              <Stack gap="md">
-                {/* Allowed Domains */}
-                <div>
-                  <Textarea
-                    name="html_urlSecurity_allowedDomains"
-                    label={
-                      <Group component="span" gap="xs">
-                        <span>
-                          {t(
-                            "admin.settings.security.htmlUrlSecurity.allowedDomains.label",
-                            "Allowed Domains (Whitelist)",
-                          )}
-                        </span>
-                        <PendingBadge
-                          show={isFieldPending(
-                            "html.urlSecurity.allowedDomains",
-                          )}
-                        />
-                        <InfoTooltip
-                          label={t(
-                            "admin.settings.security.htmlUrlSecurity.allowedDomains.description",
-                            "One domain per line (e.g., cdn.example.com). Only these domains allowed when level is MAX",
-                          )}
-                        />
-                      </Group>
-                    }
-                    value={
-                      settings?.html?.urlSecurity?.allowedDomains?.join("\n") ||
-                      ""
-                    }
-                    onChange={(e) =>
-                      setSettings({
-                        ...settings,
-                        html: {
-                          ...settings?.html,
-                          urlSecurity: {
-                            ...settings?.html?.urlSecurity,
-                            allowedDomains: e.target.value
-                              ? e.target.value
-                                  .split("\n")
-                                  .filter((d) => d.trim())
-                              : [],
-                          },
-                        },
-                      })
-                    }
-                    placeholder="cdn.example.com&#10;images.google.com"
-                    minRows={3}
-                    autosize
-                    disabled={!loginEnabled}
-                  />
-                </div>
-
-                {/* Blocked Domains */}
-                <div>
-                  <Textarea
-                    name="html_urlSecurity_blockedDomains"
-                    label={
-                      <Group component="span" gap="xs">
-                        <span>
-                          {t(
-                            "admin.settings.security.htmlUrlSecurity.blockedDomains.label",
-                            "Blocked Domains (Blacklist)",
-                          )}
-                        </span>
-                        <PendingBadge
-                          show={isFieldPending(
-                            "html.urlSecurity.blockedDomains",
-                          )}
-                        />
-                        <InfoTooltip
-                          label={t(
-                            "admin.settings.security.htmlUrlSecurity.blockedDomains.description",
-                            "One domain per line (e.g., malicious.com). Additional domains to block",
-                          )}
-                        />
-                      </Group>
-                    }
-                    value={
-                      settings?.html?.urlSecurity?.blockedDomains?.join("\n") ||
-                      ""
-                    }
-                    onChange={(e) =>
-                      setSettings({
-                        ...settings,
-                        html: {
-                          ...settings?.html,
-                          urlSecurity: {
-                            ...settings?.html?.urlSecurity,
-                            blockedDomains: e.target.value
-                              ? e.target.value
-                                  .split("\n")
-                                  .filter((d) => d.trim())
-                              : [],
-                          },
-                        },
-                      })
-                    }
-                    placeholder="malicious.com&#10;evil.org"
-                    minRows={3}
-                    autosize
-                    disabled={!loginEnabled}
-                  />
-                </div>
-
-                {/* Internal TLDs */}
-                <div>
-                  <Textarea
-                    name="html_urlSecurity_internalTlds"
-                    label={
-                      <Group component="span" gap="xs">
-                        <span>
-                          {t(
-                            "admin.settings.security.htmlUrlSecurity.internalTlds.label",
-                            "Internal TLDs",
-                          )}
-                        </span>
-                        <PendingBadge
-                          show={isFieldPending("html.urlSecurity.internalTlds")}
-                        />
-                        <InfoTooltip
-                          label={t(
-                            "admin.settings.security.htmlUrlSecurity.internalTlds.description",
-                            "One TLD per line (e.g., .local, .internal). Block domains with these TLD patterns",
-                          )}
-                        />
-                      </Group>
-                    }
-                    value={
-                      settings?.html?.urlSecurity?.internalTlds?.join("\n") ||
-                      ""
-                    }
-                    onChange={(e) =>
-                      setSettings({
-                        ...settings,
-                        html: {
-                          ...settings?.html,
-                          urlSecurity: {
-                            ...settings?.html?.urlSecurity,
-                            internalTlds: e.target.value
-                              ? e.target.value
-                                  .split("\n")
-                                  .filter((d) => d.trim())
-                              : [],
-                          },
-                        },
-                      })
-                    }
-                    placeholder=".local&#10;.internal&#10;.corp&#10;.home"
-                    minRows={3}
-                    autosize
-                    disabled={!loginEnabled}
-                  />
-                </div>
-
-                {/* Network Blocking Options */}
-                <Text fw={600} size="sm" mt="md">
-                  {t(
-                    "admin.settings.security.htmlUrlSecurity.networkBlocking",
-                    "Network Blocking",
-                  )}
-                </Text>
-
-                <SettingsToggleRow
-                  label={t(
-                    "admin.settings.security.htmlUrlSecurity.blockPrivateNetworks.label",
-                    "Block Private Networks",
-                  )}
-                  info={t(
-                    "admin.settings.security.htmlUrlSecurity.blockPrivateNetworks.description",
-                    "Block RFC 1918 private networks (10.x.x.x, 192.168.x.x, 172.16-31.x.x)",
-                  )}
-                  pending={isFieldPending(
-                    "html.urlSecurity.blockPrivateNetworks",
-                  )}
-                  checked={
-                    settings?.html?.urlSecurity?.blockPrivateNetworks || false
-                  }
-                  onChange={(checked) =>
-                    setSettings({
-                      ...settings,
-                      html: {
-                        ...settings?.html,
-                        urlSecurity: {
-                          ...settings?.html?.urlSecurity,
-                          blockPrivateNetworks: checked,
-                        },
-                      },
-                    })
-                  }
-                  disabled={!loginEnabled}
-                />
-
-                <SettingsToggleRow
-                  label={t(
-                    "admin.settings.security.htmlUrlSecurity.blockLocalhost.label",
-                    "Block Localhost",
-                  )}
-                  info={t(
-                    "admin.settings.security.htmlUrlSecurity.blockLocalhost.description",
-                    "Block localhost and loopback addresses (127.x.x.x, ::1)",
-                  )}
-                  pending={isFieldPending("html.urlSecurity.blockLocalhost")}
-                  checked={settings?.html?.urlSecurity?.blockLocalhost || false}
-                  onChange={(checked) =>
-                    setSettings({
-                      ...settings,
-                      html: {
-                        ...settings?.html,
-                        urlSecurity: {
-                          ...settings?.html?.urlSecurity,
-                          blockLocalhost: checked,
-                        },
-                      },
-                    })
-                  }
-                  disabled={!loginEnabled}
-                />
-
-                <SettingsToggleRow
-                  label={t(
-                    "admin.settings.security.htmlUrlSecurity.blockLinkLocal.label",
-                    "Block Link-Local Addresses",
-                  )}
-                  info={t(
-                    "admin.settings.security.htmlUrlSecurity.blockLinkLocal.description",
-                    "Block link-local addresses (169.254.x.x, fe80::/10)",
-                  )}
-                  pending={isFieldPending("html.urlSecurity.blockLinkLocal")}
-                  checked={settings?.html?.urlSecurity?.blockLinkLocal || false}
-                  onChange={(checked) =>
-                    setSettings({
-                      ...settings,
-                      html: {
-                        ...settings?.html,
-                        urlSecurity: {
-                          ...settings?.html?.urlSecurity,
-                          blockLinkLocal: checked,
-                        },
-                      },
-                    })
-                  }
-                  disabled={!loginEnabled}
-                />
-
-                <SettingsToggleRow
-                  label={t(
-                    "admin.settings.security.htmlUrlSecurity.blockCloudMetadata.label",
-                    "Block Cloud Metadata Endpoints",
-                  )}
-                  info={t(
-                    "admin.settings.security.htmlUrlSecurity.blockCloudMetadata.description",
-                    "Block cloud provider metadata endpoints (169.254.169.254)",
-                  )}
-                  pending={isFieldPending(
-                    "html.urlSecurity.blockCloudMetadata",
-                  )}
-                  checked={
-                    settings?.html?.urlSecurity?.blockCloudMetadata || false
-                  }
-                  onChange={(checked) =>
-                    setSettings({
-                      ...settings,
-                      html: {
-                        ...settings?.html,
-                        urlSecurity: {
-                          ...settings?.html?.urlSecurity,
-                          blockCloudMetadata: checked,
-                        },
-                      },
-                    })
-                  }
-                  disabled={!loginEnabled}
-                />
-              </Stack>
+              <AdvancedUrlSecurityFields
+                urlSecurity={urlSecurity}
+                onChange={updateUrlSecurity}
+                isFieldPending={isFieldPending}
+                disabled={!loginEnabled}
+              />
             </Accordion.Panel>
           </Accordion.Item>
         </Accordion>
       </Stack>
     </Paper>
+  );
+}
+
+interface AdvancedUrlSecurityFieldsProps {
+  urlSecurity: UrlSecurity | undefined;
+  onChange: (patch: Partial<UrlSecurity>) => void;
+  isFieldPending: (field: string) => boolean;
+  disabled: boolean;
+}
+
+function AdvancedUrlSecurityFields({
+  urlSecurity,
+  onChange,
+  isFieldPending,
+  disabled,
+}: AdvancedUrlSecurityFieldsProps) {
+  const { t } = useTranslation();
+  return (
+    <Stack gap="md">
+      <DomainListField
+        name="html_urlSecurity_allowedDomains"
+        label={t(
+          "admin.settings.security.htmlUrlSecurity.allowedDomains.label",
+          "Allowed Domains (Whitelist)",
+        )}
+        info={t(
+          "admin.settings.security.htmlUrlSecurity.allowedDomains.description",
+          "One domain per line (e.g., cdn.example.com). Only these domains allowed when level is MAX",
+        )}
+        pending={isFieldPending("html.urlSecurity.allowedDomains")}
+        value={urlSecurity?.allowedDomains}
+        onChange={(allowedDomains) => onChange({ allowedDomains })}
+        placeholder="cdn.example.com&#10;images.google.com"
+        disabled={disabled}
+      />
+
+      <DomainListField
+        name="html_urlSecurity_blockedDomains"
+        label={t(
+          "admin.settings.security.htmlUrlSecurity.blockedDomains.label",
+          "Blocked Domains (Blacklist)",
+        )}
+        info={t(
+          "admin.settings.security.htmlUrlSecurity.blockedDomains.description",
+          "One domain per line (e.g., malicious.com). Additional domains to block",
+        )}
+        pending={isFieldPending("html.urlSecurity.blockedDomains")}
+        value={urlSecurity?.blockedDomains}
+        onChange={(blockedDomains) => onChange({ blockedDomains })}
+        placeholder="malicious.com&#10;evil.org"
+        disabled={disabled}
+      />
+
+      <DomainListField
+        name="html_urlSecurity_internalTlds"
+        label={t(
+          "admin.settings.security.htmlUrlSecurity.internalTlds.label",
+          "Internal TLDs",
+        )}
+        info={t(
+          "admin.settings.security.htmlUrlSecurity.internalTlds.description",
+          "One TLD per line (e.g., .local, .internal). Block domains with these TLD patterns",
+        )}
+        pending={isFieldPending("html.urlSecurity.internalTlds")}
+        value={urlSecurity?.internalTlds}
+        onChange={(internalTlds) => onChange({ internalTlds })}
+        placeholder=".local&#10;.internal&#10;.corp&#10;.home"
+        disabled={disabled}
+      />
+
+      <Text fw={600} size="sm" mt="md">
+        {t(
+          "admin.settings.security.htmlUrlSecurity.networkBlocking",
+          "Network Blocking",
+        )}
+      </Text>
+
+      <SettingsToggleRow
+        label={t(
+          "admin.settings.security.htmlUrlSecurity.blockPrivateNetworks.label",
+          "Block Private Networks",
+        )}
+        info={t(
+          "admin.settings.security.htmlUrlSecurity.blockPrivateNetworks.description",
+          "Block RFC 1918 private networks (10.x.x.x, 192.168.x.x, 172.16-31.x.x)",
+        )}
+        pending={isFieldPending("html.urlSecurity.blockPrivateNetworks")}
+        checked={urlSecurity?.blockPrivateNetworks || false}
+        onChange={(checked) => onChange({ blockPrivateNetworks: checked })}
+        disabled={disabled}
+      />
+
+      <SettingsToggleRow
+        label={t(
+          "admin.settings.security.htmlUrlSecurity.blockLocalhost.label",
+          "Block Localhost",
+        )}
+        info={t(
+          "admin.settings.security.htmlUrlSecurity.blockLocalhost.description",
+          "Block localhost and loopback addresses (127.x.x.x, ::1)",
+        )}
+        pending={isFieldPending("html.urlSecurity.blockLocalhost")}
+        checked={urlSecurity?.blockLocalhost || false}
+        onChange={(checked) => onChange({ blockLocalhost: checked })}
+        disabled={disabled}
+      />
+
+      <SettingsToggleRow
+        label={t(
+          "admin.settings.security.htmlUrlSecurity.blockLinkLocal.label",
+          "Block Link-Local Addresses",
+        )}
+        info={t(
+          "admin.settings.security.htmlUrlSecurity.blockLinkLocal.description",
+          "Block link-local addresses (169.254.x.x, fe80::/10)",
+        )}
+        pending={isFieldPending("html.urlSecurity.blockLinkLocal")}
+        checked={urlSecurity?.blockLinkLocal || false}
+        onChange={(checked) => onChange({ blockLinkLocal: checked })}
+        disabled={disabled}
+      />
+
+      <SettingsToggleRow
+        label={t(
+          "admin.settings.security.htmlUrlSecurity.blockCloudMetadata.label",
+          "Block Cloud Metadata Endpoints",
+        )}
+        info={t(
+          "admin.settings.security.htmlUrlSecurity.blockCloudMetadata.description",
+          "Block cloud provider metadata endpoints (169.254.169.254)",
+        )}
+        pending={isFieldPending("html.urlSecurity.blockCloudMetadata")}
+        checked={urlSecurity?.blockCloudMetadata || false}
+        onChange={(checked) => onChange({ blockCloudMetadata: checked })}
+        disabled={disabled}
+      />
+    </Stack>
+  );
+}
+
+function UrlSecurityFieldLabel({
+  label,
+  info,
+  pending,
+}: {
+  label: string;
+  info: string;
+  pending: boolean;
+}) {
+  return (
+    <Group component="span" gap="xs">
+      <span>{label}</span>
+      <PendingBadge show={pending} />
+      <InfoTooltip label={info} />
+    </Group>
+  );
+}
+
+interface DomainListFieldProps {
+  name: string;
+  label: string;
+  info: string;
+  pending: boolean;
+  value: string[] | undefined;
+  onChange: (value: string[]) => void;
+  placeholder: string;
+  disabled: boolean;
+}
+
+function DomainListField({
+  name,
+  label,
+  info,
+  pending,
+  value,
+  onChange,
+  placeholder,
+  disabled,
+}: DomainListFieldProps) {
+  return (
+    <div>
+      <Textarea
+        name={name}
+        label={
+          <UrlSecurityFieldLabel label={label} info={info} pending={pending} />
+        }
+        value={value?.join("\n") || ""}
+        onChange={(e) =>
+          onChange(e.target.value.split("\n").filter((line) => line.trim()))
+        }
+        placeholder={placeholder}
+        minRows={3}
+        autosize
+        disabled={disabled}
+      />
+    </div>
   );
 }

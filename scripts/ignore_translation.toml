@@ -417,7 +417,7 @@ ignore = [
     'language.direction',
 ]
 
-[sr_LATN_RS]
+[sr_Latn_RS]
 ignore = [
     'font',
     'language.direction',

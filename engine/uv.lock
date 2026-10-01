@@ -422,6 +422,7 @@ engine = [
     { name = "pydantic-ai-slim", extra = ["anthropic", "openai"] },
     { name = "pydantic-settings" },
     { name = "python-dotenv" },
+    { name = "pyyaml" },
     { name = "sqlite-vec" },
     { name = "uvicorn" },
 ]
@@ -480,6 +481,7 @@ engine = [
     { name = "pydantic-ai-slim", extras = ["anthropic", "openai"], specifier = ">=1.107.2,<2.0.0" },
     { name = "pydantic-settings", specifier = ">=2.15.0" },
     { name = "python-dotenv", specifier = ">=1.2.3" },
+    { name = "pyyaml", specifier = ">=6.0.3" },
     { name = "sqlite-vec", specifier = ">=0.1.9" },
     { name = "uvicorn", specifier = ">=0.52.4" },
 ]
