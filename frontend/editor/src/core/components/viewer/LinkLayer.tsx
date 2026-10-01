@@ -9,6 +9,7 @@ import React, {
 import { Icon } from "@app/ui/Icon";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { useDocumentState } from "@embedpdf/core/react";
 import { useScroll } from "@embedpdf/plugin-scroll/react";
 import { useAnnotation } from "@embedpdf/plugin-annotation/react";
@@ -39,21 +40,24 @@ function truncateUrl(url: string, maxLen = 32): string {
   }
 }
 
-function getLinkLabel(annotationLink: PdfLinkAnnoObject): string {
-  if (!annotationLink.target) return "Open Link";
+function getLinkLabel(annotationLink: PdfLinkAnnoObject, t: TFunction): string {
+  const openLink = t("viewer.link.open", "Open Link");
+  const pageLabel = (pageIndex: number) =>
+    t("viewer.link.page", "Page {{page}}", { page: pageIndex + 1 });
+  if (!annotationLink.target) return openLink;
 
   if (annotationLink.target.type === "action") {
     const action = annotationLink.target.action;
     if (action.type === PdfActionType.URI) return truncateUrl(action.uri);
     if (action.type === PdfActionType.Goto)
-      return `Page ${action.destination.pageIndex + 1}`;
+      return pageLabel(action.destination.pageIndex);
     if (action.type === PdfActionType.RemoteGoto)
-      return `Page ${action.destination.pageIndex + 1}`;
+      return pageLabel(action.destination.pageIndex);
   } else if (annotationLink.target.type === "destination") {
-    return `Page ${annotationLink.target.destination.pageIndex + 1}`;
+    return pageLabel(annotationLink.target.destination.pageIndex);
   }
 
-  return "Open Link";
+  return openLink;
 }
 
 function isInternalLink(annotationLink: PdfLinkAnnoObject): boolean {
@@ -129,7 +133,7 @@ const LinkToolbar: React.FC<LinkToolbarProps> = React.memo(
   }) => {
     const { t } = useTranslation();
     const internal = isInternalLink(annotationLink);
-    const label = getLinkLabel(annotationLink);
+    const label = getLinkLabel(annotationLink, t);
 
     return (
       <div
@@ -168,7 +172,11 @@ const LinkToolbar: React.FC<LinkToolbarProps> = React.memo(
             e.stopPropagation();
             onNavigate(annotationLink);
           }}
-          aria-label={internal ? `Go to ${label}` : "Open link"}
+          aria-label={
+            internal
+              ? t("viewer.link.goTo", "Go to {{label}}", { label })
+              : t("viewer.link.openAria", "Open link")
+          }
           title={label}
         >
           {internal ? (
@@ -198,6 +206,7 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
   documentId,
   pageIndex,
 }) => {
+  const { t } = useTranslation();
   const { provides: scroll } = useScroll(documentId);
   const { state, provides: scope } = useAnnotation(documentId);
   const documentState = useDocumentState(documentId);
@@ -486,7 +495,7 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
               }}
               role="link"
               tabIndex={0}
-              aria-label={getLinkLabel(annotationLink)}
+              aria-label={getLinkLabel(annotationLink, t)}
             />
           );
         })}

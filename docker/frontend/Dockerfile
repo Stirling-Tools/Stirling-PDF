@@ -14,10 +14,9 @@ COPY frontend .
 # Defaults match prior behaviour. Supabase values are client-publishable build args.
 ARG STIRLING_FLAVOR=proprietary
 ARG VITE_BUILD_MODE=production
-# Include the processor (admin portal) route/chunk. SaaS ships it, so its
-# deploy sets this true; without it /processor and the processor's settings
-# sections are absent from the built app.
-ARG VITE_INCLUDE_PORTAL=false
+# Include the processor (admin portal) route/chunk; false drops /processor and
+# the processor's settings sections from the built app.
+ARG VITE_INCLUDE_PORTAL=true
 ARG VITE_SUPABASE_URL=""
 # pragma: allowlist secret
 ARG VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY=""

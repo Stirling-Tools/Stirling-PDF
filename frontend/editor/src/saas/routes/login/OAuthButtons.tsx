@@ -36,7 +36,13 @@ export default function OAuthButtons({
         {oauthProviders.map((p) => (
           <Tooltip
             key={p.id}
-            content={`${t("login.signInWith", "Sign in with")} ${p.label}`}
+            content={t(
+              "login.signInWithProvider",
+              "Sign in with {{provider}}",
+              {
+                provider: p.label,
+              },
+            )}
             position="top"
           >
             <Button
@@ -44,7 +50,13 @@ export default function OAuthButtons({
               onClick={() => onProviderClick(p.id as "github" | "google")}
               disabled={isSubmitting || p.isDisabled}
               className="oauth-button-icon"
-              aria-label={`${t("login.signInWith", "Sign in with")} ${p.label}`}
+              aria-label={t(
+                "login.signInWithProvider",
+                "Sign in with {{provider}}",
+                {
+                  provider: p.label,
+                },
+              )}
             >
               <ProviderMark
                 file={p.file}
@@ -64,7 +76,13 @@ export default function OAuthButtons({
         {oauthProviders.map((p) => (
           <Tooltip
             key={p.id}
-            content={`${t("login.signInWith", "Sign in with")} ${p.label}`}
+            content={t(
+              "login.signInWithProvider",
+              "Sign in with {{provider}}",
+              {
+                provider: p.label,
+              },
+            )}
             position="top"
           >
             <Button
@@ -72,7 +90,13 @@ export default function OAuthButtons({
               onClick={() => onProviderClick(p.id as "github" | "google")}
               disabled={isSubmitting || p.isDisabled}
               className="oauth-button-grid"
-              aria-label={`${t("login.signInWith", "Sign in with")} ${p.label}`}
+              aria-label={t(
+                "login.signInWithProvider",
+                "Sign in with {{provider}}",
+                {
+                  provider: p.label,
+                },
+              )}
             >
               <ProviderMark
                 file={p.file}

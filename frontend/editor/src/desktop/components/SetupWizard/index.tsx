@@ -58,7 +58,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
 
   const handleSaaSLogin = async (username: string, password: string) => {
     if (!serverConfig) {
-      setError("No SaaS server configured");
+      setError(t("setup.error.noSaasServer", "No SaaS server configured"));
       return;
     }
 
@@ -78,14 +78,18 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
       onComplete();
     } catch (err) {
       console.error("SaaS login failed:", err);
-      setError(err instanceof Error ? err.message : "SaaS login failed");
+      setError(
+        err instanceof Error
+          ? err.message
+          : t("setup.error.saasLoginFailed", "SaaS login failed"),
+      );
       setLoading(false);
     }
   };
 
   const handleSaaSLoginOAuth = async (_userInfo: UserInfo) => {
     if (!serverConfig) {
-      setError("No SaaS server configured");
+      setError(t("setup.error.noSaasServer", "No SaaS server configured"));
       return;
     }
 
@@ -100,7 +104,12 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
     } catch (err) {
       console.error("SaaS OAuth login completion failed:", err);
       setError(
-        err instanceof Error ? err.message : "Failed to complete SaaS login",
+        err instanceof Error
+          ? err.message
+          : t(
+              "setup.error.saasLoginIncomplete",
+              "Failed to complete SaaS login",
+            ),
       );
       setLoading(false);
     }
@@ -160,7 +169,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
 
     if (!serverConfig) {
       console.error("[SetupWizard] ❌ No server configured");
-      setError("No server configured");
+      setError(t("setup.error.noServer", "No server configured"));
       return;
     }
 
@@ -189,7 +198,10 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
       onComplete();
     } catch (err) {
       console.error("[SetupWizard] ❌ Self-hosted login failed:", err);
-      let errorMessage = "Self-hosted login failed";
+      let errorMessage = t(
+        "setup.error.selfHostedLoginFailed",
+        "Self-hosted login failed",
+      );
       if (err instanceof AuthServiceError) {
         if (err.code === "mfa_required" || err.code === "invalid_mfa_code") {
           setSelfHostedMfaRequired(true);
@@ -218,7 +230,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
 
     if (!serverConfig) {
       console.error("[SetupWizard] ❌ No server configured");
-      setError("No server configured");
+      setError(t("setup.error.noServer", "No server configured"));
       return;
     }
 
@@ -243,7 +255,9 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
         err,
       );
       const errorMessage =
-        err instanceof Error ? err.message : "Failed to complete login";
+        err instanceof Error
+          ? err.message
+          : t("setup.error.loginIncomplete", "Failed to complete login");
       console.error("[SetupWizard] Error message:", errorMessage);
       setError(errorMessage);
       setLoading(false);
@@ -320,7 +334,9 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
       } catch (err) {
         console.error("[SetupWizard] Failed to handle deep link", err);
         setError(
-          err instanceof Error ? err.message : "Failed to complete signup",
+          err instanceof Error
+            ? err.message
+            : t("setup.error.signupIncomplete", "Failed to complete signup"),
         );
         setLoading(false);
       }

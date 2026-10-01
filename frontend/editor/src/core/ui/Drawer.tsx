@@ -2,6 +2,7 @@ import { useEffect, useId, type ReactNode } from "react";
 import { Icon } from "@app/ui/Icon";
 import { createPortal } from "react-dom";
 import { FocusTrap } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
 import "@app/ui/Drawer.css";
 
@@ -39,6 +40,7 @@ export function Drawer({
   ariaLabel,
   children,
 }: DrawerProps) {
+  const { t } = useTranslation();
   const titleId = useId();
 
   useEffect(() => {
@@ -109,7 +111,7 @@ export function Drawer({
                 shape="circle"
                 className="sui-drawer__close"
                 onClick={onClose}
-                aria-label="Close"
+                aria-label={t("common.close", "Close")}
                 leftSection={<Icon name="x" size={16} />}
               />
             </header>

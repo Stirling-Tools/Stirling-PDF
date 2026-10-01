@@ -156,15 +156,6 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
   },
   // --- Licensing & Analytics ---
   {
-    key: "adminPlan",
-    labelKey: "settings.licensingAnalytics.plan",
-    labelFallback: "Plan",
-    keywords: ["plan", "license", "billing", "subscription", "enterprise"],
-    adminArea: true,
-    groupLabelKey: "settings.workspace.title",
-    groupLabelFallback: "Workspace",
-  },
-  {
     key: "adminAudit",
     labelKey: "settings.licensingAnalytics.audit",
     labelFallback: "Audit",

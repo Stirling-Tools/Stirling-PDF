@@ -36,7 +36,6 @@ public class RequestUriUtils {
                 || normalizedUri.startsWith("/images/")
                 || normalizedUri.startsWith("/public/")
                 || normalizedUri.startsWith("/pdfjs/")
-                || normalizedUri.startsWith("/pdfjs-legacy/")
                 || normalizedUri.startsWith("/pdfium/")
                 || normalizedUri.startsWith("/assets/")
                 || normalizedUri.startsWith("/locales/")
@@ -118,7 +117,6 @@ public class RequestUriUtils {
             "/register",
             "/pipeline",
             "/pdfjs",
-            "/pdfjs-legacy",
             "/fonts",
             "/images",
             "/css",

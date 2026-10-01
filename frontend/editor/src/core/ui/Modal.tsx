@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, type ReactNode } from "react";
 import { Icon } from "@app/ui/Icon";
 import { createPortal } from "react-dom";
 import { FocusTrap } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
 import { useIsOverflowing } from "@app/hooks/useIsOverflowing";
 import "@app/ui/Modal.css";
@@ -25,6 +26,7 @@ export interface ModalProps {
   /** Accessible name when no visible title is provided. */
   ariaLabel?: string;
   className?: string;
+  zIndex?: number;
   children?: ReactNode;
 }
 
@@ -42,8 +44,10 @@ export function Modal({
   disableEscapeClose = false,
   ariaLabel,
   className,
+  zIndex,
   children,
 }: ModalProps) {
+  const { t } = useTranslation();
   const titleId = useId();
   const bodyRef = useRef<HTMLDivElement>(null);
   // A body that overflows must be reachable by keyboard to scroll; only its non-focusable
@@ -80,6 +84,7 @@ export function Modal({
   return createPortal(
     <div
       className="sui-modal__backdrop"
+      style={zIndex === undefined ? undefined : { zIndex }}
       onClick={onBackdropClick}
       role="presentation"
     >
@@ -105,7 +110,7 @@ export function Modal({
                   shape="circle"
                   className="sui-modal__back"
                   onClick={onBack}
-                  aria-label={backLabel ?? "Back"}
+                  aria-label={backLabel ?? t("common.back", "Back")}
                   leftSection={<Icon name="arrow-left" size={16} />}
                 />
               )}
@@ -124,7 +129,7 @@ export function Modal({
                 shape="circle"
                 className="sui-modal__close"
                 onClick={onClose}
-                aria-label="Close"
+                aria-label={t("common.close", "Close")}
                 leftSection={<Icon name="x" size={16} />}
               />
             </header>

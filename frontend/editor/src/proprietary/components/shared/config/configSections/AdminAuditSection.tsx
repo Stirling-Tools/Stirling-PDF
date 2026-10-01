@@ -64,7 +64,10 @@ const AdminAuditSection: React.FC = () => {
           setError(
             err instanceof Error
               ? err.message
-              : "Failed to load audit system status",
+              : t(
+                  "audit.error.loadStatus",
+                  "Failed to load audit system status",
+                ),
           );
         }
       } finally {

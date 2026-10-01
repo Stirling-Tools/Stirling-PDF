@@ -139,12 +139,14 @@ export function DataTable<T extends RowData>({
   toolbar,
   variant = "default",
   caption,
-  collapseLabels = {
-    showAll: (n) => `Show all ${n}`,
-    showLess: "Show less",
-  },
+  collapseLabels,
 }: DataTableProps<T>) {
   const { t } = useTranslation();
+  const resolvedCollapseLabels = collapseLabels ?? {
+    showAll: (total: number) =>
+      t("common.showAllTotal", "Show all {{total}}", { total }),
+    showLess: t("common.showLess", "Show less"),
+  };
   const [sorting, setSorting] = useState<SortingState>(
     defaultSort
       ? [{ id: defaultSort.key, desc: defaultSort.direction === "desc" }]
@@ -316,7 +318,7 @@ export function DataTable<T extends RowData>({
           }
           colSpan={colCount}
         >
-          {empty ?? "No data"}
+          {empty ?? t("common.noData", "No data")}
         </td>
       </tr>
     );
@@ -365,8 +367,8 @@ export function DataTable<T extends RowData>({
               onClick={() => toggleGroup(g.key)}
             >
               {open
-                ? collapseLabels.showLess
-                : collapseLabels.showAll(g.rows.length)}
+                ? resolvedCollapseLabels.showLess
+                : resolvedCollapseLabels.showAll(g.rows.length)}
             </button>
           </td>
         </tr>
