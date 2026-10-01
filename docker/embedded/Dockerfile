@@ -1,7 +1,7 @@
 # Stirling-PDF - Full version (embedded frontend)
 # Uses pre-built base image for fast builds
 
-ARG BASE_VERSION=1.0.6@sha256:003c1056474d4f9b8c38d3c8b72c78a7ac51b45e12500f831739a4cbf8803987
+ARG BASE_VERSION=1.0.6@sha256:678d67fd8c80d625b54e39ced1e712cc0dcfee0601c507ac2a67d0cc8a52a696
 ARG BASE_IMAGE=stirlingtools/stirling-pdf-base:${BASE_VERSION}
 
 # Stage 1: Build the Java application and frontend
@@ -58,9 +58,8 @@ COPY . .
 ARG PROTOTYPES_BUILD=false
 ARG STIRLING_FLAVOR=proprietary
 ENV STIRLING_FLAVOR=${STIRLING_FLAVOR}
-# Embed the admin portal app at /portal. Set true by the deploy workflow when the
-# portal or AI layers change; defaults false so normal builds skip the extra app.
-ARG BUILD_PORTAL=false
+# Include the processor (admin portal) in the bundled editor; false leaves it out.
+ARG BUILD_PORTAL=true
 
 # Which Stirling account the portal connects to. Build-time because Vite inlines VITE_* into the
 # bundle; there is no runtime override. Empty leaves the committed .env.proprietary defaults, which
