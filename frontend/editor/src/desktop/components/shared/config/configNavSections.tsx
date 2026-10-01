@@ -1,7 +1,10 @@
 import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import { useConfigNavSections as useProprietaryConfigNavSections } from "@proprietary/components/shared/config/configNavSections";
-import { ConfigNavSection } from "@core/components/shared/config/configNavSections";
+import {
+  ConfigNavSection,
+  extendPreferences,
+} from "@core/components/shared/config/configNavSections";
 import { ConnectionSettings } from "@app/components/ConnectionSettings";
 import DesktopGeneralSection from "@app/components/shared/config/configSections/GeneralSection";
 import { createCloudTeamNavItem } from "@app/components/shared/config/cloudConfigNavSections";
@@ -60,25 +63,19 @@ export const useConfigNavSections = (
   const isSaasMode = connectionMode === "saas";
   const isLocalMode = connectionMode === "local";
 
-  // Get the proprietary sections (includes core Preferences + admin sections)
-  const sections = useProprietaryConfigNavSections(
-    isAdmin,
-    runningEE,
-    loginEnabled,
-    onRequestClose,
-    showSettingsWhenNoLogin,
-  ).slice();
-
-  // Desktop adds file-association defaults and its own update controls to the
-  // Preferences page; core builds the page, desktop supplies its extras.
-  const preferences = sections.find((s) => s.id === "preferences");
-  if (preferences) {
-    preferences.items = preferences.items.map((item) =>
-      item.key === "general"
-        ? { ...item, component: <DesktopGeneralSection /> }
-        : item,
-    );
-  }
+  // Wraps proprietary's Preferences page, keeping its account cards while signed
+  // in, to add file-association defaults and the desktop update controls.
+  const sections = extendPreferences(
+    useProprietaryConfigNavSections(
+      isAdmin,
+      runningEE,
+      loginEnabled,
+      onRequestClose,
+      showSettingsWhenNoLogin,
+    ),
+    isAuthenticated ? {} : { accountSlot: undefined },
+    DesktopGeneralSection,
+  );
 
   const connectionModeSection: ConfigNavSection = {
     title: t("settings.connection.title", "Connection Mode"),
@@ -165,8 +162,7 @@ export const useConfigNavSections = (
     });
   }
 
-  // Append remaining proprietary sections, skipping self-hosted admin sections in SaaS mode
-  // and hiding the Account section when not authenticated.
+  // Append remaining proprietary sections, skipping self-hosted admin sections in SaaS mode.
   for (const section of sections.slice(1)) {
     const firstItemKey = section.items[0]?.key;
     if (
@@ -176,11 +172,8 @@ export const useConfigNavSections = (
     ) {
       continue;
     }
-    const filteredItems = isAuthenticated
-      ? section.items
-      : section.items.filter((item) => item.key !== "account");
-    if (filteredItems.length === 0) continue;
-    result.push({ ...section, items: filteredItems });
+    if (section.items.length === 0) continue;
+    result.push(section);
   }
 
   return result;

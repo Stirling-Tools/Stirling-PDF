@@ -64,6 +64,16 @@ describe("Connected instances settings navigation", () => {
     },
   );
 
+  it.each([false, true])(
+    "sends retired Preferences rows to their new home with Processor access = %s",
+    (portalAccess) => {
+      state.portalAccess = portalAccess;
+      const { result } = renderHook(() => useSettingsNav(vi.fn()));
+      expect(result.current.aliases?.hotkeys).toBe("general");
+      expect(result.current.aliases?.account).toBe("overview");
+    },
+  );
+
   it.each([
     { owner: false, loading: false },
     { owner: true, loading: true },
