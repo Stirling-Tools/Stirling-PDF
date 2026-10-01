@@ -25,7 +25,7 @@ export function endLoadingLaunchFiles(): void {
 
 /**
  * Whether files the OS handed this app ("open with") are on their way in.
- * They own the workbench when they arrive, so a session restore yields to them.
+ * Session restoration can reopen files, but must leave incoming files' selection and view alone.
  */
 export async function launchFilesPending(): Promise<boolean> {
   await Promise.allSettled([...pops]);

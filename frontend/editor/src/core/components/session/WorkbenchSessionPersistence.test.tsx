@@ -169,15 +169,21 @@ describe("restore", () => {
     expect(mocks.alert).not.toHaveBeenCalled();
   });
 
-  it("does not touch a workbench that already holds files", async () => {
+  it("adds saved files alongside files that are already open", async () => {
     sessionStorage.setItem(
       SESSION_KEY,
       JSON.stringify({ v: 2, fileIds: ["root-a"], selectedFileIds: [] }),
     );
+    mocks.getStirlingFileStub.mockResolvedValue(stub("root-a", "root-a"));
     mount(makeStore([stub("already-open", "already-open")]));
 
     await act(async () => {});
-    expect(actions.addStirlingFileStubs).not.toHaveBeenCalled();
+    expect(actions.addStirlingFileStubs).toHaveBeenCalledWith([
+      stub("root-a", "root-a"),
+    ]);
+    expect(actions.setSelectedFiles).not.toHaveBeenCalled();
+    expect(mocks.setActiveFileId).not.toHaveBeenCalled();
+    expect(mocks.restoreWorkbench).not.toHaveBeenCalled();
   });
 
   it("reads unversioned files directly instead of scanning the whole library", async () => {
@@ -225,10 +231,16 @@ describe("restore", () => {
     ).toEqual(["a-v2"]);
   });
 
-  it("yields to files opened with the app that are still loading", async () => {
+  it("restores saved files while leaving the view to launch files still loading", async () => {
     sessionStorage.setItem(
       SESSION_KEY,
-      JSON.stringify({ v: 2, fileIds: ["root-a"], selectedFileIds: [] }),
+      JSON.stringify({
+        v: 2,
+        fileIds: ["root-a"],
+        selectedFileIds: ["root-a"],
+        activeFileId: "root-a",
+        workbench: "fileEditor",
+      }),
     );
     mocks.getLeafStirlingFileStubs.mockResolvedValue([
       stub("root-a", "root-a"),
@@ -238,8 +250,73 @@ describe("restore", () => {
     mount(makeStore());
 
     await act(async () => {});
-    expect(actions.addStirlingFileStubs).not.toHaveBeenCalled();
+    expect(actions.addStirlingFileStubs).toHaveBeenCalledWith([
+      stub("root-a", "root-a"),
+    ]);
+    expect(actions.setSelectedFiles).not.toHaveBeenCalled();
+    expect(mocks.setActiveFileId).not.toHaveBeenCalled();
     expect(mocks.restoreWorkbench).not.toHaveBeenCalled();
+  });
+
+  it.each(["lookup", "addition"])(
+    "does not replace launch selection or view when files arrive during %s",
+    async (phase) => {
+      sessionStorage.setItem(
+        SESSION_KEY,
+        JSON.stringify({
+          v: 2,
+          fileIds: ["root-a"],
+          selectedFileIds: ["root-a"],
+          activeFileId: "root-a",
+          workbench: "fileEditor",
+        }),
+      );
+      const store = makeStore();
+      const arrive = () => {
+        store.state.files.ids = ["launched" as never];
+        store.state.files.byId = { launched: stub("launched", "launched") };
+        store.state.ui.selectedFileIds = ["launched"];
+        store.notify();
+      };
+      mocks.getStirlingFileStub.mockImplementation(async () => {
+        if (phase === "lookup") arrive();
+        return stub("root-a", "root-a");
+      });
+      actions.addStirlingFileStubs.mockImplementation(async () => {
+        if (phase === "addition") arrive();
+        return [];
+      });
+
+      mount(store);
+      await act(async () => {});
+
+      expect(actions.addStirlingFileStubs).toHaveBeenCalledWith([
+        stub("root-a", "root-a"),
+      ]);
+      expect(actions.setSelectedFiles).not.toHaveBeenCalled();
+      expect(mocks.setActiveFileId).not.toHaveBeenCalled();
+      expect(mocks.restoreWorkbench).not.toHaveBeenCalled();
+      expect(store.state.ui.selectedFileIds).toEqual(["launched"]);
+    },
+  );
+
+  it("does not reopen another version of a file already in the workbench", async () => {
+    sessionStorage.setItem(
+      SESSION_KEY,
+      JSON.stringify({ v: 2, fileIds: ["root-a"], selectedFileIds: [] }),
+    );
+    mocks.getStirlingFileStub.mockResolvedValue({
+      ...stub("root-a", "root-a"),
+      isLeaf: false,
+    });
+    mocks.getLeafStirlingFileStubs.mockResolvedValue([
+      stub("a-v3", "root-a", 3),
+    ]);
+    mount(makeStore([stub("a-v2", "root-a", 2)]));
+
+    await act(async () => {});
+    expect(actions.addStirlingFileStubs).not.toHaveBeenCalled();
+    expect(mocks.alert).not.toHaveBeenCalled();
   });
 
   it("restores what still exists and says how much is gone", async () => {
