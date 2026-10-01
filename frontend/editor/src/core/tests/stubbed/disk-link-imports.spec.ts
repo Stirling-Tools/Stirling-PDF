@@ -79,7 +79,6 @@ test("the sidebar native picker keeps its path after reload and saves in place",
   await dismissModals(page);
   await expectLinked(page);
   await expect(page.locator(".file-sidebar-file-item")).toHaveCount(1);
-  await page.locator(".file-sidebar-file-item").click();
   await expect(page.locator('[data-page-index="0"]').first()).toBeVisible({
     timeout: 30_000,
   });

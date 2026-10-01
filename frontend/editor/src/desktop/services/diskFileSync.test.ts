@@ -204,6 +204,14 @@ describe("syncLinkedFileFromDisk", () => {
     expect(result.status).toBe("conflict");
   });
 
+  it("keeps a recorded conflict after the live editor state is lost on reload", async () => {
+    diskState.state = { availability: "present", size: 3, modifiedMs: 9000 };
+    const result = await syncLinkedFileFromDisk(
+      stub({ isDirty: false, diskConflictAt: 8000 }),
+    );
+    expect(result.status).toBe("conflict");
+  });
+
   it("keeps an open editor's edits, which no stub flag records", async () => {
     // A page editor, annotation or redaction session is dirty long before any
     // version exists to set isDirty, so disk must not simply win.

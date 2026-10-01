@@ -147,7 +147,9 @@ export async function syncLinkedFileFromDisk(
   // child's write, so "changed" here means the child was saved - and reloading
   // would overwrite that version for good.
   if (stub.isLeaf === false) return { status: "superseded" };
-  if (stub.isDirty || hasUnsavedWork) return { status: "conflict" };
+  // A recorded conflict still needs a choice after reload, when live editor state is gone.
+  if (stub.isDirty || stub.diskConflictAt || hasUnsavedWork)
+    return { status: "conflict" };
   if (state.size > AUTO_RELOAD_MAX_BYTES) {
     return { status: "too-large", size: state.size };
   }

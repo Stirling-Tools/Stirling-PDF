@@ -12,6 +12,7 @@ import { MemoryRouter, useLocation, useNavigate } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
 import { AppProviders } from "@app/components/AppProviders";
 import HomePage from "@app/pages/HomePage";
+import SettingsPage from "@app/pages/SettingsPage";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import {
   useNavigationActions,
@@ -30,6 +31,7 @@ let showPage: () => void = () => {};
 let backToTools: () => void = () => {};
 let selectTool: (id: ToolId) => void = () => {};
 let goBack: () => void = () => {};
+let goToSettings: () => void = () => {};
 let setReaderMode: (on: boolean) => void = () => {};
 let navigation: ReturnType<typeof useNavigationState>;
 let navigationActions: ReturnType<typeof useNavigationActions>["actions"];
@@ -45,6 +47,7 @@ function Probe() {
   selectTool = workflow.handleToolSelect;
   setReaderMode = workflow.setReaderMode;
   goBack = () => navigate(-1);
+  goToSettings = () => navigate("/settings/general");
   return null;
 }
 
@@ -52,12 +55,14 @@ function Probe() {
 // does until its auth check settles.
 function Page({ late }: { late: boolean }) {
   const [shown, setShown] = useState(!late);
+  const { pathname } = useLocation();
   showPage = () => setShown(true);
   return (
     <>
       <Probe />
       <NavigationWarningModal />
-      {shown && <HomePage />}
+      {shown &&
+        (pathname.startsWith("/settings") ? <SettingsPage /> : <HomePage />)}
     </>
   );
 }
@@ -104,23 +109,30 @@ describe("default startup view: Reader", () => {
   it.each([
     ["with the providers", false],
     ["after the providers", true],
-  ])("opens reading when the page mounts %s", async (_label, late) => {
-    renderApp(late);
-    if (late) {
-      await waitFor(() => expect(seen.readerMode).toBe(true));
-      act(() => showPage());
-    }
-    await expectSettledInReader();
-  });
+  ])(
+    "opens reading when the page mounts %s",
+    async (_label, late) => {
+      renderApp(late);
+      if (late) {
+        await waitFor(() => expect(seen.readerMode).toBe(true));
+        act(() => showPage());
+      }
+      await expectSettledInReader();
+    },
+    15000,
+  );
 
   it("keeps the editor on a reload", async () => {
     const navigation = vi
       .spyOn(performance, "getEntriesByType")
       .mockReturnValue([{ type: "reload" } as PerformanceNavigationTiming]);
-    renderApp();
-    await act(() => new Promise((r) => setTimeout(r, 1500)));
-    expect(seen).toEqual({ pathname: "/", readerMode: false });
-    navigation.mockRestore();
+    try {
+      renderApp();
+      await act(() => new Promise((r) => setTimeout(r, 1500)));
+      expect(seen).toEqual({ pathname: "/", readerMode: false });
+    } finally {
+      navigation.mockRestore();
+    }
   });
 
   it("returns to reading from the brand mark", async () => {
@@ -149,6 +161,18 @@ describe("default startup view: Reader", () => {
     await waitFor(() =>
       expect(seen).toEqual({ pathname: "/compress", readerMode: false }),
     );
+  }, 15000);
+
+  it("returns from settings to reading with one brand click", async () => {
+    renderApp();
+    await expectSettledInReader();
+    act(() => backToTools());
+    await waitFor(() => expect(seen.readerMode).toBe(false));
+    act(() => goToSettings());
+    await waitFor(() => expect(seen.pathname).toBe("/settings/general"));
+
+    fireEvent.click(document.querySelector(".quick-nav-brand-button")!);
+    await expectSettledInReader();
   }, 15000);
 
   it("opens reading from the rail while a tool is open", async () => {

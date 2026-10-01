@@ -13,6 +13,7 @@ export function useOpenedFile() {
   const openedFilePathsRef = useRef<string[]>([]);
 
   const clearOpenedFilePaths = useCallback(() => {
+    if (openedFilePathsRef.current.length > 0) endLoadingLaunchFiles();
     openedFilePathsRef.current = [];
     setOpenedFilePaths([]);
   }, []);
@@ -25,13 +26,17 @@ export function useOpenedFile() {
   }, []);
 
   useEffect(() => {
-    // Function to read and process files from storage
+    let disposed = false;
     const readFilesFromStorage = async () => {
+      // StrictMode replays setup before this resumes; a discarded setup must not drain the queue.
+      await Promise.resolve();
+      if (disposed) return;
       console.log("🔍 Reading files from storage...");
       try {
         const filePaths = await trackLaunchFilePop(
           fileOpenService.getOpenedFiles(),
         );
+        if (disposed) return;
         console.log("🔍 fileOpenService.getOpenedFiles() returned:", filePaths);
 
         if (filePaths.length > 0) {
@@ -48,7 +53,7 @@ export function useOpenedFile() {
       } catch (error) {
         console.error("❌ Failed to read files from storage:", error);
       } finally {
-        setLoading(false);
+        if (!disposed) setLoading(false);
       }
     };
 
@@ -68,10 +73,16 @@ export function useOpenedFile() {
         await readFilesFromStorage();
       })
       .then((unlistenFn) => {
-        unlisten = unlistenFn;
+        if (disposed) unlistenFn();
+        else unlisten = unlistenFn;
       });
 
     return () => {
+      disposed = true;
+      if (openedFilePathsRef.current.length > 0) {
+        endLoadingLaunchFiles();
+        openedFilePathsRef.current = [];
+      }
       if (unlisten) unlisten();
     };
   }, []);
