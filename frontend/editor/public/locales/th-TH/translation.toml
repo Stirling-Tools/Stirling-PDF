@@ -278,6 +278,7 @@ customNumberDesc = "ค่าเริ่มต้น {n}, ยังยอมร
 fontName = "ชื่อฟอนต์"
 fontSize = "ขนาดตัวอักษร"
 numberPagesDesc = "หมายเลขหน้าที่จะกำหนด หมายเลขเริ่มต้น 'ทั้งหมด', ยังยอมรับ 1-5 หรือ 2,5,9 เป็นต้น"
+pagePreviewAlt = "ตัวอย่างหน้า"
 pagesAndStarting = "หน้าและเลขเริ่มต้น"
 positionAndPages = "ตำแหน่งและหน้า"
 preview = "การเลือกตำแหน่ง"
@@ -350,7 +351,9 @@ text = "สิทธิ์เหล่านี้ควบคุมสิ่ง
 title = "เปลี่ยนสิทธิ์"
 
 [addStamp]
+pagePreviewAlt = "ตัวอย่างหน้า"
 preview = "ดูตัวอย่างตราประทับ"
+stampPreviewAlt = "ตัวอย่างตราประทับ"
 tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 
 [AddStampRequest]
@@ -383,6 +386,7 @@ positionAndFormatting = "ตำแหน่งและการจัดรู�
 preview = "Preview:"
 quickPosition = "เลือกตำแหน่งบนหน้าสำหรับวางตราประทับ"
 rotation = "การหมุน"
+selectedImageAlt = "รูปภาพตราประทับที่เลือก"
 selectTemplate = "Select a template..."
 stampSetup = "ตั้งค่าตราประทับ"
 stampText = "ข้อความตราประทับ"
@@ -533,6 +537,9 @@ letter = "Letter"
 
 [adjustPageScale.scaleFactor]
 label = "อัตราส่วนสเกล"
+
+[adjustPageScale.settings]
+title = "การตั้งค่า"
 
 [adjustPageScale.tooltip.description]
 text = "ปรับขนาดเนื้อหา PDF และเปลี่ยนมิติของหน้า"
@@ -728,6 +735,7 @@ noLanguages = "ไม่พบภาษา tessdata ในไดเรกทอ�
 permissionNotice = "เส้นทาง tessdata ไม่สามารถเขียนได้ การดาวน์โหลดจะถูกเปิดในเบราว์เซอร์ โปรดบันทึกไฟล์ .traineddata ลงในโฟลเดอร์ tessdata ด้วยตนเอง"
 
 [admin.settings.ai]
+customProvider = "กำหนดเอง (เข้ากันได้กับ OpenAI)"
 description = "เชื่อมต่อ Stirling กับ Python AI engine เลือกโมเดล และตั้งค่า guardrails ที่ใช้ควบคุมการทำงาน"
 managedByCloud = "จัดการโดย Stirling Cloud ในโหมดนี้"
 managedByCloudShort = "จัดการโดย Stirling Cloud"
@@ -1146,7 +1154,6 @@ refresh = "รีเฟรช"
 selectFile = "กรุณาเลือกไฟล์ .sql เพื่อทำการนำเข้า"
 size = "ขนาด"
 title = "ฐานข้อมูล"
-unavailable = "ไม่สามารถแสดงรายการไฟล์สำรองสำหรับการกำหนดค่าฐานข้อมูลปัจจุบัน"
 uploadTitle = "อัปโหลดและนำเข้า"
 version = "เวอร์ชัน H2"
 
@@ -1280,6 +1287,7 @@ label = "ข้อมูลเมตาแบบกำหนดเอง"
 [admin.settings.general.customMetadata.author]
 description = "ผู้เขียนเริ่มต้นสำหรับข้อมูลเมตาของ PDF (เช่น ชื่อผู้ใช้)"
 label = "ผู้เขียนเริ่มต้น"
+placeholder = "ชื่อผู้ใช้"
 
 [admin.settings.general.customMetadata.autoUpdate]
 description = "อัปเดตข้อมูลเมตาของ PDF โดยอัตโนมัติในเอกสารที่ประมวลผลทั้งหมด"
@@ -1395,6 +1403,7 @@ defaultLocaleLink = "กำหนดค่าโลแคลเริ่มต�
 description = "แสดงข้อจำกัดความรับผิดชอบที่ผู้ใช้ต้องยอมรับหลังจากเข้าสู่ระบบ ข้อความจะเป็นไปตามภาษาของผู้ใช้แต่ละคน"
 discardConfirm = "คุณมีการเปลี่ยนแปลงที่ยังไม่ได้บันทึกซึ่งจะสูญหาย ต้องการสลับภาษาอยู่ดีหรือไม่?"
 editLabel = "Markdown"
+editPlaceholder = "## หัวข้อ\n\nข้อความปฏิเสธความรับผิดชอบของคุณ..."
 emptyPreview = "ยังไม่มีตัวอย่างให้แสดง"
 language = "ภาษา"
 languageHelp = "แต่ละภาษามีไฟล์ของตนเอง หากภาษาของผู้ใช้ไม่มีไฟล์ ข้อตกลงจะใช้ไฟล์ของโลแคลเริ่มต้น จากนั้นจึงใช้ข้อความสำรอง"
@@ -1513,8 +1522,10 @@ label = "JWKS URL (optional)"
 placeholder = "Auto-discovered from issuer"
 
 [admin.settings.mcp.mode]
+apikey = "API key (คีย์ต่อผู้ใช้ของ Stirling)"
 description = "OAuth needs an external IdP. API key uses a Stirling per-user API key (X-API-KEY) - simplest for self-host."
 label = "Authentication mode"
+oauth = "OAuth 2.1 (IdP ภายนอก)"
 
 [admin.settings.mcp.requireAccount]
 description = "Only let tokens through if their subject maps to a provisioned, enabled Stirling user."
@@ -1931,6 +1942,14 @@ title = "การควบคุมผู้ใช้"
 [agents]
 stirling_name = "Stirling"
 
+[alphabetOptions]
+arabic = "อาหรับ"
+chinese = "จีน (ตัวย่อ)"
+japanese = "ญี่ปุ่น"
+korean = "เกาหลี"
+roman = "โรมัน"
+thai = "ไทย"
+
 [analytics]
 learnMore = "เรียนรู้เพิ่มเติม"
 paragraph1 = "Stirling PDF มีการวิเคราะห์แบบสมัครใจเพื่อช่วยเราปรับปรุงผลิตภัณฑ์ เราไม่นำทางความเป็นส่วนตัวหรือเนื้อหาของไฟล์ไปเก็บข้อมูลใด ๆ"
@@ -2052,6 +2071,7 @@ week = "สัปดาห์"
 
 [audit.clearData]
 cancel = "ยกเลิก"
+closeAlert = "ปิดการแจ้งเตือน"
 codeDoesNotMatch = "โค้ดไม่ตรงกัน"
 codePlaceholder = "พิมพ์รหัสที่นี่"
 confirmationCode = "รหัสยืนยัน"
@@ -2061,6 +2081,7 @@ confirmTitle = "โปรดยืนยันว่าคุณต้องก�
 deleteButton = "ลบ"
 enterCode = "รหัสยืนยัน"
 enterCodeBelow = "ป้อนรหัสให้ตรงกับที่แสดงด้านบน (ตัวพิมพ์เล็ก-ใหญ่มีผล)"
+failed = "ล้างข้อมูลการตรวจสอบไม่สำเร็จ"
 initiateDelete = "ลบข้อมูลทั้งหมด"
 irreversible = "ไม่สามารถย้อนกลับได้"
 success = "สำเร็จ"
@@ -2069,6 +2090,7 @@ warning1 = "ไม่สามารถยกเลิกการทำรา�
 warning2 = "การลบข้อมูลการตรวจสอบจะลบล็อกการตรวจสอบทั้งหมดในอดีตอย่างถาวร รวมทั้งเหตุการณ์ด้านความปลอดภัย กิจกรรมของผู้ใช้ และการดำเนินการกับไฟล์ออกจากฐานข้อมูล"
 
 [audit.error]
+loadStatus = "โหลดสถานะระบบการตรวจสอบไม่สำเร็จ"
 title = "เกิดข้อผิดพลาดในการโหลดระบบบันทึกการตรวจสอบ"
 
 [audit.events]
@@ -2084,6 +2106,7 @@ fileHash = "แฮชไฟล์"
 filterByType = "กรองตามประเภท"
 filterByUser = "กรองตามผู้ใช้"
 ipAddress = "ที่อยู่ IP"
+loadFailed = "โหลดเหตุการณ์ไม่สำเร็จ"
 noEvents = "ไม่พบเหตุการณ์"
 startDate = "วันที่เริ่มต้น"
 timestamp = "เวลาประทับ"
@@ -2124,6 +2147,7 @@ avgLatency = "เวลาแฝงเฉลี่ย"
 error = "เกิดข้อผิดพลาดในการโหลดสถิติ"
 excellent = "ยอดเยี่ยม"
 good = "ดี"
+loadFailed = "โหลดสถิติไม่สำเร็จ"
 noData = "N/A"
 successRate = "อัตราความสำเร็จ"
 totalEvents = "เหตุการณ์ทั้งหมด"
@@ -2158,13 +2182,27 @@ accessDenied = "ปฏิเสธการเข้าถึง"
 insufficientPermissions = "คุณไม่มีสิทธิ์ในการดำเนินการนี้"
 
 [auth.callback]
+alreadySignedIn = "ลงชื่อเข้าใช้แล้ว! กำลังเปลี่ยนเส้นทาง..."
+backToLogin = "กลับไปที่หน้าเข้าสู่ระบบ"
 completing = "กำลังดำเนินการยืนยันตัวตนให้เสร็จสิ้น"
+exchanging = "กำลังแลกรหัสอนุญาต..."
+failedWithReason = "การยืนยันตัวตนล้มเหลว: {{error}}"
 invalidToken = "เข้าสู่ระบบ OAuth ล้มเหลว - token ไม่ถูกต้อง"
 missingToken = "เข้าสู่ระบบ OAuth ล้มเหลว - ไม่ได้รับ token"
+noData = "ไม่พบข้อมูลการยืนยันตัวตน"
 oauthFailed = "เข้าสู่ระบบ OAuth ล้มเหลว โปรดลองอีกครั้ง"
 pleaseWait = "โปรดรอขณะที่เราดำเนินการเข้าสู่ระบบให้เสร็จสิ้น"
+processing = "กำลังประมวลผลการยืนยันตัวตน..."
 signedOut = "คุณออกจากระบบแล้ว โปรดเข้าสู่ระบบอีกครั้ง"
+signInFailed = "ลงชื่อเข้าใช้ให้เสร็จสมบูรณ์ไม่สำเร็จ: {{error}}"
+success = "ลงชื่อเข้าใช้สำเร็จ! กำลังเปลี่ยนเส้นทาง..."
+unknownError = "ข้อผิดพลาดที่ไม่ทราบสาเหตุ"
 windowMayClose = "คุณสามารถปิดหน้าต่างนี้ได้เมื่อดำเนินการเสร็จสิ้น"
+
+[auth.callback.title]
+default = "การยืนยันตัวตน"
+processing = "กำลังลงชื่อเข้าใช้ให้คุณ"
+success = "พร้อมใช้งานแล้ว!"
 
 [auth.displayName]
 guest = "ผู้เยี่ยมชม"
@@ -2317,6 +2355,7 @@ title = "นำเข้าการทำงานอัตโนมัติ"
 unresolved = "ยังไม่จับคู่: {{ops}}"
 
 [automate.run]
+progress = "ความคืบหน้า: {{current}}/{{total}}"
 title = "เรียกใช้ระบบอัตโนมัติ"
 
 [automate.selection]
@@ -2466,6 +2505,7 @@ whatHappensNext = "ต่อไปจะเกิดอะไรขึ้น?"
 
 [billing.portal]
 error = "ไม่สามารถเปิดพอร์ทัลการเรียกเก็บเงิน"
+errorFallback = "โปรดลองอีกครั้งหรือติดต่อฝ่ายสนับสนุน"
 
 [bookletImposition]
 paperSizeNote = "ขนาดกระดาษจะถูกกำหนดจากหน้ากระดาษแรกโดยอัตโนมัติ"
@@ -2513,6 +2553,9 @@ title = "โหมดพิมพ์สองหน้าด้วยตนเ�
 [bookletImposition.rtlBinding]
 label = "เข้าเล่มจากขวาไปซ้าย"
 tooltip = "เหมาะสำหรับภาษาอาหรับ ฮีบรู หรือภาษาแบบขวาไปซ้ายอื่น ๆ"
+
+[bookletImposition.settings]
+title = "การตั้งค่า"
 
 [bookletImposition.tooltip.advanced]
 bullet1 = "เข้าเล่มขวาไปซ้าย: สำหรับภาษาอาหรับ ฮีบรู หรือภาษา RTL"
@@ -2582,6 +2625,8 @@ detail = "คลิกหรือกด Space เพื่อเล่นอี
 headline = "เคลียร์ทั้งหมด"
 
 [bulkSelection]
+selectedPages_one = "เลือกแล้ว: {{count}} หน้า ({{pages}})"
+selectedPages_other = "เลือกแล้ว: {{count}} หน้า ({{pages}})"
 syntaxError = "มีปัญหาเกี่ยวกับไวยากรณ์ ดูเคล็ดลับการเลือกหน้าเพื่อขอความช่วยเหลือ"
 
 [bulkSelection.advanced]
@@ -2802,6 +2847,7 @@ declineButton = "ปฏิเสธ"
 deleteSelected = "ลบลายเซ็นที่เลือก"
 drawSignature = "วาดลายเซ็นของคุณด้านล่าง"
 fileTooLarge = "ขนาดไฟล์ต้องน้อยกว่า 5MB"
+fontBrushScript = "Brush Script MT (ตัวเขียน)"
 fontFamily = "ตระกูลฟอนต์"
 fontSize = "ขนาดฟอนต์: {{size}}px"
 fontSizePlaceholder = "ขนาด"
@@ -2821,6 +2867,7 @@ removeImage = "นำรูปภาพออก"
 savedSignatures = "ลายเซ็นที่บันทึกไว้"
 selectFile = "เลือกไฟล์รูปภาพ"
 selectSignatureTitle = "เลือกหรือสร้างลายเซ็น"
+signatureImageAlt = "ลายเซ็น"
 signatureInfo = "การตั้งค่าเหล่านี้กำหนดโดยเจ้าของเอกสาร"
 signatureSettings = "การตั้งค่าลายเซ็น"
 signatureText = "ข้อความลายเซ็น"
@@ -3591,13 +3638,19 @@ confirm = "ยืนยัน"
 continue = "ดำเนินการต่อ"
 copied = "คัดลอกแล้ว!"
 copy = "คัดลอก"
+copyCode = "คัดลอกโค้ด"
+dismiss = "ปิด"
 done = "เสร็จสิ้น"
 enterValue = "Enter value"
 error = "ข้อผิดพลาด"
 expand = "ขยาย"
 filterEmpty = "ไม่มีสิ่งให้กรอง"
+goToSlide = "ไปที่สไลด์ {{number}}"
 loading = "กำลังโหลด..."
+moreInformation = "ข้อมูลเพิ่มเติม"
 next = "ถัดไป"
+noData = "ไม่มีข้อมูล"
+nOfTotal = "{{current}} จาก {{total}}"
 open = "Open"
 preview = "แสดงตัวอย่าง"
 previous = "ก่อนหน้า"
@@ -3606,6 +3659,9 @@ remaining = "คงเหลือ"
 retry = "ลองใหม่"
 save = "บันทึก"
 search = "ค้นหา"
+settingsSections = "ส่วนการตั้งค่า"
+showAllTotal = "แสดงทั้งหมด {{total}}"
+showLess = "แสดงน้อยลง"
 stepOf = "Step {{current}} of {{total}}"
 
 [compare]
@@ -3617,6 +3673,7 @@ newLine = "บรรทัดใหม่"
 pages = "หน้า"
 tags = "แยกแยะ, เปรียบเทียบ, การเปลี่ยนแปลง, การวิเคราะห์"
 title = "เปรียบเทียบ"
+workbenchLabel = "มุมมองเปรียบเทียบ"
 
 [compare.actions]
 linkScroll = "เชื่อมโยงการเลื่อน"
@@ -3770,6 +3827,7 @@ title = "วิธีการบีบอัด"
 desiredSize = "ขนาดไฟล์ที่ต้องการ"
 desiredSizePlaceholder = "ป้อนขนาด"
 desiredSizeUnit = "Size unit"
+title = "การตั้งค่า"
 
 [compress.tooltip.description]
 text = "การบีบอัดเป็นวิธีง่าย ๆ ในการลดขนาดไฟล์ เลือก ขนาดไฟล์ เพื่อป้อนขนาดเป้าหมายและให้เราปรับคุณภาพให้คุณ เลือก คุณภาพ เพื่อกำหนดความแรงการบีบอัดด้วยตนเอง"
@@ -3819,10 +3877,13 @@ title = "การตั้งค่าบัญชี"
 description = "อัปโหลดรูปภาพเพื่อปรับแต่งบัญชีของคุณ"
 help = "PNG, JPG หรือ WebP ขนาดไม่เกิน 2MB"
 remove = "ลบ"
+removeFailed = "ลบรูปโปรไฟล์ไม่สำเร็จ"
 sizeError = "โปรดเลือกรูปภาพที่มีขนาดเล็กกว่า 2MB"
 switchedToCustom = "สลับเป็นรูปภาพกำหนดเองแล้ว ขณะนี้คุณสามารถอัปโหลดของคุณเองได้"
+switchFailed = "เปลี่ยนเป็นรูปที่กำหนดเองไม่สำเร็จ"
 title = "รูปโปรไฟล์"
 upload = "อัปโหลด"
+uploadFailed = "อัปโหลดรูปโปรไฟล์ไม่สำเร็จ"
 useCustom = "ใช้รูปภาพกำหนดเอง"
 usingProvider = "กำลังใช้รูปโปรไฟล์จาก {{provider}}"
 
@@ -3836,6 +3897,7 @@ title = "ครอบตัดรูปโปรไฟล์"
 zoom = "ซูม"
 
 [config.account.security]
+changeFailed = "เปลี่ยนรหัสผ่านไม่สำเร็จ"
 changePassword = "เปลี่ยนรหัสผ่าน"
 description = "จัดการรหัสผ่านและการตั้งค่าความปลอดภัยของคุณ"
 title = "รหัสผ่านและความปลอดภัย"
@@ -3846,11 +3908,15 @@ description = "เชื่อมโยงบัญชีของคุณเ�
 email = "อีเมล"
 emailPassword = "หรือป้อนอีเมลและรหัสผ่านของคุณ"
 emailPlaceholder = "ป้อนอีเมลของคุณ"
+failed = "อัปเกรดบัญชีไม่สำเร็จ"
+failedWithProvider = "อัปเกรดบัญชีด้วย {{provider}} ไม่สำเร็จ"
 linkWith = "เชื่อมโยงกับ"
+linkWithProvider = "เชื่อมโยงกับ {{provider}}"
 password = "รหัสผ่าน (ไม่บังคับ)"
 passwordNote = "เว้นว่างไว้เพื่อใช้การยืนยันทางอีเมลเท่านั้น"
 passwordPlaceholder = "ตั้งรหัสผ่าน"
 socialLogin = "อัปเกรดด้วยบัญชีโซเชียล"
+success = "อัปเกรดบัญชีสำเร็จ! ตอนนี้คุณสามารถลงชื่อเข้าใช้ด้วยอีเมลของคุณได้แล้ว"
 title = "อัปเกรดบัญชีแขก"
 upgradeButton = "อัปเกรดบัญชี"
 
@@ -3960,10 +4026,10 @@ title = "คำขอไม่ถูกต้อง"
 
 [connect.renewal]
 approve = "ต่ออายุการลงชื่อเข้าใช้"
+currentOwnerRequired = "ลงชื่อเข้าใช้ในฐานะเจ้าของปัจจุบันของทีมบนคลาวด์ที่เชื่อมโยงไว้เพื่อต่ออายุการลงชื่อเข้าใช้ของเซิร์ฟเวอร์นี้ หากมีการโอนความเป็นเจ้าของแล้ว ให้ใช้บัญชีของเจ้าของใหม่"
 failed = "ไม่สามารถต่ออายุการลงชื่อเข้าใช้ของคุณได้ ลองอีกครั้ง หรือปิดหน้านี้แล้วเริ่มใหม่จากเซิร์ฟเวอร์ของคุณ"
 lead = "เซิร์ฟเวอร์นี้เชื่อมโยงกับบัญชีของคุณแล้ว ต่ออายุการลงชื่อเข้าใช้เพื่อกลับไปยังการเรียกเก็บเงินและการใช้งานบนเซิร์ฟเวอร์ของคุณ"
 title = "ต่ออายุการลงชื่อเข้าใช้เซิร์ฟเวอร์ของคุณ"
-wrongAccount = "บัญชีนี้ไม่สามารถต่ออายุการลงชื่อเข้าใช้ของเซิร์ฟเวอร์นี้ได้ เปลี่ยนไปใช้บัญชีที่ใช้เชื่อมโยงเซิร์ฟเวอร์เดิม บัญชีนั้นต้องยังคงเป็นเจ้าของทีมที่เชื่อมโยงอยู่"
 
 [convert]
 autoRotate = "หมุนอัตโนมัติ"
@@ -4009,6 +4075,7 @@ multiple = "หลายรายการ"
 optimizeForEbook = "ปรับ PDF ให้เหมาะกับเครื่องอ่าน ebook (ใช้ Ghostscript)"
 output = "ผลลัพธ์"
 outputFormat = "รูปแบบผลลัพธ์"
+pdfaAccessibleFormat = "{{format}} (เข้าถึงได้)"
 pdfaDigitalSignatureWarning = "PDF มีลายเซ็นดิจิทัล ซึ่งจะถูกลบในขั้นตอนถัดไป"
 pdfaNote = "PDF/A-1b เข้ากันได้มากกว่า ส่วน PDF/A-2b รองรับฟีเจอร์มากกว่า"
 pdfaOptions = "ตัวเลือก PDF/A"
@@ -4068,6 +4135,24 @@ outputFormatDesc = "เลือกรูปแบบเอาต์พุตส
 tabletPhone = "แท็บเล็ต/โทรศัพท์ (พร้อมรูปภาพ)"
 targetDevice = "อุปกรณ์เป้าหมาย"
 targetDeviceDesc = "เลือกโปรไฟล์เอาต์พุตที่ปรับให้เหมาะกับอุปกรณ์อ่าน"
+
+[convert.formatGroups]
+archive = "ไฟล์เก็บถาวร"
+document = "เอกสาร"
+ebook = "eBook"
+email = "อีเมล"
+file = "ไฟล์"
+image = "รูปภาพ"
+multipleFiles = "หลายไฟล์"
+presentation = "งานนำเสนอ"
+spreadsheet = "สเปรดชีต"
+text = "ข้อความ"
+web = "Web"
+
+[convert.formatOptions]
+any = "ใดก็ได้"
+images = "รูปภาพ"
+msgOutlook = "MSG (Outlook)"
 
 [cookieBanner.popUp]
 acceptAllBtn = "ตกลง"
@@ -4161,6 +4246,12 @@ label = "ตำแหน่ง Y"
 [crop.error]
 failed = "ครอบตัด PDF ไม่สำเร็จ"
 
+[crop.pageNumbers]
+description = "ครอบตัดพื้นที่ที่เลือกบนหน้าที่ระบุ หรือใช้ 'all' สำหรับทุกหน้า"
+error = "การเลือกหน้าไม่ถูกต้อง ใช้เช่น 1, 3, 5-8 หรือ all"
+label = "หน้าที่จะครอบตัด"
+placeholder = "เช่น 1, 3, 5-8 หรือ all"
+
 [crop.preview]
 title = "การเลือกพื้นที่ครอบตัด"
 
@@ -4183,16 +4274,11 @@ fileName = "ชื่อไฟล์"
 title = "การนำเข้า/ส่งออกฐานข้อมูล"
 
 [defaultApp]
-setDefault = "ตั้งเป็นค่าเริ่มต้น"
 title = "ตั้งเป็นแอป PDF เริ่มต้น"
 
 [defaultApp.error]
 message = "ตั้งตัวจัดการ PDF เริ่มต้นไม่สำเร็จ"
 title = "ข้อผิดพลาด"
-
-[defaultApp.prompt]
-dontRemind = "ไม่ต้องเตือนฉันอีก"
-message = "ทำให้ Stirling PDF เป็นแอปเริ่มต้นสำหรับเปิดไฟล์ PDF"
 
 [defaultApp.settingsOpened]
 message = "โปรดเลือก Stirling PDF ในการตั้งค่าระบบของคุณ"
@@ -4201,6 +4287,17 @@ title = "เปิดการตั้งค่าแล้ว"
 [defaultApp.success]
 message = "Stirling PDF เป็นโปรแกรมแก้ไข PDF เริ่มต้นของคุณแล้ว"
 title = "ตั้งเป็นแอปเริ่มต้นแล้ว"
+
+[desktop.titleBar]
+maximize = "ขยายใหญ่สุด"
+minimize = "ย่อเล็กสุด"
+restore = "คืนค่า"
+
+[desktopBilling]
+description = "จัดการการใช้งานและการเรียกเก็บเงินในเบราว์เซอร์ของคุณ ลงชื่อเข้าใช้ด้วยบัญชี Stirling เดียวกับที่คุณใช้ที่นี่"
+open = "เปิดการใช้งานและการเรียกเก็บเงินในเบราว์เซอร์"
+openFailed = "ไม่สามารถเปิดการใช้งานและการเรียกเก็บเงินได้ ตรวจสอบการเชื่อมต่อของคุณแล้วลองอีกครั้ง"
+selfHostedDescription = "จัดการการใช้งานและการเรียกเก็บเงินบนเซิร์ฟเวอร์ที่เชื่อมต่อของคุณในเบราว์เซอร์ ลงชื่อเข้าใช้ด้วยบัญชีเจ้าของเซิร์ฟเวอร์ของคุณ"
 
 [desktopFileLink]
 saveAs = "บันทึกเป็น…"
@@ -4264,6 +4361,7 @@ tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,ident
 noItems = "No items available"
 noResults = "No results found"
 searchPlaceholder = "ค้นหา..."
+selectedCount = "เลือกแล้ว {{count}} รายการ"
 selectLanguages = "Select languages"
 selectOption = "Select an option"
 
@@ -4274,6 +4372,7 @@ editSecretValue = "แก้ไขค่า Secret"
 [editTableOfContents]
 submit = "นำไปใช้กับสารบัญ"
 tags = "bookmarks,contents,edit,table of contents,TOC,outline,navigation,chapters,sections,add bookmarks,edit bookmarks,PDF outline"
+workbenchLabel = "พื้นที่ทำงานโครงร่าง"
 
 [editTableOfContents.actions]
 clipboardUnavailable = "เบราว์เซอร์นี้ไม่รองรับการเข้าถึงคลิปบอร์ด"
@@ -4434,6 +4533,27 @@ closeFile = "ปิดไฟล์"
 
 [fileEditor]
 addFiles = "เพิ่มไฟล์"
+closedFile = "ปิด {{name}} แล้ว"
+couldNotSave = "ไม่สามารถบันทึก {{name}} ได้"
+filesAdded_one = "เพิ่ม {{count}} ไฟล์แล้ว"
+filesAdded_other = "เพิ่ม {{count}} ไฟล์แล้ว"
+filesReordered_one = "จัดลำดับไฟล์ใหม่แล้ว"
+filesReordered_other = "จัดลำดับไฟล์ใหม่ {{count}} ไฟล์แล้ว"
+loadedFromStorage_one = "โหลด {{count}} ไฟล์จากที่เก็บข้อมูลแล้ว"
+loadedFromStorage_other = "โหลด {{count}} ไฟล์จากที่เก็บข้อมูลแล้ว"
+loadFromStorageFailed = "โหลดบางไฟล์จากที่เก็บข้อมูลไม่สำเร็จ"
+pinnedFile = "ปักหมุด {{name}} แล้ว"
+processFilesFailed = "ประมวลผลไฟล์ไม่สำเร็จ"
+savedAndClosed = "บันทึกและปิด {{name}} แล้ว"
+saveFailed = "บันทึกไม่สำเร็จ"
+unpinnedFile = "เลิกปักหมุด {{name}} แล้ว"
+unzipping = "กำลังแตกไฟล์ {{name}}"
+
+[fileEditor.unzip]
+error = "เกิดข้อผิดพลาดในการแตกไฟล์ {{name}}"
+extracted_one = "แตกไฟล์ {{count}} ไฟล์จาก {{name}} แล้ว"
+extracted_other = "แตกไฟล์ {{count}} ไฟล์จาก {{name}} แล้ว"
+failed = "แตกไฟล์จาก {{name}} ไม่สำเร็จ"
 
 [fileManager]
 addToUpload = "เพิ่มไปยังอัปโหลด"
@@ -4450,6 +4570,7 @@ noFiles = "ไม่มีไฟล์"
 noFilesFound = "ไม่พบไฟล์ที่ตรงกับการค้นหา"
 openInFileEditor = "เปิดในตัวแก้ไขไฟล์"
 openInPageEditor = "เปิดในตัวแก้ไขหน้า"
+reloadFiles = "โหลดไฟล์ใหม่"
 saveSelected = "บันทึกที่เลือก"
 searchFiles = "ค้นหาไฟล์..."
 share = "แชร์"
@@ -4459,6 +4580,8 @@ sharedEditNoticeConfirm = "รับทราบ"
 sharedEditNoticeTitle = "สำเนาบนเซิร์ฟเวอร์แบบอ่านอย่างเดียว"
 sharedWithYou = "แชร์กับคุณ"
 showAll = "แสดงทั้งหมด"
+showAllCount_one = "แสดงทั้งหมด ({{count}} ไฟล์)"
+showAllCount_other = "แสดงทั้งหมด ({{count}} ไฟล์)"
 sortBy = "Sort files"
 sortByDate = "เรียงตามวันที่"
 sortByName = "เรียงตามชื่อ"
@@ -4495,6 +4618,11 @@ sources = "แหล่งที่มาของไฟล์"
 subtitle = "เลือกจากไลบรารีของคุณหรือเพิ่มรายการใหม่"
 title = "เพิ่มไฟล์"
 unsupported = "เครื่องมือที่เลือกไม่รองรับไฟล์ประเภทนี้"
+
+[filePreview]
+loadingThumbnail = "กำลังโหลดรูปขนาดย่อ..."
+locked = "ถูกล็อก"
+previewOf = "ตัวอย่างของ {{name}}"
 
 [files]
 addFiles = "เพิ่มไฟล์"
@@ -4930,13 +5058,15 @@ title = "ไฟล์เป็น PDF"
 [fileUpload]
 dropFilesHere = "วางไฟล์ที่นี่หรือคลิกปุ่มอัปโหลด"
 dropFilesHereOpen = "วางไฟล์ที่นี่หรือคลิกปุ่มเปิด"
-filesAvailable = "ไฟล์ที่มีอยู่"
+filesAvailableCount_one = "มี {{count}} ไฟล์พร้อมใช้งาน"
+filesAvailableCount_other = "มี {{count}} ไฟล์พร้อมใช้งาน"
 loadFromStorage = "โหลดจากที่เก็บ"
 noFilesInStorage = "ไม่มีไฟล์ในที่เก็บ โปรดอัปโหลดไฟล์ก่อน"
 noFilesInStorageOpen = "ไม่มีไฟล์ในที่เก็บ เปิดไฟล์ก่อน"
 open = "เปิด"
 openFile = "เปิดไฟล์"
 openFiles = "เปิดไฟล์หลายไฟล์"
+selectedCount = "เลือกแล้ว {{count}} รายการ"
 selectFile = "Select {{name}}"
 selectFromStorage = "เลือกจากที่เก็บ"
 upload = "อัปโหลด"
@@ -5028,6 +5158,7 @@ rescanFields = "สแกนฟิลด์อีกครั้ง"
 rescanFormFields = "สแกนฟิลด์ฟอร์มอีกครั้ง"
 save = "บันทึก"
 saveShortcut = "Ctrl+S เพื่อบันทึก"
+selectOptionPlaceholder = "— เลือก —"
 skippedEdits_one = "ไม่สามารถใช้การเปลี่ยนแปลง 1 รายการ:"
 skippedEdits_other = "ไม่สามารถใช้การเปลี่ยนแปลง {{count}} รายการ:"
 skippedEditsTruncated = "มีอีก {{count}} รายการที่ไม่ได้แสดง"
@@ -5090,6 +5221,16 @@ tooltipHelp = "คำแนะนำที่แสดงเมื่อมี�
 type = "ประเภท"
 typeHelp = "ชนิดของฟิลด์นี้ การเปลี่ยนจะสร้างฟิลด์ใหม่ ดังนั้นค่าปัจจุบันจะไม่ถูกถ่ายโอนไป"
 
+[formFill.fieldTypes]
+button = "ปุ่ม"
+checkbox = "ช่องทำเครื่องหมาย"
+combobox = "ดรอปดาวน์"
+listbox = "กล่องรายการ"
+radio = "Radio"
+radioGroup = "กลุ่ม Radio"
+signature = "ลายเซ็น"
+text = "ข้อความ"
+
 [formFill.mode]
 create = "สร้าง"
 fill = "กรอก"
@@ -5107,11 +5248,16 @@ restore = "คืนค่า"
 
 [formFill.sidebar]
 close = "ปิดแถบด้านข้าง"
+empty = "ไม่พบช่องฟอร์มใน PDF นี้"
+loading = "กำลังโหลดช่องฟอร์ม..."
+pageNumber = "หน้า {{page}}"
+title = "ช่องฟอร์ม"
 
 [getPdfInfo]
 downloadJson = "ดาวน์โหลด JSON"
 downloads = "ดาวน์โหลด"
 indexTitle = "ดัชนี"
+noData = "ไม่มีข้อมูล"
 noneDetected = "ไม่พบ"
 noResults = "เรียกใช้เครื่องมือนี้เพื่อสร้างรายงาน"
 processing = "กำลังแยกข้อมูล..."
@@ -5127,6 +5273,8 @@ noVerification = "ไม่ได้ทำการตรวจสอบ"
 noVerificationDesc = "ไม่ได้ตรวจสอบการเป็นไปตามมาตรฐาน PDF สำหรับเอกสารนี้"
 passed = "ผ่าน"
 passedCount = "ผ่าน"
+secCompliant = "เอกสารเป็นไปตามข้อกำหนดการยื่นเอกสาร SEC EDGAR"
+secNotCompliant = "เอกสารไม่เป็นไปตามข้อกำหนดการยื่นเอกสาร SEC EDGAR"
 
 [getPdfInfo.error]
 partial = "ไม่สามารถประมวลผลไฟล์บางไฟล์ได้"
@@ -5134,10 +5282,15 @@ unexpected = "เกิดข้อผิดพลาดที่ไม่คา
 
 [getPdfInfo.other]
 attachments = "ไฟล์แนบ"
+created = "สร้างเมื่อ: {{date}}"
 embeddedFiles = "ไฟล์ฝัง"
+fileSizeBytes = "({{size}} bytes)"
 javaScript = "JavaScript"
 layers = "เลเยอร์"
+modified = "แก้ไขเมื่อ: {{date}}"
 structureTree = "StructureTree"
+unnamedAttachment = "ไฟล์แนบไม่มีชื่อ"
+unnamedFile = "ไฟล์ไม่มีชื่อ"
 xmp = "XMPMetadata"
 
 [getPdfInfo.perPage]
@@ -5147,6 +5300,7 @@ images = "รูปภาพ"
 links = "ลิงก์"
 multimedia = "มัลติมีเดีย"
 size = "ขนาด"
+unnamedImage = "รูปภาพ"
 xobjects = "จำนวน XObject"
 
 [getPdfInfo.report]
@@ -5675,6 +5829,7 @@ invalidEmail = "ที่อยู่อีเมลไม่ถูกต้อ�
 invalidInvitation = "คำเชิญไม่ถูกต้อง"
 invalidToken = "ลิงก์คำเชิญไม่ถูกต้อง"
 linkExpires = "ลิงก์หมดอายุ"
+linkExpiresAt = "ลิงก์หมดอายุ: {{date}} เวลา {{time}}"
 passwordMismatch = "รหัสผ่านไม่ตรงกัน"
 passwordPlaceholder = "ป้อนรหัสผ่านของคุณ"
 passwordRequired = "ต้องระบุรหัสผ่าน"
@@ -5689,6 +5844,7 @@ welcomeTitle = "คุณได้รับคำเชิญ!"
 addFiles = "เพิ่มไฟล์"
 mobileUpload = "อัปโหลดจากมือถือ"
 openFromComputer = "เปิดจากคอมพิวเตอร์"
+settingUpSession = "กำลังตั้งค่าเซสชันของคุณ..."
 uploadFromComputer = "อัปโหลดจากคอมพิวเตอร์"
 
 [language]
@@ -5770,6 +5926,7 @@ sessionExpired = "เซสชันของคุณหมดอายุ โ�
 signin = "ลงชื่อเข้าใช้"
 signingIn = "กำลังลงชื่อเข้าใช้..."
 signInWith = "ลงชื่อเข้าใช้ด้วย"
+signInWithProvider = "ลงชื่อเข้าใช้ด้วย {{provider}}"
 title = "ลงชื่อเข้าใช้"
 unexpectedError = "ข้อผิดพลาดที่ไม่คาดคิด: {{message}}"
 updatePassword = "อัปเดตรหัสผ่าน"
@@ -5811,6 +5968,9 @@ label = "ลบลายเซ็นดิจิทัลในไฟล์ท�
 description = "ลายเซ็นดิจิทัลจะไม่ถูกต้องเมื่อผสานไฟล์ เลือกตัวเลือกนี้เพื่อลบออกจาก PDF ที่ผสาน"
 title = "ลบลายเซ็นดิจิทัล"
 
+[merge.settings]
+title = "การตั้งค่า"
+
 [merge.sortBy]
 ascending = "จากน้อยไปมาก"
 dateModified = "แก้ไขล่าสุด"
@@ -5819,6 +5979,9 @@ description = "ไฟล์จะถูกผสานตามลำดับ�
 filename = "ชื่อไฟล์"
 label = "เรียงตาม"
 sort = "เรียงลำดับ"
+
+[merge.sortFiles]
+title = "จัดเรียงไฟล์"
 
 [merge.tooltip.header]
 title = "ภาพรวมการตั้งค่าการรวม"
@@ -5867,6 +6030,7 @@ validating = "กำลังตรวจสอบเซสชัน..."
 
 [mobileSign]
 clear = "Clear"
+drawingArea = "พื้นที่วาดลายเซ็น"
 invalidSession = "Session expired"
 invalidSessionMessage = "This QR code is no longer valid. Open the Sign tool on your computer and scan the new code."
 penSizeLabel = "Pen size"
@@ -5882,6 +6046,7 @@ validating = "Checking session…"
 fromGallery = "From gallery"
 hint = "Photograph a signature on white paper, or choose an existing image."
 invalidType = "Please choose an image file."
+previewAlt = "ลายเซ็น"
 takePhoto = "Take a photo"
 
 [mobileSign.tab]
@@ -5993,6 +6158,9 @@ profile = "See your basic profile information"
 desc = "ทำความสะอาดการสแกนและตรวจจับข้อความจากภาพภายใน PDF และเพิ่มเป็นข้อความอีกครั้ง"
 tags = "การรู้จำ, ข้อความ, รูปภาพ, การสแกน, อ่าน, ระบุ, ตรวจจับ, แก้ไขได้"
 title = "OCR / ทำความสะอาดการสแกน"
+
+[ocr.advanced]
+title = "ขั้นสูง"
 
 [ocr.error]
 failed = "การทำงาน OCR ล้มเหลว"
@@ -6118,9 +6286,9 @@ title = "ดาวน์โหลด Stirling สำหรับ Desktop"
 description = "ทำงานร่วมกับทีมของคุณ"
 title = "เชิญสมาชิกทีม"
 
-[onboarding.checklist.shareAnalytics]
-description = "ช่วยปรับปรุง Stirling"
-title = "แชร์ข้อมูลการใช้งานแบบไม่ระบุตัวตน"
+[onboarding.checklist.setDefaultApp]
+description = "เปิดไฟล์ PDF ใน Stirling PDF"
+title = "ตั้ง Stirling เป็นค่าเริ่มต้นของคุณ"
 
 [onboarding.checklist.takeTour]
 description = "ดูวิธีการทำงานของ Stirling ในคำแนะนำแบบรวดเร็ว"
@@ -6188,6 +6356,7 @@ message = "แอปมีการเปลี่ยนแปลงครั้
 roleAdmin = "ผู้ดูแลระบบ"
 rolePlaceholder = "ยืนยันบทบาทของคุณ"
 roleUser = "ผู้ใช้"
+title = "การตรวจสอบความปลอดภัย"
 
 [onboarding.serverLicense]
 freeBody = "ไลเซนส์ <strong>Open-Core</strong> ของเรารวม <strong>OAuth SSO</strong> และผู้ใช้สูงสุด <strong>{{freeTierLimit}}</strong> คนฟรี เพื่อขยายการใช้งานอย่างต่อเนื่อง เราแนะนำแพ็กเกจ Stirling Team — <strong>ผู้ใช้ 100 คน</strong> ในราคา $99/เดือน"
@@ -6276,16 +6445,93 @@ title = "ไฟล์ซ้อนทับ"
 text = "ชั้นหน้าจะวางซ้อนทับไว้ด้านบนของหน้า พื้นหลังจะวางไว้ด้านหลัง"
 title = "ตำแหน่งการซ้อนทับ"
 
+[ownership]
+acceptInvite = "พวกเขาสามารถสร้างบัญชีหรือลงชื่อเข้าใช้ แล้วจึงยอมรับคำเชิญได้"
+accessUpdated = "สิทธิ์การเข้าถึงในฐานะเจ้าของของพวกเขาพร้อมแล้ว"
+accountLinkDisabled = "เซิร์ฟเวอร์นี้ยังคงมีลิงก์คลาวด์อยู่ แต่การเชื่อมโยงบัญชีถูกปิดอยู่ ขอให้ผู้ดูแลเซิร์ฟเวอร์เปิดใช้งานการเชื่อมโยงบัญชี จากนั้นดำเนินการโอนนี้ต่อ หรือยกเลิกการเชื่อมโยงเซิร์ฟเวอร์ในการตั้งค่า"
+anotherTeam = "อยู่ในทีมอื่นอยู่แล้วหรือไม่"
+billing = "การสมัครใช้งาน กระเป๋าเงิน วิธีการชำระเงิน และใบอนุญาตที่มีอยู่ยังคงอยู่ รายละเอียดผู้ติดต่อสำหรับการเรียกเก็บเงินจะไม่เปลี่ยนโดยอัตโนมัติ"
+billingDetails = "รายละเอียดการเรียกเก็บเงิน"
+billingUnchanged = "การสมัครใช้งานและการเรียกเก็บเงินยังคงอยู่"
+bothDone = "ความเป็นเจ้าของเซิร์ฟเวอร์และคลาวด์สอดคล้องกันแล้ว"
+cancel = "ยกเลิกการโอน"
+check = "ตรวจสอบอีกครั้ง"
+checkAccount = "ตรวจสอบบัญชี"
+chooseEmail = "เลือกบัญชีของพวกเขาใน {{team}} หรือป้อนอีเมลเพื่อเชิญพวกเขา"
+close = "ปิดกล่องโต้ตอบการโอน"
+cloudAccount = "บัญชี Stirling"
+cloudScopeStyled = "<user>{{name}}</user> จะจัดการ {{team}} สมาชิก และการเรียกเก็บเงิน"
+cloudTargetChanged = "เลือกสมาชิกคลาวด์คนอื่น บัญชีนี้ไม่มีสิทธิ์รับการโอนอีกต่อไป"
+confirm = "ฉันเข้าใจการเปลี่ยนแปลงสิทธิ์การเข้าถึงและความเป็นเจ้าของ"
+done = "โอนความเป็นเจ้าของแล้ว"
+error = "เราไม่สามารถดำเนินการขั้นตอนนี้ให้เสร็จสมบูรณ์ได้ ตรวจสอบว่าผู้รับเปิดใช้งานอยู่และเซิร์ฟเวอร์เชื่อมต่อแล้ว จากนั้นตรวจสอบอีกครั้ง การโอนที่รอดำเนินการสามารถดำเนินการต่อได้ที่นี่"
+finish = "เสร็จสิ้นการโอนเซิร์ฟเวอร์"
+inProgress = "มีผู้รับรายอื่นมีการโอนที่รอดำเนินการอยู่แล้ว ปิดกล่องโต้ตอบนี้และดำเนินการต่อจากผู้ใช้"
+instances = "ทีมนี้มีเซิร์ฟเวอร์ที่เชื่อมโยง {{count}} เซิร์ฟเวอร์ การเรียกเก็บเงินบนคลาวด์ของเซิร์ฟเวอร์เหล่านั้นยังคงอยู่กับทีมนี้ เจ้าของภายในของเซิร์ฟเวอร์อื่นจะไม่เปลี่ยนแปลง"
+invitationSent = "ส่งคำเชิญแล้ว"
+invite = "ส่งคำเชิญ"
+inviteAddress = "เชิญ <account>{{email}}</account> เข้าร่วม {{team}}"
+inviteBlocked = "ไม่สามารถส่งคำเชิญได้ ตรวจสอบจำนวนที่นั่งของทีมที่มีอยู่และดูว่าผู้รับมีการสมัครใช้งานแบบชำระเงินอยู่แล้วหรือไม่"
+linkChanged = "ลิงก์คลาวด์ของเซิร์ฟเวอร์เปลี่ยนไป ขอให้ผู้ดูแลเซิร์ฟเวอร์คืนค่าลิงก์เดิมก่อนดำเนินการต่อ"
+linkedServerCount = "เซิร์ฟเวอร์ที่เชื่อมโยง {{count}} เซิร์ฟเวอร์"
+linkRevoked = "ลิงก์คลาวด์ของเซิร์ฟเวอร์นี้ใช้ไม่ได้อีกต่อไป ยกเลิกการโอน แล้วเชื่อมต่อบัญชี Stirling ของคุณใหม่ในการตั้งค่า ความเป็นเจ้าของจะไม่เปลี่ยนแปลง"
+localScope = "พวกเขาจะเป็นเจ้าของเซิร์ฟเวอร์นี้และจัดการการเรียกเก็บเงินกับการเชื่อมต่อคลาวด์ คุณจะยังคงมีสิทธิ์ผู้ดูแลระบบ แต่จะเสียสิทธิ์เข้าถึงการตั้งค่าเหล่านั้น"
+membershipDetails = "รายละเอียดสมาชิกทีม"
+membershipFirst = "พวกเขาต้องเข้าร่วมทีมก่อนที่คุณจะยืนยันการโอนได้"
+membershipRequired = "ผู้รับต้องเข้าร่วมทีมคลาวด์นี้ก่อนจึงจะโอนความเป็นเจ้าของได้ ขอให้พวกเขายอมรับคำเชิญ แล้วตรวจสอบอีกครั้ง"
+newOwnerLabel = "เจ้าของใหม่"
+newOwnerStyled = "<user>{{name}}</user> เป็นเจ้าของแล้ว"
+noEmailMatches = "ไม่พบสมาชิกที่ตรงกัน ป้อนอีเมลเพื่อเชิญ"
+otherTeam = "หากพวกเขาอยู่ในทีมอื่น การยอมรับอาจย้ายบัญชีของพวกเขา บัญชีแบบชำระเงินหรือความเป็นเจ้าของทีมอื่นอาจต้องได้รับการจัดการก่อน เราจะไม่ย้ายการสมัครใช้งานหรือรวมทีมของพวกเขา"
+ownerChanged = "ความเป็นเจ้าของบนคลาวด์เปลี่ยนไปหลังจากเริ่มการโอนนี้ ยกเลิกการโอนนี้และเริ่มใหม่ด้วยเจ้าของคลาวด์ปัจจุบัน"
+ownerRequired = "ลงชื่อเข้าใช้ในฐานะเจ้าของทีมคลาวด์ปัจจุบัน แล้วลองขั้นตอนนี้อีกครั้ง"
+partialError = "โอนความเป็นเจ้าของบนคลาวด์แล้ว เสร็จสิ้นการโอนเซิร์ฟเวอร์เพื่อให้เจ้าของทั้งสองสอดคล้องกัน"
+partialTargetChanged = "คืนค่าสิทธิ์การเข้าถึงของผู้ใช้เซิร์ฟเวอร์ที่เลือกและรายละเอียดบัญชีเดิม จากนั้นเสร็จสิ้นการโอนเซิร์ฟเวอร์ ความเป็นเจ้าของบนคลาวด์ถูกโอนไปแล้ว"
+pending = "การโอนความเป็นเจ้าของไปยัง {{name}} กำลังรอดำเนินการ"
+personalTeam = "ทีมส่วนบุคคลไม่สามารถโอนความเป็นเจ้าของได้"
+prepareHelp = "ผู้รับต้องเข้าสู่ระบบเซิร์ฟเวอร์ครั้งแรกเรียบร้อยแล้ว คุณสามารถลองใหม่ที่นี่ หรือกลับไปที่ผู้ใช้เพื่อเลือกคนอื่น"
+resume = "ดำเนินการโอนต่อ"
+searchEmail = "ค้นหาหรือป้อนอีเมล"
+serverAccount = "บัญชีเซิร์ฟเวอร์"
+serverDetails = "รายละเอียดเซิร์ฟเวอร์ที่เชื่อมโยง"
+signIn = "ลงชื่อเข้าใช้คลาวด์"
+startFromInstanceBody = "ทีมนี้มีเซิร์ฟเวอร์ที่เชื่อมโยง บนเซิร์ฟเวอร์ self-hosted ให้เปิด การตั้งค่า → ผู้ใช้ และเปลี่ยนบทบาทของผู้รับเป็น Org Owner ขั้นตอนนี้จะโอนความเป็นเจ้าของบนคลาวด์ก่อนทำการโอนเซิร์ฟเวอร์ให้เสร็จสมบูรณ์"
+startFromInstanceTitle = "เริ่มจากเซิร์ฟเวอร์ self-hosted ของคุณ"
+stayOwner = "คุณยังคงเป็นเจ้าของจนกว่าจะโอน"
+targetChanged = "บัญชีของผู้รับเปลี่ยนไป คืนค่าสิทธิ์การเข้าถึงของพวกเขาหรือยกเลิกการโอนนี้แล้วเลือกพวกเขาอีกครั้ง"
+title = "โอนความเป็นเจ้าของ"
+transfer = "โอนความเป็นเจ้าของ"
+waitingForEmail = "กำลังรอให้ {{email}} เข้าร่วม {{team}}"
+working = "กำลังตรวจสอบและอัปเดตความเป็นเจ้าของ..."
+yourCloudAccess = "คุณจะกลายเป็นสมาชิกทีมและเสียสิทธิ์การเข้าถึงในฐานะเจ้าของ"
+
 [pageEdit]
 deselectAll = "ไม่เลือกเลย"
 selectAll = "เลือกทั้งหมด"
 
 [pageEditor]
+dragPreviewAlt = "กำลังลาก"
+filePosition = "ตำแหน่ง {{position}}"
+pageLabel = "หน้า {{page}}"
 title = "ตัวแก้ไขหน้า"
+
+[pageEditor.actions]
+deletePage = "ลบหน้า"
+insertFileAfter = "แทรกไฟล์หลังจากนี้"
+moveLeft = "ย้ายไปซ้าย"
+moveRight = "ย้ายไปขวา"
+rotateLeft = "หมุนซ้าย"
+rotateRight = "หมุนขวา"
+splitAfter = "แยกหลังจากนี้"
 
 [pageEditor.emptyState]
 body = "เพิ่มไฟล์เพื่อเริ่มแก้ไขหน้า"
 title = "ยังไม่ได้โหลดไฟล์ PDF"
+
+[pageEditor.fileDropdown]
+addFile = "เพิ่มไฟล์"
+selectedCount = "เลือกไฟล์ {{selected}}/{{total}} แล้ว"
+untitled = "ไม่มีชื่อ"
 
 [pageEditor.toolbar]
 delete = "ลบที่เลือก"
@@ -6391,6 +6637,11 @@ portrait = "แนวตั้ง"
 label = "ทิศทางการอ่าน:"
 ltr = "ซ้ายไปขวา"
 rtl = "ขวาไปซ้าย"
+
+[pageLayout.steps]
+advanced = "การตั้งค่าขั้นสูง"
+layout = "การตั้งค่าเลย์เอาต์"
+marginsBorders = "ระยะขอบและเส้นขอบ"
 
 [pageLayout.tooltip.header]
 title = "คู่มือเลย์เอาต์หน้า"
@@ -6712,6 +6963,7 @@ teamChangeUnavailable = "ไม่สามารถโหลดการเป�
 teamPending = "การซื้อ Team ของคุณยังอยู่ระหว่างการประมวลผล รีเฟรชหน้านี้ในอีกสักครู่"
 teamProcessing = "กำลังประมวลผลการซื้อ Team"
 teamScheduled = "การเปลี่ยนแปลง Team ของคุณมีกำหนดในวันที่ {{date}} ความจุปัจจุบันของคุณยังคงใช้งานได้จนถึงตอนนั้น"
+unknownError = "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ"
 upgradeComplete = "อัปเกรดเสร็จสิ้น"
 upgradeCompleteMessage = "การสมัครของคุณอัปเกรดเรียบร้อยแล้ว และได้อัปเดต license key เดิมของคุณแล้ว"
 upgradeSuccess = "ชำระเงินสำเร็จ! การสมัครของคุณได้รับการอัปเกรดแล้ว ไลเซนส์บนเซิร์ฟเวอร์ของคุณถูกอัปเดตแล้ว คุณจะได้รับอีเมลยืนยันในไม่ช้า"
@@ -6766,6 +7018,14 @@ selectedMonthly = "รายเดือน"
 selectedYearly = "รายปี"
 selectMonthly = "เลือกแบบรายเดือน"
 selectYearly = "เลือกแบบรายปี"
+
+[payment.priceDisplay]
+basePrice = "ราคาพื้นฐาน"
+perPeriod = "/{{period}}"
+perSeat = "ต่อที่นั่ง"
+perSeatPeriod = "/ที่นั่ง/{{period}}"
+totalSeats_one = "รวม ({{count}} ที่นั่ง)"
+totalSeats_other = "รวม ({{count}} ที่นั่ง)"
 
 [payment.upgradeTeam]
 title = "อัปเกรดเป็น Team"
@@ -6985,6 +7245,10 @@ save = "บันทึก"
 style = "สไตล์"
 tapToPlace = "แตะหน้าตรงตำแหน่งที่ต้องการวางข้อความ"
 unlock = "ปลดล็อก"
+
+[pdfTextEditor.pageView]
+pageNumber = "หน้า {{page}}"
+renderFailed = "เรนเดอร์หน้าไม่สำเร็จ"
 
 [pdfTextEditor.password]
 cancel = "ยกเลิก"
@@ -7212,6 +7476,7 @@ title = "พิ้พลne"
 contact = "ติดต่อเรา"
 current = "แผนปัจจุบัน"
 featureComparison = "การเปรียบเทียบฟีเจอร์"
+fetchError = "ดึงข้อมูลราคาไม่สำเร็จ"
 from = "เริ่มต้นที่"
 hideComparison = "ซ่อนการเปรียบเทียบฟีเจอร์"
 licensedSeats = "ที่นั่งที่มีสิทธิ์: {{count}} ที่นั่ง"
@@ -7227,6 +7492,8 @@ withServer = "+ แพ็กเกจเซิร์ฟเวอร์"
 [plan.api]
 large = "5,000 เครดิต"
 medium = "1,000 เครดิต"
+perCredit = "{{price}} ต่อเครดิต"
+perCreditWithDiscount = "{{price}} ต่อเครดิต • ส่วนลด {{discount}}%"
 small = "500 เครดิต"
 xsmall = "100 เครดิต"
 
@@ -7302,14 +7569,9 @@ upToFiveUsers = "สูงสุด 5 ผู้ใช้"
 usageTrackingPrometheus = "การติดตามการใช้งานและ Prometheus"
 usersIncluded = "รวมผู้ใช้ 100 คน"
 
-[plan.licenseWarning]
-body = "คุณมีผู้ใช้ {{total}} คน แต่ระดับฟรีรองรับเพียง {{limit}} ต่อเซิร์ฟเวอร์ อัปเกรดเพื่อให้ Stirling PDF ทำงานราบรื่น"
-cta = "ดูแพ็กเกจ"
-overLimit = "มากกว่า {{limit}}"
-title = "ถึงขีดจำกัดฟรีสำหรับโฮสต์เองแล้ว"
-
 [plan.period]
 month = "เดือน"
+year = "ปี"
 
 [plan.pro]
 highlight1 = "ใช้งานเครื่องมือได้ไม่จำกัด"
@@ -7435,6 +7697,9 @@ pdfa-1 = "PDF/A-1b"
 pdfa-2b = "PDF/A-2b"
 pdfa-3b = "PDF/A-3b"
 
+[portal.accountLink]
+ownerRequired = "เฉพาะเจ้าขององค์กรเท่านั้นที่สามารถเชื่อมโยงหรือยกเลิกการเชื่อมโยงเซิร์ฟเวอร์นี้ได้"
+
 [portal.accountLink.card]
 billingNote = "การประมวลผลแบบไม่ต้องดูแลจะเรียกเก็บเงินจากกระเป๋าเงินองค์กรของคุณ"
 connectDescription = "เชื่อมต่อเซิร์ฟเวอร์นี้เพื่อใช้สิทธิ์การประมวลผลของทีมคุณใน Stirling Cloud"
@@ -7556,6 +7821,7 @@ identity = "บัญชี Stirling"
 linkTitle = "เชื่อมโยงบัญชี Stirling ของคุณ"
 noAuthorizeUrl = "Stirling ไม่ได้ส่งตำแหน่งสำหรับดำเนินการต่อกลับมา ลองอีกครั้งในอีกสักครู่"
 startFailed = "ไม่สามารถเข้าถึง Stirling เพื่อเริ่มการเชื่อมต่อได้ ตรวจสอบการเข้าถึงเครือข่ายขาออกของเซิร์ฟเวอร์นี้ แล้วลองอีกครั้ง"
+transferPending = "มีการโอนความเป็นเจ้าของที่รอดำเนินการ ไปที่ การตั้งค่า → ผู้ใช้ เพื่อทำให้เสร็จสิ้นหรือยกเลิก แล้วลองเชื่อมโยงอีกครั้ง"
 
 [portal.accountLink.modal.loginNotConfigured]
 after = "เพื่อเปิดใช้งานการเชื่อมโยงในแอปกับบัญชี Stirling ที่โฮสต์อยู่"
@@ -9441,6 +9707,7 @@ labelId = "Label ID"
 labelIdHelp = "GUID ของป้ายกำกับจาก Purview portal การใช้ป้ายกำกับจะเขียน metadata ลงใน PDF; ไม่สามารถเข้ารหัสได้ ซึ่งต้องใช้ Microsoft client"
 labelName = "ชื่อป้ายกำกับ (ไม่บังคับ)"
 labelNameHelp = "บันทึกไว้พร้อมกับ ID เพื่อให้ผู้คนและเครื่องมือรู้จักป้ายกำกับ"
+labelNamePlaceholder = "ลับ"
 
 [portal.policies.config.purview.fields.method]
 help = "Purview แยกความแตกต่างระหว่างป้ายกำกับที่นโยบายใช้กับป้ายกำกับที่บุคคลเลือก"
@@ -10425,31 +10692,6 @@ unlimited = "{{used}} · ไม่จำกัด"
 [printFile]
 title = "พิมพ์ไฟล์"
 
-[processingFolders.downloads]
-approve = "ประมวลผล Downloads ของฉัน"
-cancelSweep = "ยกเลิก"
-capped = "คุณมี PDF {{found}} ไฟล์; {{limit}} ไฟล์แรกจะถูกประมวลผลตอนนี้ และที่เหลือจะตามมา"
-close = "เสร็จสิ้น"
-explain_one = "Stirling สามารถจำแนก PDF {{count}} ไฟล์ที่อยู่ในโฟลเดอร์ Downloads ของคุณแล้ว และเปิดผลลัพธ์ที่นี่"
-explain_other = "Stirling สามารถจำแนก PDF {{count}} ไฟล์ที่อยู่ในโฟลเดอร์ Downloads ของคุณแล้ว และเปิดผลลัพธ์ที่นี่"
-failed = "ไม่สามารถตั้งค่านั้นได้ ไฟล์ของคุณยังไม่ได้ถูกเปลี่ยนแปลง"
-finished_one = "จำแนกไฟล์ {{count}} ไฟล์แล้ว และเปิด {{opened}} ไฟล์ที่นี่ พร้อมให้ทำงานต่อ"
-finished_other = "จำแนกไฟล์ {{count}} ไฟล์แล้ว และเปิด {{opened}} ไฟล์ที่นี่ พร้อมให้ทำงานต่อ"
-nothingNew_one = "ไม่มีรายการใหม่ให้ประมวลผล - ไฟล์ {{count}} ไฟล์นี้เคยผ่านกระบวนการแล้ว"
-nothingNew_other = "ไม่มีรายการใหม่ให้ประมวลผล - ไฟล์ {{count}} ไฟล์เหล่านี้เคยผ่านกระบวนการแล้ว"
-notModified = "ไฟล์ของคุณใน Downloads จะไม่ถูกเปลี่ยนแปลง - Stirling จะอ่านไฟล์และเปิดไฟล์ที่นี่"
-notNow = "ไม่ใช่ตอนนี้"
-progressCounts = "ประมวลผลแล้วจาก {{total}}"
-someFailed_one = "ไม่สามารถประมวลผล {{count}} ได้ และถูกปล่อยไว้โดยไม่แตะต้อง"
-someFailed_other = "ไม่สามารถประมวลผล {{count}} ได้ และถูกปล่อยไว้โดยไม่แตะต้อง"
-stillRunning = "บางไฟล์ยังคงกำลังประมวลผลในเบื้องหลัง"
-title = "จัดระเบียบ Downloads ของคุณหรือไม่"
-trigger_one = "ประมวลผล PDF {{count}} ไฟล์ใน Downloads"
-trigger_other = "ประมวลผล PDF {{count}} ไฟล์ใน Downloads"
-typesFound_one = "พบประเภทเอกสาร {{count}} ประเภท"
-typesFound_other = "พบประเภทเอกสาร {{count}} ประเภท"
-working = "กำลังประมวลผล ..."
-
 [processingFolders.setup]
 addFolder = "เพิ่มโฟลเดอร์"
 advancedSteps = "โฟลเดอร์นี้ใช้การตั้งค่าการประมวลผลที่วิซาร์ดนี้ไม่สามารถแก้ไขได้ ขั้นตอนที่บันทึกไว้ของโฟลเดอร์ยังไม่ได้ถูกเปลี่ยนแปลง"
@@ -10527,6 +10769,10 @@ label = "Client ID"
 [provider.googledrive.enabled]
 description = "อนุญาตให้ผู้นำเข้าไฟล์จาก Google Drive ได้โดยตรง"
 label = "เปิดใช้งานตัวเลือกไฟล์ Google Drive"
+
+[provider.googledrive.errors]
+notConfigured = "ยังไม่ได้กำหนดค่า Google Drive"
+pickerFailed = "เปิดตัวเลือก Google Drive ไม่สำเร็จ"
 
 [provider.oauth2.generic]
 name = "OAuth2 ทั่วไป"
@@ -10775,6 +11021,7 @@ applyWarning = "⚠️ การใช้แบบถาวร ไม่สา�
 colorLabel = "สีของการปกปิด"
 controlsTitle = "การควบคุมการปกปิดแบบแมนนวล"
 instructions = "เลือกข้อความหรือวาดพื้นที่บน PDF เพื่อทำเครื่องหมายเนื้อหาสำหรับการปกปิด"
+notImplemented = "อินเทอร์เฟซการปิดทับข้อมูลด้วยตนเองจะพร้อมใช้งานที่นี่เมื่อดำเนินการแล้ว"
 title = "เครื่องมือปกปิด"
 
 [redact.modeSelector]
@@ -11102,6 +11349,9 @@ failed = "เกิดข้อผิดพลาดระหว่างกา�
 [rotate.preview]
 title = "ภาพตัวอย่างการหมุน"
 
+[rotate.settings]
+title = "การตั้งค่า"
+
 [rotate.tooltip.controls]
 text = "ใช้ปุ่มหมุนเพื่อปรับทิศทาง ปุ่มซ้ายหมุนทวนเข็มนาฬิกา ปุ่มขวาหมุนตามเข็มนาฬิกา แต่ละคลิกหมุน 90 องศา"
 title = "การควบคุม"
@@ -11119,6 +11369,16 @@ hideSmallLabels = "ซ่อนป้ายกำกับขนาดเล็�
 physicalValues = "ค่าจริง"
 scaled = "ปรับสเกลแล้ว"
 showAllLabels = "แสดงป้ายกำกับทั้งหมด"
+
+[ruler.units]
+cm = "เซนติเมตร (cm)"
+ft = "ฟุต (ft)"
+in = "นิ้ว (in)"
+km = "กิโลเมตร (km)"
+m = "เมตร (m)"
+mi = "ไมล์ (mi)"
+mm = "มิลลิเมตร (mm)"
+yd = "หลา (yd)"
 
 [sanitize]
 desc = "ลบองค์ประกอบที่อาจเป็นอันตรายออกจากไฟล์ PDF"
@@ -11184,6 +11444,7 @@ calibrationPaperDistance = "ระยะทางบนหน้าที่ว�
 calibrationTitle = "ปรับเทียบมาตราส่วน"
 calibrationTooltip = "วัดระยะทางที่ทราบเพื่อคำนวณมาตราส่วนโดยอัตโนมัติ"
 customScale = "มาตราส่วนกำหนดเอง"
+customUnit = "{{unit}} (กำหนดเอง)"
 noneSet = "ยังไม่ได้ตั้งค่ามาตราส่วนกำหนดเอง"
 presets = "มาตราส่วนที่ตั้งไว้ล่วงหน้า"
 ratio = "อัตราส่วนมาตราส่วน"
@@ -11207,6 +11468,9 @@ title = "รูปภาพที่แยกออก"
 
 [scannerImageSplit.error]
 failed = "เกิดข้อผิดพลาดขณะดึงรูปภาพสแกน"
+
+[scannerImageSplit.settings]
+title = "การตั้งค่า"
 
 [scannerImageSplit.tooltip]
 headsUp = "แจ้งให้ทราบ"
@@ -11274,6 +11538,9 @@ general = "ทั่วไป"
 limits = "ขีดจำกัดและประสิทธิภาพ"
 models = "โมเดลและผู้ให้บริการ"
 title = "AI"
+
+[settings.billing]
+title = "การเรียกเก็บเงิน"
 
 [settings.configuration]
 advanced = "ขั้นสูง"
@@ -11348,8 +11615,6 @@ defaultPdfEditor = "โปรแกรมแก้ไข PDF เริ่มต�
 defaultPdfEditorActive = "Stirling PDF เป็นโปรแกรมแก้ไข PDF เริ่มต้นของคุณ"
 defaultPdfEditorChecking = "กำลังตรวจสอบ..."
 defaultPdfEditorInactive = "มีแอปอื่นตั้งเป็นค่าเริ่มต้น"
-defaultPdfEditorRemind = "เตือนให้ตั้งเป็นค่าเริ่มต้น"
-defaultPdfEditorRemindDescription = "แสดงแบนเนอร์เมื่อ Stirling PDF ไม่ใช่แอปพลิเคชัน PDF เริ่มต้นของคุณ"
 defaultPdfEditorSet = "เป็นค่าเริ่มต้นอยู่แล้ว"
 defaultStartupView = "มุมมองเริ่มต้นเมื่อเปิดแอป"
 defaultStartupViewDescription = "เลือกแท็บที่ใช้งานในคอลัมน์ซ้ายเมื่อแอปเริ่มทำงาน"
@@ -11618,6 +11883,15 @@ people = "สมาชิก"
 teams = "ทีม"
 title = "พื้นที่ทำงาน"
 
+[setup.error]
+loginIncomplete = "เข้าสู่ระบบให้เสร็จสมบูรณ์ไม่สำเร็จ"
+noSaasServer = "ไม่ได้กำหนดค่าเซิร์ฟเวอร์ SaaS"
+noServer = "ไม่ได้กำหนดค่าเซิร์ฟเวอร์"
+saasLoginFailed = "เข้าสู่ระบบ SaaS ไม่สำเร็จ"
+saasLoginIncomplete = "เข้าสู่ระบบ SaaS ให้เสร็จสมบูรณ์ไม่สำเร็จ"
+selfHostedLoginFailed = "เข้าสู่ระบบ self-hosted ไม่สำเร็จ"
+signupIncomplete = "สมัครใช้งานให้เสร็จสมบูรณ์ไม่สำเร็จ"
+
 [setup.login]
 connectingTo = "กำลังเชื่อมต่อกับ:"
 oauthPending = "กำลังเปิดเบราว์เซอร์เพื่อยืนยันตัวตน..."
@@ -11661,6 +11935,7 @@ configFetchError = "ดึงการกำหนดค่าเซิร์ฟ
 emptyUrl = "โปรดป้อน URL เซิร์ฟเวอร์"
 invalidUrl = "รูปแบบ URL ไม่ถูกต้อง โปรดป้อน URL ที่ถูกต้องเช่น https://your-server.com"
 testFailed = "การทดสอบการเชื่อมต่อล้มเหลว"
+unknown = "ข้อผิดพลาดที่ไม่ทราบสาเหตุ"
 unreachable = "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์"
 
 [setup.server.error.securityDisabled]
@@ -11769,6 +12044,7 @@ canvas = "หลังจากวาดลายเซ็นในแคนว�
 image = "หลังจากอัปโหลดภาพลายเซ็นด้านบนแล้ว ให้คลิกที่ใดก็ได้บน PDF เพื่อวาง"
 noSignature = "สร้างลายเซ็นด้านบนเพื่อเปิดใช้เครื่องมือวาง"
 paused = "หยุดการวางชั่วคราว"
+placeAnnotation = "คลิกที่ใดก็ได้บน PDF เพื่อวางหมายเหตุประกอบของคุณ"
 resumeHint = "ทำต่อการวางเพื่อคลิกและเพิ่มลายเซ็นของคุณ"
 saved = "เลือกหนึ่งลายเซ็นที่บันทึกไว้ด้านบน แล้วคลิกที่ใดก็ได้บน PDF เพื่อวาง"
 text = "หลังจากป้อนชื่อของคุณด้านบนแล้ว ให้คลิกที่ใดก็ได้บน PDF เพื่อวางลายเซ็น"
@@ -11922,7 +12198,9 @@ signUpWith = "Sign up with"
 skip = "Skip"
 subtitle = "เข้าร่วม Stirling PDF เพื่อเริ่มต้น"
 title = "สร้างบัญชี"
+unableToAccessTool = "ไม่สามารถเข้าถึงเครื่องมือได้: {{error}}"
 unexpectedError = "ข้อผิดพลาดที่ไม่คาดคิด: {{message}}"
+unknownError = "ข้อผิดพลาดที่ไม่ทราบสาเหตุ"
 
 [sizes]
 large = "ใหญ่"
@@ -11995,6 +12273,14 @@ rightToLeft = "แยกจากขวาไปซ้าย"
 [split.poster.pageSize]
 description = "ขนาดหน้าผลลัพธ์สำหรับการพิมพ์"
 label = "ขนาดหน้ากระดาษเป้าหมาย"
+
+[split.poster.pageSize.options]
+a3 = "A3 (297 × 420 mm)"
+a4 = "A4 (210 × 297 mm)"
+a5 = "A5 (148 × 210 mm)"
+legal = "Legal (8.5 × 14 in)"
+letter = "Letter (8.5 × 11 in)"
+tabloid = "Tabloid (11 × 17 in)"
 
 [split.poster.xFactor]
 description = "จำนวนคอลัมน์ที่จะแบ่งแต่ละหน้า"
@@ -12267,6 +12553,7 @@ confirmCancelInvite = "คุณแน่ใจหรือไม่ว่าต
 confirmLeave = "คุณแน่ใจหรือไม่ว่าต้องการออกจากทีมนี้?"
 confirmLeaveLeader = "ในฐานะหัวหน้าทีม การออกจะนำคุณออกจากทีม คุณแน่ใจหรือไม่?"
 confirmRemove = "คุณแน่ใจหรือไม่ว่าต้องการลบสมาชิกนี้?"
+currentUnavailable = "เราไม่สามารถระบุทีมปัจจุบันของคุณได้ ลองอีกครั้ง หรือติดต่อฝ่ายสนับสนุนหากยังคงเกิดปัญหานี้"
 editName = "แก้ไขชื่อทีม"
 inviteCancelled = "ยกเลิกคำเชิญแล้ว"
 inviteError = "ส่งคำเชิญไม่สำเร็จ"
@@ -12292,10 +12579,8 @@ renameCancel = "ยกเลิกการเปลี่ยนชื่อ"
 renameError = "เปลี่ยนชื่อทีมไม่สำเร็จ"
 renameSubmit = "บันทึกชื่อทีม"
 renameSuccess = "เปลี่ยนชื่อทีมเรียบร้อยแล้ว"
-transferBody = "ตั้งให้ {{email}} เป็นเจ้าของทีมหรือไม่ พวกเขาจะควบคุมการเป็นสมาชิกทีมและการตั้งค่าการเรียกเก็บเงินขององค์กร คุณจะกลายเป็นสมาชิก การสมัครใช้งานและกระเป๋าเงินของทีมจะยังคงอยู่กับทีม"
 transferError = "ไม่สามารถโอนความเป็นเจ้าของได้ รีเฟรชทีมแล้วลองอีกครั้ง"
 transferSuccess = "โอนความเป็นเจ้าของทีมแล้ว บทบาทของคุณตอนนี้คือสมาชิก"
-transferTitle = "โอนความเป็นเจ้าของทีม"
 
 [team.invitationBanner]
 acceptButton = "ยอมรับ"
@@ -12396,6 +12681,10 @@ WORD = "เอกสาร Word"
 XML = "ไฟล์ XML"
 XPS = "เอกสาร XPS"
 ZIP = "ไฟล์เก็บถาวร ZIP"
+
+[toolLoading]
+generic = "กำลังโหลดเครื่องมือ..."
+named = "กำลังโหลด {{toolName}}..."
 
 [toolPanel]
 alpha = "อัลฟา"
@@ -12501,6 +12790,8 @@ stable = "STABLE"
 updateAvailable = "มีอัปเดต"
 urgentUpdateAvailable = "อัปเดตเร่งด่วน"
 version = "เวอร์ชัน"
+versionCount_one = "{{count}} เวอร์ชัน"
+versionCount_other = "{{count}} เวอร์ชัน"
 versionHistory = "ประวัติเวอร์ชัน"
 viewGuide = "ดูคู่มือ"
 whatsNewIn = "มีอะไรใหม่ใน"
@@ -12528,6 +12819,7 @@ title = "URL เป็น PDF"
 aboutUsageAnalytics = "เกี่ยวกับการวิเคราะห์การใช้งาน"
 configureSettings = "กำหนดค่าการตั้งค่าการวิเคราะห์"
 error = "เกิดข้อผิดพลาดในการโหลดสถิติการใช้งาน"
+loadFailed = "โหลดสถิติการใช้งานไม่สำเร็จ"
 noData = "ไม่มีข้อมูล"
 noDataMessage = "ขณะนี้ไม่มีสถิติการใช้งาน"
 usageAnalyticsExplanation = "การวิเคราะห์การใช้งานจะติดตามคำขอไปยัง endpoint และรูปแบบการใช้เครื่องมือ เมื่อนำมารวมกับแดชบอร์ดบันทึกการตรวจสอบ คุณจะเห็นกิจกรรมของระบบ ประสิทธิภาพ และเหตุการณ์ด้านความปลอดภัยได้อย่างครบถ้วน"
@@ -12591,7 +12883,6 @@ removeTeam = "นำออกจากทีม"
 rename = "เปลี่ยนชื่อทีม"
 resetPw = "รีเซ็ตรหัสผ่าน"
 suspend = "ระงับ"
-transferOwnership = "โอนความเป็นเจ้าของ"
 unlock = "ปลดล็อกบัญชี"
 
 [users.activity]
@@ -12631,8 +12922,6 @@ disableMfaTitle = "รีเซ็ต MFA"
 removeBody = "ลบ {{name}} ออกจากองค์กรอย่างถาวรหรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้"
 removeTeamBody = "นำ {{name}} ออกจากทีมหรือไม่? ผู้ใช้จะยังคงมีบัญชีอยู่ แต่จะเสียสิทธิ์เข้าถึงทรัพยากรของทีมนี้"
 removeTitle = "ลบสมาชิก"
-transferOwnershipBody = "ตั้งให้ {{name}} เป็นเจ้าขององค์กรหรือไม่ พวกเขาจะกลายเป็นผู้ดูแลระบบ คุณจะยังคงเป็นผู้ดูแลระบบแต่จะเสียความเป็นเจ้าของ เฉพาะเจ้าของใหม่หรือผู้ดูแลเซิร์ฟเวอร์เท่านั้นที่สามารถโอนกลับได้"
-transferOwnershipTitle = "โอนความเป็นเจ้าขององค์กร"
 
 [users.empty]
 description = "เชิญทีมของคุณเพื่อเริ่มทำงานร่วมกัน"
@@ -12825,6 +13114,7 @@ signaturesInvalid = "{{count}} ลายเซ็นไม่ถูกต้อ�
 signaturesUnverified_one = "{{count}} ต้องตรวจสอบ"
 signaturesUnverified_other = "{{count}} ต้องตรวจสอบ"
 signaturesValid = "ถูกต้องสมบูรณ์ {{count}} รายการ"
+thumbnailAlt = "รูปขนาดย่อของ {{fileName}}"
 title = "รายงานการตรวจสอบลายเซ็น"
 
 [validateSignature.report.fields]
@@ -12862,6 +13152,7 @@ lastPage = "หน้าสุดท้าย"
 loadingEngine = "กำลังโหลด PDF Engine..."
 moreOptions = "เพิ่มเติม"
 nextPage = "หน้าถัดไป"
+noPdfProvided = "ไม่ได้ระบุ PDF"
 onlyPdfSupported = "ตัวแสดงผลรองรับเฉพาะไฟล์ PDF ไฟล์นี้ดูเหมือนจะเป็นรูปแบบอื่น"
 pageNavigation = "การนำทางหน้า"
 previousPage = "หน้าก่อนหน้า"
@@ -12899,8 +13190,17 @@ collapseAll = "ยุบบุ๊กมาร์กทั้งหมด"
 editorOnly = "บุ๊กมาร์กของเอกสารนี้สามารถแก้ไขได้เฉพาะในตัวแก้ไขเท่านั้น"
 empty = "No bookmarks in this document"
 expandAll = "ขยายบุ๊กมาร์กทั้งหมด"
+loadFailed = "โหลดบุ๊กมาร์กไม่สำเร็จ"
+loading = "กำลังโหลดบุ๊กมาร์ก..."
+noDocument = "เปิด PDF เพื่อดูบุ๊กมาร์ก"
+noSearchResults = "ไม่มีบุ๊กมาร์กที่ตรงกับการค้นหาของคุณ"
+openEditor = "ต้องการจัดลำดับใหม่หรือซ้อนกันหรือไม่ เปิดตัวแก้ไขบุ๊กมาร์ก"
+pageLabel = "หน้า"
+pageNumber = "หน้า {{page}}"
+saveFailed = "บันทึกบุ๊กมาร์กไม่สำเร็จ"
 searchPlaceholder = "ค้นหาบุ๊กมาร์ก"
 title = "Bookmarks"
+untitled = "ไม่มีชื่อ"
 
 [viewer.comments]
 addComment = "เพิ่มความคิดเห็น"
@@ -12948,16 +13248,26 @@ unsavedDesc = "คุณมีการเปลี่ยนแปลงที�
 
 [viewer.layers]
 closeSidebar = "ปิดแถบด้านข้างเลเยอร์"
+empty = "เอกสารนี้ไม่มีเลเยอร์"
 hideAll = "ซ่อนเลเยอร์ทั้งหมด"
+loadFailed = "โหลดเลเยอร์ไม่สำเร็จ"
+loading = "กำลังโหลดเลเยอร์..."
+noDocument = "เปิด PDF เพื่อดูเลเยอร์"
+readFailed = "อ่านเลเยอร์ PDF ไม่สำเร็จ"
 showAll = "แสดงเลเยอร์ทั้งหมด"
 title = "Layers"
 
 [viewer.link]
 delete = "ลบลิงก์"
+goTo = "ไปที่ {{label}}"
+open = "เปิดลิงก์"
+openAria = "เปิดลิงก์"
+page = "หน้า {{page}}"
 
 [viewer.nonPdf]
 columnDefault = "คอลัมน์ {{index}}"
 convertToPdf = "แปลงเป็น PDF"
+copied = "คัดลอกแล้ว"
 csvStats = "{{rows}} แถว · {{columns}} คอลัมน์ · {{size}}"
 emptyFile = "ไฟล์ว่างเปล่า"
 htmlHidePreview = "ซ่อนตัวอย่าง"
@@ -12968,6 +13278,8 @@ htmlShowPreview = "แสดงตัวอย่างต่อไป"
 invalidJson = "JSON ไม่ถูกต้อง — แสดงเนื้อหาดิบ"
 lineNumbers = "หมายเลขบรรทัด"
 loading = "กำลังโหลด..."
+noFile = "ไม่มีไฟล์ที่โหลด"
+previewUnavailable = "ไม่สามารถแสดงตัวอย่างสำหรับไฟล์ประเภทนี้ได้"
 renderMarkdown = "แสดงผล Markdown"
 sortedBy = "เรียงตาม: {{column}}"
 textStats = "{{lines}} บรรทัด · {{size}}"
@@ -12994,11 +13306,28 @@ next = "ผลลัพธ์ถัดไป"
 previous = "ผลลัพธ์ก่อนหน้า"
 resultsOf = "จาก {{total}}"
 
+[viewer.sidebar]
+close = "ปิดแถบด้านข้าง"
+searchPlaceholder = "ค้นหา..."
+
 [viewer.signature]
 delete = "ลบลายเซ็น"
+previewAlt = "ตัวอย่างลายเซ็น"
+
+[viewer.signatureField]
+badge = "ลายเซ็น"
+fieldTitle = "ช่องลายเซ็น: {{name}}"
+signed = "ลงนามแล้ว"
+signedWithReason = "ลงนามแล้ว: {{reason}}"
+unsignedFieldTitle = "ช่องลายเซ็นที่ยังไม่ได้ลงนาม: {{name}}"
+withTime = "{{label}} ({{time}})"
 
 [viewer.thumbnails]
 closeSidebar = "ปิดแถบด้านข้างภาพขนาดย่อ"
+failed = "ล้มเหลว"
+pageNumber = "หน้า {{page}}"
+thumbnailAlt = "รูปขนาดย่อของหน้า {{page}}"
+title = "หน้า"
 
 [viewPdf]
 tags = "ดู, อ่าน, เพิ่มคำอธิบาย, ข้อความ, รูปภาพ"
@@ -13006,169 +13335,6 @@ title = "ดู/แก้ไข PDF"
 
 [warning]
 tooltipTitle = "คำเตือน"
-
-[watchedFolders]
-alreadyInFolder = "Already in this folder"
-defaultFolderWarning = "This is a default folder and will be recreated on next reload."
-deleteConfirmBody = "This will remove the folder and its run history. Files already downloaded are not affected."
-deleteConfirmTitle = "Delete folder?"
-folderNotFound = "Folder not found"
-newFolder = "New folder"
-noFolders = "No watched folders yet"
-sidebarTitle = "Watched Folders"
-title = "Watched Folders"
-
-[watchedFolders.actions]
-back = "Back"
-collapse = "Collapse"
-dismiss = "Dismiss"
-download = "Download"
-downloadInput = "Download input"
-downloadOutput = "Download output"
-expand = "Expand"
-retry = "Retry"
-
-[watchedFolders.card]
-delete = "Delete folder"
-edit = "Edit folder"
-
-[watchedFolders.home]
-addAnother = "Add another Watched Folder"
-addAnotherDesc = "Automatically process files with a new pipeline"
-create = "Create your first Watched Folder"
-deleteFolder = "Delete folder"
-editFolder = "Edit folder"
-empty = "No watched folders yet"
-emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
-emptyTitle = "Automate your PDF workflows"
-file = "file"
-files = "files"
-pause = "Pause"
-resume = "Resume"
-
-[watchedFolders.howItWorks]
-step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
-step1Title = "Drop files"
-step2Desc = "Your configured tools process each file automatically"
-step2Title = "Pipeline runs"
-step3Desc = "Download processed files from inside the folder"
-step3Title = "Output ready"
-title = "How Watched Folders work"
-
-[watchedFolders.modal]
-advanced = "Advanced"
-automation = "Automation"
-automationNameFallback = "Watched Folder automation"
-automationRequired = "Add at least one configured step before saving."
-autoNumber = "Auto-number"
-autoNumberExample = "e.g. document.pdf → document (1).pdf"
-autoScanHelp = "New PDF files in this folder are processed automatically every 10 seconds."
-changeFolder = "Change"
-chooseFolder = "Choose"
-clearFolder = "Clear"
-color = "Accent color"
-createFolder = "Create Folder"
-createTitle = "New Watched Folder"
-editTitle = "Edit Watched Folder"
-inputFolder = "Input folder"
-inputFolderNotChosen = "No folder chosen — required for auto-scan"
-inputSource = "Input source"
-inputSourceBrowser = "Browser — drop files here"
-inputSourceLocal = "Local folder (auto-scan)"
-inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
-localOutputFolder = "Local output folder"
-maxRetries = "Max retries"
-name = "Folder name"
-namePlaceholder = "My Watched Folder"
-nameRequired = "Folder name is required"
-nameTooLong = "Folder name must be 50 characters or less"
-outputFolderNotSet = "Not set — outputs stay in app"
-outputFolderUnsupported = "Not supported in this browser"
-outputModeNewDesc = "Output is saved as a new separate file"
-outputModeVersion = "Replace original?"
-outputModeVersionDesc = "Output becomes a new version of the input file rather than a separate file"
-outputName = "Output filename prefix"
-outputNamePrefix = "Filename prefix"
-outputNameSuffix = "Suffix"
-positionPrefix = "Prefix"
-positionSuffix = "Suffix"
-replaceOriginal = "Replace original file"
-retryDelay = "Delay (minutes)"
-saveChanges = "Save Changes"
-saveFailed = "Failed to save folder. Please try again."
-sectionFolder = "Folder"
-sectionSourceOutput = "Source & Output"
-sectionSteps = "Steps"
-
-[watchedFolders.status]
-active = "Active"
-done = "Done"
-paused = "Paused"
-processing = "Processing"
-
-[watchedFolders.time]
-daysAgo = "{{count}}d ago"
-hoursAgo = "{{count}}h ago"
-justNow = "just now"
-minutesAgo = "{{count}}m ago"
-
-[watchedFolders.workbench]
-activity = "Activity"
-addFiles = "Add files"
-allTime = "All time"
-cancel = "Cancel"
-chartTooltipComplete = "{{count}} complete"
-chartTooltipFailed = "{{count}} failed"
-clearSelection = "Clear selection"
-countProcessing = "{{count}} processing"
-countQueued = "{{count}} queued"
-countSelected = "{{count}} selected"
-dataSaved = "Saved"
-dayRunning = "day running"
-daysRunning = "days running"
-delete = "Delete"
-deleteConfirmBody = "Remove notifications only clears the activity log. Delete outputs also removes the processed files from storage. Your original input files are never touched."
-deleteOutputs = "Delete outputs"
-directionIn = "in"
-directionOut = "out"
-dropToProcess = "Drop to process"
-export = "Export"
-exportSeparately = "Export separately"
-exportZip = "Export zip"
-failed = "Failed"
-filesProcessedOverTime = "Files processed over time"
-filterAll = "All"
-filterPending = "Pending"
-inputs = "Inputs"
-inputSize = "Input size"
-legendComplete = "Complete"
-noActivity = "No activity yet — drop a PDF to start"
-noActivityMatch = "No matching activity"
-noInputFolder = "No input folder — edit to configure"
-outputs = "Outputs"
-pause = "Pause"
-preview = "Preview"
-previewInput = "Preview input"
-previewLoadFailed = "Could not load file preview."
-previewOutput = "Preview output"
-queued = "Queued"
-queuedWaiting = "Queued — waiting to run"
-removeEntries = "Remove {{count}} entries"
-removeEntry = "Remove entry"
-removeNotificationsOnly = "Remove notifications only"
-resume = "Resume"
-retryAll = "Retry all"
-retryIn = "retry in {{count}}m"
-retryingSoon = "retrying…"
-retryMixedConfirm = "Some selected files have already completed and will be skipped. Only failed files will be retried. Continue?"
-running = "Running"
-search = "Search…"
-selectAll = "Select all {{count}}"
-sortNameAsc = "A → Z"
-sortNameDesc = "Z → A"
-sortNewest = "Newest"
-sortOldest = "Oldest"
-watching = "Watching: {{name}}"
 
 [watermark]
 desc = "เพิ่มวอเตอร์มาร์กข้อความหรือรูปภาพให้กับไฟล์ PDF"
@@ -13371,6 +13537,10 @@ certTypeServer = "ใบรับรองเซิร์ฟเวอร์ (ถ
 completedDeclined = "คุณได้ปฏิเสธเอกสารนี้แล้ว."
 completedSigned = "คุณได้เซ็นเอกสารนี้แล้ว."
 decline = "ปฏิเสธ"
+declineConfirm = "คุณแน่ใจหรือไม่ว่าต้องการปฏิเสธการลงนามเอกสารนี้"
+declineFailed = "ปฏิเสธไม่สำเร็จ: {{error}}"
+declineSuccess = "คุณได้ปฏิเสธคำขอลงนามนี้แล้ว"
+defaultReason = "การลงนามเอกสาร"
 downloadDocument = "ดาวน์โหลดเอกสาร"
 dueDate = "วันครบกำหนด: {{date}}"
 errorTitle = "ข้อผิดพลาด"
@@ -13381,6 +13551,7 @@ locationPlaceholder = "เช่น San Francisco, CA"
 pageNumber = "หมายเลขหน้า (ไม่บังคับ)"
 reason = "เหตุผล"
 reasonPlaceholder = "เช่น อนุมัติเอกสาร"
+selectCertificateFile = "โปรดเลือกไฟล์ใบรับรอง"
 sessionNotFound = "ไม่พบเซสชันหรือไม่มีสิทธิ์เข้าถึง."
 signDocument = "เซ็นเอกสาร"
 statusDeclined = "ปฏิเสธ"
@@ -13388,7 +13559,9 @@ statusNotified = "แจ้งแล้ว"
 statusPending = "รอดำเนินการ"
 statusSigned = "เซ็นแล้ว"
 statusViewed = "ดูแล้ว"
+submitFailed = "ส่งลายเซ็นไม่สำเร็จ: {{error}}"
 submitSignature = "ส่งลายเซ็น"
+submitSuccess = "ส่งลายเซ็นสำเร็จ!"
 
 [workspace]
 title = "พื้นที่ทำงาน"

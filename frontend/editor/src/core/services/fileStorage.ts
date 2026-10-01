@@ -17,6 +17,7 @@ import {
   DATABASE_CONFIGS,
 } from "@app/services/indexedDBManager";
 import { alert } from "@app/components/toast";
+import i18n from "i18next";
 
 /**
  * Storage record - single source of truth
@@ -533,10 +534,12 @@ class FileStorageService {
     );
     alert({
       alertType: "warning",
-      title: "File data is unavailable",
-      body:
-        `"${record.name}" is saved in this browser but its contents can no longer be read. ` +
-        "Upload the file again to keep working on it.",
+      title: i18n.t("fileStorage.unreadable.title", "File data is unavailable"),
+      body: i18n.t(
+        "fileStorage.unreadable.body",
+        '"{{name}}" is saved in this browser but its contents can no longer be read. Upload the file again to keep working on it.',
+        { name: record.name },
+      ),
       expandable: false,
       durationMs: 8000,
     });
