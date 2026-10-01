@@ -2476,7 +2476,16 @@ checking = "백엔드 상태 확인 중..."
 offline = "백엔드 오프라인"
 online = "백엔드 온라인"
 starting = "백엔드 시작 중..."
+unavailable = "백엔드를 사용할 수 없습니다"
 wait = "백엔드가 실행을 마칠 때까지 기다린 후 다시 시도하세요."
+
+[backendHealth.restart]
+attempting = "다시 시작하는 중... ({{attempt}}/{{max}})"
+failedBody = "로컬 백엔드를 복구할 수 없습니다. 앱을 다시 시작하세요."
+failedTitle = "백엔드를 다시 시작하지 못했습니다"
+stoppedTitle = "백엔드가 예기치 않게 중지되었습니다"
+successBody = "로컬 백엔드가 다시 온라인 상태입니다."
+successTitle = "백엔드가 다시 시작되었습니다"
 
 [backendStartup]
 notFoundTitle = "백엔드를 찾을 수 없음"
@@ -4288,6 +4297,14 @@ title = "설정 열림"
 message = "Stirling PDF가 기본 PDF 편집기로 설정되었습니다"
 title = "기본 앱 설정됨"
 
+[desktop.fileSave]
+saveFilesTitle_one = "{{count}}개 파일 저장"
+saveFilesTitle_other = "{{count}}개 파일 저장"
+
+[desktop.saasError]
+body = "이 도구는 클라우드 처리가 필요하지만 오류가 발생했습니다: {{error}}. 연결을 확인하고 다시 시도하세요."
+title = "클라우드 처리 실패"
+
 [desktop.titleBar]
 maximize = "최대화"
 minimize = "최소화"
@@ -4485,7 +4502,37 @@ title = "엔드포인트 통계"
 [error]
 _value = "오류"
 dismissAllErrors = "모든 오류 닫기"
+failedFiles = "실패한 파일: {{ids}}"
 generic = "오류가 발생했습니다"
+invalidOrCorruptedFiles = "유효하지 않거나 손상된 파일로 인해 처리가 실패했습니다"
+networkError = "네트워크 오류"
+requestError = "요청 오류"
+requestFailed = "요청 실패"
+requestFallback = "요청을 처리하는 중 오류가 발생했습니다."
+serverError = "서버 오류"
+unknown = "알 수 없는 오류가 발생했습니다"
+
+[error.pdfOpen]
+code = "PDF를 열 수 없습니다(오류 {{code}})."
+corrupted = "PDF 파일이 손상되어 읽을 수 없습니다."
+invalid = "이 파일은 유효한 PDF가 아니거나 손상되었습니다."
+pageLoadFailed = "이 PDF의 페이지를 불러올 수 없습니다."
+passwordProtected = "이 PDF는 암호로 보호되어 있습니다."
+unknown = "PDF를 열 수 없습니다(알 수 없는 오류)."
+unsupportedSecurity = "이 PDF는 지원되지 않는 보안 방식을 사용합니다."
+
+[error.processing]
+cancelled = "사용자가 처리를 취소했습니다."
+corruption = "이 PDF 파일은 손상되었거나 암호화된 것으로 보입니다. 다른 파일을 시도하세요."
+failed = "처리 실패: {{message}}"
+memory = "이 파일을 처리할 메모리가 부족합니다. 다른 애플리케이션을 닫거나 더 작은 파일을 처리해 보세요."
+network = "네트워크 연결에 실패했습니다. 인터넷 연결을 확인하고 다시 시도하세요."
+parsing = "PDF 처리 실패: {{message}}"
+timeout = "처리 시간이 초과되었습니다. 이 파일은 너무 크거나 처리하기 복잡할 수 있습니다."
+
+[errorBoundary]
+title = "문제가 발생했습니다"
+tryAgain = "다시 시도"
 
 [extractImages]
 allowDuplicates = "중복 이미지 저장"
@@ -4905,21 +4952,31 @@ addFolderFailed = "폴더를 추가할 수 없습니다."
 addFolderFailedDetail = "폴더를 추가할 수 없습니다: {{message}}"
 cloudDeleteFailed_one = "Couldn't delete 1 file from the cloud."
 cloudDeleteFailed_other = "Couldn't delete {{count}} files from the cloud."
+createOutsideMount = "마운트된 디렉터리 외부에는 폴더를 만들 수 없습니다"
 deleteFolderFailed = "폴더를 삭제할 수 없습니다."
 deleteFolderFailedDetail = "폴더를 삭제할 수 없습니다: {{message}}"
+diskFoldersUnsupported = "이 빌드는 디스크에 폴더를 만들 수 없습니다"
 downloadFailed = "Could not download the file."
 duplicateFailed = "Could not duplicate the file."
 folderAppearanceFailed = "폴더 모양을 업데이트할 수 없습니다."
 folderAppearanceFailedDetail = "폴더 모양을 업데이트할 수 없습니다: {{message}}"
+folderDetachFailed = "폴더가 삭제되었지만 일부 파일을 로컬에서 분리할 수 없습니다. 새로고침하여 해결하세요."
+folderOperationFailed = "폴더 작업 실패"
+folderSyncFailed = "폴더 동기화 실패: {{message}}"
+loadFilesFailed = "파일을 불러오지 못했습니다"
+moveAcrossKinds = "폴더는 같은 유형 내에서만 이동할 수 있습니다"
 moveFilesFailed = "파일을 이동할 수 없습니다."
 moveFilesFailedDetail = "파일을 이동할 수 없습니다: {{message}}"
 moveFolderFailed = "폴더를 이동할 수 없습니다."
 moveFolderFailedDetail = "폴더를 이동할 수 없습니다: {{message}}"
+moveLocalFolder = "로컬 폴더는 해당 디렉터리가 있는 위치에 있습니다"
 openDiskFileFailed = "{{name}}을(를) 열 수 없습니다."
 openDiskFileFailedDetail = "{{name}}을(를) 열 수 없습니다: {{message}}"
 processingStatusUnavailable = "처리 상태를 새로고침할 수 없습니다. 연결이 복구될 때까지 파일 잠금이 해제되었습니다."
 readFolderFailed = "폴더를 읽을 수 없습니다."
 readFolderFailedDetail = "폴더를 읽을 수 없습니다: {{message}}"
+recolourLocalFolder = "로컬 폴더는 아직 색상을 변경할 수 없습니다"
+removeDiskSubfolder = "마운트된 디렉터리의 하위 폴더는 디스크에서 제거됩니다"
 removeFilesFailed = "파일을 제거할 수 없습니다."
 removeFilesFailedDetail = "파일을 제거할 수 없습니다: {{message}}"
 removeFolderFailed = "폴더를 제거할 수 없습니다."
@@ -5051,6 +5108,22 @@ grid = "격자 보기"
 label = "보기 모드"
 list = "목록 보기"
 
+[fileStorage.unreadable]
+body = "\"{{name}}\"이(가) 이 브라우저에 저장되어 있지만 더 이상 내용을 읽을 수 없습니다. 계속 작업하려면 파일을 다시 업로드하세요."
+title = "파일 데이터를 사용할 수 없습니다"
+
+[fileSync.openFailed]
+multiple_one = "\"{{name}}\"을(를) 포함한 {{count}}개 파일을 열 수 없습니다."
+multiple_other = "\"{{name}}\"을(를) 포함한 {{count}}개 파일을 열 수 없습니다."
+single = "\"{{name}}\"을(를) 열 수 없습니다."
+singleWithStatus = "\"{{name}}\"을(를) 열 수 없습니다(HTTP {{status}})."
+title = "일부 파일을 열 수 없습니다"
+
+[fileSync.pullFailed]
+body = "이 브라우저에 캐시된 파일만 표시합니다. 연결이 복구되면 새로고침하여 다시 시도하세요."
+signInTitle = "클라우드 파일을 불러오려면 로그인이 필요합니다"
+unreachableTitle = "클라우드 라이브러리에 연결할 수 없습니다"
+
 [fileToPDF]
 tags = "변환,형식,문서,사진,슬라이드,텍스트,변환,오피스,문서,워드,엑셀,파워포인트"
 title = "파일을 PDF로"
@@ -5058,6 +5131,7 @@ title = "파일을 PDF로"
 [fileUpload]
 dropFilesHere = "여기에 파일을 끌어다 놓거나 업로드 버튼을 클릭하세요"
 dropFilesHereOpen = "파일을 여기로 끌어오거나 열기 버튼을 클릭하세요"
+droppedFileUnreadable = "드롭한 파일을 읽을 수 없습니다."
 filesAvailableCount_one = "사용 가능한 파일 {{count}}개"
 filesAvailableCount_other = "사용 가능한 파일 {{count}}개"
 loadFromStorage = "저장소에서 불러오기"
@@ -5089,6 +5163,7 @@ passwordMustBeDifferent = "새 비밀번호는 현재 비밀번호와 달라야 
 passwordsDoNotMatch = "새 비밀번호가 일치하지 않습니다"
 passwordTooShort = "비밀번호는 8자 이상이어야 합니다"
 reEnterNewPassword = "새 비밀번호를 다시 입력하세요"
+setPasswordTitle = "비밀번호 설정"
 title = "첫 로그인"
 welcomeMessage = "보안상의 이유로 첫 로그인 시 비밀번호를 변경해야 합니다."
 welcomeTitle = "환영합니다!"
@@ -5927,6 +6002,7 @@ signin = "로그인"
 signingIn = "로그인 중..."
 signInWith = "다음으로 로그인"
 signInWithProvider = "{{provider}}로 로그인"
+ssoRedirectFailed = "SSO 리디렉션 실패"
 title = "로그인"
 unexpectedError = "예기치 않은 오류: {{message}}"
 updatePassword = "비밀번호 업데이트"
@@ -6524,6 +6600,32 @@ rotateLeft = "왼쪽으로 회전"
 rotateRight = "오른쪽으로 회전"
 splitAfter = "뒤에서 분할"
 
+[pageEditor.commands]
+addSplitAt = "위치 {{position}}에 분할 추가"
+addSplits_one = "{{count}}개 분할 추가"
+addSplits_other = "{{count}}개 분할 추가"
+deletePages_one = "{{count}}개 페이지 삭제"
+deletePages_other = "{{count}}개 페이지 삭제"
+insertFiles_one = "{{page}}페이지 뒤에 {{count}}개 파일 삽입"
+insertFiles_other = "{{page}}페이지 뒤에 {{count}}개 파일 삽입"
+insertPageBreaks_one = "{{count}}개 페이지 나누기 삽입"
+insertPageBreaks_other = "{{count}}개 페이지 나누기 삽입"
+insertPageBreaksAll = "모든 페이지 뒤에 페이지 나누기 삽입"
+removeAllSplits = "모든 분할 제거"
+removeSplitAt = "위치 {{position}}의 분할 제거"
+removeSplits_one = "{{count}}개 분할 제거"
+removeSplits_other = "{{count}}개 분할 제거"
+reorderPages = "페이지 순서 변경"
+rotatePageLeft = "페이지를 왼쪽으로 회전"
+rotatePageRight = "페이지를 오른쪽으로 회전"
+rotatePagesLeft_one = "{{count}}개 페이지를 왼쪽으로 회전"
+rotatePagesLeft_other = "{{count}}개 페이지를 왼쪽으로 회전"
+rotatePagesRight_one = "{{count}}개 페이지를 오른쪽으로 회전"
+rotatePagesRight_other = "{{count}}개 페이지를 오른쪽으로 회전"
+splitAllPages = "모든 페이지 분할"
+toggleSplits_one = "{{count}}개 분할 위치 전환"
+toggleSplits_other = "{{count}}개 분할 위치 전환"
+
 [pageEditor.emptyState]
 body = "파일을 추가하여 페이지 편집을 시작하세요"
 title = "로드된 PDF 파일 없음"
@@ -6933,6 +7035,7 @@ thisPeriod = "This billing period"
 billingPeriod = "청구 기간"
 cancelTeamChange = "현재 플랜 유지"
 canCloseWindow = "이제 이 창을 닫아도 됩니다."
+createSessionFailed = "결제 세션을 만들지 못했습니다"
 error = "결제 오류"
 generatingLicense = "라이선스 키를 생성하는 중..."
 licenseActivated = "라이선스가 활성화되었습니다! 라이선스 키가 저장되었습니다. 등록된 이메일 주소로 확인 메일을 보냈습니다."
@@ -6948,6 +7051,7 @@ monthly = "월간"
 paymentCanceled = "결제가 취소되었습니다. 결제는 청구되지 않았습니다."
 perMonth = "/월"
 perUserBlock = "사용자 100명당"
+planPeriodUnavailable = "선택한 플랜 기간을 사용할 수 없습니다"
 preparing = "결제 준비 중..."
 redirecting = "보안 결제 페이지로 이동 중..."
 success = "결제 성공!"
@@ -7095,6 +7199,16 @@ freetext = "주석 텍스트 - 페이지 텍스트가 아니므로 여기에서 
 stamp = "스탬프 주석 - 페이지 텍스트가 아니므로 여기에서 편집할 수 없습니다"
 widget = "양식 필드 - 페이지 텍스트가 아니므로 여기에서 편집할 수 없습니다"
 
+[pdfTextEditor.commands]
+edit = "편집"
+mergeRuns_one = "{{count}}개 런을 단락으로 병합"
+mergeRuns_other = "{{count}}개 런을 단락으로 병합"
+setColour = "{{run}}에 색상 설정"
+setOutline = "{{run}}에 윤곽선 설정"
+typeInto = "{{run}}에 입력"
+ungroupParagraph = "단락 {{run}} 그룹 해제"
+wrap = "{{run}} 줄 바꿈"
+
 [pdfTextEditor.discard]
 body = "{{name}}을(를) 열면 편집 중인 문서가 닫힙니다. 저장되지 않은 변경 사항은 손실됩니다."
 cancel = "취소"
@@ -7109,6 +7223,9 @@ title = "열려면 PDF를 놓으세요"
 [pdfTextEditor.error]
 decodeImage = "선택한 이미지를 디코딩할 수 없습니다."
 insertImage = "선택한 이미지를 삽입할 수 없습니다."
+
+[pdfTextEditor.externalEdit]
+pngFileType = "PNG 이미지"
 
 [pdfTextEditor.find]
 close = "찾기 표시줄 닫기"
@@ -11932,11 +12049,18 @@ useLast = "Last used server: {{serverUrl}}"
 [setup.server.error]
 configFetch = "서버 구성을 가져오지 못했습니다. URL을 확인하고 다시 시도하세요."
 configFetchError = "서버 구성을 가져오지 못했습니다: {{error}}"
+dnsFailed = "호스트 이름을 확인할 수 없습니다: {{hostname}}"
 emptyUrl = "서버 URL을 입력하세요"
+httpOnly = "서버는 HTTP로만 접근할 수 있습니다(HTTPS 아님)."
+httpsOnly = "서버는 HTTPS로만 접근할 수 있으며 HTTP는 아닙니다."
 invalidUrl = "잘못된 URL 형식입니다. https://your-server.com 같은 올바른 URL을 입력하세요"
+methodMismatch = "서버가 HEAD 요청에는 응답하지만 GET 요청에는 응답하지 않습니다."
+networkBlocked = "인터넷 연결이 감지되지 않았습니다. 모든 네트워크 요청이 실패하고 있습니다."
+serverUnreachable = "서버에 연결할 수 없습니다. 인터넷은 작동하지만 이 특정 서버에 연결할 수 없습니다."
 testFailed = "연결 테스트에 실패했습니다"
 unknown = "알 수 없는 오류"
 unreachable = "서버에 연결할 수 없습니다"
+userAgentBlocked = "서버가 Tauri/desktop app User-Agent는 차단하지만 browser User-Agent는 허용합니다."
 
 [setup.server.error.securityDisabled]
 body = "이 서버에는 로그인이 활성화되어 있지 않습니다. 이 서버에 연결하려면 인증을 활성화해야 합니다:"
@@ -13283,6 +13407,12 @@ previewUnavailable = "이 파일 형식은 미리보기를 사용할 수 없습�
 renderMarkdown = "마크다운 렌더링"
 sortedBy = "정렬 기준: {{column}}"
 textStats = "{{lines}}줄 · {{size}}"
+
+[viewer.nonPdf.fileType]
+file = "파일"
+image = "이미지"
+spreadsheet = "스프레드시트"
+text = "텍스트"
 
 [viewer.portfolio]
 addFile = "파일 추가"

@@ -2476,7 +2476,16 @@ checking = "جارٍ التحقق من حالة الواجهة الخلفية...
 offline = "الواجهة الخلفية غير متصلة"
 online = "الواجهة الخلفية متصلة"
 starting = "الواجهة الخلفية قيد التشغيل..."
+unavailable = "الواجهة الخلفية غير متاحة"
 wait = "يرجى انتظار اكتمال تشغيل الواجهة الخلفية ثم المحاولة مرة أخرى."
+
+[backendHealth.restart]
+attempting = "جارٍ محاولة إعادة التشغيل... ({{attempt}}/{{max}})"
+failedBody = "تعذّر استرداد الواجهة الخلفية المحلية. يُرجى إعادة تشغيل التطبيق."
+failedTitle = "فشلت إعادة تشغيل الواجهة الخلفية"
+stoppedTitle = "توقفت الواجهة الخلفية بشكل غير متوقع"
+successBody = "عادت الواجهة الخلفية المحلية للعمل."
+successTitle = "تمت إعادة تشغيل الواجهة الخلفية"
 
 [backendStartup]
 notFoundTitle = "لم يتم العثور على الخادم الخلفي"
@@ -4288,6 +4297,14 @@ title = "تم فتح الإعدادات"
 message = "أصبح Stirling PDF محرر PDF الافتراضي لديك"
 title = "تم تعيين التطبيق الافتراضي"
 
+[desktop.fileSave]
+saveFilesTitle_one = "حفظ {{count}} ملف"
+saveFilesTitle_other = "حفظ {{count}} ملفات"
+
+[desktop.saasError]
+body = "تتطلب هذه الأداة معالجة سحابية لكنها واجهت خطأ: {{error}}. يُرجى التحقق من اتصالك والمحاولة مرة أخرى."
+title = "فشلت المعالجة السحابية"
+
 [desktop.titleBar]
 maximize = "تكبير"
 minimize = "تصغير"
@@ -4485,7 +4502,37 @@ title = "إحصاءات المسارات"
 [error]
 _value = "خطأ"
 dismissAllErrors = "تجاهل كل الأخطاء"
+failedFiles = "الملفات التي فشلت: {{ids}}"
 generic = "حدث خطأ"
+invalidOrCorruptedFiles = "فشلت العملية بسبب ملف/ملفات غير صالحة أو تالفة"
+networkError = "خطأ في الشبكة"
+requestError = "خطأ في الطلب"
+requestFailed = "فشل الطلب"
+requestFallback = "حدث خطأ أثناء معالجة طلبك."
+serverError = "خطأ في الخادم"
+unknown = "حدث خطأ غير معروف"
+
+[error.pdfOpen]
+code = "تعذّر فتح PDF (الخطأ {{code}})."
+corrupted = "ملف PDF تالف وتعذّرت قراءته."
+invalid = "هذا الملف ليس PDF صالحًا أو أنه تالف."
+pageLoadFailed = "تعذّر تحميل صفحة في ملف PDF هذا."
+passwordProtected = "ملف PDF هذا محمي بكلمة مرور."
+unknown = "تعذّر فتح PDF (خطأ غير معروف)."
+unsupportedSecurity = "يستخدم ملف PDF هذا نظام أمان غير مدعوم."
+
+[error.processing]
+cancelled = "تم إلغاء المعالجة بواسطة المستخدم."
+corruption = "يبدو أن ملف PDF هذا تالف أو مشفر. يُرجى تجربة ملف مختلف."
+failed = "فشلت المعالجة: {{message}}"
+memory = "الذاكرة غير كافية لمعالجة هذا الملف. جرّب إغلاق تطبيقات أخرى أو معالجة ملف أصغر."
+network = "فشل اتصال الشبكة. يُرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى."
+parsing = "فشلت معالجة PDF: {{message}}"
+timeout = "انتهت مهلة المعالجة. قد يكون هذا الملف كبيرًا جدًا أو معقدًا جدًا للمعالجة."
+
+[errorBoundary]
+title = "حدث خطأ ما"
+tryAgain = "حاول مرة أخرى"
 
 [extractImages]
 allowDuplicates = "حفظ الصور المكررة"
@@ -4905,21 +4952,31 @@ addFolderFailed = "تعذرت إضافة المجلد."
 addFolderFailedDetail = "تعذرت إضافة المجلد: {{message}}"
 cloudDeleteFailed_one = "Couldn't delete 1 file from the cloud."
 cloudDeleteFailed_other = "Couldn't delete {{count}} files from the cloud."
+createOutsideMount = "لا يمكن إنشاء مجلد خارج دليل مُركّب"
 deleteFolderFailed = "تعذّر حذف المجلد."
 deleteFolderFailedDetail = "تعذّر حذف المجلد: {{message}}"
+diskFoldersUnsupported = "لا يمكن لهذا الإصدار إنشاء مجلدات على القرص"
 downloadFailed = "Could not download the file."
 duplicateFailed = "Could not duplicate the file."
 folderAppearanceFailed = "تعذّر تحديث مظهر المجلد."
 folderAppearanceFailedDetail = "تعذّر تحديث مظهر المجلد: {{message}}"
+folderDetachFailed = "تم حذف المجلد، لكن تعذّر إلغاء ربط بعض الملفات محليًا. حدّث للإصلاح."
+folderOperationFailed = "فشلت عملية المجلد"
+folderSyncFailed = "فشلت مزامنة المجلد: {{message}}"
+loadFilesFailed = "فشل تحميل الملفات"
+moveAcrossKinds = "لا يمكن نقل المجلدات إلا داخل نوعها نفسه"
 moveFilesFailed = "تعذّر نقل الملفات."
 moveFilesFailedDetail = "تعذّر نقل الملفات: {{message}}"
 moveFolderFailed = "تعذّر نقل المجلد."
 moveFolderFailedDetail = "تعذّر نقل المجلد: {{message}}"
+moveLocalFolder = "يوجد المجلد المحلي حيث يوجد دليله"
 openDiskFileFailed = "تعذر فتح {{name}}."
 openDiskFileFailedDetail = "تعذر فتح {{name}}: {{message}}"
 processingStatusUnavailable = "تعذر تحديث حالة المعالجة. تم تحرير أقفال الملفات حتى يستعيد الاتصال عافيته."
 readFolderFailed = "تعذرت قراءة المجلد."
 readFolderFailedDetail = "تعذرت قراءة المجلد: {{message}}"
+recolourLocalFolder = "لا يمكن تغيير لون المجلدات المحلية بعد"
+removeDiskSubfolder = "تتم إزالة المجلدات الفرعية لدليل مُركّب على القرص"
 removeFilesFailed = "تعذّر حذف الملفات."
 removeFilesFailedDetail = "تعذّر حذف الملفات: {{message}}"
 removeFolderFailed = "تعذرت إزالة المجلد."
@@ -5051,6 +5108,22 @@ grid = "عرض شبكي"
 label = "وضع العرض"
 list = "عرض قائمتي"
 
+[fileStorage.unreadable]
+body = "تم حفظ \"{{name}}\" في هذا المتصفح لكن لم يعد من الممكن قراءة محتوياته. حمّل الملف مرة أخرى لمواصلة العمل عليه."
+title = "بيانات الملف غير متاحة"
+
+[fileSync.openFailed]
+multiple_one = "تعذّر فتح {{count}} ملف بما في ذلك \"{{name}}\"."
+multiple_other = "تعذّر فتح {{count}} ملفات بما في ذلك \"{{name}}\"."
+single = "تعذّر فتح \"{{name}}\"."
+singleWithStatus = "تعذّر فتح \"{{name}}\" (HTTP {{status}})."
+title = "تعذّر فتح بعض الملفات"
+
+[fileSync.pullFailed]
+body = "يتم عرض الملفات المخزنة مؤقتًا في هذا المتصفح فقط. حدّث لإعادة المحاولة بعد عودة الاتصال."
+signInTitle = "تسجيل الدخول مطلوب لتحميل ملفات السحابة"
+unreachableTitle = "تعذّر الوصول إلى مكتبة السحابة"
+
 [fileToPDF]
 tags = "تحويل,تنسيق,مستند,صورة,شريحة,نص,تحويل,مكتب,مستندات,وورد,إكسل,باوربوينت"
 title = "ملف إلى PDF"
@@ -5058,6 +5131,7 @@ title = "ملف إلى PDF"
 [fileUpload]
 dropFilesHere = "أسقط الملفات هنا أو انقر زر التحميل"
 dropFilesHereOpen = "أسقط الملفات هنا أو انقر زر الفتح"
+droppedFileUnreadable = "تعذّرت قراءة ملف تم إفلاته."
 filesAvailableCount_one = "{{count}} ملف متاح"
 filesAvailableCount_other = "{{count}} ملفات متاحة"
 loadFromStorage = "التحميل من التخزين"
@@ -5089,6 +5163,7 @@ passwordMustBeDifferent = "يجب أن تكون كلمة المرور الجدي
 passwordsDoNotMatch = "كلمتا المرور الجديدتان غير متطابقتين"
 passwordTooShort = "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل"
 reEnterNewPassword = "أعد إدخال كلمة المرور الجديدة"
+setPasswordTitle = "عيّن كلمة المرور الخاصة بك"
 title = "تسجيل الدخول لأول مرة"
 welcomeMessage = "لأسباب أمنية، يجب تغيير كلمة المرور عند تسجيل الدخول لأول مرة."
 welcomeTitle = "مرحبًا!"
@@ -5927,6 +6002,7 @@ signin = "تسجيل الدخول"
 signingIn = "جارٍ تسجيل الدخول..."
 signInWith = "تسجيل الدخول بواسطة"
 signInWithProvider = "تسجيل الدخول باستخدام {{provider}}"
+ssoRedirectFailed = "فشلت إعادة توجيه SSO"
 title = "تسجيل الدخول"
 unexpectedError = "خطأ غير متوقع: {{message}}"
 updatePassword = "تحديث كلمة المرور"
@@ -6524,6 +6600,32 @@ rotateLeft = "تدوير لليسار"
 rotateRight = "تدوير لليمين"
 splitAfter = "تقسيم بعد"
 
+[pageEditor.commands]
+addSplitAt = "إضافة تقسيم عند الموضع {{position}}"
+addSplits_one = "إضافة {{count}} تقسيم"
+addSplits_other = "إضافة {{count}} تقسيمات"
+deletePages_one = "حذف {{count}} صفحة"
+deletePages_other = "حذف {{count}} صفحات"
+insertFiles_one = "إدراج {{count}} ملف بعد الصفحة {{page}}"
+insertFiles_other = "إدراج {{count}} ملفات بعد الصفحة {{page}}"
+insertPageBreaks_one = "إدراج {{count}} فاصل صفحة"
+insertPageBreaks_other = "إدراج {{count}} فواصل صفحات"
+insertPageBreaksAll = "إدراج فواصل صفحات بعد كل الصفحات"
+removeAllSplits = "إزالة كل التقسيمات"
+removeSplitAt = "إزالة التقسيم عند الموضع {{position}}"
+removeSplits_one = "إزالة {{count}} تقسيم"
+removeSplits_other = "إزالة {{count}} تقسيمات"
+reorderPages = "إعادة ترتيب الصفحات"
+rotatePageLeft = "تدوير الصفحة لليسار"
+rotatePageRight = "تدوير الصفحة لليمين"
+rotatePagesLeft_one = "تدوير {{count}} صفحة لليسار"
+rotatePagesLeft_other = "تدوير {{count}} صفحات لليسار"
+rotatePagesRight_one = "تدوير {{count}} صفحة لليمين"
+rotatePagesRight_other = "تدوير {{count}} صفحات لليمين"
+splitAllPages = "تقسيم كل الصفحات"
+toggleSplits_one = "تبديل موضع {{count}} تقسيم"
+toggleSplits_other = "تبديل مواضع {{count}} تقسيمات"
+
 [pageEditor.emptyState]
 body = "أضف ملفات للبدء في تحرير الصفحات"
 title = "لم يتم تحميل ملفات PDF"
@@ -6933,6 +7035,7 @@ thisPeriod = "This billing period"
 billingPeriod = "فترة الفوترة"
 cancelTeamChange = "الاحتفاظ بالخطة الحالية"
 canCloseWindow = "يمكنك الآن إغلاق هذه النافذة."
+createSessionFailed = "فشل إنشاء جلسة الدفع"
 error = "خطأ في الدفع"
 generatingLicense = "جارٍ إنشاء مفتاح الترخيص..."
 licenseActivated = "تم تفعيل الترخيص! تم حفظ مفتاح الترخيص الخاص بك. تم إرسال رسالة تأكيد إلى بريدك الإلكتروني المسجل."
@@ -6948,6 +7051,7 @@ monthly = "شهري"
 paymentCanceled = "تم إلغاء الدفع. لم يتم خصم أي رسوم."
 perMonth = "/شهر"
 perUserBlock = "لكل 100 مستخدم"
+planPeriodUnavailable = "فترة الخطة المحددة غير متاحة"
 preparing = "جارٍ تجهيز عملية الدفع..."
 redirecting = "جارٍ التحويل إلى الدفع الآمن..."
 success = "تم الدفع بنجاح!"
@@ -7095,6 +7199,16 @@ freetext = "نص التعليق التوضيحي - ليس نص الصفحة، ل
 stamp = "تعليق ختم - ليس نص الصفحة، لذلك لا يمكن تحريره هنا"
 widget = "حقل نموذج - ليس نص الصفحة، لذلك لا يمكن تحريره هنا"
 
+[pdfTextEditor.commands]
+edit = "تحرير"
+mergeRuns_one = "دمج {{count}} مقطع في فقرة"
+mergeRuns_other = "دمج {{count}} مقاطع في فقرة"
+setColour = "تعيين اللون على {{run}}"
+setOutline = "تعيين المخطط التفصيلي على {{run}}"
+typeInto = "الكتابة داخل {{run}}"
+ungroupParagraph = "فك تجميع الفقرة {{run}}"
+wrap = "التفاف {{run}}"
+
 [pdfTextEditor.discard]
 body = "سيؤدي فتح {{name}} إلى إغلاق المستند الذي تحرره. ستفقد تغييراتك غير المحفوظة."
 cancel = "إلغاء"
@@ -7109,6 +7223,9 @@ title = "أفلت PDF لفتحه"
 [pdfTextEditor.error]
 decodeImage = "تعذر فك ترميز الصورة المحددة."
 insertImage = "تعذر إدراج الصورة المحددة."
+
+[pdfTextEditor.externalEdit]
+pngFileType = "صورة PNG"
 
 [pdfTextEditor.find]
 close = "إغلاق شريط البحث"
@@ -11932,11 +12049,18 @@ useLast = "Last used server: {{serverUrl}}"
 [setup.server.error]
 configFetch = "فشل في جلب إعدادات الخادم. يرجى التحقق من عنوان URL والمحاولة مرة أخرى."
 configFetchError = "فشل جلب إعدادات الخادم: {{error}}"
+dnsFailed = "لا يمكن حل اسم المضيف: {{hostname}}"
 emptyUrl = "يرجى إدخال عنوان URL للخادم"
+httpOnly = "لا يمكن الوصول إلى الخادم إلا عبر HTTP (وليس HTTPS)."
+httpsOnly = "لا يمكن الوصول إلى الخادم إلا عبر HTTPS، وليس HTTP."
 invalidUrl = "صيغة URL غير صالحة. يرجى إدخال عنوان URL صالح مثل https://your-server.com"
+methodMismatch = "يستجيب الخادم لطلبات HEAD ولكن ليس لطلبات GET."
+networkBlocked = "لم يتم اكتشاف اتصال بالإنترنت. جميع طلبات الشبكة تفشل."
+serverUnreachable = "لا يمكن الاتصال بالخادم. الإنترنت يعمل لكن هذا الخادم المحدد غير قابل للوصول."
 testFailed = "فشل اختبار الاتصال"
 unknown = "خطأ غير معروف"
 unreachable = "تعذّر الاتصال بالخادم"
+userAgentBlocked = "يحظر الخادم User-Agent الخاص بتطبيق Tauri/سطح المكتب لكنه يسمح بـ User-Agent الخاص بالمتصفح."
 
 [setup.server.error.securityDisabled]
 body = "لا يحتوي هذا الخادم على تسجيل دخول مفعّل. للاتصال بهذا الخادم، يجب تمكين المصادقة:"
@@ -13283,6 +13407,12 @@ previewUnavailable = "المعاينة غير متاحة لهذا النوع م�
 renderMarkdown = "عرض Markdown"
 sortedBy = "مرتّب حسب: {{column}}"
 textStats = "{{lines}} أسطر · {{size}}"
+
+[viewer.nonPdf.fileType]
+file = "ملف"
+image = "صورة"
+spreadsheet = "جدول بيانات"
+text = "نص"
 
 [viewer.portfolio]
 addFile = "إضافة ملف"

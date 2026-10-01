@@ -2476,7 +2476,16 @@ checking = "バックエンドの状態を確認しています..."
 offline = "バックエンドはオフライン"
 online = "バックエンドはオンライン"
 starting = "バックエンドを起動しています..."
+unavailable = "バックエンドを利用できません"
 wait = "バックエンドの起動完了までお待ちいただき、再度お試しください。"
+
+[backendHealth.restart]
+attempting = "再起動を試行しています... ({{attempt}}/{{max}})"
+failedBody = "ローカルバックエンドを復旧できませんでした。アプリを再起動してください。"
+failedTitle = "バックエンドの再起動に失敗しました"
+stoppedTitle = "バックエンドが予期せず停止しました"
+successBody = "ローカルバックエンドがオンラインに戻りました。"
+successTitle = "バックエンドを再起動しました"
 
 [backendStartup]
 notFoundTitle = "バックエンドが見つかりません"
@@ -4288,6 +4297,14 @@ title = "設定を開きました"
 message = "Stirling PDF が既定のPDFエディターになりました"
 title = "既定のアプリを設定"
 
+[desktop.fileSave]
+saveFilesTitle_one = "{{count}} 個のファイルを保存"
+saveFilesTitle_other = "{{count}} 個のファイルを保存"
+
+[desktop.saasError]
+body = "このツールにはクラウド処理が必要ですが、エラーが発生しました: {{error}}。接続を確認して、もう一度お試しください。"
+title = "クラウド処理に失敗しました"
+
 [desktop.titleBar]
 maximize = "最大化"
 minimize = "最小化"
@@ -4485,7 +4502,37 @@ title = "エンドポイント統計"
 [error]
 _value = "エラー"
 dismissAllErrors = "すべてのエラーを閉じる"
+failedFiles = "失敗したファイル: {{ids}}"
 generic = "エラーが発生しました"
+invalidOrCorruptedFiles = "無効または破損したファイルのため処理に失敗しました"
+networkError = "ネットワークエラー"
+requestError = "リクエストエラー"
+requestFailed = "リクエストに失敗しました"
+requestFallback = "リクエストの処理中にエラーが発生しました。"
+serverError = "サーバーエラー"
+unknown = "不明なエラーが発生しました"
+
+[error.pdfOpen]
+code = "PDF を開けませんでした（エラー {{code}}）。"
+corrupted = "PDF ファイルが破損しているため読み取れませんでした。"
+invalid = "このファイルは有効な PDF ではないか、破損しています。"
+pageLoadFailed = "この PDF 内のページを読み込めませんでした。"
+passwordProtected = "この PDF はパスワードで保護されています。"
+unknown = "PDF を開けませんでした（不明なエラー）。"
+unsupportedSecurity = "この PDF はサポートされていないセキュリティ方式を使用しています。"
+
+[error.processing]
+cancelled = "処理はユーザーによってキャンセルされました。"
+corruption = "この PDF ファイルは破損しているか暗号化されているようです。別のファイルをお試しください。"
+failed = "処理に失敗しました: {{message}}"
+memory = "このファイルを処理するためのメモリが不足しています。他のアプリケーションを閉じるか、より小さいファイルを処理してみてください。"
+network = "ネットワーク接続に失敗しました。インターネット接続を確認して、もう一度お試しください。"
+parsing = "PDF の処理に失敗しました: {{message}}"
+timeout = "処理がタイムアウトしました。このファイルは大きすぎるか複雑すぎて処理できない可能性があります。"
+
+[errorBoundary]
+title = "問題が発生しました"
+tryAgain = "再試行"
 
 [extractImages]
 allowDuplicates = "重複した画像を保存する"
@@ -4905,21 +4952,31 @@ addFolderFailed = "フォルダーを追加できませんでした。"
 addFolderFailedDetail = "フォルダーを追加できませんでした: {{message}}"
 cloudDeleteFailed_one = "Couldn't delete 1 file from the cloud."
 cloudDeleteFailed_other = "Couldn't delete {{count}} files from the cloud."
+createOutsideMount = "マウントされたディレクトリの外にフォルダーを作成できません"
 deleteFolderFailed = "フォルダを削除できませんでした。"
 deleteFolderFailedDetail = "フォルダを削除できませんでした: {{message}}"
+diskFoldersUnsupported = "このビルドではディスク上にフォルダーを作成できません"
 downloadFailed = "Could not download the file."
 duplicateFailed = "Could not duplicate the file."
 folderAppearanceFailed = "フォルダの外観を更新できませんでした。"
 folderAppearanceFailedDetail = "フォルダの外観を更新できませんでした: {{message}}"
+folderDetachFailed = "フォルダーは削除されましたが、一部のファイルをローカルで切り離せませんでした。更新して修正してください。"
+folderOperationFailed = "フォルダー操作に失敗しました"
+folderSyncFailed = "フォルダーの同期に失敗しました: {{message}}"
+loadFilesFailed = "ファイルの読み込みに失敗しました"
+moveAcrossKinds = "フォルダーは同じ種類の中でのみ移動できます"
 moveFilesFailed = "ファイルを移動できませんでした。"
 moveFilesFailedDetail = "ファイルを移動できませんでした: {{message}}"
 moveFolderFailed = "フォルダを移動できませんでした。"
 moveFolderFailedDetail = "フォルダを移動できませんでした: {{message}}"
+moveLocalFolder = "ローカルフォルダーはそのディレクトリがある場所に配置されます"
 openDiskFileFailed = "{{name}} を開けませんでした。"
 openDiskFileFailedDetail = "{{name}} を開けませんでした: {{message}}"
 processingStatusUnavailable = "処理ステータスを更新できませんでした。接続が復旧するまでファイルロックは解除されました。"
 readFolderFailed = "フォルダーを読み取れませんでした。"
 readFolderFailedDetail = "フォルダーを読み取れませんでした: {{message}}"
+recolourLocalFolder = "ローカルフォルダーの色はまだ変更できません"
+removeDiskSubfolder = "マウントされたディレクトリのサブフォルダーはディスク上で削除されます"
 removeFilesFailed = "ファイルを削除できませんでした。"
 removeFilesFailedDetail = "ファイルを削除できませんでした: {{message}}"
 removeFolderFailed = "フォルダーを削除できませんでした。"
@@ -5051,6 +5108,22 @@ grid = "グリッド表示"
 label = "表示モード"
 list = "リスト表示"
 
+[fileStorage.unreadable]
+body = "\"{{name}}\" はこのブラウザーに保存されていますが、その内容を読み取れなくなりました。作業を続けるにはファイルを再度アップロードしてください。"
+title = "ファイルデータを利用できません"
+
+[fileSync.openFailed]
+multiple_one = "\"{{name}}\" を含む {{count}} 個のファイルを開けませんでした。"
+multiple_other = "\"{{name}}\" を含む {{count}} 個のファイルを開けませんでした。"
+single = "\"{{name}}\" を開けませんでした。"
+singleWithStatus = "\"{{name}}\" を開けませんでした（HTTP {{status}}）。"
+title = "一部のファイルを開けませんでした"
+
+[fileSync.pullFailed]
+body = "このブラウザーにキャッシュされたファイルのみを表示しています。接続が戻ったら更新して再試行してください。"
+signInTitle = "クラウドファイルを読み込むにはサインインが必要です"
+unreachableTitle = "クラウドライブラリに到達できませんでした"
+
 [fileToPDF]
 tags = "変換,形式,文書,画像,スライド,テキスト,変換,オフィス,ドキュメント,Word,Excel,PowerPoint"
 title = "ファイルをPDFに変換"
@@ -5058,6 +5131,7 @@ title = "ファイルをPDFに変換"
 [fileUpload]
 dropFilesHere = "ここにドロップするかアップロードボタンをクリック"
 dropFilesHereOpen = "ここにファイルをドロップするか、開くボタンをクリック"
+droppedFileUnreadable = "ドロップされたファイルを読み取れませんでした。"
 filesAvailableCount_one = "{{count}} 個のファイルが利用可能"
 filesAvailableCount_other = "{{count}} 個のファイルが利用可能"
 loadFromStorage = "ストレージから読み込む"
@@ -5089,6 +5163,7 @@ passwordMustBeDifferent = "新しいパスワードは現在のパスワード�
 passwordsDoNotMatch = "新しいパスワードが一致しません"
 passwordTooShort = "パスワードは8文字以上である必要があります"
 reEnterNewPassword = "新しいパスワードを再入力"
+setPasswordTitle = "パスワードを設定"
 title = "初回ログイン"
 welcomeMessage = "セキュリティのため、初回ログイン時にパスワードを変更する必要があります。"
 welcomeTitle = "ようこそ！"
@@ -5927,6 +6002,7 @@ signin = "サインイン"
 signingIn = "サインイン中..."
 signInWith = "次でサインイン"
 signInWithProvider = "{{provider}} でサインイン"
+ssoRedirectFailed = "SSO リダイレクトに失敗しました"
 title = "サインイン"
 unexpectedError = "予期しないエラー：{{message}}"
 updatePassword = "パスワードを更新"
@@ -6524,6 +6600,32 @@ rotateLeft = "左に回転"
 rotateRight = "右に回転"
 splitAfter = "後で分割"
 
+[pageEditor.commands]
+addSplitAt = "位置 {{position}} に分割を追加"
+addSplits_one = "{{count}} 個の分割を追加"
+addSplits_other = "{{count}} 個の分割を追加"
+deletePages_one = "{{count}} ページを削除"
+deletePages_other = "{{count}} ページを削除"
+insertFiles_one = "ページ {{page}} の後に {{count}} 個のファイルを挿入"
+insertFiles_other = "ページ {{page}} の後に {{count}} 個のファイルを挿入"
+insertPageBreaks_one = "{{count}} 個のページ区切りを挿入"
+insertPageBreaks_other = "{{count}} 個のページ区切りを挿入"
+insertPageBreaksAll = "すべてのページの後にページ区切りを挿入"
+removeAllSplits = "すべての分割を削除"
+removeSplitAt = "位置 {{position}} の分割を削除"
+removeSplits_one = "{{count}} 個の分割を削除"
+removeSplits_other = "{{count}} 個の分割を削除"
+reorderPages = "ページを並べ替え"
+rotatePageLeft = "ページを左に回転"
+rotatePageRight = "ページを右に回転"
+rotatePagesLeft_one = "{{count}} ページを左に回転"
+rotatePagesLeft_other = "{{count}} ページを左に回転"
+rotatePagesRight_one = "{{count}} ページを右に回転"
+rotatePagesRight_other = "{{count}} ページを右に回転"
+splitAllPages = "すべてのページを分割"
+toggleSplits_one = "{{count}} 個の分割位置を切り替え"
+toggleSplits_other = "{{count}} 個の分割位置を切り替え"
+
 [pageEditor.emptyState]
 body = "ファイルを追加してページ編集を開始"
 title = "PDF ファイルが読み込まれていません"
@@ -6933,6 +7035,7 @@ thisPeriod = "This billing period"
 billingPeriod = "請求期間"
 cancelTeamChange = "現在のプランを維持"
 canCloseWindow = "このウィンドウは閉じても構いません。"
+createSessionFailed = "チェックアウトセッションの作成に失敗しました"
 error = "支払いエラー"
 generatingLicense = "ライセンスキーを生成中..."
 licenseActivated = "ライセンスを有効化しました！ ライセンスキーは保存済みです。登録メール宛に確認メールを送信しました。"
@@ -6948,6 +7051,7 @@ monthly = "月額"
 paymentCanceled = "支払いをキャンセルしました。課金は行われていません。"
 perMonth = "/月"
 perUserBlock = "100ユーザーごと"
+planPeriodUnavailable = "選択したプラン期間は利用できません"
 preparing = "チェックアウトを準備しています..."
 redirecting = "安全なチェックアウトにリダイレクトしています..."
 success = "支払いが完了しました"
@@ -7095,6 +7199,16 @@ freetext = "注釈テキスト - ページテキストではないため、こ�
 stamp = "スタンプ注釈 - ページテキストではないため、ここでは編集できません"
 widget = "フォームフィールド - ページテキストではないため、ここでは編集できません"
 
+[pdfTextEditor.commands]
+edit = "編集"
+mergeRuns_one = "{{count}} 個のランを段落に結合"
+mergeRuns_other = "{{count}} 個のランを段落に結合"
+setColour = "{{run}} の色を設定"
+setOutline = "{{run}} のアウトラインを設定"
+typeInto = "{{run}} に入力"
+ungroupParagraph = "段落 {{run}} のグループ化を解除"
+wrap = "{{run}} を折り返し"
+
 [pdfTextEditor.discard]
 body = "{{name}} を開くと、編集中のドキュメントが閉じます。未保存の変更は失われます。"
 cancel = "キャンセル"
@@ -7109,6 +7223,9 @@ title = "PDF をドロップして開く"
 [pdfTextEditor.error]
 decodeImage = "選択した画像をデコードできませんでした。"
 insertImage = "選択した画像を挿入できませんでした。"
+
+[pdfTextEditor.externalEdit]
+pngFileType = "PNG 画像"
 
 [pdfTextEditor.find]
 close = "検索バーを閉じる"
@@ -11932,11 +12049,18 @@ useLast = "Last used server: {{serverUrl}}"
 [setup.server.error]
 configFetch = "サーバー構成の取得に失敗しました。URL を確認して、もう一度お試しください。"
 configFetchError = "サーバー設定の取得に失敗しました: {{error}}"
+dnsFailed = "ホスト名を解決できません: {{hostname}}"
 emptyUrl = "サーバー URL を入力してください"
+httpOnly = "サーバーは HTTP でのみアクセス可能です（HTTPS ではありません）。"
+httpsOnly = "サーバーは HTTPS でのみアクセス可能で、HTTP ではアクセスできません。"
 invalidUrl = "URL の形式が無効です。https://your-server.com のような有効な URL を入力してください"
+methodMismatch = "サーバーは HEAD リクエストには応答しますが、GET リクエストには応答しません。"
+networkBlocked = "インターネット接続が検出されません。すべてのネットワークリクエストが失敗しています。"
+serverUnreachable = "サーバーに接続できません。インターネットは動作していますが、この特定のサーバーに到達できません。"
 testFailed = "接続テストに失敗しました"
 unknown = "不明なエラー"
 unreachable = "サーバーに接続できませんでした"
+userAgentBlocked = "サーバーは Tauri/デスクトップアプリの User-Agent をブロックしますが、ブラウザーの User-Agent は許可します。"
 
 [setup.server.error.securityDisabled]
 body = "このサーバーではログインが有効になっていません。このサーバーに接続するには、認証を有効にする必要があります:"
@@ -13283,6 +13407,12 @@ previewUnavailable = "このファイルタイプではプレビューを利用�
 renderMarkdown = "Markdown をレンダリング"
 sortedBy = "並び替え基準: {{column}}"
 textStats = "{{lines}} 行 · {{size}}"
+
+[viewer.nonPdf.fileType]
+file = "ファイル"
+image = "画像"
+spreadsheet = "スプレッドシート"
+text = "テキスト"
 
 [viewer.portfolio]
 addFile = "ファイルを追加"

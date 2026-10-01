@@ -2476,7 +2476,16 @@ checking = "ബാക്ക്എൻഡിന്റെ നില പരിശോ
 offline = "ബാക്ക്എൻഡ് ഓഫ്ലൈൻ"
 online = "ബാക്ക്എൻഡ് ഓൺലൈൻ"
 starting = "ബാക്ക്എൻഡ് ആരംഭിക്കുന്നു..."
+unavailable = "ബാക്കെൻഡ് ലഭ്യമല്ല"
 wait = "ബാക്ക്എൻഡ് ആരംഭിക്കുന്നത് പൂർത്തിയാകുന്നത് വരെ ദയവായി കാത്തிருந்து വീണ്ടും ശ്രമിക്കുക."
+
+[backendHealth.restart]
+attempting = "പുനരാരംഭിക്കാൻ ശ്രമിക്കുന്നു... ({{attempt}}/{{max}})"
+failedBody = "ലോക്കൽ ബാക്കെൻഡ് വീണ്ടെടുക്കാനായില്ല. ദയവായി ആപ്പ് പുനരാരംഭിക്കുക."
+failedTitle = "ബാക്കെൻഡ് പുനരാരംഭിക്കാൻ പരാജയപ്പെട്ടു"
+stoppedTitle = "ബാക്കെൻഡ് അപ്രതീക്ഷിതമായി നിർത്തി"
+successBody = "ലോക്കൽ ബാക്കെൻഡ് വീണ്ടും ഓൺലൈനിലാണ്."
+successTitle = "ബാക്കെൻഡ് പുനരാരംഭിച്ചു"
 
 [backendStartup]
 notFoundTitle = "ബാക്ക്‌എൻഡ് കണ്ടെത്താനായില്ല"
@@ -4288,6 +4297,14 @@ title = "സെറ്റിങ്ങുകൾ തുറന്നു"
 message = "Stirling PDF ഇപ്പോൾ നിങ്ങളുടെ സ്വതേയുള്ള PDF എഡിറ്ററാണ്"
 title = "സ്വതേയുള്ള ആപ്പ് സെറ്റ് ചെയ്തു"
 
+[desktop.fileSave]
+saveFilesTitle_one = "{{count}} ഫയൽ സംരക്ഷിക്കുക"
+saveFilesTitle_other = "{{count}} ഫയലുകൾ സംരക്ഷിക്കുക"
+
+[desktop.saasError]
+body = "ഈ ടൂളിന് ക്ലൗഡ് പ്രോസസ്സിംഗ് ആവശ്യമാണ്, പക്ഷേ ഒരു പിശക് സംഭവിച്ചു: {{error}}. ദയവായി നിങ്ങളുടെ കണക്ഷൻ പരിശോധിച്ച് വീണ്ടും ശ്രമിക്കുക."
+title = "ക്ലൗഡ് പ്രോസസ്സിംഗ് പരാജയപ്പെട്ടു"
+
 [desktop.titleBar]
 maximize = "വലുതാക്കുക"
 minimize = "ചെറുതാക്കുക"
@@ -4485,7 +4502,37 @@ title = "എൻഡ്‌പോയിന്റ് സ്ഥിതിവിവര�
 [error]
 _value = "പിശക്"
 dismissAllErrors = "എല്ലാ പിശകുകളും ഒഴിവാക്കുക"
+failedFiles = "പരാജയപ്പെട്ട ഫയലുകൾ: {{ids}}"
 generic = "ഒരു പിശക് സംഭവിച്ചു"
+invalidOrCorruptedFiles = "അസാധുവായ/കേടായ ഫയൽ(കൾ) കാരണം പ്രോസസ്സ് പരാജയപ്പെട്ടു"
+networkError = "നെറ്റ്‌വർക്ക് പിശക്"
+requestError = "അഭ്യർത്ഥന പിശക്"
+requestFailed = "അഭ്യർത്ഥന പരാജയപ്പെട്ടു"
+requestFallback = "നിങ്ങളുടെ അഭ്യർത്ഥന പ്രോസസ്സ് ചെയ്യുന്നതിൽ ഒരു പിശക് സംഭവിച്ചു."
+serverError = "സർവർ പിശക്"
+unknown = "അജ്ഞാത പിശക് സംഭവിച്ചു"
+
+[error.pdfOpen]
+code = "PDF തുറക്കാനായില്ല (പിശക് {{code}})."
+corrupted = "PDF ഫയൽ കേടായതിനാൽ വായിക്കാനായില്ല."
+invalid = "ഈ ഫയൽ സാധുവായ PDF അല്ല അല്ലെങ്കിൽ കേടായതാണ്."
+pageLoadFailed = "ഈ PDF-ലെ ഒരു പേജ് ലോഡ് ചെയ്യാനായില്ല."
+passwordProtected = "ഈ PDF പാസ്‌വേഡ് സംരക്ഷിതമാണ്."
+unknown = "PDF തുറക്കാനായില്ല (അജ്ഞാത പിശക്)."
+unsupportedSecurity = "ഈ PDF പിന്തുണയ്ക്കാത്ത സുരക്ഷാ സ്കീം ഉപയോഗിക്കുന്നു."
+
+[error.processing]
+cancelled = "ഉപയോക്താവ് പ്രോസസ്സിംഗ് റദ്ദാക്കി."
+corruption = "ഈ PDF ഫയൽ കേടായതോ എൻക്രിപ്റ്റ് ചെയ്തതോ ആണെന്ന് തോന്നുന്നു. ദയവായി മറ്റൊരു ഫയൽ ശ്രമിക്കുക."
+failed = "പ്രോസസ്സിംഗ് പരാജയപ്പെട്ടു: {{message}}"
+memory = "ഈ ഫയൽ പ്രോസസ്സ് ചെയ്യാൻ മതിയായ മെമ്മറി ഇല്ല. മറ്റ് അപ്ലിക്കേഷനുകൾ അടയ്ക്കുകയോ ചെറിയ ഫയൽ പ്രോസസ്സ് ചെയ്യുകയോ ചെയ്യുക."
+network = "നെറ്റ്‌വർക്ക് കണക്ഷൻ പരാജയപ്പെട്ടു. ദയവായി നിങ്ങളുടെ ഇന്റർനെറ്റ് കണക്ഷൻ പരിശോധിച്ച് വീണ്ടും ശ്രമിക്കുക."
+parsing = "PDF പ്രോസസ്സ് ചെയ്യുന്നതിൽ പരാജയപ്പെട്ടു: {{message}}"
+timeout = "പ്രോസസ്സിംഗിന് സമയപരിധി കഴിഞ്ഞു. ഈ ഫയൽ പ്രോസസ്സ് ചെയ്യാൻ വളരെ വലുതോ സങ്കീർണ്ണമോ ആയിരിക്കാം."
+
+[errorBoundary]
+title = "എന്തോ പിശക് സംഭവിച്ചു"
+tryAgain = "വീണ്ടും ശ്രമിക്കുക"
 
 [extractImages]
 allowDuplicates = "തനിപ്പകർപ്പ് ചിത്രങ്ങൾ സംരക്ഷിക്കുക"
@@ -4905,21 +4952,31 @@ addFolderFailed = "ഫോൾഡർ ചേർക്കാനായില്ല."
 addFolderFailedDetail = "ഫോൾഡർ ചേർക്കാനായില്ല: {{message}}"
 cloudDeleteFailed_one = "Couldn't delete 1 file from the cloud."
 cloudDeleteFailed_other = "Couldn't delete {{count}} files from the cloud."
+createOutsideMount = "മൗണ്ട് ചെയ്ത ഡയറക്ടറിയുടെ പുറത്തു ഫോൾഡർ സൃഷ്ടിക്കാനാവില്ല"
 deleteFolderFailed = "ഫോൾഡർ ഇല്ലാതാക്കാൻ കഴിഞ്ഞില്ല."
 deleteFolderFailedDetail = "ഫോൾഡർ ഇല്ലാതാക്കാൻ കഴിഞ്ഞില്ല: {{message}}"
+diskFoldersUnsupported = "ഈ ബിൽഡിന് ഡിസ്കിൽ ഫോൾഡറുകൾ സൃഷ്ടിക്കാനാവില്ല"
 downloadFailed = "Could not download the file."
 duplicateFailed = "Could not duplicate the file."
 folderAppearanceFailed = "ഫോൾഡർ രൂപഭാവം അപ്‌ഡേറ്റ് ചെയ്യാൻ കഴിഞ്ഞില്ല."
 folderAppearanceFailedDetail = "ഫോൾഡർ രൂപഭാവം അപ്‌ഡേറ്റ് ചെയ്യാൻ കഴിഞ്ഞില്ല: {{message}}"
+folderDetachFailed = "ഫോൾഡർ ഇല്ലാതാക്കി, പക്ഷേ ചില ഫയലുകൾ ലോക്കലായി വേർപ്പെടുത്താൻ കഴിഞ്ഞില്ല. ശരിയാക്കാൻ റിഫ്രെഷ് ചെയ്യുക."
+folderOperationFailed = "ഫോൾഡർ പ്രവർത്തനം പരാജയപ്പെട്ടു"
+folderSyncFailed = "ഫോൾഡർ സിങ്ക് പരാജയപ്പെട്ടു: {{message}}"
+loadFilesFailed = "ഫയലുകൾ ലോഡ് ചെയ്യുന്നതിൽ പരാജയപ്പെട്ടു"
+moveAcrossKinds = "ഫോൾഡറുകൾക്ക് സ്വന്തം തരംക്കുള്ളിൽ മാത്രം നീങ്ങാനാകും"
 moveFilesFailed = "ഫയലുകൾ മാറ്റാൻ കഴിഞ്ഞില്ല."
 moveFilesFailedDetail = "ഫയലുകൾ മാറ്റാൻ കഴിഞ്ഞില്ല: {{message}}"
 moveFolderFailed = "ഫോൾഡർ മാറ്റാൻ കഴിഞ്ഞില്ല."
 moveFolderFailedDetail = "ഫോൾഡർ മാറ്റാൻ കഴിഞ്ഞില്ല: {{message}}"
+moveLocalFolder = "ഒരു ലോക്കൽ ഫോൾഡർ അതിന്റെ ഡയറക്ടറി ഇരിക്കുന്നിടത്താണ് ഇരിക്കുന്നത്"
 openDiskFileFailed = "{{name}} തുറക്കാനായില്ല."
 openDiskFileFailedDetail = "{{name}} തുറക്കാനായില്ല: {{message}}"
 processingStatusUnavailable = "പ്രോസസ്സിംഗ് നില പുതുക്കാനായില്ല. കണക്ഷൻ വീണ്ടെടുക്കുന്നതുവരെ ഫയൽ ലോക്കുകൾ റിലീസ് ചെയ്തു."
 readFolderFailed = "ഫോൾഡർ വായിക്കാനായില്ല."
 readFolderFailedDetail = "ഫോൾഡർ വായിക്കാനായില്ല: {{message}}"
+recolourLocalFolder = "ലോക്കൽ ഫോൾഡറുകൾക്ക് ഇതുവരെ വീണ്ടും നിറം നൽകാനാവില്ല"
+removeDiskSubfolder = "മൗണ്ട് ചെയ്ത ഡയറക്ടറിയുടെ സബ്‌ഫോൾഡറുകൾ ഡിസ്കിൽ നീക്കം ചെയ്യപ്പെടും"
 removeFilesFailed = "ഫയലുകൾ ഇല്ലാതാക്കാൻ കഴിഞ്ഞില്ല."
 removeFilesFailedDetail = "ഫയലുകൾ ഇല്ലാതാക്കാൻ കഴിഞ്ഞില്ല: {{message}}"
 removeFolderFailed = "ഫോൾഡർ നീക്കാനായില്ല."
@@ -5051,6 +5108,22 @@ grid = "ഗ്രിഡ് വ്യൂ"
 label = "കാഴ്‌ച രീതി"
 list = "ലിസ്റ്റ് വ്യൂ"
 
+[fileStorage.unreadable]
+body = "\"{{name}}\" ഈ ബ്രൗസറിൽ സംരക്ഷിച്ചിട്ടുണ്ടെങ്കിലും അതിന്റെ ഉള്ളടക്കം ഇനി വായിക്കാനാവില്ല. അതിൽ പ്രവർത്തനം തുടരാൻ ഫയൽ വീണ്ടും അപ്‌ലോഡ് ചെയ്യുക."
+title = "ഫയൽ ഡാറ്റ ലഭ്യമല്ല"
+
+[fileSync.openFailed]
+multiple_one = "\"{{name}}\" ഉൾപ്പെടെ {{count}} ഫയൽ തുറക്കാനായില്ല."
+multiple_other = "\"{{name}}\" ഉൾപ്പെടെ {{count}} ഫയലുകൾ തുറക്കാനായില്ല."
+single = "\"{{name}}\" തുറക്കാനായില്ല."
+singleWithStatus = "\"{{name}}\" തുറക്കാനായില്ല (HTTP {{status}})."
+title = "ചില ഫയലുകൾ തുറക്കാനായില്ല"
+
+[fileSync.pullFailed]
+body = "ഈ ബ്രൗസറിൽ കാഷ് ചെയ്ത ഫയലുകൾ മാത്രം കാണിക്കുന്നു. കണക്ഷൻ തിരികെയെത്തിയാൽ വീണ്ടും ശ്രമിക്കാൻ റിഫ്രെഷ് ചെയ്യുക."
+signInTitle = "ക്ലൗഡ് ഫയലുകൾ ലോഡ് ചെയ്യാൻ സൈൻ-ഇൻ ആവശ്യമാണ്"
+unreachableTitle = "ക്ലൗഡ് ലൈബ്രറിയിൽ എത്താനായില്ല"
+
 [fileToPDF]
 tags = "രൂപാന്തരം,ഫോർമാറ്റ്,പ്രമാണം,ചിത്രം,സ്ലൈഡ്,ടെക്സ്റ്റ്,പരിവർത്തനം,ഓഫീസ്,ഡോക്സ്,വേഡ്,എക്സൽ,പവർപോയിന്റ്"
 title = "ഫയൽ PDF-ലേക്ക്"
@@ -5058,6 +5131,7 @@ title = "ഫയൽ PDF-ലേക്ക്"
 [fileUpload]
 dropFilesHere = "ഫയലുകൾ ഇവിടെ ഇടുകയോ അപ്‌ലോഡ് ബട്ടൺ ക്ലിക്ക് ചെയ്യുകയോ ചെയ്യുക"
 dropFilesHereOpen = "ഫയലുകൾ ഇവിടെ ഡ്രോപ്പ് ചെയ്യുക അല്ലെങ്കിൽ Open ബട്ടൺ ക്ലിക്ക് ചെയ്യുക"
+droppedFileUnreadable = "ഡ്രോപ്പ് ചെയ്ത ഫയൽ വായിക്കാനായില്ല."
 filesAvailableCount_one = "{{count}} ഫയൽ ലഭ്യമാണ്"
 filesAvailableCount_other = "{{count}} ഫയലുകൾ ലഭ്യമാണ്"
 loadFromStorage = "സ്റ്റോറേജിൽ നിന്ന് ലോഡുചെയ്യുക"
@@ -5089,6 +5163,7 @@ passwordMustBeDifferent = "പുതിയ പാസ്‌വേഡ് നില
 passwordsDoNotMatch = "പുതിയ പാസ്‌വേഡുകൾ പൊരുത്തപ്പെടുന്നില്ല"
 passwordTooShort = "പാസ്‌വേഡ് കുറഞ്ഞത് 8 അക്ഷരങ്ങളെങ്കിലും വേണം"
 reEnterNewPassword = "പുതിയ പാസ്‌വേഡ് വീണ്ടും നൽകുക"
+setPasswordTitle = "നിങ്ങളുടെ പാസ്‌വേഡ് സജ്ജമാക്കുക"
 title = "ആദ്യ ലോഗിൻ"
 welcomeMessage = "സുരക്ഷാ കാരണങ്ങളാൽ, നിങ്ങൾ ആദ്യമായി ലോഗിൻ ചെയ്യുമ്പോൾ പാസ്‌വേഡ് മാറ്റണം."
 welcomeTitle = "സ്വാഗതം!"
@@ -5927,6 +6002,7 @@ signin = "സൈൻ ഇൻ ചെയ്യുക"
 signingIn = "സൈൻ ഇൻ ചെയ്യുന്നു..."
 signInWith = "ഇത് ഉപയോഗിച്ച് സൈൻ ഇൻ ചെയ്യുക"
 signInWithProvider = "{{provider}} ഉപയോഗിച്ച് സൈൻ ഇൻ ചെയ്യുക"
+ssoRedirectFailed = "SSO റീഡയറക്ട് പരാജയപ്പെട്ടു"
 title = "സൈൻ ഇൻ ചെയ്യുക"
 unexpectedError = "പ്രതീക്ഷിക്കാത്ത പിശക്: {{message}}"
 updatePassword = "പാസ്‌വേഡ് അപ്‌ഡേറ്റ് ചെയ്യുക"
@@ -6524,6 +6600,32 @@ rotateLeft = "ഇടത്തേക്ക് തിരിക്കുക"
 rotateRight = "വലത്തേക്ക് തിരിക്കുക"
 splitAfter = "ശേഷം വിഭജിക്കുക"
 
+[pageEditor.commands]
+addSplitAt = "{{position}} സ്ഥാനത്ത് വിഭജനം ചേർക്കുക"
+addSplits_one = "{{count}} വിഭജനം ചേർക്കുക"
+addSplits_other = "{{count}} വിഭജനങ്ങൾ ചേർക്കുക"
+deletePages_one = "{{count}} പേജ് ഇല്ലാതാക്കുക"
+deletePages_other = "{{count}} പേജുകൾ ഇല്ലാതാക്കുക"
+insertFiles_one = "{{page}}-ാം പേജിന് ശേഷം {{count}} ഫയൽ ചേർക്കുക"
+insertFiles_other = "{{page}}-ാം പേജിന് ശേഷം {{count}} ഫയലുകൾ ചേർക്കുക"
+insertPageBreaks_one = "{{count}} പേജ് ബ്രേക്ക് ചേർക്കുക"
+insertPageBreaks_other = "{{count}} പേജ് ബ്രേക്കുകൾ ചേർക്കുക"
+insertPageBreaksAll = "എല്ലാ പേജുകൾക്കും ശേഷം പേജ് ബ്രേക്കുകൾ ചേർക്കുക"
+removeAllSplits = "എല്ലാ വിഭജനങ്ങളും നീക്കം ചെയ്യുക"
+removeSplitAt = "{{position}} സ്ഥാനത്തെ വിഭജനം നീക്കം ചെയ്യുക"
+removeSplits_one = "{{count}} വിഭജനം നീക്കം ചെയ്യുക"
+removeSplits_other = "{{count}} വിഭജനങ്ങൾ നീക്കം ചെയ്യുക"
+reorderPages = "പേജുകൾ പുനഃക്രമീകരിക്കുക"
+rotatePageLeft = "പേജ് ഇടത്തേക്ക് തിരിക്കുക"
+rotatePageRight = "പേജ് വലത്തേക്ക് തിരിക്കുക"
+rotatePagesLeft_one = "{{count}} പേജ് ഇടത്തേക്ക് തിരിക്കുക"
+rotatePagesLeft_other = "{{count}} പേജുകൾ ഇടത്തേക്ക് തിരിക്കുക"
+rotatePagesRight_one = "{{count}} പേജ് വലത്തേക്ക് തിരിക്കുക"
+rotatePagesRight_other = "{{count}} പേജുകൾ വലത്തേക്ക് തിരിക്കുക"
+splitAllPages = "എല്ലാ പേജുകളും വിഭജിക്കുക"
+toggleSplits_one = "{{count}} വിഭജന സ്ഥാനം ടോഗിൾ ചെയ്യുക"
+toggleSplits_other = "{{count}} വിഭജന സ്ഥാനങ്ങൾ ടോഗിൾ ചെയ്യുക"
+
 [pageEditor.emptyState]
 body = "പേജുകൾ എഡിറ്റ് ചെയ്യാൻ ഫയലുകൾ ചേർക്കുക"
 title = "PDF ഫയലുകൾ ലോഡ് ചെയ്തിട്ടില്ല"
@@ -6933,6 +7035,7 @@ thisPeriod = "This billing period"
 billingPeriod = "ബില്ലിംഗ് കാലയളവ്"
 cancelTeamChange = "നിലവിലെ പ്ലാൻ നിലനിർത്തുക"
 canCloseWindow = "ഇപ്പോൾ ഈ വിൻഡോ അടയ്ക്കാം."
+createSessionFailed = "ചെക്കൗട്ട് സെഷൻ സൃഷ്ടിക്കുന്നതിൽ പരാജയപ്പെട്ടു"
 error = "പേയ്മെന്റ് പിഴവ്"
 generatingLicense = "നിങ്ങളുടെ ലൈസൻസ് കീ നിർമ്മിക്കുന്നു..."
 licenseActivated = "ലൈസൻസ് സജീവമായി! നിങ്ങളുടെ ലൈസൻസ് കീ സേവ് ചെയ്തു. രജിസ്റ്റർ ചെയ്ത ഇമെയിലിലേക്ക് സ്ഥിരീകരണ ഇമെയിൽ അയച്ചിട്ടുണ്ട്."
@@ -6948,6 +7051,7 @@ monthly = "മാസം"
 paymentCanceled = "പേയ്മെന്റ് റദ്ദാക്കി. പണമിടപാട് ഒന്നും നടന്നിട്ടില്ല."
 perMonth = "/മാസം"
 perUserBlock = "100 ഉപയോക്താക്കൾക്ക്"
+planPeriodUnavailable = "തിരഞ്ഞെടുത്ത പ്ലാൻ കാലയളവ് ലഭ്യമല്ല"
 preparing = "നിങ്ങളുടെ ചെക്ക്ഔട്ട് തയ്യാറാക്കുന്നു..."
 redirecting = "സുരക്ഷിത checkout ലേക്ക് റീഡിറക്ട് ചെയ്യുന്നു..."
 success = "പേയ്മെന്റ് വിജയകരം!"
@@ -7095,6 +7199,16 @@ freetext = "Annotation ടെക്സ്റ്റ് - പേജ് ടെക�
 stamp = "Stamp annotation - പേജ് ടെക്സ്റ്റ് അല്ല, അതിനാൽ ഇവിടെ എഡിറ്റ് ചെയ്യാനാകില്ല"
 widget = "ഫോം ഫീൽഡ് - പേജ് ടെക്സ്റ്റ് അല്ല, അതിനാൽ ഇവിടെ എഡിറ്റ് ചെയ്യാനാകില്ല"
 
+[pdfTextEditor.commands]
+edit = "എഡിറ്റ് ചെയ്യുക"
+mergeRuns_one = "{{count}} run ഒരു ഖണ്ഡികയിലേക്ക് ലയിപ്പിക്കുക"
+mergeRuns_other = "{{count}} runs ഒരു ഖണ്ഡികയിലേക്ക് ലയിപ്പിക്കുക"
+setColour = "{{run}}-ൽ നിറം സജ്ജമാക്കുക"
+setOutline = "{{run}}-ൽ ഔട്ട്‌ലൈൻ സജ്ജമാക്കുക"
+typeInto = "{{run}}-ൽ ടൈപ്പ് ചെയ്യുക"
+ungroupParagraph = "{{run}} ഖണ്ഡിക അൺഗ്രൂപ്പ് ചെയ്യുക"
+wrap = "{{run}} റാപ്പ് ചെയ്യുക"
+
 [pdfTextEditor.discard]
 body = "{{name}} തുറക്കുന്നത് നിങ്ങൾ എഡിറ്റ് ചെയ്യുന്ന ഡോക്യുമെന്റ് അടയ്ക്കും. നിങ്ങളുടെ സേവ് ചെയ്യാത്ത മാറ്റങ്ങൾ നഷ്ടപ്പെടും."
 cancel = "റദ്ദാക്കുക"
@@ -7109,6 +7223,9 @@ title = "തുറക്കാൻ ഒരു PDF ഇടുക"
 [pdfTextEditor.error]
 decodeImage = "തിരഞ്ഞെടുത്ത ചിത്രം ഡീകോഡ് ചെയ്യാനായില്ല."
 insertImage = "തിരഞ്ഞെടുത്ത ചിത്രം ചേർക്കാനായില്ല."
+
+[pdfTextEditor.externalEdit]
+pngFileType = "PNG ചിത്രം"
 
 [pdfTextEditor.find]
 close = "കണ്ടെത്തൽ ബാർ അടയ്ക്കുക"
@@ -11932,11 +12049,18 @@ useLast = "Last used server: {{serverUrl}}"
 [setup.server.error]
 configFetch = "സർവർ കോൺഫിഗറേഷൻ ലഭ്യമാക്കൽ പരാജയപ്പെട്ടു. ദയവായി URL പരിശോധിച്ച് വീണ്ടും ശ്രമിക്കുക."
 configFetchError = "സർവർ കോൺഫിഗറേഷൻ കൊണ്ടുവരൽ പരാജയപ്പെട്ടു: {{error}}"
+dnsFailed = "ഹോസ്റ്റ്‌നെയിം പരിഹരിക്കാനാവില്ല: {{hostname}}"
 emptyUrl = "ദയവായി ഒരു സെർവർ URL നൽകുക"
+httpOnly = "സർവർ HTTP വഴി മാത്രമേ ആക്സസ് ചെയ്യാനാകൂ (HTTPS അല്ല)."
+httpsOnly = "സർവർ HTTPS വഴി മാത്രമേ ആക്സസ് ചെയ്യാനാകൂ, HTTP വഴി അല്ല."
 invalidUrl = "അസാധുവായ URL ഫോർമാറ്റ്. https://your-server.com പോലുള്ള സാധുവായ URL നൽകുക"
+methodMismatch = "സർവർ HEAD അഭ്യർത്ഥനകൾക്ക് പ്രതികരിക്കുന്നു, പക്ഷേ GET അഭ്യർത്ഥനകൾക്ക് പ്രതികരിക്കുന്നില്ല."
+networkBlocked = "ഇന്റർനെറ്റ് കണക്റ്റിവിറ്റി കണ്ടെത്തിയില്ല. എല്ലാ നെറ്റ്‌വർക്ക് അഭ്യർത്ഥനകളും പരാജയപ്പെടുന്നു."
+serverUnreachable = "സർവറിലേക്ക് കണക്റ്റുചെയ്യാനാവില്ല. ഇന്റർനെറ്റ് പ്രവർത്തിക്കുന്നു, പക്ഷേ ഈ നിർദ്ദിഷ്ട സർവർ ലഭ്യമല്ല."
 testFailed = "കണക്ഷൻ ടെസ്റ്റ് പരാജയപ്പെട്ടു"
 unknown = "അജ്ഞാത പിശക്"
 unreachable = "സെർവറുമായി ബന്ധപ്പെടാൻ കഴിഞ്ഞില്ല"
+userAgentBlocked = "സർവർ Tauri/desktop app User-Agent തടയുന്നു, പക്ഷേ ബ്രൗസർ User-Agent അനുവദിക്കുന്നു."
 
 [setup.server.error.securityDisabled]
 body = "ഈ സർവറിൽ ലോഗിൻ സജീവമാക്കിയിട്ടില്ല. ഈ സർവറുമായി ബന്ധപ്പെടാൻ, ഓതന്റിക്കേഷൻ സജീവമാക്കണം:"
@@ -13283,6 +13407,12 @@ previewUnavailable = "ഈ ഫയൽ തരത്തിന് പ്രിവ്�
 renderMarkdown = "മാർക്ക്ഡൗൺ റെൻഡർ ചെയ്യുക"
 sortedBy = "ക്രമീകരിച്ചത്: {{column}}"
 textStats = "{{lines}} വരികൾ · {{size}}"
+
+[viewer.nonPdf.fileType]
+file = "ഫയൽ"
+image = "ചിത്രം"
+spreadsheet = "സ്പ്രെഡ്‌ഷീറ്റ്"
+text = "ടെക്സ്റ്റ്"
 
 [viewer.portfolio]
 addFile = "ഫയൽ ചേർക്കുക"

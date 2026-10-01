@@ -2476,7 +2476,16 @@ checking = "बैकएंड स्थिति की जाँच की ज
 offline = "बैकएंड ऑफ़लाइन"
 online = "बैकएंड ऑनलाइन"
 starting = "बैकएंड शुरू हो रहा है..."
+unavailable = "बैकएंड उपलब्ध नहीं है"
 wait = "कृपया बैकएंड के लॉन्च पूरा होने तक प्रतीक्षा करें और पुनः प्रयास करें।"
+
+[backendHealth.restart]
+attempting = "रीस्टार्ट करने का प्रयास किया जा रहा है... ({{attempt}}/{{max}})"
+failedBody = "स्थानीय बैकएंड को पुनर्प्राप्त नहीं किया जा सका। कृपया ऐप रीस्टार्ट करें।"
+failedTitle = "बैकएंड रीस्टार्ट होने में विफल रहा"
+stoppedTitle = "बैकएंड अप्रत्याशित रूप से रुक गया"
+successBody = "स्थानीय बैकएंड फिर से ऑनलाइन है।"
+successTitle = "बैकएंड रीस्टार्ट हो गया"
 
 [backendStartup]
 notFoundTitle = "बैकएंड नहीं मिला"
@@ -4288,6 +4297,14 @@ title = "सेटिंग्स खुलीं"
 message = "Stirling PDF अब आपका डिफ़ॉल्ट PDF एडिटर है"
 title = "डिफ़ॉल्ट ऐप सेट"
 
+[desktop.fileSave]
+saveFilesTitle_one = "{{count}} फ़ाइल सहेजें"
+saveFilesTitle_other = "{{count}} फ़ाइलें सहेजें"
+
+[desktop.saasError]
+body = "इस टूल को क्लाउड प्रोसेसिंग की आवश्यकता है, लेकिन एक त्रुटि आई: {{error}}। कृपया अपना कनेक्शन जाँचें और फिर से प्रयास करें।"
+title = "क्लाउड प्रोसेसिंग विफल रही"
+
 [desktop.titleBar]
 maximize = "अधिकतम करें"
 minimize = "न्यूनतम करें"
@@ -4485,7 +4502,37 @@ title = "एंडपॉइंट सांख्यिकी"
 [error]
 _value = "त्रुटि"
 dismissAllErrors = "सभी त्रुटियाँ खारिज करें"
+failedFiles = "विफल फ़ाइलें: {{ids}}"
 generic = "एक त्रुटि हुई"
+invalidOrCorruptedFiles = "अमान्य/करप्ट फ़ाइल(ों) के कारण प्रोसेस विफल हो गई"
+networkError = "नेटवर्क त्रुटि"
+requestError = "अनुरोध त्रुटि"
+requestFailed = "अनुरोध विफल रहा"
+requestFallback = "आपके अनुरोध को प्रोसेस करने में एक त्रुटि हुई।"
+serverError = "Server त्रुटि"
+unknown = "अज्ञात त्रुटि हुई"
+
+[error.pdfOpen]
+code = "PDF नहीं खोला जा सका (त्रुटि {{code}})।"
+corrupted = "PDF फ़ाइल करप्ट है और पढ़ी नहीं जा सकी।"
+invalid = "यह फ़ाइल मान्य PDF नहीं है या करप्ट है।"
+pageLoadFailed = "इस PDF में एक पृष्ठ लोड नहीं किया जा सका।"
+passwordProtected = "यह PDF पासवर्ड-सुरक्षित है।"
+unknown = "PDF नहीं खोला जा सका (अज्ञात त्रुटि)।"
+unsupportedSecurity = "यह PDF असमर्थित सुरक्षा योजना का उपयोग करता है।"
+
+[error.processing]
+cancelled = "प्रोसेसिंग उपयोगकर्ता द्वारा रद्द कर दी गई।"
+corruption = "यह PDF फ़ाइल करप्ट या एन्क्रिप्टेड प्रतीत होती है। कृपया कोई दूसरी फ़ाइल आज़माएँ।"
+failed = "प्रोसेसिंग विफल रही: {{message}}"
+memory = "इस फ़ाइल को प्रोसेस करने के लिए मेमोरी अपर्याप्त है। अन्य ऐप्लिकेशन बंद करने या छोटी फ़ाइल प्रोसेस करने का प्रयास करें।"
+network = "नेटवर्क कनेक्शन विफल रहा। कृपया अपना इंटरनेट कनेक्शन जाँचें और फिर से प्रयास करें।"
+parsing = "PDF प्रोसेस करने में विफल: {{message}}"
+timeout = "प्रोसेसिंग का समय समाप्त हो गया। यह फ़ाइल प्रोसेस करने के लिए बहुत बड़ी या जटिल हो सकती है।"
+
+[errorBoundary]
+title = "कुछ गलत हो गया"
+tryAgain = "फिर से प्रयास करें"
 
 [extractImages]
 allowDuplicates = "डुप्लिकेट छवियां सहेजें"
@@ -4905,21 +4952,31 @@ addFolderFailed = "फ़ोल्डर जोड़ा नहीं जा स
 addFolderFailedDetail = "फ़ोल्डर जोड़ा नहीं जा सका: {{message}}"
 cloudDeleteFailed_one = "Couldn't delete 1 file from the cloud."
 cloudDeleteFailed_other = "Couldn't delete {{count}} files from the cloud."
+createOutsideMount = "माउंट की गई डायरेक्टरी के बाहर फ़ोल्डर नहीं बनाया जा सकता"
 deleteFolderFailed = "फ़ोल्डर हटाया नहीं जा सका।"
 deleteFolderFailedDetail = "फ़ोल्डर हटाया नहीं जा सका: {{message}}"
+diskFoldersUnsupported = "यह build डिस्क पर फ़ोल्डर नहीं बना सकता"
 downloadFailed = "Could not download the file."
 duplicateFailed = "Could not duplicate the file."
 folderAppearanceFailed = "फ़ोल्डर दिखावट अपडेट नहीं हो सकी।"
 folderAppearanceFailedDetail = "फ़ोल्डर दिखावट अपडेट नहीं हो सकी: {{message}}"
+folderDetachFailed = "फ़ोल्डर हटा दिया गया, लेकिन कुछ फ़ाइलें स्थानीय रूप से अलग नहीं की जा सकीं। ठीक करने के लिए रिफ्रेश करें।"
+folderOperationFailed = "फ़ोल्डर ऑपरेशन विफल रहा"
+folderSyncFailed = "फ़ोल्डर sync विफल रहा: {{message}}"
+loadFilesFailed = "फ़ाइलें लोड करने में विफल"
+moveAcrossKinds = "फ़ोल्डर केवल अपने ही प्रकार के भीतर move हो सकते हैं"
 moveFilesFailed = "फ़ाइलें ले जाई नहीं जा सकीं।"
 moveFilesFailedDetail = "फ़ाइलें ले जाई नहीं जा सकीं: {{message}}"
 moveFolderFailed = "फ़ोल्डर ले जाया नहीं जा सका।"
 moveFolderFailedDetail = "फ़ोल्डर ले जाया नहीं जा सका: {{message}}"
+moveLocalFolder = "स्थानीय फ़ोल्डर वहीं रहता है जहाँ उसकी डायरेक्टरी होती है"
 openDiskFileFailed = "{{name}} खोला नहीं जा सका।"
 openDiskFileFailedDetail = "{{name}} खोला नहीं जा सका: {{message}}"
 processingStatusUnavailable = "प्रोसेसिंग स्थिति रीफ़्रेश नहीं की जा सकी। कनेक्शन ठीक होने तक फ़ाइल लॉक रिलीज़ कर दिए गए हैं।"
 readFolderFailed = "फ़ोल्डर पढ़ा नहीं जा सका।"
 readFolderFailedDetail = "फ़ोल्डर पढ़ा नहीं जा सका: {{message}}"
+recolourLocalFolder = "स्थानीय फ़ोल्डरों का रंग अभी बदला नहीं जा सकता"
+removeDiskSubfolder = "माउंट की गई डायरेक्टरी के सबफ़ोल्डर डिस्क पर हटाए जाते हैं"
 removeFilesFailed = "फ़ाइलें हटाई नहीं जा सकीं।"
 removeFilesFailedDetail = "फ़ाइलें हटाई नहीं जा सकीं: {{message}}"
 removeFolderFailed = "फ़ोल्डर हटाया नहीं जा सका।"
@@ -5051,6 +5108,22 @@ grid = "ग्रिड दृश्य"
 label = "दृश्य मोड"
 list = "सूची दृश्य"
 
+[fileStorage.unreadable]
+body = "\"{{name}}\" इस ब्राउज़र में सहेजा गया है लेकिन इसकी सामग्री अब पढ़ी नहीं जा सकती। इस पर काम जारी रखने के लिए फ़ाइल फिर से अपलोड करें।"
+title = "फ़ाइल डेटा उपलब्ध नहीं है"
+
+[fileSync.openFailed]
+multiple_one = "\"{{name}}\" सहित {{count}} फ़ाइल नहीं खोली जा सकी।"
+multiple_other = "\"{{name}}\" सहित {{count}} फ़ाइलें नहीं खोली जा सकीं।"
+single = "\"{{name}}\" नहीं खोली जा सकी।"
+singleWithStatus = "\"{{name}}\" नहीं खोली जा सकी (HTTP {{status}})।"
+title = "कुछ फ़ाइलें नहीं खोली जा सकीं"
+
+[fileSync.pullFailed]
+body = "केवल इस ब्राउज़र में कैश की गई फ़ाइलें दिखाई जा रही हैं। कनेक्शन वापस आने पर फिर से प्रयास करने के लिए रिफ्रेश करें।"
+signInTitle = "क्लाउड फ़ाइलें लोड करने के लिए साइन-इन आवश्यक है"
+unreachableTitle = "क्लाउड लाइब्रेरी तक नहीं पहुँचा जा सका"
+
 [fileToPDF]
 tags = "रूपांतरण,प्रारूप,दस्तावेज,चित्र,स्लाइड,टेक्स्ट,रूपांतरण,कार्यालय,डॉक्स,वर्ड,एक्सेल,पावरपॉइंट"
 title = "फ़ाइल से PDF"
@@ -5058,6 +5131,7 @@ title = "फ़ाइल से PDF"
 [fileUpload]
 dropFilesHere = "फ़ाइलें यहाँ छोड़ें या अपलोड बटन पर क्लिक करें"
 dropFilesHereOpen = "फ़ाइलें यहाँ छोड़ें या ओपन बटन क्लिक करें"
+droppedFileUnreadable = "ड्रॉप की गई फ़ाइल पढ़ी नहीं जा सकी।"
 filesAvailableCount_one = "{{count}} फ़ाइल उपलब्ध"
 filesAvailableCount_other = "{{count}} फ़ाइलें उपलब्ध"
 loadFromStorage = "स्टोरेज से लोड करें"
@@ -5089,6 +5163,7 @@ passwordMustBeDifferent = "नया पासवर्ड वर्तमान
 passwordsDoNotMatch = "नए पासवर्ड मेल नहीं खाते"
 passwordTooShort = "पासवर्ड कम से कम 8 अक्षर का होना चाहिए"
 reEnterNewPassword = "नया पासवर्ड फिर से दर्ज करें"
+setPasswordTitle = "अपना पासवर्ड सेट करें"
 title = "पहली बार लॉगिन"
 welcomeMessage = "सुरक्षा कारणों से, पहली बार लॉगिन पर आपको अपना पासवर्ड बदलना होगा।"
 welcomeTitle = "स्वागत है!"
@@ -5927,6 +6002,7 @@ signin = "साइन इन करें"
 signingIn = "साइन इन किया जा रहा है..."
 signInWith = "इसके साथ साइन इन करें"
 signInWithProvider = "{{provider}} के साथ साइन इन करें"
+ssoRedirectFailed = "SSO redirect विफल रहा"
 title = "साइन इन करें"
 unexpectedError = "अप्रत्याशित त्रुटि: {{message}}"
 updatePassword = "पासवर्ड अपडेट करें"
@@ -6524,6 +6600,32 @@ rotateLeft = "बाएँ घुमाएँ"
 rotateRight = "दाएँ घुमाएँ"
 splitAfter = "इसके बाद विभाजित करें"
 
+[pageEditor.commands]
+addSplitAt = "स्थान {{position}} पर विभाजन जोड़ें"
+addSplits_one = "{{count}} विभाजन जोड़ें"
+addSplits_other = "{{count}} विभाजन जोड़ें"
+deletePages_one = "{{count}} पृष्ठ हटाएँ"
+deletePages_other = "{{count}} पृष्ठ हटाएँ"
+insertFiles_one = "पृष्ठ {{page}} के बाद {{count}} फ़ाइल डालें"
+insertFiles_other = "पृष्ठ {{page}} के बाद {{count}} फ़ाइलें डालें"
+insertPageBreaks_one = "{{count}} page break डालें"
+insertPageBreaks_other = "{{count}} page breaks डालें"
+insertPageBreaksAll = "सभी पृष्ठों के बाद page breaks डालें"
+removeAllSplits = "सभी विभाजन हटाएँ"
+removeSplitAt = "स्थान {{position}} पर विभाजन हटाएँ"
+removeSplits_one = "{{count}} विभाजन हटाएँ"
+removeSplits_other = "{{count}} विभाजन हटाएँ"
+reorderPages = "पृष्ठों का क्रम बदलें"
+rotatePageLeft = "पृष्ठ को बाएँ घुमाएँ"
+rotatePageRight = "पृष्ठ को दाएँ घुमाएँ"
+rotatePagesLeft_one = "{{count}} पृष्ठ को बाएँ घुमाएँ"
+rotatePagesLeft_other = "{{count}} पृष्ठों को बाएँ घुमाएँ"
+rotatePagesRight_one = "{{count}} पृष्ठ को दाएँ घुमाएँ"
+rotatePagesRight_other = "{{count}} पृष्ठों को दाएँ घुमाएँ"
+splitAllPages = "सभी पृष्ठ विभाजित करें"
+toggleSplits_one = "{{count}} विभाजन स्थान टॉगल करें"
+toggleSplits_other = "{{count}} विभाजन स्थान टॉगल करें"
+
 [pageEditor.emptyState]
 body = "पृष्ठ संपादित करना शुरू करने के लिए फ़ाइलें जोड़ें"
 title = "कोई PDF फ़ाइलें लोड नहीं"
@@ -6933,6 +7035,7 @@ thisPeriod = "This billing period"
 billingPeriod = "बिलिंग अवधि"
 cancelTeamChange = "वर्तमान प्लान रखें"
 canCloseWindow = "अब आप यह विंडो बंद कर सकते हैं।"
+createSessionFailed = "checkout session बनाने में विफल"
 error = "भुगतान त्रुटि"
 generatingLicense = "आपकी लाइसेंस की जेनरेट हो रही है..."
 licenseActivated = "लाइसेंस सक्रिय! आपकी लाइसेंस की सेव हो गई है। एक पुष्टि ईमेल आपके पंजीकृत पते पर भेज दिया गया है।"
@@ -6948,6 +7051,7 @@ monthly = "मासिक"
 paymentCanceled = "भुगतान रद्द कर दिया गया। कोई शुल्क नहीं लगा।"
 perMonth = "/माह"
 perUserBlock = "प्रति 100 उपयोगकर्ता"
+planPeriodUnavailable = "चयनित plan period उपलब्ध नहीं है"
 preparing = "आपका चेकआउट तैयार किया जा रहा है..."
 redirecting = "सुरक्षित चेकआउट पर रीडायरेक्ट किया जा रहा है..."
 success = "भुगतान सफल!"
@@ -7095,6 +7199,16 @@ freetext = "एनोटेशन टेक्स्ट - पेज टेक्
 stamp = "स्टैम्प एनोटेशन - पेज टेक्स्ट नहीं, इसलिए इसे यहाँ संपादित नहीं किया जा सकता"
 widget = "फ़ॉर्म फ़ील्ड - पेज टेक्स्ट नहीं, इसलिए इसे यहाँ संपादित नहीं किया जा सकता"
 
+[pdfTextEditor.commands]
+edit = "संपादित करें"
+mergeRuns_one = "{{count}} run को एक पैराग्राफ में मर्ज करें"
+mergeRuns_other = "{{count}} runs को एक पैराग्राफ में मर्ज करें"
+setColour = "{{run}} पर रंग सेट करें"
+setOutline = "{{run}} पर outline सेट करें"
+typeInto = "{{run}} में टाइप करें"
+ungroupParagraph = "पैराग्राफ {{run}} को ungroup करें"
+wrap = "{{run}} को wrap करें"
+
 [pdfTextEditor.discard]
 body = "{{name}} खोलने से वह दस्तावेज़ बंद हो जाएगा जिसे आप संपादित कर रहे हैं। आपके असहेजे बदलाव खो जाएँगे।"
 cancel = "रद्द करें"
@@ -7109,6 +7223,9 @@ title = "खोलने के लिए PDF छोड़ें"
 [pdfTextEditor.error]
 decodeImage = "चुनी गई छवि डिकोड नहीं की जा सकी।"
 insertImage = "चुनी गई छवि डाली नहीं जा सकी।"
+
+[pdfTextEditor.externalEdit]
+pngFileType = "PNG image"
 
 [pdfTextEditor.find]
 close = "find बार बंद करें"
@@ -11932,11 +12049,18 @@ useLast = "Last used server: {{serverUrl}}"
 [setup.server.error]
 configFetch = "सर्वर कॉन्फ़िगरेशन प्राप्त करने में विफल। कृपया URL जाँचें और फिर से प्रयास करें।"
 configFetchError = "सर्वर कॉन्फ़िगरेशन प्राप्त करने में विफल: {{error}}"
+dnsFailed = "hostname resolve नहीं किया जा सकता: {{hostname}}"
 emptyUrl = "कृपया सर्वर URL दर्ज करें"
+httpOnly = "Server केवल HTTP के माध्यम से accessible है (HTTPS नहीं)।"
+httpsOnly = "Server केवल HTTPS के माध्यम से accessible है, HTTP नहीं।"
 invalidUrl = "अमान्य URL प्रारूप। कृपया https://your-server.com जैसे वैध URL दर्ज करें"
+methodMismatch = "Server HEAD requests का जवाब देता है लेकिन GET requests का नहीं।"
+networkBlocked = "कोई इंटरनेट कनेक्टिविटी नहीं मिली। सभी नेटवर्क requests विफल हो रही हैं।"
+serverUnreachable = "Server से कनेक्ट नहीं किया जा सकता। इंटरनेट काम कर रहा है लेकिन यह विशिष्ट server unreachable है।"
 testFailed = "कनेक्शन परीक्षण विफल"
 unknown = "अज्ञात त्रुटि"
 unreachable = "सर्वर से कनेक्ट नहीं हो सका"
+userAgentBlocked = "Server Tauri/desktop app User-Agent को ब्लॉक करता है लेकिन browser User-Agent की अनुमति देता है।"
 
 [setup.server.error.securityDisabled]
 body = "इस सर्वर पर लॉगिन सक्षम नहीं है। इस सर्वर से कनेक्ट करने के लिए, आपको प्रमाणीकरण सक्षम करना होगा:"
@@ -13283,6 +13407,12 @@ previewUnavailable = "इस फ़ाइल प्रकार के लिए
 renderMarkdown = "Markdown रेंडर करें"
 sortedBy = "इसके अनुसार क्रमबद्ध: {{column}}"
 textStats = "{{lines}} पंक्तियाँ · {{size}}"
+
+[viewer.nonPdf.fileType]
+file = "फ़ाइल"
+image = "Image"
+spreadsheet = "Spreadsheet"
+text = "Text"
 
 [viewer.portfolio]
 addFile = "फ़ाइल जोड़ें"
