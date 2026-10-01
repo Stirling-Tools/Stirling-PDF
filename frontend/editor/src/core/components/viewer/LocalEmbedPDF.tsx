@@ -1070,7 +1070,7 @@ export function LocalEmbedPDF({
         <Stack align="center" gap="md">
           <div style={{ fontSize: "24px" }}>📄</div>
           <Text c="dimmed" size="sm">
-            No PDF provided
+            {t("viewer.noPdfProvided", "No PDF provided")}
           </Text>
         </Stack>
       </Center>
