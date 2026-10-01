@@ -397,10 +397,23 @@
     max-width: 1600px;
   }
   .signing-workspace__document-picker {
+    display: flex;
+    flex-direction: column;
     margin-bottom: 0;
     padding: 0 28px 0 0;
     border-bottom: 0;
     border-right: 1px solid var(--c-border);
+  }
+  .signing-document-picker__selected {
+    flex: 1;
+    min-height: 0;
+  }
+  .signing-document-picker__selected .signing-document-card__preview {
+    flex: 1;
+    min-height: 0;
+    max-width: none;
+    aspect-ratio: auto;
+    contain: size;
   }
   .signing-document-picker__grid {
     max-height: clamp(420px, calc(100dvh - 260px), 900px);
