@@ -565,7 +565,12 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     // the user is signed in (guests have no cloud library).
     const storageEnabled = config?.storageEnabled === true && !isAnonymous;
 
+    // Only the newest read may publish: coalesced refreshes overlap when a scan
+    // outlasts the window, and a slow one finishing last would otherwise
+    // overwrite the newer library with the state it started from.
+    const stubsGenRef = useRef(0);
     const refreshStubs = useCallback(async () => {
+      const gen = ++stubsGenRef.current;
       // `stubsLoaded` gates the spinner, so the `finally` below must set it on
       // every path - callers never await this, so a rejection goes nowhere.
       let stubs: StirlingFileStub[] = [];
@@ -576,6 +581,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         // should cost the user their history, not the file they're working on.
         console.error("Failed to read the file library from storage:", error);
       }
+      if (gen !== stubsGenRef.current) return;
 
       try {
         const idbIds = new Set(stubs.map((s) => s.id as string));
@@ -601,12 +607,20 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           ),
         );
       } finally {
-        setStubsLoaded(true);
+        if (gen === stubsGenRef.current) setStubsLoaded(true);
       }
     }, [indexedDB, state.files.ids, state.files.byId]);
 
     const indexedDBRevision = useIndexedDBRevision();
     useCoalescedCallback(refreshStubs, indexedDBRevision);
+
+    // The hook cancels timers but cannot cancel a started run, so unmount has to
+    // invalidate it here or a late scan would publish into a gone tree.
+    useEffect(() => {
+      return () => {
+        stubsGenRef.current++;
+      };
+    }, []);
 
     // Server copies require a deletion-scope choice; local-only files delete immediately.
     const handleSidebarDelete = useCallback(

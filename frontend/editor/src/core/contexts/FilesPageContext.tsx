@@ -2,6 +2,7 @@ import React, {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -240,6 +241,14 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
   ]);
 
   useCoalescedCallback(refresh, indexedDBRevision);
+
+  // The hook cancels timers but cannot cancel a started run, so unmount has to
+  // invalidate it here or a late scan would publish into a gone tree.
+  useEffect(() => {
+    return () => {
+      refreshGenRef.current++;
+    };
+  }, []);
 
   const fileMap = useMemo(() => {
     const map = new Map<FileId, StirlingFileStub>();
