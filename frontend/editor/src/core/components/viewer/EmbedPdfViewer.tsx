@@ -1339,6 +1339,9 @@ const EmbedPdfViewerContent = ({
     if (!previous || !root || !content) return;
     if (previous.encrypted || encrypted) return;
     if (previous.root !== root || previous.content === content) return;
+    // A save the live document already shows is not reopened (shouldSkipBytes),
+    // so no replacement would ever report back.
+    if (skipReloadContentKeyRef.current === content) return;
 
     const page = getScrollState().currentPage || lastKnownScrollPageRef.current;
     if (page > 0) {
