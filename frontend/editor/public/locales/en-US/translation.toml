@@ -1943,7 +1943,12 @@ title = "User Control Settings"
 stirling_name = "Stirling"
 
 [alphabetOptions]
+arabic = "Arabic"
+chinese = "Chinese (Simplified)"
+japanese = "Japanese"
+korean = "Korean"
 roman = "Roman"
+thai = "Thai"
 
 [analytics]
 learnMore = "Learn more about our analytics"

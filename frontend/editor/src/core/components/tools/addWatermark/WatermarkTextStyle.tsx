@@ -52,9 +52,7 @@ const WatermarkTextStyle = ({
           onChange={(value) => value && onParameterChange("alphabet", value)}
           data={alphabetOptions.map((option) => ({
             value: option.value,
-            label: option.labelKey
-              ? t(option.labelKey, option.label)
-              : option.label,
+            label: t(option.labelKey, option.label),
           }))}
           disabled={disabled}
           comboboxProps={{
