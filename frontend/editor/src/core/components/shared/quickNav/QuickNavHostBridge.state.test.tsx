@@ -10,6 +10,7 @@ import {
 import { QuickNavHostBridge } from "@app/components/shared/quickNav/QuickNavHostBridge";
 import { fetchSigningSessions, type SigningSessions } from "@app/api/signing";
 import { alert } from "@app/components/toast";
+import { markSessionSeen } from "@app/services/signingSeenStore";
 import { expectConsole } from "@app/tests/failOnConsole";
 
 const { auth, access } = vi.hoisted(() => ({
@@ -58,6 +59,7 @@ function RailState() {
     <>
       <output data-testid="access">{String(host?.portalAccess)}</output>
       <output data-testid="badge">{host?.signingBadge}</output>
+      <output data-testid="items">{JSON.stringify(host?.signingItems)}</output>
     </>
   );
 }
@@ -120,6 +122,44 @@ describe("quick-nav account data during view switches", () => {
     mockFetch.mockResolvedValue(UNREAD);
   });
 
+  it("keeps the badge equal to the action list as owners review and finalize", async () => {
+    const partial = UNREAD.mySessions[0];
+    mockFetch.mockResolvedValue({
+      signRequests: [
+        {
+          sessionId: "request",
+          documentName: "Request.pdf",
+          ownerUsername: "Owner",
+          createdAt: "2026-09-24",
+          dueDate: "",
+          myStatus: "PENDING",
+        },
+      ],
+      mySessions: [
+        partial,
+        { ...partial, sessionId: "ready", signedCount: 2 },
+        { ...partial, sessionId: "closed", finalized: true },
+      ],
+    });
+    setup();
+    await waitFor(() => expectRail(true, 3));
+    const actionCount = () =>
+      JSON.parse(screen.getByTestId("items").textContent ?? "[]").filter(
+        (item: { action: string | null }) => item.action !== null,
+      ).length;
+    expect(actionCount()).toBe(3);
+    act(() => markSessionSeen("session-1", 1));
+    await waitFor(() => expectRail(true, 2));
+    expect(actionCount()).toBe(2);
+    act(() => markSessionSeen("ready", 2));
+    await waitFor(() => expectRail(true, 2));
+    expect(screen.getByTestId("items")).toHaveTextContent(
+      '"action":"finalize"',
+    );
+    expect(
+      JSON.parse(screen.getByTestId("items").textContent ?? "[]"),
+    ).toHaveLength(4);
+  });
   it("retains access and the count until each incoming lookup settles", async () => {
     const switchView = setup();
     await waitFor(() => expectRail(true, 1));

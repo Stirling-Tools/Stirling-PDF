@@ -1,7 +1,7 @@
-import { fireEvent, render, screen } from "@testing-library/react";
-
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 import { SignMenu } from "@app/components/shared/signing/SignMenu";
+import type { SigningMenuItem } from "@app/utils/signingItems";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -9,91 +9,203 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-it("keeps personal signing accessible when the server disables shared signing", () => {
+const incoming: SigningMenuItem = {
+  kind: "request",
+  sessionId: "incoming",
+  documentName: "Contract.pdf",
+  ownerUsername: "Alice",
+  createdAt: "2026-09-24",
+  dueDate: "",
+  myStatus: "PENDING",
+  action: "sign",
+};
+const owned: SigningMenuItem = {
+  kind: "session",
+  sessionId: "owned",
+  documentName: "Owned.pdf",
+  createdAt: "2026-09-24",
+  participantCount: 2,
+  signedCount: 1,
+  finalized: false,
+  action: "review",
+};
+function setup(items: SigningMenuItem[] = [], sharedSign?: string) {
   const onSelect = vi.fn();
   const onOpenSigning = vi.fn();
-  render(
-    <>
-      <SignMenu
-        opened
-        onClose={vi.fn()}
-        onSelect={onSelect}
-        onOpenSigning={onOpenSigning}
-        items={[]}
-        reasons={{ sharedSign: "Disabled on this server" }}
-        badge={0}
-      >
-        <button>Sign</button>
-      </SignMenu>
-    </>,
-  );
-  expect(
-    screen.getByRole("menuitem", { name: "Request signatures" }),
-  ).toBeDisabled();
-  fireEvent.click(
-    screen.getByRole("menuitem", { name: "Draw, type or upload a signature" }),
-  );
-  expect(onSelect).toHaveBeenCalledWith("sign");
-});
-
-it("opens request creation directly and provides a separate sessions entry", () => {
-  const onSelect = vi.fn();
-  const onOpenSigning = vi.fn();
-  render(
-    <>
-      <SignMenu
-        opened
-        onClose={vi.fn()}
-        onSelect={onSelect}
-        onOpenSigning={onOpenSigning}
-        items={[]}
-        reasons={{}}
-        badge={2}
-      >
-        <button>Sign</button>
-      </SignMenu>
-    </>,
-  );
-  fireEvent.click(screen.getByRole("menuitem", { name: "Request signatures" }));
-  expect(onOpenSigning).toHaveBeenCalledWith("create");
-  fireEvent.click(
-    screen.getByRole("menuitem", { name: /Expand signing sessions/ }),
-  );
-  expect(onOpenSigning).toHaveBeenCalledWith("list");
-});
-
-it("opens a recent request by identity without selecting a tool", () => {
-  const onOpenSigning = vi.fn();
-  const onSelect = vi.fn();
-  render(
+  const onClose = vi.fn();
+  const view = render(
     <SignMenu
       opened
-      onClose={vi.fn()}
+      onClose={onClose}
       onSelect={onSelect}
       onOpenSigning={onOpenSigning}
-      reasons={{}}
-      badge={1}
-      items={[
-        {
-          kind: "request",
-          sessionId: "incoming",
-          documentName: "Contract.pdf",
-          ownerUsername: "Alice",
-          createdAt: "2026-09-24",
-          dueDate: "",
-          myStatus: "PENDING",
-        },
-      ]}
+      reasons={{ sharedSign }}
+      items={items}
     >
       <button>Sign</button>
     </SignMenu>,
   );
+  return { ...view, onSelect, onOpenSigning, onClose };
+}
+
+it("keeps personal signing accessible when shared signing is disabled", () => {
+  const { onSelect } = setup([], "Disabled on this server");
+  expect(screen.getByRole("dialog", { name: "Sign" })).toBeInTheDocument();
+  expect(
+    screen.getByRole("button", { name: "Request signatures" }),
+  ).toBeDisabled();
+  fireEvent.click(screen.getByRole("button", { name: /Personal signature/ }));
+  expect(onSelect).toHaveBeenCalledWith("sign");
+});
+
+it("opens request creation, expanded sessions and certificate signing directly", () => {
+  const { onSelect, onOpenSigning, onClose } = setup();
+  fireEvent.click(screen.getByRole("button", { name: "Request signatures" }));
+  expect(onOpenSigning).toHaveBeenLastCalledWith("create");
   fireEvent.click(
-    screen.getByRole("menuitem", { name: /Contract.pdf Needs your signature/ }),
+    screen.getByRole("button", { name: "Expand signing sessions" }),
+  );
+  expect(onOpenSigning).toHaveBeenLastCalledWith("list");
+  fireEvent.click(screen.getByRole("button", { name: /Digital signature/ }));
+  expect(onSelect).toHaveBeenCalledWith("certSign");
+  expect(onClose).toHaveBeenCalledTimes(3);
+});
+
+it("makes the action count match every actionable row and names each next step", () => {
+  setup([
+    incoming,
+    owned,
+    {
+      ...owned,
+      sessionId: "ready",
+      documentName: "Ready.pdf",
+      signedCount: 2,
+      action: "finalize",
+    },
+    {
+      ...owned,
+      sessionId: "waiting",
+      documentName: "Waiting.pdf",
+      action: null,
+    },
+  ]);
+  expect(
+    screen.getByRole("button", { name: /Needs action\s*3/ }),
+  ).toHaveAttribute("aria-pressed", "true");
+  const list = within(
+    screen.getByRole("region", { name: "Needs action", exact: true }),
+  );
+  expect(list.getAllByRole("button")).toHaveLength(3);
+  expect(
+    list.getByRole("button", {
+      name: /Contract.pdf.*Sign document.*From: Alice/,
+    }),
+  ).toBeInTheDocument();
+  expect(
+    list.getByRole("button", { name: /Owned.pdf.*Review new signatures/ }),
+  ).toBeInTheDocument();
+  expect(
+    list.getByRole("button", { name: /Ready.pdf.*Finalize document/ }),
+  ).toBeInTheDocument();
+  expect(list.queryByText("Waiting.pdf")).not.toBeInTheDocument();
+});
+
+it("opens the selected role by identity and closes the popover", () => {
+  const { onOpenSigning, onSelect, onClose } = setup([incoming]);
+  fireEvent.click(
+    screen.getByRole("button", { name: /Contract.pdf.*Sign document/ }),
   );
   expect(onOpenSigning).toHaveBeenCalledWith({
     kind: "request",
     sessionId: "incoming",
   });
   expect(onSelect).not.toHaveBeenCalled();
+  expect(onClose).toHaveBeenCalledTimes(1);
+});
+
+it("shows the entire active list and searches documents or senders without changing the badge", () => {
+  const requests = Array.from({ length: 9 }, (_, index) => ({
+    ...incoming,
+    sessionId: `request-${index}`,
+    documentName: `Document ${index}.pdf`,
+  }));
+  setup([...requests, { ...owned, action: null }]);
+  fireEvent.click(screen.getByRole("button", { name: "Active", exact: true }));
+  expect(
+    within(
+      screen.getByRole("region", { name: "Active", exact: true }),
+    ).getAllByRole("button"),
+  ).toHaveLength(10);
+  fireEvent.change(screen.getByRole("searchbox"), {
+    target: { value: "Document 8" },
+  });
+  expect(
+    screen.getByRole("button", { name: /Document 8.pdf/ }),
+  ).toBeInTheDocument();
+  expect(
+    screen.queryByRole("button", { name: /Document 0.pdf/ }),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.getByRole("button", { name: /Needs action\s*9/ }),
+  ).toBeInTheDocument();
+  fireEvent.change(screen.getByRole("searchbox"), {
+    target: { value: "alice" },
+  });
+  expect(
+    within(
+      screen.getByRole("region", { name: "Active", exact: true }),
+    ).getAllByRole("button"),
+  ).toHaveLength(9);
+});
+
+it("keeps submitted requests active and places finalized or declined requests in Closed", () => {
+  setup([
+    {
+      ...incoming,
+      documentName: "Submitted.pdf",
+      myStatus: "SIGNED",
+      action: null,
+    },
+    { ...owned, finalized: true, action: null },
+    {
+      ...incoming,
+      sessionId: "declined",
+      documentName: "Declined.pdf",
+      myStatus: "DECLINED",
+      action: null,
+    },
+  ]);
+  expect(screen.getByRole("status")).toHaveTextContent("You're all caught up");
+  fireEvent.click(screen.getByRole("button", { name: "Active", exact: true }));
+  expect(
+    screen.getByRole("button", { name: /Submitted.pdf.*Submitted/ }),
+  ).toBeInTheDocument();
+  expect(
+    screen.queryByRole("button", { name: /Declined.pdf/ }),
+  ).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Closed", exact: true }));
+  expect(
+    screen.getByRole("button", { name: /Owned.pdf.*Finalized/ }),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByRole("button", { name: /Declined.pdf.*Declined/ }),
+  ).toBeInTheDocument();
+  expect(
+    screen.queryByRole("button", { name: /Submitted.pdf/ }),
+  ).not.toBeInTheDocument();
+});
+
+it("allows editing search with Home/End and restores the trigger on Escape", () => {
+  const { onClose } = setup([incoming]);
+  const search = screen.getByRole("searchbox");
+  search.focus();
+  fireEvent.keyDown(search, { key: "Home" });
+  expect(search).toHaveFocus();
+  fireEvent.keyDown(search, { key: "End" });
+  expect(search).toHaveFocus();
+  fireEvent.keyDown(search, { key: "Escape" });
+  expect(onClose).toHaveBeenCalledTimes(1);
+  expect(
+    screen.getByRole("button", { name: "Sign", exact: true }),
+  ).toHaveFocus();
 });

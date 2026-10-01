@@ -224,7 +224,11 @@ export function QuickNavRailHost() {
     },
     {
       id: "sign",
-      label: t("signMenu.title", "Sign"),
+      label: host?.signingBadge
+        ? t("signMenu.triggerCount", "Sign · {{count}} actions needed", {
+            count: host.signingBadge,
+          })
+        : t("signMenu.title", "Sign"),
       icon: <Icon name="pen-tool" size={SIZE} />,
       badge: host?.signingBadge,
       badgeTone: "warning",
@@ -239,7 +243,6 @@ export function QuickNavRailHost() {
           opened={signMenuOpen}
           onClose={() => setSignMenuOpen(false)}
           reasons={host?.toolReasons ?? {}}
-          badge={host?.signingBadge ?? 0}
           items={host?.signingItems ?? []}
           onOpenSigning={(intent) =>
             guarded(() => {

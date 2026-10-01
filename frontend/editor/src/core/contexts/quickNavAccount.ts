@@ -1,4 +1,4 @@
-import type { SigningItem } from "@app/utils/signingItems";
+import type { SigningMenuItem } from "@app/utils/signingItems";
 
 export interface QuickNavIdentity {
   displayName: string;
@@ -11,7 +11,7 @@ export interface QuickNavAccount {
   isAnonymous: boolean;
   identity: QuickNavIdentity | null;
   signingBadge: number;
-  signingItems: SigningItem[];
+  signingItems: SigningMenuItem[];
   portalAccess: boolean;
 }
 

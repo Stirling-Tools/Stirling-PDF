@@ -7,6 +7,9 @@ export type SigningItem =
   | (SignRequestSummary & { kind: "request" })
   | (SessionSummary & { kind: "session" });
 
+export type SigningAction = "sign" | "review" | "finalize";
+export type SigningMenuItem = SigningItem & { action: SigningAction | null };
+
 /** One entry per session and role; an owner who also signs keeps both actions. */
 export function collectSigningItems(
   requests: SignRequestSummary[],
@@ -25,15 +28,19 @@ export function collectSigningItems(
   );
 }
 
-/** Reserve one shortcut for an outstanding signature; keep the others available for recent sessions. */
-export function recentSigningItems(items: SigningItem[]): SigningItem[] {
-  const active = items.filter((item) => !item.finalized);
-  const nextRequest = active.find(needsSignature);
-  return (
-    nextRequest
-      ? [nextRequest, ...active.filter((item) => item !== nextRequest)]
-      : active
-  ).slice(0, 4);
+/** Ready sessions remain actionable after viewing; partial updates clear when the owner reviews them. */
+export function signingAction(
+  item: SigningItem,
+  lastSeenSignedCount: number,
+): SigningAction | null {
+  if (item.finalized) return null;
+  if (needsSignature(item)) return "sign";
+  if (item.kind === "session") {
+    if (item.participantCount > 0 && item.signedCount === item.participantCount)
+      return "finalize";
+    if (item.signedCount > lastSeenSignedCount) return "review";
+  }
+  return null;
 }
 
 export function needsSignature(item: SigningItem): boolean {

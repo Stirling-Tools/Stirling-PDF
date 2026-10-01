@@ -1,48 +1,281 @@
-.sign-menu {
-  width: min(360px, calc(100vw - 24px));
-  padding: 8px;
+.sign-menu.sui-dd__menu {
+  width: min(400px, calc(100vw - 24px));
+  height: min(660px, calc(100dvh - 24px));
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+  border-radius: 14px;
+}
+.sign-menu.sign-menu--unavailable {
+  height: auto;
+}
+.sign-menu h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--c-text);
+}
+.sign-menu__personal {
+  flex-shrink: 0;
+  padding: 18px;
+  background: var(--c-bg-raised);
+  border-bottom: 1px solid var(--c-border);
+}
+.sign-menu__tools {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+.sign-menu__tool {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  background: var(--c-surface);
+  color: var(--c-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.sign-menu__tool svg {
+  margin-bottom: 4px;
+  color: var(--c-text-muted);
+}
+.sign-menu__tool strong {
+  font-size: 13px;
+  font-weight: 500;
+}
+.sign-menu__tool span {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--c-text-muted);
+}
+.sign-menu button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.sign-menu button:focus-visible,
+.sign-menu__results:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: -2px;
+}
+.sign-menu__sessions {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+.sign-menu__session-header {
+  flex-shrink: 0;
+  padding: 12px 18px 0;
 }
 .sign-menu__heading {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
-  padding: 10px 10px 6px;
-  font-size: 12px;
-  font-weight: 600;
+  margin-bottom: 10px;
+}
+.sign-menu__icon-button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
   color: var(--c-text-muted);
+  cursor: pointer;
+}
+.sign-menu__request {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 36px;
+  padding: 8px 12px;
+  border: 1px solid var(--c-border-strong);
+  border-radius: 8px;
+  background: var(--c-surface);
+  color: var(--c-text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.sign-menu__tool:hover:not(:disabled),
+.sign-menu__request:hover:not(:disabled),
+.sign-menu__icon-button:hover:not(:disabled) {
+  background: var(--c-hover);
+}
+.sign-menu__filters {
+  flex-shrink: 0;
+  padding: 12px 18px 8px;
+}
+.sign-menu__tabs {
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+.sign-menu__tabs .sui-tabs__tab {
+  padding: 8px 6px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.sign-menu__tabs .sui-tabs__count {
+  background: var(--c-primary-subtle);
+  color: var(--c-accent-fg);
+  border-radius: 12px;
+  padding: 2px 5px;
+  font-weight: 600;
 }
 .sign-menu__hint {
-  margin: 0;
-  padding: 8px 10px;
-  font-size: 12px;
+  margin: 10px 0 0;
   color: var(--c-text-muted);
+  font-size: 11px;
   line-height: 1.5;
 }
-.sign-menu__count {
-  border-radius: 20px;
-  padding: 1px 6px;
-  background: var(--c-hover);
-  color: var(--c-text);
+.sign-menu__sessions > .sign-menu__hint {
+  padding: 0 18px 18px;
 }
-.sign-menu .sui-dd__item {
-  padding: 8px 10px;
+.sign-menu__search {
+  display: flex;
   align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 7px 10px;
+  border: 1px solid var(--c-border);
+  border-radius: 7px;
+  color: var(--c-text-muted);
+  background: var(--c-input-bg);
 }
-.sign-menu .sui-dd__item-label {
+.sign-menu__search:focus-within {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 1px;
+}
+.sign-menu__search input {
   min-width: 0;
-  white-space: normal;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--c-text);
+  font: inherit;
+  font-size: 12px;
+}
+.sign-menu__search input::placeholder {
+  color: var(--c-text-muted);
+}
+.sign-menu__results {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 8px 10px;
+  scrollbar-gutter: stable;
+}
+.sign-menu__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.sign-menu__session {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--c-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.sign-menu__session:hover {
+  background: var(--c-hover);
+}
+.sign-menu__session > svg {
+  flex-shrink: 0;
+  color: var(--c-text-subtle);
+}
+.sign-menu__session-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 9px;
+  background: var(--c-surface-sunken);
+  color: var(--c-text-muted);
+}
+.sign-menu__session[data-action="true"] .sign-menu__session-icon {
+  color: var(--c-accent-fg);
+  background: var(--c-primary-subtle);
+}
+.sign-menu__session-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
 }
 .sign-menu__document {
   display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-size: 13px;
+  font-weight: 500;
+}
+.sign-menu__state {
+  font-size: 12px;
+  color: var(--c-text-muted);
+}
+.sign-menu__session[data-action="true"] .sign-menu__state {
+  color: var(--c-accent-fg);
 }
 .sign-menu__meta {
-  display: block;
-  margin-top: 3px;
   font-size: 11px;
   color: var(--c-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sign-menu__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 26px 20px;
+  text-align: center;
+  color: var(--c-text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.sign-menu__empty strong {
+  color: var(--c-text);
+  font-size: 13px;
+  font-weight: 500;
+}
+.sign-menu__trigger-badge {
+  position: absolute;
+  top: 2px;
+  right: 8px;
+  min-width: 16px;
+  border-radius: 10px;
+  padding: 1px 4px;
+  font-size: 10px;
+  line-height: 14px;
+  color: var(--c-text-on-primary);
+  background: var(--c-primary);
 }
 .signing-workspace {
   display: flex;
@@ -456,5 +689,33 @@
   }
   .signing-request__calendar {
     padding: 12px 8px;
+  }
+}
+
+@media (max-height: 560px) {
+  .sign-menu__personal {
+    padding: 12px;
+  }
+  .sign-menu__tool {
+    flex-direction: row;
+    align-items: center;
+    padding: 8px;
+  }
+  .sign-menu__tool svg {
+    margin: 0;
+    flex-shrink: 0;
+  }
+  .sign-menu__tool span,
+  .sign-menu__filters > .sign-menu__hint {
+    display: none;
+  }
+  .sign-menu__session-header {
+    padding: 8px 12px 0;
+  }
+  .sign-menu__heading {
+    margin-bottom: 6px;
+  }
+  .sign-menu__filters {
+    padding: 8px 12px;
   }
 }

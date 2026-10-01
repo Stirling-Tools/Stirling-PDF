@@ -32,7 +32,7 @@ On desktop, with one PDF already selected, the default one-person request uses f
 
 Locally verified scope covers registered users, PKCS12/PFX/JKS/PEM uploads, optional marks, progress/decline, owner finalization and retrieval. Invalid creation, certificate and mark inputs are rejected before accepting work. Access/lifecycle checks and independent signature verification support the demonstration.
 
-The Sign popover shows personal signing first, then request creation and recent sessions. Expand opens a dedicated session workspace. Shared signing is no longer a tool-picker entry. Wet/certificate personal editors remain separate. See the [history and next steps](./sign-experience-history.md).
+The Sign popover separates personal signing from sessions. Demonstrate **Needs action**, whose count matches the navigation badge, then search and scroll **Active** and **Closed**. Rows state the next action: sign, review new signatures or finalize. **Request signatures** stays visible above the list; the expand icon opens the full session workspace. Shared signing is no longer a tool-picker entry. Wet/certificate personal editors remain separate. See the [history and next steps](./sign-experience-history.md).
 
 Do not promise guest onboarding, email invitations/reminders, enforced signing order, multiple-document envelopes, qualified signatures or universal recipient trust. SMTP alone does not implement those journeys. Legitimate paid/provider paths, SSO, restore, supported devices and the customer's deployment need separate acceptance.
 

@@ -165,7 +165,7 @@
   min-width: 0;
   flex: 1;
   padding: 6px 12px;
-  background: var(--p-white);
+  background: var(--c-document-bg);
   border-radius: 6px;
 }
 .signing-finalize__group {

@@ -569,7 +569,6 @@ export default function HomePage() {
         onClose={() => setMobileSignOpen(false)}
         reasons={quickNavHost?.toolReasons ?? {}}
         items={quickNavHost?.signingItems ?? []}
-        badge={quickNavHost?.signingBadge ?? 0}
         onOpenSigning={openSigning}
         onSelect={(tool) => {
           handleToolSelect(tool);
@@ -579,10 +578,23 @@ export default function HomePage() {
         <Button
           variant="tertiary"
           className="mobile-bottom-button"
-          aria-label={t("signMenu.title", "Sign")}
+          aria-label={
+            quickNavHost?.signingBadge
+              ? t("signMenu.triggerCount", "Sign · {{count}} actions needed", {
+                  count: quickNavHost.signingBadge,
+                })
+              : t("signMenu.title", "Sign")
+          }
           onClick={() => setMobileSignOpen((open) => !open)}
         >
           <Icon name="pen-tool" size="1.5rem" />
+          {Boolean(quickNavHost?.signingBadge) && (
+            <span className="sign-menu__trigger-badge" aria-hidden="true">
+              {quickNavHost!.signingBadge > 9
+                ? "9+"
+                : quickNavHost!.signingBadge}
+            </span>
+          )}
           <span className="mobile-bottom-button-label">
             {t("signMenu.title", "Sign")}
           </span>
