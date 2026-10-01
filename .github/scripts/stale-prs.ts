@@ -1,15 +1,8 @@
 // Stale PR triage, run daily by .github/workflows/stale-prs.yml.
 //
-// Works out whether each open PR is waiting on its author. When it has been the
-// author's turn for too long it posts a warning, and closes the PR a week later if
-// the same thing is still outstanding. A PR that is waiting on maintainers (no
-// review yet, or the author has replied since) is never warned or closed.
-//
-// The warning's date is the time the Stale PR label was added, so removing that
-// label cancels a warning and "on-hold" exempts a PR permanently.
-//
-// The same rules keep a waiting-on-author or waiting-on-review label on every open
-// PR, so the review queue can be filtered by whose turn it is.
+// Warns a PR that has been waiting on its author for too long, and closes it if the
+// same thing is still outstanding CLOSE_AFTER_WARNING_DAYS later. A PR waiting on
+// maintainers is never warned or closed.
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -132,7 +125,6 @@ export interface Decision {
   turns: Turn[];
 }
 
-/** `label` is the turn label the PR should carry; `remove` is the other one, if present. */
 export interface TurnLabelChange {
   label: string;
   add: boolean;
@@ -200,8 +192,7 @@ function latestReopenTime(pr: PullRequest) {
   );
 }
 
-// Only the author's own actions count. updatedAt is useless here: label changes,
-// CI comments and this bot all bump it.
+// Deliberately not updatedAt: label changes, CI comments and this bot all bump it.
 function lastAuthorActivity(pr: PullRequest) {
   const author = pr.author?.login;
   const isAuthor = (actor: Actor | null) => author !== undefined && actor?.login === author;
@@ -276,8 +267,8 @@ export function authorTurns(pr: PullRequest): Turn[] {
  * What to do with one PR at epoch ms `now`. `action` is one of:
  * - "none": nothing outstanding, or not outstanding long enough to warn.
  * - "warn": post the warning listing `turns` and add the Stale PR label.
- * - "pending": warned, and `turns` are still outstanding, but the week is not up.
- * - "close": warned a week ago and `turns` are still outstanding.
+ * - "pending": warned, and `turns` are still outstanding, but the close is not due yet.
+ * - "close": warned CLOSE_AFTER_WARNING_DAYS ago and `turns` are still outstanding.
  * - "clear": warned, but resolved, reopened or exempted since; remove the label.
  */
 export function decide(pr: PullRequest, now: number): Decision {
@@ -483,6 +474,10 @@ function changeSummary({ decision, turnLabel }: Result) {
   return `${decision.action} (${turnKinds}); turn label ${labelChanges.join(" ") || "unchanged"}`;
 }
 
+/**
+ * Triages every open PR. A write that fails is logged and the run moves on to the
+ * next PR; the job is failed at the end. Always writes a job summary.
+ */
 export default async function triageStalePullRequests({
   github,
   context,

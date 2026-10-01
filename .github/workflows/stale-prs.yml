@@ -1,6 +1,5 @@
 name: Stale PR triage
 
-# Warns, then closes, PRs that have been waiting on their author for too long.
 # Dry run unless the STALE_PR_BOT_LIVE repository variable is "true"; unsetting it
 # is the kill switch. The rules live in .github/scripts/stale-prs.ts.
 
@@ -47,7 +46,7 @@ jobs:
         with:
           persist-credentials: false
 
-      # The Node github-script v9 runs on, so the tests strip types the same way.
+      # Same Node as github-script v9, so the tests load the .ts the way the bot does.
       - name: Set up Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
@@ -81,7 +80,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read # actions/checkout
-      issues: write # comment on PRs and add/remove the Stale PR label
+      issues: write # comment on and label PRs
       pull-requests: write # close PRs
     steps:
       - name: Harden Runner
