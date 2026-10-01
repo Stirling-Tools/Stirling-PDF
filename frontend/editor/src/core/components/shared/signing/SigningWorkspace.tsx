@@ -243,37 +243,37 @@ export default function SigningWorkspace() {
             </Alert>
           )}
           {showCreate ? (
-            <div className="signing-workspace__create">
-              <SigningDocumentPicker
-                value={document?.fileId ?? null}
-                onChange={setDocumentId}
-                disabled={controller.creating}
-                loading={uploading}
-                onLoadingChange={setUploading}
-              />
-              <CreateSessionFlow
-                selectedFiles={document ? [document] : []}
-                selectedUserIds={selectedUserIds}
-                onSelectedUserIdsChange={setSelectedUserIds}
-                dueDate={dueDate}
-                onDueDateChange={setDueDate}
-                creating={controller.creating || uploading}
-                onSubmit={(settings) => {
-                  if (!document) return;
-                  void controller
-                    .createSession(settings, selectedUserIds, dueDate, document)
-                    .then((ok) => {
-                      if (!ok) return;
-                      setShowCreate(false);
-                      setSelectedUserIds([]);
-                      setDueDate("");
-                      setTab("active");
-                      setScope("mine");
-                      setSearch("");
-                    });
-                }}
-              />
-            </div>
+            <CreateSessionFlow
+              documentPicker={
+                <SigningDocumentPicker
+                  value={document?.fileId ?? null}
+                  onChange={setDocumentId}
+                  disabled={controller.creating}
+                  loading={uploading}
+                  onLoadingChange={setUploading}
+                />
+              }
+              selectedFiles={document ? [document] : []}
+              selectedUserIds={selectedUserIds}
+              onSelectedUserIdsChange={setSelectedUserIds}
+              dueDate={dueDate}
+              onDueDateChange={setDueDate}
+              creating={controller.creating || uploading}
+              onSubmit={(settings) => {
+                if (!document) return;
+                void controller
+                  .createSession(settings, selectedUserIds, dueDate, document)
+                  .then((ok) => {
+                    if (!ok) return;
+                    setShowCreate(false);
+                    setSelectedUserIds([]);
+                    setDueDate("");
+                    setTab("active");
+                    setScope("mine");
+                    setSearch("");
+                  });
+              }}
+            />
           ) : (
             <div className="signing-workspace__content">
               <div className="signing-workspace__toolbar">

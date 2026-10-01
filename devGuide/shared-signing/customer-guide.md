@@ -25,6 +25,8 @@ The official feature remains alpha. The tested setup uses ordinary registered ac
 5. Finalize when the required people have signed. At least one signature is required. Early finalization asks you to confirm which people are included and which will be left out. Cancel if an outstanding signature is still needed.
 6. Open the final PDF from Completed or load it into Active Files. Download it and use **Validate PDF Signature** to check the expected signer count, identities and integrity. Check certificate trust separately in the recipient's intended PDF reader.
 
+On mobile, request creation has three pages: **Document**, **Participants**, then **Dates & options**. Use **Next** after choosing a PDF and at least one participant. **Back** or the numbered steps let you review earlier choices without losing the draft. **Send signing request** appears on the last page. Resizing between mobile and desktop keeps your choices and mobile page.
+
 Finalization closes the request: outstanding participants cannot sign afterward. Create a new request if the document or intended signers must change. Submitted contributions cannot be edited in place. Participant removal is available while the session is active and revokes that invitation's access.
 
 ## Participant: review, sign or decline

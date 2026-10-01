@@ -4,10 +4,18 @@ import userEvent from "@testing-library/user-event";
 import { MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
-import { expect, it, vi } from "vitest";
+import { beforeEach, expect, it, vi } from "vitest";
 import { CreateSessionFlow } from "@app/components/shared/signing/CreateSessionFlow";
 import UserSelector from "@app/components/shared/UserSelector";
 import { qk } from "@app/query/keys";
+
+const viewport = vi.hoisted(() => ({ mobile: false }));
+vi.mock("@app/hooks/useIsMobile", () => ({
+  useIsMobile: () => viewport.mobile,
+}));
+beforeEach(() => {
+  viewport.mobile = false;
+});
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -59,18 +67,26 @@ function Harness({
   onSubmit,
   creating = false,
   initialIds = [],
+  initialFileSelected = true,
 }: {
   onSubmit: ReturnType<typeof vi.fn>;
   creating?: boolean;
   initialIds?: number[];
+  initialFileSelected?: boolean;
 }) {
   const [ids, setIds] = useState(initialIds);
   const [date, setDate] = useState("2026-10-01");
+  const [hasFile, setHasFile] = useState(initialFileSelected);
   return (
     <>
       <output aria-label="Date sent to API">{date}</output>
       <CreateSessionFlow
-        selectedFiles={[{ name: "Document.pdf", size: 100 }]}
+        documentPicker={
+          <button disabled={creating} onClick={() => setHasFile(!hasFile)}>
+            {hasFile ? "Change PDF" : "Choose PDF"}
+          </button>
+        }
+        selectedFiles={hasFile ? [{ name: "Document.pdf", size: 100 }] : []}
         selectedUserIds={ids}
         onSelectedUserIdsChange={setIds}
         dueDate={date}
@@ -85,13 +101,21 @@ function Harness({
 function show({
   creating = false,
   initialIds = [],
-}: { creating?: boolean; initialIds?: number[] } = {}) {
+  mobile = false,
+  initialFileSelected = true,
+}: {
+  creating?: boolean;
+  initialIds?: number[];
+  mobile?: boolean;
+  initialFileSelected?: boolean;
+} = {}) {
+  viewport.mobile = mobile;
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false, staleTime: Infinity } },
   });
   client.setQueryData(qk.users(), users);
   const onSubmit = vi.fn();
-  render(
+  const content = () => (
     <QueryClientProvider client={client}>
       <MemoryRouter>
         <MantineProvider env="test">
@@ -99,13 +123,131 @@ function show({
             onSubmit={onSubmit}
             creating={creating}
             initialIds={initialIds}
+            initialFileSelected={initialFileSelected}
           />
         </MantineProvider>
       </MemoryRouter>
-    </QueryClientProvider>,
+    </QueryClientProvider>
   );
-  return { onSubmit, user: userEvent.setup() };
+  const view = render(content());
+  return {
+    onSubmit,
+    user: userEvent.setup(),
+    resize: (mobile: boolean) => {
+      viewport.mobile = mobile;
+      view.rerender(content());
+    },
+  };
 }
+
+it("guides mobile creation through three pages and retains the draft when going back", async () => {
+  const { user, onSubmit } = show({ mobile: true, initialFileSelected: false });
+  expect(
+    screen.getByRole("button", { name: "Next", exact: true }),
+  ).toBeDisabled();
+  expect(
+    screen.getByRole("button", { name: "Participants", exact: true }),
+  ).toBeDisabled();
+  expect(
+    screen.queryByRole("button", { name: "Send signing request" }),
+  ).not.toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Choose PDF" }));
+  await user.click(screen.getByRole("button", { name: "Next", exact: true }));
+  expect(
+    screen.getByRole("button", { name: "Participants", exact: true }),
+  ).toHaveAttribute("aria-current", "step");
+  expect(
+    screen.getByRole("button", { name: "Next", exact: true }),
+  ).toBeDisabled();
+  expect(
+    screen.queryByRole("button", { name: "Change PDF" }),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.queryByRole("button", { name: "Clear date" }),
+  ).not.toBeInTheDocument();
+  await user.click(screen.getByRole("checkbox", { name: /Bob/ }));
+  await user.click(screen.getByRole("button", { name: "Next", exact: true }));
+  expect(
+    screen.getByRole("button", { name: "Dates & options" }),
+  ).toHaveAttribute("aria-current", "step");
+  await user.click(
+    screen.getByRole("button", { name: "Sunday, October 25, 2026" }),
+  );
+  await user.click(
+    screen.getByRole("button", {
+      name: "Appearance and summary page (optional)",
+    }),
+  );
+  await user.click(
+    await screen.findByRole("switch", {
+      name: "Include Signature Summary Page",
+    }),
+  );
+  await user.click(screen.getByRole("button", { name: "Back", exact: true }));
+  expect(screen.getByRole("checkbox", { name: /Bob/ })).toBeChecked();
+  await user.click(screen.getByRole("button", { name: "Back", exact: true }));
+  await user.click(screen.getByRole("button", { name: "Change PDF" }));
+  expect(
+    screen.getByRole("button", { name: "Next", exact: true }),
+  ).toBeDisabled();
+  await user.click(screen.getByRole("button", { name: "Choose PDF" }));
+  await user.click(screen.getByRole("button", { name: "Next", exact: true }));
+  expect(screen.getByRole("checkbox", { name: /Bob/ })).toBeChecked();
+  await user.click(screen.getByRole("button", { name: "Next", exact: true }));
+  expect(screen.getByLabelText("Date sent to API")).toHaveTextContent(
+    "2026-10-25",
+  );
+  expect(
+    screen.getByRole("switch", { name: "Include Signature Summary Page" }),
+  ).toBeChecked();
+  expect(onSubmit).not.toHaveBeenCalled();
+  await user.click(
+    screen.getByRole("button", { name: "Send signing request" }),
+  );
+  expect(onSubmit).toHaveBeenCalledExactlyOnceWith(
+    expect.objectContaining({ includeSummaryPage: true }),
+  );
+});
+
+it("preserves the mobile page and signature settings across desktop resizing", async () => {
+  const { user, resize } = show({ mobile: true, initialIds: [2] });
+  await user.click(screen.getByRole("button", { name: "Dates & options" }));
+  await user.click(
+    screen.getByRole("button", {
+      name: "Appearance and summary page (optional)",
+    }),
+  );
+  await user.click(
+    await screen.findByRole("switch", {
+      name: "Include Signature Summary Page",
+    }),
+  );
+  resize(false);
+  expect(screen.getByRole("button", { name: "Change PDF" })).toBeVisible();
+  expect(screen.getByRole("checkbox", { name: /Bob/ })).toBeChecked();
+  expect(
+    screen.getByRole("switch", { name: "Include Signature Summary Page" }),
+  ).toBeChecked();
+  resize(true);
+  expect(
+    screen.getByRole("button", { name: "Dates & options" }),
+  ).toHaveAttribute("aria-current", "step");
+  expect(
+    screen.getByRole("switch", { name: "Include Signature Summary Page" }),
+  ).toBeChecked();
+  expect(
+    screen.queryByRole("button", { name: "Change PDF" }),
+  ).not.toBeInTheDocument();
+});
+
+it("locks mobile navigation during submission", () => {
+  show({ mobile: true, creating: true, initialIds: [2] });
+  for (const label of ["Document", "Participants", "Dates & options", "Next"]) {
+    expect(
+      screen.getByRole("button", { name: label, exact: true }),
+    ).toBeDisabled();
+  }
+});
 
 it("selects participants inline, retaining checked people while searching", async () => {
   const { user } = show();

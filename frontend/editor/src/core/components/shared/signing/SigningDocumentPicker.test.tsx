@@ -95,12 +95,16 @@ it("shows only PDFs and selects an open document without importing it", () => {
   fireEvent.click(screen.getByRole("radio", { name: "Second.pdf" }));
   expect(onChange).toHaveBeenCalledWith(second.id);
   expect(screen.queryByRole("radio")).not.toBeInTheDocument();
-  expect(screen.getByRole("figure")).toHaveTextContent("Second.pdf");
+  expect(screen.getByRole("figure")).toHaveAccessibleName("Second.pdf");
+  expect(screen.getByRole("heading", { name: "Second.pdf" })).toBeVisible();
+  expect(
+    screen.queryByRole("heading", { name: "Document" }),
+  ).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "Change PDF" }));
   expect(onChange).toHaveBeenLastCalledWith(null);
   expect(screen.getAllByRole("radio")).toHaveLength(2);
   fireEvent.click(screen.getByRole("radio", { name: "First.pdf" }));
-  expect(screen.getByRole("figure")).toHaveTextContent("First.pdf");
+  expect(screen.getByRole("figure")).toHaveAccessibleName("First.pdf");
   expect(state.add).not.toHaveBeenCalled();
 });
 
@@ -108,7 +112,7 @@ it("can deselect even when only one PDF is open", () => {
   const file = createNewStirlingFileStub(new File(["one"], "Only.pdf"));
   state.stubs.mockReturnValue([file]);
   const { onChange } = show(file.id);
-  expect(screen.getByRole("figure")).toHaveTextContent("Only.pdf");
+  expect(screen.getByRole("figure")).toHaveAccessibleName("Only.pdf");
   fireEvent.click(screen.getByRole("button", { name: "Change PDF" }));
   expect(onChange).toHaveBeenCalledWith(null);
   expect(screen.getByRole("radio", { name: "Only.pdf" })).not.toBeChecked();

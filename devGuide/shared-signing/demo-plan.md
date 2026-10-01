@@ -16,7 +16,7 @@ Demonstrate a single Sign entry, fast request creation and a verifiable final PD
 | 12–14 min | Show a prepared partially signed request and named early-finalization warning, then Cancel. Show the Created by me and Overdue filters, search and a Completed request. | Minimum one signature, explicit exclusion of outstanding people, advisory dates and closure. Submitted and finalized differ. |
 | 14–15 min | Share the guide and self-host checklist; agree pilot acceptance. | Clear deployment and certificate/trust requirements. |
 
-With one PDF already selected, the default one-person request uses four primary pointer actions: Sign, Request signatures, select signer, Send. Search, extra signers and optional settings add interactions. Show the short path first.
+On desktop, with one PDF already selected, the default one-person request uses four primary pointer actions: Sign, Request signatures, select signer, Send. Search, extra signers and optional settings add interactions. Show the short path first. On mobile, demonstrate **Document > Next > Participants > Next > Dates & options**, then Send; Back retains the selections. The selected page floats without nested frames, with the filename above it.
 
 ## Rehearsal preparation
 

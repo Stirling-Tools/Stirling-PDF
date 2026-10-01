@@ -1,3 +1,4 @@
+import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
 import { Icon } from "@app/ui/Icon";
@@ -7,6 +8,7 @@ import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import { useFileThumbnail } from "@app/hooks/useFileThumbnail";
 import DocumentThumbnail from "@app/components/shared/filePreview/DocumentThumbnail";
+import { PrivateContent } from "@app/components/shared/PrivateContent";
 import { createQuickKey, type StirlingFileStub } from "@app/types/fileContext";
 import thumbnailStyles from "@app/components/fileEditor/FileEditorThumbnail.module.css";
 
@@ -25,6 +27,7 @@ export function SigningDocumentPicker({
   onLoadingChange: (loading: boolean) => void;
 }) {
   const { t } = useTranslation();
+  const headingId = useId();
   const { fileStubs } = useAllFiles();
   const selectors = useFileSelectors();
   const { openFilesModal } = useFilesModalContext();
@@ -37,7 +40,13 @@ export function SigningDocumentPicker({
   return (
     <div className="signing-workspace__document-picker">
       <div className="signing-document-picker__heading">
-        <h2>{t("signWorkspace.document", "Document")}</h2>
+        <h2 id={headingId} title={selectedFile?.name}>
+          {selectedFile ? (
+            <PrivateContent>{selectedFile.name}</PrivateContent>
+          ) : (
+            t("signWorkspace.document", "Document")
+          )}
+        </h2>
         {selectedFile ? (
           <Button
             variant="secondary"
@@ -100,9 +109,15 @@ export function SigningDocumentPicker({
         )}
       </div>
       {selectedFile ? (
-        <figure className="signing-document-picker__selected">
-          <SigningDocumentPreview file={selectedFile} />
-          <figcaption>{selectedFile.name}</figcaption>
+        <figure
+          className="signing-document-picker__selected"
+          aria-labelledby={headingId}
+        >
+          <SigningDocumentPreview
+            key={selectedFile.id}
+            file={selectedFile}
+            floating
+          />
         </figure>
       ) : pdfs.length > 0 ? (
         <fieldset
@@ -158,19 +173,47 @@ function SigningDocumentCard({
   );
 }
 
-function SigningDocumentPreview({ file }: { file: StirlingFileStub }) {
+function SigningDocumentPreview({
+  file,
+  floating = false,
+}: {
+  file: StirlingFileStub;
+  floating?: boolean;
+}) {
   const { thumbnail, isEncrypted, isGenerating } = useFileThumbnail(file);
+  const [pageRatio, setPageRatio] = useState(210 / 297);
   return (
     <div
-      className={`${thumbnailStyles.thumbContainer} signing-document-card__preview`}
+      className={
+        floating
+          ? "signing-document-preview"
+          : `${thumbnailStyles.thumbContainer} signing-document-card__preview`
+      }
     >
-      <DocumentThumbnail
-        file={file}
-        thumbnail={thumbnail}
-        isEncrypted={isEncrypted}
-        isLoading={isGenerating}
-        imgClassName={thumbnailStyles.thumbImage}
-      />
+      {floating && thumbnail && !isEncrypted ? (
+        <PrivateContent>
+          <img
+            src={thumbnail}
+            alt={`Preview of ${file.name}`}
+            draggable={false}
+            className="signing-document-preview__page"
+            style={{ width: `min(100cqw, calc(100cqh * ${pageRatio}))` }}
+            onLoad={(event) => {
+              const image = event.currentTarget;
+              if (image.naturalHeight > 0)
+                setPageRatio(image.naturalWidth / image.naturalHeight);
+            }}
+          />
+        </PrivateContent>
+      ) : (
+        <DocumentThumbnail
+          file={file}
+          thumbnail={thumbnail}
+          isEncrypted={isEncrypted}
+          isLoading={isGenerating}
+          imgClassName={thumbnailStyles.thumbImage}
+        />
+      )}
     </div>
   );
 }
