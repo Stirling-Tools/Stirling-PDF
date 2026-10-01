@@ -278,6 +278,7 @@ customNumberDesc = "Alapértelmezett {n}, elfogad 'Oldal {n} / {total}', 'Szöve
 fontName = "Betűtípus"
 fontSize = "Betűméret"
 numberPagesDesc = "Mely oldalakat számozzuk, alapértelmezett 'mind', elfogad 1-5 vagy 2,5,9 formátumot is"
+pagePreviewAlt = "Oldal előnézete"
 pagesAndStarting = "Oldalak és kezdő sorszám"
 positionAndPages = "Pozíció és oldalak"
 preview = "Pozíció kiválasztása"
@@ -350,7 +351,9 @@ text = "Ezek a jogosultságok szabályozzák, mit tehetnek a felhasználók a PD
 title = "Jogosultságok módosítása"
 
 [addStamp]
+pagePreviewAlt = "Oldal előnézete"
 preview = "Bélyeg előnézete"
+stampPreviewAlt = "Bélyegző előnézete"
 tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 
 [AddStampRequest]
@@ -383,6 +386,7 @@ positionAndFormatting = "Pozíció és formázás"
 preview = "Preview:"
 quickPosition = "Válasszon pozíciót az oldalon a bélyeg elhelyezéséhez."
 rotation = "Forgatás"
+selectedImageAlt = "Kiválasztott bélyegzőkép"
 selectTemplate = "Select a template..."
 stampSetup = "Bélyeg beállítása"
 stampText = "Pecsét szövege"
@@ -533,6 +537,9 @@ letter = "Letter"
 
 [adjustPageScale.scaleFactor]
 label = "Skálázási arány"
+
+[adjustPageScale.settings]
+title = "Beállítások"
 
 [adjustPageScale.tooltip.description]
 text = "A PDF-tartalom méretének és az oldalméreteknek a beállítása."
@@ -728,6 +735,7 @@ noLanguages = "Nem találhatók tessdata nyelvek a beállított könyvtárban."
 permissionNotice = "A tessdata elérési út nem írható. A letöltések a böngészőben nyílnak meg; mentse a .traineddata fájlokat kézzel a tessdata mappába."
 
 [admin.settings.ai]
+customProvider = "Egyéni (OpenAI-kompatibilis)"
 description = "Csatlakoztassa a Stirlinget a Python AI motorhoz, válassza ki a modelljeit, és állítsa be a működési korlátokat."
 managedByCloud = "Ebben a módban a Stirling Cloud kezeli."
 managedByCloudShort = "Stirling Cloud által kezelve"
@@ -1146,7 +1154,6 @@ refresh = "Frissítés"
 selectFile = "Válasszon ki egy .sql fájlt az importáláshoz"
 size = "Méret"
 title = "Adatbázis"
-unavailable = "A mentéslista nem érhető el a jelenlegi adatbázis-konfigurációhoz."
 uploadTitle = "Feltöltés és importálás"
 version = "H2 verzió"
 
@@ -1280,6 +1287,7 @@ label = "Egyéni metaadatok"
 [admin.settings.general.customMetadata.author]
 description = "Alapértelmezett szerző a PDF metaadataihoz (pl. felhasználónév)"
 label = "Alapértelmezett szerző"
+placeholder = "felhasználónév"
 
 [admin.settings.general.customMetadata.autoUpdate]
 description = "PDF metaadatok automatikus frissítése minden feldolgozott dokumentumnál"
@@ -1395,6 +1403,7 @@ defaultLocaleLink = "Alapértelmezett területi beállítás konfigurálása"
 description = "Egy nyilatkozatot jelenít meg, amelyet a felhasználóknak bejelentkezés után el kell fogadniuk. A szöveg a felhasználó nyelvét követi."
 discardConfirm = "Nem mentett módosításai vannak, amelyek el fognak veszni. Ennek ellenére vált nyelvet?"
 editLabel = "Markdown"
+editPlaceholder = "## Címsor\n\nA felelősségkizárási szöveg..."
 emptyPreview = "Még nincs előnézet."
 language = "Nyelv"
 languageHelp = "Minden nyelvnek saját fájlja van. Ha egy felhasználó nyelvéhez nincs fájl, a megállapodás az alapértelmezett területi beállítás fájljára esik vissza, majd a tartalékszövegre."
@@ -1513,8 +1522,10 @@ label = "JWKS URL (optional)"
 placeholder = "Auto-discovered from issuer"
 
 [admin.settings.mcp.mode]
+apikey = "API key (Stirling felhasználónkénti kulcs)"
 description = "OAuth needs an external IdP. API key uses a Stirling per-user API key (X-API-KEY) - simplest for self-host."
 label = "Authentication mode"
+oauth = "OAuth 2.1 (külső IdP)"
 
 [admin.settings.mcp.requireAccount]
 description = "Only let tokens through if their subject maps to a provisioned, enabled Stirling user."
@@ -1931,6 +1942,14 @@ title = "Felhasználókezelés"
 [agents]
 stirling_name = "Stirling"
 
+[alphabetOptions]
+arabic = "Arab"
+chinese = "Kínai (egyszerűsített)"
+japanese = "Japán"
+korean = "Koreai"
+roman = "Latin"
+thai = "Thai"
+
 [analytics]
 learnMore = "További információ"
 paragraph1 = "A Stirling PDF opcionális analitikai adatgyűjtést kínál a termék fejlesztésének támogatásához. Nem gyűjtünk személyes információkat vagy fájltartalmakat."
@@ -2052,6 +2071,7 @@ week = "Hét"
 
 [audit.clearData]
 cancel = "Mégse"
+closeAlert = "Riasztás bezárása"
 codeDoesNotMatch = "A kód nem egyezik"
 codePlaceholder = "Írja be a kódot ide"
 confirmationCode = "Megerősítő kód"
@@ -2061,6 +2081,7 @@ confirmTitle = "Erősítse meg a törlést"
 deleteButton = "Törlés"
 enterCode = "Megerősítő kód"
 enterCodeBelow = "Adja meg a kódot pontosan a fentiek szerint (kis- és nagybetűk számítanak)"
+failed = "Nem sikerült törölni az auditadatokat"
 initiateDelete = "Összes adat törlése"
 irreversible = "VISSZAFORDÍTHATATLAN"
 success = "Siker"
@@ -2069,6 +2090,7 @@ warning1 = "Ez a művelet nem vonható vissza"
 warning2 = "Az auditadatok törlése véglegesen eltávolítja az összes korábbi auditnaplót, beleértve a biztonsági eseményeket, felhasználói aktivitásokat és fájlműveleteket az adatbázisból."
 
 [audit.error]
+loadStatus = "Nem sikerült betölteni az auditrendszer állapotát"
 title = "Hiba az audit rendszer betöltésekor"
 
 [audit.events]
@@ -2084,6 +2106,7 @@ fileHash = "Fájlhash"
 filterByType = "Szűrés típus szerint"
 filterByUser = "Szűrés felhasználó szerint"
 ipAddress = "IP-cím"
+loadFailed = "Nem sikerült betölteni az eseményeket"
 noEvents = "Nem találhatók események"
 startDate = "Kezdő dátum"
 timestamp = "Időbélyeg"
@@ -2124,6 +2147,7 @@ avgLatency = "Átlagos késleltetés"
 error = "Hiba a statisztikák betöltésekor"
 excellent = "Kiváló"
 good = "Jó"
+loadFailed = "Nem sikerült betölteni a statisztikákat"
 noData = "N/A"
 successRate = "Sikerarány"
 totalEvents = "Események összesen"
@@ -2158,13 +2182,27 @@ accessDenied = "Hozzáférés megtagadva"
 insufficientPermissions = "Nincs jogosultsága a művelet végrehajtásához."
 
 [auth.callback]
+alreadySignedIn = "Már be van jelentkezve! Átirányítás..."
+backToLogin = "Vissza a bejelentkezéshez"
 completing = "Hitelesítés befejezése"
+exchanging = "Hitelesítési kód cseréje..."
+failedWithReason = "A hitelesítés sikertelen: {{error}}"
 invalidToken = "OAuth bejelentkezés sikertelen – érvénytelen token."
 missingToken = "OAuth bejelentkezés sikertelen – nem érkezett token."
+noData = "Nem találhatók hitelesítési adatok"
 oauthFailed = "OAuth bejelentkezés sikertelen. Próbálja újra."
 pleaseWait = "Kérjük, várjon, amíg befejezzük a bejelentkezést."
+processing = "Hitelesítés feldolgozása..."
 signedOut = "Kijelentkezett. Kérjük, jelentkezzen be újra."
+signInFailed = "Nem sikerült befejezni a bejelentkezést: {{error}}"
+success = "Sikeres bejelentkezés! Átirányítás..."
+unknownError = "Ismeretlen hiba"
 windowMayClose = "A befejezés után bezárhatja ezt az ablakot."
+
+[auth.callback.title]
+default = "Hitelesítés"
+processing = "Bejelentkeztetés folyamatban"
+success = "Minden készen áll!"
 
 [auth.displayName]
 guest = "Vendég"
@@ -2317,6 +2355,7 @@ title = "Automatizálás importálása"
 unresolved = "Le nem képezett: {{ops}}"
 
 [automate.run]
+progress = "Folyamat: {{current}}/{{total}}"
 title = "Automatizálás futtatása"
 
 [automate.selection]
@@ -2466,6 +2505,7 @@ whatHappensNext = "Mi történik ezután?"
 
 [billing.portal]
 error = "Nem sikerült megnyitni a számlázási portált"
+errorFallback = "Próbálja újra, vagy lépjen kapcsolatba a támogatással."
 
 [bookletImposition]
 paperSizeNote = "A papírméret automatikusan az első oldal alapján kerül meghatározásra."
@@ -2513,6 +2553,9 @@ title = "Kézi duplex mód"
 [bookletImposition.rtlBinding]
 label = "Jobbról balra kötés"
 tooltip = "Arab, héber vagy más jobbról balra írt nyelvekhez"
+
+[bookletImposition.settings]
+title = "Beállítások"
 
 [bookletImposition.tooltip.advanced]
 bullet1 = "Jobbról balra kötés: Arab, héber vagy RTL nyelvekhez"
@@ -2582,6 +2625,8 @@ detail = "Kattintson vagy nyomja meg a Szóközt az új játékhoz"
 headline = "Minden kész"
 
 [bulkSelection]
+selectedPages_one = "Kiválasztva: {{count}} oldal ({{pages}})"
+selectedPages_other = "Kiválasztva: {{count}} oldal ({{pages}})"
 syntaxError = "Hiba a szintaxisban. Segítségért lásd az Oldalválasztási tippeket."
 
 [bulkSelection.advanced]
@@ -2802,6 +2847,7 @@ declineButton = "Elutasítás"
 deleteSelected = "Kiválasztott aláírás törlése"
 drawSignature = "Rajzolja le az aláírását lent"
 fileTooLarge = "A fájlméretnek 5 MB alatt kell lennie"
+fontBrushScript = "Brush Script MT (kurzív)"
 fontFamily = "Betűcsalád"
 fontSize = "Betűméret: {{size}}px"
 fontSizePlaceholder = "Méret"
@@ -2821,6 +2867,7 @@ removeImage = "Kép eltávolítása"
 savedSignatures = "Mentett aláírások"
 selectFile = "Képfájl kiválasztása"
 selectSignatureTitle = "Aláírás kiválasztása vagy létrehozása"
+signatureImageAlt = "Aláírás"
 signatureInfo = "Ezeket a beállításokat a dokumentum tulajdonosa állította be"
 signatureSettings = "Aláírás beállításai"
 signatureText = "Aláírás szövege"
@@ -3591,13 +3638,19 @@ confirm = "Megerősítés"
 continue = "Folytatás"
 copied = "Másolva!"
 copy = "Másolás"
+copyCode = "Kód másolása"
+dismiss = "Elvetés"
 done = "Kész"
 enterValue = "Enter value"
 error = "Hiba"
 expand = "Kibontás"
 filterEmpty = "Nincs mit szűrni"
+goToSlide = "Ugrás a(z) {{number}} diára"
 loading = "Betöltés..."
+moreInformation = "További információ"
 next = "Következő"
+noData = "Nincs adat"
+nOfTotal = "{{current}} / {{total}}"
 open = "Open"
 preview = "Előnézet"
 previous = "Előző"
@@ -3606,6 +3659,9 @@ remaining = "Hátralévő"
 retry = "Újra"
 save = "Mentés"
 search = "Keresés"
+settingsSections = "Beállítási szakaszok"
+showAllTotal = "Összes megjelenítése: {{total}}"
+showLess = "Kevesebb megjelenítése"
 stepOf = "Step {{current}} of {{total}}"
 
 [compare]
@@ -3617,6 +3673,7 @@ newLine = "új sor"
 pages = "Oldalak"
 tags = "különbség,kontraszt,változások,elemzés"
 title = "Összehasonlítás"
+workbenchLabel = "Összehasonlító nézet"
 
 [compare.actions]
 linkScroll = "Görgetés összekapcsolása"
@@ -3770,6 +3827,7 @@ title = "Tömörítési mód"
 desiredSize = "Kívánt fájlméret"
 desiredSizePlaceholder = "Méret megadása"
 desiredSizeUnit = "Size unit"
+title = "Beállítások"
 
 [compress.tooltip.description]
 text = "A tömörítés egyszerű módja a fájlméret csökkentésének. Válassza a Fájlméret lehetőséget a célméret megadásához, és mi ehhez igazítjuk a minőséget. Válassza a Minőség lehetőséget a tömörítés erősségének kézi beállításához."
@@ -3819,10 +3877,13 @@ title = "Fiókbeállítások"
 description = "Töltsön fel egy képet a fiókja személyre szabásához."
 help = "PNG, JPG vagy WebP legfeljebb 2 MB-ig."
 remove = "Eltávolítás"
+removeFailed = "Nem sikerült eltávolítani a profilképet"
 sizeError = "Kérjük, 2 MB-nál kisebb képet válasszon."
 switchedToCustom = "Egyéni képre váltott. Most feltöltheti a sajátját."
+switchFailed = "Nem sikerült egyéni képre váltani"
 title = "Profilkép"
 upload = "Feltöltés"
+uploadFailed = "Nem sikerült feltölteni a profilképet"
 useCustom = "Egyéni kép használata"
 usingProvider = "A(z) {{provider}} profilképét használja"
 
@@ -3836,6 +3897,7 @@ title = "Profilkép kivágása"
 zoom = "Nagyítás"
 
 [config.account.security]
+changeFailed = "Nem sikerült módosítani a jelszót"
 changePassword = "Jelszó módosítása"
 description = "Kezelje jelszavát és biztonsági beállításait."
 title = "Jelszavak és biztonság"
@@ -3846,11 +3908,15 @@ description = "Kapcsolja össze a fiókját, hogy megőrizze az előzményeket �
 email = "E-mail"
 emailPassword = "vagy adja meg e-mail címét és jelszavát"
 emailPlaceholder = "Adja meg e-mail címét"
+failed = "Nem sikerült frissíteni a fiókot"
+failedWithProvider = "Nem sikerült frissíteni a fiókot ezzel: {{provider}}"
 linkWith = "Összekapcsolás ezzel:"
+linkWithProvider = "Összekapcsolás ezzel: {{provider}}"
 password = "Jelszó (opcionális)"
 passwordNote = "Hagyja üresen, ha csak e-mailes ellenőrzést szeretne használni"
 passwordPlaceholder = "Jelszó beállítása"
 socialLogin = "Frissítés közösségi fiókkal"
+success = "A fiók sikeresen frissítve! Most már bejelentkezhet az e-mail-címével."
 title = "Vendégfiók frissítése"
 upgradeButton = "Fiók frissítése"
 
@@ -3960,10 +4026,10 @@ title = "A kérés nem érvényes"
 
 [connect.renewal]
 approve = "Bejelentkezés megújítása"
+currentOwnerRequired = "Jelentkezzen be a kapcsolt felhőcsapat jelenlegi tulajdonosaként a szerver bejelentkezésének megújításához. Ha a tulajdonjogot átruházták, használja az új tulajdonos fiókját."
 failed = "A bejelentkezést nem sikerült megújítani. Próbálja újra, vagy zárja be ezt az oldalt, és indítsa újra a szerveréről."
 lead = "Ez a szerver már kapcsolódik a fiókjához. Újítsa meg a bejelentkezését, hogy visszatérjen a szerverén lévő számlázáshoz és használathoz."
 title = "Szerverbejelentkezés megújítása"
-wrongAccount = "Ez a fiók nem tudja megújítani ennek a szervernek a bejelentkezését. Váltson arra a fiókra, amellyel eredetileg összekapcsolták a szervert. Ennek a fióknak továbbra is tulajdonolnia kell a kapcsolt csapatot."
 
 [convert]
 autoRotate = "Automatikus forgatás"
@@ -4009,6 +4075,7 @@ multiple = "Több"
 optimizeForEbook = "PDF optimalizálása e-könyv olvasókhoz (Ghostscript használatával)"
 output = "Kimenet"
 outputFormat = "Kimeneti formátum"
+pdfaAccessibleFormat = "{{format}} (akadálymentes)"
 pdfaDigitalSignatureWarning = "A PDF digitális aláírást tartalmaz. Ez a következő lépésben eltávolításra kerül."
 pdfaNote = "A PDF/A-1b kompatibilisebb, a PDF/A-2b több funkciót támogat."
 pdfaOptions = "PDF/A beállítások"
@@ -4068,6 +4135,24 @@ outputFormatDesc = "Válassza ki az e-könyv kimeneti formátumát"
 tabletPhone = "Tablet/Telefon (képekkel)"
 targetDevice = "Cél eszköz"
 targetDeviceDesc = "A felhasználói eszközhöz optimalizált kimeneti profil kiválasztása"
+
+[convert.formatGroups]
+archive = "Archívum"
+document = "Dokumentum"
+ebook = "eBook"
+email = "E-mail"
+file = "Fájl"
+image = "Kép"
+multipleFiles = "Több fájl"
+presentation = "Prezentáció"
+spreadsheet = "Táblázat"
+text = "Szöveg"
+web = "Web"
+
+[convert.formatOptions]
+any = "Bármely"
+images = "Képek"
+msgOutlook = "MSG (Outlook)"
 
 [cookieBanner.popUp]
 acceptAllBtn = "Elfogadom"
@@ -4161,6 +4246,12 @@ label = "Y pozíció"
 [crop.error]
 failed = "A PDF vágása sikertelen"
 
+[crop.pageNumbers]
+description = "Vágja körbe a kiválasztott területet adott oldalakon, vagy használja az 'all' értéket minden oldalhoz."
+error = "Érvénytelen oldalválasztás. Használja például: 1, 3, 5-8 vagy all."
+label = "Körbevágandó oldalak"
+placeholder = "pl. 1, 3, 5-8 vagy all"
+
 [crop.preview]
 title = "Vágási terület kiválasztása"
 
@@ -4183,16 +4274,11 @@ fileName = "Fájlnév"
 title = "Adatbázis importálás/exportálás"
 
 [defaultApp]
-setDefault = "Beállítás alapértelmezettként"
 title = "Beállítás alapértelmezett PDF-alkalmazásként"
 
 [defaultApp.error]
 message = "Nem sikerült beállítani az alapértelmezett PDF-kezelőt"
 title = "Hiba"
-
-[defaultApp.prompt]
-dontRemind = "Ne emlékeztessen újra"
-message = "Állítsa a Stirling PDF-et a PDF-fájlok megnyitásának alapértelmezett alkalmazásává."
 
 [defaultApp.settingsOpened]
 message = "Válassza a rendszerbeállításokban a Stirling PDF-et"
@@ -4201,6 +4287,17 @@ title = "Beállítások megnyitva"
 [defaultApp.success]
 message = "A Stirling PDF mostantól az alapértelmezett PDF-szerkesztő"
 title = "Alapértelmezett alkalmazás beállítva"
+
+[desktop.titleBar]
+maximize = "Maximalizálás"
+minimize = "Minimalizálás"
+restore = "Visszaállítás"
+
+[desktopBilling]
+description = "Kezelje a használatot és a számlázást a böngészőben. Jelentkezzen be ugyanazzal a Stirling-fiókkal, amelyet itt használ."
+open = "Használat és számlázás megnyitása a böngészőben"
+openFailed = "Nem sikerült megnyitni a Használat és számlázás oldalt. Ellenőrizze a kapcsolatot, és próbálja újra."
+selfHostedDescription = "Kezelje a használatot és a számlázást a kapcsolt szerveren a böngészőben. Jelentkezzen be a szervertulajdonosi fiókjával."
 
 [desktopFileLink]
 saveAs = "Mentés másként…"
@@ -4264,6 +4361,7 @@ tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,ident
 noItems = "No items available"
 noResults = "No results found"
 searchPlaceholder = "Keresés..."
+selectedCount = "{{count}} kiválasztva"
 selectLanguages = "Select languages"
 selectOption = "Select an option"
 
@@ -4274,6 +4372,7 @@ editSecretValue = "Titok értékének szerkesztése"
 [editTableOfContents]
 submit = "Tartalomjegyzék alkalmazása"
 tags = "bookmarks,contents,edit,table of contents,TOC,outline,navigation,chapters,sections,add bookmarks,edit bookmarks,PDF outline"
+workbenchLabel = "Vázlat munkaterület"
 
 [editTableOfContents.actions]
 clipboardUnavailable = "A vágólap-hozzáférés nem érhető el ebben a böngészőben."
@@ -4434,6 +4533,27 @@ closeFile = "Fájl bezárása"
 
 [fileEditor]
 addFiles = "Fájlok hozzáadása"
+closedFile = "{{name}} bezárva"
+couldNotSave = "Nem sikerült menteni: {{name}}"
+filesAdded_one = "{{count}} fájl hozzáadva"
+filesAdded_other = "{{count}} fájl hozzáadva"
+filesReordered_one = "Fájl átrendezve"
+filesReordered_other = "{{count}} fájl átrendezve"
+loadedFromStorage_one = "{{count}} fájl betöltve a tárhelyről"
+loadedFromStorage_other = "{{count}} fájl betöltve a tárhelyről"
+loadFromStorageFailed = "Nem sikerült néhány fájlt betölteni a tárhelyről"
+pinnedFile = "{{name}} rögzítve"
+processFilesFailed = "Nem sikerült feldolgozni a fájlokat"
+savedAndClosed = "{{name}} mentve és bezárva"
+saveFailed = "A mentés sikertelen"
+unpinnedFile = "{{name}} rögzítése feloldva"
+unzipping = "{{name}} kicsomagolása"
+
+[fileEditor.unzip]
+error = "Hiba {{name}} kicsomagolásakor"
+extracted_one = "{{count}} fájl kibontva innen: {{name}}"
+extracted_other = "{{count}} fájl kibontva innen: {{name}}"
+failed = "Nem sikerült kibontani a fájlokat innen: {{name}}"
 
 [fileManager]
 addToUpload = "Hozzáadás a feltöltéshez"
@@ -4450,6 +4570,7 @@ noFiles = "Nem állnak rendelkezésre fájlok"
 noFilesFound = "Nem található a keresésnek megfelelő fájl"
 openInFileEditor = "Megnyitás fájlszerkesztőben"
 openInPageEditor = "Megnyitás oldalszerkesztőben"
+reloadFiles = "Fájlok újratöltése"
 saveSelected = "Kijelöltek mentése"
 searchFiles = "Fájlok keresése..."
 share = "Megosztás"
@@ -4459,6 +4580,8 @@ sharedEditNoticeConfirm = "Értettem"
 sharedEditNoticeTitle = "Csak olvasható szerverpéldány"
 sharedWithYou = "Önnel megosztva"
 showAll = "Összes megjelenítése"
+showAllCount_one = "Összes megjelenítése ({{count}} fájl)"
+showAllCount_other = "Összes megjelenítése ({{count}} fájl)"
 sortBy = "Sort files"
 sortByDate = "Rendezés dátum szerint"
 sortByName = "Rendezés név szerint"
@@ -4495,6 +4618,11 @@ sources = "Fájlforrások"
 subtitle = "Válassz a könyvtáradból, vagy adj hozzá valami újat."
 title = "Fájlok hozzáadása"
 unsupported = "Ezt a fájltípust a kiválasztott eszköz nem támogatja."
+
+[filePreview]
+loadingThumbnail = "Bélyegkép betöltése..."
+locked = "Zárolva"
+previewOf = "{{name}} előnézete"
 
 [files]
 addFiles = "Fájlok hozzáadása"
@@ -4930,13 +5058,15 @@ title = "Fájl konvertálása PDF-be"
 [fileUpload]
 dropFilesHere = "Húzza ide a fájlokat, vagy kattintson a feltöltés gombra"
 dropFilesHereOpen = "Húzza ide a fájlokat, vagy kattintson a Megnyitás gombra"
-filesAvailable = "elérhető fájlok"
+filesAvailableCount_one = "{{count}} fájl elérhető"
+filesAvailableCount_other = "{{count}} fájl elérhető"
 loadFromStorage = "Betöltés tárhelyről"
 noFilesInStorage = "Nem érhetők el fájlok a tárhelyen. Először töltsön fel néhány fájlt."
 noFilesInStorageOpen = "Nincsenek fájlok a tárhelyen. Először nyisson meg néhány fájlt."
 open = "Megnyitás"
 openFile = "Fájl megnyitása"
 openFiles = "Fájlok megnyitása"
+selectedCount = "{{count}} kiválasztva"
 selectFile = "Select {{name}}"
 selectFromStorage = "Kiválasztás a tárhelyről"
 upload = "Feltöltés"
@@ -5028,6 +5158,7 @@ rescanFields = "Mezők újraolvasása"
 rescanFormFields = "Űrlapmezők újraolvasása"
 save = "Mentés"
 saveShortcut = "Ctrl+S a mentéshez"
+selectOptionPlaceholder = "— válasszon —"
 skippedEdits_one = "1 módosítást nem sikerült alkalmazni:"
 skippedEdits_other = "{{count}} módosítást nem sikerült alkalmazni:"
 skippedEditsTruncated = "További {{count}} nincs felsorolva."
@@ -5090,6 +5221,16 @@ tooltipHelp = "A PDF olvasóban akkor megjelenő tipp, amikor valaki a mező fö
 type = "Típus"
 typeHelp = "Milyen típusú ez a mező. A módosítása újraépíti a mezőt, ezért az aktuális értéke nem kerül átvitelre."
 
+[formFill.fieldTypes]
+button = "Gomb"
+checkbox = "Jelölőnégyzet"
+combobox = "Legördülő lista"
+listbox = "Listamező"
+radio = "Rádiógomb"
+radioGroup = "Rádiógombcsoport"
+signature = "Aláírás"
+text = "Szöveg"
+
 [formFill.mode]
 create = "Létrehozás"
 fill = "Kitöltés"
@@ -5107,11 +5248,16 @@ restore = "Visszaállítás"
 
 [formFill.sidebar]
 close = "Oldalsáv bezárása"
+empty = "Nem találhatók űrlapmezők ebben a PDF-ben"
+loading = "Űrlapmezők betöltése..."
+pageNumber = "{{page}}. oldal"
+title = "Űrlapmezők"
 
 [getPdfInfo]
 downloadJson = "JSON letöltése"
 downloads = "Letöltések"
 indexTitle = "Index"
+noData = "Nincs adat"
 noneDetected = "Nem található"
 noResults = "Futtassa az eszközt a jelentés létrehozásához."
 processing = "Információk kinyerése..."
@@ -5127,6 +5273,8 @@ noVerification = "Nem történt ellenőrzés"
 noVerificationDesc = "Ennél a dokumentumnál nem ellenőrizték a PDF-szabványoknak való megfelelést."
 passed = "Megfelelt"
 passedCount = "megfelelt"
+secCompliant = "A dokumentum megfelel a SEC EDGAR benyújtási követelményeinek"
+secNotCompliant = "A dokumentum nem felel meg a SEC EDGAR benyújtási követelményeinek"
 
 [getPdfInfo.error]
 partial = "Néhány fájlt nem sikerült feldolgozni."
@@ -5134,10 +5282,15 @@ unexpected = "Váratlan hiba a kinyerés során."
 
 [getPdfInfo.other]
 attachments = "Mellékletek"
+created = "Létrehozva: {{date}}"
 embeddedFiles = "Beágyazott fájlok"
+fileSizeBytes = "({{size}} bájt)"
 javaScript = "JavaScript"
 layers = "Rétegek"
+modified = "Módosítva: {{date}}"
 structureTree = "Struktúrafa"
+unnamedAttachment = "Névtelen melléklet"
+unnamedFile = "Névtelen fájl"
 xmp = "XMPMetadata"
 
 [getPdfInfo.perPage]
@@ -5147,6 +5300,7 @@ images = "Képek"
 links = "Hivatkozások"
 multimedia = "Multimédia"
 size = "Méret"
+unnamedImage = "Kép"
 xobjects = "XObject-ek száma"
 
 [getPdfInfo.report]
@@ -5675,6 +5829,7 @@ invalidEmail = "Érvénytelen e-mail cím"
 invalidInvitation = "Érvénytelen meghívó"
 invalidToken = "Érvénytelen meghívó hivatkozás"
 linkExpires = "A hivatkozás lejár"
+linkExpiresAt = "A link lejár: {{date}}, {{time}}"
 passwordMismatch = "A jelszavak nem egyeznek"
 passwordPlaceholder = "Adja meg a jelszavát"
 passwordRequired = "A jelszó megadása kötelező"
@@ -5689,6 +5844,7 @@ welcomeTitle = "Meghívták!"
 addFiles = "Fájlok hozzáadása"
 mobileUpload = "Feltöltés mobilról"
 openFromComputer = "Megnyitás a gépről"
+settingUpSession = "Munkamenet beállítása..."
 uploadFromComputer = "Feltöltés a számítógépről"
 
 [language]
@@ -5770,6 +5926,7 @@ sessionExpired = "A munkamenet lejárt. Kérjük, jelentkezzen be újra."
 signin = "Bejelentkezés"
 signingIn = "Bejelentkezés..."
 signInWith = "Bejelentkezés ezzel:"
+signInWithProvider = "Bejelentkezés ezzel: {{provider}}"
 title = "Bejelentkezés"
 unexpectedError = "Váratlan hiba: {{message}}"
 updatePassword = "Jelszó frissítése"
@@ -5811,6 +5968,9 @@ label = "Eltávolítja a digitális aláírást az egyesített fájlból?"
 description = "A fájlok egyesítése érvényteleníti a digitális aláírásokat. Jelölje be ezt, ha el kívánja távolítani őket a végső egyesített PDF-ből."
 title = "Digitális aláírás eltávolítása"
 
+[merge.settings]
+title = "Beállítások"
+
 [merge.sortBy]
 ascending = "Növekvő"
 dateModified = "Módosítás dátuma"
@@ -5819,6 +5979,9 @@ description = "A fájlok a kiválasztás sorrendjében lesznek egyesítve. Húz�
 filename = "Fájlnév"
 label = "Rendezés"
 sort = "Rendez"
+
+[merge.sortFiles]
+title = "Fájlok rendezése"
 
 [merge.tooltip.header]
 title = "Összefűzési beállítások áttekintése"
@@ -5867,6 +6030,7 @@ validating = "Munkamenet ellenőrzése..."
 
 [mobileSign]
 clear = "Clear"
+drawingArea = "Aláírás rajzolási területe"
 invalidSession = "Session expired"
 invalidSessionMessage = "This QR code is no longer valid. Open the Sign tool on your computer and scan the new code."
 penSizeLabel = "Pen size"
@@ -5882,6 +6046,7 @@ validating = "Checking session…"
 fromGallery = "From gallery"
 hint = "Photograph a signature on white paper, or choose an existing image."
 invalidType = "Please choose an image file."
+previewAlt = "Aláírás"
 takePhoto = "Take a photo"
 
 [mobileSign.tab]
@@ -5993,6 +6158,9 @@ profile = "See your basic profile information"
 desc = "Szkennelt dokumentumok tisztítása és szövegfelismerés képekből, majd visszaadása szerkeszthető szövegként"
 tags = "felismerés,szöveg,kép,szkennelés,olvasás,azonosítás,észlelés,szerkeszthető"
 title = "OCR / Szkennelés tisztítása"
+
+[ocr.advanced]
+title = "Speciális"
 
 [ocr.error]
 failed = "Az OCR művelet meghiúsult"
@@ -6118,9 +6286,9 @@ title = "Stirling letöltése asztali gépre"
 description = "Működjön együtt a csapatával"
 title = "Csapattagok meghívása"
 
-[onboarding.checklist.shareAnalytics]
-description = "Segítsen a Stirling fejlesztésében"
-title = "Anonim használati adatok megosztása"
+[onboarding.checklist.setDefaultApp]
+description = "PDF-fájlok megnyitása a Stirling PDF-ben"
+title = "Legyen a Stirling az alapértelmezett"
 
 [onboarding.checklist.takeTour]
 description = "Nézze meg egy gyors bemutatóban, hogyan működik a Stirling"
@@ -6188,6 +6356,7 @@ message = "Az alkalmazás nemrég jelentős változásokon ment keresztül. Elő
 roleAdmin = "Admin"
 rolePlaceholder = "Erősítse meg a szerepkörét"
 roleUser = "Felhasználó"
+title = "Biztonsági ellenőrzés"
 
 [onboarding.serverLicense]
 freeBody = "Az <strong>Open-Core</strong> licencünk ingyenesen tartalmazza az <strong>OAuth SSO</strong> funkciót és legfeljebb <strong>{{freeTierLimit}}</strong> felhasználót. A zavartalan bővüléshez a Stirling Team csomagot ajánljuk — <strong>100 felhasználó</strong> havi 99 dollárért."
@@ -6276,16 +6445,93 @@ title = "Rávetítési fájlok"
 text = "Az Előtér a rávetítést az oldal tetejére helyezi. A Háttér mögé helyezi."
 title = "Rávetítés pozíciója"
 
+[ownership]
+acceptInvite = "Létrehozhatnak egy fiókot vagy bejelentkezhetnek, majd elfogadhatják a meghívást."
+accessUpdated = "A tulajdonosi hozzáférésük készen áll."
+accountLinkDisabled = "A szerver továbbra is rendelkezik felhőkapcsolattal, de a fiók-összekapcsolás ki van kapcsolva. Kérje meg a szerver üzemeltetőjét, hogy engedélyezze a fiók-összekapcsolást, majd folytassa ezt az átruházást, vagy szüntesse meg a szerver összekapcsolását a beállításokban."
+anotherTeam = "Már egy másik csapatban van?"
+billing = "Az előfizetés, a pénztárca, a fizetési mód és a meglévő licencek változatlanok maradnak. A számlázási kapcsolattartási adatok nem módosulnak automatikusan."
+billingDetails = "Számlázási adatok"
+billingUnchanged = "Az előfizetés és a számlázás változatlan marad"
+bothDone = "A szerver és a felhő tulajdonjoga most már összehangolt."
+cancel = "Átruházás megszakítása"
+check = "Újraellenőrzés"
+checkAccount = "Fiók ellenőrzése"
+chooseEmail = "Válassza ki a fiókjukat itt: {{team}}, vagy adjon meg egy e-mail-címet a meghíváshoz."
+close = "Átruházási párbeszédpanel bezárása"
+cloudAccount = "Stirling-fiók"
+cloudScopeStyled = "<user>{{name}}</user> fogja kezelni ezt: {{team}}, valamint a tagokat és a számlázást."
+cloudTargetChanged = "Válasszon másik felhőtagot. Ez a fiók már nem jogosult az átadásra."
+confirm = "Megértem a hozzáférési és tulajdonjogi változásokat."
+done = "Tulajdonjog átruházva"
+error = "Nem sikerült befejezni ezt a lépést. Ellenőrizze, hogy a címzett aktív-e, és a szerver csatlakozik-e, majd ellenőrizze újra. A függőben lévő átruházás itt folytatható."
+finish = "Szerver átruházásának befejezése"
+inProgress = "Egy másik címzettnél már függőben van egy átruházás. Zárja be ezt a párbeszédpanelt, és folytassa a Felhasználók részből."
+instances = "Ennek a csapatnak {{count}} kapcsolt szervere van. A felhőbeli számlázásuk ennél a csapatnál marad; a többi szerver helyi tulajdonosa nem változik."
+invitationSent = "Meghívó elküldve"
+invite = "Meghívó küldése"
+inviteAddress = "<account>{{email}}</account> meghívása ide: {{team}}."
+inviteBlocked = "A meghívót nem sikerült elküldeni. Ellenőrizze az elérhető csapathelyeket, és hogy a címzettnek van-e már fizetős előfizetése."
+linkChanged = "A szerver felhőkapcsolata megváltozott. Kérje meg a szerver üzemeltetőjét, hogy állítsa vissza az eredeti kapcsolatot a folytatás előtt."
+linkedServerCount = "{{count}} kapcsolt szerver"
+linkRevoked = "A szerver felhőkapcsolata már nem érvényes. Szakítsa meg az átruházást, majd csatlakoztassa újra a Stirling-fiókját a beállításokban. A tulajdonjog nem változik."
+localScope = "Ők lesznek a szerver tulajdonosai, és kezelik a számlázást és a felhőkapcsolatokat. Ön megtartja a rendszergazdai hozzáférést, de elveszíti a hozzáférést ezekhez a beállításokhoz."
+membershipDetails = "Csapattagsági adatok"
+membershipFirst = "Csatlakozniuk kell a csapathoz, mielőtt megerősítheti az átruházást."
+membershipRequired = "A címzettnek csatlakoznia kell ehhez a felhőcsapathoz, mielőtt a tulajdonjog átruházható. Kérje meg, hogy fogadja el a meghívást, majd ellenőrizze újra."
+newOwnerLabel = "Új tulajdonos"
+newOwnerStyled = "<user>{{name}}</user> mostantól a tulajdonos."
+noEmailMatches = "Nincsenek egyező tagok. Adjon meg egy e-mail-címet a meghíváshoz."
+otherTeam = "Ha egy másik csapathoz tartoznak, az elfogadás áthelyezheti a fiókjukat. Előfordulhat, hogy előbb rendezni kell egy fizetős fiókot vagy egy másik csapat tulajdonjogát. Nem helyezzük át az előfizetésüket, és nem egyesítünk csapatokat."
+ownerChanged = "A felhő tulajdonjoga megváltozott az átruházás megkezdése után. Szakítsa meg ezt az átruházást, és kezdje újra a jelenlegi felhőtulajdonossal."
+ownerRequired = "Jelentkezzen be a jelenlegi felhőcsapat-tulajdonosként, majd próbálja újra ezt a lépést."
+partialError = "A felhő tulajdonjoga átruházásra került. Fejezze be a szerver átruházását, hogy a két tulajdonos összehangolt maradjon."
+partialTargetChanged = "Állítsa vissza a kiválasztott szerverfelhasználó hozzáférését és eredeti fiókadatait, majd fejezze be a szerver átruházását. A felhő tulajdonjoga már átruházásra került."
+pending = "Függőben van a tulajdonjog átruházása erre: {{name}}."
+personalTeam = "Személyes csapatok nem ruházhatják át a tulajdonjogot."
+prepareHelp = "A címzettnek el kell végeznie az első szerveres bejelentkezését. Itt újrapróbálhatja, vagy visszatérhet a Felhasználókhoz, hogy valaki mást válasszon."
+resume = "Átruházás folytatása"
+searchEmail = "E-mail keresése vagy megadása"
+serverAccount = "Szerverfiók"
+serverDetails = "Kapcsolt szerver adatai"
+signIn = "Bejelentkezés a felhőbe"
+startFromInstanceBody = "Ennek a csapatnak kapcsolt szerverei vannak. A saját üzemeltetésű szerveren nyissa meg a Beállítások → Felhasználók részt, és módosítsa a címzett szerepét Org Owner szerepre. Ez a folyamat a szerver átruházásának befejezése előtt átruházza a felhő tulajdonjogát."
+startFromInstanceTitle = "Indítás a saját üzemeltetésű szerverről"
+stayOwner = "Az átruházásig Ön marad a tulajdonos."
+targetChanged = "A címzett fiókja megváltozott. Állítsa vissza a hozzáférését, vagy szakítsa meg ezt az átruházást, és válassza ki újra."
+title = "Tulajdonjog átruházása"
+transfer = "Tulajdonjog átruházása"
+waitingForEmail = "Várakozás arra, hogy {{email}} csatlakozzon ehhez: {{team}}."
+working = "Tulajdonjog ellenőrzése és frissítése..."
+yourCloudAccess = "Csapattaggá válik, és elveszíti a tulajdonosi hozzáférést."
+
 [pageEdit]
 deselectAll = "Kijelölés megszüntetése"
 selectAll = "Összes kijelölése"
 
 [pageEditor]
+dragPreviewAlt = "Húzás"
+filePosition = "Pozíció: {{position}}"
+pageLabel = "{{page}}. oldal"
 title = "Oldalszerkesztő"
+
+[pageEditor.actions]
+deletePage = "Oldal törlése"
+insertFileAfter = "Fájl beszúrása utána"
+moveLeft = "Mozgatás balra"
+moveRight = "Mozgatás jobbra"
+rotateLeft = "Forgatás balra"
+rotateRight = "Forgatás jobbra"
+splitAfter = "Felosztás utána"
 
 [pageEditor.emptyState]
 body = "Adjon hozzá fájlokat az oldalak szerkesztésének megkezdéséhez"
 title = "Nincsenek betöltve PDF-fájlok"
+
+[pageEditor.fileDropdown]
+addFile = "Fájl hozzáadása"
+selectedCount = "{{selected}}/{{total}} fájl kiválasztva"
+untitled = "Névtelen"
 
 [pageEditor.toolbar]
 delete = "Kijelöltek törlése"
@@ -6391,6 +6637,11 @@ portrait = "Álló"
 label = "Olvasási irány:"
 ltr = "Balról jobbra"
 rtl = "Jobbról balra"
+
+[pageLayout.steps]
+advanced = "Speciális beállítások"
+layout = "Elrendezési beállítások"
+marginsBorders = "Margók és szegélyek"
 
 [pageLayout.tooltip.header]
 title = "Oldalelrendezés súgó"
@@ -6712,6 +6963,7 @@ teamChangeUnavailable = "Az ütemezett Team módosításokat nem sikerült betö
 teamPending = "A Team vásárlásod még feldolgozás alatt áll. Frissítsd hamarosan ezt az oldalt."
 teamProcessing = "Team vásárlás feldolgozása"
 teamScheduled = "A Team módosításod erre a dátumra van ütemezve: {{date}}. A jelenlegi kapacitásod addig aktív marad."
+unknownError = "Ismeretlen hiba történt"
 upgradeComplete = "Frissítés kész"
 upgradeCompleteMessage = "Az előfizetés sikeresen frissült. A meglévő licenckulcs frissítve lett."
 upgradeSuccess = "Sikeres fizetés! Az előfizetése frissült. A licenc frissítve lett a szerverén. Hamarosan visszaigazoló e-mailt kap."
@@ -6766,6 +7018,14 @@ selectedMonthly = "Havi"
 selectedYearly = "Éves"
 selectMonthly = "Havi kiválasztása"
 selectYearly = "Éves kiválasztása"
+
+[payment.priceDisplay]
+basePrice = "Alapár"
+perPeriod = "/{{period}}"
+perSeat = "Helyenként"
+perSeatPeriod = "/hely/{{period}}"
+totalSeats_one = "Összesen ({{count}} hely)"
+totalSeats_other = "Összesen ({{count}} hely)"
 
 [payment.upgradeTeam]
 title = "Frissítés Team csomagra"
@@ -6985,6 +7245,10 @@ save = "Mentés"
 style = "Stílus"
 tapToPlace = "Koppintson arra a helyre az oldalon, ahová a szöveg kerüljön"
 unlock = "Feloldás"
+
+[pdfTextEditor.pageView]
+pageNumber = "{{page}}. oldal"
+renderFailed = "Nem sikerült renderelni az oldalt"
 
 [pdfTextEditor.password]
 cancel = "Mégse"
@@ -7212,6 +7476,7 @@ title = "Folyamat"
 contact = "Kapcsolat"
 current = "Jelenlegi csomag"
 featureComparison = "Funkció-összehasonlítás"
+fetchError = "Nem sikerült lekérni az árazási adatokat"
 from = "Ettől"
 hideComparison = "Funkció-összehasonlítás elrejtése"
 licensedSeats = "Licencelve: {{count}} hely"
@@ -7227,6 +7492,8 @@ withServer = "+ Szervercsomag"
 [plan.api]
 large = "5,000 kredit"
 medium = "1,000 kredit"
+perCredit = "{{price}} kreditenként"
+perCreditWithDiscount = "{{price}} kreditenként • {{discount}}% kedvezmény"
 small = "500 kredit"
 xsmall = "100 kredit"
 
@@ -7302,14 +7569,9 @@ upToFiveUsers = "Legfeljebb 5 felhasználó"
 usageTrackingPrometheus = "Használatkövetés és Prometheus"
 usersIncluded = "100 felhasználó benne foglaltatik"
 
-[plan.licenseWarning]
-body = "{{total}} felhasználója van, de az ingyenes szint szerverenként csak {{limit}}-et támogat. Frissítsen, hogy a Stirling PDF zavartalanul működjön."
-cta = "Csomagok megtekintése"
-overLimit = "több mint {{limit}}"
-title = "Elérte az önhostolt ingyenes korlátot"
-
 [plan.period]
 month = "hónap"
+year = "év"
 
 [plan.pro]
 highlight1 = "Korlátlan eszközhasználat"
@@ -7435,6 +7697,9 @@ pdfa-1 = "PDF/A-1b"
 pdfa-2b = "PDF/A-2b"
 pdfa-3b = "PDF/A-3b"
 
+[portal.accountLink]
+ownerRequired = "Csak a szervezet tulajdonosa kapcsolhatja össze vagy választhatja le ezt a szervert."
+
 [portal.accountLink.card]
 billingNote = "A felügyelet nélküli feldolgozás költsége a szervezeti tárcát terheli."
 connectDescription = "Csatlakoztasd ezt a szervert, hogy a csapatod feldolgozási keretét használd a Stirling Cloudban."
@@ -7556,6 +7821,7 @@ identity = "Stirling-fiók"
 linkTitle = "Stirling-fiók összekapcsolása"
 noAuthorizeUrl = "A Stirling nem adott vissza folytatási helyet. Próbálja újra később."
 startFailed = "Nem sikerült elérni a Stirlinget a kapcsolat indításához. Ellenőrizze a szerver kimenő hálózati hozzáférését, majd próbálja újra."
+transferPending = "Egy tulajdonjog-átruházás függőben van. Lépjen a Beállítások → Felhasználók részre a befejezéshez vagy megszakításhoz, majd próbálja újra az összekapcsolást."
 
 [portal.accountLink.modal.loginNotConfigured]
 after = "az alkalmazáson belüli összekapcsolás engedélyezéséhez a hosztolt Stirling-fiókkal."
@@ -9441,6 +9707,7 @@ labelId = "Címke ID"
 labelIdHelp = "A címke GUID-ja a Purview portálról. A címke alkalmazása metaadatokat ír a PDF-re; titkosítani nem tud, ahhoz a Microsoft kliens szükséges."
 labelName = "Címke neve (opcionális)"
 labelNameHelp = "Az ID mellett rögzítve, hogy az emberek és eszközök felismerjék a címkét."
+labelNamePlaceholder = "Bizalmas"
 
 [portal.policies.config.purview.fields.method]
 help = "A Purview megkülönbözteti a házirend által alkalmazott címkét attól, amelyet egy személy választott."
@@ -10425,31 +10692,6 @@ unlimited = "{{used}} · Korlátlan"
 [printFile]
 title = "Fájl nyomtatása"
 
-[processingFolders.downloads]
-approve = "Letöltések feldolgozása"
-cancelSweep = "Mégse"
-capped = "{{found}} PDF található; az első {{limit}} most feldolgozásra kerül, a többi pedig ezután következik."
-close = "Kész"
-explain_one = "A Stirling osztályozni tudja a Letöltések mappában már meglévő {{count}} PDF-et, és itt megnyitja az eredményeket."
-explain_other = "A Stirling osztályozni tudja a Letöltések mappában már meglévő {{count}} PDF-et, és itt megnyitja az eredményeket."
-failed = "Nem sikerült beállítani. A fájljai nem módosultak."
-finished_one = "{{count}} fájl osztályozva, és közülük {{opened}} itt megnyitva, készen a munkára."
-finished_other = "{{count}} fájl osztályozva, és közülük {{opened}} itt megnyitva, készen a munkára."
-nothingNew_one = "Nincs új feldolgoznivaló – ez a {{count}} fájl már átment a feldolgozáson."
-nothingNew_other = "Nincs új feldolgoznivaló – ez a {{count}} fájl már átment a feldolgozáson."
-notModified = "A Letöltések mappában lévő fájljai nem módosulnak – a Stirling beolvassa őket, és itt megnyitja."
-notNow = "Most nem"
-progressCounts = "{{total}} feldolgozva"
-someFailed_one = "{{count}} nem dolgozható fel, és érintetlen maradt."
-someFailed_other = "{{count}} nem dolgozható fel, és érintetlen maradt."
-stillRunning = "Néhány fájl feldolgozása még folyamatban van a háttérben."
-title = "Rendezi a Letöltések mappát?"
-trigger_one = "{{count}} PDF feldolgozása a Letöltések mappában"
-trigger_other = "{{count}} PDF feldolgozása a Letöltések mappában"
-typesFound_one = "{{count}} dokumentumtípus található"
-typesFound_other = "{{count}} dokumentumtípus található"
-working = "Feldolgozás ..."
-
 [processingFolders.setup]
 addFolder = "Mappa hozzáadása"
 advancedSteps = "Ez a mappa olyan feldolgozási beállítást használ, amelyet ez a varázsló nem tud szerkeszteni. A mentett lépései nem módosultak."
@@ -10527,6 +10769,10 @@ label = "Kliensazonosító"
 [provider.googledrive.enabled]
 description = "Lehetővé teszi a felhasználóknak, hogy közvetlenül a Google Drive-ból importáljanak fájlokat"
 label = "Google Drive fájlválasztó engedélyezése"
+
+[provider.googledrive.errors]
+notConfigured = "A Google Drive nincs konfigurálva"
+pickerFailed = "Nem sikerült megnyitni a Google Drive választót"
 
 [provider.oauth2.generic]
 name = "Általános OAuth2"
@@ -10775,6 +11021,7 @@ applyWarning = "⚠️ Végleges alkalmazás, nem vonható vissza, és az alatta
 colorLabel = "Kitakarás színe"
 controlsTitle = "Kézi kitakarás vezérlők"
 instructions = "Jelöljön meg szöveget vagy rajzoljon területeket a PDF-en a kitakarandó tartalom megjelöléséhez."
+notImplemented = "A kézi kitakarási felület itt lesz elérhető, amikor elkészül."
 title = "Kitakaró eszközök"
 
 [redact.modeSelector]
@@ -11102,6 +11349,9 @@ failed = "Hiba történt a PDF forgatása közben."
 [rotate.preview]
 title = "Forgatás előnézete"
 
+[rotate.settings]
+title = "Beállítások"
+
 [rotate.tooltip.controls]
 text = "A forgatás gombjaival állíthatja a tájolást. A bal gomb ellentétesen, a jobb gomb megegyezően forgat. Minden kattintás 90 fokkal forgat."
 title = "Vezérlők"
@@ -11119,6 +11369,16 @@ hideSmallLabels = "Kis címkék elrejtése"
 physicalValues = "Fizikai"
 scaled = "Méretezett"
 showAllLabels = "Összes címke megjelenítése"
+
+[ruler.units]
+cm = "Centiméter (cm)"
+ft = "Láb (ft)"
+in = "Hüvelyk (in)"
+km = "Kilométer (km)"
+m = "Méter (m)"
+mi = "Mérföld (mi)"
+mm = "Milliméter (mm)"
+yd = "Yard (yd)"
 
 [sanitize]
 desc = "Potenciálisan ártalmas elemek eltávolítása PDF fájlokból."
@@ -11184,6 +11444,7 @@ calibrationPaperDistance = "Mért oldaltávolság: {{distance}}"
 calibrationTitle = "Méretarány kalibrálása"
 calibrationTooltip = "Mérjen meg egy ismert távolságot a méretarány automatikus kiszámításához"
 customScale = "Egyéni méretarány"
+customUnit = "{{unit}} (egyéni)"
 noneSet = "Nincs beállítva egyéni méretarány"
 presets = "Előre beállított méretarányok"
 ratio = "Méretarány"
@@ -11207,6 +11468,9 @@ title = "Kinyert képek"
 
 [scannerImageSplit.error]
 failed = "Hiba történt a képbeolvasások kinyerése közben."
+
+[scannerImageSplit.settings]
+title = "Beállítások"
 
 [scannerImageSplit.tooltip]
 headsUp = "Figyelem"
@@ -11274,6 +11538,9 @@ general = "Általános"
 limits = "Korlátok és teljesítmény"
 models = "Modellek és szolgáltatók"
 title = "AI"
+
+[settings.billing]
+title = "Számlázás"
 
 [settings.configuration]
 advanced = "Speciális"
@@ -11348,8 +11615,6 @@ defaultPdfEditor = "Alapértelmezett PDF-szerkesztő"
 defaultPdfEditorActive = "A Stirling PDF az alapértelmezett PDF-szerkesztő"
 defaultPdfEditorChecking = "Ellenőrzés..."
 defaultPdfEditorInactive = "Más alkalmazás van alapértelmezettként beállítva"
-defaultPdfEditorRemind = "Emlékeztessen, hogy alapértelmezettként állítsam be"
-defaultPdfEditorRemindDescription = "Banner megjelenítése, ha a Stirling PDF nem az alapértelmezett PDF-alkalmazása."
 defaultPdfEditorSet = "Már alapértelmezett"
 defaultStartupView = "Alapértelmezett nézet indításkor"
 defaultStartupViewDescription = "Válassza ki, melyik lap legyen aktív a bal oldali oszlopban az alkalmazás indításakor"
@@ -11618,6 +11883,15 @@ people = "Felhasználók"
 teams = "Csapatok"
 title = "Munkaterület"
 
+[setup.error]
+loginIncomplete = "Nem sikerült befejezni a bejelentkezést"
+noSaasServer = "Nincs konfigurálva SaaS szerver"
+noServer = "Nincs konfigurálva szerver"
+saasLoginFailed = "SaaS bejelentkezés sikertelen"
+saasLoginIncomplete = "Nem sikerült befejezni a SaaS bejelentkezést"
+selfHostedLoginFailed = "Saját üzemeltetésű bejelentkezés sikertelen"
+signupIncomplete = "Nem sikerült befejezni a regisztrációt"
+
 [setup.login]
 connectingTo = "Kapcsolódás ehhez:"
 oauthPending = "Böngésző megnyitása hitelesítéshez..."
@@ -11661,6 +11935,7 @@ configFetchError = "Nem sikerült lekérni a szerver konfigurációját: {{error
 emptyUrl = "Adjon meg egy szerver URL-t"
 invalidUrl = "Érvénytelen URL-formátum. Adjon meg egy érvényes URL-t, például https://your-server.com"
 testFailed = "A kapcsolat tesztje sikertelen"
+unknown = "Ismeretlen hiba"
 unreachable = "Nem sikerült kapcsolódni a szerverhez"
 
 [setup.server.error.securityDisabled]
@@ -11769,6 +12044,7 @@ canvas = "Miután megrajzolta az aláírását a vásznon, zárja be a modált, 
 image = "Miután feltöltötte a fenti aláírásképet, kattintson bárhová a PDF-ben az elhelyezéshez."
 noSignature = "Hozzon létre fent egy aláírást az elhelyezési eszközök engedélyezéséhez."
 paused = "Elhelyezés szüneteltetve"
+placeAnnotation = "Kattintson bárhová a PDF-en a megjegyzés elhelyezéséhez."
 resumeHint = "Folytassa az elhelyezést, majd kattintson az aláírás hozzáadásához."
 saved = "Válasszon ki fent egy mentett aláírást, majd kattintson a PDF bármely pontjára az elhelyezéshez."
 text = "Miután megadta a nevét fent, kattintson bárhová a PDF-ben az aláírás elhelyezéséhez."
@@ -11922,7 +12198,9 @@ signUpWith = "Sign up with"
 skip = "Skip"
 subtitle = "Csatlakozzon a Stirling PDF-hez a kezdéshez"
 title = "Fiók létrehozása"
+unableToAccessTool = "Nem lehet hozzáférni az eszközhöz: {{error}}"
 unexpectedError = "Váratlan hiba: {{message}}"
+unknownError = "Ismeretlen hiba"
 
 [sizes]
 large = "Nagy"
@@ -11995,6 +12273,14 @@ rightToLeft = "Felosztás jobbról balra"
 [split.poster.pageSize]
 description = "A kimeneti oldalak mérete nyomtatáshoz"
 label = "Céloldal-méret"
+
+[split.poster.pageSize.options]
+a3 = "A3 (297 × 420 mm)"
+a4 = "A4 (210 × 297 mm)"
+a5 = "A5 (148 × 210 mm)"
+legal = "Legal (8.5 × 14 in)"
+letter = "Letter (8.5 × 11 in)"
+tabloid = "Tabloid (11 × 17 in)"
 
 [split.poster.xFactor]
 description = "Az egyes oldalak felosztásához használt oszlopok száma"
@@ -12267,6 +12553,7 @@ confirmCancelInvite = "Biztosan visszavonja ezt a meghívást?"
 confirmLeave = "Biztosan elhagyja ezt a csapatot?"
 confirmLeaveLeader = "Csapatvezetőként a távozás eltávolítja Önt a csapatból. Biztos benne?"
 confirmRemove = "Biztosan eltávolítja ezt a tagot?"
+currentUnavailable = "Nem sikerült azonosítani a jelenlegi csapatát. Próbálja újra, vagy lépjen kapcsolatba a támogatással, ha ez továbbra is fennáll."
 editName = "Csapatnév szerkesztése"
 inviteCancelled = "Meghívás visszavonva"
 inviteError = "Nem sikerült elküldeni a meghívást"
@@ -12292,10 +12579,8 @@ renameCancel = "Átnevezés megszakítása"
 renameError = "Nem sikerült átnevezni a csapatot"
 renameSubmit = "Csapatnév mentése"
 renameSuccess = "Csapat sikeresen átnevezve"
-transferBody = "Legyen {{email}} a csapattulajdonos? Ő fogja kezelni a csapattagságot és a szervezeti számlázási beállításokat. Ön taggá válik. A csapat előfizetése és pénztárcája a csapatnál marad."
 transferError = "A tulajdonjogot nem sikerült átadni. Frissítse a csapatot, és próbálja újra."
 transferSuccess = "A csapat tulajdonjoga átadva. Az Ön szerepköre mostantól tag."
-transferTitle = "Csapattulajdonjog átadása"
 
 [team.invitationBanner]
 acceptButton = "Elfogadás"
@@ -12396,6 +12681,10 @@ WORD = "Word-dokumentum"
 XML = "XML-fájl"
 XPS = "XPS-dokumentum"
 ZIP = "ZIP-archívum"
+
+[toolLoading]
+generic = "Eszköz betöltése..."
+named = "{{toolName}} betöltése..."
 
 [toolPanel]
 alpha = "Alfa"
@@ -12501,6 +12790,8 @@ stable = "STABLE"
 updateAvailable = "Frissítés elérhető"
 urgentUpdateAvailable = "Sürgős frissítés"
 version = "Verzió"
+versionCount_one = "{{count}} verzió"
+versionCount_other = "{{count}} verzió"
 versionHistory = "Verziótörténet"
 viewGuide = "Útmutató megnyitása"
 whatsNewIn = "Újdonságok ebben"
@@ -12528,6 +12819,7 @@ title = "URL konvertálása PDF-be"
 aboutUsageAnalytics = "A használati analitikáról"
 configureSettings = "Analitika beállításainak módosítása"
 error = "Hiba a használati statisztikák betöltésekor"
+loadFailed = "Nem sikerült betölteni a használati statisztikákat"
 noData = "Nem áll rendelkezésre adat"
 noDataMessage = "Jelenleg nem érhetők el használati statisztikák."
 usageAnalyticsExplanation = "A használati analitika a végpontkéréseket és az eszközhasználati mintákat követi. Az Audit naplózási irányítópulttal együtt teljes rálátást ad a rendszer aktivitására, teljesítményére és biztonsági eseményeire."
@@ -12591,7 +12883,6 @@ removeTeam = "Eltávolítás a csapatból"
 rename = "Csapat átnevezése"
 resetPw = "Jelszó visszaállítása"
 suspend = "Felfüggesztés"
-transferOwnership = "Tulajdonjog átadása"
 unlock = "Fiók zárolásának feloldása"
 
 [users.activity]
@@ -12631,8 +12922,6 @@ disableMfaTitle = "MFA visszaállítása"
 removeBody = "Véglegesen eltávolítja {{name}} felhasználót a szervezetből? Ez nem vonható vissza."
 removeTeamBody = "Eltávolítja {{name}} személyt a csapatból? A fiókja megmarad, de elveszíti a hozzáférést a csapat erőforrásaihoz."
 removeTitle = "Tag eltávolítása"
-transferOwnershipBody = "Legyen {{name}} a szervezet tulajdonosa? Adminná válik. Ön továbbra is admin marad, de elveszíti a tulajdonjogot. Csak az új tulajdonos vagy a szerver üzemeltetője adhatja vissza."
-transferOwnershipTitle = "Szervezeti tulajdonjog átadása"
 
 [users.empty]
 description = "Hívja meg csapatát az együttműködés megkezdéséhez."
@@ -12825,6 +13114,7 @@ signaturesInvalid = "{{count}} érvénytelen"
 signaturesUnverified_one = "{{count}} ellenőrzést igényel"
 signaturesUnverified_other = "{{count}} ellenőrzést igényel"
 signaturesValid = "{{count}} teljesen érvényes"
+thumbnailAlt = "{{fileName}} bélyegképe"
 title = "Aláírás-ellenőrzési jelentés"
 
 [validateSignature.report.fields]
@@ -12862,6 +13152,7 @@ lastPage = "Utolsó oldal"
 loadingEngine = "PDF Engine betöltése..."
 moreOptions = "Továbbiak"
 nextPage = "Következő oldal"
+noPdfProvided = "Nincs megadva PDF"
 onlyPdfSupported = "A megjelenítő csak PDF fájlokat támogat. Úgy tűnik, ez a fájl más formátumú."
 pageNavigation = "Oldalnavigáció"
 previousPage = "Előző oldal"
@@ -12899,8 +13190,17 @@ collapseAll = "Összes könyvjelző összecsukása"
 editorOnly = "A dokumentum könyvjelzői csak a szerkesztőben szerkeszthetők."
 empty = "No bookmarks in this document"
 expandAll = "Összes könyvjelző kibontása"
+loadFailed = "Nem sikerült betölteni a könyvjelzőket"
+loading = "Könyvjelzők betöltése..."
+noDocument = "Nyisson meg egy PDF-et a könyvjelzői megtekintéséhez."
+noSearchResults = "Nincs a keresésnek megfelelő könyvjelző"
+openEditor = "Át kell rendezni vagy egymásba ágyazni? Nyissa meg a Könyvjelzőszerkesztőt"
+pageLabel = "Oldal"
+pageNumber = "{{page}}. oldal"
+saveFailed = "Nem sikerült menteni a könyvjelzőt"
 searchPlaceholder = "Könyvjelzők keresése"
 title = "Bookmarks"
+untitled = "Névtelen"
 
 [viewer.comments]
 addComment = "Megjegyzés hozzáadása"
@@ -12948,16 +13248,26 @@ unsavedDesc = "Mentetlen módosításai vannak"
 
 [viewer.layers]
 closeSidebar = "Rétegek oldalsávjának bezárása"
+empty = "Ennek a dokumentumnak nincsenek rétegei."
 hideAll = "Összes réteg elrejtése"
+loadFailed = "Nem sikerült betölteni a rétegeket."
+loading = "Rétegek betöltése..."
+noDocument = "Nyisson meg egy PDF-et a rétegei megtekintéséhez."
+readFailed = "Nem sikerült beolvasni a PDF-rétegeket"
 showAll = "Összes réteg megjelenítése"
 title = "Layers"
 
 [viewer.link]
 delete = "Hivatkozás törlése"
+goTo = "Ugrás ide: {{label}}"
+open = "Link megnyitása"
+openAria = "Link megnyitása"
+page = "{{page}}. oldal"
 
 [viewer.nonPdf]
 columnDefault = "{{index}}. oszlop"
 convertToPdf = "Konvertálás PDF-be"
+copied = "Másolva"
 csvStats = "{{rows}} sor · {{columns}} oszlop · {{size}}"
 emptyFile = "Üres fájl"
 htmlHidePreview = "Előnézet elrejtése"
@@ -12968,6 +13278,8 @@ htmlShowPreview = "Előnézet megjelenítése mégis"
 invalidJson = "Érvénytelen JSON — nyers tartalom megjelenítése"
 lineNumbers = "Sorszámok"
 loading = "Betöltés..."
+noFile = "Nincs betöltve fájl"
+previewUnavailable = "Az előnézet nem érhető el ehhez a fájltípushoz"
 renderMarkdown = "Markdown megjelenítése"
 sortedBy = "Rendezve: {{column}}"
 textStats = "{{lines}} sor · {{size}}"
@@ -12994,11 +13306,28 @@ next = "Következő találat"
 previous = "Előző találat"
 resultsOf = "a(z) {{total}} közül"
 
+[viewer.sidebar]
+close = "Oldalsáv bezárása"
+searchPlaceholder = "Keresés..."
+
 [viewer.signature]
 delete = "Aláírás törlése"
+previewAlt = "Aláírás előnézete"
+
+[viewer.signatureField]
+badge = "Aláírás"
+fieldTitle = "Aláírásmező: {{name}}"
+signed = "Aláírva"
+signedWithReason = "Aláírva: {{reason}}"
+unsignedFieldTitle = "Aláíratlan aláírásmező: {{name}}"
+withTime = "{{label}} ({{time}})"
 
 [viewer.thumbnails]
 closeSidebar = "Bélyegképek oldalsávjának bezárása"
+failed = "Sikertelen"
+pageNumber = "{{page}}. oldal"
+thumbnailAlt = "{{page}}. oldal bélyegképe"
+title = "Oldalak"
 
 [viewPdf]
 tags = "megtekintés,olvasás,jegyzetelés,szöveg,kép"
@@ -13006,169 +13335,6 @@ title = "PDF megtekintése/szerkesztése"
 
 [warning]
 tooltipTitle = "Figyelmeztetés"
-
-[watchedFolders]
-alreadyInFolder = "Already in this folder"
-defaultFolderWarning = "This is a default folder and will be recreated on next reload."
-deleteConfirmBody = "This will remove the folder and its run history. Files already downloaded are not affected."
-deleteConfirmTitle = "Delete folder?"
-folderNotFound = "Folder not found"
-newFolder = "New folder"
-noFolders = "No watched folders yet"
-sidebarTitle = "Watched Folders"
-title = "Watched Folders"
-
-[watchedFolders.actions]
-back = "Back"
-collapse = "Collapse"
-dismiss = "Dismiss"
-download = "Download"
-downloadInput = "Download input"
-downloadOutput = "Download output"
-expand = "Expand"
-retry = "Retry"
-
-[watchedFolders.card]
-delete = "Delete folder"
-edit = "Edit folder"
-
-[watchedFolders.home]
-addAnother = "Add another Watched Folder"
-addAnotherDesc = "Automatically process files with a new pipeline"
-create = "Create your first Watched Folder"
-deleteFolder = "Delete folder"
-editFolder = "Edit folder"
-empty = "No watched folders yet"
-emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
-emptyTitle = "Automate your PDF workflows"
-file = "file"
-files = "files"
-pause = "Pause"
-resume = "Resume"
-
-[watchedFolders.howItWorks]
-step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
-step1Title = "Drop files"
-step2Desc = "Your configured tools process each file automatically"
-step2Title = "Pipeline runs"
-step3Desc = "Download processed files from inside the folder"
-step3Title = "Output ready"
-title = "How Watched Folders work"
-
-[watchedFolders.modal]
-advanced = "Advanced"
-automation = "Automation"
-automationNameFallback = "Watched Folder automation"
-automationRequired = "Add at least one configured step before saving."
-autoNumber = "Auto-number"
-autoNumberExample = "e.g. document.pdf → document (1).pdf"
-autoScanHelp = "New PDF files in this folder are processed automatically every 10 seconds."
-changeFolder = "Change"
-chooseFolder = "Choose"
-clearFolder = "Clear"
-color = "Accent color"
-createFolder = "Create Folder"
-createTitle = "New Watched Folder"
-editTitle = "Edit Watched Folder"
-inputFolder = "Input folder"
-inputFolderNotChosen = "No folder chosen — required for auto-scan"
-inputSource = "Input source"
-inputSourceBrowser = "Browser — drop files here"
-inputSourceLocal = "Local folder (auto-scan)"
-inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
-localOutputFolder = "Local output folder"
-maxRetries = "Max retries"
-name = "Folder name"
-namePlaceholder = "My Watched Folder"
-nameRequired = "Folder name is required"
-nameTooLong = "Folder name must be 50 characters or less"
-outputFolderNotSet = "Not set — outputs stay in app"
-outputFolderUnsupported = "Not supported in this browser"
-outputModeNewDesc = "Output is saved as a new separate file"
-outputModeVersion = "Replace original?"
-outputModeVersionDesc = "Output becomes a new version of the input file rather than a separate file"
-outputName = "Output filename prefix"
-outputNamePrefix = "Filename prefix"
-outputNameSuffix = "Suffix"
-positionPrefix = "Prefix"
-positionSuffix = "Suffix"
-replaceOriginal = "Replace original file"
-retryDelay = "Delay (minutes)"
-saveChanges = "Save Changes"
-saveFailed = "Failed to save folder. Please try again."
-sectionFolder = "Folder"
-sectionSourceOutput = "Source & Output"
-sectionSteps = "Steps"
-
-[watchedFolders.status]
-active = "Active"
-done = "Done"
-paused = "Paused"
-processing = "Processing"
-
-[watchedFolders.time]
-daysAgo = "{{count}}d ago"
-hoursAgo = "{{count}}h ago"
-justNow = "just now"
-minutesAgo = "{{count}}m ago"
-
-[watchedFolders.workbench]
-activity = "Activity"
-addFiles = "Add files"
-allTime = "All time"
-cancel = "Cancel"
-chartTooltipComplete = "{{count}} complete"
-chartTooltipFailed = "{{count}} failed"
-clearSelection = "Clear selection"
-countProcessing = "{{count}} processing"
-countQueued = "{{count}} queued"
-countSelected = "{{count}} selected"
-dataSaved = "Saved"
-dayRunning = "day running"
-daysRunning = "days running"
-delete = "Delete"
-deleteConfirmBody = "Remove notifications only clears the activity log. Delete outputs also removes the processed files from storage. Your original input files are never touched."
-deleteOutputs = "Delete outputs"
-directionIn = "in"
-directionOut = "out"
-dropToProcess = "Drop to process"
-export = "Export"
-exportSeparately = "Export separately"
-exportZip = "Export zip"
-failed = "Failed"
-filesProcessedOverTime = "Files processed over time"
-filterAll = "All"
-filterPending = "Pending"
-inputs = "Inputs"
-inputSize = "Input size"
-legendComplete = "Complete"
-noActivity = "No activity yet — drop a PDF to start"
-noActivityMatch = "No matching activity"
-noInputFolder = "No input folder — edit to configure"
-outputs = "Outputs"
-pause = "Pause"
-preview = "Preview"
-previewInput = "Preview input"
-previewLoadFailed = "Could not load file preview."
-previewOutput = "Preview output"
-queued = "Queued"
-queuedWaiting = "Queued — waiting to run"
-removeEntries = "Remove {{count}} entries"
-removeEntry = "Remove entry"
-removeNotificationsOnly = "Remove notifications only"
-resume = "Resume"
-retryAll = "Retry all"
-retryIn = "retry in {{count}}m"
-retryingSoon = "retrying…"
-retryMixedConfirm = "Some selected files have already completed and will be skipped. Only failed files will be retried. Continue?"
-running = "Running"
-search = "Search…"
-selectAll = "Select all {{count}}"
-sortNameAsc = "A → Z"
-sortNameDesc = "Z → A"
-sortNewest = "Newest"
-sortOldest = "Oldest"
-watching = "Watching: {{name}}"
 
 [watermark]
 desc = "Szöveg- vagy képvízjelek hozzáadása PDF fájlokhoz"
@@ -13371,6 +13537,10 @@ certTypeServer = "Kiszolgáló tanúsítvány (ha elérhető)"
 completedDeclined = "Elutasította ezt a dokumentumot."
 completedSigned = "Aláírta ezt a dokumentumot."
 decline = "Elutasítás"
+declineConfirm = "Biztosan elutasítja ennek a dokumentumnak az aláírását?"
+declineFailed = "Nem sikerült elutasítani: {{error}}"
+declineSuccess = "Elutasította ezt az aláírási kérelmet."
+defaultReason = "Dokumentum aláírása"
 downloadDocument = "Dokumentum letöltése"
 dueDate = "Határidő: {{date}}"
 errorTitle = "Hiba"
@@ -13381,6 +13551,7 @@ locationPlaceholder = "pl., San Francisco, CA"
 pageNumber = "Oldalszám (opcionális)"
 reason = "Indok"
 reasonPlaceholder = "pl., Dokumentum jóváhagyása"
+selectCertificateFile = "Válasszon ki egy tanúsítványfájlt"
 sessionNotFound = "Munkamenet nem található vagy a hozzáférés megtagadva."
 signDocument = "Dokumentum aláírása"
 statusDeclined = "Elutasítva"
@@ -13388,7 +13559,9 @@ statusNotified = "Értesítve"
 statusPending = "Függőben"
 statusSigned = "Aláírva"
 statusViewed = "Megtekintve"
+submitFailed = "Nem sikerült beküldeni az aláírást: {{error}}"
 submitSignature = "Aláírás elküldése"
+submitSuccess = "Az aláírás sikeresen beküldve!"
 
 [workspace]
 title = "Munkaterület"

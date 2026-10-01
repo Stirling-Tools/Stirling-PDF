@@ -278,6 +278,7 @@ customNumberDesc = "Default untuk {n}, juga menerima 'Halaman {n} dari {total}',
 fontName = "Nama Fonta"
 fontSize = "Ukuran Fonta"
 numberPagesDesc = "Halaman mana yang akan diberi nomor, default 'semua', juga menerima 1-5 atau 2,5,9, dll."
+pagePreviewAlt = "Pratinjau halaman"
 pagesAndStarting = "Halaman & Nomor Awal"
 positionAndPages = "Posisi & Halaman"
 preview = "Pemilihan Posisi"
@@ -350,7 +351,9 @@ text = "Izin ini mengontrol apa yang dapat dilakukan pengguna dengan PDF. Paling
 title = "Ganti Perizinan"
 
 [addStamp]
+pagePreviewAlt = "Pratinjau halaman"
 preview = "Pratinjau Stempel"
+stampPreviewAlt = "Pratinjau stempel"
 tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 
 [AddStampRequest]
@@ -383,6 +386,7 @@ positionAndFormatting = "Posisi & Pemformatan"
 preview = "Preview:"
 quickPosition = "Pilih posisi pada halaman untuk menempatkan stempel."
 rotation = "Rotasi"
+selectedImageAlt = "Gambar stempel yang dipilih"
 selectTemplate = "Select a template..."
 stampSetup = "Pengaturan Stempel"
 stampText = "Teks Stampel"
@@ -533,6 +537,9 @@ letter = "Letter"
 
 [adjustPageScale.scaleFactor]
 label = "Faktor Skala"
+
+[adjustPageScale.settings]
+title = "Pengaturan"
 
 [adjustPageScale.tooltip.description]
 text = "Sesuaikan ukuran konten PDF dan ubah dimensi halaman."
@@ -728,6 +735,7 @@ noLanguages = "Tidak ditemukan bahasa tessdata di direktori yang dikonfigurasi."
 permissionNotice = "Jalur tessdata tidak dapat ditulisi. Unduhan akan dibuka di peramban; silakan simpan berkas .traineddata secara manual ke dalam folder tessdata."
 
 [admin.settings.ai]
+customProvider = "Kustom (kompatibel OpenAI)"
 description = "Hubungkan Stirling ke mesin AI Python, pilih modelnya, dan atur batasan yang digunakan saat berjalan."
 managedByCloud = "Dikelola oleh Stirling Cloud dalam mode ini."
 managedByCloudShort = "Dikelola oleh Stirling Cloud"
@@ -1146,7 +1154,6 @@ refresh = "Segarkan"
 selectFile = "Silakan pilih berkas .sql untuk diimpor"
 size = "Ukuran"
 title = "Database"
-unavailable = "Daftar cadangan tidak tersedia untuk konfigurasi basis data saat ini."
 uploadTitle = "Unggah & impor"
 version = "Versi H2"
 
@@ -1280,6 +1287,7 @@ label = "Metadata Kustom"
 [admin.settings.general.customMetadata.author]
 description = "Penulis bawaan untuk metadata PDF (mis., nama pengguna)"
 label = "Penulis Bawaan"
+placeholder = "nama pengguna"
 
 [admin.settings.general.customMetadata.autoUpdate]
 description = "Perbarui metadata PDF secara otomatis pada semua dokumen yang diproses"
@@ -1395,6 +1403,7 @@ defaultLocaleLink = "Konfigurasikan lokal bawaan"
 description = "Tampilkan penafian yang harus disetujui pengguna setelah masuk. Teks mengikuti bahasa masing-masing pengguna."
 discardConfirm = "Anda memiliki perubahan yang belum disimpan dan akan hilang. Tetap ganti bahasa?"
 editLabel = "Markdown"
+editPlaceholder = "## Judul\n\nTeks sanggahan Anda..."
 emptyPreview = "Belum ada yang dapat dipratinjau."
 language = "Bahasa"
 languageHelp = "Setiap bahasa memiliki file tersendiri. Jika bahasa pengguna tidak memiliki file, perjanjian akan menggunakan file dari lokal bawaan, lalu ke teks cadangan."
@@ -1513,8 +1522,10 @@ label = "JWKS URL (optional)"
 placeholder = "Auto-discovered from issuer"
 
 [admin.settings.mcp.mode]
+apikey = "API key (kunci per pengguna Stirling)"
 description = "OAuth needs an external IdP. API key uses a Stirling per-user API key (X-API-KEY) - simplest for self-host."
 label = "Authentication mode"
+oauth = "OAuth 2.1 (IdP eksternal)"
 
 [admin.settings.mcp.requireAccount]
 description = "Only let tokens through if their subject maps to a provisioned, enabled Stirling user."
@@ -1931,6 +1942,14 @@ title = "Pengaturan Kontrol Pengguna"
 [agents]
 stirling_name = "Stirling"
 
+[alphabetOptions]
+arabic = "Arab"
+chinese = "Tionghoa (Sederhana)"
+japanese = "Jepang"
+korean = "Korea"
+roman = "Romawi"
+thai = "Thai"
+
 [analytics]
 learnMore = "Pelajari lebih lanjut"
 paragraph1 = "Stirling PDF memiliki analitik yang dapat diaktifkan untuk membantu kami meningkatkan produk. Kami tidak melacak informasi pribadi atau konten berkas."
@@ -2052,6 +2071,7 @@ week = "Minggu"
 
 [audit.clearData]
 cancel = "Batal"
+closeAlert = "Tutup peringatan"
 codeDoesNotMatch = "Kode tidak cocok"
 codePlaceholder = "Ketik kodenya di sini"
 confirmationCode = "Kode Konfirmasi"
@@ -2061,6 +2081,7 @@ confirmTitle = "Harap konfirmasi bahwa Anda ingin menghapus"
 deleteButton = "Hapus"
 enterCode = "Kode Konfirmasi"
 enterCodeBelow = "Masukkan kode persis seperti di atas (sensitif huruf besar/kecil)"
+failed = "Gagal menghapus data audit"
 initiateDelete = "Hapus Semua Data"
 irreversible = "TIDAK DAPAT DIBATALKAN"
 success = "Berhasil"
@@ -2069,6 +2090,7 @@ warning1 = "Tindakan ini tidak dapat dibatalkan"
 warning2 = "Menghapus data audit akan menghapus secara permanen semua log audit historis, termasuk kejadian keamanan, aktivitas pengguna, dan operasi file dari database."
 
 [audit.error]
+loadStatus = "Gagal memuat status sistem audit"
 title = "Kesalahan saat memuat sistem audit"
 
 [audit.events]
@@ -2084,6 +2106,7 @@ fileHash = "Hash File"
 filterByType = "Saring berdasarkan jenis"
 filterByUser = "Saring berdasarkan pengguna"
 ipAddress = "Alamat IP"
+loadFailed = "Gagal memuat peristiwa"
 noEvents = "Tidak ada peristiwa"
 startDate = "Tanggal mulai"
 timestamp = "Stempel waktu"
@@ -2124,6 +2147,7 @@ avgLatency = "Latensi Rata-rata"
 error = "Kesalahan memuat statistik"
 excellent = "Sangat baik"
 good = "Baik"
+loadFailed = "Gagal memuat statistik"
 noData = "N/A"
 successRate = "Tingkat Keberhasilan"
 totalEvents = "Total Kejadian"
@@ -2158,13 +2182,27 @@ accessDenied = "Akses Ditolak"
 insufficientPermissions = "Anda tidak memiliki izin untuk melakukan tindakan ini."
 
 [auth.callback]
+alreadySignedIn = "Sudah masuk! Mengalihkan..."
+backToLogin = "Kembali ke login"
 completing = "Menyelesaikan autentikasi"
+exchanging = "Menukar kode otorisasi..."
+failedWithReason = "Autentikasi gagal: {{error}}"
 invalidToken = "Login OAuth gagal - token tidak valid."
 missingToken = "Login OAuth gagal - tidak ada token yang diterima."
+noData = "Tidak ada data autentikasi ditemukan"
 oauthFailed = "Login OAuth gagal. Silakan coba lagi."
 pleaseWait = "Harap tunggu sementara kami menyelesaikan proses masuk Anda."
+processing = "Memproses autentikasi..."
 signedOut = "Anda telah keluar. Silakan masuk lagi."
+signInFailed = "Gagal menyelesaikan proses masuk: {{error}}"
+success = "Berhasil masuk! Mengalihkan..."
+unknownError = "Kesalahan tidak diketahui"
 windowMayClose = "Anda dapat menutup jendela ini setelah selesai."
+
+[auth.callback.title]
+default = "Autentikasi"
+processing = "Memasukkan Anda"
+success = "Semua siap!"
 
 [auth.displayName]
 guest = "Tamu"
@@ -2317,6 +2355,7 @@ title = "Impor otomatisasi"
 unresolved = "Tidak dipetakan: {{ops}}"
 
 [automate.run]
+progress = "Kemajuan: {{current}}/{{total}}"
 title = "Jalankan Otomatisasi"
 
 [automate.selection]
@@ -2466,6 +2505,7 @@ whatHappensNext = "Apa selanjutnya?"
 
 [billing.portal]
 error = "Gagal membuka portal penagihan"
+errorFallback = "Silakan coba lagi atau hubungi dukungan."
 
 [bookletImposition]
 paperSizeNote = "Ukuran kertas otomatis diambil dari halaman pertama Anda."
@@ -2513,6 +2553,9 @@ title = "Mode Dupleks Manual"
 [bookletImposition.rtlBinding]
 label = "Penjilidan kanan-ke-kiri"
 tooltip = "Untuk bahasa Arab, Ibrani, atau bahasa kanan-ke-kiri lainnya"
+
+[bookletImposition.settings]
+title = "Pengaturan"
 
 [bookletImposition.tooltip.advanced]
 bullet1 = "Penjilidan Kanan-ke-Kiri: Untuk bahasa Arab, Ibrani, atau bahasa RTL"
@@ -2582,6 +2625,8 @@ detail = "Klik atau tekan Space untuk bermain lagi"
 headline = "Semua bersih"
 
 [bulkSelection]
+selectedPages_one = "Dipilih: {{count}} halaman ({{pages}})"
+selectedPages_other = "Dipilih: {{count}} halaman ({{pages}})"
 syntaxError = "Ada masalah sintaks. Lihat tips Pemilihan Halaman untuk bantuan."
 
 [bulkSelection.advanced]
@@ -2802,6 +2847,7 @@ declineButton = "Tolak"
 deleteSelected = "Hapus tanda tangan yang dipilih"
 drawSignature = "Gambar tanda tangan Anda di bawah"
 fileTooLarge = "Ukuran file harus kurang dari 5MB"
+fontBrushScript = "Brush Script MT (kursif)"
 fontFamily = "Keluarga Font"
 fontSize = "Ukuran Font: {{size}}px"
 fontSizePlaceholder = "Ukuran"
@@ -2821,6 +2867,7 @@ removeImage = "Hapus Gambar"
 savedSignatures = "Tanda Tangan Tersimpan"
 selectFile = "Pilih File Gambar"
 selectSignatureTitle = "Pilih atau Buat Tanda Tangan"
+signatureImageAlt = "Tanda tangan"
 signatureInfo = "Pengaturan ini dikonfigurasi oleh pemilik dokumen"
 signatureSettings = "Pengaturan Tanda Tangan"
 signatureText = "Teks Tanda Tangan"
@@ -3591,13 +3638,19 @@ confirm = "Konfirmasi"
 continue = "Lanjut"
 copied = "Disalin!"
 copy = "Salin"
+copyCode = "Salin kode"
+dismiss = "Tutup"
 done = "Selesai"
 enterValue = "Enter value"
 error = "Error"
 expand = "Perluas"
 filterEmpty = "Tidak ada yang dapat difilter"
+goToSlide = "Buka slide {{number}}"
 loading = "Memuat..."
+moreInformation = "Informasi selengkapnya"
 next = "Berikutnya"
+noData = "Tidak ada data"
+nOfTotal = "{{current}} dari {{total}}"
 open = "Open"
 preview = "Pratinjau"
 previous = "Sebelumnya"
@@ -3606,6 +3659,9 @@ remaining = "Tersisa"
 retry = "Coba Lagi"
 save = "Simpan"
 search = "Cari"
+settingsSections = "Bagian pengaturan"
+showAllTotal = "Tampilkan semua {{total}}"
+showLess = "Tampilkan lebih sedikit"
 stepOf = "Step {{current}} of {{total}}"
 
 [compare]
@@ -3617,6 +3673,7 @@ newLine = "baris-baru"
 pages = "Halaman"
 tags = "membedakan, kontras, perubahan, analisis"
 title = "Bandingkan"
+workbenchLabel = "Tampilan perbandingan"
 
 [compare.actions]
 linkScroll = "Tautkan gulir"
@@ -3770,6 +3827,7 @@ title = "Metode Kompresi"
 desiredSize = "Ukuran file yang diinginkan"
 desiredSizePlaceholder = "Masukkan ukuran"
 desiredSizeUnit = "Size unit"
+title = "Pengaturan"
 
 [compress.tooltip.description]
 text = "Kompresi adalah cara mudah untuk mengurangi ukuran file. Pilih Ukuran File untuk memasukkan ukuran target dan biarkan kami menyesuaikan kualitas untuk Anda. Pilih Kualitas untuk mengatur kekuatan kompresi secara manual."
@@ -3819,10 +3877,13 @@ title = "Pengaturan Akun"
 description = "Unggah gambar untuk mempersonalisasi akun Anda."
 help = "PNG, JPG, atau WebP hingga 2MB."
 remove = "Hapus"
+removeFailed = "Gagal menghapus gambar profil"
 sizeError = "Pilih gambar yang ukurannya kurang dari 2MB."
 switchedToCustom = "Beralih ke gambar khusus. Anda sekarang dapat mengunggah gambar sendiri."
+switchFailed = "Gagal beralih ke gambar kustom"
 title = "Foto profil"
 upload = "Unggah"
+uploadFailed = "Gagal mengunggah gambar profil"
 useCustom = "Gunakan gambar khusus"
 usingProvider = "Menggunakan foto profil {{provider}}"
 
@@ -3836,6 +3897,7 @@ title = "Potong Foto Profil"
 zoom = "Zoom"
 
 [config.account.security]
+changeFailed = "Gagal mengubah kata sandi"
 changePassword = "Ubah kata sandi"
 description = "Kelola kata sandi dan pengaturan keamanan Anda."
 title = "Kata Sandi & Keamanan"
@@ -3846,11 +3908,15 @@ description = "Tautkan akun Anda untuk menyimpan riwayat Anda dan mengakses lebi
 email = "Email"
 emailPassword = "atau masukkan email & kata sandi Anda"
 emailPlaceholder = "Masukkan email Anda"
+failed = "Gagal meningkatkan akun"
+failedWithProvider = "Gagal meningkatkan akun dengan {{provider}}"
 linkWith = "Tautkan dengan"
+linkWithProvider = "Tautkan dengan {{provider}}"
 password = "Kata Sandi (opsional)"
 passwordNote = "Biarkan kosong untuk menggunakan verifikasi email saja"
 passwordPlaceholder = "Tetapkan kata sandi"
 socialLogin = "Upgrade dengan Akun Sosial"
+success = "Akun berhasil ditingkatkan! Anda sekarang dapat masuk dengan email Anda."
 title = "Tingkatkan Akun Tamu"
 upgradeButton = "Tingkatkan Akun"
 
@@ -3960,10 +4026,10 @@ title = "Permintaan tidak valid"
 
 [connect.renewal]
 approve = "Perbarui proses masuk"
+currentOwnerRequired = "Masuk sebagai pemilik saat ini dari tim cloud yang tertaut untuk memperpanjang proses masuk server ini. Jika kepemilikan telah dialihkan, gunakan akun pemilik baru."
 failed = "Proses masuk Anda tidak dapat diperbarui. Coba lagi, atau tutup halaman ini dan mulai lagi dari server Anda."
 lead = "Server ini sudah ditautkan ke akun Anda. Perbarui proses masuk Anda untuk kembali ke penagihan dan penggunaan di server Anda."
 title = "Perbarui proses masuk server Anda"
-wrongAccount = "Akun ini tidak dapat memperbarui proses masuk server ini. Beralihlah ke akun yang awalnya digunakan untuk menautkan server. Akun tersebut harus tetap menjadi pemilik tim tertaut."
 
 [convert]
 autoRotate = "Putar Otomatis"
@@ -4009,6 +4075,7 @@ multiple = "Banyak"
 optimizeForEbook = "Optimalkan PDF untuk pembaca ebook (menggunakan Ghostscript)"
 output = "Keluaran"
 outputFormat = "Format Keluaran"
+pdfaAccessibleFormat = "{{format}} (dapat diakses)"
 pdfaDigitalSignatureWarning = "PDF ini mengandung tanda tangan digital. Ini akan dihapus pada langkah berikutnya."
 pdfaNote = "PDF/A-1b lebih kompatibel, PDF/A-2b mendukung lebih banyak fitur."
 pdfaOptions = "Opsi PDF/A"
@@ -4068,6 +4135,24 @@ outputFormatDesc = "Pilih format keluaran untuk eBook"
 tabletPhone = "Tablet/Ponsel (dengan gambar)"
 targetDevice = "Perangkat target"
 targetDeviceDesc = "Pilih profil keluaran yang dioptimalkan untuk perangkat pembaca"
+
+[convert.formatGroups]
+archive = "Arsip"
+document = "Dokumen"
+ebook = "eBook"
+email = "Email"
+file = "File"
+image = "Gambar"
+multipleFiles = "Beberapa File"
+presentation = "Presentasi"
+spreadsheet = "Spreadsheet"
+text = "Teks"
+web = "Web"
+
+[convert.formatOptions]
+any = "Apa pun"
+images = "Gambar"
+msgOutlook = "MSG (Outlook)"
 
 [cookieBanner.popUp]
 acceptAllBtn = "Oke"
@@ -4161,6 +4246,12 @@ label = "Posisi Y"
 [crop.error]
 failed = "Gagal memangkas PDF"
 
+[crop.pageNumbers]
+description = "Potong area yang dipilih pada halaman tertentu, atau 'all' untuk setiap halaman."
+error = "Pilihan halaman tidak valid. Gunakan mis. 1, 3, 5-8 atau all."
+label = "Halaman untuk Dipotong"
+placeholder = "mis. 1, 3, 5-8 atau all"
+
 [crop.preview]
 title = "Pilihan Area Pangkas"
 
@@ -4183,16 +4274,11 @@ fileName = "Nama Berkas"
 title = "Impor/Ekspor Database"
 
 [defaultApp]
-setDefault = "Jadikan Default"
 title = "Jadikan Aplikasi PDF Default"
 
 [defaultApp.error]
 message = "Gagal menyetel penangan PDF default"
 title = "Error"
-
-[defaultApp.prompt]
-dontRemind = "Jangan ingatkan saya lagi"
-message = "Jadikan Stirling PDF aplikasi default untuk membuka file PDF."
 
 [defaultApp.settingsOpened]
 message = "Silakan pilih Stirling PDF di pengaturan sistem Anda"
@@ -4201,6 +4287,17 @@ title = "Pengaturan Dibuka"
 [defaultApp.success]
 message = "Stirling PDF sekarang adalah editor PDF default Anda"
 title = "Aplikasi Default Disetel"
+
+[desktop.titleBar]
+maximize = "Maksimalkan"
+minimize = "Minimalkan"
+restore = "Pulihkan"
+
+[desktopBilling]
+description = "Kelola penggunaan dan penagihan di browser Anda. Masuk dengan akun Stirling yang sama dengan yang Anda gunakan di sini."
+open = "Buka Penggunaan & Penagihan di browser"
+openFailed = "Tidak dapat membuka Penggunaan & Penagihan. Periksa koneksi Anda dan coba lagi."
+selfHostedDescription = "Kelola penggunaan dan penagihan pada server terhubung Anda di browser. Masuk dengan akun pemilik server Anda."
 
 [desktopFileLink]
 saveAs = "Simpan sebagai…"
@@ -4264,6 +4361,7 @@ tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,ident
 noItems = "No items available"
 noResults = "No results found"
 searchPlaceholder = "Cari..."
+selectedCount = "{{count}} dipilih"
 selectLanguages = "Select languages"
 selectOption = "Select an option"
 
@@ -4274,6 +4372,7 @@ editSecretValue = "Edit nilai rahasia"
 [editTableOfContents]
 submit = "Terapkan table of contents"
 tags = "bookmarks,contents,edit,table of contents,TOC,outline,navigation,chapters,sections,add bookmarks,edit bookmarks,PDF outline"
+workbenchLabel = "Ruang kerja outline"
 
 [editTableOfContents.actions]
 clipboardUnavailable = "Akses clipboard tidak tersedia di browser ini."
@@ -4434,6 +4533,27 @@ closeFile = "Tutup file"
 
 [fileEditor]
 addFiles = "Tambahkan File"
+closedFile = "Menutup {{name}}"
+couldNotSave = "Tidak dapat menyimpan {{name}}"
+filesAdded_one = "Menambahkan {{count}} file"
+filesAdded_other = "Menambahkan {{count}} file"
+filesReordered_one = "File diurutkan ulang"
+filesReordered_other = "{{count}} file diurutkan ulang"
+loadedFromStorage_one = "Memuat {{count}} file dari penyimpanan"
+loadedFromStorage_other = "Memuat {{count}} file dari penyimpanan"
+loadFromStorageFailed = "Gagal memuat beberapa file dari penyimpanan"
+pinnedFile = "Menyematkan {{name}}"
+processFilesFailed = "Gagal memproses file"
+savedAndClosed = "Menyimpan dan menutup {{name}}"
+saveFailed = "Penyimpanan gagal"
+unpinnedFile = "Melepas sematan {{name}}"
+unzipping = "Mengekstrak ZIP {{name}}"
+
+[fileEditor.unzip]
+error = "Kesalahan saat mengekstrak ZIP {{name}}"
+extracted_one = "Mengekstrak {{count}} file dari {{name}}"
+extracted_other = "Mengekstrak {{count}} file dari {{name}}"
+failed = "Gagal mengekstrak file dari {{name}}"
 
 [fileManager]
 addToUpload = "Tambahkan ke Unggahan"
@@ -4450,6 +4570,7 @@ noFiles = "Tidak ada file tersedia"
 noFilesFound = "Tidak ada file yang cocok dengan pencarian Anda"
 openInFileEditor = "Buka di Editor File"
 openInPageEditor = "Buka di Editor Halaman"
+reloadFiles = "Muat Ulang File"
 saveSelected = "Simpan Terpilih"
 searchFiles = "Cari file..."
 share = "Bagikan"
@@ -4459,6 +4580,8 @@ sharedEditNoticeConfirm = "Mengerti"
 sharedEditNoticeTitle = "Salinan server hanya-baca"
 sharedWithYou = "Dibagikan kepada Anda"
 showAll = "Tampilkan Semua"
+showAllCount_one = "Tampilkan Semua ({{count}} file)"
+showAllCount_other = "Tampilkan Semua ({{count}} file)"
 sortBy = "Sort files"
 sortByDate = "Urutkan berdasarkan Tanggal"
 sortByName = "Urutkan berdasarkan Nama"
@@ -4495,6 +4618,11 @@ sources = "Sumber file"
 subtitle = "Pilih dari pustaka Anda atau tambahkan yang baru."
 title = "Tambahkan file"
 unsupported = "Jenis file ini tidak didukung oleh tool yang dipilih."
+
+[filePreview]
+loadingThumbnail = "Memuat thumbnail..."
+locked = "Terkunci"
+previewOf = "Pratinjau {{name}}"
 
 [files]
 addFiles = "Tambahkan file"
@@ -4930,13 +5058,15 @@ title = "Berkas ke PDF"
 [fileUpload]
 dropFilesHere = "Lepaskan file di sini atau klik tombol unggah"
 dropFilesHereOpen = "Jatuhkan file di sini atau klik tombol buka"
-filesAvailable = "file tersedia"
+filesAvailableCount_one = "{{count}} file tersedia"
+filesAvailableCount_other = "{{count}} file tersedia"
 loadFromStorage = "Muat dari Penyimpanan"
 noFilesInStorage = "Tidak ada file di penyimpanan. Unggah beberapa file terlebih dahulu."
 noFilesInStorageOpen = "Tidak ada file di penyimpanan. Buka beberapa file terlebih dahulu."
 open = "Buka"
 openFile = "Buka File"
 openFiles = "Buka File"
+selectedCount = "{{count}} dipilih"
 selectFile = "Select {{name}}"
 selectFromStorage = "Pilih dari Penyimpanan"
 upload = "Unggah"
@@ -5028,6 +5158,7 @@ rescanFields = "Pindai ulang bidang"
 rescanFormFields = "Pindai ulang bidang formulir"
 save = "Simpan"
 saveShortcut = "Ctrl+S untuk menyimpan"
+selectOptionPlaceholder = "— pilih —"
 skippedEdits_one = "1 perubahan tidak dapat diterapkan:"
 skippedEdits_other = "{{count}} perubahan tidak dapat diterapkan:"
 skippedEditsTruncated = "{{count}} lainnya tidak tercantum."
@@ -5090,6 +5221,16 @@ tooltipHelp = "Petunjuk yang ditampilkan saat seseorang mengarahkan kursor ke bi
 type = "Jenis"
 typeHelp = "Jenis bidang ini. Mengubahnya akan membangun ulang bidang, sehingga nilai saat ini tidak ikut dibawa."
 
+[formFill.fieldTypes]
+button = "Tombol"
+checkbox = "Checkbox"
+combobox = "Dropdown"
+listbox = "Kotak daftar"
+radio = "Radio"
+radioGroup = "Grup radio"
+signature = "Tanda tangan"
+text = "Teks"
+
 [formFill.mode]
 create = "Buat"
 fill = "Isi"
@@ -5107,11 +5248,16 @@ restore = "Pulihkan"
 
 [formFill.sidebar]
 close = "Tutup bilah sisi"
+empty = "Tidak ada bidang formulir ditemukan dalam PDF ini"
+loading = "Memuat bidang formulir..."
+pageNumber = "Halaman {{page}}"
+title = "Bidang Formulir"
 
 [getPdfInfo]
 downloadJson = "Unduh JSON"
 downloads = "Unduhan"
 indexTitle = "Indeks"
+noData = "Tidak Ada Data"
 noneDetected = "Tidak ada yang terdeteksi"
 noResults = "Jalankan alat untuk menghasilkan laporan."
 processing = "Mengekstrak informasi..."
@@ -5127,6 +5273,8 @@ noVerification = "Tidak Ada Verifikasi Dilakukan"
 noVerificationDesc = "Kepatuhan terhadap standar PDF tidak diverifikasi untuk dokumen ini."
 passed = "Lulus"
 passedCount = "lulus"
+secCompliant = "Dokumen memenuhi persyaratan pengajuan SEC EDGAR"
+secNotCompliant = "Dokumen tidak memenuhi persyaratan pengajuan SEC EDGAR"
 
 [getPdfInfo.error]
 partial = "Beberapa file tidak dapat diproses."
@@ -5134,10 +5282,15 @@ unexpected = "Kesalahan tak terduga saat ekstraksi."
 
 [getPdfInfo.other]
 attachments = "Lampiran"
+created = "Dibuat: {{date}}"
 embeddedFiles = "File Tertanam"
+fileSizeBytes = "({{size}} byte)"
 javaScript = "JavaScript"
 layers = "Lapisan"
+modified = "Diubah: {{date}}"
 structureTree = "StructureTree"
+unnamedAttachment = "Lampiran tanpa nama"
+unnamedFile = "File tanpa nama"
 xmp = "XMPMetadata"
 
 [getPdfInfo.perPage]
@@ -5147,6 +5300,7 @@ images = "Gambar"
 links = "Tautan"
 multimedia = "Multimedia"
 size = "Ukuran"
+unnamedImage = "Gambar"
 xobjects = "Jumlah XObject"
 
 [getPdfInfo.report]
@@ -5675,6 +5829,7 @@ invalidEmail = "Alamat email tidak valid"
 invalidInvitation = "Undangan Tidak Valid"
 invalidToken = "Tautan undangan tidak valid"
 linkExpires = "Tautan kedaluwarsa"
+linkExpiresAt = "Tautan kedaluwarsa: {{date}} pukul {{time}}"
 passwordMismatch = "Kata sandi tidak cocok"
 passwordPlaceholder = "Masukkan kata sandi Anda"
 passwordRequired = "Kata sandi wajib diisi"
@@ -5689,6 +5844,7 @@ welcomeTitle = "Anda telah diundang!"
 addFiles = "Tambahkan File"
 mobileUpload = "Unggah dari Ponsel"
 openFromComputer = "Buka dari komputer"
+settingUpSession = "Menyiapkan sesi Anda..."
 uploadFromComputer = "Unggah dari komputer"
 
 [language]
@@ -5770,6 +5926,7 @@ sessionExpired = "Sesi Anda telah berakhir. Silakan masuk kembali."
 signin = "Masuk"
 signingIn = "Sedang masuk..."
 signInWith = "Masuk dengan"
+signInWithProvider = "Masuk dengan {{provider}}"
 title = "Masuk"
 unexpectedError = "Kesalahan tak terduga: {{message}}"
 updatePassword = "Perbarui kata sandi"
@@ -5811,6 +5968,9 @@ label = "Hapus tanda tangan digital di file hasil penggabungan?"
 description = "Tanda tangan digital akan tidak valid saat menggabungkan file. Centang ini untuk menghapusnya dari PDF gabungan akhir."
 title = "Hapus Tanda Tangan Digital"
 
+[merge.settings]
+title = "Pengaturan"
+
 [merge.sortBy]
 ascending = "Naik"
 dateModified = "Tanggal Diubah"
@@ -5819,6 +5979,9 @@ description = "File akan digabung sesuai urutan saat dipilih. Seret untuk mengur
 filename = "Nama Berkas"
 label = "Urutkan Berdasarkan"
 sort = "Urutkan"
+
+[merge.sortFiles]
+title = "Urutkan File"
 
 [merge.tooltip.header]
 title = "Ringkasan Pengaturan Gabung"
@@ -5867,6 +6030,7 @@ validating = "Memvalidasi sesi..."
 
 [mobileSign]
 clear = "Clear"
+drawingArea = "Area menggambar tanda tangan"
 invalidSession = "Session expired"
 invalidSessionMessage = "This QR code is no longer valid. Open the Sign tool on your computer and scan the new code."
 penSizeLabel = "Pen size"
@@ -5882,6 +6046,7 @@ validating = "Checking session…"
 fromGallery = "From gallery"
 hint = "Photograph a signature on white paper, or choose an existing image."
 invalidType = "Please choose an image file."
+previewAlt = "Tanda tangan"
 takePhoto = "Take a photo"
 
 [mobileSign.tab]
@@ -5993,6 +6158,9 @@ profile = "See your basic profile information"
 desc = "Memindai dan mendeteksi teks dari gambar di dalam PDF dan menambahkannya kembali sebagai teks."
 tags = "rekognisi,teks,gambar,pindai,baca,identifikasi,deteksi,dapat diedit"
 title = "OCR / Pembersihan Pindaian"
+
+[ocr.advanced]
+title = "Lanjutan"
 
 [ocr.error]
 failed = "Operasi OCR gagal"
@@ -6118,9 +6286,9 @@ title = "Unduh Stirling untuk Desktop"
 description = "Berkolaborasi dengan tim Anda"
 title = "Undang anggota tim"
 
-[onboarding.checklist.shareAnalytics]
-description = "Bantu meningkatkan Stirling"
-title = "Bagikan data penggunaan anonim"
+[onboarding.checklist.setDefaultApp]
+description = "Buka file PDF di Stirling PDF"
+title = "Jadikan Stirling sebagai default Anda"
 
 [onboarding.checklist.takeTour]
 description = "Lihat cara kerja Stirling dalam panduan singkat"
@@ -6188,6 +6356,7 @@ message = "Aplikasi telah mengalami perubahan signifikan baru-baru ini. Perhatia
 roleAdmin = "Admin"
 rolePlaceholder = "Konfirmasi peran Anda"
 roleUser = "Pengguna"
+title = "Pemeriksaan Keamanan"
 
 [onboarding.serverLicense]
 freeBody = "Lisensi <strong>Open-Core</strong> kami mencakup <strong>OAuth SSO</strong> dan hingga <strong>{{freeTierLimit}}</strong> pengguna secara gratis. Untuk berkembang tanpa hambatan, kami menyarankan paket Stirling Team — <strong>100 pengguna</strong> seharga $99/bulan."
@@ -6276,16 +6445,93 @@ title = "File Overlay"
 text = "Latar depan menempatkan overlay di atas halaman. Latar belakang menempatkannya di belakang."
 title = "Posisi Overlay"
 
+[ownership]
+acceptInvite = "Mereka dapat membuat akun atau masuk, lalu menerima undangan."
+accessUpdated = "Akses pemilik mereka sudah siap."
+accountLinkDisabled = "Server ini masih memiliki tautan cloud, tetapi penautan akun dinonaktifkan. Minta operator server untuk mengaktifkan penautan akun, lalu lanjutkan transfer ini atau putuskan tautan server di pengaturan."
+anotherTeam = "Sudah berada di tim lain?"
+billing = "Langganan, dompet, metode pembayaran, dan lisensi yang ada tetap berlaku. Detail kontak penagihan tidak berubah secara otomatis."
+billingDetails = "Detail penagihan"
+billingUnchanged = "Langganan dan penagihan tetap berlaku"
+bothDone = "Kepemilikan server dan cloud sekarang sudah selaras."
+cancel = "Batalkan transfer"
+check = "Periksa lagi"
+checkAccount = "Periksa akun"
+chooseEmail = "Pilih akun mereka di {{team}}, atau masukkan email untuk mengundang mereka."
+close = "Tutup dialog transfer"
+cloudAccount = "Akun Stirling"
+cloudScopeStyled = "<user>{{name}}</user> akan mengelola {{team}}, anggotanya, dan penagihan."
+cloudTargetChanged = "Pilih anggota cloud lain. Akun ini tidak lagi memenuhi syarat untuk penyerahan."
+confirm = "Saya memahami perubahan akses dan kepemilikan."
+done = "Kepemilikan ditransfer"
+error = "Kami tidak dapat menyelesaikan langkah ini. Periksa apakah penerima aktif dan server terhubung, lalu periksa lagi. Transfer yang tertunda dapat dilanjutkan di sini."
+finish = "Selesaikan transfer server"
+inProgress = "Penerima lain sudah memiliki transfer yang tertunda. Tutup dialog ini dan lanjutkan dari Pengguna."
+instances = "Tim ini memiliki {{count}} server tertaut. Penagihan cloud mereka tetap bersama tim ini; pemilik lokal server lain tidak berubah."
+invitationSent = "Undangan terkirim"
+invite = "Kirim undangan"
+inviteAddress = "Undang <account>{{email}}</account> ke {{team}}."
+inviteBlocked = "Undangan tidak dapat dikirim. Periksa kursi tim yang tersedia dan apakah penerima sudah memiliki langganan berbayar."
+linkChanged = "Tautan cloud server berubah. Minta operator server untuk memulihkan tautan asli sebelum melanjutkan."
+linkedServerCount = "{{count}} server tertaut"
+linkRevoked = "Tautan cloud server ini tidak lagi valid. Batalkan transfer, lalu hubungkan kembali akun Stirling Anda di pengaturan. Kepemilikan tidak akan berubah."
+localScope = "Mereka akan memiliki server ini dan mengelola penagihan serta koneksi cloud. Anda tetap memiliki akses administrator, tetapi kehilangan akses ke pengaturan tersebut."
+membershipDetails = "Detail keanggotaan tim"
+membershipFirst = "Mereka harus bergabung dengan tim sebelum Anda dapat mengonfirmasi transfer."
+membershipRequired = "Penerima harus bergabung dengan tim cloud ini sebelum kepemilikan dapat ditransfer. Minta mereka menerima undangan, lalu periksa lagi."
+newOwnerLabel = "Pemilik baru"
+newOwnerStyled = "<user>{{name}}</user> sekarang adalah pemilik."
+noEmailMatches = "Tidak ada anggota yang cocok. Masukkan email untuk mengundang."
+otherTeam = "Jika mereka tergabung dalam tim lain, penerimaan dapat memindahkan akun mereka. Akun berbayar atau kepemilikan tim lain mungkin perlu diselesaikan terlebih dahulu. Kami tidak akan memindahkan langganan mereka atau menggabungkan tim."
+ownerChanged = "Kepemilikan cloud berubah setelah transfer ini dimulai. Batalkan transfer ini dan mulai lagi dengan pemilik cloud saat ini."
+ownerRequired = "Masuk sebagai pemilik tim cloud saat ini, lalu coba langkah ini lagi."
+partialError = "Kepemilikan cloud telah ditransfer. Selesaikan transfer server agar kedua pemilik tetap selaras."
+partialTargetChanged = "Pulihkan akses pengguna server yang dipilih dan detail akun asli, lalu selesaikan transfer server. Kepemilikan cloud sudah ditransfer."
+pending = "Transfer kepemilikan ke {{name}} sedang tertunda."
+personalTeam = "Tim pribadi tidak dapat mentransfer kepemilikan."
+prepareHelp = "Penerima harus telah menyelesaikan login server pertama mereka. Anda dapat mencoba lagi di sini, atau kembali ke Pengguna untuk memilih orang lain."
+resume = "Lanjutkan transfer"
+searchEmail = "Cari atau masukkan email"
+serverAccount = "Akun server"
+serverDetails = "Detail server tertaut"
+signIn = "Masuk ke cloud"
+startFromInstanceBody = "Tim ini memiliki server tertaut. Pada server self-hosted, buka Pengaturan → Pengguna dan ubah peran penerima menjadi Pemilik Org. Alur tersebut mentransfer kepemilikan cloud sebelum menyelesaikan transfer server."
+startFromInstanceTitle = "Mulai dari server self-hosted Anda"
+stayOwner = "Anda tetap menjadi pemilik hingga transfer."
+targetChanged = "Akun penerima berubah. Pulihkan akses mereka atau batalkan transfer ini dan pilih mereka lagi."
+title = "Transfer kepemilikan"
+transfer = "Transfer kepemilikan"
+waitingForEmail = "Menunggu {{email}} bergabung dengan {{team}}."
+working = "Memeriksa dan memperbarui kepemilikan..."
+yourCloudAccess = "Anda akan menjadi anggota tim dan kehilangan akses pemilik."
+
 [pageEdit]
 deselectAll = "Pilih Tidak Ada"
 selectAll = "Pilih Semua"
 
 [pageEditor]
+dragPreviewAlt = "Menyeret"
+filePosition = "Posisi {{position}}"
+pageLabel = "Halaman {{page}}"
 title = "Editor Halaman"
+
+[pageEditor.actions]
+deletePage = "Hapus Halaman"
+insertFileAfter = "Sisipkan File Setelahnya"
+moveLeft = "Pindahkan ke Kiri"
+moveRight = "Pindahkan ke Kanan"
+rotateLeft = "Putar ke Kiri"
+rotateRight = "Putar ke Kanan"
+splitAfter = "Pisahkan Setelahnya"
 
 [pageEditor.emptyState]
 body = "Tambahkan file untuk mulai mengedit halaman"
 title = "Tidak ada file PDF dimuat"
+
+[pageEditor.fileDropdown]
+addFile = "Tambah File"
+selectedCount = "{{selected}}/{{total}} file dipilih"
+untitled = "Tanpa judul"
 
 [pageEditor.toolbar]
 delete = "Hapus yang dipilih"
@@ -6391,6 +6637,11 @@ portrait = "Potret"
 label = "Arah Baca:"
 ltr = "Kiri ke Kanan"
 rtl = "Kanan ke Kiri"
+
+[pageLayout.steps]
+advanced = "Pengaturan lanjutan"
+layout = "Pengaturan tata letak"
+marginsBorders = "Margin dan batas"
 
 [pageLayout.tooltip.header]
 title = "Panduan Tata Letak Halaman"
@@ -6712,6 +6963,7 @@ teamChangeUnavailable = "Perubahan Team terjadwal tidak dapat dimuat. Segarkan u
 teamPending = "Pembelian Team Anda masih diproses. Segarkan halaman ini sebentar lagi."
 teamProcessing = "Pembelian Team sedang diproses"
 teamScheduled = "Perubahan Team Anda dijadwalkan pada {{date}}. Kapasitas Anda saat ini tetap aktif hingga saat itu."
+unknownError = "Terjadi kesalahan yang tidak diketahui"
 upgradeComplete = "Upgrade Selesai"
 upgradeCompleteMessage = "Langganan Anda telah diupgrade dengan sukses. Kunci lisensi yang ada telah diperbarui."
 upgradeSuccess = "Pembayaran berhasil! Langganan Anda telah diupgrade. Lisensi telah diperbarui di server Anda. Anda akan menerima email konfirmasi segera."
@@ -6766,6 +7018,14 @@ selectedMonthly = "Bulanan"
 selectedYearly = "Tahunan"
 selectMonthly = "Pilih Bulanan"
 selectYearly = "Pilih Tahunan"
+
+[payment.priceDisplay]
+basePrice = "Harga Dasar"
+perPeriod = "/{{period}}"
+perSeat = "Per Kursi"
+perSeatPeriod = "/kursi/{{period}}"
+totalSeats_one = "Total ({{count}} kursi)"
+totalSeats_other = "Total ({{count}} kursi)"
 
 [payment.upgradeTeam]
 title = "Upgrade ke Team"
@@ -6985,6 +7245,10 @@ save = "Simpan"
 style = "Gaya"
 tapToPlace = "Ketuk halaman tempat teks harus ditempatkan"
 unlock = "Buka kunci"
+
+[pdfTextEditor.pageView]
+pageNumber = "Halaman {{page}}"
+renderFailed = "Gagal merender halaman"
 
 [pdfTextEditor.password]
 cancel = "Batal"
@@ -7212,6 +7476,7 @@ title = "Pipeline"
 contact = "Hubungi Kami"
 current = "Paket Saat Ini"
 featureComparison = "Perbandingan Fitur"
+fetchError = "Gagal mengambil data harga"
 from = "Mulai"
 hideComparison = "Sembunyikan Perbandingan Fitur"
 licensedSeats = "Berlisensi: {{count}} seat"
@@ -7227,6 +7492,8 @@ withServer = "+ Paket Server"
 [plan.api]
 large = "5.000 Kredit"
 medium = "1.000 Kredit"
+perCredit = "{{price}} per kredit"
+perCreditWithDiscount = "{{price}} per kredit • diskon {{discount}}%"
 small = "500 Kredit"
 xsmall = "100 Kredit"
 
@@ -7302,14 +7569,9 @@ upToFiveUsers = "Hingga 5 pengguna"
 usageTrackingPrometheus = "Pelacakan penggunaan & Prometheus"
 usersIncluded = "100 pengguna disertakan"
 
-[plan.licenseWarning]
-body = "Anda memiliki {{total}} pengguna tetapi level gratis hanya mendukung {{limit}} per server. Upgrade agar Stirling PDF tetap berjalan lancar."
-cta = "Lihat paket"
-overLimit = "lebih dari {{limit}}"
-title = "Batas gratis self-hosted tercapai"
-
 [plan.period]
 month = "bulan"
+year = "tahun"
 
 [plan.pro]
 highlight1 = "Penggunaan Alat Tanpa Batas"
@@ -7435,6 +7697,9 @@ pdfa-1 = "PDF/A-1b"
 pdfa-2b = "PDF/A-2b"
 pdfa-3b = "PDF/A-3b"
 
+[portal.accountLink]
+ownerRequired = "Hanya pemilik org yang dapat menautkan atau memutus tautan server ini."
+
 [portal.accountLink.card]
 billingNote = "Pemrosesan tanpa pengawasan ditagihkan ke dompet organisasi Anda."
 connectDescription = "Hubungkan server ini untuk menggunakan kuota pemrosesan tim Anda di Stirling Cloud."
@@ -7556,6 +7821,7 @@ identity = "Akun Stirling"
 linkTitle = "Tautkan akun Stirling Anda"
 noAuthorizeUrl = "Stirling tidak mengembalikan tempat untuk melanjutkan. Coba lagi sebentar lagi."
 startFailed = "Tidak dapat menjangkau Stirling untuk memulai koneksi. Periksa akses jaringan keluar server ini, lalu coba lagi."
+transferPending = "Transfer kepemilikan sedang tertunda. Buka Pengaturan → Pengguna untuk menyelesaikan atau membatalkannya, lalu coba tautkan lagi."
 
 [portal.accountLink.modal.loginNotConfigured]
 after = "untuk mengaktifkan penautan dalam aplikasi terhadap akun Stirling yang di-host."
@@ -9441,6 +9707,7 @@ labelId = "ID label"
 labelIdHelp = "GUID label, dari portal Purview. Menerapkan label menulis metadatanya ke PDF; ini tidak dapat mengenkripsi, yang memerlukan klien Microsoft."
 labelName = "Nama label (opsional)"
 labelNameHelp = "Direkam bersama ID agar orang dan alat dapat mengenali label."
+labelNamePlaceholder = "Rahasia"
 
 [portal.policies.config.purview.fields.method]
 help = "Purview membedakan label yang diterapkan kebijakan dari label yang dipilih seseorang."
@@ -10425,31 +10692,6 @@ unlimited = "{{used}} · Tidak terbatas"
 [printFile]
 title = "Cetak File"
 
-[processingFolders.downloads]
-approve = "Proses Downloads saya"
-cancelSweep = "Batal"
-capped = "Anda memiliki {{found}} PDF; {{limit}} pertama diproses sekarang dan sisanya menyusul."
-close = "Selesai"
-explain_one = "Stirling dapat mengklasifikasikan {{count}} PDF yang sudah ada di folder Downloads Anda dan membuka hasilnya di sini."
-explain_other = "Stirling dapat mengklasifikasikan {{count}} PDF yang sudah ada di folder Downloads Anda dan membuka hasilnya di sini."
-failed = "Tidak dapat menyiapkannya. File Anda belum diubah."
-finished_one = "Mengklasifikasikan {{count}} file dan membuka {{opened}} di antaranya di sini, siap untuk dikerjakan."
-finished_other = "Mengklasifikasikan {{count}} file dan membuka {{opened}} di antaranya di sini, siap untuk dikerjakan."
-nothingNew_one = "Tidak ada yang baru untuk diproses - file {{count}} ini sudah diproses."
-nothingNew_other = "Tidak ada yang baru untuk diproses - {{count}} file ini sudah diproses."
-notModified = "File Anda di Downloads tidak diubah - Stirling membacanya dan membukanya di sini."
-notNow = "Tidak sekarang"
-progressCounts = "dari {{total}} diproses"
-someFailed_one = "{{count}} tidak dapat diproses dan dibiarkan tanpa perubahan."
-someFailed_other = "{{count}} tidak dapat diproses dan dibiarkan tanpa perubahan."
-stillRunning = "Beberapa file masih diproses di latar belakang."
-title = "Atur Downloads Anda?"
-trigger_one = "Proses {{count}} PDF di Downloads"
-trigger_other = "Proses {{count}} PDF di Downloads"
-typesFound_one = "{{count}} jenis dokumen ditemukan"
-typesFound_other = "{{count}} jenis dokumen ditemukan"
-working = "Memproses ..."
-
 [processingFolders.setup]
 addFolder = "Tambahkan folder"
 advancedSteps = "Folder ini menggunakan pengaturan pemrosesan yang tidak dapat diedit oleh wizard ini. Langkah yang tersimpan tidak diubah."
@@ -10527,6 +10769,10 @@ label = "Client ID"
 [provider.googledrive.enabled]
 description = "Izinkan pengguna mengimpor file langsung dari Google Drive"
 label = "Aktifkan Google Drive File Picker"
+
+[provider.googledrive.errors]
+notConfigured = "Google Drive belum dikonfigurasi"
+pickerFailed = "Gagal membuka pemilih Google Drive"
 
 [provider.oauth2.generic]
 name = "OAuth2 Generik"
@@ -10775,6 +11021,7 @@ applyWarning = "⚠️ Penerapan permanen, tidak dapat dibatalkan dan data di ba
 colorLabel = "Warna Sensor"
 controlsTitle = "Kontrol Redaksi Manual"
 instructions = "Pilih teks atau gambar area pada PDF untuk menandai konten untuk redaksi."
+notImplemented = "Antarmuka redaksi manual akan tersedia di sini saat diimplementasikan."
 title = "Alat Redaksi"
 
 [redact.modeSelector]
@@ -11102,6 +11349,9 @@ failed = "Terjadi kesalahan saat memutar PDF."
 [rotate.preview]
 title = "Pratinjau Rotasi"
 
+[rotate.settings]
+title = "Pengaturan"
+
 [rotate.tooltip.controls]
 text = "Gunakan tombol rotasi untuk menyesuaikan orientasi. Tombol kiri memutar berlawanan arah jarum jam, tombol kanan memutar searah jarum jam. Setiap klik memutar 90 derajat."
 title = "Kontrol"
@@ -11119,6 +11369,16 @@ hideSmallLabels = "Sembunyikan label kecil"
 physicalValues = "Fisik"
 scaled = "Diskalakan"
 showAllLabels = "Tampilkan semua label"
+
+[ruler.units]
+cm = "Sentimeter (cm)"
+ft = "Kaki (ft)"
+in = "Inci (in)"
+km = "Kilometer (km)"
+m = "Meter (m)"
+mi = "Mil (mi)"
+mm = "Milimeter (mm)"
+yd = "Yard (yd)"
 
 [sanitize]
 desc = "Hapus elemen yang berpotensi berbahaya dari file PDF."
@@ -11184,6 +11444,7 @@ calibrationPaperDistance = "Jarak halaman terukur: {{distance}}"
 calibrationTitle = "Kalibrasi Skala"
 calibrationTooltip = "Ukur jarak yang diketahui untuk menghitung skala secara otomatis"
 customScale = "Skala Kustom"
+customUnit = "{{unit}} (kustom)"
 noneSet = "Tidak ada skala kustom yang diatur"
 presets = "Skala Preset"
 ratio = "Rasio Skala"
@@ -11207,6 +11468,9 @@ title = "Gambar yang Diekstrak"
 
 [scannerImageSplit.error]
 failed = "Terjadi kesalahan saat mengekstrak pemindaian gambar."
+
+[scannerImageSplit.settings]
+title = "Pengaturan"
 
 [scannerImageSplit.tooltip]
 headsUp = "Perhatian"
@@ -11274,6 +11538,9 @@ general = "Umum"
 limits = "Batas & Performa"
 models = "Model & Penyedia"
 title = "AI"
+
+[settings.billing]
+title = "Penagihan"
 
 [settings.configuration]
 advanced = "Lanjutan"
@@ -11348,8 +11615,6 @@ defaultPdfEditor = "Editor PDF default"
 defaultPdfEditorActive = "Stirling PDF adalah editor PDF default Anda"
 defaultPdfEditorChecking = "Memeriksa..."
 defaultPdfEditorInactive = "Aplikasi lain disetel sebagai default"
-defaultPdfEditorRemind = "Ingatkan saya untuk mengatur sebagai default"
-defaultPdfEditorRemindDescription = "Tampilkan banner saat Stirling PDF bukan aplikasi PDF default Anda."
 defaultPdfEditorSet = "Sudah Default"
 defaultStartupView = "Tampilan default saat aplikasi dibuka"
 defaultStartupViewDescription = "Pilih tab yang aktif di kolom kiri saat aplikasi dimulai"
@@ -11618,6 +11883,15 @@ people = "Anggota"
 teams = "Tim"
 title = "Ruang kerja"
 
+[setup.error]
+loginIncomplete = "Gagal menyelesaikan login"
+noSaasServer = "Tidak ada server SaaS yang dikonfigurasi"
+noServer = "Tidak ada server yang dikonfigurasi"
+saasLoginFailed = "Login SaaS gagal"
+saasLoginIncomplete = "Gagal menyelesaikan login SaaS"
+selfHostedLoginFailed = "Login self-hosted gagal"
+signupIncomplete = "Gagal menyelesaikan pendaftaran"
+
 [setup.login]
 connectingTo = "Menghubungkan ke:"
 oauthPending = "Membuka browser untuk autentikasi..."
@@ -11661,6 +11935,7 @@ configFetchError = "Gagal mengambil konfigurasi server: {{error}}"
 emptyUrl = "Masukkan URL server"
 invalidUrl = "Format URL tidak valid. Harap masukkan URL yang valid seperti https://your-server.com"
 testFailed = "Tes koneksi gagal"
+unknown = "Kesalahan tidak diketahui"
 unreachable = "Tidak dapat terhubung ke server"
 
 [setup.server.error.securityDisabled]
@@ -11769,6 +12044,7 @@ canvas = "Setelah menggambar tanda tangan Anda di kanvas, tutup modal lalu klik 
 image = "Setelah mengunggah gambar tanda tangan Anda di atas, klik di mana saja pada PDF untuk menempatkannya."
 noSignature = "Buat tanda tangan di atas untuk mengaktifkan alat penempatan."
 paused = "Penempatan dijeda"
+placeAnnotation = "Klik di mana saja pada PDF untuk menempatkan anotasi Anda."
 resumeHint = "Lanjutkan penempatan untuk mengklik dan menambahkan tanda tangan Anda."
 saved = "Pilih tanda tangan tersimpan di atas, lalu klik di mana saja pada PDF untuk menempatkannya."
 text = "Setelah memasukkan nama Anda di atas, klik di mana saja pada PDF untuk menempatkan tanda tangan Anda."
@@ -11922,7 +12198,9 @@ signUpWith = "Sign up with"
 skip = "Skip"
 subtitle = "Bergabunglah dengan Stirling PDF untuk memulai"
 title = "Buat akun"
+unableToAccessTool = "Tidak dapat mengakses alat: {{error}}"
 unexpectedError = "Kesalahan tak terduga: {{message}}"
+unknownError = "Kesalahan tidak diketahui"
 
 [sizes]
 large = "Besar"
@@ -11995,6 +12273,14 @@ rightToLeft = "Pisah kanan-ke-kiri"
 [split.poster.pageSize]
 description = "Ukuran halaman keluaran untuk pencetakan"
 label = "Ukuran Halaman Target"
+
+[split.poster.pageSize.options]
+a3 = "A3 (297 × 420 mm)"
+a4 = "A4 (210 × 297 mm)"
+a5 = "A5 (148 × 210 mm)"
+legal = "Legal (8.5 × 14 in)"
+letter = "Letter (8.5 × 11 in)"
+tabloid = "Tabloid (11 × 17 in)"
 
 [split.poster.xFactor]
 description = "Jumlah kolom untuk membagi setiap halaman"
@@ -12267,6 +12553,7 @@ confirmCancelInvite = "Anda yakin ingin membatalkan undangan ini?"
 confirmLeave = "Anda yakin ingin keluar dari tim ini?"
 confirmLeaveLeader = "Sebagai pemimpin tim, keluar akan menghapus Anda dari tim. Anda yakin?"
 confirmRemove = "Anda yakin ingin menghapus anggota ini?"
+currentUnavailable = "Kami tidak dapat mengidentifikasi tim Anda saat ini. Coba lagi, atau hubungi dukungan jika ini berlanjut."
 editName = "Edit nama tim"
 inviteCancelled = "Undangan dibatalkan"
 inviteError = "Gagal mengirim undangan"
@@ -12292,10 +12579,8 @@ renameCancel = "Batalkan rename"
 renameError = "Gagal mengganti nama tim"
 renameSubmit = "Simpan nama tim"
 renameSuccess = "Nama tim berhasil diganti"
-transferBody = "Jadikan {{email}} pemilik tim? Mereka akan mengontrol keanggotaan tim dan pengaturan penagihan organisasi. Anda akan menjadi anggota. Langganan dan wallet tim tetap bersama tim."
 transferError = "Kepemilikan tidak dapat ditransfer. Segarkan tim dan coba lagi."
 transferSuccess = "Kepemilikan tim ditransfer. Peran Anda sekarang anggota."
-transferTitle = "Transfer kepemilikan tim"
 
 [team.invitationBanner]
 acceptButton = "Terima"
@@ -12396,6 +12681,10 @@ WORD = "dokumen Word"
 XML = "file XML"
 XPS = "dokumen XPS"
 ZIP = "arsip ZIP"
+
+[toolLoading]
+generic = "Memuat alat..."
+named = "Memuat {{toolName}}..."
 
 [toolPanel]
 alpha = "Alpha"
@@ -12501,6 +12790,8 @@ stable = "STABLE"
 updateAvailable = "Pembaruan Tersedia"
 urgentUpdateAvailable = "Pembaruan Mendesak"
 version = "Versi"
+versionCount_one = "{{count}} versi"
+versionCount_other = "{{count}} versi"
 versionHistory = "Riwayat Versi"
 viewGuide = "Lihat Panduan"
 whatsNewIn = "Apa yang baru di"
@@ -12528,6 +12819,7 @@ title = "URL ke PDF"
 aboutUsageAnalytics = "Tentang Analitik Penggunaan"
 configureSettings = "Konfigurasikan Pengaturan Analitik"
 error = "Kesalahan saat memuat statistik penggunaan"
+loadFailed = "Gagal memuat statistik penggunaan"
 noData = "Tidak ada data"
 noDataMessage = "Tidak ada statistik penggunaan saat ini."
 usageAnalyticsExplanation = "Analitik penggunaan melacak permintaan endpoint dan pola pemakaian alat. Dikombinasikan dengan dasbor Pencatatan Audit, Anda mendapatkan visibilitas penuh atas aktivitas sistem, performa, dan kejadian keamanan."
@@ -12591,7 +12883,6 @@ removeTeam = "Hapus dari tim"
 rename = "Rename tim"
 resetPw = "Reset password"
 suspend = "Tangguhkan"
-transferOwnership = "Transfer kepemilikan"
 unlock = "Buka kunci akun"
 
 [users.activity]
@@ -12631,8 +12922,6 @@ disableMfaTitle = "Reset MFA"
 removeBody = "Hapus {{name}} secara permanen dari organisasi? Tindakan ini tidak dapat dibatalkan."
 removeTeamBody = "Hapus {{name}} dari tim? Mereka tetap memiliki akun tetapi kehilangan akses ke sumber daya tim ini."
 removeTitle = "Hapus anggota"
-transferOwnershipBody = "Jadikan {{name}} pemilik organisasi? Mereka akan menjadi admin. Anda akan tetap menjadi admin tetapi kehilangan kepemilikan. Hanya pemilik baru atau operator server yang dapat mentransfernya kembali."
-transferOwnershipTitle = "Transfer kepemilikan organisasi"
 
 [users.empty]
 description = "Undang tim Anda untuk mulai berkolaborasi."
@@ -12825,6 +13114,7 @@ signaturesInvalid = "{{count}} tidak valid"
 signaturesUnverified_one = "{{count}} perlu ditinjau"
 signaturesUnverified_other = "{{count}} perlu ditinjau"
 signaturesValid = "{{count}} sepenuhnya valid"
+thumbnailAlt = "thumbnail {{fileName}}"
 title = "Laporan Validasi Tanda Tangan"
 
 [validateSignature.report.fields]
@@ -12862,6 +13152,7 @@ lastPage = "Halaman Terakhir"
 loadingEngine = "Memuat PDF Engine..."
 moreOptions = "Lainnya"
 nextPage = "Halaman Berikutnya"
+noPdfProvided = "Tidak ada PDF yang diberikan"
 onlyPdfSupported = "Penampil hanya mendukung file PDF. File ini tampaknya memiliki format yang berbeda."
 pageNavigation = "Navigasi halaman"
 previousPage = "Halaman Sebelumnya"
@@ -12899,8 +13190,17 @@ collapseAll = "Ciutkan semua bookmark"
 editorOnly = "Bookmark dokumen ini hanya dapat diedit di editor."
 empty = "No bookmarks in this document"
 expandAll = "Luaskan semua bookmark"
+loadFailed = "Gagal memuat bookmark"
+loading = "Memuat bookmark..."
+noDocument = "Buka PDF untuk melihat bookmark-nya."
+noSearchResults = "Tidak ada bookmark yang cocok dengan pencarian Anda"
+openEditor = "Perlu mengurutkan ulang atau menyusun bertingkat? Buka Editor Bookmark"
+pageLabel = "Halaman"
+pageNumber = "Halaman {{page}}"
+saveFailed = "Gagal menyimpan bookmark"
 searchPlaceholder = "Cari bookmark"
 title = "Bookmarks"
+untitled = "Tanpa judul"
 
 [viewer.comments]
 addComment = "Tambahkan komentar"
@@ -12948,16 +13248,26 @@ unsavedDesc = "Anda memiliki perubahan yang belum disimpan"
 
 [viewer.layers]
 closeSidebar = "Tutup bilah sisi layer"
+empty = "Dokumen ini tidak memiliki lapisan."
 hideAll = "Sembunyikan semua layer"
+loadFailed = "Gagal memuat lapisan."
+loading = "Memuat lapisan..."
+noDocument = "Buka PDF untuk melihat lapisannya."
+readFailed = "Gagal membaca lapisan PDF"
 showAll = "Tampilkan semua layer"
 title = "Layers"
 
 [viewer.link]
 delete = "Hapus tautan"
+goTo = "Buka {{label}}"
+open = "Buka Tautan"
+openAria = "Buka tautan"
+page = "Halaman {{page}}"
 
 [viewer.nonPdf]
 columnDefault = "Kolom {{index}}"
 convertToPdf = "Konversi ke PDF"
+copied = "Disalin"
 csvStats = "{{rows}} baris · {{columns}} kolom · {{size}}"
 emptyFile = "File kosong"
 htmlHidePreview = "Sembunyikan pratinjau"
@@ -12968,6 +13278,8 @@ htmlShowPreview = "Tetap tampilkan pratinjau"
 invalidJson = "JSON tidak valid — menampilkan konten mentah"
 lineNumbers = "Nomor baris"
 loading = "Memuat..."
+noFile = "Tidak ada file yang dimuat"
+previewUnavailable = "Pratinjau tidak tersedia untuk jenis file ini"
 renderMarkdown = "Render markdown"
 sortedBy = "Diurutkan menurut: {{column}}"
 textStats = "{{lines}} baris · {{size}}"
@@ -12994,11 +13306,28 @@ next = "Hasil berikutnya"
 previous = "Hasil sebelumnya"
 resultsOf = "dari {{total}}"
 
+[viewer.sidebar]
+close = "Tutup sidebar"
+searchPlaceholder = "Cari..."
+
 [viewer.signature]
 delete = "Hapus tanda tangan"
+previewAlt = "Pratinjau tanda tangan"
+
+[viewer.signatureField]
+badge = "Tanda tangan"
+fieldTitle = "Bidang tanda tangan: {{name}}"
+signed = "Ditandatangani"
+signedWithReason = "Ditandatangani: {{reason}}"
+unsignedFieldTitle = "Bidang tanda tangan belum ditandatangani: {{name}}"
+withTime = "{{label}} ({{time}})"
 
 [viewer.thumbnails]
 closeSidebar = "Tutup bilah sisi thumbnail"
+failed = "Gagal"
+pageNumber = "Halaman {{page}}"
+thumbnailAlt = "thumbnail halaman {{page}}"
+title = "Halaman"
 
 [viewPdf]
 tags = "melihat,membaca,membuat anotasi,teks,gambar"
@@ -13006,169 +13335,6 @@ title = "Lihat/Edit PDF"
 
 [warning]
 tooltipTitle = "Peringatan"
-
-[watchedFolders]
-alreadyInFolder = "Already in this folder"
-defaultFolderWarning = "This is a default folder and will be recreated on next reload."
-deleteConfirmBody = "This will remove the folder and its run history. Files already downloaded are not affected."
-deleteConfirmTitle = "Delete folder?"
-folderNotFound = "Folder not found"
-newFolder = "New folder"
-noFolders = "No watched folders yet"
-sidebarTitle = "Watched Folders"
-title = "Watched Folders"
-
-[watchedFolders.actions]
-back = "Back"
-collapse = "Collapse"
-dismiss = "Dismiss"
-download = "Download"
-downloadInput = "Download input"
-downloadOutput = "Download output"
-expand = "Expand"
-retry = "Retry"
-
-[watchedFolders.card]
-delete = "Delete folder"
-edit = "Edit folder"
-
-[watchedFolders.home]
-addAnother = "Add another Watched Folder"
-addAnotherDesc = "Automatically process files with a new pipeline"
-create = "Create your first Watched Folder"
-deleteFolder = "Delete folder"
-editFolder = "Edit folder"
-empty = "No watched folders yet"
-emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
-emptyTitle = "Automate your PDF workflows"
-file = "file"
-files = "files"
-pause = "Pause"
-resume = "Resume"
-
-[watchedFolders.howItWorks]
-step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
-step1Title = "Drop files"
-step2Desc = "Your configured tools process each file automatically"
-step2Title = "Pipeline runs"
-step3Desc = "Download processed files from inside the folder"
-step3Title = "Output ready"
-title = "How Watched Folders work"
-
-[watchedFolders.modal]
-advanced = "Advanced"
-automation = "Automation"
-automationNameFallback = "Watched Folder automation"
-automationRequired = "Add at least one configured step before saving."
-autoNumber = "Auto-number"
-autoNumberExample = "e.g. document.pdf → document (1).pdf"
-autoScanHelp = "New PDF files in this folder are processed automatically every 10 seconds."
-changeFolder = "Change"
-chooseFolder = "Choose"
-clearFolder = "Clear"
-color = "Accent color"
-createFolder = "Create Folder"
-createTitle = "New Watched Folder"
-editTitle = "Edit Watched Folder"
-inputFolder = "Input folder"
-inputFolderNotChosen = "No folder chosen — required for auto-scan"
-inputSource = "Input source"
-inputSourceBrowser = "Browser — drop files here"
-inputSourceLocal = "Local folder (auto-scan)"
-inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
-localOutputFolder = "Local output folder"
-maxRetries = "Max retries"
-name = "Folder name"
-namePlaceholder = "My Watched Folder"
-nameRequired = "Folder name is required"
-nameTooLong = "Folder name must be 50 characters or less"
-outputFolderNotSet = "Not set — outputs stay in app"
-outputFolderUnsupported = "Not supported in this browser"
-outputModeNewDesc = "Output is saved as a new separate file"
-outputModeVersion = "Replace original?"
-outputModeVersionDesc = "Output becomes a new version of the input file rather than a separate file"
-outputName = "Output filename prefix"
-outputNamePrefix = "Filename prefix"
-outputNameSuffix = "Suffix"
-positionPrefix = "Prefix"
-positionSuffix = "Suffix"
-replaceOriginal = "Replace original file"
-retryDelay = "Delay (minutes)"
-saveChanges = "Save Changes"
-saveFailed = "Failed to save folder. Please try again."
-sectionFolder = "Folder"
-sectionSourceOutput = "Source & Output"
-sectionSteps = "Steps"
-
-[watchedFolders.status]
-active = "Active"
-done = "Done"
-paused = "Paused"
-processing = "Processing"
-
-[watchedFolders.time]
-daysAgo = "{{count}}d ago"
-hoursAgo = "{{count}}h ago"
-justNow = "just now"
-minutesAgo = "{{count}}m ago"
-
-[watchedFolders.workbench]
-activity = "Activity"
-addFiles = "Add files"
-allTime = "All time"
-cancel = "Cancel"
-chartTooltipComplete = "{{count}} complete"
-chartTooltipFailed = "{{count}} failed"
-clearSelection = "Clear selection"
-countProcessing = "{{count}} processing"
-countQueued = "{{count}} queued"
-countSelected = "{{count}} selected"
-dataSaved = "Saved"
-dayRunning = "day running"
-daysRunning = "days running"
-delete = "Delete"
-deleteConfirmBody = "Remove notifications only clears the activity log. Delete outputs also removes the processed files from storage. Your original input files are never touched."
-deleteOutputs = "Delete outputs"
-directionIn = "in"
-directionOut = "out"
-dropToProcess = "Drop to process"
-export = "Export"
-exportSeparately = "Export separately"
-exportZip = "Export zip"
-failed = "Failed"
-filesProcessedOverTime = "Files processed over time"
-filterAll = "All"
-filterPending = "Pending"
-inputs = "Inputs"
-inputSize = "Input size"
-legendComplete = "Complete"
-noActivity = "No activity yet — drop a PDF to start"
-noActivityMatch = "No matching activity"
-noInputFolder = "No input folder — edit to configure"
-outputs = "Outputs"
-pause = "Pause"
-preview = "Preview"
-previewInput = "Preview input"
-previewLoadFailed = "Could not load file preview."
-previewOutput = "Preview output"
-queued = "Queued"
-queuedWaiting = "Queued — waiting to run"
-removeEntries = "Remove {{count}} entries"
-removeEntry = "Remove entry"
-removeNotificationsOnly = "Remove notifications only"
-resume = "Resume"
-retryAll = "Retry all"
-retryIn = "retry in {{count}}m"
-retryingSoon = "retrying…"
-retryMixedConfirm = "Some selected files have already completed and will be skipped. Only failed files will be retried. Continue?"
-running = "Running"
-search = "Search…"
-selectAll = "Select all {{count}}"
-sortNameAsc = "A → Z"
-sortNameDesc = "Z → A"
-sortNewest = "Newest"
-sortOldest = "Oldest"
-watching = "Watching: {{name}}"
 
 [watermark]
 desc = "Tambahkan tanda air teks atau gambar ke file PDF"
@@ -13371,6 +13537,10 @@ certTypeServer = "Sertifikat Server (jika tersedia)"
 completedDeclined = "Anda telah menolak dokumen ini."
 completedSigned = "Anda telah menandatangani dokumen ini."
 decline = "Tolak"
+declineConfirm = "Apakah Anda yakin ingin menolak penandatanganan dokumen ini?"
+declineFailed = "Gagal menolak: {{error}}"
+declineSuccess = "Anda telah menolak permintaan penandatanganan ini."
+defaultReason = "Penandatanganan Dokumen"
 downloadDocument = "Unduh Dokumen"
 dueDate = "Batas Waktu: {{date}}"
 errorTitle = "Kesalahan"
@@ -13381,6 +13551,7 @@ locationPlaceholder = "mis., San Francisco, CA"
 pageNumber = "Nomor Halaman (opsional)"
 reason = "Alasan"
 reasonPlaceholder = "mis., Persetujuan dokumen"
+selectCertificateFile = "Silakan pilih file sertifikat"
 sessionNotFound = "Sesi tidak ditemukan atau akses ditolak."
 signDocument = "Tandatangani Dokumen"
 statusDeclined = "Ditolak"
@@ -13388,7 +13559,9 @@ statusNotified = "Diberi tahu"
 statusPending = "Tertunda"
 statusSigned = "Ditandatangani"
 statusViewed = "Dilihat"
+submitFailed = "Gagal mengirim tanda tangan: {{error}}"
 submitSignature = "Kirim Tanda Tangan"
+submitSuccess = "Tanda tangan berhasil dikirim!"
 
 [workspace]
 title = "Ruang Kerja"
