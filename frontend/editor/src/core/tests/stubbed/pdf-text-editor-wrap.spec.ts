@@ -122,7 +122,29 @@ async function blurRun(page: import("@playwright/test").Page, testId: string) {
   await page.evaluate((id) => {
     document.querySelector<HTMLDivElement>(`[data-testid="${id}"]`)?.blur();
   }, testId);
-  await page.waitForTimeout(2500);
+}
+
+/**
+ * The blur-triggered reflow updates the run's bounds a variable number of frames
+ * later (WebKit under load is the slow case), so poll the model until the width
+ * has settled at or below `maxWidth`, then return the settled shape. A one-shot
+ * read races the reflow and reads the still-grown box.
+ */
+async function readRunAfterReflow(
+  page: import("@playwright/test").Page,
+  runId: string,
+  maxWidth: number,
+): Promise<RunShape> {
+  await expect
+    .poll(
+      async () =>
+        (await readRun(page, runId))?.width ?? Number.POSITIVE_INFINITY,
+      { timeout: 15_000 },
+    )
+    .toBeLessThan(maxWidth);
+  const run = await readRun(page, runId);
+  expect(run).not.toBeNull();
+  return run!;
 }
 
 test.describe("PDF text editor - text wrap", () => {
@@ -146,16 +168,11 @@ test.describe("PDF text editor - text wrap", () => {
     await typeAtEnd(page, testId, LONG_TEXT);
     await blurRun(page, testId);
 
-    const after = await readRun(page, runId);
-    expect(after).not.toBeNull();
     // The whole point of wrapping: the box keeps the width it was locked to
     // and the overflow goes onto new lines.
+    const after = await readRunAfterReflow(page, runId, before!.width + 1);
     expect(
-      after!.width,
-      `box grew from ${before!.width.toFixed(0)}pt to ${after!.width.toFixed(0)}pt instead of wrapping back to its locked width`,
-    ).toBeLessThan(before!.width + 1);
-    expect(
-      after!.lines,
+      after.lines,
       "the added text should have pushed onto new lines",
     ).toBeGreaterThan(before!.lines);
   });
@@ -193,19 +210,14 @@ test.describe("PDF text editor - text wrap", () => {
     await typeAtEnd(page, testId, LONG_TEXT);
     await blurRun(page, testId);
 
-    const after = await readRun(page, runId);
-    expect(after).not.toBeNull();
-    expect(
-      after!.lines,
-      "in wrap mode the overflow must go onto a second line",
-    ).toBeGreaterThan(1);
     // Wrapping at the page edge is not wrapping: "Wrap" means the run keeps
     // the box it had. The old code reflowed at whatever width the box had
     // grown to, so the heading spanned the page before it broke at all.
+    const after = await readRunAfterReflow(page, runId, before!.width + 1);
     expect(
-      after!.width,
-      `wrap mode let the box grow from ${before!.width.toFixed(0)}pt to ${after!.width.toFixed(0)}pt`,
-    ).toBeLessThan(before!.width + 1);
+      after.lines,
+      "in wrap mode the overflow must go onto a second line",
+    ).toBeGreaterThan(1);
   });
 
   // This used to assert that the overlay WRAPS text typed past the page edge.
@@ -261,11 +273,11 @@ test.describe("PDF text editor - text wrap", () => {
     ).toEqual(rows!.map(() => 1));
 
     await blurRun(page, testId);
-    const after = await readRun(page, runId);
-    expect(after).not.toBeNull();
     // The typed text survived and was re-broken onto lines that fit.
-    expect(after!.lines, "the reflow should have added lines").toBeGreaterThan(
-      before!.lines,
-    );
+    await expect
+      .poll(async () => (await readRun(page, runId))?.lines ?? 0, {
+        timeout: 15_000,
+      })
+      .toBeGreaterThan(before!.lines);
   });
 });

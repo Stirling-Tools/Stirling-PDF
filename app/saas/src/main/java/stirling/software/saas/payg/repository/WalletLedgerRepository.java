@@ -6,12 +6,10 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
 import stirling.software.saas.payg.model.LedgerEntryType;
 import stirling.software.saas.payg.wallet.WalletLedgerEntry;
 
-@Repository
 public interface WalletLedgerRepository extends JpaRepository<WalletLedgerEntry, Long> {
 
     /** Most recent entries for the Plan page activity feed. */
@@ -82,24 +80,6 @@ public interface WalletLedgerRepository extends JpaRepository<WalletLedgerEntry,
     long sumPeriodAmount(
             @Param("teamId") Long teamId,
             @Param("entryType") LedgerEntryType entryType,
-            @Param("periodStart") LocalDateTime periodStart,
-            @Param("periodEnd") LocalDateTime periodEnd);
-
-    /**
-     * Net signed period balance over billable entries (DEBIT negative + REFUND positive). Negate
-     * for positive spend. Unlike {@link #sumPeriodAmount} (DEBIT only) this nets refunds, so a
-     * refunded job no longer reads as spent — the headline period-spend figure for the subscribed
-     * monthly bill + cap.
-     */
-    @Query(
-            "SELECT COALESCE(SUM(e.amountUnits), 0) FROM WalletLedgerEntry e"
-                    + " WHERE e.teamId = :teamId"
-                    + " AND e.entryType IN (stirling.software.saas.payg.model.LedgerEntryType.DEBIT,"
-                    + " stirling.software.saas.payg.model.LedgerEntryType.REFUND)"
-                    + " AND e.occurredAt >= :periodStart"
-                    + " AND e.occurredAt < :periodEnd")
-    long sumPeriodNetBillable(
-            @Param("teamId") Long teamId,
             @Param("periodStart") LocalDateTime periodStart,
             @Param("periodEnd") LocalDateTime periodEnd);
 

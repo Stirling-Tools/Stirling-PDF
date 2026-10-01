@@ -70,6 +70,7 @@ import { usePolicyAutoRun } from "@app/components/policies/usePolicyAutoRun";
 import {
   recordRunStart,
   getRun,
+  updateRun,
   resetPolicyRuns,
 } from "@app/components/policies/policyRunStore";
 
@@ -118,6 +119,40 @@ beforeEach(() => {
 });
 
 describe("auto-run import: new-version output delivery", () => {
+  it.each(["doc.chunks.jsonl", "indexing-report.json", "processed.pdf"])(
+    "never imports external %s, even if the policy now replaces editor files",
+    async (fileName) => {
+      mocks.fileStubs = [{ id: "file-1" }];
+      recordCompletedRun();
+      updateRun("run-1", {
+        externalOutput: true,
+        outputs: [{ fileId: "out-1", fileName }],
+      });
+      await runImport();
+      expect(getRun("run-1")?.outputFileIds).toEqual(["file-1"]);
+      expect(mocks.downloadPolicyOutput).not.toHaveBeenCalled();
+      expect(mocks.consumeFiles).not.toHaveBeenCalled();
+      expect(mocks.addFiles).not.toHaveBeenCalled();
+      expect(mocks.persistVersionedOutputs).not.toHaveBeenCalled();
+      expect(mocks.updateFileMetadata).not.toHaveBeenCalled();
+      expect(mocks.bumpRevision).not.toHaveBeenCalled();
+    },
+  );
+
+  it("preserves a converted output's extension for subsequent policies", async () => {
+    recordCompletedRun();
+    updateRun("run-1", {
+      outputs: [{ fileId: "out-file-1", fileName: "doc_converted.png" }],
+    });
+    mocks.downloadPolicyOutput.mockResolvedValue(new Blob(["image"]));
+
+    await runImport();
+
+    const file = mocks.addFiles.mock.calls[0][0][0] as File;
+    expect(file.name).toBe("doc.png");
+    expect(file.type).not.toBe("application/pdf");
+  });
+
   it("versions the input in storage when it's recovered after a reload (no second file)", async () => {
     // Reload case: the workspace is empty, but the input still persists in IndexedDB.
     mocks.fileStubs = [];

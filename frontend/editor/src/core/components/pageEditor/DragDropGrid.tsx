@@ -14,7 +14,7 @@ import {
   Z_INDEX_DROP_INDICATOR,
   Z_INDEX_DRAG_BADGE,
 } from "@app/styles/zIndex";
-import { LocalIcon } from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import {
   DndContext,
   DragEndEvent,
@@ -58,6 +58,7 @@ interface DragDropGridProps<T extends DragDropItem> {
     justMoved: boolean,
     dragHandleProps?: DragHandleProps,
     zoomLevel?: number,
+    isOverTarget?: boolean,
   ) => React.ReactNode;
   getThumbnailData?: (
     itemId: string,
@@ -239,9 +240,11 @@ interface DraggableItemProps<T extends DragDropItem> {
     justMoved: boolean,
     dragHandleProps?: DragHandleProps,
     zoomLevel?: number,
+    isOverTarget?: boolean,
   ) => React.ReactNode;
   zoomLevel: number;
   selectedPageIds?: string[];
+  isOverTarget: boolean;
 }
 
 const DraggableItemInner = <T extends DragDropItem>({
@@ -256,6 +259,7 @@ const DraggableItemInner = <T extends DragDropItem>({
   renderItem,
   onUpdateDropTarget,
   zoomLevel,
+  isOverTarget,
 }: DraggableItemProps<T>) => {
   const isPlaceholder = Boolean(item.isPlaceholder);
   const pageNumber = item.pageNumber ?? index + 1;
@@ -326,6 +330,7 @@ const DraggableItemInner = <T extends DragDropItem>({
         justMoved,
         { ref: setNodeRef, ...attributes, ...listeners },
         zoomLevel,
+        isOverTarget,
       )}
     </>
   );
@@ -366,6 +371,7 @@ const DraggableItem = React.memo(DraggableItemInner, (prevProps, nextProps) => {
     prevProps.index === nextProps.index &&
     prevProps.justMoved === nextProps.justMoved &&
     prevProps.zoomLevel === nextProps.zoomLevel &&
+    prevProps.isOverTarget === nextProps.isOverTarget &&
     prevProps.activeDragIds.length === nextProps.activeDragIds.length &&
     prevProps.boxSelectedPageIds.length === nextProps.boxSelectedPageIds.length
   );
@@ -966,6 +972,7 @@ const DragDropGrid = <T extends DragDropItem>({
                         renderItem={renderItem}
                         zoomLevel={zoomLevel}
                         selectedPageIds={selectedPageIds}
+                        isOverTarget={hoveredItemId === item.id}
                       />
                     );
                   })}
@@ -1015,7 +1022,7 @@ const DragDropGrid = <T extends DragDropItem>({
                   color: "var(--mantine-color-dimmed)",
                 }}
               >
-                <LocalIcon icon="description" width="3rem" height="3rem" />
+                <Icon name="file-text" size="3rem" />
               </div>
             )}
           </div>

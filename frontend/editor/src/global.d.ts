@@ -1,3 +1,4 @@
+/// <reference types="vite-plugin-svgr/client" />
 /// <reference types="gapi" />
 /// <reference types="gapi.client.drive-v3" />
 /// <reference types="google.accounts" />
@@ -5,17 +6,6 @@
 
 declare module "*.js";
 declare module "*.module.css";
-
-// Auto-generated icon set JSON import
-declare module "assets/material-symbols-icons.json" {
-  const value: {
-    prefix: string;
-    icons: Record<string, unknown>;
-    width?: number;
-    height?: number;
-  };
-  export default value;
-}
 
 declare global {
   interface Window {
@@ -51,6 +41,8 @@ declare global {
 declare module "axios" {
   export interface AxiosRequestConfig<_D = unknown> {
     suppressErrorToast?: boolean;
+    /** Supplies pipeline details only when that request caused the credit prompt. */
+    accountLinkBlockContext?: import("@app/services/accountLinkBlock").AccountLinkBlockContext;
     skipAuthRedirect?: boolean;
     skipBackendReadyCheck?: boolean;
   }

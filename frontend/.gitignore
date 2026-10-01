@@ -16,6 +16,7 @@
 
 /editor/build
 /editor/dist
+/editor/dist-desktop
 
 # misc
 .DS_Store
@@ -38,10 +39,6 @@ yarn-error.log*
 
 playwright-report
 test-results
-
-# auto-generated files
-/editor/src/assets/material-symbols-icons.json
-/editor/src/assets/material-symbols-icons.d.ts
 
 # dev update testing - keys, built bundles, screenshots, and generated config override
 /scripts/dev-update-test/.keys/

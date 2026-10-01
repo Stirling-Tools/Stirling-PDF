@@ -183,20 +183,6 @@
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
     },
     {
-      "moduleName": "@emotion/react",
-      "moduleUrl": "https://github.com/emotion-js/emotion.git#main",
-      "moduleVersion": "11.14.0",
-      "moduleLicense": "MIT",
-      "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
-    },
-    {
-      "moduleName": "@emotion/styled",
-      "moduleUrl": "https://github.com/emotion-js/emotion.git#main",
-      "moduleVersion": "11.14.1",
-      "moduleLicense": "MIT",
-      "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
-    },
-    {
       "moduleName": "@mantine/core",
       "moduleUrl": "https://github.com/mantinedev/mantine",
       "moduleVersion": "8.3.18",
@@ -221,20 +207,6 @@
       "moduleName": "@mantine/hooks",
       "moduleUrl": "https://github.com/mantinedev/mantine",
       "moduleVersion": "8.3.18",
-      "moduleLicense": "MIT",
-      "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
-    },
-    {
-      "moduleName": "@mui/icons-material",
-      "moduleUrl": "https://github.com/mui/material-ui",
-      "moduleVersion": "9.3.1",
-      "moduleLicense": "MIT",
-      "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
-    },
-    {
-      "moduleName": "@mui/material",
-      "moduleUrl": "https://github.com/mui/material-ui",
-      "moduleVersion": "9.3.1",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
     },
@@ -283,7 +255,7 @@
     {
       "moduleName": "@tanstack/react-query",
       "moduleUrl": "https://github.com/TanStack/query",
-      "moduleVersion": "5.101.4",
+      "moduleVersion": "5.102.0",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
     },
@@ -398,6 +370,13 @@
       "moduleVersion": "6.8.5",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+    },
+    {
+      "moduleName": "lucide-static",
+      "moduleUrl": "https://github.com/lucide-icons/lucide",
+      "moduleVersion": "1.41.0",
+      "moduleLicense": "ISC",
+      "moduleLicenseUrl": "https://opensource.org/licenses/ISC"
     },
     {
       "moduleName": "pdfjs-dist",

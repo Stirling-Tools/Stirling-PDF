@@ -310,6 +310,19 @@ class FileReadinessCheckerTest {
         }
 
         @Test
+        @DisplayName("read-only input with no writer lock is ready")
+        void readOnlyFileIsReady() throws Exception {
+            Path file = realFile("read-only.pdf", "data");
+            setLastModifiedInPast(file, 60_000);
+            org.junit.jupiter.api.Assumptions.assumeTrue(file.toFile().setReadOnly());
+            try {
+                assertTrue(checker.isReady(file));
+            } finally {
+                file.toFile().setWritable(true);
+            }
+        }
+
+        @Test
         @DisplayName("file with no external lock and all checks passing → ready")
         void noLock_ready() throws IOException {
             Path file = realFile("unlocked.pdf", "data");

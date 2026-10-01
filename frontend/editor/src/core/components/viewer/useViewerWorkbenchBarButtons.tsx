@@ -8,7 +8,7 @@ import {
   useWorkbenchBarButtons,
   WorkbenchBarButtonWithAction,
 } from "@app/hooks/useWorkbenchBarButtons";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { SearchInterface } from "@app/components/viewer/SearchInterface";
 import ViewerAnnotationControls from "@app/components/viewer/ViewerAnnotationControls";
@@ -21,12 +21,6 @@ import {
 } from "@app/contexts/NavigationContext";
 import { stripBasePath, withBasePath } from "@app/constants/app";
 import { useRedaction, useRedactionMode } from "@app/contexts/RedactionContext";
-import TextFieldsIcon from "@mui/icons-material/TextFields";
-import StraightenIcon from "@mui/icons-material/Straighten";
-import LayersIcon from "@mui/icons-material/Layers";
-import VolumeUpIcon from "@mui/icons-material/VolumeUp";
-import StopIcon from "@mui/icons-material/Stop";
-import SettingsIcon from "@mui/icons-material/Settings";
 import { useViewerReadAloud } from "@app/components/viewer/useViewerReadAloud";
 import { RulerScaleSettingsButton } from "@app/components/viewer/RulerScaleSettingsButton";
 import type { MeasureScale } from "@app/utils/measurementTypes";
@@ -209,11 +203,7 @@ export function useViewerWorkbenchBarButtons(
                     aria-label={searchLabel}
                     onClick={viewer.searchInterfaceActions.toggle}
                   >
-                    <LocalIcon
-                      icon="find-in-page-rounded"
-                      width="1.25rem"
-                      height="1.25rem"
-                    />
+                    <Icon name="file-search" size="1.25rem" />
                   </ActionIcon>
                 </Tooltip>
               </div>
@@ -231,7 +221,7 @@ export function useViewerWorkbenchBarButtons(
       },
       {
         id: "viewer-pan-mode",
-        icon: <LocalIcon icon="pan-tool-rounded" width="1rem" height="1rem" />,
+        icon: <Icon name="hand" size="1rem" />,
         tooltip:
           !isPanning && pendingCount > 0 && redactionActiveType !== null
             ? applyRedactionsLabel
@@ -252,7 +242,7 @@ export function useViewerWorkbenchBarButtons(
       },
       {
         id: "viewer-ruler",
-        icon: <StraightenIcon sx={{ fontSize: "1rem" }} />,
+        icon: <Icon name="ruler" size={"1rem"} />,
         tooltip: rulerLabel,
         ariaLabel: rulerLabel,
         section: "top" as const,
@@ -271,7 +261,7 @@ export function useViewerWorkbenchBarButtons(
         ? [
             {
               id: "viewer-ruler-settings",
-              icon: <SettingsIcon sx={{ fontSize: "1.5rem" }} />,
+              icon: <Icon name="settings" size={"1.5rem"} />,
               tooltip: rulerSettingsLabel,
               ariaLabel: rulerSettingsLabel,
               section: "top" as const,
@@ -294,7 +284,7 @@ export function useViewerWorkbenchBarButtons(
         : []),
       {
         id: "viewer-rotate-left",
-        icon: <LocalIcon icon="rotate-left" width="1rem" height="1rem" />,
+        icon: <Icon name="rotate-ccw" size="1rem" />,
         tooltip: rotateLeftLabel,
         ariaLabel: rotateLeftLabel,
         section: "top" as const,
@@ -305,7 +295,7 @@ export function useViewerWorkbenchBarButtons(
       },
       {
         id: "viewer-rotate-right",
-        icon: <LocalIcon icon="rotate-right" width="1rem" height="1rem" />,
+        icon: <Icon name="rotate-cw" size="1rem" />,
         tooltip: rotateRightLabel,
         ariaLabel: rotateRightLabel,
         section: "top" as const,
@@ -316,7 +306,7 @@ export function useViewerWorkbenchBarButtons(
       },
       {
         id: "viewer-toggle-sidebar",
-        icon: <LocalIcon icon="view-list" width="1rem" height="1rem" />,
+        icon: <Icon name="rows-2" size="1rem" />,
         tooltip: sidebarLabel,
         ariaLabel: sidebarLabel,
         section: "top" as const,
@@ -328,13 +318,7 @@ export function useViewerWorkbenchBarButtons(
       },
       {
         id: "viewer-toggle-bookmarks",
-        icon: (
-          <LocalIcon
-            icon="bookmark-add-rounded"
-            width="1.25rem"
-            height="1.25rem"
-          />
-        ),
+        icon: <Icon name="bookmark-plus" size="1.25rem" />,
         tooltip: bookmarkLabel,
         ariaLabel: bookmarkLabel,
         section: "top" as const,
@@ -346,13 +330,7 @@ export function useViewerWorkbenchBarButtons(
       },
       {
         id: "viewer-toggle-attachments",
-        icon: (
-          <LocalIcon
-            icon="attachment-rounded"
-            width="1.25rem"
-            height="1.25rem"
-          />
-        ),
+        icon: <Icon name="paperclip" size="1.25rem" />,
         tooltip: attachmentLabel,
         ariaLabel: attachmentLabel,
         section: "top" as const,
@@ -366,7 +344,7 @@ export function useViewerWorkbenchBarButtons(
         ? [
             {
               id: "viewer-toggle-layers",
-              icon: <LayersIcon sx={{ fontSize: "1rem" }} />,
+              icon: <Icon name="layers" size={"1rem"} />,
               tooltip: layersLabel,
               ariaLabel: layersLabel,
               section: "top" as const,
@@ -380,7 +358,7 @@ export function useViewerWorkbenchBarButtons(
         : []),
       {
         id: "viewer-toggle-comments",
-        icon: <LocalIcon icon="comment" width="1rem" height="1rem" />,
+        icon: <Icon name="message-square" size="1rem" />,
         tooltip: commentsLabel,
         ariaLabel: commentsLabel,
         section: "top" as const,
@@ -428,9 +406,9 @@ export function useViewerWorkbenchBarButtons(
                     onClick={handleReadAloud}
                   >
                     {isReadingAloud ? (
-                      <StopIcon sx={{ fontSize: "1rem" }} />
+                      <Icon name="square" size={"1rem"} />
                     ) : (
-                      <VolumeUpIcon sx={{ fontSize: "1rem" }} />
+                      <Icon name="volume-2" size={"1rem"} />
                     )}
                   </ActionIcon>
                 </Tooltip>
@@ -532,7 +510,7 @@ export function useViewerWorkbenchBarButtons(
               aria-pressed={isAnnotationsActive}
               aria-label={annotationsLabel}
             >
-              <LocalIcon icon="edit" width="1rem" height="1rem" />
+              <Icon name="pencil" size="1rem" />
             </ActionIcon>
           </Tooltip>
         ),
@@ -574,7 +552,7 @@ export function useViewerWorkbenchBarButtons(
               aria-pressed={isFormFillActive}
               aria-label={formFillLabel}
             >
-              <TextFieldsIcon sx={{ fontSize: "1rem" }} />
+              <Icon name="type" size={"1rem"} />
             </ActionIcon>
           </Tooltip>
         ),

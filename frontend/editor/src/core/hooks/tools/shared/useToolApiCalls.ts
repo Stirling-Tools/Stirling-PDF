@@ -8,6 +8,7 @@ import {
 import { isEmptyOutput } from "@app/services/errorUtils";
 import type { ProcessingProgress } from "@app/hooks/tools/shared/useToolState";
 import type { StirlingFile, FileId } from "@app/types/fileContext";
+import { isSignupRequiredError } from "@app/utils/toolErrorHandler";
 
 /** An input that did not survive the batch, with the error it failed on. */
 export interface FailedInput {
@@ -39,12 +40,14 @@ export const useToolApiCalls = <TParams = void>() => {
       outputFiles: File[];
       successSourceIds: FileId[];
       failedInputs: FailedInput[];
+      unprocessedSourceIds: FileId[];
     }> => {
       const processedFiles: File[] = [];
       const successSourceIds: FileId[] = [];
       // Kept with their errors: a batch where only some inputs fail still owes the caller a
       // report for each one, and it cannot derive the kind without the error.
       const failedInputs: FailedInput[] = [];
+      const unprocessedSourceIds: FileId[] = [];
       const failedFiles: string[] = [];
       const total = validFiles.length;
 
@@ -123,6 +126,13 @@ export const useToolApiCalls = <TParams = void>() => {
             produced: responseFiles.length,
           });
         } catch (error) {
+          if (isSignupRequiredError(error)) {
+            if (processedFiles.length === 0) throw error;
+            unprocessedSourceIds.push(
+              ...validFiles.slice(i).map((input) => input.fileId),
+            );
+            break;
+          }
           if (axios.isCancel(error)) {
             throw new Error("Operation was cancelled", { cause: error });
           }
@@ -164,6 +174,7 @@ export const useToolApiCalls = <TParams = void>() => {
         outputFiles: processedFiles,
         successSourceIds,
         failedInputs,
+        unprocessedSourceIds,
       };
     },
     [],

@@ -64,7 +64,7 @@ class ConfigControllerTest {
         properties.getUi().setDefaultStartupView("read");
 
         ResponseEntity<Map<String, Object>> response =
-                createConfigController(properties).getAppConfig();
+                createConfigController(properties).getAppConfig(mock(HttpServletRequest.class));
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         Map<String, Object> body = response.getBody();
@@ -79,7 +79,8 @@ class ConfigControllerTest {
     @Test
     void getAppConfig_includesDefaultLayoutFallbacks() {
         ResponseEntity<Map<String, Object>> response =
-                createConfigController(new ApplicationProperties()).getAppConfig();
+                createConfigController(new ApplicationProperties())
+                        .getAppConfig(mock(HttpServletRequest.class));
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         Map<String, Object> body = response.getBody();
@@ -92,9 +93,11 @@ class ConfigControllerTest {
     private ConfigController createConfigController(ApplicationProperties properties) {
         ApplicationContext context = mock(ApplicationContext.class);
         ExternalAppDepConfig externalAppDepConfig = mock(ExternalAppDepConfig.class);
-        AppConfig appConfig = new AppConfig(mock(Environment.class), properties);
+        Environment environment = mock(Environment.class);
+        AppConfig appConfig = new AppConfig(environment, properties);
 
         when(context.getBean(AppConfig.class)).thenReturn(appConfig);
+        when(context.getEnvironment()).thenReturn(environment);
         when(externalAppDepConfig.isDependenciesChecked()).thenReturn(true);
 
         return new ConfigController(
@@ -103,6 +106,7 @@ class ConfigControllerTest {
                 endpointConfiguration,
                 serverCertificateService,
                 userService,
+                showAdmin,
                 licenseService,
                 externalAppDepConfig);
     }

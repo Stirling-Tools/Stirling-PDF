@@ -100,3 +100,10 @@
     animation: none;
   }
 }
+
+/* The portfolio member currently open in the viewer. */
+.attachment-item--current {
+  background: color-mix(in srgb, var(--c-accent-text) 10%, var(--c-bg-raised));
+  border-color: color-mix(in srgb, var(--c-accent-text) 35%, transparent);
+  box-shadow: inset 0.125rem 0 0 0 var(--c-accent-text);
+}

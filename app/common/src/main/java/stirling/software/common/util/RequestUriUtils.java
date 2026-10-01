@@ -36,13 +36,11 @@ public class RequestUriUtils {
                 || normalizedUri.startsWith("/images/")
                 || normalizedUri.startsWith("/public/")
                 || normalizedUri.startsWith("/pdfjs/")
-                || normalizedUri.startsWith("/pdfjs-legacy/")
                 || normalizedUri.startsWith("/pdfium/")
                 || normalizedUri.startsWith("/assets/")
                 || normalizedUri.startsWith("/locales/")
                 || normalizedUri.startsWith("/Login/")
                 || normalizedUri.startsWith("/samples/")
-                || normalizedUri.startsWith("/classic-logo/")
                 || normalizedUri.startsWith("/modern-logo/")
                 || normalizedUri.startsWith("/og_images/")) {
             return true;
@@ -53,7 +51,6 @@ public class RequestUriUtils {
                 || "/favicon.ico".equals(normalizedUri)
                 || "/manifest.json".equals(normalizedUri)
                 || "/site.webmanifest".equals(normalizedUri)
-                || "/manifest-classic.json".equals(normalizedUri)
                 || "/index.html".equals(normalizedUri)) {
             return true;
         }
@@ -120,7 +117,6 @@ public class RequestUriUtils {
             "/register",
             "/pipeline",
             "/pdfjs",
-            "/pdfjs-legacy",
             "/fonts",
             "/images",
             "/css",

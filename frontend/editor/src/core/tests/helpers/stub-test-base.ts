@@ -3,7 +3,6 @@ import {
   bypassOnboarding,
   mockAppApis,
   seedCookieConsent,
-  skipOnboarding,
   type MockAppApiOptions,
 } from "@app/tests/helpers/api-stubs";
 import { suppressNativeFilePicker } from "@app/tests/helpers/ui-helpers";
@@ -45,6 +44,8 @@ type StubFixtures = {
   stubOptions: MockAppApiOptions;
   autoGoto: false | string;
   seedJwt: boolean;
+  /** The library's view. Set it where a test reads cards or rows by shape. */
+  filesViewMode: "grid" | "list" | null;
 };
 
 // Minimal JWT-shaped value — the proprietary auth client only checks for
@@ -59,20 +60,29 @@ export const test = base.extend<StubFixtures>({
   // the app instead of racing a redirect on every single test.
   autoGoto: ["/editor", { option: true }],
   seedJwt: [false, { option: true }],
+  filesViewMode: [null, { option: true }],
 
-  page: async ({ page, stubOptions, autoGoto, seedJwt }, use) => {
+  page: async (
+    { page, stubOptions, autoGoto, seedJwt, filesViewMode },
+    use,
+  ) => {
     suppressNativeFilePicker(page);
     await seedCookieConsent(page);
+    await bypassOnboarding(page);
     if (seedJwt) {
-      // Logged-in users hit the orchestrator path that surfaces the
-      // analytics opt-in / MFA prompts — use the stronger bypass-all flag
-      // so those overlays don't block clicks.
-      await bypassOnboarding(page);
       await page.addInitScript((token) => {
         localStorage.setItem("stirling_jwt", token);
       }, STUB_JWT);
-    } else {
-      await skipOnboarding(page);
+    }
+    if (filesViewMode) {
+      await page.addInitScript((mode) => {
+        localStorage.setItem("stirling.filesPageViewMode", mode);
+      }, filesViewMode);
+    }
+    if (filesViewMode) {
+      await page.addInitScript((mode) => {
+        localStorage.setItem("stirling.filesPageViewMode", mode);
+      }, filesViewMode);
     }
     await mockAppApis(page, stubOptions);
     if (autoGoto !== false) {

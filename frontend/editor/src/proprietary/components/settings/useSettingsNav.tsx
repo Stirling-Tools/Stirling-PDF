@@ -4,11 +4,13 @@ import { useSettingsNav as useCoreSettingsNav } from "@core/components/settings/
 import type { SettingsNav } from "@app/components/settings/settingsNavTypes";
 import { usePortalAccessState } from "@app/hooks/usePortalAccess";
 import { useAuth } from "@app/auth/context";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useRosterAvailable } from "@app/hooks/useRosterAvailable";
 import { mergeSettingsGroups } from "@app/components/settings/mergeSettingsGroups";
 import {
   buildPortalSettingsSections,
   PORTAL_SECTION_ALIASES,
-  PORTAL_SUPERSEDED_SECTION_KEYS,
+  portalSupersededSectionKeys,
 } from "@app/components/settings/portalSettingsNav";
 
 export type { SettingsNav };
@@ -20,48 +22,63 @@ export type { SettingsNav };
  * processor access, audit) — so the narrower section is dropped rather than
  * shown twice, and its key aliases across.
  *
- * Encryption at rest, what the deployment spends, and the link to the Stirling
- * account are all operator concerns, so they are offered to admins only;
- * portal access alone is not enough to reach them.
+ * Admins manage encryption; only the organization owner manages billing and
+ * the Stirling account connection. Portal access alone grants neither.
  */
 export function useSettingsNav(onLeave: () => void): SettingsNav {
   const { t } = useTranslation();
   const base = useCoreSettingsNav(onLeave);
   const { granted: portalAccess, settled: accessSettled } =
     usePortalAccessState();
-  const { isAdmin } = useAuth();
+  const { isAdmin, user, loading } = useAuth();
+  const isOwner = isAdmin && !loading && user?.orgOwner === true;
+  // Answers to the same admin flag the rest of the nav is built from, not the
+  // session's - the two disagree while /me is still in flight.
+  const { config } = useAppConfig();
+  const navAdmin = config?.isAdmin ?? false;
+  const rosterAvailable = useRosterAvailable();
 
   const portalSections = useMemo(
     () =>
-      portalAccess
-        ? buildPortalSettingsSections(t, {
-            includeEncryption: isAdmin,
-            includeBilling: isAdmin,
-            includeAccountLink: isAdmin,
-          })
-        : [],
-    [portalAccess, isAdmin, t],
+      buildPortalSettingsSections(t, {
+        // The roster is this build's only one, so it does not wait on processor
+        // access the way the processor's own surfaces do.
+        includeRoster: rosterAvailable && (navAdmin || portalAccess),
+        includeApiKeys: portalAccess,
+        includeEncryption: portalAccess && isAdmin,
+        includeBilling: portalAccess && isOwner,
+        includeAccountLink: portalAccess && isOwner,
+      }),
+    [portalAccess, isAdmin, isOwner, navAdmin, rosterAvailable, t],
   );
 
   const sections = useMemo(
     () =>
-      portalSections.length === 0
-        ? base.sections
-        : mergeSettingsGroups(
-            base.sections,
-            portalSections,
-            PORTAL_SUPERSEDED_SECTION_KEYS,
-          ),
+      mergeSettingsGroups(base.sections, portalSections, [
+        "plan",
+        "adminPlan",
+        ...portalSupersededSectionKeys(portalSections),
+      ]),
     [base.sections, portalSections],
   );
+
+  const portalAliases = { ...PORTAL_SECTION_ALIASES };
+  if (
+    !portalSections.some((group) =>
+      group.items.some((item) => item.key === "billing"),
+    )
+  ) {
+    delete portalAliases.plan;
+    delete portalAliases.adminPlan;
+  }
 
   return {
     ...base,
     sections,
-    pending: !accessSettled,
+    pending: !accessSettled || loading,
     aliases:
       portalSections.length > 0
-        ? { ...base.aliases, ...PORTAL_SECTION_ALIASES }
+        ? { ...base.aliases, ...portalAliases }
         : base.aliases,
   };
 }

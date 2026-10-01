@@ -64,6 +64,32 @@ function isBlobLike(value: unknown): value is { text: () => Promise<string> } {
   );
 }
 
+/**
+ * Report a failure whose code and wording are already known, for a client that has learned
+ * something new about a document it already reported. Folds on by the server's own dedup.
+ */
+export async function reportKnownFailure(report: {
+  operation: string;
+  errorCode: string;
+  detail: string | null;
+  fileIds?: string[];
+}): Promise<void> {
+  try {
+    await apiClient.post(
+      REPORT_PATH,
+      {
+        operation: report.operation,
+        errorCode: report.errorCode,
+        fileIds: report.fileIds ?? [],
+        detail: report.detail,
+      },
+      { suppressErrorToast: true },
+    );
+  } catch {
+    // Best-effort, as above: the reader already has the refusal on screen.
+  }
+}
+
 export async function reportToolFailure({
   operation,
   error,

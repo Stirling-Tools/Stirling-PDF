@@ -18,6 +18,7 @@ import { ChatFABWindow } from "@app/ui/ChatFABWindow";
 import { ChatPanel } from "@app/components/chat/ChatPanel";
 import { useChat } from "@app/components/chat/ChatContext";
 import { useAiEngineEnabled } from "@app/hooks/useAiEngineEnabled";
+import { useChatAccess } from "@app/hooks/useChatAccess";
 import { Z_INDEX_CHAT_FAB_OVERLAY } from "@app/styles/zIndex";
 import {
   PANEL_WIDTH_PX,
@@ -51,6 +52,7 @@ export function ChatFAB() {
   // Desktop sources this from the SaaS backend (cloud kill switch); web reads it
   // from the local app-config. Either way the AI engine drives FAB visibility.
   const enabled = useAiEngineEnabled();
+  const requestChatAccess = useChatAccess();
 
   // Scope the panel's nested MantineProvider to this ref; unscoped it writes
   // its color scheme onto <html> and overrides the whole app's theme.
@@ -188,6 +190,7 @@ export function ChatFAB() {
       <ChatFABButton
         className={`chat-fab-trigger${isOpen ? " chat-fab-trigger--hidden" : ""}`}
         onClick={() => {
+          if (!requestChatAccess()) return;
           // Fallback: ensure a position exists before opening, in case the
           // layout effect measured before the overlay was laid out.
           if (rndPos === null) {

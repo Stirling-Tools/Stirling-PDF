@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useAuth } from "@app/auth/UseSession";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Button, EmptyState, Skeleton } from "@app/ui";
+import { Button, EmptyState, Skeleton, StatusBadge, Tooltip } from "@app/ui";
 import {
+  claimTeamOwnership,
   changeMemberRole,
   disableMemberMfa,
   setMemberSuspended,
@@ -18,10 +20,11 @@ import {
   revokeGrant,
   type ResourceGrant,
 } from "@portal/api/access";
-import { deleteTeam as apiDeleteTeam } from "@portal/api/teams";
+import { deleteTeam as apiDeleteTeam, type Team } from "@portal/api/teams";
 import { errorMessage } from "@portal/api/http";
 import { usersCapabilities as buildCaps } from "@app/portal/usersCapabilities";
 import type { UsersCapabilities } from "@portal/api/usersCapabilities";
+import { useSeatManagement } from "@app/portal/seatManagement";
 import { UsersDirectory } from "@portal/components/users/UsersDirectory";
 import { PendingInvitations } from "@portal/components/users/PendingInvitations";
 import { InviteMemberModal } from "@portal/components/users/InviteMemberModal";
@@ -30,8 +33,14 @@ import { ResetPasswordModal } from "@portal/components/users/ResetPasswordModal"
 import { MoveToTeamModal } from "@portal/components/users/MoveToTeamModal";
 import { RenameTeamModal } from "@portal/components/users/RenameTeamModal";
 import { ConfirmModal } from "@portal/components/users/ConfirmModal";
-import type { TeamGroup } from "@portal/components/users/directory";
+import { seatsLabel } from "@portal/components/users/format";
 import { useUsersData } from "@portal/views/usersData";
+import {
+  OwnershipTransferModal,
+  type OwnershipStatus,
+} from "@app/components/shared/ownership/OwnershipTransferModal";
+import { ownershipAdapter, pendingOwnership } from "@portal/api/ownership";
+import { useUI } from "@portal/contexts/UIContext";
 
 interface Confirm {
   title: string;
@@ -47,6 +56,15 @@ interface Confirm {
  */
 export function Users() {
   const { t } = useTranslation();
+  const { refreshSession } = useAuth();
+  const { openLinkModal } = useUI();
+  const [ownershipTarget, setOwnershipTarget] = useState<Pick<
+    Member,
+    "id" | "name" | "email" | "teamId"
+  > | null>(null);
+  const [pendingTransfer, setPendingTransfer] =
+    useState<OwnershipStatus | null>(null);
+  const [actionBusy, setActionBusy] = useState(false);
   const { usersState, grantsState, teamsState, authState, refresh } =
     useUsersData();
 
@@ -68,6 +86,7 @@ export function Users() {
         : {
             ...buildCaps,
             changeRole: false,
+            transferOwnership: false,
             createTeam: false,
             deleteTeam: false,
             renameTeam: false,
@@ -96,6 +115,19 @@ export function Users() {
     name: string;
   } | null>(null);
   const [confirm, setConfirm] = useState<Confirm | null>(null);
+
+  useEffect(() => {
+    if (!buildCaps.adminRole || !viewer?.orgOwner || ownershipTarget) return;
+    let active = true;
+    pendingOwnership()
+      .then((value) => {
+        if (active) setPendingTransfer(value);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [viewer?.orgOwner, ownershipTarget]);
 
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -186,17 +218,42 @@ export function Users() {
   // Either route to a new member: an emailed invite, or creating the account
   // outright. With neither, the invite controls have nothing to open.
   const canAddMembers = canEmailInvite || caps.directCreate;
+  // Licence seats, from the same roster fetch. A null limit is an unlimited
+  // licence, which still shows the count; no summary at all (SaaS) shows nothing.
+  const summary = usersState.data?.summary;
+  const seats = summary
+    ? {
+        used: summary.seatsUsed,
+        limit: summary.seatLimit,
+        full:
+          summary.seatLimit !== null && summary.seatsUsed >= summary.seatLimit,
+      }
+    : null;
+  const seatManagement = useSeatManagement();
+  // A full licence blocks every route to a new member: the backend rejects the
+  // create/invite either way, so the controls say so instead of failing late.
+  const seatsFull = seats?.full === true;
+  const seatsFullHint = t(
+    "users.seats.full",
+    "Every licensed seat is in use. Free one up, or raise the seat count, to add anyone else.",
+  );
   const loading = usersState.loading && usersState.data === null;
   const loadError = !usersState.loading && usersState.error !== null;
   const isEmpty = !usersState.loading && !loadError && members.length === 0;
 
   function run(action: () => Promise<unknown>) {
     setActionError(null);
-    action()
-      .catch((error) => setActionError(errorMessage(error)))
-      // Refetch on success AND failure: a multi-step mutation (e.g. changeMemberRole)
-      // has no rollback, so a mid-sequence failure must resync the roster to real state.
-      .finally(() => refresh());
+    setActionBusy(true);
+    return (
+      action()
+        .catch((error) => setActionError(errorMessage(error)))
+        // Refetch on success AND failure: a multi-step mutation (e.g. changeMemberRole)
+        // has no rollback, so a mid-sequence failure must resync the roster to real state.
+        .finally(() => {
+          setActionBusy(false);
+          refresh();
+        })
+    );
   }
 
   function changeRole(member: Member, role: RoleId) {
@@ -218,7 +275,7 @@ export function Users() {
     run(() => revokeGrant(member.portalGrantId!));
   }
   // Grant/revoke Processor for a whole team (a TEAM-principal PORTAL grant).
-  function grantTeamProcessor(team: TeamGroup) {
+  function grantTeamProcessor(team: Team) {
     run(() =>
       createGrant({
         resourceType: "PORTAL",
@@ -229,7 +286,7 @@ export function Users() {
       }),
     );
   }
-  function revokeTeamProcessor(team: TeamGroup) {
+  function revokeTeamProcessor(team: Team) {
     const grant = grantByTeam.get(team.id);
     if (!grant) return;
     run(() => revokeGrant(grant.id));
@@ -261,6 +318,10 @@ export function Users() {
       action: () => disableMemberMfa(member),
     });
   }
+  function transferOwner(member: Member) {
+    setOwnershipTarget(member);
+  }
+
   function removeUser(member: Member) {
     // SaaS removes from the team (the account survives); self-hosted deletes the account.
     const teamScope = caps.removeScope === "team";
@@ -297,7 +358,7 @@ export function Users() {
       action: () => usersBackend.cancelInvitation(invitation.id),
     });
   }
-  function deleteTeamAction(team: TeamGroup) {
+  function deleteTeamAction(team: Team) {
     setConfirm({
       title: t("users.confirm.deleteTeamTitle", "Delete team"),
       body: t(
@@ -317,25 +378,104 @@ export function Users() {
         <div>
           <h1 className="portal-users__title">{t("users.title", "Users")}</h1>
           <p className="portal-users__sub">
-            {t("users.subtitle2", "Your people, teams, and access levels.")}{" "}
-            <a className="portal-users__link" href="/docs">
-              {t("users.learnMore", "Learn more about roles and access.")}
-            </a>
+            {t("users.subtitle2", "Your people, teams, and access levels.")}
           </p>
         </div>
         <div className="portal-users__head-actions">
+          {seats && (
+            <StatusBadge tone={seats.full ? "warning" : "neutral"}>
+              {seatsLabel(t, seats.used, seats.limit)}
+            </StatusBadge>
+          )}
+          {seatManagement.available && (
+            <Button
+              fat
+              variant="secondary"
+              loading={seatManagement.busy}
+              onClick={() => seatManagement.open(refresh)}
+            >
+              {t("users.seats.update", "Update seats")}
+            </Button>
+          )}
           {caps.createTeam && (
             <Button fat variant="secondary" onClick={openNewTeam}>
               {t("users.newTeam.action", "+ New team")}
             </Button>
           )}
-          {canAddMembers && (
-            <Button fat onClick={() => openInvite(null)}>
-              {t("users.invite.action", "Invite people")}
-            </Button>
-          )}
+          {canAddMembers &&
+            (seatsFull ? (
+              <Tooltip content={seatsFullHint} placement="bottom">
+                <Button fat disabled className="portal-users__blocked">
+                  {t("users.invite.action", "Invite people")}
+                </Button>
+              </Tooltip>
+            ) : (
+              <Button fat onClick={() => openInvite(null)}>
+                {t("users.invite.action", "Invite people")}
+              </Button>
+            ))}
         </div>
       </header>
+
+      {pendingTransfer && viewer?.orgOwner && (
+        <div role="status">
+          <p>
+            {t(
+              "ownership.pending",
+              "An ownership transfer to {{name}} is pending.",
+              { name: pendingTransfer.targetName },
+            )}
+          </p>
+          <Button
+            onClick={() =>
+              setOwnershipTarget({
+                id: String(pendingTransfer.targetId),
+                name: pendingTransfer.targetName,
+                email: pendingTransfer.targetEmail ?? "",
+              })
+            }
+          >
+            {t("ownership.resume", "Resume transfer")}
+          </Button>
+        </div>
+      )}
+
+      {members.some((member) => member.orgOwner && member.isFirstLogin) && (
+        <p role="status">
+          {t(
+            "users.ownerSetupRequired",
+            "The organization owner has not completed first login. Complete setup or ask the server operator to recover ownership before transferring ownership.",
+          )}
+        </p>
+      )}
+
+      {!buildCaps.adminRole &&
+        buildCaps.transferOwnership &&
+        members.length > 0 &&
+        !members.some((m) => m.teamLead) &&
+        teams.some((team) => team.isPersonal === false) && (
+          <div role="status">
+            <p>
+              {t(
+                "team.recoverBody",
+                "An existing member can recover ownership to manage the team and its billing settings.",
+              )}
+            </p>
+            <Button
+              disabled={actionBusy}
+              onClick={() => {
+                const team = teams.find((item) => item.isPersonal === false);
+                if (team)
+                  void run(async () => {
+                    await claimTeamOwnership(team.id);
+                    await refreshSession();
+                  });
+              }}
+            >
+              {t("team.recoverOwner", "Become team owner")}
+            </Button>
+          </div>
+        )}
 
       {actionError && (
         <p className="portal-users__error" role="alert">
@@ -374,7 +514,7 @@ export function Users() {
             "Invite your team to start collaborating.",
           )}
           actions={
-            canAddMembers ? (
+            canAddMembers && !seatsFull ? (
               <Button onClick={() => openInvite(null)}>
                 {t("users.invite.action", "Invite people")}
               </Button>
@@ -400,12 +540,14 @@ export function Users() {
             onGrantTeamProcessor={grantTeamProcessor}
             onRevokeTeamProcessor={revokeTeamProcessor}
             onAddToTeam={canAddMembers ? (team) => openInvite(team.id) : null}
+            seatsFull={seatsFull}
             onResetPassword={setResetPwMember}
             onMoveToTeam={setMoveMember}
             onToggleEnabled={toggleEnabled}
             onUnlock={unlock}
             onDisableMfa={disableMfa}
             onRemove={removeUser}
+            onTransferOwnership={transferOwner}
             onRenameTeam={(team) =>
               setRenameTarget({ id: team.id, name: team.name })
             }
@@ -428,6 +570,20 @@ export function Users() {
         manageGrants={caps.manageGrants}
         onNotice={setActionError}
       />
+      {ownershipTarget && (
+        <OwnershipTransferModal
+          key={ownershipTarget.id}
+          adapter={ownershipAdapter(ownershipTarget, buildCaps.adminRole, () =>
+            openLinkModal("reauth"),
+          )}
+          onClose={() => setOwnershipTarget(null)}
+          onTransferred={() => {
+            setPendingTransfer(null);
+            refresh();
+            void refreshSession();
+          }}
+        />
+      )}
       <NewTeamModal
         open={newTeamOpen}
         onClose={() => setNewTeamOpen(false)}
@@ -460,11 +616,14 @@ export function Users() {
         body={confirm?.body ?? ""}
         confirmLabel={confirm?.confirmLabel ?? t("common.confirm", "Confirm")}
         danger={confirm?.danger}
+        busy={actionBusy}
         onConfirm={() => {
-          if (confirm) run(confirm.action);
-          setConfirm(null);
+          if (confirm && !actionBusy)
+            void run(confirm.action).finally(() => setConfirm(null));
         }}
-        onCancel={() => setConfirm(null)}
+        onCancel={() => {
+          if (!actionBusy) setConfirm(null);
+        }}
       />
     </div>
   );

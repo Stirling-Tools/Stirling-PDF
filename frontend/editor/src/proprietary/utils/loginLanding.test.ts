@@ -30,7 +30,14 @@ describe("loginLandingMode", () => {
 });
 
 describe("fetchRootDestination", () => {
-  beforeEach(() => h.get.mockReset());
+  beforeEach(() => {
+    h.get.mockReset();
+    window.localStorage.setItem("stirling_jwt", "test-token");
+  });
+
+  afterEach(() => {
+    window.localStorage.removeItem("stirling_jwt");
+  });
 
   it("sends an opted-in user to the processor", async () => {
     h.get.mockResolvedValueOnce(
@@ -65,5 +72,22 @@ describe("fetchRootDestination", () => {
   it("signedOut when /me fails", async () => {
     h.get.mockRejectedValueOnce(httpError(401));
     expect(await fetchRootDestination()).toBe("signedOut");
+  });
+
+  it("signedOut without a request when no token is stored", async () => {
+    window.localStorage.removeItem("stirling_jwt");
+    expect(await fetchRootDestination()).toBe("signedOut");
+    expect(h.get).not.toHaveBeenCalled();
+  });
+
+  it("still calls /me for a Supabase session with no Spring JWT", async () => {
+    window.localStorage.removeItem("stirling_jwt");
+    window.localStorage.setItem("sb-abcdef-auth-token", "{}");
+    h.get.mockResolvedValueOnce(
+      mockMe({ portalAccess: true, loginLandingView: "processor" }),
+    );
+    expect(await fetchRootDestination()).toBe("processor");
+    expect(h.get).toHaveBeenCalledTimes(1);
+    window.localStorage.removeItem("sb-abcdef-auth-token");
   });
 });

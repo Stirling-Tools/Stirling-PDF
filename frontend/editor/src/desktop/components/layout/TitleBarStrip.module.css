@@ -1,0 +1,135 @@
+/* Frame column: the strip on top, then the rail + app below it. */
+.column {
+  --titlebar-h: 2.5rem;
+  /* Inherited down to AppLayout, which sizes itself to the space under the strip
+     with a real length (a percentage would collapse under WebKit; see AppLayout). */
+  --titlebar-body-h: calc(100dvh - var(--titlebar-h));
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  /* clip, not hidden: a hidden box is still programmatically scrollable, so a
+     scrollIntoView on a deep element (settings/docs/admin anchors) could shift
+     the whole app inside the frame. clip forbids that; inner scrollers still
+     scroll. */
+  overflow: clip;
+}
+/* Fill the space under the strip via flex, tied to the strip's real row - not a
+   fixed calc(100dvh - strip), which slides up leaving a strip-sized gap at the
+   bottom if it ever disagrees with the strip's actual height (a reflow, a stray
+   scroll). AppLayout still renders because it self-sizes with a real length, not
+   a height:100% that WebKit won't resolve against a flex-sized ancestor. */
+.column > :global(.app-frame) {
+  flex: 1 1 0;
+  min-height: 0;
+  height: auto;
+  /* Non-scrollable (see .column): the frame must never be the thing a
+     scrollIntoView drags; legitimate inner scrollers keep their own overflow. */
+  overflow: clip;
+}
+
+/* The desktop title-bar row. Normal flow (first row of the frame column), so it
+   reserves its own height for the whole app and nothing below it can reach the
+   window-controls corner.
+
+   Three columns: search sits in the fixed centre column, centred on the strip;
+   the view switcher and global actions hug it from the equal side columns, so
+   the empty space (and the OS controls) fall on the outer edges rather than
+   between the clusters. */
+.strip {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr minmax(0, 24rem) 1fr;
+  align-items: center;
+  column-gap: 8px;
+  flex-shrink: 0;
+  height: var(--titlebar-h, 2.5rem);
+  padding-inline: 8px;
+  background: var(--c-surface);
+  border-bottom: 1px solid var(--c-border-subtle);
+  user-select: none;
+  -webkit-user-select: none;
+  z-index: 60;
+}
+
+/* The OS controls live in the reserved corners: macOS traffic lights top-left
+   (drawn by the OS over the overlay title bar), Windows controls top-right.
+   Reserve the SAME width on both sides so the centre column stays on the true
+   window midpoint whichever corner an OS actually uses. */
+.strip[data-os="macos"] {
+  padding-inline: 4.75rem;
+}
+.strip[data-os="windows"] {
+  padding-inline: 8.625rem; /* three 46px controls */
+}
+
+/* Portal targets: the view switcher hugs the search from the left column, the
+   global actions from the right; search fills the centre column. */
+.viewsSlot {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.globalsSlot {
+  justify-self: start;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.searchSlot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+.controls {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  display: flex;
+  align-items: stretch;
+  /* Keep minimize/maximize/close in that order regardless of app direction. */
+  direction: ltr;
+}
+
+.button {
+  width: 46px;
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--c-text-muted);
+  font-size: 15px;
+  line-height: 1;
+  cursor: default;
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease;
+}
+
+/* Clicks (and the drag hit test) resolve to the button, never its glyph. */
+.button svg {
+  pointer-events: none;
+}
+
+.button:hover {
+  background: var(--c-hover);
+  color: var(--c-text);
+}
+
+.close:hover {
+  background: var(--c-danger);
+  color: #fff;
+}
+
+.restoreIcon {
+  /* The overlapping-squares glyph reads large next to the others. */
+  font-size: 13px;
+}

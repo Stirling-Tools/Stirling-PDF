@@ -7,6 +7,7 @@ import type { UsersCapabilities } from "@portal/api/usersCapabilities";
  */
 export const usersCapabilities: UsersCapabilities = {
   orgGroup: false,
+  transferOwnership: true,
   changeRole: false,
   adminRole: false,
   createTeam: false,
