@@ -75,8 +75,10 @@ export function SigningSessionsTable({
     item.kind === "session"
       ? t("signWorkspace.createdByMe", "Created by me")
       : item.ownerUsername;
-  const rows = items.filter(
-    (item) => isSigningItemClosed(item) === (tab === "closed"),
+  const rows = items.filter((item) =>
+    tab === "unread"
+      ? item.unread && !isSigningItemClosed(item)
+      : isSigningItemClosed(item) === (tab === "closed"),
   );
   const filters = useDataTableFilters({
     rows,
@@ -99,7 +101,7 @@ export function SigningSessionsTable({
         getValue: statusKey,
         formatValue: (value) => statusLabels[value],
       },
-      ...(tab === "active"
+      ...(tab !== "closed"
         ? [
             {
               key: "due",
@@ -180,6 +182,7 @@ export function SigningSessionsTable({
           }}
           options={[
             { value: "active", label: t("sharedSign.tab.active", "Active") },
+            { value: "unread", label: t("signMenu.unreadTab", "Unread") },
             {
               value: "closed",
               label: t("signMenu.closedTab", "Closed"),
@@ -206,7 +209,9 @@ export function SigningSessionsTable({
         loading={loading && items.length === 0}
         empty={
           rows.length === 0
-            ? t("signWorkspace.empty", "No sessions here yet.")
+            ? tab === "unread"
+              ? t("signMenu.noUnread", "You're all caught up")
+              : t("signWorkspace.empty", "No sessions here yet.")
             : t(
                 "signWorkspace.noMatches",
                 "No sessions match your search or filter.",

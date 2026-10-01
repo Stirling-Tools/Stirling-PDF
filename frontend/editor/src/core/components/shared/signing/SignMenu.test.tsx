@@ -33,20 +33,71 @@ function setup(items: SigningMenuItem[] = [], sharedSign?: string) {
   const onSelect = vi.fn();
   const onOpenSigning = vi.fn();
   const onClose = vi.fn();
-  const view = render(
+  const menu = (rows: SigningMenuItem[]) => (
     <SignMenu
       opened
       onClose={onClose}
       onSelect={onSelect}
       onOpenSigning={onOpenSigning}
       reasons={{ sharedSign }}
-      items={items}
+      items={rows}
     >
       <button>Sign</button>
-    </SignMenu>,
+    </SignMenu>
   );
-  return { ...view, onSelect, onOpenSigning, onClose };
+  const view = render(menu(items));
+  return {
+    ...view,
+    onSelect,
+    onOpenSigning,
+    onClose,
+    updateItems: (rows: SigningMenuItem[]) => view.rerender(menu(rows)),
+  };
 }
+
+it("filters unread invitations and ready owner sessions, updating the count when read", () => {
+  const items: SigningMenuItem[] = [
+    incoming,
+    { ...owned, signedCount: 2 },
+    { ...incoming, sessionId: "read", documentName: "Read.pdf", unread: false },
+    {
+      ...owned,
+      sessionId: "closed",
+      documentName: "Closed.pdf",
+      finalized: true,
+    },
+  ];
+  const { updateItems, onOpenSigning } = setup(items);
+  fireEvent.click(screen.getByRole("button", { name: /^Unread\s*2$/ }));
+  const list = within(screen.getByRole("region", { name: "Unread" }));
+  expect(list.getAllByRole("button")).toHaveLength(2);
+  expect(
+    list.getByRole("button", { name: /Owned.pdf.*Ready to finalize/ }),
+  ).toBeInTheDocument();
+  expect(
+    list.queryByRole("button", { name: /Read.pdf|Closed.pdf/ }),
+  ).not.toBeInTheDocument();
+  fireEvent.change(screen.getByRole("searchbox"), {
+    target: { value: "Owned" },
+  });
+  expect(list.getAllByRole("button")).toHaveLength(1);
+  expect(screen.getByRole("button", { name: /^Unread\s*2$/ })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  expect(onOpenSigning).not.toHaveBeenCalled();
+  fireEvent.change(screen.getByRole("searchbox"), { target: { value: "" } });
+  updateItems(items.map((item) => ({ ...item, unread: false })));
+  expect(screen.getByRole("button", { name: /^Unread\s*0$/ })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  expect(screen.getByText("You're all caught up")).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Active", exact: true }));
+  expect(
+    screen.getByRole("button", { name: /Owned.pdf.*Ready to finalize/ }),
+  ).toBeInTheDocument();
+});
 
 it("keeps personal signing accessible when shared signing is disabled", () => {
   const { onSelect } = setup([], "Disabled on this server");

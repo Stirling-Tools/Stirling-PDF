@@ -8,17 +8,19 @@ import type {
 } from "@app/types/signingSession";
 
 import { hasUnseenSigningActivity } from "@app/services/signingSeenStore";
+import { expectConsole } from "@app/tests/failOnConsole";
 
 const mocks = vi.hoisted(() => ({
   get: vi.fn(),
   setOverlay: vi.fn(),
   refetch: vi.fn(),
+  alert: vi.fn(),
 }));
 vi.mock("@app/auth/UseSession", () => ({
   useAuth: () => ({ user: { id: "alice" } }),
 }));
 vi.mock("@app/services/apiClient", () => ({ default: { get: mocks.get } }));
-vi.mock("@app/components/toast", () => ({ alert: vi.fn() }));
+vi.mock("@app/components/toast", () => ({ alert: mocks.alert }));
 vi.mock("@app/services/fileStorage", () => ({ fileStorage: {} }));
 vi.mock("@app/contexts/FileContext", () => ({
   useFileActions: () => ({ actions: {} }),
@@ -123,6 +125,98 @@ it("acknowledges a request only after its detail and PDF have opened", async () 
   expect(
     hasUnseenSigningActivity("alice", { ...request, kind: "request" }),
   ).toBe(false);
+});
+
+it("acknowledges an expired invitation even when the empty document error arrives first", async () => {
+  expectConsole.error(/Failed to load sign request/);
+  let failDetail!: (reason: unknown) => void;
+  mocks.get.mockImplementation((url: string) =>
+    url.endsWith("/document")
+      ? Promise.reject({
+          isAxiosError: true,
+          response: { status: 403, data: new Blob() },
+        })
+      : new Promise((_, reject) => {
+          failDetail = reject;
+        }),
+  );
+  const { result } = renderHook(() => useSigningSessionController(true));
+  let opening!: Promise<void>;
+  act(() => {
+    opening = result.current.openSignRequest(request);
+  });
+  await act(async () => {
+    failDetail({
+      isAxiosError: true,
+      response: {
+        status: 403,
+        data: 'Access denied or sign request not found: 403 FORBIDDEN "Participant access expired"',
+      },
+    });
+    await opening;
+  });
+  expect(result.current.view).toBe("list");
+  expect(result.current.requestData).toBeNull();
+  expect(
+    hasUnseenSigningActivity("alice", { ...request, kind: "request" }),
+  ).toBe(false);
+  expect(mocks.alert).toHaveBeenLastCalledWith(
+    expect.objectContaining({ body: "signRequest.accessExpired" }),
+  );
+  expect(mocks.get).toHaveBeenCalledWith(expect.stringContaining("/document"), {
+    responseType: "blob",
+    suppressErrorToast: true,
+  });
+});
+
+it.each([
+  { isAxiosError: true, response: { status: 500, data: "Server unavailable" } },
+  { isAxiosError: true, response: { status: 403, data: "Access denied" } },
+  new Error("Network unavailable"),
+])(
+  "retains unread activity when loading fails without confirmed expiry: %j",
+  async (error) => {
+    expectConsole.error(/Failed to load sign request/);
+    mocks.get.mockRejectedValue(error);
+    const { result } = renderHook(() => useSigningSessionController(true));
+    await act(async () => {
+      await result.current.openSignRequest(request);
+    });
+    expect(
+      hasUnseenSigningActivity("alice", { ...request, kind: "request" }),
+    ).toBe(true);
+    expect(mocks.alert).toHaveBeenLastCalledWith(
+      expect.objectContaining({ body: "signRequest.fetchFailed" }),
+    );
+  },
+);
+
+it("does not acknowledge a late expiry response after leaving the request", async () => {
+  let failDetail!: (reason: unknown) => void;
+  mocks.get.mockImplementation((url: string) =>
+    url.endsWith("/document")
+      ? Promise.resolve({ data: new Blob(["pdf"]) })
+      : new Promise((_, reject) => {
+          failDetail = reject;
+        }),
+  );
+  const { result } = renderHook(() => useSigningSessionController(true));
+  let opening!: Promise<void>;
+  act(() => {
+    opening = result.current.openSignRequest(request);
+  });
+  act(() => result.current.backToList());
+  await act(async () => {
+    failDetail({
+      isAxiosError: true,
+      response: { status: 403, data: "Participant access expired" },
+    });
+    await opening;
+  });
+  expect(
+    hasUnseenSigningActivity("alice", { ...request, kind: "request" }),
+  ).toBe(true);
+  expect(mocks.alert).not.toHaveBeenCalled();
 });
 
 it("does not acknowledge participant updates from a refresh after leaving the session", async () => {

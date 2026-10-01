@@ -17,6 +17,8 @@ export interface QuickNavEntry {
   disabled?: boolean;
   reason?: string;
   badge?: number;
+  /** Counts above this use a plus suffix; null shows the full count. Defaults to nine. */
+  badgeMax?: number | null;
   /** Popup semantics for an entry whose panel is rendered in another tree. */
   expanded?: boolean;
   controls?: string;
@@ -45,6 +47,7 @@ export function RailButton({
   disabled,
   reason,
   badge,
+  badgeMax = 9,
   badgeTone = "danger",
   current,
   expanded,
@@ -94,7 +97,7 @@ export function RailButton({
             data-tone={badgeTone}
             aria-hidden="true"
           >
-            {badge > 9 ? "9+" : badge}
+            {badgeMax !== null && badge > badgeMax ? `${badgeMax}+` : badge}
           </span>
         )}
       </button>

@@ -242,15 +242,6 @@
   border-radius: 50%;
   background: var(--c-accent-fg);
 }
-.signing-activity-icon {
-  position: relative;
-  display: inline-flex;
-}
-.signing-activity-icon > .signing-activity-dot {
-  position: absolute;
-  top: -2px;
-  right: -4px;
-}
 .sign-menu__state {
   font-size: 12px;
   color: var(--c-text-muted);
@@ -285,6 +276,14 @@
   position: absolute;
   top: 2px;
   right: 8px;
+  min-width: 16px;
+  border-radius: 10px;
+  padding: 1px 4px;
+  font-size: 10px;
+  line-height: 14px;
+  font-weight: 600;
+  background: var(--c-warning-solid);
+  color: var(--c-text-on-primary);
 }
 .signing-workspace {
   display: flex;

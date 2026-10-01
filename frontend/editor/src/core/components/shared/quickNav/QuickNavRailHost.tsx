@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { SignMenu } from "@app/components/shared/signing/SignMenu";
-import { SigningActivityDot } from "@app/components/shared/signing/SigningActivityDot";
 import { requestSigningIntent } from "@app/utils/pendingSigningIntent";
 import { useLocation, useNavigate } from "react-router-dom";
 import { QuickNavRailContainer } from "@app/components/shared/quickNav/QuickNavRailContainer";
@@ -226,14 +225,14 @@ export function QuickNavRailHost() {
     {
       id: "sign",
       label: host?.signingBadge
-        ? t("signMenu.triggerUnread", "Sign · New activity")
+        ? t("signMenu.triggerUnreadCount", "Sign · {{count}} unread sessions", {
+            count: host.signingBadge,
+          })
         : t("signMenu.title", "Sign"),
-      icon: (
-        <span className="signing-activity-icon">
-          <Icon name="pen-tool" size={SIZE} />
-          {Boolean(host?.signingBadge) && <SigningActivityDot />}
-        </span>
-      ),
+      icon: <Icon name="pen-tool" size={SIZE} />,
+      badge: host?.signingBadge,
+      badgeMax: null,
+      badgeTone: "warning",
       current:
         host?.activeTool === "sign" ||
         host?.activeTool === "certSign" ||

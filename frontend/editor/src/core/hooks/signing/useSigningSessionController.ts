@@ -81,6 +81,15 @@ function acknowledgeSession(
   });
 }
 
+function isParticipantAccessExpired(error: unknown): boolean {
+  return (
+    isAxiosError(error) &&
+    error.response?.status === 403 &&
+    typeof error.response.data === "string" &&
+    error.response.data.includes("Participant access expired")
+  );
+}
+
 // Read-only overlay previews for every participant's already-placed wet
 // signatures, coloured per participant (matches the participant list dots).
 function computeWetSignaturePreviews(
@@ -300,16 +309,22 @@ export function useSigningSessionController(
   const openSignRequest = async (request: SignRequestSummary) => {
     const version = ++openVersion.current;
     try {
-      const [detailResponse, pdfResponse] = await Promise.all([
+      const [detailResult, pdfResult] = await Promise.allSettled([
         apiClient.get<SignRequestDetail>(
           `/api/v1/security/cert-sign/sign-requests/${request.sessionId}`,
+          { suppressErrorToast: true },
         ),
         apiClient.get(
           `/api/v1/security/cert-sign/sign-requests/${request.sessionId}/document`,
-          { responseType: "blob" },
+          { responseType: "blob", suppressErrorToast: true },
         ),
       ]);
       if (version !== openVersion.current) return;
+      // Document errors omit the expiry reason; prefer the detail error regardless of response order.
+      if (detailResult.status === "rejected") throw detailResult.reason;
+      if (pdfResult.status === "rejected") throw pdfResult.reason;
+      const detailResponse = detailResult.value;
+      const pdfResponse = pdfResult.value;
       const pdfFile = new File(
         [pdfResponse.data],
         detailResponse.data.documentName,
@@ -339,6 +354,10 @@ export function useSigningSessionController(
       });
     } catch (error) {
       if (version !== openVersion.current) return;
+      const accessExpired = isParticipantAccessExpired(error);
+      if (accessExpired) {
+        markSigningItemSeen(accountId, { ...request, kind: "request" });
+      }
       console.error(
         "Failed to load sign request:",
         error instanceof Error ? error.message : error,
@@ -346,7 +365,12 @@ export function useSigningSessionController(
       alert({
         alertType: "error",
         title: t("common.error"),
-        body: t("signRequest.fetchFailed", "Failed to load sign request"),
+        body: accessExpired
+          ? t(
+              "signRequest.accessExpired",
+              "Your access to this signing request has expired. Ask the sender for a new request.",
+            )
+          : t("signRequest.fetchFailed", "Failed to load sign request"),
         expandable: false,
         durationMs: 3000,
       });

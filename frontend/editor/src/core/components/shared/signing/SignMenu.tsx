@@ -26,7 +26,7 @@ interface SignMenuProps {
   items: SigningMenuItem[];
 }
 
-type SessionTab = "active" | "closed";
+type SessionTab = "active" | "unread" | "closed";
 
 /** The global rail cannot depend on either app's file, authentication or Mantine providers. */
 export function SignMenu({
@@ -53,10 +53,19 @@ export function SignMenu({
       key: "active" as const,
       label: t("certSign.collab.sessionList.active", "Active"),
     },
+    {
+      key: "unread" as const,
+      label: t("signMenu.unreadTab", "Unread"),
+      count: items.filter((item) => item.unread && !isSigningItemClosed(item))
+        .length,
+    },
     { key: "closed" as const, label: t("signMenu.closedTab", "Closed") },
   ];
   const rows = items.filter((item) => {
-    const inTab = isSigningItemClosed(item) === (tab === "closed");
+    const inTab =
+      tab === "unread"
+        ? item.unread && !isSigningItemClosed(item)
+        : isSigningItemClosed(item) === (tab === "closed");
     const searchable = `${item.documentName} ${item.kind === "request" ? item.ownerUsername : t("signWorkspace.createdByMe", "Created by me")}`;
     return (
       inTab &&
@@ -270,7 +279,9 @@ export function SignMenu({
                         ? t("signMenu.noMatches", "No matching sessions")
                         : tab === "closed"
                           ? t("signMenu.noClosed", "No closed sessions")
-                          : t("signMenu.noActive", "No active sessions")}
+                          : tab === "unread"
+                            ? t("signMenu.noUnread", "You're all caught up")
+                            : t("signMenu.noActive", "No active sessions")}
                     </strong>
                   </div>
                 )}

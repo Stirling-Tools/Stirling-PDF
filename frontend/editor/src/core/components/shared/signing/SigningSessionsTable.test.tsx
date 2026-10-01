@@ -81,10 +81,13 @@ const items: SigningItem[] = [
   },
 ];
 
-function show(loading = false, rows = items) {
+function show(
+  loading = false,
+  rows: (SigningItem & { unread?: boolean })[] = items,
+) {
   const onOpen = vi.fn();
   const onRefresh = vi.fn();
-  render(
+  const table = (rows: (SigningItem & { unread?: boolean })[]) => (
     <MantineProvider>
       <SigningSessionsTable
         items={rows}
@@ -92,10 +95,35 @@ function show(loading = false, rows = items) {
         onOpen={onOpen}
         onRefresh={onRefresh}
       />
-    </MantineProvider>,
+    </MantineProvider>
   );
-  return { user: userEvent.setup(), onOpen, onRefresh };
+  const view = render(table(rows));
+  return {
+    user: userEvent.setup(),
+    onOpen,
+    onRefresh,
+    updateItems: (rows: (SigningItem & { unread?: boolean })[]) =>
+      view.rerender(table(rows)),
+  };
 }
+
+it("shows only unread active sessions with due-date filters and keeps read sessions in Active", async () => {
+  const rows = items.map((item) => ({
+    ...item,
+    unread: ["ready", "future", "done"].includes(item.sessionId),
+  }));
+  const { user, updateItems } = show(false, rows);
+  await user.click(screen.getByRole("radio", { name: "Unread" }));
+  expect(documents()).toEqual(["Plan.pdf", "Ready.pdf"]);
+  await pick(user, "Due date", "Upcoming");
+  expect(documents()).toEqual(["Plan.pdf"]);
+  await user.click(screen.getByRole("button", { name: "Clear filters" }));
+  updateItems(rows.map((item) => ({ ...item, unread: false })));
+  expect(screen.getByText("You're all caught up")).toBeInTheDocument();
+  await user.click(screen.getByRole("radio", { name: "Active" }));
+  expect(documents()).toContain("Ready.pdf");
+  expect(documents()).toContain("Plan.pdf");
+});
 
 function documents() {
   return within(screen.getByRole("table"))

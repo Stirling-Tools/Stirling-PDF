@@ -85,7 +85,7 @@ export function hasUnseenSigningActivity(
   );
 }
 
-/** Call only after the detail is successfully displayed. Persist no document names, emails or credentials. */
+/** Call after showing the detail or its access-expiry notice. Persist no document names, emails or credentials. */
 export function markSigningItemSeen(
   accountId: string | null,
   item: SigningItem,
