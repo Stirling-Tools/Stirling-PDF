@@ -35,166 +35,70 @@ jobs:
       - name: Checkout main branch first
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Get PR data
-        id: get-pr-data
+      - name: Fetch changed translation files
+        id: fetch-files
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-        with:
-          github-token: ${{ github.token }}
-          script: |
-            const prNumber = context.payload.pull_request.number;
-            const repoOwner = context.payload.repository.owner.login;
-            const repoName = context.payload.repository.name;
-            const branch = context.payload.pull_request.head.ref;
-
-            console.log(`PR Number: ${prNumber}`);
-            console.log(`Repo Owner: ${repoOwner}`);
-            console.log(`Repo Name: ${repoName}`);
-            console.log(`Branch: ${branch}`);
-
-            core.setOutput("pr_number", prNumber);
-            core.setOutput("repo_owner", repoOwner);
-            core.setOutput("repo_name", repoName);
-            core.setOutput("branch", branch);
-        continue-on-error: true
-
-      - name: Fetch PR changed files
-        id: fetch-pr-changes
-        env:
-          GH_TOKEN: ${{ github.token }}
-          PR_NUMBER: ${{ steps.get-pr-data.outputs.pr_number }}
-        run: |
-          echo "Fetching PR changed files..."
-          echo "Getting list of changed files from PR..."
-          # Check if PR number exists
-          if [ -z "${PR_NUMBER}" ]; then
-            echo "Error: PR number is empty"
-            exit 1
-          fi
-          # Get changed files and filter for TOML translation files
-          gh pr view "${PR_NUMBER}" --json files -q ".files[].path" | grep -E '^frontend/editor/public/locales/[a-zA-Z-]+/translation\.toml$' > changed_files.txt || echo "No matching TOML files found in PR"
-          # Check if any files were found
-          if [ ! -s changed_files.txt ]; then
-            echo "No TOML translation files changed in this PR"
-            echo "Workflow will exit early as no relevant files to check"
-            exit 0
-          fi
-          echo "Found $(wc -l < changed_files.txt) matching TOML files"
-
-      - name: Determine reference file
-        id: determine-file
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-        env:
-          # Untrusted, fork-controlled values are passed via env, never interpolated into the script
-          PR_NUMBER: ${{ steps.get-pr-data.outputs.pr_number }}
-          REPO_OWNER: ${{ steps.get-pr-data.outputs.repo_owner }}
-          REPO_NAME: ${{ steps.get-pr-data.outputs.repo_name }}
-          PR_REPO_OWNER: ${{ github.event.pull_request.head.repo.owner.login }}
-          PR_REPO_NAME: ${{ github.event.pull_request.head.repo.name }}
-          PR_BRANCH: ${{ steps.get-pr-data.outputs.branch }}
         with:
           github-token: ${{ github.token }}
           script: |
             const fs = require("fs");
             const path = require("path");
 
-            // Validate inputs before any use
-            const validateInput = (input, regex, name) => {
-              if (typeof input !== "string" || !regex.test(input)) {
-                throw new Error(`Invalid ${name}: ${input}`);
-              }
-              return input;
+            const { owner, repo } = context.repo;
+            const pr = context.payload.pull_request;
+            const LOCALE_FILE = /^frontend\/editor\/public\/locales\/[a-zA-Z-]+\/translation\.toml$/;
+            const REFERENCE_FILE = "frontend/editor/public/locales/en-US/translation.toml";
+
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner,
+              repo,
+              pull_number: pr.number,
+              per_page: 100,
+            });
+            const changedFiles = files.filter(file => file.status !== "removed" && LOCALE_FILE.test(file.filename));
+            if (changedFiles.length === 0) {
+              console.log("No translation files changed.");
+              core.setOutput("has_files", "false");
+              return;
+            }
+
+            // The PR's own changes are diffed from the merge base, or keys main changed after the PR branched count as
+            // the PR's. They are judged against main's en-US, which the checkout already holds.
+            const { data: comparison } = await github.rest.repos.compareCommitsWithBasehead({
+              owner,
+              repo,
+              basehead: `${pr.base.sha}...${pr.head.sha}`,
+            });
+            const mergeBase = comparison.merge_base_commit.sha;
+
+            // PR content is only ever read through the API as data: this job runs with write permissions.
+            const download = async (filePath, ref, destination) => {
+              const { data } = await github.rest.repos.getContent({
+                owner,
+                repo,
+                path: filePath,
+                ref,
+                mediaType: { format: "raw" }, // the default JSON form returns no content for files over 1 MB
+              });
+              fs.mkdirSync(path.dirname(destination), { recursive: true });
+              fs.writeFileSync(destination, Buffer.from(data));
             };
 
-            const repoOwner = validateInput(process.env.REPO_OWNER, /^[a-zA-Z0-9_-]+$/, "repository owner");
-            const repoName = validateInput(process.env.REPO_NAME, /^[a-zA-Z0-9._-]+$/, "repository name");
-            const prRepoOwner = validateInput(process.env.PR_REPO_OWNER, /^[a-zA-Z0-9_-]+$/, "PR repository owner");
-            const prRepoName = validateInput(process.env.PR_REPO_NAME, /^[a-zA-Z0-9._-]+$/, "PR repository name");
-            const branch = validateInput(process.env.PR_BRANCH, /^[a-zA-Z0-9._/-]+$/, "branch name");
-            const prNumber = Number(validateInput(process.env.PR_NUMBER, /^[0-9]+$/, "PR number"));
-
-            console.log(`Determining reference file for PR #${prNumber}`);
-
-            // Get the list of changed files in the PR
-            const { data: files } = await github.rest.pulls.listFiles({
-              owner: repoOwner,
-              repo: repoName,
-              pull_number: prNumber,
-            });
-
-            // Filter for relevant TOML files based on the PR changes
-            const changedFiles = files
-              .filter(file =>
-                file.status !== "removed" &&
-                /^frontend\/editor\/public\/locales\/[a-zA-Z-]+\/translation\.toml$/.test(file.filename)
-              )
-              .map(file => file.filename);
-
-            console.log("Changed files:", changedFiles);
-
-            // Create a temporary directory for PR files
-            const tempDir = "pr-branch";
-            if (!fs.existsSync(tempDir)) {
-              fs.mkdirSync(tempDir, { recursive: true });
-            }
-
-            // Download and save each changed file
+            await download(REFERENCE_FILE, pr.head.sha, path.join("pr-head", REFERENCE_FILE));
+            await download(REFERENCE_FILE, mergeBase, path.join("pr-base", REFERENCE_FILE));
             for (const file of changedFiles) {
-              const { data: fileContent } = await github.rest.repos.getContent({
-                owner: prRepoOwner,
-                repo: prRepoName,
-                path: file,
-                ref: branch,
-              });
-
-              const content = Buffer.from(fileContent.content, "base64").toString("utf-8");
-              const filePath = path.join(tempDir, file);
-              const dirPath = path.dirname(filePath);
-
-              if (!fs.existsSync(dirPath)) {
-                fs.mkdirSync(dirPath, { recursive: true });
+              await download(file.filename, pr.head.sha, path.join("pr-head", file.filename));
+              if (file.status !== "added") {
+                await download(file.previous_filename ?? file.filename, mergeBase, path.join("pr-base", file.filename));
               }
-
-              fs.writeFileSync(filePath, content);
-              console.log(`Saved file: ${filePath}`);
             }
 
-            // Output the list of changed files for further processing
-            const fileList = changedFiles.join(" ");
-            core.exportVariable("FILES_LIST", fileList);
-            console.log("Files saved and listed in FILES_LIST.");
-
-            // Determine reference file
-            let referenceFilePath;
-            if (changedFiles.includes("frontend/editor/public/locales/en-US/translation.toml")) {
-              console.log("Using PR branch reference file.");
-              const { data: fileContent } = await github.rest.repos.getContent({
-                owner: prRepoOwner,
-                repo: prRepoName,
-                path: "frontend/editor/public/locales/en-US/translation.toml",
-                ref: branch,
-              });
-
-              referenceFilePath = "pr-branch-translation-en-US.toml";
-              const content = Buffer.from(fileContent.content, "base64").toString("utf-8");
-              fs.writeFileSync(referenceFilePath, content);
-            } else {
-              console.log("Using main branch reference file.");
-              const { data: fileContent } = await github.rest.repos.getContent({
-                owner: repoOwner,
-                repo: repoName,
-                path: "frontend/editor/public/locales/en-US/translation.toml",
-                ref: "main",
-              });
-
-              referenceFilePath = "main-branch-translation-en-US.toml";
-              const content = Buffer.from(fileContent.content, "base64").toString("utf-8");
-              fs.writeFileSync(referenceFilePath, content);
-            }
-
-            console.log(`Reference file path: ${referenceFilePath}`);
-            core.exportVariable("REFERENCE_FILE", referenceFilePath);
+            console.log(`Merge base: ${mergeBase}`);
+            console.log("Changed files:", changedFiles.map(file => file.filename));
+            core.setOutput("has_files", "true");
 
       - name: Install uv
+        if: steps.fetch-files.outputs.has_files == 'true'
         uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
           enable-cache: true
@@ -203,100 +107,68 @@ jobs:
             engine/uv.lock
 
       - name: Install Python dependencies
+        if: steps.fetch-files.outputs.has_files == 'true'
         run: |
           uv sync --project engine --locked --group tools
 
-      - name: Run Python script to check files
+      - name: Check translation files
         id: run-check
+        if: steps.fetch-files.outputs.has_files == 'true'
         env:
           PR_ACTOR: ${{ github.event.pull_request.user.login }}
         run: |
-          echo "Running Python script to check TOML files..."
-          uv run --project engine --locked --group tools python .github/scripts/check_language_toml.py \
-            --actor "${PR_ACTOR}" \
-            --reference-file "${REFERENCE_FILE}" \
-            --branch "pr-branch" \
-            --files "${FILES_LIST[@]}" > result.txt
-        continue-on-error: true # Continue the job even if this step fails
-
-      - name: Capture output
-        id: capture-output
-        run: |
-          if [ -f result.txt ] && [ -s result.txt ]; then
-            echo "Capturing output..."
-            SCRIPT_OUTPUT=$(cat result.txt)
-            echo "SCRIPT_OUTPUT<<EOF" >> $GITHUB_ENV
-            echo "$SCRIPT_OUTPUT" >> $GITHUB_ENV
-            echo "EOF" >> $GITHUB_ENV
-            echo "${SCRIPT_OUTPUT}"
-
-            # Determine job failure based on script output
-            if [[ "$SCRIPT_OUTPUT" == *"❌"* ]]; then
-              echo "FAIL_JOB=true" >> $GITHUB_ENV
-            else
-              echo "FAIL_JOB=false" >> $GITHUB_ENV
-            fi
-          else
-            echo "No output found."
-            echo "SCRIPT_OUTPUT=" >> $GITHUB_ENV
-            echo "FAIL_JOB=false" >> $GITHUB_ENV
-          fi
+          set -o pipefail
+          uv run --project engine --locked --group tools python .github/scripts/check_language_toml.py check \
+            --base-dir pr-base \
+            --head-dir pr-head \
+            --main-dir . \
+            --actor "${PR_ACTOR}" | tee report.md
+        continue-on-error: true
 
       - name: Post comment on PR
-        if: env.SCRIPT_OUTPUT != ''
+        if: steps.run-check.outcome == 'success' || steps.run-check.outcome == 'failure'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          CHECK_FAILED: ${{ steps.run-check.outcome == 'failure' }}
         with:
           github-token: ${{ github.token }}
           script: |
-            const { GITHUB_REPOSITORY, SCRIPT_OUTPUT } = process.env;
-            const [repoOwner, repoName] = GITHUB_REPOSITORY.split('/');
-            const issueNumber = context.issue.number;
+            const fs = require("fs");
 
-            // Find existing comment
-            const comments = await github.rest.issues.listComments({
-              owner: repoOwner,
-              repo: repoName,
-              issue_number: issueNumber
+            // Empty when the script crashed rather than reporting; the failed step's log has the traceback.
+            const report = fs.existsSync("report.md") ? fs.readFileSync("report.md", "utf8").trim() : "";
+            if (!report) {
+              console.log("No report to post.");
+              return;
+            }
+
+            const HEADER = "## 🌐 TOML Translation Verification Summary";
+            const MAX_COMMENT_LENGTH = 65536;
+            const truncationNote = "\n\n_Report truncated: the full report is in the workflow run's log._";
+            let body = `${HEADER}\n\n${report}\n`;
+            if (body.length > MAX_COMMENT_LENGTH) {
+              body = body.slice(0, MAX_COMMENT_LENGTH - truncationNote.length) + truncationNote;
+            }
+
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
             });
+            const existing = comments.find(c => c.user.login === "github-actions[bot]" && c.body.includes(HEADER));
 
-            const comment = comments.data.find(c => c.body.includes("## 🌐 TOML Translation Verification Summary"));
-
-            // Only update or create comments by the action user
-            const expectedActor = "github-actions[bot]";
-
-            if (comment && comment.user.login === expectedActor) {
-              // Update existing comment
-              await github.rest.issues.updateComment({
-                owner: repoOwner,
-                repo: repoName,
-                comment_id: comment.id,
-                body: `## 🌐 TOML Translation Verification Summary\n\n\n${SCRIPT_OUTPUT}\n`
-              });
+            // Passing PRs get no new comment; an earlier failure comment is updated so it never goes stale.
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
               console.log("Updated existing comment.");
-            } else if (!comment) {
-              // Create new comment if no existing comment is found
-              await github.rest.issues.createComment({
-                owner: repoOwner,
-                repo: repoName,
-                issue_number: issueNumber,
-                body: `## 🌐 TOML Translation Verification Summary\n\n\n${SCRIPT_OUTPUT}\n`
-              });
+            } else if (process.env.CHECK_FAILED === "true") {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
               console.log("Created new comment.");
-            } else {
-              console.log("Comment update attempt denied. Actor does not match.");
             }
 
       - name: Fail job if errors found
-        if: env.FAIL_JOB == 'true'
-        run: |
-          echo "Failing the job because errors were detected."
-          exit 1
-
-      - name: Cleanup temporary files
-        if: always()
-        run: |
-          echo "Cleaning up temporary files..."
-          rm -rf pr-branch
-          rm -f pr-branch-translation-en-US.toml main-branch-translation-en-US.toml changed_files.txt result.txt
-          echo "Cleanup complete."
-        continue-on-error: true # Ensure cleanup runs even if previous steps fail
+        if: steps.run-check.outcome == 'failure'
+        run: exit 1

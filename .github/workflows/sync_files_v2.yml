@@ -69,7 +69,7 @@ jobs:
 
       - name: Sync translation TOML files
         run: |
-          uv run --project engine --locked --group tools python .github/scripts/check_language_toml.py --reference-file "frontend/editor/public/locales/en-US/translation.toml" --branch main
+          uv run --project engine --locked --group tools python .github/scripts/check_language_toml.py sync --reference-file "frontend/editor/public/locales/en-US/translation.toml"
 
       - name: Sort translation TOML files
         run: |
