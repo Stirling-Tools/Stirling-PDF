@@ -63,8 +63,9 @@ export const useConfigNavSections = (
   const isSaasMode = connectionMode === "saas";
   const isLocalMode = connectionMode === "local";
 
-  // Wraps proprietary's Preferences page, keeping its account cards while signed
-  // in, to add file-association defaults and the desktop update controls.
+  // Account cards and the server-setup banner concern a self-hosted server, so
+  // local and cloud mode drop them; desktop adds file defaults and update controls.
+  const isSelfHostedMode = connectionMode === "selfhosted";
   const sections = extendPreferences(
     useProprietaryConfigNavSections(
       isAdmin,
@@ -73,7 +74,12 @@ export const useConfigNavSections = (
       onRequestClose,
       showSettingsWhenNoLogin,
     ),
-    isAuthenticated ? {} : { accountSlot: undefined },
+    {
+      hideAdminBanner: !isSelfHostedMode,
+      ...(isSelfHostedMode && isAuthenticated
+        ? {}
+        : { accountSlot: undefined }),
+    },
     DesktopGeneralSection,
   );
 
