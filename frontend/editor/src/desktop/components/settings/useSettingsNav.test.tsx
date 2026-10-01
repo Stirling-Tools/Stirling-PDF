@@ -133,8 +133,18 @@ function preferencesPage(sections: SettingsNav["sections"]) {
   return item?.component as ReactElement<PreferencesSectionProps>;
 }
 
-it.each(["selfhosted", "saas"])(
-  "keeps proprietary's account cards on the desktop Preferences page in mode=%s",
+it("keeps proprietary's account cards on the desktop Preferences page when self-hosted", async () => {
+  state.mode = "selfhosted";
+  state.loginEnabled = true;
+  const { result } = renderHook(() => useSettingsNav(vi.fn()));
+  await waitFor(() => expect(result.current.pending).toBe(false));
+  const page = preferencesPage(result.current.sections);
+  expect(page.type).toBe(DesktopGeneralSection);
+  expect(page.props.accountSlot).toBe("account-cards");
+});
+
+it.each(["saas", "local"])(
+  "drops the self-hosted account cards in mode=%s",
   async (mode) => {
     state.mode = mode;
     state.loginEnabled = true;
@@ -142,9 +152,22 @@ it.each(["selfhosted", "saas"])(
     await waitFor(() => expect(result.current.pending).toBe(false));
     const page = preferencesPage(result.current.sections);
     expect(page.type).toBe(DesktopGeneralSection);
-    expect(page.props.accountSlot).toBe("account-cards");
+    expect(page.props.accountSlot).toBeUndefined();
   },
 );
+
+it.each([
+  ["local", true],
+  ["saas", true],
+  ["selfhosted", false],
+])("hides the server-setup banner in mode=%s: %s", async (mode, hidden) => {
+  state.mode = mode;
+  const { result } = renderHook(() => useSettingsNav(vi.fn()));
+  await waitFor(() => expect(result.current.pending).toBe(false));
+  expect(preferencesPage(result.current.sections).props.hideAdminBanner).toBe(
+    hidden,
+  );
+});
 
 it("drops the account cards while signed out", async () => {
   state.mode = "selfhosted";
