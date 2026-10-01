@@ -5223,11 +5223,11 @@ typeHelp = "यह किस प्रकार का फ़ील्ड है
 
 [formFill.fieldTypes]
 button = "बटन"
-checkbox = "Checkbox"
-combobox = "Dropdown"
+checkbox = "चेकबॉक्स"
+combobox = "ड्रॉपडाउन"
 listbox = "सूची बॉक्स"
-radio = "Radio"
-radioGroup = "Radio समूह"
+radio = "रेडियो बटन"
+radioGroup = "रेडियो बटन समूह"
 signature = "हस्ताक्षर"
 text = "टेक्स्ट"
 
