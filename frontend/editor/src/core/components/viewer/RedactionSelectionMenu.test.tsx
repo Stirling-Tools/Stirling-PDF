@@ -45,7 +45,7 @@ function renderMenu(selected = true) {
     <RedactionSelectionMenu
       context={{ type: "redaction", item, pageIndex: 0 }}
       selected={selected}
-      menuWrapperProps={{ ref: vi.fn() }}
+      menuWrapperProps={{ ref: vi.fn(), style: {} }}
       rect={item.rect}
       placement={{ suggestTop: false, spaceAbove: 0, spaceBelow: 0 }}
     />,
