@@ -1,0 +1,61 @@
+name: PR turn labels
+
+# Keeps each open PR's waiting-on-author / waiting-on-review label current between
+# the triages in stale-prs.yml. Pushes, opens, reopens and ready-for-review arrive
+# through the conflict labeler, so the turn is worked out after has conflicts is
+# current. Reviews arrive through pr-review-events.yml. Off unless
+# STALE_PR_BOT_LIVE is "true".
+
+on:
+  workflow_run:
+    workflows: ["PR conflict labeler", "PR review events"]
+    types: [completed]
+  pull_request_target:
+    types: [converted_to_draft, labeled, unlabeled]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    name: Sync turn labels
+    # Labels added with a workflow token never trigger workflows, so a label event
+    # here came from a person. Of those, only needs-changes moves the turn, and of
+    # comments only the author's does.
+    if: >-
+      vars.STALE_PR_BOT_LIVE == 'true' && vars.CI_PROFILE != 'lite' && (
+        github.event_name == 'workflow_run' ||
+        github.event.action == 'converted_to_draft' ||
+        github.event.label.name == 'needs-changes' ||
+        (github.event.issue.pull_request && github.event.comment.user.login == github.event.issue.user.login)
+      )
+    runs-on: ubuntu-latest
+    # Each sync covers every open PR, so one running and one queued is enough: GitHub
+    # replaces a queued run in the group when a newer one arrives.
+    concurrency:
+      group: pr-turn-labels
+      cancel-in-progress: false
+    permissions:
+      contents: read # actions/checkout
+      issues: write # add/remove labels
+      pull-requests: write # add/remove labels on PRs
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - name: Check out the repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Sync turn labels
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const { syncTurnLabels } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/stale-prs.ts`);
+            await syncTurnLabels({ github, context, core, live: true });

@@ -390,10 +390,18 @@ async function apply(github: GitHubClient, repo: Repo, pr: PullRequest, { action
   }
 }
 
+const isNotFound = (error: unknown) =>
+  typeof error === "object" && error !== null && "status" in error && error.status === 404;
+
 async function applyTurnLabel(github: GitHubClient, repo: Repo, pr: PullRequest, change: TurnLabelChange) {
   const issue = { ...repo, issue_number: pr.number };
   if (change.add) await github.rest.issues.addLabels({ ...issue, labels: [change.label] });
-  for (const name of change.remove) await github.rest.issues.removeLabel({ ...issue, name });
+  for (const name of change.remove) {
+    // A turn-label sync and the triage can overlap, and both remove the same label.
+    await github.rest.issues.removeLabel({ ...issue, name }).catch((error: unknown) => {
+      if (!isNotFound(error)) throw error;
+    });
+  }
 }
 
 const ACTION_ORDER: Action[] = ["close", "warn", "clear", "pending"];
@@ -468,11 +476,17 @@ export interface TriageInputs {
   writeIntervalMs?: number;
 }
 
+function labelChangeSummary(change: TurnLabelChange) {
+  const changes = [...(change.add ? [`+${change.label}`] : []), ...change.remove.map((name) => `-${name}`)];
+  return `turn label ${changes.join(" ") || "unchanged"}`;
+}
+
 function changeSummary({ decision, turnLabel }: Result) {
   const turnKinds = decision.turns.map((turn) => turn.kind).join(", ");
-  const labelChanges = [...(turnLabel.add ? [`+${turnLabel.label}`] : []), ...turnLabel.remove.map((name) => `-${name}`)];
-  return `${decision.action} (${turnKinds}); turn label ${labelChanges.join(" ") || "unchanged"}`;
+  return `${decision.action} (${turnKinds}); ${labelChangeSummary(turnLabel)}`;
 }
+
+const errorMessage = (error: unknown) => (error instanceof Error ? error.message : String(error));
 
 /**
  * Triages every open PR. A write that fails is logged and the run moves on to the
@@ -501,11 +515,42 @@ export default async function triageStalePullRequests({
       if (needsRelabel(result)) await applyTurnLabel(github, context.repo, pr, result.turnLabel);
     } catch (error) {
       failures += 1;
-      core.error(`#${pr.number}: ${changeSummary(result)} failed: ${error instanceof Error ? error.message : String(error)}`);
+      core.error(`#${pr.number}: ${changeSummary(result)} failed: ${errorMessage(error)}`);
     }
     await sleep(writeIntervalMs);
   }
 
   await writeSummary(core, results, live, now);
+  if (failures > 0) core.setFailed(`${failures} PR(s) could not be updated.`);
+}
+
+/**
+ * Brings every open PR's turn label up to date and touches nothing else, for runs
+ * between triages. Fails the same way as the triage, without writing a summary.
+ */
+export async function syncTurnLabels({
+  github,
+  context,
+  core,
+  live,
+  writeIntervalMs = WRITE_INTERVAL_MS,
+}: TriageInputs) {
+  let failures = 0;
+
+  for (const pr of await fetchOpenPullRequests(github, context.repo)) {
+    const change = turnLabelChange(pr);
+    if (!change.add && change.remove.length === 0) continue;
+
+    core.info(`#${pr.number}: ${labelChangeSummary(change)}`);
+    if (!live) continue;
+    try {
+      await applyTurnLabel(github, context.repo, pr, change);
+    } catch (error) {
+      failures += 1;
+      core.error(`#${pr.number}: ${labelChangeSummary(change)} failed: ${errorMessage(error)}`);
+    }
+    await sleep(writeIntervalMs);
+  }
+
   if (failures > 0) core.setFailed(`${failures} PR(s) could not be updated.`);
 }

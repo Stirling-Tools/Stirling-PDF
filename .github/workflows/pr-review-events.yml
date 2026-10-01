@@ -1,0 +1,26 @@
+name: PR review events
+
+# Lets pr-turn-labels.yml react to reviews. A review on a fork PR only gets a
+# read-only token here, but the workflow_run it triggers gets a write token.
+
+on:
+  pull_request_review:
+    types: [submitted, dismissed]
+
+permissions: {}
+
+jobs:
+  relay:
+    name: Relay review event
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - name: Record the review
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REVIEW_ACTION: ${{ github.event.action }}
+        run: echo "Review $REVIEW_ACTION on #$PR_NUMBER"

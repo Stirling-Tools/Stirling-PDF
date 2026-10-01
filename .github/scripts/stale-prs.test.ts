@@ -9,6 +9,7 @@ import triageStalePullRequests, {
   LABELS,
   type PullRequest,
   type Review,
+  syncTurnLabels,
   turnLabelChange,
   warningComment,
 } from "./stale-prs.ts";
@@ -306,7 +307,7 @@ describe("comments", () => {
   });
 });
 
-function recordingGitHub(pullRequests: PullRequest[]) {
+function recordingGitHub(pullRequests: PullRequest[], { alreadyRemoved = [] as string[] } = {}) {
   const calls: string[] = [];
   const github: GitHubClient = {
     graphql: async <T>() =>
@@ -315,7 +316,10 @@ function recordingGitHub(pullRequests: PullRequest[]) {
       issues: {
         createComment: async ({ issue_number }) => calls.push(`comment #${issue_number}`),
         addLabels: async ({ issue_number, labels }) => calls.push(`label #${issue_number} ${labels.join(",")}`),
-        removeLabel: async ({ issue_number, name }) => calls.push(`unlabel #${issue_number} ${name}`),
+        removeLabel: async ({ issue_number, name }) => {
+          if (alreadyRemoved.includes(name)) throw Object.assign(new Error("Label does not exist"), { status: 404 });
+          return calls.push(`unlabel #${issue_number} ${name}`);
+        },
       },
       pulls: {
         update: async ({ pull_number }) => calls.push(`close #${pull_number}`),
@@ -424,6 +428,38 @@ describe("triage run", () => {
   it("changes nothing in a dry run", async () => {
     const { github, calls } = recordingGitHub([overdue()]);
     await triageStalePullRequests({ github, context: { repo }, core: silentCore(), live: false, writeIntervalMs: 0 });
+    assert.deepEqual(calls, []);
+  });
+});
+
+describe("turn label sync", () => {
+  const repo = { owner: "o", repo: "r" };
+  const sync = (github: GitHubClient, live = true) =>
+    syncTurnLabels({ github, context: { repo }, core: silentCore(), live, writeIntervalMs: 0 });
+
+  it("only touches turn labels, even on a PR that is due to close", async () => {
+    const overdue = label(label(pullRequest({ mergeable: "CONFLICTING" }), LABELS.conflicts, 40), LABELS.stale, 30);
+    const { github, calls } = recordingGitHub([overdue]);
+    await sync(github);
+    assert.deepEqual(calls, ["label #1 waiting-on-author"]);
+  });
+
+  it("leaves a correctly labelled PR alone", async () => {
+    const { github, calls } = recordingGitHub([label(pullRequest(), LABELS.waitingOnReview, 5)]);
+    await sync(github);
+    assert.deepEqual(calls, []);
+  });
+
+  it("does not fail when the label it removes is already gone", async () => {
+    const pr = label(label(pullRequest({ mergeable: "CONFLICTING" }), LABELS.waitingOnReview, 5), LABELS.conflicts, 1);
+    const { github, calls } = recordingGitHub([pr], { alreadyRemoved: [LABELS.waitingOnReview] });
+    await sync(github);
+    assert.deepEqual(calls, ["label #1 waiting-on-author"]);
+  });
+
+  it("changes nothing in a dry run", async () => {
+    const { github, calls } = recordingGitHub([pullRequest()]);
+    await sync(github, false);
     assert.deepEqual(calls, []);
   });
 });
