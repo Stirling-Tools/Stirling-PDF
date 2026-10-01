@@ -133,3 +133,35 @@ it("prevalidates both PEM files before enabling submission", async () => {
   expect(payload.get("certFile")).toBeInstanceOf(File);
   expect(screen.getByRole("button", { name: "Sign Document" })).toBeEnabled();
 });
+
+it("keeps the certificate dialog open while a signature submission is in flight", async () => {
+  const onClose = vi.fn();
+  let finishSigning: () => void = () => {};
+  const onSign = vi.fn(
+    () =>
+      new Promise<void>((resolve) => {
+        finishSigning = resolve;
+      }),
+  );
+  render(
+    <MantineProvider>
+      <CertificateConfigModal
+        opened
+        onClose={onClose}
+        onSign={onSign}
+        signatureCount={0}
+      />
+    </MantineProvider>,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Sign Document" }));
+  expect(onSign).toHaveBeenCalledTimes(1);
+  fireEvent.click(screen.getByRole("button", { name: "Close", exact: true }));
+  fireEvent.keyDown(document, { key: "Escape" });
+  expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled();
+  expect(onClose).not.toHaveBeenCalled();
+  await act(async () => {
+    finishSigning();
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+  expect(onClose).toHaveBeenCalledTimes(1);
+});

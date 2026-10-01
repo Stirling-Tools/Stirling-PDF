@@ -43,7 +43,6 @@ function renderSession(participants: ParticipantInfo[], finalized = false) {
       <SessionActionsPanel
         session={session}
         onFinalize={onFinalize}
-        onAddParticipants={vi.fn()}
         onLoadSignedPdf={vi.fn()}
         finalizing={false}
         loadingPdf={false}

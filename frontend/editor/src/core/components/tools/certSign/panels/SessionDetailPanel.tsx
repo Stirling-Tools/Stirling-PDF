@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Stack, Text, Group, Badge, Divider, Modal } from "@mantine/core";
+import { Stack, Text, Group, Modal } from "@mantine/core";
 import { Button } from "@app/ui/Button";
+import { StatusBadge } from "@app/ui/StatusBadge";
+import { ProgressBar } from "@app/ui/ProgressBar";
+import { SigningSessionHeader } from "@app/components/shared/signing/SigningSessionHeader";
 import { alert } from "@app/components/toast";
 import { Icon } from "@app/ui/Icon";
 import { ParticipantListPanel } from "@app/components/tools/certSign/panels/ParticipantListPanel";
@@ -32,6 +35,10 @@ export const SessionDetailPanel = ({ data }: SessionDetailPanelProps) => {
   const [finalizing, setFinalizing] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [loadingPdf, setLoadingPdf] = useState(false);
+  const signedCount = session.participants.filter(
+    (p) => p.status === "SIGNED",
+  ).length;
+  const busy = finalizing || deleting || loadingPdf;
 
   // Auto-refresh every 30 seconds while the session is active.
   useEffect(() => {
@@ -147,79 +154,105 @@ export const SessionDetailPanel = ({ data }: SessionDetailPanelProps) => {
   };
 
   return (
-    <Stack gap="md" p="md" h="100%" style={{ minHeight: 0 }}>
-      <Stack gap={4}>
-        <Group gap="sm" wrap="nowrap">
-          <Text
-            size="sm"
-            fw={600}
-            style={{ flex: 1, minWidth: 0, overflowWrap: "anywhere" }}
-          >
-            {session.documentName}
-          </Text>
-          <Badge
-            size="sm"
-            color={session.finalized ? "green" : "blue"}
-            variant="light"
-          >
-            {session.finalized
-              ? t("certSign.collab.sessionList.finalized", "Finalized")
-              : t("certSign.collab.sessionList.active", "Active")}
-          </Badge>
-        </Group>
-        {(session.ownerEmail || session.createdAt) && (
-          <Text size="xs" c="dimmed">
-            {session.ownerEmail &&
-              `${t("certSign.collab.sessionDetail.owner", "Owner")}: ${session.ownerEmail}`}
-            {session.ownerEmail && session.createdAt && " • "}
-            {session.createdAt &&
-              new Date(session.createdAt).toLocaleDateString()}
-          </Text>
-        )}
-      </Stack>
-
-      <Divider />
-
-      {/* Participants — scrollable, bounded so actions stay visible */}
-      <div style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
-        <ParticipantListPanel
-          participants={session.participants}
-          finalized={session.finalized}
-          onRemove={handleRemoveParticipant}
+    <div className="signing-detail">
+      <div className="signing-detail__body">
+        <SigningSessionHeader
+          documentName={session.documentName}
+          owner={session.ownerEmail}
+          createdAt={session.createdAt}
+          dueDate={session.dueDate}
+          message={session.message}
+          status={
+            <StatusBadge tone={session.finalized ? "success" : "info"}>
+              {session.finalized
+                ? t("certSign.collab.sessionList.finalized", "Finalized")
+                : t("certSign.collab.sessionList.active", "Active")}
+            </StatusBadge>
+          }
         />
+        <div className="signing-detail__summary">
+          <div className="signing-detail__heading">
+            <h3>{t("signingDetail.progress", "Signature progress")}</h3>
+            <StatusBadge
+              tone={
+                signedCount === session.participants.length && signedCount > 0
+                  ? "success"
+                  : "neutral"
+              }
+              showDot={false}
+            >
+              {t("signingDetail.signedCount", "{{signed}} / {{total}} signed", {
+                signed: signedCount,
+                total: session.participants.length,
+              })}
+            </StatusBadge>
+          </div>
+          <ProgressBar
+            value={
+              session.participants.length
+                ? signedCount / session.participants.length
+                : 0
+            }
+            label={t("signingDetail.progress", "Signature progress")}
+          />
+        </div>
+        <section className="signing-detail__section">
+          <div className="signing-detail__heading">
+            <h3>
+              {t("certSign.collab.sessionDetail.participants", "Participants")}
+            </h3>
+            {!session.finalized && (
+              <Button
+                size="sm"
+                variant="tertiary"
+                leftSection={<Icon name="plus" size={16} />}
+                disabled={busy}
+                onClick={() => setAddParticipantsModalOpen(true)}
+              >
+                {t(
+                  "certSign.collab.sessionDetail.addParticipants",
+                  "Add Participants",
+                )}
+              </Button>
+            )}
+          </div>
+          <ParticipantListPanel
+            participants={session.participants}
+            finalized={session.finalized}
+            onRemove={handleRemoveParticipant}
+            disabled={busy}
+          />
+        </section>
       </div>
+      <footer className="signing-detail__footer">
+        <SessionActionsPanel
+          session={session}
+          onFinalize={handleFinalize}
+          onLoadSignedPdf={handleLoadSignedPdf}
+          finalizing={finalizing}
+          loadingPdf={loadingPdf}
+          disabled={busy}
+        />
 
-      <Divider />
-
-      <SessionActionsPanel
-        session={session}
-        onAddParticipants={() => setAddParticipantsModalOpen(true)}
-        onFinalize={handleFinalize}
-        onLoadSignedPdf={handleLoadSignedPdf}
-        finalizing={finalizing}
-        loadingPdf={loadingPdf}
-      />
-
-      {!session.finalized && (
-        <Button
-          leftSection={<Icon name="trash" size={20} />}
-          accent="danger"
-          variant="tertiary"
-          fullWidth
-          onClick={() => setDeleteModalOpen(true)}
-        >
-          {t("certSign.collab.sessionDetail.deleteSession", "Delete Session")}
-        </Button>
-      )}
-
-      {/* Add Participants Modal */}
+        {!session.finalized && (
+          <Button
+            leftSection={<Icon name="trash" size={20} />}
+            accent="danger"
+            variant="tertiary"
+            fullWidth
+            disabled={busy}
+            onClick={() => setDeleteModalOpen(true)}
+          >
+            {t("certSign.collab.sessionDetail.deleteSession", "Delete Session")}
+          </Button>
+        )}
+      </footer>
       <AddParticipantsFlow
         opened={addParticipantsModalOpen}
         onClose={() => setAddParticipantsModalOpen(false)}
         onSubmit={handleAddParticipants}
       />
 
-      {/* Delete Confirmation Modal */}
       <Modal
         opened={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
@@ -248,7 +281,7 @@ export const SessionDetailPanel = ({ data }: SessionDetailPanelProps) => {
           </Group>
         </Stack>
       </Modal>
-    </Stack>
+    </div>
   );
 };
 

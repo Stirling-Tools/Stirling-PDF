@@ -1,13 +1,6 @@
-import {
-  Modal,
-  Stack,
-  Group,
-  Text,
-  Collapse,
-  TextInput,
-  Loader,
-} from "@mantine/core";
+import { Stack, Group, Text, Collapse, TextInput, Loader } from "@mantine/core";
 import { Button } from "@app/ui/Button";
+import { Modal } from "@app/ui/Modal";
 import { useTranslation } from "react-i18next";
 import { useState, useEffect, useMemo } from "react";
 import { Icon } from "@app/ui/Icon";
@@ -167,7 +160,6 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
     };
   }, [opened, validationPayload, participantToken, t]);
 
-  // Advanced settings
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [reason, setReason] = useState(defaultReason);
   const [location, setLocation] = useState(defaultLocation);
@@ -220,14 +212,41 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
 
   return (
     <Modal
-      opened={opened}
-      onClose={onClose}
+      open={opened}
+      onClose={() => {
+        if (!signing && !disabled) onClose();
+      }}
       title={t(
         "certSign.collab.signRequest.certModal.title",
         "Configure Certificate",
       )}
-      centered
-      size="lg"
+      width="md"
+      disableBackdropClose={signing || disabled}
+      disableEscapeClose={signing || disabled}
+      footer={
+        <Group justify="space-between" wrap="wrap">
+          <Button
+            variant="secondary"
+            onClick={onClose}
+            disabled={signing || disabled}
+          >
+            {t("cancel", "Cancel")}
+          </Button>
+          <Button
+            onClick={handleSign}
+            disabled={
+              !isValid ||
+              disabled ||
+              signing ||
+              certValidation.status === "validating"
+            }
+            loading={signing}
+            leftSection={<Icon name="check" size={18} />}
+          >
+            {t("certSign.collab.signRequest.certModal.sign", "Sign Document")}
+          </Button>
+        </Group>
+      }
     >
       <Stack gap="md">
         <Text size="sm" c="dimmed">
@@ -262,7 +281,6 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
           disabled={disabled || signing}
         />
 
-        {/* Certificate validation status */}
         {certValidation.status === "validating" && (
           <Group gap="xs">
             <Loader size="xs" />
@@ -279,9 +297,9 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
             <Icon
               name="circle-check"
               size={20}
-              style={{ color: "var(--mantine-color-green-6)" }}
+              style={{ color: "var(--c-success)" }}
             />
-            <Text size="sm" c="var(--color-green-dark)">
+            <Text size="sm" c="var(--c-success)">
               {t(
                 "certSign.collab.signRequest.certModal.certValidUntil",
                 "Certificate valid until {{date}}",
@@ -302,9 +320,9 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
             <Icon
               name="circle-alert"
               size={20}
-              style={{ color: "var(--mantine-color-red-6)" }}
+              style={{ color: "var(--c-danger)" }}
             />
-            <Text size="sm" c="var(--color-red-dark)">
+            <Text size="sm" c="var(--c-danger)">
               {t(
                 "certSign.collab.signRequest.certModal.certInvalid",
                 "Certificate invalid: {{error}}",
@@ -316,13 +334,19 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
           </Group>
         )}
 
-        {/* Advanced Settings - Optional */}
         <div>
           <Button
             variant="tertiary"
             size="sm"
             onClick={() => setShowAdvanced(!showAdvanced)}
             disabled={disabled || signing}
+            aria-expanded={showAdvanced}
+            rightSection={
+              <Icon
+                name={showAdvanced ? "chevron-up" : "chevron-down"}
+                size={16}
+              />
+            }
             style={{ marginBottom: "8px" }}
           >
             {t(
@@ -362,24 +386,6 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
             </Stack>
           </Collapse>
         </div>
-
-        <Group justify="space-between" wrap="wrap" mt="md">
-          <Button variant="secondary" onClick={onClose} disabled={signing}>
-            {t("cancel", "Cancel")}
-          </Button>
-          <Button
-            onClick={handleSign}
-            disabled={
-              !isValid ||
-              disabled ||
-              signing ||
-              certValidation.status === "validating"
-            }
-            loading={signing}
-          >
-            {t("certSign.collab.signRequest.certModal.sign", "Sign Document")}
-          </Button>
-        </Group>
       </Stack>
     </Modal>
   );

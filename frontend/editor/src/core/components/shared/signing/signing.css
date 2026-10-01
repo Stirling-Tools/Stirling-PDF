@@ -119,7 +119,7 @@
 }
 .signing-workspace__detail {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(360px, 32%, 480px);
+  grid-template-columns: minmax(0, 1fr) clamp(380px, 34%, 480px);
   flex: 1;
   min-height: 0;
 }
@@ -135,7 +135,6 @@
   overflow-y: auto;
   border-left: 1px solid var(--c-border);
   background: var(--c-surface);
-  padding: 8px;
 }
 .signing-workspace__create {
   display: grid;

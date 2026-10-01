@@ -1,0 +1,205 @@
+.signing-detail {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  min-width: 0;
+  color: var(--c-text);
+}
+.signing-detail__body {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  padding: 24px;
+}
+.signing-detail h2,
+.signing-detail h3,
+.signing-detail p {
+  margin: 0;
+}
+.signing-detail h2 {
+  font-size: 20px;
+  line-height: 1.4;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.signing-detail h3 {
+  font-size: 15px;
+  font-weight: 600;
+}
+.signing-detail__header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+.signing-detail__sender {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.signing-detail__sender time {
+  display: block;
+  margin-top: 3px;
+  color: var(--c-text-muted);
+  font-size: 12px;
+}
+.signing-detail__due {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--c-text-muted);
+  font-size: 13px;
+}
+.signing-detail__message {
+  width: 100%;
+  padding: 12px 16px;
+  border-left: 2px solid var(--c-border-strong);
+  background: var(--c-surface-sunken);
+  border-radius: 0 8px 8px 0;
+}
+.signing-detail__message p {
+  margin-top: 6px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--c-text-muted);
+}
+.signing-detail__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.signing-detail__section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.signing-detail__summary {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  background: var(--c-surface-raised);
+}
+.signing-detail__summary p,
+.signing-detail__hint {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--c-text-muted);
+}
+.signing-detail__footer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: auto;
+  padding: 20px 24px;
+  border-top: 1px solid var(--c-border);
+  background: var(--c-surface);
+}
+.signing-detail__footer .sui-btn {
+  white-space: normal;
+  height: auto;
+  min-height: 36px;
+}
+.signing-detail__secondary {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+}
+.signing-participants {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.signing-participant {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+}
+.signing-participant__identity {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+}
+.signing-participant__identity strong {
+  display: block;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.signing-participant__email {
+  display: block;
+  margin: 3px 0 5px;
+  font-size: 12px;
+  color: var(--c-text-muted);
+  overflow-wrap: anywhere;
+}
+.signing-participant__color {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.signing-controls__picker.mantine-Button-root {
+  min-height: 72px;
+  border-radius: 10px;
+}
+.signing-controls__preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  min-width: 0;
+  flex: 1;
+  padding: 6px 12px;
+  background: var(--p-white);
+  border-radius: 6px;
+}
+.signing-finalize__group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+}
+.signing-finalize__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.signing-finalize__list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.signing-finalize__list svg {
+  flex-shrink: 0;
+}
+@media (max-width: 800px) {
+  .signing-detail__body {
+    padding: 20px;
+    gap: 24px;
+  }
+  .signing-detail__footer {
+    padding: 20px;
+  }
+}
