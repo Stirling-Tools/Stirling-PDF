@@ -138,6 +138,9 @@ export async function syncLinkedFileFromDisk(
   if (state.availability === "unavailable") {
     return { status: "unavailable", reason: state.reason };
   }
+  // Matching disk metadata does not resolve a recorded conflict after reload.
+  if (stub.isLeaf !== false && stub.diskConflictAt)
+    return { status: "conflict" };
   if (!hasDiskChanged(stub, state)) return { status: "unchanged" };
   // Deliberately below the missing and unavailable checks: a superseded version
   // still wants its link state reported, it just must never be replaced.
@@ -147,9 +150,7 @@ export async function syncLinkedFileFromDisk(
   // child's write, so "changed" here means the child was saved - and reloading
   // would overwrite that version for good.
   if (stub.isLeaf === false) return { status: "superseded" };
-  // A recorded conflict still needs a choice after reload, when live editor state is gone.
-  if (stub.isDirty || stub.diskConflictAt || hasUnsavedWork)
-    return { status: "conflict" };
+  if (stub.isDirty || hasUnsavedWork) return { status: "conflict" };
   if (state.size > AUTO_RELOAD_MAX_BYTES) {
     return { status: "too-large", size: state.size };
   }

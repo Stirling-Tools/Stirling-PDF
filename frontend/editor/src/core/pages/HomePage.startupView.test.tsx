@@ -25,6 +25,11 @@ import { allowConsole } from "@app/tests/failOnConsole";
 import type { ToolId } from "@app/types/toolId";
 
 vi.mock("@app/hooks/useDocumentMeta", () => ({ useDocumentMeta: () => {} }));
+// Document and tool panels are outside the navigation contract; loading them
+// under coverage can time out before the real pages and providers settle.
+vi.mock("@app/components/layout/Workbench", () => ({ default: () => null }));
+vi.mock("@app/components/tools/RightSidebar", () => ({ default: () => null }));
+vi.mock("@app/components/FileManager", () => ({ default: () => null }));
 
 const seen = { pathname: "", readerMode: false };
 let showPage: () => void = () => {};
@@ -133,7 +138,7 @@ describe("default startup view: Reader", () => {
     } finally {
       navigation.mockRestore();
     }
-  });
+  }, 15000);
 
   it("returns to reading from the brand mark", async () => {
     renderApp();
