@@ -35,10 +35,23 @@ class FailingRequest extends EventTarget {
   }
 }
 
-/** An IDBRequest that never settles, the way WebKit sometimes stalls a blob put. */
+/** An IDBRequest that never settles, the way WebKit sometimes stalls a blob put.
+ *  Chained reads keep the transaction open until something aborts it. */
 class StalledRequest extends EventTarget {
   onerror: ((event: Event) => void) | null = null;
   onsuccess: ((event: Event) => void) | null = null;
+
+  constructor(store: IDBObjectStore) {
+    super();
+    const keepOpen = () => {
+      try {
+        nativeGet.call(store, "__stall__").onsuccess = keepOpen;
+      } catch {
+        // Aborted: nothing left to hold open.
+      }
+    };
+    keepOpen();
+  }
 }
 
 /** Record every add, optionally failing or stalling the blob-valued ones. */
@@ -54,7 +67,7 @@ function instrumentAdd(options: {
     const isBlob = (value as { data?: unknown } | null)?.data instanceof Blob;
     attempts.push(isBlob ? "blob" : "copy");
     if (isBlob && options.stallBlobs) {
-      return new StalledRequest() as unknown as IDBRequest<IDBValidKey>;
+      return new StalledRequest(this) as unknown as IDBRequest<IDBValidKey>;
     }
     if (isBlob && options.rejectBlobs) {
       return new FailingRequest(
@@ -239,8 +252,7 @@ describe("storeStirlingFile — blob-value fallback", () => {
     expect((await fileStorage.getStirlingFile(id))?.name).toBe("webkit.pdf");
   });
 
-  test("falls back to a copy when a blob write never settles, instead of holding the upload", async () => {
-    expectConsole.warn(/IndexedDB rejected a Blob value/);
+  test("falls back to a copy when a blob write never settles, without giving up on blobs", async () => {
     const { fileStorage, store } = await freshFileStorage();
     instrumentAdd({ rejectBlobs: false, stallBlobs: true });
     // Open the database on real timers; fake-indexeddb can't run under fake ones.
@@ -254,6 +266,11 @@ describe("storeStirlingFile — blob-value fallback", () => {
 
     expect(attempts).toEqual(["blob", "copy"]);
     expect((await fileStorage.getStirlingFile(id))?.name).toBe("stalled.pdf");
+    // A stall may only be queueing, so the next file still tries a blob.
+    instrumentAdd({ rejectBlobs: false });
+    attempts = [];
+    await store("next.pdf");
+    expect(attempts).toEqual(["blob"]);
   });
 
   test("remembers the rejection, so later files skip the doomed blob attempt", async () => {

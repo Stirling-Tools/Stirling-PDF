@@ -96,11 +96,7 @@ export function legacyDerivedFromTool(
  */
 function isBlobValueRejection(error: unknown): boolean {
   const name = (error as DOMException | null)?.name;
-  return (
-    name === "UnknownError" ||
-    name === "DataCloneError" ||
-    error instanceof StalledWriteError
-  );
+  return name === "UnknownError" || name === "DataCloneError";
 }
 
 /** A write that never settled. WebKit can stall a Blob put instead of refusing it,
@@ -399,9 +395,13 @@ class FileStorageService {
       const unproven = record.data instanceof Blob && !this.blobWriteVerified;
       await this.addFileRecord(db, record, unproven ? deadline : undefined);
     } catch (error) {
-      // Recoverable: re-add as a copy, and stop offering blobs this session.
-      // Anything else is the caller's to report.
-      if (!(record.data instanceof Blob) || !this.noteBlobRefusal(error)) {
+      // Recoverable: re-add as a copy. A refusal also stops offering blobs; a stall
+      // may only be queueing, so it proves nothing about the engine.
+      const stalled = error instanceof StalledWriteError;
+      if (
+        !(record.data instanceof Blob) ||
+        (!stalled && !this.noteBlobRefusal(error))
+      ) {
         throw error;
       }
       record.data = await copyBlobBytes(record.data);
@@ -682,7 +682,8 @@ class FileStorageService {
         const request = store.add(record);
 
         request.onerror = () => settle(() => reject(request.error));
-        request.onsuccess = () => settle(resolve);
+        // On commit: request success does not mean the record survived.
+        transaction.oncomplete = () => settle(resolve);
         if (deadlineMs !== undefined) {
           timer = setTimeout(() => {
             reject(
