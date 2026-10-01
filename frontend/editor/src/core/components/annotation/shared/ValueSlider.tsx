@@ -2,8 +2,7 @@ import { memo } from "react";
 import { Slider } from "@mantine/core";
 import { useRenderCount } from "@app/hooks/useRenderCount";
 
-/** `useRenderCount` label asserted by annotationMenuSliders.test.tsx. */
-export const VALUE_SLIDER_RENDER_LABEL = "annotationValueSlider";
+const RENDER_LABEL = "annotationValueSlider";
 
 interface ValueSliderProps {
   value: number;
@@ -18,10 +17,9 @@ interface ValueSliderProps {
 /**
  * A Mantine `Slider` that only rebuilds when its value moves.
  *
- * Mantine memoises nothing inside Slider, and the annotation menu sits under a
- * viewer that re-renders whenever an annotation is updated — which while a
- * slider is being dragged is once per pointer move. Rebuilding the track on each
- * of those, alongside every sibling control, is what makes dragging stutter.
+ * Mantine memoises nothing inside Slider, and the menu sits under a viewer that
+ * re-renders on every annotation update: while a slider is dragged that is once
+ * per pointer move, and rebuilding every sibling track with it is the stutter.
  */
 export const ValueSlider = memo(function ValueSlider({
   value,
@@ -30,7 +28,8 @@ export const ValueSlider = memo(function ValueSlider({
   onChange,
   suffix,
 }: ValueSliderProps) {
-  useRenderCount(VALUE_SLIDER_RENDER_LABEL);
+  // Dev-only counter; annotationMenuSliders.test.tsx asserts the memo contract.
+  useRenderCount(RENDER_LABEL);
   return (
     <Slider
       value={value}

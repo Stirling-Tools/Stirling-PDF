@@ -29,20 +29,20 @@ export function DocumentEditSessionProvider({
   documentId: string | null;
   children: ReactNode;
 }) {
-  const [state, dispatch] = useReducer(sessionReducer, undefined, () => ({
-    ...initialSessionState(),
-    documentId,
-  }));
+  const [state, dispatch] = useReducer(
+    sessionReducer,
+    undefined,
+    initialSessionState,
+  );
 
-  // One transition per document swap, rather than each component effect clearing
-  // its own flags and hoping they land in a consistent order.
+  // Fired here rather than in each consumer's effect so the reset lands once
+  // per swap. Resets on null too: a stale revision left by a closed file would
+  // re-open the Annotate UI when a viewer remounts with no document behind it.
   const lastDocumentIdRef = useRef(documentId);
   useEffect(() => {
     if (lastDocumentIdRef.current === documentId) return;
     lastDocumentIdRef.current = documentId;
-    if (documentId !== null) {
-      dispatch({ type: "DOCUMENT_REPLACED", documentId });
-    }
+    dispatch({ type: "DOCUMENT_REPLACED" });
   }, [documentId]);
 
   return (

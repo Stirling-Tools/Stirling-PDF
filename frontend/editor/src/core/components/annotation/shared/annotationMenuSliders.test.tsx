@@ -1,21 +1,17 @@
 import { describe, expect, test, vi, beforeEach } from "vitest";
 import { render, renderHook, act } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
-import {
-  ValueSlider,
-  VALUE_SLIDER_RENDER_LABEL,
-} from "@app/components/annotation/shared/ValueSlider";
+import { ValueSlider } from "@app/components/annotation/shared/ValueSlider";
 import { useEventCallback } from "@app/hooks/useEventCallback";
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
   <MantineProvider>{children}</MantineProvider>
 );
 
+// Matches the RENDER_LABEL inside ValueSlider; the first assertion below fails
+// if the two drift apart.
 const renders = () =>
-  Number(
-    (window as unknown as { __renderCounts?: Record<string, number> })
-      .__renderCounts?.[VALUE_SLIDER_RENDER_LABEL] ?? 0,
-  );
+  Number(window.__renderCounts?.["annotationValueSlider"] ?? 0);
 
 /** The composition every annotation control uses: stabilise, then memoise. */
 function Harness({
@@ -31,9 +27,7 @@ function Harness({
 
 describe("annotation menu slider", () => {
   beforeEach(() => {
-    (
-      window as unknown as { __renderCounts?: Record<string, number> }
-    ).__renderCounts = {};
+    window.__renderCounts = {};
   });
 
   // The viewer rebuilds the annotation menu on every annotation update, handing

@@ -67,16 +67,16 @@ const Viewer = (props: ViewerProps & SignatureOverlayPassThrough) => {
   );
 
   // The session resets itself on a document swap through one DOCUMENT_REPLACED
-  // transition. It is deliberately NOT keyed: a keyed provider remounts its whole
-  // subtree, which tears down the live viewer on an in-place save — the exact
-  // thing the in-place reload path exists to avoid.
+  // transition. Deliberately not keyed: a keyed provider remounts its subtree,
+  // tearing down the live viewer on an in-place save, which is exactly what the
+  // in-place reload path exists to avoid.
 
   return (
     <DocumentEditSessionProvider documentId={activeFileId}>
       <div
-        // Matches the wrapper the portfolio branch already used. Its geometry is
-        // load-bearing: the in-place reload specs assert page position and zoom
-        // across a swap, so this must not gain a width the scroller did not have.
+        // Same geometry the portfolio branch already used: the in-place reload
+        // specs assert page position and zoom across a swap, so this must not
+        // gain a width the scroller did not have.
         style={{
           position: "relative",
           height: "100%",

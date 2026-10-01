@@ -25,8 +25,6 @@ interface UseAnchoredOverlayOptions {
   enabled: boolean;
   /** Gap between the anchor and the overlay. */
   offset?: number;
-  /** Observe the anchor's own size changes, which `window.resize` cannot see. */
-  observeAnchorResize?: boolean;
   /** Defaults to "below". "above" anchors to the anchor's top edge. */
   placement?: OverlayPlacement;
   /** Notified whenever the resolved position actually changes. */
@@ -45,7 +43,6 @@ export function useAnchoredOverlay({
   anchorRef,
   enabled,
   offset = 8,
-  observeAnchorResize = false,
   placement = "below",
   onPosition,
 }: UseAnchoredOverlayOptions) {
@@ -115,29 +112,12 @@ export function useAnchoredOverlay({
     });
     window.addEventListener("resize", scheduleMeasure, { passive: true });
 
-    let observer: ResizeObserver | null = null;
-    if (observeAnchorResize && typeof ResizeObserver !== "undefined") {
-      const anchor = anchorRef.current;
-      if (anchor) {
-        observer = new ResizeObserver(scheduleMeasure);
-        observer.observe(anchor);
-      }
-    }
-
     return () => {
       window.removeEventListener("scroll", scheduleMeasure, true);
       window.removeEventListener("resize", scheduleMeasure);
-      observer?.disconnect();
       cancelPendingFrame();
     };
-  }, [
-    enabled,
-    anchorRef,
-    measure,
-    scheduleMeasure,
-    cancelPendingFrame,
-    observeAnchorResize,
-  ]);
+  }, [enabled, anchorRef, measure, scheduleMeasure, cancelPendingFrame]);
 
   // Both refs are only populated after commit, so the mount decision and the
   // first measurement happen here rather than in the effect that runs first.
@@ -149,5 +129,5 @@ export function useAnchoredOverlay({
     // commit after it flips true, so the first measure has to run again then.
   }, [enabled, anchorRef, measure, mounted]);
 
-  return { overlayRef, mounted, measure, placement };
+  return { overlayRef, mounted, measure };
 }

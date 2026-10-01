@@ -89,17 +89,12 @@ function TextSelectionMenuInner({
     [menuWrapperProps],
   );
 
-  const overlayPlacement = placement?.suggestTop ? "above" : "below";
-  const {
-    overlayRef,
-    mounted,
-    placement: resolvedPlacement,
-  } = useAnchoredOverlay({
+  const showAbove = placement?.suggestTop ?? true;
+  const { overlayRef, mounted } = useAnchoredOverlay({
     anchorRef: wrapperRef,
     enabled: Boolean(selected),
-    placement: overlayPlacement,
+    placement: showAbove ? "above" : "below",
   });
-  const showAbove = resolvedPlacement === "above";
 
   const handleCopy = useCallback(() => {
     if (documentId) {

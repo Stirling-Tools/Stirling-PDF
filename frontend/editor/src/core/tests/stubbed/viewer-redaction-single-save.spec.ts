@@ -127,7 +127,7 @@ async function markRedactionAt(
   await page.mouse.up();
 
   // The reader offers Redact on the text-selection menu. Once redaction mode is
-  // armed — which the first mark does — the drag itself queues the mark and no
+  // armed (which the first mark does) the drag itself queues the mark and no
   // menu appears, so both paths have to be handled.
   const redactInMenu = page
     .locator('[data-text-selection-menu] button[aria-label="Redact"]')

@@ -43,12 +43,10 @@ interface ColorControlProps {
 }
 
 /**
- * Mantine memoises nothing inside ColorPicker, so every render of an ancestor
- * recomputes each swatch and its luminance. The annotation menu sits under a
- * viewer that re-renders dozens of times while it re-lays out — opening the
- * Annotate panel, a zoom change — and rebuilding the palette each time reads as
- * flicker. Keying on the colour alone keeps those renders off the swatches; the
- * callbacks are read through a ref so their identity is not part of the compare.
+ * Mantine computes every swatch (and its luminance) on each render of an
+ * ancestor; the menu sits under a viewer that re-renders during layout changes,
+ * so rebuilding the palette reads as flicker. Key on colour alone: the callbacks
+ * are read through a ref so handler identity is not part of the compare.
  */
 const Picker = memo(function Picker({
   value,

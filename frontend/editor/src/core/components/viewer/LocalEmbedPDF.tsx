@@ -131,7 +131,6 @@ interface LocalEmbedPDFProps {
   onSignatureAdded?: (annotation: PdfAnnotationObject) => void;
   signatureApiRef?: React.RefObject<SignatureAPI | null>;
   annotationApiRef?: React.RefObject<AnnotationAPI | null>;
-  /** A committed annotation edit landed (redaction marks and signatures excluded). */
   historyApiRef?: React.RefObject<HistoryAPI | null>;
   redactionTrackerRef?: React.RefObject<RedactionPendingTrackerAPI>;
   /** File identity passed through to FormFieldOverlay for stale-field guards */

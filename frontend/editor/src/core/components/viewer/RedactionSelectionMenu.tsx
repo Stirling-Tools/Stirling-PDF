@@ -62,11 +62,8 @@ function RedactionSelectionMenuInner({
   // This menu is scoped to one pending mark, so it only offers actions that
   // affect that mark. Applying is permanent and applies *every* pending mark, so
   // it lives in the redaction review panel where that scope is visible.
-
-  // Hands the decision to the redaction review panel rather than applying from a
-  // menu attached to a single mark.
   const onReviewPanel = useCallback(() => {
-    handleToolSelect?.("redact");
+    handleToolSelect("redact");
   }, [handleToolSelect]);
 
   const { overlayRef, mounted } = useAnchoredOverlay({
