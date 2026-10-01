@@ -90,8 +90,10 @@ export interface EmbedPdfViewerProps {
 const documentCacheKey = (file: StirlingFile): string =>
   `${file.fileId}|${file.quickKey}`;
 
-// Guard only; a restore completes on plugin events.
-const RESTORE_SETTLE_CAP_MS = 30_000;
+// Guards only; a restore completes on plugin events. A missed event costs a
+// wrong-scale frame after the hide cap, not a blank viewer until the other.
+const RESTORE_SETTLE_CAP_MS = 15_000;
+const HIDE_CAP_MS = 5_000;
 
 const findScrollableAncestor = (el: HTMLElement | null): HTMLElement | null => {
   let node = el?.parentElement ?? null;
@@ -235,6 +237,7 @@ const EmbedPdfViewerContent = ({
   const [restoreTick, setRestoreTick] = useState(0);
   const [restorePending, setRestorePending] = useState(false);
   const hiddenScrollerRef = useRef<HTMLElement | null>(null);
+  const hideCapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const swapTargetRef = useRef<number | null>(null);
   const swapLayoutRef = useRef<string | null>(null);
   // Activation and the replacement pages' React commit happen separately.
@@ -242,6 +245,10 @@ const EmbedPdfViewerContent = ({
   const scrollIntentCleanupRef = useRef<(() => void) | null>(null);
 
   const revealSwappedDocument = useCallback(() => {
+    if (hideCapTimerRef.current !== null) {
+      clearTimeout(hideCapTimerRef.current);
+      hideCapTimerRef.current = null;
+    }
     const scroller = hiddenScrollerRef.current;
     if (scroller) {
       scroller.style.visibility = "";
@@ -326,8 +333,14 @@ const EmbedPdfViewerContent = ({
       revealSwappedDocument();
       hiddenScrollerRef.current = scroller;
       scroller.style.visibility = "hidden";
+      // Carried values keep landing after this reveal.
+      hideCapTimerRef.current = setTimeout(() => {
+        hideCapTimerRef.current = null;
+        revealSwappedDocument();
+        if (zoomRestorePendingRef.current) settleZoomRestore();
+      }, HIDE_CAP_MS);
     },
-    [revealSwappedDocument],
+    [revealSwappedDocument, zoomRestorePendingRef, settleZoomRestore],
   );
 
   const queueScrollRestore = useCallback(
@@ -1093,12 +1106,6 @@ const EmbedPdfViewerContent = ({
           "[Viewer] Applying form fill changes - reloading filled PDF",
         );
 
-        // Use the continuously tracked scroll position
-        const pageToRestore = lastKnownScrollPageRef.current;
-
-        // Save the current rotation to restore after reload
-        const currentRotation = rotationState.rotation ?? 0;
-
         // Convert Blob to File
         const filename = currentFile.name || "document.pdf";
         const file = new File([filledBlob], filename, {
@@ -1118,12 +1125,6 @@ const EmbedPdfViewerContent = ({
           parentStub,
           selectedTool ?? "multiTool",
         );
-
-        // Store the page to restore after file replacement
-        queueScrollRestore(pageToRestore, true);
-
-        // Store the rotation to restore after file replacement
-        pendingRotationRestoreRef.current = currentRotation;
 
         const newFileId = stubs[0]?.id;
         if (newFileId) setActiveFileId(newFileId);
@@ -1168,9 +1169,6 @@ const EmbedPdfViewerContent = ({
 
       layerApplyInProgressRef.current = true;
       try {
-        const pageToRestore = lastKnownScrollPageRef.current;
-        const currentRotation = rotationState.rotation ?? 0;
-
         const filename = currentFile.name || "document.pdf";
         const file = new File([modifiedBlob], filename, {
           type: "application/pdf",
@@ -1187,9 +1185,6 @@ const EmbedPdfViewerContent = ({
           parentStub,
           selectedTool ?? "multiTool",
         );
-
-        queueScrollRestore(pageToRestore, true);
-        pendingRotationRestoreRef.current = currentRotation;
 
         const newFileId = stubs[0]?.id;
         if (newFileId) setActiveFileId(newFileId);
@@ -1226,10 +1221,6 @@ const EmbedPdfViewerContent = ({
         "[Viewer] Discarding pending marks but saving applied redactions",
       );
 
-      // Save current view state to restore after file replacement
-      const pageToRestore = lastKnownScrollPageRef.current;
-      const currentRotation = rotationState.rotation ?? 0;
-
       // Export PDF WITHOUT committing pending marks - this saves only applied redactions
       const arrayBuffer = await exportActions.saveAsCopy();
       if (!arrayBuffer) {
@@ -1253,10 +1244,6 @@ const EmbedPdfViewerContent = ({
         parentStub,
         selectedTool ?? "multiTool",
       );
-
-      // Store view state to restore after file replacement
-      queueScrollRestore(pageToRestore, true);
-      pendingRotationRestoreRef.current = currentRotation;
 
       const newFileId = stubs[0]?.id;
       if (newFileId) setActiveFileId(newFileId);
@@ -1343,6 +1330,9 @@ const EmbedPdfViewerContent = ({
     // so no replacement would ever report back.
     if (skipReloadContentKeyRef.current === content) return;
 
+    // Only a replacement already activated shows intermediate values; any
+    // earlier state is re-read rather than carried over.
+    const keepTargets = documentSwappedRef.current;
     const page = getScrollState().currentPage || lastKnownScrollPageRef.current;
     if (page > 0) {
       // Captures the within-page offset and waits for the replacement node, so
@@ -1350,12 +1340,11 @@ const EmbedPdfViewerContent = ({
       queueScrollRestore(page, true);
     }
 
-    // In-flight targets are kept: a re-read would see the plugin defaults.
-    if (pendingRotationRestoreRef.current === null) {
+    if (!keepTargets || pendingRotationRestoreRef.current === null) {
       pendingRotationRestoreRef.current = getRotationState().rotation ?? 0;
     }
 
-    if (pendingZoomRestoreRef.current === null) {
+    if (!keepTargets || pendingZoomRestoreRef.current === null) {
       const zoom = getZoomState();
       // Automatic re-evaluates against the unmounted shell; preserve the numeric scale.
       const level =
@@ -1369,7 +1358,7 @@ const EmbedPdfViewerContent = ({
       }
     }
 
-    if (pendingSpreadRestoreRef.current === null) {
+    if (!keepTargets || pendingSpreadRestoreRef.current === null) {
       pendingSpreadRestoreRef.current = getSpreadState().spreadMode ?? null;
     }
 
