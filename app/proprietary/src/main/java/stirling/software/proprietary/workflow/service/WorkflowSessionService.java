@@ -93,12 +93,13 @@ public class WorkflowSessionService {
     private final LicenseServiceInterface licenseService;
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    /** Rejects managed certificate submissions when the installation has no paid entitlement. */
+    /**
+     * Personal account certificates require a paid entitlement; organization certificates do not.
+     */
     public void ensureCertificateTypeAllowed(String certType) {
-        if (("SERVER".equalsIgnoreCase(certType) || "USER_CERT".equalsIgnoreCase(certType))
-                && !licenseService.isRunningProOrHigher()) {
+        if ("USER_CERT".equalsIgnoreCase(certType) && !licenseService.isRunningProOrHigher()) {
             throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN, "Managed signing certificates require a Pro license");
+                    HttpStatus.FORBIDDEN, "Personal signing certificates require a Pro license");
         }
     }
 

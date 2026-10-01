@@ -101,20 +101,35 @@ class WorkflowSessionServiceTest {
         verify(workflowParticipantRepository, never()).save(any());
     }
 
-    @org.junit.jupiter.params.ParameterizedTest
-    @org.junit.jupiter.params.provider.ValueSource(strings = {"SERVER", "USER_CERT"})
-    void unlicensedManagedSubmissionIsRejectedBeforeStoringSecrets(String certType) {
+    @Test
+    void unlicensedPersonalSubmissionIsRejectedBeforeStoringSecrets() {
         when(licenseService.isRunningProOrHigher()).thenReturn(false);
         User user = user("unlicensed");
         sessionWithParticipant("unlicensed", pendingParticipant(user));
         SignDocumentRequest request = new SignDocumentRequest();
-        request.setCertType(certType);
+        request.setCertType("USER_CERT");
         assertThatThrownBy(() -> service.signDocument("unlicensed", user, request))
                 .isInstanceOf(ResponseStatusException.class)
                 .extracting(e -> ((ResponseStatusException) e).getStatusCode())
                 .isEqualTo(HttpStatus.FORBIDDEN);
         verifyNoInteractions(metadataEncryptionService);
         verify(workflowParticipantRepository, never()).save(any());
+    }
+
+    @Test
+    void serverCertificateSubmissionDoesNotRequireALicense() {
+        lenient().when(licenseService.isRunningProOrHigher()).thenReturn(false);
+        User user = user("free-server");
+        WorkflowParticipant participant = pendingParticipant(user);
+        sessionWithParticipant("free-server", participant);
+        SignDocumentRequest request = new SignDocumentRequest();
+        request.setCertType("SERVER");
+
+        service.signDocument("free-server", user, request);
+
+        assertThat(participant.getStatus()).isEqualTo(ParticipantStatus.SIGNED);
+        verifyNoInteractions(licenseService);
+        verify(workflowParticipantRepository).save(participant);
     }
 
     @Test

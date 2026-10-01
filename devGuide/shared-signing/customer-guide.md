@@ -48,11 +48,11 @@ If you cannot approve the document, use **Decline Request**. Decline is immediat
 Use the official guides for installation commands and the companion self-hosted requirements document for the full configuration breakdown. Before a customer rollout, verify these points on the actual installation:
 
 - Install a server package containing login, storage and workflow functionality, with matching frontend and backend versions. A runtime flag cannot restore features omitted from the build.
-- Enable login, storage and shared signing. For the local/uploaded path, use the local provider and a persistent, writable storage path. A paid license is not required for that path; managed certificates and paid storage/encryption capabilities have separate entitlement requirements.
+- Enable login, storage and shared signing. For the local/uploaded path, use the local provider and a persistent, writable storage path. A paid license is not required for that path; Personal account certificates and paid storage/encryption capabilities have separate entitlement requirements. Organization/Server certificate signing is free when enabled by the administrator.
 - Create enabled coordinator and participant accounts within the installation's effective user allowance. Verify the organization/team picker scope. Its setting is **storage.signing.userListScope**.
 - Preserve the document store, application database and configuration/key material together. Restart the instance and retrieve both a final PDF and a pending request; then rehearse a backup restore.
 - Publish the correct frontend URL through HTTPS and the intended reverse proxy. Check access from a participant's network, including certificate uploads and final downloads.
-- Supply valid certificates and accessible private keys. For managed certificate options, enable and verify the licensed server configuration. Establish recipient trust anchors and any revocation policy separately.
+- Supply valid certificates and accessible private keys. For Organization/Server signing, enable `system.serverCertificate.enabled` and verify the server keystore; no paid license is required. Personal account certificates still require a paid entitlement. Establish recipient trust anchors and any revocation policy separately.
 - Rehearse the complete workflow on the pinned deployment version. Compare expected signatures with the finalized PDF. Exercise early closure, revoked access and an invalid upload.
 
 SMTP is not a requirement for the demonstrated in-app request flow. Do not promise invitation delivery, reminders, guest onboarding or enforced signing order from this demonstration. Successful token API tests alone do not establish a customer-ready guest invitation journey.

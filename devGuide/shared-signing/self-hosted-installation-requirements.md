@@ -1,6 +1,6 @@
 # Shared Signing: self-hosted installation requirements
 
-Verified 24 September 2026 against commit `910b5d012f` plus the local signing patch and current official documentation. This is a configuration and entitlement breakdown, not a production sign-off. Uploaded-certificate finalization and lifecycle safeguards have been repaired and retested locally; licensed deployments and backup restoration still need their own acceptance runs.
+Original installation review: 24 September 2026. Certificate entitlement requirements updated 1 October 2026 for free organization/server signing in this branch. This is a configuration and entitlement breakdown, not a production sign-off. Uploaded-certificate finalization and lifecycle safeguards have been repaired and retested locally; licensed deployments and backup restoration still need their own acceptance runs.
 
 ## Is the feature currently gated?
 
@@ -14,10 +14,10 @@ There are separate build, configuration, authentication and license gates. “Pr
 | S3-compatible file storage | `storage.provider=s3` plus bucket/endpoint/credentials configuration | Effective SERVER or ENTERPRISE entitlement |
 | Encrypt stored PDFs at rest, including local storage | `storage.encryption.enabled=true`, retained master key | Effective SERVER or ENTERPRISE entitlement |
 | Managed Personal certificate | Paid certificate selector; stored/generated per user | Effective SERVER or ENTERPRISE entitlement; patched shared-signing API rejects unlicensed submissions |
-| Managed Organization/Server certificate | Paid certificate selector + `system.serverCertificate.enabled=true` + usable keystore | Paid in UI and server-certificate service |
+| Managed Organization/Server certificate | `system.serverCertificate.enabled=true` + usable keystore | No paid license; administrator controls and signing permissions still apply |
 | Platform audit logging, including storage encryption audit events | Audit enabled at suitable level and retained database capacity | Enterprise |
 
-The documentation calls the paid certificate/storage boundary Pro/Enterprise. The code uses `SERVER`/`ENTERPRISE`; a purchased linked Team entitlement can promote the effective tier to SERVER. An installed key and a linked Team entitlement are alternative entitlement mechanisms, not two requirements. Confirm the effective server tier rather than infer it from a marketing plan name.
+The paid Personal-certificate/storage boundary is Pro/Enterprise. The code uses `SERVER`/`ENTERPRISE`; a purchased linked Team entitlement can promote the effective tier to SERVER. An installed key and a linked Team entitlement are alternative entitlement mechanisms, not two requirements. Confirm the effective server tier rather than infer it from a marketing plan name.
 
 The main [Shared Signing guide](https://docs.stirlingpdf.com/Functionality/Security/Shared-Signing/) and [storage guide](https://docs.stirlingpdf.com/Configuration/Storage/File-Sharing-Storage/) describe the free local/uploaded path. The [Security overview](https://docs.stirlingpdf.com/Functionality/Security/) still broadly labels Shared Signing Pro/Enterprise. That overview is inconsistent with the specific guide, implementation and observed unlicensed workflow.
 
@@ -34,7 +34,7 @@ Paid storage is checked at configuration/startup and wrapped with a runtime writ
 | Persistent configuration/key material | Retain settings and the generated application key, plus applicable certificate/file-encryption keys | Pending certificate data remains decryptable after restart/restore |
 | Enabled workflow | `storage.enabled=true` and `storage.signing.enabled=true` | `/api/v1/config/app-config` reports `storageEnabled` and `storageGroupSigningEnabled` as true |
 | Reachable web service | Browser-reachable instance URL; HTTPS for real credentials and private-key uploads; correct frontend URL/reverse-proxy routing | Participant can log in, review, submit and download through the intended external address |
-| Certificate source | At least one usable source: each user's uploaded certificate/private key, or enabled licensed managed sources | Check identity/validity; verify actual digital signatures in a completed PDF |
+| Certificate source | At least one usable source: each user's uploaded certificate/private key, the enabled Organization/Server certificate, or licensed Personal certificates | Check identity/validity; verify actual digital signatures in a completed PDF |
 
 The normal free user allowance in this checkout is five accounts; grandfathered limits and purchased capacity can change the effective allowance. Check the instance's actual admission limit before arranging a larger signing group. Do not assume free Shared Signing means unlimited user accounts.
 
@@ -79,10 +79,10 @@ File sharing is a separate switch. `storage.sharing.enabled`, share-link setting
 
 ## Additional requirements for all certificate choices
 
-For the full supported certificate selector - uploaded, Personal and Organization/Server - add a valid paid entitlement and a usable server certificate. Local storage remains a valid choice; there is no requirement to buy or operate S3 just to unlock managed signing.
+Organization/Server signing is free in this branch, both in the certificate tool and Shared Signing. Enable it and provide a usable server certificate as below. Only the managed Personal option requires a paid entitlement. Local storage remains a valid choice for all certificate sources.
 
-1. **Activate the entitlement.** Use the supported instance activation/account-link flow. For an installed license key, this checkout reads `premium.enabled=true` and `premium.key` (environment names `PREMIUM_ENABLED` / `PREMIUM_KEY`). The key may be supplied by a protected mounted file using `file:/path/to/license`. A paid linked Team entitlement can independently grant Server features. Keep activation material out of distributed customer examples. Verify `runningProOrHigher=true` after activation.
-2. **Enable and initialize the server certificate.** Add the block below. After startup/activation, verify certificate availability and identity in the admin settings; a true setting alone does not prove the keystore was successfully created.
+1. **For Personal certificates only, activate the entitlement.** Use the supported instance activation/account-link flow. For an installed license key, this checkout reads `premium.enabled=true` and `premium.key` (environment names `PREMIUM_ENABLED` / `PREMIUM_KEY`). The key may be supplied by a protected mounted file using `file:/path/to/license`. A paid linked Team entitlement can independently grant Server features. Keep activation material out of distributed customer examples. Verify `runningProOrHigher=true` after activation.
+2. **Enable and initialize the server certificate.** Add the block below. After startup, verify `serverCertificateEnabled=true` in app-config and certificate availability and identity in the admin settings; a true setting alone does not prove the keystore was successfully created.
 3. **Choose the organization identity.** Use the auto-generated certificate for evaluation/internal trust, or upload the organization's `.p12`/`.pfx` private-key keystore through the supported admin certificate settings. A website's HTTPS certificate is a separate concern from the PDF signing certificate.
 4. **Preserve managed keys.** The organization keystore is stored as `configs/server-certificate.p12`. Personal certificates are generated/stored per account in the application database. Preserve database and configuration together; do not regenerate the organization certificate on every restart.
 5. **Define recipient trust.** A cryptographically valid self-signed certificate is not automatically trusted by an external reader. Agree the CA/trust anchors, validation/revocation policy and recipient PDF reader. Stirling's own trust settings do not configure Acrobat or other clients automatically. See [Certificate Signing](https://docs.stirlingpdf.com/Functionality/Security/Certificate-Signing/) for supported sources and validation configuration.
@@ -95,6 +95,8 @@ system:
     validity: 365
     regenerateOnStartup: false
 ```
+
+All participants choosing Organization/Server sign with the same organization certificate. Their account identities remain in the workflow/summary; this option does not issue a distinct personal certificate to each signer.
 
 Environment equivalents are `SYSTEM_SERVERCERTIFICATE_ENABLED`, `SYSTEM_SERVERCERTIFICATE_ORGANIZATIONNAME`, `SYSTEM_SERVERCERTIFICATE_VALIDITY`, and `SYSTEM_SERVERCERTIFICATE_REGENERATEONSTARTUP`.
 
@@ -127,7 +129,7 @@ If platform audit evidence is required, enable and size the Enterprise audit sub
 
 Use the [release-gate plan](./release-gate-plan.md). At minimum: two ordinary users submit distinct certificates, owner finalizes, final PDF contains the expected valid digital signatures and visible marks, both parties retrieve it, and pending/completed requests survive restart. Negative cases must reject late signing, viewer signing and expired access. Recheck the actual downloaded artifact, not a green Signed label.
 
-Use a release containing the signing fixes and verify its behavior. Flags and a license alone cannot substitute for the output, permission and persistence acceptance tests. A successful local unlicensed run does not sign off licensed Personal/Organization certificates, S3/database storage, encryption-at-rest recovery, SSO or clustered installations.
+Use a release containing the signing fixes and verify its behavior. Flags and a license alone cannot substitute for the output, permission and persistence acceptance tests. A successful local unlicensed run does not sign off licensed Personal certificates, S3/database storage, encryption-at-rest recovery, SSO or clustered installations.
 
 ## Implementation evidence
 
@@ -137,8 +139,8 @@ Repository paths refer to the evaluated base and local patch; line numbers below
 - `app/proprietary/.../workflow/service/WorkflowSessionService.java:85`: storage/signing switches; no whole-feature paid gate.
 - `app/proprietary/.../storage/config/StorageProviderConfig.java:75,136-177`: encryption and database/S3 paid checks; local provider available without them.
 - `app/proprietary/.../storage/provider/LicensedStorageProvider.java:16`: runtime paid-write guard with reads retained.
-- `frontend/editor/src/core/components/tools/certSign/CertificateSelector.tsx:51`: managed options gated by `runningProOrHigher`.
-- `app/proprietary/.../service/ServerCertificateService.java:68-110`: paid-tier/configuration/keystore checks. The patched workflow submission services also check entitlement before accepting managed Personal/Server certificates, including participant-token submissions.
+- `frontend/editor/src/core/components/tools/certSign/CertificateSelector.tsx`: Personal uses `runningProOrHigher`; Organization uses `serverCertificateEnabled` independently of the paid tier.
+- `app/proprietary/.../service/ServerCertificateService.java`: configuration/keystore checks, without a paid-tier gate. Workflow submissions require entitlement only for Personal certificates, including participant-token submissions. Administrator-only certificate management remains enforced by `ServerCertificateController`.
 - `app/proprietary/.../security/configuration/ee/LicenseKeyChecker.java:89-136`: installed-key verification and linked Team promotion.
 - `app/proprietary/.../security/configuration/ee/DatabaseLicenseGuard.java:20`: effective Pro-or-higher guard for custom application DB processing.
 - `app/proprietary/.../service/UserLicenseSettingsService.java:54,305`: default user allowance and effective capacity calculation.

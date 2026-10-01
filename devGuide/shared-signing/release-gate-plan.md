@@ -2,14 +2,14 @@
 
 24 September 2026 | based on checkout `910b5d012f` and the local assessment
 
-Status: both local repair batches and story revalidation are complete; see the [closure report and gate-by-gate status](./blocking-work-report.md). The local uploaded-certificate path has 129/129 passing evidence checks and 302 passing workflow tests. Broader deployment gates and eight known baseline suite failures remain open. D1 is accepted: partial finalization requires at least one signature. D3 is accepted: due dates remain advisory, with explicit access expiry enforced separately. For D2, local storage and the shared-signing workflow are free, while managed certificates, database/S3 storage and file encryption are paid. Preserve those existing boundaries; no new licensing policy is proposed. See [self-hosted installation requirements](./self-hosted-installation-requirements.md). The detailed work descriptions below preserve the original plan; the closure report is the current status authority.
+Status: both local repair batches and story revalidation are complete; see the [closure report and gate-by-gate status](./blocking-work-report.md). The local uploaded-certificate path has 129/129 passing evidence checks and 302 passing workflow tests. Broader deployment gates and eight known baseline suite failures remain open. D1 is accepted: partial finalization requires at least one signature. D3 is accepted: due dates remain advisory, with explicit access expiry enforced separately. D2 update, 1 October 2026: local storage, shared signing, uploaded certificates and Organization/Server certificates are free. Personal account certificates, database/S3 storage and file encryption retain their paid boundaries. See [self-hosted installation requirements](./self-hosted-installation-requirements.md). The detailed work descriptions below preserve the original plan; the closure report is the current status authority.
 
 ## Decisions needed first
 
 | Decision | Recommendation | Alternative and impact |
 |---|---|---|
 | D1: incomplete requests | Allow the owner to finalize with at least one accepted signature. Require confirmation listing included and excluded people. Never finalize with zero signatures. Finalization closes all outstanding contributions. | Require everyone to sign. A declined/pending participant then blocks finalization until the owner explicitly changes the participant list. This removes the current early-completion capability. |
-| D2: edition contract | Local storage + uploaded certificates available without a paid license; Personal/Server certificates and database/S3 storage require their licensed entitlements. Enforce consistently in UI and backend. | All Shared Signing requires a paid license. This changes the public uploaded/local promise and requires coordinated documentation and UI updates. |
+| D2: edition contract | Local storage + uploaded and Organization/Server certificates available without a paid license; Personal certificates and database/S3 storage require their licensed entitlements. Enforce consistently in UI and backend. | All Shared Signing requires a paid license. This changes the public uploaded/local promise and requires coordinated documentation and UI updates. |
 | D3: due date | Keep due date advisory, fix overdue visibility, and label it clearly. Enforce explicit participant access expiry independently. | Make due date a hard cutoff. Requires a defined timezone/end-of-day rule, boundary tests and clear recovery when an owner extends the deadline. Do not infer those semantics from a date-only field. |
 
 D1 and D3 above are recorded as agreed. D2 matches the existing product boundary; the first patch now rejects unlicensed Personal/Server submissions in the tested signing APIs. Legitimate paid journeys still need a licensed environment.
@@ -112,7 +112,7 @@ The user asked to cover the feature's full scope. Retain these as required verif
 
 | Coverage | Input needed | Evidence required |
 |---|---|---|
-| Personal and Server certificate UI journeys | Valid test license and intended entitlements | Legitimate UI + API submission, certificate identity/trust behavior and valid final signatures |
+| Personal certificate UI journey | Valid test license and intended entitlement | Legitimate UI + API submission, certificate identity/trust behavior and valid final signatures |
 | Database and S3 storage | Supported configured test providers | Pending/finalized persistence, restart, retrieval, failure and backup/restore behavior |
 | Customer authentication/team picker | Target login/SSO/team configuration, when known | Intended users visible; unrelated users excluded; ordinary-user permissions work |
 | Customer PDF reader/trust | Reader/version and intended CA/trust setup | Signature integrity and recipient trust results clearly distinguished |
