@@ -129,7 +129,7 @@ public class SigningNotificationListener {
             }
             Optional<String> to = participantAddress(participant);
             Optional<String> link = participantLink(participant);
-            if (to.isEmpty() || missingGuestLink(participant, link)) {
+            if (to.isEmpty() || unusableGuestLink(participant, link)) {
                 continue;
             }
             emails.add(
@@ -184,7 +184,7 @@ public class SigningNotificationListener {
             }
             Optional<String> to = participantAddress(participant);
             Optional<String> link = participantLink(participant);
-            if (to.isEmpty() || missingGuestLink(participant, link)) {
+            if (to.isEmpty() || unusableGuestLink(participant, link)) {
                 continue;
             }
             emails.add(
@@ -231,10 +231,20 @@ public class SigningNotificationListener {
                 awaiting);
     }
 
-    /** A guest has no account to sign in to, so an email without its token link is useless. */
-    private static boolean missingGuestLink(
+    /**
+     * A guest has no account to sign in to, so an email is only useful with a token link that
+     * opens: not when no base URL is configured, and not once their access has expired, because the
+     * token endpoints then answer 403.
+     */
+    private static boolean unusableGuestLink(
             WorkflowParticipant participant, Optional<String> link) {
-        if (!isGuest(participant) || link.isPresent()) {
+        if (!isGuest(participant)) {
+            return false;
+        }
+        if (participant.isExpired()) {
+            return true;
+        }
+        if (link.isPresent()) {
             return false;
         }
         log.warn(

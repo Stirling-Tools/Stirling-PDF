@@ -12,6 +12,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -206,6 +207,19 @@ class SigningNotificationListenerTest {
         }
 
         @Test
+        void expiredGuestIsNotInvited() throws Exception {
+            participant(
+                    2L, user(2L, "bob@example.com"), "bob@example.com", ParticipantStatus.PENDING);
+            participant(3L, null, "guest@example.com", ParticipantStatus.PENDING)
+                    .setExpiresAt(LocalDateTime.now().minusMinutes(1));
+            sessionIsStored();
+
+            listener.onInvitation(new SigningInvitationEvent("s1", List.of(2L, 3L)));
+
+            assertThat(sent()).extracting(Sent::to).containsExactly("bob@example.com");
+        }
+
+        @Test
         void otherWorkflowTypesSendNothing() {
             participant(
                     2L, user(2L, "bob@example.com"), "bob@example.com", ParticipantStatus.PENDING);
@@ -391,6 +405,22 @@ class SigningNotificationListenerTest {
                     .contains(BASE + "/workflow/sign/token-4")
                     .contains("do not forward this email");
             assertThat(sent.get(0).html()).doesNotContain("do not forward");
+        }
+
+        @Test
+        void expiredGuestIsSkippedBecauseTheirTokenNoLongerOpens() throws Exception {
+            User alice = user(3L, "alice@example.com");
+            participant(3L, alice, "alice@example.com", ParticipantStatus.SIGNED)
+                    .setExpiresAt(LocalDateTime.now().minusDays(1));
+            participant(4L, null, "guest@example.com", ParticipantStatus.SIGNED)
+                    .setExpiresAt(LocalDateTime.now().minusDays(1));
+            session.setFinalized(true);
+            session.setStatus(WorkflowStatus.COMPLETED);
+            sessionIsStored();
+
+            listener.onCompletion(new SigningCompletionEvent("s1"));
+
+            assertThat(sent()).extracting(Sent::to).containsExactly("alice@example.com");
         }
     }
 
