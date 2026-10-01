@@ -476,6 +476,76 @@ describe("on the login screen", () => {
 });
 
 describe("writer", () => {
+  it("keeps the saved session when launch intake never opens a file", async () => {
+    vi.useFakeTimers();
+    const saved = JSON.stringify({
+      v: 2,
+      fileIds: ["root-a"],
+      selectedFileIds: [],
+    });
+    sessionStorage.setItem(SESSION_KEY, saved);
+    mocks.launchFilesPending = true;
+    const store = makeStore();
+    const { unmount } = mount(store);
+    await act(async () => {});
+    mocks.launchFilesPending = false;
+    act(() => store.notify());
+    await act(async () => vi.advanceTimersByTimeAsync(300));
+    unmount();
+
+    expect(sessionStorage.getItem(SESSION_KEY)).toBe(saved);
+  });
+
+  it("records launched files and an intentional close after intake succeeds", async () => {
+    vi.useFakeTimers();
+    sessionStorage.setItem(
+      SESSION_KEY,
+      JSON.stringify({ v: 2, fileIds: ["root-a"], selectedFileIds: [] }),
+    );
+    mocks.launchFilesPending = true;
+    const store = makeStore();
+    const { unmount } = mount(store);
+    await act(async () => {});
+
+    store.state.files.ids = ["launched" as never];
+    store.state.files.byId = { launched: stub("launched", "launched") };
+    act(() => store.notify());
+    await act(async () => vi.advanceTimersByTimeAsync(300));
+    expect(JSON.parse(sessionStorage.getItem(SESSION_KEY)!).fileIds).toEqual([
+      "launched",
+    ]);
+
+    store.state.files.ids = [];
+    store.state.files.byId = {};
+    act(() => store.notify());
+    unmount();
+    expect(JSON.parse(sessionStorage.getItem(SESSION_KEY)!).fileIds).toEqual(
+      [],
+    );
+  });
+
+  it("records a launch file closed before the debounced write as an empty session", async () => {
+    sessionStorage.setItem(
+      SESSION_KEY,
+      JSON.stringify({ v: 2, fileIds: ["root-a"], selectedFileIds: [] }),
+    );
+    mocks.launchFilesPending = true;
+    const store = makeStore();
+    const { unmount } = mount(store);
+    await act(async () => {});
+
+    store.state.files.ids = ["launched" as never];
+    store.state.files.byId = { launched: stub("launched", "launched") };
+    act(() => store.notify());
+    store.state.files.ids = [];
+    store.state.files.byId = {};
+    act(() => store.notify());
+    unmount();
+    expect(JSON.parse(sessionStorage.getItem(SESSION_KEY)!).fileIds).toEqual(
+      [],
+    );
+  });
+
   it("mirrors the open files and selection as original ids, debounced", async () => {
     vi.useFakeTimers();
     const store = makeStore();

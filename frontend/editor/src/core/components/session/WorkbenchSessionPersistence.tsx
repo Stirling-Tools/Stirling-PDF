@@ -164,6 +164,8 @@ export function WorkbenchSessionPersistence() {
   const restoreStarted = useRef(false);
   // Until the restore has run, this mount's empty state is not the truth to record.
   const restoreSettled = useRef(false);
+  // Failed launch intake must leave the previous recovery record available on the next reload.
+  const awaitingLaunchedFile = useRef(false);
 
   // Published so a build's restore setting is legible without reading the bundle.
   useEffect(() => {
@@ -177,6 +179,8 @@ export function WorkbenchSessionPersistence() {
     // A known identity whose fingerprint has not landed yet: wait, do not stamp it as nobody's.
     if (userId != null && owner == null) return;
     const state = store.getState();
+    if (awaitingLaunchedFile.current && state.files.ids.length === 0) return;
+    awaitingLaunchedFile.current = false;
     const toOriginal = (id: FileId): string | null => {
       const stub = state.files.byId[id];
       return stub ? originalIdOf(stub) : null;
@@ -205,6 +209,8 @@ export function WorkbenchSessionPersistence() {
     resumeWorkbenchSession();
     let timer: ReturnType<typeof setTimeout> | undefined;
     const unsubscribe = store.subscribe(() => {
+      if (store.getState().files.ids.length > 0)
+        awaitingLaunchedFile.current = false;
       clearTimeout(timer);
       timer = setTimeout(() => writeRef.current(), WRITE_DEBOUNCE_MS);
     });
@@ -250,6 +256,8 @@ export function WorkbenchSessionPersistence() {
       // Files opened with the app own the workbench; the recorded ones stay in My Files.
       const pending = await launchFilesPending();
       if (pending || store.getState().files.ids.length > 0) {
+        awaitingLaunchedFile.current =
+          pending && store.getState().files.ids.length === 0;
         restoreSettled.current = true;
         return;
       }
