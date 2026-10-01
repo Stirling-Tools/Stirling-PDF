@@ -18,6 +18,7 @@ import { isAuthRoute } from "@app/constants/routes";
 import { fileStorage } from "@app/services/fileStorage";
 import { alert } from "@app/components/toast";
 import { WORKBENCH_SESSION_RESTORE } from "@app/constants/featureFlags";
+import { launchFilesPending } from "@app/services/launchFiles";
 import {
   beginRestoredView,
   clearWorkbenchSession,
@@ -48,6 +49,23 @@ function leafByOriginalId(
     }
   }
   return map;
+}
+
+/**
+ * The current leaf for each original id. A file never versioned is its own leaf, so point reads
+ * settle the usual case; scanning every stored file - seconds on a large library - is kept for
+ * when one of them has been versioned or is gone.
+ */
+async function currentLeaves(
+  originalIds: string[],
+): Promise<Map<string, StirlingFileStub>> {
+  const direct = await Promise.all(
+    originalIds.map((id) => fileStorage.getStirlingFileStub(id as FileId)),
+  );
+  if (direct.every((stub) => stub && stub.isLeaf !== false)) {
+    return new Map(originalIds.map((id, i) => [id, direct[i]!]));
+  }
+  return leafByOriginalId(await fileStorage.getLeafStirlingFileStubs());
 }
 
 /** How long to wait for the NEXT file to hydrate before giving up on holding the view. Restarted on
@@ -229,15 +247,19 @@ export function WorkbenchSessionPersistence() {
         restoreSettled.current = true;
         return;
       }
+      // Files opened with the app own the workbench; the recorded ones stay in My Files.
+      const pending = await launchFilesPending();
+      if (pending || store.getState().files.ids.length > 0) {
+        restoreSettled.current = true;
+        return;
+      }
 
       // Held while the files land: they are added one at a time, and each landing re-runs the
       // default-view heuristic, which must not overwrite the recorded view mid-restore.
       let held: number | null = null;
       try {
         // Resolve each id to its CURRENT leaf: a policy or another tab may have versioned it since.
-        const leaves = leafByOriginalId(
-          await fileStorage.getLeafStirlingFileStubs(),
-        );
+        const leaves = await currentLeaves(saved.fileIds);
         const stubs = saved.fileIds
           .map((id) => leaves.get(id))
           .filter((stub): stub is StirlingFileStub => stub !== undefined);

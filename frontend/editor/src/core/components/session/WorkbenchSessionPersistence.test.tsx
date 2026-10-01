@@ -3,6 +3,7 @@ import { render, waitFor, act } from "@testing-library/react";
 
 const mocks = vi.hoisted(() => ({
   getLeafStirlingFileStubs: vi.fn(),
+  getStirlingFileStub: vi.fn(),
   alert: vi.fn(),
   setActiveFileId: vi.fn(),
   restoreWorkbench: vi.fn(),
@@ -11,12 +12,19 @@ const mocks = vi.hoisted(() => ({
   authLoading: false,
   pathname: "/editor",
   activeFileId: null as string | null,
+  launchFilesPending: false,
 }));
 
 vi.mock("@app/services/fileStorage", () => ({
-  fileStorage: { getLeafStirlingFileStubs: mocks.getLeafStirlingFileStubs },
+  fileStorage: {
+    getLeafStirlingFileStubs: mocks.getLeafStirlingFileStubs,
+    getStirlingFileStub: mocks.getStirlingFileStub,
+  },
 }));
 vi.mock("@app/components/toast", () => ({ alert: mocks.alert }));
+vi.mock("@app/services/launchFiles", () => ({
+  launchFilesPending: async () => mocks.launchFilesPending,
+}));
 vi.mock("@app/contexts/NavigationContext", () => ({
   useNavigationState: () => ({ workbench: mocks.workbench }),
   useNavigationActions: () => ({
@@ -120,11 +128,13 @@ beforeEach(() => {
   vi.clearAllMocks();
   actions.addStirlingFileStubs.mockResolvedValue([]);
   mocks.getLeafStirlingFileStubs.mockResolvedValue([]);
+  mocks.getStirlingFileStub.mockResolvedValue(null);
   mocks.workbench = "viewer";
   mocks.authUser = null;
   mocks.authLoading = false;
   mocks.pathname = "/editor";
   mocks.activeFileId = null;
+  mocks.launchFilesPending = false;
 });
 afterEach(() => vi.useRealTimers());
 
@@ -168,6 +178,68 @@ describe("restore", () => {
 
     await act(async () => {});
     expect(actions.addStirlingFileStubs).not.toHaveBeenCalled();
+  });
+
+  it("reads unversioned files directly instead of scanning the whole library", async () => {
+    sessionStorage.setItem(
+      SESSION_KEY,
+      JSON.stringify({ v: 2, fileIds: ["root-a"], selectedFileIds: [] }),
+    );
+    mocks.getStirlingFileStub.mockResolvedValue(stub("root-a", "root-a"));
+
+    mount(makeStore());
+
+    await waitFor(() =>
+      expect(actions.addStirlingFileStubs).toHaveBeenCalled(),
+    );
+    expect(
+      actions.addStirlingFileStubs.mock.calls[0][0].map(
+        (s: StirlingFileStub) => s.id,
+      ),
+    ).toEqual(["root-a"]);
+    expect(mocks.getLeafStirlingFileStubs).not.toHaveBeenCalled();
+  });
+
+  it("scans for the current leaf once a recorded file has been versioned", async () => {
+    sessionStorage.setItem(
+      SESSION_KEY,
+      JSON.stringify({ v: 2, fileIds: ["root-a"], selectedFileIds: [] }),
+    );
+    mocks.getStirlingFileStub.mockResolvedValue({
+      ...stub("root-a", "root-a"),
+      isLeaf: false,
+    });
+    mocks.getLeafStirlingFileStubs.mockResolvedValue([
+      stub("a-v2", "root-a", 2),
+    ]);
+
+    mount(makeStore());
+
+    await waitFor(() =>
+      expect(actions.addStirlingFileStubs).toHaveBeenCalled(),
+    );
+    expect(
+      actions.addStirlingFileStubs.mock.calls[0][0].map(
+        (s: StirlingFileStub) => s.id,
+      ),
+    ).toEqual(["a-v2"]);
+  });
+
+  it("yields to files opened with the app that are still loading", async () => {
+    sessionStorage.setItem(
+      SESSION_KEY,
+      JSON.stringify({ v: 2, fileIds: ["root-a"], selectedFileIds: [] }),
+    );
+    mocks.getLeafStirlingFileStubs.mockResolvedValue([
+      stub("root-a", "root-a"),
+    ]);
+    mocks.launchFilesPending = true;
+
+    mount(makeStore());
+
+    await act(async () => {});
+    expect(actions.addStirlingFileStubs).not.toHaveBeenCalled();
+    expect(mocks.restoreWorkbench).not.toHaveBeenCalled();
   });
 
   it("restores what still exists and says how much is gone", async () => {

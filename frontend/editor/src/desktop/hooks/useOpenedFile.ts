@@ -1,6 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { fileOpenService } from "@app/services/fileOpenService";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import {
+  beginLoadingLaunchFiles,
+  endLoadingLaunchFiles,
+  trackLaunchFilePop,
+} from "@app/services/launchFiles";
 
 export function useOpenedFile() {
   const [openedFilePaths, setOpenedFilePaths] = useState<string[]>([]);
@@ -24,7 +29,9 @@ export function useOpenedFile() {
     const readFilesFromStorage = async () => {
       console.log("🔍 Reading files from storage...");
       try {
-        const filePaths = await fileOpenService.getOpenedFiles();
+        const filePaths = await trackLaunchFilePop(
+          fileOpenService.getOpenedFiles(),
+        );
         console.log("🔍 fileOpenService.getOpenedFiles() returned:", filePaths);
 
         if (filePaths.length > 0) {
@@ -32,6 +39,9 @@ export function useOpenedFile() {
             `✅ Found ${filePaths.length} file(s) in storage:`,
             filePaths,
           );
+          // A batch replaced before it was consumed is never loaded.
+          if (openedFilePathsRef.current.length > 0) endLoadingLaunchFiles();
+          beginLoadingLaunchFiles();
           openedFilePathsRef.current = filePaths;
           setOpenedFilePaths(filePaths);
         }
