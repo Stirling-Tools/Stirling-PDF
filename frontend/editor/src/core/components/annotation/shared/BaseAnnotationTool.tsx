@@ -88,7 +88,10 @@ export const BaseAnnotationTool: React.FC<BaseAnnotationToolProps> = ({
         title={t("sign.instructions.title", "How to add signature")}
       >
         <Text size="sm">
-          Click anywhere on the PDF to place your annotation.
+          {t(
+            "sign.instructions.placeAnnotation",
+            "Click anywhere on the PDF to place your annotation.",
+          )}
         </Text>
       </Alert>
 

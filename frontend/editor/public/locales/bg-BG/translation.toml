@@ -278,6 +278,7 @@ customNumberDesc = "По подразбиране е {n}, също приема 
 fontName = "Име на шрифт"
 fontSize = "Размер на шрифт"
 numberPagesDesc = "Кои страници да номерирате, по подразбиране 'всички', също приема 1-5 или 2,5,9 и т.н."
+pagePreviewAlt = "Преглед на страницата"
 pagesAndStarting = "Страници и начално число"
 positionAndPages = "Позиция и страници"
 preview = "Избор на позиция"
@@ -350,7 +351,9 @@ text = "Тези разрешения контролират какво мога
 title = "Промяна на правата"
 
 [addStamp]
+pagePreviewAlt = "Преглед на страницата"
 preview = "Преглед на печата"
+stampPreviewAlt = "Преглед на печата"
 tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 
 [AddStampRequest]
@@ -383,6 +386,7 @@ positionAndFormatting = "Позиция и форматиране"
 preview = "Preview:"
 quickPosition = "Изберете позиция на страницата, където да поставите печата."
 rotation = "Ротация"
+selectedImageAlt = "Избрано изображение за печат"
 selectTemplate = "Select a template..."
 stampSetup = "Настройки на печата"
 stampText = "Поставяне на текст"
@@ -533,6 +537,9 @@ letter = "Letter"
 
 [adjustPageScale.scaleFactor]
 label = "Коефициент на мащабиране"
+
+[adjustPageScale.settings]
+title = "Настройки"
 
 [adjustPageScale.tooltip.description]
 text = "Настройте размера на съдържанието в PDF и променете размерите на страницата."
@@ -728,6 +735,7 @@ noLanguages = "Няма намерени tessdata езици в конфигур
 permissionNotice = "Пътят към tessdata няма права за запис. Изтеглянията ще се отварят в браузъра; моля, запишете файловете .traineddata ръчно в папката tessdata."
 
 [admin.settings.ai]
+customProvider = "Персонализиран (съвместим с OpenAI)"
 description = "Свържете Stirling с Python AI двигателя, изберете моделите му и задайте ограниченията, под които работи."
 managedByCloud = "Управлява се от Stirling Cloud в този режим."
 managedByCloudShort = "Управлява се от Stirling Cloud"
@@ -1146,7 +1154,6 @@ refresh = "Опресняване"
 selectFile = "Моля, изберете .sql файл за импортиране"
 size = "Размер"
 title = "База данни"
-unavailable = "Списъкът с резервни копия не е наличен за текущата конфигурация на базата данни."
 uploadTitle = "Качване и импортиране"
 version = "Версия на H2"
 
@@ -1280,6 +1287,7 @@ label = "Персонализирани метаданни"
 [admin.settings.general.customMetadata.author]
 description = "Автор по подразбиране за PDF метаданни (напр. потребителско име)"
 label = "Автор по подразбиране"
+placeholder = "потребителско име"
 
 [admin.settings.general.customMetadata.autoUpdate]
 description = "Автоматично обновяване на PDF метаданни за всички обработени документи"
@@ -1395,6 +1403,7 @@ defaultLocaleLink = "Настройване на локала по подраз�
 description = "Показва отказ от отговорност, който потребителите трябва да приемат след влизане. Текстът следва езика на всеки потребител."
 discardConfirm = "Имате незаписани промени, които ще бъдат загубени. Искате ли все пак да смените езика?"
 editLabel = "Markdown"
+editPlaceholder = "## Заглавие\n\nВашият текст за отказ от отговорност..."
 emptyPreview = "Все още няма нищо за преглед."
 language = "Език"
 languageHelp = "Всеки език има собствен файл. Ако за езика на потребителя няма файл, споразумението използва файла на локала по подразбиране, а след това резервния текст."
@@ -1513,8 +1522,10 @@ label = "JWKS URL (optional)"
 placeholder = "Auto-discovered from issuer"
 
 [admin.settings.mcp.mode]
+apikey = "API ключ (ключ на потребител в Stirling)"
 description = "OAuth needs an external IdP. API key uses a Stirling per-user API key (X-API-KEY) - simplest for self-host."
 label = "Authentication mode"
+oauth = "OAuth 2.1 (външен IdP)"
 
 [admin.settings.mcp.requireAccount]
 description = "Only let tokens through if their subject maps to a provisioned, enabled Stirling user."
@@ -1931,6 +1942,14 @@ title = "Настройки за потребителски контрол"
 [agents]
 stirling_name = "Stirling"
 
+[alphabetOptions]
+arabic = "Арабски"
+chinese = "Китайски (опростен)"
+japanese = "Японски"
+korean = "Корейски"
+roman = "Римски"
+thai = "Тайландски"
+
 [analytics]
 learnMore = "Научете повече"
 paragraph1 = "Stirling PDF включва анализи, за да ни помогне да подобрим продукта. Ние не проследяваме лична информация или съдържание на файлове."
@@ -2052,6 +2071,7 @@ week = "Седмица"
 
 [audit.clearData]
 cancel = "Отказ"
+closeAlert = "Затвори предупреждението"
 codeDoesNotMatch = "Кодът не съвпада"
 codePlaceholder = "Въведете кода тук"
 confirmationCode = "Код за потвърждение"
@@ -2061,6 +2081,7 @@ confirmTitle = "Моля, потвърдете, че искате да изтр�
 deleteButton = "Изтрий"
 enterCode = "Код за потвърждение"
 enterCodeBelow = "Въведете кода точно както е показан по-горе (с отчитане на малки/главни)"
+failed = "Неуспешно изчистване на данните от одита"
 initiateDelete = "Изтрий всички данни"
 irreversible = "НЕОБРАТИМО"
 success = "Успех"
@@ -2069,6 +2090,7 @@ warning1 = "Това действие не може да бъде отменен
 warning2 = "Изтриването на одитни данни ще премахне трайно всички исторически одитни логове, включително събития по сигурността, потребителски дейности и файлови операции от базата данни."
 
 [audit.error]
+loadStatus = "Неуспешно зареждане на състоянието на системата за одит"
 title = "Грешка при зареждане на системата за одит"
 
 [audit.events]
@@ -2084,6 +2106,7 @@ fileHash = "Хеш на файла"
 filterByType = "Филтър по тип"
 filterByUser = "Филтър по потребител"
 ipAddress = "IP адрес"
+loadFailed = "Неуспешно зареждане на събитията"
 noEvents = "Няма намерени събития"
 startDate = "Начална дата"
 timestamp = "Отметка за време"
@@ -2124,6 +2147,7 @@ avgLatency = "Средна латентност"
 error = "Грешка при зареждане на статистиката"
 excellent = "Отлично"
 good = "Добро"
+loadFailed = "Неуспешно зареждане на статистиките"
 noData = "Няма данни"
 successRate = "Процент на успеваемост"
 totalEvents = "Общ брой събития"
@@ -2158,13 +2182,27 @@ accessDenied = "Достъпът е отказан"
 insufficientPermissions = "Нямате разрешение да извършите това действие."
 
 [auth.callback]
+alreadySignedIn = "Вече сте влезли! Пренасочване..."
+backToLogin = "Назад към входа"
 completing = "Завършване на удостоверяването"
+exchanging = "Обмен на код за упълномощаване..."
+failedWithReason = "Удостоверяването е неуспешно: {{error}}"
 invalidToken = "OAuth входът не бе успешен - невалиден token."
 missingToken = "OAuth входът не бе успешен - не е получен token."
+noData = "Не са намерени данни за удостоверяване"
 oauthFailed = "OAuth входът не бе успешен. Моля, опитайте отново."
 pleaseWait = "Моля, изчакайте, докато завършим влизането ви."
+processing = "Обработка на удостоверяването..."
 signedOut = "Излязохте от профила си. Моля, влезте отново."
+signInFailed = "Неуспешно завършване на влизането: {{error}}"
+success = "Успешно влизане! Пренасочване..."
+unknownError = "Неизвестна грешка"
 windowMayClose = "Можете да затворите този прозорец, след като завърши."
+
+[auth.callback.title]
+default = "Удостоверяване"
+processing = "Влизане в системата"
+success = "Готово!"
 
 [auth.displayName]
 guest = "Гост"
@@ -2317,6 +2355,7 @@ title = "Импортиране на автоматизация"
 unresolved = "Несвързани: {{ops}}"
 
 [automate.run]
+progress = "Напредък: {{current}}/{{total}}"
 title = "Стартиране на автоматизация"
 
 [automate.selection]
@@ -2466,6 +2505,7 @@ whatHappensNext = "Какво следва?"
 
 [billing.portal]
 error = "Неуспешно отваряне на портала за плащания"
+errorFallback = "Моля, опитайте отново или се свържете с поддръжката."
 
 [bookletImposition]
 paperSizeNote = "Размерът на хартията се извежда автоматично от първата ви страница."
@@ -2513,6 +2553,9 @@ title = "Ръчен дуплекс режим"
 [bookletImposition.rtlBinding]
 label = "Подвързване отдясно наляво"
 tooltip = "За арабски, иврит или други езици отдясно наляво"
+
+[bookletImposition.settings]
+title = "Настройки"
 
 [bookletImposition.tooltip.advanced]
 bullet1 = "Подвързване отдясно наляво: за арабски, иврит или RTL езици"
@@ -2582,6 +2625,8 @@ detail = "Щракнете или натиснете Space, за да играе
 headline = "Всичко е изчистено"
 
 [bulkSelection]
+selectedPages_one = "Избрани: {{count}} страница ({{pages}})"
+selectedPages_other = "Избрани: {{count}} страници ({{pages}})"
 syntaxError = "Има проблем със синтаксиса. Вижте съветите за избор на страници за помощ."
 
 [bulkSelection.advanced]
@@ -2802,6 +2847,7 @@ declineButton = "Откажи"
 deleteSelected = "Изтрий избрания подпис"
 drawSignature = "Нарисувайте своя подпис по-долу"
 fileTooLarge = "Размерът на файла трябва да е под 5MB"
+fontBrushScript = "Brush Script MT (ръкописен)"
 fontFamily = "Семейство шрифтове"
 fontSize = "Размер на шрифта: {{size}}px"
 fontSizePlaceholder = "Размер"
@@ -2821,6 +2867,7 @@ removeImage = "Премахни изображението"
 savedSignatures = "Записани подписи"
 selectFile = "Изберете файл с изображение"
 selectSignatureTitle = "Изберете или създайте подпис"
+signatureImageAlt = "Подпис"
 signatureInfo = "Тези настройки се задават от собственика на документа"
 signatureSettings = "Настройки на подписа"
 signatureText = "Текст на подписа"
@@ -3591,13 +3638,19 @@ confirm = "Потвърди"
 continue = "Продължи"
 copied = "Копирано!"
 copy = "Копирай"
+copyCode = "Копирай кода"
+dismiss = "Отхвърли"
 done = "Готово"
 enterValue = "Enter value"
 error = "Грешка"
 expand = "Разгъни"
 filterEmpty = "Няма нищо за филтриране"
+goToSlide = "Отиди на слайд {{number}}"
 loading = "Зареждане..."
+moreInformation = "Повече информация"
 next = "Напред"
+noData = "Няма данни"
+nOfTotal = "{{current}} от {{total}}"
 open = "Open"
 preview = "Преглед"
 previous = "Назад"
@@ -3606,6 +3659,9 @@ remaining = "Оставащи"
 retry = "Повтори"
 save = "Запазване"
 search = "Търсене"
+settingsSections = "Раздели с настройки"
+showAllTotal = "Покажи всички {{total}}"
+showLess = "Покажи по-малко"
 stepOf = "Step {{current}} of {{total}}"
 
 [compare]
@@ -3617,6 +3673,7 @@ newLine = "нов ред"
 pages = "Страници"
 tags = "разграничаване,контраст,промени,анализ"
 title = "Сравнявай"
+workbenchLabel = "Изглед за сравнение"
 
 [compare.actions]
 linkScroll = "Свържи превъртането"
@@ -3770,6 +3827,7 @@ title = "Метод на компресиране"
 desiredSize = "Желан размер на файла"
 desiredSizePlaceholder = "Въведете размер"
 desiredSizeUnit = "Size unit"
+title = "Настройки"
 
 [compress.tooltip.description]
 text = "Компресията е лесен начин да намалите размера на файла си. Изберете File Size, за да въведете целеви размер и ние ще нагласим качеството вместо вас. Изберете Quality, за да зададете силата на компресията ръчно."
@@ -3819,10 +3877,13 @@ title = "Настройки на акаунта"
 description = "Качете изображение, за да персонализирате акаунта си."
 help = "PNG, JPG или WebP до 2 MB."
 remove = "Премахване"
+removeFailed = "Неуспешно премахване на профилната снимка"
 sizeError = "Моля, изберете изображение по-малко от 2 MB."
 switchedToCustom = "Преминахте към персонална снимка. Сега можете да качите своя."
+switchFailed = "Неуспешно превключване към персонализирана снимка"
 title = "Профилна снимка"
 upload = "Качване"
+uploadFailed = "Неуспешно качване на профилната снимка"
 useCustom = "Използване на персонална снимка"
 usingProvider = "Използвате профилната снимка от {{provider}}"
 
@@ -3836,6 +3897,7 @@ title = "Изрязване на профилната снимка"
 zoom = "Мащаб"
 
 [config.account.security]
+changeFailed = "Неуспешна промяна на паролата"
 changePassword = "Промяна на парола"
 description = "Управлявайте паролата и настройките за сигурност."
 title = "Пароли и сигурност"
@@ -3846,11 +3908,15 @@ description = "Свържете акаунта си, за да запазите 
 email = "Имейл"
 emailPassword = "или въведете имейл и парола"
 emailPlaceholder = "Въведете имейла си"
+failed = "Неуспешно надграждане на акаунта"
+failedWithProvider = "Неуспешно надграждане на акаунта с {{provider}}"
 linkWith = "Свържи с"
+linkWithProvider = "Свързване с {{provider}}"
 password = "Парола (незадължително)"
 passwordNote = "Оставете празно, за да използвате само имейл потвърждение"
 passwordPlaceholder = "Задайте парола"
 socialLogin = "Надграждане със социален акаунт"
+success = "Акаунтът е надграден успешно! Вече можете да влезете с имейла си."
 title = "Надграждане на гост акаунт"
 upgradeButton = "Надгради акаунта"
 
@@ -3960,10 +4026,10 @@ title = "Заявката не е валидна"
 
 [connect.renewal]
 approve = "Подновяване на входа"
+currentOwnerRequired = "Влезте като текущия собственик на свързания облачен екип, за да подновите влизането на този сървър. Ако собствеността е прехвърлена, използвайте акаунта на новия собственик."
 failed = "Входът ви не можа да бъде подновен. Опитайте отново или отхвърлете тази страница и започнете отново от вашия сървър."
 lead = "Този сървър вече е свързан с вашия акаунт. Подновете входа си, за да се върнете към фактурирането и използването на вашия сървър."
 title = "Подновяване на входа към сървъра"
-wrongAccount = "Този акаунт не може да поднови входа към този сървър. Превключете към акаунта, първоначално използван за свързване на сървъра. Този акаунт все още трябва да притежава свързания екип."
 
 [convert]
 autoRotate = "Автоматично завъртане"
@@ -4009,6 +4075,7 @@ multiple = "Няколко"
 optimizeForEbook = "Оптимизиране на PDF за четци на електронни книги (използва Ghostscript)"
 output = "Изход"
 outputFormat = "Изходен формат"
+pdfaAccessibleFormat = "{{format}} (достъпен)"
 pdfaDigitalSignatureWarning = "PDF файлът съдържа цифров подпис. Това ще бъде премахнато в следващата стъпка."
 pdfaNote = "PDF/A-1b е по-съвместим, PDF/A-2b поддържа повече функции."
 pdfaOptions = "Опции за PDF/A"
@@ -4068,6 +4135,24 @@ outputFormatDesc = "Изберете изходния формат за eBook"
 tabletPhone = "Таблет/Телефон (с изображения)"
 targetDevice = "Целево устройство"
 targetDeviceDesc = "Изберете изходен профил, оптимизиран за устройството-четец"
+
+[convert.formatGroups]
+archive = "Архив"
+document = "Документ"
+ebook = "eBook"
+email = "Имейл"
+file = "Файл"
+image = "Изображение"
+multipleFiles = "Множество файлове"
+presentation = "Презентация"
+spreadsheet = "Електронна таблица"
+text = "Текст"
+web = "Web"
+
+[convert.formatOptions]
+any = "Всеки"
+images = "Изображения"
+msgOutlook = "MSG (Outlook)"
 
 [cookieBanner.popUp]
 acceptAllBtn = "Добре"
@@ -4161,6 +4246,12 @@ label = "Y позиция"
 [crop.error]
 failed = "Неуспешно изрязване на PDF"
 
+[crop.pageNumbers]
+description = "Изрежете избраната област на конкретни страници или 'all' за всяка страница."
+error = "Невалиден избор на страници. Използвайте напр. 1, 3, 5-8 или all."
+label = "Страници за изрязване"
+placeholder = "напр. 1, 3, 5-8 или all"
+
 [crop.preview]
 title = "Избор на област за изрязване"
 
@@ -4183,16 +4274,11 @@ fileName = "Име на файл"
 title = "Импорт/Експорт на база данни"
 
 [defaultApp]
-setDefault = "Задай по подразбиране"
 title = "Задай като приложение по подразбиране за PDF"
 
 [defaultApp.error]
 message = "Неуспешно задаване на обработчик на PDF по подразбиране"
 title = "Грешка"
-
-[defaultApp.prompt]
-dontRemind = "Не ми напомняй отново"
-message = "Направете Stirling PDF приложение по подразбиране за отваряне на PDF файлове."
 
 [defaultApp.settingsOpened]
 message = "Моля, изберете Stirling PDF в системните настройки"
@@ -4201,6 +4287,17 @@ title = "Настройките са отворени"
 [defaultApp.success]
 message = "Stirling PDF вече е вашият редактор на PDF по подразбиране"
 title = "Зададено приложение по подразбиране"
+
+[desktop.titleBar]
+maximize = "Максимизирай"
+minimize = "Минимизирай"
+restore = "Възстанови"
+
+[desktopBilling]
+description = "Управлявайте използването и фактурирането в браузъра си. Влезте със същия акаунт в Stirling, който използвате тук."
+open = "Отвори използване и фактуриране в браузъра"
+openFailed = "Неуспешно отваряне на използване и фактуриране. Проверете връзката си и опитайте отново."
+selfHostedDescription = "Управлявайте използването и фактурирането на свързания сървър в браузъра си. Влезте с акаунта на собственика на сървъра."
 
 [desktopFileLink]
 saveAs = "Запиши като…"
@@ -4264,6 +4361,7 @@ tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,ident
 noItems = "No items available"
 noResults = "No results found"
 searchPlaceholder = "Търсене..."
+selectedCount = "{{count}} избрани"
 selectLanguages = "Select languages"
 selectOption = "Select an option"
 
@@ -4274,6 +4372,7 @@ editSecretValue = "Редактиране на секретната стойно
 [editTableOfContents]
 submit = "Приложи съдържанието"
 tags = "bookmarks,contents,edit,table of contents,TOC,outline,navigation,chapters,sections,add bookmarks,edit bookmarks,PDF outline"
+workbenchLabel = "Работно пространство за структура"
 
 [editTableOfContents.actions]
 clipboardUnavailable = "Достъпът до клипборда не е наличен в този браузър."
@@ -4434,6 +4533,27 @@ closeFile = "Затворете файла"
 
 [fileEditor]
 addFiles = "Добави файлове"
+closedFile = "Затворен {{name}}"
+couldNotSave = "Неуспешно записване на {{name}}"
+filesAdded_one = "Добавен {{count}} файл"
+filesAdded_other = "Добавени {{count}} файла"
+filesReordered_one = "Файлът е пренареден"
+filesReordered_other = "{{count}} файла са пренаредени"
+loadedFromStorage_one = "Зареден {{count}} файл от хранилището"
+loadedFromStorage_other = "Заредени {{count}} файла от хранилището"
+loadFromStorageFailed = "Неуспешно зареждане на някои файлове от хранилището"
+pinnedFile = "Закачен {{name}}"
+processFilesFailed = "Неуспешна обработка на файловете"
+savedAndClosed = "Записан и затворен {{name}}"
+saveFailed = "Записването е неуспешно"
+unpinnedFile = "Откачен {{name}}"
+unzipping = "Разархивиране на {{name}}"
+
+[fileEditor.unzip]
+error = "Грешка при разархивиране на {{name}}"
+extracted_one = "Извлечен {{count}} файл от {{name}}"
+extracted_other = "Извлечени {{count}} файла от {{name}}"
+failed = "Неуспешно извличане на файлове от {{name}}"
 
 [fileManager]
 addToUpload = "Добави към качването"
@@ -4450,6 +4570,7 @@ noFiles = "Няма налични файлове"
 noFilesFound = "Няма намерени файлове, отговарящи на търсенето"
 openInFileEditor = "Отвори във файловия редактор"
 openInPageEditor = "Отвори в редактора на страници"
+reloadFiles = "Презареди файловете"
 saveSelected = "Запази избраните"
 searchFiles = "Търсене на файлове..."
 share = "Сподели"
@@ -4459,6 +4580,8 @@ sharedEditNoticeConfirm = "Разбрах"
 sharedEditNoticeTitle = "Сървърното копие е само за четене"
 sharedWithYou = "Споделено с вас"
 showAll = "Покажи всички"
+showAllCount_one = "Покажи всички ({{count}} файл)"
+showAllCount_other = "Покажи всички ({{count}} файла)"
 sortBy = "Sort files"
 sortByDate = "Сортирай по дата"
 sortByName = "Сортирай по име"
@@ -4495,6 +4618,11 @@ sources = "Източници на файлове"
 subtitle = "Изберете от библиотеката си или добавете нещо ново."
 title = "Добавяне на файлове"
 unsupported = "Този тип файл не се поддържа от избрания инструмент."
+
+[filePreview]
+loadingThumbnail = "Зареждане на миниатюра..."
+locked = "Заключен"
+previewOf = "Преглед на {{name}}"
 
 [files]
 addFiles = "Добавяне на файлове"
@@ -4930,13 +5058,15 @@ title = "Файл към PDF"
 [fileUpload]
 dropFilesHere = "Пуснете файловете тук или кликнете бутона за качване"
 dropFilesHereOpen = "Пуснете файловете тук или щракнете върху бутона за отваряне"
-filesAvailable = "налични файлове"
+filesAvailableCount_one = "Наличен {{count}} файл"
+filesAvailableCount_other = "Налични {{count}} файла"
 loadFromStorage = "Зареди от хранилище"
 noFilesInStorage = "Няма налични файлове в хранилището. Първо качете няколко файла."
 noFilesInStorageOpen = "Няма налични файлове в хранилището. Първо отворете някои файлове."
 open = "Отвори"
 openFile = "Отвори файл"
 openFiles = "Отвори файлове"
+selectedCount = "{{count}} избрани"
 selectFile = "Select {{name}}"
 selectFromStorage = "Изберете от хранилище"
 upload = "Качване"
@@ -5028,6 +5158,7 @@ rescanFields = "Пресканирайте полетата"
 rescanFormFields = "Пресканирайте полетата на формуляра"
 save = "Запазете"
 saveShortcut = "Ctrl+S за запазване"
+selectOptionPlaceholder = "— изберете —"
 skippedEdits_one = "1 промяна не можа да бъде приложена:"
 skippedEdits_other = "{{count}} промени не можаха да бъдат приложени:"
 skippedEditsTruncated = "Още {{count}} не са показани."
@@ -5090,6 +5221,16 @@ tooltipHelp = "Подсказката, показвана когато няко�
 type = "Тип"
 typeHelp = "Какъв вид поле е това. Промяната му изгражда полето наново, затова текущата му стойност не се пренася."
 
+[formFill.fieldTypes]
+button = "Бутон"
+checkbox = "Квадратче за отметка"
+combobox = "Падащо меню"
+listbox = "Списък"
+radio = "Радио бутон"
+radioGroup = "Група радио бутони"
+signature = "Подпис"
+text = "Текст"
+
 [formFill.mode]
 create = "Създаване"
 fill = "Попълване"
@@ -5107,11 +5248,16 @@ restore = "Възстановяване"
 
 [formFill.sidebar]
 close = "Затворете страничната лента"
+empty = "В този PDF не са намерени полета на формуляра"
+loading = "Зареждане на полета на формуляра..."
+pageNumber = "Страница {{page}}"
+title = "Полета на формуляра"
 
 [getPdfInfo]
 downloadJson = "Изтеглете JSON"
 downloads = "Изтегляния"
 indexTitle = "Индекс"
+noData = "Няма данни"
 noneDetected = "Нищо не е открито"
 noResults = "Стартирайте инструмента, за да генерирате отчет."
 processing = "Извличане на информация..."
@@ -5127,6 +5273,8 @@ noVerification = "Не е извършена проверка"
 noVerificationDesc = "Съответствието със стандартите на PDF не беше проверено за този документ."
 passed = "Преминато"
 passedCount = "преминали"
+secCompliant = "Документът отговаря на изискванията за подаване на SEC EDGAR"
+secNotCompliant = "Документът не отговаря на изискванията за подаване на SEC EDGAR"
 
 [getPdfInfo.error]
 partial = "Някои файлове не можаха да бъдат обработени."
@@ -5134,10 +5282,15 @@ unexpected = "Неочаквана грешка по време на извли�
 
 [getPdfInfo.other]
 attachments = "Прикачени файлове"
+created = "Създаден: {{date}}"
 embeddedFiles = "Вградени файлове"
+fileSizeBytes = "({{size}} байта)"
 javaScript = "JavaScript"
 layers = "Слоеве"
+modified = "Променен: {{date}}"
 structureTree = "StructureTree"
+unnamedAttachment = "Прикачен файл без име"
+unnamedFile = "Файл без име"
 xmp = "XMPMetadata"
 
 [getPdfInfo.perPage]
@@ -5147,6 +5300,7 @@ images = "Изображения"
 links = "Връзки"
 multimedia = "Мултимедия"
 size = "Размер"
+unnamedImage = "Изображение"
 xobjects = "Брой XObject"
 
 [getPdfInfo.report]
@@ -5675,6 +5829,7 @@ invalidEmail = "Невалиден имейл адрес"
 invalidInvitation = "Невалидна покана"
 invalidToken = "Невалидна връзка за покана"
 linkExpires = "Връзката изтича"
+linkExpiresAt = "Връзката изтича: {{date}} в {{time}}"
 passwordMismatch = "Паролите не съвпадат"
 passwordPlaceholder = "Въведете паролата си"
 passwordRequired = "Паролата е задължителна"
@@ -5689,6 +5844,7 @@ welcomeTitle = "Поканени сте!"
 addFiles = "Добавяне на файлове"
 mobileUpload = "Качване от мобилно устройство"
 openFromComputer = "Отвори от компютър"
+settingUpSession = "Настройване на вашата сесия..."
 uploadFromComputer = "Качване от компютър"
 
 [language]
@@ -5770,6 +5926,7 @@ sessionExpired = "Сесията ви е изтекла. Моля, влезте 
 signin = "Впишете се"
 signingIn = "Влизане..."
 signInWith = "Вход с"
+signInWithProvider = "Вход с {{provider}}"
 title = "Вход"
 unexpectedError = "Неочаквана грешка: {{message}}"
 updatePassword = "Актуализиране на парола"
@@ -5811,6 +5968,9 @@ label = "Премахване на цифровия подпис в слетия
 description = "Цифровите подписи ще бъдат невалидни при сливане на файлове. Отметнете това, за да ги премахнете от окончателния слет PDF."
 title = "Премахване на цифров подпис"
 
+[merge.settings]
+title = "Настройки"
+
 [merge.sortBy]
 ascending = "Възходящ"
 dateModified = "Дата на промяна"
@@ -5819,6 +5979,9 @@ description = "Файловете ще се слеят в реда, в койт�
 filename = "Име на файл"
 label = "Сортиране по"
 sort = "Сортиране"
+
+[merge.sortFiles]
+title = "Сортиране на файлове"
 
 [merge.tooltip.header]
 title = "Преглед на настройките за сливане"
@@ -5867,6 +6030,7 @@ validating = "Валидиране на сесията..."
 
 [mobileSign]
 clear = "Clear"
+drawingArea = "Област за рисуване на подпис"
 invalidSession = "Session expired"
 invalidSessionMessage = "This QR code is no longer valid. Open the Sign tool on your computer and scan the new code."
 penSizeLabel = "Pen size"
@@ -5882,6 +6046,7 @@ validating = "Checking session…"
 fromGallery = "From gallery"
 hint = "Photograph a signature on white paper, or choose an existing image."
 invalidType = "Please choose an image file."
+previewAlt = "Подпис"
 takePhoto = "Take a photo"
 
 [mobileSign.tab]
@@ -5993,6 +6158,9 @@ profile = "See your basic profile information"
 desc = "Почиства, сканира и открива текст от изображения в PDF и го добавя отново като текст."
 tags = "разпознаване,текст,изображение,сканиране,четене,идентифициране,откриване,редактиране"
 title = "OCR / Почистване на сканиране"
+
+[ocr.advanced]
+title = "Разширени"
 
 [ocr.error]
 failed = "OCR операцията се провали"
@@ -6118,9 +6286,9 @@ title = "Изтеглете Stirling за Desktop"
 description = "Сътрудничете с екипа си"
 title = "Поканете членове на екипа"
 
-[onboarding.checklist.shareAnalytics]
-description = "Помогнете за подобряването на Stirling"
-title = "Споделяне на анонимни данни за употреба"
+[onboarding.checklist.setDefaultApp]
+description = "Отваряйте PDF файлове в Stirling PDF"
+title = "Направете Stirling стандартното си приложение"
 
 [onboarding.checklist.takeTour]
 description = "Вижте как работи Stirling в кратка обиколка"
@@ -6188,6 +6356,7 @@ message = "Приложението претърпя значителни про
 roleAdmin = "Администратор"
 rolePlaceholder = "Потвърдете ролята си"
 roleUser = "Потребител"
+title = "Проверка на сигурността"
 
 [onboarding.serverLicense]
 freeBody = "Нашият лиценз <strong>Open-Core</strong> включва <strong>OAuth SSO</strong> и до <strong>{{freeTierLimit}}</strong> потребители безплатно. За да се разраствате без прекъсвания, препоръчваме плана Stirling Team — <strong>100 потребители</strong> за $99/месец."
@@ -6276,16 +6445,93 @@ title = "Файлове за наслагване"
 text = "Преден план поставя наслагването отгоре на страницата. Заден план го поставя отдолу."
 title = "Позиция на наслагване"
 
+[ownership]
+acceptInvite = "Те могат да създадат акаунт или да влязат, след което да приемат поканата."
+accessUpdated = "Достъпът им като собственик е готов."
+accountLinkDisabled = "Този сървър все още има облачна връзка, но свързването на акаунти е изключено. Помолете оператора на сървъра да активира свързването на акаунти, след което възобновете това прехвърляне или прекъснете връзката на сървъра в настройките."
+anotherTeam = "Вече сте в друг екип?"
+billing = "Абонаментът, портфейлът, методът на плащане и съществуващите лицензи остават на място. Данните за контакт за фактуриране не се променят автоматично."
+billingDetails = "Данни за фактуриране"
+billingUnchanged = "Абонаментът и фактурирането остават на място"
+bothDone = "Собствеността на сървъра и облака вече е съгласувана."
+cancel = "Откажи прехвърлянето"
+check = "Провери отново"
+checkAccount = "Провери акаунта"
+chooseEmail = "Изберете техния акаунт в {{team}} или въведете имейл, за да ги поканите."
+close = "Затвори диалога за прехвърляне"
+cloudAccount = "Акаунт в Stirling"
+cloudScopeStyled = "<user>{{name}}</user> ще управлява {{team}}, неговите членове и фактурирането."
+cloudTargetChanged = "Изберете друг член на облака. Този акаунт вече не отговаря на условията за предаването."
+confirm = "Разбирам промените в достъпа и собствеността."
+done = "Собствеността е прехвърлена"
+error = "Не можахме да завършим тази стъпка. Проверете дали получателят е активен и сървърът е свързан, след което проверете отново. Чакащо прехвърляне може да бъде възобновено тук."
+finish = "Завърши прехвърлянето на сървъра"
+inProgress = "Друг получател вече има чакащо прехвърляне. Затворете този диалог и го възобновете от Потребители."
+instances = "Този екип има {{count}} свързани сървъра. Тяхното облачно фактуриране остава с този екип; локалните собственици на другите сървъри не се променят."
+invitationSent = "Поканата е изпратена"
+invite = "Изпрати покана"
+inviteAddress = "Поканете <account>{{email}}</account> в {{team}}."
+inviteBlocked = "Поканата не можа да бъде изпратена. Проверете наличните места в екипа и дали получателят вече има платен абонамент."
+linkChanged = "Облачната връзка на сървъра се промени. Помолете оператора на сървъра да възстанови оригиналната връзка, преди да възобновите."
+linkedServerCount = "{{count}} свързани сървъра"
+linkRevoked = "Облачната връзка на този сървър вече не е валидна. Откажете прехвърлянето, след което свържете отново своя акаунт в Stirling в настройките. Собствеността няма да се промени."
+localScope = "Те ще притежават този сървър и ще управляват фактурирането и облачните връзки. Вие запазвате администраторски достъп, но губите достъп до тези настройки."
+membershipDetails = "Данни за членство в екипа"
+membershipFirst = "Те трябва да се присъединят към екипа, преди да можете да потвърдите прехвърлянето."
+membershipRequired = "Получателят трябва да се присъедини към този облачен екип, преди собствеността да може да бъде прехвърлена. Помолете го да приеме поканата си, след което проверете отново."
+newOwnerLabel = "Нов собственик"
+newOwnerStyled = "<user>{{name}}</user> вече е собственик."
+noEmailMatches = "Няма съвпадащи членове. Въведете имейл, за да поканите."
+otherTeam = "Ако принадлежат към друг екип, приемането може да премести акаунта им. Може първо да трябва да се разреши платен акаунт или собственост на друг екип. Няма да преместваме абонамента им или да обединяваме екипи."
+ownerChanged = "Собствеността на облака се промени след началото на това прехвърляне. Откажете това прехвърляне и започнете отново с текущия собственик на облака."
+ownerRequired = "Влезте като текущия собственик на облачния екип, след което опитайте тази стъпка отново."
+partialError = "Собствеността на облака е прехвърлена. Завършете прехвърлянето на сървъра, за да запазите двамата собственици съгласувани."
+partialTargetChanged = "Възстановете достъпа и оригиналните данни за акаунта на избрания потребител на сървъра, след което завършете прехвърлянето на сървъра. Собствеността на облака вече е прехвърлена."
+pending = "Прехвърляне на собственост към {{name}} е в изчакване."
+personalTeam = "Личните екипи не могат да прехвърлят собственост."
+prepareHelp = "Получателят трябва да е завършил първото си влизане в сървъра. Можете да опитате отново тук или да се върнете към Потребители, за да изберете друг."
+resume = "Възобнови прехвърлянето"
+searchEmail = "Търсете или въведете имейл"
+serverAccount = "Акаунт на сървъра"
+serverDetails = "Данни за свързания сървър"
+signIn = "Вход в облака"
+startFromInstanceBody = "Този екип има свързани сървъри. На самостоятелно хоствания сървър отворете Настройки → Потребители и променете ролята на получателя на собственик на организацията. Този процес прехвърля облачната собственост, преди да завърши прехвърлянето на сървъра."
+startFromInstanceTitle = "Започнете от своя самостоятелно хостван сървър"
+stayOwner = "Оставате собственик до прехвърлянето."
+targetChanged = "Акаунтът на получателя се промени. Възстановете достъпа му или откажете това прехвърляне и го изберете отново."
+title = "Прехвърляне на собственост"
+transfer = "Прехвърли собствеността"
+waitingForEmail = "Изчакване {{email}} да се присъедини към {{team}}."
+working = "Проверка и актуализиране на собствеността..."
+yourCloudAccess = "Ще станете член на екипа и ще загубите достъп като собственик."
+
 [pageEdit]
 deselectAll = "Отмени избора"
 selectAll = "Избери всички"
 
 [pageEditor]
+dragPreviewAlt = "Плъзгане"
+filePosition = "Позиция {{position}}"
+pageLabel = "Страница {{page}}"
 title = "Редактор на страници"
+
+[pageEditor.actions]
+deletePage = "Изтриване на страница"
+insertFileAfter = "Вмъкване на файл след"
+moveLeft = "Преместване наляво"
+moveRight = "Преместване надясно"
+rotateLeft = "Завъртане наляво"
+rotateRight = "Завъртане надясно"
+splitAfter = "Разделяне след"
 
 [pageEditor.emptyState]
 body = "Добавете файлове, за да започнете редактиране на страници"
 title = "Няма заредени PDF файлове"
+
+[pageEditor.fileDropdown]
+addFile = "Добавяне на файл"
+selectedCount = "Избрани {{selected}}/{{total}} файла"
+untitled = "Без заглавие"
 
 [pageEditor.toolbar]
 delete = "Изтрийте избраните"
@@ -6391,6 +6637,11 @@ portrait = "Вертикална"
 label = "Посока на четене:"
 ltr = "Отляво надясно"
 rtl = "Отдясно наляво"
+
+[pageLayout.steps]
+advanced = "Разширени настройки"
+layout = "Настройки на оформлението"
+marginsBorders = "Полета и рамки"
 
 [pageLayout.tooltip.header]
 title = "Ръководство за оформление на страница"
@@ -6712,6 +6963,7 @@ teamChangeUnavailable = "Планираните Team промени не мож�
 teamPending = "Вашата Team покупка все още се обработва. Обновете тази страница след малко."
 teamProcessing = "Обработка на Team покупката"
 teamScheduled = "Вашата Team промяна е планирана за {{date}}. Текущият ви капацитет остава активен дотогава."
+unknownError = "Възникна неизвестна грешка"
 upgradeComplete = "Надграждането завърши"
 upgradeCompleteMessage = "Абонаментът ви беше надграден успешно. Съществуващият ви лицензен ключ беше обновен."
 upgradeSuccess = "Плащането е успешно! Абонаментът ви е надграден. Лицензът е обновен на вашия сървър. Скоро ще получите потвърждение по имейл."
@@ -6766,6 +7018,14 @@ selectedMonthly = "Месечно"
 selectedYearly = "Годишно"
 selectMonthly = "Избери месечно"
 selectYearly = "Избери годишно"
+
+[payment.priceDisplay]
+basePrice = "Основна цена"
+perPeriod = "/{{period}}"
+perSeat = "На място"
+perSeatPeriod = "/място/{{period}}"
+totalSeats_one = "Общо ({{count}} място)"
+totalSeats_other = "Общо ({{count}} места)"
 
 [payment.upgradeTeam]
 title = "Надграждане до Team"
@@ -6985,6 +7245,10 @@ save = "Запазване"
 style = "Стил"
 tapToPlace = "Докоснете страницата там, където трябва да се постави текстът"
 unlock = "Отключване"
+
+[pdfTextEditor.pageView]
+pageNumber = "Страница {{page}}"
+renderFailed = "Неуспешно рендиране на страницата"
 
 [pdfTextEditor.password]
 cancel = "Отказ"
@@ -7212,6 +7476,7 @@ title = "Pipeline (Разширено)"
 contact = "Свържете се с нас"
 current = "Текущ план"
 featureComparison = "Сравнение на функциите"
+fetchError = "Неуспешно извличане на данните за цените"
 from = "От"
 hideComparison = "Скрий сравнението на функциите"
 licensedSeats = "Лицензирани: {{count}} места"
@@ -7227,6 +7492,8 @@ withServer = "+ Server план"
 [plan.api]
 large = "5 000 кредита"
 medium = "1 000 кредита"
+perCredit = "{{price}} за кредит"
+perCreditWithDiscount = "{{price}} за кредит • {{discount}}% отстъпка"
 small = "500 кредита"
 xsmall = "100 кредита"
 
@@ -7302,14 +7569,9 @@ upToFiveUsers = "До 5 потребители"
 usageTrackingPrometheus = "Проследяване на използването и Prometheus"
 usersIncluded = "Включени 100 потребители"
 
-[plan.licenseWarning]
-body = "Имате {{total}} потребители, но безплатният план поддържа само {{limit}} на сървър. Надградете, за да работи Stirling PDF безпроблемно."
-cta = "Виж плановете"
-overLimit = "повече от {{limit}}"
-title = "Достигнат е безплатният лимит за self-hosted"
-
 [plan.period]
 month = "месец"
+year = "година"
 
 [plan.pro]
 highlight1 = "Неограничено ползване на инструменти"
@@ -7435,6 +7697,9 @@ pdfa-1 = "PDF/A-1b"
 pdfa-2b = "PDF/A-2b"
 pdfa-3b = "PDF/A-3b"
 
+[portal.accountLink]
+ownerRequired = "Само собственикът на организацията може да свърже или прекъсне връзката на този сървър."
+
 [portal.accountLink.card]
 billingNote = "Автоматичната обработка се таксува към портфейла на вашата организация."
 connectDescription = "Свържете този сървър, за да използвате лимита за обработка на екипа си в Stirling Cloud."
@@ -7556,6 +7821,7 @@ identity = "Stirling акаунт"
 linkTitle = "Свържете своя Stirling акаунт"
 noAuthorizeUrl = "Stirling не върна място за продължаване. Опитайте отново след малко."
 startFailed = "Неуспешна връзка със Stirling за започване на свързването. Проверете изходящия мрежов достъп на този сървър, след което опитайте отново."
+transferPending = "Има чакащо прехвърляне на собственост. Отидете в Настройки → Потребители, за да го завършите или откажете, след което опитайте да свържете отново."
 
 [portal.accountLink.modal.loginNotConfigured]
 after = "за да активирате свързване в приложението с хоствания Stirling акаунт."
@@ -9441,6 +9707,7 @@ labelId = "Label ID"
 labelIdHelp = "GUID на етикета от портала Purview. Прилагането на етикет записва метаданните му върху PDF; не може да криптира, за което е нужен Microsoft клиентът."
 labelName = "Име на етикет (по избор)"
 labelNameHelp = "Записва се заедно с ID, за да могат хората и инструментите да разпознаят етикета."
+labelNamePlaceholder = "Поверително"
 
 [portal.policies.config.purview.fields.method]
 help = "Purview различава етикет, приложен от политика, от такъв, избран от човек."
@@ -10425,31 +10692,6 @@ unlimited = "{{used}} · Неограничено"
 [printFile]
 title = "Печат на файл"
 
-[processingFolders.downloads]
-approve = "Обработване на моите Изтегляния"
-cancelSweep = "Отказ"
-capped = "Имате {{found}} PDF файла; първите {{limit}} се обработват сега, а останалите ще последват."
-close = "Готово"
-explain_one = "Stirling може да класифицира {{count}} PDF, който вече е в папката ви Изтегляния, и да отвори резултатите тук."
-explain_other = "Stirling може да класифицира {{count}} PDF файла, които вече са в папката ви Изтегляния, и да отвори резултатите тук."
-failed = "Неуспешна настройка. Файловете ви не са променени."
-finished_one = "Класифициран е {{count}} файл и са отворени {{opened}} от тях тук, готови за работа."
-finished_other = "Класифицирани са {{count}} файла и са отворени {{opened}} от тях тук, готови за работа."
-nothingNew_one = "Няма нищо ново за обработване — този {{count}} файл вече е преминал през процеса."
-nothingNew_other = "Няма нищо ново за обработване — тези {{count}} файла вече са преминали през процеса."
-notModified = "Файловете ви в Изтегляния не се променят — Stirling ги прочита и ги отваря тук."
-notNow = "Не сега"
-progressCounts = "от {{total}} обработени"
-someFailed_one = "{{count}} не можа да бъде обработен и беше оставен непроменен."
-someFailed_other = "{{count}} не можаха да бъдат обработени и бяха оставени непроменени."
-stillRunning = "Някои файлове все още се обработват на заден план."
-title = "Да организираме ли вашите Изтегляния?"
-trigger_one = "Обработване на {{count}} PDF в Изтегляния"
-trigger_other = "Обработване на {{count}} PDF файла в Изтегляния"
-typesFound_one = "Намерен е {{count}} тип документ"
-typesFound_other = "Намерени са {{count}} типа документи"
-working = "Обработване ..."
-
 [processingFolders.setup]
 addFolder = "Добавяне на папка"
 advancedSteps = "Тази папка използва настройка за обработване, която този съветник не може да редактира. Запазените ѝ стъпки не са променени."
@@ -10527,6 +10769,10 @@ label = "Client ID"
 [provider.googledrive.enabled]
 description = "Позволете на потребителите да импортират файлове директно от Google Drive"
 label = "Активирай Google Drive File Picker"
+
+[provider.googledrive.errors]
+notConfigured = "Google Drive не е конфигуриран"
+pickerFailed = "Неуспешно отваряне на инструмента за избор на Google Drive"
 
 [provider.oauth2.generic]
 name = "Generic OAuth2"
@@ -10775,6 +11021,7 @@ applyWarning = "⚠️ Постоянно прилагане, не може да
 colorLabel = "Цвят на заличаването"
 controlsTitle = "Ръчни контроли за заличаване"
 instructions = "Изберете текст или начертайте области върху PDF, за да маркирате съдържание за заличаване."
+notImplemented = "Интерфейсът за ръчно заличаване ще бъде наличен тук, когато бъде внедрен."
 title = "Инструменти за заличаване"
 
 [redact.modeSelector]
@@ -11102,6 +11349,9 @@ failed = "Възникна грешка при завъртане на PDF."
 [rotate.preview]
 title = "Преглед на завъртането"
 
+[rotate.settings]
+title = "Настройки"
+
 [rotate.tooltip.controls]
 text = "Използвайте бутоните за завъртане, за да коригирате ориентацията. Левият бутон завърта обратно, десният – по часовниковата стрелка. Всяко щракване завърта с 90 градуса."
 title = "Управление"
@@ -11119,6 +11369,16 @@ hideSmallLabels = "Скриване на малките етикети"
 physicalValues = "Физически"
 scaled = "Мащабирани"
 showAllLabels = "Показване на всички етикети"
+
+[ruler.units]
+cm = "Сантиметри (cm)"
+ft = "Футове (ft)"
+in = "Инчове (in)"
+km = "Километри (km)"
+m = "Метри (m)"
+mi = "Мили (mi)"
+mm = "Милиметри (mm)"
+yd = "Ярдове (yd)"
 
 [sanitize]
 desc = "Премахнете потенциално вредни елементи от PDF файлове."
@@ -11184,6 +11444,7 @@ calibrationPaperDistance = "Измерено разстояние на стра�
 calibrationTitle = "Калибриране на мащаба"
 calibrationTooltip = "Измерете известно разстояние, за да изчислите мащаба автоматично"
 customScale = "Персонализиран мащаб"
+customUnit = "{{unit}} (персонализирано)"
 noneSet = "Няма зададен персонализиран мащаб"
 presets = "Предварително зададени мащаби"
 ratio = "Съотношение на мащаба"
@@ -11207,6 +11468,9 @@ title = "Извлечени изображения"
 
 [scannerImageSplit.error]
 failed = "Възникна грешка при извличането на сканирани изображения."
+
+[scannerImageSplit.settings]
+title = "Настройки"
 
 [scannerImageSplit.tooltip]
 headsUp = "Важно"
@@ -11274,6 +11538,9 @@ general = "Общи"
 limits = "Ограничения и производителност"
 models = "Модели и доставчици"
 title = "AI"
+
+[settings.billing]
+title = "Фактуриране"
 
 [settings.configuration]
 advanced = "Разширени"
@@ -11348,8 +11615,6 @@ defaultPdfEditor = "Редактор на PDF по подразбиране"
 defaultPdfEditorActive = "Stirling PDF е вашият редактор на PDF по подразбиране"
 defaultPdfEditorChecking = "Проверка..."
 defaultPdfEditorInactive = "Друго приложение е зададено по подразбиране"
-defaultPdfEditorRemind = "Напомняне за задаване по подразбиране"
-defaultPdfEditorRemindDescription = "Показване на банер, когато Stirling PDF не е вашето PDF приложение по подразбиране."
 defaultPdfEditorSet = "Вече е по подразбиране"
 defaultStartupView = "Начален изглед по подразбиране"
 defaultStartupViewDescription = "Изберете кой раздел в лявата колона да е активен при стартиране на приложението"
@@ -11618,6 +11883,15 @@ people = "Хора"
 teams = "Екипи"
 title = "Работно пространство"
 
+[setup.error]
+loginIncomplete = "Неуспешно завършване на входа"
+noSaasServer = "Няма конфигуриран SaaS сървър"
+noServer = "Няма конфигуриран сървър"
+saasLoginFailed = "Неуспешен вход в SaaS"
+saasLoginIncomplete = "Неуспешно завършване на входа в SaaS"
+selfHostedLoginFailed = "Неуспешен вход в самостоятелно хостван сървър"
+signupIncomplete = "Неуспешно завършване на регистрацията"
+
 [setup.login]
 connectingTo = "Свързване към:"
 oauthPending = "Отваряне на браузър за удостоверяване..."
@@ -11661,6 +11935,7 @@ configFetchError = "Грешка при извличане на конфигур
 emptyUrl = "Моля, въведете URL на сървър"
 invalidUrl = "Невалиден формат на URL. Въведете валиден URL като https://your-server.com"
 testFailed = "Тестът на връзката е неуспешен"
+unknown = "Неизвестна грешка"
 unreachable = "Неуспешна връзка със сървъра"
 
 [setup.server.error.securityDisabled]
@@ -11769,6 +12044,7 @@ canvas = "След като нарисувате подписа си върху 
 image = "След като качите изображението на подписа по-горе, щракнете навсякъде върху PDF-а, за да го поставите."
 noSignature = "Създайте подпис по-горе, за да активирате инструментите за поставяне."
 paused = "Поставянето е на пауза"
+placeAnnotation = "Щракнете където и да е върху PDF, за да поставите анотацията си."
 resumeHint = "Възобновете поставянето, за да щракнете и добавите подписа си."
 saved = "Изберете запазен подпис по-горе, след това щракнете навсякъде в PDF, за да го поставите."
 text = "След като въведете името си по-горе, щракнете навсякъде върху PDF-а, за да поставите подписа."
@@ -11922,7 +12198,9 @@ signUpWith = "Sign up with"
 skip = "Skip"
 subtitle = "Присъединете се към Stirling PDF, за да започнете"
 title = "Създайте акаунт"
+unableToAccessTool = "Няма достъп до инструмента: {{error}}"
 unexpectedError = "Неочаквана грешка: {{message}}"
+unknownError = "Неизвестна грешка"
 
 [sizes]
 large = "Голям"
@@ -11995,6 +12273,14 @@ rightToLeft = "Разделяне отдясно наляво"
 [split.poster.pageSize]
 description = "Размер на изходните страници за печат"
 label = "Целеви размер на страница"
+
+[split.poster.pageSize.options]
+a3 = "A3 (297 × 420 mm)"
+a4 = "A4 (210 × 297 mm)"
+a5 = "A5 (148 × 210 mm)"
+legal = "Legal (8.5 × 14 in)"
+letter = "Letter (8.5 × 11 in)"
+tabloid = "Tabloid (11 × 17 in)"
 
 [split.poster.xFactor]
 description = "Брой колони, на които да се раздели всяка страница"
@@ -12267,6 +12553,7 @@ confirmCancelInvite = "Сигурни ли сте, че искате да ану
 confirmLeave = "Сигурни ли сте, че искате да напуснете този екип?"
 confirmLeaveLeader = "Като лидер на екипа, напускането ще ви премахне от екипа. Сигурни ли сте?"
 confirmRemove = "Сигурни ли сте, че искате да премахнете този член?"
+currentUnavailable = "Не можахме да идентифицираме текущия ви екип. Опитайте отново или се свържете с поддръжката, ако това продължи."
 editName = "Редактиране на името на екипа"
 inviteCancelled = "Поканата е анулирана"
 inviteError = "Неуспешно изпращане на поканата"
@@ -12292,10 +12579,8 @@ renameCancel = "Отказ на преименуването"
 renameError = "Неуспешно преименуване на екипа"
 renameSubmit = "Запазване на името на екипа"
 renameSuccess = "Екипът беше преименуван успешно"
-transferBody = "Да направите ли {{email}} собственик на екипа? Той/тя ще контролира членството в екипа и настройките за фактуриране на организацията. Вие ще станете член. Абонаментът и портфейлът на екипа остават с екипа."
 transferError = "Собствеността не можа да бъде прехвърлена. Обновете екипа и опитайте отново."
 transferSuccess = "Собствеността на екипа е прехвърлена. Вашата роля вече е член."
-transferTitle = "Прехвърляне на собствеността на екипа"
 
 [team.invitationBanner]
 acceptButton = "Приеми"
@@ -12396,6 +12681,10 @@ WORD = "Word документ"
 XML = "XML файл"
 XPS = "XPS документ"
 ZIP = "ZIP архив"
+
+[toolLoading]
+generic = "Зареждане на инструмента..."
+named = "Зареждане на {{toolName}}..."
 
 [toolPanel]
 alpha = "Алфа"
@@ -12501,6 +12790,8 @@ stable = "STABLE"
 updateAvailable = "Налична е актуализация"
 urgentUpdateAvailable = "Спешна актуализация"
 version = "Версия"
+versionCount_one = "{{count}} версия"
+versionCount_other = "{{count}} версии"
 versionHistory = "История на версиите"
 viewGuide = "Виж ръководството"
 whatsNewIn = "Какво ново в"
@@ -12528,6 +12819,7 @@ title = "URL към PDF"
 aboutUsageAnalytics = "Относно аналитиката за използване"
 configureSettings = "Конфигуриране на настройки за аналитика"
 error = "Грешка при зареждане на статистиката за използване"
+loadFailed = "Неуспешно зареждане на статистиките за използване"
 noData = "Няма налични данни"
 noDataMessage = "Понастоящем няма налична статистика за използване."
 usageAnalyticsExplanation = "Аналитиката за използване проследява заявки към крайни точки и модели на използване на инструментите. В комбинация с таблото за одитно регистриране получавате пълна видимост върху системната активност, производителността и събитията по сигурността."
@@ -12591,7 +12883,6 @@ removeTeam = "Премахване от екипа"
 rename = "Преименуване на екип"
 resetPw = "Нулиране на парола"
 suspend = "Спиране"
-transferOwnership = "Прехвърляне на собственост"
 unlock = "Отключване на акаунт"
 
 [users.activity]
@@ -12631,8 +12922,6 @@ disableMfaTitle = "Нулиране на MFA"
 removeBody = "Да се премахне ли окончателно {{name}} от организацията? Това не може да бъде отменено."
 removeTeamBody = "Да се премахне ли {{name}} от екипа? Те запазват акаунта си, но губят достъп до ресурсите на този екип."
 removeTitle = "Премахване на член"
-transferOwnershipBody = "Да направите ли {{name}} собственик на организацията? Той/тя ще стане администратор. Вие ще останете администратор, но ще загубите собствеността. Само новият собственик или операторът на сървъра може да я прехвърли обратно."
-transferOwnershipTitle = "Прехвърляне на собствеността на организацията"
 
 [users.empty]
 description = "Поканете екипа си, за да започнете сътрудничество."
@@ -12825,6 +13114,7 @@ signaturesInvalid = "{{count}} невалидни"
 signaturesUnverified_one = "{{count}} изисква преглед"
 signaturesUnverified_other = "{{count}} изискват преглед"
 signaturesValid = "{{count}} напълно валидни"
+thumbnailAlt = "Миниатюра на {{fileName}}"
 title = "Отчет за валидиране на подписи"
 
 [validateSignature.report.fields]
@@ -12862,6 +13152,7 @@ lastPage = "Последна страница"
 loadingEngine = "Зареждане на PDF Engine..."
 moreOptions = "Още"
 nextPage = "Следваща страница"
+noPdfProvided = "Не е предоставен PDF"
 onlyPdfSupported = "Прегледачът поддържа само PDF файлове. Този файл изглежда е в друг формат."
 pageNavigation = "Навигация по страници"
 previousPage = "Предишна страница"
@@ -12899,8 +13190,17 @@ collapseAll = "Свий всички отметки"
 editorOnly = "Отметките на този документ могат да се редактират само в редактора."
 empty = "No bookmarks in this document"
 expandAll = "Разгъни всички отметки"
+loadFailed = "Неуспешно зареждане на отметките"
+loading = "Зареждане на отметки..."
+noDocument = "Отворете PDF, за да видите отметките му."
+noSearchResults = "Няма отметки, съответстващи на търсенето ви"
+openEditor = "Трябва да пренаредите или вложите? Отворете редактора на отметки"
+pageLabel = "Страница"
+pageNumber = "Страница {{page}}"
+saveFailed = "Неуспешно записване на отметката"
 searchPlaceholder = "Търсене в отметките"
 title = "Bookmarks"
+untitled = "Без заглавие"
 
 [viewer.comments]
 addComment = "Добавяне на коментар"
@@ -12948,16 +13248,26 @@ unsavedDesc = "Имате незаписани промени"
 
 [viewer.layers]
 closeSidebar = "Затвори страничната лента със слоеве"
+empty = "Този документ няма слоеве."
 hideAll = "Скрий всички слоеве"
+loadFailed = "Неуспешно зареждане на слоевете."
+loading = "Зареждане на слоеве..."
+noDocument = "Отворете PDF, за да видите слоевете му."
+readFailed = "Неуспешно прочитане на PDF слоеве"
 showAll = "Покажи всички слоеве"
 title = "Layers"
 
 [viewer.link]
 delete = "Изтриване на връзка"
+goTo = "Отиди на {{label}}"
+open = "Отваряне на връзка"
+openAria = "Отвори връзка"
+page = "Страница {{page}}"
 
 [viewer.nonPdf]
 columnDefault = "Колона {{index}}"
 convertToPdf = "Конвертирай в PDF"
+copied = "Копирано"
 csvStats = "{{rows}} реда · {{columns}} колони · {{size}}"
 emptyFile = "Празен файл"
 htmlHidePreview = "Скриване на прегледа"
@@ -12968,6 +13278,8 @@ htmlShowPreview = "Показване на прегледа въпреки то�
 invalidJson = "Невалиден JSON — показване на суровото съдържание"
 lineNumbers = "Номера на редовете"
 loading = "Зареждане..."
+noFile = "Няма зареден файл"
+previewUnavailable = "Прегледът не е наличен за този тип файл"
 renderMarkdown = "Рендерирай Markdown"
 sortedBy = "Сортирано по: {{column}}"
 textStats = "{{lines}} реда · {{size}}"
@@ -12994,11 +13306,28 @@ next = "Следващ резултат"
 previous = "Предишен резултат"
 resultsOf = "от {{total}}"
 
+[viewer.sidebar]
+close = "Затвори страничната лента"
+searchPlaceholder = "Търсене..."
+
 [viewer.signature]
 delete = "Изтриване на подпис"
+previewAlt = "Преглед на подписа"
+
+[viewer.signatureField]
+badge = "Подпис"
+fieldTitle = "Поле за подпис: {{name}}"
+signed = "Подписано"
+signedWithReason = "Подписано: {{reason}}"
+unsignedFieldTitle = "Неподписано поле за подпис: {{name}}"
+withTime = "{{label}} ({{time}})"
 
 [viewer.thumbnails]
 closeSidebar = "Затвори страничната лента с миниатюри"
+failed = "Неуспешно"
+pageNumber = "Страница {{page}}"
+thumbnailAlt = "Миниатюра на страница {{page}}"
+title = "Страници"
 
 [viewPdf]
 tags = "преглед,четене,анотиране,текст,изображение"
@@ -13006,169 +13335,6 @@ title = "Преглед/Редактиране на PDF"
 
 [warning]
 tooltipTitle = "Предупреждение"
-
-[watchedFolders]
-alreadyInFolder = "Already in this folder"
-defaultFolderWarning = "This is a default folder and will be recreated on next reload."
-deleteConfirmBody = "This will remove the folder and its run history. Files already downloaded are not affected."
-deleteConfirmTitle = "Delete folder?"
-folderNotFound = "Folder not found"
-newFolder = "New folder"
-noFolders = "No watched folders yet"
-sidebarTitle = "Watched Folders"
-title = "Watched Folders"
-
-[watchedFolders.actions]
-back = "Back"
-collapse = "Collapse"
-dismiss = "Dismiss"
-download = "Download"
-downloadInput = "Download input"
-downloadOutput = "Download output"
-expand = "Expand"
-retry = "Retry"
-
-[watchedFolders.card]
-delete = "Delete folder"
-edit = "Edit folder"
-
-[watchedFolders.home]
-addAnother = "Add another Watched Folder"
-addAnotherDesc = "Automatically process files with a new pipeline"
-create = "Create your first Watched Folder"
-deleteFolder = "Delete folder"
-editFolder = "Edit folder"
-empty = "No watched folders yet"
-emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
-emptyTitle = "Automate your PDF workflows"
-file = "file"
-files = "files"
-pause = "Pause"
-resume = "Resume"
-
-[watchedFolders.howItWorks]
-step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
-step1Title = "Drop files"
-step2Desc = "Your configured tools process each file automatically"
-step2Title = "Pipeline runs"
-step3Desc = "Download processed files from inside the folder"
-step3Title = "Output ready"
-title = "How Watched Folders work"
-
-[watchedFolders.modal]
-advanced = "Advanced"
-automation = "Automation"
-automationNameFallback = "Watched Folder automation"
-automationRequired = "Add at least one configured step before saving."
-autoNumber = "Auto-number"
-autoNumberExample = "e.g. document.pdf → document (1).pdf"
-autoScanHelp = "New PDF files in this folder are processed automatically every 10 seconds."
-changeFolder = "Change"
-chooseFolder = "Choose"
-clearFolder = "Clear"
-color = "Accent color"
-createFolder = "Create Folder"
-createTitle = "New Watched Folder"
-editTitle = "Edit Watched Folder"
-inputFolder = "Input folder"
-inputFolderNotChosen = "No folder chosen — required for auto-scan"
-inputSource = "Input source"
-inputSourceBrowser = "Browser — drop files here"
-inputSourceLocal = "Local folder (auto-scan)"
-inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
-localOutputFolder = "Local output folder"
-maxRetries = "Max retries"
-name = "Folder name"
-namePlaceholder = "My Watched Folder"
-nameRequired = "Folder name is required"
-nameTooLong = "Folder name must be 50 characters or less"
-outputFolderNotSet = "Not set — outputs stay in app"
-outputFolderUnsupported = "Not supported in this browser"
-outputModeNewDesc = "Output is saved as a new separate file"
-outputModeVersion = "Replace original?"
-outputModeVersionDesc = "Output becomes a new version of the input file rather than a separate file"
-outputName = "Output filename prefix"
-outputNamePrefix = "Filename prefix"
-outputNameSuffix = "Suffix"
-positionPrefix = "Prefix"
-positionSuffix = "Suffix"
-replaceOriginal = "Replace original file"
-retryDelay = "Delay (minutes)"
-saveChanges = "Save Changes"
-saveFailed = "Failed to save folder. Please try again."
-sectionFolder = "Folder"
-sectionSourceOutput = "Source & Output"
-sectionSteps = "Steps"
-
-[watchedFolders.status]
-active = "Active"
-done = "Done"
-paused = "Paused"
-processing = "Processing"
-
-[watchedFolders.time]
-daysAgo = "{{count}}d ago"
-hoursAgo = "{{count}}h ago"
-justNow = "just now"
-minutesAgo = "{{count}}m ago"
-
-[watchedFolders.workbench]
-activity = "Activity"
-addFiles = "Add files"
-allTime = "All time"
-cancel = "Cancel"
-chartTooltipComplete = "{{count}} complete"
-chartTooltipFailed = "{{count}} failed"
-clearSelection = "Clear selection"
-countProcessing = "{{count}} processing"
-countQueued = "{{count}} queued"
-countSelected = "{{count}} selected"
-dataSaved = "Saved"
-dayRunning = "day running"
-daysRunning = "days running"
-delete = "Delete"
-deleteConfirmBody = "Remove notifications only clears the activity log. Delete outputs also removes the processed files from storage. Your original input files are never touched."
-deleteOutputs = "Delete outputs"
-directionIn = "in"
-directionOut = "out"
-dropToProcess = "Drop to process"
-export = "Export"
-exportSeparately = "Export separately"
-exportZip = "Export zip"
-failed = "Failed"
-filesProcessedOverTime = "Files processed over time"
-filterAll = "All"
-filterPending = "Pending"
-inputs = "Inputs"
-inputSize = "Input size"
-legendComplete = "Complete"
-noActivity = "No activity yet — drop a PDF to start"
-noActivityMatch = "No matching activity"
-noInputFolder = "No input folder — edit to configure"
-outputs = "Outputs"
-pause = "Pause"
-preview = "Preview"
-previewInput = "Preview input"
-previewLoadFailed = "Could not load file preview."
-previewOutput = "Preview output"
-queued = "Queued"
-queuedWaiting = "Queued — waiting to run"
-removeEntries = "Remove {{count}} entries"
-removeEntry = "Remove entry"
-removeNotificationsOnly = "Remove notifications only"
-resume = "Resume"
-retryAll = "Retry all"
-retryIn = "retry in {{count}}m"
-retryingSoon = "retrying…"
-retryMixedConfirm = "Some selected files have already completed and will be skipped. Only failed files will be retried. Continue?"
-running = "Running"
-search = "Search…"
-selectAll = "Select all {{count}}"
-sortNameAsc = "A → Z"
-sortNameDesc = "Z → A"
-sortNewest = "Newest"
-sortOldest = "Oldest"
-watching = "Watching: {{name}}"
 
 [watermark]
 desc = "Добавяне на текстови или изображени водни знаци към PDF файлове"
@@ -13371,6 +13537,10 @@ certTypeServer = "Сървърен сертификат (ако е наличе�
 completedDeclined = "Отказахте този документ."
 completedSigned = "Подписахте този документ."
 decline = "Откажете"
+declineConfirm = "Сигурни ли сте, че искате да откажете подписването на този документ?"
+declineFailed = "Неуспешен отказ: {{error}}"
+declineSuccess = "Отказахте тази заявка за подписване."
+defaultReason = "Подписване на документ"
 downloadDocument = "Изтеглете документа"
 dueDate = "Краен срок: {{date}}"
 errorTitle = "Грешка"
@@ -13381,6 +13551,7 @@ locationPlaceholder = "напр., Сан Франциско, CA"
 pageNumber = "Номер на страница (незадължително)"
 reason = "Причина"
 reasonPlaceholder = "напр., Одобрение на документ"
+selectCertificateFile = "Моля, изберете файл със сертификат"
 sessionNotFound = "Сесията не е намерена или достъпът е отказан."
 signDocument = "Подпишете документа"
 statusDeclined = "Отказан"
@@ -13388,7 +13559,9 @@ statusNotified = "Уведомен"
 statusPending = "В изчакване"
 statusSigned = "Подписан"
 statusViewed = "Прегледан"
+submitFailed = "Неуспешно изпращане на подписа: {{error}}"
 submitSignature = "Изпратете подписа"
+submitSuccess = "Подписът е изпратен успешно!"
 
 [workspace]
 title = "Работно пространство"

@@ -96,7 +96,13 @@ export function AiDocumentsCard({
               { value: "voyageai", label: "VoyageAI" },
               { value: "openai", label: "OpenAI" },
               { value: "ollama", label: "Ollama" },
-              { value: "custom", label: "Custom (OpenAI-compatible)" },
+              {
+                value: "custom",
+                label: t(
+                  "admin.settings.ai.customProvider",
+                  "Custom (OpenAI-compatible)",
+                ),
+              },
             ]}
             value={embeddingProvider}
             onChange={(v) => {

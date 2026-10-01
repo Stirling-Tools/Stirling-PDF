@@ -624,7 +624,10 @@ const EmbedPdfViewerContent = ({
       // Use the current state if valid, otherwise fall back to tracked ref
       const pageToRestore = pageFromState > 0 ? pageFromState : pageFromRef;
 
-      if (pageToRestore > 0) {
+      // An in-flight swap restore already carries the page; replacing it drops
+      // the swap gate and the carried zoom settles against the outgoing document.
+      const swapInFlight = pendingScrollPositionRef.current?.expectSwap;
+      if (pageToRestore > 0 && !swapInFlight) {
         queueScrollRestore(pageToRestore);
       }
 

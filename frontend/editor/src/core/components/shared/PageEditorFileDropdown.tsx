@@ -1,5 +1,6 @@
 import React from "react";
 import { Menu, Loader, Group, Text, Checkbox } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
 import FitText from "@app/components/shared/FitText";
 import { getFileColorWithOpacity } from "@app/components/pageEditor/fileColors";
@@ -32,6 +33,7 @@ const FileMenuItem: React.FC<FileMenuItemProps> = ({
   onToggleSelection,
   onReorder,
 }) => {
+  const { t } = useTranslation();
   const {
     itemRef,
     isDragging,
@@ -47,7 +49,8 @@ const FileMenuItem: React.FC<FileMenuItemProps> = ({
     onReorder,
   });
 
-  const itemName = file?.name || "Untitled";
+  const itemName =
+    file?.name || t("pageEditor.fileDropdown.untitled", "Untitled");
   const fileColorBorder = getFileColorWithOpacity(colorIndex, 1);
   const fileColorBorderHover = getFileColorWithOpacity(colorIndex, 1.0);
 
@@ -165,6 +168,7 @@ export const PageEditorFileDropdown: React.FC<PageEditorFileDropdownProps> = ({
   selectedCount,
   totalCount,
 }) => {
+  const { t } = useTranslation();
   const { openFilesModal } = useFilesModalContext();
 
   return (
@@ -185,7 +189,11 @@ export const PageEditorFileDropdown: React.FC<PageEditorFileDropdownProps> = ({
             <Icon name="layout-dashboard" size="1.4rem" />
           )}
           <span className="ph-no-capture">
-            {selectedCount}/{totalCount} files selected
+            {t(
+              "pageEditor.fileDropdown.selectedCount",
+              "{{selected}}/{{total}} files selected",
+              { selected: selectedCount, total: totalCount },
+            )}
           </span>
           <Icon name="chevron-down" size={20} />
         </div>
@@ -249,7 +257,7 @@ export const PageEditorFileDropdown: React.FC<PageEditorFileDropdownProps> = ({
               style={{ color: "var(--mantine-color-text)" }}
               className="ph-no-capture"
             >
-              Add File
+              {t("pageEditor.fileDropdown.addFile", "Add File")}
             </Text>
           </Group>
         </div>

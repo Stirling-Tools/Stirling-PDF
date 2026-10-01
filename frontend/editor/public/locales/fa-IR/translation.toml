@@ -278,6 +278,7 @@ customNumberDesc = "به‌طور پیش‌فرض {n}، همچنین می‌تو
 fontName = "نام فونت"
 fontSize = "اندازه فونت"
 numberPagesDesc = "کدام صفحات شماره‌گذاری شوند، پیش‌فرض 'همه'، همچنین می‌توانید 1-5 یا 2,5,9 را وارد کنید."
+pagePreviewAlt = "پیش‌نمایش صفحه"
 pagesAndStarting = "صفحات و شماره آغازین"
 positionAndPages = "موقعیت و صفحات"
 preview = "انتخاب موقعیت"
@@ -350,7 +351,9 @@ text = "این مجوزها کنترل می‌کنند کاربران چه کا�
 title = "تغییر مجوزها"
 
 [addStamp]
+pagePreviewAlt = "پیش‌نمایش صفحه"
 preview = "پیش‌نمایش مهر"
+stampPreviewAlt = "پیش‌نمایش مهر"
 tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 
 [AddStampRequest]
@@ -383,6 +386,7 @@ positionAndFormatting = "موقعیت و قالب‌بندی"
 preview = "Preview:"
 quickPosition = "یک موقعیت روی صفحه برای قرار دادن مهر انتخاب کنید."
 rotation = "چرخش"
+selectedImageAlt = "تصویر مهر انتخاب‌شده"
 selectTemplate = "Select a template..."
 stampSetup = "تنظیمات مهر"
 stampText = "متن مهر"
@@ -533,6 +537,9 @@ letter = "لتر"
 
 [adjustPageScale.scaleFactor]
 label = "ضریب مقیاس"
+
+[adjustPageScale.settings]
+title = "تنظیمات"
 
 [adjustPageScale.tooltip.description]
 text = "اندازه محتوای PDF را تنظیم کرده و ابعاد صفحه را تغییر دهید."
@@ -728,6 +735,7 @@ noLanguages = "هیچ زبان tessdata در پوشهٔ پیکربندی‌شد�
 permissionNotice = "مسیر tessdata قابل نوشتن نیست. دانلودها در مرورگر باز می‌شوند؛ لطفاً فایل‌های .traineddata را به‌صورت دستی در پوشهٔ tessdata ذخیره کنید."
 
 [admin.settings.ai]
+customProvider = "سفارشی (سازگار با OpenAI)"
 description = "Stirling را به موتور AI پایتون متصل کنید، مدل‌های آن را انتخاب کنید و محدودیت‌هایی را که تحت آن اجرا می‌شود تنظیم کنید."
 managedByCloud = "در این حالت توسط Stirling Cloud مدیریت می‌شود."
 managedByCloudShort = "مدیریت‌شده توسط Stirling Cloud"
@@ -1146,7 +1154,6 @@ refresh = "تازه‌سازی"
 selectFile = "لطفاً یک فایل .sql برای درون‌ریزی انتخاب کنید"
 size = "اندازه"
 title = "پایگاه داده"
-unavailable = "فهرست نسخه‌های پشتیبان برای پیکربندی فعلی پایگاه داده در دسترس نیست."
 uploadTitle = "بارگذاری و درون‌ریزی"
 version = "نسخهٔ H2"
 
@@ -1280,6 +1287,7 @@ label = "فراداده سفارشی"
 [admin.settings.general.customMetadata.author]
 description = "نویسنده پیش‌فرض برای فراداده PDF (مثلاً نام کاربری)"
 label = "نویسنده پیش‌فرض"
+placeholder = "نام کاربری"
 
 [admin.settings.general.customMetadata.autoUpdate]
 description = "به‌صورت خودکار فراداده PDF را در تمام اسناد پردازش‌شده به‌روزرسانی کن"
@@ -1395,6 +1403,7 @@ defaultLocaleLink = "بومی‌سازی پیش‌فرض را پیکربندی �
 description = "بیانیه‌ای نمایش دهید که کاربران باید پس از ورود آن را بپذیرند. متن بر اساس زبان هر کاربر نشان داده می‌شود."
 discardConfirm = "تغییراتی ذخیره‌نشده دارید که از بین خواهند رفت. با این حال زبان را تغییر دهید؟"
 editLabel = "Markdown"
+editPlaceholder = "## عنوان\n\nمتن سلب مسئولیت شما..."
 emptyPreview = "هنوز چیزی برای پیش‌نمایش نیست."
 language = "زبان"
 languageHelp = "هر زبان پروندهٔ خود را دارد. اگر زبان کاربر پرونده‌ای نداشته باشد، توافق‌نامه به پروندهٔ بومی‌سازی پیش‌فرض، و سپس به متن پشتیبان برمی‌گردد."
@@ -1513,8 +1522,10 @@ label = "JWKS URL (optional)"
 placeholder = "Auto-discovered from issuer"
 
 [admin.settings.mcp.mode]
+apikey = "کلید API (کلید هر کاربر Stirling)"
 description = "OAuth needs an external IdP. API key uses a Stirling per-user API key (X-API-KEY) - simplest for self-host."
 label = "Authentication mode"
+oauth = "OAuth 2.1 (IdP خارجی)"
 
 [admin.settings.mcp.requireAccount]
 description = "Only let tokens through if their subject maps to a provisioned, enabled Stirling user."
@@ -1931,6 +1942,14 @@ title = "تنظیمات کنترل کاربران"
 [agents]
 stirling_name = "Stirling"
 
+[alphabetOptions]
+arabic = "عربی"
+chinese = "چینی (ساده‌شده)"
+japanese = "ژاپنی"
+korean = "کره‌ای"
+roman = "رومی"
+thai = "تایلندی"
+
 [analytics]
 learnMore = "بیشتر بدانید"
 paragraph1 = "Stirling PDF از تحلیل‌های اختیاری استفاده می‌کند تا به ما در بهبود محصول کمک کند. ما هیچ اطلاعات شخصی یا محتوای فایل را ردیابی نمی‌کنیم."
@@ -2052,6 +2071,7 @@ week = "هفته"
 
 [audit.clearData]
 cancel = "لغو"
+closeAlert = "بستن هشدار"
 codeDoesNotMatch = "کد مطابقت ندارد"
 codePlaceholder = "کد را اینجا وارد کنید"
 confirmationCode = "کد تأیید"
@@ -2061,6 +2081,7 @@ confirmTitle = "لطفاً حذف را تأیید کنید"
 deleteButton = "حذف"
 enterCode = "کد تأیید"
 enterCodeBelow = "کد را دقیقاً مطابق نمایش بالا وارد کنید (حساس به حروف بزرگ/کوچک)"
+failed = "پاک‌سازی داده‌های ممیزی ناموفق بود"
 initiateDelete = "حذف همه داده‌ها"
 irreversible = "غیرقابل‌بازگشت"
 success = "موفق"
@@ -2069,6 +2090,7 @@ warning1 = "این اقدام قابل بازگشت نیست"
 warning2 = "حذف داده‌های ممیزی، همه لاگ‌های ممیزی تاریخی از جمله رویدادهای امنیتی، فعالیت‌های کاربر و عملیات فایل را برای همیشه از پایگاه داده حذف می‌کند."
 
 [audit.error]
+loadStatus = "بارگیری وضعیت سیستم ممیزی ناموفق بود"
 title = "خطا در بارگذاری سیستم ممیزی"
 
 [audit.events]
@@ -2084,6 +2106,7 @@ fileHash = "هش فایل"
 filterByType = "فیلتر بر اساس نوع"
 filterByUser = "فیلتر بر اساس کاربر"
 ipAddress = "نشانی IP"
+loadFailed = "بارگیری رویدادها ناموفق بود"
 noEvents = "هیچ رویدادی یافت نشد"
 startDate = "تاریخ شروع"
 timestamp = "مُهر زمانی"
@@ -2124,6 +2147,7 @@ avgLatency = "میانگین تأخیر"
 error = "خطا در بارگذاری آمار"
 excellent = "عالی"
 good = "خوب"
+loadFailed = "بارگیری آمار ناموفق بود"
 noData = "ناموجود"
 successRate = "نرخ موفقیت"
 totalEvents = "کل رویدادها"
@@ -2158,13 +2182,27 @@ accessDenied = "دسترسی رد شد"
 insufficientPermissions = "شما مجوز انجام این اقدام را ندارید."
 
 [auth.callback]
+alreadySignedIn = "از قبل وارد شده‌اید! در حال هدایت..."
+backToLogin = "بازگشت به ورود"
 completing = "در حال تکمیل احراز هویت"
+exchanging = "در حال تبادل کد مجوز..."
+failedWithReason = "احراز هویت ناموفق بود: {{error}}"
 invalidToken = "ورود OAuth ناموفق بود - توکن نامعتبر است."
 missingToken = "ورود OAuth ناموفق بود - توکنی دریافت نشد."
+noData = "هیچ داده احراز هویتی یافت نشد"
 oauthFailed = "ورود OAuth ناموفق بود. لطفاً دوباره تلاش کنید."
 pleaseWait = "لطفاً صبر کنید تا ورود شما را تکمیل کنیم."
+processing = "در حال پردازش احراز هویت..."
 signedOut = "از سیستم خارج شده‌اید. لطفاً دوباره وارد شوید."
+signInFailed = "تکمیل ورود ناموفق بود: {{error}}"
+success = "ورود موفقیت‌آمیز بود! در حال هدایت..."
+unknownError = "خطای ناشناخته"
 windowMayClose = "پس از تکمیل، می‌توانید این پنجره را ببندید."
+
+[auth.callback.title]
+default = "احراز هویت"
+processing = "در حال ورود شما"
+success = "همه‌چیز آماده است!"
 
 [auth.displayName]
 guest = "مهمان"
@@ -2317,6 +2355,7 @@ title = "وارد کردن خودکارسازی"
 unresolved = "نگاشت‌نشده: {{ops}}"
 
 [automate.run]
+progress = "پیشرفت: {{current}}/{{total}}"
 title = "اجرای اتوماسیون"
 
 [automate.selection]
@@ -2466,6 +2505,7 @@ whatHappensNext = "در ادامه چه می‌شود؟"
 
 [billing.portal]
 error = "باز کردن پورتال صورتحساب ناموفق بود"
+errorFallback = "لطفاً دوباره تلاش کنید یا با پشتیبانی تماس بگیرید."
 
 [bookletImposition]
 paperSizeNote = "اندازه کاغذ به‌صورت خودکار از صفحه اول شما تعیین می‌شود."
@@ -2513,6 +2553,9 @@ title = "حالت دوبلکس دستی"
 [bookletImposition.rtlBinding]
 label = "صحافی راست‌به‌چپ"
 tooltip = "برای عربی، عبری یا سایر زبان‌های راست‌به‌چپ"
+
+[bookletImposition.settings]
+title = "تنظیمات"
 
 [bookletImposition.tooltip.advanced]
 bullet1 = "صحافی راست‌به‌چپ: برای عربی، عبری یا زبان‌های RTL"
@@ -2582,6 +2625,8 @@ detail = "برای بازی دوباره کلیک کنید یا Space را فش�
 headline = "همه پاک شد"
 
 [bulkSelection]
+selectedPages_one = "انتخاب‌شده: {{count}} صفحه ({{pages}})"
+selectedPages_other = "انتخاب‌شده: {{count}} صفحه ({{pages}})"
 syntaxError = "مشکل نحوی وجود دارد. برای راهنمایی به نکات انتخاب صفحه مراجعه کنید."
 
 [bulkSelection.advanced]
@@ -2802,6 +2847,7 @@ declineButton = "رد"
 deleteSelected = "حذف امضای انتخاب‌شده"
 drawSignature = "امضای خود را در پایین رسم کنید"
 fileTooLarge = "اندازه فایل باید کمتر از 5MB باشد"
+fontBrushScript = "Brush Script MT (دست‌نویس)"
 fontFamily = "خانواده فونت"
 fontSize = "اندازه فونت: {{size}}px"
 fontSizePlaceholder = "اندازه"
@@ -2821,6 +2867,7 @@ removeImage = "حذف تصویر"
 savedSignatures = "امضاهای ذخیره‌شده"
 selectFile = "انتخاب فایل تصویر"
 selectSignatureTitle = "انتخاب یا ایجاد امضا"
+signatureImageAlt = "امضا"
 signatureInfo = "این تنظیمات توسط مالک سند پیکربندی شده است"
 signatureSettings = "تنظیمات امضا"
 signatureText = "متن امضا"
@@ -3591,13 +3638,19 @@ confirm = "تأیید"
 continue = "ادامه"
 copied = "کپی شد!"
 copy = "کپی"
+copyCode = "کپی کد"
+dismiss = "رد کردن"
 done = "انجام شد"
 enterValue = "Enter value"
 error = "خطا"
 expand = "گسترش دادن"
 filterEmpty = "چیزی برای فیلتر کردن وجود ندارد"
+goToSlide = "رفتن به اسلاید {{number}}"
 loading = "در حال بارگذاری..."
+moreInformation = "اطلاعات بیشتر"
 next = "بعدی"
+noData = "بدون داده"
+nOfTotal = "{{current}} از {{total}}"
 open = "Open"
 preview = "پیش‌نمایش"
 previous = "قبلی"
@@ -3606,6 +3659,9 @@ remaining = "باقی‌مانده"
 retry = "تلاش مجدد"
 save = "ذخیره"
 search = "جستجو"
+settingsSections = "بخش‌های تنظیمات"
+showAllTotal = "نمایش همه {{total}} مورد"
+showLess = "نمایش کمتر"
 stepOf = "Step {{current}} of {{total}}"
 
 [compare]
@@ -3617,6 +3673,7 @@ newLine = "خط جدید"
 pages = "صفحات"
 tags = "تفاوت‌گذاری،کنتراست،تغییرات،تحلیل"
 title = "مقایسه"
+workbenchLabel = "نمای مقایسه"
 
 [compare.actions]
 linkScroll = "پیوند اسکرول"
@@ -3770,6 +3827,7 @@ title = "روش فشرده‌سازی"
 desiredSize = "حجم فایل موردنظر"
 desiredSizePlaceholder = "اندازه را وارد کنید"
 desiredSizeUnit = "Size unit"
+title = "تنظیمات"
 
 [compress.tooltip.description]
 text = "فشرده‌سازی راهی آسان برای کاهش اندازه فایل است. «اندازه فایل» را انتخاب کنید تا اندازه هدف را وارد کنید و ما کیفیت را برای شما تنظیم کنیم. «کیفیت» را انتخاب کنید تا قدرت فشرده‌سازی را به‌صورت دستی تنظیم کنید."
@@ -3819,10 +3877,13 @@ title = "تنظیمات حساب"
 description = "برای شخصی‌سازی حساب خود یک تصویر بارگذاری کنید."
 help = "PNG، JPG یا WebP تا ۲ مگابایت."
 remove = "حذف"
+removeFailed = "حذف تصویر پروفایل ناموفق بود"
 sizeError = "لطفاً تصویری کوچک‌تر از ۲ مگابایت انتخاب کنید."
 switchedToCustom = "به تصویر سفارشی تغییر یافت. اکنون می‌توانید تصویر خود را بارگذاری کنید."
+switchFailed = "تغییر به تصویر سفارشی ناموفق بود"
 title = "تصویر پروفایل"
 upload = "بارگذاری"
+uploadFailed = "بارگذاری تصویر پروفایل ناموفق بود"
 useCustom = "استفاده از تصویر سفارشی"
 usingProvider = "استفاده از تصویر پروفایل {{provider}}"
 
@@ -3836,6 +3897,7 @@ title = "برش تصویر پروفایل"
 zoom = "بزرگ‌نمایی"
 
 [config.account.security]
+changeFailed = "تغییر رمز عبور ناموفق بود"
 changePassword = "تغییر گذرواژه"
 description = "گذرواژه و تنظیمات امنیتی خود را مدیریت کنید."
 title = "گذرواژه‌ها و امنیت"
@@ -3846,11 +3908,15 @@ description = "حساب خود را پیوند دهید تا تاریخچه‌ت
 email = "ایمیل"
 emailPassword = "یا ایمیل و رمز عبور خود را وارد کنید"
 emailPlaceholder = "ایمیل خود را وارد کنید"
+failed = "ارتقای حساب ناموفق بود"
+failedWithProvider = "ارتقای حساب با {{provider}} ناموفق بود"
 linkWith = "اتصال با"
+linkWithProvider = "پیوند با {{provider}}"
 password = "رمز عبور (اختیاری)"
 passwordNote = "برای استفاده فقط از تأیید ایمیل، خالی بگذارید"
 passwordPlaceholder = "تنظیم رمز عبور"
 socialLogin = "ارتقا با حساب اجتماعی"
+success = "حساب با موفقیت ارتقا یافت! اکنون می‌توانید با ایمیل خود وارد شوید."
 title = "ارتقای حساب مهمان"
 upgradeButton = "ارتقای حساب"
 
@@ -3960,10 +4026,10 @@ title = "درخواست معتبر نیست"
 
 [connect.renewal]
 approve = "تمدید ورود"
+currentOwnerRequired = "برای تمدید ورود این سرور، به‌عنوان مالک فعلی تیم ابری پیوندشده وارد شوید. اگر مالکیت منتقل شده است، از حساب مالک جدید استفاده کنید."
 failed = "ورود شما قابل تمدید نبود. دوباره تلاش کنید، یا این صفحه را ببندید و از سرور خود دوباره شروع کنید."
 lead = "این سرور از قبل به حساب شما پیوند شده است. ورود خود را تمدید کنید تا به صورت‌حساب و میزان استفاده روی سرور خود برگردید."
 title = "تمدید ورود سرور شما"
-wrongAccount = "این حساب نمی‌تواند ورود این سرور را تمدید کند. به حسابی بروید که در ابتدا برای پیوند دادن سرور استفاده شده است. آن حساب همچنان باید مالک تیم پیوندشده باشد."
 
 [convert]
 autoRotate = "چرخش خودکار"
@@ -4009,6 +4075,7 @@ multiple = "چندگانه"
 optimizeForEbook = "بهینه‌سازی PDF برای کتاب‌خوان‌ها (از Ghostscript استفاده می‌کند)"
 output = "خروجی"
 outputFormat = "قالب خروجی"
+pdfaAccessibleFormat = "{{format}} (دسترس‌پذیر)"
 pdfaDigitalSignatureWarning = "PDF حاوی یک امضای دیجیتال است. این در مرحله بعد حذف خواهد شد."
 pdfaNote = "PDF/A-1b سازگارتر است، PDF/A-2b از قابلیت‌های بیشتری پشتیبانی می‌کند."
 pdfaOptions = "گزینه‌های PDF/A"
@@ -4068,6 +4135,24 @@ outputFormatDesc = "فرمت خروجی eBook را انتخاب کنید"
 tabletPhone = "تبلت/گوشی (به‌همراه تصاویر)"
 targetDevice = "دستگاه هدف"
 targetDeviceDesc = "یک پروفایل خروجی بهینه‌شده برای دستگاه خوانش انتخاب کنید"
+
+[convert.formatGroups]
+archive = "آرشیو"
+document = "سند"
+ebook = "eBook"
+email = "ایمیل"
+file = "فایل"
+image = "تصویر"
+multipleFiles = "چندین فایل"
+presentation = "ارائه"
+spreadsheet = "صفحه‌گسترده"
+text = "متن"
+web = "وب"
+
+[convert.formatOptions]
+any = "هرکدام"
+images = "تصاویر"
+msgOutlook = "MSG (Outlook)"
 
 [cookieBanner.popUp]
 acceptAllBtn = "باشه"
@@ -4161,6 +4246,12 @@ label = "موقعیت Y"
 [crop.error]
 failed = "برش PDF ناموفق بود"
 
+[crop.pageNumbers]
+description = "ناحیه انتخاب‌شده را در صفحات مشخص برش دهید، یا برای هر صفحه از 'all' استفاده کنید."
+error = "انتخاب صفحه نامعتبر است. مثلاً از 1، 3، 5-8 یا all استفاده کنید."
+label = "صفحات برای برش"
+placeholder = "مثلاً 1، 3، 5-8 یا all"
+
 [crop.preview]
 title = "انتخاب ناحیه برش"
 
@@ -4183,16 +4274,11 @@ fileName = "نام فایل"
 title = "وارد کردن/صادر کردن پایگاه داده"
 
 [defaultApp]
-setDefault = "تنظیم به‌عنوان پیش‌فرض"
 title = "تنظیم به‌عنوان برنامه پیش‌فرض PDF"
 
 [defaultApp.error]
 message = "تنظیم برنامه پیش‌فرض PDF ناموفق بود"
 title = "خطا"
-
-[defaultApp.prompt]
-dontRemind = "دیگر به من یادآوری نکن"
-message = "Stirling PDF را برنامه پیش‌فرض خود برای باز کردن فایل‌های PDF کنید."
 
 [defaultApp.settingsOpened]
 message = "لطفاً Stirling PDF را در تنظیمات سیستم انتخاب کنید"
@@ -4201,6 +4287,17 @@ title = "تنظیمات باز شد"
 [defaultApp.success]
 message = "Stirling PDF اکنون ویرایشگر پیش‌فرض PDF شماست"
 title = "برنامه پیش‌فرض تنظیم شد"
+
+[desktop.titleBar]
+maximize = "بزرگ‌نمایی"
+minimize = "کوچک‌نمایی"
+restore = "بازگردانی"
+
+[desktopBilling]
+description = "مصرف و صورت‌حساب را در مرورگر خود مدیریت کنید. با همان حساب Stirling که اینجا استفاده می‌کنید وارد شوید."
+open = "باز کردن مصرف و صورت‌حساب در مرورگر"
+openFailed = "باز کردن مصرف و صورت‌حساب ممکن نبود. اتصال خود را بررسی کنید و دوباره تلاش کنید."
+selfHostedDescription = "مصرف و صورت‌حساب را روی سرور متصل خود در مرورگر مدیریت کنید. با حساب مالک سرور خود وارد شوید."
 
 [desktopFileLink]
 saveAs = "ذخیره به‌عنوان…"
@@ -4264,6 +4361,7 @@ tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,ident
 noItems = "No items available"
 noResults = "No results found"
 searchPlaceholder = "جستجو..."
+selectedCount = "{{count}} انتخاب‌شده"
 selectLanguages = "Select languages"
 selectOption = "Select an option"
 
@@ -4274,6 +4372,7 @@ editSecretValue = "ویرایش مقدار محرمانه"
 [editTableOfContents]
 submit = "اعمال فهرست مطالب"
 tags = "bookmarks,contents,edit,table of contents,TOC,outline,navigation,chapters,sections,add bookmarks,edit bookmarks,PDF outline"
+workbenchLabel = "فضای کاری طرح کلی"
 
 [editTableOfContents.actions]
 clipboardUnavailable = "دسترسی به کلیپ‌بورد در این مرورگر موجود نیست."
@@ -4434,6 +4533,27 @@ closeFile = "بستن فایل"
 
 [fileEditor]
 addFiles = "افزودن فایل‌ها"
+closedFile = "{{name}} بسته شد"
+couldNotSave = "ذخیره {{name}} ممکن نبود"
+filesAdded_one = "{{count}} فایل اضافه شد"
+filesAdded_other = "{{count}} فایل اضافه شد"
+filesReordered_one = "فایل دوباره مرتب شد"
+filesReordered_other = "{{count}} فایل دوباره مرتب شدند"
+loadedFromStorage_one = "{{count}} فایل از فضای ذخیره‌سازی بارگیری شد"
+loadedFromStorage_other = "{{count}} فایل از فضای ذخیره‌سازی بارگیری شدند"
+loadFromStorageFailed = "بارگیری برخی فایل‌ها از فضای ذخیره‌سازی ناموفق بود"
+pinnedFile = "{{name}} سنجاق شد"
+processFilesFailed = "پردازش فایل‌ها ناموفق بود"
+savedAndClosed = "{{name}} ذخیره و بسته شد"
+saveFailed = "ذخیره ناموفق بود"
+unpinnedFile = "{{name}} از حالت سنجاق خارج شد"
+unzipping = "در حال Unzip کردن {{name}}"
+
+[fileEditor.unzip]
+error = "خطا در Unzip کردن {{name}}"
+extracted_one = "{{count}} فایل از {{name}} استخراج شد"
+extracted_other = "{{count}} فایل از {{name}} استخراج شدند"
+failed = "استخراج فایل‌ها از {{name}} ناموفق بود"
 
 [fileManager]
 addToUpload = "افزودن به بارگذاری"
@@ -4450,6 +4570,7 @@ noFiles = "فایلی موجود نیست"
 noFilesFound = "فایلی مطابق جستجو یافت نشد"
 openInFileEditor = "باز کردن در ویرایشگر فایل"
 openInPageEditor = "باز کردن در ویرایشگر صفحه"
+reloadFiles = "بارگیری مجدد فایل‌ها"
 saveSelected = "ذخیره موارد انتخاب‌شده"
 searchFiles = "جستجوی فایل‌ها..."
 share = "اشتراک‌گذاری"
@@ -4459,6 +4580,8 @@ sharedEditNoticeConfirm = "متوجه شدم"
 sharedEditNoticeTitle = "نسخه فقط‌خواندنی روی سرور"
 sharedWithYou = "با شما به اشتراک گذاشته شده"
 showAll = "نمایش همه"
+showAllCount_one = "نمایش همه ({{count}} فایل)"
+showAllCount_other = "نمایش همه ({{count}} فایل)"
 sortBy = "Sort files"
 sortByDate = "مرتب‌سازی بر اساس تاریخ"
 sortByName = "مرتب‌سازی بر اساس نام"
@@ -4495,6 +4618,11 @@ sources = "منابع فایل"
 subtitle = "از کتابخانه خود انتخاب کنید یا مورد جدیدی اضافه کنید."
 title = "افزودن فایل‌ها"
 unsupported = "این نوع فایل توسط ابزار انتخاب‌شده پشتیبانی نمی‌شود."
+
+[filePreview]
+loadingThumbnail = "در حال بارگیری تصویر کوچک..."
+locked = "قفل‌شده"
+previewOf = "پیش‌نمایش {{name}}"
 
 [files]
 addFiles = "افزودن فایل‌ها"
@@ -4930,13 +5058,15 @@ title = "فایل به PDF"
 [fileUpload]
 dropFilesHere = "فایل‌ها را اینجا رها کنید یا دکمه بارگذاری را کلیک کنید"
 dropFilesHereOpen = "فایل‌ها را اینجا رها کنید یا روی دکمه باز کردن کلیک کنید"
-filesAvailable = "فایل در دسترس"
+filesAvailableCount_one = "{{count}} فایل در دسترس"
+filesAvailableCount_other = "{{count}} فایل در دسترس"
 loadFromStorage = "بارگذاری از فضای ذخیره"
 noFilesInStorage = "در فضای ذخیره فایلی موجود نیست. ابتدا چند فایل بارگذاری کنید."
 noFilesInStorageOpen = "فایلی در فضای ذخیره‌سازی موجود نیست. ابتدا چند فایل باز کنید."
 open = "باز کردن"
 openFile = "باز کردن فایل"
 openFiles = "باز کردن فایل‌ها"
+selectedCount = "{{count}} انتخاب‌شده"
 selectFile = "Select {{name}}"
 selectFromStorage = "انتخاب از فضای ذخیره"
 upload = "بارگذاری"
@@ -5028,6 +5158,7 @@ rescanFields = "اسکن دوبارهٔ فیلدها"
 rescanFormFields = "اسکن دوبارهٔ فیلدهای فرم"
 save = "ذخیره"
 saveShortcut = "Ctrl+S برای ذخیره"
+selectOptionPlaceholder = "— انتخاب کنید —"
 skippedEdits_one = "۱ تغییر قابل اعمال نبود:"
 skippedEdits_other = "{{count}} تغییر قابل اعمال نبود:"
 skippedEditsTruncated = "{{count}} مورد دیگر فهرست نشده است."
@@ -5090,6 +5221,16 @@ tooltipHelp = "راهنمایی که وقتی کسی در نمایشگر PDF ن�
 type = "نوع"
 typeHelp = "این فیلد از چه نوعی است. تغییر آن فیلد را دوباره می‌سازد، بنابراین مقدار فعلی منتقل نمی‌شود."
 
+[formFill.fieldTypes]
+button = "دکمه"
+checkbox = "چک‌باکس"
+combobox = "فهرست کشویی"
+listbox = "کادر فهرست"
+radio = "رادیویی"
+radioGroup = "گروه رادیویی"
+signature = "امضا"
+text = "متن"
+
 [formFill.mode]
 create = "ایجاد"
 fill = "پر کردن"
@@ -5107,11 +5248,16 @@ restore = "بازیابی"
 
 [formFill.sidebar]
 close = "بستن نوار کناری"
+empty = "هیچ فیلد فرمی در این PDF یافت نشد"
+loading = "در حال بارگیری فیلدهای فرم..."
+pageNumber = "صفحه {{page}}"
+title = "فیلدهای فرم"
 
 [getPdfInfo]
 downloadJson = "دانلود JSON"
 downloads = "دانلودها"
 indexTitle = "نمایه"
+noData = "بدون داده"
 noneDetected = "هیچ موردی شناسایی نشد"
 noResults = "برای ایجاد گزارش، ابزار را اجرا کنید."
 processing = "در حال استخراج اطلاعات..."
@@ -5127,6 +5273,8 @@ noVerification = "هیچ راستی‌آزمایی انجام نشد"
 noVerificationDesc = "انطباق با استانداردهای PDF برای این سند راستی‌آزمایی نشده است."
 passed = "موفق"
 passedCount = "موفق"
+secCompliant = "سند الزامات ارسال SEC EDGAR را برآورده می‌کند"
+secNotCompliant = "سند الزامات ارسال SEC EDGAR را برآورده نمی‌کند"
 
 [getPdfInfo.error]
 partial = "برخی فایل‌ها قابل پردازش نبودند."
@@ -5134,10 +5282,15 @@ unexpected = "خطای غیرمنتظره هنگام استخراج."
 
 [getPdfInfo.other]
 attachments = "پیوست‌ها"
+created = "ایجاد شده: {{date}}"
 embeddedFiles = "فایل‌های جاسازی‌شده"
+fileSizeBytes = "({{size}} بایت)"
 javaScript = "JavaScript"
 layers = "لایه‌ها"
+modified = "تغییر یافته: {{date}}"
 structureTree = "StructureTree"
+unnamedAttachment = "پیوست بدون نام"
+unnamedFile = "فایل بدون نام"
 xmp = "XMPMetadata"
 
 [getPdfInfo.perPage]
@@ -5147,6 +5300,7 @@ images = "تصاویر"
 links = "پیوندها"
 multimedia = "چندرسانه‌ای"
 size = "اندازه"
+unnamedImage = "تصویر"
 xobjects = "تعداد XObject"
 
 [getPdfInfo.report]
@@ -5675,6 +5829,7 @@ invalidEmail = "آدرس ایمیل نامعتبر است"
 invalidInvitation = "دعوت نامعتبر"
 invalidToken = "لینک دعوت نامعتبر است"
 linkExpires = "لینک منقضی می‌شود"
+linkExpiresAt = "انقضای لینک: {{date}} در {{time}}"
 passwordMismatch = "رمزهای عبور هم‌خوانی ندارند"
 passwordPlaceholder = "رمز عبور خود را وارد کنید"
 passwordRequired = "رمز عبور الزامی است"
@@ -5689,6 +5844,7 @@ welcomeTitle = "شما دعوت شده‌اید!"
 addFiles = "افزودن فایل‌ها"
 mobileUpload = "آپلود از موبایل"
 openFromComputer = "باز کردن از رایانه"
+settingUpSession = "در حال تنظیم جلسه شما..."
 uploadFromComputer = "بارگذاری از رایانه"
 
 [language]
@@ -5770,6 +5926,7 @@ sessionExpired = "نشست شما منقضی شده است. لطفاً دوبا�
 signin = "ورود"
 signingIn = "در حال ورود..."
 signInWith = "ورود با"
+signInWithProvider = "ورود با {{provider}}"
 title = "ورود"
 unexpectedError = "خطای غیرمنتظره: {{message}}"
 updatePassword = "به‌روزرسانی گذرواژه"
@@ -5811,6 +5968,9 @@ label = "امضای دیجیتال در فایل ادغام‌شده حذف شو
 description = "امضاهای دیجیتال در زمان ادغام نامعتبر می‌شوند. برای حذف آن‌ها از PDF نهایی این گزینه را علامت بزنید."
 title = "حذف امضای دیجیتال"
 
+[merge.settings]
+title = "تنظیمات"
+
 [merge.sortBy]
 ascending = "صعودی"
 dateModified = "تاریخ ویرایش"
@@ -5819,6 +5979,9 @@ description = "فایل‌ها به ترتیبی که انتخاب می‌شون
 filename = "نام فایل"
 label = "مرتب‌سازی بر اساس"
 sort = "مرتب‌سازی"
+
+[merge.sortFiles]
+title = "مرتب‌سازی فایل‌ها"
 
 [merge.tooltip.header]
 title = "نمای کلی تنظیمات ادغام"
@@ -5867,6 +6030,7 @@ validating = "در حال اعتبارسنجی نشست..."
 
 [mobileSign]
 clear = "Clear"
+drawingArea = "ناحیه ترسیم امضا"
 invalidSession = "Session expired"
 invalidSessionMessage = "This QR code is no longer valid. Open the Sign tool on your computer and scan the new code."
 penSizeLabel = "Pen size"
@@ -5882,6 +6046,7 @@ validating = "Checking session…"
 fromGallery = "From gallery"
 hint = "Photograph a signature on white paper, or choose an existing image."
 invalidType = "Please choose an image file."
+previewAlt = "امضا"
 takePhoto = "Take a photo"
 
 [mobileSign.tab]
@@ -5993,6 +6158,9 @@ profile = "See your basic profile information"
 desc = "پاکسازی اسکن‌ها و تشخیص متن از تصاویر درون یک فایل PDF و بازافزودن آن به عنوان متن."
 tags = "تشخیص،متن،تصویر،اسکن،خواندن،شناسایی،آشکارسازی،قابل ویرایش"
 title = "OCR / مرتب‌سازی اسکن‌ها"
+
+[ocr.advanced]
+title = "پیشرفته"
 
 [ocr.error]
 failed = "عملیات OCR ناموفق بود"
@@ -6118,9 +6286,9 @@ title = "دانلود Stirling برای دسکتاپ"
 description = "با تیم خود همکاری کنید"
 title = "دعوت از اعضای تیم"
 
-[onboarding.checklist.shareAnalytics]
-description = "به بهبود Stirling کمک کنید"
-title = "اشتراک‌گذاری داده‌های استفاده ناشناس"
+[onboarding.checklist.setDefaultApp]
+description = "باز کردن فایل‌های PDF در Stirling PDF"
+title = "Stirling را پیش‌فرض خود کنید"
 
 [onboarding.checklist.takeTour]
 description = "در یک مرور سریع ببینید Stirling چگونه کار می‌کند"
@@ -6188,6 +6356,7 @@ message = "این برنامه اخیراً تغییرات مهمی داشته �
 roleAdmin = "مدیر"
 rolePlaceholder = "نقش خود را تأیید کنید"
 roleUser = "کاربر"
+title = "بررسی امنیتی"
 
 [onboarding.serverLicense]
 freeBody = "مجوز <strong>Open-Core</strong> ما شامل <strong>OAuth SSO</strong> و حداکثر <strong>{{freeTierLimit}}</strong> کاربر به‌صورت رایگان است. برای گسترش بدون وقفه، طرح Stirling Team را پیشنهاد می‌کنیم — <strong>100 کاربر</strong> با 99 دلار در ماه."
@@ -6276,16 +6445,93 @@ title = "فایل‌های هم‌پوشانی"
 text = "پیش‌زمینه هم‌پوشانی را روی صفحه قرار می‌دهد. پس‌زمینه آن را پشت صفحه قرار می‌دهد."
 title = "موقعیت هم‌پوشانی"
 
+[ownership]
+acceptInvite = "آن‌ها می‌توانند حساب بسازند یا وارد شوند، سپس دعوت‌نامه را بپذیرند."
+accessUpdated = "دسترسی مالک آن‌ها آماده است."
+accountLinkDisabled = "این سرور هنوز یک پیوند ابری دارد، اما پیوند حساب غیرفعال است. از اپراتور سرور بخواهید پیوند حساب را فعال کند، سپس این انتقال را از سر بگیرید یا پیوند سرور را در تنظیمات لغو کنید."
+anotherTeam = "از قبل در تیم دیگری هستید؟"
+billing = "اشتراک، کیف پول، روش پرداخت و مجوزهای موجود در جای خود باقی می‌مانند. جزئیات تماس صورت‌حساب به‌طور خودکار تغییر نمی‌کند."
+billingDetails = "جزئیات صورت‌حساب"
+billingUnchanged = "اشتراک و صورت‌حساب در جای خود باقی می‌مانند"
+bothDone = "مالکیت سرور و ابر اکنون هماهنگ هستند."
+cancel = "لغو انتقال"
+check = "بررسی دوباره"
+checkAccount = "بررسی حساب"
+chooseEmail = "حساب آن‌ها را در {{team}} انتخاب کنید، یا برای دعوت یک ایمیل وارد کنید."
+close = "بستن گفتگوی انتقال"
+cloudAccount = "حساب Stirling"
+cloudScopeStyled = "<user>{{name}}</user> مدیریت {{team}}، اعضای آن و صورت‌حساب را بر عهده خواهد داشت."
+cloudTargetChanged = "عضو ابری دیگری را انتخاب کنید. این حساب دیگر واجد شرایط تحویل نیست."
+confirm = "تغییرات دسترسی و مالکیت را درک می‌کنم."
+done = "مالکیت منتقل شد"
+error = "نتوانستیم این مرحله را کامل کنیم. بررسی کنید گیرنده فعال است و سرور متصل است، سپس دوباره بررسی کنید. انتقال در انتظار را می‌توان از اینجا از سر گرفت."
+finish = "پایان انتقال سرور"
+inProgress = "گیرنده دیگری از قبل یک انتقال در انتظار دارد. این گفتگو را ببندید و آن را از کاربران از سر بگیرید."
+instances = "این تیم {{count}} سرور پیوندشده دارد. صورت‌حساب ابری آن‌ها با این تیم باقی می‌ماند؛ مالکان محلی سرورهای دیگر تغییر نمی‌کنند."
+invitationSent = "دعوت‌نامه ارسال شد"
+invite = "ارسال دعوت‌نامه"
+inviteAddress = "دعوت از <account>{{email}}</account> به {{team}}."
+inviteBlocked = "دعوت‌نامه ارسال نشد. صندلی‌های موجود تیم و اینکه گیرنده از قبل اشتراک پولی دارد یا نه را بررسی کنید."
+linkChanged = "پیوند ابری سرور تغییر کرده است. از اپراتور سرور بخواهید پیش از ازسرگیری، پیوند اصلی را بازیابی کند."
+linkedServerCount = "{{count}} سرور پیوندشده"
+linkRevoked = "پیوند ابری این سرور دیگر معتبر نیست. انتقال را لغو کنید، سپس حساب Stirling خود را در تنظیمات دوباره متصل کنید. مالکیت تغییر نخواهد کرد."
+localScope = "آن‌ها مالک این سرور خواهند شد و صورت‌حساب و اتصال‌های ابری را مدیریت خواهند کرد. شما دسترسی مدیر را نگه می‌دارید، اما دسترسی به آن تنظیمات را از دست می‌دهید."
+membershipDetails = "جزئیات عضویت تیم"
+membershipFirst = "پیش از اینکه بتوانید انتقال را تأیید کنید، آن‌ها باید به تیم بپیوندند."
+membershipRequired = "گیرنده باید پیش از انتقال مالکیت به این تیم ابری بپیوندد. از او بخواهید دعوت‌نامه را بپذیرد، سپس دوباره بررسی کنید."
+newOwnerLabel = "مالک جدید"
+newOwnerStyled = "<user>{{name}}</user> اکنون مالک است."
+noEmailMatches = "هیچ عضو مطابقی یافت نشد. برای دعوت، یک ایمیل وارد کنید."
+otherTeam = "اگر به تیم دیگری تعلق دارند، پذیرش ممکن است حسابشان را منتقل کند. ممکن است ابتدا نیاز باشد حساب پولی یا مالکیت تیم دیگری حل‌وفصل شود. ما اشتراک آن‌ها را منتقل نمی‌کنیم یا تیم‌ها را ادغام نمی‌کنیم."
+ownerChanged = "مالکیت ابری پس از شروع این انتقال تغییر کرده است. این انتقال را لغو کنید و با مالک ابری فعلی دوباره شروع کنید."
+ownerRequired = "به‌عنوان مالک فعلی تیم ابری وارد شوید، سپس این مرحله را دوباره امتحان کنید."
+partialError = "مالکیت ابری منتقل شده است. انتقال سرور را به پایان برسانید تا هر دو مالک هماهنگ بمانند."
+partialTargetChanged = "دسترسی کاربر سرور انتخاب‌شده و جزئیات اصلی حساب را بازیابی کنید، سپس انتقال سرور را به پایان برسانید. مالکیت ابری قبلاً منتقل شده است."
+pending = "انتقال مالکیت به {{name}} در انتظار است."
+personalTeam = "تیم‌های شخصی نمی‌توانند مالکیت را منتقل کنند."
+prepareHelp = "گیرنده باید اولین ورود به سرور خود را تکمیل کرده باشد. می‌توانید اینجا دوباره تلاش کنید، یا برای انتخاب شخص دیگری به کاربران برگردید."
+resume = "ازسرگیری انتقال"
+searchEmail = "جستجو یا وارد کردن ایمیل"
+serverAccount = "حساب سرور"
+serverDetails = "جزئیات سرور پیوندشده"
+signIn = "ورود به ابر"
+startFromInstanceBody = "این تیم سرورهای پیوندشده دارد. در سرور self-hosted، تنظیمات → کاربران را باز کنید و نقش گیرنده را به مالک سازمان تغییر دهید. این روند پیش از تکمیل انتقال سرور، مالکیت ابری را منتقل می‌کند."
+startFromInstanceTitle = "از سرور self-hosted خود شروع کنید"
+stayOwner = "تا زمان انتقال، شما مالک می‌مانید."
+targetChanged = "حساب گیرنده تغییر کرده است. دسترسی او را بازیابی کنید یا این انتقال را لغو کنید و دوباره او را انتخاب کنید."
+title = "انتقال مالکیت"
+transfer = "انتقال مالکیت"
+waitingForEmail = "در انتظار پیوستن {{email}} به {{team}}."
+working = "در حال بررسی و به‌روزرسانی مالکیت..."
+yourCloudAccess = "شما به عضو تیم تبدیل می‌شوید و دسترسی مالک را از دست می‌دهید."
+
 [pageEdit]
 deselectAll = "عدم انتخاب"
 selectAll = "انتخاب همه"
 
 [pageEditor]
+dragPreviewAlt = "در حال کشیدن"
+filePosition = "موقعیت {{position}}"
+pageLabel = "صفحه {{page}}"
 title = "ویرایشگر صفحه"
+
+[pageEditor.actions]
+deletePage = "حذف صفحه"
+insertFileAfter = "درج فایل بعد از این"
+moveLeft = "انتقال به چپ"
+moveRight = "انتقال به راست"
+rotateLeft = "چرخش به چپ"
+rotateRight = "چرخش به راست"
+splitAfter = "تقسیم بعد از این"
 
 [pageEditor.emptyState]
 body = "برای ویرایش صفحات، فایل‌ها را اضافه کنید"
 title = "هیچ فایل PDF بارگذاری نشده"
+
+[pageEditor.fileDropdown]
+addFile = "افزودن فایل"
+selectedCount = "{{selected}}/{{total}} فایل انتخاب‌شده"
+untitled = "بدون عنوان"
 
 [pageEditor.toolbar]
 delete = "حذف انتخاب‌شده‌ها"
@@ -6391,6 +6637,11 @@ portrait = "عمودی"
 label = "جهت خواندن:"
 ltr = "چپ به راست"
 rtl = "راست به چپ"
+
+[pageLayout.steps]
+advanced = "تنظیمات پیشرفته"
+layout = "تنظیمات چیدمان"
+marginsBorders = "حاشیه‌ها و کادرها"
 
 [pageLayout.tooltip.header]
 title = "راهنمای چیدمان صفحه"
@@ -6712,6 +6963,7 @@ teamChangeUnavailable = "تغییرات زمان‌بندی‌شده Team بار
 teamPending = "خرید Team شما هنوز در حال پردازش است. کمی بعد این صفحه را تازه‌سازی کنید."
 teamProcessing = "در حال پردازش خرید Team"
 teamScheduled = "تغییر Team شما برای {{date}} زمان‌بندی شده است. ظرفیت فعلی شما تا آن زمان فعال می‌ماند."
+unknownError = "خطای ناشناخته‌ای رخ داد"
 upgradeComplete = "ارتقا کامل شد"
 upgradeCompleteMessage = "اشتراک شما با موفقیت ارتقا یافت. کلید لایسنس موجود به‌روزرسانی شد."
 upgradeSuccess = "پرداخت موفق بود! اشتراک شما ارتقا یافت. لایسنس روی سرورتان به‌روزرسانی شد. به‌زودی یک ایمیل تأیید دریافت می‌کنید."
@@ -6766,6 +7018,14 @@ selectedMonthly = "ماهانه"
 selectedYearly = "سالانه"
 selectMonthly = "انتخاب ماهانه"
 selectYearly = "انتخاب سالانه"
+
+[payment.priceDisplay]
+basePrice = "قیمت پایه"
+perPeriod = "/{{period}}"
+perSeat = "به‌ازای هر صندلی"
+perSeatPeriod = "/صندلی/{{period}}"
+totalSeats_one = "مجموع ({{count}} صندلی)"
+totalSeats_other = "مجموع ({{count}} صندلی)"
 
 [payment.upgradeTeam]
 title = "ارتقا به Team"
@@ -6985,6 +7245,10 @@ save = "ذخیره"
 style = "سبک"
 tapToPlace = "روی جایی از صفحه که متن باید قرار بگیرد ضربه بزنید"
 unlock = "باز کردن قفل"
+
+[pdfTextEditor.pageView]
+pageNumber = "صفحه {{page}}"
+renderFailed = "رندر صفحه ناموفق بود"
 
 [pdfTextEditor.password]
 cancel = "لغو"
@@ -7212,6 +7476,7 @@ title = "خط لوله"
 contact = "تماس با ما"
 current = "طرح فعلی"
 featureComparison = "مقایسه قابلیت‌ها"
+fetchError = "دریافت داده‌های قیمت‌گذاری ناموفق بود"
 from = "از"
 hideComparison = "پنهان کردن مقایسه قابلیت‌ها"
 licensedSeats = "دارای مجوز: {{count}} صندلی"
@@ -7227,6 +7492,8 @@ withServer = "+ پلن سرور"
 [plan.api]
 large = "5,000 اعتبار"
 medium = "1,000 اعتبار"
+perCredit = "{{price}} به‌ازای هر اعتبار"
+perCreditWithDiscount = "{{price}} به‌ازای هر اعتبار • {{discount}}٪ تخفیف"
 small = "500 اعتبار"
 xsmall = "100 اعتبار"
 
@@ -7302,14 +7569,9 @@ upToFiveUsers = "تا ۵ کاربر"
 usageTrackingPrometheus = "رهگیری استفاده و Prometheus"
 usersIncluded = "100 کاربر شامل شده است"
 
-[plan.licenseWarning]
-body = "شما {{total}} کاربر دارید اما سطح رایگان فقط از {{limit}} نفر به‌ازای هر سرور پشتیبانی می‌کند. برای اجرای روان Stirling PDF ارتقا دهید."
-cta = "مشاهده پلن‌ها"
-overLimit = "بیش از {{limit}}"
-title = "حد رایگان خودمیزبان پر شده است"
-
 [plan.period]
 month = "ماه"
+year = "سال"
 
 [plan.pro]
 highlight1 = "استفاده نامحدود از ابزار"
@@ -7435,6 +7697,9 @@ pdfa-1 = "PDF/A-1b"
 pdfa-2b = "PDF/A-2b"
 pdfa-3b = "PDF/A-3b"
 
+[portal.accountLink]
+ownerRequired = "فقط مالک سازمان می‌تواند این سرور را پیوند دهد یا پیوند آن را لغو کند."
+
 [portal.accountLink.card]
 billingNote = "پردازش بدون نظارت از کیف پول سازمان شما هزینه می‌شود."
 connectDescription = "برای استفاده از سهمیه پردازش تیم خود در Stirling Cloud، این سرور را متصل کنید."
@@ -7556,6 +7821,7 @@ identity = "حساب Stirling"
 linkTitle = "پیوند دادن حساب Stirling شما"
 noAuthorizeUrl = "Stirling مکانی برای ادامه برنگرداند. کمی بعد دوباره تلاش کنید."
 startFailed = "برای شروع اتصال، دسترسی به Stirling ممکن نشد. دسترسی شبکه خروجی این سرور را بررسی کنید، سپس دوباره تلاش کنید."
+transferPending = "انتقال مالکیت در انتظار است. برای پایان دادن یا لغو آن به تنظیمات → کاربران بروید، سپس دوباره برای پیوند تلاش کنید."
 
 [portal.accountLink.modal.loginNotConfigured]
 after = "تا پیوند درون‌برنامه‌ای با حساب Stirling میزبانی‌شده فعال شود."
@@ -9441,6 +9707,7 @@ labelId = "شناسه برچسب"
 labelIdHelp = "GUID برچسب، از پرتال Purview. اعمال یک برچسب، فراداده آن را روی PDF می‌نویسد؛ نمی‌تواند رمزگذاری کند، که به کلاینت Microsoft نیاز دارد."
 labelName = "نام برچسب (اختیاری)"
 labelNameHelp = "در کنار شناسه ثبت می‌شود تا افراد و ابزارها بتوانند برچسب را تشخیص دهند."
+labelNamePlaceholder = "محرمانه"
 
 [portal.policies.config.purview.fields.method]
 help = "Purview بین برچسبی که یک خط‌مشی اعمال کرده و برچسبی که یک شخص انتخاب کرده تفاوت قائل می‌شود."
@@ -10425,31 +10692,6 @@ unlimited = "{{used}} · نامحدود"
 [printFile]
 title = "چاپ فایل"
 
-[processingFolders.downloads]
-approve = "پردازش Downloads من"
-cancelSweep = "لغو"
-capped = "شما {{found}} PDF دارید؛ {{limit}} مورد اول اکنون پردازش می‌شوند و بقیه بعداً ادامه می‌یابند."
-close = "انجام شد"
-explain_one = "Stirling می‌تواند {{count}} PDF را که از قبل در پوشه Downloads شماست طبقه‌بندی کند و نتایج را اینجا باز کند."
-explain_other = "Stirling می‌تواند {{count}} PDF را که از قبل در پوشه Downloads شما هستند طبقه‌بندی کند و نتایج را اینجا باز کند."
-failed = "امکان راه‌اندازی آن وجود نداشت. فایل‌های شما تغییر نکرده‌اند."
-finished_one = "{{count}} فایل طبقه‌بندی شد و {{opened}} مورد از آن‌ها اینجا باز شد، آماده برای کار."
-finished_other = "{{count}} فایل طبقه‌بندی شدند و {{opened}} مورد از آن‌ها اینجا باز شدند، آماده برای کار."
-nothingNew_one = "مورد جدیدی برای پردازش نیست - این {{count}} فایل قبلاً پردازش شده است."
-nothingNew_other = "مورد جدیدی برای پردازش نیست - این {{count}} فایل قبلاً پردازش شده‌اند."
-notModified = "فایل‌های شما در Downloads تغییر نمی‌کنند - Stirling آن‌ها را می‌خواند و اینجا باز می‌کند."
-notNow = "الان نه"
-progressCounts = "از {{total}} پردازش شد"
-someFailed_one = "{{count}} پردازش نشد و بدون تغییر باقی ماند."
-someFailed_other = "{{count}} پردازش نشدند و بدون تغییر باقی ماندند."
-stillRunning = "برخی فایل‌ها هنوز در پس‌زمینه در حال پردازش هستند."
-title = "Downloads خود را سازمان‌دهی کنید؟"
-trigger_one = "پردازش {{count}} PDF در Downloads"
-trigger_other = "پردازش {{count}} PDF در Downloads"
-typesFound_one = "{{count}} نوع سند پیدا شد"
-typesFound_other = "{{count}} نوع سند پیدا شد"
-working = "در حال پردازش ..."
-
 [processingFolders.setup]
 addFolder = "افزودن پوشه"
 advancedSteps = "این پوشه از تنظیمات پردازشی استفاده می‌کند که این راهنما نمی‌تواند ویرایش کند. مراحل ذخیره‌شده آن تغییر نکرده‌اند."
@@ -10527,6 +10769,10 @@ label = "Client ID"
 [provider.googledrive.enabled]
 description = "اجازه دهید کاربران مستقیماً از Google Drive فایل وارد کنند"
 label = "فعال‌سازی انتخاب‌گر فایل Google Drive"
+
+[provider.googledrive.errors]
+notConfigured = "Google Drive پیکربندی نشده است"
+pickerFailed = "باز کردن انتخابگر Google Drive ناموفق بود"
 
 [provider.oauth2.generic]
 name = "OAuth2 عمومی"
@@ -10775,6 +11021,7 @@ applyWarning = "⚠️ اعمال دائمی، قابل بازگشت نیست و
 colorLabel = "رنگ پوشاندن"
 controlsTitle = "کنترل‌های سانسور دستی"
 instructions = "متن را انتخاب کنید یا ناحیه‌هایی روی PDF بکشید تا برای سانسور علامت‌گذاری شود."
+notImplemented = "رابط ویرایش دستی پس از پیاده‌سازی در اینجا در دسترس خواهد بود."
 title = "ابزارهای سانسور"
 
 [redact.modeSelector]
@@ -11102,6 +11349,9 @@ failed = "هنگام چرخاندن PDF خطایی رخ داد."
 [rotate.preview]
 title = "پیش‌نمایش چرخش"
 
+[rotate.settings]
+title = "تنظیمات"
+
 [rotate.tooltip.controls]
 text = "برای تنظیم جهت، از دکمه‌های چرخش استفاده کنید. دکمه چپ پادساعت‌گرد و دکمه راست ساعت‌گرد می‌چرخاند. هر کلیک ۹۰ درجه می‌چرخاند."
 title = "کنترل‌ها"
@@ -11119,6 +11369,16 @@ hideSmallLabels = "پنهان کردن برچسب‌های کوچک"
 physicalValues = "فیزیکی"
 scaled = "مقیاس‌شده"
 showAllLabels = "نمایش همه برچسب‌ها"
+
+[ruler.units]
+cm = "سانتی‌متر (cm)"
+ft = "فوت (ft)"
+in = "اینچ (in)"
+km = "کیلومتر (km)"
+m = "متر (m)"
+mi = "مایل (mi)"
+mm = "میلی‌متر (mm)"
+yd = "یارد (yd)"
 
 [sanitize]
 desc = "حذف عناصر بالقوه مضر از فایل‌های PDF."
@@ -11184,6 +11444,7 @@ calibrationPaperDistance = "فاصله اندازه‌گیری‌شده در ص�
 calibrationTitle = "کالیبره‌کردن مقیاس"
 calibrationTooltip = "برای محاسبه خودکار مقیاس، یک فاصله معلوم را اندازه‌گیری کنید"
 customScale = "مقیاس سفارشی"
+customUnit = "{{unit}} (سفارشی)"
 noneSet = "هیچ مقیاس سفارشی تنظیم نشده است"
 presets = "مقیاس‌های از پیش تنظیم‌شده"
 ratio = "نسبت مقیاس"
@@ -11207,6 +11468,9 @@ title = "تصاویر استخراج‌شده"
 
 [scannerImageSplit.error]
 failed = "هنگام استخراج اسکن‌های تصویر خطایی رخ داد."
+
+[scannerImageSplit.settings]
+title = "تنظیمات"
 
 [scannerImageSplit.tooltip]
 headsUp = "توجه"
@@ -11274,6 +11538,9 @@ general = "عمومی"
 limits = "محدودیت‌ها و عملکرد"
 models = "مدل‌ها و ارائه‌دهندگان"
 title = "هوش مصنوعی"
+
+[settings.billing]
+title = "صورت‌حساب"
 
 [settings.configuration]
 advanced = "پیشرفته"
@@ -11348,8 +11615,6 @@ defaultPdfEditor = "ویرایشگر پیش‌فرض PDF"
 defaultPdfEditorActive = "Stirling PDF ویرایشگر پیش‌فرض PDF شماست"
 defaultPdfEditorChecking = "در حال بررسی..."
 defaultPdfEditorInactive = "برنامه دیگری به‌عنوان پیش‌فرض تنظیم شده است"
-defaultPdfEditorRemind = "یادآوری برای تنظیم به‌عنوان پیش‌فرض"
-defaultPdfEditorRemindDescription = "وقتی Stirling PDF برنامه پیش‌فرض PDF شما نیست، یک بنر نمایش داده شود."
 defaultPdfEditorSet = "از پیش پیش‌فرض است"
 defaultStartupView = "نمای پیش‌فرض هنگام اجرا"
 defaultStartupViewDescription = "انتخاب کنید هنگام شروع برنامه کدام زبانه در ستون چپ فعال باشد"
@@ -11618,6 +11883,15 @@ people = "افراد"
 teams = "تیم‌ها"
 title = "فضای کاری"
 
+[setup.error]
+loginIncomplete = "تکمیل ورود ناموفق بود"
+noSaasServer = "هیچ سرور SaaS پیکربندی نشده است"
+noServer = "هیچ سروری پیکربندی نشده است"
+saasLoginFailed = "ورود SaaS ناموفق بود"
+saasLoginIncomplete = "تکمیل ورود SaaS ناموفق بود"
+selfHostedLoginFailed = "ورود self-hosted ناموفق بود"
+signupIncomplete = "تکمیل ثبت‌نام ناموفق بود"
+
 [setup.login]
 connectingTo = "در حال اتصال به:"
 oauthPending = "در حال باز کردن مرورگر برای احراز هویت..."
@@ -11661,6 +11935,7 @@ configFetchError = "دریافت پیکربندی سرور ناموفق بود: 
 emptyUrl = "لطفاً URL سرور را وارد کنید"
 invalidUrl = "قالب URL نامعتبر است. لطفاً یک URL معتبر مانند https://your-server.com وارد کنید"
 testFailed = "آزمون اتصال ناموفق بود"
+unknown = "خطای ناشناخته"
 unreachable = "اتصال به سرور ممکن نشد"
 
 [setup.server.error.securityDisabled]
@@ -11769,6 +12044,7 @@ canvas = "پس از رسم امضای خود در بوم، پنجره را بب�
 image = "پس از بارگذاری تصویر امضا در بالا، هرجای PDF کلیک کنید تا آن را قرار دهید."
 noSignature = "برای فعال شدن ابزارهای جانمایی، یک امضا بسازید."
 paused = "جانمایی مکث شد"
+placeAnnotation = "برای قرار دادن یادداشت خود، هر جایی روی PDF کلیک کنید."
 resumeHint = "برای کلیک و افزودن امضا، جانمایی را از سر بگیرید."
 saved = "یک امضای ذخیره‌شده را انتخاب کنید، سپس برای جانمایی روی PDF کلیک کنید."
 text = "پس از وارد کردن نام خود در بالا، هرجای PDF کلیک کنید تا امضای شما قرار گیرد."
@@ -11922,7 +12198,9 @@ signUpWith = "Sign up with"
 skip = "Skip"
 subtitle = "به Stirling PDF بپیوندید و شروع کنید"
 title = "ایجاد حساب"
+unableToAccessTool = "دسترسی به ابزار ممکن نیست: {{error}}"
 unexpectedError = "خطای غیرمنتظره: {{message}}"
+unknownError = "خطای ناشناخته"
 
 [sizes]
 large = "بزرگ"
@@ -11995,6 +12273,14 @@ rightToLeft = "تقسیم از راست به چپ"
 [split.poster.pageSize]
 description = "اندازه صفحات خروجی برای چاپ"
 label = "اندازه صفحه هدف"
+
+[split.poster.pageSize.options]
+a3 = "A3 (297 × 420 mm)"
+a4 = "A4 (210 × 297 mm)"
+a5 = "A5 (148 × 210 mm)"
+legal = "Legal (8.5 × 14 in)"
+letter = "Letter (8.5 × 11 in)"
+tabloid = "Tabloid (11 × 17 in)"
 
 [split.poster.xFactor]
 description = "تعداد ستون‌ها برای تقسیم هر صفحه"
@@ -12267,6 +12553,7 @@ confirmCancelInvite = "آیا از لغو این دعوت‌نامه مطمئن 
 confirmLeave = "آیا مطمئن هستید می‌خواهید این تیم را ترک کنید؟"
 confirmLeaveLeader = "به‌عنوان رهبر تیم، با ترک کردن از تیم حذف خواهید شد. مطمئن هستید؟"
 confirmRemove = "آیا از حذف این عضو مطمئن هستید؟"
+currentUnavailable = "نتوانستیم تیم فعلی شما را شناسایی کنیم. دوباره تلاش کنید، یا اگر این مشکل ادامه داشت با پشتیبانی تماس بگیرید."
 editName = "ویرایش نام تیم"
 inviteCancelled = "دعوت‌نامه لغو شد"
 inviteError = "ارسال دعوت‌نامه ناموفق بود"
@@ -12292,10 +12579,8 @@ renameCancel = "لغو تغییر نام"
 renameError = "تغییر نام تیم ناموفق بود"
 renameSubmit = "ذخیره نام تیم"
 renameSuccess = "نام تیم با موفقیت تغییر کرد"
-transferBody = "{{email}} مالک تیم شود؟ او عضویت تیم و تنظیمات صورت‌حساب سازمان را کنترل خواهد کرد. شما عضو خواهید شد. اشتراک و کیف پول تیم با تیم باقی می‌ماند."
 transferError = "امکان انتقال مالکیت وجود نداشت. تیم را تازه‌سازی کنید و دوباره تلاش کنید."
 transferSuccess = "مالکیت تیم منتقل شد. نقش شما اکنون عضو است."
-transferTitle = "انتقال مالکیت تیم"
 
 [team.invitationBanner]
 acceptButton = "پذیرفتن"
@@ -12396,6 +12681,10 @@ WORD = "یک سند Word"
 XML = "یک فایل XML"
 XPS = "یک سند XPS"
 ZIP = "یک آرشیو ZIP"
+
+[toolLoading]
+generic = "در حال بارگیری ابزار..."
+named = "در حال بارگیری {{toolName}}..."
 
 [toolPanel]
 alpha = "آلفا"
@@ -12501,6 +12790,8 @@ stable = "پایدار"
 updateAvailable = "به‌روزرسانی موجود است"
 urgentUpdateAvailable = "به‌روزرسانی فوری"
 version = "نسخه"
+versionCount_one = "{{count}} نسخه"
+versionCount_other = "{{count}} نسخه"
 versionHistory = "تاریخچهٔ نسخه‌ها"
 viewGuide = "مشاهده راهنما"
 whatsNewIn = "موارد جدید در"
@@ -12528,6 +12819,7 @@ title = "URL به PDF"
 aboutUsageAnalytics = "درباره تحلیل استفاده"
 configureSettings = "پیکربندی تنظیمات تحلیل"
 error = "خطا در بارگذاری آمار استفاده"
+loadFailed = "بارگیری آمار مصرف ناموفق بود"
 noData = "داده‌ای در دسترس نیست"
 noDataMessage = "در حال حاضر هیچ آمار استفاده‌ای در دسترس نیست."
 usageAnalyticsExplanation = "تحلیل استفاده، درخواست‌های endpoint و الگوهای استفاده از ابزارها را ردیابی می‌کند. با ترکیب داشبورد لاگ ممیزی، دید کاملی از فعالیت سیستم، عملکرد و رویدادهای امنیتی خواهید داشت."
@@ -12591,7 +12883,6 @@ removeTeam = "حذف از تیم"
 rename = "تغییر نام تیم"
 resetPw = "بازنشانی رمز عبور"
 suspend = "تعلیق"
-transferOwnership = "انتقال مالکیت"
 unlock = "باز کردن قفل حساب"
 
 [users.activity]
@@ -12631,8 +12922,6 @@ disableMfaTitle = "بازنشانی MFA"
 removeBody = "{{name}} برای همیشه از سازمان حذف شود؟ این کار قابل بازگشت نیست."
 removeTeamBody = "{{name}} از تیم حذف شود؟ حساب کاربری خود را حفظ می‌کنند اما دسترسی به منابع این تیم را از دست می‌دهند."
 removeTitle = "حذف عضو"
-transferOwnershipBody = "{{name}} مالک سازمان شود؟ او به مدیر تبدیل خواهد شد. شما مدیر می‌مانید اما مالکیت را از دست می‌دهید. فقط مالک جدید یا اپراتور سرور می‌تواند آن را برگرداند."
-transferOwnershipTitle = "انتقال مالکیت سازمان"
 
 [users.empty]
 description = "تیم خود را دعوت کنید تا همکاری را شروع کنید."
@@ -12825,6 +13114,7 @@ signaturesInvalid = "{{count}} نامعتبر"
 signaturesUnverified_one = "{{count}} نیاز به بازبینی دارد"
 signaturesUnverified_other = "{{count}} نیاز به بازبینی دارند"
 signaturesValid = "{{count}} کاملاً معتبر"
+thumbnailAlt = "تصویر کوچک {{fileName}}"
 title = "گزارش اعتبارسنجی امضا"
 
 [validateSignature.report.fields]
@@ -12862,6 +13152,7 @@ lastPage = "صفحه آخر"
 loadingEngine = "در حال بارگذاری موتور PDF..."
 moreOptions = "بیشتر"
 nextPage = "صفحه بعد"
+noPdfProvided = "هیچ PDF ارائه نشده است"
 onlyPdfSupported = "نمایشگر فقط فایل‌های PDF را پشتیبانی می‌کند. به نظر می‌رسد این فایل قالب متفاوتی دارد."
 pageNavigation = "پیمایش صفحه"
 previousPage = "صفحه قبل"
@@ -12899,8 +13190,17 @@ collapseAll = "جمع کردن همه نشانک‌ها"
 editorOnly = "نشانک‌های این سند فقط در ویرایشگر قابل ویرایش هستند."
 empty = "No bookmarks in this document"
 expandAll = "باز کردن همه نشانک‌ها"
+loadFailed = "بارگیری نشانک‌ها ناموفق بود"
+loading = "در حال بارگیری نشانک‌ها..."
+noDocument = "برای مشاهده نشانک‌های آن، یک PDF باز کنید."
+noSearchResults = "هیچ نشانکی با جستجوی شما مطابقت ندارد"
+openEditor = "نیاز به مرتب‌سازی مجدد یا تو در تو کردن دارید؟ ویرایشگر نشانک را باز کنید"
+pageLabel = "صفحه"
+pageNumber = "صفحه {{page}}"
+saveFailed = "ذخیره نشانک ناموفق بود"
 searchPlaceholder = "جستجوی نشانک‌ها"
 title = "Bookmarks"
+untitled = "بدون عنوان"
 
 [viewer.comments]
 addComment = "افزودن نظر"
@@ -12948,16 +13248,26 @@ unsavedDesc = "تغییرات ذخیره‌نشده دارید"
 
 [viewer.layers]
 closeSidebar = "بستن نوار کناری لایه‌ها"
+empty = "این سند هیچ لایه‌ای ندارد."
 hideAll = "پنهان کردن همه لایه‌ها"
+loadFailed = "بارگیری لایه‌ها ناموفق بود."
+loading = "در حال بارگیری لایه‌ها..."
+noDocument = "برای مشاهده لایه‌های آن، یک PDF باز کنید."
+readFailed = "خواندن لایه‌های PDF ناموفق بود"
 showAll = "نمایش همه لایه‌ها"
 title = "Layers"
 
 [viewer.link]
 delete = "حذف لینک"
+goTo = "رفتن به {{label}}"
+open = "باز کردن لینک"
+openAria = "باز کردن لینک"
+page = "صفحه {{page}}"
 
 [viewer.nonPdf]
 columnDefault = "ستون {{index}}"
 convertToPdf = "تبدیل به PDF"
+copied = "کپی شد"
 csvStats = "{{rows}} ردیف · {{columns}} ستون · {{size}}"
 emptyFile = "فایل خالی"
 htmlHidePreview = "پنهان کردن پیش‌نمایش"
@@ -12968,6 +13278,8 @@ htmlShowPreview = "با این حال پیش‌نمایش را نشان بده"
 invalidJson = "JSON نامعتبر — محتوای خام نمایش داده می‌شود"
 lineNumbers = "شماره خطوط"
 loading = "در حال بارگذاری..."
+noFile = "هیچ فایلی بارگیری نشده است"
+previewUnavailable = "پیش‌نمایش برای این نوع فایل در دسترس نیست"
 renderMarkdown = "رندر Markdown"
 sortedBy = "مرتب‌شده بر اساس: {{column}}"
 textStats = "{{lines}} خط · {{size}}"
@@ -12994,11 +13306,28 @@ next = "نتیجهٔ بعدی"
 previous = "نتیجهٔ قبلی"
 resultsOf = "از {{total}}"
 
+[viewer.sidebar]
+close = "بستن نوار کناری"
+searchPlaceholder = "جستجو..."
+
 [viewer.signature]
 delete = "حذف امضا"
+previewAlt = "پیش‌نمایش امضا"
+
+[viewer.signatureField]
+badge = "امضا"
+fieldTitle = "فیلد امضا: {{name}}"
+signed = "امضاشده"
+signedWithReason = "امضاشده: {{reason}}"
+unsignedFieldTitle = "فیلد امضای امضانشده: {{name}}"
+withTime = "{{label}} ({{time}})"
 
 [viewer.thumbnails]
 closeSidebar = "بستن نوار کناری بندانگشتی‌ها"
+failed = "ناموفق"
+pageNumber = "صفحه {{page}}"
+thumbnailAlt = "تصویر کوچک صفحه {{page}}"
+title = "صفحات"
 
 [viewPdf]
 tags = "مشاهده،خواندن،حاشیه‌نویسی،متن،تصویر"
@@ -13006,169 +13335,6 @@ title = "نمایش/ویرایش PDF"
 
 [warning]
 tooltipTitle = "هشدار"
-
-[watchedFolders]
-alreadyInFolder = "Already in this folder"
-defaultFolderWarning = "This is a default folder and will be recreated on next reload."
-deleteConfirmBody = "This will remove the folder and its run history. Files already downloaded are not affected."
-deleteConfirmTitle = "Delete folder?"
-folderNotFound = "Folder not found"
-newFolder = "New folder"
-noFolders = "No watched folders yet"
-sidebarTitle = "Watched Folders"
-title = "Watched Folders"
-
-[watchedFolders.actions]
-back = "Back"
-collapse = "Collapse"
-dismiss = "Dismiss"
-download = "Download"
-downloadInput = "Download input"
-downloadOutput = "Download output"
-expand = "Expand"
-retry = "Retry"
-
-[watchedFolders.card]
-delete = "Delete folder"
-edit = "Edit folder"
-
-[watchedFolders.home]
-addAnother = "Add another Watched Folder"
-addAnotherDesc = "Automatically process files with a new pipeline"
-create = "Create your first Watched Folder"
-deleteFolder = "Delete folder"
-editFolder = "Edit folder"
-empty = "No watched folders yet"
-emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
-emptyTitle = "Automate your PDF workflows"
-file = "file"
-files = "files"
-pause = "Pause"
-resume = "Resume"
-
-[watchedFolders.howItWorks]
-step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
-step1Title = "Drop files"
-step2Desc = "Your configured tools process each file automatically"
-step2Title = "Pipeline runs"
-step3Desc = "Download processed files from inside the folder"
-step3Title = "Output ready"
-title = "How Watched Folders work"
-
-[watchedFolders.modal]
-advanced = "Advanced"
-automation = "Automation"
-automationNameFallback = "Watched Folder automation"
-automationRequired = "Add at least one configured step before saving."
-autoNumber = "Auto-number"
-autoNumberExample = "e.g. document.pdf → document (1).pdf"
-autoScanHelp = "New PDF files in this folder are processed automatically every 10 seconds."
-changeFolder = "Change"
-chooseFolder = "Choose"
-clearFolder = "Clear"
-color = "Accent color"
-createFolder = "Create Folder"
-createTitle = "New Watched Folder"
-editTitle = "Edit Watched Folder"
-inputFolder = "Input folder"
-inputFolderNotChosen = "No folder chosen — required for auto-scan"
-inputSource = "Input source"
-inputSourceBrowser = "Browser — drop files here"
-inputSourceLocal = "Local folder (auto-scan)"
-inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
-localOutputFolder = "Local output folder"
-maxRetries = "Max retries"
-name = "Folder name"
-namePlaceholder = "My Watched Folder"
-nameRequired = "Folder name is required"
-nameTooLong = "Folder name must be 50 characters or less"
-outputFolderNotSet = "Not set — outputs stay in app"
-outputFolderUnsupported = "Not supported in this browser"
-outputModeNewDesc = "Output is saved as a new separate file"
-outputModeVersion = "Replace original?"
-outputModeVersionDesc = "Output becomes a new version of the input file rather than a separate file"
-outputName = "Output filename prefix"
-outputNamePrefix = "Filename prefix"
-outputNameSuffix = "Suffix"
-positionPrefix = "Prefix"
-positionSuffix = "Suffix"
-replaceOriginal = "Replace original file"
-retryDelay = "Delay (minutes)"
-saveChanges = "Save Changes"
-saveFailed = "Failed to save folder. Please try again."
-sectionFolder = "Folder"
-sectionSourceOutput = "Source & Output"
-sectionSteps = "Steps"
-
-[watchedFolders.status]
-active = "Active"
-done = "Done"
-paused = "Paused"
-processing = "Processing"
-
-[watchedFolders.time]
-daysAgo = "{{count}}d ago"
-hoursAgo = "{{count}}h ago"
-justNow = "just now"
-minutesAgo = "{{count}}m ago"
-
-[watchedFolders.workbench]
-activity = "Activity"
-addFiles = "Add files"
-allTime = "All time"
-cancel = "Cancel"
-chartTooltipComplete = "{{count}} complete"
-chartTooltipFailed = "{{count}} failed"
-clearSelection = "Clear selection"
-countProcessing = "{{count}} processing"
-countQueued = "{{count}} queued"
-countSelected = "{{count}} selected"
-dataSaved = "Saved"
-dayRunning = "day running"
-daysRunning = "days running"
-delete = "Delete"
-deleteConfirmBody = "Remove notifications only clears the activity log. Delete outputs also removes the processed files from storage. Your original input files are never touched."
-deleteOutputs = "Delete outputs"
-directionIn = "in"
-directionOut = "out"
-dropToProcess = "Drop to process"
-export = "Export"
-exportSeparately = "Export separately"
-exportZip = "Export zip"
-failed = "Failed"
-filesProcessedOverTime = "Files processed over time"
-filterAll = "All"
-filterPending = "Pending"
-inputs = "Inputs"
-inputSize = "Input size"
-legendComplete = "Complete"
-noActivity = "No activity yet — drop a PDF to start"
-noActivityMatch = "No matching activity"
-noInputFolder = "No input folder — edit to configure"
-outputs = "Outputs"
-pause = "Pause"
-preview = "Preview"
-previewInput = "Preview input"
-previewLoadFailed = "Could not load file preview."
-previewOutput = "Preview output"
-queued = "Queued"
-queuedWaiting = "Queued — waiting to run"
-removeEntries = "Remove {{count}} entries"
-removeEntry = "Remove entry"
-removeNotificationsOnly = "Remove notifications only"
-resume = "Resume"
-retryAll = "Retry all"
-retryIn = "retry in {{count}}m"
-retryingSoon = "retrying…"
-retryMixedConfirm = "Some selected files have already completed and will be skipped. Only failed files will be retried. Continue?"
-running = "Running"
-search = "Search…"
-selectAll = "Select all {{count}}"
-sortNameAsc = "A → Z"
-sortNameDesc = "Z → A"
-sortNewest = "Newest"
-sortOldest = "Oldest"
-watching = "Watching: {{name}}"
 
 [watermark]
 desc = "افزودن واترمارک متنی یا تصویری به فایل‌های PDF"
@@ -13371,6 +13537,10 @@ certTypeServer = "گواهی سرور (درصورت موجود بودن)"
 completedDeclined = "این سند را رد کرده‌اید."
 completedSigned = "این سند را امضا کرده‌اید."
 decline = "رد کردن"
+declineConfirm = "آیا مطمئن هستید که می‌خواهید امضای این سند را رد کنید؟"
+declineFailed = "رد کردن ناموفق بود: {{error}}"
+declineSuccess = "شما این درخواست امضا را رد کرده‌اید."
+defaultReason = "امضای سند"
 downloadDocument = "دانلود سند"
 dueDate = "تاریخ سررسید: {{date}}"
 errorTitle = "خطا"
@@ -13381,6 +13551,7 @@ locationPlaceholder = "مثلاً: San Francisco, CA"
 pageNumber = "شمارهٔ صفحه (اختیاری)"
 reason = "دلیل"
 reasonPlaceholder = "مثلاً: تأیید سند"
+selectCertificateFile = "لطفاً یک فایل گواهی انتخاب کنید"
 sessionNotFound = "جلسه پیدا نشد یا دسترسی رد شد."
 signDocument = "امضای سند"
 statusDeclined = "رد شده"
@@ -13388,7 +13559,9 @@ statusNotified = "اطلاع‌رسانی‌شده"
 statusPending = "در انتظار"
 statusSigned = "امضا شده"
 statusViewed = "مشاهده شده"
+submitFailed = "ارسال امضا ناموفق بود: {{error}}"
 submitSignature = "ارسال امضا"
+submitSuccess = "امضا با موفقیت ارسال شد!"
 
 [workspace]
 title = "فضای کاری"
