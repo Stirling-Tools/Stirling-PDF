@@ -32,7 +32,7 @@ import re
 import sys
 from pathlib import Path
 
-LOCALES = Path(__file__).resolve().parent.parent / "frontend/editor/public/locales"
+LOCALES = Path(__file__).resolve().parent.parent / "frontend/public/locales"
 EN_US = LOCALES / "en-US/translation.toml"
 EN_GB = LOCALES / "en-GB/translation.toml"
 

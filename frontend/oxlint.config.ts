@@ -4,9 +4,9 @@ import { defineConfig, type OxlintGlobals } from "oxlint";
 // import scope. `no-restricted-imports` is repeated per scope on purpose:
 // oxlint REPLACES (does not merge) a rule across matching overrides, so each
 // scope must restate the full set of bans that apply to it.
-const APP_SOURCE = "editor/src/**/*.{js,mjs,jsx,ts,tsx}";
-const DESKTOP_SOURCE = "editor/src/desktop/**/*.{js,mjs,jsx,ts,tsx}";
-const CLOUD_SOURCE = "editor/src/cloud/**/*.{js,mjs,jsx,ts,tsx}";
+const APP_SOURCE = "src/**/*.{js,mjs,jsx,ts,tsx}";
+const DESKTOP_SOURCE = "src/editor/desktop/**/*.{js,mjs,jsx,ts,tsx}";
+const CLOUD_SOURCE = "src/editor/cloud/**/*.{js,mjs,jsx,ts,tsx}";
 
 // Shared import-ban building blocks -----------------------------------------
 
@@ -22,7 +22,7 @@ const aliasOverSrc = {
 const noTauriOutsideDesktop = {
   regex: "^@tauri-apps/",
   message:
-    "Tauri APIs are desktop-only. Review frontend/editor/DeveloperGuide.md for structure advice.",
+    "Tauri APIs are desktop-only. Review frontend/DeveloperGuide.md for structure advice.",
 };
 const cloudNoTauri = {
   regex: "^@tauri-apps/",
@@ -90,11 +90,11 @@ export default defineConfig({
     "playwright-report",
     "storybook-static",
     "test-results",
-    "editor/dist",
-    "editor/public",
-    "editor/src-tauri",
-    "editor/playwright-report",
-    "editor/test-results",
+    "dist",
+    "public",
+    "src-tauri",
+    "playwright-report",
+    "test-results",
   ],
   rules: {
     "constructor-super": "error",
@@ -242,8 +242,8 @@ export default defineConfig({
       // Node globals for build scripts, config files, and Storybook config.
       files: [
         "scripts/**/*.{js,ts,mjs,mts}",
-        "editor/scripts/**/*.{js,ts,mjs,mts}",
-        "editor/*.config.{js,ts,mjs}",
+        "scripts/**/*.{js,ts,mjs,mts}",
+        "*.config.{js,ts,mjs}",
         "*.config.{js,ts,mjs}",
         ".storybook/*.{js,ts,mjs,mts,tsx}",
       ],
@@ -349,13 +349,13 @@ export default defineConfig({
       // rules. Comes after the scoped bans above so it wins for these files;
       // desktop/cloud keep theirs.
       files: [
-        "editor/src/core/ui/**/*.{js,mjs,jsx,ts,tsx}",
-        "editor/src/prototypes/**/*.{js,mjs,jsx,ts,tsx}",
+        "src/editor/core/ui/**/*.{js,mjs,jsx,ts,tsx}",
+        "src/editor/prototypes/**/*.{js,mjs,jsx,ts,tsx}",
         "**/*.stories.{js,mjs,jsx,ts,tsx}",
         "**/*.test.{js,mjs,jsx,ts,tsx}",
-        "editor/src/core/components/shared/FileSelectorPicker.tsx",
-        "editor/src/core/components/filesPage/FileManagerView.tsx",
-        "editor/src/core/pages/HomePage.tsx",
+        "src/editor/core/components/shared/FileSelectorPicker.tsx",
+        "src/editor/core/components/filesPage/FileManagerView.tsx",
+        "src/editor/core/pages/HomePage.tsx",
       ],
       excludeFiles: [DESKTOP_SOURCE, CLOUD_SOURCE],
       rules: {
@@ -372,8 +372,8 @@ export default defineConfig({
       // are exempt from the shared-DS Mantine import ban; being desktop they also
       // keep the Tauri allowance.
       files: [
-        "editor/src/desktop/**/*.test.{js,mjs,jsx,ts,tsx}",
-        "editor/src/desktop/**/*.stories.{js,mjs,jsx,ts,tsx}",
+        "src/editor/desktop/**/*.test.{js,mjs,jsx,ts,tsx}",
+        "src/editor/desktop/**/*.stories.{js,mjs,jsx,ts,tsx}",
       ],
       rules: {
         "no-restricted-imports": [
@@ -388,7 +388,7 @@ export default defineConfig({
       // A provider stack nests one context per level in dependency order, so its
       // depth counts providers rather than measuring how hard the tree is to read.
       files: [
-        "editor/src/core/components/AppProviders.tsx",
+        "src/editor/core/components/AppProviders.tsx",
         ".storybook/preview.tsx",
       ],
       rules: {
@@ -399,7 +399,7 @@ export default defineConfig({
       // Circular-import detection across the editor app source (the import
       // plugin resolves @app/* and the other tsconfig path aliases). Replaces
       // the previous dpdm pass.
-      files: ["editor/src/**/*.{ts,tsx}"],
+      files: ["src/**/*.{ts,tsx}"],
       rules: {
         "import/no-cycle": "error",
       },

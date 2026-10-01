@@ -57,7 +57,7 @@ public class SamplePdfFontDumpTest {
             Paths.get(System.getProperty("user.dir"))
                     .getParent()
                     .getParent()
-                    .resolve("frontend/editor/public/samples/Sample.pdf");
+                    .resolve("frontend/public/samples/Sample.pdf");
 
     @Test
     public void dumpFonts() throws IOException {

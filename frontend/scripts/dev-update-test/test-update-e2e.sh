@@ -28,7 +28,7 @@ done
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 FRONTEND_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 REPO_ROOT="$(cd "$FRONTEND_DIR/.." && pwd)"
-TAURI_DIR="$FRONTEND_DIR/editor/src-tauri"
+TAURI_DIR="$FRONTEND_DIR/src-tauri"
 OUTPUT_DIR="$SCRIPT_DIR/.update-dist"
 KEYS_DIR="$SCRIPT_DIR/.keys"
 PORT=8090
