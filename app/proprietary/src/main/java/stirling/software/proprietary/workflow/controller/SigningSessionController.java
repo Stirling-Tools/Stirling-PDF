@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.security.Principal;
 import java.util.List;
 
-import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -206,25 +205,6 @@ public class SigningSessionController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body("Cannot remove participant: " + e.getMessage());
         }
-    }
-
-    @Operation(summary = "Preview the first page of a signing session for its owner or participant")
-    @GetMapping(
-            value = "/cert-sign/sessions/{sessionId}/thumbnail",
-            produces = MediaType.IMAGE_PNG_VALUE)
-    public ResponseEntity<byte[]> getSessionThumbnail(
-            @PathVariable("sessionId") @NotBlank String sessionId, Principal principal)
-            throws IOException {
-        workflowSessionService.ensureSigningEnabled();
-        if (principal == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        byte[] thumbnail =
-                workflowSessionService.getSessionThumbnail(sessionId, getCurrentUser(principal));
-        return ResponseEntity.ok()
-                .contentType(MediaType.IMAGE_PNG)
-                .cacheControl(CacheControl.noStore())
-                .body(thumbnail);
     }
 
     @Operation(summary = "Get session PDF for participant view")

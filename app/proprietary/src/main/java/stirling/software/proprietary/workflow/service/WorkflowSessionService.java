@@ -18,10 +18,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import javax.imageio.ImageIO;
-
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.rendering.PDFRenderer;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.openssl.PEMDecryptorProvider;
 import org.bouncycastle.openssl.PEMEncryptedKeyPair;
@@ -857,52 +854,6 @@ public class WorkflowSessionService {
             log.error("Failed to retrieve document for session {}", sessionId, e);
             throw new ResponseStatusException(
                     HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve document");
-        }
-    }
-
-    /**
-     * Renders the first page at at most 240 pixels per side for an owner or unexpired participant.
-     * Finalized sessions preview the published PDF. Access and a 100 MB preview limit are checked
-     * before reading stored bytes; larger files remain accessible through the document endpoints.
-     */
-    @Transactional(readOnly = true)
-    public byte[] getSessionThumbnail(String sessionId, User user) throws IOException {
-        WorkflowSession session = getSession(sessionId);
-        if (!session.getOwner().equals(user)) {
-            requireUnexpiredAccess(getParticipantForUser(session, user));
-        }
-        StoredFile source =
-                session.isFinalized() && session.getProcessedFile() != null
-                        ? session.getProcessedFile()
-                        : session.getOriginalFile();
-        if (source == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Document not available");
-        }
-        if (source.getSizeBytes() > 100L * 1024 * 1024) {
-            throw new ResponseStatusException(
-                    HttpStatus.PAYLOAD_TOO_LARGE, "Document is too large for a thumbnail");
-        }
-        try (PDDocument document =
-                pdfDocumentFactory.load(readBlob(source.getStorageKey()), true)) {
-            if (document.getNumberOfPages() == 0) {
-                throw new IOException("Document has no previewable pages");
-            }
-            var crop = document.getPage(0).getCropBox();
-            float longestSide = Math.max(crop.getWidth(), crop.getHeight());
-            if (!Float.isFinite(longestSide) || longestSide <= 0) {
-                throw new IOException("Invalid page dimensions");
-            }
-            PDFRenderer renderer = new PDFRenderer(document);
-            renderer.setSubsamplingAllowed(true);
-            var image = renderer.renderImage(0, 240f / longestSide);
-            try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
-                if (!ImageIO.write(image, "png", output)) {
-                    throw new IOException("PNG encoder unavailable");
-                }
-                return output.toByteArray();
-            } finally {
-                image.flush();
-            }
         }
     }
 

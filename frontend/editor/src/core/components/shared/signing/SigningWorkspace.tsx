@@ -1,28 +1,22 @@
 import { useNavigate } from "react-router-dom";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
-import { Alert, Center, Loader, Select, TextInput } from "@mantine/core";
+import { Alert, Center, Loader } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
 import { Icon } from "@app/ui/Icon";
-import { SegmentedControl } from "@app/ui/SegmentedControl";
+import { SigningSessionsTable } from "@app/components/shared/signing/SigningSessionsTable";
 import { useGroupSigningEnabled } from "@app/hooks/useGroupSigningEnabled";
 import { useSigningSessionController } from "@app/hooks/signing/useSigningSessionController";
 import { useAllFiles } from "@app/contexts/FileContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useNavigationGuard } from "@app/contexts/NavigationContext";
 import { SigningDocumentPicker } from "@app/components/shared/signing/SigningDocumentPicker";
-import { SigningSessionThumbnail } from "@app/components/shared/signing/SigningSessionThumbnail";
 import { useSigningOverlay } from "@app/contexts/SigningOverlayContext";
 import { CreateSessionFlow } from "@app/components/shared/signing/CreateSessionFlow";
 import { SessionDetailPanel } from "@app/components/tools/certSign/panels/SessionDetailPanel";
 import SignRequestPanel from "@app/components/tools/certSign/panels/SignRequestPanel";
-import {
-  collectSigningItems,
-  needsSignature,
-  type SigningItem,
-} from "@app/utils/signingItems";
-import { signingStatus } from "@app/utils/signingStatus";
+import { collectSigningItems, type SigningItem } from "@app/utils/signingItems";
 import {
   requestSigningIntent,
   usePendingSigningIntent,
@@ -53,9 +47,7 @@ export default function SigningWorkspace() {
   const [showCreate, setShowCreate] = useState(false);
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
   const [dueDate, setDueDate] = useState("");
-  const [tab, setTab] = useState("active");
-  const [scope, setScope] = useState<string | null>("all");
-  const [search, setSearch] = useState("");
+  const [listRevision, setListRevision] = useState(0);
   const [opening, setOpening] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const pendingIntent = usePendingSigningIntent();
@@ -105,28 +97,6 @@ export default function SigningWorkspace() {
     controller.backToList,
   ]);
 
-  const filtered = items.filter((item) => {
-    if (Boolean(item.finalized) !== (tab === "completed")) return false;
-    if (scope === "mine" && item.kind !== "session") return false;
-    if (
-      scope === "signed" &&
-      (item.kind !== "request" || item.myStatus !== "SIGNED")
-    )
-      return false;
-    if (
-      scope === "declined" &&
-      (item.kind !== "request" || item.myStatus !== "DECLINED")
-    )
-      return false;
-    if (scope === "needsMe" && !needsSignature(item)) return false;
-    if (
-      scope === "overdue" &&
-      (!item.dueDate || new Date(item.dueDate).getTime() >= Date.now())
-    )
-      return false;
-    const text = `${item.documentName} ${item.kind === "request" ? item.ownerUsername : ""}`;
-    return text.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase());
-  });
   const detail = controller.view !== "list" && !showCreate;
   const currentLocation = showCreate
     ? t("signMenu.request", "Request signatures")
@@ -236,13 +206,13 @@ export default function SigningWorkspace() {
           </div>
         </div>
       ) : (
-        <div className="signing-workspace__body">
+        <div className="signing-workspace__body" hidden={!showCreate}>
           {error && (
             <Alert mb="md" color="red">
               {error}
             </Alert>
           )}
-          {showCreate ? (
+          {showCreate && (
             <CreateSessionFlow
               documentPicker={
                 <SigningDocumentPicker
@@ -268,156 +238,34 @@ export default function SigningWorkspace() {
                     setShowCreate(false);
                     setSelectedUserIds([]);
                     setDueDate("");
-                    setTab("active");
-                    setScope("mine");
-                    setSearch("");
+                    setListRevision((revision) => revision + 1);
                   });
               }}
             />
-          ) : (
-            <div className="signing-workspace__content">
-              <div className="signing-workspace__toolbar">
-                <SegmentedControl
-                  value={tab}
-                  onChange={(value) => {
-                    setTab(value);
-                    setScope("all");
-                  }}
-                  options={[
-                    {
-                      value: "active",
-                      label: t("sharedSign.tab.active", "Active"),
-                    },
-                    {
-                      value: "completed",
-                      label: t("sharedSign.tab.completed", "Completed"),
-                    },
-                  ]}
-                />
-                <Select
-                  aria-label={t("signWorkspace.filter", "Filter sessions")}
-                  value={scope}
-                  onChange={setScope}
-                  allowDeselect={false}
-                  data={[
-                    {
-                      value: "all",
-                      label: t("signWorkspace.all", "All sessions"),
-                    },
-                    {
-                      value: "mine",
-                      label: t("signWorkspace.createdByMe", "Created by me"),
-                    },
-                    {
-                      value: "signed",
-                      label: t("sharedSign.filterSigned", "Signed"),
-                    },
-                    {
-                      value: "declined",
-                      label: t("sharedSign.filterDeclined", "Declined"),
-                    },
-                    ...(tab === "active"
-                      ? [
-                          {
-                            value: "needsMe",
-                            label: t(
-                              "signWorkspace.needsYou",
-                              "Needs your signature",
-                            ),
-                          },
-                          {
-                            value: "overdue",
-                            label: t("sharedSign.filterOverdue", "Overdue"),
-                          },
-                        ]
-                      : []),
-                  ]}
-                />
-                <TextInput
-                  className="signing-workspace__search"
-                  aria-label={t(
-                    "signWorkspace.search",
-                    "Search documents or people",
-                  )}
-                  placeholder={t(
-                    "signWorkspace.search",
-                    "Search documents or people",
-                  )}
-                  leftSection={<Icon name="search" size={16} />}
-                  value={search}
-                  onChange={(event) => setSearch(event.currentTarget.value)}
-                />
-                <Button
-                  variant="quiet"
-                  aria-label={t("signWorkspace.refresh", "Refresh sessions")}
-                  title={t("signWorkspace.refresh", "Refresh sessions")}
-                  onClick={() => {
-                    void controller.refetch();
-                  }}
-                  leftSection={<Icon name="refresh-cw" size={18} />}
-                />
-              </div>
-              {controller.loading && items.length === 0 ? (
-                <Center py="xl">
-                  <Loader />
-                </Center>
-              ) : filtered.length === 0 ? (
-                <div className="signing-workspace__empty">
-                  <Icon name="file-text" size={36} />
-                  <span>
-                    {search || scope !== "all"
-                      ? t(
-                          "signWorkspace.noMatches",
-                          "No sessions match your search or filter.",
-                        )
-                      : t("signWorkspace.empty", "No sessions here yet.")}
-                  </span>
-                </div>
-              ) : (
-                <div className="signing-workspace__list">
-                  {filtered.map((item) => (
-                    <button
-                      type="button"
-                      className="signing-workspace__row"
-                      key={`${item.kind}-${item.sessionId}`}
-                      onClick={() => {
-                        void openItem(item);
-                      }}
-                    >
-                      <SigningSessionThumbnail
-                        sessionId={item.sessionId}
-                        finalized={Boolean(item.finalized)}
-                      />
-                      <span>
-                        <span className="signing-workspace__name">
-                          {item.documentName}
-                        </span>
-                        <span className="signing-workspace__meta">
-                          {item.kind === "session"
-                            ? t("signWorkspace.yourRequest", "Your request")
-                            : t("sharedSign.fromOwner", "From {{owner}}", {
-                                owner: item.ownerUsername,
-                              })}{" "}
-                          · {new Date(item.createdAt).toLocaleDateString()}
-                          {item.dueDate &&
-                            ` · ${t("sharedSign.due", "Due {{date}}", { date: new Date(item.dueDate).toLocaleDateString() })}`}
-                        </span>
-                      </span>
-                      <span
-                        className="signing-workspace__status"
-                        data-attention={needsSignature(item)}
-                      >
-                        {needsSignature(item)
-                          ? t("signWorkspace.needsYou", "Needs your signature")
-                          : signingStatus(item, t).label}
-                      </span>
-                      <Icon name="chevron-right" size={18} />
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
           )}
+        </div>
+      )}
+      {enabled && (
+        <div
+          className="signing-workspace__body"
+          hidden={opening || detail || showCreate}
+        >
+          {error && (
+            <Alert mb="md" color="red">
+              {error}
+            </Alert>
+          )}
+          <SigningSessionsTable
+            key={listRevision}
+            items={items}
+            loading={controller.loading}
+            onOpen={(item) => {
+              void openItem(item);
+            }}
+            onRefresh={() => {
+              void controller.refetch();
+            }}
+          />
         </div>
       )}
     </section>
