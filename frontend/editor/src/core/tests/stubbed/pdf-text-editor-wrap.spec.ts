@@ -1,5 +1,6 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 import path from "path";
+import { selectWrapWidthMode } from "@app/tests/stubbed/widthModeHelpers";
 
 // Wrap never happened. On blur the overlay asked ReflowWrapCommand to wrap at
 // `width / scale`, but with an exact layout `width` is the width the BOX had
@@ -44,13 +45,7 @@ async function openWrapMode(
   file: string,
 ) {
   await openEditor(page, file);
-  await page.getByTestId("pdf-editor-tab-document").click();
-  await page.getByTestId("pdf-editor-advanced-toggle").click();
-  await page
-    .getByTestId("pdf-editor-width-mode-control")
-    .getByText("Wrap", { exact: true })
-    .click();
-  await page.getByTestId("pdf-editor-tab-selected").click();
+  await selectWrapWidthMode(page);
   await page.waitForTimeout(400);
 }
 
@@ -181,13 +176,7 @@ test.describe("PDF text editor - text wrap", () => {
     await openEditor(page, PARAGRAPH_PDF);
 
     // Wrap mode is a document-level preference, in the panel's overflow menu.
-    await page.getByTestId("pdf-editor-tab-document").click();
-    await page.getByTestId("pdf-editor-advanced-toggle").click();
-    await page
-      .getByTestId("pdf-editor-width-mode-control")
-      .getByText("Wrap", { exact: true })
-      .click();
-    await page.getByTestId("pdf-editor-tab-selected").click();
+    await selectWrapWidthMode(page);
     await page.waitForTimeout(400);
 
     const run = page
