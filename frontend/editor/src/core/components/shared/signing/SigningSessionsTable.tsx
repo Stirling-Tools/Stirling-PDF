@@ -9,11 +9,17 @@ import {
 import { Icon } from "@app/ui/Icon";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
 import type { StatusTone } from "@app/ui/StatusBadge";
-import { needsSignature, type SigningItem } from "@app/utils/signingItems";
+import {
+  isSigningItemClosed,
+  needsSignature,
+  type SigningItem,
+} from "@app/utils/signingItems";
 import { signingStatus } from "@app/utils/signingStatus";
 
+type SessionRow = SigningItem & { unread?: boolean };
+
 interface SigningSessionsTableProps {
-  items: SigningItem[];
+  items: SessionRow[];
   loading: boolean;
   onOpen: (item: SigningItem) => void;
   onRefresh: () => void;
@@ -70,7 +76,7 @@ export function SigningSessionsTable({
       ? t("signWorkspace.createdByMe", "Created by me")
       : item.ownerUsername;
   const rows = items.filter(
-    (item) => Boolean(item.finalized) === (tab === "completed"),
+    (item) => isSigningItemClosed(item) === (tab === "closed"),
   );
   const filters = useDataTableFilters({
     rows,
@@ -111,12 +117,19 @@ export function SigningSessionsTable({
     ],
   });
   const columns = [
-    column.entity<SigningItem>({
+    column.entity<SessionRow>({
       key: "document",
       header: t("signWorkspace.document", "Document"),
       sortable: true,
       primary: (item) => item.documentName,
       icon: () => <Icon name="file-text" size={18} />,
+      unreadLabel: (item) =>
+        item.unread
+          ? t(
+              "signMenu.newActivity",
+              "New activity since you last viewed this session",
+            )
+          : undefined,
     }),
     column.text<SigningItem>({
       key: "owner",
@@ -168,8 +181,8 @@ export function SigningSessionsTable({
           options={[
             { value: "active", label: t("sharedSign.tab.active", "Active") },
             {
-              value: "completed",
-              label: t("sharedSign.tab.completed", "Completed"),
+              value: "closed",
+              label: t("signMenu.closedTab", "Closed"),
             },
           ]}
         />

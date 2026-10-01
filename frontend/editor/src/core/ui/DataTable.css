@@ -380,3 +380,12 @@
 .sui-dtc__select {
   min-width: 13rem;
 }
+
+.sui-dtc__unread {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--c-accent-fg);
+}

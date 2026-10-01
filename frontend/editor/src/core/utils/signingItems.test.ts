@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   collectSigningItems,
-  signingAction,
+  isSigningItemClosed,
   type SigningItem,
 } from "@app/utils/signingItems";
 import {
@@ -47,20 +47,14 @@ describe("signing workspace entry points", () => {
       ]),
     ).toHaveLength(10);
   });
-  it("classifies pending signatures, unseen owner updates and finalization separately", () => {
-    expect(signingAction(request, 0)).toBe("sign");
-    expect(signingAction(session, 0)).toBe("review");
-    expect(signingAction(session, 1)).toBeNull();
-    expect(signingAction({ ...session, signedCount: 2 }, 2)).toBe("finalize");
-    expect(
-      signingAction({ ...session, participantCount: 0, signedCount: 0 }, 0),
-    ).toBeNull();
-  });
-  it("never counts finalized, declined or submitted participant entries as actions", () => {
-    expect(signingAction({ ...request, finalized: true }, 0)).toBeNull();
-    expect(signingAction({ ...request, myStatus: "SIGNED" }, 0)).toBeNull();
-    expect(signingAction({ ...request, myStatus: "DECLINED" }, 0)).toBeNull();
-    expect(signingAction({ ...session, finalized: true }, 0)).toBeNull();
+  it("keeps ready and submitted sessions active, with finalized and declined invitations closed", () => {
+    expect(isSigningItemClosed(request)).toBe(false);
+    expect(isSigningItemClosed({ ...request, myStatus: "SIGNED" })).toBe(false);
+    expect(isSigningItemClosed({ ...session, signedCount: 2 })).toBe(false);
+    expect(isSigningItemClosed({ ...request, myStatus: "DECLINED" })).toBe(
+      true,
+    );
+    expect(isSigningItemClosed({ ...session, finalized: true })).toBe(true);
   });
   it("keeps an owner's participant action separately addressable", () => {
     const items = collectSigningItems(
@@ -76,7 +70,7 @@ describe("signing workspace entry points", () => {
   it("does not leak session names into another account or after logout", () => {
     const alice = updateQuickNavAccount(EMPTY_QUICK_NAV_ACCOUNT, {
       accountId: "alice",
-      signingItems: [{ ...request, action: "sign" }],
+      signingItems: [{ ...request, unread: true }],
       signingBadge: 1,
     });
     expect(
@@ -89,7 +83,7 @@ describe("signing workspace entry points", () => {
       updateQuickNavAccount(alice, {
         identity: { displayName: "Alice", profilePictureUrl: null },
       }).signingItems,
-    ).toEqual([{ ...request, action: "sign" }]);
+    ).toEqual([{ ...request, unread: true }]);
   });
 
   it("keeps request creation open when an upload adds files", () => {

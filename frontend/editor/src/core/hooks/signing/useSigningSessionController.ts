@@ -18,7 +18,8 @@ import { useFileActions } from "@app/contexts/FileContext";
 import { useSigningOverlay } from "@app/contexts/SigningOverlayContext";
 import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
 import { useSigningSessions } from "@app/hooks/signing/useSigningSessions";
-import { markSessionSeen } from "@app/services/signingSeenStore";
+import { markSigningItemSeen } from "@app/services/signingSeenStore";
+import { useAuth } from "@app/auth/UseSession";
 import type { SignatureSettings } from "@app/components/tools/certSign/SignatureSettingsInput";
 
 /** The session workflow currently shown in the workspace. */
@@ -67,8 +68,17 @@ export interface SigningRequestData {
   canSign: boolean;
 }
 
-function countSignedParticipants(session: SessionDetail): number {
-  return session.participants.filter((p) => p.status === "SIGNED").length;
+function acknowledgeSession(
+  accountId: string | null,
+  session: SessionDetail,
+): void {
+  markSigningItemSeen(accountId, {
+    ...session,
+    kind: "session",
+    participantCount: session.participants.length,
+    signedCount: session.participants.filter((p) => p.status === "SIGNED")
+      .length,
+  });
 }
 
 // Read-only overlay previews for every participant's already-placed wet
@@ -106,6 +116,8 @@ export function useSigningSessionController(
   onOpenFiles?: () => void,
 ) {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const accountId = user?.id ?? null;
   const { signRequests, mySessions, loading, refetch } = useSigningSessions({
     enabled,
     autoRefreshInterval: enabled ? 15000 : 0,
@@ -232,10 +244,10 @@ export function useSigningSessionController(
       `/api/v1/security/cert-sign/sessions/${sessionId}`,
     );
     const session = response.data;
-    markSessionSeen(session.sessionId, countSignedParticipants(session));
     // Discard a refresh that resolves after the user navigated away, so we
     // never paint this session's data onto another document.
     if (openDetailSessionIdRef.current !== session.sessionId) return;
+    acknowledgeSession(accountId, session);
     setDetailData((prev) => (prev ? { ...prev, session } : prev));
     // Keep the read-only overlay in sync as participants sign.
     setOverlay((prev) =>
@@ -321,6 +333,10 @@ export function useSigningSessionController(
         canSign,
       });
       setView("request");
+      markSigningItemSeen(accountId, {
+        ...detailResponse.data,
+        kind: "request",
+      });
     } catch (error) {
       if (version !== openVersion.current) return;
       console.error(
@@ -385,11 +401,7 @@ export function useSigningSessionController(
       }
 
       if (version !== openVersion.current) return;
-      // Owner is now viewing this session — clear its "new signatures" badge.
-      markSessionSeen(
-        session.sessionId,
-        countSignedParticipants(detailResponse.data),
-      );
+      acknowledgeSession(accountId, detailResponse.data);
       openDetailSessionIdRef.current = session.sessionId;
       setOverlay({
         file: pdfFile,

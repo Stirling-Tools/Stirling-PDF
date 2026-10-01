@@ -7,7 +7,13 @@ import { Tooltip } from "@app/ui/Tooltip";
 import type { QuickNavToolReasons } from "@app/contexts/QuickNavHostContext";
 import type { ToolId } from "@app/types/toolId";
 import type { SigningIntent } from "@app/utils/pendingSigningIntent";
-import type { SigningMenuItem } from "@app/utils/signingItems";
+import {
+  isSigningItemClosed,
+  needsSignature,
+  type SigningMenuItem,
+} from "@app/utils/signingItems";
+import { signingStatus } from "@app/utils/signingStatus";
+import { SigningActivityDot } from "@app/components/shared/signing/SigningActivityDot";
 import "@app/components/shared/signing/signing.css";
 
 interface SignMenuProps {
@@ -20,7 +26,7 @@ interface SignMenuProps {
   items: SigningMenuItem[];
 }
 
-type SessionTab = "attention" | "active" | "closed";
+type SessionTab = "active" | "closed";
 
 /** The global rail cannot depend on either app's file, authentication or Mantine providers. */
 export function SignMenu({
@@ -33,27 +39,16 @@ export function SignMenu({
   items,
 }: SignMenuProps) {
   const { t } = useTranslation();
-  const [tab, setTab] = useState<SessionTab>("attention");
+  const [tab, setTab] = useState<SessionTab>("active");
   const [query, setQuery] = useState("");
   useEffect(() => {
     if (opened) {
-      setTab("attention");
+      setTab("active");
       setQuery("");
     }
   }, [opened]);
 
-  const attentionCount = items.filter((item) => item.action !== null).length;
-  const actionLabels = {
-    sign: t("signMenu.actionSign", "Sign document"),
-    review: t("signMenu.actionReview", "Review new signatures"),
-    finalize: t("signMenu.actionFinalize", "Finalize document"),
-  };
   const tabs = [
-    {
-      key: "attention" as const,
-      label: t("signMenu.needsAction", "Needs action"),
-      count: attentionCount,
-    },
     {
       key: "active" as const,
       label: t("certSign.collab.sessionList.active", "Active"),
@@ -61,15 +56,7 @@ export function SignMenu({
     { key: "closed" as const, label: t("signMenu.closedTab", "Closed") },
   ];
   const rows = items.filter((item) => {
-    const closed =
-      item.finalized ||
-      (item.kind === "request" && item.myStatus === "DECLINED");
-    const inTab =
-      tab === "attention"
-        ? item.action !== null
-        : tab === "closed"
-          ? closed
-          : !closed;
+    const inTab = isSigningItemClosed(item) === (tab === "closed");
     const searchable = `${item.documentName} ${item.kind === "request" ? item.ownerUsername : t("signWorkspace.createdByMe", "Created by me")}`;
     return (
       inTab &&
@@ -206,14 +193,6 @@ export function SignMenu({
                     )}
                   />
                 </div>
-                {tab === "attention" && (
-                  <p className="sign-menu__hint">
-                    {t(
-                      "signMenu.attentionHelp",
-                      "The badge counts documents to sign, review or finalize.",
-                    )}
-                  </p>
-                )}
               </div>
               <div
                 key={tab}
@@ -225,27 +204,15 @@ export function SignMenu({
                 {rows.length > 0 ? (
                   <ul className="sign-menu__list">
                     {rows.map((item) => {
-                      const state = item.action
-                        ? actionLabels[item.action]
-                        : item.finalized
-                          ? t("certSign.finalized", "Finalized")
-                          : item.kind === "session"
-                            ? t(
-                                "certSign.awaitingSignatures",
-                                "Awaiting signatures",
-                              )
-                            : item.myStatus === "DECLINED"
-                              ? t("certSign.declined", "Declined")
-                              : t(
-                                  "signMenu.submitted",
-                                  "Submitted · awaiting finalization",
-                                );
+                      const state = needsSignature(item)
+                        ? t("signWorkspace.needsYou", "Needs your signature")
+                        : signingStatus(item, t).label;
                       return (
                         <li key={`${item.kind}-${item.sessionId}`}>
                           <button
                             type="button"
                             className="sign-menu__session"
-                            data-action={Boolean(item.action)}
+                            data-unread={item.unread}
                             onClick={() =>
                               openSigning({
                                 kind: item.kind,
@@ -256,23 +223,24 @@ export function SignMenu({
                             <span className="sign-menu__session-icon">
                               <Icon
                                 name={
-                                  item.action === "sign"
+                                  needsSignature(item)
                                     ? "pen-tool"
-                                    : item.action === "finalize"
-                                      ? "circle-check"
-                                      : item.kind === "session"
-                                        ? "users"
-                                        : "file-text"
+                                    : item.kind === "session"
+                                      ? "users"
+                                      : "file-text"
                                 }
                                 size={19}
                               />
                             </span>
                             <span className="sign-menu__session-copy">
-                              <span
-                                className="sign-menu__document"
-                                title={item.documentName}
-                              >
-                                {item.documentName}
+                              <span className="sign-menu__document-heading">
+                                <span
+                                  className="sign-menu__document"
+                                  title={item.documentName}
+                                >
+                                  {item.documentName}
+                                </span>
+                                {item.unread && <SigningActivityDot />}
                               </span>
                               <span className="sign-menu__state">{state}</span>
                               <span className="sign-menu__meta">
@@ -296,31 +264,14 @@ export function SignMenu({
                   </ul>
                 ) : (
                   <div className="sign-menu__empty" role="status">
-                    <Icon
-                      name={
-                        tab === "attention" && !query
-                          ? "circle-check"
-                          : "search"
-                      }
-                      size={24}
-                    />
+                    <Icon name="search" size={24} />
                     <strong>
                       {query
                         ? t("signMenu.noMatches", "No matching sessions")
-                        : tab === "attention"
-                          ? t("signMenu.caughtUp", "You're all caught up")
-                          : tab === "closed"
-                            ? t("signMenu.noClosed", "No closed sessions")
-                            : t("signMenu.noActive", "No active sessions")}
+                        : tab === "closed"
+                          ? t("signMenu.noClosed", "No closed sessions")
+                          : t("signMenu.noActive", "No active sessions")}
                     </strong>
-                    {!query && tab === "attention" && (
-                      <span>
-                        {t(
-                          "signMenu.caughtUpHint",
-                          "Follow ongoing requests in Active, or start a new one.",
-                        )}
-                      </span>
-                    )}
                   </div>
                 )}
               </div>

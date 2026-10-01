@@ -7,8 +7,7 @@ export type SigningItem =
   | (SignRequestSummary & { kind: "request" })
   | (SessionSummary & { kind: "session" });
 
-export type SigningAction = "sign" | "review" | "finalize";
-export type SigningMenuItem = SigningItem & { action: SigningAction | null };
+export type SigningMenuItem = SigningItem & { unread: boolean };
 
 /** One entry per session and role; an owner who also signs keeps both actions. */
 export function collectSigningItems(
@@ -28,19 +27,12 @@ export function collectSigningItems(
   );
 }
 
-/** Ready sessions remain actionable after viewing; partial updates clear when the owner reviews them. */
-export function signingAction(
-  item: SigningItem,
-  lastSeenSignedCount: number,
-): SigningAction | null {
-  if (item.finalized) return null;
-  if (needsSignature(item)) return "sign";
-  if (item.kind === "session") {
-    if (item.participantCount > 0 && item.signedCount === item.participantCount)
-      return "finalize";
-    if (item.signedCount > lastSeenSignedCount) return "review";
-  }
-  return null;
+/** A declined invitation is closed for its participant, even while the owner's session remains active. */
+export function isSigningItemClosed(item: SigningItem): boolean {
+  return (
+    Boolean(item.finalized) ||
+    (item.kind === "request" && item.myStatus === "DECLINED")
+  );
 }
 
 export function needsSignature(item: SigningItem): boolean {

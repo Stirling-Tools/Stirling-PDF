@@ -17,6 +17,7 @@ import { CreateSessionFlow } from "@app/components/shared/signing/CreateSessionF
 import { SessionDetailPanel } from "@app/components/tools/certSign/panels/SessionDetailPanel";
 import SignRequestPanel from "@app/components/tools/certSign/panels/SignRequestPanel";
 import { collectSigningItems, type SigningItem } from "@app/utils/signingItems";
+import { useSigningActivity } from "@app/hooks/signing/useSigningActivity";
 import {
   requestSigningIntent,
   usePendingSigningIntent,
@@ -51,10 +52,11 @@ export default function SigningWorkspace() {
   const [opening, setOpening] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const pendingIntent = usePendingSigningIntent();
-  const items = useMemo(
+  const sessions = useMemo(
     () => collectSigningItems(controller.signRequests, controller.mySessions),
     [controller.signRequests, controller.mySessions],
   );
+  const items = useSigningActivity(sessions);
 
   const openItem = async (item: SigningItem) => {
     setOpening(true);

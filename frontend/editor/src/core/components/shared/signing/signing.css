@@ -127,13 +127,6 @@
   font-size: 12px;
   white-space: nowrap;
 }
-.sign-menu__tabs .sui-tabs__count {
-  background: var(--c-primary-subtle);
-  color: var(--c-accent-fg);
-  border-radius: 12px;
-  padding: 2px 5px;
-  font-weight: 600;
-}
 .sign-menu__hint {
   margin: 10px 0 0;
   color: var(--c-text-muted);
@@ -216,7 +209,7 @@
   background: var(--c-surface-sunken);
   color: var(--c-text-muted);
 }
-.sign-menu__session[data-action="true"] .sign-menu__session-icon {
+.sign-menu__session[data-unread="true"] .sign-menu__session-icon {
   color: var(--c-accent-fg);
   background: var(--c-primary-subtle);
 }
@@ -235,11 +228,34 @@
   font-size: 13px;
   font-weight: 500;
 }
+.sign-menu__document-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.signing-activity-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--c-accent-fg);
+}
+.signing-activity-icon {
+  position: relative;
+  display: inline-flex;
+}
+.signing-activity-icon > .signing-activity-dot {
+  position: absolute;
+  top: -2px;
+  right: -4px;
+}
 .sign-menu__state {
   font-size: 12px;
   color: var(--c-text-muted);
 }
-.sign-menu__session[data-action="true"] .sign-menu__state {
+.sign-menu__session[data-unread="true"] .sign-menu__state {
   color: var(--c-accent-fg);
 }
 .sign-menu__meta {
@@ -269,13 +285,6 @@
   position: absolute;
   top: 2px;
   right: 8px;
-  min-width: 16px;
-  border-radius: 10px;
-  padding: 1px 4px;
-  font-size: 10px;
-  line-height: 14px;
-  color: var(--c-text-on-primary);
-  background: var(--c-primary);
 }
 .signing-workspace {
   display: flex;

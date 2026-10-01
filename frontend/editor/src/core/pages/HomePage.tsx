@@ -29,6 +29,7 @@ import { useViewer } from "@app/contexts/ViewerContext";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import { Icon } from "@app/ui/Icon";
+import { SigningActivityDot } from "@app/components/shared/signing/SigningActivityDot";
 import RightSidebar from "@app/components/tools/RightSidebar";
 import { ReaderRail } from "@app/components/viewer/readerRail/ReaderRail";
 import { ReaderSuperSearch } from "@app/components/viewer/readerRail/ReaderSuperSearch";
@@ -580,20 +581,14 @@ export default function HomePage() {
           className="mobile-bottom-button"
           aria-label={
             quickNavHost?.signingBadge
-              ? t("signMenu.triggerCount", "Sign · {{count}} actions needed", {
-                  count: quickNavHost.signingBadge,
-                })
+              ? t("signMenu.triggerUnread", "Sign · New activity")
               : t("signMenu.title", "Sign")
           }
           onClick={() => setMobileSignOpen((open) => !open)}
         >
           <Icon name="pen-tool" size="1.5rem" />
           {Boolean(quickNavHost?.signingBadge) && (
-            <span className="sign-menu__trigger-badge" aria-hidden="true">
-              {quickNavHost!.signingBadge > 9
-                ? "9+"
-                : quickNavHost!.signingBadge}
-            </span>
+            <SigningActivityDot className="sign-menu__trigger-badge" />
           )}
           <span className="mobile-bottom-button-label">
             {t("signMenu.title", "Sign")}

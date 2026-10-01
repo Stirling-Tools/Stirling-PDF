@@ -14,6 +14,7 @@ export interface SessionSummary {
   createdAt: string;
   participantCount: number;
   signedCount: number;
+  participants?: Pick<ParticipantInfo, "id" | "status" | "lastUpdated">[];
   finalized: boolean;
   dueDate?: string;
 }

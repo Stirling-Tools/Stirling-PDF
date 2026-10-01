@@ -10,7 +10,7 @@ import {
 import { QuickNavHostBridge } from "@app/components/shared/quickNav/QuickNavHostBridge";
 import { fetchSigningSessions, type SigningSessions } from "@app/api/signing";
 import { alert } from "@app/components/toast";
-import { markSessionSeen } from "@app/services/signingSeenStore";
+import { markSigningItemSeen } from "@app/services/signingSeenStore";
 import { expectConsole } from "@app/tests/failOnConsole";
 
 const { auth, access } = vi.hoisted(() => ({
@@ -122,7 +122,7 @@ describe("quick-nav account data during view switches", () => {
     mockFetch.mockResolvedValue(UNREAD);
   });
 
-  it("keeps the badge equal to the action list as owners review and finalize", async () => {
+  it("keeps the unread count in sync as owners view updates and ready sessions", async () => {
     const partial = UNREAD.mySessions[0];
     mockFetch.mockResolvedValue({
       signRequests: [
@@ -143,19 +143,24 @@ describe("quick-nav account data during view switches", () => {
     });
     setup();
     await waitFor(() => expectRail(true, 3));
-    const actionCount = () =>
+    const unreadCount = () =>
       JSON.parse(screen.getByTestId("items").textContent ?? "[]").filter(
-        (item: { action: string | null }) => item.action !== null,
+        (item: { unread: boolean }) => item.unread,
       ).length;
-    expect(actionCount()).toBe(3);
-    act(() => markSessionSeen("session-1", 1));
+    expect(unreadCount()).toBe(3);
+    act(() => markSigningItemSeen("ada", { ...partial, kind: "session" }));
     await waitFor(() => expectRail(true, 2));
-    expect(actionCount()).toBe(2);
-    act(() => markSessionSeen("ready", 2));
-    await waitFor(() => expectRail(true, 2));
-    expect(screen.getByTestId("items")).toHaveTextContent(
-      '"action":"finalize"',
+    expect(unreadCount()).toBe(2);
+    act(() =>
+      markSigningItemSeen("ada", {
+        ...partial,
+        kind: "session",
+        sessionId: "ready",
+        signedCount: 2,
+      }),
     );
+    await waitFor(() => expectRail(true, 1));
+    expect(unreadCount()).toBe(1);
     expect(
       JSON.parse(screen.getByTestId("items").textContent ?? "[]"),
     ).toHaveLength(4);

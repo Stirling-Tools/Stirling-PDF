@@ -130,7 +130,6 @@ it("sorts document names and actual timestamps, keeping undated sessions last", 
     "Agreement.pdf",
     "Budget.pdf",
     "Budget.pdf",
-    "Declined.pdf",
     "Plan.pdf",
     "Ready.pdf",
   ]);
@@ -150,7 +149,6 @@ it("sorts document names and actual timestamps, keeping undated sessions last", 
     "Plan.pdf",
     "Budget.pdf",
     "Ready.pdf",
-    "Declined.pdf",
   ]);
   await user.click(due);
   if (
@@ -183,7 +181,7 @@ it("combines owner, status and due-date facets with search, and clears filters",
     screen.getByRole("textbox", { name: "Search documents or people" }),
   );
   await user.click(screen.getByRole("button", { name: "Clear filters" }));
-  expect(documents()).toHaveLength(6);
+  expect(documents()).toHaveLength(5);
 });
 
 it("keeps owner and signer entries distinct and opens the selected role with mouse or keyboard", async () => {
@@ -198,22 +196,20 @@ it("keeps owner and signer entries distinct and opens the selected role with mou
   expect(onOpen).toHaveBeenLastCalledWith(items[1]);
 });
 
-it("keeps submitted and declined responses active until finalization, and clears active-only facets on completion", async () => {
+it("keeps submitted and ready sessions active, moving finalized and declined entries to Closed", async () => {
   const { user } = show();
+  expect(documents()).toContain("Ready.pdf");
+  expect(documents()).not.toContain("Declined.pdf");
   await pick(user, "Status", "Signed");
   expect(documents()).toEqual(["Budget.pdf"]);
-  await user.click(screen.getByRole("button", { name: "Clear filters" }));
-  await pick(user, "Status", "Declined");
-  expect(documents()).toEqual(["Declined.pdf"]);
-  await user.click(screen.getByRole("radio", { name: "Completed" }));
-  expect(documents()).toEqual(["Completed.pdf"]);
+  await user.click(screen.getByRole("radio", { name: "Closed" }));
+  expect(documents()).toEqual(["Completed.pdf", "Declined.pdf"]);
   expect(
     screen.queryByRole("button", { name: "Due date", expanded: false }),
   ).not.toBeInTheDocument();
-  await pick(user, "Status", "Signed");
-  expect(documents()).toEqual(["Completed.pdf"]);
+  await pick(user, "Status", "Declined");
+  expect(documents()).toEqual(["Declined.pdf"]);
 });
-
 it("retains sorting after zero search results and refreshes without clearing the search", async () => {
   const { user, onRefresh } = show();
   await user.click(
@@ -233,7 +229,7 @@ it("retains sorting after zero search results and refreshes without clearing the
   await user.type(search, "ALICE");
   await user.click(screen.getByRole("button", { name: "Refresh sessions" }));
   expect(onRefresh).toHaveBeenCalledOnce();
-  expect(documents()).toEqual(["Budget.pdf", "Declined.pdf"]);
+  expect(documents()).toEqual(["Budget.pdf"]);
 });
 
 it("distinguishes initial loading from an empty list", () => {
@@ -242,4 +238,17 @@ it("distinguishes initial loading from an empty list", () => {
   expect(
     screen.getByRole("button", { name: "Refresh sessions" }),
   ).toBeDisabled();
+});
+
+it("exposes unread activity beside the document without changing the ready-to-finalize status", () => {
+  show(
+    false,
+    items.map((item) => ({ ...item, unread: item.sessionId === "ready" })),
+  );
+  const ready = screen.getByRole("button", {
+    name: /Ready.pdf.*New activity.*Ready to finalize/,
+  });
+  expect(
+    within(ready).getByRole("img", { name: /New activity/ }),
+  ).toBeInTheDocument();
 });

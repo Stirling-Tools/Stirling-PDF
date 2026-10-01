@@ -388,6 +388,8 @@ function entity<T>(
     primary: (row: T) => string;
     /** Muted inline suffix after the name, its own node (e.g. "(you)"). */
     suffix?: (row: T) => string | null | undefined;
+    /** When present, shows an unread dot and exposes this explanation to assistive technology. */
+    unreadLabel?: (row: T) => string | null | undefined;
     /** Secondary muted line under the name. */
     note?: (row: T) => string | null | undefined;
     sortBy?: (row: T) => SortValue;
@@ -402,6 +404,7 @@ function entity<T>(
     renderCell: (r) => {
       const icon = o.icon?.(r);
       const suffix = o.suffix?.(r);
+      const unreadLabel = o.unreadLabel?.(r);
       const note = o.note?.(r);
       return (
         <div className="sui-dtc__entity">
@@ -413,6 +416,14 @@ function entity<T>(
           <div className="sui-dtc__entity-body">
             <span className="sui-dtc__entity-head">
               <span className="sui-dtc__entity-name">{o.primary(r)}</span>
+              {unreadLabel && (
+                <span
+                  className="sui-dtc__unread"
+                  role="img"
+                  aria-label={unreadLabel}
+                  title={unreadLabel}
+                />
+              )}
               {suffix && (
                 <span className="sui-dtc__entity-suffix">{suffix}</span>
               )}

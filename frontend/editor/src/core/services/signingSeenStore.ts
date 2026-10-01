@@ -1,52 +1,137 @@
-/**
- * Tracks how many signatures the user had already seen on each signing session
- * they own. Used to surface a badge when participants have signed a session
- * since the owner last opened it. Persisted in localStorage so "seen" survives
- * reloads; a module-level version counter lets hooks re-read reactively.
- */
+import { isSigningItemClosed, type SigningItem } from "@app/utils/signingItems";
 
-const STORAGE_KEY = "stirling.signing.lastSeenSigned";
+const STORAGE_PREFIX = "stirling.signing.seenActivity.";
 
-type SeenMap = Record<string, number>;
+interface SeenActivity {
+  signedCount: number;
+  decisions: string[];
+}
 
 let version = 0;
 const listeners = new Set<() => void>();
+const memory = new Map<string, SeenActivity>();
+const failedWrites = new Set<string>();
 
-function read(): SeenMap {
+function storageKey(accountId: string, item: SigningItem): string {
+  return (
+    STORAGE_PREFIX + JSON.stringify([accountId, item.kind, item.sessionId])
+  );
+}
+
+function snapshot(item: SigningItem): SeenActivity {
+  return item.kind === "request"
+    ? { signedCount: 0, decisions: [] }
+    : {
+        signedCount: item.signedCount,
+        decisions: (item.participants ?? [])
+          .filter(
+            (participant) =>
+              participant.status === "SIGNED" ||
+              participant.status === "DECLINED",
+          )
+          .map((participant) =>
+            JSON.stringify([
+              participant.id,
+              participant.status,
+              participant.lastUpdated,
+            ]),
+          )
+          .sort(),
+      };
+}
+
+function read(key: string): SeenActivity | undefined {
+  if (failedWrites.has(key)) return memory.get(key);
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as SeenMap) : {};
+    const value: unknown = JSON.parse(localStorage.getItem(key) ?? "null");
+    if (
+      value &&
+      typeof value === "object" &&
+      "signedCount" in value &&
+      typeof value.signedCount === "number" &&
+      "decisions" in value &&
+      Array.isArray(value.decisions) &&
+      value.decisions.every((entry) => typeof entry === "string")
+    ) {
+      return { signedCount: value.signedCount, decisions: value.decisions };
+    }
+    return undefined;
   } catch {
-    return {};
+    return memory.get(key);
   }
 }
 
-/** Signed count the owner last saw for a session (0 if never opened). */
-export function getLastSeenSignedCount(sessionId: string): number {
-  return read()[sessionId] ?? 0;
-}
-
-/** Record the signed count the owner just saw for a session. */
-export function markSessionSeen(sessionId: string, signedCount: number): void {
-  try {
-    const map = read();
-    if (map[sessionId] === signedCount) return;
-    map[sessionId] = signedCount;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(map));
-  } catch {
-    // Storage may be unavailable (private mode); badge degrades gracefully.
-  }
+function notify(): void {
   version += 1;
   listeners.forEach((listener) => listener());
 }
 
-/** Subscribe to "seen" changes (for useSyncExternalStore). */
-export function subscribeSigningSeen(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
+/** Unread means an unseen invitation or participant decision, not an unfinished signing task. */
+export function hasUnseenSigningActivity(
+  accountId: string | null,
+  item: SigningItem,
+): boolean {
+  if (!accountId || isSigningItemClosed(item)) return false;
+  const seen = read(storageKey(accountId, item));
+  if (item.kind === "request") {
+    return (
+      !seen && (item.myStatus === "PENDING" || item.myStatus === "NOTIFIED")
+    );
+  }
+  const current = snapshot(item);
+  return (
+    current.signedCount > (seen?.signedCount ?? 0) ||
+    current.decisions.some((decision) => !seen?.decisions.includes(decision))
+  );
 }
 
-/** Monotonic version, bumped whenever a session is marked seen. */
+/** Call only after the detail is successfully displayed. Persist no document names, emails or credentials. */
+export function markSigningItemSeen(
+  accountId: string | null,
+  item: SigningItem,
+): void {
+  if (!accountId) return;
+  const key = storageKey(accountId, item);
+  const current = snapshot(item);
+  const previous = read(key);
+  // A stale list/response must not resurrect a decision that was already reviewed.
+  const next = {
+    signedCount: Math.max(previous?.signedCount ?? 0, current.signedCount),
+    decisions: [
+      ...new Set([...(previous?.decisions ?? []), ...current.decisions]),
+    ].sort(),
+  };
+  if (JSON.stringify(previous) === JSON.stringify(next)) return;
+  memory.set(key, next);
+  try {
+    localStorage.setItem(key, JSON.stringify(next));
+    failedWrites.delete(key);
+  } catch {
+    // Private-mode storage failures retain read state for this app session.
+    failedWrites.add(key);
+  }
+  notify();
+}
+
+function onStorage(event: StorageEvent): void {
+  if (event.key === null || event.key.startsWith(STORAGE_PREFIX)) {
+    memory.clear();
+    failedWrites.clear();
+    notify();
+  }
+}
+
+/** Includes read acknowledgements from other tabs on the same origin. */
+export function subscribeSigningSeen(listener: () => void): () => void {
+  listeners.add(listener);
+  if (listeners.size === 1) window.addEventListener("storage", onStorage);
+  return () => {
+    listeners.delete(listener);
+    if (listeners.size === 0) window.removeEventListener("storage", onStorage);
+  };
+}
+
+/** Changes when local or cross-tab read state changes; used by useSyncExternalStore. */
 export function getSigningSeenVersion(): number {
   return version;
 }

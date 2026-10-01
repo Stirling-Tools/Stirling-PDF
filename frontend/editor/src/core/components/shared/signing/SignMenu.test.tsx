@@ -17,7 +17,7 @@ const incoming: SigningMenuItem = {
   createdAt: "2026-09-24",
   dueDate: "",
   myStatus: "PENDING",
-  action: "sign",
+  unread: true,
 };
 const owned: SigningMenuItem = {
   kind: "session",
@@ -27,7 +27,7 @@ const owned: SigningMenuItem = {
   participantCount: 2,
   signedCount: 1,
   finalized: false,
-  action: "review",
+  unread: true,
 };
 function setup(items: SigningMenuItem[] = [], sharedSign?: string) {
   const onSelect = vi.fn();
@@ -71,7 +71,7 @@ it("opens request creation, expanded sessions and certificate signing directly",
   expect(onClose).toHaveBeenCalledTimes(3);
 });
 
-it("makes the action count match every actionable row and names each next step", () => {
+it("shows requests and owned sessions together, with unread dots independent of readiness", () => {
   setup([
     incoming,
     owned,
@@ -80,40 +80,40 @@ it("makes the action count match every actionable row and names each next step",
       sessionId: "ready",
       documentName: "Ready.pdf",
       signedCount: 2,
-      action: "finalize",
+      unread: false,
     },
     {
       ...owned,
       sessionId: "waiting",
       documentName: "Waiting.pdf",
-      action: null,
+      signedCount: 0,
+      unread: false,
     },
   ]);
   expect(
-    screen.getByRole("button", { name: /Needs action\s*3/ }),
+    screen.queryByRole("button", { name: /Needs action/ }),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.getByRole("button", { name: "Active", exact: true }),
   ).toHaveAttribute("aria-pressed", "true");
   const list = within(
-    screen.getByRole("region", { name: "Needs action", exact: true }),
+    screen.getByRole("region", { name: "Active", exact: true }),
   );
-  expect(list.getAllByRole("button")).toHaveLength(3);
+  expect(list.getAllByRole("button")).toHaveLength(4);
+  expect(list.getAllByRole("img", { name: /New activity/ })).toHaveLength(2);
+  const ready = list.getByRole("button", {
+    name: /Ready.pdf.*Ready to finalize/,
+  });
+  expect(ready).toBeInTheDocument();
   expect(
-    list.getByRole("button", {
-      name: /Contract.pdf.*Sign document.*From: Alice/,
-    }),
-  ).toBeInTheDocument();
-  expect(
-    list.getByRole("button", { name: /Owned.pdf.*Review new signatures/ }),
-  ).toBeInTheDocument();
-  expect(
-    list.getByRole("button", { name: /Ready.pdf.*Finalize document/ }),
-  ).toBeInTheDocument();
-  expect(list.queryByText("Waiting.pdf")).not.toBeInTheDocument();
+    within(ready).queryByRole("img", { name: /New activity/ }),
+  ).not.toBeInTheDocument();
+  expect(list.getByRole("button", { name: /Waiting.pdf/ })).toBeInTheDocument();
 });
-
 it("opens the selected role by identity and closes the popover", () => {
   const { onOpenSigning, onSelect, onClose } = setup([incoming]);
   fireEvent.click(
-    screen.getByRole("button", { name: /Contract.pdf.*Sign document/ }),
+    screen.getByRole("button", { name: /Contract.pdf.*Needs your signature/ }),
   );
   expect(onOpenSigning).toHaveBeenCalledWith({
     kind: "request",
@@ -123,13 +123,13 @@ it("opens the selected role by identity and closes the popover", () => {
   expect(onClose).toHaveBeenCalledTimes(1);
 });
 
-it("shows the entire active list and searches documents or senders without changing the badge", () => {
+it("shows every active item and searches without marking hidden items as read", () => {
   const requests = Array.from({ length: 9 }, (_, index) => ({
     ...incoming,
     sessionId: `request-${index}`,
     documentName: `Document ${index}.pdf`,
   }));
-  setup([...requests, { ...owned, action: null }]);
+  setup([...requests, { ...owned, unread: false }]);
   fireEvent.click(screen.getByRole("button", { name: "Active", exact: true }));
   expect(
     within(
@@ -145,9 +145,7 @@ it("shows the entire active list and searches documents or senders without chang
   expect(
     screen.queryByRole("button", { name: /Document 0.pdf/ }),
   ).not.toBeInTheDocument();
-  expect(
-    screen.getByRole("button", { name: /Needs action\s*9/ }),
-  ).toBeInTheDocument();
+  expect(screen.getByRole("img", { name: /New activity/ })).toBeInTheDocument();
   fireEvent.change(screen.getByRole("searchbox"), {
     target: { value: "alice" },
   });
@@ -164,18 +162,17 @@ it("keeps submitted requests active and places finalized or declined requests in
       ...incoming,
       documentName: "Submitted.pdf",
       myStatus: "SIGNED",
-      action: null,
+      unread: false,
     },
-    { ...owned, finalized: true, action: null },
+    { ...owned, finalized: true, unread: false },
     {
       ...incoming,
       sessionId: "declined",
       documentName: "Declined.pdf",
       myStatus: "DECLINED",
-      action: null,
+      unread: false,
     },
   ]);
-  expect(screen.getByRole("status")).toHaveTextContent("You're all caught up");
   fireEvent.click(screen.getByRole("button", { name: "Active", exact: true }));
   expect(
     screen.getByRole("button", { name: /Submitted.pdf.*Submitted/ }),

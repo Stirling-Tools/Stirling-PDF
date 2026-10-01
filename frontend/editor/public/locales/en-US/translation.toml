@@ -11653,7 +11653,6 @@ filterSigned = "Signed"
 
 [sharedSign.tab]
 active = "Active"
-completed = "Completed"
 
 [showJS]
 done = "JavaScript extracted"
@@ -11869,18 +11868,12 @@ visibleSignature = "Visible signature"
 visibleSignatureHelp = "About visible signatures"
 
 [signMenu]
-actionFinalize = "Finalize document"
-actionReview = "Review new signatures"
-actionSign = "Sign document"
 anyOrder = "Participants can sign in any order. The owner finalizes the document after reviewing the collected signatures."
-attentionHelp = "The badge counts documents to sign, review or finalize."
-caughtUp = "You're all caught up"
-caughtUpHint = "Follow ongoing requests in Active, or start a new one."
 certificateHint = "Use a certificate"
 certificateTitle = "Digital signature"
 closedTab = "Closed"
 dueDate = "Due date (optional)"
-needsAction = "Needs action"
+newActivity = "New activity since you last viewed this session"
 noActive = "No active sessions"
 noClosed = "No closed sessions"
 noMatches = "No matching sessions"
@@ -11897,8 +11890,7 @@ settings = "Appearance and summary page (optional)"
 signFailed = "Signing failed. Check your certificate and try again; your placed marks are preserved."
 submitted = "Submitted · awaiting finalization"
 title = "Sign"
-triggerCount_one = "Sign · {{count}} action needed"
-triggerCount_other = "Sign · {{count}} actions needed"
+triggerUnread = "Sign · New activity"
 
 [signRequest]
 declined = "Sign request declined"
