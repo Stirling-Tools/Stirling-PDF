@@ -28,6 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read # actions/checkout
+      checks: read # turn-label sync: when a push reached GitHub
       issues: write # get/create the repo-level conflict label
       pull-requests: write # pulls.get/list plus add/remove the label on PRs
     steps:
@@ -101,6 +102,13 @@ jobs:
             }
 
             async function labelPullRequest(pull) {
+              // Unknown is not "no conflict": removing the label here and re-adding it
+              // later restarts the stale PR bot's conflict clock.
+              if (pull.mergeable === null) {
+                core.info(`PR #${pull.number}: mergeable is still unknown; leaving the label as it is.`);
+                return;
+              }
+
               const existingLabels = pull.labels.map((label) => label.name);
               const hasConflictLabel = existingLabels.includes(conflictLabel);
               const hasConflicts = pull.mergeable === false && pull.mergeable_state === 'dirty';
@@ -150,3 +158,14 @@ jobs:
               const pull = await getPullRequestWithMergeableState(pullNumber);
               await labelPullRequest(pull);
             }
+
+      # Here rather than on its own trigger, so the turn is worked out once has
+      # conflicts is current.
+      - name: Sync turn labels
+        if: vars.STALE_PR_BOT_LIVE == 'true' && vars.CI_PROFILE != 'lite'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const { pullNumbersForEvent, syncTurnLabels } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/stale-prs.ts`);
+            await syncTurnLabels({ github, context, core, live: true, pullNumbers: await pullNumbersForEvent(github, context) });

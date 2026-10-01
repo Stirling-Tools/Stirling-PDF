@@ -1,14 +1,14 @@
 name: PR turn labels
 
-# Keeps each open PR's waiting-on-author / waiting-on-review label current between
-# the triages in stale-prs.yml. Pushes, opens, reopens and ready-for-review arrive
-# through the conflict labeler, so the turn is worked out after has conflicts is
-# current. Reviews arrive through pr-review-events.yml. Off unless
+# Keeps an open PR's waiting-on-author / waiting-on-review label current between the
+# triages in stale-prs.yml, for events that move the turn without a push. Pushes,
+# opens, reopens and ready-for-review are synced by pr-conflict-labeler.yml once has
+# conflicts is current. Reviews arrive through pr-review-events.yml. Off unless
 # STALE_PR_BOT_LIVE is "true".
 
 on:
   workflow_run:
-    workflows: ["PR conflict labeler", "PR review events"]
+    workflows: ["PR review events"]
     types: [completed]
   pull_request_target:
     types: [converted_to_draft, labeled, unlabeled]
@@ -32,13 +32,14 @@ jobs:
         (github.event.issue.pull_request && github.event.comment.user.login == github.event.issue.user.login)
       )
     runs-on: ubuntu-latest
-    # Each sync covers every open PR, so one running and one queued is enough: GitHub
-    # replaces a queued run in the group when a newer one arrives.
+    # One running and one queued per PR: GitHub replaces a queued run in the group when
+    # a newer one arrives, and each run reads the PR afresh.
     concurrency:
-      group: pr-turn-labels
+      group: pr-turn-labels-${{ github.event.pull_request.number || github.event.issue.number || github.event.workflow_run.head_sha }}
       cancel-in-progress: false
     permissions:
       contents: read # actions/checkout
+      checks: read # when a push reached GitHub
       issues: write # add/remove labels
       pull-requests: write # add/remove labels on PRs
     steps:
@@ -57,5 +58,5 @@ jobs:
         with:
           github-token: ${{ github.token }}
           script: |
-            const { syncTurnLabels } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/stale-prs.ts`);
-            await syncTurnLabels({ github, context, core, live: true });
+            const { pullNumbersForEvent, syncTurnLabels } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/stale-prs.ts`);
+            await syncTurnLabels({ github, context, core, live: true, pullNumbers: await pullNumbersForEvent(github, context) });

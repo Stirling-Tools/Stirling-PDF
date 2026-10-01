@@ -33,6 +33,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      checks: read
       issues: read
       pull-requests: read
     steps:
@@ -80,6 +81,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read # actions/checkout
+      checks: read # when a push reached GitHub
       issues: write # comment on and label PRs
       pull-requests: write # close PRs
     steps:
