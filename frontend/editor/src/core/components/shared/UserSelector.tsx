@@ -144,9 +144,11 @@ const UserSelector = ({
         <div className={styles.groups}>
           {matchingGroups.map((group) => (
             <div key={group.group}>
-              <Text size="xs" c="dimmed" mb="xs">
-                {group.group}
-              </Text>
+              {group.group.toLowerCase() !== "default" && (
+                <Text size="xs" c="dimmed" mb="xs">
+                  {group.group}
+                </Text>
+              )}
               <div className={styles.grid}>
                 {group.items.map((item) => {
                   const id = Number(item.value);

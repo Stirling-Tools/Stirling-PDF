@@ -283,7 +283,12 @@ function number<T>(
 
 function badge<T>(
   o: Common & {
-    get: (row: T) => { tone: StatusTone; label: string };
+    get: (row: T) => {
+      tone: StatusTone;
+      label: string;
+      /** Optional completion bar below the status; value is 0–1 and label describes the completed count. */
+      progress?: { value: number; label: string };
+    };
     sortBy?: (row: T) => SortValue;
   },
 ): DataTableColumn<T> {
@@ -295,10 +300,24 @@ function badge<T>(
     sortFn: "alphanumeric",
     renderCell: (r) => {
       const b = o.get(r);
-      return (
+      const status = (
         <StatusBadge tone={b.tone} size="sm">
           {b.label}
         </StatusBadge>
+      );
+      if (!b.progress) return status;
+      return (
+        <div className="sui-dtc__status-progress">
+          <div className="sui-dtc__status-progress-heading">
+            {status}
+            <span className="sui-dtc__progress-pct">{b.progress.label}</span>
+          </div>
+          <ProgressBar
+            value={b.progress.value}
+            label={b.progress.label}
+            height={4}
+          />
+        </div>
       );
     },
   });

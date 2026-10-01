@@ -544,6 +544,66 @@ class WorkflowSessionServiceMoreTest {
             assertThat(result.get(0).getSessionId()).isEqualTo("s1");
             assertThat(result.get(0).getOwnerUsername()).isEqualTo("owner");
             assertThat(result.get(0).getMyStatus()).isEqualTo(ParticipantStatus.NOTIFIED);
+            assertThat(result.get(0).isAccessExpired()).isFalse();
+            assertThat(result.get(0).isClosed()).isFalse();
+        }
+
+        @Test
+        void listSignRequests_reportsAccessExpiryIndependentlyOfDueDateAndStatus() {
+            User user = user("alice", 1L);
+            WorkflowSession s = session("s1", user("owner", 2L));
+            s.setCreatedAt(LocalDateTime.now().minusDays(10));
+            s.setDueDate(LocalDateTime.now().minusDays(2).toString());
+            WorkflowParticipant expired = participant(user, ParticipantStatus.NOTIFIED);
+            expired.setExpiresAt(LocalDateTime.now().minusDays(1));
+            WorkflowParticipant available = participant(user, ParticipantStatus.PENDING);
+            available.setExpiresAt(LocalDateTime.now().plusDays(1));
+            WorkflowParticipant noExpiry = participant(user, ParticipantStatus.VIEWED);
+            WorkflowParticipant submitted = participant(user, ParticipantStatus.SIGNED);
+            submitted.setExpiresAt(LocalDateTime.now().minusDays(1));
+            List<WorkflowParticipant> participants =
+                    List.of(expired, available, noExpiry, submitted);
+            participants.forEach(p -> p.setWorkflowSession(s));
+            when(workflowParticipantRepository.findByUserOrderByLastUpdatedDesc(user))
+                    .thenReturn(participants);
+
+            List<SignRequestSummaryDTO> result = service.listSignRequests(user);
+
+            assertThat(result)
+                    .extracting(SignRequestSummaryDTO::isAccessExpired)
+                    .containsExactly(true, false, false, true);
+            assertThat(result)
+                    .extracting(SignRequestSummaryDTO::isClosed)
+                    .containsExactly(true, false, false, true);
+            assertThat(s.isFinalized()).isFalse();
+        }
+
+        @Test
+        void listSignRequests_closesNonSigningRolesAndInactiveWorkflowsButKeepsSubmissionsActive() {
+            User user = user("alice", 1L);
+            WorkflowSession active = session("active", user("owner", 2L));
+            active.setCreatedAt(LocalDateTime.now());
+            WorkflowParticipant viewer = participant(user, ParticipantStatus.PENDING);
+            viewer.setAccessRole(
+                    stirling.software.proprietary.storage.model.ShareAccessRole.VIEWER);
+            WorkflowParticipant commenter = participant(user, ParticipantStatus.VIEWED);
+            commenter.setAccessRole(
+                    stirling.software.proprietary.storage.model.ShareAccessRole.COMMENTER);
+            WorkflowParticipant submitted = participant(user, ParticipantStatus.SIGNED);
+            WorkflowParticipant declined = participant(user, ParticipantStatus.DECLINED);
+            List<WorkflowParticipant> participants =
+                    List.of(viewer, commenter, submitted, declined);
+            participants.forEach(p -> p.setWorkflowSession(active));
+            when(workflowParticipantRepository.findByUserOrderByLastUpdatedDesc(user))
+                    .thenReturn(participants);
+
+            assertThat(service.listSignRequests(user))
+                    .extracting(SignRequestSummaryDTO::isClosed)
+                    .containsExactly(true, true, false, true);
+            active.setStatus(WorkflowStatus.CANCELLED);
+            assertThat(service.listSignRequests(user)).allMatch(SignRequestSummaryDTO::isClosed);
+            active.setStatus(WorkflowStatus.COMPLETED);
+            assertThat(service.listSignRequests(user)).allMatch(SignRequestSummaryDTO::isClosed);
         }
 
         @Test

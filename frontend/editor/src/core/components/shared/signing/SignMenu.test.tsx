@@ -109,6 +109,31 @@ it("keeps personal signing accessible when shared signing is disabled", () => {
   expect(onSelect).toHaveBeenCalledWith("sign");
 });
 
+it("keeps expired and server-closed requests out of Active and the unread count", () => {
+  setup([
+    { ...incoming, closed: true, documentName: "Viewer.pdf" },
+    {
+      ...incoming,
+      sessionId: "expired",
+      accessExpired: true,
+      documentName: "Expired.pdf",
+    },
+  ]);
+  expect(
+    screen.getByRole("button", { name: /^Unread\s*0$/ }),
+  ).toBeInTheDocument();
+  expect(
+    screen.queryByRole("button", { name: /Viewer.pdf|Expired.pdf/ }),
+  ).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Closed", exact: true }));
+  expect(
+    screen.getByRole("button", { name: /Viewer.pdf.*Closed/ }),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByRole("button", { name: /Expired.pdf.*Access expired/ }),
+  ).toBeInTheDocument();
+});
+
 it("opens request creation, expanded sessions and certificate signing directly", () => {
   const { onSelect, onOpenSigning, onClose } = setup();
   fireEvent.click(screen.getByRole("button", { name: "Request signatures" }));

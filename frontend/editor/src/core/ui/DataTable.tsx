@@ -49,7 +49,7 @@ const DATA_TABLE_FEATURES = tableFeatures({
 type DataTableFeatures = typeof DATA_TABLE_FEATURES;
 
 /** Closed appearance dial — the only look choice a call-site may make. */
-export type DataTableVariant = "default" | "compact";
+export type DataTableVariant = "default" | "compact" | "comfortable";
 
 /**
  * A collapsible section of rows under a locked header. Group headers are

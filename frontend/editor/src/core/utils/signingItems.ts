@@ -27,19 +27,24 @@ export function collectSigningItems(
   );
 }
 
-/** A declined invitation is closed for its participant, even while the owner's session remains active. */
+/** Participant closure includes access and role restrictions; the owner's workflow can remain active. */
 export function isSigningItemClosed(item: SigningItem): boolean {
   return (
     Boolean(item.finalized) ||
-    (item.kind === "request" && item.myStatus === "DECLINED")
+    (item.kind === "session" &&
+      item.status !== undefined &&
+      item.status !== "IN_PROGRESS") ||
+    (item.kind === "request" &&
+      (item.myStatus === "DECLINED" ||
+        Boolean(item.accessExpired) ||
+        Boolean(item.closed)))
   );
 }
 
 export function needsSignature(item: SigningItem): boolean {
   return (
     item.kind === "request" &&
-    !item.finalized &&
-    item.myStatus !== "SIGNED" &&
-    item.myStatus !== "DECLINED"
+    !isSigningItemClosed(item) &&
+    item.myStatus !== "SIGNED"
   );
 }

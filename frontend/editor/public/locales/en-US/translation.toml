@@ -11898,6 +11898,7 @@ unreadTab = "Unread"
 [signRequest]
 accessExpired = "Your access to this signing request has expired. Ask the sender for a new request."
 declined = "Sign request declined"
+expired = "Access expired"
 fetchFailed = "Failed to load sign request"
 
 [signSession]
@@ -11938,6 +11939,8 @@ changeDocument = "Change PDF"
 chooseDocument = "Choose an open PDF"
 chooseFromLibrary = "Choose from library"
 chooseParticipants = "Choose participants"
+choosePdf = "Choose a PDF"
+choosePdfHeading = "Start with your document"
 clearDate = "Clear date"
 created = "Created"
 createdByMe = "Created by me"

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   collectSigningItems,
   isSigningItemClosed,
+  needsSignature,
   type SigningItem,
 } from "@app/utils/signingItems";
 import {
@@ -30,6 +31,27 @@ const session: SigningItem = {
 };
 
 describe("signing workspace entry points", () => {
+  it("closes server-reported participant restrictions and cancelled or completed workflows", () => {
+    expect(isSigningItemClosed({ ...request, closed: true })).toBe(true);
+    expect(needsSignature({ ...request, closed: true })).toBe(false);
+    expect(isSigningItemClosed({ ...session, status: "CANCELLED" })).toBe(true);
+    expect(isSigningItemClosed({ ...session, status: "COMPLETED" })).toBe(true);
+    expect(isSigningItemClosed({ ...session, status: "IN_PROGRESS" })).toBe(
+      false,
+    );
+  });
+  it("closes expired participant access without closing the owner session or treating due dates as expiry", () => {
+    const expired = { ...request, accessExpired: true };
+    expect(isSigningItemClosed(expired)).toBe(true);
+    expect(needsSignature(expired)).toBe(false);
+    expect(isSigningItemClosed({ ...expired, myStatus: "SIGNED" })).toBe(true);
+    const overdue = { ...request, dueDate: "2000-01-01", accessExpired: false };
+    expect(isSigningItemClosed(overdue)).toBe(false);
+    expect(needsSignature(overdue)).toBe(true);
+    expect(
+      isSigningItemClosed({ ...session, sessionId: request.sessionId }),
+    ).toBe(false);
+  });
   it("collapses duplicate historical invitations before rendering and filtering", () => {
     expect(collectSigningItems([request, { ...request }], [])).toEqual([
       request,

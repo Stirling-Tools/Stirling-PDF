@@ -112,51 +112,40 @@ export default function SigningWorkspace() {
       className="signing-workspace"
       aria-label={t("signMenu.sessions", "Signing sessions")}
     >
-      <header className="signing-workspace__header">
-        <nav
-          className="signing-workspace__navigation"
-          aria-label={t("signWorkspace.navigation", "Signing navigation")}
-        >
-          <h1 className="signing-workspace__path">
-            <Button
-              variant={currentLocation ? "tertiary" : "primary"}
-              shape="pill"
-              size="sm"
-              aria-current={currentLocation ? undefined : "page"}
-              disabled={controller.creating || uploading || opening}
-              onClick={() =>
-                requestNavigation(() => {
-                  controller.backToList();
-                  setShowCreate(false);
-                  setError(null);
-                })
-              }
-            >
-              {t("signMenu.sessions", "Signing sessions")}
-            </Button>
-            {currentLocation && (
-              <>
-                <Icon name="chevron-right" size={16} aria-hidden="true" />
-                <span
-                  className="signing-workspace__current"
-                  aria-current="page"
-                  title={currentLocation}
-                >
-                  {currentLocation}
-                </span>
-              </>
-            )}
-          </h1>
-        </nav>
-        {!detail && !showCreate && enabled && (
-          <Button
-            leftSection={<Icon name="plus" size={18} />}
-            onClick={() => setShowCreate(true)}
+      {currentLocation && (
+        <header className="signing-workspace__header">
+          <nav
+            className="signing-workspace__navigation"
+            aria-label={t("signWorkspace.navigation", "Signing navigation")}
           >
-            {t("signMenu.request", "Request signatures")}
-          </Button>
-        )}
-      </header>
+            <h1 className="signing-workspace__path">
+              <Button
+                variant="tertiary"
+                shape="pill"
+                size="sm"
+                disabled={controller.creating || uploading || opening}
+                onClick={() =>
+                  requestNavigation(() => {
+                    controller.backToList();
+                    setShowCreate(false);
+                    setError(null);
+                  })
+                }
+              >
+                {t("signMenu.sessions", "Signing sessions")}
+              </Button>
+              <Icon name="chevron-right" size={16} aria-hidden="true" />
+              <span
+                className="signing-workspace__current"
+                aria-current="page"
+                title={currentLocation}
+              >
+                {currentLocation}
+              </span>
+            </h1>
+          </nav>
+        </header>
+      )}
       {!enabled ? (
         <div className="signing-workspace__body">
           <Alert>
@@ -261,6 +250,7 @@ export default function SigningWorkspace() {
             key={listRevision}
             items={items}
             loading={controller.loading}
+            onCreate={() => setShowCreate(true)}
             onOpen={(item) => {
               void openItem(item);
             }}

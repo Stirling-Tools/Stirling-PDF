@@ -357,6 +357,7 @@ export function useSigningSessionController(
       const accessExpired = isParticipantAccessExpired(error);
       if (accessExpired) {
         markSigningItemSeen(accountId, { ...request, kind: "request" });
+        void refetch();
       }
       console.error(
         "Failed to load sign request:",

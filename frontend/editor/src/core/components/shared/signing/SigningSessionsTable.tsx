@@ -7,6 +7,7 @@ import {
   useDataTableFilters,
 } from "@app/ui/DataTableFilterBar";
 import { Icon } from "@app/ui/Icon";
+import { Input } from "@app/ui/Input";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
 import type { StatusTone } from "@app/ui/StatusBadge";
 import {
@@ -23,15 +24,19 @@ interface SigningSessionsTableProps {
   loading: boolean;
   onOpen: (item: SigningItem) => void;
   onRefresh: () => void;
+  onCreate: () => void;
 }
 
 function statusKey(item: SigningItem): string {
+  if (item.kind === "request" && item.accessExpired) return "expired";
+  if (item.finalized) return "finalized";
   if (item.kind === "request") {
-    if (item.myStatus === "SIGNED") return "signed";
     if (item.myStatus === "DECLINED") return "declined";
+    if (item.closed) return "closed";
+    if (item.myStatus === "SIGNED") return "signed";
     if (needsSignature(item)) return "needsYou";
   }
-  if (item.finalized) return "finalized";
+  if (isSigningItemClosed(item)) return "closed";
   if (
     item.kind === "session" &&
     item.participantCount > 0 &&
@@ -55,10 +60,13 @@ export function SigningSessionsTable({
   loading,
   onOpen,
   onRefresh,
+  onCreate,
 }: SigningSessionsTableProps) {
   const { t } = useTranslation();
   const [tab, setTab] = useState("active");
   const statusLabels: Record<string, string> = {
+    expired: t("signRequest.expired", "Access expired"),
+    closed: t("signMenu.closedTab", "Closed"),
     needsYou: t("signWorkspace.needsYou", "Needs your signature"),
     signed: t("sharedSign.filterSigned", "Signed"),
     declined: t("sharedSign.filterDeclined", "Declined"),
@@ -146,6 +154,26 @@ export function SigningSessionsTable({
       sortBy: (item) => statusLabels[statusKey(item)],
       get: (item) => {
         const status = signingStatus(item, t);
+        if (item.kind === "session") {
+          return {
+            tone: statusTones[status.color] ?? "neutral",
+            label: statusLabels[statusKey(item)],
+            progress:
+              item.participantCount > 0
+                ? {
+                    value: item.signedCount / item.participantCount,
+                    label: t(
+                      "signingDetail.signedCount",
+                      "{{signed}} / {{total}} signed",
+                      {
+                        signed: item.signedCount,
+                        total: item.participantCount,
+                      },
+                    ),
+                  }
+                : undefined,
+          };
+        }
         return needsSignature(item)
           ? { tone: "warning", label: statusLabels.needsYou }
           : {
@@ -173,33 +201,66 @@ export function SigningSessionsTable({
 
   return (
     <div className="signing-workspace__content">
-      <div className="signing-workspace__toolbar">
-        <SegmentedControl
-          value={tab}
-          onChange={(value) => {
-            setTab(value);
-            filters.filterBar.onClearAll();
-          }}
-          options={[
-            { value: "active", label: t("sharedSign.tab.active", "Active") },
-            { value: "unread", label: t("signMenu.unreadTab", "Unread") },
-            {
-              value: "closed",
-              label: t("signMenu.closedTab", "Closed"),
-            },
-          ]}
+      <div className="signing-workspace__list-heading">
+        <Input
+          className="signing-workspace__search"
+          inputSize="sm"
+          leadingIcon={<Icon name="search" size={16} />}
+          value={filters.filterBar.search?.value ?? ""}
+          onChange={(event) =>
+            filters.filterBar.search?.onChange(event.target.value)
+          }
+          placeholder={t("signWorkspace.search", "Search documents or people")}
+          aria-label={t("signWorkspace.search", "Search documents or people")}
         />
-        <Button
-          variant="quiet"
-          aria-label={t("signWorkspace.refresh", "Refresh sessions")}
-          title={t("signWorkspace.refresh", "Refresh sessions")}
-          onClick={onRefresh}
-          disabled={loading}
-          leftSection={<Icon name="refresh-cw" size={18} />}
-        />
+        <div className="signing-workspace__list-action">
+          <Button
+            leftSection={<Icon name="plus" size={18} />}
+            onClick={onCreate}
+          >
+            {t("signMenu.request", "Request signatures")}
+          </Button>
+        </div>
       </div>
-      <DataTableFilterBar {...filters.filterBar} />
       <DataTable
+        variant="comfortable"
+        toolbar={
+          <div className="signing-workspace__table-controls">
+            <SegmentedControl
+              ariaLabel={t("signMenu.sessionFilter", "Session views")}
+              value={tab}
+              onChange={(value) => {
+                setTab(value);
+                filters.filterBar.onClearAll();
+              }}
+              options={[
+                {
+                  value: "active",
+                  label: t("sharedSign.tab.active", "Active"),
+                },
+                { value: "unread", label: t("signMenu.unreadTab", "Unread") },
+                {
+                  value: "closed",
+                  label: t("signMenu.closedTab", "Closed"),
+                },
+              ]}
+            />
+            <DataTableFilterBar
+              {...filters.filterBar}
+              search={undefined}
+              trailing={
+                <Button
+                  variant="quiet"
+                  aria-label={t("signWorkspace.refresh", "Refresh sessions")}
+                  title={t("signWorkspace.refresh", "Refresh sessions")}
+                  onClick={onRefresh}
+                  disabled={loading}
+                  leftSection={<Icon name="refresh-cw" size={18} />}
+                />
+              }
+            />
+          </div>
+        }
         columns={columns}
         rows={filters.rows}
         rowKey={(item) => `${item.kind}:${item.sessionId}`}

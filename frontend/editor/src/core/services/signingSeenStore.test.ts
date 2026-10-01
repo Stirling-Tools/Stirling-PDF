@@ -32,6 +32,18 @@ const request: SigningItem = {
 beforeEach(() => localStorage.clear());
 afterEach(() => vi.restoreAllMocks());
 
+it("does not notify for expired access even if the invitation has never been opened", () => {
+  expect(hasUnseenSigningActivity("alice", { ...request, closed: true })).toBe(
+    false,
+  );
+  expect(
+    hasUnseenSigningActivity("alice", { ...request, accessExpired: true }),
+  ).toBe(false);
+  expect(
+    hasUnseenSigningActivity("alice", { ...request, dueDate: "2000-01-01" }),
+  ).toBe(true);
+});
+
 it("flags new requests until successfully viewed, separately for each account and role", () => {
   expect(hasUnseenSigningActivity("alice", request)).toBe(true);
   markSigningItemSeen("alice", session);

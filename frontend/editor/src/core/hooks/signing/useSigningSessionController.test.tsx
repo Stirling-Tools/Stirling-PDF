@@ -163,6 +163,7 @@ it("acknowledges an expired invitation even when the empty document error arrive
   expect(mocks.alert).toHaveBeenLastCalledWith(
     expect.objectContaining({ body: "signRequest.accessExpired" }),
   );
+  expect(mocks.refetch).toHaveBeenCalledOnce();
   expect(mocks.get).toHaveBeenCalledWith(expect.stringContaining("/document"), {
     responseType: "blob",
     suppressErrorToast: true,

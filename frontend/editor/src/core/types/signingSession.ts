@@ -9,6 +9,7 @@ export interface WetSignatureMetadata {
 }
 
 export interface SessionSummary {
+  status?: "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
   sessionId: string;
   documentName: string;
   createdAt: string;
@@ -64,6 +65,10 @@ export interface SignRequestSummary {
   dueDate: string;
   myStatus: "PENDING" | "NOTIFIED" | "VIEWED" | "SIGNED" | "DECLINED";
   finalized?: boolean;
+  /** Server-evaluated access expiry, independent of the advisory due date. */
+  accessExpired?: boolean;
+  /** Closed for this participant, including non-signing roles; submitted signatures alone do not close it. */
+  closed?: boolean;
 }
 
 export interface SignRequestDetail {

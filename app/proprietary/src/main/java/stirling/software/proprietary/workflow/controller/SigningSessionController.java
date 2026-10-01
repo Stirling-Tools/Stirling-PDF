@@ -21,6 +21,10 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.validation.constraints.NotBlank;
@@ -36,6 +40,7 @@ import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.workflow.dto.CertificateInfo;
 import stirling.software.proprietary.workflow.dto.CertificateValidationResponse;
 import stirling.software.proprietary.workflow.dto.ParticipantRequest;
+import stirling.software.proprietary.workflow.dto.SignRequestSummaryDTO;
 import stirling.software.proprietary.workflow.dto.WorkflowCreationRequest;
 import stirling.software.proprietary.workflow.model.WorkflowSession;
 import stirling.software.proprietary.workflow.service.CertificateSubmissionValidator;
@@ -282,6 +287,18 @@ public class SigningSessionController {
     // ===== SIGN REQUESTS (Participant View) =====
 
     @Operation(summary = "List sign requests for authenticated user")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Participant requests, including finalized, declined and expired access",
+            content =
+                    @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            array =
+                                    @ArraySchema(
+                                            schema =
+                                                    @Schema(
+                                                            implementation =
+                                                                    SignRequestSummaryDTO.class))))
     @Transactional(readOnly = true)
     @GetMapping(value = "/cert-sign/sign-requests")
     public ResponseEntity<?> listSignRequests(Principal principal) {

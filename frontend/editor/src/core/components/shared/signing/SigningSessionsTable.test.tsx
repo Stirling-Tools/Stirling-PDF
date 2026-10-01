@@ -87,6 +87,7 @@ function show(
 ) {
   const onOpen = vi.fn();
   const onRefresh = vi.fn();
+  const onCreate = vi.fn();
   const table = (rows: (SigningItem & { unread?: boolean })[]) => (
     <MantineProvider>
       <SigningSessionsTable
@@ -94,6 +95,7 @@ function show(
         loading={loading}
         onOpen={onOpen}
         onRefresh={onRefresh}
+        onCreate={onCreate}
       />
     </MantineProvider>
   );
@@ -102,6 +104,7 @@ function show(
     user: userEvent.setup(),
     onOpen,
     onRefresh,
+    onCreate,
     updateItems: (rows: (SigningItem & { unread?: boolean })[]) =>
       view.rerender(table(rows)),
   };
@@ -123,6 +126,60 @@ it("shows only unread active sessions with due-date filters and keeps read sessi
   await user.click(screen.getByRole("radio", { name: "Active" }));
   expect(documents()).toContain("Ready.pdf");
   expect(documents()).toContain("Plan.pdf");
+});
+
+it("moves expired access from Active and Unread into Closed when refreshed", async () => {
+  const request = items[3];
+  if (request.kind !== "request") throw new Error("Expected a request fixture");
+  const { user, updateItems } = show(false, [{ ...request, unread: true }]);
+  expect(documents()).toEqual(["Plan.pdf"]);
+  updateItems([{ ...request, accessExpired: true, unread: false }]);
+  expect(documents()).toEqual([]);
+  await user.click(screen.getByRole("radio", { name: "Unread" }));
+  expect(documents()).toEqual([]);
+  await user.click(screen.getByRole("radio", { name: "Closed" }));
+  expect(documents()).toEqual(["Plan.pdf"]);
+  expect(screen.getByText("Access expired")).toBeInTheDocument();
+  await pick(user, "Status", "Access expired");
+  expect(documents()).toEqual(["Plan.pdf"]);
+});
+
+it("shows completion progress for owners without implying aggregate progress for participants", () => {
+  show(false, [
+    ...items,
+    {
+      kind: "session",
+      sessionId: "empty",
+      documentName: "Empty.pdf",
+      createdAt: "2026-01-01",
+      participantCount: 0,
+      signedCount: 0,
+      finalized: false,
+    },
+  ]);
+  const partial = screen.getByRole("button", {
+    name: /Budget.pdf Created by me/,
+  });
+  expect(
+    within(partial).getByRole("progressbar", { name: "1 / 2 signed" }),
+  ).toHaveAttribute("aria-valuenow", "50");
+  expect(within(partial).getByText("Awaiting signatures")).toBeInTheDocument();
+  const ready = screen.getByRole("button", {
+    name: /Ready.pdf.*Ready to finalize/,
+  });
+  expect(
+    within(ready).getByRole("progressbar", { name: "2 / 2 signed" }),
+  ).toHaveAttribute("aria-valuenow", "100");
+  expect(
+    within(
+      screen.getByRole("button", { name: /Budget.pdf alice/ }),
+    ).queryByRole("progressbar"),
+  ).not.toBeInTheDocument();
+  expect(
+    within(screen.getByRole("button", { name: /Empty.pdf/ })).queryByRole(
+      "progressbar",
+    ),
+  ).not.toBeInTheDocument();
 });
 
 function documents() {

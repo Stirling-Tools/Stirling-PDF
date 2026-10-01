@@ -125,7 +125,7 @@ it("uses the single-PDF library picker and reuses an already-open file", async (
   const file = createStirlingFile(new File(["same"], "Open.pdf"));
   state.files.mockReturnValue([file]);
   const { onChange } = show();
-  fireEvent.click(screen.getByRole("button", { name: "Choose from library" }));
+  fireEvent.click(screen.getByRole("button", { name: "Choose a PDF" }));
   const options = state.open.mock.calls[0][0];
   expect(options).toMatchObject({
     supportedFormats: ["pdf"],
@@ -143,7 +143,7 @@ it("selects the imported PDF and releases loading state when ingestion fails", a
     .mockResolvedValueOnce([added])
     .mockRejectedValueOnce(new Error("Storage unavailable"));
   const { onChange, onLoadingChange } = show();
-  fireEvent.click(screen.getByRole("button", { name: "Choose from library" }));
+  fireEvent.click(screen.getByRole("button", { name: "Choose a PDF" }));
   const options = state.open.mock.calls[0][0];
   await act(() => options.customHandler([source]));
   expect(state.add).toHaveBeenCalledWith([source], { selectFiles: false });
@@ -159,7 +159,7 @@ it("selects the imported PDF and releases loading state when ingestion fails", a
 
 it("rejects a multi-document bundle before changing the selected PDF", async () => {
   const { onChange } = show();
-  fireEvent.click(screen.getByRole("button", { name: "Choose from library" }));
+  fireEvent.click(screen.getByRole("button", { name: "Choose a PDF" }));
   const options = state.open.mock.calls[0][0];
   await act(async () => {
     await expect(

@@ -1,5 +1,6 @@
 import type { TFunction } from "i18next";
 import type { SigningItem } from "@app/utils/signingItems";
+import { isSigningItemClosed } from "@app/utils/signingItems";
 import type {
   SessionSummary,
   SignRequestSummary,
@@ -13,6 +14,9 @@ export function signingStatus(
     const s = item as SessionSummary;
     if (s.finalized) {
       return { color: "green", label: t("certSign.finalized", "Finalized") };
+    }
+    if (isSigningItemClosed(item)) {
+      return { color: "orange", label: t("signMenu.closedTab", "Closed") };
     }
     const signed = s.signedCount ?? 0;
     const total = s.participantCount ?? 0;
@@ -38,8 +42,17 @@ export function signingStatus(
     };
   }
   const req = item as SignRequestSummary;
+  if (req.accessExpired) {
+    return {
+      color: "orange",
+      label: t("signRequest.expired", "Access expired"),
+    };
+  }
   if (req.finalized) {
     return { color: "green", label: t("certSign.finalized", "Finalized") };
+  }
+  if (req.closed && req.myStatus !== "DECLINED") {
+    return { color: "orange", label: t("signMenu.closedTab", "Closed") };
   }
   switch (req.myStatus) {
     case "SIGNED":

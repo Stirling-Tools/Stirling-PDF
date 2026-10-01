@@ -37,6 +37,44 @@ export function SigningDocumentPicker({
   );
   const selectedFile = pdfs.find((file) => file.id === value);
 
+  const openLibrary = () => {
+    openFilesModal({
+      maxSelectable: 1,
+      supportedFormats: ["pdf"],
+      customHandler: async (files) => {
+        if (
+          files.length !== 1 ||
+          !files[0].name.toLowerCase().endsWith(".pdf")
+        ) {
+          throw new Error(
+            t(
+              "signWorkspace.selectOnePdf",
+              "Choose one PDF for this signing request.",
+            ),
+          );
+        }
+        onLoadingChange(true);
+        try {
+          const existing = selectors
+            .getFiles()
+            .find((file) => createQuickKey(file) === createQuickKey(files[0]));
+          const selected =
+            existing ?? (await addFiles(files, { selectFiles: false }))[0];
+          if (!selected)
+            throw new Error(
+              t(
+                "signWorkspace.uploadFailed",
+                "Could not open this PDF. Please try again.",
+              ),
+            );
+          onChange(selected.fileId);
+        } finally {
+          onLoadingChange(false);
+        }
+      },
+    });
+  };
+
   return (
     <div className="signing-workspace__document-picker">
       <div className="signing-document-picker__heading">
@@ -56,57 +94,17 @@ export function SigningDocumentPicker({
           >
             {t("signWorkspace.changeDocument", "Change PDF")}
           </Button>
-        ) : (
+        ) : pdfs.length > 0 ? (
           <Button
             variant="secondary"
             loading={loading}
             disabled={disabled}
             leftSection={<Icon name="folder-open" size={18} />}
-            onClick={() =>
-              openFilesModal({
-                maxSelectable: 1,
-                supportedFormats: ["pdf"],
-                customHandler: async (files) => {
-                  if (
-                    files.length !== 1 ||
-                    !files[0].name.toLowerCase().endsWith(".pdf")
-                  ) {
-                    throw new Error(
-                      t(
-                        "signWorkspace.selectOnePdf",
-                        "Choose one PDF for this signing request.",
-                      ),
-                    );
-                  }
-                  onLoadingChange(true);
-                  try {
-                    const existing = selectors
-                      .getFiles()
-                      .find(
-                        (file) =>
-                          createQuickKey(file) === createQuickKey(files[0]),
-                      );
-                    const selected =
-                      existing ??
-                      (await addFiles(files, { selectFiles: false }))[0];
-                    if (!selected)
-                      throw new Error(
-                        t(
-                          "signWorkspace.uploadFailed",
-                          "Could not open this PDF. Please try again.",
-                        ),
-                      );
-                    onChange(selected.fileId);
-                  } finally {
-                    onLoadingChange(false);
-                  }
-                },
-              })
-            }
+            onClick={openLibrary}
           >
             {t("signWorkspace.chooseFromLibrary", "Choose from library")}
           </Button>
-        )}
+        ) : null}
       </div>
       {selectedFile ? (
         <figure
@@ -138,12 +136,34 @@ export function SigningDocumentPicker({
           </div>
         </fieldset>
       ) : (
-        <p className="signing-document-picker__empty">
-          {t(
-            "signWorkspace.noOpenPdfs",
-            "Choose a PDF from your library or add one from your computer.",
-          )}
-        </p>
+        <div className="signing-document-picker__empty">
+          <div className="signing-document-picker__empty-content">
+            <div
+              className="signing-document-picker__empty-icon"
+              aria-hidden="true"
+            >
+              <Icon name="file-text" size={40} />
+            </div>
+            <h3>
+              {t("signWorkspace.choosePdfHeading", "Start with your document")}
+            </h3>
+            <p>
+              {t(
+                "signWorkspace.noOpenPdfs",
+                "Choose a PDF from your library or add one from your computer.",
+              )}
+            </p>
+            <Button
+              size="lg"
+              loading={loading}
+              disabled={disabled}
+              leftSection={<Icon name="folder-open" size={20} />}
+              onClick={openLibrary}
+            >
+              {t("signWorkspace.choosePdf", "Choose a PDF")}
+            </Button>
+          </div>
+        </div>
       )}
     </div>
   );

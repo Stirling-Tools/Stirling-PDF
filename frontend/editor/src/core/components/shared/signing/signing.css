@@ -340,13 +340,44 @@
 }
 .signing-workspace__content {
   min-width: 0;
+  max-width: 72rem;
+  margin-inline: auto;
 }
-.signing-workspace__toolbar {
-  display: flex;
+.signing-workspace__list-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 24rem) minmax(0, 1fr);
   align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+.signing-workspace__search {
+  grid-column: 2;
+  width: 100%;
+  min-width: 0;
+  background: transparent;
+}
+.signing-workspace__list-action {
+  grid-column: 3;
+  justify-self: end;
+}
+.signing-workspace__table-controls {
+  display: flex;
+  align-items: flex-start;
   flex-wrap: wrap;
-  gap: 16px;
-  margin-bottom: 20px;
+  gap: 1rem 1.5rem;
+  width: 100%;
+}
+.signing-workspace__table-controls > .sui-dtfb {
+  flex: 1 1 20rem;
+}
+.signing-workspace__table-controls .sui-dtfb__row {
+  justify-content: flex-end;
+}
+.signing-workspace__table-controls .sui-dtfb__trailing {
+  margin-inline-start: 0;
+}
+.signing-workspace__table-controls .sui-dtfb__active {
+  justify-content: flex-end;
 }
 .signing-workspace__empty {
   display: flex;
@@ -398,6 +429,8 @@
   flex-direction: column;
 }
 .signing-workspace__document-picker {
+  display: flex;
+  flex-direction: column;
   flex: 1;
   padding-bottom: 24px;
   margin-bottom: 24px;
@@ -425,12 +458,53 @@
   border: 0;
   min-width: 0;
 }
-.signing-document-picker__files legend,
-.signing-document-picker__empty {
+.signing-document-picker__files legend {
   margin: 0 0 12px;
   padding: 0;
   font-size: 12px;
   color: var(--c-text-muted);
+}
+.signing-document-picker__empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 320px;
+  padding: clamp(24px, 4vw, 56px);
+  border: 1px dashed var(--c-border-strong);
+  border-radius: 16px;
+  background: var(--c-bg);
+  text-align: center;
+}
+.signing-document-picker__empty-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  min-height: clamp(260px, calc(100dvh - 280px), 600px);
+}
+.signing-document-picker__empty-icon {
+  display: grid;
+  place-items: center;
+  width: 88px;
+  height: 104px;
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  background: var(--c-surface);
+  color: var(--c-accent-fg);
+  box-shadow: var(--shadow-sm);
+}
+.signing-document-picker__empty h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+.signing-document-picker__empty p {
+  max-width: 32ch;
+  margin: -8px 0 4px;
+  color: var(--c-text-muted);
+  font-size: 14px;
+  line-height: 1.6;
 }
 .signing-document-picker__grid {
   display: grid;
@@ -672,7 +746,23 @@
     max-height: clamp(420px, calc(100dvh - 260px), 900px);
   }
 }
+@media (max-width: 960px) {
+  .signing-workspace__list-heading {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 1rem;
+  }
+  .signing-workspace__search {
+    grid-column: 1;
+  }
+  .signing-workspace__list-action {
+    grid-column: 2;
+  }
+}
 @media (max-width: 800px) {
+  .signing-workspace__table-controls .sui-dtfb__row,
+  .signing-workspace__table-controls .sui-dtfb__active {
+    justify-content: flex-start;
+  }
   .signing-workspace__header {
     padding: 8px 12px;
   }
@@ -697,6 +787,18 @@
   }
   .signing-request__calendar {
     padding: 12px 8px;
+  }
+}
+
+@media (max-width: 560px) {
+  .signing-workspace__list-heading {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .signing-workspace__search {
+    grid-row: 2;
+  }
+  .signing-workspace__list-action {
+    grid-column: 1;
   }
 }
 

@@ -754,6 +754,12 @@ public class WorkflowSessionService {
                                             : null);
                             dto.setMyStatus(p.getStatus());
                             dto.setFinalized(session.isFinalized());
+                            dto.setAccessExpired(p.isExpired());
+                            dto.setClosed(
+                                    !session.isActive()
+                                            || dto.isAccessExpired()
+                                            || p.getStatus() == ParticipantStatus.DECLINED
+                                            || p.getAccessRole() != ShareAccessRole.EDITOR);
                             return dto;
                         })
                 .toList();
