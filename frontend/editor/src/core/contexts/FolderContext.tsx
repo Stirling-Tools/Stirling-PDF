@@ -25,6 +25,7 @@ import React, {
   useState,
 } from "react";
 
+import i18n from "i18next";
 import { folderStorage } from "@app/services/folderStorage";
 import { virtualFolderStorage } from "@app/services/virtualFolderStorage";
 import { localFolderStorage } from "@app/services/localFolderStorage";
@@ -207,7 +208,12 @@ function formatServerError(err: unknown): string {
       response?.data?.errors?.[0]?.defaultMessage;
     if (msg) return status ? `${msg} (HTTP ${status})` : msg;
   }
-  return err instanceof Error ? err.message : "Folder operation failed";
+  return err instanceof Error
+    ? err.message
+    : i18n.t(
+        "filesPage.error.folderOperationFailed",
+        "Folder operation failed",
+      );
 }
 
 /**
@@ -395,7 +401,13 @@ export function FolderProvider({ children }: FolderProviderProps) {
           // tooltips via `serverReachable`, which is enough signal.
           if (status === undefined || status >= 500) {
             console.warn("[FolderContext] pullFromServer failed", err);
-            setError(`Folder sync failed: ${formatServerError(err)}`);
+            setError(
+              i18n.t(
+                "filesPage.error.folderSyncFailed",
+                "Folder sync failed: {{message}}",
+                { message: formatServerError(err) },
+              ),
+            );
           }
         }
         // Narrowing the ternary into a typed variable so TS keeps the literal
@@ -612,11 +624,21 @@ export function FolderProvider({ children }: FolderProviderProps) {
         // listing would. Mount roots come from the picker, never here.
         const parent = parentFolderId ? foldersById.get(parentFolderId) : null;
         if (!parent?.directory) {
-          throw new Error("Cannot create a folder outside a mounted directory");
+          throw new Error(
+            i18n.t(
+              "filesPage.error.createOutsideMount",
+              "Cannot create a folder outside a mounted directory",
+            ),
+          );
         }
         const path = await makeDiskDirectory(parent.directory, name);
         if (path === null) {
-          throw new Error("This build cannot create folders on disk");
+          throw new Error(
+            i18n.t(
+              "filesPage.error.diskFoldersUnsupported",
+              "This build cannot create folders on disk",
+            ),
+          );
         }
         const record = diskSubfolderRecord(path, name, parent.id);
         if (mountedRef.current) {
@@ -723,10 +745,20 @@ export function FolderProvider({ children }: FolderProviderProps) {
     async (id: FolderId, newParentId: FolderId | null) => {
       const kind = requireKind(id);
       if (newParentId !== null && requireKind(newParentId) !== kind) {
-        throw new Error("Folders can only move within their own kind");
+        throw new Error(
+          i18n.t(
+            "filesPage.error.moveAcrossKinds",
+            "Folders can only move within their own kind",
+          ),
+        );
       }
       if (kind === "local") {
-        throw new Error("A local folder sits where its directory sits");
+        throw new Error(
+          i18n.t(
+            "filesPage.error.moveLocalFolder",
+            "A local folder sits where its directory sits",
+          ),
+        );
       }
       if (kind === "virtual") {
         return applyOwnedRecord(
@@ -758,7 +790,12 @@ export function FolderProvider({ children }: FolderProviderProps) {
     ) => {
       const kind = requireKind(id);
       if (kind === "local") {
-        throw new Error("Local folders cannot be recoloured yet");
+        throw new Error(
+          i18n.t(
+            "filesPage.error.recolourLocalFolder",
+            "Local folders cannot be recoloured yet",
+          ),
+        );
       }
       if (kind === "virtual") {
         // Only the fields the picker sent: it sends one key per interaction, and the
@@ -797,7 +834,10 @@ export function FolderProvider({ children }: FolderProviderProps) {
       if (kind === "local") {
         if (isDiskFolderId(id)) {
           throw new Error(
-            "Subfolders of a mounted directory are removed on disk",
+            i18n.t(
+              "filesPage.error.removeDiskSubfolder",
+              "Subfolders of a mounted directory are removed on disk",
+            ),
           );
         }
         // Removes the record and nothing else; the directory is the user's.
@@ -887,7 +927,10 @@ export function FolderProvider({ children }: FolderProviderProps) {
         );
         if (mountedRef.current) {
           setError(
-            "Folder was deleted, but some files couldn't be detached locally. Refresh to fix.",
+            i18n.t(
+              "filesPage.error.folderDetachFailed",
+              "Folder was deleted, but some files couldn't be detached locally. Refresh to fix.",
+            ),
           );
         }
       }
