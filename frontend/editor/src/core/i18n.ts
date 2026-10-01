@@ -58,8 +58,8 @@ i18n
       caches: [], // Don't cache auto-detected language - only cache when user manually selects
       convertDetectedLanguage: (lng: string) => {
         // Map bare en to en-US
-        if (lng === "en") return "en-US";
-        return lng;
+        const normalized = normalizeLanguageCode(lng);
+        return normalized === "en" ? "en-US" : normalized;
       },
     },
 

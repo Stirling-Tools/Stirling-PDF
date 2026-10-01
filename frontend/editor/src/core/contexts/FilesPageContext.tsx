@@ -7,6 +7,7 @@ import React, {
   useState,
 } from "react";
 import { useTranslation } from "react-i18next";
+import i18n from "i18next";
 import { useNavigate } from "react-router-dom";
 
 import { FileId } from "@app/types/file";
@@ -222,7 +223,9 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
       if (gen !== refreshGenRef.current) return;
       console.error("[FilesPageContext] refresh failed", err);
       setFoldersError(
-        err instanceof Error ? err.message : "Failed to load files",
+        err instanceof Error
+          ? err.message
+          : i18n.t("filesPage.error.loadFilesFailed", "Failed to load files"),
       );
     } finally {
       if (gen === refreshGenRef.current) setLoading(false);

@@ -374,7 +374,13 @@ export function TextRunOverlay({
   const [focused, setFocused] = useState(false);
   // Masking a run the user has only clicked into swaps real PDF ink for a
   // CSS approximation, so hold the pristine bitmap until an actual edit.
-  const [touched, setTouched] = useState(false);
+  const [touched, setTouchedState] = useState(false);
+  // Live copy for effects: a commit's effect can run after a newer keystroke.
+  const touchedRef = useRef(false);
+  const setTouched = (next: boolean) => {
+    touchedRef.current = next;
+    setTouchedState(next);
+  };
   const [editTick, setEditTick] = useState(0);
   const [stalled, setStalled] = useState(false);
   const editedAtRevisionRef = useRef(-1);
@@ -595,7 +601,10 @@ export function TextRunOverlay({
     // the browser's, and the caret walks off the text on the page a fraction of
     // a pixel per keystroke. Any other layout would be fighting a keystroke
     // still in flight.
-    if (active && touched && !(freshExact && domText === run.text)) return;
+    // Read live: an effect committed before a keystroke still sees the old
+    // `touched` and would paint the pre-edit text over the new character.
+    if (active && touchedRef.current && !(freshExact && domText === run.text))
+      return;
     const wantSignature = freshExact ? freshExact.signature : "";
     if (!freshExact && isLinePainted(el) && domText === run.text) return;
     if (
