@@ -1,6 +1,6 @@
 # Customer demo plan
 
-30 September 2026 | local demonstration branch
+1 October 2026 | local demonstration branch
 
 Demonstrate a single Sign entry, fast request creation and a verifiable final PDF. Use the patched registered-user/uploaded-certificate workflow. Production approval still requires the deployment gates in the [closure report](./blocking-work-report.md).
 
@@ -9,14 +9,14 @@ Demonstrate a single Sign entry, fast request creation and a verifiable final PD
 | Time | Presenter action | What to establish |
 |---|---|---|
 | 0–2 min | Open the non-binding two-page PDF. Click **Sign** in the permanent rail. Show personal draw/type/upload, certificate signing, request creation and sessions. | One entry point; personal editors currently remain separate. |
-| 2–4 min | Choose **Request signatures**. Show the selected PDF thumbnail and **Choose from library**. Select Alice and Bob, point out their names. Optionally enable the summary, then Send. | Open PDFs are selectable thumbnails; the library modal can pick or import one PDF without leaving the form. People may sign in any order; owner finalization produces the final PDF. |
+| 2–4 min | Choose **Request signatures**. Show the portrait PDF previews and **Choose from library**. Open **Choose participants**, select Alice and Bob, then **Use selected participants**. Show the calendar and info tooltips. Optionally enable the summary, then Send. | Open PDFs and selected people are visible together. The library modal can pick or import one PDF without leaving the form. People may sign in any order; owner finalization produces the final PDF. |
 | 4–7 min | Alice opens **Sign > Expand signing sessions**, reviews, types and places a mark on page one. Complete & Sign, upload her synthetic PKCS12, check the subject and submit. | Optional marks, readable typed appearance, certificate identity and Submitted—awaiting finalization. Viewed records access, not proof of reading. |
 | 7–9 min | Bob opens the request and selects **Complete & Sign** without placing a mark. Upload his certificate and submit. | Certificate-only contributions; owner progress reaches 2/2. |
 | 9–12 min | Owner finalizes once and downloads. Run **Validate PDF Signature**; inspect the summary and visible mark. | Exactly two valid digital signatures and distinct subjects. Self-signed demo certificates establish integrity, not automatic recipient trust. |
 | 12–14 min | Show a prepared partially signed request and named early-finalization warning, then Cancel. Show the Created by me and Overdue filters, search and a Completed request. | Minimum one signature, explicit exclusion of outstanding people, advisory dates and closure. Submitted and finalized differ. |
 | 14–15 min | Share the guide and self-host checklist; agree pilot acceptance. | Clear deployment and certificate/trust requirements. |
 
-With one PDF already selected, the default one-person request uses five primary pointer actions: Sign, Request signatures, participant picker, select signer, Send. Search, extra signers and optional settings add interactions. Show the short path first.
+With one PDF already selected, the default one-person request uses six primary pointer actions: Sign, Request signatures, Choose participants, select signer, Use selected participants, Send. Search, extra signers and optional settings add interactions. Show the short path first.
 
 ## Rehearsal preparation
 

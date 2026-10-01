@@ -1,0 +1,54 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr));
+  gap: 12px;
+}
+.card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  cursor: pointer;
+}
+.card:hover {
+  background: var(--c-hover);
+}
+.card[data-selected="true"] {
+  border-color: var(--c-primary);
+  background: var(--c-primary-subtle);
+}
+.card:focus-within {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 2px;
+}
+.card:has(input:disabled) {
+  opacity: 0.6;
+  cursor: default;
+}
+.avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--c-primary-subtle);
+  color: var(--c-accent-fg);
+  font-size: 14px;
+  font-weight: 600;
+}
+.name {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+.card input {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--c-primary);
+}

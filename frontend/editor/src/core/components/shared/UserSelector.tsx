@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { MultiSelect, Loader, Text, Stack } from "@mantine/core";
+import { MultiSelect, Loader, Text, Stack, TextInput } from "@mantine/core";
 import { Button } from "@app/ui/Button";
+import { Icon } from "@app/ui/Icon";
+import styles from "@app/components/shared/UserSelector.module.css";
 import { useNavigate } from "react-router-dom";
 import { alert } from "@app/components/toast";
 import { fetchUsers } from "@app/api/users";
@@ -17,6 +19,7 @@ interface UserSelectorProps {
   label?: string;
   size?: "xs" | "sm" | "md" | "lg" | "xl";
   disabled?: boolean;
+  presentation?: "dropdown" | "cards";
 }
 
 type SelectItem = { value: string; label: string };
@@ -29,11 +32,13 @@ const UserSelector = ({
   label,
   size = "sm",
   disabled = false,
+  presentation = "dropdown",
 }: UserSelectorProps) => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [stringValue, setStringValue] = useState<string[]>([]);
+  const [search, setSearch] = useState("");
 
   const {
     data: users,
@@ -79,7 +84,6 @@ const UserSelector = ({
     }));
   }, [users, user, t]);
 
-  // Process stringValue when value prop changes
   useEffect(() => {
     const safeValue = Array.isArray(value) ? value : [];
     const result = safeValue
@@ -92,7 +96,6 @@ const UserSelector = ({
     return <Loader size="sm" />;
   }
 
-  // No users available — prompt to invite
   if (!selectData || selectData.length === 0) {
     return (
       <Stack gap="xs" align="flex-start">
@@ -102,10 +105,85 @@ const UserSelector = ({
         <Button
           size="sm"
           variant="secondary"
+          disabled={disabled}
           onClick={() => navigate("/settings/people")}
         >
           {t("certSign.collab.userSelector.inviteUsers", "Add Users")}
         </Button>
+      </Stack>
+    );
+  }
+
+  if (presentation === "cards") {
+    const matchingGroups = selectData
+      .map((group) => ({
+        ...group,
+        items: group.items.filter((item) =>
+          `${item.label} ${group.group}`
+            .toLocaleLowerCase()
+            .includes(search.trim().toLocaleLowerCase()),
+        ),
+      }))
+      .filter((group) => group.items.length > 0);
+    return (
+      <Stack gap="md" role="group" aria-label={label}>
+        <TextInput
+          data-autofocus
+          aria-label={t(
+            "signWorkspace.searchParticipants",
+            "Search people or teams",
+          )}
+          placeholder={t(
+            "signWorkspace.searchParticipants",
+            "Search people or teams",
+          )}
+          leftSection={<Icon name="search" size={18} />}
+          value={search}
+          onChange={(event) => setSearch(event.currentTarget.value)}
+          disabled={disabled}
+        />
+        {matchingGroups.map((group) => (
+          <div key={group.group}>
+            <Text size="xs" c="dimmed" mb="xs">
+              {group.group}
+            </Text>
+            <div className={styles.grid}>
+              {group.items.map((item) => {
+                const id = Number(item.value);
+                const selected = value.includes(id);
+                return (
+                  <label
+                    key={id}
+                    className={styles.card}
+                    data-selected={selected}
+                  >
+                    <span className={styles.avatar} aria-hidden="true">
+                      {item.label.slice(0, 2).toLocaleUpperCase()}
+                    </span>
+                    <span className={styles.name}>{item.label}</span>
+                    <input
+                      type="checkbox"
+                      checked={selected}
+                      disabled={disabled}
+                      onChange={() =>
+                        onChange(
+                          selected
+                            ? value.filter((userId) => userId !== id)
+                            : [...value, id],
+                        )
+                      }
+                    />
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+        {matchingGroups.length === 0 && (
+          <Text size="sm" c="dimmed">
+            {t("signWorkspace.noPeopleMatch", "No people match your search.")}
+          </Text>
+        )}
       </Stack>
     );
   }

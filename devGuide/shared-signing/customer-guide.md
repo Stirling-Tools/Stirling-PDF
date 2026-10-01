@@ -1,6 +1,6 @@
 # Shared Signing: customer guide supplement
 
-30 September 2026 | Updated local demonstration build
+1 October 2026 | Updated local demonstration build
 
 This supplement covers the navigation and practical decisions verified in the local signing patch. It is not a statement that these changes are already in a published release. Use synthetic documents for the demonstration; confirm the customer deployment separately.
 
@@ -19,7 +19,7 @@ The official feature remains alpha. The tested setup uses ordinary registered ac
 ## Owner: create and complete a request
 
 1. Click **Sign** in the permanent navigation rail, then **Request signatures**. The current PDF is selected automatically. Click a thumbnail to choose another open PDF, or **Choose from library** to open the library picker. Select one PDF there, or use **From your computer** to add one, then **Add 1 file**. The form stays open with that PDF selected.
-2. Choose the named participants. Their names stay visible in the picker beside the document and optional due date. Expand **Appearance and summary page (optional)** only when needed, then **Send signing request**.
+2. Click **Choose participants**, search by person or team, select their cards, then **Use selected participants**. Cancel leaves the previous selection unchanged. Selected people stay visible beside the document; remove someone with the cross on their card. Pick an optional due date on the calendar, or **Clear date** to remove it. Info buttons explain signing order and the advisory date. Expand **Appearance and summary page (optional)** when needed; its info buttons explain appearance and summary-page behavior. Click **Send signing request**.
 3. Tell participants to open **Sign > Expand signing sessions** on the same server. Sending a request creates the session; it does not establish that an email was delivered. All participants may sign in any order. The due date is advisory.
 4. Open your session to review individual statuses and the signature count. Use **Created by me**, **Needs your signature** or **Overdue**, and search by document or owner. Session names and statuses are shown in the full workbench. A submitted signature stays in Active until the owner finalizes.
 5. Finalize when the required people have signed. At least one signature is required. Early finalization asks you to confirm which people are included and which will be left out. Cancel if an outstanding signature is still needed.
