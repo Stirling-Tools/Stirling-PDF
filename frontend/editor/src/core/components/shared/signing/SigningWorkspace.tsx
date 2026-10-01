@@ -12,6 +12,7 @@ import { useAllFiles } from "@app/contexts/FileContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useNavigationGuard } from "@app/contexts/NavigationContext";
 import { SigningDocumentPicker } from "@app/components/shared/signing/SigningDocumentPicker";
+import { SigningSessionThumbnail } from "@app/components/shared/signing/SigningSessionThumbnail";
 import { useSigningOverlay } from "@app/contexts/SigningOverlayContext";
 import { CreateSessionFlow } from "@app/components/shared/signing/CreateSessionFlow";
 import { SessionDetailPanel } from "@app/components/tools/certSign/panels/SessionDetailPanel";
@@ -44,11 +45,10 @@ export default function SigningWorkspace() {
   const { activeFileIndex } = useViewer();
   const pdfs = files.filter((file) => file.name.toLowerCase().endsWith(".pdf"));
   const [documentId, setDocumentId] = useState<string | null>(
-    files[activeFileIndex]?.fileId ?? null,
+    pdfs.find((file) => file.fileId === files[activeFileIndex]?.fileId)
+      ?.fileId ?? (pdfs.length === 1 ? pdfs[0].fileId : null),
   );
-  const document =
-    pdfs.find((file) => file.fileId === documentId) ??
-    (pdfs.length === 1 ? pdfs[0] : null);
+  const document = pdfs.find((file) => file.fileId === documentId);
   const [uploading, setUploading] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
@@ -384,7 +384,10 @@ export default function SigningWorkspace() {
                         void openItem(item);
                       }}
                     >
-                      <Icon name="file-text" size={24} />
+                      <SigningSessionThumbnail
+                        sessionId={item.sessionId}
+                        finalized={Boolean(item.finalized)}
+                      />
                       <span>
                         <span className="signing-workspace__name">
                           {item.documentName}

@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
+import { useState } from "react";
 import { MantineProvider } from "@mantine/core";
 import { beforeEach, beforeAll, afterAll, expect, it, vi } from "vitest";
 import { SigningDocumentPicker } from "@app/components/shared/signing/SigningDocumentPicker";
@@ -58,15 +59,24 @@ beforeEach(() => {
 function show(value: string | null = null) {
   const onChange = vi.fn();
   const onLoadingChange = vi.fn();
-  render(
-    <MantineProvider env="test">
+  function Picker() {
+    const [selected, setSelected] = useState(value);
+    return (
       <SigningDocumentPicker
-        value={value}
-        onChange={onChange}
+        value={selected}
+        onChange={(id) => {
+          setSelected(id);
+          onChange(id);
+        }}
         disabled={false}
         loading={false}
         onLoadingChange={onLoadingChange}
       />
+    );
+  }
+  render(
+    <MantineProvider env="test">
+      <Picker />
     </MantineProvider>,
   );
   return { onChange, onLoadingChange };
@@ -80,12 +90,31 @@ it("shows only PDFs and selects an open document without importing it", () => {
     second,
     createNewStirlingFileStub(new File([], "Notes.txt")),
   ]);
-  const { onChange } = show(first.id);
-  expect(screen.getByRole("radio", { name: "First.pdf" })).toBeChecked();
+  const { onChange } = show();
   expect(screen.getAllByRole("radio")).toHaveLength(2);
   fireEvent.click(screen.getByRole("radio", { name: "Second.pdf" }));
   expect(onChange).toHaveBeenCalledWith(second.id);
+  expect(screen.queryByRole("radio")).not.toBeInTheDocument();
+  expect(screen.getByRole("figure")).toHaveTextContent("Second.pdf");
+  fireEvent.click(screen.getByRole("button", { name: "Change PDF" }));
+  expect(onChange).toHaveBeenLastCalledWith(null);
+  expect(screen.getAllByRole("radio")).toHaveLength(2);
+  fireEvent.click(screen.getByRole("radio", { name: "First.pdf" }));
+  expect(screen.getByRole("figure")).toHaveTextContent("First.pdf");
   expect(state.add).not.toHaveBeenCalled();
+});
+
+it("can deselect even when only one PDF is open", () => {
+  const file = createNewStirlingFileStub(new File(["one"], "Only.pdf"));
+  state.stubs.mockReturnValue([file]);
+  const { onChange } = show(file.id);
+  expect(screen.getByRole("figure")).toHaveTextContent("Only.pdf");
+  fireEvent.click(screen.getByRole("button", { name: "Change PDF" }));
+  expect(onChange).toHaveBeenCalledWith(null);
+  expect(screen.getByRole("radio", { name: "Only.pdf" })).not.toBeChecked();
+  expect(
+    screen.getByRole("button", { name: "Choose from library" }),
+  ).toBeEnabled();
 });
 
 it("uses the single-PDF library picker and reuses an already-open file", async () => {

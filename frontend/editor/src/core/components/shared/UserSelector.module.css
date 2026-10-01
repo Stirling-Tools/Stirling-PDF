@@ -1,3 +1,10 @@
+.groups {
+  display: grid;
+  gap: 16px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 3px;
+}
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr));

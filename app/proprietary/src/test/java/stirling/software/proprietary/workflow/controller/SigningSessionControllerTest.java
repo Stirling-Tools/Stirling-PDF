@@ -64,6 +64,29 @@ class SigningSessionControllerTest {
         return () -> name;
     }
 
+    @Test
+    void thumbnailIsAuthenticatedGatedAndNotStoredByBrowserCaches() throws Exception {
+        assertThat(controller.getSessionThumbnail("preview", null).getStatusCode())
+                .isEqualTo(HttpStatus.UNAUTHORIZED);
+        User owner = user("alice");
+        when(userService.findByUsernameIgnoreCase("alice")).thenReturn(Optional.of(owner));
+        byte[] image = new byte[] {1, 2, 3};
+        when(workflowSessionService.getSessionThumbnail("preview", owner)).thenReturn(image);
+        var response = controller.getSessionThumbnail("preview", principal("alice"));
+        assertThat(response.getBody()).isEqualTo(image);
+        assertThat(response.getHeaders().getContentType())
+                .isEqualTo(org.springframework.http.MediaType.IMAGE_PNG);
+        assertThat(response.getHeaders().getCacheControl()).isEqualTo("no-store");
+        verify(workflowSessionService).getSessionThumbnail("preview", owner);
+        doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Signing disabled"))
+                .when(workflowSessionService)
+                .ensureSigningEnabled();
+        org.assertj.core.api.Assertions.assertThatThrownBy(
+                        () -> controller.getSessionThumbnail("preview", principal("alice")))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("Signing disabled");
+    }
+
     private User user(String username) {
         User u = new User();
         u.setId(1L);

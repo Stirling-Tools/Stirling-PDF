@@ -22,3 +22,15 @@ export async function fetchSigningSessions(): Promise<SigningSessions> {
   ]);
   return { signRequests: requests.data, mySessions: sessions.data };
 }
+
+/** Fetches a small authenticated preview; unavailable previews must not block opening the session. */
+export async function fetchSigningThumbnail(
+  sessionId: string,
+  signal: AbortSignal,
+): Promise<Blob> {
+  const response = await apiClient.get<Blob>(
+    `/api/v1/security/cert-sign/sessions/${encodeURIComponent(sessionId)}/thumbnail`,
+    { responseType: "blob", suppressErrorToast: true, signal },
+  );
+  return response.data;
+}

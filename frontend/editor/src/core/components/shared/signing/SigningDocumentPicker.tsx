@@ -1,4 +1,3 @@
-import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
 import { Icon } from "@app/ui/Icon";
@@ -20,7 +19,7 @@ export function SigningDocumentPicker({
   onLoadingChange,
 }: {
   value: string | null;
-  onChange: (fileId: string) => void;
+  onChange: (fileId: string | null) => void;
   disabled: boolean;
   loading: boolean;
   onLoadingChange: (loading: boolean) => void;
@@ -33,62 +32,79 @@ export function SigningDocumentPicker({
   const pdfs = fileStubs.filter((file) =>
     file.name.toLowerCase().endsWith(".pdf"),
   );
+  const selectedFile = pdfs.find((file) => file.id === value);
 
   return (
     <div className="signing-workspace__document-picker">
       <div className="signing-document-picker__heading">
         <h2>{t("signWorkspace.document", "Document")}</h2>
-        <Button
-          variant="secondary"
-          loading={loading}
-          disabled={disabled}
-          leftSection={<Icon name="folder-open" size={18} />}
-          onClick={() =>
-            openFilesModal({
-              maxSelectable: 1,
-              supportedFormats: ["pdf"],
-              customHandler: async (files) => {
-                if (
-                  files.length !== 1 ||
-                  !files[0].name.toLowerCase().endsWith(".pdf")
-                ) {
-                  throw new Error(
-                    t(
-                      "signWorkspace.selectOnePdf",
-                      "Choose one PDF for this signing request.",
-                    ),
-                  );
-                }
-                onLoadingChange(true);
-                try {
-                  const existing = selectors
-                    .getFiles()
-                    .find(
-                      (file) =>
-                        createQuickKey(file) === createQuickKey(files[0]),
-                    );
-                  const selected =
-                    existing ??
-                    (await addFiles(files, { selectFiles: false }))[0];
-                  if (!selected)
+        {selectedFile ? (
+          <Button
+            variant="secondary"
+            disabled={disabled || loading}
+            onClick={() => onChange(null)}
+            leftSection={<Icon name="arrow-left" size={18} />}
+          >
+            {t("signWorkspace.changeDocument", "Change PDF")}
+          </Button>
+        ) : (
+          <Button
+            variant="secondary"
+            loading={loading}
+            disabled={disabled}
+            leftSection={<Icon name="folder-open" size={18} />}
+            onClick={() =>
+              openFilesModal({
+                maxSelectable: 1,
+                supportedFormats: ["pdf"],
+                customHandler: async (files) => {
+                  if (
+                    files.length !== 1 ||
+                    !files[0].name.toLowerCase().endsWith(".pdf")
+                  ) {
                     throw new Error(
                       t(
-                        "signWorkspace.uploadFailed",
-                        "Could not open this PDF. Please try again.",
+                        "signWorkspace.selectOnePdf",
+                        "Choose one PDF for this signing request.",
                       ),
                     );
-                  onChange(selected.fileId);
-                } finally {
-                  onLoadingChange(false);
-                }
-              },
-            })
-          }
-        >
-          {t("signWorkspace.chooseFromLibrary", "Choose from library")}
-        </Button>
+                  }
+                  onLoadingChange(true);
+                  try {
+                    const existing = selectors
+                      .getFiles()
+                      .find(
+                        (file) =>
+                          createQuickKey(file) === createQuickKey(files[0]),
+                      );
+                    const selected =
+                      existing ??
+                      (await addFiles(files, { selectFiles: false }))[0];
+                    if (!selected)
+                      throw new Error(
+                        t(
+                          "signWorkspace.uploadFailed",
+                          "Could not open this PDF. Please try again.",
+                        ),
+                      );
+                    onChange(selected.fileId);
+                  } finally {
+                    onLoadingChange(false);
+                  }
+                },
+              })
+            }
+          >
+            {t("signWorkspace.chooseFromLibrary", "Choose from library")}
+          </Button>
+        )}
       </div>
-      {pdfs.length > 0 ? (
+      {selectedFile ? (
+        <figure className="signing-document-picker__selected">
+          <SigningDocumentPreview file={selectedFile} />
+          <figcaption>{selectedFile.name}</figcaption>
+        </figure>
+      ) : pdfs.length > 0 ? (
         <fieldset
           disabled={disabled || loading}
           className="signing-document-picker__files"
@@ -101,7 +117,6 @@ export function SigningDocumentPicker({
               <SigningDocumentCard
                 key={file.id}
                 file={file}
-                selected={value === file.id}
                 onSelect={() => onChange(file.id)}
               />
             ))}
@@ -121,45 +136,41 @@ export function SigningDocumentPicker({
 
 function SigningDocumentCard({
   file,
-  selected,
   onSelect,
 }: {
   file: StirlingFileStub;
-  selected: boolean;
   onSelect: () => void;
 }) {
-  const { thumbnail, isEncrypted, isGenerating } = useFileThumbnail(file);
-  const cardRef = useRef<HTMLLabelElement>(null);
-  useEffect(() => {
-    if (selected) cardRef.current?.scrollIntoView({ block: "nearest" });
-  }, [selected]);
   return (
-    <label
-      ref={cardRef}
-      className="signing-document-card"
-      data-selected={selected}
-    >
+    <label className="signing-document-card">
       <input
         type="radio"
         name="signing-document"
         aria-label={file.name}
-        checked={selected}
+        checked={false}
         onChange={onSelect}
       />
-      <div
-        className={`${thumbnailStyles.thumbContainer} signing-document-card__preview`}
-      >
-        <DocumentThumbnail
-          file={file}
-          thumbnail={thumbnail}
-          isEncrypted={isEncrypted}
-          isLoading={isGenerating}
-          imgClassName={thumbnailStyles.thumbImage}
-        />
-      </div>
+      <SigningDocumentPreview file={file} />
       <span className="signing-document-card__name" title={file.name}>
         {file.name}
       </span>
     </label>
+  );
+}
+
+function SigningDocumentPreview({ file }: { file: StirlingFileStub }) {
+  const { thumbnail, isEncrypted, isGenerating } = useFileThumbnail(file);
+  return (
+    <div
+      className={`${thumbnailStyles.thumbContainer} signing-document-card__preview`}
+    >
+      <DocumentThumbnail
+        file={file}
+        thumbnail={thumbnail}
+        isEncrypted={isEncrypted}
+        isLoading={isGenerating}
+        imgClassName={thumbnailStyles.thumbImage}
+      />
+    </div>
   );
 }

@@ -562,6 +562,93 @@ export default function HomePage() {
         : baseUrl,
   });
 
+  const mobileNavigation = (
+    <div className="mobile-bottom-bar">
+      <SignMenu
+        opened={mobileSignOpen}
+        onClose={() => setMobileSignOpen(false)}
+        reasons={quickNavHost?.toolReasons ?? {}}
+        items={quickNavHost?.signingItems ?? []}
+        badge={quickNavHost?.signingBadge ?? 0}
+        onOpenSigning={openSigning}
+        onSelect={(tool) => {
+          handleToolSelect(tool);
+          setActiveMobileView("tools");
+        }}
+      >
+        <Button
+          variant="tertiary"
+          className="mobile-bottom-button"
+          aria-label={t("signMenu.title", "Sign")}
+          onClick={() => setMobileSignOpen((open) => !open)}
+        >
+          <Icon name="pen-tool" size="1.5rem" />
+          <span className="mobile-bottom-button-label">
+            {t("signMenu.title", "Sign")}
+          </span>
+        </Button>
+      </SignMenu>
+      <Button
+        variant="tertiary"
+        className="mobile-bottom-button"
+        aria-label={t("quickAccess.allTools", "Tools")}
+        onClick={() => {
+          leaveMyFiles();
+          handleBackToTools();
+          if (isMobile) {
+            setActiveMobileView("tools");
+          }
+        }}
+      >
+        <Icon name="layout-grid" size={"1.5rem"} />
+        <span className="mobile-bottom-button-label">
+          {t("quickAccess.allTools", "Tools")}
+        </span>
+      </Button>
+      {toolAvailability["automate"]?.available !== false && (
+        <Button
+          variant="tertiary"
+          className="mobile-bottom-button"
+          aria-label={t("quickAccess.automate", "Automate")}
+          onClick={() => {
+            leaveMyFiles();
+            handleToolSelect("automate");
+            if (isMobile) {
+              setActiveMobileView("tools");
+            }
+          }}
+        >
+          <Icon name="waypoints" size="1.5rem" />
+          <span className="mobile-bottom-button-label">
+            {t("quickAccess.automate", "Automate")}
+          </span>
+        </Button>
+      )}
+      <Button
+        variant="tertiary"
+        className="mobile-bottom-button"
+        aria-label={t("home.mobile.openFiles", "Open files")}
+        onClick={() => navigate("/files")}
+      >
+        <Icon name="folder" size="1.5rem" />
+        <span className="mobile-bottom-button-label">
+          {t("quickAccess.files", "Files")}
+        </span>
+      </Button>
+      <Button
+        variant="tertiary"
+        className="mobile-bottom-button"
+        aria-label={t("quickAccess.config", "Config")}
+        onClick={openSettings}
+      >
+        <Icon name="settings" size="1.5rem" />
+        <span className="mobile-bottom-button-label">
+          {t("quickAccess.config", "Config")}
+        </span>
+      </Button>
+    </div>
+  );
+
   return (
     <div className="h-screen overflow-hidden">
       <HomePageExtensions />
@@ -583,7 +670,8 @@ export default function HomePage() {
         }
       />
       <FilesPageProvider>
-        {isMobile ? (
+        {/* Keep signing in the same tree across breakpoints to preserve drafts and placed signatures. */}
+        {isMobile && navigationState.workbench !== "signing" ? (
           <div className="mobile-layout" data-files-mode={isWorkspaceHub}>
             {/* The library brings its own tabs and folder path, so the
               tools/workspace toggle would only cost it vertical space. Every
@@ -674,99 +762,18 @@ export default function HomePage() {
                 )}
               </div>
             )}
-            <div className="mobile-bottom-bar">
-              <SignMenu
-                opened={mobileSignOpen}
-                onClose={() => setMobileSignOpen(false)}
-                reasons={quickNavHost?.toolReasons ?? {}}
-                items={quickNavHost?.signingItems ?? []}
-                badge={quickNavHost?.signingBadge ?? 0}
-                onOpenSigning={openSigning}
-                onSelect={(tool) => {
-                  handleToolSelect(tool);
-                  setActiveMobileView("tools");
-                }}
-              >
-                <Button
-                  variant="tertiary"
-                  className="mobile-bottom-button"
-                  aria-label={t("signMenu.title", "Sign")}
-                  onClick={() => setMobileSignOpen((open) => !open)}
-                >
-                  <Icon name="pen-tool" size="1.5rem" />
-                  <span className="mobile-bottom-button-label">
-                    {t("signMenu.title", "Sign")}
-                  </span>
-                </Button>
-              </SignMenu>
-              <Button
-                variant="tertiary"
-                className="mobile-bottom-button"
-                aria-label={t("quickAccess.allTools", "Tools")}
-                onClick={() => {
-                  leaveMyFiles();
-                  handleBackToTools();
-                  if (isMobile) {
-                    setActiveMobileView("tools");
-                  }
-                }}
-              >
-                <Icon name="layout-grid" size={"1.5rem"} />
-                <span className="mobile-bottom-button-label">
-                  {t("quickAccess.allTools", "Tools")}
-                </span>
-              </Button>
-              {toolAvailability["automate"]?.available !== false && (
-                <Button
-                  variant="tertiary"
-                  className="mobile-bottom-button"
-                  aria-label={t("quickAccess.automate", "Automate")}
-                  onClick={() => {
-                    leaveMyFiles();
-                    handleToolSelect("automate");
-                    if (isMobile) {
-                      setActiveMobileView("tools");
-                    }
-                  }}
-                >
-                  <Icon name="waypoints" size="1.5rem" />
-                  <span className="mobile-bottom-button-label">
-                    {t("quickAccess.automate", "Automate")}
-                  </span>
-                </Button>
-              )}
-              <Button
-                variant="tertiary"
-                className="mobile-bottom-button"
-                aria-label={t("home.mobile.openFiles", "Open files")}
-                onClick={() => navigate("/files")}
-              >
-                <Icon name="folder" size="1.5rem" />
-                <span className="mobile-bottom-button-label">
-                  {t("quickAccess.files", "Files")}
-                </span>
-              </Button>
-              <Button
-                variant="tertiary"
-                className="mobile-bottom-button"
-                aria-label={t("quickAccess.config", "Config")}
-                onClick={openSettings}
-              >
-                <Icon name="settings" size="1.5rem" />
-                <span className="mobile-bottom-button-label">
-                  {t("quickAccess.config", "Config")}
-                </span>
-              </Button>
-            </div>
+            {mobileNavigation}
           </div>
         ) : (
           <Group
-            align="flex-start"
+            align={isMobile ? "stretch" : "flex-start"}
             gap={0}
+            wrap="nowrap"
             h="100%"
             className="flex-nowrap flex"
             bg="var(--c-bg)"
             data-wings={wingsPhase ?? undefined}
+            style={{ flexDirection: isMobile ? "column" : "row" }}
           >
             {/* Reading leaves the document and nothing beside it, so the wing goes
                 rather than shrinking to a rail. Everywhere else it is fixed open. */}
@@ -782,6 +789,7 @@ export default function HomePage() {
               </div>
             )}
             <Workbench />
+            {isMobile && mobileNavigation}
             {/* The reader's rail takes the slot the tool panel holds otherwise: the
                 panel's controls are the editor's, and reading wants the viewer's.
                 Both render together only while the panel is on its way out. */}

@@ -119,7 +119,7 @@
 }
 .signing-workspace__row {
   display: grid;
-  grid-template-columns: 36px minmax(0, 1fr) minmax(170px, 240px) 24px;
+  grid-template-columns: 64px minmax(0, 1fr) minmax(170px, 240px) 24px;
   align-items: center;
   gap: 16px;
   width: 100%;
@@ -133,6 +133,23 @@
 }
 .signing-workspace__row:last-child {
   border-bottom: 0;
+}
+.signing-session-thumbnail {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  aspect-ratio: 210 / 297;
+  overflow: hidden;
+  border: 1px solid var(--c-border);
+  border-radius: 4px;
+  background: var(--c-bg-raised);
+  color: var(--c-text-muted);
+}
+.signing-session-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 .signing-workspace__row:hover {
   background: var(--c-hover);
@@ -260,10 +277,6 @@
 .signing-document-card:hover {
   background: var(--c-hover);
 }
-.signing-document-card[data-selected="true"] {
-  border-color: var(--c-primary);
-  background: var(--c-primary-subtle);
-}
 .signing-document-card:focus-within {
   outline: 2px solid var(--c-primary);
   outline-offset: 1px;
@@ -282,11 +295,31 @@
   z-index: 2;
   accent-color: var(--c-primary);
 }
-.signing-document-card .signing-document-card__preview {
+.signing-document-card__preview {
   height: auto;
   aspect-ratio: 210 / 297;
   max-width: 280px;
   pointer-events: none;
+}
+.signing-document-picker__selected {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin: 0;
+  padding: 20px;
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  background: var(--c-bg-raised);
+}
+.signing-document-picker__selected .signing-document-card__preview {
+  max-width: 320px;
+}
+.signing-document-picker__selected figcaption {
+  font-size: 14px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+  text-align: center;
 }
 .signing-document-card__name {
   display: -webkit-box;
@@ -318,68 +351,9 @@
   font-size: 16px;
   font-weight: 600;
 }
-.signing-request__add-people {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  width: 100%;
-  min-height: 112px;
-  padding: 24px;
-  border: 1px dashed var(--c-border-strong);
-  border-radius: 12px;
-  background: var(--c-bg-raised);
-  color: var(--c-text);
-  cursor: pointer;
-  font-weight: 500;
-}
-.signing-request__add-people:hover {
-  background: var(--c-hover);
-}
-.signing-request__add-people:focus-visible {
-  outline: 2px solid var(--c-primary);
-  outline-offset: 2px;
-}
-.signing-request__add-people:disabled {
-  opacity: 0.6;
-  cursor: default;
-}
-.signing-request__people {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(210px, 100%), 1fr));
-  gap: 12px;
-  padding: 0;
-  margin: 0;
-  list-style: none;
-  max-height: 240px;
-  overflow-y: auto;
-}
-.signing-request__person {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px;
-  border: 1px solid var(--c-border);
-  border-radius: 12px;
-}
-.signing-request__avatar {
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: var(--c-primary-subtle);
-  color: var(--c-accent-fg);
-  font-size: 14px;
-  font-weight: 600;
-}
-.signing-request__person-name {
-  flex: 1;
-  min-width: 0;
-  overflow-wrap: anywhere;
-  font-size: 14px;
-  font-weight: 500;
+.signing-request__selection-count {
+  color: var(--c-text-muted);
+  font-size: 13px;
 }
 .signing-request__calendar {
   min-width: 0;
@@ -444,13 +418,17 @@
     width: 100%;
   }
   .signing-workspace__row {
-    grid-template-columns: 24px minmax(0, 1fr) 16px;
+    grid-template-columns: 48px minmax(0, 1fr) 16px;
     gap: 12px;
     padding: 16px;
   }
   .signing-workspace__status {
     grid-column: 2;
     grid-row: 2;
+  }
+  .signing-session-thumbnail {
+    width: 48px;
+    grid-row: 1 / 3;
   }
   .signing-workspace__row > svg:last-child {
     grid-column: 3;

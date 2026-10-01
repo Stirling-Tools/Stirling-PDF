@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -107,42 +107,36 @@ function show({
   return { onSubmit, user: userEvent.setup() };
 }
 
-it("keeps participant changes tentative, supports search and applies only the chosen people", async () => {
+it("selects participants inline, retaining checked people while searching", async () => {
   const { user } = show();
-  await user.click(screen.getByRole("button", { name: "Choose participants" }));
-  let dialog = screen.getByRole("dialog");
-  expect(within(dialog).getAllByRole("checkbox")).toHaveLength(2);
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  expect(screen.getAllByRole("checkbox")).toHaveLength(2);
   expect(
-    within(dialog).queryByRole("checkbox", { name: /Owner|Internal/ }),
+    screen.queryByRole("checkbox", { name: /Owner|Internal/ }),
   ).not.toBeInTheDocument();
-  await user.click(within(dialog).getByRole("checkbox", { name: /Bob/ }));
-  await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
   expect(
     screen.getByRole("button", { name: "Send signing request" }),
   ).toBeDisabled();
-  await user.click(screen.getByRole("button", { name: "Choose participants" }));
-  dialog = screen.getByRole("dialog");
-  expect(
-    within(dialog).getByRole("checkbox", { name: /Bob/ }),
-  ).not.toBeChecked();
-  await user.type(
-    within(dialog).getByRole("textbox", { name: "Search people or teams" }),
-    "legal",
-  );
-  expect(within(dialog).getAllByRole("checkbox")).toHaveLength(1);
-  await user.click(within(dialog).getByRole("checkbox", { name: /Alice/ }));
-  await user.click(
-    within(dialog).getByRole("button", { name: "Use selected participants" }),
-  );
+  await user.click(screen.getByRole("checkbox", { name: /Bob/ }));
   expect(
     screen.getByRole("button", { name: "Send signing request" }),
   ).toBeEnabled();
-  await user.click(screen.getByRole("button", { name: "Remove Alice" }));
+  const search = screen.getByRole("textbox", {
+    name: "Search people or teams",
+  });
+  await user.type(search, "legal");
+  expect(screen.getAllByRole("checkbox")).toHaveLength(1);
+  await user.click(screen.getByRole("checkbox", { name: /Alice/ }));
+  expect(screen.getByText("2 selected")).toHaveAttribute("role", "status");
+  await user.clear(search);
+  expect(screen.getByRole("checkbox", { name: /Bob/ })).toBeChecked();
+  expect(screen.getByRole("checkbox", { name: /Alice/ })).toBeChecked();
+  await user.click(screen.getByRole("checkbox", { name: /Bob/ }));
+  await user.click(screen.getByRole("checkbox", { name: /Alice/ }));
   expect(
     screen.getByRole("button", { name: "Send signing request" }),
   ).toBeDisabled();
 });
-
 it("round-trips calendar dates without timezone conversion and allows clearing the deadline", async () => {
   const { user } = show();
   await user.click(
@@ -199,9 +193,9 @@ it("moves signing guidance into focusable tooltips while preserving submitted si
 it("locks participants, dates and sending while creation is in progress", () => {
   show({ creating: true, initialIds: [2] });
   expect(
-    screen.getByRole("button", { name: "Choose participants" }),
+    screen.getByRole("textbox", { name: "Search people or teams" }),
   ).toBeDisabled();
-  expect(screen.getByRole("button", { name: "Remove Bob" })).toBeDisabled();
+  expect(screen.getByRole("checkbox", { name: /Bob/ })).toBeDisabled();
   expect(screen.getByRole("button", { name: "Clear date" })).toBeDisabled();
   expect(
     screen.getByRole("button", { name: "Sunday, October 25, 2026" }),

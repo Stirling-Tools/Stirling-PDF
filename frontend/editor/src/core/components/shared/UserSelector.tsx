@@ -128,7 +128,6 @@ const UserSelector = ({
     return (
       <Stack gap="md" role="group" aria-label={label}>
         <TextInput
-          data-autofocus
           aria-label={t(
             "signWorkspace.searchParticipants",
             "Search people or teams",
@@ -142,43 +141,45 @@ const UserSelector = ({
           onChange={(event) => setSearch(event.currentTarget.value)}
           disabled={disabled}
         />
-        {matchingGroups.map((group) => (
-          <div key={group.group}>
-            <Text size="xs" c="dimmed" mb="xs">
-              {group.group}
-            </Text>
-            <div className={styles.grid}>
-              {group.items.map((item) => {
-                const id = Number(item.value);
-                const selected = value.includes(id);
-                return (
-                  <label
-                    key={id}
-                    className={styles.card}
-                    data-selected={selected}
-                  >
-                    <span className={styles.avatar} aria-hidden="true">
-                      {item.label.slice(0, 2).toLocaleUpperCase()}
-                    </span>
-                    <span className={styles.name}>{item.label}</span>
-                    <input
-                      type="checkbox"
-                      checked={selected}
-                      disabled={disabled}
-                      onChange={() =>
-                        onChange(
-                          selected
-                            ? value.filter((userId) => userId !== id)
-                            : [...value, id],
-                        )
-                      }
-                    />
-                  </label>
-                );
-              })}
+        <div className={styles.groups}>
+          {matchingGroups.map((group) => (
+            <div key={group.group}>
+              <Text size="xs" c="dimmed" mb="xs">
+                {group.group}
+              </Text>
+              <div className={styles.grid}>
+                {group.items.map((item) => {
+                  const id = Number(item.value);
+                  const selected = value.includes(id);
+                  return (
+                    <label
+                      key={id}
+                      className={styles.card}
+                      data-selected={selected}
+                    >
+                      <span className={styles.avatar} aria-hidden="true">
+                        {item.label.slice(0, 2).toLocaleUpperCase()}
+                      </span>
+                      <span className={styles.name}>{item.label}</span>
+                      <input
+                        type="checkbox"
+                        checked={selected}
+                        disabled={disabled}
+                        onChange={() =>
+                          onChange(
+                            selected
+                              ? value.filter((userId) => userId !== id)
+                              : [...value, id],
+                          )
+                        }
+                      />
+                    </label>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
         {matchingGroups.length === 0 && (
           <Text size="sm" c="dimmed">
             {t("signWorkspace.noPeopleMatch", "No people match your search.")}
