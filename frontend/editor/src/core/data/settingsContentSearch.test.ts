@@ -17,13 +17,15 @@ describe("flattenTranslationStrings", () => {
     ]);
   });
 
-  test("removes unresolved interpolation placeholders", () => {
+  test("excludes strings that contain unresolved interpolation placeholders", () => {
     expect(
       flattenTranslationStrings({
         defaultLabel: "Default: {{shortcut}}",
         notificationLabel: "Send {{email}} about {{message}}",
+        leadingPlaceholder: "{{shortcut}}: Open settings",
+        plain: "Keyboard shortcuts",
       }),
-    ).toEqual(["Default", "Send about"]);
+    ).toEqual(["Keyboard shortcuts"]);
   });
 
   test("removes indexed Trans markup", () => {

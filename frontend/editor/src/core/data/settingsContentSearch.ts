@@ -70,13 +70,19 @@ export const getTranslationPrefixesForNavKey = (key: string): string[] => {
   return Array.from(new Set([...explicitPrefixes, ...inferredPrefixes]));
 };
 
-const INTERPOLATION_PLACEHOLDER_PATTERN = /\{\{\s*[^}]+?\s*\}\}/g;
+const INTERPOLATION_PLACEHOLDER_PATTERN = /\{\{\s*[^}]+?\s*\}\}/;
 const INDEXED_TRANS_TAG_PATTERN = /<\/?\d+>/g;
-const TEMPLATE_SYNTAX_PATTERN = /\{\{\s*[^}]+?\s*\}\}|<\/?\d+>/;
 const SEARCHABLE_TEXT_PATTERN = /[\p{L}\p{N}]/u;
 
-/** Strips unresolved {{interpolation}} and <0>Trans</0> markup so raw template
- * syntax never reaches a search snippet; null when nothing searchable is left. */
+/**
+ * Searchable text from one translation leaf.
+ *
+ * An unresolved `{{interpolation}}` placeholder stands in for a runtime value
+ * this index cannot supply. The leftover label ("Default:") is not a useful
+ * hit, so the whole string is omitted. Indexed `<0>` Trans tags are markup
+ * around words the user sees, so only the tags are removed. Null when nothing
+ * searchable remains.
+ */
 export const sanitizeSearchableTranslationString = (
   value: string,
 ): string | null => {
@@ -86,16 +92,17 @@ export const sanitizeSearchableTranslationString = (
     return null;
   }
 
-  if (!TEMPLATE_SYNTAX_PATTERN.test(trimmed)) {
+  if (INTERPOLATION_PLACEHOLDER_PATTERN.test(trimmed)) {
+    return null;
+  }
+
+  if (!trimmed.match(INDEXED_TRANS_TAG_PATTERN)) {
     return trimmed;
   }
 
   const sanitized = trimmed
     .replace(INDEXED_TRANS_TAG_PATTERN, "")
-    .replace(INTERPOLATION_PLACEHOLDER_PATTERN, "")
     .replace(/\s+/g, " ")
-    .replace(/\s+([:;,.!?])/g, "$1")
-    .replace(/[:;,\s-]+$/g, "")
     .trim();
 
   return SEARCHABLE_TEXT_PATTERN.test(sanitized) ? sanitized : null;
