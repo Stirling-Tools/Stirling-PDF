@@ -59,6 +59,24 @@ permissions:
   contents: read
   pull-requests: write
 
+env:
+  JAVA_VERSION: 25
+  GRADLE_FILES_TO_HASH: |
+    gradle/wrapper/gradle-wrapper.properties
+    gradle/libs.versions.toml
+    buildSrc/**
+    settings.gradle
+    build.gradle
+    app/**/build.gradle
+    gradle/**/*.gradle
+  GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-25
+  CARGO_FILES_TO_HASH: |
+    frontend/editor/src-tauri
+  # frontend/editor/src-tauri/Cargo.toml
+  # frontend/editor/src-tauri/Cargo.lock
+  CARGO_HOME: ${{ github.workspace }}/.cache/cargo
+  GITHUB_TOKEN: ${{ github.token }}
+
 jobs:
   determine-matrix:
     # Only probes APPLE_CERTIFICATE for presence, so it stays on the unrestricted
@@ -112,6 +130,39 @@ jobs:
           JOINED=$(IFS=','; echo "${ENTRIES[*]}")
           echo "matrix={\"include\":[$JOINED]}" >> $GITHUB_OUTPUT
 
+  hash_pr:
+    name: Hash files
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    outputs:
+      java_version: ${{ steps.hash.outputs.java_version }}
+      gradle_files_hash: ${{ steps.hash.outputs.gradle_files_hash}}
+      cargo_files_hash: ${{ steps.hash.outputs.cargo_files_hash}}
+      cache_key: ${{ steps.hash.outputs.cache_key }}
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Hash Gradle and Cargo files
+        id: hash
+        env:
+          GRADLE_HASH: ${{ hashFiles(env.GRADLE_FILES_TO_HASH) }}
+          CARGO_HASH: ${{ hashFiles(env.CARGO_FILES_TO_HASH) }}
+        run: |
+          echo "java_version=${{ env.JAVA_VERSION }}" >> "$GITHUB_OUTPUT"
+          echo "gradle_files_hash=$GRADLE_HASH" >> "$GITHUB_OUTPUT"
+          echo "cargo_files_hash=$CARGO_HASH" >> "$GITHUB_OUTPUT"
+          echo "cache_key=gradle-v1-${{ runner.os }}-${{ runner.arch }}-jdk-${{ env.JAVA_VERSION }}-$GRADLE_HASH" >> "$GITHUB_OUTPUT"
+
   build:
     # Windows/GPG signing only runs on main (see the per-step gates below), so only
     # that path needs the reviewer-gated release-signing environment. Everything else
@@ -119,7 +170,9 @@ jobs:
     # approval or branch restriction.
     environment:
       name: ${{ (inputs.sign && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))) && 'release-signing' || 'ci-signing' }}
-    needs: determine-matrix
+    needs: [determine-matrix, hash_pr]
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.determine-matrix.outputs.matrix) }}
@@ -150,12 +203,63 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libjavascriptcoregtk-4.0-dev libsoup2.4-dev libjavascriptcoregtk-4.1-dev libsoup-3.0-dev
 
-      - name: Setup Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - name: Use GNU tar on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $gitUsrBin = Join-Path $env:ProgramFiles 'Git\usr\bin'
+          $gnuTar = Join-Path $gitUsrBin 'tar.exe'
+
+          if (-not (Test-Path $gnuTar)) {
+            throw "GNU tar not found at $gnuTar"
+          }
+
+          & $gnuTar --version
+          Add-Content -Path $env:GITHUB_PATH -Value $gitUsrBin
+
+      - name: Prepare cache directory
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force `
+            -Path (Join-Path $env:GITHUB_WORKSPACE '.cache') | Out-Null
+
+      - name: Use GNU tar on macOS
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          brew install gnu-tar
+          echo "$(brew --prefix gnu-tar)/libexec/gnubin" >> "$GITHUB_PATH"
+          tar --version
+
+      - name: Restore cache sftp
+        id: cache-cargo
+        uses: Ludy87/cache-the-planet/multi-cache@99eff07751575b65a519664ce352889a56fa7140
         with:
-          node-version: 22
-          cache: "npm"
-          cache-dependency-path: frontend/package-lock.json
+          storage: github-artifact
+          artifact-retention-days: 1
+          manifest-branch: dev-cache-artifact
+          manifest-path: .github/cache-data
+          multi-cache: |
+            cargo-registry:
+              path: .cache/cargo/registry
+            cargo-git:
+              path: .cache/cargo/git
+            cargo-bin:
+              path: .cache/cargo/bin
+            gradle-caches:
+              path: .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/caches
+            gradle-wrapper:
+              path: .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/wrapper
+          save-scope: shared
+          key: |
+            gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
+            gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}
+            cargo-registry=${{ needs.hash_pr.outputs.cargo_files_hash }}
+            cargo-git=${{ needs.hash_pr.outputs.cargo_files_hash }}
+            cargo-bin=${{ needs.hash_pr.outputs.cargo_files_hash }}
+          allow-shared-restore: true
+          strict: false
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7 # stable
@@ -167,6 +271,7 @@ jobs:
       # only recompiles the app crate. Written on main; PRs and the merge queue
       # restore from it.
       - name: Cache Rust build
+        if: ${{ steps.cache-cargo.outputs.error }}
         uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         with:
           workspaces: frontend/editor/src-tauri
@@ -182,23 +287,23 @@ jobs:
       # distribution and every dependency. Fall back to the cache the nightly
       # warm run saves for this OS.
       - name: Restore cache Gradle User Home
-        if: inputs.use_shared_cache
+        if: ${{ steps.cache-cargo.outputs.error && inputs.use_shared_cache }}
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
+            .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/caches
+            .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/wrapper
           key: gradle-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
           restore-keys: |
             gradle-tauri-build-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-
 
       - name: Restore cache Gradle
-        if: inputs.use_shared_cache == false
+        if: ${{ steps.cache-cargo.outputs.error && inputs.use_shared_cache == false }}
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
+            .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/caches
+            .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/wrapper
           key: gradle-tauri-build-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
           restore-keys: |
             gradle-tauri-build-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-
@@ -721,7 +826,7 @@ jobs:
     environment:
       name: ci-unsigned
       deployment: false
-    needs: determine-matrix
+    needs: [determine-matrix, hash_pr]
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.determine-matrix.outputs.matrix) }}
@@ -768,8 +873,8 @@ jobs:
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
+            .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/caches
+            .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/wrapper
           key: gradle-tauri-build-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
           restore-keys: |
             gradle-tauri-build-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-
