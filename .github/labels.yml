@@ -209,3 +209,6 @@
 - name: "Stale PR"
   color: "6E7781"
   description: "Waiting on the author; closes automatically a week after this was added"
+- name: "backlog-cleanup"
+  color: "BFD4F2"
+  description: "Closed during the PR backlog cleanup; reopen to continue"

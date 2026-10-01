@@ -1,15 +1,36 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { closingComment, decide, LABELS, warningComment } from "./stale-prs.mjs";
+import triageStalePullRequests, {
+  closingComment,
+  type Core,
+  decide,
+  type GitHubClient,
+  LABELS,
+  type PullRequest,
+  type Review,
+  warningComment,
+} from "./stale-prs.ts";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const NOW = Date.parse("2026-10-01T12:00:00Z");
-const daysAgo = (n) => new Date(NOW - n * DAY_MS).toISOString();
+const daysAgo = (n: number) => new Date(NOW - n * DAY_MS).toISOString();
 
 const AUTHOR = "contributor";
 
-function pullRequest({ isDraft = false, mergeable = "MERGEABLE", pushedDaysAgo = 60, authorType = "User" } = {}) {
+interface PullRequestOptions {
+  isDraft?: boolean;
+  mergeable?: PullRequest["mergeable"];
+  pushedDaysAgo?: number;
+  authorType?: string;
+}
+
+function pullRequest({
+  isDraft = false,
+  mergeable = "MERGEABLE",
+  pushedDaysAgo = 60,
+  authorType = "User",
+}: PullRequestOptions = {}): PullRequest {
   return {
     number: 1,
     url: "https://github.com/o/r/pull/1",
@@ -26,13 +47,24 @@ function pullRequest({ isDraft = false, mergeable = "MERGEABLE", pushedDaysAgo =
   };
 }
 
-function label(pr, name, daysAgoAdded) {
+function label(pr: PullRequest, name: string, daysAgoAdded: number) {
   pr.labels.nodes.push({ name });
   pr.timelineItems.nodes.push({ __typename: "LabeledEvent", createdAt: daysAgo(daysAgoAdded), label: { name } });
   return pr;
 }
 
-function review(pr, state, daysAgoSubmitted, { login = "maintainer", association = "MEMBER", type = "User" } = {}) {
+interface Reviewer {
+  login?: string;
+  association?: string;
+  type?: string;
+}
+
+function review(
+  pr: PullRequest,
+  state: Review["state"],
+  daysAgoSubmitted: number,
+  { login = "maintainer", association = "MEMBER", type = "User" }: Reviewer = {},
+) {
   pr.reviews.nodes.push({
     state,
     submittedAt: daysAgo(daysAgoSubmitted),
@@ -42,17 +74,27 @@ function review(pr, state, daysAgoSubmitted, { login = "maintainer", association
   return pr;
 }
 
-function comment(pr, login, daysAgoPosted) {
+function comment(pr: PullRequest, login: string, daysAgoPosted: number) {
   pr.comments.nodes.push({ createdAt: daysAgo(daysAgoPosted), author: { login } });
   return pr;
 }
 
-function timelineEvent(pr, typename, daysAgoHappened, actor = AUTHOR) {
+function draftToggled(
+  pr: PullRequest,
+  typename: "ReadyForReviewEvent" | "ConvertToDraftEvent",
+  daysAgoHappened: number,
+  actor = AUTHOR,
+) {
   pr.timelineItems.nodes.push({ __typename: typename, createdAt: daysAgo(daysAgoHappened), actor: { login: actor } });
   return pr;
 }
 
-const actionFor = (pr) => decide(pr, NOW).action;
+function reopened(pr: PullRequest, daysAgoHappened: number) {
+  pr.timelineItems.nodes.push({ __typename: "ReopenedEvent", createdAt: daysAgo(daysAgoHappened) });
+  return pr;
+}
+
+const actionFor = (pr: PullRequest) => decide(pr, NOW).action;
 
 describe("waiting on maintainers", () => {
   it("never warns an old PR nobody has reviewed", () => {
@@ -107,7 +149,7 @@ describe("merge conflicts", () => {
 });
 
 describe("non-approving core review", () => {
-  for (const state of ["COMMENTED", "CHANGES_REQUESTED"]) {
+  for (const state of ["COMMENTED", "CHANGES_REQUESTED"] as const) {
     it(`warns 7 days after a ${state} review with no reply or push`, () => {
       assert.equal(actionFor(review(pullRequest(), state, 7)), "warn");
     });
@@ -179,12 +221,12 @@ describe("idle drafts", () => {
   });
 
   it("counts the author converting to draft as activity", () => {
-    const pr = timelineEvent(pullRequest({ isDraft: true, pushedDaysAgo: 60 }), "ConvertToDraftEvent", 5);
+    const pr = draftToggled(pullRequest({ isDraft: true, pushedDaysAgo: 60 }), "ConvertToDraftEvent", 5);
     assert.equal(actionFor(pr), "none");
   });
 
   it("does not count a maintainer converting it to draft", () => {
-    const pr = timelineEvent(pullRequest({ isDraft: true, pushedDaysAgo: 60 }), "ConvertToDraftEvent", 5, "maintainer");
+    const pr = draftToggled(pullRequest({ isDraft: true, pushedDaysAgo: 60 }), "ConvertToDraftEvent", 5, "maintainer");
     assert.equal(actionFor(pr), "warn");
   });
 });
@@ -221,7 +263,7 @@ describe("after the warning", () => {
   });
 
   it("clears on a reopened PR rather than closing it again", () => {
-    const pr = timelineEvent(label(conflicted(), LABELS.stale, 30), "ReopenedEvent", 1, "maintainer");
+    const pr = reopened(label(conflicted(), LABELS.stale, 30), 1);
     assert.equal(actionFor(pr), "clear");
   });
 
@@ -260,5 +302,58 @@ describe("comments", () => {
     for (const body of [warningComment(pr, turns, NOW), closingComment(pr, turns, NOW)]) {
       assert.match(body, /^[\x20-\x7E\n]*$/);
     }
+  });
+});
+
+function recordingGitHub(pullRequests: PullRequest[]) {
+  const calls: string[] = [];
+  const github: GitHubClient = {
+    graphql: async <T>() =>
+      ({ repository: { pullRequests: { pageInfo: { hasNextPage: false, endCursor: null }, nodes: pullRequests } } }) as T,
+    rest: {
+      issues: {
+        createComment: async ({ issue_number }) => calls.push(`comment #${issue_number}`),
+        addLabels: async ({ issue_number, labels }) => calls.push(`label #${issue_number} ${labels.join(",")}`),
+        removeLabel: async ({ issue_number, name }) => calls.push(`unlabel #${issue_number} ${name}`),
+      },
+      pulls: {
+        update: async ({ pull_number }) => calls.push(`close #${pull_number}`),
+      },
+    },
+  };
+  return { github, calls };
+}
+
+function silentCore(): Core {
+  const summary: Core["summary"] = {
+    addHeading: () => summary,
+    addRaw: () => summary,
+    addTable: () => summary,
+    write: async () => summary,
+  };
+  return {
+    info: () => {},
+    error: (message) => assert.fail(message),
+    setFailed: (message) => assert.fail(message),
+    summary,
+  };
+}
+
+describe("triage run", () => {
+  // Dated well before the real clock, which the run reads, so the close is always due.
+  const overdue = () =>
+    label(label(pullRequest({ mergeable: "CONFLICTING" }), LABELS.conflicts, 40), LABELS.stale, 30);
+  const repo = { owner: "o", repo: "r" };
+
+  it("comments, labels it backlog-cleanup, then closes", async () => {
+    const { github, calls } = recordingGitHub([overdue()]);
+    await triageStalePullRequests({ github, context: { repo }, core: silentCore(), live: true });
+    assert.deepEqual(calls, ["comment #1", "label #1 backlog-cleanup", "close #1"]);
+  });
+
+  it("changes nothing in a dry run", async () => {
+    const { github, calls } = recordingGitHub([overdue()]);
+    await triageStalePullRequests({ github, context: { repo }, core: silentCore(), live: false });
+    assert.deepEqual(calls, []);
   });
 });

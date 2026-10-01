@@ -2,7 +2,7 @@ name: Stale PR triage
 
 # Warns, then closes, PRs that have been waiting on their author for too long.
 # Dry run unless the STALE_PR_BOT_LIVE repository variable is "true"; unsetting it
-# is the kill switch. The rules live in .github/scripts/stale-prs.mjs.
+# is the kill switch. The rules live in .github/scripts/stale-prs.ts.
 
 on:
   schedule:
@@ -16,7 +16,9 @@ on:
   pull_request:
     paths:
       - ".github/workflows/stale-prs.yml"
-      - ".github/scripts/stale-prs*.mjs"
+      - ".github/scripts/stale-prs*.ts"
+      - ".github/scripts/package.json"
+      - ".github/scripts/tsconfig.json"
 
 permissions:
   contents: read
@@ -45,19 +47,32 @@ jobs:
         with:
           persist-credentials: false
 
+      # The Node github-script v9 runs on, so the tests strip types the same way.
       - name: Set up Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: "22"
+          node-version: "24"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install TypeScript from the frontend lockfile
+        working-directory: frontend
+        env:
+          NPM_CONFIG_IGNORE_SCRIPTS: "true"
+        run: npm ci --ignore-scripts --audit=false --fund=false
+
+      - name: Typecheck
+        working-directory: frontend
+        run: npx tsc --noEmit --project ../.github/scripts/tsconfig.json
 
       - name: Run unit tests
-        run: node --test .github/scripts/stale-prs.test.mjs
+        run: node --test .github/scripts/stale-prs.test.ts
 
       - name: Dry run against open PRs
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
-            const { default: triage } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/stale-prs.mjs`);
+            const { default: triage } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/stale-prs.ts`);
             await triage({ github, context, core, live: false });
 
   triage:
@@ -86,5 +101,5 @@ jobs:
         with:
           github-token: ${{ github.token }}
           script: |
-            const { default: triage } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/stale-prs.mjs`);
+            const { default: triage } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/stale-prs.ts`);
             await triage({ github, context, core, live: process.env.LIVE === "true" });
