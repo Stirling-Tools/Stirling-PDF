@@ -152,10 +152,18 @@ const FilePickerModal = ({
             {/* Selection controls */}
             <Group justify="space-between">
               <Text size="sm" c="dimmed">
-                {storedFiles.length}{" "}
-                {t("fileUpload.filesAvailable", "files available")}
+                {t("fileUpload.filesAvailableCount", {
+                  count: storedFiles.length,
+                  defaultValue_one: "{{count}} file available",
+                  defaultValue_other: "{{count}} files available",
+                })}
                 {selectedFileIds.length > 0 && (
-                  <> • {selectedFileIds.length} selected</>
+                  <>
+                    {" • "}
+                    {t("fileUpload.selectedCount", "{{count}} selected", {
+                      count: selectedFileIds.length,
+                    })}
+                  </>
                 )}
               </Text>
               <Group gap="xs">

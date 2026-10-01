@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Tooltip, type FloatingPosition } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import "@app/ui/InfoTooltip.css";
 
 export interface InfoTooltipProps {
@@ -21,6 +22,7 @@ export function InfoTooltip({
   ariaLabel,
   position = "top",
 }: InfoTooltipProps) {
+  const { t } = useTranslation();
   return (
     <Tooltip
       label={label}
@@ -34,7 +36,10 @@ export function InfoTooltip({
         type="button"
         className="sui-info"
         aria-label={
-          ariaLabel ?? (typeof label === "string" ? label : "More information")
+          ariaLabel ??
+          (typeof label === "string"
+            ? label
+            : t("common.moreInformation", "More information"))
         }
       >
         <svg
