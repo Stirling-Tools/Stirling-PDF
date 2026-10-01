@@ -119,7 +119,9 @@ export const usePlans = (currency: string = getPreferredCurrency()) => {
     } catch (err) {
       console.error("Error fetching pricing:", err);
       setError(
-        err instanceof Error ? err.message : "Failed to fetch pricing data",
+        err instanceof Error
+          ? err.message
+          : t("plan.fetchError", "Failed to fetch pricing data"),
       );
       // continue with static prices if needed
     } finally {
@@ -279,6 +281,22 @@ export const usePlans = (currency: string = getPreferredCurrency()) => {
       (1 - largePerCredit / xsmallPerCredit) * 100,
     );
 
+    const describePackage = (
+      info: { price: number; currencySymbol: string },
+      credits: number,
+      discount: number,
+    ) => {
+      const price = `${info.currencySymbol}${(info.price / credits).toFixed(3)}`;
+      if (discount > 0) {
+        return t(
+          "plan.api.perCreditWithDiscount",
+          "{{price}} per credit • {{discount}}% discount",
+          { price, discount },
+        );
+      }
+      return t("plan.api.perCredit", "{{price}} per credit", { price });
+    };
+
     const apiPackages: ApiPackage[] = [
       {
         id: "xsmall",
@@ -286,7 +304,7 @@ export const usePlans = (currency: string = getPreferredCurrency()) => {
         price: xsmallPrice.price,
         currency: xsmallPrice.currencySymbol,
         credits: 100,
-        description: `${xsmallPrice.currencySymbol}${(xsmallPrice.price / 100).toFixed(3)} per credit`,
+        description: describePackage(xsmallPrice, 100, 0),
       },
       {
         id: "small",
@@ -294,7 +312,7 @@ export const usePlans = (currency: string = getPreferredCurrency()) => {
         price: smallPrice.price,
         currency: smallPrice.currencySymbol,
         credits: 500,
-        description: `${smallPrice.currencySymbol}${(smallPrice.price / 500).toFixed(3)} per credit${smallDiscount > 0 ? ` • ${smallDiscount}% discount` : ""}`,
+        description: describePackage(smallPrice, 500, smallDiscount),
       },
       {
         id: "medium",
@@ -302,7 +320,7 @@ export const usePlans = (currency: string = getPreferredCurrency()) => {
         price: mediumPrice.price,
         currency: mediumPrice.currencySymbol,
         credits: 1000,
-        description: `${mediumPrice.currencySymbol}${(mediumPrice.price / 1000).toFixed(3)} per credit${mediumDiscount > 0 ? ` • ${mediumDiscount}% discount` : ""}`,
+        description: describePackage(mediumPrice, 1000, mediumDiscount),
       },
       {
         id: "large",
@@ -310,7 +328,7 @@ export const usePlans = (currency: string = getPreferredCurrency()) => {
         price: largePrice.price,
         currency: largePrice.currencySymbol,
         credits: 5000,
-        description: `${largePrice.currencySymbol}${(largePrice.price / 5000).toFixed(3)} per credit${largeDiscount > 0 ? ` • ${largeDiscount}% discount` : ""}`,
+        description: describePackage(largePrice, 5000, largeDiscount),
       },
     ];
 
