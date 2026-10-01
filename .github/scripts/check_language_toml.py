@@ -170,7 +170,7 @@ def check_locale(base_file: Path, head_file: Path, reference_keys: set[str] | No
         return []
 
     base = load_optional_translation_file(base_file)
-    reference_name = f"`{REFERENCE_LOCALE}/translation.toml` on main"
+    reference_name = f"`{REFERENCE_LOCALE}/translation.toml` (main plus this PR's {REFERENCE_LOCALE} changes)"
     problems = []
 
     unknown_keys = sorted(keys_touched_by_pr(base, head) - reference_keys)
@@ -238,7 +238,8 @@ def check_pr(base_dir: Path, head_dir: Path, main_dir: Path, actor: str) -> bool
             report.extend(f"- {problem}" for problem in problems)
             report.append("")
         report.append(
-            f"Only the keys this PR adds, changes or removes are checked, against {REFERENCE_LOCALE} on main."
+            f"Only the keys this PR adds, changes or removes are checked, against main's {REFERENCE_LOCALE} "
+            f"with this PR's {REFERENCE_LOCALE} changes applied."
         )
         if actor:
             report.append("")

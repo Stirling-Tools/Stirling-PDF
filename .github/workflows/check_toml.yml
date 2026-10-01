@@ -117,6 +117,7 @@ jobs:
         env:
           PR_ACTOR: ${{ github.event.pull_request.user.login }}
         run: |
+          set -o pipefail
           uv run --project engine --locked --group tools python .github/scripts/check_language_toml.py check \
             --base-dir pr-base \
             --head-dir pr-head \
