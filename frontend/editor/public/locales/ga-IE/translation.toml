@@ -278,6 +278,7 @@ customNumberDesc = "Réamhshocrú go {n}, glacann sé freisin le 'Leathanach {n}
 fontName = "Ainm Cló"
 fontSize = "Méid an Chló"
 numberPagesDesc = "Cé na leathanaigh le huimhriú, réamhshocraithe 'gach duine', a ghlacann freisin 1-5 nó 2,5,9 etc"
+pagePreviewAlt = "Réamhamharc leathanaigh"
 pagesAndStarting = "Leathanaigh & Uimhir Tosaigh"
 positionAndPages = "Suíomh & Leathanaigh"
 preview = "Roghnú Suímh"
@@ -350,7 +351,9 @@ text = "Rialaíonn na ceadanna seo cad is féidir le húsáideoirí a dhéanamh 
 title = "Athrú Ceadanna"
 
 [addStamp]
+pagePreviewAlt = "Réamhamharc leathanaigh"
 preview = "Réamhamharc ar Stampa"
+stampPreviewAlt = "Réamhamharc stampa"
 tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 
 [AddStampRequest]
@@ -383,6 +386,7 @@ positionAndFormatting = "Suíomh & Formáidiú"
 preview = "Preview:"
 quickPosition = "Roghnaigh suíomh ar an leathanach le stampa a chur."
 rotation = "Rothlú"
+selectedImageAlt = "Íomhá stampa roghnaithe"
 selectTemplate = "Select a template..."
 stampSetup = "Socrú Stampa"
 stampText = "Téacs Stampa"
@@ -533,6 +537,9 @@ letter = "Litir"
 
 [adjustPageScale.scaleFactor]
 label = "Fachtóir Scála"
+
+[adjustPageScale.settings]
+title = "Socruithe"
 
 [adjustPageScale.tooltip.description]
 text = "Coigeartaigh méid ábhar an PDF agus athraigh toisí na leathanach."
@@ -728,6 +735,7 @@ noLanguages = "Níor aimsíodh teangacha tessdata sa chomhadlann chumraithe."
 permissionNotice = "Níl cosán an tessdata inscríofa. Osclófar íoslódálacha sa bhrabhsálaí; sábháil na comhaid .traineddata de láimh sa chomhadlann tessdata le do thoil."
 
 [admin.settings.ai]
+customProvider = "Saincheaptha (comhoiriúnach le OpenAI)"
 description = "Ceangail Stirling leis an inneall Python AI, roghnaigh a shamhlacha, agus socraigh na cosaintí faoina ritheann sé."
 managedByCloud = "Á bhainistiú ag Stirling Cloud sa mhód seo."
 managedByCloudShort = "Á bhainistiú ag Stirling Cloud"
@@ -1146,7 +1154,6 @@ refresh = "Athnuaigh"
 selectFile = "Roghnaigh comhad .sql le hiompórtáil"
 size = "Méid"
 title = "Bunachar Sonraí"
-unavailable = "Níl liosta na gcúltacaí ar fáil don chumraíocht bhunachair sonraí reatha."
 uploadTitle = "Uaslódáil agus iompórtáil"
 version = "Leagan H2"
 
@@ -1280,6 +1287,7 @@ label = "Meiteashonraí Saincheaptha"
 [admin.settings.general.customMetadata.author]
 description = "Údar réamhshocraithe do mheitheashonraí PDF (m.sh., ainm úsáideora)"
 label = "Údar Réamhshocraithe"
+placeholder = "ainm úsáideora"
 
 [admin.settings.general.customMetadata.autoUpdate]
 description = "Nuashonraigh meiteashonraí PDF go huathoibríoch ar gach doiciméad próiseáilte"
@@ -1395,6 +1403,7 @@ defaultLocaleLink = "Cumraigh an logchaighdeán réamhshocraithe"
 description = "Taispeáin séanadh a chaithfidh úsáideoirí glacadh leis i ndiaidh dóibh logáil isteach. Leanann an téacs teanga gach úsáideora."
 discardConfirm = "Tá athruithe gan sábháil agat a chaillfear. Athraigh an teanga mar sin féin?"
 editLabel = "Markdown"
+editPlaceholder = "## Ceannteideal\n\nTéacs do shéanadh..."
 emptyPreview = "Níl aon rud le réamhamharc fós."
 language = "Teanga"
 languageHelp = "Tá a chomhad féin ag gach teanga. Mura bhfuil comhad ag teanga úsáideora, úsáidtear comhad an logchaighdeáin réamhshocraithe mar chúltaca, agus ansin an téacs cúltaca."
@@ -1513,8 +1522,10 @@ label = "JWKS URL (optional)"
 placeholder = "Auto-discovered from issuer"
 
 [admin.settings.mcp.mode]
+apikey = "API key (eochair in aghaidh an úsáideora Stirling)"
 description = "OAuth needs an external IdP. API key uses a Stirling per-user API key (X-API-KEY) - simplest for self-host."
 label = "Authentication mode"
+oauth = "OAuth 2.1 (IdP seachtrach)"
 
 [admin.settings.mcp.requireAccount]
 description = "Only let tokens through if their subject maps to a provisioned, enabled Stirling user."
@@ -1931,6 +1942,14 @@ title = "Socruithe Rialaithe Úsáideora"
 [agents]
 stirling_name = "Stirling"
 
+[alphabetOptions]
+arabic = "Arabach"
+chinese = "Sínis (Simplithe)"
+japanese = "Seapánach"
+korean = "Cóiréach"
+roman = "Rómhánach"
+thai = "Téalannach"
+
 [analytics]
 learnMore = "Tuilleadh eolais"
 paragraph1 = "Tá rogha an diúltaithe ag PDF Stirling chun cabhrú linn an táirge a fheabhsú. Ní rianaimid aon fhaisnéis phearsanta nó ábhar comhaid."
@@ -2052,6 +2071,7 @@ week = "Seachtain"
 
 [audit.clearData]
 cancel = "Cealaigh"
+closeAlert = "Dún foláireamh"
 codeDoesNotMatch = "Ní mheaitseálann an cód"
 codePlaceholder = "Clóscríobh an cód anseo"
 confirmationCode = "Cód Deimhnithe"
@@ -2061,6 +2081,7 @@ confirmTitle = "Dearbhaigh go bhfuil tú ag iarraidh scriosadh"
 deleteButton = "Scrios"
 enterCode = "Cód Deimhnithe"
 enterCodeBelow = "Iontráil an cód díreach mar a thaispeántar thuas (cásíogair)"
+failed = "Theip ar shonraí iniúchta a ghlanadh"
 initiateDelete = "Scrios Gach Sonraí"
 irreversible = "NEAMH-INAISIOMPTHA"
 success = "Rath"
@@ -2069,6 +2090,7 @@ warning1 = "Ní féidir an gníomh seo a chur ar ceal"
 warning2 = "Trí shonraí iniúchta a scriosadh, bainfear gach loga iniúchta stairiúil go buan, lena n-áirítear imeachtaí slándála, gníomhaíochtaí úsáideora, agus oibríochtaí comhaid ón mbunachar sonraí."
 
 [audit.error]
+loadStatus = "Theip ar stádas an chórais iniúchta a luchtú"
 title = "Earráid agus an córas iniúchta á lódáil"
 
 [audit.events]
@@ -2084,6 +2106,7 @@ fileHash = "Hais Comhaid"
 filterByType = "Scag de réir cineáil"
 filterByUser = "Scag de réir úsáideora"
 ipAddress = "Seoladh IP"
+loadFailed = "Theip ar imeachtaí a luchtú"
 noEvents = "Níor aimsíodh aon imeachtaí"
 startDate = "Dáta tosaigh"
 timestamp = "Stampa ama"
@@ -2124,6 +2147,7 @@ avgLatency = "Meánmhoill"
 error = "Earráid agus staitisticí á lódáil"
 excellent = "Ar fheabhas"
 good = "Maith"
+loadFailed = "Theip ar staitisticí a luchtú"
 noData = "N/B"
 successRate = "Ráta Ratha"
 totalEvents = "Iomlán Imeachtaí"
@@ -2158,13 +2182,27 @@ accessDenied = "Rochtain diúltaithe"
 insufficientPermissions = "Níl cead agat an gníomh seo a dhéanamh."
 
 [auth.callback]
+alreadySignedIn = "Tá tú sínithe isteach cheana! Á atreorú..."
+backToLogin = "Ar ais chuig logáil isteach"
 completing = "Fíordheimhniú á chríochnú"
+exchanging = "Cód údaraithe á mhalartú..."
+failedWithReason = "Theip ar fhíordheimhniú: {{error}}"
 invalidToken = "Theip ar logáil isteach OAuth - token neamhbhailí."
 missingToken = "Theip ar logáil isteach OAuth - ní bhfuarthas token."
+noData = "Níor aimsíodh aon sonraí fíordheimhnithe"
 oauthFailed = "Theip ar logáil isteach OAuth. Bain triail eile as."
 pleaseWait = "Fan le do thoil agus muid ag críochnú do shínithe isteach."
+processing = "Fíordheimhniú á phróiseáil..."
 signedOut = "Síníodh amach thú. Sínigh isteach arís le do thoil."
+signInFailed = "Theip ar shíniú isteach a chur i gcrích: {{error}}"
+success = "D’éirigh le síniú isteach! Á atreorú..."
+unknownError = "Earráid anaithnid"
 windowMayClose = "Is féidir leat an fhuinneog seo a dhúnadh nuair a bheidh sé críochnaithe."
+
+[auth.callback.title]
+default = "Fíordheimhniú"
+processing = "Á síniú isteach thú"
+success = "Tá gach rud réidh agat!"
 
 [auth.displayName]
 guest = "Aoi"
@@ -2317,6 +2355,7 @@ title = "Iompórtáil uathoibriú"
 unresolved = "Gan mhapáil: {{ops}}"
 
 [automate.run]
+progress = "Dul chun cinn: {{current}}/{{total}}"
 title = "Rith an tUathoibriú"
 
 [automate.selection]
@@ -2466,6 +2505,7 @@ whatHappensNext = "Cad a tharlaíonn ansin?"
 
 [billing.portal]
 error = "Theip ar an bportál billeála a oscailt"
+errorFallback = "Bain triail eile as nó déan teagmháil le tacaíocht."
 
 [bookletImposition]
 paperSizeNote = "Tógtar méid an pháipéir go huathoibríoch ón chéad leathanach agat."
@@ -2513,6 +2553,9 @@ title = "Mód Déthaobhach Láimhe"
 [bookletImposition.rtlBinding]
 label = "Ceangal deas-go-clé"
 tooltip = "Le haghaidh Araibise, Eabhraise, nó teangacha RTL eile"
+
+[bookletImposition.settings]
+title = "Socruithe"
 
 [bookletImposition.tooltip.advanced]
 bullet1 = "Ceangal Deas-go-Chlé: Do RTL mar Araibis/Eabhrais"
@@ -2582,6 +2625,8 @@ detail = "Cliceáil nó brúigh Space chun imirt arís"
 headline = "Gach rud glanta"
 
 [bulkSelection]
+selectedPages_one = "Roghnaithe: {{count}} leathanach ({{pages}})"
+selectedPages_other = "Roghnaithe: {{count}} leathanach ({{pages}})"
 syntaxError = "Tá fadhb le comhréir. Féach leideanna Roghnaithe Leathanach le cabhair."
 
 [bulkSelection.advanced]
@@ -2802,6 +2847,7 @@ declineButton = "Diúltaigh"
 deleteSelected = "Scrios an síniú roghnaithe"
 drawSignature = "Tarraing do shíniú thíos"
 fileTooLarge = "Ní mór do mhéid an chomhaid a bheith níos lú ná 5MB"
+fontBrushScript = "Brush Script MT (cúrsach)"
 fontFamily = "Teaghlach Cló"
 fontSize = "Méid Cló: {{size}}px"
 fontSizePlaceholder = "Méid"
@@ -2821,6 +2867,7 @@ removeImage = "Bain Íomhá"
 savedSignatures = "Sínithe Sábháilte"
 selectFile = "Roghnaigh Comhad Íomhá"
 selectSignatureTitle = "Roghnaigh nó Cruthaigh Síniú"
+signatureImageAlt = "Síniú"
 signatureInfo = "Cumraíonn úinéir an doiciméid na socruithe seo"
 signatureSettings = "Socruithe Sínithe"
 signatureText = "Téacs an Sínithe"
@@ -3591,13 +3638,19 @@ confirm = "Deimhnigh"
 continue = "Lean ar aghaidh"
 copied = "Cóipeáilte!"
 copy = "Cóipeáil"
+copyCode = "Cóipeáil cód"
+dismiss = "Ruaig"
 done = "Déanta"
 enterValue = "Enter value"
 error = "Earráid"
 expand = "Leathnaigh"
 filterEmpty = "Níl aon rud le scagadh air"
+goToSlide = "Téigh go sleamhnán {{number}}"
 loading = "Á lódáil..."
+moreInformation = "Tuilleadh eolais"
 next = "Ar Aghaidh"
+noData = "Gan sonraí"
+nOfTotal = "{{current}} as {{total}}"
 open = "Open"
 preview = "Réamhamharc"
 previous = "Roimhe Seo"
@@ -3606,6 +3659,9 @@ remaining = "Fágtha"
 retry = "Bain triail eile as"
 save = "Sábháil"
 search = "Cuardaigh"
+settingsSections = "Rannáin socruithe"
+showAllTotal = "Taispeáin gach ceann {{total}}"
+showLess = "Taispeáin níos lú"
 stepOf = "Step {{current}} of {{total}}"
 
 [compare]
@@ -3617,6 +3673,7 @@ newLine = "líne nua"
 pages = "Leathanaigh"
 tags = "idirdhealú, codarsnacht, athruithe, anailís"
 title = "Déan comparáid idir"
+workbenchLabel = "Amharc comparáide"
 
 [compare.actions]
 linkScroll = "Nasc scrollaigh"
@@ -3770,6 +3827,7 @@ title = "Modh Comhbhrúite"
 desiredSize = "Méid comhaid inmhianaithe"
 desiredSizePlaceholder = "Iontráil an méid"
 desiredSizeUnit = "Size unit"
+title = "Socruithe"
 
 [compress.tooltip.description]
 text = "Is bealach éasca é comhbhrú chun do mhéid comhaid a laghdú. Roghnaigh Méid Comhaid chun spriocmhéid a iontráil agus ligean dúinn an cháilíocht a choigeartú duitse. Roghnaigh Cáilíocht chun neart an chomhbhrú a shocrú de láimh."
@@ -3819,10 +3877,13 @@ title = "Socruithe Cuntais"
 description = "Uasluchtaigh íomhá chun do chuntas a phearsanú."
 help = "PNG, JPG, nó WebP suas le 2MB."
 remove = "Bain"
+removeFailed = "Theip ar phictiúr próifíle a bhaint"
 sizeError = "Roghnaigh íomhá atá níos lú ná 2MB le do thoil."
 switchedToCustom = "Athraíodh go pictiúr saincheaptha. Is féidir leat do cheann féin a uasluchtú anois."
+switchFailed = "Theip ar athrú go pictiúr saincheaptha"
 title = "Pictiúr próifíle"
 upload = "Uasluchtaigh"
+uploadFailed = "Theip ar phictiúr próifíle a uaslódáil"
 useCustom = "Úsáid pictiúr saincheaptha"
 usingProvider = "Ag úsáid pictiúr próifíle {{provider}}"
 
@@ -3836,6 +3897,7 @@ title = "Bearr Pictiúr Próifíle"
 zoom = "Súmáil"
 
 [config.account.security]
+changeFailed = "Theip ar phasfhocal a athrú"
 changePassword = "Athraigh focal faire"
 description = "Bainistigh do fhocal faire agus do shocruithe slándála."
 title = "Focail Faire & Slándáil"
@@ -3846,11 +3908,15 @@ description = "Nasc do chuntas chun do stair a chaomhnú agus rochtain ar níos 
 email = "R-phost"
 emailPassword = "nó cuir isteach do r-phost agus d'fhocal faire"
 emailPlaceholder = "Cuir isteach do r-phost"
+failed = "Theip ar chuntas a uasghrádú"
+failedWithProvider = "Theip ar chuntas a uasghrádú le {{provider}}"
 linkWith = "Nasc le"
+linkWithProvider = "Nasc le {{provider}}"
 password = "Focal Faire (roghnach)"
 passwordNote = "Fág folamh é chun fíorú ríomhphoist amháin a úsáid"
 passwordPlaceholder = "Socraigh focal faire"
 socialLogin = "Uasghrádaigh le Cuntas Sóisialta"
+success = "Uasghrádaíodh an cuntas go rathúil! Is féidir leat síniú isteach anois le do ríomhphost."
 title = "Uasghrádaigh Cuntas Aoi"
 upgradeButton = "Uasghrádaigh an Cuntas"
 
@@ -3960,10 +4026,10 @@ title = "Níl an t-iarratas bailí"
 
 [connect.renewal]
 approve = "Athnuaigh síniú isteach"
+currentOwnerRequired = "Sínigh isteach mar úinéir reatha na foirne scamall nasctha chun síniú isteach an fhreastalaí seo a athnuachan. Má aistríodh an úinéireacht, úsáid cuntas an úinéara nua."
 failed = "Níorbh fhéidir do shíniú isteach a athnuachan. Bain triail eile as, nó dún an leathanach seo agus tosaigh arís ó do fhreastalaí."
 lead = "Tá an freastalaí seo nasctha le do chuntas cheana. Athnuaigh do shíniú isteach chun filleadh ar bhilleáil agus úsáid ar do fhreastalaí."
 title = "Athnuaigh síniú isteach do fhreastalaí"
-wrongAccount = "Ní féidir leis an gcuntas seo síniú isteach an fhreastalaí seo a athnuachan. Athraigh chuig an gcuntas a úsáideadh ar dtús chun an freastalaí a nascadh. Ní mór don chuntas sin a bheith fós ina úinéir ar an bhfoireann nasctha."
 
 [convert]
 autoRotate = "Rothlú Uathoibríoch"
@@ -4009,6 +4075,7 @@ multiple = "Il"
 optimizeForEbook = "Optamaigh PDF do léitheoirí ríomhleabhar (úsáideann Ghostscript)"
 output = "Aschur"
 outputFormat = "Formáid Aschuir"
+pdfaAccessibleFormat = "{{format}} (inrochtana)"
 pdfaDigitalSignatureWarning = "Tá síniú digiteach ar an PDF. Bainfear é seo sa chéad chéim eile."
 pdfaNote = "Tá PDF/A-1b níos comhoiriúnaí, tacaíonn PDF/A-2b le níos mó gnéithe."
 pdfaOptions = "Roghanna PDF/A"
@@ -4068,6 +4135,24 @@ outputFormatDesc = "Choose the output format for the ebook"
 tabletPhone = "Tablet/Phone (with images)"
 targetDevice = "Target device"
 targetDeviceDesc = "Choose an output profile optimized for the reader device"
+
+[convert.formatGroups]
+archive = "Cartlann"
+document = "Doiciméad"
+ebook = "eBook"
+email = "Ríomhphost"
+file = "Comhad"
+image = "Íomhá"
+multipleFiles = "Comhaid Iolracha"
+presentation = "Cur i láthair"
+spreadsheet = "Scarbhileog"
+text = "Téacs"
+web = "Gréasán"
+
+[convert.formatOptions]
+any = "Aon cheann"
+images = "Íomhánna"
+msgOutlook = "MSG (Outlook)"
 
 [cookieBanner.popUp]
 acceptAllBtn = "Ceart go leor"
@@ -4161,6 +4246,12 @@ label = "Suíomh Y"
 [crop.error]
 failed = "Theip ar an PDF a bhearradh"
 
+[crop.pageNumbers]
+description = "Bearr an limistéar roghnaithe ar leathanaigh shonracha, nó 'all' do gach leathanach."
+error = "Roghnú leathanach neamhbhailí. Úsáid m.sh. 1, 3, 5-8 nó all."
+label = "Leathanaigh le Bearradh"
+placeholder = "m.sh. 1, 3, 5-8 nó all"
+
 [crop.preview]
 title = "Roghnú Limistéir Bhearrtha"
 
@@ -4183,16 +4274,11 @@ fileName = "Ainm comhaid"
 title = "Iompórtáil/Easpórtáil Bunachar Sonraí"
 
 [defaultApp]
-setDefault = "Socraigh mar Réamhshocraithe"
 title = "Socraigh mar Aip PDF Réamhshocraithe"
 
 [defaultApp.error]
 message = "Theip ar shocrú láimhseálaí PDF réamhshocraithe"
 title = "Earráid"
-
-[defaultApp.prompt]
-dontRemind = "Ná cuir i gcuimhne dom arís"
-message = "Déan Stirling PDF mar d’fheidhmchlár réamhshocraithe chun comhaid PDF a oscailt."
 
 [defaultApp.settingsOpened]
 message = "Roghnaigh Stirling PDF i socruithe do chórais"
@@ -4201,6 +4287,17 @@ title = "Socruithe Oscailte"
 [defaultApp.success]
 message = "Is é Stirling PDF d’eagarthóir PDF réamhshocraithe anois"
 title = "Aip Réamhshocraithe Socraithe"
+
+[desktop.titleBar]
+maximize = "Uasmhéadaigh"
+minimize = "Íoslaghdaigh"
+restore = "Athchóirigh"
+
+[desktopBilling]
+description = "Bainistigh úsáid agus billeáil i do bhrabhsálaí. Sínigh isteach leis an gcuntas Stirling céanna a úsáideann tú anseo."
+open = "Oscail Úsáid & Billeáil sa bhrabhsálaí"
+openFailed = "Níorbh fhéidir Úsáid & Billeáil a oscailt. Seiceáil do cheangal agus bain triail eile as."
+selfHostedDescription = "Bainistigh úsáid agus billeáil ar do fhreastalaí nasctha i do bhrabhsálaí. Sínigh isteach le cuntas úinéara do fhreastalaí."
 
 [desktopFileLink]
 saveAs = "Sábháil mar…"
@@ -4264,6 +4361,7 @@ tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,ident
 noItems = "No items available"
 noResults = "No results found"
 searchPlaceholder = "Cuardaigh..."
+selectedCount = "{{count}} roghnaithe"
 selectLanguages = "Select languages"
 selectOption = "Select an option"
 
@@ -4274,6 +4372,7 @@ editSecretValue = "Cuir luach rúnda in eagar"
 [editTableOfContents]
 submit = "Cuir clár ábhair i bhfeidhm"
 tags = "bookmarks,contents,edit,table of contents,TOC,outline,navigation,chapters,sections,add bookmarks,edit bookmarks,PDF outline"
+workbenchLabel = "Spás oibre imlíne"
 
 [editTableOfContents.actions]
 clipboardUnavailable = "Níl rochtain ar an ngearrthaisce ar fáil sa bhrabhsálaí seo."
@@ -4434,6 +4533,27 @@ closeFile = "Dún comhad"
 
 [fileEditor]
 addFiles = "Cuir Comhaid Leis"
+closedFile = "Dúnadh {{name}}"
+couldNotSave = "Níorbh fhéidir {{name}} a shábháil"
+filesAdded_one = "Cuireadh {{count}} chomhad leis"
+filesAdded_other = "Cuireadh {{count}} chomhad leis"
+filesReordered_one = "Athordaíodh comhad"
+filesReordered_other = "Athordaíodh {{count}} chomhad"
+loadedFromStorage_one = "Luchtaíodh {{count}} chomhad ón stóráil"
+loadedFromStorage_other = "Luchtaíodh {{count}} chomhad ón stóráil"
+loadFromStorageFailed = "Theip ar roinnt comhad a luchtú ón stóráil"
+pinnedFile = "Pionnáladh {{name}}"
+processFilesFailed = "Theip ar chomhaid a phróiseáil"
+savedAndClosed = "Sábháladh agus dúnadh {{name}}"
+saveFailed = "Theip ar shábháil"
+unpinnedFile = "Díphionnáladh {{name}}"
+unzipping = "{{name}} á dhízipeáil"
+
+[fileEditor.unzip]
+error = "Earráid agus {{name}} á dhízipeáil"
+extracted_one = "Baineadh {{count}} chomhad as {{name}}"
+extracted_other = "Baineadh {{count}} chomhad as {{name}}"
+failed = "Theip ar chomhaid a bhaint as {{name}}"
 
 [fileManager]
 addToUpload = "Cuir leis an Uaslódáil"
@@ -4450,6 +4570,7 @@ noFiles = "Níl comhaid ar fáil"
 noFilesFound = "Níor aimsíodh comhaid a mheaitseálann do chuardach"
 openInFileEditor = "Oscail san Eagarthóir Comhad"
 openInPageEditor = "Oscail san Eagarthóir Leathanaigh"
+reloadFiles = "Athluchtaigh Comhaid"
 saveSelected = "Sábháil Roghnaithe"
 searchFiles = "Cuardaigh comhaid..."
 share = "Comhroinn"
@@ -4459,6 +4580,8 @@ sharedEditNoticeConfirm = "Tuigim"
 sharedEditNoticeTitle = "Leagan freastalaí inléite amháin"
 sharedWithYou = "Roinnte leat"
 showAll = "Taispeáin Uile"
+showAllCount_one = "Taispeáin Gach Rud ({{count}} chomhad)"
+showAllCount_other = "Taispeáin Gach Rud ({{count}} chomhad)"
 sortBy = "Sort files"
 sortByDate = "Sórtáil de réir Dáta"
 sortByName = "Sórtáil de réir Ainm"
@@ -4495,6 +4618,11 @@ sources = "Foinsí comhad"
 subtitle = "Roghnaigh ó do leabharlann nó cuir rud nua leis."
 title = "Cuir comhaid leis"
 unsupported = "Ní thacaíonn an uirlis roghnaithe leis an gcineál comhaid seo."
+
+[filePreview]
+loadingThumbnail = "Mionsamhail á luchtú..."
+locked = "Faoi ghlas"
+previewOf = "Réamhamharc ar {{name}}"
 
 [files]
 addFiles = "Cuir comhaid leis"
@@ -4930,13 +5058,15 @@ title = "Comhad go PDF"
 [fileUpload]
 dropFilesHere = "Scaoil comhaid anseo nó cliceáil an cnaipe uaslódála"
 dropFilesHereOpen = "Scaoil comhaid anseo nó cliceáil an cnaipe Oscail"
-filesAvailable = "comhaid ar fáil"
+filesAvailableCount_one = "{{count}} chomhad ar fáil"
+filesAvailableCount_other = "{{count}} chomhad ar fáil"
 loadFromStorage = "Luchtaigh ón Stóráil"
 noFilesInStorage = "Níl comhaid ar fáil sa stóráil. Uaslódáil roinnt comhad ar dtús."
 noFilesInStorageOpen = "Níl comhaid ar fáil sa stóráil. Oscail roinnt comhad ar dtús."
 open = "Oscail"
 openFile = "Oscail Comhad"
 openFiles = "Oscail Comhaid"
+selectedCount = "{{count}} roghnaithe"
 selectFile = "Select {{name}}"
 selectFromStorage = "Roghnaigh ón Stóráil"
 upload = "Uaslódáil"
@@ -5028,6 +5158,7 @@ rescanFields = "Athscan na réimsí"
 rescanFormFields = "Athscan réimsí an fhoirme"
 save = "Sábháil"
 saveShortcut = "Ctrl+S chun sábháil"
+selectOptionPlaceholder = "— roghnaigh —"
 skippedEdits_one = "Níorbh fhéidir 1 athrú a chur i bhfeidhm:"
 skippedEdits_other = "Níorbh fhéidir {{count}} athrú a chur i bhfeidhm:"
 skippedEditsTruncated = "{{count}} eile nach bhfuil liostaithe."
@@ -5090,6 +5221,16 @@ tooltipHelp = "An leid a thaispeántar nuair a fhanann duine os cionn an réimse
 type = "Cineál"
 typeHelp = "Cén cineál réimse é seo. Má athraítear é, atógtar an réimse, mar sin ní thugtar a luach reatha ar aghaidh."
 
+[formFill.fieldTypes]
+button = "Cnaipe"
+checkbox = "Ticbhosca"
+combobox = "Roghchlár anuas"
+listbox = "Bosca liosta"
+radio = "Raidió"
+radioGroup = "Grúpa raidió"
+signature = "Síniú"
+text = "Téacs"
+
 [formFill.mode]
 create = "Cruthaigh"
 fill = "Líon"
@@ -5107,11 +5248,16 @@ restore = "Athchóirigh"
 
 [formFill.sidebar]
 close = "Dún an barra taoibh"
+empty = "Níor aimsíodh aon réimsí foirme sa PDF seo"
+loading = "Réimsí foirme á luchtú..."
+pageNumber = "Leathanach {{page}}"
+title = "Réimsí Foirme"
 
 [getPdfInfo]
 downloadJson = "Íosluchtaigh ceol JSON"
 downloads = "Íoslódálacha"
 indexTitle = "Innéacs"
+noData = "Gan Sonraí"
 noneDetected = "Níor braitheadh aon cheann"
 noResults = "Rith an uirlis chun tuairisc a ghiniúint."
 processing = "Ag eastóscadh faisnéise..."
@@ -5127,6 +5273,8 @@ noVerification = "Ní dhearnadh aon fhíorú"
 noVerificationDesc = "Ní dhearnadh fíorú ar chomhlíonadh caighdeáin PDF don cháipéis seo."
 passed = "D'éirigh leis"
 passedCount = "rite"
+secCompliant = "Comhlíonann an doiciméad riachtanais chomhdúcháin SEC EDGAR"
+secNotCompliant = "Ní chomhlíonann an doiciméad riachtanais chomhdúcháin SEC EDGAR"
 
 [getPdfInfo.error]
 partial = "Níorbh fhéidir roinnt comhad a phróiseáil."
@@ -5134,10 +5282,15 @@ unexpected = "Earráid gan choinne le linn eastósctha."
 
 [getPdfInfo.other]
 attachments = "Iatáin"
+created = "Cruthaithe: {{date}}"
 embeddedFiles = "Comhaid Leabaithe"
+fileSizeBytes = "({{size}} beart)"
 javaScript = "JavaScript"
 layers = "Sraitheanna"
+modified = "Athraithe: {{date}}"
 structureTree = "Crann Struchtúir"
+unnamedAttachment = "Ceangaltán gan ainm"
+unnamedFile = "Comhad gan ainm"
 xmp = "XMPMetadata"
 
 [getPdfInfo.perPage]
@@ -5147,6 +5300,7 @@ images = "Íomhánna"
 links = "Naisc"
 multimedia = "Ilmheáin"
 size = "Méid"
+unnamedImage = "Íomhá"
 xobjects = "Líon XObjectanna"
 
 [getPdfInfo.report]
@@ -5675,6 +5829,7 @@ invalidEmail = "Seoladh ríomhphoist neamhbhailí"
 invalidInvitation = "Cuireadh Neamhbhailí"
 invalidToken = "Nasc cuireadh neamhbhailí"
 linkExpires = "Éagann an nasc"
+linkExpiresAt = "Rachaidh an nasc in éag: {{date}} ag {{time}}"
 passwordMismatch = "Ní hionann na focail faire"
 passwordPlaceholder = "Cuir isteach d'fhocal faire"
 passwordRequired = "Tá focal faire riachtanach"
@@ -5689,6 +5844,7 @@ welcomeTitle = "Tugadh cuireadh duit!"
 addFiles = "Cuir Comhaid Leis"
 mobileUpload = "Uaslódáil ó Shoghluaiste"
 openFromComputer = "Oscail ón ríomhaire"
+settingUpSession = "Do sheisiún á shocrú..."
 uploadFromComputer = "Uaslódáil ón ríomhaire"
 
 [language]
@@ -5770,6 +5926,7 @@ sessionExpired = "Tá do sheisiún imithe in éag. Logáil isteach arís, le do 
 signin = "Sínigh isteach"
 signingIn = "Ag logáil isteach..."
 signInWith = "Logáil isteach le"
+signInWithProvider = "Sínigh isteach le {{provider}}"
 title = "Sínigh isteach"
 unexpectedError = "Earráid gan choinne: {{message}}"
 updatePassword = "Nuashonraigh focal faire"
@@ -5811,6 +5968,9 @@ label = "Bain síniú digiteach sa chomhad cumaiscthe?"
 description = "Beidh sínithe digiteacha neamhbhailí nuair a chumaisctear comhaid. Seiceáil é seo chun iad a bhaint as an PDF cumaiscthe deiridh."
 title = "Bain Síniú Digiteach"
 
+[merge.settings]
+title = "Socruithe"
+
 [merge.sortBy]
 ascending = "Ardaitheach"
 dateModified = "Dáta Athraithe"
@@ -5819,6 +5979,9 @@ description = "Cumaiscfear na comhaid san ord a roghnaítear iad. Tarraing chun 
 filename = "Ainm comhaid"
 label = "Sórtáil De Réir"
 sort = "Sórtáil"
+
+[merge.sortFiles]
+title = "Sórtáil Comhaid"
 
 [merge.tooltip.header]
 title = "Forbhreathnú ar Shocruithe Cumaisc"
@@ -5867,6 +6030,7 @@ validating = "Ag bailíochtú an tseisiúin..."
 
 [mobileSign]
 clear = "Clear"
+drawingArea = "Limistéar líníochta sínithe"
 invalidSession = "Session expired"
 invalidSessionMessage = "This QR code is no longer valid. Open the Sign tool on your computer and scan the new code."
 penSizeLabel = "Pen size"
@@ -5882,6 +6046,7 @@ validating = "Checking session…"
 fromGallery = "From gallery"
 hint = "Photograph a signature on white paper, or choose an existing image."
 invalidType = "Please choose an image file."
+previewAlt = "Síniú"
 takePhoto = "Take a photo"
 
 [mobileSign.tab]
@@ -5993,6 +6158,9 @@ profile = "See your basic profile information"
 desc = "Scanann glantachán agus aimsíonn sé téacs ó íomhánna laistigh de PDF agus cuireann sé isteach arís é mar théacs."
 tags = "aithint, téacs, íomhá, scanadh, léamh, a aithint, a bhrath, in eagar"
 title = "OCR / Glanta Scan"
+
+[ocr.advanced]
+title = "Ardroghanna"
 
 [ocr.error]
 failed = "Theip ar oibríocht OCR"
@@ -6118,9 +6286,9 @@ title = "Íoslódáil Stirling don Deasc"
 description = "Comhoibrigh le do fhoireann"
 title = "Tabhair cuireadh do bhaill foirne"
 
-[onboarding.checklist.shareAnalytics]
-description = "Cuidigh le Stirling a fheabhsú"
-title = "Comhroinn sonraí úsáide anaithnide"
+[onboarding.checklist.setDefaultApp]
+description = "Oscail comhaid PDF in Stirling PDF"
+title = "Déan Stirling mar réamhshocrú agat"
 
 [onboarding.checklist.takeTour]
 description = "Féach conas a oibríonn Stirling i dtreoir thapa"
@@ -6188,6 +6356,7 @@ message = "Tá athruithe suntasacha déanta ar an bhfeidhmchlár le déanaí. B�
 roleAdmin = "Riarthóir"
 rolePlaceholder = "Deimhnigh do ról"
 roleUser = "Úsáideoir"
+title = "Seiceáil Slándála"
 
 [onboarding.serverLicense]
 freeBody = "Cuimsíonn ár gceadúnas <strong>Open-Core</strong> <strong>OAuth SSO</strong> agus suas le <strong>{{freeTierLimit}}</strong> úsáideoir saor in aisce. Chun fás gan bhriseadh, molaimid plean Stirling Team — <strong>100 úsáideoir</strong> ar $99 sa mhí."
@@ -6276,16 +6445,93 @@ title = "Comhaid Forleagain"
 text = "Cuireann Tulra an fhorleagan os cionn an leathanaigh. Cuireann Cúlra é taobh thiar di."
 title = "Suíomh Forleagain"
 
+[ownership]
+acceptInvite = "Is féidir leo cuntas a chruthú nó síniú isteach, ansin glacadh leis an gcuireadh."
+accessUpdated = "Tá a rochtain úinéara réidh."
+accountLinkDisabled = "Tá nasc scamall fós ag an bhfreastalaí seo, ach tá nascadh cuntas múchta. Iarr ar oibreoir an fhreastalaí nascadh cuntas a chumasú, ansin lean leis an aistriú seo nó dícheangail an freastalaí sna socruithe."
+anotherTeam = "Ar fhoireann eile cheana?"
+billing = "Fanann an síntiús, sparán, modh íocaíochta agus na ceadúnais reatha i bhfeidhm. Ní athraíonn sonraí teagmhála billeála go huathoibríoch."
+billingDetails = "Sonraí billeála"
+billingUnchanged = "Fanann an síntiús agus an bhilleáil i bhfeidhm"
+bothDone = "Tá úinéireacht an fhreastalaí agus na scamall ailínithe anois."
+cancel = "Cealaigh aistriú"
+check = "Seiceáil arís"
+checkAccount = "Seiceáil cuntas"
+chooseEmail = "Roghnaigh a gcuntas in {{team}}, nó cuir isteach ríomhphost chun cuireadh a thabhairt dóibh."
+close = "Dún dialóg aistrithe"
+cloudAccount = "Cuntas Stirling"
+cloudScopeStyled = "Bainisteoidh <user>{{name}}</user> {{team}}, a baill agus billeáil."
+cloudTargetChanged = "Roghnaigh ball scamall eile. Níl an cuntas seo incháilithe don aistriú a thuilleadh."
+confirm = "Tuigim na hathruithe rochtana agus úinéireachta."
+done = "Aistríodh an úinéireacht"
+error = "Níorbh fhéidir linn an chéim seo a chur i gcrích. Seiceáil go bhfuil an faighteoir gníomhach agus go bhfuil an freastalaí ceangailte, ansin seiceáil arís. Is féidir aistriú ar feitheamh a atosú anseo."
+finish = "Críochnaigh aistriú freastalaí"
+inProgress = "Tá aistriú ar feitheamh ag faighteoir eile cheana. Dún an dialóg seo agus atosaigh é ó Úsáideoirí."
+instances = "Tá {{count}} fhreastalaí nasctha ag an bhfoireann seo. Fanann a mbilleáil scamall leis an bhfoireann seo; ní athraíonn úinéirí áitiúla freastalaithe eile."
+invitationSent = "Cuireadh seolta"
+invite = "Seol cuireadh"
+inviteAddress = "Tabhair cuireadh do <account>{{email}}</account> chuig {{team}}."
+inviteBlocked = "Níorbh fhéidir an cuireadh a sheoladh. Seiceáil suíocháin foirne atá ar fáil agus an bhfuil síntiús íoctha ag an bhfaighteoir cheana."
+linkChanged = "D’athraigh nasc scamall an fhreastalaí. Iarr ar oibreoir an fhreastalaí an nasc bunaidh a athchóiriú sula n-atosófar."
+linkedServerCount = "{{count}} fhreastalaí nasctha"
+linkRevoked = "Níl nasc scamall an fhreastalaí seo bailí a thuilleadh. Cealaigh an t-aistriú, ansin athcheangail do chuntas Stirling sna socruithe. Ní athróidh úinéireacht."
+localScope = "Beidh úinéireacht acu ar an bhfreastalaí seo agus bainisteoidh siad billeáil agus naisc scamall. Coinneoidh tú rochtain riarthóra, ach caillfidh tú rochtain ar na socruithe sin."
+membershipDetails = "Sonraí ballraíochta foirne"
+membershipFirst = "Caithfidh siad dul isteach san fhoireann sular féidir leat an t-aistriú a dheimhniú."
+membershipRequired = "Caithfidh an faighteoir dul isteach san fhoireann scamall seo sular féidir úinéireacht a aistriú. Iarr orthu glacadh lena gcuireadh, ansin seiceáil arís."
+newOwnerLabel = "Úinéir nua"
+newOwnerStyled = "Is é <user>{{name}}</user> an t-úinéir anois."
+noEmailMatches = "Níl aon bhaill mheaitseála ann. Cuir isteach ríomhphost chun cuireadh a thabhairt."
+otherTeam = "Má bhaineann siad le foireann eile, d’fhéadfadh glacadh a gcuntas a bhogadh. Seans go mbeidh gá le cuntas íoctha nó úinéireacht foirne eile a réiteach ar dtús. Ní bhogfaimid a síntiús ná ní chumascfaimid foirne."
+ownerChanged = "D’athraigh úinéireacht scamall tar éis don aistriú seo tosú. Cealaigh an t-aistriú seo agus tosaigh arís leis an úinéir scamall reatha."
+ownerRequired = "Sínigh isteach mar úinéir reatha na foirne scamall, ansin bain triail as an gcéim seo arís."
+partialError = "Aistríodh úinéireacht scamall. Críochnaigh aistriú an fhreastalaí chun an dá úinéir a choinneáil ailínithe."
+partialTargetChanged = "Athchóirigh rochtain agus sonraí cuntais bunaidh an úsáideora freastalaí roghnaithe, ansin críochnaigh aistriú an fhreastalaí. Tá úinéireacht scamall aistrithe cheana."
+pending = "Tá aistriú úinéireachta chuig {{name}} ar feitheamh."
+personalTeam = "Ní féidir le foirne pearsanta úinéireacht a aistriú."
+prepareHelp = "Caithfidh an faighteoir a chéad logáil isteach freastalaí a bheith críochnaithe aige. Is féidir leat triail eile a bhaint as anseo, nó filleadh ar Úsáideoirí chun duine eile a roghnú."
+resume = "Atosaigh aistriú"
+searchEmail = "Cuardaigh nó cuir isteach ríomhphost"
+serverAccount = "Cuntas freastalaí"
+serverDetails = "Sonraí freastalaí nasctha"
+signIn = "Sínigh isteach sa scamall"
+startFromInstanceBody = "Tá freastalaithe nasctha ag an bhfoireann seo. Ar an bhfreastalaí féinóstáilte, oscail Socruithe → Úsáideoirí agus athraigh ról an fhaighteora go hÚinéir Eagraíochta. Aistríonn an sreabhadh sin úinéireacht scamall sula gcuirtear aistriú an fhreastalaí i gcrích."
+startFromInstanceTitle = "Tosaigh ó do fhreastalaí féinóstáilte"
+stayOwner = "Fanann tú mar úinéir go dtí an t-aistriú."
+targetChanged = "D’athraigh cuntas an fhaighteora. Athchóirigh a rochtain nó cealaigh an t-aistriú seo agus roghnaigh arís iad."
+title = "Aistrigh úinéireacht"
+transfer = "Aistrigh úinéireacht"
+waitingForEmail = "Ag fanacht le {{email}} dul isteach in {{team}}."
+working = "Úinéireacht á seiceáil agus á nuashonrú..."
+yourCloudAccess = "Beidh tú i do bhall foirne agus caillfidh tú rochtain úinéara."
+
 [pageEdit]
 deselectAll = "Díroghnaigh Uile"
 selectAll = "Roghnaigh Uile"
 
 [pageEditor]
+dragPreviewAlt = "Á tharraingt"
+filePosition = "Suíomh {{position}}"
+pageLabel = "Leathanach {{page}}"
 title = "Eagarthóir Leathanach"
+
+[pageEditor.actions]
+deletePage = "Scrios Leathanach"
+insertFileAfter = "Ionsáigh Comhad Ina Dhiaidh"
+moveLeft = "Bog Ar Chlé"
+moveRight = "Bog Ar Dheis"
+rotateLeft = "Rothlaigh Ar Chlé"
+rotateRight = "Rothlaigh Ar Dheis"
+splitAfter = "Scoilt Ina Dhiaidh"
 
 [pageEditor.emptyState]
 body = "Cuir comhaid leis chun eagarthóireacht ar leathanaigh a thosú"
 title = "Níl aon chomhaid PDF lódáilte"
+
+[pageEditor.fileDropdown]
+addFile = "Cuir Comhad Leis"
+selectedCount = "{{selected}}/{{total}} chomhad roghnaithe"
+untitled = "Gan teideal"
 
 [pageEditor.toolbar]
 delete = "Scrios na roghnaithe"
@@ -6391,6 +6637,11 @@ portrait = "Portráid"
 label = "Treo Léitheoireachta:"
 ltr = "Ó Chlé go Deas"
 rtl = "Ó Dheas go Clé"
+
+[pageLayout.steps]
+advanced = "Ardsocruithe"
+layout = "Socruithe leagain amach"
+marginsBorders = "Imill agus teorainneacha"
 
 [pageLayout.tooltip.header]
 title = "Treoir Leagain Amach Leathanach"
@@ -6712,6 +6963,7 @@ teamChangeUnavailable = "Níorbh fhéidir athruithe sceidealaithe Foirne a lucht
 teamPending = "Tá do cheannach Foirne fós á phróiseáil. Athnuaigh an leathanach seo go luath."
 teamProcessing = "Ceannach Foirne á phróiseáil"
 teamScheduled = "Tá d'athrú Foirne sceidealaithe do {{date}}. Fanann d'acmhainn reatha gníomhach go dtí sin."
+unknownError = "Tharla earráid anaithnid"
 upgradeComplete = "Uasghrádú Críochnaithe"
 upgradeCompleteMessage = "Uasghrádaíodh do shíntiús go rathúil. Nuashonraíodh d’eochair cheadúnais atá ann cheana."
 upgradeSuccess = "D’éirigh leis an íocaíocht! Uasghrádaíodh do shíntiús. Nuashonraíodh an ceadúnas ar do fhreastalaí. Gheobhaidh tú ríomhphost deimhnithe go luath."
@@ -6766,6 +7018,14 @@ selectedMonthly = "Míosúil"
 selectedYearly = "Bliantúil"
 selectMonthly = "Roghnaigh Míosúil"
 selectYearly = "Roghnaigh Bliantúil"
+
+[payment.priceDisplay]
+basePrice = "Bunphraghas"
+perPeriod = "/{{period}}"
+perSeat = "In aghaidh an tSuíocháin"
+perSeatPeriod = "/suíochán/{{period}}"
+totalSeats_one = "Iomlán ({{count}} suíochán)"
+totalSeats_other = "Iomlán ({{count}} suíochán)"
 
 [payment.upgradeTeam]
 title = "Uasghrádaigh go Foireann"
@@ -6985,6 +7245,10 @@ save = "Sábháil"
 style = "Stíl"
 tapToPlace = "Tapáil an leathanach san áit ar cheart don téacs dul"
 unlock = "Díghlasáil"
+
+[pdfTextEditor.pageView]
+pageNumber = "Leathanach {{page}}"
+renderFailed = "Theip ar leathanach a rindreáil"
 
 [pdfTextEditor.password]
 cancel = "Cealaigh"
@@ -7212,6 +7476,7 @@ title = "Píblíne"
 contact = "Déan Teagmháil Linn"
 current = "Plean Reatha"
 featureComparison = "Comparáid Gnéithe"
+fetchError = "Theip ar shonraí praghsála a fháil"
 from = "Ó"
 hideComparison = "Folaigh Comparáid Gnéithe"
 licensedSeats = "Ceadúnaithe: {{count}} suíochán"
@@ -7227,6 +7492,8 @@ withServer = "+ Plean Freastalaí"
 [plan.api]
 large = "5,000 Creidiúintí"
 medium = "1,000 Creidiúintí"
+perCredit = "{{price}} in aghaidh an chreidmheasa"
+perCreditWithDiscount = "{{price}} in aghaidh an chreidmheasa • lascaine {{discount}}%"
 small = "500 Creidiúintí"
 xsmall = "100 Creidiúintí"
 
@@ -7302,14 +7569,9 @@ upToFiveUsers = "Suas le 5 úsáideoir"
 usageTrackingPrometheus = "Rianú úsáide & Prometheus"
 usersIncluded = "100 úsáideoir san áireamh"
 
-[plan.licenseWarning]
-body = "Tá {{total}} úsáideoir agat ach ní thacaíonn an sraith saor in aisce ach le {{limit}} in aghaidh an fhreastalaí. Uasghrádaigh chun Stirling PDF a choinneáil ag rith go réidh."
-cta = "Féach ar phleananna"
-overLimit = "níos mó ná {{limit}}"
-title = "Sroichtear teorainn féin-óstáilte saor in aisce"
-
 [plan.period]
 month = "mí"
+year = "bliain"
 
 [plan.pro]
 highlight1 = "Úsáid Uirlisí Gan Teorainn"
@@ -7435,6 +7697,9 @@ pdfa-1 = "PDF/A-1b"
 pdfa-2b = "PDF/A-2b"
 pdfa-3b = "PDF/A-3b"
 
+[portal.accountLink]
+ownerRequired = "Ní féidir ach le húinéir na heagraíochta an freastalaí seo a nascadh nó a dhínascadh."
+
 [portal.accountLink.card]
 billingNote = "Billeálann próiseáil gan freastal ar sparán d’eagraíochta."
 connectDescription = "Ceangail an freastalaí seo chun liúntas próiseála d'fhoirne a úsáid in Stirling Cloud."
@@ -7556,6 +7821,7 @@ identity = "Cuntas Stirling"
 linkTitle = "Nasc do chuntas Stirling"
 noAuthorizeUrl = "Níor thug Stirling áit le leanúint ar aghaidh. Bain triail eile as ar ball."
 startFailed = "Níorbh fhéidir Stirling a bhaint amach chun an nasc a thosú. Seiceáil rochtain líonra amach an fhreastalaí seo, ansin bain triail eile as."
+transferPending = "Tá aistriú úinéireachta ar feitheamh. Téigh go Socruithe → Úsáideoirí chun é a chríochnú nó a chealú, ansin bain triail as nascadh arís."
 
 [portal.accountLink.modal.loginNotConfigured]
 after = "chun nascadh in-app leis an gcuntas Stirling óstáilte a chumasú."
@@ -9441,6 +9707,7 @@ labelId = "ID lipéid"
 labelIdHelp = "GUID an lipéid, ón tairseach Purview. Scríobhann cur i bhfeidhm lipéid a mheiteashonraí ar an PDF; ní féidir leis criptiú, rud a dteastaíonn cliant Microsoft uaidh."
 labelName = "Ainm lipéid (roghnach)"
 labelNameHelp = "Taifeadta in éineacht leis an ID ionas gur féidir le daoine agus uirlisí an lipéad a aithint."
+labelNamePlaceholder = "Rúnda"
 
 [portal.policies.config.purview.fields.method]
 help = "Déanann Purview idirdhealú idir lipéad a chuir polasaí i bhfeidhm agus ceann a roghnaigh duine."
@@ -10425,31 +10692,6 @@ unlimited = "{{used}} · Gan teorainn"
 [printFile]
 title = "Priontáil Comhad"
 
-[processingFolders.downloads]
-approve = "Próiseáil mo Downloads"
-cancelSweep = "Cealaigh"
-capped = "Tá {{found}} PDF agat; próiseálfar an chéad {{limit}} anois agus leanfaidh an chuid eile ina dhiaidh."
-close = "Déanta"
-explain_one = "Is féidir le Stirling an {{count}} PDF atá i d’fhillteán Downloads cheana a aicmiú agus na torthaí a oscailt anseo."
-explain_other = "Is féidir le Stirling na {{count}} PDF atá i d’fhillteán Downloads cheana a aicmiú agus na torthaí a oscailt anseo."
-failed = "Níorbh fhéidir é sin a shocrú. Níor athraíodh do chuid comhad."
-finished_one = "Aicmíodh {{count}} chomhad agus osclaíodh {{opened}} díobh anseo, réidh le hoibriú orthu."
-finished_other = "Aicmíodh {{count}} chomhad agus osclaíodh {{opened}} díobh anseo, réidh le hoibriú orthu."
-nothingNew_one = "Níl aon rud nua le próiseáil - tá an {{count}} chomhad seo imithe tríd cheana."
-nothingNew_other = "Níl aon rud nua le próiseáil - tá na {{count}} chomhad seo imithe tríd cheana."
-notModified = "Ní athraítear do chuid comhad in Downloads - léann Stirling iad agus osclaíonn sé anseo iad."
-notNow = "Ní anois"
-progressCounts = "as {{total}} próiseáilte"
-someFailed_one = "Níorbh fhéidir {{count}} a phróiseáil agus fágadh gan teagmháil é."
-someFailed_other = "Níorbh fhéidir {{count}} a phróiseáil agus fágadh gan teagmháil iad."
-stillRunning = "Tá roinnt comhad fós á bpróiseáil sa chúlra."
-title = "Eagraigh do Downloads?"
-trigger_one = "Próiseáil {{count}} PDF in Downloads"
-trigger_other = "Próiseáil {{count}} PDF in Downloads"
-typesFound_one = "Aimsíodh {{count}} chineál doiciméid"
-typesFound_other = "Aimsíodh {{count}} chineál doiciméid"
-working = "Á phróiseáil ..."
-
 [processingFolders.setup]
 addFolder = "Cuir fillteán leis"
 advancedSteps = "Úsáideann an fillteán seo socrú próiseála nach féidir leis an treoraí seo a chur in eagar. Níor athraíodh na céimeanna sábháilte aige."
@@ -10527,6 +10769,10 @@ label = "Client ID"
 [provider.googledrive.enabled]
 description = "Ceadaigh d’úsáideoirí comhaid a iompórtáil go díreach ó Google Drive"
 label = "Cumasaigh Roghnóir Comhad Google Drive"
+
+[provider.googledrive.errors]
+notConfigured = "Níl Google Drive cumraithe"
+pickerFailed = "Theip ar roghnóir Google Drive a oscailt"
 
 [provider.oauth2.generic]
 name = "OAuth2 Ginearálta"
@@ -10775,6 +11021,7 @@ applyWarning = "⚠️ Feidhmchlár buan, ní féidir é a chealú agus scriosfa
 colorLabel = "Dath Ceilte"
 controlsTitle = "Rialuithe Eagarthóireachta Láimhe"
 instructions = "Roghnaigh téacs nó tarraing limistéir ar an PDF chun ábhar a mharcáil le haghaidh eagarthóireachta."
+notImplemented = "Beidh comhéadan eagarthóireachta de láimh ar fáil anseo nuair a chuirfear i bhfeidhm é."
 title = "Uirlisí Eagarthóireachta"
 
 [redact.modeSelector]
@@ -11102,6 +11349,9 @@ failed = "Tharla earráid agus an PDF á rothlú."
 [rotate.preview]
 title = "Réamhamharc Rothlaithe"
 
+[rotate.settings]
+title = "Socruithe"
+
 [rotate.tooltip.controls]
 text = "Úsáid na cnaipí rothlaithe chun an treoshuíomh a choigeartú. Rothlaíonn an cnaipe clé go tuathalach, rothlaíonn an cnaipe deas go deiseal. Rothlaíonn gach cliceáil 90 céim."
 title = "Rialuithe"
@@ -11119,6 +11369,16 @@ hideSmallLabels = "Folaigh lipéid bheaga"
 physicalValues = "Fisiciúil"
 scaled = "Scálaithe"
 showAllLabels = "Taispeáin gach lipéad"
+
+[ruler.units]
+cm = "Ceintiméadair (cm)"
+ft = "Troighthe (ft)"
+in = "Orlaí (in)"
+km = "Ciliméadair (km)"
+m = "Méadair (m)"
+mi = "Mílte (mi)"
+mm = "Milliméadair (mm)"
+yd = "Slata (yd)"
 
 [sanitize]
 desc = "Bain eilimintí a d’fhéadfadh a bheith dochrach as comhaid PDF."
@@ -11184,6 +11444,7 @@ calibrationPaperDistance = "Fad tomhaiste an leathanaigh: {{distance}}"
 calibrationTitle = "Calabraigh Scála"
 calibrationTooltip = "Tomhais fad aitheanta chun an scála a ríomh go huathoibríoch"
 customScale = "Scála Saincheaptha"
+customUnit = "{{unit}} (saincheaptha)"
 noneSet = "Níl aon scála saincheaptha socraithe"
 presets = "Scálaí Réamhshocraithe"
 ratio = "Cóimheas Scála"
@@ -11207,6 +11468,9 @@ title = "Íomhánna Bain­te"
 
 [scannerImageSplit.error]
 failed = "Tharla earráid agus scananna íomhá á mbaint."
+
+[scannerImageSplit.settings]
+title = "Socruithe"
 
 [scannerImageSplit.tooltip]
 headsUp = "Aire"
@@ -11274,6 +11538,9 @@ general = "Ginearálta"
 limits = "Teorainneacha & Feidhmíocht"
 models = "Samhlacha & Soláthraithe"
 title = "AI"
+
+[settings.billing]
+title = "Billeáil"
 
 [settings.configuration]
 advanced = "Ardroghanna"
@@ -11348,8 +11615,6 @@ defaultPdfEditor = "Eagarthóir PDF réamhshocraithe"
 defaultPdfEditorActive = "Is é Stirling PDF d’eagarthóir PDF réamhshocraithe"
 defaultPdfEditorChecking = "Á sheiceáil..."
 defaultPdfEditorInactive = "Tá feidhmchlár eile socraithe mar réamhshocrú"
-defaultPdfEditorRemind = "Cuir i gcuimhne dom é a shocrú mar réamhshocrú"
-defaultPdfEditorRemindDescription = "Taispeáin meirge nuair nach é Stirling PDF d'fheidhmchlár PDF réamhshocraithe."
 defaultPdfEditorSet = "Réamhshocraithe Cheana"
 defaultStartupView = "Amharc réamhshocraithe ar thosú"
 defaultStartupViewDescription = "Roghnaigh cén cluaisín a bheidh gníomhach sa cholún clé nuair a thosaíonn an aip"
@@ -11618,6 +11883,15 @@ people = "Daoine"
 teams = "Foirne"
 title = "Spás Oibre"
 
+[setup.error]
+loginIncomplete = "Theip ar logáil isteach a chur i gcrích"
+noSaasServer = "Níl aon fhreastalaí SaaS cumraithe"
+noServer = "Níl aon fhreastalaí cumraithe"
+saasLoginFailed = "Theip ar logáil isteach SaaS"
+saasLoginIncomplete = "Theip ar logáil isteach SaaS a chur i gcrích"
+selfHostedLoginFailed = "Theip ar logáil isteach féinóstáilte"
+signupIncomplete = "Theip ar chlárú a chur i gcrích"
+
 [setup.login]
 connectingTo = "Ag ceangal le:"
 oauthPending = "Brabhsálaí á oscailt le haghaidh fíordheimhnithe..."
@@ -11661,6 +11935,7 @@ configFetchError = "Theip ar chumraíocht an fhreastalaí a fháil: {{error}}"
 emptyUrl = "Cuir isteach URL freastalaí le do thoil"
 invalidUrl = "Formáid URL neamhbhailí. Cuir isteach URL bailí cosúil le https://your-server.com"
 testFailed = "Theip ar thástáil an cheangail"
+unknown = "Earráid anaithnid"
 unreachable = "Níorbh fhéidir ceangal leis an bhfreastalaí"
 
 [setup.server.error.securityDisabled]
@@ -11769,6 +12044,7 @@ canvas = "Tar éis duit do shíniú a tharraingt sa chanbhás, dún an mhodal an
 image = "Tar éis duit d’íomhá shínithe a uaslódáil thuas, cliceáil áit ar bith ar an PDF chun í a chur."
 noSignature = "Cruthaigh síniú thuas chun uirlisí suínithe a chumasú."
 paused = "Suíniú ar sos"
+placeAnnotation = "Cliceáil áit ar bith ar an PDF chun do nóta a chur ann."
 resumeHint = "Lean ar aghaidh leis an suíniú chun cliceáil agus do shíniú a chur."
 saved = "Roghnaigh síniú sábháilte thuas, ansin cliceáil áit ar bith ar an PDF chun é a chur."
 text = "Tar éis duit d’ainm a chur isteach thuas, cliceáil áit ar bith ar an PDF chun do shíniú a chur."
@@ -11922,7 +12198,9 @@ signUpWith = "Sign up with"
 skip = "Skip"
 subtitle = "Bí le Stirling PDF chun tosú"
 title = "Cruthaigh cuntas"
+unableToAccessTool = "Ní féidir rochtain a fháil ar an uirlis: {{error}}"
 unexpectedError = "Earráid gan choinne: {{message}}"
+unknownError = "Earráid anaithnid"
 
 [sizes]
 large = "Mór"
@@ -11995,6 +12273,14 @@ rightToLeft = "Roinn ó dheis go clé"
 [split.poster.pageSize]
 description = "Méid na leathanach aschuir le haghaidh priontála"
 label = "Spriocmhéid Leathanaigh"
+
+[split.poster.pageSize.options]
+a3 = "A3 (297 × 420 mm)"
+a4 = "A4 (210 × 297 mm)"
+a5 = "A5 (148 × 210 mm)"
+legal = "Legal (8.5 × 14 in)"
+letter = "Letter (8.5 × 11 in)"
+tabloid = "Tabloid (11 × 17 in)"
 
 [split.poster.xFactor]
 description = "Líon na gcolún chun gach leathanach a roinnt ina gcuid"
@@ -12267,6 +12553,7 @@ confirmCancelInvite = "An bhfuil tú cinnte gur mian leat an cuireadh seo a chea
 confirmLeave = "An bhfuil tú cinnte gur mian leat an fhoireann seo a fhágáil?"
 confirmLeaveLeader = "Mar cheannaire foirne, bainfear díot ón bhfoireann má fhágann tú. An bhfuil tú cinnte?"
 confirmRemove = "An bhfuil tú cinnte gur mian leat an ball seo a bhaint?"
+currentUnavailable = "Níorbh fhéidir linn d’fhoireann reatha a aithint. Bain triail eile as, nó déan teagmháil le tacaíocht má leanann sé seo ar aghaidh."
 editName = "Cuir ainm na foirne in eagar"
 inviteCancelled = "Cuireadh cealaithe"
 inviteError = "Theip ar an gcuireadh a sheoladh"
@@ -12292,10 +12579,8 @@ renameCancel = "Cealaigh athainmniú"
 renameError = "Theip ar an bhfoireann a athainmniú"
 renameSubmit = "Sábháil ainm foirne"
 renameSuccess = "Athainmníodh an fhoireann go rathúil"
-transferBody = "Déan úinéir na foirne de {{email}}? Beidh smacht acu ar bhallraíocht foirne agus ar shocruithe billeála na heagraíochta. Beidh tusa i do bhall. Fanann síntiús agus sparán na foirne leis an bhfoireann."
 transferError = "Níorbh fhéidir úinéireacht a aistriú. Athnuaigh an fhoireann agus bain triail eile as."
 transferSuccess = "Aistríodh úinéireacht na foirne. Is ball é do ról anois."
-transferTitle = "Aistrigh úinéireacht foirne"
 
 [team.invitationBanner]
 acceptButton = "Glac"
@@ -12396,6 +12681,10 @@ WORD = "doiciméad Word"
 XML = "comhad XML"
 XPS = "doiciméad XPS"
 ZIP = "cartlann ZIP"
+
+[toolLoading]
+generic = "Uirlis á luchtú..."
+named = "{{toolName}} á luchtú..."
 
 [toolPanel]
 alpha = "Alfa"
@@ -12501,6 +12790,8 @@ stable = "STABLE"
 updateAvailable = "Nuashonrú ar Fáil"
 urgentUpdateAvailable = "Nuashonrú Práinneach"
 version = "Leagan"
+versionCount_one = "{{count}} leagan"
+versionCount_other = "{{count}} leagan"
 versionHistory = "Stair Leaganacha"
 viewGuide = "Féach Treoir"
 whatsNewIn = "Cad atá nua i"
@@ -12528,6 +12819,7 @@ title = "URL go PDF"
 aboutUsageAnalytics = "Maidir le hAnailísíocht Úsáide"
 configureSettings = "Cumraigh Socruithe Anailísíochta"
 error = "Earráid agus staitisticí úsáide á luchtú"
+loadFailed = "Theip ar staitisticí úsáide a luchtú"
 noData = "Níl aon sonraí ar fáil"
 noDataMessage = "Níl aon staitisticí úsáide ar fáil faoi láthair."
 usageAnalyticsExplanation = "Rianaíonn anailísíocht úsáide iarratais ar chríochphointí agus patrúin úsáide uirlisí. In éineacht leis an bpainéal Logála Iniúchta, faigheann tú infheictheacht iomlán ar ghníomhaíocht an chórais, ar fheidhmíocht, agus ar imeachtaí slándála."
@@ -12591,7 +12883,6 @@ removeTeam = "Bain den fhoireann"
 rename = "Athainmnigh foireann"
 resetPw = "Athshocraigh pasfhocal"
 suspend = "Cuir ar fionraí"
-transferOwnership = "Aistrigh úinéireacht"
 unlock = "Díghlasáil cuntas"
 
 [users.activity]
@@ -12631,8 +12922,6 @@ disableMfaTitle = "Athshocraigh MFA"
 removeBody = "Bain {{name}} go buan ón eagraíocht? Ní féidir é seo a chealú."
 removeTeamBody = "Bain {{name}} den fhoireann? Coinneoidh siad a gcuntas ach caillfidh siad rochtain ar acmhainní na foirne seo."
 removeTitle = "Bain ball"
-transferOwnershipBody = "Déan úinéir na heagraíochta de {{name}}? Beidh siad ina riarthóir. Fanfaidh tusa i do riarthóir ach caillfidh tú úinéireacht. Ní féidir ach leis an úinéir nua nó oibreoir an fhreastalaí í a aistriú ar ais."
-transferOwnershipTitle = "Aistrigh úinéireacht eagraíochta"
 
 [users.empty]
 description = "Tabhair cuireadh do d’fhoireann chun tosú ag comhoibriú."
@@ -12825,6 +13114,7 @@ signaturesInvalid = "{{count}} neamhbhailí"
 signaturesUnverified_one = "{{count}} le hathbhreithniú"
 signaturesUnverified_other = "{{count}} le hathbhreithniú"
 signaturesValid = "{{count}} go hiomlán bailí"
+thumbnailAlt = "Mionsamhail {{fileName}}"
 title = "Tuarascáil Bhailíochtaithe Sínithe"
 
 [validateSignature.report.fields]
@@ -12862,6 +13152,7 @@ lastPage = "An Leathanach Deireanach"
 loadingEngine = "Inneall PDF á luchtú..."
 moreOptions = "Tuilleadh"
 nextPage = "Leathanach Ar Aghaidh"
+noPdfProvided = "Níor soláthraíodh PDF"
 onlyPdfSupported = "Ní thacaíonn an t-amharcán ach le comhaid PDF. Is cosúil gur formáid eile é an comhad seo."
 pageNavigation = "Nascleanúint leathanaigh"
 previousPage = "Leathanach Roimhe Seo"
@@ -12899,8 +13190,17 @@ collapseAll = "Laghdaigh gach leabharmharc"
 editorOnly = "Ní féidir leabharmharcanna an doiciméid seo a chur in eagar ach san eagarthóir."
 empty = "No bookmarks in this document"
 expandAll = "Leathnaigh gach leabharmharc"
+loadFailed = "Theip ar leabharmharcanna a luchtú"
+loading = "Leabharmharcanna á luchtú..."
+noDocument = "Oscail PDF chun a leabharmharcanna a fheiceáil."
+noSearchResults = "Níl aon leabharmharcanna ag teacht le do chuardach"
+openEditor = "An gá athordú nó neadú a dhéanamh? Oscail an tEagarthóir Leabharmharcanna"
+pageLabel = "Leathanach"
+pageNumber = "Leathanach {{page}}"
+saveFailed = "Theip ar leabharmharc a shábháil"
 searchPlaceholder = "Cuardaigh leabharmharcanna"
 title = "Bookmarks"
+untitled = "Gan teideal"
 
 [viewer.comments]
 addComment = "Cuir trácht leis"
@@ -12948,16 +13248,26 @@ unsavedDesc = "Tá athruithe gan sábháil agat"
 
 [viewer.layers]
 closeSidebar = "Dún barra taoibh na sraitheanna"
+empty = "Níl aon sraitheanna sa doiciméad seo."
 hideAll = "Folaigh gach sraith"
+loadFailed = "Theip ar shraitheanna a luchtú."
+loading = "Sraitheanna á luchtú..."
+noDocument = "Oscail PDF chun a shraitheanna a fheiceáil."
+readFailed = "Theip ar shraitheanna PDF a léamh"
 showAll = "Taispeáin gach sraith"
 title = "Layers"
 
 [viewer.link]
 delete = "Scrios nasc"
+goTo = "Téigh go {{label}}"
+open = "Oscail Nasc"
+openAria = "Oscail nasc"
+page = "Leathanach {{page}}"
 
 [viewer.nonPdf]
 columnDefault = "Colún {{index}}"
 convertToPdf = "Tiontaigh go PDF"
+copied = "Cóipeáilte"
 csvStats = "{{rows}} sraith · {{columns}} colún · {{size}}"
 emptyFile = "Comhad folamh"
 htmlHidePreview = "Folaigh réamhamharc"
@@ -12968,6 +13278,8 @@ htmlShowPreview = "Taispeáin réamhamharc mar sin féin"
 invalidJson = "JSON neamhbhailí — á thaispeáint amh"
 lineNumbers = "Uimhreacha línte"
 loading = "Á lódáil..."
+noFile = "Níl aon chomhad luchtaithe"
+previewUnavailable = "Níl réamhamharc ar fáil don chineál comhaid seo"
 renderMarkdown = "Rindreáil Markdown"
 sortedBy = "Sórtáilte de réir: {{column}}"
 textStats = "{{lines}} líne · {{size}}"
@@ -12994,11 +13306,28 @@ next = "An chéad toradh eile"
 previous = "An toradh roimhe seo"
 resultsOf = "as {{total}}"
 
+[viewer.sidebar]
+close = "Dún barra taoibh"
+searchPlaceholder = "Cuardaigh..."
+
 [viewer.signature]
 delete = "Scrios síniú"
+previewAlt = "Réamhamharc sínithe"
+
+[viewer.signatureField]
+badge = "Síniú"
+fieldTitle = "Réimse sínithe: {{name}}"
+signed = "Sínithe"
+signedWithReason = "Sínithe: {{reason}}"
+unsignedFieldTitle = "Réimse sínithe gan síniú: {{name}}"
+withTime = "{{label}} ({{time}})"
 
 [viewer.thumbnails]
 closeSidebar = "Dún barra taoibh na mionsamhlacha"
+failed = "Theip"
+pageNumber = "Leathanach {{page}}"
+thumbnailAlt = "Mionsamhail leathanaigh {{page}}"
+title = "Leathanaigh"
 
 [viewPdf]
 tags = "amharc, léamh, anótáil, téacs, íomhá"
@@ -13006,169 +13335,6 @@ title = "Amharc/Cuir PDF in Eagar"
 
 [warning]
 tooltipTitle = "Rabhadh"
-
-[watchedFolders]
-alreadyInFolder = "Already in this folder"
-defaultFolderWarning = "This is a default folder and will be recreated on next reload."
-deleteConfirmBody = "This will remove the folder and its run history. Files already downloaded are not affected."
-deleteConfirmTitle = "Delete folder?"
-folderNotFound = "Folder not found"
-newFolder = "New folder"
-noFolders = "No watched folders yet"
-sidebarTitle = "Watched Folders"
-title = "Watched Folders"
-
-[watchedFolders.actions]
-back = "Back"
-collapse = "Collapse"
-dismiss = "Dismiss"
-download = "Download"
-downloadInput = "Download input"
-downloadOutput = "Download output"
-expand = "Expand"
-retry = "Retry"
-
-[watchedFolders.card]
-delete = "Delete folder"
-edit = "Edit folder"
-
-[watchedFolders.home]
-addAnother = "Add another Watched Folder"
-addAnotherDesc = "Automatically process files with a new pipeline"
-create = "Create your first Watched Folder"
-deleteFolder = "Delete folder"
-editFolder = "Edit folder"
-empty = "No watched folders yet"
-emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
-emptyTitle = "Automate your PDF workflows"
-file = "file"
-files = "files"
-pause = "Pause"
-resume = "Resume"
-
-[watchedFolders.howItWorks]
-step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
-step1Title = "Drop files"
-step2Desc = "Your configured tools process each file automatically"
-step2Title = "Pipeline runs"
-step3Desc = "Download processed files from inside the folder"
-step3Title = "Output ready"
-title = "How Watched Folders work"
-
-[watchedFolders.modal]
-advanced = "Advanced"
-automation = "Automation"
-automationNameFallback = "Watched Folder automation"
-automationRequired = "Add at least one configured step before saving."
-autoNumber = "Auto-number"
-autoNumberExample = "e.g. document.pdf → document (1).pdf"
-autoScanHelp = "New PDF files in this folder are processed automatically every 10 seconds."
-changeFolder = "Change"
-chooseFolder = "Choose"
-clearFolder = "Clear"
-color = "Accent color"
-createFolder = "Create Folder"
-createTitle = "New Watched Folder"
-editTitle = "Edit Watched Folder"
-inputFolder = "Input folder"
-inputFolderNotChosen = "No folder chosen — required for auto-scan"
-inputSource = "Input source"
-inputSourceBrowser = "Browser — drop files here"
-inputSourceLocal = "Local folder (auto-scan)"
-inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
-localOutputFolder = "Local output folder"
-maxRetries = "Max retries"
-name = "Folder name"
-namePlaceholder = "My Watched Folder"
-nameRequired = "Folder name is required"
-nameTooLong = "Folder name must be 50 characters or less"
-outputFolderNotSet = "Not set — outputs stay in app"
-outputFolderUnsupported = "Not supported in this browser"
-outputModeNewDesc = "Output is saved as a new separate file"
-outputModeVersion = "Replace original?"
-outputModeVersionDesc = "Output becomes a new version of the input file rather than a separate file"
-outputName = "Output filename prefix"
-outputNamePrefix = "Filename prefix"
-outputNameSuffix = "Suffix"
-positionPrefix = "Prefix"
-positionSuffix = "Suffix"
-replaceOriginal = "Replace original file"
-retryDelay = "Delay (minutes)"
-saveChanges = "Save Changes"
-saveFailed = "Failed to save folder. Please try again."
-sectionFolder = "Folder"
-sectionSourceOutput = "Source & Output"
-sectionSteps = "Steps"
-
-[watchedFolders.status]
-active = "Active"
-done = "Done"
-paused = "Paused"
-processing = "Processing"
-
-[watchedFolders.time]
-daysAgo = "{{count}}d ago"
-hoursAgo = "{{count}}h ago"
-justNow = "just now"
-minutesAgo = "{{count}}m ago"
-
-[watchedFolders.workbench]
-activity = "Activity"
-addFiles = "Add files"
-allTime = "All time"
-cancel = "Cancel"
-chartTooltipComplete = "{{count}} complete"
-chartTooltipFailed = "{{count}} failed"
-clearSelection = "Clear selection"
-countProcessing = "{{count}} processing"
-countQueued = "{{count}} queued"
-countSelected = "{{count}} selected"
-dataSaved = "Saved"
-dayRunning = "day running"
-daysRunning = "days running"
-delete = "Delete"
-deleteConfirmBody = "Remove notifications only clears the activity log. Delete outputs also removes the processed files from storage. Your original input files are never touched."
-deleteOutputs = "Delete outputs"
-directionIn = "in"
-directionOut = "out"
-dropToProcess = "Drop to process"
-export = "Export"
-exportSeparately = "Export separately"
-exportZip = "Export zip"
-failed = "Failed"
-filesProcessedOverTime = "Files processed over time"
-filterAll = "All"
-filterPending = "Pending"
-inputs = "Inputs"
-inputSize = "Input size"
-legendComplete = "Complete"
-noActivity = "No activity yet — drop a PDF to start"
-noActivityMatch = "No matching activity"
-noInputFolder = "No input folder — edit to configure"
-outputs = "Outputs"
-pause = "Pause"
-preview = "Preview"
-previewInput = "Preview input"
-previewLoadFailed = "Could not load file preview."
-previewOutput = "Preview output"
-queued = "Queued"
-queuedWaiting = "Queued — waiting to run"
-removeEntries = "Remove {{count}} entries"
-removeEntry = "Remove entry"
-removeNotificationsOnly = "Remove notifications only"
-resume = "Resume"
-retryAll = "Retry all"
-retryIn = "retry in {{count}}m"
-retryingSoon = "retrying…"
-retryMixedConfirm = "Some selected files have already completed and will be skipped. Only failed files will be retried. Continue?"
-running = "Running"
-search = "Search…"
-selectAll = "Select all {{count}}"
-sortNameAsc = "A → Z"
-sortNameDesc = "Z → A"
-sortNewest = "Newest"
-sortOldest = "Oldest"
-watching = "Watching: {{name}}"
 
 [watermark]
 desc = "Cuir comharthaí uisce téacs nó íomhá le comhaid PDF"
@@ -13371,6 +13537,10 @@ certTypeServer = "Teastas Freastalaí (más ann dó)"
 completedDeclined = "Dhiúltaigh tú don doiciméad seo."
 completedSigned = "Shínigh tú an doiciméad seo."
 decline = "Diúltaigh"
+declineConfirm = "An bhfuil tú cinnte gur mhaith leat diúltú don doiciméad seo a shíniú?"
+declineFailed = "Theip ar dhiúltú: {{error}}"
+declineSuccess = "Dhiúltaigh tú don iarratas sínithe seo."
+defaultReason = "Síniú Doiciméid"
 downloadDocument = "Íoslódáil an Doiciméad"
 dueDate = "Dáta Dlite: {{date}}"
 errorTitle = "Earráid"
@@ -13381,6 +13551,7 @@ locationPlaceholder = "m.sh., San Francisco, CA"
 pageNumber = "Uimhir Leathanaigh (roghnach)"
 reason = "Fáth"
 reasonPlaceholder = "m.sh., Formhuiniú doiciméid"
+selectCertificateFile = "Roghnaigh comhad teastais"
 sessionNotFound = "Seisiún gan aimsiú nó rochtain diúltaithe."
 signDocument = "Sínigh an Doiciméad"
 statusDeclined = "Diúltaithe"
@@ -13388,7 +13559,9 @@ statusNotified = "Fógraithe"
 statusPending = "Ar feitheamh"
 statusSigned = "Sínithe"
 statusViewed = "Feicthe"
+submitFailed = "Theip ar shíniú a chur isteach: {{error}}"
 submitSignature = "Cuir an síniú isteach"
+submitSuccess = "Cuireadh an síniú isteach go rathúil!"
 
 [workspace]
 title = "Spás Oibre"

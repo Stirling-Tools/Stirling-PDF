@@ -35,7 +35,9 @@ const AuditStatsCards: React.FC<AuditStatsCardsProps> = ({
         setStats(data);
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : "Failed to load statistics",
+          err instanceof Error
+            ? err.message
+            : t("audit.stats.loadFailed", "Failed to load statistics"),
         );
       } finally {
         setLoading(false);

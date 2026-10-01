@@ -73,7 +73,7 @@ const modernGlobals: OxlintGlobals = {
 };
 
 export default defineConfig({
-  plugins: ["typescript", "import"],
+  plugins: ["typescript", "import", "react"],
   options: {
     typeAware: true,
   },
@@ -199,6 +199,7 @@ export default defineConfig({
     "typescript/prefer-as-const": "error",
     "typescript/prefer-namespace-keyword": "error",
     "typescript/triple-slash-reference": "error",
+    "react/jsx-max-depth": ["error", { max: 8 }],
   },
   overrides: [
     {
@@ -381,6 +382,18 @@ export default defineConfig({
             patterns: [aliasOverRelative, aliasOverSrc],
           },
         ],
+      },
+    },
+    {
+      // A provider stack nests one context per level in dependency order, so its
+      // depth counts providers rather than measuring how hard the tree is to read.
+      files: [
+        "editor/src/core/components/AppProviders.tsx",
+        "editor/src/portal/PortalProviders.tsx",
+        ".storybook/preview.tsx",
+      ],
+      rules: {
+        "react/jsx-max-depth": "off",
       },
     },
     {

@@ -41,7 +41,10 @@ export function SystemCard({
   );
 
   const selectedLanguages = useMemo(
-    () => toUnderscoreLanguages(settings.ui?.languages || []),
+    () =>
+      toUnderscoreLanguages(
+        (settings.ui?.languages || []).map(normalizeLanguageCode),
+      ),
     [settings.ui?.languages],
   );
 

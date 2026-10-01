@@ -278,6 +278,7 @@ customNumberDesc = "Standard til {n}, aksepterer også 'Side {n} av {total}', 'T
 fontName = "Skrifttype"
 fontSize = "Skriftstørrelse"
 numberPagesDesc = "Hvilke sider som skal nummereres, standard 'alle', aksepterer også 1-5 eller 2,5,9 osv."
+pagePreviewAlt = "Forhåndsvisning av side"
 pagesAndStarting = "Sider og startnummer"
 positionAndPages = "Plassering og sider"
 preview = "Valg av plassering"
@@ -350,7 +351,9 @@ text = "Disse tillatelsene kontrollerer hva brukere kan gjøre med PDF-en. Mest 
 title = "Endre tillatelser"
 
 [addStamp]
+pagePreviewAlt = "Forhåndsvisning av side"
 preview = "Forhåndsvis stempel"
+stampPreviewAlt = "Forhåndsvisning av stempel"
 tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 
 [AddStampRequest]
@@ -383,6 +386,7 @@ positionAndFormatting = "Plassering og formatering"
 preview = "Preview:"
 quickPosition = "Velg en posisjon på siden for å plassere stempelet."
 rotation = "Rotasjon"
+selectedImageAlt = "Valgt stempelbilde"
 selectTemplate = "Select a template..."
 stampSetup = "Stempeloppsett"
 stampText = "Stempele tekst"
@@ -533,6 +537,9 @@ letter = "Letter"
 
 [adjustPageScale.scaleFactor]
 label = "Skaleringsfaktor"
+
+[adjustPageScale.settings]
+title = "Innstillinger"
 
 [adjustPageScale.tooltip.description]
 text = "Juster størrelsen på PDF-innhold og endre sidedimensjoner."
@@ -728,6 +735,7 @@ noLanguages = "Ingen tessdata-språk funnet i den konfigurerte katalogen."
 permissionNotice = "tessdata-stien er ikke skrivbar. Nedlastinger åpnes i nettleseren; lagre .traineddata-filene manuelt i tessdata-mappen."
 
 [admin.settings.ai]
+customProvider = "Egendefinert (OpenAI-kompatibel)"
 description = "Koble Stirling til Python AI-motoren, velg modellene dens og angi sikkerhetsrammene den kjører under."
 managedByCloud = "Administreres av Stirling Cloud i denne modusen."
 managedByCloudShort = "Administreres av Stirling Cloud"
@@ -1146,7 +1154,6 @@ refresh = "Oppdater"
 selectFile = "Velg en .sql-fil som skal importeres"
 size = "Størrelse"
 title = "Database"
-unavailable = "Liste over sikkerhetskopier er ikke tilgjengelig for gjeldende databasekonfigurasjon."
 uploadTitle = "Last opp og importer"
 version = "H2-versjon"
 
@@ -1280,6 +1287,7 @@ label = "Egendefinert metadata"
 [admin.settings.general.customMetadata.author]
 description = "Standardforfatter for PDF-metadata (f.eks. brukernavn)"
 label = "Standardforfatter"
+placeholder = "brukernavn"
 
 [admin.settings.general.customMetadata.autoUpdate]
 description = "Oppdater automatisk PDF-metadata på alle behandlede dokumenter"
@@ -1395,6 +1403,7 @@ defaultLocaleLink = "Konfigurer standardlokale"
 description = "Vis en ansvarsfraskrivelse som brukerne må godta etter innlogging. Teksten følger brukerens språk."
 discardConfirm = "Du har ulagrede endringer som vil gå tapt. Bytte språk likevel?"
 editLabel = "Markdown"
+editPlaceholder = "## Overskrift\n\nDin ansvarsfraskrivelsestekst..."
 emptyPreview = "Ingenting å forhåndsvise ennå."
 language = "Språk"
 languageHelp = "Hvert språk har sin egen fil. Hvis en brukers språk ikke har noen fil, faller avtalen tilbake til filen for standardlokalet, deretter til reserveteksten."
@@ -1513,8 +1522,10 @@ label = "JWKS URL (optional)"
 placeholder = "Auto-discovered from issuer"
 
 [admin.settings.mcp.mode]
+apikey = "API-nøkkel (Stirling-nøkkel per bruker)"
 description = "OAuth needs an external IdP. API key uses a Stirling per-user API key (X-API-KEY) - simplest for self-host."
 label = "Authentication mode"
+oauth = "OAuth 2.1 (ekstern IdP)"
 
 [admin.settings.mcp.requireAccount]
 description = "Only let tokens through if their subject maps to a provisioned, enabled Stirling user."
@@ -1931,6 +1942,14 @@ title = "Brukerkontroll Innstillinger"
 [agents]
 stirling_name = "Stirling"
 
+[alphabetOptions]
+arabic = "Arabisk"
+chinese = "Kinesisk (forenklet)"
+japanese = "Japansk"
+korean = "Koreansk"
+roman = "Romersk"
+thai = "Thai"
+
 [analytics]
 learnMore = "Lær mer"
 paragraph1 = "Stirling PDF har valgfri analyse for å hjelpe oss med å forbedre produktet. Vi sporer ikke personlig informasjon eller filinnhold."
@@ -2052,6 +2071,7 @@ week = "Uke"
 
 [audit.clearData]
 cancel = "Avbryt"
+closeAlert = "Lukk varsel"
 codeDoesNotMatch = "Koden stemmer ikke"
 codePlaceholder = "Skriv inn koden her"
 confirmationCode = "Bekreftelseskode"
@@ -2061,6 +2081,7 @@ confirmTitle = "Bekreft at du vil slette"
 deleteButton = "Slett"
 enterCode = "Bekreftelseskode"
 enterCodeBelow = "Skriv inn koden nøyaktig som vist ovenfor (skiller mellom store og små bokstaver)"
+failed = "Kunne ikke tømme revisjonsdata"
 initiateDelete = "Slett alle data"
 irreversible = "IRREVERSIBELT"
 success = "Vellykket"
@@ -2069,6 +2090,7 @@ warning1 = "Denne handlingen kan ikke angres"
 warning2 = "Sletting av revisjonsdata vil permanent fjerne alle historiske revisjonslogger, inkludert sikkerhetshendelser, brukeraktiviteter og filoperasjoner fra databasen."
 
 [audit.error]
+loadStatus = "Kunne ikke laste status for revisjonssystem"
 title = "Feil ved innlasting av revisjonssystemet"
 
 [audit.events]
@@ -2084,6 +2106,7 @@ fileHash = "Filhash"
 filterByType = "Filtrer etter type"
 filterByUser = "Filtrer etter bruker"
 ipAddress = "IP-adresse"
+loadFailed = "Kunne ikke laste hendelser"
 noEvents = "Ingen hendelser funnet"
 startDate = "Startdato"
 timestamp = "Tidsstempel"
@@ -2124,6 +2147,7 @@ avgLatency = "Gjennomsnittlig ventetid"
 error = "Feil ved lasting av statistikk"
 excellent = "Utmerket"
 good = "Bra"
+loadFailed = "Kunne ikke laste statistikk"
 noData = "N/A"
 successRate = "Suksessrate"
 totalEvents = "Totale hendelser"
@@ -2158,13 +2182,27 @@ accessDenied = "Tilgang nektet"
 insufficientPermissions = "Du har ikke tillatelse til å utføre denne handlingen."
 
 [auth.callback]
+alreadySignedIn = "Allerede logget inn! Omdirigerer..."
+backToLogin = "Tilbake til innlogging"
 completing = "Fullfører autentisering"
+exchanging = "Utveksler autorisasjonskode..."
+failedWithReason = "Autentisering mislyktes: {{error}}"
 invalidToken = "OAuth-innlogging mislyktes – ugyldig token."
 missingToken = "OAuth-innlogging mislyktes – ingen token mottatt."
+noData = "Fant ingen autentiseringsdata"
 oauthFailed = "OAuth-innlogging mislyktes. Prøv igjen."
 pleaseWait = "Vent mens vi fullfører innloggingen din."
+processing = "Behandler autentisering..."
 signedOut = "Du er logget ut. Logg inn igjen."
+signInFailed = "Kunne ikke fullføre innlogging: {{error}}"
+success = "Innlogging fullført! Omdirigerer..."
+unknownError = "Ukjent feil"
 windowMayClose = "Du kan lukke dette vinduet når det er fullført."
+
+[auth.callback.title]
+default = "Autentisering"
+processing = "Logger deg inn"
+success = "Alt er klart!"
 
 [auth.displayName]
 guest = "Gjest"
@@ -2317,6 +2355,7 @@ title = "Importer automatisering"
 unresolved = "Ikke-tilordnet: {{ops}}"
 
 [automate.run]
+progress = "Fremdrift: {{current}}/{{total}}"
 title = "Kjør automatisering"
 
 [automate.selection]
@@ -2466,6 +2505,7 @@ whatHappensNext = "Hva skjer videre?"
 
 [billing.portal]
 error = "Kunne ikke åpne faktureringsportalen"
+errorFallback = "Prøv igjen eller kontakt kundestøtte."
 
 [bookletImposition]
 paperSizeNote = "Papirstørrelse hentes automatisk fra første side."
@@ -2513,6 +2553,9 @@ title = "Manuell dupleksmodus"
 [bookletImposition.rtlBinding]
 label = "Høyre-til-venstre-innbinding"
 tooltip = "For arabisk, hebraisk eller andre høyre-til-venstre-språk"
+
+[bookletImposition.settings]
+title = "Innstillinger"
 
 [bookletImposition.tooltip.advanced]
 bullet1 = "Høyre-til-venstre-innbinding: For arabisk, hebraisk eller RTL-språk"
@@ -2582,6 +2625,8 @@ detail = "Klikk eller trykk mellomrom for å spille igjen"
 headline = "Alt klart"
 
 [bulkSelection]
+selectedPages_one = "Valgt: {{count}} side ({{pages}})"
+selectedPages_other = "Valgt: {{count}} sider ({{pages}})"
 syntaxError = "Det er et syntaksproblem. Se tipsene for Sidevalg for hjelp."
 
 [bulkSelection.advanced]
@@ -2802,6 +2847,7 @@ declineButton = "Avslå"
 deleteSelected = "Slett valgt signatur"
 drawSignature = "Tegn signaturen din nedenfor"
 fileTooLarge = "Filstørrelsen må være mindre enn 5MB"
+fontBrushScript = "Brush Script MT (kursiv)"
 fontFamily = "Skrifttype"
 fontSize = "Skriftstørrelse: {{size}}px"
 fontSizePlaceholder = "Størrelse"
@@ -2821,6 +2867,7 @@ removeImage = "Fjern bilde"
 savedSignatures = "Lagrede signaturer"
 selectFile = "Velg bildefil"
 selectSignatureTitle = "Velg eller opprett signatur"
+signatureImageAlt = "Signatur"
 signatureInfo = "Disse innstillingene er konfigurert av dokumenteieren"
 signatureSettings = "Signaturinnstillinger"
 signatureText = "Signaturtekst"
@@ -3591,13 +3638,19 @@ confirm = "Bekreft"
 continue = "Fortsett"
 copied = "Kopiert!"
 copy = "Kopier"
+copyCode = "Kopier kode"
+dismiss = "Avvis"
 done = "Ferdig"
 enterValue = "Enter value"
 error = "Feil"
 expand = "Utvid"
 filterEmpty = "Ingenting å filtrere på"
+goToSlide = "Gå til lysbilde {{number}}"
 loading = "Laster..."
+moreInformation = "Mer informasjon"
 next = "Neste"
+noData = "Ingen data"
+nOfTotal = "{{current}} av {{total}}"
 open = "Open"
 preview = "Forhåndsvis"
 previous = "Forrige"
@@ -3606,6 +3659,9 @@ remaining = "Gjenstår"
 retry = "Prøv igjen"
 save = "Lagre"
 search = "Søk"
+settingsSections = "Innstillingsseksjoner"
+showAllTotal = "Vis alle {{total}}"
+showLess = "Vis mindre"
 stepOf = "Step {{current}} of {{total}}"
 
 [compare]
@@ -3617,6 +3673,7 @@ newLine = "ny linje"
 pages = "Sider"
 tags = "differensiere,kontrast,endringer,analyse"
 title = "Sammenlign"
+workbenchLabel = "Sammenligningsvisning"
 
 [compare.actions]
 linkScroll = "Koble til rulling"
@@ -3770,6 +3827,7 @@ title = "Komprimeringsmetode"
 desiredSize = "Ønsket filstørrelse"
 desiredSizePlaceholder = "Angi størrelse"
 desiredSizeUnit = "Size unit"
+title = "Innstillinger"
 
 [compress.tooltip.description]
 text = "Komprimering er en enkel måte å redusere filstørrelsen på. Velg Filstørrelse for å angi en målstørrelse og la oss justere kvaliteten for deg. Velg Kvalitet for å sette komprimeringsstyrke manuelt."
@@ -3819,10 +3877,13 @@ title = "Kontoinnstillinger"
 description = "Last opp et bilde for å tilpasse kontoen din."
 help = "PNG, JPG eller WebP opptil 2 MB."
 remove = "Fjern"
+removeFailed = "Kunne ikke fjerne profilbilde"
 sizeError = "Velg et bilde som er mindre enn 2 MB."
 switchedToCustom = "Byttet til egendefinert bilde. Du kan nå laste opp ditt eget."
+switchFailed = "Kunne ikke bytte til egendefinert bilde"
 title = "Profilbilde"
 upload = "Last opp"
+uploadFailed = "Kunne ikke laste opp profilbilde"
 useCustom = "Bruk egendefinert bilde"
 usingProvider = "Bruker profilbilde fra {{provider}}"
 
@@ -3836,6 +3897,7 @@ title = "Beskjær profilbilde"
 zoom = "Zoom"
 
 [config.account.security]
+changeFailed = "Kunne ikke endre passord"
 changePassword = "Endre passord"
 description = "Administrer passord og sikkerhetsinnstillinger."
 title = "Passord og sikkerhet"
@@ -3846,11 +3908,15 @@ description = "Koble kontoen din for å bevare historikken og få tilgang til fl
 email = "E-post"
 emailPassword = "eller skriv inn e-post og passord"
 emailPlaceholder = "Skriv inn e-posten din"
+failed = "Kunne ikke oppgradere konto"
+failedWithProvider = "Kunne ikke oppgradere konto med {{provider}}"
 linkWith = "Koble sammen med"
+linkWithProvider = "Koble til {{provider}}"
 password = "Passord (valgfritt)"
 passwordNote = "La stå tomt for kun e-postverifisering"
 passwordPlaceholder = "Angi et passord"
 socialLogin = "Oppgrader med sosial konto"
+success = "Kontoen ble oppgradert! Du kan nå logge inn med e-posten din."
 title = "Oppgrader gjestekonto"
 upgradeButton = "Oppgrader konto"
 
@@ -3960,10 +4026,10 @@ title = "Forespørsel ikke gyldig"
 
 [connect.renewal]
 approve = "Forny innlogging"
+currentOwnerRequired = "Logg inn som nåværende eier av det tilknyttede skyteamet for å fornye denne serverens innlogging. Hvis eierskapet ble overført, bruk den nye eierens konto."
 failed = "Innloggingen din kunne ikke fornyes. Prøv igjen, eller avvis denne siden og start på nytt fra serveren din."
 lead = "Denne serveren er allerede koblet til kontoen din. Forny innloggingen din for å gå tilbake til fakturering og bruk på serveren din."
 title = "Forny serverinnloggingen din"
-wrongAccount = "Denne kontoen kan ikke fornye innloggingen for denne serveren. Bytt til kontoen som opprinnelig ble brukt til å koble til serveren. Den kontoen må fortsatt eie det tilkoblede teamet."
 
 [convert]
 autoRotate = "Roter automatisk"
@@ -4009,6 +4075,7 @@ multiple = "Flere"
 optimizeForEbook = "Optimaliser PDF for e-boklesere (bruker Ghostscript)"
 output = "Utdata"
 outputFormat = "Utdataformat"
+pdfaAccessibleFormat = "{{format}} (tilgjengelig)"
 pdfaDigitalSignatureWarning = "PDFen inneholder en digital signatur. Denne vil bli fjernet i neste steg."
 pdfaNote = "PDF/A-1b er mer kompatibel, PDF/A-2b støtter flere funksjoner."
 pdfaOptions = "PDF/A-alternativer"
@@ -4068,6 +4135,24 @@ outputFormatDesc = "Velg utdataformat for eBook-en"
 tabletPhone = "Nettbrett/mobil (med bilder)"
 targetDevice = "Målenhet"
 targetDeviceDesc = "Velg en utdata-profil optimalisert for leserenheten"
+
+[convert.formatGroups]
+archive = "Arkiv"
+document = "Dokument"
+ebook = "eBook"
+email = "E-post"
+file = "Fil"
+image = "Bilde"
+multipleFiles = "Flere filer"
+presentation = "Presentasjon"
+spreadsheet = "Regneark"
+text = "Tekst"
+web = "Nett"
+
+[convert.formatOptions]
+any = "Alle"
+images = "Bilder"
+msgOutlook = "MSG (Outlook)"
 
 [cookieBanner.popUp]
 acceptAllBtn = "OK"
@@ -4161,6 +4246,12 @@ label = "Y-posisjon"
 [crop.error]
 failed = "Kunne ikke beskjære PDF"
 
+[crop.pageNumbers]
+description = "Beskjær det valgte området på bestemte sider, eller 'all' for hver side."
+error = "Ugyldig sidevalg. Bruk f.eks. 1, 3, 5-8 eller all."
+label = "Sider som skal beskjæres"
+placeholder = "f.eks. 1, 3, 5-8 eller all"
+
 [crop.preview]
 title = "Valg av beskjæringsområde"
 
@@ -4183,16 +4274,11 @@ fileName = "Fil navn"
 title = "Database Import/Eksport"
 
 [defaultApp]
-setDefault = "Sett som standard"
 title = "Sett som standard PDF-app"
 
 [defaultApp.error]
 message = "Kunne ikke angi standard PDF-behandler"
 title = "Feil"
-
-[defaultApp.prompt]
-dontRemind = "Ikke minn meg på dette igjen"
-message = "Gjør Stirling PDF til standardappen for å åpne PDF-filer."
 
 [defaultApp.settingsOpened]
 message = "Velg Stirling PDF i systeminnstillingene"
@@ -4201,6 +4287,17 @@ title = "Innstillinger åpnet"
 [defaultApp.success]
 message = "Stirling PDF er nå din standard PDF-redigerer"
 title = "Standardapp satt"
+
+[desktop.titleBar]
+maximize = "Maksimer"
+minimize = "Minimer"
+restore = "Gjenopprett"
+
+[desktopBilling]
+description = "Administrer bruk og fakturering i nettleseren. Logg inn med den samme Stirling-kontoen du bruker her."
+open = "Åpne bruk og fakturering i nettleser"
+openFailed = "Kunne ikke åpne bruk og fakturering. Sjekk tilkoblingen og prøv igjen."
+selfHostedDescription = "Administrer bruk og fakturering på den tilkoblede serveren i nettleseren. Logg inn med servereierkontoen din."
 
 [desktopFileLink]
 saveAs = "Lagre som…"
@@ -4264,6 +4361,7 @@ tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,ident
 noItems = "No items available"
 noResults = "No results found"
 searchPlaceholder = "Søk..."
+selectedCount = "{{count}} valgt"
 selectLanguages = "Select languages"
 selectOption = "Select an option"
 
@@ -4274,6 +4372,7 @@ editSecretValue = "Rediger hemmelig verdi"
 [editTableOfContents]
 submit = "Bruk innholdsfortegnelse"
 tags = "bookmarks,contents,edit,table of contents,TOC,outline,navigation,chapters,sections,add bookmarks,edit bookmarks,PDF outline"
+workbenchLabel = "Disposisjonsarbeidsområde"
 
 [editTableOfContents.actions]
 clipboardUnavailable = "Tilgang til utklippstavlen er ikke tilgjengelig i denne nettleseren."
@@ -4434,6 +4533,27 @@ closeFile = "Lukk fil"
 
 [fileEditor]
 addFiles = "Legg til filer"
+closedFile = "Lukket {{name}}"
+couldNotSave = "Kunne ikke lagre {{name}}"
+filesAdded_one = "La til {{count}} fil"
+filesAdded_other = "La til {{count}} filer"
+filesReordered_one = "Fil omorganisert"
+filesReordered_other = "{{count}} filer omorganisert"
+loadedFromStorage_one = "Lastet {{count}} fil fra lagring"
+loadedFromStorage_other = "Lastet {{count}} filer fra lagring"
+loadFromStorageFailed = "Kunne ikke laste noen filer fra lagring"
+pinnedFile = "Festet {{name}}"
+processFilesFailed = "Kunne ikke behandle filer"
+savedAndClosed = "Lagret og lukket {{name}}"
+saveFailed = "Lagring mislyktes"
+unpinnedFile = "Løsnet {{name}}"
+unzipping = "Pakker ut {{name}}"
+
+[fileEditor.unzip]
+error = "Feil ved utpakking av {{name}}"
+extracted_one = "Pakket ut {{count}} fil fra {{name}}"
+extracted_other = "Pakket ut {{count}} filer fra {{name}}"
+failed = "Kunne ikke pakke ut filer fra {{name}}"
 
 [fileManager]
 addToUpload = "Legg til i opplasting"
@@ -4450,6 +4570,7 @@ noFiles = "Ingen filer tilgjengelig"
 noFilesFound = "Ingen filer funnet som samsvarer med søket ditt"
 openInFileEditor = "Åpne i filredigerer"
 openInPageEditor = "Åpne i Sideeditor"
+reloadFiles = "Last filer på nytt"
 saveSelected = "Lagre valgte"
 searchFiles = "Søk i filer..."
 share = "Del"
@@ -4459,6 +4580,8 @@ sharedEditNoticeConfirm = "Forstått"
 sharedEditNoticeTitle = "Skrivebeskyttet serverkopi"
 sharedWithYou = "Delt med deg"
 showAll = "Vis alle"
+showAllCount_one = "Vis alle ({{count}} fil)"
+showAllCount_other = "Vis alle ({{count}} filer)"
 sortBy = "Sort files"
 sortByDate = "Sorter etter dato"
 sortByName = "Sorter etter navn"
@@ -4495,6 +4618,11 @@ sources = "Filkilder"
 subtitle = "Velg fra biblioteket ditt eller legg til noe nytt."
 title = "Legg til filer"
 unsupported = "Denne filtypen støttes ikke av det valgte verktøyet."
+
+[filePreview]
+loadingThumbnail = "Laster miniatyrbilde..."
+locked = "Låst"
+previewOf = "Forhåndsvisning av {{name}}"
 
 [files]
 addFiles = "Legg til filer"
@@ -4930,13 +5058,15 @@ title = "Fil til PDF"
 [fileUpload]
 dropFilesHere = "Slipp filer her eller klikk på opplastingsknappen"
 dropFilesHereOpen = "Slipp filer her eller klikk på Åpne-knappen"
-filesAvailable = "filer tilgjengelige"
+filesAvailableCount_one = "{{count}} fil tilgjengelig"
+filesAvailableCount_other = "{{count}} filer tilgjengelige"
 loadFromStorage = "Last inn fra lagring"
 noFilesInStorage = "Ingen filer tilgjengelig i lagring. Last opp noen filer først."
 noFilesInStorageOpen = "Ingen filer tilgjengelig i lagringen. Åpne noen filer først."
 open = "Åpne"
 openFile = "Åpne fil"
 openFiles = "Åpne filer"
+selectedCount = "{{count}} valgt"
 selectFile = "Select {{name}}"
 selectFromStorage = "Velg fra lagring"
 upload = "Last opp"
@@ -5028,6 +5158,7 @@ rescanFields = "Skann felter på nytt"
 rescanFormFields = "Skann skjemafelter på nytt"
 save = "Lagre"
 saveShortcut = "Ctrl+S for å lagre"
+selectOptionPlaceholder = "— velg —"
 skippedEdits_one = "1 endring kunne ikke brukes:"
 skippedEdits_other = "{{count}} endringer kunne ikke brukes:"
 skippedEditsTruncated = "{{count}} flere ikke oppført."
@@ -5090,6 +5221,16 @@ tooltipHelp = "Hintet som vises når noen holder pekeren over feltet i en PDF-le
 type = "Type"
 typeHelp = "Hvilken type felt dette er. Hvis du endrer det, bygges feltet på nytt, så den gjeldende verdien beholdes ikke."
 
+[formFill.fieldTypes]
+button = "Knapp"
+checkbox = "Avkrysningsboks"
+combobox = "Nedtrekksliste"
+listbox = "Listeboks"
+radio = "Radioknapp"
+radioGroup = "Radiogruppe"
+signature = "Signatur"
+text = "Tekst"
+
 [formFill.mode]
 create = "Opprett"
 fill = "Fyll ut"
@@ -5107,11 +5248,16 @@ restore = "Gjenopprett"
 
 [formFill.sidebar]
 close = "Lukk sidepanel"
+empty = "Fant ingen skjemafelt i denne PDF-en"
+loading = "Laster skjemafelt..."
+pageNumber = "Side {{page}}"
+title = "Skjemafelt"
 
 [getPdfInfo]
 downloadJson = "Last ned JSON"
 downloads = "Nedlastinger"
 indexTitle = "Indeks"
+noData = "Ingen data"
 noneDetected = "Ingen funnet"
 noResults = "Kjør verktøyet for å generere en rapport."
 processing = "Henter ut informasjon..."
@@ -5127,6 +5273,8 @@ noVerification = "Ingen verifisering utført"
 noVerificationDesc = "Samsvar med PDF-standarder ble ikke verifisert for dette dokumentet."
 passed = "Bestått"
 passedCount = "bestått"
+secCompliant = "Dokumentet oppfyller SEC EDGAR-innsendingskravene"
+secNotCompliant = "Dokumentet oppfyller ikke SEC EDGAR-innsendingskravene"
 
 [getPdfInfo.error]
 partial = "Noen filer kunne ikke behandles."
@@ -5134,10 +5282,15 @@ unexpected = "Uventet feil under uttrekk."
 
 [getPdfInfo.other]
 attachments = "Vedlegg"
+created = "Opprettet: {{date}}"
 embeddedFiles = "Innebygde filer"
+fileSizeBytes = "({{size}} byte)"
 javaScript = "JavaScript"
 layers = "Lag"
+modified = "Endret: {{date}}"
 structureTree = "StructureTree"
+unnamedAttachment = "Vedlegg uten navn"
+unnamedFile = "Fil uten navn"
 xmp = "XMPMetadata"
 
 [getPdfInfo.perPage]
@@ -5147,6 +5300,7 @@ images = "Bilder"
 links = "Lenker"
 multimedia = "Multimedia"
 size = "Størrelse"
+unnamedImage = "Bilde"
 xobjects = "XObject-antall"
 
 [getPdfInfo.report]
@@ -5675,6 +5829,7 @@ invalidEmail = "Ugyldig e-postadresse"
 invalidInvitation = "Ugyldig invitasjon"
 invalidToken = "Ugyldig invitasjonslenke"
 linkExpires = "Lenken utløper"
+linkExpiresAt = "Lenken utløper: {{date}} kl. {{time}}"
 passwordMismatch = "Passordene samsvarer ikke"
 passwordPlaceholder = "Skriv inn passordet ditt"
 passwordRequired = "Passord er påkrevd"
@@ -5689,6 +5844,7 @@ welcomeTitle = "Du er invitert!"
 addFiles = "Legg til filer"
 mobileUpload = "Last opp fra mobil"
 openFromComputer = "Åpne fra datamaskin"
+settingUpSession = "Setter opp økten din..."
 uploadFromComputer = "Last opp fra datamaskin"
 
 [language]
@@ -5770,6 +5926,7 @@ sessionExpired = "Økten din har utløpt. Logg inn på nytt."
 signin = "Logg inn"
 signingIn = "Logger inn..."
 signInWith = "Logg inn med"
+signInWithProvider = "Logg inn med {{provider}}"
 title = "Logg inn"
 unexpectedError = "Uventet feil: {{message}}"
 updatePassword = "Oppdater passord"
@@ -5811,6 +5968,9 @@ label = "Fjerne digital signatur i den sammenslåtte filen?"
 description = "Digitale signaturer blir ugyldige ved sammenslåing av filer. Kryss av for å fjerne dem fra den endelige sammenslåtte PDF-en."
 title = "Fjern digital signatur"
 
+[merge.settings]
+title = "Innstillinger"
+
 [merge.sortBy]
 ascending = "Stigende"
 dateModified = "Dato endret"
@@ -5819,6 +5979,9 @@ description = "Filer slås sammen i rekkefølgen de er valgt. Dra for å endre r
 filename = "Fil navn"
 label = "Sorter etter"
 sort = "Sorter"
+
+[merge.sortFiles]
+title = "Sorter filer"
 
 [merge.tooltip.header]
 title = "Oversikt over fletteinnstillinger"
@@ -5867,6 +6030,7 @@ validating = "Validerer økt..."
 
 [mobileSign]
 clear = "Clear"
+drawingArea = "Tegneområde for signatur"
 invalidSession = "Session expired"
 invalidSessionMessage = "This QR code is no longer valid. Open the Sign tool on your computer and scan the new code."
 penSizeLabel = "Pen size"
@@ -5882,6 +6046,7 @@ validating = "Checking session…"
 fromGallery = "From gallery"
 hint = "Photograph a signature on white paper, or choose an existing image."
 invalidType = "Please choose an image file."
+previewAlt = "Signatur"
 takePhoto = "Take a photo"
 
 [mobileSign.tab]
@@ -5993,6 +6158,9 @@ profile = "See your basic profile information"
 desc = "Rydd opp skanninger og oppdag tekst fra bilder i en PDF og legg den til som tekst."
 tags = "gjenkjenning,tekst,bilde,skann,les,identifisere,deteksjon,redigerbar"
 title = "OCR / Rens av skanning"
+
+[ocr.advanced]
+title = "Avansert"
 
 [ocr.error]
 failed = "OCR-operasjonen mislyktes"
@@ -6118,9 +6286,9 @@ title = "Last ned Stirling for skrivebord"
 description = "Samarbeid med teamet ditt"
 title = "Inviter teammedlemmer"
 
-[onboarding.checklist.shareAnalytics]
-description = "Hjelp til med å forbedre Stirling"
-title = "Del anonyme bruksdata"
+[onboarding.checklist.setDefaultApp]
+description = "Åpne PDF-filer i Stirling PDF"
+title = "Gjør Stirling til standardappen din"
 
 [onboarding.checklist.takeTour]
 description = "Se hvordan Stirling fungerer i en rask gjennomgang"
@@ -6188,6 +6356,7 @@ message = "Applikasjonen har nylig gjennomgått betydelige endringer. Serveradmi
 roleAdmin = "Administrator"
 rolePlaceholder = "Bekreft rollen din"
 roleUser = "Bruker"
+title = "Sikkerhetssjekk"
 
 [onboarding.serverLicense]
 freeBody = "Vår <strong>Open-Core</strong>-lisens inkluderer <strong>OAuth SSO</strong> og opptil <strong>{{freeTierLimit}}</strong> brukere gratis. For å vokse uten avbrudd anbefaler vi Stirling Team-abonnementet — <strong>100 brukere</strong> for $99/mnd."
@@ -6276,16 +6445,93 @@ title = "Overleggsfiler"
 text = "Forgrunn plasserer overlegget oppå siden. Bakgrunn plasserer det bak."
 title = "Overleggsposisjon"
 
+[ownership]
+acceptInvite = "De kan opprette en konto eller logge inn, og deretter godta invitasjonen."
+accessUpdated = "Eiertilgangen deres er klar."
+accountLinkDisabled = "Denne serveren har fortsatt en skytilkobling, men kontokobling er slått av. Be serveroperatøren aktivere kontokobling, og fortsett deretter denne overføringen eller fjern tilkoblingen til serveren i innstillinger."
+anotherTeam = "Allerede i et annet team?"
+billing = "Abonnementet, lommeboken, betalingsmåten og eksisterende lisenser forblir på plass. Fakturakontaktopplysninger endres ikke automatisk."
+billingDetails = "Faktureringsdetaljer"
+billingUnchanged = "Abonnement og fakturering forblir på plass"
+bothDone = "Server- og skyeierskap er nå samordnet."
+cancel = "Avbryt overføring"
+check = "Sjekk igjen"
+checkAccount = "Sjekk konto"
+chooseEmail = "Velg kontoen deres i {{team}}, eller skriv inn en e-post for å invitere dem."
+close = "Lukk overføringsdialog"
+cloudAccount = "Stirling-konto"
+cloudScopeStyled = "<user>{{name}}</user> vil administrere {{team}}, medlemmene og faktureringen."
+cloudTargetChanged = "Velg et annet skymedlem. Denne kontoen er ikke lenger kvalifisert for overleveringen."
+confirm = "Jeg forstår endringene i tilgang og eierskap."
+done = "Eierskap overført"
+error = "Vi kunne ikke fullføre dette trinnet. Sjekk at mottakeren er aktiv og at serveren er tilkoblet, og sjekk deretter igjen. En ventende overføring kan gjenopptas her."
+finish = "Fullfør serveroverføring"
+inProgress = "En annen mottaker har allerede en ventende overføring. Lukk denne dialogen og gjenoppta den fra Brukere."
+instances = "Dette teamet har {{count}} tilkoblede servere. Skyfaktureringen deres forblir hos dette teamet; lokale eiere av andre servere endres ikke."
+invitationSent = "Invitasjon sendt"
+invite = "Send invitasjon"
+inviteAddress = "Inviter <account>{{email}}</account> til {{team}}."
+inviteBlocked = "Invitasjonen kunne ikke sendes. Sjekk tilgjengelige teamplasser og om mottakeren allerede har et betalt abonnement."
+linkChanged = "Serverens skytilkobling er endret. Be serveroperatøren gjenopprette den opprinnelige tilkoblingen før du fortsetter."
+linkedServerCount = "{{count}} tilkoblede servere"
+linkRevoked = "Denne serverens skytilkobling er ikke lenger gyldig. Avbryt overføringen, og koble deretter til Stirling-kontoen din på nytt i innstillinger. Eierskapet vil ikke endres."
+localScope = "De vil eie denne serveren og administrere fakturering og skytilkoblinger. Du beholder administratortilgang, men mister tilgang til disse innstillingene."
+membershipDetails = "Detaljer om teammedlemskap"
+membershipFirst = "De må bli med i teamet før du kan bekrefte overføringen."
+membershipRequired = "Mottakeren må bli med i dette skyteamet før eierskap kan overføres. Be dem godta invitasjonen, og sjekk deretter igjen."
+newOwnerLabel = "Ny eier"
+newOwnerStyled = "<user>{{name}}</user> er nå eieren."
+noEmailMatches = "Ingen samsvarende medlemmer. Skriv inn en e-post for å invitere."
+otherTeam = "Hvis de tilhører et annet team, kan godkjenning flytte kontoen deres. En betalt konto eller eierskap til et annet team må kanskje løses først. Vi flytter ikke abonnementet deres eller slår sammen team."
+ownerChanged = "Skyeierskap endret seg etter at denne overføringen startet. Avbryt denne overføringen og start på nytt med nåværende skyeier."
+ownerRequired = "Logg inn som nåværende eier av skyteamet, og prøv deretter dette trinnet igjen."
+partialError = "Skyeierskap er overført. Fullfør serveroverføringen for å holde begge eierne samordnet."
+partialTargetChanged = "Gjenopprett den valgte serverbrukerens tilgang og opprinnelige kontodetaljer, og fullfør deretter serveroverføringen. Skyeierskap er allerede overført."
+pending = "En eierskapsoverføring til {{name}} venter."
+personalTeam = "Personlige team kan ikke overføre eierskap."
+prepareHelp = "Mottakeren må ha fullført sin første serverinnlogging. Du kan prøve på nytt her, eller gå tilbake til Brukere for å velge noen andre."
+resume = "Gjenoppta overføring"
+searchEmail = "Søk eller skriv inn en e-post"
+serverAccount = "Serverkonto"
+serverDetails = "Detaljer om tilkoblet server"
+signIn = "Logg inn i skyen"
+startFromInstanceBody = "Dette teamet har tilkoblede servere. På den selvhostede serveren åpner du Innstillinger → Brukere og endrer mottakerens rolle til organisasjonseier. Denne flyten overfører skyeierskap før serveroverføringen fullføres."
+startFromInstanceTitle = "Start fra den selvhostede serveren din"
+stayOwner = "Du forblir eieren frem til overføring."
+targetChanged = "Mottakerens konto er endret. Gjenopprett tilgangen deres, eller avbryt denne overføringen og velg dem på nytt."
+title = "Overfør eierskap"
+transfer = "Overfør eierskap"
+waitingForEmail = "Venter på at {{email}} skal bli med i {{team}}."
+working = "Sjekker og oppdaterer eierskap..."
+yourCloudAccess = "Du blir et teammedlem og mister eiertilgang."
+
 [pageEdit]
 deselectAll = "Velg ingen"
 selectAll = "Velg alle"
 
 [pageEditor]
+dragPreviewAlt = "Drar"
+filePosition = "Posisjon {{position}}"
+pageLabel = "Side {{page}}"
 title = "Sideeditor"
+
+[pageEditor.actions]
+deletePage = "Slett side"
+insertFileAfter = "Sett inn fil etter"
+moveLeft = "Flytt til venstre"
+moveRight = "Flytt til høyre"
+rotateLeft = "Roter til venstre"
+rotateRight = "Roter til høyre"
+splitAfter = "Del etter"
 
 [pageEditor.emptyState]
 body = "Legg til filer for å begynne å redigere sider"
 title = "Ingen PDF-filer lastet"
+
+[pageEditor.fileDropdown]
+addFile = "Legg til fil"
+selectedCount = "{{selected}}/{{total}} filer valgt"
+untitled = "Uten tittel"
 
 [pageEditor.toolbar]
 delete = "Slett valgte"
@@ -6391,6 +6637,11 @@ portrait = "Stående"
 label = "Leseretning:"
 ltr = "Venstre til høyre"
 rtl = "Høyre til venstre"
+
+[pageLayout.steps]
+advanced = "Avanserte innstillinger"
+layout = "Oppsettinnstillinger"
+marginsBorders = "Marger og kantlinjer"
 
 [pageLayout.tooltip.header]
 title = "Veiledning for sideoppsett"
@@ -6712,6 +6963,7 @@ teamChangeUnavailable = "Planlagte Team-endringer kunne ikke lastes. Oppdater fo
 teamPending = "Team-kjøpet ditt behandles fortsatt. Oppdater denne siden om litt."
 teamProcessing = "Team-kjøp behandles"
 teamScheduled = "Team-endringen din er planlagt for {{date}}. Den gjeldende kapasiteten din forblir aktiv til da."
+unknownError = "Det oppstod en ukjent feil"
 upgradeComplete = "Oppgradering fullført"
 upgradeCompleteMessage = "Abonnementet ditt er oppgradert. Den eksisterende lisensnøkkelen er oppdatert."
 upgradeSuccess = "Betaling vellykket! Abonnementet ditt er oppgradert. Lisensen er oppdatert på serveren din. Du mottar snart en bekreftelses-e-post."
@@ -6766,6 +7018,14 @@ selectedMonthly = "Månedlig"
 selectedYearly = "Årlig"
 selectMonthly = "Velg månedlig"
 selectYearly = "Velg årlig"
+
+[payment.priceDisplay]
+basePrice = "Grunnpris"
+perPeriod = "/{{period}}"
+perSeat = "Per sete"
+perSeatPeriod = "/sete/{{period}}"
+totalSeats_one = "Totalt ({{count}} sete)"
+totalSeats_other = "Totalt ({{count}} seter)"
 
 [payment.upgradeTeam]
 title = "Oppgrader til Team"
@@ -6985,6 +7245,10 @@ save = "Lagre"
 style = "Stil"
 tapToPlace = "Trykk på siden der teksten skal plasseres"
 unlock = "Lås opp"
+
+[pdfTextEditor.pageView]
+pageNumber = "Side {{page}}"
+renderFailed = "Kunne ikke gjengi side"
 
 [pdfTextEditor.password]
 cancel = "Avbryt"
@@ -7212,6 +7476,7 @@ title = "Pipeline (Avansert)"
 contact = "Kontakt oss"
 current = "Gjeldende plan"
 featureComparison = "Funksjonssammenligning"
+fetchError = "Kunne ikke hente prisdata"
 from = "Fra"
 hideComparison = "Skjul funksjonssammenligning"
 licensedSeats = "Lisensiert: {{count}} plasser"
@@ -7227,6 +7492,8 @@ withServer = "+ Server-plan"
 [plan.api]
 large = "5,000 kreditter"
 medium = "1,000 kreditter"
+perCredit = "{{price}} per kreditt"
+perCreditWithDiscount = "{{price}} per kreditt • {{discount}} % rabatt"
 small = "500 kreditter"
 xsmall = "100 kreditter"
 
@@ -7302,14 +7569,9 @@ upToFiveUsers = "Opptil 5 brukere"
 usageTrackingPrometheus = "Brukssporing og Prometheus"
 usersIncluded = "100 brukere inkludert"
 
-[plan.licenseWarning]
-body = "Du har {{total}} brukere, men gratistier støtter bare {{limit}} per server. Oppgrader for å holde Stirling PDF i gang uten problemer."
-cta = "Se planer"
-overLimit = "mer enn {{limit}}"
-title = "Grense for gratis selvhostet nådd"
-
 [plan.period]
 month = "måned"
+year = "år"
 
 [plan.pro]
 highlight1 = "Ubegrenset verktøybruk"
@@ -7435,6 +7697,9 @@ pdfa-1 = "PDF/A-1b"
 pdfa-2b = "PDF/A-2b"
 pdfa-3b = "PDF/A-3b"
 
+[portal.accountLink]
+ownerRequired = "Bare organisasjonseieren kan koble til eller fra denne serveren."
+
 [portal.accountLink.card]
 billingNote = "Uovervåket behandling faktureres mot organisasjonens lommebok."
 connectDescription = "Koble til denne serveren for å bruke teamets behandlingskvote i Stirling Cloud."
@@ -7556,6 +7821,7 @@ identity = "Stirling-konto"
 linkTitle = "Koble til Stirling-kontoen din"
 noAuthorizeUrl = "Stirling returnerte ikke noe sted å fortsette. Prøv igjen om et øyeblikk."
 startFailed = "Kunne ikke nå Stirling for å starte tilkoblingen. Sjekk denne serverens utgående nettverkstilgang, og prøv igjen."
+transferPending = "En eierskapsoverføring venter. Gå til Innstillinger → Brukere for å fullføre eller avbryte den, og prøv deretter å koble til igjen."
 
 [portal.accountLink.modal.loginNotConfigured]
 after = "for å aktivere kobling i appen mot den hostede Stirling-kontoen."
@@ -9441,6 +9707,7 @@ labelId = "Etikett-ID"
 labelIdHelp = "Etikettens GUID, fra Purview-portalen. Å bruke en etikett skriver metadataene til PDF-en; den kan ikke kryptere, noe som krever Microsoft-klienten."
 labelName = "Etikettnavn (valgfritt)"
 labelNameHelp = "Registreres sammen med ID-en slik at personer og verktøy kan gjenkjenne etiketten."
+labelNamePlaceholder = "Konfidensielt"
 
 [portal.policies.config.purview.fields.method]
 help = "Purview skiller mellom en etikett som en retningslinje brukte, og en som en person valgte."
@@ -10425,31 +10692,6 @@ unlimited = "{{used}} · Ubegrenset"
 [printFile]
 title = "Skriv ut fil"
 
-[processingFolders.downloads]
-approve = "Behandle Nedlastinger"
-cancelSweep = "Avbryt"
-capped = "Du har {{found}} PDF-er; de første {{limit}} behandles nå, og resten følger etter."
-close = "Ferdig"
-explain_one = "Stirling kan klassifisere {{count}} PDF som allerede ligger i Nedlastinger-mappen din, og åpne resultatene her."
-explain_other = "Stirling kan klassifisere {{count}} PDF-er som allerede ligger i Nedlastinger-mappen din, og åpne resultatene her."
-failed = "Kunne ikke sette opp dette. Filene dine er ikke endret."
-finished_one = "Klassifiserte {{count}} fil og åpnet {{opened}} av dem her, klare til å jobbe med."
-finished_other = "Klassifiserte {{count}} filer og åpnet {{opened}} av dem her, klare til å jobbe med."
-nothingNew_one = "Ingenting nytt å behandle – denne {{count}} filen har allerede vært gjennom prosessen."
-nothingNew_other = "Ingenting nytt å behandle – disse {{count}} filene har allerede vært gjennom prosessen."
-notModified = "Filene dine i Nedlastinger endres ikke – Stirling leser dem og åpner dem her."
-notNow = "Ikke nå"
-progressCounts = "av {{total}} behandlet"
-someFailed_one = "{{count}} kunne ikke behandles og ble stående urørt."
-someFailed_other = "{{count}} kunne ikke behandles og ble stående urørt."
-stillRunning = "Noen filer behandles fortsatt i bakgrunnen."
-title = "Organisere Nedlastinger?"
-trigger_one = "Behandle {{count}} PDF i Nedlastinger"
-trigger_other = "Behandle {{count}} PDF-er i Nedlastinger"
-typesFound_one = "{{count}} dokumenttype funnet"
-typesFound_other = "{{count}} dokumenttyper funnet"
-working = "Behandler ..."
-
 [processingFolders.setup]
 addFolder = "Legg til mappe"
 advancedSteps = "Denne mappen bruker et behandlingsoppsett som denne veiviseren ikke kan redigere. De lagrede trinnene er ikke endret."
@@ -10527,6 +10769,10 @@ label = "Klient-ID"
 [provider.googledrive.enabled]
 description = "Tillat brukere å importere filer direkte fra Google Drive"
 label = "Aktiver Google Drive-filvelger"
+
+[provider.googledrive.errors]
+notConfigured = "Google Drive er ikke konfigurert"
+pickerFailed = "Kunne ikke åpne Google Drive-velgeren"
 
 [provider.oauth2.generic]
 name = "Generisk OAuth2"
@@ -10775,6 +11021,7 @@ applyWarning = "⚠️ Permanent handling, kan ikke angres og data under blir sl
 colorLabel = "Farge for sladding"
 controlsTitle = "Manuelle sladdekontroller"
 instructions = "Velg tekst eller tegn områder på PDF-en for å markere innhold for sladding."
+notImplemented = "Grensesnitt for manuell sladding blir tilgjengelig her når det er implementert."
 title = "Sladdeverktøy"
 
 [redact.modeSelector]
@@ -11102,6 +11349,9 @@ failed = "Det oppstod en feil under rotering av PDF-en."
 [rotate.preview]
 title = "Forhåndsvisning av rotasjon"
 
+[rotate.settings]
+title = "Innstillinger"
+
 [rotate.tooltip.controls]
 text = "Bruk rotasjonsknappene for å justere orientering. Venstre knapp roterer mot klokken, høyre knapp roterer med klokken. Hvert klikk roterer 90 grader."
 title = "Kontroller"
@@ -11119,6 +11369,16 @@ hideSmallLabels = "Skjul små etiketter"
 physicalValues = "Fysisk"
 scaled = "Skalert"
 showAllLabels = "Vis alle etiketter"
+
+[ruler.units]
+cm = "Centimeter (cm)"
+ft = "Fot (ft)"
+in = "Tommer (in)"
+km = "Kilometer (km)"
+m = "Meter (m)"
+mi = "Miles (mi)"
+mm = "Millimeter (mm)"
+yd = "Yards (yd)"
 
 [sanitize]
 desc = "Fjern potensielt skadelige elementer fra PDF-filer."
@@ -11184,6 +11444,7 @@ calibrationPaperDistance = "Målt sideavstand: {{distance}}"
 calibrationTitle = "Kalibrer målestokk"
 calibrationTooltip = "Mål en kjent avstand for å beregne målestokken automatisk"
 customScale = "Egendefinert målestokk"
+customUnit = "{{unit}} (egendefinert)"
 noneSet = "Ingen egendefinert målestokk angitt"
 presets = "Forhåndsinnstilte målestokker"
 ratio = "Målestokkforhold"
@@ -11207,6 +11468,9 @@ title = "Ekstraherte bilder"
 
 [scannerImageSplit.error]
 failed = "Det oppstod en feil under ekstrahering av bildeskanninger."
+
+[scannerImageSplit.settings]
+title = "Innstillinger"
 
 [scannerImageSplit.tooltip]
 headsUp = "Obs"
@@ -11274,6 +11538,9 @@ general = "Generelt"
 limits = "Grenser og ytelse"
 models = "Modeller og leverandører"
 title = "AI"
+
+[settings.billing]
+title = "Fakturering"
 
 [settings.configuration]
 advanced = "Avansert"
@@ -11348,8 +11615,6 @@ defaultPdfEditor = "Standard PDF-redigerer"
 defaultPdfEditorActive = "Stirling PDF er din standard PDF-redigerer"
 defaultPdfEditorChecking = "Sjekker..."
 defaultPdfEditorInactive = "En annen app er satt som standard"
-defaultPdfEditorRemind = "Minn meg på å angi som standard"
-defaultPdfEditorRemindDescription = "Vis et banner når Stirling PDF ikke er standard PDF-programmet ditt."
 defaultPdfEditorSet = "Allerede standard"
 defaultStartupView = "Standardvisning ved oppstart"
 defaultStartupViewDescription = "Velg hvilken fane som er aktiv i venstre kolonne når appen starter"
@@ -11618,6 +11883,15 @@ people = "Personer"
 teams = "Team"
 title = "Arbeidsområde"
 
+[setup.error]
+loginIncomplete = "Kunne ikke fullføre innlogging"
+noSaasServer = "Ingen SaaS-server konfigurert"
+noServer = "Ingen server konfigurert"
+saasLoginFailed = "SaaS-innlogging mislyktes"
+saasLoginIncomplete = "Kunne ikke fullføre SaaS-innlogging"
+selfHostedLoginFailed = "Selvhostet innlogging mislyktes"
+signupIncomplete = "Kunne ikke fullføre registrering"
+
 [setup.login]
 connectingTo = "Kobler til:"
 oauthPending = "Åpner nettleser for autentisering..."
@@ -11661,6 +11935,7 @@ configFetchError = "Kunne ikke hente serverkonfigurasjon: {{error}}"
 emptyUrl = "Skriv inn en server-URL"
 invalidUrl = "Ugyldig URL-format. Angi en gyldig URL som https://your-server.com"
 testFailed = "Tilkoblingstest mislyktes"
+unknown = "Ukjent feil"
 unreachable = "Kunne ikke koble til server"
 
 [setup.server.error.securityDisabled]
@@ -11769,6 +12044,7 @@ canvas = "Når du har tegnet signaturen i lerretet, lukk modalvinduet og klikk h
 image = "Når du har lastet opp signaturbildet over, klikk hvor som helst i PDF-en for å plassere det."
 noSignature = "Opprett en signatur ovenfor for å aktivere plasseringsverktøy."
 paused = "Plassering pauset"
+placeAnnotation = "Klikk hvor som helst på PDF-en for å plassere merknaden din."
 resumeHint = "Gjenoppta plassering for å klikke og legge til signaturen."
 saved = "Velg en lagret signatur ovenfor, og klikk hvor som helst på PDF-en for å plassere den."
 text = "Når du har skrevet inn navnet ditt over, klikk hvor som helst i PDF-en for å plassere signaturen."
@@ -11922,7 +12198,9 @@ signUpWith = "Sign up with"
 skip = "Skip"
 subtitle = "Bli med i Stirling PDF for å komme i gang"
 title = "Opprett en konto"
+unableToAccessTool = "Får ikke tilgang til verktøy: {{error}}"
 unexpectedError = "Uventet feil: {{message}}"
+unknownError = "Ukjent feil"
 
 [sizes]
 large = "Stor"
@@ -11995,6 +12273,14 @@ rightToLeft = "Del høyre-til-venstre"
 [split.poster.pageSize]
 description = "Størrelse på sidene som skal skrives ut"
 label = "Mål-sidestørrelse"
+
+[split.poster.pageSize.options]
+a3 = "A3 (297 × 420 mm)"
+a4 = "A4 (210 × 297 mm)"
+a5 = "A5 (148 × 210 mm)"
+legal = "Legal (8.5 × 14 in)"
+letter = "Letter (8.5 × 11 in)"
+tabloid = "Tabloid (11 × 17 in)"
 
 [split.poster.xFactor]
 description = "Antall kolonner hver side skal deles i"
@@ -12267,6 +12553,7 @@ confirmCancelInvite = "Er du sikker på at du vil avbryte denne invitasjonen?"
 confirmLeave = "Er du sikker på at du vil forlate dette teamet?"
 confirmLeaveLeader = "Som teamleder vil du bli fjernet fra teamet hvis du forlater. Er du sikker?"
 confirmRemove = "Er du sikker på at du vil fjerne dette medlemmet?"
+currentUnavailable = "Vi kunne ikke identifisere ditt nåværende team. Prøv igjen, eller kontakt kundestøtte hvis dette fortsetter."
 editName = "Rediger teamnavn"
 inviteCancelled = "Invitasjon avbrutt"
 inviteError = "Kunne ikke sende invitasjon"
@@ -12292,10 +12579,8 @@ renameCancel = "Avbryt omdøping"
 renameError = "Kunne ikke gi nytt navn til teamet"
 renameSubmit = "Lagre teamnavn"
 renameSuccess = "Teamet har fått nytt navn"
-transferBody = "Gjøre {{email}} til teameier? De vil kontrollere teammedlemskap og organisasjonens faktureringsinnstillinger. Du blir medlem. Teamets abonnement og lommebok forblir hos teamet."
 transferError = "Eierskapet kunne ikke overføres. Oppdater teamet og prøv igjen."
 transferSuccess = "Teameierskap overført. Rollen din er nå medlem."
-transferTitle = "Overfør teameierskap"
 
 [team.invitationBanner]
 acceptButton = "Godta"
@@ -12396,6 +12681,10 @@ WORD = "et Word dokument"
 XML = "en XML fil"
 XPS = "et XPS dokument"
 ZIP = "et ZIP arkiv"
+
+[toolLoading]
+generic = "Laster verktøy..."
+named = "Laster {{toolName}}..."
 
 [toolPanel]
 alpha = "Alpha"
@@ -12501,6 +12790,8 @@ stable = "STABLE"
 updateAvailable = "Oppdatering tilgjengelig"
 urgentUpdateAvailable = "Kritisk oppdatering"
 version = "Versjon"
+versionCount_one = "{{count}} versjon"
+versionCount_other = "{{count}} versjoner"
 versionHistory = "Versjonshistorikk"
 viewGuide = "Vis veiledning"
 whatsNewIn = "Hva er nytt i"
@@ -12528,6 +12819,7 @@ title = "URL Til PDF"
 aboutUsageAnalytics = "Om bruksanalyse"
 configureSettings = "Konfigurer analyseinnstillinger"
 error = "Feil ved innlasting av bruksstatistikk"
+loadFailed = "Kunne ikke laste bruksstatistikk"
 noData = "Ingen data tilgjengelig"
 noDataMessage = "Ingen bruksstatistikk er tilgjengelig for øyeblikket."
 usageAnalyticsExplanation = "Bruksanalyse sporer endepunktforespørsler og mønstre i verktøybruk. Sammen med panelet for revisjonslogging får du full innsikt i systemaktivitet, ytelse og sikkerhetshendelser."
@@ -12591,7 +12883,6 @@ removeTeam = "Fjern fra team"
 rename = "Gi team nytt navn"
 resetPw = "Tilbakestill passord"
 suspend = "Suspender"
-transferOwnership = "Overfør eierskap"
 unlock = "Lås opp konto"
 
 [users.activity]
@@ -12631,8 +12922,6 @@ disableMfaTitle = "Tilbakestill MFA"
 removeBody = "Fjerne {{name}} permanent fra organisasjonen? Dette kan ikke angres."
 removeTeamBody = "Fjerne {{name}} fra teamet? De beholder kontoen sin, men mister tilgang til dette teamets ressurser."
 removeTitle = "Fjern medlem"
-transferOwnershipBody = "Gjøre {{name}} til organisasjonseier? De blir administrator. Du forblir administrator, men mister eierskapet. Bare den nye eieren eller serveroperatøren kan overføre det tilbake."
-transferOwnershipTitle = "Overfør organisasjonseierskap"
 
 [users.empty]
 description = "Inviter teamet ditt for å begynne å samarbeide."
@@ -12825,6 +13114,7 @@ signaturesInvalid = "{{count}} ugyldig"
 signaturesUnverified_one = "{{count}} må gjennomgås"
 signaturesUnverified_other = "{{count}} må gjennomgås"
 signaturesValid = "{{count}} helt gyldige"
+thumbnailAlt = "{{fileName}} miniatyrbilde"
 title = "Rapport for signaturvalidering"
 
 [validateSignature.report.fields]
@@ -12862,6 +13152,7 @@ lastPage = "Siste side"
 loadingEngine = "Laster PDF-motor ..."
 moreOptions = "Mer"
 nextPage = "Neste side"
+noPdfProvided = "Ingen PDF oppgitt"
 onlyPdfSupported = "Visningsprogrammet støtter bare PDF-filer. Denne filen ser ut til å ha et annet format."
 pageNavigation = "Sidenavigasjon"
 previousPage = "Forrige side"
@@ -12899,8 +13190,17 @@ collapseAll = "Skjul alle bokmerker"
 editorOnly = "Bokmerkene i dette dokumentet kan bare redigeres i redigeringsverktøyet."
 empty = "No bookmarks in this document"
 expandAll = "Utvid alle bokmerker"
+loadFailed = "Kunne ikke laste bokmerker"
+loading = "Laster bokmerker..."
+noDocument = "Åpne en PDF for å vise bokmerkene."
+noSearchResults = "Ingen bokmerker samsvarer med søket ditt"
+openEditor = "Trenger du å endre rekkefølge eller nøste? Åpne bokmerkeredigering"
+pageLabel = "Side"
+pageNumber = "Side {{page}}"
+saveFailed = "Kunne ikke lagre bokmerke"
 searchPlaceholder = "Søk i bokmerker"
 title = "Bookmarks"
+untitled = "Uten tittel"
 
 [viewer.comments]
 addComment = "Legg til kommentar"
@@ -12948,16 +13248,26 @@ unsavedDesc = "Du har ulagrede endringer"
 
 [viewer.layers]
 closeSidebar = "Lukk sidepanelet for lag"
+empty = "Dette dokumentet har ingen lag."
 hideAll = "Skjul alle lag"
+loadFailed = "Kunne ikke laste lag."
+loading = "Laster lag..."
+noDocument = "Åpne en PDF for å vise lagene."
+readFailed = "Kunne ikke lese PDF-lag"
 showAll = "Vis alle lag"
 title = "Layers"
 
 [viewer.link]
 delete = "Slett lenke"
+goTo = "Gå til {{label}}"
+open = "Åpne lenke"
+openAria = "Åpne lenke"
+page = "Side {{page}}"
 
 [viewer.nonPdf]
 columnDefault = "Kolonne {{index}}"
 convertToPdf = "Konverter til PDF"
+copied = "Kopiert"
 csvStats = "{{rows}} rader · {{columns}} kolonner · {{size}}"
 emptyFile = "Tom fil"
 htmlHidePreview = "Skjul forhåndsvisning"
@@ -12968,6 +13278,8 @@ htmlShowPreview = "Vis forhåndsvisning likevel"
 invalidJson = "Ugyldig JSON — viser rått innhold"
 lineNumbers = "Linjenumre"
 loading = "Laster ..."
+noFile = "Ingen fil lastet"
+previewUnavailable = "Forhåndsvisning er ikke tilgjengelig for denne filtypen"
 renderMarkdown = "Gjengi Markdown"
 sortedBy = "Sortert etter: {{column}}"
 textStats = "{{lines}} linjer · {{size}}"
@@ -12994,11 +13306,28 @@ next = "Neste resultat"
 previous = "Forrige resultat"
 resultsOf = "av {{total}}"
 
+[viewer.sidebar]
+close = "Lukk sidepanel"
+searchPlaceholder = "Søk..."
+
 [viewer.signature]
 delete = "Slett signatur"
+previewAlt = "Forhåndsvisning av signatur"
+
+[viewer.signatureField]
+badge = "Signatur"
+fieldTitle = "Signaturfelt: {{name}}"
+signed = "Signert"
+signedWithReason = "Signert: {{reason}}"
+unsignedFieldTitle = "Usignert signaturfelt: {{name}}"
+withTime = "{{label}} ({{time}})"
 
 [viewer.thumbnails]
 closeSidebar = "Lukk sidepanelet for miniatyrbilder"
+failed = "Mislyktes"
+pageNumber = "Side {{page}}"
+thumbnailAlt = "Miniatyrbilde av side {{page}}"
+title = "Sider"
 
 [viewPdf]
 tags = "vis,les,annoter,tekst,bilde"
@@ -13006,169 +13335,6 @@ title = "Vis/Rediger PDF"
 
 [warning]
 tooltipTitle = "Advarsel"
-
-[watchedFolders]
-alreadyInFolder = "Already in this folder"
-defaultFolderWarning = "This is a default folder and will be recreated on next reload."
-deleteConfirmBody = "This will remove the folder and its run history. Files already downloaded are not affected."
-deleteConfirmTitle = "Delete folder?"
-folderNotFound = "Folder not found"
-newFolder = "New folder"
-noFolders = "No watched folders yet"
-sidebarTitle = "Watched Folders"
-title = "Watched Folders"
-
-[watchedFolders.actions]
-back = "Back"
-collapse = "Collapse"
-dismiss = "Dismiss"
-download = "Download"
-downloadInput = "Download input"
-downloadOutput = "Download output"
-expand = "Expand"
-retry = "Retry"
-
-[watchedFolders.card]
-delete = "Delete folder"
-edit = "Edit folder"
-
-[watchedFolders.home]
-addAnother = "Add another Watched Folder"
-addAnotherDesc = "Automatically process files with a new pipeline"
-create = "Create your first Watched Folder"
-deleteFolder = "Delete folder"
-editFolder = "Edit folder"
-empty = "No watched folders yet"
-emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
-emptyTitle = "Automate your PDF workflows"
-file = "file"
-files = "files"
-pause = "Pause"
-resume = "Resume"
-
-[watchedFolders.howItWorks]
-step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
-step1Title = "Drop files"
-step2Desc = "Your configured tools process each file automatically"
-step2Title = "Pipeline runs"
-step3Desc = "Download processed files from inside the folder"
-step3Title = "Output ready"
-title = "How Watched Folders work"
-
-[watchedFolders.modal]
-advanced = "Advanced"
-automation = "Automation"
-automationNameFallback = "Watched Folder automation"
-automationRequired = "Add at least one configured step before saving."
-autoNumber = "Auto-number"
-autoNumberExample = "e.g. document.pdf → document (1).pdf"
-autoScanHelp = "New PDF files in this folder are processed automatically every 10 seconds."
-changeFolder = "Change"
-chooseFolder = "Choose"
-clearFolder = "Clear"
-color = "Accent color"
-createFolder = "Create Folder"
-createTitle = "New Watched Folder"
-editTitle = "Edit Watched Folder"
-inputFolder = "Input folder"
-inputFolderNotChosen = "No folder chosen — required for auto-scan"
-inputSource = "Input source"
-inputSourceBrowser = "Browser — drop files here"
-inputSourceLocal = "Local folder (auto-scan)"
-inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
-localOutputFolder = "Local output folder"
-maxRetries = "Max retries"
-name = "Folder name"
-namePlaceholder = "My Watched Folder"
-nameRequired = "Folder name is required"
-nameTooLong = "Folder name must be 50 characters or less"
-outputFolderNotSet = "Not set — outputs stay in app"
-outputFolderUnsupported = "Not supported in this browser"
-outputModeNewDesc = "Output is saved as a new separate file"
-outputModeVersion = "Replace original?"
-outputModeVersionDesc = "Output becomes a new version of the input file rather than a separate file"
-outputName = "Output filename prefix"
-outputNamePrefix = "Filename prefix"
-outputNameSuffix = "Suffix"
-positionPrefix = "Prefix"
-positionSuffix = "Suffix"
-replaceOriginal = "Replace original file"
-retryDelay = "Delay (minutes)"
-saveChanges = "Save Changes"
-saveFailed = "Failed to save folder. Please try again."
-sectionFolder = "Folder"
-sectionSourceOutput = "Source & Output"
-sectionSteps = "Steps"
-
-[watchedFolders.status]
-active = "Active"
-done = "Done"
-paused = "Paused"
-processing = "Processing"
-
-[watchedFolders.time]
-daysAgo = "{{count}}d ago"
-hoursAgo = "{{count}}h ago"
-justNow = "just now"
-minutesAgo = "{{count}}m ago"
-
-[watchedFolders.workbench]
-activity = "Activity"
-addFiles = "Add files"
-allTime = "All time"
-cancel = "Cancel"
-chartTooltipComplete = "{{count}} complete"
-chartTooltipFailed = "{{count}} failed"
-clearSelection = "Clear selection"
-countProcessing = "{{count}} processing"
-countQueued = "{{count}} queued"
-countSelected = "{{count}} selected"
-dataSaved = "Saved"
-dayRunning = "day running"
-daysRunning = "days running"
-delete = "Delete"
-deleteConfirmBody = "Remove notifications only clears the activity log. Delete outputs also removes the processed files from storage. Your original input files are never touched."
-deleteOutputs = "Delete outputs"
-directionIn = "in"
-directionOut = "out"
-dropToProcess = "Drop to process"
-export = "Export"
-exportSeparately = "Export separately"
-exportZip = "Export zip"
-failed = "Failed"
-filesProcessedOverTime = "Files processed over time"
-filterAll = "All"
-filterPending = "Pending"
-inputs = "Inputs"
-inputSize = "Input size"
-legendComplete = "Complete"
-noActivity = "No activity yet — drop a PDF to start"
-noActivityMatch = "No matching activity"
-noInputFolder = "No input folder — edit to configure"
-outputs = "Outputs"
-pause = "Pause"
-preview = "Preview"
-previewInput = "Preview input"
-previewLoadFailed = "Could not load file preview."
-previewOutput = "Preview output"
-queued = "Queued"
-queuedWaiting = "Queued — waiting to run"
-removeEntries = "Remove {{count}} entries"
-removeEntry = "Remove entry"
-removeNotificationsOnly = "Remove notifications only"
-resume = "Resume"
-retryAll = "Retry all"
-retryIn = "retry in {{count}}m"
-retryingSoon = "retrying…"
-retryMixedConfirm = "Some selected files have already completed and will be skipped. Only failed files will be retried. Continue?"
-running = "Running"
-search = "Search…"
-selectAll = "Select all {{count}}"
-sortNameAsc = "A → Z"
-sortNameDesc = "Z → A"
-sortNewest = "Newest"
-sortOldest = "Oldest"
-watching = "Watching: {{name}}"
 
 [watermark]
 desc = "Legg til tekst- eller bildevannmerker i PDF-filer"
@@ -13371,6 +13537,10 @@ certTypeServer = "Serversertifikat (hvis tilgjengelig)"
 completedDeclined = "Du har avslått dette dokumentet."
 completedSigned = "Du har signert dette dokumentet."
 decline = "Avslå"
+declineConfirm = "Er du sikker på at du vil avslå å signere dette dokumentet?"
+declineFailed = "Kunne ikke avslå: {{error}}"
+declineSuccess = "Du har avslått denne signeringsforespørselen."
+defaultReason = "Dokumentsignering"
 downloadDocument = "Last ned dokument"
 dueDate = "Forfallsdato: {{date}}"
 errorTitle = "Feil"
@@ -13381,6 +13551,7 @@ locationPlaceholder = "f.eks. San Francisco, CA"
 pageNumber = "Sidenummer (valgfritt)"
 reason = "Begrunnelse"
 reasonPlaceholder = "f.eks. Dokumentgodkjenning"
+selectCertificateFile = "Velg en sertifikatfil"
 sessionNotFound = "Økt ikke funnet eller tilgang nektet."
 signDocument = "Signer dokument"
 statusDeclined = "Avslått"
@@ -13388,7 +13559,9 @@ statusNotified = "Varslet"
 statusPending = "Avventer"
 statusSigned = "Signert"
 statusViewed = "Vist"
+submitFailed = "Kunne ikke sende inn signatur: {{error}}"
 submitSignature = "Send inn signatur"
+submitSuccess = "Signatur sendt inn!"
 
 [workspace]
 title = "Arbeidsområde"
