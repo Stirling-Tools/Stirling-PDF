@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
@@ -15,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -25,6 +27,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
@@ -44,6 +47,9 @@ import stirling.software.proprietary.workflow.model.ParticipantStatus;
 import stirling.software.proprietary.workflow.model.WorkflowParticipant;
 import stirling.software.proprietary.workflow.model.WorkflowSession;
 import stirling.software.proprietary.workflow.model.WorkflowStatus;
+import stirling.software.proprietary.workflow.notification.SigningCompletionEvent;
+import stirling.software.proprietary.workflow.notification.SigningInvitationEvent;
+import stirling.software.proprietary.workflow.notification.SigningResponseEvent;
 import stirling.software.proprietary.workflow.repository.WorkflowParticipantRepository;
 import stirling.software.proprietary.workflow.repository.WorkflowSessionRepository;
 
@@ -68,6 +74,7 @@ class WorkflowSessionServiceMoreTest {
     @Mock private ApplicationProperties applicationProperties;
     @Mock private MetadataEncryptionService metadataEncryptionService;
     @Mock private CertificateSubmissionValidator certificateSubmissionValidator;
+    @Mock private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks private WorkflowSessionService service;
 
@@ -257,6 +264,49 @@ class WorkflowSessionServiceMoreTest {
         }
 
         @Test
+        void invitesOnlyParticipantsThatAskForIt() {
+            User owner = user("alice", 1L);
+            WorkflowSession s = session("s1", owner);
+            s.setStatus(WorkflowStatus.IN_PROGRESS);
+            when(workflowSessionRepository.findBySessionId("s1")).thenReturn(Optional.of(s));
+            AtomicLong ids = new AtomicLong(10L);
+            when(workflowParticipantRepository.save(any()))
+                    .thenAnswer(
+                            i -> {
+                                WorkflowParticipant saved = i.getArgument(0);
+                                saved.setId(ids.getAndIncrement());
+                                return saved;
+                            });
+
+            ParticipantRequest notified = new ParticipantRequest();
+            notified.setEmail("pat@example.com");
+            ParticipantRequest quiet = new ParticipantRequest();
+            quiet.setEmail("sam@example.com");
+            quiet.setSendNotification(false);
+
+            service.addParticipants("s1", List.of(notified, quiet), owner);
+
+            verify(eventPublisher).publishEvent(new SigningInvitationEvent("s1", List.of(10L)));
+        }
+
+        @Test
+        void nobodyAsksForAnInvitation_publishesNothing() {
+            User owner = user("alice", 1L);
+            WorkflowSession s = session("s1", owner);
+            s.setStatus(WorkflowStatus.IN_PROGRESS);
+            when(workflowSessionRepository.findBySessionId("s1")).thenReturn(Optional.of(s));
+            when(workflowParticipantRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+            ParticipantRequest quiet = new ParticipantRequest();
+            quiet.setEmail("sam@example.com");
+            quiet.setSendNotification(false);
+
+            service.addParticipants("s1", List.of(quiet), owner);
+
+            verifyNoInteractions(eventPublisher);
+        }
+
+        @Test
         void participantWithoutUserIdOrEmail_throwsBadRequest() {
             User owner = user("alice", 1L);
             WorkflowSession s = session("s1", owner);
@@ -413,6 +463,7 @@ class WorkflowSessionServiceMoreTest {
                     .isInstanceOf(ResponseStatusException.class)
                     .extracting(e -> ((ResponseStatusException) e).getStatusCode())
                     .isEqualTo(HttpStatus.BAD_REQUEST);
+            verifyNoInteractions(eventPublisher);
         }
 
         @Test
@@ -426,6 +477,7 @@ class WorkflowSessionServiceMoreTest {
             assertThat(s.isFinalized()).isTrue();
             assertThat(s.getStatus()).isEqualTo(WorkflowStatus.COMPLETED);
             verify(workflowSessionRepository).save(s);
+            verify(eventPublisher).publishEvent(new SigningCompletionEvent("s1"));
         }
     }
 
@@ -487,6 +539,71 @@ class WorkflowSessionServiceMoreTest {
             when(storageProvider.load("orig-key")).thenReturn(resource);
 
             assertThat(service.getOriginalFile("s1")).containsExactly(7);
+        }
+
+        private WorkflowSession sessionWithToken(String token) throws IOException {
+            WorkflowSession s = session("s1", user("owner", 2L));
+            StoredFile original = new StoredFile();
+            original.setStorageKey("orig-key");
+            s.setOriginalFile(original);
+            WorkflowParticipant p = participant(null, ParticipantStatus.SIGNED);
+            p.setShareToken(token);
+            s.addParticipant(p);
+            when(workflowParticipantRepository.findByShareToken(token)).thenReturn(Optional.of(p));
+            when(storageProvider.load("orig-key"))
+                    .thenReturn(new ByteArrayResource(new byte[] {1}));
+            return s;
+        }
+
+        @Test
+        void getParticipantDocument_beforeFinalize_servesOriginal() throws IOException {
+            sessionWithToken("tok");
+
+            WorkflowSessionService.ParticipantDocument document =
+                    service.getParticipantDocument("tok");
+
+            assertThat(document.content()).containsExactly(1);
+            assertThat(document.filename()).isEqualTo("doc.pdf");
+        }
+
+        @Test
+        void getParticipantDocument_afterFinalize_servesSignedCopy() throws IOException {
+            WorkflowSession s = sessionWithToken("tok");
+            StoredFile signed = new StoredFile();
+            signed.setStorageKey("signed-key");
+            signed.setOriginalFilename("doc_shared_signed.pdf");
+            s.setProcessedFile(signed);
+            s.setFinalized(true);
+            when(storageProvider.load("signed-key"))
+                    .thenReturn(new ByteArrayResource(new byte[] {9}));
+
+            WorkflowSessionService.ParticipantDocument document =
+                    service.getParticipantDocument("tok");
+
+            assertThat(document.content()).containsExactly(9);
+            assertThat(document.filename()).isEqualTo("doc_shared_signed.pdf");
+        }
+
+        @Test
+        void getParticipantDocument_unknownToken_throwsForbidden() {
+            when(workflowParticipantRepository.findByShareToken("nope"))
+                    .thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> service.getParticipantDocument("nope"))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .extracting(e -> ((ResponseStatusException) e).getStatusCode())
+                    .isEqualTo(HttpStatus.FORBIDDEN);
+        }
+
+        @Test
+        void getParticipantDocument_expiredAccess_throwsForbidden() throws IOException {
+            WorkflowSession s = sessionWithToken("tok");
+            s.getParticipants().get(0).setExpiresAt(LocalDateTime.now().minusDays(1));
+
+            assertThatThrownBy(() -> service.getParticipantDocument("tok"))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .extracting(e -> ((ResponseStatusException) e).getStatusCode())
+                    .isEqualTo(HttpStatus.FORBIDDEN);
         }
     }
 
@@ -625,6 +742,7 @@ class WorkflowSessionServiceMoreTest {
                     .isEqualTo(HttpStatus.BAD_REQUEST);
 
             verify(workflowParticipantRepository, never()).save(any());
+            verifyNoInteractions(eventPublisher);
         }
 
         @Test
@@ -633,6 +751,7 @@ class WorkflowSessionServiceMoreTest {
             User owner = user("owner", 2L);
             WorkflowSession s = session("s1", owner);
             WorkflowParticipant p = participant(user, ParticipantStatus.PENDING);
+            p.setId(7L);
             s.addParticipant(p);
             when(workflowSessionRepository.findBySessionId("s1")).thenReturn(Optional.of(s));
 
@@ -640,6 +759,7 @@ class WorkflowSessionServiceMoreTest {
 
             assertThat(p.getStatus()).isEqualTo(ParticipantStatus.DECLINED);
             verify(workflowParticipantRepository).save(p);
+            verify(eventPublisher).publishEvent(new SigningResponseEvent(7L, null));
         }
     }
 

@@ -25,6 +25,7 @@ import org.bouncycastle.openssl.jcajce.JceOpenSSLPKCS8DecryptorProviderBuilder;
 import org.bouncycastle.openssl.jcajce.JcePEMDecryptorProviderBuilder;
 import org.bouncycastle.operator.InputDecryptorProvider;
 import org.bouncycastle.pkcs.PKCS8EncryptedPrivateKeyInfo;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,6 +53,9 @@ import stirling.software.proprietary.workflow.model.ParticipantStatus;
 import stirling.software.proprietary.workflow.model.WorkflowParticipant;
 import stirling.software.proprietary.workflow.model.WorkflowSession;
 import stirling.software.proprietary.workflow.model.WorkflowStatus;
+import stirling.software.proprietary.workflow.notification.SigningCompletionEvent;
+import stirling.software.proprietary.workflow.notification.SigningInvitationEvent;
+import stirling.software.proprietary.workflow.notification.SigningResponseEvent;
 import stirling.software.proprietary.workflow.repository.WorkflowParticipantRepository;
 import stirling.software.proprietary.workflow.repository.WorkflowSessionRepository;
 
@@ -81,6 +85,7 @@ public class WorkflowSessionService {
     private final ApplicationProperties applicationProperties;
     private final MetadataEncryptionService metadataEncryptionService;
     private final CertificateSubmissionValidator certificateSubmissionValidator;
+    private final ApplicationEventPublisher eventPublisher;
 
     public void ensureSigningEnabled() {
         if (!applicationProperties.getStorage().isEnabled()
@@ -91,7 +96,7 @@ public class WorkflowSessionService {
 
     /**
      * Creates a new workflow session with participants. Stores the original file using
-     * StorageProvider.
+     * StorageProvider. Participants are emailed an invitation once the transaction commits.
      */
     public WorkflowSession createSession(
             User owner, MultipartFile file, WorkflowCreationRequest request) throws IOException {
@@ -183,6 +188,7 @@ public class WorkflowSessionService {
     /** Adds participants to a workflow session. */
     private void addParticipantsToSession(
             WorkflowSession session, List<ParticipantRequest> participantRequests) {
+        List<Long> invited = new ArrayList<>();
         for (ParticipantRequest request : participantRequests) {
             WorkflowParticipant participant = new WorkflowParticipant();
             participant.setShareToken(UUID.randomUUID().toString());
@@ -249,6 +255,13 @@ public class WorkflowSessionService {
 
             session.addParticipant(participant);
             participant = workflowParticipantRepository.save(participant);
+            if (request.isSendNotification()) {
+                invited.add(participant.getId());
+            }
+        }
+        if (!invited.isEmpty()) {
+            eventPublisher.publishEvent(
+                    new SigningInvitationEvent(session.getSessionId(), invited));
         }
     }
 
@@ -329,7 +342,10 @@ public class WorkflowSessionService {
         return workflowSessionRepository.findActiveSessionsByOwner(owner);
     }
 
-    /** Adds additional participants to an existing session. */
+    /**
+     * Adds additional participants to an existing session. Each one whose request has {@code
+     * sendNotification} set is emailed an invitation once the transaction commits.
+     */
     @Transactional
     public void addParticipants(
             String sessionId, List<ParticipantRequest> participants, User owner) {
@@ -420,7 +436,10 @@ public class WorkflowSessionService {
         workflowSessionRepository.save(session);
     }
 
-    /** Marks a workflow session as finalized. */
+    /**
+     * Marks a workflow session as finalized. Participants are emailed that it is complete once the
+     * transaction commits, so store the processed file first.
+     */
     public void finalizeSession(String sessionId, User owner) {
         WorkflowSession session = getSessionForOwner(sessionId, owner);
 
@@ -432,6 +451,7 @@ public class WorkflowSessionService {
         session.setFinalized(true);
         session.setStatus(WorkflowStatus.COMPLETED);
         workflowSessionRepository.save(session);
+        eventPublisher.publishEvent(new SigningCompletionEvent(sessionId));
 
         log.info("Finalized workflow session {}", sessionId);
     }
@@ -462,6 +482,38 @@ public class WorkflowSessionService {
             throw StorageEncryptionErrors.revoked(e);
         }
     }
+
+    /**
+     * The document a share-token holder downloads: the signed PDF once the session is finalized, so
+     * the link in the completion email delivers it, otherwise the original. Resolves the token in
+     * its own transaction because the participant's session is lazy and open-in-view is off.
+     */
+    @Transactional(readOnly = true)
+    public ParticipantDocument getParticipantDocument(String shareToken) throws IOException {
+        WorkflowParticipant participant =
+                workflowParticipantRepository
+                        .findByShareToken(shareToken)
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.FORBIDDEN,
+                                                "Invalid or expired participant token"));
+        if (participant.isExpired()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Participant access expired");
+        }
+        WorkflowSession session = participant.getWorkflowSession();
+        boolean signed = session.isFinalized() && session.getProcessedFile() != null;
+        StoredFile file = signed ? session.getProcessedFile() : session.getOriginalFile();
+        if (file == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND, "Document not available for this session");
+        }
+        return new ParticipantDocument(
+                readBlob(file.getStorageKey()),
+                signed ? file.getOriginalFilename() : session.getDocumentName());
+    }
+
+    public record ParticipantDocument(byte[] content, String filename) {}
 
     /** Retrieves the original file data for a workflow session. */
     @Transactional(readOnly = true)
@@ -679,7 +731,8 @@ public class WorkflowSessionService {
     }
 
     /**
-     * Sign a document in a workflow session.
+     * Sign a document in a workflow session. The owner is emailed the session's progress once the
+     * transaction commits.
      *
      * @param sessionId The session ID
      * @param user The participant user
@@ -864,6 +917,7 @@ public class WorkflowSessionService {
         // 5. Update participant status
         participant.setStatus(ParticipantStatus.SIGNED);
         workflowParticipantRepository.save(participant);
+        eventPublisher.publishEvent(new SigningResponseEvent(participant.getId(), null));
 
         log.info(
                 "User {} signed document in session {} - certificate and signature data stored",
@@ -872,7 +926,8 @@ public class WorkflowSessionService {
     }
 
     /**
-     * Decline a sign request.
+     * Decline a sign request. The owner is emailed the session's progress once the transaction
+     * commits.
      *
      * @param sessionId The session ID
      * @param user The participant user
@@ -888,6 +943,7 @@ public class WorkflowSessionService {
 
         participant.setStatus(ParticipantStatus.DECLINED);
         workflowParticipantRepository.save(participant); // updatedAt is auto-updated
+        eventPublisher.publishEvent(new SigningResponseEvent(participant.getId(), null));
 
         log.info("User {} declined sign request for session {}", user.getUsername(), sessionId);
     }
