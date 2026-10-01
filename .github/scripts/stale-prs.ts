@@ -7,6 +7,9 @@
 //
 // The warning's date is the time the Stale PR label was added, so removing that
 // label cancels a warning and "on-hold" exempts a PR permanently.
+//
+// The same rules keep a waiting-on-author or waiting-on-review label on every open
+// PR, so the review queue can be filtered by whose turn it is.
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -15,6 +18,8 @@ export const LABELS = {
   onHold: "on-hold",
   needsChanges: "needs-changes",
   backlogCleanup: "backlog-cleanup",
+  waitingOnAuthor: "waiting-on-author",
+  waitingOnReview: "waiting-on-review",
   conflicts: "has conflicts", // must match CONFLICT_LABEL in pr-conflict-labeler.yml
 };
 
@@ -28,6 +33,10 @@ export const WARN_AFTER_DAYS: Record<TurnKind, number> = {
 };
 
 export const CLOSE_AFTER_WARNING_DAYS = 7;
+
+// GitHub's secondary rate limit expects a pause between writes, and the first run
+// labels every open PR.
+const WRITE_INTERVAL_MS = 1000;
 
 const CORE_ASSOCIATIONS = new Set(["OWNER", "MEMBER", "COLLABORATOR"]);
 const REVIEW_VERDICTS = new Set(["APPROVED", "CHANGES_REQUESTED", "COMMENTED"]);
@@ -121,6 +130,13 @@ export type Action = "none" | "warn" | "pending" | "close" | "clear";
 export interface Decision {
   action: Action;
   turns: Turn[];
+}
+
+/** `label` is the turn label the PR should carry; `remove` is the other one, if present. */
+export interface TurnLabelChange {
+  label: string;
+  add: boolean;
+  remove: string[];
 }
 
 interface Repo {
@@ -290,6 +306,19 @@ export function decide(pr: PullRequest, now: number): Decision {
   return { action: closeDue ? "close" : "pending", turns: warnedTurns };
 }
 
+/**
+ * Every open PR gets a turn label, bots and on-hold included: those are exempt from
+ * closing, not from having a turn. Approved-but-unmerged counts as waiting on review.
+ */
+export function turnLabelChange(pr: PullRequest): TurnLabelChange {
+  const label = authorTurns(pr).length > 0 ? LABELS.waitingOnAuthor : LABELS.waitingOnReview;
+  return {
+    label,
+    add: !hasLabel(pr, label),
+    remove: [LABELS.waitingOnAuthor, LABELS.waitingOnReview].filter((name) => name !== label && hasLabel(pr, name)),
+  };
+}
+
 function problem(turn: Turn, pr: PullRequest, now: number): string {
   switch (turn.kind) {
     case "conflicts":
@@ -370,6 +399,12 @@ async function apply(github: GitHubClient, repo: Repo, pr: PullRequest, { action
   }
 }
 
+async function applyTurnLabel(github: GitHubClient, repo: Repo, pr: PullRequest, change: TurnLabelChange) {
+  const issue = { ...repo, issue_number: pr.number };
+  if (change.add) await github.rest.issues.addLabels({ ...issue, labels: [change.label] });
+  for (const name of change.remove) await github.rest.issues.removeLabel({ ...issue, name });
+}
+
 const ACTION_ORDER: Action[] = ["close", "warn", "clear", "pending"];
 
 const SUMMARY_KIND_NAMES: Record<TurnKind, string> = {
@@ -382,7 +417,17 @@ const SUMMARY_KIND_NAMES: Record<TurnKind, string> = {
 interface Result {
   pr: PullRequest;
   decision: Decision;
+  turnLabel: TurnLabelChange;
 }
+
+// A PR being closed keeps whatever turn label it had: relabelling it is noise.
+const needsRelabel = ({ decision, turnLabel }: Result) =>
+  decision.action !== "close" && (turnLabel.add || turnLabel.remove.length > 0);
+
+const hasWrites = (result: Result) =>
+  needsRelabel(result) || ["warn", "close", "clear"].includes(result.decision.action);
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function writeSummary(core: Core, results: Result[], live: boolean, now: number) {
   const rows = results
@@ -394,14 +439,22 @@ async function writeSummary(core: Core, results: Result[], live: boolean, now: n
       decision.action,
       decision.turns.map((turn) => `${turn.kind} ${days(now - turn.since)}d`).join(", "),
     ]);
-  const waitingOnAuthor = Object.entries(SUMMARY_KIND_NAMES).map(([kind, name]) => {
-    const count = results.filter(({ decision }) => decision.turns.some((turn) => turn.kind === kind)).length;
+  const turns = results.map(({ pr }) => authorTurns(pr));
+  const onAuthor = turns.filter((prTurns) => prTurns.length > 0).length;
+  const byKind = Object.entries(SUMMARY_KIND_NAMES).map(([kind, name]) => {
+    const count = turns.filter((prTurns) => prTurns.some((turn) => turn.kind === kind)).length;
     return `${count} ${name}`;
   });
+  const relabelled = results.filter(needsRelabel).length;
 
   await core.summary
     .addHeading(live ? "Stale PR triage" : "Stale PR triage (dry run: no PRs changed)")
-    .addRaw(`${results.length} open PRs. Waiting on the author: ${waitingOnAuthor.join(", ")}.`, true)
+    .addRaw(
+      `${results.length} open PRs: ${results.length - onAuthor} waiting on review, ` +
+        `${onAuthor} waiting on the author (${byKind.join(", ")}).`,
+      true,
+    )
+    .addRaw(`${live ? "Updated" : "Would update"} the turn label on ${relabelled} PRs.`, true)
     .addTable([
       [
         { data: "PR", header: true },
@@ -420,26 +473,42 @@ export interface TriageInputs {
   core: Core;
   /** false reports what would happen without commenting, labelling or closing. */
   live: boolean;
+  /** Pause after each PR that was changed. Defaults to WRITE_INTERVAL_MS. */
+  writeIntervalMs?: number;
 }
 
-export default async function triageStalePullRequests({ github, context, core, live }: TriageInputs) {
+function changeSummary({ decision, turnLabel }: Result) {
+  const turnKinds = decision.turns.map((turn) => turn.kind).join(", ");
+  const labelChanges = [...(turnLabel.add ? [`+${turnLabel.label}`] : []), ...turnLabel.remove.map((name) => `-${name}`)];
+  return `${decision.action} (${turnKinds}); turn label ${labelChanges.join(" ") || "unchanged"}`;
+}
+
+export default async function triageStalePullRequests({
+  github,
+  context,
+  core,
+  live,
+  writeIntervalMs = WRITE_INTERVAL_MS,
+}: TriageInputs) {
   const now = Date.now();
   const results: Result[] = [];
   let failures = 0;
 
   for (const pr of await fetchOpenPullRequests(github, context.repo)) {
-    const decision = decide(pr, now);
-    results.push({ pr, decision });
-    if (decision.action === "none") continue;
+    const result = { pr, decision: decide(pr, now), turnLabel: turnLabelChange(pr) };
+    results.push(result);
+    if (!hasWrites(result) && result.decision.action !== "pending") continue;
 
-    core.info(`#${pr.number}: ${decision.action} (${decision.turns.map((turn) => turn.kind).join(", ")})`);
-    if (!live) continue;
+    core.info(`#${pr.number}: ${changeSummary(result)}`);
+    if (!live || !hasWrites(result)) continue;
     try {
-      await apply(github, context.repo, pr, decision, now);
+      await apply(github, context.repo, pr, result.decision, now);
+      if (needsRelabel(result)) await applyTurnLabel(github, context.repo, pr, result.turnLabel);
     } catch (error) {
       failures += 1;
-      core.error(`#${pr.number}: ${decision.action} failed: ${error instanceof Error ? error.message : String(error)}`);
+      core.error(`#${pr.number}: ${changeSummary(result)} failed: ${error instanceof Error ? error.message : String(error)}`);
     }
+    await sleep(writeIntervalMs);
   }
 
   await writeSummary(core, results, live, now);

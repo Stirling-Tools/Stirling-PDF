@@ -9,6 +9,7 @@ import triageStalePullRequests, {
   LABELS,
   type PullRequest,
   type Review,
+  turnLabelChange,
   warningComment,
 } from "./stale-prs.ts";
 
@@ -339,6 +340,57 @@ function silentCore(): Core {
   };
 }
 
+describe("turn labels", () => {
+  const labelFor = (pr: PullRequest) => turnLabelChange(pr).label;
+
+  it("puts an unreviewed PR on review", () => {
+    assert.equal(labelFor(pullRequest()), LABELS.waitingOnReview);
+  });
+
+  it("puts an approved PR on review", () => {
+    assert.equal(labelFor(review(pullRequest(), "APPROVED", 3)), LABELS.waitingOnReview);
+  });
+
+  it("moves a PR to the author as soon as it conflicts", () => {
+    assert.equal(labelFor(label(pullRequest({ mergeable: "CONFLICTING" }), LABELS.conflicts, 0)), LABELS.waitingOnAuthor);
+  });
+
+  it("moves a PR to the author as soon as a core review asks for changes", () => {
+    assert.equal(labelFor(review(pullRequest(), "CHANGES_REQUESTED", 0)), LABELS.waitingOnAuthor);
+  });
+
+  it("moves it back to review when the author replies", () => {
+    assert.equal(labelFor(comment(review(pullRequest(), "CHANGES_REQUESTED", 3), AUTHOR, 1)), LABELS.waitingOnReview);
+  });
+
+  it("puts drafts on the author", () => {
+    assert.equal(labelFor(pullRequest({ isDraft: true, pushedDaysAgo: 0 })), LABELS.waitingOnAuthor);
+  });
+
+  it("still labels PRs that are exempt from closing", () => {
+    const onHold = label(label(pullRequest({ mergeable: "CONFLICTING" }), LABELS.conflicts, 1), LABELS.onHold, 1);
+    assert.equal(labelFor(onHold), LABELS.waitingOnAuthor);
+    assert.equal(labelFor(pullRequest({ authorType: "Bot" })), LABELS.waitingOnReview);
+  });
+
+  it("swaps the old label for the new one", () => {
+    const pr = label(label(pullRequest({ mergeable: "CONFLICTING" }), LABELS.waitingOnReview, 5), LABELS.conflicts, 1);
+    assert.deepEqual(turnLabelChange(pr), {
+      label: LABELS.waitingOnAuthor,
+      add: true,
+      remove: [LABELS.waitingOnReview],
+    });
+  });
+
+  it("changes nothing when the label is already right", () => {
+    assert.deepEqual(turnLabelChange(label(pullRequest(), LABELS.waitingOnReview, 5)), {
+      label: LABELS.waitingOnReview,
+      add: false,
+      remove: [],
+    });
+  });
+});
+
 describe("triage run", () => {
   // Dated well before the real clock, which the run reads, so the close is always due.
   const overdue = () =>
@@ -347,13 +399,31 @@ describe("triage run", () => {
 
   it("comments, labels it backlog-cleanup, then closes", async () => {
     const { github, calls } = recordingGitHub([overdue()]);
-    await triageStalePullRequests({ github, context: { repo }, core: silentCore(), live: true });
+    await triageStalePullRequests({ github, context: { repo }, core: silentCore(), live: true, writeIntervalMs: 0 });
     assert.deepEqual(calls, ["comment #1", "label #1 backlog-cleanup", "close #1"]);
+  });
+
+  it("labels a PR with whose turn it is", async () => {
+    const { github, calls } = recordingGitHub([pullRequest()]);
+    await triageStalePullRequests({ github, context: { repo }, core: silentCore(), live: true, writeIntervalMs: 0 });
+    assert.deepEqual(calls, ["label #1 waiting-on-review"]);
+  });
+
+  it("warns, then moves the turn label to the author", async () => {
+    const pr = label(label(pullRequest({ mergeable: "CONFLICTING" }), LABELS.waitingOnReview, 20), LABELS.conflicts, 10);
+    const { github, calls } = recordingGitHub([pr]);
+    await triageStalePullRequests({ github, context: { repo }, core: silentCore(), live: true, writeIntervalMs: 0 });
+    assert.deepEqual(calls, [
+      "comment #1",
+      "label #1 Stale PR",
+      "label #1 waiting-on-author",
+      "unlabel #1 waiting-on-review",
+    ]);
   });
 
   it("changes nothing in a dry run", async () => {
     const { github, calls } = recordingGitHub([overdue()]);
-    await triageStalePullRequests({ github, context: { repo }, core: silentCore(), live: false });
+    await triageStalePullRequests({ github, context: { repo }, core: silentCore(), live: false, writeIntervalMs: 0 });
     assert.deepEqual(calls, []);
   });
 });
