@@ -267,6 +267,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
         return (
           <PaymentStage
             clientSecret={checkoutState.state.clientSecret || null}
+            hostedUrl={checkoutState.state.hostedUrl ?? null}
             selectedPlan={checkoutState.selectedPlan}
             onPaymentComplete={session.handlePaymentComplete}
           />

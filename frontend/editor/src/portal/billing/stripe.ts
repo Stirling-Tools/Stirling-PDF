@@ -77,6 +77,9 @@ interface CheckoutSessionRequest {
   currency?: SaasCurrency;
   /** Optional prefill for the Stripe Checkout email field. */
   billingOwnerEmail?: string;
+  /** Stripe's hosted page instead of the embedded form, for hosts that cannot
+   *  frame Stripe (desktop). The result then comes back on `successUrl`. */
+  hosted?: boolean;
 }
 
 interface PortalSessionRequest {
@@ -350,11 +353,13 @@ export async function createCheckoutSession(
     currency: req.currency ?? "usd",
     success_url: req.successUrl,
     cancel_url: req.cancelUrl,
-    // The portal drives an in-page onComplete handler (the checkout modal stays open to
-    // finalise activation + nudge the linked instance), so tell the edge function not to
+    // Embedded: the portal drives an in-page onComplete handler (the checkout modal stays open
+    // to finalise activation + nudge the linked instance), so tell the edge function not to
     // redirect on completion. A redirect would reload the page, skip that finalize step, and
     // make Stripe ignore onComplete entirely (console warns "redirect_on_completion: always").
-    redirect_on_completion: "never",
+    ...(req.hosted
+      ? { ui_mode: "hosted" }
+      : { redirect_on_completion: "never" }),
     ...(req.billingOwnerEmail
       ? { billing_owner_email: req.billingOwnerEmail }
       : {}),

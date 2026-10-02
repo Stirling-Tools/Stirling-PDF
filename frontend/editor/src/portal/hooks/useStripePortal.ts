@@ -1,6 +1,10 @@
 import { useCallback, useState } from "react";
 import type { Wallet } from "@portal/api/billing";
 import { createPortalSession } from "@portal/billing/stripe";
+import {
+  openStripePage,
+  stripeReturnUrl,
+} from "@app/platform/stripeNavigation";
 
 /**
  * Opens the Stripe customer portal for the wallet's team. Card,
@@ -20,9 +24,9 @@ export function useStripePortal(wallet: Wallet | null) {
     try {
       const url = await createPortalSession({
         teamId,
-        returnUrl: window.location.href,
+        returnUrl: stripeReturnUrl(),
       });
-      window.location.assign(url);
+      openStripePage(url);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {

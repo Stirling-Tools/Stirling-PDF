@@ -35,9 +35,13 @@ export function useConnectedServer(): boolean {
 
   useEffect(() => {
     let current = true;
-    void connectionModeService.getCurrentMode().then((mode) => {
-      if (current) setIsServer(isServerMode(mode));
-    });
+    void connectionModeService.getCurrentMode().then(
+      (mode) => {
+        if (current) setIsServer(isServerMode(mode));
+      },
+      // An unreadable config keeps the cached answer; a mode change still updates it.
+      () => undefined,
+    );
     const unsubscribe = connectionModeService.subscribeToModeChanges(
       (config) => {
         current = false;

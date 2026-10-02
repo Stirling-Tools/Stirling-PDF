@@ -16,6 +16,13 @@ import {
 import { CardPlaceholder } from "@portal/components/billing/CardPlaceholder";
 import { ProcessorSpendFields } from "@portal/components/billing/ProcessorSpendFields";
 import { PrepayModalHeader } from "@portal/components/billing/PrepayModalHeader";
+import {
+  openStripePage,
+  stripeCheckoutEmbeds,
+  stripeCheckoutFallbackUrl,
+  stripeReturnUrl,
+} from "@app/platform/stripeNavigation";
+import { STRIPE_RETURN_EVENT } from "@app/constants/billingEvents";
 
 interface Props {
   open: boolean;
@@ -110,6 +117,9 @@ export function StripeCheckoutModal({
 }: Props) {
   const { t } = useTranslation();
   const [clientSecret, setClientSecret] = useState<string | null>(null);
+  // Where the purchase continues when this host cannot frame Stripe (desktop).
+  const [hostedUrl, setHostedUrl] = useState<string | null>(null);
+  const embeds = stripeCheckoutEmbeds();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pricing, setPricing] = useState<CheckoutPricing | null>(null);
@@ -160,6 +170,7 @@ export function StripeCheckoutModal({
     if (!open) {
       setPhase("cap");
       setClientSecret(null);
+      setHostedUrl(null);
       setError(null);
       setLoading(true);
       setCapBusy(false);
@@ -178,15 +189,25 @@ export function StripeCheckoutModal({
     createCheckoutSession({
       teamId,
       currency,
-      successUrl: window.location.href,
-      cancelUrl: window.location.href,
+      successUrl: `${stripeReturnUrl()}?payment_status=success`,
+      cancelUrl: `${stripeReturnUrl()}?payment_status=canceled`,
       billingOwnerEmail,
+      hosted: !embeds,
     })
       .then((session) => {
         if (cancelled) return;
         if (session.alreadySubscribed && session.redirectUrl) {
-          window.open(session.redirectUrl, "_blank", "noopener,noreferrer");
+          openStripePage(session.redirectUrl, "tab");
           onClose();
+          return;
+        }
+        if (!embeds) {
+          // A Stirling Cloud that only mints embedded sessions is finished on the web instead.
+          const url = session.redirectUrl ?? stripeCheckoutFallbackUrl();
+          if (url) {
+            setHostedUrl(url);
+            openStripePage(url);
+          }
           return;
         }
         if (!session.clientSecret) {
@@ -216,11 +237,14 @@ export function StripeCheckoutModal({
     teamId,
     currency,
     billingOwnerEmail,
+    embeds,
     onClose,
     t,
   ]);
 
-  const stripe = publishableKey ? loadStripeOnce(publishableKey) : null;
+  // Not loaded where checkout runs in the browser: Stripe.js would only frame its fraud probes.
+  const stripe =
+    publishableKey && embeds ? loadStripeOnce(publishableKey) : null;
   const canRender = Boolean(stripe && clientSecret);
 
   // Apply the chosen ceiling, then advance to payment. Applying it up front keeps
@@ -244,6 +268,19 @@ export function StripeCheckoutModal({
       if (mounted.current) setCapBusy(false);
     }
   }
+
+  // The browser's checkout reports back through the desktop's return page.
+  useEffect(() => {
+    if (!hostedUrl || phase !== "checkout") return;
+    const onReturn = (event: Event) => {
+      if (!(event instanceof CustomEvent) || typeof event.detail !== "string")
+        return;
+      const status = new URLSearchParams(event.detail).get("payment_status");
+      if (status === "success") handleStripeComplete();
+    };
+    window.addEventListener(STRIPE_RETURN_EVENT, onReturn);
+    return () => window.removeEventListener(STRIPE_RETURN_EVENT, onReturn);
+  });
 
   function handleStripeComplete() {
     setPhase("finalizing");
@@ -419,6 +456,30 @@ export function StripeCheckoutModal({
               <div className="portal-billing__skeleton" aria-hidden>
                 <Skeleton height="3rem" />
                 <Skeleton height="18rem" />
+              </div>
+            )}
+            {hostedUrl && (
+              <div className="portal-billing__checkout-browser">
+                <p>
+                  {t(
+                    "portal.billing.checkout.browser.body",
+                    "Checkout is open in your browser. Come back here once you have paid.",
+                  )}
+                </p>
+                <div className="portal-billing__checkout-cap-actions">
+                  <Button
+                    variant="secondary"
+                    onClick={() => openStripePage(hostedUrl)}
+                  >
+                    {t(
+                      "portal.billing.checkout.browser.reopen",
+                      "Open checkout again",
+                    )}
+                  </Button>
+                  <Button onClick={handleStripeComplete}>
+                    {t("portal.billing.checkout.browser.done", "I've paid")}
+                  </Button>
+                </div>
               </div>
             )}
             {publishableKey && canRender && stripe && clientSecret && (

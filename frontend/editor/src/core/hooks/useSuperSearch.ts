@@ -16,6 +16,7 @@ import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { ViewerContext } from "@app/contexts/ViewerContext";
 import { usePortalAccess } from "@app/hooks/usePortalAccess";
+import { isProcessorGateOpen } from "@app/hooks/processorSearchGate";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useFileActions } from "@app/contexts/file/fileHooks";
 import { fileStorage } from "@app/services/fileStorage";
@@ -80,18 +81,6 @@ const GROUP_ORDER: SuperSearchGroupId[] = [
   "settings",
   "processor",
 ];
-
-/**
- * Whether the current user can enter the Processor at all: explicit portal
- * access, admin, or single-user mode with login disabled. Null gates (config
- * still loading) stay closed.
- */
-export function isProcessorGateOpen(gates: SuperSearchGates | null): boolean {
-  return (
-    !!gates &&
-    (gates.portalAccessible === true || gates.isAdmin || !gates.loginEnabled)
-  );
-}
 
 /** The editor's visibility gates, from app config + the session's flags. */
 export function useSuperSearchGates(): SuperSearchGates | null {

@@ -12,6 +12,10 @@ import {
 } from "@app/services/serverPlanCheckout";
 import { getCheckoutMode } from "@app/utils/protocolDetection";
 import {
+  openStripePage,
+  stripeReturnUrl,
+} from "@app/platform/stripeNavigation";
+import {
   CheckoutState,
   PollingStatus,
 } from "@app/components/shared/stripeCheckout/types/checkout";
@@ -104,7 +108,7 @@ export const useCheckoutSession = (
       // plan section and from the portal's billing screen, and a fixed path lands half of them
       // somewhere they were not. CheckoutProvider reads the return params wherever it is mounted,
       // and both hosts mount it. The current pathname already carries any base path.
-      const returnTo = window.location.origin + window.location.pathname;
+      const returnTo = stripeReturnUrl();
       const response = await createSession({
         lookupKey: selectedPlan.lookupKey,
         serverQuantity: Math.max(1, serverQuantity || 1),
@@ -118,7 +122,15 @@ export const useCheckoutSession = (
       });
 
       if (response.url) {
-        window.location.href = response.url;
+        // The web leaves for Stripe; desktop opens it in the browser and stays here.
+        if (openStripePage(response.url)) {
+          setState((prev) => ({
+            ...prev,
+            hostedUrl: response.url ?? undefined,
+            sessionId: response.sessionId ?? undefined,
+            loading: false,
+          }));
+        }
         return;
       }
 

@@ -1,4 +1,9 @@
-import { createContext, useContext } from "react";
+import {
+  createContext,
+  createElement,
+  useContext,
+  type ComponentType,
+} from "react";
 import {
   connectionModeService,
   type ConnectionMode,
@@ -76,4 +81,18 @@ export function editionObject<T extends object>(cloud: T, server: T): T {
     getOwnPropertyDescriptor: (_target, key) =>
       Reflect.getOwnPropertyDescriptor(pick(), key),
   });
+}
+
+/** {@link editionHook} for a component seam. Switching the component type
+ *  remounts it, so a change of edition never reuses the other one's state. */
+export function editionComponent<P extends object>(
+  cloud: ComponentType<P>,
+  server: ComponentType<P>,
+): ComponentType<P> {
+  return function EditionComponent(props: P) {
+    return createElement(
+      useProcessorEdition() === "cloud" ? cloud : server,
+      props,
+    );
+  };
 }

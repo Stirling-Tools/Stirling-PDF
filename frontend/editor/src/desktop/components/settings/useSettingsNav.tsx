@@ -1,13 +1,47 @@
-import { useEffect, useState } from "react";
-import { useSettingsNav as useProprietarySettingsNav } from "@proprietary/components/settings/useSettingsNav";
+import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useSettingsNav as useCoreSettingsNav } from "@core/components/settings/useSettingsNav";
 import type { SettingsNav } from "@app/components/settings/settingsNavTypes";
+import { usePortalAccessState } from "@app/hooks/usePortalAccess";
+import { useAuth } from "@app/auth/context";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useRosterAvailable } from "@app/hooks/useRosterAvailable";
+import { useConnectionMode } from "@app/hooks/useConnectionMode";
+import { useConnectedServer } from "@app/hooks/useConnectedServer";
 import { connectionModeService } from "@app/services/connectionModeService";
+import { mergeSettingsGroups } from "@app/components/settings/mergeSettingsGroups";
+import {
+  buildPortalSettingsSections,
+  PORTAL_SECTION_ALIASES,
+  portalSupersededSectionKeys,
+} from "@app/components/settings/portalSettingsNav";
 
 export type { SettingsNav };
 
-/** Desktop billing opens on the web; existing Plan links land on its browser handoff. */
+/**
+ * Desktop settings: the build's own sections plus the processor's, by the
+ * rules of the edition the connection runs - Stirling Cloud as on web SaaS, a
+ * self-hosted server as on web self-hosted. Usage & Billing is the only billing
+ * page in both: every signed-in Stirling Cloud member gets it (purchases stay
+ * leader-only inside it), and on a self-hosted server the organisation owner
+ * does.
+ */
 export function useSettingsNav(onLeave: () => void): SettingsNav {
-  const nav = useProprietarySettingsNav(onLeave);
+  const { t } = useTranslation();
+  const base = useCoreSettingsNav(onLeave);
+  const mode = useConnectionMode();
+  const connected = useConnectedServer();
+  const { granted: portalAccess, settled: accessSettled } =
+    usePortalAccessState();
+  const { isAdmin, isAnonymous, user, loading } = useAuth();
+  const isOwner = isAdmin && !loading && user?.orgOwner === true;
+  // The same admin flag the rest of the nav is built from; the session's lags
+  // it while /me is in flight.
+  const { config } = useAppConfig();
+  const navAdmin = config?.isAdmin ?? false;
+  const rosterAvailable = useRosterAvailable();
+
+  // A failed lookup still settles: the nav then shows only what needs no server.
   const [connectionReady, setConnectionReady] = useState(false);
   useEffect(() => {
     let active = true;
@@ -21,14 +55,65 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
       active = false;
     };
   }, []);
-  const hasBilling = nav.sections.some((group) =>
+
+  const portalSections = useMemo(() => {
+    if (!connected) return [];
+    if (mode === "saas") {
+      return buildPortalSettingsSections(t, {
+        includeRoster: rosterAvailable && portalAccess,
+        includeApiKeys: portalAccess,
+        includeAudit: portalAccess,
+        includeEncryption: false,
+        includeBilling: !isAnonymous,
+        includeAccountLink: false,
+      });
+    }
+    if (mode === "selfhosted") {
+      return buildPortalSettingsSections(t, {
+        includeRoster: rosterAvailable && (navAdmin || portalAccess),
+        includeApiKeys: portalAccess,
+        includeEncryption: portalAccess && isAdmin,
+        includeBilling: isOwner,
+        includeAccountLink: isOwner,
+      });
+    }
+    return [];
+  }, [
+    connected,
+    mode,
+    rosterAvailable,
+    portalAccess,
+    isAnonymous,
+    navAdmin,
+    isAdmin,
+    isOwner,
+    t,
+  ]);
+
+  const sections = useMemo(
+    () =>
+      mergeSettingsGroups(base.sections, portalSections, [
+        "plan",
+        "adminPlan",
+        ...portalSupersededSectionKeys(portalSections),
+      ]),
+    [base.sections, portalSections],
+  );
+
+  const aliases = { ...base.aliases };
+  if (portalSections.length > 0) Object.assign(aliases, PORTAL_SECTION_ALIASES);
+  const hasBilling = portalSections.some((group) =>
     group.items.some((item) => item.key === "billing"),
   );
+  if (!hasBilling) {
+    delete aliases.plan;
+    delete aliases.adminPlan;
+  }
+
   return {
-    ...nav,
-    pending: nav.pending || !connectionReady,
-    aliases: hasBilling
-      ? { ...nav.aliases, plan: "billing", adminPlan: "billing" }
-      : nav.aliases,
+    ...base,
+    sections,
+    pending: !connectionReady || !accessSettled || loading,
+    aliases,
   };
 }

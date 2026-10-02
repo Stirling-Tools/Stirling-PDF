@@ -5,6 +5,7 @@ const {
   refreshSession,
   invoke,
   rpc,
+  rpcHeader,
   getLinkedClient,
   ensureLinkClient,
   fetchMock,
@@ -13,6 +14,7 @@ const {
   refreshSession: vi.fn(),
   invoke: vi.fn(),
   rpc: vi.fn(),
+  rpcHeader: vi.fn(),
   getLinkedClient: vi.fn(() => null),
   ensureLinkClient: vi.fn(() => null),
   fetchMock: vi.fn(),
@@ -27,7 +29,16 @@ vi.mock("@app/auth/supabase", () => ({
   supabase: {
     auth: { getSession, refreshSession },
     functions: { invoke },
-    rpc,
+    // rpc returns a builder; the client sets the bearer on it before awaiting.
+    rpc: (fn: string, args: unknown) => {
+      const result: unknown = rpc(fn, args);
+      return {
+        setHeader: (name: string, value: string) => {
+          rpcHeader(name, value);
+          return result;
+        },
+      };
+    },
   },
 }));
 vi.mock("@app/auth/supabase/supabaseClient", () => ({
@@ -166,6 +177,10 @@ it("uses the hosted client for edge calls, billing management and quote RPCs", a
   expect(rpc).toHaveBeenCalledWith("payg_get_latest_bundle_quote", {
     p_team_id: 42,
   });
+  expect(rpcHeader).toHaveBeenCalledWith(
+    "Authorization",
+    "Bearer hosted-token",
+  );
   expect(getLinkedClient).not.toHaveBeenCalled();
   expect(ensureLinkClient).not.toHaveBeenCalled();
 });

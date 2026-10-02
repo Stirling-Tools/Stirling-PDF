@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button, Checkbox, Modal, RadioGroup } from "@app/ui";
 import { exportAuditLog } from "@portal/api/infrastructure";
+import { downloadFile } from "@app/services/downloadService";
 
 interface AuditExportModalProps {
   open: boolean;
@@ -47,14 +48,10 @@ export function AuditExportModal({ open, onClose }: AuditExportModalProps) {
     try {
       const fieldsParam = FIELD_KEYS.filter((k) => fields[k]).join(",");
       const blob = await exportAuditLog(format, fieldsParam);
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `audit-export-${new Date().toISOString()}.${format}`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      await downloadFile({
+        data: blob,
+        filename: `audit-export-${new Date().toISOString()}.${format}`,
+      });
       onClose();
     } catch {
       setError(t("portal.infrastructure.audit.export.error"));
