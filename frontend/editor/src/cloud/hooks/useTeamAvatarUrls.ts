@@ -7,11 +7,7 @@ const SIGNED_URL_TTL_SECONDS = 60 * 60;
 /** Re-sign well before expiry, so a long-lived settings modal never shows a dead image. */
 const REFRESH_INTERVAL_MS = 45 * 60 * 1000;
 
-/**
- * Ids are interpolated into a storage path, so anything that is not a bare uuid is dropped rather
- * than sent. They arrive from the roster DTO, but the bucket must never be addressable by whatever
- * a caller happens to hand this hook.
- */
+/** Ids are interpolated into a storage path, so only a bare uuid is ever sent. */
 const SUPABASE_ID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -20,14 +16,11 @@ interface HasSupabaseId {
 }
 
 /**
- * Signed avatar URLs for a set of team members, keyed by Supabase id.
+ * Signed avatar URLs for a set of team members, keyed by Supabase id. Ids the bucket refuses are
+ * absent, so callers fall back to initials.
  *
- * Reading these depends on the teammate storage policy in the SaaS repo
- * (20260923000000_team_readable_profile_pictures). Without it every path is refused and the map
- * comes back empty, which callers render as initials.
- *
- * The roster polls every 10s, so this deliberately keys off the set of ids rather than the member
- * array: an unchanged roster must not re-sign on every poll.
+ * Keys off the set of ids rather than the member array: the roster polls every 10s, and an
+ * unchanged roster must not re-sign on every poll.
  */
 export function useTeamAvatarUrls(
   members: readonly HasSupabaseId[],
@@ -74,8 +67,7 @@ export function useTeamAvatarUrls(
 
         const next: Record<string, string> = {};
         for (const entry of data ?? []) {
-          // Per-path outcome: a member who never uploaded a picture, and every member if the
-          // teammate policy is missing, comes back with an error and no signedUrl.
+          // Per-path outcome: a member with no stored picture carries an error and no signedUrl.
           if (!entry.signedUrl || !entry.path?.endsWith("/avatar")) continue;
           next[entry.path.slice(0, -"/avatar".length)] = entry.signedUrl;
         }

@@ -557,11 +557,7 @@ public class SaasTeamController {
         private final String role;
         private final LocalDateTime joinedAt;
 
-        /**
-         * The member's Supabase auth id, which is also their avatar's storage path prefix. Null on
-         * accounts with no Supabase identity. Only ever sent to callers the membership check has
-         * already admitted, who can see this person's email on the same row.
-         */
+        /** Also the member's avatar storage path prefix. Null without a Supabase identity. */
         private final String supabaseId;
     }
 

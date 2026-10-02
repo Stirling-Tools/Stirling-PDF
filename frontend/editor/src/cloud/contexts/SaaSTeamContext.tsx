@@ -38,7 +38,7 @@ interface TeamMember {
   email: string;
   role: string;
   joinedAt: string;
-  /** Supabase auth id, which is also the member's avatar path prefix in storage. */
+  /** Also the member's avatar storage path prefix. */
   supabaseId?: string | null;
 }
 
