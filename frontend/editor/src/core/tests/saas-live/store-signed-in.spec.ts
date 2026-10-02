@@ -192,12 +192,60 @@ test("publishing clean text creates a listing with a store id", async () => {
   expect(listing.viewer.author?.displayName).toBeTruthy();
   publisherName = listing.viewer.author.displayName;
   expect(containsSecret(listing)).toBe(false);
+  // Stored in UTC: a server-local timestamp read as UTC lands in the future and shows "just now".
+  expect(Math.abs(Date.parse(listing.updatedAt) - Date.now())).toBeLessThan(
+    5 * 60_000,
+  );
 });
 
 test("the source pipeline links back to its listing", async () => {
   const res = await api.get(`/api/v1/policies/${policyId}`);
   expect(res.status()).toBe(200);
   expect((await res.json()).storeId).toBe(storeId);
+});
+
+test("editing the pipeline keeps the link, so publishing again is a republish", async () => {
+  // The builder saves the whole policy without storeId; that used to unlink it.
+  const { storeId: _link, ...edited } = await (
+    await api.get(`/api/v1/policies/${policyId}`)
+  ).json();
+  const saved = await api.post("/api/v1/policies", {
+    data: { ...edited, name: `${NAME} edited` },
+  });
+  expect(saved.status(), await saved.text()).toBe(200);
+  expect((await saved.json()).storeId).toBe(storeId);
+
+  const report = await (
+    await api.post("/api/v1/store/publish/preflight", { data: details() })
+  ).json();
+  expect(report.existingStoreId).toBe(storeId);
+});
+
+test("the owner edits the listing's words without republishing", async () => {
+  const before = await (await api.get(`${PUBLIC}/${storeId}`)).json();
+  const description =
+    "Locks each document with a password, then shrinks it. Edited by the store check.";
+  const res = await api.patch(`/api/v1/store/pipelines/${storeId}`, {
+    data: {
+      name: NAME,
+      description,
+      category: "security",
+      whatChanged: "Clearer description.",
+    },
+  });
+  expect(res.status(), await res.text()).toBe(200);
+
+  const after = await (await anon.get(`${PUBLIC}/${storeId}`)).json();
+  expect(after.description).toBe(description);
+  expect(after.latestChange).toBe("Clearer description.");
+  expect(after.updatedAt).toBe(before.updatedAt);
+  expect(after.steps).toEqual(before.steps);
+
+  const blocked = await api.patch(`/api/v1/store/pipelines/${storeId}`, {
+    data: { name: `Official ${NAME}`, description, category: "security" },
+  });
+  expect(blocked.status()).toBe(422);
+  expect(codes(await blocked.json())).toContain("reserved-word");
 });
 
 test("a stranger sees the listing but never its author or the passwords", async () => {
