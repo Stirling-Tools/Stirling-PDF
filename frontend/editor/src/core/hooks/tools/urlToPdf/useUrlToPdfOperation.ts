@@ -1,4 +1,6 @@
 import apiClient from "@app/services/apiClient";
+import { isAxiosError } from "axios";
+import { normalizeAxiosErrorData } from "@app/services/errorUtils";
 import {
   useToolOperation,
   ToolType,
@@ -30,14 +32,28 @@ export const urlToPdfOperationConfig: CustomToolOperationConfig<UrlToPdfParamete
         throw new Error("Enter a valid HTTP or HTTPS URL.");
       const formData = new FormData();
       formData.append("urlInput", urlInput.trim());
-      const response = await apiClient.post<Blob>(
-        "/api/v1/convert/url/pdf",
-        formData,
-        {
+      const response = await apiClient
+        .post<Blob>("/api/v1/convert/url/pdf", formData, {
           responseType: "blob",
-        },
-      );
-      // The legacy endpoint redirects to an HTML error page for invalid/disabled URLs.
+          suppressErrorToast: true,
+        })
+        .catch(async (error: unknown) => {
+          if (isAxiosError(error)) {
+            const data: unknown = await normalizeAxiosErrorData(
+              error.response?.data,
+            );
+            if (
+              data &&
+              typeof data === "object" &&
+              "detail" in data &&
+              typeof data.detail === "string" &&
+              data.detail.trim()
+            ) {
+              throw new Error(data.detail);
+            }
+          }
+          throw error;
+        });
       if (response.data.type.split(";")[0] !== "application/pdf") {
         throw new Error("The URL could not be converted to a PDF.");
       }

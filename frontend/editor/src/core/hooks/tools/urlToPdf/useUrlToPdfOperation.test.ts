@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
+import { AxiosError } from "axios";
+import { Blob as NodeBlob } from "node:buffer";
 import apiClient from "@app/services/apiClient";
 import {
   isValidWebUrl,
@@ -40,7 +42,7 @@ describe("URL conversion", () => {
     expect(apiClient.post).toHaveBeenCalledWith(
       "/api/v1/convert/url/pdf",
       expect.any(FormData),
-      { responseType: "blob" },
+      { responseType: "blob", suppressErrorToast: true },
     );
     const form = vi.mocked(apiClient.post).mock.calls.at(-1)![1] as FormData;
     expect(form.get("urlInput")).toBe("https://example.com");
@@ -48,7 +50,7 @@ describe("URL conversion", () => {
     expect(result.files[0].name).toBe("website.pdf");
     expect(result.files[0].type).toBe("application/pdf");
   });
-  it("rejects an HTML redirect response rather than importing it as a PDF", async () => {
+  it("rejects a non-PDF response rather than importing it as a PDF", async () => {
     vi.mocked(apiClient.post).mockResolvedValue({
       data: new Blob(["error page"], { type: "text/html" }),
       headers: {},
@@ -59,5 +61,45 @@ describe("URL conversion", () => {
         [],
       ),
     ).rejects.toThrow("could not be converted");
+  });
+  it.each([
+    { detail: "The URL is not allowed or could not be reached." },
+    new NodeBlob(
+      [
+        JSON.stringify({
+          detail: "The URL is not allowed or could not be reached.",
+        }),
+      ],
+      { type: "application/problem+json" },
+    ),
+  ])(
+    "displays the backend error message from a JSON or blob response",
+    async (data) => {
+      const error = new AxiosError("Request failed with status code 400");
+      error.response = {
+        data,
+        status: 400,
+        statusText: "Bad Request",
+        headers: {},
+        config: { headers: {} },
+      } as AxiosError["response"];
+      vi.mocked(apiClient.post).mockRejectedValue(error);
+      await expect(
+        urlToPdfOperationConfig.customProcessor(
+          { urlInput: "https://example.com" },
+          [],
+        ),
+      ).rejects.toThrow("The URL is not allowed or could not be reached.");
+    },
+  );
+  it("preserves a network error when no backend message is available", async () => {
+    const error = new AxiosError("Network Error");
+    vi.mocked(apiClient.post).mockRejectedValue(error);
+    await expect(
+      urlToPdfOperationConfig.customProcessor(
+        { urlInput: "https://example.com" },
+        [],
+      ),
+    ).rejects.toBe(error);
   });
 });
