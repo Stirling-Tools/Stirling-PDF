@@ -354,6 +354,15 @@ export default function PageTracks() {
     [dispatch, selection.selectedIds],
   );
 
+  const splitAfterSelection = useCallback(
+    () =>
+      dispatch({
+        type: "splitAfterSelected",
+        pageIds: Array.from(selection.selectedIds),
+      }),
+    [dispatch, selection.selectedIds],
+  );
+
   const clearSelection = selection.clear;
   const toggleSelectAll =
     totalPages > 0 && selection.selectedCount === totalPages
@@ -741,6 +750,7 @@ export default function PageTracks() {
     onRotate: rotateSelection,
     onDelete: deleteSelection,
     onInsertBlankAfter: insertBlankAfterSelection,
+    onSplitAfter: splitAfterSelection,
     onUndo: undo,
     onRedo: redo,
     onSave: saveNow,

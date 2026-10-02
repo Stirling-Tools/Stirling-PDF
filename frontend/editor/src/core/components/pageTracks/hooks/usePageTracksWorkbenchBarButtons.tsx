@@ -36,6 +36,7 @@ export interface PageTracksBarParams {
   onRotate: (delta: number) => void;
   onDelete: () => void;
   onInsertBlankAfter: () => void;
+  onSplitAfter: () => void;
   onUndo: () => void;
   onRedo: () => void;
   onSave: () => void;
@@ -60,6 +61,7 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
     onRotate,
     onDelete,
     onInsertBlankAfter,
+    onSplitAfter,
     onUndo,
     onRedo,
     onSave,
@@ -79,6 +81,10 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
     insertBlankAfter: t(
       "pageTracks.insertBlankAfterSelected",
       "Insert a blank page after each selected page",
+    ),
+    splitAfter: t(
+      "pageTracks.splitAfterSelected",
+      "Split after selected pages",
     ),
     undo: t("pageTracks.undo", "Undo"),
     redo: t("pageTracks.redo", "Redo"),
@@ -188,6 +194,17 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
         onClick: onInsertBlankAfter,
       },
       {
+        id: "tracks-split-after",
+        icon: <Icon name="scissors" size="1.25rem" />,
+        tooltip: labels.splitAfter,
+        ariaLabel: labels.splitAfter,
+        section: "middle" as const,
+        order: 27,
+        disabled: !hasSelection,
+        visible: hasPages,
+        onClick: onSplitAfter,
+      },
+      {
         id: "tracks-delete-selected",
         icon: <Icon name="trash" size="1.5rem" />,
         tooltip: labels.deleteSelected,
@@ -261,6 +278,7 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
       labels.rotateRight,
       labels.deleteSelected,
       labels.insertBlankAfter,
+      labels.splitAfter,
       labels.undo,
       labels.redo,
       labels.save,
@@ -283,6 +301,7 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
       onRotate,
       onDelete,
       onInsertBlankAfter,
+      onSplitAfter,
       onUndo,
       onRedo,
       onSave,

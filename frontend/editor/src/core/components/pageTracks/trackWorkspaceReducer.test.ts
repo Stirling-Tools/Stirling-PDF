@@ -335,6 +335,37 @@ describe("trackEditorReducer split", () => {
   });
 });
 
+describe("trackEditorReducer splitAfterSelected", () => {
+  it("cuts a track after each selected page, the tails becoming new tracks", () => {
+    let state = twoTracks();
+    const [a1, a2] = pagesOf(state, A);
+    state = trackEditorReducer(state, {
+      type: "splitAfterSelected",
+      pageIds: [a1.id, a2.id],
+    });
+
+    const [, new1, new2] = state.present.order;
+    expect(state.present.order).toEqual([A, new1, new2, B]);
+    expect(ids(state, A)).toEqual([`${A}:1`]);
+    expect(ids(state, new1)).toEqual([`${A}:2`]);
+    expect(ids(state, new2)).toEqual([`${A}:3`]);
+    expect(state.present.tracks[new1]?.isNew).toBe(true);
+    expect(state.present.tracks[new2]?.isNew).toBe(true);
+    // B held no selected page, so it is untouched.
+    expect(ids(state, B)).toEqual([`${B}:1`, `${B}:2`]);
+  });
+
+  it("ignores a selected last page, which would only make an empty tail", () => {
+    const state = twoTracks();
+    const a3 = pagesOf(state, A)[2];
+    const next = trackEditorReducer(state, {
+      type: "splitAfterSelected",
+      pageIds: [a3.id],
+    });
+    expect(next).toBe(state);
+  });
+});
+
 describe("trackEditorReducer revert", () => {
   it("reverts a file's track and every track it swapped pages with, keeping the rest", () => {
     const C = "file-c" as FileId;

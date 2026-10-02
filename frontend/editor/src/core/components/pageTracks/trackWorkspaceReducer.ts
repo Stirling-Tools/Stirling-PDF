@@ -47,6 +47,10 @@ export type TrackEditorAction =
       /** The page that becomes the first page of the new track. */
       startPageId: string;
     }
+  /** Splits every track after each selected page: the pages past each boundary
+   *  become new tracks, so a page selection yields the same cuts the gap
+   *  scissors make one at a time. */
+  | { type: "splitAfterSelected"; pageIds: string[] }
   | {
       type: "reorderTrack";
       sourceId: FileId;
@@ -459,6 +463,63 @@ export function trackEditorReducer(
         },
       };
       return withEdit(state, next);
+    }
+
+    case "splitAfterSelected": {
+      const selected = new Set(action.pageIds);
+      if (selected.size === 0) return state;
+      const taken = new Set(
+        state.present.order
+          .map((id) => state.present.tracks[id]?.name)
+          .filter((name): name is string => name != null),
+      );
+      const order: FileId[] = [];
+      const tracks: Record<FileId, Track> = {};
+      let changed = false;
+
+      for (const fileId of state.present.order) {
+        const track = state.present.tracks[fileId];
+        if (!track) continue;
+
+        // A boundary after a selected page, except the last page of the track:
+        // splitting there would just make an empty tail.
+        const boundaries = track.pages.reduce<number[]>((cuts, page, i) => {
+          if (selected.has(page.id) && i < track.pages.length - 1)
+            cuts.push(i + 1);
+          return cuts;
+        }, []);
+        if (boundaries.length === 0) {
+          tracks[fileId] = track;
+          order.push(fileId);
+          continue;
+        }
+
+        changed = true;
+        const starts = [0, ...boundaries];
+        const ends = [...boundaries, track.pages.length];
+        starts.forEach((start, segment) => {
+          const pages = track.pages.slice(start, ends[segment]);
+          if (segment === 0) {
+            tracks[fileId] = { ...track, pages };
+            order.push(fileId);
+            return;
+          }
+          const newId = createFileId();
+          const name = splitName(track.name, taken);
+          taken.add(name);
+          tracks[newId] = {
+            fileId: newId,
+            name,
+            isNew: true,
+            splitFromFileId: track.isNew ? track.splitFromFileId : fileId,
+            pages,
+          };
+          order.push(newId);
+        });
+      }
+
+      if (!changed) return state;
+      return withEdit(state, { order, tracks });
     }
 
     case "reorderTrack": {
