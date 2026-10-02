@@ -1,7 +1,112 @@
-# Pipeline store blocked-word list. One word or phrase per line; lines starting with # are ignored.
+# Pipeline store blocked-word list: profanity, sexual terms and slurs that store names,
+# descriptions and change notes may not use. The default English list; an operator adds their own
+# entries on top with stirling.store.blocked-words-file (same syntax).
 #
-# Ships empty on purpose: the words are operator data, not source code. To populate it, paste a
-# maintained list here (for example the LDNOOBW "en" list, CC-BY-4.0) or set
-# stirling.store.blocked-words-file to a path outside the jar. Matching is whole-token only after
-# folding case, leetspeak, punctuation and repeated letters, so entries should be plain lower-case
-# words. Known false positives go in allowed-words.txt.
+# Syntax, one entry per line, lines starting with # ignored:
+#   *root      anywhere inside a word. Only for terms no ordinary word contains.
+#   word       the whole word only. For terms that sit inside innocent words (ass/class).
+#   two words  that run of whole words; its joined-up form ("blowjob") also counts.
+# Matching folds case, leetspeak, punctuation, spaced-out letters and repeated letters, so list
+# plain lower-case spellings. A false positive belongs in allowed-words.txt, not here.
+
+# Anywhere inside a word
+*fuck
+*shit
+*cunt
+*bitch
+*whore
+*slut
+*porn
+*wank
+*jizz
+*twat
+*bollock
+*asshole
+*arsehole
+*dickhead
+*cocksuck
+*nigger
+*nigga
+*faggot
+
+# Whole words
+arse
+arses
+ass
+asses
+bastard
+bastards
+boner
+boners
+boob
+boobs
+bugger
+cock
+cocks
+crap
+crappy
+cum
+cumming
+cumshot
+dick
+dicks
+dildo
+dildos
+douche
+douchebag
+fag
+fags
+fck
+fcking
+fcuk
+fuk
+fuking
+gook
+gooks
+jerkoff
+kike
+kikes
+milf
+paki
+pakis
+phuck
+piss
+pissed
+pisses
+pissing
+prick
+pricks
+pussies
+pussy
+queef
+rape
+raped
+rapes
+raping
+rapist
+rapists
+retard
+retarded
+retards
+skank
+spaz
+spic
+spics
+spunk
+stfu
+tits
+titties
+titty
+tosser
+tranny
+trannies
+turd
+turds
+wetback
+wetbacks
+wtf
+
+# Runs of words
+blow job
+hand job
+jerk off

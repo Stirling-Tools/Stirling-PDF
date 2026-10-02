@@ -131,6 +131,18 @@ test("the preflight blocks reserved words and contact details in the text", asyn
   );
 });
 
+test("the preflight blocks profanity, however it is spelled", async () => {
+  for (const name of [`F.u.c.k compressor ${RUN}`, `Sh1tty scans ${RUN}`]) {
+    const report = await (
+      await api.post("/api/v1/store/publish/preflight", {
+        data: details({ name }),
+      })
+    ).json();
+    expect(report.canPublish, name).toBe(false);
+    expect(codes(report), name).toContain("blocked-word");
+  }
+});
+
 test("the preflight clears both passwords and asks installers for them", async () => {
   const res = await api.post("/api/v1/store/publish/preflight", {
     data: details(),

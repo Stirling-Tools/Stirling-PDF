@@ -10,3 +10,15 @@ assessment
 class
 classic
 classification
+# Words containing a root from blocked-words.txt, or folding onto one.
+shiitake
+shitake
+swank
+swanky
+swankier
+swankiest
+niggard
+niggardly
+niggardliness
+matsushita
+wankel
