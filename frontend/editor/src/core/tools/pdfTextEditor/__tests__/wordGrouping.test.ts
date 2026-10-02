@@ -63,6 +63,13 @@ describe("groupWords", () => {
     expect(wordTexts(leaves)).toEqual(["carry", "out", "various"]);
   });
 
+  it("splits a short tracked line at its word gap", () => {
+    // Two gap samples, 8pt tracking and a 14pt word gap: an upper median
+    // would take 14 as the tracking and merge "I" into "am".
+    const leaves = perGlyph("I am", 8, 14);
+    expect(wordTexts(leaves)).toEqual(["I", "am"]);
+  });
+
   it("keeps tightly kerned glyphs together", () => {
     const leaves = perGlyph("AVATAR", -1.5, FONT_SIZE * 0.25);
     expect(wordTexts(leaves)).toEqual(["AVATAR"]);

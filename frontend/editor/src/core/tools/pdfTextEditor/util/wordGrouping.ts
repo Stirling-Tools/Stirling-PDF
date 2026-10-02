@@ -114,7 +114,9 @@ function medianGlyphGapByLine(
   const medians = new Map<number, number>();
   for (const [line, gaps] of gapsByLine) {
     gaps.sort((x, y) => x - y);
-    medians.set(line, gaps[Math.floor(gaps.length / 2)]);
+    // Lower median: with few samples the larger gaps are likely word spaces,
+    // and an upper median would raise the threshold above them.
+    medians.set(line, gaps[Math.floor((gaps.length - 1) / 2)]);
   }
   return medians;
 }

@@ -46,6 +46,7 @@ interface RunSnapshot {
   mergedFromBounds: Array<{ x: number; right: number }>;
   mergedFromCharStarts: number[];
   pdfiumObjPtr: number;
+  wrapWidthPt: number | null;
 }
 
 export class ReflowWrapCommand implements Command {
@@ -245,6 +246,7 @@ export class ReflowWrapCommand implements Command {
       fontSize,
       this.prev.text,
     );
+    if (this.explicit) run.wrapWidthPt = maxWidth;
     run.dirty = true;
     page.markDirty();
     page.markNeedsGenerate();
@@ -574,6 +576,7 @@ function snapshotRun(run: TextRun): RunSnapshot {
     mergedFromBounds: run.mergedFromBounds.map((b) => ({ ...b })),
     mergedFromCharStarts: [...run.mergedFromCharStarts],
     pdfiumObjPtr: run.pdfiumObjPtr,
+    wrapWidthPt: run.wrapWidthPt,
   };
 }
 
@@ -594,6 +597,7 @@ function restoreRun(run: TextRun, prev: RunSnapshot): void {
   run.mergedFromBounds = prev.mergedFromBounds.map((b) => ({ ...b }));
   run.mergedFromCharStarts = [...prev.mergedFromCharStarts];
   run.pdfiumObjPtr = prev.pdfiumObjPtr;
+  run.wrapWidthPt = prev.wrapWidthPt;
 }
 
 function cloneSlot(s: ParagraphLineSlot): ParagraphLineSlot {

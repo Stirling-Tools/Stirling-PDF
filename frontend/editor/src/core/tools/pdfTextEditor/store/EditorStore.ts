@@ -475,6 +475,7 @@ export class EditorStore {
       page.loaded = false;
       page.setRuns([]);
       page.setImages([]);
+      page.setShapes([]);
       PdfiumTextReader.populate(doc, page, mode);
     }
   }

@@ -81,6 +81,8 @@ export interface TextRunSnapshot {
   // Editor-only metadata: when true the run cannot be selected or edited via
   // mouse/keyboard.
   locked?: boolean;
+  /** Box width the user set by resize, in PDF points; absent = follow the ink. */
+  wrapWidthPt?: number;
 }
 
 export interface ImageObjectSnapshot {

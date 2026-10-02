@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type React from "react";
 import type { ShapeObjectSnapshot } from "@app/tools/pdfTextEditor/types";
 import type { DisplayTransform } from "@app/tools/pdfTextEditor/model/DisplayTransform";
@@ -35,6 +35,11 @@ export function ShapeHandle({
     null,
   );
   const originRef = useRef<{ x: number; y: number } | null>(null);
+  // Detaches an in-flight drag's window listeners. A page re-read can unmount
+  // the handle mid-drag, and a listener left behind would move a stale shape.
+  const endDragRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => () => endDragRef.current?.(), []);
 
   const b = shape.bounds;
   const corners = [
@@ -73,12 +78,17 @@ export function ShapeHandle({
       if (!origin) return;
       setDragOffset({ x: ev.clientX - origin.x, y: ev.clientY - origin.y });
     };
-    const onPointerUp = (ev: PointerEvent) => {
+    const endDrag = () => {
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
-      const origin = originRef.current;
+      window.removeEventListener("pointercancel", endDrag);
+      endDragRef.current = null;
       originRef.current = null;
       setDragOffset(null);
+    };
+    const onPointerUp = (ev: PointerEvent) => {
+      const origin = originRef.current;
+      endDrag();
       if (!origin) return;
       const cssDx = ev.clientX - origin.x;
       const cssDy = ev.clientY - origin.y;
@@ -89,8 +99,10 @@ export function ShapeHandle({
       const v = transform.invertVector(cssDx / scale, -cssDy / scale);
       onMove(v.x, v.y);
     };
+    endDragRef.current = endDrag;
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);
+    window.addEventListener("pointercancel", endDrag);
   }
 
   const dragging = dragOffset !== null;

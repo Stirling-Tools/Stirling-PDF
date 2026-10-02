@@ -1,4 +1,5 @@
 import type {
+  Affine,
   PageRect,
   ShapeObjectSnapshot,
 } from "@app/tools/pdfTextEditor/types";
@@ -10,15 +11,22 @@ export class ShapeObject {
   pdfiumObjPtr: number;
   /** Owning form XObject, or 0 when the shape sits on the page. */
   containerPtr: number;
+  /** Maps the container's local space to page space; identity on the page. */
+  containerTransform: Affine;
   bounds: PageRect;
 
   constructor(
-    init: ShapeObjectSnapshot & { pdfiumObjPtr: number; containerPtr: number },
+    init: ShapeObjectSnapshot & {
+      pdfiumObjPtr: number;
+      containerPtr: number;
+      containerTransform: Affine;
+    },
   ) {
     this.id = init.id;
     this.pageIndex = init.pageIndex;
     this.pdfiumObjPtr = init.pdfiumObjPtr;
     this.containerPtr = init.containerPtr;
+    this.containerTransform = init.containerTransform;
     this.bounds = init.bounds;
   }
 

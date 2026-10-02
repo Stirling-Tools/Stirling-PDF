@@ -816,6 +816,7 @@ function readShape(
     pageIndex: page.index,
     pdfiumObjPtr: objPtr,
     containerPtr,
+    containerTransform: transform,
     bounds,
   });
 }

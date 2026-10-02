@@ -668,7 +668,7 @@ export function TextRunOverlay({
   // fit the content.
   const wrapMode = widthMode === "wrap";
   const wrapLockWidth = Math.max(
-    originalBoundsWidthRef.current * scale,
+    (run.wrapWidthPt ?? originalBoundsWidthRef.current) * scale,
     fontSizePx * 4,
   );
   // The mode the user picked, and nothing else. Forcing a paragraph to wrap in
@@ -725,7 +725,10 @@ export function TextRunOverlay({
   // underneath it.
   // Wrap holds its width and pushes overflow onto new lines; widening to the
   // page edge instead is Grow's job, and doing both makes the modes identical.
-  const width = wantWrap ? wrapWidth : exact ? exactWidth : flowWidth;
+  const userWidthPx = (run.wrapWidthPt ?? 0) * scale;
+  const width = wantWrap
+    ? wrapWidth
+    : Math.max(exact ? exactWidth : flowWidth, userWidthPx);
   const height = exact ? exact.heightPx : flowHeight;
   // An exact layout is never wrapped - its lines are the PDF's own. Only the
   // plain-text fallback, where CSS flow genuinely owns the layout, may wrap.
@@ -773,10 +776,7 @@ export function TextRunOverlay({
         onSelect(false);
         return;
       }
-      const widthPt = widthAt(ev.clientX) / scale;
-      // Wrap mode wraps typing at this lock, so it must follow the new width.
-      originalBoundsWidthRef.current = widthPt;
-      commit(widthPt);
+      commit(widthAt(ev.clientX) / scale);
     };
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);
