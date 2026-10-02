@@ -19,7 +19,9 @@ on:
       - ".github/workflows/pr-turn-labels.yml"
       - ".github/workflows/pr-review-events.yml"
       - ".github/scripts/package.json"
+      - ".github/scripts/package-lock.json"
       - ".github/scripts/tsconfig.json"
+      - ".github/workflows/pr-conflict-labeler.yml"
 
 permissions:
   contents: read
@@ -43,10 +45,11 @@ jobs:
         with:
           egress-policy: audit
 
-      - name: Check out the repository
+      - name: Check out the scripts
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
+          sparse-checkout: .github/scripts
 
       # Same Node as github-script v9, so the tests load the .ts the way the bot does.
       - name: Set up Node.js
@@ -54,17 +57,17 @@ jobs:
         with:
           node-version: "24"
           cache: "npm"
-          cache-dependency-path: frontend/package-lock.json
+          cache-dependency-path: .github/scripts/package-lock.json
 
-      - name: Install TypeScript from the frontend lockfile
-        working-directory: frontend
+      - name: Install TypeScript
+        working-directory: .github/scripts
         env:
           NPM_CONFIG_IGNORE_SCRIPTS: "true"
         run: npm ci --ignore-scripts --audit=false --fund=false
 
       - name: Typecheck
-        working-directory: frontend
-        run: npx tsc --noEmit --project ../.github/scripts/tsconfig.json
+        working-directory: .github/scripts
+        run: npx tsc --noEmit
 
       - name: Run unit tests
         run: node --test .github/scripts/*.test.ts
@@ -90,10 +93,11 @@ jobs:
         with:
           egress-policy: audit
 
-      - name: Check out the repository
+      - name: Check out the scripts
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
+          sparse-checkout: .github/scripts
 
       - name: Triage open PRs
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0

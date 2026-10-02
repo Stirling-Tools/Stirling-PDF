@@ -1,4 +1,8 @@
 {
   "private": true,
-  "type": "module"
+  "type": "module",
+  "devDependencies": {
+    "@types/node": "^24.5.2",
+    "typescript": "^6.0.2"
+  }
 }

@@ -20,8 +20,9 @@ permissions:
 jobs:
   update:
     name: Update the turn label
-    # Only the author moves the turn on a push, ready, re-request or comment, and only
-    # off a PR that has the label. A relay run with no job to do concludes skipped.
+    # Skips only events pr-turn.ts would do nothing with: a push, ready, re-request or comment
+    # that is not the author's, or on a PR without the label. Must not skip anything
+    # turnChangeForEvent acts on.
     if: >-
       vars.CI_PROFILE != 'lite' && (
         (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
@@ -41,10 +42,11 @@ jobs:
         with:
           egress-policy: audit
 
-      - name: Check out the repository
+      - name: Check out the scripts
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
+          sparse-checkout: .github/scripts
 
       - name: Update the turn label
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0

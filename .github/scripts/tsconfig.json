@@ -10,7 +10,6 @@
     "verbatimModuleSyntax": true,
     "noUncheckedIndexedAccess": true,
     "skipLibCheck": true,
-    "typeRoots": ["../../frontend/node_modules/@types"],
     "types": ["node"]
   },
   "include": ["*.ts"]
