@@ -9,6 +9,8 @@ export interface NavEntry {
   externalUrl?: string;
   /** Hidden from a member. The view reports instance-wide figures behind ADMIN-gated endpoints. */
   requiresAdmin?: boolean;
+  /** Hidden entirely unless this backend can reach the Pipeline store (see useStoreAvailable). */
+  requiresStore?: boolean;
 }
 
 export interface NavGroup {
@@ -27,6 +29,7 @@ export const GROUP_PROCESSOR: NavEntry[] = [
   { id: "home", icon: <Icon name="house" size={18} /> },
   { id: "sources", icon: <Icon name="plug" size={18} /> },
   { id: "pipelines", icon: <Icon name="workflow" size={18} /> },
+  { id: "store", icon: <Icon name="store" size={18} />, requiresStore: true },
   { id: "documents", icon: <Icon name="file-text" size={18} /> },
   { id: "review", icon: <Icon name="clipboard-check" size={18} /> },
   { id: "integrations", icon: <Icon name="blocks" size={18} /> },

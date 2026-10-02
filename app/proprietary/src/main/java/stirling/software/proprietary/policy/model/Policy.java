@@ -4,7 +4,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-/** A stored automation: ordered tool steps, input bindings, and output destinations. */
+/**
+ * A stored automation: ordered tool steps, input bindings, and output destinations. {@code storeId}
+ * links back to the pipeline store listing this policy was installed from or published as; nothing
+ * else reads it and no update tracking hangs off it.
+ */
 public record Policy(
         String id,
         String name,
@@ -20,7 +24,8 @@ public record Policy(
         EditorConfig editor,
         /** The owning product surface; {@link #SURFACE_POLICY} unless stamped otherwise. */
         String surface,
-        List<RoutingRule> routingRules) {
+        List<RoutingRule> routingRules,
+        String storeId) {
 
     public Policy {
         icon = icon == null ? "" : icon;
@@ -31,6 +36,41 @@ public record Policy(
         editor = editor == null ? EditorConfig.disabled() : editor;
         surface = surface == null || surface.isBlank() ? SURFACE_POLICY : surface;
         routingRules = routingRules == null ? List.of() : List.copyOf(routingRules);
+        storeId = storeId == null || storeId.isBlank() ? null : storeId;
+    }
+
+    /** Without a store link. Kept for every caller that predates the pipeline store. */
+    public Policy(
+            String id,
+            String name,
+            String owner,
+            boolean enabled,
+            boolean required,
+            String icon,
+            List<PipelineInput> inputs,
+            List<PipelineStep> steps,
+            OutputSpec output,
+            List<String> outputIds,
+            Long teamId,
+            EditorConfig editor,
+            String surface,
+            List<RoutingRule> routingRules) {
+        this(
+                id,
+                name,
+                owner,
+                enabled,
+                required,
+                icon,
+                inputs,
+                steps,
+                output,
+                outputIds,
+                teamId,
+                editor,
+                surface,
+                routingRules,
+                null);
     }
 
     /** The record belongs to the org policies surface (the default). */
@@ -176,7 +216,8 @@ public record Policy(
                 teamId,
                 editor,
                 surface,
-                routingRules);
+                routingRules,
+                storeId);
     }
 
     /** A copy under a different owner (e.g. moving a seed off a placeholder name). */
@@ -195,7 +236,8 @@ public record Policy(
                 teamId,
                 editor,
                 surface,
-                routingRules);
+                routingRules,
+                storeId);
     }
 
     /** A copy referencing the given saved output destinations. */
@@ -214,7 +256,8 @@ public record Policy(
                 teamId,
                 editor,
                 surface,
-                routingRules);
+                routingRules,
+                storeId);
     }
 
     public Policy withEnabled(boolean newEnabled) {
@@ -232,7 +275,8 @@ public record Policy(
                 teamId,
                 editor,
                 surface,
-                routingRules);
+                routingRules,
+                storeId);
     }
 
     public Policy withSteps(List<PipelineStep> newSteps) {
@@ -250,7 +294,8 @@ public record Policy(
                 teamId,
                 editor,
                 surface,
-                routingRules);
+                routingRules,
+                storeId);
     }
 
     /**
@@ -279,7 +324,8 @@ public record Policy(
                 teamId,
                 editor,
                 newSurface,
-                routingRules);
+                routingRules,
+                storeId);
     }
 
     /**
@@ -288,5 +334,25 @@ public record Policy(
      */
     public PipelineDefinition toDefinition() {
         return new PipelineDefinition(name, steps, output);
+    }
+
+    /** A copy linked to the given store listing (set when published to, or installed from, it). */
+    public Policy withStoreId(String newStoreId) {
+        return new Policy(
+                id,
+                name,
+                owner,
+                enabled,
+                required,
+                icon,
+                inputs,
+                steps,
+                output,
+                outputIds,
+                teamId,
+                editor,
+                surface,
+                routingRules,
+                newStoreId);
     }
 }

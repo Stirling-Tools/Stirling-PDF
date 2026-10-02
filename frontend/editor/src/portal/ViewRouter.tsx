@@ -4,6 +4,8 @@ import { Documents } from "@portal/views/Documents";
 import { Review } from "@portal/views/Review";
 import { Pipelines } from "@portal/views/Pipelines";
 import { PipelineBuilder } from "@portal/views/PipelineBuilder";
+import { Store } from "@portal/views/Store";
+import { StoreListing } from "@portal/views/StoreListing";
 import { Sources } from "@portal/views/Sources";
 import { Integrations } from "@portal/views/Integrations";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
@@ -44,6 +46,11 @@ export function ViewRouter() {
       <Route
         path={`${rel(VIEW_PATHS.pipelines)}/:id`}
         element={<PipelineBuilder />}
+      />
+      <Route path={rel(VIEW_PATHS.store)} element={<Store />} />
+      <Route
+        path={`${rel(VIEW_PATHS.store)}/:storeId`}
+        element={<StoreListing />}
       />
       <Route path={rel(VIEW_PATHS.sources)} element={<Sources />} />
       {/* Source create/edit is a modal on the list now; old deep links land there. */}

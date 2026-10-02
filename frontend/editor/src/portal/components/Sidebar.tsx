@@ -12,6 +12,7 @@ import { useTranslation } from "react-i18next";
 import { useView, type ViewId } from "@portal/contexts/ViewContext";
 import { useUI } from "@portal/contexts/UIContext";
 import { LinkAccountFooterItem } from "@portal/components/LinkAccountFooterItem";
+import { useStoreAvailable } from "@portal/hooks/useStoreAvailable";
 import { Icon } from "@app/ui/Icon";
 import {
   GROUP_PROCESSOR,
@@ -47,6 +48,7 @@ export function Sidebar() {
   const credits = useFreeCreditsSummary();
   const adminNavVisible = useAdminNavVisible();
   const openPlan = useOpenPlan();
+  const storeAvailable = useStoreAvailable();
 
   // Collapse is a desktop-only affordance: on mobile the sidebar is an
   // off-canvas drawer, so the icon-rail state never applies there.
@@ -56,8 +58,13 @@ export function Sidebar() {
   // a takeover modal (matching the marketing prototype).
 
   function renderGroup(entries: NavEntry[]) {
+    // A store entry with no store behind it is noise, not a gate: drop it rather than ask.
     return entries
-      .filter((entry) => adminNavVisible || !entry.requiresAdmin)
+      .filter(
+        (entry) =>
+          (adminNavVisible || !entry.requiresAdmin) &&
+          (!entry.requiresStore || storeAvailable),
+      )
       .map((entry) => {
         const label = t(`portal.nav.${entry.id}`);
         const item = (

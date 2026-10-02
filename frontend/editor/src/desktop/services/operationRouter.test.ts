@@ -121,6 +121,7 @@ describe("operationRouter.getBaseUrl — SaaS mode cloud-only routing", () => {
     "/api/v1/proprietary/ui-data/teams",
     "/api/v1/user/admin/saveUser",
     "/api/v1/admin/access/grants",
+    "/api/v1/store/public/pipelines",
   ])("%s routes to the SaaS backend (not local)", async (endpoint) => {
     await expect(operationRouter.getBaseUrl(endpoint)).resolves.toBe(SAAS_URL);
   });

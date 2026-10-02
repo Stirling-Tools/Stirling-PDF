@@ -443,7 +443,8 @@ public class PolicyController {
                 teamId,
                 policy.editor(),
                 surface,
-                policy.routingRules());
+                policy.routingRules(),
+                policy.storeId());
     }
 
     /** Output secrets never leave the server: reads return the redaction sentinel instead. */

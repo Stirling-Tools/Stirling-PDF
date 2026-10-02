@@ -90,6 +90,7 @@ export class OperationRouter {
       /^\/api\/v1\/processing-folders(?:[/?]|$)/, // Processing folders — proprietary controller
       /^\/api\/v1\/storage(?:[/?]|$)/, // Server folders and their processed outputs
       /^\/api\/v1\/notifications(?:[/?]|$)/, // Failure notifications — proprietary controller
+      /^\/api\/v1\/store\//, // Pipeline store — hosted by the cloud
       // Add more cloud-only feature prefixes here as they land.
     ];
 
