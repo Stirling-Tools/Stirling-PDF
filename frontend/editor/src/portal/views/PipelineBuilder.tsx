@@ -89,6 +89,7 @@ import { PipelineCreateHeader } from "@portal/components/pipelines/PipelineCreat
 import { PipelineEditHeader } from "@portal/components/pipelines/PipelineEditHeader";
 import { PublishFlowModal } from "@portal/components/store/PublishFlowModal";
 import { useStoreAvailable } from "@portal/hooks/useStoreAvailable";
+import { useConnectGate } from "@portal/hooks/useConnectGate";
 import { alert as showToast } from "@app/components/toast";
 import { PipelineGraphToolbar } from "@portal/components/pipelines/PipelineGraphToolbar";
 import { PipelineInspector } from "@portal/components/pipelines/PipelineInspector";
@@ -321,6 +322,8 @@ export function PipelineBuilder() {
   // Publish to store works on the saved record, so it is offered only where the store is reachable
   // and opens only when nothing is left unsaved (the store copies what the server has).
   const storeAvailable = useStoreAvailable();
+  // Publishing goes to the cloud store under a Stirling account, so an unlinked server links first.
+  const { guard: guardForAccount } = useConnectGate();
   const [publishOpen, setPublishOpen] = useState(false);
 
   // Create or edit a source in place, instead of leaving the builder (and its
@@ -1454,7 +1457,7 @@ export function PipelineBuilder() {
           onReprocess={handleReprocessAll}
           reprocessing={reprocessing}
           onDelete={() => setPendingDelete(true)}
-          onPublish={storeAvailable ? openPublish : undefined}
+          onPublish={storeAvailable ? guardForAccount(openPublish) : undefined}
           storeId={policyState.data?.storeId}
         />
       ) : (

@@ -10510,6 +10510,11 @@ signIn = "Sign in"
 signInToInstall = "Sign in to install"
 signInToStar = "Sign in to star"
 
+[portal.store.link]
+action = "Link account"
+description = "Stars and your team's listings belong to a Stirling account. Link this server to see them."
+title = "Link your Stirling account"
+
 [portal.store.publish]
 action = "Publish to store"
 back = "Back"
@@ -10523,8 +10528,10 @@ continue = "Continue"
 counter = "{{count}}/{{max}}"
 description = "Description"
 descriptionHelp = "20 to 500 characters"
+exportFailed = "Couldn't read this pipeline to publish it."
 fixToContinue_one = "Fix {{count}} problem to continue"
 fixToContinue_other = "Fix {{count}} problems to continue"
+linkFailed = "Published, but this server couldn't record the link, so publishing again would make a new listing."
 name = "Name"
 nameHelp = "3 to 80 characters"
 preview = "Store preview"

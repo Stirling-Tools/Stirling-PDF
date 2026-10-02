@@ -29,6 +29,19 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
+// The builder runs under the portal's UIProvider in the app; here the gate just lets actions run.
+vi.mock("@portal/hooks/useConnectGate", () => ({
+  useConnectGate: () => ({
+    gated: false,
+    loading: false,
+    error: null,
+    retry: vi.fn(),
+    available: false,
+    connect: vi.fn(),
+    guard: <A extends unknown[]>(action: (...args: A) => void) => action,
+  }),
+}));
+
 vi.mock("@portal/hooks/useAiEngineEnabled", () => ({
   useAiEngineEnabled: () => ({
     enabled: true,

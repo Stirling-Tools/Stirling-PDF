@@ -125,6 +125,11 @@ export interface StorePublishRequest {
   description: string;
   category: string;
   whatChanged?: string;
+  /**
+   * The pipeline itself, sent by a self-hosted portal because the store cannot read that server's
+   * pipelines. From {@link fetchStoreExport}, so its secrets are already blanked.
+   */
+  policy?: Policy;
 }
 
 export type StoreTeamListingStatus = "LISTED" | "REMOVED";
@@ -300,6 +305,30 @@ export interface StoreImportRequest {
   icon: string;
   storeId: string;
   steps: StoreManifestStep[];
+}
+
+/**
+ * GET /api/v1/policies/{id}/store-export (LOCAL backend): this server's pipeline ready to send to
+ * the store, every secret setting blanked so it never leaves the server.
+ */
+export async function fetchStoreExport(policyId: string): Promise<Policy> {
+  return apiClient.local.json<Policy>(
+    `/api/v1/policies/${encodeURIComponent(policyId)}/store-export`,
+  );
+}
+
+/**
+ * PUT /api/v1/policies/{id}/store-link (LOCAL backend): record the listing a pipeline on this
+ * server became, so its next publish is a republish.
+ */
+export async function linkPipelineToStore(
+  policyId: string,
+  storeId: string,
+): Promise<Policy> {
+  return apiClient.local.json<Policy>(
+    `/api/v1/policies/${encodeURIComponent(policyId)}/store-link`,
+    { method: "PUT", body: { storeId } },
+  );
 }
 
 /**

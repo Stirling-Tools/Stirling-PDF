@@ -28,6 +28,7 @@ import {
 } from "@portal/components/store/builtInListings";
 import { PublishedTable } from "@portal/components/store/PublishedTable";
 import { useStoreAccess } from "@portal/components/store/storeAccess";
+import { useConnectGate } from "@portal/hooks/useConnectGate";
 import { usePipelines } from "@portal/queries/pipelines";
 import {
   useStarredListings,
@@ -118,8 +119,12 @@ export function Store() {
   );
 
   const list = useStoreList(listParams);
-  const starred = useStarredListings(tab === "starred");
-  const team = useTeamListings(tab === "published");
+  // Stars and the team's listings belong to a Stirling account. A server that can link but has not
+  // has none to read them from, so it is asked to link instead of being told to sign in again.
+  const gate = useConnectGate();
+  const accountReady = !gate.loading && !gate.gated;
+  const starred = useStarredListings(tab === "starred" && accountReady);
+  const team = useTeamListings(tab === "published" && accountReady);
   const pipelines = usePipelines({ enabled: access === "member" });
 
   // Stirling's templates lead the browse grid whatever the sort, so the store is never empty, and
@@ -209,6 +214,21 @@ export function Store() {
           <StoreCard key={listing.storeId} listing={listing} />
         ))}
       </div>
+    );
+  }
+
+  function linkPrompt() {
+    return (
+      <EmptyState
+        icon={<Icon name="link" size={28} />}
+        title={t("portal.store.link.title")}
+        description={t("portal.store.link.description")}
+        actions={
+          <Button variant="primary" onClick={gate.connect}>
+            {t("portal.store.link.action")}
+          </Button>
+        }
+      />
     );
   }
 
@@ -305,7 +325,9 @@ export function Store() {
         </section>
       )}
 
-      {tab === "starred" && (
+      {tab !== "browse" && gate.gated && linkPrompt()}
+
+      {tab === "starred" && !gate.gated && (
         <section className="portal-store__browse">
           {starred.isError && (
             <Banner
@@ -321,7 +343,7 @@ export function Store() {
         </section>
       )}
 
-      {tab === "published" && (
+      {tab === "published" && !gate.gated && (
         <section className="portal-store__published">
           {team.isError && (
             <Banner

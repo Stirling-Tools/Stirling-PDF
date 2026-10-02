@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
   Banner,
@@ -13,9 +14,12 @@ import {
 import { alert as showToast } from "@app/components/toast";
 import { errorMessage } from "@portal/api/http";
 import type { Policy } from "@portal/api/pipelines";
+import { isSaasBuild } from "@portal/api/saasApiBase";
 import {
   STORE_CATEGORIES,
+  fetchStoreExport,
   isStoreCategory,
+  linkPipelineToStore,
   preflightPublish,
   type StoreCategory,
   type StoreListingSummary,
@@ -23,6 +27,7 @@ import {
   type StorePublishRequest,
 } from "@portal/api/store";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
+import { qk } from "@portal/queries/keys";
 import { usePublishPipeline, useStoreListing } from "@portal/queries/store";
 import { FlowModal } from "@portal/components/shared/FlowModal";
 import { StepModalHeader } from "@portal/components/shared/StepModalHeader";
@@ -71,7 +76,17 @@ export function PublishFlowModal({
 }: PublishFlowModalProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const publish = usePublishPipeline();
+
+  // The store cannot read a self-hosted server's pipelines, so that server sends the pipeline with
+  // the request, exported with its secrets blanked. On the SaaS build the store reads it itself.
+  const remote = !isSaasBuild();
+  const exported = useQuery({
+    queryKey: [...qk.pipelines(), "store-export", policy.id ?? ""],
+    queryFn: () => fetchStoreExport(policy.id as string),
+    enabled: open && remote && Boolean(policy.id),
+  });
 
   const [step, setStep] = useState<StepId>("details");
   const [name, setName] = useState(policy.name);
@@ -136,22 +151,41 @@ export function PublishFlowModal({
       description: trimmedDescription,
       category,
       whatChanged: whatChanged.trim() || undefined,
+      policy: remote ? exported.data : undefined,
     }),
-    [policy.id, trimmedName, trimmedDescription, category, whatChanged],
+    [
+      policy.id,
+      trimmedName,
+      trimmedDescription,
+      category,
+      whatChanged,
+      remote,
+      exported.data,
+    ],
   );
+  const refetchExport = exported.refetch;
 
   const runChecks = useCallback(async () => {
     setChecking(true);
     setCheckError(null);
     try {
-      setReport(await preflightPublish(request));
+      let body = request;
+      if (remote && !body.policy) {
+        const fresh = await refetchExport();
+        if (!fresh.data)
+          throw (
+            fresh.error ?? new Error(t("portal.store.publish.exportFailed"))
+          );
+        body = { ...body, policy: fresh.data };
+      }
+      setReport(await preflightPublish(body));
     } catch (e) {
       setReport(null);
       setCheckError(errorMessage(e));
     } finally {
       setChecking(false);
     }
-  }, [request]);
+  }, [request, remote, refetchExport, t]);
 
   // Entering Checks runs them once; a failed run waits for "Run checks again" rather than looping.
   useEffect(() => {
@@ -190,6 +224,16 @@ export function PublishFlowModal({
         body: request,
         existingStoreId,
       });
+      if (remote && policy.id && listing.storeId !== policy.storeId) {
+        // The store keeps no copy of this server's pipeline, so the link is recorded here.
+        await linkPipelineToStore(policy.id, listing.storeId).catch(() =>
+          showToast({
+            title: t("portal.store.publish.linkFailed"),
+            alertType: "warning",
+          }),
+        );
+        void queryClient.invalidateQueries({ queryKey: qk.pipelines() });
+      }
       showToast({
         title: t("portal.store.publish.published"),
         alertType: "success",
