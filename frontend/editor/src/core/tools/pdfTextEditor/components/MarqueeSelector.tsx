@@ -12,12 +12,30 @@ interface MarqueeRect {
   height: number;
 }
 
-// Ctrl+Shift+drag a rectangle on the page stack. Lets the user override
-// line/paragraph auto-grouping when it gets the structure wrong.
+// Pressing on these keeps their own gesture (edit, move, resize, guide drag),
+// so a plain drag only becomes a marquee when it starts on bare page or gutter.
+const OWN_GESTURE_SELECTOR = [
+  '[data-testid^="pdf-editor-run-"]',
+  '[data-testid^="pdf-editor-image-"]',
+  '[data-testid^="pdf-editor-ruler"]',
+  '[data-testid^="pdf-editor-guide-"]',
+  "button",
+  "input",
+  "textarea",
+  "[contenteditable='true']",
+].join(", ");
+
+/**
+ * Rectangle-select on the page stack, selecting every text run and image it
+ * touches. A plain drag from bare page starts one, Shift extends the current
+ * selection, and Ctrl/Cmd+Shift starts one from anywhere, including over text,
+ * to override line/paragraph auto-grouping when it gets the structure wrong.
+ */
 export function MarqueeSelector({ store }: MarqueeSelectorProps) {
   const [rect, setRect] = useState<MarqueeRect | null>(null);
   const startRef = useRef<{ x: number; y: number } | null>(null);
   const liveRectRef = useRef<MarqueeRect | null>(null);
+  const additiveRef = useRef(false);
 
   useEffect(() => {
     function setLiveRect(next: MarqueeRect | null) {
@@ -25,12 +43,22 @@ export function MarqueeSelector({ store }: MarqueeSelectorProps) {
       setRect(next);
     }
     function onPointerDown(e: PointerEvent) {
-      if (!e.ctrlKey && !e.metaKey) return;
-      if (!e.shiftKey) return;
+      if (e.button !== 0) return;
       const target = e.target as HTMLElement | null;
       if (!target?.closest('[data-testid="pdf-editor-pages"]')) return;
-      e.preventDefault();
+      const forced = (e.ctrlKey || e.metaKey) && e.shiftKey;
+      if (forced) {
+        e.preventDefault();
+      } else {
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+        if (store.getState().mode !== "select") return;
+        if (target.closest(OWN_GESTURE_SELECTOR)) return;
+      }
+      additiveRef.current = !forced && e.shiftKey;
       startRef.current = { x: e.clientX, y: e.clientY };
+      // Without this, dragging across text runs paints a native text
+      // selection under the rectangle.
+      document.body.style.userSelect = "none";
       setLiveRect({ left: e.clientX, top: e.clientY, width: 0, height: 0 });
     }
     function onPointerMove(e: PointerEvent) {
@@ -47,26 +75,33 @@ export function MarqueeSelector({ store }: MarqueeSelectorProps) {
       const origin = startRef.current;
       startRef.current = null;
       setLiveRect(null);
-      if (!origin || !r) return;
-      if (r.width < 3 && r.height < 3) return;
-      const hits = collectRunsInRect(r);
+      if (!origin) return;
+      document.body.style.userSelect = "";
+      if (!r || (r.width < 3 && r.height < 3)) return;
+      const runIds = collectIdsInRect(r, "pdf-editor-run-");
+      const imageIds = collectIdsInRect(r, "pdf-editor-image-");
       // A rectangle that caught nothing leaves the selection alone rather than
       // silently wiping it.
-      if (hits.length === 0) return;
-      // Seam for an extending rectangle-select. No modifier is bound to it:
-      // the marquee already claims Ctrl/Cmd+Shift and both Ctrl-click and
-      // Shift-click already mean extend, so the gesture needs a UX decision.
-      const additive = false;
-      store.selection.selectMany(hits, additive);
+      if (runIds.length === 0 && imageIds.length === 0) return;
+      store.selection.selectMany(runIds, additiveRef.current, imageIds);
+    }
+    function onPointerCancel() {
+      if (!startRef.current) return;
+      startRef.current = null;
+      setLiveRect(null);
+      document.body.style.userSelect = "";
     }
     // Pointer events cover mouse, pen and touch with one code path.
     window.addEventListener("pointerdown", onPointerDown);
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);
+    window.addEventListener("pointercancel", onPointerCancel);
     return () => {
       window.removeEventListener("pointerdown", onPointerDown);
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
+      window.removeEventListener("pointercancel", onPointerCancel);
+      document.body.style.userSelect = "";
     };
   }, [store]);
 
@@ -89,15 +124,17 @@ export function MarqueeSelector({ store }: MarqueeSelectorProps) {
   );
 }
 
-function collectRunsInRect(rect: MarqueeRect): string[] {
+function collectIdsInRect(rect: MarqueeRect, testIdPrefix: string): string[] {
+  const pages = document.querySelector('[data-testid="pdf-editor-pages"]');
+  if (!pages) return [];
   const right = rect.left + rect.width;
   const bottom = rect.top + rect.height;
   const ids: string[] = [];
-  const runs = document.querySelectorAll<HTMLElement>(
-    '[data-testid^="pdf-editor-run-"]',
+  const elements = pages.querySelectorAll<HTMLElement>(
+    `[data-testid^="${testIdPrefix}"]`,
   );
-  for (const el of runs) {
-    const id = el.dataset.testid?.replace(/^pdf-editor-run-/, "");
+  for (const el of elements) {
+    const id = el.dataset.testid?.slice(testIdPrefix.length);
     if (!id) continue;
     const b = el.getBoundingClientRect();
     const intersects =

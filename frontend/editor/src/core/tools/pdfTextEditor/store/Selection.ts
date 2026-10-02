@@ -78,20 +78,24 @@ export class Selection {
   }
 
   /**
-   * Replace the selection with `runIds`, or union them into it when additive
-   * (an extending rectangle-select). Additive keeps order, dedupes, and leaves
-   * any selected images alone.
+   * Replace the selection with `runIds` and `imageIds`, or union them into it
+   * when additive (an extending rectangle-select). Additive keeps order and
+   * dedupes.
    */
-  selectMany(runIds: string[], additive = false): void {
+  selectMany(
+    runIds: string[],
+    additive = false,
+    imageIds: string[] = [],
+  ): void {
     if (!additive) {
-      this.set({ runIds: [...runIds], imageIds: [], caret: null });
+      this.set({ runIds: [...runIds], imageIds: [...imageIds], caret: null });
       return;
     }
-    const merged = [...this.state.runIds];
-    for (const id of runIds) {
-      if (!merged.includes(id)) merged.push(id);
-    }
-    this.set({ ...this.state, runIds: merged, caret: null });
+    this.set({
+      runIds: unionInOrder(this.state.runIds, runIds),
+      imageIds: unionInOrder(this.state.imageIds, imageIds),
+      caret: null,
+    });
   }
 
   subscribe(listener: (s: SelectionState) => void): () => void {
@@ -110,4 +114,12 @@ export class Selection {
       }
     }
   }
+}
+
+function unionInOrder(existing: string[], added: string[]): string[] {
+  const merged = [...existing];
+  for (const id of added) {
+    if (!merged.includes(id)) merged.push(id);
+  }
+  return merged;
 }
