@@ -39,7 +39,6 @@ The component lives with the other shared primitives, in `core/ui/Icon.tsx` — 
 | `colorless.ts` / `colorless.css` | The `colorless` class, which dims a brand mark for a disabled source. |
 | `svg/stirling/*.svg` | Our own drawings, for glyphs lucide has no equivalent for. |
 | `svg/third-party/*.svg` | Brand marks (S3, Slack, Jira…), which keep their own colours. |
-| `icon-map.json` | Temporary: legacy name → lucide name, for the migration audit story only. |
 
 `?react` compiles each svg into a component at build time, configured once in `editor/scripts/icons/svgrOptions.mts` so the app, Storybook and the tests transform them the same way. Lucide's own svgs are read from `lucide-static` in `node_modules`, so none of its artwork is checked in.
 
@@ -66,10 +65,10 @@ For a prop that takes *either* a name or your own node, narrow with `isIconName(
 ## Gotchas
 
 - **A css `fill` breaks every icon in its scope.** Stroke icons render with `fill="none"`; a stylesheet fill overrides that presentation attribute and renders them solid. Colour them with `color`. icon-lint blocks this.
-- **An unknown name never throws.** `<Icon>` draws a dashed-circle placeholder (`MISSING_ICON`) and, in dev, logs the name once; the svg carries `data-missing-icon` so a screenshot or e2e run can spot it. Seeing it means a typo, or a name from data that `icons.ts` does not map. `task frontend:lint:icons` catches Material Symbols names left in any position, and `isIconName` is the guard for names that arrive from data.
+- **An unknown name never throws.** `<Icon>` draws a dashed-circle placeholder (`MISSING_ICON`) and, in dev, logs the name once; the svg carries `data-missing-icon` so a screenshot or e2e run can spot it. Seeing it means a typo, or a name from data that `icons.ts` does not map. `task frontend:lint:icons` catches Material Symbols names with a `-rounded`/`-outlined`/`-sharp`/`-twotone` suffix in any position (an unsuffixed one only shows up as the placeholder), and `isIconName` is the guard for names that arrive from data.
 - **`fontSize` is inert on `<Icon>`.** The most likely regression when porting old code: the icon silently renders at the default size. Use `size`.
 - **A filled/outline pair is one icon plus `filled`, not two.** MUI shipped `Star` and `StarBorder` as separate glyphs, so a component that rendered both collapsed to one name here. If a legacy diff shows a filled variant, check whether the difference encoded state before treating it as a duplicate.
 - **`iconMap.ts` keys are persisted.** A saved automation stores `"SettingsIcon"`, so those keys must never be renamed — only their values.
 - **The classification label palette is mirrored in the backend** (`app/proprietary/src/main/resources/classification/classification-labels.json`) and a drift test enforces icon parity. Change both sides together.
 - **Brand marks look unreferenced.** They resolve from connector ids the API returns, never from literals; the unused report and the gallery's *In use* view both allow for that.
-- **No third-party icon artwork is checked in.** `Migration/Icon audit` gets its "before" glyphs from `virtual:legacy-icons`, served straight out of the icon packages by `editor/scripts/icons/legacyIcons.vite.mts`; never commit another icon set's geometry. The audit and everything it needs go once the mapping is signed off.
+- **No third-party icon-set glyphs are checked in.** Lucide's svgs come from `lucide-static` in `node_modules`; never commit another icon set's geometry. Brand marks in `svg/third-party/` are the exception.

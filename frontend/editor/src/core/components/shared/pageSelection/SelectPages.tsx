@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Text, NumberInput, Group } from "@mantine/core";
 import { Button } from "@app/ui/Button";
+import { useTranslation } from "react-i18next";
 import classes from "@app/components/shared/pageSelection/BulkSelectionPanel.module.css";
 
 interface SelectPagesProps {
@@ -25,6 +26,7 @@ const SelectPages = ({
   onRangeEndChange,
   rangeEndPlaceholder,
 }: SelectPagesProps) => {
+  const { t } = useTranslation();
   const [value, setValue] = useState<number | "">("");
   const [error, setError] = useState<string | null>(null);
 
@@ -100,7 +102,7 @@ const SelectPages = ({
             onClick={handleApply}
             disabled={isDisabled}
           >
-            Apply
+            {t("apply", "Apply")}
           </Button>
         </Group>
       </div>

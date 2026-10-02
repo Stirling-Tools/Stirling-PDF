@@ -14,6 +14,9 @@ export function FlowModal({
   header,
   footer,
   size = "md",
+  zIndex,
+  disableBackdropClose,
+  disableEscapeClose,
   children,
 }: {
   open: boolean;
@@ -24,6 +27,9 @@ export function FlowModal({
   footer?: ReactNode;
   /** `md` for the task dialogs, `lg` for the procurement takeover and Calendly. */
   size?: "md" | "lg";
+  zIndex?: number;
+  disableBackdropClose?: boolean;
+  disableEscapeClose?: boolean;
   children: ReactNode;
 }) {
   return (
@@ -35,6 +41,9 @@ export function FlowModal({
       className={`portal-flowmodal portal-flowmodal--${size}`}
       title={header}
       footer={footer}
+      zIndex={zIndex}
+      disableBackdropClose={disableBackdropClose}
+      disableEscapeClose={disableEscapeClose}
     >
       {children}
     </Modal>

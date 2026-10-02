@@ -102,7 +102,7 @@ export function FormFieldSidebar({ visible, onToggle }: FormFieldSidebarProps) {
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <Icon name="type" size={18} style={{ opacity: 0.7 }} />
           <Text fw={600} size="sm">
-            Form Fields
+            {t("formFill.sidebar.title", "Form Fields")}
           </Text>
           <Badge size="xs" variant="light" color="blue" radius="sm">
             {fields.length}
@@ -123,7 +123,7 @@ export function FormFieldSidebar({ visible, onToggle }: FormFieldSidebarProps) {
         {loading && (
           <div className={styles.emptyState}>
             <Text size="sm" c="dimmed">
-              Loading form fields...
+              {t("formFill.sidebar.loading", "Loading form fields...")}
             </Text>
           </div>
         )}
@@ -131,7 +131,7 @@ export function FormFieldSidebar({ visible, onToggle }: FormFieldSidebarProps) {
         {!loading && fields.length === 0 && (
           <div className={styles.emptyState}>
             <span className={styles.emptyStateText}>
-              No form fields found in this PDF
+              {t("formFill.sidebar.empty", "No form fields found in this PDF")}
             </span>
           </div>
         )}
@@ -145,7 +145,9 @@ export function FormFieldSidebar({ visible, onToggle }: FormFieldSidebarProps) {
                   style={i === 0 ? { marginTop: 0 } : undefined}
                 >
                   <Text className={styles.pageDividerLabel}>
-                    Page {pageIdx + 1}
+                    {t("formFill.sidebar.pageNumber", "Page {{page}}", {
+                      page: pageIdx + 1,
+                    })}
                   </Text>
                 </div>
 
@@ -160,7 +162,14 @@ export function FormFieldSidebar({ visible, onToggle }: FormFieldSidebarProps) {
                       onClick={() => handleFieldClick(field.name)}
                     >
                       <div className={styles.fieldHeader}>
-                        <Tooltip label={field.type} withArrow position="left">
+                        <Tooltip
+                          label={t(
+                            `formFill.fieldTypes.${field.type}`,
+                            field.type,
+                          )}
+                          withArrow
+                          position="left"
+                        >
                           <span
                             className={styles.fieldTypeIcon}
                             style={{
@@ -177,7 +186,9 @@ export function FormFieldSidebar({ visible, onToggle }: FormFieldSidebarProps) {
                           {field.label || field.name}
                         </span>
                         {field.required && (
-                          <span className={styles.fieldRequired}>req</span>
+                          <span className={styles.fieldRequired}>
+                            {t("formFill.requiredAbbreviation", "req")}
+                          </span>
                         )}
                       </div>
 
