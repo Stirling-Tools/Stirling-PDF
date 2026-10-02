@@ -4,7 +4,8 @@ import type { Policy } from "@portal/api/pipelines";
 /**
  * Pipeline store contract. The store is hosted by the SaaS backend, so every
  * `/api/v1/store` call goes over `apiClient.saas` (self-hosted reaches it through
- * the account link; on the SaaS build it is the same backend). Installing is the
+ * the account link; on the SaaS build it is the same backend). The public reads use
+ * `publicJson`, which works for guests; writes need a session. Installing is the
  * one exception: the copy is created on THIS instance, so the import goes over
  * `apiClient.local`.
  *
@@ -189,14 +190,16 @@ export async function fetchStoreListings(
   if (params.category) search.set("category", params.category);
   if (cursor) search.set("cursor", cursor);
   search.set("limit", String(params.limit ?? PAGE_SIZE));
-  return apiClient.saas.json<StoreListPage>(`${PUBLIC}?${search.toString()}`);
+  return apiClient.saas.publicJson<StoreListPage>(
+    `${PUBLIC}?${search.toString()}`,
+  );
 }
 
 /** GET /api/v1/store/public/pipelines/{storeId}: the read-only listing detail. */
 export async function fetchStoreListing(
   storeId: string,
 ): Promise<StoreListingDetail> {
-  return apiClient.saas.json<StoreListingDetail>(
+  return apiClient.saas.publicJson<StoreListingDetail>(
     `${PUBLIC}/${encodeURIComponent(storeId)}`,
   );
 }
@@ -205,7 +208,7 @@ export async function fetchStoreListing(
 export async function fetchStoreManifest(
   storeId: string,
 ): Promise<StoreManifest> {
-  return apiClient.saas.json<StoreManifest>(
+  return apiClient.saas.publicJson<StoreManifest>(
     `${PUBLIC}/${encodeURIComponent(storeId)}/manifest`,
   );
 }

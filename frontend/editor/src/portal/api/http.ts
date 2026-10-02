@@ -42,7 +42,10 @@
  * admin and uses the Supabase JWT for SaaS reads. Don't add it here.
  */
 import type { AccountLinkBlockContext } from "@app/services/accountLinkBlock";
-import { withPortalSaasSession } from "@app/portal/auth/portalSaasSession";
+import {
+  getPortalSaasToken,
+  withPortalSaasSession,
+} from "@app/portal/auth/portalSaasSession";
 import { reportAccountLinkBlock } from "@app/portal/services/accountLinkBlock";
 export { SaasSessionRequiredError } from "@app/portal/auth/portalSaasSession";
 import { resolveDemoResponse } from "@app/portal/api/demoData";
@@ -274,6 +277,36 @@ async function saasJson<T>(
   return unwrap<T>(res);
 }
 
+/**
+ * A public SaaS read, such as the store catalogue. It sends the viewer's Supabase JWT when there
+ * is one, so the server can fill in per-viewer state like stars, and works without one. Unlike
+ * {@link saasJson} it never asks for a sign-in: these pages are open to guests, and a stale token
+ * is dropped and the read retried anonymously, since an invalid bearer is a 401 even on a public
+ * route.
+ */
+async function saasPublicJson<T>(
+  path: string,
+  options: Pick<HttpRequestOptions, "headers" | "signal"> = {},
+): Promise<T> {
+  const demo = await resolveDemoResponse(new URL(path, "http://saas.mock"), {});
+  if (demo) return unwrap<T>(demo);
+  const base = saasBaseUrl();
+  if (base === null) throw new SaasUnconfiguredError();
+  const send = (token: string | null) =>
+    fetch(`${base}${path}`, {
+      headers: {
+        Accept: "application/json",
+        ...options.headers,
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      signal: options.signal,
+    });
+  const token = await getPortalSaasToken().catch(() => null);
+  let res = await send(token);
+  if (res.status === 401 && token) res = await send(null);
+  return unwrap<T>(res);
+}
+
 /** Fetch a plain-text SaaS response (e.g. a downloadable licence file). Throws on a non-2xx. */
 async function saasText(
   path: string,
@@ -339,6 +372,8 @@ export const apiClient = {
   /** Hosted SaaS Java. Admin's Supabase JWT auto-attached. */
   saas: {
     json: saasJson,
+    /** Optional-auth GET for public SaaS routes; never sends the viewer to sign in. */
+    publicJson: saasPublicJson,
     text: saasText,
     blob: saasBlob,
   },
