@@ -145,23 +145,18 @@ function show({
 
 it("guides mobile creation through three pages and retains the draft when going back", async () => {
   const { user, onSubmit } = show({ mobile: true, initialFileSelected: false });
-  expect(
-    screen.getByRole("button", { name: "Next", exact: true }),
-  ).toBeDisabled();
-  expect(
-    screen.getByRole("button", { name: "Participants", exact: true }),
-  ).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Next" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Participants" })).toBeDisabled();
   expect(
     screen.queryByRole("button", { name: "Send signing request" }),
   ).not.toBeInTheDocument();
   await user.click(screen.getByRole("button", { name: "Choose PDF" }));
-  await user.click(screen.getByRole("button", { name: "Next", exact: true }));
-  expect(
-    screen.getByRole("button", { name: "Participants", exact: true }),
-  ).toHaveAttribute("aria-current", "step");
-  expect(
-    screen.getByRole("button", { name: "Next", exact: true }),
-  ).toBeDisabled();
+  await user.click(screen.getByRole("button", { name: "Next" }));
+  expect(screen.getByRole("button", { name: "Participants" })).toHaveAttribute(
+    "aria-current",
+    "step",
+  );
+  expect(screen.getByRole("button", { name: "Next" })).toBeDisabled();
   expect(
     screen.queryByRole("button", { name: "Change PDF" }),
   ).not.toBeInTheDocument();
@@ -169,7 +164,7 @@ it("guides mobile creation through three pages and retains the draft when going 
     screen.queryByRole("button", { name: "Clear date" }),
   ).not.toBeInTheDocument();
   await user.click(screen.getByRole("checkbox", { name: /Bob/ }));
-  await user.click(screen.getByRole("button", { name: "Next", exact: true }));
+  await user.click(screen.getByRole("button", { name: "Next" }));
   expect(
     screen.getByRole("button", { name: "Dates & options" }),
   ).toHaveAttribute("aria-current", "step");
@@ -186,17 +181,15 @@ it("guides mobile creation through three pages and retains the draft when going 
       name: "Include Signature Summary Page",
     }),
   );
-  await user.click(screen.getByRole("button", { name: "Back", exact: true }));
+  await user.click(screen.getByRole("button", { name: "Back" }));
   expect(screen.getByRole("checkbox", { name: /Bob/ })).toBeChecked();
-  await user.click(screen.getByRole("button", { name: "Back", exact: true }));
+  await user.click(screen.getByRole("button", { name: "Back" }));
   await user.click(screen.getByRole("button", { name: "Change PDF" }));
-  expect(
-    screen.getByRole("button", { name: "Next", exact: true }),
-  ).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Next" })).toBeDisabled();
   await user.click(screen.getByRole("button", { name: "Choose PDF" }));
-  await user.click(screen.getByRole("button", { name: "Next", exact: true }));
+  await user.click(screen.getByRole("button", { name: "Next" }));
   expect(screen.getByRole("checkbox", { name: /Bob/ })).toBeChecked();
-  await user.click(screen.getByRole("button", { name: "Next", exact: true }));
+  await user.click(screen.getByRole("button", { name: "Next" }));
   expect(screen.getByLabelText("Date sent to API")).toHaveTextContent(
     "2026-10-25",
   );
@@ -246,9 +239,7 @@ it("preserves the mobile page and signature settings across desktop resizing", a
 it("locks mobile navigation during submission", () => {
   show({ mobile: true, creating: true, initialIds: [2] });
   for (const label of ["Document", "Participants", "Dates & options", "Next"]) {
-    expect(
-      screen.getByRole("button", { name: label, exact: true }),
-    ).toBeDisabled();
+    expect(screen.getByRole("button", { name: label })).toBeDisabled();
   }
 });
 

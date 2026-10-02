@@ -12,7 +12,7 @@ import {
 } from "@app/contexts/quickNavAccount";
 import { getStartupNavigationAction } from "@app/utils/homePageNavigation";
 
-const request: SigningItem = {
+const request = {
   kind: "request",
   sessionId: "request-1",
   documentName: "Agreement.pdf",
@@ -20,8 +20,8 @@ const request: SigningItem = {
   createdAt: "2026-09-24",
   dueDate: "",
   myStatus: "PENDING",
-};
-const session: SigningItem = {
+} satisfies SigningItem;
+const session = {
   kind: "session",
   sessionId: "session-1",
   documentName: "Owned.pdf",
@@ -29,17 +29,25 @@ const session: SigningItem = {
   participantCount: 2,
   signedCount: 1,
   finalized: false,
-};
+} satisfies SigningItem;
 
 describe("signing workspace entry points", () => {
   it("closes server-reported participant restrictions and cancelled or completed workflows", () => {
     expect(isSigningItemClosed({ ...request, closed: true })).toBe(true);
     expect(needsSignature({ ...request, closed: true })).toBe(false);
-    expect(isSigningItemClosed({ ...session, status: "CANCELLED" })).toBe(true);
-    expect(isSigningItemClosed({ ...session, status: "COMPLETED" })).toBe(true);
-    expect(isSigningItemClosed({ ...session, status: "IN_PROGRESS" })).toBe(
-      false,
-    );
+    expect(
+      isSigningItemClosed({ ...session, kind: "session", status: "CANCELLED" }),
+    ).toBe(true);
+    expect(
+      isSigningItemClosed({ ...session, kind: "session", status: "COMPLETED" }),
+    ).toBe(true);
+    expect(
+      isSigningItemClosed({
+        ...session,
+        kind: "session",
+        status: "IN_PROGRESS",
+      }),
+    ).toBe(false);
   });
   it("closes expired participant access without closing the owner session or treating due dates as expiry", () => {
     const expired = { ...request, accessExpired: true };

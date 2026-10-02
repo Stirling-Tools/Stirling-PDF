@@ -65,9 +65,7 @@ it("shows one owner session in the popover as its action changes from signing to
     unread: true,
   }));
   const { onOpenSigning, updateItems } = setup(rows);
-  const active = within(
-    screen.getByRole("region", { name: "Active", exact: true }),
-  );
+  const active = within(screen.getByRole("region", { name: "Active" }));
   expect(active.getAllByRole("button")).toHaveLength(1);
   fireEvent.click(
     active.getByRole("button", { name: /Owned.pdf.*Needs your signature/ }),
@@ -129,7 +127,7 @@ it("filters unread invitations and ready owner sessions, updating the count when
     "true",
   );
   expect(screen.getByText("You're all caught up")).toBeInTheDocument();
-  fireEvent.click(screen.getByRole("button", { name: "Active", exact: true }));
+  fireEvent.click(screen.getByRole("button", { name: "Active" }));
   expect(
     screen.getByRole("button", { name: /Owned.pdf.*Ready to finalize/ }),
   ).toBeInTheDocument();
@@ -161,7 +159,7 @@ it("keeps expired and server-closed requests out of Active and the unread count"
   expect(
     screen.queryByRole("button", { name: /Viewer.pdf|Expired.pdf/ }),
   ).not.toBeInTheDocument();
-  fireEvent.click(screen.getByRole("button", { name: "Closed", exact: true }));
+  fireEvent.click(screen.getByRole("button", { name: "Closed" }));
   expect(
     screen.getByRole("button", { name: /Viewer.pdf.*Closed/ }),
   ).toBeInTheDocument();
@@ -205,12 +203,11 @@ it("shows requests and owned sessions together, with unread dots independent of 
   expect(
     screen.queryByRole("button", { name: /Needs action/ }),
   ).not.toBeInTheDocument();
-  expect(
-    screen.getByRole("button", { name: "Active", exact: true }),
-  ).toHaveAttribute("aria-pressed", "true");
-  const list = within(
-    screen.getByRole("region", { name: "Active", exact: true }),
+  expect(screen.getByRole("button", { name: "Active" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
   );
+  const list = within(screen.getByRole("region", { name: "Active" }));
   expect(list.getAllByRole("button")).toHaveLength(4);
   expect(list.getAllByRole("img", { name: /New activity/ })).toHaveLength(2);
   const ready = list.getByRole("button", {
@@ -242,11 +239,11 @@ it("shows every active item and searches without marking hidden items as read", 
     documentName: `Document ${index}.pdf`,
   }));
   setup([...requests, { ...owned, unread: false }]);
-  fireEvent.click(screen.getByRole("button", { name: "Active", exact: true }));
+  fireEvent.click(screen.getByRole("button", { name: "Active" }));
   expect(
-    within(
-      screen.getByRole("region", { name: "Active", exact: true }),
-    ).getAllByRole("button"),
+    within(screen.getByRole("region", { name: "Active" })).getAllByRole(
+      "button",
+    ),
   ).toHaveLength(10);
   fireEvent.change(screen.getByRole("searchbox"), {
     target: { value: "Document 8" },
@@ -262,9 +259,9 @@ it("shows every active item and searches without marking hidden items as read", 
     target: { value: "alice" },
   });
   expect(
-    within(
-      screen.getByRole("region", { name: "Active", exact: true }),
-    ).getAllByRole("button"),
+    within(screen.getByRole("region", { name: "Active" })).getAllByRole(
+      "button",
+    ),
   ).toHaveLength(9);
 });
 
@@ -285,14 +282,14 @@ it("keeps submitted requests active and places finalized or declined requests in
       unread: false,
     },
   ]);
-  fireEvent.click(screen.getByRole("button", { name: "Active", exact: true }));
+  fireEvent.click(screen.getByRole("button", { name: "Active" }));
   expect(
     screen.getByRole("button", { name: /Submitted.pdf.*Submitted/ }),
   ).toBeInTheDocument();
   expect(
     screen.queryByRole("button", { name: /Declined.pdf/ }),
   ).not.toBeInTheDocument();
-  fireEvent.click(screen.getByRole("button", { name: "Closed", exact: true }));
+  fireEvent.click(screen.getByRole("button", { name: "Closed" }));
   expect(
     screen.getByRole("button", { name: /Owned.pdf.*Finalized/ }),
   ).toBeInTheDocument();
@@ -314,7 +311,5 @@ it("allows editing search with Home/End and restores the trigger on Escape", () 
   expect(search).toHaveFocus();
   fireEvent.keyDown(search, { key: "Escape" });
   expect(onClose).toHaveBeenCalledTimes(1);
-  expect(
-    screen.getByRole("button", { name: "Sign", exact: true }),
-  ).toHaveFocus();
+  expect(screen.getByRole("button", { name: "Sign" })).toHaveFocus();
 });

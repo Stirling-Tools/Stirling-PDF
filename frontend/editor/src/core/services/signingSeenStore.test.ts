@@ -6,7 +6,7 @@ import {
 } from "@app/services/signingSeenStore";
 import { collectSigningItems, type SigningItem } from "@app/utils/signingItems";
 
-const session: SigningItem = {
+const session = {
   kind: "session",
   sessionId: "owned",
   documentName: "Private.pdf",
@@ -18,8 +18,8 @@ const session: SigningItem = {
     { id: 1, status: "VIEWED", lastUpdated: "2026-10-01T10:00:00" },
     { id: 2, status: "PENDING", lastUpdated: "2026-10-01T10:00:00" },
   ],
-};
-const request: SigningItem = {
+} satisfies SigningItem;
+const request = {
   kind: "request",
   sessionId: "owned",
   documentName: "Private.pdf",
@@ -27,7 +27,7 @@ const request: SigningItem = {
   ownerUsername: "Owner",
   dueDate: "",
   myStatus: "PENDING",
-};
+} satisfies SigningItem;
 
 beforeEach(() => localStorage.clear());
 afterEach(() => vi.restoreAllMocks());
@@ -95,24 +95,26 @@ it("flags new requests until successfully viewed, separately for each account an
 it("detects a signature and a later decline without relying on the signed count changing", () => {
   expect(hasUnseenSigningActivity("alice", session)).toBe(false);
   markSigningItemSeen("alice", session);
-  const signed: SigningItem = {
+  const signed = {
     ...session,
+    kind: "session",
     signedCount: 1,
     participants: [
       { id: 1, status: "SIGNED", lastUpdated: "2026-10-01T11:00:00" },
-      session.participants![1],
+      session.participants[1],
     ],
-  };
+  } satisfies SigningItem;
   expect(hasUnseenSigningActivity("alice", signed)).toBe(true);
   markSigningItemSeen("alice", signed);
   expect(hasUnseenSigningActivity("alice", signed)).toBe(false);
-  const declined: SigningItem = {
+  const declined = {
     ...signed,
+    kind: "session",
     participants: [
-      signed.participants![0],
+      signed.participants[0],
       { id: 2, status: "DECLINED", lastUpdated: "2026-10-01T12:00:00" },
     ],
-  };
+  } satisfies SigningItem;
   expect(hasUnseenSigningActivity("alice", declined)).toBe(true);
   markSigningItemSeen("alice", declined);
   expect(hasUnseenSigningActivity("alice", declined)).toBe(false);
@@ -121,16 +123,18 @@ it("detects a signature and a later decline without relying on the signed count 
 });
 
 it("distinguishes participant decisions when aggregate counts stay unchanged", () => {
-  const first: SigningItem = {
+  const first = {
     ...session,
+    kind: "session",
     participants: [
       { id: 1, status: "DECLINED", lastUpdated: "2026-10-01T11:00:00" },
     ],
-  };
+  } satisfies SigningItem;
   markSigningItemSeen("alice", first);
   expect(
     hasUnseenSigningActivity("alice", {
       ...first,
+      kind: "session",
       participants: [
         { id: 2, status: "DECLINED", lastUpdated: "2026-10-01T12:00:00" },
       ],
@@ -169,10 +173,12 @@ it("persists only decision identifiers and handles malformed stored values", () 
 });
 
 it("keeps read state in memory when persistent writes are unavailable", () => {
-  vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+  const setItem = vi.spyOn(localStorage, "setItem").mockImplementation(() => {
     throw new Error("Storage disabled");
   });
   markSigningItemSeen("private-mode", request);
+  expect(setItem).toHaveBeenCalledOnce();
+  expect(localStorage.length).toBe(0);
   expect(hasUnseenSigningActivity("private-mode", request)).toBe(false);
 });
 

@@ -155,7 +155,7 @@ it("keeps the certificate dialog open while a signature submission is in flight"
   );
   fireEvent.click(screen.getByRole("button", { name: "Sign Document" }));
   expect(onSign).toHaveBeenCalledTimes(1);
-  fireEvent.click(screen.getByRole("button", { name: "Close", exact: true }));
+  fireEvent.click(screen.getByRole("button", { name: "Close" }));
   fireEvent.keyDown(document, { key: "Escape" });
   expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled();
   expect(onClose).not.toHaveBeenCalled();
