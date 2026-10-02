@@ -68,6 +68,8 @@ class StoreDtoPrivacyTest {
                 List.of(new StoreManifest.Step("/api/v1/misc/ocr-pdf", Map.of("languages", "eng"))),
                 List.of(StoreManifest.RequiredOnInstall.source()),
                 null,
+                StoreListing.Status.LISTED,
+                null,
                 viewer);
     }
 

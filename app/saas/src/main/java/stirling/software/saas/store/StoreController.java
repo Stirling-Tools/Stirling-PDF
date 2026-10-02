@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -50,6 +51,12 @@ public class StoreController {
     public StoreDtos.ListingDetail republish(
             @PathVariable String storeId, @RequestBody PublishRequest request) {
         return storeService.republish(storeId, request);
+    }
+
+    @PatchMapping("/pipelines/{storeId}")
+    public StoreDtos.ListingDetail updateDetails(
+            @PathVariable String storeId, @RequestBody StoreDtos.DetailsRequest request) {
+        return storeService.updateDetails(storeId, request);
     }
 
     @DeleteMapping("/pipelines/{storeId}")

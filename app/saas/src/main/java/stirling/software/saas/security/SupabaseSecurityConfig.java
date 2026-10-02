@@ -438,7 +438,7 @@ public class SupabaseSecurityConfig {
 
     private static CorsConfiguration storeCors() {
         CorsConfiguration cfg = linkedInstanceCors();
-        cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         return cfg;
     }
 

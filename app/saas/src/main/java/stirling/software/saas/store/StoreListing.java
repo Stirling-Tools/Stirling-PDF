@@ -2,8 +2,6 @@ package stirling.software.saas.store;
 
 import java.time.LocalDateTime;
 
-import org.hibernate.annotations.CreationTimestamp;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -107,11 +105,11 @@ public class StoreListing {
     @Column(name = "install_count", nullable = false)
     private int installCount;
 
-    @CreationTimestamp
+    /** UTC, like every timestamp here; set by {@link StoreService} when the listing is created. */
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    /** Last publish or republish, shown as "Updated". Not bumped by stars or installs. */
+    /** Last publish or republish in UTC, shown as "Updated". Not bumped by stars or installs. */
     @Column(name = "published_at", nullable = false)
     private LocalDateTime publishedAt;
 

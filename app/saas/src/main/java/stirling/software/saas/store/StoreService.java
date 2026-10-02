@@ -146,19 +146,9 @@ public class StoreService {
     }
 
     private Prepared prepare(Policy policy, PublishRequest request, StoreListing existing) {
-        List<StoreFinding> findings = new ArrayList<>();
         boolean curated = existing != null && existing.isCurated();
-        findings.addAll(textAuditor.audit(request, curated));
-        String category =
-                request.category() == null ? "" : request.category().toLowerCase(Locale.ROOT);
-        if (!CATEGORIES.contains(category)) {
-            findings.add(
-                    StoreFinding.block(
-                            "category",
-                            "Choose a category",
-                            "Pick one of the store categories.",
-                            StoreFinding.Where.details()));
-        }
+        List<StoreFinding> findings = auditDetails(request, curated);
+        String category = normalisedCategory(request.category());
         List<ToolDiagnostic> diagnostics = policyValidator.diagnoseChain(policy.steps(), null);
         StoreManifestSanitizer.Result result =
                 sanitizer.sanitize(
@@ -182,6 +172,71 @@ public class StoreService {
         return new Prepared(report, result);
     }
 
+    /** Text audit plus the category check: everything a listing's words must pass. */
+    private List<StoreFinding> auditDetails(PublishRequest request, boolean curated) {
+        List<StoreFinding> findings = new ArrayList<>(textAuditor.audit(request, curated));
+        if (!CATEGORIES.contains(normalisedCategory(request.category()))) {
+            findings.add(
+                    StoreFinding.block(
+                            "category",
+                            "Choose a category",
+                            "Pick one of the store categories.",
+                            StoreFinding.Where.details()));
+        }
+        return findings;
+    }
+
+    private static String normalisedCategory(String category) {
+        return category == null ? "" : category.trim().toLowerCase(Locale.ROOT);
+    }
+
+    /**
+     * An owner's edit of name, description, category and the change note, without republishing: the
+     * tool chain, stars, installs and the Updated time stay as they are, and so does a removed
+     * listing's status. Runs the same text checks as publishing; a block throws {@link
+     * PublishBlockedException}.
+     */
+    @Transactional
+    public StoreDtos.ListingDetail updateDetails(String storeId, StoreDtos.DetailsRequest request) {
+        requireCanPublish();
+        StoreListing listing = teamListing(storeId);
+        requireNotStaffRemoved(listing);
+        PublishRequest details =
+                new PublishRequest(
+                        null,
+                        request.name(),
+                        request.description(),
+                        request.category(),
+                        request.whatChanged());
+        List<StoreFinding> findings = auditDetails(details, listing.isCurated());
+        if (findings.stream().anyMatch(StoreFinding::blocks)) {
+            throw new PublishBlockedException(new PreflightReport(findings, false, storeId, null));
+        }
+        StoreManifest current = readManifest(listing);
+        StoreManifest updated =
+                new StoreManifest(
+                        current.manifestSchemaVersion(),
+                        details.trimmedName(),
+                        details.trimmedDescription(),
+                        normalisedCategory(details.category()),
+                        current.icon(),
+                        current.steps(),
+                        current.requiredOnInstall(),
+                        current.suggestedTrigger(),
+                        current.minimumStirlingVersion());
+        listing.setName(updated.name());
+        listing.setSlug(StoreIds.slugify(updated.name()));
+        listing.setDescription(updated.description());
+        listing.setCategory(updated.category());
+        listing.setManifestJson(objectMapper.writeValueAsString(updated));
+        listing.setLatestChange(details.trimmedWhatChanged());
+        return toDetail(listings.save(listing), viewer());
+    }
+
+    private static LocalDateTime now() {
+        return LocalDateTime.now(ZoneOffset.UTC);
+    }
+
     private void apply(StoreListing listing, Prepared prepared, PublishRequest request) {
         StoreManifest manifest = prepared.result().manifest();
         listing.setName(manifest.name());
@@ -195,8 +250,8 @@ public class StoreService {
         listing.setNeedsConnections(prepared.result().needsSetup());
         listing.setLatestChange(request.trimmedWhatChanged());
         listing.setPublishedByUserId(teamSecurity.currentUserId());
-        listing.setRightsAcceptedAt(LocalDateTime.now());
-        listing.setPublishedAt(LocalDateTime.now());
+        listing.setRightsAcceptedAt(now());
+        listing.setPublishedAt(now());
         listing.setStatus(StoreListing.Status.LISTED);
         listing.setRemovedBy(null);
     }
@@ -209,7 +264,8 @@ public class StoreService {
         }
         listing.setStoreId(storeId);
         listing.setPublisherTeamId(teamId);
-        listing.setPublishedAt(LocalDateTime.now());
+        listing.setCreatedAt(now());
+        listing.setPublishedAt(now());
         return listing;
     }
 
@@ -587,6 +643,8 @@ public class StoreService {
                 manifest.steps(),
                 manifest.requiredOnInstall(),
                 manifest.minimumStirlingVersion(),
+                row.getStatus(),
+                row.getRemovedBy(),
                 viewerInfo);
     }
 

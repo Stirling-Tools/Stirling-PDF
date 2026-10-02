@@ -53,7 +53,13 @@ public final class StoreDtos {
             List<StoreManifest.Step> steps,
             List<StoreManifest.RequiredOnInstall> requiredOnInstall,
             String minimumStirlingVersion,
+            StoreListing.Status status,
+            StoreListing.RemovedBy removedBy,
             Viewer viewer) {}
+
+    /** An owner's edit of the listing text. The tool chain changes only by republishing. */
+    public record DetailsRequest(
+            String name, String description, String category, String whatChanged) {}
 
     public record ListPage(List<ListingSummary> items, String nextCursor, int total) {}
 
