@@ -69,13 +69,10 @@ env:
     build.gradle
     app/**/build.gradle
     gradle/**/*.gradle
-  GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-25
   CARGO_FILES_TO_HASH: |
     frontend/editor/src-tauri
-  # frontend/editor/src-tauri/Cargo.toml
-  # frontend/editor/src-tauri/Cargo.lock
-  CARGO_HOME: ${{ github.workspace }}/.cache/cargo
-  GITHUB_TOKEN: ${{ github.token }}
+    frontend/editor/src-tauri/Cargo.toml
+    frontend/editor/src-tauri/Cargo.lock
 
 jobs:
   determine-matrix:
@@ -131,6 +128,7 @@ jobs:
           echo "matrix={\"include\":[$JOINED]}" >> $GITHUB_OUTPUT
 
   hash_pr:
+    needs: determine-matrix
     name: Hash files
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -140,7 +138,6 @@ jobs:
       java_version: ${{ steps.hash.outputs.java_version }}
       gradle_files_hash: ${{ steps.hash.outputs.gradle_files_hash}}
       cargo_files_hash: ${{ steps.hash.outputs.cargo_files_hash}}
-      cache_key: ${{ steps.hash.outputs.cache_key }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
@@ -157,11 +154,11 @@ jobs:
         env:
           GRADLE_HASH: ${{ hashFiles(env.GRADLE_FILES_TO_HASH) }}
           CARGO_HASH: ${{ hashFiles(env.CARGO_FILES_TO_HASH) }}
+        shell: bash
         run: |
           echo "java_version=${{ env.JAVA_VERSION }}" >> "$GITHUB_OUTPUT"
           echo "gradle_files_hash=$GRADLE_HASH" >> "$GITHUB_OUTPUT"
           echo "cargo_files_hash=$CARGO_HASH" >> "$GITHUB_OUTPUT"
-          echo "cache_key=gradle-v1-${{ runner.os }}-${{ runner.arch }}-jdk-${{ env.JAVA_VERSION }}-$GRADLE_HASH" >> "$GITHUB_OUTPUT"
 
   build:
     # Windows/GPG signing only runs on main (see the per-step gates below), so only
@@ -179,6 +176,8 @@ jobs:
     runs-on: ${{ matrix.platform }}
     timeout-minutes: 90
     env:
+      GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-${{ env.JAVA_VERSION }}
+      CARGO_HOME: ${{ github.workspace }}/.cache/cargo
       TAURI_BUNDLER_DMG_IGNORE_CI: "true"
       SM_API_KEY: ${{ secrets.SM_API_KEY }}
       APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
@@ -232,9 +231,9 @@ jobs:
           echo "$(brew --prefix gnu-tar)/libexec/gnubin" >> "$GITHUB_PATH"
           tar --version
 
-      - name: Restore cache sftp
-        id: cache-cargo
-        uses: Ludy87/cache-the-planet/multi-cache@430f9495972e3ef9867bac8b605ebdb2137aa9ee
+      - name: Restore cache artifact
+        id: cache
+        uses: Ludy87/cache-the-planet/multi-cache@ea6aa04213fec4fdcfcf77f133ee93bf2176bd38
         with:
           storage: github-artifact
           artifact-retention-days: 1
@@ -248,9 +247,9 @@ jobs:
             cargo-bin:
               path: .cache/cargo/bin
             gradle-caches:
-              path: .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/caches
+              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
             gradle-wrapper:
-              path: .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/wrapper
+              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
           save-scope: shared
           key: |
             gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
@@ -258,6 +257,7 @@ jobs:
             cargo-registry=${{ needs.hash_pr.outputs.cargo_files_hash }}
             cargo-git=${{ needs.hash_pr.outputs.cargo_files_hash }}
             cargo-bin=${{ needs.hash_pr.outputs.cargo_files_hash }}
+          token: ${{ github.token }}
           allow-shared-restore: true
           strict: false
 
@@ -267,70 +267,29 @@ jobs:
           toolchain: stable
           targets: ${{ matrix.platform == 'macos-15' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
-      # Cache the Cargo registry and compiled dependency crates so the build
-      # only recompiles the app crate. Written on main; PRs and the merge queue
-      # restore from it.
-      - name: Cache Rust build
-        if: ${{ steps.cache-cargo.outputs.error }}
-        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
-        with:
-          workspaces: frontend/editor/src-tauri
-          # Stable key shared across workflows so the nightly warmer.
-          # rust-cache still appends OS + rustc + Cargo.lock.
-          shared-key: tauri-${{ matrix.name }}
-          save-if: ${{ github.ref == 'refs/heads/main' }}
-          # Save the dependency cache even if a later step fails
-          cache-on-failure: true
-
-      # The shared key is only ever written by the Linux prime job, so on
-      # Windows and macOS it never hits and every PR leg downloaded the Gradle
-      # distribution and every dependency. Fall back to the cache the nightly
-      # warm run saves for this OS.
-      - name: Restore cache Gradle User Home
-        if: ${{ steps.cache-cargo.outputs.error && inputs.use_shared_cache }}
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: |
-            .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/caches
-            .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/wrapper
-          key: gradle-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
-          restore-keys: |
-            gradle-tauri-build-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-
-
-      - name: Restore cache Gradle
-        if: ${{ steps.cache-cargo.outputs.error && inputs.use_shared_cache == false }}
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: |
-            .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/caches
-            .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/wrapper
-          key: gradle-tauri-build-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
-          restore-keys: |
-            gradle-tauri-build-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-
-
-      - name: Set up x86_64 JDK 25 (macOS universal JRE)
+      - name: Set up x86_64 JDK ${{ env.JAVA_VERSION }} (macOS universal JRE)
         if: matrix.platform == 'macos-15'
         uses: ./.github/actions/java
         with:
-          java-version: "25"
+          java-version: ${{ env.JAVA_VERSION }}
           architecture: "x64"
 
       - name: Capture x86_64 JAVA_HOME
         if: matrix.platform == 'macos-15'
         run: echo "X64_JAVA_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
 
-      - name: Set up JDK 25
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
         if: matrix.platform != 'windows-11-arm'
         uses: ./.github/actions/java
         with:
-          java-version: "25"
+          java-version: ${{ env.JAVA_VERSION }}
 
       # Windows ARM64 runners have no preinstalled JDK 25; Microsoft provides an ARM64 build.
-      - name: Set up JDK 25 (Windows ARM64)
+      - name: Set up JDK ${{ env.JAVA_VERSION }} (Windows ARM64)
         if: matrix.platform == 'windows-11-arm'
         uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
-          java-version: "25"
+          java-version: ${{ env.JAVA_VERSION }}
           distribution: "microsoft"
           architecture: "arm64"
 
@@ -830,6 +789,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.determine-matrix.outputs.matrix) }}
+    env:
+      GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-${{ env.JAVA_VERSION }}
+      CARGO_HOME: ${{ github.workspace }}/.cache/cargo
     runs-on: ${{ matrix.platform }}
     timeout-minutes: 45
     steps:
@@ -847,50 +809,60 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libjavascriptcoregtk-4.0-dev libsoup2.4-dev libjavascriptcoregtk-4.1-dev libsoup-3.0-dev
 
-      - name: Setup Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 22
-          cache: "npm"
-          cache-dependency-path: frontend/package-lock.json
+      # - name: Setup Node.js
+      #   uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      #   with:
+      #     node-version: 22
+      #     cache: "npm"
+      #     cache-dependency-path: frontend/package-lock.json
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7 # stable
         with:
           toolchain: stable
 
-      # Dev-profile artifacts, kept apart from the release cache the bundle
-      # build restores. Written on main (the nightly warm run); PRs restore.
-      - name: Cache Rust build
-        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - name: Restore cache artifact
+        id: cache
+        uses: Ludy87/cache-the-planet/multi-cache@ea6aa04213fec4fdcfcf77f133ee93bf2176bd38
         with:
-          workspaces: frontend/editor/src-tauri
-          shared-key: tauri-test-${{ matrix.name }}
-          save-if: ${{ github.ref == 'refs/heads/main' }}
-          cache-on-failure: true
+          storage: github-artifact
+          artifact-retention-days: 1
+          manifest-branch: dev-cache-artifact
+          manifest-path: .github/cache-data
+          multi-cache: |
+            cargo-registry:
+              path: .cache/cargo/registry
+            cargo-git:
+              path: .cache/cargo/git
+            cargo-bin:
+              path: .cache/cargo/bin
+            gradle-caches:
+              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
+            gradle-wrapper:
+              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
+          save-scope: shared
+          key: |
+            gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
+            gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}
+            cargo-registry=${{ needs.hash_pr.outputs.cargo_files_hash }}
+            cargo-git=${{ needs.hash_pr.outputs.cargo_files_hash }}
+            cargo-bin=${{ needs.hash_pr.outputs.cargo_files_hash }}
+          token: ${{ github.token }}
+          allow-shared-restore: true
+          strict: false
 
-      - name: Restore cache Gradle User Home
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: |
-            .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/caches
-            .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/wrapper
-          key: gradle-tauri-build-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
-          restore-keys: |
-            gradle-tauri-build-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-
-
-      - name: Set up JDK 25
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
         if: matrix.platform != 'windows-11-arm'
         uses: ./.github/actions/java
         with:
-          java-version: "25"
+          java-version: ${{ env.JAVA_VERSION }}
 
       # Windows ARM64 runners have no preinstalled JDK 25; Microsoft provides an ARM64 build.
-      - name: Set up JDK 25 (Windows ARM64)
+      - name: Set up JDK ${{ env.JAVA_VERSION }} (Windows ARM64)
         if: matrix.platform == 'windows-11-arm'
         uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
-          java-version: "25"
+          java-version: ${{ env.JAVA_VERSION }}
           distribution: "microsoft"
           architecture: "arm64"
 

@@ -35,41 +35,6 @@ env:
     engine/uv.lock
 
 jobs:
-  hash_pr:
-    name: Hash Gradle files
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    permissions:
-      contents: read
-    outputs:
-      java_version: ${{ steps.hash.outputs.java_version }}
-      gradle_cache_key: ${{ steps.hash.outputs.gradle_cache_key }}
-      gradle_files_hash: ${{ steps.hash.outputs.gradle_files_hash }}
-      uv_files_hash: ${{ steps.hash.outputs.uv_files_hash }}
-    steps:
-      - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
-        with:
-          egress-policy: audit
-
-      - name: Check out repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Hash Gradle files
-        id: hash
-        env:
-          GRADLE_FILES_HASH: ${{ hashFiles(env.GRADLE_FILES_TO_HASH) }}
-          UV_FILES_HASH: ${{ hashFiles(env.UV_FILES_TO_HASH) }}
-        shell: bash
-        run: |
-          GRADLE_HASH="$GRADLE_FILES_HASH"
-          UV_HASH="$UV_FILES_HASH"
-          echo "java_version=${{ env.JAVA_VERSION }}" >> "$GITHUB_OUTPUT"
-          echo "gradle_files_hash=$GRADLE_HASH" >> "$GITHUB_OUTPUT"
-          echo "uv_files_hash=$UV_HASH" >> "$GITHUB_OUTPUT"
-          echo "gradle_cache_key=gradle-v1-${{ runner.os }}-${{ runner.arch }}-jdk-${{ env.JAVA_VERSION }}-$GRADLE_HASH" >> "$GITHUB_OUTPUT"
   build:
     environment:
       name: ci-unsigned
@@ -78,10 +43,9 @@ jobs:
     needs: [hash_pr]
     timeout-minutes: 30
     env:
-      GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}
+      GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-${{ env.JAVA_VERSION }}
       UV_CACHE_DIR: ${{ github.workspace }}/.cache/setup-uv-cache
       UV_PYTHON_INSTALL_DIR: ${{ github.workspace }}/.cache/uv-python-dir
-      CACHE_COMPRESSION_LEVEL: 1
     permissions:
       contents: write
     strategy:
@@ -98,6 +62,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
+      - name: Hash Gradle files
+        id: hash
+        env:
+          GRADLE_FILES_HASH: ${{ hashFiles(env.GRADLE_FILES_TO_HASH) }}
+          UV_FILES_HASH: ${{ hashFiles(env.UV_FILES_TO_HASH) }}
+        shell: bash
+        run: |
+          GRADLE_HASH="$GRADLE_FILES_HASH"
+          UV_HASH="$UV_FILES_HASH"
+          echo "java_version=${{ env.JAVA_VERSION }}" >> "$GITHUB_OUTPUT"
+          echo "gradle_files_hash=$GRADLE_HASH" >> "$GITHUB_OUTPUT"
+          echo "uv_files_hash=$UV_HASH" >> "$GITHUB_OUTPUT"
+
       - name: Build multi-cache configuration
         id: cache-config
         shell: bash
@@ -107,9 +84,9 @@ jobs:
               echo 'multi_cache<<EOF'
               cat <<'CACHE'
             gradle-caches:
-              path: .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/caches
+              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
             gradle-wrapper:
-              path: .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/wrapper
+              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
             setup-uv-cache:
               path: .cache/setup-uv-cache
             uv-python-dir:
@@ -117,10 +94,10 @@ jobs:
           CACHE
               echo 'EOF'
               echo 'cache_key<<EOF'
-              echo 'gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}'
-              echo 'gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}'
-              echo 'setup-uv-cache=${{ needs.hash_pr.outputs.uv_files_hash }}'
-              echo 'uv-python-dir=${{ needs.hash_pr.outputs.uv_files_hash }}'
+              echo 'gradle-caches=${{ steps.hash.outputs.gradle_files_hash }}'
+              echo 'gradle-wrapper=${{ steps.hash.outputs.gradle_files_hash }}'
+              echo 'setup-uv-cache=${{ steps.hash.outputs.uv_files_hash }}'
+              echo 'uv-python-dir=${{ steps.hash.outputs.uv_files_hash }}'
               echo 'EOF'
             } >> "$GITHUB_OUTPUT"
           else
@@ -128,21 +105,21 @@ jobs:
               echo 'multi_cache<<EOF'
               cat <<'CACHE'
             gradle-caches:
-              path: .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/caches
+              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
             gradle-wrapper:
-              path: .cache/gradle-java-${{ needs.hash_pr.outputs.java_version }}/wrapper
+              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
           CACHE
               echo 'EOF'
               echo 'cache_key<<EOF'
-              echo 'gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}'
-              echo 'gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}'
+              echo 'gradle-caches=${{ steps.hash.outputs.gradle_files_hash }}'
+              echo 'gradle-wrapper=${{ steps.hash.outputs.gradle_files_hash }}'
               echo 'EOF'
             } >> "$GITHUB_OUTPUT"
           fi
 
       - name: Restore Gradle cache github-artifact
         id: cache
-        uses: Ludy87/cache-the-planet/multi-cache@430f9495972e3ef9867bac8b605ebdb2137aa9ee
+        uses: Ludy87/cache-the-planet/multi-cache@ea6aa04213fec4fdcfcf77f133ee93bf2176bd38
         with:
           manifest-branch: dev-cache-artifact
           manifest-path: .github/cache-data
@@ -154,15 +131,6 @@ jobs:
           key: ${{ steps.cache-config.outputs.cache_key }}
           allow-shared-restore: true
           strict: false
-
-      - name: Restore cache Gradle User Home
-        if: steps.cache.outputs.error
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: |
-            .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
-            .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
-          key: ${{ needs.hash_pr.outputs.gradle_cache_key }}
 
       - name: Set up JDK ${{ matrix.jdk-version }}
         uses: ./.github/actions/java
