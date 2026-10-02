@@ -1,17 +1,15 @@
 name: PR turn labels
 
-# Keeps an open PR's waiting-on-author / waiting-on-review label current between the
-# triages in stale-prs.yml, for events that move the turn without a push. Pushes,
-# opens, reopens and ready-for-review are synced by pr-conflict-labeler.yml once has
-# conflicts is current. Reviews arrive through pr-review-events.yml. Off unless
-# STALE_PR_BOT_LIVE is "true".
+# Adds waiting-on-author on a changes-requested review and removes it when the PR
+# author responds. The rules live in .github/scripts/pr-turn.ts. Reviews arrive
+# through pr-review-events.yml. Off unless STALE_PR_BOT_LIVE is "true".
 
 on:
   workflow_run:
     workflows: ["PR review events"]
     types: [completed]
   pull_request_target:
-    types: [converted_to_draft, labeled, unlabeled]
+    types: [synchronize, ready_for_review, review_requested]
   issue_comment:
     types: [created]
 
@@ -19,27 +17,18 @@ permissions:
   contents: read
 
 jobs:
-  sync:
-    name: Sync turn labels
-    # Labels added with a workflow token never trigger workflows, so a label event
-    # here came from a person. Of those, only needs-changes moves the turn, and of
-    # comments only the author's does.
+  update:
+    name: Update the turn label
+    # Only the author moves the turn on a push, ready, re-request or comment.
     if: >-
       vars.STALE_PR_BOT_LIVE == 'true' && vars.CI_PROFILE != 'lite' && (
         github.event_name == 'workflow_run' ||
-        github.event.action == 'converted_to_draft' ||
-        github.event.label.name == 'needs-changes' ||
+        (github.event.pull_request && github.event.sender.login == github.event.pull_request.user.login) ||
         (github.event.issue.pull_request && github.event.comment.user.login == github.event.issue.user.login)
       )
     runs-on: ubuntu-latest
-    # One running and one queued per PR: GitHub replaces a queued run in the group when
-    # a newer one arrives, and each run reads the PR afresh.
-    concurrency:
-      group: pr-turn-labels-${{ github.event.pull_request.number || github.event.issue.number || github.event.workflow_run.head_sha }}
-      cancel-in-progress: false
     permissions:
       contents: read # actions/checkout
-      checks: read # when a push reached GitHub
       issues: write # add/remove labels
       pull-requests: write # add/remove labels on PRs
     steps:
@@ -53,10 +42,10 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Sync turn labels
+      - name: Update the turn label
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           github-token: ${{ github.token }}
           script: |
-            const { pullNumbersForEvent, syncTurnLabels } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/stale-prs.ts`);
-            await syncTurnLabels({ github, context, core, live: true, pullNumbers: await pullNumbersForEvent(github, context) });
+            const { updateTurnLabel } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/pr-turn.ts`);
+            await updateTurnLabel({ github, context, core });

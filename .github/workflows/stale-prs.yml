@@ -15,7 +15,9 @@ on:
   pull_request:
     paths:
       - ".github/workflows/stale-prs.yml"
-      - ".github/scripts/stale-prs*.ts"
+      - ".github/scripts/*.ts"
+      - ".github/workflows/pr-turn-labels.yml"
+      - ".github/workflows/pr-review-events.yml"
       - ".github/scripts/package.json"
       - ".github/scripts/tsconfig.json"
 
@@ -33,7 +35,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      checks: read
       issues: read
       pull-requests: read
     steps:
@@ -66,7 +67,7 @@ jobs:
         run: npx tsc --noEmit --project ../.github/scripts/tsconfig.json
 
       - name: Run unit tests
-        run: node --test .github/scripts/stale-prs.test.ts
+        run: node --test .github/scripts/*.test.ts
 
       - name: Dry run against open PRs
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -81,7 +82,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read # actions/checkout
-      checks: read # when a push reached GitHub
       issues: write # comment on and label PRs
       pull-requests: write # close PRs
     steps:

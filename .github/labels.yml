@@ -214,7 +214,4 @@
   description: "Closed during the PR backlog cleanup; reopen to continue"
 - name: "waiting-on-author"
   color: "FEF2C0"
-  description: "The next step is the author's; kept up to date daily by the stale PR bot"
-- name: "waiting-on-review"
-  color: "C2E0C6"
-  description: "The next step is a maintainer's, to review or merge; kept up to date daily by the stale PR bot"
+  description: "A maintainer is waiting on the author; removed when the author pushes or replies"
