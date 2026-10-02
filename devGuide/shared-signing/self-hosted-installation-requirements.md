@@ -42,6 +42,19 @@ For source builds, use the server/proprietary flavor and include security/additi
 
 ## Baseline configuration
 
+Storage and Shared Signing are enabled by default in this branch when their settings are omitted. Login is still required. Existing explicit `false` values are preserved on upgrade; remove them or set them to `true` to adopt the new defaults.
+
+To opt out, edit these keys in your existing `settings.yml` and restart:
+
+```yaml
+storage:
+  enabled: false
+  signing:
+    enabled: false
+```
+
+Disable only `storage.signing.enabled` to keep the library available without Shared Signing. Disabling `storage.enabled` also makes Shared Signing unavailable. The equivalent environment overrides are `STORAGE_ENABLED=false` and `STORAGE_SIGNING_ENABLED=false`. File sharing remains separately disabled by default.
+
 Merge this into an existing instance's settings; it is not a complete deployment file. `/storage` is the container path in this example and must be mounted persistently. Use an appropriate absolute path for a bare-JAR installation.
 
 ```yaml
