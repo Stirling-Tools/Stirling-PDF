@@ -109,15 +109,40 @@ test.describe("Pipeline store, anonymous", () => {
 });
 
 test.describe("Pipeline store page, anonymous", () => {
+  // BR-01 and AC-04: the store's pages open with no account, offer a way in, and nothing else of
+  // the portal comes with them.
   test("the store index opens without signing in", async ({ page }) => {
-    // BR-01. The MVP mounts the store inside the portal, whose SaaS gate sends anyone without a
-    // session to /login, so this fails until the store gets a public route. Playwright flags it
-    // as soon as it starts passing.
-    test.fail(true, "BR-01: the store page is behind the portal sign-in gate");
     await page.goto("processor/store", { waitUntil: "domcontentloaded" });
     await expect(
       page.getByRole("heading", { name: "Pipeline store" }),
-    ).toBeVisible({ timeout: 20_000 });
+    ).toBeVisible({ timeout: 30_000 });
     expect(new URL(page.url()).pathname).not.toMatch(/\/login$/);
+    await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible();
+    await expect(page.getByRole("tab", { name: "Starred" })).toHaveCount(0);
+  });
+
+  test("a shared link opens the listing, slug and all", async ({ page }) => {
+    const first = (await (await api.get(`${PUBLIC}?limit=1`)).json()).items[0];
+    test.skip(!first, "the catalogue is empty");
+    await page.goto(`store/p/${first.storeId}-${first.slug}`, {
+      waitUntil: "domcontentloaded",
+    });
+    await expect(page.getByRole("heading", { name: first.name })).toBeVisible({
+      timeout: 30_000,
+    });
+    expect(new URL(page.url()).pathname).toMatch(
+      new RegExp(`/processor/store/${first.storeId}$`),
+    );
+    await expect(
+      page.getByRole("button", { name: "Sign in to install" }),
+    ).toBeVisible();
+    await expect(page.locator(".portal-store-listing__share-url")).toHaveText(
+      new RegExp(`/store/p/${first.storeId}$`),
+    );
+  });
+
+  test("the rest of the portal still needs an account", async ({ page }) => {
+    await page.goto("processor/pipelines", { waitUntil: "domcontentloaded" });
+    await expect(page).toHaveURL(/\/login/, { timeout: 30_000 });
   });
 });
