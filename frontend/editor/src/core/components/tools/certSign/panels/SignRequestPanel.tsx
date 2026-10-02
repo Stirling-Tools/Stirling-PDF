@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
 import { Icon } from "@app/ui/Icon";
@@ -16,6 +16,8 @@ import SignControlsPanel from "@app/components/tools/certSign/panels/SignControl
 import { CertificateConfigModal } from "@app/components/tools/certSign/modals/CertificateConfigModal";
 import type { CertificateSubmitData } from "@app/components/tools/certSign/modals/CertificateConfigModal";
 import type { SigningRequestData } from "@app/hooks/signing/useSigningSessionController";
+import { getSubmittedSignaturePreviews } from "@app/utils/signingPreviews";
+import { ParticipantListPanel } from "@app/components/tools/certSign/panels/ParticipantListPanel";
 
 interface SignRequestPanelProps {
   data: SigningRequestData;
@@ -24,7 +26,15 @@ interface SignRequestPanelProps {
 /** Controls for a sign request: drives viewer placement via the overlay context and reads placed signatures via the overlay API ref. */
 const SignRequestPanel = ({ data }: SignRequestPanelProps) => {
   const { t } = useTranslation();
-  const { signRequest, pdfFile, onSign, onDecline, onBack, canSign } = data;
+  const {
+    signRequest,
+    pdfFile,
+    onSign,
+    onDecline,
+    onRefresh,
+    onBack,
+    canSign,
+  } = data;
   const { actions: fileActions } = useFileActions();
   const { setOverlay } = useSigningOverlay();
 
@@ -48,8 +58,34 @@ const SignRequestPanel = ({ data }: SignRequestPanelProps) => {
   const [certificateModalOpen, setCertificateModalOpen] = useState(false);
   const [signing, setSigning] = useState(false);
   const [declining, setDeclining] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const submittedPreviews = useMemo(
+    () => getSubmittedSignaturePreviews(signRequest),
+    [signRequest],
+  );
+
+  useEffect(() => {
+    if (signRequest.finalized || signing || declining) return;
+    const timer = setInterval(() => {
+      void onRefresh();
+    }, 30000);
+    return () => clearInterval(timer);
+  }, [signRequest.finalized, signing, declining, onRefresh]);
+
+  const refreshPreview = async () => {
+    setRefreshing(true);
+    try {
+      await onRefresh();
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const signControlsVisible = canSign && signatureConfig !== null;
+
+  useEffect(() => {
+    if (!canSign) overlayApiRef.current?.clearPreviews();
+  }, [canSign]);
 
   const handlePreviewsChange = useCallback((previews: SignaturePreview[]) => {
     setPreviewCount(previews.length);
@@ -62,6 +98,8 @@ const SignRequestPanel = ({ data }: SignRequestPanelProps) => {
   useEffect(() => {
     setOverlay({
       file: pdfFile,
+      readOnlySignaturePreviews: submittedPreviews,
+      signaturePreviewsReadOnly: !canSign,
       signaturePlacementMode: signControlsVisible ? placementMode : false,
       signaturePlacementData: signControlsVisible ? placementData : undefined,
       signaturePlacementType: signControlsVisible ? placementType : undefined,
@@ -70,6 +108,8 @@ const SignRequestPanel = ({ data }: SignRequestPanelProps) => {
     });
   }, [
     pdfFile,
+    submittedPreviews,
+    canSign,
     signControlsVisible,
     placementMode,
     placementData,
@@ -220,6 +260,7 @@ const SignRequestPanel = ({ data }: SignRequestPanelProps) => {
       }
 
       await onSign(formData);
+      overlayApiRef.current?.clearPreviews();
       setCertificateModalOpen(false);
     } finally {
       setSigning(false);
@@ -285,6 +326,14 @@ const SignRequestPanel = ({ data }: SignRequestPanelProps) => {
             </StatusBadge>
           }
         />
+        {!signRequest.finalized && (
+          <p className="signing-detail__hint">
+            {t(
+              "signingDetail.inProgressPreview",
+              "In-progress preview with submitted signatures. The owner has not finalized this document yet.",
+            )}
+          </p>
+        )}
         {!canSign && (
           <div className="signing-detail__summary" role="status">
             <Icon
@@ -323,6 +372,12 @@ const SignRequestPanel = ({ data }: SignRequestPanelProps) => {
             </p>
           </div>
         )}
+        {signRequest.participants && (
+          <ParticipantListPanel
+            participants={signRequest.participants}
+            finalized={Boolean(signRequest.finalized)}
+          />
+        )}
         {signControlsVisible && (
           <SignControlsPanel
             placementMode={placementMode}
@@ -335,6 +390,16 @@ const SignRequestPanel = ({ data }: SignRequestPanelProps) => {
         )}
       </div>
       <footer className="signing-detail__footer">
+        {!signRequest.finalized && (
+          <Button
+            variant="secondary"
+            onClick={refreshPreview}
+            loading={refreshing}
+            disabled={signing || declining}
+          >
+            {t("signingDetail.refreshPreview", "Refresh preview")}
+          </Button>
+        )}
         {canSign && (
           <>
             <h3>{t("signingDetail.readyToSign", "Ready to sign?")}</h3>

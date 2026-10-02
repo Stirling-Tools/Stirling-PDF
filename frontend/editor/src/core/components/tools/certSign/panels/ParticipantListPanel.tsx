@@ -3,14 +3,17 @@ import { ActionIcon } from "@app/ui/ActionIcon";
 import { Avatar } from "@app/ui/Avatar";
 import { Icon } from "@app/ui/Icon";
 import { StatusBadge } from "@app/ui/StatusBadge";
-import type { ParticipantInfo } from "@app/types/signingSession";
+import type {
+  ParticipantInfo,
+  SigningParticipantPreview,
+} from "@app/types/signingSession";
 import { getFileColor } from "@app/components/pageEditor/fileColors";
 import "@app/components/shared/signing/signingDetail.css";
 
 interface ParticipantListPanelProps {
-  participants: ParticipantInfo[];
+  participants: (SigningParticipantPreview & { email?: string })[];
   finalized: boolean;
-  onRemove: (participantId: number) => void;
+  onRemove?: (participantId: number) => void;
   disabled?: boolean;
 }
 
@@ -39,7 +42,7 @@ export const ParticipantListPanel: React.FC<ParticipantListPanelProps> = ({
       {participants.map((participant, participantIndex) => {
         const isSigned = participant.status === "SIGNED";
         const isDeclined = participant.status === "DECLINED";
-        const name = participant.name || participant.email;
+        const name = participant.name || participant.email || "";
         return (
           <li className="signing-participant" key={participant.id}>
             <Avatar name={name} size="sm" tone="neutral" />
@@ -64,7 +67,7 @@ export const ParticipantListPanel: React.FC<ParticipantListPanelProps> = ({
                 aria-hidden="true"
               />
             ) : null}
-            {!finalized && !isSigned && !isDeclined && (
+            {onRemove && !finalized && !isSigned && !isDeclined && (
               <ActionIcon
                 size="sm"
                 variant="tertiary"

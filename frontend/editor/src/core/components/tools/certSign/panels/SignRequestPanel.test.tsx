@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import { beforeEach, expect, it, vi } from "vitest";
 import SignRequestPanel from "@app/components/tools/certSign/panels/SignRequestPanel";
@@ -58,6 +58,7 @@ function setup(
     canSign: !finalized && status !== "SIGNED" && status !== "DECLINED",
     onSign: vi.fn(),
     onDecline: vi.fn(),
+    onRefresh: vi.fn().mockResolvedValue(undefined),
     onBack: vi.fn(),
   };
   const result = render(
@@ -112,3 +113,80 @@ it.each([
     );
   },
 );
+
+it("renders submitted marks separately from the participant's editable draft and supports refresh", async () => {
+  const { data, rerender } = setup("SIGNED");
+  data.signRequest = {
+    ...data.signRequest,
+    participants: [
+      {
+        id: 2,
+        name: "Bob",
+        status: "SIGNED",
+        wetSignatures: [
+          {
+            type: "image",
+            data: "data:image/png;base64,AA==",
+            page: 0,
+            x: 0.1,
+            y: 0.2,
+            width: 0.3,
+            height: 0.1,
+          },
+        ],
+      },
+    ],
+  };
+  rerender(
+    <MantineProvider>
+      <SignRequestPanel data={data} />
+    </MantineProvider>,
+  );
+  const overlay = setOverlay.mock.calls.at(-1)![0];
+  expect(overlay.readOnlySignaturePreviews).toHaveLength(1);
+  expect(overlay.signaturePreviews).toBeUndefined();
+  expect(screen.getByRole("list", { name: "Participants" })).toHaveTextContent(
+    "Bob",
+  );
+  expect(
+    screen.queryByRole("button", { name: /Remove Bob/ }),
+  ).not.toBeInTheDocument();
+  await act(async () => {
+    fireEvent.click(screen.getByRole("button", { name: "Refresh preview" }));
+  });
+  expect(data.onRefresh).toHaveBeenCalledOnce();
+  data.signRequest = { ...data.signRequest, finalized: true };
+  rerender(
+    <MantineProvider>
+      <SignRequestPanel data={data} />
+    </MantineProvider>,
+  );
+  expect(setOverlay.mock.calls.at(-1)![0].readOnlySignaturePreviews).toEqual(
+    [],
+  );
+  expect(
+    screen.queryByRole("button", { name: "Refresh preview" }),
+  ).not.toBeInTheDocument();
+});
+
+it("clears an unfinished draft when the owner finalizes or closes access", () => {
+  const { data, rerender } = setup();
+  const clearPreviews = vi.fn();
+  const overlay = setOverlay.mock.calls.at(-1)![0];
+  overlay.signatureOverlayApiRef.current = { clearPreviews };
+  data.canSign = false;
+  data.signRequest = { ...data.signRequest, finalized: true };
+  rerender(
+    <MantineProvider>
+      <SignRequestPanel data={data} />
+    </MantineProvider>,
+  );
+  expect(clearPreviews).toHaveBeenCalledOnce();
+  expect(setOverlay.mock.calls.at(-1)![0]).toEqual(
+    expect.objectContaining({
+      signaturePreviewsReadOnly: true,
+      signaturePlacementMode: false,
+      readOnlySignaturePreviews: [],
+    }),
+  );
+});

@@ -8,6 +8,8 @@ import type {
 export interface SigningOverlay {
   file: File | null;
   signaturePreviews?: SignaturePreview[];
+  /** Submitted marks rendered separately from editable previews and excluded from submission. */
+  readOnlySignaturePreviews?: SignaturePreview[];
   signaturePreviewsReadOnly?: boolean;
   signaturePlacementMode?: boolean;
   signaturePlacementData?: string;

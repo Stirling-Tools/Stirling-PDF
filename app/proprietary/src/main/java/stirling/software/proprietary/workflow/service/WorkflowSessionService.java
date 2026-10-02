@@ -796,6 +796,9 @@ public class WorkflowSessionService {
         dto.setCreatedAt(session.getCreatedAt().toString());
         dto.setMyStatus(participant.getStatus());
         dto.setFinalized(session.isFinalized());
+        dto.setParticipants(
+                stirling.software.proprietary.workflow.util.WorkflowMapper
+                        .toSigningParticipantPreviews(session, objectMapper));
         dto.setCanSign(
                 session.isActive()
                         && !participant.hasCompleted()

@@ -81,6 +81,7 @@ export interface SignRequestDetail {
   myStatus: "PENDING" | "NOTIFIED" | "VIEWED" | "SIGNED" | "DECLINED";
   finalized?: boolean;
   canSign?: boolean;
+  participants?: SigningParticipantPreview[];
   // Signature appearance settings (read-only, configured by owner)
   showSignature?: boolean;
   pageNumber?: number;
@@ -88,3 +89,9 @@ export interface SignRequestDetail {
   location?: string;
   showLogo?: boolean;
 }
+
+/** Public participant progress; contains neither certificate credentials nor share tokens. */
+export type SigningParticipantPreview = Pick<
+  ParticipantInfo,
+  "id" | "name" | "status" | "wetSignatures"
+>;

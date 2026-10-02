@@ -145,6 +145,8 @@ interface LocalEmbedPDFProps {
   // ── Signature overlay (opt-in; all default off) ──────────────────────────
   /** Read-only / interactive signature preview overlays to render per page. */
   signaturePreviews?: SignaturePreview[];
+  /** Submitted marks rendered separately from editable previews and excluded from submission. */
+  readOnlySignaturePreviews?: SignaturePreview[];
   /** If true, previews are display-only (cannot be moved, resized, or deleted). */
   signaturePreviewsReadOnly?: boolean;
   /** When true (and not read-only), clicking a page places a new preview. */
@@ -254,6 +256,7 @@ export function LocalEmbedPDF({
   isSignMode = false,
   pdfRenderMode = "normal",
   signaturePreviews,
+  readOnlySignaturePreviews,
   signaturePreviewsReadOnly = false,
   signaturePlacementMode = false,
   signaturePlacementData,
@@ -1470,7 +1473,17 @@ export function LocalEmbedPDF({
                                   pageIndex={pageIndex}
                                 />
 
-                                {/* Signature preview overlay (opt-in; off by default) */}
+                                {readOnlySignaturePreviews && (
+                                  <SignaturePreviewLayer
+                                    pageIndex={pageIndex}
+                                    pageWidth={width}
+                                    pageHeight={height}
+                                    previews={readOnlySignaturePreviews}
+                                    readOnly
+                                    placementMode={false}
+                                    onChange={() => {}}
+                                  />
+                                )}
                                 {signatureOverlayEnabled && (
                                   <SignaturePreviewLayer
                                     pageIndex={pageIndex}

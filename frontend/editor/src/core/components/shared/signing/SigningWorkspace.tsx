@@ -174,6 +174,7 @@ export default function SigningWorkspace() {
                   previewFile={overlay.file}
                   signaturePreviews={overlay.signaturePreviews}
                   signaturePreviewsReadOnly={overlay.signaturePreviewsReadOnly}
+                  readOnlySignaturePreviews={overlay.readOnlySignaturePreviews}
                   signaturePlacementMode={overlay.signaturePlacementMode}
                   signaturePlacementData={overlay.signaturePlacementData}
                   signaturePlacementType={overlay.signaturePlacementType}

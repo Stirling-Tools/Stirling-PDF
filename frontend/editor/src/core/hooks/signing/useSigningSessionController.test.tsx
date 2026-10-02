@@ -12,6 +12,7 @@ import { expectConsole } from "@app/tests/failOnConsole";
 
 const mocks = vi.hoisted(() => ({
   get: vi.fn(),
+  post: vi.fn(),
   setOverlay: vi.fn(),
   refetch: vi.fn(),
   alert: vi.fn(),
@@ -19,7 +20,9 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@app/auth/UseSession", () => ({
   useAuth: () => ({ user: { id: "alice" } }),
 }));
-vi.mock("@app/services/apiClient", () => ({ default: { get: mocks.get } }));
+vi.mock("@app/services/apiClient", () => ({
+  default: { get: mocks.get, post: mocks.post },
+}));
 vi.mock("@app/components/toast", () => ({ alert: mocks.alert }));
 vi.mock("@app/services/fileStorage", () => ({ fileStorage: {} }));
 vi.mock("@app/contexts/FileContext", () => ({
@@ -288,4 +291,99 @@ it("does not acknowledge participant updates from a refresh after leaving the se
       kind: "session",
     }),
   ).toBe(true);
+});
+
+it("keeps the participant in the preview after signing and refreshes submitted marks", async () => {
+  let signed = false;
+  const peer = { id: 2, name: "Bob", status: "SIGNED", wetSignatures: [] };
+  mocks.post.mockImplementation(async () => {
+    signed = true;
+  });
+  mocks.get.mockImplementation(async (url: string) => ({
+    data: url.endsWith("/document")
+      ? new Blob(["original"])
+      : {
+          ...request,
+          myStatus: signed ? "SIGNED" : "VIEWED",
+          canSign: !signed,
+          participants: [peer],
+        },
+  }));
+  const { result } = renderHook(() => useSigningSessionController(true));
+  await act(async () => {
+    await result.current.openSignRequest(request);
+  });
+  const original = result.current.requestData!.pdfFile;
+  await act(async () => {
+    await result.current.requestData!.onSign(new FormData());
+  });
+  expect(result.current.view).toBe("request");
+  expect(result.current.requestData?.canSign).toBe(false);
+  expect(result.current.requestData?.signRequest.myStatus).toBe("SIGNED");
+  expect(result.current.requestData?.signRequest.participants).toEqual([peer]);
+  expect(result.current.requestData?.pdfFile).toBe(original);
+});
+
+it("refreshes participant progress without replacing the document or draft, then loads the finalized PDF", async () => {
+  let finalized = false;
+  let participants: { id: number; name: string; status: string }[] = [];
+  mocks.get.mockImplementation(async (url: string) => ({
+    data: url.endsWith("/document")
+      ? new Blob([finalized ? "final" : "original"])
+      : { ...request, finalized, canSign: !finalized, participants },
+  }));
+  const { result } = renderHook(() => useSigningSessionController(true));
+  await act(async () => {
+    await result.current.openSignRequest(request);
+  });
+  const original = result.current.requestData!.pdfFile;
+  participants = [{ id: 2, name: "Bob", status: "SIGNED" }];
+  mocks.setOverlay.mockClear();
+  await act(async () => {
+    await result.current.requestData!.onRefresh();
+  });
+  expect(result.current.requestData?.signRequest.participants).toEqual(
+    participants,
+  );
+  expect(result.current.requestData?.pdfFile).toBe(original);
+  expect(mocks.setOverlay).not.toHaveBeenCalled();
+  finalized = true;
+  await act(async () => {
+    await result.current.requestData!.onRefresh();
+  });
+  expect(result.current.requestData?.canSign).toBe(false);
+  expect(result.current.requestData?.signRequest.finalized).toBe(true);
+  expect(result.current.requestData?.pdfFile).not.toBe(original);
+  expect(result.current.requestData?.pdfFile.size).toBe(5);
+});
+
+it("discards a participant refresh that completes after leaving the request", async () => {
+  mocks.get.mockImplementation(async (url: string) => ({
+    data: url.endsWith("/document")
+      ? new Blob(["original"])
+      : { ...request, canSign: true },
+  }));
+  const { result } = renderHook(() => useSigningSessionController(true));
+  await act(async () => {
+    await result.current.openSignRequest(request);
+  });
+  let resolve!: (value: unknown) => void;
+  mocks.get.mockImplementation(
+    () =>
+      new Promise((done) => {
+        resolve = done;
+      }),
+  );
+  let refresh!: Promise<void>;
+  act(() => {
+    refresh = result.current.requestData!.onRefresh();
+  });
+  act(() => result.current.backToList());
+  await act(async () => {
+    resolve({ data: { ...request, myStatus: "SIGNED" } });
+    await refresh;
+  });
+  expect(result.current.requestData).toBeNull();
+  expect(result.current.view).toBe("list");
+  expect(mocks.setOverlay).toHaveBeenLastCalledWith(null);
 });

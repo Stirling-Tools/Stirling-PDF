@@ -89,6 +89,9 @@ class WorkflowSessionServiceTest {
         WorkflowParticipant participant = pendingParticipant(user);
         participant.setExpiresAt(java.time.LocalDateTime.now().minusSeconds(1));
         sessionWithParticipant("expired", participant);
+        assertThatThrownBy(() -> service.getSignRequestDetail("expired", user))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("access expired");
         assertThatThrownBy(() -> service.signDocument("expired", user, new SignDocumentRequest()))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("access expired");

@@ -11,8 +11,7 @@ import {
   SessionSummary,
   SessionDetail,
 } from "@app/types/signingSession";
-import type { SignaturePreview } from "@app/components/viewer/viewerTypes";
-import { getFileColor } from "@app/components/pageEditor/fileColors";
+import { getSubmittedSignaturePreviews } from "@app/utils/signingPreviews";
 import type { StirlingFile } from "@app/types/fileContext";
 import { useFileActions } from "@app/contexts/FileContext";
 import { useSigningOverlay } from "@app/contexts/SigningOverlayContext";
@@ -63,6 +62,7 @@ export interface SigningRequestData {
   pdfFile: File;
   onSign: (certificateData: FormData) => Promise<void>;
   onDecline: () => Promise<void>;
+  onRefresh: () => Promise<void>;
   onBack: () => void;
   onOpenFiles?: () => void;
   canSign: boolean;
@@ -88,35 +88,6 @@ function isParticipantAccessExpired(error: unknown): boolean {
     typeof error.response.data === "string" &&
     error.response.data.includes("Participant access expired")
   );
-}
-
-// Read-only overlay previews for every participant's already-placed wet
-// signatures, coloured per participant (matches the participant list dots).
-function computeWetSignaturePreviews(
-  session: SessionDetail,
-): SignaturePreview[] {
-  const previews: SignaturePreview[] = [];
-  session.participants.forEach((participant, participantIndex) => {
-    if (participant.wetSignatures && participant.wetSignatures.length > 0) {
-      const color = getFileColor(participantIndex);
-      const participantName = participant.name || participant.email;
-      participant.wetSignatures.forEach((wetSig, sigIndex) => {
-        previews.push({
-          id: `participant-${participant.userId}-sig-${sigIndex}`,
-          pageIndex: wetSig.page,
-          x: wetSig.x,
-          y: wetSig.y,
-          width: wetSig.width,
-          height: wetSig.height,
-          signatureData: wetSig.data,
-          signatureType: "image" as const,
-          color,
-          participantName,
-        });
-      });
-    }
-  });
-  return previews;
 }
 
 /** Fetches sessions, creates requests and supplies documents and overlays to the signing workspace. */
@@ -149,6 +120,8 @@ export function useSigningSessionController(
   // than painting its data onto whatever is now on screen.
   const openDetailSessionIdRef = useRef<string | null>(null);
   const openVersion = useRef(0);
+  const requestRefreshVersion = useRef(0);
+  const openRequestSessionIdRef = useRef<string | null>(null);
 
   // Leaving the workspace releases its document and signature overlays.
   useEffect(() => {
@@ -161,6 +134,7 @@ export function useSigningSessionController(
   const backToList = useCallback(() => {
     openVersion.current += 1;
     openDetailSessionIdRef.current = null;
+    openRequestSessionIdRef.current = null;
     setOverlay(null);
     setDetailData(null);
     setRequestData(null);
@@ -168,6 +142,8 @@ export function useSigningSessionController(
   }, [setOverlay]);
 
   const handleSign = async (sessionId: string, certificateData: FormData) => {
+    const version = openVersion.current;
+    requestRefreshVersion.current += 1;
     await apiClient.post(
       `/api/v1/security/cert-sign/sign-requests/${sessionId}/sign`,
       certificateData,
@@ -180,8 +156,77 @@ export function useSigningSessionController(
       expandable: false,
       durationMs: 2500,
     });
-    backToList();
-    await refetch();
+    if (version === openVersion.current) {
+      setRequestData((previous) =>
+        previous
+          ? {
+              ...previous,
+              canSign: false,
+              signRequest: {
+                ...previous.signRequest,
+                myStatus: "SIGNED",
+                canSign: false,
+              },
+            }
+          : previous,
+      );
+      await refreshSignRequest(sessionId);
+    }
+    void refetch();
+  };
+
+  const refreshSignRequest = async (sessionId: string) => {
+    const version = openVersion.current;
+    const refreshVersion = ++requestRefreshVersion.current;
+    const isCurrent = () =>
+      version === openVersion.current &&
+      refreshVersion === requestRefreshVersion.current &&
+      openRequestSessionIdRef.current === sessionId;
+    try {
+      const { data: detail } = await apiClient.get<SignRequestDetail>(
+        `/api/v1/security/cert-sign/sign-requests/${sessionId}`,
+        { suppressErrorToast: true },
+      );
+      if (!isCurrent()) return;
+      let finalFile: File | undefined;
+      if (detail.finalized) {
+        const response = await apiClient.get(
+          `/api/v1/security/cert-sign/sign-requests/${sessionId}/document`,
+          { responseType: "blob", suppressErrorToast: true },
+        );
+        finalFile = new File([response.data], detail.documentName, {
+          type: "application/pdf",
+        });
+      }
+      if (!isCurrent()) return;
+      setRequestData((previous) =>
+        previous
+          ? {
+              ...previous,
+              signRequest: detail,
+              pdfFile: finalFile ?? previous.pdfFile,
+              canSign: detail.canSign === true && !detail.finalized,
+            }
+          : previous,
+      );
+      markSigningItemSeen(accountId, { ...detail, kind: "request" });
+    } catch (error) {
+      if (!isCurrent()) return;
+      if (
+        isAxiosError(error) &&
+        [403, 404].includes(error.response?.status ?? 0)
+      ) {
+        backToList();
+        void refetch();
+      }
+      alert({
+        alertType: "error",
+        title: t("common.error"),
+        body: t("signRequest.fetchFailed", "Failed to load sign request"),
+        expandable: false,
+        durationMs: 3000,
+      });
+    }
   };
 
   const handleDecline = async (sessionId: string) => {
@@ -261,7 +306,7 @@ export function useSigningSessionController(
     // Keep the read-only overlay in sync as participants sign.
     setOverlay((prev) =>
       prev
-        ? { ...prev, signaturePreviews: computeWetSignaturePreviews(session) }
+        ? { ...prev, signaturePreviews: getSubmittedSignaturePreviews(session) }
         : prev,
     );
   };
@@ -335,15 +380,22 @@ export function useSigningSessionController(
 
       // Leaving the detail view: stop any in-flight detail refresh from applying.
       openDetailSessionIdRef.current = null;
+      openRequestSessionIdRef.current = request.sessionId;
       // Seed the viewer with the document immediately; the request panel enriches
       // the overlay with interactive placement props once it mounts.
-      setOverlay({ file: pdfFile });
+      setOverlay({
+        file: pdfFile,
+        readOnlySignaturePreviews: getSubmittedSignaturePreviews(
+          detailResponse.data,
+        ),
+      });
       setRequestData({
         signRequest: detailResponse.data,
         onOpenFiles,
         pdfFile,
         onSign: (certData: FormData) => handleSign(request.sessionId, certData),
         onDecline: () => handleDecline(request.sessionId),
+        onRefresh: () => refreshSignRequest(request.sessionId),
         onBack: backToList,
         canSign,
       });
@@ -428,9 +480,10 @@ export function useSigningSessionController(
       if (version !== openVersion.current) return;
       acknowledgeSession(accountId, detailResponse.data);
       openDetailSessionIdRef.current = session.sessionId;
+      openRequestSessionIdRef.current = null;
       setOverlay({
         file: pdfFile,
-        signaturePreviews: computeWetSignaturePreviews(detailResponse.data),
+        signaturePreviews: getSubmittedSignaturePreviews(detailResponse.data),
         signaturePreviewsReadOnly: true,
       });
       setDetailData({

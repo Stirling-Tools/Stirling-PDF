@@ -1,5 +1,7 @@
 package stirling.software.proprietary.workflow.dto;
 
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,6 +22,7 @@ public class SignRequestDetailDTO {
     private ParticipantStatus myStatus;
     private boolean finalized;
     private boolean canSign;
+    private List<SigningParticipantPreview> participants = List.of();
     // Signature appearance settings (read-only, configured by owner)
     private Boolean showSignature;
     private Integer pageNumber;

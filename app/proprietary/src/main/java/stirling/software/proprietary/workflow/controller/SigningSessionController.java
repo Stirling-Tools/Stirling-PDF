@@ -317,6 +317,17 @@ public class SigningSessionController {
     }
 
     @Operation(summary = "Get sign request detail for participant")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Participant request with submitted signature previews and progress",
+            content =
+                    @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema =
+                                    @Schema(
+                                            implementation =
+                                                    stirling.software.proprietary.workflow.dto
+                                                            .SignRequestDetailDTO.class)))
     @GetMapping(value = "/cert-sign/sign-requests/{sessionId}")
     public ResponseEntity<?> getSignRequestDetail(
             @PathVariable("sessionId") @NotBlank String sessionId, Principal principal) {
