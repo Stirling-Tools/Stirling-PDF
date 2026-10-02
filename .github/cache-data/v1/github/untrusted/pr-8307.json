@@ -826,10 +826,39 @@
       "artifact_id": 11217673732,
       "artifact_name": "cache-untrusted-pr-8307-gradle-wrapper-linux-x64-bf72d815b7e3fe6b5341aea10a8aff3529b1a4aec9fc838bd8be5d81993f1de9-v2--157332f83a08dfcc06670080f92431c8687babbe1a1ea7ff5e-part-000000",
       "workflow_run_id": 36986481682
+    },
+    "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/setup-uv-cache/linux-x64/420a352a55b0046aa1d09a146366286b74ff0eaef54219f651f225162df0f358/v2": {
+      "object": "sha256:84ab5e00fe799b7c97d6fc2de8e33e487402a8f62a28b82ec929cc7dd24c1641",
+      "storage": "github-artifact",
+      "updated_at": "2026-10-02T09:06:02.497Z",
+      "source": "Stirling-Tools/Stirling-PDF",
+      "created_by": "Ludy87",
+      "size": 42692422,
+      "parts": [
+        {
+          "index": 0,
+          "object": "sha256:c3ac84d100eada8c9f2add9fc2d8bcb408bde2f67ef7881b02925f59d7233d69",
+          "size": 25165824,
+          "artifact_id": 11218142687,
+          "artifact_name": "cache-untrusted-pr-8307-setup-uv-cache-linux-x64-420a352a55b0046aa1d09a146366286b74ff0eaef54219f651f225162df0f358-v2--84ab5e00fe799b7c97d6fc2de8e33e487402a8f62a28b82ec9-part-000000",
+          "workflow_run_id": 36986481682
+        },
+        {
+          "index": 1,
+          "object": "sha256:3ec57b82d4fe0d45706508eaee95c5410f4b291fdce38f00cd5cdabb7340943b",
+          "size": 17526598,
+          "artifact_id": 11218217394,
+          "artifact_name": "cache-untrusted-pr-8307-setup-uv-cache-linux-x64-420a352a55b0046aa1d09a146366286b74ff0eaef54219f651f225162df0f358-v2--84ab5e00fe799b7c97d6fc2de8e33e487402a8f62a28b82ec9-part-000001",
+          "workflow_run_id": 36986481682
+        }
+      ],
+      "artifact_id": 11218142687,
+      "artifact_name": "cache-untrusted-pr-8307-setup-uv-cache-linux-x64-420a352a55b0046aa1d09a146366286b74ff0eaef54219f651f225162df0f358-v2--84ab5e00fe799b7c97d6fc2de8e33e487402a8f62a28b82ec9-part-000000",
+      "workflow_run_id": 36986481682
     }
   },
   "monitoring": {
     "window_started_at": "2026-10-02T08:07:52.610Z",
-    "writes": 10
+    "writes": 11
   }
 }
