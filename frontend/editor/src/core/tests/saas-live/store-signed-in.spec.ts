@@ -11,6 +11,10 @@ import {
   savedSession,
   signedInApi,
 } from "@app/tests/saas-live/saasLive";
+import {
+  DEFAULT_TEST_PASSWORD,
+  DEFAULT_TEST_USERNAME,
+} from "@app/tests/helpers/login";
 
 /**
  * One listing's whole life on a real SaaS backend and database, as a team leader: build a
@@ -49,6 +53,23 @@ function details(extra: Record<string, unknown> = {}) {
     category: "security",
     ...extra,
   };
+}
+
+function chainWithPasswords() {
+  return [
+    {
+      operation: "/api/v1/misc/compress-pdf",
+      parameters: { optimizeLevel: 2 },
+    },
+    {
+      operation: "/api/v1/security/add-password",
+      parameters: {
+        password: USER_PASSWORD,
+        ownerPassword: OWNER_PASSWORD,
+        keyLength: 256,
+      },
+    },
+  ];
 }
 
 function codes(report: { findings: Array<{ code: string }> }): string[] {
@@ -91,20 +112,8 @@ test("a team leader creates a pipeline that holds passwords", async () => {
       required: false,
       icon: "lock",
       inputs: [],
-      steps: [
-        {
-          operation: "/api/v1/security/add-password",
-          parameters: {
-            password: USER_PASSWORD,
-            ownerPassword: OWNER_PASSWORD,
-            keyLength: 256,
-          },
-        },
-        {
-          operation: "/api/v1/misc/compress-pdf",
-          parameters: { optimizeLevel: 2 },
-        },
-      ],
+      // Compress first: compress cannot read an encrypted PDF.
+      steps: chainWithPasswords(),
       outputIds: [],
     },
   });
@@ -157,9 +166,9 @@ test("the preflight clears both passwords and asks installers for them", async (
     (finding: { code: string }) => finding.code === "secret-cleared",
   );
   expect(cleared?.severity).toBe("warn");
-  expect(cleared?.where).toMatchObject({ kind: "step", stepIndex: 0 });
+  expect(cleared?.where).toMatchObject({ kind: "step", stepIndex: 1 });
 
-  const [encrypt, compress] = report.manifest.steps;
+  const [compress, encrypt] = report.manifest.steps;
   expect(encrypt.parameters).not.toHaveProperty("password");
   expect(encrypt.parameters).not.toHaveProperty("ownerPassword");
   expect(encrypt.parameters.keyLength).toBe(256);
@@ -170,12 +179,12 @@ test("the preflight clears both passwords and asks installers for them", async (
       expect.objectContaining({ kind: "destination" }),
       expect.objectContaining({
         kind: "parameter",
-        stepIndex: 0,
+        stepIndex: 1,
         field: "password",
       }),
       expect.objectContaining({
         kind: "parameter",
-        stepIndex: 0,
+        stepIndex: 1,
         field: "ownerPassword",
       }),
     ]),
@@ -338,7 +347,7 @@ test("installing from the listing page makes a paused copy and opens the builder
   expect(copy.outputIds).toEqual([]);
   expect(
     copy.steps.map((step: { operation: string }) => step.operation),
-  ).toEqual(["/api/v1/security/add-password", "/api/v1/misc/compress-pdf"]);
+  ).toEqual(["/api/v1/misc/compress-pdf", "/api/v1/security/add-password"]);
   expect(containsSecret(copy)).toBe(false);
 
   // The install count is recorded after navigation, best effort.
@@ -370,8 +379,8 @@ test("a linked self-hosted server installs the listing as its own paused copy", 
   try {
     const login = await server.post("/api/v1/auth/login", {
       data: {
-        username: process.env.SELF_HOSTED_E2E_USER ?? "admin",
-        password: process.env.SELF_HOSTED_E2E_PASSWORD ?? "adminadmin",
+        username: process.env.SELF_HOSTED_E2E_USER ?? DEFAULT_TEST_USERNAME,
+        password: process.env.SELF_HOSTED_E2E_PASSWORD ?? DEFAULT_TEST_PASSWORD,
       },
     });
     expect(login.status(), await login.text()).toBe(200);
@@ -398,6 +407,105 @@ test("a linked self-hosted server installs the listing as its own paused copy", 
     expect(containsSecret(copy)).toBe(false);
     await server.delete(`/api/v1/policies/${copy.id}`, { headers });
   } finally {
+    await server.dispose();
+  }
+});
+
+test("a self-hosted server publishes its own pipeline, and its passwords stay on it", async () => {
+  test.skip(
+    !SELF_HOSTED_API_URL,
+    "Set SELF_HOSTED_E2E_API_URL to a running self-hosted backend",
+  );
+  const server = await playwrightRequest.newContext({
+    baseURL: SELF_HOSTED_API_URL,
+  });
+  let listingId = "";
+  let localId = "";
+  try {
+    const login = await server.post("/api/v1/auth/login", {
+      data: {
+        username: process.env.SELF_HOSTED_E2E_USER ?? DEFAULT_TEST_USERNAME,
+        password: process.env.SELF_HOSTED_E2E_PASSWORD ?? DEFAULT_TEST_PASSWORD,
+      },
+    });
+    const headers = {
+      Authorization: `Bearer ${(await login.json()).session.access_token}`,
+    };
+    const local = await server.post("/api/v1/policies", {
+      headers,
+      data: {
+        name: `${NAME} self-hosted`,
+        enabled: false,
+        required: false,
+        icon: "lock",
+        inputs: [],
+        steps: chainWithPasswords(),
+        outputIds: [],
+      },
+    });
+    expect(local.status(), await local.text()).toBe(200);
+    localId = (await local.json()).id;
+
+    // The store cannot read this server's pipelines, so the portal sends an export of it.
+    const exported = await (
+      await server.get(`/api/v1/policies/${localId}/store-export`, { headers })
+    ).json();
+    expect(containsSecret(exported)).toBe(false);
+
+    const published = await api.post("/api/v1/store/publish", {
+      data: {
+        policyId: localId,
+        name: `Self-hosted shrink and lock ${RUN}`,
+        description: DESCRIPTION,
+        category: "security",
+        policy: exported,
+      },
+    });
+    expect(published.status(), await published.text()).toBe(201);
+    listingId = (await published.json()).storeId;
+    const manifest = await (
+      await anon.get(`${PUBLIC}/${listingId}/manifest`)
+    ).json();
+    expect(containsSecret(manifest)).toBe(false);
+
+    const linked = await server.put(`/api/v1/policies/${localId}/store-link`, {
+      headers,
+      data: { storeId: listingId },
+    });
+    expect((await linked.json()).storeId).toBe(listingId);
+
+    // Linked, the next publish from that server is a republish of the same listing.
+    const again = await (
+      await server.get(`/api/v1/policies/${localId}/store-export`, { headers })
+    ).json();
+    const report = await (
+      await api.post("/api/v1/store/publish/preflight", {
+        data: {
+          policyId: localId,
+          name: `Self-hosted shrink and lock ${RUN}`,
+          description: DESCRIPTION,
+          category: "security",
+          policy: again,
+        },
+      })
+    ).json();
+    expect(report.existingStoreId).toBe(listingId);
+  } finally {
+    if (listingId) await api.delete(`/api/v1/store/pipelines/${listingId}`);
+    if (localId) {
+      const relogin = await server.post("/api/v1/auth/login", {
+        data: {
+          username: process.env.SELF_HOSTED_E2E_USER ?? DEFAULT_TEST_USERNAME,
+          password:
+            process.env.SELF_HOSTED_E2E_PASSWORD ?? DEFAULT_TEST_PASSWORD,
+        },
+      });
+      await server.delete(`/api/v1/policies/${localId}`, {
+        headers: {
+          Authorization: `Bearer ${(await relogin.json()).session.access_token}`,
+        },
+      });
+    }
     await server.dispose();
   }
 });
