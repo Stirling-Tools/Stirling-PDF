@@ -486,22 +486,21 @@ function TrackRowImpl({
             selectedPageIds={selectedInTrack}
             onSelect={handleSelectNumbers}
           />
-          {!isNew && (
-            <Tooltip
-              position="bottom"
-              content={t("pageTracks.track.close", "Close file")}
+          <Tooltip
+            position="bottom"
+            content={t("pageTracks.track.close", "Close file")}
+          >
+            <ActionIcon
+              variant="quiet"
+              size="sm"
+              accent="danger"
+              aria-label={t("pageTracks.track.close", "Close file")}
+              disabled={isNew}
+              onClick={() => onClose(track.fileId)}
             >
-              <ActionIcon
-                variant="quiet"
-                size="sm"
-                accent="danger"
-                aria-label={t("pageTracks.track.close", "Close file")}
-                onClick={() => onClose(track.fileId)}
-              >
-                <Icon name="x" size="1rem" />
-              </ActionIcon>
-            </Tooltip>
-          )}
+              <Icon name="x" size="1rem" />
+            </ActionIcon>
+          </Tooltip>
         </div>
       </header>
 
