@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Box, ScrollArea, Text, TextInput } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import "@app/components/viewer/SidebarBase.css";
 
@@ -42,7 +43,7 @@ export function SidebarBase({
   visible = true,
   className = "",
   onClose,
-  closeLabel = "Close sidebar",
+  closeLabel,
   headerActions,
   searchTerm,
   searchPlaceholder,
@@ -50,6 +51,10 @@ export function SidebarBase({
   viewportRef,
   children,
 }: SidebarBaseProps) {
+  const { t } = useTranslation();
+  const resolvedCloseLabel =
+    closeLabel ?? t("viewer.sidebar.close", "Close sidebar");
+
   if (!visible) {
     return null;
   }
@@ -87,8 +92,8 @@ export function SidebarBase({
               accent="neutral"
               size="sm"
               onClick={onClose}
-              aria-label={closeLabel}
-              title={closeLabel}
+              aria-label={resolvedCloseLabel}
+              title={resolvedCloseLabel}
             >
               <Icon name="x" size="1.1rem" />
             </ActionIcon>
@@ -100,7 +105,10 @@ export function SidebarBase({
         <Box px="sm" pb="sm" className="sidebar-base__search">
           <TextInput
             value={searchTerm ?? ""}
-            placeholder={searchPlaceholder ?? "Search..."}
+            placeholder={
+              searchPlaceholder ??
+              t("viewer.sidebar.searchPlaceholder", "Search...")
+            }
             onChange={(e) => onSearchChange(e.currentTarget.value)}
             leftSection={<Icon name="search" size="1.1rem" />}
             size="xs"

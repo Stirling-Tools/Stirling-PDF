@@ -1,3 +1,4 @@
+import i18n from "i18next";
 import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
 import type {
@@ -256,7 +257,9 @@ export class ReflowWrapCommand implements Command {
   }
 
   describe(): string {
-    return `Wrap ${this.runId}`;
+    return i18n.t("pdfTextEditor.commands.wrap", "Wrap {{run}}", {
+      run: this.runId,
+    });
   }
 
   // Share the edit coalesce key for this run so the auto-reflow that fires on
