@@ -1,8 +1,9 @@
 name: PR turn labels
 
-# Adds waiting-on-author on a changes-requested review and removes it when the PR
-# author responds. The rules live in .github/scripts/pr-turn.ts. Reviews arrive
-# through pr-review-events.yml. Off unless STALE_PR_BOT_LIVE is "true".
+# Adds waiting-on-author on a changes-requested review and removes it on an approval
+# or when the PR author responds. The rules live in .github/scripts/pr-turn.ts.
+# Reviews arrive through pr-review-events.yml. Runs whatever STALE_PR_BOT_LIVE says:
+# a label left stale while the triage is off would date its warning from before.
 
 on:
   workflow_run:
@@ -19,12 +20,15 @@ permissions:
 jobs:
   update:
     name: Update the turn label
-    # Only the author moves the turn on a push, ready, re-request or comment.
+    # Only the author moves the turn on a push, ready, re-request or comment, and only
+    # off a PR that has the label. A relay run with no job to do concludes skipped.
     if: >-
-      vars.STALE_PR_BOT_LIVE == 'true' && vars.CI_PROFILE != 'lite' && (
-        github.event_name == 'workflow_run' ||
-        (github.event.pull_request && github.event.sender.login == github.event.pull_request.user.login) ||
-        (github.event.issue.pull_request && github.event.comment.user.login == github.event.issue.user.login)
+      vars.CI_PROFILE != 'lite' && (
+        (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+        (github.event.pull_request && github.event.sender.login == github.event.pull_request.user.login &&
+          contains(github.event.pull_request.labels.*.name, 'waiting-on-author')) ||
+        (github.event.issue.pull_request && github.event.comment.user.login == github.event.issue.user.login &&
+          contains(github.event.issue.labels.*.name, 'waiting-on-author'))
       )
     runs-on: ubuntu-latest
     permissions:

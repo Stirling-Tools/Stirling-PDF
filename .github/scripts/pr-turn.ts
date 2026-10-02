@@ -1,7 +1,8 @@
 // Keeps waiting-on-author current, run by .github/workflows/pr-turn-labels.yml at the
 // moment each event happens. A changes-requested review from someone who can push adds
-// it; the PR author pushing, commenting, replying to a review, re-requesting review or
-// marking the PR ready removes it. This file owns waiting-on-author and no other label.
+// it. An approval from someone who can push removes it, as does the PR author pushing,
+// commenting, replying to a review, re-requesting review or marking the PR ready. This
+// file owns waiting-on-author and no other label.
 
 import { type Core, type GitHubClient, LABELS, type Repo, removeLabel } from "./stale-prs.ts";
 
@@ -55,7 +56,9 @@ async function reviewChange(github: GitHubClient, repo: Repo, number: number, re
   const review = pr.reviews.nodes.find((candidate) => candidate.databaseId === reviewId);
   if (!review?.author) return null;
   if (review.author.login === pr.author?.login) return { number, add: false };
-  return review.state === "CHANGES_REQUESTED" && review.authorCanPushToRepository ? { number, add: true } : null;
+  if (!review.authorCanPushToRepository) return null;
+  if (review.state === "CHANGES_REQUESTED") return { number, add: true };
+  return review.state === "APPROVED" ? { number, add: false } : null;
 }
 
 /** How the triggering event moves waiting-on-author, or null when it does not. */

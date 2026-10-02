@@ -196,10 +196,17 @@ describe("comments", () => {
     assert.match(body, /merge conflicts with `main`\. Merging or rebasing/);
     assert.match(body, /waiting on a response from you\. A reply, a new push/);
     assert.match(body, /closed automatically/);
+    assert.match(body, /a maintainer can add the on-hold label/);
   });
 
   it("says how long a draft has been idle", () => {
     assert.match(warningComment(pullRequest({ isDraft: true, updatedDaysAgo: 31 }), ["idleDraft"], NOW), /for 31 days/);
+  });
+
+  it("does not misstate a closed draft's idle time, which the reminder reset", () => {
+    const body = closingComment(pullRequest({ isDraft: true, updatedDaysAgo: 7 }), ["idleDraft"], NOW);
+    assert.match(body, /no activity since the reminder/);
+    assert.doesNotMatch(body, /for 7 days\./);
   });
 
   it("explains the close and how to reopen", () => {

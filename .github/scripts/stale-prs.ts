@@ -264,15 +264,19 @@ export function warningComment(pr: PullRequest, reasons: Reason[], now: number) 
     ...reasons.map((reason) => `- ${problem(reason, pr, now)} ${remedy(reason, pr)}`),
     "",
     `If this is still outstanding in ${CLOSE_AFTER_WARNING_DAYS} days, the PR will be closed automatically.`,
-    "If you think it's actually waiting on us rather than you, say so here and a maintainer will take a look.",
+    "If you think it's actually waiting on us rather than you, say so here, and a maintainer can add the on-hold label to keep it open.",
   ].join("\n");
 }
+
+// The reminder itself bumped updatedAt, so a draft's idle time is only known since then.
+const closedBecause = (reason: Reason, pr: PullRequest, now: number) =>
+  reason === "idleDraft" ? "It has stayed a draft with no activity since the reminder." : problem(reason, pr, now);
 
 export function closingComment(pr: PullRequest, reasons: Reason[], now: number) {
   return [
     `Hi @${authorLogin(pr)}, this PR has been closed automatically because it was still waiting on you ${CLOSE_AFTER_WARNING_DAYS} days after the reminder:`,
     "",
-    ...reasons.map((reason) => `- ${problem(reason, pr, now)}`),
+    ...reasons.map((reason) => `- ${closedBecause(reason, pr, now)}`),
     "",
     "Thanks for the contribution! If you pick this up again, reopen it (or ask here and a maintainer will) and fix the above.",
   ].join("\n");

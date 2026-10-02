@@ -82,8 +82,12 @@ describe("turn change for an event", () => {
     assert.equal(await changeFor(reviewRun(99), [review("CHANGES_REQUESTED", "passer-by", false)]), null);
   });
 
-  it("ignores approvals and comment-only reviews from maintainers", async () => {
-    assert.equal(await changeFor(reviewRun(99), [review("APPROVED", "maintainer", true)]), null);
+  it("hands the turn back on an approval from someone who can push", async () => {
+    assert.deepEqual(await changeFor(reviewRun(99), [review("APPROVED", "maintainer", true)]), { number: 7, add: false });
+  });
+
+  it("ignores approvals from someone who cannot push, and comment-only reviews", async () => {
+    assert.equal(await changeFor(reviewRun(99), [review("APPROVED", "passer-by", false)]), null);
     assert.equal(await changeFor(reviewRun(99), [review("COMMENTED", "maintainer", true)]), null);
   });
 

@@ -15,6 +15,11 @@ permissions: {}
 jobs:
   relay:
     name: Relay review event
+    # Only reviews that can move the turn: verdicts, and the PR author replying.
+    if: >-
+      github.event.review.state == 'changes_requested' ||
+      github.event.review.state == 'approved' ||
+      github.event.review.user.login == github.event.pull_request.user.login
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
