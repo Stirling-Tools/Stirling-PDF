@@ -165,6 +165,38 @@ tasks:
           npx playwright test --project=live "$@"
         ' bash {{.CLI_ARGS}}
 
+  saas-live:
+    desc: "Run SaaS live E2E tests against a running SaaS stack (shared v3 project)"
+    summary: |
+      Needs a SaaS backend and SaaS frontend already running on a real Supabase
+      project with the pipeline store on. For the shared v3 project, with the v3
+      database password exported as SAAS_STAGING_DB_PASSWORD:
+        STIRLING_STORE_ENABLED=true SECURITY_JWT_ENABLEKEYSTORE=false \
+          task backend:staging:saas PORT=8081
+        VITE_API_BASE_URL=http://localhost:8081 \
+          task frontend:staging:saas PORT=5174 BACKEND_URL=http://localhost:8081
+
+      Signed-in specs need a v3 team leader with portal access, else they skip:
+        SAAS_E2E_EMAIL=... SAAS_E2E_PASSWORD=... task e2e:saas-live
+      The install-to-server leg also needs a self-hosted backend:
+        SELF_HOSTED_E2E_API_URL=http://localhost:8080 (admin / adminadmin, or
+        SELF_HOSTED_E2E_USER / SELF_HOSTED_E2E_PASSWORD)
+      Other URLs: SAAS_E2E_API_URL, SAAS_E2E_APP_URL (include RUN_SUBPATH).
+    dir: frontend/editor
+    env:
+      PW_SAAS_LIVE: "1"
+    cmds:
+      - cmd: |
+          for u in "${SAAS_E2E_API_URL:-http://localhost:8081}/api/v1/info/status" \
+                   "${SAAS_E2E_APP_URL:-http://localhost:5174/app}/"; do
+            # Not -o /dev/null: Windows curl.exe treats it as a real path and exits 23.
+            if ! curl -s -m 5 "$u" >/dev/null 2>&1; then
+              echo "Not reachable: $u. Start the SaaS stack first (task --summary e2e:saas-live)."
+              exit 1
+            fi
+          done
+      - npx playwright test --project=saas-live {{.CLI_ARGS}}
+
   enterprise:
     desc: "Run enterprise E2E tests"
     summary: |

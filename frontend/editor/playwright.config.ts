@@ -42,6 +42,13 @@ const DISK_LINK_SPECS = /disk-link-.*\.spec\.ts/;
 const VIEWER_SWAP_SPECS =
   /viewer-(hot-reload-matrix|in-place-reload)\.spec\.ts/;
 
+// The SaaS live suite drives a SaaS frontend and backend that `task e2e:saas-live` expects to be
+// running already (they need a Supabase project, so no webServer can start them). The URL keeps
+// the frontend's RUN_SUBPATH and ends in a slash so specs can goto relative paths; saasLive.ts
+// derives the same value for the specs.
+const SAAS_LIVE = process.env.PW_SAAS_LIVE === "1";
+const SAAS_APP_URL = `${(process.env.SAAS_E2E_APP_URL ?? "http://localhost:5174/app").replace(/\/$/, "")}/`;
+
 export default defineConfig({
   testDir: "./src/core/tests",
   testMatch: "**/*.spec.ts",
@@ -143,6 +150,21 @@ export default defineConfig({
       dependencies: ["live-setup"],
     },
 
+    // SaaS live - a local SaaS backend + frontend on a real Supabase project (v3 by default).
+    // The setup signs the test account in once; without one, signed-in specs skip.
+    {
+      name: "saas-live-setup",
+      testDir: "./src/core/tests/saas-live-setup",
+      testMatch: /.*\.setup\.ts$/,
+      use: { ...chromiumViewport, baseURL: SAAS_APP_URL },
+    },
+    {
+      name: "saas-live",
+      testDir: "./src/core/tests/saas-live",
+      use: { ...chromiumViewport, baseURL: SAAS_APP_URL },
+      dependencies: ["saas-live-setup"],
+    },
+
     // Enterprise - license-gated SSO/SAML/audit/teams against keycloak compose
     // Uses port 8080 directly (the docker compose stack publishes the
     // backend's built-in frontend there); the Vite dev server is bypassed
@@ -181,8 +203,9 @@ export default defineConfig({
 
   // PW_DESKTOP picks the desktop-mode server instead of the default one, so a
   // normal run never pays for a second build it has no project for.
-  webServer:
-    process.env.PW_DESKTOP === "1"
+  webServer: SAAS_LIVE
+    ? undefined
+    : process.env.PW_DESKTOP === "1"
       ? {
           command: process.env.CI
             ? `npx vite preview --outDir dist-desktop --port ${DESKTOP_PORT} --strictPort`
