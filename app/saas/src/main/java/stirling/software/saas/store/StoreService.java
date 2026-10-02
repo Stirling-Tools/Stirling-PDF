@@ -90,7 +90,7 @@ public class StoreService {
     private final ObjectMapper objectMapper;
 
     public PreflightReport preflight(PublishRequest request) {
-        Policy policy = ownedPolicy(request);
+        Policy policy = publishSource(request).policy();
         return prepare(policy, request, existingListingFor(policy).orElse(null)).report();
     }
 
@@ -101,7 +101,8 @@ public class StoreService {
     @Transactional
     public StoreDtos.ListingDetail publish(PublishRequest request) {
         requireCanPublish();
-        Policy policy = ownedPolicy(request);
+        Publishing source = publishSource(request);
+        Policy policy = source.policy();
         StoreListing existing = existingListingFor(policy).orElse(null);
         if (existing != null) {
             requireNotStaffRemoved(existing);
@@ -113,7 +114,7 @@ public class StoreService {
         StoreListing listing = existing != null ? existing : newListing(policy.teamId());
         apply(listing, prepared, request);
         listing = listings.save(listing);
-        linkPolicy(policy, listing);
+        linkPolicy(source, listing);
         return toDetail(listing, viewer());
     }
 
@@ -123,14 +124,14 @@ public class StoreService {
         requireCanPublish();
         StoreListing listing = teamListing(storeId);
         requireNotStaffRemoved(listing);
-        Policy policy = ownedPolicy(request);
-        Prepared prepared = prepare(policy, request, listing);
+        Publishing source = publishSource(request);
+        Prepared prepared = prepare(source.policy(), request, listing);
         if (!prepared.report().canPublish()) {
             throw new PublishBlockedException(prepared.report());
         }
         apply(listing, prepared, request);
         listing = listings.save(listing);
-        linkPolicy(policy, listing);
+        linkPolicy(source, listing);
         return toDetail(listing, viewer());
     }
 
@@ -271,10 +272,12 @@ public class StoreService {
 
     /**
      * The policy remembers its listing so the next publish is a republish and the builder can link
-     * back.
+     * back. A pipeline from a self-hosted server is not stored here; that server records the link
+     * itself once the publish returns.
      */
-    private void linkPolicy(Policy policy, StoreListing listing) {
-        if (!Objects.equals(policy.storeId(), listing.getStoreId())) {
+    private void linkPolicy(Publishing source, StoreListing listing) {
+        Policy policy = source.policy();
+        if (source.stored() && !Objects.equals(policy.storeId(), listing.getStoreId())) {
             policyStore.save(policy.withStoreId(listing.getStoreId()));
         }
     }
@@ -429,17 +432,26 @@ public class StoreService {
                 .toList();
     }
 
-    private Policy ownedPolicy(PublishRequest request) {
+    /** The pipeline being published, and whether it is stored here (so the link can be saved). */
+    private record Publishing(Policy policy, boolean stored) {}
+
+    /**
+     * The caller's stored policy, or, when this backend has no such policy, the one a linked
+     * self-hosted server sent (see {@link PublishRequest#policy()}).
+     */
+    private Publishing publishSource(PublishRequest request) {
         if (request.policyId() == null || request.policyId().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "policyId is required");
         }
-        return policyStore
-                .get(request.policyId())
-                .filter(policyAccessGuard::canAccess)
-                .orElseThrow(
-                        () ->
-                                new ResponseStatusException(
-                                        HttpStatus.NOT_FOUND, "No policy: " + request.policyId()));
+        Optional<Policy> stored =
+                policyStore.get(request.policyId()).filter(policyAccessGuard::canAccess);
+        if (stored.isPresent()) {
+            return new Publishing(stored.get(), true);
+        }
+        if (request.policy() != null) {
+            return new Publishing(request.policy(), false);
+        }
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No policy: " + request.policyId());
     }
 
     /** The listing this policy already publishes to, if it is one of the caller's team's. */

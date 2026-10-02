@@ -4,12 +4,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -27,6 +31,7 @@ import stirling.software.proprietary.policy.model.EditorConfig;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.model.SensitiveParameters;
 import stirling.software.proprietary.policy.store.PolicyStore;
 
 /**
@@ -39,6 +44,12 @@ import stirling.software.proprietary.policy.store.PolicyStore;
  * installer through choosing a source and destination and supplying any cleared secrets. Only
  * {@code storeId} is kept as a link back to the listing; nothing else about the copy's origin is
  * tracked.
+ *
+ * <p>The other direction lives here too. The store is on the SaaS backend, which cannot read a
+ * self-hosted server's pipelines, so publishing from one sends the pipeline itself: {@code
+ * store-export} hands the portal a copy with every secret setting blanked, so a password never
+ * leaves this server to be stripped elsewhere, and {@code store-link} records the listing it became
+ * so the next publish is a republish.
  */
 @RestController
 @RequestMapping("/api/v1/policies")
@@ -54,6 +65,8 @@ public class PolicyImportController {
     private final PolicyAccessGuard policyAccessGuard;
     private final PolicyManagementAuthority policyManagementAuthority;
 
+    private static final Pattern STORE_ID = Pattern.compile("sp-[0-9a-z]{8}");
+
     /** A store manifest reduced to what a policy needs: the chain, plus the link back. */
     public record PolicyImportRequest(
             String name, String icon, String storeId, List<PipelineStep> steps) {}
@@ -66,10 +79,7 @@ public class PolicyImportController {
                             + " destinations. Name collisions get a numeric suffix. Returns the"
                             + " stored policy.")
     public ResponseEntity<Policy> importPipeline(@RequestBody PolicyImportRequest request) {
-        if (!policyManagementAuthority.canEditPolicies()) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN, "Policies may only be created by a team leader");
-        }
+        requireEditor();
         String name = request.name() == null ? "" : request.name().trim();
         if (name.isEmpty() || name.length() > MAX_NAME_LENGTH) {
             throw new ResponseStatusException(
@@ -127,6 +137,65 @@ public class PolicyImportController {
                         List.of(),
                         request.storeId());
         return ResponseEntity.status(HttpStatus.CREATED).body(policyStore.save(policy));
+    }
+
+    public record StoreLinkRequest(String storeId) {}
+
+    @GetMapping("/{policyId}/store-export")
+    @Operation(
+            summary = "A pipeline prepared for publishing to the store from this server",
+            description =
+                    "The stored pipeline with every secret step setting blanked (the setting is"
+                            + " kept, so the store still marks it as set on install) and no output"
+                            + " settings. The store runs its own checks on what it receives.")
+    public Policy storeExport(@PathVariable String policyId) {
+        requireEditor();
+        Policy policy = editablePolicy(policyId);
+        List<PipelineStep> steps =
+                policy.steps().stream()
+                        .map(
+                                step ->
+                                        new PipelineStep(
+                                                step.operation(),
+                                                SensitiveParameters.blanked(step.parameters()),
+                                                step.fileParameters()))
+                        .toList();
+        return policy.withSteps(steps).withOutput(OutputSpec.inline());
+    }
+
+    @PutMapping(value = "/{policyId}/store-link", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(
+            summary = "Record the store listing a pipeline was published as",
+            description =
+                    "Links the pipeline to its listing so the next publish is a republish and the"
+                            + " builder links back to the store. Returns the stored pipeline.")
+    public Policy linkToStore(
+            @PathVariable String policyId, @RequestBody StoreLinkRequest request) {
+        requireEditor();
+        String storeId = request == null ? null : request.storeId();
+        if (storeId == null || !STORE_ID.matcher(storeId).matches()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Not a store id");
+        }
+        return policyStore.save(editablePolicy(policyId).withStoreId(storeId));
+    }
+
+    private void requireEditor() {
+        if (!policyManagementAuthority.canEditPolicies()) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "Policies may only be changed by a team leader");
+        }
+    }
+
+    /** A pipeline the caller may manage; a processing folder's policy is not one. */
+    private Policy editablePolicy(String policyId) {
+        return policyStore
+                .get(policyId)
+                .filter(policy -> Policy.SURFACE_POLICY.equals(policy.surface()))
+                .filter(policyAccessGuard::canAccess)
+                .orElseThrow(
+                        () ->
+                                new ResponseStatusException(
+                                        HttpStatus.NOT_FOUND, "No policy: " + policyId));
     }
 
     /**

@@ -3,10 +3,8 @@ package stirling.software.saas.store;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
@@ -18,6 +16,7 @@ import stirling.software.proprietary.policy.asset.PolicyAssetRefs;
 import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.model.SensitiveParameters;
 import stirling.software.proprietary.policy.model.TriggerConfig;
 import stirling.software.proprietary.policy.source.Source;
 
@@ -46,40 +45,7 @@ public class StoreManifestSanitizer {
             List<String> tools,
             boolean needsSetup) {}
 
-    static final Set<String> SENSITIVE_TOKENS =
-            Set.of(
-                    "password",
-                    "passphrase",
-                    "token",
-                    "secret",
-                    "secrets",
-                    "authorization",
-                    "auth",
-                    "jwt",
-                    "cred",
-                    "credential",
-                    "credentials",
-                    "cert",
-                    "certificate",
-                    "pin",
-                    "otp");
-    static final Set<String> SENSITIVE_PAIRS =
-            Set.of(
-                    "api key",
-                    "access key",
-                    "secret key",
-                    "private key",
-                    "signing secret",
-                    "client secret",
-                    "shared secret",
-                    "connection id",
-                    "webhook id",
-                    "account key",
-                    "license key");
-
     private static final String INTEGRATION_PREFIX = "/api/v1/integration/";
-    private static final Pattern KEY_TOKENS =
-            Pattern.compile("(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|[_\\-.\\s]+");
     // Every repetition below has a constant upper bound, and each repeated label ends in a
     // delimiter its own character class excludes. Both keep the matchers linear on the user text
     // they run over (CodeQL java/polynomial-redos); the bounds are generous for anything real.
@@ -111,7 +77,7 @@ public class StoreManifestSanitizer {
             findings.add(
                     StoreFinding.info(
                             "source-removed",
-                            "Source left out: " + describe(source, input.sourceId()),
+                            leftOut("Source left out", source),
                             "Stays on this server. Installers choose their own.",
                             StoreFinding.Where.input()));
             if (input.trigger() != null) {
@@ -131,7 +97,7 @@ public class StoreManifestSanitizer {
             findings.add(
                     StoreFinding.info(
                             "destination-removed",
-                            "Destination left out: " + describe(sources.apply(outputId), outputId),
+                            leftOut("Destination left out", sources.apply(outputId)),
                             "Stays on this server. Installers choose their own.",
                             StoreFinding.Where.output()));
         }
@@ -257,27 +223,9 @@ public class StoreManifestSanitizer {
     }
 
     /** Whether a settings key names a secret, judged on its camelCase or snake_case tokens. */
+    /** Kept here for the sanitiser's own tests; the definition is shared with self-hosted. */
     static boolean isSensitiveKey(String key) {
-        if (key == null || key.isBlank()) {
-            return false;
-        }
-        List<String> tokens = new ArrayList<>();
-        for (String token : KEY_TOKENS.split(key)) {
-            if (!token.isBlank()) {
-                tokens.add(token.toLowerCase(Locale.ROOT));
-            }
-        }
-        for (String token : tokens) {
-            if (SENSITIVE_TOKENS.contains(token)) {
-                return true;
-            }
-        }
-        for (int i = 0; i + 1 < tokens.size(); i++) {
-            if (SENSITIVE_PAIRS.contains(tokens.get(i) + " " + tokens.get(i + 1))) {
-                return true;
-            }
-        }
-        return false;
+        return SensitiveParameters.isSensitiveKey(key);
     }
 
     @SuppressWarnings("unchecked")
@@ -373,8 +321,12 @@ public class StoreManifestSanitizer {
         return false;
     }
 
-    private static String describe(Optional<Source> source, String id) {
-        return source.map(s -> s.name() + " (" + s.type() + ")").orElse(id);
+    /**
+     * Names the source when this backend knows it. A self-hosted server's sources are not known
+     * here, and their ids mean nothing to the publisher, so those are left unnamed.
+     */
+    private static String leftOut(String what, Optional<Source> source) {
+        return source.map(s -> what + ": " + s.name() + " (" + s.type() + ")").orElse(what);
     }
 
     private static String triggerSummary(TriggerConfig trigger) {

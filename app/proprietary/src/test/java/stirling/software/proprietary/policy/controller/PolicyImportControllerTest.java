@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,6 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.policy.engine.PolicyValidator;
+import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.store.PolicyStore;
@@ -122,5 +124,77 @@ class PolicyImportControllerTest {
     private static Policy existing(String name) {
         return new Policy(
                 "id-" + name, name, "alice", true, List.of(), List.of(), null, List.of(), 7L);
+    }
+
+    private static Policy stored(String surface) {
+        return new Policy(
+                        "p1",
+                        "Lock and shrink",
+                        "alice",
+                        true,
+                        List.of(),
+                        List.of(
+                                new PipelineStep(
+                                        "/api/v1/security/add-password",
+                                        Map.of("password", "hunter2", "keyLength", 256),
+                                        Map.of())),
+                        new OutputSpec("s3", Map.of("secretAccessKey", "shh")),
+                        List.of("dest-1"),
+                        7L)
+                .withSurface(surface);
+    }
+
+    @Test
+    void storeExportBlanksSecretsAndDropsOutputSettings() {
+        when(policyManagementAuthority.canEditPolicies()).thenReturn(true);
+        Policy policy = stored(Policy.SURFACE_POLICY);
+        when(policyStore.get("p1")).thenReturn(Optional.of(policy));
+        when(policyAccessGuard.canAccess(policy)).thenReturn(true);
+
+        Policy export = controller().storeExport("p1");
+
+        // The setting stays so the store still marks it as set on install; the value never leaves.
+        assertThat(export.steps().get(0).parameters())
+                .containsEntry("password", "")
+                .containsEntry("keyLength", 256);
+        assertThat(export.output().options()).isEmpty();
+        assertThat(export.outputIds()).containsExactly("dest-1");
+    }
+
+    @Test
+    void storeExportIsNotOfferedForAProcessingFolder() {
+        when(policyManagementAuthority.canEditPolicies()).thenReturn(true);
+        when(policyStore.get("p1")).thenReturn(Optional.of(stored("processing-folder")));
+
+        assertThatThrownBy(() -> controller().storeExport("p1"))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(e -> ((ResponseStatusException) e).getStatusCode())
+                .isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    void storeLinkSavesTheListingIdAndRefusesAnythingElse() {
+        when(policyManagementAuthority.canEditPolicies()).thenReturn(true);
+        Policy policy = stored(Policy.SURFACE_POLICY);
+        when(policyStore.get("p1")).thenReturn(Optional.of(policy));
+        when(policyAccessGuard.canAccess(policy)).thenReturn(true);
+        when(policyStore.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        Policy linked =
+                controller()
+                        .linkToStore(
+                                "p1", new PolicyImportController.StoreLinkRequest("sp-8k2m4q7x"));
+        assertThat(linked.storeId()).isEqualTo("sp-8k2m4q7x");
+
+        assertThatThrownBy(
+                        () ->
+                                controller()
+                                        .linkToStore(
+                                                "p1",
+                                                new PolicyImportController.StoreLinkRequest(
+                                                        "stirling-security")))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(e -> ((ResponseStatusException) e).getStatusCode())
+                .isEqualTo(HttpStatus.BAD_REQUEST);
     }
 }
