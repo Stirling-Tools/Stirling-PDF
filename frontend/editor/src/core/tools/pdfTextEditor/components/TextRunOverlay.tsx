@@ -41,6 +41,7 @@ import {
   measureMaxLineWidth,
   resetTextMetricsCache,
 } from "@app/tools/pdfTextEditor/util/textMetrics";
+import { MIN_WRAP_WIDTH_EM } from "@app/tools/pdfTextEditor/commands/ReflowWrapCommand";
 import "@app/tools/pdfTextEditor/components/TextRunOverlay.css";
 
 const RENDER_MODE_INVISIBLE = 3;
@@ -673,7 +674,7 @@ export function TextRunOverlay({
   const wrapMode = widthMode === "wrap";
   const wrapLockWidth = Math.max(
     (run.wrapWidthPt ?? originalBoundsWidthRef.current) * scale,
-    fontSizePx * 4,
+    fontSizePx * MIN_WRAP_WIDTH_EM,
   );
   // The mode the user picked, and nothing else. Forcing a paragraph to wrap in
   // Grow made the two modes indistinguishable for body text and contradicted
@@ -763,7 +764,7 @@ export function TextRunOverlay({
   // The reflow lays text out along the page axis, so a turned run has no
   // meaningful width to drag.
   const canResize = !!onResize && !runRotation;
-  const minResizePx = fontSizePx * 2;
+  const minResizePx = fontSizePx * MIN_WRAP_WIDTH_EM;
 
   function startResize(
     originX: number,

@@ -28,6 +28,13 @@ interface Leaf {
 
 type Word = GenericWord<Leaf>;
 
+/**
+ * Narrowest wrap width, in font sizes. The text overlay draws no box narrower
+ * than this, so a narrower explicit width would wrap the text inside a box
+ * that does not match it.
+ */
+export const MIN_WRAP_WIDTH_EM = 4;
+
 interface RunSnapshot {
   text: string;
   matrixE: number;
@@ -112,9 +119,13 @@ export class ReflowWrapCommand implements Command {
     // loses its last word: "...carry out various" drops "various" onto a line
     // of its own, on lines the user never touched.
     const rawRightEdge = page.display.cropLeft + page.display.cropWidth;
+    const minWidth = fontSize * MIN_WRAP_WIDTH_EM;
+    const requested = this.explicit
+      ? Math.max(this.maxWidthPt, minWidth)
+      : this.maxWidthPt;
     const maxWidth = Math.min(
-      this.maxWidthPt,
-      Math.max(fontSize * 4, rawRightEdge - startX),
+      requested,
+      Math.max(minWidth, rawRightEdge - startX),
     );
 
     // Reflow is only NEEDED when some line actually overflows the wrap width.
