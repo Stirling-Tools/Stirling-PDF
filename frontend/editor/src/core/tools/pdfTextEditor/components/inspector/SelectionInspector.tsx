@@ -48,6 +48,7 @@ export function SelectionInspector({
 }: Props) {
   const runCount = selection.runIds.length;
   const imageCount = selection.imageIds.length;
+  const shapeCount = selection.shapeIds.length;
   const { hasRunSelection, hasImageSelection } = controller;
 
   return (
@@ -55,9 +56,12 @@ export function SelectionInspector({
       <SelectionHeader
         runCount={runCount}
         imageCount={imageCount}
+        shapeCount={shapeCount}
         fontNote={hasRunSelection ? fontNote : null}
       />
-      <GeometrySection geometry={geometry} isImage={!hasRunSelection} />
+      {runCount + imageCount > 0 && (
+        <GeometrySection geometry={geometry} isImage={!hasRunSelection} />
+      )}
       {hasRunSelection && (
         <ParagraphSection
           canGroup={canGroup}
@@ -75,18 +79,28 @@ export function SelectionInspector({
 function SelectionHeader({
   runCount,
   imageCount,
+  shapeCount,
   fontNote,
 }: {
   runCount: number;
   imageCount: number;
+  shapeCount: number;
   fontNote: string | null;
 }) {
   const { t } = useTranslation();
+  const kinds = [runCount, imageCount, shapeCount].filter((n) => n > 0).length;
   let title: string;
-  if (runCount > 0 && imageCount > 0) {
+  if (kinds > 1) {
     title = t("pdfTextEditor.inspector.mixed", "{{count}} objects", {
-      count: runCount + imageCount,
+      count: runCount + imageCount + shapeCount,
     });
+  } else if (shapeCount > 0) {
+    title =
+      shapeCount === 1
+        ? t("pdfTextEditor.inspector.oneShape", "Shape")
+        : t("pdfTextEditor.inspector.manyShapes", "{{count}} shapes", {
+            count: shapeCount,
+          });
   } else if (runCount > 0) {
     title =
       runCount === 1

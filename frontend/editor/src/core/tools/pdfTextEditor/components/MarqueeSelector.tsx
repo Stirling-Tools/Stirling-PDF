@@ -17,6 +17,7 @@ interface MarqueeRect {
 const OWN_GESTURE_SELECTOR = [
   '[data-testid^="pdf-editor-run-"]',
   '[data-testid^="pdf-editor-image-"]',
+  '[data-testid^="pdf-editor-shape-"]',
   '[data-testid^="pdf-editor-ruler"]',
   '[data-testid^="pdf-editor-guide-"]',
   "button",
@@ -26,10 +27,11 @@ const OWN_GESTURE_SELECTOR = [
 ].join(", ");
 
 /**
- * Rectangle-select on the page stack, selecting every text run and image it
- * touches. A plain drag from bare page starts one, Shift extends the current
- * selection, and Ctrl/Cmd+Shift starts one from anywhere, including over text,
- * to override line/paragraph auto-grouping when it gets the structure wrong.
+ * Rectangle-select on the page stack, selecting every text run, image and
+ * shape it touches. A plain drag from bare page starts one, Shift extends the
+ * current selection, and Ctrl/Cmd+Shift starts one from anywhere, including
+ * over text, to override line/paragraph auto-grouping when it gets the
+ * structure wrong.
  */
 export function MarqueeSelector({ store }: MarqueeSelectorProps) {
   const [rect, setRect] = useState<MarqueeRect | null>(null);
@@ -80,10 +82,16 @@ export function MarqueeSelector({ store }: MarqueeSelectorProps) {
       if (!r || (r.width < 3 && r.height < 3)) return;
       const runIds = collectIdsInRect(r, "pdf-editor-run-");
       const imageIds = collectIdsInRect(r, "pdf-editor-image-");
+      const shapeIds = collectIdsInRect(r, "pdf-editor-shape-");
       // A rectangle that caught nothing leaves the selection alone rather than
       // silently wiping it.
-      if (runIds.length === 0 && imageIds.length === 0) return;
-      store.selection.selectMany(runIds, additiveRef.current, imageIds);
+      if (runIds.length + imageIds.length + shapeIds.length === 0) return;
+      store.selection.selectMany(
+        runIds,
+        additiveRef.current,
+        imageIds,
+        shapeIds,
+      );
     }
     function onPointerCancel() {
       if (!startRef.current) return;

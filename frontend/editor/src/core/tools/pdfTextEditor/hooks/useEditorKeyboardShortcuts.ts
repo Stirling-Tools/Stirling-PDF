@@ -132,7 +132,12 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
       if (e.key === "Delete" || e.key === "Backspace") {
         if (isFocusInContentEditable()) return;
         const sel = store.selection.value;
-        if (sel.runIds.length === 0 && sel.imageIds.length === 0) return;
+        if (
+          sel.runIds.length === 0 &&
+          sel.imageIds.length === 0 &&
+          sel.shapeIds.length === 0
+        )
+          return;
         e.preventDefault();
         onDelete();
         return;

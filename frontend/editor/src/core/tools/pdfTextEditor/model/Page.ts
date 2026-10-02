@@ -1,5 +1,6 @@
 import { TextRun } from "@app/tools/pdfTextEditor/model/TextRun";
 import { ImageObject } from "@app/tools/pdfTextEditor/model/ImageObject";
+import type { ShapeObject } from "@app/tools/pdfTextEditor/model/ShapeObject";
 import { DisplayTransform } from "@app/tools/pdfTextEditor/model/DisplayTransform";
 import type { AnnotationBox } from "@app/tools/pdfTextEditor/model/AnnotationBox";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
@@ -15,6 +16,7 @@ export class Page {
   readonly display: DisplayTransform;
   runs: TextRun[];
   images: ImageObject[];
+  shapes: ShapeObject[];
   /** Text-carrying annotations: rendered by the canvas, not editable. */
   annotations: AnnotationBox[];
   /** True if any object on this page has uncommitted mutation. */
@@ -45,6 +47,7 @@ export class Page {
       opts.display ?? DisplayTransform.identity(opts.width, opts.height);
     this.runs = [];
     this.images = [];
+    this.shapes = [];
     this.annotations = [];
     this.dirty = false;
     this.loaded = false;
@@ -59,6 +62,10 @@ export class Page {
 
   setImages(images: ImageObject[]): void {
     this.images = images;
+  }
+
+  setShapes(shapes: ShapeObject[]): void {
+    this.shapes = shapes;
   }
 
   setAnnotations(annotations: AnnotationBox[]): void {
@@ -113,5 +120,9 @@ export class Page {
 
   findImage(id: string): ImageObject | undefined {
     return this.images.find((i) => i.id === id);
+  }
+
+  findShape(id: string): ShapeObject | undefined {
+    return this.shapes.find((s) => s.id === id);
   }
 }

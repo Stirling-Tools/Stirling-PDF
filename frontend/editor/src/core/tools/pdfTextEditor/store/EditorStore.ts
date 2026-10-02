@@ -259,6 +259,7 @@ export class EditorStore {
         revision: live.revision,
         runs: live.runs.map((r) => r.snapshot()),
         images: live.images.map((img) => img.snapshot()),
+        shapes: live.shapes.map((shape) => shape.snapshot()),
         // Regrouping re-populates the page, which re-reads its annotations.
         annotations: live.annotations,
       };
@@ -501,6 +502,7 @@ export class EditorStore {
         revision: live.revision,
         runs: live.runs.map((r) => r.snapshot()),
         images: live.images.map((img) => img.snapshot()),
+        shapes: live.shapes.map((shape) => shape.snapshot()),
       };
     });
     if (!changed) return;

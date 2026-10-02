@@ -25,6 +25,7 @@ import { MarqueeSelector } from "@app/tools/pdfTextEditor/components/MarqueeSele
 import { PageView } from "@app/tools/pdfTextEditor/components/PageView";
 import { EditTextCommand } from "@app/tools/pdfTextEditor/commands/EditTextCommand";
 import { ReflowWrapCommand } from "@app/tools/pdfTextEditor/commands/ReflowWrapCommand";
+import { MoveShapeCommand } from "@app/tools/pdfTextEditor/commands/MoveShapeCommand";
 import { InsertTextCommand } from "@app/tools/pdfTextEditor/commands/InsertTextCommand";
 import { MoveTextRunCommand } from "@app/tools/pdfTextEditor/commands/MoveTextRunCommand";
 import { SetImageTransformCommand } from "@app/tools/pdfTextEditor/commands/SetImageTransformCommand";
@@ -340,6 +341,7 @@ export function PageStage() {
                     showRulers={state.showRulers}
                     selectedRunIds={selection.runIds}
                     selectedImageIds={selection.imageIds}
+                    selectedShapeIds={selection.shapeIds}
                     highlightedRunId={highlightedRunId}
                     onSelectRun={(runId, shiftKey) => {
                       if (shiftKey) store.selection.toggle(runId);
@@ -348,6 +350,16 @@ export function PageStage() {
                     onSelectImage={(imageId) =>
                       store.selection.selectImage(imageId)
                     }
+                    onSelectShape={(shapeId, extend) => {
+                      if (extend) store.selection.toggleShape(shapeId);
+                      else store.selection.selectShape(shapeId);
+                    }}
+                    onMoveShape={(pageIndex, shapeId, dx, dy) => {
+                      store.dispatch(
+                        new MoveShapeCommand({ pageIndex, shapeId, dx, dy }),
+                      );
+                      store.selection.selectShape(shapeId);
+                    }}
                     onEditRun={(pageIndex, runId, nextText) => {
                       // contentEditable can fire several input events per
                       // keystroke burst.

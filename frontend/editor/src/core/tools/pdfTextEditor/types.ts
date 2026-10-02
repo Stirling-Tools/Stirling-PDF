@@ -92,6 +92,13 @@ export interface ImageObjectSnapshot {
   locked?: boolean;
 }
 
+/** A vector path: a line, frame, box or other drawn shape. */
+export interface ShapeObjectSnapshot {
+  id: string;
+  pageIndex: number;
+  bounds: PageRect;
+}
+
 export interface PageSnapshot {
   pageIndex: number;
   width: number;
@@ -102,6 +109,7 @@ export interface PageSnapshot {
   revision: number;
   runs: TextRunSnapshot[];
   images: ImageObjectSnapshot[];
+  shapes: ShapeObjectSnapshot[];
   // Text-carrying annotations: drawn by the canvas, outside the editable
   // object tree. Absent until the page has been read.
   annotations?: AnnotationBox[];
@@ -113,6 +121,8 @@ export interface SelectionState {
   runIds: string[];
   /** Selected image object ids. */
   imageIds: string[];
+  /** Selected vector shape ids. */
+  shapeIds: string[];
   /** Caret position when exactly one run is selected and the user is typing */
   caret: number | null;
 }

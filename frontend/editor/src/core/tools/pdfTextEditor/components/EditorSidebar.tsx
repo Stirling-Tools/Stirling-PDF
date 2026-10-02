@@ -51,7 +51,9 @@ export function EditorSidebar({
   const controller = useToolbarController(store, state, selection);
   const geometry = useSelectionGeometry(store, state, selection);
   const hasSelection =
-    selection.runIds.length > 0 || selection.imageIds.length > 0;
+    selection.runIds.length > 0 ||
+    selection.imageIds.length > 0 ||
+    selection.shapeIds.length > 0;
   const [tab, setTab] = useState<SidebarTab>(initialTab);
 
   // Picking something on the page is a request to see its properties, so the
@@ -151,7 +153,7 @@ function NothingSelected() {
         <Text size="xs" c="dimmed" ta="center">
           {t(
             "pdfTextEditor.inspector.nothingSelectedHint",
-            "Click any text or image on the page to edit it here.",
+            "Click any text, image or shape on the page to edit it here.",
           )}
         </Text>
       </Stack>
