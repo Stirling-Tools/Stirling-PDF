@@ -521,34 +521,74 @@ export default function PageTracks() {
    * is itself being dragged is fine: the reducer skips past the moved pages.
    */
   const resolveHint = useCallback(
-    (overId: string | null, pointerX: number): DropHint | null => {
+    (
+      overId: string | null,
+      pointerX: number,
+      pointerY: number,
+    ): DropHint | null => {
       if (!overId) return null;
 
-      // The lane, or anywhere else on the track: append to it.
-      for (const prefix of [TRACK_PREFIX, ZONE_PREFIX]) {
-        if (!overId.startsWith(prefix)) continue;
-        const fileId = overId.slice(prefix.length) as FileId;
-        if (!workspace.tracks[fileId]) return null;
-        return { fileId, beforePageId: null };
+      // Over a page: insert on whichever side of it the pointer is on.
+      if (overId.startsWith(PAGE_PREFIX)) {
+        const overPageId = overId.slice(PAGE_PREFIX.length);
+        const fileId = trackByPageId.get(overPageId);
+        if (!fileId) return null;
+        const pages = workspace.tracks[fileId]?.pages ?? [];
+        const overIndex = pages.findIndex((page) => page.id === overPageId);
+        if (overIndex === -1) return null;
+        const rect = document
+          .querySelector<HTMLElement>(`[data-page-id="${overPageId}"]`)
+          ?.getBoundingClientRect();
+        const dropAfter = rect ? pointerX > rect.left + rect.width / 2 : false;
+        return {
+          fileId,
+          beforePageId:
+            pages[dropAfter ? overIndex + 1 : overIndex]?.id ?? null,
+        };
       }
 
-      if (!overId.startsWith(PAGE_PREFIX)) return null;
-      const overPageId = overId.slice(PAGE_PREFIX.length);
-      const fileId = trackByPageId.get(overPageId);
+      // The lane itself (the gaps and empty space): drop into the gap nearest
+      // the pointer rather than jumping to the end, so a page can be dropped
+      // between two pages without hovering one of them exactly.
+      let fileId: FileId | undefined;
+      for (const prefix of [TRACK_PREFIX, ZONE_PREFIX])
+        if (overId.startsWith(prefix))
+          fileId = overId.slice(prefix.length) as FileId;
       if (!fileId) return null;
+      const track = workspace.tracks[fileId];
+      if (!track) return null;
+      if (track.pages.length === 0) return { fileId, beforePageId: null };
 
-      const pages = workspace.tracks[fileId]?.pages ?? [];
-      const overIndex = pages.findIndex((page) => page.id === overPageId);
-      if (overIndex === -1) return null;
-
-      const element = document.querySelector<HTMLElement>(
-        `[data-page-id="${overPageId}"]`,
+      const tiles = Array.from(
+        document
+          .querySelector<HTMLElement>(`[data-track-lane="${fileId}"]`)
+          ?.querySelectorAll<HTMLElement>("[data-page-id]") ?? [],
       );
-      const rect = element?.getBoundingClientRect();
-      const dropAfter = rect ? pointerX > rect.left + rect.width / 2 : false;
-
-      const anchor = pages[dropAfter ? overIndex + 1 : overIndex];
-      return { fileId, beforePageId: anchor?.id ?? null };
+      const nearest = tiles
+        .flatMap((tile) => {
+          const id = tile.getAttribute("data-page-id");
+          if (id == null) return [];
+          const rect = tile.getBoundingClientRect();
+          const dist = Math.hypot(
+            pointerX - (rect.left + rect.width / 2),
+            pointerY - (rect.top + rect.height / 2),
+          );
+          return [{ id, rect, dist }];
+        })
+        .reduce<{ id: string; rect: DOMRect; dist: number } | null>(
+          (best, candidate) =>
+            best == null || candidate.dist < best.dist ? candidate : best,
+          null,
+        );
+      if (nearest == null) return { fileId, beforePageId: null };
+      const overIndex = track.pages.findIndex((p) => p.id === nearest.id);
+      if (overIndex === -1) return { fileId, beforePageId: null };
+      const dropAfter = pointerX > nearest.rect.left + nearest.rect.width / 2;
+      return {
+        fileId,
+        beforePageId:
+          track.pages[dropAfter ? overIndex + 1 : overIndex]?.id ?? null,
+      };
     },
     [trackByPageId, workspace],
   );
@@ -610,6 +650,7 @@ export default function PageTracks() {
       const next = resolveHint(
         event.over ? String(event.over.id) : null,
         pointerXOf(event),
+        pointerYOf(event),
       );
       // Most moves land on the same side of the same tile. Keeping the previous
       // object bails the re-render out, so only a real change costs anything.
@@ -635,6 +676,7 @@ export default function PageTracks() {
       const hint = resolveHint(
         event.over ? String(event.over.id) : null,
         pointerXOf(event),
+        pointerYOf(event),
       );
       setDraggingIds(new Set());
       setDropHint(null);

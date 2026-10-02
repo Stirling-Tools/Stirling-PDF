@@ -232,6 +232,7 @@ function TrackRowImpl({
         "--pt-tile-h": `${tileHeightRem}rem`,
         "--pt-tile-footer-h": `${tileFooterRem}rem`,
         "--pt-lane-pad-x": `${TRACK_GEOMETRY.lanePaddingXRem}rem`,
+        "--pt-gap": `${gapRem}rem`,
       } as React.CSSProperties,
     };
   }, [zoom]);

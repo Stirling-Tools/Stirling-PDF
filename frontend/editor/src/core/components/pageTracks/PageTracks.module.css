@@ -548,12 +548,14 @@
   pointer-events: none;
 }
 
+/* Centred in the gap (half a gap outside the tile edge), so it lines up with
+   the insert/split controls that sit between the same two pages. */
 .dropBefore::before {
-  left: -5px;
+  left: calc(var(--pt-gap) / -2);
 }
 
 .dropAfterLast::after {
-  right: -5px;
+  right: calc(var(--pt-gap) / -2);
 }
 
 .dragBadge {

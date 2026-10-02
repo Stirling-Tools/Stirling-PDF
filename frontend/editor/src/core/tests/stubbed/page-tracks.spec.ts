@@ -111,6 +111,35 @@ async function dragPageOnto(
   await page.mouse.up();
 }
 
+/** Drops `from` into the empty gap between two adjacent tiles, over neither. */
+async function dragPageIntoGap(
+  page: import("@playwright/test").Page,
+  from: import("@playwright/test").Locator,
+  leftTile: import("@playwright/test").Locator,
+  rightTile: import("@playwright/test").Locator,
+) {
+  const source = await from.boundingBox();
+  const left = await leftTile.boundingBox();
+  const right = await rightTile.boundingBox();
+  if (!source || !left || !right)
+    throw new Error("drag endpoints are not laid out");
+  const gapX = (left.x + left.width + right.x) / 2;
+  const gapY = left.y + left.height / 2;
+  await page.mouse.move(
+    source.x + source.width / 2,
+    source.y + source.height / 2,
+  );
+  await page.mouse.down();
+  for (const step of [0.2, 0.5, 0.8, 1]) {
+    await page.mouse.move(
+      source.x + (gapX - source.x) * step,
+      source.y + (gapY - source.y) * step,
+      { steps: 8 },
+    );
+  }
+  await page.mouse.up();
+}
+
 /** The order of the tracks, top to bottom. */
 async function trackOrder(page: import("@playwright/test").Page) {
   return page
@@ -289,6 +318,21 @@ test.describe("Page Editor tracks", () => {
     await expect(rotated.locator("[data-page-id]")).toHaveCount(4);
     expect(await readRotations(rotated, 4)).toEqual([180, 0, 90, 270]);
     await expect(track(page, "sample.pdf")).not.toContainText("edited");
+  });
+
+  test("a page dropped in the gap between pages lands between them", async ({
+    page,
+  }) => {
+    await openPageEditor(page);
+    const rotated = track(page, "rotated-pages.pdf");
+    expect(await readRotations(rotated, 4)).toEqual([0, 90, 270, 180]);
+
+    // Drop the last page into the gap between the first two, over neither tile.
+    const tiles = rotated.locator("[data-page-id]");
+    await dragPageIntoGap(page, tiles.nth(3), tiles.nth(0), tiles.nth(1));
+
+    await expect(rotated.locator("[data-page-id]")).toHaveCount(4);
+    expect(await readRotations(rotated, 4)).toEqual([0, 180, 90, 270]);
   });
 
   test("prompts when leaving with pending edits, and can save from the prompt", async ({
