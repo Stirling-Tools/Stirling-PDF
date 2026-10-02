@@ -369,6 +369,16 @@ export function PageStage() {
                         new ReflowWrapCommand({ pageIndex, runId, maxWidthPt }),
                       );
                     }}
+                    onResizeRun={(pageIndex, runId, widthPt) => {
+                      store.dispatch(
+                        new ReflowWrapCommand({
+                          pageIndex,
+                          runId,
+                          maxWidthPt: widthPt,
+                          explicit: true,
+                        }),
+                      );
+                    }}
                     onPageClick={(pageIndex, pageX, pageY) => {
                       if (state.mode !== "addText") return;
                       const cmd = new InsertTextCommand({

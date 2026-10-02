@@ -72,6 +72,7 @@ export function useSelectionGeometry(
                   pageIndex,
                   runId,
                   maxWidthPt: Math.max(1, next),
+                  explicit: true,
                 }),
               ),
           },

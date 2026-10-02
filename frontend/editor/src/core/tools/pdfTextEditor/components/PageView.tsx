@@ -39,6 +39,8 @@ interface PageViewProps {
   ) => void;
   /** Wrap-mode reflow request; maxWidthPt in PDF points. */
   onWrapRun?: (pageIndex: number, runId: string, maxWidthPt: number) => void;
+  /** Right-edge drag to a new box width; widthPt in PDF points. */
+  onResizeRun?: (pageIndex: number, runId: string, widthPt: number) => void;
   /** Fires when the user clicks on a non-text area of the page. */
   onPageClick?: (pageIndex: number, pageX: number, pageY: number) => void;
   /** Fires when an image's drag OR resize completes. */
@@ -79,6 +81,7 @@ export function PageView({
   onEditRun,
   onMoveRun,
   onWrapRun,
+  onResizeRun,
   onPageClick,
   onTransformImage,
   onFirstVisible,
@@ -361,6 +364,11 @@ export function PageView({
             onMove={(dx, dy) => onMoveRun?.(page.pageIndex, run.id, dx, dy)}
             onWrap={(maxWidthPt) =>
               onWrapRun?.(page.pageIndex, run.id, maxWidthPt)
+            }
+            onResize={
+              onResizeRun
+                ? (widthPt) => onResizeRun(page.pageIndex, run.id, widthPt)
+                : undefined
             }
           />
         ))}

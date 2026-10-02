@@ -7342,7 +7342,7 @@ tabDocument = "Document"
 tabSelected = "Selected"
 textBoxes = "Text boxes"
 width = "Width"
-widthHint = "A text box's width follows its content and wrapping."
+widthHint = "Text re-wraps to fit the width."
 x = "X"
 y = "Y"
 

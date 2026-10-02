@@ -255,19 +255,14 @@ function GeometrySection({
                 ? undefined
                 : t(
                     "pdfTextEditor.inspector.widthHint",
-                    "A text box's width follows its content and wrapping.",
+                    "Text re-wraps to fit the width.",
                   )
             }
           >
-            {/* Read-only for text: setting a width goes through the reflow,
-                which splits inside words on runs whose glyphs are positioned
-                individually. Until that is token-aware this must not be a
-                one-keystroke way to shred a heading. */}
             <PointsInput
               value={bounds.width}
-              onCommit={isImage ? setWidth : () => undefined}
+              onCommit={setWidth}
               min={1}
-              disabled={!isImage}
               label={t("pdfTextEditor.inspector.width", "Width")}
               testId="pdf-editor-size-w"
             />
