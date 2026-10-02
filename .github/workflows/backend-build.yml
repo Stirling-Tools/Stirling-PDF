@@ -19,8 +19,8 @@ permissions:
   pull-requests: write
 
 env:
-  VERSION: 1
   JAVA_VERSION: 25
+  GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-25
   GRADLE_FILES_TO_HASH: |
     gradle/wrapper/gradle-wrapper.properties
     gradle/libs.versions.toml
@@ -43,7 +43,6 @@ jobs:
     needs: [hash_pr]
     timeout-minutes: 30
     env:
-      GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-${{ env.JAVA_VERSION }}
       UV_CACHE_DIR: ${{ github.workspace }}/.cache/setup-uv-cache
       UV_PYTHON_INSTALL_DIR: ${{ github.workspace }}/.cache/uv-python-dir
     permissions:
@@ -121,6 +120,7 @@ jobs:
         id: cache
         uses: Ludy87/cache-the-planet/multi-cache@ea6aa04213fec4fdcfcf77f133ee93bf2176bd38
         with:
+          encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD }}
           manifest-branch: dev-cache-artifact
           manifest-path: .github/cache-data
           artifact-retention-days: 1

@@ -61,6 +61,7 @@ permissions:
 
 env:
   JAVA_VERSION: 25
+  GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-25
   GRADLE_FILES_TO_HASH: |
     gradle/wrapper/gradle-wrapper.properties
     gradle/libs.versions.toml
@@ -176,7 +177,6 @@ jobs:
     runs-on: ${{ matrix.platform }}
     timeout-minutes: 90
     env:
-      GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-${{ env.JAVA_VERSION }}
       CARGO_HOME: ${{ github.workspace }}/.cache/cargo
       TAURI_BUNDLER_DMG_IGNORE_CI: "true"
       SM_API_KEY: ${{ secrets.SM_API_KEY }}
@@ -235,6 +235,7 @@ jobs:
         id: cache
         uses: Ludy87/cache-the-planet/multi-cache@ea6aa04213fec4fdcfcf77f133ee93bf2176bd38
         with:
+          encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD }}
           storage: github-artifact
           artifact-retention-days: 1
           manifest-branch: dev-cache-artifact
@@ -790,7 +791,6 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJson(needs.determine-matrix.outputs.matrix) }}
     env:
-      GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-${{ env.JAVA_VERSION }}
       CARGO_HOME: ${{ github.workspace }}/.cache/cargo
     runs-on: ${{ matrix.platform }}
     timeout-minutes: 45
@@ -825,6 +825,7 @@ jobs:
         id: cache
         uses: Ludy87/cache-the-planet/multi-cache@ea6aa04213fec4fdcfcf77f133ee93bf2176bd38
         with:
+          encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD }}
           storage: github-artifact
           artifact-retention-days: 1
           manifest-branch: dev-cache-artifact
