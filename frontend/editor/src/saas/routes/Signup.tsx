@@ -53,7 +53,11 @@ export default function Signup() {
   useEffect(() => {
     const state = location.state as { autoAuthError?: string } | null;
     if (state?.autoAuthError) {
-      setError(`Unable to access tool: ${state.autoAuthError}`);
+      setError(
+        t("signup.unableToAccessTool", "Unable to access tool: {{error}}", {
+          error: state.autoAuthError,
+        }),
+      );
     }
   }, [location.state]);
 
@@ -99,7 +103,12 @@ export default function Signup() {
     } catch (err) {
       console.error("[Signup] Anonymous sign-in unexpected error:", err);
       setError(
-        `Unexpected error: ${err instanceof Error ? err.message : "Unknown error"}`,
+        t("signup.unexpectedError", "Unexpected error: {{message}}", {
+          message:
+            err instanceof Error
+              ? err.message
+              : t("signup.unknownError", "Unknown error"),
+        }),
       );
     } finally {
       setIsSigningUp(false);
@@ -167,7 +176,9 @@ export default function Signup() {
       setError(
         err instanceof Error
           ? err.message
-          : t("signup.unexpectedError", { message: "Unknown error" }),
+          : t("signup.unexpectedError", "Unexpected error: {{message}}", {
+              message: t("signup.unknownError", "Unknown error"),
+            }),
       );
     } finally {
       setIsSigningUp(false);
@@ -185,7 +196,9 @@ export default function Signup() {
       setError(
         err instanceof Error
           ? err.message
-          : t("signup.unexpectedError", { message: "Unknown error" }),
+          : t("signup.unexpectedError", "Unexpected error: {{message}}", {
+              message: t("signup.unknownError", "Unknown error"),
+            }),
       );
     } finally {
       setIsSigningUp(false);

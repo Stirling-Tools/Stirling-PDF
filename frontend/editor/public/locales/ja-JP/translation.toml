@@ -278,6 +278,7 @@ customNumberDesc = "デフォルトは{n}、'{n} ／ {total} ページ'、'テ�
 fontName = "フォント名"
 fontSize = "フォントサイズ"
 numberPagesDesc = "番号をつけるページ、デフォルトは'all'、 1-5 や 2,5,9 など"
+pagePreviewAlt = "ページプレビュー"
 pagesAndStarting = "ページと開始番号"
 positionAndPages = "位置とページ"
 preview = "位置の選択"
@@ -350,7 +351,9 @@ text = "これらの権限は、PDF でユーザーができることを制御�
 title = "権限の変更"
 
 [addStamp]
+pagePreviewAlt = "ページプレビュー"
 preview = "スタンプをプレビュー"
+stampPreviewAlt = "スタンププレビュー"
 tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 
 [AddStampRequest]
@@ -383,6 +386,7 @@ positionAndFormatting = "位置と書式"
 preview = "Preview:"
 quickPosition = "ページ上の配置位置を選択してください。"
 rotation = "回転"
+selectedImageAlt = "選択されたスタンプ画像"
 selectTemplate = "Select a template..."
 stampSetup = "スタンプ設定"
 stampText = "スタンプする文章"
@@ -533,6 +537,9 @@ letter = "レター"
 
 [adjustPageScale.scaleFactor]
 label = "拡大縮小率"
+
+[adjustPageScale.settings]
+title = "設定"
 
 [adjustPageScale.tooltip.description]
 text = "PDF コンテンツのサイズを調整し、ページ寸法を変更します。"
@@ -728,6 +735,7 @@ noLanguages = "設定されたディレクトリに tessdata 言語が見つか�
 permissionNotice = "tessdata パスに書き込めません。ダウンロードはブラウザで開かれます。.traineddata ファイルを手動で tessdata フォルダーに保存してください。"
 
 [admin.settings.ai]
+customProvider = "カスタム (OpenAI-compatible)"
 description = "Stirling を Python AI エンジンに接続し、モデルを選択して、実行時のガードレールを設定します。"
 managedByCloud = "このモードでは Stirling Cloud によって管理されます。"
 managedByCloudShort = "Stirling Cloud によって管理"
@@ -1146,7 +1154,6 @@ refresh = "更新"
 selectFile = "インポートする .sql ファイルを選択してください"
 size = "サイズ"
 title = "データベース"
-unavailable = "現在のデータベース設定ではバックアップ一覧は利用できません。"
 uploadTitle = "アップロードとインポート"
 version = "H2 バージョン"
 
@@ -1280,6 +1287,7 @@ label = "カスタムメタデータ"
 [admin.settings.general.customMetadata.author]
 description = "PDF メタデータの既定の著者（例: username）"
 label = "既定の著者"
+placeholder = "ユーザー名"
 
 [admin.settings.general.customMetadata.autoUpdate]
 description = "処理したすべてのドキュメントの PDF メタデータを自動更新"
@@ -1395,6 +1403,7 @@ defaultLocaleLink = "既定のロケールを設定"
 description = "ログイン後にユーザーが同意する必要がある免責事項を表示します。テキストは各ユーザーの言語に合わせて表示されます。"
 discardConfirm = "未保存の変更は失われます。言語を切り替えますか？"
 editLabel = "Markdown"
+editPlaceholder = "## 見出し\n\n免責事項のテキスト..."
 emptyPreview = "プレビューするものはまだありません。"
 language = "言語"
 languageHelp = "各言語には専用のファイルがあります。ユーザーの言語にファイルがない場合、同意文は既定ロケールのファイル、次にフォールバックのテキストに切り替わります。"
@@ -1513,8 +1522,10 @@ label = "JWKS URL (optional)"
 placeholder = "Auto-discovered from issuer"
 
 [admin.settings.mcp.mode]
+apikey = "API key (Stirling ユーザーごとのキー)"
 description = "OAuth needs an external IdP. API key uses a Stirling per-user API key (X-API-KEY) - simplest for self-host."
 label = "Authentication mode"
+oauth = "OAuth 2.1 (外部 IdP)"
 
 [admin.settings.mcp.requireAccount]
 description = "Only let tokens through if their subject maps to a provisioned, enabled Stirling user."
@@ -1931,6 +1942,14 @@ title = "ユーザー制御設定"
 [agents]
 stirling_name = "Stirling"
 
+[alphabetOptions]
+arabic = "アラビア語"
+chinese = "中国語（簡体字）"
+japanese = "日本語"
+korean = "韓国語"
+roman = "ローマ字"
+thai = "タイ語"
+
 [analytics]
 learnMore = "詳しく見る"
 paragraph1 = "Stirling PDFでは、製品の改善に役立つ分析機能をオプトインしています。個人情報やファイルの内容を追跡することはありません。"
@@ -2052,6 +2071,7 @@ week = "週"
 
 [audit.clearData]
 cancel = "キャンセル"
+closeAlert = "アラートを閉じる"
 codeDoesNotMatch = "コードが一致しません"
 codePlaceholder = "ここにコードを入力"
 confirmationCode = "確認コード"
@@ -2061,6 +2081,7 @@ confirmTitle = "削除の実行を確認してください"
 deleteButton = "削除"
 enterCode = "確認コード"
 enterCodeBelow = "上に表示されたとおりに正確にコードを入力してください（大文字・小文字を区別）"
+failed = "監査データのクリアに失敗しました"
 initiateDelete = "すべてのデータを削除"
 irreversible = "取り消し不可"
 success = "成功"
@@ -2069,6 +2090,7 @@ warning1 = "この操作は元に戻せません"
 warning2 = "監査データを削除すると、セキュリティイベント、ユーザーアクティビティ、ファイル操作を含むすべての過去の監査ログがデータベースから完全に削除されます。"
 
 [audit.error]
+loadStatus = "監査システムのステータスを読み込めませんでした"
 title = "監査システムの読み込みエラー"
 
 [audit.events]
@@ -2084,6 +2106,7 @@ fileHash = "ファイルハッシュ"
 filterByType = "タイプでフィルタ"
 filterByUser = "ユーザーでフィルタ"
 ipAddress = "IP アドレス"
+loadFailed = "イベントを読み込めませんでした"
 noEvents = "イベントが見つかりません"
 startDate = "開始日"
 timestamp = "タイムスタンプ"
@@ -2124,6 +2147,7 @@ avgLatency = "平均レイテンシ"
 error = "統計の読み込みエラー"
 excellent = "非常に良い"
 good = "良好"
+loadFailed = "統計を読み込めませんでした"
 noData = "N/A"
 successRate = "成功率"
 totalEvents = "イベント合計"
@@ -2158,13 +2182,27 @@ accessDenied = "アクセス拒否"
 insufficientPermissions = "この操作を実行する権限がありません。"
 
 [auth.callback]
+alreadySignedIn = "すでにサインインしています！リダイレクトしています..."
+backToLogin = "ログインに戻る"
 completing = "認証を完了しています"
+exchanging = "認証コードを交換しています..."
+failedWithReason = "認証に失敗しました: {{error}}"
 invalidToken = "OAuth ログインに失敗しました - 無効なトークンです。"
 missingToken = "OAuth ログインに失敗しました - トークンを受信していません。"
+noData = "認証データが見つかりません"
 oauthFailed = "OAuth ログインに失敗しました。もう一度お試しください。"
 pleaseWait = "サインインを完了するまでお待ちください。"
+processing = "認証を処理しています..."
 signedOut = "サインアウトしました。もう一度サインインしてください。"
+signInFailed = "サインインを完了できませんでした: {{error}}"
+success = "サインインに成功しました！リダイレクトしています..."
+unknownError = "不明なエラー"
 windowMayClose = "完了したらこのウィンドウを閉じることができます。"
+
+[auth.callback.title]
+default = "認証"
+processing = "サインイン中"
+success = "準備が完了しました！"
 
 [auth.displayName]
 guest = "ゲスト"
@@ -2317,6 +2355,7 @@ title = "自動化をインポート"
 unresolved = "未マッピング: {{ops}}"
 
 [automate.run]
+progress = "進行状況: {{current}}/{{total}}"
 title = "自動処理を実行"
 
 [automate.selection]
@@ -2466,6 +2505,7 @@ whatHappensNext = "次の手順"
 
 [billing.portal]
 error = "請求ポータルを開けませんでした"
+errorFallback = "もう一度お試しいただくか、サポートにお問い合わせください。"
 
 [bookletImposition]
 paperSizeNote = "用紙サイズは 1 ページ目から自動的に取得されます。"
@@ -2513,6 +2553,9 @@ title = "手動両面モード"
 [bookletImposition.rtlBinding]
 label = "右綴じ"
 tooltip = "アラビア語、ヘブライ語など右から左の言語向け"
+
+[bookletImposition.settings]
+title = "設定"
 
 [bookletImposition.tooltip.advanced]
 bullet1 = "右綴じ：RTL 言語向け"
@@ -2582,6 +2625,8 @@ detail = "クリックするか Space を押してもう一度プレイ"
 headline = "全クリア"
 
 [bulkSelection]
+selectedPages_one = "選択済み: {{count}} ページ ({{pages}})"
+selectedPages_other = "選択済み: {{count}} ページ ({{pages}})"
 syntaxError = "構文に問題があります。ページ選択のヒントを参照してください。"
 
 [bulkSelection.advanced]
@@ -2802,6 +2847,7 @@ declineButton = "辞退"
 deleteSelected = "選択した署名を削除"
 drawSignature = "下に署名を手書きしてください"
 fileTooLarge = "ファイルサイズは5MB未満である必要があります"
+fontBrushScript = "Brush Script MT (筆記体)"
 fontFamily = "フォントファミリー"
 fontSize = "フォントサイズ: {{size}}px"
 fontSizePlaceholder = "サイズ"
@@ -2821,6 +2867,7 @@ removeImage = "画像を削除"
 savedSignatures = "保存済みの署名"
 selectFile = "画像ファイルを選択"
 selectSignatureTitle = "署名を選択または作成"
+signatureImageAlt = "署名"
 signatureInfo = "これらの設定はドキュメントの所有者によって設定されています"
 signatureSettings = "署名設定"
 signatureText = "署名テキスト"
@@ -3591,13 +3638,19 @@ confirm = "確認"
 continue = "続行"
 copied = "コピーしました！"
 copy = "コピー"
+copyCode = "コードをコピー"
+dismiss = "閉じる"
 done = "完了"
 enterValue = "Enter value"
 error = "エラー"
 expand = "展開"
 filterEmpty = "フィルター対象がありません"
+goToSlide = "スライド {{number}} に移動"
 loading = "読み込み中..."
+moreInformation = "詳細情報"
 next = "次へ"
+noData = "データなし"
+nOfTotal = "{{total}} 件中 {{current}} 件"
 open = "Open"
 preview = "プレビュー"
 previous = "前へ"
@@ -3606,6 +3659,9 @@ remaining = "残り"
 retry = "再試行"
 save = "保存"
 search = "検索"
+settingsSections = "設定セクション"
+showAllTotal = "すべて表示 {{total}}"
+showLess = "表示を減らす"
 stepOf = "Step {{current}} of {{total}}"
 
 [compare]
@@ -3617,6 +3673,7 @@ newLine = "改行"
 pages = "ページ"
 tags = "差分,対比,変更,分析"
 title = "比較"
+workbenchLabel = "比較ビュー"
 
 [compare.actions]
 linkScroll = "スクロールを連動"
@@ -3770,6 +3827,7 @@ title = "圧縮方式"
 desiredSize = "目標ファイルサイズ"
 desiredSizePlaceholder = "サイズを入力"
 desiredSizeUnit = "Size unit"
+title = "設定"
 
 [compress.tooltip.description]
 text = "圧縮はファイルサイズを簡単に減らす方法です。「ファイルサイズ」を選ぶと目標サイズを入力でき、品質は自動調整します。「品質」を選ぶと圧縮強度を手動設定できます。"
@@ -3819,10 +3877,13 @@ title = "アカウント設定"
 description = "画像をアップロードしてアカウントを個人設定してください。"
 help = "PNG、JPG、または WebP（最大 2MB）。"
 remove = "削除"
+removeFailed = "プロフィール画像を削除できませんでした"
 sizeError = "2MB 未満の画像を選択してください。"
 switchedToCustom = "カスタム画像に切り替えました。自分の画像をアップロードできます。"
+switchFailed = "カスタム画像に切り替えられませんでした"
 title = "プロフィール画像"
 upload = "アップロード"
+uploadFailed = "プロフィール画像をアップロードできませんでした"
 useCustom = "カスタム画像を使用"
 usingProvider = "{{provider}} のプロフィール画像を使用中"
 
@@ -3836,6 +3897,7 @@ title = "プロフィール画像を切り抜き"
 zoom = "ズーム"
 
 [config.account.security]
+changeFailed = "パスワードを変更できませんでした"
 changePassword = "パスワードを変更"
 description = "パスワードとセキュリティ設定を管理します。"
 title = "パスワードとセキュリティ"
@@ -3846,11 +3908,15 @@ description = "アカウントを連携すると履歴が保存され、より�
 email = "メール"
 emailPassword = "またはメールとパスワードを入力"
 emailPlaceholder = "メールアドレスを入力"
+failed = "アカウントをアップグレードできませんでした"
+failedWithProvider = "{{provider}} でアカウントをアップグレードできませんでした"
 linkWith = "連携するサービス"
+linkWithProvider = "{{provider}} とリンク"
 password = "パスワード（任意）"
 passwordNote = "空欄のままにするとメール認証のみを使用します"
 passwordPlaceholder = "パスワードを設定"
 socialLogin = "ソーシャルアカウントでアップグレード"
+success = "アカウントが正常にアップグレードされました！これでメールアドレスでサインインできます。"
 title = "ゲストアカウントをアップグレード"
 upgradeButton = "アカウントをアップグレード"
 
@@ -3960,10 +4026,10 @@ title = "リクエストが有効ではありません"
 
 [connect.renewal]
 approve = "サインインを更新"
+currentOwnerRequired = "このサーバーのサインインを更新するには、リンクされたクラウドチームの現在の所有者としてサインインしてください。所有権が移転された場合は、新しい所有者のアカウントを使用してください。"
 failed = "サインインを更新できませんでした。もう一度試すか、このページを閉じてサーバーからやり直してください。"
 lead = "このサーバーはすでにあなたのアカウントにリンクされています。サインインを更新して、サーバー上の請求と使用状況に戻ってください。"
 title = "サーバーのサインインを更新"
-wrongAccount = "このアカウントでは、このサーバーのサインインを更新できません。サーバーのリンクに最初に使用したアカウントに切り替えてください。そのアカウントは、リンクされたチームのオーナーである必要があります。"
 
 [convert]
 autoRotate = "自動回転"
@@ -4009,6 +4075,7 @@ multiple = "複数"
 optimizeForEbook = "PDF を eBook リーダー向けに最適化（Ghostscript 使用）"
 output = "出力"
 outputFormat = "出力形式"
+pdfaAccessibleFormat = "{{format}} (アクセシブル)"
 pdfaDigitalSignatureWarning = "PDFにはデジタル署名が含まれています。これは次の手順で削除されます。"
 pdfaNote = "PDF/A-1b は互換性が高く、PDF/A-2b はより多くの機能をサポートします。"
 pdfaOptions = "PDF/A オプション"
@@ -4068,6 +4135,24 @@ outputFormatDesc = "電子書籍の出力形式を選択"
 tabletPhone = "タブレット/スマートフォン（画像あり）"
 targetDevice = "対象デバイス"
 targetDeviceDesc = "リーダーデバイス向けに最適化された出力プロファイルを選択"
+
+[convert.formatGroups]
+archive = "アーカイブ"
+document = "ドキュメント"
+ebook = "eBook"
+email = "メール"
+file = "ファイル"
+image = "画像"
+multipleFiles = "複数ファイル"
+presentation = "プレゼンテーション"
+spreadsheet = "スプレッドシート"
+text = "テキスト"
+web = "Web"
+
+[convert.formatOptions]
+any = "任意"
+images = "画像"
+msgOutlook = "MSG (Outlook)"
 
 [cookieBanner.popUp]
 acceptAllBtn = "Ok"
@@ -4161,6 +4246,12 @@ label = "Y 位置"
 [crop.error]
 failed = "PDF の切り抜きに失敗しました"
 
+[crop.pageNumbers]
+description = "特定のページ、またはすべてのページに対して選択範囲をトリミングします（すべての場合は 'all'）。"
+error = "無効なページ選択です。例: 1, 3, 5-8 または all を使用してください。"
+label = "トリミングするページ"
+placeholder = "例: 1, 3, 5-8 または all"
+
 [crop.preview]
 title = "切り抜き範囲の選択"
 
@@ -4183,16 +4274,11 @@ fileName = "ファイル名"
 title = "データベースのインポート/エクスポート"
 
 [defaultApp]
-setDefault = "既定に設定"
 title = "既定のPDFアプリに設定"
 
 [defaultApp.error]
 message = "既定のPDFハンドラーの設定に失敗しました"
 title = "エラー"
-
-[defaultApp.prompt]
-dontRemind = "今後表示しない"
-message = "PDFファイルを開く既定のアプリとして Stirling PDF を設定します。"
 
 [defaultApp.settingsOpened]
 message = "システム設定で Stirling PDF を選択してください"
@@ -4201,6 +4287,17 @@ title = "設定を開きました"
 [defaultApp.success]
 message = "Stirling PDF が既定のPDFエディターになりました"
 title = "既定のアプリを設定"
+
+[desktop.titleBar]
+maximize = "最大化"
+minimize = "最小化"
+restore = "復元"
+
+[desktopBilling]
+description = "ブラウザーで使用状況と請求を管理します。ここで使用しているものと同じ Stirling アカウントでサインインしてください。"
+open = "ブラウザーで使用状況と請求を開く"
+openFailed = "使用状況と請求を開けませんでした。接続を確認して、もう一度お試しください。"
+selfHostedDescription = "接続されたサーバーの使用状況と請求をブラウザーで管理します。サーバー所有者アカウントでサインインしてください。"
 
 [desktopFileLink]
 saveAs = "名前を付けて保存…"
@@ -4264,6 +4361,7 @@ tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,ident
 noItems = "No items available"
 noResults = "No results found"
 searchPlaceholder = "検索..."
+selectedCount = "{{count}} 件選択済み"
 selectLanguages = "Select languages"
 selectOption = "Select an option"
 
@@ -4274,6 +4372,7 @@ editSecretValue = "シークレット値を編集"
 [editTableOfContents]
 submit = "目次を適用"
 tags = "bookmarks,contents,edit,table of contents,TOC,outline,navigation,chapters,sections,add bookmarks,edit bookmarks,PDF outline"
+workbenchLabel = "アウトラインワークスペース"
 
 [editTableOfContents.actions]
 clipboardUnavailable = "このブラウザーではクリップボードにアクセスできません。"
@@ -4434,6 +4533,27 @@ closeFile = "ファイルを閉じる"
 
 [fileEditor]
 addFiles = "ファイルを追加"
+closedFile = "{{name}} を閉じました"
+couldNotSave = "{{name}} を保存できませんでした"
+filesAdded_one = "{{count}} 個のファイルを追加しました"
+filesAdded_other = "{{count}} 個のファイルを追加しました"
+filesReordered_one = "ファイルの順序を変更しました"
+filesReordered_other = "{{count}} 個のファイルの順序を変更しました"
+loadedFromStorage_one = "ストレージから {{count}} 個のファイルを読み込みました"
+loadedFromStorage_other = "ストレージから {{count}} 個のファイルを読み込みました"
+loadFromStorageFailed = "ストレージから一部のファイルを読み込めませんでした"
+pinnedFile = "{{name}} をピン留めしました"
+processFilesFailed = "ファイルの処理に失敗しました"
+savedAndClosed = "{{name}} を保存して閉じました"
+saveFailed = "保存に失敗しました"
+unpinnedFile = "{{name}} のピン留めを解除しました"
+unzipping = "{{name}} を解凍しています"
+
+[fileEditor.unzip]
+error = "{{name}} の解凍中にエラーが発生しました"
+extracted_one = "{{name}} から {{count}} 個のファイルを抽出しました"
+extracted_other = "{{name}} から {{count}} 個のファイルを抽出しました"
+failed = "{{name}} からファイルを抽出できませんでした"
 
 [fileManager]
 addToUpload = "アップロードに追加"
@@ -4450,6 +4570,7 @@ noFiles = "ファイルはありません"
 noFilesFound = "検索条件に一致するファイルが見つかりません"
 openInFileEditor = "ファイルエディタで開く"
 openInPageEditor = "ページエディターで開く"
+reloadFiles = "ファイルを再読み込み"
 saveSelected = "選択項目を保存"
 searchFiles = "ファイルを検索..."
 share = "共有"
@@ -4459,6 +4580,8 @@ sharedEditNoticeConfirm = "了解"
 sharedEditNoticeTitle = "サーバー上の閲覧専用コピー"
 sharedWithYou = "あなたと共有"
 showAll = "すべて表示"
+showAllCount_one = "すべて表示 ({{count}} 個のファイル)"
+showAllCount_other = "すべて表示 ({{count}} 個のファイル)"
 sortBy = "Sort files"
 sortByDate = "日付で並べ替え"
 sortByName = "名前で並べ替え"
@@ -4495,6 +4618,11 @@ sources = "ファイルソース"
 subtitle = "ライブラリから選択するか、新しく追加してください。"
 title = "ファイルを追加"
 unsupported = "このファイル形式は選択したツールでサポートされていません。"
+
+[filePreview]
+loadingThumbnail = "サムネイルを読み込んでいます..."
+locked = "ロック済み"
+previewOf = "{{name}} のプレビュー"
 
 [files]
 addFiles = "ファイルを追加"
@@ -4930,13 +5058,15 @@ title = "ファイルをPDFに変換"
 [fileUpload]
 dropFilesHere = "ここにドロップするかアップロードボタンをクリック"
 dropFilesHereOpen = "ここにファイルをドロップするか、開くボタンをクリック"
-filesAvailable = "件利用可能"
+filesAvailableCount_one = "{{count}} 個のファイルが利用可能"
+filesAvailableCount_other = "{{count}} 個のファイルが利用可能"
 loadFromStorage = "ストレージから読み込む"
 noFilesInStorage = "ストレージにファイルがありません。まずはファイルをアップロードしてください。"
 noFilesInStorageOpen = "ストレージに利用可能なファイルがありません。先にファイルを開いてください。"
 open = "開く"
 openFile = "ファイルを開く"
 openFiles = "複数ファイルを開く"
+selectedCount = "{{count}} 件選択済み"
 selectFile = "Select {{name}}"
 selectFromStorage = "ストレージから選択"
 upload = "アップロード"
@@ -5028,6 +5158,7 @@ rescanFields = "フィールドを再スキャン"
 rescanFormFields = "フォームフィールドを再スキャン"
 save = "保存"
 saveShortcut = "Ctrl+S で保存"
+selectOptionPlaceholder = "— 選択 —"
 skippedEdits_one = "1 件の変更を適用できませんでした:"
 skippedEdits_other = "{{count}} 件の変更を適用できませんでした:"
 skippedEditsTruncated = "さらに {{count}} 件は表示されていません。"
@@ -5090,6 +5221,16 @@ tooltipHelp = "PDF リーダーでフィールドにカーソルを合わせた�
 type = "種類"
 typeHelp = "このフィールドの種類です。変更するとフィールドが再作成されるため、現在の値は引き継がれません。"
 
+[formFill.fieldTypes]
+button = "ボタン"
+checkbox = "チェックボックス"
+combobox = "ドロップダウン"
+listbox = "リストボックス"
+radio = "ラジオ"
+radioGroup = "ラジオグループ"
+signature = "署名"
+text = "テキスト"
+
 [formFill.mode]
 create = "作成"
 fill = "入力"
@@ -5107,11 +5248,16 @@ restore = "復元"
 
 [formFill.sidebar]
 close = "サイドバーを閉じる"
+empty = "この PDF にフォームフィールドは見つかりません"
+loading = "フォームフィールドを読み込んでいます..."
+pageNumber = "ページ {{page}}"
+title = "フォームフィールド"
 
 [getPdfInfo]
 downloadJson = "JSONでダウンロード"
 downloads = "ダウンロード"
 indexTitle = "インデックス"
+noData = "データなし"
 noneDetected = "検出なし"
 noResults = "レポートを生成するにはツールを実行してください。"
 processing = "情報を抽出しています..."
@@ -5127,6 +5273,8 @@ noVerification = "検証は実行されていません"
 noVerificationDesc = "このドキュメントの PDF 標準への準拠は検証されていません。"
 passed = "合格"
 passedCount = "合格"
+secCompliant = "ドキュメントは SEC EDGAR 提出要件を満たしています"
+secNotCompliant = "ドキュメントは SEC EDGAR 提出要件を満たしていません"
 
 [getPdfInfo.error]
 partial = "一部のファイルを処理できませんでした。"
@@ -5134,10 +5282,15 @@ unexpected = "抽出中に予期しないエラーが発生しました。"
 
 [getPdfInfo.other]
 attachments = "添付ファイル"
+created = "作成日時: {{date}}"
 embeddedFiles = "埋め込みファイル"
+fileSizeBytes = "({{size}} バイト)"
 javaScript = "JavaScript"
 layers = "レイヤー"
+modified = "変更日時: {{date}}"
 structureTree = "構造ツリー"
+unnamedAttachment = "名前のない添付ファイル"
+unnamedFile = "名前のないファイル"
 xmp = "XMPMetadata"
 
 [getPdfInfo.perPage]
@@ -5147,6 +5300,7 @@ images = "画像"
 links = "リンク"
 multimedia = "マルチメディア"
 size = "サイズ"
+unnamedImage = "画像"
 xobjects = "XObject の数"
 
 [getPdfInfo.report]
@@ -5675,6 +5829,7 @@ invalidEmail = "無効なメールアドレスです"
 invalidInvitation = "無効な招待"
 invalidToken = "無効な招待リンク"
 linkExpires = "リンクの有効期限"
+linkExpiresAt = "リンクの有効期限: {{date}} {{time}}"
 passwordMismatch = "パスワードが一致しません"
 passwordPlaceholder = "パスワードを入力"
 passwordRequired = "パスワードは必須です"
@@ -5689,6 +5844,7 @@ welcomeTitle = "招待されています！"
 addFiles = "ファイルを追加"
 mobileUpload = "モバイルからアップロード"
 openFromComputer = "コンピューターから開く"
+settingUpSession = "セッションを設定しています..."
 uploadFromComputer = "コンピュータからアップロード"
 
 [language]
@@ -5770,6 +5926,7 @@ sessionExpired = "セッションの有効期限が切れました。もう一�
 signin = "サインイン"
 signingIn = "サインイン中..."
 signInWith = "次でサインイン"
+signInWithProvider = "{{provider}} でサインイン"
 title = "サインイン"
 unexpectedError = "予期しないエラー：{{message}}"
 updatePassword = "パスワードを更新"
@@ -5811,6 +5968,9 @@ label = "結合後のファイルの電子署名を削除しますか？"
 description = "ファイルを結合するとデジタル署名は無効になります。最終的な結合 PDF から署名を削除するにはチェックを入れてください。"
 title = "デジタル署名を削除"
 
+[merge.settings]
+title = "設定"
+
 [merge.sortBy]
 ascending = "昇順"
 dateModified = "更新日"
@@ -5819,6 +5979,9 @@ description = "ファイルは選択した順に結合されます。ドラッ�
 filename = "ファイル名"
 label = "並べ替え"
 sort = "ソート"
+
+[merge.sortFiles]
+title = "ファイルを並べ替え"
 
 [merge.tooltip.header]
 title = "結合設定の概要"
@@ -5867,6 +6030,7 @@ validating = "セッションを検証中..."
 
 [mobileSign]
 clear = "Clear"
+drawingArea = "署名描画エリア"
 invalidSession = "Session expired"
 invalidSessionMessage = "This QR code is no longer valid. Open the Sign tool on your computer and scan the new code."
 penSizeLabel = "Pen size"
@@ -5882,6 +6046,7 @@ validating = "Checking session…"
 fromGallery = "From gallery"
 hint = "Photograph a signature on white paper, or choose an existing image."
 invalidType = "Please choose an image file."
+previewAlt = "署名"
 takePhoto = "Take a photo"
 
 [mobileSign.tab]
@@ -5993,6 +6158,9 @@ profile = "See your basic profile information"
 desc = "クリーンアップはPDF内の画像からテキストを検出してテキストとして再追加します。"
 tags = "認識,テキスト,画像,スキャン,読み取り,識別,検出,編集可能"
 title = "OCR / クリーンアップ"
+
+[ocr.advanced]
+title = "詳細"
 
 [ocr.error]
 failed = "OCR 操作に失敗しました"
@@ -6118,9 +6286,9 @@ title = "デスクトップ版 Stirling をダウンロード"
 description = "チームと共同作業"
 title = "チームメンバーを招待"
 
-[onboarding.checklist.shareAnalytics]
-description = "Stirling の改善に協力"
-title = "匿名の使用状況データを共有"
+[onboarding.checklist.setDefaultApp]
+description = "PDF ファイルを Stirling PDF で開く"
+title = "Stirling をデフォルトに設定"
 
 [onboarding.checklist.takeTour]
 description = "簡単な案内で Stirling の動作を確認"
@@ -6188,6 +6356,7 @@ message = "アプリケーションに最近大きな変更がありました。
 roleAdmin = "管理者"
 rolePlaceholder = "役割を確認してください"
 roleUser = "ユーザー"
+title = "セキュリティチェック"
 
 [onboarding.serverLicense]
 freeBody = "当社の <strong>Open-Core</strong> ライセンスでは、<strong>OAuth SSO</strong> と最大 <strong>{{freeTierLimit}}</strong> ユーザーまで無料でご利用いただけます。スムーズに規模を拡大するには、月額99ドルで <strong>100ユーザー</strong> を利用できる Stirling Team プランをお勧めします。"
@@ -6276,16 +6445,93 @@ title = "オーバーレイファイル"
 text = "前面はページの上に、背面はページの後ろに配置します。"
 title = "オーバーレイ位置"
 
+[ownership]
+acceptInvite = "相手はアカウントを作成するかサインインしてから、招待を承諾できます。"
+accessUpdated = "相手の所有者アクセスの準備ができました。"
+accountLinkDisabled = "このサーバーにはまだクラウドリンクがありますが、アカウントリンクがオフになっています。サーバー運用者にアカウントリンクを有効にするよう依頼してから、この移転を再開するか、設定でサーバーのリンクを解除してください。"
+anotherTeam = "すでに別のチームに所属していますか？"
+billing = "サブスクリプション、ウォレット、支払い方法、既存のライセンスはそのまま維持されます。請求先連絡先の詳細は自動的には変更されません。"
+billingDetails = "請求情報"
+billingUnchanged = "サブスクリプションと請求はそのまま維持されます"
+bothDone = "サーバーとクラウドの所有権が一致しました。"
+cancel = "移転をキャンセル"
+check = "再確認"
+checkAccount = "アカウントを確認"
+chooseEmail = "{{team}} 内の相手のアカウントを選択するか、招待するメールアドレスを入力してください。"
+close = "移転ダイアログを閉じる"
+cloudAccount = "Stirling アカウント"
+cloudScopeStyled = "<user>{{name}}</user> が {{team}}、そのメンバー、請求を管理します。"
+cloudTargetChanged = "別のクラウドメンバーを選択してください。このアカウントは引き継ぎ対象ではなくなりました。"
+confirm = "アクセス権と所有権の変更を理解しました。"
+done = "所有権が移転されました"
+error = "この手順を完了できませんでした。受信者がアクティブで、サーバーが接続されていることを確認してから、もう一度確認してください。保留中の移転はここで再開できます。"
+finish = "サーバー移転を完了"
+inProgress = "別の受信者にすでに保留中の移転があります。このダイアログを閉じて、ユーザーから再開してください。"
+instances = "このチームには {{count}} 台のリンク済みサーバーがあります。それらのクラウド請求はこのチームに残り、他のサーバーのローカル所有者は変更されません。"
+invitationSent = "招待を送信しました"
+invite = "招待を送信"
+inviteAddress = "<account>{{email}}</account> を {{team}} に招待します。"
+inviteBlocked = "招待を送信できませんでした。利用可能なチームシート数と、受信者がすでに有料サブスクリプションを持っているかどうかを確認してください。"
+linkChanged = "サーバーのクラウドリンクが変更されました。再開する前に、サーバー運用者に元のリンクを復元するよう依頼してください。"
+linkedServerCount = "{{count}} 台のリンク済みサーバー"
+linkRevoked = "このサーバーのクラウドリンクは無効になりました。移転をキャンセルしてから、設定で Stirling アカウントを再接続してください。所有権は変更されません。"
+localScope = "相手がこのサーバーを所有し、請求とクラウド接続を管理します。あなたは管理者アクセスを維持しますが、これらの設定へのアクセスは失います。"
+membershipDetails = "チームメンバーシップの詳細"
+membershipFirst = "移転を確認する前に、相手がチームに参加する必要があります。"
+membershipRequired = "所有権を移転する前に、受信者がこのクラウドチームに参加する必要があります。招待を承諾するよう依頼してから、もう一度確認してください。"
+newOwnerLabel = "新しい所有者"
+newOwnerStyled = "<user>{{name}}</user> が所有者になりました。"
+noEmailMatches = "一致するメンバーがいません。招待するメールアドレスを入力してください。"
+otherTeam = "相手が別のチームに所属している場合、承諾するとアカウントが移動されることがあります。有料アカウントまたは別チームの所有権を先に解決する必要がある場合があります。相手のサブスクリプションを移動したり、チームを統合したりすることはありません。"
+ownerChanged = "この移転の開始後にクラウドの所有権が変更されました。この移転をキャンセルし、現在のクラウド所有者でやり直してください。"
+ownerRequired = "現在のクラウドチーム所有者としてサインインしてから、この手順をもう一度お試しください。"
+partialError = "クラウドの所有権は移転されました。両方の所有者を一致させるには、サーバー移転を完了してください。"
+partialTargetChanged = "選択したサーバーユーザーのアクセス権と元のアカウント詳細を復元してから、サーバー移転を完了してください。クラウドの所有権はすでに移転されています。"
+pending = "{{name}} への所有権移転が保留中です。"
+personalTeam = "個人チームは所有権を移転できません。"
+prepareHelp = "受信者は最初のサーバーログインを完了している必要があります。ここで再試行するか、ユーザーに戻って別の人を選択できます。"
+resume = "移転を再開"
+searchEmail = "検索またはメールアドレスを入力"
+serverAccount = "サーバーアカウント"
+serverDetails = "リンク済みサーバーの詳細"
+signIn = "クラウドにサインイン"
+startFromInstanceBody = "このチームにはリンク済みサーバーがあります。セルフホストサーバーで、設定 → ユーザーを開き、受信者の役割を組織所有者に変更してください。このフローでは、サーバー移転を完了する前にクラウド所有権が移転されます。"
+startFromInstanceTitle = "セルフホストサーバーから開始"
+stayOwner = "移転まではあなたが所有者のままです。"
+targetChanged = "受信者のアカウントが変更されました。アクセス権を復元するか、この移転をキャンセルして相手を再度選択してください。"
+title = "所有権を移転"
+transfer = "所有権を移転"
+waitingForEmail = "{{email}} が {{team}} に参加するのを待っています。"
+working = "所有権を確認して更新しています..."
+yourCloudAccess = "あなたはチームメンバーになり、所有者アクセスを失います。"
+
 [pageEdit]
 deselectAll = "すべて選択解除"
 selectAll = "すべて選択"
 
 [pageEditor]
+dragPreviewAlt = "ドラッグ中"
+filePosition = "位置 {{position}}"
+pageLabel = "ページ {{page}}"
 title = "ページエディタ"
+
+[pageEditor.actions]
+deletePage = "ページを削除"
+insertFileAfter = "後にファイルを挿入"
+moveLeft = "左へ移動"
+moveRight = "右へ移動"
+rotateLeft = "左に回転"
+rotateRight = "右に回転"
+splitAfter = "後で分割"
 
 [pageEditor.emptyState]
 body = "ファイルを追加してページ編集を開始"
 title = "PDF ファイルが読み込まれていません"
+
+[pageEditor.fileDropdown]
+addFile = "ファイルを追加"
+selectedCount = "{{selected}}/{{total}} 個のファイルを選択済み"
+untitled = "無題"
 
 [pageEditor.toolbar]
 delete = "選択を削除"
@@ -6391,6 +6637,11 @@ portrait = "縦向き"
 label = "読み方向:"
 ltr = "左から右"
 rtl = "右から左"
+
+[pageLayout.steps]
+advanced = "詳細設定"
+layout = "レイアウト設定"
+marginsBorders = "余白と境界線"
 
 [pageLayout.tooltip.header]
 title = "ページレイアウトガイド"
@@ -6712,6 +6963,7 @@ teamChangeUnavailable = "予定されている Team の変更を読み込めま�
 teamPending = "Team の購入はまだ処理中です。しばらくしてからこのページを更新してください。"
 teamProcessing = "Team 購入を処理中"
 teamScheduled = "Team の変更は{{date}}に予定されています。それまでは現在の容量が有効です。"
+unknownError = "不明なエラーが発生しました"
 upgradeComplete = "アップグレード完了"
 upgradeCompleteMessage = "サブスクリプションは正常にアップグレードされ、既存のライセンスキーが更新されました。"
 upgradeSuccess = "支払いに成功しました！ サブスクリプションがアップグレードされ、ライセンスがサーバーに更新されました。確認メールをまもなくお送りします。"
@@ -6766,6 +7018,14 @@ selectedMonthly = "月払い"
 selectedYearly = "年払い"
 selectMonthly = "月額を選択"
 selectYearly = "年額を選択"
+
+[payment.priceDisplay]
+basePrice = "基本価格"
+perPeriod = "/{{period}}"
+perSeat = "シートごと"
+perSeatPeriod = "/シート/{{period}}"
+totalSeats_one = "合計 ({{count}} シート)"
+totalSeats_other = "合計 ({{count}} シート)"
 
 [payment.upgradeTeam]
 title = "Team にアップグレード"
@@ -6985,6 +7245,10 @@ save = "保存"
 style = "スタイル"
 tapToPlace = "テキストを配置するページ上の場所をタップしてください"
 unlock = "ロック解除"
+
+[pdfTextEditor.pageView]
+pageNumber = "ページ {{page}}"
+renderFailed = "ページをレンダリングできませんでした"
 
 [pdfTextEditor.password]
 cancel = "キャンセル"
@@ -7212,6 +7476,7 @@ title = "パイプライン"
 contact = "お問い合わせ"
 current = "現在のプラン"
 featureComparison = "機能比較"
+fetchError = "価格データを取得できませんでした"
 from = "から"
 hideComparison = "機能比較を隠す"
 licensedSeats = "ライセンス: {{count}} 席"
@@ -7227,6 +7492,8 @@ withServer = "+ Server プラン"
 [plan.api]
 large = "5,000 クレジット"
 medium = "1,000 クレジット"
+perCredit = "1 クレジットあたり {{price}}"
+perCreditWithDiscount = "1 クレジットあたり {{price}} • {{discount}}% 割引"
 small = "500 クレジット"
 xsmall = "100 クレジット"
 
@@ -7302,14 +7569,9 @@ upToFiveUsers = "最大 5 ユーザー"
 usageTrackingPrometheus = "利用状況の追跡 & Prometheus"
 usersIncluded = "100ユーザー含む"
 
-[plan.licenseWarning]
-body = "ユーザーは {{total}} 人ですが、無料枠はサーバーあたり {{limit}} 人までです。Stirling PDF を円滑に運用するにはアップグレードしてください。"
-cta = "プランを見る"
-overLimit = "{{limit}} を超過"
-title = "セルフホストの無料上限に達しました"
-
 [plan.period]
 month = "月"
+year = "年"
 
 [plan.pro]
 highlight1 = "ツール利用無制限"
@@ -7435,6 +7697,9 @@ pdfa-1 = "PDF/A-1b"
 pdfa-2b = "PDF/A-2b"
 pdfa-3b = "PDF/A-3b"
 
+[portal.accountLink]
+ownerRequired = "このサーバーをリンクまたはリンク解除できるのは組織所有者のみです。"
+
 [portal.accountLink.card]
 billingNote = "無人処理は組織ウォレットに請求されます。"
 connectDescription = "このサーバーを接続して、Stirling Cloud のチーム処理許容量を使用します。"
@@ -7556,6 +7821,7 @@ identity = "Stirling アカウント"
 linkTitle = "Stirling アカウントをリンク"
 noAuthorizeUrl = "Stirling から続行先が返されませんでした。しばらくしてからもう一度お試しください。"
 startFailed = "接続を開始するために Stirling に到達できませんでした。このサーバーの外向きネットワークアクセスを確認してから、もう一度お試しください。"
+transferPending = "所有権の移転が保留中です。設定 → ユーザーに移動して完了またはキャンセルしてから、もう一度リンクをお試しください。"
 
 [portal.accountLink.modal.loginNotConfigured]
 after = "を設定して、ホストされた Stirling アカウントとのアプリ内リンクを有効にしてください。"
@@ -9441,6 +9707,7 @@ labelId = "ラベル ID"
 labelIdHelp = "Purview ポータルからのラベルの GUID です。ラベルを適用すると、そのメタデータが PDF に書き込まれます。暗号化はできません。暗号化には Microsoft クライアントが必要です。"
 labelName = "ラベル名（任意）"
 labelNameHelp = "人やツールがラベルを認識できるように、ID と一緒に記録されます。"
+labelNamePlaceholder = "機密"
 
 [portal.policies.config.purview.fields.method]
 help = "Purview は、ポリシーが適用したラベルと、ユーザーが選択したラベルを区別します。"
@@ -10425,31 +10692,6 @@ unlimited = "{{used}} · 無制限"
 [printFile]
 title = "ファイルの印刷"
 
-[processingFolders.downloads]
-approve = "ダウンロードを処理する"
-cancelSweep = "キャンセル"
-capped = "PDF が {{found}} 件あります。最初の {{limit}} 件を今処理し、残りは後で処理されます。"
-close = "完了"
-explain_one = "Stirling はダウンロードフォルダーに既にある {{count}} 件の PDF を分類し、結果をここで開くことができます。"
-explain_other = "Stirling はダウンロードフォルダーに既にある {{count}} 件の PDF を分類し、結果をここで開くことができます。"
-failed = "設定できませんでした。ファイルは変更されていません。"
-finished_one = "{{count}} 件のファイルを分類し、そのうち {{opened}} 件をここで開きました。作業できる状態です。"
-finished_other = "{{count}} 件のファイルを分類し、そのうち {{opened}} 件をここで開きました。作業できる状態です。"
-nothingNew_one = "処理する新しいものはありません。この {{count}} 件のファイルは既に処理済みです。"
-nothingNew_other = "処理する新しいものはありません。これら {{count}} 件のファイルは既に処理済みです。"
-notModified = "ダウンロード内のファイルは変更されません。Stirling はそれらを読み取り、ここで開きます。"
-notNow = "今はしない"
-progressCounts = "{{total}} 件中処理済み"
-someFailed_one = "{{count}} 件を処理できず、変更されませんでした。"
-someFailed_other = "{{count}} 件を処理できず、変更されませんでした。"
-stillRunning = "一部のファイルはまだバックグラウンドで処理中です。"
-title = "ダウンロードを整理しますか？"
-trigger_one = "ダウンロード内の {{count}} 件の PDF を処理"
-trigger_other = "ダウンロード内の {{count}} 件の PDF を処理"
-typesFound_one = "{{count}} 件のドキュメントタイプが見つかりました"
-typesFound_other = "{{count}} 件のドキュメントタイプが見つかりました"
-working = "処理中 ..."
-
 [processingFolders.setup]
 addFolder = "フォルダーを追加"
 advancedSteps = "このフォルダーは、このウィザードでは編集できない処理設定を使用しています。保存済みのステップは変更されていません。"
@@ -10527,6 +10769,10 @@ label = "クライアント ID"
 [provider.googledrive.enabled]
 description = "ユーザーが Google Drive から直接ファイルをインポートできるようにする"
 label = "Google Drive ファイルピッカーを有効化"
+
+[provider.googledrive.errors]
+notConfigured = "Google Drive が設定されていません"
+pickerFailed = "Google Drive picker を開けませんでした"
 
 [provider.oauth2.generic]
 name = "汎用 OAuth2"
@@ -10775,6 +11021,7 @@ applyWarning = "⚠️ 永久適用で元に戻せず、下のデータは削除
 colorLabel = "墨消しの色"
 controlsTitle = "手動墨消しコントロール"
 instructions = "PDF 上のテキストを選択するか領域を描画して、墨消し対象をマークします。"
+notImplemented = "手動墨消しインターフェイスは、実装後にここで利用できるようになります。"
 title = "墨消しツール"
 
 [redact.modeSelector]
@@ -11102,6 +11349,9 @@ failed = "PDF の回転中にエラーが発生しました。"
 [rotate.preview]
 title = "回転プレビュー"
 
+[rotate.settings]
+title = "設定"
+
 [rotate.tooltip.controls]
 text = "回転ボタンで向きを調整します。左ボタンは反時計回り、右ボタンは時計回り。クリックごとに90度回転します。"
 title = "操作"
@@ -11119,6 +11369,16 @@ hideSmallLabels = "小さいラベルを非表示"
 physicalValues = "物理"
 scaled = "スケーリング済み"
 showAllLabels = "すべてのラベルを表示"
+
+[ruler.units]
+cm = "センチメートル (cm)"
+ft = "フィート (ft)"
+in = "インチ (in)"
+km = "キロメートル (km)"
+m = "メートル (m)"
+mi = "マイル (mi)"
+mm = "ミリメートル (mm)"
+yd = "ヤード (yd)"
 
 [sanitize]
 desc = "PDF ファイルから潜在的に有害な要素を削除します。"
@@ -11184,6 +11444,7 @@ calibrationPaperDistance = "測定されたページ上の距離: {{distance}}"
 calibrationTitle = "縮尺をキャリブレーション"
 calibrationTooltip = "既知の距離を測定して縮尺を自動計算します"
 customScale = "カスタム縮尺"
+customUnit = "{{unit}} (カスタム)"
 noneSet = "カスタム縮尺が設定されていません"
 presets = "プリセット縮尺"
 ratio = "縮尺比"
@@ -11207,6 +11468,9 @@ title = "抽出された画像"
 
 [scannerImageSplit.error]
 failed = "画像スキャンの抽出中にエラーが発生しました。"
+
+[scannerImageSplit.settings]
+title = "設定"
 
 [scannerImageSplit.tooltip]
 headsUp = "注意"
@@ -11274,6 +11538,9 @@ general = "一般"
 limits = "制限 & パフォーマンス"
 models = "モデル & プロバイダー"
 title = "AI"
+
+[settings.billing]
+title = "請求"
 
 [settings.configuration]
 advanced = "詳細設定"
@@ -11348,8 +11615,6 @@ defaultPdfEditor = "既定のPDFエディター"
 defaultPdfEditorActive = "Stirling PDF は既定のPDFエディターです"
 defaultPdfEditorChecking = "確認中..."
 defaultPdfEditorInactive = "別のアプリが既定に設定されています"
-defaultPdfEditorRemind = "デフォルトに設定するよう通知する"
-defaultPdfEditorRemindDescription = "Stirling PDF がデフォルトの PDF アプリケーションでない場合にバナーを表示します。"
 defaultPdfEditorSet = "既に既定です"
 defaultStartupView = "起動時のデフォルト表示"
 defaultStartupViewDescription = "アプリ起動時に左側の列でアクティブにするタブを選択します"
@@ -11618,6 +11883,15 @@ people = "メンバー"
 teams = "チーム"
 title = "ワークスペース"
 
+[setup.error]
+loginIncomplete = "ログインを完了できませんでした"
+noSaasServer = "SaaS サーバーが設定されていません"
+noServer = "サーバーが設定されていません"
+saasLoginFailed = "SaaS ログインに失敗しました"
+saasLoginIncomplete = "SaaS ログインを完了できませんでした"
+selfHostedLoginFailed = "セルフホストのログインに失敗しました"
+signupIncomplete = "サインアップを完了できませんでした"
+
 [setup.login]
 connectingTo = "接続先:"
 oauthPending = "認証のためブラウザーを開いています..."
@@ -11661,6 +11935,7 @@ configFetchError = "サーバー設定の取得に失敗しました: {{error}}"
 emptyUrl = "サーバー URL を入力してください"
 invalidUrl = "URL の形式が無効です。https://your-server.com のような有効な URL を入力してください"
 testFailed = "接続テストに失敗しました"
+unknown = "不明なエラー"
 unreachable = "サーバーに接続できませんでした"
 
 [setup.server.error.securityDisabled]
@@ -11769,6 +12044,7 @@ canvas = "キャンバスで署名を描いた後、モーダルを閉じてか�
 image = "上で署名画像をアップロードした後、PDF 上の任意の場所をクリックして配置します。"
 noSignature = "上で署名を作成すると配置ツールが使えます。"
 paused = "配置を一時停止"
+placeAnnotation = "PDF 上の任意の場所をクリックして注釈を配置します。"
 resumeHint = "再開してクリックで署名を追加します。"
 saved = "上の保存済み署名を選択し、PDF上の任意の場所をクリックして配置します。"
 text = "上で氏名を入力した後、PDF 上の任意の場所をクリックして署名を配置します。"
@@ -11922,7 +12198,9 @@ signUpWith = "Sign up with"
 skip = "Skip"
 subtitle = "Stirling PDF に参加して始めましょう"
 title = "アカウントを作成"
+unableToAccessTool = "ツールにアクセスできません: {{error}}"
 unexpectedError = "予期しないエラー: {{message}}"
+unknownError = "不明なエラー"
 
 [sizes]
 large = "大"
@@ -11995,6 +12273,14 @@ rightToLeft = "右から左へ分割"
 [split.poster.pageSize]
 description = "印刷用の出力ページサイズ"
 label = "対象の用紙サイズ"
+
+[split.poster.pageSize.options]
+a3 = "A3 (297 × 420 mm)"
+a4 = "A4 (210 × 297 mm)"
+a5 = "A5 (148 × 210 mm)"
+legal = "Legal (8.5 × 14 in)"
+letter = "Letter (8.5 × 11 in)"
+tabloid = "Tabloid (11 × 17 in)"
 
 [split.poster.xFactor]
 description = "各ページを分割する列数"
@@ -12267,6 +12553,7 @@ confirmCancelInvite = "この招待を取り消してもよろしいですか？
 confirmLeave = "このチームから退出してもよろしいですか？"
 confirmLeaveLeader = "あなたはチームリーダーです。退出するとチームから削除されます。よろしいですか？"
 confirmRemove = "このメンバーを削除してもよろしいですか？"
+currentUnavailable = "現在のチームを特定できませんでした。もう一度お試しください。問題が続く場合はサポートにお問い合わせください。"
 editName = "チーム名を編集"
 inviteCancelled = "招待を取り消しました"
 inviteError = "招待の送信に失敗しました"
@@ -12292,10 +12579,8 @@ renameCancel = "名前変更をキャンセル"
 renameError = "チーム名の変更に失敗しました"
 renameSubmit = "チーム名を保存"
 renameSuccess = "チーム名を変更しました"
-transferBody = "{{email}} をチームオーナーにしますか？そのユーザーはチームメンバーシップと組織の請求設定を管理します。あなたはメンバーになります。チームのサブスクリプションとウォレットはチームに残ります。"
 transferError = "所有権を移行できませんでした。チームを更新してもう一度お試しください。"
 transferSuccess = "チームの所有権が移行されました。あなたのロールはメンバーになりました。"
-transferTitle = "チーム所有権を移行"
 
 [team.invitationBanner]
 acceptButton = "承認"
@@ -12396,6 +12681,10 @@ WORD = "Word 文書"
 XML = "XML ファイル"
 XPS = "XPS 文書"
 ZIP = "ZIP アーカイブ"
+
+[toolLoading]
+generic = "ツールを読み込んでいます..."
+named = "{{toolName}} を読み込んでいます..."
 
 [toolPanel]
 alpha = "アルファ"
@@ -12501,6 +12790,8 @@ stable = "安定版"
 updateAvailable = "更新があります"
 urgentUpdateAvailable = "緊急の更新"
 version = "バージョン"
+versionCount_one = "{{count}} バージョン"
+versionCount_other = "{{count}} バージョン"
 versionHistory = "バージョン履歴"
 viewGuide = "ガイドを見る"
 whatsNewIn = "の新機能"
@@ -12528,6 +12819,7 @@ title = "URLをPDFに変換"
 aboutUsageAnalytics = "利用状況分析について"
 configureSettings = "分析設定を構成"
 error = "利用状況の読み込みエラー"
+loadFailed = "使用状況の統計を読み込めませんでした"
 noData = "利用可能なデータがありません"
 noDataMessage = "現在、利用統計はありません。"
 usageAnalyticsExplanation = "利用状況分析はエンドポイントリクエストとツールの利用パターンを追跡します。監査ログのダッシュボードと組み合わせることで、システムのアクティビティ、パフォーマンス、セキュリティイベントを包括的に可視化できます。"
@@ -12591,7 +12883,6 @@ removeTeam = "チームから削除"
 rename = "チーム名を変更"
 resetPw = "パスワードをリセット"
 suspend = "停止"
-transferOwnership = "所有権を移行"
 unlock = "アカウントのロック解除"
 
 [users.activity]
@@ -12631,8 +12922,6 @@ disableMfaTitle = "MFA をリセット"
 removeBody = "{{name}} を組織から完全に削除しますか？この操作は元に戻せません。"
 removeTeamBody = "{{name}} をチームから削除しますか？アカウントは保持されますが、このチームのリソースへのアクセス権を失います。"
 removeTitle = "メンバーを削除"
-transferOwnershipBody = "{{name}} を組織オーナーにしますか？そのユーザーは管理者になります。あなたは管理者のままですが、所有権を失います。新しいオーナーまたはサーバー運用者のみが所有権を戻すことができます。"
-transferOwnershipTitle = "組織所有権を移行"
 
 [users.empty]
 description = "チームを招待して共同作業を開始しましょう。"
@@ -12825,6 +13114,7 @@ signaturesInvalid = "{{count}} 件が無効"
 signaturesUnverified_one = "{{count}} 件は要確認"
 signaturesUnverified_other = "{{count}} 件は要確認"
 signaturesValid = "{{count}} 件が完全に有効"
+thumbnailAlt = "{{fileName}} のサムネイル"
 title = "署名検証レポート"
 
 [validateSignature.report.fields]
@@ -12862,6 +13152,7 @@ lastPage = "最後のページ"
 loadingEngine = "PDF エンジンを読み込み中..."
 moreOptions = "その他"
 nextPage = "次のページ"
+noPdfProvided = "PDF が指定されていません"
 onlyPdfSupported = "このビューアは PDF ファイルのみをサポートしています。このファイルは別の形式のようです。"
 pageNavigation = "ページ移動"
 previousPage = "前のページ"
@@ -12899,8 +13190,17 @@ collapseAll = "すべてのブックマークを折りたたむ"
 editorOnly = "このドキュメントのブックマークはエディターでのみ編集できます。"
 empty = "No bookmarks in this document"
 expandAll = "すべてのブックマークを展開"
+loadFailed = "ブックマークを読み込めませんでした"
+loading = "ブックマークを読み込んでいます..."
+noDocument = "ブックマークを表示するには PDF を開いてください。"
+noSearchResults = "検索に一致するブックマークはありません"
+openEditor = "並べ替えや入れ子が必要ですか？ブックマークエディターを開く"
+pageLabel = "ページ"
+pageNumber = "ページ {{page}}"
+saveFailed = "ブックマークを保存できませんでした"
 searchPlaceholder = "ブックマークを検索"
 title = "Bookmarks"
+untitled = "無題"
 
 [viewer.comments]
 addComment = "コメントを追加"
@@ -12948,16 +13248,26 @@ unsavedDesc = "未保存の変更があります"
 
 [viewer.layers]
 closeSidebar = "レイヤーのサイドバーを閉じる"
+empty = "このドキュメントにはレイヤーがありません。"
 hideAll = "すべてのレイヤーを非表示"
+loadFailed = "レイヤーを読み込めませんでした。"
+loading = "レイヤーを読み込んでいます..."
+noDocument = "レイヤーを表示するには PDF を開いてください。"
+readFailed = "PDF レイヤーを読み取れませんでした"
 showAll = "すべてのレイヤーを表示"
 title = "Layers"
 
 [viewer.link]
 delete = "リンクを削除"
+goTo = "{{label}} に移動"
+open = "リンクを開く"
+openAria = "リンクを開く"
+page = "ページ {{page}}"
 
 [viewer.nonPdf]
 columnDefault = "列 {{index}}"
 convertToPdf = "PDF に変換"
+copied = "コピーしました"
 csvStats = "{{rows}} 行 · {{columns}} 列 · {{size}}"
 emptyFile = "空のファイル"
 htmlHidePreview = "プレビューを非表示"
@@ -12968,6 +13278,8 @@ htmlShowPreview = "それでもプレビューを表示"
 invalidJson = "無効な JSON — 生の内容を表示しています"
 lineNumbers = "行番号"
 loading = "読み込み中..."
+noFile = "ファイルが読み込まれていません"
+previewUnavailable = "このファイルタイプではプレビューを利用できません"
 renderMarkdown = "Markdown をレンダリング"
 sortedBy = "並び替え基準: {{column}}"
 textStats = "{{lines}} 行 · {{size}}"
@@ -12994,11 +13306,28 @@ next = "次の結果"
 previous = "前の結果"
 resultsOf = "／{{total}}"
 
+[viewer.sidebar]
+close = "サイドバーを閉じる"
+searchPlaceholder = "検索..."
+
 [viewer.signature]
 delete = "署名を削除"
+previewAlt = "署名プレビュー"
+
+[viewer.signatureField]
+badge = "署名"
+fieldTitle = "署名フィールド: {{name}}"
+signed = "署名済み"
+signedWithReason = "署名済み: {{reason}}"
+unsignedFieldTitle = "未署名の署名フィールド: {{name}}"
+withTime = "{{label}} ({{time}})"
 
 [viewer.thumbnails]
 closeSidebar = "サムネイルのサイドバーを閉じる"
+failed = "失敗"
+pageNumber = "ページ {{page}}"
+thumbnailAlt = "ページ {{page}} のサムネイル"
+title = "ページ"
 
 [viewPdf]
 tags = "view,read,annotate,text,image"
@@ -13006,169 +13335,6 @@ title = "PDFの表示/編集"
 
 [warning]
 tooltipTitle = "警告"
-
-[watchedFolders]
-alreadyInFolder = "Already in this folder"
-defaultFolderWarning = "This is a default folder and will be recreated on next reload."
-deleteConfirmBody = "This will remove the folder and its run history. Files already downloaded are not affected."
-deleteConfirmTitle = "Delete folder?"
-folderNotFound = "Folder not found"
-newFolder = "New folder"
-noFolders = "No watched folders yet"
-sidebarTitle = "Watched Folders"
-title = "Watched Folders"
-
-[watchedFolders.actions]
-back = "Back"
-collapse = "Collapse"
-dismiss = "Dismiss"
-download = "Download"
-downloadInput = "Download input"
-downloadOutput = "Download output"
-expand = "Expand"
-retry = "Retry"
-
-[watchedFolders.card]
-delete = "Delete folder"
-edit = "Edit folder"
-
-[watchedFolders.home]
-addAnother = "Add another Watched Folder"
-addAnotherDesc = "Automatically process files with a new pipeline"
-create = "Create your first Watched Folder"
-deleteFolder = "Delete folder"
-editFolder = "Edit folder"
-empty = "No watched folders yet"
-emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
-emptyTitle = "Automate your PDF workflows"
-file = "file"
-files = "files"
-pause = "Pause"
-resume = "Resume"
-
-[watchedFolders.howItWorks]
-step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
-step1Title = "Drop files"
-step2Desc = "Your configured tools process each file automatically"
-step2Title = "Pipeline runs"
-step3Desc = "Download processed files from inside the folder"
-step3Title = "Output ready"
-title = "How Watched Folders work"
-
-[watchedFolders.modal]
-advanced = "Advanced"
-automation = "Automation"
-automationNameFallback = "Watched Folder automation"
-automationRequired = "Add at least one configured step before saving."
-autoNumber = "Auto-number"
-autoNumberExample = "e.g. document.pdf → document (1).pdf"
-autoScanHelp = "New PDF files in this folder are processed automatically every 10 seconds."
-changeFolder = "Change"
-chooseFolder = "Choose"
-clearFolder = "Clear"
-color = "Accent color"
-createFolder = "Create Folder"
-createTitle = "New Watched Folder"
-editTitle = "Edit Watched Folder"
-inputFolder = "Input folder"
-inputFolderNotChosen = "No folder chosen — required for auto-scan"
-inputSource = "Input source"
-inputSourceBrowser = "Browser — drop files here"
-inputSourceLocal = "Local folder (auto-scan)"
-inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
-localOutputFolder = "Local output folder"
-maxRetries = "Max retries"
-name = "Folder name"
-namePlaceholder = "My Watched Folder"
-nameRequired = "Folder name is required"
-nameTooLong = "Folder name must be 50 characters or less"
-outputFolderNotSet = "Not set — outputs stay in app"
-outputFolderUnsupported = "Not supported in this browser"
-outputModeNewDesc = "Output is saved as a new separate file"
-outputModeVersion = "Replace original?"
-outputModeVersionDesc = "Output becomes a new version of the input file rather than a separate file"
-outputName = "Output filename prefix"
-outputNamePrefix = "Filename prefix"
-outputNameSuffix = "Suffix"
-positionPrefix = "Prefix"
-positionSuffix = "Suffix"
-replaceOriginal = "Replace original file"
-retryDelay = "Delay (minutes)"
-saveChanges = "Save Changes"
-saveFailed = "Failed to save folder. Please try again."
-sectionFolder = "Folder"
-sectionSourceOutput = "Source & Output"
-sectionSteps = "Steps"
-
-[watchedFolders.status]
-active = "Active"
-done = "Done"
-paused = "Paused"
-processing = "Processing"
-
-[watchedFolders.time]
-daysAgo = "{{count}}d ago"
-hoursAgo = "{{count}}h ago"
-justNow = "just now"
-minutesAgo = "{{count}}m ago"
-
-[watchedFolders.workbench]
-activity = "Activity"
-addFiles = "Add files"
-allTime = "All time"
-cancel = "Cancel"
-chartTooltipComplete = "{{count}} complete"
-chartTooltipFailed = "{{count}} failed"
-clearSelection = "Clear selection"
-countProcessing = "{{count}} processing"
-countQueued = "{{count}} queued"
-countSelected = "{{count}} selected"
-dataSaved = "Saved"
-dayRunning = "day running"
-daysRunning = "days running"
-delete = "Delete"
-deleteConfirmBody = "Remove notifications only clears the activity log. Delete outputs also removes the processed files from storage. Your original input files are never touched."
-deleteOutputs = "Delete outputs"
-directionIn = "in"
-directionOut = "out"
-dropToProcess = "Drop to process"
-export = "Export"
-exportSeparately = "Export separately"
-exportZip = "Export zip"
-failed = "Failed"
-filesProcessedOverTime = "Files processed over time"
-filterAll = "All"
-filterPending = "Pending"
-inputs = "Inputs"
-inputSize = "Input size"
-legendComplete = "Complete"
-noActivity = "No activity yet — drop a PDF to start"
-noActivityMatch = "No matching activity"
-noInputFolder = "No input folder — edit to configure"
-outputs = "Outputs"
-pause = "Pause"
-preview = "Preview"
-previewInput = "Preview input"
-previewLoadFailed = "Could not load file preview."
-previewOutput = "Preview output"
-queued = "Queued"
-queuedWaiting = "Queued — waiting to run"
-removeEntries = "Remove {{count}} entries"
-removeEntry = "Remove entry"
-removeNotificationsOnly = "Remove notifications only"
-resume = "Resume"
-retryAll = "Retry all"
-retryIn = "retry in {{count}}m"
-retryingSoon = "retrying…"
-retryMixedConfirm = "Some selected files have already completed and will be skipped. Only failed files will be retried. Continue?"
-running = "Running"
-search = "Search…"
-selectAll = "Select all {{count}}"
-sortNameAsc = "A → Z"
-sortNameDesc = "Z → A"
-sortNewest = "Newest"
-sortOldest = "Oldest"
-watching = "Watching: {{name}}"
 
 [watermark]
 desc = "PDF ファイルにテキストまたは画像の透かしを追加"
@@ -13371,6 +13537,10 @@ certTypeServer = "サーバー証明書（利用可能な場合）"
 completedDeclined = "このドキュメントを却下しました。"
 completedSigned = "このドキュメントに署名しました。"
 decline = "却下"
+declineConfirm = "このドキュメントへの署名を辞退してもよろしいですか？"
+declineFailed = "辞退できませんでした: {{error}}"
+declineSuccess = "この署名リクエストを辞退しました。"
+defaultReason = "ドキュメント署名"
 downloadDocument = "ドキュメントをダウンロード"
 dueDate = "期限: {{date}}"
 errorTitle = "エラー"
@@ -13381,6 +13551,7 @@ locationPlaceholder = "例: San Francisco, CA"
 pageNumber = "ページ番号（任意）"
 reason = "理由"
 reasonPlaceholder = "例: ドキュメントの承認"
+selectCertificateFile = "証明書ファイルを選択してください"
 sessionNotFound = "セッションが見つからないか、アクセスが拒否されました。"
 signDocument = "ドキュメントに署名"
 statusDeclined = "却下"
@@ -13388,7 +13559,9 @@ statusNotified = "通知済み"
 statusPending = "保留中"
 statusSigned = "署名済み"
 statusViewed = "閲覧済み"
+submitFailed = "署名を送信できませんでした: {{error}}"
 submitSignature = "署名を送信"
+submitSuccess = "署名が正常に送信されました！"
 
 [workspace]
 title = "ワークスペース"

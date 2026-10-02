@@ -278,6 +278,7 @@ customNumberDesc = "Lehenetsoa {n}-ra, '{n} orria {total}-tik', 'Text-{n}', '{fi
 fontName = "Letra-tipoaren izena"
 fontSize = "Letra-tamaina"
 numberPagesDesc = "Zein orri numeratu, lehenetsita 'denak', 1-5 edo 2,5,9 etab onartzen ditu"
+pagePreviewAlt = "Orriaren aurrebista"
 pagesAndStarting = "Orrialdeak eta hasierako zenbakia"
 positionAndPages = "Kokalekua eta orrialdeak"
 preview = "Kokalekuaren hautaketa"
@@ -350,7 +351,9 @@ text = "Baimen hauek erabiltzaileek PDFarekin egin dezaketena kontrolatzen dute.
 title = "Aldatu baimenak"
 
 [addStamp]
+pagePreviewAlt = "Orriaren aurrebista"
 preview = "Zigiluaren aurrebista"
+stampPreviewAlt = "Zigiluaren aurrebista"
 tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 
 [AddStampRequest]
@@ -383,6 +386,7 @@ positionAndFormatting = "Kokapena eta formatua"
 preview = "Preview:"
 quickPosition = "Hautatu orrian zigiloa kokatzeko posizio bat."
 rotation = "Biraketa"
+selectedImageAlt = "Hautatutako zigilu-irudia"
 selectTemplate = "Select a template..."
 stampSetup = "Zigiluaren konfigurazioa"
 stampText = "Zigilu testua"
@@ -533,6 +537,9 @@ letter = "Letter"
 
 [adjustPageScale.scaleFactor]
 label = "Eskala-faktorea"
+
+[adjustPageScale.settings]
+title = "Ezarpenak"
 
 [adjustPageScale.tooltip.description]
 text = "PDF edukien tamaina doitu eta orriaren neurriak aldatu."
@@ -728,6 +735,7 @@ noLanguages = "Ez da tessdata hizkuntzarik aurkitu konfiguratutako direktorioan.
 permissionNotice = "tessdata bidea ez da idazgarria. Deskargak nabigatzailean irekiko dira; gorde .traineddata fitxategiak eskuz tessdata direktorioan."
 
 [admin.settings.ai]
+customProvider = "Pertsonalizatua (OpenAI-rekin bateragarria)"
 description = "Konektatu Stirling Python AI motorrera, aukeratu haren ereduak eta ezarri exekutatzeko babes-mugak."
 managedByCloud = "Modu honetan Stirling Cloud-ek kudeatzen du."
 managedByCloudShort = "Stirling Cloud-ek kudeatua"
@@ -1146,7 +1154,6 @@ refresh = "Freskatu"
 selectFile = "Mesedez, hautatu inportatzeko .sql fitxategi bat"
 size = "Tamaina"
 title = "Datu-basea"
-unavailable = "Uneko datu-base konfigurazioarentzat babeskopien zerrenda ez dago erabilgarri."
 uploadTitle = "Igo eta inportatu"
 version = "H2 bertsioa"
 
@@ -1280,6 +1287,7 @@ label = "Metadatu pertsonalizatuak"
 [admin.settings.general.customMetadata.author]
 description = "PDF metadatuetarako egile lehenetsia (adib., erabiltzaile-izena)"
 label = "Egile lehenetsia"
+placeholder = "erabiltzaile-izena"
 
 [admin.settings.general.customMetadata.autoUpdate]
 description = "Automatikoki eguneratu PDF metadatuak prozesatutako dokumentu guztietan"
@@ -1395,6 +1403,7 @@ defaultLocaleLink = "Konfiguratu lehenetsitako hizkuntza"
 description = "Erabiltzaileek saioa hasi ondoren onartu behar duten ardura-ukatze-oharra erakutsi. Testua erabiltzaile bakoitzaren hizkuntzara egokitzen da."
 discardConfirm = "Gorde gabeko aldaketak dituzu eta galdu egingo dira. Hala ere, hizkuntza aldatu?"
 editLabel = "Markdown"
+editPlaceholder = "## Goiburua\n\nZure erantzukizun-ukapenaren testua..."
 emptyPreview = "Oraindik ez dago aurrebistarik."
 language = "Hizkuntza"
 languageHelp = "Hizkuntza bakoitzak bere fitxategia du. Erabiltzaile baten hizkuntzak fitxategirik ez badu, hitzarmenak lehenetsitako hizkuntzaren fitxategia erabiliko du, eta, ondoren, ordezko testua."
@@ -1513,8 +1522,10 @@ label = "JWKS URL (optional)"
 placeholder = "Auto-discovered from issuer"
 
 [admin.settings.mcp.mode]
+apikey = "API gakoa (Stirling erabiltzaile bakoitzeko gakoa)"
 description = "OAuth needs an external IdP. API key uses a Stirling per-user API key (X-API-KEY) - simplest for self-host."
 label = "Authentication mode"
+oauth = "OAuth 2.1 (kanpoko IdP)"
 
 [admin.settings.mcp.requireAccount]
 description = "Only let tokens through if their subject maps to a provisioned, enabled Stirling user."
@@ -1931,6 +1942,14 @@ title = "Erabiltzailearen Ezarpenen Kontrolak"
 [agents]
 stirling_name = "Stirling"
 
+[alphabetOptions]
+arabic = "Arabiera"
+chinese = "Txinera (sinplifikatua)"
+japanese = "Japoniera"
+korean = "Koreera"
+roman = "Erromatarra"
+thai = "Thailandiera"
+
 [analytics]
 learnMore = "Argibide gehiago"
 paragraph1 = "Stirling PDF-k aukerazko analitikak ditu produktua hobetzen laguntzeko. Ez dugu informazio pertsonalik edo fitxategi-edukirik jarraitzen."
@@ -2052,6 +2071,7 @@ week = "Astea"
 
 [audit.clearData]
 cancel = "Utzi"
+closeAlert = "Itxi alerta"
 codeDoesNotMatch = "Kodea ez dator bat"
 codePlaceholder = "Idatzi kodea hemen"
 confirmationCode = "Baieztapen-kodea"
@@ -2061,6 +2081,7 @@ confirmTitle = "Mesedez baieztatu ezabatu nahi duzula"
 deleteButton = "Ezabatu"
 enterCode = "Baieztapen-kodea"
 enterCodeBelow = "Sartu kodea goian agertzen den bezala zehazki (maiuskulak/minuskulak bereizten dira)"
+failed = "Ezin izan dira auditoretza-datuak garbitu"
 initiateDelete = "Ezabatu datu guztiak"
 irreversible = "ITZULEZINA"
 success = "Arrakasta"
@@ -2069,6 +2090,7 @@ warning1 = "Ekintza hau ezin da desegin"
 warning2 = "Ikuskaritza-datuak ezabatzeak betiko kenduko ditu datu-baseko aurreko ikuskaritza erregistro guztiak, segurtasun gertaerak, erabiltzaile jarduerak eta fitxategi eragiketak barne."
 
 [audit.error]
+loadStatus = "Ezin izan da auditoretza-sistemaren egoera kargatu"
 title = "Errorea auditoretza-sistema kargatzean"
 
 [audit.events]
@@ -2084,6 +2106,7 @@ fileHash = "Fitxategiaren hash-a"
 filterByType = "Iragazi motaren arabera"
 filterByUser = "Iragazi erabiltzailearen arabera"
 ipAddress = "IP helbidea"
+loadFailed = "Ezin izan dira gertaerak kargatu"
 noEvents = "Ez da gertaerarik aurkitu"
 startDate = "Hasiera-data"
 timestamp = "Denbora-zigilua"
@@ -2124,6 +2147,7 @@ avgLatency = "Batez besteko latentzia"
 error = "Errorea estatistikak kargatzean"
 excellent = "Bikain"
 good = "Ona"
+loadFailed = "Ezin izan dira estatistikak kargatu"
 noData = "N/A"
 successRate = "Arrakasta tasa"
 totalEvents = "Gertaera kopurua"
@@ -2158,13 +2182,27 @@ accessDenied = "Sarbidea ukatuta"
 insufficientPermissions = "Ez duzu ekintza hau egiteko baimenik."
 
 [auth.callback]
+alreadySignedIn = "Dagoeneko saioa hasita duzu! Birbideratzen..."
+backToLogin = "Itzuli saio-hasierara"
 completing = "Autentifikazioa osatzen"
+exchanging = "Baimen-kodea trukatzen..."
+failedWithReason = "Autentifikazioak huts egin du: {{error}}"
 invalidToken = "OAuth saioa hasteak huts egin du - token baliogabea."
 missingToken = "OAuth saioa hasteak huts egin du - ez da tokenik jaso."
+noData = "Ez da autentifikazio-daturik aurkitu"
 oauthFailed = "OAuth saioa hasteak huts egin du. Saiatu berriro."
 pleaseWait = "Itxaron saioa hasten amaitzen dugun bitartean."
+processing = "Autentifikazioa prozesatzen..."
 signedOut = "Saioa amaitu duzu. Hasi saioa berriro."
+signInFailed = "Ezin izan da saio-hasiera osatu: {{error}}"
+success = "Saio-hasiera arrakastatsua! Birbideratzen..."
+unknownError = "Errore ezezaguna"
 windowMayClose = "Leiho hau itxi dezakezu osatzen denean."
+
+[auth.callback.title]
+default = "Autentifikazioa"
+processing = "Saioa hasten"
+success = "Dena prest!"
 
 [auth.displayName]
 guest = "Gonbidatua"
@@ -2317,6 +2355,7 @@ title = "Inportatu automatizazioa"
 unresolved = "Mapatu gabe: {{ops}}"
 
 [automate.run]
+progress = "Aurrerapena: {{current}}/{{total}}"
 title = "Automatizazioa exekutatu"
 
 [automate.selection]
@@ -2466,6 +2505,7 @@ whatHappensNext = "Zer dator orain?"
 
 [billing.portal]
 error = "Ezin izan da fakturazio ataria ireki"
+errorFallback = "Saiatu berriro edo jarri harremanetan laguntzarekin."
 
 [bookletImposition]
 paperSizeNote = "Paperaren tamaina zure lehen orritik ateratzen da automatikoki."
@@ -2513,6 +2553,9 @@ title = "Eskuzko duplex modua"
 [bookletImposition.rtlBinding]
 label = "Eskuinetik ezkerrera lotura"
 tooltip = "Arabiera, hebreera edo eskuinetik ezkerrera hizkuntzetarako"
+
+[bookletImposition.settings]
+title = "Ezarpenak"
 
 [bookletImposition.tooltip.advanced]
 bullet1 = "Eskuinetik ezkerrera lotura: Arabiera, hebreera edo RTL hizkuntzetarako"
@@ -2582,6 +2625,8 @@ detail = "Egin klik edo sakatu Zuriunea berriro jokatzeko"
 headline = "Dena garbi"
 
 [bulkSelection]
+selectedPages_one = "Hautatuta: orri {{count}} ({{pages}})"
+selectedPages_other = "Hautatuta: {{count}} orri ({{pages}})"
 syntaxError = "Sintaxian arazo bat dago. Ikusi Orrialde Hautaketa aholkuak laguntzarako."
 
 [bulkSelection.advanced]
@@ -2802,6 +2847,7 @@ declineButton = "Ukatu"
 deleteSelected = "Ezabatu hautatutako sinadura"
 drawSignature = "Marraztu zure sinadura behean"
 fileTooLarge = "Fitxategiaren tamainak 5MB baino txikiagoa izan behar du"
+fontBrushScript = "Brush Script MT (kurtsiboa)"
 fontFamily = "Letra-familia"
 fontSize = "Letra-tamaina: {{size}}px"
 fontSizePlaceholder = "Tamaina"
@@ -2821,6 +2867,7 @@ removeImage = "Kendu irudia"
 savedSignatures = "Gordetako sinadurak"
 selectFile = "Hautatu irudi-fitxategia"
 selectSignatureTitle = "Hautatu edo sortu sinadura"
+signatureImageAlt = "Sinadura"
 signatureInfo = "Ezarpen hauek dokumentuaren jabeak konfiguratzen ditu"
 signatureSettings = "Sinadura-ezarpenak"
 signatureText = "Sinadura-testua"
@@ -3591,13 +3638,19 @@ confirm = "Berretsi"
 continue = "Jarraitu"
 copied = "Kopiatuta!"
 copy = "Kopiatu"
+copyCode = "Kopiatu kodea"
+dismiss = "Baztertu"
 done = "Eginda"
 enterValue = "Enter value"
 error = "Errorea"
 expand = "Zabaldu"
 filterEmpty = "Ez dago iragazteko ezer"
+goToSlide = "Joan {{number}} diapositibara"
 loading = "Kargatzen..."
+moreInformation = "Informazio gehiago"
 next = "Hurrengoa"
+noData = "Daturik ez"
+nOfTotal = "{{current}} / {{total}}"
 open = "Open"
 preview = "Aurrebista"
 previous = "Aurrekoa"
@@ -3606,6 +3659,9 @@ remaining = "Geratzen dena"
 retry = "Saiatu berriro"
 save = "Gorde"
 search = "Bilatu"
+settingsSections = "Ezarpenen atalak"
+showAllTotal = "Erakutsi {{total}} guztiak"
+showLess = "Erakutsi gutxiago"
 stepOf = "Step {{current}} of {{total}}"
 
 [compare]
@@ -3617,6 +3673,7 @@ newLine = "lerro-berria"
 pages = "Orriak"
 tags = "bereizi,kontraste,aldaketak,analisi"
 title = "Konparatu"
+workbenchLabel = "Konparazio-ikuspegia"
 
 [compare.actions]
 linkScroll = "Lotu korritzea"
@@ -3770,6 +3827,7 @@ title = "Konpresio-metodoa"
 desiredSize = "Nahi den fitxategi-tamaina"
 desiredSizePlaceholder = "Sartu tamaina"
 desiredSizeUnit = "Size unit"
+title = "Ezarpenak"
 
 [compress.tooltip.description]
 text = "Konpresioa modu erraza da fitxategi-tamaina murrizteko. Aukeratu Fitxategiaren tamaina helburu tamaina bat sartzeko eta guk kalitatea doitzeko. Aukeratu Kalitatea konpresio-indarra eskuz ezartzeko."
@@ -3819,10 +3877,13 @@ title = "Kontuaren ezarpenak"
 description = "Igo irudi bat zure kontua pertsonalizatzeko."
 help = "PNG, JPG edo WebP 2MB arte."
 remove = "Kendu"
+removeFailed = "Ezin izan da profileko irudia kendu"
 sizeError = "Hautatu 2MB baino txikiagoa den irudia."
 switchedToCustom = "Irudi pertsonalizatura aldatu da. Orain zurea igo dezakezu."
+switchFailed = "Ezin izan da irudi pertsonalizatura aldatu"
 title = "Profil-argazkia"
 upload = "Igo"
+uploadFailed = "Ezin izan da profileko irudia kargatu"
 useCustom = "Erabili irudi pertsonalizatua"
 usingProvider = "{{provider}}-eko profil-argazkia erabiltzen"
 
@@ -3836,6 +3897,7 @@ title = "Moztu profil-argazkia"
 zoom = "Zoom"
 
 [config.account.security]
+changeFailed = "Ezin izan da pasahitza aldatu"
 changePassword = "Pasahitza aldatu"
 description = "Zure pasahitza eta segurtasun-ezarpenak kudeatu."
 title = "Pasahitzak eta segurtasuna"
@@ -3846,11 +3908,15 @@ description = "Estekatu zure kontua zure historia gordetzeko eta funtzio gehiago
 email = "Helbide elektronikoa"
 emailPassword = "edo sartu zure helbide elektronikoa eta pasahitza"
 emailPlaceholder = "Sartu zure helbide elektronikoa"
+failed = "Ezin izan da kontua bertsio-berritu"
+failedWithProvider = "Ezin izan da kontua bertsio-berritu {{provider}} bidez"
 linkWith = "Estekatu honekin"
+linkWithProvider = "Lotu {{provider}}-rekin"
 password = "Pasahitza (aukerakoa)"
 passwordNote = "Utzi hutsik soilik posta bidezko egiaztapena erabiltzeko"
 passwordPlaceholder = "Ezarri pasahitza"
 socialLogin = "Bertsio-berritu sare sozialeko kontuarekin"
+success = "Kontua behar bezala bertsio-berritu da! Orain zure posta elektronikoarekin saioa has dezakezu."
 title = "Gonbidatu-kontua bertsio-berritu"
 upgradeButton = "Bertsio-berritu kontua"
 
@@ -3960,10 +4026,10 @@ title = "Eskaera ez da baliozkoa"
 
 [connect.renewal]
 approve = "Berritu saio-hasiera"
+currentOwnerRequired = "Hasi saioa lotutako hodeiko taldearen egungo jabe gisa zerbitzari honen saio-hasiera berritzeko. Jabetza transferitu bada, erabili jabe berriaren kontua."
 failed = "Zure saio-hasiera ezin izan da berritu. Saiatu berriro, edo baztertu orrialde hau eta hasi berriro zure zerbitzaritik."
 lead = "Zerbitzari hau dagoeneko zure kontuarekin lotuta dago. Berritu saio-hasiera zure zerbitzariko fakturaziora eta erabilerara itzultzeko."
 title = "Berritu zure zerbitzariaren saio-hasiera"
-wrongAccount = "Kontu honek ezin du zerbitzari honen saio-hasiera berritu. Aldatu zerbitzaria lotzeko jatorrian erabilitako kontura. Kontu horrek lotutako taldearen jabe izaten jarraitu behar du."
 
 [convert]
 autoRotate = "Biraketa automatikoa"
@@ -4009,6 +4075,7 @@ multiple = "Hainbat"
 optimizeForEbook = "Optimizatu PDF e-book irakurgailuetarako (Ghostscript erabiltzen du)"
 output = "Irteera"
 outputFormat = "Irteerako formatua"
+pdfaAccessibleFormat = "{{format}} (irisgarria)"
 pdfaDigitalSignatureWarning = "PDFak sinadura digitala dauka. Hurrengo urratsean kenduko da."
 pdfaNote = "PDF/A-1b bateragarriagoa da; PDF/A-2b-k ezaugarri gehiago onartzen ditu."
 pdfaOptions = "PDF/A aukerak"
@@ -4068,6 +4135,24 @@ outputFormatDesc = "Aukeratu eBookaren irteera-formatua"
 tabletPhone = "Tableta/Mugikorra (irudiekin)"
 targetDevice = "Helburu gailua"
 targetDeviceDesc = "Aukeratu irakurgailurako optimizatutako irteera-profila"
+
+[convert.formatGroups]
+archive = "Artxiboa"
+document = "Dokumentua"
+ebook = "eBook"
+email = "Email"
+file = "Fitxategia"
+image = "Irudia"
+multipleFiles = "Fitxategi anitz"
+presentation = "Aurkezpena"
+spreadsheet = "Kalkulu-orria"
+text = "Testua"
+web = "Web"
+
+[convert.formatOptions]
+any = "Edozein"
+images = "Irudiak"
+msgOutlook = "MSG (Outlook)"
 
 [cookieBanner.popUp]
 acceptAllBtn = "Ados"
@@ -4161,6 +4246,12 @@ label = "Y posizioa"
 [crop.error]
 failed = "Huts egin du PDFa mozteak"
 
+[crop.pageNumbers]
+description = "Moztu hautatutako eremua orri zehatzetan, edo 'all' orri guztietarako."
+error = "Orri-hautaketa baliogabea. Erabili adib. 1, 3, 5-8 edo all."
+label = "Moztu beharreko orriak"
+placeholder = "adib. 1, 3, 5-8 edo all"
+
 [crop.preview]
 title = "Mozketa-arearen hautapena"
 
@@ -4183,16 +4274,11 @@ fileName = "Fitxategi-izena"
 title = "Datu-basearen inportazioa/esportazioa"
 
 [defaultApp]
-setDefault = "Ezarri lehenetsia"
 title = "Ezarri PDF aplikazio lehenetsi gisa"
 
 [defaultApp.error]
 message = "Ezin izan da PDF kudeatzaile lehenetsia ezarri"
 title = "Errorea"
-
-[defaultApp.prompt]
-dontRemind = "Ez gogorarazi berriro"
-message = "Egin Stirling PDF PDF fitxategiak irekitzeko zure aplikazio lehenetsia."
 
 [defaultApp.settingsOpened]
 message = "Hautatu Stirling PDF sistemaren ezarpenetan, mesedez"
@@ -4201,6 +4287,17 @@ title = "Ezarpenak ireki dira"
 [defaultApp.success]
 message = "Stirling PDF orain zure PDF editore lehenetsia da"
 title = "Aplikazio lehenetsia ezarrita"
+
+[desktop.titleBar]
+maximize = "Maximizatu"
+minimize = "Minimizatu"
+restore = "Leheneratu"
+
+[desktopBilling]
+description = "Kudeatu erabilera eta fakturazioa zure nabigatzailean. Hasi saioa hemen erabiltzen duzun Stirling kontu berarekin."
+open = "Ireki Erabilera eta fakturazioa nabigatzailean"
+openFailed = "Ezin izan da Erabilera eta fakturazioa ireki. Egiaztatu konexioa eta saiatu berriro."
+selfHostedDescription = "Kudeatu erabilera eta fakturazioa konektatutako zerbitzarian zure nabigatzailean. Hasi saioa zerbitzariaren jabearen kontuarekin."
 
 [desktopFileLink]
 saveAs = "Gorde honela…"
@@ -4264,6 +4361,7 @@ tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,ident
 noItems = "No items available"
 noResults = "No results found"
 searchPlaceholder = "Bilatu..."
+selectedCount = "{{count}} hautatuta"
 selectLanguages = "Select languages"
 selectOption = "Select an option"
 
@@ -4274,6 +4372,7 @@ editSecretValue = "Editatu sekretu-balioa"
 [editTableOfContents]
 submit = "Aplikatu edukien taula"
 tags = "bookmarks,contents,edit,table of contents,TOC,outline,navigation,chapters,sections,add bookmarks,edit bookmarks,PDF outline"
+workbenchLabel = "Eskemaren lan-eremua"
 
 [editTableOfContents.actions]
 clipboardUnavailable = "Arbelerako sarbidea ez dago eskuragarri nabigatzaile honetan."
@@ -4434,6 +4533,27 @@ closeFile = "Itxi fitxategia"
 
 [fileEditor]
 addFiles = "Fitxategiak gehitu"
+closedFile = "{{name}} itxita"
+couldNotSave = "Ezin izan da {{name}} gorde"
+filesAdded_one = "Fitxategi {{count}} gehitu da"
+filesAdded_other = "{{count}} fitxategi gehitu dira"
+filesReordered_one = "Fitxategia berrordenatu da"
+filesReordered_other = "{{count}} fitxategi berrordenatu dira"
+loadedFromStorage_one = "Fitxategi {{count}} biltegiratzetik kargatu da"
+loadedFromStorage_other = "{{count}} fitxategi biltegiratzetik kargatu dira"
+loadFromStorageFailed = "Ezin izan dira fitxategi batzuk biltegiratzetik kargatu"
+pinnedFile = "{{name}} ainguratu da"
+processFilesFailed = "Ezin izan dira fitxategiak prozesatu"
+savedAndClosed = "{{name}} gorde eta itxi da"
+saveFailed = "Gordetzeak huts egin du"
+unpinnedFile = "{{name}} ainguratzetik kendu da"
+unzipping = "{{name}} deskonprimatzen"
+
+[fileEditor.unzip]
+error = "Errorea {{name}} deskonprimatzean"
+extracted_one = "Fitxategi {{count}} erauzi da {{name}}-tik"
+extracted_other = "{{count}} fitxategi erauzi dira {{name}}-tik"
+failed = "Ezin izan dira fitxategiak {{name}}-tik erauzi"
 
 [fileManager]
 addToUpload = "Gehitu igoerara"
@@ -4450,6 +4570,7 @@ noFiles = "Ez dago fitxategirik eskuragarri"
 noFilesFound = "Ez da aurkitu zure bilaketarekin bat datorren fitxategirik"
 openInFileEditor = "Ireki fitxategi-editorean"
 openInPageEditor = "Ireki orri-editorean"
+reloadFiles = "Birkargatu fitxategiak"
 saveSelected = "Hautatutakoa gorde"
 searchFiles = "Bilatu fitxategiak..."
 share = "Partekatu"
@@ -4459,6 +4580,8 @@ sharedEditNoticeConfirm = "Ulertuta"
 sharedEditNoticeTitle = "Zerbitzariko kopia irakurtzeko soilik"
 sharedWithYou = "Zurekin partekatua"
 showAll = "Erakutsi denak"
+showAllCount_one = "Erakutsi guztiak (fitxategi {{count}})"
+showAllCount_other = "Erakutsi guztiak ({{count}} fitxategi)"
 sortBy = "Sort files"
 sortByDate = "Ordenatu dataren arabera"
 sortByName = "Ordenatu izenaren arabera"
@@ -4495,6 +4618,11 @@ sources = "Fitxategi-iturburuak"
 subtitle = "Aukeratu zure liburutegitik edo gehitu zerbait berria."
 title = "Gehitu fitxategiak"
 unsupported = "Fitxategi mota hau ez da bateragarria hautatutako tresnarekin."
+
+[filePreview]
+loadingThumbnail = "Koadro txikia kargatzen..."
+locked = "Blokeatuta"
+previewOf = "{{name}}-ren aurrebista"
 
 [files]
 addFiles = "Gehitu fitxategiak"
@@ -4930,13 +5058,15 @@ title = "Fitxategia PDF bihurtu"
 [fileUpload]
 dropFilesHere = "Jaregin fitxategiak hemen edo egin klik igo botoian"
 dropFilesHereOpen = "Jaregin fitxategiak hemen edo egin klik irekitze-botoian"
-filesAvailable = "fitxategi erabilgarri"
+filesAvailableCount_one = "Fitxategi {{count}} eskuragarri"
+filesAvailableCount_other = "{{count}} fitxategi eskuragarri"
 loadFromStorage = "Biltegitik kargatu"
 noFilesInStorage = "Ez dago fitxategirik biltegian. Igo batzuk lehenik."
 noFilesInStorageOpen = "Ez dago fitxategirik biltegian. Ireki lehenik fitxategi batzuk."
 open = "Ireki"
 openFile = "Fitxategia ireki"
 openFiles = "Fitxategiak ireki"
+selectedCount = "{{count}} hautatuta"
 selectFile = "Select {{name}}"
 selectFromStorage = "Biltegitik hautatu"
 upload = "Igo"
@@ -5028,6 +5158,7 @@ rescanFields = "Eremuak berriro eskaneatu"
 rescanFormFields = "Inprimaki-eremuak berriro eskaneatu"
 save = "Gorde"
 saveShortcut = "Ctrl+S gordetzeko"
+selectOptionPlaceholder = "— hautatu —"
 skippedEdits_one = "Ezin izan da aldaketa bat aplikatu:"
 skippedEdits_other = "Ezin izan dira {{count}} aldaketa aplikatu:"
 skippedEditsTruncated = "Beste {{count}} ez dira zerrendatu."
@@ -5090,6 +5221,16 @@ tooltipHelp = "PDF irakurgailu batean norbaitek eremuaren gainean sagua jartzean
 type = "Mota"
 typeHelp = "Eremu mota. Aldatzean eremua berreraikitzen da; beraz, uneko balioa ez da mantenduko."
 
+[formFill.fieldTypes]
+button = "Botoia"
+checkbox = "Kontrol-laukia"
+combobox = "Goitibeherako menua"
+listbox = "Zerrenda-koadroa"
+radio = "Radio"
+radioGroup = "Radio taldea"
+signature = "Sinadura"
+text = "Testua"
+
 [formFill.mode]
 create = "Sortu"
 fill = "Bete"
@@ -5107,11 +5248,16 @@ restore = "Lehengoratu"
 
 [formFill.sidebar]
 close = "Itxi alboko barra"
+empty = "Ez da formulario-eremurik aurkitu PDF honetan"
+loading = "Formulario-eremuak kargatzen..."
+pageNumber = "{{page}}. orria"
+title = "Formulario-eremuak"
 
 [getPdfInfo]
 downloadJson = "Deskargatu JSON"
 downloads = "Deskargak"
 indexTitle = "Indizea"
+noData = "Daturik ez"
 noneDetected = "Ez da ezer detektatu"
 noResults = "Exekutatu tresna txosten bat sortzeko."
 processing = "Informazioa erauzten..."
@@ -5127,6 +5273,8 @@ noVerification = "Ez da egiaztapenik egin"
 noVerificationDesc = "Dokumentu honen PDF estandarren betetzea ez da egiaztatu."
 passed = "Gaindituta"
 passedCount = "gaindituta"
+secCompliant = "Dokumentuak SEC EDGAR aurkezpen-eskakizunak betetzen ditu"
+secNotCompliant = "Dokumentuak ez ditu SEC EDGAR aurkezpen-eskakizunak betetzen"
 
 [getPdfInfo.error]
 partial = "Fitxategi batzuk ezin izan dira prozesatu."
@@ -5134,10 +5282,15 @@ unexpected = "Ustekabeko errorea erauzketan zehar."
 
 [getPdfInfo.other]
 attachments = "Eranskinak"
+created = "Sortua: {{date}}"
 embeddedFiles = "Txertatutako fitxategiak"
+fileSizeBytes = "({{size}} byte)"
 javaScript = "JavaScript"
 layers = "Geruzak"
+modified = "Aldatua: {{date}}"
 structureTree = "StructureTree"
+unnamedAttachment = "Izenik gabeko eranskina"
+unnamedFile = "Izenik gabeko fitxategia"
 xmp = "XMPMetadata"
 
 [getPdfInfo.perPage]
@@ -5147,6 +5300,7 @@ images = "Irudiak"
 links = "Estekak"
 multimedia = "Multimedia"
 size = "Tamaina"
+unnamedImage = "Irudia"
 xobjects = "XObject kopuruak"
 
 [getPdfInfo.report]
@@ -5675,6 +5829,7 @@ invalidEmail = "Helbide elektronikoa baliogabea"
 invalidInvitation = "Gonbidapen baliogabea"
 invalidToken = "Gonbidapen-esteka baliogabea"
 linkExpires = "Esteka iraungiko da"
+linkExpiresAt = "Esteka iraungiko da: {{date}} {{time}}"
 passwordMismatch = "Pasahitzak ez datoz bat"
 passwordPlaceholder = "Sartu zure pasahitza"
 passwordRequired = "Pasahitza beharrezkoa da"
@@ -5689,6 +5844,7 @@ welcomeTitle = "Gonbidapena jaso duzu!"
 addFiles = "Gehitu fitxategiak"
 mobileUpload = "Kargatu mugikorretik"
 openFromComputer = "Ireki ordenagailutik"
+settingUpSession = "Zure saioa konfiguratzen..."
 uploadFromComputer = "Igo ordenagailutik"
 
 [language]
@@ -5770,6 +5926,7 @@ sessionExpired = "Zure saioa iraungi da. Hasi saioa berriro, mesedez."
 signin = "Saioa hasi"
 signingIn = "Saioa hasten..."
 signInWith = "Hasi saioa honekin"
+signInWithProvider = "Hasi saioa {{provider}} bidez"
 title = "Saioa hasi"
 unexpectedError = "Ustekabeko errorea: {{message}}"
 updatePassword = "Pasahitza eguneratu"
@@ -5811,6 +5968,9 @@ label = "Kendu sinadura digitala bateratutako fitxategitik?"
 description = "Sinadura digitalak baliogabetu egingo dira fitxategiak batzean. Markatu hau azken PDF bateratuan kentzeko."
 title = "Kendu sinadura digitala"
 
+[merge.settings]
+title = "Ezarpenak"
+
 [merge.sortBy]
 ascending = "Goranzkoa"
 dateModified = "Aldatze-data"
@@ -5819,6 +5979,9 @@ description = "Fitxategiak hautatu diren ordenan batuko dira. Arrastatu berrorde
 filename = "Fitxategi-izena"
 label = "Ordenatu"
 sort = "Ordenatu"
+
+[merge.sortFiles]
+title = "Ordenatu fitxategiak"
 
 [merge.tooltip.header]
 title = "Bateratze ezarpenen ikuspegi orokorra"
@@ -5867,6 +6030,7 @@ validating = "Saioa balioztatzen..."
 
 [mobileSign]
 clear = "Clear"
+drawingArea = "Sinadura marrazteko eremua"
 invalidSession = "Session expired"
 invalidSessionMessage = "This QR code is no longer valid. Open the Sign tool on your computer and scan the new code."
 penSizeLabel = "Pen size"
@@ -5882,6 +6046,7 @@ validating = "Checking session…"
 fromGallery = "From gallery"
 hint = "Photograph a signature on white paper, or choose an existing image."
 invalidType = "Please choose an image file."
+previewAlt = "Sinadura"
 takePhoto = "Take a photo"
 
 [mobileSign.tab]
@@ -5993,6 +6158,9 @@ profile = "See your basic profile information"
 desc = "Garbiketa-eskaneatzeak eta irudi-testuak detektatu PDF baten barruan eta berriz ere gehitu testu gisa"
 tags = "ezagutzea,testua,irudia,eskaneatu,irakurri,identifikatu,detekzioa,editagarria"
 title = "OCR / Garbiketa-eskaneatzea"
+
+[ocr.advanced]
+title = "Aurreratua"
 
 [ocr.error]
 failed = "OCR eragiketak huts egin du"
@@ -6118,9 +6286,9 @@ title = "Deskargatu Stirling mahaigainerako"
 description = "Kolaboratu zure taldearekin"
 title = "Gonbidatu taldeko kideak"
 
-[onboarding.checklist.shareAnalytics]
-description = "Lagundu Stirling hobetzen"
-title = "Partekatu erabilera-datu anonimoak"
+[onboarding.checklist.setDefaultApp]
+description = "Ireki PDF fitxategiak Stirling PDF-n"
+title = "Ezarri Stirling lehenetsi gisa"
 
 [onboarding.checklist.takeTour]
 description = "Ikusi Stirling nola dabilen ibilbide azkar batean"
@@ -6188,6 +6356,7 @@ message = "Aplikazioak aldaketa handiak izan ditu azkenaldian. Zure zerbitzariar
 roleAdmin = "Administratzailea"
 rolePlaceholder = "Baieztatu zure rola"
 roleUser = "Erabiltzailea"
+title = "Segurtasun-egiaztapena"
 
 [onboarding.serverLicense]
 freeBody = "Gure <strong>Open-Core</strong> lizentziak <strong>OAuth SSO</strong> eta gehienez <strong>{{freeTierLimit}}</strong> erabiltzaile barne hartzen ditu doan. Etenik gabe hazteko, Stirling Team plana gomendatzen dugu — <strong>100 erabiltzaile</strong> hilean 99 $-ren truke."
@@ -6276,16 +6445,93 @@ title = "Gainjartzeko fitxategiak"
 text = "Aurreko planoak gainjartzea orriaren gainean jartzen du. Atzeko planoak atzean kokatzen du."
 title = "Gainjartze kokapena"
 
+[ownership]
+acceptInvite = "Kontu bat sor dezakete edo saioa hasi, eta gero gonbidapena onartu."
+accessUpdated = "Haien jabe-sarbidea prest dago."
+accountLinkDisabled = "Zerbitzari honek oraindik hodeiko esteka du, baina kontuen lotura desaktibatuta dago. Eskatu zerbitzariaren operadoreari kontuen lotura gaitzeko, eta ondoren jarraitu transferentzia honekin edo deslotu zerbitzaria ezarpenetan."
+anotherTeam = "Dagoeneko beste talde batean?"
+billing = "Harpidetza, zorroa, ordainketa-metodoa eta dauden lizentziak bere horretan geratzen dira. Fakturazio-harremanetarako datuak ez dira automatikoki aldatzen."
+billingDetails = "Fakturazio-xehetasunak"
+billingUnchanged = "Harpidetza eta fakturazioa bere horretan geratzen dira"
+bothDone = "Zerbitzariaren eta hodeiaren jabetza lerrokatuta daude orain."
+cancel = "Utzi transferentzia"
+check = "Egiaztatu berriro"
+checkAccount = "Egiaztatu kontua"
+chooseEmail = "Hautatu haien kontua {{team}} taldean, edo sartu email bat gonbidatzeko."
+close = "Itxi transferentzia-elkarrizketa"
+cloudAccount = "Stirling kontua"
+cloudScopeStyled = "<user>{{name}}</user> erabiltzaileak {{team}}, haren kideak eta fakturazioa kudeatuko ditu."
+cloudTargetChanged = "Hautatu beste hodeiko kide bat. Kontu hau jada ez da egokia eskualdaketarako."
+confirm = "Ulertzen ditut sarbide- eta jabetza-aldaketak."
+done = "Jabetza transferitu da"
+error = "Ezin izan dugu urrats hau osatu. Egiaztatu hartzailea aktibo dagoela eta zerbitzaria konektatuta dagoela, eta gero egiaztatu berriro. Zain dagoen transferentzia bat hemen berrekin daiteke."
+finish = "Amaitu zerbitzariaren transferentzia"
+inProgress = "Beste hartzaile batek dagoeneko zain dagoen transferentzia bat du. Itxi elkarrizketa hau eta jarraitu Erabiltzaileak ataletik."
+instances = "Talde honek {{count}} zerbitzari lotu ditu. Haien hodeiko fakturazioa talde honekin geratzen da; beste zerbitzarien tokiko jabeak ez dira aldatzen."
+invitationSent = "Gonbidapena bidali da"
+invite = "Bidali gonbidapena"
+inviteAddress = "Gonbidatu <account>{{email}}</account> {{team}} taldera."
+inviteBlocked = "Ezin izan da gonbidapena bidali. Egiaztatu taldeko eserleku erabilgarriak eta hartzaileak dagoeneko ordainpeko harpidetzarik duen."
+linkChanged = "Zerbitzariaren hodeiko esteka aldatu da. Eskatu zerbitzariaren operadoreari jatorrizko esteka leheneratzeko jarraitu aurretik."
+linkedServerCount = "{{count}} zerbitzari lotu"
+linkRevoked = "Zerbitzari honen hodeiko esteka jada ez da baliozkoa. Utzi transferentzia, eta gero berriro konektatu zure Stirling kontua ezarpenetan. Jabetza ez da aldatuko."
+localScope = "Zerbitzari honen jabe izango dira eta fakturazioa eta hodeiko konexioak kudeatuko dituzte. Administratzaile-sarbidea mantenduko duzu, baina ezarpen horietarako sarbidea galduko duzu."
+membershipDetails = "Taldeko kidetzaren xehetasunak"
+membershipFirst = "Taldean sartu behar dute transferentzia berretsi ahal izan aurretik."
+membershipRequired = "Hartzaileak hodeiko talde honetan sartu behar du jabetza transferitu ahal izan aurretik. Eskatu gonbidapena onartzeko, eta gero egiaztatu berriro."
+newOwnerLabel = "Jabe berria"
+newOwnerStyled = "<user>{{name}}</user> da orain jabea."
+noEmailMatches = "Ez dago bat datorren kiderik. Sartu email bat gonbidatzeko."
+otherTeam = "Beste talde batekoa bada, onartzean bere kontua mugi daiteke. Baliteke lehenik ordainpeko kontu bat edo beste talde baten jabetza konpondu behar izatea. Ez dugu bere harpidetza mugituko edo taldeak bateratuko."
+ownerChanged = "Hodeiko jabetza aldatu da transferentzia hau hasi ondoren. Utzi transferentzia hau eta hasi berriro egungo hodeiko jabearekin."
+ownerRequired = "Hasi saioa hodeiko taldearen egungo jabe gisa, eta saiatu berriro urrats hau egiten."
+partialError = "Hodeiko jabetza transferitu da. Amaitu zerbitzariaren transferentzia bi jabeak lerrokatuta mantentzeko."
+partialTargetChanged = "Leheneratu hautatutako zerbitzari-erabiltzailearen sarbidea eta jatorrizko kontu-xehetasunak, eta gero amaitu zerbitzariaren transferentzia. Hodeiko jabetza dagoeneko transferitu da."
+pending = "{{name}} erabiltzaileari jabetza transferentzia bat zain dago."
+personalTeam = "Talde pertsonalek ezin dute jabetza transferitu."
+prepareHelp = "Hartzaileak bere lehen zerbitzari-saioa osatu behar du. Hemen berriro saia zaitezke, edo Erabiltzaileak atalera itzuli beste norbait aukeratzeko."
+resume = "Jarraitu transferentzia"
+searchEmail = "Bilatu edo sartu email bat"
+serverAccount = "Zerbitzari-kontua"
+serverDetails = "Lotutako zerbitzariaren xehetasunak"
+signIn = "Hasi saioa hodeian"
+startFromInstanceBody = "Talde honek zerbitzari lotuak ditu. Autoostatutako zerbitzarian, ireki Ezarpenak → Erabiltzaileak eta aldatu hartzailearen rola Erakundearen jabe gisa. Fluxu horrek hodeiko jabetza transferitzen du zerbitzariaren transferentzia osatu aurretik."
+startFromInstanceTitle = "Hasi zure autoostatutako zerbitzaritik"
+stayOwner = "Jabe izaten jarraituko duzu transferentziara arte."
+targetChanged = "Hartzailearen kontua aldatu da. Leheneratu haren sarbidea edo utzi transferentzia hau eta aukeratu berriro."
+title = "Transferitu jabetza"
+transfer = "Transferitu jabetza"
+waitingForEmail = "{{email}} {{team}} taldera sartzeko zain."
+working = "Jabetza egiaztatzen eta eguneratzen..."
+yourCloudAccess = "Taldeko kide bihurtuko zara eta jabe-sarbidea galduko duzu."
+
 [pageEdit]
 deselectAll = "Hautatu ezer ez"
 selectAll = "Hautatu dena"
 
 [pageEditor]
+dragPreviewAlt = "Arrastatzen"
+filePosition = "{{position}}. posizioa"
+pageLabel = "{{page}}. orria"
 title = "Orri-editorea"
+
+[pageEditor.actions]
+deletePage = "Ezabatu orria"
+insertFileAfter = "Txertatu fitxategia ondoren"
+moveLeft = "Mugitu ezkerrera"
+moveRight = "Mugitu eskuinera"
+rotateLeft = "Biratu ezkerrera"
+rotateRight = "Biratu eskuinera"
+splitAfter = "Zatitu ondoren"
 
 [pageEditor.emptyState]
 body = "Gehitu fitxategiak orrialdeak editatzen hasteko"
 title = "Ez da PDF fitxategirik kargatu"
+
+[pageEditor.fileDropdown]
+addFile = "Gehitu fitxategia"
+selectedCount = "{{selected}}/{{total}} fitxategi hautatuta"
+untitled = "Izenik gabe"
 
 [pageEditor.toolbar]
 delete = "Ezabatu hautatutakoak"
@@ -6391,6 +6637,11 @@ portrait = "Bertikala"
 label = "Irakurketa-norabidea:"
 ltr = "Ezkerretik eskuinera"
 rtl = "Eskuinetik ezkerrera"
+
+[pageLayout.steps]
+advanced = "Ezarpen aurreratuak"
+layout = "Diseinu-ezarpenak"
+marginsBorders = "Marjinak eta ertzak"
 
 [pageLayout.tooltip.header]
 title = "Orrialde-diseinuaren gida"
@@ -6712,6 +6963,7 @@ teamChangeUnavailable = "Programatutako Team aldaketak ezin izan dira kargatu. F
 teamPending = "Zure Team erosketa oraindik prozesatzen ari da. Freskatu orri hau laster."
 teamProcessing = "Team erosketa prozesatzen"
 teamScheduled = "Zure Team aldaketa {{date}}rako programatuta dago. Zure uneko edukiera aktibo egongo da ordura arte."
+unknownError = "Errore ezezagun bat gertatu da"
 upgradeComplete = "Eguneratzea osatuta"
 upgradeCompleteMessage = "Zure harpidetza behar bezala eguneratu da. Zure oraingo lizentzia-gakoa eguneratu da."
 upgradeSuccess = "Ordainketa arrakastatsua! Zure harpidetza eguneratu da. Lizentzia zure zerbitzarian eguneratu da. Laster jasoko duzu berrespen email bat."
@@ -6766,6 +7018,14 @@ selectedMonthly = "Hilekoa"
 selectedYearly = "Urtekoa"
 selectMonthly = "Aukeratu hilero"
 selectYearly = "Aukeratu urtero"
+
+[payment.priceDisplay]
+basePrice = "Oinarrizko prezioa"
+perPeriod = "/{{period}}"
+perSeat = "Eserlekuko"
+perSeatPeriod = "/eserleku/{{period}}"
+totalSeats_one = "Guztira (eserleku {{count}})"
+totalSeats_other = "Guztira ({{count}} eserleku)"
 
 [payment.upgradeTeam]
 title = "Bertsio-berritu Team-era"
@@ -6985,6 +7245,10 @@ save = "Gorde"
 style = "Estiloa"
 tapToPlace = "Ukitu orrialdea testua jarri behar den tokian"
 unlock = "Desblokeatu"
+
+[pdfTextEditor.pageView]
+pageNumber = "{{page}}. orria"
+renderFailed = "Ezin izan da orria errendatu"
 
 [pdfTextEditor.password]
 cancel = "Utzi"
@@ -7212,6 +7476,7 @@ title = "Hodia"
 contact = "Jarri gurekin harremanetan"
 current = "Uneko plana"
 featureComparison = "Ezaugarrien konparazioa"
+fetchError = "Ezin izan dira prezio-datuak eskuratu"
 from = "Hasita"
 hideComparison = "Ezkutatu ezaugarrien konparazioa"
 licensedSeats = "Lizentziadunak: {{count}} eserleku"
@@ -7227,6 +7492,8 @@ withServer = "+ Zerbitzari-plana"
 [plan.api]
 large = "5.000 kreditu"
 medium = "1.000 kreditu"
+perCredit = "{{price}} kreditu bakoitzeko"
+perCreditWithDiscount = "{{price}} kreditu bakoitzeko • %{{discount}} deskontua"
 small = "500 kreditu"
 xsmall = "100 kreditu"
 
@@ -7302,14 +7569,9 @@ upToFiveUsers = "Gehienez 5 erabiltzaile"
 usageTrackingPrometheus = "Erabilera-jarraipena eta Prometheus"
 usersIncluded = "100 erabiltzaile barne"
 
-[plan.licenseWarning]
-body = "{{total}} erabiltzaile dituzu baina maila doakoak {{limit}} soilik onartzen ditu zerbitzari bakoitzeko. Eguneratu Stirling PDF ondo ibil dadin."
-cta = "Ikusi planak"
-overLimit = "{{limit}} baino gehiago"
-title = "Doako auto-ostatu muga gaindituta"
-
 [plan.period]
 month = "hilabete"
+year = "urtea"
 
 [plan.pro]
 highlight1 = "Tresna erabilera mugagabea"
@@ -7435,6 +7697,9 @@ pdfa-1 = "PDF/A-1b"
 pdfa-2b = "PDF/A-2b"
 pdfa-3b = "PDF/A-3b"
 
+[portal.accountLink]
+ownerRequired = "Erakundearen jabeak bakarrik lotu edo deslotu dezake zerbitzari hau."
+
 [portal.accountLink.card]
 billingNote = "Gainbegiratu gabeko prozesamendua zure erakundearen zorroari fakturatzen zaio."
 connectDescription = "Konektatu zerbitzari hau zure taldearen prozesatze-muga Stirling Cloud-en erabiltzeko."
@@ -7556,6 +7821,7 @@ identity = "Stirling kontua"
 linkTitle = "Lotu zure Stirling kontua"
 noAuthorizeUrl = "Stirling-ek ez du jarraitzeko tokirik itzuli. Saiatu berriro une batean."
 startFailed = "Ezin izan da Stirling-era iritsi konexioa hasteko. Egiaztatu zerbitzari honen kanporako sare-sarbidea, eta saiatu berriro."
+transferPending = "Jabetza-transferentzia bat zain dago. Joan Ezarpenak → Erabiltzaileak atalera amaitzeko edo bertan behera uzteko, eta gero saiatu berriro lotzen."
 
 [portal.accountLink.modal.loginNotConfigured]
 after = "hostatutako Stirling kontuarekin aplikazio barruko lotura gaitzeko."
@@ -9441,6 +9707,7 @@ labelId = "Etiketa ID"
 labelIdHelp = "Etiketaren GUID-a, Purview ataritik. Etiketa bat aplikatzeak haren metadatuak PDF-ean idazten ditu; ezin du zifratu, horretarako Microsoft bezeroa behar da."
 labelName = "Etiketaren izena (aukerakoa)"
 labelNameHelp = "ID-arekin batera erregistratzen da, pertsonek eta tresnek etiketa ezagut dezaten."
+labelNamePlaceholder = "Isilpekoa"
 
 [portal.policies.config.purview.fields.method]
 help = "Purview-ek bereizten du politika batek aplikatutako etiketa eta pertsona batek aukeratutakoa."
@@ -10425,31 +10692,6 @@ unlimited = "{{used}} · Mugagabea"
 [printFile]
 title = "Inprimatu fitxategia"
 
-[processingFolders.downloads]
-approve = "Prozesatu nire Deskargak"
-cancelSweep = "Utzi"
-capped = "{{found}} PDF dituzu; lehen {{limit}}ak orain prozesatuko dira eta gainerakoak ondoren."
-close = "Eginda"
-explain_one = "Stirling-ek zure Deskargak karpetan dagoen {{count}} PDF sailka dezake eta emaitzak hemen ireki."
-explain_other = "Stirling-ek zure Deskargak karpetan dauden {{count}} PDF sailka ditzake eta emaitzak hemen ireki."
-failed = "Ezin izan da hori konfiguratu. Zure fitxategiak ez dira aldatu."
-finished_one = "{{count}} fitxategi sailkatu da eta horietatik {{opened}} ireki dira hemen, lanerako prest."
-finished_other = "{{count}} fitxategi sailkatu dira eta horietatik {{opened}} ireki dira hemen, lanerako prest."
-nothingNew_one = "Ez dago prozesatzeko ezer berririk; {{count}} fitxategi hau dagoeneko pasatu da."
-nothingNew_other = "Ez dago prozesatzeko ezer berririk; {{count}} fitxategi hauek dagoeneko pasatu dira."
-notModified = "Deskargak karpetako zure fitxategiak ez dira aldatzen; Stirling-ek irakurri eta hemen irekitzen ditu."
-notNow = "Orain ez"
-progressCounts = "{{total}}tik prozesatuta"
-someFailed_one = "{{count}} ezin izan da prozesatu eta bere horretan utzi da."
-someFailed_other = "{{count}} ezin izan dira prozesatu eta bere horretan utzi dira."
-stillRunning = "Fitxategi batzuk oraindik atzeko planoan prozesatzen ari dira."
-title = "Antolatu zure Deskargak?"
-trigger_one = "Prozesatu {{count}} PDF Deskargak karpetan"
-trigger_other = "Prozesatu {{count}} PDF Deskargak karpetan"
-typesFound_one = "{{count}} dokumentu mota aurkitu da"
-typesFound_other = "{{count}} dokumentu mota aurkitu dira"
-working = "Prozesatzen ..."
-
 [processingFolders.setup]
 addFolder = "Gehitu karpeta"
 advancedSteps = "Karpeta honek morroi honek editatu ezin duen prozesatze-konfigurazio bat erabiltzen du. Gordetako urratsak ez dira aldatu."
@@ -10527,6 +10769,10 @@ label = "Bezeroaren IDa"
 [provider.googledrive.enabled]
 description = "Baimendu erabiltzaileei fitxategiak zuzenean Google Drivetik inportatzea"
 label = "Gaitu Google Drive fitxategi hautatzailea"
+
+[provider.googledrive.errors]
+notConfigured = "Google Drive ez dago konfiguratuta"
+pickerFailed = "Ezin izan da Google Drive hautatzailea ireki"
 
 [provider.oauth2.generic]
 name = "OAuth2 generikoa"
@@ -10775,6 +11021,7 @@ applyWarning = "⚠️ Aplikazio iraunkorra; ezin da desegin eta azpiko datuak e
 colorLabel = "Zentsuratze kolorea"
 controlsTitle = "Eskuzko zentsura-kontrolak"
 instructions = "Hautatu testua edo marraztu eremuak PDFan zentsuratzeko edukia markatzeko."
+notImplemented = "Eskuzko erredakzio-interfazea hemen egongo da eskuragarri inplementatzen denean."
 title = "Zentsura-tresnak"
 
 [redact.modeSelector]
@@ -11102,6 +11349,9 @@ failed = "Errore bat gertatu da PDFa biratzean."
 [rotate.preview]
 title = "Biraketaren aurreikuspena"
 
+[rotate.settings]
+title = "Ezarpenak"
+
 [rotate.tooltip.controls]
 text = "Erabili biraketa-botoiak orientazioa doitzeko. Ezkerreko botoiak erlojuaren aurkako noranzkoan biratzen du; eskuinekoak, erlojuaren noranzkoan. Klik bakoitzean 90 gradu biratzen da."
 title = "Kontrolak"
@@ -11119,6 +11369,16 @@ hideSmallLabels = "Ezkutatu etiketa txikiak"
 physicalValues = "Fisikoa"
 scaled = "Eskalatua"
 showAllLabels = "Erakutsi etiketa guztiak"
+
+[ruler.units]
+cm = "Zentimetroak (cm)"
+ft = "Oinak (ft)"
+in = "Hazbeteak (in)"
+km = "Kilometroak (km)"
+m = "Metroak (m)"
+mi = "Miliak (mi)"
+mm = "Milimetroak (mm)"
+yd = "Yardak (yd)"
 
 [sanitize]
 desc = "Kaltegarriak izan daitezkeen elementuak kendu PDF fitxategietatik."
@@ -11184,6 +11444,7 @@ calibrationPaperDistance = "Neurtutako orrialdeko distantzia: {{distance}}"
 calibrationTitle = "Kalibratu eskala"
 calibrationTooltip = "Neurtu distantzia ezagun bat eskala automatikoki kalkulatzeko"
 customScale = "Eskala pertsonalizatua"
+customUnit = "{{unit}} (pertsonalizatua)"
 noneSet = "Ez da eskala pertsonalizaturik ezarri"
 presets = "Aurrez ezarritako eskalak"
 ratio = "Eskala-ratioa"
@@ -11207,6 +11468,9 @@ title = "Erauzi diren irudiak"
 
 [scannerImageSplit.error]
 failed = "Errore bat gertatu da irudi-eskaneoak erauztean."
+
+[scannerImageSplit.settings]
+title = "Ezarpenak"
 
 [scannerImageSplit.tooltip]
 headsUp = "Kontuan izan"
@@ -11274,6 +11538,9 @@ general = "Orokorra"
 limits = "Mugak eta errendimendua"
 models = "Ereduak eta hornitzaileak"
 title = "AI"
+
+[settings.billing]
+title = "Fakturazioa"
 
 [settings.configuration]
 advanced = "Aurreratua"
@@ -11348,8 +11615,6 @@ defaultPdfEditor = "PDF editore lehenetsia"
 defaultPdfEditorActive = "Stirling PDF zure PDF editore lehenetsia da"
 defaultPdfEditorChecking = "Egiaztatzen..."
 defaultPdfEditorInactive = "Beste aplikazio bat dago lehenetsi gisa"
-defaultPdfEditorRemind = "Gogorarazi lehenetsi gisa ezartzea"
-defaultPdfEditorRemindDescription = "Erakutsi banner bat Stirling PDF zure PDF aplikazio lehenetsia ez denean."
 defaultPdfEditorSet = "Dagoeneko lehenetsia"
 defaultStartupView = "Abioan ikuspegi lehenetsia"
 defaultStartupViewDescription = "Aukeratu aplikazioa abiatzean ezkerreko zutabeko zein fitxa egongo den aktibo"
@@ -11618,6 +11883,15 @@ people = "Pertsonak"
 teams = "Taldeak"
 title = "Lan-espazioa"
 
+[setup.error]
+loginIncomplete = "Ezin izan da saio-hasiera osatu"
+noSaasServer = "Ez dago SaaS zerbitzaririk konfiguratuta"
+noServer = "Ez dago zerbitzaririk konfiguratuta"
+saasLoginFailed = "SaaS saio-hasierak huts egin du"
+saasLoginIncomplete = "Ezin izan da SaaS saio-hasiera osatu"
+selfHostedLoginFailed = "Autoostatutako saio-hasierak huts egin du"
+signupIncomplete = "Ezin izan da erregistroa osatu"
+
 [setup.login]
 connectingTo = "Hona konektatzen:"
 oauthPending = "Nabigatzailea irekitzen autentifikaziorako..."
@@ -11661,6 +11935,7 @@ configFetchError = "Ezin izan da zerbitzariaren konfigurazioa eskuratu: {{error}
 emptyUrl = "Sartu zerbitzari baten URLa"
 invalidUrl = "URL formatua baliogabea. Sartu baliozko URL bat, adibidez https://your-server.com"
 testFailed = "Konexio proba huts egin du"
+unknown = "Errore ezezaguna"
 unreachable = "Ezin izan da zerbitzarira konektatu"
 
 [setup.server.error.securityDisabled]
@@ -11769,6 +12044,7 @@ canvas = "Kanvas-ean sinadura marraztu ondoren, itxi modala eta egin klik PDFn e
 image = "Goian zure sinaduraren irudia igo ondoren, egin klik PDFn edonon kokatzeko."
 noSignature = "Sortu sinadura bat goian kokapen-tresnak gaitzeko."
 paused = "Kokatzea pausatuta"
+placeAnnotation = "Egin klik PDF-ko edozein lekutan zure oharpena kokatzeko."
 resumeHint = "Berrekin kokatzeari klik egin eta zure sinadura gehitzeko."
 saved = "Hautatu goiko gordetako sinadura, ondoren egin klik PDFan edozein lekutan kokatzeko."
 text = "Goian zure izena sartu ondoren, egin klik PDFn edonon zure sinadura kokatzeko."
@@ -11922,7 +12198,9 @@ signUpWith = "Sign up with"
 skip = "Skip"
 subtitle = "Batu Stirling PDFra hasteko"
 title = "Sortu kontu bat"
+unableToAccessTool = "Ezin da tresnara sartu: {{error}}"
 unexpectedError = "Ustekabeko errorea: {{message}}"
+unknownError = "Errore ezezaguna"
 
 [sizes]
 large = "Handia"
@@ -11995,6 +12273,14 @@ rightToLeft = "Zatitu eskuinetik ezkerrera"
 [split.poster.pageSize]
 description = "Inprimatzeko irteerako orrien tamaina"
 label = "Helburu orri tamaina"
+
+[split.poster.pageSize.options]
+a3 = "A3 (297 × 420 mm)"
+a4 = "A4 (210 × 297 mm)"
+a5 = "A5 (148 × 210 mm)"
+legal = "Legal (8.5 × 14 in)"
+letter = "Letter (8.5 × 11 in)"
+tabloid = "Tabloid (11 × 17 in)"
 
 [split.poster.xFactor]
 description = "Orri bakoitza zatitzeko zutabe kopurua"
@@ -12267,6 +12553,7 @@ confirmCancelInvite = "Ziur zaude gonbidapen hau ezeztatu nahi duzula?"
 confirmLeave = "Ziur zaude talde hau utzi nahi duzula?"
 confirmLeaveLeader = "Talde-burua zaren heinean, alde eginez gero taldetik kenduko zara. Ziur zaude?"
 confirmRemove = "Ziur zaude kide hau kendu nahi duzula?"
+currentUnavailable = "Ezin izan dugu zure uneko taldea identifikatu. Saiatu berriro, edo jarri harremanetan laguntzarekin honek jarraitzen badu."
 editName = "Editatu taldearen izena"
 inviteCancelled = "Gonbidapena ezeztatua"
 inviteError = "Ezin izan da gonbidapena bidali"
@@ -12292,10 +12579,8 @@ renameCancel = "Utzi izena aldatzea"
 renameError = "Ezin izan da taldea berrizendatu"
 renameSubmit = "Gorde taldearen izena"
 renameSuccess = "Taldea ongi berrizendatu da"
-transferBody = "Egin {{email}} taldearen jabe? Taldeko kideak eta erakundearen fakturazio-ezarpenak kontrolatuko ditu. Zu kide bihurtuko zara. Taldearen harpidetzak eta zorroak taldearekin jarraituko dute."
 transferError = "Ezin izan da jabetza transferitu. Freskatu taldea eta saiatu berriro."
 transferSuccess = "Taldearen jabetza transferitu da. Zure rola orain kidea da."
-transferTitle = "Transferitu taldearen jabetza"
 
 [team.invitationBanner]
 acceptButton = "Onartu"
@@ -12396,6 +12681,10 @@ WORD = "Word dokumentu bat"
 XML = "XML fitxategi bat"
 XPS = "XPS dokumentu bat"
 ZIP = "ZIP artxibo bat"
+
+[toolLoading]
+generic = "Tresna kargatzen..."
+named = "{{toolName}} kargatzen..."
 
 [toolPanel]
 alpha = "Alpha"
@@ -12501,6 +12790,8 @@ stable = "EGONKORRA"
 updateAvailable = "Eguneratzea eskuragarri"
 urgentUpdateAvailable = "Eguneratze premiazkoa"
 version = "Bertsioa"
+versionCount_one = "Bertsio {{count}}"
+versionCount_other = "{{count}} bertsio"
 versionHistory = "Bertsio-historia"
 viewGuide = "Gida ikusi"
 whatsNewIn = "Zer dago berria hemen:"
@@ -12528,6 +12819,7 @@ title = "URL bat PDF-ra"
 aboutUsageAnalytics = "Erabilera-analitikari buruz"
 configureSettings = "Konfiguratu analitika ezarpenak"
 error = "Errorea erabilera-estatistikak kargatzean"
+loadFailed = "Ezin izan dira erabilera-estatistikak kargatu"
 noData = "Ez dago daturik eskuragarri"
 noDataMessage = "Une honetan ez dago erabilera-estatistikarik eskuragarri."
 usageAnalyticsExplanation = "Erabilera-analitikak endpoint-eskaerak eta tresnen erabilera ereduak jarraitzen ditu. Ikuskaritza-erregistroen aginte-panelekin batera, sistemaren jardueraren, errendimenduaren eta segurtasun gertaeren ikusgarritasun osoa lortzen duzu."
@@ -12591,7 +12883,6 @@ removeTeam = "Kendu taldetik"
 rename = "Aldatu taldearen izena"
 resetPw = "Berrezarri pasahitza"
 suspend = "Eten"
-transferOwnership = "Transferitu jabetza"
 unlock = "Desblokeatu kontua"
 
 [users.activity]
@@ -12631,8 +12922,6 @@ disableMfaTitle = "Berrezarri MFA"
 removeBody = "Betiko kendu {{name}} erakundetik? Hau ezin da desegin."
 removeTeamBody = "{{name}} taldetik kendu? Kontua mantenduko dute, baina talde honen baliabideetarako sarbidea galduko dute."
 removeTitle = "Kendu kidea"
-transferOwnershipBody = "Egin {{name}} erakundearen jabe? Administratzaile bihurtuko da. Zu administratzaile izaten jarraituko duzu, baina jabetza galduko duzu. Jabe berriak edo zerbitzariaren operadoreak bakarrik transferi dezake berriro."
-transferOwnershipTitle = "Transferitu erakundearen jabetza"
 
 [users.empty]
 description = "Gonbidatu zure taldea elkarlanean hasteko."
@@ -12825,6 +13114,7 @@ signaturesInvalid = "{{count}} baliogabe"
 signaturesUnverified_one = "{{count}} berrikuspena behar du"
 signaturesUnverified_other = "{{count}} berrikuspena behar dute"
 signaturesValid = "{{count}} erabat baliozko"
+thumbnailAlt = "{{fileName}} koadro txikia"
 title = "Sinaduren balidazio-txostena"
 
 [validateSignature.report.fields]
@@ -12862,6 +13152,7 @@ lastPage = "Azken orria"
 loadingEngine = "PDF motorra kargatzen..."
 moreOptions = "Gehiago"
 nextPage = "Hurrengo orria"
+noPdfProvided = "Ez da PDF-rik eman"
 onlyPdfSupported = "Ikustaileak PDF fitxategiak bakarrik onartzen ditu. Fitxategi honek beste formatu batekoa dirudi."
 pageNavigation = "Orrialde-nabigazioa"
 previousPage = "Aurreko orria"
@@ -12899,8 +13190,17 @@ collapseAll = "Tolestu laster-marka guztiak"
 editorOnly = "Dokumentu honen laster-markak editorean bakarrik edita daitezke."
 empty = "No bookmarks in this document"
 expandAll = "Zabaldu laster-marka guztiak"
+loadFailed = "Ezin izan dira laster-markak kargatu"
+loading = "Laster-markak kargatzen..."
+noDocument = "Ireki PDF bat bere laster-markak ikusteko."
+noSearchResults = "Ez dago zure bilaketarekin bat datorren laster-markarik"
+openEditor = "Berrordenatu edo habiaratu behar duzu? Ireki laster-marken editorea"
+pageLabel = "Orria"
+pageNumber = "{{page}}. orria"
+saveFailed = "Ezin izan da laster-marka gorde"
 searchPlaceholder = "Bilatu laster-markak"
 title = "Bookmarks"
+untitled = "Izenik gabe"
 
 [viewer.comments]
 addComment = "Gehitu iruzkina"
@@ -12948,16 +13248,26 @@ unsavedDesc = "Gorde gabeko aldaketak dituzu"
 
 [viewer.layers]
 closeSidebar = "Itxi geruzen alboko barra"
+empty = "Dokumentu honek ez du geruzarik."
 hideAll = "Ezkutatu geruza guztiak"
+loadFailed = "Ezin izan dira geruzak kargatu."
+loading = "Geruzak kargatzen..."
+noDocument = "Ireki PDF bat bere geruzak ikusteko."
+readFailed = "Ezin izan dira PDF geruzak irakurri"
 showAll = "Erakutsi geruza guztiak"
 title = "Layers"
 
 [viewer.link]
 delete = "Ezabatu esteka"
+goTo = "Joan {{label}}(e)ra"
+open = "Ireki esteka"
+openAria = "Ireki esteka"
+page = "{{page}}. orria"
 
 [viewer.nonPdf]
 columnDefault = "{{index}}. zutabea"
 convertToPdf = "Bihurtu PDFra"
+copied = "Kopiatuta"
 csvStats = "{{rows}} errenkada · {{columns}} zutabe · {{size}}"
 emptyFile = "Fitxategi hutsa"
 htmlHidePreview = "Ezkutatu aurrebista"
@@ -12968,6 +13278,8 @@ htmlShowPreview = "Erakutsi aurrebista hala ere"
 invalidJson = "JSON baliogabea — edukia gordinean erakusten"
 lineNumbers = "Lerro-zenbakiak"
 loading = "Kargatzen..."
+noFile = "Ez da fitxategirik kargatu"
+previewUnavailable = "Aurrebista ez dago erabilgarri fitxategi mota honetarako"
 renderMarkdown = "Errendatu Markdown"
 sortedBy = "Ordenatua: {{column}}"
 textStats = "{{lines}} lerro · {{size}}"
@@ -12994,11 +13306,28 @@ next = "Hurrengo emaitza"
 previous = "Aurreko emaitza"
 resultsOf = " / {{total}}"
 
+[viewer.sidebar]
+close = "Itxi alboko barra"
+searchPlaceholder = "Bilatu..."
+
 [viewer.signature]
 delete = "Ezabatu sinadura"
+previewAlt = "Sinaduraren aurrebista"
+
+[viewer.signatureField]
+badge = "Sinadura"
+fieldTitle = "Sinadura-eremua: {{name}}"
+signed = "Sinatuta"
+signedWithReason = "Sinatuta: {{reason}}"
+unsignedFieldTitle = "Sinatu gabeko sinadura-eremua: {{name}}"
+withTime = "{{label}} ({{time}})"
 
 [viewer.thumbnails]
 closeSidebar = "Itxi miniaturen alboko barra"
+failed = "Huts egin du"
+pageNumber = "{{page}}. orria"
+thumbnailAlt = "{{page}}. orriaren koadro txikia"
+title = "Orriak"
 
 [viewPdf]
 tags = "view,read,annotate,text,image"
@@ -13006,169 +13335,6 @@ title = "Ikusi/Editatu PDF"
 
 [warning]
 tooltipTitle = "Abisua"
-
-[watchedFolders]
-alreadyInFolder = "Already in this folder"
-defaultFolderWarning = "This is a default folder and will be recreated on next reload."
-deleteConfirmBody = "This will remove the folder and its run history. Files already downloaded are not affected."
-deleteConfirmTitle = "Delete folder?"
-folderNotFound = "Folder not found"
-newFolder = "New folder"
-noFolders = "No watched folders yet"
-sidebarTitle = "Watched Folders"
-title = "Watched Folders"
-
-[watchedFolders.actions]
-back = "Back"
-collapse = "Collapse"
-dismiss = "Dismiss"
-download = "Download"
-downloadInput = "Download input"
-downloadOutput = "Download output"
-expand = "Expand"
-retry = "Retry"
-
-[watchedFolders.card]
-delete = "Delete folder"
-edit = "Edit folder"
-
-[watchedFolders.home]
-addAnother = "Add another Watched Folder"
-addAnotherDesc = "Automatically process files with a new pipeline"
-create = "Create your first Watched Folder"
-deleteFolder = "Delete folder"
-editFolder = "Edit folder"
-empty = "No watched folders yet"
-emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
-emptyTitle = "Automate your PDF workflows"
-file = "file"
-files = "files"
-pause = "Pause"
-resume = "Resume"
-
-[watchedFolders.howItWorks]
-step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
-step1Title = "Drop files"
-step2Desc = "Your configured tools process each file automatically"
-step2Title = "Pipeline runs"
-step3Desc = "Download processed files from inside the folder"
-step3Title = "Output ready"
-title = "How Watched Folders work"
-
-[watchedFolders.modal]
-advanced = "Advanced"
-automation = "Automation"
-automationNameFallback = "Watched Folder automation"
-automationRequired = "Add at least one configured step before saving."
-autoNumber = "Auto-number"
-autoNumberExample = "e.g. document.pdf → document (1).pdf"
-autoScanHelp = "New PDF files in this folder are processed automatically every 10 seconds."
-changeFolder = "Change"
-chooseFolder = "Choose"
-clearFolder = "Clear"
-color = "Accent color"
-createFolder = "Create Folder"
-createTitle = "New Watched Folder"
-editTitle = "Edit Watched Folder"
-inputFolder = "Input folder"
-inputFolderNotChosen = "No folder chosen — required for auto-scan"
-inputSource = "Input source"
-inputSourceBrowser = "Browser — drop files here"
-inputSourceLocal = "Local folder (auto-scan)"
-inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
-localOutputFolder = "Local output folder"
-maxRetries = "Max retries"
-name = "Folder name"
-namePlaceholder = "My Watched Folder"
-nameRequired = "Folder name is required"
-nameTooLong = "Folder name must be 50 characters or less"
-outputFolderNotSet = "Not set — outputs stay in app"
-outputFolderUnsupported = "Not supported in this browser"
-outputModeNewDesc = "Output is saved as a new separate file"
-outputModeVersion = "Replace original?"
-outputModeVersionDesc = "Output becomes a new version of the input file rather than a separate file"
-outputName = "Output filename prefix"
-outputNamePrefix = "Filename prefix"
-outputNameSuffix = "Suffix"
-positionPrefix = "Prefix"
-positionSuffix = "Suffix"
-replaceOriginal = "Replace original file"
-retryDelay = "Delay (minutes)"
-saveChanges = "Save Changes"
-saveFailed = "Failed to save folder. Please try again."
-sectionFolder = "Folder"
-sectionSourceOutput = "Source & Output"
-sectionSteps = "Steps"
-
-[watchedFolders.status]
-active = "Active"
-done = "Done"
-paused = "Paused"
-processing = "Processing"
-
-[watchedFolders.time]
-daysAgo = "{{count}}d ago"
-hoursAgo = "{{count}}h ago"
-justNow = "just now"
-minutesAgo = "{{count}}m ago"
-
-[watchedFolders.workbench]
-activity = "Activity"
-addFiles = "Add files"
-allTime = "All time"
-cancel = "Cancel"
-chartTooltipComplete = "{{count}} complete"
-chartTooltipFailed = "{{count}} failed"
-clearSelection = "Clear selection"
-countProcessing = "{{count}} processing"
-countQueued = "{{count}} queued"
-countSelected = "{{count}} selected"
-dataSaved = "Saved"
-dayRunning = "day running"
-daysRunning = "days running"
-delete = "Delete"
-deleteConfirmBody = "Remove notifications only clears the activity log. Delete outputs also removes the processed files from storage. Your original input files are never touched."
-deleteOutputs = "Delete outputs"
-directionIn = "in"
-directionOut = "out"
-dropToProcess = "Drop to process"
-export = "Export"
-exportSeparately = "Export separately"
-exportZip = "Export zip"
-failed = "Failed"
-filesProcessedOverTime = "Files processed over time"
-filterAll = "All"
-filterPending = "Pending"
-inputs = "Inputs"
-inputSize = "Input size"
-legendComplete = "Complete"
-noActivity = "No activity yet — drop a PDF to start"
-noActivityMatch = "No matching activity"
-noInputFolder = "No input folder — edit to configure"
-outputs = "Outputs"
-pause = "Pause"
-preview = "Preview"
-previewInput = "Preview input"
-previewLoadFailed = "Could not load file preview."
-previewOutput = "Preview output"
-queued = "Queued"
-queuedWaiting = "Queued — waiting to run"
-removeEntries = "Remove {{count}} entries"
-removeEntry = "Remove entry"
-removeNotificationsOnly = "Remove notifications only"
-resume = "Resume"
-retryAll = "Retry all"
-retryIn = "retry in {{count}}m"
-retryingSoon = "retrying…"
-retryMixedConfirm = "Some selected files have already completed and will be skipped. Only failed files will be retried. Continue?"
-running = "Running"
-search = "Search…"
-selectAll = "Select all {{count}}"
-sortNameAsc = "A → Z"
-sortNameDesc = "Z → A"
-sortNewest = "Newest"
-sortOldest = "Oldest"
-watching = "Watching: {{name}}"
 
 [watermark]
 desc = "Gehitu testu edo irudi ur‑markak PDF fitxategiei"
@@ -13371,6 +13537,10 @@ certTypeServer = "Zerbitzariaren ziurtagiria (badagoen kasuan)"
 completedDeclined = "Dokumentu hau ukatu duzu."
 completedSigned = "Dokumentu hau sinatu duzu."
 decline = "Ukatu"
+declineConfirm = "Ziur zaude dokumentu hau sinatzeari uko egin nahi diozula?"
+declineFailed = "Ezin izan da uko egin: {{error}}"
+declineSuccess = "Sinadura-eskaera honi uko egin diozu."
+defaultReason = "Dokumentuaren sinadura"
 downloadDocument = "Deskargatu dokumentua"
 dueDate = "Muga-eguna: {{date}}"
 errorTitle = "Errorea"
@@ -13381,6 +13551,7 @@ locationPlaceholder = "adib., San Francisco, CA"
 pageNumber = "Orrialde-zenbakia (aukerakoa)"
 reason = "Arrazoia"
 reasonPlaceholder = "adib., Dokumentuaren onarpena"
+selectCertificateFile = "Hautatu ziurtagiri-fitxategi bat"
 sessionNotFound = "Saioa ez da aurkitu edo sarbidea ukatu da."
 signDocument = "Sinatu dokumentua"
 statusDeclined = "Ukatuta"
@@ -13388,7 +13559,9 @@ statusNotified = "Jakinarazita"
 statusPending = "Zain"
 statusSigned = "Sinatuta"
 statusViewed = "Ikusita"
+submitFailed = "Ezin izan da sinadura bidali: {{error}}"
 submitSignature = "Bidali sinadura"
+submitSuccess = "Sinadura behar bezala bidali da!"
 
 [workspace]
 title = "Lan-espazioa"

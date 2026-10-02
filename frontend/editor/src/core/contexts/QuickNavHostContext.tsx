@@ -42,6 +42,8 @@ export interface QuickNavHostActions {
   createProcessingFolder?: () => void;
   toggleNotifications?: () => void;
   goToDefaultState?: () => void;
+  /** The view the user chose to launch into, where that differs from the default state. */
+  goToStartupView?: () => void;
   requestNavigation?: (go: () => void) => void;
   openFromComputer?: () => void;
   /**

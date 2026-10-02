@@ -17,7 +17,7 @@ export default function SecurityCheckSlide({
 }: SecurityCheckSlideProps): SlideConfig {
   return {
     key: "security-check",
-    title: "Security Check",
+    title: i18n.t("onboarding.securityCheck.title", "Security Check"),
     body: (
       <div className={styles.securitySlideContent}>
         <div className={styles.securityCard}>
