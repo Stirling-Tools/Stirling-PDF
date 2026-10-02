@@ -7,8 +7,23 @@ const SIGNED_URL_TTL_SECONDS = 60 * 60;
 /** Re-sign well before expiry, so a long-lived settings modal never shows a dead image. */
 const REFRESH_INTERVAL_MS = 45 * 60 * 1000;
 
+/**
+ * Ids are interpolated into a storage path, so anything that is not a bare uuid is dropped rather
+ * than sent. They arrive from the roster DTO, but the bucket must never be addressable by whatever
+ * a caller happens to hand this hook.
+ */
+const SUPABASE_ID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 interface HasSupabaseId {
   supabaseId?: string | null;
+}
+
+function avatarPath(id: string): string {
+  if (!SUPABASE_ID.test(id)) {
+    throw new Error("Refusing to sign a non-uuid avatar path");
+  }
+  return `${id}/avatar`;
 }
 
 /**
@@ -31,7 +46,7 @@ export function useTeamAvatarUrls(
     () =>
       members
         .map((m) => m.supabaseId)
-        .filter((id): id is string => Boolean(id))
+        .filter((id): id is string => Boolean(id) && SUPABASE_ID.test(id!))
         .sort()
         .join(","),
     [members],
@@ -52,10 +67,7 @@ export function useTeamAvatarUrls(
       try {
         const { data, error } = await client.storage
           .from(PROFILE_BUCKET)
-          .createSignedUrls(
-            ids.map((id) => `${id}/avatar`),
-            SIGNED_URL_TTL_SECONDS,
-          );
+          .createSignedUrls(ids.map(avatarPath), SIGNED_URL_TTL_SECONDS);
 
         if (cancelled || error || request !== requestRef.current) return;
 
