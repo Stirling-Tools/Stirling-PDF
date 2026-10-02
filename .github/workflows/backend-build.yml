@@ -120,7 +120,7 @@ jobs:
         id: cache
         uses: Ludy87/cache-the-planet/multi-cache@ea6aa04213fec4fdcfcf77f133ee93bf2176bd38
         with:
-          encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD }}
+          encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
           manifest-branch: dev-cache-artifact
           manifest-path: .github/cache-data
           artifact-retention-days: 1
