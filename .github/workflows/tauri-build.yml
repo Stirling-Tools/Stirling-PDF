@@ -178,6 +178,7 @@ jobs:
     timeout-minutes: 90
     env:
       CARGO_HOME: ${{ github.workspace }}/.cache/cargo
+      NPM_CONFIG_CACHE: ${{ github.workspace }}/.cache/npm
       TAURI_BUNDLER_DMG_IGNORE_CI: "true"
       SM_API_KEY: ${{ secrets.SM_API_KEY }}
       APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
@@ -233,7 +234,7 @@ jobs:
 
       - name: Restore cache artifact
         id: cache
-        uses: Ludy87/cache-the-planet/multi-cache@88825ec76a1996ee569b138b316409024edb1028
+        uses: Ludy87/cache-the-planet/multi-cache@26ee925b4054b6f9d6274dd299160aad3b11c3f0
         with:
           version: 2
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
@@ -248,6 +249,10 @@ jobs:
               path: .cache/cargo/git
             cargo-bin:
               path: .cache/cargo/bin
+            npm-cache:
+              path: .cache/npm
+            frontend-node-modules:
+              path: frontend/node_modules
             gradle-caches:
               path: .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
             gradle-wrapper:
@@ -259,6 +264,8 @@ jobs:
             cargo-registry=${{ needs.hash_pr.outputs.cargo_files_hash }}
             cargo-git=${{ needs.hash_pr.outputs.cargo_files_hash }}
             cargo-bin=${{ needs.hash_pr.outputs.cargo_files_hash }}
+            npm-cache=${{ hashFiles('frontend/package-lock.json') }}
+            frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}-${{ runner.os }}-${{ runner.arch }}
           token: ${{ github.token }}
           allow-shared-restore: true
           strict: false
@@ -793,6 +800,7 @@ jobs:
       matrix: ${{ fromJson(needs.determine-matrix.outputs.matrix) }}
     env:
       CARGO_HOME: ${{ github.workspace }}/.cache/cargo
+      NPM_CONFIG_CACHE: ${{ github.workspace }}/.cache/npm
     runs-on: ${{ matrix.platform }}
     timeout-minutes: 45
     steps:
@@ -841,7 +849,7 @@ jobs:
 
       - name: Restore cache artifact
         id: cache
-        uses: Ludy87/cache-the-planet/multi-cache@88825ec76a1996ee569b138b316409024edb1028
+        uses: Ludy87/cache-the-planet/multi-cache@26ee925b4054b6f9d6274dd299160aad3b11c3f0
         with:
           version: 2
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
@@ -856,6 +864,10 @@ jobs:
               path: .cache/cargo/git
             cargo-bin:
               path: .cache/cargo/bin
+            npm-cache:
+              path: .cache/npm
+            frontend-node-modules:
+              path: frontend/node_modules
             gradle-caches:
               path: .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
             gradle-wrapper:
@@ -867,6 +879,8 @@ jobs:
             cargo-registry=${{ needs.hash_pr.outputs.cargo_files_hash }}
             cargo-git=${{ needs.hash_pr.outputs.cargo_files_hash }}
             cargo-bin=${{ needs.hash_pr.outputs.cargo_files_hash }}
+            npm-cache=${{ hashFiles('frontend/package-lock.json') }}
+            frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}-${{ runner.os }}-${{ runner.arch }}
           token: ${{ github.token }}
           allow-shared-restore: true
           strict: false
