@@ -19,13 +19,6 @@ interface HasSupabaseId {
   supabaseId?: string | null;
 }
 
-function avatarPath(id: string): string {
-  if (!SUPABASE_ID.test(id)) {
-    throw new Error("Refusing to sign a non-uuid avatar path");
-  }
-  return `${id}/avatar`;
-}
-
 /**
  * Signed avatar URLs for a set of team members, keyed by Supabase id.
  *
@@ -65,9 +58,17 @@ export function useTeamAvatarUrls(
     const sign = async () => {
       const request = ++requestRef.current;
       try {
+        const paths: string[] = [];
+        for (const id of ids) {
+          if (!SUPABASE_ID.test(id)) {
+            throw new Error("Refusing to sign a non-uuid avatar path");
+          }
+          paths.push(`${id}/avatar`);
+        }
+
         const { data, error } = await client.storage
           .from(PROFILE_BUCKET)
-          .createSignedUrls(ids.map(avatarPath), SIGNED_URL_TTL_SECONDS);
+          .createSignedUrls(paths, SIGNED_URL_TTL_SECONDS);
 
         if (cancelled || error || request !== requestRef.current) return;
 
