@@ -15,6 +15,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
@@ -45,6 +46,7 @@ public class BlockedWordList {
     private final Set<String> blocked;
     private final Set<String> allowed;
 
+    @Autowired
     public BlockedWordList(@Value("${stirling.store.blocked-words-file:}") String extraFile) {
         this.blocked = new HashSet<>();
         this.allowed = new HashSet<>();
