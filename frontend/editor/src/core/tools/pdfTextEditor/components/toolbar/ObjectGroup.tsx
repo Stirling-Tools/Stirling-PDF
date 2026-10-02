@@ -47,7 +47,12 @@ export function ObjectGroup({ controller }: { controller: Controller }) {
           }
         />
       </Tooltip>
-      <Tooltip label={t("pdfTextEditor.toolbar.deleteTooltip", "Delete (Del)")}>
+      <Tooltip
+        label={t(
+          "pdfTextEditor.toolbar.deleteTooltip",
+          "Delete (Del or Backspace)",
+        )}
+      >
         <Button
           variant="tertiary"
           accent="danger"
