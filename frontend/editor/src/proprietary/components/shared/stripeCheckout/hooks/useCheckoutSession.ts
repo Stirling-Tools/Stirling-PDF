@@ -13,6 +13,7 @@ import {
 import { getCheckoutMode } from "@app/utils/protocolDetection";
 import {
   openStripePage,
+  stripeCheckoutEmbeds,
   stripeReturnUrl,
 } from "@app/platform/stripeNavigation";
 import {
@@ -102,8 +103,9 @@ export const useCheckoutSession = (
       }
 
       // Stripe's embedded iframe needs a secure context, so a plain-HTTP instance sends the buyer
-      // to Stripe's own page and needs the two return URLs up front.
-      const uiMode = getCheckoutMode();
+      // to Stripe's own page and needs the two return URLs up front. So does a platform that
+      // cannot embed it at all (desktop).
+      const uiMode = stripeCheckoutEmbeds() ? getCheckoutMode() : "hosted";
       // Back to the page the buyer left, whichever it was: this modal opens from the settings
       // plan section and from the portal's billing screen, and a fixed path lands half of them
       // somewhere they were not. CheckoutProvider reads the return params wherever it is mounted,
