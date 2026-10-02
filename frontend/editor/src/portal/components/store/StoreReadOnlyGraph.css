@@ -1,7 +1,10 @@
+/* An explicit width: with auto margins alone the column sizes to its longest node detail and
+   overflows a narrow card. */
 .portal-store__graph {
   display: flex;
   flex-direction: column;
   align-items: stretch;
+  width: 100%;
   max-width: 26rem;
   margin: 0 auto;
 }

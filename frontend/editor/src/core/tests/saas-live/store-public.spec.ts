@@ -117,7 +117,9 @@ test.describe("Pipeline store page, anonymous", () => {
       page.getByRole("heading", { name: "Pipeline store" }),
     ).toBeVisible({ timeout: 30_000 });
     expect(new URL(page.url()).pathname).not.toMatch(/\/login$/);
-    await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Sign in", exact: true }),
+    ).toBeVisible();
     await expect(page.getByRole("tab", { name: "Starred" })).toHaveCount(0);
   });
 
@@ -144,5 +146,36 @@ test.describe("Pipeline store page, anonymous", () => {
   test("the rest of the portal still needs an account", async ({ page }) => {
     await page.goto("processor/pipelines", { waitUntil: "domcontentloaded" });
     await expect(page).toHaveURL(/\/login/, { timeout: 30_000 });
+  });
+});
+
+test.describe("Pipeline store page, anonymous, on a phone", () => {
+  test.use({
+    viewport: { width: 390, height: 700 },
+    isMobile: true,
+    hasTouch: true,
+  });
+
+  test("a listing scrolls and never runs wider than the screen", async ({
+    page,
+  }) => {
+    const first = (await (await api.get(`${PUBLIC}?limit=1`)).json()).items[0];
+    test.skip(!first, "the catalogue is empty");
+    await page.goto(`processor/store/${first.storeId}`, {
+      waitUntil: "domcontentloaded",
+    });
+    await expect(page.getByRole("heading", { name: first.name })).toBeVisible({
+      timeout: 30_000,
+    });
+    const main = page.locator(".portal-public-store__main");
+    const box = await main.evaluate((m) => ({
+      overflowX: m.scrollWidth - m.clientWidth,
+      taller: m.scrollHeight > m.clientHeight,
+    }));
+    expect(box.overflowX).toBeLessThanOrEqual(0);
+    expect(box.taller).toBe(true);
+    // The main area is the scroll container: the frame, body and html all clip overflow.
+    await main.evaluate((m) => m.scrollTo(0, m.scrollHeight));
+    expect(await main.evaluate((m) => m.scrollTop)).toBeGreaterThan(0);
   });
 });

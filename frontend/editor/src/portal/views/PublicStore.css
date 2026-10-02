@@ -1,14 +1,17 @@
+/* Pinned to the viewport like .portal-shell, so the main area is the scroll container: the app
+   frame, body and html all clip overflow, so a shell that grew with its content would just be cut
+   off below the fold. */
 .portal-public-store {
   display: flex;
   flex-direction: column;
-  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
   background: var(--c-bg);
 }
 
 .portal-public-store__bar {
-  position: sticky;
-  top: 0;
-  z-index: 1;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -26,6 +29,15 @@
 }
 
 .portal-public-store__main {
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
+@media (max-width: 48rem) {
+  .portal-public-store__bar {
+    padding: 0.625rem 1rem;
+  }
 }
