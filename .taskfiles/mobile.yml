@@ -55,7 +55,10 @@ tasks:
     ignore_error: true
     dir: editor
     cmds:
-      - npx tauri android dev --host
+      # No --host: the CLI then reaches the dev server over `adb reverse`. A LAN
+      # address costs the emulator ~1s per TCP connect, and Tauri's dev proxy
+      # opens one per module, so the app never finishes loading.
+      - npx tauri android dev
 
   android:build:
     desc: "Build the Android app (APK/AAB)"
