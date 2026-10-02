@@ -250,7 +250,7 @@ export const SignaturePreviewLayer = memo(function SignaturePreviewLayer({
               >
                 <img
                   src={preview.signatureData}
-                  alt="Signature preview"
+                  alt={t("viewer.signature.previewAlt", "Signature preview")}
                   style={{
                     width: "100%",
                     height: "100%",

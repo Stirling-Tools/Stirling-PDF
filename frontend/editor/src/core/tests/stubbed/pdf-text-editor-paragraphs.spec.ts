@@ -2,6 +2,7 @@ import { test, expect } from "@app/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import path from "path";
 import type { EditorTestWindow } from "@app/tests/stubbed/editorTestTypes";
+import { selectWrapWidthMode } from "@app/tests/stubbed/widthModeHelpers";
 
 const SAMPLE = path.join(
   import.meta.dirname,
@@ -22,13 +23,7 @@ async function gotoWrap(page: Page): Promise<void> {
     timeout: 30_000,
   });
   await page.waitForTimeout(700);
-  await page.getByTestId("pdf-editor-tab-document").click();
-  await page.getByTestId("pdf-editor-advanced-toggle").click();
-  await page
-    .getByTestId("pdf-editor-width-mode-control")
-    .getByText("Wrap", { exact: true })
-    .click();
-  await page.getByTestId("pdf-editor-tab-selected").click();
+  await selectWrapWidthMode(page);
   await page.waitForTimeout(150);
 }
 
@@ -362,7 +357,7 @@ test.describe("PDF text editor - paragraph editing battery", () => {
     const baseNew = firstBaselineOfWord(info, "NEWLINEWORD");
     expect(baseNew !== null, `NEW word missing: ${info.text}`).toBe(true);
     if (baseProc !== null) {
-      expect(baseNew!).toBeLessThan(baseProc! - 1);
+      expect(baseNew!).toBeLessThan(baseProc - 1);
     }
   });
 

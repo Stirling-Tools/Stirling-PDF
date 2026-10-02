@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Box, Loader } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
 import { PdfiumPageRenderer } from "@app/tools/pdfTextEditor/pdfium/PdfiumPageRenderer";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
@@ -83,6 +84,7 @@ export function PageView({
   onFirstVisible,
   onFirstRendered,
 }: PageViewProps) {
+  const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   // `raster` is the CSS layout size; the bitmap itself renders at deviceScale
@@ -225,9 +227,7 @@ export function PageView({
         if (!onPageClick) return;
         // Convert from CSS pixel coords (origin upper-left) into PDF
         // page-space coords (origin lower-left, points).
-        const rect = (
-          e.currentTarget as HTMLDivElement
-        ).getBoundingClientRect();
+        const rect = e.currentTarget.getBoundingClientRect();
         const cssX = e.clientX - rect.left;
         const cssY = e.clientY - rect.top;
         // CSS px -> display-PDF.
@@ -264,7 +264,9 @@ export function PageView({
           }}
           data-testid={`pdf-editor-page-${page.pageIndex}-placeholder`}
         >
-          Page {page.pageIndex + 1}
+          {t("pdfTextEditor.pageView.pageNumber", "Page {{page}}", {
+            page: page.pageIndex + 1,
+          })}
         </Box>
       )}
       {rendering && nearViewport && (
@@ -294,17 +296,19 @@ export function PageView({
           }}
           data-testid={`pdf-editor-page-${page.pageIndex}-error`}
         >
-          <span style={{ fontSize: 13 }}>Failed to render page</span>
+          <span style={{ fontSize: 13 }}>
+            {t("pdfTextEditor.pageView.renderFailed", "Failed to render page")}
+          </span>
           <span style={{ fontSize: 11, opacity: 0.8 }}>{renderError}</span>
           <Button
             type="button"
             size="sm"
             variant="secondary"
             accent="danger"
-            onClick={() => setRetryToken((t) => t + 1)}
+            onClick={() => setRetryToken((token) => token + 1)}
             data-testid={`pdf-editor-page-${page.pageIndex}-retry`}
           >
-            Retry
+            {t("common.retry", "Retry")}
           </Button>
         </Box>
       )}

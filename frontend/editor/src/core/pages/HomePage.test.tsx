@@ -48,6 +48,9 @@ vi.mock("@app/contexts/SidebarContext", () => ({
 vi.mock("@app/contexts/AppConfigContext", () => ({
   useAppConfig: () => ({ config: {} }),
 }));
+vi.mock("@app/contexts/PreferencesContext", () => ({
+  usePreferences: () => ({ preferences: { defaultStartupView: "tools" } }),
+}));
 vi.mock("@app/contexts/file/fileHooks", () => ({
   useFileContext: () => ({ activeFiles: [] }),
 }));

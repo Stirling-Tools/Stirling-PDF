@@ -183,27 +183,6 @@
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
     },
     {
-      "moduleName": "@emotion/react",
-      "moduleUrl": "https://github.com/emotion-js/emotion.git#main",
-      "moduleVersion": "11.14.0",
-      "moduleLicense": "MIT",
-      "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
-    },
-    {
-      "moduleName": "@emotion/styled",
-      "moduleUrl": "https://github.com/emotion-js/emotion.git#main",
-      "moduleVersion": "11.14.1",
-      "moduleLicense": "MIT",
-      "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
-    },
-    {
-      "moduleName": "@iconify-json/material-symbols",
-      "moduleUrl": "https://icon-sets.iconify.design/material-symbols/",
-      "moduleVersion": "1.2.90",
-      "moduleLicense": "Apache-2.0",
-      "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
-    },
-    {
       "moduleName": "@mantine/core",
       "moduleUrl": "https://github.com/mantinedev/mantine",
       "moduleVersion": "8.3.18",
@@ -228,20 +207,6 @@
       "moduleName": "@mantine/hooks",
       "moduleUrl": "https://github.com/mantinedev/mantine",
       "moduleVersion": "8.3.18",
-      "moduleLicense": "MIT",
-      "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
-    },
-    {
-      "moduleName": "@mui/icons-material",
-      "moduleUrl": "https://github.com/mui/material-ui",
-      "moduleVersion": "9.4.0",
-      "moduleLicense": "MIT",
-      "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
-    },
-    {
-      "moduleName": "@mui/material",
-      "moduleUrl": "https://github.com/mui/material-ui",
-      "moduleVersion": "9.4.0",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
     },

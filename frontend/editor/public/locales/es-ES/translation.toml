@@ -278,6 +278,7 @@ customNumberDesc = "Por defecto a {n}, también acepta 'Página {n} de {total}',
 fontName = "Nombre de fuente"
 fontSize = "Tamaño de fuente"
 numberPagesDesc = "Qué páginas numerar, por defecto 'todas', también acepta 1-5 o 2,5,9 etc"
+pagePreviewAlt = "Vista previa de página"
 pagesAndStarting = "Páginas y número inicial"
 positionAndPages = "Posición y páginas"
 preview = "Selección de posición"
@@ -350,7 +351,9 @@ text = "Estos permisos controlan lo que los usuarios pueden hacer con el PDF. So
 title = "Cambiar permisos"
 
 [addStamp]
+pagePreviewAlt = "Vista previa de página"
 preview = "Vista previa del sello"
+stampPreviewAlt = "Vista previa del sello"
 tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 
 [AddStampRequest]
@@ -383,6 +386,7 @@ positionAndFormatting = "Posición y formato"
 preview = "Vista previa:"
 quickPosition = "Selecciona una posición en la página para colocar el sello."
 rotation = "Rotación"
+selectedImageAlt = "Imagen de sello seleccionada"
 selectTemplate = "Seleccione una plantilla..."
 stampSetup = "Configuración de sello"
 stampText = "Texto del sello"
@@ -533,6 +537,9 @@ letter = "Carta"
 
 [adjustPageScale.scaleFactor]
 label = "Factor de escala"
+
+[adjustPageScale.settings]
+title = "Configuración"
 
 [adjustPageScale.tooltip.description]
 text = "Ajuste el tamaño del contenido del PDF y cambie las dimensiones de página."
@@ -728,6 +735,7 @@ noLanguages = "No se han encontrado idiomas de tessdata en el directorio configu
 permissionNotice = "La ruta de tessdata no tiene permisos de escritura. Las descargas se abrirán en el navegador; guarda los archivos .traineddata manualmente en la carpeta tessdata."
 
 [admin.settings.ai]
+customProvider = "Personalizado (compatible con OpenAI)"
 description = "Conecta Stirling al motor de IA de Python, elige sus modelos y establece las barreras de seguridad bajo las que se ejecuta."
 managedByCloud = "Gestionado por Stirling Cloud en este modo."
 managedByCloudShort = "Gestionado por Stirling Cloud"
@@ -1146,7 +1154,6 @@ refresh = "Actualizar"
 selectFile = "Selecciona un archivo .sql para importar"
 size = "Tamaño"
 title = "Base de datos"
-unavailable = "La lista de copias de seguridad no está disponible para la configuración de base de datos actual."
 uploadTitle = "Subir e importar"
 version = "Versión de H2"
 
@@ -1280,6 +1287,7 @@ label = "Metadatos personalizados"
 [admin.settings.general.customMetadata.author]
 description = "Autor predeterminado para los metadatos del PDF (p. ej., nombre de usuario)"
 label = "Autor predeterminado"
+placeholder = "nombre de usuario"
 
 [admin.settings.general.customMetadata.autoUpdate]
 description = "Actualizar automáticamente los metadatos PDF en todos los documentos procesados"
@@ -1395,6 +1403,7 @@ defaultLocaleLink = "Configurar la configuración regional predeterminada"
 description = "Mostrar un descargo de responsabilidad que los usuarios deben aceptar después de iniciar sesión. El texto se ajusta al idioma de cada usuario."
 discardConfirm = "Tiene cambios sin guardar que se perderán. ¿Cambiar de idioma de todos modos?"
 editLabel = "Markdown"
+editPlaceholder = "## Encabezado\n\nSu texto de descargo de responsabilidad..."
 emptyPreview = "Nada que previsualizar todavía."
 language = "Idioma"
 languageHelp = "Cada idioma tiene su propio archivo. Si el idioma de un usuario no tiene archivo, el acuerdo recurre al archivo de la configuración regional predeterminada y, después, al texto alternativo."
@@ -1513,8 +1522,10 @@ label = "JWKS URL (optional)"
 placeholder = "Auto-discovered from issuer"
 
 [admin.settings.mcp.mode]
+apikey = "Clave API (clave por usuario de Stirling)"
 description = "OAuth needs an external IdP. API key uses a Stirling per-user API key (X-API-KEY) - simplest for self-host."
 label = "Authentication mode"
+oauth = "OAuth 2.1 (IdP externo)"
 
 [admin.settings.mcp.requireAccount]
 description = "Only let tokens through if their subject maps to a provisioned, enabled Stirling user."
@@ -1931,6 +1942,14 @@ title = "Configuración de control de usuario"
 [agents]
 stirling_name = "Stirling"
 
+[alphabetOptions]
+arabic = "Árabe"
+chinese = "Chino (simplificado)"
+japanese = "Japonés"
+korean = "Coreano"
+roman = "Romano"
+thai = "Tailandés"
+
 [analytics]
 learnMore = "Más información"
 paragraph1 = "Stirling PDF ha optado por analíticas para ayudarnos a mejorar el producto. No rastreamos ninguna información personal ni contenido de archivos."
@@ -2052,6 +2071,7 @@ week = "Semana"
 
 [audit.clearData]
 cancel = "Cancelar"
+closeAlert = "Cerrar alerta"
 codeDoesNotMatch = "El código no coincide"
 codePlaceholder = "Escribe el código aquí"
 confirmationCode = "Código de confirmación"
@@ -2061,6 +2081,7 @@ confirmTitle = "Confirma que deseas eliminar"
 deleteButton = "Eliminar"
 enterCode = "Código de confirmación"
 enterCodeBelow = "Introduce el código exactamente como se muestra arriba (sensible a mayúsculas y minúsculas)"
+failed = "No se pudieron borrar los datos de auditoría"
 initiateDelete = "Eliminar todos los datos"
 irreversible = "IRREVERSIBLE"
 success = "Éxito"
@@ -2069,6 +2090,7 @@ warning1 = "Esta acción no se puede deshacer"
 warning2 = "Eliminar los datos de auditoría eliminará permanentemente todos los registros de auditoría históricos, incluidos eventos de seguridad, actividades de usuario y operaciones de archivos de la base de datos."
 
 [audit.error]
+loadStatus = "No se pudo cargar el estado del sistema de auditoría"
 title = "Error al cargar el sistema de auditoría"
 
 [audit.events]
@@ -2084,6 +2106,7 @@ fileHash = "Hash de archivo"
 filterByType = "Filtrar por tipo"
 filterByUser = "Filtrar por usuario"
 ipAddress = "Dirección IP"
+loadFailed = "No se pudieron cargar los eventos"
 noEvents = "No se encontraron eventos"
 startDate = "Fecha de inicio"
 timestamp = "Marca de tiempo"
@@ -2124,6 +2147,7 @@ avgLatency = "Latencia media"
 error = "Error al cargar las estadísticas"
 excellent = "Excelente"
 good = "Bueno"
+loadFailed = "No se pudieron cargar las estadísticas"
 noData = "N/D"
 successRate = "Tasa de éxito"
 totalEvents = "Eventos totales"
@@ -2158,13 +2182,27 @@ accessDenied = "Acceso denegado"
 insufficientPermissions = "No tienes permiso para realizar esta acción."
 
 [auth.callback]
+alreadySignedIn = "¡Sesión ya iniciada! Redirigiendo..."
+backToLogin = "Volver al inicio de sesión"
 completing = "Completando autenticación"
+exchanging = "Intercambiando código de autorización..."
+failedWithReason = "Autenticación fallida: {{error}}"
 invalidToken = "Error de inicio de sesión con OAuth: token no válido."
 missingToken = "Error de inicio de sesión con OAuth: no se ha recibido ningún token."
+noData = "No se encontraron datos de autenticación"
 oauthFailed = "Error de inicio de sesión con OAuth. Inténtalo de nuevo."
 pleaseWait = "Espera mientras terminamos de iniciar tu sesión."
+processing = "Procesando autenticación..."
 signedOut = "Se ha cerrado tu sesión. Inicia sesión de nuevo."
+signInFailed = "No se pudo completar el inicio de sesión: {{error}}"
+success = "¡Inicio de sesión correcto! Redirigiendo..."
+unknownError = "Error desconocido"
 windowMayClose = "Puedes cerrar esta ventana cuando se complete."
+
+[auth.callback.title]
+default = "Autenticación"
+processing = "Iniciando sesión"
+success = "¡Todo listo!"
 
 [auth.displayName]
 guest = "Invitado"
@@ -2317,6 +2355,7 @@ title = "Importar automatización"
 unresolved = "Sin asignar: {{ops}}"
 
 [automate.run]
+progress = "Progreso: {{current}}/{{total}}"
 title = "Ejecutar automatización"
 
 [automate.selection]
@@ -2466,6 +2505,7 @@ whatHappensNext = "¿Qué sucede a continuación?"
 
 [billing.portal]
 error = "No se pudo abrir el portal de facturación"
+errorFallback = "Inténtelo de nuevo o contacte con soporte."
 
 [bookletImposition]
 paperSizeNote = "El tamaño del papel se deriva automáticamente de su primera página."
@@ -2513,6 +2553,9 @@ title = "Modo dúplex manual"
 [bookletImposition.rtlBinding]
 label = "Encuadernación de derecha a izquierda"
 tooltip = "Para árabe, hebreo u otros idiomas de derecha a izquierda"
+
+[bookletImposition.settings]
+title = "Configuración"
 
 [bookletImposition.tooltip.advanced]
 bullet1 = "Encuadernación de derecha a izquierda: Para árabe, hebreo o idiomas RTL"
@@ -2582,6 +2625,8 @@ detail = "Haz clic o pulsa Espacio para jugar de nuevo"
 headline = "Todo despejado"
 
 [bulkSelection]
+selectedPages_one = "Seleccionado: {{count}} página ({{pages}})"
+selectedPages_other = "Seleccionadas: {{count}} páginas ({{pages}})"
 syntaxError = "Hay un problema de sintaxis. Consulta los consejos de Selección de páginas para obtener ayuda."
 
 [bulkSelection.advanced]
@@ -2802,6 +2847,7 @@ declineButton = "Rechazar"
 deleteSelected = "Eliminar firma seleccionada"
 drawSignature = "Dibuja tu firma abajo"
 fileTooLarge = "El tamaño del archivo debe ser menor de 5MB"
+fontBrushScript = "Brush Script MT (cursiva)"
 fontFamily = "Familia tipográfica"
 fontSize = "Tamaño de fuente: {{size}}px"
 fontSizePlaceholder = "Tamaño"
@@ -2821,6 +2867,7 @@ removeImage = "Eliminar imagen"
 savedSignatures = "Firmas guardadas"
 selectFile = "Seleccionar archivo de imagen"
 selectSignatureTitle = "Seleccionar o crear firma"
+signatureImageAlt = "Firma"
 signatureInfo = "Estos ajustes los configura el propietario del documento"
 signatureSettings = "Configuración de la firma"
 signatureText = "Texto de la firma"
@@ -3591,13 +3638,19 @@ confirm = "Confirmar"
 continue = "Continuar"
 copied = "¡Copiado!"
 copy = "Copiar"
+copyCode = "Copiar código"
+dismiss = "Descartar"
 done = "Hecho"
 enterValue = "Enter value"
 error = "Error"
 expand = "Expandir"
 filterEmpty = "Nada que filtrar"
+goToSlide = "Ir a la diapositiva {{number}}"
 loading = "Cargando..."
+moreInformation = "Más información"
 next = "Siguiente"
+noData = "Sin datos"
+nOfTotal = "{{current}} de {{total}}"
 open = "Open"
 preview = "Vista previa"
 previous = "Anterior"
@@ -3606,6 +3659,9 @@ remaining = "Restante"
 retry = "Reintentar"
 save = "Guardar"
 search = "Buscar"
+settingsSections = "Secciones de configuración"
+showAllTotal = "Mostrar todo {{total}}"
+showLess = "Mostrar menos"
 stepOf = "Step {{current}} of {{total}}"
 
 [compare]
@@ -3617,6 +3673,7 @@ newLine = "nueva línea"
 pages = "Páginas"
 tags = "diferenciar,contrastar,cambios,análisis"
 title = "Comparar"
+workbenchLabel = "Vista de comparación"
 
 [compare.actions]
 linkScroll = "Vincular desplazamiento"
@@ -3770,6 +3827,7 @@ title = "Método de Compresión"
 desiredSize = "Tamaño de archivo deseado"
 desiredSizePlaceholder = "Introduce el tamaño"
 desiredSizeUnit = "Size unit"
+title = "Configuración"
 
 [compress.tooltip.description]
 text = "La compresión es una forma fácil de reducir el tamaño de su archivo. Elija Tamaño de Archivo para ingresar un tamaño objetivo y nosotros ajustaremos la calidad por usted. Elija Calidad para establecer la intensidad de compresión manualmente."
@@ -3819,10 +3877,13 @@ title = "Configuración de Cuenta"
 description = "Sube una imagen para personalizar tu cuenta."
 help = "PNG, JPG, o WebP hasta 2MB."
 remove = "Eliminar"
+removeFailed = "No se pudo eliminar la foto de perfil"
 sizeError = "Por favor, selecciona una imagen de menos de 2MB."
 switchedToCustom = "Cambiada a foto personalizada. Ahora puedes subir la tuya."
+switchFailed = "No se pudo cambiar a la imagen personalizada"
 title = "Foto de perfil"
 upload = "Subir"
+uploadFailed = "No se pudo subir la foto de perfil"
 useCustom = "Usar foto personalizada"
 usingProvider = "Usando la foto de perfil de {{provider}}"
 
@@ -3836,6 +3897,7 @@ title = "Recortar Foto de Perfil"
 zoom = "Zoom"
 
 [config.account.security]
+changeFailed = "No se pudo cambiar la contraseña"
 changePassword = "Cambiar contraseña"
 description = "Gestiona tu contraseña y los ajustes de seguridad."
 title = "Contraseñas y Seguridad"
@@ -3846,11 +3908,15 @@ description = "¡Vincula tu cuenta para preservar tu historial y acceder a más 
 email = "Correo electrónico"
 emailPassword = "o introduce tu correo electrónico y contraseña"
 emailPlaceholder = "Introduce tu correo electrónico"
+failed = "No se pudo actualizar la cuenta"
+failedWithProvider = "No se pudo actualizar la cuenta con {{provider}}"
 linkWith = "Vincular con"
+linkWithProvider = "Vincular con {{provider}}"
 password = "Contraseña (opcional)"
 passwordNote = "Deja vacío para usar solo verificación por correo electrónico"
 passwordPlaceholder = "Establecer una contraseña"
 socialLogin = "Actualizar con Cuenta Social"
+success = "¡Cuenta actualizada correctamente! Ahora puede iniciar sesión con su correo electrónico."
 title = "Actualizar Cuenta de Invitado"
 upgradeButton = "Actualizar Cuenta"
 
@@ -3960,10 +4026,10 @@ title = "Solicitud no válida"
 
 [connect.renewal]
 approve = "Renovar inicio de sesión"
+currentOwnerRequired = "Inicie sesión como propietario actual del equipo en la nube vinculado para renovar el inicio de sesión de este servidor. Si se transfirió la propiedad, use la cuenta del nuevo propietario."
 failed = "No se ha podido renovar tu inicio de sesión. Inténtalo de nuevo o descarta esta página y vuelve a empezar desde tu servidor."
 lead = "Este servidor ya está vinculado a tu cuenta. Renueva tu inicio de sesión para volver a la facturación y el uso en tu servidor."
 title = "Renovar el inicio de sesión de tu servidor"
-wrongAccount = "Esta cuenta no puede renovar el inicio de sesión de este servidor. Cambia a la cuenta usada originalmente para vincular el servidor. Esa cuenta debe seguir siendo propietaria del equipo vinculado."
 
 [convert]
 autoRotate = "Rotación Automática"
@@ -4009,6 +4075,7 @@ multiple = "Múltiple"
 optimizeForEbook = "Optimizar PDF para lectores de libros electrónicos (usa Ghostscript)"
 output = "Salida"
 outputFormat = "Formato de Salida"
+pdfaAccessibleFormat = "{{format}} (accesible)"
 pdfaDigitalSignatureWarning = "El PDF contiene una firma digital. Ésta se eliminará en el siguiente paso."
 pdfaNote = "PDF/A-1b es más compatible, PDF/A-2b soporta más funciones."
 pdfaOptions = "Opciones de PDF/A"
@@ -4068,6 +4135,24 @@ outputFormatDesc = "Elige el formato de salida para el eBook"
 tabletPhone = "Tableta/Teléfono (con imágenes)"
 targetDevice = "Dispositivo de destino"
 targetDeviceDesc = "Elige un perfil de salida optimizado para el dispositivo lector"
+
+[convert.formatGroups]
+archive = "Archivo"
+document = "Documento"
+ebook = "eBook"
+email = "Correo electrónico"
+file = "Archivo"
+image = "Imagen"
+multipleFiles = "Varios archivos"
+presentation = "Presentación"
+spreadsheet = "Hoja de cálculo"
+text = "Texto"
+web = "Web"
+
+[convert.formatOptions]
+any = "Cualquiera"
+images = "Imágenes"
+msgOutlook = "MSG (Outlook)"
 
 [cookieBanner.popUp]
 acceptAllBtn = "De acuerdo"
@@ -4161,6 +4246,12 @@ label = "Posición Y"
 [crop.error]
 failed = "Error al recortar PDF"
 
+[crop.pageNumbers]
+description = "Recorte el área seleccionada en páginas específicas, o 'all' para todas las páginas."
+error = "Selección de páginas no válida. Use, por ejemplo, 1, 3, 5-8 o all."
+label = "Páginas que recortar"
+placeholder = "p. ej., 1, 3, 5-8 o all"
+
 [crop.preview]
 title = "Selección de Área de Recorte"
 
@@ -4183,16 +4274,11 @@ fileName = "Nombre de Archivo"
 title = "Importar/Exportar base de datos"
 
 [defaultApp]
-setDefault = "Establecer como predeterminado"
 title = "Establecer como aplicación PDF predeterminada"
 
 [defaultApp.error]
 message = "No se pudo establecer el gestor de PDF predeterminado"
 title = "Error"
-
-[defaultApp.prompt]
-dontRemind = "No volver a recordármelo"
-message = "Haga que Stirling PDF sea su aplicación predeterminada para abrir archivos PDF."
 
 [defaultApp.settingsOpened]
 message = "Seleccione Stirling PDF en la configuración del sistema"
@@ -4201,6 +4287,17 @@ title = "Configuración abierta"
 [defaultApp.success]
 message = "Stirling PDF es ahora su editor de PDF predeterminado"
 title = "Configurada la aplicación predeterminada"
+
+[desktop.titleBar]
+maximize = "Maximizar"
+minimize = "Minimizar"
+restore = "Restaurar"
+
+[desktopBilling]
+description = "Gestione el uso y la facturación en su navegador. Inicie sesión con la misma cuenta de Stirling que usa aquí."
+open = "Abrir Uso y facturación en el navegador"
+openFailed = "No se pudo abrir Uso y facturación. Compruebe su conexión e inténtelo de nuevo."
+selfHostedDescription = "Gestione el uso y la facturación en su servidor conectado desde el navegador. Inicie sesión con la cuenta del propietario del servidor."
 
 [desktopFileLink]
 saveAs = "Guardar como…"
@@ -4264,6 +4361,7 @@ tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,ident
 noItems = "No items available"
 noResults = "No results found"
 searchPlaceholder = "Buscar..."
+selectedCount = "{{count}} seleccionados"
 selectLanguages = "Select languages"
 selectOption = "Select an option"
 
@@ -4274,6 +4372,7 @@ editSecretValue = "Editar valor secreto"
 [editTableOfContents]
 submit = "Aplicar índice"
 tags = "bookmarks,contents,edit,table of contents,TOC,outline,navigation,chapters,sections,add bookmarks,edit bookmarks,PDF outline"
+workbenchLabel = "Espacio de trabajo del esquema"
 
 [editTableOfContents.actions]
 clipboardUnavailable = "El acceso al portapapeles no está disponible en este navegador."
@@ -4434,6 +4533,27 @@ closeFile = "Cerrar archivo"
 
 [fileEditor]
 addFiles = "Añadir archivos"
+closedFile = "{{name}} cerrado"
+couldNotSave = "No se pudo guardar {{name}}"
+filesAdded_one = "Se añadió {{count}} archivo"
+filesAdded_other = "Se añadieron {{count}} archivos"
+filesReordered_one = "Archivo reordenado"
+filesReordered_other = "{{count}} archivos reordenados"
+loadedFromStorage_one = "Se cargó {{count}} archivo desde el almacenamiento"
+loadedFromStorage_other = "Se cargaron {{count}} archivos desde el almacenamiento"
+loadFromStorageFailed = "No se pudieron cargar algunos archivos desde el almacenamiento"
+pinnedFile = "{{name}} fijado"
+processFilesFailed = "No se pudieron procesar los archivos"
+savedAndClosed = "{{name}} guardado y cerrado"
+saveFailed = "Error al guardar"
+unpinnedFile = "{{name}} desfijado"
+unzipping = "Descomprimiendo {{name}}"
+
+[fileEditor.unzip]
+error = "Error al descomprimir {{name}}"
+extracted_one = "Se extrajo {{count}} archivo de {{name}}"
+extracted_other = "Se extrajeron {{count}} archivos de {{name}}"
+failed = "No se pudieron extraer archivos de {{name}}"
 
 [fileManager]
 addToUpload = "Añadir a la subida"
@@ -4450,6 +4570,7 @@ noFiles = "No hay archivos disponibles"
 noFilesFound = "No se encontraron archivos que coincidan con tu búsqueda"
 openInFileEditor = "Abrir en Editor de Archivos"
 openInPageEditor = "Abrir en el editor de páginas"
+reloadFiles = "Recargar archivos"
 saveSelected = "Guardar seleccionados"
 searchFiles = "Buscar archivos..."
 share = "Compartir"
@@ -4459,6 +4580,8 @@ sharedEditNoticeConfirm = "Entendido"
 sharedEditNoticeTitle = "Copia del servidor de solo lectura"
 sharedWithYou = "Compartidos contigo"
 showAll = "Mostrar todo"
+showAllCount_one = "Mostrar todo ({{count}} archivo)"
+showAllCount_other = "Mostrar todo ({{count}} archivos)"
 sortBy = "Sort files"
 sortByDate = "Ordenar por fecha"
 sortByName = "Ordenar por nombre"
@@ -4495,6 +4618,11 @@ sources = "Fuentes de archivos"
 subtitle = "Elige desde tu biblioteca o añade algo nuevo."
 title = "Añadir archivos"
 unsupported = "Este tipo de archivo no es compatible con la herramienta seleccionada."
+
+[filePreview]
+loadingThumbnail = "Cargando miniatura..."
+locked = "Bloqueado"
+previewOf = "Vista previa de {{name}}"
 
 [files]
 addFiles = "Agregar archivos"
@@ -4930,13 +5058,15 @@ title = "Archivo a PDF"
 [fileUpload]
 dropFilesHere = "Suelte los archivos aquí o haga clic en el botón de carga"
 dropFilesHereOpen = "Suelte archivos aquí o haga clic en el botón Abrir"
-filesAvailable = "archivos disponibles"
+filesAvailableCount_one = "{{count}} archivo disponible"
+filesAvailableCount_other = "{{count}} archivos disponibles"
 loadFromStorage = "Cargar desde Almacenamiento"
 noFilesInStorage = "No hay archivos disponibles en el almacenamiento. Cargue algunos archivos primero."
 noFilesInStorageOpen = "No hay archivos disponibles en el almacenamiento. Abra algunos archivos primero."
 open = "Abrir"
 openFile = "Abrir archivo"
 openFiles = "Abrir archivos"
+selectedCount = "{{count}} seleccionados"
 selectFile = "Select {{name}}"
 selectFromStorage = "Seleccionar del Almacenamiento"
 upload = "Cargar"
@@ -5028,6 +5158,7 @@ rescanFields = "Volver a escanear campos"
 rescanFormFields = "Volver a escanear campos del formulario"
 save = "Guardar"
 saveShortcut = "Ctrl+S para guardar"
+selectOptionPlaceholder = "— seleccionar —"
 skippedEdits_one = "No se pudo aplicar 1 cambio:"
 skippedEdits_other = "No se pudieron aplicar {{count}} cambios:"
 skippedEditsTruncated = "{{count}} más no mostrados."
@@ -5090,6 +5221,16 @@ tooltipHelp = "La pista que se muestra cuando alguien pasa el cursor sobre el ca
 type = "Tipo"
 typeHelp = "Qué tipo de campo es este. Cambiarlo reconstruye el campo, por lo que su valor actual no se conserva."
 
+[formFill.fieldTypes]
+button = "Botón"
+checkbox = "Casilla de verificación"
+combobox = "Desplegable"
+listbox = "Cuadro de lista"
+radio = "Radio"
+radioGroup = "Grupo de radio"
+signature = "Firma"
+text = "Texto"
+
 [formFill.mode]
 create = "Crear"
 fill = "Rellenar"
@@ -5107,11 +5248,16 @@ restore = "Restaurar"
 
 [formFill.sidebar]
 close = "Cerrar barra lateral"
+empty = "No se encontraron campos de formulario en este PDF"
+loading = "Cargando campos de formulario..."
+pageNumber = "Página {{page}}"
+title = "Campos de formulario"
 
 [getPdfInfo]
 downloadJson = "Descargar JSON"
 downloads = "Descargas"
 indexTitle = "Índice"
+noData = "Sin datos"
 noneDetected = "Ninguno detectado"
 noResults = "Ejecute la herramienta para generar un informe."
 processing = "Extrayendo información..."
@@ -5127,6 +5273,8 @@ noVerification = "No se realizó verificación"
 noVerificationDesc = "No se verificó el cumplimiento de estándares PDF para este documento."
 passed = "Aprobado"
 passedCount = "aprobadas"
+secCompliant = "El documento cumple los requisitos de presentación de SEC EDGAR"
+secNotCompliant = "El documento no cumple los requisitos de presentación de SEC EDGAR"
 
 [getPdfInfo.error]
 partial = "Algunos archivos no se pudieron procesar."
@@ -5134,10 +5282,15 @@ unexpected = "Error inesperado durante la extracción."
 
 [getPdfInfo.other]
 attachments = "Adjuntos"
+created = "Creado: {{date}}"
 embeddedFiles = "Archivos incrustados"
+fileSizeBytes = "({{size}} bytes)"
 javaScript = "JavaScript"
 layers = "Capas"
+modified = "Modificado: {{date}}"
 structureTree = "Árbol de estructura"
+unnamedAttachment = "Adjunto sin nombre"
+unnamedFile = "Archivo sin nombre"
 xmp = "Metadatos XMP"
 
 [getPdfInfo.perPage]
@@ -5147,6 +5300,7 @@ images = "Imágenes"
 links = "Enlaces"
 multimedia = "Multimedia"
 size = "Tamaño"
+unnamedImage = "Imagen"
 xobjects = "Recuento de XObject"
 
 [getPdfInfo.report]
@@ -5675,6 +5829,7 @@ invalidEmail = "Dirección de correo electrónico no válida"
 invalidInvitation = "Invitación no válida"
 invalidToken = "Enlace de invitación no válido"
 linkExpires = "El enlace expira"
+linkExpiresAt = "El enlace caduca: {{date}} a las {{time}}"
 passwordMismatch = "Las contraseñas no coinciden"
 passwordPlaceholder = "Introduce tu contraseña"
 passwordRequired = "Se requiere contraseña"
@@ -5689,6 +5844,7 @@ welcomeTitle = "¡Has sido invitado!"
 addFiles = "Agregar Archivos"
 mobileUpload = "Subir desde el móvil"
 openFromComputer = "Abrir desde el ordenador"
+settingUpSession = "Configurando su sesión..."
 uploadFromComputer = "Cargar desde el ordenador"
 
 [language]
@@ -5770,6 +5926,7 @@ sessionExpired = "Tu sesión ha expirado. Vuelve a iniciar sesión."
 signin = "Iniciar sesión"
 signingIn = "Iniciando sesión..."
 signInWith = "Iniciar sesión con"
+signInWithProvider = "Iniciar sesión con {{provider}}"
 title = "Iniciar sesión"
 unexpectedError = "Error inesperado: {{message}}"
 updatePassword = "Actualizar contraseña"
@@ -5811,6 +5968,9 @@ label = "¿Eliminar la firma digital en el archivo combinado?"
 description = "Las firmas digitales se invalidarán al combinar archivos. Marque esto para eliminarlas del PDF combinado final."
 title = "Eliminar Firma Digital"
 
+[merge.settings]
+title = "Configuración"
+
 [merge.sortBy]
 ascending = "Ascendente"
 dateModified = "Fecha de Modificación"
@@ -5819,6 +5979,9 @@ description = "Los archivos se combinarán en el orden en que se seleccionen. Ar
 filename = "Nombre de Archivo"
 label = "Ordenar Por"
 sort = "Ordenar"
+
+[merge.sortFiles]
+title = "Ordenar archivos"
 
 [merge.tooltip.header]
 title = "Resumen de ajustes de combinación"
@@ -5867,6 +6030,7 @@ validating = "Validando la sesión..."
 
 [mobileSign]
 clear = "Clear"
+drawingArea = "Área de dibujo de firma"
 invalidSession = "Session expired"
 invalidSessionMessage = "This QR code is no longer valid. Open the Sign tool on your computer and scan the new code."
 penSizeLabel = "Pen size"
@@ -5882,6 +6046,7 @@ validating = "Checking session…"
 fromGallery = "From gallery"
 hint = "Photograph a signature on white paper, or choose an existing image."
 invalidType = "Please choose an image file."
+previewAlt = "Firma"
 takePhoto = "Take a photo"
 
 [mobileSign.tab]
@@ -5993,6 +6158,9 @@ profile = "See your basic profile information"
 desc = "Tareas de limpieza y detectar texto en imágenes dentro de un PDF y volver a incrustarlo como texto"
 tags = "reconocimiento,texto,imagen,escanear,leer,identificar,detección,editable"
 title = "OCR / Escaneo de limpieza"
+
+[ocr.advanced]
+title = "Avanzado"
 
 [ocr.error]
 failed = "La operación de OCR falló"
@@ -6118,9 +6286,9 @@ title = "Descargar Stirling para escritorio"
 description = "Colabora con tu equipo"
 title = "Invitar a miembros del equipo"
 
-[onboarding.checklist.shareAnalytics]
-description = "Ayuda a mejorar Stirling"
-title = "Compartir datos de uso anónimos"
+[onboarding.checklist.setDefaultApp]
+description = "Abrir archivos PDF en Stirling PDF"
+title = "Hacer de Stirling la opción predeterminada"
 
 [onboarding.checklist.takeTour]
 description = "Descubre cómo funciona Stirling con una visita rápida"
@@ -6188,6 +6356,7 @@ message = "La aplicación ha sufrido cambios importantes recientemente. Puede re
 roleAdmin = "Administrador"
 rolePlaceholder = "Confirma tu rol"
 roleUser = "Usuario"
+title = "Comprobación de seguridad"
 
 [onboarding.serverLicense]
 freeBody = "Nuestra licencia <strong>Open-Core</strong> incluye <strong>OAuth SSO</strong> y hasta <strong>{{freeTierLimit}}</strong> usuarios gratis. Para crecer sin interrupciones, recomendamos el plan Stirling Team: <strong>100 usuarios</strong> por 99 $/mes."
@@ -6276,16 +6445,93 @@ title = "Archivos de superposición"
 text = "Primer plano coloca la superposición encima de la página. Fondo la coloca detrás."
 title = "Posición de superposición"
 
+[ownership]
+acceptInvite = "Puede crear una cuenta o iniciar sesión y luego aceptar la invitación."
+accessUpdated = "Su acceso de propietario está listo."
+accountLinkDisabled = "Este servidor aún tiene un enlace a la nube, pero la vinculación de cuentas está desactivada. Pida al operador del servidor que active la vinculación de cuentas y luego reanude esta transferencia o desvincule el servidor en la configuración."
+anotherTeam = "¿Ya está en otro equipo?"
+billing = "La suscripción, el monedero, el método de pago y las licencias existentes permanecen igual. Los datos de contacto de facturación no cambian automáticamente."
+billingDetails = "Datos de facturación"
+billingUnchanged = "La suscripción y la facturación permanecen igual"
+bothDone = "La propiedad del servidor y de la nube ya está alineada."
+cancel = "Cancelar transferencia"
+check = "Comprobar de nuevo"
+checkAccount = "Comprobar cuenta"
+chooseEmail = "Elija su cuenta en {{team}} o introduzca un correo electrónico para invitarle."
+close = "Cerrar cuadro de transferencia"
+cloudAccount = "Cuenta de Stirling"
+cloudScopeStyled = "<user>{{name}}</user> gestionará {{team}}, sus miembros y la facturación."
+cloudTargetChanged = "Elija otro miembro de la nube. Esta cuenta ya no es apta para la transferencia."
+confirm = "Entiendo los cambios de acceso y propiedad."
+done = "Propiedad transferida"
+error = "No hemos podido completar este paso. Compruebe que el destinatario esté activo y que el servidor esté conectado, y vuelva a comprobarlo. Una transferencia pendiente se puede reanudar aquí."
+finish = "Finalizar transferencia del servidor"
+inProgress = "Otro destinatario ya tiene una transferencia pendiente. Cierre este cuadro y reanúdela desde Usuarios."
+instances = "Este equipo tiene {{count}} servidores vinculados. Su facturación en la nube permanece con este equipo; los propietarios locales de otros servidores no cambian."
+invitationSent = "Invitación enviada"
+invite = "Enviar invitación"
+inviteAddress = "Invitar a <account>{{email}}</account> a {{team}}."
+inviteBlocked = "No se pudo enviar la invitación. Compruebe las plazas disponibles del equipo y si el destinatario ya tiene una suscripción de pago."
+linkChanged = "El enlace a la nube del servidor ha cambiado. Pida al operador del servidor que restaure el enlace original antes de reanudar."
+linkedServerCount = "{{count}} servidores vinculados"
+linkRevoked = "El enlace a la nube de este servidor ya no es válido. Cancele la transferencia y vuelva a conectar su cuenta de Stirling en la configuración. La propiedad no cambiará."
+localScope = "Será propietario de este servidor y gestionará la facturación y las conexiones a la nube. Usted conservará el acceso de administrador, pero perderá el acceso a esos ajustes."
+membershipDetails = "Detalles de pertenencia al equipo"
+membershipFirst = "Debe unirse al equipo antes de que pueda confirmar la transferencia."
+membershipRequired = "El destinatario debe unirse a este equipo en la nube antes de que se pueda transferir la propiedad. Pídale que acepte su invitación y vuelva a comprobarlo."
+newOwnerLabel = "Nuevo propietario"
+newOwnerStyled = "<user>{{name}}</user> es ahora el propietario."
+noEmailMatches = "No hay miembros coincidentes. Introduzca un correo electrónico para invitar."
+otherTeam = "Si pertenece a otro equipo, aceptar puede mover su cuenta. Es posible que primero deba resolver una cuenta de pago o la propiedad de otro equipo. No moveremos su suscripción ni fusionaremos equipos."
+ownerChanged = "La propiedad en la nube cambió después de iniciar esta transferencia. Cancele esta transferencia y vuelva a empezar con el propietario actual de la nube."
+ownerRequired = "Inicie sesión como propietario actual del equipo en la nube y vuelva a intentar este paso."
+partialError = "La propiedad en la nube se ha transferido. Finalice la transferencia del servidor para mantener ambos propietarios alineados."
+partialTargetChanged = "Restaure el acceso y los datos originales de la cuenta del usuario del servidor seleccionado y luego finalice la transferencia del servidor. La propiedad en la nube ya se ha transferido."
+pending = "Hay una transferencia de propiedad a {{name}} pendiente."
+personalTeam = "Los equipos personales no pueden transferir la propiedad."
+prepareHelp = "El destinatario debe haber completado su primer inicio de sesión en el servidor. Puede reintentarlo aquí o volver a Usuarios para elegir a otra persona."
+resume = "Reanudar transferencia"
+searchEmail = "Buscar o introducir un correo electrónico"
+serverAccount = "Cuenta del servidor"
+serverDetails = "Detalles del servidor vinculado"
+signIn = "Iniciar sesión en la nube"
+startFromInstanceBody = "Este equipo tiene servidores vinculados. En el servidor con alojamiento propio, abra Configuración → Usuarios y cambie el rol del destinatario a Propietario de la organización. Ese flujo transfiere la propiedad en la nube antes de completar la transferencia del servidor."
+startFromInstanceTitle = "Empezar desde su servidor con alojamiento propio"
+stayOwner = "Usted seguirá siendo el propietario hasta la transferencia."
+targetChanged = "La cuenta del destinatario ha cambiado. Restaure su acceso o cancele esta transferencia y vuelva a elegirlo."
+title = "Transferir propiedad"
+transfer = "Transferir propiedad"
+waitingForEmail = "Esperando a que {{email}} se una a {{team}}."
+working = "Comprobando y actualizando la propiedad..."
+yourCloudAccess = "Pasará a ser miembro del equipo y perderá el acceso de propietario."
+
 [pageEdit]
 deselectAll = "Deseleccionar todo"
 selectAll = "Seleccionar todo"
 
 [pageEditor]
+dragPreviewAlt = "Arrastrando"
+filePosition = "Posición {{position}}"
+pageLabel = "Página {{page}}"
 title = "Editor de Páginas"
+
+[pageEditor.actions]
+deletePage = "Eliminar página"
+insertFileAfter = "Insertar archivo después"
+moveLeft = "Mover a la izquierda"
+moveRight = "Mover a la derecha"
+rotateLeft = "Girar a la izquierda"
+rotateRight = "Girar a la derecha"
+splitAfter = "Dividir después"
 
 [pageEditor.emptyState]
 body = "Añade archivos para empezar a editar páginas"
 title = "No hay archivos PDF cargados"
+
+[pageEditor.fileDropdown]
+addFile = "Añadir archivo"
+selectedCount = "{{selected}}/{{total}} archivos seleccionados"
+untitled = "Sin título"
 
 [pageEditor.toolbar]
 delete = "Eliminar seleccionados"
@@ -6391,6 +6637,11 @@ portrait = "Vertical"
 label = "Dirección de lectura:"
 ltr = "De izquierda a derecha"
 rtl = "De derecha a izquierda"
+
+[pageLayout.steps]
+advanced = "Configuración avanzada"
+layout = "Configuración de diseño"
+marginsBorders = "Márgenes y bordes"
 
 [pageLayout.tooltip.header]
 title = "Guía de disposición de página"
@@ -6712,6 +6963,7 @@ teamChangeUnavailable = "No se han podido cargar los cambios programados de Team
 teamPending = "Tu compra de Team aún se está procesando. Actualiza esta página en breve."
 teamProcessing = "Procesando compra de Team"
 teamScheduled = "Tu cambio de Team está programado para {{date}}. Tu capacidad actual seguirá activa hasta entonces."
+unknownError = "Se ha producido un error desconocido"
 upgradeComplete = "Actualización completa"
 upgradeCompleteMessage = "Su suscripción se ha actualizado correctamente. Su clave de licencia existente ha sido actualizada."
 upgradeSuccess = "¡Pago correcto! Su suscripción se ha actualizado. La licencia se ha actualizado en su servidor. Recibirá un correo electrónico de confirmación en breve."
@@ -6766,6 +7018,14 @@ selectedMonthly = "Mensual"
 selectedYearly = "Anual"
 selectMonthly = "Seleccionar mensual"
 selectYearly = "Seleccionar anual"
+
+[payment.priceDisplay]
+basePrice = "Precio base"
+perPeriod = "/{{period}}"
+perSeat = "Por plaza"
+perSeatPeriod = "/plaza/{{period}}"
+totalSeats_one = "Total ({{count}} plaza)"
+totalSeats_other = "Total ({{count}} plazas)"
 
 [payment.upgradeTeam]
 title = "Mejorar a Team"
@@ -6985,6 +7245,10 @@ save = "Guardar"
 style = "Estilo"
 tapToPlace = "Toca la página donde debe ir el texto"
 unlock = "Desbloquear"
+
+[pdfTextEditor.pageView]
+pageNumber = "Página {{page}}"
+renderFailed = "No se pudo renderizar la página"
 
 [pdfTextEditor.password]
 cancel = "Cancelar"
@@ -7212,6 +7476,7 @@ title = "Automatización"
 contact = "Contacta con nosotros"
 current = "Plan actual"
 featureComparison = "Comparación de funciones"
+fetchError = "No se pudieron obtener los datos de precios"
 from = "Desde"
 hideComparison = "Ocultar comparación de funciones"
 licensedSeats = "Con licencia: {{count}} plazas"
@@ -7227,6 +7492,8 @@ withServer = "+ Plan de servidor"
 [plan.api]
 large = "5.000 Créditos"
 medium = "1.000 Créditos"
+perCredit = "{{price}} por crédito"
+perCreditWithDiscount = "{{price}} por crédito • {{discount}}% de descuento"
 small = "500 Créditos"
 xsmall = "100 Créditos"
 
@@ -7302,14 +7569,9 @@ upToFiveUsers = "Hasta 5 usuarios"
 usageTrackingPrometheus = "Seguimiento de uso y Prometheus"
 usersIncluded = "100 usuarios incluidos"
 
-[plan.licenseWarning]
-body = "Tiene {{total}} usuarios, pero el nivel gratuito solo admite {{limit}} por servidor. Actualice para que Stirling PDF siga funcionando sin problemas."
-cta = "Ver planes"
-overLimit = "más de {{limit}}"
-title = "Alcanzado el límite gratuito en autoalojado"
-
 [plan.period]
 month = "mes"
+year = "año"
 
 [plan.pro]
 highlight1 = "Uso de herramientas ilimitado"
@@ -7435,6 +7697,9 @@ pdfa-1 = "PDF/A-1b"
 pdfa-2b = "PDF/A-2b"
 pdfa-3b = "PDF/A-3b"
 
+[portal.accountLink]
+ownerRequired = "Solo el propietario de la organización puede vincular o desvincular este servidor."
+
 [portal.accountLink.card]
 billingNote = "El procesamiento desatendido se factura contra la cartera de tu organización."
 connectDescription = "Conecta este servidor para usar la asignación de procesamiento de tu equipo en Stirling Cloud."
@@ -7556,6 +7821,7 @@ identity = "Cuenta de Stirling"
 linkTitle = "Vincular tu cuenta de Stirling"
 noAuthorizeUrl = "Stirling no ha devuelto ningún lugar para continuar. Inténtalo de nuevo en un momento."
 startFailed = "No se pudo contactar con Stirling para iniciar la conexión. Comprueba el acceso de red saliente de este servidor y vuelve a intentarlo."
+transferPending = "Hay una transferencia de propiedad pendiente. Vaya a Configuración → Usuarios para finalizarla o cancelarla y luego intente vincular de nuevo."
 
 [portal.accountLink.modal.loginNotConfigured]
 after = "para habilitar la vinculación en la aplicación con la cuenta de Stirling alojada."
@@ -9441,6 +9707,7 @@ labelId = "ID de etiqueta"
 labelIdHelp = "El GUID de la etiqueta, desde el portal de Purview. Al aplicar una etiqueta, se escriben sus metadatos en el PDF; no puede cifrar, ya que eso requiere el cliente de Microsoft."
 labelName = "Nombre de etiqueta (opcional)"
 labelNameHelp = "Se registra junto al ID para que las personas y las herramientas puedan reconocer la etiqueta."
+labelNamePlaceholder = "Confidencial"
 
 [portal.policies.config.purview.fields.method]
 help = "Purview distingue una etiqueta aplicada por una política de una elegida por una persona."
@@ -10425,31 +10692,6 @@ unlimited = "{{used}} · Ilimitado"
 [printFile]
 title = "Imprimir archivo"
 
-[processingFolders.downloads]
-approve = "Procesar mis Descargas"
-cancelSweep = "Cancelar"
-capped = "Tienes {{found}} PDF; los primeros {{limit}} se procesan ahora y el resto después."
-close = "Hecho"
-explain_one = "Stirling puede clasificar el {{count}} PDF que ya está en tu carpeta Descargas y abrir los resultados aquí."
-explain_other = "Stirling puede clasificar los {{count}} PDF que ya están en tu carpeta Descargas y abrir los resultados aquí."
-failed = "No se pudo configurar. Tus archivos no se han modificado."
-finished_one = "Se ha clasificado {{count}} archivo y se han abierto {{opened}} aquí, listos para trabajar."
-finished_other = "Se han clasificado {{count}} archivos y se han abierto {{opened}} aquí, listos para trabajar."
-nothingNew_one = "Nada nuevo que procesar: este {{count}} archivo ya se ha procesado."
-nothingNew_other = "Nada nuevo que procesar: estos {{count}} archivos ya se han procesado."
-notModified = "Tus archivos en Descargas no se modifican: Stirling los lee y los abre aquí."
-notNow = "Ahora no"
-progressCounts = "de {{total}} procesados"
-someFailed_one = "{{count}} no se pudo procesar y se dejó intacto."
-someFailed_other = "{{count}} no se pudieron procesar y se dejaron intactos."
-stillRunning = "Algunos archivos siguen procesándose en segundo plano."
-title = "¿Organizar tus Descargas?"
-trigger_one = "Procesar {{count}} PDF en Descargas"
-trigger_other = "Procesar {{count}} PDF en Descargas"
-typesFound_one = "{{count}} tipo de documento encontrado"
-typesFound_other = "{{count}} tipos de documento encontrados"
-working = "Procesando..."
-
 [processingFolders.setup]
 addFolder = "Añadir carpeta"
 advancedSteps = "Esta carpeta usa una configuración de procesamiento que este asistente no puede editar. Sus pasos guardados no se han modificado."
@@ -10527,6 +10769,10 @@ label = "ID de cliente"
 [provider.googledrive.enabled]
 description = "Permitir que los usuarios importen archivos directamente desde Google Drive"
 label = "Habilitar selector de archivos de Google Drive"
+
+[provider.googledrive.errors]
+notConfigured = "Google Drive no está configurado"
+pickerFailed = "No se pudo abrir el selector de Google Drive"
 
 [provider.oauth2.generic]
 name = "OAuth2 genérico"
@@ -10775,6 +11021,7 @@ applyWarning = "⚠️ Aplicación permanente, no se puede deshacer y los datos 
 colorLabel = "Color de redacción"
 controlsTitle = "Controles de censura manual"
 instructions = "Selecciona texto o dibuja áreas en el PDF para marcar contenido para censura."
+notImplemented = "La interfaz de censura manual estará disponible aquí cuando se implemente."
 title = "Herramientas de censura"
 
 [redact.modeSelector]
@@ -11102,6 +11349,9 @@ failed = "Se produjo un error al rotar el PDF."
 [rotate.preview]
 title = "Vista Previa de Rotación"
 
+[rotate.settings]
+title = "Configuración"
+
 [rotate.tooltip.controls]
 text = "Usa los botones de rotación para ajustar la orientación. El botón izquierdo rota en sentido antihorario y el botón derecho en sentido horario. Cada clic rota 90 grados."
 title = "Controles"
@@ -11119,6 +11369,16 @@ hideSmallLabels = "Ocultar etiquetas pequeñas"
 physicalValues = "Físico"
 scaled = "Escalado"
 showAllLabels = "Mostrar todas las etiquetas"
+
+[ruler.units]
+cm = "Centímetros (cm)"
+ft = "Pies (ft)"
+in = "Pulgadas (in)"
+km = "Kilómetros (km)"
+m = "Metros (m)"
+mi = "Millas (mi)"
+mm = "Milímetros (mm)"
+yd = "Yardas (yd)"
 
 [sanitize]
 desc = "Eliminar elementos potencialmente dañinos de archivos PDF."
@@ -11184,6 +11444,7 @@ calibrationPaperDistance = "Distancia medida en la página: {{distance}}"
 calibrationTitle = "Calibrar escala"
 calibrationTooltip = "Mide una distancia conocida para calcular la escala automáticamente"
 customScale = "Escala personalizada"
+customUnit = "{{unit}} (personalizado)"
 noneSet = "No se ha establecido ninguna escala personalizada"
 presets = "Escalas predefinidas"
 ratio = "Relación de escala"
@@ -11207,6 +11468,9 @@ title = "Imágenes Extraídas"
 
 [scannerImageSplit.error]
 failed = "Se produjo un error al extraer escaneos de imágenes."
+
+[scannerImageSplit.settings]
+title = "Configuración"
 
 [scannerImageSplit.tooltip]
 headsUp = "Advertencia"
@@ -11274,6 +11538,9 @@ general = "General"
 limits = "Límites y rendimiento"
 models = "Modelos y proveedores"
 title = "IA"
+
+[settings.billing]
+title = "Facturación"
 
 [settings.configuration]
 advanced = "Avanzado"
@@ -11348,8 +11615,6 @@ defaultPdfEditor = "Editor de PDF predeterminado"
 defaultPdfEditorActive = "Stirling PDF es su editor de PDF predeterminado"
 defaultPdfEditorChecking = "Comprobando..."
 defaultPdfEditorInactive = "Otra aplicación está establecida como predeterminada"
-defaultPdfEditorRemind = "Recordarme que lo establezca como predeterminado"
-defaultPdfEditorRemindDescription = "Mostrar un banner cuando Stirling PDF no sea tu aplicación PDF predeterminada."
 defaultPdfEditorSet = "Ya es predeterminado"
 defaultStartupView = "Vista predeterminada al iniciar"
 defaultStartupViewDescription = "Elija qué pestaña estará activa en la columna izquierda cuando se inicie la aplicación"
@@ -11618,6 +11883,15 @@ people = "Personas"
 teams = "Equipos"
 title = "Espacio de trabajo"
 
+[setup.error]
+loginIncomplete = "No se pudo completar el inicio de sesión"
+noSaasServer = "No hay ningún servidor SaaS configurado"
+noServer = "No hay ningún servidor configurado"
+saasLoginFailed = "Error al iniciar sesión en SaaS"
+saasLoginIncomplete = "No se pudo completar el inicio de sesión en SaaS"
+selfHostedLoginFailed = "Error al iniciar sesión en alojamiento propio"
+signupIncomplete = "No se pudo completar el registro"
+
 [setup.login]
 connectingTo = "Conectando a:"
 oauthPending = "Abriendo el navegador para autenticación..."
@@ -11661,6 +11935,7 @@ configFetchError = "Error al obtener la configuración del servidor: {{error}}"
 emptyUrl = "Introduzca una URL de servidor"
 invalidUrl = "Formato de URL no válido. Introduce una URL válida como https://your-server.com"
 testFailed = "Falló la prueba de conexión"
+unknown = "Error desconocido"
 unreachable = "No se pudo conectar con el servidor"
 
 [setup.server.error.securityDisabled]
@@ -11769,6 +12044,7 @@ canvas = "Tras dibujar tu firma en el lienzo, cierra la ventana y haz clic en cu
 image = "Tras subir la imagen de tu firma arriba, haz clic en cualquier parte del PDF para colocarla."
 noSignature = "Cree una firma arriba para activar las herramientas de colocación."
 paused = "Colocación en pausa"
+placeAnnotation = "Haga clic en cualquier lugar del PDF para colocar su anotación."
 resumeHint = "Reanude la colocación para hacer clic y añadir su firma."
 saved = "Seleccione una firma guardada arriba y haga clic en cualquier parte del PDF para colocarla."
 text = "Tras introducir tu nombre arriba, haz clic en cualquier parte del PDF para colocar tu firma."
@@ -11922,7 +12198,9 @@ signUpWith = "Sign up with"
 skip = "Skip"
 subtitle = "Únase a Stirling PDF para comenzar"
 title = "Crear una cuenta"
+unableToAccessTool = "No se puede acceder a la herramienta: {{error}}"
 unexpectedError = "Error inesperado: {{message}}"
+unknownError = "Error desconocido"
 
 [sizes]
 large = "Grande"
@@ -11995,6 +12273,14 @@ rightToLeft = "Dividir de derecha a izquierda"
 [split.poster.pageSize]
 description = "Tamaño de las páginas de salida para impresión"
 label = "Tamaño de página objetivo"
+
+[split.poster.pageSize.options]
+a3 = "A3 (297 × 420 mm)"
+a4 = "A4 (210 × 297 mm)"
+a5 = "A5 (148 × 210 mm)"
+legal = "Legal (8.5 × 14 in)"
+letter = "Letter (8.5 × 11 in)"
+tabloid = "Tabloid (11 × 17 in)"
 
 [split.poster.xFactor]
 description = "Número de columnas en las que dividir cada página"
@@ -12267,6 +12553,7 @@ confirmCancelInvite = "¿Seguro que quieres cancelar esta invitación?"
 confirmLeave = "¿Seguro que quieres salir de este equipo?"
 confirmLeaveLeader = "Como líder de equipo, al salir te eliminarás del equipo. ¿Seguro?"
 confirmRemove = "¿Seguro que quieres eliminar a este miembro?"
+currentUnavailable = "No hemos podido identificar su equipo actual. Inténtelo de nuevo o contacte con soporte si esto continúa."
 editName = "Editar nombre del equipo"
 inviteCancelled = "Invitación cancelada"
 inviteError = "No se pudo enviar la invitación"
@@ -12292,10 +12579,8 @@ renameCancel = "Cancelar cambio de nombre"
 renameError = "No se pudo cambiar el nombre del equipo"
 renameSubmit = "Guardar nombre del equipo"
 renameSuccess = "Equipo renombrado correctamente"
-transferBody = "¿Hacer a {{email}} propietario del equipo? Controlará la pertenencia al equipo y la configuración de facturación de la organización. Pasarás a ser miembro. La suscripción y el monedero del equipo permanecen con el equipo."
 transferError = "No se pudo transferir la propiedad. Actualiza el equipo e inténtalo de nuevo."
 transferSuccess = "Propiedad del equipo transferida. Tu rol ahora es miembro."
-transferTitle = "Transferir propiedad del equipo"
 
 [team.invitationBanner]
 acceptButton = "Aceptar"
@@ -12396,6 +12681,10 @@ WORD = "un documento Word"
 XML = "un archivo XML"
 XPS = "un documento XPS"
 ZIP = "un archivo ZIP"
+
+[toolLoading]
+generic = "Cargando herramienta..."
+named = "Cargando {{toolName}}..."
 
 [toolPanel]
 alpha = "Alfa"
@@ -12501,6 +12790,8 @@ stable = "ESTABLE"
 updateAvailable = "Actualización disponible"
 urgentUpdateAvailable = "Actualización urgente"
 version = "Versión"
+versionCount_one = "{{count}} versión"
+versionCount_other = "{{count}} versiones"
 versionHistory = "Historial de versiones"
 viewGuide = "Ver guía"
 whatsNewIn = "Novedades en"
@@ -12528,6 +12819,7 @@ title = "URL a PDF"
 aboutUsageAnalytics = "Acerca de las analíticas de uso"
 configureSettings = "Configurar ajustes de analíticas"
 error = "Error al cargar las estadísticas de uso"
+loadFailed = "No se pudieron cargar las estadísticas de uso"
 noData = "No hay datos disponibles"
 noDataMessage = "Actualmente no hay estadísticas de uso disponibles."
 usageAnalyticsExplanation = "Las analíticas de uso registran las solicitudes a endpoints y los patrones de uso de herramientas. Combinadas con el panel de registro de auditoría, obtienes visibilidad completa de la actividad del sistema, el rendimiento y los eventos de seguridad."
@@ -12591,7 +12883,6 @@ removeTeam = "Quitar del equipo"
 rename = "Cambiar nombre del equipo"
 resetPw = "Restablecer contraseña"
 suspend = "Suspender"
-transferOwnership = "Transferir propiedad"
 unlock = "Desbloquear cuenta"
 
 [users.activity]
@@ -12631,8 +12922,6 @@ disableMfaTitle = "Restablecer MFA"
 removeBody = "¿Eliminar permanentemente a {{name}} de la organización? Esto no se puede deshacer."
 removeTeamBody = "¿Quitar a {{name}} del equipo? Mantendrá su cuenta, pero perderá el acceso a los recursos de este equipo."
 removeTitle = "Eliminar miembro"
-transferOwnershipBody = "¿Hacer a {{name}} propietario de la organización? Pasará a ser administrador. Tú seguirás siendo administrador, pero perderás la propiedad. Solo el nuevo propietario o el operador del servidor puede transferirla de vuelta."
-transferOwnershipTitle = "Transferir propiedad de la organización"
 
 [users.empty]
 description = "Invita a tu equipo para empezar a colaborar."
@@ -12825,6 +13114,7 @@ signaturesInvalid = "{{count}} no válidas"
 signaturesUnverified_one = "{{count}} necesita revisión"
 signaturesUnverified_other = "{{count}} necesitan revisión"
 signaturesValid = "{{count}} totalmente válidas"
+thumbnailAlt = "Miniatura de {{fileName}}"
 title = "Informe de validación de firmas"
 
 [validateSignature.report.fields]
@@ -12862,6 +13152,7 @@ lastPage = "Última Página"
 loadingEngine = "Cargando motor PDF..."
 moreOptions = "Más"
 nextPage = "Página Siguiente"
+noPdfProvided = "No se proporcionó ningún PDF"
 onlyPdfSupported = "El visor solo admite archivos PDF. Este archivo parece ser de un formato diferente."
 pageNavigation = "Navegación de páginas"
 previousPage = "Página Anterior"
@@ -12899,8 +13190,17 @@ collapseAll = "Contraer todos los marcadores"
 editorOnly = "Los marcadores de este documento solo se pueden editar en el editor."
 empty = "No bookmarks in this document"
 expandAll = "Expandir todos los marcadores"
+loadFailed = "No se pudieron cargar los marcadores"
+loading = "Cargando marcadores..."
+noDocument = "Abra un PDF para ver sus marcadores."
+noSearchResults = "Ningún marcador coincide con su búsqueda"
+openEditor = "¿Necesita reordenar o anidar? Abra el editor de marcadores"
+pageLabel = "Página"
+pageNumber = "Página {{page}}"
+saveFailed = "No se pudo guardar el marcador"
 searchPlaceholder = "Buscar marcadores"
 title = "Bookmarks"
+untitled = "Sin título"
 
 [viewer.comments]
 addComment = "Añadir comentario"
@@ -12948,16 +13248,26 @@ unsavedDesc = "Tienes cambios sin guardar"
 
 [viewer.layers]
 closeSidebar = "Cerrar barra lateral de capas"
+empty = "Este documento no tiene capas."
 hideAll = "Ocultar todas las capas"
+loadFailed = "No se pudieron cargar las capas."
+loading = "Cargando capas..."
+noDocument = "Abra un PDF para ver sus capas."
+readFailed = "No se pudieron leer las capas del PDF"
 showAll = "Mostrar todas las capas"
 title = "Layers"
 
 [viewer.link]
 delete = "Eliminar enlace"
+goTo = "Ir a {{label}}"
+open = "Abrir enlace"
+openAria = "Abrir enlace"
+page = "Página {{page}}"
 
 [viewer.nonPdf]
 columnDefault = "Columna {{index}}"
 convertToPdf = "Convertir a PDF"
+copied = "Copiado"
 csvStats = "{{rows}} filas · {{columns}} columnas · {{size}}"
 emptyFile = "Archivo vacío"
 htmlHidePreview = "Ocultar vista previa"
@@ -12968,6 +13278,8 @@ htmlShowPreview = "Mostrar vista previa de todos modos"
 invalidJson = "JSON no válido — mostrando contenido sin procesar"
 lineNumbers = "Números de línea"
 loading = "Cargando..."
+noFile = "No hay ningún archivo cargado"
+previewUnavailable = "Vista previa no disponible para este tipo de archivo"
 renderMarkdown = "Renderizar markdown"
 sortedBy = "Ordenado por: {{column}}"
 textStats = "{{lines}} líneas · {{size}}"
@@ -12994,11 +13306,28 @@ next = "Siguiente resultado"
 previous = "Resultado anterior"
 resultsOf = "de {{total}}"
 
+[viewer.sidebar]
+close = "Cerrar barra lateral"
+searchPlaceholder = "Buscar..."
+
 [viewer.signature]
 delete = "Eliminar firma"
+previewAlt = "Vista previa de la firma"
+
+[viewer.signatureField]
+badge = "Firma"
+fieldTitle = "Campo de firma: {{name}}"
+signed = "Firmado"
+signedWithReason = "Firmado: {{reason}}"
+unsignedFieldTitle = "Campo de firma sin firmar: {{name}}"
+withTime = "{{label}} ({{time}})"
 
 [viewer.thumbnails]
 closeSidebar = "Cerrar barra lateral de miniaturas"
+failed = "Error"
+pageNumber = "Página {{page}}"
+thumbnailAlt = "Miniatura de la página {{page}}"
+title = "Páginas"
 
 [viewPdf]
 tags = "ver,leer,anotar,texto,imagen"
@@ -13006,169 +13335,6 @@ title = "Ver/Editar PDF"
 
 [warning]
 tooltipTitle = "Advertencia"
-
-[watchedFolders]
-alreadyInFolder = "Already in this folder"
-defaultFolderWarning = "This is a default folder and will be recreated on next reload."
-deleteConfirmBody = "This will remove the folder and its run history. Files already downloaded are not affected."
-deleteConfirmTitle = "Delete folder?"
-folderNotFound = "Folder not found"
-newFolder = "New folder"
-noFolders = "No watched folders yet"
-sidebarTitle = "Watched Folders"
-title = "Watched Folders"
-
-[watchedFolders.actions]
-back = "Back"
-collapse = "Collapse"
-dismiss = "Dismiss"
-download = "Download"
-downloadInput = "Download input"
-downloadOutput = "Download output"
-expand = "Expand"
-retry = "Retry"
-
-[watchedFolders.card]
-delete = "Delete folder"
-edit = "Edit folder"
-
-[watchedFolders.home]
-addAnother = "Add another Watched Folder"
-addAnotherDesc = "Automatically process files with a new pipeline"
-create = "Create your first Watched Folder"
-deleteFolder = "Delete folder"
-editFolder = "Edit folder"
-empty = "No watched folders yet"
-emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
-emptyTitle = "Automate your PDF workflows"
-file = "file"
-files = "files"
-pause = "Pause"
-resume = "Resume"
-
-[watchedFolders.howItWorks]
-step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
-step1Title = "Drop files"
-step2Desc = "Your configured tools process each file automatically"
-step2Title = "Pipeline runs"
-step3Desc = "Download processed files from inside the folder"
-step3Title = "Output ready"
-title = "How Watched Folders work"
-
-[watchedFolders.modal]
-advanced = "Advanced"
-automation = "Automation"
-automationNameFallback = "Watched Folder automation"
-automationRequired = "Add at least one configured step before saving."
-autoNumber = "Auto-number"
-autoNumberExample = "e.g. document.pdf → document (1).pdf"
-autoScanHelp = "New PDF files in this folder are processed automatically every 10 seconds."
-changeFolder = "Change"
-chooseFolder = "Choose"
-clearFolder = "Clear"
-color = "Accent color"
-createFolder = "Create Folder"
-createTitle = "New Watched Folder"
-editTitle = "Edit Watched Folder"
-inputFolder = "Input folder"
-inputFolderNotChosen = "No folder chosen — required for auto-scan"
-inputSource = "Input source"
-inputSourceBrowser = "Browser — drop files here"
-inputSourceLocal = "Local folder (auto-scan)"
-inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
-localOutputFolder = "Local output folder"
-maxRetries = "Max retries"
-name = "Folder name"
-namePlaceholder = "My Watched Folder"
-nameRequired = "Folder name is required"
-nameTooLong = "Folder name must be 50 characters or less"
-outputFolderNotSet = "Not set — outputs stay in app"
-outputFolderUnsupported = "Not supported in this browser"
-outputModeNewDesc = "Output is saved as a new separate file"
-outputModeVersion = "Replace original?"
-outputModeVersionDesc = "Output becomes a new version of the input file rather than a separate file"
-outputName = "Output filename prefix"
-outputNamePrefix = "Filename prefix"
-outputNameSuffix = "Suffix"
-positionPrefix = "Prefix"
-positionSuffix = "Suffix"
-replaceOriginal = "Replace original file"
-retryDelay = "Delay (minutes)"
-saveChanges = "Save Changes"
-saveFailed = "Failed to save folder. Please try again."
-sectionFolder = "Folder"
-sectionSourceOutput = "Source & Output"
-sectionSteps = "Steps"
-
-[watchedFolders.status]
-active = "Active"
-done = "Done"
-paused = "Paused"
-processing = "Processing"
-
-[watchedFolders.time]
-daysAgo = "{{count}}d ago"
-hoursAgo = "{{count}}h ago"
-justNow = "just now"
-minutesAgo = "{{count}}m ago"
-
-[watchedFolders.workbench]
-activity = "Activity"
-addFiles = "Add files"
-allTime = "All time"
-cancel = "Cancel"
-chartTooltipComplete = "{{count}} complete"
-chartTooltipFailed = "{{count}} failed"
-clearSelection = "Clear selection"
-countProcessing = "{{count}} processing"
-countQueued = "{{count}} queued"
-countSelected = "{{count}} selected"
-dataSaved = "Saved"
-dayRunning = "day running"
-daysRunning = "days running"
-delete = "Delete"
-deleteConfirmBody = "Remove notifications only clears the activity log. Delete outputs also removes the processed files from storage. Your original input files are never touched."
-deleteOutputs = "Delete outputs"
-directionIn = "in"
-directionOut = "out"
-dropToProcess = "Drop to process"
-export = "Export"
-exportSeparately = "Export separately"
-exportZip = "Export zip"
-failed = "Failed"
-filesProcessedOverTime = "Files processed over time"
-filterAll = "All"
-filterPending = "Pending"
-inputs = "Inputs"
-inputSize = "Input size"
-legendComplete = "Complete"
-noActivity = "No activity yet — drop a PDF to start"
-noActivityMatch = "No matching activity"
-noInputFolder = "No input folder — edit to configure"
-outputs = "Outputs"
-pause = "Pause"
-preview = "Preview"
-previewInput = "Preview input"
-previewLoadFailed = "Could not load file preview."
-previewOutput = "Preview output"
-queued = "Queued"
-queuedWaiting = "Queued — waiting to run"
-removeEntries = "Remove {{count}} entries"
-removeEntry = "Remove entry"
-removeNotificationsOnly = "Remove notifications only"
-resume = "Resume"
-retryAll = "Retry all"
-retryIn = "retry in {{count}}m"
-retryingSoon = "retrying…"
-retryMixedConfirm = "Some selected files have already completed and will be skipped. Only failed files will be retried. Continue?"
-running = "Running"
-search = "Search…"
-selectAll = "Select all {{count}}"
-sortNameAsc = "A → Z"
-sortNameDesc = "Z → A"
-sortNewest = "Newest"
-sortOldest = "Oldest"
-watching = "Watching: {{name}}"
 
 [watermark]
 desc = "Añadir marcas de agua de texto o imagen a archivos PDF"
@@ -13371,6 +13537,10 @@ certTypeServer = "Certificado de servidor (si está disponible)"
 completedDeclined = "Has rechazado este documento."
 completedSigned = "Has firmado este documento."
 decline = "Rechazar"
+declineConfirm = "¿Está seguro de que desea rechazar la firma de este documento?"
+declineFailed = "No se pudo rechazar: {{error}}"
+declineSuccess = "Ha rechazado esta solicitud de firma."
+defaultReason = "Firma de documento"
 downloadDocument = "Descargar documento"
 dueDate = "Fecha límite: {{date}}"
 errorTitle = "Error"
@@ -13381,6 +13551,7 @@ locationPlaceholder = "p. ej., San Francisco, CA"
 pageNumber = "Número de página (opcional)"
 reason = "Motivo"
 reasonPlaceholder = "p. ej., Aprobación del documento"
+selectCertificateFile = "Seleccione un archivo de certificado"
 sessionNotFound = "Sesión no encontrada o acceso denegado."
 signDocument = "Firmar documento"
 statusDeclined = "Rechazado"
@@ -13388,7 +13559,9 @@ statusNotified = "Notificado"
 statusPending = "Pendiente"
 statusSigned = "Firmado"
 statusViewed = "Visto"
+submitFailed = "No se pudo enviar la firma: {{error}}"
 submitSignature = "Enviar firma"
+submitSuccess = "¡Firma enviada correctamente!"
 
 [workspace]
 title = "Espacio de trabajo"

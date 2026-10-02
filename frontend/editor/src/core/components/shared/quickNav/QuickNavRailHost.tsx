@@ -58,6 +58,13 @@ export function QuickNavRailHost() {
     else navigate(inPortal ? PORTAL_BASENAME : EDITOR_BASENAME);
   };
 
+  // The brand goes where the app launches; the Editor entry stays in the editor.
+  const goToStartupView = () => {
+    const start = host?.actions.current?.goToStartupView;
+    if (start) start();
+    else returnHome();
+  };
+
   // Guarded where the app supplies a guard, so leaving mid-edit still prompts.
   const guarded = (leave: () => void) => {
     const guard = host?.actions.current?.requestNavigation;
@@ -284,7 +291,7 @@ export function QuickNavRailHost() {
   return (
     <QuickNavRailContainer
       groups={[surfaces, within]}
-      onReturnHome={returnHome}
+      onReturnHome={() => guarded(goToStartupView)}
       identity={host?.identity ?? null}
       onOpenAccount={openAccount}
       // The avatar stands for the whole page, not just its own section.

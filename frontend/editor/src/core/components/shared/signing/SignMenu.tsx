@@ -28,6 +28,69 @@ interface SignMenuProps {
 
 type SessionTab = "active" | "unread" | "closed";
 
+function SigningSessionRow({
+  item,
+  onOpenSigning,
+}: {
+  item: SigningMenuItem;
+  onOpenSigning: (intent: SigningIntent) => void;
+}) {
+  const { t } = useTranslation();
+  const state = needsSignature(item)
+    ? t("signWorkspace.needsYou", "Needs your signature")
+    : signingStatus(item, t).label;
+  return (
+    <li>
+      <button
+        type="button"
+        className="sign-menu__session"
+        data-unread={item.unread}
+        onClick={() =>
+          onOpenSigning({
+            kind: item.kind,
+            sessionId: item.sessionId,
+          })
+        }
+      >
+        <span className="sign-menu__session-icon">
+          <Icon
+            name={
+              needsSignature(item)
+                ? "pen-tool"
+                : item.kind === "session"
+                  ? "users"
+                  : "file-text"
+            }
+            size={19}
+          />
+        </span>
+        <span className="sign-menu__session-copy">
+          <span className="sign-menu__document-heading">
+            <span className="sign-menu__document" title={item.documentName}>
+              {item.documentName}
+            </span>
+            {item.unread && <SigningActivityDot />}
+          </span>
+          <span className="sign-menu__state">{state}</span>
+          <span className="sign-menu__meta">
+            {item.kind === "request"
+              ? `${t("certSign.collab.signRequest.from", "From")}: ${item.ownerUsername}`
+              : t(
+                  "signMenu.ownerProgress",
+                  "Your request · {{signed}} / {{total}} signed",
+                  {
+                    signed: item.signedCount,
+                    total: item.participantCount,
+                  },
+                )}
+          </span>
+        </span>
+        <Icon name="chevron-right" size={16} />
+      </button>
+    </li>
+  );
+}
+
 /** The global rail cannot depend on either app's file, authentication or Mantine providers. */
 export function SignMenu({
   children,
@@ -212,64 +275,13 @@ export function SignMenu({
               >
                 {rows.length > 0 ? (
                   <ul className="sign-menu__list">
-                    {rows.map((item) => {
-                      const state = needsSignature(item)
-                        ? t("signWorkspace.needsYou", "Needs your signature")
-                        : signingStatus(item, t).label;
-                      return (
-                        <li key={`${item.kind}-${item.sessionId}`}>
-                          <button
-                            type="button"
-                            className="sign-menu__session"
-                            data-unread={item.unread}
-                            onClick={() =>
-                              openSigning({
-                                kind: item.kind,
-                                sessionId: item.sessionId,
-                              })
-                            }
-                          >
-                            <span className="sign-menu__session-icon">
-                              <Icon
-                                name={
-                                  needsSignature(item)
-                                    ? "pen-tool"
-                                    : item.kind === "session"
-                                      ? "users"
-                                      : "file-text"
-                                }
-                                size={19}
-                              />
-                            </span>
-                            <span className="sign-menu__session-copy">
-                              <span className="sign-menu__document-heading">
-                                <span
-                                  className="sign-menu__document"
-                                  title={item.documentName}
-                                >
-                                  {item.documentName}
-                                </span>
-                                {item.unread && <SigningActivityDot />}
-                              </span>
-                              <span className="sign-menu__state">{state}</span>
-                              <span className="sign-menu__meta">
-                                {item.kind === "request"
-                                  ? `${t("certSign.collab.signRequest.from", "From")}: ${item.ownerUsername}`
-                                  : t(
-                                      "signMenu.ownerProgress",
-                                      "Your request · {{signed}} / {{total}} signed",
-                                      {
-                                        signed: item.signedCount,
-                                        total: item.participantCount,
-                                      },
-                                    )}
-                              </span>
-                            </span>
-                            <Icon name="chevron-right" size={16} />
-                          </button>
-                        </li>
-                      );
-                    })}
+                    {rows.map((item) => (
+                      <SigningSessionRow
+                        key={`${item.kind}-${item.sessionId}`}
+                        item={item}
+                        onOpenSigning={openSigning}
+                      />
+                    ))}
                   </ul>
                 ) : (
                   <div className="sign-menu__empty" role="status">

@@ -81,7 +81,13 @@ export const TypeSignatureText: React.FC<TypeSignatureTextProps> = ({
     { value: "Georgia", label: "Georgia" },
     { value: "Verdana", label: "Verdana" },
     { value: "Comic Sans MS", label: "Comic Sans MS" },
-    { value: "Brush Script MT", label: "Brush Script MT (cursive)" },
+    {
+      value: "Brush Script MT",
+      label: t(
+        "certSign.collab.signRequest.fontBrushScript",
+        "Brush Script MT (cursive)",
+      ),
+    },
   ];
 
   return (
