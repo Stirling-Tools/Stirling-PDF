@@ -99,6 +99,8 @@ export interface ShapeObjectSnapshot {
   id: string;
   pageIndex: number;
   bounds: PageRect;
+  /** False inside a form XObject, whose children PDFium cannot re-save moved. */
+  movable: boolean;
 }
 
 export interface PageSnapshot {

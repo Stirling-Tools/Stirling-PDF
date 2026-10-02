@@ -7403,6 +7403,9 @@ find = "Find in document"
 findTooltip = "Find ({{shortcut}})"
 view = "View"
 
+[pdfTextEditor.shape]
+groupedTitle = "Part of a group in this PDF: it can be deleted but not moved."
+
 [pdfTextEditor.sidebar]
 addImage = "Add image"
 addText = "Add text"

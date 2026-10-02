@@ -408,16 +408,14 @@ function walkObjects(
       const indexId = [...path, i].join("-");
       const img = readImage(m, page, objPtr, indexId, transform, containerPtr);
       if (img) images.push(img);
-    } else if (type === FPDF_PAGEOBJ_PATH) {
+    } else if (type === FPDF_PAGEOBJ_PATH && path.length <= 1) {
+      // Shapes in nested forms are left alone: deleting one relies on form
+      // removal being written back, verified only for page-level forms.
       const indexId = [...path, i].join("-");
-      const shape = readShape(
-        m,
-        page,
-        objPtr,
-        indexId,
-        transform,
+      const shape = readShape(m, page, objPtr, indexId, transform, {
         containerPtr,
-      );
+        topLevelContainerPtr,
+      });
       if (shape) shapes.push(shape);
     } else if (type === FPDF_PAGEOBJ_FORM && depth < MAX_DEPTH) {
       let formCount: number;
@@ -799,7 +797,7 @@ function readShape(
   objPtr: number,
   index: number | string,
   transform: Affine,
-  containerPtr: number,
+  containers: { containerPtr: number; topLevelContainerPtr: number },
 ): ShapeObject | null {
   if (!isPainted(m, objPtr)) return null;
   const localBounds = readBounds(m, objPtr);
@@ -815,7 +813,7 @@ function readShape(
     id: `p${page.index}-s${index}`,
     pageIndex: page.index,
     pdfiumObjPtr: objPtr,
-    containerPtr,
+    ...containers,
     containerTransform: transform,
     bounds,
   });

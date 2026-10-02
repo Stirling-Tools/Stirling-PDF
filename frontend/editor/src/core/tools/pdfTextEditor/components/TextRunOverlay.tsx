@@ -412,6 +412,10 @@ export function TextRunOverlay({
   const [edgeZone, setEdgeZone] = useState<EdgeZone>(null);
   // Live box width while the right edge is being dragged, in CSS px.
   const [resizeWidthPx, setResizeWidthPx] = useState<number | null>(null);
+  // Detaches an in-flight resize's window listeners, so a cancelled or
+  // unmounted resize can never commit a width on a later pointerup.
+  const endResizeRef = useRef<(() => void) | null>(null);
+  useEffect(() => () => endResizeRef.current?.(), []);
   const originalBoundsWidthRef = useRef<number>(run.bounds.width);
   // Whether this run was a real (multi-line) paragraph when it first mounted.
 
@@ -761,25 +765,42 @@ export function TextRunOverlay({
   const canResize = !!onResize && !runRotation;
   const minResizePx = fontSizePx * 2;
 
-  function startResize(originX: number, commit: (widthPt: number) => void) {
+  function startResize(
+    originX: number,
+    pointerId: number,
+    commit: (widthPt: number) => void,
+  ) {
+    if (endResizeRef.current) return;
     const startWidth = width;
     setResizeWidthPx(startWidth);
     const widthAt = (clientX: number) =>
       Math.max(minResizePx, startWidth + clientX - originX);
-    const onPointerMove = (ev: PointerEvent) =>
-      setResizeWidthPx(widthAt(ev.clientX));
-    const onPointerUp = (ev: PointerEvent) => {
+    const onPointerMove = (ev: PointerEvent) => {
+      if (ev.pointerId === pointerId) setResizeWidthPx(widthAt(ev.clientX));
+    };
+    const endResize = () => {
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
+      window.removeEventListener("pointercancel", onPointerCancel);
+      endResizeRef.current = null;
       setResizeWidthPx(null);
+    };
+    const onPointerCancel = (ev: PointerEvent) => {
+      if (ev.pointerId === pointerId) endResize();
+    };
+    const onPointerUp = (ev: PointerEvent) => {
+      if (ev.pointerId !== pointerId) return;
+      endResize();
       if (Math.abs(ev.clientX - originX) < 1) {
         onSelect(false);
         return;
       }
       commit(widthAt(ev.clientX) / scale);
     };
+    endResizeRef.current = endResize;
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);
+    window.addEventListener("pointercancel", onPointerCancel);
   }
 
   const spellcheckLang = resolveLang(
@@ -838,7 +859,7 @@ export function TextRunOverlay({
         if (zone === "resize" && onResize) {
           e.preventDefault();
           e.currentTarget.blur();
-          startResize(e.clientX, onResize);
+          startResize(e.clientX, e.pointerId, onResize);
           return;
         }
 

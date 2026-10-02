@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type React from "react";
+import { useTranslation } from "react-i18next";
 import type { ShapeObjectSnapshot } from "@app/tools/pdfTextEditor/types";
 import type { DisplayTransform } from "@app/tools/pdfTextEditor/model/DisplayTransform";
 
@@ -30,6 +31,7 @@ export function ShapeHandle({
   onSelect,
   onMove,
 }: ShapeHandleProps) {
+  const { t } = useTranslation();
   const [hovered, setHovered] = useState(false);
   const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(
     null,
@@ -61,6 +63,8 @@ export function ShapeHandle({
 
   function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
     if (e.button !== 0) return;
+    // One drag at a time: a second finger or pen must not restart it.
+    if (endDragRef.current) return;
     // Ctrl/Cmd+Shift+drag is the marquee gesture - let it reach the stage.
     if ((e.ctrlKey || e.metaKey) && e.shiftKey) return;
     // Otherwise the stage's "press on empty space clears" handler would drop
@@ -71,9 +75,15 @@ export function ShapeHandle({
       onSelect(true);
       return;
     }
+    if (!shape.movable) {
+      onSelect(false);
+      return;
+    }
     originRef.current = { x: e.clientX, y: e.clientY };
     setDragOffset({ x: 0, y: 0 });
+    const pointerId = e.pointerId;
     const onPointerMove = (ev: PointerEvent) => {
+      if (ev.pointerId !== pointerId) return;
       const origin = originRef.current;
       if (!origin) return;
       setDragOffset({ x: ev.clientX - origin.x, y: ev.clientY - origin.y });
@@ -81,12 +91,16 @@ export function ShapeHandle({
     const endDrag = () => {
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
-      window.removeEventListener("pointercancel", endDrag);
+      window.removeEventListener("pointercancel", onPointerCancel);
       endDragRef.current = null;
       originRef.current = null;
       setDragOffset(null);
     };
+    const onPointerCancel = (ev: PointerEvent) => {
+      if (ev.pointerId === pointerId) endDrag();
+    };
     const onPointerUp = (ev: PointerEvent) => {
+      if (ev.pointerId !== pointerId) return;
       const origin = originRef.current;
       endDrag();
       if (!origin) return;
@@ -102,13 +116,21 @@ export function ShapeHandle({
     endDragRef.current = endDrag;
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);
-    window.addEventListener("pointercancel", endDrag);
+    window.addEventListener("pointercancel", onPointerCancel);
   }
 
   const dragging = dragOffset !== null;
   return (
     <div
       data-testid={`pdf-editor-shape-${shape.id}`}
+      title={
+        shape.movable
+          ? undefined
+          : t(
+              "pdfTextEditor.shape.groupedTitle",
+              "Part of a group in this PDF: it can be deleted but not moved.",
+            )
+      }
       onPointerDown={onPointerDown}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -129,7 +151,7 @@ export function ShapeHandle({
         background:
           selected || dragging ? "var(--c-primary-subtle)" : "transparent",
         opacity: selected || dragging ? 0.6 : 1,
-        cursor: dragging ? "grabbing" : "move",
+        cursor: !shape.movable ? "pointer" : dragging ? "grabbing" : "move",
         pointerEvents: "auto",
       }}
     />

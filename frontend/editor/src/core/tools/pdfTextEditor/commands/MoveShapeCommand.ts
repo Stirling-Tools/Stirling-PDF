@@ -1,6 +1,5 @@
 import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
-import { invertAffine } from "@app/tools/pdfTextEditor/model/affine";
 import { transformObject } from "@app/tools/pdfTextEditor/util/objectTransform";
 
 /** Translate a vector shape by (dx, dy) in PDF page-space points. */
@@ -38,22 +37,9 @@ export class MoveShapeCommand implements Command {
   private shift(doc: EditorDocument, dx: number, dy: number): void {
     const page = doc.page(this.pageIndex);
     const shape = page.findShape(this.shapeId);
-    if (!shape || !shape.pdfiumObjPtr) return;
-    // PDFium transforms a form's child in the form's own space, so a scaled or
-    // rotated form would move it by a different amount than the page delta.
-    const inv = invertAffine(shape.containerTransform);
-    const localDx = inv.a * dx + inv.c * dy;
-    const localDy = inv.b * dx + inv.d * dy;
-    transformObject(
-      doc.module,
-      shape.pdfiumObjPtr,
-      1,
-      0,
-      0,
-      1,
-      localDx,
-      localDy,
-    );
+    // A form child's new position renders but is not written back on save.
+    if (!shape || !shape.pdfiumObjPtr || shape.containerPtr) return;
+    transformObject(doc.module, shape.pdfiumObjPtr, 1, 0, 0, 1, dx, dy);
     shape.bounds = {
       ...shape.bounds,
       x: shape.bounds.x + dx,
