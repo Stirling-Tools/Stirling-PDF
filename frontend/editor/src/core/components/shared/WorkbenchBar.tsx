@@ -1,5 +1,6 @@
 import React, {
   useCallback,
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -107,6 +108,52 @@ export default function WorkbenchBar({
   const { selectedTool } = useNavigationState();
   const isCustomView = !isBaseWorkbench(currentView);
   const isViewer = currentView === "viewer";
+
+  // Which view's label is expanded, held back until the new view has mounted
+  const [openView, setOpenView] = useState(currentView);
+  useEffect(() => {
+    if (typeof window.requestIdleCallback === "function") {
+      const id = window.requestIdleCallback(() => setOpenView(currentView), {
+        timeout: 400,
+      });
+      return () => window.cancelIdleCallback?.(id);
+    }
+    const frame = requestAnimationFrame(() => setOpenView(currentView));
+    return () => cancelAnimationFrame(frame);
+  }, [currentView]);
+
+  // Publish each view label's natural width as --view-label-w so the open width
+  // animates to an exact length (see WorkbenchBar.css). A ResizeObserver keeps
+  // it current across font load, zoom and language change.
+  const labelSizeObserver = useMemo(
+    () =>
+      typeof ResizeObserver === "undefined"
+        ? null
+        : new ResizeObserver((entries) => {
+            for (const entry of entries) {
+              const span = entry.target;
+              if (span instanceof HTMLElement) {
+                span.parentElement?.style.setProperty(
+                  "--view-label-w",
+                  `${Math.ceil(span.getBoundingClientRect().width)}px`,
+                );
+              }
+            }
+          }),
+    [],
+  );
+  useEffect(() => () => labelSizeObserver?.disconnect(), [labelSizeObserver]);
+  const measureViewLabel = useCallback(
+    (span: HTMLSpanElement | null) => {
+      if (!span) return;
+      span.parentElement?.style.setProperty(
+        "--view-label-w",
+        `${Math.ceil(span.getBoundingClientRect().width)}px`,
+      );
+      labelSizeObserver?.observe(span);
+    },
+    [labelSizeObserver],
+  );
   const disableForFullscreen =
     toolPanelMode === "fullscreen" && leftPanelView === "toolPicker";
   const terminology = useFileActionTerminology();
@@ -536,7 +583,13 @@ export default function WorkbenchBar({
             label: (
               <>
                 {opt.icon}
-                <span className="workbench-bar-view-label">{opt.label}</span>
+                <span
+                  className={`workbench-bar-view-label${
+                    opt.value === openView ? " is-open" : ""
+                  }`}
+                >
+                  <span ref={measureViewLabel}>{opt.label}</span>
+                </span>
               </>
             ),
           }))}
