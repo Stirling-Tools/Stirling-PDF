@@ -474,7 +474,7 @@ export default function WorkbenchBar({
     {
       value: "pageEditor",
       label: t("workbenchBar.pageEditor", "Page Editor"),
-      icon: <Icon name="layers" size={20} />,
+      icon: <Icon name="rows-3" size={20} />,
     },
     {
       value: "fileEditor",
