@@ -27,6 +27,13 @@ export interface TrackEditorState {
   future: TrackWorkspace[];
   /** Monotonic page-id counter, held in state to keep the reducer pure. */
   seq: number;
+  /**
+   * The order a save wants once its new files arrive. A saved file (a version,
+   * or a materialised split) gets a brand-new id, which sync would otherwise
+   * append at the end; this holds the intended sequence so the next sync can
+   * drop each new file into its old slot.
+   */
+  pendingOrder: FileId[] | null;
 }
 
 export type TrackEditorAction =
@@ -68,6 +75,14 @@ export type TrackEditorAction =
   /** Swaps a page with its neighbour in the same track. */
   | { type: "shiftPage"; pageId: string; by: -1 | 1 }
   | { type: "dropTracks"; fileIds: FileId[] }
+  /** Drops the just-saved split tracks and records the order their new files
+   *  should take, so sync slots each one back where its track sat. */
+  | {
+      type: "reconcileAfterSave";
+      dropTrackIds: FileId[];
+      /** Intended final order, in new file ids. */
+      order: FileId[];
+    }
   /** Reverts these files' tracks, and every track entangled with them, to
    *  their saved state; entangled splits are dropped. */
   | { type: "revert"; fileIds: FileId[] }
@@ -82,6 +97,7 @@ export const initialTrackEditorState: TrackEditorState = {
   past: [],
   future: [],
   seq: 0,
+  pendingOrder: null,
 };
 
 const sourceSignature = (source: TrackSource): string =>
@@ -317,26 +333,41 @@ function syncSources(
     historyValid = false;
   }
 
+  // A save's new files appended at the end above; a pending order from that save
+  // pulls each one back to the slot its track held. Applied once, then cleared,
+  // so a later unrelated sync can't reshuffle on a stale order.
+  const placed = new Set(
+    (state.pendingOrder ?? []).filter((id) => tracks[id] != null),
+  );
+  const finalOrder = state.pendingOrder
+    ? [
+        ...state.pendingOrder.filter((id) => placed.has(id)),
+        ...order.filter((id) => !placed.has(id)),
+      ]
+    : order;
+
   const orderUnchanged =
-    order.length === state.present.order.length &&
-    order.every((id, i) => state.present.order[i] === id);
+    finalOrder.length === state.present.order.length &&
+    finalOrder.every((id, i) => state.present.order[i] === id);
   const tracksUnchanged =
     orderUnchanged &&
-    order.every((id) => tracks[id] === state.present.tracks[id]);
+    finalOrder.every((id) => tracks[id] === state.present.tracks[id]);
   const signaturesUnchanged =
     liveIds.size === Object.keys(state.sourceSignatures).length &&
     sources.every(
       (s) => state.sourceSignatures[s.fileId] === signatures[s.fileId],
     );
-  if (tracksUnchanged && signaturesUnchanged) return state;
+  if (tracksUnchanged && signaturesUnchanged && state.pendingOrder == null)
+    return state;
 
   return {
-    present: { order, tracks },
-    baseline: { order, tracks: baselineTracks },
+    present: { order: finalOrder, tracks },
+    baseline: { order: finalOrder, tracks: baselineTracks },
     sourceSignatures: signatures,
     past: historyValid ? state.past : [],
     future: historyValid ? state.future : [],
     seq,
+    pendingOrder: null,
   };
 }
 
@@ -562,6 +593,27 @@ export function trackEditorReducer(
         ...state,
         present: { order, tracks },
         baseline: { order, tracks: baselineTracks },
+        past: [],
+        future: [],
+      };
+    }
+
+    case "reconcileAfterSave": {
+      const drop = new Set(action.dropTrackIds);
+      const order = state.present.order.filter((id) => !drop.has(id));
+      const tracks: Record<FileId, Track> = {};
+      const baselineTracks: Record<FileId, Track> = {};
+      for (const id of order) {
+        const track = state.present.tracks[id];
+        if (track) tracks[id] = track;
+        const baseline = state.baseline.tracks[id];
+        if (baseline) baselineTracks[id] = baseline;
+      }
+      return {
+        ...state,
+        present: { order, tracks },
+        baseline: { order, tracks: baselineTracks },
+        pendingOrder: action.order,
         past: [],
         future: [],
       };

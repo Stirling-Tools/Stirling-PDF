@@ -366,6 +366,48 @@ describe("trackEditorReducer splitAfterSelected", () => {
   });
 });
 
+describe("trackEditorReducer reconcileAfterSave", () => {
+  it("slots a saved split's new file back beside its source, not at the end", () => {
+    const C = "file-c" as FileId;
+    const BNew = "file-b2" as FileId;
+    const Split = "file-split" as FileId;
+
+    // Three files; split B so a synthetic track sits right after it.
+    let state = sync(initialTrackEditorState, [
+      source(A, 2),
+      source(B, 3),
+      source(C, 1),
+    ]);
+    const b2 = pagesOf(state, B)[1];
+    state = trackEditorReducer(state, {
+      type: "split",
+      fileId: B,
+      startPageId: b2.id,
+    });
+    const splitId = state.present.order[2];
+    expect(state.present.order).toEqual([A, B, splitId, C]);
+
+    // Saving versions B (new id) and writes the split to its own file; the
+    // editor is handed the order those new files should land in.
+    state = trackEditorReducer(state, {
+      type: "reconcileAfterSave",
+      dropTrackIds: [splitId],
+      order: [A, BNew, Split, C],
+    });
+
+    // The new files arrive: B is gone, BNew and Split are fresh sources.
+    state = sync(state, [
+      source(A, 2),
+      source(BNew, 1),
+      source(Split, 2),
+      source(C, 1),
+    ]);
+
+    expect(state.present.order).toEqual([A, BNew, Split, C]);
+    expect(state.pendingOrder).toBeNull();
+  });
+});
+
 describe("trackEditorReducer revert", () => {
   it("reverts a file's track and every track it swapped pages with, keeping the rest", () => {
     const C = "file-c" as FileId;

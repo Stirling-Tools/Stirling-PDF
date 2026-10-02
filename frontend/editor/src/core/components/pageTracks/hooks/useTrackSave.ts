@@ -37,11 +37,16 @@ export interface TrackSaveOptions {
    */
   onVersioned?: (previousId: FileId, nextId: FileId) => void;
   /**
-   * Called with the split tracks that were just written to their own new files.
-   * Those synthetic tracks must be dropped: the newly added files re-enter the
-   * workspace as ordinary file-backed tracks.
+   * Called once a save has written its split tracks to their own new files.
+   * `dropTrackIds` are the synthetic split tracks to drop (their new files
+   * re-enter the workspace via sync); `order` is the sequence the workspace
+   * should take once those files arrive, so a saved file lands back in its old
+   * slot rather than at the end.
    */
-  onMaterialized?: (splitTrackIds: FileId[]) => void;
+  onMaterialized?: (result: {
+    dropTrackIds: FileId[];
+    order: FileId[];
+  }) => void;
 }
 
 export interface TrackSaveHook {
@@ -155,13 +160,18 @@ export function useTrackSave(
         // A split becomes a brand-new active file, exactly like the Multi-Tool's
         // apply: add the fresh files so they enter the workbench (and the
         // workspace, via sync) as their own tracks.
-        const splitFiles = built
-          .filter((entry) => entry.inputFileId == null)
-          .map((entry) => entry.file);
-        if (splitFiles.length > 0) {
-          await actions.addFiles(splitFiles, {
-            selectFiles: false,
-            skipUploadTracking: true,
+        const splitEntries = built.filter((entry) => entry.inputFileId == null);
+        const materializedIds = new Map<FileId, FileId>();
+        if (splitEntries.length > 0) {
+          const added = await actions.addFiles(
+            splitEntries.map((entry) => entry.file),
+            { selectFiles: false, skipUploadTracking: true },
+          );
+          // addFiles preserves input order (PDFs, auto-unzip skipped), so each
+          // new file lines up with the split track it was built from.
+          splitEntries.forEach((entry, index) => {
+            const file = added[index];
+            if (file) materializedIds.set(entry.trackId, file.fileId);
           });
         }
 
@@ -171,12 +181,21 @@ export function useTrackSave(
           await actions.removeFiles(emptied, false);
         }
 
-        // The split tracks now live in their own files; drop the synthetic tracks
-        // so the added files take their place as ordinary file-backed tracks.
-        const materialized = built
-          .filter((entry) => entry.inputFileId == null)
-          .map((entry) => entry.trackId);
-        if (materialized.length > 0) onMaterializedRef.current?.(materialized);
+        // Put the saved files back where their tracks sat: a version and a
+        // materialised split each take a new id that sync would otherwise append
+        // at the end, so hand the editor the order to settle into. The synthetic
+        // split tracks are dropped so their new files take their place.
+        if (materializedIds.size > 0) {
+          const emptiedSet = new Set(emptied);
+          const order = workspace.order.flatMap((id) => {
+            if (emptiedSet.has(id)) return [];
+            return [versioned.get(id) ?? materializedIds.get(id) ?? id];
+          });
+          onMaterializedRef.current?.({
+            dropTrackIds: [...materializedIds.keys()],
+            order,
+          });
+        }
 
         return versioned;
       } catch (error) {

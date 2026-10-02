@@ -154,8 +154,8 @@ export default function PageTracks() {
 
   const { saving, progress, save } = useTrackSave(workspace, changedFileIds, {
     onVersioned: handleVersioned,
-    onMaterialized: (splitTrackIds) =>
-      dispatch({ type: "dropTracks", fileIds: splitTrackIds }),
+    onMaterialized: ({ dropTrackIds, order }) =>
+      dispatch({ type: "reconcileAfterSave", dropTrackIds, order }),
   });
 
   /**
@@ -712,12 +712,20 @@ export default function PageTracks() {
                 "Are you sure you want to close this file?",
               )
       }
-      fileNames={
+      files={
         hasCloseEdits
-          ? closeRequestEdits.map((id) => workspace.tracks[id]?.name ?? id)
+          ? closeRequestEdits.map((id) => ({
+              id,
+              name: workspace.tracks[id]?.name ?? id,
+            }))
           : closingAll || closeRequest === null
             ? []
-            : [workspace.tracks[closeRequest]?.name ?? closeRequest]
+            : [
+                {
+                  id: closeRequest,
+                  name: workspace.tracks[closeRequest]?.name ?? closeRequest,
+                },
+              ]
       }
       closeLabel={
         hasCloseEdits

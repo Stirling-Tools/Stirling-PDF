@@ -696,7 +696,7 @@ const FileEditorThumbnail = ({
                 "Are you sure you want to close this file?",
               )
         }
-        fileNames={[file.name]}
+        files={[{ id: file.id, name: file.name }]}
         closeLabel={
           file.isDirty && file.localFilePath
             ? t("confirmCloseDiscard", "Discard changes and close")

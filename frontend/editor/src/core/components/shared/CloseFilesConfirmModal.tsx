@@ -3,10 +3,16 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 
+export interface CloseFileEntry {
+  /** Stable key: two open files can share a name, their ids cannot. */
+  id: string;
+  name: string;
+}
+
 export interface CloseFilesConfirmModalProps {
   opened: boolean;
   message: string;
-  fileNames: string[];
+  files: CloseFileEntry[];
   /** The destructive button's label: a plain close, or discarding unsaved changes. */
   closeLabel: string;
   onClose: () => void;
@@ -19,7 +25,7 @@ export interface CloseFilesConfirmModalProps {
 export function CloseFilesConfirmModal({
   opened,
   message,
-  fileNames,
+  files,
   closeLabel,
   onClose,
   onCancel,
@@ -36,9 +42,9 @@ export function CloseFilesConfirmModal({
     >
       <Stack gap="md">
         <Text size="md">{message}</Text>
-        {fileNames.map((name) => (
-          <Text key={name} size="sm" c="dimmed" fw={500}>
-            <PrivateContent>{name}</PrivateContent>
+        {files.map((file) => (
+          <Text key={file.id} size="sm" c="dimmed" fw={500}>
+            <PrivateContent>{file.name}</PrivateContent>
           </Text>
         ))}
         <Group justify="flex-end" gap="sm">
