@@ -49,8 +49,9 @@ export function useWalletActions(
   }
 
   async function remove(signature: SavedSignature) {
-    if (placement.placingKey === signature.id) placement.stop();
-    await library.remove(signature);
+    const removed = await library.remove(signature);
+    if (removed && placement.placingKey === signature.id) placement.stop();
+    return removed;
   }
 
   function showPlaced(entry: PlacedSignature) {

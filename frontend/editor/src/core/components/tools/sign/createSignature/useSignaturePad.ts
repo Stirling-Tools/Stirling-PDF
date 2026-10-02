@@ -18,6 +18,10 @@ export const PEN_WIDTHS: Record<PenWidth, { min: number; max: number }> = {
 };
 
 const MIN_PIXEL_RATIO = 2;
+const padLayouts = new WeakMap<
+  SignaturePad,
+  { width: number; height: number }
+>();
 
 function fitCanvasToLayout(canvas: HTMLCanvasElement, pad: SignaturePad) {
   const rect = canvas.getBoundingClientRect();
@@ -25,12 +29,26 @@ function fitCanvasToLayout(canvas: HTMLCanvasElement, pad: SignaturePad) {
   const ratio = Math.max(window.devicePixelRatio || 1, MIN_PIXEL_RATIO);
   const width = Math.round(rect.width * ratio);
   const height = Math.round(rect.height * ratio);
-  if (canvas.width === width && canvas.height === height) return;
-  const strokes = pad.toData();
+  if (canvas.width === width && canvas.height === height) {
+    padLayouts.set(pad, { width: rect.width, height: rect.height });
+    return;
+  }
+  const previous = padLayouts.get(pad);
+  const scaleX = previous ? rect.width / previous.width : 1;
+  const scaleY = previous ? rect.height / previous.height : 1;
+  const strokes = pad.toData().map((group) => ({
+    ...group,
+    points: group.points.map((point) => ({
+      ...point,
+      x: point.x * scaleX,
+      y: point.y * scaleY,
+    })),
+  }));
   canvas.width = width;
   canvas.height = height;
   canvas.getContext("2d")?.scale(ratio, ratio);
   pad.fromData(strokes);
+  padLayouts.set(pad, { width: rect.width, height: rect.height });
 }
 
 function restyle(pad: SignaturePad, ink: string, pen: PenWidth) {

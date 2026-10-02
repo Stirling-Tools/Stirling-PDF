@@ -32,6 +32,7 @@ interface SignatureState {
   placedSignatures: PlacedSignature[];
   // Whether the viewer's signature API is mounted on a loaded document
   isSignatureApiReady: boolean;
+  isApplyingSignatures: boolean;
 }
 
 // Signature actions interface
@@ -53,6 +54,7 @@ interface SignatureActions {
   ) => void;
   setPlacedSignatures: (placed: PlacedSignature[]) => void;
   setSignatureApiReady: (ready: boolean) => void;
+  setApplyingSignatures: (applying: boolean) => void;
 }
 
 // Combined context interface
@@ -75,6 +77,7 @@ const initialState: SignatureState = {
   placementPreviewSize: null,
   placedSignatures: [],
   isSignatureApiReady: false,
+  isApplyingSignatures: false,
 };
 
 // Provider component
@@ -199,6 +202,10 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({
     );
   }, []);
 
+  const setApplyingSignatures = useCallback((applying: boolean) => {
+    setState((prev) => ({ ...prev, isApplyingSignatures: applying }));
+  }, []);
+
   // No auto-activation - all modes use manual buttons
 
   const contextValue: SignatureContextValue = {
@@ -221,6 +228,7 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({
     setPlacementPreviewSize,
     setPlacedSignatures,
     setSignatureApiReady,
+    setApplyingSignatures,
   };
 
   return (

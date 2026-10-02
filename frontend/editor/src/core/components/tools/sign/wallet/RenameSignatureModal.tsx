@@ -9,7 +9,7 @@ import styles from "@app/components/tools/sign/wallet/SignatureWallet.module.css
 interface RenameSignatureModalProps {
   currentName: string;
   onClose: () => void;
-  onRename: (name: string) => void;
+  onRename: (name: string) => Promise<boolean>;
 }
 
 export function RenameSignatureModal({
@@ -19,18 +19,29 @@ export function RenameSignatureModal({
 }: RenameSignatureModalProps) {
   const { t } = useTranslation();
   const [name, setName] = useState(currentName);
+  const [saving, setSaving] = useState(false);
   const canSave = name.trim().length > 0;
 
-  function submit() {
-    if (canSave) onRename(name);
+  async function submit() {
+    if (!canSave || saving) return;
+    setSaving(true);
+    try {
+      if (await onRename(name)) onClose();
+    } finally {
+      setSaving(false);
+    }
   }
 
   const footer = (
     <div className={styles.dialogFooter}>
-      <Button variant="tertiary" onClick={onClose}>
+      <Button variant="tertiary" onClick={onClose} disabled={saving}>
         {t("sign.wallet.create.cancel", "Cancel")}
       </Button>
-      <Button onClick={submit} disabled={!canSave}>
+      <Button
+        onClick={() => void submit()}
+        disabled={!canSave}
+        loading={saving}
+      >
         {t("sign.wallet.rename.save", "Save")}
       </Button>
     </div>
@@ -39,7 +50,9 @@ export function RenameSignatureModal({
   return (
     <Modal
       open
-      onClose={onClose}
+      onClose={() => {
+        if (!saving) onClose();
+      }}
       title={t("sign.wallet.rename.title", "Rename signature")}
       width="sm"
       footer={footer}
@@ -48,9 +61,10 @@ export function RenameSignatureModal({
         <Input
           value={name}
           maxLength={60}
+          disabled={saving}
           onChange={(event) => setName(event.currentTarget.value)}
           onKeyDown={(event) => {
-            if (event.key === "Enter") submit();
+            if (event.key === "Enter") void submit();
           }}
         />
       </FormField>

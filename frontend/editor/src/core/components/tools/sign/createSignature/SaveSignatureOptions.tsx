@@ -22,6 +22,7 @@ export interface SaveLibraryLimits {
   maxLimit: number;
   canShare: boolean;
   browserStorage: boolean;
+  remainingSlots?: number;
 }
 
 export function toSaveChoice(
@@ -29,7 +30,11 @@ export function toSaveChoice(
   defaultLabel: string,
   limits: SaveLibraryLimits,
 ): SaveChoice | null {
-  if (!state.enabled || !limits.canSave) return null;
+  if (
+    !state.enabled ||
+    (!limits.canSave && !(limits.canShare && state.scope === "shared"))
+  )
+    return null;
   return {
     label: state.label?.trim() || defaultLabel,
     scope: limits.canShare ? state.scope : "personal",
@@ -70,19 +75,21 @@ export function SaveSignatureOptions({
   const { t } = useTranslation();
   const update = (patch: Partial<SaveOptionsState>) =>
     onChange({ ...value, ...patch });
-  const saving = value.enabled && limits.canSave;
+  const canSave =
+    limits.canSave || (limits.canShare && value.scope === "shared");
+  const saving = value.enabled && canSave;
 
   return (
     <div className={styles.box}>
       <Checkbox
         label={t("sign.wallet.create.save", "Save to my signatures")}
-        description={saveHint(t, limits)}
+        description={saveHint(t, { ...limits, canSave })}
         checked={saving}
-        disabled={!limits.canSave}
+        disabled={!canSave}
         onChange={(event) => update({ enabled: event.currentTarget.checked })}
         data-testid="save-signature-checkbox"
       />
-      {saving && (
+      {(saving || limits.canShare) && (
         <div className={styles.fields}>
           <div className={styles.name}>
             <FormField label={t("sign.wallet.create.name", "Name")}>
@@ -92,6 +99,7 @@ export function SaveSignatureOptions({
                   update({ label: event.currentTarget.value })
                 }
                 maxLength={60}
+                disabled={!saving}
                 data-testid="signature-name-input"
               />
             </FormField>
@@ -123,6 +131,7 @@ export function SaveSignatureOptions({
           <Checkbox
             label={t("sign.wallet.create.makeDefault", "Make default")}
             checked={value.makeDefault}
+            disabled={!saving}
             onChange={(event) =>
               update({ makeDefault: event.currentTarget.checked })
             }

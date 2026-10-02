@@ -478,7 +478,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
         navigationState.selectedTool &&
         navigationState.selectedTool !== toolId
       ) {
-        actions.requestNavigation(() => handleToolSelect(toolId));
+        actions.requestNavigation(() => handleToolSelectRef.current(toolId));
         return;
       }
 
@@ -575,10 +575,12 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   );
 
   const handleBackToTools = useCallback(() => {
-    setLeftPanelView("toolPicker");
-    setReaderMode(false);
-    actions.setSelectedTool(null);
-  }, [setLeftPanelView, setReaderMode, actions.setSelectedTool]);
+    actions.requestNavigation(() => {
+      setLeftPanelView("toolPicker");
+      setReaderMode(false);
+      actions.setSelectedTool(null);
+    });
+  }, [setLeftPanelView, setReaderMode, actions]);
 
   const handleReaderToggle = useCallback(() => {
     setReaderMode(true);

@@ -203,6 +203,7 @@ export const SignatureAPIBridge = forwardRef<
     placementPreviewSize,
     setSignaturesApplied,
     setSignatureApiReady,
+    isApplyingSignatures,
   } = useSignature();
   const { getZoomState, registerImmediateZoomUpdate } = useViewer();
   const documentReady = useDocumentReady();
@@ -332,6 +333,7 @@ export const SignatureAPIBridge = forwardRef<
       return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (isApplyingSignatures) return;
       // Skip delete/backspace while a text input/textarea is focused (e.g., editing textbox)
       const target = event.target as HTMLElement | null;
       const tag = target?.tagName?.toLowerCase();
@@ -391,7 +393,7 @@ export const SignatureAPIBridge = forwardRef<
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [annotationApi, storeImageData, isPlacementMode]);
+  }, [annotationApi, storeImageData, isPlacementMode, isApplyingSignatures]);
 
   useImperativeHandle(
     ref,

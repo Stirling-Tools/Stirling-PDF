@@ -104,6 +104,11 @@ export function trimCanvas(
   return out;
 }
 
+/** Reports whether a canvas contains visible foreground pixels. */
+export function hasCanvasInk(canvas: HTMLCanvasElement): boolean {
+  return findInkBounds(canvas, {}) !== null;
+}
+
 export function scaleCanvasToFit(
   source: HTMLCanvasElement,
   maxSide: number,

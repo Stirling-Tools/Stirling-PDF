@@ -112,8 +112,174 @@ test.describe("Sign tool signature wallet", () => {
     );
     await expect(page.getByTestId("apply-signatures")).toBeEnabled();
 
-    await page.keyboard.press("Escape");
+    await page.getByTestId("apply-signatures").click();
+    await expect(page.getByTestId("apply-signatures")).toBeDisabled();
     await expect(status).toContainText("Pick a signature");
+    await expect(page.getByTestId("placed-signatures")).toContainText(
+      "On this document (0)",
+    );
+    await page.mouse.click(box.x + box.width * 0.4, box.y + box.height * 0.75);
+    await expect(page.getByTestId("placed-signatures")).toContainText(
+      "On this document (0)",
+    );
+    await page
+      .getByRole("button", { name: "Back to all tools", exact: true })
+      .click();
+    await expect(page.getByTestId("signature-wallet")).not.toBeVisible();
+    await expect(page.getByRole("dialog")).not.toBeVisible();
+  });
+
+  test("finishing a drawing outside the modal keeps the signature", async ({
+    page,
+  }) => {
+    await useBrowserStorage(page);
+    await openSign(page);
+    await startFromIntro(page, "Draw");
+    const pad = page.getByTestId("signature-draw-pad");
+    const box = await pad.boundingBox();
+    if (!box) throw new Error("Signature pad has no bounding box");
+    await page.mouse.move(box.x + 100, box.y + 100);
+    await page.mouse.down();
+    await page.mouse.move(box.x + 200, box.y + 120, { steps: 10 });
+    await page.mouse.move(5, 5, { steps: 10 });
+    await page.mouse.up();
+    await expect(page.getByRole("dialog")).toBeVisible();
+    await expect(page.getByTestId("use-signature")).toBeEnabled();
+    await page.getByTestId("use-signature").click();
+    await expect(page.getByTestId("signature-tile")).toHaveCount(1);
+  });
+
+  test("resizing the drawing modal preserves strokes near its right edge", async ({
+    page,
+  }) => {
+    await useBrowserStorage(page);
+    await openSign(page);
+    await startFromIntro(page, "Draw");
+    const box = await page.getByTestId("signature-draw-pad").boundingBox();
+    if (!box) throw new Error("Signature pad has no bounding box");
+    await page.mouse.move(box.x + box.width * 0.8, box.y + 80);
+    await page.mouse.down();
+    for (let step = 1; step <= 12; step++) {
+      await page.mouse.move(
+        box.x + box.width * (0.8 + (0.15 * step) / 12),
+        box.y + 80 + (50 * step) / 12,
+      );
+      await page.waitForTimeout(20);
+    }
+    await page.mouse.up();
+    await page.getByTestId("signature-draw-pad").evaluate((canvas) => {
+      canvas.style.width = "50%";
+    });
+    await expect
+      .poll(
+        async () =>
+          (await page.getByTestId("signature-draw-pad").boundingBox())?.width,
+      )
+      .toBeLessThan(box.width * 0.6);
+    await page.getByTestId("use-signature").click();
+    await expect(page.getByTestId("signature-tile")).toHaveCount(1);
+    const dimensions = await page.evaluate(async (key) => {
+      const [signature] = JSON.parse(localStorage.getItem(key) ?? "[]");
+      const image = new Image();
+      image.src = signature.dataUrl;
+      await image.decode();
+      return { width: image.naturalWidth, height: image.naturalHeight };
+    }, STORAGE_KEY);
+    expect(dimensions.width).toBeGreaterThan(20);
+    expect(dimensions.width).toBeLessThan(250);
+    expect(dimensions.height).toBeLessThan(200);
+  });
+
+  test("blank paper cannot be saved as an invisible signature", async ({
+    page,
+  }) => {
+    await useBrowserStorage(page);
+    await openSign(page);
+    await startFromIntro(page, "Draw");
+    await page.getByRole("dialog").getByText("Upload", { exact: true }).click();
+    const image = await page.evaluate(() => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 100;
+      canvas.height = 100;
+      const context = canvas.getContext("2d")!;
+      context.fillStyle = "white";
+      context.fillRect(0, 0, 100, 100);
+      return canvas.toDataURL("image/png").split(",")[1];
+    });
+    await page
+      .getByRole("dialog")
+      .locator('input[type="file"]')
+      .first()
+      .setInputFiles({
+        name: "blank.png",
+        mimeType: "image/png",
+        buffer: Buffer.from(image, "base64"),
+      });
+    await expect(page.getByRole("alert")).toContainText(
+      "Could not read that image",
+    );
+    await expect(page.getByTestId("use-signature")).toBeDisabled();
+  });
+
+  test("leaving Sign with unapplied signatures warns and can be cancelled", async ({
+    page,
+  }) => {
+    await useBrowserStorage(page);
+    await seedBrowserSignature(page, "My signature");
+    await openSign(page);
+    await page
+      .getByRole("button", { name: "My signature", exact: true })
+      .click();
+    const pdfPage = page.locator("[data-page-index]").first();
+    const box = await pdfPage.boundingBox();
+    if (!box) throw new Error("PDF page has no bounding box");
+    await page.mouse.click(box.x + box.width * 0.4, box.y + box.height * 0.75);
+    await expect(page.getByTestId("apply-signatures")).toBeEnabled();
+    await page
+      .getByRole("button", { name: "Back to all tools", exact: true })
+      .click();
+    await expect(page.getByTestId("unsaved-discard")).toBeVisible();
+    await page
+      .getByRole("button", { name: "Keep Working", exact: true })
+      .click();
+    await expect(page.getByTestId("signature-wallet")).toBeVisible();
+    await expect(page.getByTestId("apply-signatures")).toBeEnabled();
+    await page
+      .getByRole("button", { name: "Back to all tools", exact: true })
+      .click();
+    await page.getByTestId("unsaved-discard").click();
+    await expect(page.getByTestId("signature-wallet")).toBeHidden();
+  });
+
+  test("deleting the last saved signature preserves document controls", async ({
+    page,
+  }) => {
+    await useBrowserStorage(page);
+    await seedBrowserSignature(page, "My signature");
+    await openSign(page);
+    await page
+      .getByRole("button", { name: "My signature", exact: true })
+      .click();
+    const box = await page.locator("[data-page-index]").first().boundingBox();
+    if (!box) throw new Error("PDF page has no bounding box");
+    await page.mouse.click(box.x + box.width * 0.4, box.y + box.height * 0.75);
+    await expect(page.getByTestId("apply-signatures")).toBeEnabled();
+    await page
+      .getByRole("button", { name: "Options for My signature" })
+      .click();
+    await page.getByRole("menuitem", { name: "Delete", exact: true }).click();
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: "Delete", exact: true })
+      .click();
+    await expect(page.getByTestId("signature-wallet-intro")).toBeVisible();
+    await expect(page.getByTestId("placed-signatures")).toContainText(
+      "On this document (1)",
+    );
+    await page
+      .getByRole("button", { name: "Remove Signature", exact: true })
+      .click();
+    await expect(page.getByTestId("apply-signatures")).toBeDisabled();
   });
 
   test("saved default signature is ready to place on open", async ({

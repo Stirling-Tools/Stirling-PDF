@@ -4,12 +4,14 @@ import { Button } from "@app/ui/Button";
 interface ApplySignaturesButtonProps {
   count: number;
   disabled: boolean;
+  applying?: boolean;
   onApply: () => void;
 }
 
 export function ApplySignaturesButton({
   count,
   disabled,
+  applying = false,
   onApply,
 }: ApplySignaturesButtonProps) {
   const { t } = useTranslation();
@@ -22,7 +24,8 @@ export function ApplySignaturesButton({
     <Button
       fullWidth
       onClick={onApply}
-      disabled={disabled || count === 0}
+      disabled={disabled || applying || count === 0}
+      loading={applying}
       data-testid="apply-signatures"
     >
       {label}

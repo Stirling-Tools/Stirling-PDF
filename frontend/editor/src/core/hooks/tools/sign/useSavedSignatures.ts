@@ -175,11 +175,13 @@ export const useSavedSignatures = () => {
             ),
           );
         }
+        return true;
       } catch (error) {
         console.error(
           "[useSavedSignatures] Failed to update signature label:",
           error,
         );
+        return false;
       }
     },
     [storageType],

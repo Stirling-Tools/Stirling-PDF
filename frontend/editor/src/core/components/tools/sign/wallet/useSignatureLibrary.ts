@@ -61,12 +61,17 @@ export function useSignatureLibrary() {
     created: CreatedSignature,
     choice: SaveChoice,
   ): Promise<WalletEntry | null> {
-    if (created.initials && maxLimit - ownCount >= 2) {
-      await addSignature(
-        { type: "text", ...created.initials },
-        uniqueName(t("sign.wallet.defaultName.initials", "Initials"), labels),
-        choice.scope,
-      );
+    const insufficientSpace =
+      created.initials && choice.scope !== "shared" && maxLimit - ownCount < 2;
+    if (insufficientSpace) {
+      alert({
+        alertType: "error",
+        title: t(
+          "sign.wallet.type.initialsLimit",
+          "Saving initials needs two free signature slots.",
+        ),
+      });
+      return null;
     }
     const result = await addSignature(
       createdToPayload(created),
@@ -86,6 +91,36 @@ export function useSignatureLibrary() {
         ),
       });
       return null;
+    }
+    if (created.initials) {
+      const initialsResult = await addSignature(
+        { type: "text", ...created.initials },
+        uniqueName(t("sign.wallet.defaultName.initials", "Initials"), [
+          ...labels,
+          choice.label,
+        ]),
+        choice.scope,
+      );
+      if (!initialsResult.success) {
+        const rolledBack = await removeSignature(result.signature.id);
+        alert({
+          alertType: "error",
+          title: t(
+            "sign.wallet.toast.initialsFailed",
+            "Could not save your initials",
+          ),
+          body: rolledBack
+            ? t(
+                "sign.wallet.toast.saveFailedBody",
+                "It is still ready to place on this document.",
+              )
+            : t(
+                "sign.wallet.toast.initialsPartial",
+                "Your signature was saved, but your initials were not. Try saving your initials separately.",
+              ),
+        });
+        return rolledBack ? null : toWalletEntry(result.signature);
+      }
     }
     if (choice.makeDefault) setDefaultId(result.signature.id);
     alert({
@@ -151,15 +186,36 @@ export function useSignatureLibrary() {
   }
 
   async function remove(signature: SavedSignature) {
-    if (defaultId === signature.id) setDefaultId(null);
-    await removeSignature(signature.id);
+    const removed = await removeSignature(signature.id);
+    if (removed) {
+      if (defaultId === signature.id) setDefaultId(null);
+    } else {
+      alert({
+        alertType: "error",
+        title: t(
+          "sign.wallet.toast.deleteFailed",
+          "Could not delete the signature",
+        ),
+      });
+    }
+    return removed;
   }
 
   async function rename(signature: SavedSignature, label: string) {
     const next = label.trim();
     if (next && next !== signature.label) {
-      await updateSignatureLabel(signature.id, next);
+      const renamed = await updateSignatureLabel(signature.id, next);
+      if (!renamed)
+        alert({
+          alertType: "error",
+          title: t(
+            "sign.wallet.toast.renameFailed",
+            "Could not rename the signature",
+          ),
+        });
+      return renamed;
     }
+    return true;
   }
 
   function toggleDefault(signature: SavedSignature) {

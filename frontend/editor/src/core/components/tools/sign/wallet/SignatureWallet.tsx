@@ -22,6 +22,7 @@ import {
 } from "@app/components/tools/sign/wallet/useSignaturePlacement";
 import { useWalletActions } from "@app/components/tools/sign/wallet/useWalletActions";
 import styles from "@app/components/tools/sign/wallet/SignatureWallet.module.css";
+import { alert } from "@app/components/toast";
 
 type WalletDialog =
   | { kind: "create"; tab: CreateTab }
@@ -35,6 +36,7 @@ interface SignatureWalletProps {
     value: SignParameters[K],
   ) => void;
   disabled?: boolean;
+  applying?: boolean;
   onActivateSignaturePlacement: () => void;
   onDeactivateSignature: () => void;
   onUndo?: () => void;
@@ -45,6 +47,7 @@ interface SignatureWalletProps {
 export function SignatureWallet({
   onParameterChange,
   disabled = false,
+  applying = false,
   onActivateSignaturePlacement,
   onDeactivateSignature,
   onUndo,
@@ -72,7 +75,19 @@ export function SignatureWallet({
 
   const showPhone = Boolean(config?.enableMobileSignature) && !isMobile;
   const closeDialog = () => setDialog(null);
-  const openCreate = (tab: CreateTab) => setDialog({ kind: "create", tab });
+  const openCreate = (tab: CreateTab) => {
+    if (library.draft) {
+      alert({
+        alertType: "warning",
+        title: t(
+          "sign.wallet.toast.draftExists",
+          "Save or discard your unsaved signature first",
+        ),
+      });
+      return;
+    }
+    setDialog({ kind: "create", tab });
+  };
 
   function renderLibrary() {
     if (library.isLoading) {
@@ -120,6 +135,7 @@ export function SignatureWallet({
           onRedo={onRedo}
           onShow={actions.showPlaced}
           onRemove={actions.removePlaced}
+          disabled={disabled}
         />
       </>
     );
@@ -128,11 +144,28 @@ export function SignatureWallet({
   return (
     <div className={styles.wallet} data-testid="signature-wallet">
       {renderLibrary()}
+      {library.isEmpty &&
+        (placedSignatures.length > 0 || history.canUndo || history.canRedo) && (
+          <PlacedSignaturesList
+            placed={placedSignatures}
+            nameFor={() => t("sign.wallet.placed.fallbackName", "Signature")}
+            history={history}
+            onUndo={onUndo}
+            onRedo={onRedo}
+            onShow={actions.showPlaced}
+            onRemove={actions.removePlaced}
+            disabled={disabled}
+          />
+        )}
       {onSave && (
         <ApplySignaturesButton
           count={placedSignatures.length}
           disabled={disabled}
-          onApply={onSave}
+          applying={applying}
+          onApply={() => {
+            placement.stop();
+            onSave();
+          }}
         />
       )}
       {dialog?.kind === "create" && (
@@ -140,14 +173,15 @@ export function SignatureWallet({
           initialTab={dialog.tab}
           onClose={closeDialog}
           onCreate={async (created, choice) => {
-            closeDialog();
             await actions.create(created, choice);
+            closeDialog();
           }}
           limits={{
             canSave: !library.isFull,
             maxLimit: library.maxLimit,
             canShare: library.canShare,
             browserStorage: library.browserStorage,
+            remainingSlots: library.maxLimit - library.count,
           }}
           showPhoneTab={showPhone}
           existingLabels={library.labels}
@@ -157,20 +191,14 @@ export function SignatureWallet({
         <RenameSignatureModal
           currentName={dialog.signature.label}
           onClose={closeDialog}
-          onRename={(name) => {
-            closeDialog();
-            void library.rename(dialog.signature, name);
-          }}
+          onRename={(name) => library.rename(dialog.signature, name)}
         />
       )}
       {dialog?.kind === "delete" && (
         <DeleteSignatureModal
           name={dialog.signature.label}
           onClose={closeDialog}
-          onConfirm={() => {
-            closeDialog();
-            void actions.remove(dialog.signature);
-          }}
+          onConfirm={() => actions.remove(dialog.signature)}
         />
       )}
     </div>

@@ -38,12 +38,16 @@ async function renderSource(
 interface TypeSignaturePanelProps {
   onReadyChange: (ready: boolean) => void;
   saveEnabled: boolean;
+  canSaveInitials: boolean;
 }
 
 export const TypeSignaturePanel = forwardRef<
   TypePanelHandle,
   TypeSignaturePanelProps
->(function TypeSignaturePanel({ onReadyChange, saveEnabled }, ref) {
+>(function TypeSignaturePanel(
+  { onReadyChange, saveEnabled, canSaveInitials },
+  ref,
+) {
   const { t } = useTranslation();
   const [name, setName] = useState("");
   const [initialsOverride, setInitialsOverride] = useState<string | null>(null);
@@ -54,7 +58,10 @@ export const TypeSignaturePanel = forwardRef<
   const initials = initialsOverride ?? deriveInitials(name);
   const hasName = name.trim().length > 0;
   const savesInitials =
-    saveEnabled && includeInitials && Boolean(initials.trim());
+    saveEnabled &&
+    canSaveInitials &&
+    includeInitials &&
+    Boolean(initials.trim());
 
   useEffect(() => onReadyChange(hasName), [hasName, onReadyChange]);
 
@@ -118,7 +125,15 @@ export const TypeSignaturePanel = forwardRef<
         <Checkbox
           label={t("sign.wallet.type.saveInitials", "Also save my initials")}
           checked={savesInitials}
-          disabled={!saveEnabled || !initials.trim()}
+          disabled={!saveEnabled || !canSaveInitials || !initials.trim()}
+          description={
+            saveEnabled && !canSaveInitials
+              ? t(
+                  "sign.wallet.type.initialsLimit",
+                  "Saving initials needs two free signature slots.",
+                )
+              : undefined
+          }
           onChange={(event) => setIncludeInitials(event.currentTarget.checked)}
         />
       </div>

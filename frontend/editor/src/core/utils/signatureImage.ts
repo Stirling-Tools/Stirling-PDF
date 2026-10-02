@@ -1,6 +1,7 @@
 import { removeWhiteBackground } from "@app/utils/imageTransparency";
 import {
   createCanvas,
+  hasCanvasInk,
   imageToCanvas,
   loadImage,
   recolorCanvas,
@@ -99,6 +100,8 @@ export async function cleanUpSignatureImage(
   if (removeBackground && inkColor) {
     recolorCanvas(canvas, inkColor);
   }
+  if (!hasCanvasInk(canvas))
+    throw new Error("The signature image has no visible ink");
   return canvas.toDataURL("image/png");
 }
 

@@ -54,6 +54,13 @@ export const UploadSignaturePanel = forwardRef<
 
   async function acceptFile(file: File | null) {
     if (!file) return;
+    if (
+      !ACCEPTED_TYPES.includes(file.type) ||
+      file.size > MAX_UPLOAD_MB * 1024 * 1024
+    ) {
+      setProblem("rejected");
+      return;
+    }
     try {
       loadSource({
         dataUrl: await readFileAsDataUrl(file),
@@ -69,7 +76,7 @@ export const UploadSignaturePanel = forwardRef<
     loadSource: (dataUrl: string, name: string) =>
       loadSource({ dataUrl, name }),
     getResult: async () =>
-      cleaned.dataUrl
+      cleaned.dataUrl && !cleaned.processing
         ? { source: "upload", type: "image", dataUrl: cleaned.dataUrl }
         : null,
   }));

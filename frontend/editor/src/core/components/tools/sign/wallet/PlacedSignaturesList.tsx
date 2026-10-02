@@ -14,6 +14,7 @@ interface PlacedSignaturesListProps {
   onRedo?: () => void;
   onShow: (entry: PlacedSignature) => void;
   onRemove: (entry: PlacedSignature) => void;
+  disabled?: boolean;
 }
 
 export function PlacedSignaturesList({
@@ -24,6 +25,7 @@ export function PlacedSignaturesList({
   onRedo,
   onShow,
   onRemove,
+  disabled = false,
 }: PlacedSignaturesListProps) {
   const { t } = useTranslation();
 
@@ -38,8 +40,8 @@ export function PlacedSignaturesList({
         <DrawingControls
           onUndo={onUndo}
           onRedo={onRedo}
-          canUndo={history.canUndo}
-          canRedo={history.canRedo}
+          canUndo={!disabled && history.canUndo}
+          canRedo={!disabled && history.canRedo}
           showPlaceButton={false}
         />
       </div>
@@ -59,6 +61,7 @@ export function PlacedSignaturesList({
               name={nameFor(entry)}
               onShow={() => onShow(entry)}
               onRemove={() => onRemove(entry)}
+              disabled={disabled}
             />
           ))}
         </ul>
@@ -72,6 +75,7 @@ interface PlacedSignatureRowProps {
   name: string;
   onShow: () => void;
   onRemove: () => void;
+  disabled: boolean;
 }
 
 function PlacedSignatureRow({
@@ -79,6 +83,7 @@ function PlacedSignatureRow({
   name,
   onShow,
   onRemove,
+  disabled,
 }: PlacedSignatureRowProps) {
   const { t } = useTranslation();
 
@@ -104,6 +109,7 @@ function PlacedSignatureRow({
           name,
         })}
         onClick={onShow}
+        disabled={disabled}
       >
         <Icon name="locate-fixed" size={15} />
       </ActionIcon>
@@ -113,6 +119,7 @@ function PlacedSignatureRow({
         accent="danger"
         aria-label={t("sign.wallet.placed.remove", "Remove {{name}}", { name })}
         onClick={onRemove}
+        disabled={disabled}
       >
         <Icon name="trash" size={15} />
       </ActionIcon>

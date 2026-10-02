@@ -65,7 +65,7 @@ export function CreateSignatureModal({
   const { ready, handlers } = useTabReadiness();
   const [phoneResult, setPhoneResult] = useState<string | null>(null);
   const [saveState, setSaveState] = useState<SaveOptionsState>({
-    enabled: limits.canSave,
+    enabled: limits.canSave || limits.canShare,
     label: null,
     scope: "personal",
     makeDefault: false,
@@ -139,7 +139,7 @@ export function CreateSignatureModal({
 
   const footer = (
     <div className={styles.footer}>
-      <Button variant="tertiary" onClick={onClose}>
+      <Button variant="tertiary" onClick={onClose} disabled={submitting}>
         {t("sign.wallet.create.cancel", "Cancel")}
       </Button>
       <Button
@@ -157,7 +157,9 @@ export function CreateSignatureModal({
   return (
     <Modal
       open
-      onClose={onClose}
+      onClose={() => {
+        if (!submitting) onClose();
+      }}
       title={t("sign.wallet.create.title", "New signature")}
       subtitle={t(
         "sign.wallet.create.subtitle",
@@ -165,6 +167,8 @@ export function CreateSignatureModal({
       )}
       width="lg"
       footer={footer}
+      disableBackdropClose
+      disableEscapeClose={submitting || Object.values(ready).some(Boolean)}
     >
       <div className={styles.body}>
         <SegmentedControl
@@ -181,7 +185,15 @@ export function CreateSignatureModal({
           <TypeSignaturePanel
             ref={typeRef}
             onReadyChange={handlers.type}
-            saveEnabled={saveState.enabled && limits.canSave}
+            saveEnabled={
+              saveState.enabled &&
+              (limits.canSave ||
+                (limits.canShare && saveState.scope === "shared"))
+            }
+            canSaveInitials={
+              saveState.scope === "shared" ||
+              (limits.remainingSlots ?? limits.maxLimit) >= 2
+            }
           />
         </div>
         <div hidden={tab !== "upload"}>
