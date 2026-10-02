@@ -75,12 +75,18 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
     selectAll: t("workbenchBar.selectAll", "Select All"),
     deselectAll: t("workbenchBar.deselectAll", "Deselect All"),
     selectByNumber: t("workbenchBar.selectByNumber", "Select by Page Numbers"),
-    rotateLeft: t("pageTracks.rotateLeft", "Rotate left"),
-    rotateRight: t("pageTracks.rotateRight", "Rotate right"),
-    deleteSelected: t("workbenchBar.deleteSelected", "Delete Selected Pages"),
+    rotateLeft: t(
+      "pageTracks.rotateSelectedLeft",
+      "Rotate selected pages left",
+    ),
+    rotateRight: t(
+      "pageTracks.rotateSelectedRight",
+      "Rotate selected pages right",
+    ),
+    deleteSelected: t("pageTracks.deleteSelected", "Delete selected pages"),
     insertBlankAfter: t(
       "pageTracks.insertBlankAfterSelected",
-      "Insert a blank page after each selected page",
+      "Insert blank pages after selected pages",
     ),
     splitAfter: t(
       "pageTracks.splitAfterSelected",
