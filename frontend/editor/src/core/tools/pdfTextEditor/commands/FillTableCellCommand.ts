@@ -1,5 +1,7 @@
+import { locateTable } from "@app/tools/pdfTextEditor/util/locateTable";
 import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
+import type { TextRun } from "@app/tools/pdfTextEditor/model/TextRun";
 import { emitStyledCellText } from "@app/tools/pdfTextEditor/commands/tableHelpers";
 
 // Puts the first text into a previously-empty table cell: inserts a text run at
@@ -13,6 +15,7 @@ export class FillTableCellCommand implements Command {
   private readonly text: string;
   private createdRunId: string | null = null;
   private createdObjPtr = 0;
+  private createdRun: TextRun | null = null;
 
   constructor(opts: {
     tableId: string;
@@ -31,10 +34,28 @@ export class FillTableCellCommand implements Command {
   }
 
   apply(doc: EditorDocument): void {
-    const page = doc.page(this.pageIndexOf(doc));
-    const model = page.tables.find((t) => t.id === this.tableId);
-    if (!model) return;
-    if (model.cellRuns[this.row]?.[this.col]) return; // already filled
+    const found = locateTable(doc, this.tableId);
+    if (!found) return;
+    const { page, model } = found;
+    if (
+      !Number.isInteger(this.row) ||
+      !Number.isInteger(this.col) ||
+      this.row < 0 ||
+      this.col < 0 ||
+      this.row >= model.rows ||
+      this.col >= model.cols ||
+      model.isCovered(this.row, this.col) ||
+      model.cellRuns[this.row]?.[this.col]
+    )
+      return;
+    if (this.createdRun) {
+      doc.module.FPDFPage_InsertObject(page.pagePtr, this.createdObjPtr);
+      page.setRuns([...page.runs, this.createdRun]);
+      model.cellRuns[this.row][this.col] = this.createdRun.id;
+      page.markDirty();
+      page.markNeedsGenerate();
+      return;
+    }
     const emitted = emitStyledCellText(
       doc,
       page,
@@ -47,13 +68,16 @@ export class FillTableCellCommand implements Command {
     model.cellRuns[this.row][this.col] = emitted.run.id;
     this.createdRunId = emitted.run.id;
     this.createdObjPtr = emitted.ptr;
+    this.createdRun = emitted.run;
     page.markDirty();
     page.markNeedsGenerate();
   }
 
   revert(doc: EditorDocument): void {
     if (!this.createdRunId) return;
-    const page = doc.page(this.pageIndexOf(doc));
+    const found = locateTable(doc, this.tableId);
+    if (!found) return;
+    const { page } = found;
     if (this.createdObjPtr) {
       doc.module.FPDFPage_RemoveObject(page.pagePtr, this.createdObjPtr);
     }
@@ -64,17 +88,6 @@ export class FillTableCellCommand implements Command {
     }
     page.markDirty();
     page.markNeedsGenerate();
-  }
-
-  // The table id carries its page index as its first segment ("p<index>-...").
-  private pageIndexOf(doc: EditorDocument): number {
-    const match = /^p(\d+)-/.exec(this.tableId);
-    if (match) return Number(match[1]);
-    // Fallback: search loaded pages for the table.
-    for (const page of doc.loadedPages()) {
-      if (page.tables.some((t) => t.id === this.tableId)) return page.index;
-    }
-    return 0;
   }
 
   describe(): string {

@@ -12,6 +12,7 @@ import {
   measureObjSpanPt,
   sanitizeForBase14,
 } from "@app/tools/pdfTextEditor/commands/editTextHelpers";
+import { transformObject } from "@app/tools/pdfTextEditor/util/objectTransform";
 
 const LINE_RGB = { r: 0, g: 0, b: 0 } as const;
 const CELL_FAMILY = "Helvetica";
@@ -39,6 +40,12 @@ function emitLineRect(
   // Draw mode 2 = fill.
   m.FPDFPath_SetDrawMode(ptr, 2, false);
   m.FPDFPage_InsertObject(page.pagePtr, ptr);
+  page.rules.push({
+    ...rect,
+    ptr,
+    thickness: Math.min(rect.width, rect.height),
+    color: { ...color },
+  });
   return ptr;
 }
 
@@ -123,6 +130,7 @@ export function paintRowFill(
     ext.FPDFPage_InsertObjectAtIndex(page.pagePtr, ptr, 0);
   } else {
     // Without index insertion the fill would cover the text, so draw nothing.
+    m.FPDFPageObj_Destroy(ptr);
     return null;
   }
   return { row, ptr, rect, color: { ...color } };
@@ -147,15 +155,19 @@ export function bandColorFor(model: TableModel, row: number): RGBA | null {
   return best ? { ...best.color } : null;
 }
 
-/** Remove a set of page objects, ignoring zero/blank pointers. */
+/** Remove and destroy objects that will be recreated on undo; never use for retained text. */
 export function removeObjects(
   m: WrappedPdfiumModule,
   page: Page,
   ptrs: number[],
 ): void {
-  for (const ptr of ptrs) {
-    if (ptr) m.FPDFPage_RemoveObject(page.pagePtr, ptr);
+  for (const ptr of new Set(ptrs)) {
+    if (ptr && m.FPDFPage_RemoveObject(page.pagePtr, ptr))
+      m.FPDFPageObj_Destroy(ptr);
   }
+  const removed = new Set(ptrs);
+  page.setRules(page.rules.filter((rule) => !removed.has(rule.ptr)));
+  page.setFills(page.fills.filter((fill) => !removed.has(fill.ptr)));
 }
 
 // Remove the model's current ruling lines and draw a fresh grid for its current
@@ -175,9 +187,10 @@ export function redrawGrid(
   // A merged cell is a boundary the page does NOT draw across those tracks, so
   // each edge is emitted as the segments that survive the merges. Repainting a
   // plain rectangle here would erase every merge on the first structural edit.
+  const hidden = hiddenEdges(model);
   const hLinePtrs: number[] = [];
   for (let r = 0; r < model.rowEdges.length; r++) {
-    for (const seg of edgeSegments(model, "h", r)) {
+    for (const seg of edgeSegments(model.cols, r, hidden.h)) {
       const ptr = emitLineRect(
         m,
         page,
@@ -194,7 +207,7 @@ export function redrawGrid(
   }
   const vLinePtrs: number[] = [];
   for (let c = 0; c < model.colEdges.length; c++) {
-    for (const seg of edgeSegments(model, "v", c)) {
+    for (const seg of edgeSegments(model.rows, c, hidden.v)) {
       const ptr = emitLineRect(
         m,
         page,
@@ -274,18 +287,14 @@ function measureCells(
 // across any track where a merge straddles it; adjacent kept tracks are joined
 // into one rect so an unmerged edge still emits a single object.
 function edgeSegments(
-  model: TableModel,
-  axis: "h" | "v",
+  count: number,
   index: number,
+  hidden: Set<number>,
 ): { from: number; to: number }[] {
-  const count = axis === "h" ? model.cols : model.rows;
   const out: { from: number; to: number }[] = [];
   let start: number | null = null;
   for (let i = 0; i < count; i++) {
-    const drawn =
-      axis === "h"
-        ? !straddlesRow(model, index, i)
-        : !straddlesCol(model, index, i);
+    const drawn = !hidden.has(index * count + i);
     if (drawn && start === null) start = i;
     if (!drawn && start !== null) {
       out.push({ from: start, to: i });
@@ -296,22 +305,24 @@ function edgeSegments(
   return out;
 }
 
-/** True when a cell spans across horizontal edge `edge` in column `col`. */
-function straddlesRow(model: TableModel, edge: number, col: number): boolean {
-  for (let r = 0; r < edge; r++) {
-    const span = model.cellSpans[r]?.[col];
-    if (span && r + span.rowSpan > edge && col < model.cols) return true;
+function hiddenEdges(model: TableModel): { h: Set<number>; v: Set<number> } {
+  const h = new Set<number>();
+  const v = new Set<number>();
+  for (let r = 0; r < model.rows; r++) {
+    for (let c = 0; c < model.cols; c++) {
+      const span = model.cellSpans[r]?.[c];
+      if (!span) continue;
+      const bottom = Math.min(r + span.rowSpan, model.rows);
+      const right = Math.min(c + span.colSpan, model.cols);
+      for (let rr = r; rr < bottom; rr++) {
+        for (let cc = c; cc < right; cc++) {
+          if (rr > r) h.add(rr * model.cols + cc);
+          if (cc > c) v.add(cc * model.rows + rr);
+        }
+      }
+    }
   }
-  return false;
-}
-
-/** True when a cell spans across vertical edge `edge` in row `row`. */
-function straddlesCol(model: TableModel, edge: number, row: number): boolean {
-  for (let c = 0; c < edge; c++) {
-    const span = model.cellSpans[row]?.[c];
-    if (span && c + span.colSpan > edge) return true;
-  }
-  return false;
+  return { h, v };
 }
 
 /** Baseline anchor (x, y) for text placed in a cell, before alignment. */
@@ -463,7 +474,7 @@ export function shiftRunBy(
   for (const ptr of run.mergedFromPtrs) if (ptr) members.add(ptr);
   if (members.size === 0 && run.pdfiumObjPtr) members.add(run.pdfiumObjPtr);
   for (const ptr of members) {
-    m.FPDFPageObj_Transform(ptr, 1, 0, 0, 1, dx, dy);
+    transformObject(m, ptr, 1, 0, 0, 1, dx, dy);
   }
   run.matrix = { ...run.matrix, e: run.matrix.e + dx, f: run.matrix.f + dy };
   run.bounds = { ...run.bounds, x: run.bounds.x + dx, y: run.bounds.y + dy };
@@ -510,11 +521,13 @@ export function setTableEdges(
           : trail < lead
             ? nextEdge - (from.x + from.width)
             : colEdges[c] - from.x;
-      moves.push({ run, dx, dy: rowEdges[r + 1] - from.y });
+      const bottom = Math.min(r + model.spanAt(r, c).rowSpan, model.rows);
+      const dy = rowEdges[bottom] - from.y;
+      moves.push({ run, dx, dy });
       // Other runs in the same cell ride along with it.
       for (const extra of model.cellExtraRuns[r]?.[c] ?? []) {
         const other = page.findRun(extra);
-        if (other) moves.push({ run: other, dx, dy: rowEdges[r + 1] - from.y });
+        if (other) moves.push({ run: other, dx, dy });
       }
     }
   }
@@ -571,32 +584,32 @@ export function captureCellPlacement(
   const out: CellPlacement[] = [];
   for (let r = 0; r < model.rows; r++) {
     for (let c = 0; c < model.cols; c++) {
-      const id = model.cellRuns[r]?.[c];
-      if (!id) continue;
-      const run = page.findRun(id);
-      if (!run) continue;
-      const cell = model.cellRect(r, c);
-      const span = run.pdfiumObjPtr
-        ? measureObjSpanPt(doc.module, [run.pdfiumObjPtr])
-        : null;
-      const left = span ? span.left : run.bounds.x;
-      const right = span ? span.right : run.bounds.x + run.bounds.width;
-      const lead = left - cell.x;
-      const trail = cell.x + cell.width - right;
-      const anchor =
-        Math.abs(lead - trail) <= ANCHOR_TOLERANCE_PT
-          ? "center"
-          : trail < lead
-            ? "right"
-            : "left";
-      out.push({
-        runId: id,
-        row: r,
-        col: c,
-        anchor,
-        inset: anchor === "right" ? trail : lead,
-        baseline: run.matrix.f - model.rowEdges[r + 1],
-      });
+      for (const id of model.runsAt(r, c)) {
+        const run = page.findRun(id);
+        if (!run) continue;
+        const cell = model.cellRect(r, c);
+        const span = run.pdfiumObjPtr
+          ? measureObjSpanPt(doc.module, [run.pdfiumObjPtr])
+          : null;
+        const left = span ? span.left : run.bounds.x;
+        const right = span ? span.right : run.bounds.x + run.bounds.width;
+        const lead = left - cell.x;
+        const trail = cell.x + cell.width - right;
+        const anchor =
+          Math.abs(lead - trail) <= ANCHOR_TOLERANCE_PT
+            ? "center"
+            : trail < lead
+              ? "right"
+              : "left";
+        out.push({
+          runId: id,
+          row: r,
+          col: c,
+          anchor,
+          inset: anchor === "right" ? trail : lead,
+          baseline: run.matrix.f - cell.y,
+        });
+      }
     }
   }
   return out;
@@ -636,12 +649,9 @@ export function applyCellPlacement(
         : spot.anchor === "center"
           ? (cellLeft + cellRight) / 2 - (left + right) / 2
           : cellLeft + inset - left;
-    const targetBaseline = model.rowEdges[spot.row + 1] + spot.baseline * scale;
+    const targetBaseline =
+      model.cellRect(spot.row, spot.col).y + spot.baseline * scale;
     const dy = targetBaseline - run.matrix.f;
     shiftRunBy(doc.module, run, dx, dy);
-    for (const extra of model.cellExtraRuns[spot.row]?.[spot.col] ?? []) {
-      const other = page.findRun(extra);
-      if (other) shiftRunBy(doc.module, other, dx, dy);
-    }
   }
 }

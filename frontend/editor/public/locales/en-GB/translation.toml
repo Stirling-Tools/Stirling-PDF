@@ -6115,9 +6115,34 @@ title = "Text Grouping Mode"
 paragraph = "Paragraph page"
 sparse = "Sparse text"
 
+[pdfTextEditor.sidebar]
+addTable = "Add table"
+clickPageToAddTable = "Click page to add a table"
+image = "Image"
+table = "Table"
+text = "Text"
+
 [pdfTextEditor.stages]
 processing = "Processing"
 uploading = "Uploading"
+
+[pdfTextEditor.table]
+addColumn = "Add column"
+addRow = "Add row"
+column = "Col"
+deleteColumn = "Delete column"
+deleteRow = "Delete row"
+done = "Done"
+doneHint = "Stop editing this as a table"
+edit = "Edit"
+editHint = "Edit as a table - type in cells, add or remove rows and columns"
+move = "Move"
+moveTable = "Drag to move the whole table"
+recognizedHint = "Recognized table - click to select all its text"
+resizeColumn = "Drag to resize this column (Alt: share with the next)"
+resizeRow = "Drag to resize this row (Alt: share with the next)"
+resizeTable = "Drag to resize the whole table"
+row = "Row"
 
 [pdfTextEditor.tooltip.alpha]
 text = "This alpha viewer is still evolving-certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing."

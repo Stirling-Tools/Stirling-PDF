@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { Page } from "@app/tools/pdfTextEditor/model/Page";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
 import { InsertTableCommand } from "@app/tools/pdfTextEditor/commands/InsertTableCommand";
@@ -7,6 +7,7 @@ import { ModifyTableCommand } from "@app/tools/pdfTextEditor/commands/ModifyTabl
 import { ResizeTableCommand } from "@app/tools/pdfTextEditor/commands/ResizeTableCommand";
 import { HistoryStack } from "@app/tools/pdfTextEditor/store/HistoryStack";
 import { redrawGrid } from "@app/tools/pdfTextEditor/commands/tableHelpers";
+import { emitCellText } from "@app/tools/pdfTextEditor/commands/tableHelpers";
 
 // A fake PDFium module that tracks which object pointers are live on the page,
 // plus each object's kind, translation, and text. Enough to exercise the table
@@ -151,6 +152,9 @@ function makeDoc(): { doc: FakeDoc; page: Page } {
       if (at >= 0) order.splice(at, 1);
       return true;
     },
+    FPDFPageObj_Destroy: (ptr: number) => {
+      objs.delete(ptr);
+    },
     pdfium: {
       // A tiny heap, so the out-param accessors can actually round-trip.
       wasmExports: {
@@ -192,6 +196,190 @@ describe("table commands (fake PDFium)", () => {
 
   beforeEach(() => {
     ({ doc, page } = makeDoc());
+  });
+
+  function filledTable() {
+    const insert = new InsertTableCommand({
+      pageIndex: 0,
+      x: 100,
+      y: 700,
+      width: 300,
+      height: 90,
+      rows: 3,
+      cols: 3,
+    });
+    insert.apply(doc);
+    const model = page.tables[0];
+    const fill = new FillTableCellCommand({
+      tableId: model.id,
+      row: 1,
+      col: 1,
+      text: "Primary",
+    });
+    fill.apply(doc);
+    const extra = emitCellText(doc, page, 240, 655, "Extra", 11)!.run;
+    model.cellExtraRuns[1][1] = [extra.id];
+    return {
+      model,
+      fill,
+      extra,
+      primary: page.findRun(model.cellRuns[1][1]!)!,
+    };
+  }
+
+  it.each(["add-row", "add-col"] as const)(
+    "%s moves every run and keeps cell mappings aligned",
+    (op) => {
+      const { model, primary, extra } = filledTable();
+      const before = {
+        primary: { ...primary.matrix },
+        extra: { ...extra.matrix },
+      };
+      const cmd = new ModifyTableCommand({ tableId: model.id, op, index: 1 });
+      cmd.apply(doc);
+      const row = op === "add-row" ? 2 : 1;
+      const col = op === "add-col" ? 2 : 1;
+      expect(model.runsAt(row, col)).toEqual([primary.id, extra.id]);
+      expect(extra.matrix.e - before.extra.e).toBe(
+        primary.matrix.e - before.primary.e,
+      );
+      expect(extra.matrix.f - before.extra.f).toBe(
+        primary.matrix.f - before.primary.f,
+      );
+      cmd.revert(doc);
+      expect(model.runsAt(1, 1)).toEqual([primary.id, extra.id]);
+      expect(extra.matrix).toEqual(before.extra);
+    },
+  );
+
+  it.each(["delete-row", "delete-col"] as const)(
+    "%s restores the original text objects and earlier undo still works",
+    (op) => {
+      const { model, fill, primary, extra } = filledTable();
+      primary.fontId = "pdf:embedded:CustomFace";
+      const cmd = new ModifyTableCommand({ tableId: model.id, op, index: 1 });
+      cmd.apply(doc);
+      expect(page.runs).toHaveLength(0);
+      expect(doc._onPage.has(extra.pdfiumObjPtr)).toBe(false);
+      cmd.revert(doc);
+      expect(page.findRun(primary.id)).toBe(primary);
+      expect(page.findRun(extra.id)).toBe(extra);
+      expect(primary.fontId).toBe("pdf:embedded:CustomFace");
+      expect(model.runsAt(1, 1)).toEqual([primary.id, extra.id]);
+      fill.revert(doc);
+      expect(page.findRun(primary.id)).toBeUndefined();
+      cmd.apply(doc);
+      cmd.revert(doc);
+      expect(page.findRun(extra.id)).toBe(extra);
+    },
+  );
+
+  it("publishes all runs belonging to a cell", () => {
+    const { model, primary, extra } = filledTable();
+    expect(
+      model.snapshot().cells.find((c) => c.row === 1 && c.col === 1)?.runIds,
+    ).toEqual([primary.id, extra.id]);
+  });
+
+  it("frees replaced ruling objects instead of leaking them on each redraw", () => {
+    const { model } = filledTable();
+    const count = doc._objs.size;
+    for (let i = 0; i < 20; i++) redrawGrid(doc, page, model);
+    expect(doc._objs.size).toBe(count);
+    expect(page.rules).toHaveLength(model.rows + model.cols + 2);
+    expect(page.rules.every((rule) => doc._onPage.has(rule.ptr))).toBe(true);
+  });
+
+  it("reuses a filled cell's identity on redo so subsequent text edits still apply", () => {
+    const { model, fill, primary } = filledTable();
+    fill.revert(doc);
+    fill.apply(doc);
+    expect(model.cellRuns[1][1]).toBe(primary.id);
+    expect(page.findRun(primary.id)).toBe(primary);
+    expect(doc._onPage.has(primary.pdfiumObjPtr)).toBe(true);
+  });
+
+  it("scales every run in a cell and exactly restores their origins on undo", () => {
+    const { model, primary, extra } = filledTable();
+    const before = [primary.snapshot(), extra.snapshot()];
+    const cmd = new ResizeTableCommand({
+      tableId: model.id,
+      edit: { kind: "scale", width: 600, height: 180 },
+    });
+    cmd.apply(doc);
+    expect(primary.fontSize).toBe(before[0].fontSize * 2);
+    expect(extra.fontSize).toBe(before[1].fontSize * 2);
+    cmd.revert(doc);
+    expect(primary.matrix).toEqual(before[0].matrix);
+    expect(extra.matrix).toEqual(before[1].matrix);
+    expect(extra.fontSize).toBe(before[1].fontSize);
+    expect(extra.bounds).toEqual(before[1].bounds);
+  });
+
+  it("does not draw separators through a cell merged across both axes", () => {
+    const { model } = filledTable();
+    model.cellSpans[0][0] = { rowSpan: 2, colSpan: 2 };
+    const rectangles = vi.spyOn(doc.module, "FPDFPageObj_CreateNewRect");
+    redrawGrid(doc, page, model);
+    expect(rectangles).toHaveBeenCalledWith(
+      300,
+      670 - model.lineWidth / 2,
+      100,
+      model.lineWidth,
+    );
+    expect(rectangles).toHaveBeenCalledWith(
+      200 - model.lineWidth / 2,
+      610,
+      model.lineWidth,
+      30,
+    );
+  });
+
+  it("keeps a vertical merge anchored on its spanned bottom when moving", () => {
+    const { model, primary, extra } = filledTable();
+    model.cellSpans[1][1] = { rowSpan: 2, colSpan: 1 };
+    const before = { primary: primary.matrix.f, extra: extra.matrix.f };
+    const cmd = new ResizeTableCommand({
+      tableId: model.id,
+      edit: { kind: "move", dx: 0, dy: 10 },
+    });
+    cmd.apply(doc);
+    expect(primary.matrix.f).toBeCloseTo(before.primary + 10);
+    expect(extra.matrix.f).toBeCloseTo(before.extra + 10);
+    cmd.revert(doc);
+    expect(primary.matrix.f).toBeCloseTo(before.primary);
+    expect(extra.matrix.f).toBeCloseTo(before.extra);
+  });
+
+  it("shrinks a merge when deleting its anchor column without losing its content", () => {
+    const { model, primary, extra } = filledTable();
+    model.cellSpans[1][1] = { rowSpan: 1, colSpan: 2 };
+    const cmd = new ModifyTableCommand({
+      tableId: model.id,
+      op: "delete-col",
+      index: 1,
+    });
+    cmd.apply(doc);
+    expect(model.runsAt(1, 1)).toEqual([primary.id, extra.id]);
+    expect(model.spanAt(1, 1).colSpan).toBe(1);
+    cmd.revert(doc);
+    expect(model.spanAt(1, 1).colSpan).toBe(2);
+    expect(model.runsAt(1, 1)).toEqual([primary.id, extra.id]);
+  });
+
+  it("expands a merge for an insertion inside it and restores it on undo", () => {
+    const { model } = filledTable();
+    model.cellSpans[1][1] = { rowSpan: 1, colSpan: 2 };
+    const cmd = new ModifyTableCommand({
+      tableId: model.id,
+      op: "add-col",
+      index: 2,
+    });
+    cmd.apply(doc);
+    expect(model.spanAt(1, 1).colSpan).toBe(3);
+    expect(model.isCovered(1, 2)).toBe(true);
+    cmd.revert(doc);
+    expect(model.spanAt(1, 1).colSpan).toBe(2);
   });
 
   it("inserts a 3x3 table with a full ruling grid, and reverts cleanly", () => {

@@ -244,6 +244,8 @@ export class EditorStore {
         images: live.images.map((img) => img.snapshot()),
         // Regrouping re-populates the page, which re-reads its annotations.
         annotations: live.annotations,
+        tables: [],
+        rules: live.rules,
       };
     });
     this.patch({ groupingMode: mode, pages, dirty: this.isDirty() });
@@ -318,7 +320,13 @@ export class EditorStore {
     if (!this.doc) return;
     const page = this.doc.page(table.pageIndex);
     if (!page) return;
-    if (page.tables.some((t) => t.id === adoptedTableId(table))) return;
+    const existing = page.tables.find((t) => t.id === adoptedTableId(table));
+    if (existing) {
+      existing.editing = true;
+      page.bumpRevision();
+      this.resnapshot();
+      return;
+    }
 
     const merged = [...new Set(table.cells.flatMap((c) => c.runIds))].filter(
       (id) => (page.findRun(id)?.paragraphMemberPtrs.length ?? 0) >= 2,
@@ -358,7 +366,9 @@ export class EditorStore {
     const page = this.doc.page(pageIndex);
     if (!page) return;
     if (!page.tables.some((t) => t.id === tableId)) return;
-    page.tables = page.tables.filter((t) => t.id !== tableId);
+    const model = page.tables.find((t) => t.id === tableId);
+    if (!model?.adopted) return;
+    model.editing = false;
     page.bumpRevision();
     this.resnapshot();
   }
@@ -499,6 +509,7 @@ export class EditorStore {
       page.loaded = false;
       page.setRuns([]);
       page.setImages([]);
+      page.tables = [];
       PdfiumTextReader.populate(doc, page, mode);
     }
   }
@@ -526,7 +537,9 @@ export class EditorStore {
         revision: live.revision,
         runs: live.runs.map((r) => r.snapshot()),
         images: live.images.map((img) => img.snapshot()),
-        tables: live.tables.map((tbl) => tbl.snapshot()),
+        tables: live.tables
+          .filter((tbl) => tbl.editing)
+          .map((tbl) => tbl.snapshot()),
         rules: live.rules,
       };
     });

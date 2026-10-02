@@ -1,3 +1,4 @@
+import { locateTable } from "@app/tools/pdfTextEditor/util/locateTable";
 import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
 import type { Page } from "@app/tools/pdfTextEditor/model/Page";
@@ -99,8 +100,9 @@ export class MaterialiseTableCommand implements Command {
   }
 
   apply(doc: EditorDocument): void {
-    const { page, model } = this.locate(doc);
-    if (!page || !model) return;
+    const found = locateTable(doc, this.tableId);
+    if (!found) return;
+    const { page, model } = found;
     this.prevRuns = [...page.runs];
     this.prevCellRuns = model.cellRuns.map((row) => [...row]);
     this.prevExtraRuns = model.cellExtraRuns.map((row) =>
@@ -121,8 +123,9 @@ export class MaterialiseTableCommand implements Command {
   }
 
   revert(doc: EditorDocument): void {
-    const { page, model } = this.locate(doc);
-    if (!page || !model) return;
+    const found = locateTable(doc, this.tableId);
+    if (!found) return;
+    const { page, model } = found;
     const mod = doc.module as unknown as ZOrderModule;
     if (this.emittedPtrs.length > 0) {
       removeObjects(doc.module, page, this.emittedPtrs);
@@ -440,21 +443,6 @@ export class MaterialiseTableCommand implements Command {
       }
     }
     return index;
-  }
-
-  private locate(doc: EditorDocument): {
-    page: Page | null;
-    model: TableModel | null;
-  } {
-    const match = /^p(\d+)-/.exec(this.tableId);
-    const pageIndex = match ? Number(match[1]) : null;
-    const pages =
-      pageIndex !== null ? [doc.page(pageIndex)] : doc.loadedPages();
-    for (const page of pages) {
-      const model = page.tables.find((t) => t.id === this.tableId);
-      if (model) return { page, model };
-    }
-    return { page: null, model: null };
   }
 
   describe(): string {

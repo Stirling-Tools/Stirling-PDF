@@ -1,8 +1,10 @@
+import { locateTable } from "@app/tools/pdfTextEditor/util/locateTable";
 import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
 import type { Page } from "@app/tools/pdfTextEditor/model/Page";
 import type { TableModel } from "@app/tools/pdfTextEditor/model/TableModel";
-import type { RGBA, TableCellStyle } from "@app/tools/pdfTextEditor/types";
+import type { TableCellStyle } from "@app/tools/pdfTextEditor/types";
+import { DeleteObjectCommand } from "@app/tools/pdfTextEditor/commands/DeleteObjectCommand";
 import { defaultCellStyle } from "@app/tools/pdfTextEditor/model/TableModel";
 import {
   insertColumnEdges,
@@ -12,7 +14,6 @@ import {
 } from "@app/tools/pdfTextEditor/util/tableGeometry";
 import {
   bandColorFor,
-  emitCellText,
   paintRowFill,
   redrawGrid,
   removeObjects,
@@ -20,28 +21,12 @@ import {
   shiftRunBy,
 } from "@app/tools/pdfTextEditor/commands/tableHelpers";
 import type { RowFill } from "@app/tools/pdfTextEditor/model/TableModel";
-import {
-  familyOf,
-  nearestStandardFont,
-} from "@app/tools/pdfTextEditor/util/fontFamily";
 
 export type TableOp = "add-row" | "delete-row" | "add-col" | "delete-col";
 
-interface RemovedCell {
-  row: number;
-  col: number;
-  text: string;
-  x: number;
-  y: number;
-  fontSize: number;
-  fill: RGBA;
-  family: string;
-}
-
 // Structural edit of a session table: add or remove a row or column. Moves the
 // runs that live in the affected tracks, redraws the ruling lines, and keeps
-// the cell->run map in step. Fully reversible; deletes capture their cell
-// content so undo can re-emit it.
+// the cell->run map in step. Deletes retain the original objects for undo.
 export class ModifyTableCommand implements Command {
   readonly type = "modify-table";
   private readonly tableId: string;
@@ -49,7 +34,13 @@ export class ModifyTableCommand implements Command {
   private readonly index: number;
   /** Height (row) or width (column) of the affected track, resolved at apply. */
   private size = 0;
-  private removed: RemovedCell[] = [];
+  private removed: DeleteObjectCommand[] = [];
+  private before: {
+    cellRuns: TableModel["cellRuns"];
+    cellExtraRuns: TableModel["cellExtraRuns"];
+    cellSpans: TableModel["cellSpans"];
+    origins: { id: string; e: number; f: number }[];
+  } | null = null;
   /** Style of a deleted column, so undo brings the column back as it was. */
   private removedStyle: TableCellStyle | null = null;
   /** Background painted for an added row, so undo can take it away again. */
@@ -64,8 +55,38 @@ export class ModifyTableCommand implements Command {
   }
 
   apply(doc: EditorDocument): void {
-    const { page, model } = this.locate(doc);
-    if (!page || !model) return;
+    const found = locateTable(doc, this.tableId);
+    if (!found) return;
+    const { page, model } = found;
+    const isRow = this.op.endsWith("row");
+    const count = isRow ? model.rows : model.cols;
+    const adding = this.op.startsWith("add");
+    if (
+      !Number.isInteger(this.index) ||
+      this.index < 0 ||
+      this.index > count - (adding ? 0 : 1) ||
+      (!adding && count <= 1)
+    )
+      return;
+    this.before = {
+      cellRuns: model.cellRuns.map((row) => [...row]),
+      cellExtraRuns: model.cellExtraRuns.map((row) =>
+        row.map((ids) => (ids ? [...ids] : null)),
+      ),
+      cellSpans: model.cellSpans.map((row) =>
+        row.map((span) => (span ? { ...span } : null)),
+      ),
+      origins: [
+        ...new Set(
+          model.cellRuns.flatMap((row, r) =>
+            row.flatMap((_id, c) => model.runsAt(r, c)),
+          ),
+        ),
+      ].flatMap((id) => {
+        const run = page.findRun(id);
+        return run ? [{ id, e: run.matrix.e, f: run.matrix.f }] : [];
+      }),
+    };
     switch (this.op) {
       case "add-row":
         this.addRow(doc, page, model);
@@ -80,6 +101,7 @@ export class ModifyTableCommand implements Command {
         this.deleteColumn(doc, page, model);
         break;
     }
+    this.adjustSpans(model, isRow, adding);
     // The table changed extent without its type changing, so the font
     // reference moves with it.
     renormaliseFontBase(model);
@@ -89,8 +111,9 @@ export class ModifyTableCommand implements Command {
   }
 
   revert(doc: EditorDocument): void {
-    const { page, model } = this.locate(doc);
-    if (!page || !model) return;
+    const found = locateTable(doc, this.tableId);
+    if (!found || !this.before) return;
+    const { page, model } = found;
     switch (this.op) {
       case "add-row":
         if (this.paintedFill) {
@@ -110,6 +133,23 @@ export class ModifyTableCommand implements Command {
         this.reinsertColumn(doc, page, model);
         break;
     }
+    model.cellRuns = this.before.cellRuns.map((row) => [...row]);
+    model.cellExtraRuns = this.before.cellExtraRuns.map((row) =>
+      row.map((ids) => (ids ? [...ids] : null)),
+    );
+    model.cellSpans = this.before.cellSpans.map((row) =>
+      row.map((span) => (span ? { ...span } : null)),
+    );
+    for (const spot of this.before.origins) {
+      const run = page.findRun(spot.id);
+      if (run)
+        shiftRunBy(
+          doc.module,
+          run,
+          spot.e - run.matrix.e,
+          spot.f - run.matrix.f,
+        );
+    }
     renormaliseFontBase(model);
     redrawGrid(doc, page, model);
     page.markDirty();
@@ -128,6 +168,11 @@ export class ModifyTableCommand implements Command {
       Array.from({ length: model.cols }, () => null),
     );
     model.cellSpans.splice(
+      this.index,
+      0,
+      Array.from({ length: model.cols }, () => null),
+    );
+    model.cellExtraRuns.splice(
       this.index,
       0,
       Array.from({ length: model.cols }, () => null),
@@ -158,13 +203,19 @@ export class ModifyTableCommand implements Command {
     h: number,
     capture: boolean,
   ): void {
-    if (capture) this.captureTrack(page, model, (r) => r === index);
-    this.removeTrackRuns(doc, page, model, (r) => r === index);
+    this.removeTrackRuns(
+      doc,
+      page,
+      model,
+      (r, c) => r === index && model.spanAt(r, c).rowSpan === 1,
+      capture,
+    );
     // Rows below the deleted one move up by h.
     this.shiftCells(doc, page, model, (r) => r > index, 0, h);
     model.rowEdges = removeRowEdges(model.rowEdges, index).edges;
     model.cellRuns.splice(index, 1);
     model.cellSpans.splice(index, 1);
+    model.cellExtraRuns.splice(index, 1);
     const dropped = model.rowFills.find((f) => f.row === index) ?? null;
     if (dropped) {
       removeObjects(doc.module, page, [dropped.ptr]);
@@ -193,6 +244,11 @@ export class ModifyTableCommand implements Command {
       0,
       Array.from({ length: model.cols }, () => null),
     );
+    model.cellExtraRuns.splice(
+      this.index,
+      0,
+      Array.from({ length: model.cols }, () => null),
+    );
     this.shiftFillRows(model, this.index, 1);
     if (this.removedFill) {
       const back = paintRowFill(
@@ -205,7 +261,7 @@ export class ModifyTableCommand implements Command {
       if (back) model.rowFills.push(back);
       this.removedFill = null;
     }
-    this.restoreCaptured(doc, page, model);
+    this.restoreCaptured(doc);
   }
 
   // Fills are bound by row index, so an insert or delete above them has to move
@@ -223,6 +279,7 @@ export class ModifyTableCommand implements Command {
     model.colEdges = insertColumnEdges(model.colEdges, this.index, w).edges;
     for (const row of model.cellRuns) row.splice(this.index, 0, null);
     for (const row of model.cellSpans) row.splice(this.index, 0, null);
+    for (const row of model.cellExtraRuns) row.splice(this.index, 0, null);
     // A new column writes like the one it was added beside.
     model.columnStyles.splice(this.index, 0, this.neighbourStyle(model));
   }
@@ -245,12 +302,18 @@ export class ModifyTableCommand implements Command {
     w: number,
     capture: boolean,
   ): void {
-    if (capture) this.captureTrack(page, model, (_r, c) => c === index);
-    this.removeTrackRuns(doc, page, model, (_r, c) => c === index);
+    this.removeTrackRuns(
+      doc,
+      page,
+      model,
+      (r, c) => c === index && model.spanAt(r, c).colSpan === 1,
+      capture,
+    );
     this.shiftCells(doc, page, model, (_r, c) => c > index, -w, 0);
     model.colEdges = removeColumnEdges(model.colEdges, index).edges;
     for (const row of model.cellRuns) row.splice(index, 1);
     for (const row of model.cellSpans) row.splice(index, 1);
+    for (const row of model.cellExtraRuns) row.splice(index, 1);
     const [dropped] = model.columnStyles.splice(index, 1);
     if (capture) this.removedStyle = dropped ?? null;
   }
@@ -265,12 +328,13 @@ export class ModifyTableCommand implements Command {
     model.colEdges = insertColumnEdges(model.colEdges, this.index, w).edges;
     for (const row of model.cellRuns) row.splice(this.index, 0, null);
     for (const row of model.cellSpans) row.splice(this.index, 0, null);
+    for (const row of model.cellExtraRuns) row.splice(this.index, 0, null);
     model.columnStyles.splice(
       this.index,
       0,
       this.removedStyle ?? this.neighbourStyle(model),
     );
-    this.restoreCaptured(doc, page, model);
+    this.restoreCaptured(doc);
   }
 
   private neighbourStyle(model: TableModel): TableCellStyle {
@@ -304,36 +368,11 @@ export class ModifyTableCommand implements Command {
     if (dx === 0 && dy === 0) return;
     for (let r = 0; r < model.cellRuns.length; r++) {
       for (let c = 0; c < model.cellRuns[r].length; c++) {
-        const id = model.cellRuns[r][c];
-        if (!id || !pred(r, c)) continue;
-        const run = page.findRun(id);
-        if (run) shiftRunBy(doc.module, run, dx, dy);
-      }
-    }
-  }
-
-  private captureTrack(
-    page: Page,
-    model: TableModel,
-    pred: (r: number, c: number) => boolean,
-  ): void {
-    this.removed = [];
-    for (let r = 0; r < model.cellRuns.length; r++) {
-      for (let c = 0; c < model.cellRuns[r].length; c++) {
-        const id = model.cellRuns[r][c];
-        if (!id || !pred(r, c)) continue;
-        const run = page.findRun(id);
-        if (!run) continue;
-        this.removed.push({
-          row: r,
-          col: c,
-          text: run.text,
-          x: run.matrix.e,
-          y: run.matrix.f,
-          fontSize: run.fontSize,
-          fill: { ...run.fill },
-          family: nearestStandardFont(familyOf(run.fontId)),
-        });
+        if (!pred(r, c)) continue;
+        for (const id of model.runsAt(r, c)) {
+          const run = page.findRun(id);
+          if (run) shiftRunBy(doc.module, run, dx, dy);
+        }
       }
     }
   }
@@ -343,62 +382,63 @@ export class ModifyTableCommand implements Command {
     page: Page,
     model: TableModel,
     pred: (r: number, c: number) => boolean,
+    capture: boolean,
   ): void {
     const toRemove = new Set<string>();
     for (let r = 0; r < model.cellRuns.length; r++) {
       for (let c = 0; c < model.cellRuns[r].length; c++) {
-        const id = model.cellRuns[r][c];
-        if (id && pred(r, c)) toRemove.add(id);
+        if (pred(r, c)) for (const id of model.runsAt(r, c)) toRemove.add(id);
       }
     }
     if (toRemove.size === 0) return;
-    const m = doc.module;
-    for (const run of page.runs) {
-      if (toRemove.has(run.id) && run.pdfiumObjPtr) {
-        m.FPDFPage_RemoveObject(page.pagePtr, run.pdfiumObjPtr);
-      }
+    if (capture) this.removed = [];
+    for (const runId of toRemove) {
+      const cmd = new DeleteObjectCommand({ pageIndex: page.index, runId });
+      cmd.apply(doc);
+      if (capture) this.removed.push(cmd);
     }
-    page.setRuns(page.runs.filter((r) => !toRemove.has(r.id)));
   }
 
-  // Re-emit captured cell content after a track was re-inserted, relinking each
-  // cell to a fresh run at its original anchor.
-  private restoreCaptured(
-    doc: EditorDocument,
-    page: Page,
-    model: TableModel,
-  ): void {
-    for (const cell of this.removed) {
-      const emitted = emitCellText(
-        doc,
-        page,
-        cell.x,
-        cell.y,
-        cell.text,
-        cell.fontSize,
-        cell.fill,
-        cell.family,
-      );
-      if (emitted && model.cellRuns[cell.row]) {
-        model.cellRuns[cell.row][cell.col] = emitted.run.id;
-      }
-    }
+  private restoreCaptured(doc: EditorDocument): void {
+    for (const cmd of this.removed) cmd.revert(doc);
     this.removed = [];
   }
 
-  private locate(doc: EditorDocument): {
-    page: Page | null;
-    model: TableModel | null;
-  } {
-    const match = /^p(\d+)-/.exec(this.tableId);
-    const pageIndex = match ? Number(match[1]) : null;
-    const pages =
-      pageIndex !== null ? [doc.page(pageIndex)] : doc.loadedPages();
-    for (const page of pages) {
-      const model = page.tables.find((t) => t.id === this.tableId);
-      if (model) return { page, model };
+  private adjustSpans(
+    model: TableModel,
+    isRow: boolean,
+    adding: boolean,
+  ): void {
+    if (!this.before) return;
+    for (let r = 0; r < this.before.cellSpans.length; r++) {
+      for (let c = 0; c < this.before.cellSpans[r].length; c++) {
+        const original = this.before.cellSpans[r][c];
+        if (!original) continue;
+        const start = isRow ? r : c;
+        const length = isRow ? original.rowSpan : original.colSpan;
+        if (!adding && start === this.index && length === 1) continue;
+        const next = adding
+          ? start + (start >= this.index ? 1 : 0)
+          : start - (start > this.index ? 1 : 0);
+        const row = isRow ? next : r;
+        const col = isRow ? c : next;
+        const span = { ...original };
+        if (
+          adding
+            ? start < this.index && this.index < start + length
+            : start <= this.index && this.index < start + length
+        ) {
+          if (isRow) span.rowSpan += adding ? 1 : -1;
+          else span.colSpan += adding ? 1 : -1;
+        }
+        model.cellSpans[row][col] =
+          span.rowSpan > 1 || span.colSpan > 1 ? span : null;
+        if (!adding && start === this.index) {
+          model.cellRuns[row][col] = this.before.cellRuns[r][c];
+          model.cellExtraRuns[row][col] = this.before.cellExtraRuns[r][c];
+        }
+      }
     }
-    return { page: null, model: null };
   }
 
   describe(): string {

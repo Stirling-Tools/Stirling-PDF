@@ -118,6 +118,14 @@ describe("tableGeometry", () => {
     expect(rows[0] - rows[rows.length - 1]).toBe(MIN_TRACK * 2);
   });
 
+  it("respects the minimum for unequal tracks while retaining their ratios", () => {
+    const cols = scaleColumnEdges([0, 10, 110], 1);
+    expect(cols[1] - cols[0]).toBeGreaterThanOrEqual(MIN_TRACK);
+    expect((cols[2] - cols[1]) / (cols[1] - cols[0])).toBeCloseTo(10);
+    const rows = scaleRowEdges([200, 190, 90], 1);
+    expect(rows[0] - rows[1]).toBeGreaterThanOrEqual(MIN_TRACK);
+  });
+
   it("falls back to uniform tracks when the grid has no extent", () => {
     expect(scaleColumnEdges([50, 50, 50], 100)).toEqual([50, 100, 150]);
     expect(scaleRowEdges([50, 50, 50], 100)).toEqual([50, 0, -50]);

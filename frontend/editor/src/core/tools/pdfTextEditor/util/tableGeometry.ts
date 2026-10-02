@@ -131,7 +131,11 @@ export function scaleColumnEdges(
   const span = colEdges[cols] - x0;
   const target = Math.max(width, min * cols);
   if (span <= 0) return uniformColumnEdges(x0, target, cols);
-  const k = target / span;
+  const smallest = Math.min(
+    ...colEdges.slice(1).map((x, i) => x - colEdges[i]),
+  );
+  if (smallest <= 0) return uniformColumnEdges(x0, target, cols);
+  const k = Math.max(target / span, min / smallest);
   return colEdges.map((x) => x0 + (x - x0) * k);
 }
 
@@ -147,7 +151,11 @@ export function scaleRowEdges(
   const span = y0 - rowEdges[rows];
   const target = Math.max(height, min * rows);
   if (span <= 0) return uniformRowEdges(y0, target, rows);
-  const k = target / span;
+  const smallest = Math.min(
+    ...rowEdges.slice(1).map((y, i) => rowEdges[i] - y),
+  );
+  if (smallest <= 0) return uniformRowEdges(y0, target, rows);
+  const k = Math.max(target / span, min / smallest);
   return rowEdges.map((y) => y0 - (y0 - y) * k);
 }
 

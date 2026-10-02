@@ -139,7 +139,7 @@ function groupRows(cands: Cand[], rowTol: number): Row[] {
       current.push(c);
       // Track the row centre as a running mean so a slightly drifting baseline
       // does not split one visual row in two.
-      ref = current.reduce((s, x) => s + x.cy, 0) / current.length;
+      ref += (c.cy - ref) / current.length;
     } else {
       rows.push(finishRow(current));
       current = [c];
@@ -499,7 +499,7 @@ export function rowSpans(
   return out;
 }
 
-/** Index of the track in `edges` containing `x`, clamped to the outer tracks. */ // How far a cell reaches downwards: while the boundary below it is not drawn
+// How far a cell reaches downwards: while the boundary below it is not drawn
 // across every column it occupies, it is one merged cell.
 function downSpan(
   pins: RowPin[],

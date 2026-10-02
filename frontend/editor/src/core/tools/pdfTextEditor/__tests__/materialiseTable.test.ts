@@ -127,6 +127,9 @@ function makeDoc(): { doc: FakeDoc; page: Page } {
     FPDFFormObj_CountObjects: (form: number) => children.get(form)?.length ?? 0,
     FPDFFormObj_GetObject: (form: number, i: number) =>
       children.get(form)?.[i] ?? 0,
+    FPDFPageObj_Destroy: (ptr: number) => {
+      objs.delete(ptr);
+    },
     FPDFPage_RemoveObject: (_p: number, ptr: number) => {
       const at = order.indexOf(ptr);
       if (at >= 0) order.splice(at, 1);

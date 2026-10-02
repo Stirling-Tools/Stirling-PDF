@@ -38,8 +38,6 @@ export function adoptedTableModel(
   page: Page,
   table: TableSnapshot,
 ): TableModel {
-  // A recognized cell can hold more than one run; the first backs the cell and
-  // the rest stay ordinary page text that structural edits will not move.
   const cellRuns: (string | null)[][] = Array.from({ length: table.rows }, () =>
     Array.from({ length: table.cols }, () => null),
   );

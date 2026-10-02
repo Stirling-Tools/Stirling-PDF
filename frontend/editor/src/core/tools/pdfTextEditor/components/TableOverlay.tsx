@@ -16,6 +16,7 @@ import type {
   TableSnapshot,
 } from "@app/tools/pdfTextEditor/types";
 import type { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
+import { overlaps } from "@app/tools/pdfTextEditor/util/tableAdoption";
 import { detectTables } from "@app/tools/pdfTextEditor/util/tableDetection";
 import { ModifyTableCommand } from "@app/tools/pdfTextEditor/commands/ModifyTableCommand";
 import { FillTableCellCommand } from "@app/tools/pdfTextEditor/commands/FillTableCellCommand";
@@ -39,7 +40,7 @@ const MARGIN = 12;
 const GRAB = 13;
 
 /** Selection accent, matching the image handle's outline. */
-const ACCENT = "#2c7be5";
+const ACCENT = "var(--c-accent-fg)";
 
 // The controls sit over page content, so they need to read as a floating
 // toolbar rather than as loose buttons tangled in the text behind them.
@@ -49,8 +50,8 @@ const toolbarStyle: React.CSSProperties = {
   alignItems: "center",
   gap: 2,
   padding: 2,
-  background: "var(--c-bg-raised, #fff)",
-  border: "1px solid var(--mantine-color-default-border, #ccc)",
+  background: "var(--c-surface)",
+  border: "1px solid var(--c-border)",
   borderRadius: 6,
   boxShadow: "0 1px 4px rgba(0,0,0,0.18)",
   pointerEvents: "auto",
@@ -127,7 +128,7 @@ export function TableOverlay({
   // A detected table that overlaps an inserted one is the inserted one's own
   // cells being re-recognized - drop it so we don't draw two grids.
   const detectedFiltered = detected.filter(
-    (d) => !synthetic.some((s) => rectsOverlap(d.bounds, s.bounds)),
+    (d) => !synthetic.some((s) => overlaps(d.bounds, s.bounds)),
   );
 
   if (detectedFiltered.length === 0 && synthetic.length === 0) return null;
@@ -198,15 +199,6 @@ function justifyFor(align: TableCellStyle["align"]): string {
   return "flex-start";
 }
 
-function rectsOverlap(a: PageRect, b: PageRect): boolean {
-  return (
-    a.x < b.x + b.width &&
-    a.x + a.width > b.x &&
-    a.y < b.y + b.height &&
-    a.y + a.height > b.y
-  );
-}
-
 // A grid recognized from ordinary text. Shows its structure and lets the user
 // select the whole thing, but structural edits need the tracked geometry that
 // only inserted tables carry.
@@ -237,8 +229,8 @@ function RecognizedTable({
         width: box.width,
         height: box.height,
         border: table.pageRuled
-          ? "1px solid rgba(44, 123, 229, 0.35)"
-          : "1px dashed rgba(0, 120, 220, 0.55)",
+          ? "1px solid color-mix(in srgb, var(--c-accent-fg) 35%, transparent)"
+          : "1px dashed color-mix(in srgb, var(--c-accent-fg) 55%, transparent)",
         pointerEvents: "none",
         boxSizing: "border-box",
       }}
@@ -298,7 +290,8 @@ function gridLines(table: TableSnapshot, box: CssRect) {
           left: fx * box.width,
           top: 0,
           bottom: 0,
-          borderLeft: "1px dashed rgba(0,120,220,0.35)",
+          borderLeft:
+            "1px dashed color-mix(in srgb, var(--c-accent-fg) 35%, transparent)",
         }}
       />,
     );
@@ -314,7 +307,8 @@ function gridLines(table: TableSnapshot, box: CssRect) {
           top: fy * box.height,
           left: 0,
           right: 0,
-          borderTop: "1px dashed rgba(0,120,220,0.35)",
+          borderTop:
+            "1px dashed color-mix(in srgb, var(--c-accent-fg) 35%, transparent)",
         }}
       />,
     );
@@ -454,8 +448,8 @@ function EditableTable({
           // just fuzz over lines the reader can already see.
           border:
             table.ruled || table.pageRuled
-              ? "1px solid rgba(44, 123, 229, 0.35)"
-              : "1px dashed rgba(0, 120, 220, 0.55)",
+              ? "1px solid color-mix(in srgb, var(--c-accent-fg) 35%, transparent)"
+              : "1px dashed color-mix(in srgb, var(--c-accent-fg) 55%, transparent)",
         }}
       >
         {!table.ruled && !table.pageRuled && gridLines(table, box)}
@@ -642,7 +636,7 @@ function EditableTable({
                 padding: "2px 6px",
                 fontSize: 11,
                 lineHeight: "18px",
-                color: "var(--mantine-color-text, #222)",
+                color: "var(--c-text)",
               }}
             >
               <OpenWithIcon style={{ fontSize: 13 }} />
@@ -727,9 +721,7 @@ function TableControl({
           padding: "2px 6px",
           fontSize: 11,
           lineHeight: "18px",
-          color: disabled
-            ? "var(--mantine-color-dimmed, #aaa)"
-            : "var(--mantine-color-text, #222)",
+          color: disabled ? "var(--c-text-muted)" : "var(--c-text)",
           background: "transparent",
           border: "none",
           borderRadius: 4,
@@ -828,8 +820,10 @@ function DragArea({
             style={{
               width: "100%",
               height: "100%",
-              background: lit ? ACCENT : "rgba(44,123,229,0.7)",
-              border: "1px solid #fff",
+              background: lit
+                ? ACCENT
+                : "color-mix(in srgb, var(--c-accent-fg) 70%, transparent)",
+              border: "1px solid var(--c-surface)",
               borderRadius: 2,
               boxSizing: "border-box",
             }}

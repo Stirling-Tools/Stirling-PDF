@@ -42,6 +42,8 @@ export function defaultCellStyle(fontSize: number): TableCellStyle {
 export class TableModel {
   readonly id: string;
   readonly pageIndex: number;
+  /** Released grids remain in the session so existing undo steps can locate them. */
+  editing = true;
   colEdges: number[];
   rowEdges: number[];
   /** Run id backing each cell, indexed [row][col]; null when the cell is empty. */
@@ -203,17 +205,22 @@ export class TableModel {
 
   snapshot(): TableSnapshot {
     const cells: TableCellSnapshot[] = [];
+    const covered = new Set<number>();
     for (let r = 0; r < this.rows; r++) {
       for (let c = 0; c < this.cols; c++) {
         // A covered position is not a cell: emitting one would put a second
         // editable box on top of the merged cell that owns the space.
-        if (this.isCovered(r, c)) continue;
-        const runId = this.cellRuns[r]?.[c] ?? null;
+        if (covered.has(r * this.cols + c)) continue;
         const { rowSpan, colSpan } = this.spanAt(r, c);
+        for (let rr = r; rr < Math.min(r + rowSpan, this.rows); rr++) {
+          for (let cc = c; cc < Math.min(c + colSpan, this.cols); cc++) {
+            if (rr !== r || cc !== c) covered.add(rr * this.cols + cc);
+          }
+        }
         cells.push({
           row: r,
           col: c,
-          runIds: runId ? [runId] : [],
+          runIds: this.runsAt(r, c),
           colSpan,
           rowSpan,
           rect: this.cellRect(r, c),

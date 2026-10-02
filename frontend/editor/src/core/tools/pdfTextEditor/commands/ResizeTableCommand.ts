@@ -1,3 +1,4 @@
+import { locateTable } from "@app/tools/pdfTextEditor/util/locateTable";
 import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
 import type { Page } from "@app/tools/pdfTextEditor/model/Page";
@@ -65,8 +66,9 @@ export class ResizeTableCommand implements Command {
   }
 
   apply(doc: EditorDocument): void {
-    const { page, model } = this.locate(doc);
-    if (!page || !model) return;
+    const found = locateTable(doc, this.tableId);
+    if (!found) return;
+    const { page, model } = found;
     this.before = {
       colEdges: [...model.colEdges],
       rowEdges: [...model.rowEdges],
@@ -76,9 +78,13 @@ export class ResizeTableCommand implements Command {
       // Scaling the frame scales what is in it: text kept at its old size in a
       // shrinking cell just spills over the column beside it.
       this.placement = captureCellPlacement(doc, page, model);
-      this.prevOrigins = model.cellRuns
-        .flat()
-        .filter((id): id is string => id !== null)
+      this.prevOrigins = [
+        ...new Set(
+          model.cellRuns.flatMap((row, r) =>
+            row.flatMap((_id, c) => model.runsAt(r, c)),
+          ),
+        ),
+      ]
         .map((id) => {
           const run = page.findRun(id);
           if (!run) return null;
@@ -111,8 +117,9 @@ export class ResizeTableCommand implements Command {
   }
 
   revert(doc: EditorDocument): void {
-    const { page, model } = this.locate(doc);
-    if (!page || !model || !this.before) return;
+    const found = locateTable(doc, this.tableId);
+    if (!found || !this.before) return;
+    const { page, model } = found;
     if (this.edit.kind === "scale") {
       for (let i = this.resizes.length - 1; i >= 0; i--) {
         this.resizes[i].revert(doc);
@@ -204,21 +211,6 @@ export class ResizeTableCommand implements Command {
     }
   }
 
-  private locate(doc: EditorDocument): {
-    page: Page | null;
-    model: TableModel | null;
-  } {
-    const match = /^p(\d+)-/.exec(this.tableId);
-    const pageIndex = match ? Number(match[1]) : null;
-    const pages =
-      pageIndex !== null ? [doc.page(pageIndex)] : doc.loadedPages();
-    for (const page of pages) {
-      const model = page.tables.find((t) => t.id === this.tableId);
-      if (model) return { page, model };
-    }
-    return { page: null, model: null };
-  }
-
   describe(): string {
     return `resize-table:${this.edit.kind}`;
   }
@@ -232,20 +224,21 @@ function scaleCellFonts(
   model: TableModel,
   scale: number,
 ): Command[] {
-  if (Math.abs(scale - 1) < 0.001) return [];
+  if (scale === 1) return [];
   const applied: Command[] = [];
-  for (const row of model.cellRuns) {
-    for (const id of row) {
-      if (!id) continue;
-      const run = page.findRun(id);
-      if (!run || run.fontSize <= 0) continue;
-      const cmd = new SetFontSizeCommand({
-        pageIndex: model.pageIndex,
-        runId: id,
-        nextSize: run.fontSize * scale,
-      });
-      cmd.apply(doc);
-      applied.push(cmd);
+  for (let r = 0; r < model.rows; r++) {
+    for (let c = 0; c < model.cols; c++) {
+      for (const id of model.runsAt(r, c)) {
+        const run = page.findRun(id);
+        if (!run || run.fontSize <= 0) continue;
+        const cmd = new SetFontSizeCommand({
+          pageIndex: model.pageIndex,
+          runId: id,
+          nextSize: run.fontSize * scale,
+        });
+        cmd.apply(doc);
+        applied.push(cmd);
+      }
     }
   }
   model.fontSize *= scale;
