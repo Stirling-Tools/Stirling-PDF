@@ -102,13 +102,6 @@ jobs:
             }
 
             async function labelPullRequest(pull) {
-              // Unknown is not "no conflict": removing the label here and re-adding it
-              // later restarts the stale PR bot's conflict clock.
-              if (pull.mergeable === null) {
-                core.info(`PR #${pull.number}: mergeable is still unknown; leaving the label as it is.`);
-                return;
-              }
-
               const existingLabels = pull.labels.map((label) => label.name);
               const hasConflictLabel = existingLabels.includes(conflictLabel);
               const hasConflicts = pull.mergeable === false && pull.mergeable_state === 'dirty';

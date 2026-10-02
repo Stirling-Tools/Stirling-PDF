@@ -107,12 +107,15 @@ const PULL_REQUEST_FIELDS = `
   ${HISTORY.timelineItems}
 `;
 
+// Numbers only. Within a page of PRs GitHub silently truncates the nested history,
+// dropping the newest events while still reporting it complete, so each PR is read on
+// its own.
 const OPEN_PULL_REQUESTS_QUERY = `
-  query($owner: String!, $repo: String!, $cursor: String, $before: String) {
+  query($owner: String!, $repo: String!, $cursor: String) {
     repository(owner: $owner, name: $repo) {
-      pullRequests(states: OPEN, first: 25, after: $cursor) {
+      pullRequests(states: OPEN, first: 100, after: $cursor) {
         pageInfo { hasNextPage endCursor }
-        nodes { ${PULL_REQUEST_FIELDS} }
+        nodes { number }
       }
     }
   }
@@ -222,7 +225,7 @@ interface PullRequestsPage {
   repository: {
     pullRequests: {
       pageInfo: { hasNextPage: boolean; endCursor: string | null };
-      nodes: PullRequestNode[];
+      nodes: { number: number }[];
     };
   };
 }
@@ -517,16 +520,16 @@ function parseWarning(comment: WarningComment): Warning | null {
   return { at: time(comment.createdAt), kinds: (match[1] ?? "").split(",").filter(isTurnKind) };
 }
 
-async function fetchOpenPullRequests(github: GitHubClient, repo: Repo) {
-  const pullRequests: PullRequestNode[] = [];
+async function fetchOpenPullNumbers(github: GitHubClient, repo: Repo) {
+  const numbers: number[] = [];
   let cursor: string | null = null;
   do {
     const page: PullRequestsPage = await github.graphql(OPEN_PULL_REQUESTS_QUERY, { ...repo, cursor });
     const { nodes, pageInfo } = page.repository.pullRequests;
-    pullRequests.push(...nodes);
+    numbers.push(...nodes.map((node) => node.number));
     cursor = pageInfo.hasNextPage ? pageInfo.endCursor : null;
   } while (cursor);
-  return pullRequests;
+  return numbers;
 }
 
 /** The PR as it is now; null once it is closed or merged. */
@@ -767,14 +770,14 @@ function changeSummary({ decision, labels }: Result) {
 const errorMessage = (error: unknown) => (error instanceof Error ? error.message : String(error));
 
 /** Runs `visit` on each PR in turn. One that throws is logged and skipped; returns how many threw. */
-async function eachLogged<T extends { number: number }>(core: Core, prs: T[], visit: (pr: T) => Promise<void>) {
+async function eachLogged(core: Core, numbers: number[], visit: (number: number) => Promise<void>) {
   let failures = 0;
-  for (const pr of prs) {
+  for (const number of numbers) {
     try {
-      await visit(pr);
+      await visit(number);
     } catch (error) {
       failures += 1;
-      core.error(`#${pr.number}: ${errorMessage(error)}`);
+      core.error(`#${number}: ${errorMessage(error)}`);
     }
   }
   return failures;
@@ -811,27 +814,19 @@ export default async function triageStalePullRequests({
   const now = Date.now();
   const { repo } = context;
   const client = pacedWrites(github, writeIntervalMs);
-  const evaluate = async (node: PullRequestNode): Promise<Result> => {
-    const pr = await loadForTriage(github, repo, node, mergeabilityRetryMs);
-    return { pr, decision: decide(pr, now), labels: labelChange(pr) };
-  };
   const results: Result[] = [];
 
-  const failures = await eachLogged(core, await fetchOpenPullRequests(github, repo), async (node) => {
-    let result = await evaluate(node);
-    if (live && hasWrites(result)) {
-      // Decided again on a fresh read: the listing can be minutes old by now, and a
-      // turn-label sync may have moved the PR on since.
-      const fresh = await fetchPullRequest(github, repo, node.number);
-      if (fresh === null) return;
-      result = await evaluate(fresh);
-    }
+  const failures = await eachLogged(core, await fetchOpenPullNumbers(github, repo), async (number) => {
+    const node = await fetchPullRequest(github, repo, number);
+    if (node === null) return;
+    const pr = await loadForTriage(github, repo, node, mergeabilityRetryMs);
+    const result = { pr, decision: decide(pr, now), labels: labelChange(pr) };
     results.push(result);
     if (!hasWrites(result) && result.decision.action !== "pending") return;
 
-    core.info(`#${node.number}: ${changeSummary(result)}`);
+    core.info(`#${number}: ${changeSummary(result)}`);
     if (!live) return;
-    const issue = { ...repo, issue_number: node.number };
+    const issue = { ...repo, issue_number: number };
     await applyDecision(client, issue, result.pr, result.decision, now);
     if (needsRelabel(result)) await applyLabelChange(client, issue, result.labels);
   });
@@ -859,14 +854,9 @@ export async function syncTurnLabels({
 }: SyncInputs) {
   const { repo } = context;
   const client = pacedWrites(github, writeIntervalMs);
-  const targets: { number: number; listed: PullRequestNode | null }[] =
-    pullNumbers === "all"
-      ? (await fetchOpenPullRequests(github, repo)).map((node) => ({ number: node.number, listed: node }))
-      : pullNumbers.map((number) => ({ number, listed: null }));
+  const numbers = pullNumbers === "all" ? await fetchOpenPullNumbers(github, repo) : pullNumbers;
 
-  const failures = await eachLogged(core, targets, async ({ number, listed }) => {
-    // A listed PR is read again before writing: the listing can be minutes old by then.
-    if (listed && !changesLabels(labelChange(await loadPullRequest(github, repo, listed)))) return;
+  const failures = await eachLogged(core, numbers, async (number) => {
     const node = await fetchPullRequest(github, repo, number);
     if (node === null) return;
     const change = labelChange(await loadPullRequest(github, repo, node));

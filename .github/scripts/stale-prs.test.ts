@@ -546,8 +546,6 @@ function warningComments(pr: PullRequest) {
 }
 
 interface FakeGitHubOptions {
-  /** What a fresh read of a PR returns, when it differs from the listing. */
-  fresh?: PullRequest[];
   /** Labels whose removal fails with a 404, as if someone removed them first. */
   alreadyRemoved?: string[];
   /** What pulls.get reports for mergeable. */
@@ -558,7 +556,7 @@ interface FakeGitHubOptions {
 }
 
 function fakeGitHub(listed: PullRequest[], options: FakeGitHubOptions = {}) {
-  const { fresh = [], alreadyRemoved = [], mergeable = null, historyPageSize = 100, headPulls = [] } = options;
+  const { alreadyRemoved = [], mergeable = null, historyPageSize = 100, headPulls = [] } = options;
   const calls: string[] = [];
   const writeTimes: number[] = [];
   const reads = { mergeable: 0, olderPages: 0 };
@@ -567,7 +565,7 @@ function fakeGitHub(listed: PullRequest[], options: FakeGitHubOptions = {}) {
     writeTimes.push(Date.now());
   };
   const find = (number: unknown) => {
-    const pr = fresh.find((candidate) => candidate.number === number) ?? listed.find((candidate) => candidate.number === number);
+    const pr = listed.find((candidate) => candidate.number === number);
     assert.ok(pr, `no PR #${String(number)}`);
     return pr;
   };
@@ -575,7 +573,7 @@ function fakeGitHub(listed: PullRequest[], options: FakeGitHubOptions = {}) {
   const graphql = async (query: string, variables: Record<string, unknown>) => {
     if (options.failGraphqlFor !== undefined && variables.number === options.failGraphqlFor) throw new Error("boom");
     if (query.includes("pullRequests(states: OPEN")) {
-      const nodes = listed.map((pr) => toNode(pr, historyPageSize));
+      const nodes = listed.map((pr) => ({ number: pr.number }));
       return { repository: { pullRequests: { pageInfo: { hasNextPage: false, endCursor: null }, nodes } } };
     }
     const field = /pullRequest\(number: \$number\) \{\s*(\w+)/.exec(query)?.[1];
@@ -679,13 +677,6 @@ describe("triage run", () => {
     assert.deepEqual(calls, []);
   });
 
-  it("writes what a fresh read calls for, not the listing", async () => {
-    const pr = pullRequest();
-    const { github, calls } = fakeGitHub([pr], { fresh: [label(pullRequest(), LABELS.waitingOnReview, 0)] });
-    await triage(github);
-    assert.deepEqual(calls, []);
-  });
-
   it("reads history older than one page", async () => {
     const pr = label(pullRequest({ mergeable: "CONFLICTING" }), LABELS.conflicts, 40);
     for (let day = 39; day > 0; day -= 1) label(pr, `noise-${day}`, day);
@@ -699,7 +690,7 @@ describe("triage run", () => {
     const pr = warned(label(pullRequest({ mergeable: "UNKNOWN" }), LABELS.conflicts, 40), 30, ["conflicts"]);
     const { github, calls, reads } = fakeGitHub([pr], { mergeable: null });
     await triage(github);
-    assert.ok(reads.mergeable >= 6);
+    assert.equal(reads.mergeable, 6);
     assert.deepEqual(calls, ["label #1 waiting-on-author"]);
   });
 
