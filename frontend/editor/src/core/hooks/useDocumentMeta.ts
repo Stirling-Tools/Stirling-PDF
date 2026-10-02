@@ -14,6 +14,8 @@ export const useDocumentMeta = (meta: MetaOptions) => {
   const { i18n } = useTranslation();
 
   useEffect(() => {
+    // The public route controller owns the complete metadata set on hosted pages.
+    if (document.getElementById("stirling-page-config")) return;
     const originalTitle = document.title;
     const originalDescription =
       document

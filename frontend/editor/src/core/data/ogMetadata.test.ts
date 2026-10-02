@@ -29,7 +29,10 @@ const TEMPLATE = `<!doctype html>
     />
     <script type="module" src="/assets/index-abc.js"></script>
   </head>
-  <body><div id="root"></div></body>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+  </body>
 </html>`;
 
 describe("getToolOgImage (client resolver)", () => {
@@ -189,7 +192,9 @@ describe("injectOg SEO extras (robots, canonical, JSON-LD)", () => {
     expect(out).toContain(
       '<link rel="canonical" href="https://stirling.com/compress" />',
     );
-    expect(out).toContain('<script type="application/ld+json">');
+    expect(out).toContain(
+      '<script type="application/ld+json" data-public-page-schema>',
+    );
     expect(out).toContain('"@type":"WebApplication"');
     expect(out).toContain('"@type":"BreadcrumbList"');
   });
@@ -337,12 +342,16 @@ describe("buildBodyContent + injectBody (crawlable landing content)", () => {
     expect(body).toContain("x &quot;y&quot;");
   });
 
-  it("injectBody fills the empty React mount point", () => {
+  it("injectBody preserves ordinary HTML outside the empty React mount point", () => {
     const out = injectBody(
-      '<body><div id="root"></div><script></script></body>',
+      '<body><noscript>Enable JS</noscript><div id="root"></div></body>',
       "<h1>hi</h1>",
     );
-    expect(out).toContain('<div id="root"><h1>hi</h1></div>');
+    expect(out).toContain(
+      '<noscript>Enable JS</noscript><h1>hi</h1><div id="root"></div>',
+    );
+    // The flash regression: content in #root is painted, then wiped on mount.
+    expect(out).toContain('<div id="root"></div>');
   });
 
   it("prerenderOg injects landing content on indexable pages but not noindex ones", async () => {
@@ -383,17 +392,21 @@ describe("buildBodyContent + injectBody (crawlable landing content)", () => {
     });
 
     const compress = await fs.readFile(path.join(dir, "compress.html"), "utf8");
-    expect(compress).toContain('<div id="root"><div class="spdf-seo">');
+    expect(compress).toContain('<header id="public-page-intro"');
     expect(compress).toContain("<h1>Compress</h1>");
+    // Never in #root: React wipes it, so a cold load would flash the link list.
+    expect(compress).toContain('<div id="root"></div>');
 
     const settings = await fs.readFile(
       path.join(dir, "settings", "people.html"),
       "utf8",
     );
-    expect(settings).toContain('<div id="root"></div>'); // noindex: bare shell
+    expect(settings).not.toContain("public-page-intro"); // noindex: stock shell
+    expect(settings).toContain('<div id="root"></div>');
 
     const home = await fs.readFile(path.join(dir, "index.html"), "utf8");
-    expect(home).toContain("spdf-seo");
+    expect(home).toContain("public-page-intro");
+    expect(home).toContain('<div id="root"></div>');
 
     await fs.rm(dir, { recursive: true, force: true });
   });
@@ -422,12 +435,12 @@ describe("buildBodyContent + injectBody (crawlable landing content)", () => {
 
     const compress = await fs.readFile(path.join(dir, "compress.html"), "utf8");
     expect(compress).toContain('<div id="root"></div>');
-    expect(compress).not.toContain("spdf-seo");
+    expect(compress).not.toContain("public-page-intro");
     // OG/title metadata is still baked in - only the visible body is skipped.
     expect(compress).toContain("<title>Compress - Stirling PDF</title>");
 
     const home = await fs.readFile(path.join(dir, "index.html"), "utf8");
-    expect(home).not.toContain("spdf-seo");
+    expect(home).not.toContain("public-page-intro");
 
     await fs.rm(dir, { recursive: true, force: true });
   });
@@ -734,7 +747,7 @@ describe("prerender refuses a drifted HTML shell", () => {
 
   it("throws when the React mount point is gone", () => {
     expect(() =>
-      injectBody("<body><main></main></body>", "<h1>x</h1>"),
+      injectBody("<body><noscript>Enable JS</noscript></body>", "<h1>x</h1>"),
     ).toThrow(/root/);
   });
 
@@ -778,7 +791,8 @@ describe("prerender refuses a drifted HTML shell", () => {
     expect(html).toContain(
       '<link rel="canonical" href="https://stirling.com/compress" />',
     );
-    expect(html).toContain('<div id="root"><div class="spdf-seo">');
+    expect(html).toContain('<header id="public-page-intro"');
+    expect(html).toContain('<div id="root"></div>');
 
     await fs.rm(dir, { recursive: true, force: true });
   });
@@ -797,6 +811,95 @@ describe("shipped OG manifests", () => {
         "utf8",
       ),
     );
+
+  it("emits ordinary public HTML for every indexable SaaS route and explicit private/404 shells", async () => {
+    const manifest = await load("og-metadata.saas.json");
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "og-public-contract-"));
+    try {
+      await fs.writeFile(
+        path.join(dir, "index.html"),
+        TEMPLATE.replace('type="module"', "type=module"),
+      );
+      await prerenderOg({
+        distDir: dir,
+        manifest,
+        ogBase: "https://stirling.com/app",
+        canonicalBase: "https://stirling.com/app",
+        baseHref: "/app/",
+        injectLanding: true,
+        staticHosting: true,
+      });
+      for (const [route, id] of Object.entries(manifest.byPath)) {
+        const html = await fs.readFile(
+          path.join(dir, route.slice(1) + ".html"),
+          "utf8",
+        );
+        const doc = new DOMParser().parseFromString(html, "text/html");
+        const entry = manifest.byTool[id as string];
+        expect(doc.getElementById("root")?.childElementCount, route).toBe(0);
+        if (entry.noindex) {
+          expect(doc.getElementById("public-page-intro"), route).toBeNull();
+        } else {
+          expect(
+            doc.querySelector("#public-page-intro h1")?.textContent,
+            route,
+          ).toBeTruthy();
+          expect(
+            doc.querySelector("h1")?.closest("#root, noscript"),
+            route,
+          ).toBeNull();
+          expect(
+            doc.querySelectorAll("#public-page-details a[href]").length,
+            route,
+          ).toBeGreaterThan(50);
+        }
+      }
+      const notFound = await fs.readFile(path.join(dir, "404.html"), "utf8");
+      expect(notFound).toContain("noindex, follow");
+      expect(
+        new DOMParser()
+          .parseFromString(notFound, "text/html")
+          .querySelector('script[type="module"]'),
+      ).toBeNull();
+      expect(notFound).not.toContain('rel="canonical"');
+      const shell = await fs.readFile(path.join(dir, "app-shell.html"), "utf8");
+      expect(shell).toContain('<base href="/app/"');
+      expect(shell).toContain("noindex, follow");
+      expect(shell).not.toContain("public-page-intro");
+      const redirects = await fs.readFile(path.join(dir, "_redirects"), "utf8");
+      expect(redirects).toContain("/share/* /app-shell.html 200");
+      expect(redirects).not.toMatch(/^\/\* /m);
+    } finally {
+      await fs.rm(dir, { recursive: true, force: true });
+    }
+  }, 30000);
+
+  it("keeps a preview noindex in its initial HTML and response-header rules", async () => {
+    const manifest = await load("og-metadata.saas.json");
+    const dir = await fs.mkdtemp(
+      path.join(os.tmpdir(), "og-preview-contract-"),
+    );
+    try {
+      await fs.writeFile(path.join(dir, "index.html"), TEMPLATE);
+      await prerenderOg({
+        distDir: dir,
+        manifest,
+        ogBase: "https://stirling.com/app",
+        canonicalBase: "https://stirling.com/app",
+        injectLanding: true,
+        staticHosting: true,
+        noindex: true,
+      });
+      expect(
+        await fs.readFile(path.join(dir, "compress.html"), "utf8"),
+      ).toContain('name="robots" content="noindex, follow"');
+      expect(await fs.readFile(path.join(dir, "_headers"), "utf8")).toContain(
+        "X-Robots-Tag: noindex, follow",
+      );
+    } finally {
+      await fs.rm(dir, { recursive: true, force: true });
+    }
+  }, 30000);
 
   it.each(["og-metadata.json", "og-metadata.saas.json"])(
     "%s marks every link tool noindex and keeps it out of the sitemap",
@@ -853,6 +956,7 @@ describe("shipped OG manifests", () => {
   it("opts the metered /processor out of the price-0 Offer, not /editor", async () => {
     const manifest = await load("og-metadata.saas.json");
     expect(manifest.byTool["/processor"].noOffer).toBe(true);
+    expect(manifest.byTool["/processor"].noindex).toBe(true);
     expect(manifest.byTool["/editor"].noOffer).toBeUndefined();
   });
 

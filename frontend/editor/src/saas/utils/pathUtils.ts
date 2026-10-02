@@ -35,9 +35,7 @@ export function isAuthRoute(pathname: string): boolean {
 }
 
 /**
- * Check if pathname is home route. Only "/" - the editor's own URL is a real
- * destination, so a signed-out visit there bounces to /login carrying a return
- * path, the same as any other non-home route.
+ * Only the root participates in account-based home routing.
  */
 export function isHomeRoute(pathname: string): boolean {
   return normalizePath(pathname) === "/";
@@ -48,6 +46,7 @@ export function isHomeRoute(pathname: string): boolean {
  */
 export function isToolRoute(pathname: string): boolean {
   const p = normalizePath(pathname);
+  if (p === "/editor") return true;
   // direct match or try without trailing slash variants if your map uses them
   if (URL_TO_TOOL_MAP[p] !== undefined) return true;
   // Fallback: try adding/removing trailing slash

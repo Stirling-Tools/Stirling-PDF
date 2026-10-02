@@ -1,0 +1,81 @@
+@import "../theme/index.css";
+
+html:has(body[data-public-page]),
+body[data-public-page] {
+  height: auto;
+  overflow: auto;
+  overscroll-behavior: auto;
+  background: var(--c-bg);
+  color: var(--c-text);
+}
+
+body[data-public-page] {
+  --app-viewport-height: max(36rem, 75svh);
+
+  margin: 0;
+  font-family: system-ui, sans-serif;
+}
+
+body[data-public-page] > #root {
+  height: var(--app-viewport-height);
+  min-height: var(--app-viewport-height);
+  border-block: 1px solid var(--c-border);
+  isolation: isolate;
+}
+
+body[data-public-page] > #root:empty::before {
+  content: "Loading the PDF workspace…";
+  display: block;
+  padding: 3rem 1.5rem;
+  text-align: center;
+  color: var(--c-text-muted);
+}
+
+.public-page-copy {
+  box-sizing: border-box;
+  max-width: 72rem;
+  margin: auto;
+  padding: 2rem 1.5rem;
+  line-height: 1.65;
+}
+
+.public-page-copy[hidden] {
+  display: none;
+}
+
+.public-page-copy h1 {
+  margin-block: 0.75rem;
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  line-height: 1.2;
+}
+
+.public-page-copy h2 {
+  margin-top: 2rem;
+  font-size: 1.25rem;
+}
+
+.public-page-copy p {
+  max-width: 75ch;
+  color: var(--c-text-muted);
+}
+
+.public-page-copy a {
+  color: var(--c-accent-fg, var(--c-primary));
+  text-underline-offset: 0.2em;
+}
+
+.public-page-copy a:focus-visible {
+  outline: 2px solid var(--c-accent-fg, var(--c-primary));
+  outline-offset: 3px;
+}
+
+.public-page-brand {
+  font-weight: 700;
+}
+
+.public-page-tools {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0.75rem 1.5rem;
+  padding-inline-start: 1.25rem;
+}
