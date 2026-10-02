@@ -9,6 +9,7 @@ import { StoreIdBadge } from "@portal/components/store/StoreIdBadge";
 import { StoreStarButton } from "@portal/components/store/StoreStarButton";
 import { StoreToolIcons } from "@portal/components/store/StoreToolIcons";
 import { formatCount } from "@portal/components/store/storeTools";
+import { isBuiltInStoreId } from "@portal/components/store/builtInIds";
 import "@portal/components/store/StoreCard.css";
 
 interface StoreCardProps {
@@ -22,9 +23,13 @@ export function StoreCard({ listing, preview = false }: StoreCardProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const detailPath = `${toPortalPath(VIEW_PATHS.store)}/${encodeURIComponent(listing.storeId)}`;
+  // A Stirling template has no store row, so nothing to star and no counts to show.
+  const builtIn = isBuiltInStoreId(listing.storeId);
   const updated = preview
     ? t("time.relative.justNow")
-    : formatRelativeTime(new Date(listing.updatedAt).getTime(), t);
+    : builtIn
+      ? ""
+      : formatRelativeTime(new Date(listing.updatedAt).getTime(), t);
 
   return (
     <Card className="portal-store__card" padding="default">
@@ -35,12 +40,14 @@ export function StoreCard({ listing, preview = false }: StoreCardProps) {
         <h2 className="portal-store__card-name" title={listing.name}>
           {listing.name}
         </h2>
-        <StoreStarButton
-          storeId={listing.storeId}
-          starred={listing.starred}
-          starCount={listing.starCount}
-          disabled={preview}
-        />
+        {!builtIn && (
+          <StoreStarButton
+            storeId={listing.storeId}
+            starred={listing.starred}
+            starCount={listing.starCount}
+            disabled={preview}
+          />
+        )}
       </div>
 
       <div className="portal-store__card-badges">
@@ -70,12 +77,18 @@ export function StoreCard({ listing, preview = false }: StoreCardProps) {
 
       <div className="portal-store__card-foot">
         <span className="portal-store__card-meta">
-          {t("portal.store.card.installs", {
-            count: listing.installCount,
-            formatted: formatCount(listing.installCount),
-          })}
-          {", "}
-          {t("portal.store.card.updated", { when: updated })}
+          {builtIn ? (
+            t("portal.store.card.steps", { count: listing.tools.length })
+          ) : (
+            <>
+              {t("portal.store.card.installs", {
+                count: listing.installCount,
+                formatted: formatCount(listing.installCount),
+              })}
+              {", "}
+              {t("portal.store.card.updated", { when: updated })}
+            </>
+          )}
         </span>
         {preview ? (
           <Button variant="secondary" size="sm" disabled>

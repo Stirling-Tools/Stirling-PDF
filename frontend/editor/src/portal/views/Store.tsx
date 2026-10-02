@@ -22,6 +22,10 @@ import {
 import { Icon } from "@app/ui/Icon";
 import { InfoHint } from "@portal/components/InfoHint";
 import { StoreCard } from "@portal/components/store/StoreCard";
+import {
+  builtInListings,
+  filterBuiltIns,
+} from "@portal/components/store/builtInListings";
 import { PublishedTable } from "@portal/components/store/PublishedTable";
 import { useStoreAccess } from "@portal/components/store/storeAccess";
 import { usePipelines } from "@portal/queries/pipelines";
@@ -118,9 +122,22 @@ export function Store() {
   const team = useTeamListings(tab === "published");
   const pipelines = usePipelines({ enabled: access === "member" });
 
-  const items: StoreListingSummary[] =
+  // Stirling's templates lead the browse grid whatever the sort, so the store is never empty, and
+  // they stay when the catalogue cannot be reached at all.
+  const builtIns = useMemo(
+    () =>
+      filterBuiltIns(
+        builtInListings(t),
+        urlQuery || undefined,
+        category || undefined,
+      ),
+    [t, urlQuery, category],
+  );
+  const published: StoreListingSummary[] =
     list.data?.pages.flatMap((page) => page.items) ?? [];
-  const total = list.data?.pages[0]?.total ?? items.length;
+  const items: StoreListingSummary[] = [...builtIns, ...published];
+  const total =
+    builtIns.length + (list.data?.pages[0]?.total ?? published.length);
   const hasFilters = Boolean(urlQuery || category || sort !== "stars");
 
   const localPipelineByStoreId = useMemo(() => {
@@ -149,6 +166,18 @@ export function Store() {
     loading: boolean,
     empty: { title: string; description: string; action?: boolean },
   ) {
+    if (loading && listings.length > 0) {
+      return (
+        <div className="portal-store__grid">
+          {listings.map((listing) => (
+            <StoreCard key={listing.storeId} listing={listing} />
+          ))}
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={`pending-${i}`} height="14rem" shape="rect" />
+          ))}
+        </div>
+      );
+    }
     if (loading) {
       return (
         <div className="portal-store__grid" aria-hidden>
@@ -250,7 +279,7 @@ export function Store() {
             />
           )}
 
-          {!list.isPending && !list.isError && (
+          {!list.isPending && (
             <p className="portal-store__count">
               {t("portal.store.results", { count: total })}
             </p>

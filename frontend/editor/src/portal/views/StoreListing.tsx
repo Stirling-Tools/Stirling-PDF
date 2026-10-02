@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Link,
   useNavigate,
@@ -30,6 +30,14 @@ import { pipelineIcon } from "@portal/components/pipelines/pipelineIcon";
 import { EditListingModal } from "@portal/components/store/EditListingModal";
 import { RemoveListingModal } from "@portal/components/store/RemoveListingModal";
 import { RepublishModal } from "@portal/components/store/RepublishModal";
+import {
+  builtInTemplateId,
+  isBuiltInStoreId,
+} from "@portal/components/store/builtInIds";
+import {
+  builtInListing,
+  builtInManifest,
+} from "@portal/components/store/builtInListings";
 import {
   StoreIdBadge,
   useCopyToClipboard,
@@ -68,7 +76,13 @@ export function StoreListing() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { allTools } = useToolRegistry();
-  const listing = useStoreListing(storeId);
+  // A Stirling template is built here from the template catalogue; the server has no row for it.
+  const builtInId = storeId !== undefined && isBuiltInStoreId(storeId);
+  const builtIn = useMemo(
+    () => (builtInId && storeId ? builtInListing(storeId, t) : null),
+    [builtInId, storeId, t],
+  );
+  const listing = useStoreListing(builtInId ? undefined : storeId);
   const access = useStoreAccess();
   const { install, installingId, error: installError } = useInstallPipeline();
   const { copied: linkCopied, copy: copyLink } = useCopyToClipboard();
@@ -83,7 +97,9 @@ export function StoreListing() {
   const pipelinesPath = toPortalPath(VIEW_PATHS.pipelines);
   // Managing a listing happens in the portal; outside it a teammate reads it like anyone else.
   const isOwner =
-    access === "member" && listing.data?.viewer?.isTeammate === true;
+    access === "member" &&
+    !builtIn &&
+    listing.data?.viewer?.isTeammate === true;
   const pipelines = usePipelines({ enabled: isOwner });
 
   // The Published tab's "Edit listing" lands here with ?edit=1.
@@ -99,13 +115,24 @@ export function StoreListing() {
     if (!storeId) return;
     setDownloadError(null);
     try {
-      downloadManifest(await fetchStoreManifest(storeId), storeId);
+      downloadManifest(
+        builtIn ? builtInManifest(builtIn) : await fetchStoreManifest(storeId),
+        storeId,
+      );
     } catch (e) {
       setDownloadError(errorMessage(e));
     }
   }
 
-  if (listing.isPending) {
+  /** A template is set up through its own wizard, which asks for what that template needs. */
+  function setUpTemplate() {
+    const templateId = storeId ? builtInTemplateId(storeId) : null;
+    if (templateId) {
+      navigate(`${pipelinesPath}?setup=${encodeURIComponent(templateId)}`);
+    }
+  }
+
+  if (!builtInId && listing.isPending) {
     return (
       <div className="portal-store-listing" aria-busy>
         <Skeleton height="1rem" width="12rem" />
@@ -120,7 +147,8 @@ export function StoreListing() {
     );
   }
 
-  if (listing.isError || !listing.data || !storeId) {
+  const loaded = builtIn ?? listing.data;
+  if (!loaded || !storeId) {
     return (
       <div className="portal-store-listing">
         <EmptyState
@@ -137,15 +165,16 @@ export function StoreListing() {
     );
   }
 
-  const data = listing.data;
+  const data = loaded;
   const removed = data.status === "REMOVED";
   // A takedown by Stirling is final for the team: no edit, republish or remove.
   const canManage = isOwner && data.removedBy !== "STAFF";
-  const updated = formatRelativeTime(new Date(data.updatedAt).getTime(), t);
-  const firstPublished = formatRelativeTime(
-    new Date(data.firstPublishedAt).getTime(),
-    t,
-  );
+  const updated = builtIn
+    ? ""
+    : formatRelativeTime(new Date(data.updatedAt).getTime(), t);
+  const firstPublished = builtIn
+    ? ""
+    : formatRelativeTime(new Date(data.firstPublishedAt).getTime(), t);
   const author = data.viewer?.author;
   // The team's pipeline that publishes this listing, which Republish runs the flow on.
   const sourcePipelineId = isOwner
@@ -180,6 +209,11 @@ export function StoreListing() {
                 defaultValue: data.category,
               })}
             </Chip>
+            {data.curated && (
+              <Chip size="xs" accent="brand" showDot={false}>
+                {t("portal.store.card.byStirling")}
+              </Chip>
+            )}
             {isOwner && (
               <Chip
                 size="xs"
@@ -201,7 +235,7 @@ export function StoreListing() {
         </div>
 
         <div className="portal-store-listing__actions">
-          {!removed && (
+          {!removed && !builtIn && (
             <StoreStarButton
               storeId={data.storeId}
               starred={data.viewer?.starred ?? data.starred}
@@ -246,6 +280,12 @@ export function StoreListing() {
                 label={t("portal.store.guest.installNeedsAccessLabel")}
               />
             </span>
+          ) : builtIn ? (
+            <Tooltip content={t("portal.store.detail.setUpTemplateCaption")}>
+              <Button variant="primary" onClick={setUpTemplate}>
+                {t(installTargetLabelKey(saas))}
+              </Button>
+            </Tooltip>
           ) : (
             <Tooltip content={t(installTargetCaptionKey(saas))}>
               <Button
@@ -329,39 +369,45 @@ export function StoreListing() {
       <p className="portal-store-listing__description">{data.description}</p>
 
       <div className="portal-store-listing__metrics">
-        <MetricCard
-          size="sm"
-          label={t("portal.store.detail.metrics.installs")}
-          value={formatCount(data.installCount)}
-        />
-        <MetricCard
-          size="sm"
-          label={t("portal.store.detail.metrics.stars")}
-          value={formatCount(data.starCount)}
-        />
-        <MetricCard
-          size="sm"
-          className="portal-store-listing__metric-text"
-          label={t("portal.store.detail.metrics.updated")}
-          value={updated}
-        />
-        <MetricCard
-          size="sm"
-          className="portal-store-listing__metric-text"
-          label={t("portal.store.detail.metrics.firstPublished")}
-          value={firstPublished}
-        />
+        {!builtIn && (
+          <>
+            <MetricCard
+              size="sm"
+              label={t("portal.store.detail.metrics.installs")}
+              value={formatCount(data.installCount)}
+            />
+            <MetricCard
+              size="sm"
+              label={t("portal.store.detail.metrics.stars")}
+              value={formatCount(data.starCount)}
+            />
+            <MetricCard
+              size="sm"
+              className="portal-store-listing__metric-text"
+              label={t("portal.store.detail.metrics.updated")}
+              value={updated}
+            />
+            <MetricCard
+              size="sm"
+              className="portal-store-listing__metric-text"
+              label={t("portal.store.detail.metrics.firstPublished")}
+              value={firstPublished}
+            />
+          </>
+        )}
         <MetricCard
           size="sm"
           label={t("portal.store.detail.metrics.tools")}
           value={data.steps.length}
         />
-        {author && (
+        {(author || builtIn) && (
           <MetricCard
             size="sm"
             className="portal-store-listing__metric-text"
             label={t("portal.store.detail.metrics.author")}
-            value={author.displayName}
+            value={
+              author?.displayName ?? t("portal.store.detail.authorStirling")
+            }
           />
         )}
       </div>
