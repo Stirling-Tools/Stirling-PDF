@@ -23,6 +23,7 @@ import { Icon } from "@app/ui/Icon";
 import { InfoHint } from "@portal/components/InfoHint";
 import { StoreCard } from "@portal/components/store/StoreCard";
 import { PublishedTable } from "@portal/components/store/PublishedTable";
+import { useStoreAccess } from "@portal/components/store/storeAccess";
 import { usePipelines } from "@portal/queries/pipelines";
 import {
   useStarredListings,
@@ -52,10 +53,24 @@ function isSort(value: string | null): value is StoreSort {
 export function Store() {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
+  const access = useStoreAccess();
+  // A guest has no stars and no team; an account outside the portal has stars but no team.
+  const tabs = TABS.filter(
+    (key) =>
+      key === "browse" ||
+      (key === "starred" && access !== "guest") ||
+      access === "member",
+  );
 
-  const tab: TabKey = isTab(searchParams.get("tab"))
-    ? (searchParams.get("tab") as TabKey)
-    : "browse";
+  const tabLabels: Record<TabKey, string> = {
+    browse: t("portal.store.tabs.browse"),
+    starred: t("portal.store.tabs.starred"),
+    published: t("portal.store.tabs.published"),
+  };
+
+  const requested = searchParams.get("tab");
+  const tab: TabKey =
+    isTab(requested) && tabs.includes(requested) ? requested : "browse";
   const sort: StoreSort = isSort(searchParams.get("sort"))
     ? (searchParams.get("sort") as StoreSort)
     : "stars";
@@ -101,7 +116,7 @@ export function Store() {
   const list = useStoreList(listParams);
   const starred = useStarredListings(tab === "starred");
   const team = useTeamListings(tab === "published");
-  const pipelines = usePipelines();
+  const pipelines = usePipelines({ enabled: access === "member" });
 
   const items: StoreListingSummary[] =
     list.data?.pages.flatMap((page) => page.items) ?? [];
@@ -179,17 +194,17 @@ export function Store() {
         />
       </header>
 
-      <Tabs<TabKey>
-        variant="pill"
-        ariaLabel={t("portal.store.title")}
-        activeKey={tab}
-        onChange={(key) => patchParams({ tab: key === "browse" ? null : key })}
-        items={[
-          { key: "browse", label: t("portal.store.tabs.browse") },
-          { key: "starred", label: t("portal.store.tabs.starred") },
-          { key: "published", label: t("portal.store.tabs.published") },
-        ]}
-      />
+      {tabs.length > 1 && (
+        <Tabs<TabKey>
+          variant="pill"
+          ariaLabel={t("portal.store.title")}
+          activeKey={tab}
+          onChange={(key) =>
+            patchParams({ tab: key === "browse" ? null : key })
+          }
+          items={tabs.map((key) => ({ key, label: tabLabels[key] }))}
+        />
+      )}
 
       {tab === "browse" && (
         <section className="portal-store__browse">

@@ -1,6 +1,7 @@
 import { type ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { allowConsole } from "@app/tests/failOnConsole";
 
 // Controllable auth state for the mocked provider. `portalAccess` is the collapsed
@@ -32,14 +33,21 @@ vi.mock("@app/auth/UseSession", () => ({
 }));
 vi.mock("@app/ui", () => ({ Spinner: () => null }));
 vi.mock("@portal/auth/saasSupabase", () => ({ ensureSaasSupabase: vi.fn() }));
+vi.mock("@portal/views/PublicStore", () => ({
+  PublicStore: ({ access }: { access: string }) => (
+    <div data-testid="public-store">{access}</div>
+  ),
+}));
 
 import { PortalAuthBoundary } from "@portal/auth/PortalAuthBoundary";
 
-function renderBoundary() {
+function renderBoundary(path = "/processor/pipelines") {
   render(
-    <PortalAuthBoundary>
-      <div data-testid="portal">PORTAL</div>
-    </PortalAuthBoundary>,
+    <MemoryRouter initialEntries={[path]}>
+      <PortalAuthBoundary>
+        <div data-testid="portal">PORTAL</div>
+      </PortalAuthBoundary>
+    </MemoryRouter>,
   );
 }
 
@@ -50,6 +58,34 @@ describe("PortalAuthBoundary — SaaS", () => {
     authState.isAnonymous = false;
     authState.portalAccess = false;
     authState.user = null;
+  });
+
+  it("opens the store to a guest instead of sending them to sign in", () => {
+    renderBoundary("/processor/store");
+    expect(screen.getByTestId("public-store")).toHaveTextContent("guest");
+    expect(screen.queryByTestId("portal")).not.toBeInTheDocument();
+  });
+
+  it("opens a listing to an account without portal access, as signed in", () => {
+    authState.session = { user: { id: "member" }, access_token: "tok" };
+    authState.user = { portalAccess: false };
+    renderBoundary("/processor/store/sp-abcd1234");
+    expect(screen.getByTestId("public-store")).toHaveTextContent("signedIn");
+  });
+
+  it("keeps the rest of the portal closed to a guest", () => {
+    allowConsole.error(/not implemented|navigation/i);
+    renderBoundary("/processor/storefront");
+    expect(screen.queryByTestId("public-store")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("portal")).not.toBeInTheDocument();
+  });
+
+  it("gives a member the full portal on the store too", () => {
+    authState.session = { user: { id: "u1" }, access_token: "tok" };
+    authState.portalAccess = true;
+    authState.user = { portalAccess: true };
+    renderBoundary("/processor/store");
+    expect(screen.getByTestId("portal")).toBeInTheDocument();
   });
 
   it("renders the portal for a real session WITH portal access", () => {

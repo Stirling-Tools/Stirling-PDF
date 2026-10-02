@@ -10498,6 +10498,14 @@ details = "Details"
 input = "Input"
 output = "Output"
 
+[portal.store.guest]
+installNeedsAccess = "Installing needs access to the Processor. Ask a team admin to install it, or to give you access."
+installNeedsAccessLabel = "Why can't I install this?"
+openEditor = "Open the editor"
+signIn = "Sign in"
+signInToInstall = "Sign in to install"
+signInToStar = "Sign in to star"
+
 [portal.store.publish]
 action = "Publish to store"
 back = "Back"

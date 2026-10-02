@@ -1,0 +1,31 @@
+.portal-public-store {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: var(--c-bg);
+}
+
+.portal-public-store__bar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1.5rem;
+  border-bottom: 1px solid var(--c-border-subtle);
+  background: var(--c-surface);
+}
+
+.portal-public-store__home {
+  display: inline-flex;
+  align-items: center;
+  color: inherit;
+  text-decoration: none;
+}
+
+.portal-public-store__main {
+  flex: 1;
+  min-width: 0;
+}

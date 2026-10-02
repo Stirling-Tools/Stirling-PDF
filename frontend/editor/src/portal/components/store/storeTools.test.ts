@@ -7,6 +7,7 @@ import {
   groupFindings,
   installTargetLabelKey,
   settingsSummary,
+  storeShareUrl,
 } from "@portal/components/store/storeTools";
 
 // Only the fields the lookup reads; the rest of a registry entry is irrelevant here.
@@ -95,5 +96,13 @@ describe("settingsSummary", () => {
         new Set(["secret"]),
       ),
     ).toBe("level: 5, grayscale: false");
+  });
+});
+
+describe("storeShareUrl", () => {
+  it("links to /store/p/{id} on an app host, never the marketing site", () => {
+    const url = storeShareUrl("sp-abcd1234");
+    expect(url).toMatch(/^https?:\/\/[^/]+(\/[^/]+)*\/store\/p\/sp-abcd1234$/);
+    expect(url).not.toMatch(/stirling\.com\/store\//);
   });
 });

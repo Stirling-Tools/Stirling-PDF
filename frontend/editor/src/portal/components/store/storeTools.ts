@@ -8,6 +8,8 @@ import type {
   StoreManifest,
   StoreRequiredOnInstall,
 } from "@portal/api/store";
+import { absoluteWithBasePath } from "@app/constants/app";
+import { isSaasBuild } from "@portal/api/saasApiBase";
 
 /**
  * Pure helpers behind the store screens: mapping a listing's operation paths back to registry
@@ -158,9 +160,18 @@ export function settingsSummary(
   return line.length > maxLength ? `${line.slice(0, maxLength - 1)}...` : line;
 }
 
-/** The public share URL a listing is reached by outside the portal. */
+/**
+ * The public link to a listing (DT-01): `/store/p/{storeId}` on the SaaS app, which anyone can
+ * open (BR-01). On the SaaS build that is this app, wherever it runs, dev included. A self-hosted
+ * portal links to the SaaS app when it knows its address, since its own pages need a login there;
+ * without one it falls back to itself, which still works for that server's users.
+ */
 export function storeShareUrl(storeId: string): string {
-  return `https://stirling.com/store/p/${encodeURIComponent(storeId)}`;
+  const path = `/store/p/${encodeURIComponent(storeId)}`;
+  const cloud = isSaasBuild()
+    ? null
+    : import.meta.env.VITE_SAAS_FRONTEND_URL?.replace(/\/+$/, "");
+  return cloud ? `${cloud}${path}` : absoluteWithBasePath(path);
 }
 
 /** Save the manifest as `{storeId}.pipeline.json` through a transient anchor. */

@@ -1,10 +1,14 @@
 import { useTranslation } from "react-i18next";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import StarBorderRoundedIcon from "@mui/icons-material/StarBorderRounded";
-import { Button } from "@app/ui";
+import { Button, Tooltip } from "@app/ui";
 import { useConnectGate } from "@portal/hooks/useConnectGate";
 import { useStarListing } from "@portal/queries/store";
 import { formatCount } from "@portal/components/store/storeTools";
+import {
+  signInToContinue,
+  useStoreAccess,
+} from "@portal/components/store/storeAccess";
 
 interface StoreStarButtonProps {
   storeId: string;
@@ -19,7 +23,7 @@ interface StoreStarButtonProps {
 
 /**
  * Star toggle with its count. An unlinked self-hosted portal is asked to connect first, since a
- * star is written to the viewer's cloud account.
+ * star is written to the viewer's cloud account; a guest is asked to sign in.
  */
 export function StoreStarButton({
   storeId,
@@ -31,13 +35,14 @@ export function StoreStarButton({
   const { t } = useTranslation();
   const { guard } = useConnectGate();
   const star = useStarListing();
+  const guest = useStoreAccess() === "guest";
   const isStarred = starred === true;
 
   const toggle = guard(() => {
     star.mutate({ storeId, starred: !isStarred });
   });
 
-  return (
+  const button = (
     <Button
       variant="secondary"
       accent={isStarred ? "warning" : "neutral"}
@@ -46,10 +51,14 @@ export function StoreStarButton({
       className="portal-store__star"
       aria-pressed={isStarred}
       aria-label={
-        isStarred ? t("portal.store.card.unstar") : t("portal.store.card.star")
+        guest
+          ? t("portal.store.guest.signInToStar")
+          : isStarred
+            ? t("portal.store.card.unstar")
+            : t("portal.store.card.star")
       }
       disabled={disabled}
-      onClick={toggle}
+      onClick={guest ? signInToContinue : toggle}
       leftSection={
         isStarred ? (
           <StarRoundedIcon style={{ fontSize: "1.125rem" }} />
@@ -61,5 +70,10 @@ export function StoreStarButton({
       {formatCount(starCount)}
       {withLabel && isStarred ? ` ${t("portal.store.card.starred")}` : ""}
     </Button>
+  );
+  return guest && !disabled ? (
+    <Tooltip content={t("portal.store.guest.signInToStar")}>{button}</Tooltip>
+  ) : (
+    button
   );
 }

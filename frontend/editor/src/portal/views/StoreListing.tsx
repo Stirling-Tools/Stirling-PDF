@@ -49,6 +49,10 @@ import {
 } from "@portal/components/store/storeTools";
 import { usePipelines } from "@portal/queries/pipelines";
 import { useStoreListing } from "@portal/queries/store";
+import {
+  signInToContinue,
+  useStoreAccess,
+} from "@portal/components/store/storeAccess";
 import "@portal/views/StoreListing.css";
 
 /**
@@ -65,7 +69,7 @@ export function StoreListing() {
   const navigate = useNavigate();
   const { allTools } = useToolRegistry();
   const listing = useStoreListing(storeId);
-  const pipelines = usePipelines();
+  const access = useStoreAccess();
   const { install, installingId, error: installError } = useInstallPipeline();
   const { copied: linkCopied, copy: copyLink } = useCopyToClipboard();
   const [selectedStep, setSelectedStep] = useState<number | null>(null);
@@ -77,7 +81,10 @@ export function StoreListing() {
   const saas = isSaasBuild();
   const storePath = toPortalPath(VIEW_PATHS.store);
   const pipelinesPath = toPortalPath(VIEW_PATHS.pipelines);
-  const isOwner = listing.data?.viewer?.isTeammate === true;
+  // Managing a listing happens in the portal; outside it a teammate reads it like anyone else.
+  const isOwner =
+    access === "member" && listing.data?.viewer?.isTeammate === true;
+  const pipelines = usePipelines({ enabled: isOwner });
 
   // The Published tab's "Edit listing" lands here with ?edit=1.
   useEffect(() => {
@@ -223,6 +230,22 @@ export function StoreListing() {
                 {t("portal.store.publish.republish")}
               </Button>
             )
+          ) : access === "guest" ? (
+            <Tooltip content={t(installTargetCaptionKey(saas))}>
+              <Button variant="primary" onClick={signInToContinue}>
+                {t("portal.store.guest.signInToInstall")}
+              </Button>
+            </Tooltip>
+          ) : access === "signedIn" ? (
+            <span className="portal-store-listing__install-blocked">
+              <Button variant="primary" disabled>
+                {t(installTargetLabelKey(saas))}
+              </Button>
+              <InfoHint
+                content={t("portal.store.guest.installNeedsAccess")}
+                label={t("portal.store.guest.installNeedsAccessLabel")}
+              />
+            </span>
           ) : (
             <Tooltip content={t(installTargetCaptionKey(saas))}>
               <Button
@@ -472,7 +495,7 @@ export function StoreListing() {
           {t("portal.store.detail.shareLabel")}
         </span>
         <code className="portal-store-listing__share-url">
-          {shareUrl.replace(/^https:\/\//, "")}
+          {shareUrl.replace(/^https?:\/\//, "")}
         </code>
         <Button
           variant="tertiary"

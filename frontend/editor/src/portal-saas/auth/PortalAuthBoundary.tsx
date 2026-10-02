@@ -1,4 +1,5 @@
 import { useEffect, type ReactNode } from "react";
+import { useLocation } from "react-router-dom";
 import { AuthProvider } from "@app/auth";
 import { useAuth } from "@app/auth/context";
 import { AuthProvider as SaasSessionProvider } from "@app/auth/UseSession";
@@ -7,6 +8,8 @@ import { stripBasePath, withBasePath } from "@app/constants/app";
 import { rememberPendingDestination } from "@app/services/pendingDestination";
 import { ensureSaasSupabase } from "@portal/auth/saasSupabase";
 import { EDITOR_URL } from "@portal/auth/editorUrl";
+import { isStorePath } from "@portal/components/store/storeAccess";
+import { PublicStore } from "@portal/views/PublicStore";
 
 function FullScreen({ children }: { children: ReactNode }) {
   return (
@@ -34,9 +37,13 @@ function FullScreen({ children }: { children: ReactNode }) {
  * user.portalAccess still undefined, and not admin-by-role) as still-loading
  * rather than bouncing a legitimate user mid-load. Once settled: no session ->
  * login; a guest or a real account without access -> the free editor.
+ *
+ * The one exception is the Pipeline store, which is public (BR-01): anyone the gate would send
+ * away gets the store's own pages instead, with a way to sign in.
  */
 function SaasPortalGate({ children }: { children: ReactNode }) {
   const { session, loading, isAnonymous, portalAccess, user } = useAuth();
+  const { pathname } = useLocation();
 
   const accessPending =
     !!session &&
@@ -45,13 +52,16 @@ function SaasPortalGate({ children }: { children: ReactNode }) {
     user?.portalAccess === undefined;
   const settling = loading || accessPending;
 
-  const redirectTo = settling
-    ? null
-    : !session
-      ? withBasePath("/login")
-      : isAnonymous || !portalAccess
-        ? EDITOR_URL
-        : null;
+  const member = !!session && !isAnonymous && !!portalAccess;
+  const storeVisitor = !settling && !member && isStorePath(pathname);
+  const redirectTo =
+    settling || storeVisitor
+      ? null
+      : !session
+        ? withBasePath("/login")
+        : isAnonymous || !portalAccess
+          ? EDITOR_URL
+          : null;
   const bouncingToLogin = !settling && !session;
 
   useEffect(() => {
@@ -67,6 +77,11 @@ function SaasPortalGate({ children }: { children: ReactNode }) {
     window.location.href = redirectTo;
   }, [redirectTo, bouncingToLogin]);
 
+  if (storeVisitor) {
+    return (
+      <PublicStore access={!session || isAnonymous ? "guest" : "signedIn"} />
+    );
+  }
   if (settling || redirectTo) {
     return (
       <FullScreen>
