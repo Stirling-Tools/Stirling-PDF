@@ -2,10 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { MultiSelect, Loader, Text, Stack, TextInput } from "@mantine/core";
-import { Button } from "@app/ui/Button";
 import { Icon } from "@app/ui/Icon";
+import { InviteTeammateButton } from "@app/components/shared/InviteTeammateButton";
 import styles from "@app/components/shared/UserSelector.module.css";
-import { useNavigate } from "react-router-dom";
 import { alert } from "@app/components/toast";
 import { fetchUsers } from "@app/api/users";
 import { useAuth } from "@app/auth/UseSession";
@@ -36,7 +35,6 @@ const UserSelector = ({
 }: UserSelectorProps) => {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [stringValue, setStringValue] = useState<string[]>([]);
   const [search, setSearch] = useState("");
 
@@ -44,6 +42,7 @@ const UserSelector = ({
     data: users,
     isPending: loading,
     error,
+    refetch,
   } = useQuery({ queryKey: qk.users(), queryFn: fetchUsers });
 
   useEffect(() => {
@@ -103,20 +102,24 @@ const UserSelector = ({
     return <Loader size="sm" />;
   }
 
-  if (!selectData || selectData.length === 0) {
+  const inviteButton = (
+    <InviteTeammateButton
+      search={search}
+      disabled={disabled}
+      onInvited={() => {
+        setSearch("");
+        void refetch();
+      }}
+    />
+  );
+
+  if (selectData.length === 0 && presentation !== "cards") {
     return (
       <Stack gap="xs" align="flex-start">
         <Text size="sm" c="dimmed">
           {t("certSign.collab.userSelector.noUsers", "No other users found.")}
         </Text>
-        <Button
-          size="sm"
-          variant="secondary"
-          disabled={disabled}
-          onClick={() => navigate("/settings/people")}
-        >
-          {t("certSign.collab.userSelector.inviteUsers", "Add Users")}
-        </Button>
+        {inviteButton}
       </Stack>
     );
   }
@@ -194,6 +197,7 @@ const UserSelector = ({
             {t("signWorkspace.noPeopleMatch", "No people match your search.")}
           </Text>
         )}
+        {inviteButton}
       </Stack>
     );
   }

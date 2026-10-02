@@ -471,11 +471,6 @@ export default function AdminSystemSection() {
             "admin.settings.storage.description",
             "Where files are stored, and whether people can share them by link or email.",
           )}
-          badge={
-            <Badge component="span" color="orange" size="sm">
-              {t("toolPanel.alpha", "Alpha")}
-            </Badge>
-          }
         >
           <StorageSharingCard
             settings={storage}

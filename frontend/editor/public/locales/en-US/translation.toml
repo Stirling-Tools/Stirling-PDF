@@ -1819,7 +1819,7 @@ label = "Enable Share Links"
 
 [admin.settings.storage.signing.enabled]
 description = "Allow users to create multi-participant document signing sessions. Requires server file storage to be enabled."
-label = "Enable Group Signing (Alpha)"
+title = "Enable Group Signing"
 
 [admin.settings.telegram]
 description = "Configure Telegram bot connectivity, access controls, and feedback behavior."
@@ -2958,7 +2958,6 @@ visible = "Visible"
 yourSignatures = "Your Signatures ({{count}})"
 
 [certSign.collab.userSelector]
-inviteUsers = "Add Users"
 loadError = "Failed to load users"
 noTeam = "No Team"
 noUsers = "No other users found."
@@ -12393,6 +12392,10 @@ dueDateHelp = "This is a target date. Participants can still sign after it."
 dueDateHelpLabel = "About due dates"
 empty = "No sessions here yet."
 expand = "Expand signing sessions"
+inviteLoadError = "Could not load invitation options. Close this dialog and try again."
+invitePerson = "Add teammate: {{name}}"
+inviteTeammate = "Add a teammate"
+inviteUnavailable = "Adding teammates is not available for your account or server configuration."
 navigation = "Signing navigation"
 needsYou = "Needs your signature"
 nextMonth = "Next month"
