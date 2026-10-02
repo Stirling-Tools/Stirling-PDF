@@ -51,7 +51,7 @@ export function FolderThumbnail({
       }}
       aria-hidden="true"
     >
-      {/* icon-lint-disable -- folder art filled from the folder's colours at runtime */}
+      {/* icon-lint-allow: runtime-generated-svg -- folder art filled from the folder's colours at runtime */}
       <svg
         viewBox="0 0 100 80"
         preserveAspectRatio="xMidYMid meet"

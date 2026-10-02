@@ -94,7 +94,7 @@ export function ClassificationDemoChart({
 
   return (
     <div className={styles.chartWrap}>
-      {/* icon-lint-disable -- chart geometry is computed from the demo data */}
+      {/* icon-lint-allow: runtime-generated-svg -- chart geometry is computed from the demo data */}
       <svg
         viewBox={`0 0 ${SIZE} ${SIZE}`}
         className={styles.chart}

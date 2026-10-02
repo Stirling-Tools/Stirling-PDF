@@ -32,7 +32,24 @@ const SVG_ALLOWED = [
   path.join(SRC, "core/tests"),
 ];
 
-const OPT_OUT = /icon-lint-disable/;
+/**
+ * The only exceptions icon-lint grants, each lifting the inline-svg rule alone for an `<svg`
+ * within ALLOW_REACH lines below it. Every other rule has none: a finding there is a bug in
+ * the rule, so fix the rule.
+ */
+const ALLOWANCES: Record<string, { why: string; storiesOnly: boolean }> = {
+  "runtime-generated-svg": {
+    why: "geometry computed from props or state at runtime: rulers, rings, charts",
+    storiesOnly: false,
+  },
+  "storybook-fixture": {
+    why: "svg text built into a fake image for a story, never rendered by the app",
+    storiesOnly: true,
+  },
+};
+const ALLOW =
+  /icon-lint-allow:\s*([a-z-]+)(?:\s+--\s+(\S.*?))?\s*(?:\*\/\}?)?$/;
+const ALLOW_REACH = 6;
 
 /** Inside `dir` itself, not merely a sibling that shares its prefix (`core/icons-old`). */
 function isWithin(file: string, dir: string): boolean {
@@ -160,7 +177,7 @@ for (const file of files) {
     const css = fs.readFileSync(file, "utf8");
     for (const m of css.matchAll(/([^{}]*svg[^{}]*)\{([^}]*)\}/g)) {
       const decl = /(^|[;\s])fill\s*:\s*(?!none|transparent)/.test(m[2]);
-      if (decl && !OPT_OUT.test(m[0])) {
+      if (decl) {
         const line = css.slice(0, m.index).split("\n").length;
         problems.push(
           `${rel(file)}:${line}: sets fill on an svg. Icons are strokes with ` +
@@ -177,17 +194,62 @@ for (const file of files) {
   const lines = text.split("\n");
   const inIconsDir = isWithin(file, ICONS_DIR);
 
+  const isStory = /\.stories\.tsx?$/.test(file);
+  const svgLines = new Set<number>();
   lines.forEach((line, i) => {
-    // No inline svg outside core/icons
-    if (/<svg(?:[\s>]|$)/.test(line) && !inIconsDir) {
-      const context = lines.slice(Math.max(0, i - 6), i + 1).join("\n");
-      if (!OPT_OUT.test(context)) {
+    if (/<svg(?:[\s>]|$)/.test(line)) svgLines.add(i);
+  });
+  const allowed = new Set<number>();
+
+  lines.forEach((line, i) => {
+    if (/icon-lint-disable/.test(line)) {
+      problems.push(
+        `${rel(file)}:${i + 1}: icon-lint-disable is gone. Use "icon-lint-allow: <category> -- <reason>" ` +
+          `with one of: ${Object.keys(ALLOWANCES).join(", ")}.`,
+      );
+    }
+    if (!line.includes("icon-lint-allow")) return;
+    const m = ALLOW.exec(line);
+    const category = m?.[1];
+    const allowance = category ? ALLOWANCES[category] : undefined;
+    if (!m || !allowance) {
+      problems.push(
+        `${rel(file)}:${i + 1}: unknown icon-lint-allow. The categories are ` +
+          Object.entries(ALLOWANCES)
+            .map(([name, a]) => `${name} (${a.why})`)
+            .join("; ") +
+          ".",
+      );
+    } else if (!m[2]) {
+      problems.push(
+        `${rel(file)}:${i + 1}: icon-lint-allow: ${category} needs " -- <reason>".`,
+      );
+    } else if (allowance.storiesOnly && !isStory) {
+      problems.push(
+        `${rel(file)}:${i + 1}: icon-lint-allow: ${category} is only for .stories.tsx files.`,
+      );
+    } else {
+      const covered = [...svgLines].filter(
+        (n) => n > i && n <= i + ALLOW_REACH,
+      );
+      if (!covered.length) {
         problems.push(
-          `${rel(file)}:${i + 1}: inline <svg>. Move it to src/core/icons/svg/ and render ` +
-            `via <Icon>, or add "// icon-lint-disable -- <reason>" if the geometry is ` +
-            `computed at runtime.`,
+          `${rel(file)}:${i + 1}: icon-lint-allow: ${category} has no <svg in the ${ALLOW_REACH} lines below it.`,
         );
       }
+      for (const n of covered) allowed.add(n);
+    }
+  });
+
+  lines.forEach((line, i) => {
+    // No inline svg outside core/icons
+    if (svgLines.has(i) && !inIconsDir && !allowed.has(i)) {
+      problems.push(
+        `${rel(file)}:${i + 1}: inline <svg>. Move it to src/core/icons/svg/ and render ` +
+          `via <Icon>. If the geometry is computed at runtime, or it is svg text for a story's ` +
+          `fake image, mark it "icon-lint-allow: <category> -- <reason>" with one of: ` +
+          `${Object.keys(ALLOWANCES).join(", ")}.`,
+      );
     }
 
     // Leftovers the type system cannot see: ReactNode admits any string, and an unchecked `?? fallback`.
@@ -196,11 +258,9 @@ for (const file of files) {
       const isLegacy = /-(?:rounded|outlined|sharp|twotone)$/.test(name);
       if (!isLegacy || known.has(name)) continue;
       if (NOT_AN_ICON_POSITION.test(line.slice(0, m.index))) continue;
-      if (OPT_OUT.test(line)) continue;
       problems.push(
         `${rel(file)}:${i + 1}: "${name}" is a Material Symbols name, not a registry ` +
-          `icon; <Icon> would draw the placeholder. Use the lucide equivalent, or ` +
-          `add "// icon-lint-disable -- <reason>" if it is not an icon name.`,
+          `icon; <Icon> would draw the placeholder. Use the lucide equivalent.`,
       );
     }
 
@@ -217,11 +277,7 @@ for (const file of files) {
     // No retired icon library
     if (/^\s*(import|export)\b/.test(line) || /\brequire\(/.test(line)) {
       for (const banned of BANNED_IMPORTS) {
-        if (
-          line.includes(banned) &&
-          !inIconsDir &&
-          !OPT_OUT.test(lines[i - 1] ?? "")
-        ) {
+        if (line.includes(banned) && !inIconsDir) {
           problems.push(
             `${rel(file)}:${i + 1}: imports ${banned}. Use <Icon name="…" /> from @app/ui/Icon.`,
           );

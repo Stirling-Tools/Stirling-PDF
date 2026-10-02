@@ -5,7 +5,7 @@ Read this before adding, changing or styling any icon.
 ## TL;DR rules
 
 1. **Render every icon with `<Icon name="…" />`** from `@app/ui/Icon`. There is one icon component and one icon set.
-2. **Never write an `<svg>` in a `.ts`/`.tsx` file.** Icons are `.svg` files under `svg/stirling/` or `svg/third-party/`. Geometry computed at runtime (charts, overlays, previews) is the only exception and needs a `// icon-lint-disable -- <reason>` comment.
+2. **Never write an `<svg>` in a `.ts`/`.tsx` file.** Icons are `.svg` files under `svg/stirling/` or `svg/third-party/`. There are two exceptions, and each needs an `icon-lint-allow: <category> -- <reason>` comment above the `<svg`: `runtime-generated-svg` for geometry computed at runtime (rulers, rings, charts), and `storybook-fixture` for svg text that builds a story's fake image, allowed only in `.stories.tsx`. Nothing else can be silenced.
 3. **Size with the `size` prop, never `fontSize`.** The old icons were font glyphs; `<Icon>` sizes via `width`/`height`, so `style={{ fontSize }}` does nothing at all.
 4. **A name has to be in `icons.ts`.** Adding one is two lines: the `?react` import and the map entry. `IconName` comes from that map, so anything missing is a compile error.
 5. `task frontend:lint:icons` enforces 1–3 (see [Linter](#linter)).

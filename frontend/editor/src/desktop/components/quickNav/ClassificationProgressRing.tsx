@@ -91,7 +91,7 @@ export function ClassificationProgressRing({
         data-state={done ? "done" : "running"}
         onClick={onClick}
       >
-        {/* icon-lint-disable -- ring dash length is computed from classification progress */}
+        {/* icon-lint-allow: runtime-generated-svg -- ring dash length is computed from classification progress */}
         <svg
           viewBox={`0 0 ${SIZE} ${SIZE}`}
           className={styles.ring}
