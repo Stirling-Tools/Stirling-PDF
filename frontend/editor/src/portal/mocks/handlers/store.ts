@@ -1,5 +1,6 @@
 import { http, HttpResponse, delay } from "msw";
 import type {
+  StoreDetailsRequest,
   StoreFinding,
   StoreListPage,
   StoreListingDetail,
@@ -35,7 +36,13 @@ function daysAgo(days: number): string {
 function listing(
   input: Omit<
     StoreListingDetail,
-    "slug" | "starred" | "viewer" | "tools" | "minimumStirlingVersion"
+    | "slug"
+    | "starred"
+    | "viewer"
+    | "tools"
+    | "minimumStirlingVersion"
+    | "status"
+    | "removedBy"
   > & {
     minimumStirlingVersion?: string | null;
   },
@@ -46,6 +53,8 @@ function listing(
     slug: input.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
     tools,
     minimumStirlingVersion: input.minimumStirlingVersion ?? null,
+    status: "LISTED",
+    removedBy: null,
     starred: false,
     viewer: null,
     manifest: {
@@ -378,7 +387,8 @@ function toSummary(item: StoredListing): StoreListingSummary {
 }
 
 function toDetail(item: StoredListing): StoreListingDetail {
-  const teammate = TEAM_LISTED.has(item.storeId);
+  const teammate =
+    TEAM_LISTED.has(item.storeId) || TEAM_REMOVED.has(item.storeId);
   return {
     ...toSummary(item),
     firstPublishedAt: item.firstPublishedAt,
@@ -386,6 +396,12 @@ function toDetail(item: StoredListing): StoreListingDetail {
     steps: item.steps,
     requiredOnInstall: item.requiredOnInstall,
     minimumStirlingVersion: item.minimumStirlingVersion,
+    status: TEAM_REMOVED.has(item.storeId) ? "REMOVED" : "LISTED",
+    removedBy: TEAM_REMOVED.has(item.storeId)
+      ? item.storeId === "sp-7n1c5v3b"
+        ? "STAFF"
+        : "TEAM"
+      : null,
     viewer: {
       starred: starred.has(item.storeId),
       isTeammate: teammate,
@@ -597,6 +613,22 @@ export const storeHandlers = [
       );
     },
   ),
+
+  http.patch(`${BASE}/pipelines/:storeId`, async ({ params, request }) => {
+    const item = store.find((entry) => entry.storeId === params.storeId);
+    if (!item || !TEAM_LISTED.has(item.storeId)) {
+      return new HttpResponse(null, { status: 404 });
+    }
+    const body = (await request.json()) as StoreDetailsRequest;
+    await delay(300);
+    const report = preflightFor({ ...body, policyId: "" });
+    if (!report.canPublish) return HttpResponse.json(report, { status: 422 });
+    item.name = body.name;
+    item.description = body.description;
+    item.category = body.category;
+    item.latestChange = body.whatChanged?.trim() || null;
+    return HttpResponse.json(toDetail(item));
+  }),
 
   http.delete(`${BASE}/pipelines/:storeId`, async ({ params }) => {
     await delay(200);

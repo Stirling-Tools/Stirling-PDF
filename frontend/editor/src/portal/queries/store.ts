@@ -15,6 +15,8 @@ import {
   removeStoreListing,
   republishPipeline,
   setStoreStar,
+  updateStoreListingDetails,
+  type StoreDetailsRequest,
   type StoreListPage,
   type StoreListParams,
   type StoreListingDetail,
@@ -160,6 +162,26 @@ export function useRemoveListing() {
       void queryClient.invalidateQueries({
         queryKey: qk.storeListing(storeId),
       });
+    },
+  });
+}
+
+/** An owner's text edit. The detail is replaced from the response; lists refetch. */
+export function useUpdateListingDetails() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      storeId,
+      body,
+    }: {
+      storeId: string;
+      body: StoreDetailsRequest;
+    }) => updateStoreListingDetails(storeId, body),
+    onSuccess: (listing) => {
+      queryClient.setQueryData(qk.storeListing(listing.storeId), listing);
+      void queryClient.invalidateQueries({ queryKey: qk.storeTeam() });
+      void queryClient.invalidateQueries({ queryKey: STORE_LIST_PREFIX });
+      void queryClient.invalidateQueries({ queryKey: qk.storeStarred() });
     },
   });
 }

@@ -2,23 +2,21 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
-  Banner,
-  Button,
   DataTable,
-  Modal,
   column,
   type DataTableColumn,
   type StatusTone,
 } from "@app/ui";
 import { formatRelativeTime } from "@app/utils/timeUtils";
-import { errorMessage } from "@portal/api/http";
 import type {
   StoreTeamListing,
   StoreTeamListingStatus,
 } from "@portal/api/store";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
-import { useRemoveListing } from "@portal/queries/store";
+import { InfoHint } from "@portal/components/InfoHint";
 import { useCopyToClipboard } from "@portal/components/store/StoreIdBadge";
+import { RemoveListingModal } from "@portal/components/store/RemoveListingModal";
+import { RepublishModal } from "@portal/components/store/RepublishModal";
 import { storeShareUrl } from "@portal/components/store/storeTools";
 
 const STATUS_TONE: Record<StoreTeamListingStatus, StatusTone> = {
@@ -33,9 +31,9 @@ interface PublishedTableProps {
 }
 
 /**
- * The team's own listings, removed ones included. Removing is soft and confirmed here; Republish
- * hands off to the builder because the publish flow needs the pipeline itself, and is disabled when
- * no pipeline on this instance carries the listing's id.
+ * The team's own listings, removed ones included. Republish opens the publish flow on the pipeline
+ * that carries the listing's id, and is disabled when none on this instance does; Edit listing
+ * changes the words only, on the listing page. Removing is soft and confirmed here.
  */
 export function PublishedTable({
   rows,
@@ -43,15 +41,13 @@ export function PublishedTable({
 }: PublishedTableProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const remove = useRemoveListing();
   const { copy } = useCopyToClipboard();
   const [pendingRemove, setPendingRemove] = useState<StoreTeamListing | null>(
     null,
   );
-  const [removeError, setRemoveError] = useState<string | null>(null);
+  const [republishId, setRepublishId] = useState<string | null>(null);
 
   const storePath = toPortalPath(VIEW_PATHS.store);
-  const pipelinesPath = toPortalPath(VIEW_PATHS.pipelines);
   const showPublishedBy = rows.some((row) => row.publishedBy);
 
   const columns = useMemo<DataTableColumn<StoreTeamListing>[]>(() => {
@@ -96,8 +92,17 @@ export function PublishedTable({
       cols.push(
         column.text({
           key: "publishedBy",
-          header: t("portal.store.published.table.publishedBy"),
-          sortable: true,
+          header: (
+            <span className="portal-store__header-hint">
+              {t("portal.store.published.table.publishedBy")}
+              <InfoHint
+                content={t("portal.store.published.banner")}
+                label={t("portal.store.published.bannerLabel")}
+              />
+            </span>
+          ),
+          // Not sortable: a sortable header is a button, and the hint inside it is one too.
+          sortable: false,
           get: (row) => row.publishedBy ?? "-",
         }),
       );
@@ -119,13 +124,18 @@ export function PublishedTable({
                     navigate(`${storePath}/${encodeURIComponent(row.storeId)}`),
                 },
                 {
+                  label: t("portal.store.published.actions.edit"),
+                  disabled: row.removedBy === "STAFF",
+                  onClick: () =>
+                    navigate(
+                      `${storePath}/${encodeURIComponent(row.storeId)}?edit=1`,
+                    ),
+                },
+                {
                   label: t("portal.store.published.actions.republish"),
-                  disabled: !localId,
+                  disabled: !localId || row.removedBy === "STAFF",
                   onClick: () => {
-                    if (localId)
-                      navigate(
-                        `${pipelinesPath}/${encodeURIComponent(localId)}`,
-                      );
+                    if (localId) setRepublishId(localId);
                   },
                 },
                 {
@@ -138,10 +148,7 @@ export function PublishedTable({
                   dividerBefore: true,
                   disabled:
                     row.status === "REMOVED" || row.removedBy === "STAFF",
-                  onClick: () => {
-                    setRemoveError(null);
-                    setPendingRemove(row);
-                  },
+                  onClick: () => setPendingRemove(row),
                 },
               ],
             },
@@ -150,25 +157,7 @@ export function PublishedTable({
       }),
     );
     return cols;
-  }, [
-    t,
-    showPublishedBy,
-    localPipelineByStoreId,
-    navigate,
-    storePath,
-    pipelinesPath,
-    copy,
-  ]);
-
-  async function confirmRemove() {
-    if (!pendingRemove) return;
-    try {
-      await remove.mutateAsync(pendingRemove.storeId);
-      setPendingRemove(null);
-    } catch (e) {
-      setRemoveError(errorMessage(e));
-    }
-  }
+  }, [t, showPublishedBy, localPipelineByStoreId, navigate, storePath, copy]);
 
   return (
     <>
@@ -179,40 +168,14 @@ export function PublishedTable({
         defaultSort={{ key: "updatedAt", direction: "desc" }}
       />
 
-      <Modal
-        open={pendingRemove !== null}
-        onClose={() => !remove.isPending && setPendingRemove(null)}
-        width="sm"
-        title={t("portal.store.published.remove.title")}
-        footer={
-          <>
-            <Button
-              variant="tertiary"
-              size="sm"
-              disabled={remove.isPending}
-              onClick={() => setPendingRemove(null)}
-            >
-              {t("portal.store.published.remove.cancel")}
-            </Button>
-            <Button
-              size="sm"
-              accent="danger"
-              loading={remove.isPending}
-              onClick={() => void confirmRemove()}
-            >
-              {t("portal.store.published.remove.confirm")}
-            </Button>
-          </>
-        }
-      >
-        {removeError && <Banner tone="danger" description={removeError} />}
-        <p>
-          {t("portal.store.published.remove.body", {
-            name: pendingRemove?.name ?? "",
-            count: pendingRemove?.installCount ?? 0,
-          })}
-        </p>
-      </Modal>
+      <RemoveListingModal
+        listing={pendingRemove}
+        onClose={() => setPendingRemove(null)}
+      />
+      <RepublishModal
+        pipelineId={republishId}
+        onClose={() => setRepublishId(null)}
+      />
     </>
   );
 }

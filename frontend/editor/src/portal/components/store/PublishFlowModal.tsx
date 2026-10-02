@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -23,23 +23,28 @@ import {
   type StorePublishRequest,
 } from "@portal/api/store";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
-import { usePublishPipeline } from "@portal/queries/store";
+import { usePublishPipeline, useStoreListing } from "@portal/queries/store";
 import { FlowModal } from "@portal/components/shared/FlowModal";
 import { StepModalHeader } from "@portal/components/shared/StepModalHeader";
 import { StoreCard } from "@portal/components/store/StoreCard";
 import { StoreFindings } from "@portal/components/store/StoreFindings";
 import { StoreToolIcons } from "@portal/components/store/StoreToolIcons";
-import { groupFindings } from "@portal/components/store/storeTools";
+import {
+  STORE_TEXT_LIMITS,
+  groupFindings,
+} from "@portal/components/store/storeTools";
 import "@portal/components/store/PublishFlowModal.css";
 
 const STEPS = ["details", "checks", "confirm"] as const;
 type StepId = (typeof STEPS)[number];
 
-const NAME_MIN = 3;
-const NAME_MAX = 80;
-const DESC_MIN = 20;
-const DESC_MAX = 500;
-const CHANGE_MAX = 300;
+const {
+  nameMin: NAME_MIN,
+  nameMax: NAME_MAX,
+  descriptionMin: DESC_MIN,
+  descriptionMax: DESC_MAX,
+  whatChangedMax: CHANGE_MAX,
+} = STORE_TEXT_LIMITS;
 
 interface PublishFlowModalProps {
   open: boolean;
@@ -56,7 +61,8 @@ function initialCategory(policy: Policy): StoreCategory {
 /**
  * Three-step publish flow on the shared FlowModal: Details (what the listing says), Checks (the
  * server's preflight report, which alone decides what can be published), Confirm (the summary and
- * the rights declaration). Publishing an already-listed pipeline republishes under the same id.
+ * the rights declaration). Publishing an already-listed pipeline republishes under the same id,
+ * starting from the listing's current text and asking what changed.
  */
 export function PublishFlowModal({
   open,
@@ -80,6 +86,14 @@ export function PublishFlowModal({
   const [checkError, setCheckError] = useState<string | null>(null);
   const [publishError, setPublishError] = useState<string | null>(null);
 
+  // A copy installed from another team's listing links to it too, but publishing that creates a
+  // new listing; only the team's own listing makes this a republish.
+  const linked = useStoreListing(
+    open ? (policy.storeId ?? undefined) : undefined,
+  );
+  const republishing = linked.data?.viewer?.isTeammate === true;
+  const prefilled = useRef(false);
+
   // A fresh open starts a fresh flow; the pipeline's current name is the natural default.
   useEffect(() => {
     if (!open) return;
@@ -92,7 +106,19 @@ export function PublishFlowModal({
     setReport(null);
     setCheckError(null);
     setPublishError(null);
+    prefilled.current = false;
   }, [open, policy]);
+
+  // A republish starts from what the listing says now, once, so later typing is never overwritten.
+  useEffect(() => {
+    if (!open || prefilled.current || !republishing || !linked.data) return;
+    prefilled.current = true;
+    setName(linked.data.name);
+    setDescription(linked.data.description);
+    if (isStoreCategory(linked.data.category)) {
+      setCategory(linked.data.category);
+    }
+  }, [open, republishing, linked.data]);
 
   const trimmedName = name.trim();
   const trimmedDescription = description.trim();
@@ -138,16 +164,18 @@ export function PublishFlowModal({
   const blockers = groups.block.length;
   const existingStoreId = report?.existingStoreId ?? null;
 
+  // A republish keeps its id, stars and installs, so the preview shows them.
+  const kept = republishing ? linked.data : undefined;
   const previewListing: StoreListingSummary = {
-    storeId: "",
+    storeId: kept?.storeId ?? "",
     slug: "",
     name: trimmedName || policy.name,
     description: trimmedDescription,
     category,
     icon: policy.icon ?? "",
     tools: policy.steps.map((s) => s.operation),
-    starCount: 0,
-    installCount: 0,
+    starCount: kept?.starCount ?? 0,
+    installCount: kept?.installCount ?? 0,
     updatedAt: new Date().toISOString(),
     curated: false,
     needsConnections: false,
@@ -176,6 +204,10 @@ export function PublishFlowModal({
   }
 
   const current = STEPS.indexOf(step) + 1;
+  const title = republishing
+    ? t("portal.store.publish.republishTitle")
+    : t("portal.store.publish.title");
+  const askWhatChanged = republishing || existingStoreId !== null;
   const categoryOptions = STORE_CATEGORIES.map((id) => ({
     value: id,
     label: t(`portal.store.filters.category.${id}`),
@@ -186,10 +218,10 @@ export function PublishFlowModal({
       open={open}
       onClose={onClose}
       size="lg"
-      label={t("portal.store.publish.title")}
+      label={title}
       header={
         <StepModalHeader
-          title={t("portal.store.publish.title")}
+          title={title}
           subtitle={policy.name}
           step={current}
           total={STEPS.length}
@@ -270,6 +302,7 @@ export function PublishFlowModal({
                   onChange={(e) => setDescription(e.target.value)}
                 />
               </FormField>
+              {askWhatChanged && whatChangedField()}
             </div>
             <aside className="portal-store__publish-preview">
               <span className="portal-store__publish-label">
@@ -364,20 +397,6 @@ export function PublishFlowModal({
               <dt>{t("portal.store.publish.summary.worthChecking")}</dt>
               <dd>{summariseGroup(groups.warn)}</dd>
             </dl>
-            {existingStoreId && (
-              <FormField
-                label={t("portal.store.publish.whatChanged")}
-                helperText={t("portal.store.publish.whatChangedHelp")}
-              >
-                <textarea
-                  className="portal-store__textarea"
-                  rows={3}
-                  maxLength={CHANGE_MAX}
-                  value={whatChanged}
-                  onChange={(e) => setWhatChanged(e.target.value)}
-                />
-              </FormField>
-            )}
             <Banner
               tone="neutral"
               title={t("portal.store.publish.whoSees.title")}
@@ -391,6 +410,23 @@ export function PublishFlowModal({
           </div>
         );
     }
+  }
+
+  function whatChangedField() {
+    return (
+      <FormField
+        label={t("portal.store.publish.whatChanged")}
+        info={t("portal.store.publish.whatChangedHelp")}
+      >
+        <textarea
+          className="portal-store__textarea"
+          rows={3}
+          maxLength={CHANGE_MAX}
+          value={whatChanged}
+          onChange={(e) => setWhatChanged(e.target.value)}
+        />
+      </FormField>
+    );
   }
 
   function summariseGroup(items: { title: string }[]): string {

@@ -1,20 +1,22 @@
-import { useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import {
+  Link,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
-import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
-import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
-import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
-import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import {
   ActionIcon,
   Banner,
   Button,
   Card,
+  Chip,
   Dropdown,
   EmptyState,
   MetricCard,
   Skeleton,
+  Tooltip,
 } from "@app/ui";
 import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
 import { formatRelativeTime } from "@app/utils/timeUtils";
@@ -23,7 +25,11 @@ import { isSaasBuild } from "@portal/api/saasApiBase";
 import { fetchStoreManifest } from "@portal/api/store";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { Icon } from "@app/ui/Icon";
+import { InfoHint } from "@portal/components/InfoHint";
 import { pipelineIcon } from "@portal/components/pipelines/pipelineIcon";
+import { EditListingModal } from "@portal/components/store/EditListingModal";
+import { RemoveListingModal } from "@portal/components/store/RemoveListingModal";
+import { RepublishModal } from "@portal/components/store/RepublishModal";
 import {
   StoreIdBadge,
   useCopyToClipboard,
@@ -41,26 +47,46 @@ import {
   requiredFieldsForStep,
   storeShareUrl,
 } from "@portal/components/store/storeTools";
+import { usePipelines } from "@portal/queries/pipelines";
 import { useStoreListing } from "@portal/queries/store";
 import "@portal/views/StoreListing.css";
 
 /**
- * One listing, read-only: what the chain does, what each step carries, what the installer still
- * supplies, and the Install button that copies it here with no picker and no modal.
+ * One listing, read-only for everyone but its publisher: what the chain does, what each step
+ * carries, what the installer sets up, and the Install button that copies it here with no picker
+ * and no modal. The publisher's team also gets the listing's management (edit the words,
+ * republish from the source pipeline, remove), so the page they land on after publishing is the
+ * one they manage it from.
  */
 export function StoreListing() {
   const { t } = useTranslation();
   const { storeId } = useParams<{ storeId: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { allTools } = useToolRegistry();
   const listing = useStoreListing(storeId);
+  const pipelines = usePipelines();
   const { install, installingId, error: installError } = useInstallPipeline();
   const { copied: linkCopied, copy: copyLink } = useCopyToClipboard();
   const [selectedStep, setSelectedStep] = useState<number | null>(null);
   const [downloadError, setDownloadError] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [removing, setRemoving] = useState(false);
+  const [republishId, setRepublishId] = useState<string | null>(null);
 
   const saas = isSaasBuild();
   const storePath = toPortalPath(VIEW_PATHS.store);
+  const pipelinesPath = toPortalPath(VIEW_PATHS.pipelines);
+  const isOwner = listing.data?.viewer?.isTeammate === true;
+
+  // The Published tab's "Edit listing" lands here with ?edit=1.
+  useEffect(() => {
+    if (searchParams.get("edit") !== "1" || !listing.data) return;
+    if (isOwner && listing.data.removedBy !== "STAFF") setEditing(true);
+    const next = new URLSearchParams(searchParams);
+    next.delete("edit");
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams, listing.data, isOwner]);
 
   async function handleDownload() {
     if (!storeId) return;
@@ -105,12 +131,19 @@ export function StoreListing() {
   }
 
   const data = listing.data;
+  const removed = data.status === "REMOVED";
+  // A takedown by Stirling is final for the team: no edit, republish or remove.
+  const canManage = isOwner && data.removedBy !== "STAFF";
   const updated = formatRelativeTime(new Date(data.updatedAt).getTime(), t);
   const firstPublished = formatRelativeTime(
     new Date(data.firstPublishedAt).getTime(),
     t,
   );
   const author = data.viewer?.author;
+  // The team's pipeline that publishes this listing, which Republish runs the flow on.
+  const sourcePipelineId = isOwner
+    ? pipelines.data?.pipelines.find((p) => p.storeId === data.storeId)?.id
+    : undefined;
   const step = selectedStep !== null ? data.steps[selectedStep] : undefined;
   const hiddenFields =
     selectedStep !== null
@@ -132,66 +165,130 @@ export function StoreListing() {
           <span className="portal-store-listing__icon" aria-hidden>
             {pipelineIcon(data.icon, "1.5rem")}
           </span>
-          <div className="portal-store-listing__titles">
-            <div className="portal-store-listing__title-row">
-              <h1 className="portal-store-listing__title">{data.name}</h1>
-              <StoreIdBadge id={data.storeId} copyable />
-            </div>
-            <p className="portal-store-listing__meta">
-              {t("portal.store.detail.meta", {
-                category: t(`portal.store.filters.category.${data.category}`, {
-                  defaultValue: data.category,
-                }),
-                updated,
-                firstPublished,
+          <div className="portal-store-listing__title-row">
+            <h1 className="portal-store-listing__title">{data.name}</h1>
+            <StoreIdBadge id={data.storeId} copyable />
+            <Chip size="xs" accent="neutral" showDot={false}>
+              {t(`portal.store.filters.category.${data.category}`, {
+                defaultValue: data.category,
               })}
-            </p>
+            </Chip>
+            {isOwner && (
+              <Chip
+                size="xs"
+                accent="default"
+                showDot={false}
+                leadingIcon={<Icon name="users" size="0.875rem" />}
+              >
+                {t("portal.store.detail.yourListing")}
+              </Chip>
+            )}
+            {removed && (
+              <Chip size="xs" accent="warning" showDot={false}>
+                {data.removedBy === "STAFF"
+                  ? t("portal.store.detail.removedByStaff")
+                  : t("portal.store.published.status.REMOVED")}
+              </Chip>
+            )}
           </div>
         </div>
 
         <div className="portal-store-listing__actions">
-          <StoreStarButton
-            storeId={data.storeId}
-            starred={data.viewer?.starred ?? data.starred}
-            starCount={data.starCount}
-            withLabel
-          />
-          <div className="portal-store-listing__install">
+          {!removed && (
+            <StoreStarButton
+              storeId={data.storeId}
+              starred={data.viewer?.starred ?? data.starred}
+              starCount={data.starCount}
+              withLabel
+            />
+          )}
+          {canManage && (
             <Button
-              variant="primary"
-              loading={installing}
-              onClick={() => install(data.storeId)}
+              variant="secondary"
+              leftSection={<Icon name="pencil" size="1rem" />}
+              onClick={() => setEditing(true)}
             >
-              {t(installTargetLabelKey(saas))}
+              {t("portal.store.detail.edit")}
             </Button>
-            <span className="portal-store-listing__install-caption">
-              {t(installTargetCaptionKey(saas))}
-            </span>
-          </div>
+          )}
+          {removed ? (
+            canManage && (
+              <Button
+                variant="primary"
+                disabled={!sourcePipelineId}
+                onClick={() =>
+                  sourcePipelineId && setRepublishId(sourcePipelineId)
+                }
+              >
+                {t("portal.store.publish.republish")}
+              </Button>
+            )
+          ) : (
+            <Tooltip content={t(installTargetCaptionKey(saas))}>
+              <Button
+                variant="primary"
+                loading={installing}
+                onClick={() => install(data.storeId)}
+              >
+                {t(installTargetLabelKey(saas))}
+              </Button>
+            </Tooltip>
+          )}
           <Dropdown.Root align="end">
             <Dropdown.Trigger>
               <ActionIcon
                 variant="tertiary"
                 aria-label={t("portal.store.detail.moreActions")}
               >
-                <MoreHorizRoundedIcon style={{ fontSize: "1.125rem" }} />
+                <Icon name="ellipsis" size="1.125rem" />
               </ActionIcon>
             </Dropdown.Trigger>
             <Dropdown.Menu>
-              <Dropdown.Item
-                onSelect={() => void handleDownload()}
-                leading={
-                  <DownloadRoundedIcon style={{ fontSize: "1.125rem" }} />
-                }
-              >
-                {t("portal.store.detail.downloadJson")}
-              </Dropdown.Item>
+              {!removed && (
+                <Dropdown.Item
+                  onSelect={() => void handleDownload()}
+                  leading={<Icon name="download" size="1rem" />}
+                >
+                  {t("portal.store.detail.downloadJson")}
+                </Dropdown.Item>
+              )}
               <Dropdown.Item
                 onSelect={() => void copyLink(shareUrl)}
-                leading={<LinkRoundedIcon style={{ fontSize: "1.125rem" }} />}
+                leading={<Icon name="link" size="1rem" />}
               >
                 {t("portal.store.detail.copyLink")}
               </Dropdown.Item>
+              {canManage && !removed && (
+                <Dropdown.Item
+                  disabled={!sourcePipelineId}
+                  onSelect={() =>
+                    sourcePipelineId && setRepublishId(sourcePipelineId)
+                  }
+                  leading={<Icon name="refresh-cw" size="1rem" />}
+                >
+                  {t("portal.store.publish.republish")}
+                </Dropdown.Item>
+              )}
+              {isOwner && sourcePipelineId && (
+                <Dropdown.Item
+                  onSelect={() =>
+                    navigate(
+                      `${pipelinesPath}/${encodeURIComponent(sourcePipelineId)}`,
+                    )
+                  }
+                  leading={<Icon name="workflow" size="1rem" />}
+                >
+                  {t("portal.store.detail.openPipeline")}
+                </Dropdown.Item>
+              )}
+              {canManage && !removed && (
+                <Dropdown.Item
+                  onSelect={() => setRemoving(true)}
+                  leading={<Icon name="trash" size="1rem" />}
+                >
+                  {t("portal.store.published.actions.remove")}
+                </Dropdown.Item>
+              )}
             </Dropdown.Menu>
           </Dropdown.Root>
         </div>
@@ -221,28 +318,29 @@ export function StoreListing() {
         />
         <MetricCard
           size="sm"
+          className="portal-store-listing__metric-text"
           label={t("portal.store.detail.metrics.updated")}
           value={updated}
+        />
+        <MetricCard
+          size="sm"
+          className="portal-store-listing__metric-text"
+          label={t("portal.store.detail.metrics.firstPublished")}
+          value={firstPublished}
         />
         <MetricCard
           size="sm"
           label={t("portal.store.detail.metrics.tools")}
           value={data.steps.length}
         />
-        <MetricCard
-          size="sm"
-          label={t("portal.store.detail.metrics.author")}
-          value={
-            author
-              ? t("portal.store.detail.authorTeam", {
-                  name: author.displayName,
-                })
-              : t("portal.store.detail.authorHiddenShort")
-          }
-          description={
-            author ? undefined : t("portal.store.detail.authorHidden")
-          }
-        />
+        {author && (
+          <MetricCard
+            size="sm"
+            className="portal-store-listing__metric-text"
+            label={t("portal.store.detail.metrics.author")}
+            value={author.displayName}
+          />
+        )}
       </div>
 
       <div className="portal-store-listing__columns">
@@ -297,13 +395,25 @@ export function StoreListing() {
 
           <Card padding="default">
             <h2 className="portal-store-listing__section-title">
-              {t("portal.store.detail.notIncluded.title")}
+              {t("portal.store.detail.customise.title")}
             </h2>
-            <ul className="portal-store-listing__list">
-              <li>{t("portal.store.detail.notIncluded.source")}</li>
-              <li>{t("portal.store.detail.notIncluded.destination")}</li>
-              <li>{t("portal.store.detail.notIncluded.secrets")}</li>
-              <li>{t("portal.store.detail.notIncluded.schedule")}</li>
+            <ul className="portal-store-listing__checklist">
+              <li>
+                <Icon name="check" size="0.875rem" />
+                {t("portal.store.detail.customise.source")}
+              </li>
+              <li>
+                <Icon name="check" size="0.875rem" />
+                {t("portal.store.detail.customise.destination")}
+              </li>
+              <li>
+                <Icon name="check" size="0.875rem" />
+                {t("portal.store.detail.customise.secrets")}
+              </li>
+              <li>
+                <Icon name="check" size="0.875rem" />
+                {t("portal.store.detail.customise.schedule")}
+              </li>
             </ul>
           </Card>
 
@@ -322,17 +432,40 @@ export function StoreListing() {
         </div>
       </div>
 
-      <Card padding="default">
-        <h2 className="portal-store-listing__section-title">
-          {t("portal.store.detail.latestChange.title")}
-        </h2>
-        <p className="portal-store-listing__change">
-          {data.latestChange ?? t("portal.store.detail.latestChange.none")}
-        </p>
-        <p className="portal-store-listing__muted">
-          {t("portal.store.detail.latestChange.hint")}
-        </p>
-      </Card>
+      {(data.latestChange || canManage) && (
+        <Card padding="default">
+          <div className="portal-store-listing__section-head">
+            <h2 className="portal-store-listing__section-title">
+              {t("portal.store.detail.latestChange.title")}
+            </h2>
+            <InfoHint
+              content={t("portal.store.detail.latestChange.hint")}
+              label={t("portal.store.detail.latestChange.hintLabel")}
+            />
+            {canManage && (
+              <Button
+                className="portal-store-listing__section-action"
+                variant="tertiary"
+                size="sm"
+                onClick={() => setEditing(true)}
+              >
+                {data.latestChange
+                  ? t("portal.store.detail.latestChange.edit")
+                  : t("portal.store.detail.latestChange.add")}
+              </Button>
+            )}
+          </div>
+          <p
+            className={
+              data.latestChange
+                ? "portal-store-listing__change"
+                : "portal-store-listing__muted"
+            }
+          >
+            {data.latestChange ?? t("portal.store.detail.latestChange.none")}
+          </p>
+        </Card>
+      )}
 
       <footer className="portal-store-listing__share">
         <span className="portal-store-listing__share-label">
@@ -346,11 +479,7 @@ export function StoreListing() {
           size="sm"
           onClick={() => void copyLink(shareUrl)}
           leftSection={
-            linkCopied ? (
-              <CheckRoundedIcon style={{ fontSize: "1rem" }} />
-            ) : (
-              <ContentCopyRoundedIcon style={{ fontSize: "1rem" }} />
-            )
+            <Icon name={linkCopied ? "check" : "copy"} size="1rem" />
           }
         >
           {linkCopied
@@ -358,6 +487,18 @@ export function StoreListing() {
             : t("portal.store.detail.copyLink")}
         </Button>
       </footer>
+
+      {editing && (
+        <EditListingModal listing={data} onClose={() => setEditing(false)} />
+      )}
+      <RemoveListingModal
+        listing={removing ? data : null}
+        onClose={() => setRemoving(false)}
+      />
+      <RepublishModal
+        pipelineId={republishId}
+        onClose={() => setRepublishId(null)}
+      />
     </div>
   );
 }

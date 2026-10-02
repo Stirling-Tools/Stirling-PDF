@@ -9,10 +9,14 @@
 
 .portal-store__head {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 1rem;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.portal-store__header-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
 }
 
 .portal-store__title {
@@ -20,14 +24,6 @@
   font-size: 1.375rem;
   font-weight: 650;
   color: var(--c-text);
-}
-
-.portal-store__sub {
-  margin: 0.25rem 0 0;
-  font-size: 0.8125rem;
-  line-height: 1.5;
-  color: var(--c-text-subtle);
-  max-width: 46rem;
 }
 
 .portal-store__browse,

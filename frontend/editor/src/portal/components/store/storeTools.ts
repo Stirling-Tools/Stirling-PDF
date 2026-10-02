@@ -15,6 +15,15 @@ import type {
  * the build flavour. Kept free of React so they can be unit-tested directly.
  */
 
+/** The backend's listing text limits (StoreTextAuditor), checked here only to enable buttons. */
+export const STORE_TEXT_LIMITS = {
+  nameMin: 3,
+  nameMax: 80,
+  descriptionMin: 20,
+  descriptionMax: 500,
+  whatChangedMax: 300,
+} as const;
+
 export interface ResolvedTool {
   toolId: ToolId;
   entry: ToolRegistryEntry;

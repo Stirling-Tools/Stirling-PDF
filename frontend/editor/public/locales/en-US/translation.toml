@@ -10365,6 +10365,7 @@ type = "Type"
 close = "Close"
 
 [portal.store]
+aboutLabel = "About the Pipeline store"
 browseStore = "Browse store"
 fromStore = "From the store"
 loadError = "Couldn't load the store"
@@ -10390,13 +10391,11 @@ updated = "Updated {{when}}"
 view = "View"
 
 [portal.store.detail]
-authorHidden = "Author hidden, shown only to the publisher's team"
-authorHiddenShort = "Hidden"
-authorTeam = "{{name}}, your team"
 breadcrumb = "Pipeline store"
 chosenOnInstall = "Chosen when you install"
 copyLink = "Copy link"
 downloadJson = "Download JSON"
+edit = "Edit listing"
 graphTitle = "Tool chain"
 inspectorEmpty = "Select a step to see its settings."
 inspectorTitle = "Step settings"
@@ -10405,13 +10404,15 @@ installServer = "Install to this server"
 installServerCaption = "Creates a paused copy on this server. Nothing runs until you connect it."
 installTeam = "Install to your team"
 installTeamCaption = "Creates a paused copy in your team. Nothing runs until you connect it."
-meta = "{{category}}, Updated {{updated}}, First published {{firstPublished}}"
 moreActions = "More actions"
 noSettings = "This step has no settings."
 notFound = "This pipeline is not in the store."
+openPipeline = "Open source pipeline"
+removedByStaff = "Removed by Stirling"
 setOnInstall = "Set on install"
 shareLabel = "Share"
 yourDestination = "Your destination"
+yourListing = "Your team's listing"
 yourSource = "Your source"
 
 [portal.store.detail.compatibility]
@@ -10419,24 +10420,34 @@ any = "Works with any current Stirling PDF."
 minimum = "Needs Stirling PDF {{version}} or later"
 title = "Compatibility"
 
+[portal.store.detail.customise]
+destination = "Choose where results go"
+schedule = "Decide when it runs. Copies start paused."
+secrets = "Add your own passwords and connections"
+source = "Choose where documents come from"
+title = "Customise after installing"
+
 [portal.store.detail.latestChange]
-hint = "Installed copies are not changed when a listing is republished. Install again to get the newer copy."
-none = "No change notes yet."
+add = "Add a note"
+edit = "Edit note"
+hint = "Shown to everyone who views the listing. Set it when you edit or republish. Installed copies do not change; installing again gets the newer copy."
+hintLabel = "About change notes"
+none = "No change note yet."
 title = "Latest change"
 
 [portal.store.detail.metrics]
 author = "Author"
+firstPublished = "First published"
 installs = "Installs"
 stars = "Stars"
 tools = "Tools"
 updated = "Updated"
 
-[portal.store.detail.notIncluded]
-destination = "Destination: you choose where results go."
-schedule = "Schedule: installed copies start paused."
-secrets = "Secrets and connections: credentials never leave the publisher."
-source = "Source: you choose where documents come from."
-title = "Not included"
+[portal.store.edit]
+failed = "Couldn't save the listing"
+save = "Save changes"
+saved = "Listing updated"
+title = "Edit listing"
 
 [portal.store.empty]
 description = "Try another search or clear the filters."
@@ -10510,12 +10521,13 @@ published = "Published to the store"
 publishFailed = "Couldn't publish"
 republish = "Republish"
 republishBanner = "This pipeline is already in the store. Publishing replaces the store copy under the same id. Existing installs are copies and are not changed."
+republishTitle = "Republish to the Pipeline store"
 runAgain = "Run checks again"
 saveFirst = "Save your changes first"
 step = "Step {{current}} of {{total}}"
 title = "Publish to the Pipeline store"
 whatChanged = "What changed"
-whatChangedHelp = "Optional, up to 300 characters. Shown on the listing."
+whatChangedHelp = "Shown on the listing as the latest change. Optional, up to 300 characters."
 
 [portal.store.publish.steps]
 checks = "Checks"
@@ -10537,10 +10549,12 @@ title = "Who sees your name"
 
 [portal.store.published]
 banner = "Only members of your team can see who published these. Everyone else sees each pipeline with no author."
+bannerLabel = "Who can see the publisher"
 loadError = "Couldn't load your team's listings"
 
 [portal.store.published.actions]
 copyLink = "Copy link"
+edit = "Edit listing"
 label = "Actions"
 remove = "Remove from store"
 republish = "Republish"

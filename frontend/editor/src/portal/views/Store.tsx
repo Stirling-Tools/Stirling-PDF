@@ -20,6 +20,7 @@ import {
   type StoreSort,
 } from "@portal/api/store";
 import { Icon } from "@app/ui/Icon";
+import { InfoHint } from "@portal/components/InfoHint";
 import { StoreCard } from "@portal/components/store/StoreCard";
 import { PublishedTable } from "@portal/components/store/PublishedTable";
 import { usePipelines } from "@portal/queries/pipelines";
@@ -170,10 +171,12 @@ export function Store() {
   return (
     <div className="portal-store">
       <header className="portal-store__head">
-        <div>
-          <h1 className="portal-store__title">{t("portal.store.title")}</h1>
-          <p className="portal-store__sub">{t("portal.store.subtitle")}</p>
-        </div>
+        <h1 className="portal-store__title">{t("portal.store.title")}</h1>
+        <InfoHint
+          content={t("portal.store.subtitle")}
+          label={t("portal.store.aboutLabel")}
+          placement="bottom"
+        />
       </header>
 
       <Tabs<TabKey>
@@ -276,10 +279,6 @@ export function Store() {
 
       {tab === "published" && (
         <section className="portal-store__published">
-          <Banner
-            tone="info"
-            description={t("portal.store.published.banner")}
-          />
           {team.isError && (
             <Banner
               tone="danger"

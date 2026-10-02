@@ -87,6 +87,10 @@ export interface StoreListingDetail extends StoreListingSummary {
   steps: StoreManifestStep[];
   requiredOnInstall: StoreRequiredOnInstall[];
   minimumStirlingVersion: string | null;
+  /** Always LISTED for outsiders; the publisher's team also reads its removed listings. */
+  status: StoreTeamListingStatus;
+  /** STAFF means Stirling took it down: the team can no longer edit or republish it. */
+  removedBy: "TEAM" | "STAFF" | null;
   viewer: StoreViewer | null;
 }
 
@@ -123,6 +127,14 @@ export interface StorePublishRequest {
 }
 
 export type StoreTeamListingStatus = "LISTED" | "REMOVED";
+
+/** An owner's edit of the listing text. The tool chain only changes by republishing. */
+export interface StoreDetailsRequest {
+  name: string;
+  description: string;
+  category: string;
+  whatChanged?: string;
+}
 
 export interface StoreTeamListing {
   storeId: string;
@@ -227,6 +239,20 @@ export async function republishPipeline(
     `${listingPath(storeId)}/republish`,
     { method: "POST", body },
   );
+}
+
+/**
+ * PATCH /api/v1/store/pipelines/{storeId}: change the listing's text without republishing. A
+ * blocked edit is a 422 whose body is the {@link StorePreflightReport}.
+ */
+export async function updateStoreListingDetails(
+  storeId: string,
+  body: StoreDetailsRequest,
+): Promise<StoreListingDetail> {
+  return apiClient.saas.json<StoreListingDetail>(listingPath(storeId), {
+    method: "PATCH",
+    body,
+  });
 }
 
 /** DELETE /api/v1/store/pipelines/{storeId}: soft-remove the listing from the store. */
