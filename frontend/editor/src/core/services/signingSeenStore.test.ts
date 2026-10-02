@@ -32,6 +32,35 @@ const request = {
 beforeEach(() => localStorage.clear());
 afterEach(() => vi.restoreAllMocks());
 
+it("notifies participants again when their reviewed request is finalized, until the final PDF is viewed", () => {
+  const signed: SigningItem = { ...request, myStatus: "SIGNED" };
+  markSigningItemSeen("alice", signed);
+  const completed = { ...signed, finalized: true, closed: true };
+  expect(hasUnseenSigningActivity("alice", completed)).toBe(true);
+  expect(hasUnseenSigningActivity(null, completed)).toBe(false);
+  expect(
+    hasUnseenSigningActivity("alice", { ...completed, accessExpired: true }),
+  ).toBe(false);
+  expect(
+    hasUnseenSigningActivity("alice", { ...completed, myStatus: "DECLINED" }),
+  ).toBe(false);
+  markSigningItemSeen("alice", completed);
+  expect(hasUnseenSigningActivity("alice", completed)).toBe(false);
+  markSigningItemSeen("alice", signed);
+  expect(hasUnseenSigningActivity("alice", completed)).toBe(false);
+  expect(hasUnseenSigningActivity("bob", completed)).toBe(true);
+});
+
+it("accepts existing read records when detecting completion", () => {
+  markSigningItemSeen("alice", request);
+  const key = localStorage.key(0)!;
+  localStorage.setItem(key, JSON.stringify({ signedCount: 0, decisions: [] }));
+  expect(hasUnseenSigningActivity("alice", request)).toBe(false);
+  expect(
+    hasUnseenSigningActivity("alice", { ...request, finalized: true }),
+  ).toBe(true);
+});
+
 it("counts both roles once and clears both notifications when the combined session is read", () => {
   const signed = {
     ...session,

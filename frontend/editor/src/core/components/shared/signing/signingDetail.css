@@ -160,20 +160,29 @@
   border-radius: 50%;
   flex-shrink: 0;
 }
-.signing-controls__picker.mantine-Button-root {
+.signing-controls__picker.sui-btn {
   min-height: 72px;
+  height: auto;
   border-radius: 10px;
 }
 .signing-controls__preview {
   display: flex;
   align-items: center;
-  justify-content: center;
-  min-height: 40px;
+  justify-content: flex-start;
+  height: 64px;
   min-width: 0;
   flex: 1;
   padding: 6px 12px;
   background: var(--c-document-bg);
   border-radius: 6px;
+  overflow: hidden;
+}
+.signing-controls__preview img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: left center;
 }
 .signing-finalize__group {
   display: flex;

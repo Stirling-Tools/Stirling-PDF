@@ -9,6 +9,7 @@ import type { ToolId } from "@app/types/toolId";
 import type { SigningIntent } from "@app/utils/pendingSigningIntent";
 import {
   isSigningItemClosed,
+  canReceiveSigningActivity,
   needsSignature,
   type SigningMenuItem,
 } from "@app/utils/signingItems";
@@ -119,15 +120,16 @@ export function SignMenu({
     {
       key: "unread" as const,
       label: t("signMenu.unreadTab", "Unread"),
-      count: items.filter((item) => item.unread && !isSigningItemClosed(item))
-        .length,
+      count: items.filter(
+        (item) => item.unread && canReceiveSigningActivity(item),
+      ).length,
     },
     { key: "closed" as const, label: t("signMenu.closedTab", "Closed") },
   ];
   const rows = items.filter((item) => {
     const inTab =
       tab === "unread"
-        ? item.unread && !isSigningItemClosed(item)
+        ? item.unread && canReceiveSigningActivity(item)
         : isSigningItemClosed(item) === (tab === "closed");
     const searchable = `${item.documentName} ${item.kind === "request" ? item.ownerUsername : t("signWorkspace.createdByMe", "Created by me")}`;
     return (

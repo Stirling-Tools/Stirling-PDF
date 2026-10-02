@@ -53,8 +53,10 @@ const SignRequestPanel = ({ data }: SignRequestPanelProps) => {
       : null,
   );
   const [previewCount, setPreviewCount] = useState(0);
-  const [placementMode, setPlacementMode] = useState(true);
+  const [placementMode, setPlacementMode] = useState(false);
   const [hasSelectedAnnotation, setHasSelectedAnnotation] = useState(false);
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
   const [certificateModalOpen, setCertificateModalOpen] = useState(false);
   const [signing, setSigning] = useState(false);
   const [declining, setDeclining] = useState(false);
@@ -126,14 +128,19 @@ const SignRequestPanel = ({ data }: SignRequestPanelProps) => {
       );
   }, [setOverlay]);
 
-  // Poll for a selected placement (drives the delete control).
+  // The viewer owns placement state; the panel reads its current selection and history.
   useEffect(() => {
     if (!signControlsVisible) {
       setHasSelectedAnnotation(false);
+      setCanUndo(false);
+      setCanRedo(false);
       return;
     }
-    const check = () =>
+    const check = () => {
       setHasSelectedAnnotation(Boolean(overlayApiRef.current?.hasSelected?.()));
+      setCanUndo(Boolean(overlayApiRef.current?.canUndo()));
+      setCanRedo(Boolean(overlayApiRef.current?.canRedo()));
+    };
     check();
     const id = setInterval(check, 350);
     return () => clearInterval(id);
@@ -394,6 +401,10 @@ const SignRequestPanel = ({ data }: SignRequestPanelProps) => {
             signatureConfig={signatureConfig}
             hasSelectedAnnotation={hasSelectedAnnotation}
             onDeleteSelected={handleDeleteSelected}
+            canUndo={canUndo}
+            canRedo={canRedo}
+            onUndo={() => overlayApiRef.current?.undo()}
+            onRedo={() => overlayApiRef.current?.redo()}
           />
         )}
       </div>

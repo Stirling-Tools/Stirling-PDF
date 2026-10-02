@@ -13,6 +13,7 @@ import { EmbedPDF, useDocumentState } from "@embedpdf/core/react";
 import { usePdfiumEngine } from "@embedpdf/engines/react";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useSignaturePreviewHistory } from "@app/hooks/signing/useSignaturePreviewHistory";
 
 // Import the essential plugins
 import {
@@ -719,9 +720,15 @@ export function LocalEmbedPDF({
   >([]);
   const [commentAuthorName, setCommentAuthorName] = useState<string>("Guest");
 
-  const [localSignaturePreviews, setLocalSignaturePreviews] = useState<
-    SignaturePreview[]
-  >(signaturePreviews ?? []);
+  const {
+    previews: localSignaturePreviews,
+    change: handleSignaturePreviewsChange,
+    reset: resetSignaturePreviews,
+    undo: undoSignaturePreview,
+    redo: redoSignaturePreview,
+    canUndo: canUndoSignaturePreview,
+    canRedo: canRedoSignaturePreview,
+  } = useSignaturePreviewHistory(signaturePreviews);
 
   // Mount the overlay for controlled previews, placement mode, or once any
   // signature is placed — so leaving placement mode doesn't hide placements.
@@ -736,26 +743,21 @@ export function LocalEmbedPDF({
   // Keep internal state in sync when the caller supplies controlled previews.
   useEffect(() => {
     if (signaturePreviews !== undefined) {
-      setLocalSignaturePreviews(signaturePreviews);
+      resetSignaturePreviews(signaturePreviews);
     }
-  }, [signaturePreviews]);
+  }, [signaturePreviews, resetSignaturePreviews]);
 
-  const handleSignaturePreviewsChange = useCallback(
-    (next: SignaturePreview[]) => {
-      setLocalSignaturePreviews(next);
-      onSignaturePreviewsChange?.(next);
-    },
-    [onSignaturePreviewsChange],
-  );
+  useEffect(() => {
+    onSignaturePreviewsChange?.(localSignaturePreviews);
+  }, [localSignaturePreviews, onSignaturePreviewsChange]);
 
   useImperativeHandle(
     signatureOverlayApiRef,
     () => ({
       getSignaturePreviews: () => localSignaturePreviews,
       clearPreviews: () => {
-        setLocalSignaturePreviews([]);
+        resetSignaturePreviews([]);
         setSelectedSignatureId(null);
-        onSignaturePreviewsChange?.([]);
       },
       deleteSelected: () => {
         if (!selectedSignatureId) return;
@@ -763,12 +765,32 @@ export function LocalEmbedPDF({
           (p) => p.id !== selectedSignatureId,
         );
         setSelectedSignatureId(null);
-        setLocalSignaturePreviews(next);
-        onSignaturePreviewsChange?.(next);
+        handleSignaturePreviewsChange(next);
       },
-      hasSelected: () => selectedSignatureId !== null,
+      hasSelected: () =>
+        localSignaturePreviews.some(
+          (preview) => preview.id === selectedSignatureId,
+        ),
+      undo: () => {
+        if (!signaturePreviewsReadOnly) undoSignaturePreview();
+      },
+      redo: () => {
+        if (!signaturePreviewsReadOnly) redoSignaturePreview();
+      },
+      canUndo: () => !signaturePreviewsReadOnly && canUndoSignaturePreview,
+      canRedo: () => !signaturePreviewsReadOnly && canRedoSignaturePreview,
     }),
-    [localSignaturePreviews, selectedSignatureId, onSignaturePreviewsChange],
+    [
+      localSignaturePreviews,
+      selectedSignatureId,
+      resetSignaturePreviews,
+      handleSignaturePreviewsChange,
+      undoSignaturePreview,
+      redoSignaturePreview,
+      canUndoSignaturePreview,
+      canRedoSignaturePreview,
+      signaturePreviewsReadOnly,
+    ],
   );
 
   useEffect(() => {

@@ -9,7 +9,7 @@ import { useSigningSessions } from "@app/hooks/signing/useSigningSessions";
 import { useSigningActivity } from "@app/hooks/signing/useSigningActivity";
 
 /**
- * Counts active rows with unread invitations or participant decisions.
+ * Counts unread invitations, participant decisions and completed documents.
  * Zero when group signing is disabled. Polls in the background
  * while enabled. Unsettled while auth, config or sessions load, or the session
  * lookup fails; consumers may retain their previous count until it settles.

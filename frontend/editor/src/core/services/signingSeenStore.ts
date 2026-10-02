@@ -1,10 +1,14 @@
-import { isSigningItemClosed, type SigningItem } from "@app/utils/signingItems";
+import {
+  canReceiveSigningActivity,
+  type SigningItem,
+} from "@app/utils/signingItems";
 
 const STORAGE_PREFIX = "stirling.signing.seenActivity.";
 
 interface SeenActivity {
   signedCount: number;
   decisions: string[];
+  finalized: boolean;
 }
 
 let version = 0;
@@ -20,9 +24,10 @@ function storageKey(accountId: string, item: SigningItem): string {
 
 function snapshot(item: SigningItem): SeenActivity {
   return item.kind === "request"
-    ? { signedCount: 0, decisions: [] }
+    ? { signedCount: 0, decisions: [], finalized: Boolean(item.finalized) }
     : {
         signedCount: item.signedCount,
+        finalized: item.finalized,
         decisions: (item.participants ?? [])
           .filter(
             (participant) =>
@@ -53,7 +58,11 @@ function read(key: string): SeenActivity | undefined {
       Array.isArray(value.decisions) &&
       value.decisions.every((entry) => typeof entry === "string")
     ) {
-      return { signedCount: value.signedCount, decisions: value.decisions };
+      return {
+        signedCount: value.signedCount,
+        decisions: value.decisions,
+        finalized: "finalized" in value && value.finalized === true,
+      };
     }
     return undefined;
   } catch {
@@ -66,13 +75,16 @@ function notify(): void {
   listeners.forEach((listener) => listener());
 }
 
-/** Unread means an unseen invitation or participant decision, not an unfinished signing task. */
+/** Unread includes invitations, participant decisions and completed documents awaiting review. */
 export function hasUnseenSigningActivity(
   accountId: string | null,
   item: SigningItem,
 ): boolean {
-  if (!accountId || isSigningItemClosed(item)) return false;
+  if (!accountId || !canReceiveSigningActivity(item)) return false;
   const seen = read(storageKey(accountId, item));
+  if (item.kind === "request" && item.finalized) {
+    return !seen?.finalized;
+  }
   if (item.kind === "request") {
     return (
       !seen && (item.myStatus === "PENDING" || item.myStatus === "NOTIFIED")
@@ -107,6 +119,7 @@ export function markSigningItemSeen(
   // A stale list/response must not resurrect a decision that was already reviewed.
   const next = {
     signedCount: Math.max(previous?.signedCount ?? 0, current.signedCount),
+    finalized: Boolean(previous?.finalized || current.finalized),
     decisions: [
       ...new Set([...(previous?.decisions ?? []), ...current.decisions]),
     ].sort(),

@@ -12,6 +12,7 @@ import { SegmentedControl } from "@app/ui/SegmentedControl";
 import type { StatusTone } from "@app/ui/StatusBadge";
 import {
   isSigningItemClosed,
+  canReceiveSigningActivity,
   needsSignature,
   type SigningItem,
 } from "@app/utils/signingItems";
@@ -85,7 +86,7 @@ export function SigningSessionsTable({
       : item.ownerUsername;
   const rows = items.filter((item) =>
     tab === "unread"
-      ? item.unread && !isSigningItemClosed(item)
+      ? item.unread && canReceiveSigningActivity(item)
       : isSigningItemClosed(item) === (tab === "closed"),
   );
   const filters = useDataTableFilters({

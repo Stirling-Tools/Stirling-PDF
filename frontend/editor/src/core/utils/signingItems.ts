@@ -51,6 +51,17 @@ export function isSigningItemClosed(item: SigningItem): boolean {
   );
 }
 
+/** Completed participant documents can notify; expired access and other closed workflows cannot. */
+export function canReceiveSigningActivity(item: SigningItem): boolean {
+  return (
+    !isSigningItemClosed(item) ||
+    (item.kind === "request" &&
+      Boolean(item.finalized) &&
+      !item.accessExpired &&
+      item.myStatus !== "DECLINED")
+  );
+}
+
 export function needsSignature(item: SigningItem): boolean {
   if (isSigningItemClosed(item)) return false;
   const request = item.kind === "request" ? item : item.ownRequest;

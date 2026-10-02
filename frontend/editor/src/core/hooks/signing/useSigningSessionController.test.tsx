@@ -67,6 +67,29 @@ beforeEach(() => {
   mocks.mySessions = [];
 });
 
+it("acknowledges a final document only after the participant can open it", async () => {
+  const completed = {
+    ...request,
+    myStatus: "SIGNED" as const,
+    finalized: true,
+    closed: true,
+  };
+  mocks.get.mockImplementation(async (url: string) => ({
+    data: url.endsWith("/document") ? new Blob(["pdf"]) : completed,
+  }));
+  const { result } = renderHook(() => useSigningSessionController(true));
+  expect(
+    hasUnseenSigningActivity("alice", { ...completed, kind: "request" }),
+  ).toBe(true);
+  await act(async () => {
+    await result.current.openSignRequest(completed);
+  });
+  expect(result.current.requestData?.canSign).toBe(false);
+  expect(
+    hasUnseenSigningActivity("alice", { ...completed, kind: "request" }),
+  ).toBe(false);
+});
+
 it("acknowledges owner activity visible in their signing preview without reading unseen decisions", async () => {
   const peer = {
     id: 2,

@@ -232,6 +232,31 @@ it("opens the selected role by identity and closes the popover", () => {
   expect(onClose).toHaveBeenCalledTimes(1);
 });
 
+it("includes a newly finalized document in Unread and Closed, but never Active", () => {
+  const completed: SigningMenuItem = {
+    ...incoming,
+    finalized: true,
+    closed: true,
+    myStatus: "SIGNED",
+  };
+  const { updateItems } = setup([completed]);
+  expect(
+    screen.queryByRole("button", { name: /Contract.pdf.*Finalized/ }),
+  ).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: /^Unread\s*1$/ }));
+  expect(
+    screen.getByRole("button", { name: /Contract.pdf.*Finalized/ }),
+  ).toBeInTheDocument();
+  updateItems([{ ...completed, unread: false }]);
+  expect(
+    screen.queryByRole("button", { name: /Contract.pdf.*Finalized/ }),
+  ).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Closed" }));
+  expect(
+    screen.getByRole("button", { name: /Contract.pdf.*Finalized/ }),
+  ).toBeInTheDocument();
+});
+
 it("shows every active item and searches without marking hidden items as read", () => {
   const requests = Array.from({ length: 9 }, (_, index) => ({
     ...incoming,

@@ -110,14 +110,14 @@ function show(
   };
 }
 
-it("shows only unread active sessions with due-date filters and keeps read sessions in Active", async () => {
+it("filters unread sessions and completed documents while keeping read sessions in Active", async () => {
   const rows = items.map((item) => ({
     ...item,
     unread: ["ready", "future", "done"].includes(item.sessionId),
   }));
   const { user, updateItems } = show(false, rows);
   await user.click(screen.getByRole("radio", { name: "Unread" }));
-  expect(documents()).toEqual(["Plan.pdf", "Ready.pdf"]);
+  expect(documents()).toEqual(["Completed.pdf", "Plan.pdf", "Ready.pdf"]);
   await pick(user, "Due date", "Upcoming");
   expect(documents()).toEqual(["Plan.pdf"]);
   await user.click(screen.getByRole("button", { name: "Clear filters" }));
@@ -366,6 +366,18 @@ it("distinguishes initial loading from an empty list", () => {
   expect(
     screen.getByRole("button", { name: "Refresh sessions" }),
   ).toBeDisabled();
+});
+
+it("shows an unread final document without putting it back in Active", async () => {
+  const completed = { ...items[5], unread: true };
+  const { user, updateItems } = show(false, [completed]);
+  expect(documents()).toEqual([]);
+  await user.click(screen.getByRole("radio", { name: "Unread" }));
+  expect(documents()).toEqual(["Completed.pdf"]);
+  updateItems([{ ...completed, unread: false }]);
+  expect(documents()).toEqual([]);
+  await user.click(screen.getByRole("radio", { name: "Closed" }));
+  expect(documents()).toEqual(["Completed.pdf"]);
 });
 
 it("exposes unread activity beside the document without changing the ready-to-finalize status", () => {
