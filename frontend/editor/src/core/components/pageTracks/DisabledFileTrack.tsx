@@ -15,10 +15,6 @@ import styles from "@app/components/pageTracks/PageTracks.module.css";
 interface DisabledFileTrackProps {
   fileId: FileId;
   name: string;
-  /** Draw the track-reorder line above this row. */
-  dropBefore: boolean;
-  /** Draw it below (last row, dropping at the end). */
-  dropAfterLast: boolean;
   onClose: () => void;
 }
 
@@ -31,8 +27,6 @@ interface DisabledFileTrackProps {
 export function DisabledFileTrack({
   fileId,
   name,
-  dropBefore,
-  dropAfterLast,
   onClose,
 }: DisabledFileTrackProps) {
   const { t } = useTranslation();
@@ -48,17 +42,9 @@ export function DisabledFileTrack({
   return (
     <section
       ref={setZoneRef}
-      className={[
-        styles.track,
-        styles.trackDisabled,
-        dropBefore ? styles.trackDropBefore : "",
-        dropAfterLast ? styles.trackDropAfterLast : "",
-      ]
-        .filter(Boolean)
-        .join(" ")}
+      className={`${styles.track} ${styles.trackDisabled}`}
       data-track-file-id={fileId}
       data-unsupported
-      data-track-drop-before={dropBefore || undefined}
     >
       <header ref={setHandleRef} className={styles.trackHeader} {...listeners}>
         <span className={styles.trackName}>

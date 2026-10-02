@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { Center, Loader, LoadingOverlay, Stack, Text } from "@mantine/core";
 import {
@@ -9,6 +16,7 @@ import {
   DragOverlay,
   DragStartEvent,
   PointerSensor,
+  closestCenter,
   pointerWithin,
   rectIntersection,
   useSensor,
@@ -74,7 +82,14 @@ const collisionDetection: CollisionDetection = (args) => {
 
   if (args.active.data.current?.type === "trackHandle") {
     const zone = first(ZONE_PREFIX);
-    return zone ? [zone] : [];
+    if (zone) return [zone];
+    // In the gap between tracks (or past either end) no zone is under the
+    // pointer, so fall back to the nearest track by centre: resolveTrackHint
+    // then reads the pointer's side of it to insert before or after.
+    const zones = args.droppableContainers.filter((c) =>
+      String(c.id).startsWith(ZONE_PREFIX),
+    );
+    return closestCenter({ ...args, droppableContainers: zones });
   }
 
   const page = first(PAGE_PREFIX);
@@ -925,7 +940,6 @@ export default function PageTracks() {
     const stub = fileState.files.byId[fileId];
     return (
       <TrackRow
-        key={fileId}
         track={track}
         name={track.name}
         isNew={track.isNew}
@@ -937,12 +951,6 @@ export default function PageTracks() {
         zoom={zoom}
         scrollerRef={scrollerRef}
         layoutVersion={layoutVersion}
-        trackDropBefore={draggingTrack != null && trackDropTarget === fileId}
-        trackDropAfterLast={
-          draggingTrack != null &&
-          trackDropTarget === null &&
-          fileId === lastReorderableId
-        }
         trackDragging={draggingTrack === fileId}
         changed={changedSet.has(fileId)}
         thumbnails={thumbnails}
@@ -1030,45 +1038,55 @@ export default function PageTracks() {
             }}
           >
             {displayRows.map((row) => {
+              const dropBefore =
+                draggingTrack != null && trackDropTarget === row.id;
+              const dropAfterLast =
+                draggingTrack != null &&
+                trackDropTarget === null &&
+                row.id === lastReorderableId;
+              const slotClass = [
+                styles.trackSlot,
+                dropBefore ? styles.trackDropBefore : "",
+                dropAfterLast ? styles.trackDropAfterLast : "",
+              ]
+                .filter(Boolean)
+                .join(" ");
+              let content: ReactNode;
               if (row.kind === "track" || row.kind === "split") {
-                return renderTrackRow(row.id);
-              }
-              if (row.kind === "disabled") {
-                return (
+                content = renderTrackRow(row.id);
+              } else if (row.kind === "disabled") {
+                content = (
                   <DisabledFileTrack
-                    key={row.id}
                     fileId={row.id}
                     name={fileState.files.byId[row.id]?.name ?? row.id}
-                    dropBefore={
-                      draggingTrack != null && trackDropTarget === row.id
-                    }
-                    dropAfterLast={
-                      draggingTrack != null &&
-                      trackDropTarget === null &&
-                      row.id === lastReorderableId
-                    }
                     onClose={() => setCloseRequest(row.id)}
                   />
                 );
+              } else {
+                content = (
+                  <div className={styles.track}>
+                    <header className={styles.trackHeader}>
+                      <span className={styles.trackName}>
+                        <PrivateContent>
+                          {truncateCenter(
+                            fileState.files.byId[row.id]?.name ?? row.id,
+                            40,
+                          )}
+                        </PrivateContent>
+                      </span>
+                      <span className={styles.trackMeta}>
+                        {t("pageTracks.readingPages", "Reading pages...")}
+                      </span>
+                    </header>
+                    <div className={`${styles.lane} ${styles.laneEmpty}`}>
+                      <Loader size="sm" />
+                    </div>
+                  </div>
+                );
               }
               return (
-                <div key={row.id} className={styles.track}>
-                  <header className={styles.trackHeader}>
-                    <span className={styles.trackName}>
-                      <PrivateContent>
-                        {truncateCenter(
-                          fileState.files.byId[row.id]?.name ?? row.id,
-                          40,
-                        )}
-                      </PrivateContent>
-                    </span>
-                    <span className={styles.trackMeta}>
-                      {t("pageTracks.readingPages", "Reading pages...")}
-                    </span>
-                  </header>
-                  <div className={`${styles.lane} ${styles.laneEmpty}`}>
-                    <Loader size="sm" />
-                  </div>
+                <div key={row.id} className={slotClass}>
+                  {content}
                 </div>
               );
             })}

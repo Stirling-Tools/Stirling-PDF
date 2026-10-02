@@ -504,8 +504,16 @@
   opacity: 0.4;
 }
 
-/* Same trick as the page marker: drawn on the track rather than inserted
-   between them, so nothing shifts while the pointer is deciding. */
+/* A non-clipping wrapper so the reorder marker can sit in the gap between
+   tracks: .track itself clips its overflow to round the lane's corners, which
+   would hide a marker drawn outside its edge. */
+.trackSlot {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+/* The reorder marker, centred in the flex gap between tracks (half a gap above
+   for "before", below for "after the last"), like the page marker in its gap. */
 .trackDropBefore::before,
 .trackDropAfterLast::after {
   content: "";
@@ -519,14 +527,12 @@
   z-index: 3;
 }
 
-/* Drawn just inside the edge, not in the gap above it: .track clips its own
-   overflow to round the lane's corners, so an outside offset is invisible. */
 .trackDropBefore::before {
-  top: 0;
+  top: calc(var(--space-3) / -2);
 }
 
 .trackDropAfterLast::after {
-  bottom: 0;
+  bottom: calc(var(--space-3) / -2);
 }
 
 /* ── Drop indicator ──────────────────────────────────────────────────────── */

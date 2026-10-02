@@ -116,10 +116,6 @@ export interface TrackRowProps {
   /** Bumped by the parent when the stacked track heights change, forcing this
    *  lane to re-measure its offset within the scroller. */
   layoutVersion: number;
-  /** Draw the track-reorder line above this track. */
-  trackDropBefore: boolean;
-  /** Draw it below (last track, moving to the end). */
-  trackDropAfterLast: boolean;
   /** This track's header is the one being dragged. */
   trackDragging: boolean;
   changed: boolean;
@@ -158,8 +154,6 @@ function TrackRowImpl({
   scrollerRef,
   layoutVersion,
   isNew,
-  trackDropBefore,
-  trackDropAfterLast,
   trackDragging,
   changed,
   thumbnails,
@@ -401,14 +395,11 @@ function TrackRowImpl({
         styles.track,
         isOver ? styles.trackDropActive : "",
         trackDragging ? styles.trackDragging : "",
-        trackDropBefore ? styles.trackDropBefore : "",
-        trackDropAfterLast ? styles.trackDropAfterLast : "",
       ]
         .filter(Boolean)
         .join(" ")}
       data-track-file-id={track.fileId}
       data-changed={changed}
-      data-track-drop-before={trackDropBefore || undefined}
       aria-label={name}
     >
       <header
