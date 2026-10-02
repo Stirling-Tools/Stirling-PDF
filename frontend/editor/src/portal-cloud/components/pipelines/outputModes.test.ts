@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-// Resolves to the SaaS override (src/portal-saas) via the @portal cascade.
+// Resolves to the hosted edition (src/portal-cloud) via the saas @portal cascade.
 import { availableOutputModes } from "@portal/components/pipelines/outputModes";
 
 describe("availableOutputModes (SaaS)", () => {

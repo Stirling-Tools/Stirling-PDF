@@ -5,8 +5,11 @@ import { defineConfig, type OxlintGlobals } from "oxlint";
 // oxlint REPLACES (does not merge) a rule across matching overrides, so each
 // scope must restate the full set of bans that apply to it.
 const APP_SOURCE = "editor/src/**/*.{js,mjs,jsx,ts,tsx}";
-const DESKTOP_SOURCE = "editor/src/desktop/**/*.{js,mjs,jsx,ts,tsx}";
-const CLOUD_SOURCE = "editor/src/cloud/**/*.{js,mjs,jsx,ts,tsx}";
+// portal-desktop is the processor's desktop edition and portal-cloud its hosted
+// edition, so each takes the import scope of the editor layer it pairs with.
+const DESKTOP_SOURCE =
+  "editor/src/{desktop,portal-desktop}/**/*.{js,mjs,jsx,ts,tsx}";
+const CLOUD_SOURCE = "editor/src/{cloud,portal-cloud}/**/*.{js,mjs,jsx,ts,tsx}";
 
 // Shared import-ban building blocks -----------------------------------------
 
@@ -372,8 +375,8 @@ export default defineConfig({
       // are exempt from the shared-DS Mantine import ban; being desktop they also
       // keep the Tauri allowance.
       files: [
-        "editor/src/desktop/**/*.test.{js,mjs,jsx,ts,tsx}",
-        "editor/src/desktop/**/*.stories.{js,mjs,jsx,ts,tsx}",
+        "editor/src/{desktop,portal-desktop}/**/*.test.{js,mjs,jsx,ts,tsx}",
+        "editor/src/{desktop,portal-desktop}/**/*.stories.{js,mjs,jsx,ts,tsx}",
       ],
       rules: {
         "no-restricted-imports": [

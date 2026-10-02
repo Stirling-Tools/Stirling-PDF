@@ -11,7 +11,7 @@
  *
  * Resolved at build time via the `@app/*` alias, same as `usersCapabilities`:
  * `src/proprietary/portal/usersBackend.ts` (self-hosted) and
- * `src/saas/portal/usersBackend.ts` (SaaS). This module is just the shared
+ * `src/portal-cloud/usersBackend.ts` (Stirling Cloud). This module is just the shared
  * contract; only the flavor-divergent operations live here. Self-hosted-only
  * actions (role changes, suspend, password reset, MFA, grants, create/delete
  * team) stay in `@portal/api/{users,teams}` and are gated off on SaaS via

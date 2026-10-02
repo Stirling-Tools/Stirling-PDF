@@ -1,7 +1,7 @@
 // Enterprise-license flag for the portal, from the backend app-config (`runningEE`).
 // Gates Enterprise-only surfaces (e.g. Infrastructure > Audit) so they show a locked
 // upsell instead of firing a doomed 403 request. The SaaS build shadows this file to
-// derive enterprise from the plan tier (wallet-backed) - see portal-saas.
+// derive enterprise from the plan tier (wallet-backed) - see portal-cloud.
 
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 

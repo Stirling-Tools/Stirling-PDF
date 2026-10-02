@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { render } from "@testing-library/react";
-// Resolves to the SaaS override (src/portal-saas/contexts) via the @portal cascade.
+// Resolves to the hosted edition (src/portal-cloud/contexts) via the saas @portal cascade.
 import { usePortalLinked } from "@portal/contexts/usePortalLinked";
 
 function Probe() {

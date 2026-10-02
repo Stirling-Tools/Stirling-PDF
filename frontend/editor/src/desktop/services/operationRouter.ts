@@ -174,6 +174,11 @@ export class OperationRouter {
     if (this.isServerAutomationEndpoint(operation)) {
       return this.getConnectedServerBaseUrl();
     }
+    // An absolute URL already names its server. Resolving it would fall through to
+    // the bundled backend in SaaS mode, which throws while that backend is starting.
+    if (operation?.startsWith("http")) {
+      return "";
+    }
     const mode = await connectionModeService.getCurrentMode();
 
     // Local-only mode: route everything to local backend; open settings if tool unavailable

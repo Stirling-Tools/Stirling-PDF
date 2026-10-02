@@ -99,7 +99,10 @@ export default defineConfig({
         test: {
           name: "desktop",
           ...TIMEOUTS,
-          include: ["src/desktop/**/*.test.{ts,tsx}"],
+          include: [
+            "src/desktop/**/*.test.{ts,tsx}",
+            "src/portal-desktop/**/*.test.{ts,tsx}",
+          ],
           environment: "jsdom",
           globals: true,
           setupFiles: ["./src/core/setupTests.ts"],
@@ -120,11 +123,13 @@ export default defineConfig({
           name: "saas",
           ...TIMEOUTS,
           // src/saas = editor-saas layer; src/portal-saas = the portal's saas
-          // overrides (sibling to src/portal). Both build under the saas flavor,
-          // so both resolve @portal via the saas cascade (tsconfig.saas.vite.json).
+          // overrides and src/portal-cloud = the hosted edition it shares with
+          // desktop. All build under the saas flavor, so all resolve @portal via
+          // the saas cascade (tsconfig.saas.vite.json).
           include: [
             "src/saas/**/*.test.{ts,tsx}",
             "src/portal-saas/**/*.test.{ts,tsx}",
+            "src/portal-cloud/**/*.test.{ts,tsx}",
           ],
           environment: "jsdom",
           globals: true,

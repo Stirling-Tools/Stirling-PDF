@@ -53,6 +53,7 @@ import {
   onLocalUnauthorized,
 } from "@app/portal/api/localBackend";
 import { localFetch } from "@app/portal/localTransport";
+import { saasFetch } from "@app/portal/saasTransport";
 
 /**
  * SaaS base URL via the flavor seam: self-hosted reads VITE_SAAS_API_URL (a
@@ -254,7 +255,7 @@ async function saasJson<T>(
   if (base === null) throw new SaasUnconfiguredError();
   const res = await withPortalSaasSession(
     (token) =>
-      fetch(`${base}${path}`, {
+      saasFetch(`${base}${path}`, {
         method: options.method ?? "GET",
         headers: {
           Accept: "application/json",
@@ -284,7 +285,7 @@ async function saasText(
   if (base === null) throw new SaasUnconfiguredError();
   const res = await withPortalSaasSession(
     (token) =>
-      fetch(`${base}${path}`, {
+      saasFetch(`${base}${path}`, {
         method: options.method ?? "GET",
         headers: {
           Accept: "text/plain",
@@ -312,7 +313,7 @@ async function saasBlob(
   if (base === null) throw new SaasUnconfiguredError();
   const res = await withPortalSaasSession(
     (token) =>
-      fetch(`${base}${path}`, {
+      saasFetch(`${base}${path}`, {
         method: options.method ?? "GET",
         headers: { ...options.headers, Authorization: `Bearer ${token}` },
         signal: options.signal,

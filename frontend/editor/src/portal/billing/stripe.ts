@@ -167,7 +167,11 @@ async function rpc<T>(
     );
   }
   const { data, error } = await withPortalSaasSession(
-    () => Promise.resolve(supabase.rpc(fn, args)),
+    // Explicit: a client without a stored session (desktop) would otherwise call as anon.
+    (token) =>
+      Promise.resolve(
+        supabase.rpc(fn, args).setHeader("Authorization", `Bearer ${token}`),
+      ),
     (response) => response.status === 401,
     readOnly,
   );

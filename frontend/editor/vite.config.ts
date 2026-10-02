@@ -469,9 +469,14 @@ export default defineConfig(async ({ mode, command }) => {
     // an absolute base so deep-route asset paths resolve to /assets/...
     // Trailing slash required: it becomes `<base href>`, and browsers resolve
     // relative URLs (manifest.json, favicon) against the base's *directory*.
+    // Desktop always serves dist at the webview root, and its windows reload
+    // nested routes (/processor/..., /settings/...), so it takes the absolute
+    // base too: with "./" those reloads fetch assets and locales from under the
+    // route and render blank.
     base: runSubpath
       ? `/${runSubpath}/`
-      : process.env.VITE_BUILD_FOR_PREVIEW === "1"
+      : process.env.VITE_BUILD_FOR_PREVIEW === "1" ||
+          effectiveMode === "desktop"
         ? "/"
         : "./",
   };

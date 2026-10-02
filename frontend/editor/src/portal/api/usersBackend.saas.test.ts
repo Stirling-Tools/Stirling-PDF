@@ -28,11 +28,11 @@ vi.mock("@app/auth/supabase/supabaseClient", () => ({
 }));
 vi.mock("@portal/auth/saasSupabase", () => ({ ensureSaasSupabase: vi.fn() }));
 
-// The SaaS usersBackend lives under src/saas; the portal vitest project resolves
+// The SaaS usersBackend lives under src/portal-cloud; the portal vitest project resolves
 // @app to proprietary (there's no @saas alias here), so the SaaS impl can only be
 // exercised by importing it directly by path.
 // oxlint-disable-next-line no-restricted-imports
-import { usersBackend } from "../../saas/portal/usersBackend";
+import { usersBackend } from "../../portal-cloud/usersBackend";
 
 const server = setupServer(...teamSaasHandlers);
 

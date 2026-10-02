@@ -16,7 +16,7 @@ function tierFromLinkState(linkState: LinkState): Tier {
  * The plan tier the portal runs on, self-hosted flavor: derived from whether the
  * org has linked its SaaS account and carries a live subscription. The SaaS
  * build shadows this file to derive the tier from the wallet instead — there is
- * no link concept there (see portal-saas/contexts/usePlanTier).
+ * no link concept there (see portal-cloud/contexts/usePlanTier).
  */
 export function usePlanTier(): Tier {
   const { linkState } = useLink();

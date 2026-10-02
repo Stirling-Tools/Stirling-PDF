@@ -5,7 +5,7 @@ import { apiClient } from "@portal/api/http";
  *
  * Self-hosted (this module) reads the local Stirling backend — the figures come
  * from this instance's audit trail, filtered to free UI tool runs. The SaaS build
- * shadows this module (src/portal-saas/api/fleetStats.ts) to read the team-scoped
+ * shadows this module (src/portal-cloud/api/fleetStats.ts) to read the team-scoped
  * SaaS backend instead.
  *
  * Activity counts cover document operations in the last 30 days of retained
