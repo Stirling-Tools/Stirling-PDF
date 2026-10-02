@@ -3,7 +3,7 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { expect, it, vi } from "vitest";
 import { SigningSessionsTable } from "@app/components/shared/signing/SigningSessionsTable";
-import type { SigningItem } from "@app/utils/signingItems";
+import { collectSigningItems, type SigningItem } from "@app/utils/signingItems";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -26,7 +26,7 @@ const items: SigningItem[] = [
   },
   {
     kind: "request",
-    sessionId: "shared",
+    sessionId: "another-budget",
     documentName: "Budget.pdf",
     ownerUsername: "alice",
     createdAt: "2026-01-31T10:00:00Z",
@@ -269,7 +269,7 @@ it("combines owner, status and due-date facets with search, and clears filters",
   expect(documents()).toHaveLength(5);
 });
 
-it("keeps owner and signer entries distinct and opens the selected role with mouse or keyboard", async () => {
+it("keeps different workflows with the same filename distinct and opens them with mouse or keyboard", async () => {
   const { user, onOpen } = show();
   await user.click(
     screen.getByRole("button", { name: /Budget.pdf Created by me/ }),
@@ -279,6 +279,49 @@ it("keeps owner and signer entries distinct and opens the selected role with mou
     key: "Enter",
   });
   expect(onOpen).toHaveBeenLastCalledWith(items[1]);
+});
+
+it("shows one owned row with personal action and progress through signing and finalization", async () => {
+  const owned = items[0];
+  const request = items[1];
+  if (owned.kind !== "session" || request.kind !== "request")
+    throw new Error("Invalid fixture");
+  const ownRequest = {
+    ...request,
+    sessionId: owned.sessionId,
+    myStatus: "PENDING" as const,
+  };
+  const pending = collectSigningItems([ownRequest], [owned]);
+  const { user, onOpen, updateItems } = show(false, pending);
+  expect(documents()).toEqual(["Budget.pdf"]);
+  const row = screen.getByRole("button", {
+    name: /Budget.pdf Created by me Needs your signature/,
+  });
+  expect(
+    within(row).getByRole("progressbar", { name: "1 / 2 signed" }),
+  ).toBeInTheDocument();
+  await user.click(row);
+  expect(onOpen).toHaveBeenLastCalledWith(pending[0]);
+  await pick(user, "Status", "Needs your signature");
+  expect(documents()).toEqual(["Budget.pdf"]);
+  await user.click(screen.getByRole("button", { name: "Clear filters" }));
+  const ready = { ...owned, signedCount: 2 };
+  updateItems(
+    collectSigningItems([{ ...ownRequest, myStatus: "SIGNED" }], [ready]),
+  );
+  expect(documents()).toEqual(["Budget.pdf"]);
+  expect(
+    screen.getByRole("button", { name: /Budget.pdf.*Ready to finalize/ }),
+  ).toBeInTheDocument();
+  updateItems(
+    collectSigningItems(
+      [{ ...ownRequest, myStatus: "SIGNED", finalized: true }],
+      [{ ...ready, finalized: true }],
+    ),
+  );
+  expect(documents()).toEqual([]);
+  await user.click(screen.getByRole("radio", { name: "Closed" }));
+  expect(documents()).toEqual(["Budget.pdf"]);
 });
 
 it("keeps submitted and ready sessions active, moving finalized and declined entries to Closed", async () => {

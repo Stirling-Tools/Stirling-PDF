@@ -5,6 +5,7 @@ import type {
   SignRequestSummary,
   SessionDetail,
   SessionSummary,
+  SigningParticipantPreview,
 } from "@app/types/signingSession";
 
 import { hasUnseenSigningActivity } from "@app/services/signingSeenStore";
@@ -64,6 +65,131 @@ beforeEach(() => {
   mocks.accountId = "alice";
   mocks.signRequests = [];
   mocks.mySessions = [];
+});
+
+it("acknowledges owner activity visible in their signing preview without reading unseen decisions", async () => {
+  const peer = {
+    id: 2,
+    status: "SIGNED" as const,
+    lastUpdated: "2026-10-01T10:00:00",
+  };
+  const ownerSession: SessionSummary = {
+    ...request,
+    participantCount: 3,
+    signedCount: 1,
+    finalized: false,
+    participants: [peer],
+  };
+  mocks.mySessions = [ownerSession];
+  let preview: SigningParticipantPreview[] = [{ ...peer, name: "Bob" }];
+  mocks.get.mockImplementation(async (url: string) => ({
+    data: url.endsWith("/document")
+      ? new Blob(["pdf"])
+      : { ...request, canSign: true, participants: preview },
+  }));
+  const { result, rerender } = renderHook(() =>
+    useSigningSessionController(true),
+  );
+  await act(async () => {
+    await result.current.openSignRequest(request);
+  });
+  expect(
+    hasUnseenSigningActivity("alice", {
+      ...ownerSession,
+      kind: "session",
+      ownRequest: request,
+    }),
+  ).toBe(false);
+
+  const decline = {
+    id: 3,
+    status: "DECLINED" as const,
+    lastUpdated: "2026-10-01T11:00:00",
+  };
+  const changed = { ...ownerSession, participants: [peer, decline] };
+  mocks.mySessions = [changed];
+  rerender();
+  await act(async () => {
+    await result.current.requestData!.onRefresh();
+  });
+  expect(
+    hasUnseenSigningActivity("alice", { ...changed, kind: "session" }),
+  ).toBe(true);
+  preview = [...preview, { ...decline, name: "Carol" }];
+  await act(async () => {
+    await result.current.requestData!.onRefresh();
+  });
+  expect(
+    hasUnseenSigningActivity("alice", { ...changed, kind: "session" }),
+  ).toBe(false);
+});
+
+it("keeps a submitted owner signature read when the list catches up after the preview", async () => {
+  const participant = {
+    id: 1,
+    name: "Alice",
+    status: "PENDING" as const,
+    lastUpdated: "2026-10-01T10:00:00",
+  };
+  const ownerSession: SessionSummary = {
+    ...request,
+    participantCount: 1,
+    signedCount: 0,
+    finalized: false,
+    participants: [participant],
+  };
+  mocks.mySessions = [ownerSession];
+  let signed = false;
+  mocks.post.mockImplementation(async () => {
+    signed = true;
+  });
+  mocks.get.mockImplementation(async (url: string) => ({
+    data: url.endsWith("/document")
+      ? new Blob(["pdf"])
+      : {
+          ...request,
+          canSign: !signed,
+          myStatus: signed ? "SIGNED" : "PENDING",
+          participants: [
+            { ...participant, status: signed ? "SIGNED" : "PENDING" },
+          ],
+        },
+  }));
+  const { result, rerender } = renderHook(() =>
+    useSigningSessionController(true),
+  );
+  await act(async () => {
+    await result.current.openSignRequest(request);
+  });
+  await act(async () => {
+    await result.current.requestData!.onSign(new FormData());
+  });
+  const updatedSession: SessionSummary = {
+    ...ownerSession,
+    signedCount: 1,
+    participants: [
+      { ...participant, status: "SIGNED", lastUpdated: "2026-10-01T11:00:00" },
+    ],
+  };
+  mocks.mySessions = [updatedSession];
+  rerender();
+  expect(
+    hasUnseenSigningActivity("alice", { ...updatedSession, kind: "session" }),
+  ).toBe(false);
+
+  act(() => result.current.backToList());
+  const unseenDecision: SessionSummary = {
+    ...updatedSession,
+    participants: [
+      ...updatedSession.participants!,
+      { id: 2, status: "DECLINED", lastUpdated: "2026-10-01T12:00:00" },
+    ],
+  };
+  mocks.mySessions = [unseenDecision];
+  rerender();
+  expect(
+    hasUnseenSigningActivity("alice", { ...unseenDecision, kind: "session" }),
+  ).toBe(true);
 });
 
 it.each(["1", 1])(

@@ -1,6 +1,6 @@
 import type { TFunction } from "i18next";
 import type { SigningItem } from "@app/utils/signingItems";
-import { isSigningItemClosed } from "@app/utils/signingItems";
+import { isSigningItemClosed, needsSignature } from "@app/utils/signingItems";
 import type {
   SessionSummary,
   SignRequestSummary,
@@ -11,6 +11,12 @@ export function signingStatus(
   t: TFunction,
 ): { color: string; label: string } {
   if (item.kind === "session") {
+    if (needsSignature(item)) {
+      return {
+        color: "orange",
+        label: t("signWorkspace.needsYou", "Needs your signature"),
+      };
+    }
     const s = item as SessionSummary;
     if (s.finalized) {
       return { color: "green", label: t("certSign.finalized", "Finalized") };

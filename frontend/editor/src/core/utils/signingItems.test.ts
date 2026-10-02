@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   collectSigningItems,
+  getSigningItemToOpen,
   isSigningItemClosed,
   needsSignature,
   type SigningItem,
@@ -78,15 +79,61 @@ describe("signing workspace entry points", () => {
     );
     expect(isSigningItemClosed({ ...session, finalized: true })).toBe(true);
   });
-  it("keeps an owner's participant action separately addressable", () => {
-    const items = collectSigningItems(
-      [{ ...request, sessionId: session.sessionId }],
+  it("combines the owner's roles into one stable session, opening signing before management", () => {
+    const ownRequest = { ...request, sessionId: session.sessionId };
+    const items = collectSigningItems([ownRequest], [session]);
+    expect(items).toEqual([{ ...session, ownRequest }]);
+    expect(needsSignature(items[0])).toBe(true);
+    expect(getSigningItemToOpen(items[0])).toEqual(ownRequest);
+    const [signed] = collectSigningItems(
+      [{ ...ownRequest, myStatus: "SIGNED" }],
       [session],
     );
-    expect(items).toHaveLength(2);
-    expect(new Set(items.map((item) => item.kind))).toEqual(
-      new Set(["request", "session"]),
+    expect(signed.kind).toBe("session");
+    expect(needsSignature(signed)).toBe(false);
+    expect(getSigningItemToOpen(signed)).toBe(signed);
+  });
+
+  it.each([
+    { myStatus: "DECLINED" as const },
+    { accessExpired: true },
+    { closed: true },
+  ])(
+    "keeps owner management active when their invitation is restricted: %j",
+    (restriction) => {
+      const [item] = collectSigningItems(
+        [{ ...request, sessionId: session.sessionId, ...restriction }],
+        [session],
+      );
+      expect(isSigningItemClosed(item)).toBe(false);
+      expect(needsSignature(item)).toBe(false);
+      expect(getSigningItemToOpen(item)).toBe(item);
+    },
+  );
+
+  it.each([
+    { ...session, finalized: true },
+    { ...session, status: "CANCELLED" as const },
+  ])(
+    "closes one combined entry even if its pending invitation is stale",
+    (closed) => {
+      const items = collectSigningItems(
+        [{ ...request, sessionId: session.sessionId }],
+        [closed],
+      );
+      expect(items).toHaveLength(1);
+      expect(isSigningItemClosed(items[0])).toBe(true);
+      expect(needsSignature(items[0])).toBe(false);
+    },
+  );
+
+  it("honors finalized participant state while the owner list is catching up", () => {
+    const [item] = collectSigningItems(
+      [{ ...request, sessionId: session.sessionId, finalized: true }],
+      [session],
     );
+    expect(isSigningItemClosed(item)).toBe(true);
+    expect(getSigningItemToOpen(item).kind).toBe("session");
   });
 
   it("does not leak session names into another account or after logout", () => {

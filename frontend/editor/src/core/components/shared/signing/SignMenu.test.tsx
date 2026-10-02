@@ -1,7 +1,10 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 import { SignMenu } from "@app/components/shared/signing/SignMenu";
-import type { SigningMenuItem } from "@app/utils/signingItems";
+import {
+  collectSigningItems,
+  type SigningMenuItem,
+} from "@app/utils/signingItems";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -54,6 +57,39 @@ function setup(items: SigningMenuItem[] = [], sharedSign?: string) {
     updateItems: (rows: SigningMenuItem[]) => view.rerender(menu(rows)),
   };
 }
+
+it("shows one owner session in the popover as its action changes from signing to finalization", () => {
+  const request = { ...incoming, sessionId: owned.sessionId };
+  const rows = collectSigningItems([request], [owned]).map((item) => ({
+    ...item,
+    unread: true,
+  }));
+  const { onOpenSigning, updateItems } = setup(rows);
+  const active = within(
+    screen.getByRole("region", { name: "Active", exact: true }),
+  );
+  expect(active.getAllByRole("button")).toHaveLength(1);
+  fireEvent.click(
+    active.getByRole("button", { name: /Owned.pdf.*Needs your signature/ }),
+  );
+  expect(onOpenSigning).toHaveBeenCalledWith({
+    kind: "session",
+    sessionId: "owned",
+  });
+  expect(
+    screen.getByRole("button", { name: /^Unread\s*1$/ }),
+  ).toBeInTheDocument();
+  updateItems(
+    collectSigningItems(
+      [{ ...request, myStatus: "SIGNED" }],
+      [{ ...owned, signedCount: 2 }],
+    ).map((item) => ({ ...item, unread: false })),
+  );
+  expect(active.getAllByRole("button")).toHaveLength(1);
+  expect(
+    active.getByRole("button", { name: /Owned.pdf.*Ready to finalize/ }),
+  ).toBeInTheDocument();
+});
 
 it("filters unread invitations and ready owner sessions, updating the count when read", () => {
   const items: SigningMenuItem[] = [

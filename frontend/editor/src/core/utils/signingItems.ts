@@ -5,24 +5,34 @@ import type {
 
 export type SigningItem =
   | (SignRequestSummary & { kind: "request" })
-  | (SessionSummary & { kind: "session" });
+  | (SessionSummary & { kind: "session"; ownRequest?: SignRequestSummary });
 
 export type SigningMenuItem = SigningItem & { unread: boolean };
 
-/** One entry per session and role; an owner who also signs keeps both actions. */
+/** One entry per document workflow; owned sessions retain the owner's participant action. */
 export function collectSigningItems(
   requests: SignRequestSummary[],
   sessions: SessionSummary[],
 ): SigningItem[] {
-  const items: SigningItem[] = [
-    ...requests.map((request) => ({ ...request, kind: "request" as const })),
-    ...sessions.map((session) => ({ ...session, kind: "session" as const })),
-  ];
-  return [
-    ...new Map(
-      items.map((item) => [`${item.kind}:${item.sessionId}`, item]),
-    ).values(),
-  ].sort(
+  const items = new Map<string, SigningItem>(
+    requests.map((request) => [
+      request.sessionId,
+      { ...request, kind: "request" },
+    ]),
+  );
+  const requestsById = new Map(
+    requests.map((request) => [request.sessionId, request]),
+  );
+  for (const session of sessions) {
+    const ownRequest = requestsById.get(session.sessionId);
+    items.set(session.sessionId, {
+      ...session,
+      kind: "session",
+      ...(ownRequest ? { ownRequest } : {}),
+      finalized: session.finalized || Boolean(ownRequest?.finalized),
+    });
+  }
+  return [...items.values()].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   );
 }
@@ -42,9 +52,18 @@ export function isSigningItemClosed(item: SigningItem): boolean {
 }
 
 export function needsSignature(item: SigningItem): boolean {
+  if (isSigningItemClosed(item)) return false;
+  const request = item.kind === "request" ? item : item.ownRequest;
   return (
-    item.kind === "request" &&
-    !isSigningItemClosed(item) &&
-    item.myStatus !== "SIGNED"
+    request !== undefined &&
+    !isSigningItemClosed({ ...request, kind: "request" }) &&
+    request.myStatus !== "SIGNED"
   );
+}
+
+/** Prioritizes an owner's pending signature, then returns to session management. */
+export function getSigningItemToOpen(item: SigningItem): SigningItem {
+  return item.kind === "session" && item.ownRequest && needsSignature(item)
+    ? { ...item.ownRequest, kind: "request" }
+    : item;
 }

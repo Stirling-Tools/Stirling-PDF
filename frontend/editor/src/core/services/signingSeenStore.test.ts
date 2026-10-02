@@ -4,7 +4,7 @@ import {
   markSigningItemSeen,
   subscribeSigningSeen,
 } from "@app/services/signingSeenStore";
-import type { SigningItem } from "@app/utils/signingItems";
+import { collectSigningItems, type SigningItem } from "@app/utils/signingItems";
 
 const session: SigningItem = {
   kind: "session",
@@ -31,6 +31,38 @@ const request: SigningItem = {
 
 beforeEach(() => localStorage.clear());
 afterEach(() => vi.restoreAllMocks());
+
+it("counts both roles once and clears both notifications when the combined session is read", () => {
+  const signed = {
+    ...session,
+    signedCount: 1,
+    participants: [
+      { id: 2, status: "SIGNED" as const, lastUpdated: "2026-10-01T11:00:00" },
+    ],
+  };
+  const items = collectSigningItems([request], [signed]);
+  expect(
+    items.filter((item) => hasUnseenSigningActivity("alice", item)),
+  ).toHaveLength(1);
+  markSigningItemSeen("alice", items[0]);
+  expect(hasUnseenSigningActivity("alice", request)).toBe(false);
+  expect(hasUnseenSigningActivity("alice", items[0])).toBe(false);
+  expect(hasUnseenSigningActivity("bob", items[0])).toBe(true);
+  const [later] = collectSigningItems(
+    [request],
+    [
+      {
+        ...signed,
+        signedCount: 2,
+        participants: [
+          ...signed.participants,
+          { id: 1, status: "SIGNED", lastUpdated: "2026-10-01T12:00:00" },
+        ],
+      },
+    ],
+  );
+  expect(hasUnseenSigningActivity("alice", later)).toBe(true);
+});
 
 it("does not notify for expired access even if the invitation has never been opened", () => {
   expect(hasUnseenSigningActivity("alice", { ...request, closed: true })).toBe(

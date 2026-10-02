@@ -16,7 +16,11 @@ import { useSigningOverlay } from "@app/contexts/SigningOverlayContext";
 import { CreateSessionFlow } from "@app/components/shared/signing/CreateSessionFlow";
 import { SessionDetailPanel } from "@app/components/tools/certSign/panels/SessionDetailPanel";
 import SignRequestPanel from "@app/components/tools/certSign/panels/SignRequestPanel";
-import { collectSigningItems, type SigningItem } from "@app/utils/signingItems";
+import {
+  collectSigningItems,
+  getSigningItemToOpen,
+  type SigningItem,
+} from "@app/utils/signingItems";
 import { useSigningActivity } from "@app/hooks/signing/useSigningActivity";
 import {
   requestSigningIntent,
@@ -62,8 +66,9 @@ export default function SigningWorkspace() {
     setOpening(true);
     setShowCreate(false);
     try {
-      if (item.kind === "request") await controller.openSignRequest(item);
-      else await controller.openSession(item);
+      const target = getSigningItemToOpen(item);
+      if (target.kind === "request") await controller.openSignRequest(target);
+      else await controller.openSession(target);
     } finally {
       setOpening(false);
     }
@@ -77,9 +82,7 @@ export default function SigningWorkspace() {
     setShowCreate(pendingIntent === "create");
     if (typeof pendingIntent === "object") {
       const item = items.find(
-        (entry) =>
-          entry.kind === pendingIntent.kind &&
-          entry.sessionId === pendingIntent.sessionId,
+        (entry) => entry.sessionId === pendingIntent.sessionId,
       );
       if (item) void openItem(item);
       else

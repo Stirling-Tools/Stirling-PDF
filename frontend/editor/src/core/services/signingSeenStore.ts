@@ -80,6 +80,13 @@ export function hasUnseenSigningActivity(
   }
   const current = snapshot(item);
   return (
+    Boolean(
+      item.ownRequest &&
+      hasUnseenSigningActivity(accountId, {
+        ...item.ownRequest,
+        kind: "request",
+      }),
+    ) ||
     current.signedCount > (seen?.signedCount ?? 0) ||
     current.decisions.some((decision) => !seen?.decisions.includes(decision))
   );
@@ -91,6 +98,9 @@ export function markSigningItemSeen(
   item: SigningItem,
 ): void {
   if (!accountId) return;
+  if (item.kind === "session" && item.ownRequest) {
+    markSigningItemSeen(accountId, { ...item.ownRequest, kind: "request" });
+  }
   const key = storageKey(accountId, item);
   const current = snapshot(item);
   const previous = read(key);

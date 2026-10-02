@@ -30,11 +30,11 @@ interface SigningSessionsTableProps {
 function statusKey(item: SigningItem): string {
   if (item.kind === "request" && item.accessExpired) return "expired";
   if (item.finalized) return "finalized";
+  if (needsSignature(item)) return "needsYou";
   if (item.kind === "request") {
     if (item.myStatus === "DECLINED") return "declined";
     if (item.closed) return "closed";
     if (item.myStatus === "SIGNED") return "signed";
-    if (needsSignature(item)) return "needsYou";
   }
   if (isSigningItemClosed(item)) return "closed";
   if (

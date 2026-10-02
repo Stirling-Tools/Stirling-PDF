@@ -74,13 +74,42 @@ export interface SigningRequestData {
 function acknowledgeSession(
   accountId: string | null,
   session: SessionDetail,
+  ownRequest?: SignRequestSummary,
 ): void {
   markSigningItemSeen(accountId, {
     ...session,
     kind: "session",
+    ownRequest,
     participantCount: session.participants.length,
     signedCount: session.participants.filter((p) => p.status === "SIGNED")
       .length,
+  });
+}
+
+function acknowledgeRequest(
+  accountId: string | null,
+  request: SignRequestDetail,
+  ownedSessions: SessionSummary[],
+): void {
+  markSigningItemSeen(accountId, { ...request, kind: "request" });
+  const session = ownedSessions.find(
+    (owned) => owned.sessionId === request.sessionId,
+  );
+  if (!session || !request.participants) return;
+  // Polls can race: acknowledge only decisions actually present in the opened preview.
+  const visibleParticipants = session.participants?.filter((participant) =>
+    request.participants?.some(
+      (visible) =>
+        visible.id === participant.id && visible.status === participant.status,
+    ),
+  );
+  markSigningItemSeen(accountId, {
+    ...session,
+    kind: "session",
+    participants: visibleParticipants,
+    signedCount: request.participants.filter(
+      (participant) => participant.status === "SIGNED",
+    ).length,
   });
 }
 
@@ -105,6 +134,7 @@ export function useSigningSessionController(
     enabled,
     autoRefreshInterval: enabled ? 15000 : 0,
   });
+  const ownedSessionsRef = useRef(mySessions);
   const { actions: fileActions } = useFileActions();
   // In viewer mode this is the single displayed file; matches how tools scope
   // their input (see useBaseTool / useViewScopedFiles). Creating a session
@@ -118,6 +148,12 @@ export function useSigningSessionController(
   const [requestData, setRequestData] = useState<SigningRequestData | null>(
     null,
   );
+  useEffect(() => {
+    ownedSessionsRef.current = mySessions;
+    if (view === "request" && requestData) {
+      acknowledgeRequest(accountId, requestData.signRequest, mySessions);
+    }
+  }, [accountId, mySessions, requestData, view]);
   // The session currently shown in the detail view. A refresh checks this at
   // resolve time so a request dispatched before navigation is discarded rather
   // than painting its data onto whatever is now on screen.
@@ -212,7 +248,7 @@ export function useSigningSessionController(
             }
           : previous,
       );
-      markSigningItemSeen(accountId, { ...detail, kind: "request" });
+      acknowledgeRequest(accountId, detail, ownedSessionsRef.current);
     } catch (error) {
       if (!isCurrent()) return;
       if (
@@ -304,7 +340,11 @@ export function useSigningSessionController(
     // Discard a refresh that resolves after the user navigated away, so we
     // never paint this session's data onto another document.
     if (openDetailSessionIdRef.current !== session.sessionId) return;
-    acknowledgeSession(accountId, session);
+    acknowledgeSession(
+      accountId,
+      session,
+      signRequests.find((request) => request.sessionId === sessionId),
+    );
     setDetailData((prev) => (prev ? { ...prev, session } : prev));
     // Keep the read-only overlay in sync as participants sign.
     setOverlay((prev) =>
@@ -404,10 +444,11 @@ export function useSigningSessionController(
         canSign,
       });
       setView("request");
-      markSigningItemSeen(accountId, {
-        ...detailResponse.data,
-        kind: "request",
-      });
+      acknowledgeRequest(
+        accountId,
+        detailResponse.data,
+        ownedSessionsRef.current,
+      );
     } catch (error) {
       if (version !== openVersion.current) return;
       const accessExpired = isParticipantAccessExpired(error);
@@ -482,7 +523,11 @@ export function useSigningSessionController(
       }
 
       if (version !== openVersion.current) return;
-      acknowledgeSession(accountId, detailResponse.data);
+      acknowledgeSession(
+        accountId,
+        detailResponse.data,
+        signRequests.find((request) => request.sessionId === session.sessionId),
+      );
       openDetailSessionIdRef.current = session.sessionId;
       openRequestSessionIdRef.current = null;
       setOverlay({
