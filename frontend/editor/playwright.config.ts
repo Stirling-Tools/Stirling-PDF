@@ -33,7 +33,8 @@ const DEV_PORT = process.env.V2_PORT ?? "5173";
 // seam is the core no-op, nothing reconciles, and every spec in it skips. Its
 // own port so it can run beside a dev server already on DEV_PORT.
 const DESKTOP_PORT = process.env.V2_DESKTOP_PORT ?? "5273";
-const DISK_LINK_SPECS = /disk-link-.*\.spec\.ts/;
+// Desktop-build specs: the disk-link suite and the desktop Processor.
+const DESKTOP_BUILD_SPECS = /(disk-link|desktop)-.*\.spec\.ts/;
 
 export default defineConfig({
   testDir: "./src/core/tests",
@@ -73,7 +74,7 @@ export default defineConfig({
     {
       name: "stubbed",
       testDir: "./src/core/tests/stubbed",
-      testIgnore: DISK_LINK_SPECS,
+      testIgnore: DESKTOP_BUILD_SPECS,
       use: chromiumViewport,
     },
 
@@ -82,7 +83,7 @@ export default defineConfig({
     {
       name: "stubbed-desktop",
       testDir: "./src/core/tests/stubbed",
-      testMatch: DISK_LINK_SPECS,
+      testMatch: DESKTOP_BUILD_SPECS,
       use: {
         ...chromiumViewport,
         baseURL: `http://localhost:${DESKTOP_PORT}`,
@@ -125,13 +126,13 @@ export default defineConfig({
     {
       name: "stubbed-firefox",
       testDir: "./src/core/tests/stubbed",
-      testIgnore: DISK_LINK_SPECS,
+      testIgnore: DESKTOP_BUILD_SPECS,
       use: { ...devices["Desktop Firefox"], viewport: STUBBED_VIEWPORT },
     },
     {
       name: "stubbed-webkit",
       testDir: "./src/core/tests/stubbed",
-      testIgnore: DISK_LINK_SPECS,
+      testIgnore: DESKTOP_BUILD_SPECS,
       // Desktop Safari ships deviceScaleFactor 2; the editor now renders
       // bitmaps at dpr x zoom, so leaving it would 4x every page raster in
       // this suite. The HiDPI spec opts into 2x deliberately where it matters.

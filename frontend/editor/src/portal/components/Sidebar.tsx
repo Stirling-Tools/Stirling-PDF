@@ -13,6 +13,7 @@ import { useView, type ViewId } from "@portal/contexts/ViewContext";
 import { useUI } from "@portal/contexts/UIContext";
 import { LinkAccountFooterItem } from "@portal/components/LinkAccountFooterItem";
 import { Icon } from "@app/ui/Icon";
+import { openExternalTab } from "@app/platform/openExternalTab";
 import {
   GROUP_PROCESSOR,
   GROUP_PLATFORM,
@@ -72,7 +73,7 @@ export function Sidebar() {
               // active view or opening an external tab changes no route — close here.
               closeMobileNav();
               if (entry.externalUrl) {
-                window.open(entry.externalUrl, "_blank", "noopener,noreferrer");
+                void openExternalTab(entry.externalUrl);
               } else {
                 setActiveView(id as ViewId);
               }

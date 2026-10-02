@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import apiClient from "@app/services/apiClient";
 import { useAuth } from "@app/auth/context";
 import { useConnectionMode } from "@app/hooks/useConnectionMode";
-import { useConnectedServer } from "@app/hooks/useConnectedServer";
+import { useConnectedServerState } from "@app/hooks/useConnectedServer";
 import {
   connectionIdentityKey,
   subscribeToConnectionIdentity,
@@ -28,7 +28,8 @@ async function fetchCloudPortalAccess(): Promise<boolean> {
  */
 export function usePortalAccessState(): PortalAccessState {
   const mode = useConnectionMode();
-  const connected = useConnectedServer();
+  const server = useConnectedServerState();
+  const connected = server.connected;
   const { portalAccess, loading } = useAuth();
   const identity = useSyncExternalStore(
     subscribeToConnectionIdentity,
@@ -43,6 +44,8 @@ export function usePortalAccessState(): PortalAccessState {
     retry: false,
   });
 
+  // Not signed in yet reads as signed out, so nothing is decided before the session is read.
+  if (!server.settled) return { granted: false, settled: false };
   if (mode === "saas") {
     return {
       granted: cloud && data === true,

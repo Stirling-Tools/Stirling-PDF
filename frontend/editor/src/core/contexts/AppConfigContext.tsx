@@ -43,6 +43,8 @@ export interface AppConfigProviderProps {
   bootstrapMode?: AppConfigBootstrapMode;
   autoFetch?: boolean;
   onConfigLoaded?: (config: AppConfig) => void;
+  /** Where the config comes from; the default asks this app's backend. Keep it stable. */
+  fetchConfig?: () => Promise<AppConfig>;
 }
 
 function statusOf(error: unknown): number | undefined {
@@ -68,6 +70,7 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
   bootstrapMode = "blocking",
   autoFetch = true,
   onConfigLoaded,
+  fetchConfig = fetchAppConfig,
 }) => {
   const maxRetries = retryOptions?.maxRetries ?? 0;
   const initialDelay = retryOptions?.initialDelay ?? 1000;
@@ -87,17 +90,17 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
     setSignedIn(true);
     await queryClient.fetchQuery({
       queryKey: qk.appConfig(),
-      queryFn: fetchAppConfig,
+      queryFn: () => fetchConfig(),
       staleTime: 0,
     });
-  }, [queryClient]);
+  }, [queryClient, fetchConfig]);
 
   const { isAuthPage } = useJwtConfigSync(refetch);
   const fetching = autoFetch && (!isAuthPage || signedIn);
 
   const { data, error, isFetching } = useQuery({
     queryKey: qk.appConfig(),
-    queryFn: fetchAppConfig,
+    queryFn: () => fetchConfig(),
     enabled: fetching,
     staleTime: CONFIG_STALE_TIME,
     // Network and 5xx only; failureCount is 0-based, so `<` gives maxRetries retries.

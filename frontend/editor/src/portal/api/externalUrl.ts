@@ -1,3 +1,5 @@
+import { openExternalTab } from "@app/platform/openExternalTab";
+
 /**
  * Open a URL that arrived from the API — a Stripe hosted-invoice page or invoice
  * PDF — in a new tab, after checking its scheme.
@@ -21,5 +23,5 @@ export function openApiUrl(url: string | null | undefined): void {
     console.warn(`[portal] refusing to open a ${parsed.protocol} URL`);
     return;
   }
-  window.open(parsed.href, "_blank", "noopener,noreferrer");
+  void openExternalTab(parsed.href);
 }

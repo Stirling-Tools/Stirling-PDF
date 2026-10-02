@@ -24,7 +24,10 @@ vi.mock("@app/services/authService", () => ({
   authService: { subscribeToAuth: subscribeToAuthMock },
 }));
 
-import { useConnectedServer } from "@app/hooks/useConnectedServer";
+import {
+  useConnectedServer,
+  useConnectedServerState,
+} from "@app/hooks/useConnectedServer";
 
 /** subscribeToAuth replays the current status on subscribe, as the real service does. */
 function withAuthStatus(status: string, userInfo: unknown = null) {
@@ -157,5 +160,29 @@ describe("useConnectedServer", () => {
     getCurrentModeMock.mockReturnValue(new Promise<never>(() => {}));
     const { result } = renderHook(() => useConnectedServer());
     expect(result.current).toBe(true);
+  });
+
+  it("is not settled before the mode is known, so a first false is not an answer", () => {
+    withAuthStatus("authenticated", { username: "ada" });
+    getCurrentModeMock.mockReturnValue(new Promise<never>(() => {}));
+    const { result } = renderHook(() => useConnectedServerState());
+    expect(result.current).toEqual({ connected: false, settled: false });
+  });
+
+  it("settles on the cached mode once the session has replayed", () => {
+    getCachedModeMock.mockReturnValue("selfhosted");
+    withAuthStatus("authenticated", { username: "ada" });
+    getCurrentModeMock.mockReturnValue(new Promise<never>(() => {}));
+    const { result } = renderHook(() => useConnectedServerState());
+    expect(result.current).toEqual({ connected: true, settled: true });
+  });
+
+  it("settles as not connected when the config cannot be read at all", async () => {
+    withAuthStatus("authenticated", { username: "ada" });
+    getCurrentModeMock.mockRejectedValue(new Error("no config"));
+    const { result } = renderHook(() => useConnectedServerState());
+    await waitFor(() =>
+      expect(result.current).toEqual({ connected: false, settled: true }),
+    );
   });
 });

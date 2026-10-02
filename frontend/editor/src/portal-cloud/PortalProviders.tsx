@@ -3,7 +3,7 @@ import { UIProvider } from "@portal/contexts/UIContext";
 import { PortalChrome } from "@portal/components/PortalChrome";
 import { LicenseProvider } from "@app/contexts/LicenseContext";
 import { StartupPrompts } from "@app/components/startup/StartupPrompts";
-import { AppConfigProvider } from "@app/contexts/AppConfigContext";
+import { PortalAppConfigProvider } from "@portal/contexts/PortalAppConfigProvider";
 import { CheckoutProvider } from "@app/contexts/CheckoutContext";
 
 /**
@@ -21,14 +21,14 @@ export function PortalProviders() {
   return (
     <TierProvider>
       <UIProvider>
-        <AppConfigProvider>
+        <PortalAppConfigProvider>
           <LicenseProvider>
             <CheckoutProvider>
               <StartupPrompts />
               <PortalChrome />
             </CheckoutProvider>
           </LicenseProvider>
-        </AppConfigProvider>
+        </PortalAppConfigProvider>
       </UIProvider>
     </TierProvider>
   );

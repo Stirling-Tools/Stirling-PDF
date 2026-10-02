@@ -36,6 +36,7 @@ import { EncryptionKeyTable } from "@portal/components/infrastructure/Encryption
 import { EncryptionMigrationCard } from "@portal/components/infrastructure/EncryptionMigrationCard";
 import { EncryptionRotationCard } from "@portal/components/infrastructure/EncryptionRotationCard";
 import "@portal/components/infrastructure/infrastructure.css";
+import { handleExternalLinkClick } from "@app/platform/externalLinkClick";
 import "@portal/components/infrastructure/EncryptionPanel.css";
 
 /** How often to re-read migration progress while a run is going. */
@@ -319,6 +320,9 @@ export function EncryptionPanel({
               href={RUNBOOK_BACKUP}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={(event) =>
+                handleExternalLinkClick(RUNBOOK_BACKUP, event)
+              }
             >
               {t("portal.infrastructure.encryption.generatedKey.backupGuide")}
             </Button>

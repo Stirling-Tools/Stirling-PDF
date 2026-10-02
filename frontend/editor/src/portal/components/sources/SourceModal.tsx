@@ -20,7 +20,8 @@ import {
   isFolderAccessDeniedError,
   type Source,
 } from "@portal/api/sources";
-import { getSettingsUrl } from "@app/utils/settingsNavigation";
+import { openSettingsSection } from "@app/platform/openSettingsSection";
+import { localBaseUrl } from "@app/portal/api/localBackend";
 import { useQueryClient } from "@tanstack/react-query";
 import { qk } from "@portal/queries/keys";
 import { creatableSourceTypes } from "@portal/components/sources/creatableSourceTypes";
@@ -46,8 +47,9 @@ import {
 import { createIntegration } from "@portal/api/integrations";
 import "@portal/components/sources/SourceModal.css";
 
+// The instance's backend, which on desktop is the connected server, not this app's origin.
 function webhookUrl(webhookId: string): string {
-  return `${window.location.origin}/api/v1/webhooks/${webhookId}`;
+  return `${localBaseUrl() || window.location.origin}/api/v1/webhooks/${webhookId}`;
 }
 
 const OFFERED_TYPES = creatableSourceTypes();
@@ -701,15 +703,8 @@ export function SourceModal({
                       <Button
                         variant="secondary"
                         size="sm"
-                        // A new tab: this dialog holds an unsaved draft, and
-                        // settings is a route now, not an overlay over it.
-                        onClick={() =>
-                          window.open(
-                            getSettingsUrl("adminFolderAccess"),
-                            "_blank",
-                            "noopener,noreferrer",
-                          )
-                        }
+                        // Beside this dialog where possible: it holds an unsaved draft.
+                        onClick={() => openSettingsSection("adminFolderAccess")}
                       >
                         {t("portal.sources.builder.folderAccess.openSettings")}
                       </Button>

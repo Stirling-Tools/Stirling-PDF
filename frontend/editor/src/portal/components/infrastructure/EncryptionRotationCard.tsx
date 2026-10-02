@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Banner, Button, Card, Modal } from "@app/ui";
 import { RUNBOOK_ROTATION } from "@portal/api/storageEncryption";
+import { handleExternalLinkClick } from "@app/platform/externalLinkClick";
 import { SectionHeader } from "@portal/components/infrastructure/SectionHeader";
 
 export interface EncryptionRotationCardProps {
@@ -105,6 +106,9 @@ export function EncryptionRotationCard({
             href={RUNBOOK_ROTATION}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={(event) =>
+              handleExternalLinkClick(RUNBOOK_ROTATION, event)
+            }
           >
             {t("portal.infrastructure.encryption.rotation.runbook")}
           </Button>
