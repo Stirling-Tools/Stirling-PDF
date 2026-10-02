@@ -531,6 +531,43 @@ class PolicyControllerTest {
         }
 
         @Test
+        @DisplayName("an edit that omits the store link keeps it")
+        void editKeepsStoreLink() {
+            applicationProperties.getSecurity().setEnableLogin(false);
+            Policy existing = policy("p1", 1L).withStoreId("sp-abcd1234");
+            when(policyStore.get("p1")).thenReturn(Optional.of(existing));
+            when(policyAccessGuard.canAccess(existing)).thenReturn(true);
+            when(policyStore.save(any())).thenAnswer(i -> i.getArgument(0));
+
+            // The builder rebuilds the policy from its form and never sends storeId back; losing
+            // it made the next publish a new listing instead of a republish.
+            ResponseEntity<Policy> response = controller.savePolicy(policy("p1", 1L));
+
+            assertThat(response.getBody().storeId()).isEqualTo("sp-abcd1234");
+        }
+
+        @Test
+        @DisplayName("a client cannot set or move the store link")
+        void storeLinkIsServerStamped() {
+            applicationProperties.getSecurity().setEnableLogin(true);
+            when(policyManagementAuthority.canEditPolicies()).thenReturn(true);
+            when(policyAccessGuard.ownerForNewPolicy()).thenReturn("alice");
+            when(policyAccessGuard.teamForNewPolicy()).thenReturn(7L);
+            when(policyStore.save(any())).thenAnswer(i -> i.getArgument(0));
+
+            ResponseEntity<Policy> created =
+                    controller.savePolicy(policy(null, null).withStoreId("sp-theirs00"));
+            assertThat(created.getBody().storeId()).isNull();
+
+            Policy existing = policy("p1", 7L).withStoreId("sp-mine0000");
+            when(policyStore.get("p1")).thenReturn(Optional.of(existing));
+            when(policyAccessGuard.canAccess(existing)).thenReturn(true);
+            ResponseEntity<Policy> edited =
+                    controller.savePolicy(policy("p1", 7L).withStoreId("sp-theirs00"));
+            assertThat(edited.getBody().storeId()).isEqualTo("sp-mine0000");
+        }
+
+        @Test
         @DisplayName("forbidden when a non-manager saves any pipeline or policy")
         void forbidsSaveForNonManager() {
             applicationProperties.getSecurity().setEnableLogin(true);
