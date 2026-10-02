@@ -12,6 +12,7 @@ import {
   SessionDetail,
 } from "@app/types/signingSession";
 import { getSubmittedSignaturePreviews } from "@app/utils/signingPreviews";
+import { needsSignature } from "@app/utils/signingItems";
 import type { StirlingFile } from "@app/types/fileContext";
 import { useFileActions } from "@app/contexts/FileContext";
 import { useSigningOverlay } from "@app/contexts/SigningOverlayContext";
@@ -54,6 +55,7 @@ export interface SigningDetailData {
   onDelete: () => Promise<void>;
   onBack: () => void;
   onRefresh: () => Promise<void>;
+  onOpenMyRequest?: () => void;
 }
 
 /** Data the sign-request panel needs to render and act. */
@@ -65,6 +67,7 @@ export interface SigningRequestData {
   onRefresh: () => Promise<void>;
   onBack: () => void;
   onOpenFiles?: () => void;
+  onManageSession?: () => void;
   canSign: boolean;
 }
 
@@ -326,6 +329,7 @@ export function useSigningSessionController(
       requests,
     );
     await handleRefreshSession(sessionId);
+    await refetch();
   };
 
   const handleRemoveParticipant = async (
@@ -581,6 +585,20 @@ export function useSigningSessionController(
     }
   };
 
+  const ownRequest = signRequests.find(
+    (request) => request.sessionId === detailData?.session.sessionId,
+  );
+  const canSignOwnSession =
+    !detailData?.session.finalized &&
+    detailData?.session.participants.some(
+      (participant) =>
+        String(participant.userId) === String(accountId) &&
+        ["PENDING", "NOTIFIED", "VIEWED"].includes(participant.status),
+    );
+  const ownedSession = mySessions.find(
+    (session) => session.sessionId === requestData?.signRequest.sessionId,
+  );
+
   return {
     signRequests,
     mySessions,
@@ -591,8 +609,25 @@ export function useSigningSessionController(
     openSignRequest,
     openSession,
     view,
-    detailData,
-    requestData,
+    detailData: detailData
+      ? {
+          ...detailData,
+          onOpenMyRequest:
+            canSignOwnSession &&
+            ownRequest &&
+            needsSignature({ ...ownRequest, kind: "request" })
+              ? () => void openSignRequest(ownRequest)
+              : undefined,
+        }
+      : null,
+    requestData: requestData
+      ? {
+          ...requestData,
+          onManageSession: ownedSession
+            ? () => void openSession(ownedSession)
+            : undefined,
+        }
+      : null,
     backToList,
   };
 }

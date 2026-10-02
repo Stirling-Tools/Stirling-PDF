@@ -80,6 +80,36 @@ it("shows the owner's message and a local-calendar due date", () => {
   ).toHaveTextContent(new Date(2026, 9, 12).toLocaleDateString());
 });
 
+it("directs an owner back to their session after submitting their own signature", () => {
+  const { data, rerender } = setup("SIGNED");
+  expect(
+    screen.queryByRole("button", { name: "Manage signing session" }),
+  ).not.toBeInTheDocument();
+  data.onManageSession = vi.fn();
+  rerender(
+    <MantineProvider>
+      <SignRequestPanel data={data} />
+    </MantineProvider>,
+  );
+  expect(screen.getByRole("status")).toHaveTextContent(
+    "Return to your session",
+  );
+  fireEvent.click(
+    screen.getByRole("button", { name: "Manage signing session" }),
+  );
+  expect(data.onManageSession).toHaveBeenCalledOnce();
+});
+
+it("releases its own viewer on unmount without clearing a replacement owner preview", () => {
+  const { unmount, data } = setup();
+  const participantOverlay = setOverlay.mock.calls.at(-1)![0];
+  const ownerOverlay = { file: data.pdfFile, signaturePreviewsReadOnly: true };
+  unmount();
+  const releaseOverlay = setOverlay.mock.calls.at(-1)![0];
+  expect(releaseOverlay(participantOverlay)).toBeNull();
+  expect(releaseOverlay(ownerOverlay)).toBe(ownerOverlay);
+});
+
 it("opens certificate-only signing without submitting and preserves the editor on cancel", () => {
   const { data } = setup();
   fireEvent.click(screen.getByRole("button", { name: "Complete & Sign" }));

@@ -61,7 +61,6 @@ const UserSelector = ({
 
     (users ?? [])
       .filter((u) => u && u.userId && u.username)
-      .filter((u) => u.userId !== currentUserId)
       .filter((u) => u.teamName?.toLowerCase() !== "internal")
       .forEach((u) => {
         const teamName =
@@ -75,7 +74,15 @@ const UserSelector = ({
           displayName !== username
             ? `${displayName} (@${username})`
             : displayName;
-        usersByTeam[teamName].push({ value: String(u.userId), label });
+        usersByTeam[teamName].push({
+          value: String(u.userId),
+          label:
+            u.userId === currentUserId
+              ? t("certSign.collab.userSelector.you", "{{name}} (You)", {
+                  name: label,
+                })
+              : label,
+        });
       });
 
     return Object.entries(usersByTeam).map(([teamName, items]) => ({

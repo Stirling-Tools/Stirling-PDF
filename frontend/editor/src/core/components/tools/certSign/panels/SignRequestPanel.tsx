@@ -118,9 +118,12 @@ const SignRequestPanel = ({ data }: SignRequestPanelProps) => {
     setOverlay,
   ]);
 
-  // Clear the shared viewer overlay when leaving the sign request.
+  // Owner navigation may install its preview before this panel unmounts.
   useEffect(() => {
-    return () => setOverlay(null);
+    return () =>
+      setOverlay((current) =>
+        current?.signatureOverlayApiRef === overlayApiRef ? null : current,
+      );
   }, [setOverlay]);
 
   // Poll for a selected placement (drives the delete control).
@@ -361,10 +364,15 @@ const SignRequestPanel = ({ data }: SignRequestPanelProps) => {
                     "This session is finalized. You can view the final document, but no further signatures or declines are accepted.",
                   )
                 : signRequest.myStatus === "SIGNED"
-                  ? t(
-                      "signingDetail.awaitingOwner",
-                      "The owner will finalize the document once they are ready.",
-                    )
+                  ? data.onManageSession
+                    ? t(
+                        "signingDetail.ownerNext",
+                        "Return to your session to review everyone's signatures and finalize the document when you are ready.",
+                      )
+                    : t(
+                        "signingDetail.awaitingOwner",
+                        "The owner will finalize the document once they are ready.",
+                      )
                   : t(
                       "signingDetail.viewOnly",
                       "You can still review the document here.",
@@ -390,6 +398,15 @@ const SignRequestPanel = ({ data }: SignRequestPanelProps) => {
         )}
       </div>
       <footer className="signing-detail__footer">
+        {data.onManageSession && (
+          <Button
+            variant="secondary"
+            onClick={data.onManageSession}
+            disabled={signing || declining}
+          >
+            {t("signingDetail.manageSession", "Manage signing session")}
+          </Button>
+        )}
         {!signRequest.finalized && (
           <Button
             variant="secondary"

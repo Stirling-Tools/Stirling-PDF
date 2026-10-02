@@ -80,6 +80,7 @@ function Harness({
   return (
     <>
       <output aria-label="Date sent to API">{date}</output>
+      <output aria-label="Selected participant IDs">{ids.join(",")}</output>
       <CreateSessionFlow
         documentPicker={
           <button disabled={creating} onClick={() => setHasFile(!hasFile)}>
@@ -103,17 +104,19 @@ function show({
   initialIds = [],
   mobile = false,
   initialFileSelected = true,
+  availableUsers = users,
 }: {
   creating?: boolean;
   initialIds?: number[];
   mobile?: boolean;
   initialFileSelected?: boolean;
+  availableUsers?: typeof users;
 } = {}) {
   viewport.mobile = mobile;
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false, staleTime: Infinity } },
   });
-  client.setQueryData(qk.users(), users);
+  client.setQueryData(qk.users(), availableUsers);
   const onSubmit = vi.fn();
   const content = () => (
     <QueryClientProvider client={client}>
@@ -252,9 +255,9 @@ it("locks mobile navigation during submission", () => {
 it("selects participants inline, retaining checked people while searching", async () => {
   const { user } = show();
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-  expect(screen.getAllByRole("checkbox")).toHaveLength(2);
+  expect(screen.getAllByRole("checkbox")).toHaveLength(3);
   expect(
-    screen.queryByRole("checkbox", { name: /Owner|Internal/ }),
+    screen.queryByRole("checkbox", { name: /Internal/ }),
   ).not.toBeInTheDocument();
   expect(
     screen.getByRole("button", { name: "Send signing request" }),
@@ -278,6 +281,36 @@ it("selects participants inline, retaining checked people while searching", asyn
   expect(
     screen.getByRole("button", { name: "Send signing request" }),
   ).toBeDisabled();
+});
+it.each([{ availableUsers: users }, { availableUsers: [users[0]] }])(
+  "allows the owner as the only signer, including a directory scoped to their own account",
+  async ({ availableUsers }) => {
+    const { user, onSubmit } = show({ availableUsers });
+    const self = screen.getByRole("checkbox", { name: "Owner (@owner) (You)" });
+    await user.click(self);
+    expect(screen.getByLabelText("Selected participant IDs")).toHaveTextContent(
+      "1",
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Send signing request" }),
+    );
+    expect(onSubmit).toHaveBeenCalledOnce();
+    await user.click(self);
+    expect(
+      screen.getByRole("button", { name: "Send signing request" }),
+    ).toBeDisabled();
+  },
+);
+
+it("keeps the owner selected while adding other participants", async () => {
+  const { user } = show();
+  await user.click(
+    screen.getByRole("checkbox", { name: "Owner (@owner) (You)" }),
+  );
+  await user.click(screen.getByRole("checkbox", { name: /Bob/ }));
+  expect(screen.getByLabelText("Selected participant IDs")).toHaveTextContent(
+    "1,2",
+  );
 });
 it("round-trips calendar dates without timezone conversion and allows clearing the deadline", async () => {
   const { user } = show();
@@ -366,8 +399,12 @@ it("preserves the existing dropdown selector for other callers", async () => {
   const user = userEvent.setup();
   await user.click(screen.getByRole("textbox", { name: "Recipients" }));
   expect(
-    screen.queryByRole("option", { name: /Owner|Internal/ }),
+    screen.queryByRole("option", { name: /Internal/ }),
   ).not.toBeInTheDocument();
   await user.click(screen.getByRole("option", { name: /Alice/ }));
   expect(onChange).toHaveBeenCalledWith([2, 3]);
+  await user.click(
+    screen.getByRole("option", { name: "Owner (@owner) (You)" }),
+  );
+  expect(onChange).toHaveBeenLastCalledWith([2, 1]);
 });

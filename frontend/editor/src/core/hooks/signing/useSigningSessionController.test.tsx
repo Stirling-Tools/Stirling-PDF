@@ -16,9 +16,12 @@ const mocks = vi.hoisted(() => ({
   setOverlay: vi.fn(),
   refetch: vi.fn(),
   alert: vi.fn(),
+  accountId: "alice" as string | number,
+  signRequests: [] as SignRequestSummary[],
+  mySessions: [] as SessionSummary[],
 }));
 vi.mock("@app/auth/UseSession", () => ({
-  useAuth: () => ({ user: { id: "alice" } }),
+  useAuth: () => ({ user: { id: mocks.accountId } }),
 }));
 vi.mock("@app/services/apiClient", () => ({
   default: { get: mocks.get, post: mocks.post },
@@ -36,8 +39,8 @@ vi.mock("@app/contexts/SigningOverlayContext", () => ({
 }));
 vi.mock("@app/hooks/signing/useSigningSessions", () => ({
   useSigningSessions: () => ({
-    signRequests: [],
-    mySessions: [],
+    signRequests: mocks.signRequests,
+    mySessions: mocks.mySessions,
     loading: false,
     refetch: mocks.refetch,
   }),
@@ -58,7 +61,75 @@ const request: SignRequestSummary = {
 beforeEach(() => {
   vi.clearAllMocks();
   localStorage.clear();
+  mocks.accountId = "alice";
+  mocks.signRequests = [];
+  mocks.mySessions = [];
 });
+
+it.each(["1", 1])(
+  "lets an owner with account ID %s open their signing request and return to management after submitting",
+  async (accountId) => {
+    mocks.accountId = accountId;
+    const session: SessionDetail = {
+      ...request,
+      ownerEmail: "",
+      message: "",
+      updatedAt: request.createdAt,
+      finalized: false,
+      participants: [
+        {
+          id: 10,
+          userId: 1,
+          name: "Alice",
+          email: "Alice",
+          status: "PENDING",
+          lastUpdated: request.createdAt,
+        },
+      ],
+    };
+    const summary = { ...session, participantCount: 1, signedCount: 0 };
+    mocks.signRequests = [request];
+    mocks.mySessions = [summary];
+    mocks.get.mockImplementation(async (url: string) => ({
+      data:
+        url.endsWith("/pdf") || url.endsWith("/document")
+          ? new Blob(["pdf"])
+          : url.includes("/sign-requests/")
+            ? {
+                ...request,
+                myStatus: session.participants[0].status,
+                canSign: session.participants[0].status !== "SIGNED",
+              }
+            : session,
+    }));
+    mocks.post.mockImplementation(async () => {
+      session.participants[0].status = "SIGNED";
+      mocks.signRequests = [{ ...request, myStatus: "SIGNED" }];
+    });
+    const { result } = renderHook(() => useSigningSessionController(true));
+    await act(async () => {
+      await result.current.openSession(summary);
+    });
+    expect(result.current.detailData?.onOpenMyRequest).toBeTypeOf("function");
+    await act(async () => {
+      result.current.detailData!.onOpenMyRequest!();
+    });
+    expect(result.current.view).toBe("request");
+    expect(result.current.requestData?.canSign).toBe(true);
+    expect(result.current.requestData?.onManageSession).toBeTypeOf("function");
+    await act(async () => {
+      await result.current.requestData!.onSign(new FormData());
+    });
+    await act(async () => {
+      result.current.requestData!.onManageSession!();
+    });
+    expect(result.current.view).toBe("detail");
+    expect(result.current.detailData?.session.participants[0].status).toBe(
+      "SIGNED",
+    );
+    expect(result.current.detailData?.onOpenMyRequest).toBeUndefined();
+  },
+);
 
 it("does not reopen a request after the user returns to the session list", async () => {
   let complete!: (value: { data: Blob }) => void;
@@ -125,6 +196,7 @@ it("acknowledges a request only after its detail and PDF have opened", async () 
     await result.current.openSignRequest(request);
   });
   expect(result.current.view).toBe("request");
+  expect(result.current.requestData?.onManageSession).toBeUndefined();
   expect(
     hasUnseenSigningActivity("alice", { ...request, kind: "request" }),
   ).toBe(false);

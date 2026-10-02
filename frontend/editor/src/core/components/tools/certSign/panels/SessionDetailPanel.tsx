@@ -250,6 +250,11 @@ export const SessionDetailPanel = ({ data }: SessionDetailPanelProps) => {
         </section>
       </div>
       <footer className="signing-detail__footer">
+        {data.onOpenMyRequest && !session.finalized && (
+          <Button onClick={data.onOpenMyRequest} disabled={busy} fullWidth>
+            {t("signingDetail.signMyRequest", "Sign this document")}
+          </Button>
+        )}
         <SessionActionsPanel
           session={session}
           onFinalize={handleFinalize}
