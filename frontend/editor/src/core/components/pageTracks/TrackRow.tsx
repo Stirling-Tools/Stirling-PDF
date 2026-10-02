@@ -536,9 +536,11 @@ function TrackRowImpl({
               ref={laneInnerRef}
               className={styles.laneInner}
               style={
-                wrap
-                  ? { width: "100%", height: virtualizer.getTotalSize() }
-                  : { width: virtualizer.getTotalSize() }
+                {
+                  "--pt-col-gap": `${wrapColStride - geometry.tileWidthPx}px`,
+                  width: wrap ? "100%" : virtualizer.getTotalSize(),
+                  height: wrap ? virtualizer.getTotalSize() : undefined,
+                } as React.CSSProperties
               }
             >
               {virtualizer.getVirtualItems().map((item) => {

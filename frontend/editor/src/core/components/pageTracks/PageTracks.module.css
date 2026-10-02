@@ -549,13 +549,15 @@
 }
 
 /* Centred in the gap (half a gap outside the tile edge), so it lines up with
-   the insert/split controls that sit between the same two pages. */
+   the insert/split controls that sit between the same two pages. --pt-col-gap
+   is the real inter-column gap, which widens in wrap mode; it falls back to the
+   plain gap before the lane has measured itself. */
 .dropBefore::before {
-  left: calc(var(--pt-gap) / -2);
+  left: calc(var(--pt-col-gap, var(--pt-gap)) / -2);
 }
 
 .dropAfterLast::after {
-  right: calc(var(--pt-gap) / -2);
+  right: calc(var(--pt-col-gap, var(--pt-gap)) / -2);
 }
 
 .dragBadge {
