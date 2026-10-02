@@ -30,6 +30,7 @@ import {
 import { QuickNavHostBridge } from "@app/components/shared/quickNav/QuickNavHostBridge";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import { READER_PATH } from "@app/routes/readerRoute";
+import { PORTAL_BASENAME } from "@app/routes/portalBasename";
 import { usePreferences } from "@app/contexts/PreferencesContext";
 import { stripBasePath } from "@app/constants/app";
 import { takeSettingsOrigin } from "@app/utils/settingsNavigation";
@@ -62,7 +63,9 @@ const SettingsPageInner: React.FC = () => {
         ? READER_PATH
         : view === "automate"
           ? "/automate"
-          : EDITOR_BASENAME,
+          : view === "processor"
+            ? PORTAL_BASENAME
+            : EDITOR_BASENAME,
     );
   };
   // The same bar as the editor and the processor, so search is one thing

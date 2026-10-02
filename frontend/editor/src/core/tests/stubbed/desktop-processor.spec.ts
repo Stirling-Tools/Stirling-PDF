@@ -72,6 +72,22 @@ test("opens the Processor as a page of the desktop app", async ({ page }) => {
   expect(sidebar?.height).toBeGreaterThan(page.viewportSize()!.height - 60);
 });
 
+test("launches into the Processor when it is the default view", async ({
+  page,
+}) => {
+  await signInToServer(page);
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "stirlingpdf_preferences",
+      JSON.stringify({ defaultStartupView: "processor" }),
+    );
+  });
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+
+  await expect(page).toHaveURL(/\/processor$/, { timeout: 30_000 });
+  await expect(page.locator(".desktop-processor .portal-shell")).toBeVisible();
+});
+
 test("opens the Processor on Stirling Cloud", async ({ page }) => {
   // Context routes yield to the page stubs, so this only catches what they leave:
   // nothing reaches a real Stirling host.

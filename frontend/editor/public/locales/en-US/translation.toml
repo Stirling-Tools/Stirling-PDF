@@ -11810,6 +11810,7 @@ sidebar = "Sidebar"
 
 [settings.general.startupView]
 automate = "Automate"
+processor = "Processor"
 read = "Reader"
 tools = "Tools"
 

@@ -3,6 +3,7 @@ import { AppProviders as ProprietaryAppProviders } from "@proprietary/components
 import { DesktopConfigSync } from "@app/components/DesktopConfigSync";
 import { DesktopQueryCacheReset } from "@app/components/DesktopQueryCacheReset";
 import { DesktopBannerInitializer } from "@app/components/DesktopBannerInitializer";
+import { ProcessorStartupView } from "@app/components/ProcessorStartupView";
 import { SaveShortcutListener } from "@app/components/SaveShortcutListener";
 import { LocalProcessingFolders } from "@app/components/LocalProcessingFolders";
 import { DiskConflictHost } from "@app/components/shared/DiskConflictHost";
@@ -374,6 +375,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
         <DesktopQueryCacheReset />
         <SaaSTeamProvider key={appKey}>
           <DesktopConfigSync />
+          <ProcessorStartupView />
           <DesktopBannerInitializer />
           <SaveShortcutListener />
           <LocalProcessingFolders />

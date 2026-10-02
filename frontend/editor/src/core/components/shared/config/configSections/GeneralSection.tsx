@@ -36,6 +36,7 @@ import type {
   DesktopInstallCanInstall,
 } from "@app/components/shared/UpdateModal";
 import { useFrontendVersionInfo } from "@app/hooks/useFrontendVersionInfo";
+import { useStartupViewOptions } from "@app/components/shared/config/configSections/preferences/useStartupViewOptions";
 
 const DEFAULT_AUTO_UNZIP_FILE_LIMIT = 4;
 const BANNER_DISMISSED_KEY = "stirlingpdf_features_banner_dismissed";
@@ -92,6 +93,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
   const autoUnzipLabelId = `${labelIds}-auto-unzip`;
   const autoUnzipLimitLabelId = `${labelIds}-auto-unzip-limit`;
   const { preferences, updatePreference } = usePreferences();
+  const startupViewOptions = useStartupViewOptions();
   const { config } = useAppConfig();
   const { setTheme, themeMode } = useTheme();
   const [fileLimitInput, setFileLimitInput] = useState<number | string>(
@@ -599,20 +601,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               onChange={(val: string) =>
                 updatePreference("defaultStartupView", val as StartupView)
               }
-              options={[
-                {
-                  label: t("settings.general.startupView.tools", "Tools"),
-                  value: "tools",
-                },
-                {
-                  label: t("settings.general.startupView.read", "Reader"),
-                  value: "read",
-                },
-                {
-                  label: t("settings.general.startupView.automate", "Automate"),
-                  value: "automate",
-                },
-              ]}
+              options={startupViewOptions}
             />
           </div>
           <div
