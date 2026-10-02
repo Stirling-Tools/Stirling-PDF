@@ -99,7 +99,10 @@ export default defineConfig({
         test: {
           name: "desktop",
           ...TIMEOUTS,
-          include: ["src/desktop/**/*.test.{ts,tsx}"],
+          include: [
+            "src/desktop/**/*.test.{ts,tsx}",
+            "src/tauri/**/*.test.{ts,tsx}",
+          ],
           environment: "jsdom",
           globals: true,
           setupFiles: ["./src/core/setupTests.ts"],

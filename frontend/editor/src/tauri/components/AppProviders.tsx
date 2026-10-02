@@ -3,12 +3,8 @@ import { AppProviders as ProprietaryAppProviders } from "@proprietary/components
 import { DesktopConfigSync } from "@app/components/DesktopConfigSync";
 import { DesktopQueryCacheReset } from "@app/components/DesktopQueryCacheReset";
 import { DesktopBannerInitializer } from "@app/components/DesktopBannerInitializer";
-import { SaveShortcutListener } from "@app/components/SaveShortcutListener";
-import { LocalProcessingFolders } from "@app/components/LocalProcessingFolders";
-import { DiskConflictHost } from "@app/components/shared/DiskConflictHost";
 import { DesktopOnboardingModal } from "@app/components/DesktopOnboardingModal";
 import { DesktopSaasOnboardingBootstrap } from "@app/components/DesktopSaasOnboardingBootstrap";
-import { ClassificationBackgroundRunner } from "@app/components/onboarding/classificationDemo/ClassificationBackgroundRunner";
 import UsageLimitModalHost from "@app/components/UsageLimitModalHost";
 import { SignInModal } from "@app/components/SignInModal";
 import { OPEN_SIGN_IN_EVENT } from "@app/constants/signInEvents";
@@ -28,8 +24,10 @@ import { endpointAvailabilityService } from "@app/services/endpointAvailabilityS
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { isTauri } from "@tauri-apps/api/core";
 import { SaaSTeamProvider } from "@app/contexts/SaaSTeamContext";
-import UpdateModal from "@core/components/shared/UpdateModal";
-import { useDesktopUpdatePopup } from "@app/hooks/useDesktopUpdatePopup";
+import {
+  AppHostExtensions,
+  useUpdatePopupModal,
+} from "@app/components/appProvidersExtensions";
 
 // Common tool endpoints to preload for faster first-use
 const COMMON_TOOL_ENDPOINTS = [
@@ -53,7 +51,7 @@ const COMMON_TOOL_ENDPOINTS = [
  */
 export function AppProviders({ children }: { children: ReactNode }) {
   const { isFirstLaunch, setupComplete } = useFirstLaunchCheck();
-  const updatePopup = useDesktopUpdatePopup();
+  const updatePopupModal = useUpdatePopupModal();
   const [connectionMode, setConnectionMode] = useState<
     "saas" | "selfhosted" | "local" | null
   >(null);
@@ -297,38 +295,6 @@ export function AppProviders({ children }: { children: ReactNode }) {
       .catch(() => {});
   }, [authChecked]);
 
-  // Desktop auto-update popup (shown on startup if update available)
-  const { state: popupState, actions: popupActions } = updatePopup;
-  const updatePopupModal = popupState.updateSummary && (
-    <UpdateModal
-      opened={popupState.showModal}
-      onClose={popupActions.dismissModal}
-      onRemindLater={popupActions.remindLater}
-      currentVersion={popupState.currentVersion}
-      updateSummary={popupState.updateSummary}
-      machineInfo={{
-        machineType: navigator.platform?.toLowerCase().includes("mac")
-          ? "Client-mac"
-          : navigator.platform?.toLowerCase().includes("linux")
-            ? "Client-unix"
-            : "Client-win",
-        activeSecurity: false,
-        licenseType: "NORMAL",
-      }}
-      desktopInstall={
-        popupState.tauriInstallReady
-          ? {
-              state: popupState.state,
-              progress: popupState.progress,
-              errorMessage: popupState.errorMessage,
-              canInstall: popupState.canInstall,
-              actions: popupActions,
-            }
-          : undefined
-      }
-    />
-  );
-
   if (!authChecked) {
     return (
       <ProprietaryAppProviders
@@ -375,16 +341,13 @@ export function AppProviders({ children }: { children: ReactNode }) {
         <SaaSTeamProvider key={appKey}>
           <DesktopConfigSync />
           <DesktopBannerInitializer />
-          <SaveShortcutListener />
-          <LocalProcessingFolders />
-          <DiskConflictHost />
+          <AppHostExtensions />
           {children}
           {/* Desktop onboarding modal: welcome slide → sign-in slide, shown once on first launch */}
           <DesktopOnboardingModal />
           {/* SaaS product onboarding (cloud flow, minus the desktop-download slide),
               shown once after a SaaS sign-in. Mirrors saas's OnboardingBootstrap. */}
           <DesktopSaasOnboardingBootstrap connectionMode={connectionMode} />
-          <ClassificationBackgroundRunner />
           {/* Always-mounted host for the PAYG usage-limit modals (free-limit /
               spend-cap). Resolves to the cloud implementation via @app; listens
               for both the imperative open events (direct-call 402s) and the
@@ -392,7 +355,6 @@ export function AppProviders({ children }: { children: ReactNode }) {
           <UsageLimitModalHost />
           {/* Global sign-in modal, opened via stirling:open-sign-in event */}
           <SignInModal />
-          {/* Desktop auto-update popup */}
           {updatePopupModal}
         </SaaSTeamProvider>
       </ToolActionsContext.Provider>

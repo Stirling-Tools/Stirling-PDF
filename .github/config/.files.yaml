@@ -111,6 +111,7 @@ tauri: &tauri
   - *ci
   - frontend/editor/src-tauri/**
   - frontend/editor/src/desktop/**
+  - frontend/editor/src/tauri/**
   - frontend/editor/tsconfig.desktop.vite.json
   - frontend/package.json
   - frontend/package-lock.json

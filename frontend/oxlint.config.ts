@@ -1,11 +1,14 @@
 import { defineConfig, type OxlintGlobals } from "oxlint";
 
-// Glob for all editor app source, and the two layers that need their own
-// import scope. `no-restricted-imports` is repeated per scope on purpose:
+// Glob for all editor app source, and the layers that need their own import
+// scope. `no-restricted-imports` is repeated per scope on purpose:
 // oxlint REPLACES (does not merge) a rule across matching overrides, so each
 // scope must restate the full set of bans that apply to it.
 const APP_SOURCE = "editor/src/**/*.{js,mjs,jsx,ts,tsx}";
 const DESKTOP_SOURCE = "editor/src/desktop/**/*.{js,mjs,jsx,ts,tsx}";
+const TAURI_SOURCE = "editor/src/tauri/**/*.{js,mjs,jsx,ts,tsx}";
+// The layers that run inside the Tauri shell, the only ones that may reach @tauri-apps/*.
+const TAURI_LAYERS = [DESKTOP_SOURCE, TAURI_SOURCE];
 const CLOUD_SOURCE = "editor/src/cloud/**/*.{js,mjs,jsx,ts,tsx}";
 
 // Shared import-ban building blocks -----------------------------------------
@@ -19,20 +22,20 @@ const aliasOverSrc = {
   regex: "^src/",
   message: "Use a workspace alias instead of absolute src/ imports.",
 };
-const noTauriOutsideDesktop = {
+const noTauriOutsideTauriLayers = {
   regex: "^@tauri-apps/",
   message:
-    "Tauri APIs are desktop-only. Review frontend/editor/DeveloperGuide.md for structure advice.",
+    "Tauri APIs are only for the tauri/ and desktop/ layers. Review frontend/editor/DeveloperGuide.md for structure advice.",
 };
 const cloudNoTauri = {
   regex: "^@tauri-apps/",
   message:
-    "cloud/ must stay platform-portable. Tauri APIs are desktop-only — reach native features via an @app/* seam (e.g. @app/platform/openExternal).",
+    "cloud/ must stay platform-portable. Tauri APIs belong to tauri/ and desktop/ — reach native features via an @app/* seam (e.g. @app/platform/openExternal).",
 };
 const cloudNoSupabase = {
   regex: "^@supabase/",
   message:
-    "cloud/ must stay platform-portable. Reach Supabase via an @app/* seam (e.g. @app/auth/supabase, @app/auth/session) provided per-platform in saas/ and desktop/.",
+    "cloud/ must stay platform-portable. Reach Supabase via an @app/* seam (e.g. @app/auth/supabase, @app/auth/session) provided per-platform in saas/ and tauri/.",
 };
 
 // Shared-DS Button/SegmentedControl/Chip family must come from @app/ui, not
@@ -253,24 +256,27 @@ export default defineConfig({
       },
     },
     {
-      // Editor app source (excluding desktop): ban relative/src imports, ban
-      // Tauri (desktop-only), and the shared-DS Mantine import ban.
+      // Editor app source outside the Tauri layers: ban relative/src imports,
+      // ban Tauri, and the shared-DS Mantine import ban.
       files: [APP_SOURCE],
-      excludeFiles: [DESKTOP_SOURCE],
+      excludeFiles: TAURI_LAYERS,
       rules: {
         "no-restricted-imports": [
           "error",
           {
-            patterns: [aliasOverRelative, aliasOverSrc, noTauriOutsideDesktop],
+            patterns: [
+              aliasOverRelative,
+              aliasOverSrc,
+              noTauriOutsideTauriLayers,
+            ],
             paths: mantineDsPaths,
           },
         ],
       },
     },
     {
-      // Desktop source: same DS import ban, but Tauri is allowed here (this is
-      // the only layer that may reach @tauri-apps/* directly).
-      files: [DESKTOP_SOURCE],
+      // Tauri layer source: same DS import ban, but Tauri is allowed.
+      files: TAURI_LAYERS,
       rules: {
         "no-restricted-imports": [
           "error",
@@ -357,23 +363,27 @@ export default defineConfig({
         "editor/src/core/components/filesPage/FileManagerView.tsx",
         "editor/src/core/pages/HomePage.tsx",
       ],
-      excludeFiles: [DESKTOP_SOURCE, CLOUD_SOURCE],
+      excludeFiles: [...TAURI_LAYERS, CLOUD_SOURCE],
       rules: {
         "no-restricted-imports": [
           "error",
           {
-            patterns: [aliasOverRelative, aliasOverSrc, noTauriOutsideDesktop],
+            patterns: [
+              aliasOverRelative,
+              aliasOverSrc,
+              noTauriOutsideTauriLayers,
+            ],
           },
         ],
       },
     },
     {
-      // Desktop test/story files: like every other *.test/*.stories file they
-      // are exempt from the shared-DS Mantine import ban; being desktop they also
-      // keep the Tauri allowance.
+      // Tauri layer test/story files: like every other *.test/*.stories file
+      // they are exempt from the shared-DS Mantine import ban, and they keep the
+      // Tauri allowance.
       files: [
-        "editor/src/desktop/**/*.test.{js,mjs,jsx,ts,tsx}",
-        "editor/src/desktop/**/*.stories.{js,mjs,jsx,ts,tsx}",
+        "editor/src/{desktop,tauri}/**/*.test.{js,mjs,jsx,ts,tsx}",
+        "editor/src/{desktop,tauri}/**/*.stories.{js,mjs,jsx,ts,tsx}",
       ],
       rules: {
         "no-restricted-imports": [

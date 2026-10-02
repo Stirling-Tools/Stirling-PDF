@@ -30,6 +30,7 @@
     "src/proprietary/**/*.spec.ts*",
     "src/cloud/**/*.test.ts*",
     "src/cloud/**/*.spec.ts*",
-    "src/desktop"
+    "src/desktop",
+    "src/tauri"
   ]
 }
