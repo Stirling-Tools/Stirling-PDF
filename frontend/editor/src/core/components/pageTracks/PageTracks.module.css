@@ -137,6 +137,9 @@
   flex-direction: column;
   cursor: grab;
   user-select: none;
+  --pt-selection-ring:
+    0 0 0 2px var(--c-primary),
+    0 0 0 5px color-mix(in srgb, var(--c-primary) 22%, transparent);
 }
 
 .tileDragging {
@@ -181,12 +184,17 @@
 }
 
 /* Selection reads as a ring hugging the page (so it turns with a rotated page),
-   not an outlined tile. */
+   not an outlined tile. The hover rule above outranks a plain .tileSelected
+   selector (its :hover counts as a class), so the ring must be re-asserted for
+   the hovered case or it vanishes under the hover shadow. */
 .tileSelected .thumb,
 .tileSelected .thumbPending {
-  box-shadow:
-    0 0 0 2px var(--c-primary),
-    0 0 0 5px color-mix(in srgb, var(--c-primary) 22%, transparent);
+  box-shadow: var(--pt-selection-ring);
+}
+
+.tileSelected .thumbBox:hover .thumb,
+.tileSelected .thumbBox:hover .thumbPending {
+  box-shadow: var(--pt-selection-ring), var(--shadow-lg);
 }
 
 /*
@@ -260,9 +268,11 @@
 }
 
 .tileSelected .blankPage {
-  box-shadow:
-    0 0 0 2px var(--c-primary),
-    0 0 0 5px color-mix(in srgb, var(--c-primary) 22%, transparent);
+  box-shadow: var(--pt-selection-ring);
+}
+
+.tileSelected .thumbBox:hover .blankPage {
+  box-shadow: var(--pt-selection-ring), var(--shadow-lg);
 }
 
 /* Just the page number as plain centred text below the page, scaled with zoom. */
