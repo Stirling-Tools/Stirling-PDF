@@ -23,8 +23,6 @@ import type { Tier } from "@portal/contexts/TierContext";
  * editor's SaaSTeamContext uses.
  */
 
-/* ── SaasTeamController DTOs ─────────────────────────────────────────────── */
-
 interface TeamDetailsDTO {
   teamId: number;
   name: string;
