@@ -26,7 +26,9 @@ function track(page: import("@playwright/test").Page, name: string) {
 
 /**
  * Switches workbench view. The switcher is a Mantine SegmentedControl whose
- * radio input is visually hidden, so the click goes through the label.
+ * radio input is visually hidden, so the click goes through the label. Only the
+ * active segment shows its text (the rest are icon-only), so the label is found
+ * by its text content and clicked as a whole rather than clicking the text node.
  */
 async function switchView(
   page: import("@playwright/test").Page,
@@ -35,7 +37,7 @@ async function switchView(
   await page
     .locator('[data-tour="view-switcher"]')
     .first()
-    .getByText(label, { exact: true })
+    .locator(".mantine-SegmentedControl-label", { hasText: label })
     .click();
 }
 
@@ -415,7 +417,7 @@ test.describe("Page Editor tracks", () => {
     await expect(
       header.getByRole("button", { name: "Deselect All", exact: true }),
     ).toBeVisible();
-    await page.getByRole("button", { name: "Delete Selected Pages" }).click();
+    await page.getByRole("button", { name: "Delete selected pages" }).click();
 
     await expect(rotated.locator("[data-page-id]")).toHaveCount(0);
     // The other track was never selected, so it is untouched.
@@ -606,7 +608,7 @@ test.describe("Page Editor tracks", () => {
     const tiles = rotated.locator("[data-page-id]");
     await expect(tiles).toHaveCount(4, { timeout: 30_000 });
     const insertAfter = page.getByRole("button", {
-      name: "Insert a blank page after each selected page",
+      name: "Insert blank pages after selected pages",
     });
     await expect(insertAfter).toBeDisabled();
 
@@ -766,7 +768,9 @@ test.describe("Page Editor tracks", () => {
 
     await tiles.nth(0).click();
     await tiles.nth(2).click();
-    await page.getByRole("button", { name: "Rotate right" }).first().click();
+    await page
+      .getByRole("button", { name: "Rotate selected pages right" })
+      .click();
 
     // Only the two clicked pages turn; the ones in between are untouched.
     expect(await readRotations(rotated, 4)).toEqual([90, 90, 0, 180]);

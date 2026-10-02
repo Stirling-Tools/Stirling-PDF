@@ -171,6 +171,9 @@
   justify-content: center;
   filter: drop-shadow(var(--shadow-md));
   transition: filter 0.15s ease;
+  /* Decorative only: clicks fall through to the tile (selection, drag) and the
+     hover controls layered over the page, the way the bare image used to. */
+  pointer-events: none;
 }
 
 .thumbBox:hover .pageShadow {
