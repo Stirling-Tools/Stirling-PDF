@@ -1,6 +1,8 @@
-import { Stack, Group, Text, Collapse, TextInput, Loader } from "@mantine/core";
+import { Stack, Group, Text, Collapse, Loader } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { Modal } from "@app/ui/Modal";
+import { FormField } from "@app/ui/FormField";
+import { Input } from "@app/ui/Input";
 import { useTranslation } from "react-i18next";
 import { useState, useEffect, useMemo } from "react";
 import { Icon } from "@app/ui/Icon";
@@ -218,13 +220,24 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
       }}
       title={t(
         "certSign.collab.signRequest.certModal.title",
-        "Configure Certificate",
+        "Choose how to sign",
+      )}
+      subtitle={t(
+        "certSign.collab.signRequest.certModal.description",
+        "Choose a certificate to complete your signature.",
+        {
+          count: signatureCount,
+        },
       )}
       width="md"
       disableBackdropClose={signing || disabled}
       disableEscapeClose={signing || disabled}
       footer={
-        <Group justify="space-between" wrap="wrap">
+        <Group
+          justify="space-between"
+          wrap="wrap"
+          className="certificate-config__footer"
+        >
           <Button
             variant="secondary"
             onClick={onClose}
@@ -241,7 +254,7 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
               certValidation.status === "validating"
             }
             loading={signing}
-            leftSection={<Icon name="check" size={18} />}
+            leftSection={<Icon name="shield-check" size={18} />}
           >
             {t("certSign.collab.signRequest.certModal.sign", "Sign Document")}
           </Button>
@@ -249,14 +262,6 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
       }
     >
       <Stack gap="md">
-        <Text size="sm" c="dimmed">
-          {t(
-            "certSign.collab.signRequest.certModal.description",
-            "You have placed {{count}} visible mark(s). Choose a certificate to submit your signature. Visible marks are optional.",
-            { count: signatureCount },
-          )}
-        </Text>
-
         {submitError && (
           <Text role="alert" size="sm" c="var(--c-danger)">
             {submitError}
@@ -282,7 +287,11 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
         />
 
         {certValidation.status === "validating" && (
-          <Group gap="xs">
+          <Group
+            gap="xs"
+            role="status"
+            className="certificate-config__validation"
+          >
             <Loader size="xs" />
             <Text size="sm" c="dimmed">
               {t(
@@ -293,7 +302,11 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
           </Group>
         )}
         {certValidation.status === "valid" && (
-          <Group gap="xs">
+          <Group
+            gap="xs"
+            role="status"
+            className="certificate-config__validation"
+          >
             <Icon
               name="circle-check"
               size={20}
@@ -316,7 +329,11 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
           </Group>
         )}
         {certValidation.status === "error" && (
-          <Group gap="xs">
+          <Group
+            gap="xs"
+            role="alert"
+            className="certificate-config__validation"
+          >
             <Icon
               name="circle-alert"
               size={20}
@@ -334,10 +351,13 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
           </Group>
         )}
 
-        <div>
+        <div className="certificate-config__details">
           <Button
             variant="tertiary"
             size="sm"
+            accent="neutral"
+            className="certificate-config__details-toggle"
+            justify="between"
             onClick={() => setShowAdvanced(!showAdvanced)}
             disabled={disabled || signing}
             aria-expanded={showAdvanced}
@@ -347,43 +367,48 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
                 size={16}
               />
             }
-            style={{ marginBottom: "8px" }}
           >
             {t(
-              "certSign.collab.signRequest.advancedSettings",
-              "Advanced Settings",
+              "certSign.collab.signRequest.certModal.details",
+              "Signing details (optional)",
             )}
           </Button>
 
           <Collapse in={showAdvanced}>
-            <Stack gap="sm">
-              <TextInput
+            <div className="certificate-config__fields">
+              <FormField
                 label={t(
                   "certSign.collab.signRequest.reason",
                   "Reason (Optional)",
                 )}
-                placeholder={t(
-                  "certSign.collab.signRequest.reasonPlaceholder",
-                  "Why are you signing?",
-                )}
-                value={reason}
-                onChange={(e) => setReason(e.currentTarget.value)}
-                disabled={disabled || signing}
-              />
-              <TextInput
+              >
+                <Input
+                  placeholder={t(
+                    "certSign.collab.signRequest.reasonPlaceholder",
+                    "Why are you signing?",
+                  )}
+                  value={reason}
+                  onChange={(e) => setReason(e.currentTarget.value)}
+                  disabled={disabled || signing}
+                />
+              </FormField>
+              <FormField
                 label={t(
                   "certSign.collab.signRequest.location",
                   "Location (Optional)",
                 )}
-                placeholder={t(
-                  "certSign.collab.signRequest.locationPlaceholder",
-                  "Where are you signing from?",
-                )}
-                value={location}
-                onChange={(e) => setLocation(e.currentTarget.value)}
-                disabled={disabled || signing}
-              />
-            </Stack>
+              >
+                <Input
+                  placeholder={t(
+                    "certSign.collab.signRequest.locationPlaceholder",
+                    "Where are you signing from?",
+                  )}
+                  value={location}
+                  onChange={(e) => setLocation(e.currentTarget.value)}
+                  disabled={disabled || signing}
+                />
+              </FormField>
+            </div>
           </Collapse>
         </div>
       </Stack>
