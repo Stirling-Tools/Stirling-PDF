@@ -1,0 +1,227 @@
+import { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Icon } from "@app/ui/Icon";
+import { useAuth } from "@app/auth/UseSession";
+import { useChecklistInviteTarget } from "@app/components/onboarding/checklistInviteTarget";
+import {
+  useChecklistSetupItem,
+  type ChecklistItem,
+} from "@app/components/onboarding/checklistSetupItem";
+import {
+  getFlowProgress,
+  hasSeenFlow,
+  markFlowSeen,
+  setStepDone,
+} from "@app/components/onboarding/orchestrator/onboardingStorage";
+import { openAppSettings } from "@app/utils/appSettings";
+import { requestStartTour } from "@app/constants/events";
+import stirlingMark from "@app/assets/brand/modern-logo/logo512.png";
+import styles from "@app/components/onboarding/OnboardingChecklist.module.css";
+
+const FLOW_ID = "saas-checklist";
+const STEP_INVITE_TEAM = "invite-team";
+const STEP_TAKE_TOUR = "take-tour";
+
+/** Getting-started checklist above the sidebar footer. Ticks and the X dismissal
+ * persist per browser in the shared onboarding store. */
+export function OnboardingChecklist() {
+  const { t } = useTranslation();
+  const { isAnonymous, loading } = useAuth();
+  const inviteTarget = useChecklistInviteTarget();
+
+  const [dismissed, setDismissed] = useState(() => hasSeenFlow(FLOW_ID));
+  const [done, setDone] = useState<string[]>(() => getFlowProgress(FLOW_ID));
+  const [expanded, setExpanded] = useState(true);
+
+  const markDone = useCallback((stepId: string) => {
+    setStepDone(FLOW_ID, stepId);
+    setDone((prev) => (prev.includes(stepId) ? prev : [...prev, stepId]));
+  }, []);
+
+  const handleInviteTeam = useCallback(() => {
+    if (inviteTarget) openAppSettings(inviteTarget);
+    markDone(STEP_INVITE_TEAM);
+  }, [inviteTarget, markDone]);
+
+  const handleTakeTour = useCallback(() => {
+    // Always the user (tools) walkthrough, regardless of admin/user role. The
+    // editor's onboarding listens for this event and drives the tour overlay.
+    requestStartTour("tools");
+    markDone(STEP_TAKE_TOUR);
+  }, [markDone]);
+
+  const setup = useChecklistSetupItem(markDone);
+
+  const items: ChecklistItem[] = [
+    ...(setup.item ? [setup.item] : []),
+    ...(inviteTarget
+      ? [
+          {
+            id: STEP_INVITE_TEAM,
+            titleKey: "onboarding.checklist.inviteTeam.title",
+            titleFallback: "Invite team members",
+            descriptionKey: "onboarding.checklist.inviteTeam.description",
+            descriptionFallback: "Collaborate with your team",
+            onClick: handleInviteTeam,
+          },
+        ]
+      : []),
+    {
+      id: STEP_TAKE_TOUR,
+      titleKey: "onboarding.checklist.takeTour.title",
+      titleFallback: "Take the tour",
+      descriptionKey: "onboarding.checklist.takeTour.description",
+      descriptionFallback: "See how Stirling works in a quick walkthrough",
+      onClick: handleTakeTour,
+    },
+  ];
+
+  const doneCount = items.filter((item) => done.includes(item.id)).length;
+  const total = items.length;
+  const allDone = total > 0 && doneCount === total;
+
+  const handleDismiss = useCallback(() => {
+    markFlowSeen(FLOW_ID);
+    setDismissed(true);
+  }, []);
+
+  if (loading || isAnonymous || dismissed) {
+    return null;
+  }
+
+  return (
+    <>
+      <div className={styles.card} data-testid="onboarding-checklist">
+        <div
+          className={styles.header}
+          role="button"
+          tabIndex={0}
+          onClick={() => setExpanded((v) => !v)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              setExpanded((v) => !v);
+            }
+          }}
+        >
+          <span className={styles.titleGroup}>
+            <img
+              src={stirlingMark}
+              alt=""
+              aria-hidden="true"
+              className={styles.logo}
+            />
+            <span className={styles.title}>
+              {t("onboarding.checklist.title", "Set up Stirling PDF")}
+            </span>
+          </span>
+          <span className={styles.headerRight}>
+            <span className={styles.progressCount}>
+              {doneCount} / {total}
+            </span>
+            {expanded ? (
+              <Icon
+                name="chevron-up"
+                size="0.95rem"
+                className={styles.chevron}
+              />
+            ) : (
+              <Icon
+                name="chevron-down"
+                size="0.95rem"
+                className={styles.chevron}
+              />
+            )}
+            <span
+              className={styles.closeButton}
+              role="button"
+              tabIndex={0}
+              aria-label={t("onboarding.checklist.dismiss", "Dismiss")}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDismiss();
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleDismiss();
+                }
+              }}
+            >
+              {allDone ? (
+                <Icon
+                  name="circle-check"
+                  size="1.05rem"
+                  className={styles.completeIcon}
+                />
+              ) : (
+                <Icon name="x" size="0.95rem" />
+              )}
+            </span>
+          </span>
+        </div>
+
+        <div className={styles.progressTrack}>
+          <div
+            className={styles.progressFill}
+            style={{ width: `${total ? (doneCount / total) * 100 : 0}%` }}
+          />
+        </div>
+
+        {expanded && (
+          <div className={styles.items}>
+            {items.map((item) => {
+              const isDone = done.includes(item.id);
+              return (
+                <div
+                  key={item.id}
+                  className={styles.item}
+                  role="button"
+                  tabIndex={0}
+                  onClick={item.onClick}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      item.onClick();
+                    }
+                  }}
+                >
+                  <span className={styles.itemIcon}>
+                    {isDone ? (
+                      <Icon
+                        name="circle-check"
+                        size="1.05rem"
+                        className={styles.checkDone}
+                      />
+                    ) : (
+                      <Icon
+                        name="circle"
+                        size="1.05rem"
+                        className={styles.checkTodo}
+                      />
+                    )}
+                  </span>
+                  <span className={styles.itemText}>
+                    <span
+                      className={`${styles.itemTitle} ${isDone ? styles.itemTitleDone : ""}`}
+                    >
+                      {t(item.titleKey, item.titleFallback)}
+                    </span>
+                    <span
+                      className={`${styles.itemDescription} ${isDone ? styles.itemDescriptionDone : ""}`}
+                    >
+                      {t(item.descriptionKey, item.descriptionFallback)}
+                    </span>
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {setup.dialog}
+    </>
+  );
+}

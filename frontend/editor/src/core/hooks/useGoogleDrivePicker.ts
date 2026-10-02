@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import {
   getGoogleDrivePickerService,
@@ -22,6 +23,7 @@ interface UseGoogleDrivePickerReturn {
 
 /** Initializes Drive lazily; failed picks resolve to [] and set error until cleared or retried. */
 export function useGoogleDrivePicker(): UseGoogleDrivePickerReturn {
+  const { t } = useTranslation();
   const { config } = useAppConfig();
   const [isEnabled, setIsEnabled] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -53,18 +55,28 @@ export function useGoogleDrivePicker(): UseGoogleDrivePickerReturn {
 
     const googleDriveConfig = getGoogleDriveConfig(googleDriveBackendConfig);
     if (!googleDriveConfig) {
-      throw new Error("Google Drive is not configured");
+      throw new Error(
+        t(
+          "provider.googledrive.errors.notConfigured",
+          "Google Drive is not configured",
+        ),
+      );
     }
 
     const service = getGoogleDrivePickerService();
     await service.initialize(googleDriveConfig);
     setIsInitialized(true);
-  }, [isInitialized, googleDriveBackendConfig]);
+  }, [isInitialized, googleDriveBackendConfig, t]);
 
   const openPicker = useCallback(
     async (options: UseGoogleDrivePickerOptions = {}): Promise<File[]> => {
       if (!isEnabled) {
-        setError("Google Drive is not configured");
+        setError(
+          t(
+            "provider.googledrive.errors.notConfigured",
+            "Google Drive is not configured",
+          ),
+        );
         return [];
       }
 
@@ -85,7 +97,10 @@ export function useGoogleDrivePicker(): UseGoogleDrivePickerReturn {
         const errorMessage =
           err instanceof Error
             ? err.message
-            : "Failed to open Google Drive picker";
+            : t(
+                "provider.googledrive.errors.pickerFailed",
+                "Failed to open Google Drive picker",
+              );
         setError(errorMessage);
         console.error("Google Drive picker error:", err);
         return [];
@@ -93,7 +108,7 @@ export function useGoogleDrivePicker(): UseGoogleDrivePickerReturn {
         setIsLoading(false);
       }
     },
-    [isEnabled, initializeService],
+    [isEnabled, initializeService, t],
   );
 
   return {

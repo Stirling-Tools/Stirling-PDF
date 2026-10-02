@@ -35,13 +35,6 @@ const DEV_PORT = process.env.V2_PORT ?? "5173";
 const DESKTOP_PORT = process.env.V2_DESKTOP_PORT ?? "5273";
 const DISK_LINK_SPECS = /disk-link-.*\.spec\.ts/;
 
-// The viewer swap specs sample animation frames during a byte swap and assert
-// that no frame shows the wrong position, zoom or page width. Three workers on
-// a 2-core CI runner starve that sampler, so CI runs them on their own leg with
-// one worker; the sharded stubbed projects skip them.
-const VIEWER_SWAP_SPECS =
-  /viewer-(hot-reload-matrix|in-place-reload)\.spec\.ts/;
-
 export default defineConfig({
   testDir: "./src/core/tests",
   testMatch: "**/*.spec.ts",
@@ -80,7 +73,7 @@ export default defineConfig({
     {
       name: "stubbed",
       testDir: "./src/core/tests/stubbed",
-      testIgnore: [DISK_LINK_SPECS, VIEWER_SWAP_SPECS],
+      testIgnore: DISK_LINK_SPECS,
       use: chromiumViewport,
     },
 
@@ -93,35 +86,6 @@ export default defineConfig({
       use: {
         ...chromiumViewport,
         baseURL: `http://localhost:${DESKTOP_PORT}`,
-      },
-    },
-
-    // Serial arm of the stubbed suite, one per engine: the frame-sampling
-    // viewer swap specs. `fullyParallel: false` keeps each file in one worker;
-    // the CI leg also passes --workers=1.
-    {
-      name: "stubbed-viewer-swap",
-      testDir: "./src/core/tests/stubbed",
-      testMatch: VIEWER_SWAP_SPECS,
-      fullyParallel: false,
-      use: chromiumViewport,
-    },
-    {
-      name: "stubbed-viewer-swap-firefox",
-      testDir: "./src/core/tests/stubbed",
-      testMatch: VIEWER_SWAP_SPECS,
-      fullyParallel: false,
-      use: { ...devices["Desktop Firefox"], viewport: STUBBED_VIEWPORT },
-    },
-    {
-      name: "stubbed-viewer-swap-webkit",
-      testDir: "./src/core/tests/stubbed",
-      testMatch: VIEWER_SWAP_SPECS,
-      fullyParallel: false,
-      use: {
-        ...devices["Desktop Safari"],
-        viewport: STUBBED_VIEWPORT,
-        deviceScaleFactor: 1,
       },
     },
 
@@ -161,13 +125,13 @@ export default defineConfig({
     {
       name: "stubbed-firefox",
       testDir: "./src/core/tests/stubbed",
-      testIgnore: [DISK_LINK_SPECS, VIEWER_SWAP_SPECS],
+      testIgnore: DISK_LINK_SPECS,
       use: { ...devices["Desktop Firefox"], viewport: STUBBED_VIEWPORT },
     },
     {
       name: "stubbed-webkit",
       testDir: "./src/core/tests/stubbed",
-      testIgnore: [DISK_LINK_SPECS, VIEWER_SWAP_SPECS],
+      testIgnore: DISK_LINK_SPECS,
       // Desktop Safari ships deviceScaleFactor 2; the editor now renders
       // bitmaps at dpr x zoom, so leaving it would 4x every page raster in
       // this suite. The HiDPI spec opts into 2x deliberately where it matters.

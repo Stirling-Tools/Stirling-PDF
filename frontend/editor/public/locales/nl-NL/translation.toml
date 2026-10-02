@@ -278,6 +278,7 @@ customNumberDesc = "Standaard {n}, accepteert ook 'Pagina {n} van {total}', 'Tek
 fontName = "Lettertypenaam"
 fontSize = "Lettertypegrootte"
 numberPagesDesc = "Welke pagina's genummerd moeten worden, standaard 'all', accepteert ook 1-5 of 2,5,9 etc"
+pagePreviewAlt = "Paginavoorbeeld"
 pagesAndStarting = "Pagina's en startnummer"
 positionAndPages = "Positie en pagina's"
 preview = "Positie selecteren"
@@ -350,7 +351,9 @@ text = "Deze machtigingen bepalen wat gebruikers met de PDF kunnen doen. Het mee
 title = "Rechten wijzigen"
 
 [addStamp]
+pagePreviewAlt = "Paginavoorbeeld"
 preview = "Stempelvoorbeeld"
+stampPreviewAlt = "Stempelvoorbeeld"
 tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 
 [AddStampRequest]
@@ -383,6 +386,7 @@ positionAndFormatting = "Positie & opmaak"
 preview = "Preview:"
 quickPosition = "Selecteer een positie op de pagina om de stempel te plaatsen."
 rotation = "Rotatie"
+selectedImageAlt = "Geselecteerde stempelafbeelding"
 selectTemplate = "Select a template..."
 stampSetup = "Stempel instellen"
 stampText = "Stempel tekst"
@@ -533,6 +537,9 @@ letter = "Letter"
 
 [adjustPageScale.scaleFactor]
 label = "Schaalfactor"
+
+[adjustPageScale.settings]
+title = "Instellingen"
 
 [adjustPageScale.tooltip.description]
 text = "Pas de grootte van PDF-inhoud aan en verander de paginadimensies."
@@ -728,7 +735,10 @@ noLanguages = "Geen tessdata-talen gevonden in de geconfigureerde map."
 permissionNotice = "Het tessdata-pad is niet schrijfbaar. Downloads worden in de browser geopend; sla de .traineddata-bestanden handmatig op in de tessdata-map."
 
 [admin.settings.ai]
+customProvider = "Aangepast (OpenAI-compatibel)"
 description = "Verbind Stirling met de Python AI-engine, kies de modellen en stel de richtlijnen in waaronder deze draait."
+managedByCloud = "Beheerd door Stirling Cloud in deze modus."
+managedByCloudShort = "Beheerd door Stirling Cloud"
 
 [admin.settings.ai.documents]
 description = "Configureer het embedding-model en de ophaalinstellingen die worden gebruikt om vragen over documenten te beantwoorden. Toegepast op de AI engine bij opslaan."
@@ -771,11 +781,24 @@ label = "Top K"
 [admin.settings.ai.general]
 connection = "Verbinding"
 description = "Verbind Stirling met de Python AI engine en kies welke AI-mogelijkheden beschikbaar zijn. Wijzigingen worden toegepast na herstart."
+restartNote = "Het wijzigen van de URL of een time-out wordt van kracht na een herstart."
 title = "AI Engine"
 
 [admin.settings.ai.general.capabilities]
 description = "Schakel afzonderlijke AI-functies in of uit. Uitgeschakelde functies worden verborgen in de app."
 title = "Mogelijkheden"
+
+[admin.settings.ai.general.cloud]
+note = "Modellen en providersleutels worden beheerd door Stirling Cloud, dus die instellingen zijn niet van toepassing in deze modus."
+
+[admin.settings.ai.general.cloud.indexing]
+description = "Elke AI-tool verzendt de paginatekst die nodig is om te antwoorden. Dit bepaalt of Stirling Cloud die tekst ook geïndexeerd mag bewaren, zodat latere vragen in het document kunnen zoeken."
+help = "Uit betekent dat documentvragen niet beschikbaar zijn. Het voorkomt niet dat tekst wordt verzonden - alleen dat deze wordt opgeslagen."
+label = "Laat Stirling Cloud geïndexeerde documenten bewaren"
+
+[admin.settings.ai.general.cloudNote]
+body = "Het redeneren draait op de infrastructuur van Stirling en wordt gefactureerd aan het account waaraan deze server is gekoppeld. Er is hier geen container om uit te voeren en geen providersleutel om te bewaren. Alles wat de AI leest, wordt verwerkt door Stirling Cloud in plaats van op uw eigen hardware."
+title = "Over Stirling Cloud AI"
 
 [admin.settings.ai.general.enabled]
 description = "Hoofdschakelaar. Wanneer uitgeschakeld, zijn er geen AI-tools, agents of engine-aanroepen beschikbaar."
@@ -809,9 +832,28 @@ label = "PDF-opmerkingenagent"
 description = "Time-out voor zwaardere agentbewerkingen zoals documentgeneratie."
 label = "Time-out voor langlopende taken (seconden)"
 
+[admin.settings.ai.general.mode]
+label = "Waar AI draait"
+
+[admin.settings.ai.general.mode.cloud]
+description = "Geen container, geen providersleutel, geen modelkeuze - het werk draait op Stirling Cloud en wordt gefactureerd aan het account waaraan deze server is gekoppeld."
+linkCta = "Koppel deze server aan een Stirling-account"
+notLinked = "Koppel eerst een account"
+ownerOnly = "Alleen de organisatie-eigenaar kan deze server aan een Stirling-account koppelen."
+title = "Stirling Cloud AI gebruiken"
+
+[admin.settings.ai.general.mode.off]
+description = "Geen AI-tools ergens in de app, en niets verlaat deze server."
+title = "Uit"
+
+[admin.settings.ai.general.mode.self]
+description = "Een container die u host, gericht op een modelprovider naar keuze. Uw sleutel, uw rekening, uw gegevenspad."
+title = "Uw eigen engine uitvoeren"
+
 [admin.settings.ai.general.note]
-body = "De AI engine draait als een aparte service. Het gedeelde geheim"
-body2 = "wordt ingesteld via een containeromgevingsvariabele. Provider API keys kunnen op deze pagina's worden ingevoerd of als engine-omgevingsvariabelen worden opgegeven; keys die hier worden ingevoerd, worden bij opslaan naar de engine gepusht."
+docs = "Installatiehandleiding"
+intro = "Een aparte container die u naast Stirling uitvoert. Deze doet het redeneren; Stirling doet nog steeds elke paginabewerking zelf. Deze heeft dezelfde"
+outro = "op beide containers en een modelprovidersleutel nodig. Alles wat de AI leest, wordt verzonden naar de provider die u kiest - een Ollama die u host houdt elke pagina binnenshuis."
 title = "Over de AI engine"
 
 [admin.settings.ai.general.streamTimeoutSeconds]
@@ -890,6 +932,67 @@ label = "Slim model"
 body = "Wijzigingen worden automatisch naar de AI engine gepusht."
 bodyNoPush = "Instellingen opgeslagen. Ze worden toegepast de volgende keer dat de AI engine de configuratie ophaalt."
 title = "AI-instellingen opgeslagen"
+
+[admin.settings.ai.status]
+capabilities = "Mogelijkheden"
+capabilitiesValue = "{{on}} van {{total}} aan"
+checked = "gecontroleerd"
+checking = "De engine wordt gecontroleerd…"
+description = "Of de engine bereikbaar is, of deze deze server accepteert en waarop deze draait."
+fastModel = "Snel model"
+justNow = "zojuist"
+latency = "Responstijd"
+linkLabel = "Accountkoppeling"
+minutesAgo = "{{count}} min geleden"
+recheck = "Opnieuw controleren"
+runningOn = "Draait op"
+secondsAgo = "{{count}} sec geleden"
+secretLabel = "Gedeeld geheim"
+smartModel = "Slim model"
+title = "Status"
+url = "Engine-URL"
+
+[admin.settings.ai.status.cloud]
+hostDown = "Niet beschikbaar"
+hostLabel = "Stirling.com"
+hostUp = "Beschikbaar"
+name = "Stirling Cloud"
+sharingLabel = "AI-delen"
+sharingOff = "Uitgeschakeld"
+sharingOn = "Ingeschakeld"
+
+[admin.settings.ai.status.cloud.degraded]
+body = "Stirling Cloud heeft geantwoord, maar heeft deze server geweigerd. De accountkoppeling is mogelijk ingetrokken."
+title = "Stirling Cloud weigert deze server"
+
+[admin.settings.ai.status.cloud.down]
+body = "Deze server kon Stirling Cloud niet bereiken. Controleer de accountkoppeling en of deze server internet kan bereiken."
+title = "Stirling Cloud onbereikbaar"
+
+[admin.settings.ai.status.cloud.ok]
+body = "Stirling Cloud heeft deze server geaccepteerd. Hier hoeft niets te worden uitgevoerd of gepatcht."
+title = "Draait op Stirling Cloud"
+
+[admin.settings.ai.status.degraded]
+body = "De health check werd beantwoord, maar een echte aanvraag werd geweigerd. De twee kanten gebruiken verschillende gedeelde geheimen."
+title = "Engine is actief, maar weigert deze server"
+
+[admin.settings.ai.status.down]
+body = "Controleer de URL, of de engine-container draait en of u opnieuw hebt gestart nadat u AI hebt ingeschakeld."
+title = "Engine onbereikbaar"
+
+[admin.settings.ai.status.off]
+body = "Kies hieronder hoe AI draait, sla op en herstart."
+title = "AI is uitgeschakeld"
+
+[admin.settings.ai.status.ok]
+body = "Health check en een geauthenticeerde aanvraag zijn beide geslaagd."
+title = "Engine draait"
+
+[admin.settings.ai.status.secret]
+no = "Geweigerd"
+unknown = "Onbekend"
+yes = "Geaccepteerd"
 
 [admin.settings.badge]
 clickToUpgrade = "Click to view plan details"
@@ -1051,7 +1154,6 @@ refresh = "Vernieuwen"
 selectFile = "Selecteer een .sql-bestand om te importeren"
 size = "Grootte"
 title = "Database"
-unavailable = "Lijst met back-ups niet beschikbaar voor de huidige databaseconfiguratie."
 uploadTitle = "Uploaden & importeren"
 version = "H2-versie"
 
@@ -1185,6 +1287,7 @@ label = "Aangepaste metadata"
 [admin.settings.general.customMetadata.author]
 description = "Standaardauteur voor PDF-metadata (bijv. gebruikersnaam)"
 label = "Standaardauteur"
+placeholder = "gebruikersnaam"
 
 [admin.settings.general.customMetadata.autoUpdate]
 description = "PDF-metadata automatisch bijwerken op alle verwerkte documenten"
@@ -1300,6 +1403,7 @@ defaultLocaleLink = "Standaardlocale configureren"
 description = "Toon een verklaring die gebruikers moeten accepteren na het inloggen. De tekst volgt de taal van elke gebruiker."
 discardConfirm = "U hebt niet-opgeslagen wijzigingen die verloren gaan. Toch van taal wisselen?"
 editLabel = "Markdown"
+editPlaceholder = "## Kop\n\nJe disclaimertekst..."
 emptyPreview = "Nog niets om te bekijken."
 language = "Taal"
 languageHelp = "Elke taal heeft een eigen bestand. Als er voor de taal van een gebruiker geen bestand is, valt de overeenkomst terug op het bestand van de standaardlocale en daarna op de terugvaltekst."
@@ -1418,8 +1522,10 @@ label = "JWKS URL (optional)"
 placeholder = "Auto-discovered from issuer"
 
 [admin.settings.mcp.mode]
+apikey = "API-sleutel (Stirling-sleutel per gebruiker)"
 description = "OAuth needs an external IdP. API key uses a Stirling per-user API key (X-API-KEY) - simplest for self-host."
 label = "Authentication mode"
+oauth = "OAuth 2.1 (externe IdP)"
 
 [admin.settings.mcp.requireAccount]
 description = "Only let tokens through if their subject maps to a provisioned, enabled Stirling user."
@@ -1836,6 +1942,14 @@ title = "Gebruikersbeheer"
 [agents]
 stirling_name = "Stirling"
 
+[alphabetOptions]
+arabic = "Arabisch"
+chinese = "Chinees (vereenvoudigd)"
+japanese = "Japans"
+korean = "Koreaans"
+roman = "Romeins"
+thai = "Thais"
+
 [analytics]
 learnMore = "Meer informatie"
 paragraph1 = "Stirling PDF heeft opt-in analyses om ons te helpen het product te verbeteren. We volgen geen persoonlijke informatie of bestandsinhoud."
@@ -1957,6 +2071,7 @@ week = "Week"
 
 [audit.clearData]
 cancel = "Annuleren"
+closeAlert = "Melding sluiten"
 codeDoesNotMatch = "Code komt niet overeen"
 codePlaceholder = "Typ de code hier"
 confirmationCode = "Bevestigingscode"
@@ -1966,6 +2081,7 @@ confirmTitle = "Bevestig dat je wilt verwijderen"
 deleteButton = "Verwijderen"
 enterCode = "Bevestigingscode"
 enterCodeBelow = "Voer de code exact in zoals hierboven weergegeven (hoofdlettergevoelig)"
+failed = "Auditgegevens wissen mislukt"
 initiateDelete = "Alle gegevens verwijderen"
 irreversible = "ONOMKEERBAAR"
 success = "Succes"
@@ -1974,6 +2090,7 @@ warning1 = "Deze actie kan niet ongedaan worden gemaakt"
 warning2 = "Het verwijderen van auditgegevens verwijdert permanent alle historische auditlogs, inclusief beveiligingsgebeurtenissen, gebruikersactiviteiten en bestandsbewerkingen uit de database."
 
 [audit.error]
+loadStatus = "Status van auditsysteem laden mislukt"
 title = "Fout bij laden van auditsysteem"
 
 [audit.events]
@@ -1989,6 +2106,7 @@ fileHash = "Bestandshash"
 filterByType = "Filteren op type"
 filterByUser = "Filteren op gebruiker"
 ipAddress = "IP-adres"
+loadFailed = "Gebeurtenissen laden mislukt"
 noEvents = "Geen gebeurtenissen gevonden"
 startDate = "Startdatum"
 timestamp = "Tijdstempel"
@@ -2029,6 +2147,7 @@ avgLatency = "Gem. latentie"
 error = "Fout bij laden van statistieken"
 excellent = "Uitstekend"
 good = "Goed"
+loadFailed = "Statistieken laden mislukt"
 noData = "N.v.t."
 successRate = "Succesratio"
 totalEvents = "Totaal aantal gebeurtenissen"
@@ -2063,13 +2182,27 @@ accessDenied = "Toegang geweigerd"
 insufficientPermissions = "U hebt geen toestemming om deze actie uit te voeren."
 
 [auth.callback]
+alreadySignedIn = "Al aangemeld! Doorsturen..."
+backToLogin = "Terug naar aanmelden"
 completing = "Authenticatie voltooien"
+exchanging = "Autorisatiecode uitwisselen..."
+failedWithReason = "Authenticatie mislukt: {{error}}"
 invalidToken = "OAuth-aanmelding mislukt - ongeldig token."
 missingToken = "OAuth-aanmelding mislukt - geen token ontvangen."
+noData = "Geen authenticatiegegevens gevonden"
 oauthFailed = "OAuth-aanmelding mislukt. Probeer het opnieuw."
 pleaseWait = "Even geduld terwijl we je aanmelding afronden."
+processing = "Authenticatie verwerken..."
 signedOut = "Je bent afgemeld. Meld je opnieuw aan."
+signInFailed = "Aanmelden voltooien mislukt: {{error}}"
+success = "Aanmelden geslaagd! Doorsturen..."
+unknownError = "Onbekende fout"
 windowMayClose = "Je kunt dit venster sluiten zodra dit is voltooid."
+
+[auth.callback.title]
+default = "Authenticatie"
+processing = "Je wordt aangemeld"
+success = "Je bent helemaal klaar!"
 
 [auth.displayName]
 guest = "Gast"
@@ -2222,6 +2355,7 @@ title = "Automatisering importeren"
 unresolved = "Niet-toegewezen: {{ops}}"
 
 [automate.run]
+progress = "Voortgang: {{current}}/{{total}}"
 title = "Automatisering uitvoeren"
 
 [automate.selection]
@@ -2371,6 +2505,7 @@ whatHappensNext = "Wat gebeurt er daarna?"
 
 [billing.portal]
 error = "Kon facturatieportaal niet openen"
+errorFallback = "Probeer het opnieuw of neem contact op met support."
 
 [bookletImposition]
 paperSizeNote = "Papierformaat wordt automatisch afgeleid van uw eerste pagina."
@@ -2418,6 +2553,9 @@ title = "Handmatige duplexmodus"
 [bookletImposition.rtlBinding]
 label = "Rechts-naar-links-binden"
 tooltip = "Voor Arabisch, Hebreeuws of andere rechts-naar-links-talen"
+
+[bookletImposition.settings]
+title = "Instellingen"
 
 [bookletImposition.tooltip.advanced]
 bullet1 = "Rechts-naar-links-binden: Voor Arabisch, Hebreeuws of RTL-talen"
@@ -2487,6 +2625,8 @@ detail = "Klik of druk op Spatie om opnieuw te spelen"
 headline = "Alles leeg"
 
 [bulkSelection]
+selectedPages_one = "Geselecteerd: {{count}} pagina ({{pages}})"
+selectedPages_other = "Geselecteerd: {{count}} pagina's ({{pages}})"
 syntaxError = "Er is een syntaxisprobleem. Zie tips voor paginaselectie voor hulp."
 
 [bulkSelection.advanced]
@@ -2707,6 +2847,7 @@ declineButton = "Weigeren"
 deleteSelected = "Geselecteerde handtekening verwijderen"
 drawSignature = "Teken hieronder uw handtekening"
 fileTooLarge = "Bestandsgrootte moet kleiner zijn dan 5MB"
+fontBrushScript = "Brush Script MT (cursief)"
 fontFamily = "Lettertype"
 fontSize = "Lettergrootte: {{size}}px"
 fontSizePlaceholder = "Grootte"
@@ -2726,6 +2867,7 @@ removeImage = "Afbeelding verwijderen"
 savedSignatures = "Opgeslagen handtekeningen"
 selectFile = "Afbeeldingsbestand selecteren"
 selectSignatureTitle = "Handtekening selecteren of maken"
+signatureImageAlt = "Handtekening"
 signatureInfo = "Deze instellingen zijn geconfigureerd door de documenteigenaar"
 signatureSettings = "Handtekeninginstellingen"
 signatureText = "Handtekeningtekst"
@@ -3496,13 +3638,19 @@ confirm = "Bevestigen"
 continue = "Doorgaan"
 copied = "Gekopieerd!"
 copy = "Kopiëren"
+copyCode = "Code kopiëren"
+dismiss = "Sluiten"
 done = "Gereed"
 enterValue = "Enter value"
 error = "Fout"
 expand = "Uitvouwen"
 filterEmpty = "Niets om op te filteren"
+goToSlide = "Ga naar dia {{number}}"
 loading = "Laden..."
+moreInformation = "Meer informatie"
 next = "Volgende"
+noData = "Geen gegevens"
+nOfTotal = "{{current}} van {{total}}"
 open = "Open"
 preview = "Voorbeeld"
 previous = "Vorige"
@@ -3511,6 +3659,9 @@ remaining = "Resterend"
 retry = "Opnieuw proberen"
 save = "Opslaan"
 search = "Zoeken"
+settingsSections = "Instellingensecties"
+showAllTotal = "Alle {{total}} tonen"
+showLess = "Minder tonen"
 stepOf = "Step {{current}} of {{total}}"
 
 [compare]
@@ -3522,6 +3673,7 @@ newLine = "nieuwe-regel"
 pages = "Pagina's"
 tags = "onderscheiden,contrasteren,veranderingen,analyse"
 title = "Vergelijken"
+workbenchLabel = "Vergelijkingsweergave"
 
 [compare.actions]
 linkScroll = "Synchroon bladeren"
@@ -3675,6 +3827,7 @@ title = "Compressiemethode"
 desiredSize = "Gewenste bestandsgrootte"
 desiredSizePlaceholder = "Grootte invoeren"
 desiredSizeUnit = "Size unit"
+title = "Instellingen"
 
 [compress.tooltip.description]
 text = "Compressie is een eenvoudige manier om uw bestandsgrootte te verkleinen. Kies Bestandsgrootte om een doelformaat in te voeren en laat ons de kwaliteit voor u aanpassen. Kies Kwaliteit om de compressiesterkte handmatig in te stellen."
@@ -3724,10 +3877,13 @@ title = "Accountinstellingen"
 description = "Upload een afbeelding om je account te personaliseren."
 help = "PNG, JPG of WebP tot 2MB."
 remove = "Verwijderen"
+removeFailed = "Profielfoto verwijderen mislukt"
 sizeError = "Selecteer een afbeelding die kleiner is dan 2MB."
 switchedToCustom = "Er is overgeschakeld naar een aangepaste afbeelding. Je kunt nu je eigen afbeelding uploaden."
+switchFailed = "Overschakelen naar aangepaste foto mislukt"
 title = "Profielfoto"
 upload = "Uploaden"
+uploadFailed = "Profielfoto uploaden mislukt"
 useCustom = "Aangepaste afbeelding gebruiken"
 usingProvider = "Profielfoto van {{provider}} wordt gebruikt"
 
@@ -3741,6 +3897,7 @@ title = "Profielfoto bijsnijden"
 zoom = "Zoom"
 
 [config.account.security]
+changeFailed = "Wachtwoord wijzigen mislukt"
 changePassword = "Wachtwoord wijzigen"
 description = "Beheer je wachtwoord en beveiligingsinstellingen."
 title = "Wachtwoorden en beveiliging"
@@ -3751,11 +3908,15 @@ description = "Koppel uw account om uw geschiedenis te behouden en toegang te kr
 email = "E-mailadres"
 emailPassword = "of voer uw e-mailadres en wachtwoord in"
 emailPlaceholder = "Voer uw e-mailadres in"
+failed = "Account upgraden mislukt"
+failedWithProvider = "Account upgraden met {{provider}} mislukt"
 linkWith = "Koppelen met"
+linkWithProvider = "Koppelen met {{provider}}"
 password = "Wachtwoord (optioneel)"
 passwordNote = "Laat leeg om alleen e-mailverificatie te gebruiken"
 passwordPlaceholder = "Stel een wachtwoord in"
 socialLogin = "Opwaarderen met sociaal account"
+success = "Account succesvol geüpgraded! Je kunt je nu aanmelden met je e-mailadres."
 title = "Gastaccount opwaarderen"
 upgradeButton = "Account opwaarderen"
 
@@ -3865,10 +4026,10 @@ title = "Verzoek niet geldig"
 
 [connect.renewal]
 approve = "Aanmelding vernieuwen"
+currentOwnerRequired = "Meld je aan als de huidige eigenaar van het gekoppelde cloudteam om de aanmelding van deze server te vernieuwen. Als het eigendom is overgedragen, gebruik dan het account van de nieuwe eigenaar."
 failed = "Je aanmelding kon niet worden vernieuwd. Probeer het opnieuw, of sluit deze pagina en begin opnieuw vanaf je server."
 lead = "Deze server is al gekoppeld aan je account. Vernieuw je aanmelding om terug te keren naar facturering en gebruik op je server."
 title = "Je serveraanmelding vernieuwen"
-wrongAccount = "Dit account kan de aanmelding van deze server niet vernieuwen. Schakel over naar het account dat oorspronkelijk is gebruikt om de server te koppelen. Dat account moet nog steeds eigenaar zijn van het gekoppelde team."
 
 [convert]
 autoRotate = "Automatisch roteren"
@@ -3914,6 +4075,7 @@ multiple = "Meerdere"
 optimizeForEbook = "PDF optimaliseren voor e-readers (gebruikt Ghostscript)"
 output = "Uitvoer"
 outputFormat = "Uitvoerformaat"
+pdfaAccessibleFormat = "{{format}} (toegankelijk)"
 pdfaDigitalSignatureWarning = "Dit PDF bestand bevat een digitale handtekening. Deze wordt in de volgende stap verwijderd."
 pdfaNote = "PDF/A-1b is compatibeler, PDF/A-2b ondersteunt meer functies."
 pdfaOptions = "PDF/A-opties"
@@ -3973,6 +4135,24 @@ outputFormatDesc = "Choose the output format for the ebook"
 tabletPhone = "Tablet/Phone (with images)"
 targetDevice = "Target device"
 targetDeviceDesc = "Choose an output profile optimized for the reader device"
+
+[convert.formatGroups]
+archive = "Archief"
+document = "Document"
+ebook = "eBook"
+email = "E-mail"
+file = "Bestand"
+image = "Afbeelding"
+multipleFiles = "Meerdere bestanden"
+presentation = "Presentatie"
+spreadsheet = "Spreadsheet"
+text = "Tekst"
+web = "Web"
+
+[convert.formatOptions]
+any = "Willekeurig"
+images = "Afbeeldingen"
+msgOutlook = "MSG (Outlook)"
 
 [cookieBanner.popUp]
 acceptAllBtn = "Oké"
@@ -4066,6 +4246,12 @@ label = "Y-positie"
 [crop.error]
 failed = "PDF bijsnijden mislukt"
 
+[crop.pageNumbers]
+description = "Snijd het geselecteerde gebied bij op specifieke pagina's, of 'all' voor elke pagina."
+error = "Ongeldige paginaselectie. Gebruik bijv. 1, 3, 5-8 of all."
+label = "Bij te snijden pagina's"
+placeholder = "bijv. 1, 3, 5-8 of all"
+
 [crop.preview]
 title = "Selectie bijsnijgebied"
 
@@ -4088,16 +4274,11 @@ fileName = "Bestandsnaam"
 title = "Database Importeer/Exporteer"
 
 [defaultApp]
-setDefault = "Als standaard instellen"
 title = "Instellen als standaard PDF-app"
 
 [defaultApp.error]
 message = "Standaard PDF-verwerker instellen mislukt"
 title = "Fout"
-
-[defaultApp.prompt]
-dontRemind = "Herinner mij niet opnieuw"
-message = "Maak Stirling PDF de standaardapp voor het openen van PDF-bestanden."
 
 [defaultApp.settingsOpened]
 message = "Selecteer Stirling PDF in de systeeminstellingen"
@@ -4106,6 +4287,17 @@ title = "Instellingen geopend"
 [defaultApp.success]
 message = "Stirling PDF is nu de standaard PDF-editor"
 title = "Standaardapp ingesteld"
+
+[desktop.titleBar]
+maximize = "Maximaliseren"
+minimize = "Minimaliseren"
+restore = "Herstellen"
+
+[desktopBilling]
+description = "Beheer gebruik en facturering in je browser. Meld je aan met hetzelfde Stirling-account dat je hier gebruikt."
+open = "Gebruik en facturering openen in browser"
+openFailed = "Kon Gebruik en facturering niet openen. Controleer je verbinding en probeer het opnieuw."
+selfHostedDescription = "Beheer gebruik en facturering op je gekoppelde server in je browser. Meld je aan met je servereigenaarsaccount."
 
 [desktopFileLink]
 saveAs = "Opslaan als…"
@@ -4169,6 +4361,7 @@ tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,ident
 noItems = "No items available"
 noResults = "No results found"
 searchPlaceholder = "Zoeken..."
+selectedCount = "{{count}} geselecteerd"
 selectLanguages = "Select languages"
 selectOption = "Select an option"
 
@@ -4179,6 +4372,7 @@ editSecretValue = "Geheime waarde bewerken"
 [editTableOfContents]
 submit = "Inhoudsopgave toepassen"
 tags = "bookmarks,contents,edit,table of contents,TOC,outline,navigation,chapters,sections,add bookmarks,edit bookmarks,PDF outline"
+workbenchLabel = "Werkruimte voor overzicht"
 
 [editTableOfContents.actions]
 clipboardUnavailable = "Klembordtoegang is niet beschikbaar in deze browser."
@@ -4339,6 +4533,27 @@ closeFile = "Bestand sluiten"
 
 [fileEditor]
 addFiles = "Bestanden toevoegen"
+closedFile = "{{name}} gesloten"
+couldNotSave = "Kon {{name}} niet opslaan"
+filesAdded_one = "{{count}} bestand toegevoegd"
+filesAdded_other = "{{count}} bestanden toegevoegd"
+filesReordered_one = "Bestand opnieuw geordend"
+filesReordered_other = "{{count}} bestanden opnieuw geordend"
+loadedFromStorage_one = "{{count}} bestand uit opslag geladen"
+loadedFromStorage_other = "{{count}} bestanden uit opslag geladen"
+loadFromStorageFailed = "Sommige bestanden laden uit opslag mislukt"
+pinnedFile = "{{name}} vastgezet"
+processFilesFailed = "Bestanden verwerken mislukt"
+savedAndClosed = "{{name}} opgeslagen en gesloten"
+saveFailed = "Opslaan mislukt"
+unpinnedFile = "{{name}} losgemaakt"
+unzipping = "{{name}} uitpakken"
+
+[fileEditor.unzip]
+error = "Fout bij uitpakken van {{name}}"
+extracted_one = "{{count}} bestand uit {{name}} uitgepakt"
+extracted_other = "{{count}} bestanden uit {{name}} uitgepakt"
+failed = "Bestanden uit {{name}} uitpakken mislukt"
 
 [fileManager]
 addToUpload = "Aan upload toevoegen"
@@ -4355,6 +4570,7 @@ noFiles = "Geen bestanden beschikbaar"
 noFilesFound = "Geen bestanden gevonden die overeenkomen met uw zoekopdracht"
 openInFileEditor = "Openen in bestandseditor"
 openInPageEditor = "Openen in Pagina-editor"
+reloadFiles = "Bestanden opnieuw laden"
 saveSelected = "Selectie opslaan"
 searchFiles = "Bestanden zoeken..."
 share = "Delen"
@@ -4364,6 +4580,8 @@ sharedEditNoticeConfirm = "Begrepen"
 sharedEditNoticeTitle = "Alleen-lezen serverkopie"
 sharedWithYou = "Met u gedeeld"
 showAll = "Alles weergeven"
+showAllCount_one = "Alles tonen ({{count}} bestand)"
+showAllCount_other = "Alles tonen ({{count}} bestanden)"
 sortBy = "Sort files"
 sortByDate = "Sorteren op datum"
 sortByName = "Sorteren op naam"
@@ -4400,6 +4618,11 @@ sources = "Bestandsbronnen"
 subtitle = "Kies uit je bibliotheek of voeg iets nieuws toe."
 title = "Bestanden toevoegen"
 unsupported = "Dit bestandstype wordt niet ondersteund door de geselecteerde tool."
+
+[filePreview]
+loadingThumbnail = "Miniatuur laden..."
+locked = "Vergrendeld"
+previewOf = "Voorbeeld van {{name}}"
 
 [files]
 addFiles = "Bestanden toevoegen"
@@ -4453,6 +4676,7 @@ openFromComputer = "Openen vanaf computer"
 openSettings = "Instellingen openen"
 other = "Overig"
 recent = "Recent"
+searchFiles = "Bestanden zoeken"
 uploadFailedBody = "Kon de geselecteerde bestanden niet toevoegen."
 uploadFailedTitle = "Uploaden mislukt"
 viewAll = "Alle {{count}} bestanden bekijken"
@@ -4834,13 +5058,15 @@ title = "Bestand naar PDF"
 [fileUpload]
 dropFilesHere = "Zet bestanden hier neer of klik op de uploadknop"
 dropFilesHereOpen = "Zet bestanden hier neer of klik op de knop Openen"
-filesAvailable = "bestanden beschikbaar"
+filesAvailableCount_one = "{{count}} bestand beschikbaar"
+filesAvailableCount_other = "{{count}} bestanden beschikbaar"
 loadFromStorage = "Laden vanuit opslag"
 noFilesInStorage = "Geen bestanden beschikbaar in opslag. Upload eerst enkele bestanden."
 noFilesInStorageOpen = "Geen bestanden beschikbaar in opslag. Open eerst enkele bestanden."
 open = "Openen"
 openFile = "Bestand openen"
 openFiles = "Bestanden openen"
+selectedCount = "{{count}} geselecteerd"
 selectFile = "Select {{name}}"
 selectFromStorage = "Selecteren uit opslag"
 upload = "Uploaden"
@@ -4932,6 +5158,7 @@ rescanFields = "Velden opnieuw scannen"
 rescanFormFields = "Formuliervelden opnieuw scannen"
 save = "Opslaan"
 saveShortcut = "Ctrl+S om op te slaan"
+selectOptionPlaceholder = "— selecteren —"
 skippedEdits_one = "1 wijziging kon niet worden toegepast:"
 skippedEdits_other = "{{count}} wijzigingen konden niet worden toegepast:"
 skippedEditsTruncated = "{{count}} meer niet vermeld."
@@ -4994,6 +5221,16 @@ tooltipHelp = "De hint die wordt getoond wanneer iemand met de muis over het vel
 type = "Type"
 typeHelp = "Welk soort veld dit is. Als je dit wijzigt, wordt het veld opnieuw opgebouwd, dus de huidige waarde wordt niet overgenomen."
 
+[formFill.fieldTypes]
+button = "Knop"
+checkbox = "Selectievakje"
+combobox = "Keuzelijst"
+listbox = "Lijstvak"
+radio = "Keuzerondje"
+radioGroup = "Keuzerondjegroep"
+signature = "Handtekening"
+text = "Tekst"
+
 [formFill.mode]
 create = "Maken"
 fill = "Invullen"
@@ -5011,11 +5248,16 @@ restore = "Herstellen"
 
 [formFill.sidebar]
 close = "Zijbalk sluiten"
+empty = "Geen formuliervelden gevonden in deze PDF"
+loading = "Formuliervelden laden..."
+pageNumber = "Pagina {{page}}"
+title = "Formuliervelden"
 
 [getPdfInfo]
 downloadJson = "JSON downloaden"
 downloads = "Downloads"
 indexTitle = "Index"
+noData = "Geen gegevens"
 noneDetected = "Niets gedetecteerd"
 noResults = "Voer de tool uit om een rapport te genereren."
 processing = "Informatie wordt geëxtraheerd..."
@@ -5031,6 +5273,8 @@ noVerification = "Geen verificatie uitgevoerd"
 noVerificationDesc = "Naleving van PDF-standaarden is voor dit document niet geverifieerd."
 passed = "Geslaagd"
 passedCount = "geslaagd"
+secCompliant = "Document voldoet aan de indieningsvereisten van SEC EDGAR"
+secNotCompliant = "Document voldoet niet aan de indieningsvereisten van SEC EDGAR"
 
 [getPdfInfo.error]
 partial = "Sommige bestanden konden niet worden verwerkt."
@@ -5038,10 +5282,15 @@ unexpected = "Onverwachte fout tijdens het extraheren."
 
 [getPdfInfo.other]
 attachments = "Bijlagen"
+created = "Aangemaakt: {{date}}"
 embeddedFiles = "Ingesloten bestanden"
+fileSizeBytes = "({{size}} bytes)"
 javaScript = "JavaScript"
 layers = "Lagen"
+modified = "Gewijzigd: {{date}}"
 structureTree = "StructureTree"
+unnamedAttachment = "Naamloze bijlage"
+unnamedFile = "Naamloos bestand"
 xmp = "XMPMetadata"
 
 [getPdfInfo.perPage]
@@ -5051,6 +5300,7 @@ images = "Afbeeldingen"
 links = "Koppelingen"
 multimedia = "Multimedia"
 size = "Grootte"
+unnamedImage = "Afbeelding"
 xobjects = "Aantal XObjects"
 
 [getPdfInfo.report]
@@ -5579,6 +5829,7 @@ invalidEmail = "Ongeldig e-mailadres"
 invalidInvitation = "Ongeldige uitnodiging"
 invalidToken = "Ongeldige uitnodigingslink"
 linkExpires = "Link verloopt"
+linkExpiresAt = "Link verloopt: {{date}} om {{time}}"
 passwordMismatch = "Wachtwoorden komen niet overeen"
 passwordPlaceholder = "Voer uw wachtwoord in"
 passwordRequired = "Wachtwoord is vereist"
@@ -5593,6 +5844,7 @@ welcomeTitle = "U bent uitgenodigd!"
 addFiles = "Bestanden toevoegen"
 mobileUpload = "Upload from Mobile"
 openFromComputer = "Openen vanaf computer"
+settingUpSession = "Je sessie instellen..."
 uploadFromComputer = "Uploaden vanaf computer"
 
 [language]
@@ -5674,6 +5926,7 @@ sessionExpired = "Uw sessie is verlopen. Log alstublieft opnieuw in."
 signin = "Inloggen"
 signingIn = "Inloggen..."
 signInWith = "Inloggen met"
+signInWithProvider = "Aanmelden met {{provider}}"
 title = "Inloggen"
 unexpectedError = "Onverwachte fout: {{message}}"
 updatePassword = "Wachtwoord bijwerken"
@@ -5715,6 +5968,9 @@ label = "Digitale handtekening in het samengevoegde bestand verwijderen?"
 description = "Digitale handtekeningen worden ongeldig bij het samenvoegen van bestanden. Vink dit aan om ze uit de uiteindelijke samengevoegde PDF te verwijderen."
 title = "Digitale handtekening verwijderen"
 
+[merge.settings]
+title = "Instellingen"
+
 [merge.sortBy]
 ascending = "Oplopend"
 dateModified = "Datum gewijzigd"
@@ -5723,6 +5979,9 @@ description = "Bestanden worden samengevoegd in de volgorde waarin ze zijn gesel
 filename = "Bestandsnaam"
 label = "Sorteren op"
 sort = "Sorteren"
+
+[merge.sortFiles]
+title = "Bestanden sorteren"
 
 [merge.tooltip.header]
 title = "Overzicht instellingen samenvoegen"
@@ -5771,6 +6030,7 @@ validating = "Validating session..."
 
 [mobileSign]
 clear = "Clear"
+drawingArea = "Tekenruimte voor handtekening"
 invalidSession = "Session expired"
 invalidSessionMessage = "This QR code is no longer valid. Open the Sign tool on your computer and scan the new code."
 penSizeLabel = "Pen size"
@@ -5786,6 +6046,7 @@ validating = "Checking session…"
 fromGallery = "From gallery"
 hint = "Photograph a signature on white paper, or choose an existing image."
 invalidType = "Please choose an image file."
+previewAlt = "Handtekening"
 takePhoto = "Take a photo"
 
 [mobileSign.tab]
@@ -5827,6 +6088,8 @@ label = "Free credits"
 adoptFailed = "Het document is ontgrendeld, maar kon hier niet worden geopend. Probeer de tool rechtstreeks."
 empty = "Niets te melden."
 handoffUnavailable = "Deze browser staat niet toe dat de verwerker het document aan de editor doorgeeft. Open het in plaats daarvan vanuit de editor."
+inSmartFolder = "Dit document bevindt zich in een slimme map, dus het wordt op de server verwerkt in plaats van hier."
+inSmartFolderNamed = "{{name}} bevindt zich in een slimme map, dus het wordt op de server verwerkt in plaats van hier."
 noDocumentLinked = "Deze fout is niet gekoppeld aan een specifiek document, dus er is hier niets om te openen."
 notOnThisDevice = "Dit document staat niet op dit apparaat, dus het kan hier niet worden geopend."
 occurrences = "{{count}} keer"
@@ -5837,6 +6100,7 @@ repairedRerunNotAdopted = "Het gerepareerde document is verwerkt, maar het resul
 repairedRerunUndelivered = "Het document is gerepareerd en het opnieuw uitvoeren van het beleid is gestart, maar het resultaat kan hier niet worden afgeleverd, dus deze fout blijft open."
 rerunRejected = "Het beleid kon zojuist niet opnieuw worden uitgevoerd. Probeer het zo meteen opnieuw."
 rerunUndelivered = "Het opnieuw uitvoeren van het beleid is gestart, maar het resultaat kan hier niet worden afgeleverd, dus deze fout blijft open."
+retryInFolderFailed = "Dat document kon zojuist niet opnieuw worden uitgevoerd."
 retryUnavailable = "Dit document kan niet meer opnieuw worden geprobeerd vanuit deze browser."
 title = "Meldingen"
 unlockedNotRerun = "Het document is ontgrendeld en hier geopend, maar het beleid kon er niet opnieuw op worden uitgevoerd."
@@ -5894,6 +6158,9 @@ profile = "See your basic profile information"
 desc = "Ruim scans op, detecteert tekst van afbeeldingen in een PDF en voegt deze opnieuw toe als tekst."
 tags = "herkenning,tekst,afbeelding,scan,lezen,identificeren,detectie,bewerkbaar"
 title = "OCR / Scan opruimen"
+
+[ocr.advanced]
+title = "Geavanceerd"
 
 [ocr.error]
 failed = "OCR-bewerking mislukt"
@@ -6019,9 +6286,9 @@ title = "Stirling voor Desktop downloaden"
 description = "Werk samen met je team"
 title = "Teamleden uitnodigen"
 
-[onboarding.checklist.shareAnalytics]
-description = "Help Stirling verbeteren"
-title = "Anonieme gebruiksgegevens delen"
+[onboarding.checklist.setDefaultApp]
+description = "Open PDF-bestanden in Stirling PDF"
+title = "Maak Stirling je standaardapp"
 
 [onboarding.checklist.takeTour]
 description = "Bekijk in een korte rondleiding hoe Stirling werkt"
@@ -6089,6 +6356,7 @@ message = "De applicatie heeft recent belangrijke wijzigingen ondergaan. De aand
 roleAdmin = "Beheerder"
 rolePlaceholder = "Bevestig uw rol"
 roleUser = "Gebruiker"
+title = "Beveiligingscontrole"
 
 [onboarding.serverLicense]
 freeBody = "Onze <strong>Open-Core</strong>-licentie omvat <strong>OAuth SSO</strong> en maximaal <strong>{{freeTierLimit}}</strong> gebruikers gratis. Om zonder onderbrekingen te groeien, raden we het Stirling Team-abonnement aan — <strong>100 gebruikers</strong> voor $99/maand."
@@ -6177,16 +6445,93 @@ title = "Overlay-bestanden"
 text = "Voorgrond plaatst de overlay boven op de pagina. Achtergrond plaatst deze erachter."
 title = "Overlaypositie"
 
+[ownership]
+acceptInvite = "Ze kunnen een account aanmaken of zich aanmelden en vervolgens de uitnodiging accepteren."
+accessUpdated = "Hun eigenaarstoegang is klaar."
+accountLinkDisabled = "Deze server heeft nog steeds een cloudkoppeling, maar accountkoppeling is uitgeschakeld. Vraag de serverbeheerder om accountkoppeling in te schakelen en hervat daarna deze overdracht of ontkoppel de server in de instellingen."
+anotherTeam = "Al in een ander team?"
+billing = "Het abonnement, de wallet, betaalmethode en bestaande licenties blijven behouden. Factureringscontactgegevens wijzigen niet automatisch."
+billingDetails = "Factureringsgegevens"
+billingUnchanged = "Abonnement en facturering blijven behouden"
+bothDone = "Server- en cloudeigendom zijn nu afgestemd."
+cancel = "Overdracht annuleren"
+check = "Opnieuw controleren"
+checkAccount = "Account controleren"
+chooseEmail = "Kies hun account in {{team}}, of voer een e-mailadres in om ze uit te nodigen."
+close = "Overdrachtsvenster sluiten"
+cloudAccount = "Stirling-account"
+cloudScopeStyled = "<user>{{name}}</user> beheert {{team}}, de leden en facturering."
+cloudTargetChanged = "Kies een ander cloudlid. Dit account komt niet meer in aanmerking voor de overdracht."
+confirm = "Ik begrijp de wijzigingen in toegang en eigendom."
+done = "Eigendom overgedragen"
+error = "We konden deze stap niet voltooien. Controleer of de ontvanger actief is en de server verbonden is, en controleer daarna opnieuw. Een lopende overdracht kan hier worden hervat."
+finish = "Serveroverdracht voltooien"
+inProgress = "Een andere ontvanger heeft al een lopende overdracht. Sluit dit venster en hervat deze via Gebruikers."
+instances = "Dit team heeft {{count}} gekoppelde servers. Hun cloudfacturering blijft bij dit team; lokale eigenaars van andere servers wijzigen niet."
+invitationSent = "Uitnodiging verzonden"
+invite = "Uitnodiging verzenden"
+inviteAddress = "Nodig <account>{{email}}</account> uit voor {{team}}."
+inviteBlocked = "De uitnodiging kon niet worden verzonden. Controleer beschikbare teamplaatsen en of de ontvanger al een betaald abonnement heeft."
+linkChanged = "De cloudkoppeling van de server is gewijzigd. Vraag de serverbeheerder om de oorspronkelijke koppeling te herstellen voordat je hervat."
+linkedServerCount = "{{count}} gekoppelde servers"
+linkRevoked = "De cloudkoppeling van deze server is niet langer geldig. Annuleer de overdracht en koppel daarna je Stirling-account opnieuw in de instellingen. Het eigendom verandert niet."
+localScope = "Zij worden eigenaar van deze server en beheren facturering en cloudverbindingen. Je behoudt beheerderstoegang, maar verliest toegang tot die instellingen."
+membershipDetails = "Details van teamlidmaatschap"
+membershipFirst = "Ze moeten lid worden van het team voordat je de overdracht kunt bevestigen."
+membershipRequired = "De ontvanger moet lid worden van dit cloudteam voordat eigendom kan worden overgedragen. Vraag hen hun uitnodiging te accepteren en controleer daarna opnieuw."
+newOwnerLabel = "Nieuwe eigenaar"
+newOwnerStyled = "<user>{{name}}</user> is nu de eigenaar."
+noEmailMatches = "Geen overeenkomende leden. Voer een e-mailadres in om uit te nodigen."
+otherTeam = "Als ze bij een ander team horen, kan accepteren hun account verplaatsen. Een betaald account of eigendom van een ander team moet mogelijk eerst worden opgelost. We verplaatsen hun abonnement niet en voegen geen teams samen."
+ownerChanged = "Cloudeigendom is gewijzigd nadat deze overdracht is gestart. Annuleer deze overdracht en start opnieuw met de huidige cloudeigenaar."
+ownerRequired = "Meld je aan als de huidige eigenaar van het cloudteam en probeer deze stap daarna opnieuw."
+partialError = "Cloudeigendom is overgedragen. Voltooi de serveroverdracht om beide eigenaars afgestemd te houden."
+partialTargetChanged = "Herstel de toegang en oorspronkelijke accountgegevens van de geselecteerde servergebruiker en voltooi daarna de serveroverdracht. Cloudeigendom is al overgedragen."
+pending = "Een eigendomsoverdracht naar {{name}} is in behandeling."
+personalTeam = "Persoonlijke teams kunnen geen eigendom overdragen."
+prepareHelp = "De ontvanger moet hun eerste serveraanmelding hebben voltooid. Je kunt het hier opnieuw proberen, of terugkeren naar Gebruikers om iemand anders te kiezen."
+resume = "Overdracht hervatten"
+searchEmail = "Zoek of voer een e-mailadres in"
+serverAccount = "Serveraccount"
+serverDetails = "Details van gekoppelde server"
+signIn = "Aanmelden bij cloud"
+startFromInstanceBody = "Dit team heeft gekoppelde servers. Open op de self-hosted server Instellingen → Gebruikers en wijzig de rol van de ontvanger naar Org Owner. Die flow draagt cloudeigendom over voordat de serveroverdracht wordt voltooid."
+startFromInstanceTitle = "Start vanaf je self-hosted server"
+stayOwner = "Je blijft eigenaar tot de overdracht."
+targetChanged = "Het account van de ontvanger is gewijzigd. Herstel hun toegang of annuleer deze overdracht en kies ze opnieuw."
+title = "Eigendom overdragen"
+transfer = "Eigendom overdragen"
+waitingForEmail = "Wachten tot {{email}} lid wordt van {{team}}."
+working = "Eigendom controleren en bijwerken..."
+yourCloudAccess = "Je wordt teamlid en verliest eigenaarstoegang."
+
 [pageEdit]
 deselectAll = "Niets selecteren"
 selectAll = "Alles selecteren"
 
 [pageEditor]
+dragPreviewAlt = "Slepen"
+filePosition = "Positie {{position}}"
+pageLabel = "Pagina {{page}}"
 title = "Pagina-editor"
+
+[pageEditor.actions]
+deletePage = "Pagina verwijderen"
+insertFileAfter = "Bestand hierna invoegen"
+moveLeft = "Naar links verplaatsen"
+moveRight = "Naar rechts verplaatsen"
+rotateLeft = "Linksom draaien"
+rotateRight = "Rechtsom draaien"
+splitAfter = "Hierna splitsen"
 
 [pageEditor.emptyState]
 body = "Voeg bestanden toe om met het bewerken van pagina's te beginnen"
 title = "Geen PDF-bestanden geladen"
+
+[pageEditor.fileDropdown]
+addFile = "Bestand toevoegen"
+selectedCount = "{{selected}}/{{total}} bestanden geselecteerd"
+untitled = "Naamloos"
 
 [pageEditor.toolbar]
 delete = "Geselecteerde verwijderen"
@@ -6292,6 +6637,11 @@ portrait = "Staand"
 label = "Leesrichting:"
 ltr = "Links naar rechts"
 rtl = "Rechts naar links"
+
+[pageLayout.steps]
+advanced = "Geavanceerde instellingen"
+layout = "Lay-outinstellingen"
+marginsBorders = "Marges en randen"
 
 [pageLayout.tooltip.header]
 title = "Handleiding pagina-indeling"
@@ -6613,6 +6963,7 @@ teamChangeUnavailable = "Geplande Team-wijzigingen konden niet worden geladen. V
 teamPending = "Je Team-aankoop wordt nog verwerkt. Vernieuw deze pagina binnenkort."
 teamProcessing = "Team-aankoop wordt verwerkt"
 teamScheduled = "Je Team-wijziging is gepland voor {{date}}. Je huidige capaciteit blijft tot dan actief."
+unknownError = "Er is een onbekende fout opgetreden"
 upgradeComplete = "Upgrade voltooid"
 upgradeCompleteMessage = "Uw abonnement is succesvol geüpgraded. Uw bestaande licentiesleutel is bijgewerkt."
 upgradeSuccess = "Betaling geslaagd! Uw abonnement is geüpgraded. De licentie is op uw server bijgewerkt. U ontvangt binnenkort een bevestigingsmail."
@@ -6625,9 +6976,11 @@ title = "Team-plan aanpassen"
 [payment.capacityStage]
 adjustmentNote = "Stripe toont de exacte kosten, eventuele pro rata verrekeningen en je volgende factuurdatum voordat je bevestigt. Je opgeslagen betaalmethode wordt gebruikt als die beschikbaar is."
 continue = "Doorgaan naar betaling"
+currencyAtCheckout = "Stripe bevestigt het definitieve bedrag en de betaalvaluta bij het afrekenen."
 customLabel = "Aantal gebruikers"
 dueToday = "Vandaag verschuldigd"
 enterpriseQuote = "Enterprise-offerte aanvragen"
+estimatedTotal = "Geschat totaal"
 lineItem = "Team · {{price}}{{period}} per {{block}} gebruikers"
 minimumForCurrentUsers = "Je hebt {{users}} gebruikers, dus het plan moet ten minste {{minimum}} dekken."
 modalTitle = "Upgraden naar {{planName}}"
@@ -6665,6 +7018,14 @@ selectedMonthly = "Maandelijks"
 selectedYearly = "Jaarlijks"
 selectMonthly = "Maandelijks selecteren"
 selectYearly = "Jaarlijks selecteren"
+
+[payment.priceDisplay]
+basePrice = "Basisprijs"
+perPeriod = "/{{period}}"
+perSeat = "Per licentieplek"
+perSeatPeriod = "/licentieplek/{{period}}"
+totalSeats_one = "Totaal ({{count}} licentieplek)"
+totalSeats_other = "Totaal ({{count}} licentieplekken)"
 
 [payment.upgradeTeam]
 title = "Upgraden naar Team"
@@ -6865,6 +7226,29 @@ width = "Breedte"
 widthHint = "De breedte van een tekstvak volgt de inhoud en tekstterugloop."
 x = "X"
 y = "Y"
+
+[pdfTextEditor.mobile]
+actions = "Editoracties"
+addImage = "Afbeelding"
+addText = "Tekst"
+cancel = "Annuleren"
+delete = "Verwijderen"
+details = "Details"
+document = "Document"
+done = "Gereed"
+download = "Opslaan en downloaden"
+find = "Zoeken"
+lock = "Vergrendelen"
+openPdf = "Een PDF openen"
+panelHint = "Bewerken gebeurt in de Workspace-weergave. Tik op tekst op de pagina om deze te wijzigen."
+save = "Opslaan"
+style = "Stijl"
+tapToPlace = "Tik op de pagina waar de tekst moet komen"
+unlock = "Ontgrendelen"
+
+[pdfTextEditor.pageView]
+pageNumber = "Pagina {{page}}"
+renderFailed = "Pagina weergeven mislukt"
 
 [pdfTextEditor.password]
 cancel = "Annuleren"
@@ -7092,6 +7476,7 @@ title = "Pijplijn"
 contact = "Neem contact op"
 current = "Huidig abonnement"
 featureComparison = "Functievergelijking"
+fetchError = "Prijsgegevens ophalen mislukt"
 from = "Vanaf"
 hideComparison = "Functievergelijking verbergen"
 licensedSeats = "Gelicenseerd: {{count}} plaatsen"
@@ -7107,6 +7492,8 @@ withServer = "+ Server-abonnement"
 [plan.api]
 large = "5,000 Credits"
 medium = "1,000 Credits"
+perCredit = "{{price}} per credit"
+perCreditWithDiscount = "{{price}} per credit • {{discount}}% korting"
 small = "500 Credits"
 xsmall = "100 Credits"
 
@@ -7182,14 +7569,9 @@ upToFiveUsers = "Tot 5 gebruikers"
 usageTrackingPrometheus = "Gebruiksregistratie & Prometheus"
 usersIncluded = "100 gebruikers inbegrepen"
 
-[plan.licenseWarning]
-body = "U hebt {{total}} gebruikers, maar de gratis laag ondersteunt slechts {{limit}} per server. Upgrade om Stirling PDF soepel te laten draaien."
-cta = "Abonnementen bekijken"
-overLimit = "meer dan {{limit}}"
-title = "Gratis self-hosted limiet bereikt"
-
 [plan.period]
 month = "maand"
+year = "jaar"
 
 [plan.pro]
 highlight1 = "Onbeperkt gebruik van tools"
@@ -7315,6 +7697,9 @@ pdfa-1 = "PDF/A-1b"
 pdfa-2b = "PDF/A-2b"
 pdfa-3b = "PDF/A-3b"
 
+[portal.accountLink]
+ownerRequired = "Alleen de organisatie-eigenaar kan deze server koppelen of ontkoppelen."
+
 [portal.accountLink.card]
 billingNote = "Verwerking zonder toezicht wordt gefactureerd aan je organisatie-wallet."
 connectDescription = "Verbind deze server om de verwerkingslimiet van je team in Stirling Cloud te gebruiken."
@@ -7436,6 +7821,7 @@ identity = "Stirling-account"
 linkTitle = "Koppel je Stirling-account"
 noAuthorizeUrl = "Stirling heeft geen locatie teruggegeven om door te gaan. Probeer het zo meteen opnieuw."
 startFailed = "Kon Stirling niet bereiken om de verbinding te starten. Controleer de uitgaande netwerktoegang van deze server en probeer het daarna opnieuw."
+transferPending = "Er is een eigendomsoverdracht in behandeling. Ga naar Instellingen → Gebruikers om deze te voltooien of te annuleren en probeer daarna opnieuw te koppelen."
 
 [portal.accountLink.modal.loginNotConfigured]
 after = "om koppelen in de app met het gehoste Stirling-account in te schakelen."
@@ -7574,6 +7960,49 @@ plan = "Plan"
 procurement = "Inkoop"
 usage = "Gebruik"
 
+[portal.billing.compare]
+current = "Huidig"
+enterpriseData = "Dataresidentie en SCIM"
+enterpriseName = "Enterprise"
+enterprisePrice = "Volgens uw overeenkomst"
+enterpriseProcessing = "Op basis van verbruik of vast"
+enterpriseSignIn = "SAML en auditing"
+enterpriseSupport = "Uptime-SLA's, implementatiehulp"
+enterpriseUsers = "Geen limiet"
+enterpriseWhere = "Plus multi-node en air-gapped"
+exploreEnterprise = "Enterprise verkennen"
+freeData = "Blijft waar u het uitvoert"
+freeName = "Gratis"
+freePrice = "Geen kaart, geen vervaldatum"
+freeProcessing = "{{allowance}} credits per maand"
+freeProcessingUnknown = "Een maandelijkse creditlimiet"
+freeSignIn = "E-mail, Google en SSO"
+freeSignInNote = "OAuth2/OIDC"
+freeSupport = "Community"
+freeUsers = "Tot {{users}}"
+freeUsersUnknown = "Een klein team"
+freeWhere = "Cloud, desktop of self-hosted"
+lede = "Elk abonnement bevat elke PDF-tool en SSO. Wat verandert, is hoeveel mensen het gebruiken, waar het draait en welke ondersteuning u krijgt."
+open = "Abonnementen vergelijken"
+rowData = "Uw gegevens"
+rowHeader = "Functie"
+rowProcessing = "Verwerking"
+rowSignIn = "Aanmelden"
+rowSupport = "Ondersteuning"
+rowUsers = "Gebruikers"
+rowWhere = "Waar het draait"
+teamData = "Google Drive, uw eigen database"
+teamName = "Team"
+teamPrice = "$99/mnd per 100 gebruikers"
+teamProcessing = "{{allowance}} per maand, daarna op basis van verbruik"
+teamProcessingUnknown = "Een hogere limiet, daarna op basis van verbruik"
+teamSignIn = "Hetzelfde"
+teamSupport = "E-mail"
+teamUsers = "100 per blok"
+teamWhere = "Cloud, desktop of self-hosted"
+title = "Abonnementen vergelijken"
+upgradeTeam = "Upgraden naar Team"
+
 [portal.billing.cycle]
 credits = "Credits"
 creditsNote = "{{units}} gebruikt · inclusief gratis en vooruitbetaalde credits"
@@ -7679,6 +8108,8 @@ payTitle = "Betaal voor je jaar"
 step = "Stap {{current}} van {{total}}"
 
 [portal.billing.prepaid.calc]
+currency = "Offertevaluta"
+currencyLocked = "Gebruikt uw bestaande Stripe-factureringsvaluta."
 rateUnknown = "We tonen de exacte prijs bij het afrekenen."
 
 [portal.billing.prepaid.consent]
@@ -8482,6 +8913,10 @@ title = "Bestand kon niet worden gerepareerd"
 description = "Je bestand heeft geen formaat dat deze stap kan openen, waardoor de run het niet kon lezen."
 title = "Verkeerd bestandstype"
 
+[portal.failures.kind.sourceUnreadable]
+description = "Uw slimme map kon niet worden gelezen, dus niets erin is verwerkt."
+title = "Map kon niet worden gelezen"
+
 [portal.failures.kind.stepCannotRenderPage]
 description = "Een pagina in je bestand kon niet worden getekend, waardoor de run niet kon worden voltooid."
 title = "Pagina kon niet worden gerenderd"
@@ -9272,6 +9707,7 @@ labelId = "Label ID"
 labelIdHelp = "De GUID van het label, uit de Purview-portal. Door een label toe te passen wordt de metadata ervan naar de PDF geschreven; het kan niet versleutelen, daarvoor is de Microsoft-client nodig."
 labelName = "Labelnaam (optioneel)"
 labelNameHelp = "Wordt naast de ID vastgelegd zodat mensen en tools het label kunnen herkennen."
+labelNamePlaceholder = "Vertrouwelijk"
 
 [portal.policies.config.purview.fields.method]
 help = "Purview maakt onderscheid tussen een label dat door beleid is toegepast en een label dat door een persoon is gekozen."
@@ -10256,31 +10692,6 @@ unlimited = "{{used}} · Onbeperkt"
 [printFile]
 title = "Print bestand"
 
-[processingFolders.downloads]
-approve = "Mijn Downloads verwerken"
-cancelSweep = "Annuleren"
-capped = "Je hebt {{found}} PDFs; de eerste {{limit}} worden nu verwerkt en de rest volgt."
-close = "Klaar"
-explain_one = "Stirling kan de {{count}} PDF die al in je map Downloads staat classificeren en de resultaten hier openen."
-explain_other = "Stirling kan de {{count}} PDFs die al in je map Downloads staan classificeren en de resultaten hier openen."
-failed = "Kon dit niet instellen. Je bestanden zijn niet gewijzigd."
-finished_one = "{{count}} bestand geclassificeerd en {{opened}} daarvan hier geopend, klaar om mee te werken."
-finished_other = "{{count}} bestanden geclassificeerd en {{opened}} daarvan hier geopend, klaar om mee te werken."
-nothingNew_one = "Niets nieuws om te verwerken - dit {{count}} bestand is al verwerkt."
-nothingNew_other = "Niets nieuws om te verwerken - deze {{count}} bestanden zijn al verwerkt."
-notModified = "Je bestanden in Downloads worden niet gewijzigd - Stirling leest ze en opent ze hier."
-notNow = "Niet nu"
-progressCounts = "van {{total}} verwerkt"
-someFailed_one = "{{count}} kon niet worden verwerkt en is ongewijzigd gelaten."
-someFailed_other = "{{count}} konden niet worden verwerkt en zijn ongewijzigd gelaten."
-stillRunning = "Sommige bestanden worden nog op de achtergrond verwerkt."
-title = "Je Downloads organiseren?"
-trigger_one = "{{count}} PDF in Downloads verwerken"
-trigger_other = "{{count}} PDFs in Downloads verwerken"
-typesFound_one = "{{count}} documenttype gevonden"
-typesFound_other = "{{count}} documenttypen gevonden"
-working = "Verwerken ..."
-
 [processingFolders.setup]
 addFolder = "Map toevoegen"
 advancedSteps = "Deze map gebruikt een verwerkingsinstelling die deze wizard niet kan bewerken. De opgeslagen stappen zijn niet gewijzigd."
@@ -10358,6 +10769,10 @@ label = "Client-ID"
 [provider.googledrive.enabled]
 description = "Sta gebruikers toe om bestanden rechtstreeks vanaf Google Drive te importeren"
 label = "Google Drive-bestandskiezer inschakelen"
+
+[provider.googledrive.errors]
+notConfigured = "Google Drive is niet geconfigureerd"
+pickerFailed = "Google Drive-picker openen mislukt"
 
 [provider.oauth2.generic]
 name = "Generieke OAuth2"
@@ -10606,6 +11021,7 @@ applyWarning = "⚠️ Permanent application, cannot be undone and the data unde
 colorLabel = "Kleur voor anonimiseren"
 controlsTitle = "Manual Redaction Controls"
 instructions = "Select text or draw areas on the PDF to mark content for redaction."
+notImplemented = "De interface voor handmatig redigeren is hier beschikbaar zodra deze is geïmplementeerd."
 title = "Redaction Tools"
 
 [redact.modeSelector]
@@ -10933,6 +11349,9 @@ failed = "Er is een fout opgetreden bij het draaien van de PDF."
 [rotate.preview]
 title = "Rotatievoorbeeld"
 
+[rotate.settings]
+title = "Instellingen"
+
 [rotate.tooltip.controls]
 text = "Gebruik de rotatieknoppen om de oriëntatie aan te passen. Linkerknop draait tegen de klok in, rechterknop met de klok mee. Elke klik draait 90 graden."
 title = "Bediening"
@@ -10950,6 +11369,16 @@ hideSmallLabels = "Kleine labels verbergen"
 physicalValues = "Fysiek"
 scaled = "Geschaald"
 showAllLabels = "Alle labels tonen"
+
+[ruler.units]
+cm = "Centimeters (cm)"
+ft = "Voet (ft)"
+in = "Inches (in)"
+km = "Kilometers (km)"
+m = "Meters (m)"
+mi = "Mijlen (mi)"
+mm = "Millimeters (mm)"
+yd = "Yards (yd)"
 
 [sanitize]
 desc = "Verwijder mogelijk schadelijke elementen uit PDF-bestanden."
@@ -11015,6 +11444,7 @@ calibrationPaperDistance = "Gemeten pagina-afstand: {{distance}}"
 calibrationTitle = "Schaal kalibreren"
 calibrationTooltip = "Meet een bekende afstand om de schaal automatisch te berekenen"
 customScale = "Aangepaste schaal"
+customUnit = "{{unit}} (aangepast)"
 noneSet = "Geen aangepaste schaal ingesteld"
 presets = "Vooraf ingestelde schalen"
 ratio = "Schaalverhouding"
@@ -11038,6 +11468,9 @@ title = "Geëxtraheerde afbeeldingen"
 
 [scannerImageSplit.error]
 failed = "Er is een fout opgetreden bij het extraheren van afbeeldingsscans."
+
+[scannerImageSplit.settings]
+title = "Instellingen"
 
 [scannerImageSplit.tooltip]
 headsUp = "Let op"
@@ -11105,6 +11538,9 @@ general = "Algemeen"
 limits = "Limieten & prestaties"
 models = "Modellen & providers"
 title = "AI"
+
+[settings.billing]
+title = "Facturering"
 
 [settings.configuration]
 advanced = "Geavanceerd"
@@ -11179,8 +11615,6 @@ defaultPdfEditor = "Standaard PDF-editor"
 defaultPdfEditorActive = "Stirling PDF is de standaard PDF-editor"
 defaultPdfEditorChecking = "Controleren..."
 defaultPdfEditorInactive = "Een andere app is als standaard ingesteld"
-defaultPdfEditorRemind = "Herinner me eraan om als standaard in te stellen"
-defaultPdfEditorRemindDescription = "Toon een banner wanneer Stirling PDF niet je standaard-PDF-toepassing is."
 defaultPdfEditorSet = "Al standaard"
 defaultStartupView = "Standaardweergave bij opstarten"
 defaultStartupViewDescription = "Kies welk tabblad in de linkerkolom actief is wanneer de app start"
@@ -11449,6 +11883,15 @@ people = "Personen"
 teams = "Teams"
 title = "Werkruimte"
 
+[setup.error]
+loginIncomplete = "Aanmelding voltooien mislukt"
+noSaasServer = "Geen SaaS-server geconfigureerd"
+noServer = "Geen server geconfigureerd"
+saasLoginFailed = "SaaS-aanmelding mislukt"
+saasLoginIncomplete = "SaaS-aanmelding voltooien mislukt"
+selfHostedLoginFailed = "Self-hosted aanmelding mislukt"
+signupIncomplete = "Registratie voltooien mislukt"
+
 [setup.login]
 connectingTo = "Verbinden met:"
 oauthPending = "Browser wordt geopend voor authenticatie..."
@@ -11492,6 +11935,7 @@ configFetchError = "Kan serverconfiguratie niet ophalen: {{error}}"
 emptyUrl = "Voer een server-URL in"
 invalidUrl = "Invalid URL format. Please enter a valid URL like https://your-server.com"
 testFailed = "Verbindingstest mislukt"
+unknown = "Onbekende fout"
 unreachable = "Kan geen verbinding maken met server"
 
 [setup.server.error.securityDisabled]
@@ -11600,6 +12044,7 @@ canvas = "Na het tekenen van uw handtekening in het canvas, sluit het venster en
 image = "Na het uploaden van uw handtekeningafbeelding hierboven, klik ergens op de PDF om deze te plaatsen."
 noSignature = "Maak hierboven een handtekening om de plaatsingstools in te schakelen."
 paused = "Plaatsing gepauzeerd"
+placeAnnotation = "Klik ergens op de PDF om je annotatie te plaatsen."
 resumeHint = "Hervat de plaatsing om te klikken en uw handtekening toe te voegen."
 saved = "Selecteer hierboven een opgeslagen handtekening en klik vervolgens ergens op de PDF om deze te plaatsen."
 text = "Na het invoeren van uw naam hierboven, klik ergens op de PDF om uw handtekening te plaatsen."
@@ -11753,7 +12198,9 @@ signUpWith = "Sign up with"
 skip = "Skip"
 subtitle = "Maak een account aan bij Stirling PDF om te beginnen"
 title = "Account aanmaken"
+unableToAccessTool = "Geen toegang tot tool: {{error}}"
 unexpectedError = "Onverwachte fout: {{message}}"
+unknownError = "Onbekende fout"
 
 [sizes]
 large = "Groot"
@@ -11826,6 +12273,14 @@ rightToLeft = "Rechts-naar-links splitsen"
 [split.poster.pageSize]
 description = "Formaat van uitvoerpagina's voor afdrukken"
 label = "Doelpaginaformaat"
+
+[split.poster.pageSize.options]
+a3 = "A3 (297 × 420 mm)"
+a4 = "A4 (210 × 297 mm)"
+a5 = "A5 (148 × 210 mm)"
+legal = "Legal (8.5 × 14 in)"
+letter = "Letter (8.5 × 11 in)"
+tabloid = "Tabloid (11 × 17 in)"
 
 [split.poster.xFactor]
 description = "Aantal kolommen waarin elke pagina wordt gesplitst"
@@ -12098,6 +12553,7 @@ confirmCancelInvite = "Weet je zeker dat je deze uitnodiging wilt annuleren?"
 confirmLeave = "Weet je zeker dat je dit team wilt verlaten?"
 confirmLeaveLeader = "Als teamleider word je door te vertrekken uit het team verwijderd. Weet je het zeker?"
 confirmRemove = "Weet je zeker dat je dit lid wilt verwijderen?"
+currentUnavailable = "We konden je huidige team niet identificeren. Probeer het opnieuw, of neem contact op met support als dit blijft gebeuren."
 editName = "Teamnaam bewerken"
 inviteCancelled = "Uitnodiging geannuleerd"
 inviteError = "Uitnodiging verzenden mislukt"
@@ -12123,10 +12579,8 @@ renameCancel = "Hernoemen annuleren"
 renameError = "Team hernoemen mislukt"
 renameSubmit = "Teamnaam opslaan"
 renameSuccess = "Team succesvol hernoemd"
-transferBody = "{{email}} de teameigenaar maken? Deze persoon beheert het teamlidmaatschap en de factureringsinstellingen van de organisatie. Jij wordt lid. Het abonnement en de wallet van het team blijven bij het team."
 transferError = "Eigendom kon niet worden overgedragen. Vernieuw het team en probeer het opnieuw."
 transferSuccess = "Teameigendom overgedragen. Je rol is nu lid."
-transferTitle = "Teameigendom overdragen"
 
 [team.invitationBanner]
 acceptButton = "Accepteren"
@@ -12228,6 +12682,10 @@ XML = "een XML-bestand"
 XPS = "een XPS-document"
 ZIP = "een ZIP-archief"
 
+[toolLoading]
+generic = "Tool laden..."
+named = "{{toolName}} laden..."
+
 [toolPanel]
 alpha = "Alfa"
 backToAllTools = "Terug naar alle tools"
@@ -12235,6 +12693,7 @@ goBack = "Ga terug"
 pdfTools = "PDF-tools"
 placeholder = "Kies een tool om te beginnen"
 premiumFeature = "Premiumfunctie:"
+searchTools = "Tools zoeken"
 toolsHeader = "Tools"
 viewAllTools = "Alle tools weergeven"
 
@@ -12331,6 +12790,8 @@ stable = "STABLE"
 updateAvailable = "Update beschikbaar"
 urgentUpdateAvailable = "Dringende update"
 version = "Versie"
+versionCount_one = "{{count}} versie"
+versionCount_other = "{{count}} versies"
 versionHistory = "Versiegeschiedenis"
 viewGuide = "Handleiding bekijken"
 whatsNewIn = "Wat is nieuw in"
@@ -12358,6 +12819,7 @@ title = "URL naar PDF"
 aboutUsageAnalytics = "Over gebruiksanalyses"
 configureSettings = "Analytics-instellingen configureren"
 error = "Fout bij laden van gebruiksstatistieken"
+loadFailed = "Gebruiksstatistieken laden mislukt"
 noData = "Geen gegevens beschikbaar"
 noDataMessage = "Er zijn momenteel geen gebruiksstatistieken beschikbaar."
 usageAnalyticsExplanation = "Gebruiksanalyses volgen endpointverzoeken en toolgebruikspatronen. In combinatie met het Audit Logging-dashboard krijg je volledig inzicht in systeemactiviteit, prestaties en beveiligingsgebeurtenissen."
@@ -12399,13 +12861,10 @@ visits = "Bezoeken"
 
 [users]
 lastActive = "Laatst actief"
-learnMore = "Meer informatie over rollen en toegang."
 locked = "Vergrendeld"
 ownerSetupRequired = "De eigenaar van de organisatie heeft de eerste login niet voltooid. Voltooi de installatie of vraag de serverbeheerder om het eigendom te herstellen voordat je het eigendom overdraagt."
 roleFor = "Rol voor {{name}}"
 rowActions = "Acties voor {{name}}"
-showAll = "Alle {{count}} tonen"
-showLess = "Minder tonen"
 subtitle2 = "Je mensen, teams en toegangsniveaus."
 suspended = "Geschorst"
 teamActions = "Teamacties"
@@ -12414,6 +12873,7 @@ you = "(jij)"
 
 [users.action]
 cancelInvite = "Uitnodiging annuleren"
+createFromDefault = "Team maken vanuit Default"
 deleteTeam = "Team verwijderen"
 disableMfa = "MFA resetten"
 move = "Naar team verplaatsen"
@@ -12423,7 +12883,6 @@ removeTeam = "Uit team verwijderen"
 rename = "Team hernoemen"
 resetPw = "Wachtwoord resetten"
 suspend = "Schorsen"
-transferOwnership = "Eigendom overdragen"
 unlock = "Account ontgrendelen"
 
 [users.activity]
@@ -12451,6 +12910,7 @@ email = "Email"
 person = "Person"
 role = "Role"
 status = "Status"
+team = "Team"
 
 [users.confirm]
 cancelInviteBody = "Uitnodiging voor {{email}} annuleren? Deze persoon kan niet deelnemen met de huidige link."
@@ -12462,22 +12922,17 @@ disableMfaTitle = "MFA resetten"
 removeBody = "{{name}} permanent uit de organisatie verwijderen? Dit kan niet ongedaan worden gemaakt."
 removeTeamBody = "{{name}} uit het team verwijderen? Deze persoon behoudt het account, maar verliest toegang tot de resources van dit team."
 removeTitle = "Lid verwijderen"
-transferOwnershipBody = "{{name}} de eigenaar van de organisatie maken? Deze persoon wordt beheerder. Jij blijft beheerder maar verliest het eigendom. Alleen de nieuwe eigenaar of de serverbeheerder kan het terug overdragen."
-transferOwnershipTitle = "Eigendom van organisatie overdragen"
 
 [users.empty]
 description = "Nodig je team uit om samen te werken."
 title = "Nog geen leden"
 
+[users.filters]
+noMatches = "Niemand komt overeen met deze filters."
+search = "Mensen zoeken"
+
 [users.group]
 addToTeam = "Toevoegen aan team"
-administrators = "{{count}} beheerders"
-guestCount = "{{count}} gast"
-guests = "Gasten"
-ledBy = "geleid door {{owner}}"
-org = "Organisatie"
-team = "Team {{name}}"
-teamMeta = "{{count}} personen"
 
 [users.invite]
 access = "Toegang"
@@ -12542,6 +12997,9 @@ title = "Nieuw team"
 
 [users.renameTeam]
 apply = "Hernoemen"
+defaultApply = "Maken en verplaatsen"
+defaultDescription = "Default blijft beschikbaar voor nieuwe gebruikers. Iedereen die momenteel in Default zit, wordt naar het nieuwe team verplaatst."
+defaultTitle = "Team maken vanuit Default"
 name = "Teamnaam"
 title = "Team hernoemen"
 
@@ -12566,6 +13024,15 @@ guest = "Gast"
 member = "Lid"
 orgOwner = "Organisatie-eigenaar"
 teamOwner = "Teameigenaar"
+
+[users.seats]
+full = "Elke gelicentieerde seat is in gebruik. Maak er een vrij of verhoog het aantal seats om iemand anders toe te voegen."
+update = "Seats bijwerken"
+
+[users.tabs]
+all = "Alles"
+label = "Filteren op team"
+unassigned = "Geen team"
 
 [users.team]
 grantProcessor = "Processor aan team toekennen"
@@ -12647,6 +13114,7 @@ signaturesInvalid = "{{count}} ongeldig"
 signaturesUnverified_one = "{{count}} moet worden gecontroleerd"
 signaturesUnverified_other = "{{count}} moeten worden gecontroleerd"
 signaturesValid = "{{count}} volledig geldig"
+thumbnailAlt = "{{fileName}} miniatuur"
 title = "Rapport handtekeningenvalidatie"
 
 [validateSignature.report.fields]
@@ -12684,6 +13152,7 @@ lastPage = "Laatste pagina"
 loadingEngine = "PDF Engine laden..."
 moreOptions = "Meer"
 nextPage = "Volgende pagina"
+noPdfProvided = "Geen PDF opgegeven"
 onlyPdfSupported = "De viewer ondersteunt alleen PDF-bestanden. Dit bestand lijkt een ander formaat te hebben."
 pageNavigation = "Paginanavigatie"
 previousPage = "Vorige pagina"
@@ -12721,8 +13190,17 @@ collapseAll = "Alle bladwijzers samenvouwen"
 editorOnly = "De bladwijzers van dit document kunnen alleen in de editor worden bewerkt."
 empty = "No bookmarks in this document"
 expandAll = "Alle bladwijzers uitvouwen"
+loadFailed = "Bladwijzers laden mislukt"
+loading = "Bladwijzers laden..."
+noDocument = "Open een PDF om de bladwijzers te bekijken."
+noSearchResults = "Geen bladwijzers komen overeen met je zoekopdracht"
+openEditor = "Opnieuw ordenen of nesten nodig? Open de Bladwijzereditor"
+pageLabel = "Pagina"
+pageNumber = "Pagina {{page}}"
+saveFailed = "Bladwijzer opslaan mislukt"
 searchPlaceholder = "Bladwijzers zoeken"
 title = "Bookmarks"
+untitled = "Naamloos"
 
 [viewer.comments]
 addComment = "Opmerking toevoegen"
@@ -12770,16 +13248,26 @@ unsavedDesc = "U heeft niet-opgeslagen wijzigingen"
 
 [viewer.layers]
 closeSidebar = "Zijbalk met lagen sluiten"
+empty = "Dit document heeft geen lagen."
 hideAll = "Alle lagen verbergen"
+loadFailed = "Lagen laden mislukt."
+loading = "Lagen laden..."
+noDocument = "Open een PDF om de lagen te bekijken."
+readFailed = "PDF-lagen lezen mislukt"
 showAll = "Alle lagen tonen"
 title = "Layers"
 
 [viewer.link]
 delete = "Link verwijderen"
+goTo = "Ga naar {{label}}"
+open = "Link openen"
+openAria = "Link openen"
+page = "Pagina {{page}}"
 
 [viewer.nonPdf]
 columnDefault = "Kolom {{index}}"
 convertToPdf = "Converteren naar PDF"
+copied = "Gekopieerd"
 csvStats = "{{rows}} rijen · {{columns}} kolommen · {{size}}"
 emptyFile = "Leeg bestand"
 htmlHidePreview = "Voorbeeldweergave verbergen"
@@ -12790,6 +13278,8 @@ htmlShowPreview = "Voorbeeldweergave toch tonen"
 invalidJson = "Ongeldige JSON — ruwe inhoud wordt weergegeven"
 lineNumbers = "Regelnummers"
 loading = "Laden..."
+noFile = "Geen bestand geladen"
+previewUnavailable = "Voorbeeld niet beschikbaar voor dit bestandstype"
 renderMarkdown = "Markdown renderen"
 sortedBy = "Gesorteerd op: {{column}}"
 textStats = "{{lines}} regels · {{size}}"
@@ -12816,11 +13306,28 @@ next = "Volgend resultaat"
 previous = "Vorig resultaat"
 resultsOf = "van {{total}}"
 
+[viewer.sidebar]
+close = "Zijbalk sluiten"
+searchPlaceholder = "Zoeken..."
+
 [viewer.signature]
 delete = "Handtekening verwijderen"
+previewAlt = "Handtekeningvoorbeeld"
+
+[viewer.signatureField]
+badge = "Handtekening"
+fieldTitle = "Handtekeningveld: {{name}}"
+signed = "Ondertekend"
+signedWithReason = "Ondertekend: {{reason}}"
+unsignedFieldTitle = "Niet-ondertekend handtekeningveld: {{name}}"
+withTime = "{{label}} ({{time}})"
 
 [viewer.thumbnails]
 closeSidebar = "Zijbalk met miniaturen sluiten"
+failed = "Mislukt"
+pageNumber = "Pagina {{page}}"
+thumbnailAlt = "Miniatuur van pagina {{page}}"
+title = "Pagina's"
 
 [viewPdf]
 tags = "bekijken,lezen,annoteren,tekst,afbeelding"
@@ -12828,169 +13335,6 @@ title = "PDF bekijken/bewerken"
 
 [warning]
 tooltipTitle = "Waarschuwing"
-
-[watchedFolders]
-alreadyInFolder = "Already in this folder"
-defaultFolderWarning = "This is a default folder and will be recreated on next reload."
-deleteConfirmBody = "This will remove the folder and its run history. Files already downloaded are not affected."
-deleteConfirmTitle = "Delete folder?"
-folderNotFound = "Folder not found"
-newFolder = "New folder"
-noFolders = "No watched folders yet"
-sidebarTitle = "Watched Folders"
-title = "Watched Folders"
-
-[watchedFolders.actions]
-back = "Back"
-collapse = "Collapse"
-dismiss = "Dismiss"
-download = "Download"
-downloadInput = "Download input"
-downloadOutput = "Download output"
-expand = "Expand"
-retry = "Retry"
-
-[watchedFolders.card]
-delete = "Delete folder"
-edit = "Edit folder"
-
-[watchedFolders.home]
-addAnother = "Add another Watched Folder"
-addAnotherDesc = "Automatically process files with a new pipeline"
-create = "Create your first Watched Folder"
-deleteFolder = "Delete folder"
-editFolder = "Edit folder"
-empty = "No watched folders yet"
-emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
-emptyTitle = "Automate your PDF workflows"
-file = "file"
-files = "files"
-pause = "Pause"
-resume = "Resume"
-
-[watchedFolders.howItWorks]
-step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
-step1Title = "Drop files"
-step2Desc = "Your configured tools process each file automatically"
-step2Title = "Pipeline runs"
-step3Desc = "Download processed files from inside the folder"
-step3Title = "Output ready"
-title = "How Watched Folders work"
-
-[watchedFolders.modal]
-advanced = "Advanced"
-automation = "Automation"
-automationNameFallback = "Watched Folder automation"
-automationRequired = "Add at least one configured step before saving."
-autoNumber = "Auto-number"
-autoNumberExample = "e.g. document.pdf → document (1).pdf"
-autoScanHelp = "New PDF files in this folder are processed automatically every 10 seconds."
-changeFolder = "Change"
-chooseFolder = "Choose"
-clearFolder = "Clear"
-color = "Accent color"
-createFolder = "Create Folder"
-createTitle = "New Watched Folder"
-editTitle = "Edit Watched Folder"
-inputFolder = "Input folder"
-inputFolderNotChosen = "No folder chosen — required for auto-scan"
-inputSource = "Input source"
-inputSourceBrowser = "Browser — drop files here"
-inputSourceLocal = "Local folder (auto-scan)"
-inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
-localOutputFolder = "Local output folder"
-maxRetries = "Max retries"
-name = "Folder name"
-namePlaceholder = "My Watched Folder"
-nameRequired = "Folder name is required"
-nameTooLong = "Folder name must be 50 characters or less"
-outputFolderNotSet = "Not set — outputs stay in app"
-outputFolderUnsupported = "Not supported in this browser"
-outputModeNewDesc = "Output is saved as a new separate file"
-outputModeVersion = "Replace original?"
-outputModeVersionDesc = "Output becomes a new version of the input file rather than a separate file"
-outputName = "Output filename prefix"
-outputNamePrefix = "Filename prefix"
-outputNameSuffix = "Suffix"
-positionPrefix = "Prefix"
-positionSuffix = "Suffix"
-replaceOriginal = "Replace original file"
-retryDelay = "Delay (minutes)"
-saveChanges = "Save Changes"
-saveFailed = "Failed to save folder. Please try again."
-sectionFolder = "Folder"
-sectionSourceOutput = "Source & Output"
-sectionSteps = "Steps"
-
-[watchedFolders.status]
-active = "Active"
-done = "Done"
-paused = "Paused"
-processing = "Processing"
-
-[watchedFolders.time]
-daysAgo = "{{count}}d ago"
-hoursAgo = "{{count}}h ago"
-justNow = "just now"
-minutesAgo = "{{count}}m ago"
-
-[watchedFolders.workbench]
-activity = "Activity"
-addFiles = "Add files"
-allTime = "All time"
-cancel = "Cancel"
-chartTooltipComplete = "{{count}} complete"
-chartTooltipFailed = "{{count}} failed"
-clearSelection = "Clear selection"
-countProcessing = "{{count}} processing"
-countQueued = "{{count}} queued"
-countSelected = "{{count}} selected"
-dataSaved = "Saved"
-dayRunning = "day running"
-daysRunning = "days running"
-delete = "Delete"
-deleteConfirmBody = "Remove notifications only clears the activity log. Delete outputs also removes the processed files from storage. Your original input files are never touched."
-deleteOutputs = "Delete outputs"
-directionIn = "in"
-directionOut = "out"
-dropToProcess = "Drop to process"
-export = "Export"
-exportSeparately = "Export separately"
-exportZip = "Export zip"
-failed = "Failed"
-filesProcessedOverTime = "Files processed over time"
-filterAll = "All"
-filterPending = "Pending"
-inputs = "Inputs"
-inputSize = "Input size"
-legendComplete = "Complete"
-noActivity = "No activity yet — drop a PDF to start"
-noActivityMatch = "No matching activity"
-noInputFolder = "No input folder — edit to configure"
-outputs = "Outputs"
-pause = "Pause"
-preview = "Preview"
-previewInput = "Preview input"
-previewLoadFailed = "Could not load file preview."
-previewOutput = "Preview output"
-queued = "Queued"
-queuedWaiting = "Queued — waiting to run"
-removeEntries = "Remove {{count}} entries"
-removeEntry = "Remove entry"
-removeNotificationsOnly = "Remove notifications only"
-resume = "Resume"
-retryAll = "Retry all"
-retryIn = "retry in {{count}}m"
-retryingSoon = "retrying…"
-retryMixedConfirm = "Some selected files have already completed and will be skipped. Only failed files will be retried. Continue?"
-running = "Running"
-search = "Search…"
-selectAll = "Select all {{count}}"
-sortNameAsc = "A → Z"
-sortNameDesc = "Z → A"
-sortNewest = "Newest"
-sortOldest = "Oldest"
-watching = "Watching: {{name}}"
 
 [watermark]
 desc = "Voeg tekst- of afbeeldingswatermerken toe aan PDF-bestanden"
@@ -13193,6 +13537,10 @@ certTypeServer = "Servercertificaat (indien beschikbaar)"
 completedDeclined = "U hebt dit document geweigerd."
 completedSigned = "U hebt dit document ondertekend."
 decline = "Weigeren"
+declineConfirm = "Weet je zeker dat je het ondertekenen van dit document wilt weigeren?"
+declineFailed = "Weigeren mislukt: {{error}}"
+declineSuccess = "Je hebt dit ondertekeningsverzoek geweigerd."
+defaultReason = "Document ondertekenen"
 downloadDocument = "Document downloaden"
 dueDate = "Vervaldatum: {{date}}"
 errorTitle = "Fout"
@@ -13203,6 +13551,7 @@ locationPlaceholder = "bijv. San Francisco, CA"
 pageNumber = "Paginanummer (optioneel)"
 reason = "Reden"
 reasonPlaceholder = "bijv. Documentgoedkeuring"
+selectCertificateFile = "Selecteer een certificaatbestand"
 sessionNotFound = "Sessie niet gevonden of toegang geweigerd."
 signDocument = "Document ondertekenen"
 statusDeclined = "Geweigerd"
@@ -13210,238 +13559,22 @@ statusNotified = "Op de hoogte gebracht"
 statusPending = "In behandeling"
 statusSigned = "Ondertekend"
 statusViewed = "Bekeken"
+submitFailed = "Handtekening indienen mislukt: {{error}}"
 submitSignature = "Handtekening indienen"
+submitSuccess = "Handtekening succesvol ingediend!"
 
 [workspace]
 title = "Werkruimte"
 
 [workspace.people]
-active = "Actief"
-activeSession = "Actieve sessie"
-addMembers = "Leden toevoegen"
-admin = "Beheerder"
-confirmDelete = "Weet u zeker dat u deze gebruiker wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt."
-confirmUnlock = "Weet u zeker dat u dit gebruikersaccount wilt ontgrendelen?"
-deleteUser = "Gebruiker verwijderen"
-deleteUserError = "Gebruiker verwijderen is mislukt"
-deleteUserSuccess = "Gebruiker succesvol verwijderd"
 description = "Beheer leden van de werkruimte en hun machtigingen"
-disable = "Uitschakelen"
-disabled = "Uitgeschakeld"
-editRole = "Rol bewerken"
-enable = "Inschakelen"
-loading = "Personen laden..."
-locked = "vergrendeld"
-lockedBadge = "Vergrendeld"
-loginRequired = "Schakel eerst de loginmodus in"
-memberActions = "Lidacties"
-noMembersFound = "Geen leden gevonden"
-ownerLocked = "Draag het eigendom van de organisatie over via Instellingen → Werkruimte → Gebruikers voordat je de rol of het account van de eigenaar wijzigt."
-role = "Rol"
-searchMembers = "Leden zoeken..."
-team = "Team"
-unlockAccount = "Account ontgrendelen"
-unlockUserError = "Gebruikersaccount ontgrendelen mislukt"
-unlockUserSuccess = "Gebruikersaccount succesvol ontgrendeld"
-user = "Gebruiker"
-userInfo = "Gebruikersinfo"
-
-[workspace.people.actions]
-upgrade = "Opwaarderen"
-
-[workspace.people.addMember]
-authType = "Authenticatietype"
-error = "Gebruiker aanmaken is mislukt"
-forceMFA = "MFA-instelling forceren bij volgende aanmelding"
-forcePasswordChange = "Wachtwoordwijziging afdwingen bij eerste aanmelding"
-password = "Wachtwoord"
-passwordPlaceholder = "Voer wachtwoord in"
-passwordRequired = "Wachtwoord is vereist"
-role = "Rol"
-submit = "Lid toevoegen"
-success = "Gebruiker succesvol aangemaakt"
-team = "Team (optioneel)"
-teamPlaceholder = "Selecteer een team"
-username = "Gebruikersnaam (e-mail)"
-usernamePlaceholder = "user@example.com"
-usernameRequired = "Gebruikersnaam en wachtwoord zijn vereist"
-
-[workspace.people.authType]
-oauth = "OAuth2"
-password = "Wachtwoord"
-saml = "SAML2"
-ssoDescription = "De gebruiker authenticeert via SSO-provider"
-
-[workspace.people.changePassword]
-action = "Wachtwoord wijzigen"
-confirmPassword = "Wachtwoord bevestigen"
-confirmPlaceholder = "Voer het nieuwe wachtwoord opnieuw in"
-copiedToClipboard = "Wachtwoord gekopieerd naar klembord"
-copyFailed = "Kopiëren van wachtwoord mislukt"
-copyTooltip = "Kopiëren naar klembord"
-emailUnavailable = "Het e-mailadres van deze gebruiker is ongeldig. Meldingen zijn uitgeschakeld."
-error = "Bijwerken van wachtwoord mislukt"
-forcePasswordChange = "Gebruiker dwingen het wachtwoord bij de volgende aanmelding te wijzigen"
-generatedPreview = "Gegenereerd wachtwoord:"
-generateRandom = "Beveiligd wachtwoord genereren"
-includePassword = "Nieuw wachtwoord in de e-mail opnemen"
-newPassword = "Nieuw wachtwoord"
-notifyOnly = "Er wordt een e-mail verzonden zonder het wachtwoord, om de gebruiker te laten weten dat een beheerder het heeft gewijzigd."
-passwordMismatch = "Wachtwoorden komen niet overeen"
-passwordRequired = "Voer een nieuw wachtwoord in"
-placeholder = "Voer een nieuw wachtwoord in"
-sendEmail = "Gebruiker per e-mail informeren over deze wijziging"
-smtpDisabled = "E-mailmeldingen vereisen dat SMTP is ingeschakeld in de instellingen."
-submit = "Wachtwoord bijwerken"
-subtitle = "Wachtwoord bijwerken voor"
-success = "Wachtwoord succesvol bijgewerkt"
-title = "Wachtwoord wijzigen"
-
-[workspace.people.editMember]
-editing = "Editing: <0>{{username}}</0>"
-error = "Gebruiker bijwerken is mislukt"
-role = "Rol"
-submit = "Update User"
-success = "Gebruiker succesvol bijgewerkt"
-team = "Team (optioneel)"
-teamPlaceholder = "Selecteer een team"
-title = "Edit User"
-
-[workspace.people.emailInvite]
-allFailed = "Uitnodigen van gebruikers is mislukt"
-emails = "E-mailadressen"
-emailsPlaceholder = "user1@example.com, user2@example.com"
-emailsRequired = "Er is minstens één e-mailadres vereist"
-error = "Uitnodigingen verzenden is mislukt"
-partialFailure = "Sommige uitnodigingen zijn mislukt"
-submit = "Uitnodigingen verzenden"
-success = "Gebruiker(s) succesvol uitgenodigd"
-
-[workspace.people.inviteLink]
-copied = "Link gekopieerd naar klembord"
-email = "E-mailadres"
-emailDescription = "Optioneel - laat leeg voor een algemene uitnodigingslink die door iedereen kan worden gebruikt"
-emailPlaceholder = "user@example.com (optioneel)"
-emailSent = "Uitnodigingslink gegenereerd en per e-mail verzonden"
-error = "Uitnodigingslink genereren is mislukt"
-expiryHours = "Verlooptijd (uren)"
-generate = "Link genereren"
-generated = "Uitnodigingslink gegenereerd"
-sendEmail = "Uitnodigingslink per e-mail verzenden"
-sendEmailDescription = "Indien ingeschakeld, wordt de uitnodigingslink naar het opgegeven e-mailadres verzonden"
-submit = "Uitnodigingslink genereren"
-
-[workspace.people.inviteMembers]
-label = "Leden uitnodigen"
-subtitle = "Typ of plak hieronder e-mailadressen, gescheiden door komma's. Uw werkruimte wordt per lid gefactureerd."
-
-[workspace.people.inviteMode]
-email = "E-mail"
-emailDisabled = "E-mailuitnodigingen vereisen SMTP-configuratie en mail.enableInvites=true in de instellingen"
-link = "Link"
-username = "Gebruikersnaam"
 
 [workspace.people.license]
-currentUsage = "Momenteel {{current}} van {{max}} gebruikerslicenties in gebruik"
-fromLicense = "van licentie"
-grandfathered = "Bestaande rechten"
-grandfatheredShort = "{{count}} bestaande rechten"
-slotsAvailable_one = "{{count}} user slot available"
-slotsAvailable_other = "{{count}} user slots available"
-slotsAvailable_zero = "No slots available"
 users_one = "user"
 users_other = "users"
 
-[workspace.people.mfa]
-adminDisableError = "MFA uitschakelen voor gebruiker mislukt"
-adminDisableSuccess = "MFA succesvol uitgeschakeld voor gebruiker"
-disableByAdmin = "MFA uitschakelen"
-
-[workspace.people.roleDescriptions]
-admin = "Kan instellingen beheren en leden uitnodigen, met volledige beheerdersrechten."
-currentRole = "Momenteel toegewezen rol."
-user = "Can view and edit shared files, but cannot manage workspace settings or users."
-
-[workspace.people.toggleEnabled]
-error = "Bijwerken van gebruikersstatus is mislukt"
-success = "Gebruikersstatus succesvol bijgewerkt"
-
 [workspace.teams]
-addMember = "Lid toevoegen"
-backToTeams = "Terug naar Teams"
-cannotAddToInternal = "Kan geen leden toevoegen aan het team Internal"
-cannotDeleteInternal = "Kan het team Internal niet verwijderen"
-cannotRenameInternal = "Kan het team Internal niet hernoemen"
-confirmDelete = "Weet u zeker dat u dit team wilt verwijderen? Dit team moet leeg zijn om te kunnen verwijderen."
-confirmRemove = "Gebruiker uit dit team verwijderen?"
-createNewTeam = "Nieuw team maken"
-deleteTeamLabel = "Team verwijderen"
 description = "Beheer teams en organiseer leden van de werkruimte"
-loadError = "Teamdetails laden mislukt"
-loading = "Teams laden..."
-loadingDetails = "Teamdetails laden..."
-memberCount_one = "{{count}} member"
-memberCount_other = "{{count}} members"
-memberCount_zero = "no members"
-noMembers = "Geen leden in dit team"
-noTeamsFound = "Geen teams gevonden"
-removeMember = "Uit team verwijderen"
-removeMemberError = "Gebruiker uit team verwijderen is mislukt"
-removeMemberSuccess = "Gebruiker uit team verwijderd"
-renameTeamLabel = "Team hernoemen"
-system = "Systeem"
-teamActions = "Teamacties"
-teamName = "Teamnaam"
-teamNotFound = "Team niet gevonden"
-totalMembers = "Totaal aantal leden"
-viewTeam = "Team bekijken"
-
-[workspace.teams.addMemberToTeam]
-addingTo = "Toevoegen aan"
-currentlyIn = "momenteel in"
-error = "Lid toevoegen aan team is mislukt"
-selectUser = "Gebruiker selecteren"
-selectUserPlaceholder = "Kies een gebruiker"
-selectUserRequired = "Selecteer een gebruiker"
-submit = "Lid toevoegen"
-success = "Lid succesvol aan team toegevoegd"
-title = "Lid toevoegen aan team"
-userRequired = "Selecteer een gebruiker"
-willBeMoved = "Opmerking: deze gebruiker wordt verplaatst van het huidige team naar dit team."
-
-[workspace.teams.changeTeam]
-changing = "Verplaatsen"
-error = "Team wijzigen is mislukt"
-label = "Team wijzigen"
-selectTeam = "Team selecteren"
-selectTeamPlaceholder = "Kies een team"
-selectTeamRequired = "Selecteer een team"
-submit = "Team wijzigen"
-success = "Team succesvol gewijzigd"
-title = "Team wijzigen"
-
-[workspace.teams.createTeam]
-error = "Team maken is mislukt"
-nameRequired = "Teamnaam is vereist"
-submit = "Team maken"
-success = "Team succesvol gemaakt"
-teamName = "Teamnaam"
-teamNamePlaceholder = "Voer teamnaam in"
-title = "Nieuw team maken"
-
-[workspace.teams.deleteTeam]
-error = "Team verwijderen is mislukt. Zorg dat het team leeg is."
-success = "Team succesvol verwijderd"
-
-[workspace.teams.renameTeam]
-error = "Team hernoemen is mislukt"
-nameRequired = "Teamnaam is vereist"
-newTeamName = "Nieuwe teamnaam"
-newTeamNamePlaceholder = "Voer nieuwe teamnaam in"
-renaming = "Hernoemen:"
-submit = "Team hernoemen"
-success = "Team succesvol hernoemd"
-title = "Team hernoemen"
 
 [zipWarning]
 cancel = "Annuleren"

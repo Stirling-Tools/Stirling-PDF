@@ -29,6 +29,8 @@ import {
 } from "@app/contexts/UnsavedChangesContext";
 import { QuickNavHostBridge } from "@app/components/shared/quickNav/QuickNavHostBridge";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
+import { READER_PATH } from "@app/routes/readerRoute";
+import { usePreferences } from "@app/contexts/PreferencesContext";
 import { stripBasePath } from "@app/constants/app";
 import { takeSettingsOrigin } from "@app/utils/settingsNavigation";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
@@ -52,6 +54,17 @@ const SettingsPageInner: React.FC = () => {
   const isMobile = useIsMobile();
   const licenseAlert = useLicenseAlert();
   const { confirmIfDirty } = useUnsavedChanges();
+  const { preferences } = usePreferences();
+  const goToStartupView = () => {
+    const view = preferences.defaultStartupView;
+    navigate(
+      view === "read"
+        ? READER_PATH
+        : view === "automate"
+          ? "/automate"
+          : EDITOR_BASENAME,
+    );
+  };
   // The same bar as the editor and the processor, so search is one thing
   // everywhere; settings results deep-link straight back into this page.
   const searchScopes = useEditorSearchScopes();
@@ -146,12 +159,8 @@ const SettingsPageInner: React.FC = () => {
       const key = (ev as CustomEvent<{ key?: NavKey }>).detail?.key;
       if (key) switchSection(key);
     };
-    window.addEventListener("appConfig:navigate", handler as EventListener);
-    return () =>
-      window.removeEventListener(
-        "appConfig:navigate",
-        handler as EventListener,
-      );
+    window.addEventListener("appConfig:navigate", handler);
+    return () => window.removeEventListener("appConfig:navigate", handler);
   }, [switchSection]);
 
   const headings = useSectionHeadings(activeItem?.key, contentRef);
@@ -195,7 +204,10 @@ const SettingsPageInner: React.FC = () => {
 
   return (
     <div className="settings-page" data-tour="settings-modal">
-      <QuickNavHostBridge requestNavigation={requestNavigation} />
+      <QuickNavHostBridge
+        requestNavigation={requestNavigation}
+        onGoToStartupView={goToStartupView}
+      />
 
       <aside
         className={`settings-page__nav modal-nav ${isMobile ? "mobile" : ""}`}

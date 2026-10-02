@@ -278,6 +278,7 @@ customNumberDesc = "Defolt olaraq {n}, və ya 'Page {n} of {total}', 'Text-{n}',
 fontName = "Şrift Adı"
 fontSize = "Şrift Ölçüsü"
 numberPagesDesc = "Hansı səhifələrin nömrələnəcəyini seçin, default 'all', və ya 1-5, 2,5,9 kimi yazılış qəbul olunur"
+pagePreviewAlt = "Səhifəyə önbaxış"
 pagesAndStarting = "Səhifələr və başlanğıc nömrəsi"
 positionAndPages = "Mövqe və səhifələr"
 preview = "Mövqe seçimi"
@@ -350,7 +351,9 @@ text = "Bu icazələr istifadəçilərin PDF ilə nə edə biləcəyini idarə e
 title = "İcazələri Dəyişdir"
 
 [addStamp]
+pagePreviewAlt = "Səhifəyə önbaxış"
 preview = "Möhürə önbaxış"
+stampPreviewAlt = "Möhürə önbaxış"
 tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 
 [AddStampRequest]
@@ -383,6 +386,7 @@ positionAndFormatting = "Mövqe və formatlama"
 preview = "Preview:"
 quickPosition = "Möhürü yerləşdirmək üçün səhifədə bir mövqe seçin."
 rotation = "İstiqamət"
+selectedImageAlt = "Seçilmiş möhür şəkli"
 selectTemplate = "Select a template..."
 stampSetup = "Möhür qurulumu"
 stampText = "Möhür Yazısı"
@@ -533,6 +537,9 @@ letter = "Letter"
 
 [adjustPageScale.scaleFactor]
 label = "Miqyas əmsalı"
+
+[adjustPageScale.settings]
+title = "Parametrlər"
 
 [adjustPageScale.tooltip.description]
 text = "PDF məzmununun ölçüsünü tənzimləyin və səhifə ölçülərini dəyişin."
@@ -728,7 +735,10 @@ noLanguages = "Konfiqurasiya edilmiş qovluqda tessdata dilləri tapılmadı."
 permissionNotice = "tessdata yolu yazıla bilən deyil. Endirmələr brauzerdə açılacaq; .traineddata fayllarını əl ilə tessdata qovluğuna yadda saxlayın."
 
 [admin.settings.ai]
+customProvider = "Fərdi (OpenAI-uyğun)"
 description = "Stirling-i Python AI mühərrikinə qoşun, modellərini seçin və işlədiyi qoruyucu qaydaları təyin edin."
+managedByCloud = "Bu rejimdə Stirling Cloud tərəfindən idarə olunur."
+managedByCloudShort = "Stirling Cloud tərəfindən idarə olunur"
 
 [admin.settings.ai.documents]
 description = "Sənədlər üzrə suallara cavab vermək üçün istifadə olunan embedding modeli və axtarış parametrlərini konfiqurasiya edin. Saxlanıldıqda AI mühərrikinə tətbiq olunur."
@@ -771,11 +781,24 @@ label = "Top K"
 [admin.settings.ai.general]
 connection = "Bağlantı"
 description = "Stirling-i Python AI mühərrikinə qoşun və hansı AI imkanlarının göstəriləcəyini seçin. Dəyişikliklər yenidən başladıldıqda tətbiq olunur."
+restartNote = "URL və ya hər hansı gözləmə müddətində dəyişiklik yenidən başladıqdan sonra qüvvəyə minir."
 title = "AI mühərriki"
 
 [admin.settings.ai.general.capabilities]
 description = "Ayrı-ayrı AI funksiyalarını aktiv və ya deaktiv edin. Deaktiv funksiyalar tətbiqdə gizlədilir."
 title = "İmkanlar"
+
+[admin.settings.ai.general.cloud]
+note = "Modellər və provayder açarları Stirling Cloud tərəfindən idarə olunur, buna görə bu ayarlar bu rejimdə tətbiq edilmir."
+
+[admin.settings.ai.general.cloud.indexing]
+description = "Hər AI aləti cavab vermək üçün lazım olan səhifə mətnini göndərir. Bu, Stirling Cloud-un həmin mətni indekslənmiş şəkildə saxlayıb-saxlamayacağını müəyyən edir ki, sonrakı suallar sənəd üzrə axtarış edə bilsin."
+help = "Söndürülü olduqda sənəd sualları əlçatan olmur. Bu, mətnin göndərilməsini dayandırmır - yalnız saxlanmasını dayandırır."
+label = "Stirling Cloud-un indekslənmiş sənədləri saxlamasına icazə ver"
+
+[admin.settings.ai.general.cloudNote]
+body = "Məntiqi emal Stirling-in infrastrukturunda işləyir və bu serverin bağlandığı hesaba hesablanır. Burada işlədiləcək konteyner və saxlanılacaq provayder açarı yoxdur. AI-nin oxuduğu hər şey öz avadanlığınızda deyil, Stirling Cloud tərəfindən emal olunur."
+title = "Stirling Cloud AI haqqında"
 
 [admin.settings.ai.general.enabled]
 description = "Əsas açar. Söndürülü olduqda heç bir AI aləti, agenti və ya mühərrik çağırışı əlçatan deyil."
@@ -809,9 +832,28 @@ label = "PDF şərh agenti"
 description = "Sənəd yaratma kimi daha ağır agent əməliyyatları üçün vaxt limiti."
 label = "Uzunmüddətli vaxt limiti (saniyə)"
 
+[admin.settings.ai.general.mode]
+label = "AI harada işləyir"
+
+[admin.settings.ai.general.mode.cloud]
+description = "Konteyner yoxdur, provayder açarı yoxdur, model seçimi yoxdur - iş Stirling Cloud-da işləyir və bu serverin bağlandığı hesaba hesablanır."
+linkCta = "Bu serveri Stirling hesabına qoş"
+notLinked = "Əvvəlcə hesabı əlaqələndirin"
+ownerOnly = "Yalnız təşkilat sahibi bu serveri Stirling hesabına qoşa bilər."
+title = "Stirling Cloud AI istifadə et"
+
+[admin.settings.ai.general.mode.off]
+description = "Tətbiqin heç bir yerində AI alətləri yoxdur və heç nə bu serverdən çıxmır."
+title = "Söndürülü"
+
+[admin.settings.ai.general.mode.self]
+description = "Sizin host etdiyiniz və seçdiyiniz model provayderinə yönləndirilmiş konteyner. Sizin açarınız, sizin hesabınız, sizin məlumat yolunuz."
+title = "Öz mühərrikinizi işlədin"
+
 [admin.settings.ai.general.note]
-body = "AI mühərriki ayrıca xidmət kimi işləyir. Onun paylaşılan sirri"
-body2 = "konteyner mühiti dəyişəni vasitəsilə təyin olunur. Provayder API açarları bu səhifələrdə daxil edilə və ya mühərrik mühiti dəyişənləri kimi verilə bilər; burada daxil edilən açarlar saxlanıldıqda mühərrikə göndərilir."
+docs = "Quraşdırma təlimatı"
+intro = "Stirling-in yanında işlətdiyiniz ayrıca konteynerdir. Məntiqi emalı o edir; Stirling isə yenə də hər səhifə əməliyyatını özü edir. O, hər iki konteynerdə eyni"
+outro = "və model provayderi açarı tələb edir. AI-nin oxuduğu hər şey seçdiyiniz provayderə göndərilir - host etdiyiniz Ollama hər səhifəni daxildə saxlayır."
 title = "AI mühərriki haqqında"
 
 [admin.settings.ai.general.streamTimeoutSeconds]
@@ -890,6 +932,67 @@ label = "Ağıllı model"
 body = "Dəyişikliklər avtomatik olaraq AI mühərrikinə göndərilir."
 bodyNoPush = "Parametrlər saxlanıldı. AI mühərriki konfiqurasiyasını növbəti dəfə götürəndə tətbiq olunacaq."
 title = "AI parametrləri saxlanıldı"
+
+[admin.settings.ai.status]
+capabilities = "İmkanlar"
+capabilitiesValue = "{{on}} / {{total}} aktivdir"
+checked = "yoxlanılıb"
+checking = "Mühərrik yoxlanılır…"
+description = "Mühərrikin əlçatan olub-olmaması, bu serveri qəbul edib-etməməsi və nə işlətdiyi."
+fastModel = "Sürətli model"
+justNow = "indicə"
+latency = "Cavab müddəti"
+linkLabel = "Hesab bağlantısı"
+minutesAgo = "{{count}} dəq əvvəl"
+recheck = "Yenidən yoxla"
+runningOn = "İşlədiyi yer"
+secondsAgo = "{{count}} san əvvəl"
+secretLabel = "Paylaşılan sirr"
+smartModel = "Ağıllı model"
+title = "Status"
+url = "Mühərrik URL"
+
+[admin.settings.ai.status.cloud]
+hostDown = "İşləmir"
+hostLabel = "Stirling.com"
+hostUp = "İşləyir"
+name = "Stirling Cloud"
+sharingLabel = "AI paylaşımı"
+sharingOff = "Deaktiv edilib"
+sharingOn = "Aktiv edilib"
+
+[admin.settings.ai.status.cloud.degraded]
+body = "Stirling Cloud cavab verdi, lakin bu serveri rədd etdi. Hesab bağlantısı ləğv edilmiş ola bilər."
+title = "Stirling Cloud bu serveri rədd edir"
+
+[admin.settings.ai.status.cloud.down]
+body = "Bu server Stirling Cloud-a çata bilmədi. Hesab bağlantısını və bu serverin internetə çıxışının olub-olmadığını yoxlayın."
+title = "Stirling Cloud əlçatmazdır"
+
+[admin.settings.ai.status.cloud.ok]
+body = "Stirling Cloud bu serveri qəbul etdi. Burada işlədiləcək və ya yenilənəcək heç nə yoxdur."
+title = "Stirling Cloud-da işləyir"
+
+[admin.settings.ai.status.degraded]
+body = "Sağlamlıq yoxlamasına cavab verdi, lakin real sorğunu rədd etdi. İki tərəf fərqli paylaşılan sirrlərdən istifadə edir."
+title = "Mühərrik işləyir, lakin bu serveri rədd edir"
+
+[admin.settings.ai.status.down]
+body = "URL-ni, mühərrik konteynerinin işlədiyini və AI aktiv edildikdən sonra yenidən başladığınızı yoxlayın."
+title = "Mühərrik əlçatmazdır"
+
+[admin.settings.ai.status.off]
+body = "Aşağıda AI-nin necə işləyəcəyini seçin, sonra saxlayın və yenidən başladın."
+title = "AI söndürülüb"
+
+[admin.settings.ai.status.ok]
+body = "Sağlamlıq yoxlaması və autentifikasiya olunmuş sorğu hər ikisi uğurlu oldu."
+title = "Mühərrik işləyir"
+
+[admin.settings.ai.status.secret]
+no = "Rədd edildi"
+unknown = "Naməlum"
+yes = "Qəbul edildi"
 
 [admin.settings.badge]
 clickToUpgrade = "Plan detalları üçün klikləyin"
@@ -1051,7 +1154,6 @@ refresh = "Yenilə"
 selectFile = "İdxal üçün .sql faylı seçin"
 size = "Ölçü"
 title = "Məlumat Bazası"
-unavailable = "Cari məlumat bazası konfiqurasiyası üçün ehtiyat nüsxə siyahısı əlçatan deyil."
 uploadTitle = "Yüklə və idxal et"
 version = "H2 Versiyası"
 
@@ -1185,6 +1287,7 @@ label = "Fərdi Metadata"
 [admin.settings.general.customMetadata.author]
 description = "PDF metadata üçün standart müəllif (məs., istifadəçi adı)"
 label = "Standart Müəllif"
+placeholder = "istifadəçi adı"
 
 [admin.settings.general.customMetadata.autoUpdate]
 description = "Emal olunan bütün sənədlərdə PDF metadatasını avtomatik yenilə"
@@ -1300,6 +1403,7 @@ defaultLocaleLink = "Standart lokalı tənzimlə"
 description = "İstifadəçilər girişdən sonra qəbul etməli olduqları xəbərdarlığı göstər. Mətn hər istifadəçinin dilinə uyğun göstərilir."
 discardConfirm = "Yadda saxlanmamış dəyişiklikləriniz var və onlar itəcək. Yenə də dili dəyişmək istəyirsiniz?"
 editLabel = "Markdown"
+editPlaceholder = "## Başlıq\n\nİmtina mətniniz..."
 emptyPreview = "Hələlik önbaxış üçün heç nə yoxdur."
 language = "Dil"
 languageHelp = "Hər dilin öz faylı var. İstifadəçinin dili üçün fayl yoxdursa, razılaşma əvvəlcə standart lokalın faylına, sonra isə ehtiyat mətinə keçir."
@@ -1418,8 +1522,10 @@ label = "JWKS URL (optional)"
 placeholder = "Auto-discovered from issuer"
 
 [admin.settings.mcp.mode]
+apikey = "API açarı (Stirling-in hər istifadəçi üçün açarı)"
 description = "OAuth needs an external IdP. API key uses a Stirling per-user API key (X-API-KEY) - simplest for self-host."
 label = "Authentication mode"
+oauth = "OAuth 2.1 (xarici IdP)"
 
 [admin.settings.mcp.requireAccount]
 description = "Only let tokens through if their subject maps to a provisioned, enabled Stirling user."
@@ -1836,6 +1942,14 @@ title = "İstifadəçi İdarəetmə Parametrləri"
 [agents]
 stirling_name = "Stirling"
 
+[alphabetOptions]
+arabic = "Ərəb"
+chinese = "Çin (Sadələşdirilmiş)"
+japanese = "Yapon"
+korean = "Koreya"
+roman = "Roma"
+thai = "Tay"
+
 [analytics]
 learnMore = "Daha ətraflı öyrənin"
 paragraph1 = "Stirling PDF bizə məhsulu inkişaf etdirməyə kömək etmək üçün analitikaya üstünlük verib. Biz heç bir şəxsi məlumatı və ya fayl məzmununu izləmirik."
@@ -1957,6 +2071,7 @@ week = "Həftə"
 
 [audit.clearData]
 cancel = "Ləğv et"
+closeAlert = "Xəbərdarlığı bağla"
 codeDoesNotMatch = "Kod uyğun gəlmir"
 codePlaceholder = "Kodu buraya yazın"
 confirmationCode = "Təsdiq kodu"
@@ -1966,6 +2081,7 @@ confirmTitle = "Silmək istədiyinizi təsdiqləyin"
 deleteButton = "Sil"
 enterCode = "Təsdiq kodu"
 enterCodeBelow = "Kodu yuxarıda göstərildiyi kimi dəqiq daxil edin (böyük-kiçik hərf nəzərə alınır)"
+failed = "Audit məlumatlarını təmizləmək alınmadı"
 initiateDelete = "Bütün məlumatları sil"
 irreversible = "GERİ DÖNMƏZ"
 success = "Uğur"
@@ -1974,6 +2090,7 @@ warning1 = "Bu əməliyyatı geri qaytarmaq mümkün deyil"
 warning2 = "Audit məlumatlarının silinməsi təhlükəsizlik hadisələri, istifadəçi fəaliyyətləri və fayl əməliyyatları daxil olmaqla bütün tarixçəni verilənlər bazasından daimi olaraq siləcək."
 
 [audit.error]
+loadStatus = "Audit sisteminin statusunu yükləmək alınmadı"
 title = "Audit sistemi yüklənərkən xəta"
 
 [audit.events]
@@ -1989,6 +2106,7 @@ fileHash = "Fayl Hash"
 filterByType = "Növə görə filtrlə"
 filterByUser = "İstifadəçiyə görə filtrlə"
 ipAddress = "IP ünvanı"
+loadFailed = "Hadisələri yükləmək alınmadı"
 noEvents = "Hadisə tapılmadı"
 startDate = "Başlanğıc tarixi"
 timestamp = "Vaxt damğası"
@@ -2029,6 +2147,7 @@ avgLatency = "Orta gecikmə"
 error = "Statistikanı yükləmə xətası"
 excellent = "Əla"
 good = "Yaxşı"
+loadFailed = "Statistikanı yükləmək alınmadı"
 noData = "Yoxdur"
 successRate = "Uğur dərəcəsi"
 totalEvents = "Ümumi hadisələr"
@@ -2063,13 +2182,27 @@ accessDenied = "Giriş rədd edildi"
 insufficientPermissions = "Bu əməliyyatı yerinə yetirmək üçün icazəniz yoxdur."
 
 [auth.callback]
+alreadySignedIn = "Artıq daxil olmusunuz! Yönləndirilir..."
+backToLogin = "Girişə qayıt"
 completing = "Autentifikasiya tamamlanır"
+exchanging = "Avtorizasiya kodu mübadilə edilir..."
+failedWithReason = "Autentifikasiya alınmadı: {{error}}"
 invalidToken = "OAuth girişi uğursuz oldu - etibarsız token."
 missingToken = "OAuth girişi uğursuz oldu - token alınmadı."
+noData = "Autentifikasiya məlumatı tapılmadı"
 oauthFailed = "OAuth girişi uğursuz oldu. Yenidən cəhd edin."
 pleaseWait = "Girişinizi tamamlayana qədər gözləyin."
+processing = "Autentifikasiya emal edilir..."
 signedOut = "Siz hesabdan çıxmısınız. Yenidən daxil olun."
+signInFailed = "Daxil olmanı tamamlamaq alınmadı: {{error}}"
+success = "Daxil olma uğurludur! Yönləndirilir..."
+unknownError = "Naməlum xəta"
 windowMayClose = "Tamamlandıqdan sonra bu pəncərəni bağlaya bilərsiniz."
+
+[auth.callback.title]
+default = "Autentifikasiya"
+processing = "Sizi daxil edirik"
+success = "Hər şey hazırdır!"
 
 [auth.displayName]
 guest = "Qonaq"
@@ -2222,6 +2355,7 @@ title = "Avtomatlaşdırmanı idxal et"
 unresolved = "Xəritələnməmiş: {{ops}}"
 
 [automate.run]
+progress = "Gedişat: {{current}}/{{total}}"
 title = "Avtomatlaşdırmanı İşə sal"
 
 [automate.selection]
@@ -2371,6 +2505,7 @@ whatHappensNext = "Sonra nə olacaq?"
 
 [billing.portal]
 error = "Ödəniş portalını açmaq alınmadı"
+errorFallback = "Yenidən cəhd edin və ya dəstək ilə əlaqə saxlayın."
 
 [bookletImposition]
 paperSizeNote = "Kağız ölçüsü avtomatik olaraq birinci səhifənizdən götürülür."
@@ -2418,6 +2553,9 @@ title = "Əl ilə dupleks rejimi"
 [bookletImposition.rtlBinding]
 label = "Sağdan-sola cildləmə"
 tooltip = "Ərəb, İvrit və ya digər sağdan-sola dillər üçün"
+
+[bookletImposition.settings]
+title = "Parametrlər"
 
 [bookletImposition.tooltip.advanced]
 bullet1 = "Sağdan-sola cildləmə: Ərəb, İvrit və ya RTL dilləri üçün"
@@ -2487,6 +2625,8 @@ detail = "Yenidən oynamaq üçün klikləyin və ya Space basın"
 headline = "Hamısı təmizləndi"
 
 [bulkSelection]
+selectedPages_one = "Seçildi: {{count}} səhifə ({{pages}})"
+selectedPages_other = "Seçildi: {{count}} səhifə ({{pages}})"
 syntaxError = "Sintaksis problemi var. Kömək üçün Səhifə seçimi məsləhətlərinə baxın."
 
 [bulkSelection.advanced]
@@ -2707,6 +2847,7 @@ declineButton = "İmtina et"
 deleteSelected = "Seçilmiş imzanı sil"
 drawSignature = "Aşağıda imzanızı çəkin"
 fileTooLarge = "Fayl ölçüsü 5MB-dan az olmalıdır"
+fontBrushScript = "Brush Script MT (kursiv)"
 fontFamily = "Şrift ailəsi"
 fontSize = "Şrift ölçüsü: {{size}}px"
 fontSizePlaceholder = "Ölçü"
@@ -2726,6 +2867,7 @@ removeImage = "Şəkli sil"
 savedSignatures = "Yadda saxlanılan imzalar"
 selectFile = "Şəkil faylı seçin"
 selectSignatureTitle = "İmza seçin və ya yaradın"
+signatureImageAlt = "İmza"
 signatureInfo = "Bu tənzimləmələr sənəd sahibi tərəfindən qurulub"
 signatureSettings = "İmza tənzimləmələri"
 signatureText = "İmza mətni"
@@ -3496,13 +3638,19 @@ confirm = "Təsdiqlə"
 continue = "Davam et"
 copied = "Kopyalandı!"
 copy = "Kopyala"
+copyCode = "Kodu kopyala"
+dismiss = "Bağla"
 done = "Bitdi"
 enterValue = "Enter value"
 error = "Xəta"
 expand = "Genişləndir"
 filterEmpty = "Filtrlənəcək heç nə yoxdur"
+goToSlide = "{{number}} slaydına keç"
 loading = "Yüklənir..."
+moreInformation = "Daha çox məlumat"
 next = "Növbəti"
+noData = "Məlumat yoxdur"
+nOfTotal = "{{current}} / {{total}}"
 open = "Open"
 preview = "Önizləmə"
 previous = "Əvvəlki"
@@ -3511,6 +3659,9 @@ remaining = "Qalıb"
 retry = "Yenidən cəhd et"
 save = "Yadda saxla"
 search = "Axtar"
+settingsSections = "Parametr bölmələri"
+showAllTotal = "Hamısını göstər {{total}}"
+showLess = "Daha az göstər"
 stepOf = "Step {{current}} of {{total}}"
 
 [compare]
@@ -3522,6 +3673,7 @@ newLine = "yeni-sətir"
 pages = "Səhifələr"
 tags = "fərqləndir,təzad yarat,dəyişikliklər,analiz"
 title = "Müqayisə Et"
+workbenchLabel = "Müqayisə görünüşü"
 
 [compare.actions]
 linkScroll = "Sürüşdürməni bağla"
@@ -3675,6 +3827,7 @@ title = "Sıxma metodu"
 desiredSize = "İstənilən fayl ölçüsü"
 desiredSizePlaceholder = "Ölçünü daxil edin"
 desiredSizeUnit = "Size unit"
+title = "Parametrlər"
 
 [compress.tooltip.description]
 text = "Sıxma fayl ölçüsünü azaltmağın asan yoludur. 'Fayl ölçüsü'nü seçərək hədəf ölçünü daxil edin və keyfiyyəti sizin üçün tənzimləyək. 'Keyfiyyət'i seçərək sıxma gücünü əl ilə təyin edin."
@@ -3724,10 +3877,13 @@ title = "Hesab Ayarları"
 description = "Hesabınızı fərdiləşdirmək üçün şəkil yükləyin."
 help = "PNG, JPG və ya WebP, 2MB-a qədər."
 remove = "Sil"
+removeFailed = "Profil şəklini silmək alınmadı"
 sizeError = "Zəhmət olmasa 2MB-dan kiçik şəkil seçin."
 switchedToCustom = "Xüsusi şəkilə keçildi. İndi öz şəkilinizi yükləyə bilərsiniz."
+switchFailed = "Fərdi şəkilə keçmək alınmadı"
 title = "Profil şəkli"
 upload = "Yüklə"
+uploadFailed = "Profil şəklini yükləmək alınmadı"
 useCustom = "Xüsusi şəkildən istifadə et"
 usingProvider = "{{provider}} profil şəklindən istifadə olunur"
 
@@ -3741,6 +3897,7 @@ title = "Profil şəklini kəs"
 zoom = "Miqyas"
 
 [config.account.security]
+changeFailed = "Şifrəni dəyişmək alınmadı"
 changePassword = "Şifrəni dəyiş"
 description = "Şifrə və təhlükəsizlik ayarlarınızı idarə edin."
 title = "Şifrə və təhlükəsizlik"
@@ -3751,11 +3908,15 @@ description = "Hesabınızı bağlayın ki, tarixçəniz qorunsun və daha çox 
 email = "E-poçt"
 emailPassword = "və ya e-poçtunuzu və parolunuzu daxil edin"
 emailPlaceholder = "E-poçtunuzu daxil edin"
+failed = "Hesabı təkmilləşdirmək alınmadı"
+failedWithProvider = "Hesabı {{provider}} ilə təkmilləşdirmək alınmadı"
 linkWith = "Bağla"
+linkWithProvider = "{{provider}} ilə əlaqələndir"
 password = "Parol (istəyə bağlı)"
 passwordNote = "Yalnız e-poçt təsdiqi istifadə etmək üçün boş buraxın"
 passwordPlaceholder = "Parol təyin edin"
 socialLogin = "Sosial hesabla yüksəlt"
+success = "Hesab uğurla təkmilləşdirildi! İndi email ilə daxil ola bilərsiniz."
 title = "Qonaq Hesabını Yüksəlt"
 upgradeButton = "Hesabı yüksəlt"
 
@@ -3865,10 +4026,10 @@ title = "Sorğu etibarlı deyil"
 
 [connect.renewal]
 approve = "Daxil olmanı yenilə"
+currentOwnerRequired = "Bu serverin daxil olmasını yeniləmək üçün əlaqələndirilmiş bulud komandasının cari sahibi kimi daxil olun. Sahibliyin ötürülməsi baş veribsə, yeni sahibin hesabından istifadə edin."
 failed = "Daxil olmanız yenilənə bilmədi. Yenidən cəhd edin və ya bu səhifəni bağlayıb serverinizdən yenidən başlayın."
 lead = "Bu server artıq hesabınıza bağlanıb. Serverinizdə hesablaşma və istifadəyə qayıtmaq üçün daxil olmanızı yeniləyin."
 title = "Server daxil olmanızı yeniləyin"
-wrongAccount = "Bu hesab bu serverin daxil olmasını yeniləyə bilməz. Serveri bağlamaq üçün ilkin istifadə olunmuş hesaba keçin. Həmin hesab hələ də bağlı komandanın sahibi olmalıdır."
 
 [convert]
 autoRotate = "Avtomatik döndür"
@@ -3914,6 +4075,7 @@ multiple = "Çoxlu"
 optimizeForEbook = "PDF-i e-oxuyucular üçün optimallaşdır (Ghostscript istifadə olunur)"
 output = "Çıxış"
 outputFormat = "Çıxış formatı"
+pdfaAccessibleFormat = "{{format}} (əlçatan)"
 pdfaDigitalSignatureWarning = "PDF Rəqəmsal İmza Ehtiva Edir.Bu, növbəti addımda silinəcək."
 pdfaNote = "PDF/A-1b daha uyğundur, PDF/A-2b daha çox funksiyanı dəstəkləyir."
 pdfaOptions = "PDF/A seçimləri"
@@ -3973,6 +4135,24 @@ outputFormatDesc = "eBook üçün çıxış formatını seçin"
 tabletPhone = "Planşet/Telefon (şəkillərlə)"
 targetDevice = "Hədəf cihaz"
 targetDeviceDesc = "Oxuyucu cihaz üçün optimallaşdırılmış çıxış profilini seçin"
+
+[convert.formatGroups]
+archive = "Arxiv"
+document = "Sənəd"
+ebook = "eBook"
+email = "Email"
+file = "Fayl"
+image = "Şəkil"
+multipleFiles = "Bir neçə fayl"
+presentation = "Təqdimat"
+spreadsheet = "Cədvəl"
+text = "Mətn"
+web = "Web"
+
+[convert.formatOptions]
+any = "İstənilən"
+images = "Şəkillər"
+msgOutlook = "MSG (Outlook)"
 
 [cookieBanner.popUp]
 acceptAllBtn = "Oldu"
@@ -4066,6 +4246,12 @@ label = "Y mövqeyi"
 [crop.error]
 failed = "PDF-i kəsmək alınmadı"
 
+[crop.pageNumbers]
+description = "Seçilmiş sahəni müəyyən səhifələrdə kəsin və ya hər səhifə üçün 'all' istifadə edin."
+error = "Yanlış səhifə seçimi. Məsələn, 1, 3, 5-8 və ya all istifadə edin."
+label = "Kəsiləcək səhifələr"
+placeholder = "məs. 1, 3, 5-8 və ya all"
+
 [crop.preview]
 title = "Kəsmə sahəsinin seçimi"
 
@@ -4088,16 +4274,11 @@ fileName = "Fayl Adı"
 title = "Verilənlər bazasını Daxil/Xaric Et"
 
 [defaultApp]
-setDefault = "Standart et"
 title = "Standart PDF tətbiqi kimi təyin et"
 
 [defaultApp.error]
 message = "Standart PDF işləyicisini təyin etmək alınmadı"
 title = "Xəta"
-
-[defaultApp.prompt]
-dontRemind = "Mənə bir daha xatırlatma"
-message = "PDF fayllarını açmaq üçün Stirling PDF-i standart tətbiqiniz edin."
 
 [defaultApp.settingsOpened]
 message = "Zəhmət olmasa sistem ayarlarında Stirling PDF-i seçin"
@@ -4106,6 +4287,17 @@ title = "Ayarlar açıldı"
 [defaultApp.success]
 message = "Stirling PDF artıq standart PDF redaktorunuzdur"
 title = "Standart tətbiq təyin edildi"
+
+[desktop.titleBar]
+maximize = "Böyüt"
+minimize = "Kiçilt"
+restore = "Bərpa et"
+
+[desktopBilling]
+description = "İstifadə və fakturalandırmanı brauzerinizdə idarə edin. Burada istifadə etdiyiniz eyni Stirling hesabı ilə daxil olun."
+open = "İstifadə və fakturalandırmanı brauzerdə aç"
+openFailed = "İstifadə və fakturalandırmanı açmaq mümkün olmadı. Bağlantınızı yoxlayın və yenidən cəhd edin."
+selfHostedDescription = "Qoşulmuş serverinizdə istifadə və fakturalandırmanı brauzerinizdə idarə edin. Server sahibi hesabınızla daxil olun."
 
 [desktopFileLink]
 saveAs = "Fərqli saxla…"
@@ -4169,6 +4361,7 @@ tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,ident
 noItems = "No items available"
 noResults = "No results found"
 searchPlaceholder = "Axtar..."
+selectedCount = "{{count}} seçildi"
 selectLanguages = "Select languages"
 selectOption = "Select an option"
 
@@ -4179,6 +4372,7 @@ editSecretValue = "Gizli dəyəri redaktə et"
 [editTableOfContents]
 submit = "Mündəricatı tətbiq et"
 tags = "bookmarks,contents,edit,table of contents,TOC,outline,navigation,chapters,sections,add bookmarks,edit bookmarks,PDF outline"
+workbenchLabel = "Kontur iş sahəsi"
 
 [editTableOfContents.actions]
 clipboardUnavailable = "Bu brauzerdə mübadilə buferinə çıxış mövcud deyil."
@@ -4339,6 +4533,27 @@ closeFile = "Faylı bağla"
 
 [fileEditor]
 addFiles = "Fayllar əlavə et"
+closedFile = "{{name}} bağlandı"
+couldNotSave = "{{name}} saxlana bilmədi"
+filesAdded_one = "{{count}} fayl əlavə edildi"
+filesAdded_other = "{{count}} fayl əlavə edildi"
+filesReordered_one = "Faylın sırası dəyişdirildi"
+filesReordered_other = "{{count}} faylın sırası dəyişdirildi"
+loadedFromStorage_one = "Yaddaşdan {{count}} fayl yükləndi"
+loadedFromStorage_other = "Yaddaşdan {{count}} fayl yükləndi"
+loadFromStorageFailed = "Bəzi faylları yaddaşdan yükləmək alınmadı"
+pinnedFile = "{{name}} sabitləndi"
+processFilesFailed = "Faylları emal etmək alınmadı"
+savedAndClosed = "{{name}} saxlanıldı və bağlandı"
+saveFailed = "Saxlama alınmadı"
+unpinnedFile = "{{name}} sabitlənmədən çıxarıldı"
+unzipping = "{{name}} arxivdən çıxarılır"
+
+[fileEditor.unzip]
+error = "{{name}} arxivdən çıxarılarkən xəta"
+extracted_one = "{{name}} faylından {{count}} fayl çıxarıldı"
+extracted_other = "{{name}} faylından {{count}} fayl çıxarıldı"
+failed = "{{name}} faylından faylları çıxarmaq alınmadı"
 
 [fileManager]
 addToUpload = "Yükləməyə əlavə et"
@@ -4355,6 +4570,7 @@ noFiles = "Fayl mövcud deyil"
 noFilesFound = "Axtarışınıza uyğun fayl tapılmadı"
 openInFileEditor = "Fayl Redaktorunda aç"
 openInPageEditor = "Səhifə Redaktorunda aç"
+reloadFiles = "Faylları yenidən yüklə"
 saveSelected = "Seçilənləri saxla"
 searchFiles = "Fayllarda axtar..."
 share = "Paylaş"
@@ -4364,6 +4580,8 @@ sharedEditNoticeConfirm = "Başa düşdüm"
 sharedEditNoticeTitle = "Server nüsxəsi yalnız oxumaq üçündür"
 sharedWithYou = "Sizinlə paylaşılanlar"
 showAll = "Hamısını göstər"
+showAllCount_one = "Hamısını göstər ({{count}} fayl)"
+showAllCount_other = "Hamısını göstər ({{count}} fayl)"
 sortBy = "Sort files"
 sortByDate = "Tarixə görə sırala"
 sortByName = "Ada görə sırala"
@@ -4400,6 +4618,11 @@ sources = "Fayl mənbələri"
 subtitle = "Kitabxananızdan seçin və ya yeni nəsə əlavə edin."
 title = "Fayllar əlavə et"
 unsupported = "Bu fayl növü seçilmiş alət tərəfindən dəstəklənmir."
+
+[filePreview]
+loadingThumbnail = "Kiçik şəkil yüklənir..."
+locked = "Kilidlənib"
+previewOf = "{{name}} üçün önbaxış"
 
 [files]
 addFiles = "Fayllar əlavə et"
@@ -4453,6 +4676,7 @@ openFromComputer = "Kompüterdən aç"
 openSettings = "Ayarları aç"
 other = "Digər"
 recent = "Son"
+searchFiles = "Faylları axtar"
 uploadFailedBody = "Seçilmiş faylları əlavə etmək mümkün olmadı."
 uploadFailedTitle = "Yükləmə alınmadı"
 viewAll = "Bütün {{count}} faylı göstər"
@@ -4834,13 +5058,15 @@ title = "Faylı PDF-ə"
 [fileUpload]
 dropFilesHere = "Faylları bura atın və ya yükləmə düyməsinə klikləyin"
 dropFilesHereOpen = "Faylları bura atın və ya aç düyməsini klikləyin"
-filesAvailable = "mövcud fayllar"
+filesAvailableCount_one = "{{count}} fayl mövcuddur"
+filesAvailableCount_other = "{{count}} fayl mövcuddur"
 loadFromStorage = "Saxlamadan yüklə"
 noFilesInStorage = "Saxlamada mövcud fayl yoxdur. Öncə bəzi fayllar yükləyin."
 noFilesInStorageOpen = "Yaddaşda fayl yoxdur. Əvvəlcə bəzi faylları açın."
 open = "Aç"
 openFile = "Faylı aç"
 openFiles = "Faylları aç"
+selectedCount = "{{count}} seçildi"
 selectFile = "Select {{name}}"
 selectFromStorage = "Saxlamadan seç"
 upload = "Yüklə"
@@ -4932,6 +5158,7 @@ rescanFields = "Sahələri yenidən skan et"
 rescanFormFields = "Forma sahələrini yenidən skan et"
 save = "Saxla"
 saveShortcut = "Saxlamaq üçün Ctrl+S"
+selectOptionPlaceholder = "— seçin —"
 skippedEdits_one = "1 dəyişiklik tətbiq edilə bilmədi:"
 skippedEdits_other = "{{count}} dəyişiklik tətbiq edilə bilmədi:"
 skippedEditsTruncated = "{{count}} əlavə qeyd göstərilmir."
@@ -4994,6 +5221,16 @@ tooltipHelp = "Kimsə PDF oxuyucusunda sahənin üzərinə gəldikdə göstəril
 type = "Növ"
 typeHelp = "Bu sahənin hansı növdə olduğunu göstərir. Dəyişdirildikdə sahə yenidən qurulur, buna görə cari dəyəri saxlanılmır."
 
+[formFill.fieldTypes]
+button = "Düymə"
+checkbox = "Seçim qutusu"
+combobox = "Açılan siyahı"
+listbox = "Siyahı qutusu"
+radio = "Radio düyməsi"
+radioGroup = "Radio qrupu"
+signature = "İmza"
+text = "Mətn"
+
 [formFill.mode]
 create = "Yarat"
 fill = "Doldur"
@@ -5011,11 +5248,16 @@ restore = "Bərpa et"
 
 [formFill.sidebar]
 close = "Yan paneli bağla"
+empty = "Bu PDF-də forma sahələri tapılmadı"
+loading = "Forma sahələri yüklənir..."
+pageNumber = "Səhifə {{page}}"
+title = "Forma sahələri"
 
 [getPdfInfo]
 downloadJson = "JSON yüklə"
 downloads = "Yükləmələr"
 indexTitle = "İndeks"
+noData = "Məlumat yoxdur"
 noneDetected = "Heç nə aşkar edilmədi"
 noResults = "Hesabat yaratmaq üçün aləti işə salın."
 processing = "Məlumat çıxarılır..."
@@ -5031,6 +5273,8 @@ noVerification = "Yoxlama aparılmadı"
 noVerificationDesc = "Bu sənəd üçün PDF standartlarına uyğunluq yoxlanılmadı."
 passed = "Keçdi"
 passedCount = "keçdi"
+secCompliant = "Sənəd SEC EDGAR təqdimetmə tələblərinə cavab verir"
+secNotCompliant = "Sənəd SEC EDGAR təqdimetmə tələblərinə cavab vermir"
 
 [getPdfInfo.error]
 partial = "Bəzi faylları emal etmək mümkün olmadı."
@@ -5038,10 +5282,15 @@ unexpected = "Çıxarılma zamanı gözlənilməz xəta baş verdi."
 
 [getPdfInfo.other]
 attachments = "Əlavələr"
+created = "Yaradıldı: {{date}}"
 embeddedFiles = "Gömülü fayllar"
+fileSizeBytes = "({{size}} bayt)"
 javaScript = "JavaScript"
 layers = "Qatlar"
+modified = "Dəyişdirildi: {{date}}"
 structureTree = "Struktur ağacı"
+unnamedAttachment = "Adsız qoşma"
+unnamedFile = "Adsız fayl"
 xmp = "XMPMetadata"
 
 [getPdfInfo.perPage]
@@ -5051,6 +5300,7 @@ images = "Şəkillər"
 links = "Keçidlər"
 multimedia = "Multimedia"
 size = "Ölçü"
+unnamedImage = "Şəkil"
 xobjects = "XObject sayları"
 
 [getPdfInfo.report]
@@ -5579,6 +5829,7 @@ invalidEmail = "Etibarsız e-poçt ünvanı"
 invalidInvitation = "Etibarsız dəvət"
 invalidToken = "Etibarsız dəvət keçidi"
 linkExpires = "Keçidin müddəti bitir"
+linkExpiresAt = "Linkin müddəti bitir: {{date}} saat {{time}}"
 passwordMismatch = "Parollar üst-üstə düşmür"
 passwordPlaceholder = "Parolunuzu daxil edin"
 passwordRequired = "Parol tələb olunur"
@@ -5593,6 +5844,7 @@ welcomeTitle = "Siz dəvət olunmusunuz!"
 addFiles = "Fayllar əlavə et"
 mobileUpload = "Mobil cihazdan yüklə"
 openFromComputer = "Komputerdən aç"
+settingUpSession = "Sessiyanız qurulur..."
 uploadFromComputer = "Kompüterdən yüklə"
 
 [language]
@@ -5674,6 +5926,7 @@ sessionExpired = "Sessiyanızın müddəti bitdi. Zəhmət olmasa yenidən daxil
 signin = "Daxil olun"
 signingIn = "Daxil olunur..."
 signInWith = "Bununla daxil ol"
+signInWithProvider = "{{provider}} ilə daxil olun"
 title = "Daxil olun"
 unexpectedError = "Gözlənilməz xəta: {{message}}"
 updatePassword = "Şifrəni yenilə"
@@ -5715,6 +5968,9 @@ label = "Birləşdirilmiş fayldakı rəqəmsal imza silinsin?"
 description = "Fayllar birləşdirilərkən rəqəmsal imzalar qüvvədən düşür. Onları son PDF-dən silmək üçün bunu işarələyin."
 title = "Rəqəmsal imzanı sil"
 
+[merge.settings]
+title = "Parametrlər"
+
 [merge.sortBy]
 ascending = "Artan"
 dateModified = "Dəyişdirilmə tarixi"
@@ -5723,6 +5979,9 @@ description = "Fayllar seçildiyi ardıcıllıqla birləşdiriləcək. Yenidən 
 filename = "Fayl Adı"
 label = "Sıralama meyarı"
 sort = "Sırala"
+
+[merge.sortFiles]
+title = "Faylları sırala"
 
 [merge.tooltip.header]
 title = "Birləşdirmə ayarlarına ümumi baxış"
@@ -5771,6 +6030,7 @@ validating = "Sessiya yoxlanılır..."
 
 [mobileSign]
 clear = "Clear"
+drawingArea = "İmza çəkmə sahəsi"
 invalidSession = "Session expired"
 invalidSessionMessage = "This QR code is no longer valid. Open the Sign tool on your computer and scan the new code."
 penSizeLabel = "Pen size"
@@ -5786,6 +6046,7 @@ validating = "Checking session…"
 fromGallery = "From gallery"
 hint = "Photograph a signature on white paper, or choose an existing image."
 invalidType = "Please choose an image file."
+previewAlt = "İmza"
 takePhoto = "Take a photo"
 
 [mobileSign.tab]
@@ -5827,6 +6088,8 @@ label = "Free credits"
 adoptFailed = "Sənədin kilidi açıldı, lakin burada açıla bilmədi. Aləti birbaşa sınayın."
 empty = "Bildiriləcək heç nə yoxdur."
 handoffUnavailable = "Bu brauzer emalçıya sənədi redaktora ötürməyə imkan verməyəcək. Bunun əvəzinə onu redaktordan açın."
+inSmartFolder = "Bu sənəd ağıllı qovluqdadır, buna görə burada deyil, serverdə işlənir."
+inSmartFolderNamed = "{{name}} ağıllı qovluqdadır, buna görə burada deyil, serverdə işlənir."
 noDocumentLinked = "Bu xəta konkret sənədlə əlaqəli deyil, buna görə burada açılacaq heç nə yoxdur."
 notOnThisDevice = "Bu sənəd bu cihazda deyil, buna görə burada açıla bilməz."
 occurrences = "{{count}} dəfə"
@@ -5837,6 +6100,7 @@ repairedRerunNotAdopted = "Təmir edilmiş sənəd emaldan keçdi, lakin nətic�
 repairedRerunUndelivered = "Sənəd təmir edildi və policy yenidən icrası başladı, lakin nəticəsi buraya çatdırıla bilmir, buna görə bu xəta açıq qalır."
 rerunRejected = "Policy indi yenidən icra edilə bilmədi. Bir az sonra yenidən cəhd edin."
 rerunUndelivered = "Policy yenidən icrası başladı, lakin nəticəsi buraya çatdırıla bilmir, buna görə bu xəta açıq qalır."
+retryInFolderFailed = "Həmin sənədi indi yenidən işə salmaq mümkün olmadı."
 retryUnavailable = "Bu sənəd artıq bu brauzerdən yenidən cəhd edilə bilməz."
 title = "Bildirişlər"
 unlockedNotRerun = "Sənədin kilidi açıldı və burada açıldı, lakin policy onun üzərində yenidən icra edilə bilmədi."
@@ -5894,6 +6158,9 @@ profile = "See your basic profile information"
 desc = "Skanları təmizləyir və PDF-in içərisindəki şəkillərdəki yazını tapıb mətn olaraq əlavə edir."
 tags = "tanıma,mətn,şəkil,skan,oxu,tanı,təyin et,redaktəediləbilən"
 title = "OST (OCR) / Skan Təmizləmə"
+
+[ocr.advanced]
+title = "Qabaqcıl"
 
 [ocr.error]
 failed = "OCR əməliyyatı uğursuz oldu"
@@ -6019,9 +6286,9 @@ title = "Stirling for Desktop yüklə"
 description = "Komandanızla əməkdaşlıq edin"
 title = "Komanda üzvlərini dəvət et"
 
-[onboarding.checklist.shareAnalytics]
-description = "Stirling-i yaxşılaşdırmağa kömək edin"
-title = "Anonim istifadə məlumatlarını paylaş"
+[onboarding.checklist.setDefaultApp]
+description = "PDF fayllarını Stirling PDF-də açın"
+title = "Stirling-i standart edin"
 
 [onboarding.checklist.takeTour]
 description = "Qısa bələdçi ilə Stirling-in necə işlədiyini görün"
@@ -6089,6 +6356,7 @@ message = "Tətbiq son vaxtlar əhəmiyyətli dəyişikliklərdən keçib. Serve
 roleAdmin = "Admin"
 rolePlaceholder = "Rolunuzu təsdiqləyin"
 roleUser = "İstifadəçi"
+title = "Təhlükəsizlik yoxlaması"
 
 [onboarding.serverLicense]
 freeBody = "Bizim <strong>Open-Core</strong> lisenziyamıza <strong>OAuth SSO</strong> və maksimum <strong>{{freeTierLimit}}</strong> istifadəçi pulsuz daxildir. Fasiləsiz böyümək üçün Stirling Team planını tövsiyə edirik — ayda $99 qarşılığında <strong>100 istifadəçi</strong>."
@@ -6177,16 +6445,93 @@ title = "Örtük faylları"
 text = "Ön plan örtüyü səhifənin üstünə qoyur. Arxa plan onu altına yerləşdirir."
 title = "Örtüyün mövqeyi"
 
+[ownership]
+acceptInvite = "Onlar hesab yarada və ya daxil olub dəvəti qəbul edə bilərlər."
+accessUpdated = "Onların sahib giriş hüququ hazırdır."
+accountLinkDisabled = "Bu serverin hələ də bulud bağlantısı var, lakin hesab əlaqələndirməsi söndürülüb. Server operatorundan hesab əlaqələndirməsini aktiv etməsini istəyin, sonra bu ötürməyə davam edin və ya parametrlərdə server bağlantısını ayırın."
+anotherTeam = "Artıq başqa komandadasınız?"
+billing = "Abunəlik, pul kisəsi, ödəniş üsulu və mövcud lisenziyalar yerində qalır. Fakturalandırma əlaqə məlumatları avtomatik dəyişmir."
+billingDetails = "Fakturalandırma detalları"
+billingUnchanged = "Abunəlik və fakturalandırma yerində qalır"
+bothDone = "Server və bulud sahibliyi indi uyğunlaşdırılıb."
+cancel = "Ötürməni ləğv et"
+check = "Yenidən yoxla"
+checkAccount = "Hesabı yoxla"
+chooseEmail = "{{team}} daxilində onların hesabını seçin və ya dəvət etmək üçün email daxil edin."
+close = "Ötürmə dialoqunu bağla"
+cloudAccount = "Stirling hesabı"
+cloudScopeStyled = "<user>{{name}}</user> {{team}}, onun üzvləri və fakturalandırmasını idarə edəcək."
+cloudTargetChanged = "Başqa bulud üzvü seçin. Bu hesab artıq təhvil üçün uyğun deyil."
+confirm = "Giriş və sahibliyin dəyişikliklərini başa düşürəm."
+done = "Sahiblik ötürüldü"
+error = "Bu addımı tamamlaya bilmədik. Alıcının aktiv olduğunu və serverin qoşulduğunu yoxlayın, sonra yenidən yoxlayın. Gözləyən ötürməyə buradan davam etmək olar."
+finish = "Server ötürməsini bitir"
+inProgress = "Başqa alıcı üçün artıq gözləyən ötürmə var. Bu dialoqu bağlayın və İstifadəçilər bölməsindən davam edin."
+instances = "Bu komandanın {{count}} əlaqələndirilmiş serveri var. Onların bulud fakturalandırması bu komandada qalır; digər serverlərin yerli sahibləri dəyişmir."
+invitationSent = "Dəvət göndərildi"
+invite = "Dəvət göndər"
+inviteAddress = "<account>{{email}}</account> hesabını {{team}} komandasına dəvət edin."
+inviteBlocked = "Dəvət göndərilə bilmədi. Mövcud komanda yerlərini və alıcının artıq ödənişli abunəliyinin olub-olmadığını yoxlayın."
+linkChanged = "Serverin bulud bağlantısı dəyişib. Davam etməzdən əvvəl server operatorundan ilkin bağlantını bərpa etməsini istəyin."
+linkedServerCount = "{{count}} əlaqələndirilmiş server"
+linkRevoked = "Bu serverin bulud bağlantısı artıq etibarlı deyil. Ötürməni ləğv edin, sonra parametrlərdə Stirling hesabınızı yenidən qoşun. Sahiblik dəyişməyəcək."
+localScope = "Onlar bu serverin sahibi olacaq və fakturalandırma ilə bulud bağlantılarını idarə edəcəklər. Siz administrator girişini saxlayırsınız, lakin həmin parametrlərə girişi itirirsiniz."
+membershipDetails = "Komanda üzvlüyü detalları"
+membershipFirst = "Ötürməni təsdiqləməzdən əvvəl onlar komandaya qoşulmalıdırlar."
+membershipRequired = "Sahibliyin ötürülməsindən əvvəl alıcı bu bulud komandasına qoşulmalıdır. Onlardan dəvəti qəbul etmələrini istəyin, sonra yenidən yoxlayın."
+newOwnerLabel = "Yeni sahib"
+newOwnerStyled = "<user>{{name}}</user> indi sahibdir."
+noEmailMatches = "Uyğun üzv yoxdur. Dəvət etmək üçün email daxil edin."
+otherTeam = "Əgər onlar başqa komandaya aiddirsə, qəbul etmək onların hesabını köçürə bilər. Ödənişli hesab və ya başqa komandanın sahibliyi əvvəlcə həll edilməli ola bilər. Onların abunəliyini köçürməyəcəyik və komandaları birləşdirməyəcəyik."
+ownerChanged = "Bu ötürmə başladıqdan sonra bulud sahibliyi dəyişib. Bu ötürməni ləğv edin və cari bulud sahibi ilə yenidən başlayın."
+ownerRequired = "Cari bulud komandasının sahibi kimi daxil olun, sonra bu addımı yenidən sınayın."
+partialError = "Bulud sahibliyi ötürüldü. Hər iki sahibin uyğun qalması üçün server ötürməsini bitirin."
+partialTargetChanged = "Seçilmiş server istifadəçisinin girişini və ilkin hesab məlumatlarını bərpa edin, sonra server ötürməsini bitirin. Bulud sahibliyi artıq ötürülüb."
+pending = "{{name}} üçün sahiblik ötürməsi gözləyir."
+personalTeam = "Şəxsi komandalar sahibliyi ötürə bilməz."
+prepareHelp = "Alıcı ilk server girişini tamamlamış olmalıdır. Burada yenidən cəhd edə və ya başqa birini seçmək üçün İstifadəçilər bölməsinə qayıda bilərsiniz."
+resume = "Ötürməyə davam et"
+searchEmail = "Axtarın və ya email daxil edin"
+serverAccount = "Server hesabı"
+serverDetails = "Əlaqələndirilmiş server detalları"
+signIn = "Buluda daxil ol"
+startFromInstanceBody = "Bu komandanın əlaqələndirilmiş serverləri var. Öz serverində yerləşən serverdə Parametrlər → İstifadəçilər bölməsini açın və alıcının rolunu Təşkilat sahibi olaraq dəyişin. Bu proses server ötürməsini tamamlamazdan əvvəl bulud sahibliyini ötürür."
+startFromInstanceTitle = "Öz serverində yerləşən serverinizdən başlayın"
+stayOwner = "Ötürməyə qədər sahib olaraq qalırsınız."
+targetChanged = "Alıcının hesabı dəyişib. Onların girişini bərpa edin və ya bu ötürməni ləğv edib onları yenidən seçin."
+title = "Sahibliyi ötür"
+transfer = "Sahibliyi ötür"
+waitingForEmail = "{{email}} hesabının {{team}} komandasına qoşulması gözlənilir."
+working = "Sahiblik yoxlanılır və yenilənir..."
+yourCloudAccess = "Siz komanda üzvü olacaqsınız və sahib girişini itirəcəksiniz."
+
 [pageEdit]
 deselectAll = "Heç birini seçmə"
 selectAll = "Hamısını seç"
 
 [pageEditor]
+dragPreviewAlt = "Sürüklənir"
+filePosition = "Mövqe {{position}}"
+pageLabel = "Səhifə {{page}}"
 title = "Səhifə Redaktoru"
+
+[pageEditor.actions]
+deletePage = "Səhifəni sil"
+insertFileAfter = "Sonrasına fayl daxil et"
+moveLeft = "Sola köçür"
+moveRight = "Sağa köçür"
+rotateLeft = "Sola döndər"
+rotateRight = "Sağa döndər"
+splitAfter = "Sonrasından böl"
 
 [pageEditor.emptyState]
 body = "Səhifələrin redaktəsinə başlamaq üçün fayllar əlavə edin"
 title = "Heç bir PDF faylı yüklənməyib"
+
+[pageEditor.fileDropdown]
+addFile = "Fayl əlavə et"
+selectedCount = "{{selected}}/{{total}} fayl seçildi"
+untitled = "Adsız"
 
 [pageEditor.toolbar]
 delete = "Seçilənləri sil"
@@ -6292,6 +6637,11 @@ portrait = "Şaquli"
 label = "Oxuma istiqaməti:"
 ltr = "Soldan sağa"
 rtl = "Sağdan sola"
+
+[pageLayout.steps]
+advanced = "Qabaqcıl parametrlər"
+layout = "Tərtibat parametrləri"
+marginsBorders = "Kənar boşluqlar və sərhədlər"
 
 [pageLayout.tooltip.header]
 title = "Səhifə düzümü bələdçisi"
@@ -6613,6 +6963,7 @@ teamChangeUnavailable = "Planlaşdırılmış Team dəyişiklikləri yüklənə 
 teamPending = "Team alışınız hələ emal olunur. Bu səhifəni bir az sonra yeniləyin."
 teamProcessing = "Team alışı emal olunur"
 teamScheduled = "Team dəyişikliyiniz {{date}} tarixinə planlaşdırılıb. Cari tutumunuz o vaxta qədər aktiv qalır."
+unknownError = "Naməlum xəta baş verdi"
 upgradeComplete = "Yeniləmə tamamlandı"
 upgradeCompleteMessage = "Abunəliyiniz uğurla yüksəldildi. Mövcud lisenziya açarınız yeniləndi."
 upgradeSuccess = "Ödəniş uğurludur! Abunəliyiniz yüksəldildi. Lisenziya serverinizdə yeniləndi. Tezliklə təsdiq e-poçtu alacaqsınız."
@@ -6625,9 +6976,11 @@ title = "Team planını tənzimlə"
 [payment.capacityStage]
 adjustmentNote = "Təsdiqləməzdən əvvəl Stripe dəqiq məbləği, hər hansı proporsional hesablamaları və növbəti hesablaşma tarixinizi göstərəcək. Əlçatan olarsa, saxlanmış ödəniş metodunuz istifadə olunacaq."
 continue = "Ödənişə davam et"
+currencyAtCheckout = "Stripe son məbləği və ödəniş valyutasını ödəniş zamanı təsdiqləyir."
 customLabel = "İstifadəçi sayı"
 dueToday = "Bu gün ödəniləcək"
 enterpriseQuote = "Enterprise təklifi alın"
+estimatedTotal = "Təxmini cəm"
 lineItem = "Team · hər {{block}} istifadəçi üçün {{price}}{{period}}"
 minimumForCurrentUsers = "Sizin {{users}} istifadəçiniz var, buna görə plan ən azı {{minimum}} istifadəçini əhatə etməlidir."
 modalTitle = "{{planName}}-a yüksəlt"
@@ -6665,6 +7018,14 @@ selectedMonthly = "Aylıq"
 selectedYearly = "İllik"
 selectMonthly = "Aylığı seç"
 selectYearly = "İlliyi seç"
+
+[payment.priceDisplay]
+basePrice = "Baza qiymət"
+perPeriod = "/{{period}}"
+perSeat = "Hər yer üçün"
+perSeatPeriod = "/yer/{{period}}"
+totalSeats_one = "Cəmi ({{count}} yer)"
+totalSeats_other = "Cəmi ({{count}} yer)"
 
 [payment.upgradeTeam]
 title = "Team-a yüksəlt"
@@ -6865,6 +7226,29 @@ width = "En"
 widthHint = "Mətn qutusunun eni onun məzmununa və sətirə keçməsinə uyğun olur."
 x = "X"
 y = "Y"
+
+[pdfTextEditor.mobile]
+actions = "Redaktor əməliyyatları"
+addImage = "Şəkil"
+addText = "Mətn"
+cancel = "Ləğv et"
+delete = "Sil"
+details = "Detallar"
+document = "Sənəd"
+done = "Hazır"
+download = "Saxla və endir"
+find = "Tap"
+lock = "Kilidlə"
+openPdf = "PDF aç"
+panelHint = "Redaktə Workspace görünüşündə aparılır. Dəyişmək üçün səhifədəki mətnə toxunun."
+save = "Saxla"
+style = "Stil"
+tapToPlace = "Mətnin yerləşməli olduğu səhifə yerinə toxunun"
+unlock = "Kilidi aç"
+
+[pdfTextEditor.pageView]
+pageNumber = "Səhifə {{page}}"
+renderFailed = "Səhifəni göstərmək alınmadı"
 
 [pdfTextEditor.password]
 cancel = "Ləğv et"
@@ -7092,6 +7476,7 @@ title = "Boru xətti"
 contact = "Bizimlə əlaqə"
 current = "Cari Plan"
 featureComparison = "Xüsusiyyət Müqayisəsi"
+fetchError = "Qiymət məlumatlarını əldə etmək alınmadı"
 from = "Başlayır"
 hideComparison = "Xüsusiyyət müqayisəsini gizlət"
 licensedSeats = "Lisenziyalı: {{count}} yer"
@@ -7107,6 +7492,8 @@ withServer = "+ Server Planı"
 [plan.api]
 large = "5,000 Credits"
 medium = "1,000 Credits"
+perCredit = "Hər kredit üçün {{price}}"
+perCreditWithDiscount = "Hər kredit üçün {{price}} • {{discount}}% endirim"
 small = "500 Credits"
 xsmall = "100 Credits"
 
@@ -7182,14 +7569,9 @@ upToFiveUsers = "5 istifadəçiyədək"
 usageTrackingPrometheus = "İstifadənin izlənməsi və Prometheus"
 usersIncluded = "100 istifadəçi daxildir"
 
-[plan.licenseWarning]
-body = "Sizdə {{total}} istifadəçi var, lakin pulsuz səviyyə hər server üçün yalnız {{limit}}-ni dəstəkləyir. Stirling PDF-in fasiləsiz işləməsi üçün yüksəldin."
-cta = "Planlara bax"
-overLimit = "{{limit}}-dən çox"
-title = "Pulsuz self-hosted limiti çatıb"
-
 [plan.period]
 month = "ay"
+year = "il"
 
 [plan.pro]
 highlight1 = "Limitsiz Alət İstifadəsi"
@@ -7315,6 +7697,9 @@ pdfa-1 = "PDF/A-1b"
 pdfa-2b = "PDF/A-2b"
 pdfa-3b = "PDF/A-3b"
 
+[portal.accountLink]
+ownerRequired = "Yalnız təşkilat sahibi bu serveri əlaqələndirə və ya əlaqəni ayıra bilər."
+
 [portal.accountLink.card]
 billingNote = "Nəzarətsiz emal təşkilatınızın pul kisəsindən hesablanır."
 connectDescription = "Komandanızın Stirling Cloud-dakı emal limitindən istifadə etmək üçün bu serveri qoşun."
@@ -7436,6 +7821,7 @@ identity = "Stirling hesabı"
 linkTitle = "Stirling hesabınızı bağlayın"
 noAuthorizeUrl = "Stirling davam etmək üçün ünvan qaytarmadı. Bir az sonra yenidən cəhd edin."
 startFailed = "Bağlantını başlatmaq üçün Stirling-ə çatıla bilmədi. Bu serverin çıxış şəbəkə girişini yoxlayın, sonra yenidən cəhd edin."
+transferPending = "Sahiblik ötürməsi gözləyir. Bitirmək və ya ləğv etmək üçün Parametrlər → İstifadəçilər bölməsinə keçin, sonra yenidən əlaqələndirməyə cəhd edin."
 
 [portal.accountLink.modal.loginNotConfigured]
 after = "host edilmiş Stirling hesabına qarşı tətbiqdaxili bağlanmanı aktivləşdirmək üçün."
@@ -7574,6 +7960,49 @@ plan = "Plan"
 procurement = "Satınalma"
 usage = "İstifadə"
 
+[portal.billing.compare]
+current = "Cari"
+enterpriseData = "Məlumatların rezidentliyi və SCIM"
+enterpriseName = "Enterprise"
+enterprisePrice = "Razılaşmanıza əsasən"
+enterpriseProcessing = "Ölçülən və ya sabit"
+enterpriseSignIn = "SAML və audit"
+enterpriseSupport = "İşləmə müddəti SLA-ları, yerləşdirmə yardımı"
+enterpriseUsers = "Limit yoxdur"
+enterpriseWhere = "Üstəlik çox qovşaqlı və air-gapped"
+exploreEnterprise = "Enterprise-i araşdır"
+freeData = "İşlətdiyiniz yerdə qalır"
+freeName = "Pulsuz"
+freePrice = "Kart tələb olunmur, müddəti bitmir"
+freeProcessing = "Ayda {{allowance}} kredit"
+freeProcessingUnknown = "Aylıq kredit limiti"
+freeSignIn = "E-poçt, Google və SSO"
+freeSignInNote = "OAuth2/OIDC"
+freeSupport = "İcma"
+freeUsers = "{{users}} nəfərə qədər"
+freeUsersUnknown = "Kiçik komanda"
+freeWhere = "Cloud, desktop və ya self-hosted"
+lede = "Hər plana bütün PDF alətləri və SSO daxildir. Dəyişən isə neçə nəfərin istifadə etməsi, harada işləməsi və hansı dəstəyi almağınızdır."
+open = "Planları müqayisə et"
+rowData = "Məlumatlarınız"
+rowHeader = "Xüsusiyyət"
+rowProcessing = "Emal"
+rowSignIn = "Giriş"
+rowSupport = "Dəstək"
+rowUsers = "İstifadəçilər"
+rowWhere = "Harada işləyir"
+teamData = "Google Drive, öz verilənlər bazanız"
+teamName = "Team"
+teamPrice = "100 istifadəçi üçün $99/ay"
+teamProcessing = "Ayda {{allowance}}, sonra ölçülən"
+teamProcessingUnknown = "Daha böyük limit, sonra ölçülən"
+teamSignIn = "Eyni"
+teamSupport = "E-poçt"
+teamUsers = "Hər blokda 100"
+teamWhere = "Cloud, desktop və ya self-hosted"
+title = "Planları müqayisə et"
+upgradeTeam = "Team-ə yüksəlt"
+
 [portal.billing.cycle]
 credits = "Kreditlər"
 creditsNote = "{{units}} istifadə edilib · pulsuz və əvvəlcədən ödənilmiş kreditlər daxildir"
@@ -7679,6 +8108,8 @@ payTitle = "İliniz üçün ödəniş edin"
 step = "Addım {{current}} / {{total}}"
 
 [portal.billing.prepaid.calc]
+currency = "Təklif valyutası"
+currencyLocked = "Mövcud Stripe hesablaşma valyutanızdan istifadə edir."
 rateUnknown = "Dəqiq qiyməti checkout-da göstərəcəyik."
 
 [portal.billing.prepaid.consent]
@@ -8482,6 +8913,10 @@ title = "Fayl təmir edilə bilmədi"
 description = "Faylınız bu addımın aça biləcəyi formatda deyil, buna görə icra onu oxuya bilmədi."
 title = "Yanlış fayl növü"
 
+[portal.failures.kind.sourceUnreadable]
+description = "Ağıllı qovluğunuz oxuna bilmədi, buna görə içindəki heç nə emal edilmədi."
+title = "Qovluq oxuna bilmədi"
+
 [portal.failures.kind.stepCannotRenderPage]
 description = "Faylınızdakı bir səhifə çəkilə bilmədi, buna görə icra tamamlana bilmədi."
 title = "Səhifə render edilə bilmədi"
@@ -9272,6 +9707,7 @@ labelId = "Etiket ID-si"
 labelIdHelp = "Purview portalından etiketin GUID-i. Etiketin tətbiqi onun metadatasını PDF üzərinə yazır; şifrələyə bilməz, bunun üçün Microsoft müştərisi lazımdır."
 labelName = "Etiket adı (istəyə bağlı)"
 labelNameHelp = "ID ilə yanaşı qeyd olunur ki, insanlar və alətlər etiketi tanıya bilsin."
+labelNamePlaceholder = "Məxfi"
 
 [portal.policies.config.purview.fields.method]
 help = "Purview siyasətin tətbiq etdiyi etiketi şəxsin seçdiyi etiketdən fərqləndirir."
@@ -10256,31 +10692,6 @@ unlimited = "{{used}} · Limitsiz"
 [printFile]
 title = "Faylı çap edin"
 
-[processingFolders.downloads]
-approve = "Yükləmələrimi emal et"
-cancelSweep = "Ləğv et"
-capped = "{{found}} PDF faylınız var; ilk {{limit}} indi emal edilir, qalanları isə sonra davam edir."
-close = "Hazırdır"
-explain_one = "Stirling artıq Yükləmələr qovluğunuzda olan {{count}} PDF faylını təsnif edə və nəticələri burada aça bilər."
-explain_other = "Stirling artıq Yükləmələr qovluğunuzda olan {{count}} PDF faylını təsnif edə və nəticələri burada aça bilər."
-failed = "Bunu qurmaq mümkün olmadı. Fayllarınız dəyişdirilməyib."
-finished_one = "{{count}} fayl təsnif edildi və onlardan {{opened}} burada açıldı, işləməyə hazırdır."
-finished_other = "{{count}} fayl təsnif edildi və onlardan {{opened}} burada açıldı, işləməyə hazırdır."
-nothingNew_one = "Emal ediləcək yeni heç nə yoxdur - bu {{count}} fayl artıq emaldan keçib."
-nothingNew_other = "Emal ediləcək yeni heç nə yoxdur - bu {{count}} fayl artıq emaldan keçib."
-notModified = "Yükləmələrdəki fayllarınız dəyişdirilmir - Stirling onları oxuyur və burada açır."
-notNow = "İndi yox"
-progressCounts = "{{total}} fayldan emal edildi"
-someFailed_one = "{{count}} emal edilə bilmədi və toxunulmadan saxlanıldı."
-someFailed_other = "{{count}} emal edilə bilmədi və toxunulmadan saxlanıldı."
-stillRunning = "Bəzi fayllar hələ də arxa planda emal olunur."
-title = "Yükləmələrinizi təşkil edək?"
-trigger_one = "Yükləmələrdə {{count}} PDF emal et"
-trigger_other = "Yükləmələrdə {{count}} PDF emal et"
-typesFound_one = "{{count}} sənəd növü tapıldı"
-typesFound_other = "{{count}} sənəd növü tapıldı"
-working = "Emal edilir ..."
-
 [processingFolders.setup]
 addFolder = "Qovluq əlavə et"
 advancedSteps = "Bu qovluq sehrbazın redaktə edə bilmədiyi emal quraşdırmasından istifadə edir. Onun saxlanmış addımları dəyişdirilməyib."
@@ -10358,6 +10769,10 @@ label = "Client ID"
 [provider.googledrive.enabled]
 description = "İstifadəçilərə faylları birbaşa Google Drive-dan idxal etməyə icazə ver"
 label = "Google Drive fayl seçicisini aktiv et"
+
+[provider.googledrive.errors]
+notConfigured = "Google Drive konfiqurasiya edilməyib"
+pickerFailed = "Google Drive seçicisini açmaq alınmadı"
 
 [provider.oauth2.generic]
 name = "Generic OAuth2"
@@ -10606,6 +11021,7 @@ applyWarning = "⚠️ Daimi tətbiqdir, geri qaytarıla bilməz və altındakı
 colorLabel = "Qaraltma rəngi"
 controlsTitle = "Əl ilə məxfiləşdirmə idarələri"
 instructions = "Məxfiləşdirmə üçün məzmunu işarələmək məqsədilə PDF-də mətn seçin və ya sahələr çəkin."
+notImplemented = "Əllə redaktə interfeysi tətbiq edildikdə burada mövcud olacaq."
 title = "Məxfiləşdirmə alətləri"
 
 [redact.modeSelector]
@@ -10933,6 +11349,9 @@ failed = "PDF-i döndərərkən xəta baş verdi."
 [rotate.preview]
 title = "Döndürmə önizləməsi"
 
+[rotate.settings]
+title = "Parametrlər"
+
 [rotate.tooltip.controls]
 text = "İstiqaməti tənzimləmək üçün döndürmə düymələrindən istifadə edin. Sol düymə saat əksinə, sağ düymə saat istiqamətində döndürür. Hər klik 90 dərəcə döndürür."
 title = "İdarəetmə"
@@ -10950,6 +11369,16 @@ hideSmallLabels = "Kiçik etiketləri gizlət"
 physicalValues = "Fiziki"
 scaled = "Miqyaslı"
 showAllLabels = "Bütün etiketləri göstər"
+
+[ruler.units]
+cm = "Santimetr (cm)"
+ft = "Fut (ft)"
+in = "Düym (in)"
+km = "Kilometr (km)"
+m = "Metr (m)"
+mi = "Mil (mi)"
+mm = "Millimetr (mm)"
+yd = "Yard (yd)"
 
 [sanitize]
 desc = "PDF fayllarından potensial zərərli elementləri silin."
@@ -11015,6 +11444,7 @@ calibrationPaperDistance = "Ölçülmüş səhifə məsafəsi: {{distance}}"
 calibrationTitle = "Miqyası kalibrləyin"
 calibrationTooltip = "Miqyası avtomatik hesablamaq üçün məlum məsafəni ölçün"
 customScale = "Fərdi miqyas"
+customUnit = "{{unit}} (fərdi)"
 noneSet = "Fərdi miqyas təyin edilməyib"
 presets = "Hazır miqyaslar"
 ratio = "Miqyas nisbəti"
@@ -11038,6 +11468,9 @@ title = "Çıxarılan şəkillər"
 
 [scannerImageSplit.error]
 failed = "Şəkil skanları çıxarılarkən xəta baş verdi."
+
+[scannerImageSplit.settings]
+title = "Parametrlər"
 
 [scannerImageSplit.tooltip]
 headsUp = "Diqqət"
@@ -11105,6 +11538,9 @@ general = "Ümumi"
 limits = "Limitlər və performans"
 models = "Modellər və təminatçılar"
 title = "AI"
+
+[settings.billing]
+title = "Fakturalandırma"
 
 [settings.configuration]
 advanced = "Qabaqcıl"
@@ -11179,8 +11615,6 @@ defaultPdfEditor = "Standart PDF redaktoru"
 defaultPdfEditorActive = "Stirling PDF standart PDF redaktorunuzdur"
 defaultPdfEditorChecking = "Yoxlanılır..."
 defaultPdfEditorInactive = "Başqa tətbiq standart kimi təyin edilib"
-defaultPdfEditorRemind = "Defolt olaraq təyin etməyi xatırlat"
-defaultPdfEditorRemindDescription = "Stirling PDF defolt PDF tətbiqiniz olmadıqda banner göstər."
 defaultPdfEditorSet = "Artıq standartdır"
 defaultStartupView = "Başlanğıcda standart görünüş"
 defaultStartupViewDescription = "Tətbiq işə düşəndə sol sütunda hansı vərəqin aktiv olacağını seçin"
@@ -11449,6 +11883,15 @@ people = "İstifadəçilər"
 teams = "Komandalar"
 title = "İş sahəsi"
 
+[setup.error]
+loginIncomplete = "Girişi tamamlamaq alınmadı"
+noSaasServer = "SaaS server konfiqurasiya edilməyib"
+noServer = "Server konfiqurasiya edilməyib"
+saasLoginFailed = "SaaS girişi alınmadı"
+saasLoginIncomplete = "SaaS girişini tamamlamaq alınmadı"
+selfHostedLoginFailed = "Öz serverində yerləşən giriş alınmadı"
+signupIncomplete = "Qeydiyyatı tamamlamaq alınmadı"
+
 [setup.login]
 connectingTo = "Qoşulur:"
 oauthPending = "Təsdiqləmə üçün brauzer açılır..."
@@ -11492,6 +11935,7 @@ configFetchError = "Server konfiqurasiyasını gətirmək alınmadı: {{error}}"
 emptyUrl = "Zəhmət olmasa server URL-i daxil edin"
 invalidUrl = "Yanlış URL formatı. Zəhmət olmasa https://your-server.com kimi düzgün URL daxil edin"
 testFailed = "Bağlantı testi uğursuz oldu"
+unknown = "Naməlum xəta"
 unreachable = "Serverə qoşulmaq mümkün olmadı"
 
 [setup.server.error.securityDisabled]
@@ -11600,6 +12044,7 @@ canvas = "İmzanızı kətanda çəkdikdən sonra pəncərəni bağlayın, sonra
 image = "Yuxarıda imza şəklinizi yüklədikdən sonra, PDF üzərində istənilən yerə klikləyərək yerləşdirin."
 noSignature = "Yerləşdirmə alətlərini aktivləşdirmək üçün yuxarıda imza yaradın."
 paused = "Yerləşdirmə dayandırılıb"
+placeAnnotation = "Annotasiyanızı yerləşdirmək üçün PDF üzərində istənilən yerə klikləyin."
 resumeHint = "İmzanı əlavə etmək üçün yerləşdirməni davam etdirin."
 saved = "Yuxarıdan saxlanmış imza seçin, sonra yerləşdirmək üçün PDF-in istənilən yerinə klikləyin."
 text = "Yuxarıda adınızı daxil etdikdən sonra, imzanızı yerləşdirmək üçün PDF üzərində istənilən yerə klikləyin."
@@ -11753,7 +12198,9 @@ signUpWith = "Sign up with"
 skip = "Skip"
 subtitle = "Başlamaq üçün Stirling PDF-ə qoşulun"
 title = "Hesab yaradın"
+unableToAccessTool = "Alətə daxil olmaq mümkün deyil: {{error}}"
 unexpectedError = "Gözlənilməz xəta: {{message}}"
+unknownError = "Naməlum xəta"
 
 [sizes]
 large = "Böyük"
@@ -11826,6 +12273,14 @@ rightToLeft = "Sağdan-sola böl"
 [split.poster.pageSize]
 description = "Çap üçün çıxış səhifələrinin ölçüsü"
 label = "Məqsəd səhifə ölçüsü"
+
+[split.poster.pageSize.options]
+a3 = "A3 (297 × 420 mm)"
+a4 = "A4 (210 × 297 mm)"
+a5 = "A5 (148 × 210 mm)"
+legal = "Legal (8.5 × 14 in)"
+letter = "Letter (8.5 × 11 in)"
+tabloid = "Tabloid (11 × 17 in)"
 
 [split.poster.xFactor]
 description = "Hər səhifənin neçə sütuna bölünəcəyi"
@@ -12098,6 +12553,7 @@ confirmCancelInvite = "Bu dəvətnaməni ləğv etmək istədiyinizə əminsiniz
 confirmLeave = "Bu komandadan çıxmaq istədiyinizə əminsiniz?"
 confirmLeaveLeader = "Komanda rəhbəri olaraq çıxsanız, komandadan silinəcəksiniz. Əminsiniz?"
 confirmRemove = "Bu üzvü silmək istədiyinizə əminsiniz?"
+currentUnavailable = "Cari komandanızı müəyyən edə bilmədik. Yenidən cəhd edin və ya bu davam edərsə, dəstək ilə əlaqə saxlayın."
 editName = "Komanda adını redaktə et"
 inviteCancelled = "Dəvətnamə ləğv edildi"
 inviteError = "Dəvətnamə göndərilə bilmədi"
@@ -12123,10 +12579,8 @@ renameCancel = "Ad dəyişməsini ləğv et"
 renameError = "Komandanın adını dəyişmək mümkün olmadı"
 renameSubmit = "Komanda adını saxla"
 renameSuccess = "Komandanın adı uğurla dəyişdirildi"
-transferBody = "{{email}} komanda sahibi edilsin? Onlar komanda üzvlüyünü və təşkilatın ödəniş parametrlərini idarə edəcəklər. Siz üzv olacaqsınız. Komandanın abunəliyi və pulqabı komandada qalır."
 transferError = "Sahiblik köçürülə bilmədi. Komandanı yeniləyin və yenidən cəhd edin."
 transferSuccess = "Komanda sahibliyi köçürüldü. Rolunuz indi üzvdür."
-transferTitle = "Komanda sahibliyini köçür"
 
 [team.invitationBanner]
 acceptButton = "Qəbul et"
@@ -12228,6 +12682,10 @@ XML = "XML faylı"
 XPS = "XPS sənədi"
 ZIP = "ZIP arxivi"
 
+[toolLoading]
+generic = "Alət yüklənir..."
+named = "{{toolName}} yüklənir..."
+
 [toolPanel]
 alpha = "Alfa"
 backToAllTools = "Bütün alətlərə qayıt"
@@ -12235,6 +12693,7 @@ goBack = "Geri qayıt"
 pdfTools = "PDF alətləri"
 placeholder = "Başlamaq üçün alət seçin"
 premiumFeature = "Premium xüsusiyyət:"
+searchTools = "Alətləri axtar"
 toolsHeader = "Alətlər"
 viewAllTools = "Bütün alətlərə bax"
 
@@ -12331,6 +12790,8 @@ stable = "STABLE"
 updateAvailable = "Yeniləmə mövcuddur"
 urgentUpdateAvailable = "Təcili yeniləmə"
 version = "Versiya"
+versionCount_one = "{{count}} versiya"
+versionCount_other = "{{count}} versiya"
 versionHistory = "Versiya tarixi"
 viewGuide = "Bələdçiyə bax"
 whatsNewIn = "Nə yenidir"
@@ -12358,6 +12819,7 @@ title = "URL-i PDF-ə"
 aboutUsageAnalytics = "İstifadə analitikası haqqında"
 configureSettings = "Analitika ayarlarını konfiqurasiya et"
 error = "İstifadə statistikası yüklənərkən xəta"
+loadFailed = "İstifadə statistikasını yükləmək alınmadı"
 noData = "Məlumat yoxdur"
 noDataMessage = "Hazırda istifadə statistikası mövcud deyil."
 usageAnalyticsExplanation = "İstifadə analitikası son nöqtə sorğularını və alət istifadəsi nümunələrini izləyir. Audit Jurnalı paneli ilə birlikdə sistem fəaliyyəti, performans və təhlükəsizlik hadisələrinə tam görünürlük əldə edirsiniz."
@@ -12399,13 +12861,10 @@ visits = "Ziyarətlər"
 
 [users]
 lastActive = "Son aktivlik"
-learnMore = "Rollar və giriş haqqında daha çox öyrənin."
 locked = "Kilidlənib"
 ownerSetupRequired = "Təşkilat sahibi ilk girişi tamamlamayıb. Sahibliyi köçürməzdən əvvəl quraşdırmanı tamamlayın və ya server operatorundan sahibliyi bərpa etməsini xahiş edin."
 roleFor = "{{name}} üçün rol"
 rowActions = "{{name}} üçün əməliyyatlar"
-showAll = "Hamısını göstər {{count}}"
-showLess = "Daha az göstər"
 subtitle2 = "İnsanlarınız, komandalarınız və giriş səviyyələriniz."
 suspended = "Dayandırılıb"
 teamActions = "Komanda əməliyyatları"
@@ -12414,6 +12873,7 @@ you = "(siz)"
 
 [users.action]
 cancelInvite = "Dəvəti ləğv et"
+createFromDefault = "Default-dan komanda yarat"
 deleteTeam = "Komandanı sil"
 disableMfa = "MFA sıfırla"
 move = "Komandaya köçür"
@@ -12423,7 +12883,6 @@ removeTeam = "Komandadan sil"
 rename = "Komandanın adını dəyiş"
 resetPw = "Şifrəni sıfırla"
 suspend = "Dayandır"
-transferOwnership = "Sahibliyi köçür"
 unlock = "Hesabı kiliddən çıxar"
 
 [users.activity]
@@ -12451,6 +12910,7 @@ email = "Email"
 person = "Person"
 role = "Role"
 status = "Status"
+team = "Komanda"
 
 [users.confirm]
 cancelInviteBody = "{{email}} ünvanına dəvət ləğv edilsin? Onlar cari linklə qoşula bilməyəcəklər."
@@ -12462,22 +12922,17 @@ disableMfaTitle = "MFA sıfırla"
 removeBody = "{{name}} təşkilatdan həmişəlik çıxarılsın? Bu əməliyyatı geri qaytarmaq mümkün deyil."
 removeTeamBody = "{{name}} komandadan silinsin? Hesabı qalacaq, lakin bu komandanın resurslarına girişini itirəcək."
 removeTitle = "Üzvü çıxar"
-transferOwnershipBody = "{{name}} təşkilat sahibi edilsin? Onlar admin olacaqlar. Siz admin olaraq qalacaqsınız, lakin sahibliyi itirəcəksiniz. Yalnız yeni sahib və ya server operatoru onu geri köçürə bilər."
-transferOwnershipTitle = "Təşkilat sahibliyini köçür"
 
 [users.empty]
 description = "Əməkdaşlığa başlamaq üçün komandanızı dəvət edin."
 title = "Hələ üzv yoxdur"
 
+[users.filters]
+noMatches = "Bu filtrlərə heç kim uyğun gəlmir."
+search = "İnsanları axtar"
+
 [users.group]
 addToTeam = "Komandaya əlavə et"
-administrators = "{{count}} administrator"
-guestCount = "{{count}} qonaq"
-guests = "Qonaqlar"
-ledBy = "{{owner}} tərəfindən idarə olunur"
-org = "Təşkilat"
-team = "{{name}} komandası"
-teamMeta = "{{count}} nəfər"
 
 [users.invite]
 access = "Giriş"
@@ -12542,6 +12997,9 @@ title = "Yeni komanda"
 
 [users.renameTeam]
 apply = "Adını dəyiş"
+defaultApply = "Yarat və köçür"
+defaultDescription = "Default yeni istifadəçilər üçün əlçatan qalacaq. Hazırda Default-da olan hər kəs yeni komandaya köçürüləcək."
+defaultTitle = "Default-dan komanda yarat"
 name = "Komanda adı"
 title = "Komandanın adını dəyiş"
 
@@ -12566,6 +13024,15 @@ guest = "Qonaq"
 member = "Üzv"
 orgOwner = "Təşkilat sahibi"
 teamOwner = "Komanda sahibi"
+
+[users.seats]
+full = "Bütün lisenziyalı yerlər istifadədədir. Başqa birini əlavə etmək üçün bir yeri boşaldın və ya yer sayını artırın."
+update = "Yerləri yenilə"
+
+[users.tabs]
+all = "Hamısı"
+label = "Komandaya görə filtr"
+unassigned = "Komanda yoxdur"
 
 [users.team]
 grantProcessor = "Komandaya Processor ver"
@@ -12647,6 +13114,7 @@ signaturesInvalid = "{{count}} etibarsız"
 signaturesUnverified_one = "{{count}} nəzərdən keçirmə tələb edir"
 signaturesUnverified_other = "{{count}} nəzərdən keçirmə tələb edir"
 signaturesValid = "{{count}} tam etibarlı"
+thumbnailAlt = "{{fileName}} kiçik şəkli"
 title = "İmza doğrulama hesabatı"
 
 [validateSignature.report.fields]
@@ -12684,6 +13152,7 @@ lastPage = "Son səhifə"
 loadingEngine = "PDF Engine yüklənir..."
 moreOptions = "Daha çox"
 nextPage = "Növbəti səhifə"
+noPdfProvided = "PDF təqdim edilməyib"
 onlyPdfSupported = "Görüntüləyici yalnız PDF fayllarını dəstəkləyir. Bu fayl fərqli formatda görünür."
 pageNavigation = "Səhifə naviqasiyası"
 previousPage = "Əvvəlki səhifə"
@@ -12721,8 +13190,17 @@ collapseAll = "Bütün əlfəcinləri yığ"
 editorOnly = "Bu sənədin əlfəcinləri yalnız redaktorda redaktə edilə bilər."
 empty = "No bookmarks in this document"
 expandAll = "Bütün əlfəcinləri genişləndir"
+loadFailed = "Əlfəcinləri yükləmək alınmadı"
+loading = "Əlfəcinlər yüklənir..."
+noDocument = "Əlfəcinlərini görmək üçün PDF açın."
+noSearchResults = "Axtarışınıza uyğun əlfəcin yoxdur"
+openEditor = "Yenidən sıralamaq və ya iç-içə yerləşdirmək lazımdır? Əlfəcin redaktorunu açın"
+pageLabel = "Səhifə"
+pageNumber = "Səhifə {{page}}"
+saveFailed = "Əlfəcini saxlamaq alınmadı"
 searchPlaceholder = "Əlfəcinləri axtar"
 title = "Bookmarks"
+untitled = "Adsız"
 
 [viewer.comments]
 addComment = "Şərh əlavə et"
@@ -12770,16 +13248,26 @@ unsavedDesc = "Yadda saxlanılmamış dəyişiklikləriniz var"
 
 [viewer.layers]
 closeSidebar = "Qatlar yan panelini bağla"
+empty = "Bu sənəddə qatlar yoxdur."
 hideAll = "Bütün qatları gizlət"
+loadFailed = "Qatları yükləmək alınmadı."
+loading = "Qatlar yüklənir..."
+noDocument = "Qatlarını görmək üçün PDF açın."
+readFailed = "PDF qatlarını oxumaq alınmadı"
 showAll = "Bütün qatları göstər"
 title = "Layers"
 
 [viewer.link]
 delete = "Keçidi sil"
+goTo = "{{label}} keç"
+open = "Linki aç"
+openAria = "Linki aç"
+page = "Səhifə {{page}}"
 
 [viewer.nonPdf]
 columnDefault = "Sütun {{index}}"
 convertToPdf = "PDF-ə çevir"
+copied = "Kopyalandı"
 csvStats = "{{rows}} sətir · {{columns}} sütun · {{size}}"
 emptyFile = "Boş fayl"
 htmlHidePreview = "Önizləməni gizlət"
@@ -12790,6 +13278,8 @@ htmlShowPreview = "Yenə də önizləməni göstər"
 invalidJson = "Etibarsız JSON — xam məzmun göstərilir"
 lineNumbers = "Sətir nömrələri"
 loading = "Yüklənir..."
+noFile = "Fayl yüklənməyib"
+previewUnavailable = "Bu fayl növü üçün önbaxış mövcud deyil"
 renderMarkdown = "Markdown-u göstər"
 sortedBy = "Sıralanıb: {{column}}"
 textStats = "{{lines}} sətir · {{size}}"
@@ -12816,11 +13306,28 @@ next = "Növbəti nəticə"
 previous = "Əvvəlki nəticə"
 resultsOf = "cəmi {{total}}"
 
+[viewer.sidebar]
+close = "Yan paneli bağla"
+searchPlaceholder = "Axtar..."
+
 [viewer.signature]
 delete = "İmzanı sil"
+previewAlt = "İmzaya önbaxış"
+
+[viewer.signatureField]
+badge = "İmza"
+fieldTitle = "İmza sahəsi: {{name}}"
+signed = "İmzalanıb"
+signedWithReason = "İmzalanıb: {{reason}}"
+unsignedFieldTitle = "İmzalanmamış imza sahəsi: {{name}}"
+withTime = "{{label}} ({{time}})"
 
 [viewer.thumbnails]
 closeSidebar = "Miniatürlər yan panelini bağla"
+failed = "Alınmadı"
+pageNumber = "Səhifə {{page}}"
+thumbnailAlt = "Səhifə {{page}} kiçik şəkli"
+title = "Səhifələr"
 
 [viewPdf]
 tags = "bax,oxu,sitat götür,mətn,şəkil"
@@ -12828,169 +13335,6 @@ title = "PDF-ə Bax/Redaktə et"
 
 [warning]
 tooltipTitle = "Xəbərdarlıq"
-
-[watchedFolders]
-alreadyInFolder = "Already in this folder"
-defaultFolderWarning = "This is a default folder and will be recreated on next reload."
-deleteConfirmBody = "This will remove the folder and its run history. Files already downloaded are not affected."
-deleteConfirmTitle = "Delete folder?"
-folderNotFound = "Folder not found"
-newFolder = "New folder"
-noFolders = "No watched folders yet"
-sidebarTitle = "Watched Folders"
-title = "Watched Folders"
-
-[watchedFolders.actions]
-back = "Back"
-collapse = "Collapse"
-dismiss = "Dismiss"
-download = "Download"
-downloadInput = "Download input"
-downloadOutput = "Download output"
-expand = "Expand"
-retry = "Retry"
-
-[watchedFolders.card]
-delete = "Delete folder"
-edit = "Edit folder"
-
-[watchedFolders.home]
-addAnother = "Add another Watched Folder"
-addAnotherDesc = "Automatically process files with a new pipeline"
-create = "Create your first Watched Folder"
-deleteFolder = "Delete folder"
-editFolder = "Edit folder"
-empty = "No watched folders yet"
-emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
-emptyTitle = "Automate your PDF workflows"
-file = "file"
-files = "files"
-pause = "Pause"
-resume = "Resume"
-
-[watchedFolders.howItWorks]
-step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
-step1Title = "Drop files"
-step2Desc = "Your configured tools process each file automatically"
-step2Title = "Pipeline runs"
-step3Desc = "Download processed files from inside the folder"
-step3Title = "Output ready"
-title = "How Watched Folders work"
-
-[watchedFolders.modal]
-advanced = "Advanced"
-automation = "Automation"
-automationNameFallback = "Watched Folder automation"
-automationRequired = "Add at least one configured step before saving."
-autoNumber = "Auto-number"
-autoNumberExample = "e.g. document.pdf → document (1).pdf"
-autoScanHelp = "New PDF files in this folder are processed automatically every 10 seconds."
-changeFolder = "Change"
-chooseFolder = "Choose"
-clearFolder = "Clear"
-color = "Accent color"
-createFolder = "Create Folder"
-createTitle = "New Watched Folder"
-editTitle = "Edit Watched Folder"
-inputFolder = "Input folder"
-inputFolderNotChosen = "No folder chosen — required for auto-scan"
-inputSource = "Input source"
-inputSourceBrowser = "Browser — drop files here"
-inputSourceLocal = "Local folder (auto-scan)"
-inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
-localOutputFolder = "Local output folder"
-maxRetries = "Max retries"
-name = "Folder name"
-namePlaceholder = "My Watched Folder"
-nameRequired = "Folder name is required"
-nameTooLong = "Folder name must be 50 characters or less"
-outputFolderNotSet = "Not set — outputs stay in app"
-outputFolderUnsupported = "Not supported in this browser"
-outputModeNewDesc = "Output is saved as a new separate file"
-outputModeVersion = "Replace original?"
-outputModeVersionDesc = "Output becomes a new version of the input file rather than a separate file"
-outputName = "Output filename prefix"
-outputNamePrefix = "Filename prefix"
-outputNameSuffix = "Suffix"
-positionPrefix = "Prefix"
-positionSuffix = "Suffix"
-replaceOriginal = "Replace original file"
-retryDelay = "Delay (minutes)"
-saveChanges = "Save Changes"
-saveFailed = "Failed to save folder. Please try again."
-sectionFolder = "Folder"
-sectionSourceOutput = "Source & Output"
-sectionSteps = "Steps"
-
-[watchedFolders.status]
-active = "Active"
-done = "Done"
-paused = "Paused"
-processing = "Processing"
-
-[watchedFolders.time]
-daysAgo = "{{count}}d ago"
-hoursAgo = "{{count}}h ago"
-justNow = "just now"
-minutesAgo = "{{count}}m ago"
-
-[watchedFolders.workbench]
-activity = "Activity"
-addFiles = "Add files"
-allTime = "All time"
-cancel = "Cancel"
-chartTooltipComplete = "{{count}} complete"
-chartTooltipFailed = "{{count}} failed"
-clearSelection = "Clear selection"
-countProcessing = "{{count}} processing"
-countQueued = "{{count}} queued"
-countSelected = "{{count}} selected"
-dataSaved = "Saved"
-dayRunning = "day running"
-daysRunning = "days running"
-delete = "Delete"
-deleteConfirmBody = "Remove notifications only clears the activity log. Delete outputs also removes the processed files from storage. Your original input files are never touched."
-deleteOutputs = "Delete outputs"
-directionIn = "in"
-directionOut = "out"
-dropToProcess = "Drop to process"
-export = "Export"
-exportSeparately = "Export separately"
-exportZip = "Export zip"
-failed = "Failed"
-filesProcessedOverTime = "Files processed over time"
-filterAll = "All"
-filterPending = "Pending"
-inputs = "Inputs"
-inputSize = "Input size"
-legendComplete = "Complete"
-noActivity = "No activity yet — drop a PDF to start"
-noActivityMatch = "No matching activity"
-noInputFolder = "No input folder — edit to configure"
-outputs = "Outputs"
-pause = "Pause"
-preview = "Preview"
-previewInput = "Preview input"
-previewLoadFailed = "Could not load file preview."
-previewOutput = "Preview output"
-queued = "Queued"
-queuedWaiting = "Queued — waiting to run"
-removeEntries = "Remove {{count}} entries"
-removeEntry = "Remove entry"
-removeNotificationsOnly = "Remove notifications only"
-resume = "Resume"
-retryAll = "Retry all"
-retryIn = "retry in {{count}}m"
-retryingSoon = "retrying…"
-retryMixedConfirm = "Some selected files have already completed and will be skipped. Only failed files will be retried. Continue?"
-running = "Running"
-search = "Search…"
-selectAll = "Select all {{count}}"
-sortNameAsc = "A → Z"
-sortNameDesc = "Z → A"
-sortNewest = "Newest"
-sortOldest = "Oldest"
-watching = "Watching: {{name}}"
 
 [watermark]
 desc = "PDF fayllarına mətn və ya şəkil su nişanları əlavə edin"
@@ -13193,6 +13537,10 @@ certTypeServer = "Server Sertifikatı (mövcuddursa)"
 completedDeclined = "Bu sənəddən imtina etdiniz."
 completedSigned = "Bu sənədi imzaladınız."
 decline = "İmtina et"
+declineConfirm = "Bu sənədi imzalamaqdan imtina etmək istədiyinizə əminsiniz?"
+declineFailed = "İmtina etmək alınmadı: {{error}}"
+declineSuccess = "Bu imzalama sorğusundan imtina etdiniz."
+defaultReason = "Sənədin imzalanması"
 downloadDocument = "Sənədi endir"
 dueDate = "Son tarix: {{date}}"
 errorTitle = "Xəta"
@@ -13203,6 +13551,7 @@ locationPlaceholder = "məs., San-Fransisko, CA"
 pageNumber = "Səhifə nömrəsi (istəyə bağlı)"
 reason = "Səbəb"
 reasonPlaceholder = "məs., Sənədin təsdiqi"
+selectCertificateFile = "Sertifikat faylı seçin"
 sessionNotFound = "Sessiya tapılmadı və ya çıxış qadağandır."
 signDocument = "Sənədi imzala"
 statusDeclined = "İmtina edilib"
@@ -13210,238 +13559,22 @@ statusNotified = "Bildiriş verilib"
 statusPending = "Gözləmədə"
 statusSigned = "İmzalanıb"
 statusViewed = "Baxılıb"
+submitFailed = "İmzanı göndərmək alınmadı: {{error}}"
 submitSignature = "İmzanı təqdim et"
+submitSuccess = "İmza uğurla göndərildi!"
 
 [workspace]
 title = "İş sahəsi"
 
 [workspace.people]
-active = "Aktiv"
-activeSession = "Aktiv sessiya"
-addMembers = "Üzv əlavə et"
-admin = "Admin"
-confirmDelete = "Bu istifadəçini silmək istədiyinizə əminsiniz? Bu əməliyyat geri alına bilməz."
-confirmUnlock = "Bu istifadəçi hesabının kilidini açmaq istədiyinizə əminsiniz?"
-deleteUser = "İstifadəçini sil"
-deleteUserError = "İstifadəçini silmək alınmadı"
-deleteUserSuccess = "İstifadəçi uğurla silindi"
 description = "İş sahəsi üzvlərini və onların icazələrini idarə edin"
-disable = "Deaktiv et"
-disabled = "Deaktiv"
-editRole = "Rolu redaktə et"
-enable = "Aktiv et"
-loading = "İnsanlar yüklənir..."
-locked = "kilidli"
-lockedBadge = "Kilidli"
-loginRequired = "Əvvəlcə giriş rejimini aktivləşdirin"
-memberActions = "Üzv əməliyyatları"
-noMembersFound = "Üzv tapılmadı"
-ownerLocked = "Sahibin rolunu və ya hesabını dəyişməzdən əvvəl Parametrlər → İş sahəsi → İstifadəçilər bölməsində təşkilat sahibliyini köçürün."
-role = "Rol"
-searchMembers = "Üzvlərdə axtar..."
-team = "Komanda"
-unlockAccount = "Hesabın kilidini aç"
-unlockUserError = "İstifadəçi hesabının kilidini açmaq mümkün olmadı"
-unlockUserSuccess = "İstifadəçi hesabının kilidi uğurla açıldı"
-user = "İstifadəçi"
-userInfo = "İstifadəçi məlumatı"
-
-[workspace.people.actions]
-upgrade = "Yüksəlt"
-
-[workspace.people.addMember]
-authType = "Doğrulama növü"
-error = "İstifadəçi yaratmaq alınmadı"
-forceMFA = "Növbəti daxilolmada MFA quraşdırılmasını məcbur et"
-forcePasswordChange = "İlk girişdə parol dəyişikliyi tələb olunsun"
-password = "Parol"
-passwordPlaceholder = "Parolu daxil edin"
-passwordRequired = "Şifrə tələb olunur"
-role = "Rol"
-submit = "Üzv əlavə et"
-success = "İstifadəçi uğurla yaradıldı"
-team = "Komanda (İstəyə bağlı)"
-teamPlaceholder = "Komanda seçin"
-username = "İstifadəçi adı (E-poçt)"
-usernamePlaceholder = "user@example.com"
-usernameRequired = "İstifadəçi adı və parol tələb olunur"
-
-[workspace.people.authType]
-oauth = "OAuth2"
-password = "Şifrə"
-saml = "SAML2"
-ssoDescription = "İstifadəçi SSO provayderi vasitəsilə doğrulanacaq"
-
-[workspace.people.changePassword]
-action = "Parolu dəyiş"
-confirmPassword = "Parolu təsdiq edin"
-confirmPlaceholder = "Yeni parolu yenidən daxil edin"
-copiedToClipboard = "Parol buferə kopyalandı"
-copyFailed = "Parolu kopyalamaq alınmadı"
-copyTooltip = "Buferə kopyala"
-emailUnavailable = "Bu istifadəçinin e-poçtu etibarlı e-poçt ünvanı deyil. Bildirişlər söndürülüb."
-error = "Parolu yeniləmək alınmadı"
-forcePasswordChange = "Növbəti girişdə istifadəçini parolu dəyişməyə məcbur et"
-generatedPreview = "Yaradılmış parol:"
-generateRandom = "Təhlükəsiz parol yaradın"
-includePassword = "E-poçta yeni parolu daxil edin"
-newPassword = "Yeni parol"
-notifyOnly = "Parol olmadan e-poçt göndəriləcək; istifadəçiyə adminin onu dəyişdiyi bildiriləcək."
-passwordMismatch = "Parollar uyğun gəlmir"
-passwordRequired = "Zəhmət olmasa yeni parolu daxil edin"
-placeholder = "Yeni parolu daxil edin"
-sendEmail = "Bu dəyişiklik barədə istifadəçiyə e-poçt göndərin"
-smtpDisabled = "E-poçt bildirişləri üçün parametrlərdə SMTP aktiv olmalıdır."
-submit = "Parolu yenilə"
-subtitle = "Aşağıdakı istifadəçi üçün parolu yeniləyin"
-success = "Parol uğurla yeniləndi"
-title = "Parolu dəyiş"
-
-[workspace.people.editMember]
-editing = "Editing: <0>{{username}}</0>"
-error = "İstifadəçini yeniləmək alınmadı"
-role = "Rol"
-submit = "Update User"
-success = "İstifadəçi uğurla yeniləndi"
-team = "Komanda (İstəyə bağlı)"
-teamPlaceholder = "Komanda seçin"
-title = "Edit User"
-
-[workspace.people.emailInvite]
-allFailed = "İstifadəçiləri dəvət etmək alınmadı"
-emails = "E-poçt Ünvanları"
-emailsPlaceholder = "user1@example.com, user2@example.com"
-emailsRequired = "Ən azı bir e-poçt ünvanı tələb olunur"
-error = "Dəvətnamələri göndərmək alınmadı"
-partialFailure = "Bəzi dəvətlər uğursuz oldu"
-submit = "Dəvətnamələri göndər"
-success = "istifadəçi(lər) uğurla dəvət olundu"
-
-[workspace.people.inviteLink]
-copied = "Link mübadilə buferinə kopyalandı"
-email = "E-poçt ünvanı"
-emailDescription = "İstəyə bağlı - hər kəsin istifadə edə biləcəyi ümumi dəvət linki üçün boş buraxın"
-emailPlaceholder = "user@example.com (istəyə bağlı)"
-emailSent = "Dəvət linki yaradıldı və e-poçtla göndərildi"
-error = "Dəvət linki yaratmaq alınmadı"
-expiryHours = "Müddət (saat)"
-generate = "Link yarat"
-generated = "Dəvət Linki Yaradıldı"
-sendEmail = "Dəvət linkini e-poçtla göndər"
-sendEmailDescription = "Aktivdirsə, dəvət linki göstərilən e-poçt ünvanına göndəriləcək"
-submit = "Dəvət Linki Yarat"
-
-[workspace.people.inviteMembers]
-label = "Üzvləri dəvət et"
-subtitle = "Aşağıya vergüllə ayrılmış e-poçtları yazın və ya yapışdırın. İş sahəniz üzvlərin sayına görə ödənişləndirələcək."
-
-[workspace.people.inviteMode]
-email = "E-poçt"
-emailDisabled = "E-poçt dəvətləri üçün ayarlarda SMTP konfiqurasiyası və mail.enableInvites=true tələb olunur"
-link = "Keçid"
-username = "İstifadəçi adı"
 
 [workspace.people.license]
-currentUsage = "Hazırda {{max}} istifadəçi lisenziyasından {{current}} istifadə olunur"
-fromLicense = "lisenziyadan"
-grandfathered = "Grandfathered"
-grandfatheredShort = "{{count}} grandfathered"
-slotsAvailable_one = "{{count}} user slot available"
-slotsAvailable_other = "{{count}} user slots available"
-slotsAvailable_zero = "No slots available"
 users_one = "user"
 users_other = "users"
 
-[workspace.people.mfa]
-adminDisableError = "İstifadəçi üçün MFA-nı deaktiv etmək mümkün olmadı"
-adminDisableSuccess = "İstifadəçi üçün MFA uğurla deaktiv edildi"
-disableByAdmin = "MFA-nı deaktiv et"
-
-[workspace.people.roleDescriptions]
-admin = "Ayarları idarə edə və üzvləri dəvət edə bilər, tam inzibati girişə malikdir."
-currentRole = "Hazırda təyin olunmuş rol."
-user = "Can view and edit shared files, but cannot manage workspace settings or users."
-
-[workspace.people.toggleEnabled]
-error = "İstifadəçi statusunu yeniləmək alınmadı"
-success = "İstifadəçi statusu uğurla yeniləndi"
-
 [workspace.teams]
-addMember = "Üzv əlavə et"
-backToTeams = "Komandalara qayıt"
-cannotAddToInternal = "Daxili komandaya üzv əlavə etmək mümkün deyil"
-cannotDeleteInternal = "Daxili komandanı silmək mümkün deyil"
-cannotRenameInternal = "Daxili komandanın adını dəyişmək mümkün deyil"
-confirmDelete = "Bu komandanı silmək istədiyinizə əminsiniz? Silmək üçün komanda boş olmalıdır."
-confirmRemove = "İstifadəçi bu komandadan çıxarılsın?"
-createNewTeam = "Yeni Komanda Yaradın"
-deleteTeamLabel = "Komandanı sil"
 description = "Komandaları idarə edin və iş sahəsi üzvlərini təşkil edin"
-loadError = "Komanda detalları yüklənmədi"
-loading = "Komandalar yüklənir..."
-loadingDetails = "Komanda detalları yüklənir..."
-memberCount_one = "{{count}} member"
-memberCount_other = "{{count}} members"
-memberCount_zero = "no members"
-noMembers = "Bu komandada üzv yoxdur"
-noTeamsFound = "Komanda tapılmadı"
-removeMember = "Komandadan çıxar"
-removeMemberError = "İstifadəçini komandadan çıxarmaq alınmadı"
-removeMemberSuccess = "İstifadəçi komandadan çıxarıldı"
-renameTeamLabel = "Komandanın adını dəyiş"
-system = "Sistem"
-teamActions = "Komanda əməliyyatları"
-teamName = "Komandanın adı"
-teamNotFound = "Komanda tapılmadı"
-totalMembers = "Ümumi Üzv sayı"
-viewTeam = "Komandaya bax"
-
-[workspace.teams.addMemberToTeam]
-addingTo = "Əlavə edilir"
-currentlyIn = "hazırda"
-error = "Üzvü komandaya əlavə etmək alınmadı"
-selectUser = "İstifadəçi seçin"
-selectUserPlaceholder = "İstifadəçi seçin"
-selectUserRequired = "Zəhmət olmasa istifadəçi seçin"
-submit = "Üzv əlavə et"
-success = "Üzv komandaya uğurla əlavə olundu"
-title = "Komandaya Üzv əlavə et"
-userRequired = "Zəhmət olmasa istifadəçi seçin"
-willBeMoved = "Qeyd: Bu istifadəçi hazırkı komandadan bu komandaya köçürüləcək."
-
-[workspace.teams.changeTeam]
-changing = "Köçürülür"
-error = "Komandanı dəyişmək alınmadı"
-label = "Komandanı dəyiş"
-selectTeam = "Komanda seçin"
-selectTeamPlaceholder = "Komanda seçin"
-selectTeamRequired = "Zəhmət olmasa komanda seçin"
-submit = "Komandanı dəyiş"
-success = "Komanda uğurla dəyişdirildi"
-title = "Komandanı dəyiş"
-
-[workspace.teams.createTeam]
-error = "Komanda yaratmaq alınmadı"
-nameRequired = "Komanda adı tələb olunur"
-submit = "Komanda yarat"
-success = "Komanda uğurla yaradıldı"
-teamName = "Komandanın adı"
-teamNamePlaceholder = "Komanda adını daxil edin"
-title = "Yeni Komanda Yaradın"
-
-[workspace.teams.deleteTeam]
-error = "Komandanı silmək alınmadı. Komandanın boş olduğundan əmin olun."
-success = "Komanda uğurla silindi"
-
-[workspace.teams.renameTeam]
-error = "Komandanın adını dəyişmək alınmadı"
-nameRequired = "Komanda adı tələb olunur"
-newTeamName = "Yeni komanda adı"
-newTeamNamePlaceholder = "Yeni komanda adını daxil edin"
-renaming = "Adı dəyişdirilir:"
-submit = "Adı dəyiş"
-success = "Komandanın adı uğurla dəyişdirildi"
-title = "Komandanın adını dəyiş"
 
 [zipWarning]
 cancel = "Ləğv et"

@@ -405,17 +405,24 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     // editor's home, never what a deep link to a tool shows. Without this, a
     // "Reader" preference rewrote every /<tool> link to /read.
     const path = stripBasePath(window.location.pathname);
-    if (path !== "/" && path !== EDITOR_BASENAME) {
+    // A reload is not a launch: it keeps whichever view the user had open.
+    const navigation = performance.getEntriesByType?.("navigation")[0] as
+      | PerformanceNavigationTiming
+      | undefined;
+    if (
+      navigation?.type === "reload" ||
+      (path !== "/" && path !== EDITOR_BASENAME)
+    ) {
       hasAppliedStartupView.current = true;
       return;
     }
     const startupView = preferences.defaultStartupView;
     if (startupView === "read") {
+      // Reading is a surface, not a tool: selecting the Read tool as well would
+      // disagree with the reader's address, and the URL sync would close both.
       hasAppliedStartupView.current = true;
-      startupSelectedToolRef.current = "read";
       markReaderModeFromPreference();
       setReaderMode(true);
-      actions.setSelectedTool("read");
     } else if (startupView === "automate") {
       hasAppliedStartupView.current = true;
       startupSelectedToolRef.current = "automate";
@@ -583,10 +590,17 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     return filterToolRegistryByQuery(toolRegistry, state.searchQuery);
   }, [toolRegistry, state.searchQuery]);
 
+  // An address naming no tool clears the tool, not reading: the reader's own path
+  // decides that, and /reader names no tool either.
+  const clearToolFromAddress = useCallback(() => {
+    setLeftPanelView("toolPicker");
+    actions.setSelectedTool(null);
+  }, [setLeftPanelView, actions.setSelectedTool]);
+
   useNavigationUrlSync(
     navigationState.selectedTool,
     handleToolSelect,
-    handleBackToTools,
+    clearToolFromAddress,
     allTools,
     true,
     startupSelectedToolRef,

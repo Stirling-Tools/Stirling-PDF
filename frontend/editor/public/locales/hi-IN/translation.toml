@@ -278,6 +278,7 @@ customNumberDesc = "डिफ़ॉल्ट {n}, 'पृष्ठ {n} कुल
 fontName = "फ़ॉन्ट नाम"
 fontSize = "फ़ॉन्ट आकार"
 numberPagesDesc = "कौन से पृष्ठ संख्यांकित करने हैं, डिफ़ॉल्ट 'सभी', 1-5 या 2,5,9 आदि भी स्वीकार करता है"
+pagePreviewAlt = "पृष्ठ पूर्वावलोकन"
 pagesAndStarting = "पृष्ठ और आरंभिक संख्या"
 positionAndPages = "स्थिति और पृष्ठ"
 preview = "स्थिति चयन"
@@ -350,7 +351,9 @@ text = "ये अनुमतियाँ तय करती हैं कि 
 title = "अनुमतियां बदलें"
 
 [addStamp]
+pagePreviewAlt = "पृष्ठ पूर्वावलोकन"
 preview = "स्टैम्प का पूर्वावलोकन"
+stampPreviewAlt = "स्टैम्प पूर्वावलोकन"
 tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 
 [AddStampRequest]
@@ -383,6 +386,7 @@ positionAndFormatting = "स्थिति और फ़ॉर्मैटि�
 preview = "Preview:"
 quickPosition = "मुहर रखने के लिए पृष्ठ पर एक स्थान चुनें।"
 rotation = "घुमाव"
+selectedImageAlt = "चयनित स्टैम्प छवि"
 selectTemplate = "Select a template..."
 stampSetup = "मुहर सेटअप"
 stampText = "स्टैम्प टेक्स्ट"
@@ -533,6 +537,9 @@ letter = "लेटर"
 
 [adjustPageScale.scaleFactor]
 label = "स्केल फ़ैक्टर"
+
+[adjustPageScale.settings]
+title = "सेटिंग्स"
 
 [adjustPageScale.tooltip.description]
 text = "PDF सामग्री का आकार समायोजित करें और पृष्ठ आयाम बदलें।"
@@ -728,7 +735,10 @@ noLanguages = "कॉन्फ़िगर की गई डायरेक्�
 permissionNotice = "tessdata पाथ पर लिखना संभव नहीं है। डाउनलोड ब्राउज़र में खुलेंगे; कृपया .traineddata फ़ाइलें मैन्युअल रूप से tessdata फ़ोल्डर में सहेजें।"
 
 [admin.settings.ai]
+customProvider = "कस्टम (OpenAI-compatible)"
 description = "Stirling को Python AI इंजन से कनेक्ट करें, इसके मॉडल चुनें, और इसके चलने के लिए guardrails सेट करें।"
+managedByCloud = "इस मोड में Stirling Cloud द्वारा प्रबंधित।"
+managedByCloudShort = "Stirling Cloud द्वारा प्रबंधित"
 
 [admin.settings.ai.documents]
 description = "दस्तावेज़ों पर प्रश्नों के उत्तर देने के लिए उपयोग किए जाने वाले एम्बेडिंग मॉडल और रिट्रीवल सेटिंग्स कॉन्फ़िगर करें। सहेजने पर AI engine पर लागू होता है।"
@@ -771,11 +781,24 @@ label = "Top K"
 [admin.settings.ai.general]
 connection = "कनेक्शन"
 description = "Stirling को Python AI engine से कनेक्ट करें और चुनें कि कौन-सी AI क्षमताएँ उपलब्ध कराई जाएँ। बदलाव restart पर लागू होते हैं।"
+restartNote = "URL या किसी भी टाइमआउट को बदलना रीस्टार्ट के बाद प्रभावी होता है।"
 title = "AI Engine"
 
 [admin.settings.ai.general.capabilities]
 description = "व्यक्तिगत AI सुविधाओं को चालू या बंद करें। अक्षम सुविधाएँ app में छिपी रहती हैं।"
 title = "क्षमताएँ"
+
+[admin.settings.ai.general.cloud]
+note = "मॉडल और प्रदाता कुंजियाँ Stirling Cloud द्वारा प्रबंधित की जाती हैं, इसलिए ये सेटिंग्स इस मोड में लागू नहीं होतीं।"
+
+[admin.settings.ai.general.cloud.indexing]
+description = "हर AI टूल उत्तर देने के लिए आवश्यक पेज टेक्स्ट भेजता है। यह तय करता है कि Stirling Cloud उस टेक्स्ट को अनुक्रमित रूप में रख सकता है या नहीं, ताकि बाद के प्रश्न पूरे दस्तावेज़ में खोज सकें।"
+help = "बंद का मतलब है कि दस्तावेज़ संबंधी प्रश्न उपलब्ध नहीं हैं। यह टेक्स्ट भेजे जाने को नहीं रोकता - केवल उसे संग्रहित किए जाने को रोकता है।"
+label = "Stirling Cloud को अनुक्रमित दस्तावेज़ रखने दें"
+
+[admin.settings.ai.general.cloudNote]
+body = "तर्क-प्रक्रिया Stirling के इंफ़्रास्ट्रक्चर पर चलती है, और इसका बिल उस खाते में जाता है जिससे यह सर्वर लिंक है। यहाँ चलाने के लिए कोई कंटेनर नहीं है और रखने के लिए कोई प्रदाता कुंजी नहीं है। AI जो भी पढ़ता है, वह आपके अपने हार्डवेयर के बजाय Stirling Cloud द्वारा प्रोसेस किया जाता है।"
+title = "Stirling Cloud AI के बारे में"
 
 [admin.settings.ai.general.enabled]
 description = "मुख्य switch। बंद होने पर कोई AI tools, agents, या engine calls उपलब्ध नहीं होते।"
@@ -809,9 +832,28 @@ label = "PDF comment agent"
 description = "दस्तावेज़ generation जैसे भारी agent operations के लिए timeout।"
 label = "लंबे समय तक चलने वाला timeout (seconds)"
 
+[admin.settings.ai.general.mode]
+label = "AI कहाँ चलता है"
+
+[admin.settings.ai.general.mode.cloud]
+description = "कोई कंटेनर नहीं, कोई प्रदाता कुंजी नहीं, कोई मॉडल चयन नहीं - काम Stirling Cloud पर चलता है और इसका बिल उस खाते में जाता है जिससे यह सर्वर लिंक है।"
+linkCta = "इस सर्वर को Stirling खाते से कनेक्ट करें"
+notLinked = "पहले एक खाता लिंक करें"
+ownerOnly = "केवल संगठन का मालिक इस सर्वर को Stirling खाते से लिंक कर सकता है।"
+title = "Stirling Cloud AI का उपयोग करें"
+
+[admin.settings.ai.general.mode.off]
+description = "ऐप में कहीं भी कोई AI टूल नहीं, और इस सर्वर से कुछ भी बाहर नहीं जाता।"
+title = "बंद"
+
+[admin.settings.ai.general.mode.self]
+description = "आपके द्वारा होस्ट किया गया एक कंटेनर, जो आपकी पसंद के मॉडल प्रदाता की ओर इंगित करता है। आपकी कुंजी, आपका बिल, आपका डेटा पथ।"
+title = "अपना खुद का इंजन चलाएँ"
+
 [admin.settings.ai.general.note]
-body = "AI engine एक अलग service के रूप में चलता है। इसका shared secret"
-body2 = "container environment variable के माध्यम से सेट किया जाता है। Provider API keys इन pages पर दर्ज की जा सकती हैं या engine environment variables के रूप में दी जा सकती हैं; यहाँ दर्ज keys सहेजने पर engine को भेजी जाती हैं।"
+docs = "सेटअप गाइड"
+intro = "एक अलग कंटेनर जिसे आप Stirling के साथ चलाते हैं। यह तर्क-प्रक्रिया करता है; Stirling फिर भी हर पेज ऑपरेशन खुद करता है। दोनों कंटेनरों पर वही"
+outro = "और एक मॉडल प्रदाता कुंजी चाहिए। AI जो भी पढ़ता है, वह आपके चुने हुए प्रदाता को भेजा जाता है - आपके द्वारा होस्ट किया गया Ollama हर पेज को इन-हाउस रखता है।"
 title = "AI engine के बारे में"
 
 [admin.settings.ai.general.streamTimeoutSeconds]
@@ -890,6 +932,67 @@ label = "Smart model"
 body = "बदलाव AI engine को स्वचालित रूप से भेज दिए जाते हैं।"
 bodyNoPush = "Settings सहेजी गईं। अगली बार जब AI engine अपनी configuration लेगा, तब वे लागू होंगी।"
 title = "AI settings सहेजी गईं"
+
+[admin.settings.ai.status]
+capabilities = "क्षमताएँ"
+capabilitiesValue = "{{total}} में से {{on}} चालू"
+checked = "जाँचा गया"
+checking = "इंजन की जाँच हो रही है…"
+description = "इंजन उपलब्ध है या नहीं, यह इस सर्वर को स्वीकार करता है या नहीं, और यह क्या चला रहा है।"
+fastModel = "तेज़ मॉडल"
+justNow = "अभी-अभी"
+latency = "प्रतिक्रिया समय"
+linkLabel = "खाता लिंक"
+minutesAgo = "{{count}} मिनट पहले"
+recheck = "फिर से जाँचें"
+runningOn = "चल रहा है"
+secondsAgo = "{{count}} सेकंड पहले"
+secretLabel = "साझा सीक्रेट"
+smartModel = "स्मार्ट मॉडल"
+title = "स्थिति"
+url = "इंजन URL"
+
+[admin.settings.ai.status.cloud]
+hostDown = "डाउन"
+hostLabel = "Stirling.com"
+hostUp = "अप"
+name = "Stirling Cloud"
+sharingLabel = "AI साझाकरण"
+sharingOff = "अक्षम"
+sharingOn = "सक्षम"
+
+[admin.settings.ai.status.cloud.degraded]
+body = "Stirling Cloud ने जवाब दिया, लेकिन इस सर्वर को अस्वीकार कर दिया। खाता लिंक निरस्त किया गया हो सकता है।"
+title = "Stirling Cloud इस सर्वर को अस्वीकार कर रहा है"
+
+[admin.settings.ai.status.cloud.down]
+body = "यह सर्वर Stirling Cloud तक नहीं पहुँच सका। खाता लिंक जाँचें और सुनिश्चित करें कि यह सर्वर इंटरनेट तक पहुँच सकता है।"
+title = "Stirling Cloud पहुँच से बाहर है"
+
+[admin.settings.ai.status.cloud.ok]
+body = "Stirling Cloud ने इस सर्वर को स्वीकार किया। यहाँ चलाने या पैच करने के लिए कुछ नहीं है।"
+title = "Stirling Cloud पर चल रहा है"
+
+[admin.settings.ai.status.degraded]
+body = "इसने हेल्थ चेक का जवाब दिया, लेकिन वास्तविक अनुरोध को अस्वीकार कर दिया। दोनों पक्ष अलग-अलग साझा सीक्रेट का उपयोग कर रहे हैं।"
+title = "इंजन चालू है, लेकिन इस सर्वर को अस्वीकार कर रहा है"
+
+[admin.settings.ai.status.down]
+body = "URL जाँचें, सुनिश्चित करें कि इंजन कंटेनर चल रहा है, और AI सक्षम करने के बाद आपने रीस्टार्ट किया है।"
+title = "इंजन पहुँच से बाहर है"
+
+[admin.settings.ai.status.off]
+body = "नीचे चुनें कि AI कैसे चलेगा, फिर सहेजें और रीस्टार्ट करें।"
+title = "AI बंद है"
+
+[admin.settings.ai.status.ok]
+body = "हेल्थ चेक और प्रमाणित अनुरोध दोनों सफल रहे।"
+title = "इंजन चल रहा है"
+
+[admin.settings.ai.status.secret]
+no = "अस्वीकृत"
+unknown = "अज्ञात"
+yes = "स्वीकृत"
 
 [admin.settings.badge]
 clickToUpgrade = "प्लान विवरण देखने के लिए क्लिक करें"
@@ -1051,7 +1154,6 @@ refresh = "रिफ्रेश"
 selectFile = "इम्पोर्ट करने के लिए .sql फ़ाइल चुनें"
 size = "आकार"
 title = "डेटाबेस"
-unavailable = "वर्तमान डेटाबेस कॉन्फ़िगरेशन के लिए बैकअप सूची उपलब्ध नहीं है।"
 uploadTitle = "अपलोड और इम्पोर्ट"
 version = "H2 संस्करण"
 
@@ -1185,6 +1287,7 @@ label = "कस्टम मेटाडाटा"
 [admin.settings.general.customMetadata.author]
 description = "PDF मेटाडाटा के लिए डिफ़ॉल्ट लेखक (उदा., उपयोगकर्ता नाम)"
 label = "डिफ़ॉल्ट लेखक"
+placeholder = "उपयोगकर्ता नाम"
 
 [admin.settings.general.customMetadata.autoUpdate]
 description = "सभी प्रोसेस किए गए दस्तावेज़ों पर PDF मेटाडाटा स्वतः अपडेट करें"
@@ -1300,6 +1403,7 @@ defaultLocaleLink = "डिफ़ॉल्ट लोकैल कॉन्फ़
 description = "लॉगिन के बाद उपयोगकर्ताओं को स्वीकार करना आवश्यक अस्वीकरण दिखाएँ। पाठ प्रत्येक उपयोगकर्ता की भाषा के अनुसार दिखेगा।"
 discardConfirm = "आपके बिना सहेजे बदलाव खो जाएँगे। फिर भी भाषा बदलें?"
 editLabel = "Markdown"
+editPlaceholder = "## शीर्षक\n\nआपका अस्वीकरण पाठ..."
 emptyPreview = "अभी पूर्वावलोकन हेतु कुछ नहीं।"
 language = "भाषा"
 languageHelp = "प्रत्येक भाषा की अपनी फ़ाइल होती है। यदि किसी उपयोगकर्ता की भाषा की फ़ाइल नहीं है, तो समझौता डिफ़ॉल्ट लोकैल की फ़ाइल पर और फिर फॉलबैक पाठ पर लौटता है।"
@@ -1418,8 +1522,10 @@ label = "JWKS URL (optional)"
 placeholder = "Auto-discovered from issuer"
 
 [admin.settings.mcp.mode]
+apikey = "API कुंजी (Stirling प्रति-उपयोगकर्ता कुंजी)"
 description = "OAuth needs an external IdP. API key uses a Stirling per-user API key (X-API-KEY) - simplest for self-host."
 label = "Authentication mode"
+oauth = "OAuth 2.1 (बाहरी IdP)"
 
 [admin.settings.mcp.requireAccount]
 description = "Only let tokens through if their subject maps to a provisioned, enabled Stirling user."
@@ -1836,6 +1942,14 @@ title = "उपयोगकर्ता नियंत्रण सेटिं
 [agents]
 stirling_name = "Stirling"
 
+[alphabetOptions]
+arabic = "अरबी"
+chinese = "चीनी (सरलीकृत)"
+japanese = "जापानी"
+korean = "कोरियाई"
+roman = "रोमन"
+thai = "थाई"
+
 [analytics]
 learnMore = "और जानें"
 paragraph1 = "Stirling PDF में उत्पाद को बेहतर बनाने में मदद करने के लिए विकल्प विश्लेषण है। हम किसी भी व्यक्तिगत जानकारी या फ़ाइल सामग्री को ट्रैक नहीं करते हैं।"
@@ -1957,6 +2071,7 @@ week = "सप्ताह"
 
 [audit.clearData]
 cancel = "रद्द करें"
+closeAlert = "अलर्ट बंद करें"
 codeDoesNotMatch = "कोड मेल नहीं खाता"
 codePlaceholder = "यहाँ कोड दर्ज करें"
 confirmationCode = "पुष्टिकरण कोड"
@@ -1966,6 +2081,7 @@ confirmTitle = "कृपया हटाने की पुष्टि कर
 deleteButton = "हटाएँ"
 enterCode = "पुष्टिकरण कोड"
 enterCodeBelow = "जैसा ऊपर दिखाया गया है, वैसा ही कोड दर्ज करें (केस-सेंसिटिव)"
+failed = "ऑडिट डेटा साफ़ करने में विफल"
 initiateDelete = "सारा डेटा हटाएँ"
 irreversible = "अपरिवर्तनीय"
 success = "सफलता"
@@ -1974,6 +2090,7 @@ warning1 = "यह क्रिया वापस नहीं की जा �
 warning2 = "ऑडिट डेटा हटाने से डेटाबेस से सभी ऐतिहासिक ऑडिट लॉग, जिनमें सुरक्षा इवेंट, उपयोगकर्ता गतिविधियाँ और फ़ाइल कार्य शामिल हैं, स्थायी रूप से हट जाएँगे।"
 
 [audit.error]
+loadStatus = "ऑडिट सिस्टम स्थिति लोड करने में विफल"
 title = "ऑडिट सिस्टम लोड करने में त्रुटि"
 
 [audit.events]
@@ -1989,6 +2106,7 @@ fileHash = "फ़ाइल हैश"
 filterByType = "प्रकार के अनुसार फ़िल्टर करें"
 filterByUser = "उपयोगकर्ता के अनुसार फ़िल्टर करें"
 ipAddress = "IP पता"
+loadFailed = "इवेंट्स लोड करने में विफल"
 noEvents = "कोई इवेंट नहीं मिला"
 startDate = "प्रारंभ तिथि"
 timestamp = "टाइमस्टैम्प"
@@ -2029,6 +2147,7 @@ avgLatency = "औसत विलंबता"
 error = "आँकड़े लोड करने में त्रुटि"
 excellent = "उत्तम"
 good = "अच्छा"
+loadFailed = "आँकड़े लोड करने में विफल"
 noData = "N/A"
 successRate = "सफलता दर"
 totalEvents = "कुल इवेंट्स"
@@ -2063,13 +2182,27 @@ accessDenied = "पहुँच अस्वीकृत"
 insufficientPermissions = "आपके पास यह क्रिया करने की अनुमति नहीं है."
 
 [auth.callback]
+alreadySignedIn = "पहले से साइन इन हैं! रीडायरेक्ट किया जा रहा है..."
+backToLogin = "लॉगिन पर वापस जाएँ"
 completing = "authentication पूरा हो रहा है"
+exchanging = "प्राधिकरण कोड बदला जा रहा है..."
+failedWithReason = "प्रमाणीकरण विफल: {{error}}"
 invalidToken = "OAuth login विफल - invalid token।"
 missingToken = "OAuth login विफल - कोई token प्राप्त नहीं हुआ।"
+noData = "कोई प्रमाणीकरण डेटा नहीं मिला"
 oauthFailed = "OAuth login विफल। कृपया फिर से प्रयास करें।"
 pleaseWait = "कृपया प्रतीक्षा करें, हम आपका sign in पूरा कर रहे हैं।"
+processing = "प्रमाणीकरण संसाधित किया जा रहा है..."
 signedOut = "आप sign out हो गए हैं। कृपया फिर से sign in करें।"
+signInFailed = "साइन इन पूरा करने में विफल: {{error}}"
+success = "साइन इन सफल! रीडायरेक्ट किया जा रहा है..."
+unknownError = "अज्ञात त्रुटि"
 windowMayClose = "पूरा होने पर आप यह window बंद कर सकते हैं।"
+
+[auth.callback.title]
+default = "प्रमाणीकरण"
+processing = "आपको साइन इन किया जा रहा है"
+success = "सब तैयार है!"
 
 [auth.displayName]
 guest = "अतिथि"
@@ -2222,6 +2355,7 @@ title = "ऑटोमेशन आयात करें"
 unresolved = "असंबद्ध: {{ops}}"
 
 [automate.run]
+progress = "प्रगति: {{current}}/{{total}}"
 title = "स्वचालन चलाएँ"
 
 [automate.selection]
@@ -2371,6 +2505,7 @@ whatHappensNext = "आगे क्या होगा?"
 
 [billing.portal]
 error = "बिलिंग पोर्टल खोलने में विफल"
+errorFallback = "कृपया फिर से प्रयास करें या सपोर्ट से संपर्क करें।"
 
 [bookletImposition]
 paperSizeNote = "पेपर आकार आपके पहले पृष्ठ से स्वतः निकाला जाता है।"
@@ -2418,6 +2553,9 @@ title = "मैनुअल डुप्लेक्स मोड"
 [bookletImposition.rtlBinding]
 label = "दाएँ-से-बाएँ बाइंडिंग"
 tooltip = "अरबी, हिब्रू, या अन्य दाएँ-से-बाएँ भाषाओं के लिए"
+
+[bookletImposition.settings]
+title = "सेटिंग्स"
 
 [bookletImposition.tooltip.advanced]
 bullet1 = "दाएँ-से-बाएँ बाइंडिंग: अरबी, हिब्रू, या RTL भाषाओं के लिए"
@@ -2487,6 +2625,8 @@ detail = "फिर से खेलने के लिए क्लिक क�
 headline = "सब साफ़"
 
 [bulkSelection]
+selectedPages_one = "चयनित: {{count}} पृष्ठ ({{pages}})"
+selectedPages_other = "चयनित: {{count}} पृष्ठ ({{pages}})"
 syntaxError = "एक सिंटैक्स समस्या है। सहायता के लिए पृष्ठ चयन टिप्स देखें।"
 
 [bulkSelection.advanced]
@@ -2707,6 +2847,7 @@ declineButton = "अस्वीकार करें"
 deleteSelected = "चयनित हस्ताक्षर हटाएँ"
 drawSignature = "नीचे अपना हस्ताक्षर बनाएं"
 fileTooLarge = "फ़ाइल आकार 5MB से कम होना चाहिए"
+fontBrushScript = "Brush Script MT (कर्सिव)"
 fontFamily = "फ़ॉन्ट परिवार"
 fontSize = "फ़ॉन्ट आकार: {{size}}px"
 fontSizePlaceholder = "आकार"
@@ -2726,6 +2867,7 @@ removeImage = "छवि हटाएँ"
 savedSignatures = "सहेजे गए हस्ताक्षर"
 selectFile = "छवि फ़ाइल चुनें"
 selectSignatureTitle = "हस्ताक्षर चुनें या बनाएँ"
+signatureImageAlt = "हस्ताक्षर"
 signatureInfo = "ये सेटिंग्स दस्तावेज़ के मालिक द्वारा कॉन्फ़िगर की गई हैं"
 signatureSettings = "हस्ताक्षर सेटिंग्स"
 signatureText = "हस्ताक्षर पाठ"
@@ -3496,13 +3638,19 @@ confirm = "पुष्टि करें"
 continue = "जारी रखें"
 copied = "कॉपी हो गया!"
 copy = "कॉपी करें"
+copyCode = "कोड कॉपी करें"
+dismiss = "खारिज करें"
 done = "पूर्ण"
 enterValue = "Enter value"
 error = "त्रुटि"
 expand = "विस्तारित करें"
 filterEmpty = "फ़िल्टर करने के लिए कुछ नहीं"
+goToSlide = "स्लाइड {{number}} पर जाएँ"
 loading = "लोड हो रहा है..."
+moreInformation = "अधिक जानकारी"
 next = "अगला"
+noData = "कोई डेटा नहीं"
+nOfTotal = "{{total}} में से {{current}}"
 open = "Open"
 preview = "पूर्वावलोकन"
 previous = "पिछला"
@@ -3511,6 +3659,9 @@ remaining = "शेष"
 retry = "फिर से प्रयास करें"
 save = "सहेजें"
 search = "खोजें"
+settingsSections = "सेटिंग्स अनुभाग"
+showAllTotal = "सभी {{total}} दिखाएँ"
+showLess = "कम दिखाएँ"
 stepOf = "Step {{current}} of {{total}}"
 
 [compare]
@@ -3522,6 +3673,7 @@ newLine = "नई पंक्ति"
 pages = "पृष्ठ"
 tags = "अंतर,तुलना,परिवर्तन,विश्लेषण"
 title = "तुलना करें"
+workbenchLabel = "तुलना दृश्य"
 
 [compare.actions]
 linkScroll = "स्क्रॉल लिंक करें"
@@ -3675,6 +3827,7 @@ title = "संपीड़न विधि"
 desiredSize = "वांछित फ़ाइल आकार"
 desiredSizePlaceholder = "आकार दर्ज करें"
 desiredSizeUnit = "Size unit"
+title = "सेटिंग्स"
 
 [compress.tooltip.description]
 text = "संपीड़न फ़ाइल आकार कम करने का आसान तरीका है। 'File Size' चुनें और लक्ष्य आकार दर्ज करें ताकि हम आपके लिए गुणवत्ता समायोजित कर दें। 'Quality' चुनें ताकि आप संपीड़न की तीव्रता मैन्युअल रूप से सेट कर सकें।"
@@ -3724,10 +3877,13 @@ title = "खाता सेटिंग्स"
 description = "अपना खाता व्यक्तिगत बनाने के लिए एक इमेज अपलोड करें।"
 help = "PNG, JPG, या WebP अधिकतम 2MB।"
 remove = "हटाएँ"
+removeFailed = "प्रोफ़ाइल चित्र हटाने में विफल"
 sizeError = "कृपया 2MB से छोटी इमेज चुनें।"
 switchedToCustom = "कस्टम तस्वीर पर स्विच किया गया। अब आप अपनी तस्वीर अपलोड कर सकते हैं।"
+switchFailed = "कस्टम चित्र पर स्विच करने में विफल"
 title = "प्रोफ़ाइल तस्वीर"
 upload = "अपलोड"
+uploadFailed = "प्रोफ़ाइल चित्र अपलोड करने में विफल"
 useCustom = "कस्टम तस्वीर उपयोग करें"
 usingProvider = "{{provider}} की प्रोफ़ाइल तस्वीर का उपयोग किया जा रहा है"
 
@@ -3741,6 +3897,7 @@ title = "प्रोफ़ाइल तस्वीर क्रॉप कर�
 zoom = "ज़ूम"
 
 [config.account.security]
+changeFailed = "पासवर्ड बदलने में विफल"
 changePassword = "पासवर्ड बदलें"
 description = "अपने पासवर्ड और सुरक्षा सेटिंग्स प्रबंधित करें।"
 title = "पासवर्ड और सुरक्षा"
@@ -3751,11 +3908,15 @@ description = "अपना इतिहास सुरक्षित रख�
 email = "ईमेल"
 emailPassword = "या अपना ईमेल और पासवर्ड दर्ज करें"
 emailPlaceholder = "अपना ईमेल दर्ज करें"
+failed = "खाता अपग्रेड करने में विफल"
+failedWithProvider = "{{provider}} के साथ खाता अपग्रेड करने में विफल"
 linkWith = "से लिंक करें"
+linkWithProvider = "{{provider}} से लिंक करें"
 password = "पासवर्ड (वैकल्पिक)"
 passwordNote = "केवल ईमेल वेरिफिकेशन के लिए खाली छोड़ दें"
 passwordPlaceholder = "पासवर्ड सेट करें"
 socialLogin = "सोशल खाते से अपग्रेड करें"
+success = "खाता सफलतापूर्वक अपग्रेड हो गया! अब आप अपने ईमेल से साइन इन कर सकते हैं।"
 title = "अतिथि खाता अपग्रेड करें"
 upgradeButton = "खाता अपग्रेड करें"
 
@@ -3865,10 +4026,10 @@ title = "अनुरोध मान्य नहीं है"
 
 [connect.renewal]
 approve = "साइन-इन नवीनीकृत करें"
+currentOwnerRequired = "इस सर्वर के साइन-इन को नवीनीकृत करने के लिए लिंक की गई क्लाउड टीम के वर्तमान स्वामी के रूप में साइन इन करें। यदि स्वामित्व हस्तांतरित किया गया था, तो नए स्वामी के खाते का उपयोग करें।"
 failed = "आपका साइन-इन नवीनीकृत नहीं किया जा सका। फिर से कोशिश करें, या यह पेज dismiss करें और अपने सर्वर से फिर शुरू करें।"
 lead = "यह सर्वर पहले से आपके खाते से लिंक है। अपने सर्वर पर billing और usage पर लौटने के लिए अपना साइन-इन नवीनीकृत करें।"
 title = "अपना सर्वर साइन-इन नवीनीकृत करें"
-wrongAccount = "यह खाता इस सर्वर के साइन-इन को नवीनीकृत नहीं कर सकता। उस खाते पर स्विच करें जिसका मूल रूप से सर्वर लिंक करने के लिए उपयोग किया गया था। उस खाते के पास अभी भी लिंक की गई टीम का ownership होना चाहिए।"
 
 [convert]
 autoRotate = "ऑटो रोटेट"
@@ -3914,6 +4075,7 @@ multiple = "एकाधिक"
 optimizeForEbook = "ईबुक रीडर्स के लिए PDF ऑप्टिमाइज़ करें (Ghostscript का उपयोग करता है)"
 output = "आउटपुट"
 outputFormat = "आउटपुट फ़ॉर्मेट"
+pdfaAccessibleFormat = "{{format}} (सुलभ)"
 pdfaDigitalSignatureWarning = "PDF में एक डिजिटल हस्ताक्षर है। यह अगले चरण में हटा दिया जाएगा।"
 pdfaNote = "PDF/A-1b अधिक संगत है, PDF/A-2b अधिक सुविधाएँ समर्थित करता है।"
 pdfaOptions = "PDF/A विकल्प"
@@ -3973,6 +4135,24 @@ outputFormatDesc = "ईबुक के लिए आउटपुट फ़ॉ�
 tabletPhone = "टैबलेट/फ़ोन (चित्र सहित)"
 targetDevice = "लक्षित डिवाइस"
 targetDeviceDesc = "रीडर डिवाइस के लिए अनुकूलित आउटपुट प्रोफाइल चुनें"
+
+[convert.formatGroups]
+archive = "संग्रह"
+document = "दस्तावेज़"
+ebook = "ईबुक"
+email = "ईमेल"
+file = "फ़ाइल"
+image = "छवि"
+multipleFiles = "एकाधिक फ़ाइलें"
+presentation = "प्रस्तुति"
+spreadsheet = "स्प्रेडशीट"
+text = "टेक्स्ट"
+web = "वेब"
+
+[convert.formatOptions]
+any = "कोई भी"
+images = "छवियाँ"
+msgOutlook = "MSG (Outlook)"
 
 [cookieBanner.popUp]
 acceptAllBtn = "ठीक है"
@@ -4066,6 +4246,12 @@ label = "Y स्थान"
 [crop.error]
 failed = "PDF क्रॉप करने में विफल"
 
+[crop.pageNumbers]
+description = "चयनित क्षेत्र को विशिष्ट पृष्ठों पर क्रॉप करें, या हर पृष्ठ के लिए 'all'।"
+error = "अमान्य पृष्ठ चयन। जैसे 1, 3, 5-8 या all का उपयोग करें।"
+label = "क्रॉप करने के लिए पृष्ठ"
+placeholder = "जैसे 1, 3, 5-8 या all"
+
 [crop.preview]
 title = "क्रॉप क्षेत्र चयन"
 
@@ -4088,16 +4274,11 @@ fileName = "फ़ाइल नाम"
 title = "डेटाबेस आयात/निर्यात"
 
 [defaultApp]
-setDefault = "डिफ़ॉल्ट बनाएं"
 title = "डिफ़ॉल्ट PDF ऐप बनाएं"
 
 [defaultApp.error]
 message = "डिफ़ॉल्ट PDF हैंडलर सेट नहीं हो सका"
 title = "त्रुटि"
-
-[defaultApp.prompt]
-dontRemind = "मुझे फिर याद न दिलाएँ"
-message = "PDF फ़ाइलें खोलने के लिए Stirling PDF को अपनी डिफ़ॉल्ट ऐप बनाएं।"
 
 [defaultApp.settingsOpened]
 message = "कृपया अपनी सिस्टम सेटिंग्स में Stirling PDF चुनें"
@@ -4106,6 +4287,17 @@ title = "सेटिंग्स खुलीं"
 [defaultApp.success]
 message = "Stirling PDF अब आपका डिफ़ॉल्ट PDF एडिटर है"
 title = "डिफ़ॉल्ट ऐप सेट"
+
+[desktop.titleBar]
+maximize = "अधिकतम करें"
+minimize = "न्यूनतम करें"
+restore = "पुनर्स्थापित करें"
+
+[desktopBilling]
+description = "अपने ब्राउज़र में उपयोग और बिलिंग प्रबंधित करें। उसी Stirling खाते से साइन इन करें जिसका उपयोग आप यहाँ करते हैं।"
+open = "ब्राउज़र में उपयोग और बिलिंग खोलें"
+openFailed = "उपयोग और बिलिंग नहीं खोली जा सकी। अपना कनेक्शन जाँचें और फिर से प्रयास करें।"
+selfHostedDescription = "अपने ब्राउज़र में अपने कनेक्टेड सर्वर पर उपयोग और बिलिंग प्रबंधित करें। अपने सर्वर स्वामी खाते से साइन इन करें।"
 
 [desktopFileLink]
 saveAs = "इस रूप में सहेजें…"
@@ -4169,6 +4361,7 @@ tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,ident
 noItems = "No items available"
 noResults = "No results found"
 searchPlaceholder = "खोजें..."
+selectedCount = "{{count}} चयनित"
 selectLanguages = "Select languages"
 selectOption = "Select an option"
 
@@ -4179,6 +4372,7 @@ editSecretValue = "गोपनीय मान संपादित करे�
 [editTableOfContents]
 submit = "Table of Contents लागू करें"
 tags = "bookmarks,contents,edit,table of contents,TOC,outline,navigation,chapters,sections,add bookmarks,edit bookmarks,PDF outline"
+workbenchLabel = "आउटलाइन कार्यक्षेत्र"
 
 [editTableOfContents.actions]
 clipboardUnavailable = "इस ब्राउज़र में क्लिपबोर्ड एक्सेस उपलब्ध नहीं है।"
@@ -4339,6 +4533,27 @@ closeFile = "फ़ाइल बंद करें"
 
 [fileEditor]
 addFiles = "फ़ाइलें जोड़ें"
+closedFile = "{{name}} बंद किया गया"
+couldNotSave = "{{name}} सहेजा नहीं जा सका"
+filesAdded_one = "{{count}} फ़ाइल जोड़ी गई"
+filesAdded_other = "{{count}} फ़ाइलें जोड़ी गईं"
+filesReordered_one = "फ़ाइल का क्रम बदला गया"
+filesReordered_other = "{{count}} फ़ाइलों का क्रम बदला गया"
+loadedFromStorage_one = "स्टोरेज से {{count}} फ़ाइल लोड की गई"
+loadedFromStorage_other = "स्टोरेज से {{count}} फ़ाइलें लोड की गईं"
+loadFromStorageFailed = "स्टोरेज से कुछ फ़ाइलें लोड करने में विफल"
+pinnedFile = "{{name}} पिन किया गया"
+processFilesFailed = "फ़ाइलें प्रोसेस करने में विफल"
+savedAndClosed = "{{name}} सहेजा और बंद किया गया"
+saveFailed = "सहेजना विफल"
+unpinnedFile = "{{name}} अनपिन किया गया"
+unzipping = "{{name}} अनज़िप किया जा रहा है"
+
+[fileEditor.unzip]
+error = "{{name}} अनज़िप करने में त्रुटि"
+extracted_one = "{{name}} से {{count}} फ़ाइल निकाली गई"
+extracted_other = "{{name}} से {{count}} फ़ाइलें निकाली गईं"
+failed = "{{name}} से फ़ाइलें निकालने में विफल"
 
 [fileManager]
 addToUpload = "अपलोड में जोड़ें"
@@ -4355,6 +4570,7 @@ noFiles = "कोई फ़ाइल उपलब्ध नहीं"
 noFilesFound = "आपकी खोज से मेल खाती कोई फ़ाइल नहीं मिली"
 openInFileEditor = "फ़ाइल एडिटर में खोलें"
 openInPageEditor = "पेज एडिटर में खोलें"
+reloadFiles = "फ़ाइलें फिर से लोड करें"
 saveSelected = "चयनित सहेजें"
 searchFiles = "फ़ाइलें खोजें..."
 share = "शेयर करें"
@@ -4364,6 +4580,8 @@ sharedEditNoticeConfirm = "ठीक है"
 sharedEditNoticeTitle = "सिर्फ पढ़ने योग्य सर्वर प्रति"
 sharedWithYou = "आपके साथ साझा"
 showAll = "सभी दिखाएँ"
+showAllCount_one = "सभी दिखाएँ ({{count}} फ़ाइल)"
+showAllCount_other = "सभी दिखाएँ ({{count}} फ़ाइलें)"
 sortBy = "Sort files"
 sortByDate = "तिथि के अनुसार क्रमबद्ध करें"
 sortByName = "नाम के अनुसार क्रमबद्ध करें"
@@ -4400,6 +4618,11 @@ sources = "फ़ाइल स्रोत"
 subtitle = "अपनी लाइब्रेरी से चुनें या कुछ नया जोड़ें।"
 title = "फ़ाइलें जोड़ें"
 unsupported = "यह फ़ाइल प्रकार चुने गए टूल द्वारा समर्थित नहीं है।"
+
+[filePreview]
+loadingThumbnail = "थंबनेल लोड हो रहा है..."
+locked = "लॉक किया गया"
+previewOf = "{{name}} का पूर्वावलोकन"
 
 [files]
 addFiles = "फ़ाइलें जोड़ें"
@@ -4453,6 +4676,7 @@ openFromComputer = "कंप्यूटर से खोलें"
 openSettings = "सेटिंग्स खोलें"
 other = "अन्य"
 recent = "हाल के"
+searchFiles = "फ़ाइलें खोजें"
 uploadFailedBody = "चुनी गई फ़ाइलें जोड़ी नहीं जा सकीं।"
 uploadFailedTitle = "अपलोड विफल"
 viewAll = "सभी {{count}} फ़ाइलें देखें"
@@ -4834,13 +5058,15 @@ title = "फ़ाइल से PDF"
 [fileUpload]
 dropFilesHere = "फ़ाइलें यहाँ छोड़ें या अपलोड बटन पर क्लिक करें"
 dropFilesHereOpen = "फ़ाइलें यहाँ छोड़ें या ओपन बटन क्लिक करें"
-filesAvailable = "फ़ाइलें उपलब्ध"
+filesAvailableCount_one = "{{count}} फ़ाइल उपलब्ध"
+filesAvailableCount_other = "{{count}} फ़ाइलें उपलब्ध"
 loadFromStorage = "स्टोरेज से लोड करें"
 noFilesInStorage = "स्टोरेज में कोई फ़ाइल उपलब्ध नहीं। पहले कुछ फ़ाइलें अपलोड करें।"
 noFilesInStorageOpen = "स्टोरेज में कोई फ़ाइल उपलब्ध नहीं। पहले कुछ फ़ाइलें खोलें।"
 open = "खोलें"
 openFile = "फ़ाइल खोलें"
 openFiles = "फ़ाइलें खोलें"
+selectedCount = "{{count}} चयनित"
 selectFile = "Select {{name}}"
 selectFromStorage = "स्टोरेज से चुनें"
 upload = "अपलोड"
@@ -4932,6 +5158,7 @@ rescanFields = "फ़ील्ड्स दोबारा स्कैन क�
 rescanFormFields = "फॉर्म फ़ील्ड्स दोबारा स्कैन करें"
 save = "सहेजें"
 saveShortcut = "सहेजने के लिए Ctrl+S"
+selectOptionPlaceholder = "— चुनें —"
 skippedEdits_one = "1 बदलाव लागू नहीं किया जा सका:"
 skippedEdits_other = "{{count}} बदलाव लागू नहीं किए जा सके:"
 skippedEditsTruncated = "{{count}} और सूचीबद्ध नहीं हैं।"
@@ -4994,6 +5221,16 @@ tooltipHelp = "PDF रीडर में जब कोई फ़ील्ड �
 type = "प्रकार"
 typeHelp = "यह किस प्रकार का फ़ील्ड है। इसे बदलने से फ़ील्ड फिर से बनता है, इसलिए इसका मौजूदा मान आगे नहीं ले जाया जाता।"
 
+[formFill.fieldTypes]
+button = "बटन"
+checkbox = "चेकबॉक्स"
+combobox = "ड्रॉपडाउन"
+listbox = "सूची बॉक्स"
+radio = "रेडियो बटन"
+radioGroup = "रेडियो बटन समूह"
+signature = "हस्ताक्षर"
+text = "टेक्स्ट"
+
 [formFill.mode]
 create = "बनाएँ"
 fill = "भरें"
@@ -5011,11 +5248,16 @@ restore = "पुनर्स्थापित करें"
 
 [formFill.sidebar]
 close = "साइडबार बंद करें"
+empty = "इस PDF में कोई फ़ॉर्म फ़ील्ड नहीं मिला"
+loading = "फ़ॉर्म फ़ील्ड लोड हो रहे हैं..."
+pageNumber = "पृष्ठ {{page}}"
+title = "फ़ॉर्म फ़ील्ड"
 
 [getPdfInfo]
 downloadJson = "JSON डाउनलोड करें"
 downloads = "डाउनलोड"
 indexTitle = "अनुक्रमणिका"
+noData = "कोई डेटा नहीं"
 noneDetected = "कुछ भी पता नहीं चला"
 noResults = "रिपोर्ट बनाने के लिए टूल चलाएँ।"
 processing = "जानकारी निकाली जा रही है..."
@@ -5031,6 +5273,8 @@ noVerification = "कोई सत्यापन नहीं किया ग�
 noVerificationDesc = "इस दस्तावेज़ के लिए PDF मानकों का अनुपालन सत्यापित नहीं किया गया।"
 passed = "उत्तीर्ण"
 passedCount = "उत्तीर्ण"
+secCompliant = "दस्तावेज़ SEC EDGAR फाइलिंग आवश्यकताओं को पूरा करता है"
+secNotCompliant = "दस्तावेज़ SEC EDGAR फाइलिंग आवश्यकताओं को पूरा नहीं करता"
 
 [getPdfInfo.error]
 partial = "कुछ फ़ाइलों का प्रसंस्करण नहीं हो सका।"
@@ -5038,10 +5282,15 @@ unexpected = "निकालते समय अप्रत्याशित 
 
 [getPdfInfo.other]
 attachments = "संलग्नक"
+created = "बनाया गया: {{date}}"
 embeddedFiles = "एम्बेडेड फ़ाइलें"
+fileSizeBytes = "({{size}} bytes)"
 javaScript = "JavaScript"
 layers = "लेयर्स"
+modified = "संशोधित: {{date}}"
 structureTree = "स्ट्रक्चर ट्री"
+unnamedAttachment = "बिना नाम का अटैचमेंट"
+unnamedFile = "बिना नाम की फ़ाइल"
 xmp = "XMPMetadata"
 
 [getPdfInfo.perPage]
@@ -5051,6 +5300,7 @@ images = "छवियाँ"
 links = "लिंक"
 multimedia = "मल्टीमीडिया"
 size = "आकार"
+unnamedImage = "छवि"
 xobjects = "XObject की संख्या"
 
 [getPdfInfo.report]
@@ -5579,6 +5829,7 @@ invalidEmail = "अमान्य ईमेल पता"
 invalidInvitation = "अमान्य आमंत्रण"
 invalidToken = "अमान्य आमंत्रण लिंक"
 linkExpires = "लिंक समाप्त होगा"
+linkExpiresAt = "लिंक समाप्त होता है: {{date}} को {{time}} बजे"
 passwordMismatch = "पासवर्ड मेल नहीं खाते"
 passwordPlaceholder = "अपना पासवर्ड दर्ज करें"
 passwordRequired = "पासवर्ड आवश्यक है"
@@ -5593,6 +5844,7 @@ welcomeTitle = "आपको आमंत्रित किया गया ह
 addFiles = "फ़ाइलें जोड़ें"
 mobileUpload = "मोबाइल से अपलोड करें"
 openFromComputer = "कंप्यूटर से खोलें"
+settingUpSession = "आपका सत्र सेट किया जा रहा है..."
 uploadFromComputer = "कंप्यूटर से अपलोड करें"
 
 [language]
@@ -5674,6 +5926,7 @@ sessionExpired = "आपका सत्र समाप्त हो गया 
 signin = "साइन इन करें"
 signingIn = "साइन इन किया जा रहा है..."
 signInWith = "इसके साथ साइन इन करें"
+signInWithProvider = "{{provider}} के साथ साइन इन करें"
 title = "साइन इन करें"
 unexpectedError = "अप्रत्याशित त्रुटि: {{message}}"
 updatePassword = "पासवर्ड अपडेट करें"
@@ -5715,6 +5968,9 @@ label = "मर्ज की गई फ़ाइल में डिजिटल
 description = "फ़ाइलें मर्ज करते समय डिजिटल हस्ताक्षर अमान्य हो जाएंगे। अंतिम मर्ज किए गए PDF से उन्हें हटाने के लिए इसे चुनें।"
 title = "डिजिटल हस्ताक्षर हटाएँ"
 
+[merge.settings]
+title = "सेटिंग्स"
+
 [merge.sortBy]
 ascending = "आरोही"
 dateModified = "संशोधित तिथि"
@@ -5723,6 +5979,9 @@ description = "फ़ाइलें चयन क्रम में मर्�
 filename = "फ़ाइल नाम"
 label = "इसके अनुसार क्रमबद्ध करें"
 sort = "छाँटें"
+
+[merge.sortFiles]
+title = "फ़ाइलें क्रमबद्ध करें"
 
 [merge.tooltip.header]
 title = "मर्ज सेटिंग्स का अवलोकन"
@@ -5771,6 +6030,7 @@ validating = "सेशन सत्यापित किया जा रह�
 
 [mobileSign]
 clear = "Clear"
+drawingArea = "हस्ताक्षर ड्रॉइंग क्षेत्र"
 invalidSession = "Session expired"
 invalidSessionMessage = "This QR code is no longer valid. Open the Sign tool on your computer and scan the new code."
 penSizeLabel = "Pen size"
@@ -5786,6 +6046,7 @@ validating = "Checking session…"
 fromGallery = "From gallery"
 hint = "Photograph a signature on white paper, or choose an existing image."
 invalidType = "Please choose an image file."
+previewAlt = "हस्ताक्षर"
 takePhoto = "Take a photo"
 
 [mobileSign.tab]
@@ -5827,6 +6088,8 @@ label = "Free credits"
 adoptFailed = "दस्तावेज़ अनलॉक हो गया था लेकिन यहाँ खोला नहीं जा सका। टूल को सीधे आज़माएँ।"
 empty = "रिपोर्ट करने के लिए कुछ नहीं।"
 handoffUnavailable = "यह ब्राउज़र प्रोसेसर को दस्तावेज़ संपादक को पास करने नहीं देगा। इसके बजाय इसे संपादक से खोलें।"
+inSmartFolder = "यह दस्तावेज़ एक स्मार्ट फ़ोल्डर में है, इसलिए इसे यहाँ के बजाय सर्वर पर संभाला जाता है।"
+inSmartFolderNamed = "{{name}} एक स्मार्ट फ़ोल्डर में है, इसलिए इसे यहाँ के बजाय सर्वर पर संभाला जाता है।"
 noDocumentLinked = "यह विफलता किसी विशिष्ट दस्तावेज़ से जुड़ी नहीं है, इसलिए यहाँ खोलने के लिए कुछ नहीं है।"
 notOnThisDevice = "यह दस्तावेज़ इस डिवाइस पर नहीं है, इसलिए इसे यहाँ नहीं खोला जा सकता।"
 occurrences = "{{count}} बार"
@@ -5837,6 +6100,7 @@ repairedRerunNotAdopted = "रिपेयर किया गया दस्�
 repairedRerunUndelivered = "दस्तावेज़ रिपेयर हो गया और नीति फिर से चलना शुरू हुई, लेकिन उसका परिणाम यहाँ डिलीवर नहीं किया जा सकता, इसलिए यह विफलता खुली रहती है।"
 rerunRejected = "नीति अभी फिर से नहीं चलाई जा सकी। थोड़ी देर में फिर प्रयास करें।"
 rerunUndelivered = "नीति फिर से चलना शुरू हुई, लेकिन उसका परिणाम यहाँ डिलीवर नहीं किया जा सकता, इसलिए यह विफलता खुली रहती है।"
+retryInFolderFailed = "उस दस्तावेज़ को अभी फिर से नहीं चलाया जा सका।"
 retryUnavailable = "इस दस्तावेज़ का अब इस ब्राउज़र से पुनः प्रयास नहीं किया जा सकता।"
 title = "सूचनाएँ"
 unlockedNotRerun = "दस्तावेज़ अनलॉक होकर यहाँ खुल गया, लेकिन उस पर नीति फिर से नहीं चलाई जा सकी।"
@@ -5894,6 +6158,9 @@ profile = "See your basic profile information"
 desc = "स्कैन को साफ करें और PDF के अंदर छवियों से टेक्स्ट का पता लगाएं और उसे टेक्स्ट के रूप में फिर से जोड़ें।"
 tags = "पहचान,टेक्स्ट,छवि,स्कैन,पढ़ें,पहचानें,पहचान,संपादन योग्य"
 title = "OCR / स्कैन साफ करें"
+
+[ocr.advanced]
+title = "उन्नत"
 
 [ocr.error]
 failed = "OCR ऑपरेशन विफल"
@@ -6019,9 +6286,9 @@ title = "Desktop के लिए Stirling download करें"
 description = "अपनी team के साथ collaborate करें"
 title = "team members को invite करें"
 
-[onboarding.checklist.shareAnalytics]
-description = "Stirling को बेहतर बनाने में मदद करें"
-title = "anonymous usage data share करें"
+[onboarding.checklist.setDefaultApp]
+description = "PDF फ़ाइलें Stirling PDF में खोलें"
+title = "Stirling को अपना डिफ़ॉल्ट बनाएँ"
 
 [onboarding.checklist.takeTour]
 description = "एक quick walkthrough में देखें कि Stirling कैसे काम करता है"
@@ -6089,6 +6356,7 @@ message = "एप्लिकेशन में हाल ही में म�
 roleAdmin = "प्रशासक"
 rolePlaceholder = "अपनी भूमिका की पुष्टि करें"
 roleUser = "उपयोगकर्ता"
+title = "सुरक्षा जाँच"
 
 [onboarding.serverLicense]
 freeBody = "हमारे <strong>Open-Core</strong> लाइसेंस में <strong>OAuth SSO</strong> और अधिकतम <strong>{{freeTierLimit}}</strong> उपयोगकर्ता मुफ़्त शामिल हैं। बिना रुकावट विस्तार के लिए हम Stirling Team प्लान की सलाह देते हैं — $99/माह में <strong>100 उपयोगकर्ता</strong>।"
@@ -6177,16 +6445,93 @@ title = "ओवरले फ़ाइलें"
 text = "अग्रभूमि ओवरले को पृष्ठ के ऊपर रखती है। पृष्ठभूमि इसे पीछे रखती है।"
 title = "ओवरले स्थिति"
 
+[ownership]
+acceptInvite = "वे खाता बना सकते हैं या साइन इन कर सकते हैं, फिर आमंत्रण स्वीकार कर सकते हैं।"
+accessUpdated = "उनका स्वामी एक्सेस तैयार है।"
+accountLinkDisabled = "इस सर्वर में अभी भी क्लाउड लिंक है, लेकिन खाता लिंकिंग बंद है। सर्वर ऑपरेटर से खाता लिंकिंग सक्षम करने के लिए कहें, फिर इस हस्तांतरण को फिर से शुरू करें या सेटिंग्स में सर्वर को अनलिंक करें।"
+anotherTeam = "क्या पहले से किसी अन्य टीम में हैं?"
+billing = "सदस्यता, वॉलेट, भुगतान विधि और मौजूदा लाइसेंस यथावत रहते हैं। बिलिंग संपर्क विवरण स्वतः नहीं बदलते।"
+billingDetails = "बिलिंग विवरण"
+billingUnchanged = "सदस्यता और बिलिंग यथावत रहती हैं"
+bothDone = "सर्वर और क्लाउड स्वामित्व अब संरेखित हैं।"
+cancel = "हस्तांतरण रद्द करें"
+check = "फिर से जाँचें"
+checkAccount = "खाता जाँचें"
+chooseEmail = "{{team}} में उनका खाता चुनें, या उन्हें आमंत्रित करने के लिए ईमेल दर्ज करें।"
+close = "हस्तांतरण डायलॉग बंद करें"
+cloudAccount = "Stirling खाता"
+cloudScopeStyled = "<user>{{name}}</user> {{team}}, उसके सदस्यों और बिलिंग का प्रबंधन करेंगे।"
+cloudTargetChanged = "किसी अन्य क्लाउड सदस्य को चुनें। यह खाता अब हस्तांतरण के लिए योग्य नहीं है।"
+confirm = "मैं एक्सेस और स्वामित्व में होने वाले बदलावों को समझता/समझती हूँ।"
+done = "स्वामित्व हस्तांतरित हो गया"
+error = "हम यह चरण पूरा नहीं कर सके। जाँचें कि प्राप्तकर्ता सक्रिय है और सर्वर कनेक्टेड है, फिर फिर से जाँचें। लंबित हस्तांतरण यहाँ से फिर से शुरू किया जा सकता है।"
+finish = "सर्वर हस्तांतरण समाप्त करें"
+inProgress = "किसी अन्य प्राप्तकर्ता के लिए पहले से लंबित हस्तांतरण है। इस डायलॉग को बंद करें और इसे Users से फिर से शुरू करें।"
+instances = "इस टीम में {{count}} लिंक किए गए सर्वर हैं। उनकी क्लाउड बिलिंग इसी टीम के साथ रहती है; अन्य सर्वरों के स्थानीय स्वामी नहीं बदलते।"
+invitationSent = "आमंत्रण भेजा गया"
+invite = "आमंत्रण भेजें"
+inviteAddress = "<account>{{email}}</account> को {{team}} में आमंत्रित करें।"
+inviteBlocked = "आमंत्रण भेजा नहीं जा सका। उपलब्ध टीम सीटों की जाँच करें और देखें कि प्राप्तकर्ता के पास पहले से भुगतान वाली सदस्यता तो नहीं है।"
+linkChanged = "सर्वर का क्लाउड लिंक बदल गया। फिर से शुरू करने से पहले सर्वर ऑपरेटर से मूल लिंक पुनर्स्थापित करने के लिए कहें।"
+linkedServerCount = "{{count}} लिंक किए गए सर्वर"
+linkRevoked = "इस सर्वर का क्लाउड लिंक अब मान्य नहीं है। हस्तांतरण रद्द करें, फिर सेटिंग्स में अपना Stirling खाता फिर से कनेक्ट करें। स्वामित्व नहीं बदलेगा।"
+localScope = "वे इस सर्वर के स्वामी होंगे और बिलिंग व क्लाउड कनेक्शन प्रबंधित करेंगे। आपका व्यवस्थापक एक्सेस बना रहेगा, लेकिन उन सेटिंग्स तक आपकी पहुँच खो जाएगी।"
+membershipDetails = "टीम सदस्यता विवरण"
+membershipFirst = "हस्तांतरण की पुष्टि करने से पहले उन्हें टीम में शामिल होना होगा।"
+membershipRequired = "स्वामित्व हस्तांतरित होने से पहले प्राप्तकर्ता को इस क्लाउड टीम में शामिल होना होगा। उनसे अपना आमंत्रण स्वीकार करने को कहें, फिर फिर से जाँचें।"
+newOwnerLabel = "नया स्वामी"
+newOwnerStyled = "<user>{{name}}</user> अब स्वामी हैं।"
+noEmailMatches = "कोई मिलते-जुलते सदस्य नहीं। आमंत्रित करने के लिए ईमेल दर्ज करें।"
+otherTeam = "यदि वे किसी अन्य टीम से संबंधित हैं, तो स्वीकार करने पर उनका खाता स्थानांतरित हो सकता है। भुगतान वाला खाता या किसी अन्य टीम का स्वामित्व पहले हल करना पड़ सकता है। हम उनकी सदस्यता नहीं हटाएँगे या टीमों को मर्ज नहीं करेंगे।"
+ownerChanged = "यह हस्तांतरण शुरू होने के बाद क्लाउड स्वामित्व बदल गया। इस हस्तांतरण को रद्द करें और वर्तमान क्लाउड स्वामी के साथ फिर से शुरू करें।"
+ownerRequired = "वर्तमान क्लाउड टीम स्वामी के रूप में साइन इन करें, फिर इस चरण को फिर से आज़माएँ।"
+partialError = "क्लाउड स्वामित्व हस्तांतरित हो गया है। दोनों स्वामियों को संरेखित रखने के लिए सर्वर हस्तांतरण पूरा करें।"
+partialTargetChanged = "चयनित सर्वर उपयोगकर्ता का एक्सेस और मूल खाता विवरण पुनर्स्थापित करें, फिर सर्वर हस्तांतरण समाप्त करें। क्लाउड स्वामित्व पहले ही हस्तांतरित हो चुका है।"
+pending = "{{name}} को स्वामित्व हस्तांतरण लंबित है।"
+personalTeam = "व्यक्तिगत टीमें स्वामित्व हस्तांतरित नहीं कर सकतीं।"
+prepareHelp = "प्राप्तकर्ता ने अपना पहला सर्वर लॉगिन पूरा किया होना चाहिए। आप यहाँ फिर से प्रयास कर सकते हैं, या किसी और को चुनने के लिए Users पर लौट सकते हैं।"
+resume = "हस्तांतरण फिर से शुरू करें"
+searchEmail = "ईमेल खोजें या दर्ज करें"
+serverAccount = "सर्वर खाता"
+serverDetails = "लिंक किए गए सर्वर का विवरण"
+signIn = "क्लाउड में साइन इन करें"
+startFromInstanceBody = "इस टीम में लिंक किए गए सर्वर हैं। self-hosted सर्वर पर, सेटिंग्स → Users खोलें और प्राप्तकर्ता की भूमिका Org Owner में बदलें। यह प्रक्रिया सर्वर हस्तांतरण पूरा करने से पहले क्लाउड स्वामित्व हस्तांतरित करती है।"
+startFromInstanceTitle = "अपने self-hosted सर्वर से शुरू करें"
+stayOwner = "हस्तांतरण तक आप स्वामी बने रहेंगे।"
+targetChanged = "प्राप्तकर्ता का खाता बदल गया। उनका एक्सेस पुनर्स्थापित करें या इस हस्तांतरण को रद्द करें और उन्हें फिर से चुनें।"
+title = "स्वामित्व हस्तांतरित करें"
+transfer = "स्वामित्व हस्तांतरित करें"
+waitingForEmail = "{{email}} के {{team}} में शामिल होने की प्रतीक्षा है।"
+working = "स्वामित्व की जाँच और अपडेट किया जा रहा है..."
+yourCloudAccess = "आप टीम सदस्य बन जाएँगे और स्वामी एक्सेस खो देंगे।"
+
 [pageEdit]
 deselectAll = "कोई न चुनें"
 selectAll = "सभी चुनें"
 
 [pageEditor]
+dragPreviewAlt = "खींचा जा रहा है"
+filePosition = "स्थिति {{position}}"
+pageLabel = "पृष्ठ {{page}}"
 title = "पृष्ठ संपादक"
+
+[pageEditor.actions]
+deletePage = "पृष्ठ हटाएँ"
+insertFileAfter = "इसके बाद फ़ाइल डालें"
+moveLeft = "बाएँ ले जाएँ"
+moveRight = "दाएँ ले जाएँ"
+rotateLeft = "बाएँ घुमाएँ"
+rotateRight = "दाएँ घुमाएँ"
+splitAfter = "इसके बाद विभाजित करें"
 
 [pageEditor.emptyState]
 body = "पृष्ठ संपादित करना शुरू करने के लिए फ़ाइलें जोड़ें"
 title = "कोई PDF फ़ाइलें लोड नहीं"
+
+[pageEditor.fileDropdown]
+addFile = "फ़ाइल जोड़ें"
+selectedCount = "{{selected}}/{{total}} फ़ाइलें चयनित"
+untitled = "शीर्षकहीन"
 
 [pageEditor.toolbar]
 delete = "चयनित हटाएं"
@@ -6292,6 +6637,11 @@ portrait = "पोर्ट्रेट"
 label = "पढ़ने की दिशा:"
 ltr = "बाएँ से दाएँ"
 rtl = "दाएँ से बाएँ"
+
+[pageLayout.steps]
+advanced = "उन्नत सेटिंग्स"
+layout = "लेआउट सेटिंग्स"
+marginsBorders = "मार्जिन और बॉर्डर"
 
 [pageLayout.tooltip.header]
 title = "पेज लेआउट मार्गदर्शिका"
@@ -6613,6 +6963,7 @@ teamChangeUnavailable = "निर्धारित टीम बदलाव �
 teamPending = "आपकी टीम खरीदारी अभी प्रोसेस हो रही है। थोड़ी देर में इस पेज को रीफ़्रेश करें।"
 teamProcessing = "टीम खरीदारी प्रोसेस हो रही है"
 teamScheduled = "आपका टीम बदलाव {{date}} के लिए निर्धारित है। तब तक आपकी वर्तमान क्षमता सक्रिय रहेगी।"
+unknownError = "एक अज्ञात त्रुटि हुई"
 upgradeComplete = "अपग्रेड पूर्ण"
 upgradeCompleteMessage = "आपकी सदस्यता सफलतापूर्वक अपग्रेड हो गई। आपकी मौजूदा लाइसेंस की अपडेट कर दी गई है।"
 upgradeSuccess = "भुगतान सफल! आपकी सदस्यता अपग्रेड हो गई है। लाइसेंस आपके सर्वर पर अपडेट कर दिया गया है। आपको शीघ्र ही एक पुष्टि ईमेल मिलेगा।"
@@ -6625,9 +6976,11 @@ title = "टीम प्लान समायोजित करें"
 [payment.capacityStage]
 adjustmentNote = "पुष्टि करने से पहले Stripe सटीक शुल्क, कोई भी prorations और आपकी अगली बिलिंग तिथि दिखाएगा। उपलब्ध होने पर आपकी सहेजी गई भुगतान विधि का उपयोग किया जाएगा।"
 continue = "भुगतान पर जारी रखें"
+currencyAtCheckout = "Stripe चेकआउट पर अंतिम राशि और भुगतान मुद्रा की पुष्टि करता है।"
 customLabel = "उपयोगकर्ताओं की संख्या"
 dueToday = "आज देय"
 enterpriseQuote = "enterprise कोट प्राप्त करें"
+estimatedTotal = "अनुमानित कुल"
 lineItem = "टीम · {{price}}{{period}} प्रति {{block}} उपयोगकर्ता"
 minimumForCurrentUsers = "आपके पास {{users}} उपयोगकर्ता हैं, इसलिए प्लान में कम से कम {{minimum}} कवर होना चाहिए।"
 modalTitle = "{{planName}} में अपग्रेड करें"
@@ -6665,6 +7018,14 @@ selectedMonthly = "मासिक"
 selectedYearly = "वार्षिक"
 selectMonthly = "मासिक चुनें"
 selectYearly = "वार्षिक चुनें"
+
+[payment.priceDisplay]
+basePrice = "आधार मूल्य"
+perPeriod = "/{{period}}"
+perSeat = "प्रति सीट"
+perSeatPeriod = "/सीट/{{period}}"
+totalSeats_one = "कुल ({{count}} सीट)"
+totalSeats_other = "कुल ({{count}} सीटें)"
 
 [payment.upgradeTeam]
 title = "टीम में अपग्रेड करें"
@@ -6865,6 +7226,29 @@ width = "चौड़ाई"
 widthHint = "टेक्स्ट बॉक्स की चौड़ाई उसकी सामग्री और wrapping के अनुसार होती है।"
 x = "X"
 y = "Y"
+
+[pdfTextEditor.mobile]
+actions = "एडिटर कार्रवाइयाँ"
+addImage = "छवि"
+addText = "टेक्स्ट"
+cancel = "रद्द करें"
+delete = "हटाएँ"
+details = "विवरण"
+document = "दस्तावेज़"
+done = "हो गया"
+download = "सहेजें और डाउनलोड करें"
+find = "खोजें"
+lock = "लॉक करें"
+openPdf = "PDF खोलें"
+panelHint = "संपादन Workspace दृश्य में होता है। पेज पर टेक्स्ट बदलने के लिए उस पर टैप करें।"
+save = "सहेजें"
+style = "शैली"
+tapToPlace = "जहाँ टेक्स्ट जाना चाहिए, वहाँ पेज पर टैप करें"
+unlock = "अनलॉक करें"
+
+[pdfTextEditor.pageView]
+pageNumber = "पृष्ठ {{page}}"
+renderFailed = "पृष्ठ रेंडर करने में विफल"
 
 [pdfTextEditor.password]
 cancel = "रद्द करें"
@@ -7092,6 +7476,7 @@ title = "पाइपलाइन"
 contact = "हमसे संपर्क करें"
 current = "वर्तमान प्लान"
 featureComparison = "फ़ीचर तुलना"
+fetchError = "मूल्य निर्धारण डेटा प्राप्त करने में विफल"
 from = "से"
 hideComparison = "फ़ीचर तुलना छिपाएँ"
 licensedSeats = "लाइसेंस प्राप्त: {{count}} सीटें"
@@ -7107,6 +7492,8 @@ withServer = "+ सर्वर प्लान"
 [plan.api]
 large = "5,000 क्रेडिट्स"
 medium = "1,000 क्रेडिट्स"
+perCredit = "प्रति क्रेडिट {{price}}"
+perCreditWithDiscount = "प्रति क्रेडिट {{price}} • {{discount}}% छूट"
 small = "500 क्रेडिट्स"
 xsmall = "100 क्रेडिट्स"
 
@@ -7182,14 +7569,9 @@ upToFiveUsers = "5 उपयोगकर्ताओं तक"
 usageTrackingPrometheus = "उपयोग ट्रैकिंग और Prometheus"
 usersIncluded = "100 उपयोगकर्ता शामिल"
 
-[plan.licenseWarning]
-body = "आपके पास {{total}} उपयोगकर्ता हैं पर मुफ्त स्तर प्रति सर्वर केवल {{limit}} का समर्थन करता है। Stirling PDF को सुचारू रूप से चलाने के लिए अपग्रेड करें।"
-cta = "प्लान देखें"
-overLimit = "{{limit}} से अधिक"
-title = "मुफ्त सेल्फ-होस्टेड सीमा पूरी हुई"
-
 [plan.period]
 month = "माह"
+year = "वर्ष"
 
 [plan.pro]
 highlight1 = "असीमित टूल उपयोग"
@@ -7315,6 +7697,9 @@ pdfa-1 = "PDF/A-1b"
 pdfa-2b = "PDF/A-2b"
 pdfa-3b = "PDF/A-3b"
 
+[portal.accountLink]
+ownerRequired = "केवल संगठन स्वामी इस सर्वर को लिंक या अनलिंक कर सकता है।"
+
 [portal.accountLink.card]
 billingNote = "Unattended processing का बिल आपके org wallet से लिया जाता है।"
 connectDescription = "Stirling Cloud में अपनी टीम का प्रोसेसिंग अलाउंस इस्तेमाल करने के लिए इस सर्वर को कनेक्ट करें।"
@@ -7436,6 +7821,7 @@ identity = "Stirling खाता"
 linkTitle = "अपना Stirling account लिंक करें"
 noAuthorizeUrl = "Stirling ने जारी रखने के लिए कोई स्थान वापस नहीं किया। थोड़ी देर में फिर कोशिश करें।"
 startFailed = "कनेक्शन शुरू करने के लिए Stirling तक नहीं पहुंच सके। इस सर्वर की outbound network access जांचें, फिर फिर कोशिश करें।"
+transferPending = "स्वामित्व हस्तांतरण लंबित है। इसे समाप्त या रद्द करने के लिए सेटिंग्स → Users पर जाएँ, फिर लिंक करने का फिर से प्रयास करें।"
 
 [portal.accountLink.modal.loginNotConfigured]
 after = "hosted Stirling account के विरुद्ध in-app linking सक्षम करने के लिए।"
@@ -7574,6 +7960,49 @@ plan = "Plan"
 procurement = "Procurement"
 usage = "Usage"
 
+[portal.billing.compare]
+current = "वर्तमान"
+enterpriseData = "डेटा रेजिडेंसी और SCIM"
+enterpriseName = "Enterprise"
+enterprisePrice = "आपके अनुबंध के अनुसार"
+enterpriseProcessing = "मीटर-आधारित या फ्लैट"
+enterpriseSignIn = "SAML और ऑडिटिंग"
+enterpriseSupport = "अपटाइम SLAs, डिप्लॉयमेंट सहायता"
+enterpriseUsers = "कोई सीमा नहीं"
+enterpriseWhere = "साथ ही multi-node और air-gapped"
+exploreEnterprise = "Enterprise देखें"
+freeData = "जहाँ आप इसे चलाते हैं, वहीं रहता है"
+freeName = "Free"
+freePrice = "कोई कार्ड नहीं, कोई समाप्ति नहीं"
+freeProcessing = "हर महीने {{allowance}} क्रेडिट"
+freeProcessingUnknown = "मासिक क्रेडिट भत्ता"
+freeSignIn = "ईमेल, Google और SSO"
+freeSignInNote = "OAuth2/OIDC"
+freeSupport = "समुदाय"
+freeUsers = "{{users}} तक"
+freeUsersUnknown = "एक छोटी टीम"
+freeWhere = "Cloud, डेस्कटॉप या self-hosted"
+lede = "हर प्लान में हर PDF टूल और SSO शामिल है। फर्क यह है कि कितने लोग इसका उपयोग करते हैं, यह कहाँ चलता है, और आपको कैसी सहायता मिलती है।"
+open = "प्लान की तुलना करें"
+rowData = "आपका डेटा"
+rowHeader = "फ़ीचर"
+rowProcessing = "प्रोसेसिंग"
+rowSignIn = "साइन-इन"
+rowSupport = "सहायता"
+rowUsers = "उपयोगकर्ता"
+rowWhere = "यह कहाँ चलता है"
+teamData = "Google Drive, आपका अपना डेटाबेस"
+teamName = "Team"
+teamPrice = "प्रति 100 उपयोगकर्ता $99/mo"
+teamProcessing = "हर महीने {{allowance}}, फिर मीटर-आधारित"
+teamProcessingUnknown = "बड़ा भत्ता, फिर मीटर-आधारित"
+teamSignIn = "वही"
+teamSupport = "ईमेल"
+teamUsers = "प्रति ब्लॉक 100"
+teamWhere = "Cloud, डेस्कटॉप या self-hosted"
+title = "प्लान की तुलना करें"
+upgradeTeam = "Team में अपग्रेड करें"
+
 [portal.billing.cycle]
 credits = "क्रेडिट्स"
 creditsNote = "{{units}} उपयोग किए गए · मुफ्त और prepaid क्रेडिट्स शामिल हैं"
@@ -7679,6 +8108,8 @@ payTitle = "अपने year के लिए pay करें"
 step = "Step {{current}} of {{total}}"
 
 [portal.billing.prepaid.calc]
+currency = "कोटेशन मुद्रा"
+currencyLocked = "आपकी मौजूदा Stripe बिलिंग मुद्रा का उपयोग करता है।"
 rateUnknown = "checkout पर हम exact price दिखाएँगे।"
 
 [portal.billing.prepaid.consent]
@@ -8482,6 +8913,10 @@ title = "फ़ाइल repair नहीं हो सकी"
 description = "आपकी फ़ाइल ऐसा format नहीं है जिसे यह step खोल सके, इसलिए run इसे पढ़ नहीं सका।"
 title = "गलत फ़ाइल type"
 
+[portal.failures.kind.sourceUnreadable]
+description = "आपका स्मार्ट फ़ोल्डर पढ़ा नहीं जा सका, इसलिए उसमें मौजूद कुछ भी प्रोसेस नहीं हुआ।"
+title = "फ़ोल्डर पढ़ा नहीं जा सका"
+
 [portal.failures.kind.stepCannotRenderPage]
 description = "आपकी फ़ाइल में एक page draw नहीं किया जा सका, इसलिए run पूरा नहीं हो सका।"
 title = "Page render नहीं किया जा सका"
@@ -9272,6 +9707,7 @@ labelId = "Label ID"
 labelIdHelp = "Purview portal से label का GUID। label लागू करने से उसका metadata PDF पर लिखा जाता है; यह encrypt नहीं कर सकता, जिसके लिए Microsoft client आवश्यक है।"
 labelName = "Label नाम (वैकल्पिक)"
 labelNameHelp = "ID के साथ रिकॉर्ड किया जाता है ताकि लोग और tools label को पहचान सकें।"
+labelNamePlaceholder = "गोपनीय"
 
 [portal.policies.config.purview.fields.method]
 help = "Purview किसी नीति द्वारा लागू किए गए label और व्यक्ति द्वारा चुने गए label में अंतर करता है।"
@@ -10256,31 +10692,6 @@ unlimited = "{{used}} · Unlimited"
 [printFile]
 title = "फ़ाइल प्रिंट करें"
 
-[processingFolders.downloads]
-approve = "मेरे Downloads प्रोसेस करें"
-cancelSweep = "रद्द करें"
-capped = "आपके पास {{found}} PDFs हैं; पहले {{limit}} अभी प्रोसेस किए जाते हैं और बाकी बाद में।"
-close = "पूर्ण"
-explain_one = "Stirling आपके Downloads folder में पहले से मौजूद {{count}} PDF को वर्गीकृत कर सकता है और परिणाम यहाँ खोल सकता है।"
-explain_other = "Stirling आपके Downloads folder में पहले से मौजूद {{count}} PDFs को वर्गीकृत कर सकता है और परिणाम यहाँ खोल सकता है।"
-failed = "इसे सेट अप नहीं किया जा सका। आपकी फ़ाइलें नहीं बदली गई हैं।"
-finished_one = "{{count}} फ़ाइल वर्गीकृत की गई और उनमें से {{opened}} यहाँ खोली गईं, काम करने के लिए तैयार।"
-finished_other = "{{count}} फ़ाइलें वर्गीकृत की गईं और उनमें से {{opened}} यहाँ खोली गईं, काम करने के लिए तैयार।"
-nothingNew_one = "प्रोसेस करने के लिए कुछ नया नहीं - यह {{count}} फ़ाइल पहले ही हो चुकी है।"
-nothingNew_other = "प्रोसेस करने के लिए कुछ नया नहीं - ये {{count}} फ़ाइलें पहले ही हो चुकी हैं।"
-notModified = "Downloads में आपकी फ़ाइलें नहीं बदली जातीं - Stirling उन्हें पढ़ता है और यहाँ खोलता है।"
-notNow = "अभी नहीं"
-progressCounts = "{{total}} में से प्रोसेस किए गए"
-someFailed_one = "{{count}} प्रोसेस नहीं किया जा सका और उसे बिना छुए छोड़ दिया गया।"
-someFailed_other = "{{count}} प्रोसेस नहीं किए जा सके और उन्हें बिना छुए छोड़ दिया गया।"
-stillRunning = "कुछ फ़ाइलें अभी भी background में प्रोसेस हो रही हैं।"
-title = "अपने Downloads व्यवस्थित करें?"
-trigger_one = "Downloads में {{count}} PDF प्रोसेस करें"
-trigger_other = "Downloads में {{count}} PDFs प्रोसेस करें"
-typesFound_one = "{{count}} दस्तावेज़ प्रकार मिला"
-typesFound_other = "{{count}} दस्तावेज़ प्रकार मिले"
-working = "प्रोसेस हो रहा है ..."
-
 [processingFolders.setup]
 addFolder = "Folder जोड़ें"
 advancedSteps = "यह folder एक processing setup का उपयोग करता है जिसे यह wizard edit नहीं कर सकता। इसके सहेजे गए steps नहीं बदले गए हैं।"
@@ -10358,6 +10769,10 @@ label = "Client ID"
 [provider.googledrive.enabled]
 description = "उपयोगकर्ताओं को सीधे Google Drive से फ़ाइलें आयात करने दें"
 label = "Google Drive फ़ाइल पिकर सक्षम करें"
+
+[provider.googledrive.errors]
+notConfigured = "Google Drive कॉन्फ़िगर नहीं है"
+pickerFailed = "Google Drive picker खोलने में विफल"
 
 [provider.oauth2.generic]
 name = "Generic OAuth2"
@@ -10606,6 +11021,7 @@ applyWarning = "⚠️ स्थायी लागू, पूर्ववत �
 colorLabel = "रिडैक्शन का रंग"
 controlsTitle = "मैनुअल रिडैक्शन नियंत्रण"
 instructions = "रिडैक्शन के लिए सामग्री चिह्नित करने हेतु PDF पर टेक्स्ट चुनें या क्षेत्र बनाएं।"
+notImplemented = "लागू होने पर मैनुअल redaction इंटरफ़ेस यहाँ उपलब्ध होगा।"
 title = "रिडैक्शन टूल"
 
 [redact.modeSelector]
@@ -10933,6 +11349,9 @@ failed = "PDF घुमाते समय एक त्रुटि हुई�
 [rotate.preview]
 title = "रोटेशन पूर्वावलोकन"
 
+[rotate.settings]
+title = "सेटिंग्स"
+
 [rotate.tooltip.controls]
 text = "ओरिएंटेशन समायोजित करने के लिए रोटेशन बटन का उपयोग करें। बायां बटन घड़ी की विपरीत दिशा में, दायां बटन घड़ी की दिशा में घुमाता है। हर क्लिक 90 डिग्री घुमाता है।"
 title = "नियंत्रण"
@@ -10950,6 +11369,16 @@ hideSmallLabels = "छोटे labels छिपाएँ"
 physicalValues = "Physical"
 scaled = "Scaled"
 showAllLabels = "सभी labels दिखाएँ"
+
+[ruler.units]
+cm = "सेंटीमीटर (cm)"
+ft = "फ़ीट (ft)"
+in = "इंच (in)"
+km = "किलोमीटर (km)"
+m = "मीटर (m)"
+mi = "मील (mi)"
+mm = "मिलीमीटर (mm)"
+yd = "यार्ड (yd)"
 
 [sanitize]
 desc = "PDF फ़ाइलों से संभावित रूप से हानिकारक तत्व हटाएँ।"
@@ -11015,6 +11444,7 @@ calibrationPaperDistance = "मापी गई पृष्ठ दूरी: {{
 calibrationTitle = "पैमाना कैलिब्रेट करें"
 calibrationTooltip = "पैमाना स्वचालित रूप से गणना करने के लिए कोई ज्ञात दूरी मापें"
 customScale = "कस्टम पैमाना"
+customUnit = "{{unit}} (कस्टम)"
 noneSet = "कोई कस्टम पैमाना सेट नहीं है"
 presets = "पूर्वनिर्धारित पैमाने"
 ratio = "पैमाना अनुपात"
@@ -11038,6 +11468,9 @@ title = "निकाली गई छवियाँ"
 
 [scannerImageSplit.error]
 failed = "इमेज स्कैन निकालते समय एक त्रुटि हुई।"
+
+[scannerImageSplit.settings]
+title = "सेटिंग्स"
 
 [scannerImageSplit.tooltip]
 headsUp = "ध्यान दें"
@@ -11105,6 +11538,9 @@ general = "सामान्य"
 limits = "सीमाएँ और प्रदर्शन"
 models = "मॉडल और प्रदाता"
 title = "AI"
+
+[settings.billing]
+title = "बिलिंग"
 
 [settings.configuration]
 advanced = "एडवांस्ड"
@@ -11179,8 +11615,6 @@ defaultPdfEditor = "डिफ़ॉल्ट PDF एडिटर"
 defaultPdfEditorActive = "Stirling PDF आपका डिफ़ॉल्ट PDF एडिटर है"
 defaultPdfEditorChecking = "जांच हो रही है..."
 defaultPdfEditorInactive = "कोई अन्य एप्लिकेशन डिफ़ॉल्ट है"
-defaultPdfEditorRemind = "डिफ़ॉल्ट के रूप में सेट करने के लिए मुझे याद दिलाएँ"
-defaultPdfEditorRemindDescription = "जब Stirling PDF आपका डिफ़ॉल्ट PDF एप्लिकेशन न हो, तो बैनर दिखाएँ।"
 defaultPdfEditorSet = "पहले से डिफ़ॉल्ट"
 defaultStartupView = "लॉन्च पर डिफ़ॉल्ट दृश्य"
 defaultStartupViewDescription = "ऐप शुरू होने पर बाएँ कॉलम में कौन-सा टैब सक्रिय हो, चुनें"
@@ -11449,6 +11883,15 @@ people = "सदस्य"
 teams = "टीमें"
 title = "वर्कस्पेस"
 
+[setup.error]
+loginIncomplete = "लॉगिन पूरा करने में विफल"
+noSaasServer = "कोई SaaS सर्वर कॉन्फ़िगर नहीं है"
+noServer = "कोई सर्वर कॉन्फ़िगर नहीं है"
+saasLoginFailed = "SaaS लॉगिन विफल"
+saasLoginIncomplete = "SaaS लॉगिन पूरा करने में विफल"
+selfHostedLoginFailed = "Self-hosted लॉगिन विफल"
+signupIncomplete = "साइनअप पूरा करने में विफल"
+
 [setup.login]
 connectingTo = "किससे कनेक्ट हो रहा है:"
 oauthPending = "प्रमाणीकरण के लिए ब्राउज़र खुल रहा है..."
@@ -11492,6 +11935,7 @@ configFetchError = "सर्वर कॉन्फ़िगरेशन प्�
 emptyUrl = "कृपया सर्वर URL दर्ज करें"
 invalidUrl = "अमान्य URL प्रारूप। कृपया https://your-server.com जैसे वैध URL दर्ज करें"
 testFailed = "कनेक्शन परीक्षण विफल"
+unknown = "अज्ञात त्रुटि"
 unreachable = "सर्वर से कनेक्ट नहीं हो सका"
 
 [setup.server.error.securityDisabled]
@@ -11600,6 +12044,7 @@ canvas = "कैनवास में हस्ताक्षर बनान�
 image = "ऊपर अपना हस्ताक्षर इमेज अपलोड करने के बाद, PDF पर कहीं भी क्लिक करके रखें।"
 noSignature = "प्लेसमेंट टूल्स सक्षम करने हेतु ऊपर एक हस्ताक्षर बनाएं।"
 paused = "प्लेसमेंट रुका हुआ"
+placeAnnotation = "अपना एनोटेशन रखने के लिए PDF पर कहीं भी क्लिक करें।"
 resumeHint = "प्लेसमेंट फिर से शुरू करें और क्लिक कर हस्ताक्षर जोड़ें।"
 saved = "ऊपर से एक सहेजा हुआ हस्ताक्षर चुनें, फिर उसे रखने के लिए PDF पर कहीं भी क्लिक करें।"
 text = "ऊपर अपना नाम दर्ज करने के बाद, PDF पर कहीं भी क्लिक करके अपना हस्ताक्षर रखें।"
@@ -11753,7 +12198,9 @@ signUpWith = "Sign up with"
 skip = "Skip"
 subtitle = "शुरू करने के लिए Stirling PDF से जुड़ें"
 title = "खाता बनाएँ"
+unableToAccessTool = "टूल तक पहुँचने में असमर्थ: {{error}}"
 unexpectedError = "अप्रत्याशित त्रुटि: {{message}}"
+unknownError = "अज्ञात त्रुटि"
 
 [sizes]
 large = "बड़ा"
@@ -11826,6 +12273,14 @@ rightToLeft = "दाएँ-से-बाएँ विभाजित करे�
 [split.poster.pageSize]
 description = "प्रिंटिंग के लिए आउटपुट पृष्ठों का आकार"
 label = "लक्षित पृष्ठ आकार"
+
+[split.poster.pageSize.options]
+a3 = "A3 (297 × 420 mm)"
+a4 = "A4 (210 × 297 mm)"
+a5 = "A5 (148 × 210 mm)"
+legal = "Legal (8.5 × 14 in)"
+letter = "Letter (8.5 × 11 in)"
+tabloid = "Tabloid (11 × 17 in)"
 
 [split.poster.xFactor]
 description = "प्रत्येक पृष्ठ को जितने कॉलम में बाँटना है"
@@ -12098,6 +12553,7 @@ confirmCancelInvite = "क्या आप वाकई यह निमंत�
 confirmLeave = "क्या आप वाकई इस टीम को छोड़ना चाहते हैं?"
 confirmLeaveLeader = "टीम लीडर होने के नाते, छोड़ने पर आप टीम से हट जाएँगे। क्या आप सुनिश्चित हैं?"
 confirmRemove = "क्या आप वाकई इस सदस्य को हटाना चाहते हैं?"
+currentUnavailable = "हम आपकी वर्तमान टीम की पहचान नहीं कर सके। फिर से प्रयास करें, या यदि यह जारी रहे तो सपोर्ट से संपर्क करें।"
 editName = "टीम नाम संपादित करें"
 inviteCancelled = "निमंत्रण रद्द किया गया"
 inviteError = "निमंत्रण भेजने में विफल"
@@ -12123,10 +12579,8 @@ renameCancel = "Rename रद्द करें"
 renameError = "टीम का नाम बदलने में विफल"
 renameSubmit = "Team का नाम सहेजें"
 renameSuccess = "टीम का नाम सफलतापूर्वक बदला गया"
-transferBody = "{{email}} को team owner बनाएँ? वे team membership और organization billing settings control करेंगे। आप member बन जाएँगे। Team की subscription और wallet team के साथ रहेंगे।"
 transferError = "Ownership transfer नहीं की जा सकी। Team refresh करें और फिर कोशिश करें।"
 transferSuccess = "Team ownership transfer हो गई। आपकी role अब member है।"
-transferTitle = "Team ownership transfer करें"
 
 [team.invitationBanner]
 acceptButton = "स्वीकार करें"
@@ -12228,6 +12682,10 @@ XML = "XML फ़ाइल"
 XPS = "XPS दस्तावेज़"
 ZIP = "ZIP आर्काइव"
 
+[toolLoading]
+generic = "टूल लोड हो रहा है..."
+named = "{{toolName}} लोड हो रहा है..."
+
 [toolPanel]
 alpha = "Alpha"
 backToAllTools = "सभी उपकरणों पर वापस"
@@ -12235,6 +12693,7 @@ goBack = "वापस जाएं"
 pdfTools = "PDF Tools"
 placeholder = "शुरू करने के लिए कोई टूल चुनें"
 premiumFeature = "प्रीमियम फीचर:"
+searchTools = "टूल खोजें"
 toolsHeader = "उपकरण"
 viewAllTools = "सभी उपकरण देखें"
 
@@ -12331,6 +12790,8 @@ stable = "STABLE"
 updateAvailable = "अपडेट उपलब्ध"
 urgentUpdateAvailable = "तत्काल अपडेट"
 version = "संस्करण"
+versionCount_one = "{{count}} संस्करण"
+versionCount_other = "{{count}} संस्करण"
 versionHistory = "संस्करण इतिहास"
 viewGuide = "गाइड देखें"
 whatsNewIn = "में नया क्या है"
@@ -12358,6 +12819,7 @@ title = "URL से PDF"
 aboutUsageAnalytics = "यूसेज एनालिटिक्स के बारे में"
 configureSettings = "एनालिटिक्स सेटिंग्स कॉन्फ़िगर करें"
 error = "उपयोग आँकड़े लोड करने में त्रुटि"
+loadFailed = "उपयोग आँकड़े लोड करने में विफल"
 noData = "कोई डेटा उपलब्ध नहीं"
 noDataMessage = "वर्तमान में कोई उपयोग आँकड़े उपलब्ध नहीं हैं।"
 usageAnalyticsExplanation = "यूसेज एनालिटिक्स एंडपॉइंट अनुरोधों और टूल उपयोग पैटर्न को ट्रैक करता है। ऑडिट लॉगिंग डैशबोर्ड के साथ मिलकर, आपको सिस्टम गतिविधि, प्रदर्शन और सुरक्षा इवेंट्स पर पूर्ण दृश्यता मिलती है।"
@@ -12399,13 +12861,10 @@ visits = "विज़िट"
 
 [users]
 lastActive = "अंतिम सक्रिय"
-learnMore = "Roles और access के बारे में अधिक जानें।"
 locked = "Locked"
 ownerSetupRequired = "Organization owner ने first login पूरा नहीं किया है। Ownership transfer करने से पहले setup पूरा करें या server operator से ownership recover करने को कहें।"
 roleFor = "{{name}} के लिए role"
 rowActions = "{{name}} के लिए कार्रवाइयां"
-showAll = "सभी {{count}} दिखाएं"
-showLess = "कम दिखाएं"
 subtitle2 = "आपके लोग, teams, और access levels।"
 suspended = "Suspended"
 teamActions = "Team actions"
@@ -12414,6 +12873,7 @@ you = "(आप)"
 
 [users.action]
 cancelInvite = "आमंत्रण रद्द करें"
+createFromDefault = "Default से टीम बनाएँ"
 deleteTeam = "Team हटाएं"
 disableMfa = "MFA रीसेट करें"
 move = "Team में ले जाएं"
@@ -12423,7 +12883,6 @@ removeTeam = "टीम से हटाएँ"
 rename = "Team का नाम बदलें"
 resetPw = "Password रीसेट करें"
 suspend = "Suspend"
-transferOwnership = "Ownership transfer करें"
 unlock = "Account unlock करें"
 
 [users.activity]
@@ -12451,6 +12910,7 @@ email = "Email"
 person = "Person"
 role = "Role"
 status = "Status"
+team = "टीम"
 
 [users.confirm]
 cancelInviteBody = "{{email}} को भेजा गया आमंत्रण रद्द करें? वे मौजूदा लिंक से शामिल नहीं हो पाएँगे।"
@@ -12462,22 +12922,17 @@ disableMfaTitle = "MFA रीसेट करें"
 removeBody = "{{name}} को organization से स्थायी रूप से हटाएं? इसे वापस नहीं किया जा सकता।"
 removeTeamBody = "{{name}} को टीम से हटाएँ? उनका खाता बना रहेगा, लेकिन वे इस टीम के संसाधनों तक पहुँच खो देंगे।"
 removeTitle = "Member हटाएं"
-transferOwnershipBody = "{{name}} को organization owner बनाएँ? वे admin बन जाएँगे। आप admin बने रहेंगे लेकिन ownership खो देंगे। केवल नया owner या server operator ही इसे वापस transfer कर सकता है।"
-transferOwnershipTitle = "Organization ownership transfer करें"
 
 [users.empty]
 description = "सहयोग शुरू करने के लिए अपनी team को आमंत्रित करें।"
 title = "अभी तक कोई member नहीं"
 
+[users.filters]
+noMatches = "इन फ़िल्टर से कोई मेल नहीं खाता।"
+search = "लोग खोजें"
+
 [users.group]
 addToTeam = "Team में जोड़ें"
-administrators = "{{count}} administrators"
-guestCount = "{{count}} guest"
-guests = "Guests"
-ledBy = "{{owner}} द्वारा नेतृत्व"
-org = "Organization"
-team = "{{name}} team"
-teamMeta = "{{count}} लोग"
 
 [users.invite]
 access = "Access"
@@ -12542,6 +12997,9 @@ title = "नई टीम"
 
 [users.renameTeam]
 apply = "नाम बदलें"
+defaultApply = "बनाएँ और स्थानांतरित करें"
+defaultDescription = "Default नए उपयोगकर्ताओं के लिए उपलब्ध रहेगा। वर्तमान में Default में मौजूद सभी लोगों को नई टीम में स्थानांतरित किया जाएगा।"
+defaultTitle = "Default से टीम बनाएँ"
 name = "टीम का नाम"
 title = "टीम का नाम बदलें"
 
@@ -12566,6 +13024,15 @@ guest = "अतिथि"
 member = "सदस्य"
 orgOwner = "संगठन स्वामी"
 teamOwner = "टीम स्वामी"
+
+[users.seats]
+full = "हर लाइसेंस प्राप्त सीट उपयोग में है। किसी और को जोड़ने के लिए एक सीट खाली करें, या सीट संख्या बढ़ाएँ।"
+update = "सीटें अपडेट करें"
+
+[users.tabs]
+all = "सभी"
+label = "टीम के अनुसार फ़िल्टर करें"
+unassigned = "कोई टीम नहीं"
 
 [users.team]
 grantProcessor = "टीम को Processor प्रदान करें"
@@ -12647,6 +13114,7 @@ signaturesInvalid = "{{count}} अमान्य"
 signaturesUnverified_one = "{{count}} समीक्षा आवश्यक"
 signaturesUnverified_other = "{{count}} समीक्षा आवश्यक"
 signaturesValid = "{{count}} पूरी तरह वैध"
+thumbnailAlt = "{{fileName}} थंबनेल"
 title = "हस्ताक्षर सत्यापन रिपोर्ट"
 
 [validateSignature.report.fields]
@@ -12684,6 +13152,7 @@ lastPage = "अंतिम पृष्ठ"
 loadingEngine = "PDF Engine load हो रहा है..."
 moreOptions = "अधिक"
 nextPage = "अगला पृष्ठ"
+noPdfProvided = "कोई PDF प्रदान नहीं किया गया"
 onlyPdfSupported = "व्यूअर केवल PDF फ़ाइलों का समर्थन करता है। यह फ़ाइल किसी भिन्न फ़ॉर्मेट में प्रतीत होती है।"
 pageNavigation = "पृष्ठ नेविगेशन"
 previousPage = "पिछला पृष्ठ"
@@ -12721,8 +13190,17 @@ collapseAll = "सभी बुकमार्क संक्षिप्त �
 editorOnly = "इस दस्तावेज़ के bookmarks केवल editor में edit किए जा सकते हैं।"
 empty = "No bookmarks in this document"
 expandAll = "सभी बुकमार्क विस्तृत करें"
+loadFailed = "बुकमार्क लोड करने में विफल"
+loading = "बुकमार्क लोड हो रहे हैं..."
+noDocument = "इसके बुकमार्क देखने के लिए PDF खोलें।"
+noSearchResults = "आपकी खोज से मेल खाते कोई बुकमार्क नहीं"
+openEditor = "पुनः क्रमित या नेस्ट करना है? Bookmark Editor खोलें"
+pageLabel = "पृष्ठ"
+pageNumber = "पृष्ठ {{page}}"
+saveFailed = "बुकमार्क सहेजने में विफल"
 searchPlaceholder = "बुकमार्क खोजें"
 title = "Bookmarks"
+untitled = "शीर्षकहीन"
 
 [viewer.comments]
 addComment = "टिप्पणी जोड़ें"
@@ -12770,16 +13248,26 @@ unsavedDesc = "आपके पास असहेजे परिवर्त�
 
 [viewer.layers]
 closeSidebar = "layers sidebar बंद करें"
+empty = "इस दस्तावेज़ में कोई लेयर नहीं है।"
 hideAll = "सभी layers छिपाएँ"
+loadFailed = "लेयर लोड करने में विफल।"
+loading = "लेयर लोड हो रही हैं..."
+noDocument = "इसकी लेयर देखने के लिए PDF खोलें।"
+readFailed = "PDF लेयर पढ़ने में विफल"
 showAll = "सभी layers दिखाएँ"
 title = "Layers"
 
 [viewer.link]
 delete = "लिंक हटाएं"
+goTo = "{{label}} पर जाएँ"
+open = "लिंक खोलें"
+openAria = "लिंक खोलें"
+page = "पृष्ठ {{page}}"
 
 [viewer.nonPdf]
 columnDefault = "स्तंभ {{index}}"
 convertToPdf = "PDF में बदलें"
+copied = "कॉपी किया गया"
 csvStats = "{{rows}} पंक्तियाँ · {{columns}} स्तंभ · {{size}}"
 emptyFile = "खाली फ़ाइल"
 htmlHidePreview = "पूर्वावलोकन छिपाएँ"
@@ -12790,6 +13278,8 @@ htmlShowPreview = "फिर भी पूर्वावलोकन दिख�
 invalidJson = "अवैध JSON — कच्ची सामग्री दिखाई जा रही है"
 lineNumbers = "पंक्ति संख्याएँ"
 loading = "लोड हो रहा है..."
+noFile = "कोई फ़ाइल लोड नहीं हुई"
+previewUnavailable = "इस फ़ाइल प्रकार के लिए पूर्वावलोकन उपलब्ध नहीं है"
 renderMarkdown = "Markdown रेंडर करें"
 sortedBy = "इसके अनुसार क्रमबद्ध: {{column}}"
 textStats = "{{lines}} पंक्तियाँ · {{size}}"
@@ -12816,11 +13306,28 @@ next = "अगला परिणाम"
 previous = "पिछला परिणाम"
 resultsOf = "{{total}} में से"
 
+[viewer.sidebar]
+close = "साइडबार बंद करें"
+searchPlaceholder = "खोजें..."
+
 [viewer.signature]
 delete = "हस्ताक्षर हटाएं"
+previewAlt = "हस्ताक्षर पूर्वावलोकन"
+
+[viewer.signatureField]
+badge = "हस्ताक्षर"
+fieldTitle = "हस्ताक्षर फ़ील्ड: {{name}}"
+signed = "हस्ताक्षरित"
+signedWithReason = "हस्ताक्षरित: {{reason}}"
+unsignedFieldTitle = "अहस्ताक्षरित हस्ताक्षर फ़ील्ड: {{name}}"
+withTime = "{{label}} ({{time}})"
 
 [viewer.thumbnails]
 closeSidebar = "thumbnails sidebar बंद करें"
+failed = "विफल"
+pageNumber = "पृष्ठ {{page}}"
+thumbnailAlt = "पृष्ठ {{page}} थंबनेल"
+title = "पृष्ठ"
 
 [viewPdf]
 tags = "देखें,पढ़ें,टिप्पणी,टेक्स्ट,छवि"
@@ -12828,169 +13335,6 @@ title = "PDF देखें/संपादित करें"
 
 [warning]
 tooltipTitle = "चेतावनी"
-
-[watchedFolders]
-alreadyInFolder = "Already in this folder"
-defaultFolderWarning = "This is a default folder and will be recreated on next reload."
-deleteConfirmBody = "This will remove the folder and its run history. Files already downloaded are not affected."
-deleteConfirmTitle = "Delete folder?"
-folderNotFound = "Folder not found"
-newFolder = "New folder"
-noFolders = "No watched folders yet"
-sidebarTitle = "Watched Folders"
-title = "Watched Folders"
-
-[watchedFolders.actions]
-back = "Back"
-collapse = "Collapse"
-dismiss = "Dismiss"
-download = "Download"
-downloadInput = "Download input"
-downloadOutput = "Download output"
-expand = "Expand"
-retry = "Retry"
-
-[watchedFolders.card]
-delete = "Delete folder"
-edit = "Edit folder"
-
-[watchedFolders.home]
-addAnother = "Add another Watched Folder"
-addAnotherDesc = "Automatically process files with a new pipeline"
-create = "Create your first Watched Folder"
-deleteFolder = "Delete folder"
-editFolder = "Edit folder"
-empty = "No watched folders yet"
-emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
-emptyTitle = "Automate your PDF workflows"
-file = "file"
-files = "files"
-pause = "Pause"
-resume = "Resume"
-
-[watchedFolders.howItWorks]
-step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
-step1Title = "Drop files"
-step2Desc = "Your configured tools process each file automatically"
-step2Title = "Pipeline runs"
-step3Desc = "Download processed files from inside the folder"
-step3Title = "Output ready"
-title = "How Watched Folders work"
-
-[watchedFolders.modal]
-advanced = "Advanced"
-automation = "Automation"
-automationNameFallback = "Watched Folder automation"
-automationRequired = "Add at least one configured step before saving."
-autoNumber = "Auto-number"
-autoNumberExample = "e.g. document.pdf → document (1).pdf"
-autoScanHelp = "New PDF files in this folder are processed automatically every 10 seconds."
-changeFolder = "Change"
-chooseFolder = "Choose"
-clearFolder = "Clear"
-color = "Accent color"
-createFolder = "Create Folder"
-createTitle = "New Watched Folder"
-editTitle = "Edit Watched Folder"
-inputFolder = "Input folder"
-inputFolderNotChosen = "No folder chosen — required for auto-scan"
-inputSource = "Input source"
-inputSourceBrowser = "Browser — drop files here"
-inputSourceLocal = "Local folder (auto-scan)"
-inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
-localOutputFolder = "Local output folder"
-maxRetries = "Max retries"
-name = "Folder name"
-namePlaceholder = "My Watched Folder"
-nameRequired = "Folder name is required"
-nameTooLong = "Folder name must be 50 characters or less"
-outputFolderNotSet = "Not set — outputs stay in app"
-outputFolderUnsupported = "Not supported in this browser"
-outputModeNewDesc = "Output is saved as a new separate file"
-outputModeVersion = "Replace original?"
-outputModeVersionDesc = "Output becomes a new version of the input file rather than a separate file"
-outputName = "Output filename prefix"
-outputNamePrefix = "Filename prefix"
-outputNameSuffix = "Suffix"
-positionPrefix = "Prefix"
-positionSuffix = "Suffix"
-replaceOriginal = "Replace original file"
-retryDelay = "Delay (minutes)"
-saveChanges = "Save Changes"
-saveFailed = "Failed to save folder. Please try again."
-sectionFolder = "Folder"
-sectionSourceOutput = "Source & Output"
-sectionSteps = "Steps"
-
-[watchedFolders.status]
-active = "Active"
-done = "Done"
-paused = "Paused"
-processing = "Processing"
-
-[watchedFolders.time]
-daysAgo = "{{count}}d ago"
-hoursAgo = "{{count}}h ago"
-justNow = "just now"
-minutesAgo = "{{count}}m ago"
-
-[watchedFolders.workbench]
-activity = "Activity"
-addFiles = "Add files"
-allTime = "All time"
-cancel = "Cancel"
-chartTooltipComplete = "{{count}} complete"
-chartTooltipFailed = "{{count}} failed"
-clearSelection = "Clear selection"
-countProcessing = "{{count}} processing"
-countQueued = "{{count}} queued"
-countSelected = "{{count}} selected"
-dataSaved = "Saved"
-dayRunning = "day running"
-daysRunning = "days running"
-delete = "Delete"
-deleteConfirmBody = "Remove notifications only clears the activity log. Delete outputs also removes the processed files from storage. Your original input files are never touched."
-deleteOutputs = "Delete outputs"
-directionIn = "in"
-directionOut = "out"
-dropToProcess = "Drop to process"
-export = "Export"
-exportSeparately = "Export separately"
-exportZip = "Export zip"
-failed = "Failed"
-filesProcessedOverTime = "Files processed over time"
-filterAll = "All"
-filterPending = "Pending"
-inputs = "Inputs"
-inputSize = "Input size"
-legendComplete = "Complete"
-noActivity = "No activity yet — drop a PDF to start"
-noActivityMatch = "No matching activity"
-noInputFolder = "No input folder — edit to configure"
-outputs = "Outputs"
-pause = "Pause"
-preview = "Preview"
-previewInput = "Preview input"
-previewLoadFailed = "Could not load file preview."
-previewOutput = "Preview output"
-queued = "Queued"
-queuedWaiting = "Queued — waiting to run"
-removeEntries = "Remove {{count}} entries"
-removeEntry = "Remove entry"
-removeNotificationsOnly = "Remove notifications only"
-resume = "Resume"
-retryAll = "Retry all"
-retryIn = "retry in {{count}}m"
-retryingSoon = "retrying…"
-retryMixedConfirm = "Some selected files have already completed and will be skipped. Only failed files will be retried. Continue?"
-running = "Running"
-search = "Search…"
-selectAll = "Select all {{count}}"
-sortNameAsc = "A → Z"
-sortNameDesc = "Z → A"
-sortNewest = "Newest"
-sortOldest = "Oldest"
-watching = "Watching: {{name}}"
 
 [watermark]
 desc = "PDF फ़ाइलों में टेक्स्ट या इमेज वॉटरमार्क जोड़ें"
@@ -13193,6 +13537,10 @@ certTypeServer = "सर्वर प्रमाणपत्र (यदि उ�
 completedDeclined = "आपने इस दस्तावेज़ को अस्वीकार कर दिया है।"
 completedSigned = "आपने इस दस्तावेज़ पर हस्ताक्षर कर दिए हैं।"
 decline = "अस्वीकार करें"
+declineConfirm = "क्या आप वाकई इस दस्तावेज़ पर हस्ताक्षर करने से मना करना चाहते हैं?"
+declineFailed = "मना करने में विफल: {{error}}"
+declineSuccess = "आपने इस हस्ताक्षर अनुरोध को अस्वीकार कर दिया है।"
+defaultReason = "दस्तावेज़ हस्ताक्षर"
 downloadDocument = "दस्तावेज़ डाउनलोड करें"
 dueDate = "नियत तिथि: {{date}}"
 errorTitle = "त्रुटि"
@@ -13203,6 +13551,7 @@ locationPlaceholder = "उदा., San Francisco, CA"
 pageNumber = "पृष्ठ संख्या (वैकल्पिक)"
 reason = "कारण"
 reasonPlaceholder = "उदा., दस्तावेज़ अनुमोदन"
+selectCertificateFile = "कृपया प्रमाणपत्र फ़ाइल चुनें"
 sessionNotFound = "सेशन नहीं मिला या पहुँच अस्वीकृत।"
 signDocument = "दस्तावेज़ पर हस्ताक्षर करें"
 statusDeclined = "अस्वीकृत"
@@ -13210,238 +13559,22 @@ statusNotified = "सूचित"
 statusPending = "लंबित"
 statusSigned = "हस्ताक्षरित"
 statusViewed = "देखा गया"
+submitFailed = "हस्ताक्षर सबमिट करने में विफल: {{error}}"
 submitSignature = "हस्ताक्षर सबमिट करें"
+submitSuccess = "हस्ताक्षर सफलतापूर्वक सबमिट किया गया!"
 
 [workspace]
 title = "वर्कस्पेस"
 
 [workspace.people]
-active = "सक्रिय"
-activeSession = "सक्रिय सत्र"
-addMembers = "सदस्य जोड़ें"
-admin = "प्रशासक"
-confirmDelete = "क्या आप वाकई इस उपयोगकर्ता को हटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती।"
-confirmUnlock = "क्या आप सुनिश्चित हैं कि आप इस उपयोगकर्ता खाते को अनलॉक करना चाहते हैं?"
-deleteUser = "उपयोगकर्ता हटाएँ"
-deleteUserError = "उपयोगकर्ता हटाने में विफल"
-deleteUserSuccess = "उपयोगकर्ता सफलतापूर्वक हटाया गया"
 description = "वर्कस्पेस सदस्यों और उनकी अनुमतियाँ प्रबंधित करें"
-disable = "अक्षम करें"
-disabled = "अक्षम"
-editRole = "भूमिका संपादित करें"
-enable = "सक्रिय करें"
-loading = "लोग लोड हो रहे हैं..."
-locked = "लॉक्ड"
-lockedBadge = "लॉक्ड"
-loginRequired = "पहले लॉगिन मोड सक्षम करें"
-memberActions = "सदस्य कार्रवाइयाँ"
-noMembersFound = "कोई सदस्य नहीं मिला"
-ownerLocked = "Owner की role या account बदलने से पहले Settings → Workspace → Users में organization ownership transfer करें।"
-role = "भूमिका"
-searchMembers = "सदस्यों को खोजें..."
-team = "टीम"
-unlockAccount = "खाता अनलॉक करें"
-unlockUserError = "उपयोगकर्ता खाता अनलॉक करने में विफल"
-unlockUserSuccess = "उपयोगकर्ता खाता सफलतापूर्वक अनलॉक किया गया"
-user = "उपयोगकर्ता"
-userInfo = "उपयोगकर्ता जानकारी"
-
-[workspace.people.actions]
-upgrade = "अपग्रेड"
-
-[workspace.people.addMember]
-authType = "प्रमाणीकरण प्रकार"
-error = "उपयोगकर्ता बनाने में विफल"
-forceMFA = "अगले लॉगिन पर MFA सेटअप अनिवार्य करें"
-forcePasswordChange = "पहली लॉगिन पर पासवर्ड बदलना अनिवार्य करें"
-password = "पासवर्ड"
-passwordPlaceholder = "पासवर्ड दर्ज करें"
-passwordRequired = "पासवर्ड आवश्यक है"
-role = "भूमिका"
-submit = "सदस्य जोड़ें"
-success = "उपयोगकर्ता सफलतापूर्वक बनाया गया"
-team = "टीम (वैकल्पिक)"
-teamPlaceholder = "एक टीम चुनें"
-username = "यूज़रनेम (ईमेल)"
-usernamePlaceholder = "user@example.com"
-usernameRequired = "यूज़रनेम और पासवर्ड आवश्यक हैं"
-
-[workspace.people.authType]
-oauth = "OAuth2"
-password = "पासवर्ड"
-saml = "SAML2"
-ssoDescription = "उपयोगकर्ता SSO प्रदाता के माध्यम से प्रमाणीकरण करेगा"
-
-[workspace.people.changePassword]
-action = "पासवर्ड बदलें"
-confirmPassword = "पासवर्ड की पुष्टि करें"
-confirmPlaceholder = "नया पासवर्ड फिर से दर्ज करें"
-copiedToClipboard = "पासवर्ड क्लिपबोर्ड पर कॉपी किया गया"
-copyFailed = "पासवर्ड कॉपी करने में विफल"
-copyTooltip = "क्लिपबोर्ड पर कॉपी करें"
-emailUnavailable = "इस उपयोगकर्ता का ईमेल एक मान्य ईमेल पता नहीं है। सूचनाएँ अक्षम हैं।"
-error = "पासवर्ड अपडेट करने में विफल"
-forcePasswordChange = "अगले लॉगिन पर उपयोगकर्ता को पासवर्ड बदलने के लिए बाध्य करें"
-generatedPreview = "जनरेट किया गया पासवर्ड:"
-generateRandom = "सुरक्षित पासवर्ड जनरेट करें"
-includePassword = "ईमेल में नया पासवर्ड शामिल करें"
-newPassword = "नया पासवर्ड"
-notifyOnly = "पासवर्ड के बिना एक ईमेल भेजा जाएगा, जिससे उपयोगकर्ता को पता चलेगा कि किसी व्यवस्थापक ने इसे बदला है।"
-passwordMismatch = "पासवर्ड मेल नहीं खाते"
-passwordRequired = "कृपया नया पासवर्ड दर्ज करें"
-placeholder = "नया पासवर्ड दर्ज करें"
-sendEmail = "इस बदलाव के बारे में उपयोगकर्ता को ईमेल करें"
-smtpDisabled = "ईमेल सूचनाओं के लिए सेटिंग्स में SMTP सक्षम होना आवश्यक है।"
-submit = "पासवर्ड अपडेट करें"
-subtitle = "के लिए पासवर्ड अपडेट करें"
-success = "पासवर्ड सफलतापूर्वक अपडेट किया गया"
-title = "पासवर्ड बदलें"
-
-[workspace.people.editMember]
-editing = "Editing: <0>{{username}}</0>"
-error = "उपयोगकर्ता अपडेट करने में विफल"
-role = "भूमिका"
-submit = "Update User"
-success = "उपयोगकर्ता सफलतापूर्वक अपडेट किया गया"
-team = "टीम (वैकल्पिक)"
-teamPlaceholder = "एक टीम चुनें"
-title = "Edit User"
-
-[workspace.people.emailInvite]
-allFailed = "उपयोगकर्ताओं को आमंत्रित करने में विफल"
-emails = "ईमेल पते"
-emailsPlaceholder = "user1@example.com, user2@example.com"
-emailsRequired = "कम से कम एक ईमेल पता आवश्यक है"
-error = "आमंत्रण भेजने में विफल"
-partialFailure = "कुछ निमंत्रण विफल हुए"
-submit = "आमंत्रण भेजें"
-success = "उपयोगकर्ता(ओं) को सफलतापूर्वक आमंत्रित किया गया"
-
-[workspace.people.inviteLink]
-copied = "लिंक क्लिपबोर्ड पर कॉपी हुआ"
-email = "ईमेल पता"
-emailDescription = "वैकल्पिक - किसी के द्वारा उपयोग किए जा सकने वाले सामान्य आमंत्रण लिंक के लिए खाली छोड़ दें"
-emailPlaceholder = "user@example.com (वैकल्पिक)"
-emailSent = "आमंत्रण लिंक जनरेट हुआ और ईमेल से भेजा गया"
-error = "आमंत्रण लिंक जनरेट करने में विफल"
-expiryHours = "समाप्ति घंटे"
-generate = "लिंक जनरेट करें"
-generated = "आमंत्रण लिंक जनरेट हुआ"
-sendEmail = "आमंत्रण लिंक ईमेल से भेजें"
-sendEmailDescription = "सक्रिय होने पर, आमंत्रण लिंक निर्दिष्ट ईमेल पते पर भेजा जाएगा"
-submit = "आमंत्रण लिंक जनरेट करें"
-
-[workspace.people.inviteMembers]
-label = "सदस्यों को आमंत्रित करें"
-subtitle = "नीचे ईमेल टाइप या पेस्ट करें, अल्पविराम से अलग करें। आपके वर्कस्पेस का बिल सदस्यों की संख्या के आधार पर लगेगा।"
-
-[workspace.people.inviteMode]
-email = "ईमेल"
-emailDisabled = "ईमेल आमंत्रण के लिए सेटिंग्स में SMTP कॉन्फ़िगरेशन और mail.enableInvites=true आवश्यक है"
-link = "लिंक"
-username = "यूज़रनेम"
 
 [workspace.people.license]
-currentUsage = "वर्तमान में {{max}} में से {{current}} उपयोगकर्ता लाइसेंस उपयोग में"
-fromLicense = "लाइसेंस से"
-grandfathered = "ग्रैंडफादर्ड"
-grandfatheredShort = "{{count}} ग्रैंडफादर्ड"
-slotsAvailable_one = "{{count}} user slot available"
-slotsAvailable_other = "{{count}} user slots available"
-slotsAvailable_zero = "No slots available"
 users_one = "user"
 users_other = "users"
 
-[workspace.people.mfa]
-adminDisableError = "उपयोगकर्ता के लिए MFA अक्षम करने में विफल"
-adminDisableSuccess = "उपयोगकर्ता के लिए MFA सफलतापूर्वक अक्षम किया गया"
-disableByAdmin = "MFA अक्षम करें"
-
-[workspace.people.roleDescriptions]
-admin = "सेटिंग्स और आमंत्रण प्रबंधित कर सकता है, पूर्ण प्रशासनिक पहुंच के साथ।"
-currentRole = "वर्तमान सौंपी गई भूमिका।"
-user = "Can view and edit shared files, but cannot manage workspace settings or users."
-
-[workspace.people.toggleEnabled]
-error = "उपयोगकर्ता स्थिति अपडेट करने में विफल"
-success = "उपयोगकर्ता स्थिति सफलतापूर्वक अपडेट की गई"
-
 [workspace.teams]
-addMember = "सदस्य जोड़ें"
-backToTeams = "टीम्स पर वापस जाएँ"
-cannotAddToInternal = "Internal टीम में सदस्य नहीं जोड़े जा सकते"
-cannotDeleteInternal = "Internal टीम को हटाया नहीं जा सकता"
-cannotRenameInternal = "Internal टीम का नाम नहीं बदला जा सकता"
-confirmDelete = "क्या आप वाकई इस टीम को हटाना चाहते हैं? हटाने के लिए टीम खाली होनी चाहिए।"
-confirmRemove = "उपयोगकर्ता को इस टीम से हटाएँ?"
-createNewTeam = "नई टीम बनाएँ"
-deleteTeamLabel = "टीम हटाएँ"
 description = "टीम्स प्रबंधित करें और वर्कस्पेस सदस्यों को व्यवस्थित करें"
-loadError = "टीम विवरण लोड करने में विफल"
-loading = "टीम्स लोड हो रही हैं..."
-loadingDetails = "टीम विवरण लोड हो रहे हैं..."
-memberCount_one = "{{count}} member"
-memberCount_other = "{{count}} members"
-memberCount_zero = "no members"
-noMembers = "इस टीम में कोई सदस्य नहीं"
-noTeamsFound = "कोई टीम नहीं मिली"
-removeMember = "टीम से हटाएँ"
-removeMemberError = "उपयोगकर्ता को टीम से हटाने में विफल"
-removeMemberSuccess = "उपयोगकर्ता टीम से हटाया गया"
-renameTeamLabel = "टीम का नाम बदलें"
-system = "सिस्टम"
-teamActions = "टीम कार्रवाइयाँ"
-teamName = "टीम का नाम"
-teamNotFound = "टीम नहीं मिली"
-totalMembers = "कुल सदस्य"
-viewTeam = "टीम देखें"
-
-[workspace.teams.addMemberToTeam]
-addingTo = "जोड़ रहे हैं"
-currentlyIn = "वर्तमान में"
-error = "सदस्य को टीम में जोड़ने में विफल"
-selectUser = "उपयोगकर्ता चुनें"
-selectUserPlaceholder = "एक उपयोगकर्ता चुनें"
-selectUserRequired = "कृपया एक उपयोगकर्ता चुनें"
-submit = "सदस्य जोड़ें"
-success = "सदस्य सफलतापूर्वक टीम में जोड़ा गया"
-title = "टीम में सदस्य जोड़ें"
-userRequired = "कृपया एक उपयोगकर्ता चुनें"
-willBeMoved = "नोट: इस उपयोगकर्ता को उनकी वर्तमान टीम से इस टीम में स्थानांतरित किया जाएगा।"
-
-[workspace.teams.changeTeam]
-changing = "स्थानांतरित कर रहे हैं"
-error = "टीम बदलने में विफल"
-label = "टीम बदलें"
-selectTeam = "टीम चुनें"
-selectTeamPlaceholder = "एक टीम चुनें"
-selectTeamRequired = "कृपया एक टीम चुनें"
-submit = "टीम बदलें"
-success = "टीम सफलतापूर्वक बदली गई"
-title = "टीम बदलें"
-
-[workspace.teams.createTeam]
-error = "टीम बनाने में विफल"
-nameRequired = "टीम का नाम आवश्यक है"
-submit = "टीम बनाएँ"
-success = "टीम सफलतापूर्वक बनाई गई"
-teamName = "टीम का नाम"
-teamNamePlaceholder = "टीम का नाम दर्ज करें"
-title = "नई टीम बनाएँ"
-
-[workspace.teams.deleteTeam]
-error = "टीम हटाने में विफल। सुनिश्चित करें कि टीम खाली है।"
-success = "टीम सफलतापूर्वक हटाई गई"
-
-[workspace.teams.renameTeam]
-error = "टीम का नाम बदलने में विफल"
-nameRequired = "टीम का नाम आवश्यक है"
-newTeamName = "नई टीम का नाम"
-newTeamNamePlaceholder = "नया टीम नाम दर्ज करें"
-renaming = "नाम बदलना:"
-submit = "टीम का नाम बदलें"
-success = "टीम का नाम सफलतापूर्वक बदला गया"
-title = "टीम का नाम बदलें"
 
 [zipWarning]
 cancel = "रद्द करें"

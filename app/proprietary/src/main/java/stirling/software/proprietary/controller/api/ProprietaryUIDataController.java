@@ -619,7 +619,7 @@ public class ProprietaryUIDataController {
         // Portal access (same policy /me uses).
         summary.setPortalAccess(portalAccessUserIds.contains(user.getId()));
         summary.setUsername(user.getUsername());
-        summary.setEmail(user.getUsername()); // Use username as email for consistency
+        summary.setEmail(user.getEmail());
         summary.setRoleName(user.getRoleName());
         summary.setRolesAsString(user.getRolesAsString());
         summary.setEnabled(user.isEnabled());

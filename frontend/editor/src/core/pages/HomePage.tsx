@@ -1,5 +1,6 @@
 import {
   forwardRef,
+  startTransition,
   useCallback,
   useEffect,
   useMemo,
@@ -48,6 +49,7 @@ import { PolicyAutoRunController } from "@app/components/policies/PolicyAutoRunC
 import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
 import { QuickNavHostBridge } from "@app/components/shared/quickNav/QuickNavHostBridge";
 import type { QuickNavToolReasons } from "@app/contexts/QuickNavHostContext";
+import { usePreferences } from "@app/contexts/PreferencesContext";
 import {
   getToolDisabledReason,
   getDisabledLabel,
@@ -194,6 +196,26 @@ export default function HomePage() {
     actions.setWorkbench(getDefaultWorkbenchForFileCount(activeFiles.length));
   }, [handleBackToTools, actions, activeFiles.length]);
 
+  const { preferences } = usePreferences();
+  const goToStartupView = useCallback(() => {
+    // The router transitions its updates; the tool reset must see the same destination.
+    startTransition(() => {
+      goToDefaultState();
+      if (preferences.defaultStartupView === "read") {
+        if (location.pathname !== READER_PATH) navigate(READER_PATH);
+        setReaderMode(true);
+      } else if (preferences.defaultStartupView === "automate")
+        handleToolSelect("automate");
+    });
+  }, [
+    goToDefaultState,
+    preferences.defaultStartupView,
+    location.pathname,
+    navigate,
+    setReaderMode,
+    handleToolSelect,
+  ]);
+
   // Reconcile route and workspace only on transitions, or the old route can undo a view change.
   const derivedFromPath = actions.viewDerivedFromPathRef;
   useEffect(() => {
@@ -235,10 +257,23 @@ export default function HomePage() {
   const readerDerivedFromPath = useRef<string | null>(null);
   useEffect(() => {
     if (readerDerivedFromPath.current === location.pathname) return;
+    const isMount = readerDerivedFromPath.current === null;
     readerDerivedFromPath.current = location.pathname;
     const onReadPath = location.pathname.startsWith(READER_PATH);
+    // The startup-view preference can open reading before this page mounts (the
+    // desktop shell holds the page back until its auth check settles). Reading is
+    // then the cause and the path follows it, rather than the path closing it.
+    if (
+      isMount &&
+      readerMode &&
+      !onReadPath &&
+      consumeReaderModeFromPreference()
+    ) {
+      navigate(READER_PATH, { replace: true });
+      return;
+    }
     if (onReadPath !== readerMode) setReaderMode(onReadPath);
-  }, [location.pathname, readerMode, setReaderMode]);
+  }, [location.pathname, readerMode, setReaderMode, navigate]);
 
   // The wings animate off their own edge, so the unmount waits out the leave rather
   // than happening with it. The rails' stylesheets take them out of flow while it
@@ -467,8 +502,16 @@ export default function HomePage() {
     };
   }, [isMobile, dismissSwipeHint]);
 
+  // Full-screen tools own the mobile viewport, so opening one selects the
+  // workbench slide. The text editor is included because it manages its own
+  // state instead of going through the startup-navigation heuristic.
   useEffect(() => {
-    if (isMobile && (readerMode || selectedToolKey === "multiTool")) {
+    if (
+      isMobile &&
+      (readerMode ||
+        selectedToolKey === "multiTool" ||
+        selectedToolKey === "pdfTextEditor")
+    ) {
       setActiveMobileView("workbench");
     }
   }, [isMobile, readerMode, selectedToolKey]);
@@ -544,6 +587,7 @@ export default function HomePage() {
         fileLibrary={navigationState.workbench === "myFiles"}
         onSetReaderMode={setReaderMode}
         onGoToDefaultState={goToDefaultState}
+        onGoToStartupView={goToStartupView}
         onSelectTool={handleToolSelect}
         activeTool={selectedToolKey}
         onShowFileLibrary={() => actions.setWorkbench("myFiles")}

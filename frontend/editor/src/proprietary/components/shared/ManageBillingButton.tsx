@@ -46,7 +46,10 @@ export const ManageBillingButton: React.FC<ManageBillingButtonProps> = ({
         title: t("billing.portal.error", "Failed to open billing portal"),
         body:
           (error instanceof Error ? error.message : undefined) ||
-          "Please try again or contact support.",
+          t(
+            "billing.portal.errorFallback",
+            "Please try again or contact support.",
+          ),
       });
       setLoading(false);
     }
