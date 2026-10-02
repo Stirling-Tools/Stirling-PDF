@@ -15,6 +15,12 @@ function jwt(payload: Record<string, unknown>): string {
 }
 
 const TOKEN = jwt({ sub: "alice", exp: 4_102_444_800 });
+const CLOUD_TOKEN = jwt({
+  sub: "5f0c2a7e-0000-4000-8000-000000000001",
+  email: "alice@example.com",
+  role: "authenticated",
+  exp: 4_102_444_800,
+});
 
 test.use({
   autoGoto: false,
@@ -64,6 +70,31 @@ test("opens the Processor as a page of the desktop app", async ({ page }) => {
   // The window's height below the strip, not the page's: the shell pins the web viewport.
   const sidebar = await page.locator(".portal-sidebar").boundingBox();
   expect(sidebar?.height).toBeGreaterThan(page.viewportSize()!.height - 60);
+});
+
+test("opens the Processor on Stirling Cloud", async ({ page }) => {
+  // Context routes yield to the page stubs, so this only catches what they leave:
+  // nothing reaches a real Stirling host.
+  await page
+    .context()
+    .route(/^https?:\/\/(?!localhost)/, (route) => route.abort());
+  await installTauri(page, {
+    connection: {
+      mode: "saas",
+      server_config: { url: "https://auth.stirling.com" },
+      lock_connection_mode: false,
+    },
+    commands: {
+      get_auth_token: CLOUD_TOKEN,
+      get_refresh_token: "refresh",
+      get_user_info: { username: "alice", email: "alice@example.com" },
+    },
+  });
+  await page.goto("/processor", { waitUntil: "domcontentloaded" });
+
+  await expect(page.locator(".desktop-processor .portal-shell")).toBeVisible({
+    timeout: 30_000,
+  });
 });
 
 test("sends local mode back to the editor", async ({ page }) => {
