@@ -163,8 +163,21 @@
   transform: translateY(-1px);
 }
 
-/* The page carries the floating-card look: rounded, soft-shadowed, no border.
-   The shadow is on the image, so a rotated page's shadow turns with it. */
+.pageShadow {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(var(--shadow-md));
+  transition: filter 0.15s ease;
+}
+
+.thumbBox:hover .pageShadow {
+  filter: drop-shadow(var(--shadow-lg));
+}
+
+/* The page carries the floating-card look: rounded, no border. */
 .thumb {
   width: auto;
   height: auto;
@@ -172,21 +185,13 @@
   max-height: 100%;
   border-radius: 0.375rem;
   background: var(--c-surface);
-  box-shadow: var(--shadow-md);
-  transition:
-    transform 0.2s ease-in-out,
-    box-shadow 0.15s ease;
+  transition: transform 0.2s ease-in-out;
 }
 
-.thumbBox:hover .thumb,
-.thumbBox:hover .thumbPending {
-  box-shadow: var(--shadow-lg);
-}
-
-/* Selection reads as a ring hugging the page (so it turns with a rotated page),
-   not an outlined tile. The hover rule above outranks a plain .tileSelected
-   selector (its :hover counts as a class), so the ring must be re-asserted for
-   the hovered case or it vanishes under the hover shadow. */
+/* Selection reads as a ring hugging the page, not an outlined tile. A uniform
+   ring looks the same turned or not, so it rides the rotating image to hug the
+   page tightly. The hover rule outranks a plain .tileSelected selector (its
+   :hover counts as a class), so the ring is re-asserted for the hovered case. */
 .tileSelected .thumb,
 .tileSelected .thumbPending {
   box-shadow: var(--pt-selection-ring);
@@ -194,7 +199,7 @@
 
 .tileSelected .thumbBox:hover .thumb,
 .tileSelected .thumbBox:hover .thumbPending {
-  box-shadow: var(--pt-selection-ring), var(--shadow-lg);
+  box-shadow: var(--pt-selection-ring);
 }
 
 /*
@@ -211,7 +216,6 @@
   height: 78%;
   border-radius: 0.375rem;
   background: var(--c-hover);
-  box-shadow: var(--shadow-md);
 }
 
 /* Clicks land on the stable box around the page instead: the placeholder is
@@ -235,12 +239,9 @@
   justify-content: center;
   border-radius: 0.375rem;
   background: var(--c-surface);
-  box-shadow: var(--shadow-md);
   color: var(--c-text-subtle);
   font-size: calc(0.75rem * var(--pt-zoom, 1));
-  transition:
-    transform 0.2s ease-in-out,
-    box-shadow 0.15s ease;
+  transition: transform 0.2s ease-in-out;
 }
 
 .blankInTile {
@@ -263,16 +264,12 @@
   --blank-bh: 80vw;
 }
 
-.thumbBox:hover .blankPage {
-  box-shadow: var(--shadow-lg);
-}
-
 .tileSelected .blankPage {
   box-shadow: var(--pt-selection-ring);
 }
 
 .tileSelected .thumbBox:hover .blankPage {
-  box-shadow: var(--pt-selection-ring), var(--shadow-lg);
+  box-shadow: var(--pt-selection-ring);
 }
 
 /* Just the page number as plain centred text below the page, scaled with zoom. */

@@ -230,28 +230,30 @@ function TrackPageTileImpl({
           />
         </div>
 
-        {page.kind === "blank" ? (
-          <BlankPagePreview page={page} placement="tile" />
-        ) : thumbnail ? (
-          <PrivateContent>
-            <img
-              className={[
-                styles.thumb,
-                quarterTurn ? styles.thumbQuarterTurn : "",
-                "ph-no-capture",
-              ]
-                .filter(Boolean)
-                .join(" ")}
-              src={thumbnail}
-              alt=""
-              draggable={false}
-              data-original-rotation={page.rotation}
-              style={{ transform: `rotate(${page.rotation}deg)` }}
-            />
-          </PrivateContent>
-        ) : (
-          <div className={styles.thumbPending} />
-        )}
+        <div className={styles.pageShadow}>
+          {page.kind === "blank" ? (
+            <BlankPagePreview page={page} placement="tile" />
+          ) : thumbnail ? (
+            <PrivateContent>
+              <img
+                className={[
+                  styles.thumb,
+                  quarterTurn ? styles.thumbQuarterTurn : "",
+                  "ph-no-capture",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                src={thumbnail}
+                alt=""
+                draggable={false}
+                data-original-rotation={page.rotation}
+                style={{ transform: `rotate(${page.rotation}deg)` }}
+              />
+            </PrivateContent>
+          ) : (
+            <div className={styles.thumbPending} />
+          )}
+        </div>
 
         {position > 1 && (
           <ShiftButton
