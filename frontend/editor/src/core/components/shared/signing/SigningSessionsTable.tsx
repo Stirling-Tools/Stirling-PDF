@@ -67,7 +67,7 @@ export function SigningSessionsTable({
   const [tab, setTab] = useState("active");
   const statusLabels: Record<string, string> = {
     expired: t("signRequest.expired", "Access expired"),
-    closed: t("signMenu.closedTab", "Closed"),
+    closed: t("signMenu.closedStatus", "Closed"),
     needsYou: t("signWorkspace.needsYou", "Needs your signature"),
     signed: t("sharedSign.filterSigned", "Signed"),
     declined: t("sharedSign.filterDeclined", "Declined"),
@@ -242,7 +242,7 @@ export function SigningSessionsTable({
                 { value: "unread", label: t("signMenu.unreadTab", "Unread") },
                 {
                   value: "closed",
-                  label: t("signMenu.closedTab", "Closed"),
+                  label: t("signMenu.completedTab", "Completed"),
                 },
               ]}
             />

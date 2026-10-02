@@ -124,7 +124,7 @@ export function SignMenu({
         (item) => item.unread && canReceiveSigningActivity(item),
       ).length,
     },
-    { key: "closed" as const, label: t("signMenu.closedTab", "Closed") },
+    { key: "closed" as const, label: t("signMenu.completedTab", "Completed") },
   ];
   const rows = items.filter((item) => {
     const inTab =
@@ -292,7 +292,7 @@ export function SignMenu({
                       {query
                         ? t("signMenu.noMatches", "No matching sessions")
                         : tab === "closed"
-                          ? t("signMenu.noClosed", "No closed sessions")
+                          ? t("signMenu.noCompleted", "No completed sessions")
                           : tab === "unread"
                             ? t("signMenu.noUnread", "You're all caught up")
                             : t("signMenu.noActive", "No active sessions")}

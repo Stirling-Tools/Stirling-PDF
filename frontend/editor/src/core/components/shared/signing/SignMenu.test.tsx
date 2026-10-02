@@ -159,7 +159,7 @@ it("keeps expired and server-closed requests out of Active and the unread count"
   expect(
     screen.queryByRole("button", { name: /Viewer.pdf|Expired.pdf/ }),
   ).not.toBeInTheDocument();
-  fireEvent.click(screen.getByRole("button", { name: "Closed" }));
+  fireEvent.click(screen.getByRole("button", { name: "Completed" }));
   expect(
     screen.getByRole("button", { name: /Viewer.pdf.*Closed/ }),
   ).toBeInTheDocument();
@@ -232,7 +232,7 @@ it("opens the selected role by identity and closes the popover", () => {
   expect(onClose).toHaveBeenCalledTimes(1);
 });
 
-it("includes a newly finalized document in Unread and Closed, but never Active", () => {
+it("includes a newly finalized document in Unread and Completed, but never Active", () => {
   const completed: SigningMenuItem = {
     ...incoming,
     finalized: true,
@@ -251,7 +251,7 @@ it("includes a newly finalized document in Unread and Closed, but never Active",
   expect(
     screen.queryByRole("button", { name: /Contract.pdf.*Finalized/ }),
   ).not.toBeInTheDocument();
-  fireEvent.click(screen.getByRole("button", { name: "Closed" }));
+  fireEvent.click(screen.getByRole("button", { name: "Completed" }));
   expect(
     screen.getByRole("button", { name: /Contract.pdf.*Finalized/ }),
   ).toBeInTheDocument();
@@ -290,7 +290,7 @@ it("shows every active item and searches without marking hidden items as read", 
   ).toHaveLength(9);
 });
 
-it("keeps submitted requests active and places finalized or declined requests in Closed", () => {
+it("keeps submitted requests active and places finalized or declined requests in Completed", () => {
   setup([
     {
       ...incoming,
@@ -314,7 +314,7 @@ it("keeps submitted requests active and places finalized or declined requests in
   expect(
     screen.queryByRole("button", { name: /Declined.pdf/ }),
   ).not.toBeInTheDocument();
-  fireEvent.click(screen.getByRole("button", { name: "Closed" }));
+  fireEvent.click(screen.getByRole("button", { name: "Completed" }));
   expect(
     screen.getByRole("button", { name: /Owned.pdf.*Finalized/ }),
   ).toBeInTheDocument();

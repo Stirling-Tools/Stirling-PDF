@@ -22,7 +22,7 @@ export function signingStatus(
       return { color: "green", label: t("certSign.finalized", "Finalized") };
     }
     if (isSigningItemClosed(item)) {
-      return { color: "orange", label: t("signMenu.closedTab", "Closed") };
+      return { color: "orange", label: t("signMenu.closedStatus", "Closed") };
     }
     const signed = s.signedCount ?? 0;
     const total = s.participantCount ?? 0;
@@ -58,7 +58,7 @@ export function signingStatus(
     return { color: "green", label: t("certSign.finalized", "Finalized") };
   }
   if (req.closed && req.myStatus !== "DECLINED") {
-    return { color: "orange", label: t("signMenu.closedTab", "Closed") };
+    return { color: "orange", label: t("signMenu.closedStatus", "Closed") };
   }
   switch (req.myStatus) {
     case "SIGNED":

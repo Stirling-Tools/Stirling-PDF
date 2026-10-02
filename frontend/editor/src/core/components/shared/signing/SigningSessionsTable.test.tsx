@@ -128,7 +128,7 @@ it("filters unread sessions and completed documents while keeping read sessions 
   expect(documents()).toContain("Plan.pdf");
 });
 
-it("moves expired access from Active and Unread into Closed when refreshed", async () => {
+it("moves expired access from Active and Unread into Completed when refreshed", async () => {
   const request = items[3];
   if (request.kind !== "request") throw new Error("Expected a request fixture");
   const { user, updateItems } = show(false, [{ ...request, unread: true }]);
@@ -137,7 +137,7 @@ it("moves expired access from Active and Unread into Closed when refreshed", asy
   expect(documents()).toEqual([]);
   await user.click(screen.getByRole("radio", { name: "Unread" }));
   expect(documents()).toEqual([]);
-  await user.click(screen.getByRole("radio", { name: "Closed" }));
+  await user.click(screen.getByRole("radio", { name: "Completed" }));
   expect(documents()).toEqual(["Plan.pdf"]);
   expect(screen.getByText("Access expired")).toBeInTheDocument();
   await pick(user, "Status", "Access expired");
@@ -320,17 +320,17 @@ it("shows one owned row with personal action and progress through signing and fi
     ),
   );
   expect(documents()).toEqual([]);
-  await user.click(screen.getByRole("radio", { name: "Closed" }));
+  await user.click(screen.getByRole("radio", { name: "Completed" }));
   expect(documents()).toEqual(["Budget.pdf"]);
 });
 
-it("keeps submitted and ready sessions active, moving finalized and declined entries to Closed", async () => {
+it("keeps submitted and ready sessions active, moving finalized and declined entries to Completed", async () => {
   const { user } = show();
   expect(documents()).toContain("Ready.pdf");
   expect(documents()).not.toContain("Declined.pdf");
   await pick(user, "Status", "Signed");
   expect(documents()).toEqual(["Budget.pdf"]);
-  await user.click(screen.getByRole("radio", { name: "Closed" }));
+  await user.click(screen.getByRole("radio", { name: "Completed" }));
   expect(documents()).toEqual(["Completed.pdf", "Declined.pdf"]);
   expect(
     screen.queryByRole("button", { name: "Due date", expanded: false }),
@@ -376,7 +376,7 @@ it("shows an unread final document without putting it back in Active", async () 
   expect(documents()).toEqual(["Completed.pdf"]);
   updateItems([{ ...completed, unread: false }]);
   expect(documents()).toEqual([]);
-  await user.click(screen.getByRole("radio", { name: "Closed" }));
+  await user.click(screen.getByRole("radio", { name: "Completed" }));
   expect(documents()).toEqual(["Completed.pdf"]);
 });
 
