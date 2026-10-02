@@ -16,6 +16,8 @@ export interface TrackWorkspaceHook {
   dispatch: (action: TrackEditorAction) => void;
   /** PDFs that are open but whose page metadata hasn't been read yet. */
   pendingFileIds: FileId[];
+  /** Open files the page editor can't edit (not PDFs); shown as disabled tracks. */
+  unsupportedFileIds: FileId[];
   /** True when any open file is a PDF (drives the empty state). */
   hasPdfFiles: boolean;
   changedFileIds: FileId[];
@@ -45,34 +47,46 @@ export function useTrackWorkspace(): TrackWorkspaceHook {
   // Only files whose page metadata has been hydrated can be expanded into a
   // track: the per-page /Rotate baseline comes from it, and assuming 0 would
   // silently un-rotate pre-rotated pages on save.
-  const { sources, pendingFileIds, hasPdfFiles } = useMemo(() => {
-    const resolved: TrackSource[] = [];
-    const pending: FileId[] = [];
-    let anyPdf = false;
+  const { sources, pendingFileIds, unsupportedFileIds, hasPdfFiles } =
+    useMemo(() => {
+      const resolved: TrackSource[] = [];
+      const pending: FileId[] = [];
+      const unsupported: FileId[] = [];
+      let anyPdf = false;
 
-    for (const fileId of fileState.files.ids) {
-      const stub = fileState.files.byId[fileId];
-      if (!isPdf(stub?.name)) continue;
-      anyPdf = true;
+      for (const fileId of fileState.files.ids) {
+        const stub = fileState.files.byId[fileId];
+        // The page editor works on PDF pages; other open files show as disabled
+        // tracks so they are visible but clearly not editable here.
+        if (!isPdf(stub?.name)) {
+          unsupported.push(fileId);
+          continue;
+        }
+        anyPdf = true;
 
-      const pages = stub?.processedFile?.pages;
-      if (!pages || pages.length === 0) {
-        pending.push(fileId);
-        continue;
+        const pages = stub?.processedFile?.pages;
+        if (!pages || pages.length === 0) {
+          pending.push(fileId);
+          continue;
+        }
+
+        resolved.push({
+          fileId,
+          name: stub?.name ?? fileId,
+          pageCount: pages.length,
+          rotations: pages.map((page) => page.rotation ?? 0),
+          sizes: pages.map(unrotatedSize),
+          contentKey: `${stub?.size ?? 0}:${stub?.lastModified ?? 0}`,
+        });
       }
 
-      resolved.push({
-        fileId,
-        name: stub?.name ?? fileId,
-        pageCount: pages.length,
-        rotations: pages.map((page) => page.rotation ?? 0),
-        sizes: pages.map(unrotatedSize),
-        contentKey: `${stub?.size ?? 0}:${stub?.lastModified ?? 0}`,
-      });
-    }
-
-    return { sources: resolved, pendingFileIds: pending, hasPdfFiles: anyPdf };
-  }, [fileState.files]);
+      return {
+        sources: resolved,
+        pendingFileIds: pending,
+        unsupportedFileIds: unsupported,
+        hasPdfFiles: anyPdf,
+      };
+    }, [fileState.files]);
 
   useEffect(() => {
     dispatch({ type: "sync", sources });
@@ -89,6 +103,7 @@ export function useTrackWorkspace(): TrackWorkspaceHook {
     state,
     dispatch: stableDispatch,
     pendingFileIds,
+    unsupportedFileIds,
     hasPdfFiles,
     changedFileIds,
     isDirty: changedFileIds.length > 0,

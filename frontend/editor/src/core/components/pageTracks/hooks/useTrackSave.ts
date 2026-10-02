@@ -46,6 +46,8 @@ export interface TrackSaveOptions {
   onMaterialized?: (result: {
     dropTrackIds: FileId[];
     order: FileId[];
+    /** Each new split file and the open file it should follow. */
+    placements: { fileId: FileId; afterFileId: FileId | null }[];
   }) => void;
 }
 
@@ -191,9 +193,21 @@ export function useTrackSave(
             if (emptiedSet.has(id)) return [];
             return [versioned.get(id) ?? materializedIds.get(id) ?? id];
           });
+          // Each new split file should sit right after its source in the open-
+          // file list (the source may itself have been versioned to a new id).
+          const placements = [...materializedIds.entries()].map(
+            ([trackId, fileId]) => {
+              const source = workspace.tracks[trackId]?.splitFromFileId;
+              return {
+                fileId,
+                afterFileId: source ? (versioned.get(source) ?? source) : null,
+              };
+            },
+          );
           onMaterializedRef.current?.({
             dropTrackIds: [...materializedIds.keys()],
             order,
+            placements,
           });
         }
 

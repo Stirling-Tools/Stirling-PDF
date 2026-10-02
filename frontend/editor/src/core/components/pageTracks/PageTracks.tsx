@@ -44,6 +44,7 @@ import { useTrackSave } from "@app/components/pageTracks/hooks/useTrackSave";
 import { usePageTracksWorkbenchBarButtons } from "@app/components/pageTracks/hooks/usePageTracksWorkbenchBarButtons";
 import { totalPageCount } from "@app/components/pageTracks/types";
 import TrackRow, { DropHint } from "@app/components/pageTracks/TrackRow";
+import { DisabledFileTrack } from "@app/components/pageTracks/DisabledFileTrack";
 import styles from "@app/components/pageTracks/PageTracks.module.css";
 
 const PAGE_PREFIX = "page:";
@@ -127,6 +128,7 @@ export default function PageTracks() {
     state,
     dispatch,
     pendingFileIds,
+    unsupportedFileIds,
     hasPdfFiles,
     changedFileIds,
     isDirty,
@@ -152,11 +154,39 @@ export default function PageTracks() {
     [setActiveFileId],
   );
 
+  // A saved split's new file is appended to the open-file list; this moves it
+  // back beside its source once it has landed in file state (see the effect).
+  const [pendingSplitPlacements, setPendingSplitPlacements] = useState<
+    { fileId: FileId; afterFileId: FileId | null }[]
+  >([]);
+
   const { saving, progress, save } = useTrackSave(workspace, changedFileIds, {
     onVersioned: handleVersioned,
-    onMaterialized: ({ dropTrackIds, order }) =>
-      dispatch({ type: "reconcileAfterSave", dropTrackIds, order }),
+    onMaterialized: ({ dropTrackIds, order, placements }) => {
+      dispatch({ type: "reconcileAfterSave", dropTrackIds, order });
+      if (placements.length > 0) setPendingSplitPlacements(placements);
+    },
   });
+
+  useEffect(() => {
+    if (pendingSplitPlacements.length === 0) return;
+    const byId = fileState.files.byId;
+    // Wait until every new split file is actually in the list before moving it.
+    if (!pendingSplitPlacements.every((p) => byId[p.fileId])) return;
+
+    let order = fileState.files.ids;
+    for (const { fileId, afterFileId } of pendingSplitPlacements) {
+      const without = order.filter((id) => id !== fileId);
+      const at = afterFileId == null ? -1 : without.indexOf(afterFileId);
+      order =
+        at === -1
+          ? [...without, fileId]
+          : [...without.slice(0, at + 1), fileId, ...without.slice(at + 1)];
+    }
+    setPendingSplitPlacements([]);
+    if (!order.every((id, i) => fileState.files.ids[i] === id))
+      fileActions.reorderFiles(order);
+  }, [pendingSplitPlacements, fileState.files, fileActions]);
 
   /**
    * Opens one track's file in the Viewer. Routed through setWorkbench so the
@@ -374,16 +404,45 @@ export default function PageTracks() {
    * workspace order is authoritative (a split adds a track with no file), so
    * this reorders the workspace rather than the workbench file list.
    */
+  // Track order follows the open-file list, so reordering a track reorders the
+  // files (and so Active Files) and lands all file types in one sequence. A
+  // split pins to its source, so it is not independently reorderable.
   const reorderTracks = useCallback(
     (sourceFileId: FileId, beforeFileId: FileId | null) => {
       if (sourceFileId === beforeFileId) return;
-      dispatch({
-        type: "reorderTrack",
-        sourceId: sourceFileId,
-        beforeId: beforeFileId,
-      });
+      if (workspace.tracks[sourceFileId]?.isNew) return;
+      const fileIds = fileState.files.ids;
+      if (!fileIds.includes(sourceFileId)) return;
+
+      const without = fileIds.filter((id) => id !== sourceFileId);
+      const at =
+        beforeFileId == null ? without.length : without.indexOf(beforeFileId);
+      const insertAt = at === -1 ? without.length : at;
+      const newOrder = [
+        ...without.slice(0, insertAt),
+        sourceFileId,
+        ...without.slice(insertAt),
+      ];
+      if (newOrder.every((id, i) => fileIds[i] === id)) return;
+      fileActions.reorderFiles(newOrder);
+
+      // Keep the workspace's own track sequence aligned with the files so page
+      // moves and splits read the same order, without clearing pending edits.
+      const srcIdx = newOrder.indexOf(sourceFileId);
+      const beforeTrackId =
+        newOrder
+          .slice(srcIdx + 1)
+          .find((id) => workspace.tracks[id] && !workspace.tracks[id]?.isNew) ??
+        null;
+      if (workspace.tracks[sourceFileId]) {
+        dispatch({
+          type: "reorderTrack",
+          sourceId: sourceFileId,
+          beforeId: beforeTrackId,
+        });
+      }
     },
-    [dispatch],
+    [dispatch, fileActions, fileState.files.ids, workspace],
   );
 
   const splitTrack = useCallback(
@@ -408,6 +467,54 @@ export default function PageTracks() {
     });
     return map;
   }, [workspace]);
+
+  // The rows to render, in open-file order: each PDF file's track (followed by
+  // any splits made from it), each loading PDF, and each non-PDF as a disabled
+  // track. One sequence shared by the view and the track-reorder drag.
+  const displayRows = useMemo(() => {
+    const splitsByParent = new Map<FileId, FileId[]>();
+    for (const id of workspace.order) {
+      const track = workspace.tracks[id];
+      if (track?.isNew && track.splitFromFileId) {
+        const siblings = splitsByParent.get(track.splitFromFileId) ?? [];
+        siblings.push(id);
+        splitsByParent.set(track.splitFromFileId, siblings);
+      }
+    }
+    const pending = new Set(pendingFileIds);
+    const unsupported = new Set(unsupportedFileIds);
+    const rows: {
+      kind: "track" | "split" | "pending" | "disabled";
+      id: FileId;
+    }[] = [];
+    const placed = new Set<FileId>();
+    const place = (kind: (typeof rows)[number]["kind"], id: FileId) => {
+      rows.push({ kind, id });
+      placed.add(id);
+    };
+    for (const fileId of fileState.files.ids) {
+      const track = workspace.tracks[fileId];
+      if (track && !track.isNew) {
+        place("track", fileId);
+        for (const splitId of splitsByParent.get(fileId) ?? [])
+          place("split", splitId);
+      } else if (pending.has(fileId)) {
+        place("pending", fileId);
+      } else if (unsupported.has(fileId)) {
+        place("disabled", fileId);
+      }
+    }
+    // A split whose source has closed still holds savable pages: keep it.
+    for (const id of workspace.order)
+      if (!placed.has(id) && workspace.tracks[id]) place("split", id);
+    return rows;
+  }, [fileState.files.ids, workspace, pendingFileIds, unsupportedFileIds]);
+
+  const lastReorderableId = useMemo(() => {
+    for (let i = displayRows.length - 1; i >= 0; i--)
+      if (displayRows[i].kind !== "split") return displayRows[i].id;
+    return null;
+  }, [displayRows]);
 
   /**
    * Resolves the pointer position to "insert before this page". An anchor that
@@ -453,7 +560,7 @@ export default function PageTracks() {
     (overId: string | null, pointerY: number): FileId | null | undefined => {
       if (!overId || !overId.startsWith(ZONE_PREFIX)) return undefined;
       const overFileId = overId.slice(ZONE_PREFIX.length) as FileId;
-      const index = workspace.order.indexOf(overFileId);
+      const index = displayRows.findIndex((row) => row.id === overFileId);
       if (index === -1) return undefined;
 
       const element = document.querySelector<HTMLElement>(
@@ -461,9 +568,12 @@ export default function PageTracks() {
       );
       const rect = element?.getBoundingClientRect();
       const dropAfter = rect ? pointerY > rect.top + rect.height / 2 : false;
-      return workspace.order[dropAfter ? index + 1 : index] ?? null;
+      // Insert before the next reorderable (non-split) row, or append at the end.
+      for (let i = dropAfter ? index + 1 : index; i < displayRows.length; i++)
+        if (displayRows[i].kind !== "split") return displayRows[i].id;
+      return null;
     },
-    [workspace.order],
+    [displayRows],
   );
 
   const handleDragStart = useCallback(
@@ -723,7 +833,10 @@ export default function PageTracks() {
             : [
                 {
                   id: closeRequest,
-                  name: workspace.tracks[closeRequest]?.name ?? closeRequest,
+                  name:
+                    workspace.tracks[closeRequest]?.name ??
+                    fileState.files.byId[closeRequest]?.name ??
+                    closeRequest,
                 },
               ]
       }
@@ -764,7 +877,49 @@ export default function PageTracks() {
     onSave: saveNow,
   });
 
-  if (!hasPdfFiles) {
+  const renderTrackRow = (fileId: FileId) => {
+    const track = workspace.tracks[fileId];
+    if (!track) return null;
+    const stub = fileState.files.byId[fileId];
+    return (
+      <TrackRow
+        key={fileId}
+        track={track}
+        name={track.name}
+        isNew={track.isNew}
+        versionNumber={stub?.versionNumber}
+        selectedIds={selection.selectedIds}
+        draggingIds={draggingIds}
+        dropHint={dropHint}
+        wrap={wrap}
+        zoom={zoom}
+        scrollerRef={scrollerRef}
+        layoutVersion={layoutVersion}
+        trackDropBefore={draggingTrack != null && trackDropTarget === fileId}
+        trackDropAfterLast={
+          draggingTrack != null &&
+          trackDropTarget === null &&
+          fileId === lastReorderableId
+        }
+        trackDragging={draggingTrack === fileId}
+        changed={changedSet.has(fileId)}
+        thumbnails={thumbnails}
+        onSelectPage={selection.selectPage}
+        onSelectTrack={selection.selectTrack}
+        onSelectNumbers={selectNumbersInTrack}
+        onOpenInViewer={openInViewer}
+        onClearSelection={clearSelection}
+        onSplit={splitTrack}
+        onInsertBlank={insertBlank}
+        onRotate={rotatePages}
+        onDelete={deletePages}
+        onShiftPage={shiftPage}
+        onClose={setCloseRequest}
+      />
+    );
+  };
+
+  if (!hasPdfFiles && unsupportedFileIds.length === 0) {
     return (
       <Center h="100%">
         {closeConfirmModal}
@@ -832,70 +987,49 @@ export default function PageTracks() {
               if (event.target === event.currentTarget) clearSelection();
             }}
           >
-            {workspace.order.map((fileId) => {
-              const track = workspace.tracks[fileId];
-              if (!track) return null;
-              const stub = fileState.files.byId[fileId];
+            {displayRows.map((row) => {
+              if (row.kind === "track" || row.kind === "split") {
+                return renderTrackRow(row.id);
+              }
+              if (row.kind === "disabled") {
+                return (
+                  <DisabledFileTrack
+                    key={row.id}
+                    fileId={row.id}
+                    name={fileState.files.byId[row.id]?.name ?? row.id}
+                    dropBefore={
+                      draggingTrack != null && trackDropTarget === row.id
+                    }
+                    dropAfterLast={
+                      draggingTrack != null &&
+                      trackDropTarget === null &&
+                      row.id === lastReorderableId
+                    }
+                    onClose={() => setCloseRequest(row.id)}
+                  />
+                );
+              }
               return (
-                <TrackRow
-                  key={fileId}
-                  track={track}
-                  name={track.name}
-                  isNew={track.isNew}
-                  versionNumber={stub?.versionNumber}
-                  selectedIds={selection.selectedIds}
-                  draggingIds={draggingIds}
-                  dropHint={dropHint}
-                  wrap={wrap}
-                  zoom={zoom}
-                  scrollerRef={scrollerRef}
-                  layoutVersion={layoutVersion}
-                  trackDropBefore={
-                    draggingTrack != null && trackDropTarget === fileId
-                  }
-                  trackDropAfterLast={
-                    draggingTrack != null &&
-                    trackDropTarget === null &&
-                    fileId === workspace.order[workspace.order.length - 1]
-                  }
-                  trackDragging={draggingTrack === fileId}
-                  changed={changedSet.has(fileId)}
-                  thumbnails={thumbnails}
-                  onSelectPage={selection.selectPage}
-                  onSelectTrack={selection.selectTrack}
-                  onSelectNumbers={selectNumbersInTrack}
-                  onOpenInViewer={openInViewer}
-                  onClearSelection={clearSelection}
-                  onSplit={splitTrack}
-                  onInsertBlank={insertBlank}
-                  onRotate={rotatePages}
-                  onDelete={deletePages}
-                  onShiftPage={shiftPage}
-                  onClose={setCloseRequest}
-                />
+                <div key={row.id} className={styles.track}>
+                  <header className={styles.trackHeader}>
+                    <span className={styles.trackName}>
+                      <PrivateContent>
+                        {truncateCenter(
+                          fileState.files.byId[row.id]?.name ?? row.id,
+                          40,
+                        )}
+                      </PrivateContent>
+                    </span>
+                    <span className={styles.trackMeta}>
+                      {t("pageTracks.readingPages", "Reading pages...")}
+                    </span>
+                  </header>
+                  <div className={`${styles.lane} ${styles.laneEmpty}`}>
+                    <Loader size="sm" />
+                  </div>
+                </div>
               );
             })}
-
-            {pendingFileIds.map((fileId) => (
-              <div key={fileId} className={styles.track}>
-                <header className={styles.trackHeader}>
-                  <span className={styles.trackName}>
-                    <PrivateContent>
-                      {truncateCenter(
-                        fileState.files.byId[fileId]?.name ?? fileId,
-                        40,
-                      )}
-                    </PrivateContent>
-                  </span>
-                  <span className={styles.trackMeta}>
-                    {t("pageTracks.readingPages", "Reading pages...")}
-                  </span>
-                </header>
-                <div className={`${styles.lane} ${styles.laneEmpty}`}>
-                  <Loader size="sm" />
-                </div>
-              </div>
-            ))}
           </div>
         </div>
 

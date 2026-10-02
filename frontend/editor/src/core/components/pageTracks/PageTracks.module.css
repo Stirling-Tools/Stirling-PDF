@@ -44,6 +44,16 @@
   box-shadow: inset 0 0 0 1px var(--c-primary);
 }
 
+/* An open file the page editor can't edit (not a PDF): greyed so it stays
+   visible but clearly out of scope, like a disabled file in Active Files. */
+.trackDisabled {
+  opacity: 0.55;
+}
+
+.trackDisabled .trackHeader {
+  cursor: default;
+}
+
 .trackHeader {
   cursor: grab;
   display: flex;
