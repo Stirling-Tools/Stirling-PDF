@@ -1,4 +1,5 @@
 import React from "react";
+import i18n from "i18next";
 import { Icon } from "@app/ui/Icon";
 
 import type { NonPdfFileType } from "@app/utils/fileUtils";
@@ -29,13 +30,13 @@ export function getFileTypeMeta(
   switch (type) {
     case "image":
       return {
-        label: "Image",
+        label: i18n.t("viewer.nonPdf.fileType.image", "Image"),
         icon: React.createElement(Icon, { name: "image", size: 20 }),
         ...BADGE_COLORS,
       };
     case "csv":
       return {
-        label: "Spreadsheet",
+        label: i18n.t("viewer.nonPdf.fileType.spreadsheet", "Spreadsheet"),
         icon: React.createElement(Icon, { name: "table", size: 20 }),
         ...BADGE_COLORS,
       };
@@ -59,14 +60,14 @@ export function getFileTypeMeta(
       };
     case "text":
       return {
-        label: "Text",
+        label: i18n.t("viewer.nonPdf.fileType.text", "Text"),
         icon: React.createElement(Icon, { name: "file-text", size: 20 }),
         ...BADGE_COLORS,
       };
     default: {
       // For unknown types, derive label from the file extension (e.g. ".docx" → "DOCX")
       const ext = fileName?.split(".").pop()?.toUpperCase();
-      const label = ext || "File";
+      const label = ext || i18n.t("viewer.nonPdf.fileType.file", "File");
       return {
         label,
         icon: React.createElement(Icon, { name: "file-text", size: 20 }),

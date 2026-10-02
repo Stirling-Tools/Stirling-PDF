@@ -8,7 +8,7 @@ dependencies = []
 [dependency-groups]
 # Runtime dependencies for the AI document engine service.
 engine = [
-    "cryptography>=50.0.0",
+    "cryptography>=50.0.1",
     "fastapi>=0.141.1",
     "opentelemetry-sdk>=1.39.1",
     "pgvector>=0.5.0",
@@ -21,6 +21,8 @@ engine = [
     "pydantic-ai-slim[anthropic,openai]>=1.107.2,<2.0.0",
     "pydantic-settings>=2.15.0",
     "python-dotenv>=1.2.3",
+    # Lets the image's init script read aiEngine.enabled from settings.yml before starting us.
+    "pyyaml>=6.0.3",
     "sqlite-vec>=0.1.9",
     "uvicorn>=0.52.4",
 ]
@@ -61,7 +63,7 @@ tools = [
 ]
 # Release-signature verification dependencies.
 updater-signatures = [
-    "cryptography>=50.0.0",
+    "cryptography>=50.0.1",
 ]
 # Pinned repository-wide pre-commit tooling.
 pre-commit = [
