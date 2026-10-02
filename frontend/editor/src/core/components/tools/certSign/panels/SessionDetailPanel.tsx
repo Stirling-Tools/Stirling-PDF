@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Stack, Text, Group, Modal } from "@mantine/core";
 import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { Tooltip } from "@app/ui/Tooltip";
 import { StatusBadge } from "@app/ui/StatusBadge";
 import { ProgressBar } from "@app/ui/ProgressBar";
 import { SigningSessionHeader } from "@app/components/shared/signing/SigningSessionHeader";
@@ -169,6 +171,29 @@ export const SessionDetailPanel = ({ data }: SessionDetailPanelProps) => {
                 : t("certSign.collab.sessionList.active", "Active")}
             </StatusBadge>
           }
+          actions={
+            !session.finalized && (
+              <Tooltip
+                content={t(
+                  "certSign.collab.sessionDetail.deleteSession",
+                  "Delete Session",
+                )}
+              >
+                <ActionIcon
+                  variant="tertiary"
+                  accent="neutral"
+                  aria-label={t(
+                    "certSign.collab.sessionDetail.deleteSession",
+                    "Delete Session",
+                  )}
+                  disabled={busy}
+                  onClick={() => setDeleteModalOpen(true)}
+                >
+                  <Icon name="trash" size={18} />
+                </ActionIcon>
+              </Tooltip>
+            )
+          }
         />
         <div className="signing-detail__summary">
           <div className="signing-detail__heading">
@@ -233,19 +258,6 @@ export const SessionDetailPanel = ({ data }: SessionDetailPanelProps) => {
           loadingPdf={loadingPdf}
           disabled={busy}
         />
-
-        {!session.finalized && (
-          <Button
-            leftSection={<Icon name="trash" size={20} />}
-            accent="danger"
-            variant="tertiary"
-            fullWidth
-            disabled={busy}
-            onClick={() => setDeleteModalOpen(true)}
-          >
-            {t("certSign.collab.sessionDetail.deleteSession", "Delete Session")}
-          </Button>
-        )}
       </footer>
       <AddParticipantsFlow
         opened={addParticipantsModalOpen}

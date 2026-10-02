@@ -11,6 +11,7 @@ interface SigningSessionHeaderProps {
   dueDate: string;
   message: string;
   status: ReactNode;
+  actions?: ReactNode;
 }
 
 /** Shared document and sender information for owner and participant session views. */
@@ -21,11 +22,15 @@ export function SigningSessionHeader({
   dueDate,
   message,
   status,
+  actions,
 }: SigningSessionHeaderProps) {
   const { t } = useTranslation();
   return (
     <header className="signing-detail__header">
-      {status}
+      <div className="signing-detail__header-row">
+        {status}
+        {actions}
+      </div>
       <h2>{documentName}</h2>
       <div className="signing-detail__sender">
         {owner && <Avatar name={owner} size="sm" tone="neutral" />}
