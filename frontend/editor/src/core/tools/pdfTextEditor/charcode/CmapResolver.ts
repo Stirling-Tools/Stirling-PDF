@@ -4,6 +4,7 @@ import type {
   ResolverContext,
 } from "@app/tools/pdfTextEditor/charcode/CharcodeStrategy";
 import { sha256Hex } from "@app/tools/pdfTextEditor/util/sha256";
+import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
 
 /** Strategy 1: parse the embedded font's cmap table. */
 
@@ -127,24 +128,20 @@ function readFontData(
   if (!fontMod.FPDFFont_GetFontData) return null;
 
   // First call: ask for the buffer size (pass length=0, read outSize).
-  const sizePtr = m.pdfium.wasmExports.malloc(4);
+  const sizePtr = scratchPtr(m, SCRATCH.cmapSize, 4);
+  const ok = fontMod.FPDFFont_GetFontData(font, 0, 0, sizePtr);
+  if (!ok) return null;
+  const size = m.pdfium.getValue(sizePtr, "i32");
+  if (size <= 0) return null;
+  const dataPtr = m.pdfium.wasmExports.malloc(size);
   try {
-    const ok = fontMod.FPDFFont_GetFontData(font, 0, 0, sizePtr);
-    if (!ok) return null;
-    const size = m.pdfium.getValue(sizePtr, "i32");
-    if (size <= 0) return null;
-    const dataPtr = m.pdfium.wasmExports.malloc(size);
-    try {
-      const ok2 = fontMod.FPDFFont_GetFontData(font, dataPtr, size, sizePtr);
-      if (!ok2) return null;
-      // Slice() copies out of the WASM heap so we own the bytes.
-      const heapU8 = (m.pdfium as unknown as { HEAPU8: Uint8Array }).HEAPU8;
-      return new Uint8Array(heapU8.buffer, dataPtr, size).slice();
-    } finally {
-      m.pdfium.wasmExports.free(dataPtr);
-    }
+    const ok2 = fontMod.FPDFFont_GetFontData(font, dataPtr, size, sizePtr);
+    if (!ok2) return null;
+    // Slice() copies out of the WASM heap so we own the bytes.
+    const heapU8 = (m.pdfium as unknown as { HEAPU8: Uint8Array }).HEAPU8;
+    return new Uint8Array(heapU8.buffer, dataPtr, size).slice();
   } finally {
-    m.pdfium.wasmExports.free(sizePtr);
+    m.pdfium.wasmExports.free(dataPtr);
   }
 }
 
