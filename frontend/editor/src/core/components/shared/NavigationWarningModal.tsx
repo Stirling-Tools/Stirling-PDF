@@ -1,4 +1,5 @@
 import { useRef, useEffect } from "react";
+import { flushSync } from "react-dom";
 import { useNavigationGuard } from "@app/contexts/NavigationContext";
 import { UnsavedChangesDialog } from "@app/components/shared/UnsavedChangesDialog";
 
@@ -25,8 +26,11 @@ const NavigationWarningModal = () => {
 
   const finishAndNavigate = () => {
     const nav = pendingNavigationRef.current;
-    setHasUnsavedChanges(false);
-    cancelNavigation();
+    // Compound navigation can invoke more guards; they must see the resolved edits.
+    flushSync(() => {
+      setHasUnsavedChanges(false);
+      cancelNavigation();
+    });
     if (nav) {
       nav();
     }

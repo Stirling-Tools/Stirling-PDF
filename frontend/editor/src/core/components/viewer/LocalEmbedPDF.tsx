@@ -95,6 +95,11 @@ import { RedactionSelectionMenu } from "@app/components/viewer/RedactionSelectio
 import { AnnotationSelectionMenu } from "@app/components/viewer/AnnotationSelectionMenu";
 import { AnnotationMenuEvents } from "@app/components/viewer/AnnotationMenuEvents";
 import { DocumentSwapBridge } from "@app/components/viewer/DocumentSwapBridge";
+import {
+  DocumentRestoreBridge,
+  type DocumentRestoreEvent,
+  type DocumentRestoreRequest,
+} from "@app/components/viewer/DocumentRestoreBridge";
 import { AnnotationDeletedMenu } from "@app/components/viewer/AnnotationDeletedMenu";
 import { TextSelectionMenu } from "@app/components/viewer/TextSelectionMenu";
 import {
@@ -162,11 +167,13 @@ interface LocalEmbedPDFProps {
   /** Fires from the layout pass that mounts a page, before it paints. */
   onPageLayout?: () => void;
   /** Fires when the swap bridge activates a replacement document. */
-  onDocumentSwapped?: () => void;
+  onDocumentSwapped?: (documentId: string) => void;
   /** Fires when the swap bridge fails to open or activate a replacement document. */
   onDocumentSwapFailed?: (error: unknown) => void;
   /** True while a view restore is in flight; gates the per-page layout hook. */
   restorePending?: boolean;
+  restoreRequest?: DocumentRestoreRequest | null;
+  onRestoreEvent?: (event: DocumentRestoreEvent) => void;
 }
 
 interface ViewerPageContainerProps {
@@ -685,6 +692,8 @@ export function LocalEmbedPDF({
   onDocumentSwapped,
   onDocumentSwapFailed,
   restorePending = false,
+  restoreRequest = null,
+  onRestoreEvent,
 }: LocalEmbedPDFProps) {
   const { t } = useTranslation();
   const { config } = useAppConfig();
@@ -909,12 +918,15 @@ export function LocalEmbedPDF({
 
   const [swapAnnouncement, setSwapAnnouncement] = useState<string | null>(null);
 
-  const handleDocumentSwapped = useCallback(() => {
-    onDocumentSwapped?.();
-    setPendingDocument(null);
-    setSwapAnnouncement(t("viewer.documentUpdated", "Document updated"));
-    setTimeout(() => setSwapAnnouncement(null), 3000);
-  }, [onDocumentSwapped, t]);
+  const handleDocumentSwapped = useCallback(
+    (documentId: string) => {
+      onDocumentSwapped?.(documentId);
+      setPendingDocument(null);
+      setSwapAnnouncement(t("viewer.documentUpdated", "Document updated"));
+      setTimeout(() => setSwapAnnouncement(null), 3000);
+    },
+    [onDocumentSwapped, t],
+  );
   const handleDocumentSwapFailed = useCallback(
     (error: unknown) => {
       // The outgoing document stays active; the replacement never landed.
@@ -1277,6 +1289,11 @@ export function LocalEmbedPDF({
             pending={pendingDocument}
             onSwapped={handleDocumentSwapped}
             onFailed={handleDocumentSwapFailed}
+          />
+          <DocumentRestoreBridge
+            request={restoreRequest}
+            restorePending={restorePending}
+            onEvent={onRestoreEvent}
           />
           <ZoomAPIBridge />
           <ScrollAPIBridge />
