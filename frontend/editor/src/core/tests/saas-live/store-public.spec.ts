@@ -123,6 +123,29 @@ test.describe("Pipeline store page, anonymous", () => {
     await expect(page.getByRole("tab", { name: "Starred" })).toHaveCount(0);
   });
 
+  test("Stirling's templates are always listed, so the store is never empty", async ({
+    page,
+  }) => {
+    await page.goto("processor/store", { waitUntil: "domcontentloaded" });
+    await expect(page.locator(".portal-store__card").first()).toBeVisible({
+      timeout: 30_000,
+    });
+    await expect(
+      page.locator(".portal-store__card").filter({ hasText: "By Stirling" }),
+    ).not.toHaveCount(0);
+
+    await page.goto("store/p/stirling-security", {
+      waitUntil: "domcontentloaded",
+    });
+    await expect(page.locator(".portal-store-listing__title")).toBeVisible({
+      timeout: 30_000,
+    });
+    await expect(page).toHaveURL(/\/processor\/store\/stirling-security$/);
+    await expect(
+      page.getByRole("button", { name: "Sign in to install" }),
+    ).toBeVisible();
+  });
+
   test("a shared link opens the listing, slug and all", async ({ page }) => {
     const first = (await (await api.get(`${PUBLIC}?limit=1`)).json()).items[0];
     test.skip(!first, "the catalogue is empty");
