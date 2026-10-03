@@ -269,4 +269,23 @@ class DatabaseServiceTest {
         boolean result = databaseService.importDatabaseFromUI(script);
         assertThat(result).isTrue();
     }
+
+    @Test
+    void importDatabaseWithLongStringLiteralDoesNotStackOverflow() throws IOException {
+        String longValue = "A".repeat(50000);
+        String sqlContent =
+                "CREATE CACHED TABLE \"PUBLIC\".\"TEST_LONG\"(\n"
+                        + "    \"ID\" BIGINT NOT NULL,\n"
+                        + "    \"VAL\" CHARACTER VARYING\n"
+                        + ");\n"
+                        + "INSERT INTO \"PUBLIC\".\"TEST_LONG\"(\"ID\", \"VAL\") VALUES(1, '"
+                        + longValue
+                        + "');\n";
+
+        Path script = Files.createTempFile("backup_long_string", ".sql");
+        Files.writeString(script, sqlContent);
+
+        org.assertj.core.api.Assertions.assertThatNoException()
+                .isThrownBy(() -> databaseService.importDatabaseFromUI(script));
+    }
 }
