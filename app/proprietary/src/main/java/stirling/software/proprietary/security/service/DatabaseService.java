@@ -593,7 +593,29 @@ public class DatabaseService implements DatabaseServiceInterface {
     }
 
     private String stripStringLiterals(String sql) {
-        return sql.replaceAll("'(?:[^']|'')*'", "''");
+        if (sql == null || sql.isEmpty()) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder(sql.length());
+        boolean inString = false;
+        for (int i = 0; i < sql.length(); i++) {
+            char c = sql.charAt(i);
+            if (c == '\'') {
+                if (inString) {
+                    if (i + 1 < sql.length() && sql.charAt(i + 1) == '\'') {
+                        i++; // Skip escaped quote inside string literal
+                    } else {
+                        inString = false;
+                        sb.append("''");
+                    }
+                } else {
+                    inString = true;
+                }
+            } else if (!inString) {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
     }
 
     /**
