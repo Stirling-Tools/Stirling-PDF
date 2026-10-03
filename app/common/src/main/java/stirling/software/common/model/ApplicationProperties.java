@@ -1136,11 +1136,12 @@ public class ApplicationProperties {
             private Boolean debugLogging = false;
 
             public String getEffectiveRegistrationId() {
-                String id =
-                        !ValidationUtils.isStringEmpty(registrationId) ? registrationId : provider;
-                return id == null
-                        ? null
-                        : id.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9\\-._~]", "-");
+                if (!ValidationUtils.isStringEmpty(registrationId)) {
+                    return registrationId
+                            .toLowerCase(Locale.ROOT)
+                            .replaceAll("[^a-z0-9\\-._~]", "-");
+                }
+                return provider;
             }
 
             public void setScopes(String scopes) {
