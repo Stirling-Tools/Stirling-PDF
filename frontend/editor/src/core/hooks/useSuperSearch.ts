@@ -474,7 +474,7 @@ export function assembleSuperSearchGroups(
 /**
  * The editor's results provider: the shared sources wired to in-app select
  * actions (open file → viewer, select tool in the workbench, deep-link into
- * the settings modal, route into the Processor).
+ * the settings page, route into the Processor).
  *
  * @param query   current search text
  * @param active  whether the search surface is open; gates the My Files load
