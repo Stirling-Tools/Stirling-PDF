@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -43,6 +44,55 @@ class LicenseKeyCheckerTest {
                 .doesNotThrowAnyException();
         assertEquals(License.SERVER, checker.getPremiumLicenseEnabledResult());
         verifyNoInteractions(verifier);
+    }
+
+    @Test
+    void repeatedTierQueriesCollapseIntoOneEntitlementRead() {
+        // /app-config asks the tier several times per page load; each miss was its own DB read.
+        ApplicationProperties properties = new ApplicationProperties();
+        when(userLicenseSettingsService.refreshLinkedTeamUsers()).thenReturn(300);
+        LicenseKeyChecker checker =
+                new LicenseKeyChecker(verifier, properties, userLicenseSettingsService);
+
+        assertEquals(License.SERVER, checker.premiumTier());
+        assertEquals(License.SERVER, checker.premiumTier());
+        assertEquals(License.SERVER, checker.premiumTier());
+
+        verify(userLicenseSettingsService, times(1)).refreshLinkedTeamUsers();
+    }
+
+    @Test
+    void anUnreadableEntitlementIsRetried_notMemoised() {
+        // The failure path must not stamp the memo, or a transient DB error would freeze the tier
+        // for the whole window instead of being retried on the next question.
+        ApplicationProperties properties = new ApplicationProperties();
+        when(userLicenseSettingsService.refreshLinkedTeamUsers())
+                .thenThrow(new IllegalStateException("Database not initialized"))
+                .thenReturn(300);
+        LicenseKeyChecker checker =
+                new LicenseKeyChecker(verifier, properties, userLicenseSettingsService);
+
+        assertEquals(License.NORMAL, checker.premiumTier());
+        assertEquals(License.SERVER, checker.premiumTier());
+
+        verify(userLicenseSettingsService, times(2)).refreshLinkedTeamUsers();
+    }
+
+    @Test
+    void anInstalledKeyNeedsNoEntitlementRead() {
+        // A paid key short-circuits the promotion, so the linked-team lookup never runs at all.
+        ApplicationProperties properties = new ApplicationProperties();
+        properties.getPremium().setEnabled(true);
+        properties.getPremium().setKey("a-key");
+        when(verifier.verifyLicense("a-key")).thenReturn(License.ENTERPRISE);
+        LicenseKeyChecker checker =
+                new LicenseKeyChecker(verifier, properties, userLicenseSettingsService);
+        checker.init();
+
+        assertEquals(License.ENTERPRISE, checker.premiumTier());
+        assertEquals(License.ENTERPRISE, checker.premiumTier());
+
+        verify(userLicenseSettingsService, never()).refreshLinkedTeamUsers();
     }
 
     @Test
