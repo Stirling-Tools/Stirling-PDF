@@ -6,6 +6,7 @@ import {
   SignaturePreview,
 } from "@app/utils/signaturePreview";
 import { useSignature } from "@app/contexts/SignatureContext";
+import { fitPlacedSignatureSize } from "@app/utils/signatureImage";
 import {
   MAX_PREVIEW_WIDTH_RATIO,
   MAX_PREVIEW_HEIGHT_RATIO,
@@ -23,12 +24,14 @@ interface StampPlacementOverlayProps {
   containerRef: React.RefObject<HTMLElement | null>;
   isActive: boolean;
   signatureConfig: SignParameters | null;
+  signatureLineZoom?: number | null;
 }
 
 export const StampPlacementOverlay: React.FC<StampPlacementOverlayProps> = ({
   containerRef,
   isActive,
   signatureConfig,
+  signatureLineZoom = null,
 }) => {
   const [preview, setPreview] = useState<SignaturePreview | null>(null);
   const [cursor, setCursor] = useState<{ x: number; y: number } | null>(null);
@@ -89,6 +92,14 @@ export const StampPlacementOverlay: React.FC<StampPlacementOverlayProps> = ({
       return null;
     }
 
+    if (signatureLineZoom) {
+      const pdfSize = fitPlacedSignatureSize(preview.width, preview.height);
+      return {
+        width: pdfSize.width * signatureLineZoom,
+        height: pdfSize.height * signatureLineZoom,
+      };
+    }
+
     const container = containerRef.current;
     const containerWidth = container.clientWidth || 1;
     const containerHeight = container.clientHeight || 1;
@@ -118,7 +129,7 @@ export const StampPlacementOverlay: React.FC<StampPlacementOverlayProps> = ({
         preview.height * scale,
       ),
     };
-  }, [preview, containerRef]);
+  }, [preview, containerRef, signatureLineZoom]);
 
   useEffect(() => {
     if (!isActive || !scaledSize) {

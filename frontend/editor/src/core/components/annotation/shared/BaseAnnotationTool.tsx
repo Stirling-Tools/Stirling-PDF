@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Stack, Alert, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { DrawingControls } from "@app/components/annotation/shared/DrawingControls";
 import { ColorPicker } from "@app/components/annotation/shared/ColorPicker";
 import { usePDFAnnotation } from "@app/components/annotation/providers/PDFAnnotationProvider";
 import { useSignature } from "@app/contexts/SignatureContext";
+import { useHistoryAvailability } from "@app/hooks/useHistoryAvailability";
 
 export interface AnnotationToolConfig {
   enableDrawing?: boolean;
@@ -42,32 +43,7 @@ export const BaseAnnotationTool: React.FC<BaseAnnotationToolProps> = ({
   const [selectedColor, setSelectedColor] = useState("#000000");
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [signatureData, setSignatureData] = useState<string | null>(null);
-  const [historyAvailability, setHistoryAvailability] = useState({
-    canUndo: false,
-    canRedo: false,
-  });
-  const historyApiInstance = historyApiRef.current;
-
-  useEffect(() => {
-    if (!historyApiInstance) {
-      setHistoryAvailability({ canUndo: false, canRedo: false });
-      return;
-    }
-
-    const updateAvailability = () => {
-      setHistoryAvailability({
-        canUndo: historyApiInstance.canUndo?.() ?? false,
-        canRedo: historyApiInstance.canRedo?.() ?? false,
-      });
-    };
-
-    const unsubscribe = historyApiInstance.subscribe?.(updateAvailability);
-    updateAvailability();
-
-    return () => {
-      unsubscribe?.();
-    };
-  }, [historyApiInstance]);
+  const historyAvailability = useHistoryAvailability(historyApiRef.current);
 
   const handleSignatureDataChange = (data: string | null) => {
     setSignatureData(data);
