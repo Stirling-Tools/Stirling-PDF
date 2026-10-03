@@ -23,6 +23,10 @@ export interface SignatureOverlayAPI {
   clearPreviews: () => void;
   deleteSelected: () => void;
   hasSelected: () => boolean;
+  undo: () => void;
+  redo: () => void;
+  canUndo: () => boolean;
+  canRedo: () => boolean;
 }
 
 export interface ClearDocumentAnnotationsResult {

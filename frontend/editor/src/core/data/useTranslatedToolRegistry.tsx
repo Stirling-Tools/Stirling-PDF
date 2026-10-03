@@ -194,20 +194,6 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "sign"),
         supportsAutomate: false, //TODO make support Sign
       },
-      sharedSign: {
-        icon: <Icon name="users-plus" size={"1.5rem"} />,
-        name: t("home.sharedSign.title", "Shared Signing"),
-        component: lazy(() => import("@app/tools/SharedSign")),
-        description: t(
-          "home.sharedSign.desc",
-          "Request signatures from others and track signing sessions",
-        ),
-        categoryId: ToolCategoryId.STANDARD_TOOLS,
-        subcategoryId: SubcategoryId.SIGNING,
-        automationSettings: null,
-        supportsAutomate: false,
-        synonyms: getSynonyms(t, "sharedSign"),
-      },
       addText: {
         icon: <Icon name="type" size="1.5rem" />,
         name: t("home.addText.title", "Add Text"),
