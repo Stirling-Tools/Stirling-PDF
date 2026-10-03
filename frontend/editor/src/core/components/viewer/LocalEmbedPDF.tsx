@@ -52,6 +52,11 @@ import {
   AnnotationPluginPackage,
 } from "@embedpdf/plugin-annotation/react";
 import type { AnnotationEvent } from "@embedpdf/plugin-annotation";
+import type { BoxedAnnotationRenderer } from "@embedpdf/plugin-annotation/react";
+import {
+  PdfAnnotationBorderStyle,
+  PdfAnnotationSubtype,
+} from "@embedpdf/models";
 import type { PdfAnnotationObject, Rect } from "@embedpdf/models";
 import { registerAnnotationTools } from "@app/components/viewer/annotationTools";
 import {
@@ -120,6 +125,7 @@ import { ButtonAppearanceOverlay } from "@app/tools/formFill/ButtonAppearanceOve
 import SignatureFieldOverlay from "@app/components/viewer/SignatureFieldOverlay";
 import { CommentsSidebar } from "@app/components/viewer/CommentsSidebar";
 import { CommentAuthorProvider } from "@app/contexts/CommentAuthorContext";
+import { useViewer } from "@app/contexts/ViewerContext";
 import { accountService } from "@app/services/accountService";
 
 interface LocalEmbedPDFProps {
@@ -193,6 +199,130 @@ function normalizePageRotation(rotation: number | null | undefined): number {
     typeof rotation === "number" && Number.isFinite(rotation) ? rotation : 0;
   return ((Math.round(value) % 4) + 4) % 4;
 }
+
+// Visual half of the built-in link renderer: underline/border styling only,
+// with no hit rect. LinkLayer owns link hit-testing, so the annotation layer
+// must not add a transparent rect per link — but the renderer entry keeps the
+// built-in matching, preview, and interaction fields, so link styling,
+// selection, and drag/resize keep working exactly as before. Two deliberate
+// exceptions: no selectOverride (an IRT reply link selects itself rather than
+// its parent) and no renderLocked (locked links fall back to the styling
+// render, which needs no hit-testing anyway).
+function LinkStyling({
+  rect,
+  scale,
+  strokeColor = "#0000FF",
+  strokeWidth = 2,
+  strokeStyle = PdfAnnotationBorderStyle.UNDERLINE,
+  strokeDashArray,
+}: {
+  rect: Rect;
+  scale: number;
+  strokeColor?: string;
+  strokeWidth?: number;
+  strokeStyle?: PdfAnnotationBorderStyle;
+  strokeDashArray?: number[];
+}) {
+  const { width, height } = rect.size;
+  const svgWidth = width * scale;
+  const svgHeight = height * scale;
+  const dashArray =
+    strokeStyle === PdfAnnotationBorderStyle.DASHED
+      ? (strokeDashArray?.join(",") ?? `${strokeWidth * 3},${strokeWidth}`)
+      : undefined;
+  const isUnderline = strokeStyle === PdfAnnotationBorderStyle.UNDERLINE;
+  return (
+    <svg
+      style={{
+        position: "absolute",
+        width: svgWidth,
+        height: svgHeight,
+        pointerEvents: "none",
+        zIndex: 2,
+      }}
+      width={svgWidth}
+      height={svgHeight}
+      viewBox={`0 0 ${width} ${height}`}
+    >
+      {isUnderline ? (
+        <line
+          x1={1}
+          y1={height - 1}
+          x2={width - 1}
+          y2={height - 1}
+          stroke={strokeColor}
+          strokeWidth={strokeWidth}
+          strokeDasharray={dashArray}
+          style={{ pointerEvents: "none" }}
+        />
+      ) : (
+        <rect
+          x={strokeWidth / 2}
+          y={strokeWidth / 2}
+          width={Math.max(width - strokeWidth, 0)}
+          height={Math.max(height - strokeWidth, 0)}
+          fill="transparent"
+          stroke={strokeColor}
+          strokeWidth={strokeWidth}
+          strokeDasharray={dashArray}
+          style={{ pointerEvents: "none" }}
+        />
+      )}
+    </svg>
+  );
+}
+
+const LINK_RENDERERS: BoxedAnnotationRenderer[] = [
+  {
+    id: "link",
+    matches: (annotation) => annotation.type === PdfAnnotationSubtype.LINK,
+    matchesPreview: (preview) => preview.type === PdfAnnotationSubtype.LINK,
+    render: ({ currentObject, scale }) => {
+      if (currentObject.type !== PdfAnnotationSubtype.LINK) return <></>;
+      const { rect, strokeColor, strokeWidth, strokeStyle, strokeDashArray } =
+        currentObject;
+      return (
+        <LinkStyling
+          rect={rect}
+          scale={scale}
+          strokeColor={strokeColor}
+          strokeWidth={strokeWidth}
+          strokeStyle={strokeStyle}
+          strokeDashArray={strokeDashArray}
+        />
+      );
+    },
+    renderPreview: ({ data, bounds, scale }) => {
+      // Preview data is untyped once the renderer is boxed; links carry the
+      // same stroke fields the built-in preview reads.
+      const { strokeWidth, strokeColor } = data as {
+        strokeWidth: number;
+        strokeColor: string;
+      };
+      return (
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            width: bounds.size.width * scale,
+            height: bounds.size.height * scale,
+            borderBottom: `${strokeWidth * scale}px solid ${strokeColor}`,
+            backgroundColor: "rgba(0, 0, 255, 0.05)",
+            boxSizing: "border-box",
+          }}
+        />
+      );
+    },
+    interactionDefaults: {
+      isDraggable: true,
+      isResizable: true,
+      isRotatable: false,
+    },
+    useAppearanceStream: false,
+    hideSelectionMenu: (annotation) => !!annotation.inReplyToId,
+  },
+];
 
 function ViewerPageContainer({
   documentId,
@@ -417,6 +547,7 @@ function AnnotationEditingLayers({
       <AnnotationLayer
         documentId={documentId}
         pageIndex={pageIndex}
+        annotationRenderers={LINK_RENDERERS}
         selectionOutline={{ color: "#007ACC" }}
         selectionMenu={(props) => (
           <AnnotationSelectionMenu
@@ -460,6 +591,7 @@ function PageLayers({
   onAnnotationMenuAnchor,
   signatureOverlay,
 }: PageGeometry & PageLayerOptions) {
+  const { isAnnotationMode } = useViewer();
   return (
     <>
       <PageTiles
@@ -498,7 +630,11 @@ function PageLayers({
         onAnnotationMenuAnchor={onAnnotationMenuAnchor}
       />
       {/* LinkLayer: uses EmbedPDF annotation state for link rendering */}
-      <LinkLayer documentId={documentId} pageIndex={pageIndex} />
+      <LinkLayer
+        documentId={documentId}
+        pageIndex={pageIndex}
+        selectionActive={isAnnotationMode}
+      />
       {/* Signature preview overlay (opt-in; off by default) */}
       {signatureOverlay && (
         <SignaturePreviewLayer
