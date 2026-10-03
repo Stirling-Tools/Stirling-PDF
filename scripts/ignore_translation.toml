@@ -439,6 +439,26 @@ ignore = [
 [tr_TR]
 ignore = [
     'language.direction',
+    'admin.formDetection.downloadingNote',
+    'admin.settings.advanced.processExecutor.calibre',
+    'admin.settings.advanced.processExecutor.ghostscript',
+    'admin.settings.advanced.processExecutor.libreOffice',
+    'admin.settings.advanced.processExecutor.ocrMyPdf',
+    'admin.settings.advanced.processExecutor.pythonOpenCv',
+    'admin.settings.advanced.processExecutor.qpdf',
+    'admin.settings.advanced.processExecutor.tesseract',
+    'admin.settings.advanced.processExecutor.weasyPrint',
+    'admin.settings.connections.mobileScanner.pageFormatA4',
+    'admin.settings.connections.oauth2.label',
+    'admin.settings.connections.pageFormatA4',
+    'admin.settings.connections.saml2.label',
+    'admin.settings.folderAccess.roots.placeholder',
+    'admin.settings.legal.loginAgreement.editLabel',
+    'admin.settings.security.xFrameOptions.label',
+    'agents.stirling_name',
+    'autoRotate.report.method.osd',
+    'certSign.collab.participant.certInvalid',
+    'certSign.logoTitle',
 ]
 
 [uk_UA]
