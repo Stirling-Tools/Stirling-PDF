@@ -210,7 +210,7 @@ public class PipelineDirectoryProcessor {
             Path dir, Path processingDir, Path jsonFile, PipelineConfig config) throws IOException {
         for (PipelineOperation operation : config.getOperations()) {
             validateOperation(operation);
-            File[] files = collectFilesForProcessing(dir, jsonFile, operation);
+            File[] files = collectFilesForProcessing(dir, jsonFile, operation, config);
             if (files.length == 0) {
                 log.debug("No files detected for {} ", dir);
                 return;
@@ -235,17 +235,24 @@ public class PipelineDirectoryProcessor {
         }
     }
 
-    private File[] collectFilesForProcessing(Path dir, Path jsonFile, PipelineOperation operation)
+    private File[] collectFilesForProcessing(
+            Path dir, Path jsonFile, PipelineOperation operation, PipelineConfig config)
             throws IOException {
 
         List<String> inputExtensions =
                 toolMetadataService.getExtensionTypes(false, operation.getOperation());
+        if (inputExtensions == null || inputExtensions.isEmpty()) {
+            inputExtensions = config.getInputExtensions();
+        }
+        if (inputExtensions == null || inputExtensions.isEmpty()) {
+            inputExtensions = List.of("ALL");
+        }
         log.info(
                 "Allowed extensions for operation {}: {}",
                 operation.getOperation(),
                 inputExtensions);
 
-        boolean allowAllFiles = inputExtensions.contains("ALL");
+        boolean allowAllFiles = inputExtensions.stream().anyMatch("ALL"::equalsIgnoreCase);
 
         try (Stream<Path> paths = Files.list(dir)) {
             File[] files =
@@ -271,8 +278,12 @@ public class PipelineDirectoryProcessor {
                                         // Check against allowed extensions
                                         boolean isAllowed =
                                                 allowAllFiles
-                                                        || inputExtensions.contains(
-                                                                extension.toLowerCase());
+                                                        || inputExtensions.stream()
+                                                                .anyMatch(
+                                                                        allowedExtension ->
+                                                                                allowedExtension
+                                                                                        .equalsIgnoreCase(
+                                                                                                extension));
                                         if (!isAllowed) {
                                             log.info(
                                                     "Skipping file with unsupported extension: {}"
