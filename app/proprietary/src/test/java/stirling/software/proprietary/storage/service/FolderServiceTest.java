@@ -51,6 +51,7 @@ import stirling.software.proprietary.storage.repository.StoredFileRepository;
 class FolderServiceTest {
 
     @Mock private FolderRepository folderRepository;
+    @Mock private FileStorageService fileStorageService;
     @Mock private StoredFileRepository storedFileRepository;
     @Mock private ApplicationProperties applicationProperties;
     @Mock private ApplicationProperties.Security security;
@@ -75,7 +76,8 @@ class FolderServiceTest {
                         folderRepository,
                         storedFileRepository,
                         applicationProperties,
-                        eventPublisher);
+                        eventPublisher,
+                        fileStorageService);
 
         user = new User();
         user.setId(42L);
@@ -294,6 +296,40 @@ class FolderServiceTest {
 
         assertThat(result.movedFileIds()).containsExactly(1L, 2L);
         assertThat(result.skippedFileIds()).containsExactly(3L, 4L);
+    }
+
+    @Test
+    void deleteFolder_retires_the_listings_of_the_files_it_held() {
+        // Deleting a folder clears its files' placement, which the listing reports.
+        Folder folder = makeFolder(UUID.randomUUID(), null);
+        when(folderRepository.findByIdAndOwner(eq(folder.getId()), eq(user)))
+                .thenReturn(Optional.of(folder));
+        when(folderRepository.findAllByOwnerOrderByName(user))
+                .thenReturn(java.util.List.of(folder));
+        stirling.software.proprietary.storage.model.StoredFile held =
+                mock(stirling.software.proprietary.storage.model.StoredFile.class);
+        when(storedFileRepository.findAllByFolderIdIn(any())).thenReturn(java.util.List.of(held));
+
+        service.deleteFolder(folder.getId());
+
+        verify(fileStorageService).invalidateListingsFor(java.util.List.of(held));
+    }
+
+    @Test
+    void bulkMove_retires_the_listings_the_moved_files_appear_in() {
+        // The listing carries each file's folder, so a move leaves it wrong until retired.
+        Folder target = makeFolder(UUID.randomUUID(), null);
+        when(folderRepository.findByIdAndOwner(eq(target.getId()), eq(user)))
+                .thenReturn(Optional.of(target));
+        stirling.software.proprietary.storage.model.StoredFile fileA =
+                mock(stirling.software.proprietary.storage.model.StoredFile.class);
+        when(fileA.getId()).thenReturn(1L);
+        when(storedFileRepository.findAllByIdInAndOwner(any(), eq(user)))
+                .thenReturn(java.util.List.of(fileA));
+
+        service.bulkMoveFilesToFolder(target.getId(), java.util.List.of(1L));
+
+        verify(fileStorageService).invalidateListingsFor(java.util.List.of(fileA));
     }
 
     @Test

@@ -1,5 +1,6 @@
 package stirling.software.proprietary.storage.repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,6 +29,8 @@ public interface FileShareRepository extends JpaRepository<FileShare, Long> {
 
     List<FileShare> findBySharedWithUser(User sharedWithUser);
 
+    List<FileShare> findByFile(StoredFile file);
+
     List<FileShare> findByExpiresAtBeforeAndShareTokenNotNull(java.time.LocalDateTime now);
 
     @Query(
@@ -36,4 +39,11 @@ public interface FileShareRepository extends JpaRepository<FileShare, Long> {
                     + "WHERE s.sharedWithUser = :user AND f IN :files")
     List<FileShare> findBySharedWithUserAndFileIn(
             @Param("user") User user, @Param("files") List<StoredFile> files);
+
+    /** Every share on these files, grantee loaded. */
+    @Query(
+            "SELECT s FROM FileShare s "
+                    + "LEFT JOIN FETCH s.sharedWithUser "
+                    + "WHERE s.file.id IN :fileIds")
+    List<FileShare> findByFileIdInWithUser(@Param("fileIds") Collection<Long> fileIds);
 }

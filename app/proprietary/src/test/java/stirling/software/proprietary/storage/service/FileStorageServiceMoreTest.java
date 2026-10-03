@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -30,6 +31,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.server.ResponseStatusException;
 
+import stirling.software.common.cluster.KeyValueCache;
+import stirling.software.common.cluster.inprocess.InProcessKeyValueCache;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
@@ -38,6 +41,7 @@ import stirling.software.proprietary.storage.model.FileShare;
 import stirling.software.proprietary.storage.model.FileShareAccess;
 import stirling.software.proprietary.storage.model.ShareAccessRole;
 import stirling.software.proprietary.storage.model.StoredFile;
+import stirling.software.proprietary.storage.model.api.StoredFileResponse;
 import stirling.software.proprietary.storage.provider.StorageProvider;
 import stirling.software.proprietary.storage.repository.FileShareAccessRepository;
 import stirling.software.proprietary.storage.repository.FileShareRepository;
@@ -45,6 +49,10 @@ import stirling.software.proprietary.storage.repository.FolderRepository;
 import stirling.software.proprietary.storage.repository.StorageCleanupEntryRepository;
 import stirling.software.proprietary.storage.repository.StoredFileRepository;
 import stirling.software.proprietary.workflow.model.WorkflowSession;
+
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 // Covers gaps not exercised by FileStorageServiceTest: enabled-guards, share-link access,
 // workflow helpers, and validation branches.
@@ -77,6 +85,8 @@ class FileStorageServiceMoreTest {
                         fileShareRepository,
                         fileShareAccessRepository,
                         userRepository,
+                        new InProcessKeyValueCache(),
+                        cachingMapper(),
                         applicationProperties,
                         storageProvider,
                         Optional.empty(),
@@ -772,5 +782,147 @@ class FileStorageServiceMoreTest {
         when(storedFileRepository.findAccessibleFiles(user)).thenReturn(List.of(f));
 
         assertThat(service.listAccessibleFiles(user)).containsExactly(f);
+    }
+
+    private static ObjectMapper cachingMapper() {
+        return JsonMapper.builder().build();
+    }
+
+    @Test
+    @DisplayName("a cached listing survives the round trip the cache puts it through")
+    void storedFileResponse_roundTripsThroughJson() {
+        ObjectMapper mapper = cachingMapper();
+        StoredFileResponse original =
+                StoredFileResponse.builder()
+                        .id(7L)
+                        .fileName("a.pdf")
+                        .sizeBytes(3L)
+                        .ownedByCurrentUser(true)
+                        .accessRole("editor")
+                        .createdAt(LocalDateTime.of(2026, 1, 2, 3, 4))
+                        .updatedAt(LocalDateTime.of(2026, 1, 2, 3, 5))
+                        .sharedWithUsers(List.of("bob"))
+                        .sharedUsers(List.of())
+                        .shareLinks(List.of())
+                        .build();
+
+        List<StoredFileResponse> back =
+                mapper.readValue(
+                        mapper.writeValueAsString(List.of(original)),
+                        new TypeReference<List<StoredFileResponse>>() {});
+
+        assertThat(back).hasSize(1);
+        assertThat(back.get(0).getId()).isEqualTo(7L);
+        assertThat(back.get(0).getFileName()).isEqualTo("a.pdf");
+        assertThat(back.get(0).getCreatedAt()).isEqualTo(LocalDateTime.of(2026, 1, 2, 3, 4));
+        assertThat(back.get(0).getSharedWithUsers()).containsExactly("bob");
+    }
+
+    @Test
+    @DisplayName("a cache that throws leaves the listing working")
+    void listAccessibleFileResponses_survivesCacheOutage() {
+        User user = user(1L);
+        StoredFile f = ownedFile(user);
+        f.setId(10L);
+        f.setCreatedAt(LocalDateTime.now());
+        when(storedFileRepository.findAccessibleFiles(user)).thenReturn(List.of(f));
+
+        FileStorageService withBrokenCache =
+                new FileStorageService(
+                        storedFileRepository,
+                        folderRepository,
+                        fileShareRepository,
+                        fileShareAccessRepository,
+                        userRepository,
+                        new KeyValueCache() {
+                            @Override
+                            public void put(String ns, String k, String v, Duration ttl) {
+                                throw new IllegalStateException("cache down");
+                            }
+
+                            @Override
+                            public Optional<String> get(String ns, String k) {
+                                throw new IllegalStateException("cache down");
+                            }
+
+                            @Override
+                            public void evict(String ns, String k) {
+                                throw new IllegalStateException("cache down");
+                            }
+
+                            @Override
+                            public void evictNamespace(String ns) {
+                                throw new IllegalStateException("cache down");
+                            }
+                        },
+                        cachingMapper(),
+                        applicationProperties,
+                        storageProvider,
+                        Optional.empty(),
+                        storageCleanupEntryRepository);
+
+        assertThat(withBrokenCache.listAccessibleFileResponses(user)).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("a listing built before an eviction cannot serve after it")
+    void listAccessibleFileResponses_staleWriteIsNotServed() {
+        User user = user(1L);
+        StoredFile f = ownedFile(user);
+        f.setId(10L);
+        f.setCreatedAt(LocalDateTime.now());
+        when(storedFileRepository.findAccessibleFiles(user)).thenReturn(List.of(f));
+
+        // Retires the generation the moment a reader takes it, which is the interleaving a
+        // mutation committing mid-listing produces: the response below is written under a
+        // generation that is already dead.
+        InProcessKeyValueCache backing = new InProcessKeyValueCache();
+        KeyValueCache evictsUnderfoot =
+                new KeyValueCache() {
+                    @Override
+                    public void put(String ns, String k, String v, Duration ttl) {
+                        if (!k.startsWith("gen:")) {
+                            // The reader is writing its listing now; a mutation committing
+                            // between it taking the generation and reaching here retires that
+                            // generation, which is the window this guards.
+                            backing.evict(ns, "gen:" + k.split(":")[0]);
+                        }
+                        backing.put(ns, k, v, ttl);
+                    }
+
+                    @Override
+                    public Optional<String> get(String ns, String k) {
+                        return backing.get(ns, k);
+                    }
+
+                    @Override
+                    public void evict(String ns, String k) {
+                        backing.evict(ns, k);
+                    }
+
+                    @Override
+                    public void evictNamespace(String ns) {
+                        backing.evictNamespace(ns);
+                    }
+                };
+        FileStorageService racing =
+                new FileStorageService(
+                        storedFileRepository,
+                        folderRepository,
+                        fileShareRepository,
+                        fileShareAccessRepository,
+                        userRepository,
+                        evictsUnderfoot,
+                        cachingMapper(),
+                        applicationProperties,
+                        storageProvider,
+                        Optional.empty(),
+                        storageCleanupEntryRepository);
+
+        racing.listAccessibleFileResponses(user);
+
+        // The file is gone now; the response cached a moment ago must not resurface.
+        when(storedFileRepository.findAccessibleFiles(user)).thenReturn(List.of());
+        assertThat(racing.listAccessibleFileResponses(user)).isEmpty();
     }
 }

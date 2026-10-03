@@ -23,6 +23,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import stirling.software.common.cluster.inprocess.InProcessKeyValueCache;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
@@ -39,6 +40,8 @@ import stirling.software.proprietary.storage.repository.FolderRepository;
 import stirling.software.proprietary.storage.repository.StorageCleanupEntryRepository;
 import stirling.software.proprietary.storage.repository.StoredFileRepository;
 import stirling.software.proprietary.workflow.model.WorkflowSession;
+
+import tools.jackson.databind.ObjectMapper;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -70,6 +73,8 @@ class FileStorageServiceTest {
                         fileShareRepository,
                         fileShareAccessRepository,
                         userRepository,
+                        new InProcessKeyValueCache(),
+                        new ObjectMapper(),
                         applicationProperties,
                         storageProvider,
                         Optional.empty(),

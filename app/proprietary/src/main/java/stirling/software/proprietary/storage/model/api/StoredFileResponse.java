@@ -7,8 +7,12 @@ import java.util.UUID;
 import lombok.Builder;
 import lombok.Getter;
 
+import tools.jackson.databind.annotation.JsonDeserialize;
+import tools.jackson.databind.annotation.JsonPOJOBuilder;
+
 @Getter
 @Builder
+@JsonDeserialize(builder = StoredFileResponse.StoredFileResponseBuilder.class)
 public class StoredFileResponse {
     private final Long id;
     private final String fileName;
@@ -29,4 +33,8 @@ public class StoredFileResponse {
      * build doesn't have the folders feature enabled - existing clients should treat null as root.
      */
     private final UUID folderId;
+
+    /** Declared so Lombok fills it in; the annotation is what Jackson needs to use it. */
+    @JsonPOJOBuilder(withPrefix = "")
+    public static class StoredFileResponseBuilder {}
 }
