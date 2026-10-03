@@ -28,6 +28,25 @@ case "$IDLE_TIMEOUT" in ''|*[!0-9]*) log "Invalid UNOSERVER_IDLE_TIMEOUT_SECONDS
 
 mkdir -p "$PROFILE_DIR"
 
+# LibreOffice egress guard (SSRF): refuses non-loopback connect(). It does not stop
+# DNS or any path that skips the dynamic symbol, so it narrows the reachable surface
+# rather than isolating the process. Default on; LIBREOFFICE_ALLOW_NETWORK=true opts out.
+OFFICE_GUARD_LIB="/usr/local/lib/stirling/soffice_no_network.so"
+OFFICE_LD_PRELOAD=""
+case "$(printf '%s' "${LIBREOFFICE_ALLOW_NETWORK:-false}" | tr '[:upper:]' '[:lower:]')" in
+  1|true|yes|on)
+    log "LibreOffice egress guard DISABLED (LIBREOFFICE_ALLOW_NETWORK=${LIBREOFFICE_ALLOW_NETWORK})"
+    ;;
+  *)
+    if [ -f "$OFFICE_GUARD_LIB" ]; then
+      OFFICE_LD_PRELOAD="$OFFICE_GUARD_LIB"
+      log "LibreOffice egress guard loaded ($OFFICE_GUARD_LIB): non-loopback connect() refused"
+    else
+      log "WARNING: LibreOffice egress guard missing at $OFFICE_GUARD_LIB; conversions can reach the network"
+    fi
+    ;;
+esac
+
 export STIRLING_LO_SANDBOX="${STIRLING_LO_SANDBOX:-enforce}"
 # Read-only paths come from lo-sandbox's built-in default unless STIRLING_LO_ALLOW_RO is set.
 export STIRLING_LO_ALLOW_RW="${STIRLING_LO_ALLOW_RW:-/tmp:/dev:${PROFILE_DIR}:${HOME:-/home/unoserver}}"
@@ -64,7 +83,7 @@ start_unoserver() {
   # Pass --user-installation as a plain path; unoserver 3.6 wraps it itself
   # and crashes if pre-wrapped as a file:// URI.
   local demand_file="/tmp/uno-last-used"
-  unoserver \
+  env ${OFFICE_LD_PRELOAD:+LD_PRELOAD="$OFFICE_LD_PRELOAD${LD_PRELOAD:+ $LD_PRELOAD}"} unoserver \
     --interface "$INTERFACE" \
     --port "$PORT" \
     --uno-port "$UNO_PORT" \
