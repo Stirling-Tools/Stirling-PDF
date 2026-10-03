@@ -1623,10 +1623,55 @@
       "artifact_id": 11277226203,
       "artifact_name": "cache-untrusted-pr-8307-frontend-dist-windows-x64-b1eac7777e3eb0df670543bd21424f49b92b7b89b2770d9da4eca7cb54b735f6-v2--653b234637db6eb2733038da97f6a09c9f57909a8df342715-part-000000",
       "workflow_run_id": 37130570818
+    },
+    "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/frontend-dist/macos-arm64/b1eac7777e3eb0df670543bd21424f49b92b7b89b2770d9da4eca7cb54b735f6/v2": {
+      "object": "sha256:9450d1f717a6d74d13a707b817f807be2bc52ada9d513b4437700c54b8a552a7",
+      "storage": "github-artifact",
+      "updated_at": "2026-10-03T15:07:25.405Z",
+      "source": "Stirling-Tools/Stirling-PDF",
+      "created_by": "Ludy87",
+      "size": 90697878,
+      "parts": [
+        {
+          "index": 0,
+          "object": "sha256:be6953ff9adec19655f60082fd3929df422b0daddc319da0d587bdc33887de07",
+          "size": 25165824,
+          "artifact_id": 11276563646,
+          "artifact_name": "cache-untrusted-pr-8307-frontend-dist-macos-arm64-b1eac7777e3eb0df670543bd21424f49b92b7b89b2770d9da4eca7cb54b735f6-v2--9450d1f717a6d74d13a707b817f807be2bc52ada9d513b443-part-000000",
+          "workflow_run_id": 37130570818
+        },
+        {
+          "index": 1,
+          "object": "sha256:22b9eb545b65b73fb9333c52c6269454916129a673f07d37fe8ab11c30e23c9d",
+          "size": 25165824,
+          "artifact_id": 11276678597,
+          "artifact_name": "cache-untrusted-pr-8307-frontend-dist-macos-arm64-b1eac7777e3eb0df670543bd21424f49b92b7b89b2770d9da4eca7cb54b735f6-v2--9450d1f717a6d74d13a707b817f807be2bc52ada9d513b443-part-000001",
+          "workflow_run_id": 37130570818
+        },
+        {
+          "index": 2,
+          "object": "sha256:fb974522296dd3b692c695acd0a146d304b2f64f4b4dc7df5dd0d1d872a759d1",
+          "size": 25165824,
+          "artifact_id": 11276613696,
+          "artifact_name": "cache-untrusted-pr-8307-frontend-dist-macos-arm64-b1eac7777e3eb0df670543bd21424f49b92b7b89b2770d9da4eca7cb54b735f6-v2--9450d1f717a6d74d13a707b817f807be2bc52ada9d513b443-part-000002",
+          "workflow_run_id": 37130570818
+        },
+        {
+          "index": 3,
+          "object": "sha256:ee4355665cab0db5a5a5e884065c8bc641a917e8a2e9321ef2c74bb36cdb87e6",
+          "size": 15200406,
+          "artifact_id": 11276414207,
+          "artifact_name": "cache-untrusted-pr-8307-frontend-dist-macos-arm64-b1eac7777e3eb0df670543bd21424f49b92b7b89b2770d9da4eca7cb54b735f6-v2--9450d1f717a6d74d13a707b817f807be2bc52ada9d513b443-part-000003",
+          "workflow_run_id": 37130570818
+        }
+      ],
+      "artifact_id": 11276563646,
+      "artifact_name": "cache-untrusted-pr-8307-frontend-dist-macos-arm64-b1eac7777e3eb0df670543bd21424f49b92b7b89b2770d9da4eca7cb54b735f6-v2--9450d1f717a6d74d13a707b817f807be2bc52ada9d513b443-part-000000",
+      "workflow_run_id": 37130570818
     }
   },
   "monitoring": {
     "window_started_at": "2026-10-03T14:58:42.826Z",
-    "writes": 1
+    "writes": 2
   }
 }
