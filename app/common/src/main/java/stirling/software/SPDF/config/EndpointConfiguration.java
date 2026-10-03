@@ -435,6 +435,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Other", "modify-fields");
         addEndpointToGroup("Other", "delete-fields");
         addEndpointToGroup("Other", "fill");
+        addEndpointToGroup("Other", "xfa-sync");
 
         // Adding endpoints to "Advance" group
         addEndpointToGroup("Advance", "compress-pdf");
