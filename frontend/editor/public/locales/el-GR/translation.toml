@@ -2476,7 +2476,16 @@ checking = "Έλεγχος κατάστασης backend..."
 offline = "Backend εκτός λειτουργίας"
 online = "Backend σε λειτουργία"
 starting = "Το backend εκκινεί..."
+unavailable = "Backend is unavailable"
 wait = "Παρακαλώ περιμένετε να ολοκληρωθεί η εκκίνηση του backend και δοκιμάστε ξανά."
+
+[backendHealth.restart]
+attempting = "Attempting to restart... ({{attempt}}/{{max}})"
+failedBody = "The local backend could not be recovered. Please restart the app."
+failedTitle = "Backend failed to restart"
+stoppedTitle = "Backend stopped unexpectedly"
+successBody = "The local backend is back online."
+successTitle = "Backend restarted"
 
 [backendStartup]
 notFoundTitle = "Το backend δεν βρέθηκε"
@@ -4288,6 +4297,14 @@ title = "Άνοιξαν οι Ρυθμίσεις"
 message = "Το Stirling PDF είναι πλέον ο προεπιλεγμένος επεξεργαστής PDF"
 title = "Ορίστηκε προεπιλεγμένη εφαρμογή"
 
+[desktop.fileSave]
+saveFilesTitle_one = "Save {{count}} file"
+saveFilesTitle_other = "Save {{count}} files"
+
+[desktop.saasError]
+body = "This tool requires cloud processing but encountered an error: {{error}}. Please check your connection and try again."
+title = "Cloud Processing Failed"
+
 [desktop.titleBar]
 maximize = "Μεγιστοποίηση"
 minimize = "Ελαχιστοποίηση"
@@ -4485,7 +4502,37 @@ title = "Στατιστικά τελικών σημείων"
 [error]
 _value = "Σφάλμα"
 dismissAllErrors = "Απόρριψη όλων των σφαλμάτων"
+failedFiles = "Failed files: {{ids}}"
 generic = "Παρουσιάστηκε σφάλμα"
+invalidOrCorruptedFiles = "Process failed due to invalid/corrupted file(s)"
+networkError = "Network error"
+requestError = "Request error"
+requestFailed = "Request failed"
+requestFallback = "There was an error processing your request."
+serverError = "Server error"
+unknown = "Unknown error occurred"
+
+[error.pdfOpen]
+code = "Could not open the PDF (error {{code}})."
+corrupted = "The PDF file is corrupted and could not be read."
+invalid = "This file is not a valid PDF or is corrupted."
+pageLoadFailed = "A page in this PDF could not be loaded."
+passwordProtected = "This PDF is password-protected."
+unknown = "Could not open the PDF (unknown error)."
+unsupportedSecurity = "This PDF uses an unsupported security scheme."
+
+[error.processing]
+cancelled = "Processing was cancelled by user."
+corruption = "This PDF file appears to be corrupted or encrypted. Please try a different file."
+failed = "Processing failed: {{message}}"
+memory = "Insufficient memory to process this file. Try closing other applications or processing a smaller file."
+network = "Network connection failed. Please check your internet connection and try again."
+parsing = "Failed to process PDF: {{message}}"
+timeout = "Processing timed out. This file may be too large or complex to process."
+
+[errorBoundary]
+title = "Something went wrong"
+tryAgain = "Try Again"
 
 [extractImages]
 allowDuplicates = "Αποθήκευση διπλότυπων εικόνων"
@@ -4905,21 +4952,31 @@ addFolderFailed = "Δεν ήταν δυνατή η προσθήκη του φα�
 addFolderFailedDetail = "Δεν ήταν δυνατή η προσθήκη του φακέλου: {{message}}"
 cloudDeleteFailed_one = "Couldn't delete 1 file from the cloud."
 cloudDeleteFailed_other = "Couldn't delete {{count}} files from the cloud."
+createOutsideMount = "Cannot create a folder outside a mounted directory"
 deleteFolderFailed = "Δεν ήταν δυνατή η διαγραφή φακέλου."
 deleteFolderFailedDetail = "Δεν ήταν δυνατή η διαγραφή φακέλου: {{message}}"
+diskFoldersUnsupported = "This build cannot create folders on disk"
 downloadFailed = "Could not download the file."
 duplicateFailed = "Could not duplicate the file."
 folderAppearanceFailed = "Δεν ήταν δυνατή η ενημέρωση εμφάνισης φακέλου."
 folderAppearanceFailedDetail = "Δεν ήταν δυνατή η ενημέρωση εμφάνισης φακέλου: {{message}}"
+folderDetachFailed = "Folder was deleted, but some files couldn't be detached locally. Refresh to fix."
+folderOperationFailed = "Folder operation failed"
+folderSyncFailed = "Folder sync failed: {{message}}"
+loadFilesFailed = "Failed to load files"
+moveAcrossKinds = "Folders can only move within their own kind"
 moveFilesFailed = "Δεν ήταν δυνατή η μετακίνηση αρχείων."
 moveFilesFailedDetail = "Δεν ήταν δυνατή η μετακίνηση αρχείων: {{message}}"
 moveFolderFailed = "Δεν ήταν δυνατή η μετακίνηση φακέλου."
 moveFolderFailedDetail = "Δεν ήταν δυνατή η μετακίνηση φακέλου: {{message}}"
+moveLocalFolder = "A local folder sits where its directory sits"
 openDiskFileFailed = "Δεν ήταν δυνατό το άνοιγμα του {{name}}."
 openDiskFileFailedDetail = "Δεν ήταν δυνατό το άνοιγμα του {{name}}: {{message}}"
 processingStatusUnavailable = "Δεν ήταν δυνατή η ανανέωση της κατάστασης επεξεργασίας. Τα κλειδώματα αρχείων έχουν απελευθερωθεί μέχρι να αποκατασταθεί η σύνδεση."
 readFolderFailed = "Δεν ήταν δυνατή η ανάγνωση του φακέλου."
 readFolderFailedDetail = "Δεν ήταν δυνατή η ανάγνωση του φακέλου: {{message}}"
+recolourLocalFolder = "Local folders cannot be recoloured yet"
+removeDiskSubfolder = "Subfolders of a mounted directory are removed on disk"
 removeFilesFailed = "Δεν ήταν δυνατή η αφαίρεση αρχείων."
 removeFilesFailedDetail = "Δεν ήταν δυνατή η αφαίρεση αρχείων: {{message}}"
 removeFolderFailed = "Δεν ήταν δυνατή η αφαίρεση του φακέλου."
@@ -5051,6 +5108,22 @@ grid = "Προβολή πλέγματος"
 label = "Λειτουργία προβολής"
 list = "Προβολή λίστας"
 
+[fileStorage.unreadable]
+body = "\"{{name}}\" is saved in this browser but its contents can no longer be read. Upload the file again to keep working on it."
+title = "File data is unavailable"
+
+[fileSync.openFailed]
+multiple_one = "Couldn't open {{count}} file including \"{{name}}\"."
+multiple_other = "Couldn't open {{count}} files including \"{{name}}\"."
+single = "Couldn't open \"{{name}}\"."
+singleWithStatus = "Couldn't open \"{{name}}\" (HTTP {{status}})."
+title = "Some files couldn't be opened"
+
+[fileSync.pullFailed]
+body = "Showing only files cached in this browser. Refresh to retry once the connection is back."
+signInTitle = "Sign-in required to load cloud files"
+unreachableTitle = "Could not reach the cloud library"
+
 [fileToPDF]
 tags = "μετατροπή,μορφή,έγγραφο,εικόνα,παρουσίαση,κείμενο,μετατροπή,γραφείο,έγγραφα,word,excel,powerpoint"
 title = "Αρχείο σε PDF"
@@ -5058,6 +5131,7 @@ title = "Αρχείο σε PDF"
 [fileUpload]
 dropFilesHere = "Αποθέστε αρχεία εδώ ή κάντε κλικ στο κουμπί μεταφόρτωσης"
 dropFilesHereOpen = "Σύρετε αρχεία εδώ ή κάντε κλικ στο κουμπί «Άνοιγμα»"
+droppedFileUnreadable = "Could not read a dropped file."
 filesAvailableCount_one = "{{count}} διαθέσιμο αρχείο"
 filesAvailableCount_other = "{{count}} διαθέσιμα αρχεία"
 loadFromStorage = "Φόρτωση από αποθήκευση"
@@ -5089,6 +5163,7 @@ passwordMustBeDifferent = "Ο νέος κωδικός πρέπει να είνα
 passwordsDoNotMatch = "Οι νέοι κωδικοί δεν ταιριάζουν"
 passwordTooShort = "Ο κωδικός πρέπει να έχει τουλάχιστον 8 χαρακτήρες"
 reEnterNewPassword = "Εισαγάγετε ξανά τον νέο κωδικό"
+setPasswordTitle = "Set Your Password"
 title = "Πρώτη σύνδεση"
 welcomeMessage = "Για λόγους ασφαλείας, πρέπει να αλλάξετε τον κωδικό πρόσβασής σας στην πρώτη σας σύνδεση."
 welcomeTitle = "Καλώς ήρθατε!"
@@ -5927,6 +6002,7 @@ signin = "Σύνδεση"
 signingIn = "Γίνεται σύνδεση..."
 signInWith = "Σύνδεση με"
 signInWithProvider = "Σύνδεση με {{provider}}"
+ssoRedirectFailed = "SSO redirect failed"
 title = "Σύνδεση"
 unexpectedError = "Απρόσμενο σφάλμα: {{message}}"
 updatePassword = "Ενημέρωση κωδικού πρόσβασης"
@@ -6524,6 +6600,32 @@ rotateLeft = "Περιστροφή αριστερά"
 rotateRight = "Περιστροφή δεξιά"
 splitAfter = "Διαχωρισμός μετά"
 
+[pageEditor.commands]
+addSplitAt = "Add split at position {{position}}"
+addSplits_one = "Add {{count}} split"
+addSplits_other = "Add {{count}} splits"
+deletePages_one = "Delete {{count}} page"
+deletePages_other = "Delete {{count}} pages"
+insertFiles_one = "Insert {{count}} file after page {{page}}"
+insertFiles_other = "Insert {{count}} files after page {{page}}"
+insertPageBreaks_one = "Insert {{count}} page break"
+insertPageBreaks_other = "Insert {{count}} page breaks"
+insertPageBreaksAll = "Insert page breaks after all pages"
+removeAllSplits = "Remove all splits"
+removeSplitAt = "Remove split at position {{position}}"
+removeSplits_one = "Remove {{count}} split"
+removeSplits_other = "Remove {{count}} splits"
+reorderPages = "Reorder pages"
+rotatePageLeft = "Rotate page left"
+rotatePageRight = "Rotate page right"
+rotatePagesLeft_one = "Rotate {{count}} page left"
+rotatePagesLeft_other = "Rotate {{count}} pages left"
+rotatePagesRight_one = "Rotate {{count}} page right"
+rotatePagesRight_other = "Rotate {{count}} pages right"
+splitAllPages = "Split all pages"
+toggleSplits_one = "Toggle {{count}} split position"
+toggleSplits_other = "Toggle {{count}} split positions"
+
 [pageEditor.emptyState]
 body = "Προσθέστε αρχεία για να ξεκινήσετε την επεξεργασία σελίδων"
 title = "Δεν φορτώθηκαν αρχεία PDF"
@@ -6933,6 +7035,7 @@ thisPeriod = "This billing period"
 billingPeriod = "Περίοδος χρέωσης"
 cancelTeamChange = "Διατήρηση τρέχοντος προγράμματος"
 canCloseWindow = "Μπορείτε τώρα να κλείσετε αυτό το παράθυρο."
+createSessionFailed = "Failed to create checkout session"
 error = "Σφάλμα πληρωμής"
 generatingLicense = "Δημιουργία κλειδιού άδειας..."
 licenseActivated = "Η άδεια ενεργοποιήθηκε! Το κλειδί άδειας αποθηκεύτηκε. Στάλθηκε email επιβεβαίωσης στη δηλωμένη διεύθυνσή σας."
@@ -6948,6 +7051,7 @@ monthly = "Μηνιαία"
 paymentCanceled = "Η πληρωμή ακυρώθηκε. Δεν έγινε χρέωση."
 perMonth = "/μήνα"
 perUserBlock = "ανά 100 χρήστες"
+planPeriodUnavailable = "Selected plan period is not available"
 preparing = "Προετοιμασία ολοκλήρωσης αγοράς..."
 redirecting = "Γίνεται ανακατεύθυνση στο ασφαλές checkout..."
 success = "Επιτυχής πληρωμή!"
@@ -7095,6 +7199,16 @@ freetext = "Κείμενο σχολίου - δεν είναι κείμενο σ�
 stamp = "Σχόλιο σφραγίδας - δεν είναι κείμενο σελίδας, επομένως δεν μπορεί να επεξεργαστεί εδώ"
 widget = "Πεδίο φόρμας - δεν είναι κείμενο σελίδας, επομένως δεν μπορεί να επεξεργαστεί εδώ"
 
+[pdfTextEditor.commands]
+edit = "Edit"
+mergeRuns_one = "Merge {{count}} run into a paragraph"
+mergeRuns_other = "Merge {{count}} runs into a paragraph"
+setColour = "Set colour on {{run}}"
+setOutline = "Set outline on {{run}}"
+typeInto = "Type into {{run}}"
+ungroupParagraph = "Ungroup paragraph {{run}}"
+wrap = "Wrap {{run}}"
+
 [pdfTextEditor.discard]
 body = "Το άνοιγμα του {{name}} κλείνει το έγγραφο που επεξεργάζεστε. Οι μη αποθηκευμένες αλλαγές σας θα χαθούν."
 cancel = "Ακύρωση"
@@ -7109,6 +7223,9 @@ title = "Αποθέστε ένα PDF για άνοιγμα"
 [pdfTextEditor.error]
 decodeImage = "Δεν ήταν δυνατή η αποκωδικοποίηση της επιλεγμένης εικόνας."
 insertImage = "Δεν ήταν δυνατή η εισαγωγή της επιλεγμένης εικόνας."
+
+[pdfTextEditor.externalEdit]
+pngFileType = "PNG image"
 
 [pdfTextEditor.find]
 close = "Κλείσιμο γραμμής εύρεσης"
@@ -7211,12 +7328,14 @@ heightHint = "Το ύψος ενός πλαισίου κειμένου ακολ�
 image = "Εικόνα"
 images = "Εικόνες"
 manyImages = "{{count}} εικόνες"
+manyShapes = "{{count}} shapes"
 manyText = "Κείμενο · {{count}} πλαίσια"
 mixed = "{{count}} αντικείμενα"
 multiGeometry = "Επιλέξτε ένα μόνο αντικείμενο για να επεξεργαστείτε τη θέση και το μέγεθός του."
 nothingSelected = "Δεν έχει επιλεγεί τίποτα"
 nothingSelectedHint = "Κάντε κλικ σε οποιοδήποτε κείμενο ή εικόνα στη σελίδα για να το επεξεργαστείτε εδώ."
 oneImage = "Εικόνα"
+oneShape = "Shape"
 oneText = "Κείμενο"
 pages = "Σελίδες"
 tabDocument = "Έγγραφο"
@@ -7281,6 +7400,9 @@ advanced = "Σύνθετα"
 find = "Εύρεση στο έγγραφο"
 findTooltip = "Εύρεση ({{shortcut}})"
 view = "Προβολή"
+
+[pdfTextEditor.shape]
+groupedTitle = "Part of a group in this PDF: it can be deleted but not moved."
 
 [pdfTextEditor.sidebar]
 addImage = "Προσθήκη εικόνας"
@@ -11932,11 +12054,18 @@ useLast = "Last used server: {{serverUrl}}"
 [setup.server.error]
 configFetch = "Αποτυχία ανάκτησης της διαμόρφωσης του διακομιστή. Ελέγξτε το URL και δοκιμάστε ξανά."
 configFetchError = "Αποτυχία λήψης διαμόρφωσης διακομιστή: {{error}}"
+dnsFailed = "Cannot resolve hostname: {{hostname}}"
 emptyUrl = "Εισαγάγετε URL διακομιστή"
+httpOnly = "Server is only accessible via HTTP (not HTTPS)."
+httpsOnly = "Server is only accessible via HTTPS, not HTTP."
 invalidUrl = "Μη έγκυρη μορφή URL. Εισαγάγετε έγκυρο URL όπως https://your-server.com"
+methodMismatch = "Server responds to HEAD requests but not GET requests."
+networkBlocked = "No internet connectivity detected. All network requests are failing."
+serverUnreachable = "Cannot connect to server. Internet works but this specific server is unreachable."
 testFailed = "Αποτυχία ελέγχου σύνδεσης"
 unknown = "Άγνωστο σφάλμα"
 unreachable = "Αδυναμία σύνδεσης με τον διακομιστή"
+userAgentBlocked = "Server blocks Tauri/desktop app User-Agent but allows browser User-Agent."
 
 [setup.server.error.securityDisabled]
 body = "Σε αυτόν τον διακομιστή δεν είναι ενεργοποιημένη η σύνδεση. Για να συνδεθείτε σε αυτόν τον διακομιστή, πρέπει να ενεργοποιήσετε τον έλεγχο ταυτότητας:"
@@ -13283,6 +13412,12 @@ previewUnavailable = "Η προεπισκόπηση δεν είναι διαθέ
 renderMarkdown = "Απόδοση Markdown"
 sortedBy = "Ταξινόμηση κατά: {{column}}"
 textStats = "{{lines}} γραμμές · {{size}}"
+
+[viewer.nonPdf.fileType]
+file = "File"
+image = "Image"
+spreadsheet = "Spreadsheet"
+text = "Text"
 
 [viewer.portfolio]
 addFile = "Προσθήκη αρχείου"

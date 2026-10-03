@@ -2476,7 +2476,16 @@ checking = "バックエンドの状態を確認しています..."
 offline = "バックエンドはオフライン"
 online = "バックエンドはオンライン"
 starting = "バックエンドを起動しています..."
+unavailable = "Backend is unavailable"
 wait = "バックエンドの起動完了までお待ちいただき、再度お試しください。"
+
+[backendHealth.restart]
+attempting = "Attempting to restart... ({{attempt}}/{{max}})"
+failedBody = "The local backend could not be recovered. Please restart the app."
+failedTitle = "Backend failed to restart"
+stoppedTitle = "Backend stopped unexpectedly"
+successBody = "The local backend is back online."
+successTitle = "Backend restarted"
 
 [backendStartup]
 notFoundTitle = "バックエンドが見つかりません"
@@ -4288,6 +4297,14 @@ title = "設定を開きました"
 message = "Stirling PDF が既定のPDFエディターになりました"
 title = "既定のアプリを設定"
 
+[desktop.fileSave]
+saveFilesTitle_one = "Save {{count}} file"
+saveFilesTitle_other = "Save {{count}} files"
+
+[desktop.saasError]
+body = "This tool requires cloud processing but encountered an error: {{error}}. Please check your connection and try again."
+title = "Cloud Processing Failed"
+
 [desktop.titleBar]
 maximize = "最大化"
 minimize = "最小化"
@@ -4485,7 +4502,37 @@ title = "エンドポイント統計"
 [error]
 _value = "エラー"
 dismissAllErrors = "すべてのエラーを閉じる"
+failedFiles = "Failed files: {{ids}}"
 generic = "エラーが発生しました"
+invalidOrCorruptedFiles = "Process failed due to invalid/corrupted file(s)"
+networkError = "Network error"
+requestError = "Request error"
+requestFailed = "Request failed"
+requestFallback = "There was an error processing your request."
+serverError = "Server error"
+unknown = "Unknown error occurred"
+
+[error.pdfOpen]
+code = "Could not open the PDF (error {{code}})."
+corrupted = "The PDF file is corrupted and could not be read."
+invalid = "This file is not a valid PDF or is corrupted."
+pageLoadFailed = "A page in this PDF could not be loaded."
+passwordProtected = "This PDF is password-protected."
+unknown = "Could not open the PDF (unknown error)."
+unsupportedSecurity = "This PDF uses an unsupported security scheme."
+
+[error.processing]
+cancelled = "Processing was cancelled by user."
+corruption = "This PDF file appears to be corrupted or encrypted. Please try a different file."
+failed = "Processing failed: {{message}}"
+memory = "Insufficient memory to process this file. Try closing other applications or processing a smaller file."
+network = "Network connection failed. Please check your internet connection and try again."
+parsing = "Failed to process PDF: {{message}}"
+timeout = "Processing timed out. This file may be too large or complex to process."
+
+[errorBoundary]
+title = "Something went wrong"
+tryAgain = "Try Again"
 
 [extractImages]
 allowDuplicates = "重複した画像を保存する"
@@ -4905,21 +4952,31 @@ addFolderFailed = "フォルダーを追加できませんでした。"
 addFolderFailedDetail = "フォルダーを追加できませんでした: {{message}}"
 cloudDeleteFailed_one = "Couldn't delete 1 file from the cloud."
 cloudDeleteFailed_other = "Couldn't delete {{count}} files from the cloud."
+createOutsideMount = "Cannot create a folder outside a mounted directory"
 deleteFolderFailed = "フォルダを削除できませんでした。"
 deleteFolderFailedDetail = "フォルダを削除できませんでした: {{message}}"
+diskFoldersUnsupported = "This build cannot create folders on disk"
 downloadFailed = "Could not download the file."
 duplicateFailed = "Could not duplicate the file."
 folderAppearanceFailed = "フォルダの外観を更新できませんでした。"
 folderAppearanceFailedDetail = "フォルダの外観を更新できませんでした: {{message}}"
+folderDetachFailed = "Folder was deleted, but some files couldn't be detached locally. Refresh to fix."
+folderOperationFailed = "Folder operation failed"
+folderSyncFailed = "Folder sync failed: {{message}}"
+loadFilesFailed = "Failed to load files"
+moveAcrossKinds = "Folders can only move within their own kind"
 moveFilesFailed = "ファイルを移動できませんでした。"
 moveFilesFailedDetail = "ファイルを移動できませんでした: {{message}}"
 moveFolderFailed = "フォルダを移動できませんでした。"
 moveFolderFailedDetail = "フォルダを移動できませんでした: {{message}}"
+moveLocalFolder = "A local folder sits where its directory sits"
 openDiskFileFailed = "{{name}} を開けませんでした。"
 openDiskFileFailedDetail = "{{name}} を開けませんでした: {{message}}"
 processingStatusUnavailable = "処理ステータスを更新できませんでした。接続が復旧するまでファイルロックは解除されました。"
 readFolderFailed = "フォルダーを読み取れませんでした。"
 readFolderFailedDetail = "フォルダーを読み取れませんでした: {{message}}"
+recolourLocalFolder = "Local folders cannot be recoloured yet"
+removeDiskSubfolder = "Subfolders of a mounted directory are removed on disk"
 removeFilesFailed = "ファイルを削除できませんでした。"
 removeFilesFailedDetail = "ファイルを削除できませんでした: {{message}}"
 removeFolderFailed = "フォルダーを削除できませんでした。"
@@ -5051,6 +5108,22 @@ grid = "グリッド表示"
 label = "表示モード"
 list = "リスト表示"
 
+[fileStorage.unreadable]
+body = "\"{{name}}\" is saved in this browser but its contents can no longer be read. Upload the file again to keep working on it."
+title = "File data is unavailable"
+
+[fileSync.openFailed]
+multiple_one = "Couldn't open {{count}} file including \"{{name}}\"."
+multiple_other = "Couldn't open {{count}} files including \"{{name}}\"."
+single = "Couldn't open \"{{name}}\"."
+singleWithStatus = "Couldn't open \"{{name}}\" (HTTP {{status}})."
+title = "Some files couldn't be opened"
+
+[fileSync.pullFailed]
+body = "Showing only files cached in this browser. Refresh to retry once the connection is back."
+signInTitle = "Sign-in required to load cloud files"
+unreachableTitle = "Could not reach the cloud library"
+
 [fileToPDF]
 tags = "変換,形式,文書,画像,スライド,テキスト,変換,オフィス,ドキュメント,Word,Excel,PowerPoint"
 title = "ファイルをPDFに変換"
@@ -5058,6 +5131,7 @@ title = "ファイルをPDFに変換"
 [fileUpload]
 dropFilesHere = "ここにドロップするかアップロードボタンをクリック"
 dropFilesHereOpen = "ここにファイルをドロップするか、開くボタンをクリック"
+droppedFileUnreadable = "Could not read a dropped file."
 filesAvailableCount_one = "{{count}} 個のファイルが利用可能"
 filesAvailableCount_other = "{{count}} 個のファイルが利用可能"
 loadFromStorage = "ストレージから読み込む"
@@ -5089,6 +5163,7 @@ passwordMustBeDifferent = "新しいパスワードは現在のパスワード�
 passwordsDoNotMatch = "新しいパスワードが一致しません"
 passwordTooShort = "パスワードは8文字以上である必要があります"
 reEnterNewPassword = "新しいパスワードを再入力"
+setPasswordTitle = "Set Your Password"
 title = "初回ログイン"
 welcomeMessage = "セキュリティのため、初回ログイン時にパスワードを変更する必要があります。"
 welcomeTitle = "ようこそ！"
@@ -5927,6 +6002,7 @@ signin = "サインイン"
 signingIn = "サインイン中..."
 signInWith = "次でサインイン"
 signInWithProvider = "{{provider}} でサインイン"
+ssoRedirectFailed = "SSO redirect failed"
 title = "サインイン"
 unexpectedError = "予期しないエラー：{{message}}"
 updatePassword = "パスワードを更新"
@@ -6524,6 +6600,32 @@ rotateLeft = "左に回転"
 rotateRight = "右に回転"
 splitAfter = "後で分割"
 
+[pageEditor.commands]
+addSplitAt = "Add split at position {{position}}"
+addSplits_one = "Add {{count}} split"
+addSplits_other = "Add {{count}} splits"
+deletePages_one = "Delete {{count}} page"
+deletePages_other = "Delete {{count}} pages"
+insertFiles_one = "Insert {{count}} file after page {{page}}"
+insertFiles_other = "Insert {{count}} files after page {{page}}"
+insertPageBreaks_one = "Insert {{count}} page break"
+insertPageBreaks_other = "Insert {{count}} page breaks"
+insertPageBreaksAll = "Insert page breaks after all pages"
+removeAllSplits = "Remove all splits"
+removeSplitAt = "Remove split at position {{position}}"
+removeSplits_one = "Remove {{count}} split"
+removeSplits_other = "Remove {{count}} splits"
+reorderPages = "Reorder pages"
+rotatePageLeft = "Rotate page left"
+rotatePageRight = "Rotate page right"
+rotatePagesLeft_one = "Rotate {{count}} page left"
+rotatePagesLeft_other = "Rotate {{count}} pages left"
+rotatePagesRight_one = "Rotate {{count}} page right"
+rotatePagesRight_other = "Rotate {{count}} pages right"
+splitAllPages = "Split all pages"
+toggleSplits_one = "Toggle {{count}} split position"
+toggleSplits_other = "Toggle {{count}} split positions"
+
 [pageEditor.emptyState]
 body = "ファイルを追加してページ編集を開始"
 title = "PDF ファイルが読み込まれていません"
@@ -6933,6 +7035,7 @@ thisPeriod = "This billing period"
 billingPeriod = "請求期間"
 cancelTeamChange = "現在のプランを維持"
 canCloseWindow = "このウィンドウは閉じても構いません。"
+createSessionFailed = "Failed to create checkout session"
 error = "支払いエラー"
 generatingLicense = "ライセンスキーを生成中..."
 licenseActivated = "ライセンスを有効化しました！ ライセンスキーは保存済みです。登録メール宛に確認メールを送信しました。"
@@ -6948,6 +7051,7 @@ monthly = "月額"
 paymentCanceled = "支払いをキャンセルしました。課金は行われていません。"
 perMonth = "/月"
 perUserBlock = "100ユーザーごと"
+planPeriodUnavailable = "Selected plan period is not available"
 preparing = "チェックアウトを準備しています..."
 redirecting = "安全なチェックアウトにリダイレクトしています..."
 success = "支払いが完了しました"
@@ -7095,6 +7199,16 @@ freetext = "注釈テキスト - ページテキストではないため、こ�
 stamp = "スタンプ注釈 - ページテキストではないため、ここでは編集できません"
 widget = "フォームフィールド - ページテキストではないため、ここでは編集できません"
 
+[pdfTextEditor.commands]
+edit = "Edit"
+mergeRuns_one = "Merge {{count}} run into a paragraph"
+mergeRuns_other = "Merge {{count}} runs into a paragraph"
+setColour = "Set colour on {{run}}"
+setOutline = "Set outline on {{run}}"
+typeInto = "Type into {{run}}"
+ungroupParagraph = "Ungroup paragraph {{run}}"
+wrap = "Wrap {{run}}"
+
 [pdfTextEditor.discard]
 body = "{{name}} を開くと、編集中のドキュメントが閉じます。未保存の変更は失われます。"
 cancel = "キャンセル"
@@ -7109,6 +7223,9 @@ title = "PDF をドロップして開く"
 [pdfTextEditor.error]
 decodeImage = "選択した画像をデコードできませんでした。"
 insertImage = "選択した画像を挿入できませんでした。"
+
+[pdfTextEditor.externalEdit]
+pngFileType = "PNG image"
 
 [pdfTextEditor.find]
 close = "検索バーを閉じる"
@@ -7211,12 +7328,14 @@ heightHint = "テキストボックスの高さは、文字サイズと行数に
 image = "画像"
 images = "画像"
 manyImages = "{{count}}枚の画像"
+manyShapes = "{{count}} shapes"
 manyText = "テキスト · {{count}}個のボックス"
 mixed = "{{count}}個のオブジェクト"
 multiGeometry = "位置とサイズを編集するには、単一のオブジェクトを選択してください。"
 nothingSelected = "何も選択されていません"
 nothingSelectedHint = "ページ上のテキストまたは画像をクリックして、ここで編集します。"
 oneImage = "画像"
+oneShape = "Shape"
 oneText = "テキスト"
 pages = "ページ"
 tabDocument = "ドキュメント"
@@ -7281,6 +7400,9 @@ advanced = "詳細"
 find = "ドキュメント内を検索"
 findTooltip = "検索（{{shortcut}}）"
 view = "表示"
+
+[pdfTextEditor.shape]
+groupedTitle = "Part of a group in this PDF: it can be deleted but not moved."
 
 [pdfTextEditor.sidebar]
 addImage = "画像を追加"
@@ -11932,11 +12054,18 @@ useLast = "Last used server: {{serverUrl}}"
 [setup.server.error]
 configFetch = "サーバー構成の取得に失敗しました。URL を確認して、もう一度お試しください。"
 configFetchError = "サーバー設定の取得に失敗しました: {{error}}"
+dnsFailed = "Cannot resolve hostname: {{hostname}}"
 emptyUrl = "サーバー URL を入力してください"
+httpOnly = "Server is only accessible via HTTP (not HTTPS)."
+httpsOnly = "Server is only accessible via HTTPS, not HTTP."
 invalidUrl = "URL の形式が無効です。https://your-server.com のような有効な URL を入力してください"
+methodMismatch = "Server responds to HEAD requests but not GET requests."
+networkBlocked = "No internet connectivity detected. All network requests are failing."
+serverUnreachable = "Cannot connect to server. Internet works but this specific server is unreachable."
 testFailed = "接続テストに失敗しました"
 unknown = "不明なエラー"
 unreachable = "サーバーに接続できませんでした"
+userAgentBlocked = "Server blocks Tauri/desktop app User-Agent but allows browser User-Agent."
 
 [setup.server.error.securityDisabled]
 body = "このサーバーではログインが有効になっていません。このサーバーに接続するには、認証を有効にする必要があります:"
@@ -13283,6 +13412,12 @@ previewUnavailable = "このファイルタイプではプレビューを利用�
 renderMarkdown = "Markdown をレンダリング"
 sortedBy = "並び替え基準: {{column}}"
 textStats = "{{lines}} 行 · {{size}}"
+
+[viewer.nonPdf.fileType]
+file = "File"
+image = "Image"
+spreadsheet = "Spreadsheet"
+text = "Text"
 
 [viewer.portfolio]
 addFile = "ファイルを追加"

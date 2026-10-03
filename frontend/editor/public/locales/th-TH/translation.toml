@@ -2476,7 +2476,16 @@ checking = "กำลังตรวจสอบสถานะแบ็กเ�
 offline = "แบ็กเอนด์ออฟไลน์"
 online = "แบ็กเอนด์ออนไลน์"
 starting = "แบ็กเอนด์กำลังเริ่มทำงาน..."
+unavailable = "Backend is unavailable"
 wait = "โปรดรอให้แบ็กเอนด์เริ่มทำงานเสร็จสิ้นแล้วลองใหม่อีกครั้ง."
+
+[backendHealth.restart]
+attempting = "Attempting to restart... ({{attempt}}/{{max}})"
+failedBody = "The local backend could not be recovered. Please restart the app."
+failedTitle = "Backend failed to restart"
+stoppedTitle = "Backend stopped unexpectedly"
+successBody = "The local backend is back online."
+successTitle = "Backend restarted"
 
 [backendStartup]
 notFoundTitle = "ไม่พบ Backend"
@@ -4288,6 +4297,14 @@ title = "เปิดการตั้งค่าแล้ว"
 message = "Stirling PDF เป็นโปรแกรมแก้ไข PDF เริ่มต้นของคุณแล้ว"
 title = "ตั้งเป็นแอปเริ่มต้นแล้ว"
 
+[desktop.fileSave]
+saveFilesTitle_one = "Save {{count}} file"
+saveFilesTitle_other = "Save {{count}} files"
+
+[desktop.saasError]
+body = "This tool requires cloud processing but encountered an error: {{error}}. Please check your connection and try again."
+title = "Cloud Processing Failed"
+
 [desktop.titleBar]
 maximize = "ขยายใหญ่สุด"
 minimize = "ย่อเล็กสุด"
@@ -4485,7 +4502,37 @@ title = "สถิติ Endpoint"
 [error]
 _value = "ข้อผิดพลาด"
 dismissAllErrors = "ปิดข้อผิดพลาดทั้งหมด"
+failedFiles = "Failed files: {{ids}}"
 generic = "เกิดข้อผิดพลาด"
+invalidOrCorruptedFiles = "Process failed due to invalid/corrupted file(s)"
+networkError = "Network error"
+requestError = "Request error"
+requestFailed = "Request failed"
+requestFallback = "There was an error processing your request."
+serverError = "Server error"
+unknown = "Unknown error occurred"
+
+[error.pdfOpen]
+code = "Could not open the PDF (error {{code}})."
+corrupted = "The PDF file is corrupted and could not be read."
+invalid = "This file is not a valid PDF or is corrupted."
+pageLoadFailed = "A page in this PDF could not be loaded."
+passwordProtected = "This PDF is password-protected."
+unknown = "Could not open the PDF (unknown error)."
+unsupportedSecurity = "This PDF uses an unsupported security scheme."
+
+[error.processing]
+cancelled = "Processing was cancelled by user."
+corruption = "This PDF file appears to be corrupted or encrypted. Please try a different file."
+failed = "Processing failed: {{message}}"
+memory = "Insufficient memory to process this file. Try closing other applications or processing a smaller file."
+network = "Network connection failed. Please check your internet connection and try again."
+parsing = "Failed to process PDF: {{message}}"
+timeout = "Processing timed out. This file may be too large or complex to process."
+
+[errorBoundary]
+title = "Something went wrong"
+tryAgain = "Try Again"
 
 [extractImages]
 allowDuplicates = "บันทึกลายซ้ำ"
@@ -4905,21 +4952,31 @@ addFolderFailed = "ไม่สามารถเพิ่มโฟลเดอ�
 addFolderFailedDetail = "ไม่สามารถเพิ่มโฟลเดอร์ได้: {{message}}"
 cloudDeleteFailed_one = "Couldn't delete 1 file from the cloud."
 cloudDeleteFailed_other = "Couldn't delete {{count}} files from the cloud."
+createOutsideMount = "Cannot create a folder outside a mounted directory"
 deleteFolderFailed = "ไม่สามารถลบโฟลเดอร์ได้."
 deleteFolderFailedDetail = "ไม่สามารถลบโฟลเดอร์ได้: {{message}}"
+diskFoldersUnsupported = "This build cannot create folders on disk"
 downloadFailed = "Could not download the file."
 duplicateFailed = "Could not duplicate the file."
 folderAppearanceFailed = "ไม่สามารถอัปเดตลักษณะที่ปรากฏของโฟลเดอร์ได้."
 folderAppearanceFailedDetail = "ไม่สามารถอัปเดตลักษณะที่ปรากฏของโฟลเดอร์ได้: {{message}}"
+folderDetachFailed = "Folder was deleted, but some files couldn't be detached locally. Refresh to fix."
+folderOperationFailed = "Folder operation failed"
+folderSyncFailed = "Folder sync failed: {{message}}"
+loadFilesFailed = "Failed to load files"
+moveAcrossKinds = "Folders can only move within their own kind"
 moveFilesFailed = "ไม่สามารถย้ายไฟล์ได้."
 moveFilesFailedDetail = "ไม่สามารถย้ายไฟล์ได้: {{message}}"
 moveFolderFailed = "ไม่สามารถย้ายโฟลเดอร์ได้."
 moveFolderFailedDetail = "ไม่สามารถย้ายโฟลเดอร์ได้: {{message}}"
+moveLocalFolder = "A local folder sits where its directory sits"
 openDiskFileFailed = "ไม่สามารถเปิด {{name}} ได้"
 openDiskFileFailedDetail = "ไม่สามารถเปิด {{name}} ได้: {{message}}"
 processingStatusUnavailable = "ไม่สามารถรีเฟรชสถานะการประมวลผลได้ การล็อกไฟล์ถูกปล่อยจนกว่าการเชื่อมต่อจะกลับมา"
 readFolderFailed = "ไม่สามารถอ่านโฟลเดอร์ได้"
 readFolderFailedDetail = "ไม่สามารถอ่านโฟลเดอร์ได้: {{message}}"
+recolourLocalFolder = "Local folders cannot be recoloured yet"
+removeDiskSubfolder = "Subfolders of a mounted directory are removed on disk"
 removeFilesFailed = "ไม่สามารถลบไฟล์ได้."
 removeFilesFailedDetail = "ไม่สามารถลบไฟล์ได้: {{message}}"
 removeFolderFailed = "ไม่สามารถลบโฟลเดอร์ได้"
@@ -5051,6 +5108,22 @@ grid = "มุมมองแบบกริด"
 label = "โหมดมุมมอง"
 list = "มุมมองแบบรายการ"
 
+[fileStorage.unreadable]
+body = "\"{{name}}\" is saved in this browser but its contents can no longer be read. Upload the file again to keep working on it."
+title = "File data is unavailable"
+
+[fileSync.openFailed]
+multiple_one = "Couldn't open {{count}} file including \"{{name}}\"."
+multiple_other = "Couldn't open {{count}} files including \"{{name}}\"."
+single = "Couldn't open \"{{name}}\"."
+singleWithStatus = "Couldn't open \"{{name}}\" (HTTP {{status}})."
+title = "Some files couldn't be opened"
+
+[fileSync.pullFailed]
+body = "Showing only files cached in this browser. Refresh to retry once the connection is back."
+signInTitle = "Sign-in required to load cloud files"
+unreachableTitle = "Could not reach the cloud library"
+
 [fileToPDF]
 tags = "การแปลง, รูปแบบ, เอกสาร, รูปภาพ, สไลด์, ข้อความ, การแปลง, สำนักงาน, เอกสาร, Word, Excel, PowerPoint"
 title = "ไฟล์เป็น PDF"
@@ -5058,6 +5131,7 @@ title = "ไฟล์เป็น PDF"
 [fileUpload]
 dropFilesHere = "วางไฟล์ที่นี่หรือคลิกปุ่มอัปโหลด"
 dropFilesHereOpen = "วางไฟล์ที่นี่หรือคลิกปุ่มเปิด"
+droppedFileUnreadable = "Could not read a dropped file."
 filesAvailableCount_one = "มี {{count}} ไฟล์พร้อมใช้งาน"
 filesAvailableCount_other = "มี {{count}} ไฟล์พร้อมใช้งาน"
 loadFromStorage = "โหลดจากที่เก็บ"
@@ -5089,6 +5163,7 @@ passwordMustBeDifferent = "รหัสผ่านใหม่ต้องแ�
 passwordsDoNotMatch = "รหัสผ่านใหม่ไม่ตรงกัน"
 passwordTooShort = "รหัสผ่านต้องมีอย่างน้อย 8 อักขระ"
 reEnterNewPassword = "ป้อนรหัสผ่านใหม่อีกครั้ง"
+setPasswordTitle = "Set Your Password"
 title = "เข้าสู่ระบบครั้งแรก"
 welcomeMessage = "ด้วยเหตุผลด้านความปลอดภัย คุณต้องเปลี่ยนรหัสผ่านในการเข้าสู่ระบบครั้งแรก"
 welcomeTitle = "ยินดีต้อนรับ!"
@@ -5927,6 +6002,7 @@ signin = "ลงชื่อเข้าใช้"
 signingIn = "กำลังลงชื่อเข้าใช้..."
 signInWith = "ลงชื่อเข้าใช้ด้วย"
 signInWithProvider = "ลงชื่อเข้าใช้ด้วย {{provider}}"
+ssoRedirectFailed = "SSO redirect failed"
 title = "ลงชื่อเข้าใช้"
 unexpectedError = "ข้อผิดพลาดที่ไม่คาดคิด: {{message}}"
 updatePassword = "อัปเดตรหัสผ่าน"
@@ -6524,6 +6600,32 @@ rotateLeft = "หมุนซ้าย"
 rotateRight = "หมุนขวา"
 splitAfter = "แยกหลังจากนี้"
 
+[pageEditor.commands]
+addSplitAt = "Add split at position {{position}}"
+addSplits_one = "Add {{count}} split"
+addSplits_other = "Add {{count}} splits"
+deletePages_one = "Delete {{count}} page"
+deletePages_other = "Delete {{count}} pages"
+insertFiles_one = "Insert {{count}} file after page {{page}}"
+insertFiles_other = "Insert {{count}} files after page {{page}}"
+insertPageBreaks_one = "Insert {{count}} page break"
+insertPageBreaks_other = "Insert {{count}} page breaks"
+insertPageBreaksAll = "Insert page breaks after all pages"
+removeAllSplits = "Remove all splits"
+removeSplitAt = "Remove split at position {{position}}"
+removeSplits_one = "Remove {{count}} split"
+removeSplits_other = "Remove {{count}} splits"
+reorderPages = "Reorder pages"
+rotatePageLeft = "Rotate page left"
+rotatePageRight = "Rotate page right"
+rotatePagesLeft_one = "Rotate {{count}} page left"
+rotatePagesLeft_other = "Rotate {{count}} pages left"
+rotatePagesRight_one = "Rotate {{count}} page right"
+rotatePagesRight_other = "Rotate {{count}} pages right"
+splitAllPages = "Split all pages"
+toggleSplits_one = "Toggle {{count}} split position"
+toggleSplits_other = "Toggle {{count}} split positions"
+
 [pageEditor.emptyState]
 body = "เพิ่มไฟล์เพื่อเริ่มแก้ไขหน้า"
 title = "ยังไม่ได้โหลดไฟล์ PDF"
@@ -6933,6 +7035,7 @@ thisPeriod = "This billing period"
 billingPeriod = "รอบการเรียกเก็บเงิน"
 cancelTeamChange = "ใช้แผนปัจจุบันต่อ"
 canCloseWindow = "คุณสามารถปิดหน้าต่างนี้ได้แล้ว"
+createSessionFailed = "Failed to create checkout session"
 error = "ข้อผิดพลาดในการชำระเงิน"
 generatingLicense = "กำลังสร้าง license key ของคุณ..."
 licenseActivated = "เปิดใช้งานไลเซนส์แล้ว! บันทึก license key ของคุณเรียบร้อย ส่งอีเมลยืนยันไปยังที่อยู่อีเมลของคุณแล้ว"
@@ -6948,6 +7051,7 @@ monthly = "รายเดือน"
 paymentCanceled = "ยกเลิกการชำระเงินแล้ว จะไม่มีการเรียกเก็บเงิน"
 perMonth = "/เดือน"
 perUserBlock = "ต่อ 100 ผู้ใช้"
+planPeriodUnavailable = "Selected plan period is not available"
 preparing = "กำลังเตรียมหน้าชำระเงินของคุณ..."
 redirecting = "กำลังเปลี่ยนเส้นทางไปยังการชำระเงินที่ปลอดภัย..."
 success = "ชำระเงินสำเร็จ!"
@@ -7095,6 +7199,16 @@ freetext = "ข้อความคำอธิบายประกอบ - �
 stamp = "คำอธิบายประกอบแบบตราประทับ - ไม่ใช่ข้อความบนหน้า จึงแก้ไขที่นี่ไม่ได้"
 widget = "ช่องฟอร์ม - ไม่ใช่ข้อความบนหน้า จึงแก้ไขที่นี่ไม่ได้"
 
+[pdfTextEditor.commands]
+edit = "Edit"
+mergeRuns_one = "Merge {{count}} run into a paragraph"
+mergeRuns_other = "Merge {{count}} runs into a paragraph"
+setColour = "Set colour on {{run}}"
+setOutline = "Set outline on {{run}}"
+typeInto = "Type into {{run}}"
+ungroupParagraph = "Ungroup paragraph {{run}}"
+wrap = "Wrap {{run}}"
+
 [pdfTextEditor.discard]
 body = "การเปิด {{name}} จะปิดเอกสารที่คุณกำลังแก้ไข การเปลี่ยนแปลงที่ยังไม่ได้บันทึกจะสูญหาย"
 cancel = "ยกเลิก"
@@ -7109,6 +7223,9 @@ title = "วาง PDF เพื่อเปิด"
 [pdfTextEditor.error]
 decodeImage = "ไม่สามารถถอดรหัสรูปภาพที่เลือกได้"
 insertImage = "ไม่สามารถแทรกรูปภาพที่เลือกได้"
+
+[pdfTextEditor.externalEdit]
+pngFileType = "PNG image"
 
 [pdfTextEditor.find]
 close = "ปิดแถบค้นหา"
@@ -7211,12 +7328,14 @@ heightHint = "ความสูงของกล่องข้อความ
 image = "รูปภาพ"
 images = "รูปภาพ"
 manyImages = "{{count}} รูปภาพ"
+manyShapes = "{{count}} shapes"
 manyText = "ข้อความ · {{count}} กล่อง"
 mixed = "{{count}} วัตถุ"
 multiGeometry = "เลือกวัตถุเดียวเพื่อแก้ไขตำแหน่งและขนาด"
 nothingSelected = "ไม่ได้เลือกอะไร"
 nothingSelectedHint = "คลิกข้อความหรือรูปภาพใดๆ บนหน้าเพื่อแก้ไขที่นี่"
 oneImage = "รูปภาพ"
+oneShape = "Shape"
 oneText = "ข้อความ"
 pages = "หน้า"
 tabDocument = "เอกสาร"
@@ -7281,6 +7400,9 @@ advanced = "ขั้นสูง"
 find = "ค้นหาในเอกสาร"
 findTooltip = "ค้นหา ({{shortcut}})"
 view = "มุมมอง"
+
+[pdfTextEditor.shape]
+groupedTitle = "Part of a group in this PDF: it can be deleted but not moved."
 
 [pdfTextEditor.sidebar]
 addImage = "เพิ่มรูปภาพ"
@@ -11932,11 +12054,18 @@ useLast = "Last used server: {{serverUrl}}"
 [setup.server.error]
 configFetch = "ไม่สามารถดึงการกำหนดค่าของเซิร์ฟเวอร์ได้ โปรดตรวจสอบ URL แล้วลองอีกครั้ง"
 configFetchError = "ดึงการกำหนดค่าเซิร์ฟเวอร์ไม่สำเร็จ: {{error}}"
+dnsFailed = "Cannot resolve hostname: {{hostname}}"
 emptyUrl = "โปรดป้อน URL เซิร์ฟเวอร์"
+httpOnly = "Server is only accessible via HTTP (not HTTPS)."
+httpsOnly = "Server is only accessible via HTTPS, not HTTP."
 invalidUrl = "รูปแบบ URL ไม่ถูกต้อง โปรดป้อน URL ที่ถูกต้องเช่น https://your-server.com"
+methodMismatch = "Server responds to HEAD requests but not GET requests."
+networkBlocked = "No internet connectivity detected. All network requests are failing."
+serverUnreachable = "Cannot connect to server. Internet works but this specific server is unreachable."
 testFailed = "การทดสอบการเชื่อมต่อล้มเหลว"
 unknown = "ข้อผิดพลาดที่ไม่ทราบสาเหตุ"
 unreachable = "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์"
+userAgentBlocked = "Server blocks Tauri/desktop app User-Agent but allows browser User-Agent."
 
 [setup.server.error.securityDisabled]
 body = "เซิร์ฟเวอร์นี้ไม่ได้เปิดใช้งานการเข้าสู่ระบบ เพื่อเชื่อมต่อกับเซิร์ฟเวอร์นี้ คุณต้องเปิดใช้งานการยืนยันตัวตน:"
@@ -13283,6 +13412,12 @@ previewUnavailable = "ไม่สามารถแสดงตัวอย่�
 renderMarkdown = "แสดงผล Markdown"
 sortedBy = "เรียงตาม: {{column}}"
 textStats = "{{lines}} บรรทัด · {{size}}"
+
+[viewer.nonPdf.fileType]
+file = "File"
+image = "Image"
+spreadsheet = "Spreadsheet"
+text = "Text"
 
 [viewer.portfolio]
 addFile = "เพิ่มไฟล์"
