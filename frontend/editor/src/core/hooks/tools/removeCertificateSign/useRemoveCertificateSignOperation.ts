@@ -4,8 +4,8 @@ import {
   defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
 import {
-  fileOnlyMapping,
   objectToFormData,
+  type ToolApiParams,
   type ToolEndpoint,
 } from "@app/hooks/tools/shared/toolApiMapping";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
@@ -16,13 +16,24 @@ import {
 
 const ENDPOINT = "/api/v1/security/remove-cert-sign" satisfies ToolEndpoint;
 
-// Removing certificate signatures takes only a file; no parameters to map.
-const { toApiParams, fromApiParams } = fileOnlyMapping();
+type RemoveCertificateSignApiParams = ToolApiParams[typeof ENDPOINT];
+
+const toApiParams = (
+  parameters: RemoveCertificateSignParameters,
+): RemoveCertificateSignApiParams => ({
+  removeVisibleSignature: parameters.removeVisibleSignature ?? false,
+});
+
+const fromApiParams = (
+  parameters: RemoveCertificateSignApiParams,
+): RemoveCertificateSignParameters => ({
+  removeVisibleSignature: parameters.removeVisibleSignature ?? false,
+});
 
 export const buildRemoveCertificateSignFormData = (
-  _parameters: RemoveCertificateSignParameters,
+  parameters: RemoveCertificateSignParameters,
   file: File,
-): FormData => objectToFormData(toApiParams(), { fileInput: file });
+): FormData => objectToFormData(toApiParams(parameters), { fileInput: file });
 
 // Static configuration object
 export const removeCertificateSignOperationConfig = defineSingleFileTool({
