@@ -67,5 +67,11 @@ public class AccountLinkProperties {
 
         /** Dedup window for identical input sets. */
         private Duration workflowWindow = Duration.ofMinutes(5);
+
+        /**
+         * How long a sync stands for before an unforced request may run another. Bounds what a
+         * reloaded billing page can cost; an operator asking explicitly forces past it.
+         */
+        private Duration manualSyncThrottle = Duration.ofMinutes(1);
     }
 }

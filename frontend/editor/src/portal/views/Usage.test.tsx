@@ -141,9 +141,10 @@ vi.mock("@app/portal/api/billing", () => ({
   fetchInvoices: () => Promise.resolve([]),
 }));
 const fetchLocalUsage = vi.fn().mockResolvedValue(null);
+const triggerLocalSync = vi.fn().mockResolvedValue(true);
 vi.mock("@app/portal/api/link", () => ({
   fetchLocalUsage: () => fetchLocalUsage(),
-  triggerLocalSync: () => Promise.resolve(),
+  triggerLocalSync: (force?: boolean) => triggerLocalSync(force),
 }));
 vi.mock("@app/portal/hooks/useStripePortal", () => ({
   useStripePortal: () => ({ opening: false, open: vi.fn(), error: null }),
@@ -153,14 +154,19 @@ vi.mock("@app/portal/components/billing/FreePlanView", () => ({
   FreePlanView: ({
     step,
     onActivationClosed,
+    onSubscribed,
   }: {
     step?: string | null;
     onActivationClosed?: () => void;
+    onSubscribed?: () => Promise<boolean>;
   }) =>
     step ? (
       <div data-testid="activation-step">
         {step}
         <button onClick={onActivationClosed}>Close activation</button>
+        <button onClick={() => void onSubscribed?.()}>
+          Checkout completed
+        </button>
       </div>
     ) : null,
 }));
@@ -816,6 +822,59 @@ describe("Usage — link-free wallet renderer", () => {
     expect(screen.queryByText(/Your plan and usage will appear/)).toBeNull();
     expect(screen.getByText("This cycle")).toBeVisible();
     expect(fetchWallet).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("Usage — the nudge after a checkout", () => {
+  /** A leader's own free team: enough for BillingScreen to offer the Processor row. */
+  const leaderWallet = (status: string) => ({
+    ...freeWallet,
+    status,
+    role: "leader",
+    teamId: 42,
+  });
+
+  beforeEach(() => {
+    bundleFlow.status = "none";
+    refreshWalletCache.mockReset().mockResolvedValue(undefined);
+    fetchLocalUsage.mockReset().mockResolvedValue(null);
+    triggerLocalSync.mockReset().mockResolvedValue(true);
+  });
+
+  /** Opens the Processor activation flow, which is where a checkout completes. */
+  async function reachCheckout() {
+    const action = await screen.findByRole("button", {
+      name: "Switch on the Processor",
+    });
+    fireEvent.click(action);
+    fireEvent.click(screen.getByRole("button", { name: "Checkout completed" }));
+  }
+
+  it("forces the sync, because a recent one is exactly the one that predates the purchase", async () => {
+    fetchWallet.mockResolvedValue(leaderWallet("free"));
+    renderUsage(<Usage localUsersInUse={3} localUserLimit={5} />);
+    // The open-the-page sync goes out unforced, so the throttle governs it.
+    await waitFor(() => expect(triggerLocalSync).toHaveBeenCalled());
+    expect(triggerLocalSync).not.toHaveBeenCalledWith(true);
+    triggerLocalSync.mockClear();
+
+    await reachCheckout();
+    fetchWallet.mockResolvedValue(leaderWallet("subscribed"));
+
+    await waitFor(() => expect(triggerLocalSync).toHaveBeenCalledWith(true));
+  });
+
+  it("leaves hosted SaaS alone, having no instance to nudge", async () => {
+    fetchWallet.mockResolvedValue(leaderWallet("subscribed"));
+    fetchWallet.mockResolvedValueOnce(leaderWallet("free"));
+    renderUsage(<Usage />);
+
+    await reachCheckout();
+
+    await waitFor(() =>
+      expect(screen.queryByTestId("activation-step")).toBeNull(),
+    );
+    expect(triggerLocalSync).not.toHaveBeenCalled();
   });
 });
 
