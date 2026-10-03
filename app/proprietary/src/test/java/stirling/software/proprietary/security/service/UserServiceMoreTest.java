@@ -3,6 +3,7 @@ package stirling.software.proprietary.security.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -13,6 +14,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.hibernate.KeyType;
+import org.hibernate.Session;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -29,6 +32,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import jakarta.persistence.EntityManager;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
@@ -56,6 +61,7 @@ import stirling.software.proprietary.workflow.service.UserServerCertificateServi
 class UserServiceMoreTest {
 
     @Mock private UserRepository userRepository;
+    @Mock private EntityManager entityManager;
     @Mock private TeamRepository teamRepository;
     @Mock private AuthorityRepository authorityRepository;
     @Mock private PasswordEncoder passwordEncoder;
@@ -159,7 +165,10 @@ class UserServiceMoreTest {
         @Test
         @DisplayName("usernameExists true when found")
         void usernameExists() {
-            when(userRepository.findByUsername("a")).thenReturn(Optional.of(user("a")));
+            User found = user("a");
+            Session session = mock(Session.class);
+            when(entityManager.unwrap(Session.class)).thenReturn(session);
+            when(session.find(User.class, "a", KeyType.NATURAL)).thenReturn(found);
             assertThat(userService.usernameExists("a")).isTrue();
         }
 
