@@ -837,11 +837,13 @@ public class GeneralUtils {
             // Limit -1 keeps empty parts, so a bare "-" is an invalid range, not an empty array.
             String[] rangeParts = trimmedPart.split("-", -1);
             try {
-                int start = Integer.parseInt(rangeParts[0].trim());
-                int end =
-                        (rangeParts.length > 1 && !rangeParts[1].trim().isEmpty())
-                                ? Integer.parseInt(rangeParts[1].trim())
-                                : totalPages;
+                String firstPart = rangeParts[0].trim();
+                String secondPart = rangeParts.length > 1 ? rangeParts[1].trim() : "";
+                if (firstPart.isEmpty() && secondPart.isEmpty()) {
+                    return partResult;
+                }
+                int start = firstPart.isEmpty() ? 1 : Integer.parseInt(firstPart);
+                int end = !secondPart.isEmpty() ? Integer.parseInt(secondPart) : totalPages;
                 for (int i = start; i <= end; i++) {
                     if (i >= 1 && i <= totalPages) {
                         partResult.add(i - 1 + offset);
