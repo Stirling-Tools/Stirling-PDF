@@ -67,6 +67,8 @@ tasks:
     cmds:
       # Auto-fixers first, then the report-only tools (codespell, gitleaks) so a
       # finding there does not stop the fixers from running.
+      - task: ruff-format
+        vars: { FIX: '1' }
       - task: ruff
         vars: { FIX: '1' }
       - task: ruff-format
@@ -104,12 +106,12 @@ tasks:
   ruff:
     deps: [install]
     cmds:
-      - uv run --project engine --locked --group pre-commit ruff check --isolated --line-length=120 {{if .FIX}}--fix {{end}}$(git ls-files {{.PY_FILES}})
+      - uv run --project engine --locked --group pre-commit ruff check --isolated --target-version=py313 --line-length=120 {{if .FIX}}--fix {{end}}$(git ls-files {{.PY_FILES}})
 
   ruff-format:
     deps: [install]
     cmds:
-      - uv run --project engine --locked --group pre-commit ruff format --isolated --line-length=120 {{if .FIX}}{{else}}--check {{end}}$(git ls-files {{.PY_FILES}})
+      - uv run --project engine --locked --group pre-commit ruff format --isolated --target-version=py313 --line-length=120 {{if .FIX}}{{else}}--check {{end}}$(git ls-files {{.PY_FILES}})
 
   codespell:
     deps: [install]
