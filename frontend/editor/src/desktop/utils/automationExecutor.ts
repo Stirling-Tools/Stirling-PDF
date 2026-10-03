@@ -38,6 +38,13 @@ export const executeAutomationSequence: typeof CoreExecuteAutomationSequence =
           );
         }
         const params = { ...config.defaultParameters, ...operation.parameters };
+        // The pipeline runs on the connected server, and this step's form would carry what a
+        // key held here needs, the token PIN among it.
+        if (config.requestConfig?.(params)?.deviceLocal === true) {
+          throw new Error(
+            `${operation.operation} must run on this machine, so it cannot be part of a server pipeline`,
+          );
+        }
         const endpoint =
           typeof config.endpoint === "function"
             ? config.endpoint(params)

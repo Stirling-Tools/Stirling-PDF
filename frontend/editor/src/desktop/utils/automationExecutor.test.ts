@@ -128,3 +128,35 @@ test("custom tools use their server parameter mapping without invoking their pro
   ]);
   expect(mocks.local).not.toHaveBeenCalled();
 });
+
+test("refuses a step that must run on this machine before building its request", async () => {
+  const buildFormData = vi.fn(() => new FormData());
+  const registry = {
+    certSign: {
+      operationConfig: {
+        toolType: ToolType.singleFile,
+        endpoint: "/api/v1/security/cert-sign",
+        buildFormData,
+        requestConfig: () => ({ deviceLocal: true }),
+        defaultParameters: { certType: "PKCS11", password: "1234" },
+      },
+    },
+  } as unknown as ToolRegistry;
+
+  await expect(
+    executeAutomationSequence(
+      {
+        id: "sign",
+        name: "Sign pipeline",
+        operations: [{ operation: "certSign", parameters: {} }],
+        createdAt: "",
+        updatedAt: "",
+      },
+      [new File(["input"], "input.pdf")],
+      registry,
+    ),
+  ).rejects.toThrow(/certSign/);
+  // The form would carry the PIN to the server, so it is never built.
+  expect(buildFormData).not.toHaveBeenCalled();
+  expect(mocks.submit).not.toHaveBeenCalled();
+});

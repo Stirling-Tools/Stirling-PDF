@@ -1,5 +1,8 @@
 import { describe, expect, test } from "vitest";
-import { buildCertSignFormData } from "@app/hooks/tools/certSign/useCertSignOperation";
+import {
+  buildCertSignFormData,
+  certSignOperationConfig,
+} from "@app/hooks/tools/certSign/useCertSignOperation";
 import {
   CertSignParameters,
   defaultParameters,
@@ -65,6 +68,35 @@ describe("buildCertSignFormData - hardware cert types", () => {
     );
 
     expect(formData.get("pkcs11Slot")).toBeNull();
+  });
+});
+
+// A key in the Windows store or on a plugged-in token cannot leave the machine,
+// so signing with one has to run there — even when the app is connected to a
+// self-hosted server (#7316). The endpoint is the same either way, so the
+// request itself has to say so.
+describe("certSignOperationConfig - device-local marking", () => {
+  const requestConfig = (overrides: Partial<CertSignParameters>) =>
+    certSignOperationConfig.requestConfig?.(params(overrides));
+
+  test.each(["WINDOWS_STORE", "PKCS11"] as const)(
+    "%s is marked device-local",
+    (certType) => {
+      expect(requestConfig({ signMode: "DEVICE", certType })).toEqual({
+        deviceLocal: true,
+      });
+    },
+  );
+
+  test.each(["PKCS12", "PFX", "JKS", "PEM"] as const)(
+    "%s is not marked, so an uploaded keystore still signs wherever the app points",
+    (certType) => {
+      expect(requestConfig({ signMode: "MANUAL", certType })).toEqual({});
+    },
+  );
+
+  test("the server certificate is not marked either", () => {
+    expect(requestConfig({ signMode: "AUTO", certType: "" })).toEqual({});
   });
 
   test("AUTO mode still maps to SERVER without hardware fields", () => {
