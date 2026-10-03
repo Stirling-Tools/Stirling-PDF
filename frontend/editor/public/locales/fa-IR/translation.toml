@@ -2476,7 +2476,16 @@ checking = "در حال بررسی وضعیت بک‌اند..."
 offline = "بک‌اند آفلاین"
 online = "بک‌اند آنلاین"
 starting = "بک‌اند در حال راه‌اندازی..."
+unavailable = "Backend is unavailable"
 wait = "لطفاً صبر کنید تا بک‌اند راه‌اندازی را به پایان برساند و سپس دوباره تلاش کنید."
+
+[backendHealth.restart]
+attempting = "Attempting to restart... ({{attempt}}/{{max}})"
+failedBody = "The local backend could not be recovered. Please restart the app."
+failedTitle = "Backend failed to restart"
+stoppedTitle = "Backend stopped unexpectedly"
+successBody = "The local backend is back online."
+successTitle = "Backend restarted"
 
 [backendStartup]
 notFoundTitle = "بک‌اند یافت نشد"
@@ -4288,6 +4297,14 @@ title = "تنظیمات باز شد"
 message = "Stirling PDF اکنون ویرایشگر پیش‌فرض PDF شماست"
 title = "برنامه پیش‌فرض تنظیم شد"
 
+[desktop.fileSave]
+saveFilesTitle_one = "Save {{count}} file"
+saveFilesTitle_other = "Save {{count}} files"
+
+[desktop.saasError]
+body = "This tool requires cloud processing but encountered an error: {{error}}. Please check your connection and try again."
+title = "Cloud Processing Failed"
+
 [desktop.titleBar]
 maximize = "بزرگ‌نمایی"
 minimize = "کوچک‌نمایی"
@@ -4485,7 +4502,37 @@ title = "آمار نقاط پایانی"
 [error]
 _value = "خطا"
 dismissAllErrors = "نادیده گرفتن همه خطاها"
+failedFiles = "Failed files: {{ids}}"
 generic = "خطایی رخ داد"
+invalidOrCorruptedFiles = "Process failed due to invalid/corrupted file(s)"
+networkError = "Network error"
+requestError = "Request error"
+requestFailed = "Request failed"
+requestFallback = "There was an error processing your request."
+serverError = "Server error"
+unknown = "Unknown error occurred"
+
+[error.pdfOpen]
+code = "Could not open the PDF (error {{code}})."
+corrupted = "The PDF file is corrupted and could not be read."
+invalid = "This file is not a valid PDF or is corrupted."
+pageLoadFailed = "A page in this PDF could not be loaded."
+passwordProtected = "This PDF is password-protected."
+unknown = "Could not open the PDF (unknown error)."
+unsupportedSecurity = "This PDF uses an unsupported security scheme."
+
+[error.processing]
+cancelled = "Processing was cancelled by user."
+corruption = "This PDF file appears to be corrupted or encrypted. Please try a different file."
+failed = "Processing failed: {{message}}"
+memory = "Insufficient memory to process this file. Try closing other applications or processing a smaller file."
+network = "Network connection failed. Please check your internet connection and try again."
+parsing = "Failed to process PDF: {{message}}"
+timeout = "Processing timed out. This file may be too large or complex to process."
+
+[errorBoundary]
+title = "Something went wrong"
+tryAgain = "Try Again"
 
 [extractImages]
 allowDuplicates = "ذخیره تصاویر تکراری"
@@ -4905,21 +4952,31 @@ addFolderFailed = "پوشه اضافه نشد."
 addFolderFailedDetail = "پوشه اضافه نشد: {{message}}"
 cloudDeleteFailed_one = "Couldn't delete 1 file from the cloud."
 cloudDeleteFailed_other = "Couldn't delete {{count}} files from the cloud."
+createOutsideMount = "Cannot create a folder outside a mounted directory"
 deleteFolderFailed = "امکان حذف پوشه نبود."
 deleteFolderFailedDetail = "امکان حذف پوشه نبود: {{message}}"
+diskFoldersUnsupported = "This build cannot create folders on disk"
 downloadFailed = "Could not download the file."
 duplicateFailed = "Could not duplicate the file."
 folderAppearanceFailed = "امکان به‌روزرسانی ظاهر پوشه نبود."
 folderAppearanceFailedDetail = "امکان به‌روزرسانی ظاهر پوشه نبود: {{message}}"
+folderDetachFailed = "Folder was deleted, but some files couldn't be detached locally. Refresh to fix."
+folderOperationFailed = "Folder operation failed"
+folderSyncFailed = "Folder sync failed: {{message}}"
+loadFilesFailed = "Failed to load files"
+moveAcrossKinds = "Folders can only move within their own kind"
 moveFilesFailed = "امکان جابه‌جایی فایل‌ها نبود."
 moveFilesFailedDetail = "امکان جابه‌جایی فایل‌ها نبود: {{message}}"
 moveFolderFailed = "امکان جابه‌جایی پوشه نبود."
 moveFolderFailedDetail = "امکان جابه‌جایی پوشه نبود: {{message}}"
+moveLocalFolder = "A local folder sits where its directory sits"
 openDiskFileFailed = "{{name}} باز نشد."
 openDiskFileFailedDetail = "{{name}} باز نشد: {{message}}"
 processingStatusUnavailable = "وضعیت پردازش تازه‌سازی نشد. قفل فایل‌ها تا زمان بازیابی اتصال آزاد شده‌اند."
 readFolderFailed = "پوشه خوانده نشد."
 readFolderFailedDetail = "پوشه خوانده نشد: {{message}}"
+recolourLocalFolder = "Local folders cannot be recoloured yet"
+removeDiskSubfolder = "Subfolders of a mounted directory are removed on disk"
 removeFilesFailed = "امکان حذف فایل‌ها نبود."
 removeFilesFailedDetail = "امکان حذف فایل‌ها نبود: {{message}}"
 removeFolderFailed = "پوشه حذف نشد."
@@ -5051,6 +5108,22 @@ grid = "نمای شبکه‌ای"
 label = "حالت نمایش"
 list = "نمای فهرستی"
 
+[fileStorage.unreadable]
+body = "\"{{name}}\" is saved in this browser but its contents can no longer be read. Upload the file again to keep working on it."
+title = "File data is unavailable"
+
+[fileSync.openFailed]
+multiple_one = "Couldn't open {{count}} file including \"{{name}}\"."
+multiple_other = "Couldn't open {{count}} files including \"{{name}}\"."
+single = "Couldn't open \"{{name}}\"."
+singleWithStatus = "Couldn't open \"{{name}}\" (HTTP {{status}})."
+title = "Some files couldn't be opened"
+
+[fileSync.pullFailed]
+body = "Showing only files cached in this browser. Refresh to retry once the connection is back."
+signInTitle = "Sign-in required to load cloud files"
+unreachableTitle = "Could not reach the cloud library"
+
 [fileToPDF]
 tags = "تبدیل،فرمت،سند،تصویر،اسلاید،متن،تبدیل،دفتر،اسناد،ورد،اکسل،پاورپوینت"
 title = "فایل به PDF"
@@ -5058,6 +5131,7 @@ title = "فایل به PDF"
 [fileUpload]
 dropFilesHere = "فایل‌ها را اینجا رها کنید یا دکمه بارگذاری را کلیک کنید"
 dropFilesHereOpen = "فایل‌ها را اینجا رها کنید یا روی دکمه باز کردن کلیک کنید"
+droppedFileUnreadable = "Could not read a dropped file."
 filesAvailableCount_one = "{{count}} فایل در دسترس"
 filesAvailableCount_other = "{{count}} فایل در دسترس"
 loadFromStorage = "بارگذاری از فضای ذخیره"
@@ -5089,6 +5163,7 @@ passwordMustBeDifferent = "رمز عبور جدید باید با رمز عبو�
 passwordsDoNotMatch = "رمزهای عبور جدید یکسان نیستند"
 passwordTooShort = "رمز عبور باید حداقل ۸ نویسه باشد"
 reEnterNewPassword = "رمز عبور جدید را دوباره وارد کنید"
+setPasswordTitle = "Set Your Password"
 title = "ورود برای اولین بار"
 welcomeMessage = "به دلایل امنیتی، باید در اولین ورود رمز عبور خود را تغییر دهید."
 welcomeTitle = "خوش آمدید!"
@@ -5927,6 +6002,7 @@ signin = "ورود"
 signingIn = "در حال ورود..."
 signInWith = "ورود با"
 signInWithProvider = "ورود با {{provider}}"
+ssoRedirectFailed = "SSO redirect failed"
 title = "ورود"
 unexpectedError = "خطای غیرمنتظره: {{message}}"
 updatePassword = "به‌روزرسانی گذرواژه"
@@ -6524,6 +6600,32 @@ rotateLeft = "چرخش به چپ"
 rotateRight = "چرخش به راست"
 splitAfter = "تقسیم بعد از این"
 
+[pageEditor.commands]
+addSplitAt = "Add split at position {{position}}"
+addSplits_one = "Add {{count}} split"
+addSplits_other = "Add {{count}} splits"
+deletePages_one = "Delete {{count}} page"
+deletePages_other = "Delete {{count}} pages"
+insertFiles_one = "Insert {{count}} file after page {{page}}"
+insertFiles_other = "Insert {{count}} files after page {{page}}"
+insertPageBreaks_one = "Insert {{count}} page break"
+insertPageBreaks_other = "Insert {{count}} page breaks"
+insertPageBreaksAll = "Insert page breaks after all pages"
+removeAllSplits = "Remove all splits"
+removeSplitAt = "Remove split at position {{position}}"
+removeSplits_one = "Remove {{count}} split"
+removeSplits_other = "Remove {{count}} splits"
+reorderPages = "Reorder pages"
+rotatePageLeft = "Rotate page left"
+rotatePageRight = "Rotate page right"
+rotatePagesLeft_one = "Rotate {{count}} page left"
+rotatePagesLeft_other = "Rotate {{count}} pages left"
+rotatePagesRight_one = "Rotate {{count}} page right"
+rotatePagesRight_other = "Rotate {{count}} pages right"
+splitAllPages = "Split all pages"
+toggleSplits_one = "Toggle {{count}} split position"
+toggleSplits_other = "Toggle {{count}} split positions"
+
 [pageEditor.emptyState]
 body = "برای ویرایش صفحات، فایل‌ها را اضافه کنید"
 title = "هیچ فایل PDF بارگذاری نشده"
@@ -6933,6 +7035,7 @@ thisPeriod = "This billing period"
 billingPeriod = "دوره صورتحساب"
 cancelTeamChange = "حفظ طرح فعلی"
 canCloseWindow = "اکنون می‌توانید این پنجره را ببندید."
+createSessionFailed = "Failed to create checkout session"
 error = "خطای پرداخت"
 generatingLicense = "در حال ساخت کلید لایسنس..."
 licenseActivated = "لایسنس فعال شد! کلید لایسنس شما ذخیره شد. یک ایمیل تأیید به آدرس ایمیل ثبت‌شده شما ارسال شد."
@@ -6948,6 +7051,7 @@ monthly = "ماهانه"
 paymentCanceled = "پرداخت لغو شد. هیچ هزینه‌ای کسر نشد."
 perMonth = "/ماه"
 perUserBlock = "به‌ازای هر 100 کاربر"
+planPeriodUnavailable = "Selected plan period is not available"
 preparing = "در حال آماده‌سازی پرداخت شما..."
 redirecting = "در حال انتقال به تسویه‌حساب امن..."
 success = "پرداخت با موفقیت انجام شد!"
@@ -7095,6 +7199,16 @@ freetext = "متن حاشیه‌نویسی - متن صفحه نیست، بناب
 stamp = "حاشیه‌نویسی مهر - متن صفحه نیست، بنابراین اینجا قابل ویرایش نیست"
 widget = "فیلد فرم - متن صفحه نیست، بنابراین اینجا قابل ویرایش نیست"
 
+[pdfTextEditor.commands]
+edit = "Edit"
+mergeRuns_one = "Merge {{count}} run into a paragraph"
+mergeRuns_other = "Merge {{count}} runs into a paragraph"
+setColour = "Set colour on {{run}}"
+setOutline = "Set outline on {{run}}"
+typeInto = "Type into {{run}}"
+ungroupParagraph = "Ungroup paragraph {{run}}"
+wrap = "Wrap {{run}}"
+
 [pdfTextEditor.discard]
 body = "باز کردن {{name}} سندی را که در حال ویرایش آن هستید می‌بندد. تغییرات ذخیره‌نشده شما از دست خواهند رفت."
 cancel = "لغو"
@@ -7109,6 +7223,9 @@ title = "برای باز کردن، یک PDF رها کنید"
 [pdfTextEditor.error]
 decodeImage = "تصویر انتخاب‌شده رمزگشایی نشد."
 insertImage = "تصویر انتخاب‌شده درج نشد."
+
+[pdfTextEditor.externalEdit]
+pngFileType = "PNG image"
 
 [pdfTextEditor.find]
 close = "بستن نوار جستجو"
@@ -7211,12 +7328,14 @@ heightHint = "ارتفاع کادر متن از اندازه نوع و تعدا�
 image = "تصویر"
 images = "تصاویر"
 manyImages = "{{count}} تصویر"
+manyShapes = "{{count}} shapes"
 manyText = "متن · {{count}} کادر"
 mixed = "{{count}} شیء"
 multiGeometry = "برای ویرایش موقعیت و اندازه، یک شیء واحد را انتخاب کنید."
 nothingSelected = "چیزی انتخاب نشده است"
 nothingSelectedHint = "برای ویرایش در اینجا، روی هر متن یا تصویر در صفحه کلیک کنید."
 oneImage = "تصویر"
+oneShape = "Shape"
 oneText = "متن"
 pages = "صفحات"
 tabDocument = "سند"
@@ -7281,6 +7400,9 @@ advanced = "پیشرفته"
 find = "جستجو در سند"
 findTooltip = "یافتن ({{shortcut}})"
 view = "نمایش"
+
+[pdfTextEditor.shape]
+groupedTitle = "Part of a group in this PDF: it can be deleted but not moved."
 
 [pdfTextEditor.sidebar]
 addImage = "افزودن تصویر"
@@ -11932,11 +12054,18 @@ useLast = "Last used server: {{serverUrl}}"
 [setup.server.error]
 configFetch = "بازیابی پیکربندی سرور ناموفق بود. لطفاً URL را بررسی کنید و دوباره تلاش کنید."
 configFetchError = "دریافت پیکربندی سرور ناموفق بود: {{error}}"
+dnsFailed = "Cannot resolve hostname: {{hostname}}"
 emptyUrl = "لطفاً URL سرور را وارد کنید"
+httpOnly = "Server is only accessible via HTTP (not HTTPS)."
+httpsOnly = "Server is only accessible via HTTPS, not HTTP."
 invalidUrl = "قالب URL نامعتبر است. لطفاً یک URL معتبر مانند https://your-server.com وارد کنید"
+methodMismatch = "Server responds to HEAD requests but not GET requests."
+networkBlocked = "No internet connectivity detected. All network requests are failing."
+serverUnreachable = "Cannot connect to server. Internet works but this specific server is unreachable."
 testFailed = "آزمون اتصال ناموفق بود"
 unknown = "خطای ناشناخته"
 unreachable = "اتصال به سرور ممکن نشد"
+userAgentBlocked = "Server blocks Tauri/desktop app User-Agent but allows browser User-Agent."
 
 [setup.server.error.securityDisabled]
 body = "ورود در این سرور فعال نشده است. برای اتصال به این سرور باید احراز هویت را فعال کنید:"
@@ -13283,6 +13412,12 @@ previewUnavailable = "پیش‌نمایش برای این نوع فایل در �
 renderMarkdown = "رندر Markdown"
 sortedBy = "مرتب‌شده بر اساس: {{column}}"
 textStats = "{{lines}} خط · {{size}}"
+
+[viewer.nonPdf.fileType]
+file = "File"
+image = "Image"
+spreadsheet = "Spreadsheet"
+text = "Text"
 
 [viewer.portfolio]
 addFile = "افزودن فایل"

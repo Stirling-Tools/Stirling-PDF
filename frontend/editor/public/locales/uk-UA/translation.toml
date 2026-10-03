@@ -2476,7 +2476,16 @@ checking = "Перевірка стану бекенду..."
 offline = "Бекенд офлайн"
 online = "Бекенд онлайн"
 starting = "Бекенд запускається..."
+unavailable = "Backend is unavailable"
 wait = "Дочекайтеся завершення запуску бекенду та спробуйте ще раз."
+
+[backendHealth.restart]
+attempting = "Attempting to restart... ({{attempt}}/{{max}})"
+failedBody = "The local backend could not be recovered. Please restart the app."
+failedTitle = "Backend failed to restart"
+stoppedTitle = "Backend stopped unexpectedly"
+successBody = "The local backend is back online."
+successTitle = "Backend restarted"
 
 [backendStartup]
 notFoundTitle = "Серверну частину не знайдено"
@@ -4288,6 +4297,14 @@ title = "Відкрито налаштування"
 message = "Stirling PDF тепер ваш PDF-редактор за замовчуванням"
 title = "Типову програму встановлено"
 
+[desktop.fileSave]
+saveFilesTitle_one = "Save {{count}} file"
+saveFilesTitle_other = "Save {{count}} files"
+
+[desktop.saasError]
+body = "This tool requires cloud processing but encountered an error: {{error}}. Please check your connection and try again."
+title = "Cloud Processing Failed"
+
 [desktop.titleBar]
 maximize = "Розгорнути"
 minimize = "Згорнути"
@@ -4485,7 +4502,37 @@ title = "Статистика кінцевих точок"
 [error]
 _value = "Помилка"
 dismissAllErrors = "Закрити всі помилки"
+failedFiles = "Failed files: {{ids}}"
 generic = "Сталася помилка"
+invalidOrCorruptedFiles = "Process failed due to invalid/corrupted file(s)"
+networkError = "Network error"
+requestError = "Request error"
+requestFailed = "Request failed"
+requestFallback = "There was an error processing your request."
+serverError = "Server error"
+unknown = "Unknown error occurred"
+
+[error.pdfOpen]
+code = "Could not open the PDF (error {{code}})."
+corrupted = "The PDF file is corrupted and could not be read."
+invalid = "This file is not a valid PDF or is corrupted."
+pageLoadFailed = "A page in this PDF could not be loaded."
+passwordProtected = "This PDF is password-protected."
+unknown = "Could not open the PDF (unknown error)."
+unsupportedSecurity = "This PDF uses an unsupported security scheme."
+
+[error.processing]
+cancelled = "Processing was cancelled by user."
+corruption = "This PDF file appears to be corrupted or encrypted. Please try a different file."
+failed = "Processing failed: {{message}}"
+memory = "Insufficient memory to process this file. Try closing other applications or processing a smaller file."
+network = "Network connection failed. Please check your internet connection and try again."
+parsing = "Failed to process PDF: {{message}}"
+timeout = "Processing timed out. This file may be too large or complex to process."
+
+[errorBoundary]
+title = "Something went wrong"
+tryAgain = "Try Again"
 
 [extractImages]
 allowDuplicates = "Зберігати дублікати зображень"
@@ -4905,21 +4952,31 @@ addFolderFailed = "Не вдалося додати папку."
 addFolderFailedDetail = "Не вдалося додати папку: {{message}}"
 cloudDeleteFailed_one = "Couldn't delete 1 file from the cloud."
 cloudDeleteFailed_other = "Couldn't delete {{count}} files from the cloud."
+createOutsideMount = "Cannot create a folder outside a mounted directory"
 deleteFolderFailed = "Не вдалося видалити папку."
 deleteFolderFailedDetail = "Не вдалося видалити папку: {{message}}"
+diskFoldersUnsupported = "This build cannot create folders on disk"
 downloadFailed = "Could not download the file."
 duplicateFailed = "Could not duplicate the file."
 folderAppearanceFailed = "Не вдалося оновити вигляд папки."
 folderAppearanceFailedDetail = "Не вдалося оновити вигляд папки: {{message}}"
+folderDetachFailed = "Folder was deleted, but some files couldn't be detached locally. Refresh to fix."
+folderOperationFailed = "Folder operation failed"
+folderSyncFailed = "Folder sync failed: {{message}}"
+loadFilesFailed = "Failed to load files"
+moveAcrossKinds = "Folders can only move within their own kind"
 moveFilesFailed = "Не вдалося перемістити файли."
 moveFilesFailedDetail = "Не вдалося перемістити файли: {{message}}"
 moveFolderFailed = "Не вдалося перемістити папку."
 moveFolderFailedDetail = "Не вдалося перемістити папку: {{message}}"
+moveLocalFolder = "A local folder sits where its directory sits"
 openDiskFileFailed = "Не вдалося відкрити {{name}}."
 openDiskFileFailedDetail = "Не вдалося відкрити {{name}}: {{message}}"
 processingStatusUnavailable = "Не вдалося оновити стан обробки. Блокування файлів знято до відновлення з’єднання."
 readFolderFailed = "Не вдалося прочитати папку."
 readFolderFailedDetail = "Не вдалося прочитати папку: {{message}}"
+recolourLocalFolder = "Local folders cannot be recoloured yet"
+removeDiskSubfolder = "Subfolders of a mounted directory are removed on disk"
 removeFilesFailed = "Не вдалося видалити файли."
 removeFilesFailedDetail = "Не вдалося видалити файли: {{message}}"
 removeFolderFailed = "Не вдалося видалити папку."
@@ -5051,6 +5108,22 @@ grid = "Плитковий вигляд"
 label = "Режим перегляду"
 list = "Списковий вигляд"
 
+[fileStorage.unreadable]
+body = "\"{{name}}\" is saved in this browser but its contents can no longer be read. Upload the file again to keep working on it."
+title = "File data is unavailable"
+
+[fileSync.openFailed]
+multiple_one = "Couldn't open {{count}} file including \"{{name}}\"."
+multiple_other = "Couldn't open {{count}} files including \"{{name}}\"."
+single = "Couldn't open \"{{name}}\"."
+singleWithStatus = "Couldn't open \"{{name}}\" (HTTP {{status}})."
+title = "Some files couldn't be opened"
+
+[fileSync.pullFailed]
+body = "Showing only files cached in this browser. Refresh to retry once the connection is back."
+signInTitle = "Sign-in required to load cloud files"
+unreachableTitle = "Could not reach the cloud library"
+
 [fileToPDF]
 tags = "перетворення,формат,документ,картинка,презентація,текст,конвертація,офіс,документи,word,excel,powerpoint"
 title = "Файл у PDF"
@@ -5058,6 +5131,7 @@ title = "Файл у PDF"
 [fileUpload]
 dropFilesHere = "Перетягніть файли сюди або натисніть кнопку завантаження"
 dropFilesHereOpen = "Перетягніть файли сюди або натисніть кнопку відкриття"
+droppedFileUnreadable = "Could not read a dropped file."
 filesAvailableCount_one = "Доступний {{count}} файл"
 filesAvailableCount_other = "Доступно {{count}} файлів"
 loadFromStorage = "Завантажити зі сховища"
@@ -5089,6 +5163,7 @@ passwordMustBeDifferent = "Новий пароль має відрізнятис
 passwordsDoNotMatch = "Нові паролі не збігаються"
 passwordTooShort = "Пароль має бути щонайменше 8 символів"
 reEnterNewPassword = "Введіть новий пароль ще раз"
+setPasswordTitle = "Set Your Password"
 title = "Перший вхід"
 welcomeMessage = "З міркувань безпеки під час першого входу потрібно змінити пароль."
 welcomeTitle = "Ласкаво просимо!"
@@ -5927,6 +6002,7 @@ signin = "Увійти"
 signingIn = "Вхід..."
 signInWith = "Увійти за допомогою"
 signInWithProvider = "Увійти через {{provider}}"
+ssoRedirectFailed = "SSO redirect failed"
 title = "Вхід"
 unexpectedError = "Неочікувана помилка: {{message}}"
 updatePassword = "Оновити пароль"
@@ -6524,6 +6600,32 @@ rotateLeft = "Повернути вліво"
 rotateRight = "Повернути вправо"
 splitAfter = "Розділити після"
 
+[pageEditor.commands]
+addSplitAt = "Add split at position {{position}}"
+addSplits_one = "Add {{count}} split"
+addSplits_other = "Add {{count}} splits"
+deletePages_one = "Delete {{count}} page"
+deletePages_other = "Delete {{count}} pages"
+insertFiles_one = "Insert {{count}} file after page {{page}}"
+insertFiles_other = "Insert {{count}} files after page {{page}}"
+insertPageBreaks_one = "Insert {{count}} page break"
+insertPageBreaks_other = "Insert {{count}} page breaks"
+insertPageBreaksAll = "Insert page breaks after all pages"
+removeAllSplits = "Remove all splits"
+removeSplitAt = "Remove split at position {{position}}"
+removeSplits_one = "Remove {{count}} split"
+removeSplits_other = "Remove {{count}} splits"
+reorderPages = "Reorder pages"
+rotatePageLeft = "Rotate page left"
+rotatePageRight = "Rotate page right"
+rotatePagesLeft_one = "Rotate {{count}} page left"
+rotatePagesLeft_other = "Rotate {{count}} pages left"
+rotatePagesRight_one = "Rotate {{count}} page right"
+rotatePagesRight_other = "Rotate {{count}} pages right"
+splitAllPages = "Split all pages"
+toggleSplits_one = "Toggle {{count}} split position"
+toggleSplits_other = "Toggle {{count}} split positions"
+
 [pageEditor.emptyState]
 body = "Додайте файли, щоб почати редагувати сторінки"
 title = "Файли PDF не завантажено"
@@ -6933,6 +7035,7 @@ thisPeriod = "This billing period"
 billingPeriod = "Платіжний період"
 cancelTeamChange = "Зберегти поточний план"
 canCloseWindow = "Можете закрити це вікно."
+createSessionFailed = "Failed to create checkout session"
 error = "Помилка оплати"
 generatingLicense = "Генеруємо ваш ліцензійний ключ..."
 licenseActivated = "Ліцензію активовано! Ваш ліцензійний ключ збережено. Підтвердження надіслано на вашу email-адресу."
@@ -6948,6 +7051,7 @@ monthly = "Щомісяця"
 paymentCanceled = "Платіж скасовано. Списань не було."
 perMonth = "/місяць"
 perUserBlock = "за 100 користувачів"
+planPeriodUnavailable = "Selected plan period is not available"
 preparing = "Підготовка оплати..."
 redirecting = "Переадресація на безпечну оплату..."
 success = "Платіж успішний!"
@@ -7095,6 +7199,16 @@ freetext = "Текст анотації — не текст сторінки, т
 stamp = "Анотація штампа — не текст сторінки, тому її не можна редагувати тут"
 widget = "Поле форми — не текст сторінки, тому його не можна редагувати тут"
 
+[pdfTextEditor.commands]
+edit = "Edit"
+mergeRuns_one = "Merge {{count}} run into a paragraph"
+mergeRuns_other = "Merge {{count}} runs into a paragraph"
+setColour = "Set colour on {{run}}"
+setOutline = "Set outline on {{run}}"
+typeInto = "Type into {{run}}"
+ungroupParagraph = "Ungroup paragraph {{run}}"
+wrap = "Wrap {{run}}"
+
 [pdfTextEditor.discard]
 body = "Відкриття {{name}} закриє документ, який ви редагуєте. Ваші незбережені зміни буде втрачено."
 cancel = "Скасувати"
@@ -7109,6 +7223,9 @@ title = "Перетягніть PDF, щоб відкрити"
 [pdfTextEditor.error]
 decodeImage = "Не вдалося декодувати вибране зображення."
 insertImage = "Не вдалося вставити вибране зображення."
+
+[pdfTextEditor.externalEdit]
+pngFileType = "PNG image"
 
 [pdfTextEditor.find]
 close = "Закрити панель пошуку"
@@ -7211,12 +7328,14 @@ heightHint = "Висота текстового поля відповідає р
 image = "Зображення"
 images = "Зображення"
 manyImages = "{{count}} зображень"
+manyShapes = "{{count}} shapes"
 manyText = "Текст · {{count}} полів"
 mixed = "{{count}} об’єктів"
 multiGeometry = "Виберіть один об’єкт, щоб редагувати його позицію та розмір."
 nothingSelected = "Нічого не вибрано"
 nothingSelectedHint = "Натисніть будь-який текст або зображення на сторінці, щоб редагувати його тут."
 oneImage = "Зображення"
+oneShape = "Shape"
 oneText = "Текст"
 pages = "Сторінки"
 tabDocument = "Документ"
@@ -7281,6 +7400,9 @@ advanced = "Додатково"
 find = "Знайти в документі"
 findTooltip = "Знайти ({{shortcut}})"
 view = "Перегляд"
+
+[pdfTextEditor.shape]
+groupedTitle = "Part of a group in this PDF: it can be deleted but not moved."
 
 [pdfTextEditor.sidebar]
 addImage = "Додати зображення"
@@ -11932,11 +12054,18 @@ useLast = "Last used server: {{serverUrl}}"
 [setup.server.error]
 configFetch = "Не вдалося отримати конфігурацію сервера. Перевірте URL і спробуйте ще раз."
 configFetchError = "Не вдалося отримати конфігурацію сервера: {{error}}"
+dnsFailed = "Cannot resolve hostname: {{hostname}}"
 emptyUrl = "Введіть URL сервера"
+httpOnly = "Server is only accessible via HTTP (not HTTPS)."
+httpsOnly = "Server is only accessible via HTTPS, not HTTP."
 invalidUrl = "Неправильний формат URL. Введіть коректний URL на зразок https://your-server.com"
+methodMismatch = "Server responds to HEAD requests but not GET requests."
+networkBlocked = "No internet connectivity detected. All network requests are failing."
+serverUnreachable = "Cannot connect to server. Internet works but this specific server is unreachable."
 testFailed = "Тест підключення не вдався"
 unknown = "Невідома помилка"
 unreachable = "Не вдалося під’єднатися до сервера"
+userAgentBlocked = "Server blocks Tauri/desktop app User-Agent but allows browser User-Agent."
 
 [setup.server.error.securityDisabled]
 body = "На цьому сервері не ввімкнено вхід. Щоб підключитися до цього сервера, потрібно ввімкнути автентифікацію:"
@@ -13283,6 +13412,12 @@ previewUnavailable = "Попередній перегляд недоступни
 renderMarkdown = "Відображати Markdown"
 sortedBy = "Відсортовано за: {{column}}"
 textStats = "{{lines}} рядків · {{size}}"
+
+[viewer.nonPdf.fileType]
+file = "File"
+image = "Image"
+spreadsheet = "Spreadsheet"
+text = "Text"
 
 [viewer.portfolio]
 addFile = "Додати файл"

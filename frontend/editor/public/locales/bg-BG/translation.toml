@@ -2476,7 +2476,16 @@ checking = "Проверка на състоянието на бекенда..."
 offline = "Бекенд офлайн"
 online = "Бекенд онлайн"
 starting = "Стартиране на бекенда..."
+unavailable = "Backend is unavailable"
 wait = "Моля, изчакайте бекендът да завърши стартирането и опитайте отново."
+
+[backendHealth.restart]
+attempting = "Attempting to restart... ({{attempt}}/{{max}})"
+failedBody = "The local backend could not be recovered. Please restart the app."
+failedTitle = "Backend failed to restart"
+stoppedTitle = "Backend stopped unexpectedly"
+successBody = "The local backend is back online."
+successTitle = "Backend restarted"
 
 [backendStartup]
 notFoundTitle = "Бекендът не е намерен"
@@ -4288,6 +4297,14 @@ title = "Настройките са отворени"
 message = "Stirling PDF вече е вашият редактор на PDF по подразбиране"
 title = "Зададено приложение по подразбиране"
 
+[desktop.fileSave]
+saveFilesTitle_one = "Save {{count}} file"
+saveFilesTitle_other = "Save {{count}} files"
+
+[desktop.saasError]
+body = "This tool requires cloud processing but encountered an error: {{error}}. Please check your connection and try again."
+title = "Cloud Processing Failed"
+
 [desktop.titleBar]
 maximize = "Максимизирай"
 minimize = "Минимизирай"
@@ -4485,7 +4502,37 @@ title = "Статистика на крайни точки"
 [error]
 _value = "Грешка"
 dismissAllErrors = "Отхвърли всички грешки"
+failedFiles = "Failed files: {{ids}}"
 generic = "Възникна грешка"
+invalidOrCorruptedFiles = "Process failed due to invalid/corrupted file(s)"
+networkError = "Network error"
+requestError = "Request error"
+requestFailed = "Request failed"
+requestFallback = "There was an error processing your request."
+serverError = "Server error"
+unknown = "Unknown error occurred"
+
+[error.pdfOpen]
+code = "Could not open the PDF (error {{code}})."
+corrupted = "The PDF file is corrupted and could not be read."
+invalid = "This file is not a valid PDF or is corrupted."
+pageLoadFailed = "A page in this PDF could not be loaded."
+passwordProtected = "This PDF is password-protected."
+unknown = "Could not open the PDF (unknown error)."
+unsupportedSecurity = "This PDF uses an unsupported security scheme."
+
+[error.processing]
+cancelled = "Processing was cancelled by user."
+corruption = "This PDF file appears to be corrupted or encrypted. Please try a different file."
+failed = "Processing failed: {{message}}"
+memory = "Insufficient memory to process this file. Try closing other applications or processing a smaller file."
+network = "Network connection failed. Please check your internet connection and try again."
+parsing = "Failed to process PDF: {{message}}"
+timeout = "Processing timed out. This file may be too large or complex to process."
+
+[errorBoundary]
+title = "Something went wrong"
+tryAgain = "Try Again"
 
 [extractImages]
 allowDuplicates = "Запазване на дублирани изображения"
@@ -4905,21 +4952,31 @@ addFolderFailed = "Папката не можа да бъде добавена."
 addFolderFailedDetail = "Папката не можа да бъде добавена: {{message}}"
 cloudDeleteFailed_one = "Couldn't delete 1 file from the cloud."
 cloudDeleteFailed_other = "Couldn't delete {{count}} files from the cloud."
+createOutsideMount = "Cannot create a folder outside a mounted directory"
 deleteFolderFailed = "Папката не можа да бъде изтрита."
 deleteFolderFailedDetail = "Папката не можа да бъде изтрита: {{message}}"
+diskFoldersUnsupported = "This build cannot create folders on disk"
 downloadFailed = "Could not download the file."
 duplicateFailed = "Could not duplicate the file."
 folderAppearanceFailed = "Неуспешно обновяване на външния вид на папката."
 folderAppearanceFailedDetail = "Неуспешно обновяване на външния вид на папката: {{message}}"
+folderDetachFailed = "Folder was deleted, but some files couldn't be detached locally. Refresh to fix."
+folderOperationFailed = "Folder operation failed"
+folderSyncFailed = "Folder sync failed: {{message}}"
+loadFilesFailed = "Failed to load files"
+moveAcrossKinds = "Folders can only move within their own kind"
 moveFilesFailed = "Файловете не можаха да бъдат преместени."
 moveFilesFailedDetail = "Файловете не можаха да бъдат преместени: {{message}}"
 moveFolderFailed = "Папката не можа да бъде преместена."
 moveFolderFailedDetail = "Папката не можа да бъде преместена: {{message}}"
+moveLocalFolder = "A local folder sits where its directory sits"
 openDiskFileFailed = "{{name}} не можа да бъде отворен."
 openDiskFileFailedDetail = "{{name}} не можа да бъде отворен: {{message}}"
 processingStatusUnavailable = "Състоянието на обработката не можа да бъде обновено. Заключванията на файловете са освободени, докато връзката се възстанови."
 readFolderFailed = "Папката не можа да бъде прочетена."
 readFolderFailedDetail = "Папката не можа да бъде прочетена: {{message}}"
+recolourLocalFolder = "Local folders cannot be recoloured yet"
+removeDiskSubfolder = "Subfolders of a mounted directory are removed on disk"
 removeFilesFailed = "Файловете не можаха да бъдат изтрити."
 removeFilesFailedDetail = "Файловете не можаха да бъдат изтрити: {{message}}"
 removeFolderFailed = "Папката не можа да бъде премахната."
@@ -5051,6 +5108,22 @@ grid = "Мрежов изглед"
 label = "Режим на изглед"
 list = "Списъчен изглед"
 
+[fileStorage.unreadable]
+body = "\"{{name}}\" is saved in this browser but its contents can no longer be read. Upload the file again to keep working on it."
+title = "File data is unavailable"
+
+[fileSync.openFailed]
+multiple_one = "Couldn't open {{count}} file including \"{{name}}\"."
+multiple_other = "Couldn't open {{count}} files including \"{{name}}\"."
+single = "Couldn't open \"{{name}}\"."
+singleWithStatus = "Couldn't open \"{{name}}\" (HTTP {{status}})."
+title = "Some files couldn't be opened"
+
+[fileSync.pullFailed]
+body = "Showing only files cached in this browser. Refresh to retry once the connection is back."
+signInTitle = "Sign-in required to load cloud files"
+unreachableTitle = "Could not reach the cloud library"
+
 [fileToPDF]
 tags = "трансформация,формат,документ,изображение,слайд,текст,преобразуване,офис,документи,word,excel,powerpoint"
 title = "Файл към PDF"
@@ -5058,6 +5131,7 @@ title = "Файл към PDF"
 [fileUpload]
 dropFilesHere = "Пуснете файловете тук или кликнете бутона за качване"
 dropFilesHereOpen = "Пуснете файловете тук или щракнете върху бутона за отваряне"
+droppedFileUnreadable = "Could not read a dropped file."
 filesAvailableCount_one = "Наличен {{count}} файл"
 filesAvailableCount_other = "Налични {{count}} файла"
 loadFromStorage = "Зареди от хранилище"
@@ -5089,6 +5163,7 @@ passwordMustBeDifferent = "Новата парола трябва да е раз
 passwordsDoNotMatch = "Новите пароли не съвпадат"
 passwordTooShort = "Паролата трябва да е поне 8 знака"
 reEnterNewPassword = "Въведете отново новата парола"
+setPasswordTitle = "Set Your Password"
 title = "Първи вход"
 welcomeMessage = "От съображения за сигурност трябва да смените паролата си при първия вход."
 welcomeTitle = "Добре дошли!"
@@ -5927,6 +6002,7 @@ signin = "Впишете се"
 signingIn = "Влизане..."
 signInWith = "Вход с"
 signInWithProvider = "Вход с {{provider}}"
+ssoRedirectFailed = "SSO redirect failed"
 title = "Вход"
 unexpectedError = "Неочаквана грешка: {{message}}"
 updatePassword = "Актуализиране на парола"
@@ -6524,6 +6600,32 @@ rotateLeft = "Завъртане наляво"
 rotateRight = "Завъртане надясно"
 splitAfter = "Разделяне след"
 
+[pageEditor.commands]
+addSplitAt = "Add split at position {{position}}"
+addSplits_one = "Add {{count}} split"
+addSplits_other = "Add {{count}} splits"
+deletePages_one = "Delete {{count}} page"
+deletePages_other = "Delete {{count}} pages"
+insertFiles_one = "Insert {{count}} file after page {{page}}"
+insertFiles_other = "Insert {{count}} files after page {{page}}"
+insertPageBreaks_one = "Insert {{count}} page break"
+insertPageBreaks_other = "Insert {{count}} page breaks"
+insertPageBreaksAll = "Insert page breaks after all pages"
+removeAllSplits = "Remove all splits"
+removeSplitAt = "Remove split at position {{position}}"
+removeSplits_one = "Remove {{count}} split"
+removeSplits_other = "Remove {{count}} splits"
+reorderPages = "Reorder pages"
+rotatePageLeft = "Rotate page left"
+rotatePageRight = "Rotate page right"
+rotatePagesLeft_one = "Rotate {{count}} page left"
+rotatePagesLeft_other = "Rotate {{count}} pages left"
+rotatePagesRight_one = "Rotate {{count}} page right"
+rotatePagesRight_other = "Rotate {{count}} pages right"
+splitAllPages = "Split all pages"
+toggleSplits_one = "Toggle {{count}} split position"
+toggleSplits_other = "Toggle {{count}} split positions"
+
 [pageEditor.emptyState]
 body = "Добавете файлове, за да започнете редактиране на страници"
 title = "Няма заредени PDF файлове"
@@ -6933,6 +7035,7 @@ thisPeriod = "This billing period"
 billingPeriod = "Период на фактуриране"
 cancelTeamChange = "Запазване на текущия план"
 canCloseWindow = "Можете да затворите този прозорец."
+createSessionFailed = "Failed to create checkout session"
 error = "Грешка при плащане"
 generatingLicense = "Генериране на лицензния ви ключ..."
 licenseActivated = "Лицензът е активиран! Лицензният ви ключ е запазен. Изпратено е потвърждение на регистрирания ви имейл."
@@ -6948,6 +7051,7 @@ monthly = "Месечно"
 paymentCanceled = "Плащането беше отменено. Не са начислени суми."
 perMonth = "/месец"
 perUserBlock = "за 100 потребители"
+planPeriodUnavailable = "Selected plan period is not available"
 preparing = "Подготвя се плащането ви..."
 redirecting = "Пренасочване към защитено плащане..."
 success = "Плащането е успешно!"
@@ -7095,6 +7199,16 @@ freetext = "Текст на анотация - не е текст на стра�
 stamp = "Анотация с печат - не е текст на страницата, затова не може да се редактира тук"
 widget = "Поле на формуляр - не е текст на страницата, затова не може да се редактира тук"
 
+[pdfTextEditor.commands]
+edit = "Edit"
+mergeRuns_one = "Merge {{count}} run into a paragraph"
+mergeRuns_other = "Merge {{count}} runs into a paragraph"
+setColour = "Set colour on {{run}}"
+setOutline = "Set outline on {{run}}"
+typeInto = "Type into {{run}}"
+ungroupParagraph = "Ungroup paragraph {{run}}"
+wrap = "Wrap {{run}}"
+
 [pdfTextEditor.discard]
 body = "Отварянето на {{name}} затваря документа, който редактирате. Незапазените ви промени ще бъдат загубени."
 cancel = "Отказ"
@@ -7109,6 +7223,9 @@ title = "Пуснете PDF за отваряне"
 [pdfTextEditor.error]
 decodeImage = "Избраното изображение не можа да бъде декодирано."
 insertImage = "Избраното изображение не можа да бъде вмъкнато."
+
+[pdfTextEditor.externalEdit]
+pngFileType = "PNG image"
 
 [pdfTextEditor.find]
 close = "Затваряне на лентата за търсене"
@@ -7211,12 +7328,14 @@ heightHint = "Височината на текстово поле следва �
 image = "Изображение"
 images = "Изображения"
 manyImages = "{{count}} изображения"
+manyShapes = "{{count}} shapes"
 manyText = "Текст · {{count}} полета"
 mixed = "{{count}} обекта"
 multiGeometry = "Изберете един обект, за да редактирате позицията и размера му."
 nothingSelected = "Нищо не е избрано"
 nothingSelectedHint = "Щракнете върху текст или изображение на страницата, за да го редактирате тук."
 oneImage = "Изображение"
+oneShape = "Shape"
 oneText = "Текст"
 pages = "Страници"
 tabDocument = "Документ"
@@ -7281,6 +7400,9 @@ advanced = "Разширени"
 find = "Търсене в документа"
 findTooltip = "Търсене ({{shortcut}})"
 view = "Изглед"
+
+[pdfTextEditor.shape]
+groupedTitle = "Part of a group in this PDF: it can be deleted but not moved."
 
 [pdfTextEditor.sidebar]
 addImage = "Добавяне на изображение"
@@ -11932,11 +12054,18 @@ useLast = "Last used server: {{serverUrl}}"
 [setup.server.error]
 configFetch = "Неуспешно извличане на конфигурацията на сървъра. Моля, проверете URL адреса и опитайте отново."
 configFetchError = "Грешка при извличане на конфигурацията на сървъра: {{error}}"
+dnsFailed = "Cannot resolve hostname: {{hostname}}"
 emptyUrl = "Моля, въведете URL на сървър"
+httpOnly = "Server is only accessible via HTTP (not HTTPS)."
+httpsOnly = "Server is only accessible via HTTPS, not HTTP."
 invalidUrl = "Невалиден формат на URL. Въведете валиден URL като https://your-server.com"
+methodMismatch = "Server responds to HEAD requests but not GET requests."
+networkBlocked = "No internet connectivity detected. All network requests are failing."
+serverUnreachable = "Cannot connect to server. Internet works but this specific server is unreachable."
 testFailed = "Тестът на връзката е неуспешен"
 unknown = "Неизвестна грешка"
 unreachable = "Неуспешна връзка със сървъра"
+userAgentBlocked = "Server blocks Tauri/desktop app User-Agent but allows browser User-Agent."
 
 [setup.server.error.securityDisabled]
 body = "На този сървър не е активиран вход. За да се свържете, трябва да активирате удостоверяване:"
@@ -13283,6 +13412,12 @@ previewUnavailable = "Прегледът не е наличен за този т
 renderMarkdown = "Рендерирай Markdown"
 sortedBy = "Сортирано по: {{column}}"
 textStats = "{{lines}} реда · {{size}}"
+
+[viewer.nonPdf.fileType]
+file = "File"
+image = "Image"
+spreadsheet = "Spreadsheet"
+text = "Text"
 
 [viewer.portfolio]
 addFile = "Добавяне на файл"
