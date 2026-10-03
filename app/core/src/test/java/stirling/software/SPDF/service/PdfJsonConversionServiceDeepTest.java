@@ -124,6 +124,8 @@ class PdfJsonConversionServiceDeepTest {
                         fontService,
                         type3FontConversionService,
                         type3GlyphExtractor,
+                        new stirling.software.SPDF.service.pdfjson.font.PdfFontResolver(),
+                        new stirling.software.SPDF.service.pdfjson.parsing.PdfGlyphCounter(),
                         applicationProperties);
 
         when(tempFileManager.createTempFile(anyString()))
