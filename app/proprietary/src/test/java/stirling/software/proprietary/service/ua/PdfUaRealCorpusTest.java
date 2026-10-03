@@ -4,12 +4,15 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Stream;
+import java.util.Set;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -36,12 +39,20 @@ class PdfUaRealCorpusTest {
     /** Files the converter is expected to refuse rather than process. */
     private static final List<String> EXPECTED_REJECTS = List.of("encrypted.pdf", "corrupted.pdf");
 
-    // Files the font-embedding pass still alters, measured 2026-08-28. Both are
-    // ADDITIONS, not loss: the embedder flattens a widget annotation into the
-    // page, and injects spaces into rotated text. Loss is caught by
-    // FontEmbeddingService, which keeps the original instead.
+    /**
+     * Files the font-embedding pass alters, all additions rather than loss: pdfwrite drops the
+     * AcroForm and paints each widget's appearance into the page, so field values PDFBox skipped as
+     * annotations become page text; it also injects spaces into rotated text. Loss is caught by
+     * FontEmbeddingService, which keeps the original instead.
+     *
+     * <p>Only exercised where Ghostscript is installed. The PR test job has none, so the embedder
+     * is a no-op there and this list is checked on developer machines alone.
+     */
     private static final List<String> KNOWN_EMBED_TEXT_DIFFS =
-            List.of("rotated-text-sample.pdf", "annotation-text-sample.pdf");
+            List.of(
+                    "rotated-text-sample.pdf",
+                    "annotation-text-sample.pdf",
+                    "form-fields-sample.pdf");
 
     @BeforeAll
     static void setUp() {
@@ -214,24 +225,41 @@ class PdfUaRealCorpusTest {
         return sb.toString().replaceAll("\\s+", " ").strip();
     }
 
+    /**
+     * Directories whose PDFs are not this tree's: dependencies, build output, and Playwright's
+     * gitignored test-results, which would make the corpus depend on what a local run left behind.
+     */
+    private static final Set<String> SKIPPED_DIRS =
+            Set.of("node_modules", "build", ".git", "test-results");
+
     private List<Path> findPdfs() throws IOException {
-        try (Stream<Path> stream = Files.walk(repoRoot)) {
-            return stream.filter(Files::isRegularFile)
-                    .filter(p -> p.toString().toLowerCase().endsWith(".pdf"))
-                    .filter(p -> !p.toString().contains("node_modules"))
-                    .filter(p -> !p.toString().contains(File_BUILD))
-                    .filter(p -> !p.toString().contains(".git"))
-                    .filter(p -> !p.toString().contains(File_TEST_RESULTS))
-                    .sorted(Comparator.comparing(Path::toString))
-                    .toList();
-        }
+        List<Path> pdfs = new ArrayList<>();
+        Files.walkFileTree(
+                repoRoot,
+                new SimpleFileVisitor<>() {
+                    @Override
+                    public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
+                        // A worktree parked under the root has its own .git; its PDFs belong to
+                        // whatever branch it has checked out, not to this tree.
+                        boolean nestedCheckout =
+                                !dir.equals(repoRoot) && Files.exists(dir.resolve(".git"));
+                        return nestedCheckout
+                                        || SKIPPED_DIRS.contains(String.valueOf(dir.getFileName()))
+                                ? FileVisitResult.SKIP_SUBTREE
+                                : FileVisitResult.CONTINUE;
+                    }
+
+                    @Override
+                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+                        if (file.toString().toLowerCase().endsWith(".pdf")) {
+                            pdfs.add(file);
+                        }
+                        return FileVisitResult.CONTINUE;
+                    }
+                });
+        pdfs.sort(Comparator.comparing(Path::toString));
+        return pdfs;
     }
-
-    private static final String File_BUILD = "build" + java.io.File.separator;
-
-    // Playwright output, gitignored: leaving it in makes the corpus depend on
-    // what a local test run happened to leave behind.
-    private static final String File_TEST_RESULTS = "test-results" + java.io.File.separator;
 
     private static String render(List<Outcome> outcomes) {
         StringBuilder sb = new StringBuilder("\nPDF/UA conversion over the repository corpus\n");
