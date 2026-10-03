@@ -74,7 +74,7 @@ env:
     frontend/editor/src-tauri
     frontend/editor/src-tauri/Cargo.toml
     frontend/editor/src-tauri/Cargo.lock
-  FRONTEND_DIST: |
+  FRONTEND_DIST_FILES_TO_HASH: |
     frontend/editor/src
 
 jobs:
@@ -158,7 +158,7 @@ jobs:
         env:
           GRADLE_HASH: ${{ hashFiles(env.GRADLE_FILES_TO_HASH) }}
           CARGO_HASH: ${{ hashFiles(env.CARGO_FILES_TO_HASH) }}
-          FRONTEND_DIST_HASH: ${{ hashFiles(env.FRONTEND_DIST_HASH) }}
+          FRONTEND_DIST_HASH: ${{ hashFiles(env.FRONTEND_DIST_FILES_TO_HASH) }}
         shell: bash
         run: |
           echo "java_version=${{ env.JAVA_VERSION }}" >> "$GITHUB_OUTPUT"
