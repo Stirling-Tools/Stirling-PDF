@@ -5,6 +5,7 @@ import {
   readPortfolioMemberBytes,
   readPortfolioMembers,
 } from "@app/utils/portfolioMembers";
+import { getDocumentBytes } from "@app/services/documentBytesCache";
 
 const buildPdf = async (options: {
   collection: boolean;
@@ -52,14 +53,14 @@ describe("readPortfolioMembers", () => {
     expect(await readPortfolioMembers(file)).toBeNull();
   });
 
-  it("does not keep a non-portfolio's parsed bytes cached", async () => {
+  it("shares a single document-bytes read across repeated scans", async () => {
     const file = await buildPdf({ collection: false });
-    await readPortfolioMembers(file);
-
     const arrayBuffer = vi.spyOn(file, "arrayBuffer");
+    await readPortfolioMembers(file);
     await readPortfolioMemberBytes(file, "anything");
 
-    expect(arrayBuffer).toHaveBeenCalled();
+    // Both scans go through documentBytesCache: one full-file copy total.
+    expect(arrayBuffer).toHaveBeenCalledTimes(1);
   });
 
   it("keeps a portfolio cached so reading a member does not reparse it", async () => {
@@ -74,5 +75,43 @@ describe("readPortfolioMembers", () => {
 
     expect(new TextDecoder().decode(bytes ?? new Uint8Array())).toBe("hello");
     expect(arrayBuffer).not.toHaveBeenCalled();
+  });
+});
+
+describe("getDocumentBytes", () => {
+  it("returns the same buffer for the same Blob without re-reading", async () => {
+    const doc = await PDFDocument.create();
+    doc.addPage();
+    const bytes = await doc.save();
+    const blob = new Blob([bytes as BlobPart], { type: "application/pdf" });
+
+    const first = await getDocumentBytes(blob);
+    const second = await getDocumentBytes(blob);
+
+    expect(second).toBe(first);
+    expect(first.byteLength).toBeGreaterThan(0);
+  });
+
+  it("shares reads across re-wrapped Files with identical identity metadata", async () => {
+    const doc = await PDFDocument.create();
+    doc.addPage();
+    const bytes = await doc.save();
+    const lastModified = 1726500000000;
+    const first = new File([bytes as BlobPart], "shared-doc.pdf", {
+      type: "application/pdf",
+      lastModified,
+    });
+    const second = new File([bytes as BlobPart], "shared-doc.pdf", {
+      type: "application/pdf",
+      lastModified,
+    });
+    const secondRead = vi.spyOn(second, "arrayBuffer");
+
+    await getDocumentBytes(first);
+    const shared = await getDocumentBytes(second);
+
+    expect(shared).toBe(await getDocumentBytes(first));
+    // Resolved from the file-key tier: no second full-file copy.
+    expect(secondRead).not.toHaveBeenCalled();
   });
 });
