@@ -814,6 +814,14 @@ public class GeneralUtils {
         return text;
     }
 
+    /**
+     * Handles a single page number, open-start/open-end range, or n-function token.
+     *
+     * @param part the page token to parse
+     * @param totalPages maximum number of pages in the document
+     * @param offset page numbering offset (0 or 1)
+     * @return list of parsed 0-based or 1-based page numbers
+     */
     private List<Integer> handlePart(String part, int totalPages, int offset) {
         List<Integer> partResult = new ArrayList<>();
         String trimmedPart = part == null ? "" : part.trim();
