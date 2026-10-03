@@ -41,6 +41,7 @@ import {
   measureMaxLineWidth,
   resetTextMetricsCache,
 } from "@app/tools/pdfTextEditor/util/textMetrics";
+import { MIN_WRAP_WIDTH_EM } from "@app/tools/pdfTextEditor/commands/ReflowWrapCommand";
 import "@app/tools/pdfTextEditor/components/TextRunOverlay.css";
 
 const RENDER_MODE_INVISIBLE = 3;
@@ -311,20 +312,16 @@ interface TextRunOverlayProps {
   // Fires on blur in Wrap mode when the edited content overflows the locked box
   // width.
   onWrap?: (maxWidthPt: number) => void;
+  /** Fires when the user drags the right edge to a new width, in PDF points. */
+  onResize?: (widthPt: number) => void;
 }
 
 /**
- * Which gesture the pointer is over: the frame, or the text interior.
- *
- * There is deliberately no resize zone. Re-wrapping to an arbitrary width goes
- * through ReflowWrapCommand, whose word grouping is x-gap based - on a run
- * whose glyphs are individually positioned (letter-spaced headings, button
- * labels) every glyph becomes its own "word" and the line breaker splits
- * inside words, shredding "Open Source" into one character per line. Until
- * that grouping is token-aware, a drag handle would make the corruption a
- * one-gesture accident.
+ * Which gesture the pointer is over: the frame, the right edge, or the text
+ * interior. The right edge re-wraps the run to a new width; the rest of the
+ * frame moves it.
  */
-type EdgeZone = "move" | null;
+type EdgeZone = "move" | "resize" | null;
 
 /** Grab band around the box, in CSS px. Matches the visible ring's reach. */
 const EDGE_PX = 7;
@@ -340,12 +337,14 @@ function edgeZoneAt(
   el: HTMLElement,
   clientX: number,
   clientY: number,
+  canResize: boolean,
 ): EdgeZone {
   const r = el.getBoundingClientRect();
   const nearLeft = clientX - r.left <= EDGE_PX;
   const nearRight = r.right - clientX <= EDGE_PX;
   const nearTop = clientY - r.top <= EDGE_PX;
   const nearBottom = r.bottom - clientY <= EDGE_PX;
+  if (canResize && nearRight && !nearTop && !nearBottom) return "resize";
   if (nearTop || nearBottom || nearLeft || nearRight) return "move";
   return null;
 }
@@ -365,6 +364,7 @@ export function TextRunOverlay({
   onEdit,
   onMove,
   onWrap,
+  onResize,
 }: TextRunOverlayProps) {
   const { t } = useTranslation();
   // Subscribed, so toggling the preference re-renders every overlay.
@@ -411,6 +411,12 @@ export function TextRunOverlay({
   // Which edge the pointer is over, so the cursor can advertise the gesture
   // before the user commits to it. Null means the text interior.
   const [edgeZone, setEdgeZone] = useState<EdgeZone>(null);
+  // Live box width while the right edge is being dragged, in CSS px.
+  const [resizeWidthPx, setResizeWidthPx] = useState<number | null>(null);
+  // Detaches an in-flight resize's window listeners, so a cancelled or
+  // unmounted resize can never commit a width on a later pointerup.
+  const endResizeRef = useRef<(() => void) | null>(null);
+  useEffect(() => () => endResizeRef.current?.(), []);
   const originalBoundsWidthRef = useRef<number>(run.bounds.width);
   // Whether this run was a real (multi-line) paragraph when it first mounted.
 
@@ -667,8 +673,8 @@ export function TextRunOverlay({
   // fit the content.
   const wrapMode = widthMode === "wrap";
   const wrapLockWidth = Math.max(
-    originalBoundsWidthRef.current * scale,
-    fontSizePx * 4,
+    (run.wrapWidthPt ?? originalBoundsWidthRef.current) * scale,
+    fontSizePx * MIN_WRAP_WIDTH_EM,
   );
   // The mode the user picked, and nothing else. Forcing a paragraph to wrap in
   // Grow made the two modes indistinguishable for body text and contradicted
@@ -724,7 +730,10 @@ export function TextRunOverlay({
   // underneath it.
   // Wrap holds its width and pushes overflow onto new lines; widening to the
   // page edge instead is Grow's job, and doing both makes the modes identical.
-  const width = wantWrap ? wrapWidth : exact ? exactWidth : flowWidth;
+  const userWidthPx = (run.wrapWidthPt ?? 0) * scale;
+  const width = wantWrap
+    ? wrapWidth
+    : Math.max(exact ? exactWidth : flowWidth, userWidthPx);
   const height = exact ? exact.heightPx : flowHeight;
   // An exact layout is never wrapped - its lines are the PDF's own. Only the
   // plain-text fallback, where CSS flow genuinely owns the layout, may wrap.
@@ -752,6 +761,49 @@ export function TextRunOverlay({
 
   // Which dictionary the browser should load. "auto" falls back to the
   // page's own language, which is what the element would inherit anyway.
+  // The reflow lays text out along the page axis, so a turned run has no
+  // meaningful width to drag.
+  const canResize = !!onResize && !runRotation;
+  const minResizePx = fontSizePx * MIN_WRAP_WIDTH_EM;
+
+  function startResize(
+    originX: number,
+    pointerId: number,
+    commit: (widthPt: number) => void,
+  ) {
+    if (endResizeRef.current) return;
+    const startWidth = width;
+    setResizeWidthPx(startWidth);
+    const widthAt = (clientX: number) =>
+      Math.max(minResizePx, startWidth + clientX - originX);
+    const onPointerMove = (ev: PointerEvent) => {
+      if (ev.pointerId === pointerId) setResizeWidthPx(widthAt(ev.clientX));
+    };
+    const endResize = () => {
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
+      window.removeEventListener("pointercancel", onPointerCancel);
+      endResizeRef.current = null;
+      setResizeWidthPx(null);
+    };
+    const onPointerCancel = (ev: PointerEvent) => {
+      if (ev.pointerId === pointerId) endResize();
+    };
+    const onPointerUp = (ev: PointerEvent) => {
+      if (ev.pointerId !== pointerId) return;
+      endResize();
+      if (Math.abs(ev.clientX - originX) < 1) {
+        onSelect(false);
+        return;
+      }
+      commit(widthAt(ev.clientX) / scale);
+    };
+    endResizeRef.current = endResize;
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
+    window.addEventListener("pointercancel", onPointerCancel);
+  }
+
   const spellcheckLang = resolveLang(
     spellcheck,
     typeof document === "undefined" ? null : document.documentElement.lang,
@@ -799,7 +851,18 @@ export function TextRunOverlay({
         e.stopPropagation();
         // Locked runs are inert: no select, no drag, no edit.
         if (run.locked) return;
-        const zone = edgeZoneAt(e.currentTarget, e.clientX, e.clientY);
+        const zone = edgeZoneAt(
+          e.currentTarget,
+          e.clientX,
+          e.clientY,
+          canResize,
+        );
+        if (zone === "resize" && onResize) {
+          e.preventDefault();
+          e.currentTarget.blur();
+          startResize(e.clientX, e.pointerId, onResize);
+          return;
+        }
 
         // Ctrl+drag still moves from anywhere inside, so existing muscle
         // memory keeps working; grabbing the frame is the discoverable path.
@@ -976,12 +1039,15 @@ export function TextRunOverlay({
       onPointerMove={(e) => {
         // Only while idle: mid-drag the cursor is owned by the gesture.
         if (run.locked || dragging) return;
-        setEdgeZone(edgeZoneAt(e.currentTarget, e.clientX, e.clientY));
+        if (resizeWidthPx !== null) return;
+        setEdgeZone(
+          edgeZoneAt(e.currentTarget, e.clientX, e.clientY, canResize),
+        );
       }}
       style={{
         left,
         top,
-        width,
+        width: resizeWidthPx ?? width,
         minHeight: height,
         // Live Ctrl+drag preview: follow the cursor via transform, and
         // float above siblings + dim slightly so the move reads clearly.
@@ -1051,7 +1117,7 @@ export function TextRunOverlay({
           : dragging
             ? "2px solid #2c7be5"
             : selected
-              ? edgeZone
+              ? edgeZone || resizeWidthPx !== null
                 ? "2px solid #2c7be5"
                 : "1px solid #2c7be5"
               : hovered
@@ -1063,9 +1129,11 @@ export function TextRunOverlay({
           ? "default"
           : dragging
             ? "grabbing"
-            : edgeZone === "move"
-              ? "grab"
-              : undefined,
+            : resizeWidthPx !== null || edgeZone === "resize"
+              ? "ew-resize"
+              : edgeZone === "move"
+                ? "grab"
+                : undefined,
         overflow: "hidden",
       }}
     />
