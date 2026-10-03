@@ -12,7 +12,7 @@ import {
   SessionDetail,
 } from "@app/types/signingSession";
 import type { SignaturePreview } from "@app/components/viewer/viewerTypes";
-import { getFileColor } from "@app/components/pageEditor/fileColors";
+import { getFileColor } from "@app/utils/fileColors";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { useFileActions } from "@app/contexts/FileContext";
 import { useSigningOverlay } from "@app/contexts/SigningOverlayContext";

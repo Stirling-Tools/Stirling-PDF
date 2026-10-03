@@ -26,13 +26,10 @@ import { ChatFAB } from "@app/components/chat/ChatFAB";
 import { NotificationBell } from "@app/components/notifications/NotificationBell";
 
 // Workbench panels are loaded on demand. Viewer pulls in pdfjs-dist and the
-// full @embedpdf plugin set; FileEditor/PageEditor are only needed once a file
+// full @embedpdf plugin set; FileEditor/PageTracks are only needed once a file
 // is open. Lazy-loading keeps all of that out of the initial bundle.
 const FileEditor = lazy(() => import("@app/components/fileEditor/FileEditor"));
-const PageEditor = lazy(() => import("@app/components/pageEditor/PageEditor"));
-const PageEditorControls = lazy(
-  () => import("@app/components/pageEditor/PageEditorControls"),
-);
+const PageTracks = lazy(() => import("@app/components/pageTracks/PageTracks"));
 const Viewer = lazy(() => import("@app/components/viewer/Viewer"));
 const FileManagerView = lazy(
   () => import("@app/components/filesPage/FileManagerView"),
@@ -50,14 +47,8 @@ export default function Workbench() {
   const { workbench: currentView } = useNavigationState();
   const { actions: navActions } = useNavigationActions();
   const setCurrentView = navActions.setWorkbench;
-  const {
-    previewFile,
-    pageEditorFunctions,
-    setPreviewFile,
-    setPageEditorFunctions,
-    customWorkbenchViews,
-    readerMode,
-  } = useToolWorkflow();
+  const { previewFile, setPreviewFile, customWorkbenchViews, readerMode } =
+    useToolWorkflow();
 
   const { handleToolSelect } = useToolWorkflow();
   const { overlay: signingOverlay } = useSigningOverlay();
@@ -216,43 +207,7 @@ export default function Workbench() {
         );
 
       case "pageEditor":
-        return (
-          <div style={{ position: "relative", flex: "1 1 0", height: 0 }}>
-            <PageEditor onFunctionsReady={setPageEditorFunctions} />
-            {pageEditorFunctions && (
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  zIndex: 100,
-                }}
-              >
-                <PageEditorControls
-                  onClosePdf={pageEditorFunctions.closePdf}
-                  onUndo={pageEditorFunctions.handleUndo}
-                  onRedo={pageEditorFunctions.handleRedo}
-                  canUndo={pageEditorFunctions.canUndo}
-                  canRedo={pageEditorFunctions.canRedo}
-                  onRotate={pageEditorFunctions.handleRotate}
-                  onDelete={pageEditorFunctions.handleDelete}
-                  onSplit={pageEditorFunctions.handleSplit}
-                  onSplitAll={pageEditorFunctions.handleSplitAll}
-                  onPageBreak={pageEditorFunctions.handlePageBreak}
-                  onPageBreakAll={pageEditorFunctions.handlePageBreakAll}
-                  onExportAll={pageEditorFunctions.onExportAll}
-                  exportLoading={pageEditorFunctions.exportLoading}
-                  selectionMode={pageEditorFunctions.selectionMode}
-                  selectedPageIds={pageEditorFunctions.selectedPageIds}
-                  displayDocument={pageEditorFunctions.displayDocument}
-                  splitPositions={pageEditorFunctions.splitPositions}
-                  totalPages={pageEditorFunctions.totalPages}
-                />
-              </div>
-            )}
-          </div>
-        );
+        return <PageTracks />;
 
       default:
         return null;

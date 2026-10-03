@@ -3,7 +3,7 @@ import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
 import type { ParticipantInfo } from "@app/types/signingSession";
-import { getFileColor } from "@app/components/pageEditor/fileColors";
+import { getFileColor } from "@app/utils/fileColors";
 
 interface ParticipantListPanelProps {
   participants: ParticipantInfo[];
