@@ -26,6 +26,7 @@ Bucketing rules:
     frontend/editor/src/proprietary/** -> proprietary
     frontend/editor/src/saas/**        -> saas
     frontend/editor/src/desktop/**     -> desktop
+    frontend/editor/src/tauri/**       -> desktop (shared Tauri layer)
 
 Cells render as `pct% (covered/total)` where the metric is:
   - Backend: JaCoCo METHOD counter (most directly comparable to JS funcs)
@@ -155,6 +156,8 @@ def _classify_frontend(file_path: str) -> str | None:
     if not file_path:
         return None
     norm = file_path.replace("\\", "/")
+    if "/src/tauri/" in norm:
+        return "desktop"
     for area in AREAS:
         if f"/src/{area}/" in norm:
             return area

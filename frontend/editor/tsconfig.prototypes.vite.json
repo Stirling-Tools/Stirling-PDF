@@ -20,6 +20,7 @@
     "src/proprietary/**/*.test.ts*",
     "src/proprietary/**/*.spec.ts*",
     "src/desktop",
+    "src/tauri",
     "src/saas"
   ]
 }

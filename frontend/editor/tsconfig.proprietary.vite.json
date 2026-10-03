@@ -17,6 +17,7 @@
     "src/core/**/*.test.ts*",
     "src/core/**/*.spec.ts*",
     "src/desktop",
+    "src/tauri",
     "src/cloud"
   ]
 }

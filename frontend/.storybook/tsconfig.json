@@ -7,9 +7,12 @@
   "extends": "../editor/tsconfig.proprietary.vite.json",
   // main.ts loads the icon Vite plugins from editor/scripts by their real .mts paths.
   "compilerOptions": { "allowImportingTsExtensions": true, "noEmit": true },
-  // Desktop stories resolve @app/* through the desktop cascade in main.ts, not the
-  // proprietary one this project extends; typecheck:desktop already covers them.
-  "exclude": ["../editor/src/desktop/**/*.stories.tsx"],
+  // Desktop and tauri stories resolve @app/* through the desktop cascade in main.ts,
+  // not the proprietary one this project extends; typecheck:desktop already covers them.
+  "exclude": [
+    "../editor/src/desktop/**/*.stories.tsx",
+    "../editor/src/tauri/**/*.stories.tsx"
+  ],
   "include": [
     "./**/*",
     "../editor/src/global.d.ts",

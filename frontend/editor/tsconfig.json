@@ -30,7 +30,12 @@
     // "rootDir": "./",                                  /* Specify the root folder within your source files. */
     "moduleResolution": "bundler" /* Specify how TypeScript looks up a file from a given module specifier. */,
     "paths": {
-      "@app/*": ["./src/desktop/*", "./src/proprietary/*", "./src/core/*"],
+      "@app/*": [
+        "./src/desktop/*",
+        "./src/tauri/*",
+        "./src/proprietary/*",
+        "./src/core/*"
+      ],
       "@proprietary/*": ["./src/proprietary/*"],
       "@core/*": ["./src/core/*"]
     },
