@@ -75,7 +75,7 @@ env:
     frontend/editor/src-tauri/Cargo.toml
     frontend/editor/src-tauri/Cargo.lock
   FRONTEND_DIST: |
-    frontend/editor/dist
+    frontend/editor/src
 
 jobs:
   determine-matrix:
