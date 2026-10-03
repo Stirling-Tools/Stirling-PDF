@@ -417,3 +417,44 @@ describe("desktop useEndpointEnabled", () => {
     await waitFor(() => expect(result.current.enabled).toBe(true));
   });
 });
+
+// url-to-pdf is opt-in and security-sensitive, so it is the one endpoint that
+// must not get the optimistic-enabled default or the SaaS-availability override.
+describe("desktop useEndpointEnabled: url-to-pdf explicit enablement", () => {
+  it("stays hidden instead of optimistically enabled while unresolved", () => {
+    mode = "saas";
+    mockGet.mockImplementation(() => new Promise(() => {}));
+    const { result } = renderHook(() => useEndpointEnabled("url-to-pdf"), {
+      wrapper: TestQueryProvider,
+    });
+    expect(result.current.enabled).toBe(null);
+    expect(result.current.loading).toBe(true);
+  });
+
+  it("does not override a disabled status with SaaS availability", async () => {
+    mode = "saas";
+    mockGet.mockImplementation((url: string) => {
+      if (url.includes("app-config")) return Promise.resolve(appConfig(true));
+      return Promise.resolve({ data: false });
+    });
+    const { result } = renderHook(() => useEndpointEnabled("url-to-pdf"), {
+      wrapper: TestQueryProvider,
+    });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.enabled).toBe(false);
+  });
+
+  it("stays hidden and surfaces the error after a failed check in SaaS mode", async () => {
+    mode = "saas";
+    mockGet.mockImplementation((url: string) => {
+      if (url.includes("app-config")) return Promise.resolve(appConfig(true));
+      return Promise.reject(new Error("offline"));
+    });
+    const { result } = renderHook(() => useEndpointEnabled("url-to-pdf"), {
+      wrapper: TestQueryProvider,
+    });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.enabled).toBe(false);
+    expect(result.current.error).toBe("offline");
+  });
+});

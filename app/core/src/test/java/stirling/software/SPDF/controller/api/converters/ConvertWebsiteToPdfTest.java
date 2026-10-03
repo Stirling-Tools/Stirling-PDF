@@ -11,14 +11,17 @@ import static org.mockito.Mockito.when;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.net.URI;
 import java.net.http.HttpClient;
+import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Executors;
 import java.util.regex.Pattern;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -33,10 +36,10 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
 import stirling.software.SPDF.model.api.converters.UrlToPdfRequest;
 import stirling.software.common.configuration.RuntimePathConfig;
@@ -103,12 +106,7 @@ public class ConvertWebsiteToPdfTest {
                         applicationProperties,
                         tempFileManager);
 
-        // Provide RequestContext for ServletUriComponentsBuilder
-        MockHttpServletRequest req = new MockHttpServletRequest();
-        req.setScheme("http");
-        req.setServerName("localhost");
-        req.setServerPort(8080);
-        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(req));
+        RequestContextHolder.resetRequestAttributes();
     }
 
     @AfterEach
@@ -118,38 +116,105 @@ public class ConvertWebsiteToPdfTest {
     }
 
     @Test
-    void redirect_with_error_when_invalid_url_format_provided() throws Exception {
+    void disabled_endpoint_returns_error_on_background_thread_without_request_context()
+            throws Exception {
+        applicationProperties.getSystem().setEnableUrlToPDF(false);
+        UrlToPdfRequest request = new UrlToPdfRequest();
+        request.setUrlInput("https://www.google.com/");
+
+        try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            ResponseEntity<?> response = executor.submit(() -> sut.urlToPdf(request)).get();
+            assertErrorResponse(
+                    response, HttpStatus.FORBIDDEN, "URL to PDF is disabled on this server.");
+        }
+    }
+
+    @Test
+    void follows_validated_redirect_and_uses_final_url_as_rendering_base() throws Exception {
+        UrlToPdfRequest request = new UrlToPdfRequest();
+        request.setUrlInput("https://google.com");
+        try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class);
+                MockedStatic<GeneralUtils> gu =
+                        Mockito.mockStatic(GeneralUtils.class, Mockito.CALLS_REAL_METHODS);
+                MockedStatic<HttpClient> httpClient =
+                        mockHttpClientResponses(
+                                List.of(
+                                        htmlResponse(301, "", "https://www.google.com/"),
+                                        htmlResponse(200, "<html></html>", null)))) {
+            gu.when(() -> GeneralUtils.isURLReachable(anyString())).thenReturn(true);
+            ProcessExecutor mockExec = Mockito.mock(ProcessExecutor.class);
+            pe.when(() -> ProcessExecutor.getInstance(Processes.WEASYPRINT)).thenReturn(mockExec);
+
+            ResponseEntity<?> response = sut.urlToPdf(request);
+
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+            gu.verify(() -> GeneralUtils.isURLReachable("https://www.google.com/"));
+            Mockito.verify(mockExec)
+                    .runCommandWithOutputHandling(
+                            org.mockito.ArgumentMatchers.argThat(
+                                    command ->
+                                            command.get(command.indexOf("--base-url") + 1)
+                                                    .equals("https://www.google.com/")));
+        }
+    }
+
+    @Test
+    void rejects_redirect_to_disallowed_destination_before_fetching_it() throws Exception {
+        UrlToPdfRequest request = new UrlToPdfRequest();
+        request.setUrlInput("https://example.com/");
+        try (MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class);
+                MockedStatic<HttpClient> httpClient =
+                        mockHttpClientResponses(
+                                List.of(htmlResponse(302, "", "http://127.0.0.1/")))) {
+            gu.when(() -> GeneralUtils.isValidURL("https://example.com/")).thenReturn(true);
+            gu.when(() -> GeneralUtils.isURLReachable("https://example.com/")).thenReturn(true);
+            gu.when(() -> GeneralUtils.isURLReachable("http://127.0.0.1/")).thenReturn(false);
+
+            IOException error = assertThrows(IOException.class, () -> sut.urlToPdf(request));
+            assertTrue(error.getMessage().contains("not allowed or reachable"));
+        }
+    }
+
+    @Test
+    void rejects_redirect_loop_after_five_redirects() throws Exception {
+        UrlToPdfRequest request = new UrlToPdfRequest();
+        request.setUrlInput("https://example.com/");
+        try (MockedStatic<GeneralUtils> gu = Mockito.mockStatic(GeneralUtils.class);
+                MockedStatic<HttpClient> httpClient =
+                        mockHttpClientResponses(
+                                Collections.nCopies(6, htmlResponse(302, "", "/")))) {
+            gu.when(() -> GeneralUtils.isValidURL("https://example.com/")).thenReturn(true);
+            gu.when(() -> GeneralUtils.isURLReachable("https://example.com/")).thenReturn(true);
+
+            IOException error = assertThrows(IOException.class, () -> sut.urlToPdf(request));
+            assertTrue(error.getMessage().contains("redirect limit"));
+        }
+    }
+
+    @Test
+    void returns_error_when_invalid_url_format_provided() throws Exception {
         UrlToPdfRequest request = new UrlToPdfRequest();
         request.setUrlInput("not-a-url");
 
         ResponseEntity<?> resp = sut.urlToPdf(request);
 
-        assertEquals(HttpStatus.SEE_OTHER, resp.getStatusCode());
-        URI location = resp.getHeaders().getLocation();
-        assertNotNull(location, "Location header expected");
-        assertTrue(
-                location.getQuery() != null
-                        && location.getQuery().contains("error=error.invalidUrlFormat"));
+        assertErrorResponse(resp, HttpStatus.BAD_REQUEST, "Enter a valid HTTP or HTTPS URL.");
     }
 
     @Test
-    void redirect_with_error_when_url_is_not_reachable() throws Exception {
+    void returns_error_when_url_is_not_reachable() throws Exception {
         UrlToPdfRequest request = new UrlToPdfRequest();
         // .invalid is reserved by RFC and not resolvable
         request.setUrlInput("https://nonexistent.invalid/");
 
         ResponseEntity<?> resp = sut.urlToPdf(request);
 
-        assertEquals(HttpStatus.SEE_OTHER, resp.getStatusCode());
-        URI location = resp.getHeaders().getLocation();
-        assertNotNull(location, "Location header expected");
-        assertTrue(
-                location.getQuery() != null
-                        && location.getQuery().contains("error=error.urlNotReachable"));
+        assertErrorResponse(
+                resp, HttpStatus.BAD_REQUEST, "The URL is not allowed or could not be reached.");
     }
 
     @Test
-    void redirect_with_error_when_endpoint_disabled() throws Exception {
+    void returns_error_when_endpoint_disabled() throws Exception {
         // Disable feature
         applicationProperties.getSystem().setEnableUrlToPDF(false);
 
@@ -158,12 +223,7 @@ public class ConvertWebsiteToPdfTest {
 
         ResponseEntity<?> resp = sut.urlToPdf(request);
 
-        assertEquals(HttpStatus.SEE_OTHER, resp.getStatusCode());
-        URI location = resp.getHeaders().getLocation();
-        assertNotNull(location, "Location header expected");
-        assertTrue(
-                location.getQuery() != null
-                        && location.getQuery().contains("error=error.endpointDisabled"));
+        assertErrorResponse(resp, HttpStatus.FORBIDDEN, "URL to PDF is disabled on this server.");
     }
 
     @Test
@@ -312,25 +372,43 @@ public class ConvertWebsiteToPdfTest {
     }
 
     private static MockedStatic<HttpClient> mockHttpClientReturning(String body) throws Exception {
+        return mockHttpClientResponses(List.of(htmlResponse(200, body, null)));
+    }
+
+    private static HttpResponse<String> htmlResponse(int status, String body, String location) {
+        HttpResponse<String> response = Mockito.mock();
+        when(response.statusCode()).thenReturn(status);
+        lenient().when(response.body()).thenReturn(body);
+        lenient()
+                .when(response.headers())
+                .thenReturn(
+                        HttpHeaders.of(
+                                location == null ? Map.of() : Map.of("Location", List.of(location)),
+                                (name, value) -> true));
+        return response;
+    }
+
+    private static MockedStatic<HttpClient> mockHttpClientResponses(
+            List<HttpResponse<String>> responses) throws Exception {
         MockedStatic<HttpClient> httpClientStatic = Mockito.mockStatic(HttpClient.class);
         HttpClient.Builder builder = Mockito.mock(HttpClient.Builder.class);
         HttpClient client = Mockito.mock(HttpClient.class);
-        HttpResponse<String> response = Mockito.mock();
 
         httpClientStatic.when(HttpClient::newBuilder).thenReturn(builder);
         when(builder.followRedirects(HttpClient.Redirect.NEVER)).thenReturn(builder);
         when(builder.connectTimeout(any(Duration.class))).thenReturn(builder);
         when(builder.build()).thenReturn(client);
 
-        Mockito.doReturn(response).when(client).send(any(HttpRequest.class), any());
-        when(response.statusCode()).thenReturn(200);
-        when(response.body()).thenReturn(body);
+        var iterator = responses.iterator();
+        Mockito.doAnswer(invocation -> iterator.next())
+                .when(client)
+                .send(any(HttpRequest.class), any());
 
         return httpClientStatic;
     }
 
     @Test
-    void redirect_with_error_when_disallowed_content_detected() throws Exception {
+    void returns_error_when_disallowed_content_detected() throws Exception {
         UrlToPdfRequest request = new UrlToPdfRequest();
         request.setUrlInput("https://example.com");
 
@@ -344,12 +422,20 @@ public class ConvertWebsiteToPdfTest {
 
             ResponseEntity<?> resp = sut.urlToPdf(request);
 
-            assertEquals(HttpStatus.SEE_OTHER, resp.getStatusCode());
-            URI location = resp.getHeaders().getLocation();
-            assertNotNull(location, "Location header expected");
-            assertTrue(
-                    location.getQuery() != null
-                            && location.getQuery().contains("error=error.disallowedUrlContent"));
+            assertErrorResponse(
+                    resp,
+                    HttpStatus.BAD_REQUEST,
+                    "The web page contains disallowed local file references.");
         }
+    }
+
+    private static void assertErrorResponse(
+            ResponseEntity<?> response, HttpStatus status, String detail) {
+        assertEquals(status, response.getStatusCode());
+        assertEquals(MediaType.APPLICATION_PROBLEM_JSON, response.getHeaders().getContentType());
+        assertNull(response.getHeaders().getLocation());
+        ProblemDetail problem = assertInstanceOf(ProblemDetail.class, response.getBody());
+        assertEquals(status.value(), problem.getStatus());
+        assertEquals(detail, problem.getDetail());
     }
 }
