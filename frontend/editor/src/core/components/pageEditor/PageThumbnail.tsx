@@ -411,7 +411,6 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
         flex-shrink-0
         shadow-sm
         hover:shadow-md
-        transition-all
         relative
         ${isDragging ? "opacity-50 scale-95" : ""}
         ${movingPage === page.pageNumber ? "page-moving" : ""}

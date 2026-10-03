@@ -49,7 +49,11 @@
   border: 0.0625rem solid var(--bulk-card-border);
   background-color: var(--c-surface);
   color: var(--c-text);
-  transition: all 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
   min-height: 2rem;
 }
 
