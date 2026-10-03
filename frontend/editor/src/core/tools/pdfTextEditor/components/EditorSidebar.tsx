@@ -7,6 +7,7 @@ import { useSelectionGeometry } from "@app/tools/pdfTextEditor/hooks/useSelectio
 import { DocumentInspector } from "@app/tools/pdfTextEditor/components/inspector/DocumentInspector";
 import { SelectionInspector } from "@app/tools/pdfTextEditor/components/inspector/SelectionInspector";
 import { analyzePageFonts } from "@app/tools/pdfTextEditor/util/pageFonts";
+import { ScanHint } from "@app/tools/pdfTextEditor/components/ScanHint";
 import type { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
 import type {
   EditorViewState,
@@ -117,7 +118,7 @@ export function EditorSidebar({
               onUngroup={onUngroup}
             />
           ) : (
-            <NothingSelected />
+            <NothingSelected pages={state.pages} />
           )}
         </Tabs.Panel>
         <Tabs.Panel value="document">
@@ -137,7 +138,7 @@ export function EditorSidebar({
 }
 
 /** What the Selected tab shows before the user has picked anything. */
-function NothingSelected() {
+function NothingSelected({ pages }: { pages: EditorViewState["pages"] }) {
   const { t } = useTranslation();
   return (
     <Center p="xl" data-testid="pdf-editor-nothing-selected">
@@ -156,6 +157,7 @@ function NothingSelected() {
             "Click any text, image or shape on the page to edit it here.",
           )}
         </Text>
+        <ScanHint pages={pages} />
       </Stack>
     </Center>
   );
@@ -177,10 +179,20 @@ function useSelectedFontNote(
     if (selection.runIds.length === 0) return null;
     const picked = new Set(selection.runIds);
     const fontIds = new Set<string>();
+    let scanned = 0;
     for (const page of state.pages)
       for (const run of page.runs)
-        if (picked.has(run.id)) fontIds.add(run.fontId);
+        if (picked.has(run.id)) {
+          fontIds.add(run.fontId);
+          if (run.renderMode === 3) scanned++;
+        }
     if (fontIds.size === 0) return null;
+    // OCR text is invisible; its font says nothing about what an edit draws.
+    if (scanned === selection.runIds.length)
+      return t(
+        "pdfTextEditor.inspector.scannedText",
+        "Scanned text · changed words are covered and redrawn in a matching font.",
+      );
 
     const fonts = analyzePageFonts(state.pages).filter((f) =>
       // analyzePageFonts keys by display name + status, so match on the names

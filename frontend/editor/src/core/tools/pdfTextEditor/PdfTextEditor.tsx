@@ -529,13 +529,37 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         return;
       }
       setOpenedFileName(file.name);
-      // Dropped/picked from disk: no workbench file to replace yet, but claim
-      // it so a later workbench arrival cannot auto-open over these edits.
+      // Dropped/picked from disk: claim it so a later workbench arrival cannot
+      // auto-open over these edits, and open it straight away.
       adoptFile(file);
       setSourceFile(null);
-      void load(file);
+      // Once it opens, it belongs in the library like any other file, or the
+      // rest of the app (OCR, convert, ...) has nothing to act on. Not before:
+      // an encrypted file would have the library ask for its password too.
+      void load(file)
+        .then(() => {
+          const opened = store.getState();
+          if (!opened.hasDocument || opened.error || opened.passwordPrompt)
+            return null;
+          return addFiles([file], { selectFiles: true });
+        })
+        .then((added) => {
+          const stored = added?.[0];
+          if (!stored) return;
+          adoptFile(stored);
+          handleFileChosen(stored.name, stored.fileId);
+        });
     },
-    [adoptFile, load, openWorkbenchFile, setSelectedFiles, setSourceFile],
+    [
+      store,
+      addFiles,
+      adoptFile,
+      handleFileChosen,
+      load,
+      openWorkbenchFile,
+      setSelectedFiles,
+      setSourceFile,
+    ],
   );
 
   const [pendingOpen, setPendingOpen] = useState<{
