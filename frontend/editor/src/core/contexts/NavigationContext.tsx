@@ -323,11 +323,14 @@ export const NavigationProvider: React.FC<{
 
   const requestNavigation = useCallback(
     (navigationFn: () => void) => {
-      if (!state.hasUnsavedChanges) {
+      const hasUnsavedChanges =
+        unsavedChangesCheckerRef.current?.() || state.hasUnsavedChanges;
+      if (!hasUnsavedChanges) {
         navigationFn();
         return;
       }
 
+      dispatch({ type: "SET_UNSAVED_CHANGES", payload: { hasChanges: true } });
       dispatch({ type: "SET_PENDING_NAVIGATION", payload: { navigationFn } });
       dispatch({ type: "SHOW_NAVIGATION_WARNING", payload: { show: true } });
     },

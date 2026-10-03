@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes } from "react";
+import { useTranslation } from "react-i18next";
 import { BrandMark } from "@app/components/shared/BrandMark";
 import "@app/ui/ChatFABButton.css";
 
@@ -15,6 +16,7 @@ export function ChatFABButton({
   className,
   ...rest
 }: ChatFABButtonProps) {
+  const { t } = useTranslation();
   const classes = [
     "chat-fab-btn",
     loading ? "chat-fab-btn--loading" : "",
@@ -28,7 +30,7 @@ export function ChatFABButton({
     <button
       type="button"
       className={classes}
-      aria-label="Open assistant"
+      aria-label={t("portal.assistant.open", "Open assistant")}
       {...rest}
     >
       {/* Decorative: the button itself carries the accessible name. */}
