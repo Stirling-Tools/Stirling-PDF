@@ -391,6 +391,8 @@ jobs:
         run: |
           echo "$RELEASE_GPG_PRIVATE_KEY" | gpg --batch --import
           gpg --list-secret-keys --keyid-format=long
+          # linuxdeploy-plugin-appimage signs when SIGN is set at all (even "0"), so only set it here.
+          echo "SIGN=1" >> "$GITHUB_ENV"
 
       - name: Make libjvm discoverable for linuxdeploy (Linux AppImage)
         if: matrix.platform == 'ubuntu-22.04'
@@ -468,7 +470,7 @@ jobs:
         uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # v1.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SIGN: ${{ (inputs.sign && env.RELEASE_GPG_PRIVATE_KEY != '' && github.ref == 'refs/heads/main') && '1' || '0' }}
+          # SIGN comes from the GPG import step; never set it here or unsigned builds fail.
           APPIMAGETOOL_SIGN_PASSPHRASE: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
           SIGN_KEY: ${{ vars.RELEASE_GPG_FINGERPRINT }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
