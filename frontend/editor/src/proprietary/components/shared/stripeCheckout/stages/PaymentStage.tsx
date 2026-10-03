@@ -7,6 +7,7 @@ import {
   EmbeddedCheckout,
 } from "@stripe/react-stripe-js";
 import { PlanTier } from "@app/services/licenseService";
+import { canUseEmbeddedCheckout } from "@app/utils/protocolDetection";
 
 const STRIPE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
 
@@ -26,8 +27,16 @@ export const PaymentStage: React.FC<PaymentStageProps> = ({
   // scope pulled the Stripe script into every page (CheckoutContext is in
   // AppProviders), which triggered the dev "HTTPS required" warning on every
   // non-payment route.
+  //
+  // Only load Stripe.js in a secure context. A live publishable key
+  // (pk_live_…) makes Stripe.js throw "Live Stripe.js integrations must use
+  // HTTPS" on plain-HTTP origins (common for self-hosted LAN deployments).
+  // On non-HTTPS origins the backend issues a hosted-checkout redirect via
+  // useCheckoutSession, so embedded checkout is never used here — skipping
+  // loadStripe lets that redirect take over cleanly.
   const stripePromise = useMemo(
-    () => (STRIPE_KEY ? loadStripe(STRIPE_KEY) : null),
+    () =>
+      STRIPE_KEY && canUseEmbeddedCheckout() ? loadStripe(STRIPE_KEY) : null,
     [],
   );
 
