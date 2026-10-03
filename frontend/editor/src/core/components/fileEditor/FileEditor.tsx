@@ -1,5 +1,4 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
-import { flushSync } from "react-dom";
 import { Center, Box, LoadingOverlay } from "@mantine/core";
 import { Dropzone } from "@mantine/dropzone";
 import { useTranslation } from "react-i18next";
@@ -13,6 +12,7 @@ import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { zipFileService } from "@app/services/zipFileService";
 import { detectFileExtension } from "@app/utils/fileUtils";
+import { withViewTransition } from "@app/utils/viewTransition";
 import FileEditorThumbnail from "@app/components/fileEditor/FileEditorThumbnail";
 import AddFileCard from "@app/components/fileEditor/AddFileCard";
 import FilePickerModal from "@app/components/shared/FilePickerModal";
@@ -197,18 +197,7 @@ const FileEditor = ({
 
       newOrder.splice(insertIndex, 0, ...filesToMove);
 
-      // flushSync commits the reorder inside the view transition so its snapshots capture both layouts.
-      const applyReorder = () => reorderFiles(newOrder);
-      const docWithViewTransition = document as Document & {
-        startViewTransition?: (cb: () => void) => unknown;
-      };
-      if (typeof docWithViewTransition.startViewTransition === "function") {
-        docWithViewTransition.startViewTransition(() => {
-          flushSync(applyReorder);
-        });
-      } else {
-        applyReorder();
-      }
+      void withViewTransition(() => reorderFiles(newOrder));
 
       const moveCount = filesToMove.length;
       showStatus(
