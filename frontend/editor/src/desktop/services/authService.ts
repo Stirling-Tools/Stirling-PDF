@@ -55,6 +55,15 @@ export class AuthService {
     (status: AuthStatus, userInfo: UserInfo | null) => void
   >();
   private refreshPromise: Promise<boolean> | null = null;
+  /** Bumped when a refresh is abandoned, so its late writes can be ignored. */
+  private refreshEpoch = 0;
+
+  /** A keyring read blocks on an OS prompt that may never be answered, so every wait on one is
+   *  bounded. Long enough that a user still reading the prompt is not cut off mid-decision. */
+  private static readonly KEYRING_TIMEOUT_MS = 20_000;
+
+  /** Axios waits forever by default; leave time for failure handling before the outer bound. */
+  private static readonly REFRESH_REQUEST_TIMEOUT_MS = 15_000;
   private selfHostedDeepLinkFlowActive = false;
 
   static getInstance(): AuthService {
@@ -131,7 +140,15 @@ export class AuthService {
   private async getTokenFromAnySource(): Promise<string | null> {
     // Try Tauri store first
     try {
-      const token = await invoke<string | null>("get_auth_token");
+      const token = await this.bounded(
+        invoke<string | null>("get_auth_token"),
+        () => {
+          console.warn(
+            "[Desktop AuthService] Token read timed out; falling back to local storage",
+          );
+          return null;
+        },
+      );
       if (token) {
         return token;
       }
@@ -657,6 +674,37 @@ export class AuthService {
     }
   }
 
+  private async bounded<T>(work: Promise<T>, onTimeout: () => T): Promise<T> {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const expired = new Promise<T>((resolve) => {
+      timer = setTimeout(
+        () => resolve(onTimeout()),
+        AuthService.KEYRING_TIMEOUT_MS,
+      );
+    });
+    try {
+      return await Promise.race([work, expired]);
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
+  }
+
+  /** Settle as a failed refresh rather than hanging; the caller then re-authenticates. */
+  private async boundedRefresh(
+    refresh: (signal: AbortSignal) => Promise<boolean>,
+  ): Promise<boolean> {
+    const controller = new AbortController();
+    return this.bounded(refresh(controller.signal), () => {
+      console.warn(
+        "[Desktop AuthService] Refresh timed out; treating the session as signed out",
+      );
+      this.refreshEpoch += 1;
+      controller.abort();
+      this.setAuthStatus("unauthenticated", null);
+      return false;
+    });
+  }
+
   async awaitRefreshIfInProgress(): Promise<boolean> {
     if (!this.refreshPromise) {
       return false;
@@ -732,7 +780,9 @@ export class AuthService {
       return this.refreshPromise;
     }
 
-    this.refreshPromise = this._doRefreshToken(serverUrl);
+    this.refreshPromise = this.boundedRefresh((signal) =>
+      this._doRefreshToken(serverUrl, signal),
+    );
     try {
       return await this.refreshPromise;
     } finally {
@@ -740,14 +790,23 @@ export class AuthService {
     }
   }
 
-  private async _doRefreshToken(serverUrl: string): Promise<boolean> {
+  private async _doRefreshToken(
+    serverUrl: string,
+    signal: AbortSignal,
+  ): Promise<boolean> {
+    // A refresh that lost the boundedRefresh race must not write auth state: the UI is
+    // already signed out, and a late logout() would clear the next session's credentials.
+    const epoch = this.refreshEpoch;
     try {
       console.log("[Desktop AuthService] Refreshing auth token");
       this.setAuthStatus("refreshing", this.userInfo);
 
       const currentToken = await this.getAuthToken();
+      if (epoch !== this.refreshEpoch) return false;
       if (!currentToken) {
-        this.setAuthStatus("unauthenticated", null);
+        if (epoch === this.refreshEpoch) {
+          this.setAuthStatus("unauthenticated", null);
+        }
         return false;
       }
 
@@ -760,6 +819,7 @@ export class AuthService {
           headers: {
             Authorization: `Bearer ${currentToken}`,
           },
+          signal,
         },
       );
 
@@ -772,8 +832,13 @@ export class AuthService {
         console.error(
           "[Desktop AuthService] Refresh response missing token payload",
         );
-        this.setAuthStatus("unauthenticated", null);
-        await this.logout();
+        if (epoch === this.refreshEpoch) {
+          this.setAuthStatus("unauthenticated", null);
+        }
+        return false;
+      }
+
+      if (epoch !== this.refreshEpoch) {
         return false;
       }
 
@@ -787,10 +852,13 @@ export class AuthService {
       return true;
     } catch (error) {
       console.error("[Desktop AuthService] Token refresh failed:", error);
-      this.setAuthStatus("unauthenticated", null);
+      if (epoch === this.refreshEpoch) {
+        this.setAuthStatus("unauthenticated", null);
 
-      // Clear stored credentials on refresh failure
-      await this.logout();
+        if (this.isCredentialRejection(error)) {
+          await this.localClearAuth();
+        }
+      }
 
       return false;
     }
@@ -805,7 +873,9 @@ export class AuthService {
       return this.refreshPromise;
     }
 
-    this.refreshPromise = this._doRefreshSupabaseToken(authServerUrl);
+    this.refreshPromise = this.boundedRefresh((signal) =>
+      this._doRefreshSupabaseToken(authServerUrl, signal),
+    );
     try {
       return await this.refreshPromise;
     } finally {
@@ -815,15 +885,20 @@ export class AuthService {
 
   private async _doRefreshSupabaseToken(
     authServerUrl: string,
+    signal: AbortSignal,
   ): Promise<boolean> {
+    const epoch = this.refreshEpoch;
     try {
       console.log("[Desktop AuthService] Refreshing Supabase token");
       this.setAuthStatus("refreshing", this.userInfo);
 
       const refreshToken = await this.getRefreshToken();
+      if (epoch !== this.refreshEpoch) return false;
       if (!refreshToken) {
         console.error("[Desktop AuthService] No refresh token available");
-        this.setAuthStatus("unauthenticated", null);
+        if (epoch === this.refreshEpoch) {
+          this.setAuthStatus("unauthenticated", null);
+        }
         return false;
       }
 
@@ -838,10 +913,16 @@ export class AuthService {
             apikey: SUPABASE_KEY,
             "Content-Type": "application/json",
           },
+          timeout: AuthService.REFRESH_REQUEST_TIMEOUT_MS,
+          signal,
         },
       );
 
       const { access_token, refresh_token: newRefreshToken } = response.data;
+
+      if (epoch !== this.refreshEpoch) {
+        return false;
+      }
 
       // Save new tokens
       await this.saveTokenEverywhere(access_token, newRefreshToken, false);
@@ -858,13 +939,44 @@ export class AuthService {
         "[Desktop AuthService] Supabase token refresh failed:",
         error,
       );
-      this.setAuthStatus("unauthenticated", null);
+      if (epoch === this.refreshEpoch) {
+        this.setAuthStatus("unauthenticated", null);
 
-      // Clear stored credentials on refresh failure
-      await this.logout();
+        if (this.isCredentialRejection(error)) {
+          await this.localClearAuth();
+        }
+      }
 
       return false;
     }
+  }
+
+  private isCredentialRejection(error: unknown): boolean {
+    if (
+      !axios.isAxiosError<{
+        error?: string;
+        error_code?: string;
+        code?: string;
+      }>(error)
+    ) {
+      return false;
+    }
+    const status = error.response?.status;
+    if (status === 401) return true;
+    if (status !== 400 && status !== 403) return false;
+
+    const data = error.response?.data;
+    const code = data?.error_code ?? data?.code ?? data?.error;
+    return (
+      code !== undefined &&
+      [
+        "invalid_grant",
+        "refresh_token_not_found",
+        "refresh_token_already_used",
+        "session_not_found",
+        "session_expired",
+      ].includes(code)
+    );
   }
 
   async initializeAuthState(): Promise<void> {
