@@ -74,6 +74,8 @@ env:
     frontend/editor/src-tauri
     frontend/editor/src-tauri/Cargo.toml
     frontend/editor/src-tauri/Cargo.lock
+  FRONTEND_DIST: |
+    frontend/editor/dist
 
 jobs:
   determine-matrix:
@@ -139,6 +141,7 @@ jobs:
       java_version: ${{ steps.hash.outputs.java_version }}
       gradle_files_hash: ${{ steps.hash.outputs.gradle_files_hash}}
       cargo_files_hash: ${{ steps.hash.outputs.cargo_files_hash}}
+      frontend_dist_files_hash: ${{ steps.hash.outputs.frontend_dist_files_hash }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
@@ -155,11 +158,13 @@ jobs:
         env:
           GRADLE_HASH: ${{ hashFiles(env.GRADLE_FILES_TO_HASH) }}
           CARGO_HASH: ${{ hashFiles(env.CARGO_FILES_TO_HASH) }}
+          FRONTEND_DIST_HASH: ${{ hashFiles(env.FRONTEND_DIST_HASH) }}
         shell: bash
         run: |
           echo "java_version=${{ env.JAVA_VERSION }}" >> "$GITHUB_OUTPUT"
           echo "gradle_files_hash=$GRADLE_HASH" >> "$GITHUB_OUTPUT"
           echo "cargo_files_hash=$CARGO_HASH" >> "$GITHUB_OUTPUT"
+          echo "frontend_dist_files_hash=$FRONTEND_DIST_HASH" >> "$GITHUB_OUTPUT"
 
   build:
     # Windows/GPG signing only runs on main (see the per-step gates below), so only
@@ -234,7 +239,7 @@ jobs:
 
       - name: Restore cache artifact
         id: cache
-        uses: Ludy87/cache-the-planet/multi-cache@95a83a6b13dd8a578f001a1e3581ef30564849d3
+        uses: Ludy87/cache-the-planet/multi-cache@9e5ea7ff7daa6c369428f7cdb98de54cec6e2ead
         with:
           version: 2
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
@@ -253,6 +258,8 @@ jobs:
               path: .cache/npm
             frontend-node-modules:
               path: frontend/node_modules
+            frontend-dist:
+              path: frontend/editor/dist
             gradle-caches:
               path: .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
             gradle-wrapper:
@@ -265,6 +272,7 @@ jobs:
             cargo-git=${{ needs.hash_pr.outputs.cargo_files_hash }}
             cargo-bin=${{ needs.hash_pr.outputs.cargo_files_hash }}
             npm-cache=${{ hashFiles('frontend/package-lock.json') }}
+            frontend-dist=${{ needs.hash_pr.outputs.frontend_dist_files_hash }}
             frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
           token: ${{ github.token }}
           allow-shared-restore: true
@@ -849,7 +857,7 @@ jobs:
 
       - name: Restore cache artifact
         id: cache
-        uses: Ludy87/cache-the-planet/multi-cache@95a83a6b13dd8a578f001a1e3581ef30564849d3
+        uses: Ludy87/cache-the-planet/multi-cache@9e5ea7ff7daa6c369428f7cdb98de54cec6e2ead
         with:
           version: 2
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
@@ -868,6 +876,8 @@ jobs:
               path: .cache/npm
             frontend-node-modules:
               path: frontend/node_modules
+            frontend-dist:
+              path: frontend/editor/dist
             gradle-caches:
               path: .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
             gradle-wrapper:
@@ -880,6 +890,7 @@ jobs:
             cargo-git=${{ needs.hash_pr.outputs.cargo_files_hash }}
             cargo-bin=${{ needs.hash_pr.outputs.cargo_files_hash }}
             npm-cache=${{ hashFiles('frontend/package-lock.json') }}
+            frontend-dist=${{ needs.hash_pr.outputs.frontend_dist_files_hash }}
             frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
           token: ${{ github.token }}
           allow-shared-restore: true
