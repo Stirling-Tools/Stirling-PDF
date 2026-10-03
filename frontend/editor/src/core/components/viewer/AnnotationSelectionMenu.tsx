@@ -1,5 +1,5 @@
 import { createPortal } from "react-dom";
-import { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import { useEffect, useRef, useCallback, useMemo } from "react";
 import { useAnnotation } from "@embedpdf/plugin-annotation/react";
 import type { TrackedAnnotation } from "@embedpdf/plugin-annotation";
 import {
@@ -13,6 +13,7 @@ import type {
 import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useAnnotationMenuHandlers } from "@app/components/viewer/useAnnotationMenuHandlers";
+import { useAnchoredOverlay } from "@app/hooks/useAnchoredOverlay";
 import { AnnotationTypeButtons } from "@app/components/viewer/AnnotationTypeButtons";
 import "@app/components/viewer/TextSelectionMenu.css";
 
@@ -56,10 +57,6 @@ function AnnotationSelectionMenuInner({
   const { state, provides } = useAnnotation(documentId);
   const { scrollActions, requestCommentFocus } = useViewer();
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const [menuPosition, setMenuPosition] = useState<{
-    top: number;
-    left: number;
-  } | null>(null);
 
   const handlers = useAnnotationMenuHandlers({
     annotation,
@@ -170,56 +167,38 @@ function AnnotationSelectionMenuInner({
     [annotation, onAnchor, pageIndex],
   );
 
-  // Track menu position via MutationObserver (handles drag repositioning)
+  const { overlayRef, mounted, measure } = useAnchoredOverlay({
+    anchorRef: wrapperRef,
+    enabled: Boolean(selected && annotation),
+    onPosition: updateAnchor,
+  });
+
+  // Dragging an annotation moves its wrapper without any scroll or resize, so a
+  // MutationObserver on its style attribute is the only signal; positioning itself
+  // is shared with the other viewer menus.
   useEffect(() => {
     if (!selected || !annotation || !wrapperRef.current) {
-      setMenuPosition(null);
       onAnchor?.(null);
       return;
     }
-
-    const updatePosition = () => {
-      const wrapper = wrapperRef.current;
-      if (!wrapper) {
-        setMenuPosition(null);
-        return;
-      }
-      const rect = wrapper.getBoundingClientRect();
-      const position = {
-        top: rect.bottom + 8,
-        left: rect.left + rect.width / 2,
-      };
-      setMenuPosition(position);
-      updateAnchor(position);
-    };
-
-    updatePosition();
-
-    const observer = new MutationObserver(updatePosition);
+    const observer = new MutationObserver(() => measure());
     observer.observe(wrapperRef.current, {
       attributes: true,
       attributeFilter: ["style"],
     });
-    window.addEventListener("scroll", updatePosition, true);
-    window.addEventListener("resize", updatePosition);
-
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("scroll", updatePosition, true);
-      window.removeEventListener("resize", updatePosition);
-    };
-  }, [selected, updateAnchor]);
+    return () => observer.disconnect();
+  }, [selected, annotation, onAnchor, measure]);
 
   if (!selected || !annotation) return null;
 
-  const menuContent = menuPosition ? (
+  const menuContent = mounted ? (
     <div
+      ref={overlayRef}
       data-annotation-selection-menu
       className="embedpdf-floating-menu"
       style={{
         position: "fixed",
-        top: `${menuPosition.top}px`,
-        left: `${menuPosition.left}px`,
+        // top/left are owned by useAnchoredOverlay; see the note there.
         transform: "translateX(-50%)",
         pointerEvents: "auto",
         zIndex: 10000,

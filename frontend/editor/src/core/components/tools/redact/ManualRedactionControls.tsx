@@ -13,7 +13,8 @@ interface ManualRedactionControlsProps {
 
 /**
  * ManualRedactionControls provides UI for manual PDF redaction in the tool panel.
- * Displays controls for marking text/areas for redaction and applying them.
+ * Marking queues redactions; the single action commits them and saves the
+ * document, so an applied redaction is never left dirty in memory.
  */
 export default function ManualRedactionControls({
   disabled = false,
@@ -23,10 +24,10 @@ export default function ManualRedactionControls({
   // Use our RedactionContext which bridges to EmbedPDF
   const {
     activateManualRedact,
-    redactionsApplied,
     commitAllPending,
     setActiveType,
     setManualRedactColor,
+    redactionsApplied,
   } = useRedaction();
   const {
     pendingCount,
@@ -44,13 +45,11 @@ export default function ManualRedactionControls({
   const { signatureApiRef } = useSignature();
 
   // Check if user is navigating away (modal shown) — don't fight the save/leave process
-  const { showNavigationWarning, hasUnsavedChanges: navHasUnsavedChanges } =
-    useNavigationGuard();
+  const { showNavigationWarning } = useNavigationGuard();
 
   const isLeavingRef = useRef(false);
   const prevFileIndexRef = useRef(activeFileIndex);
   const [isApplying, setIsApplying] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
 
   // Keep redaction tool active at all times while this component is mounted.
   // If anything deactivates it (annotation tools, text selection, file switch, etc.)
@@ -62,7 +61,7 @@ export default function ManualRedactionControls({
       disabled ||
       !isBridgeReady ||
       isLeavingRef.current ||
-      isSaving ||
+      isApplying ||
       showNavigationWarning
     )
       return;
@@ -81,7 +80,7 @@ export default function ManualRedactionControls({
       }
       // Small delay to avoid racing with EmbedPDF's own state updates
       const timer = setTimeout(() => {
-        if (!isLeavingRef.current && !isSaving && !showNavigationWarning) {
+        if (!isLeavingRef.current && !isApplying && !showNavigationWarning) {
           activateManualRedact();
         }
       }, 50);
@@ -92,7 +91,7 @@ export default function ManualRedactionControls({
     isAnnotationMode,
     disabled,
     isBridgeReady,
-    isSaving,
+    isApplying,
     showNavigationWarning,
     activateManualRedact,
     setAnnotationMode,
@@ -112,32 +111,32 @@ export default function ManualRedactionControls({
     }
   }, [activeFileIndex, activeType, setActiveType]);
 
+  // Applying marks is permanent, so it also saves: an applied mark kept only in
+  // memory would leave the document dirty and a second save button to find.
+  // The commit goes through the bridge directly so the save cannot race an
+  // uncommitted mark into the exported file as a stale annotation.
   const handleApplyRedactions = useCallback(async () => {
+    if (!applyChanges) return;
     setIsApplying(true);
     try {
       await commitAllPending();
+      await applyChanges();
+    } catch {
+      // Viewer reports save failure to user.
     } finally {
       setIsApplying(false);
     }
-  }, [commitAllPending]);
+  }, [applyChanges, commitAllPending]);
 
-  // Handle saving changes - this will apply pending redactions and save to file
-  const handleSaveChanges = useCallback(async () => {
-    if (applyChanges) {
-      setIsSaving(true);
-      try {
-        await applyChanges();
-      } catch {
-        // Viewer reports save failure to user.
-      } finally {
-        setIsSaving(false);
-      }
-    }
-  }, [applyChanges]);
-
-  // Check if there are unsaved changes to save (pending redactions OR applied redactions OR unsaved changes)
-  const hasUnsavedChanges =
-    pendingCount > 0 || redactionsApplied || navHasUnsavedChanges;
+  // pendingCount drops to zero the moment the commit lands, so gating on it
+  // alone would unmount this button before a failed export could be retried.
+  // redactionsApplied stays set until a save succeeds. Annotation dirty state is
+  // deliberately not included: that is saved from the Annotate panel, not here.
+  const hasUnsavedChanges = pendingCount > 0 || redactionsApplied;
+  const applyLabel =
+    pendingCount > 0
+      ? `${t("viewer.redaction.applyAll", "Apply Redactions")} (${pendingCount})`
+      : t("annotation.saveChanges", "Save Changes");
 
   const isApiReady = isBridgeReady;
 
@@ -166,7 +165,7 @@ export default function ManualRedactionControls({
           popoverProps={{ withinPortal: true }}
         />
 
-        {pendingCount > 0 && (
+        {hasUnsavedChanges && (
           <Button
             fullWidth
             size="md"
@@ -174,22 +173,9 @@ export default function ManualRedactionControls({
             loading={isApplying}
             onClick={handleApplyRedactions}
           >
-            {t("viewer.redaction.applyAll", "Apply Redactions")} ({pendingCount}
-            )
+            {applyLabel}
           </Button>
         )}
-
-        {/* Save Changes Button - applies pending redactions and saves to file */}
-        <Button
-          fullWidth
-          size="md"
-          variant={pendingCount > 0 ? "secondary" : "primary"}
-          disabled={!hasUnsavedChanges || isApplying}
-          loading={isSaving}
-          onClick={handleSaveChanges}
-        >
-          {t("annotation.saveChanges", "Save Changes")}
-        </Button>
       </Stack>
     </>
   );

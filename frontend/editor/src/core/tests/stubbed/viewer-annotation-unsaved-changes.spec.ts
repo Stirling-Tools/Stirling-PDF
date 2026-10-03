@@ -77,7 +77,7 @@ test("undoing the only annotation disarms the unsaved-changes warning", async ({
   await expect(page.getByText("Unsaved changes").first()).not.toBeVisible();
 });
 
-test("entering manual redact mode keeps annotation work saveable", async ({
+test("entering manual redact mode keeps annotation work dirty", async ({
   page,
 }) => {
   test.setTimeout(120_000);
@@ -96,9 +96,13 @@ test("entering manual redact mode keeps annotation work saveable", async ({
     .poll(() => viewerCursor(page), { timeout: 15_000 })
     .toBe("crosshair");
 
-  // Manual redaction mode used to clear the shared dirty flag, disabling this
-  // button while the annotation history was still unsaved.
-  await expect(
-    page.getByRole("button", { name: "Save Changes" }).first(),
-  ).toBeEnabled({ timeout: 10_000 });
+  // The redaction panel no longer carries a separate save; annotation work
+  // stays dirty and must still trip the guard instead of being dropped.
+  await expect(page.getByRole("button", { name: "Save Changes" })).toHaveCount(
+    0,
+  );
+  await switchToFormEditor(page);
+  await expect(page.getByText("Unsaved changes").first()).toBeVisible({
+    timeout: 5_000,
+  });
 });
