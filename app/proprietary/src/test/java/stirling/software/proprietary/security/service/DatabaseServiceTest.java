@@ -282,7 +282,7 @@ class DatabaseServiceTest {
                         + longValue
                         + "');\n";
 
-        Path script = Files.createTempFile("backup_long_string", ".sql");
+        Path script = Files.createTempFile(tempDir, "backup_long_string", ".sql");
         Files.writeString(script, sqlContent);
 
         org.assertj.core.api.Assertions.assertThatNoException()

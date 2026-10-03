@@ -844,14 +844,18 @@ public class GeneralUtils {
             // Process ranges only if it's not n-syntax
             // Limit -1 keeps empty parts, so a bare "-" is an invalid range, not an empty array.
             String[] rangeParts = trimmedPart.split("-", -1);
+            if (rangeParts.length != 2) {
+                log.debug("Invalid range: {}", trimmedPart);
+                return partResult;
+            }
             try {
                 String firstPart = rangeParts[0].trim();
-                String secondPart = rangeParts.length > 1 ? rangeParts[1].trim() : "";
+                String secondPart = rangeParts[1].trim();
                 if (firstPart.isEmpty() && secondPart.isEmpty()) {
                     return partResult;
                 }
                 int start = firstPart.isEmpty() ? 1 : Integer.parseInt(firstPart);
-                int end = !secondPart.isEmpty() ? Integer.parseInt(secondPart) : totalPages;
+                int end = secondPart.isEmpty() ? totalPages : Integer.parseInt(secondPart);
                 for (int i = start; i <= end; i++) {
                     if (i >= 1 && i <= totalPages) {
                         partResult.add(i - 1 + offset);
