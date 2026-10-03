@@ -570,11 +570,6 @@ public final class RegexPatternUtils {
                 "^(?=.{1,320}$)(?=.{1,64}@)[A-Za-z0-9](?:[A-Za-z0-9_.+-]*[A-Za-z0-9])?@[^-][A-Za-z0-9-]+(?:\\.[A-Za-z0-9-]+)*(?:\\.[A-Za-z]{2,})$");
     }
 
-    /* Pattern for validating file extensions (2-4 alphanumeric, case-insensitive) */
-    public Pattern getFileExtensionValidationPattern() {
-        return getPattern("^[a-zA-Z0-9]{2,4}$", Pattern.CASE_INSENSITIVE);
-    }
-
     /** Pattern for splitting on line breaks (Unicode line separator) */
     public Pattern getLineSeparatorPattern() {
         return getPattern("\\R");

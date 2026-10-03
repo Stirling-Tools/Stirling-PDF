@@ -52,6 +52,7 @@ public class CustomHtmlSanitizer {
                     .onElements("img")
                     .toFactory();
 
+    /** Keep CSS URLs and style/link/base elements disabled; SSRF checks allow public hosts. */
     private final PolicyFactory POLICY =
             Sanitizers.FORMATTING
                     .and(Sanitizers.BLOCKS)
