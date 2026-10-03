@@ -46,6 +46,10 @@ dependencies {
     implementation "org.commonmark:commonmark:$commonmarkVersion" // https://mvnrepository.com/artifact/org.commonmark/commonmark
     implementation "org.commonmark:commonmark-ext-gfm-tables:$commonmarkVersion"
 
+    // PDF to Word, OpenDocument, RTF, text, PowerPoint and Excel; legacy adds binary .ppt through POI.
+    implementation "com.stirling:stirling-office-convert:$officeConvertVersion"
+    implementation "com.stirling:stirling-office-convert-legacy:$officeConvertVersion"
+
     // General PDF dependencies
     implementation "org.apache.pdfbox:preflight:$pdfboxVersion"
     implementation "org.apache.pdfbox:xmpbox:$pdfboxVersion"

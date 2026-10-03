@@ -15,7 +15,6 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
@@ -26,6 +25,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.SPDF.model.api.PDFWithPageNums;
+import stirling.software.SPDF.service.OfficeConversionService;
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFile;
@@ -37,10 +38,15 @@ class ConvertPDFToExcelControllerTest {
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private TempFileManager tempFileManager;
 
-    @InjectMocks private ConvertPDFToExcelController controller;
+    private ConvertPDFToExcelController controller;
 
     @BeforeEach
     void setUp() throws Exception {
+        controller =
+                new ConvertPDFToExcelController(
+                        pdfDocumentFactory,
+                        tempFileManager,
+                        new OfficeConversionService(new ApplicationProperties()));
         lenient()
                 .when(tempFileManager.createManagedTempFile(anyString()))
                 .thenAnswer(

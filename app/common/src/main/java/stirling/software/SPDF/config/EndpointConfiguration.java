@@ -469,14 +469,11 @@ public class EndpointConfiguration {
         addEndpointToGroup("CLI", "repair");
         addEndpointToGroup("CLI", "pdf-to-pdfa");
         addEndpointToGroup("CLI", "file-to-pdf");
-        addEndpointToGroup("CLI", "pdf-to-word");
-        addEndpointToGroup("CLI", "pdf-to-presentation");
         addEndpointToGroup("CLI", "pdf-to-html");
         addEndpointToGroup("CLI", "pdf-to-xml");
         addEndpointToGroup("CLI", "ocr-pdf");
         addEndpointToGroup("CLI", "html-to-pdf");
         addEndpointToGroup("CLI", "url-to-pdf");
-        addEndpointToGroup("CLI", "pdf-to-rtf");
 
         // python
         addEndpointToGroup("Python", "extract-image-scans");
@@ -489,9 +486,6 @@ public class EndpointConfiguration {
 
         // LibreOffice
         addEndpointToGroup("LibreOffice", "file-to-pdf");
-        addEndpointToGroup("LibreOffice", "pdf-to-word");
-        addEndpointToGroup("LibreOffice", "pdf-to-presentation");
-        addEndpointToGroup("LibreOffice", "pdf-to-rtf");
         addEndpointToGroup("LibreOffice", "pdf-to-html");
         addEndpointToGroup("LibreOffice", "pdf-to-xml");
         addEndpointToGroup("LibreOffice", "pdf-to-pdfa");
@@ -540,6 +534,9 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", REMOVE_BLANKS);
         addEndpointToGroup("Java", "remove-annotations");
         addEndpointToGroup("Java", "pdf-to-text");
+        addEndpointToGroup("Java", "pdf-to-word");
+        addEndpointToGroup("Java", "pdf-to-presentation");
+        addEndpointToGroup("Java", "pdf-to-rtf");
         addEndpointToGroup("Java", "pdf-to-markdown");
         addEndpointToGroup("Java", "add-attachments");
         addEndpointToGroup("Java", "compress-pdf");

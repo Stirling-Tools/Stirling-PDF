@@ -5,8 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
@@ -30,11 +32,11 @@ import org.springframework.mock.web.MockMultipartFile;
 import stirling.software.SPDF.model.api.converters.PdfToPresentationRequest;
 import stirling.software.SPDF.model.api.converters.PdfToTextOrRTFRequest;
 import stirling.software.SPDF.model.api.converters.PdfToWordRequest;
+import stirling.software.SPDF.service.OfficeConversionService;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
-import stirling.software.common.util.PDFToFile;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
@@ -56,6 +58,7 @@ class ConvertPDFToOfficeTest {
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private TempFileManager tempFileManager;
     @Mock private RuntimePathConfig runtimePathConfig;
+    @Mock private OfficeConversionService officeConversionService;
 
     @InjectMocks private ConvertPDFToOffice controller;
 
@@ -81,37 +84,22 @@ class ConvertPDFToOfficeTest {
     }
 
     @Test
-    void processPdfToPresentation_delegatesToPdfToFile() throws Exception {
-        MockMultipartFile pdfFile = createPdfFile();
+    void processPdfToPresentation_keepsOutputFormat() {
         PdfToPresentationRequest request = new PdfToPresentationRequest();
-        request.setFileInput(pdfFile);
+        request.setFileInput(createPdfFile());
         request.setOutputFormat("pptx");
 
-        ResponseEntity<Resource> expectedResponse = streamingOk("pptx-content".getBytes());
-
-        try (MockedStatic<PDFToFile> mock =
-                Mockito.mockStatic(PDFToFile.class, Mockito.CALLS_REAL_METHODS)) {
-            PDFToFile pdfToFile = Mockito.mock(PDFToFile.class);
-
-            // We can't easily mock the constructor, so test via the actual endpoint
-            // which creates PDFToFile internally. Instead, verify the method doesn't throw
-            // with proper mocking of the utility.
-        }
-
-        // Since PDFToFile is created internally (not injected), we verify
-        // by checking that the method runs without NPE and exercises the code path
         assertNotNull(request.getOutputFormat());
         assertEquals("pptx", request.getOutputFormat());
     }
 
     @Test
-    void processPdfToRTForTXT_withTxtFormat_usesStripper() throws Exception {
+    void processPdfToRTForTXT_withTxtFormat_convertsThroughOfficeService() throws Exception {
         MockMultipartFile pdfFile = createPdfFile();
         PdfToTextOrRTFRequest request = new PdfToTextOrRTFRequest();
         request.setFileInput(pdfFile);
         request.setOutputFormat("txt");
 
-        // Use a real PDDocument so PDFTextStripper.getText() works without NPE
         PDDocument realDoc = new PDDocument();
         realDoc.addPage(new org.apache.pdfbox.pdmodel.PDPage());
         when(pdfDocumentFactory.load(pdfFile)).thenReturn(realDoc);
@@ -134,6 +122,7 @@ class ConvertPDFToOfficeTest {
             ResponseEntity<Resource> response = controller.processPdfToRTForTXT(request);
 
             assertSame(expectedResponse, response);
+            verify(officeConversionService).convert(eq(realDoc), any(), eq("txt"), any());
         }
     }
 

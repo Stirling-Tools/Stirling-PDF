@@ -22,7 +22,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.Resource;
@@ -31,15 +30,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.SPDF.model.api.PDFWithPageNums;
+import stirling.software.SPDF.service.OfficeConversionService;
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
 /**
- * Additional coverage for {@link ConvertPDFToExcelController}. Tabula runs in-process, so documents
- * are built in-memory: an empty page exercises the no-content branch, a multi-page document drives
- * the page loop, and a bordered-grid page drives the workbook-writing path. The managed temp file
- * is a real file so the workbook is written to disk.
+ * Additional coverage for {@link ConvertPDFToExcelController}. Stirling Office Convert runs
+ * in-process, so documents are built in-memory: an empty page exercises the no-content branch, a
+ * multi-page document drives the page loop, and a bordered-grid page drives the workbook-writing
+ * path. The managed temp file is a real file so the workbook is written to disk.
  */
 @ExtendWith(MockitoExtension.class)
 class ConvertPDFToExcelControllerMoreTest {
@@ -47,10 +48,15 @@ class ConvertPDFToExcelControllerMoreTest {
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private TempFileManager tempFileManager;
 
-    @InjectMocks private ConvertPDFToExcelController controller;
+    private ConvertPDFToExcelController controller;
 
     @BeforeEach
     void setUp() throws Exception {
+        controller =
+                new ConvertPDFToExcelController(
+                        pdfDocumentFactory,
+                        tempFileManager,
+                        new OfficeConversionService(new ApplicationProperties()));
         lenient()
                 .when(tempFileManager.createManagedTempFile(anyString()))
                 .thenAnswer(
@@ -160,8 +166,7 @@ class ConvertPDFToExcelControllerMoreTest {
     class WorkbookWriting {
 
         @Test
-        @DisplayName(
-                "a bordered table page produces an xlsx response or, if undetected, no content")
+        @DisplayName("a bordered table page produces an xlsx holding its cells")
         void borderedTableProducesXlsx() throws Exception {
             PDFWithPageNums request = new PDFWithPageNums();
             request.setFileInput(pdf("table.pdf"));
@@ -171,18 +176,29 @@ class ConvertPDFToExcelControllerMoreTest {
 
             ResponseEntity<Resource> response = controller.pdfToExcel(request);
 
-            // Lattice detection depends on the Tabula build; accept either outcome but assert the
-            // success path produced a real, non-empty xlsx body.
-            if (response.getStatusCode() == HttpStatus.OK) {
-                assertThat(response.getHeaders().getContentType().toString())
-                        .contains("spreadsheetml.sheet");
-                assertThat(response.getHeaders().getContentDisposition().getFilename())
-                        .isEqualTo("table.xlsx");
-                assertThat(response.getBody()).isNotNull();
-            } else {
-                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getHeaders().getContentType().toString())
+                    .contains("spreadsheetml.sheet");
+            assertThat(response.getHeaders().getContentDisposition().getFilename())
+                    .isEqualTo("table.xlsx");
+            assertThat(workbookText(response)).contains("R0C0", "R1C2", "R2C1");
+        }
+    }
+
+    /** Every string the workbook holds, shared or inline, from its XML parts. */
+    private static String workbookText(ResponseEntity<Resource> response) throws Exception {
+        StringBuilder text = new StringBuilder();
+        try (java.util.zip.ZipInputStream zip =
+                new java.util.zip.ZipInputStream(response.getBody().getInputStream())) {
+            for (java.util.zip.ZipEntry e; (e = zip.getNextEntry()) != null; ) {
+                if (e.getName().startsWith("xl/") && e.getName().endsWith(".xml")) {
+                    text.append(
+                            new String(
+                                    zip.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8));
+                }
             }
         }
+        return text.toString();
     }
 
     @Nested
