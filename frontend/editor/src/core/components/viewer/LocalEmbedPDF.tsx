@@ -22,7 +22,11 @@ import {
 import { Scroller, ScrollPluginPackage } from "@embedpdf/plugin-scroll/react";
 import { DocumentManagerPluginPackage } from "@embedpdf/plugin-document-manager/react";
 import { RenderPluginPackage } from "@embedpdf/plugin-render/react";
-import { ZoomPluginPackage, ZoomMode } from "@embedpdf/plugin-zoom/react";
+import {
+  ZoomPluginPackage,
+  ZoomMode,
+  ZoomGestureWrapper,
+} from "@embedpdf/plugin-zoom/react";
 import { InteractionManagerPluginPackage } from "@embedpdf/plugin-interaction-manager/react";
 import {
   SelectionLayer,
@@ -560,19 +564,21 @@ function DocumentViewport({ documentId, pageOptions }: DocumentViewportProps) {
           contain: "strict",
         }}
       >
-        <Scroller
-          documentId={documentId}
-          renderPage={({ width, height, pageIndex }) => (
-            <ViewerPage
-              key={`${documentId}-${pageIndex}`}
-              documentId={documentId}
-              pageIndex={pageIndex}
-              width={width}
-              height={height}
-              {...pageOptions}
-            />
-          )}
-        />
+        <ZoomGestureWrapper documentId={documentId}>
+          <Scroller
+            documentId={documentId}
+            renderPage={({ width, height, pageIndex }) => (
+              <ViewerPage
+                key={`${documentId}-${pageIndex}`}
+                documentId={documentId}
+                pageIndex={pageIndex}
+                width={width}
+                height={height}
+                {...pageOptions}
+              />
+            )}
+          />
+        </ZoomGestureWrapper>
       </Viewport>
     </ViewerGlobalPointerProvider>
   );

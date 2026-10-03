@@ -24,6 +24,21 @@ import { startEagerWasmCompilation } from "@app/services/wasmPrecompiler";
 applyDevWorktreeLabel();
 
 if (typeof window !== "undefined") {
+  // Safari magnifies the whole page on a pinch unless `gesturestart` is
+  // prevented. Only the viewer's own surface is suppressed - it zooms the
+  // document itself - while every other screen keeps browser magnification,
+  // which is the only zoom it has.
+  window.addEventListener(
+    "gesturestart",
+    (event) => {
+      const target = event.target as Element | null;
+      if (target?.closest("[data-viewer-touch-scroll]")) {
+        event.preventDefault();
+      }
+    },
+    { passive: false, capture: true },
+  );
+
   const scheduleCompilation = () =>
     requestIdleCallback(() => startEagerWasmCompilation(), { timeout: 2000 });
 
