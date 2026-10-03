@@ -856,9 +856,12 @@ public class GeneralUtils {
                 }
                 int start = firstPart.isEmpty() ? 1 : Integer.parseInt(firstPart);
                 int end = secondPart.isEmpty() ? totalPages : Integer.parseInt(secondPart);
-                for (int i = start; i <= end; i++) {
-                    if (i >= 1 && i <= totalPages) {
-                        partResult.add(i - 1 + offset);
+                int firstPage = Math.max(start, 1);
+                int lastPage = Math.min(end, totalPages);
+                for (int i = firstPage; i <= lastPage; i++) {
+                    partResult.add(i - 1 + offset);
+                    if (i == lastPage) {
+                        break;
                     }
                 }
             } catch (NumberFormatException e) {
