@@ -4,7 +4,6 @@ import {
   useEffect,
   useCallback,
   useRef,
-  useState,
 } from "react";
 import { useAnnotationCapability } from "@embedpdf/plugin-annotation/react";
 import {
@@ -18,7 +17,6 @@ import type {
   AnnotationRect,
 } from "@app/components/viewer/viewerTypes";
 import type { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
-import { useViewer } from "@app/contexts/ViewerContext";
 import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
 
 // The signature tools stash the source image on stamp annotations via custom fields
@@ -199,25 +197,25 @@ export const SignatureAPIBridge = forwardRef<
     signatureConfig,
     storeImageData,
     isPlacementMode,
-    placementPreviewSize,
+    placementSize,
+    setPlacementSize,
     setSignaturesApplied,
   } = useSignature();
-  const { getZoomState, registerImmediateZoomUpdate } = useViewer();
   const documentReady = useDocumentReady();
-  const [currentZoom, setCurrentZoom] = useState(
-    () => getZoomState()?.currentZoom ?? 1,
-  );
   const lastStampImageRef = useRef<string | null>(null);
+  const placedSignatureIdsRef = useRef(new Set<string>());
 
   useEffect(() => {
-    setCurrentZoom(getZoomState()?.currentZoom ?? 1);
-    const unregister = registerImmediateZoomUpdate((percent) => {
-      setCurrentZoom(Math.max(percent / 100, 0.01));
-    });
-    return () => {
-      unregister?.();
-    };
-  }, [getZoomState, registerImmediateZoomUpdate]);
+    placedSignatureIdsRef.current.clear();
+  }, [
+    signatureConfig?.signatureType,
+    signatureConfig?.signatureData,
+    signatureConfig?.signerName,
+    signatureConfig?.fontFamily,
+    signatureConfig?.fontSize,
+    signatureConfig?.textColor,
+    signatureConfig?.textAlign,
+  ]);
 
   // When entering sign mode, deactivate any active annotation tool immediately.
   // Only signature-specific tools (signatureInk, stamp) should be usable.
@@ -227,18 +225,6 @@ export const SignatureAPIBridge = forwardRef<
     }
   }, [isSignMode, annotationApi, documentReady]);
 
-  const cssToPdfSize = useCallback(
-    (size: { width: number; height: number }) => {
-      const zoom = currentZoom || 1;
-      const factor = 1 / zoom;
-      return {
-        width: size.width * factor,
-        height: size.height * factor,
-      };
-    },
-    [currentZoom],
-  );
-
   const applyStampDefaults = useCallback(
     (
       imageSrc: string,
@@ -247,18 +233,13 @@ export const SignatureAPIBridge = forwardRef<
     ) => {
       if (!annotationApi) return;
 
-      annotationApi.setActiveTool(null);
-      annotationApi.setActiveTool("stamp");
-      const stampTool = annotationApi.getActiveTool();
-      if (stampTool && stampTool.id === "stamp") {
-        annotationApi.setToolDefaults("stamp", {
-          imageSrc,
-          subject,
-          ...(size
-            ? { imageSize: { width: size.width, height: size.height } }
-            : {}),
-        });
-      }
+      annotationApi.setToolDefaults("stamp", {
+        imageSrc,
+        subject,
+        ...(size
+          ? { imageSize: { width: size.width, height: size.height } }
+          : {}),
+      });
     },
     [annotationApi],
   );
@@ -273,48 +254,35 @@ export const SignatureAPIBridge = forwardRef<
         signatureConfig.signatureType === "text" &&
         signatureConfig.signerName
       ) {
-        const textStamp = createTextStampImage(
-          signatureConfig,
-          placementPreviewSize,
-        );
+        const textStamp = createTextStampImage(signatureConfig, placementSize);
         if (textStamp) {
-          const displaySize = placementPreviewSize ?? {
+          const displaySize = placementSize ?? {
             width: textStamp.displayWidth,
             height: textStamp.displayHeight,
           };
-          const pdfSize = cssToPdfSize(displaySize);
           lastStampImageRef.current = textStamp.dataUrl;
           applyStampDefaults(
             textStamp.dataUrl,
             `Text Signature - ${signatureConfig.signerName}`,
-            pdfSize,
+            displaySize,
           );
         }
         return;
       }
 
       if (signatureConfig.signatureData) {
-        const pdfSize = placementPreviewSize
-          ? cssToPdfSize(placementPreviewSize)
-          : undefined;
         lastStampImageRef.current = signatureConfig.signatureData;
         applyStampDefaults(
           signatureConfig.signatureData,
           `Digital Signature - ${signatureConfig.reason || "Document signing"}`,
-          pdfSize,
+          placementSize ?? undefined,
         );
         return;
       }
     } catch (error) {
       console.error("Error preparing signature defaults:", error);
     }
-  }, [
-    annotationApi,
-    signatureConfig,
-    placementPreviewSize,
-    applyStampDefaults,
-    cssToPdfSize,
-  ]);
+  }, [annotationApi, signatureConfig, placementSize, applyStampDefaults]);
 
   // Enable keyboard deletion of selected annotations
   useEffect(() => {
@@ -445,6 +413,8 @@ export const SignatureAPIBridge = forwardRef<
       activateSignaturePlacementMode: () => {
         if (!annotationApi || !signatureConfig) return;
 
+        annotationApi.setActiveTool(null);
+        annotationApi.setActiveTool("stamp");
         configureStampDefaults().catch((error) => {
           console.error("Error activating signature tool:", error);
         });
@@ -562,7 +532,7 @@ export const SignatureAPIBridge = forwardRef<
         rectMove.moveAnnotation?.(pageIndex, annotationId, newRect);
       },
     }),
-    [annotationApi, signatureConfig, placementPreviewSize, applyStampDefaults],
+    [annotationApi, signatureConfig, placementSize, applyStampDefaults],
   );
 
   useEffect(() => {
@@ -582,8 +552,19 @@ export const SignatureAPIBridge = forwardRef<
       }
 
       // Mark signatures as not applied when a new signature is placed
-      if (event.type === "create") {
+      const isSignatureStamp =
+        annotation?.type === PdfAnnotationSubtype.STAMP &&
+        isPlacementMode &&
+        signatureConfig !== null;
+
+      if (event.type === "create" && isSignatureStamp) {
         setSignaturesApplied(false);
+        placedSignatureIdsRef.current.add(annotationId);
+      } else if (placedSignatureIdsRef.current.has(annotationId)) {
+        const size = annotation?.rect?.size;
+        if (size?.width > 0 && size?.height > 0) {
+          setPlacementSize({ width: size.width, height: size.height });
+        }
       }
 
       const directData =
@@ -605,7 +586,15 @@ export const SignatureAPIBridge = forwardRef<
     return () => {
       unsubscribe?.();
     };
-  }, [annotationApi, storeImageData, setSignaturesApplied, documentReady]);
+  }, [
+    annotationApi,
+    storeImageData,
+    setSignaturesApplied,
+    setPlacementSize,
+    isPlacementMode,
+    signatureConfig,
+    documentReady,
+  ]);
 
   useEffect(() => {
     if (!isPlacementMode || !documentReady) {
@@ -625,7 +614,7 @@ export const SignatureAPIBridge = forwardRef<
   }, [
     isPlacementMode,
     configureStampDefaults,
-    placementPreviewSize,
+    placementSize,
     signatureConfig,
     documentReady,
   ]);
