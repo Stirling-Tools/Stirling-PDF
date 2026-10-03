@@ -58,6 +58,10 @@ public class AiCreateSessionService {
         return repository.save(session);
     }
 
+    /**
+     * Any user's session, with no owner check. User-facing code uses {@link
+     * #getSessionForCurrentUser}.
+     */
     public AiCreateSession getSession(String sessionId) {
         return repository
                 .findById(sessionId)
@@ -131,6 +135,10 @@ public class AiCreateSessionService {
         repository.delete(session);
     }
 
+    /**
+     * Updates any user's session with no owner check, so it must stay behind an ADMIN gate. A null
+     * argument leaves its field unchanged.
+     */
     public AiCreateSession applyInternalUpdate(
             String sessionId,
             String outlineText,

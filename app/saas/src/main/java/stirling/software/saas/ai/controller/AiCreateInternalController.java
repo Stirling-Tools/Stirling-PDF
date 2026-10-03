@@ -6,6 +6,7 @@ import java.util.Map;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,9 +30,15 @@ import stirling.software.saas.payg.model.FeatureGate;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
+/**
+ * Service-to-service read and write-back for AI Create sessions. It acts on any user's session with
+ * no owner check, so only an ADMIN credential (an admin {@code X-API-KEY}) may call it; users reach
+ * their own sessions through the owner-scoped {@link AiCreateController}.
+ */
 @RestController
 @Profile("saas")
 @RequestMapping("/api/v1/ai/create/internal")
+@PreAuthorize("hasRole('ADMIN')")
 @Tag(name = "AI")
 @Hidden
 @RequiredArgsConstructor
