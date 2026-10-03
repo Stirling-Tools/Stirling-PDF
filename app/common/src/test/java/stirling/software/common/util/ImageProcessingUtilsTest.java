@@ -7,10 +7,70 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.awt.image.DataBufferInt;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.zip.CRC32;
+
+import javax.imageio.ImageIO;
 
 import org.junit.jupiter.api.Test;
 
 class ImageProcessingUtilsTest {
+
+    // A valid PNG whose IHDR declares w x h; the header alone drives the dimension guard.
+    private static byte[] pngHeader(int w, int h) throws IOException {
+        ByteArrayOutputStream png = new ByteArrayOutputStream();
+        DataOutputStream out = new DataOutputStream(png);
+        out.write(new byte[] {(byte) 0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n'});
+        ByteArrayOutputStream ihdr = new ByteArrayOutputStream();
+        DataOutputStream ih = new DataOutputStream(ihdr);
+        ih.writeInt(w);
+        ih.writeInt(h);
+        ih.write(new byte[] {8, 2, 0, 0, 0});
+        writeChunk(out, "IHDR", ihdr.toByteArray());
+        writeChunk(out, "IEND", new byte[0]);
+        return png.toByteArray();
+    }
+
+    private static void writeChunk(DataOutputStream out, String type, byte[] data)
+            throws IOException {
+        CRC32 crc = new CRC32();
+        crc.update(type.getBytes(StandardCharsets.ISO_8859_1));
+        crc.update(data);
+        out.writeInt(data.length);
+        out.writeBytes(type);
+        out.write(data);
+        out.writeInt((int) crc.getValue());
+    }
+
+    @Test
+    void assertWithinPixelLimit_withinLimit_passes() throws IOException {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ImageIO.write(new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB), "png", bos);
+        assertDoesNotThrow(() -> ImageProcessingUtils.assertWithinPixelLimit(bos.toByteArray()));
+    }
+
+    @Test
+    void assertWithinPixelLimit_oversized_throws() throws IOException {
+        byte[] bomb = pngHeader(20000, 20000); // 400 Mpx, over the 100 Mpx cap
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> ImageProcessingUtils.assertWithinPixelLimit(bomb));
+    }
+
+    @Test
+    void assertWithinPixelLimit_nullBytes_passes() {
+        assertDoesNotThrow(() -> ImageProcessingUtils.assertWithinPixelLimit((byte[]) null));
+    }
+
+    @Test
+    void assertWithinPixelLimit_nonImageBytes_passes() {
+        // No reader claims it, so the guard defers to the normal decode path's own error.
+        byte[] notAnImage = "not an image".getBytes(StandardCharsets.UTF_8);
+        assertDoesNotThrow(() -> ImageProcessingUtils.assertWithinPixelLimit(notAnImage));
+    }
 
     @Test
     void convertColorType_greyscale_returnsGrayscaleImage() {
