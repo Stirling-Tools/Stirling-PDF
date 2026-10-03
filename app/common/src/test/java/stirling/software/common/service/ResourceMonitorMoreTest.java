@@ -1,12 +1,12 @@
 package stirling.software.common.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryUsage;
-import java.lang.management.OperatingSystemMXBean;
 import java.time.Instant;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
@@ -16,9 +16,13 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import com.sun.management.OperatingSystemMXBean;
 
 import stirling.software.common.service.ResourceMonitor.ResourceMetrics;
 import stirling.software.common.service.ResourceMonitor.ResourceStatus;
@@ -63,103 +67,87 @@ class ResourceMonitorMoreTest {
     @DisplayName("updateResourceMetrics status transitions")
     class UpdateMetrics {
 
-        @Test
-        @DisplayName("high CPU load drives the status to CRITICAL")
-        void criticalOnHighCpu() {
-            // load average / processors = 4 / 2 = 2.0 -> well over critical threshold.
-            when(osMXBean.getSystemLoadAverage()).thenReturn(4.0);
-            when(osMXBean.getAvailableProcessors()).thenReturn(2);
+        @ParameterizedTest
+        @CsvSource({"0.5, OK", "0.8, WARNING", "0.95, CRITICAL"})
+        @DisplayName("CPU utilization drives resource status")
+        void statusFollowsCpuUtilization(double cpuUsage, ResourceStatus expectedStatus) {
+            when(osMXBean.getCpuLoad()).thenReturn(cpuUsage);
             stubMemory(1L, 1L);
 
             ReflectionTestUtils.invokeMethod(resourceMonitor, "updateResourceMetrics");
 
-            assertThat(currentStatus.get()).isEqualTo(ResourceStatus.CRITICAL);
-            assertThat(latestMetrics.get().getCpuUsage()).isEqualTo(2.0);
+            assertThat(currentStatus.get()).isEqualTo(expectedStatus);
+            assertThat(latestMetrics.get().getCpuUsage()).isEqualTo(cpuUsage);
         }
 
         @Test
-        @DisplayName("moderately high CPU load drives the status to WARNING")
-        void warningOnModerateCpu() {
-            // 1.6 / 2 = 0.8 -> above high (0.75) but below critical (0.9).
-            when(osMXBean.getSystemLoadAverage()).thenReturn(1.6);
-            when(osMXBean.getAvailableProcessors()).thenReturn(2);
+        @DisplayName("CPU utilization takes precedence over load average")
+        void utilizationTakesPrecedenceOverLoadAverage() {
+            when(osMXBean.getCpuLoad()).thenReturn(0.2);
+            lenient().when(osMXBean.getSystemLoadAverage()).thenReturn(20.0);
             stubMemory(1L, 1L);
-
-            ReflectionTestUtils.invokeMethod(resourceMonitor, "updateResourceMetrics");
-
-            assertThat(currentStatus.get()).isEqualTo(ResourceStatus.WARNING);
-        }
-
-        @Test
-        @DisplayName("low load keeps the status at OK")
-        void okOnLowLoad() {
-            when(osMXBean.getSystemLoadAverage()).thenReturn(0.2);
-            when(osMXBean.getAvailableProcessors()).thenReturn(4);
-            stubMemory(1L, 1L);
-            currentStatus.set(ResourceStatus.WARNING); // ensure a transition log path is hit
 
             ReflectionTestUtils.invokeMethod(resourceMonitor, "updateResourceMetrics");
 
             assertThat(currentStatus.get()).isEqualTo(ResourceStatus.OK);
+            assertThat(latestMetrics.get().getCpuUsage()).isEqualTo(0.2);
         }
 
         @Test
-        @DisplayName("a negative load average triggers the alternative CPU fallback")
-        void negativeLoadUsesFallback() {
-            // getSystemLoadAverage returns -1 on platforms (e.g. Windows) where it is unsupported.
-            when(osMXBean.getSystemLoadAverage()).thenReturn(-1.0);
+        @DisplayName("unsupported CPU utilization falls back to bounded load average")
+        void unsupportedUtilizationUsesBoundedLoadAverage() {
+            when(osMXBean.getCpuLoad()).thenReturn(-1.0);
+            when(osMXBean.getSystemLoadAverage()).thenReturn(8.0);
+            when(osMXBean.getAvailableProcessors()).thenReturn(2);
+            stubMemory(1L, 1L);
+
+            ReflectionTestUtils.invokeMethod(resourceMonitor, "updateResourceMetrics");
+
+            assertThat(latestMetrics.get().getCpuUsage()).isEqualTo(1.0);
+            assertThat(currentStatus.get()).isEqualTo(ResourceStatus.CRITICAL);
+        }
+
+        @Test
+        @DisplayName("invalid CPU samples use the safe default")
+        void invalidCpuSamplesUseSafeDefault() {
+            when(osMXBean.getCpuLoad()).thenReturn(Double.NaN);
+            when(osMXBean.getSystemLoadAverage()).thenReturn(Double.POSITIVE_INFINITY);
             when(osMXBean.getAvailableProcessors()).thenReturn(4);
             stubMemory(1L, 1L);
 
             ReflectionTestUtils.invokeMethod(resourceMonitor, "updateResourceMetrics");
 
-            // The mock OS bean has no getProcessCpuLoad/getSystemCpuLoad, so fallback yields 0.5.
             assertThat(latestMetrics.get().getCpuUsage()).isEqualTo(0.5);
             assertThat(currentStatus.get()).isEqualTo(ResourceStatus.OK);
+        }
+
+        @ParameterizedTest
+        @CsvSource({"0.8, WARNING", "0.95, CRITICAL"})
+        @DisplayName("memory pressure drives status when CPU utilization is low")
+        void statusFollowsMemoryPressure(double memoryUsage, ResourceStatus expectedStatus) {
+            when(osMXBean.getCpuLoad()).thenReturn(0.1);
+            long maxMemory = Runtime.getRuntime().maxMemory();
+            stubMemory((long) (maxMemory * memoryUsage), 0L);
+
+            ReflectionTestUtils.invokeMethod(resourceMonitor, "updateResourceMetrics");
+
+            assertThat(currentStatus.get()).isEqualTo(expectedStatus);
         }
 
         @Test
         @DisplayName("an exception while sampling is swallowed and status is unchanged")
         void samplingExceptionSwallowed() {
-            when(osMXBean.getSystemLoadAverage()).thenReturn(0.1);
-            when(osMXBean.getAvailableProcessors()).thenReturn(2);
+            when(osMXBean.getCpuLoad()).thenReturn(0.1);
             when(memoryMXBean.getHeapMemoryUsage())
                     .thenThrow(new RuntimeException("jmx unavailable"));
             currentStatus.set(ResourceStatus.OK);
 
-            // Must not propagate; the catch in updateResourceMetrics handles it.
-            ReflectionTestUtils.invokeMethod(resourceMonitor, "updateResourceMetrics");
+            assertDoesNotThrow(
+                    () ->
+                            ReflectionTestUtils.invokeMethod(
+                                    resourceMonitor, "updateResourceMetrics"));
 
             assertThat(currentStatus.get()).isEqualTo(ResourceStatus.OK);
-        }
-    }
-
-    @Nested
-    @DisplayName("getAlternativeCpuLoad")
-    class AlternativeCpuLoad {
-
-        @Test
-        @DisplayName("uses getProcessCpuLoad via reflection when present")
-        void usesProcessCpuLoad() {
-            // A bean exposing getProcessCpuLoad lets the reflective fallback return its value.
-            OperatingSystemMXBean withCpuLoad = new OsBeanWithProcessCpuLoad(0.42);
-            ReflectionTestUtils.setField(resourceMonitor, "osMXBean", withCpuLoad);
-
-            double load =
-                    (double)
-                            ReflectionTestUtils.invokeMethod(
-                                    resourceMonitor, "getAlternativeCpuLoad");
-            assertThat(load).isEqualTo(0.42);
-        }
-
-        @Test
-        @DisplayName("defaults to 0.5 when no CPU-load method is available")
-        void defaultsWhenUnavailable() {
-            double load =
-                    (double)
-                            ReflectionTestUtils.invokeMethod(
-                                    resourceMonitor, "getAlternativeCpuLoad");
-            assertThat(load).isEqualTo(0.5);
         }
     }
 
@@ -210,50 +198,6 @@ class ResourceMonitorMoreTest {
 
             live.shutdown();
             assertThat(scheduler.isShutdown()).isTrue();
-        }
-    }
-
-    /** Minimal OS bean stub exposing getProcessCpuLoad so the reflective fallback can find it. */
-    private static class OsBeanWithProcessCpuLoad implements OperatingSystemMXBean {
-        private final double cpuLoad;
-
-        OsBeanWithProcessCpuLoad(double cpuLoad) {
-            this.cpuLoad = cpuLoad;
-        }
-
-        // Reflectively located by getAlternativeCpuLoad.
-        public double getProcessCpuLoad() {
-            return cpuLoad;
-        }
-
-        @Override
-        public String getName() {
-            return "stub";
-        }
-
-        @Override
-        public String getArch() {
-            return "stub";
-        }
-
-        @Override
-        public String getVersion() {
-            return "stub";
-        }
-
-        @Override
-        public int getAvailableProcessors() {
-            return 1;
-        }
-
-        @Override
-        public double getSystemLoadAverage() {
-            return -1.0;
-        }
-
-        @Override
-        public javax.management.ObjectName getObjectName() {
-            return null;
         }
     }
 }
