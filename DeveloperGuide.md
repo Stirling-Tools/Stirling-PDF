@@ -131,6 +131,8 @@ Stirling-PDF can be packaged as a cross-platform desktop application using Tauri
 
 Using Taskfile: `task desktop:dev` (development) or `task desktop:build` (production build).
 
+On macOS the macOS 26 app icon is compiled with `actool`, which needs full Xcode 26 or newer - Command Line Tools alone are not enough. Without it the build still works and falls back to `icons/macos/app.icns`.
+
 See [the frontend README](frontend/README.md#tauri) for detailed build instructions.
 
 ## 5. Project Structure
