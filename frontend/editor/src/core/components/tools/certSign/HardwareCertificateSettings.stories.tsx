@@ -13,6 +13,7 @@ const baseParameters: CertSignParameters = {
   name: "",
   pageNumber: 1,
   showLogo: true,
+  addTimestamp: true,
 };
 
 const meta = {
