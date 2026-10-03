@@ -153,6 +153,9 @@ public interface ProcessedFileRepository
     /** Whether any policy's row at this identity is in a state other than {@code status}. */
     boolean existsByIdentityHashAndStatusNot(String identityHash, ProcessedFileStatus status);
 
+    /** Whether any policy's row at this identity is in exactly {@code status}. */
+    boolean existsByIdentityHashAndStatus(String identityHash, ProcessedFileStatus status);
+
     /** One policy's rows across a chunk of identity hashes, for a sweep's claim snapshot. */
     List<ProcessedFileEntity> findByPolicyIdAndIdentityHashIn(
             String policyId, Collection<String> identityHashes);
