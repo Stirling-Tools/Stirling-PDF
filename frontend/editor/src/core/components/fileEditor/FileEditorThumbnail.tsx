@@ -38,6 +38,7 @@ import UploadToServerModal from "@app/components/shared/UploadToServerModal";
 import ShareFileModal from "@app/components/shared/ShareFileModal";
 import { VersionHistoryModal } from "@app/components/filesPage/VersionHistoryModal";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useAuth } from "@app/auth/UseSession";
 import { useFileThumbnail } from "@app/hooks/useFileThumbnail";
 import DocumentThumbnail from "@app/components/shared/filePreview/DocumentThumbnail";
 import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
@@ -81,6 +82,7 @@ const FileEditorThumbnail = ({
     ? t("files.notIncludedInToolRun", "Not included in this tool run")
     : undefined;
   const { config } = useAppConfig();
+  const { isAnonymous } = useAuth();
   const terminology = useFileActionTerminology();
   const icons = useFileActionIcons();
   const {
@@ -141,7 +143,8 @@ const FileEditorThumbnail = ({
   const isCBZ = extLower === "cbz";
   const isCBR = extLower === "cbr";
 
-  const uploadEnabled = config?.storageEnabled === true;
+  // Guests have no server storage to save or share into.
+  const uploadEnabled = config?.storageEnabled === true && !isAnonymous;
   const sharingEnabled =
     uploadEnabled && config?.storageSharingEnabled === true;
   const shareLinksEnabled =
