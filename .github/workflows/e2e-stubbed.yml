@@ -10,6 +10,9 @@ name: Playwright E2E (stubbed)
 # the shard list in the matrix is the single place to change the count.
 # The disk-link suite needs a desktop-mode bundle, so it is its own leg
 # instead of tailing the first chromium shard.
+#
+# Every leg serves the same bundle, so one `preview-bundle` job builds it and
+# the legs download the artifact.
 on:
   workflow_call:
 
@@ -17,8 +20,43 @@ permissions:
   contents: read
 
 jobs:
+  preview-bundle:
+    name: build preview bundle
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install Task
+        uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
+      - name: Build frontend (production bundle for vite preview)
+        env:
+          VITE_BUILD_FOR_PREVIEW: "1"
+          VITE_INCLUDE_PORTAL: "true"
+        run: task frontend:build:proprietary
+      # Every leg consumes this, so a bundle that produced no files must fail
+      # here rather than surface as sixteen identical test failures.
+      - name: Upload preview bundle
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: e2e-preview-bundle
+          path: frontend/editor/dist/
+          if-no-files-found: error
+          retention-days: 1
+
   playwright-e2e:
     name: playwright-e2e (${{ matrix.browser }} ${{ matrix.shard }})
+    needs: preview-bundle
     runs-on: ubuntu-latest
     timeout-minutes: 40
     # The image already contains the Playwright browsers and all Linux
@@ -64,14 +102,14 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - name: Install Task
         uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
-      # Every leg needs this, the disk-link one included: the OG prerender
+      # Every leg needs this bundle, the disk-link one included: the OG prerender
       # plugin in vite.config.ts reads dist/index.html whatever --outDir the
       # desktop build was given.
-      - name: Build frontend (production bundle for vite preview)
-        env:
-          VITE_BUILD_FOR_PREVIEW: "1"
-          VITE_INCLUDE_PORTAL: "true"
-        run: task frontend:build:proprietary
+      - name: Download preview bundle
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: e2e-preview-bundle
+          path: frontend/editor/dist/
       - name: Run stubbed E2E tests (${{ matrix.browser }} ${{ matrix.shard }})
         if: matrix.suite != 'desktop'
         env:
