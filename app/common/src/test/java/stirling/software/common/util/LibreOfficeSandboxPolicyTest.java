@@ -52,7 +52,8 @@ class LibreOfficeSandboxPolicyTest {
 
         assertEquals(profile, policy.profile());
 
-        assertEquals(profile + ":" + outDir + ":/dev", env.get("STIRLING_LO_ALLOW_RW"));
+        String sep = LibreOfficeSandboxPolicy.LIST_SEPARATOR;
+        assertEquals(profile + sep + outDir + sep + "/dev", env.get("STIRLING_LO_ALLOW_RW"));
         assertEquals(input.toString(), env.get("STIRLING_LO_ALLOW_RO_EXTRA"));
         assertEquals("/tmp", env.get("STIRLING_LO_ALLOW_SOCK"));
         assertEquals(profile.toString(), env.get("HOME"));
@@ -117,7 +118,9 @@ class LibreOfficeSandboxPolicyTest {
 
     @Test
     void pathWithListSeparatorIsLeftToSharedPolicy() throws IOException {
-        Path odd = Files.createDirectories(tmp.resolve("a:b"));
+        Path odd =
+                Files.createDirectories(
+                        tmp.resolve("a" + LibreOfficeSandboxPolicy.LIST_SEPARATOR + "b"));
         Path input = Files.writeString(tmp.resolve("in.docx"), "x");
 
         assertEquals(
