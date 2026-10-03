@@ -5,6 +5,19 @@ services:
       dockerfile: docker/embedded/Dockerfile.fat
     container_name: stirling-pdf-fat
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    # SETUID/SETGID drop to PUID/PGID; CHOWN/DAC_OVERRIDE prepare writable mounts.
+    # FOWNER permits chmod after chown; KILL lets PID 1 stop the JVM across UIDs.
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - KILL
+      - SETGID
+      - SETUID
     deploy:
       resources:
         limits:
