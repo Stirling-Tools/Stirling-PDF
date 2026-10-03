@@ -6,8 +6,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -34,6 +32,8 @@ import stirling.software.SPDF.model.api.security.RedactExecuteRequest.ImageBox;
 import stirling.software.SPDF.model.api.security.RedactExecuteRequest.RedactStyle;
 import stirling.software.SPDF.model.api.security.RedactExecuteRequest.TextRange;
 import stirling.software.SPDF.model.api.security.RedactPdfRequest;
+import stirling.software.SPDF.pdf.redaction.RedactionAssurance;
+import stirling.software.SPDF.pdf.redaction.RedactionVerificationFailedException;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
 import stirling.software.common.enumeration.ResourceWeight;
@@ -174,16 +174,10 @@ public class RedactController {
         boolean useRegex = Boolean.TRUE.equals(request.getUseRegex());
         boolean wholeWordSearchBool = Boolean.TRUE.equals(request.getWholeWordSearch());
 
-        if (useRegex) {
-            for (String term : terms) {
-                try {
-                    Pattern.compile(term);
-                } catch (PatternSyntaxException e) {
-                    throw ExceptionUtils.createIllegalArgumentException(
-                            "error.redaction.no.patterns", "Invalid regex pattern: " + term);
-                }
-            }
-        }
+        // Built before any redaction work so an invalid user regex fails the request up front,
+        // rather than at the first of the later compiles of the same terms.
+        RedactionAssurance.Targets assuranceTargets =
+                RedactionAssurance.targetsFor(terms, useRegex, wholeWordSearchBool);
 
         String filename =
                 removeFileExtension(
@@ -229,6 +223,7 @@ public class RedactController {
                                 .build();
 
                 TempFile tempOutput = tempFileManager.createManagedTempFile(".pdf");
+                TempFile redacted;
                 try {
                     try (PdfDocument checkDoc = PdfDocument.open(tempInput.getFile().toPath())) {
                         if (checkDoc.pageCount() <= 0) {
@@ -237,8 +232,8 @@ public class RedactController {
                     }
 
                     log.debug(
-                            "Calling JPDFium PdfRedactor.redact in RedactController (terms={})",
-                            terms);
+                            "Calling JPDFium PdfRedactor.redact in RedactController ({} term(s))",
+                            terms.size());
                     RedactResult result = PdfRedactor.redact(tempInput.getFile().toPath(), options);
                     log.debug(
                             "JPDFium auto-redact complete (matches={})",
@@ -252,7 +247,7 @@ public class RedactController {
                                 "JPDFium auto-redact: {} matches processed into {}",
                                 result.totalMatches(),
                                 filename);
-                        return WebResponseUtils.pdfFileToWebResponse(tempOutput, filename);
+                        redacted = tempOutput;
                     } finally {
                         if (result.document() != null) {
                             result.document().close();
@@ -261,7 +256,7 @@ public class RedactController {
                 } catch (Exception e) {
                     tempOutput.close();
                     log.warn(
-                            "JPDFium native redaction fell back to manual redaction service: {}",
+                            "JPDFium native redaction fell back to box-only manual redaction: {}",
                             e.getMessage());
                     Map<Integer, List<PDFText>> foundTexts =
                             textRedactionService.findTextToRedact(
@@ -269,7 +264,7 @@ public class RedactController {
                                     terms.toArray(new String[0]),
                                     useRegex,
                                     wholeWordSearchBool);
-                    TempFile finalized =
+                    redacted =
                             manualRedactionService.finalizeRedaction(
                                     document,
                                     foundTexts,
@@ -277,10 +272,21 @@ public class RedactController {
                                     request.getCustomPadding(),
                                     request.getConvertPDFToImage(),
                                     false);
-                    return WebResponseUtils.pdfFileToWebResponse(finalized, filename);
                 }
+
+                // Runs on the OUTPUT of both paths: the box-only fallback above covers text
+                // without removing it, and only this pass turns that into a 422 instead of a
+                // document that merely looks redacted.
+                try {
+                    RedactionAssurance.scrubAndVerify(
+                            redacted.getFile().toPath(), assuranceTargets);
+                } catch (Exception e) {
+                    redacted.close();
+                    throw e;
+                }
+                return WebResponseUtils.pdfFileToWebResponse(redacted, filename);
             }
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException | RedactionVerificationFailedException e) {
             throw e;
         } catch (Exception e) {
             log.error("Redaction operation failed: {}", e.getMessage(), e);

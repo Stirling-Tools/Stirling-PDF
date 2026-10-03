@@ -16,6 +16,7 @@ import static org.mockito.Mockito.when;
 import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,14 +25,22 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.cos.COSArray;
+import org.apache.pdfbox.cos.COSDictionary;
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
+import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.apache.pdfbox.pdmodel.interactive.form.PDTextField;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -116,6 +125,63 @@ class ManualRedactionServiceTest {
             cs.endText();
         }
         return doc;
+    }
+
+    private static PDDocument newDocumentWithFormField(String name, String value)
+            throws IOException {
+        PDDocument doc = new PDDocument();
+        PDPage page = new PDPage(PDRectangle.A4);
+        doc.addPage(page);
+        PDAcroForm form = new PDAcroForm(doc);
+        doc.getDocumentCatalog().setAcroForm(form);
+        PDResources defaultResources = new PDResources();
+        defaultResources.put(
+                COSName.getPDFName("Helv"), new PDType1Font(Standard14Fonts.FontName.HELVETICA));
+        form.setDefaultResources(defaultResources);
+        form.setDefaultAppearance("/Helv 12 Tf 0 g");
+        PDTextField field = new PDTextField(form);
+        field.setPartialName(name);
+        form.getFields().add(field);
+        PDAnnotationWidget widget = field.getWidgets().get(0);
+        widget.setRectangle(new PDRectangle(72, 700, 200, 20));
+        widget.setPage(page);
+        page.getAnnotations().add(widget);
+        field.setValue(value);
+        return doc;
+    }
+
+    private static COSDictionary namedFieldNode(String name) {
+        COSDictionary node = new COSDictionary();
+        node.setString(COSName.T, name);
+        return node;
+    }
+
+    private static void setKids(COSDictionary parent, COSDictionary... kids) {
+        COSArray array = new COSArray();
+        for (COSDictionary kid : kids) {
+            array.add(kid);
+        }
+        parent.setItem(COSName.KIDS, array);
+    }
+
+    private static COSArray acroFormFields(PDDocument doc) {
+        PDAcroForm form = doc.getDocumentCatalog().getAcroForm();
+        COSArray fields = form.getCOSObject().getCOSArray(COSName.FIELDS);
+        if (fields == null) {
+            fields = new COSArray();
+            form.getCOSObject().setItem(COSName.FIELDS, fields);
+        }
+        return fields;
+    }
+
+    private static COSDictionary chainOfNonTerminalFields(int depth, COSDictionary leaf) {
+        COSDictionary current = leaf;
+        for (int i = 0; i < depth; i++) {
+            COSDictionary parent = namedFieldNode("node" + i);
+            setKids(parent, current);
+            current = parent;
+        }
+        return current;
     }
 
     private static RedactionArea area(
@@ -349,6 +415,153 @@ class ManualRedactionServiceTest {
             try (PDDocument doc = newDocument(1)) {
                 service.redactPages(request("all", null), doc, doc.getPages());
                 assertEquals(1, doc.getNumberOfPages());
+            }
+        }
+
+        @Test
+        @DisplayName("a wiped page leaves no extractable text")
+        void wipedPageHasNoExtractableText() throws Exception {
+            byte[] out;
+            try (PDDocument doc = newDocumentWithText()) {
+                service.redactPages(request("all", "#000000"), doc, doc.getPages());
+                out = save(doc);
+            }
+            try (PDDocument reloaded = Loader.loadPDF(out)) {
+                assertFalse(new PDFTextStripper().getText(reloaded).contains("Sensitive"));
+            }
+        }
+
+        @Test
+        @DisplayName("a wiped page drops the AcroForm fields whose widgets it carried")
+        void wipedPageDropsItsFormFields() throws Exception {
+            byte[] out;
+            try (PDDocument doc = newDocumentWithFormField("ssn", "SECRETFORMVALUE123")) {
+                service.redactPages(request("all", "#000000"), doc, doc.getPages());
+                out = save(doc);
+            }
+            try (PDDocument reloaded = Loader.loadPDF(out)) {
+                PDAcroForm form = reloaded.getDocumentCatalog().getAcroForm();
+                assertTrue(form == null || form.getFields().isEmpty());
+            }
+            assertFalse(
+                    new String(out, StandardCharsets.ISO_8859_1).contains("SECRETFORMVALUE123"));
+        }
+
+        @Test
+        @DisplayName("a form field on a surviving page keeps its value")
+        void unwipedPageKeepsItsFormFields() throws Exception {
+            byte[] out;
+            try (PDDocument doc = newDocumentWithFormField("ssn", "SECRETFORMVALUE123")) {
+                doc.addPage(new PDPage(PDRectangle.A4));
+                service.redactPages(request("2", "#000000"), doc, doc.getPages());
+                out = save(doc);
+            }
+            try (PDDocument reloaded = Loader.loadPDF(out)) {
+                PDAcroForm form = reloaded.getDocumentCatalog().getAcroForm();
+                assertNotNull(form);
+                assertEquals(1, form.getFields().size());
+                assertEquals("SECRETFORMVALUE123", form.getField("ssn").getValueAsString());
+            }
+        }
+
+        @Test
+        @DisplayName("a cyclic field tree does not recurse forever")
+        void cyclicFieldTreeTerminates() throws Exception {
+            byte[] out;
+            try (PDDocument doc = newDocumentWithFormField("ssn", "SECRETFORMVALUE123")) {
+                COSDictionary a = namedFieldNode("a");
+                COSDictionary b = namedFieldNode("b");
+                setKids(a, b);
+                setKids(b, a);
+                acroFormFields(doc).add(a);
+
+                service.redactPages(request("all", "#000000"), doc, doc.getPages());
+                out = save(doc);
+            }
+            try (PDDocument reloaded = Loader.loadPDF(out)) {
+                PDAcroForm form = reloaded.getDocumentCatalog().getAcroForm();
+                assertTrue(form == null || form.getFields().isEmpty());
+            }
+        }
+
+        @Test
+        @DisplayName("a deep but legal field tree keeps its surviving field")
+        void deepLegalFieldTreeIsRetained() throws Exception {
+            byte[] out;
+            try (PDDocument doc = newDocumentWithFormField("wiped", "WIPEDVALUE")) {
+                PDPage survivor = new PDPage(PDRectangle.A4);
+                doc.addPage(survivor);
+                PDAcroForm form = doc.getDocumentCatalog().getAcroForm();
+                PDTextField deep = new PDTextField(form);
+                deep.setPartialName("deep");
+                PDAnnotationWidget widget = deep.getWidgets().get(0);
+                widget.setRectangle(new PDRectangle(72, 700, 200, 20));
+                widget.setPage(survivor);
+                survivor.getAnnotations().add(widget);
+                deep.setValue("DEEPVALUE");
+                acroFormFields(doc).add(chainOfNonTerminalFields(32, deep.getCOSObject()));
+
+                service.redactPages(request("1", "#000000"), doc, doc.getPages());
+                assertEquals(1, form.getFields().size());
+                out = save(doc);
+            }
+            try (PDDocument reloaded = Loader.loadPDF(out)) {
+                PDAcroForm form = reloaded.getDocumentCatalog().getAcroForm();
+                assertEquals(1, form.getFields().size());
+            }
+            assertTrue(new String(out, StandardCharsets.ISO_8859_1).contains("DEEPVALUE"));
+        }
+
+        @Test
+        @DisplayName("a field tree deeper than the walk limit is dropped, not walked")
+        void overDeepFieldTreeIsDropped() throws Exception {
+            byte[] out;
+            try (PDDocument doc = newDocumentWithFormField("wiped", "WIPEDVALUE")) {
+                PDPage survivor = new PDPage(PDRectangle.A4);
+                doc.addPage(survivor);
+                PDAcroForm form = doc.getDocumentCatalog().getAcroForm();
+                PDTextField deep = new PDTextField(form);
+                deep.setPartialName("deep");
+                PDAnnotationWidget widget = deep.getWidgets().get(0);
+                widget.setRectangle(new PDRectangle(72, 700, 200, 20));
+                widget.setPage(survivor);
+                survivor.getAnnotations().add(widget);
+                deep.setValue("DEEPVALUE");
+                acroFormFields(doc).add(chainOfNonTerminalFields(65, deep.getCOSObject()));
+
+                service.redactPages(request("1", "#000000"), doc, doc.getPages());
+                assertTrue(form.getFields().isEmpty());
+                out = save(doc);
+            }
+            try (PDDocument reloaded = Loader.loadPDF(out)) {
+                PDAcroForm form = reloaded.getDocumentCatalog().getAcroForm();
+                assertTrue(form == null || form.getFields().isEmpty());
+            }
+        }
+
+        @Test
+        @DisplayName("a field reachable twice in the tree is not walked twice")
+        void sharedFieldNodeIsWalkedOnce() throws Exception {
+            try (PDDocument doc = newDocumentWithFormField("ssn", "SECRETFORMVALUE123")) {
+                PDPage survivor = new PDPage(PDRectangle.A4);
+                doc.addPage(survivor);
+                PDAcroForm form = doc.getDocumentCatalog().getAcroForm();
+                PDTextField shared = new PDTextField(form);
+                shared.setPartialName("shared");
+                PDAnnotationWidget widget = shared.getWidgets().get(0);
+                widget.setRectangle(new PDRectangle(72, 700, 200, 20));
+                widget.setPage(survivor);
+                survivor.getAnnotations().add(widget);
+
+                COSDictionary first = namedFieldNode("first");
+                COSDictionary second = namedFieldNode("second");
+                setKids(first, shared.getCOSObject());
+                setKids(second, shared.getCOSObject());
+                acroFormFields(doc).add(first);
+                acroFormFields(doc).add(second);
+
+                service.redactPages(request("1", "#000000"), doc, doc.getPages());
+                assertEquals(1, form.getFields().size());
             }
         }
     }

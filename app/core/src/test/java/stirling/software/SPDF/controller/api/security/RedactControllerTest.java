@@ -408,6 +408,26 @@ class RedactControllerTest {
         void handleInvalidRegex() throws Exception {
             testAutoRedaction("[invalid regex(", true, false, "#000000", 1.0f, false, false);
         }
+
+        @Test
+        @DisplayName("An invalid regex is rejected before any redaction work starts")
+        void invalidRegexRejectedBeforeAnyRedactionWork() {
+            RedactPdfRequest request = createRedactPdfRequest();
+            request.setListOfText("[invalid regex(");
+            request.setUseRegex(true);
+            request.setWholeWordSearch(false);
+            request.setRedactColor("#000000");
+            request.setCustomPadding(1.0f);
+            request.setConvertPDFToImage(false);
+
+            IllegalArgumentException thrown =
+                    assertThrows(
+                            IllegalArgumentException.class,
+                            () -> redactController.redactPdf(request));
+
+            assertFalse(thrown.getMessage().contains("[invalid regex("));
+            verifyNoInteractions(pdfDocumentFactory, tempFileManager, redactExecuteService);
+        }
     }
 
     @Nested
