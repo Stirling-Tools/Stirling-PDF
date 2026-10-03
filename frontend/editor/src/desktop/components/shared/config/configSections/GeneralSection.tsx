@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 import PreferencesSection from "@core/components/shared/config/configSections/preferences/PreferencesSection";
 import { DefaultAppSettings } from "@app/components/shared/config/configSections/DefaultAppSettings";
 import { useDesktopInstall } from "@app/hooks/useDesktopInstall";
-import { useSaaSMode } from "@app/hooks/useSaaSMode";
 import {
   desktopUpdateService,
   type UpdateMode,
@@ -28,9 +27,6 @@ interface GeneralSectionProps {
 const GeneralSection: React.FC<GeneralSectionProps> = () => {
   const { t } = useTranslation();
   const install = useDesktopInstall();
-  // In SaaS connection mode the cloud owns app versioning — hide the update
-  // section (which also stops the core auto-check from firing).
-  const isSaaSMode = useSaaSMode();
   const [updateModeInfo, setUpdateModeInfo] = useState<UpdateModeInfo>({
     mode: "prompt",
     locked: false,
@@ -101,9 +97,9 @@ const GeneralSection: React.FC<GeneralSectionProps> = () => {
       )}
       <PreferencesSection
         editorDefaultsSlot={<DefaultAppSettings />}
+        // Only an install-time (provisioning) "disabled" hides updates, in every connection mode.
         hideUpdateSection={
-          isSaaSMode ||
-          (updateModeInfo.mode === "disabled" && updateModeInfo.locked)
+          updateModeInfo.mode === "disabled" && updateModeInfo.locked
         }
         desktopInstall={{
           state: install.state,
