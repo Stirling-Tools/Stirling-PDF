@@ -36,7 +36,7 @@ ext {
     rhinoVersion = "1.9.1"
     okhttpBomVersion = "5.4.0"
     gsonVersion = "2.14.0"
-    guavaVersion = "33.6.0-jre"
+    guavaVersion = "33.7.1-jre"
     jinjavaVersion = "2.8.4"
     jackson2Version = "2.22.3"
     bucket4jVersion = "8.19.0"
