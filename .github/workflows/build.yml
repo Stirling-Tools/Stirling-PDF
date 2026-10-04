@@ -159,10 +159,10 @@ jobs:
       use_shared_cache: true
 
   check-licence:
-    if: needs.files-changed.outputs.build == 'true' && false
+    if: needs.files-changed.outputs.build == 'true'
     needs: [files-changed, gradle-cache-prime]
     permissions:
-      contents: read
+      contents: write
     uses: ./.github/workflows/check-licence.yml
     secrets: inherit
 
