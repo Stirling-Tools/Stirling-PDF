@@ -95,11 +95,7 @@ export const AttachmentRow = memo(function AttachmentRow({
         overflow: "hidden",
       }}
     >
-      <Icon
-        name="paperclip"
-        size={16}
-        style={{ flexShrink: 0 }}
-      />
+      <Icon name="paperclip" size={16} style={{ flexShrink: 0 }} />
 
       {isEditing ? (
         <Group gap={4} style={{ flex: 1, minWidth: 0 }}>
@@ -263,10 +259,7 @@ export const AttachmentRow = memo(function AttachmentRow({
                   onClick={() => onToggleDelete(id)}
                   disabled={disabled || isSaving}
                 >
-                  <Icon
-                    name={isStaged ? "x" : "trash"}
-                    size={15}
-                  />
+                  <Icon name={isStaged ? "x" : "trash"} size={15} />
                 </ActionIcon>
               </Tooltip>
             </>

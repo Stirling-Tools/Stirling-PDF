@@ -74,9 +74,7 @@ export const AttachmentManagerUI = memo(function AttachmentManagerUI({
           value={filterQuery}
           onChange={(e) => setFilterQuery(e.currentTarget.value)}
           size="xs"
-          leftSection={
-            <Icon name="search" size={14} />
-          }
+          leftSection={<Icon name="search" size={14} />}
           rightSection={
             filterQuery ? (
               <ActionIcon
@@ -148,9 +146,7 @@ export const AttachmentManagerUI = memo(function AttachmentManagerUI({
           size="sm"
           variant="tertiary"
           fullWidth
-          leftSection={
-            <Icon name="download" size={13} />
-          }
+          leftSection={<Icon name="download" size={13} />}
           onClick={onExtractAllZip}
           disabled={disabled || isSaving}
           loading={activeAction === "extractAll"}
