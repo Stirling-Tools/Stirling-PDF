@@ -170,7 +170,6 @@ jobs:
           echo "frontend_tauri_files_hash=$FRONTEND_TAURI_HASH" >> "$GITHUB_OUTPUT"
 
   build:
-    if: false
     # Windows/GPG signing only runs on main (see the per-step gates below), so only
     # that path needs the reviewer-gated release-signing environment. Everything else
     # (PRs, merge queue, nightly) signs macOS only and uses ci-signing, which has no
