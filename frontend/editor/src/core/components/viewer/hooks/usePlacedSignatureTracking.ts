@@ -17,6 +17,8 @@ const SIGNATURE_SUBJECT_PREFIXES = ["Digital Signature", "Text Signature"];
 function isSignatureStamp(annotation: PdfAnnotationObject): boolean {
   return (
     annotation.type === PdfAnnotationSubtype.STAMP &&
+    !annotation.flags?.includes("locked") &&
+    !annotation.flags?.includes("readOnly") &&
     SIGNATURE_SUBJECT_PREFIXES.some((prefix) =>
       (annotation.subject ?? "").startsWith(prefix),
     )

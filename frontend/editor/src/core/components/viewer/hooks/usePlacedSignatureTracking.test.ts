@@ -62,8 +62,11 @@ describe("usePlacedSignatureTracking", () => {
 
   it("enumerates existing stamps even if loading finished before subscription", () => {
     let notify: ((event: AnnotationEvent) => void) | undefined;
+    const applied = stamp("applied");
+    applied.flags = ["print", "readOnly", "locked"];
     const getAnnotations = vi.fn(() => [
       { commitState: "synced", object: stamp("saved") },
+      { commitState: "synced", object: applied },
       { commitState: "deleted", object: stamp("deleted") },
       { commitState: "synced", object: stamp("other", "Approved") },
     ]);
@@ -117,6 +120,14 @@ describe("nextPlacedSignatures", () => {
       imageFor,
     );
     expect(placed).toEqual([]);
+  });
+
+  it("does not offer applied signatures for placement or removal", () => {
+    const applied = stamp("applied");
+    applied.flags = ["print", "readOnly", "locked"];
+    expect(
+      nextPlacedSignatures([], event("create", applied), imageFor),
+    ).toEqual([]);
   });
 
   it("drops a deleted signature, as undo does", () => {
