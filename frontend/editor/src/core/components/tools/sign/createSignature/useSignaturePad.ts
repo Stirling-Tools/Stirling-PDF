@@ -84,7 +84,12 @@ export function useSignaturePad(
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const pad = new SignaturePad(canvas, { throttle: 8, minDistance: 2 });
+    const pad = new SignaturePad(canvas, {
+      throttle: 8,
+      minDistance: 2,
+      // Signature trimming reads pixels from this context.
+      canvasContextOptions: { willReadFrequently: true },
+    });
     padRef.current = pad;
     pad.addEventListener("endStroke", syncStrokeCount);
     fitCanvasToLayout(canvas, pad);
