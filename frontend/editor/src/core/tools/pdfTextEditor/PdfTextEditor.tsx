@@ -73,6 +73,14 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     store.selection.value,
   );
   const [openedFileName, setOpenedFileName] = useState<string | null>(null);
+  const pendingDiskFileRef = useRef<File | null>(null);
+  const mountedRef = useRef(false);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
   // Set only when the document came from the workbench; a drag-dropped
   // file has no fileId and can only be downloaded. Mirrored into state so the
   // sidebar's file switcher can mark which workbench file is open.
@@ -520,8 +528,43 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       .find((r) => r.id === selection.runIds[0]);
     return !!run && (run.paragraphLineCount ?? 0) > 1;
   })();
+  const loadDiskFile = useCallback(
+    (file: File, password?: string) => {
+      const loading = load(file, password);
+      const token = store.currentLoadToken;
+      void loading
+        .then(() => {
+          if (!mountedRef.current || !store.isCurrentLoad(token)) return null;
+          const opened = store.getState();
+          if (!opened.hasDocument || opened.error || opened.passwordPrompt)
+            return null;
+          return addFiles([file], {
+            selectFiles: false,
+            skipAutomaticPasswordPrompt: password !== undefined,
+          });
+        })
+        .then((added) => {
+          if (!mountedRef.current || !store.isCurrentLoad(token)) return;
+          const stored = added?.[0];
+          if (!stored) return;
+          pendingDiskFileRef.current = null;
+          adoptFile(stored);
+          setSelectedFiles([stored.fileId]);
+          handleFileChosen(stored.name, stored.fileId);
+        })
+        .catch((error: unknown) => {
+          if (mountedRef.current && store.isCurrentLoad(token))
+            store.setError(
+              error instanceof Error ? error.message : String(error),
+            );
+        });
+    },
+    [store, addFiles, adoptFile, handleFileChosen, load, setSelectedFiles],
+  );
+
   const openDocument = useCallback(
     (file: File, fromDisk: boolean) => {
+      pendingDiskFileRef.current = fromDisk ? file : null;
       if (!fromDisk) {
         const fileId = (file as File & { fileId?: FileId }).fileId;
         if (fileId != null) setSelectedFiles([fileId]);
@@ -529,33 +572,15 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         return;
       }
       setOpenedFileName(file.name);
-      // Dropped/picked from disk: claim it so a later workbench arrival cannot
-      // auto-open over these edits, and open it straight away.
       adoptFile(file);
       setSourceFile(null);
-      // Once it opens, it belongs in the library like any other file, or the
-      // rest of the app (OCR, convert, ...) has nothing to act on. Not before:
-      // an encrypted file would have the library ask for its password too.
-      void load(file)
-        .then(() => {
-          const opened = store.getState();
-          if (!opened.hasDocument || opened.error || opened.passwordPrompt)
-            return null;
-          return addFiles([file], { selectFiles: true });
-        })
-        .then((added) => {
-          const stored = added?.[0];
-          if (!stored) return;
-          adoptFile(stored);
-          handleFileChosen(stored.name, stored.fileId);
-        });
+      // Password-protected files join the library only after unlocking, so its
+      // own upload flow does not ask for the password a second time.
+      loadDiskFile(file);
     },
     [
-      store,
-      addFiles,
       adoptFile,
-      handleFileChosen,
-      load,
+      loadDiskFile,
       openWorkbenchFile,
       setSelectedFiles,
       setSourceFile,
@@ -620,15 +645,17 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   const handleSubmitPassword = useCallback(
     (password: string) => {
       const file = store.pendingPasswordFile;
-      if (file) void load(file, password);
+      if (!file) return;
+      if (pendingDiskFileRef.current === file) loadDiskFile(file, password);
+      else void load(file, password);
     },
-    [store, load],
+    [store, load, loadDiskFile],
   );
 
-  const handleCancelPassword = useCallback(
-    () => store.clearPasswordPrompt(),
-    [store],
-  );
+  const handleCancelPassword = useCallback(() => {
+    pendingDiskFileRef.current = null;
+    store.clearPasswordPrompt();
+  }, [store]);
 
   const sidebarProps = {
     store,

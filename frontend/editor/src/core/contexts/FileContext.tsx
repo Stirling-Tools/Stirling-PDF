@@ -293,6 +293,8 @@ function FileContextInner({
         };
         /** Bytes and stub only, no thumbnail parse (see AddFileOptions). */
         skipMetadataHydration?: boolean;
+        /** A caller already unlocked the document in its own editor session. */
+        skipAutomaticPasswordPrompt?: boolean;
       },
     ): Promise<StirlingFile[]> => {
       const stirlingFiles = await addFiles(
@@ -307,7 +309,17 @@ function FileContextInner({
         },
         stateRef,
         filesRef,
-        dispatch,
+        (action) => {
+          if (
+            options?.skipAutomaticPasswordPrompt &&
+            action.type === "ADD_FILES"
+          ) {
+            for (const stub of action.payload.stirlingFileStubs) {
+              dismissedEncryptedFilesRef.current.add(stub.id);
+            }
+          }
+          dispatch(action);
+        },
         lifecycleManager,
         enablePersistence,
       );

@@ -391,6 +391,8 @@ export interface FileContextActions {
     options?: {
       insertAfterPageId?: string;
       selectFiles?: boolean;
+      /** Suppress the automatic unlock modal when an editor already unlocked this file. */
+      skipAutomaticPasswordPrompt?: boolean;
       skipUploadTracking?: boolean;
       /**
        * Produced in-app rather than uploaded, which stops the policy auto-run enforcing an upload

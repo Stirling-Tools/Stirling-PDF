@@ -57,6 +57,7 @@ interface ScanWord {
   x: number;
   right: number;
   ptr: number;
+  extraPtrs?: number[];
   container: number;
   fontSize: number;
 }
@@ -565,7 +566,7 @@ function lift(m: WrappedPdfiumModule, page: Page, word: ScanWord): void {
   removeMemberPtrs(
     m,
     page,
-    [word.ptr],
+    [word.ptr, ...(word.extraPtrs ?? [])],
     new Map([[word.ptr, word.container]]),
     0,
   );
@@ -892,6 +893,7 @@ export function renderScanEdit(
           line.baseline,
         );
         word.ptr = back[0] ?? 0;
+        word.extraPtrs = back.slice(1);
         word.container = 0;
         state.lifted.delete(key);
       }
@@ -903,9 +905,12 @@ export function renderScanEdit(
   const live = state.lines.flatMap((l, li) =>
     l.words.filter((_, wi) => !state.lifted.has(`${li}:${wi}`)),
   );
-  run.paragraphLeafPtrs = [...live.map((w) => w.ptr), ...state.textPtrs];
+  run.paragraphLeafPtrs = [
+    ...live.flatMap((w) => [w.ptr, ...(w.extraPtrs ?? [])]),
+    ...state.textPtrs,
+  ];
   run.paragraphLeafContainers = [
-    ...live.map((w) => w.container),
+    ...live.flatMap((w) => [w.container, ...(w.extraPtrs ?? []).map(() => 0)]),
     ...state.textPtrs.map(() => 0),
   ];
   // Show what is drawn, not OCR's guesses, so size and colour controls start
@@ -938,8 +943,7 @@ export function scanDrawnSize(
   if (!state) return null;
   return (
     state.override.fontSize ??
-    styleFor(doc, page, state, null)?.fontSize ??
-    null
+    (styleFor(doc, page, state, null) ?? fallbackStyle(state)).fontSize
   );
 }
 
