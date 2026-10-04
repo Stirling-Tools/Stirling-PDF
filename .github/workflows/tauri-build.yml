@@ -262,9 +262,9 @@ jobs:
             frontend-dist:
               path: frontend/editor/dist
             gradle-caches:
-              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
+              path: ~/.gradle/caches
             gradle-wrapper:
-              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
+              path: ~/.gradle/wrapper
           save-scope: shared
           key: |
             gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
@@ -810,6 +810,8 @@ jobs:
     env:
       CARGO_HOME: ${{ github.workspace }}/.cache/cargo
       NPM_CONFIG_CACHE: ${{ github.workspace }}/.cache/npm
+    permissions:
+      contents: write
     runs-on: ${{ matrix.platform }}
     timeout-minutes: 45
     steps:
@@ -880,9 +882,9 @@ jobs:
             frontend-dist:
               path: frontend/editor/dist
             gradle-caches:
-              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
+              path: ~/.gradle/caches
             gradle-wrapper:
-              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
+              path: ~/.gradle/wrapper
           save-scope: shared
           key: |
             gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}

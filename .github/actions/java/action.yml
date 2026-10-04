@@ -125,6 +125,7 @@ runs:
             rm -rf "${jdk_root}/Contents"
             tar -xzf "${archive_path}" -C "${jdk_root}"
           fi
+          rm -f "${archive_path}"
           java_home="$(find "${jdk_root}" -type d -path '*/Contents/Home' -print -quit)"
         fi
         if [ -z "${java_home}" ]; then
