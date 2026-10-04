@@ -284,9 +284,8 @@ jobs:
           token: ${{ github.token }}
           allow-shared-restore: true
           strict: false
-          exclude-path:
-            frontend/editor/src-tauri/target/debug/.fingerprint
-          exclude:
+          exclude: |
+            frontend/editor/src-tauri/target/debug/.fingerprint/**
             frontend/editor/src-tauri/target/debug/deps/match_token*
             frontend/editor/src-tauri/target/debug/deps/refresh_token_fallback*
 
@@ -912,9 +911,8 @@ jobs:
           token: ${{ github.token }}
           allow-shared-restore: true
           strict: false
-          exclude-path:
-            frontend/editor/src-tauri/target/debug/.fingerprint
-          exclude:
+          exclude: |
+            frontend/editor/src-tauri/target/debug/.fingerprint/**
             frontend/editor/src-tauri/target/debug/deps/match_token*
             frontend/editor/src-tauri/target/debug/deps/refresh_token_fallback*
 
