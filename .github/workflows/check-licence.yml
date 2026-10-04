@@ -8,8 +8,52 @@ on:
 permissions:
   contents: read
 
+env:
+  JAVA_VERSION: 25
+  GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-25
+  GRADLE_FILES_TO_HASH: |
+    gradle/wrapper/gradle-wrapper.properties
+    gradle/libs.versions.toml
+    buildSrc/**
+    settings.gradle
+    build.gradle
+    app/**/build.gradle
+    gradle/**/*.gradle
+
 jobs:
+  hash_pr:
+    name: Hash files
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    outputs:
+      java_version: ${{ steps.hash.outputs.java_version }}
+      gradle_files_hash: ${{ steps.hash.outputs.gradle_files_hash}}
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Hash Gradle and Cargo files
+        id: hash
+        env:
+          GRADLE_HASH: ${{ hashFiles(env.GRADLE_FILES_TO_HASH) }}
+        shell: bash
+        run: |
+          echo "java_version=${{ env.JAVA_VERSION }}" >> "$GITHUB_OUTPUT"
+          echo "gradle_files_hash=$GRADLE_HASH" >> "$GITHUB_OUTPUT"
+
   check-licence:
+    needs: hash_pr
+    permissions:
+      contents: write
     environment:
       name: ci-unsigned
       deployment: false
@@ -24,13 +68,57 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Restore cache Gradle User Home
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - name: Use GNU tar on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $gitUsrBin = Join-Path $env:ProgramFiles 'Git\usr\bin'
+          $gnuTar = Join-Path $gitUsrBin 'tar.exe'
+
+          if (-not (Test-Path $gnuTar)) {
+            throw "GNU tar not found at $gnuTar"
+          }
+
+          & $gnuTar --version
+          Add-Content -Path $env:GITHUB_PATH -Value $gitUsrBin
+
+      - name: Prepare cache directory
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force `
+            -Path (Join-Path $env:GITHUB_WORKSPACE '.cache') | Out-Null
+
+      - name: Use GNU tar on macOS
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          brew install gnu-tar
+          echo "$(brew --prefix gnu-tar)/libexec/gnubin" >> "$GITHUB_PATH"
+          tar --version
+
+      - name: Restore cache artifact
+        id: cache
+        uses: Ludy87/cache-the-planet/multi-cache@5723e2b4f71fdb265d0f839156fffa58bb0342e6
         with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
+          version: 2
+          encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
+          storage: github-artifact
+          artifact-retention-days: 1
+          manifest-branch: dev-cache-artifact
+          manifest-path: .github/cache-data
+          multi-cache: |
+            gradle-caches:
+              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
+            gradle-wrapper:
+              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
+          save-scope: shared
+          key: |
+            gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
+            gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}
+          token: ${{ github.token }}
+          allow-shared-restore: true
+          strict: false
 
       - name: Set up JDK 25
         uses: ./.github/actions/java
