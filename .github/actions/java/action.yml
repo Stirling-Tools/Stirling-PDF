@@ -80,6 +80,9 @@ runs:
 
         java_home_variable="JAVA_HOME_${JAVA_VERSION}_${architecture}"
         java_home="${!java_home_variable:-}"
+        if [ -z "${java_home}" ] && [ "${RUNNER_OS_NAME}" = "Windows" ] && [ "${architecture}" = "ARM64" ] && [ -n "${JAVA_HOME:-}" ]; then
+          java_home="${JAVA_HOME}"
+        fi
         if [ -z "${java_home}" ] && [ "${RUNNER_OS_NAME}" = "macOS" ]; then
           if [ "${architecture}" = "${runner_architecture}" ] && [ -n "${JAVA_HOME:-}" ]; then
             java_home="${JAVA_HOME}"
