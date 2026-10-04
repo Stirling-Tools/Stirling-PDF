@@ -12,8 +12,6 @@ import tsconfigPaths from "vite-tsconfig-paths";
 // oxlint-disable-next-line no-restricted-imports -- config runs in node, before the aliases exist
 import { iconSvgr } from "./scripts/icons/svgrOptions.mts";
 import { viteStaticCopy } from "vite-plugin-static-copy";
-// oxlint-disable-next-line no-restricted-imports -- config runs in node, before the aliases exist
-import { ensureEmbedpdfPatches } from "../scripts/ensure-embedpdf-patches.mjs";
 
 const gzipPromise = promisify(gzip);
 const brotliPromise = promisify(brotliCompress);
@@ -378,7 +376,6 @@ const TSCONFIG_MAP: Record<BuildMode, string> = {
 };
 
 export default defineConfig(async ({ mode, command }) => {
-  ensureEmbedpdfPatches();
   // Dev-only browser-tab label (worktree folder basename) surfaced by the
   // top-level dev tasks so concurrent worktrees have distinguishable tabs.
   // Only injected during `vite` (dev serve) — never baked into a production

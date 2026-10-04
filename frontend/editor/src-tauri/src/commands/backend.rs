@@ -138,11 +138,12 @@ fn find_stirling_jar(resource_dir: &PathBuf) -> Result<PathBuf, String> {
     Ok(jar_path)
 }
 
-/// Ordering key for `stirling-pdf-<version>.jar`: the numeric release components
-/// and whether the version is a final release. Anything unparseable counts as
-/// zero so comparison never panics, and the flag keeps `3.0.0-rc1` sorting below
-/// `3.0.0`.
-fn version_key(name: &str) -> (Vec<u64>, u8) {
+/// Ordering key for `stirling-pdf-<version>.jar`: the numeric release components,
+/// whether the version is a final release (1 for final release, 0 for prerelease),
+/// and the prerelease suffix. Anything unparseable counts as zero so comparison never
+/// panics, while final releases sort above prereleases and newer prereleases (e.g. rc2 vs rc1)
+/// sort appropriately.
+fn version_key(name: &str) -> (Vec<u64>, u8, String) {
     let lower = name.to_ascii_lowercase();
     let version = lower
         .strip_prefix("stirling-pdf-")
@@ -158,6 +159,7 @@ fn version_key(name: &str) -> (Vec<u64>, u8) {
             .map(|part| part.parse::<u64>().unwrap_or(0))
             .collect(),
         if suffix.is_empty() { 1 } else { 0 },
+        suffix.to_string(),
     )
 }
 
@@ -586,10 +588,12 @@ mod tests {
     fn version_key_ranks_prereleases_below_the_release() {
         assert!(version_key("stirling-pdf-3.0.0-SNAPSHOT.jar") < version_key("stirling-pdf-3.0.0.jar"));
         assert!(version_key("stirling-pdf-3.0.0-rc1.jar") < version_key("stirling-pdf-3.0.0.jar"));
+        assert!(version_key("stirling-pdf-3.0.0-rc1.jar") < version_key("stirling-pdf-3.0.0-rc2.jar"));
 
         let mut names = [
             "stirling-pdf-3.0.0-rc1.jar",
             "stirling-pdf-3.0.0.jar",
+            "stirling-pdf-3.0.0-rc2.jar",
             "stirling-pdf-2.14.3.jar",
         ];
         names.sort_by_key(|name| std::cmp::Reverse(version_key(name)));
@@ -597,6 +601,7 @@ mod tests {
             names,
             [
                 "stirling-pdf-3.0.0.jar",
+                "stirling-pdf-3.0.0-rc2.jar",
                 "stirling-pdf-3.0.0-rc1.jar",
                 "stirling-pdf-2.14.3.jar",
             ]
@@ -605,7 +610,7 @@ mod tests {
 
     #[test]
     fn version_key_tolerates_non_numeric_versions() {
-        assert_eq!(version_key("not-a-version.jar"), (vec![0], 0));
+        assert_eq!(version_key("not-a-version.jar"), (vec![0], 0, "a-version.jar".to_string()));
         assert_eq!(version_key("stirling-pdf-3.0.0.jar").1, 1);
     }
 }
