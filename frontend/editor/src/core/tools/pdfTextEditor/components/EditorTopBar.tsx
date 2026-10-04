@@ -227,6 +227,11 @@ export function EditorTopBar({
           {hasSelection && (
             <>
               <ToolbarSeparator />
+              {/* Ahead of the formatting group: the band scrolls sideways
+                  under macOS's hidden scrollbars, so anything past the edge
+                  is invisible rather than visibly clipped. */}
+              <ObjectGroup controller={controller} />
+              <ToolbarSeparator />
               {compact ? (
                 <Popover position="bottom-start" withinPortal shadow="md">
                   <Popover.Target>
@@ -252,8 +257,6 @@ export function EditorTopBar({
               ) : (
                 <FormatGroup controller={controller} />
               )}
-              <ToolbarSeparator />
-              <ObjectGroup controller={controller} />
             </>
           )}
         </div>
