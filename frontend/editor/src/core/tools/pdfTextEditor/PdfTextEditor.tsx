@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
 import { downloadFile } from "@app/services/downloadService";
 import { useFileContext, useFileSelection } from "@app/contexts/FileContext";
+import { useViewer } from "@app/contexts/ViewerContext";
 import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
 import type { FileId } from "@app/types/file";
 import type { BaseToolProps } from "@app/types/tool";
@@ -41,6 +42,7 @@ import { jpegExifOrientation } from "@app/utils/jpegOrientation";
 import { MergeRunsCommand } from "@app/tools/pdfTextEditor/commands/MergeRunsCommand";
 import { UngroupParagraphCommand } from "@app/tools/pdfTextEditor/commands/UngroupParagraphCommand";
 import { exportToBlob } from "@app/tools/pdfTextEditor/util/exportPdf";
+import { clampRenderScale } from "@app/tools/pdfTextEditor/util/fitToWidth";
 import {
   detectSaveRisks,
   hasSaveRisks,
@@ -63,6 +65,9 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   const isMobile = useIsMobile();
   const { store, state } = useEditorStore();
   const load = useDocumentLoader(store);
+  const { getZoomState } = useViewer();
+  const viewerZoomRef = useRef(getZoomState);
+  viewerZoomRef.current = getZoomState;
 
   const [selection, setSelection] = useState<SelectionState>(
     store.selection.value,
@@ -99,9 +104,16 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     (name: string, fileId?: FileId) => {
       setOpenedFileName(name);
       setSourceFile(fileId ?? null);
+      // A workbench file opens at the zoom the viewer showed it at. The
+      // viewer's fallback state carries no level, so a viewer that never
+      // opened a document leaves the editor's own default alone.
+      const viewerZoom = viewerZoomRef.current();
+      if (fileId && viewerZoom.level !== undefined) {
+        store.setRenderScale(clampRenderScale(viewerZoom.currentZoom));
+      }
       pinWorkbench();
     },
-    [pinWorkbench, setSourceFile],
+    [pinWorkbench, setSourceFile, store],
   );
   const { openFile: openWorkbenchFile, adopt: adoptFile } = useAutoLoadFile(
     load,
@@ -338,7 +350,9 @@ export default function PdfTextEditor(_props: BaseToolProps) {
 
   const hasSelection = useCallback(() => {
     const s = store.selection.value;
-    return s.runIds.length > 0 || s.imageIds.length > 0;
+    return (
+      s.runIds.length > 0 || s.imageIds.length > 0 || s.shapeIds.length > 0
+    );
   }, [store]);
 
   // Paste: create a fresh InsertTextCommand on the currently-visible page,

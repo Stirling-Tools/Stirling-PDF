@@ -70,10 +70,48 @@ export const getTranslationPrefixesForNavKey = (key: string): string[] => {
   return Array.from(new Set([...explicitPrefixes, ...inferredPrefixes]));
 };
 
+const INTERPOLATION_PLACEHOLDER_PATTERN = /\{\{\s*[^}]+?\s*\}\}/;
+const INDEXED_TRANS_TAG_PATTERN = /<\/?\d+>/g;
+const SEARCHABLE_TEXT_PATTERN = /[\p{L}\p{N}]/u;
+
+/**
+ * Searchable text from one translation leaf.
+ *
+ * An unresolved `{{interpolation}}` placeholder stands in for a runtime value
+ * this index cannot supply. The leftover label ("Default:") is not a useful
+ * hit, so the whole string is omitted. Indexed `<0>` Trans tags are markup
+ * around words the user sees, so only the tags are removed. Null when nothing
+ * searchable remains.
+ */
+export const sanitizeSearchableTranslationString = (
+  value: string,
+): string | null => {
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    return null;
+  }
+
+  if (INTERPOLATION_PLACEHOLDER_PATTERN.test(trimmed)) {
+    return null;
+  }
+
+  if (!trimmed.match(INDEXED_TRANS_TAG_PATTERN)) {
+    return trimmed;
+  }
+
+  const sanitized = trimmed
+    .replace(INDEXED_TRANS_TAG_PATTERN, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return SEARCHABLE_TEXT_PATTERN.test(sanitized) ? sanitized : null;
+};
+
 export const flattenTranslationStrings = (value: unknown): string[] => {
   if (typeof value === "string") {
-    const trimmed = value.trim();
-    return trimmed ? [trimmed] : [];
+    const sanitized = sanitizeSearchableTranslationString(value);
+    return sanitized ? [sanitized] : [];
   }
 
   if (Array.isArray(value)) {

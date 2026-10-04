@@ -10,6 +10,7 @@ import React, {
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { DEFAULT_APP_CONFIG, fetchAppConfig } from "@app/api/config";
 import { qk } from "@app/query/keys";
+import i18n from "i18next";
 import { CONFIG_STALE_TIME } from "@app/query/staleTime";
 import type { AppConfig, AppConfigBootstrapMode } from "@app/types/appConfig";
 import { useJwtConfigSync } from "@app/hooks/useJwtConfigSync";
@@ -56,7 +57,7 @@ function errorMessage(error: unknown): string {
   return (
     axiosLike?.response?.data?.message ||
     axiosLike?.message ||
-    "Unknown error occurred"
+    i18n.t("error.unknown", "Unknown error occurred")
   );
 }
 
