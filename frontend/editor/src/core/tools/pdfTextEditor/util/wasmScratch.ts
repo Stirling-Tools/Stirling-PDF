@@ -50,6 +50,8 @@ export const SCRATCH = {
   partialBbox: key(),
   imageMatrix: key(),
   annotRect: key(),
+  shapeDrawMode: key(),
+  shapeStrokeAlpha: key(),
   colourR: key(),
   colourG: key(),
   colourB: key(),

@@ -780,36 +780,22 @@ function readShape(
 
 /** True when a path fills or strokes with any opacity; clip-only paths draw nothing. */
 function isPainted(m: WrappedPdfiumModule, objPtr: number): boolean {
-  const fillModePtr = m.pdfium.wasmExports.malloc(4);
-  const strokePtr = m.pdfium.wasmExports.malloc(4);
-  try {
-    if (!m.FPDFPath_GetDrawMode(objPtr, fillModePtr, strokePtr)) return false;
-    const fills = m.pdfium.getValue(fillModePtr, "i32") !== 0;
-    const strokes = m.pdfium.getValue(strokePtr, "i32") !== 0;
-    return (
-      (fills && readFill(m, objPtr).a > 0) ||
-      (strokes && readStrokeAlpha(m, objPtr) > 0)
-    );
-  } finally {
-    m.pdfium.wasmExports.free(fillModePtr);
-    m.pdfium.wasmExports.free(strokePtr);
-  }
+  const buf = scratchPtr(m, SCRATCH.shapeDrawMode, 8);
+  if (!m.FPDFPath_GetDrawMode(objPtr, buf, buf + 4)) return false;
+  const fills = m.pdfium.getValue(buf, "i32") !== 0;
+  const strokes = m.pdfium.getValue(buf + 4, "i32") !== 0;
+  return (
+    (fills && readFill(m, objPtr).a > 0) ||
+    (strokes && readStrokeAlpha(m, objPtr) > 0)
+  );
 }
 
 function readStrokeAlpha(m: WrappedPdfiumModule, objPtr: number): number {
-  const r = m.pdfium.wasmExports.malloc(4);
-  const g = m.pdfium.wasmExports.malloc(4);
-  const b = m.pdfium.wasmExports.malloc(4);
-  const a = m.pdfium.wasmExports.malloc(4);
-  try {
-    if (!m.FPDFPageObj_GetStrokeColor(objPtr, r, g, b, a)) return 0;
-    return m.pdfium.getValue(a, "i32") & 0xff;
-  } finally {
-    m.pdfium.wasmExports.free(r);
-    m.pdfium.wasmExports.free(g);
-    m.pdfium.wasmExports.free(b);
-    m.pdfium.wasmExports.free(a);
+  const buf = scratchPtr(m, SCRATCH.shapeStrokeAlpha, 16);
+  if (!m.FPDFPageObj_GetStrokeColor(objPtr, buf, buf + 4, buf + 8, buf + 12)) {
+    return 0;
   }
+  return m.pdfium.getValue(buf + 12, "i32") & 0xff;
 }
 
 function readImage(
