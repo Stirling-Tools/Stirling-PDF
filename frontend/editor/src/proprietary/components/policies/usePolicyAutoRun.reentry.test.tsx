@@ -5,7 +5,11 @@ import { renderHook, waitFor } from "@testing-library/react";
 // The persisted dispatch record must stop the upload policy (and its billing) firing a second time.
 
 const mocks = vi.hoisted(() => ({
-  workspace: [] as Array<{ id: string; derivedFromTool?: boolean }>,
+  workspace: [] as Array<{
+    id: string;
+    name: string;
+    derivedFromTool?: boolean;
+  }>,
   runStoredPolicy: vi.fn(),
   getPolicyRun: vi.fn(),
   listPolicyRuns: vi.fn(),
@@ -32,8 +36,9 @@ vi.mock("@app/hooks/usePolicies", () => ({
       security: {
         configured: true,
         runsOnEditor: true,
-        status: "active",
+        enabled: true,
         backendId: "backend-security",
+        firstOperation: "/api/v1/misc/compress-pdf",
         runOn: "upload",
         order: 0,
         outputMode: "new_version",
@@ -88,7 +93,10 @@ beforeEach(() => {
 describe("upload policies and files re-entering the workbench", () => {
   it("does not re-run on a file the policy already ran on", async () => {
     markDispatched("security", "already-enforced");
-    mocks.workspace = [{ id: "already-enforced" }, { id: "fresh-upload" }];
+    mocks.workspace = [
+      { id: "already-enforced", name: "doc.pdf" },
+      { id: "fresh-upload", name: "doc.pdf" },
+    ];
 
     renderHook(() => usePolicyAutoRun());
 
@@ -100,7 +108,10 @@ describe("upload policies and files re-entering the workbench", () => {
   it("stays silent when every file in the workbench has already been enforced", async () => {
     markDispatched("security", "one");
     markDispatched("security", "two");
-    mocks.workspace = [{ id: "one" }, { id: "two" }];
+    mocks.workspace = [
+      { id: "one", name: "doc.pdf" },
+      { id: "two", name: "doc.pdf" },
+    ];
 
     renderHook(() => usePolicyAutoRun());
 
@@ -110,7 +121,9 @@ describe("upload policies and files re-entering the workbench", () => {
   });
 
   it("still skips a policy's own output, which is not an upload at all", async () => {
-    mocks.workspace = [{ id: "policy-output", derivedFromTool: true }];
+    mocks.workspace = [
+      { id: "policy-output", name: "doc.pdf", derivedFromTool: true },
+    ];
 
     renderHook(() => usePolicyAutoRun());
 

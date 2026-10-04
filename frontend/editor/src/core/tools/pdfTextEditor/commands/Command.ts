@@ -16,3 +16,13 @@ export interface Command {
   // previous undo step however long ago that step ran.
   coalesceIgnoresTimeWindow?(previous: Command | null): boolean;
 }
+
+export class RolledBackError extends Error {
+  readonly cause: unknown;
+
+  constructor(cause: unknown) {
+    super(cause instanceof Error ? cause.message : String(cause));
+    this.name = "RolledBackError";
+    this.cause = cause;
+  }
+}

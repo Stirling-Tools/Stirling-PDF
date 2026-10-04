@@ -21,6 +21,7 @@ import styles from "@app/components/tools/addStamp/StampPreview.module.css";
 import { getDefaultFontSizeForAlphabet } from "@app/components/tools/addStamp/StampPreviewUtils";
 import { useFileWithUrl } from "@app/hooks/useFileWithUrl";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
+import { alphabetOptions } from "@app/constants/addWatermarkConstants";
 
 const STAMP_TEMPLATES = [
   {
@@ -265,7 +266,10 @@ const StampSetupSettings = ({
               const template = STAMP_TEMPLATES.find((t) => t.id === value);
               if (template) {
                 onParameterChange("stampText", template.text);
-                onParameterChange("position", template.position as any);
+                onParameterChange(
+                  "position",
+                  template.position as AddStampParameters["position"],
+                );
               }
             }}
             clearable
@@ -640,19 +644,16 @@ const StampSetupSettings = ({
             label={t("AddStampRequest.alphabet", "Alphabet")}
             value={parameters.alphabet}
             onChange={(v) => {
-              const nextAlphabet = (v as any) || "roman";
+              const nextAlphabet =
+                (v as AddStampParameters["alphabet"]) || "roman";
               onParameterChange("alphabet", nextAlphabet);
               const nextDefault = getDefaultFontSizeForAlphabet(nextAlphabet);
               onParameterChange("fontSize", nextDefault);
             }}
-            data={[
-              { value: "roman", label: "Roman" },
-              { value: "arabic", label: "العربية" },
-              { value: "japanese", label: "日本語" },
-              { value: "korean", label: "한국어" },
-              { value: "chinese", label: "简体中文" },
-              { value: "thai", label: "ไทย" },
-            ]}
+            data={alphabetOptions.map((option) => ({
+              value: option.value,
+              label: t(option.labelKey, option.label),
+            }))}
             disabled={disabled}
             comboboxProps={{
               withinPortal: true,
@@ -687,7 +688,10 @@ const StampSetupSettings = ({
             <Stack gap="xs">
               <img
                 src={stampImageWithUrl.url}
-                alt="Selected stamp image"
+                alt={t(
+                  "AddStampRequest.selectedImageAlt",
+                  "Selected stamp image",
+                )}
                 className="max-h-24 w-full object-contain border border-gray-200 rounded bg-gray-50"
               />
               <Text size="xs" c="dimmed">

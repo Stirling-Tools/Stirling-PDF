@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { resolveLandingPath } from "@app/utils/loginLanding";
 import { supabase } from "@app/auth/supabase";
 import { Button } from "@app/ui/Button";
 import { withBasePath } from "@app/constants/app";
 import { readPendingConnect } from "@app/routes/pendingConnect";
 import { isSafePostLoginRedirect } from "@app/services/postLoginRedirect";
+import { takePendingDestination } from "@app/services/pendingDestination";
 import { AuthShell } from "@app/auth/ui/AuthShell";
 import ErrorMessage from "@app/auth/ui/ErrorMessage";
 import { Spinner } from "@app/ui/Spinner";
@@ -20,9 +22,10 @@ interface CallbackState {
 
 export default function AuthCallback() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [state, setState] = useState<CallbackState>({
     status: "processing",
-    message: "Processing authentication...",
+    message: t("auth.callback.processing", "Processing authentication..."),
   });
 
   useEffect(() => {
@@ -32,7 +35,11 @@ export default function AuthCallback() {
         const code = url.searchParams.get("code");
         const error = url.searchParams.get("error");
         const errorDescription = url.searchParams.get("error_description");
-        const next = url.searchParams.get("next") || "/";
+        // For the debug log; the redirect below reads the param itself. Left
+        // undefaulted because a default would pass the safety guard, so any branch
+        // on it in that chain matches every param-less sign-in and masks the
+        // fallbacks beneath it.
+        const next = url.searchParams.get("next");
 
         console.log("[Auth Callback Debug] URL parameters:", {
           hasCode: !!code,
@@ -53,7 +60,11 @@ export default function AuthCallback() {
 
           setState({
             status: "error",
-            message: `Authentication failed: ${errorMsg}`,
+            message: t(
+              "auth.callback.failedWithReason",
+              "Authentication failed: {{error}}",
+              { error: errorMsg },
+            ),
             details: { error, errorDescription },
           });
 
@@ -68,7 +79,10 @@ export default function AuthCallback() {
 
           setState({
             status: "processing",
-            message: "Exchanging authorization code...",
+            message: t(
+              "auth.callback.exchanging",
+              "Exchanging authorization code...",
+            ),
           });
 
           const { data, error: exchangeError } =
@@ -82,7 +96,13 @@ export default function AuthCallback() {
 
             setState({
               status: "error",
-              message: `Failed to complete sign in: ${exchangeError.message}`,
+              message: t(
+                "auth.callback.signInFailed",
+                "Failed to complete sign in: {{error}}",
+                {
+                  error: exchangeError.message,
+                },
+              ),
               details: { exchangeError },
             });
 
@@ -98,7 +118,10 @@ export default function AuthCallback() {
 
           setState({
             status: "success",
-            message: "Sign in successful! Redirecting...",
+            message: t(
+              "auth.callback.success",
+              "Sign in successful! Redirecting...",
+            ),
             details: {
               userId: data.session?.user?.id,
               email: data.session?.user?.email,
@@ -117,36 +140,38 @@ export default function AuthCallback() {
             console.log("[Auth Callback Debug] Existing session found");
             setState({
               status: "success",
-              message: "Already signed in! Redirecting...",
+              message: t(
+                "auth.callback.alreadySignedIn",
+                "Already signed in! Redirecting...",
+              ),
             });
           } else {
             console.log("[Auth Callback Debug] No session found");
             setState({
               status: "error",
-              message: "No authentication data found",
+              message: t(
+                "auth.callback.noData",
+                "No authentication data found",
+              ),
             });
             setTimeout(() => navigate("/login", { replace: true }), 2000);
             return;
           }
         }
 
-        // Redirect to the intended destination. Reject protocol-relative
-        // "//host" values (same guard as Login's `next`) so a crafted callback
-        // URL can't bounce the user off-origin after sign-in.
-        // No explicit destination: land team leads on the processor and everyone
-        // else on the editor.
-        // Explicit `next` first, so a sign-in started for another reason is not
-        // hijacked by a remembered connect request.
+        // A deliberate `next` outranks a remembered intent so it cannot be hijacked;
+        // a remembered one is all a sign-up has, its confirmation link being unable
+        // to carry a `next`. Claimed up front because reaching here means the detour
+        // is over, so the intent is spent whichever wins.
         const explicitNext =
           url.searchParams.get("next") ?? url.searchParams.get("from");
         const pendingConnect = readPendingConnect();
+        const remembered = takePendingDestination();
         const destination = isSafePostLoginRedirect(explicitNext)
           ? explicitNext
           : pendingConnect
             ? `/link?request=${encodeURIComponent(pendingConnect)}`
-            : isSafePostLoginRedirect(next)
-              ? next
-              : await resolveLandingPath();
+            : (remembered ?? (await resolveLandingPath()));
         console.log("[Auth Callback Debug] Redirecting to:", destination);
 
         setTimeout(() => navigate(destination, { replace: true }), 1500);
@@ -155,7 +180,12 @@ export default function AuthCallback() {
 
         setState({
           status: "error",
-          message: `Unexpected error: ${err instanceof Error ? err.message : "Unknown error"}`,
+          message: t("login.unexpectedError", "Unexpected error: {{message}}", {
+            message:
+              err instanceof Error
+                ? err.message
+                : t("auth.callback.unknownError", "Unknown error"),
+          }),
           details: { error: err },
         });
 
@@ -169,13 +199,13 @@ export default function AuthCallback() {
   const getTitle = () => {
     switch (state.status) {
       case "processing":
-        return "Signing you in";
+        return t("auth.callback.title.processing", "Signing you in");
       case "success":
-        return "You're all set!";
+        return t("auth.callback.title.success", "You're all set!");
       case "error":
-        return "Authentication failed";
+        return t("oauth.error.title", "Authentication failed");
       default:
-        return "Authentication";
+        return t("auth.callback.title.default", "Authentication");
     }
   };
 
@@ -225,7 +255,7 @@ export default function AuthCallback() {
             fullWidth
             onClick={() => navigate("/login", { replace: true })}
           >
-            Back to login
+            {t("auth.callback.backToLogin", "Back to login")}
           </Button>
         </div>
       )}

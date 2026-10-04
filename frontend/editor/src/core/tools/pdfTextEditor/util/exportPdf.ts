@@ -1,6 +1,10 @@
 import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
 import { preserveShadings } from "@app/tools/pdfTextEditor/pdfdoc/passes/preserveShadings";
 import { PdfiumSave } from "@app/tools/pdfTextEditor/pdfium/PdfiumSave";
+import {
+  assertIncrementalAppend,
+  assertSavedPdf,
+} from "@app/tools/pdfTextEditor/util/savedBytes";
 
 /** Serialize the editor document to a Blob plus the download filename. */
 export async function exportToBlob(
@@ -18,6 +22,8 @@ export async function exportToBlob(
     return { blob: pdfBlob(doc.openedBytes), filename: exportName(sourceName) };
   }
 
+  commitPendingFormRemovals(doc);
+
   // A signed document is appended to rather than rewritten, so the bytes the
   // signature covers are still there and still verify for their revision.
   const incremental = documentIsSigned(doc);
@@ -32,13 +38,42 @@ export async function exportToBlob(
       const repaired = await preserveShadings(bytes, doc.openedBytes, {
         pages: regenerated,
       });
-      if (repaired) bytes = repaired;
+      if (repaired && (!incremental || repaired.length >= bytes.length)) {
+        bytes = repaired;
+      }
     } catch {
       /* the unrepaired save is still a correct save */
     }
   }
 
+  // Re-checked after the shading repair: `PdfiumSave.serialize` validated its
+  // own output, but `preserveShadings` may have swapped in a different buffer,
+  // and these are the bytes the workspace file is overwritten with.
+  assertSavedPdf(bytes);
+  if (incremental) assertIncrementalAppend(bytes, doc.openedBytes);
+
   return { blob: pdfBlob(bytes), filename: exportName(sourceName) };
+}
+
+interface FormRemovalModule {
+  FPDFFormObj_RemoveObject?: (form: number, obj: number) => boolean;
+}
+
+/**
+ * Remove the form children that DeleteShapeCommand only hid. Done here, on the
+ * user's save, rather than in every serialize: other serializes (the charcode
+ * probe) must not make a delete permanent while it can still be undone.
+ */
+function commitPendingFormRemovals(doc: EditorDocument): void {
+  const m = doc.module as unknown as FormRemovalModule;
+  for (const page of doc.loadedPages()) {
+    if (page.pendingFormRemovals.size === 0) continue;
+    for (const [objPtr, formPtr] of page.pendingFormRemovals) {
+      m.FPDFFormObj_RemoveObject?.(formPtr, objPtr);
+    }
+    page.pendingFormRemovals.clear();
+    page.markNeedsGenerate();
+  }
 }
 
 function pdfBlob(bytes: Uint8Array): Blob {

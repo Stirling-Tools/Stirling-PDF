@@ -4,9 +4,10 @@ import {
   createConfigNavSections as createCoreConfigNavSections,
   type ConfigNavSection,
 } from "@core/components/shared/config/configNavSections";
+import type { ConfigNavItem } from "@app/components/shared/config/types";
 import HotkeysSection from "@app/components/shared/config/configSections/HotkeysSection";
 import GeneralSection from "@app/components/shared/config/configSections/GeneralSection";
-import GeneralWithLoginLanding from "@app/components/shared/config/GeneralWithLoginLanding";
+import PreferencesSection from "@core/components/shared/config/configSections/preferences/PreferencesSection";
 import PasswordSecurity from "@app/components/shared/config/configSections/PasswordSecurity";
 import ApiKeys from "@app/components/shared/config/configSections/ApiKeys";
 import McpSection from "@app/components/shared/config/configSections/McpSection";
@@ -20,7 +21,6 @@ import {
 type OverviewComponent = React.ComponentType<{ onLogoutClick: () => void }>;
 
 interface CreateSaasConfigNavSectionsOptions {
-  isDev?: boolean;
   isAnonymous?: boolean;
   t: TFunction<"translation", undefined>;
   /** Close the settings modal — the Help tours need it to start the tour. */
@@ -29,27 +29,29 @@ interface CreateSaasConfigNavSectionsOptions {
 
 function ensurePreferencesSection(
   sections: ConfigNavSection[],
+  t: TFunction<"translation", undefined>,
 ): ConfigNavSection[] {
   const preferencesIndex = sections.findIndex(
-    (section) => section.title === "Preferences",
+    (section) => section.id === "preferences",
   );
 
   if (preferencesIndex === -1) {
     return [
       ...sections,
       {
-        title: "Preferences",
+        id: "preferences",
+        title: t("settings.preferences.title", "Preferences"),
         items: [
           {
             key: "general",
-            label: "General",
-            icon: "settings-rounded",
+            label: t("settings.general.title", "General"),
+            icon: "settings",
             component: <GeneralSection />,
           },
           {
             key: "hotkeys",
-            label: "Keyboard Shortcuts",
-            icon: "keyboard-rounded",
+            label: t("settings.hotkeys.title", "Keyboard Shortcuts"),
+            icon: "keyboard",
             component: <HotkeysSection />,
           },
         ],
@@ -62,6 +64,7 @@ function ensurePreferencesSection(
 
 function appendDeveloperSection(
   sections: ConfigNavSection[],
+  t: TFunction<"translation", undefined>,
 ): ConfigNavSection[] {
   const hasDeveloper = sections.some((section) =>
     section.items.some(
@@ -76,12 +79,12 @@ function appendDeveloperSection(
   return [
     ...sections,
     {
-      title: "Developer",
+      title: t("settings.developer.title", "Developer"),
       items: [
         {
           key: "api-keys",
-          label: "API Keys",
-          icon: "key-rounded",
+          label: t("settings.developer.apiKeys", "API Keys"),
+          icon: "key",
           component: <ApiKeys />,
         },
       ],
@@ -120,10 +123,14 @@ function appendMcpSection(
     return sections;
   }
 
-  const mcpItem = {
+  const mcpItem: ConfigNavItem = {
     key: "mcp" as const,
     label: t("config.mcp.navLabel", "MCP Server"),
-    icon: "smart-toy-rounded",
+    description: t(
+      "config.mcp.description",
+      "Model Context Protocol (MCP) lets AI assistants like Claude use your Stirling PDF tools directly. Connect a client once and your assistant can convert, edit, secure and process documents on your behalf.",
+    ),
+    icon: "bot",
     component: <McpSection />,
   };
 
@@ -134,7 +141,13 @@ function appendMcpSection(
   );
 
   if (developerIndex === -1) {
-    return [...sections, { title: "Developer", items: [mcpItem] }];
+    return [
+      ...sections,
+      {
+        title: t("settings.developer.title", "Developer"),
+        items: [mcpItem],
+      },
+    ];
   }
 
   return sections.map((section, index) =>
@@ -165,7 +178,7 @@ function appendHelpSection(
         {
           key: "help" as const,
           label: t("settings.help.label", "Tours"),
-          icon: "help-rounded",
+          icon: "circle-question-mark",
           component: (
             <HelpSection isAdmin={false} onRequestClose={onRequestClose} />
           ),
@@ -197,7 +210,7 @@ function appendLegalSection(
         {
           key: "legal" as const,
           label: t("settings.legal.label", "Legal"),
-          icon: "gavel-rounded",
+          icon: "gavel",
           component: <LegalSection />,
         },
       ],
@@ -209,13 +222,12 @@ export function createSaasConfigNavSections(
   Overview: OverviewComponent,
   onLogoutClick: () => void,
   {
-    isDev = false,
     isAnonymous = false,
     t,
     onRequestClose = () => {},
   }: CreateSaasConfigNavSectionsOptions,
 ): ConfigNavSection[] {
-  const baseSections = createCoreConfigNavSections(false, false, false);
+  const baseSections = createCoreConfigNavSections(t);
 
   // Create Account section as the first section with Overview and Passwords & Security
   const accountSection: ConfigNavSection = {
@@ -224,12 +236,12 @@ export function createSaasConfigNavSections(
       {
         key: "overview",
         label: t("config.account.overview.label", "Overview"),
-        icon: "account-circle",
+        icon: "circle-user",
         component: <Overview onLogoutClick={onLogoutClick} />,
       },
       {
         key: "security",
-        label: "Passwords & Security",
+        label: t("config.account.security.title", "Passwords & Security"),
         icon: "lock",
         component: <PasswordSecurity />,
       },
@@ -250,16 +262,14 @@ export function createSaasConfigNavSections(
       item.key === "general"
         ? {
             ...item,
-            component: (
-              <GeneralWithLoginLanding hideUpdateSection hideAdminBanner />
-            ),
+            component: <PreferencesSection hideUpdateSection hideAdminBanner />,
           }
         : item,
     ),
   }));
 
-  sections = ensurePreferencesSection(sections);
-  sections = appendDeveloperSection(sections);
+  sections = ensurePreferencesSection(sections, t);
+  sections = appendDeveloperSection(sections, t);
   sections = appendMcpSection(sections, t);
 
   if (!isAnonymous) {
@@ -271,10 +281,6 @@ export function createSaasConfigNavSections(
 
   sections = appendHelpSection(sections, t, onRequestClose);
   sections = appendLegalSection(sections, t);
-
-  if (isDev) {
-    console.debug("[AppConfigModal] SaaS navigation sections", sections);
-  }
 
   return sections;
 }

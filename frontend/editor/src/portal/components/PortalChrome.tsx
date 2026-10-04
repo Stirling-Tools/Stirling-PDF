@@ -1,10 +1,10 @@
+import { AccountConnectionRefresh } from "@app/portal/components/account-link/AccountConnectionNotice";
 import { useLocation } from "react-router-dom";
 import { AppConfigProvider } from "@app/contexts/AppConfigContext";
 import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
-import { ErrorBoundary } from "@portal/components/ErrorBoundary";
-import { AppShell } from "@portal/components/AppShell";
-import { PortalSettingsHost } from "@portal/components/PortalSettingsHost";
-import { ViewRouter } from "@portal/ViewRouter";
+import { ErrorBoundary } from "@app/portal/components/ErrorBoundary";
+import { AppShell } from "@app/portal/components/AppShell";
+import { ViewRouter } from "@app/portal/ViewRouter";
 
 /**
  * The routed view, wrapped in an error boundary so a single view crashing can't
@@ -29,16 +29,16 @@ function RoutedContent() {
  */
 export function PortalChrome() {
   return (
-    // One app-config instance for every portal consumer (search gates, the
-    // settings modal) so they can't fetch twice or disagree.
+    // One app-config instance for every portal consumer (the search gates, the
+    // sidebar) so they can't fetch twice or disagree.
     <AppConfigProvider bootstrapMode="non-blocking">
       {/* The pipeline builder reads the tool registry to list and configure operations. */}
       <ToolRegistryProvider>
+        <AccountConnectionRefresh />
         <AppShell>
           <RoutedContent />
         </AppShell>
       </ToolRegistryProvider>
-      <PortalSettingsHost />
     </AppConfigProvider>
   );
 }

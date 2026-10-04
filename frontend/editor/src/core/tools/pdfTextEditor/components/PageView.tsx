@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Box, Loader } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
 import { PdfiumPageRenderer } from "@app/tools/pdfTextEditor/pdfium/PdfiumPageRenderer";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
@@ -8,6 +9,7 @@ import { TextRunOverlay } from "@app/tools/pdfTextEditor/components/TextRunOverl
 import { TableOverlay } from "@app/tools/pdfTextEditor/components/TableOverlay";
 import { ImageHandle } from "@app/tools/pdfTextEditor/components/ImageHandle";
 import type { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
+import { ShapeHandle } from "@app/tools/pdfTextEditor/components/ShapeHandle";
 import { AnnotationOutline } from "@app/tools/pdfTextEditor/components/AnnotationOutline";
 import { DisplayTransform } from "@app/tools/pdfTextEditor/model/DisplayTransform";
 import { PageGuides } from "@app/tools/pdfTextEditor/components/PageRulers";
@@ -28,10 +30,19 @@ interface PageViewProps {
   showRulers?: boolean;
   selectedRunIds: string[];
   selectedImageIds: string[];
+  selectedShapeIds: string[];
   /** Run id currently highlighted by the find-bar (yellow). */
   highlightedRunId?: string | null;
   onSelectRun: (runId: string, shiftKey: boolean) => void;
   onSelectImage: (imageId: string) => void;
+  onSelectShape: (shapeId: string, extend: boolean) => void;
+  /** Fires when a shape drag completes; dx/dy in raw PDF points. */
+  onMoveShape?: (
+    pageIndex: number,
+    shapeId: string,
+    dx: number,
+    dy: number,
+  ) => void;
   onEditRun: (pageIndex: number, runId: string, nextText: string) => void;
   /** Ctrl+drag committed; dx/dy in PDF points. */
   onMoveRun?: (
@@ -42,6 +53,8 @@ interface PageViewProps {
   ) => void;
   /** Wrap-mode reflow request; maxWidthPt in PDF points. */
   onWrapRun?: (pageIndex: number, runId: string, maxWidthPt: number) => void;
+  /** Right-edge drag to a new box width; widthPt in PDF points. */
+  onResizeRun?: (pageIndex: number, runId: string, widthPt: number) => void;
   /** Fires when the user clicks on a non-text area of the page. */
   onPageClick?: (pageIndex: number, pageX: number, pageY: number) => void;
   /** Fires when an image's drag OR resize completes. */
@@ -77,17 +90,22 @@ export function PageView({
   showRulers,
   selectedRunIds,
   selectedImageIds,
+  selectedShapeIds,
   highlightedRunId,
   onSelectRun,
   onSelectImage,
+  onSelectShape,
+  onMoveShape,
   onEditRun,
   onMoveRun,
   onWrapRun,
+  onResizeRun,
   onPageClick,
   onTransformImage,
   onFirstVisible,
   onFirstRendered,
 }: PageViewProps) {
+  const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   // `raster` is the CSS layout size; the bitmap itself renders at deviceScale
@@ -230,9 +248,7 @@ export function PageView({
         if (!onPageClick) return;
         // Convert from CSS pixel coords (origin upper-left) into PDF
         // page-space coords (origin lower-left, points).
-        const rect = (
-          e.currentTarget as HTMLDivElement
-        ).getBoundingClientRect();
+        const rect = e.currentTarget.getBoundingClientRect();
         const cssX = e.clientX - rect.left;
         const cssY = e.clientY - rect.top;
         // CSS px -> display-PDF.
@@ -271,7 +287,9 @@ export function PageView({
           }}
           data-testid={`pdf-editor-page-${page.pageIndex}-placeholder`}
         >
-          Page {page.pageIndex + 1}
+          {t("pdfTextEditor.pageView.pageNumber", "Page {{page}}", {
+            page: page.pageIndex + 1,
+          })}
         </Box>
       )}
       {rendering && nearViewport && (
@@ -301,17 +319,19 @@ export function PageView({
           }}
           data-testid={`pdf-editor-page-${page.pageIndex}-error`}
         >
-          <span style={{ fontSize: 13 }}>Failed to render page</span>
+          <span style={{ fontSize: 13 }}>
+            {t("pdfTextEditor.pageView.renderFailed", "Failed to render page")}
+          </span>
           <span style={{ fontSize: 11, opacity: 0.8 }}>{renderError}</span>
           <Button
             type="button"
             size="sm"
             variant="secondary"
             accent="danger"
-            onClick={() => setRetryToken((t) => t + 1)}
+            onClick={() => setRetryToken((token) => token + 1)}
             data-testid={`pdf-editor-page-${page.pageIndex}-retry`}
           >
-            Retry
+            {t("common.retry", "Retry")}
           </Button>
         </Box>
       )}
@@ -331,6 +351,19 @@ export function PageView({
             pageHeight={page.height}
             transform={transform}
             scale={cssScale}
+          />
+        ))}
+        {/* Before images and runs: anything drawn over a shape wins its clicks. */}
+        {page.shapes.map((shape) => (
+          <ShapeHandle
+            key={shape.id}
+            shape={shape}
+            pageHeight={page.height}
+            transform={transform}
+            scale={cssScale}
+            selected={selectedShapeIds.includes(shape.id)}
+            onSelect={(extend) => onSelectShape(shape.id, extend)}
+            onMove={(dx, dy) => onMoveShape?.(page.pageIndex, shape.id, dx, dy)}
           />
         ))}
         {page.images.map((image) => (
@@ -372,6 +405,11 @@ export function PageView({
             onMove={(dx, dy) => onMoveRun?.(page.pageIndex, run.id, dx, dy)}
             onWrap={(maxWidthPt) =>
               onWrapRun?.(page.pageIndex, run.id, maxWidthPt)
+            }
+            onResize={
+              onResizeRun
+                ? (widthPt) => onResizeRun(page.pageIndex, run.id, widthPt)
+                : undefined
             }
           />
         ))}

@@ -14,11 +14,7 @@ import {
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useParticipantSession } from "@app/hooks/workflow/useParticipantSession";
-import InfoIcon from "@mui/icons-material/Info";
-import DownloadIcon from "@mui/icons-material/Download";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import CancelIcon from "@mui/icons-material/Cancel";
-
+import { Icon } from "@app/ui/Icon";
 interface ParticipantViewProps {
   token: string;
 }
@@ -39,7 +35,9 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
   const [password, setPassword] = useState<string>("");
   const [certFile, setCertFile] = useState<File | null>(null);
   const [location, setLocation] = useState<string>("");
-  const [reason, setReason] = useState<string>("Document Signing");
+  const [reason, setReason] = useState<string>(() =>
+    t("workflow.participant.defaultReason", "Document Signing"),
+  );
   const [showSignature, _setShowSignature] = useState<boolean>(true);
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [declineReason, _setDeclineReason] = useState<string>("");
@@ -127,7 +125,10 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
     if (!certFile && certType !== "SERVER") {
       setNotification({
         type: "error",
-        message: "Please select a certificate file",
+        message: t(
+          "workflow.participant.selectCertificateFile",
+          "Please select a certificate file",
+        ),
       });
       return;
     }
@@ -149,12 +150,21 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
       });
       setNotification({
         type: "success",
-        message: "Signature submitted successfully!",
+        message: t(
+          "workflow.participant.submitSuccess",
+          "Signature submitted successfully!",
+        ),
       });
     } catch (err: unknown) {
       setNotification({
         type: "error",
-        message: `Failed to submit signature: ${err instanceof Error ? err.message : String(err)}`,
+        message: t(
+          "workflow.participant.submitFailed",
+          "Failed to submit signature: {{error}}",
+          {
+            error: err instanceof Error ? err.message : String(err),
+          },
+        ),
       });
     } finally {
       setIsSubmitting(false);
@@ -163,19 +173,33 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
 
   const handleDecline = async () => {
     if (
-      window.confirm("Are you sure you want to decline signing this document?")
+      window.confirm(
+        t(
+          "workflow.participant.declineConfirm",
+          "Are you sure you want to decline signing this document?",
+        ),
+      )
     ) {
       setNotification(null);
       try {
         await decline(token, declineReason || "Declined by participant");
         setNotification({
           type: "success",
-          message: "You have declined this signing request.",
+          message: t(
+            "workflow.participant.declineSuccess",
+            "You have declined this signing request.",
+          ),
         });
       } catch (err: unknown) {
         setNotification({
           type: "error",
-          message: `Failed to decline: ${err instanceof Error ? err.message : String(err)}`,
+          message: t(
+            "workflow.participant.declineFailed",
+            "Failed to decline: {{error}}",
+            {
+              error: err instanceof Error ? err.message : String(err),
+            },
+          ),
         });
       }
     }
@@ -195,7 +219,7 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
   if (error) {
     return (
       <Alert
-        icon={<InfoIcon fontSize="small" />}
+        icon={<Icon name="info" size={20} />}
         color="red"
         title={t("workflow.participant.errorTitle", "Error")}
       >
@@ -206,7 +230,7 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
 
   if (!session || !participant) {
     return (
-      <Alert icon={<InfoIcon fontSize="small" />} color="orange">
+      <Alert icon={<Icon name="info" size={20} />} color="orange">
         {t(
           "workflow.participant.sessionNotFound",
           "Session not found or access denied.",
@@ -263,9 +287,9 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
         <Alert
           icon={
             notification.type === "success" ? (
-              <CheckCircleIcon fontSize="small" />
+              <Icon name="circle-check" size={20} />
             ) : (
-              <InfoIcon fontSize="small" />
+              <Icon name="info" size={20} />
             )
           }
           color={notification.type === "success" ? "green" : "red"}
@@ -293,7 +317,7 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
 
           {session.message && (
             <Alert
-              icon={<InfoIcon fontSize="small" />}
+              icon={<Icon name="info" size={20} />}
               color="blue"
               variant="light"
             >
@@ -312,7 +336,7 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
           <Group gap="xs" mt="sm">
             <Button
               size="sm"
-              leftSection={<DownloadIcon fontSize="small" />}
+              leftSection={<Icon name="download" size={20} />}
               onClick={() => downloadDocument(token)}
               variant="secondary"
             >
@@ -483,7 +507,7 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
 
             <Group gap="xs">
               <Button
-                leftSection={<CheckCircleIcon fontSize="small" />}
+                leftSection={<Icon name="circle-check" size={20} />}
                 onClick={handleSubmitSignature}
                 loading={isSubmitting}
                 disabled={
@@ -496,7 +520,7 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
               </Button>
 
               <Button
-                leftSection={<CancelIcon fontSize="small" />}
+                leftSection={<Icon name="circle-x" size={20} />}
                 onClick={handleDecline}
                 variant="secondary"
                 accent="danger"
@@ -510,7 +534,7 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
       )}
 
       {participant.hasCompleted && (
-        <Alert icon={<CheckCircleIcon fontSize="small" />} color="green">
+        <Alert icon={<Icon name="circle-check" size={20} />} color="green">
           {participant.status === "SIGNED"
             ? t(
                 "workflow.participant.completedSigned",
@@ -524,7 +548,7 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
       )}
 
       {participant.isExpired && (
-        <Alert icon={<InfoIcon fontSize="small" />} color="orange">
+        <Alert icon={<Icon name="info" size={20} />} color="orange">
           {t(
             "workflow.participant.accessExpired",
             "Your access to this document has expired.",

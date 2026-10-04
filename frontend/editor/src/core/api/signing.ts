@@ -9,13 +9,16 @@ export interface SigningSessions {
   mySessions: SessionSummary[];
 }
 
-/** The two lists the signing UI always needs together. */
+/** Reads both signing lists without global toasts; the caller owns error reporting. */
 export async function fetchSigningSessions(): Promise<SigningSessions> {
   const [requests, sessions] = await Promise.all([
     apiClient.get<SignRequestSummary[]>(
       "/api/v1/security/cert-sign/sign-requests",
+      { suppressErrorToast: true },
     ),
-    apiClient.get<SessionSummary[]>("/api/v1/security/cert-sign/sessions"),
+    apiClient.get<SessionSummary[]>("/api/v1/security/cert-sign/sessions", {
+      suppressErrorToast: true,
+    }),
   ]);
   return { signRequests: requests.data, mySessions: sessions.data };
 }

@@ -48,11 +48,11 @@ jobs:
       version: ${{ steps.versionNumber.outputs.versionNumber }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Cache Gradle
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -63,10 +63,9 @@ jobs:
           key: gradle-tauri-releases-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
 
       - name: Set up JDK 25
-        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        uses: ./.github/actions/java
         with:
           java-version: "25"
-          distribution: "temurin"
 
       - name: Install Task
         uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
@@ -140,11 +139,11 @@ jobs:
             file_suffix: "-server"
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Cache Gradle
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -155,10 +154,9 @@ jobs:
           key: gradle-tauri-releases-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
 
       - name: Set up JDK 25
-        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        uses: ./.github/actions/java
         with:
           java-version: "25"
-          distribution: "temurin"
 
       - name: Setup Node.js
         if: matrix.variant.build_frontend == true
@@ -207,7 +205,7 @@ jobs:
       RELEASE_GPG_PRIVATE_KEY: ${{ secrets.RELEASE_GPG_PRIVATE_KEY }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
           egress-policy: audit
           allowed-endpoints: >
@@ -215,7 +213,7 @@ jobs:
             clientauth.one.digicert.com:443
 
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04'
@@ -247,25 +245,32 @@ jobs:
       # x86_64 JDK is set up first so the aarch64 step below can leave its
       # JAVA_HOME as the active one. The macOS universal JRE build needs
       # jmods from both arches; the x64 path is captured into the env
-      # before the second setup-java overwrites JAVA_HOME.
+      # before the second local JDK setup overwrites JAVA_HOME.
       - name: Set up x86_64 JDK 25 (macOS universal JRE)
         if: matrix.platform == 'macos-15'
-        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        uses: ./.github/actions/java
         with:
           java-version: "25"
-          distribution: "temurin"
           architecture: "x64"
 
       - name: Capture x86_64 JAVA_HOME
         if: matrix.platform == 'macos-15'
         run: echo "X64_JAVA_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
 
-      # Temurin has no windows-aarch64 JDK 25 yet; Microsoft OpenJDK does.
       - name: Set up JDK 25
-        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        if: matrix.platform != 'windows-11-arm'
+        uses: ./.github/actions/java
         with:
           java-version: "25"
-          distribution: ${{ matrix.platform == 'windows-11-arm' && 'microsoft' || 'temurin' }}
+
+      # Windows ARM64 runners have no preinstalled JDK 25; Microsoft provides an ARM64 build.
+      - name: Set up JDK 25 (Windows ARM64)
+        if: matrix.platform == 'windows-11-arm'
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          java-version: "25"
+          distribution: "microsoft"
+          architecture: "arm64"
 
       - name: Install Task
         uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
@@ -308,11 +313,12 @@ jobs:
 
           # Decode client certificate
           $certBytes = [Convert]::FromBase64String("$env:SM_CLIENT_CERT_FILE_B64")
-          $certPath = "D:\Certificate_pkcs12.p12"
+          # RUNNER_TEMP, not D:\ - windows-11-arm runners have no D: drive
+          $certPath = Join-Path $env:RUNNER_TEMP "Certificate_pkcs12.p12"
           [IO.File]::WriteAllBytes($certPath, $certBytes)
 
           # Set environment variables
-          echo "SM_CLIENT_CERT_FILE=D:\Certificate_pkcs12.p12" >> $env:GITHUB_ENV
+          echo "SM_CLIENT_CERT_FILE=$certPath" >> $env:GITHUB_ENV
           echo "SM_HOST=$env:SM_HOST" >> $env:GITHUB_ENV
           echo "SM_API_KEY=$env:SM_API_KEY" >> $env:GITHUB_ENV
           echo "SM_CLIENT_CERT_PASSWORD=$env:SM_CLIENT_CERT_PASSWORD" >> $env:GITHUB_ENV
@@ -332,6 +338,15 @@ jobs:
             } else {
               Write-Host "Warning: Could not find PKCS11 config file"
             }
+          }
+
+          # Tauri's signtool lookup has no ARM64 case ("SignTool not found"), so pass it explicitly
+          if ($env:RUNNER_ARCH -eq "ARM64") {
+            $signtool = (Get-Command signtool.exe -ErrorAction SilentlyContinue).Source
+            if (-not $signtool) { $signtool = Join-Path $env:RUNNER_TOOL_CACHE "signtool/latest/arm64/signtool.exe" }
+            if (-not (Test-Path $signtool)) { throw "signtool.exe not found for ARM64 signing" }
+            Write-Host "Using signtool: $signtool"
+            echo "TAURI_WINDOWS_SIGNTOOL_PATH=$signtool" >> $env:GITHUB_ENV
           }
 
         env:
@@ -450,6 +465,7 @@ jobs:
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # v1.0.0
         env:
+          TAURI_BUNDLER_DMG_IGNORE_CI: "true"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
@@ -467,7 +483,7 @@ jobs:
           APPIMAGETOOL_SIGN_PASSPHRASE: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
           SIGN_KEY: ${{ vars.RELEASE_GPG_FINGERPRINT }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY != '' && secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD || '' }}
           VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY || 'sb_publishable_UHz2SVRF5mvdrPHWkRteyA_yNlZTkYb' }}
           VITE_SAAS_SERVER_URL: ${{ secrets.VITE_SAAS_SERVER_URL || 'https://app.stirlingpdf.com' }}
           VITE_SAAS_BACKEND_API_URL: ${{ secrets.VITE_SAAS_BACKEND_API_URL || 'https://api.stirlingpdf.com' }}
@@ -715,18 +731,21 @@ jobs:
       contents: write
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
           egress-policy: audit
 
       # Sparse-check out the verifier + pubkey before the artifact downloads
       # so the checkout cannot clobber ./artifacts.
       - name: Checkout updater verifier
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           sparse-checkout: |
             .github/scripts/verify-updater-signatures.py
             frontend/editor/src-tauri/tauri.conf.json
+            engine/pyproject.toml
+            engine/uv.lock
+            engine/.python-version
           sparse-checkout-cone-mode: false
 
       - name: Download all Tauri artifacts
@@ -872,7 +891,7 @@ jobs:
       # Gate publish on valid updater sigs. Runs after the review upload (so
       # artifacts survive for debugging) and before action-gh-release.
       - name: Install uv
-        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
           enable-cache: true
           cache-dependency-glob: |
@@ -891,7 +910,7 @@ jobs:
       # instead of silently shipping a broken auto-update.
       - name: Upload binaries to Release
         if: (github.event_name == 'workflow_dispatch' && github.event.inputs.test_mode != 'true' && github.event.inputs.platform == 'all') || github.event_name == 'release' || github.ref == 'refs/heads/release'
-        uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           tag_name: v${{ needs.determine-matrix.outputs.version }}
           # Don't regenerate/append notes on re-runs, and don't force this into the

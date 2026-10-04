@@ -2,13 +2,7 @@ import { useMemo } from "react";
 import { Group, Stack, Text, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
-import ImageIcon from "@mui/icons-material/ImageOutlined";
-import CallMergeIcon from "@mui/icons-material/CallMergeOutlined";
-import CallSplitIcon from "@mui/icons-material/CallSplitOutlined";
-import RotateLeftIcon from "@mui/icons-material/RotateLeftOutlined";
-import RotateRightIcon from "@mui/icons-material/RotateRightOutlined";
-import FlipIcon from "@mui/icons-material/FlipOutlined";
-import OpenInNewIcon from "@mui/icons-material/OpenInNewOutlined";
+import { Icon } from "@app/ui/Icon";
 import {
   Field,
   PointsInput,
@@ -18,6 +12,7 @@ import {
 import type { SelectionGeometry } from "@app/tools/pdfTextEditor/hooks/useSelectionGeometry";
 import type { useToolbarController } from "@app/tools/pdfTextEditor/hooks/useToolbarController";
 import type { SelectionState } from "@app/tools/pdfTextEditor/types";
+import { modShortcut } from "@app/utils/hotkeys";
 
 export type InspectorController = ReturnType<typeof useToolbarController>;
 
@@ -53,6 +48,7 @@ export function SelectionInspector({
 }: Props) {
   const runCount = selection.runIds.length;
   const imageCount = selection.imageIds.length;
+  const shapeCount = selection.shapeIds.length;
   const { hasRunSelection, hasImageSelection } = controller;
 
   return (
@@ -60,9 +56,12 @@ export function SelectionInspector({
       <SelectionHeader
         runCount={runCount}
         imageCount={imageCount}
+        shapeCount={shapeCount}
         fontNote={hasRunSelection ? fontNote : null}
       />
-      <GeometrySection geometry={geometry} isImage={!hasRunSelection} />
+      {runCount + imageCount > 0 && (
+        <GeometrySection geometry={geometry} isImage={!hasRunSelection} />
+      )}
       {hasRunSelection && (
         <ParagraphSection
           canGroup={canGroup}
@@ -80,18 +79,28 @@ export function SelectionInspector({
 function SelectionHeader({
   runCount,
   imageCount,
+  shapeCount,
   fontNote,
 }: {
   runCount: number;
   imageCount: number;
+  shapeCount: number;
   fontNote: string | null;
 }) {
   const { t } = useTranslation();
+  const kinds = [runCount, imageCount, shapeCount].filter((n) => n > 0).length;
   let title: string;
-  if (runCount > 0 && imageCount > 0) {
+  if (kinds > 1) {
     title = t("pdfTextEditor.inspector.mixed", "{{count}} objects", {
-      count: runCount + imageCount,
+      count: runCount + imageCount + shapeCount,
     });
+  } else if (shapeCount > 0) {
+    title =
+      shapeCount === 1
+        ? t("pdfTextEditor.inspector.oneShape", "Shape")
+        : t("pdfTextEditor.inspector.manyShapes", "{{count}} shapes", {
+            count: shapeCount,
+          });
   } else if (runCount > 0) {
     title =
       runCount === 1
@@ -150,10 +159,11 @@ function ParagraphSection({
         <Tooltip
           label={
             canGroup
-              ? t(
-                  "pdfTextEditor.sidebar.groupTooltip",
-                  "Merge selected runs into one paragraph (Ctrl+M)",
-                )
+              ? t("pdfTextEditor.sidebar.groupTooltip", {
+                  defaultValue:
+                    "Merge selected runs into one paragraph ({{shortcut}})",
+                  shortcut: modShortcut("M"),
+                })
               : t(
                   "pdfTextEditor.sidebar.groupTooltipDisabled",
                   "Select 2+ runs to merge",
@@ -164,7 +174,7 @@ function ParagraphSection({
             size="sm"
             variant="secondary"
             accent="neutral"
-            leftSection={<CallMergeIcon fontSize="small" />}
+            leftSection={<Icon name="merge" size={20} />}
             onClick={onGroup}
             disabled={!canGroup}
             data-testid="pdf-editor-group"
@@ -189,7 +199,7 @@ function ParagraphSection({
             size="sm"
             variant="secondary"
             accent="neutral"
-            leftSection={<CallSplitIcon fontSize="small" />}
+            leftSection={<Icon name="split" size={20} />}
             onClick={onUngroup}
             disabled={!canUngroup}
             data-testid="pdf-editor-ungroup"
@@ -259,19 +269,14 @@ function GeometrySection({
                 ? undefined
                 : t(
                     "pdfTextEditor.inspector.widthHint",
-                    "A text box's width follows its content and wrapping.",
+                    "Text re-wraps to fit the width.",
                   )
             }
           >
-            {/* Read-only for text: setting a width goes through the reflow,
-                which splits inside words on runs whose glyphs are positioned
-                individually. Until that is token-aware this must not be a
-                one-keystroke way to shred a heading. */}
             <PointsInput
               value={bounds.width}
-              onCommit={isImage ? setWidth : () => undefined}
+              onCommit={setWidth}
               min={1}
-              disabled={!isImage}
               label={t("pdfTextEditor.inspector.width", "Width")}
               testId="pdf-editor-size-w"
             />
@@ -317,26 +322,30 @@ function ImageSection({ controller }: { controller: InspectorController }) {
         {
           mode: "rotate-ccw" as const,
           testId: "pdf-editor-imgop-rotate-ccw",
-          icon: <RotateLeftIcon fontSize="small" />,
+          icon: <Icon name="rotate-ccw" size={20} />,
           label: t("pdfTextEditor.toolbar.rotateLeft", "Rotate 90° left"),
         },
         {
           mode: "rotate-cw" as const,
           testId: "pdf-editor-imgop-rotate-cw",
-          icon: <RotateRightIcon fontSize="small" />,
+          icon: <Icon name="rotate-cw" size={20} />,
           label: t("pdfTextEditor.toolbar.rotateRight", "Rotate 90° right"),
         },
         {
           mode: "flip-h" as const,
           testId: "pdf-editor-imgop-flip-h",
-          icon: <FlipIcon fontSize="small" />,
+          icon: <Icon name="flip-horizontal-2" size={20} />,
           label: t("pdfTextEditor.toolbar.flipHorizontal", "Flip horizontal"),
         },
         {
           mode: "flip-v" as const,
           testId: "pdf-editor-imgop-flip-v",
           icon: (
-            <FlipIcon fontSize="small" style={{ transform: "rotate(90deg)" }} />
+            <Icon
+              name="flip-horizontal-2"
+              size={20}
+              style={{ transform: "rotate(90deg)" }}
+            />
           ),
           label: t("pdfTextEditor.toolbar.flipVertical", "Flip vertical"),
         },
@@ -369,7 +378,7 @@ function ImageSection({ controller }: { controller: InspectorController }) {
           accent="neutral"
           fullWidth
           justify="start"
-          leftSection={<ImageIcon fontSize="small" />}
+          leftSection={<Icon name="image" size={20} />}
           onClick={onReplaceImage}
           data-testid="pdf-editor-imgop-replace"
         >
@@ -384,7 +393,7 @@ function ImageSection({ controller }: { controller: InspectorController }) {
           accent="neutral"
           fullWidth
           justify="start"
-          leftSection={<OpenInNewIcon fontSize="small" />}
+          leftSection={<Icon name="external-link" size={20} />}
           onClick={onEditImageExternally}
           disabled={!externalEditSupported}
           data-testid="pdf-editor-imgop-edit-externally"

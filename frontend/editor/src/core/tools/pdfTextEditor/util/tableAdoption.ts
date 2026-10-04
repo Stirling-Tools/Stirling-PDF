@@ -142,7 +142,7 @@ function adoptGrid(
   const fallback = {
     ptrs: [] as number[],
     lineWidth: LINE_WIDTH,
-    lineColor: { r: 0, g: 0, b: 0, a: 255 } as RGBA,
+    lineColor: { r: 0, g: 0, b: 0, a: 255 },
   };
   if (!table.pageRuled) return fallback;
   const pad = 2;

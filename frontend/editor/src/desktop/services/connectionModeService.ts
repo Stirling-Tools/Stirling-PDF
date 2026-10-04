@@ -1,4 +1,5 @@
 import { invoke, isTauri } from "@tauri-apps/api/core";
+import i18n from "i18next";
 import { fetch } from "@tauri-apps/plugin-http";
 import { endpointAvailabilityService } from "@app/services/endpointAvailabilityService";
 import { selfHostedServerMonitor } from "@app/services/selfHostedServerMonitor";
@@ -69,6 +70,17 @@ export class ConnectionModeService {
   async getCurrentMode(): Promise<ConnectionMode> {
     const config = await this.getCurrentConfig();
     return config.mode;
+  }
+
+  /** The mode already in memory, or null before the first load. */
+  getCachedMode(): ConnectionMode | null {
+    return this.currentConfig?.mode ?? null;
+  }
+
+  /** The server already in memory, or null before the first load. Synchronous so
+   *  callers that build a URL inline (raw fetch, template string) can reach it. */
+  getCachedServerConfig(): ServerConfig | null {
+    return this.currentConfig?.server_config ?? null;
   }
 
   async getServerConfig(): Promise<ServerConfig | null> {
@@ -347,7 +359,10 @@ export class ConnectionModeService {
       if (stage2Result.success) {
         return {
           success: false,
-          error: "Server is only accessible via HTTPS, not HTTP.",
+          error: i18n.t(
+            "setup.server.error.httpsOnly",
+            "Server is only accessible via HTTPS, not HTTP.",
+          ),
           errorCode: "HTTP_NOT_AVAILABLE",
           diagnostics,
         };
@@ -443,7 +458,10 @@ export class ConnectionModeService {
         console.log(`[ConnectionModeService] ⚠️ HTTP works but HTTPS doesn't`);
         return {
           success: false,
-          error: "Server is only accessible via HTTP (not HTTPS).",
+          error: i18n.t(
+            "setup.server.error.httpOnly",
+            "Server is only accessible via HTTP (not HTTPS).",
+          ),
           errorCode: "HTTPS_NOT_AVAILABLE",
           diagnostics,
         };
@@ -498,8 +516,10 @@ export class ConnectionModeService {
       );
       return {
         success: false,
-        error:
+        error: i18n.t(
+          "setup.server.error.networkBlocked",
           "No internet connectivity detected. All network requests are failing.",
+        ),
         errorCode: "NETWORK_BLOCKED",
         diagnostics,
       };
@@ -533,7 +553,11 @@ export class ConnectionModeService {
       );
       return {
         success: false,
-        error: `Cannot resolve hostname: ${urlObj.hostname}`,
+        error: i18n.t(
+          "setup.server.error.dnsFailed",
+          "Cannot resolve hostname: {{hostname}}",
+          { hostname: urlObj.hostname },
+        ),
         errorCode: "DNS_RESOLUTION_FAILED",
         diagnostics,
       };
@@ -550,7 +574,10 @@ export class ConnectionModeService {
       );
       return {
         success: false,
-        error: "Server responds to HEAD requests but not GET requests.",
+        error: i18n.t(
+          "setup.server.error.methodMismatch",
+          "Server responds to HEAD requests but not GET requests.",
+        ),
         errorCode: "METHOD_MISMATCH",
         diagnostics,
       };
@@ -569,8 +596,10 @@ export class ConnectionModeService {
       );
       return {
         success: false,
-        error:
+        error: i18n.t(
+          "setup.server.error.userAgentBlocked",
           "Server blocks Tauri/desktop app User-Agent but allows browser User-Agent.",
+        ),
         errorCode: "USER_AGENT_BLOCKED",
         diagnostics,
       };
@@ -639,8 +668,10 @@ export class ConnectionModeService {
 
     return {
       success: false,
-      error:
+      error: i18n.t(
+        "setup.server.error.serverUnreachable",
         "Cannot connect to server. Internet works but this specific server is unreachable.",
+      ),
       errorCode: "SERVER_UNREACHABLE",
       diagnostics,
     };

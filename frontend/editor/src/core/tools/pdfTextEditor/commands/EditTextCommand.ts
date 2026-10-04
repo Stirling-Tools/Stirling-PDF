@@ -1,3 +1,4 @@
+import i18n from "i18next";
 import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
 import { PdfiumTextWriter } from "@app/tools/pdfTextEditor/pdfium/PdfiumTextWriter";
@@ -482,6 +483,14 @@ export class EditTextCommand implements Command {
         // emits land at the same baselines we just established.
         run.paragraphLineHeight = lineHeight;
       }
+    } else {
+      run.pdfiumObjPtr = 0;
+      run.paragraphMemberPtrs = [];
+      run.paragraphMemberContainers = [];
+      run.paragraphMemberFs = [];
+      run.paragraphLeafPtrs = [];
+      run.paragraphLeafContainers = [];
+      run.bounds = { ...run.bounds, width: 0 };
     }
 
     run.mergedFromPtrs = [];
@@ -1200,7 +1209,9 @@ export class EditTextCommand implements Command {
   }
 
   describe(): string {
-    return `Type into ${this.runId}`;
+    return i18n.t("pdfTextEditor.commands.typeInto", "Type into {{run}}", {
+      run: this.runId,
+    });
   }
 
   /** Consecutive typing on the SAME run coalesces into one undo step. */

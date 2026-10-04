@@ -1,12 +1,7 @@
 import { useMemo, useRef, useState } from "react";
 import { Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import AddIcon from "@mui/icons-material/Add";
-import RemoveIcon from "@mui/icons-material/Remove";
-import GridOnIcon from "@mui/icons-material/GridOnOutlined";
-import EditIcon from "@mui/icons-material/EditOutlined";
-import DoneIcon from "@mui/icons-material/DoneOutlined";
-import OpenWithIcon from "@mui/icons-material/OpenWith";
+import { Icon } from "@app/ui/Icon";
 import type { DisplayTransform } from "@app/tools/pdfTextEditor/model/DisplayTransform";
 import type {
   PageRect,
@@ -249,7 +244,7 @@ function RecognizedTable({
             data-testid={`pdf-editor-recognized-table-select-${table.id}`}
             style={chipStyle}
           >
-            <GridOnIcon style={{ fontSize: 13 }} />
+            <Icon name="table" size={13} />
             {table.rows}×{table.cols}
           </button>
         </Tooltip>
@@ -265,7 +260,7 @@ function RecognizedTable({
             data-testid={`pdf-editor-recognized-table-edit-${table.id}`}
             style={chipStyle}
           >
-            <EditIcon style={{ fontSize: 13 }} />
+            <Icon name="pencil" size={13} />
             {t("pdfTextEditor.table.edit", "Edit")}
           </button>
         </Tooltip>
@@ -639,7 +634,7 @@ function EditableTable({
                 color: "var(--c-text)",
               }}
             >
-              <OpenWithIcon style={{ fontSize: 13 }} />
+              <Icon name="move" size={13} />
               {t("pdfTextEditor.table.move", "Move")}
             </span>
           }
@@ -648,14 +643,14 @@ function EditableTable({
         <TableControl
           label={t("pdfTextEditor.table.addRow", "Add row")}
           testid={`pdf-editor-table-add-row-${table.id}`}
-          icon={<AddIcon style={{ fontSize: 13 }} />}
+          icon={<Icon name="plus" size={13} />}
           text={t("pdfTextEditor.table.row", "Row")}
           onClick={() => modify("add-row")}
         />
         <TableControl
           label={t("pdfTextEditor.table.deleteRow", "Delete row")}
           testid={`pdf-editor-table-del-row-${table.id}`}
-          icon={<RemoveIcon style={{ fontSize: 13 }} />}
+          icon={<Icon name="minus" size={13} />}
           text={t("pdfTextEditor.table.row", "Row")}
           disabled={table.rows < 2}
           onClick={() => modify("delete-row")}
@@ -663,14 +658,14 @@ function EditableTable({
         <TableControl
           label={t("pdfTextEditor.table.addColumn", "Add column")}
           testid={`pdf-editor-table-add-col-${table.id}`}
-          icon={<AddIcon style={{ fontSize: 13 }} />}
+          icon={<Icon name="plus" size={13} />}
           text={t("pdfTextEditor.table.column", "Col")}
           onClick={() => modify("add-col")}
         />
         <TableControl
           label={t("pdfTextEditor.table.deleteColumn", "Delete column")}
           testid={`pdf-editor-table-del-col-${table.id}`}
-          icon={<RemoveIcon style={{ fontSize: 13 }} />}
+          icon={<Icon name="minus" size={13} />}
           text={t("pdfTextEditor.table.column", "Col")}
           disabled={table.cols < 2}
           onClick={() => modify("delete-col")}
@@ -682,7 +677,7 @@ function EditableTable({
               "Stop editing this as a table",
             )}
             testid={`pdf-editor-table-done-${table.id}`}
-            icon={<DoneIcon style={{ fontSize: 13 }} />}
+            icon={<Icon name="check" size={13} />}
             text={t("pdfTextEditor.table.done", "Done")}
             onClick={() => store.releaseTable(page.pageIndex, table.id)}
           />

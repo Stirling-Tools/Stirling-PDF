@@ -1,5 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { Page } from "@app/tools/pdfTextEditor/model/Page";
+import { ShapeObject } from "@app/tools/pdfTextEditor/model/ShapeObject";
+import type { PageRuleSnapshot } from "@app/tools/pdfTextEditor/types";
+import { MoveShapeCommand } from "@app/tools/pdfTextEditor/commands/MoveShapeCommand";
+import { DeleteShapeCommand } from "@app/tools/pdfTextEditor/commands/DeleteShapeCommand";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
 import { InsertTableCommand } from "@app/tools/pdfTextEditor/commands/InsertTableCommand";
 import { FillTableCellCommand } from "@app/tools/pdfTextEditor/commands/FillTableCellCommand";
@@ -190,6 +194,18 @@ function liveRects(doc: FakeDoc): number {
   return n;
 }
 
+function ruleShape(rule: PageRuleSnapshot): ShapeObject {
+  return new ShapeObject({
+    id: `shape-${rule.ptr}`,
+    pageIndex: 0,
+    bounds: { x: rule.x, y: rule.y, width: rule.width, height: rule.height },
+    pdfiumObjPtr: rule.ptr,
+    containerPtr: 0,
+    topLevelContainerPtr: 0,
+    containerTransform: { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 },
+  });
+}
+
 describe("table commands (fake PDFium)", () => {
   let doc: FakeDoc;
   let page: Page;
@@ -288,6 +304,51 @@ describe("table commands (fake PDFium)", () => {
     expect(doc._objs.size).toBe(count);
     expect(page.rules).toHaveLength(model.rows + model.cols + 2);
     expect(page.rules.every((rule) => doc._onPage.has(rule.ptr))).toBe(true);
+  });
+
+  it("drops shape handles pointing at table rules destroyed by a redraw", () => {
+    const { model } = filledTable();
+    const shape = ruleShape(page.rules[0]);
+    page.setShapes([shape]);
+    redrawGrid(doc, page, model);
+    expect(page.shapes).toEqual([]);
+    expect(doc._objs.has(shape.pdfiumObjPtr)).toBe(false);
+  });
+
+  it("moves cached table rules and fills with their shape, including undo", () => {
+    filledTable();
+    const rule = page.rules[0];
+    const shape = ruleShape(rule);
+    page.setShapes([shape]);
+    page.setFills([{ ...rule }]);
+    const command = new MoveShapeCommand({
+      pageIndex: 0,
+      shapeId: shape.id,
+      dx: 15,
+      dy: -20,
+    });
+    command.apply(doc);
+    expect(page.rules[0]).toMatchObject({ x: rule.x + 15, y: rule.y - 20 });
+    expect(page.fills[0]).toMatchObject({ x: rule.x + 15, y: rule.y - 20 });
+    command.revert(doc);
+    expect(page.rules[0]).toEqual(rule);
+    expect(page.fills[0]).toEqual(rule);
+  });
+
+  it("removes deleted shapes from table recognition and restores them on undo", () => {
+    filledTable();
+    const rule = page.rules[0];
+    const shape = ruleShape(rule);
+    page.setShapes([shape]);
+    page.setFills([{ ...rule }]);
+    const command = new DeleteShapeCommand({ pageIndex: 0, shapeId: shape.id });
+    command.apply(doc);
+    expect(page.rules.some((entry) => entry.ptr === rule.ptr)).toBe(false);
+    expect(page.fills).toEqual([]);
+    command.revert(doc);
+    expect(page.rules).toContainEqual(rule);
+    expect(page.fills).toEqual([rule]);
+    expect(page.shapes).toEqual([shape]);
   });
 
   it("reuses a filled cell's identity on redo so subsequent text edits still apply", () => {

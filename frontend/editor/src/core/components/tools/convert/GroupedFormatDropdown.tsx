@@ -9,13 +9,14 @@ import {
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import CloudOutlinedIcon from "@mui/icons-material/CloudOutlined";
+import { Icon } from "@app/ui/Icon";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
+import { FORMAT_GROUP_LABEL_KEYS } from "@app/constants/convertConstants";
 
 interface FormatOption {
   value: string;
   label: string;
+  labelKey?: string;
   group: string;
   enabled?: boolean;
   usesCloud?: boolean;
@@ -49,6 +50,13 @@ const GroupedFormatDropdown = ({
   const [dropdownOpened, setDropdownOpened] = useState(false);
   const theme = useMantineTheme();
 
+  const getOptionLabel = (option: FormatOption) =>
+    option.labelKey ? t(option.labelKey, option.label) : option.label;
+  const getGroupLabel = (group: string) => {
+    const key = FORMAT_GROUP_LABEL_KEYS[group];
+    return key ? t(key, group) : group;
+  };
+
   const groupedOptions = useMemo(() => {
     const groups: Record<string, FormatOption[]> = {};
 
@@ -66,9 +74,9 @@ const GroupedFormatDropdown = ({
     if (!value) return resolvedPlaceholder;
     const selected = options.find((opt) => opt.value === value);
     return selected
-      ? `${selected.group} (${selected.label})`
+      ? `${getGroupLabel(selected.group)} (${getOptionLabel(selected)})`
       : value.toUpperCase();
-  }, [value, options, resolvedPlaceholder]);
+  }, [value, options, resolvedPlaceholder, t]);
 
   const handleOptionSelect = (selectedValue: string) => {
     onChange(selectedValue);
@@ -115,9 +123,10 @@ const GroupedFormatDropdown = ({
             <Text size="sm" c={value ? undefined : "dimmed"}>
               {selectedLabel}
             </Text>
-            <KeyboardArrowDownIcon
+            <Icon
+              name="chevron-down"
+              size={"1rem"}
               style={{
-                fontSize: "1rem",
                 transform: dropdownOpened ? "rotate(180deg)" : "rotate(0deg)",
                 transition: "transform 0.2s ease",
                 color: "var(--dropdown-trigger-icon)",
@@ -145,7 +154,7 @@ const GroupedFormatDropdown = ({
                 mb="xs"
                 style={{ color: "var(--dropdown-group-label)" }}
               >
-                {groupName}
+                {getGroupLabel(groupName)}
               </Text>
               <Group gap="xs" style={{ flexWrap: "wrap" }}>
                 {groupOptions.map((option) => (
@@ -158,12 +167,10 @@ const GroupedFormatDropdown = ({
                     disabled={option.enabled === false}
                     rightSection={
                       option.usesCloud ? (
-                        <CloudOutlinedIcon
-                          style={{
-                            fontSize: "0.625rem",
-                            marginLeft: "0.25rem",
-                            opacity: 0.7,
-                          }}
+                        <Icon
+                          name="cloud"
+                          size={"0.625rem"}
+                          style={{ marginLeft: "0.25rem", opacity: 0.7 }}
                         />
                       ) : undefined
                     }
@@ -175,7 +182,7 @@ const GroupedFormatDropdown = ({
                       position: "relative",
                     }}
                   >
-                    {option.label}
+                    {getOptionLabel(option)}
                   </Button>
                 ))}
               </Group>

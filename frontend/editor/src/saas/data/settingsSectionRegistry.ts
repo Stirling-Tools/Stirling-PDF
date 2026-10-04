@@ -65,6 +65,15 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
     groupLabelFallback: "Developer",
   },
   {
+    key: "audit",
+    labelKey: "settings.licensingAnalytics.audit",
+    labelFallback: "Audit log",
+    keywords: ["audit", "logs", "events", "history"],
+    requiresPortalAccess: true,
+    groupLabelKey: "settings.securityAuth.title",
+    groupLabelFallback: "Security & sign-in",
+  },
+  {
     key: "mcp",
     labelKey: "config.mcp.navLabel",
     labelFallback: "MCP Server",

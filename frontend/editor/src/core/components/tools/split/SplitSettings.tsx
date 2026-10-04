@@ -6,7 +6,7 @@ import {
   Text,
   Select,
 } from "@mantine/core";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { SPLIT_METHODS } from "@app/constants/splitConstants";
 import { SplitParameters } from "@app/hooks/tools/split/useSplitParameters";
@@ -211,7 +211,7 @@ const SplitSettings = ({
         size="sm"
         style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
       >
-        <LocalIcon icon="download-rounded" width="2rem" height="2rem" />
+        <Icon name="download" size="2rem" />
         {t(
           "autoSplitPDF.dividerDownload2",
           "Download 'Auto Splitter Divider (with instructions).pdf'",
@@ -243,12 +243,39 @@ const SplitSettings = ({
         value={parameters.pageSize || "A4"}
         onChange={(value) => onParameterChange("pageSize", value || "A4")}
         data={[
-          { value: "A4", label: "A4 (210 × 297 mm)" },
-          { value: "Letter", label: "Letter (8.5 × 11 in)" },
-          { value: "A3", label: "A3 (297 × 420 mm)" },
-          { value: "A5", label: "A5 (148 × 210 mm)" },
-          { value: "Legal", label: "Legal (8.5 × 14 in)" },
-          { value: "Tabloid", label: "Tabloid (11 × 17 in)" },
+          {
+            value: "A4",
+            label: t("split.poster.pageSize.options.a4", "A4 (210 × 297 mm)"),
+          },
+          {
+            value: "Letter",
+            label: t(
+              "split.poster.pageSize.options.letter",
+              "Letter (8.5 × 11 in)",
+            ),
+          },
+          {
+            value: "A3",
+            label: t("split.poster.pageSize.options.a3", "A3 (297 × 420 mm)"),
+          },
+          {
+            value: "A5",
+            label: t("split.poster.pageSize.options.a5", "A5 (148 × 210 mm)"),
+          },
+          {
+            value: "Legal",
+            label: t(
+              "split.poster.pageSize.options.legal",
+              "Legal (8.5 × 14 in)",
+            ),
+          },
+          {
+            value: "Tabloid",
+            label: t(
+              "split.poster.pageSize.options.tabloid",
+              "Tabloid (11 × 17 in)",
+            ),
+          },
         ]}
         disabled={disabled}
         comboboxProps={{

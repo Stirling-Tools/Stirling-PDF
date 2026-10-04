@@ -15,17 +15,19 @@ import { scheduleIdle } from "@app/utils/scheduleIdle";
 import { usePolicies } from "@app/hooks/usePolicies";
 import { runPolicyOnFile } from "@app/services/policyDispatch";
 import {
+  dispatchableFileId,
   localPassFor,
   type LocalPass,
 } from "@app/components/policies/policyLocalPass";
 import { policyRequiresAiEngine } from "@app/data/classificationPolicy";
+import { editorTriggerOf } from "@app/policies/runOn";
 import type { StirlingFileStub } from "@app/types/fileContext";
 
 /** Files processed per idle pass, so a large upload drains over several ticks instead of janking. */
 const LOCAL_PASS_BATCH = 3;
 
 interface ActivePass {
-  categoryId: string;
+  policyKey: string;
   backendId: string;
   pass: LocalPass;
   /** When true, the server run is skipped while the AI engine is off (nothing to escalate to). */
@@ -50,21 +52,15 @@ export function usePolicyLocalPasses(): void {
   // Active editor upload policies that declare a local fast path.
   const passes = useMemo<ActivePass[]>(() => {
     const out: ActivePass[] = [];
-    for (const [categoryId, s] of Object.entries(policies)) {
-      const active =
-        s.configured &&
-        s.status === "active" &&
-        s.backendId &&
-        s.runsOnEditor &&
-        (s.runOn ?? "upload") === "upload";
-      if (!active) continue;
-      const pass = localPassFor(categoryId);
+    for (const [policyKey, s] of Object.entries(policies)) {
+      if (editorTriggerOf(s) !== "upload") continue;
+      const pass = localPassFor(policyKey);
       if (!pass) continue;
       out.push({
-        categoryId,
+        policyKey,
         backendId: s.backendId as string,
         pass,
-        requiresAiEngine: policyRequiresAiEngine(categoryId),
+        requiresAiEngine: policyRequiresAiEngine(policyKey),
       });
     }
     return out;
@@ -72,15 +68,17 @@ export function usePolicyLocalPasses(): void {
 
   useEffect(() => {
     if (configLoading || passes.length === 0) return;
-    const claimKey = (categoryId: string, s: StirlingFileStub) =>
-      `${categoryId}:${s.id as string}:${s.lastModified ?? 0}`;
+    const claimKey = (policyKey: string, s: StirlingFileStub) =>
+      `${policyKey}:${s.id as string}:${s.lastModified ?? 0}`;
     // Collect one idle batch of pending (pass, file) work across all passes.
     const batch: { active: ActivePass; stub: StirlingFileStub }[] = [];
     outer: for (const active of passes) {
       for (const stub of fileStubs) {
         if (batch.length >= LOCAL_PASS_BATCH) break outer;
+        // Null when the classification is locked: no pass, and so no escalation.
+        if (!dispatchableFileId(stub)) continue;
         if (!active.pass.eligible(stub)) continue;
-        if (claimed.current.has(claimKey(active.categoryId, stub))) continue;
+        if (claimed.current.has(claimKey(active.policyKey, stub))) continue;
         batch.push({ active, stub });
       }
     }
@@ -92,7 +90,7 @@ export function usePolicyLocalPasses(): void {
       void (async () => {
         let wrote = false;
         for (const { active, stub } of batch) {
-          const key = claimKey(active.categoryId, stub);
+          const key = claimKey(active.policyKey, stub);
           // Re-validate at execution time - another batch may have claimed it since.
           if (claimed.current.has(key)) continue;
           claimed.current.add(key);
@@ -114,13 +112,17 @@ export function usePolicyLocalPasses(): void {
             !(active.requiresAiEngine && !aiEnabled)
           ) {
             void runPolicyOnFile(
-              active.categoryId,
+              active.policyKey,
               active.backendId,
-              stub.id,
+              dispatchableFileId(stub)!,
               stub.name,
             ).catch(() => {
               // Backstop: runPolicyOnFile handles its own failures.
             });
+          } else {
+            // No server run follows (verdict stands, or the AI engine is off so nothing can
+            // escalate): this local pass is the billable run, so charge it here.
+            result.meter?.();
           }
         }
         if (wrote) bumpRevision();

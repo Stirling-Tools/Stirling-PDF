@@ -81,6 +81,8 @@ export interface TextRunSnapshot {
   // Editor-only metadata: when true the run cannot be selected or edited via
   // mouse/keyboard.
   locked?: boolean;
+  /** Box width the user set by resize, in PDF points; absent = follow the ink. */
+  wrapWidthPt?: number;
 }
 
 export interface ImageObjectSnapshot {
@@ -166,6 +168,15 @@ export interface TableSnapshot {
   headerStyle: TableCellStyle | null;
 }
 
+/** A vector path: a line, frame, box or other drawn shape. */
+export interface ShapeObjectSnapshot {
+  id: string;
+  pageIndex: number;
+  bounds: PageRect;
+  /** False inside a form XObject, whose children PDFium cannot re-save moved. */
+  movable: boolean;
+}
+
 export interface PageSnapshot {
   pageIndex: number;
   width: number;
@@ -176,6 +187,7 @@ export interface PageSnapshot {
   revision: number;
   runs: TextRunSnapshot[];
   images: ImageObjectSnapshot[];
+  shapes: ShapeObjectSnapshot[];
   // Text-carrying annotations: drawn by the canvas, outside the editable
   // object tree. Absent until the page has been read.
   annotations?: AnnotationBox[];
@@ -192,6 +204,8 @@ export interface SelectionState {
   runIds: string[];
   /** Selected image object ids. */
   imageIds: string[];
+  /** Selected vector shape ids. */
+  shapeIds: string[];
   /** Caret position when exactly one run is selected and the user is typing */
   caret: number | null;
 }

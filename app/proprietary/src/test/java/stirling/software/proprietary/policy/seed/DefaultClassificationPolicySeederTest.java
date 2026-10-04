@@ -52,7 +52,7 @@ class DefaultClassificationPolicySeederTest {
     }
 
     @Test
-    void seedsAnEnabledClassificationPolicyWhenTheTeamHasNone() {
+    void seedsAnEnabledClassificationPipelineWhenTheTeamHasNone() {
         when(policyStore.findByTeam(7L)).thenReturn(List.of());
 
         seeder().onTeamCreated(new TeamCreatedEvent(7L, "Acme"));
@@ -61,6 +61,7 @@ class DefaultClassificationPolicySeederTest {
         verify(policyStore).save(saved.capture());
         Policy policy = saved.getValue();
         assertThat(policy.enabled()).isTrue();
+        assertThat(policy.required()).isFalse();
         assertThat(policy.teamId()).isEqualTo(7L);
         assertThat(policy.output().type()).isEqualTo("inline");
         assertThat(policy.output().options().get("categoryId")).isEqualTo("classification");
@@ -140,7 +141,7 @@ class DefaultClassificationPolicySeederTest {
         Team defaultTeam = new Team();
         defaultTeam.setId(1L);
         defaultTeam.setName(TeamService.DEFAULT_TEAM_NAME);
-        when(teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME))
+        when(teamRepository.findFirstByNameOrderByIdAsc(TeamService.DEFAULT_TEAM_NAME))
                 .thenReturn(Optional.of(defaultTeam));
         when(policyStore.findByTeam(1L)).thenReturn(List.of());
 
@@ -151,7 +152,8 @@ class DefaultClassificationPolicySeederTest {
 
     @Test
     void doesNotSeedOnStartupWhenThereIsNoDefaultTeam() {
-        when(teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME)).thenReturn(Optional.empty());
+        when(teamRepository.findFirstByNameOrderByIdAsc(TeamService.DEFAULT_TEAM_NAME))
+                .thenReturn(Optional.empty());
 
         seeder().seedDefaultTeamOnStartup();
 

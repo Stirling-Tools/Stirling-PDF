@@ -1,13 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { Box, Center, Group, Stack, Tabs, Text, Tooltip } from "@mantine/core";
+import { Box, Center, Group, Stack, Tabs, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import HighlightAltIcon from "@mui/icons-material/HighlightAltOutlined";
-import TextFieldsIcon from "@mui/icons-material/TextFieldsOutlined";
-import ImageIcon from "@mui/icons-material/ImageOutlined";
-import TableChartIcon from "@mui/icons-material/TableChartOutlined";
-import SearchIcon from "@mui/icons-material/SearchOutlined";
-import HelpIcon from "@mui/icons-material/HelpOutlineOutlined";
-import { Button } from "@app/ui/Button";
+import { Icon } from "@app/ui/Icon";
 import { useToolbarController } from "@app/tools/pdfTextEditor/hooks/useToolbarController";
 import { useSelectionGeometry } from "@app/tools/pdfTextEditor/hooks/useSelectionGeometry";
 import { DocumentInspector } from "@app/tools/pdfTextEditor/components/inspector/DocumentInspector";
@@ -35,27 +29,11 @@ interface SidebarProps {
   onSetGroupingMode: (mode: GroupingMode) => void;
   onSetWidthMode: (mode: WidthMode) => void;
   onSetShowRulers: (show: boolean) => void;
-  onOpenFind: () => void;
-  onShowHelp: () => void;
-  /** True while the next page click drops a new text box. */
-  addTextArmed: boolean;
-  onToggleAddText: () => void;
-  /** True while the next page click drops a new table. */
-  addTableArmed: boolean;
-  onToggleAddTable: () => void;
-  onPickImage: () => void;
+  initialTab?: SidebarTab;
 }
 
-type TabId = "selected" | "document";
+export type SidebarTab = "selected" | "document";
 
-/**
- * The editor's right-hand panel: a properties inspector for the selection.
- *
- * Two tabs and one overflow menu. "Selected" only ever shows controls that can
- * act on what is picked right now; "Document" holds the facts about the file;
- * everything set-and-forget lives behind the menu. Nothing that never changes
- * competes for space with the thing the user is actually editing.
- */
 export function EditorSidebar({
   store,
   state,
@@ -67,20 +45,16 @@ export function EditorSidebar({
   onSetGroupingMode,
   onSetWidthMode,
   onSetShowRulers,
-  onOpenFind,
-  onShowHelp,
-  addTextArmed,
-  onToggleAddText,
-  addTableArmed,
-  onToggleAddTable,
-  onPickImage,
+  initialTab = "selected",
 }: SidebarProps) {
   const { t } = useTranslation();
   const controller = useToolbarController(store, state, selection);
   const geometry = useSelectionGeometry(store, state, selection);
   const hasSelection =
-    selection.runIds.length > 0 || selection.imageIds.length > 0;
-  const [tab, setTab] = useState<TabId>("selected");
+    selection.runIds.length > 0 ||
+    selection.imageIds.length > 0 ||
+    selection.shapeIds.length > 0;
+  const [tab, setTab] = useState<SidebarTab>(initialTab);
 
   // Picking something on the page is a request to see its properties, so the
   // panel follows. Clearing does NOT yank the tab back - a user who opened
@@ -102,7 +76,7 @@ export function EditorSidebar({
   return (
     <Tabs
       value={tab}
-      onChange={(next) => setTab((next as TabId | null) ?? "selected")}
+      onChange={(next) => setTab((next as SidebarTab | null) ?? "selected")}
       data-testid="pdf-editor-sidebar-status"
     >
       <Group
@@ -127,108 +101,6 @@ export function EditorSidebar({
             {t("pdfTextEditor.inspector.tabDocument", "Document")}
           </Tabs.Tab>
         </Tabs.List>
-        <Tooltip label={t("pdfTextEditor.settings.find", "Find (Ctrl+F)")}>
-          <Button
-            variant="tertiary"
-            accent="neutral"
-            size="sm"
-            onClick={onOpenFind}
-            aria-label={t("pdfTextEditor.settings.find", "Find in document")}
-            data-testid="pdf-editor-open-find"
-            leftSection={<SearchIcon fontSize="small" />}
-          />
-        </Tooltip>
-        <Tooltip
-          label={t("pdfTextEditor.help.tooltip", "Keyboard shortcuts (?)")}
-        >
-          <Button
-            variant="tertiary"
-            accent="neutral"
-            size="sm"
-            onClick={onShowHelp}
-            aria-label={t("pdfTextEditor.help.ariaLabel", "Keyboard shortcuts")}
-            data-testid="pdf-editor-help"
-            leftSection={<HelpIcon fontSize="small" />}
-          />
-        </Tooltip>
-      </Group>
-
-      {/* Insert applies in either tab and to no selection in particular, so it
-          rides with the sticky header rather than inside a panel. */}
-      {/* Three insert buttons share a ~260px panel, so the labels are the bare
-          noun and the verb lives in the tooltip. The armed state is the filled
-          variant, not a longer label: a label that grows on click cannot fit
-          three to a row and clipped "Add image" off the panel. */}
-      <Group
-        gap={6}
-        grow
-        px="md"
-        py="xs"
-        style={{
-          position: "sticky",
-          top: 37,
-          zIndex: 2,
-          background: "var(--c-bg-raised)",
-          borderBottom: "1px solid var(--mantine-color-default-border)",
-        }}
-      >
-        <Tooltip
-          label={
-            addTextArmed
-              ? t(
-                  "pdfTextEditor.sidebar.clickPageToAddText",
-                  "Click page to add text",
-                )
-              : t("pdfTextEditor.sidebar.addText", "Add text")
-          }
-        >
-          <Button
-            size="sm"
-            variant={addTextArmed ? "primary" : "secondary"}
-            accent={addTextArmed ? "default" : "neutral"}
-            leftSection={<TextFieldsIcon fontSize="small" />}
-            onClick={onToggleAddText}
-            px="xs"
-            data-testid="pdf-editor-add-text"
-          >
-            {t("pdfTextEditor.sidebar.text", "Text")}
-          </Button>
-        </Tooltip>
-        <Tooltip
-          label={
-            addTableArmed
-              ? t(
-                  "pdfTextEditor.sidebar.clickPageToAddTable",
-                  "Click page to add a table",
-                )
-              : t("pdfTextEditor.sidebar.addTable", "Add table")
-          }
-        >
-          <Button
-            size="sm"
-            variant={addTableArmed ? "primary" : "secondary"}
-            accent={addTableArmed ? "default" : "neutral"}
-            leftSection={<TableChartIcon fontSize="small" />}
-            onClick={onToggleAddTable}
-            px="xs"
-            data-testid="pdf-editor-add-table"
-          >
-            {t("pdfTextEditor.sidebar.table", "Table")}
-          </Button>
-        </Tooltip>
-        <Tooltip label={t("pdfTextEditor.sidebar.addImage", "Add image")}>
-          <Button
-            size="sm"
-            variant="secondary"
-            accent="neutral"
-            leftSection={<ImageIcon fontSize="small" />}
-            onClick={onPickImage}
-            px="xs"
-            data-testid="pdf-editor-add-image"
-          >
-            {t("pdfTextEditor.sidebar.image", "Image")}
-          </Button>
-        </Tooltip>
       </Group>
 
       <Box>
@@ -270,12 +142,10 @@ function NothingSelected() {
   return (
     <Center p="xl" data-testid="pdf-editor-nothing-selected">
       <Stack align="center" gap={6}>
-        <HighlightAltIcon
-          style={{
-            fontSize: 34,
-            color: "var(--mantine-color-dimmed)",
-            opacity: 0.5,
-          }}
+        <Icon
+          name="square-dashed"
+          size={34}
+          style={{ color: "var(--mantine-color-dimmed)", opacity: 0.5 }}
         />
         <Text size="sm" fw={500} c="dimmed">
           {t("pdfTextEditor.inspector.nothingSelected", "Nothing selected")}
@@ -283,7 +153,7 @@ function NothingSelected() {
         <Text size="xs" c="dimmed" ta="center">
           {t(
             "pdfTextEditor.inspector.nothingSelectedHint",
-            "Click any text or image on the page to edit it here.",
+            "Click any text, image or shape on the page to edit it here.",
           )}
         </Text>
       </Stack>
@@ -324,7 +194,10 @@ function useSelectedFontNote(
       return t(
         "pdfTextEditor.inspector.fontGap",
         "{{name}} · missing {{glyphs}} - typing those falls back to Helvetica.",
-        { name: font.name, glyphs: gaps.slice(0, 6).join(" ") },
+        {
+          name: font.name,
+          glyphs: gaps.slice(0, 6).join(" "),
+        },
       );
     }
     // Silent when the font can render anything the user types: a standard

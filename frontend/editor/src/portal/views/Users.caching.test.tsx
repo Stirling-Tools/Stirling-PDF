@@ -1,3 +1,4 @@
+import { UIProvider } from "@portal/contexts/UIContext";
 import {
   afterAll,
   afterEach,
@@ -28,16 +29,6 @@ import { qk } from "@portal/queries/keys";
  * roster from cache with no refetch, and the SaaS roster + teams queries share
  * one /team/my resolve. Same SaaS mocks as Users.saas.test.tsx.
  */
-
-vi.mock("@portal/hooks/useConnectGate", () => ({
-  useConnectGate: () => ({
-    gated: false,
-    loading: false,
-    available: false,
-    connect: vi.fn(),
-    guard: (fn: unknown) => fn,
-  }),
-}));
 
 vi.mock("@app/auth", () => ({
   getStoredToken: () => null,
@@ -104,7 +95,9 @@ function renderUsers(client: QueryClient): RenderResult {
     <MantineProvider>
       <QueryClientProvider client={client}>
         <MemoryRouter>
-          <Users />
+          <UIProvider>
+            <Users />
+          </UIProvider>
         </MemoryRouter>
       </QueryClientProvider>
     </MantineProvider>,

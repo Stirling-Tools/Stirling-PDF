@@ -160,6 +160,7 @@ vi.mock("@portal/api/policies", async (importOriginal) => ({
 
 vi.mock("@portal/api/pipelines", () => ({
   fetchPipelines: vi.fn(),
+  fetchPolicyPermissions: () => Promise.resolve({ canManagePolicies: true }),
 }));
 
 vi.mock("@portal/api/sources", () => ({
@@ -212,6 +213,7 @@ function makePolicyEntry(overrides?: Partial<CatalogueEntry>): CatalogueEntry {
       state: {
         configured: true,
         status: "active",
+        required: false,
         sources: [],
         scopeTypes: [],
         reviewerEmail: "",
@@ -239,6 +241,8 @@ function makePipelineView(
     id,
     name,
     enabled: true,
+    required: false,
+    icon: "",
     status: "active",
     trigger,
     sources: [],

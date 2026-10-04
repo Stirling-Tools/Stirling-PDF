@@ -8,14 +8,29 @@ import {
 } from "@app/contexts/file/contexts";
 import { NavigationActionsContext } from "@app/contexts/NavigationContext";
 import { ViewerContext } from "@app/contexts/ViewerContext";
+import { getToolUrlPath } from "@app/data/toolsTaxonomy";
 import {
   PORTAL_BASENAME,
-  PORTAL_FAILURES_ANCHOR,
+  PORTAL_REVIEW_PATH,
 } from "@app/routes/portalBasename";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
+import { HAS_PORTAL } from "@app/routes/hasPortal";
 import { fileStorage } from "@app/services/fileStorage";
+import { rerunPolicy } from "@app/services/notificationPolicyRetry";
+import { dispatchNotificationAction } from "@app/services/notifications";
+import { isValidToolId, type ToolId } from "@app/types/toolId";
 import type { FileId } from "@app/types/file";
 import {
+  RESOLUTIONS,
+  canRetry,
+  rerunOutcome,
+  resolutionSpec,
+  retryTargetOf,
+  toolOf,
+  unavailable,
+} from "@app/components/notifications/resolutions";
+import {
+  closesPanelFor,
   type ClientActionOutcome,
   type ClientActionRegistry,
   type ClientActionSpec,
@@ -23,45 +38,55 @@ import {
 } from "@core/components/notifications/notificationActions";
 
 export {
+  closesPanelFor,
   type ClientActionOutcome,
   type ClientActionRegistry,
   type ClientActionSpec,
   type NotificationActionContext,
 };
 
-/**
- * The portal mounts as a sibling of `AppProviders`, so in the processor shell none of the workbench
- * contexts exist above this hook. That is why contexts are read raw and a document is handed over.
- */
+// The portal mounts as a sibling of AppProviders, so no workbench contexts sit above this hook.
 
 const HANDOFF_KEY = "stirling.notifications.pendingSelection";
 
-const FAILURES_DESTINATION = `${PORTAL_BASENAME}/documents#${PORTAL_FAILURES_ANCHOR}`;
+const REVIEW_DESTINATION = `${PORTAL_BASENAME}${PORTAL_REVIEW_PATH}`;
 
-/** False when storage refused it: navigating anyway lands the user in an editor with nothing open. */
-function stashSelection(fileId: string): boolean {
+/** The document to open on arrival, and the tool to open it into. */
+interface Handoff {
+  fileId: string;
+  tool: ToolId | null;
+}
+
+/** False when storage refused it: navigating anyway lands the user in an empty editor. */
+function stashSelection(fileId: string, tool: ToolId | null = null): boolean {
   try {
-    window.sessionStorage.setItem(HANDOFF_KEY, fileId);
+    window.sessionStorage.setItem(
+      HANDOFF_KEY,
+      JSON.stringify({ fileId, tool }),
+    );
     return true;
   } catch {
     return false;
   }
 }
 
-function takeSelection(): string | null {
+function takeSelection(): Handoff | null {
   try {
-    const fileId = window.sessionStorage.getItem(HANDOFF_KEY);
-    if (fileId !== null) window.sessionStorage.removeItem(HANDOFF_KEY);
-    return fileId;
+    const stored = window.sessionStorage.getItem(HANDOFF_KEY);
+    if (stored === null) return null;
+    window.sessionStorage.removeItem(HANDOFF_KEY);
+    const { fileId, tool } = JSON.parse(stored) as Record<string, unknown>;
+    if (typeof fileId !== "string" || fileId === "") return null;
+    return {
+      fileId,
+      tool: typeof tool === "string" && isValidToolId(tool) ? tool : null,
+    };
   } catch {
     return null;
   }
 }
 
-/**
- * Not the router's `navigate`: the editor reads its tool from the URL on mount and on a history pop,
- * and a router push is neither, so the address would change and the workbench would not.
- */
+/** Not the router's `navigate`: the editor reads its tool on mount and on a history pop. */
 function goToEditor(path: string): void {
   window.history.pushState({}, "", withBasePath(path));
   window.dispatchEvent(new PopStateEvent("popstate"));
@@ -70,20 +95,16 @@ function goToEditor(path: string): void {
 export function useNotificationActions(): ClientActionRegistry {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  // Raw, because the hooks that wrap these throw when there is no provider, and in the processor
-  // shell there is none. All four are present together or not at all.
+  // Raw, because the wrapping hooks throw without a provider. All four are present or none are.
   const fileContext = useContext(FileActionsContext);
   const fileStore = useContext(FileStoreContext);
   const navigation = useContext(NavigationActionsContext);
   const viewer = useContext(ViewerContext);
   const canOpenHere = Boolean(fileContext && fileStore && navigation && viewer);
 
-  /**
-   * Opens the way the file sidebar does. Selecting alone shows nothing: an id the workbench does not
-   * hold has nothing to render, and the workbench keeps whatever view it was on.
-   */
+  /** Opens the way the file sidebar does: an id the workbench does not hold renders nothing. */
   const openInWorkbench = useCallback(
-    async (fileId: string): Promise<boolean> => {
+    async (fileId: string, tool: ToolId | null = null): Promise<boolean> => {
       if (!fileContext || !fileStore || !navigation || !viewer) return false;
 
       const stub = await fileStorage.getStirlingFileStub(fileId as FileId);
@@ -96,17 +117,22 @@ export function useNotificationActions(): ClientActionRegistry {
         await fileContext.actions.addStirlingFileStubs([stub]);
       }
       viewer.setActiveFileId(fileId);
-      navigation.actions.setWorkbench("viewer");
+      // The viewer is what scopes a tool to one document; every other view hands it all of them.
+      if (tool) {
+        navigation.actions.setToolAndWorkbench(tool, "viewer");
+      } else {
+        navigation.actions.setWorkbench("viewer");
+      }
       return true;
     },
     [fileContext, fileStore, navigation, viewer],
   );
 
-  // One-shot: read and cleared, so a later render cannot reopen a file the user has moved on from.
+  // One-shot: a later render must not reopen a file the user has moved on from.
   useEffect(() => {
     if (!canOpenHere) return;
-    const fileId = takeSelection();
-    if (fileId) void openInWorkbench(fileId);
+    const handoff = takeSelection();
+    if (handoff) void openInWorkbench(handoff.fileId, handoff.tool);
   }, [canOpenHere, openInWorkbench]);
 
   return useMemo<ClientActionRegistry>(() => {
@@ -115,8 +141,7 @@ export function useNotificationActions(): ClientActionRegistry {
     ): Promise<ClientActionOutcome | void> => {
       if (!fileId) return;
 
-      // In place, with no navigation: "/" is the role-based router, so going there reads as the app
-      // reloading and lands the user wherever their role says rather than on their document.
+      // In place: "/" is the landing router, which redirects wherever the account belongs.
       if (canOpenHere) {
         return (await openInWorkbench(fileId)) ? undefined : { ok: false };
       }
@@ -133,6 +158,48 @@ export function useNotificationActions(): ClientActionRegistry {
       goToEditor(EDITOR_BASENAME);
     };
 
+    /** Into the viewer, the only view that scopes the tool to the one document that failed. */
+    const openToolWithDocument = async (
+      fileId: string | null,
+      tool: ToolId | null,
+    ): Promise<ClientActionOutcome | void> => {
+      if (canOpenHere && fileId) {
+        return (await openInWorkbench(fileId, tool))
+          ? undefined
+          : unavailable(t);
+      }
+      if (fileId && !stashSelection(fileId, tool)) {
+        // Nothing would be open on arrival, so say so rather than navigate regardless.
+        return {
+          ok: false,
+          message: t(
+            "notifications.handoffUnavailable",
+            "This browser will not let the processor pass the document to the editor. Open it from the editor instead.",
+          ),
+        };
+      }
+      goToEditor(tool ? getToolUrlPath(tool) : EDITOR_BASENAME);
+    };
+
+    const openInTool: ClientActionSpec = {
+      available: (context) => canRetry(context, fileContext),
+      closesPanel: true,
+      run: async (context): Promise<ClientActionOutcome | void> => {
+        const target = retryTargetOf(context);
+        if (!target) return unavailable(t);
+
+        // A tool opens rather than re-runs: it failed once, so the user sees the settings first.
+        if (target.kind === "tool") {
+          return openToolWithDocument(
+            context.notification.fileId,
+            toolOf(target.payload),
+          );
+        }
+        if (!fileContext) return unavailable(t);
+        return rerunOutcome(t, await rerunPolicy(target.policy), null);
+      },
+    };
+
     const viewFile: ClientActionSpec = {
       available: (context) => context.hasLocalFile,
       closesPanel: true,
@@ -140,16 +207,69 @@ export function useNotificationActions(): ClientActionRegistry {
     };
 
     const viewInProcessor: ClientActionSpec = {
-      // Its destination is dev-only until failures get a review screen; the other half of this gate
-      // is in portal/views/Documents, and both lift together.
-      available: () => import.meta.env.DEV,
+      // Desktop ships the app without the processor, so the destination is not routed there and
+      // the button navigated to nothing.
+      available: () => HAS_PORTAL,
       closesPanel: true,
-      run: () => navigate(FAILURES_DESTINATION),
+      run: () => navigate(REVIEW_DESTINATION),
     };
 
+    const heldByServer = (context: NotificationActionContext) =>
+      context.notification.documentLocation === "SMART_FOLDER";
+
+    // What the server does on this browser's behalf: the document is in a folder this browser
+    // cannot reach, so all the client does is ask, and the row names which file it is about.
+    const askTheServer = (
+      actionId: string,
+      whenItFails: string,
+    ): ClientActionSpec => ({
+      available: heldByServer,
+      run: async (context): Promise<ClientActionOutcome | void> => {
+        const refusal = await dispatchNotificationAction(
+          context.notification.id,
+          actionId,
+        );
+        if (refusal === null) return;
+        // The server's own words where it gave any: only it knows why the folder refused.
+        return { ok: false, message: refusal || whenItFails };
+      },
+    });
+
+    // One id, run by whichever side holds the document: the server resolves it per row, and this
+    // picks the half that can act.
+    const rerunInFolder = askTheServer(
+      "OPEN_IN_TOOL",
+      t(
+        "notifications.retryInFolderFailed",
+        "That document could not be run again just now.",
+      ),
+    );
+    const retry: ClientActionSpec = {
+      available: (context) =>
+        heldByServer(context)
+          ? rerunInFolder.available(context)
+          : openInTool.available(context),
+      // The server's half changes nothing on screen to move to, so the panel stays and shows the
+      // row leave the list; the client's half opens the tool behind it.
+      closesPanel: (context) => !heldByServer(context),
+      run: (context) =>
+        heldByServer(context)
+          ? rerunInFolder.run(context)
+          : openInTool.run(context),
+    };
+
+    const resolutions = Object.fromEntries(
+      RESOLUTIONS.map((resolution) => [
+        resolution.actionId,
+        resolutionSpec(resolution, { t, fileContext, fileStore }),
+      ]),
+    );
+
     return {
+      OPEN_IN_TOOL: retry,
+      ...resolutions,
       VIEW_FILE: viewFile,
       VIEW_IN_PROCESSOR: viewInProcessor,
     };
-  }, [canOpenHere, openInWorkbench, navigate, t]);
+  }, [canOpenHere, openInWorkbench, fileContext, fileStore, navigate, t]);
 }

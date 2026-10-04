@@ -168,6 +168,9 @@ export function removeObjects(
   const removed = new Set(ptrs);
   page.setRules(page.rules.filter((rule) => !removed.has(rule.ptr)));
   page.setFills(page.fills.filter((fill) => !removed.has(fill.ptr)));
+  page.setShapes(
+    page.shapes.filter((shape) => !removed.has(shape.pdfiumObjPtr)),
+  );
 }
 
 // Remove the model's current ruling lines and draw a fresh grid for its current

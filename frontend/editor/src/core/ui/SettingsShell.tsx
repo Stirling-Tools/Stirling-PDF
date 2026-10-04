@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
 import "@app/ui/SettingsShell.css";
 
@@ -42,13 +43,17 @@ export function SettingsShell({
   children,
   className,
 }: SettingsShellProps) {
+  const { t } = useTranslation();
   return (
     <div
       className={["sui-settings-shell", className ?? ""]
         .filter(Boolean)
         .join(" ")}
     >
-      <nav className="sui-settings-shell__nav" aria-label="Settings sections">
+      <nav
+        className="sui-settings-shell__nav"
+        aria-label={t("common.settingsSections", "Settings sections")}
+      >
         {sections.map((section) => (
           <div key={section.title} className="sui-settings-shell__group">
             <span className="sui-settings-shell__group-title">
@@ -98,7 +103,7 @@ export function SettingsShell({
                 shape="circle"
                 className="sui-settings-shell__close"
                 onClick={onClose}
-                aria-label="Close"
+                aria-label={t("common.close", "Close")}
                 leftSection={
                   <svg
                     viewBox="0 0 24 24"

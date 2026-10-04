@@ -1,7 +1,9 @@
-import { useEffect, useId, type ReactNode } from "react";
+import { useEffect, useId, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { FocusTrap } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
+import { useIsOverflowing } from "@app/hooks/useIsOverflowing";
 import "@app/ui/Modal.css";
 
 export type ModalWidth = "sm" | "md" | "lg" | "xl";
@@ -23,6 +25,7 @@ export interface ModalProps {
   /** Accessible name when no visible title is provided. */
   ariaLabel?: string;
   className?: string;
+  zIndex?: number;
   children?: ReactNode;
 }
 
@@ -40,9 +43,16 @@ export function Modal({
   disableEscapeClose = false,
   ariaLabel,
   className,
+  zIndex,
   children,
 }: ModalProps) {
+  const { t } = useTranslation();
   const titleId = useId();
+  const bodyRef = useRef<HTMLDivElement>(null);
+  // A body that overflows must be reachable by keyboard to scroll; only its non-focusable
+  // content (header close + footer live outside it). tabindex lands only when it scrolls, so
+  // fitting modals gain no stray tab stop (axe scrollable-region-focusable).
+  const bodyScrolls = useIsOverflowing(bodyRef);
 
   useEffect(() => {
     if (!open || disableEscapeClose) return;
@@ -73,6 +83,7 @@ export function Modal({
   return createPortal(
     <div
       className="sui-modal__backdrop"
+      style={zIndex === undefined ? undefined : { zIndex }}
       onClick={onBackdropClick}
       role="presentation"
     >
@@ -98,7 +109,7 @@ export function Modal({
                   shape="circle"
                   className="sui-modal__back"
                   onClick={onBack}
-                  aria-label={backLabel ?? "Back"}
+                  aria-label={backLabel ?? t("common.back", "Back")}
                   leftSection={
                     <svg
                       viewBox="0 0 24 24"
@@ -132,7 +143,7 @@ export function Modal({
                 shape="circle"
                 className="sui-modal__close"
                 onClick={onClose}
-                aria-label="Close"
+                aria-label={t("common.close", "Close")}
                 leftSection={
                   <svg
                     viewBox="0 0 24 24"
@@ -152,7 +163,13 @@ export function Modal({
               />
             </header>
           )}
-          <div className="sui-modal__body">{children}</div>
+          <div
+            ref={bodyRef}
+            className="sui-modal__body"
+            tabIndex={bodyScrolls ? 0 : undefined}
+          >
+            {children}
+          </div>
           {footer && <footer className="sui-modal__footer">{footer}</footer>}
         </div>
       </FocusTrap>

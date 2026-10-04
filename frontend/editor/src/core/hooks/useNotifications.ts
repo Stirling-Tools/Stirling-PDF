@@ -3,7 +3,11 @@ import {
   fetchNotifications,
   type AppNotification,
 } from "@app/services/notifications";
-import { hasLocalFile } from "@app/services/localFilePresence";
+import {
+  hasLocalFile,
+  loadRetryPayload,
+  type RetryPayload,
+} from "@app/services/notificationRetry";
 
 /**
  * One polled store for however many bells are mounted. A module store rather than a context because
@@ -14,11 +18,7 @@ import { hasLocalFile } from "@app/services/localFilePresence";
 const POLL_INTERVAL_MS = 30_000;
 const SEEN_STORAGE_KEY_PREFIX = "stirling.notifications.readThroughAt";
 
-/**
- * Scoped to the viewer the server named, because a timestamp is legible to whoever reads it next: an
- * unscoped marker left by the previous user of a shared browser would silently pre-read the
- * incoming user's older failures. Null while the viewer is unknown, which reads as nothing marked.
- */
+/** Null while the viewer is unknown: an unscoped marker would pre-read the next user's rows. */
 function seenStorageKey(viewerKey: string | null): string | null {
   return viewerKey ? `${SEEN_STORAGE_KEY_PREFIX}.${viewerKey}` : null;
 }
@@ -42,7 +42,6 @@ function readReadThrough(viewerKey: string | null): number | null {
 
 function writeReadThrough(viewerKey: string | null, at: number): void {
   const key = seenStorageKey(viewerKey);
-  // Unscoped would be worse than unsaved: the next viewer here would inherit it.
   if (!key) return;
   try {
     window.localStorage.setItem(key, String(at));
@@ -51,11 +50,7 @@ function writeReadThrough(viewerKey: string | null, at: number): void {
   }
 }
 
-/**
- * Forget how far the departing reader got. The marker is scoped to its viewer, so this is belt to
- * that brace: it also covers a sign-out on a build where the server names no viewer, and it drops
- * the in-memory marker so the bell does not answer for them until the next read says who is here.
- */
+/** Forget how far the departing reader got, for a build where the server names no viewer. */
 export function clearNotificationReadState(): void {
   const key = seenStorageKey(snapshot.viewerKey);
   if (key) {
@@ -70,18 +65,28 @@ export function clearNotificationReadState(): void {
 
 export interface NotificationDocumentState {
   hasLocalFile: boolean;
+  retryPayload: RetryPayload | null;
 }
 
 const NO_DOCUMENT: NotificationDocumentState = {
   hasLocalFile: false,
+  retryPayload: null,
 };
 
 /**
- * Whether this browser could resolve the document a row names. Two id spaces share `fileId`: an
- * attended run reports the id its editor minted, a source-fed one a hash that was never on a device.
+ * Whether this browser holds the document a row names, and so could run a fix over it. The server
+ * says: a client inferring it from `sourceId` cannot see a smart folder's rows at all.
  */
 export function isResolvableHere(notification: AppNotification): boolean {
-  return (notification.sourceId ?? null) === null;
+  return notification.documentLocation === "BROWSER";
+}
+
+/**
+ * Rows the server keeps on the reader's behalf. The server says which, so a smart-folder policy
+ * run from the editor, whose document is this browser's, is not mistaken for one.
+ */
+function isHeldByServer(notification: AppNotification): boolean {
+  return notification.heldByServer;
 }
 
 interface NotificationsSnapshot {
@@ -90,7 +95,7 @@ interface NotificationsSnapshot {
   documents: Record<string, NotificationDocumentState>;
   /** Everything up to and including this time has been read. Epoch millis, never a row id. */
   readThroughAt: number | null;
-  /** Who the marker belongs to. Null until a read says, so nothing is marked on their behalf. */
+  /** Who the marker belongs to, once a read has said. */
   viewerKey: string | null;
 }
 
@@ -150,6 +155,7 @@ async function read(forCycle: number): Promise<void> {
           fileId,
           {
             hasLocalFile: await hasLocalFile(fileId),
+            retryPayload: await loadRetryPayload(fileId),
           },
         ] as const,
     ),
@@ -157,20 +163,19 @@ async function read(forCycle: number): Promise<void> {
   if (forCycle !== cycle) return;
 
   const documents = Object.fromEntries(resolved);
-  // Presentation, not access: the server has already scoped these rows to the reader. Hidden
-  // because every offer a member gets needs the document, so the row would only say so.
+  // Presentation, not access: the server has already scoped these rows to the reader. A member is
+  // shown what they can act on, plus what the server holds for them and nobody else.
   const visible = viewerReviewsTeam
     ? listed
     : listed.filter(
-        // Asked rather than left to the lookup missing: an unattended row's fileId comes from
-        // another id space, so a hit on one would be a collision and not the document.
+        // Asked, not left to the lookup missing: a hit on another id space would be a collision.
         (n) =>
-          isResolvableHere(n) &&
-          Boolean(n.fileId && documents[n.fileId]?.hasLocalFile),
+          isHeldByServer(n) ||
+          (isResolvableHere(n) &&
+            Boolean(n.fileId && documents[n.fileId]?.hasLocalFile)),
       );
 
-  // Read per read, not once at startup: the marker belongs to whoever the server says is
-  // reading, and signing in or out changes who that is without remounting the bell.
+  // Per read, since signing in or out changes whose marker applies without remounting the bell.
   publish({
     ...snapshot,
     notifications: visible,
@@ -215,13 +220,28 @@ function loadFresh(): void {
   });
 }
 
+/**
+ * The bell sits in the quick-nav rail, which renders above AppProviders and so
+ * above the query client - hence this store rather than a query. The one thing
+ * the client would give for free has to be spelled out: a backgrounded tab
+ * otherwise reads every 30s for the whole session, on every page.
+ */
+function pollIfWatching(): void {
+  if (document.visibilityState === "visible") void load();
+}
+
 function startPolling(): void {
   cycle += 1;
-  // Nothing read until the first read names the viewer, since the marker is theirs and not this
-  // browser's. Everything counts as unread until then, which errs towards showing failures.
+  // Nothing counts as read until a read names the viewer, which errs towards showing failures.
   snapshot = NOTHING_LOADED;
-  pollTimer = window.setInterval(() => void load(), POLL_INTERVAL_MS);
+  pollTimer = window.setInterval(pollIfWatching, POLL_INTERVAL_MS);
+  document.addEventListener("visibilitychange", onVisibilityChange);
   void load();
+}
+
+/** Coming back to a stale bell is the case people notice, so catch up on return. */
+function onVisibilityChange(): void {
+  if (document.visibilityState === "visible") void load();
 }
 
 function stopPolling(): void {
@@ -229,6 +249,7 @@ function stopPolling(): void {
     window.clearInterval(pollTimer);
     pollTimer = null;
   }
+  document.removeEventListener("visibilitychange", onVisibilityChange);
   // Drop anything in flight: its cycle has nobody watching it.
   cycle += 1;
   inFlight = null;

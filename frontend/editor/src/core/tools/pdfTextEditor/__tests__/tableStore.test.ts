@@ -42,6 +42,7 @@ async function makeStore() {
       revision: page.revision,
       runs: [],
       images: [],
+      shapes: [],
       tables: [model.snapshot()],
       rules: [],
       display: page.display.toData(),

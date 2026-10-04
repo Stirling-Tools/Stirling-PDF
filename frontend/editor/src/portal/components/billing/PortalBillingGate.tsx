@@ -1,32 +1,93 @@
-import { useCallback } from "react";
-import { useApplyLinkFacts } from "@portal/contexts/LinkContext";
-import { useUI } from "@portal/contexts/UIContext";
-import { ConnectGuardedRoute } from "@portal/components/account-link/ConnectGuardedRoute";
-import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
-import { Usage } from "@portal/views/Usage";
-import type { Wallet } from "@portal/api/billing";
+import { useServerPlan } from "@app/portal/hooks/useServerPlan";
+import { ManageBillingButton } from "@app/components/shared/ManageBillingButton";
+import { useCallback, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
+import { ServerLicenseSection } from "@app/portal/components/billing/ServerLicenseSection";
+import {
+  useApplyLinkFacts,
+  useLinkOptional,
+} from "@app/portal/contexts/LinkContext";
+import { useUI } from "@app/portal/contexts/UIContext";
+import { useConnectGate } from "@app/portal/hooks/useConnectGate";
+import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
+import { AccountConnectionNotice } from "@app/portal/components/account-link/AccountConnectionNotice";
+import { SaasSessionBanner } from "@app/portal/components/account-link/SaasSessionBanner";
+import { FreeTierPlanView } from "@app/portal/components/billing/FreeTierPlanView";
+import { Usage } from "@app/portal/views/Usage";
+import type { Wallet } from "@app/portal/api/billing";
 
 /**
- * The seam the SaaS build shadows, and the backstop for a typed URL — the nav already refuses to
- * come here unlinked (the sidebar's requiresLink).
+ * The seam the SaaS build shadows: picks which usage page this instance has one of.
  *
- * <p>Usage must not render while unlinked: {@link onWalletLoaded} reports linked as a fact, and the
- * browser can hold a SaaS session with no link to this server, so rendering it flipped the portal
- * to linked.
+ * <p>Two sources, never one: {@link onWalletLoaded} reports {@code linked} as a fact, and a
+ * browser can hold a SaaS session with no link to this server, so routing the unlinked page through
+ * the wallet would flip the whole portal to linked.
  */
 export function PortalBillingGate() {
   const applyLinkFacts = useApplyLinkFacts();
-  const { openLinkModal } = useUI();
+  const { trialSetupRequested } = useUI();
+  const { loading, gated, connect } = useConnectGate();
+  const isOwner = useAccountLinkOwner();
+  const {
+    serverPlan,
+    usersInUse,
+    userLimit,
+    loading: licenseLoading,
+  } = useServerPlan(isOwner);
+  const serverPlanAction = serverPlan ? <ManageBillingButton /> : undefined;
+  const link = useLinkOptional();
+  const [searchParams] = useSearchParams();
+  const prompted = useRef(false);
+  const accountLinkRequested =
+    trialSetupRequested ||
+    searchParams.get("procurement") === "start" ||
+    searchParams.get("upgrade") === "team";
+
+  useEffect(() => {
+    if (!accountLinkRequested || link?.isLinked) prompted.current = false;
+    else if (isOwner && !loading && gated && !prompted.current) {
+      prompted.current = true;
+      connect();
+    }
+  }, [accountLinkRequested, link?.isLinked, isOwner, loading, gated, connect]);
 
   const onWalletLoaded = useCallback(
     (w: Wallet) => applyLinkFacts(true, w.status === "subscribed"),
     [applyLinkFacts],
   );
-  const onReauth = useCallback(() => openLinkModal("reauth"), [openLinkModal]);
 
+  // Only the organization owner manages the server's account and billing.
+  // The nav hides these sections too; this guards a directly entered URL.
+  if (!isOwner) return null;
+  // Neither page while the answer is unknown: showing the local meter to a linked instance would
+  // present a dormant ledger as its live one.
+  if (loading || licenseLoading) return null;
+  // A positively known link, not merely "not gated": linking turned off and a failed status
+  // check are neither, and must not reach a SaaS this instance has no address for.
+  if (!link?.isLinked)
+    return (
+      <FreeTierPlanView
+        serverPlan={serverPlan}
+        serverPlanAction={serverPlanAction}
+        licenseSection={<ServerLicenseSection onSaved={() => {}} />}
+      />
+    );
   return (
-    <ConnectGuardedRoute fallback={toPortalPath(VIEW_PATHS.home)}>
-      <Usage onWalletLoaded={onWalletLoaded} onReauth={onReauth} />
-    </ConnectGuardedRoute>
+    <Usage
+      localUsersInUse={usersInUse}
+      localUserLimit={userLimit}
+      serverPlan={serverPlan}
+      serverPlanAction={serverPlanAction}
+      onWalletLoaded={onWalletLoaded}
+      renderLicenseSection={(onSaved) => (
+        <ServerLicenseSection onSaved={onSaved} />
+      )}
+      sessionRecovery={
+        <>
+          <SaasSessionBanner />
+          <AccountConnectionNotice />
+        </>
+      }
+    />
   );
 }

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Box, Popover, ScrollArea, Text, Loader } from "@mantine/core";
 import { Button } from "@app/ui/Button";
-import AddIcon from "@mui/icons-material/Add";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import {
   createStirlingFile,
@@ -10,7 +10,6 @@ import {
   createNewStirlingFileStub,
 } from "@app/types/fileContext";
 import type { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
-import type { FileId } from "@app/types/file";
 import { useAllFiles } from "@app/contexts/FileContext";
 import { useIndexedDB } from "@app/contexts/IndexedDBContext";
 import { useFileContext } from "@app/contexts/file/fileHooks";
@@ -24,6 +23,11 @@ import {
 } from "@app/services/shareBundleUtils";
 import { truncateCenter } from "@app/utils/textUtils";
 import { generateThumbnailForFile } from "@app/utils/thumbnailUtils";
+import {
+  assertFilesNotBlocked,
+  policySourceIds,
+} from "@app/services/policyFileGuard";
+import { alert } from "@app/components/toast";
 import styles from "@app/components/shared/FileSelectorPicker.module.css";
 import "@app/components/shared/FileSidebarFileItem.css";
 
@@ -39,7 +43,7 @@ function lsGet<const T extends readonly string[]>(
   try {
     const v = localStorage.getItem(key);
     const allowed = valid as readonly string[];
-    if (v && allowed.includes(v)) return v as T[number];
+    if (v && allowed.includes(v)) return v;
   } catch {
     /* ignore */
   }
@@ -150,15 +154,12 @@ export function FileSelectorPicker({
     setHoveredThumbnail(null);
     (async () => {
       try {
-        const file = await indexedDB.loadFile(hoveredStub.stub.id as FileId);
+        const file = await indexedDB.loadFile(hoveredStub.stub.id);
         if (!file || thumbCancelRef.current) return;
         const thumbnail = await generateThumbnailForFile(file);
         if (thumbCancelRef.current || !thumbnail) return;
         setHoveredThumbnail(thumbnail);
-        void indexedDB.updateThumbnail(
-          hoveredStub.stub.id as FileId,
-          thumbnail,
-        );
+        void indexedDB.updateThumbnail(hoveredStub.stub.id, thumbnail);
       } catch {
         // non-critical
       }
@@ -243,14 +244,23 @@ export function FileSelectorPicker({
   const loadAndSelect = useCallback(
     async (stub: StirlingFileStub) => {
       if (loadingId) return;
+      try {
+        assertFilesNotBlocked(policySourceIds(stub));
+      } catch {
+        alert({
+          alertType: "warning",
+          title: t("policy.recoveryTitle"),
+          body: t("policy.recoveryBody"),
+        });
+        return;
+      }
 
       // Workbench file — get StirlingFile directly from FileContext (no loading needed)
       if (workbenchIdSet.has(stub.id)) {
-        const sf = selectors.getFile(stub.id as FileId);
+        const sf = selectors.getFile(stub.id);
         if (sf) {
           // Prefer the workbench stub (has thumbnail) over the saved stub (may not)
-          const workbenchStub =
-            selectors.getStirlingFileStub(stub.id as FileId) ?? stub;
+          const workbenchStub = selectors.getStirlingFileStub(stub.id) ?? stub;
           onSelect({ stub: workbenchStub, stirlingFile: sf });
           setIsOpen(false);
         }
@@ -296,8 +306,7 @@ export function FileSelectorPicker({
             parseContentDispositionFilename(disp) || stub.name,
             ct,
           );
-          if (files[0])
-            stirlingFile = createStirlingFile(files[0], stub.id as FileId);
+          if (files[0]) stirlingFile = createStirlingFile(files[0], stub.id);
         } else {
           // Local IndexedDB file
           const localFile = await fileStorage.getStirlingFile(stub.id);
@@ -314,7 +323,7 @@ export function FileSelectorPicker({
                 resolvedStub = { ...stub, thumbnailUrl: thumbnail };
                 // Persist so subsequent opens don't regenerate
                 void fileStorage.updateThumbnail(
-                  stirlingFile.fileId as FileId,
+                  stirlingFile.fileId,
                   thumbnail,
                 );
               }
@@ -322,6 +331,7 @@ export function FileSelectorPicker({
               // Non-fatal — thumbnail simply won't show
             }
           }
+          assertFilesNotBlocked(policySourceIds(resolvedStub));
           onSelect({ stub: resolvedStub, stirlingFile });
           setIsOpen(false);
         }
@@ -331,7 +341,7 @@ export function FileSelectorPicker({
         setLoadingId(null);
       }
     },
-    [loadingId, workbenchIdSet, selectors, onSelect],
+    [loadingId, workbenchIdSet, selectors, onSelect, t],
   );
 
   const handleUpload = useCallback(
@@ -419,12 +429,10 @@ export function FileSelectorPicker({
               {placeholder ||
                 t("fileSelectorPicker.placeholder", "Select file")}
             </Text>
-            <AddIcon
-              style={{
-                fontSize: 18,
-                color: "var(--mantine-color-dimmed)",
-                flexShrink: 0,
-              }}
+            <Icon
+              name="plus"
+              size={18}
+              style={{ color: "var(--mantine-color-dimmed)", flexShrink: 0 }}
             />
           </Box>
         </Popover.Target>

@@ -1,4 +1,8 @@
-import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
+import i18n from "i18next";
+import {
+  RolledBackError,
+  type Command,
+} from "@app/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
 
 /** Groups several already-applied commands into one undo/redo step. */
@@ -21,12 +25,36 @@ export class CompositeCommand implements Command {
   }
 
   apply(doc: EditorDocument): void {
-    for (const cmd of this.commands) cmd.apply(doc);
+    this.run(doc, this.commands, "apply");
   }
 
   revert(doc: EditorDocument): void {
-    for (let i = this.commands.length - 1; i >= 0; i--) {
-      this.commands[i].revert(doc);
+    const reversed = [...this.commands].reverse();
+    this.run(doc, reversed, "revert");
+  }
+
+  private run(
+    doc: EditorDocument,
+    order: Command[],
+    phase: "apply" | "revert",
+  ): void {
+    const done: Command[] = [];
+    for (const cmd of order) {
+      try {
+        if (phase === "apply") cmd.apply(doc);
+        else cmd.revert(doc);
+      } catch (err) {
+        for (let i = done.length - 1; i >= 0; i--) {
+          try {
+            if (phase === "apply") done[i].revert(doc);
+            else done[i].apply(doc);
+          } catch {
+            throw err;
+          }
+        }
+        throw new RolledBackError(err);
+      }
+      done.push(cmd);
     }
   }
 
@@ -35,6 +63,8 @@ export class CompositeCommand implements Command {
   }
 
   describe(): string {
-    return this.last.describe?.() ?? "Edit";
+    return (
+      this.last.describe?.() ?? i18n.t("pdfTextEditor.commands.edit", "Edit")
+    );
   }
 }

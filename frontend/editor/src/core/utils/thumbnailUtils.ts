@@ -9,6 +9,7 @@ import {
   renderPdfiumPageDataUrl,
   readPdfiumPageMetadata,
 } from "@app/utils/pdfiumPageRender";
+import { getDocumentBytes } from "@app/services/documentBytesCache";
 
 export interface ThumbnailWithMetadata {
   thumbnail: string; // Always returns a thumbnail (placeholder if needed)
@@ -46,6 +47,32 @@ const LINEARIZED_PREFIX_BYTES = 2 * 1024 * 1024;
 
 /** Window at each end of the file searched for an /Encrypt entry. */
 const ENCRYPT_PROBE_BYTES = 64 * 1024;
+
+/** Pages read between yields while collecting whole-document metadata. */
+const METADATA_YIELD_INTERVAL = 50;
+
+/**
+ * Fills rotation and dimensions for pages 1..pageCount-1. Each read is
+ * synchronous WASM on the main thread, so this yields every
+ * {@link METADATA_YIELD_INTERVAL} pages to let a frame through on long
+ * documents.
+ */
+async function collectAllPageMetadata(
+  docPtr: number,
+  pageCount: number,
+  pageRotations: number[],
+  pageDimensions: Array<{ width: number; height: number }>,
+): Promise<void> {
+  for (let i = 1; i < pageCount; i++) {
+    if (i % METADATA_YIELD_INTERVAL === 0) {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+    const meta = await readPdfiumPageMetadata(docPtr, i);
+    if (!meta) continue;
+    pageRotations[i] = meta.rotation;
+    pageDimensions[i] = { width: meta.width, height: meta.height };
+  }
+}
 
 /** Decoded latin1 because the input is binary - UTF-8 replacement characters
  * can swallow the marker. \b excludes longer keys like /Encryption. */
@@ -131,12 +158,12 @@ async function renderPdfThumbnailPdfium(
     ];
 
     if (collectAllPagesMetadata) {
-      for (let i = 1; i < pageCount; i++) {
-        const meta = await readPdfiumPageMetadata(docPtr, i);
-        if (!meta) continue;
-        pageRotations[i] = meta.rotation;
-        pageDimensions[i] = { width: meta.width, height: meta.height };
-      }
+      await collectAllPageMetadata(
+        docPtr,
+        pageCount,
+        pageRotations,
+        pageDimensions,
+      );
     }
 
     return { thumbnail, pageCount, pageRotations, pageDimensions };
@@ -190,12 +217,12 @@ async function renderPdfThumbnailPairPdfium(
       { width: firstMeta?.width ?? 0, height: firstMeta?.height ?? 0 },
     ];
     if (collectAllPagesMetadata) {
-      for (let i = 1; i < pageCount; i++) {
-        const meta = await readPdfiumPageMetadata(docPtr, i);
-        if (!meta) continue;
-        pageRotations[i] = meta.rotation;
-        pageDimensions[i] = { width: meta.width, height: meta.height };
-      }
+      await collectAllPageMetadata(
+        docPtr,
+        pageCount,
+        pageRotations,
+        pageDimensions,
+      );
     }
 
     const base = { pageCount, pageRotations, pageDimensions };
@@ -258,7 +285,7 @@ export async function generateThumbnailForFile(file: File): Promise<string> {
       // chunk can fail to open for PDFs larger than that. Retry with the
       // full buffer before falling back to an empty thumbnail.
       try {
-        const fullArrayBuffer = await file.arrayBuffer();
+        const fullArrayBuffer = await getDocumentBytes(file);
         return await generatePDFThumbnail(fullArrayBuffer, scale);
       } catch (error) {
         reportThumbnailFailure(file, error);
@@ -320,7 +347,7 @@ export async function generateThumbnailWithMetadata(
   }
 
   try {
-    const arrayBuffer = await file.arrayBuffer();
+    const arrayBuffer = await getDocumentBytes(file);
     // Always read per-page rotation: PageEditor renders thumbnails upright and
     // uses this as the rotation baseline, so skipping it corrupts saves.
     const result = await renderPdfThumbnailPdfium(
@@ -374,7 +401,7 @@ export async function generateThumbnailPairWithMetadata(file: File): Promise<{
     }
     const buffer = isLarge
       ? await file.slice(0, LINEARIZED_PREFIX_BYTES).arrayBuffer()
-      : await file.arrayBuffer();
+      : await getDocumentBytes(file);
     const pair = await renderPdfThumbnailPairPdfium(buffer, scale, !isLarge);
 
     const toPublic = (r: PdfiumRenderResult): ThumbnailWithMetadata =>

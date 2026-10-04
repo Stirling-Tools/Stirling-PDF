@@ -28,7 +28,10 @@ import tools.jackson.databind.node.ObjectNode;
 @Slf4j
 @Service
 @Profile("!saas")
-@ConditionalOnProperty(name = "stirling.billing.account-link.enabled", havingValue = "true")
+@ConditionalOnProperty(
+        name = "stirling.billing.account-link.enabled",
+        havingValue = "true",
+        matchIfMissing = true)
 public class AccountLinkClient {
 
     static final String HEADER_DEVICE_ID = "X-Device-Id";
@@ -59,14 +62,24 @@ public class AccountLinkClient {
     /** A non-2xx reply from the SaaS account-link API. */
     public static class UpstreamException extends IOException {
         private final int status;
+        private final String reason;
 
         public UpstreamException(int status, String body) {
+            this(status, body, null);
+        }
+
+        public UpstreamException(int status, String body, String reason) {
             super("SaaS account-link returned HTTP " + status + ": " + body);
             this.status = status;
+            this.reason = reason;
         }
 
         public int status() {
             return status;
+        }
+
+        public String reason() {
+            return reason;
         }
     }
 
@@ -218,9 +231,71 @@ public class AccountLinkClient {
         }
     }
 
-    /**
-     * Revokes this instance's own credential on the SaaS side, authenticated by that credential.
-     */
+    /** Status uses the device identity; invite and transfer additionally require a human bearer. */
+    public CloudOwnershipStatus ownership(
+            DeviceCredential credential, String email, String token, String action, Long leaderId)
+            throws IOException {
+        return ownership(credential, email, token, action, leaderId, null);
+    }
+
+    /** Pins the cloud recipient as well as the expected leader when a member has been selected. */
+    public CloudOwnershipStatus ownership(
+            DeviceCredential credential,
+            String email,
+            String token,
+            String action,
+            Long leaderId,
+            Long targetUserId)
+            throws IOException {
+        ObjectNode body = mapper.createObjectNode();
+        body.put("email", email);
+        if (leaderId != null) body.put("expectedLeaderId", leaderId);
+        if (targetUserId != null) body.put("expectedTargetId", targetUserId);
+        String path =
+                "status".equals(action)
+                        ? "/api/v1/instance/ownership/status"
+                        : "/api/v1/account-link/ownership/" + action;
+        HttpRequest.Builder request =
+                HttpRequest.newBuilder()
+                        .uri(uri(path))
+                        .header(HEADER_DEVICE_ID, credential.getDeviceId())
+                        .header(HEADER_DEVICE_SECRET, credential.getDeviceSecret())
+                        .header("Content-Type", "application/json")
+                        .timeout(timeout())
+                        .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(body)));
+        if (token != null && !token.isBlank()) request.header("Authorization", token);
+        HttpResponse<String> response = send(request.build());
+        if (response.statusCode() / 100 != 2) {
+            String reason = null;
+            try {
+                reason = text(mapper.readTree(response.body()), "detail");
+            } catch (RuntimeException ignored) {
+                // An HTML gateway error has no structured ownership reason.
+            }
+            throw new UpstreamException(response.statusCode(), response.body(), reason);
+        }
+        return mapper.readValue(response.body(), CloudOwnershipStatus.class);
+    }
+
+    /** Reads only the linked team's eligible members; device credentials stay on the server. */
+    public CloudOwnershipCandidates ownershipCandidates(DeviceCredential credential)
+            throws IOException {
+        HttpRequest request =
+                HttpRequest.newBuilder()
+                        .uri(uri("/api/v1/instance/ownership/members"))
+                        .header(HEADER_DEVICE_ID, credential.getDeviceId())
+                        .header(HEADER_DEVICE_SECRET, credential.getDeviceSecret())
+                        .timeout(timeout())
+                        .GET()
+                        .build();
+        HttpResponse<String> response = send(request);
+        if (response.statusCode() / 100 != 2) {
+            throw new UpstreamException(response.statusCode(), response.body());
+        }
+        return mapper.readValue(response.body(), CloudOwnershipCandidates.class);
+    }
+
+    /** Revokes only the instance presenting this device credential. */
     public boolean revokeSelf(String deviceId, String deviceSecret) {
         try {
             HttpRequest request =
@@ -293,16 +368,40 @@ public class AccountLinkClient {
             long apiUnits,
             long aiUnits,
             long automationUnits) {
+        return reportUsage(
+                deviceId,
+                deviceSecret,
+                syncSeq,
+                periodStart,
+                apiUnits,
+                aiUnits,
+                automationUnits,
+                null);
+    }
+
+    /** A null period sends only deployment seats, without changing usage counters. */
+    public InstanceEntitlement reportUsage(
+            String deviceId,
+            String deviceSecret,
+            long syncSeq,
+            LocalDateTime periodStart,
+            long apiUnits,
+            long aiUnits,
+            long automationUnits,
+            Integer seatCount) {
         HttpResponse<String> response;
         try {
             ObjectNode root = mapper.createObjectNode();
             root.put("syncSeq", syncSeq);
             // Explicit ISO-8601 string so it round-trips regardless of the mapper's time config.
-            root.put("periodStart", periodStart.toString());
-            ObjectNode units = root.putObject("cumulativeUnits");
-            units.put("api", apiUnits);
-            units.put("ai", aiUnits);
-            units.put("automation", automationUnits);
+            if (seatCount != null) root.put("seatCount", seatCount);
+            if (periodStart != null) {
+                root.put("periodStart", periodStart.toString());
+                ObjectNode units = root.putObject("cumulativeUnits");
+                units.put("api", apiUnits);
+                units.put("ai", aiUnits);
+                units.put("automation", automationUnits);
+            }
             String body = mapper.writeValueAsString(root);
             HttpRequest request =
                     HttpRequest.newBuilder()
@@ -343,6 +442,8 @@ public class AccountLinkClient {
         Long periodCap =
                 root.hasNonNull("periodCapUnits") ? root.get("periodCapUnits").asLong() : null;
         EntitlementState state = mapState(root.path("state").asText(null));
+        Integer licensedUsers =
+                root.hasNonNull("licensedUsers") ? root.get("licensedUsers").asInt() : null;
         return new InstanceEntitlement(
                 subscribed,
                 freeRemaining,
@@ -351,7 +452,13 @@ public class AccountLinkClient {
                 state,
                 parseUnitCalcPolicy(root),
                 parseDateTime(root, "periodStart"),
-                parseDateTime(root, "periodEnd"));
+                parseDateTime(root, "periodEnd"),
+                licensedUsers,
+                root.path("automationStepLimit").asInt(0),
+                root.path("prepaidRemainingUnits").asLong(0),
+                root.hasNonNull("fleetUserLimit")
+                        ? Math.max(0, root.get("fleetUserLimit").asInt())
+                        : null);
     }
 
     /** Parses the nested unit-calc policy; null if absent or any knob is invalid (e.g. zero). */

@@ -1,5 +1,6 @@
 import { TextRun } from "@app/tools/pdfTextEditor/model/TextRun";
 import { ImageObject } from "@app/tools/pdfTextEditor/model/ImageObject";
+import type { ShapeObject } from "@app/tools/pdfTextEditor/model/ShapeObject";
 import { DisplayTransform } from "@app/tools/pdfTextEditor/model/DisplayTransform";
 import type { AnnotationBox } from "@app/tools/pdfTextEditor/model/AnnotationBox";
 import type { TableModel } from "@app/tools/pdfTextEditor/model/TableModel";
@@ -17,6 +18,13 @@ export class Page {
   readonly display: DisplayTransform;
   runs: TextRun[];
   images: ImageObject[];
+  shapes: ShapeObject[];
+  /**
+   * Deleted shapes still inside a form XObject (object ptr -> form ptr). They
+   * are hidden for now and removed on save: removal is the only change to a
+   * form's children that PDFium writes back, and it cannot be undone.
+   */
+  pendingFormRemovals: Map<number, number>;
   /** Text-carrying annotations: rendered by the canvas, not editable. */
   annotations: AnnotationBox[];
   // Bounding boxes of the thin filled/stroked paths the page draws - table
@@ -56,6 +64,8 @@ export class Page {
       opts.display ?? DisplayTransform.identity(opts.width, opts.height);
     this.runs = [];
     this.images = [];
+    this.shapes = [];
+    this.pendingFormRemovals = new Map();
     this.annotations = [];
     this.tables = [];
     this.dirty = false;
@@ -81,6 +91,10 @@ export class Page {
 
   setImages(images: ImageObject[]): void {
     this.images = images;
+  }
+
+  setShapes(shapes: ShapeObject[]): void {
+    this.shapes = shapes;
   }
 
   setAnnotations(annotations: AnnotationBox[]): void {
@@ -135,5 +149,9 @@ export class Page {
 
   findImage(id: string): ImageObject | undefined {
     return this.images.find((i) => i.id === id);
+  }
+
+  findShape(id: string): ShapeObject | undefined {
+    return this.shapes.find((s) => s.id === id);
   }
 }

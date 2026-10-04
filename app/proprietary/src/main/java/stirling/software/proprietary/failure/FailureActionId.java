@@ -9,7 +9,6 @@ import lombok.Getter;
  */
 @Getter
 public enum FailureActionId {
-
     /**
      * Kept in the vocabulary for as long as any persisted row is {@code ACKNOWLEDGED}: such rows
      * must stay readable and closable whether or not any kind currently offers this.
@@ -19,24 +18,23 @@ public enum FailureActionId {
     DISMISS(Execution.SERVER, "Dismiss"),
 
     /**
-     * Open the failed operation in the client with its document, for the owner to run again
-     * themselves. Not a re-run: the settings are theirs to check first.
+     * Runs the failed step again. A browser holding the document opens the tool with it loaded; a
+     * smart folder's document is re-run by the server, the only side that can reach it.
      */
-    OPEN_IN_TOOL(Execution.CLIENT, "Retry"),
+    OPEN_IN_TOOL(Execution.EITHER, "Retry"),
 
-    /**
-     * Ask the owner for the password and unlock the document in their client. Re-running is implied
-     * rather than named: an id says what a caller must supply, and a {@link
-     * FailureActionSlot#RESOLUTION} runs the failed work again once it has it.
-     */
-    DECRYPT(Execution.CLIENT, "Decrypt and retry"),
+    /** Unlocks the document with a password the owner supplies, then re-runs. */
+    DECRYPT(Execution.CLIENT, "Unlock"),
+
+    /** Repairs the document, then re-runs. */
+    REPAIR(Execution.CLIENT, "Repair"),
 
     /** Open the document behind the incident, in whichever client can resolve its id. */
     VIEW_FILE(Execution.CLIENT, "View file"),
 
     VIEW_IN_PROCESSOR(Execution.CLIENT, "View in processor");
 
-    /** Dispatch refuses a {@code CLIENT} id, so this is enforced rather than merely documented. */
+    /** Dispatch refuses an id that does not run on the server, so this is enforced. */
     public enum Execution {
 
         /** {@link FailureActionRegistry} requires a {@link FailureAction} bean for these. */
@@ -45,7 +43,13 @@ public enum FailureActionId {
         /**
          * Declared and rendered, never dispatched: the server has neither the file nor the tool.
          */
-        CLIENT
+        CLIENT,
+
+        /**
+         * Per row, not declared here: a reader holding the file acts on it themselves; a document
+         * only the server can reach is acted on there. See {@link #executionFor(boolean)}.
+         */
+        EITHER
     }
 
     private final Execution execution;
@@ -58,8 +62,19 @@ public enum FailureActionId {
         this.defaultLabel = defaultLabel;
     }
 
-    /** Also whether it can be dispatched. */
-    public boolean runsOnServer() {
-        return execution == Execution.SERVER;
+    /**
+     * Where this action runs for a document in the given place, which is what the client is told
+     * and what dispatch is checked against. Only {@link Execution#EITHER} depends on the argument.
+     */
+    public Execution executionFor(boolean inSmartFolder) {
+        if (execution != Execution.EITHER) {
+            return execution;
+        }
+        return inSmartFolder ? Execution.SERVER : Execution.CLIENT;
+    }
+
+    /** Whether a handler bean must exist: true for anything that can ever be dispatched. */
+    public boolean canRunOnServer() {
+        return execution != Execution.CLIENT;
     }
 }

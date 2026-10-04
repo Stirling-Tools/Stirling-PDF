@@ -3,6 +3,7 @@ import { render, waitFor, act } from "@testing-library/react";
 
 const mocks = vi.hoisted(() => ({
   getLeafStirlingFileStubs: vi.fn(),
+  getStirlingFileStub: vi.fn(),
   alert: vi.fn(),
   setActiveFileId: vi.fn(),
   restoreWorkbench: vi.fn(),
@@ -11,12 +12,19 @@ const mocks = vi.hoisted(() => ({
   authLoading: false,
   pathname: "/editor",
   activeFileId: null as string | null,
+  launchFilesPending: false,
 }));
 
 vi.mock("@app/services/fileStorage", () => ({
-  fileStorage: { getLeafStirlingFileStubs: mocks.getLeafStirlingFileStubs },
+  fileStorage: {
+    getLeafStirlingFileStubs: mocks.getLeafStirlingFileStubs,
+    getStirlingFileStub: mocks.getStirlingFileStub,
+  },
 }));
 vi.mock("@app/components/toast", () => ({ alert: mocks.alert }));
+vi.mock("@app/services/launchFiles", () => ({
+  launchFilesPending: async () => mocks.launchFilesPending,
+}));
 vi.mock("@app/contexts/NavigationContext", () => ({
   useNavigationState: () => ({ workbench: mocks.workbench }),
   useNavigationActions: () => ({
@@ -120,11 +128,13 @@ beforeEach(() => {
   vi.clearAllMocks();
   actions.addStirlingFileStubs.mockResolvedValue([]);
   mocks.getLeafStirlingFileStubs.mockResolvedValue([]);
+  mocks.getStirlingFileStub.mockResolvedValue(null);
   mocks.workbench = "viewer";
   mocks.authUser = null;
   mocks.authLoading = false;
   mocks.pathname = "/editor";
   mocks.activeFileId = null;
+  mocks.launchFilesPending = false;
 });
 afterEach(() => vi.useRealTimers());
 
@@ -159,15 +169,154 @@ describe("restore", () => {
     expect(mocks.alert).not.toHaveBeenCalled();
   });
 
-  it("does not touch a workbench that already holds files", async () => {
+  it("adds saved files alongside files that are already open", async () => {
     sessionStorage.setItem(
       SESSION_KEY,
       JSON.stringify({ v: 2, fileIds: ["root-a"], selectedFileIds: [] }),
     );
+    mocks.getStirlingFileStub.mockResolvedValue(stub("root-a", "root-a"));
     mount(makeStore([stub("already-open", "already-open")]));
 
     await act(async () => {});
+    expect(actions.addStirlingFileStubs).toHaveBeenCalledWith([
+      stub("root-a", "root-a"),
+    ]);
+    expect(actions.setSelectedFiles).not.toHaveBeenCalled();
+    expect(mocks.setActiveFileId).not.toHaveBeenCalled();
+    expect(mocks.restoreWorkbench).not.toHaveBeenCalled();
+  });
+
+  it("reads unversioned files directly instead of scanning the whole library", async () => {
+    sessionStorage.setItem(
+      SESSION_KEY,
+      JSON.stringify({ v: 2, fileIds: ["root-a"], selectedFileIds: [] }),
+    );
+    mocks.getStirlingFileStub.mockResolvedValue(stub("root-a", "root-a"));
+
+    mount(makeStore());
+
+    await waitFor(() =>
+      expect(actions.addStirlingFileStubs).toHaveBeenCalled(),
+    );
+    expect(
+      actions.addStirlingFileStubs.mock.calls[0][0].map(
+        (s: StirlingFileStub) => s.id,
+      ),
+    ).toEqual(["root-a"]);
+    expect(mocks.getLeafStirlingFileStubs).not.toHaveBeenCalled();
+  });
+
+  it("scans for the current leaf once a recorded file has been versioned", async () => {
+    sessionStorage.setItem(
+      SESSION_KEY,
+      JSON.stringify({ v: 2, fileIds: ["root-a"], selectedFileIds: [] }),
+    );
+    mocks.getStirlingFileStub.mockResolvedValue({
+      ...stub("root-a", "root-a"),
+      isLeaf: false,
+    });
+    mocks.getLeafStirlingFileStubs.mockResolvedValue([
+      stub("a-v2", "root-a", 2),
+    ]);
+
+    mount(makeStore());
+
+    await waitFor(() =>
+      expect(actions.addStirlingFileStubs).toHaveBeenCalled(),
+    );
+    expect(
+      actions.addStirlingFileStubs.mock.calls[0][0].map(
+        (s: StirlingFileStub) => s.id,
+      ),
+    ).toEqual(["a-v2"]);
+  });
+
+  it("restores saved files while leaving the view to launch files still loading", async () => {
+    sessionStorage.setItem(
+      SESSION_KEY,
+      JSON.stringify({
+        v: 2,
+        fileIds: ["root-a"],
+        selectedFileIds: ["root-a"],
+        activeFileId: "root-a",
+        workbench: "fileEditor",
+      }),
+    );
+    mocks.getLeafStirlingFileStubs.mockResolvedValue([
+      stub("root-a", "root-a"),
+    ]);
+    mocks.launchFilesPending = true;
+
+    mount(makeStore());
+
+    await act(async () => {});
+    expect(actions.addStirlingFileStubs).toHaveBeenCalledWith([
+      stub("root-a", "root-a"),
+    ]);
+    expect(actions.setSelectedFiles).not.toHaveBeenCalled();
+    expect(mocks.setActiveFileId).not.toHaveBeenCalled();
+    expect(mocks.restoreWorkbench).not.toHaveBeenCalled();
+  });
+
+  it.each(["lookup", "addition"])(
+    "does not replace launch selection or view when files arrive during %s",
+    async (phase) => {
+      sessionStorage.setItem(
+        SESSION_KEY,
+        JSON.stringify({
+          v: 2,
+          fileIds: ["root-a"],
+          selectedFileIds: ["root-a"],
+          activeFileId: "root-a",
+          workbench: "fileEditor",
+        }),
+      );
+      const store = makeStore();
+      const arrive = () => {
+        store.state.files.ids = ["launched" as never];
+        store.state.files.byId = { launched: stub("launched", "launched") };
+        store.state.ui.selectedFileIds = ["launched"];
+        store.notify();
+      };
+      mocks.getStirlingFileStub.mockImplementation(async () => {
+        if (phase === "lookup") arrive();
+        return stub("root-a", "root-a");
+      });
+      actions.addStirlingFileStubs.mockImplementation(async () => {
+        if (phase === "addition") arrive();
+        return [];
+      });
+
+      mount(store);
+      await act(async () => {});
+
+      expect(actions.addStirlingFileStubs).toHaveBeenCalledWith([
+        stub("root-a", "root-a"),
+      ]);
+      expect(actions.setSelectedFiles).not.toHaveBeenCalled();
+      expect(mocks.setActiveFileId).not.toHaveBeenCalled();
+      expect(mocks.restoreWorkbench).not.toHaveBeenCalled();
+      expect(store.state.ui.selectedFileIds).toEqual(["launched"]);
+    },
+  );
+
+  it("does not reopen another version of a file already in the workbench", async () => {
+    sessionStorage.setItem(
+      SESSION_KEY,
+      JSON.stringify({ v: 2, fileIds: ["root-a"], selectedFileIds: [] }),
+    );
+    mocks.getStirlingFileStub.mockResolvedValue({
+      ...stub("root-a", "root-a"),
+      isLeaf: false,
+    });
+    mocks.getLeafStirlingFileStubs.mockResolvedValue([
+      stub("a-v3", "root-a", 3),
+    ]);
+    mount(makeStore([stub("a-v2", "root-a", 2)]));
+
+    await act(async () => {});
     expect(actions.addStirlingFileStubs).not.toHaveBeenCalled();
+    expect(mocks.alert).not.toHaveBeenCalled();
   });
 
   it("restores what still exists and says how much is gone", async () => {
@@ -238,7 +387,7 @@ describe("restore", () => {
     expect(mocks.restoreWorkbench).toHaveBeenCalledWith("fileEditor");
   });
 
-  it("leaves a URL-owned view to the return path", async () => {
+  it("leaves a path-seeded view to the return path", async () => {
     sessionStorage.setItem(
       SESSION_KEY,
       JSON.stringify({
@@ -329,7 +478,7 @@ describe("a lost session that comes back", () => {
     store: ReturnType<typeof makeStore>,
   ) =>
     view.rerender(
-      <FileStoreContext.Provider value={store as never}>
+      <FileStoreContext.Provider value={store}>
         <FileActionsContext.Provider
           value={{ actions, dispatch: vi.fn() } as never}
         >
@@ -367,7 +516,7 @@ describe("a lost session that comes back", () => {
     // Let the fingerprint land: writes hold off while a known identity has none yet.
     await act(async () => {});
     store.state.files.ids = ["f2" as never];
-    store.state.files.byId = { f2: stub("f2", "root-b") } as never;
+    store.state.files.byId = { f2: stub("f2", "root-b") };
     act(() => store.notify());
     view.unmount();
     expect(JSON.parse(sessionStorage.getItem(SESSION_KEY)!).fileIds).toEqual([
@@ -394,7 +543,7 @@ describe("on the login screen", () => {
 
     // And the unmount flush must not write either.
     store.state.files.ids = ["f1" as never];
-    store.state.files.byId = { f1: stub("f1", "f1") } as never;
+    store.state.files.byId = { f1: stub("f1", "f1") };
     act(() => store.notify());
     unmount();
     expect(JSON.parse(sessionStorage.getItem(SESSION_KEY)!).fileIds).toEqual([
@@ -404,13 +553,83 @@ describe("on the login screen", () => {
 });
 
 describe("writer", () => {
+  it("keeps the saved session when launch intake never opens a file", async () => {
+    vi.useFakeTimers();
+    const saved = JSON.stringify({
+      v: 2,
+      fileIds: ["root-a"],
+      selectedFileIds: [],
+    });
+    sessionStorage.setItem(SESSION_KEY, saved);
+    mocks.launchFilesPending = true;
+    const store = makeStore();
+    const { unmount } = mount(store);
+    await act(async () => {});
+    mocks.launchFilesPending = false;
+    act(() => store.notify());
+    await act(async () => vi.advanceTimersByTimeAsync(300));
+    unmount();
+
+    expect(sessionStorage.getItem(SESSION_KEY)).toBe(saved);
+  });
+
+  it("records launched files and an intentional close after intake succeeds", async () => {
+    vi.useFakeTimers();
+    sessionStorage.setItem(
+      SESSION_KEY,
+      JSON.stringify({ v: 2, fileIds: ["root-a"], selectedFileIds: [] }),
+    );
+    mocks.launchFilesPending = true;
+    const store = makeStore();
+    const { unmount } = mount(store);
+    await act(async () => {});
+
+    store.state.files.ids = ["launched" as never];
+    store.state.files.byId = { launched: stub("launched", "launched") };
+    act(() => store.notify());
+    await act(async () => vi.advanceTimersByTimeAsync(300));
+    expect(JSON.parse(sessionStorage.getItem(SESSION_KEY)!).fileIds).toEqual([
+      "launched",
+    ]);
+
+    store.state.files.ids = [];
+    store.state.files.byId = {};
+    act(() => store.notify());
+    unmount();
+    expect(JSON.parse(sessionStorage.getItem(SESSION_KEY)!).fileIds).toEqual(
+      [],
+    );
+  });
+
+  it("records a launch file closed before the debounced write as an empty session", async () => {
+    sessionStorage.setItem(
+      SESSION_KEY,
+      JSON.stringify({ v: 2, fileIds: ["root-a"], selectedFileIds: [] }),
+    );
+    mocks.launchFilesPending = true;
+    const store = makeStore();
+    const { unmount } = mount(store);
+    await act(async () => {});
+
+    store.state.files.ids = ["launched" as never];
+    store.state.files.byId = { launched: stub("launched", "launched") };
+    act(() => store.notify());
+    store.state.files.ids = [];
+    store.state.files.byId = {};
+    act(() => store.notify());
+    unmount();
+    expect(JSON.parse(sessionStorage.getItem(SESSION_KEY)!).fileIds).toEqual(
+      [],
+    );
+  });
+
   it("mirrors the open files and selection as original ids, debounced", async () => {
     vi.useFakeTimers();
     const store = makeStore();
     mount(store);
 
     store.state.files.ids = ["v2" as never];
-    store.state.files.byId = { v2: stub("v2", "root-a", 2) } as never;
+    store.state.files.byId = { v2: stub("v2", "root-a", 2) };
     store.state.ui.selectedFileIds = ["v2"];
     act(() => store.notify());
 
@@ -464,7 +683,7 @@ describe("writer", () => {
     const { unmount } = mount(store);
 
     store.state.files.ids = ["f1" as never];
-    store.state.files.byId = { f1: stub("f1", "f1") } as never;
+    store.state.files.byId = { f1: stub("f1", "f1") };
     act(() => store.notify());
     unmount();
 

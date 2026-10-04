@@ -21,6 +21,10 @@ const ALLOWED_PATH_PREFIXES = [
   "/api/v1/filter/",
   "/api/v1/integration/",
   "/api/v1/ai/tools/classify-and-label",
+  "/api/v1/docparse/ingest",
+  // Admitted on its own rather than the whole form namespace: this is the only /form/ endpoint
+  // that takes a document and returns one, so it is the only one a pipeline can chain.
+  "/api/v1/form/form-detection/detect",
 ];
 
 // File plumbing, not user parameters: `fileInput` and `file` are the uploaded primary document
@@ -155,7 +159,7 @@ function queryParameters(pathItem: Json): { props: Json; required: string[] } {
     )
       continue;
     if (!isObject(param.schema)) continue;
-    const schema = structuredClone(param.schema) as Json;
+    const schema = structuredClone(param.schema);
     if (!("description" in schema) && typeof param.description === "string") {
       schema.description = param.description;
     }
@@ -256,6 +260,9 @@ export type ToolFormat = ${union(formats)};
 /** Every format, for iteration. */
 export const TOOL_FORMATS = ${JSON.stringify(formats)} as const satisfies readonly ToolFormat[];
 
+/** Filename extensions from the backend ToolFormat declarations. */
+export const TOOL_FORMAT_EXTENSIONS: Record<ToolFormat, readonly string[]> = ${JSON.stringify(vocabulary.extensions)};
+
 /** How many files go in and come out. A multi-output tool returns its results zipped, and the caller unpacks them. */
 export type ToolArity = ${union(vocabulary.arities as string[])};
 
@@ -277,6 +284,8 @@ export interface ToolIOCase {
 /** What one endpoint accepts and produces. */
 export interface ToolIOSpec {
   accepts: ToolFormat[];
+  /** Overrides the broad format categories for filename-based input checks. */
+  inputExtensions?: string[];
   produces: ToolFormat;
   arity: ToolArity;
   cases?: ToolIOCase[];
@@ -378,10 +387,10 @@ async function main(): Promise<void> {
       const component = components[refComponent];
       if (!isObject(component)) continue;
       className = refComponent;
-      modelSchema = structuredClone(component) as Json;
+      modelSchema = structuredClone(component);
     } else {
       className = pathToClassName(path);
-      modelSchema = structuredClone(bodySchema) as Json;
+      modelSchema = structuredClone(bodySchema);
     }
 
     // A component shared by several endpoints (e.g. GeneralFile) is only defined once.
@@ -389,7 +398,7 @@ async function main(): Promise<void> {
       const uniqueName = dedupe(className, usedClassNames);
       className = uniqueName;
       const bodyProps: Json = isObject(modelSchema.properties)
-        ? (structuredClone(modelSchema.properties) as Json)
+        ? structuredClone(modelSchema.properties)
         : {};
       const query = queryParameters(pathItem);
       // Body wins over query on a name collision.
@@ -459,7 +468,7 @@ async function main(): Promise<void> {
     if (name in definitions) continue;
     const component = components[name];
     if (!isObject(component)) continue;
-    const cloned = structuredClone(component) as Json;
+    const cloned = structuredClone(component);
     cloned.title = name;
     const nested = new Set<string>();
     rewriteRefs(cloned, nested);
@@ -495,7 +504,7 @@ async function compileAndWrite(
     properties: Object.fromEntries(
       uniqueClassNames.map((name) => [name, { $ref: `#/definitions/${name}` }]),
     ),
-    definitions: definitions as Record<string, JSONSchema>,
+    definitions: definitions,
   };
 
   // Canonicalize key order so a reordering in SwaggerDoc.json can never change

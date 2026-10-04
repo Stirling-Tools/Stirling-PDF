@@ -11,13 +11,21 @@ import {
 import { useTranslation } from "react-i18next";
 import { useEditorStore } from "@app/tools/pdfTextEditor/hooks/useEditorStore";
 import { ensurePageRead } from "@app/tools/pdfTextEditor/hooks/useDocumentLoader";
-import { Toolbar } from "@app/tools/pdfTextEditor/components/Toolbar";
+import { EditorTopBar } from "@app/tools/pdfTextEditor/components/EditorTopBar";
+import { MobileEditorTopBar } from "@app/tools/pdfTextEditor/components/MobileEditorTopBar";
+import { MobileActionBar } from "@app/tools/pdfTextEditor/components/MobileActionBar";
+import { useIsMobile } from "@app/hooks/useIsMobile";
+import { Button } from "@app/ui/Button";
+import { Icon } from "@app/ui/Icon";
+import { fitToWidthScale } from "@app/tools/pdfTextEditor/util/fitToWidth";
+import { FindBar } from "@app/tools/pdfTextEditor/components/FindBar";
 import { useToolbarController } from "@app/tools/pdfTextEditor/hooks/useToolbarController";
 import { ZoomPill } from "@app/tools/pdfTextEditor/components/ZoomPill";
 import { MarqueeSelector } from "@app/tools/pdfTextEditor/components/MarqueeSelector";
 import { PageView } from "@app/tools/pdfTextEditor/components/PageView";
 import { EditTextCommand } from "@app/tools/pdfTextEditor/commands/EditTextCommand";
 import { ReflowWrapCommand } from "@app/tools/pdfTextEditor/commands/ReflowWrapCommand";
+import { MoveShapeCommand } from "@app/tools/pdfTextEditor/commands/MoveShapeCommand";
 import { InsertTextCommand } from "@app/tools/pdfTextEditor/commands/InsertTextCommand";
 import { InsertTableCommand } from "@app/tools/pdfTextEditor/commands/InsertTableCommand";
 import { MoveTextRunCommand } from "@app/tools/pdfTextEditor/commands/MoveTextRunCommand";
@@ -25,6 +33,8 @@ import { SetImageTransformCommand } from "@app/tools/pdfTextEditor/commands/SetI
 import type { SelectionState } from "@app/tools/pdfTextEditor/types";
 
 const DEFAULT_SCALE = 1.5;
+const DESKTOP_FIT_PAD_PX = 64;
+const MOBILE_FIT_PAD_PX = 16;
 
 // Custom workbench view: the contextual formatting toolbar as a bar across the
 // top, then the scrollable pages stack with editable overlays beneath.
@@ -40,6 +50,7 @@ export function PageStage() {
   const [draggingFile, setDraggingFile] = useState(false);
   const dragCountRef = useRef(0);
   const stageRootRef = useRef<HTMLDivElement | null>(null);
+  const isMobile = useIsMobile();
 
   useEffect(() => store.selection.subscribe(setSelection), [store]);
   useEffect(
@@ -70,26 +81,102 @@ export function PageStage() {
   // inspector derives from the same controller, so both surfaces read one
   // source of truth.
   const controller = useToolbarController(store, state, selection);
-  const toolbar = { controller };
+
+  const lastFitRef = useRef<{
+    doc: object;
+    width: number;
+    scale: number;
+  } | null>(null);
+  const firstPageWidth = state.pages[0]?.width;
+  useEffect(() => {
+    const doc = store.document;
+    const stage = stageRootRef.current;
+    if (!isMobile || !doc || !stage || !firstPageWidth) return;
+    const fit = () => {
+      const width = stage.clientWidth;
+      if (!width) return;
+      const last = lastFitRef.current;
+      // Refit on rotate/resize only while the user has not zoomed away from the fit.
+      if (
+        last?.doc === doc &&
+        (last.width === width || store.getState().renderScale !== last.scale)
+      ) {
+        return;
+      }
+      const scale = fitToWidthScale(width, firstPageWidth, MOBILE_FIT_PAD_PX);
+      lastFitRef.current = { doc, width, scale };
+      store.setRenderScale(scale);
+    };
+    fit();
+    const observer = new ResizeObserver(fit);
+    observer.observe(stage);
+    return () => observer.disconnect();
+  }, [isMobile, firstPageWidth, store]);
+
+  const topBar = isMobile ? (
+    <MobileEditorTopBar
+      controller={controller}
+      hasDocument={state.hasDocument}
+      dirty={state.dirty}
+    />
+  ) : (
+    <EditorTopBar
+      controller={controller}
+      hasDocument={state.hasDocument}
+      dirty={state.dirty}
+      addTextArmed={state.mode === "addText"}
+      addTableArmed={state.mode === "addTable"}
+      onToggleAddTable={() =>
+        store.setMode(
+          store.getState().mode === "addTable" ? "select" : "addTable",
+        )
+      }
+      onToggleAddText={() =>
+        store.setMode(
+          store.getState().mode === "addText" ? "select" : "addText",
+        )
+      }
+      findOpen={state.findOpen}
+      onToggleFind={() => store.setFindOpen(!store.getState().findOpen)}
+      onShowHelp={() => store.setHelpOpen(true)}
+    />
+  );
 
   if (!state.hasDocument && !state.loading) {
     return (
       <Stack gap={0} h="100%" style={{ overflow: "hidden" }}>
-        <Toolbar {...toolbar} />
+        {topBar}
         <Center
           style={{ flex: 1, minHeight: 0 }}
           data-testid="pdf-editor-stage-empty"
         >
-          <Stack align="center" gap="xs">
+          <Stack align="center" gap="xs" px="md">
             <Text c="dimmed">
               {t("pdfTextEditor.stage.noDocument", "No document loaded.")}
             </Text>
-            <Text c="dimmed" size="sm">
-              {t(
-                "pdfTextEditor.stage.pickPrompt",
-                "Pick a PDF from the Files panel on the left to begin editing.",
-              )}
-            </Text>
+            {isMobile ? (
+              <Button
+                size="xl"
+                leftSection={<Icon name="file-up" size={22} />}
+                onClick={() =>
+                  document
+                    .querySelector<HTMLInputElement>(
+                      '[data-testid="pdf-editor-file-input"]',
+                    )
+                    ?.click()
+                }
+                data-testid="pdf-editor-mobile-open"
+              >
+                {t("pdfTextEditor.mobile.openPdf", "Open a PDF")}
+              </Button>
+            ) : (
+              <Text c="dimmed" size="sm">
+                {t(
+                  "pdfTextEditor.stage.pickPrompt",
+                  "Pick a PDF from the Files panel on the left to begin editing.",
+                )}
+              </Text>
+            )}
           </Stack>
         </Center>
       </Stack>
@@ -111,7 +198,14 @@ export function PageStage() {
 
   return (
     <Stack gap={0} h="100%" style={{ overflow: "hidden" }}>
-      <Toolbar {...toolbar} />
+      {topBar}
+      {state.findOpen && state.hasDocument && (
+        <FindBar
+          store={store}
+          pages={state.pages}
+          onClose={() => store.setFindOpen(false)}
+        />
+      )}
       <Box
         pos="relative"
         ref={stageRootRef}
@@ -143,19 +237,6 @@ export function PageStage() {
             (f) => f.type === "application/pdf" || /\.pdf$/i.test(f.name),
           );
           if (!pdf) return;
-          // Replacing the open document discards in-progress edits - confirm
-          // first when dirty, so an accidental drop can't silently lose work.
-          if (
-            store.getState().dirty &&
-            !window.confirm(
-              t(
-                "pdfTextEditor.confirmReplaceDirty",
-                "You have unsaved changes. Replace the open document and discard them?",
-              ),
-            )
-          ) {
-            return;
-          }
           const input = document.querySelector<HTMLInputElement>(
             '[data-testid="pdf-editor-file-input"]',
           );
@@ -245,7 +326,7 @@ export function PageStage() {
         <MarqueeSelector store={store} />
         <ScrollArea h="100%" type="auto" data-testid="pdf-editor-stage">
           <Box
-            py="lg"
+            py={isMobile ? "sm" : "lg"}
             onPointerDown={(e) => {
               // Shift means "extend" here (shift-click) and Ctrl/Cmd+Shift
               // starts the marquee: neither may wipe what it is about to add
@@ -255,7 +336,7 @@ export function PageStage() {
             }}
             data-testid="pdf-editor-pages"
           >
-            <Stack gap="lg" align="center">
+            <Stack gap={isMobile ? "sm" : "lg"} align="center">
               {state.pages.map((page) =>
                 store.document ? (
                   <PageView
@@ -268,6 +349,7 @@ export function PageStage() {
                     showRulers={state.showRulers}
                     selectedRunIds={selection.runIds}
                     selectedImageIds={selection.imageIds}
+                    selectedShapeIds={selection.shapeIds}
                     highlightedRunId={highlightedRunId}
                     onSelectRun={(runId, shiftKey) => {
                       if (shiftKey) store.selection.toggle(runId);
@@ -276,6 +358,16 @@ export function PageStage() {
                     onSelectImage={(imageId) =>
                       store.selection.selectImage(imageId)
                     }
+                    onSelectShape={(shapeId, extend) => {
+                      if (extend) store.selection.toggleShape(shapeId);
+                      else store.selection.selectShape(shapeId);
+                    }}
+                    onMoveShape={(pageIndex, shapeId, dx, dy) => {
+                      store.dispatch(
+                        new MoveShapeCommand({ pageIndex, shapeId, dx, dy }),
+                      );
+                      store.selection.selectShape(shapeId);
+                    }}
                     onEditRun={(pageIndex, runId, nextText) => {
                       // contentEditable can fire several input events per
                       // keystroke burst.
@@ -295,6 +387,16 @@ export function PageStage() {
                     onWrapRun={(pageIndex, runId, maxWidthPt) => {
                       store.dispatch(
                         new ReflowWrapCommand({ pageIndex, runId, maxWidthPt }),
+                      );
+                    }}
+                    onResizeRun={(pageIndex, runId, widthPt) => {
+                      store.dispatch(
+                        new ReflowWrapCommand({
+                          pageIndex,
+                          runId,
+                          maxWidthPt: widthPt,
+                          explicit: true,
+                        }),
                       );
                     }}
                     onPageClick={(pageIndex, pageX, pageY) => {
@@ -351,9 +453,20 @@ export function PageStage() {
             store={store}
             renderScale={state.renderScale}
             pages={state.pages}
+            fitPaddingPx={isMobile ? MOBILE_FIT_PAD_PX : DESKTOP_FIT_PAD_PX}
+            compact={isMobile}
           />
         )}
       </Box>
+      {isMobile && state.hasDocument && (
+        <MobileActionBar
+          store={store}
+          controller={controller}
+          addTextArmed={state.mode === "addText"}
+          addTableArmed={state.mode === "addTable"}
+          findOpen={state.findOpen}
+        />
+      )}
     </Stack>
   );
 }

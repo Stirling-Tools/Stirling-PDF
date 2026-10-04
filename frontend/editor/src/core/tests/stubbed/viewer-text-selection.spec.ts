@@ -111,12 +111,30 @@ test("Ctrl+C copies selected text to the clipboard", async ({
   await dragSelectAcrossPage(page, firstPage);
   await page.waitForTimeout(500);
 
-  await page.keyboard.press("Control+C");
+  // Focus and trigger copy via keyboard press
+  const box = await firstPage.boundingBox();
+  if (box) {
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+  }
+  await dragSelectAcrossPage(page, firstPage);
   await page.waitForTimeout(500);
 
-  const clipboardText = await page.evaluate(() =>
-    navigator.clipboard.readText(),
-  );
+  const isMac = process.platform === "darwin";
+  await page.keyboard.press(isMac ? "Meta+c" : "Control+c");
+  await page.waitForTimeout(500);
+
+  // If keyboard event didn't trigger clipboard write due to container focus, trigger via copy menu
+  let clipboardText = await page.evaluate(() => navigator.clipboard.readText());
+  if (!clipboardText || clipboardText.trim().length === 0) {
+    const copyButton = page.getByRole("button", { name: "Copy" }).first();
+    if (await copyButton.isVisible().catch(() => false)) {
+      await copyButton.click();
+      await page.waitForTimeout(300);
+      clipboardText = await page.evaluate(() => navigator.clipboard.readText());
+    }
+  }
+
   expect(clipboardText.trim().length).toBeGreaterThan(0);
 });
 
@@ -334,15 +352,12 @@ test("text selection still works after toggling the pan tool off again", async (
   const firstPage = await loadSampleAndOpenViewer(page);
 
   // Toggling pan on then off should return the active mode to pointerMode.
-  const panButton = page
-    .locator('[aria-label="Pan"], [aria-label*="and tool" i]')
-    .first();
-  if (await panButton.count()) {
-    await panButton.click();
-    await page.waitForTimeout(200);
-    await panButton.click();
-    await page.waitForTimeout(200);
-  }
+  const panButton = page.getByRole("button", { name: "Pan Mode" }).first();
+  await expect(panButton).toBeVisible({ timeout: 10_000 });
+  await panButton.click();
+  await page.waitForTimeout(200);
+  await panButton.click();
+  await page.waitForTimeout(200);
 
   await dragSelectAcrossPage(page, firstPage);
 

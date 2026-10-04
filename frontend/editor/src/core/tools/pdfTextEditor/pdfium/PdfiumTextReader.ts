@@ -1,6 +1,7 @@
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import { TextRun } from "@app/tools/pdfTextEditor/model/TextRun";
 import { ImageObject } from "@app/tools/pdfTextEditor/model/ImageObject";
+import { ShapeObject } from "@app/tools/pdfTextEditor/model/ShapeObject";
 import type { Page } from "@app/tools/pdfTextEditor/model/Page";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
 import { LineGrouper } from "@app/tools/pdfTextEditor/pdfium/LineGrouper";
@@ -47,6 +48,7 @@ export class PdfiumTextReader {
     const images: ImageObject[] = [];
     const rules: PageRuleSnapshot[] = [];
     const fills: PageRuleSnapshot[] = [];
+    const shapes: ShapeObject[] = [];
 
     // ONE text page for the whole walk: FPDFText_LoadPage runs full page text
     // extraction, so opening it per text object made population O.
@@ -62,6 +64,7 @@ export class PdfiumTextReader {
         images,
         rules,
         fills,
+        shapes,
         doc,
         page,
         [],
@@ -74,6 +77,7 @@ export class PdfiumTextReader {
       page.setImages(images);
       page.setRules(rules);
       page.setFills(fills);
+      page.setShapes(shapes);
       // Annotation text is drawn by FPDF_ANNOT but lives outside the object
       // tree, so record the boxes to explain why it can't be edited.
       PdfiumAnnotationReader.populate(m, page);
@@ -378,6 +382,7 @@ function walkObjects(
   images: ImageObject[],
   rules: PageRuleSnapshot[],
   fills: PageRuleSnapshot[],
+  shapes: ShapeObject[],
   doc: EditorDocument,
   page: Page,
   path: number[],
@@ -423,6 +428,15 @@ function walkObjects(
         const fill = readAreaFill(m, objPtr, transform);
         if (fill) fills.push(fill);
       }
+      if (path.length <= 1) {
+        // PDFium can save shape removals only in page-level forms.
+        const indexId = [...path, i].join("-");
+        const shape = readShape(m, page, objPtr, indexId, transform, {
+          containerPtr,
+          topLevelContainerPtr,
+        });
+        if (shape) shapes.push(shape);
+      }
     } else if (type === FPDF_PAGEOBJ_IMAGE) {
       const indexId = [...path, i].join("-");
       const img = readImage(m, page, objPtr, indexId, transform, containerPtr);
@@ -446,6 +460,7 @@ function walkObjects(
           images,
           rules,
           fills,
+          shapes,
           doc,
           page,
           [...path, i],
@@ -1010,6 +1025,75 @@ function readTextRun(
       stroke: stroke ?? undefined,
       strokeWidth,
     });
+  }
+}
+
+/**
+ * Fraction of the page a shape may cover and still be offered for selection.
+ * Larger ones are page backgrounds: selectable, they would swallow every click
+ * and every drag-select on the page.
+ */
+const MAX_SHAPE_PAGE_COVERAGE = 0.9;
+
+function readShape(
+  m: WrappedPdfiumModule,
+  page: Page,
+  objPtr: number,
+  index: number | string,
+  transform: Affine,
+  containers: { containerPtr: number; topLevelContainerPtr: number },
+): ShapeObject | null {
+  if (!isPainted(m, objPtr)) return null;
+  const localBounds = readBounds(m, objPtr);
+  if (!localBounds) return null;
+  const bounds = isIdentity(transform)
+    ? localBounds
+    : transformRect(transform, localBounds);
+  const pageArea = page.width * page.height;
+  if (bounds.width * bounds.height >= pageArea * MAX_SHAPE_PAGE_COVERAGE) {
+    return null;
+  }
+  return new ShapeObject({
+    id: `p${page.index}-s${index}`,
+    pageIndex: page.index,
+    pdfiumObjPtr: objPtr,
+    ...containers,
+    containerTransform: transform,
+    bounds,
+  });
+}
+
+/** True when a path fills or strokes with any opacity; clip-only paths draw nothing. */
+function isPainted(m: WrappedPdfiumModule, objPtr: number): boolean {
+  const fillModePtr = m.pdfium.wasmExports.malloc(4);
+  const strokePtr = m.pdfium.wasmExports.malloc(4);
+  try {
+    if (!m.FPDFPath_GetDrawMode(objPtr, fillModePtr, strokePtr)) return false;
+    const fills = m.pdfium.getValue(fillModePtr, "i32") !== 0;
+    const strokes = m.pdfium.getValue(strokePtr, "i32") !== 0;
+    return (
+      (fills && readFill(m, objPtr).a > 0) ||
+      (strokes && readStrokeAlpha(m, objPtr) > 0)
+    );
+  } finally {
+    m.pdfium.wasmExports.free(fillModePtr);
+    m.pdfium.wasmExports.free(strokePtr);
+  }
+}
+
+function readStrokeAlpha(m: WrappedPdfiumModule, objPtr: number): number {
+  const r = m.pdfium.wasmExports.malloc(4);
+  const g = m.pdfium.wasmExports.malloc(4);
+  const b = m.pdfium.wasmExports.malloc(4);
+  const a = m.pdfium.wasmExports.malloc(4);
+  try {
+    if (!m.FPDFPageObj_GetStrokeColor(objPtr, r, g, b, a)) return 0;
+    return m.pdfium.getValue(a, "i32") & 0xff;
+  } finally {
+    m.pdfium.wasmExports.free(r);
+    m.pdfium.wasmExports.free(g);
+    m.pdfium.wasmExports.free(b);
+    m.pdfium.wasmExports.free(a);
   }
 }
 

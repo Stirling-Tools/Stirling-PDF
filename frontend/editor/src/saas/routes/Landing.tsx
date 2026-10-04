@@ -1,14 +1,16 @@
 import React, { useMemo } from "react";
 import { Navigate, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@app/auth/UseSession";
 import { useAutoAnonymousAuth } from "@app/hooks/useAutoAnonymousAuth";
 import { isHomeRoute, isToolRoute } from "@app/utils/pathUtils";
-import HomePage from "@app/pages/HomePage";
+import { AppRoot } from "@app/components/layout/AppRoot";
 import Login from "@app/routes/Login";
 import GuestUserBanner from "@app/components/auth/GuestUserBanner";
 import { TeamInvitationBanner } from "@app/components/shared/TeamInvitationBanner";
 
 export default function Landing() {
+  const { t } = useTranslation();
   const { session, loading } = useAuth();
   const { isAutoAuthenticating, autoAuthError, shouldTriggerAutoAuth } =
     useAutoAnonymousAuth();
@@ -59,7 +61,9 @@ export default function Landing() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3"></div>
           <div className="text-gray-600">
-            {isAutoAuthenticating ? "Setting up your session..." : "Loading..."}
+            {isAutoAuthenticating
+              ? t("landing.settingUpSession", "Setting up your session...")
+              : t("loading", "Loading...")}
           </div>
         </div>
       </div>
@@ -72,7 +76,7 @@ export default function Landing() {
       <>
         <GuestUserBanner />
         <TeamInvitationBanner />
-        <HomePage />
+        <AppRoot />
       </>
     );
   }

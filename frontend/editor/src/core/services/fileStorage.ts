@@ -17,6 +17,7 @@ import {
   DATABASE_CONFIGS,
 } from "@app/services/indexedDBManager";
 import { alert } from "@app/components/toast";
+import i18n from "i18next";
 
 /**
  * Storage record - single source of truth
@@ -33,12 +34,32 @@ export interface StoredStirlingFileRecord extends BaseFileMetadata {
   thumbnail?: string;
   thumbnailStoredAt?: number; // Epoch ms - sliding 30-day TTL
   url?: string; // For compatibility with existing components
+  // Disk path this file came from (desktop only). Persisted so the link to the
+  // real file survives a reload - without it every restart drops to the stored copy.
+  localFilePath?: string;
+  // Size/mtime of the disk file when we last read it, so an external edit is
+  // detectable without hashing. Only meaningful alongside localFilePath.
+  diskSyncedSize?: number;
+  diskSyncedModifiedMs?: number;
+  // Disk path whose original is gone. Persisted so the "not on disk" state
+  // survives a reload instead of dying with the toast.
+  orphanedFilePath?: string;
+  // Epoch ms of an unresolved disk-vs-unsaved-edits divergence.
+  diskConflictAt?: number;
+  // Epoch ms of the last pickup of an external edit.
+  diskReloadedAt?: number;
+  // In-app edits not yet written to localFilePath. Persisted because a reload
+  // would otherwise forget them and let a disk re-read overwrite the user's work.
+  isDirty?: boolean;
   // Cached classification labels — mirrors the stub field so the sidebar can
   // group by label without re-reading PDF bytes, and it survives versioning.
   // See StirlingFileStub.classificationLabels.
   classificationLabels?: string[];
   // See StirlingFileStub.classificationConfidence.
   classificationConfidence?: ClassificationConfidence;
+  // See StirlingFileStub.classificationLocked. Persisted because the guarantee it
+  // carries — that no policy reclassifies this file — has to outlive a reload.
+  classificationLocked?: boolean;
 }
 
 export interface StorageStats {
@@ -79,6 +100,20 @@ function isBlobValueRejection(error: unknown): boolean {
   return name === "UnknownError" || name === "DataCloneError";
 }
 
+/** A write that never settled. WebKit can stall a Blob put instead of refusing it,
+ *  and the upload awaits the write, so the file never opens. */
+class StalledWriteError extends Error {
+  override name = "StalledWriteError";
+}
+
+// Size-scaled so a legitimately slow write of a very large file is not cut off.
+const WRITE_STALL_BASE_MS = 5000;
+const WRITE_STALL_BYTES_PER_MS = 10_000;
+
+function writeStallDeadlineMs(size: number): number {
+  return WRITE_STALL_BASE_MS + Math.ceil(size / WRITE_STALL_BYTES_PER_MS);
+}
+
 /** This engine loses Blob values, remembered per browser: session-scoped, each
  *  reload re-decides optimistically and writes more files it will lose. */
 const BLOB_VALUES_UNSUPPORTED_KEY = "stirling.indexeddb.blobValuesUnsupported";
@@ -117,6 +152,20 @@ export function maintenanceMayRewrite(
   return !(record.data instanceof Blob) || blobValuesSupported;
 }
 
+/**
+ * True when a still-fresh thumbnail is past half its TTL and should be re-dated
+ * so an active library does not expire it. Listings rewrite only the records
+ * that cross the halfway mark, instead of every thumbnailed record per scan.
+ */
+export function shouldBumpThumbnailTtl(
+  record: Pick<StoredStirlingFileRecord, "thumbnail" | "thumbnailStoredAt">,
+  now: number = Date.now(),
+): boolean {
+  if (!record.thumbnail || !record.thumbnailStoredAt) return false;
+  const age = now - record.thumbnailStoredAt;
+  return age >= THUMBNAIL_TTL_MS / 2 && age < THUMBNAIL_TTL_MS;
+}
+
 /** WebKit loses backing stores for blobs it accepted, and only a real read shows
  *  it. One byte is enough: what fails is opening the store, not the length. */
 async function blobReadFailure(data: Blob): Promise<unknown> {
@@ -143,6 +192,22 @@ export function onRecordUnreadable(
  *  deadline. Distinct from a failure: nothing was proven either way. */
 const PROBE_UNANSWERED = { unanswered: true } as const;
 const PROBE_DEADLINE_MS = 3000;
+
+/**
+ * Bytes for a record whose blob the engine will not store. Probes the backing store
+ * first: WebKit can lose a File's handle and then never answer a read (see
+ * {@link maintenanceMayRewrite}), which would hold every caller awaiting the write. A
+ * plain timeout cannot help — it could not tell that apart from a legitimately slow read
+ * of a very large file, which this app supports.
+ */
+export async function copyBlobBytes(source: Blob): Promise<ArrayBuffer> {
+  const failure = await withProbeDeadline(blobReadFailure(source));
+  if (failure === PROBE_UNANSWERED) {
+    throw new Error("Blob backing store did not answer a read probe");
+  }
+  if (failure) throw failure;
+  return source.arrayBuffer();
+}
 
 function withProbeDeadline(
   probe: Promise<unknown>,
@@ -199,6 +264,8 @@ class FileStorageService {
   /** Whether a stored blob's bytes have come back yet. Until they have, each
    *  store proves it: accepting the write is no evidence the bytes survived. */
   private blobReadbackVerified = false;
+  /** Whether a Blob write has committed. Until one has, a stalled one is a refusal. */
+  private blobWriteVerified = false;
   /** Ids whose TTL write failed. Without this the swallowed failure repeats a
    *  whole-file rewrite on every listing. Session-scoped on purpose. */
   private readonly unwritableRecords = new Set<FileId>();
@@ -301,9 +368,16 @@ class FileStorageService {
       // Engines that reject blob values fall back to a copy — see addFileRecord.
       data: this.blobValuesSupported
         ? stirlingFile
-        : await stirlingFile.arrayBuffer(),
+        : await copyBlobBytes(stirlingFile),
       thumbnail: stub.thumbnailUrl,
       thumbnailStoredAt: stub.thumbnailUrl ? Date.now() : undefined,
+      localFilePath: stub.localFilePath,
+      diskSyncedSize: stub.diskSyncedSize,
+      diskSyncedModifiedMs: stub.diskSyncedModifiedMs,
+      orphanedFilePath: stub.orphanedFilePath,
+      diskConflictAt: stub.diskConflictAt,
+      diskReloadedAt: stub.diskReloadedAt,
+      isDirty: stub.isDirty,
       isLeaf: stub.isLeaf ?? true,
       remoteStorageId: stub.remoteStorageId,
       remoteStorageUpdatedAt: stub.remoteStorageUpdatedAt,
@@ -325,22 +399,32 @@ class FileStorageService {
       // Folder organisation (root when null)
       folderId: stub.folderId ?? null,
 
-      // Cached classification category, if already known (preserved across re-stores).
+      // Cached classification, if already known (preserved across re-stores).
       classificationLabels: stub.classificationLabels,
+      classificationConfidence: stub.classificationConfidence,
+      classificationLocked: stub.classificationLocked,
     };
 
+    const deadline = writeStallDeadlineMs(stirlingFile.size);
     try {
-      await this.addFileRecord(db, record);
+      const unproven = record.data instanceof Blob && !this.blobWriteVerified;
+      await this.addFileRecord(db, record, unproven ? deadline : undefined);
     } catch (error) {
-      // Recoverable: re-add as a copy, and stop offering blobs this session.
-      // Anything else is the caller's to report.
-      if (!(record.data instanceof Blob) || !this.noteBlobRefusal(error)) {
+      // Recoverable: re-add as a copy. A refusal also stops offering blobs; a stall
+      // may only be queueing, so it proves nothing about the engine.
+      const stalled = error instanceof StalledWriteError;
+      if (
+        !(record.data instanceof Blob) ||
+        (!stalled && !this.noteBlobRefusal(error))
+      ) {
         throw error;
       }
-      record.data = await record.data.arrayBuffer();
-      await this.addFileRecord(db, record);
+      record.data = await copyBlobBytes(record.data);
+      // A stall can leave the store wedged; never let the copy hold the upload.
+      await this.addFileRecord(db, record, deadline);
       return;
     }
+    if (record.data instanceof Blob) this.blobWriteVerified = true;
 
     // Committed is not retrievable. Prove the round-trip while the source File is
     // still in hand; after a reload there is nothing left to repair from.
@@ -488,10 +572,12 @@ class FileStorageService {
     );
     alert({
       alertType: "warning",
-      title: "File data is unavailable",
-      body:
-        `"${record.name}" is saved in this browser but its contents can no longer be read. ` +
-        "Upload the file again to keep working on it.",
+      title: i18n.t("fileStorage.unreadable.title", "File data is unavailable"),
+      body: i18n.t(
+        "fileStorage.unreadable.body",
+        '"{{name}}" is saved in this browser but its contents can no longer be read. Upload the file again to keep working on it.',
+        { name: record.name },
+      ),
       expandable: false,
       durationMs: 8000,
     });
@@ -585,12 +671,19 @@ class FileStorageService {
     });
   }
 
-  /** Single `add` of a file record. Rejects with the underlying IDB error. */
+  /** Single `add` of a file record. Rejects with the underlying IDB error, or with
+   *  {@link StalledWriteError} (aborting the write) if it outlives `deadlineMs`. */
   private addFileRecord(
     db: IDBDatabase,
     record: StoredStirlingFileRecord,
+    deadlineMs?: number,
   ): Promise<void> {
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const settle = (finish: () => void) => {
+        clearTimeout(timer);
+        finish();
+      };
       try {
         // Verify store exists before creating transaction
         if (!db.objectStoreNames.contains(this.storeName)) {
@@ -600,15 +693,28 @@ class FileStorageService {
         }
 
         const transaction = db.transaction([this.storeName], "readwrite");
-        settleOnAbort(transaction, reject);
+        settleOnAbort(transaction, (reason) => settle(() => reject(reason)));
         const store = transaction.objectStore(this.storeName);
 
         const request = store.add(record);
 
-        request.onerror = () => reject(request.error);
-        request.onsuccess = () => resolve();
+        request.onerror = () => settle(() => reject(request.error));
+        // On commit: request success does not mean the record survived.
+        transaction.oncomplete = () => settle(resolve);
+        if (deadlineMs !== undefined) {
+          timer = setTimeout(() => {
+            reject(
+              new StalledWriteError(`write unsettled after ${deadlineMs}ms`),
+            );
+            try {
+              transaction.abort();
+            } catch {
+              // Already finished: nothing left to release.
+            }
+          }, deadlineMs);
+        }
       } catch (error) {
-        reject(error);
+        settle(() => reject(error));
       }
     });
   }
@@ -679,6 +785,13 @@ class FileStorageService {
           lastModified: record.lastModified,
           quickKey: record.quickKey,
           thumbnailUrl: fresh ? record.thumbnail : undefined,
+          localFilePath: record.localFilePath,
+          diskSyncedSize: record.diskSyncedSize,
+          diskSyncedModifiedMs: record.diskSyncedModifiedMs,
+          orphanedFilePath: record.orphanedFilePath,
+          diskConflictAt: record.diskConflictAt,
+          diskReloadedAt: record.diskReloadedAt,
+          isDirty: record.isDirty,
           isLeaf: record.isLeaf,
           remoteStorageId: record.remoteStorageId,
           remoteStorageUpdatedAt: record.remoteStorageUpdatedAt,
@@ -699,6 +812,7 @@ class FileStorageService {
           createdAt: record.createdAt || Date.now(),
           classificationLabels: record.classificationLabels,
           classificationConfidence: record.classificationConfidence,
+          classificationLocked: record.classificationLocked,
         };
 
         resolve(stub);
@@ -733,8 +847,8 @@ class FileStorageService {
               record.thumbnail &&
               maintenanceMayRewrite(record, this.blobValuesSupported)
             ) {
-              if (fresh) tobump.push(record.id);
-              else toexpire.push(record.id);
+              if (shouldBumpThumbnailTtl(record)) tobump.push(record.id);
+              else if (!fresh) toexpire.push(record.id);
             }
             this.reportIfUnreadable(record);
             stubs.push({
@@ -747,6 +861,13 @@ class FileStorageService {
               lastModified: record.lastModified,
               quickKey: record.quickKey,
               thumbnailUrl: fresh ? record.thumbnail : undefined,
+              localFilePath: record.localFilePath,
+              diskSyncedSize: record.diskSyncedSize,
+              diskSyncedModifiedMs: record.diskSyncedModifiedMs,
+              orphanedFilePath: record.orphanedFilePath,
+              diskConflictAt: record.diskConflictAt,
+              diskReloadedAt: record.diskReloadedAt,
+              isDirty: record.isDirty,
               isLeaf: record.isLeaf,
               remoteStorageId: record.remoteStorageId,
               remoteStorageUpdatedAt: record.remoteStorageUpdatedAt,
@@ -767,6 +888,7 @@ class FileStorageService {
               createdAt: record.createdAt || Date.now(),
               classificationLabels: record.classificationLabels,
               classificationConfidence: record.classificationConfidence,
+              classificationLocked: record.classificationLocked,
             });
           }
           cursor.continue();
@@ -833,8 +955,8 @@ class FileStorageService {
               record.thumbnail &&
               maintenanceMayRewrite(record, this.blobValuesSupported)
             ) {
-              if (fresh) tobump.push(record.id);
-              else toexpire.push(record.id);
+              if (shouldBumpThumbnailTtl(record)) tobump.push(record.id);
+              else if (!fresh) toexpire.push(record.id);
             }
             this.reportIfUnreadable(record);
             leafStubs.push({
@@ -847,6 +969,13 @@ class FileStorageService {
               lastModified: record.lastModified,
               quickKey: record.quickKey,
               thumbnailUrl: fresh ? record.thumbnail : undefined,
+              localFilePath: record.localFilePath,
+              diskSyncedSize: record.diskSyncedSize,
+              diskSyncedModifiedMs: record.diskSyncedModifiedMs,
+              orphanedFilePath: record.orphanedFilePath,
+              diskConflictAt: record.diskConflictAt,
+              diskReloadedAt: record.diskReloadedAt,
+              isDirty: record.isDirty,
               isLeaf: record.isLeaf,
               remoteStorageId: record.remoteStorageId,
               remoteStorageUpdatedAt: record.remoteStorageUpdatedAt,
@@ -867,6 +996,7 @@ class FileStorageService {
               createdAt: record.createdAt || Date.now(),
               classificationLabels: record.classificationLabels,
               classificationConfidence: record.classificationConfidence,
+              classificationLocked: record.classificationLocked,
             });
           }
           cursor.continue();
@@ -951,9 +1081,7 @@ class FileStorageService {
         );
 
       for (const folderId of folderIds) {
-        const cursorRequest = index.openCursor(
-          IDBKeyRange.only(folderId as string),
-        );
+        const cursorRequest = index.openCursor(IDBKeyRange.only(folderId));
         cursorRequest.onerror = () => reject(cursorRequest.error);
         cursorRequest.onsuccess = (event) => {
           const cursor = (event.target as IDBRequest)
@@ -989,11 +1117,11 @@ class FileStorageService {
     // share a lineage, so one leaf's delete must not strip another's history.
     const keep = new Set<string>();
     for (const stub of stubs) {
-      if (doomed.has(stub.id as string)) continue;
+      if (doomed.has(stub.id)) continue;
       let cursor = stub.parentFileId as string | undefined;
       while (cursor && !keep.has(cursor)) {
         keep.add(cursor);
-        cursor = byId.get(cursor)?.parentFileId as string | undefined;
+        cursor = byId.get(cursor)?.parentFileId;
       }
     }
 
@@ -1005,7 +1133,7 @@ class FileStorageService {
           doomed.add(cursor);
           orphans.push(cursor as FileId);
         }
-        cursor = byId.get(cursor)?.parentFileId as string | undefined;
+        cursor = byId.get(cursor)?.parentFileId;
       }
     }
     return orphans;

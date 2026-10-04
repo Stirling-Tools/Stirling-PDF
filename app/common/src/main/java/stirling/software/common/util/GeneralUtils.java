@@ -642,11 +642,7 @@ public class GeneralUtils {
         if (pages == null) {
             return List.of(1); // Default to first page if input is null
         }
-        try {
-            return parsePageList(pages.split(","), totalPages, oneBased);
-        } catch (NumberFormatException e) {
-            return List.of(1); // Default to first page if input is invalid
-        }
+        return parsePageList(pages.split(","), totalPages, oneBased);
     }
 
     public List<Integer> parsePageList(String[] pages, int totalPages) {
@@ -659,19 +655,20 @@ public class GeneralUtils {
         int offset = oneBased ? 1 : 0;
         int maxSize = Math.max(1000, totalPages * 3);
         for (String page : pages) {
-            if ("all".equalsIgnoreCase(page)) {
+            String trimmedPage = page == null ? "" : page.trim();
+            if ("all".equalsIgnoreCase(trimmedPage)) {
 
                 for (int i = 0; i < totalPages; i++) {
                     result.add(i + offset);
                 }
-            } else if (page.contains(",")) {
+            } else if (trimmedPage.contains(",")) {
                 // Split the string into parts, could be single pages or ranges
-                String[] parts = page.split(",");
+                String[] parts = trimmedPage.split(",");
                 for (String part : parts) {
                     result.addAll(handlePart(part, totalPages, offset));
                 }
             } else {
-                result.addAll(handlePart(page, totalPages, offset));
+                result.addAll(handlePart(trimmedPage, totalPages, offset));
             }
             if (result.size() > maxSize) {
                 throw new IllegalArgumentException(
@@ -701,11 +698,7 @@ public class GeneralUtils {
         List<Integer> results = new ArrayList<>();
         DoubleEvaluator evaluator = new DoubleEvaluator();
 
-        // Validate the expression format
-        if (!RegexPatternUtils.getInstance()
-                .getMathExpressionPattern()
-                .matcher(expression.trim())
-                .matches()) {
+        if (!isMathExpression(expression)) {
             throw new IllegalArgumentException("Invalid expression format: " + expression);
         }
 
@@ -735,6 +728,28 @@ public class GeneralUtils {
         }
 
         return results;
+    }
+
+    private boolean isMathExpression(String expression) {
+        return patternCache.getMathExpressionPattern().matcher(expression.trim()).matches();
+    }
+
+    /*
+     * Whether a token is a well-formed n-function. getMathExpressionPattern only restricts the
+     * characters, so "n+" passes it; the expression is parsed once to reject tokens the evaluator
+     * cannot read. Parsing succeeds or fails on structure alone, so a single n is enough.
+     */
+    private boolean isNFunction(String expression) {
+        if (!isMathExpression(expression)) {
+            return false;
+        }
+        try {
+            new DoubleEvaluator().evaluate(sanitizeNFunction(expression.trim(), 1));
+            return true;
+        } catch (Exception e) {
+            log.debug("Not an n-function: '{}': {}", expression, e.getMessage());
+            return false;
+        }
     }
 
     private String sanitizeNFunction(String expression, int nValue) {
@@ -801,23 +816,31 @@ public class GeneralUtils {
 
     private List<Integer> handlePart(String part, int totalPages, int offset) {
         List<Integer> partResult = new ArrayList<>();
+        String trimmedPart = part == null ? "" : part.trim();
+        if (trimmedPart.isEmpty()) {
+            return partResult;
+        }
 
-        // First check for n-syntax because it should not be processed as a range
-        if (part.contains("n")) {
-            partResult = evaluateNFunc(part, totalPages);
+        // First check for n-syntax because it should not be processed as a range. A token that
+        // only contains an "n" ("no", "and") or is not a well-formed expression ("n+") must not
+        // reach evaluateNFunc, which throws and would fail the whole list; it falls through and
+        // is dropped like any other bad token.
+        if (trimmedPart.contains("n") && isNFunction(trimmedPart)) {
+            partResult = evaluateNFunc(trimmedPart, totalPages);
             // Adjust the results according to the offset
             for (int i = 0; i < partResult.size(); i++) {
                 int adjustedValue = partResult.get(i) - 1 + offset;
                 partResult.set(i, adjustedValue);
             }
-        } else if (part.contains("-")) {
+        } else if (trimmedPart.contains("-")) {
             // Process ranges only if it's not n-syntax
-            String[] rangeParts = part.split("-");
+            // Limit -1 keeps empty parts, so a bare "-" is an invalid range, not an empty array.
+            String[] rangeParts = trimmedPart.split("-", -1);
             try {
-                int start = Integer.parseInt(rangeParts[0]);
+                int start = Integer.parseInt(rangeParts[0].trim());
                 int end =
-                        (rangeParts.length > 1 && !rangeParts[1].isEmpty())
-                                ? Integer.parseInt(rangeParts[1])
+                        (rangeParts.length > 1 && !rangeParts[1].trim().isEmpty())
+                                ? Integer.parseInt(rangeParts[1].trim())
                                 : totalPages;
                 for (int i = start; i <= end; i++) {
                     if (i >= 1 && i <= totalPages) {
@@ -825,17 +848,17 @@ public class GeneralUtils {
                     }
                 }
             } catch (NumberFormatException e) {
-                log.debug("Invalid range: {}", part);
+                log.debug("Invalid range: {}", trimmedPart);
             }
         } else {
             // This is a single page number
             try {
-                int pageNum = Integer.parseInt(part.trim());
+                int pageNum = Integer.parseInt(trimmedPart);
                 if (pageNum >= 1 && pageNum <= totalPages) {
                     partResult.add(pageNum - 1 + offset);
                 }
             } catch (NumberFormatException e) {
-                log.debug("Invalid page number: {}", part);
+                log.debug("Invalid page number: {}", trimmedPart);
             }
         }
         return partResult;
@@ -870,12 +893,23 @@ public class GeneralUtils {
      *                  Internal Implementation Details                       *
      *------------------------------------------------------------------------*/
 
+    /**
+     * Guards the read-modify-write cycle below. Every writer reloads the whole file, edits one key
+     * and writes it all back, so two unsynchronised writers would silently drop one another's keys.
+     */
+    private final Object SETTINGS_WRITE_LOCK = new Object();
+
+    /** Dotted-notation separator for settings keys; a literal, so compile it once. */
+    private final Pattern SETTINGS_KEY_SEPARATOR = Pattern.compile("\\.");
+
     public void saveKeyToSettings(String key, Object newValue) throws IOException {
-        String[] keyArray = key.split("\\.");
-        Path settingsPath = Path.of(InstallationPathConfig.getSettingsPath());
-        YamlHelper settingsYaml = new YamlHelper(settingsPath);
-        settingsYaml.updateValue(Arrays.asList(keyArray), newValue);
-        settingsYaml.saveOverride(settingsPath);
+        synchronized (SETTINGS_WRITE_LOCK) {
+            String[] keyArray = SETTINGS_KEY_SEPARATOR.split(key);
+            Path settingsPath = Path.of(InstallationPathConfig.getSettingsPath());
+            YamlHelper settingsYaml = new YamlHelper(settingsPath);
+            settingsYaml.updateValue(Arrays.asList(keyArray), newValue);
+            settingsYaml.saveOverride(settingsPath);
+        }
     }
 
     /**
@@ -893,19 +927,21 @@ public class GeneralUtils {
             return;
         }
 
-        Path settingsPath = Path.of(InstallationPathConfig.getSettingsPath());
-        YamlHelper settingsYaml = new YamlHelper(settingsPath);
+        synchronized (SETTINGS_WRITE_LOCK) {
+            Path settingsPath = Path.of(InstallationPathConfig.getSettingsPath());
+            YamlHelper settingsYaml = new YamlHelper(settingsPath);
 
-        // Apply all updates to the same YamlHelper instance
-        for (Map.Entry<String, Object> entry : settingsMap.entrySet()) {
-            String key = entry.getKey();
-            Object value = entry.getValue();
-            String[] keyArray = key.split("\\.");
-            settingsYaml.updateValue(Arrays.asList(keyArray), value);
+            // Apply all updates to the same YamlHelper instance
+            for (Map.Entry<String, Object> entry : settingsMap.entrySet()) {
+                String key = entry.getKey();
+                Object value = entry.getValue();
+                String[] keyArray = SETTINGS_KEY_SEPARATOR.split(key);
+                settingsYaml.updateValue(Arrays.asList(keyArray), value);
+            }
+
+            // Save only once after all updates are applied
+            settingsYaml.saveOverride(settingsPath);
         }
-
-        // Save only once after all updates are applied
-        settingsYaml.saveOverride(settingsPath);
     }
 
     /*

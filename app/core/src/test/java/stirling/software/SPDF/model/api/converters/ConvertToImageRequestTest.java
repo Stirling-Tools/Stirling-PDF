@@ -17,6 +17,19 @@ class ConvertToImageRequestTest {
     }
 
     @Nested
+    @DisplayName("defaults")
+    class Defaults {
+
+        @Test
+        @DisplayName("dpi defaults to the value the schema documents")
+        void dpiDefaultMatchesSchema() {
+            assertThat(new ConvertToImageRequest().getDpi())
+                    .isEqualTo(ConvertToImageRequest.DEFAULT_DPI)
+                    .isEqualTo(300);
+        }
+    }
+
+    @Nested
     @DisplayName("accessors")
     class Accessors {
 

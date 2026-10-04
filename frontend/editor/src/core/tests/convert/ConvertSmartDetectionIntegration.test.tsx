@@ -63,6 +63,15 @@ vi.mock("../../services/apiClient", () => ({
 // Import the mocked apiClient
 import apiClient from "@app/services/apiClient";
 const mockedApiClient = vi.mocked(apiClient);
+const onToolRunComplete = vi.hoisted(() => vi.fn());
+vi.mock("@app/hooks/useToolRunComplete", () => ({
+  useToolRunComplete: () => onToolRunComplete,
+}));
+
+// Usage-recommendation tracking would add its own posts to the apiClient spy.
+vi.mock("../../services/toolUsageTracker", () => ({
+  notifyToolCompleted: vi.fn(),
+}));
 
 // Mock only essential services that are actually called by the tests
 vi.mock("../../services/fileStorage", () => ({
@@ -348,6 +357,7 @@ describe("Convert Tool - Smart Detection Integration Tests", () => {
         );
       });
 
+      expect(onToolRunComplete).toHaveBeenCalledTimes(1);
       expect(mockedApiClient.post).toHaveBeenCalledWith(
         "/api/v1/convert/file/pdf",
         expect.any(FormData),

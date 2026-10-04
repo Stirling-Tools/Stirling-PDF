@@ -12,11 +12,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
-import tools.jackson.databind.ObjectMapper;
-
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.saas.config.SupabaseConfigurationProperties;
+
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Reports per-tenant overage to Stripe Billing Meters via the Supabase {@code meter-usage} Edge

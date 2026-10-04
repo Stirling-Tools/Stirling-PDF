@@ -1,4 +1,5 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
+import type { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
 import path from "path";
 
 // Drives the real PDFium object path: insert a bordered table, grow it by a row
@@ -10,6 +11,62 @@ import path from "path";
 const STORE = `(window).__editor_store`;
 
 test.describe("PDF text editor - tables", () => {
+  for (const layout of [
+    { name: "compact toolbar", width: 1100, height: 900, mobile: false },
+    { name: "phone action bar", width: 390, height: 844, mobile: true },
+  ]) {
+    test(`inserts a table from the ${layout.name}`, async ({ page }) => {
+      test.setTimeout(120_000);
+      await page.setViewportSize({
+        width: layout.width,
+        height: layout.height,
+      });
+      await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
+      await expect(page.getByTestId("pdf-editor-root")).toBeAttached();
+      await page
+        .getByTestId("pdf-editor-file-input")
+        .setInputFiles(
+          path.join(
+            import.meta.dirname,
+            "../test-fixtures/paragraph-sample.pdf",
+          ),
+        );
+      await page.waitForFunction(() => {
+        const state = (
+          window as unknown as { __editor_store: EditorStore }
+        ).__editor_store.getState();
+        return state.firstPageRendered && !state.loading;
+      });
+      if (!layout.mobile) {
+        await expect(page.getByTestId("pdf-editor-toolbar")).toHaveAttribute(
+          "data-compact",
+          "true",
+        );
+        await page.getByTestId("pdf-editor-overflow-menu").click();
+      }
+      await page.getByTestId("pdf-editor-add-table").click();
+      await page.waitForFunction(
+        () =>
+          (
+            window as unknown as { __editor_store: EditorStore }
+          ).__editor_store.getState().mode === "addTable",
+      );
+      const box = await page.getByTestId("pdf-editor-page-0").boundingBox();
+      if (!box) throw new Error("Rendered page not found");
+      await page.mouse.click(box.x + 20, box.y + 20);
+      await expect
+        .poll(() =>
+          page.evaluate(
+            () =>
+              (
+                window as unknown as { __editor_store: EditorStore }
+              ).__editor_store.getState().pages[0].tables?.length ?? 0,
+          ),
+        )
+        .toBe(1);
+    });
+  }
+
   test("insert, grow, fill, and undo a table", async ({ page }) => {
     test.setTimeout(180_000);
     await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });

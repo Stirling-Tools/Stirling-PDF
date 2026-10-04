@@ -13,6 +13,7 @@
 export interface UsersCapabilities {
   /** Show the "Organization" owners group (a single-org deployment). */
   orgGroup: boolean;
+  transferOwnership: boolean;
   /** Let an admin reassign roles at all (the role Select). */
   changeRole: boolean;
   /**
@@ -56,6 +57,8 @@ export interface UsersCapabilities {
   manageGrants: boolean;
   /** Whether "remove" takes the member out of the whole org or just the team. */
   removeScope: "org" | "team";
+  /** Offer the remove action at all. Off for viewers who may only read. */
+  removeMember: boolean;
   /**
    * Listing the roster needs the org-admin role. Self-hosted reads the
    * admin-only endpoints (`@PreAuthorize(hasRole('ADMIN'))`), which refuse

@@ -1,9 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Text, Checkbox, Stack, Loader, Tooltip } from "@mantine/core";
-import LayersIcon from "@mui/icons-material/Layers";
+import { Icon } from "@app/ui/Icon";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { useTranslation } from "react-i18next";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { SidebarBase } from "@app/components/viewer/SidebarBase";
@@ -109,7 +107,9 @@ export function LayerSidebar({
         if (cancelled) return;
         setStatus("error");
         setLoadError(
-          err instanceof Error ? err.message : "Failed to read PDF layers",
+          err instanceof Error
+            ? err.message
+            : t("viewer.layers.readFailed", "Failed to read PDF layers"),
         );
         onLayersDetected?.(false);
       });
@@ -320,7 +320,7 @@ export function LayerSidebar({
             aria-label={t("viewer.layers.showAll", "Show all layers")}
             title={t("viewer.layers.showAll", "Show all layers")}
           >
-            <VisibilityIcon sx={{ fontSize: "1rem" }} />
+            <Icon name="eye" size={"1rem"} />
           </ActionIcon>
           <ActionIcon
             variant="tertiary"
@@ -330,7 +330,7 @@ export function LayerSidebar({
             aria-label={t("viewer.layers.hideAll", "Hide all layers")}
             title={t("viewer.layers.hideAll", "Hide all layers")}
           >
-            <VisibilityOffIcon sx={{ fontSize: "1rem" }} />
+            <Icon name="eye-off" size={"1rem"} />
           </ActionIcon>
         </>
       )}
@@ -341,7 +341,7 @@ export function LayerSidebar({
     <SidebarBase
       className="layer-sidebar"
       title={t("viewer.layers.title", "Layers")}
-      icon={<LayersIcon fontSize="small" />}
+      icon={<Icon name="layers" size={20} />}
       rightOffset={`${rightOffset}rem`}
       visible={visible}
       onClose={toggleLayerSidebar}
@@ -351,7 +351,7 @@ export function LayerSidebar({
       {status === "idle" && (
         <div className="sidebar-base__empty-state">
           <Text size="sm" c="dimmed" ta="center">
-            Open a PDF to view its layers.
+            {t("viewer.layers.noDocument", "Open a PDF to view its layers.")}
           </Text>
         </div>
       )}
@@ -366,7 +366,7 @@ export function LayerSidebar({
         >
           <Loader size="md" type="dots" />
           <Text size="sm" ta="center">
-            Loading layers...
+            {t("viewer.layers.loading", "Loading layers...")}
           </Text>
         </Stack>
       )}
@@ -374,7 +374,8 @@ export function LayerSidebar({
       {status === "error" && (
         <div className="sidebar-base__error">
           <Text size="sm" c="var(--color-red-dark)" ta="center">
-            {loadError ?? "Failed to load layers."}
+            {loadError ??
+              t("viewer.layers.loadFailed", "Failed to load layers.")}
           </Text>
         </div>
       )}
@@ -382,7 +383,7 @@ export function LayerSidebar({
       {status === "no-layers" && (
         <div className="sidebar-base__empty-state">
           <Text size="sm" c="dimmed" ta="center">
-            This document has no layers.
+            {t("viewer.layers.empty", "This document has no layers.")}
           </Text>
         </div>
       )}

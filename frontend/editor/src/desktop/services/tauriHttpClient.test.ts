@@ -1,4 +1,4 @@
-import { describe, expect, test, vi, beforeEach } from "vitest";
+import { describe, expect, test, vi, beforeEach, afterEach } from "vitest";
 
 // Regression: a caller-set "Content-Type: multipart/form-data" (no boundary) on a
 // FormData POST must NOT reach the server, or Jetty rejects it with
@@ -25,11 +25,96 @@ function lastFetchHeaders(): Record<string, string> {
   return (opts.headers ?? {}) as Record<string, string>;
 }
 
+describe("tauriHttpClient — native request origin", () => {
+  beforeEach(() => {
+    fetchMock.mockReset();
+    fetchMock.mockResolvedValue(okJson());
+  });
+
+  afterEach(() => vi.unstubAllEnvs());
+
+  test.each([true, false])(
+    "preserves auth and overrides Origin only in dev (DEV=%s)",
+    async (dev) => {
+      vi.stubEnv("DEV", dev);
+
+      const client = create({
+        baseURL: "https://api.test",
+        headers: { "X-Browser-Id": "desktop-test" },
+      });
+
+      await client.get("/api/v1/policies", {
+        headers: { Authorization: "Bearer test-token" },
+        withCredentials: true,
+      });
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        "https://api.test/api/v1/policies",
+        expect.objectContaining({
+          method: "GET",
+          credentials: "include",
+          headers: {
+            ...(dev ? { Origin: "tauri://localhost" } : {}),
+            "X-Browser-Id": "desktop-test",
+            Authorization: "Bearer test-token",
+          },
+        }),
+      );
+    },
+  );
+});
+
 describe("tauriHttpClient — Content-Type handling", () => {
   beforeEach(() => {
     fetchMock.mockReset();
     fetchMock.mockResolvedValue(okJson());
   });
+
+  test("sends URLSearchParams as an encoded form with repeated and empty values", async () => {
+    const client = create({ baseURL: "https://api.test" });
+    const params = new URLSearchParams([
+      ["username", "Jörg + admin&"],
+      ["role", "ROLE_USER"],
+      ["role", "ROLE_ADMIN"],
+      ["empty", ""],
+    ]);
+
+    await client.post("/api/v1/user/admin/saveUser", params);
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.test/api/v1/user/admin/saveUser",
+      expect.objectContaining({
+        body: "username=J%C3%B6rg+%2B+admin%26&role=ROLE_USER&role=ROLE_ADMIN&empty=",
+        headers: expect.objectContaining({
+          "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+        }),
+      }),
+    );
+  });
+
+  test.each(["Content-Type", "content-type", "CONTENT-TYPE"])(
+    "preserves an explicit %s header for URLSearchParams",
+    async (header) => {
+      const client = create({ baseURL: "https://api.test" });
+      const contentType = "application/x-www-form-urlencoded";
+
+      await client.post(
+        "/api/v1/team/rename",
+        new URLSearchParams({ name: "A B" }),
+        {
+          headers: { [header]: contentType },
+        },
+      );
+
+      expect(fetchMock.mock.calls[0][1].body).toBe("name=A+B");
+      expect(
+        Object.entries(lastFetchHeaders()).filter(
+          ([key]) => key.toLowerCase() === "content-type",
+        ),
+      ).toEqual([[header, contentType]]);
+    },
+  );
 
   test("strips a caller-set Content-Type on FormData so the boundary is generated", async () => {
     const client = create({ baseURL: "https://api.test" });

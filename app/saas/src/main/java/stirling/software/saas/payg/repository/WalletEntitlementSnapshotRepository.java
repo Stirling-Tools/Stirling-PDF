@@ -3,12 +3,10 @@ package stirling.software.saas.payg.repository;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 
 import stirling.software.saas.payg.entitlement.WalletEntitlementSnapshot;
 import stirling.software.saas.payg.entitlement.WalletEntitlementSnapshot.WalletEntitlementSnapshotId;
 
-@Repository
 public interface WalletEntitlementSnapshotRepository
         extends JpaRepository<WalletEntitlementSnapshot, WalletEntitlementSnapshotId> {
 
