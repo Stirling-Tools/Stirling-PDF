@@ -149,6 +149,71 @@ test.describe("Sign tool signature wallet", () => {
     await expect(page.getByTestId("signature-tile")).toHaveCount(1);
   });
 
+  test("drawn ink stays under the cursor after the opening animation and resize", async ({
+    page,
+  }) => {
+    await useBrowserStorage(page);
+    await openSign(page);
+    await page.addStyleTag({
+      content: ".sui-modal { animation-play-state: paused !important; }",
+    });
+    await startFromIntro(page, "Draw");
+    const pad = page.getByTestId("signature-draw-pad");
+    await expect(pad).toBeVisible();
+    await expect
+      .poll(() => pad.evaluate((canvas: HTMLCanvasElement) => canvas.width))
+      .toBeGreaterThan(300);
+    await page.getByRole("dialog").evaluate((dialog) => {
+      dialog.getAnimations().forEach((animation) => animation.finish());
+    });
+
+    for (const resize of [false, true]) {
+      if (resize) {
+        await page
+          .getByRole("dialog")
+          .getByRole("button", { name: "Clear", exact: true })
+          .click();
+        await pad.evaluate((canvas) => {
+          canvas.style.width = "65%";
+        });
+      }
+      const box = await pad.boundingBox();
+      if (!box) throw new Error("Signature pad has no bounding box");
+      const point = { x: box.width * 0.75, y: box.height * 0.65 };
+      await pad.click({ position: point });
+      const ink = await pad.evaluate((canvas: HTMLCanvasElement) => {
+        const context = canvas.getContext("2d");
+        if (!context) throw new Error("Signature pad has no drawing context");
+        const pixels = context.getImageData(
+          0,
+          0,
+          canvas.width,
+          canvas.height,
+        ).data;
+        let totalAlpha = 0;
+        let weightedX = 0;
+        let weightedY = 0;
+        for (let y = 0; y < canvas.height; y++) {
+          for (let x = 0; x < canvas.width; x++) {
+            const alpha = pixels[(y * canvas.width + x) * 4 + 3];
+            totalAlpha += alpha;
+            weightedX += (x + 0.5) * alpha;
+            weightedY += (y + 0.5) * alpha;
+          }
+        }
+        const rect = canvas.getBoundingClientRect();
+        return {
+          totalAlpha,
+          x: (weightedX / totalAlpha) * (rect.width / canvas.width),
+          y: (weightedY / totalAlpha) * (rect.height / canvas.height),
+        };
+      });
+      expect(ink.totalAlpha).toBeGreaterThan(0);
+      expect(Math.abs(ink.x - point.x)).toBeLessThan(2);
+      expect(Math.abs(ink.y - point.y)).toBeLessThan(2);
+    }
+  });
+
   test("resizing the drawing modal preserves strokes near its right edge", async ({
     page,
   }) => {

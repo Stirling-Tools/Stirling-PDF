@@ -24,18 +24,21 @@ const padLayouts = new WeakMap<
 >();
 
 function fitCanvasToLayout(canvas: HTMLCanvasElement, pad: SignaturePad) {
-  const rect = canvas.getBoundingClientRect();
-  if (rect.width === 0 || rect.height === 0) return;
+  // The modal's opening transform changes its visual bounds without changing
+  // layout or notifying ResizeObserver.
+  const layoutWidth = canvas.clientWidth;
+  const layoutHeight = canvas.clientHeight;
+  if (layoutWidth === 0 || layoutHeight === 0) return;
   const ratio = Math.max(window.devicePixelRatio || 1, MIN_PIXEL_RATIO);
-  const width = Math.round(rect.width * ratio);
-  const height = Math.round(rect.height * ratio);
+  const width = Math.round(layoutWidth * ratio);
+  const height = Math.round(layoutHeight * ratio);
   if (canvas.width === width && canvas.height === height) {
-    padLayouts.set(pad, { width: rect.width, height: rect.height });
+    padLayouts.set(pad, { width: layoutWidth, height: layoutHeight });
     return;
   }
   const previous = padLayouts.get(pad);
-  const scaleX = previous ? rect.width / previous.width : 1;
-  const scaleY = previous ? rect.height / previous.height : 1;
+  const scaleX = previous ? layoutWidth / previous.width : 1;
+  const scaleY = previous ? layoutHeight / previous.height : 1;
   const strokes = pad.toData().map((group) => ({
     ...group,
     points: group.points.map((point) => ({
@@ -48,7 +51,7 @@ function fitCanvasToLayout(canvas: HTMLCanvasElement, pad: SignaturePad) {
   canvas.height = height;
   canvas.getContext("2d")?.scale(ratio, ratio);
   pad.fromData(strokes);
-  padLayouts.set(pad, { width: rect.width, height: rect.height });
+  padLayouts.set(pad, { width: layoutWidth, height: layoutHeight });
 }
 
 function restyle(pad: SignaturePad, ink: string, pen: PenWidth) {
