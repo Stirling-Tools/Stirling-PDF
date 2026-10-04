@@ -278,6 +278,7 @@ customNumberDesc = "Implicit la {n}, acceptă și 'Pagina {n} din {total}', 'Tex
 fontName = "Nume Font"
 fontSize = "Dimensiune Font"
 numberPagesDesc = "Ce pagini să numeroteze, implicit 'toate', acceptă și 1-5 sau 2,5,9 etc"
+pagePreviewAlt = "Previzualizare pagină"
 pagesAndStarting = "Pagini și număr de start"
 positionAndPages = "Poziție și pagini"
 preview = "Selecție poziție"
@@ -350,7 +351,9 @@ text = "Aceste permisiuni controlează ce pot face utilizatorii cu PDF-ul. Sunt 
 title = "Schimbă Permisiunile"
 
 [addStamp]
+pagePreviewAlt = "Previzualizare pagină"
 preview = "Previzualizare ștampilă"
+stampPreviewAlt = "Previzualizare ștampilă"
 tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 
 [AddStampRequest]
@@ -383,6 +386,7 @@ positionAndFormatting = "Poziție și formatare"
 preview = "Preview:"
 quickPosition = "Selectați o poziție pe pagină pentru a plasa ștampila."
 rotation = "Rotație"
+selectedImageAlt = "Imaginea ștampilei selectate"
 selectTemplate = "Select a template..."
 stampSetup = "Configurare ștampilă"
 stampText = "Text Ștampilă"
@@ -533,6 +537,9 @@ letter = "Letter"
 
 [adjustPageScale.scaleFactor]
 label = "Factor de scalare"
+
+[adjustPageScale.settings]
+title = "Setări"
 
 [adjustPageScale.tooltip.description]
 text = "Ajustați dimensiunea conținutului PDF și modificați dimensiunile paginii."
@@ -728,6 +735,7 @@ noLanguages = "Nu s-au găsit limbi tessdata în directorul configurat."
 permissionNotice = "Calea tessdata nu are permisiuni de scriere. Descărcările vor fi deschise în browser; salvați manual fișierele .traineddata în folderul tessdata."
 
 [admin.settings.ai]
+customProvider = "Personalizat (compatibil OpenAI)"
 description = "Conectați Stirling la motorul Python AI, alegeți-i modelele și setați limitele sub care rulează."
 managedByCloud = "Gestionat de Stirling Cloud în acest mod."
 managedByCloudShort = "Gestionat de Stirling Cloud"
@@ -1146,7 +1154,6 @@ refresh = "Reîmprospătează"
 selectFile = "Selectați un fișier .sql pentru import"
 size = "Dimensiune"
 title = "Bază de date"
-unavailable = "Lista de backup-uri nu este disponibilă pentru configurația curentă a bazei de date."
 uploadTitle = "Încărcare și import"
 version = "Versiune H2"
 
@@ -1280,6 +1287,7 @@ label = "Metadate personalizate"
 [admin.settings.general.customMetadata.author]
 description = "Autorul implicit pentru metadatele PDF (de ex., nume utilizator)"
 label = "Autor implicit"
+placeholder = "nume de utilizator"
 
 [admin.settings.general.customMetadata.autoUpdate]
 description = "Actualizează automat metadatele PDF pentru toate documentele procesate"
@@ -1395,6 +1403,7 @@ defaultLocaleLink = "Configurați limba implicită"
 description = "Afișează o declinare a responsabilității pe care utilizatorii trebuie să o accepte după autentificare. Textul este afișat în limba fiecărui utilizator."
 discardConfirm = "Aveți modificări nesalvate care vor fi pierdute. Schimbați limba oricum?"
 editLabel = "Markdown"
+editPlaceholder = "## Titlu\n\nTextul declarației dvs. de declinare a responsabilității..."
 emptyPreview = "Nimic de previzualizat încă."
 language = "Limbă"
 languageHelp = "Fiecare limbă are propriul fișier. Dacă limba unui utilizator nu are fișier, acordul revine la fișierul limbii implicite, apoi la textul de rezervă."
@@ -1513,8 +1522,10 @@ label = "JWKS URL (optional)"
 placeholder = "Auto-discovered from issuer"
 
 [admin.settings.mcp.mode]
+apikey = "Cheie API (cheie Stirling per utilizator)"
 description = "OAuth needs an external IdP. API key uses a Stirling per-user API key (X-API-KEY) - simplest for self-host."
 label = "Authentication mode"
+oauth = "OAuth 2.1 (IdP extern)"
 
 [admin.settings.mcp.requireAccount]
 description = "Only let tokens through if their subject maps to a provisioned, enabled Stirling user."
@@ -1931,6 +1942,14 @@ title = "Setări Control Utilizator"
 [agents]
 stirling_name = "Stirling"
 
+[alphabetOptions]
+arabic = "Arabă"
+chinese = "Chineză (simplificată)"
+japanese = "Japoneză"
+korean = "Coreeană"
+roman = "Latin"
+thai = "Thailandeză"
+
 [analytics]
 learnMore = "Aflați mai multe"
 paragraph1 = "Stirling PDF are analize opționale pentru a ne ajuta să îmbunătățim produsul. Nu urmărim nicio informație personală sau conținutul fișierelor."
@@ -2052,6 +2071,7 @@ week = "Săptămână"
 
 [audit.clearData]
 cancel = "Anulați"
+closeAlert = "Închide alerta"
 codeDoesNotMatch = "Codul nu se potrivește"
 codePlaceholder = "Introduceți codul aici"
 confirmationCode = "Cod de confirmare"
@@ -2061,6 +2081,7 @@ confirmTitle = "Confirmați că doriți să ștergeți"
 deleteButton = "Ștergeți"
 enterCode = "Cod de confirmare"
 enterCodeBelow = "Introduceți codul exact așa cum este afișat mai sus (sensibil la majuscule/minuscule)"
+failed = "Nu s-au putut șterge datele de audit"
 initiateDelete = "Ștergeți toate datele"
 irreversible = "IREVERSIBIL"
 success = "Reușită"
@@ -2069,6 +2090,7 @@ warning1 = "Această acțiune nu poate fi anulată"
 warning2 = "Ștergerea datelor de audit va elimina definitiv din baza de date toate jurnalele istorice de audit, inclusiv evenimentele de securitate, activitățile utilizatorilor și operațiunile pe fișiere."
 
 [audit.error]
+loadStatus = "Nu s-a putut încărca starea sistemului de audit"
 title = "Eroare la încărcarea sistemului de audit"
 
 [audit.events]
@@ -2084,6 +2106,7 @@ fileHash = "Amprentă fișier"
 filterByType = "Filtrează după tip"
 filterByUser = "Filtrează după utilizator"
 ipAddress = "Adresă IP"
+loadFailed = "Nu s-au putut încărca evenimentele"
 noEvents = "Nu s-au găsit evenimente"
 startDate = "Data de început"
 timestamp = "Marcaj temporal"
@@ -2124,6 +2147,7 @@ avgLatency = "Latență medie"
 error = "Eroare la încărcarea statisticilor"
 excellent = "Excelent"
 good = "Bun"
+loadFailed = "Nu s-au putut încărca statisticile"
 noData = "N/A"
 successRate = "Rată de reușită"
 totalEvents = "Evenimente totale"
@@ -2158,13 +2182,27 @@ accessDenied = "Acces refuzat"
 insufficientPermissions = "Nu aveți permisiunea de a efectua această acțiune."
 
 [auth.callback]
+alreadySignedIn = "Deja autentificat! Se redirecționează..."
+backToLogin = "Înapoi la autentificare"
 completing = "Se finalizează autentificarea"
+exchanging = "Se schimbă codul de autorizare..."
+failedWithReason = "Autentificarea a eșuat: {{error}}"
 invalidToken = "Autentificarea OAuth a eșuat - token nevalid."
 missingToken = "Autentificarea OAuth a eșuat - nu s-a primit niciun token."
+noData = "Nu s-au găsit date de autentificare"
 oauthFailed = "Autentificarea OAuth a eșuat. Încercați din nou."
 pleaseWait = "Așteptați cât timp finalizăm autentificarea."
+processing = "Se procesează autentificarea..."
 signedOut = "Ați fost deconectat. Autentificați-vă din nou."
+signInFailed = "Nu s-a putut finaliza autentificarea: {{error}}"
+success = "Autentificare reușită! Se redirecționează..."
+unknownError = "Eroare necunoscută"
 windowMayClose = "Puteți închide această fereastră după finalizare."
+
+[auth.callback.title]
+default = "Autentificare"
+processing = "Vă autentificăm"
+success = "Totul este pregătit!"
 
 [auth.displayName]
 guest = "Invitat"
@@ -2317,6 +2355,7 @@ title = "Importă automatizare"
 unresolved = "Neasociate: {{ops}}"
 
 [automate.run]
+progress = "Progres: {{current}}/{{total}}"
 title = "Rulați automatizarea"
 
 [automate.selection]
@@ -2466,6 +2505,7 @@ whatHappensNext = "Ce urmează?"
 
 [billing.portal]
 error = "Deschiderea portalului de facturare a eșuat"
+errorFallback = "Încercați din nou sau contactați asistența."
 
 [bookletImposition]
 paperSizeNote = "Dimensiunea hârtiei este derivată automat din prima pagină."
@@ -2513,6 +2553,9 @@ title = "Mod duplex manual"
 [bookletImposition.rtlBinding]
 label = "Legare de la dreapta la stânga"
 tooltip = "Pentru arabă, ebraică sau alte limbi RTL"
+
+[bookletImposition.settings]
+title = "Setări"
 
 [bookletImposition.tooltip.advanced]
 bullet1 = "Legare RTL: pentru arabă, ebraică sau limbi RTL"
@@ -2582,6 +2625,8 @@ detail = "Faceți clic sau apăsați Space pentru a juca din nou"
 headline = "Totul liber"
 
 [bulkSelection]
+selectedPages_one = "Selectat: {{count}} pagină ({{pages}})"
+selectedPages_other = "Selectate: {{count}} pagini ({{pages}})"
 syntaxError = "Există o problemă de sintaxă. Consultați sfaturile pentru selectarea paginilor."
 
 [bulkSelection.advanced]
@@ -2802,6 +2847,7 @@ declineButton = "Refuzați"
 deleteSelected = "Ștergeți semnătura selectată"
 drawSignature = "Desenați-vă semnătura mai jos"
 fileTooLarge = "Dimensiunea fișierului trebuie să fie mai mică de 5MB"
+fontBrushScript = "Brush Script MT (cursiv)"
 fontFamily = "Familie de fonturi"
 fontSize = "Mărimea fontului: {{size}}px"
 fontSizePlaceholder = "Mărime"
@@ -2821,6 +2867,7 @@ removeImage = "Eliminați imaginea"
 savedSignatures = "Semnături salvate"
 selectFile = "Selectați fișier imagine"
 selectSignatureTitle = "Selectați sau creați o semnătură"
+signatureImageAlt = "Semnătură"
 signatureInfo = "Aceste setări sunt configurate de proprietarul documentului"
 signatureSettings = "Setări semnătură"
 signatureText = "Textul semnăturii"
@@ -3591,13 +3638,19 @@ confirm = "Confirmă"
 continue = "Continuă"
 copied = "Copiat!"
 copy = "Copiați"
+copyCode = "Copiază codul"
+dismiss = "Închide"
 done = "Gata"
 enterValue = "Enter value"
 error = "Eroare"
 expand = "Extinde"
 filterEmpty = "Nimic de filtrat"
+goToSlide = "Mergi la diapozitivul {{number}}"
 loading = "Se încarcă..."
+moreInformation = "Mai multe informații"
 next = "Înainte"
+noData = "Nu există date"
+nOfTotal = "{{current}} din {{total}}"
 open = "Open"
 preview = "Previzualizare"
 previous = "Înapoi"
@@ -3606,6 +3659,9 @@ remaining = "Rămas"
 retry = "Reîncercați"
 save = "Salvează"
 search = "Caută"
+settingsSections = "Secțiuni de setări"
+showAllTotal = "Afișează toate {{total}}"
+showLess = "Afișează mai puțin"
 stepOf = "Step {{current}} of {{total}}"
 
 [compare]
@@ -3617,6 +3673,7 @@ newLine = "linie nouă"
 pages = "Pagini"
 tags = "diferențiază,contrastează,modificări,analiză"
 title = "Compară"
+workbenchLabel = "Vizualizare comparare"
 
 [compare.actions]
 linkScroll = "Sincronizează derularea"
@@ -3770,6 +3827,7 @@ title = "Metodă de comprimare"
 desiredSize = "Dimensiunea dorită a fișierului"
 desiredSizePlaceholder = "Introduceți dimensiunea"
 desiredSizeUnit = "Size unit"
+title = "Setări"
 
 [compress.tooltip.description]
 text = "Comprimarea este o modalitate ușoară de a reduce dimensiunea fișierului. Alegeți Dimensiunea fișierului pentru a introduce o dimensiune țintă și vom ajusta noi calitatea. Alegeți Calitate pentru a seta manual intensitatea comprimării."
@@ -3819,10 +3877,13 @@ title = "Setările contului"
 description = "Încărcați o imagine pentru a vă personaliza contul."
 help = "PNG, JPG sau WebP, până la 2MB."
 remove = "Elimină"
+removeFailed = "Nu s-a putut elimina fotografia de profil"
 sizeError = "Selectați o imagine mai mică de 2MB."
 switchedToCustom = "S-a trecut la imagine personalizată. Acum puteți încărca propria imagine."
+switchFailed = "Nu s-a putut comuta la imaginea personalizată"
 title = "Poză de profil"
 upload = "Încărcați"
+uploadFailed = "Nu s-a putut încărca fotografia de profil"
 useCustom = "Utilizați imagine personalizată"
 usingProvider = "Se utilizează poza de profil {{provider}}"
 
@@ -3836,6 +3897,7 @@ title = "Decupați poza de profil"
 zoom = "Zoom"
 
 [config.account.security]
+changeFailed = "Nu s-a putut schimba parola"
 changePassword = "Schimbați parola"
 description = "Gestionați parola și setările de securitate."
 title = "Parole și securitate"
@@ -3846,11 +3908,15 @@ description = "Conectați-vă contul pentru a vă păstra istoricul și a accesa
 email = "Email"
 emailPassword = "sau introduceți emailul și parola"
 emailPlaceholder = "Introduceți emailul"
+failed = "Nu s-a putut actualiza contul"
+failedWithProvider = "Nu s-a putut actualiza contul cu {{provider}}"
 linkWith = "Conectați cu"
+linkWithProvider = "Asociază cu {{provider}}"
 password = "Parolă (opțional)"
 passwordNote = "Lăsați gol pentru a folosi doar verificarea prin email"
 passwordPlaceholder = "Setați o parolă"
 socialLogin = "Actualizați cu cont social"
+success = "Cont actualizat cu succes! Acum vă puteți autentifica folosind adresa de e-mail."
 title = "Actualizați contul de invitat"
 upgradeButton = "Actualizați contul"
 
@@ -3960,10 +4026,10 @@ title = "Cerere nevalidă"
 
 [connect.renewal]
 approve = "Reînnoiește autentificarea"
+currentOwnerRequired = "Autentificați-vă ca proprietarul actual al echipei cloud asociate pentru a reînnoi autentificarea acestui server. Dacă proprietatea a fost transferată, folosiți contul noului proprietar."
 failed = "Autentificarea dvs. nu a putut fi reînnoită. Încercați din nou sau închideți această pagină și începeți din nou de pe serverul dvs."
 lead = "Acest server este deja legat la contul dvs. Reînnoiți autentificarea pentru a reveni la facturare și utilizare pe serverul dvs."
 title = "Reînnoiți autentificarea pe server"
-wrongAccount = "Acest cont nu poate reînnoi autentificarea acestui server. Comutați la contul utilizat inițial pentru a lega serverul. Acel cont trebuie să dețină în continuare echipa legată."
 
 [convert]
 autoRotate = "Rotire automată"
@@ -4009,6 +4075,7 @@ multiple = "Multiple"
 optimizeForEbook = "Optimizați PDF pentru e-readere (folosește Ghostscript)"
 output = "Ieșire"
 outputFormat = "Format de ieșire"
+pdfaAccessibleFormat = "{{format}} (accesibil)"
 pdfaDigitalSignatureWarning = "PDF-ul conține o semnătură digitală. Aceasta va fi eliminată în pasul următor."
 pdfaNote = "PDF/A-1b este mai compatibil, PDF/A-2b acceptă mai multe funcții."
 pdfaOptions = "Opțiuni PDF/A"
@@ -4068,6 +4135,24 @@ outputFormatDesc = "Alege formatul de ieșire pentru eBook"
 tabletPhone = "Tabletă/Telefon (cu imagini)"
 targetDevice = "Dispozitiv țintă"
 targetDeviceDesc = "Alege un profil de ieșire optimizat pentru dispozitivul de citire"
+
+[convert.formatGroups]
+archive = "Arhivă"
+document = "Document"
+ebook = "eBook"
+email = "E-mail"
+file = "Fișier"
+image = "Imagine"
+multipleFiles = "Fișiere multiple"
+presentation = "Prezentare"
+spreadsheet = "Foaie de calcul"
+text = "Text"
+web = "Web"
+
+[convert.formatOptions]
+any = "Oricare"
+images = "Imagini"
+msgOutlook = "MSG (Outlook)"
 
 [cookieBanner.popUp]
 acceptAllBtn = "OK"
@@ -4161,6 +4246,12 @@ label = "Poziția Y"
 [crop.error]
 failed = "Nu s-a putut decupa PDF-ul"
 
+[crop.pageNumbers]
+description = "Decupați zona selectată pe anumite pagini sau 'all' pentru fiecare pagină."
+error = "Selecție de pagini nevalidă. Folosiți de ex. 1, 3, 5-8 sau all."
+label = "Pagini de decupat"
+placeholder = "de ex. 1, 3, 5-8 sau all"
+
 [crop.preview]
 title = "Selecție zonă de decupare"
 
@@ -4183,16 +4274,11 @@ fileName = "Nume Fișier"
 title = "Import/Export Bază de Date"
 
 [defaultApp]
-setDefault = "Setează ca implicită"
 title = "Setează ca aplicație PDF implicită"
 
 [defaultApp.error]
 message = "Nu s-a putut seta gestionarul PDF implicit"
 title = "Eroare"
-
-[defaultApp.prompt]
-dontRemind = "Nu-mi mai reaminti"
-message = "Fă din Stirling PDF aplicația implicită pentru deschiderea fișierelor PDF."
 
 [defaultApp.settingsOpened]
 message = "Te rugăm să selectezi Stirling PDF în setările sistemului"
@@ -4201,6 +4287,17 @@ title = "Setări deschise"
 [defaultApp.success]
 message = "Stirling PDF este acum editorul tău PDF implicit"
 title = "Aplicație implicită setată"
+
+[desktop.titleBar]
+maximize = "Maximizează"
+minimize = "Minimizează"
+restore = "Restaurează"
+
+[desktopBilling]
+description = "Gestionați utilizarea și facturarea în browser. Autentificați-vă cu același cont Stirling pe care îl folosiți aici."
+open = "Deschide Utilizare și facturare în browser"
+openFailed = "Nu s-a putut deschide Utilizare și facturare. Verificați conexiunea și încercați din nou."
+selfHostedDescription = "Gestionați utilizarea și facturarea pe serverul conectat în browser. Autentificați-vă cu contul de proprietar al serverului."
 
 [desktopFileLink]
 saveAs = "Salvează ca…"
@@ -4264,6 +4361,7 @@ tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,ident
 noItems = "No items available"
 noResults = "No results found"
 searchPlaceholder = "Căutați..."
+selectedCount = "{{count}} selectate"
 selectLanguages = "Select languages"
 selectOption = "Select an option"
 
@@ -4274,6 +4372,7 @@ editSecretValue = "Editați valoarea secretă"
 [editTableOfContents]
 submit = "Aplică cuprinsul"
 tags = "bookmarks,contents,edit,table of contents,TOC,outline,navigation,chapters,sections,add bookmarks,edit bookmarks,PDF outline"
+workbenchLabel = "Spațiu de lucru pentru schiță"
 
 [editTableOfContents.actions]
 clipboardUnavailable = "Accesul la clipboard nu este disponibil în acest browser."
@@ -4434,6 +4533,27 @@ closeFile = "Închideți fișierul"
 
 [fileEditor]
 addFiles = "Adăugați fișiere"
+closedFile = "{{name}} închis"
+couldNotSave = "Nu s-a putut salva {{name}}"
+filesAdded_one = "S-a adăugat {{count}} fișier"
+filesAdded_other = "S-au adăugat {{count}} fișiere"
+filesReordered_one = "Fișier reordonat"
+filesReordered_other = "{{count}} fișiere reordonate"
+loadedFromStorage_one = "S-a încărcat {{count}} fișier din stocare"
+loadedFromStorage_other = "S-au încărcat {{count}} fișiere din stocare"
+loadFromStorageFailed = "Nu s-au putut încărca unele fișiere din stocare"
+pinnedFile = "{{name}} fixat"
+processFilesFailed = "Nu s-au putut procesa fișierele"
+savedAndClosed = "{{name}} salvat și închis"
+saveFailed = "Salvarea a eșuat"
+unpinnedFile = "{{name}} nefixat"
+unzipping = "Se dezarhivează {{name}}"
+
+[fileEditor.unzip]
+error = "Eroare la dezarhivarea {{name}}"
+extracted_one = "S-a extras {{count}} fișier din {{name}}"
+extracted_other = "S-au extras {{count}} fișiere din {{name}}"
+failed = "Nu s-au putut extrage fișierele din {{name}}"
 
 [fileManager]
 addToUpload = "Adăugați la încărcare"
@@ -4450,6 +4570,7 @@ noFiles = "Nu există fișiere disponibile"
 noFilesFound = "Nu s-au găsit fișiere care să corespundă căutării"
 openInFileEditor = "Deschideți în Editor fișiere"
 openInPageEditor = "Deschideți în Editorul de pagini"
+reloadFiles = "Reîncarcă fișierele"
 saveSelected = "Salvează selecția"
 searchFiles = "Căutare fișiere..."
 share = "Partajați"
@@ -4459,6 +4580,8 @@ sharedEditNoticeConfirm = "Am înțeles"
 sharedEditNoticeTitle = "Copie pe server doar pentru citire"
 sharedWithYou = "Partajat cu dvs."
 showAll = "Afișați tot"
+showAllCount_one = "Afișează toate ({{count}} fișier)"
+showAllCount_other = "Afișează toate ({{count}} fișiere)"
 sortBy = "Sort files"
 sortByDate = "Sortează după dată"
 sortByName = "Sortează după nume"
@@ -4495,6 +4618,11 @@ sources = "Surse de fișiere"
 subtitle = "Alege din biblioteca ta sau adaugă ceva nou."
 title = "Adaugă fișiere"
 unsupported = "Acest tip de fișier nu este acceptat de instrumentul selectat."
+
+[filePreview]
+loadingThumbnail = "Se încarcă miniatura..."
+locked = "Blocat"
+previewOf = "Previzualizare pentru {{name}}"
 
 [files]
 addFiles = "Adăugați fișiere"
@@ -4930,13 +5058,15 @@ title = "Fișier în PDF"
 [fileUpload]
 dropFilesHere = "Trageți fișierele aici sau faceți clic pe butonul de încărcare"
 dropFilesHereOpen = "Trage fișiere aici sau apasă butonul Deschide"
-filesAvailable = "fișiere disponibile"
+filesAvailableCount_one = "{{count}} fișier disponibil"
+filesAvailableCount_other = "{{count}} fișiere disponibile"
 loadFromStorage = "Încărcați din stocare"
 noFilesInStorage = "Nu există fișiere disponibile în stocare. Încărcați mai întâi câteva fișiere."
 noFilesInStorageOpen = "Nu există fișiere în stocare. Deschide mai întâi câteva fișiere."
 open = "Deschide"
 openFile = "Deschide fișier"
 openFiles = "Deschide fișiere"
+selectedCount = "{{count}} selectate"
 selectFile = "Select {{name}}"
 selectFromStorage = "Selectați din stocare"
 upload = "Încărcați"
@@ -5028,6 +5158,7 @@ rescanFields = "Rescanați câmpurile"
 rescanFormFields = "Rescanați câmpurile formularului"
 save = "Salvați"
 saveShortcut = "Ctrl+S pentru salvare"
+selectOptionPlaceholder = "— selectați —"
 skippedEdits_one = "1 modificare nu a putut fi aplicată:"
 skippedEdits_other = "{{count}} modificări nu au putut fi aplicate:"
 skippedEditsTruncated = "Încă {{count}} nu sunt listate."
@@ -5090,6 +5221,16 @@ tooltipHelp = "Indiciul afișat când cineva trece cu cursorul peste câmp într
 type = "Tip"
 typeHelp = "Ce fel de câmp este acesta. Schimbarea lui reconstruiește câmpul, astfel că valoarea sa curentă nu este preluată."
 
+[formFill.fieldTypes]
+button = "Buton"
+checkbox = "Casetă de selectare"
+combobox = "Listă derulantă"
+listbox = "Casetă listă"
+radio = "Radio"
+radioGroup = "Grup radio"
+signature = "Semnătură"
+text = "Text"
+
 [formFill.mode]
 create = "Creează"
 fill = "Completează"
@@ -5107,11 +5248,16 @@ restore = "Restaurează"
 
 [formFill.sidebar]
 close = "Închideți bara laterală"
+empty = "Nu s-au găsit câmpuri de formular în acest PDF"
+loading = "Se încarcă câmpurile formularului..."
+pageNumber = "Pagina {{page}}"
+title = "Câmpuri formular"
 
 [getPdfInfo]
 downloadJson = "Descarcă JSON"
 downloads = "Descărcări"
 indexTitle = "Index"
+noData = "Nu există date"
 noneDetected = "Nu s-a detectat nimic"
 noResults = "Rulați instrumentul pentru a genera un raport."
 processing = "Se extrag informațiile..."
@@ -5127,6 +5273,8 @@ noVerification = "Nu s-a efectuat nicio verificare"
 noVerificationDesc = "Conformitatea cu standardele PDF nu a fost verificată pentru acest document."
 passed = "Reușit"
 passedCount = "reușite"
+secCompliant = "Documentul îndeplinește cerințele SEC EDGAR pentru depunere"
+secNotCompliant = "Documentul nu îndeplinește cerințele SEC EDGAR pentru depunere"
 
 [getPdfInfo.error]
 partial = "Unele fișiere nu au putut fi procesate."
@@ -5134,10 +5282,15 @@ unexpected = "Eroare neașteptată în timpul extragerii."
 
 [getPdfInfo.other]
 attachments = "Atașamente"
+created = "Creat: {{date}}"
 embeddedFiles = "Fișiere încorporate"
+fileSizeBytes = "({{size}} octeți)"
 javaScript = "JavaScript"
 layers = "Straturi"
+modified = "Modificat: {{date}}"
 structureTree = "Arbore de structură"
+unnamedAttachment = "Atașament fără nume"
+unnamedFile = "Fișier fără nume"
 xmp = "XMPMetadata"
 
 [getPdfInfo.perPage]
@@ -5147,6 +5300,7 @@ images = "Imagini"
 links = "Linkuri"
 multimedia = "Multimedia"
 size = "Dimensiune"
+unnamedImage = "Imagine"
 xobjects = "Număr de XObject-uri"
 
 [getPdfInfo.report]
@@ -5675,6 +5829,7 @@ invalidEmail = "Adresă de e-mail invalidă"
 invalidInvitation = "Invitație invalidă"
 invalidToken = "Link de invitație invalid"
 linkExpires = "Linkul expiră"
+linkExpiresAt = "Linkul expiră: {{date}} la {{time}}"
 passwordMismatch = "Parolele nu se potrivesc"
 passwordPlaceholder = "Introduceți parola"
 passwordRequired = "Parola este obligatorie"
@@ -5689,6 +5844,7 @@ welcomeTitle = "Ați fost invitat!"
 addFiles = "Adăugați fișiere"
 mobileUpload = "Încărcare de pe mobil"
 openFromComputer = "Deschide de pe calculator"
+settingUpSession = "Se configurează sesiunea dvs..."
 uploadFromComputer = "Încărcați de pe calculator"
 
 [language]
@@ -5770,6 +5926,7 @@ sessionExpired = "Sesiunea a expirat. Vă rugăm să vă autentificați din nou.
 signin = "Autentificare"
 signingIn = "Se autentifică..."
 signInWith = "Autentificați-vă cu"
+signInWithProvider = "Autentificare cu {{provider}}"
 title = "Autentificare"
 unexpectedError = "Eroare neașteptată: {{message}}"
 updatePassword = "Actualizați parola"
@@ -5811,6 +5968,9 @@ label = "Eliminați semnătura digitală în fișierul îmbinat?"
 description = "Semnăturile digitale vor fi invalidate la îmbinarea fișierelor. Bifați pentru a le elimina din PDF-ul final îmbinat."
 title = "Eliminare semnătură digitală"
 
+[merge.settings]
+title = "Setări"
+
 [merge.sortBy]
 ascending = "Crescător"
 dateModified = "Dată modificare"
@@ -5819,6 +5979,9 @@ description = "Fișierele vor fi îmbinate în ordinea în care sunt selectate. 
 filename = "Nume Fișier"
 label = "Sortare după"
 sort = "Sortați"
+
+[merge.sortFiles]
+title = "Sortează fișierele"
 
 [merge.tooltip.header]
 title = "Prezentare setări de îmbinare"
@@ -5867,6 +6030,7 @@ validating = "Se validează sesiunea..."
 
 [mobileSign]
 clear = "Clear"
+drawingArea = "Zonă de desenare a semnăturii"
 invalidSession = "Session expired"
 invalidSessionMessage = "This QR code is no longer valid. Open the Sign tool on your computer and scan the new code."
 penSizeLabel = "Pen size"
@@ -5882,6 +6046,7 @@ validating = "Checking session…"
 fromGallery = "From gallery"
 hint = "Photograph a signature on white paper, or choose an existing image."
 invalidType = "Please choose an image file."
+previewAlt = "Semnătură"
 takePhoto = "Take a photo"
 
 [mobileSign.tab]
@@ -5993,6 +6158,9 @@ profile = "See your basic profile information"
 desc = "Curăță scanările și detectează textul din imaginile dintr-un PDF și îl adaugă ca text."
 tags = "recunoaștere,text,imagine,scanare,citește,identifică,detectare,editabil"
 title = "OCR / Curățare scanare"
+
+[ocr.advanced]
+title = "Avansat"
 
 [ocr.error]
 failed = "Operațiunea OCR a eșuat"
@@ -6118,9 +6286,9 @@ title = "Descărcați Stirling pentru Desktop"
 description = "Colaborați cu echipa dvs."
 title = "Invitați membri ai echipei"
 
-[onboarding.checklist.shareAnalytics]
-description = "Ajutați la îmbunătățirea Stirling"
-title = "Partajați date anonime de utilizare"
+[onboarding.checklist.setDefaultApp]
+description = "Deschideți fișiere PDF în Stirling PDF"
+title = "Setați Stirling ca implicit"
 
 [onboarding.checklist.takeTour]
 description = "Vedeți cum funcționează Stirling într-un tur rapid"
@@ -6188,6 +6356,7 @@ message = "Aplicația a suferit schimbări semnificative recent. Poate fi nevoie
 roleAdmin = "Administrator"
 rolePlaceholder = "Confirmați-vă rolul"
 roleUser = "Utilizator"
+title = "Verificare de securitate"
 
 [onboarding.serverLicense]
 freeBody = "Licența noastră <strong>Open-Core</strong> include <strong>OAuth SSO</strong> și până la <strong>{{freeTierLimit}}</strong> utilizatori gratuit. Pentru a crește fără întreruperi, recomandăm planul Stirling Team — <strong>100 de utilizatori</strong> pentru 99 USD/lună."
@@ -6276,16 +6445,93 @@ title = "Fișiere de suprapunere"
 text = "Prim-plan plasează suprapunerea deasupra paginii. Fundal o plasează în spate."
 title = "Poziția suprapunerii"
 
+[ownership]
+acceptInvite = "Aceștia pot crea un cont sau se pot autentifica, apoi pot accepta invitația."
+accessUpdated = "Accesul lor de proprietar este pregătit."
+accountLinkDisabled = "Acest server are încă o legătură cloud, dar asocierea conturilor este dezactivată. Cereți operatorului serverului să activeze asocierea conturilor, apoi reluați acest transfer sau dezasociați serverul din setări."
+anotherTeam = "Deja într-o altă echipă?"
+billing = "Abonamentul, portofelul, metoda de plată și licențele existente rămân neschimbate. Datele de contact pentru facturare nu se modifică automat."
+billingDetails = "Detalii de facturare"
+billingUnchanged = "Abonamentul și facturarea rămân neschimbate"
+bothDone = "Proprietatea serverului și cea cloud sunt acum aliniate."
+cancel = "Anulează transferul"
+check = "Verifică din nou"
+checkAccount = "Verifică contul"
+chooseEmail = "Alegeți contul lor din {{team}} sau introduceți un e-mail pentru a-i invita."
+close = "Închide dialogul de transfer"
+cloudAccount = "Cont Stirling"
+cloudScopeStyled = "<user>{{name}}</user> va gestiona {{team}}, membrii și facturarea acesteia."
+cloudTargetChanged = "Alegeți un alt membru cloud. Acest cont nu mai este eligibil pentru predare."
+confirm = "Înțeleg modificările de acces și proprietate."
+done = "Proprietate transferată"
+error = "Nu am putut finaliza acest pas. Verificați dacă destinatarul este activ și serverul este conectat, apoi verificați din nou. Un transfer în așteptare poate fi reluat aici."
+finish = "Finalizează transferul serverului"
+inProgress = "Un alt destinatar are deja un transfer în așteptare. Închideți acest dialog și reluați-l din Utilizatori."
+instances = "Această echipă are {{count}} servere asociate. Facturarea lor cloud rămâne la această echipă; proprietarii locali ai altor servere nu se modifică."
+invitationSent = "Invitație trimisă"
+invite = "Trimite invitația"
+inviteAddress = "Invitați <account>{{email}}</account> în {{team}}."
+inviteBlocked = "Invitația nu a putut fi trimisă. Verificați locurile disponibile în echipă și dacă destinatarul are deja un abonament plătit."
+linkChanged = "Legătura cloud a serverului s-a schimbat. Cereți operatorului serverului să restaureze legătura originală înainte de a relua."
+linkedServerCount = "{{count}} servere asociate"
+linkRevoked = "Legătura cloud a acestui server nu mai este validă. Anulați transferul, apoi reconectați contul Stirling în setări. Proprietatea nu se va schimba."
+localScope = "Aceștia vor deține acest server și vor gestiona facturarea și conexiunile cloud. Veți păstra accesul de administrator, dar veți pierde accesul la acele setări."
+membershipDetails = "Detalii despre apartenența la echipă"
+membershipFirst = "Aceștia trebuie să se alăture echipei înainte de a putea confirma transferul."
+membershipRequired = "Destinatarul trebuie să se alăture acestei echipe cloud înainte ca proprietatea să poată fi transferată. Cereți-i să accepte invitația, apoi verificați din nou."
+newOwnerLabel = "Proprietar nou"
+newOwnerStyled = "<user>{{name}}</user> este acum proprietarul."
+noEmailMatches = "Nu există membri corespunzători. Introduceți un e-mail pentru a invita."
+otherTeam = "Dacă aparțin altei echipe, acceptarea le poate muta contul. Un cont plătit sau proprietatea asupra altei echipe poate necesita rezolvare mai întâi. Nu le vom muta abonamentul și nu vom îmbina echipele."
+ownerChanged = "Proprietatea cloud s-a schimbat după începerea acestui transfer. Anulați acest transfer și începeți din nou cu proprietarul cloud actual."
+ownerRequired = "Autentificați-vă ca proprietarul actual al echipei cloud, apoi încercați din nou acest pas."
+partialError = "Proprietatea cloud a fost transferată. Finalizați transferul serverului pentru a menține ambii proprietari aliniați."
+partialTargetChanged = "Restaurați accesul utilizatorului de server selectat și detaliile originale ale contului, apoi finalizați transferul serverului. Proprietatea cloud a fost deja transferată."
+pending = "Un transfer de proprietate către {{name}} este în așteptare."
+personalTeam = "Echipele personale nu pot transfera proprietatea."
+prepareHelp = "Destinatarul trebuie să fi finalizat prima autentificare pe server. Puteți reîncerca aici sau reveni la Utilizatori pentru a alege pe altcineva."
+resume = "Reia transferul"
+searchEmail = "Căutați sau introduceți un e-mail"
+serverAccount = "Cont server"
+serverDetails = "Detalii server asociat"
+signIn = "Autentificare în cloud"
+startFromInstanceBody = "Această echipă are servere asociate. Pe serverul self-hosted, deschideți Setări → Utilizatori și schimbați rolul destinatarului la Proprietar organizație. Acest flux transferă proprietatea cloud înainte de a finaliza transferul serverului."
+startFromInstanceTitle = "Începeți de pe serverul dvs. self-hosted"
+stayOwner = "Rămâneți proprietar până la transfer."
+targetChanged = "Contul destinatarului s-a schimbat. Restaurați-i accesul sau anulați acest transfer și alegeți-l din nou."
+title = "Transferă proprietatea"
+transfer = "Transferă proprietatea"
+waitingForEmail = "Se așteaptă ca {{email}} să se alăture {{team}}."
+working = "Se verifică și se actualizează proprietatea..."
+yourCloudAccess = "Veți deveni membru al echipei și veți pierde accesul de proprietar."
+
 [pageEdit]
 deselectAll = "Deselectați tot"
 selectAll = "Selectați tot"
 
 [pageEditor]
+dragPreviewAlt = "Se trage"
+filePosition = "Poziția {{position}}"
+pageLabel = "Pagina {{page}}"
 title = "Editor de pagini"
+
+[pageEditor.actions]
+deletePage = "Șterge pagina"
+insertFileAfter = "Inserează fișier după"
+moveLeft = "Mută la stânga"
+moveRight = "Mută la dreapta"
+rotateLeft = "Rotește la stânga"
+rotateRight = "Rotește la dreapta"
+splitAfter = "Împarte după"
 
 [pageEditor.emptyState]
 body = "Adăugați fișiere pentru a începe editarea paginilor"
 title = "Nu au fost încărcate fișiere PDF"
+
+[pageEditor.fileDropdown]
+addFile = "Adaugă fișier"
+selectedCount = "{{selected}}/{{total}} fișiere selectate"
+untitled = "Fără titlu"
 
 [pageEditor.toolbar]
 delete = "Ștergeți selecția"
@@ -6391,6 +6637,11 @@ portrait = "Portret"
 label = "Direcție de citire:"
 ltr = "Stânga la dreapta"
 rtl = "Dreapta la stânga"
+
+[pageLayout.steps]
+advanced = "Setări avansate"
+layout = "Setări aspect"
+marginsBorders = "Margini și borduri"
 
 [pageLayout.tooltip.header]
 title = "Ghid pentru aspectul paginii"
@@ -6712,6 +6963,7 @@ teamChangeUnavailable = "Modificările Team programate nu au putut fi încărcat
 teamPending = "Achiziția ta Team este încă în procesare. Reîmprospătează această pagină în curând."
 teamProcessing = "Achiziția Team se procesează"
 teamScheduled = "Modificarea Team este programată pentru {{date}}. Capacitatea ta curentă rămâne activă până atunci."
+unknownError = "A apărut o eroare necunoscută"
 upgradeComplete = "Upgrade finalizat"
 upgradeCompleteMessage = "Abonamentul tău a fost actualizat cu succes. Cheia de licență existentă a fost actualizată."
 upgradeSuccess = "Plată reușită! Abonamentul a fost actualizat. Licența a fost actualizată pe serverul tău. Vei primi în curând un email de confirmare."
@@ -6766,6 +7018,14 @@ selectedMonthly = "Lunar"
 selectedYearly = "Anual"
 selectMonthly = "Selectează lunar"
 selectYearly = "Selectează anual"
+
+[payment.priceDisplay]
+basePrice = "Preț de bază"
+perPeriod = "/{{period}}"
+perSeat = "Per loc"
+perSeatPeriod = "/loc/{{period}}"
+totalSeats_one = "Total ({{count}} loc)"
+totalSeats_other = "Total ({{count}} locuri)"
 
 [payment.upgradeTeam]
 title = "Fă upgrade la Team"
@@ -6985,6 +7245,10 @@ save = "Salvați"
 style = "Stil"
 tapToPlace = "Atingeți pagina unde ar trebui să apară textul"
 unlock = "Deblocați"
+
+[pdfTextEditor.pageView]
+pageNumber = "Pagina {{page}}"
+renderFailed = "Nu s-a putut reda pagina"
 
 [pdfTextEditor.password]
 cancel = "Anulează"
@@ -7212,6 +7476,7 @@ title = "Pipeline (Avansat)"
 contact = "Contactează-ne"
 current = "Plan curent"
 featureComparison = "Comparație funcții"
+fetchError = "Nu s-au putut obține datele de preț"
 from = "De la"
 hideComparison = "Ascunde comparația funcțiilor"
 licensedSeats = "Licențiate: {{count}} locuri"
@@ -7227,6 +7492,8 @@ withServer = "+ Plan Server"
 [plan.api]
 large = "5.000 de credite"
 medium = "1.000 de credite"
+perCredit = "{{price}} per credit"
+perCreditWithDiscount = "{{price}} per credit • reducere {{discount}}%"
 small = "500 de credite"
 xsmall = "100 de credite"
 
@@ -7302,14 +7569,9 @@ upToFiveUsers = "Până la 5 utilizatori"
 usageTrackingPrometheus = "Urmărire a utilizării și Prometheus"
 usersIncluded = "100 de utilizatori incluși"
 
-[plan.licenseWarning]
-body = "Ai {{total}} utilizatori, dar nivelul gratuit suportă doar {{limit}} per server. Fă upgrade pentru ca Stirling PDF să ruleze fără probleme."
-cta = "Vezi planuri"
-overLimit = "mai mult de {{limit}}"
-title = "Limită self-hosted gratuită atinsă"
-
 [plan.period]
 month = "lună"
+year = "an"
 
 [plan.pro]
 highlight1 = "Utilizare nelimitată a instrumentelor"
@@ -7435,6 +7697,9 @@ pdfa-1 = "PDF/A-1b"
 pdfa-2b = "PDF/A-2b"
 pdfa-3b = "PDF/A-3b"
 
+[portal.accountLink]
+ownerRequired = "Numai proprietarul organizației poate asocia sau dezasocia acest server."
+
 [portal.accountLink.card]
 billingNote = "Procesarea nesupravegheată este facturată din portofelul organizației tale."
 connectDescription = "Conectează acest server pentru a folosi alocația de procesare a echipei tale în Stirling Cloud."
@@ -7556,6 +7821,7 @@ identity = "Cont Stirling"
 linkTitle = "Conectează contul tău Stirling"
 noAuthorizeUrl = "Stirling nu a returnat o destinație pentru a continua. Încercați din nou peste puțin timp."
 startFailed = "Nu s-a putut contacta Stirling pentru a începe conexiunea. Verificați accesul de rețea outbound al acestui server, apoi încercați din nou."
+transferPending = "Un transfer de proprietate este în așteptare. Accesați Setări → Utilizatori pentru a-l finaliza sau anula, apoi încercați din nou asocierea."
 
 [portal.accountLink.modal.loginNotConfigured]
 after = "pentru a activa conectarea în aplicație la contul Stirling găzduit."
@@ -9441,6 +9707,7 @@ labelId = "ID etichetă"
 labelIdHelp = "GUID-ul etichetei, din portalul Purview. Aplicarea unei etichete scrie metadatele acesteia pe PDF; nu poate cripta, pentru asta este necesar clientul Microsoft."
 labelName = "Nume etichetă (opțional)"
 labelNameHelp = "Înregistrat alături de ID, astfel încât oamenii și instrumentele să poată recunoaște eticheta."
+labelNamePlaceholder = "Confidențial"
 
 [portal.policies.config.purview.fields.method]
 help = "Purview distinge o etichetă aplicată de o politică de una aleasă de o persoană."
@@ -10425,31 +10692,6 @@ unlimited = "{{used}} · Nelimitat"
 [printFile]
 title = "Tipărește Fișier"
 
-[processingFolders.downloads]
-approve = "Procesează folderul meu Descărcări"
-cancelSweep = "Anulează"
-capped = "Aveți {{found}} PDF-uri; primele {{limit}} sunt procesate acum, iar restul urmează."
-close = "Gata"
-explain_one = "Stirling poate clasifica {{count}} PDF deja aflat în folderul Descărcări și poate deschide rezultatele aici."
-explain_other = "Stirling poate clasifica cele {{count}} PDF-uri deja aflate în folderul Descărcări și poate deschide rezultatele aici."
-failed = "Nu s-a putut configura acest lucru. Fișierele dvs. nu au fost modificate."
-finished_one = "S-a clasificat {{count}} fișier și s-au deschis {{opened}} dintre acestea aici, gata de lucru."
-finished_other = "S-au clasificat {{count}} fișiere și s-au deschis {{opened}} dintre acestea aici, gata de lucru."
-nothingNew_one = "Nimic nou de procesat - acest {{count}} fișier a trecut deja prin procesare."
-nothingNew_other = "Nimic nou de procesat - aceste {{count}} fișiere au trecut deja prin procesare."
-notModified = "Fișierele dvs. din Descărcări nu sunt modificate - Stirling le citește și le deschide aici."
-notNow = "Nu acum"
-progressCounts = "din {{total}} procesate"
-someFailed_one = "{{count}} nu a putut fi procesat și a fost lăsat neatins."
-someFailed_other = "{{count}} nu au putut fi procesate și au fost lăsate neatinse."
-stillRunning = "Unele fișiere sunt încă procesate în fundal."
-title = "Organizați folderul Descărcări?"
-trigger_one = "Procesează {{count}} PDF din Descărcări"
-trigger_other = "Procesează {{count}} PDF-uri din Descărcări"
-typesFound_one = "{{count}} tip de document găsit"
-typesFound_other = "{{count}} tipuri de documente găsite"
-working = "Se procesează ..."
-
 [processingFolders.setup]
 addFolder = "Adaugă folder"
 advancedSteps = "Acest folder utilizează o configurare de procesare pe care acest asistent nu o poate edita. Pașii săi salvați nu au fost modificați."
@@ -10527,6 +10769,10 @@ label = "Client ID"
 [provider.googledrive.enabled]
 description = "Permiteți utilizatorilor să importe fișiere direct din Google Drive"
 label = "Activați selectorul de fișiere Google Drive"
+
+[provider.googledrive.errors]
+notConfigured = "Google Drive nu este configurat"
+pickerFailed = "Nu s-a putut deschide selectorul Google Drive"
 
 [provider.oauth2.generic]
 name = "OAuth2 generic"
@@ -10775,6 +11021,7 @@ applyWarning = "⚠️ Aplicare permanentă, nu poate fi anulată, iar datele de
 colorLabel = "Culoare redactare"
 controlsTitle = "Controale de redactare manuală"
 instructions = "Selectați text sau desenați zone în PDF pentru a marca conținut de redactat."
+notImplemented = "Interfața de redactare manuală va fi disponibilă aici când va fi implementată."
 title = "Instrumente de redactare"
 
 [redact.modeSelector]
@@ -11102,6 +11349,9 @@ failed = "A apărut o eroare la rotirea PDF-ului."
 [rotate.preview]
 title = "Previzualizare rotație"
 
+[rotate.settings]
+title = "Setări"
+
 [rotate.tooltip.controls]
 text = "Folosiți butoanele de rotație pentru a ajusta orientarea. Butonul din stânga rotește antiorar, cel din dreapta rotește orar. Fiecare clic rotește cu 90 de grade."
 title = "Controale"
@@ -11119,6 +11369,16 @@ hideSmallLabels = "Ascundeți etichetele mici"
 physicalValues = "Fizic"
 scaled = "Scalat"
 showAllLabels = "Afișați toate etichetele"
+
+[ruler.units]
+cm = "Centimetri (cm)"
+ft = "Picioare (ft)"
+in = "Inci (in)"
+km = "Kilometri (km)"
+m = "Metri (m)"
+mi = "Mile (mi)"
+mm = "Milimetri (mm)"
+yd = "Yarzi (yd)"
 
 [sanitize]
 desc = "Eliminați elementele potențial dăunătoare din fișierele PDF."
@@ -11184,6 +11444,7 @@ calibrationPaperDistance = "Distanța măsurată pe pagină: {{distance}}"
 calibrationTitle = "Calibrare scară"
 calibrationTooltip = "Măsurați o distanță cunoscută pentru a calcula automat scara"
 customScale = "Scară personalizată"
+customUnit = "{{unit}} (personalizat)"
 noneSet = "Nu este setată nicio scară personalizată"
 presets = "Scări presetate"
 ratio = "Raport de scară"
@@ -11207,6 +11468,9 @@ title = "Imagini extrase"
 
 [scannerImageSplit.error]
 failed = "A apărut o eroare la extragerea scanărilor de imagini."
+
+[scannerImageSplit.settings]
+title = "Setări"
 
 [scannerImageSplit.tooltip]
 headsUp = "Atenție"
@@ -11274,6 +11538,9 @@ general = "General"
 limits = "Limite și performanță"
 models = "Modele și furnizori"
 title = "AI"
+
+[settings.billing]
+title = "Facturare"
 
 [settings.configuration]
 advanced = "Avansat"
@@ -11348,8 +11615,6 @@ defaultPdfEditor = "Editor PDF implicit"
 defaultPdfEditorActive = "Stirling PDF este editorul tău PDF implicit"
 defaultPdfEditorChecking = "Se verifică..."
 defaultPdfEditorInactive = "O altă aplicație este setată ca implicită"
-defaultPdfEditorRemind = "Amintește-mi să setez ca implicit"
-defaultPdfEditorRemindDescription = "Afișează un banner când Stirling PDF nu este aplicația implicită pentru PDF."
 defaultPdfEditorSet = "Deja implicit"
 defaultStartupView = "Vizualizare implicită la pornire"
 defaultStartupViewDescription = "Alegeți care filă este activă în coloana din stânga la pornirea aplicației"
@@ -11618,6 +11883,15 @@ people = "Persoane"
 teams = "Echipe"
 title = "Spațiu de lucru"
 
+[setup.error]
+loginIncomplete = "Nu s-a putut finaliza autentificarea"
+noSaasServer = "Nu este configurat niciun server SaaS"
+noServer = "Nu este configurat niciun server"
+saasLoginFailed = "Autentificarea SaaS a eșuat"
+saasLoginIncomplete = "Nu s-a putut finaliza autentificarea SaaS"
+selfHostedLoginFailed = "Autentificarea self-hosted a eșuat"
+signupIncomplete = "Nu s-a putut finaliza înregistrarea"
+
 [setup.login]
 connectingTo = "Conectare la:"
 oauthPending = "Se deschide browserul pentru autentificare..."
@@ -11661,6 +11935,7 @@ configFetchError = "Nu s-a putut prelua configurația serverului: {{error}}"
 emptyUrl = "Te rugăm să introduci un URL de server"
 invalidUrl = "Format URL invalid. Introduceți un URL valid, de exemplu https://your-server.com"
 testFailed = "Testul de conexiune a eșuat"
+unknown = "Eroare necunoscută"
 unreachable = "Nu s-a putut conecta la server"
 
 [setup.server.error.securityDisabled]
@@ -11769,6 +12044,7 @@ canvas = "După ce desenați semnătura în canvas, închideți fereastra și ap
 image = "După încărcarea imaginii semnăturii de mai sus, faceți clic oriunde pe PDF pentru a o plasa."
 noSignature = "Creează o semnătură mai sus pentru a activa instrumentele de plasare."
 paused = "Plasare întreruptă"
+placeAnnotation = "Faceți clic oriunde pe PDF pentru a plasa adnotarea."
 resumeHint = "Reia plasarea pentru a face clic și a adăuga semnătura."
 saved = "Selectează o semnătură salvată mai sus, apoi fă clic oriunde pe PDF pentru a o plasa."
 text = "După ce introduceți numele mai sus, faceți clic oriunde pe PDF pentru a plasa semnătura."
@@ -11922,7 +12198,9 @@ signUpWith = "Sign up with"
 skip = "Skip"
 subtitle = "Alăturați-vă Stirling PDF pentru a începe"
 title = "Creați un cont"
+unableToAccessTool = "Nu se poate accesa instrumentul: {{error}}"
 unexpectedError = "Eroare neașteptată: {{message}}"
+unknownError = "Eroare necunoscută"
 
 [sizes]
 large = "Mare"
@@ -11995,6 +12273,14 @@ rightToLeft = "Împărțiți de la dreapta la stânga"
 [split.poster.pageSize]
 description = "Dimensiunea paginilor de ieșire pentru imprimare"
 label = "Dimensiunea paginii țintă"
+
+[split.poster.pageSize.options]
+a3 = "A3 (297 × 420 mm)"
+a4 = "A4 (210 × 297 mm)"
+a5 = "A5 (148 × 210 mm)"
+legal = "Legal (8.5 × 14 in)"
+letter = "Letter (8.5 × 11 in)"
+tabloid = "Tabloid (11 × 17 in)"
 
 [split.poster.xFactor]
 description = "Numărul de coloane în care se împarte fiecare pagină"
@@ -12267,6 +12553,7 @@ confirmCancelInvite = "Sigur doriți să anulați această invitație?"
 confirmLeave = "Sigur doriți să părăsiți această echipă?"
 confirmLeaveLeader = "Ca lider de echipă, dacă părăsiți, veți fi eliminat din echipă. Sigur doriți să continuați?"
 confirmRemove = "Sigur doriți să eliminați acest membru?"
+currentUnavailable = "Nu am putut identifica echipa dvs. curentă. Încercați din nou sau contactați asistența dacă problema continuă."
 editName = "Editați numele echipei"
 inviteCancelled = "Invitație anulată"
 inviteError = "Trimiterea invitației a eșuat"
@@ -12292,10 +12579,8 @@ renameCancel = "Anulează redenumirea"
 renameError = "Redenumirea echipei a eșuat"
 renameSubmit = "Salvează numele echipei"
 renameSuccess = "Echipa a fost redenumită cu succes"
-transferBody = "Faceți ca {{email}} să fie proprietarul echipei? Va controla calitatea de membru a echipei și setările de facturare ale organizației. Veți deveni membru. Abonamentul și portofelul echipei rămân cu echipa."
 transferError = "Proprietatea nu a putut fi transferată. Reîmprospătați echipa și încercați din nou."
 transferSuccess = "Proprietatea echipei a fost transferată. Rolul dvs. este acum membru."
-transferTitle = "Transferați proprietatea echipei"
 
 [team.invitationBanner]
 acceptButton = "Acceptați"
@@ -12396,6 +12681,10 @@ WORD = "un document Word"
 XML = "un fișier XML"
 XPS = "un document XPS"
 ZIP = "o arhivă ZIP"
+
+[toolLoading]
+generic = "Se încarcă instrumentul..."
+named = "Se încarcă {{toolName}}..."
 
 [toolPanel]
 alpha = "Alpha"
@@ -12501,6 +12790,8 @@ stable = "STABIL"
 updateAvailable = "Actualizare disponibilă"
 urgentUpdateAvailable = "Actualizare urgentă"
 version = "Versiune"
+versionCount_one = "{{count}} versiune"
+versionCount_other = "{{count}} versiuni"
 versionHistory = "Istoricul versiunilor"
 viewGuide = "Vezi ghidul"
 whatsNewIn = "Noutăți în"
@@ -12528,6 +12819,7 @@ title = "URL în PDF"
 aboutUsageAnalytics = "Despre analiza utilizării"
 configureSettings = "Configurați setările de analiză"
 error = "Eroare la încărcarea statisticilor de utilizare"
+loadFailed = "Nu s-au putut încărca statisticile de utilizare"
 noData = "Nu sunt date disponibile"
 noDataMessage = "În prezent nu sunt disponibile statistici de utilizare."
 usageAnalyticsExplanation = "Analiza utilizării urmărește solicitările către endpoint-uri și modelele de utilizare ale instrumentelor. Împreună cu tabloul de bord de jurnalizare de audit, obțineți vizibilitate completă asupra activității sistemului, performanței și evenimentelor de securitate."
@@ -12591,7 +12883,6 @@ removeTeam = "Elimină din echipă"
 rename = "Redenumește echipa"
 resetPw = "Resetează parola"
 suspend = "Suspendă"
-transferOwnership = "Transferă proprietatea"
 unlock = "Deblochează contul"
 
 [users.activity]
@@ -12631,8 +12922,6 @@ disableMfaTitle = "Resetează MFA"
 removeBody = "Elimini definitiv pe {{name}} din organizație? Această acțiune nu poate fi anulată."
 removeTeamBody = "Eliminați pe {{name}} din echipă? Își păstrează contul, dar pierde accesul la resursele acestei echipe."
 removeTitle = "Elimină membrul"
-transferOwnershipBody = "Faceți ca {{name}} să fie proprietarul organizației? Va deveni admin. Veți rămâne admin, dar veți pierde proprietatea. Doar noul proprietar sau operatorul serverului o poate transfera înapoi."
-transferOwnershipTitle = "Transferă proprietatea organizației"
 
 [users.empty]
 description = "Invită-ți echipa pentru a începe colaborarea."
@@ -12825,6 +13114,7 @@ signaturesInvalid = "{{count}} nevalide"
 signaturesUnverified_one = "{{count}} necesită verificare"
 signaturesUnverified_other = "{{count}} necesită verificare"
 signaturesValid = "{{count}} complet valide"
+thumbnailAlt = "Miniatură {{fileName}}"
 title = "Raport de validare a semnăturilor"
 
 [validateSignature.report.fields]
@@ -12862,6 +13152,7 @@ lastPage = "Ultima pagină"
 loadingEngine = "Se încarcă motorul PDF..."
 moreOptions = "Mai multe"
 nextPage = "Pagina următoare"
+noPdfProvided = "Nu a fost furnizat niciun PDF"
 onlyPdfSupported = "Vizualizatorul acceptă doar fișiere PDF. Acest fișier pare a fi într-un format diferit."
 pageNavigation = "Navigare în pagină"
 previousPage = "Pagina anterioară"
@@ -12899,8 +13190,17 @@ collapseAll = "Restrânge toate marcajele"
 editorOnly = "Marcajele acestui document pot fi editate doar în editor."
 empty = "No bookmarks in this document"
 expandAll = "Extinde toate marcajele"
+loadFailed = "Nu s-au putut încărca marcajele"
+loading = "Se încarcă marcajele..."
+noDocument = "Deschideți un PDF pentru a-i vedea marcajele."
+noSearchResults = "Niciun marcaj nu corespunde căutării dvs."
+openEditor = "Trebuie să reordonați sau să imbricați? Deschideți Editorul de marcaje"
+pageLabel = "Pagină"
+pageNumber = "Pagina {{page}}"
+saveFailed = "Nu s-a putut salva marcajul"
 searchPlaceholder = "Caută marcaje"
 title = "Bookmarks"
+untitled = "Fără titlu"
 
 [viewer.comments]
 addComment = "Adăugați comentariu"
@@ -12948,16 +13248,26 @@ unsavedDesc = "Ai modificări nesalvate"
 
 [viewer.layers]
 closeSidebar = "Închide bara laterală a straturilor"
+empty = "Acest document nu are straturi."
 hideAll = "Ascunde toate straturile"
+loadFailed = "Nu s-au putut încărca straturile."
+loading = "Se încarcă straturile..."
+noDocument = "Deschideți un PDF pentru a-i vedea straturile."
+readFailed = "Nu s-au putut citi straturile PDF"
 showAll = "Afișează toate straturile"
 title = "Layers"
 
 [viewer.link]
 delete = "Ștergeți linkul"
+goTo = "Mergi la {{label}}"
+open = "Deschide linkul"
+openAria = "Deschide linkul"
+page = "Pagina {{page}}"
 
 [viewer.nonPdf]
 columnDefault = "Coloana {{index}}"
 convertToPdf = "Convertiți în PDF"
+copied = "Copiat"
 csvStats = "{{rows}} rânduri · {{columns}} coloane · {{size}}"
 emptyFile = "Fișier gol"
 htmlHidePreview = "Ascunde previzualizarea"
@@ -12968,6 +13278,8 @@ htmlShowPreview = "Afișează oricum previzualizarea"
 invalidJson = "JSON invalid — se afișează conținutul brut"
 lineNumbers = "Numere de linie"
 loading = "Se încarcă..."
+noFile = "Niciun fișier încărcat"
+previewUnavailable = "Previzualizarea nu este disponibilă pentru acest tip de fișier"
 renderMarkdown = "Redați markdown"
 sortedBy = "Sortat după: {{column}}"
 textStats = "{{lines}} linii · {{size}}"
@@ -12994,11 +13306,28 @@ next = "Rezultatul următor"
 previous = "Rezultatul precedent"
 resultsOf = "din {{total}}"
 
+[viewer.sidebar]
+close = "Închide bara laterală"
+searchPlaceholder = "Căutare..."
+
 [viewer.signature]
 delete = "Ștergeți semnătura"
+previewAlt = "Previzualizare semnătură"
+
+[viewer.signatureField]
+badge = "Semnătură"
+fieldTitle = "Câmp semnătură: {{name}}"
+signed = "Semnat"
+signedWithReason = "Semnat: {{reason}}"
+unsignedFieldTitle = "Câmp de semnătură nesemnat: {{name}}"
+withTime = "{{label}} ({{time}})"
 
 [viewer.thumbnails]
 closeSidebar = "Închide bara laterală a miniaturilor"
+failed = "Eșuat"
+pageNumber = "Pagina {{page}}"
+thumbnailAlt = "Miniatură pagina {{page}}"
+title = "Pagini"
 
 [viewPdf]
 tags = "vizualizare,citește,adnotează,text,imagine"
@@ -13006,169 +13335,6 @@ title = "Vizualizați/Editați PDF"
 
 [warning]
 tooltipTitle = "Avertisment"
-
-[watchedFolders]
-alreadyInFolder = "Already in this folder"
-defaultFolderWarning = "This is a default folder and will be recreated on next reload."
-deleteConfirmBody = "This will remove the folder and its run history. Files already downloaded are not affected."
-deleteConfirmTitle = "Delete folder?"
-folderNotFound = "Folder not found"
-newFolder = "New folder"
-noFolders = "No watched folders yet"
-sidebarTitle = "Watched Folders"
-title = "Watched Folders"
-
-[watchedFolders.actions]
-back = "Back"
-collapse = "Collapse"
-dismiss = "Dismiss"
-download = "Download"
-downloadInput = "Download input"
-downloadOutput = "Download output"
-expand = "Expand"
-retry = "Retry"
-
-[watchedFolders.card]
-delete = "Delete folder"
-edit = "Edit folder"
-
-[watchedFolders.home]
-addAnother = "Add another Watched Folder"
-addAnotherDesc = "Automatically process files with a new pipeline"
-create = "Create your first Watched Folder"
-deleteFolder = "Delete folder"
-editFolder = "Edit folder"
-empty = "No watched folders yet"
-emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
-emptyTitle = "Automate your PDF workflows"
-file = "file"
-files = "files"
-pause = "Pause"
-resume = "Resume"
-
-[watchedFolders.howItWorks]
-step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
-step1Title = "Drop files"
-step2Desc = "Your configured tools process each file automatically"
-step2Title = "Pipeline runs"
-step3Desc = "Download processed files from inside the folder"
-step3Title = "Output ready"
-title = "How Watched Folders work"
-
-[watchedFolders.modal]
-advanced = "Advanced"
-automation = "Automation"
-automationNameFallback = "Watched Folder automation"
-automationRequired = "Add at least one configured step before saving."
-autoNumber = "Auto-number"
-autoNumberExample = "e.g. document.pdf → document (1).pdf"
-autoScanHelp = "New PDF files in this folder are processed automatically every 10 seconds."
-changeFolder = "Change"
-chooseFolder = "Choose"
-clearFolder = "Clear"
-color = "Accent color"
-createFolder = "Create Folder"
-createTitle = "New Watched Folder"
-editTitle = "Edit Watched Folder"
-inputFolder = "Input folder"
-inputFolderNotChosen = "No folder chosen — required for auto-scan"
-inputSource = "Input source"
-inputSourceBrowser = "Browser — drop files here"
-inputSourceLocal = "Local folder (auto-scan)"
-inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
-localOutputFolder = "Local output folder"
-maxRetries = "Max retries"
-name = "Folder name"
-namePlaceholder = "My Watched Folder"
-nameRequired = "Folder name is required"
-nameTooLong = "Folder name must be 50 characters or less"
-outputFolderNotSet = "Not set — outputs stay in app"
-outputFolderUnsupported = "Not supported in this browser"
-outputModeNewDesc = "Output is saved as a new separate file"
-outputModeVersion = "Replace original?"
-outputModeVersionDesc = "Output becomes a new version of the input file rather than a separate file"
-outputName = "Output filename prefix"
-outputNamePrefix = "Filename prefix"
-outputNameSuffix = "Suffix"
-positionPrefix = "Prefix"
-positionSuffix = "Suffix"
-replaceOriginal = "Replace original file"
-retryDelay = "Delay (minutes)"
-saveChanges = "Save Changes"
-saveFailed = "Failed to save folder. Please try again."
-sectionFolder = "Folder"
-sectionSourceOutput = "Source & Output"
-sectionSteps = "Steps"
-
-[watchedFolders.status]
-active = "Active"
-done = "Done"
-paused = "Paused"
-processing = "Processing"
-
-[watchedFolders.time]
-daysAgo = "{{count}}d ago"
-hoursAgo = "{{count}}h ago"
-justNow = "just now"
-minutesAgo = "{{count}}m ago"
-
-[watchedFolders.workbench]
-activity = "Activity"
-addFiles = "Add files"
-allTime = "All time"
-cancel = "Cancel"
-chartTooltipComplete = "{{count}} complete"
-chartTooltipFailed = "{{count}} failed"
-clearSelection = "Clear selection"
-countProcessing = "{{count}} processing"
-countQueued = "{{count}} queued"
-countSelected = "{{count}} selected"
-dataSaved = "Saved"
-dayRunning = "day running"
-daysRunning = "days running"
-delete = "Delete"
-deleteConfirmBody = "Remove notifications only clears the activity log. Delete outputs also removes the processed files from storage. Your original input files are never touched."
-deleteOutputs = "Delete outputs"
-directionIn = "in"
-directionOut = "out"
-dropToProcess = "Drop to process"
-export = "Export"
-exportSeparately = "Export separately"
-exportZip = "Export zip"
-failed = "Failed"
-filesProcessedOverTime = "Files processed over time"
-filterAll = "All"
-filterPending = "Pending"
-inputs = "Inputs"
-inputSize = "Input size"
-legendComplete = "Complete"
-noActivity = "No activity yet — drop a PDF to start"
-noActivityMatch = "No matching activity"
-noInputFolder = "No input folder — edit to configure"
-outputs = "Outputs"
-pause = "Pause"
-preview = "Preview"
-previewInput = "Preview input"
-previewLoadFailed = "Could not load file preview."
-previewOutput = "Preview output"
-queued = "Queued"
-queuedWaiting = "Queued — waiting to run"
-removeEntries = "Remove {{count}} entries"
-removeEntry = "Remove entry"
-removeNotificationsOnly = "Remove notifications only"
-resume = "Resume"
-retryAll = "Retry all"
-retryIn = "retry in {{count}}m"
-retryingSoon = "retrying…"
-retryMixedConfirm = "Some selected files have already completed and will be skipped. Only failed files will be retried. Continue?"
-running = "Running"
-search = "Search…"
-selectAll = "Select all {{count}}"
-sortNameAsc = "A → Z"
-sortNameDesc = "Z → A"
-sortNewest = "Newest"
-sortOldest = "Oldest"
-watching = "Watching: {{name}}"
 
 [watermark]
 desc = "Adaugă filigrane text sau imagine în fișiere PDF"
@@ -13371,6 +13537,10 @@ certTypeServer = "Certificat de server (dacă este disponibil)"
 completedDeclined = "Ați refuzat acest document."
 completedSigned = "Ați semnat acest document."
 decline = "Refuzați"
+declineConfirm = "Sigur doriți să refuzați semnarea acestui document?"
+declineFailed = "Nu s-a putut refuza: {{error}}"
+declineSuccess = "Ați refuzat această cerere de semnare."
+defaultReason = "Semnarea documentului"
 downloadDocument = "Descărcați documentul"
 dueDate = "Data scadenței: {{date}}"
 errorTitle = "Eroare"
@@ -13381,6 +13551,7 @@ locationPlaceholder = "ex.: San Francisco, CA"
 pageNumber = "Numărul paginii (opțional)"
 reason = "Motiv"
 reasonPlaceholder = "ex.: Aprobarea documentului"
+selectCertificateFile = "Selectați un fișier de certificat"
 sessionNotFound = "Sesiunea nu a fost găsită sau accesul a fost refuzat."
 signDocument = "Semnați documentul"
 statusDeclined = "Refuzat"
@@ -13388,7 +13559,9 @@ statusNotified = "Notificat"
 statusPending = "În așteptare"
 statusSigned = "Semnat"
 statusViewed = "Vizualizat"
+submitFailed = "Nu s-a putut trimite semnătura: {{error}}"
 submitSignature = "Trimiteți semnătura"
+submitSuccess = "Semnătură trimisă cu succes!"
 
 [workspace]
 title = "Spațiu de lucru"
