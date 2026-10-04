@@ -9,7 +9,7 @@ import {
   TextInput,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { Button as DSButton } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
@@ -75,7 +75,7 @@ export const AttachmentManagerUI = memo(function AttachmentManagerUI({
           onChange={(e) => setFilterQuery(e.currentTarget.value)}
           size="xs"
           leftSection={
-            <LocalIcon icon="search-rounded" width={14} height={14} />
+            <Icon name="search" size={14} />
           }
           rightSection={
             filterQuery ? (
@@ -85,7 +85,7 @@ export const AttachmentManagerUI = memo(function AttachmentManagerUI({
                 onClick={() => setFilterQuery("")}
                 aria-label={t("cancel", "Cancel")}
               >
-                <LocalIcon icon="close-rounded" width={12} height={12} />
+                <Icon name="x" size={12} />
               </ActionIcon>
             ) : null
           }
@@ -149,7 +149,7 @@ export const AttachmentManagerUI = memo(function AttachmentManagerUI({
           variant="tertiary"
           fullWidth
           leftSection={
-            <LocalIcon icon="download-rounded" width={13} height={13} />
+            <Icon name="download" size={13} />
           }
           onClick={onExtractAllZip}
           disabled={disabled || isSaving}
@@ -163,7 +163,7 @@ export const AttachmentManagerUI = memo(function AttachmentManagerUI({
         variant="secondary"
         multiple={true}
         disabled={disabled || isSaving}
-        leftSection={<LocalIcon icon="upload-rounded" width={16} height={16} />}
+        leftSection={<Icon name="upload" size={16} />}
         onChange={(files) => {
           if (files && files.length > 0) {
             onStageFiles(files);
@@ -204,10 +204,9 @@ export const AttachmentManagerUI = memo(function AttachmentManagerUI({
               sidebarTooltip={true}
               pinOnClick={true}
             >
-              <LocalIcon
-                icon="info-outline-rounded"
-                width={14}
-                height={14}
+              <Icon
+                name="info"
+                size={14}
                 style={{ color: "var(--icon-files-color)", cursor: "help" }}
               />
             </Tooltip>

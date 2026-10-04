@@ -9,7 +9,7 @@ import {
   Box,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { formatFileSize } from "@app/utils/fileUtils";
 import { DraftRowKind } from "@app/hooks/tools/addAttachments/useAttachmentManager";
@@ -95,10 +95,9 @@ export const AttachmentRow = memo(function AttachmentRow({
         overflow: "hidden",
       }}
     >
-      <LocalIcon
-        icon="attachment-rounded"
-        width="16"
-        height="16"
+      <Icon
+        name="paperclip"
+        size={16}
         style={{ flexShrink: 0 }}
       />
 
@@ -125,7 +124,7 @@ export const AttachmentRow = memo(function AttachmentRow({
             aria-label={t("save", "Save")}
             onClick={handleCommitRename}
           >
-            <LocalIcon icon="check" width="14" height="14" />
+            <Icon name="check" size={14} />
           </ActionIcon>
           <ActionIcon
             variant="tertiary"
@@ -133,7 +132,7 @@ export const AttachmentRow = memo(function AttachmentRow({
             aria-label={t("cancel", "Cancel")}
             onClick={handleCancelRename}
           >
-            <LocalIcon icon="close-rounded" width="14" height="14" />
+            <Icon name="x" size={14} />
           </ActionIcon>
         </Group>
       ) : (
@@ -218,7 +217,7 @@ export const AttachmentRow = memo(function AttachmentRow({
                 onClick={() => onRestore(id)}
                 disabled={disabled || isSaving}
               >
-                <LocalIcon icon="undo" width="15" height="15" />
+                <Icon name="undo-2" size={15} />
               </ActionIcon>
             </Tooltip>
           ) : (
@@ -238,7 +237,7 @@ export const AttachmentRow = memo(function AttachmentRow({
                     disabled={disabled || isSaving}
                     loading={isDownloading}
                   >
-                    <LocalIcon icon="download-rounded" width="15" height="15" />
+                    <Icon name="download" size={15} />
                   </ActionIcon>
                 </Tooltip>
               )}
@@ -251,7 +250,7 @@ export const AttachmentRow = memo(function AttachmentRow({
                   onClick={handleStartRename}
                   disabled={disabled || isSaving}
                 >
-                  <LocalIcon icon="edit" width="15" height="15" />
+                  <Icon name="pencil" size={15} />
                 </ActionIcon>
               </Tooltip>
 
@@ -264,10 +263,9 @@ export const AttachmentRow = memo(function AttachmentRow({
                   onClick={() => onToggleDelete(id)}
                   disabled={disabled || isSaving}
                 >
-                  <LocalIcon
-                    icon={isStaged ? "close-rounded" : "delete-rounded"}
-                    width="15"
-                    height="15"
+                  <Icon
+                    name={isStaged ? "x" : "trash"}
+                    size={15}
                   />
                 </ActionIcon>
               </Tooltip>
