@@ -1,6 +1,6 @@
 import { test, expect } from "@app/tests/helpers/test-base";
 import { loginAndSetup } from "@app/tests/helpers/login";
-import { runToolAndWaitForReview } from "@app/tests/helpers/ui-helpers";
+
 import * as path from "path";
 import * as fs from "fs";
 import {
@@ -104,15 +104,23 @@ test.describe("Viewer sidebar add buttons - real PDF round-trip", () => {
       .locator("#attachments-input")
       .setInputFiles(fixture(attachmentName));
 
-    // Capture the backend response so we can inspect the produced PDF.
+    // AddAttachments uses an inline save model (no standard run-button).
+    // After staging files, a "Save Changes" footer button appears.
+    const saveBtn = page.getByRole("button", { name: /Save Changes/i });
+    await expect(saveBtn).toBeVisible({ timeout: 10_000 });
+
+    // Capture the backend response before clicking save.
+    // The tool calls batch-process-attachments; it falls back to
+    // add-attachments against older backends.
     const responsePromise = page.waitForResponse(
       (r) =>
-        /\/api\/v1\/(general|misc)\/add-attachments$/.test(r.url()) &&
-        r.status() === 200,
+        /\/api\/v1\/misc\/(batch-process-attachments|add-attachments)$/.test(
+          r.url(),
+        ) && r.status() === 200,
       { timeout: 90_000 },
     );
 
-    await runToolAndWaitForReview(page);
+    await saveBtn.click();
 
     const response = await responsePromise;
     const pdfBytes = await response.body();

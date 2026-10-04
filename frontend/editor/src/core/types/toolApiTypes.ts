@@ -251,6 +251,11 @@ export interface AutoSplitPdfRequest {
    */
   duplexMode?: boolean;
 }
+export interface BatchAttachmentRequest {
+  attachments?: File[];
+  convertToPdfA3b?: boolean;
+  opsJson?: string;
+}
 export interface BookletImpositionRequest {
   /**
    * Boolean for if you wish to add border around the pages
@@ -539,6 +544,12 @@ export interface ExtractImageScansRequest {
    * The tolerance for the image scan extraction
    */
   tolerance?: number;
+}
+export interface ExtractSingleAttachmentRequest {
+  /**
+   * Name of the embedded attachment to extract
+   */
+  attachmentName: string;
 }
 export interface FileSizeRequest {
   /**
@@ -1623,6 +1634,7 @@ export type ToolEndpoint =
   | "/api/v1/misc/auto-rename"
   | "/api/v1/misc/auto-rotate-pdf"
   | "/api/v1/misc/auto-split-pdf"
+  | "/api/v1/misc/batch-process-attachments"
   | "/api/v1/misc/compress-pdf"
   | "/api/v1/misc/create-portfolio"
   | "/api/v1/misc/decompress-pdf"
@@ -1630,6 +1642,7 @@ export type ToolEndpoint =
   | "/api/v1/misc/extract-attachments"
   | "/api/v1/misc/extract-image-scans"
   | "/api/v1/misc/extract-images"
+  | "/api/v1/misc/extract-single-attachment"
   | "/api/v1/misc/flatten"
   | "/api/v1/misc/flatten-portfolio"
   | "/api/v1/misc/list-attachments"
@@ -1732,6 +1745,7 @@ export interface ToolApiParams {
   "/api/v1/misc/auto-rename": ExtractHeaderRequest;
   "/api/v1/misc/auto-rotate-pdf": AutoRotatePdfRequest;
   "/api/v1/misc/auto-split-pdf": AutoSplitPdfRequest;
+  "/api/v1/misc/batch-process-attachments": BatchAttachmentRequest;
   "/api/v1/misc/compress-pdf": OptimizePdfRequest;
   "/api/v1/misc/create-portfolio": CreatePortfolioRequest;
   "/api/v1/misc/decompress-pdf": MiscDecompressPdfRequest;
@@ -1739,6 +1753,7 @@ export interface ToolApiParams {
   "/api/v1/misc/extract-attachments": ExtractAttachmentsRequest;
   "/api/v1/misc/extract-image-scans": ExtractImageScansRequest;
   "/api/v1/misc/extract-images": PDFExtractImagesRequest;
+  "/api/v1/misc/extract-single-attachment": ExtractSingleAttachmentRequest;
   "/api/v1/misc/flatten": FlattenRequest;
   "/api/v1/misc/flatten-portfolio": FlattenPortfolioRequest;
   "/api/v1/misc/list-attachments": ListAttachmentsRequest;
@@ -1842,6 +1857,7 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/misc/auto-rename",
   "/api/v1/misc/auto-rotate-pdf",
   "/api/v1/misc/auto-split-pdf",
+  "/api/v1/misc/batch-process-attachments",
   "/api/v1/misc/compress-pdf",
   "/api/v1/misc/create-portfolio",
   "/api/v1/misc/decompress-pdf",
@@ -1849,6 +1865,7 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/misc/extract-attachments",
   "/api/v1/misc/extract-image-scans",
   "/api/v1/misc/extract-images",
+  "/api/v1/misc/extract-single-attachment",
   "/api/v1/misc/flatten",
   "/api/v1/misc/flatten-portfolio",
   "/api/v1/misc/list-attachments",
@@ -1887,6 +1904,7 @@ export const TOOL_FILE_FIELDS = {
   "/api/v1/misc/add-attachments": ["attachments"],
   "/api/v1/misc/add-image": ["imageFile"],
   "/api/v1/misc/add-stamp": ["stampImage"],
+  "/api/v1/misc/batch-process-attachments": ["attachments"],
   "/api/v1/misc/create-portfolio": ["files"],
   "/api/v1/security/add-watermark": ["watermarkImage"],
   "/api/v1/security/cert-sign": [
