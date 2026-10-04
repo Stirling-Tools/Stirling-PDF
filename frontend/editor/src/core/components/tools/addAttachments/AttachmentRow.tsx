@@ -11,7 +11,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import { formatFileSize } from "@app/utils/fileUtils";
+import { formatFileSize, detectFileExtension } from "@app/utils/fileUtils";
 import { DraftRowKind } from "@app/hooks/tools/addAttachments/useAttachmentManager";
 
 export interface AttachmentRowProps {
@@ -73,32 +73,72 @@ export const AttachmentRow = memo(function AttachmentRow({
     ? `${filename} (original: ${originalName})`
     : filename;
 
+  const ext = detectFileExtension(filename);
+  const isPdf = ext === "pdf";
+
+  const getBadgeColor = () => {
+    if (isStaged) return "teal";
+    if (isRenamed) return "orange";
+    if (isDeleted) return "red";
+    return "gray";
+  };
+
+  const badgeText = isStaged
+    ? t("attachments.badges.staged", "NEW")
+    : isRenamed
+      ? t("attachments.badges.renamed", "RENAMED")
+      : isDeleted
+        ? t("attachments.badges.deleted", "DELETED")
+        : null;
+
   return (
     <Group
-      gap="xs"
+      gap="sm"
       wrap="nowrap"
-      px="xs"
-      py={6}
+      px="sm"
+      py="xs"
       style={{
-        border: "1px solid var(--c-border, var(--mantine-color-gray-3))",
-        borderRadius: "var(--mantine-radius-sm)",
-        opacity: isDeleted ? 0.65 : 1,
+        border: "1px solid var(--c-border)",
+        borderRadius: "var(--radius-md, 8px)",
+        opacity: isDeleted ? 0.6 : 1,
         backgroundColor: isStaged
-          ? "var(--c-surface-sunken)"
+          ? "color-mix(in srgb, var(--c-primary) 6%, var(--c-surface))"
           : isDeleted
             ? "var(--c-surface-sunken)"
-            : undefined,
+            : "var(--c-surface)",
         borderStyle: isStaged ? "dashed" : "solid",
+        borderColor: isStaged
+          ? "color-mix(in srgb, var(--c-primary) 40%, var(--c-border))"
+          : isDeleted
+            ? "color-mix(in srgb, var(--c-danger) 30%, var(--c-border))"
+            : "var(--c-border)",
         width: "100%",
         minWidth: 0,
         boxSizing: "border-box",
         overflow: "hidden",
+        transition: "background-color 0.15s ease, border-color 0.15s ease",
       }}
     >
-      <Icon name="paperclip" size={16} style={{ flexShrink: 0 }} />
+      <Box
+        style={{
+          width: 32,
+          height: 32,
+          borderRadius: "var(--radius-sm, 6px)",
+          backgroundColor: isPdf
+            ? "color-mix(in srgb, var(--c-danger) 12%, transparent)"
+            : "var(--c-surface-sunken)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+          color: isPdf ? "var(--c-danger)" : "var(--c-text-muted)",
+        }}
+      >
+        <Icon name={isPdf ? "file-pdf" : "paperclip"} size={16} />
+      </Box>
 
       {isEditing ? (
-        <Group gap={4} style={{ flex: 1, minWidth: 0 }}>
+        <Group gap={6} style={{ flex: 1, minWidth: 0 }}>
           <TextInput
             value={editingName}
             onChange={(e) => setEditingName(e.currentTarget.value)}
@@ -134,7 +174,7 @@ export const AttachmentRow = memo(function AttachmentRow({
       ) : (
         <Stack gap={2} style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
           <Group
-            gap={4}
+            gap={6}
             wrap="nowrap"
             style={{ minWidth: 0, width: "100%", overflow: "hidden" }}
           >
@@ -156,36 +196,20 @@ export const AttachmentRow = memo(function AttachmentRow({
               </Tooltip>
             </Box>
 
-            {isStaged && (
+            {badgeText && (
               <Badge
                 size="xs"
-                color="teal"
                 variant="light"
-                style={{ flexShrink: 0 }}
+                color={getBadgeColor()}
+                style={{
+                  flexShrink: 0,
+                  fontSize: "0.68rem",
+                  letterSpacing: "0.03em",
+                  padding: "0 6px",
+                  height: 18,
+                }}
               >
-                {t("attachments.badges.staged", "NEW")}
-              </Badge>
-            )}
-
-            {isRenamed && (
-              <Badge
-                size="xs"
-                color="orange"
-                variant="light"
-                style={{ flexShrink: 0 }}
-              >
-                {t("attachments.badges.renamed", "RENAMED")}
-              </Badge>
-            )}
-
-            {isDeleted && (
-              <Badge
-                size="xs"
-                color="red"
-                variant="light"
-                style={{ flexShrink: 0 }}
-              >
-                {t("attachments.badges.deleted", "DELETED")}
+                {badgeText}
               </Badge>
             )}
           </Group>
@@ -194,7 +218,10 @@ export const AttachmentRow = memo(function AttachmentRow({
             <Text
               size="xs"
               c="dimmed"
-              style={{ fontVariantNumeric: "tabular-nums" }}
+              style={{
+                fontVariantNumeric: "tabular-nums",
+                lineHeight: 1.2,
+              }}
             >
               {formatFileSize(size)}
             </Text>
@@ -203,7 +230,7 @@ export const AttachmentRow = memo(function AttachmentRow({
       )}
 
       {!isEditing && (
-        <Group gap={2} wrap="nowrap" style={{ flexShrink: 0 }}>
+        <Group gap={4} wrap="nowrap" style={{ flexShrink: 0 }}>
           {isDeleted ? (
             <Tooltip label={t("attachments.restore", "Undo delete")}>
               <ActionIcon
