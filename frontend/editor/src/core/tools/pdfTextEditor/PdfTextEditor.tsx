@@ -350,7 +350,9 @@ export default function PdfTextEditor(_props: BaseToolProps) {
 
   const hasSelection = useCallback(() => {
     const s = store.selection.value;
-    return s.runIds.length > 0 || s.imageIds.length > 0;
+    return (
+      s.runIds.length > 0 || s.imageIds.length > 0 || s.shapeIds.length > 0
+    );
   }, [store]);
 
   // Paste: create a fresh InsertTextCommand on the currently-visible page,
