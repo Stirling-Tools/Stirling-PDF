@@ -391,7 +391,7 @@ export interface FileContextActions {
     options?: {
       insertAfterPageId?: string;
       selectFiles?: boolean;
-      /** Suppress the automatic unlock modal when an editor already unlocked this file. */
+      /** Suppress the duplicate modal while retaining a policy hold on encrypted bytes. */
       skipAutomaticPasswordPrompt?: boolean;
       skipUploadTracking?: boolean;
       /**

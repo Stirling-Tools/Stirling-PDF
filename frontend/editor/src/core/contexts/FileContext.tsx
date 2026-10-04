@@ -70,7 +70,10 @@ import type { RemovePasswordParameters } from "@app/hooks/tools/removePassword/u
 import { useResolutionContinuation } from "@app/hooks/tools/shared/useResolutionContinuation";
 import apiClient from "@app/services/apiClient";
 import { reportFilesRemoved } from "@app/services/failureReporting";
-import { setPendingUnlocks } from "@app/services/pendingUnlocks";
+import {
+  addPendingUnlocks,
+  setPendingUnlocks,
+} from "@app/services/pendingUnlocks";
 import { processResponse } from "@app/utils/toolResponseProcessor";
 import { ToolOperation } from "@app/types/file";
 import { handlePasswordError } from "@app/utils/toolErrorHandler";
@@ -124,6 +127,7 @@ function FileContextInner({
   const [unlockError, setUnlockError] = useState<string | null>(null);
   const [isUnlocking, setIsUnlocking] = useState(false);
   const dismissedEncryptedFilesRef = useRef<Set<FileId>>(new Set());
+  const deferredEncryptedFilesRef = useRef<Set<FileId>>(new Set());
   const observedFileIdsRef = useRef<Set<FileId>>(new Set());
 
   const enqueueEncryptedFiles = useCallback(
@@ -134,6 +138,7 @@ function FileContextInner({
         const next = [...prevQueue];
         for (const id of fileIds) {
           if (dismissedEncryptedFilesRef.current.has(id)) continue;
+          if (deferredEncryptedFilesRef.current.has(id)) continue;
           if (id === activeEncryptedFileId) continue;
           if (existing.has(id)) continue;
           existing.add(id);
@@ -189,12 +194,17 @@ function FileContextInner({
   // would fail on a document they are about to decrypt, and leave a row about a version that no
   // longer exists once they have.
   useEffect(() => {
-    setPendingUnlocks(
-      activeEncryptedFileId
-        ? [activeEncryptedFileId, ...encryptedQueue]
-        : encryptedQueue,
-    );
-  }, [activeEncryptedFileId, encryptedQueue]);
+    const deferred = deferredEncryptedFilesRef.current;
+    for (const id of deferred) {
+      if (!state.files.byId[id]?.processedFile?.isEncrypted)
+        deferred.delete(id);
+    }
+    setPendingUnlocks([
+      ...(activeEncryptedFileId ? [activeEncryptedFileId] : []),
+      ...encryptedQueue,
+      ...deferred,
+    ]);
+  }, [activeEncryptedFileId, encryptedQueue, state.files.byId]);
 
   // The store outlives this provider, and a hold nobody can answer would stall the file's policy
   // for the rest of the session. Its own effect, so a change of prompt does not clear and re-set.
@@ -234,6 +244,7 @@ function FileContextInner({
     }
 
     dismissedEncryptedFilesRef.current.delete(fileId);
+    deferredEncryptedFilesRef.current.delete(fileId);
 
     setEncryptedQueue((prevQueue) => prevQueue.filter((id) => id !== fileId));
 
@@ -293,7 +304,7 @@ function FileContextInner({
         };
         /** Bytes and stub only, no thumbnail parse (see AddFileOptions). */
         skipMetadataHydration?: boolean;
-        /** A caller already unlocked the document in its own editor session. */
+        /** An editor owns the prompt; encrypted library bytes still hold policies. */
         skipAutomaticPasswordPrompt?: boolean;
       },
     ): Promise<StirlingFile[]> => {
@@ -314,9 +325,14 @@ function FileContextInner({
             options?.skipAutomaticPasswordPrompt &&
             action.type === "ADD_FILES"
           ) {
-            for (const stub of action.payload.stirlingFileStubs) {
-              dismissedEncryptedFilesRef.current.add(stub.id);
+            const encrypted = action.payload.stirlingFileStubs.filter(
+              (stub) => stub.processedFile?.isEncrypted,
+            );
+            for (const stub of encrypted) {
+              deferredEncryptedFilesRef.current.add(stub.id);
             }
+            // Policies can observe the new records before this provider's effects run.
+            addPendingUnlocks(encrypted.map((stub) => stub.id));
           }
           dispatch(action);
         },
