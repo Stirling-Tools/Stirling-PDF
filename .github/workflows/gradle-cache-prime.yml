@@ -75,7 +75,7 @@ jobs:
 
       - name: Restore Gradle cache github-artifact
         id: cache
-        uses: Ludy87/cache-the-planet/multi-cache@fb44147aa916b113d41e4704e8f966ca8afe5491
+        uses: Ludy87/cache-the-planet/multi-cache@e76cc84073daedcbd26815c3caf399b8fc42d990
         with:
           version: 2
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
