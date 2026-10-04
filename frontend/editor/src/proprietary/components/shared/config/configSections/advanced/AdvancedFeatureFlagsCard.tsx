@@ -4,7 +4,7 @@ import { Stack, Paper } from "@mantine/core";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
 import type { AdvancedCardProps } from "@app/components/shared/config/configSections/advanced/advancedCardProps";
 
-/** Server-wide switches. All three need a restart to take effect. */
+/** Server-wide switches. All need a restart to take effect. */
 export function AdvancedFeatureFlagsCard({
   settings,
   setSettings,
@@ -77,6 +77,28 @@ export function AdvancedFeatureFlagsCard({
             setSettings({
               ...settings,
               disableSanitize: checked,
+            });
+          }}
+          disabled={!loginEnabled}
+          styles={getDisabledStyles()}
+        />
+
+        <SettingsToggleRow
+          label={t(
+            "admin.settings.advanced.legacyOfficeConversion.label",
+            "Use legacy Office conversion",
+          )}
+          info={t(
+            "admin.settings.advanced.legacyOfficeConversion.description",
+            "Convert Office files with LibreOffice as before instead of the built-in Stirling Office Convert. Stirling Office Convert is still used when LibreOffice is not installed.",
+          )}
+          pending={isFieldPending("legacyOfficeConversion")}
+          checked={settings.legacyOfficeConversion || false}
+          onChange={(checked) => {
+            if (!loginEnabled) return;
+            setSettings({
+              ...settings,
+              legacyOfficeConversion: checked,
             });
           }}
           disabled={!loginEnabled}

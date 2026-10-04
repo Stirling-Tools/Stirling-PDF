@@ -30,6 +30,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import stirling.software.SPDF.model.api.converters.PdfToPresentationRequest;
 import stirling.software.SPDF.model.api.converters.PdfToTextOrRTFRequest;
 import stirling.software.SPDF.model.api.converters.PdfToWordRequest;
+import stirling.software.SPDF.service.OfficeConversionService;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -55,12 +56,15 @@ class ConvertPDFToOfficeTest {
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private TempFileManager tempFileManager;
+    @Mock private OfficeConversionService officeConversionService;
     @Mock private RuntimePathConfig runtimePathConfig;
 
     @InjectMocks private ConvertPDFToOffice controller;
 
     @BeforeEach
     void setUp() throws Exception {
+        // These cover the legacy converters; Stirling Office Convert has its own tests.
+        lenient().when(officeConversionService.legacy()).thenReturn(true);
         lenient()
                 .when(tempFileManager.createManagedTempFile(anyString()))
                 .thenAnswer(
@@ -164,5 +168,43 @@ class ConvertPDFToOfficeTest {
         MockMultipartFile pdfFile = createPdfFile();
         file.setFileInput(pdfFile);
         assertNotNull(file.getFileInput());
+    }
+
+    @Test
+    void processPdfToWord_usesOfficeConvertUnlessLegacy() throws Exception {
+        when(officeConversionService.replacesLibreOffice()).thenReturn(true);
+        MockMultipartFile pdfFile = createPdfFile();
+        when(pdfDocumentFactory.load(pdfFile)).thenReturn(new PDDocument());
+        PdfToWordRequest request = new PdfToWordRequest();
+        request.setFileInput(pdfFile);
+        request.setOutputFormat("docx");
+
+        try (MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
+            wr.when(() -> WebResponseUtils.fileToWebResponse(any(), anyString(), any()))
+                    .thenReturn(streamingOk("docx".getBytes()));
+
+            assertEquals(200, controller.processPdfToWord(request).getStatusCode().value());
+        }
+        Mockito.verify(officeConversionService)
+                .convert(any(PDDocument.class), any(), Mockito.eq("docx"), any());
+    }
+
+    @Test
+    void processPdfToRTForTXT_txtUsesOfficeConvertWhenNotLegacy() throws Exception {
+        when(officeConversionService.legacy()).thenReturn(false);
+        MockMultipartFile pdfFile = createPdfFile();
+        when(pdfDocumentFactory.load(pdfFile)).thenReturn(new PDDocument());
+        PdfToTextOrRTFRequest request = new PdfToTextOrRTFRequest();
+        request.setFileInput(pdfFile);
+        request.setOutputFormat("txt");
+
+        try (MockedStatic<WebResponseUtils> wr = Mockito.mockStatic(WebResponseUtils.class)) {
+            wr.when(() -> WebResponseUtils.fileToWebResponse(any(), anyString(), any()))
+                    .thenReturn(streamingOk("txt".getBytes()));
+
+            controller.processPdfToRTForTXT(request);
+        }
+        Mockito.verify(officeConversionService)
+                .convert(any(PDDocument.class), any(), Mockito.eq("txt"), any());
     }
 }

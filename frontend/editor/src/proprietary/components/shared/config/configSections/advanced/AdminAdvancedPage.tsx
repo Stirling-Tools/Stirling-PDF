@@ -64,6 +64,7 @@ export default function AdminAdvancedPage() {
         enableUrlToPDF: systemData.enableUrlToPDF || false,
         tessdataDir: systemData.tessdataDir || "",
         disableSanitize: systemData.disableSanitize || false,
+        legacyOfficeConversion: systemData.legacyOfficeConversion || false,
         tempFileManagement: systemData.tempFileManagement || {
           baseTmpDir: "",
           libreofficeDir: "",
@@ -95,6 +96,10 @@ export default function AdminAdvancedPage() {
       if (systemData._pending?.disableSanitize !== undefined) {
         pendingBlock.disableSanitize = systemData._pending.disableSanitize;
       }
+      if (systemData._pending?.legacyOfficeConversion !== undefined) {
+        pendingBlock.legacyOfficeConversion =
+          systemData._pending.legacyOfficeConversion;
+      }
       if (systemData._pending?.tempFileManagement) {
         pendingBlock.tempFileManagement =
           systemData._pending.tempFileManagement;
@@ -116,6 +121,7 @@ export default function AdminAdvancedPage() {
         "system.enableUrlToPDF": settings.enableUrlToPDF,
         "system.tessdataDir": settings.tessdataDir,
         "system.disableSanitize": settings.disableSanitize,
+        "system.legacyOfficeConversion": settings.legacyOfficeConversion,
       };
 
       // Add temp file management settings

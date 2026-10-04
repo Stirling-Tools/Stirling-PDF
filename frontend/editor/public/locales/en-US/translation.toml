@@ -645,6 +645,10 @@ description = "Endpoint management is configured via YAML. See documentation for
 label = "Endpoints"
 manage = "Manage API Endpoints"
 
+[admin.settings.advanced.legacyOfficeConversion]
+description = "Convert Office files with LibreOffice as before instead of the built-in Stirling Office Convert. Stirling Office Convert is still used when LibreOffice is not installed."
+label = "Use legacy Office conversion"
+
 [admin.settings.advanced.maxDPI]
 description = "Maximum DPI for image processing (0 = unlimited)"
 label = "Maximum DPI"

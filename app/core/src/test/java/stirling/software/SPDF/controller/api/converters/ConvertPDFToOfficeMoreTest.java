@@ -38,6 +38,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import stirling.software.SPDF.model.api.converters.PdfToPresentationRequest;
 import stirling.software.SPDF.model.api.converters.PdfToTextOrRTFRequest;
 import stirling.software.SPDF.model.api.converters.PdfToWordRequest;
+import stirling.software.SPDF.service.OfficeConversionService;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -60,12 +61,15 @@ class ConvertPDFToOfficeMoreTest {
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private TempFileManager tempFileManager;
+    @Mock private OfficeConversionService officeConversionService;
     @Mock private RuntimePathConfig runtimePathConfig;
 
     @InjectMocks private ConvertPDFToOffice controller;
 
     @BeforeEach
     void setUp() throws Exception {
+        // These cover the legacy converters; Stirling Office Convert has its own tests.
+        lenient().when(officeConversionService.legacy()).thenReturn(true);
         // Real temp files backing TempFileManager so the file-backed response can be read back.
         lenient()
                 .when(tempFileManager.createManagedTempFile(any()))

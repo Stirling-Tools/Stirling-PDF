@@ -1339,6 +1339,7 @@ public class ApplicationProperties {
         private boolean enableEasterEggs = true;
         private Datasource datasource;
         private boolean disableSanitize;
+        private boolean legacyOfficeConversion;
         private int maxDPI = 500;
         private boolean enableUrlToPDF;
         private Html html = new Html();

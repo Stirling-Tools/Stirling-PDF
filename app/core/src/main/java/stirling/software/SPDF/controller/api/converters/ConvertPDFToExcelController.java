@@ -1,7 +1,9 @@
 package stirling.software.SPDF.controller.api.converters;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
 
@@ -23,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.PDFWithPageNums;
+import stirling.software.SPDF.service.OfficeConversionService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.enumeration.ResourceWeight;
@@ -33,6 +36,8 @@ import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.officeconvert.OfficeConvert;
+import stirling.software.officeconvert.PdfToXlsx;
 
 import technology.tabula.ObjectExtractor;
 import technology.tabula.Page;
@@ -47,6 +52,7 @@ public class ConvertPDFToExcelController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
+    private final OfficeConversionService officeConversionService;
 
     @AutoJobPostMapping(
             value = "/pdf/xlsx",
@@ -64,11 +70,31 @@ public class ConvertPDFToExcelController {
                 GeneralUtils.removeExtension(request.getFileInput().getOriginalFilename());
 
         TempFile tempOut = tempFileManager.createManagedTempFile(".xlsx");
-        try (PDDocument document = pdfDocumentFactory.load(request);
-                XSSFWorkbook workbook = new XSSFWorkbook();
-                ObjectExtractor extractor = new ObjectExtractor(document)) {
-
+        try (PDDocument document = pdfDocumentFactory.load(request)) {
             List<Integer> pages = request.getPageNumbersList(document, true);
+            boolean written =
+                    officeConversionService.legacy()
+                            ? writeTabula(document, pages, tempOut.getPath())
+                            : writeOfficeConvert(document, pages, tempOut.getPath());
+            if (!written) {
+                tempOut.close();
+                return ResponseEntity.noContent().build();
+            }
+        } catch (Exception e) {
+            tempOut.close();
+            throw e;
+        }
+
+        MediaType mediaType =
+                MediaType.parseMediaType(
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        return WebResponseUtils.fileToWebResponse(tempOut, baseName + ".xlsx", mediaType);
+    }
+
+    private boolean writeTabula(PDDocument document, List<Integer> pages, Path out)
+            throws IOException {
+        try (XSSFWorkbook workbook = new XSSFWorkbook();
+                ObjectExtractor extractor = new ObjectExtractor(document)) {
             SpreadsheetExtractionAlgorithm sea = new SpreadsheetExtractionAlgorithm();
             int sheetCount = 0;
 
@@ -101,22 +127,44 @@ public class ConvertPDFToExcelController {
             }
 
             if (sheetCount == 0) {
-                tempOut.close();
-                return ResponseEntity.noContent().build();
+                return false;
             }
-
-            try (OutputStream os = Files.newOutputStream(tempOut.getPath())) {
+            try (OutputStream os = Files.newOutputStream(out)) {
                 workbook.write(os);
             }
-        } catch (Exception e) {
-            tempOut.close();
-            throw e;
+            return true;
         }
+    }
 
-        MediaType mediaType =
-                MediaType.parseMediaType(
-                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-        return WebResponseUtils.fileToWebResponse(tempOut, baseName + ".xlsx", mediaType);
+    private boolean writeOfficeConvert(PDDocument document, List<Integer> pages, Path out)
+            throws IOException {
+        if (pages.isEmpty()) {
+            return false;
+        }
+        OfficeConvert.Settings settings =
+                officeConversionService.settings().sheets(PdfToXlsx.Sheets.TABLE);
+        if (consecutive(pages)) {
+            // A run of pages converts in place, so sheet names keep the PDF's page numbers.
+            officeConversionService.convert(
+                    document, out, "xlsx", settings.pages(pages.getFirst(), pages.getLast()));
+        } else {
+            try (PDDocument chosen = new PDDocument()) {
+                for (int page : pages) {
+                    chosen.importPage(document.getPage(page - 1));
+                }
+                officeConversionService.convert(chosen, out, "xlsx", settings);
+            }
+        }
+        return OfficeConversionService.hasCells(out);
+    }
+
+    private static boolean consecutive(List<Integer> pages) {
+        for (int i = 1; i < pages.size(); i++) {
+            if (pages.get(i) != pages.get(i - 1) + 1) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private String getUniqueSheetName(Workbook workbook, String baseName) {

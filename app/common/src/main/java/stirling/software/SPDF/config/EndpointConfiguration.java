@@ -607,6 +607,11 @@ public class EndpointConfiguration {
         // file-to-pdf has multiple implementations
         addEndpointAlternative("file-to-pdf", "LibreOffice");
         addEndpointAlternative("file-to-pdf", "Unoconvert");
+        // Stirling Office Convert keeps Office conversions working without LibreOffice
+        addEndpointAlternative("file-to-pdf", "Java");
+        addEndpointAlternative("pdf-to-word", "Java");
+        addEndpointAlternative("pdf-to-presentation", "Java");
+        addEndpointAlternative("pdf-to-rtf", "Java");
 
         // pdf-to-html and pdf-to-markdown can use either LibreOffice or Pdftohtml
         addEndpointAlternative("pdf-to-html", "LibreOffice");

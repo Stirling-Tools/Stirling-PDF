@@ -31,6 +31,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.SPDF.model.api.PDFWithPageNums;
+import stirling.software.SPDF.service.OfficeConversionService;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -46,11 +47,14 @@ class ConvertPDFToExcelControllerMoreTest {
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private TempFileManager tempFileManager;
+    @Mock private OfficeConversionService officeConversionService;
 
     @InjectMocks private ConvertPDFToExcelController controller;
 
     @BeforeEach
     void setUp() throws Exception {
+        // These cover the legacy converters; Stirling Office Convert has its own tests.
+        lenient().when(officeConversionService.legacy()).thenReturn(true);
         lenient()
                 .when(tempFileManager.createManagedTempFile(anyString()))
                 .thenAnswer(

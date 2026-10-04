@@ -3,6 +3,7 @@ package stirling.software.SPDF.controller.api.converters;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Set;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
@@ -19,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.SPDF.model.api.converters.PdfToPresentationRequest;
 import stirling.software.SPDF.model.api.converters.PdfToTextOrRTFRequest;
 import stirling.software.SPDF.model.api.converters.PdfToWordRequest;
+import stirling.software.SPDF.service.OfficeConversionService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.configuration.RuntimePathConfig;
@@ -43,6 +45,7 @@ public class ConvertPDFToOffice {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
     private final RuntimePathConfig runtimePathConfig;
+    private final OfficeConversionService officeConversionService;
 
     @AutoJobPostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
@@ -57,6 +60,13 @@ public class ConvertPDFToOffice {
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
         String outputFormat = request.getOutputFormat();
+        if (officeConversionService.replacesLibreOffice()) {
+            return convert(
+                    inputFile,
+                    outputFormat,
+                    Set.of("ppt", "pptx", "odp"),
+                    MediaType.APPLICATION_OCTET_STREAM);
+        }
         PDFToFile pdfToFile = new PDFToFile(tempFileManager, runtimePathConfig);
         return pdfToFile.processPdfToOfficeFormat(inputFile, outputFormat, "impress_pdf_import");
     }
@@ -80,7 +90,20 @@ public class ConvertPDFToOffice {
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
         String outputFormat = request.getOutputFormat();
-        if ("txt".equals(request.getOutputFormat())) {
+        boolean plainText = "txt".equals(outputFormat);
+        // Legacy text came from PDFBox, not LibreOffice, so it never needs the fallback.
+        boolean officeConvert =
+                plainText
+                        ? !officeConversionService.legacy()
+                        : officeConversionService.replacesLibreOffice();
+        if (officeConvert) {
+            return convert(
+                    inputFile,
+                    outputFormat,
+                    Set.of("rtf", "txt"),
+                    plainText ? MediaType.TEXT_PLAIN : MediaType.APPLICATION_OCTET_STREAM);
+        }
+        if (plainText) {
             String fileName =
                     GeneralUtils.generateFilename(inputFile.getOriginalFilename(), ".txt");
             TempFile finalOut = tempFileManager.createManagedTempFile(".txt");
@@ -111,6 +134,13 @@ public class ConvertPDFToOffice {
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
         String outputFormat = request.getOutputFormat();
+        if (officeConversionService.replacesLibreOffice()) {
+            return convert(
+                    inputFile,
+                    outputFormat,
+                    Set.of("doc", "docx", "odt"),
+                    MediaType.APPLICATION_OCTET_STREAM);
+        }
         PDFToFile pdfToFile = new PDFToFile(tempFileManager, runtimePathConfig);
         return pdfToFile.processPdfToOfficeFormat(inputFile, outputFormat, "writer_pdf_import");
     }
@@ -128,5 +158,25 @@ public class ConvertPDFToOffice {
 
         PDFToFile pdfToFile = new PDFToFile(tempFileManager, runtimePathConfig);
         return pdfToFile.processPdfToOfficeFormat(inputFile, "xml", "writer_pdf_import");
+    }
+
+    private ResponseEntity<Resource> convert(
+            MultipartFile input, String format, Set<String> formats, MediaType type)
+            throws IOException {
+        // Text reads any upload; every other format takes only an upload typed as a PDF.
+        boolean pdf = MediaType.APPLICATION_PDF_VALUE.equals(input.getContentType());
+        if (!formats.contains(format) || !pdf && !"txt".equals(format)) {
+            return ResponseEntity.badRequest().build();
+        }
+        TempFile out = tempFileManager.createManagedTempFile("." + format);
+        try (PDDocument document = pdfDocumentFactory.load(input)) {
+            officeConversionService.convert(
+                    document, out.getPath(), format, officeConversionService.settings());
+        } catch (Exception e) {
+            out.close();
+            throw e;
+        }
+        String fileName = GeneralUtils.generateFilename(input.getOriginalFilename(), "." + format);
+        return WebResponseUtils.fileToWebResponse(out, fileName, type);
     }
 }
