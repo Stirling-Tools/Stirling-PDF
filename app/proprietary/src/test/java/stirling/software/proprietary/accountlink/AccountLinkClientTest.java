@@ -51,8 +51,125 @@ class AccountLinkClientTest {
         return resp;
     }
 
-    // register() is gone with the JWT relay, and with it the two tests that asserted this client
-    // sends an Authorization: Bearer header. Nothing here carries a user token any more.
+    @Test
+    @SuppressWarnings("unchecked")
+    void candidateReadUsesOnlyDeviceCredentials() throws Exception {
+        var requests = ArgumentCaptor.forClass(HttpRequest.class);
+        var reply =
+                response(
+                        200,
+                        "{\"teamId\":9,\"teamName\":\"Team\",\"members\":[{\"id\":42,\"name\":\"Jamie\",\"email\":\"jamie@example.com\"}]}");
+        when(httpClient.send(requests.capture(), any(HttpResponse.BodyHandler.class)))
+                .thenReturn(reply);
+        DeviceCredential device = new DeviceCredential();
+        device.setDeviceId("device");
+        device.setDeviceSecret("secret");
+        var result = client.ownershipCandidates(device);
+        assertEquals(42L, result.members().getFirst().id());
+        assertEquals("jamie@example.com", result.members().getFirst().email());
+        var request = requests.getValue();
+        assertEquals("GET", request.method());
+        assertEquals("/api/v1/instance/ownership/members", request.uri().getPath());
+        assertEquals("secret", request.headers().firstValue("X-Device-Secret").orElseThrow());
+        assertEquals(java.util.Optional.empty(), request.headers().firstValue("Authorization"));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void pinnedIdentityIsSentAndStructuredTargetFailureIsPreserved() throws Exception {
+        var requests = ArgumentCaptor.forClass(HttpRequest.class);
+        var reply = response(409, "{\"detail\":\"CLOUD_TARGET_CHANGED\"}");
+        when(httpClient.send(requests.capture(), any(HttpResponse.BodyHandler.class)))
+                .thenReturn(reply);
+        DeviceCredential device = new DeviceCredential();
+        device.setDeviceId("device");
+        device.setDeviceSecret("secret");
+        var error =
+                assertThrows(
+                        AccountLinkClient.UpstreamException.class,
+                        () ->
+                                client.ownership(
+                                        device,
+                                        "jamie@example.com",
+                                        "Bearer owner",
+                                        "transfer",
+                                        1L,
+                                        42L));
+        assertEquals("CLOUD_TARGET_CHANGED", error.reason());
+        var body = HttpResponse.BodySubscribers.ofString(java.nio.charset.StandardCharsets.UTF_8);
+        requests.getValue()
+                .bodyPublisher()
+                .orElseThrow()
+                .subscribe(
+                        new java.util.concurrent.Flow.Subscriber<java.nio.ByteBuffer>() {
+                            public void onSubscribe(
+                                    java.util.concurrent.Flow.Subscription subscription) {
+                                body.onSubscribe(subscription);
+                            }
+
+                            public void onNext(java.nio.ByteBuffer item) {
+                                body.onNext(java.util.List.of(item));
+                            }
+
+                            public void onError(Throwable error) {
+                                body.onError(error);
+                            }
+
+                            public void onComplete() {
+                                body.onComplete();
+                            }
+                        });
+        var json = new ObjectMapper().readTree(body.getBody().toCompletableFuture().join());
+        assertEquals(42L, json.path("expectedTargetId").asLong());
+        assertEquals(1L, json.path("expectedLeaderId").asLong());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void ownershipReadsUseDeviceIdentityAndMutationsAlsoCarryHumanAuthorization() throws Exception {
+        HttpResponse<String> resp =
+                response(
+                        200,
+                        "{\"teamId\":9,\"teamName\":\"Team\",\"leaderUserId\":1,\"targetUserId\":2,\"linkedInstances\":3,\"subscribed\":true,\"state\":\"READY\"}");
+        ArgumentCaptor<HttpRequest> requests = ArgumentCaptor.forClass(HttpRequest.class);
+        when(httpClient.send(requests.capture(), any(HttpResponse.BodyHandler.class)))
+                .thenReturn(resp);
+        DeviceCredential device = new DeviceCredential();
+        device.setDeviceId("device");
+        device.setDeviceSecret("secret");
+        device.setTeamId(9L);
+        assertEquals(
+                CloudOwnershipStatus.State.READY,
+                client.ownership(device, "new@example.com", null, "status", null).state());
+        assertEquals("/api/v1/instance/ownership/status", requests.getValue().uri().getPath());
+        assertEquals(
+                java.util.Optional.empty(),
+                requests.getValue().headers().firstValue("Authorization"));
+        client.ownership(device, "new@example.com", "Bearer human", "transfer", 1L);
+        HttpRequest transfer = requests.getValue();
+        assertEquals("/api/v1/account-link/ownership/transfer", transfer.uri().getPath());
+        assertEquals("Bearer human", transfer.headers().firstValue("Authorization").orElseThrow());
+        assertEquals("device", transfer.headers().firstValue("X-Device-Id").orElseThrow());
+        assertEquals("secret", transfer.headers().firstValue("X-Device-Secret").orElseThrow());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void ownershipRejectsUpstreamFailureInsteadOfAssumingSuccess() throws Exception {
+        HttpResponse<String> resp = response(503, "unavailable");
+        when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(resp);
+        DeviceCredential device = new DeviceCredential();
+        device.setDeviceId("device");
+        device.setDeviceSecret("secret");
+        assertEquals(
+                503,
+                assertThrows(
+                                AccountLinkClient.UpstreamException.class,
+                                () ->
+                                        client.ownership(
+                                                device, "new@example.com", null, "status", null))
+                        .status());
+    }
 
     @Test
     @SuppressWarnings("unchecked")

@@ -206,6 +206,45 @@ class GeneralUtilsMoreTest {
         void rangePartlyOutOfBounds() {
             assertEquals(List.of(4, 5), GeneralUtils.parsePageList(new String[] {"4-99"}, 5, true));
         }
+
+        @ParameterizedTest(name = "\"{0}\" is dropped")
+        @ValueSource(strings = {"-", "--"})
+        @DisplayName("range without any bounds is dropped")
+        void rangeWithoutBoundsDropped(String token) {
+            assertTrue(GeneralUtils.parsePageList(new String[] {token}, 5, true).isEmpty());
+        }
+    }
+
+    @Nested
+    @DisplayName("tokens containing n that are not n-functions")
+    class NonFunctionTokenTests {
+
+        @ParameterizedTest(name = "\"{0}\" is dropped")
+        @ValueSource(strings = {"no", "and", "none", "xn", "2n+x", "n+", "n*", "n("})
+        @DisplayName("token is dropped like any other non-numeric token")
+        void droppedLikeOtherInvalidTokens(String token) {
+            assertTrue(GeneralUtils.parsePageList(new String[] {token}, 5, true).isEmpty());
+        }
+
+        @Test
+        @DisplayName("valid tokens around it are still returned")
+        void validTokensKept() {
+            assertEquals(List.of(1, 3), GeneralUtils.parsePageList("1,no,3", 5, true));
+        }
+
+        @Test
+        @DisplayName("a real n-function past the evaluation limit still throws")
+        void nFunctionLimitStillEnforced() {
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () -> GeneralUtils.parsePageList("2n", 10001, true));
+        }
+
+        @Test
+        @DisplayName("a malformed n-token is dropped even past the evaluation limit")
+        void malformedNTokenPastLimitIsDropped() {
+            assertEquals(List.of(1, 3), GeneralUtils.parsePageList("1,n+,3", 10001, true));
+        }
     }
 
     @Nested

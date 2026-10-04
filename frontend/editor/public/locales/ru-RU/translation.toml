@@ -278,6 +278,7 @@ customNumberDesc = "По умолчанию {n}, также принимает '
 fontName = "Название шрифта"
 fontSize = "Размер шрифта"
 numberPagesDesc = "Какие страницы нумеровать, по умолчанию 'все', также принимает 1-5 или 2,5,9 и т.д."
+pagePreviewAlt = "Предпросмотр страницы"
 pagesAndStarting = "Страницы и начальный номер"
 positionAndPages = "Положение и страницы"
 preview = "Выбор положения"
@@ -350,7 +351,9 @@ text = "Эти разрешения контролируют, что польз�
 title = "Изменить разрешения"
 
 [addStamp]
+pagePreviewAlt = "Предпросмотр страницы"
 preview = "Предпросмотр штампа"
+stampPreviewAlt = "Предпросмотр штампа"
 tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 
 [AddStampRequest]
@@ -383,6 +386,7 @@ positionAndFormatting = "Положение и форматирование"
 preview = "Preview:"
 quickPosition = "Выберите положение на странице для размещения штампа."
 rotation = "Поворот"
+selectedImageAlt = "Выбранное изображение штампа"
 selectTemplate = "Select a template..."
 stampSetup = "Настройка штампа"
 stampText = "Текст штампа"
@@ -533,6 +537,9 @@ letter = "Letter"
 
 [adjustPageScale.scaleFactor]
 label = "Коэффициент масштабирования"
+
+[adjustPageScale.settings]
+title = "Настройки"
 
 [adjustPageScale.tooltip.description]
 text = "Изменяйте размер содержимого PDF и меняйте размеры страниц."
@@ -728,6 +735,7 @@ noLanguages = "В настроенном каталоге не найдено я
 permissionNotice = "Путь tessdata недоступен для записи. Загрузки будут открываться в браузере; сохраните файлы .traineddata вручную в папку tessdata."
 
 [admin.settings.ai]
+customProvider = "Пользовательский (совместимый с OpenAI)"
 description = "Подключите Stirling к Python AI engine, выберите его модели и задайте ограничения, в которых он работает."
 managedByCloud = "Управляется Stirling Cloud в этом режиме."
 managedByCloudShort = "Управляется Stirling Cloud"
@@ -1146,7 +1154,6 @@ refresh = "Обновить"
 selectFile = "Выберите файл .sql для импорта"
 size = "Размер"
 title = "База данных"
-unavailable = "Список резервных копий недоступен для текущей конфигурации базы данных."
 uploadTitle = "Загрузка и импорт"
 version = "Версия H2"
 
@@ -1280,6 +1287,7 @@ label = "Пользовательские метаданные"
 [admin.settings.general.customMetadata.author]
 description = "Автор по умолчанию для метаданных PDF (например, имя пользователя)"
 label = "Автор по умолчанию"
+placeholder = "имя пользователя"
 
 [admin.settings.general.customMetadata.autoUpdate]
 description = "Автоматически обновлять метаданные PDF во всех обработанных документах"
@@ -1395,6 +1403,7 @@ defaultLocaleLink = "Настроить локаль по умолчанию"
 description = "Показывать предупреждение, которое пользователи должны принять после входа. Текст соответствует языку каждого пользователя."
 discardConfirm = "У вас есть несохранённые изменения, они будут потеряны. Всё равно сменить язык?"
 editLabel = "Markdown"
+editPlaceholder = "## Заголовок\n\nТекст вашего отказа от ответственности..."
 emptyPreview = "Пока нечего просматривать."
 language = "Язык"
 languageHelp = "Для каждого языка есть собственный файл. Если для языка пользователя нет файла, используется файл локали по умолчанию, затем — резервный текст."
@@ -1513,8 +1522,10 @@ label = "JWKS URL (optional)"
 placeholder = "Auto-discovered from issuer"
 
 [admin.settings.mcp.mode]
+apikey = "API key (ключ Stirling для каждого пользователя)"
 description = "OAuth needs an external IdP. API key uses a Stirling per-user API key (X-API-KEY) - simplest for self-host."
 label = "Authentication mode"
+oauth = "OAuth 2.1 (внешний IdP)"
 
 [admin.settings.mcp.requireAccount]
 description = "Only let tokens through if their subject maps to a provisioned, enabled Stirling user."
@@ -1931,6 +1942,14 @@ title = "Настройки управления пользователями"
 [agents]
 stirling_name = "Stirling"
 
+[alphabetOptions]
+arabic = "Арабский"
+chinese = "Китайский (упрощенный)"
+japanese = "Японский"
+korean = "Корейский"
+roman = "Латиница"
+thai = "Тайский"
+
 [analytics]
 learnMore = "Подробнее"
 paragraph1 = "В Stirling PDF есть опциональная аналитика для улучшения продукта. Мы не отслеживаем личную информацию или содержимое файлов."
@@ -2052,6 +2071,7 @@ week = "Неделя"
 
 [audit.clearData]
 cancel = "Отмена"
+closeAlert = "Закрыть уведомление"
 codeDoesNotMatch = "Код не совпадает"
 codePlaceholder = "Введите код здесь"
 confirmationCode = "Код подтверждения"
@@ -2061,6 +2081,7 @@ confirmTitle = "Подтвердите удаление"
 deleteButton = "Удалить"
 enterCode = "Код подтверждения"
 enterCodeBelow = "Введите код в точности как выше (с учетом регистра)"
+failed = "Не удалось очистить данные аудита"
 initiateDelete = "Удалить все данные"
 irreversible = "НЕОБРАТИМО"
 success = "Успех"
@@ -2069,6 +2090,7 @@ warning1 = "Это действие нельзя отменить"
 warning2 = "Удаление данных аудита навсегда удалит все исторические журналы аудита, включая события безопасности, действия пользователей и операции с файлами из базы данных."
 
 [audit.error]
+loadStatus = "Не удалось загрузить состояние системы аудита"
 title = "Ошибка загрузки системы аудита"
 
 [audit.events]
@@ -2084,6 +2106,7 @@ fileHash = "Хэш файла"
 filterByType = "Фильтр по типу"
 filterByUser = "Фильтр по пользователю"
 ipAddress = "IP-адрес"
+loadFailed = "Не удалось загрузить события"
 noEvents = "Событий не найдено"
 startDate = "Дата начала"
 timestamp = "Метка времени"
@@ -2124,6 +2147,7 @@ avgLatency = "Средняя задержка"
 error = "Ошибка загрузки статистики"
 excellent = "Отлично"
 good = "Хорошо"
+loadFailed = "Не удалось загрузить статистику"
 noData = "Н/Д"
 successRate = "Уровень успешности"
 totalEvents = "Всего событий"
@@ -2158,13 +2182,27 @@ accessDenied = "Доступ запрещен"
 insufficientPermissions = "У вас нет прав для выполнения этого действия."
 
 [auth.callback]
+alreadySignedIn = "Вы уже вошли! Перенаправление..."
+backToLogin = "Вернуться ко входу"
 completing = "Завершение аутентификации"
+exchanging = "Обмен кода авторизации..."
+failedWithReason = "Сбой аутентификации: {{error}}"
 invalidToken = "Вход через OAuth не удался — недействительный токен."
 missingToken = "Вход через OAuth не удался — токен не получен."
+noData = "Данные аутентификации не найдены"
 oauthFailed = "Вход через OAuth не удался. Повторите попытку."
 pleaseWait = "Подождите, пока мы завершим вход."
+processing = "Обработка аутентификации..."
 signedOut = "Вы вышли из системы. Войдите снова."
+signInFailed = "Не удалось завершить вход: {{error}}"
+success = "Вход выполнен успешно! Перенаправление..."
+unknownError = "Неизвестная ошибка"
 windowMayClose = "Вы можете закрыть это окно после завершения."
+
+[auth.callback.title]
+default = "Аутентификация"
+processing = "Выполняется вход"
+success = "Все готово!"
 
 [auth.displayName]
 guest = "Гость"
@@ -2317,6 +2355,7 @@ title = "Импорт автоматизации"
 unresolved = "Несопоставлено: {{ops}}"
 
 [automate.run]
+progress = "Ход выполнения: {{current}}/{{total}}"
 title = "Запустить автоматизацию"
 
 [automate.selection]
@@ -2466,6 +2505,7 @@ whatHappensNext = "Что дальше?"
 
 [billing.portal]
 error = "Не удалось открыть портал оплаты"
+errorFallback = "Повторите попытку или обратитесь в поддержку."
 
 [bookletImposition]
 paperSizeNote = "Размер бумаги автоматически определяется по первой странице."
@@ -2513,6 +2553,9 @@ title = "Ручной дуплекс"
 [bookletImposition.rtlBinding]
 label = "Переплёт справа налево"
 tooltip = "Для арабского, иврита и других RTL-языков"
+
+[bookletImposition.settings]
+title = "Настройки"
 
 [bookletImposition.tooltip.advanced]
 bullet1 = "Переплёт справа налево: для RTL-языков"
@@ -2582,6 +2625,8 @@ detail = "Нажмите мышью или Space, чтобы сыграть сн
 headline = "Всё очищено"
 
 [bulkSelection]
+selectedPages_one = "Выбрано: {{count}} страница ({{pages}})"
+selectedPages_other = "Выбрано: {{count}} страниц ({{pages}})"
 syntaxError = "Есть ошибка синтаксиса. См. советы по выбору страниц."
 
 [bulkSelection.advanced]
@@ -2802,6 +2847,7 @@ declineButton = "Отклонить"
 deleteSelected = "Удалить выбранную подпись"
 drawSignature = "Нарисуйте свою подпись ниже"
 fileTooLarge = "Размер файла должен быть меньше 5 МБ"
+fontBrushScript = "Brush Script MT (курсив)"
 fontFamily = "Шрифт"
 fontSize = "Размер шрифта: {{size}}px"
 fontSizePlaceholder = "Размер"
@@ -2821,6 +2867,7 @@ removeImage = "Удалить изображение"
 savedSignatures = "Сохранённые подписи"
 selectFile = "Выбрать файл изображения"
 selectSignatureTitle = "Выбрать или создать подпись"
+signatureImageAlt = "Подпись"
 signatureInfo = "Эти настройки задаёт владелец документа"
 signatureSettings = "Настройки подписи"
 signatureText = "Текст подписи"
@@ -3591,13 +3638,19 @@ confirm = "Подтвердить"
 continue = "Продолжить"
 copied = "Скопировано!"
 copy = "Копировать"
+copyCode = "Копировать код"
+dismiss = "Скрыть"
 done = "Готово"
 enterValue = "Enter value"
 error = "Ошибка"
 expand = "Развернуть"
 filterEmpty = "Нечего фильтровать"
+goToSlide = "Перейти к слайду {{number}}"
 loading = "Загрузка..."
+moreInformation = "Подробнее"
 next = "Далее"
+noData = "Нет данных"
+nOfTotal = "{{current}} из {{total}}"
 open = "Open"
 preview = "Предпросмотр"
 previous = "Предыдущий"
@@ -3606,6 +3659,9 @@ remaining = "Осталось"
 retry = "Повторить"
 save = "Сохранить"
 search = "Поиск"
+settingsSections = "Разделы настроек"
+showAllTotal = "Показать все {{total}}"
+showLess = "Показать меньше"
 stepOf = "Step {{current}} of {{total}}"
 
 [compare]
@@ -3617,6 +3673,7 @@ newLine = "новая строка"
 pages = "Страницы"
 tags = "различие,контраст,изменения,анализ"
 title = "Сравнить"
+workbenchLabel = "Режим сравнения"
 
 [compare.actions]
 linkScroll = "Связать прокрутку"
@@ -3770,6 +3827,7 @@ title = "Метод сжатия"
 desiredSize = "Желаемый размер файла"
 desiredSizePlaceholder = "Введите размер"
 desiredSizeUnit = "Size unit"
+title = "Настройки"
 
 [compress.tooltip.description]
 text = "Сжатие — простой способ уменьшить размер файла. Выберите «Размер файла», чтобы указать целевой размер, а мы подберём качество. Выберите «Качество», чтобы задать силу сжатия вручную."
@@ -3819,10 +3877,13 @@ title = "Настройки аккаунта"
 description = "Загрузите изображение, чтобы персонализировать аккаунт."
 help = "PNG, JPG или WebP до 2 МБ."
 remove = "Удалить"
+removeFailed = "Не удалось удалить изображение профиля"
 sizeError = "Выберите изображение размером меньше 2 МБ."
 switchedToCustom = "Включено пользовательское изображение. Теперь вы можете загрузить своё."
+switchFailed = "Не удалось переключиться на пользовательское изображение"
 title = "Фото профиля"
 upload = "Загрузить"
+uploadFailed = "Не удалось загрузить изображение профиля"
 useCustom = "Использовать своё изображение"
 usingProvider = "Используется фото профиля {{provider}}"
 
@@ -3836,6 +3897,7 @@ title = "Обрезать фото профиля"
 zoom = "Масштаб"
 
 [config.account.security]
+changeFailed = "Не удалось изменить пароль"
 changePassword = "Сменить пароль"
 description = "Управляйте паролем и настройками безопасности."
 title = "Пароли и безопасность"
@@ -3846,11 +3908,15 @@ description = "Привяжите аккаунт, чтобы сохранить 
 email = "Email"
 emailPassword = "или введите email и пароль"
 emailPlaceholder = "Введите ваш email"
+failed = "Не удалось обновить аккаунт"
+failedWithProvider = "Не удалось обновить аккаунт с помощью {{provider}}"
 linkWith = "Привязать к"
+linkWithProvider = "Связать с {{provider}}"
 password = "Пароль (необязательно)"
 passwordNote = "Оставьте пустым для входа только по email-подтверждению"
 passwordPlaceholder = "Задайте пароль"
 socialLogin = "Обновить через соцсеть"
+success = "Аккаунт успешно обновлен! Теперь вы можете войти с помощью электронной почты."
 title = "Обновить гостевой аккаунт"
 upgradeButton = "Обновить аккаунт"
 
@@ -3960,10 +4026,10 @@ title = "Запрос недействителен"
 
 [connect.renewal]
 approve = "Обновить вход"
+currentOwnerRequired = "Войдите как текущий владелец связанной облачной команды, чтобы продлить вход на этот сервер. Если владелец изменился, используйте аккаунт нового владельца."
 failed = "Не удалось обновить ваш вход. Попробуйте снова или закройте эту страницу и начните заново с вашего сервера."
 lead = "Этот сервер уже связан с вашей учётной записью. Обновите вход, чтобы вернуться к оплате и использованию на вашем сервере."
 title = "Обновите вход на ваш сервер"
-wrongAccount = "Эта учётная запись не может обновить вход для этого сервера. Переключитесь на учётную запись, которая изначально использовалась для привязки сервера. Эта учётная запись всё ещё должна владеть связанной командой."
 
 [convert]
 autoRotate = "Автоповорот"
@@ -4009,6 +4075,7 @@ multiple = "Несколько"
 optimizeForEbook = "Оптимизировать PDF для ридеров (использует Ghostscript)"
 output = "Выходные данные"
 outputFormat = "Выходной формат"
+pdfaAccessibleFormat = "{{format}} (доступный)"
 pdfaDigitalSignatureWarning = "PDF содержит цифровую подпись. Она будет удалена на следующем шаге."
 pdfaNote = "PDF/A-1b более совместим, PDF/A-2b поддерживает больше функций."
 pdfaOptions = "Параметры PDF/A"
@@ -4068,6 +4135,24 @@ outputFormatDesc = "Выберите формат вывода для eBook"
 tabletPhone = "Планшет/Телефон (с изображениями)"
 targetDevice = "Целевое устройство"
 targetDeviceDesc = "Выберите профиль вывода, оптимизированный для устройства чтения"
+
+[convert.formatGroups]
+archive = "Архив"
+document = "Документ"
+ebook = "Электронная книга"
+email = "Email"
+file = "Файл"
+image = "Изображение"
+multipleFiles = "Несколько файлов"
+presentation = "Презентация"
+spreadsheet = "Электронная таблица"
+text = "Текст"
+web = "Web"
+
+[convert.formatOptions]
+any = "Любой"
+images = "Изображения"
+msgOutlook = "MSG (Outlook)"
 
 [cookieBanner.popUp]
 acceptAllBtn = "Хорошо"
@@ -4161,6 +4246,12 @@ label = "Положение Y"
 [crop.error]
 failed = "Не удалось обрезать PDF"
 
+[crop.pageNumbers]
+description = "Обрезать выбранную область на указанных страницах или 'all' для всех страниц."
+error = "Недопустимый выбор страниц. Используйте, например, 1, 3, 5-8 или all."
+label = "Страницы для обрезки"
+placeholder = "например, 1, 3, 5-8 или all"
+
 [crop.preview]
 title = "Выбор области обрезки"
 
@@ -4183,16 +4274,11 @@ fileName = "Имя файла"
 title = "Импорт/экспорт базы данных"
 
 [defaultApp]
-setDefault = "Сделать по умолчанию"
 title = "Сделать приложением PDF по умолчанию"
 
 [defaultApp.error]
 message = "Не удалось назначить обработчик PDF по умолчанию"
 title = "Ошибка"
-
-[defaultApp.prompt]
-dontRemind = "Больше не напоминать"
-message = "Сделайте Stirling PDF приложением по умолчанию для открытия файлов PDF."
 
 [defaultApp.settingsOpened]
 message = "Пожалуйста, выберите Stirling PDF в настройках системы"
@@ -4201,6 +4287,17 @@ title = "Открыты настройки"
 [defaultApp.success]
 message = "Stirling PDF теперь редактор PDF по умолчанию"
 title = "Приложение по умолчанию установлено"
+
+[desktop.titleBar]
+maximize = "Развернуть"
+minimize = "Свернуть"
+restore = "Восстановить"
+
+[desktopBilling]
+description = "Управляйте использованием и оплатой в браузере. Войдите с тем же аккаунтом Stirling, который используете здесь."
+open = "Открыть использование и оплату в браузере"
+openFailed = "Не удалось открыть использование и оплату. Проверьте подключение и повторите попытку."
+selfHostedDescription = "Управляйте использованием и оплатой на подключенном сервере в браузере. Войдите с аккаунтом владельца сервера."
 
 [desktopFileLink]
 saveAs = "Сохранить как…"
@@ -4264,6 +4361,7 @@ tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,ident
 noItems = "No items available"
 noResults = "No results found"
 searchPlaceholder = "Поиск..."
+selectedCount = "Выбрано: {{count}}"
 selectLanguages = "Select languages"
 selectOption = "Select an option"
 
@@ -4274,6 +4372,7 @@ editSecretValue = "Изменить секретное значение"
 [editTableOfContents]
 submit = "Применить оглавление"
 tags = "bookmarks,contents,edit,table of contents,TOC,outline,navigation,chapters,sections,add bookmarks,edit bookmarks,PDF outline"
+workbenchLabel = "Рабочая область структуры"
 
 [editTableOfContents.actions]
 clipboardUnavailable = "Доступ к буферу обмена недоступен в этом браузере."
@@ -4434,6 +4533,27 @@ closeFile = "Закрыть файл"
 
 [fileEditor]
 addFiles = "Добавить файлы"
+closedFile = "Закрыт {{name}}"
+couldNotSave = "Не удалось сохранить {{name}}"
+filesAdded_one = "Добавлен {{count}} файл"
+filesAdded_other = "Добавлено {{count}} файлов"
+filesReordered_one = "Порядок файлов изменен"
+filesReordered_other = "Порядок {{count}} файлов изменен"
+loadedFromStorage_one = "Загружен {{count}} файл из хранилища"
+loadedFromStorage_other = "Загружено {{count}} файлов из хранилища"
+loadFromStorageFailed = "Не удалось загрузить некоторые файлы из хранилища"
+pinnedFile = "{{name}} закреплен"
+processFilesFailed = "Не удалось обработать файлы"
+savedAndClosed = "{{name}} сохранен и закрыт"
+saveFailed = "Сохранение не удалось"
+unpinnedFile = "{{name}} откреплен"
+unzipping = "Распаковка {{name}}"
+
+[fileEditor.unzip]
+error = "Ошибка при распаковке {{name}}"
+extracted_one = "Извлечен {{count}} файл из {{name}}"
+extracted_other = "Извлечено {{count}} файлов из {{name}}"
+failed = "Не удалось извлечь файлы из {{name}}"
 
 [fileManager]
 addToUpload = "Добавить к загрузке"
@@ -4450,6 +4570,7 @@ noFiles = "Нет доступных файлов"
 noFilesFound = "По вашему запросу файлы не найдены"
 openInFileEditor = "Открыть в редакторе файлов"
 openInPageEditor = "Открыть в редакторе страниц"
+reloadFiles = "Перезагрузить файлы"
 saveSelected = "Сохранить выбранные"
 searchFiles = "Поиск файлов..."
 share = "Поделиться"
@@ -4459,6 +4580,8 @@ sharedEditNoticeConfirm = "Понятно"
 sharedEditNoticeTitle = "Серверная копия только для чтения"
 sharedWithYou = "Предоставлены вам"
 showAll = "Показать все"
+showAllCount_one = "Показать все ({{count}} файл)"
+showAllCount_other = "Показать все ({{count}} файлов)"
 sortBy = "Sort files"
 sortByDate = "Сортировать по дате"
 sortByName = "Сортировать по имени"
@@ -4495,6 +4618,11 @@ sources = "Источники файлов"
 subtitle = "Выберите из своей библиотеки или добавьте что-то новое."
 title = "Добавить файлы"
 unsupported = "Этот тип файла не поддерживается выбранным инструментом."
+
+[filePreview]
+loadingThumbnail = "Загрузка миниатюры..."
+locked = "Заблокировано"
+previewOf = "Предпросмотр {{name}}"
 
 [files]
 addFiles = "Добавить файлы"
@@ -4930,13 +5058,15 @@ title = "Файл в PDF"
 [fileUpload]
 dropFilesHere = "Перетащите файлы сюда или нажмите кнопку загрузки"
 dropFilesHereOpen = "Перетащите файлы сюда или нажмите кнопку Открыть"
-filesAvailable = "файлов доступно"
+filesAvailableCount_one = "Доступен {{count}} файл"
+filesAvailableCount_other = "Доступно {{count}} файлов"
 loadFromStorage = "Загрузить из хранилища"
 noFilesInStorage = "В хранилище нет файлов. Сначала загрузите несколько."
 noFilesInStorageOpen = "В хранилище нет файлов. Сначала откройте файлы."
 open = "Открыть"
 openFile = "Открыть файл"
 openFiles = "Открыть файлы"
+selectedCount = "Выбрано: {{count}}"
 selectFile = "Select {{name}}"
 selectFromStorage = "Выбрать из хранилища"
 upload = "Загрузить"
@@ -5028,6 +5158,7 @@ rescanFields = "Пересканировать поля"
 rescanFormFields = "Пересканировать поля формы"
 save = "Сохранить"
 saveShortcut = "Ctrl+S для сохранения"
+selectOptionPlaceholder = "— выберите —"
 skippedEdits_one = "1 изменение не удалось применить:"
 skippedEdits_other = "{{count}} изменений не удалось применить:"
 skippedEditsTruncated = "Еще {{count}} не перечислено."
@@ -5090,6 +5221,16 @@ tooltipHelp = "Подсказка, отображаемая при наведе�
 type = "Тип"
 typeHelp = "Какого типа это поле. При изменении типа поле пересоздается, поэтому его текущее значение не переносится."
 
+[formFill.fieldTypes]
+button = "Кнопка"
+checkbox = "Флажок"
+combobox = "Выпадающий список"
+listbox = "Список"
+radio = "Переключатель"
+radioGroup = "Группа переключателей"
+signature = "Подпись"
+text = "Текст"
+
 [formFill.mode]
 create = "Создать"
 fill = "Заполнить"
@@ -5107,11 +5248,16 @@ restore = "Восстановить"
 
 [formFill.sidebar]
 close = "Закрыть боковую панель"
+empty = "В этом PDF не найдены поля формы"
+loading = "Загрузка полей формы..."
+pageNumber = "Страница {{page}}"
+title = "Поля формы"
 
 [getPdfInfo]
 downloadJson = "Скачать JSON"
 downloads = "Загрузки"
 indexTitle = "Индекс"
+noData = "Нет данных"
 noneDetected = "Ничего не обнаружено"
 noResults = "Запустите инструмент, чтобы создать отчет."
 processing = "Извлечение информации..."
@@ -5127,6 +5273,8 @@ noVerification = "Проверка не выполнялась"
 noVerificationDesc = "Соответствие стандартам PDF для этого документа не проверялось."
 passed = "Пройдено"
 passedCount = "пройдено"
+secCompliant = "Документ соответствует требованиям SEC EDGAR к подаче документов"
+secNotCompliant = "Документ не соответствует требованиям SEC EDGAR к подаче документов"
 
 [getPdfInfo.error]
 partial = "Некоторые файлы не удалось обработать."
@@ -5134,10 +5282,15 @@ unexpected = "Непредвиденная ошибка при извлечен�
 
 [getPdfInfo.other]
 attachments = "Вложения"
+created = "Создано: {{date}}"
 embeddedFiles = "Встроенные файлы"
+fileSizeBytes = "({{size}} байт)"
 javaScript = "JavaScript"
 layers = "Слои"
+modified = "Изменено: {{date}}"
 structureTree = "Дерево структуры"
+unnamedAttachment = "Вложение без имени"
+unnamedFile = "Файл без имени"
 xmp = "XMPMetadata"
 
 [getPdfInfo.perPage]
@@ -5147,6 +5300,7 @@ images = "Изображения"
 links = "Ссылки"
 multimedia = "Мультимедиа"
 size = "Размер"
+unnamedImage = "Изображение"
 xobjects = "Количество XObject"
 
 [getPdfInfo.report]
@@ -5675,6 +5829,7 @@ invalidEmail = "Недействительный адрес электронно
 invalidInvitation = "Недействительное приглашение"
 invalidToken = "Недействительная ссылка-приглашение"
 linkExpires = "Ссылка истекает"
+linkExpiresAt = "Срок действия ссылки истекает: {{date}} в {{time}}"
 passwordMismatch = "Пароли не совпадают"
 passwordPlaceholder = "Введите пароль"
 passwordRequired = "Пароль обязателен"
@@ -5689,6 +5844,7 @@ welcomeTitle = "Вас пригласили!"
 addFiles = "Добавить файлы"
 mobileUpload = "Загрузка с мобильного"
 openFromComputer = "Открыть с компьютера"
+settingUpSession = "Настройка вашей сессии..."
 uploadFromComputer = "Загрузить с компьютера"
 
 [language]
@@ -5770,6 +5926,7 @@ sessionExpired = "Сеанс истек. Пожалуйста, войдите с
 signin = "Войти"
 signingIn = "Входим..."
 signInWith = "Войти с помощью"
+signInWithProvider = "Войти с помощью {{provider}}"
 title = "Вход"
 unexpectedError = "Непредвиденная ошибка: {{message}}"
 updatePassword = "Обновить пароль"
@@ -5811,6 +5968,9 @@ label = "Удалить цифровую подпись в объединенн�
 description = "Цифровые подписи становятся недействительными при объединении. Отметьте, чтобы удалить их из итогового PDF."
 title = "Удалить цифровую подпись"
 
+[merge.settings]
+title = "Настройки"
+
 [merge.sortBy]
 ascending = "По возрастанию"
 dateModified = "Дата изменения"
@@ -5819,6 +5979,9 @@ description = "Файлы будут объединены в порядке их
 filename = "Имя файла"
 label = "Сортировать по"
 sort = "Сортировать"
+
+[merge.sortFiles]
+title = "Сортировать файлы"
 
 [merge.tooltip.header]
 title = "Обзор настроек объединения"
@@ -5867,6 +6030,7 @@ validating = "Проверка сеанса..."
 
 [mobileSign]
 clear = "Clear"
+drawingArea = "Область рисования подписи"
 invalidSession = "Session expired"
 invalidSessionMessage = "This QR code is no longer valid. Open the Sign tool on your computer and scan the new code."
 penSizeLabel = "Pen size"
@@ -5882,6 +6046,7 @@ validating = "Checking session…"
 fromGallery = "From gallery"
 hint = "Photograph a signature on white paper, or choose an existing image."
 invalidType = "Please choose an image file."
+previewAlt = "Подпись"
 takePhoto = "Take a photo"
 
 [mobileSign.tab]
@@ -5993,6 +6158,9 @@ profile = "See your basic profile information"
 desc = "Очистка сканов и распознавание текста с изображений в PDF с последующим добавлением его как текст."
 tags = "распознавание,текст,изображение,сканирование,чтение,идентификация,обнаружение,редактируемый"
 title = "OCR / Очистка сканов"
+
+[ocr.advanced]
+title = "Дополнительно"
 
 [ocr.error]
 failed = "Операция OCR не выполнена"
@@ -6118,9 +6286,9 @@ title = "Скачать Stirling для Desktop"
 description = "Работайте совместно со своей командой"
 title = "Пригласить участников команды"
 
-[onboarding.checklist.shareAnalytics]
-description = "Помогите улучшить Stirling"
-title = "Делиться анонимными данными использования"
+[onboarding.checklist.setDefaultApp]
+description = "Открывать PDF файлы в Stirling PDF"
+title = "Сделать Stirling приложением по умолчанию"
 
 [onboarding.checklist.takeTour]
 description = "Посмотрите, как работает Stirling, в коротком обзоре"
@@ -6188,6 +6356,7 @@ message = "В приложении недавно произошли значи�
 roleAdmin = "Администратор"
 rolePlaceholder = "Подтвердите вашу роль"
 roleUser = "Пользователь"
+title = "Проверка безопасности"
 
 [onboarding.serverLicense]
 freeBody = "Наша лицензия <strong>Open-Core</strong> включает <strong>OAuth SSO</strong> и до <strong>{{freeTierLimit}}</strong> пользователей бесплатно. Для роста без перерывов рекомендуем тариф Stirling Team — <strong>100 пользователей</strong> за 99 долларов в месяц."
@@ -6276,16 +6445,93 @@ title = "Файлы наложения"
 text = "Передний план размещает наложение поверх страницы. Фон — позади."
 title = "Положение наложения"
 
+[ownership]
+acceptInvite = "Они могут создать аккаунт или войти, а затем принять приглашение."
+accessUpdated = "Их доступ владельца готов."
+accountLinkDisabled = "У этого сервера все еще есть облачная связь, но привязка аккаунтов отключена. Попросите оператора сервера включить привязку аккаунтов, затем возобновите эту передачу или отвяжите сервер в настройках."
+anotherTeam = "Уже в другой команде?"
+billing = "Подписка, кошелек, способ оплаты и существующие лицензии остаются на месте. Контактные данные для оплаты автоматически не изменяются."
+billingDetails = "Платежные данные"
+billingUnchanged = "Подписка и оплата остаются на месте"
+bothDone = "Владельцы сервера и облака теперь согласованы."
+cancel = "Отменить передачу"
+check = "Проверить снова"
+checkAccount = "Проверить аккаунт"
+chooseEmail = "Выберите их аккаунт в {{team}} или введите email, чтобы пригласить их."
+close = "Закрыть диалог передачи"
+cloudAccount = "Аккаунт Stirling"
+cloudScopeStyled = "<user>{{name}}</user> будет управлять {{team}}, ее участниками и оплатой."
+cloudTargetChanged = "Выберите другого участника облачной команды. Этот аккаунт больше не подходит для передачи."
+confirm = "Я понимаю изменения доступа и владения."
+done = "Владение передано"
+error = "Не удалось выполнить этот шаг. Проверьте, что получатель активен, а сервер подключен, затем проверьте снова. Ожидающую передачу можно возобновить здесь."
+finish = "Завершить передачу сервера"
+inProgress = "У другого получателя уже есть ожидающая передача. Закройте этот диалог и возобновите ее из раздела Пользователи."
+instances = "У этой команды {{count}} связанных серверов. Их облачная оплата остается за этой командой; локальные владельцы других серверов не изменяются."
+invitationSent = "Приглашение отправлено"
+invite = "Отправить приглашение"
+inviteAddress = "Пригласить <account>{{email}}</account> в {{team}}."
+inviteBlocked = "Не удалось отправить приглашение. Проверьте доступные места в команде и нет ли у получателя уже платной подписки."
+linkChanged = "Облачная связь сервера изменилась. Попросите оператора сервера восстановить исходную связь перед возобновлением."
+linkedServerCount = "{{count}} связанных серверов"
+linkRevoked = "Облачная связь этого сервера больше недействительна. Отмените передачу, затем заново подключите аккаунт Stirling в настройках. Владение не изменится."
+localScope = "Они станут владельцами этого сервера и будут управлять оплатой и облачными подключениями. Вы сохраните доступ администратора, но потеряете доступ к этим настройкам."
+membershipDetails = "Сведения об участии в команде"
+membershipFirst = "Они должны присоединиться к команде, прежде чем вы сможете подтвердить передачу."
+membershipRequired = "Получатель должен присоединиться к этой облачной команде, прежде чем владение можно будет передать. Попросите его принять приглашение, затем проверьте снова."
+newOwnerLabel = "Новый владелец"
+newOwnerStyled = "<user>{{name}}</user> теперь владелец."
+noEmailMatches = "Совпадающие участники не найдены. Введите email, чтобы пригласить."
+otherTeam = "Если они состоят в другой команде, принятие может переместить их аккаунт. Может потребоваться сначала урегулировать платный аккаунт или владение другой командой. Мы не будем переносить их подписку или объединять команды."
+ownerChanged = "Облачный владелец изменился после начала этой передачи. Отмените эту передачу и начните заново с текущим облачным владельцем."
+ownerRequired = "Войдите как текущий владелец облачной команды, затем повторите этот шаг."
+partialError = "Облачное владение передано. Завершите передачу сервера, чтобы оба владельца были согласованы."
+partialTargetChanged = "Восстановите доступ выбранного пользователя сервера и исходные данные аккаунта, затем завершите передачу сервера. Облачное владение уже передано."
+pending = "Ожидается передача владения пользователю {{name}}."
+personalTeam = "Личные команды не могут передавать владение."
+prepareHelp = "Получатель должен завершить свой первый вход на сервер. Вы можете повторить попытку здесь или вернуться к Пользователям, чтобы выбрать другого человека."
+resume = "Возобновить передачу"
+searchEmail = "Найти или ввести email"
+serverAccount = "Аккаунт сервера"
+serverDetails = "Сведения о связанном сервере"
+signIn = "Войти в облако"
+startFromInstanceBody = "У этой команды есть связанные серверы. На самостоятельно размещенном сервере откройте Настройки → Пользователи и измените роль получателя на Владелец организации. Этот процесс передает облачное владение перед завершением передачи сервера."
+startFromInstanceTitle = "Начните с самостоятельно размещенного сервера"
+stayOwner = "Вы остаетесь владельцем до передачи."
+targetChanged = "Аккаунт получателя изменился. Восстановите его доступ или отмените эту передачу и выберите его снова."
+title = "Передать владение"
+transfer = "Передать владение"
+waitingForEmail = "Ожидание присоединения {{email}} к {{team}}."
+working = "Проверка и обновление владения..."
+yourCloudAccess = "Вы станете участником команды и потеряете доступ владельца."
+
 [pageEdit]
 deselectAll = "Снять выделение"
 selectAll = "Выбрать все"
 
 [pageEditor]
+dragPreviewAlt = "Перетаскивание"
+filePosition = "Позиция {{position}}"
+pageLabel = "Страница {{page}}"
 title = "Редактор страниц"
+
+[pageEditor.actions]
+deletePage = "Удалить страницу"
+insertFileAfter = "Вставить файл после"
+moveLeft = "Переместить влево"
+moveRight = "Переместить вправо"
+rotateLeft = "Повернуть влево"
+rotateRight = "Повернуть вправо"
+splitAfter = "Разделить после"
 
 [pageEditor.emptyState]
 body = "Добавьте файлы, чтобы начать редактирование страниц"
 title = "PDF-файлы не загружены"
+
+[pageEditor.fileDropdown]
+addFile = "Добавить файл"
+selectedCount = "Выбрано файлов: {{selected}}/{{total}}"
+untitled = "Без названия"
 
 [pageEditor.toolbar]
 delete = "Удалить выбранное"
@@ -6391,6 +6637,11 @@ portrait = "Книжная"
 label = "Направление чтения:"
 ltr = "Слева направо"
 rtl = "Справа налево"
+
+[pageLayout.steps]
+advanced = "Дополнительные настройки"
+layout = "Настройки макета"
+marginsBorders = "Поля и границы"
 
 [pageLayout.tooltip.header]
 title = "Руководство по макету страницы"
@@ -6712,6 +6963,7 @@ teamChangeUnavailable = "Не удалось загрузить запланир
 teamPending = "Покупка Team все еще обрабатывается. Обновите эту страницу чуть позже."
 teamProcessing = "Обработка покупки Team"
 teamScheduled = "Изменение Team запланировано на {{date}}. Текущая вместимость останется активной до этой даты."
+unknownError = "Произошла неизвестная ошибка"
 upgradeComplete = "Обновление завершено"
 upgradeCompleteMessage = "Подписка успешно обновлена. Ваш существующий лицензионный ключ обновлён."
 upgradeSuccess = "Платёж прошёл успешно! Подписка обновлена. Лицензия на сервере обновлена. Вскоре вы получите подтверждение на email."
@@ -6766,6 +7018,14 @@ selectedMonthly = "Ежемесячно"
 selectedYearly = "Ежегодно"
 selectMonthly = "Выбрать помесячно"
 selectYearly = "Выбрать за год"
+
+[payment.priceDisplay]
+basePrice = "Базовая цена"
+perPeriod = "/{{period}}"
+perSeat = "За место"
+perSeatPeriod = "/место/{{period}}"
+totalSeats_one = "Итого ({{count}} место)"
+totalSeats_other = "Итого ({{count}} мест)"
 
 [payment.upgradeTeam]
 title = "Перейти на Team"
@@ -6985,6 +7245,10 @@ save = "Сохранить"
 style = "Стиль"
 tapToPlace = "Нажмите на страницу в месте, где должен быть текст"
 unlock = "Разблокировать"
+
+[pdfTextEditor.pageView]
+pageNumber = "Страница {{page}}"
+renderFailed = "Не удалось отобразить страницу"
 
 [pdfTextEditor.password]
 cancel = "Отмена"
@@ -7212,6 +7476,7 @@ title = "Конвейер"
 contact = "Связаться с нами"
 current = "Текущий план"
 featureComparison = "Сравнение функций"
+fetchError = "Не удалось получить данные о ценах"
 from = "От"
 hideComparison = "Скрыть сравнение функций"
 licensedSeats = "Лицензировано: {{count}} мест"
@@ -7227,6 +7492,8 @@ withServer = "+ тариф Server"
 [plan.api]
 large = "5,000 кредитов"
 medium = "1,000 кредитов"
+perCredit = "{{price}} за кредит"
+perCreditWithDiscount = "{{price}} за кредит • скидка {{discount}}%"
 small = "500 кредитов"
 xsmall = "100 кредитов"
 
@@ -7302,14 +7569,9 @@ upToFiveUsers = "До 5 пользователей"
 usageTrackingPrometheus = "Отслеживание использования и Prometheus"
 usersIncluded = "Включено 100 пользователей"
 
-[plan.licenseWarning]
-body = "У вас {{total}} пользователей, но бесплатный уровень поддерживает только {{limit}} на сервер. Обновитесь, чтобы Stirling PDF работал стабильно."
-cta = "Посмотреть тарифы"
-overLimit = "более {{limit}}"
-title = "Достигнут лимит бесплатного self-hosted"
-
 [plan.period]
 month = "месяц"
+year = "год"
 
 [plan.pro]
 highlight1 = "Неограниченное использование инструментов"
@@ -7435,6 +7697,9 @@ pdfa-1 = "PDF/A-1b"
 pdfa-2b = "PDF/A-2b"
 pdfa-3b = "PDF/A-3b"
 
+[portal.accountLink]
+ownerRequired = "Только владелец организации может связать или отвязать этот сервер."
+
 [portal.accountLink.card]
 billingNote = "Автоматическая обработка оплачивается из кошелька вашей организации."
 connectDescription = "Подключите этот сервер, чтобы использовать лимит обработки вашей команды в Stirling Cloud."
@@ -7556,6 +7821,7 @@ identity = "Учетная запись Stirling"
 linkTitle = "Привязать ваш аккаунт Stirling"
 noAuthorizeUrl = "Stirling не вернул адрес для продолжения. Повторите попытку через некоторое время."
 startFailed = "Не удалось связаться со Stirling, чтобы начать подключение. Проверьте исходящий сетевой доступ этого сервера, затем повторите попытку."
+transferPending = "Ожидается передача владения. Перейдите в Настройки → Пользователи, чтобы завершить или отменить ее, затем попробуйте связать снова."
 
 [portal.accountLink.modal.loginNotConfigured]
 after = "чтобы включить привязку в приложении к размещённому аккаунту Stirling."
@@ -9441,6 +9707,7 @@ labelId = "ID метки"
 labelIdHelp = "GUID метки из портала Purview. Применение метки записывает ее метаданные в PDF; шифровать она не может — для этого нужен клиент Microsoft."
 labelName = "Название метки (необязательно)"
 labelNameHelp = "Записывается вместе с ID, чтобы пользователи и инструменты могли распознать метку."
+labelNamePlaceholder = "Конфиденциально"
 
 [portal.policies.config.purview.fields.method]
 help = "Purview отличает метку, примененную политикой, от метки, выбранной человеком."
@@ -10425,31 +10692,6 @@ unlimited = "{{used}} · Без ограничений"
 [printFile]
 title = "Печать файла"
 
-[processingFolders.downloads]
-approve = "Обработать мои «Загрузки»"
-cancelSweep = "Отмена"
-capped = "У вас {{found}} PDF; первые {{limit}} обрабатываются сейчас, остальные — затем."
-close = "Готово"
-explain_one = "Stirling может классифицировать {{count}} PDF, уже находящийся в вашей папке «Загрузки», и открыть результаты здесь."
-explain_other = "Stirling может классифицировать {{count}} PDF, уже находящихся в вашей папке «Загрузки», и открыть результаты здесь."
-failed = "Не удалось это настроить. Ваши файлы не были изменены."
-finished_one = "Классифицирован {{count}} файл, и {{opened}} из них открыто здесь, готово к работе."
-finished_other = "Классифицировано {{count}} файлов, и {{opened}} из них открыто здесь, готово к работе."
-nothingNew_one = "Нечего обрабатывать — этот {{count}} файл уже был обработан."
-nothingNew_other = "Нечего обрабатывать — эти {{count}} файлов уже были обработаны."
-notModified = "Ваши файлы в «Загрузках» не изменяются — Stirling читает их и открывает здесь."
-notNow = "Не сейчас"
-progressCounts = "обработано из {{total}}"
-someFailed_one = "{{count}} не удалось обработать, он оставлен без изменений."
-someFailed_other = "{{count}} не удалось обработать, они оставлены без изменений."
-stillRunning = "Некоторые файлы все еще обрабатываются в фоновом режиме."
-title = "Организовать ваши «Загрузки»?"
-trigger_one = "Обработать {{count}} PDF в «Загрузках»"
-trigger_other = "Обработать {{count}} PDF в «Загрузках»"
-typesFound_one = "Найден {{count}} тип документа"
-typesFound_other = "Найдено {{count}} типов документов"
-working = "Обработка ..."
-
 [processingFolders.setup]
 addFolder = "Добавить папку"
 advancedSteps = "Эта папка использует настройку обработки, которую этот мастер не может редактировать. Сохраненные шаги не были изменены."
@@ -10527,6 +10769,10 @@ label = "Client ID"
 [provider.googledrive.enabled]
 description = "Разрешить пользователям импортировать файлы напрямую из Google Drive"
 label = "Включить селектор файлов Google Drive"
+
+[provider.googledrive.errors]
+notConfigured = "Google Drive не настроен"
+pickerFailed = "Не удалось открыть средство выбора Google Drive"
 
 [provider.oauth2.generic]
 name = "Универсальный OAuth2"
@@ -10775,6 +11021,7 @@ applyWarning = "⚠️ Применение необратимо; отмена �
 colorLabel = "Цвет скрытия"
 controlsTitle = "Ручные элементы управления зачернением"
 instructions = "Выберите текст или нарисуйте области в PDF, чтобы пометить содержимое для зачернения."
+notImplemented = "Интерфейс ручного редактирования будет доступен здесь после реализации."
 title = "Инструменты зачернения"
 
 [redact.modeSelector]
@@ -11102,6 +11349,9 @@ failed = "Произошла ошибка при повороте PDF."
 [rotate.preview]
 title = "Предпросмотр поворота"
 
+[rotate.settings]
+title = "Настройки"
+
 [rotate.tooltip.controls]
 text = "Используйте кнопки поворота для изменения ориентации. Левая — против часовой, правая — по часовой. Каждый щелчок поворачивает на 90°."
 title = "Управление"
@@ -11119,6 +11369,16 @@ hideSmallLabels = "Скрыть мелкие метки"
 physicalValues = "Физические"
 scaled = "Масштабированные"
 showAllLabels = "Показать все метки"
+
+[ruler.units]
+cm = "Сантиметры (cm)"
+ft = "Футы (ft)"
+in = "Дюймы (in)"
+km = "Километры (km)"
+m = "Метры (m)"
+mi = "Мили (mi)"
+mm = "Миллиметры (mm)"
+yd = "Ярды (yd)"
 
 [sanitize]
 desc = "Удаление потенциально вредных элементов из PDF-файлов."
@@ -11184,6 +11444,7 @@ calibrationPaperDistance = "Измеренное расстояние на ст�
 calibrationTitle = "Калибровать масштаб"
 calibrationTooltip = "Измерьте известное расстояние, чтобы автоматически рассчитать масштаб"
 customScale = "Пользовательский масштаб"
+customUnit = "{{unit}} (пользовательская)"
 noneSet = "Пользовательский масштаб не задан"
 presets = "Предустановленные масштабы"
 ratio = "Коэффициент масштаба"
@@ -11207,6 +11468,9 @@ title = "Извлечённые изображения"
 
 [scannerImageSplit.error]
 failed = "Произошла ошибка при извлечении отсканированных фотографий."
+
+[scannerImageSplit.settings]
+title = "Настройки"
 
 [scannerImageSplit.tooltip]
 headsUp = "Внимание"
@@ -11274,6 +11538,9 @@ general = "Общие"
 limits = "Ограничения и производительность"
 models = "Модели и поставщики"
 title = "ИИ"
+
+[settings.billing]
+title = "Оплата"
 
 [settings.configuration]
 advanced = "Дополнительно"
@@ -11348,8 +11615,6 @@ defaultPdfEditor = "Редактор PDF по умолчанию"
 defaultPdfEditorActive = "Stirling PDF — ваш редактор PDF по умолчанию"
 defaultPdfEditorChecking = "Проверка..."
 defaultPdfEditorInactive = "Другое приложение назначено по умолчанию"
-defaultPdfEditorRemind = "Напоминать установить по умолчанию"
-defaultPdfEditorRemindDescription = "Показывать баннер, когда Stirling PDF не является вашим приложением PDF по умолчанию."
 defaultPdfEditorSet = "Уже по умолчанию"
 defaultStartupView = "Вид по умолчанию при запуске"
 defaultStartupViewDescription = "Выберите, какая вкладка в левой колонке будет активной при запуске приложения"
@@ -11618,6 +11883,15 @@ people = "Участники"
 teams = "Команды"
 title = "Рабочее пространство"
 
+[setup.error]
+loginIncomplete = "Не удалось завершить вход"
+noSaasServer = "Сервер SaaS не настроен"
+noServer = "Сервер не настроен"
+saasLoginFailed = "Сбой входа в SaaS"
+saasLoginIncomplete = "Не удалось завершить вход в SaaS"
+selfHostedLoginFailed = "Сбой входа на самостоятельно размещенный сервер"
+signupIncomplete = "Не удалось завершить регистрацию"
+
 [setup.login]
 connectingTo = "Подключение к:"
 oauthPending = "Открываем браузер для аутентификации..."
@@ -11661,6 +11935,7 @@ configFetchError = "Не удалось получить конфигураци�
 emptyUrl = "Введите URL сервера"
 invalidUrl = "Неверный формат URL. Введите корректный URL, например https://your-server.com"
 testFailed = "Тест подключения не пройден"
+unknown = "Неизвестная ошибка"
 unreachable = "Не удалось подключиться к серверу"
 
 [setup.server.error.securityDisabled]
@@ -11769,6 +12044,7 @@ canvas = "После того как вы нарисуете подпись на
 image = "После загрузки изображения подписи выше щелкните в любом месте PDF, чтобы разместить ее."
 noSignature = "Создайте подпись выше, чтобы включить инструменты размещения."
 paused = "Размещение приостановлено"
+placeAnnotation = "Щелкните в любом месте PDF, чтобы разместить аннотацию."
 resumeHint = "Возобновите размещение, чтобы нажать и добавить подпись."
 saved = "Выберите сохранённую подпись выше, затем щёлкните по PDF, чтобы разместить её."
 text = "После ввода вашего имени выше щелкните в любом месте PDF, чтобы поставить подпись."
@@ -11922,7 +12198,9 @@ signUpWith = "Sign up with"
 skip = "Skip"
 subtitle = "Присоединяйтесь к Stirling PDF, чтобы начать"
 title = "Создать аккаунт"
+unableToAccessTool = "Не удается получить доступ к инструменту: {{error}}"
 unexpectedError = "Непредвиденная ошибка: {{message}}"
+unknownError = "Неизвестная ошибка"
 
 [sizes]
 large = "Большой"
@@ -11995,6 +12273,14 @@ rightToLeft = "Разделять справа налево"
 [split.poster.pageSize]
 description = "Размер выходных страниц для печати"
 label = "Целевой размер страницы"
+
+[split.poster.pageSize.options]
+a3 = "A3 (297 × 420 mm)"
+a4 = "A4 (210 × 297 mm)"
+a5 = "A5 (148 × 210 mm)"
+legal = "Legal (8.5 × 14 in)"
+letter = "Letter (8.5 × 11 in)"
+tabloid = "Tabloid (11 × 17 in)"
 
 [split.poster.xFactor]
 description = "Количество столбцов, на которые делится каждая страница"
@@ -12267,6 +12553,7 @@ confirmCancelInvite = "Вы уверены, что хотите отменить
 confirmLeave = "Вы уверены, что хотите покинуть эту команду?"
 confirmLeaveLeader = "Как лидер команды, при выходе вы будете удалены из команды. Продолжить?"
 confirmRemove = "Вы уверены, что хотите удалить этого участника?"
+currentUnavailable = "Не удалось определить вашу текущую команду. Повторите попытку или обратитесь в поддержку, если проблема не исчезнет."
 editName = "Изменить имя команды"
 inviteCancelled = "Приглашение отменено"
 inviteError = "Не удалось отправить приглашение"
@@ -12292,10 +12579,8 @@ renameCancel = "Отменить переименование"
 renameError = "Не удалось переименовать команду"
 renameSubmit = "Сохранить название команды"
 renameSuccess = "Команда успешно переименована"
-transferBody = "Сделать {{email}} владельцем команды? Он будет управлять членством в команде и платежными настройками организации. Вы станете участником. Подписка и кошелек команды останутся у команды."
 transferError = "Не удалось передать право владения. Обновите команду и повторите попытку."
 transferSuccess = "Право владения командой передано. Теперь ваша роль — участник."
-transferTitle = "Передать право владения командой"
 
 [team.invitationBanner]
 acceptButton = "Принять"
@@ -12396,6 +12681,10 @@ WORD = "документ Word"
 XML = "XML-файл"
 XPS = "документ XPS"
 ZIP = "ZIP-архив"
+
+[toolLoading]
+generic = "Загрузка инструмента..."
+named = "Загрузка {{toolName}}..."
 
 [toolPanel]
 alpha = "Альфа"
@@ -12501,6 +12790,8 @@ stable = "STABLE"
 updateAvailable = "Доступно обновление"
 urgentUpdateAvailable = "Срочное обновление"
 version = "Версия"
+versionCount_one = "{{count}} версия"
+versionCount_other = "{{count}} версий"
 versionHistory = "История версий"
 viewGuide = "Открыть руководство"
 whatsNewIn = "Что нового в"
@@ -12528,6 +12819,7 @@ title = "URL в PDF"
 aboutUsageAnalytics = "О аналитике использования"
 configureSettings = "Настроить параметры аналитики"
 error = "Ошибка загрузки статистики использования"
+loadFailed = "Не удалось загрузить статистику использования"
 noData = "Данные недоступны"
 noDataMessage = "Статистика использования временно недоступна."
 usageAnalyticsExplanation = "Аналитика использования отслеживает запросы к конечным точкам и шаблоны использования инструментов. В сочетании с панелью журналирования аудита вы получаете полную видимость активности системы, производительности и событий безопасности."
@@ -12591,7 +12883,6 @@ removeTeam = "Удалить из команды"
 rename = "Переименовать команду"
 resetPw = "Сбросить пароль"
 suspend = "Приостановить"
-transferOwnership = "Передать право владения"
 unlock = "Разблокировать аккаунт"
 
 [users.activity]
@@ -12631,8 +12922,6 @@ disableMfaTitle = "Сбросить MFA"
 removeBody = "Навсегда удалить {{name}} из организации? Это действие нельзя отменить."
 removeTeamBody = "Удалить {{name}} из команды? У них останется учетная запись, но они потеряют доступ к ресурсам этой команды."
 removeTitle = "Удалить участника"
-transferOwnershipBody = "Сделать {{name}} владельцем организации? Он станет администратором. Вы останетесь администратором, но потеряете право владения. Только новый владелец или оператор сервера сможет передать его обратно."
-transferOwnershipTitle = "Передать право владения организацией"
 
 [users.empty]
 description = "Пригласите команду, чтобы начать совместную работу."
@@ -12825,6 +13114,7 @@ signaturesInvalid = "{{count}} недействительных"
 signaturesUnverified_one = "{{count}} требует проверки"
 signaturesUnverified_other = "{{count}} требуют проверки"
 signaturesValid = "{{count}} полностью действительных"
+thumbnailAlt = "Миниатюра {{fileName}}"
 title = "Отчет о проверке подписей"
 
 [validateSignature.report.fields]
@@ -12862,6 +13152,7 @@ lastPage = "Последняя страница"
 loadingEngine = "Загрузка PDF Engine..."
 moreOptions = "Ещё"
 nextPage = "Следующая страница"
+noPdfProvided = "PDF не предоставлен"
 onlyPdfSupported = "Просмотрщик поддерживает только PDF-файлы. Похоже, этот файл другого формата."
 pageNavigation = "Навигация по страницам"
 previousPage = "Предыдущая страница"
@@ -12899,8 +13190,17 @@ collapseAll = "Свернуть все закладки"
 editorOnly = "Закладки этого документа можно редактировать только в редакторе."
 empty = "No bookmarks in this document"
 expandAll = "Развернуть все закладки"
+loadFailed = "Не удалось загрузить закладки"
+loading = "Загрузка закладок..."
+noDocument = "Откройте PDF, чтобы просмотреть его закладки."
+noSearchResults = "Нет закладок, соответствующих вашему поиску"
+openEditor = "Нужно изменить порядок или вложенность? Откройте редактор закладок"
+pageLabel = "Страница"
+pageNumber = "Страница {{page}}"
+saveFailed = "Не удалось сохранить закладку"
 searchPlaceholder = "Поиск закладок"
 title = "Bookmarks"
+untitled = "Без названия"
 
 [viewer.comments]
 addComment = "Добавить комментарий"
@@ -12948,16 +13248,26 @@ unsavedDesc = "У вас есть несохранённые изменения"
 
 [viewer.layers]
 closeSidebar = "Закрыть боковую панель слоев"
+empty = "В этом документе нет слоев."
 hideAll = "Скрыть все слои"
+loadFailed = "Не удалось загрузить слои."
+loading = "Загрузка слоев..."
+noDocument = "Откройте PDF, чтобы просмотреть его слои."
+readFailed = "Не удалось прочитать слои PDF"
 showAll = "Показать все слои"
 title = "Layers"
 
 [viewer.link]
 delete = "Удалить ссылку"
+goTo = "Перейти к {{label}}"
+open = "Открыть ссылку"
+openAria = "Открыть ссылку"
+page = "Страница {{page}}"
 
 [viewer.nonPdf]
 columnDefault = "Столбец {{index}}"
 convertToPdf = "Преобразовать в PDF"
+copied = "Скопировано"
 csvStats = "{{rows}} строк · {{columns}} столбцов · {{size}}"
 emptyFile = "Пустой файл"
 htmlHidePreview = "Скрыть предпросмотр"
@@ -12968,6 +13278,8 @@ htmlShowPreview = "Все равно показать предпросмотр"
 invalidJson = "Некорректный JSON — показано исходное содержимое"
 lineNumbers = "Номера строк"
 loading = "Загрузка..."
+noFile = "Файл не загружен"
+previewUnavailable = "Предпросмотр недоступен для этого типа файла"
 renderMarkdown = "Отобразить markdown"
 sortedBy = "Сортировка по: {{column}}"
 textStats = "{{lines}} строк · {{size}}"
@@ -12994,11 +13306,28 @@ next = "Следующий результат"
 previous = "Предыдущий результат"
 resultsOf = "из {{total}}"
 
+[viewer.sidebar]
+close = "Закрыть боковую панель"
+searchPlaceholder = "Поиск..."
+
 [viewer.signature]
 delete = "Удалить подпись"
+previewAlt = "Предпросмотр подписи"
+
+[viewer.signatureField]
+badge = "Подпись"
+fieldTitle = "Поле подписи: {{name}}"
+signed = "Подписано"
+signedWithReason = "Подписано: {{reason}}"
+unsignedFieldTitle = "Неподписанное поле подписи: {{name}}"
+withTime = "{{label}} ({{time}})"
 
 [viewer.thumbnails]
 closeSidebar = "Закрыть боковую панель миниатюр"
+failed = "Сбой"
+pageNumber = "Страница {{page}}"
+thumbnailAlt = "Миниатюра страницы {{page}}"
+title = "Страницы"
 
 [viewPdf]
 tags = "просмотр,чтение,аннотации,текст,изображение"
@@ -13006,169 +13335,6 @@ title = "Смотреть/Редактировать PDF"
 
 [warning]
 tooltipTitle = "Предупреждение"
-
-[watchedFolders]
-alreadyInFolder = "Already in this folder"
-defaultFolderWarning = "This is a default folder and will be recreated on next reload."
-deleteConfirmBody = "This will remove the folder and its run history. Files already downloaded are not affected."
-deleteConfirmTitle = "Delete folder?"
-folderNotFound = "Folder not found"
-newFolder = "New folder"
-noFolders = "No watched folders yet"
-sidebarTitle = "Watched Folders"
-title = "Watched Folders"
-
-[watchedFolders.actions]
-back = "Back"
-collapse = "Collapse"
-dismiss = "Dismiss"
-download = "Download"
-downloadInput = "Download input"
-downloadOutput = "Download output"
-expand = "Expand"
-retry = "Retry"
-
-[watchedFolders.card]
-delete = "Delete folder"
-edit = "Edit folder"
-
-[watchedFolders.home]
-addAnother = "Add another Watched Folder"
-addAnotherDesc = "Automatically process files with a new pipeline"
-create = "Create your first Watched Folder"
-deleteFolder = "Delete folder"
-editFolder = "Edit folder"
-empty = "No watched folders yet"
-emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
-emptyTitle = "Automate your PDF workflows"
-file = "file"
-files = "files"
-pause = "Pause"
-resume = "Resume"
-
-[watchedFolders.howItWorks]
-step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
-step1Title = "Drop files"
-step2Desc = "Your configured tools process each file automatically"
-step2Title = "Pipeline runs"
-step3Desc = "Download processed files from inside the folder"
-step3Title = "Output ready"
-title = "How Watched Folders work"
-
-[watchedFolders.modal]
-advanced = "Advanced"
-automation = "Automation"
-automationNameFallback = "Watched Folder automation"
-automationRequired = "Add at least one configured step before saving."
-autoNumber = "Auto-number"
-autoNumberExample = "e.g. document.pdf → document (1).pdf"
-autoScanHelp = "New PDF files in this folder are processed automatically every 10 seconds."
-changeFolder = "Change"
-chooseFolder = "Choose"
-clearFolder = "Clear"
-color = "Accent color"
-createFolder = "Create Folder"
-createTitle = "New Watched Folder"
-editTitle = "Edit Watched Folder"
-inputFolder = "Input folder"
-inputFolderNotChosen = "No folder chosen — required for auto-scan"
-inputSource = "Input source"
-inputSourceBrowser = "Browser — drop files here"
-inputSourceLocal = "Local folder (auto-scan)"
-inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
-localOutputFolder = "Local output folder"
-maxRetries = "Max retries"
-name = "Folder name"
-namePlaceholder = "My Watched Folder"
-nameRequired = "Folder name is required"
-nameTooLong = "Folder name must be 50 characters or less"
-outputFolderNotSet = "Not set — outputs stay in app"
-outputFolderUnsupported = "Not supported in this browser"
-outputModeNewDesc = "Output is saved as a new separate file"
-outputModeVersion = "Replace original?"
-outputModeVersionDesc = "Output becomes a new version of the input file rather than a separate file"
-outputName = "Output filename prefix"
-outputNamePrefix = "Filename prefix"
-outputNameSuffix = "Suffix"
-positionPrefix = "Prefix"
-positionSuffix = "Suffix"
-replaceOriginal = "Replace original file"
-retryDelay = "Delay (minutes)"
-saveChanges = "Save Changes"
-saveFailed = "Failed to save folder. Please try again."
-sectionFolder = "Folder"
-sectionSourceOutput = "Source & Output"
-sectionSteps = "Steps"
-
-[watchedFolders.status]
-active = "Active"
-done = "Done"
-paused = "Paused"
-processing = "Processing"
-
-[watchedFolders.time]
-daysAgo = "{{count}}d ago"
-hoursAgo = "{{count}}h ago"
-justNow = "just now"
-minutesAgo = "{{count}}m ago"
-
-[watchedFolders.workbench]
-activity = "Activity"
-addFiles = "Add files"
-allTime = "All time"
-cancel = "Cancel"
-chartTooltipComplete = "{{count}} complete"
-chartTooltipFailed = "{{count}} failed"
-clearSelection = "Clear selection"
-countProcessing = "{{count}} processing"
-countQueued = "{{count}} queued"
-countSelected = "{{count}} selected"
-dataSaved = "Saved"
-dayRunning = "day running"
-daysRunning = "days running"
-delete = "Delete"
-deleteConfirmBody = "Remove notifications only clears the activity log. Delete outputs also removes the processed files from storage. Your original input files are never touched."
-deleteOutputs = "Delete outputs"
-directionIn = "in"
-directionOut = "out"
-dropToProcess = "Drop to process"
-export = "Export"
-exportSeparately = "Export separately"
-exportZip = "Export zip"
-failed = "Failed"
-filesProcessedOverTime = "Files processed over time"
-filterAll = "All"
-filterPending = "Pending"
-inputs = "Inputs"
-inputSize = "Input size"
-legendComplete = "Complete"
-noActivity = "No activity yet — drop a PDF to start"
-noActivityMatch = "No matching activity"
-noInputFolder = "No input folder — edit to configure"
-outputs = "Outputs"
-pause = "Pause"
-preview = "Preview"
-previewInput = "Preview input"
-previewLoadFailed = "Could not load file preview."
-previewOutput = "Preview output"
-queued = "Queued"
-queuedWaiting = "Queued — waiting to run"
-removeEntries = "Remove {{count}} entries"
-removeEntry = "Remove entry"
-removeNotificationsOnly = "Remove notifications only"
-resume = "Resume"
-retryAll = "Retry all"
-retryIn = "retry in {{count}}m"
-retryingSoon = "retrying…"
-retryMixedConfirm = "Some selected files have already completed and will be skipped. Only failed files will be retried. Continue?"
-running = "Running"
-search = "Search…"
-selectAll = "Select all {{count}}"
-sortNameAsc = "A → Z"
-sortNameDesc = "Z → A"
-sortNewest = "Newest"
-sortOldest = "Oldest"
-watching = "Watching: {{name}}"
 
 [watermark]
 desc = "Добавляйте текстовые или графические водяные знаки в PDF-файлы"
@@ -13371,6 +13537,10 @@ certTypeServer = "Сертификат сервера (если доступен
 completedDeclined = "Вы отклонили этот документ."
 completedSigned = "Вы подписали этот документ."
 decline = "Отклонить"
+declineConfirm = "Вы уверены, что хотите отклонить подписание этого документа?"
+declineFailed = "Не удалось отклонить: {{error}}"
+declineSuccess = "Вы отклонили этот запрос на подписание."
+defaultReason = "Подписание документа"
 downloadDocument = "Скачать документ"
 dueDate = "Срок: {{date}}"
 errorTitle = "Ошибка"
@@ -13381,6 +13551,7 @@ locationPlaceholder = "например, San Francisco, CA"
 pageNumber = "Номер страницы (необязательно)"
 reason = "Причина"
 reasonPlaceholder = "например, утверждение документа"
+selectCertificateFile = "Выберите файл сертификата"
 sessionNotFound = "Сессия не найдена или доступ запрещён."
 signDocument = "Подписать документ"
 statusDeclined = "Отклонён"
@@ -13388,7 +13559,9 @@ statusNotified = "Уведомлён"
 statusPending = "В ожидании"
 statusSigned = "Подписан"
 statusViewed = "Просмотрен"
+submitFailed = "Не удалось отправить подпись: {{error}}"
 submitSignature = "Отправить подпись"
+submitSuccess = "Подпись успешно отправлена!"
 
 [workspace]
 title = "Рабочая область"

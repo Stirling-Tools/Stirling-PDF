@@ -302,6 +302,30 @@ class RepairControllerMoreTest {
                 assertFalse(thrown.getMessage().contains("/tmp/repair123.pdf"));
             }
         }
+
+        @Test
+        @DisplayName("a cancelled job stays cancelled rather than reading as unrepairable")
+        void qpdfInterruptPropagates() throws Exception {
+            when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(false);
+            when(endpointConfiguration.isGroupEnabled("qpdf")).thenReturn(true);
+
+            try (MockedStatic<ProcessExecutor> mockedFactory = mockStatic(ProcessExecutor.class)) {
+                ProcessExecutor qpdfExecutor = mock(ProcessExecutor.class);
+                when(qpdfExecutor.runCommandWithOutputHandling(any()))
+                        .thenThrow(new InterruptedException("cancelled"));
+
+                mockedFactory
+                        .when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF))
+                        .thenReturn(qpdfExecutor);
+
+                // The catch names IOException and RuntimeException for this reason: widening it to
+                // Exception would swallow the interrupt and file a verdict on a document nothing
+                // finished reading.
+                assertThrows(
+                        InterruptedException.class,
+                        () -> repairController.repairPdf(pdfFileFrom(inputPdf(1))));
+            }
+        }
     }
 
     @Nested

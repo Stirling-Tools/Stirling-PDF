@@ -69,7 +69,10 @@ export function CustomMetadataCard({
                 },
               })
             }
-            placeholder="username"
+            placeholder={t(
+              "admin.settings.general.customMetadata.author.placeholder",
+              "username",
+            )}
             disabled={!loginEnabled}
           />
         </div>
