@@ -594,6 +594,7 @@ public class EndpointConfiguration {
 
         /* tesseract */
         addEndpointToGroup("tesseract", "ocr-pdf");
+        addEndpointToGroup("tesseract", "auto-rotate-pdf");
 
         /* OCRmyPDF */
         addEndpointToGroup("OCRmyPDF", "ocr-pdf");

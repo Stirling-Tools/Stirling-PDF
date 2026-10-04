@@ -119,7 +119,7 @@ const Compare = (props: BaseToolProps) => {
     registerCustomWorkbenchView({
       id: CUSTOM_VIEW_ID,
       workbenchId: CUSTOM_WORKBENCH_ID,
-      label: "Compare view",
+      label: t("compare.workbenchLabel", "Compare view"),
       icon: compareIcon,
       component: CompareWorkbenchView,
     });

@@ -1,6 +1,7 @@
 import { isAxiosError } from "axios";
 import { extractAxiosErrorMessage } from "@app/services/httpErrorUtils";
 import { alert } from "@app/components/toast";
+import i18n from "i18next";
 
 /**
  * Desktop implementation: intercepts errors from SaaS backend requests
@@ -24,8 +25,12 @@ export function handleSaaSError(error: unknown): boolean {
 
   alert({
     alertType: "error",
-    title: "Cloud Processing Failed",
-    body: `This tool requires cloud processing but encountered an error: ${originalBody}. Please check your connection and try again.`,
+    title: i18n.t("desktop.saasError.title", "Cloud Processing Failed"),
+    body: i18n.t(
+      "desktop.saasError.body",
+      "This tool requires cloud processing but encountered an error: {{error}}. Please check your connection and try again.",
+      { error: originalBody },
+    ),
     expandable: true,
     isPersistentPopup: false,
   });

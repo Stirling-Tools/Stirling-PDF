@@ -278,6 +278,7 @@ customNumberDesc = "例如：「第 {n} 頁」，或留空只顯示數字"
 fontName = "字型名稱"
 fontSize = "字型大小"
 numberPagesDesc = "要編號的頁面，預設為 '全部'，也可使用 1-5 或 2,5,9 等格式"
+pagePreviewAlt = "頁面預覽"
 pagesAndStarting = "頁面與起始編號"
 positionAndPages = "位置與頁面"
 preview = "位置選擇"
@@ -350,7 +351,9 @@ text = "這些權限控制使用者對 PDF 可進行的操作。與擁有者密�
 title = "變更權限"
 
 [addStamp]
+pagePreviewAlt = "頁面預覽"
 preview = "預覽印章"
+stampPreviewAlt = "圖章預覽"
 tags = "圖章,標記,印章,已核准,已拒絕,機密,圖章工具,日期章,核准章,已收件,作廢,副本,正本,stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 
 [AddStampRequest]
@@ -383,6 +386,7 @@ positionAndFormatting = "位置與格式"
 preview = "預覽："
 quickPosition = "選擇頁面上的位置以放置印章。"
 rotation = "旋轉"
+selectedImageAlt = "已選取的圖章影像"
 selectTemplate = "選擇範本..."
 stampSetup = "印章設定"
 stampText = "圖章文字"
@@ -533,6 +537,9 @@ letter = "美式信紙"
 
 [adjustPageScale.scaleFactor]
 label = "縮放係數"
+
+[adjustPageScale.settings]
+title = "設定"
 
 [adjustPageScale.tooltip.description]
 text = "調整 PDF 內容大小並變更頁面尺寸。"
@@ -728,6 +735,7 @@ noLanguages = "在已設定的目錄中找不到任何 tessdata 語言。"
 permissionNotice = "tessdata 路徑不可寫入。下載將在瀏覽器中開啟；請手動將 .traineddata 檔案儲存到 tessdata 資料夾中。"
 
 [admin.settings.ai]
+customProvider = "自訂（OpenAI 相容）"
 description = "讓 Stirling 連線至 Python AI 引擎、選擇模型，並設定執行時的安全限制。"
 managedByCloud = "在此模式下由 Stirling Cloud 管理。"
 managedByCloudShort = "由 Stirling Cloud 管理"
@@ -1146,7 +1154,6 @@ refresh = "重新整理"
 selectFile = "請選取要匯入的 .sql 檔案"
 size = "大小"
 title = "資料庫"
-unavailable = "目前的資料庫設定無法使用備份清單。"
 uploadTitle = "上傳與匯入"
 version = "H2 版本"
 
@@ -1280,6 +1287,7 @@ label = "自訂中繼資料"
 [admin.settings.general.customMetadata.author]
 description = "PDF 中繼資料的預設作者（例如：使用者名稱）"
 label = "預設作者"
+placeholder = "使用者名稱"
 
 [admin.settings.general.customMetadata.autoUpdate]
 description = "自動更新所有處理文件的 PDF 中繼資料"
@@ -1395,6 +1403,7 @@ defaultLocaleLink = "設定預設語系"
 description = "在使用者登入後顯示必須接受的免責聲明。文字依各使用者的語言顯示。"
 discardConfirm = "您有尚未儲存的變更，將會遺失。仍要切換語言嗎？"
 editLabel = "Markdown"
+editPlaceholder = "## 標題\n\n您的免責聲明文字..."
 emptyPreview = "尚無可預覽內容。"
 language = "語言"
 languageHelp = "每種語言都有各自的檔案。若使用者的語言沒有檔案，將改用預設語系的檔案，最後再改用後備文字。"
@@ -1513,8 +1522,10 @@ label = "JWKS URL（選填）"
 placeholder = "從發行者自動探索"
 
 [admin.settings.mcp.mode]
+apikey = "API key（Stirling 每位使用者金鑰）"
 description = "OAuth 需要外部 IdP。API 金鑰模式會使用 Stirling 的個別使用者 API 金鑰（X-API-KEY），最適合自架。"
 label = "驗證模式"
+oauth = "OAuth 2.1（外部 IdP）"
 
 [admin.settings.mcp.requireAccount]
 description = "只有在權杖 subject 對應到已佈建且已啟用的 Stirling 使用者時，才會放行。"
@@ -1931,6 +1942,14 @@ title = "使用者控制設定"
 [agents]
 stirling_name = "Stirling"
 
+[alphabetOptions]
+arabic = "阿拉伯文"
+chinese = "中文（簡體）"
+japanese = "日文"
+korean = "韓文"
+roman = "羅馬字母"
+thai = "泰文"
+
 [analytics]
 learnMore = "了解更多"
 paragraph1 = "Stirling PDF 有選擇性的分析功能，可幫助我們改進產品。我們不會追蹤任何個人資訊或檔案內容。"
@@ -2052,6 +2071,7 @@ week = "週"
 
 [audit.clearData]
 cancel = "取消"
+closeAlert = "關閉警示"
 codeDoesNotMatch = "驗證碼不符"
 codePlaceholder = "在此輸入驗證碼"
 confirmationCode = "確認驗證碼"
@@ -2061,6 +2081,7 @@ confirmTitle = "請確認您要刪除"
 deleteButton = "刪除"
 enterCode = "確認驗證碼"
 enterCodeBelow = "請完整輸入上方驗證碼（區分大小寫）"
+failed = "無法清除稽核資料"
 initiateDelete = "刪除所有資料"
 irreversible = "無法還原"
 success = "成功"
@@ -2069,6 +2090,7 @@ warning1 = "此動作無法復原"
 warning2 = "刪除稽核資料會永久從資料庫中移除所有歷史稽核記錄，包括安全事件、使用者活動與檔案操作。"
 
 [audit.error]
+loadStatus = "無法載入稽核系統狀態"
 title = "載入稽核系統時發生錯誤"
 
 [audit.events]
@@ -2084,6 +2106,7 @@ fileHash = "檔案雜湊"
 filterByType = "依類型篩選"
 filterByUser = "依使用者篩選"
 ipAddress = "IP 位址"
+loadFailed = "無法載入事件"
 noEvents = "找不到任何事件"
 startDate = "開始日期"
 timestamp = "時間戳記"
@@ -2124,6 +2147,7 @@ avgLatency = "平均延遲"
 error = "載入統計時發生錯誤"
 excellent = "極佳"
 good = "良好"
+loadFailed = "無法載入統計資料"
 noData = "無"
 successRate = "成功率"
 totalEvents = "事件總數"
@@ -2158,13 +2182,27 @@ accessDenied = "拒絕存取"
 insufficientPermissions = "您沒有執行此操作的權限。"
 
 [auth.callback]
+alreadySignedIn = "已登入！正在重新導向..."
+backToLogin = "返回登入"
 completing = "正在完成驗證"
+exchanging = "正在交換授權碼..."
+failedWithReason = "驗證失敗：{{error}}"
 invalidToken = "OAuth 登入失敗 - token 無效。"
 missingToken = "OAuth 登入失敗 - 未收到 token。"
+noData = "找不到驗證資料"
 oauthFailed = "OAuth 登入失敗。請再試一次。"
 pleaseWait = "請稍候，我們正在完成登入。"
+processing = "正在處理驗證..."
 signedOut = "您已登出。請再次登入。"
+signInFailed = "無法完成登入：{{error}}"
+success = "登入成功！正在重新導向..."
+unknownError = "未知錯誤"
 windowMayClose = "完成後您可以關閉此視窗。"
+
+[auth.callback.title]
+default = "驗證"
+processing = "正在為您登入"
+success = "您已完成設定！"
 
 [auth.displayName]
 guest = "訪客"
@@ -2317,6 +2355,7 @@ title = "匯入自動化"
 unresolved = "未對應：{{ops}}"
 
 [automate.run]
+progress = "進度：{{current}}/{{total}}"
 title = "執行自動化"
 
 [automate.selection]
@@ -2466,6 +2505,7 @@ whatHappensNext = "接下來會發生什麼？"
 
 [billing.portal]
 error = "開啟計費入口失敗"
+errorFallback = "請再試一次或聯絡支援。"
 
 [bookletImposition]
 paperSizeNote = "紙張尺寸會自動依您的第一頁推算。"
@@ -2513,6 +2553,9 @@ title = "手動雙面模式"
 [bookletImposition.rtlBinding]
 label = "由右至左裝訂"
 tooltip = "適用於阿拉伯文、希伯來文或其他由右至左的語言"
+
+[bookletImposition.settings]
+title = "設定"
 
 [bookletImposition.tooltip.advanced]
 bullet1 = "由右至左裝訂：適用於阿拉伯文、希伯來文或 RTL 語言"
@@ -2582,6 +2625,8 @@ detail = "點選或按空白鍵可再玩一次"
 headline = "全部過關"
 
 [bulkSelection]
+selectedPages_one = "已選取：{{count}} 頁（{{pages}}）"
+selectedPages_other = "已選取：{{count}} 頁（{{pages}}）"
 syntaxError = "語法有問題。請參考「頁面選擇」提示以取得協助。"
 
 [bulkSelection.advanced]
@@ -2802,6 +2847,7 @@ declineButton = "拒絕"
 deleteSelected = "刪除選取的簽名"
 drawSignature = "在下方繪製簽名"
 fileTooLarge = "檔案大小須小於 5MB"
+fontBrushScript = "Brush Script MT（草寫）"
 fontFamily = "字型"
 fontSize = "字型大小：{{size}}px"
 fontSizePlaceholder = "大小"
@@ -2821,6 +2867,7 @@ removeImage = "移除圖片"
 savedSignatures = "已儲存的簽名"
 selectFile = "選擇圖片檔案"
 selectSignatureTitle = "選擇或建立簽名"
+signatureImageAlt = "簽名"
 signatureInfo = "這些設定由文件擁有者指定"
 signatureSettings = "簽名設定"
 signatureText = "簽名文字"
@@ -3591,13 +3638,19 @@ confirm = "確認"
 continue = "繼續"
 copied = "已複製！"
 copy = "複製"
+copyCode = "複製程式碼"
+dismiss = "關閉"
 done = "完成"
 enterValue = "Enter value"
 error = "錯誤"
 expand = "展開"
 filterEmpty = "沒有可篩選的項目"
+goToSlide = "前往投影片 {{number}}"
 loading = "正在載入..."
+moreInformation = "更多資訊"
 next = "下一步"
+noData = "無資料"
+nOfTotal = "{{total}} 之 {{current}}"
 open = "Open"
 preview = "預覽"
 previous = "上一步"
@@ -3606,6 +3659,9 @@ remaining = "剩餘"
 retry = "重試"
 save = "儲存"
 search = "搜尋"
+settingsSections = "設定區段"
+showAllTotal = "顯示全部 {{total}}"
+showLess = "顯示較少"
 stepOf = "Step {{current}} of {{total}}"
 
 [compare]
@@ -3617,6 +3673,7 @@ newLine = "換行"
 pages = "頁面"
 tags = "區分,對比,變化,分析"
 title = "比較"
+workbenchLabel = "比較檢視"
 
 [compare.actions]
 linkScroll = "連結捲動"
@@ -3770,6 +3827,7 @@ title = "壓縮方法"
 desiredSize = "期望檔案大小"
 desiredSizePlaceholder = "輸入大小"
 desiredSizeUnit = "Size unit"
+title = "設定"
 
 [compress.tooltip.description]
 text = "壓縮是減少檔案大小的簡單方法。選擇『檔案大小』可輸入目標大小，系統會為您調整品質。選擇『品質』可手動設定壓縮強度。"
@@ -3819,10 +3877,13 @@ title = "帳號設定"
 description = "上傳圖片以自訂您的帳號。"
 help = "PNG、JPG 或 WebP，最大 2MB。"
 remove = "移除"
+removeFailed = "無法移除個人資料圖片"
 sizeError = "請選擇小於 2MB 的圖片。"
 switchedToCustom = "已切換為自訂圖片。您現在可以上傳自己的圖片。"
+switchFailed = "無法切換為自訂圖片"
 title = "大頭照"
 upload = "上傳"
+uploadFailed = "無法上傳個人資料圖片"
 useCustom = "使用自訂圖片"
 usingProvider = "使用 {{provider}} 的大頭照"
 
@@ -3836,6 +3897,7 @@ title = "裁切大頭照"
 zoom = "縮放"
 
 [config.account.security]
+changeFailed = "無法變更密碼"
 changePassword = "變更密碼"
 description = "管理您的密碼與安全設定。"
 title = "密碼與安全性"
@@ -3846,11 +3908,15 @@ description = "將您的帳號連結起來以保留歷史紀錄並存取更多�
 email = "電子郵件"
 emailPassword = "或輸入您的電子郵件與密碼"
 emailPlaceholder = "輸入您的電子郵件"
+failed = "無法升級帳戶"
+failedWithProvider = "無法使用 {{provider}} 升級帳戶"
 linkWith = "連結至"
+linkWithProvider = "連結 {{provider}}"
 password = "密碼（選填）"
 passwordNote = "留空則僅使用電子郵件驗證"
 passwordPlaceholder = "設定密碼"
 socialLogin = "使用社群帳號升級"
+success = "帳戶已成功升級！您現在可以使用電子郵件登入。"
 title = "升級訪客帳號"
 upgradeButton = "升級帳號"
 
@@ -3960,10 +4026,10 @@ title = "要求無效"
 
 [connect.renewal]
 approve = "更新登入狀態"
+currentOwnerRequired = "請以已連結雲端團隊的目前擁有者身分登入，以續訂此伺服器的登入。若所有權已轉移，請使用新擁有者的帳戶。"
 failed = "無法更新您的登入。請重試，或關閉此頁面並從您的伺服器重新開始。"
 lead = "此伺服器已連結至您的帳號。請更新登入狀態，以回到伺服器的帳務與用量頁面。"
 title = "更新伺服器登入狀態"
-wrongAccount = "此帳號無法更新此伺服器的登入狀態。請切換至原先用來連結伺服器的帳號，且該帳號仍須為已連結團隊的擁有者。"
 
 [convert]
 autoRotate = "自動旋轉"
@@ -4009,6 +4075,7 @@ multiple = "多個"
 optimizeForEbook = "為電子書閱讀器最佳化 PDF（使用 Ghostscript）"
 output = "輸出"
 outputFormat = "輸出格式"
+pdfaAccessibleFormat = "{{format}}（無障礙）"
 pdfaDigitalSignatureWarning = "該 PDF 的憑證簽章將會在下一步被移除"
 pdfaNote = "PDF/A-1b 相容性較佳，PDF/A-2b 支援更多功能。"
 pdfaOptions = "PDF/A 選項"
@@ -4068,6 +4135,24 @@ outputFormatDesc = "選擇電子書的輸出格式"
 tabletPhone = "平板／手機（含圖片）"
 targetDevice = "目標裝置"
 targetDeviceDesc = "選擇為閱讀裝置最佳化的輸出設定檔"
+
+[convert.formatGroups]
+archive = "封存"
+document = "文件"
+ebook = "eBook"
+email = "電子郵件"
+file = "檔案"
+image = "影像"
+multipleFiles = "多個檔案"
+presentation = "簡報"
+spreadsheet = "試算表"
+text = "文字"
+web = "Web"
+
+[convert.formatOptions]
+any = "任何"
+images = "影像"
+msgOutlook = "MSG（Outlook）"
 
 [cookieBanner.popUp]
 acceptAllBtn = "接受"
@@ -4161,6 +4246,12 @@ label = "Y 位置"
 [crop.error]
 failed = "裁切 PDF 失敗"
 
+[crop.pageNumbers]
+description = "裁切特定頁面的選取區域，或使用 'all' 套用至每一頁。"
+error = "頁面選擇無效。請使用例如 1, 3, 5-8 或 all。"
+label = "要裁切的頁面"
+placeholder = "例如 1, 3, 5-8 或 all"
+
 [crop.preview]
 title = "裁切區域選擇"
 
@@ -4196,6 +4287,17 @@ title = "已開啟設定"
 [defaultApp.success]
 message = "Stirling PDF 已成為您的預設 PDF 編輯器"
 title = "已設為預設應用程式"
+
+[desktop.titleBar]
+maximize = "最大化"
+minimize = "最小化"
+restore = "還原"
+
+[desktopBilling]
+description = "在瀏覽器中管理使用量與帳務。請使用您在此處使用的相同 Stirling 帳戶登入。"
+open = "在瀏覽器中開啟使用量與帳務"
+openFailed = "無法開啟使用量與帳務。請檢查您的連線後再試一次。"
+selfHostedDescription = "在瀏覽器中於已連線的伺服器上管理使用量與帳務。請使用您的伺服器擁有者帳戶登入。"
 
 [desktopFileLink]
 saveAs = "另存新檔…"
@@ -4259,6 +4361,7 @@ tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,ident
 noItems = "No items available"
 noResults = "No results found"
 searchPlaceholder = "搜尋..."
+selectedCount = "已選取 {{count}} 個"
 selectLanguages = "Select languages"
 selectOption = "Select an option"
 
@@ -4269,6 +4372,7 @@ editSecretValue = "編輯機密值"
 [editTableOfContents]
 submit = "套用目錄"
 tags = "bookmarks,contents,edit,table of contents,TOC,outline,navigation,chapters,sections,add bookmarks,edit bookmarks,PDF outline"
+workbenchLabel = "大綱工作區"
 
 [editTableOfContents.actions]
 clipboardUnavailable = "此瀏覽器無法存取剪貼簿。"
@@ -4429,6 +4533,27 @@ closeFile = "關閉檔案"
 
 [fileEditor]
 addFiles = "新增檔案"
+closedFile = "已關閉 {{name}}"
+couldNotSave = "無法儲存 {{name}}"
+filesAdded_one = "已新增 {{count}} 個檔案"
+filesAdded_other = "已新增 {{count}} 個檔案"
+filesReordered_one = "檔案已重新排序"
+filesReordered_other = "{{count}} 個檔案已重新排序"
+loadedFromStorage_one = "已從儲存空間載入 {{count}} 個檔案"
+loadedFromStorage_other = "已從儲存空間載入 {{count}} 個檔案"
+loadFromStorageFailed = "無法從儲存空間載入部分檔案"
+pinnedFile = "已釘選 {{name}}"
+processFilesFailed = "無法處理檔案"
+savedAndClosed = "已儲存並關閉 {{name}}"
+saveFailed = "儲存失敗"
+unpinnedFile = "已取消釘選 {{name}}"
+unzipping = "正在解壓縮 {{name}}"
+
+[fileEditor.unzip]
+error = "解壓縮 {{name}} 時發生錯誤"
+extracted_one = "已從 {{name}} 解壓縮 {{count}} 個檔案"
+extracted_other = "已從 {{name}} 解壓縮 {{count}} 個檔案"
+failed = "無法從 {{name}} 解壓縮檔案"
 
 [fileManager]
 addToUpload = "加入上傳"
@@ -4445,6 +4570,7 @@ noFiles = "沒有可用的檔案"
 noFilesFound = "找不到符合搜尋條件的檔案"
 openInFileEditor = "在檔案編輯器中開啟"
 openInPageEditor = "在頁面編輯器中開啟"
+reloadFiles = "重新載入檔案"
 saveSelected = "儲存已選"
 searchFiles = "搜尋檔案..."
 share = "共用"
@@ -4454,6 +4580,8 @@ sharedEditNoticeConfirm = "了解"
 sharedEditNoticeTitle = "伺服器副本為唯讀"
 sharedWithYou = "與您共用"
 showAll = "顯示全部"
+showAllCount_one = "顯示全部（{{count}} 個檔案）"
+showAllCount_other = "顯示全部（{{count}} 個檔案）"
 sortBy = "Sort files"
 sortByDate = "依日期排序"
 sortByName = "依名稱排序"
@@ -4490,6 +4618,11 @@ sources = "檔案來源"
 subtitle = "從你的資料庫中選擇，或新增內容。"
 title = "新增檔案"
 unsupported = "所選工具不支援此檔案類型。"
+
+[filePreview]
+loadingThumbnail = "正在載入縮圖..."
+locked = "已鎖定"
+previewOf = "{{name}} 的預覽"
 
 [files]
 addFiles = "新增檔案"
@@ -4925,13 +5058,15 @@ title = "檔案轉 PDF"
 [fileUpload]
 dropFilesHere = "將檔案拖放到此處或點選上傳按鈕"
 dropFilesHereOpen = "將檔案拖曳到此處或點選開啟按鈕"
-filesAvailable = "個可用檔案"
+filesAvailableCount_one = "{{count}} 個檔案可用"
+filesAvailableCount_other = "{{count}} 個檔案可用"
 loadFromStorage = "從儲存空間載入"
 noFilesInStorage = "儲存空間中沒有可用檔案。請先上傳一些檔案。"
 noFilesInStorageOpen = "儲存空間中沒有可用檔案。請先開啟一些檔案。"
 open = "開啟"
 openFile = "開啟檔案"
 openFiles = "開啟多個檔案"
+selectedCount = "已選取 {{count}} 個"
 selectFile = "Select {{name}}"
 selectFromStorage = "從儲存空間選取"
 upload = "上傳"
@@ -5023,6 +5158,7 @@ rescanFields = "重新掃描欄位"
 rescanFormFields = "重新掃描表單欄位"
 save = "儲存"
 saveShortcut = "Ctrl+S 儲存"
+selectOptionPlaceholder = "— 選取 —"
 skippedEdits_one = "無法套用 1 項變更："
 skippedEdits_other = "無法套用 {{count}} 項變更："
 skippedEditsTruncated = "另有 {{count}} 項未列出。"
@@ -5085,6 +5221,16 @@ tooltipHelp = "滑鼠停留在 PDF 閱讀器中的欄位上時顯示的提示。
 type = "類型"
 typeHelp = "這是何種類型的欄位。變更它會重建欄位，因此目前的值不會保留。"
 
+[formFill.fieldTypes]
+button = "按鈕"
+checkbox = "核取方塊"
+combobox = "下拉選單"
+listbox = "清單方塊"
+radio = "選項按鈕"
+radioGroup = "選項按鈕群組"
+signature = "簽名"
+text = "文字"
+
 [formFill.mode]
 create = "建立"
 fill = "填寫"
@@ -5102,11 +5248,16 @@ restore = "還原"
 
 [formFill.sidebar]
 close = "關閉側邊欄"
+empty = "此 PDF 中找不到表單欄位"
+loading = "正在載入表單欄位..."
+pageNumber = "第 {{page}} 頁"
+title = "表單欄位"
 
 [getPdfInfo]
 downloadJson = "下載 JSON"
 downloads = "下載"
 indexTitle = "索引"
+noData = "無資料"
 noneDetected = "未偵測到"
 noResults = "執行此工具以產生報告。"
 processing = "正在擷取資訊..."
@@ -5122,6 +5273,8 @@ noVerification = "未執行驗證"
 noVerificationDesc = "未針對此文件驗證其是否符合 PDF 標準。"
 passed = "合格"
 passedCount = "合格"
+secCompliant = "文件符合 SEC EDGAR 申報要求"
+secNotCompliant = "文件不符合 SEC EDGAR 申報要求"
 
 [getPdfInfo.error]
 partial = "部分檔案無法處理。"
@@ -5129,10 +5282,15 @@ unexpected = "擷取過程發生非預期錯誤。"
 
 [getPdfInfo.other]
 attachments = "附件"
+created = "建立日期：{{date}}"
 embeddedFiles = "內嵌檔案"
+fileSizeBytes = "（{{size}} 位元組）"
 javaScript = "JavaScript"
 layers = "圖層"
+modified = "修改日期：{{date}}"
 structureTree = "結構樹"
+unnamedAttachment = "未命名附件"
+unnamedFile = "未命名檔案"
 xmp = "XMPMetadata"
 
 [getPdfInfo.perPage]
@@ -5142,6 +5300,7 @@ images = "影像"
 links = "連結"
 multimedia = "多媒體"
 size = "尺寸"
+unnamedImage = "影像"
 xobjects = "XObject 數量"
 
 [getPdfInfo.report]
@@ -5670,6 +5829,7 @@ invalidEmail = "電子郵件地址無效"
 invalidInvitation = "無效的邀請"
 invalidToken = "無效的邀請連結"
 linkExpires = "連結到期"
+linkExpiresAt = "連結到期：{{date}} {{time}}"
 passwordMismatch = "密碼不相符"
 passwordPlaceholder = "輸入您的密碼"
 passwordRequired = "需要密碼"
@@ -5684,6 +5844,7 @@ welcomeTitle = "您已獲邀！"
 addFiles = "新增檔案"
 mobileUpload = "從行動裝置上傳"
 openFromComputer = "從電腦開啟"
+settingUpSession = "正在設定您的工作階段..."
 uploadFromComputer = "從電腦上傳"
 
 [language]
@@ -5765,6 +5926,7 @@ sessionExpired = "您的工作階段已過期。請重新登入。"
 signin = "登入"
 signingIn = "正在登入..."
 signInWith = "使用以下方式登入"
+signInWithProvider = "使用 {{provider}} 登入"
 title = "登入"
 unexpectedError = "未預期的錯誤：{{message}}"
 updatePassword = "更新密碼"
@@ -5806,6 +5968,9 @@ label = "移除合併後檔案中的數位簽章？"
 description = "合併檔案時會使數位簽章失效。勾選此項以從最終合併的 PDF 移除它們。"
 title = "移除數位簽章"
 
+[merge.settings]
+title = "設定"
+
 [merge.sortBy]
 ascending = "遞增"
 dateModified = "修改日期"
@@ -5814,6 +5979,9 @@ description = "檔案將依選取順序合併。可拖曳重新排序或在下�
 filename = "檔案名稱"
 label = "排序依據"
 sort = "排序"
+
+[merge.sortFiles]
+title = "排序檔案"
 
 [merge.tooltip.header]
 title = "合併設定概覽"
@@ -5862,6 +6030,7 @@ validating = "正在驗證工作階段…"
 
 [mobileSign]
 clear = "Clear"
+drawingArea = "簽名繪製區域"
 invalidSession = "Session expired"
 invalidSessionMessage = "This QR code is no longer valid. Open the Sign tool on your computer and scan the new code."
 penSizeLabel = "Pen size"
@@ -5877,6 +6046,7 @@ validating = "Checking session…"
 fromGallery = "From gallery"
 hint = "Photograph a signature on white paper, or choose an existing image."
 invalidType = "Please choose an image file."
+previewAlt = "簽名"
 takePhoto = "Take a photo"
 
 [mobileSign.tab]
@@ -5988,6 +6158,9 @@ profile = "檢視您的基本個人資料"
 desc = "清理掃描並從 PDF 中的影像中偵測文字並重新新增為文字。"
 tags = "識別,文字,影像,掃描,讀取,識別,偵測,可編輯"
 title = "OCR / 掃描清理"
+
+[ocr.advanced]
+title = "進階"
 
 [ocr.error]
 failed = "OCR 作業失敗"
@@ -6183,6 +6356,7 @@ message = "應用程式近期進行了重大變更，可能需要您的伺服器
 roleAdmin = "管理員"
 rolePlaceholder = "確認您的角色"
 roleUser = "使用者"
+title = "安全性檢查"
 
 [onboarding.serverLicense]
 freeBody = "我們的 <strong>Open-Core</strong> 授權免費提供 <strong>OAuth SSO</strong>，並支援最多 <strong>{{freeTierLimit}}</strong> 位使用者。若要無縫擴充，我們推薦 Stirling Team 方案 — 每月 99 美元，包含 <strong>100 位使用者</strong>。"
@@ -6271,16 +6445,93 @@ title = "疊加檔案"
 text = "前景將疊加置於頁面上方；背景則置於其下。"
 title = "疊加位置"
 
+[ownership]
+acceptInvite = "他們可以建立帳戶或登入，然後接受邀請。"
+accessUpdated = "他們的擁有者存取權已準備就緒。"
+accountLinkDisabled = "此伺服器仍有雲端連結，但帳戶連結已關閉。請要求伺服器操作員啟用帳戶連結，然後繼續此轉移，或在設定中取消連結伺服器。"
+anotherTeam = "已在另一個團隊中？"
+billing = "訂閱、錢包、付款方式和現有授權都會保留。帳務聯絡資料不會自動變更。"
+billingDetails = "帳務詳細資料"
+billingUnchanged = "訂閱與帳務會保留"
+bothDone = "伺服器與雲端所有權現在已一致。"
+cancel = "取消轉移"
+check = "再次檢查"
+checkAccount = "檢查帳戶"
+chooseEmail = "在 {{team}} 中選擇他們的帳戶，或輸入電子郵件邀請他們。"
+close = "關閉轉移對話方塊"
+cloudAccount = "Stirling 帳戶"
+cloudScopeStyled = "<user>{{name}}</user> 將管理 {{team}}、其成員與帳務。"
+cloudTargetChanged = "請選擇另一位雲端成員。此帳戶不再符合交接資格。"
+confirm = "我了解存取權與所有權的變更。"
+done = "所有權已轉移"
+error = "我們無法完成此步驟。請確認接收者處於啟用狀態且伺服器已連線，然後再次檢查。待處理的轉移可在此繼續。"
+finish = "完成伺服器轉移"
+inProgress = "已有另一位接收者有待處理的轉移。請關閉此對話方塊，並從使用者繼續該轉移。"
+instances = "此團隊有 {{count}} 台已連結伺服器。其雲端帳務會保留在此團隊；其他伺服器的本機擁有者不會變更。"
+invitationSent = "邀請已傳送"
+invite = "傳送邀請"
+inviteAddress = "邀請 <account>{{email}}</account> 加入 {{team}}。"
+inviteBlocked = "無法傳送邀請。請檢查可用的團隊席位，以及接收者是否已有付費訂閱。"
+linkChanged = "伺服器的雲端連結已變更。請要求伺服器操作員在繼續之前還原原始連結。"
+linkedServerCount = "{{count}} 台已連結伺服器"
+linkRevoked = "此伺服器的雲端連結已不再有效。請取消轉移，然後在設定中重新連線您的 Stirling 帳戶。所有權不會變更。"
+localScope = "他們將擁有此伺服器並管理帳務與雲端連線。您會保留管理員存取權，但會失去對這些設定的存取權。"
+membershipDetails = "團隊成員資格詳細資料"
+membershipFirst = "他們必須先加入團隊，您才能確認轉移。"
+membershipRequired = "接收者必須先加入此雲端團隊，才能轉移所有權。請要求他們接受邀請，然後再次檢查。"
+newOwnerLabel = "新擁有者"
+newOwnerStyled = "<user>{{name}}</user> 現在是擁有者。"
+noEmailMatches = "沒有符合的成員。請輸入電子郵件進行邀請。"
+otherTeam = "如果他們屬於另一個團隊，接受邀請可能會移動其帳戶。可能需要先處理付費帳戶或另一個團隊的所有權。我們不會移動他們的訂閱或合併團隊。"
+ownerChanged = "此轉移開始後，雲端所有權已變更。請取消此轉移，並以目前的雲端擁有者重新開始。"
+ownerRequired = "請以目前的雲端團隊擁有者身分登入，然後再次嘗試此步驟。"
+partialError = "雲端所有權已轉移。請完成伺服器轉移，以保持兩邊擁有者一致。"
+partialTargetChanged = "請還原所選伺服器使用者的存取權與原始帳戶詳細資料，然後完成伺服器轉移。雲端所有權已經轉移。"
+pending = "轉移給 {{name}} 的所有權正在待處理。"
+personalTeam = "個人團隊無法轉移所有權。"
+prepareHelp = "接收者必須已完成首次伺服器登入。您可以在此重試，或返回使用者選擇其他人。"
+resume = "繼續轉移"
+searchEmail = "搜尋或輸入電子郵件"
+serverAccount = "伺服器帳戶"
+serverDetails = "已連結伺服器詳細資料"
+signIn = "登入雲端"
+startFromInstanceBody = "此團隊有已連結的伺服器。在自架伺服器上，開啟設定 → 使用者，並將接收者的角色變更為組織擁有者。該流程會在完成伺服器轉移前先轉移雲端所有權。"
+startFromInstanceTitle = "從您的自架伺服器開始"
+stayOwner = "在轉移前，您仍是擁有者。"
+targetChanged = "接收者的帳戶已變更。請還原其存取權，或取消此轉移並再次選擇他們。"
+title = "轉移所有權"
+transfer = "轉移所有權"
+waitingForEmail = "正在等待 {{email}} 加入 {{team}}。"
+working = "正在檢查並更新所有權..."
+yourCloudAccess = "您將成為團隊成員並失去擁有者存取權。"
+
 [pageEdit]
 deselectAll = "全部不選"
 selectAll = "全選"
 
 [pageEditor]
+dragPreviewAlt = "拖曳中"
+filePosition = "位置 {{position}}"
+pageLabel = "第 {{page}} 頁"
 title = "頁面編輯器"
+
+[pageEditor.actions]
+deletePage = "刪除頁面"
+insertFileAfter = "在後方插入檔案"
+moveLeft = "向左移動"
+moveRight = "向右移動"
+rotateLeft = "向左旋轉"
+rotateRight = "向右旋轉"
+splitAfter = "在後方分割"
 
 [pageEditor.emptyState]
 body = "新增檔案以開始編輯頁面"
 title = "尚未載入 PDF 檔案"
+
+[pageEditor.fileDropdown]
+addFile = "新增檔案"
+selectedCount = "已選取 {{selected}}/{{total}} 個檔案"
+untitled = "未命名"
 
 [pageEditor.toolbar]
 delete = "刪除所選"
@@ -6386,6 +6637,11 @@ portrait = "直向"
 label = "閱讀方向："
 ltr = "由左至右"
 rtl = "由右至左"
+
+[pageLayout.steps]
+advanced = "進階設定"
+layout = "版面設定"
+marginsBorders = "邊界與框線"
 
 [pageLayout.tooltip.header]
 title = "頁面版面配置指南"
@@ -6707,13 +6963,12 @@ teamChangeUnavailable = "無法載入排定的 Team 方案變更。請重新整�
 teamPending = "Team 方案購買仍在處理中。請稍後重新整理此頁面。"
 teamProcessing = "正在處理 Team 方案購買"
 teamScheduled = "Team 方案變更已排定於 {{date}} 生效。在此之前，目前的人數額度仍有效。"
+unknownError = "發生未知錯誤"
 upgradeComplete = "升級完成"
 upgradeCompleteMessage = "您的訂閱已成功升級。既有授權金鑰已更新。"
 upgradeSuccess = "付款成功！您的訂閱已升級。伺服器上的授權已更新。您將很快收到確認電子郵件。"
 upgradeTitle = "升級至 {{planName}}"
 yearly = "年繳"
-
-[payment.addCapacity]
 
 [payment.adjustTeam]
 title = "調整 Team 方案"
@@ -6763,6 +7018,14 @@ selectedMonthly = "月繳"
 selectedYearly = "年繳"
 selectMonthly = "選擇月繳"
 selectYearly = "選擇年繳"
+
+[payment.priceDisplay]
+basePrice = "基本價格"
+perPeriod = "/{{period}}"
+perSeat = "每席位"
+perSeatPeriod = "/席位/{{period}}"
+totalSeats_one = "總計（{{count}} 個席位）"
+totalSeats_other = "總計（{{count}} 個席位）"
 
 [payment.upgradeTeam]
 title = "升級至 Team"
@@ -6982,6 +7245,10 @@ save = "儲存"
 style = "樣式"
 tapToPlace = "點一下頁面上要放置文字的位置"
 unlock = "解除鎖定"
+
+[pdfTextEditor.pageView]
+pageNumber = "第 {{page}} 頁"
+renderFailed = "無法呈現頁面"
 
 [pdfTextEditor.password]
 cancel = "取消"
@@ -7209,6 +7476,7 @@ title = "管線"
 contact = "聯絡我們"
 current = "目前方案"
 featureComparison = "功能比較"
+fetchError = "無法取得價格資料"
 from = "起"
 hideComparison = "隱藏功能比較"
 licensedSeats = "已授權：{{count}} 席"
@@ -7224,6 +7492,8 @@ withServer = "+ Team 方案"
 [plan.api]
 large = "5,000 點"
 medium = "1,000 點"
+perCredit = "每點數 {{price}}"
+perCreditWithDiscount = "每點數 {{price}} • {{discount}}% 折扣"
 small = "500 點"
 xsmall = "100 點"
 
@@ -7299,14 +7569,9 @@ upToFiveUsers = "最多 5 位使用者"
 usageTrackingPrometheus = "使用追蹤與 Prometheus"
 usersIncluded = "包含 100 位使用者"
 
-[plan.licenseWarning]
-body = "目前有 {{total}} 位使用者，但免費方案僅支援 {{limit}} 位。請升級以保持 Stirling PDF 運作順暢。"
-cta = "檢視方案"
-overLimit = "多於 {{limit}}"
-title = "自架免費上限已達"
-
 [plan.period]
 month = "月"
+year = "年"
 
 [plan.pro]
 highlight1 = "工具使用不限次數"
@@ -7432,6 +7697,9 @@ pdfa-1 = "PDF/A-1b"
 pdfa-2b = "PDF/A-2b"
 pdfa-3b = "PDF/A-3b"
 
+[portal.accountLink]
+ownerRequired = "只有組織擁有者可以連結或取消連結此伺服器。"
+
 [portal.accountLink.card]
 billingNote = "此伺服器會共用團隊在 Stirling Cloud 的處理額度。"
 connectDescription = "連結此伺服器，以使用你團隊在 Stirling Cloud 中的處理額度。"
@@ -7553,6 +7821,7 @@ identity = "Stirling 帳戶"
 linkTitle = "連結您的 Stirling 帳戶"
 noAuthorizeUrl = "Stirling 未提供可繼續前往的網址。請稍後再試。"
 startFailed = "無法連上 Stirling 以開始連線。請檢查此伺服器的對外網路存取，然後再試一次。"
+transferPending = "有一項所有權轉移待處理。請前往設定 → 使用者完成或取消它，然後再次嘗試連結。"
 
 [portal.accountLink.modal.loginNotConfigured]
 after = "讓此伺服器在您回到此頁面時完成連線。"
@@ -7846,8 +8115,6 @@ rateUnknown = "我們會在結帳時顯示確切價格。"
 [portal.billing.prepaid.consent]
 label = "我了解當我的預付容量用完或 12 個月後到期時，除非我取消，處理會自動以標準計量隨用隨付費率繼續（最高至我的支出上限），且我可以隨時從帳單入口網站取消。"
 
-[portal.billing.prepaid.deploy]
-
 [portal.billing.prepaid.offer]
 title = "以 10 個月價格取得 12 個月"
 
@@ -7861,15 +8128,9 @@ payOnline = "線上付款"
 poNumber = "PO 編號（選填）"
 poNumberPlaceholder = "例如 PO-2026-0142"
 
-[portal.billing.prepaid.pipelines]
-
-[portal.billing.prepaid.posture]
-
 [portal.billing.prepaid.review]
 download = "下載報價（PDF）"
 downloading = "準備中…"
-
-[portal.billing.prepaid.size]
 
 [portal.billing.processor]
 activate = "啟用 Processor"
@@ -7965,8 +8226,6 @@ useSuggested = "使用建議 · {{amount}} / 月"
 body_one = "以 {{rate}}/天計算，您約 {{count}} 天後會達到上限（約 {{monthEnd}} 月底）。建議限制約 {{suggested}}。"
 body_other = "以 {{rate}}/天計算，您約 {{count}} 天後會達到上限（約 {{monthEnd}} 月底）。建議限制約 {{suggested}}。"
 label = "預計會超出。"
-
-[portal.billing.spendLimitModal]
 
 [portal.billing.subscribedPlan.capWarn]
 approachingBody = "現在提高上限，讓自動處理永不暫停。"
@@ -9448,6 +9707,7 @@ labelId = "標籤 ID"
 labelIdHelp = "來自 Purview 入口網站的標籤 GUID。套用標籤會將其中繼資料寫入 PDF；它無法加密，加密需要 Microsoft 用戶端。"
 labelName = "標籤名稱（選填）"
 labelNameHelp = "與 ID 一起記錄，讓人員和工具能辨識標籤。"
+labelNamePlaceholder = "機密"
 
 [portal.policies.config.purview.fields.method]
 help = "Purview 會區分由政策套用的標籤與人員選擇的標籤。"
@@ -10510,6 +10770,10 @@ label = "用戶端 ID"
 description = "允許使用者直接從 Google Drive 匯入檔案"
 label = "啟用 Google Drive 檔案選擇器"
 
+[provider.googledrive.errors]
+notConfigured = "Google Drive 尚未設定"
+pickerFailed = "無法開啟 Google Drive 選擇器"
+
 [provider.oauth2.generic]
 name = "通用 OAuth2"
 scope = "SSO"
@@ -10757,6 +11021,7 @@ applyWarning = "⚠️ 永久套用，無法復原，且底層資料將被刪除
 colorLabel = "遮蔽顏色"
 controlsTitle = "手動塗黑控制"
 instructions = "在 PDF 上選取文字或繪製區域，以標記要塗黑的內容。"
+notImplemented = "手動遮蔽介面將在實作後於此處提供。"
 title = "塗黑工具"
 
 [redact.modeSelector]
@@ -11084,6 +11349,9 @@ failed = "旋轉 PDF 時發生錯誤。"
 [rotate.preview]
 title = "旋轉預覽"
 
+[rotate.settings]
+title = "設定"
+
 [rotate.tooltip.controls]
 text = "使用旋轉按鈕調整方向。左鍵為逆時針，右鍵為順時針。每次點選旋轉 90 度。"
 title = "控制項"
@@ -11101,6 +11369,16 @@ hideSmallLabels = "隱藏小標籤"
 physicalValues = "實體"
 scaled = "已縮放"
 showAllLabels = "顯示所有標籤"
+
+[ruler.units]
+cm = "公分 (cm)"
+ft = "英尺 (ft)"
+in = "英吋 (in)"
+km = "公里 (km)"
+m = "公尺 (m)"
+mi = "英里 (mi)"
+mm = "毫米 (mm)"
+yd = "碼 (yd)"
 
 [sanitize]
 desc = "從 PDF 檔案移除可能有害的元素。"
@@ -11166,6 +11444,7 @@ calibrationPaperDistance = "測得頁面距離：{{distance}}"
 calibrationTitle = "校準比例尺"
 calibrationTooltip = "測量已知距離以自動計算比例尺"
 customScale = "自訂比例尺"
+customUnit = "{{unit}}（自訂）"
 noneSet = "未設定自訂比例尺"
 presets = "預設比例尺"
 ratio = "比例尺比率"
@@ -11189,6 +11468,9 @@ title = "已擷取的影像"
 
 [scannerImageSplit.error]
 failed = "擷取相片掃描時發生錯誤。"
+
+[scannerImageSplit.settings]
+title = "設定"
 
 [scannerImageSplit.tooltip]
 headsUp = "提醒"
@@ -11256,6 +11538,9 @@ general = "AI 引擎"
 limits = "限制與效能"
 models = "模型與提供者"
 title = "AI"
+
+[settings.billing]
+title = "帳務"
 
 [settings.configuration]
 advanced = "進階"
@@ -11598,6 +11883,15 @@ people = "成員"
 teams = "團隊"
 title = "工作空間"
 
+[setup.error]
+loginIncomplete = "無法完成登入"
+noSaasServer = "未設定 SaaS 伺服器"
+noServer = "未設定伺服器"
+saasLoginFailed = "SaaS 登入失敗"
+saasLoginIncomplete = "無法完成 SaaS 登入"
+selfHostedLoginFailed = "自架登入失敗"
+signupIncomplete = "無法完成註冊"
+
 [setup.login]
 connectingTo = "正在連線到："
 oauthPending = "正在開啟瀏覽器進行驗證..."
@@ -11641,6 +11935,7 @@ configFetchError = "擷取伺服器設定失敗：{{error}}"
 emptyUrl = "請輸入伺服器 URL"
 invalidUrl = "URL 格式無效。請輸入有效的 URL，如 https://your-server.com"
 testFailed = "連線測試失敗"
+unknown = "未知錯誤"
 unreachable = "無法連線至伺服器"
 
 [setup.server.error.securityDisabled]
@@ -11749,6 +12044,7 @@ canvas = "在畫布中繪製簽名後，關閉此視窗，接著在 PDF 任意�
 image = "在上方上傳簽名影像後，於 PDF 任意位置點選以放置。"
 noSignature = "請在上方建立簽名以啟用放置工具。"
 paused = "已暫停放置"
+placeAnnotation = "在 PDF 上任意位置點擊以放置您的註釋。"
 resumeHint = "恢復放置後，點選即可加入簽名。"
 saved = "在上方選擇已儲存的簽名，然後在 PDF 任意位置點選以放置。"
 text = "在上方輸入您的姓名後，於 PDF 任意位置點選以放置簽名。"
@@ -11902,7 +12198,9 @@ signUpWith = "使用以下方式註冊"
 skip = "略過"
 subtitle = "加入 Stirling PDF 以開始使用"
 title = "建立帳號"
+unableToAccessTool = "無法存取工具：{{error}}"
 unexpectedError = "未預期的錯誤：{{message}}"
+unknownError = "未知錯誤"
 
 [sizes]
 large = "大"
@@ -11975,6 +12273,14 @@ rightToLeft = "由右至左分割"
 [split.poster.pageSize]
 description = "用於列印的輸出頁面大小"
 label = "目標頁面尺寸"
+
+[split.poster.pageSize.options]
+a3 = "A3 (297 × 420 mm)"
+a4 = "A4 (210 × 297 mm)"
+a5 = "A5 (148 × 210 mm)"
+legal = "Legal (8.5 × 14 in)"
+letter = "Letter (8.5 × 11 in)"
+tabloid = "Tabloid (11 × 17 in)"
 
 [split.poster.xFactor]
 description = "每頁要分成的欄數"
@@ -12247,6 +12553,7 @@ confirmCancelInvite = "確定要取消此邀請嗎？"
 confirmLeave = "確定要離開此團隊嗎？"
 confirmLeaveLeader = "身為團隊領導者，離開後您將被移出團隊。確定要繼續嗎？"
 confirmRemove = "確定要移除此成員嗎？"
+currentUnavailable = "我們無法識別您目前的團隊。請再試一次；若持續發生，請聯絡支援。"
 editName = "編輯團隊名稱"
 inviteCancelled = "已取消邀請"
 inviteError = "邀請寄送失敗"
@@ -12272,10 +12579,8 @@ renameCancel = "取消重新命名"
 renameError = "重新命名團隊失敗"
 renameSubmit = "儲存團隊名稱"
 renameSuccess = "已成功重新命名團隊"
-transferBody = "要將 {{email}} 設為團隊擁有者嗎？對方將可管理團隊成員與組織帳務設定，您則會成為成員。團隊的訂閱與錢包仍歸團隊所有。"
 transferError = "無法移轉擁有權。請重新整理團隊後再試。"
 transferSuccess = "已移轉團隊擁有權。您的角色現為成員。"
-transferTitle = "移轉團隊擁有權"
 
 [team.invitationBanner]
 acceptButton = "接受"
@@ -12376,6 +12681,10 @@ WORD = "Word 文件"
 XML = "XML 檔案"
 XPS = "XPS 文件"
 ZIP = "ZIP 封存檔"
+
+[toolLoading]
+generic = "正在載入工具..."
+named = "正在載入 {{toolName}}..."
 
 [toolPanel]
 alpha = "Alpha"
@@ -12481,6 +12790,8 @@ stable = "STABLE"
 updateAvailable = "可用更新"
 urgentUpdateAvailable = "緊急更新"
 version = "版本"
+versionCount_one = "{{count}} 個版本"
+versionCount_other = "{{count}} 個版本"
 versionHistory = "版本歷史"
 viewGuide = "檢視指南"
 whatsNewIn = "此版本的新功能"
@@ -12508,6 +12819,7 @@ title = "URL 轉 PDF"
 aboutUsageAnalytics = "關於使用分析"
 configureSettings = "設定分析選項"
 error = "載入使用統計時發生錯誤"
+loadFailed = "無法載入使用量統計資料"
 noData = "尚無用量"
 noDataMessage = "使用者開始執行工具後，這裡便會顯示端點活動。"
 usageAnalyticsExplanation = "使用分析會追蹤端點請求與工具使用模式。搭配稽核記錄儀表板，可完整掌握系統活動、效能與安全事件。"
@@ -12571,7 +12883,6 @@ removeTeam = "從團隊移除"
 rename = "重新命名團隊"
 resetPw = "重設密碼"
 suspend = "停權"
-transferOwnership = "移轉擁有權"
 unlock = "解鎖帳戶"
 
 [users.activity]
@@ -12611,8 +12922,6 @@ disableMfaTitle = "重設 MFA"
 removeBody = "永久從組織移除 {{name}}？此操作無法復原。"
 removeTeamBody = "要將 {{name}} 從團隊移除嗎？他們會保留帳戶，但會失去此團隊資源的存取權。"
 removeTitle = "移除成員"
-transferOwnershipBody = "要將 {{name}} 設為組織擁有者嗎？對方將成為管理員。您仍是管理員，但不再擁有組織。只有新的擁有者或伺服器管理人員才能將擁有權移轉回來。"
-transferOwnershipTitle = "移轉組織擁有權"
 
 [users.empty]
 description = "邀請您的團隊開始協作。"
@@ -12805,6 +13114,7 @@ signaturesInvalid = "{{count}} 項無效"
 signaturesUnverified_one = "{{count}} 項需要檢視"
 signaturesUnverified_other = "{{count}} 項需要檢視"
 signaturesValid = "{{count}} 個完全有效"
+thumbnailAlt = "{{fileName}} 縮圖"
 title = "簽章驗證報告"
 
 [validateSignature.report.fields]
@@ -12842,6 +13152,7 @@ lastPage = "最後一頁"
 loadingEngine = "正在載入 PDF 引擎..."
 moreOptions = "更多"
 nextPage = "下一頁"
+noPdfProvided = "未提供 PDF"
 onlyPdfSupported = "此檢視器僅支援 PDF 檔案。此檔案似乎是其他格式。"
 pageNavigation = "頁面導覽"
 previousPage = "上一頁"
@@ -12879,8 +13190,17 @@ collapseAll = "收合所有書籤"
 editorOnly = "此文件的書籤只能在編輯器中編輯。"
 empty = "No bookmarks in this document"
 expandAll = "展開所有書籤"
+loadFailed = "無法載入書籤"
+loading = "正在載入書籤..."
+noDocument = "開啟 PDF 以檢視其書籤。"
+noSearchResults = "沒有符合您搜尋的書籤"
+openEditor = "需要重新排序或巢狀排列？開啟書籤編輯器"
+pageLabel = "頁面"
+pageNumber = "第 {{page}} 頁"
+saveFailed = "無法儲存書籤"
 searchPlaceholder = "搜尋書籤"
 title = "Bookmarks"
+untitled = "未命名"
 
 [viewer.comments]
 addComment = "新增評論"
@@ -12928,16 +13248,26 @@ unsavedDesc = "您有未儲存的變更"
 
 [viewer.layers]
 closeSidebar = "關閉圖層側邊欄"
+empty = "此文件沒有圖層。"
 hideAll = "隱藏所有圖層"
+loadFailed = "無法載入圖層。"
+loading = "正在載入圖層..."
+noDocument = "開啟 PDF 以檢視其圖層。"
+readFailed = "無法讀取 PDF 圖層"
 showAll = "顯示所有圖層"
 title = "Layers"
 
 [viewer.link]
 delete = "刪除連結"
+goTo = "前往 {{label}}"
+open = "開啟連結"
+openAria = "開啟連結"
+page = "第 {{page}} 頁"
 
 [viewer.nonPdf]
 columnDefault = "欄 {{index}}"
 convertToPdf = "轉換為 PDF"
+copied = "已複製"
 csvStats = "{{rows}} 列 · {{columns}} 欄 · {{size}}"
 emptyFile = "空白檔案"
 htmlHidePreview = "隱藏預覽"
@@ -12948,6 +13278,8 @@ htmlShowPreview = "仍要顯示預覽"
 invalidJson = "無效的 JSON — 顯示原始內容"
 lineNumbers = "行號"
 loading = "載入中..."
+noFile = "未載入檔案"
+previewUnavailable = "此檔案類型無法預覽"
 renderMarkdown = "轉譯 Markdown"
 sortedBy = "排序依據：{{column}}"
 textStats = "{{lines}} 行 · {{size}}"
@@ -12974,11 +13306,28 @@ next = "下一個結果"
 previous = "上一個結果"
 resultsOf = "／ {{total}}"
 
+[viewer.sidebar]
+close = "關閉側邊欄"
+searchPlaceholder = "搜尋..."
+
 [viewer.signature]
 delete = "刪除簽名"
+previewAlt = "簽名預覽"
+
+[viewer.signatureField]
+badge = "簽名"
+fieldTitle = "簽名欄位：{{name}}"
+signed = "已簽署"
+signedWithReason = "已簽署：{{reason}}"
+unsignedFieldTitle = "未簽署的簽名欄位：{{name}}"
+withTime = "{{label}}（{{time}}）"
 
 [viewer.thumbnails]
 closeSidebar = "關閉縮圖側邊欄"
+failed = "失敗"
+pageNumber = "第 {{page}} 頁"
+thumbnailAlt = "第 {{page}} 頁縮圖"
+title = "頁面"
 
 [viewPdf]
 tags = "檢視,閱讀,註釋,文字,圖片"
@@ -13188,6 +13537,10 @@ certTypeServer = "伺服器憑證（若有）"
 completedDeclined = "您已拒絕此文件。"
 completedSigned = "您已簽署此文件。"
 decline = "拒絕"
+declineConfirm = "您確定要拒絕簽署此文件嗎？"
+declineFailed = "無法拒絕：{{error}}"
+declineSuccess = "您已拒絕此簽署請求。"
+defaultReason = "文件簽署"
 downloadDocument = "下載文件"
 dueDate = "到期日：{{date}}"
 errorTitle = "錯誤"
@@ -13198,6 +13551,7 @@ locationPlaceholder = "例如：San Francisco, CA"
 pageNumber = "頁碼（選填）"
 reason = "原因"
 reasonPlaceholder = "例如：文件核准"
+selectCertificateFile = "請選擇憑證檔案"
 sessionNotFound = "找不到工作階段或存取被拒。"
 signDocument = "簽署文件"
 statusDeclined = "已拒絕"
@@ -13205,7 +13559,9 @@ statusNotified = "已通知"
 statusPending = "等待中"
 statusSigned = "已簽署"
 statusViewed = "已檢視"
+submitFailed = "無法提交簽名：{{error}}"
 submitSignature = "送出簽名"
+submitSuccess = "簽名已成功提交！"
 
 [workspace]
 title = "工作空間"
