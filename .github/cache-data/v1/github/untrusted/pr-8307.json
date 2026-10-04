@@ -3229,10 +3229,39 @@
       "artifact_id": 11313023126,
       "artifact_name": "cache-untrusted-pr-8307-gradle-wrapper-macos-arm64-bf72d815b7e3fe6b5341aea10a8aff3529b1a4aec9fc838bd8be5d81993f1de9-v3--157332f83a08dfcc06670080f92431c8687babbe1a1ea7ff-part-000000",
       "workflow_run_id": 37229272285
+    },
+    "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/setup-uv-cache/linux-x64/420a352a55b0046aa1d09a146366286b74ff0eaef54219f651f225162df0f358/v3": {
+      "object": "sha256:4a9b08d0422afaf4b409b7cf81b3da328dded9513ba4d787737e9d2363b7b664",
+      "storage": "github-artifact",
+      "updated_at": "2026-10-04T19:56:22.582Z",
+      "source": "Stirling-Tools/Stirling-PDF",
+      "created_by": "Ludy87",
+      "size": 42725514,
+      "parts": [
+        {
+          "index": 0,
+          "object": "sha256:b4b8c3df2e10026aa8544a4540b5fa704c3f418735fac2f42115585e16c20b7e",
+          "size": 25165824,
+          "artifact_id": 11313348998,
+          "artifact_name": "cache-untrusted-pr-8307-setup-uv-cache-linux-x64-420a352a55b0046aa1d09a146366286b74ff0eaef54219f651f225162df0f358-v3--4a9b08d0422afaf4b409b7cf81b3da328dded9513ba4d78773-part-000000",
+          "workflow_run_id": 37229272285
+        },
+        {
+          "index": 1,
+          "object": "sha256:7aa8a6749d1be0ed05c2d6084ffb611dd26a8359102ec5b6702f64d8618dbadd",
+          "size": 17559690,
+          "artifact_id": 11312504359,
+          "artifact_name": "cache-untrusted-pr-8307-setup-uv-cache-linux-x64-420a352a55b0046aa1d09a146366286b74ff0eaef54219f651f225162df0f358-v3--4a9b08d0422afaf4b409b7cf81b3da328dded9513ba4d78773-part-000001",
+          "workflow_run_id": 37229272285
+        }
+      ],
+      "artifact_id": 11313348998,
+      "artifact_name": "cache-untrusted-pr-8307-setup-uv-cache-linux-x64-420a352a55b0046aa1d09a146366286b74ff0eaef54219f651f225162df0f358-v3--4a9b08d0422afaf4b409b7cf81b3da328dded9513ba4d78773-part-000000",
+      "workflow_run_id": 37229272285
     }
   },
   "monitoring": {
     "window_started_at": "2026-10-04T19:23:08.179Z",
-    "writes": 10
+    "writes": 11
   }
 }
