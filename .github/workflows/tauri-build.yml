@@ -242,9 +242,9 @@ jobs:
 
       - name: Restore cache artifact
         id: cache
-        uses: Ludy87/cache-the-planet/multi-cache@5723e2b4f71fdb265d0f839156fffa58bb0342e6
+        uses: Ludy87/cache-the-planet/multi-cache@8951fe17ca090ba363f95e4dc78854d04b926ed6
         with:
-          version: 2
+          version: 3
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
           storage: github-artifact
           artifact-retention-days: 1
@@ -870,33 +870,33 @@ jobs:
 
       - name: Restore cache artifact
         id: cache
-        uses: Ludy87/cache-the-planet/multi-cache@5723e2b4f71fdb265d0f839156fffa58bb0342e6
+        uses: Ludy87/cache-the-planet/multi-cache@8951fe17ca090ba363f95e4dc78854d04b926ed6
         with:
-          version: 2
+          version: 3
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
           storage: github-artifact
           artifact-retention-days: 1
           manifest-branch: dev-cache-artifact
           manifest-path: .github/cache-data
           multi-cache: |
-            tauri-target:
-              path: frontend/editor/src-tauri/target
             cargo-registry:
               path: .cache/cargo/registry
             cargo-git:
               path: .cache/cargo/git
             cargo-bin:
               path: .cache/cargo/bin
-            npm-cache:
-              path: .cache/npm
-            frontend-node-modules:
-              path: frontend/node_modules
             frontend-dist:
               path: frontend/editor/dist
+            frontend-node-modules:
+              path: frontend/node_modules
+            npm-cache:
+              path: .cache/npm
             gradle-caches:
               path: .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
             gradle-wrapper:
               path: .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
+            tauri-target:
+              path: frontend/editor/src-tauri/target
           save-scope: shared
           key: |
             gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
