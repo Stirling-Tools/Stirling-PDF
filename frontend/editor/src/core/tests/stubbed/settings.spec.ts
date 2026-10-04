@@ -158,6 +158,12 @@ test.describe("Settings page", () => {
 
     const generalNav = page.locator('[data-tour="admin-general-nav"]').first();
     const aboutNav = page.locator('[data-tour="admin-about-nav"]').first();
+    // General's section links fill in after it opens and push About down, so a
+    // click aimed before they land releases on the wrong row and is dropped.
+    const generalLinksSettled = () =>
+      expect(
+        page.locator('.settings-page__nav a[href="#hotkeys"]'),
+      ).toBeVisible({ timeout: 5_000 });
     await expect(generalNav).toBeVisible({ timeout: 5_000 });
 
     // First nav into /settings/* takes the React Router path (push). We
@@ -173,6 +179,7 @@ test.describe("Settings page", () => {
 
     // Now do 4 round-trips between two tabs - 8 intra-modal clicks total.
     for (let i = 0; i < 4; i++) {
+      await generalLinksSettled();
       await aboutNav.click();
       await page.waitForURL(/\/settings\/about/, { timeout: 5_000 });
       await generalNav.click();

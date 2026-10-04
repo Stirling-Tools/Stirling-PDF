@@ -1,3 +1,4 @@
+import i18n from "i18next";
 import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
 import type {
@@ -9,6 +10,11 @@ import { readUtf16 } from "@app/services/pdfiumService";
 import { rotationFromMatrix } from "@app/tools/pdfTextEditor/commands/editTextHelpers";
 import { transformObject } from "@app/tools/pdfTextEditor/util/objectTransform";
 import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
+import {
+  endsWithSpace,
+  groupWords,
+  type Word as GenericWord,
+} from "@app/tools/pdfTextEditor/util/wordGrouping";
 
 /** Reflow a text run's EXISTING glyph objects to fit within `maxWidthPt`. */
 
@@ -21,12 +27,14 @@ interface Leaf {
   baseline: number;
 }
 
-interface Word {
-  glyphs: Leaf[];
-  x: number;
-  right: number;
-  baseline: number;
-}
+type Word = GenericWord<Leaf>;
+
+/**
+ * Narrowest wrap width, in font sizes. The text overlay draws no box narrower
+ * than this, so a narrower explicit width would wrap the text inside a box
+ * that does not match it.
+ */
+export const MIN_WRAP_WIDTH_EM = 4;
 
 interface RunSnapshot {
   text: string;
@@ -46,6 +54,7 @@ interface RunSnapshot {
   mergedFromBounds: Array<{ x: number; right: number }>;
   mergedFromCharStarts: number[];
   pdfiumObjPtr: number;
+  wrapWidthPt: number | null;
 }
 
 export class ReflowWrapCommand implements Command {
@@ -53,15 +62,28 @@ export class ReflowWrapCommand implements Command {
   private readonly pageIndex: number;
   private readonly runId: string;
   private readonly maxWidthPt: number;
+  private readonly explicit: boolean;
   private applied = false;
   /** Per-object translation applied, so revert can undo it exactly. */
   private moves: Array<{ ptr: number; dx: number; dy: number }> = [];
   private prev: RunSnapshot | null = null;
 
-  constructor(opts: { pageIndex: number; runId: string; maxWidthPt: number }) {
+  /**
+   * `explicit` marks a width the user set directly (resize handle, width
+   * field): the paragraph re-lines even when nothing overflows, so widening
+   * rejoins lines an earlier wrap broke, and it is its own undo step rather
+   * than part of the typing burst.
+   */
+  constructor(opts: {
+    pageIndex: number;
+    runId: string;
+    maxWidthPt: number;
+    explicit?: boolean;
+  }) {
     this.pageIndex = opts.pageIndex;
     this.runId = opts.runId;
     this.maxWidthPt = opts.maxWidthPt;
+    this.explicit = opts.explicit ?? false;
   }
 
   apply(doc: EditorDocument): void {
@@ -98,13 +120,17 @@ export class ReflowWrapCommand implements Command {
     // loses its last word: "...carry out various" drops "various" onto a line
     // of its own, on lines the user never touched.
     const rawRightEdge = page.display.cropLeft + page.display.cropWidth;
+    const minWidth = fontSize * MIN_WRAP_WIDTH_EM;
+    const requested = this.explicit
+      ? Math.max(this.maxWidthPt, minWidth)
+      : this.maxWidthPt;
     const maxWidth = Math.min(
-      this.maxWidthPt,
-      Math.max(fontSize * 4, rawRightEdge - startX),
+      requested,
+      Math.max(minWidth, rawRightEdge - startX),
     );
 
     // Reflow is only NEEDED when some line actually overflows the wrap width.
-    {
+    if (!this.explicit) {
       const rightByLine = new Map<number, number>();
       for (const l of leaves) {
         const key = Math.round(l.baseline / 2);
@@ -121,7 +147,7 @@ export class ReflowWrapCommand implements Command {
       if (!overflows) return;
     }
 
-    const words = groupWords(leaves, fontSize * 0.18);
+    const words = groupWords(leaves, fontSize);
     const spaceWidth = estimateSpaceWidth(words, fontSize);
     // The gap that FOLLOWED this word in the document, when the next word was
     // beside it on the same line. Justified text stretches its spaces line by
@@ -133,9 +159,13 @@ export class ReflowWrapCommand implements Command {
     const gapAfter = (index: number): number => {
       const a = words[index];
       const b = words[index + 1];
-      if (!a || !b) return spaceWidth;
-      if (Math.abs(a.baseline - b.baseline) > 2) return spaceWidth;
+      // A trailing space glyph already separates it from whatever follows.
+      const carried = a ? endsWithSpace(a) : false;
+      if (!a || !b) return carried ? 0 : spaceWidth;
+      if (Math.abs(a.baseline - b.baseline) > 2)
+        return carried ? 0 : spaceWidth;
       const gap = b.x - a.right;
+      if (carried) return Math.max(0, gap);
       return gap > 0 ? gap : spaceWidth;
     };
     // Manual line breaks the user typed (Enter) live in run.text as "\n".
@@ -228,6 +258,7 @@ export class ReflowWrapCommand implements Command {
       fontSize,
       this.prev.text,
     );
+    if (this.explicit) run.wrapWidthPt = maxWidth;
     run.dirty = true;
     page.markDirty();
     page.markNeedsGenerate();
@@ -257,12 +288,15 @@ export class ReflowWrapCommand implements Command {
   }
 
   describe(): string {
-    return `Wrap ${this.runId}`;
+    return i18n.t("pdfTextEditor.commands.wrap", "Wrap {{run}}", {
+      run: this.runId,
+    });
   }
 
   // Share the edit coalesce key for this run so the auto-reflow that fires on
   // blur merges into the preceding typing burst's single undo step.
-  coalesceKey(): string {
+  coalesceKey(): string | null {
+    if (this.explicit) return null;
     return `edit-text:${this.pageIndex}:${this.runId}`;
   }
 
@@ -313,34 +347,6 @@ function extractLeaves(
   return leaves;
 }
 
-/** Group consecutive same-baseline leaves into words. */
-function groupWords(leaves: Leaf[], gapThreshold: number): Word[] {
-  const words: Word[] = [];
-  let cur: Leaf[] = [];
-  let prev: Leaf | null = null;
-  const flush = () => {
-    if (cur.length === 0) return;
-    words.push({
-      glyphs: cur,
-      x: Math.min(...cur.map((g) => g.x)),
-      right: Math.max(...cur.map((g) => g.right)),
-      baseline: cur[0].baseline,
-    });
-    cur = [];
-  };
-  for (const g of leaves) {
-    if (prev) {
-      const sameLine = Math.abs(g.baseline - prev.baseline) <= 2;
-      const gap = g.x - prev.right;
-      if (!sameLine || gap > gapThreshold) flush();
-    }
-    cur.push(g);
-    prev = g;
-  }
-  flush();
-  return words;
-}
-
 /** The non-whitespace char counts at which `text` has a hard "\n" break. */
 function hardBreakNonWsCounts(
   text: string,
@@ -367,6 +373,7 @@ function estimateSpaceWidth(words: Word[], fontSize: number): number {
   for (let i = 1; i < words.length; i++) {
     const a = words[i - 1];
     const b = words[i];
+    if (endsWithSpace(a)) continue;
     if (Math.abs(a.baseline - b.baseline) <= 2) {
       const gap = b.x - a.right;
       if (gap > 0) gaps.push(gap);
@@ -569,6 +576,7 @@ function snapshotRun(run: TextRun): RunSnapshot {
     mergedFromBounds: run.mergedFromBounds.map((b) => ({ ...b })),
     mergedFromCharStarts: [...run.mergedFromCharStarts],
     pdfiumObjPtr: run.pdfiumObjPtr,
+    wrapWidthPt: run.wrapWidthPt,
   };
 }
 
@@ -589,6 +597,7 @@ function restoreRun(run: TextRun, prev: RunSnapshot): void {
   run.mergedFromBounds = prev.mergedFromBounds.map((b) => ({ ...b }));
   run.mergedFromCharStarts = [...prev.mergedFromCharStarts];
   run.pdfiumObjPtr = prev.pdfiumObjPtr;
+  run.wrapWidthPt = prev.wrapWidthPt;
 }
 
 function cloneSlot(s: ParagraphLineSlot): ParagraphLineSlot {
