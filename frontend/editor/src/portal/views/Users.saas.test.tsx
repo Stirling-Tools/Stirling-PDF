@@ -296,15 +296,12 @@ describe("SaaS ownership through the current Users page", () => {
         expect(
           within(screen.getByRole("row", { name: /Blair/ })).getByRole("cell", {
             name: "Org Owner",
-            exact: true,
           }),
         ).toBeVisible(),
       REFETCH_WAIT,
     );
     expect(owner()).toBe(2);
-    expect(
-      screen.getByRole("cell", { name: "Member", exact: true }),
-    ).toBeVisible();
+    expect(screen.getByRole("cell", { name: "Member" })).toBeVisible();
     expect(screen.queryAllByRole("textbox", { name: /Role for/ })).toHaveLength(
       0,
     );

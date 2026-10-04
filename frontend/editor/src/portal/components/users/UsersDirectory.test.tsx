@@ -349,12 +349,8 @@ describe("read-only role visibility", () => {
       [owner, viewer],
       transfer,
     );
-    expect(
-      screen.getByRole("cell", { name: "Org Owner", exact: true }),
-    ).toBeVisible();
-    expect(
-      screen.getByRole("cell", { name: "Member", exact: true }),
-    ).toBeVisible();
+    expect(screen.getByRole("cell", { name: "Org Owner" })).toBeVisible();
+    expect(screen.getByRole("cell", { name: "Member" })).toBeVisible();
     expect(
       screen.queryByRole("textbox", { name: /Role for/ }),
     ).not.toBeInTheDocument();
@@ -372,12 +368,8 @@ it("keeps self-hosted Admin and Team Lead labels readable without editing rights
     TEAMS,
     members,
   );
-  expect(
-    screen.getByRole("cell", { name: "Admin", exact: true }),
-  ).toBeVisible();
-  expect(
-    screen.getByRole("cell", { name: "Team Lead", exact: true }),
-  ).toBeVisible();
+  expect(screen.getByRole("cell", { name: "Admin" })).toBeVisible();
+  expect(screen.getByRole("cell", { name: "Team Lead" })).toBeVisible();
   expect(
     screen.queryByRole("textbox", { name: /Role for/ }),
   ).not.toBeInTheDocument();
