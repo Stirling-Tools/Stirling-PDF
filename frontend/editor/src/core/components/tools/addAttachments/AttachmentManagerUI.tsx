@@ -216,18 +216,11 @@ export const AttachmentManagerUI = memo(function AttachmentManagerUI({
       />
 
       {hasChanges && (
-        <Group justify="space-between" align="center" mt="xs">
+        <Stack gap="xs" mt="xs">
           <DSButton
-            size="sm"
-            variant="tertiary"
-            onClick={onDiscardDraft}
-            disabled={disabled || isSaving}
-          >
-            {t("attachments.discardChanges", "Discard")}
-          </DSButton>
-          <DSButton
-            size="sm"
+            size="md"
             variant="primary"
+            fullWidth
             onClick={onSaveDraft}
             disabled={disabled || isSaving}
             loading={isSaving}
@@ -236,7 +229,16 @@ export const AttachmentManagerUI = memo(function AttachmentManagerUI({
               count: pendingChangesCount,
             })}
           </DSButton>
-        </Group>
+          <DSButton
+            size="sm"
+            variant="tertiary"
+            fullWidth
+            onClick={onDiscardDraft}
+            disabled={disabled || isSaving}
+          >
+            {t("attachments.discardChanges", "Discard Changes")}
+          </DSButton>
+        </Stack>
       )}
     </Stack>
   );
