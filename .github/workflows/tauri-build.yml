@@ -76,8 +76,6 @@ env:
     frontend/editor/src-tauri/Cargo.lock
   FRONTEND_DIST_FILES_TO_HASH: |
     frontend/editor/src
-  FRONTEND_TAURI_FILES_TO_HASH: |
-    frontend/editor/src-tauri/target
 
 jobs:
   determine-matrix:
@@ -162,7 +160,7 @@ jobs:
           GRADLE_HASH: ${{ hashFiles(env.GRADLE_FILES_TO_HASH) }}
           CARGO_HASH: ${{ hashFiles(env.CARGO_FILES_TO_HASH) }}
           FRONTEND_DIST_HASH: ${{ hashFiles(env.FRONTEND_DIST_FILES_TO_HASH) }}
-          FRONTEND_TAURI_HASH: ${{ hashFiles(env.FRONTEND_TAURI_FILES_TO_HASH) }}
+          FRONTEND_TAURI_HASH: ${{ hashFiles(env.CARGO_FILES_TO_HASH) }}
         shell: bash
         run: |
           echo "java_version=${{ env.JAVA_VERSION }}" >> "$GITHUB_OUTPUT"
@@ -282,7 +280,7 @@ jobs:
             npm-cache=${{ hashFiles('frontend/package-lock.json') }}
             frontend-dist=${{ needs.hash_pr.outputs.frontend_dist_files_hash }}
             frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
-            tauri=${{ needs.hash_pr.outputs.frontend_tauri_files_hash }}
+            tauri-target=${{ needs.hash_pr.outputs.frontend_tauri_files_hash }}
           token: ${{ github.token }}
           allow-shared-restore: true
           strict: false
@@ -905,7 +903,7 @@ jobs:
             npm-cache=${{ hashFiles('frontend/package-lock.json') }}
             frontend-dist=${{ needs.hash_pr.outputs.frontend_dist_files_hash }}
             frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
-            tauri=${{ needs.hash_pr.outputs.frontend_tauri_files_hash }}
+            tauri-target=${{ needs.hash_pr.outputs.frontend_tauri_files_hash }}
           token: ${{ github.token }}
           allow-shared-restore: true
           strict: false
