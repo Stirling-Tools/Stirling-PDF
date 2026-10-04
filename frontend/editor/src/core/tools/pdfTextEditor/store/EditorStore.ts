@@ -20,9 +20,7 @@ import {
   resetPerCharBranchPtrs,
 } from "@app/tools/pdfTextEditor/commands/editTextHelpers";
 import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
-import { CompositeCommand } from "@app/tools/pdfTextEditor/commands/CompositeCommand";
-import { UngroupParagraphCommand } from "@app/tools/pdfTextEditor/commands/UngroupParagraphCommand";
-import { detectTables } from "@app/tools/pdfTextEditor/util/tableDetection";
+import { AdoptTableCommand } from "@app/tools/pdfTextEditor/commands/AdoptTableCommand";
 import {
   adoptedTableId,
   adoptedTableModel,
@@ -341,13 +339,16 @@ export class EditorStore {
   // Paragraph grouping merges a whole table column into one run, so the same
   // run would back several cells and a structural edit would move it once per
   // cell. Splitting those runs first is what gives every cell its own text -
-  // that part is a real document edit and goes through history; registering the
-  // grid afterwards is not, and must not mark the file unsaved.
+  // that part and its grid share an undo step. A grid needing no splits is
+  // session state and must not mark the file unsaved.
   adoptTable(table: TableSnapshot): void {
     if (!this.doc) return;
     const page = this.doc.page(table.pageIndex);
     if (!page) return;
-    const existing = page.tables.find((t) => t.id === adoptedTableId(table));
+    const baseId = adoptedTableId(table);
+    const existing = page.tables.find(
+      (t) => t.adopted && overlaps(t.snapshot().bounds, table.bounds),
+    );
     if (existing) {
       existing.editing = true;
       page.bumpRevision();
@@ -358,29 +359,19 @@ export class EditorStore {
     const merged = [...new Set(table.cells.flatMap((c) => c.runIds))].filter(
       (id) => (page.findRun(id)?.paragraphMemberPtrs.length ?? 0) >= 2,
     );
+    let id = baseId;
+    let suffix = 2;
+    while (page.tables.some((t) => t.id === id))
+      id = `${table.id}-${suffix++}-editable`;
     if (merged.length > 0) {
-      const splits = merged.map(
-        (runId) =>
-          new UngroupParagraphCommand({ pageIndex: table.pageIndex, runId }),
-      );
-      this.dispatch(new CompositeCommand(splits));
+      this.dispatch(new AdoptTableCommand(table, id, merged));
+      return;
     }
-
-    // The split replaced the runs the snapshot named, so re-read the grid from
-    // the page as it stands now.
-    const fresh = detectTables(
-      page.runs.map((r) => r.snapshot()),
-      table.pageIndex,
-      {},
-      page.rules,
-    );
-    const rebuilt =
-      fresh.find((t) => overlaps(t.bounds, table.bounds)) ?? table;
     page.tables = [
       ...page.tables,
       adoptedTableModel(this.doc.module, page, {
-        ...rebuilt,
-        id: adoptedTableId(table),
+        ...table,
+        id,
       }),
     ];
     page.bumpRevision();

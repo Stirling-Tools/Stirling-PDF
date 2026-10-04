@@ -349,9 +349,7 @@ function EditableTable({
       return;
     }
     const canvas = pageCanvas(page.pageIndex);
-    const colors = canvas
-      ? sampleTableColors(canvas, table, page.width, page.height)
-      : null;
+    const colors = canvas ? sampleTableColors(canvas, table, transform) : null;
     store.dispatch(
       new CompositeCommand([
         new MaterialiseTableCommand({ tableId: table.id, colors }),

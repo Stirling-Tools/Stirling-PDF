@@ -1,5 +1,8 @@
 import { locateTable } from "@app/tools/pdfTextEditor/util/locateTable";
-import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
+import {
+  RolledBackError,
+  type Command,
+} from "@app/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
 import type { Page } from "@app/tools/pdfTextEditor/model/Page";
 import type { TextRun } from "@app/tools/pdfTextEditor/model/TextRun";
@@ -102,6 +105,12 @@ export class MaterialiseTableCommand implements Command {
   apply(doc: EditorDocument): void {
     const found = locateTable(doc, this.tableId);
     if (!found) return;
+    if (!(doc.module as unknown as ZOrderModule).FPDFPage_InsertObjectAtIndex)
+      throw new RolledBackError(
+        new Error(
+          "Rebuilding scanned tables is unavailable in this PDF engine.",
+        ),
+      );
     const { page, model } = found;
     this.prevRuns = [...page.runs];
     this.prevCellRuns = model.cellRuns.map((row) => [...row]);
@@ -123,6 +132,7 @@ export class MaterialiseTableCommand implements Command {
   }
 
   revert(doc: EditorDocument): void {
+    if (!this.prevRuns) return;
     const found = locateTable(doc, this.tableId);
     if (!found) return;
     const { page, model } = found;

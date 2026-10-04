@@ -92,7 +92,7 @@ export function adoptedTableModel(
     ruled: grid.ptrs.length > 0,
     pageRuled: table.pageRuled,
     adopted: true,
-    scanned: looksScanned(module, page, table, cellRuns),
+    scanned: looksScanned(page, table, cellRuns),
     columnStyles,
     headerStyle,
   });
@@ -103,7 +103,6 @@ export function adoptedTableModel(
 // rebuilt as real objects. Both halves are required: invisible text alone is
 // just hidden text, and an image alone is a table printed over a photo.
 function looksScanned(
-  module: WrappedPdfiumModule,
   page: Page,
   table: TableSnapshot,
   cellRuns: (string | null)[][],
@@ -120,10 +119,7 @@ function looksScanned(
       const run = page.findRun(id);
       if (!run?.pdfiumObjPtr) continue;
       seen++;
-      if (
-        module.FPDFTextObj_GetTextRenderMode(run.pdfiumObjPtr) ===
-        RENDER_INVISIBLE
-      ) {
+      if (run.renderMode === RENDER_INVISIBLE) {
         invisible++;
       }
     }
@@ -154,7 +150,10 @@ function adoptGrid(
       r.y + r.height <= table.bounds.y + table.bounds.height + pad,
   );
   if (inside.length === 0) return fallback;
-  const ptrs = [...new Set(inside.map((r) => r.ptr))].filter((p) => p > 0);
+  const insideSet = new Set(inside);
+  const ptrs = [...new Set(inside.map((r) => r.ptr))].filter(
+    (p) => p > 0 && page.rules.every((r) => r.ptr !== p || insideSet.has(r)),
+  );
   if (ptrs.length === 0) return fallback;
   const widths = inside
     .map((r) => r.thickness)

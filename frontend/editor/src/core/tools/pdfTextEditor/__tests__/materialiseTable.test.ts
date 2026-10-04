@@ -224,6 +224,21 @@ describe("MaterialiseTableCommand (measurable fake PDFium)", () => {
   let page: Page;
   let model: TableModel;
 
+  it("leaves the page intact when indexed insertion is unavailable", () => {
+    Object.defineProperty(doc.module, "FPDFPage_InsertObjectAtIndex", {
+      value: undefined,
+    });
+    const order = [...doc._order];
+    const runs = [...page.runs];
+    const before = model.snapshot();
+    const command = new MaterialiseTableCommand({ tableId: model.id });
+    expect(() => command.apply(doc)).toThrow(/unavailable/);
+    command.revert(doc);
+    expect(doc._order).toEqual(order);
+    expect(page.runs).toEqual(runs);
+    expect(model.snapshot()).toEqual(before);
+  });
+
   beforeEach(() => {
     ({ doc, page } = makeDoc());
     // The OCR layer is ONE form object on the page; its words are inside it,

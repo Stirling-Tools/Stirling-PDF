@@ -3,6 +3,7 @@ import type {
   RGBA,
   TableSnapshot,
 } from "@app/tools/pdfTextEditor/types";
+import type { DisplayTransform } from "@app/tools/pdfTextEditor/model/DisplayTransform";
 
 /** What a scan actually looks like inside one cell. */
 export interface CellColors {
@@ -102,15 +103,33 @@ export function pageCanvas(pageIndex: number): HTMLCanvasElement | null {
 export function sampleTableColors(
   canvas: HTMLCanvasElement,
   table: TableSnapshot,
-  pageWidthPt: number,
-  pageHeightPt: number,
+  transform: DisplayTransform,
 ): ScanColors | null {
+  const pageWidthPt = transform.displayWidth;
+  const pageHeightPt = transform.displayHeight;
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
   if (!ctx || pageWidthPt <= 0 || pageHeightPt <= 0) return null;
   const sx = canvas.width / pageWidthPt;
   const sy = canvas.height / pageHeightPt;
-  const read = (rect: PageRect): Map<number, Bucket> | null =>
-    readRegion(ctx, rect, sx, sy, pageHeightPt);
+  const read = (rect: PageRect): Map<number, Bucket> | null => {
+    const corners = [
+      transform.apply(rect.x, rect.y),
+      transform.apply(rect.x + rect.width, rect.y),
+      transform.apply(rect.x, rect.y + rect.height),
+      transform.apply(rect.x + rect.width, rect.y + rect.height),
+    ];
+    const xs = corners.map((p) => p.x);
+    const ys = corners.map((p) => p.y);
+    const x = Math.min(...xs);
+    const y = Math.min(...ys);
+    return readRegion(
+      ctx,
+      { x, y, width: Math.max(...xs) - x, height: Math.max(...ys) - y },
+      sx,
+      sy,
+      pageHeightPt,
+    );
+  };
 
   // The paper comes from just OUTSIDE the table. Taking it from the cells lets
   // a big shaded header pass itself off as the background, and then every
