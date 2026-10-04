@@ -2,6 +2,7 @@ import type {
   SaveResult,
   MultiFileSaveResult,
 } from "@core/services/localFileSaveService";
+import i18n from "i18next";
 import { beginSelfWrite, endSelfWrite } from "@app/services/diskFileSync";
 export type { SaveResult, MultiFileSaveResult };
 import { assertFilesNotBlocked } from "@app/services/policyFileGuard";
@@ -58,7 +59,7 @@ export async function showSaveDialog(
         ? `${defaultDirectory}/${defaultFilename}`
         : defaultFilename,
       filters,
-      title: "Save As",
+      title: i18n.t("workbenchBar.saveAs", "Save As"),
     });
 
     return selectedPath;
@@ -89,7 +90,9 @@ export async function saveMultipleFilesWithPrompt(
       directory: true,
       multiple: false,
       defaultPath: defaultDirectory,
-      title: `Save ${files.length} file${files.length > 1 ? "s" : ""}`,
+      title: i18n.t("desktop.fileSave.saveFilesTitle", "Save {{count}} files", {
+        count: files.length,
+      }),
     });
 
     // User cancelled

@@ -139,7 +139,7 @@ test.describe("Viewer sidebar add buttons - real PDF round-trip", () => {
     const viewerUrl = page.url();
 
     await page
-      .getByRole("button", { name: /Toggle Bookmarks/i })
+      .getByRole("button", { name: /Bookmarks \(Table of Contents\)/i })
       .first()
       .click();
 

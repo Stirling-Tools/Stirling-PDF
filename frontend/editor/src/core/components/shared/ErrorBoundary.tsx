@@ -1,6 +1,7 @@
 import React from "react";
 import { Text, Stack } from "@mantine/core";
 import { Button } from "@app/ui/Button";
+import i18n from "i18next";
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -89,7 +90,7 @@ export default class ErrorBoundary extends React.Component<
           }}
         >
           <Text size="lg" fw={500} c="var(--color-red-dark)">
-            Something went wrong
+            {i18n.t("errorBoundary.title", "Something went wrong")}
           </Text>
           {process.env.NODE_ENV === "development" && this.state.error && (
             <>
@@ -134,7 +135,7 @@ export default class ErrorBoundary extends React.Component<
             variant="secondary"
             style={{ marginTop: "var(--mantine-spacing-md)" }}
           >
-            Try Again
+            {i18n.t("errorBoundary.tryAgain", "Try Again")}
           </Button>
         </Stack>
       );
