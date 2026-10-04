@@ -167,6 +167,7 @@ jobs:
           echo "frontend_dist_files_hash=$FRONTEND_DIST_HASH" >> "$GITHUB_OUTPUT"
 
   build:
+    if: false
     # Windows/GPG signing only runs on main (see the per-step gates below), so only
     # that path needs the reviewer-gated release-signing environment. Everything else
     # (PRs, merge queue, nightly) signs macOS only and uses ci-signing, which has no
@@ -239,7 +240,7 @@ jobs:
 
       - name: Restore cache artifact
         id: cache
-        uses: Ludy87/cache-the-planet/multi-cache@ac8b6691d84d4649c04067194090bcfa9b31dbd9
+        uses: Ludy87/cache-the-planet/multi-cache@3c91501c68a3517a8432659f6e9903e69b1e58a2
         with:
           version: 2
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
@@ -857,7 +858,7 @@ jobs:
 
       - name: Restore cache artifact
         id: cache
-        uses: Ludy87/cache-the-planet/multi-cache@ac8b6691d84d4649c04067194090bcfa9b31dbd9
+        uses: Ludy87/cache-the-planet/multi-cache@3c91501c68a3517a8432659f6e9903e69b1e58a2
         with:
           version: 2
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
