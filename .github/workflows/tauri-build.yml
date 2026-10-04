@@ -76,6 +76,8 @@ env:
     frontend/editor/src-tauri/Cargo.lock
   FRONTEND_DIST_FILES_TO_HASH: |
     frontend/editor/src
+  FRONTEND_TAURI_FILES_TO_HASH: |
+    frontend/editor/src-tauri/target
 
 jobs:
   determine-matrix:
@@ -142,6 +144,7 @@ jobs:
       gradle_files_hash: ${{ steps.hash.outputs.gradle_files_hash}}
       cargo_files_hash: ${{ steps.hash.outputs.cargo_files_hash}}
       frontend_dist_files_hash: ${{ steps.hash.outputs.frontend_dist_files_hash }}
+      frontend_tauri_files_hash: ${{ steps.hash.outputs.frontend_tauri_files_hash }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
@@ -159,12 +162,14 @@ jobs:
           GRADLE_HASH: ${{ hashFiles(env.GRADLE_FILES_TO_HASH) }}
           CARGO_HASH: ${{ hashFiles(env.CARGO_FILES_TO_HASH) }}
           FRONTEND_DIST_HASH: ${{ hashFiles(env.FRONTEND_DIST_FILES_TO_HASH) }}
+          FRONTEND_TAURI_HASH: ${{ hashFiles(env.FRONTEND_TAURI_FILES_TO_HASH) }}
         shell: bash
         run: |
           echo "java_version=${{ env.JAVA_VERSION }}" >> "$GITHUB_OUTPUT"
           echo "gradle_files_hash=$GRADLE_HASH" >> "$GITHUB_OUTPUT"
           echo "cargo_files_hash=$CARGO_HASH" >> "$GITHUB_OUTPUT"
           echo "frontend_dist_files_hash=$FRONTEND_DIST_HASH" >> "$GITHUB_OUTPUT"
+          echo "frontend_tauri_files_hash=$FRONTEND_TAURI_HASH" >> "$GITHUB_OUTPUT"
 
   build:
     if: false
@@ -183,7 +188,7 @@ jobs:
     runs-on: ${{ matrix.platform }}
     timeout-minutes: 90
     env:
-      CARGO_HOME: ${{ github.workspace }}/.cache/cargo
+      CARGO_HOME: ~/.cargo
       NPM_CONFIG_CACHE: ${{ github.workspace }}/.cache/npm
       TAURI_BUNDLER_DMG_IGNORE_CI: "true"
       SM_API_KEY: ${{ secrets.SM_API_KEY }}
@@ -249,12 +254,14 @@ jobs:
           manifest-branch: dev-cache-artifact
           manifest-path: .github/cache-data
           multi-cache: |
+            tauri-target:
+              path: frontend/editor/src-tauri/target
             cargo-registry:
-              path: .cache/cargo/registry
+              path: ~/.cargo/registry
             cargo-git:
-              path: .cache/cargo/git
+              path: ~/.cargo/git
             cargo-bin:
-              path: .cache/cargo/bin
+              path: ~/.cargo/bin
             npm-cache:
               path: .cache/npm
             frontend-node-modules:
@@ -275,6 +282,7 @@ jobs:
             npm-cache=${{ hashFiles('frontend/package-lock.json') }}
             frontend-dist=${{ needs.hash_pr.outputs.frontend_dist_files_hash }}
             frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
+            tauri=${{ needs.hash_pr.outputs.frontend_tauri_files_hash }}
           token: ${{ github.token }}
           allow-shared-restore: true
           strict: false
@@ -808,7 +816,7 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJson(needs.determine-matrix.outputs.matrix) }}
     env:
-      CARGO_HOME: ${{ github.workspace }}/.cache/cargo
+      CARGO_HOME: ~/.cargo
       NPM_CONFIG_CACHE: ${{ github.workspace }}/.cache/npm
     permissions:
       contents: write
@@ -869,12 +877,14 @@ jobs:
           manifest-branch: dev-cache-artifact
           manifest-path: .github/cache-data
           multi-cache: |
+            tauri-target:
+              path: frontend/editor/src-tauri/target
             cargo-registry:
-              path: .cache/cargo/registry
+              path: ~/.cargo/registry
             cargo-git:
-              path: .cache/cargo/git
+              path: ~/.cargo/git
             cargo-bin:
-              path: .cache/cargo/bin
+              path: ~/.cargo/bin
             npm-cache:
               path: .cache/npm
             frontend-node-modules:
@@ -895,6 +905,7 @@ jobs:
             npm-cache=${{ hashFiles('frontend/package-lock.json') }}
             frontend-dist=${{ needs.hash_pr.outputs.frontend_dist_files_hash }}
             frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
+            tauri=${{ needs.hash_pr.outputs.frontend_tauri_files_hash }}
           token: ${{ github.token }}
           allow-shared-restore: true
           strict: false
