@@ -61,7 +61,7 @@ permissions:
 
 env:
   JAVA_VERSION: 25
-  GRADLE_USER_HOME: ~/.gradle
+  GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-25
   GRADLE_FILES_TO_HASH: |
     gradle/wrapper/gradle-wrapper.properties
     gradle/libs.versions.toml
@@ -186,7 +186,7 @@ jobs:
     runs-on: ${{ matrix.platform }}
     timeout-minutes: 90
     env:
-      CARGO_HOME: ~/.cargo
+      CARGO_HOME: ${{ github.workspace }}/.cache/cargo
       NPM_CONFIG_CACHE: ${{ github.workspace }}/.cache/npm
       TAURI_BUNDLER_DMG_IGNORE_CI: "true"
       SM_API_KEY: ${{ secrets.SM_API_KEY }}
@@ -252,24 +252,24 @@ jobs:
           manifest-branch: dev-cache-artifact
           manifest-path: .github/cache-data
           multi-cache: |
-            tauri-target:
-              path: frontend/editor/src-tauri/target
             cargo-registry:
               path: ~/.cargo/registry
             cargo-git:
               path: ~/.cargo/git
             cargo-bin:
               path: ~/.cargo/bin
-            npm-cache:
-              path: .cache/npm
-            frontend-node-modules:
-              path: frontend/node_modules
             frontend-dist:
               path: frontend/editor/dist
+            frontend-node-modules:
+              path: frontend/node_modules
+            npm-cache:
+              path: .cache/npm
             gradle-caches:
-              path: ~/.gradle/caches
+              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
             gradle-wrapper:
-              path: ~/.gradle/wrapper
+              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
+            tauri-target:
+              path: frontend/editor/src-tauri/target
           save-scope: shared
           key: |
             gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
@@ -819,7 +819,7 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJson(needs.determine-matrix.outputs.matrix) }}
     env:
-      CARGO_HOME: ~/.cargo
+      CARGO_HOME: ${{ github.workspace }}/.cache/cargo
       NPM_CONFIG_CACHE: ${{ github.workspace }}/.cache/npm
     permissions:
       contents: write
@@ -895,9 +895,9 @@ jobs:
             frontend-dist:
               path: frontend/editor/dist
             gradle-caches:
-              path: ~/.gradle/caches
+              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
             gradle-wrapper:
-              path: ~/.gradle/wrapper
+              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
           save-scope: shared
           key: |
             gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}

@@ -86,9 +86,9 @@ jobs:
           disable-download: true
           multi-cache: |
             gradle-caches:
-              path: ~/.gradle/caches
+              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
             gradle-wrapper:
-              path: ~/.gradle/wrapper
+              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
           save-scope: shared
           token: ${{ github.token }}
           key: |
