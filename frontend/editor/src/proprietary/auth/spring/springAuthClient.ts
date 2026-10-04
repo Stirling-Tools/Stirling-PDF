@@ -13,6 +13,7 @@
  */
 
 import { AxiosError, type AxiosRequestConfig } from "axios";
+import i18n from "i18next";
 import { getSpringAuthConfig } from "@app/auth/config";
 import { JWT_STORAGE_KEY } from "@app/auth/httpClient";
 import { type OAuthProvider } from "@app/auth/spring/oauthTypes";
@@ -493,7 +494,9 @@ class SpringAuthClient {
       return {
         error: {
           message:
-            error instanceof Error ? error.message : "SSO redirect failed",
+            error instanceof Error
+              ? error.message
+              : i18n.t("login.ssoRedirectFailed", "SSO redirect failed"),
         },
       };
     }

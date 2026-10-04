@@ -32,8 +32,8 @@ type SignatureTab = "draw" | "type" | "photo";
 // Ink pigments, not UI theme colours: they are baked into the exported PNG
 // and transferred to the desktop, so they must be fixed literals.
 const INK_COLORS = [
-  { value: "#101010", label: "black" }, // theme-allow-color ink pigment, serialized into the signature
-  { value: "#1d4ed8", label: "blue" }, // theme-allow-color ink pigment, serialized into the signature
+  { value: "#101010", labelKey: "black", label: "Black" }, // theme-allow-color ink pigment, serialized into the signature
+  { value: "#1d4ed8", labelKey: "blue", label: "Blue" }, // theme-allow-color ink pigment, serialized into the signature
 ];
 
 const PEN_SIZES = [
@@ -350,7 +350,7 @@ export default function MobileSignPage() {
                   key={color.value}
                   component="button"
                   onClick={() => setInkColor(color.value)}
-                  aria-label={color.label}
+                  aria-label={t(color.labelKey, color.label)}
                   style={{
                     width: 32,
                     height: 32,
@@ -421,7 +421,7 @@ export default function MobileSignPage() {
                 key={color.value}
                 component="button"
                 onClick={() => setInkColor(color.value)}
-                aria-label={color.label}
+                aria-label={t(color.labelKey, color.label)}
                 style={{
                   width: 32,
                   height: 32,
@@ -477,7 +477,7 @@ export default function MobileSignPage() {
             <Card withBorder radius="md" style={{ background: "white" }}>
               <Image
                 src={photoDataUrl}
-                alt="Signature"
+                alt={t("mobileSign.photo.previewAlt", "Signature")}
                 fit="contain"
                 mah={220}
               />

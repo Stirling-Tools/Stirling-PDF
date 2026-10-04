@@ -1,3 +1,4 @@
+import i18n from "i18next";
 import { FileId } from "@app/types/file";
 import { PDFDocument, PDFPage, PageBreakSettings } from "@app/types/pageEditor";
 
@@ -73,7 +74,10 @@ export class RotatePageCommand extends DOMCommand {
   }
 
   get description(): string {
-    return `Rotate page ${this.degrees > 0 ? "right" : "left"}`;
+    if (this.degrees > 0) {
+      return i18n.t("pageEditor.commands.rotatePageRight", "Rotate page right");
+    }
+    return i18n.t("pageEditor.commands.rotatePageLeft", "Rotate page left");
   }
 }
 
@@ -201,7 +205,9 @@ export class DeletePagesCommand extends DOMCommand {
   }
 
   get description(): string {
-    return `Delete ${this.pagesToDelete.length} page(s)`;
+    return i18n.t("pageEditor.commands.deletePages", "Delete {{count}} pages", {
+      count: this.pagesToDelete.length,
+    });
   }
 }
 
@@ -300,7 +306,7 @@ export class ReorderPagesCommand extends DOMCommand {
   }
 
   get description(): string {
-    return `Reorder page(s)`;
+    return i18n.t("pageEditor.commands.reorderPages", "Reorder pages");
   }
 }
 
@@ -341,7 +347,18 @@ export class SplitCommand extends DOMCommand {
   get description(): string {
     const currentPositions = this.getSplitPositions();
     const willAdd = !currentPositions.has(this.pageId);
-    return `${willAdd ? "Add" : "Remove"} split at position ${this.pageNumber}`;
+    if (willAdd) {
+      return i18n.t(
+        "pageEditor.commands.addSplitAt",
+        "Add split at position {{position}}",
+        { position: this.pageNumber },
+      );
+    }
+    return i18n.t(
+      "pageEditor.commands.removeSplitAt",
+      "Remove split at position {{position}}",
+      { position: this.pageNumber },
+    );
   }
 }
 
@@ -424,7 +441,19 @@ export class BulkRotateCommand extends DOMCommand {
   }
 
   get description(): string {
-    return `Rotate ${this.pageIds.length} page(s) ${this.degrees > 0 ? "right" : "left"}`;
+    const count = this.pageIds.length;
+    if (this.degrees > 0) {
+      return i18n.t(
+        "pageEditor.commands.rotatePagesRight",
+        "Rotate {{count}} pages right",
+        { count },
+      );
+    }
+    return i18n.t(
+      "pageEditor.commands.rotatePagesLeft",
+      "Rotate {{count}} pages left",
+      { count },
+    );
   }
 }
 
@@ -464,7 +493,11 @@ export class BulkSplitCommand extends DOMCommand {
   }
 
   get description(): string {
-    return `Toggle ${this.positions.length} split position(s)`;
+    return i18n.t(
+      "pageEditor.commands.toggleSplits",
+      "Toggle {{count}} split positions",
+      { count: this.positions.length },
+    );
   }
 }
 
@@ -513,7 +546,10 @@ export class SplitAllCommand extends DOMCommand {
     const hasAllSplits = Array.from(this.allPossibleSplits).every((pos) =>
       currentSplits.has(pos),
     );
-    return hasAllSplits ? "Remove all splits" : "Split all pages";
+    if (hasAllSplits) {
+      return i18n.t("pageEditor.commands.removeAllSplits", "Remove all splits");
+    }
+    return i18n.t("pageEditor.commands.splitAllPages", "Split all pages");
   }
 }
 
@@ -588,7 +624,11 @@ export class PageBreakCommand extends DOMCommand {
   }
 
   get description(): string {
-    return `Insert ${this.selectedPageNumbers.length} page break(s)`;
+    return i18n.t(
+      "pageEditor.commands.insertPageBreaks",
+      "Insert {{count}} page breaks",
+      { count: this.selectedPageNumbers.length },
+    );
   }
 }
 
@@ -678,7 +718,10 @@ export class BulkPageBreakCommand extends DOMCommand {
   }
 
   get description(): string {
-    return `Insert page breaks after all pages`;
+    return i18n.t(
+      "pageEditor.commands.insertPageBreaksAll",
+      "Insert page breaks after all pages",
+    );
   }
 }
 
@@ -994,7 +1037,11 @@ export class InsertFilesCommand extends DOMCommand {
   }
 
   get description(): string {
-    return `Insert ${this.files.length} file(s) after page ${this.insertAfterPageNumber}`;
+    return i18n.t(
+      "pageEditor.commands.insertFiles",
+      "Insert {{count}} files after page {{page}}",
+      { count: this.files.length, page: this.insertAfterPageNumber },
+    );
   }
 }
 

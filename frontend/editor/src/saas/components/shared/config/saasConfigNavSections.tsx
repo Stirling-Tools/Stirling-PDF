@@ -29,26 +29,28 @@ interface CreateSaasConfigNavSectionsOptions {
 
 function ensurePreferencesSection(
   sections: ConfigNavSection[],
+  t: TFunction<"translation", undefined>,
 ): ConfigNavSection[] {
   const preferencesIndex = sections.findIndex(
-    (section) => section.title === "Preferences",
+    (section) => section.id === "preferences",
   );
 
   if (preferencesIndex === -1) {
     return [
       ...sections,
       {
-        title: "Preferences",
+        id: "preferences",
+        title: t("settings.preferences.title", "Preferences"),
         items: [
           {
             key: "general",
-            label: "General",
+            label: t("settings.general.title", "General"),
             icon: "settings",
             component: <GeneralSection />,
           },
           {
             key: "hotkeys",
-            label: "Keyboard Shortcuts",
+            label: t("settings.hotkeys.title", "Keyboard Shortcuts"),
             icon: "keyboard",
             component: <HotkeysSection />,
           },
@@ -62,6 +64,7 @@ function ensurePreferencesSection(
 
 function appendDeveloperSection(
   sections: ConfigNavSection[],
+  t: TFunction<"translation", undefined>,
 ): ConfigNavSection[] {
   const hasDeveloper = sections.some((section) =>
     section.items.some(
@@ -76,11 +79,11 @@ function appendDeveloperSection(
   return [
     ...sections,
     {
-      title: "Developer",
+      title: t("settings.developer.title", "Developer"),
       items: [
         {
           key: "api-keys",
-          label: "API Keys",
+          label: t("settings.developer.apiKeys", "API Keys"),
           icon: "key",
           component: <ApiKeys />,
         },
@@ -138,7 +141,13 @@ function appendMcpSection(
   );
 
   if (developerIndex === -1) {
-    return [...sections, { title: "Developer", items: [mcpItem] }];
+    return [
+      ...sections,
+      {
+        title: t("settings.developer.title", "Developer"),
+        items: [mcpItem],
+      },
+    ];
   }
 
   return sections.map((section, index) =>
@@ -232,7 +241,7 @@ export function createSaasConfigNavSections(
       },
       {
         key: "security",
-        label: "Passwords & Security",
+        label: t("config.account.security.title", "Passwords & Security"),
         icon: "lock",
         component: <PasswordSecurity />,
       },
@@ -259,8 +268,8 @@ export function createSaasConfigNavSections(
     ),
   }));
 
-  sections = ensurePreferencesSection(sections);
-  sections = appendDeveloperSection(sections);
+  sections = ensurePreferencesSection(sections, t);
+  sections = appendDeveloperSection(sections, t);
   sections = appendMcpSection(sections, t);
 
   if (!isAnonymous) {

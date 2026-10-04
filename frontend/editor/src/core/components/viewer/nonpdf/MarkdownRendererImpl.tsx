@@ -2,9 +2,11 @@ import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import type { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
 
 function CopyButton({ text }: { text: string }) {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
   return (
     <Button
@@ -32,7 +34,9 @@ function CopyButton({ text }: { text: string }) {
           : "var(--mantine-color-gray-7)",
       }}
     >
-      {copied ? "✓ Copied" : "Copy"}
+      {copied
+        ? `✓ ${t("viewer.nonPdf.copied", "Copied")}`
+        : t("common.copy", "Copy")}
     </Button>
   );
 }
