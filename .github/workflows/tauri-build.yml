@@ -243,7 +243,7 @@ jobs:
 
       - name: Restore cache artifact
         id: cache
-        uses: Ludy87/cache-the-planet/multi-cache@516494aa412b74fc8a5f4a8ddba799fa50c66a58
+        uses: Ludy87/cache-the-planet/multi-cache@5723e2b4f71fdb265d0f839156fffa58bb0342e6
         with:
           version: 2
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
@@ -871,7 +871,7 @@ jobs:
 
       - name: Restore cache artifact
         id: cache
-        uses: Ludy87/cache-the-planet/multi-cache@516494aa412b74fc8a5f4a8ddba799fa50c66a58
+        uses: Ludy87/cache-the-planet/multi-cache@5723e2b4f71fdb265d0f839156fffa58bb0342e6
         with:
           version: 2
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
