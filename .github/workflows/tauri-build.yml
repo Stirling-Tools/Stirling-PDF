@@ -284,6 +284,11 @@ jobs:
           token: ${{ github.token }}
           allow-shared-restore: true
           strict: false
+          exclude-path:
+            frontend/editor/src-tauri/target/debug/.fingerprint
+          exclude:
+            frontend/editor/src-tauri/target/debug/deps/match_token*
+            frontend/editor/src-tauri/target/debug/deps/refresh_token_fallback*
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7 # stable
@@ -907,6 +912,11 @@ jobs:
           token: ${{ github.token }}
           allow-shared-restore: true
           strict: false
+          exclude-path:
+            frontend/editor/src-tauri/target/debug/.fingerprint
+          exclude:
+            frontend/editor/src-tauri/target/debug/deps/match_token*
+            frontend/editor/src-tauri/target/debug/deps/refresh_token_fallback*
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7 # stable
