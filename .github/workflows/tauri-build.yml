@@ -61,7 +61,7 @@ permissions:
 
 env:
   JAVA_VERSION: 25
-  GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-25
+  GRADLE_USER_HOME: ~/.gradle
   GRADLE_FILES_TO_HASH: |
     gradle/wrapper/gradle-wrapper.properties
     gradle/libs.versions.toml
