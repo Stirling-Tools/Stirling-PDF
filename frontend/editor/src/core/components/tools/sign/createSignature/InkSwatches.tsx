@@ -32,7 +32,7 @@ export function InkSwatches({ value, onChange }: InkSwatchesProps) {
             key={ink.id}
             type="button"
             role="radio"
-            aria-checked={value.id === ink.id}
+            aria-checked={value.value === ink.value}
             aria-label={names[ink.id]}
             className={styles.swatch}
             style={{ background: ink.value }}

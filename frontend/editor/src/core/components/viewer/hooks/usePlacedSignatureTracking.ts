@@ -10,6 +10,7 @@ import {
   type PlacedSignature,
 } from "@app/contexts/SignatureContext";
 import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
+import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
 
 const SIGNATURE_SUBJECT_PREFIXES = ["Digital Signature", "Text Signature"];
 
@@ -45,17 +46,46 @@ export function usePlacedSignatureTracking() {
   const { provides: annotationApi } = useAnnotationCapability();
   const { setPlacedSignatures, getImageData } = useSignature();
   const documentReady = useDocumentReady();
+  const documentId = useActiveDocumentId();
   const placedRef = useRef<PlacedSignature[]>([]);
 
   useEffect(() => {
     placedRef.current = [];
     setPlacedSignatures([]);
-    if (!annotationApi?.onAnnotationEvent || !documentReady) return;
-    return annotationApi.onAnnotationEvent((event) => {
+    if (!annotationApi || !documentReady || !documentId) return;
+    const annotations = annotationApi.forDocument(documentId);
+    const readSignatures = () => {
+      const next = annotations
+        .getAnnotations()
+        .filter(
+          (entry) =>
+            entry.commitState !== "deleted" && isSignatureStamp(entry.object),
+        )
+        .map(({ object }) => ({
+          id: object.id,
+          pageIndex: object.pageIndex,
+          imageSrc: getImageData(object.id),
+        }));
+      placedRef.current = next;
+      setPlacedSignatures(next);
+    };
+    const unsubscribe = annotations.onAnnotationEvent((event) => {
+      if (event.type === "loaded") {
+        readSignatures();
+        return;
+      }
       const next = nextPlacedSignatures(placedRef.current, event, getImageData);
       if (next === placedRef.current) return;
       placedRef.current = next;
       setPlacedSignatures(next);
     });
-  }, [annotationApi, documentReady, getImageData, setPlacedSignatures]);
+    readSignatures();
+    return unsubscribe;
+  }, [
+    annotationApi,
+    documentReady,
+    documentId,
+    getImageData,
+    setPlacedSignatures,
+  ]);
 }

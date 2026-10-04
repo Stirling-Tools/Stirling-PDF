@@ -43,7 +43,7 @@ export const BaseAnnotationTool: React.FC<BaseAnnotationToolProps> = ({
   const [selectedColor, setSelectedColor] = useState("#000000");
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [signatureData, setSignatureData] = useState<string | null>(null);
-  const historyAvailability = useHistoryAvailability(historyApiRef.current);
+  const historyAvailability = useHistoryAvailability(historyApiRef);
 
   const handleSignatureDataChange = (data: string | null) => {
     setSignatureData(data);

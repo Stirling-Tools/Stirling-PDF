@@ -30,7 +30,10 @@ export interface SignaturePanelHandle {
 }
 
 export interface TypePanelHandle extends SignaturePanelHandle {
-  setName: (name: string) => void;
+  setName: (
+    name: string,
+    style?: Pick<TypedSignatureSource, "fontFamily" | "textColor">,
+  ) => void;
 }
 
 export interface UploadPanelHandle extends SignaturePanelHandle {

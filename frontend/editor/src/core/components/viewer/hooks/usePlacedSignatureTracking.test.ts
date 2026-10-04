@@ -1,10 +1,37 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { act, renderHook } from "@testing-library/react";
 import type { AnnotationEvent } from "@embedpdf/plugin-annotation";
 import {
   PdfAnnotationSubtype,
   type PdfAnnotationObject,
 } from "@embedpdf/models";
-import { nextPlacedSignatures } from "@app/components/viewer/hooks/usePlacedSignatureTracking";
+import {
+  nextPlacedSignatures,
+  usePlacedSignatureTracking,
+} from "@app/components/viewer/hooks/usePlacedSignatureTracking";
+
+const tracking = vi.hoisted(() => ({
+  api: { forDocument: vi.fn() },
+  documentId: "doc",
+  ready: true,
+  setPlaced: vi.fn(),
+  imageFor: vi.fn((id: string) => `data:image/png;base64,${id}`),
+}));
+vi.mock("@embedpdf/plugin-annotation/react", () => ({
+  useAnnotationCapability: () => ({ provides: tracking.api }),
+}));
+vi.mock("@app/contexts/SignatureContext", () => ({
+  useSignature: () => ({
+    setPlacedSignatures: tracking.setPlaced,
+    getImageData: tracking.imageFor,
+  }),
+}));
+vi.mock("@app/components/viewer/hooks/useDocumentReady", () => ({
+  useDocumentReady: () => tracking.ready,
+}));
+vi.mock("@app/components/viewer/useActiveDocumentId", () => ({
+  useActiveDocumentId: () => tracking.documentId,
+}));
 
 const stamp = (id: string, subject = "Digital Signature - Document signing") =>
   ({
@@ -24,6 +51,54 @@ const event = (
   annotation,
   pageIndex,
   committed: true,
+});
+
+describe("usePlacedSignatureTracking", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    tracking.documentId = "doc";
+    tracking.ready = true;
+  });
+
+  it("enumerates existing stamps even if loading finished before subscription", () => {
+    let notify: ((event: AnnotationEvent) => void) | undefined;
+    const getAnnotations = vi.fn(() => [
+      { commitState: "synced", object: stamp("saved") },
+      { commitState: "deleted", object: stamp("deleted") },
+      { commitState: "synced", object: stamp("other", "Approved") },
+    ]);
+    tracking.api.forDocument.mockReturnValue({
+      getAnnotations,
+      onAnnotationEvent: vi.fn((listener: (event: AnnotationEvent) => void) => {
+        notify = listener;
+        return vi.fn();
+      }),
+    });
+    renderHook(() => usePlacedSignatureTracking());
+    expect(tracking.setPlaced).toHaveBeenLastCalledWith([
+      { id: "saved", pageIndex: 0, imageSrc: imageFor("saved") },
+    ]);
+    getAnnotations.mockReturnValue([
+      { commitState: "synced", object: stamp("restored") },
+    ]);
+    act(() => notify?.({ type: "loaded", documentId: "doc", total: 1 }));
+    expect(tracking.setPlaced).toHaveBeenLastCalledWith([
+      { id: "restored", pageIndex: 0, imageSrc: imageFor("restored") },
+    ]);
+  });
+
+  it("clears the old document's list and unsubscribes when it stops being ready", () => {
+    const unsubscribe = vi.fn();
+    tracking.api.forDocument.mockReturnValue({
+      getAnnotations: () => [{ commitState: "synced", object: stamp("saved") }],
+      onAnnotationEvent: () => unsubscribe,
+    });
+    const { rerender } = renderHook(() => usePlacedSignatureTracking());
+    tracking.ready = false;
+    rerender();
+    expect(unsubscribe).toHaveBeenCalledTimes(1);
+    expect(tracking.setPlaced).toHaveBeenLastCalledWith([]);
+  });
 });
 
 const imageFor = (id: string) => `data:image/png;base64,${id}`;

@@ -98,7 +98,7 @@ const SignSettings = ({
   const { t } = useTranslation();
   const { isPlacementMode, signaturesApplied, historyApiRef } = useSignature();
   const { activeFileIndex } = useViewer();
-  const historyAvailability = useHistoryAvailability(historyApiRef.current);
+  const historyAvailability = useHistoryAvailability(historyApiRef);
   const translate = useCallback(
     (key: string, defaultValue: string, options?: Record<string, unknown>) =>
       t(`${translationScope}.${key}`, { defaultValue, ...options }),

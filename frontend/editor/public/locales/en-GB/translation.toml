@@ -12244,13 +12244,6 @@ type = "Type"
 upload = "Upload"
 
 [sign.wallet.toast]
-applyFailed = "Could not apply signatures"
-applyFailedBody = "Your signatures are still on the document. Try again."
-deleteFailed = "Could not delete the signature"
-draftExists = "Save or discard your unsaved signature first"
-initialsFailed = "Could not save your initials"
-initialsPartial = "Your signature was saved, but your initials were not. Try saving your initials separately."
-renameFailed = "Could not rename the signature"
 saved = "Saved to your signatures"
 saveFailed = "Could not save the signature"
 saveFailedBody = "It is still ready to place on this document."
@@ -12259,7 +12252,6 @@ shareFailed = "Could not share the signature"
 
 [sign.wallet.type]
 initials = "Initials"
-initialsLimit = "Saving initials needs two free signature slots."
 name = "Your name"
 namePlaceholder = "Type your name"
 previewName = "Your name"

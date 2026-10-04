@@ -58,7 +58,7 @@ export function SignatureWallet({
   const { config } = useAppConfig();
   const isMobile = useIsMobile();
   const { placedSignatures, historyApiRef } = useSignature();
-  const history = useHistoryAvailability(historyApiRef.current);
+  const history = useHistoryAvailability(historyApiRef);
   const library = useSignatureLibrary();
   const [dialog, setDialog] = useState<WalletDialog>(null);
   const placement = useSignaturePlacement({

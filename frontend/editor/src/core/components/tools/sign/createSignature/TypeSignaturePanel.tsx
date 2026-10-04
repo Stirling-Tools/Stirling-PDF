@@ -11,6 +11,7 @@ import { InkSwatches } from "@app/components/tools/sign/createSignature/InkSwatc
 import { SignatureStylePicker } from "@app/components/tools/sign/createSignature/SignatureStylePicker";
 import {
   DEFAULT_INK,
+  INK_COLORS,
   SIGNATURE_FONTS,
   type InkColor,
   type SignatureFont,
@@ -89,7 +90,26 @@ export const TypeSignaturePanel = forwardRef<
     };
   }
 
-  useImperativeHandle(ref, () => ({ setName, getResult }));
+  useImperativeHandle(ref, () => ({
+    setName: (nextName, style) => {
+      setName(nextName);
+      setInitialsOverride(null);
+      if (!style) return;
+      setFont(
+        SIGNATURE_FONTS.find((entry) => entry.family === style.fontFamily) ?? {
+          family: style.fontFamily,
+          previewScale: 1,
+        },
+      );
+      setInk(
+        INK_COLORS.find((entry) => entry.value === style.textColor) ?? {
+          ...DEFAULT_INK,
+          value: style.textColor,
+        },
+      );
+    },
+    getResult,
+  }));
 
   return (
     <div className={styles.panel}>

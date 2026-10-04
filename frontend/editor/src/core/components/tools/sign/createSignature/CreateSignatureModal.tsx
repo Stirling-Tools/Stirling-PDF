@@ -85,7 +85,10 @@ export function CreateSignatureModal({
         return;
       }
       if (payload.kind === "text") {
-        typeRef.current?.setName(payload.text);
+        typeRef.current?.setName(payload.text, {
+          fontFamily: payload.fontFamily,
+          textColor: payload.color,
+        });
         setTab("type");
         return;
       }

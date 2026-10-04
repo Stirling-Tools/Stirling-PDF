@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import type { HistoryAPI } from "@app/components/viewer/viewerTypes";
 
 export interface HistoryAvailability {
@@ -9,11 +9,19 @@ export interface HistoryAvailability {
 const NOTHING_TO_STEP: HistoryAvailability = { canUndo: false, canRedo: false };
 
 export function useHistoryAvailability(
-  historyApi: HistoryAPI | null,
+  historyApiRef: RefObject<HistoryAPI | null>,
 ): HistoryAvailability {
   const [availability, setAvailability] = useState(NOTHING_TO_STEP);
+  const subscription = useRef<{
+    api: HistoryAPI | null;
+    unsubscribe?: () => void;
+  }>({ api: null });
 
   useEffect(() => {
+    const historyApi = historyApiRef.current;
+    if (subscription.current.api === historyApi) return;
+    subscription.current.unsubscribe?.();
+    subscription.current = { api: historyApi };
     if (!historyApi) {
       setAvailability(NOTHING_TO_STEP);
       return;
@@ -23,10 +31,17 @@ export function useHistoryAvailability(
         canUndo: historyApi.canUndo?.() ?? false,
         canRedo: historyApi.canRedo?.() ?? false,
       });
-    const unsubscribe = historyApi.subscribe?.(update);
+    subscription.current.unsubscribe = historyApi.subscribe?.(update);
     update();
-    return () => unsubscribe?.();
-  }, [historyApi]);
+  });
+
+  useEffect(
+    () => () => {
+      subscription.current.unsubscribe?.();
+      subscription.current = { api: null };
+    },
+    [],
+  );
 
   return availability;
 }
