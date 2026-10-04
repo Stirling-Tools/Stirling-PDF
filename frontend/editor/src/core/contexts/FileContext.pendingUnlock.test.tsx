@@ -49,7 +49,9 @@ vi.mock("@app/contexts/file/fileActions", async (importOriginal) => {
     ...actual,
     addFiles: vi.fn<typeof actual.addFiles>(
       async (options, _stateRef, filesRef, dispatch) => {
-        const file = createStirlingFile(options.files[0], id);
+        const source = options.files?.[0];
+        if (!source) throw new Error("No test file supplied");
+        const file = createStirlingFile(source, id);
         const stub: StirlingFileStub = {
           id,
           name: file.name,
