@@ -75,8 +75,6 @@ import { processResponse } from "@app/utils/toolResponseProcessor";
 import { ToolOperation } from "@app/types/file";
 import { handlePasswordError } from "@app/utils/toolErrorHandler";
 
-const DEBUG = process.env.NODE_ENV === "development";
-
 // Inner provider component that has access to IndexedDB
 function FileContextInner({
   children,
@@ -775,12 +773,15 @@ function FileContextInner({
   //   loadFromPersistence();
   // }, [enablePersistence, indexedDB]);
 
-  // Cleanup on unmount
+  const mountedRef = useRef(false);
   useEffect(() => {
+    mountedRef.current = true;
     return () => {
-      if (DEBUG)
-        console.log("FileContext unmounting - cleaning up all resources");
-      lifecycleManager.destroy();
+      mountedRef.current = false;
+      // StrictMode can replay effects after files hydrate; only an actual unmount owns cleanup.
+      queueMicrotask(() => {
+        if (!mountedRef.current) lifecycleManager.destroy();
+      });
     };
   }, [lifecycleManager]);
 

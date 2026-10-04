@@ -109,6 +109,12 @@ export class TextRun {
   // Session-only lock: when true the run is skipped by all hit-tests (mouse,
   // marquee, Ctrl+A) and edit gestures are no-ops.
   locked: boolean;
+  /**
+   * Width the user resized the box to, in PDF points, or null to follow the
+   * ink. Kept apart from `bounds`, which a reflow sets to the glyphs' extent:
+   * text rarely fills its box, so the box would shrink back to the ink.
+   */
+  wrapWidthPt: number | null;
 
   constructor(
     init: TextRunSnapshot & {
@@ -152,6 +158,7 @@ export class TextRun {
     this.coverRectPtr = 0;
     this.scanEdit = null;
     this.locked = init.locked ?? false;
+    this.wrapWidthPt = init.wrapWidthPt ?? null;
   }
 
   // Captured pen positions are only valid for the text AND face they were
@@ -192,6 +199,7 @@ export class TextRun {
       paragraphBaselines: this.lineBaselines(),
       paragraphLineLefts: this.lineLefts(),
       locked: this.locked || undefined,
+      wrapWidthPt: this.wrapWidthPt ?? undefined,
     };
   }
 
