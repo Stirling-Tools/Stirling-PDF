@@ -253,11 +253,11 @@ jobs:
           manifest-path: .github/cache-data
           multi-cache: |
             cargo-registry:
-              path: ~/.cargo/registry
+              path: .cache/cargo/registry
             cargo-git:
-              path: ~/.cargo/git
+              path: .cache/cargo/git
             cargo-bin:
-              path: ~/.cargo/bin
+              path: .cache/cargo/bin
             frontend-dist:
               path: frontend/editor/dist
             frontend-node-modules:
@@ -883,11 +883,11 @@ jobs:
             tauri-target:
               path: frontend/editor/src-tauri/target
             cargo-registry:
-              path: ~/.cargo/registry
+              path: .cache/cargo/registry
             cargo-git:
-              path: ~/.cargo/git
+              path: .cache/cargo/git
             cargo-bin:
-              path: ~/.cargo/bin
+              path: .cache/cargo/bin
             npm-cache:
               path: .cache/npm
             frontend-node-modules:
