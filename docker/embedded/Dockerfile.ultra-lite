@@ -46,8 +46,8 @@ RUN --mount=type=cache,id=stirling-pdf-gradle-cache,target=/home/gradle/.gradle,
 COPY . .
 
 # Build ultra-lite JAR with embedded frontend (minimal features).
-# Embed the admin portal app at /portal when the deploy workflow flags it.
-ARG BUILD_PORTAL=false
+# Include the processor (admin portal) in the bundled editor; false leaves it out.
+ARG BUILD_PORTAL=true
 # Bundle only the JPDFium native for this image's target arch.
 ARG TARGETARCH
 RUN --mount=type=cache,id=stirling-pdf-npm-cache,target=/root/.npm,sharing=locked \
