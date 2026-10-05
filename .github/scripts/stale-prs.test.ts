@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import { BOT_LOGIN, type Core, type GitHubClient, LABELS } from "./github.ts";
+import { type ChangedFile, oversizedComment } from "./pr-size.ts";
 import type { ReviewNode, TimelineItem } from "./pr-turn.ts";
 import triageStalePullRequests, {
   type Actor,
@@ -26,6 +27,7 @@ interface PullRequestOptions {
   isDraft?: boolean;
   activeDaysAgo?: number;
   authorType?: string;
+  additions?: number;
 }
 
 function pullRequest({
@@ -33,12 +35,16 @@ function pullRequest({
   isDraft = false,
   activeDaysAgo = 0,
   authorType = "User",
+  additions = 10,
 }: PullRequestOptions = {}): PullRequest {
   return {
     number,
     url: `https://github.com/o/r/pull/${number}`,
     isDraft,
     baseRefName: "main",
+    additions,
+    deletions: 0,
+    authorAssociation: "CONTRIBUTOR",
     author: { login: "contributor", __typename: authorType },
     labels: [],
     timeline: [],
@@ -182,6 +188,28 @@ describe("ready PRs after the warning", () => {
   });
 });
 
+describe("too-large PRs", () => {
+  const tooLarge = (daysAgoAdded: number, options: PullRequestOptions = {}) => label(pullRequest(options), LABELS.tooLarge, daysAgoAdded);
+
+  it("are pending until a week after the size warning, then close", () => {
+    assert.deepEqual(decision(tooLarge(3)), { action: "pending", reasons: ["tooLarge"] });
+    assert.deepEqual(decision(tooLarge(7)), { action: "close", reasons: ["tooLarge"] });
+    assert.deepEqual(decision(tooLarge(7, { isDraft: true, activeDaysAgo: 1 })), { action: "close", reasons: ["tooLarge"] });
+  });
+
+  it("still get the stale warnings while pending", () => {
+    assert.deepEqual(decision(label(conflicted(10), LABELS.tooLarge, 2)), { action: "warn", reasons: ["conflicts"] });
+  });
+
+  it("are never closed on hold", () => {
+    assert.equal(actionFor(label(tooLarge(30), LABELS.onHold, 1)), "none");
+  });
+
+  it("finish a size close that stopped partway", () => {
+    assert.deepEqual(decision(label(tooLarge(8), LABELS.backlogCleanup, 1)), { action: "resume", reasons: [] });
+  });
+});
+
 describe("drafts", () => {
   const draft = (activeDaysAgo: number) => pullRequest({ isDraft: true, activeDaysAgo });
 
@@ -297,6 +325,9 @@ function toNode(pr: PullRequest, pageSize: number, before: string | null): PullR
     isDraft: pr.isDraft,
     createdAt: pr.lastActivityAt,
     baseRefName: pr.baseRefName,
+    additions: pr.additions,
+    deletions: pr.deletions,
+    authorAssociation: pr.authorAssociation,
     author: pr.author,
     labels: { nodes: pr.labels.map((name) => ({ name })) },
     commits: { nodes: [] },
@@ -323,6 +354,10 @@ interface FakeOptions {
   alreadyRemoved?: string[];
   /** The history pr-turn.ts reads to re-check waiting-on-author. */
   turnItems?: TurnItem[];
+  /** What pulls.listFiles returns, for a PR over the size limit in total. */
+  files?: ChangedFile[];
+  /** What issues.listComments returns. */
+  comments?: { id: number; body: string; user: { login: string; type: string } }[];
 }
 
 function fakeGitHub(
@@ -335,6 +370,8 @@ function fakeGitHub(
     failWrite,
     alreadyRemoved = [],
     turnItems = STILL_WAITING,
+    files = [],
+    comments = [],
   }: FakeOptions = {},
 ) {
   const calls: string[] = [];
@@ -374,6 +411,8 @@ function fakeGitHub(
           if (alreadyRemoved.includes(name)) throw Object.assign(new Error("Label does not exist"), { status: 404 });
           write(`unlabel #${issue_number} ${name}`);
         },
+        listComments: async () => ({ data: comments }),
+        updateComment: async ({ comment_id }) => write(`edit comment ${comment_id}`),
       },
       pulls: {
         get: async () => {
@@ -381,7 +420,7 @@ function fakeGitHub(
           return { data: { mergeable, mergeable_state: mergeableState, labels: [], head: { ref: "feature", repo: null } } };
         },
         update: async ({ pull_number }) => write(`close #${pull_number}`),
-        listFiles: async () => assert.fail("no file lists"),
+        listFiles: async ({ page }) => ({ data: page === 1 ? files : [] }),
       },
     },
   };
@@ -522,6 +561,40 @@ describe("triage run", () => {
     assert.deepEqual(errors, ["#1: boom"]);
     assert.equal(failed.length, 1);
     assert.equal(summaries(), 1);
+  });
+
+  describe("size limit", () => {
+    const javaFile = (lines: number): ChangedFile[] => [{ filename: "app/core/A.java", additions: lines, deletions: 0 }];
+
+    it("warns a PR over the limit, then holds it pending", async () => {
+      const { github, calls } = fakeGitHub([pullRequest({ additions: 1500 })], { files: javaFile(1500) });
+      const { tables } = await triage(github);
+      assert.deepEqual(calls, ["comment #1", "label #1 too-large"]);
+      assert.deepEqual(tables[0]?.[1]?.slice(2), ["pending", "tooLarge"]);
+    });
+
+    it("closes a PR still over the limit a week after the warning", async () => {
+      const pr = label(pullRequest({ additions: 1500 }), LABELS.tooLarge, 30);
+      const comments = [{ id: 9, body: oversizedComment("contributor", 1500), user: { login: "github-actions[bot]", type: "Bot" } }];
+      const { github, calls } = fakeGitHub([pr], { files: javaFile(1500), comments });
+      await triage(github);
+      assert.deepEqual(calls, ["comment #1", "label #1 backlog-cleanup", "close #1"]);
+    });
+
+    it("lifts the warning once the PR is split down", async () => {
+      const pr = label(pullRequest({ additions: 500 }), LABELS.tooLarge, 3);
+      const comments = [{ id: 9, body: oversizedComment("contributor", 1500), user: { login: "github-actions[bot]", type: "Bot" } }];
+      const { github, calls } = fakeGitHub([pr], { comments });
+      await triage(github);
+      assert.deepEqual(calls, ["edit comment 9", "unlabel #1 too-large"]);
+    });
+
+    it("only reports it in a dry run", async () => {
+      const { github, calls } = fakeGitHub([pullRequest({ additions: 1500 })], { files: javaFile(1500) });
+      const { tables } = await triage(github, { live: false });
+      assert.deepEqual(calls, []);
+      assert.deepEqual(tables[0]?.[1]?.slice(2), ["pending", "tooLarge"]);
+    });
   });
 
   it("marks a write that failed in the summary", async () => {

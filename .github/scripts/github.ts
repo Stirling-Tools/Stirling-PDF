@@ -1,4 +1,4 @@
-// The GitHub API surface and labels the PR bots share.
+// The GitHub API surface, labels and timings the PR bots share.
 
 export const LABELS = {
   stale: "Stale PR",
@@ -7,7 +7,11 @@ export const LABELS = {
   waitingOnAuthor: "waiting-on-author",
   conflicts: "has conflicts", // must match CONFLICT_LABEL in pr-conflict-labeler.yml
   largePrApproved: "large-pr-approved",
+  tooLarge: "too-large",
 };
+
+/** Days from a warning to the close, for the stale PR warning and the size warning alike. */
+export const CLOSE_AFTER_WARNING_DAYS = 7;
 
 /** The login github.token acts as, so the actor on every write these bots make. */
 export const BOT_LOGIN = "github-actions";
@@ -34,6 +38,10 @@ export interface GitHubClient {
       createComment(params: IssueRef & { body: string }): Promise<unknown>;
       addLabels(params: IssueRef & { labels: string[] }): Promise<unknown>;
       removeLabel(params: IssueRef & { name: string }): Promise<unknown>;
+      listComments(
+        params: IssueRef & { per_page: number; page: number },
+      ): Promise<{ data: { id: number; body?: string; user: { login: string; type: string } | null }[] }>;
+      updateComment(params: Repo & { comment_id: number; body: string }): Promise<unknown>;
     };
     pulls: {
       get(params: Repo & { pull_number: number }): Promise<{ data: PullData }>;

@@ -51,6 +51,8 @@ function fakeGitHub(items: TurnItem[] = [], { labelled = false, alreadyRemoved =
           if (alreadyRemoved) throw Object.assign(new Error("Label does not exist"), { status: 404 });
           return calls.push(`unlabel #${issue_number} ${name}`);
         },
+        listComments: async () => assert.fail("no comment reads"),
+        updateComment: async () => assert.fail("no comment edits"),
       },
       pulls: {
         get: async () => {
