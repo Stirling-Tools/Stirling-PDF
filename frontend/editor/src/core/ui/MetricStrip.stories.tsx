@@ -1,24 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { Icon } from "@app/ui/Icon";
 import { MetricStrip } from "@app/ui/MetricStrip";
 import { MetricCard } from "@app/ui/MetricCard";
 
 function ShieldIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width={22}
-      height={22}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.75}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-      <path d="m9 12 2 2 4-4" />
-    </svg>
-  );
+  return <Icon name="shield-check" size={22} />;
 }
 
 const meta: Meta<typeof MetricStrip> = {

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef } from "react";
+import i18n from "i18next";
 
 import {
   BulkRotateCommand,
@@ -249,8 +250,16 @@ export const usePageEditorCommands = ({
       execute: () => setSplitPositions(newSplitPositions),
       undo: () => setSplitPositions(splitPositions),
       description: shouldRemoveSplits
-        ? `Remove ${selectedSplitPageIds.length} split(s)`
-        : `Add ${selectedSplitPageIds.length - existingSplitsCount} split(s)`,
+        ? i18n.t(
+            "pageEditor.commands.removeSplits",
+            "Remove {{count}} splits",
+            {
+              count: selectedSplitPageIds.length,
+            },
+          )
+        : i18n.t("pageEditor.commands.addSplits", "Add {{count}} splits", {
+            count: noSplitsCount,
+          }),
     };
 
     executeCommandWithTracking(smartSplitCommand);

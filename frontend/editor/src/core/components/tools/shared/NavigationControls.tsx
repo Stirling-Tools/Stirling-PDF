@@ -33,7 +33,10 @@ const NavigationControls = ({
           <Icon name="chevron-left" size={"1rem"} />
         </ActionIcon>
         <Text size="xs" c="dimmed">
-          {currentIndex + 1} of {totalFiles}
+          {t("common.nOfTotal", "{{current}} of {{total}}", {
+            current: currentIndex + 1,
+            total: totalFiles,
+          })}
         </Text>
 
         <ActionIcon

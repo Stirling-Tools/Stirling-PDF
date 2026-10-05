@@ -248,7 +248,9 @@ const FileThumbnail = ({
         {/* Centered index */}
         <div
           className={styles.headerIndex}
-          aria-label={`Position ${index + 1}`}
+          aria-label={t("pageEditor.filePosition", "Position {{position}}", {
+            position: index + 1,
+          })}
         >
           {index + 1}
         </div>

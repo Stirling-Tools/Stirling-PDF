@@ -1,5 +1,5 @@
 import { FileButton as MantineFileButton } from "@mantine/core";
-import type { ForwardedRef, ReactNode } from "react";
+import type { ForwardedRef, InputHTMLAttributes, ReactNode } from "react";
 import { Button } from "@app/ui/Button";
 import type { ButtonProps } from "@app/ui/Button";
 
@@ -19,6 +19,8 @@ export interface FilePickerProps<
   resetRef?: ForwardedRef<() => void>;
   name?: string;
   capture?: boolean | "user" | "environment";
+  /** Props forwarded to the hidden <input> element (e.g. { id: 'my-input' } for test selectors). */
+  inputProps?: InputHTMLAttributes<HTMLInputElement>;
   /** Trigger label. */
   children?: ReactNode;
 }
@@ -32,6 +34,7 @@ export function FilePicker<Multiple extends boolean = false>({
   name,
   capture,
   disabled,
+  inputProps,
   children,
   ...buttonProps
 }: FilePickerProps<Multiple>) {
@@ -44,6 +47,7 @@ export function FilePicker<Multiple extends boolean = false>({
       name={name}
       capture={capture}
       disabled={disabled}
+      inputProps={inputProps}
     >
       {(props) => (
         <Button {...buttonProps} {...props} disabled={disabled}>

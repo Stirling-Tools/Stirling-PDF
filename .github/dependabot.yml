@@ -107,6 +107,9 @@ updates:
           - "i18next"
           - "i18next-*"
           - "react-i18next"
+      lucide:
+        patterns:
+          - "lucide-static"
       stripe:
         patterns:
           - "@stripe/*"

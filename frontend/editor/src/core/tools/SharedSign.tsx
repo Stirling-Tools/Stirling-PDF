@@ -16,6 +16,7 @@ import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
 import type { BaseToolProps } from "@app/types/tool";
 import { useGroupSigningEnabled } from "@app/hooks/useGroupSigningEnabled";
+import { useAuth } from "@app/auth/UseSession";
 import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
 import { useSigningSessionController } from "@app/hooks/signing/useSigningSessionController";
 import { CreateSessionFlow } from "@app/components/shared/signing/CreateSessionFlow";
@@ -41,6 +42,7 @@ function sortByRecency(items: SessionItem[]): SessionItem[] {
 const SharedSign = (_props: BaseToolProps) => {
   const { t } = useTranslation();
   const groupSigningEnabled = useGroupSigningEnabled();
+  const { isAnonymous } = useAuth();
   const controller = useSigningSessionController(groupSigningEnabled);
   const selectedFiles = useViewScopedFiles();
 
@@ -133,6 +135,22 @@ const SharedSign = (_props: BaseToolProps) => {
       void controller.openSession(item);
     }
   };
+
+  if (!groupSigningEnabled && isAnonymous) {
+    return (
+      <Stack p="md">
+        <Alert
+          color="yellow"
+          title={t("sharedSign.signInRequiredTitle", "Sign in required")}
+        >
+          {t(
+            "sharedSign.signInRequiredBody",
+            "Sign in to request signatures and see requests sent to you.",
+          )}
+        </Alert>
+      </Stack>
+    );
+  }
 
   if (!groupSigningEnabled) {
     return (

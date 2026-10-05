@@ -67,29 +67,33 @@ export function MobileActionBar({
               onClick={() => store.setMobileSheet("details")}
               data-testid="pdf-editor-mobile-details"
             />
-            <Menu shadow="md" position="top" withinPortal closeOnItemClick>
-              <Menu.Target>
+            {(controller.hasRunSelection || controller.hasImageSelection) && (
+              <>
+                <Menu shadow="md" position="top" withinPortal closeOnItemClick>
+                  <Menu.Target>
+                    <BarButton
+                      icon="layers"
+                      label={t("pdfTextEditor.toolbar.arrange", "Arrange")}
+                      data-testid="pdf-editor-arrange-menu"
+                    />
+                  </Menu.Target>
+                  <Menu.Dropdown>
+                    <ArrangeMenuItems controller={controller} />
+                  </Menu.Dropdown>
+                </Menu>
                 <BarButton
-                  icon="layers"
-                  label={t("pdfTextEditor.toolbar.arrange", "Arrange")}
-                  data-testid="pdf-editor-arrange-menu"
+                  icon={controller.selectionAllLocked ? "lock" : "lock-open"}
+                  label={
+                    controller.selectionAllLocked
+                      ? t("pdfTextEditor.mobile.unlock", "Unlock")
+                      : t("pdfTextEditor.mobile.lock", "Lock")
+                  }
+                  pressed={controller.selectionAllLocked}
+                  onClick={controller.onToggleLock}
+                  data-testid="pdf-editor-toggle-lock"
                 />
-              </Menu.Target>
-              <Menu.Dropdown>
-                <ArrangeMenuItems controller={controller} />
-              </Menu.Dropdown>
-            </Menu>
-            <BarButton
-              icon={controller.selectionAllLocked ? "lock" : "lock-open"}
-              label={
-                controller.selectionAllLocked
-                  ? t("pdfTextEditor.mobile.unlock", "Unlock")
-                  : t("pdfTextEditor.mobile.lock", "Lock")
-              }
-              pressed={controller.selectionAllLocked}
-              onClick={controller.onToggleLock}
-              data-testid="pdf-editor-toggle-lock"
-            />
+              </>
+            )}
             <BarButton
               icon="trash"
               label={t("pdfTextEditor.mobile.delete", "Delete")}

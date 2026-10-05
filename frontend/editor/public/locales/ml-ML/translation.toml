@@ -278,6 +278,7 @@ customNumberDesc = "സ്ഥിരസ്ഥിതിയായി {n}, 'പേ�
 fontName = "അക്ഷരത്തിന്റെ പേര്"
 fontSize = "അക്ഷര വലുപ്പം"
 numberPagesDesc = "ഏത് പേജുകളാണ് നമ്പർ ചെയ്യേണ്ടത്, സ്ഥിരസ്ഥിതി 'എല്ലാം', 1-5 അല്ലെങ്കിൽ 2,5,9 തുടങ്ങിയവയും സ്വീകരിക്കുന്നു"
+pagePreviewAlt = "പേജ് പ്രിവ്യൂ"
 pagesAndStarting = "പേജുകളും ആരംഭ നമ്പറും"
 positionAndPages = "സ്ഥാനം & പേജുകൾ"
 preview = "സ്ഥാനം തിരഞ്ഞെടുപ്പ്"
@@ -350,7 +351,9 @@ text = "ഈ അനുമതികൾ ഉപയോഗിച്ച് ഉപയോ
 title = "അനുമതികൾ മാറ്റുക"
 
 [addStamp]
+pagePreviewAlt = "പേജ് പ്രിവ്യൂ"
 preview = "സ്റ്റാമ്പ് പ്രിവ്യൂ"
+stampPreviewAlt = "സ്റ്റാമ്പ് പ്രിവ്യൂ"
 tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 
 [AddStampRequest]
@@ -383,6 +386,7 @@ positionAndFormatting = "സ്ഥാനം & ഫോർമാറ്റിംഗ�
 preview = "Preview:"
 quickPosition = "സ്റ്റാമ്പ് വയ്ക്കാൻ പേജിലെ ഒരു സ്ഥാനം തിരഞ്ഞെടുക്കുക."
 rotation = "തിരിക്കൽ"
+selectedImageAlt = "തിരഞ്ഞെടുത്ത സ്റ്റാമ്പ് ചിത്രം"
 selectTemplate = "Select a template..."
 stampSetup = "സ്റ്റാമ്പ് സജ്ജീകരണം"
 stampText = "സ്റ്റാമ്പ് ടെക്സ്റ്റ്"
@@ -533,6 +537,9 @@ letter = "Letter"
 
 [adjustPageScale.scaleFactor]
 label = "സ്കെയിൽ ഫാക്ടർ"
+
+[adjustPageScale.settings]
+title = "ക്രമീകരണങ്ങൾ"
 
 [adjustPageScale.tooltip.description]
 text = "PDF ഉള്ളടക്കത്തിന്റെ വലിപ്പം ക്രമപ്പെടുത്തുകയും പേജ് അളവുകൾ മാറ്റുകയും ചെയ്യുക."
@@ -728,6 +735,7 @@ noLanguages = "ക്രമീകരിച്ച ഡയറക്ടറിയി�
 permissionNotice = "tessdata പാത എഴുതാനാവില്ല. ഡൗൺലോഡുകൾ ബ്രൗസറിൽ തുറക്കും; ദയവായി .traineddata ഫയലുകൾ കൈകൊണ്ട് tessdata ഫോൾഡറിൽ സേവ് ചെയ്യുക."
 
 [admin.settings.ai]
+customProvider = "ഇഷ്ടാനുസൃതം (OpenAI-compatible)"
 description = "Stirling-നെ Python AI engine-നോട് ബന്ധിപ്പിക്കുക, അതിന്റെ മോഡലുകൾ തിരഞ്ഞെടുക്കുക, അത് പ്രവർത്തിക്കുന്ന guardrails സജ്ജമാക്കുക."
 managedByCloud = "ഈ മോഡിൽ Stirling Cloud ആണ് നിയന്ത്രിക്കുന്നത്."
 managedByCloudShort = "Stirling Cloud നിയന്ത്രിക്കുന്നു"
@@ -1146,7 +1154,6 @@ refresh = "റിഫ്രെഷ്"
 selectFile = "ഇംപോർട്ട് ചെയ്യാൻ ഒരു .sql ഫയൽ തിരഞ്ഞെടുക്കുക"
 size = "വലിപ്പം"
 title = "ഡാറ്റാബേസ്"
-unavailable = "നിലവിലെ ഡാറ്റാബേസ് കോൺഫിഗറേഷനിൽ ബാക്കപ്പ് പട്ടിക ലഭ്യമല്ല."
 uploadTitle = "അപ്‌ലോഡ് & ഇംപോർട്ട്"
 version = "H2 പതിപ്പ്"
 
@@ -1280,6 +1287,7 @@ label = "കസ്റ്റം മെറ്റാഡാറ്റ"
 [admin.settings.general.customMetadata.author]
 description = "PDF മെറ്റാഡാറ്റയ്ക്കുള്ള ഡീഫാൾട്ട് രചയിതാവ് (ഉദാ., യൂസർനെയിം)"
 label = "ഡീഫാൾട്ട് രചയിതാവ്"
+placeholder = "ഉപയോക്തൃനാമം"
 
 [admin.settings.general.customMetadata.autoUpdate]
 description = "പ്രോസസ്സ് ചെയ്യുന്ന എല്ലാ ഡോക്യുമെന്റുകളിലും PDF മെറ്റാഡാറ്റ സ്വയമേ പുതുക്കുക"
@@ -1395,6 +1403,7 @@ defaultLocaleLink = "സ്വതേയുള്ള ലോക്കേൽ ക്
 description = "ലോഗിൻ ചെയ്തതിന് ശേഷം ഉപയോക്താക്കൾ അംഗീകരിക്കേണ്ട ഒരു ഡിസ്ക്ലെയിമർ പ്രദർശിപ്പിക്കുക. വാചകം ഓരോ ഉപയോക്താവിന്റെയും ഭാഷയെ അനുസരിച്ചായിരിക്കും."
 discardConfirm = "നിങ്ങൾക്ക് സംരക്ഷിക്കാത്ത മാറ്റങ്ങൾ ഉണ്ട്; അവ നഷ്ടപ്പെടും. എങ്കിലും ഭാഷ മാറ്റണോ?"
 editLabel = "Markdown"
+editPlaceholder = "## തലക്കെട്ട്\n\nനിങ്ങളുടെ നിരാകരണ വാചകം..."
 emptyPreview = "ഇപ്പോൾ പ്രിവ്യൂ ചെയ്യാൻ ഒന്നുമില്ല."
 language = "ഭാഷ"
 languageHelp = "ഓരോ ഭാഷക്കും സ്വന്തം ഫയൽ ഉണ്ട്. ഒരു ഉപയോക്താവിന്റെ ഭാഷയ്ക്ക് ഫയൽ ഇല്ലെങ്കിൽ, കരാർ സ്വതേയുള്ള ലോക്കേലിന്റെ ഫയലിലേക്ക്, തുടർന്ന് ഫോൾബാക്ക് ടെക്സ്റ്റിലേക്ക് മാറും."
@@ -1513,8 +1522,10 @@ label = "JWKS URL (optional)"
 placeholder = "Auto-discovered from issuer"
 
 [admin.settings.mcp.mode]
+apikey = "API key (Stirling ഓരോ-ഉപയോക്തൃ കീ)"
 description = "OAuth needs an external IdP. API key uses a Stirling per-user API key (X-API-KEY) - simplest for self-host."
 label = "Authentication mode"
+oauth = "OAuth 2.1 (ബാഹ്യ IdP)"
 
 [admin.settings.mcp.requireAccount]
 description = "Only let tokens through if their subject maps to a provisioned, enabled Stirling user."
@@ -1931,6 +1942,14 @@ title = "ഉപയോക്തൃ നിയന്ത്രണ ക്രമീക
 [agents]
 stirling_name = "Stirling"
 
+[alphabetOptions]
+arabic = "അറബിക്"
+chinese = "ചൈനീസ് (ലളിതമാക്കിയ)"
+japanese = "ജാപ്പനീസ്"
+korean = "കൊറിയൻ"
+roman = "റോമൻ"
+thai = "തായ്"
+
 [analytics]
 learnMore = "കൂടുതൽ അറിയുക"
 paragraph1 = "ഉൽപ്പന്നം മെച്ചപ്പെടുത്താൻ ഞങ്ങളെ സഹായിക്കുന്നതിന് സ്റ്റെർലിംഗ് PDF-ൽ ഓപ്റ്റ്-ഇൻ അനലിറ്റിക്സ് ഉണ്ട്. ഞങ്ങൾ വ്യക്തിഗത വിവരങ്ങളോ ഫയൽ ഉള്ളടക്കങ്ങളോ ട്രാക്ക് ചെയ്യുന്നില്ല."
@@ -2052,6 +2071,7 @@ week = "ആഴ്ച"
 
 [audit.clearData]
 cancel = "റദ്ദാക്കുക"
+closeAlert = "അലർട്ട് അടയ്ക്കുക"
 codeDoesNotMatch = "കോഡ് പൊരുത്തപ്പെടുന്നില്ല"
 codePlaceholder = "കോഡ് ഇവിടെ ടൈപ്പ് ചെയ്യുക"
 confirmationCode = "സ്ഥിരീകരണ കോഡ്"
@@ -2061,6 +2081,7 @@ confirmTitle = "ഇല്ലാതാക്കണമെന്ന് ദയവാ
 deleteButton = "ഇല്ലാതാക്കുക"
 enterCode = "സ്ഥിരീകരണ കോഡ്"
 enterCodeBelow = "മുകളിൽ കാണുന്നതുപോലെ തന്നെയായി കോഡ് നൽകുക (case-sensitive)"
+failed = "ഓഡിറ്റ് ഡാറ്റ മായ്ക്കാൻ പരാജയപ്പെട്ടു"
 initiateDelete = "എല്ലാ ഡാറ്റയും ഇല്ലാതാക്കുക"
 irreversible = "മടക്കാനാവില്ല"
 success = "വിജയം"
@@ -2069,6 +2090,7 @@ warning1 = "ഈ പ്രവർത്തനം തിരിച്ച് കൊ�
 warning2 = "ഓഡിറ്റ് ഡാറ്റ ഇല്ലാതാക്കുന്നത്, സുരക്ഷാ ഇവന്റുകൾ, ഉപയോക്തൃ പ്രവർത്തനങ്ങൾ, ഫയൽ പ്രവർത്തനങ്ങൾ എന്നിവ ഉൾപ്പെടെ ചരിത്ര ഓഡിറ്റ് ലോഗുകൾ എല്ലാം ഡേറ്റാബേസിൽ നിന്ന് സ്ഥിരമായി നീക്കം ചെയ്യും."
 
 [audit.error]
+loadStatus = "ഓഡിറ്റ് സിസ്റ്റം നില ലോഡ് ചെയ്യാൻ പരാജയപ്പെട്ടു"
 title = "ഓഡിറ്റ് സിസ്റ്റം ലോഡ് ചെയ്യുന്നതിൽ പിശക്"
 
 [audit.events]
@@ -2084,6 +2106,7 @@ fileHash = "ഫയൽ Hash"
 filterByType = "തരം പ്രകാരം ഫിൽറ്റർ ചെയ്യുക"
 filterByUser = "ഉപയോക്താവ് പ്രകാരം ഫിൽറ്റർ ചെയ്യുക"
 ipAddress = "IP വിലാസം"
+loadFailed = "ഇവന്റുകൾ ലോഡ് ചെയ്യാൻ പരാജയപ്പെട്ടു"
 noEvents = "ഇവന്റുകളൊന്നും കണ്ടെത്താനായില്ല"
 startDate = "ആരംഭ തീയതി"
 timestamp = "ടൈംസ്റ്റാമ്പ്"
@@ -2124,6 +2147,7 @@ avgLatency = "ശരാശരി latency"
 error = "സ്ഥിതിവിവരക്കണക്കുകൾ ലോഡ് ചെയ്യുന്നതിൽ പിശക്"
 excellent = "അത്യുത്തമം"
 good = "നല്ലത്"
+loadFailed = "സ്ഥിതിവിവരക്കണക്കുകൾ ലോഡ് ചെയ്യാൻ പരാജയപ്പെട്ടു"
 noData = "N/A"
 successRate = "വിജയ നിരക്ക്"
 totalEvents = "ആകെ ഇവന്റുകൾ"
@@ -2158,13 +2182,27 @@ accessDenied = "ആക്‌സസ് നിരസിച്ചു"
 insufficientPermissions = "ഈ പ്രവർത്തനം നടത്താൻ നിങ്ങൾക്ക് അനുമതിയില്ല."
 
 [auth.callback]
+alreadySignedIn = "ഇതിനകം സൈൻ ഇൻ ചെയ്തിട്ടുണ്ട്! റീഡയറക്ട് ചെയ്യുന്നു..."
+backToLogin = "ലോഗിനിലേക്ക് മടങ്ങുക"
 completing = "authentication പൂർത്തിയാക്കുന്നു"
+exchanging = "അംഗീകാര കോഡ് കൈമാറുന്നു..."
+failedWithReason = "പ്രാമാണീകരണം പരാജയപ്പെട്ടു: {{error}}"
 invalidToken = "OAuth login പരാജയപ്പെട്ടു - invalid token."
 missingToken = "OAuth login പരാജയപ്പെട്ടു - token ലഭിച്ചില്ല."
+noData = "പ്രാമാണീകരണ ഡാറ്റ കണ്ടെത്തിയില്ല"
 oauthFailed = "OAuth login പരാജയപ്പെട്ടു. ദയവായി വീണ്ടും ശ്രമിക്കുക."
 pleaseWait = "നിങ്ങളെ sign in ചെയ്യുന്നത് പൂർത്തിയാക്കുന്നത് വരെ ദയവായി കാത്തിരിക്കുക."
+processing = "പ്രാമാണീകരണം പ്രോസസ്സ് ചെയ്യുന്നു..."
 signedOut = "നിങ്ങൾ sign out ചെയ്തു. ദയവായി വീണ്ടും sign in ചെയ്യുക."
+signInFailed = "സൈൻ ഇൻ പൂർത്തിയാക്കാൻ പരാജയപ്പെട്ടു: {{error}}"
+success = "സൈൻ ഇൻ വിജയകരം! റീഡയറക്ട് ചെയ്യുന്നു..."
+unknownError = "അജ്ഞാത പിശക്"
 windowMayClose = "പൂർത്തിയായാൽ നിങ്ങൾക്ക് ഈ window അടയ്ക്കാം."
+
+[auth.callback.title]
+default = "പ്രാമാണീകരണം"
+processing = "നിങ്ങളെ സൈൻ ഇൻ ചെയ്യുന്നു"
+success = "എല്ലാം തയ്യാറായി!"
 
 [auth.displayName]
 guest = "അതിഥി"
@@ -2317,6 +2355,7 @@ title = "ഓട്ടോമേഷൻ ഇംപോർട്ട് ചെയ്യ
 unresolved = "മാപ്പ് ചെയ്യാത്തത്: {{ops}}"
 
 [automate.run]
+progress = "പുരോഗതി: {{current}}/{{total}}"
 title = "ഓട്ടോമേഷൻ നടത്തുക"
 
 [automate.selection]
@@ -2466,6 +2505,7 @@ whatHappensNext = "അടുത്തത് എന്താണ്?"
 
 [billing.portal]
 error = "ബില്ലിംഗ് പോർട്ടൽ തുറക്കൽ പരാജയപ്പെട്ടു"
+errorFallback = "വീണ്ടും ശ്രമിക്കുക അല്ലെങ്കിൽ പിന്തുണയെ ബന്ധപ്പെടുക."
 
 [bookletImposition]
 paperSizeNote = "പേപ്പർ വലിപ്പം നിങ്ങളുടെ ആദ്യ പേജിൽ നിന്ന് സ്വയമേ നിർണയിക്കുന്നു."
@@ -2513,6 +2553,9 @@ title = "മാനുവൽ ഡ്യൂപ്ലെക്സ് മോഡ്"
 [bookletImposition.rtlBinding]
 label = "വലതിൽ നിന്ന് ഇടത്തേക്ക് ബൈൻഡിംഗ്"
 tooltip = "അറബിക്, ഹീബ്രു, അല്ലെങ്കിൽ മറ്റ് RTL ഭാഷകൾക്കായി"
+
+[bookletImposition.settings]
+title = "ക്രമീകരണങ്ങൾ"
 
 [bookletImposition.tooltip.advanced]
 bullet1 = "റൈറ്റ്-ടു-ലെഫ്റ്റ് ബൈൻഡിംഗ്: അറബിക്, ഹീബ്രു, അല്ലെങ്കിൽ RTL ഭാഷകൾക്കായി"
@@ -2582,6 +2625,8 @@ detail = "വീണ്ടും കളിക്കാൻ ക്ലിക്ക�
 headline = "എല്ലാം ക്ലിയർ"
 
 [bulkSelection]
+selectedPages_one = "തിരഞ്ഞെടുത്തത്: {{count}} പേജ് ({{pages}})"
+selectedPages_other = "തിരഞ്ഞെടുത്തത്: {{count}} പേജുകൾ ({{pages}})"
 syntaxError = "സിന്റാക്സിൽ ഒരു പ്രശ്നമുണ്ട്. സഹായത്തിന് പേജ് തിരഞ്ഞെടുക്കൽ ടിപ്പുകൾ കാണുക."
 
 [bulkSelection.advanced]
@@ -2802,6 +2847,7 @@ declineButton = "നിരസിക്കുക"
 deleteSelected = "തിരഞ്ഞെടുത്ത ഒപ്പ് ഇല്ലാതാക്കുക"
 drawSignature = "താഴെ നിങ്ങളുടെ ഒപ്പ് വരയ്ക്കുക"
 fileTooLarge = "ഫയൽ വലുപ്പം 5MB-ൽ കുറവായിരിക്കണം"
+fontBrushScript = "Brush Script MT (cursive)"
 fontFamily = "അക്ഷരശൈലി"
 fontSize = "ഫോണ്ട് വലുപ്പം: {{size}}px"
 fontSizePlaceholder = "വലുപ്പം"
@@ -2821,6 +2867,7 @@ removeImage = "ചിത്രം നീക്കുക"
 savedSignatures = "സംരക്ഷിച്ച ഒപ്പുകൾ"
 selectFile = "ഇമേജ് ഫയൽ തിരഞ്ഞെടുക്കുക"
 selectSignatureTitle = "ഒപ്പ് തിരഞ്ഞെടുക്കുക അല്ലെങ്കിൽ സൃഷ്ടിക്കുക"
+signatureImageAlt = "ഒപ്പ്"
 signatureInfo = "ഈ ക്രമീകരണങ്ങൾ ഡോക്യുമെന്റിന്റെ ഉടമ നിർണ്ണയിച്ചവയാണ്"
 signatureSettings = "ഒപ്പ് ക്രമീകരണങ്ങൾ"
 signatureText = "ഒപ്പ് വാചകം"
@@ -3591,13 +3638,19 @@ confirm = "സ്ഥിരീകരിക്കുക"
 continue = "തുടരുക"
 copied = "പകർത്തി!"
 copy = "പകർത്തുക"
+copyCode = "കോഡ് പകർത്തുക"
+dismiss = "ഒഴിവാക്കുക"
 done = "പൂർത്തിയായി"
 enterValue = "Enter value"
 error = "പിശക്"
 expand = "വിപുലീകരിക്കുക"
 filterEmpty = "ഫിൽട്ടർ ചെയ്യാൻ ഒന്നുമില്ല"
+goToSlide = "സ്ലൈഡ് {{number}}-ലേക്ക് പോകുക"
 loading = "ലോഡുചെയ്യുന്നു..."
+moreInformation = "കൂടുതൽ വിവരങ്ങൾ"
 next = "അടുത്തത്"
+noData = "ഡാറ്റ ഇല്ല"
+nOfTotal = "{{total}}-ൽ {{current}}"
 open = "Open"
 preview = "മുന്‍കാഴ്ച"
 previous = "മുൻപ്"
@@ -3606,6 +3659,9 @@ remaining = "ബാക്കി"
 retry = "വീണ്ടും ശ്രമിക്കുക"
 save = "സംരക്ഷിക്കുക"
 search = "തിരയുക"
+settingsSections = "ക്രമീകരണ വിഭാഗങ്ങൾ"
+showAllTotal = "എല്ലാ {{total}} ഉം കാണിക്കുക"
+showLess = "കുറച്ച് കാണിക്കുക"
 stepOf = "Step {{current}} of {{total}}"
 
 [compare]
@@ -3617,6 +3673,7 @@ newLine = "പുതിയ വരി"
 pages = "പേജുകൾ"
 tags = "വേർതിരിക്കുക,വ്യത്യാസം,മാറ്റങ്ങൾ,വിശകലനം"
 title = "താരതമ്യം ചെയ്യുക"
+workbenchLabel = "താരതമ്യ കാഴ്ച"
 
 [compare.actions]
 linkScroll = "സ്ക്രോൾ ബന്ധിപ്പിക്കുക"
@@ -3770,6 +3827,7 @@ title = "കംപ്രഷൻ രീതി"
 desiredSize = "ആവശ്യമായ ഫയൽ വലുപ്പം"
 desiredSizePlaceholder = "വലുപ്പം നൽകുക"
 desiredSizeUnit = "Size unit"
+title = "ക്രമീകരണങ്ങൾ"
 
 [compress.tooltip.description]
 text = "കംപ്രഷൻ ഫയൽ വലിപ്പം കുറയ്ക്കാനുള്ള എളുപ്പ മാർഗമാണ്. File Size തിരഞ്ഞെടുക്കുക, ലക്ഷ്യ വലിപ്പം നൽകുക, ഞങ്ങൾ ഗുണനിലവാരം ക്രമീകരിക്കും. Quality തിരഞ്ഞെടുക്കുക, കംപ്രഷൻ ശക്തി കൈയോടെ സജ്ജമാക്കാൻ."
@@ -3819,10 +3877,13 @@ title = "അക്കൗണ്ട് ക്രമീകരണങ്ങൾ"
 description = "നിങ്ങളുടെ അക്കൗണ്ട് വ്യക്തിഗതമാക്കാൻ ഒരു ഇമേജ് അപ്‌ലോഡ് ചെയ്യുക."
 help = "PNG, JPG, അല്ലെങ്കിൽ WebP 2MB വരെ."
 remove = "നീക്കം ചെയ്യുക"
+removeFailed = "പ്രൊഫൈൽ ചിത്രം നീക്കം ചെയ്യാൻ പരാജയപ്പെട്ടു"
 sizeError = "ദയവായി 2MB-ലും കുറവുള്ള ഒരു ഇമേജ് തിരഞ്ഞെടുക്കുക."
 switchedToCustom = "കസ്റ്റം ചിത്രത്തിലേക്ക് മാറ്റി. നിങ്ങൾക്ക് ഇപ്പോൾ സ്വന്തം ചിത്രം അപ്‌ലോഡ് ചെയ്യാം."
+switchFailed = "ഇഷ്ടാനുസൃത ചിത്രത്തിലേക്ക് മാറാൻ പരാജയപ്പെട്ടു"
 title = "പ്രൊഫൈൽ ചിത്രം"
 upload = "അപ്‌ലോഡ്"
+uploadFailed = "പ്രൊഫൈൽ ചിത്രം അപ്‌ലോഡ് ചെയ്യാൻ പരാജയപ്പെട്ടു"
 useCustom = "കസ്റ്റം ചിത്രം ഉപയോഗിക്കുക"
 usingProvider = "{{provider}} പ്രൊഫൈൽ ചിത്രം ഉപയോഗിക്കുന്നു"
 
@@ -3836,6 +3897,7 @@ title = "പ്രൊഫൈൽ ചിത്രം ക്രോപ്പ് ച�
 zoom = "സൂം"
 
 [config.account.security]
+changeFailed = "പാസ്‌വേഡ് മാറ്റാൻ പരാജയപ്പെട്ടു"
 changePassword = "പാസ്‌വേഡ് മാറ്റുക"
 description = "നിങ്ങളുടെ പാസ്‌വേഡും സുരക്ഷാ സജ്ജീകരണങ്ങളും കൈകാര്യം ചെയ്യുക."
 title = "പാസ്‌വേഡുകളും സുരക്ഷയും"
@@ -3846,11 +3908,15 @@ description = "നിങ്ങളുടെ ചരിത്രം സംരക്
 email = "ഇമെയിൽ"
 emailPassword = "അല്ലെങ്കിൽ നിങ്ങളുടെ ഇമെയിലും പാസ്‌വേഡും നൽകുക"
 emailPlaceholder = "നിങ്ങളുടെ ഇമെയിൽ നൽകുക"
+failed = "അക്കൗണ്ട് അപ്‌ഗ്രേഡ് ചെയ്യാൻ പരാജയപ്പെട്ടു"
+failedWithProvider = "{{provider}} ഉപയോഗിച്ച് അക്കൗണ്ട് അപ്‌ഗ്രേഡ് ചെയ്യാൻ പരാജയപ്പെട്ടു"
 linkWith = "ലിങ്ക് ചെയ്യുക"
+linkWithProvider = "{{provider}}-മായി ലിങ്ക് ചെയ്യുക"
 password = "പാസ്‌വേഡ് (ഐച്ഛികം)"
 passwordNote = "ഇമെയിൽ സ്ഥിരീകരണം മാത്രം ഉപയോഗിക്കാൻ ശൂന്യമായി വിടുക"
 passwordPlaceholder = "ഒരു പാസ്‌വേഡ് സജ്ജമാക്കുക"
 socialLogin = "സോഷ്യൽ അക്കൗണ്ടിലൂടെ അപ്‌ഗ്രേഡ് ചെയ്യുക"
+success = "അക്കൗണ്ട് വിജയകരമായി അപ്‌ഗ്രേഡ് ചെയ്തു! ഇപ്പോൾ നിങ്ങളുടെ ഇമെയിൽ ഉപയോഗിച്ച് സൈൻ ഇൻ ചെയ്യാം."
 title = "ഗസ്റ്റ് അക്കൗണ്ട് അപ്‌ഗ്രേഡ് ചെയ്യുക"
 upgradeButton = "അക്കൗണ്ട് അപ്‌ഗ്രേഡ് ചെയ്യുക"
 
@@ -3960,10 +4026,10 @@ title = "അഭ്യർത്ഥന സാധുവല്ല"
 
 [connect.renewal]
 approve = "Sign-in പുതുക്കുക"
+currentOwnerRequired = "ഈ സെർവറിന്റെ സൈൻ-ഇൻ പുതുക്കാൻ ലിങ്ക് ചെയ്ത ക്ലൗഡ് ടീമിന്റെ നിലവിലെ ഉടമയായി സൈൻ ഇൻ ചെയ്യുക. ഉടമസ്ഥാവകാശം കൈമാറിയിട്ടുണ്ടെങ്കിൽ, പുതിയ ഉടമയുടെ അക്കൗണ്ട് ഉപയോഗിക്കുക."
 failed = "നിങ്ങളുടെ sign-in പുതുക്കാൻ കഴിഞ്ഞില്ല. വീണ്ടും ശ്രമിക്കുക, അല്ലെങ്കിൽ ഈ പേജ് അടച്ച് നിങ്ങളുടെ സർവറിൽ നിന്ന് വീണ്ടും ആരംഭിക്കുക."
 lead = "ഈ സർവർ ഇതിനകം നിങ്ങളുടെ account-നോട് linked ആണ്. നിങ്ങളുടെ സർവറിലെ billing, usage എന്നിവയിലേക്ക് മടങ്ങാൻ sign-in പുതുക്കുക."
 title = "നിങ്ങളുടെ server sign-in പുതുക്കുക"
-wrongAccount = "ഈ account-ന് ഈ server-ന്റെ sign-in പുതുക്കാൻ കഴിയില്ല. സർവർ link ചെയ്യാൻ ആദ്യം ഉപയോഗിച്ച account-ലേക്ക് മാറുക. ആ account-ന് linked team ഇപ്പോഴും own ചെയ്യണം."
 
 [convert]
 autoRotate = "ഓട്ടോ റോട്ടേറ്റ്"
@@ -4009,6 +4075,7 @@ multiple = "പല"
 optimizeForEbook = "ഇബുക്ക് റീഡറുകൾക്കായി PDF ഓപ്റ്റിമൈസ് ചെയ്യുക (Ghostscript ഉപയോഗിക്കുന്നു)"
 output = "ഔട്ട്പുട്ട്"
 outputFormat = "ഔട്ട്പുട്ട് ഫോർമാറ്റ്"
+pdfaAccessibleFormat = "{{format}} (ആക്സസ് ചെയ്യാവുന്നത്)"
 pdfaDigitalSignatureWarning = "ഈ PDF-ൽ ഡിജിറ്റൽ ഒപ്പ് ഉണ്ട്. ഇത് അടുത്ത ഘട്ടത്തിൽ നീക്കം ചെയ്യപ്പെടും."
 pdfaNote = "PDF/A-1b കൂടുതൽ അനുയോജ്യതയുള്ളത്, PDF/A-2b കൂടുതൽ ഫീച്ചറുകൾ പിന്തുണയ്ക്കുന്നു."
 pdfaOptions = "PDF/A ഓപ്ഷനുകൾ"
@@ -4068,6 +4135,24 @@ outputFormatDesc = "eBook-ന്റെ ഔട്ട്പുട്ട് ഫോ�
 tabletPhone = "ടാബ്ലെറ്റ്/ഫോൺ (ചിത്രങ്ങളോടെ)"
 targetDevice = "ലക്ഷ്യ ഉപകരണം"
 targetDeviceDesc = "റീഡർ ഉപകരണത്തിന് ഒപ്റ്റിമൈസ് ചെയ്ത ഔട്ട്പുട്ട് പ്രൊഫൈൽ തിരഞ്ഞെടുക്കുക"
+
+[convert.formatGroups]
+archive = "ആർക്കൈവ്"
+document = "പ്രമാണം"
+ebook = "eBook"
+email = "ഇമെയിൽ"
+file = "ഫയൽ"
+image = "ചിത്രം"
+multipleFiles = "ഒന്നിലധികം ഫയലുകൾ"
+presentation = "അവതരണം"
+spreadsheet = "സ്പ്രെഡ്ഷീറ്റ്"
+text = "ടെക്സ്റ്റ്"
+web = "വെബ്"
+
+[convert.formatOptions]
+any = "ഏതും"
+images = "ചിത്രങ്ങൾ"
+msgOutlook = "MSG (Outlook)"
 
 [cookieBanner.popUp]
 acceptAllBtn = "ശരി"
@@ -4161,6 +4246,12 @@ label = "Y സ്ഥാനം"
 [crop.error]
 failed = "PDF ക്രോപ്പ് ചെയ്യാൻ കഴിഞ്ഞില്ല"
 
+[crop.pageNumbers]
+description = "തിരഞ്ഞെടുത്ത പ്രദേശം നിർദ്ദിഷ്ട പേജുകളിൽ ക്രോപ്പ് ചെയ്യുക, അല്ലെങ്കിൽ എല്ലാ പേജുകൾക്കായി 'all'."
+error = "അസാധുവായ പേജ് തിരഞ്ഞെടുപ്പ്. ഉദാ. 1, 3, 5-8 അല്ലെങ്കിൽ all ഉപയോഗിക്കുക."
+label = "ക്രോപ്പ് ചെയ്യേണ്ട പേജുകൾ"
+placeholder = "ഉദാ. 1, 3, 5-8 അല്ലെങ്കിൽ all"
+
 [crop.preview]
 title = "ക്രോപ്പ് ഏരിയ തിരഞ്ഞെടുപ്പ്"
 
@@ -4183,16 +4274,11 @@ fileName = "ഫയലിന്റെ പേര്"
 title = "ഡാറ്റാബേസ് ഇറക്കുമതി/കയറ്റുമതി"
 
 [defaultApp]
-setDefault = "ഡീഫോൾട്ടായി സജ്ജമാക്കുക"
 title = "സ്വതേയുള്ള PDF ആപ്പായി സജ്ജമാക്കുക"
 
 [defaultApp.error]
 message = "സ്വതേയുള്ള PDF ഹാൻഡ്ലർ സെറ്റ് ചെയ്യൽ പരാജയപ്പെട്ടു"
 title = "പിശക്"
-
-[defaultApp.prompt]
-dontRemind = "വീണ്ടും ഓർമ്മിപ്പിക്കരുത്"
-message = "PDF ഫയലുകൾ തുറക്കാനുള്ള സ്വതേയുള്ള ആപ്പായി Stirling PDF-നെ നിർണ്ണയിക്കുക."
 
 [defaultApp.settingsOpened]
 message = "ദയവായി നിങ്ങളുടെ സിസ്റ്റം സെറ്റിങ്ങുകളിൽ Stirling PDF തിരഞ്ഞെടുക്കുക"
@@ -4201,6 +4287,17 @@ title = "സെറ്റിങ്ങുകൾ തുറന്നു"
 [defaultApp.success]
 message = "Stirling PDF ഇപ്പോൾ നിങ്ങളുടെ സ്വതേയുള്ള PDF എഡിറ്ററാണ്"
 title = "സ്വതേയുള്ള ആപ്പ് സെറ്റ് ചെയ്തു"
+
+[desktop.titleBar]
+maximize = "വലുതാക്കുക"
+minimize = "ചെറുതാക്കുക"
+restore = "പുനഃസ്ഥാപിക്കുക"
+
+[desktopBilling]
+description = "നിങ്ങളുടെ ബ്രൗസറിൽ ഉപയോഗവും ബില്ലിംഗും കൈകാര്യം ചെയ്യുക. ഇവിടെ ഉപയോഗിക്കുന്ന അതേ Stirling അക്കൗണ്ട് ഉപയോഗിച്ച് സൈൻ ഇൻ ചെയ്യുക."
+open = "ഉപയോഗവും ബില്ലിംഗും ബ്രൗസറിൽ തുറക്കുക"
+openFailed = "ഉപയോഗവും ബില്ലിംഗും തുറക്കാനായില്ല. നിങ്ങളുടെ കണക്ഷൻ പരിശോധിച്ച് വീണ്ടും ശ്രമിക്കുക."
+selfHostedDescription = "നിങ്ങളുടെ ബ്രൗസറിൽ ബന്ധിപ്പിച്ച സെർവറിലെ ഉപയോഗവും ബില്ലിംഗും കൈകാര്യം ചെയ്യുക. നിങ്ങളുടെ സെർവർ ഉടമ അക്കൗണ്ട് ഉപയോഗിച്ച് സൈൻ ഇൻ ചെയ്യുക."
 
 [desktopFileLink]
 saveAs = "ഇങ്ങനെ സംരക്ഷിക്കുക…"
@@ -4264,6 +4361,7 @@ tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,ident
 noItems = "No items available"
 noResults = "No results found"
 searchPlaceholder = "തിരയുക..."
+selectedCount = "{{count}} തിരഞ്ഞെടുത്തു"
 selectLanguages = "Select languages"
 selectOption = "Select an option"
 
@@ -4274,6 +4372,7 @@ editSecretValue = "സീക്രട്ട് മൂല്യം തിരു�
 [editTableOfContents]
 submit = "വിഷയസൂചിക പ്രയോഗിക്കുക"
 tags = "bookmarks,contents,edit,table of contents,TOC,outline,navigation,chapters,sections,add bookmarks,edit bookmarks,PDF outline"
+workbenchLabel = "ഔട്ട്‌ലൈൻ വർക്ക്‌സ്‌പേസ്"
 
 [editTableOfContents.actions]
 clipboardUnavailable = "ഈ ബ്രൗസറിൽ ക്ലിപ്പ്ബോർഡിലേക്കുള്ള ആക്സസ് ലഭ്യമല്ല."
@@ -4434,6 +4533,27 @@ closeFile = "ഫയൽ അടയ്ക്കുക"
 
 [fileEditor]
 addFiles = "ഫയലുകൾ ചേർക്കുക"
+closedFile = "{{name}} അടച്ചു"
+couldNotSave = "{{name}} സംരക്ഷിക്കാനായില്ല"
+filesAdded_one = "{{count}} ഫയൽ ചേർത്തു"
+filesAdded_other = "{{count}} ഫയലുകൾ ചേർത്തു"
+filesReordered_one = "ഫയൽ പുനഃക്രമീകരിച്ചു"
+filesReordered_other = "{{count}} ഫയലുകൾ പുനഃക്രമീകരിച്ചു"
+loadedFromStorage_one = "സ്റ്റോറേജിൽ നിന്ന് {{count}} ഫയൽ ലോഡ് ചെയ്തു"
+loadedFromStorage_other = "സ്റ്റോറേജിൽ നിന്ന് {{count}} ഫയലുകൾ ലോഡ് ചെയ്തു"
+loadFromStorageFailed = "സ്റ്റോറേജിൽ നിന്ന് ചില ഫയലുകൾ ലോഡ് ചെയ്യാൻ പരാജയപ്പെട്ടു"
+pinnedFile = "{{name}} പിൻ ചെയ്തു"
+processFilesFailed = "ഫയലുകൾ പ്രോസസ്സ് ചെയ്യാൻ പരാജയപ്പെട്ടു"
+savedAndClosed = "{{name}} സംരക്ഷിച്ച് അടച്ചു"
+saveFailed = "സംരക്ഷണം പരാജയപ്പെട്ടു"
+unpinnedFile = "{{name}} പിൻ ഒഴിവാക്കി"
+unzipping = "{{name}} അൺസിപ്പ് ചെയ്യുന്നു"
+
+[fileEditor.unzip]
+error = "{{name}} അൺസിപ്പ് ചെയ്യുന്നതിൽ പിശക്"
+extracted_one = "{{name}}-ൽ നിന്ന് {{count}} ഫയൽ എക്സ്ട്രാക്റ്റ് ചെയ്തു"
+extracted_other = "{{name}}-ൽ നിന്ന് {{count}} ഫയലുകൾ എക്സ്ട്രാക്റ്റ് ചെയ്തു"
+failed = "{{name}}-ൽ നിന്ന് ഫയലുകൾ എക്സ്ട്രാക്റ്റ് ചെയ്യാൻ പരാജയപ്പെട്ടു"
 
 [fileManager]
 addToUpload = "അപ്‌ലോഡിലേക്ക് ചേർക്കുക"
@@ -4450,6 +4570,7 @@ noFiles = "ഫയലുകളൊന്നും ലഭ്യമല്ല"
 noFilesFound = "നിങ്ങളുടെ തിരച്ചിലിനൊത്ത ഫയലുകൾ കണ്ടെത്താനായില്ല"
 openInFileEditor = "ഫയൽ എഡിറ്ററിൽ തുറക്കുക"
 openInPageEditor = "പേജ് എഡിറ്ററിൽ തുറക്കുക"
+reloadFiles = "ഫയലുകൾ വീണ്ടും ലോഡ് ചെയ്യുക"
 saveSelected = "തിരഞ്ഞെടുത്തത് സേവ് ചെയ്യുക"
 searchFiles = "ഫയലുകൾ തിരയുക..."
 share = "പങ്കിടുക"
@@ -4459,6 +4580,8 @@ sharedEditNoticeConfirm = "മനസ്സിലായി"
 sharedEditNoticeTitle = "വായിക്കാനേ കഴിയൂ എന്ന സെർവർ പകർപ്പ്"
 sharedWithYou = "നിങ്ങളുമായി പങ്കിട്ടത്"
 showAll = "എല്ലാം കാണിക്കുക"
+showAllCount_one = "എല്ലാം കാണിക്കുക ({{count}} ഫയൽ)"
+showAllCount_other = "എല്ലാം കാണിക്കുക ({{count}} ഫയലുകൾ)"
 sortBy = "Sort files"
 sortByDate = "തീയതി അനുസരിച്ച് ക്രമീകരിക്കുക"
 sortByName = "പേര് അനുസരിച്ച് ക്രമീകരിക്കുക"
@@ -4495,6 +4618,11 @@ sources = "ഫയൽ ഉറവിടങ്ങൾ"
 subtitle = "നിങ്ങളുടെ ലൈബ്രറിയിൽ നിന്ന് തിരഞ്ഞെടുക്കുക അല്ലെങ്കിൽ പുതിയതൊന്ന് ചേർക്കുക."
 title = "ഫയലുകൾ ചേർക്കുക"
 unsupported = "തിരഞ്ഞെടുത്ത ടൂൾ ഈ ഫയൽ തരം പിന്തുണയ്ക്കുന്നില്ല."
+
+[filePreview]
+loadingThumbnail = "തംബ്നെയിൽ ലോഡ് ചെയ്യുന്നു..."
+locked = "ലോക്ക് ചെയ്‌തു"
+previewOf = "{{name}}-ന്റെ പ്രിവ്യൂ"
 
 [files]
 addFiles = "ഫയലുകൾ ചേർക്കുക"
@@ -4930,13 +5058,15 @@ title = "ഫയൽ PDF-ലേക്ക്"
 [fileUpload]
 dropFilesHere = "ഫയലുകൾ ഇവിടെ ഇടുകയോ അപ്‌ലോഡ് ബട്ടൺ ക്ലിക്ക് ചെയ്യുകയോ ചെയ്യുക"
 dropFilesHereOpen = "ഫയലുകൾ ഇവിടെ ഡ്രോപ്പ് ചെയ്യുക അല്ലെങ്കിൽ Open ബട്ടൺ ക്ലിക്ക് ചെയ്യുക"
-filesAvailable = "ഫയലുകൾ ലഭ്യമാണ്"
+filesAvailableCount_one = "{{count}} ഫയൽ ലഭ്യമാണ്"
+filesAvailableCount_other = "{{count}} ഫയലുകൾ ലഭ്യമാണ്"
 loadFromStorage = "സ്റ്റോറേജിൽ നിന്ന് ലോഡുചെയ്യുക"
 noFilesInStorage = "സ്റ്റോറേജിൽ ഫയലുകളൊന്നുമില്ല. ആദ്യം ചില ഫയലുകൾ അപ്‌ലോഡ് ചെയ്യുക."
 noFilesInStorageOpen = "സ്റ്റോറേജിൽ ഫയലുകളില്ല. ആദ്യം ചില ഫയലുകൾ Open ചെയ്യൂ."
 open = "തുറക്കുക"
 openFile = "ഫയൽ തുറക്കുക"
 openFiles = "ഫയലുകൾ തുറക്കുക"
+selectedCount = "{{count}} തിരഞ്ഞെടുത്തു"
 selectFile = "Select {{name}}"
 selectFromStorage = "സ്റ്റോറേജിൽ നിന്ന് തിരഞ്ഞെടുക്കുക"
 upload = "അപ്‌ലോഡ്"
@@ -5028,6 +5158,7 @@ rescanFields = "ഫീൽഡുകൾ വീണ്ടും സ്കാൻ ച�
 rescanFormFields = "ഫോം ഫീൽഡുകൾ വീണ്ടും സ്കാൻ ചെയ്യുക"
 save = "സംരക്ഷിക്കുക"
 saveShortcut = "സേവ് ചെയ്യാൻ Ctrl+S"
+selectOptionPlaceholder = "— തിരഞ്ഞെടുക്കുക —"
 skippedEdits_one = "1 മാറ്റം പ്രയോഗിക്കാൻ കഴിഞ്ഞില്ല:"
 skippedEdits_other = "{{count}} മാറ്റങ്ങൾ പ്രയോഗിക്കാൻ കഴിഞ്ഞില്ല:"
 skippedEditsTruncated = "{{count}} എണ്ണം കൂടി പട്ടികപ്പെടുത്തിയിട്ടില്ല."
@@ -5090,6 +5221,16 @@ tooltipHelp = "PDF reader-ൽ ആരെങ്കിലും ഫീൽഡിന�
 type = "തരം"
 typeHelp = "ഇത് ഏത് തരത്തിലുള്ള ഫീൽഡാണ്. ഇത് മാറ്റുന്നത് ഫീൽഡ് പുനർനിർമ്മിക്കും, അതിനാൽ നിലവിലെ മൂല്യം കൊണ്ടുപോകില്ല."
 
+[formFill.fieldTypes]
+button = "ബട്ടൺ"
+checkbox = "ചെക്ക്ബോക്സ്"
+combobox = "ഡ്രോപ്പ്ഡൗൺ"
+listbox = "ലിസ്റ്റ് ബോക്സ്"
+radio = "റേഡിയോ"
+radioGroup = "റേഡിയോ ഗ്രൂപ്പ്"
+signature = "ഒപ്പ്"
+text = "ടെക്സ്റ്റ്"
+
 [formFill.mode]
 create = "സൃഷ്ടിക്കുക"
 fill = "പൂരിപ്പിക്കുക"
@@ -5107,11 +5248,16 @@ restore = "പുനഃസ്ഥാപിക്കുക"
 
 [formFill.sidebar]
 close = "സൈഡ്ബാർ അടയ്ക്കുക"
+empty = "ഈ PDF-ൽ ഫോം ഫീൽഡുകൾ കണ്ടെത്തിയില്ല"
+loading = "ഫോം ഫീൽഡുകൾ ലോഡ് ചെയ്യുന്നു..."
+pageNumber = "പേജ് {{page}}"
+title = "ഫോം ഫീൽഡുകൾ"
 
 [getPdfInfo]
 downloadJson = "JSON ഡൗൺലോഡ് ചെയ്യുക"
 downloads = "ഡൗൺലോഡുകൾ"
 indexTitle = "സൂചിക"
+noData = "ഡാറ്റ ഇല്ല"
 noneDetected = "ഒന്നും കണ്ടെത്തിയില്ല"
 noResults = "ഒരു റിപ്പോർട്ട് സൃഷ്ടിക്കാൻ ഉപകരണം പ്രവർത്തിപ്പിക്കുക."
 processing = "വിവരങ്ങൾ പുറത്തെടുക്കുന്നു..."
@@ -5127,6 +5273,8 @@ noVerification = "സ്ഥിരീകരണം നടത്തിയിട്�
 noVerificationDesc = "ഈ ഡോക്യുമെന്റിന് PDF സ്റ്റാൻഡേർഡുകളുടെ അനുസൃതത പരിശോധിച്ചിട്ടില്ല."
 passed = "പാസായി"
 passedCount = "പാസായി"
+secCompliant = "പ്രമാണം SEC EDGAR ഫയലിംഗ് ആവശ്യകതകൾ പാലിക്കുന്നു"
+secNotCompliant = "പ്രമാണം SEC EDGAR ഫയലിംഗ് ആവശ്യകതകൾ പാലിക്കുന്നില്ല"
 
 [getPdfInfo.error]
 partial = "ചില ഫയലുകൾ പ്രോസസ്സ് ചെയ്യാൻ കഴിഞ്ഞില്ല."
@@ -5134,10 +5282,15 @@ unexpected = "പുറത്തെടുക്കുന്നതിനിടെ
 
 [getPdfInfo.other]
 attachments = "അറ്റാച്ച്മെന്റുകൾ"
+created = "സൃഷ്ടിച്ചത്: {{date}}"
 embeddedFiles = "എംബെഡ് ചെയ്ത ഫയലുകൾ"
+fileSizeBytes = "({{size}} bytes)"
 javaScript = "JavaScript"
 layers = "ലെയറുകൾ"
+modified = "മാറ്റം വരുത്തിയത്: {{date}}"
 structureTree = "StructureTree"
+unnamedAttachment = "പേരില്ലാത്ത അറ്റാച്ച്മെന്റ്"
+unnamedFile = "പേരില്ലാത്ത ഫയൽ"
 xmp = "XMPMetadata"
 
 [getPdfInfo.perPage]
@@ -5147,6 +5300,7 @@ images = "ചിത്രങ്ങൾ"
 links = "ലിങ്കുകൾ"
 multimedia = "മൾട്ടിമീഡിയ"
 size = "വലുപ്പം"
+unnamedImage = "ചിത്രം"
 xobjects = "XObject എണ്ണങ്ങൾ"
 
 [getPdfInfo.report]
@@ -5675,6 +5829,7 @@ invalidEmail = "അസാധുവായ ഇമെയിൽ വിലാസം"
 invalidInvitation = "അസാധുവായ ക്ഷണം"
 invalidToken = "അസാധുവായ ക്ഷണ ലിങ്ക്"
 linkExpires = "ലിങ്ക് കാലഹരണപ്പെടുന്നത്"
+linkExpiresAt = "ലിങ്ക് കാലഹരണപ്പെടുന്നു: {{date}} {{time}}-ന്"
 passwordMismatch = "പാസ്‌വേഡുകൾ പൊരുത്തപ്പെടുന്നില്ല"
 passwordPlaceholder = "നിങ്ങളുടെ പാസ്‌വേഡ് നൽകുക"
 passwordRequired = "പാസ്‌വേഡ് ആവശ്യമാണ്"
@@ -5689,6 +5844,7 @@ welcomeTitle = "നിങ്ങൾ ക്ഷണിക്കപ്പെട്ട
 addFiles = "ഫയലുകൾ ചേർക്കുക"
 mobileUpload = "മൊബൈൽ മുതൽ അപ്ലോഡ് ചെയ്യുക"
 openFromComputer = "കമ്പ്യൂട്ടറിൽ നിന്ന് തുറക്കുക"
+settingUpSession = "നിങ്ങളുടെ സെഷൻ സജ്ജീകരിക്കുന്നു..."
 uploadFromComputer = "കമ്പ്യൂട്ടറിൽ നിന്ന് അപ്ലോഡ് ചെയ്യുക"
 
 [language]
@@ -5770,6 +5926,7 @@ sessionExpired = "നിങ്ങളുടെ സെഷൻ കാലഹരണപ
 signin = "സൈൻ ഇൻ ചെയ്യുക"
 signingIn = "സൈൻ ഇൻ ചെയ്യുന്നു..."
 signInWith = "ഇത് ഉപയോഗിച്ച് സൈൻ ഇൻ ചെയ്യുക"
+signInWithProvider = "{{provider}} ഉപയോഗിച്ച് സൈൻ ഇൻ ചെയ്യുക"
 title = "സൈൻ ഇൻ ചെയ്യുക"
 unexpectedError = "പ്രതീക്ഷിക്കാത്ത പിശക്: {{message}}"
 updatePassword = "പാസ്‌വേഡ് അപ്‌ഡേറ്റ് ചെയ്യുക"
@@ -5811,6 +5968,9 @@ label = "ലയിപ്പിച്ച ഫയലിൽ ഡിജിറ്റൽ
 description = "ഫയലുകൾ ലയിപ്പിക്കുമ്പോൾ ഡിജിറ്റൽ ഒപ്പുകൾ അസാധുവാകുന്നു. അവ അന്തിമ ലയിപ്പിച്ച PDF-ിൽ നിന്ന് നീക്കാൻ ഇത് ചെക്ക് ചെയ്യുക."
 title = "ഡിജിറ്റൽ ഒപ്പ് നീക്കം ചെയ്യുക"
 
+[merge.settings]
+title = "ക്രമീകരണങ്ങൾ"
+
 [merge.sortBy]
 ascending = "ആറോഹണം"
 dateModified = "മാറ്റം വരുത്തിയ തീയതി"
@@ -5819,6 +5979,9 @@ description = "തിരഞ്ഞെടുക്കുന്ന ക്രമത�
 filename = "ഫയൽ പേര്"
 label = "സോർട്ട് ചെയ്യുക"
 sort = "സോർട്ട്"
+
+[merge.sortFiles]
+title = "ഫയലുകൾ ക്രമീകരിക്കുക"
 
 [merge.tooltip.header]
 title = "മർജ് സെറ്റിങ്ങുകളുടെ അവലോകനം"
@@ -5867,6 +6030,7 @@ validating = "സെഷൻ ശരിവെയ്ക്കുന്നു..."
 
 [mobileSign]
 clear = "Clear"
+drawingArea = "ഒപ്പ് വരയ്ക്കുന്ന സ്ഥലം"
 invalidSession = "Session expired"
 invalidSessionMessage = "This QR code is no longer valid. Open the Sign tool on your computer and scan the new code."
 penSizeLabel = "Pen size"
@@ -5882,6 +6046,7 @@ validating = "Checking session…"
 fromGallery = "From gallery"
 hint = "Photograph a signature on white paper, or choose an existing image."
 invalidType = "Please choose an image file."
+previewAlt = "ഒപ്പ്"
 takePhoto = "Take a photo"
 
 [mobileSign.tab]
@@ -5993,6 +6158,9 @@ profile = "See your basic profile information"
 desc = "സ്കാൻ ചെയ്ത പേജുകൾ ശുചിയാക്കി PDF-ലുള്ള ചിത്രങ്ങളിൽ നിന്ന് വാചകം കണ്ടെത്തി അത് വീണ്ടും ടെക്സ്റ്റായി ചേർക്കുന്നു."
 tags = "തിരിച്ചറിയൽ,ടെക്സ്റ്റ്,ചിത്രം,സ്കാൻ,വായിക്കുക,തിരിച്ചറിയുക,കണ്ടെത്തൽ,തിരുത്താവുന്നത്"
 title = "OCR / സ്കാൻ വൃത്തിയാക്കൽ"
+
+[ocr.advanced]
+title = "വിപുലമായത്"
 
 [ocr.error]
 failed = "OCR പ്രവർത്തനം പരാജയപ്പെട്ടു"
@@ -6118,9 +6286,9 @@ title = "Desktop-നായി Stirling download ചെയ്യുക"
 description = "നിങ്ങളുടെ team-നൊപ്പം സഹകരിക്കുക"
 title = "team members-നെ ക്ഷണിക്കുക"
 
-[onboarding.checklist.shareAnalytics]
-description = "Stirling മെച്ചപ്പെടുത്താൻ സഹായിക്കുക"
-title = "anonymous usage data പങ്കിടുക"
+[onboarding.checklist.setDefaultApp]
+description = "PDF ഫയലുകൾ Stirling PDF-ൽ തുറക്കുക"
+title = "Stirling നിങ്ങളുടെ ഡീഫോൾട്ട് ആക്കുക"
 
 [onboarding.checklist.takeTour]
 description = "ഒരു quick walkthrough-ൽ Stirling എങ്ങനെ പ്രവർത്തിക്കുന്നുവെന്ന് കാണുക"
@@ -6188,6 +6356,7 @@ message = "ആപ്ലിക്കേഷൻ അടുത്തിടെ വല�
 roleAdmin = "അഡ്മിൻ"
 rolePlaceholder = "നിങ്ങളുടെ റോൾ സ്ഥിരീകരിക്കുക"
 roleUser = "ഉപയോക്താവ്"
+title = "സുരക്ഷാ പരിശോധന"
 
 [onboarding.serverLicense]
 freeBody = "ഞങ്ങളുടെ <strong>Open-Core</strong> ലൈസൻസിൽ <strong>OAuth SSO</strong>യും പരമാവധി <strong>{{freeTierLimit}}</strong> ഉപയോക്താക്കളും സൗജന്യമായി ഉൾപ്പെടുന്നു. തടസ്സമില്ലാതെ വിപുലീകരിക്കാൻ Stirling Team പ്ലാൻ ഞങ്ങൾ ശുപാർശ ചെയ്യുന്നു — പ്രതിമാസം $99-ന് <strong>100 ഉപയോക്താക്കൾ</strong>."
@@ -6276,16 +6445,93 @@ title = "ഓവർലെ ഫയലുകൾ"
 text = "Foreground പേജ് മീതെ ഓവർലെ വയ്ക്കും. Background അത് പേജിന് പിന്നിൽ വയ്ക്കും."
 title = "ഓവർലെ സ്ഥാനം"
 
+[ownership]
+acceptInvite = "അവർക്ക് ഒരു അക്കൗണ്ട് സൃഷ്ടിക്കുകയോ സൈൻ ഇൻ ചെയ്യുകയോ ചെയ്ത്, തുടർന്ന് ക്ഷണം സ്വീകരിക്കാം."
+accessUpdated = "അവരുടെ ഉടമ ആക്സസ് തയ്യാറാണ്."
+accountLinkDisabled = "ഈ സെർവറിന് ഇപ്പോഴും ക്ലൗഡ് ലിങ്ക് ഉണ്ട്, പക്ഷേ അക്കൗണ്ട് ലിങ്കിംഗ് ഓഫാണ്. അക്കൗണ്ട് ലിങ്കിംഗ് പ്രവർത്തനക്ഷമമാക്കാൻ സെർവർ ഓപ്പറേറ്ററോട് ആവശ്യപ്പെടുക, തുടർന്ന് ഈ കൈമാറ്റം പുനരാരംഭിക്കുകയോ ക്രമീകരണങ്ങളിൽ സെർവറിന്റെ ലിങ്ക് ഒഴിവാക്കുകയോ ചെയ്യുക."
+anotherTeam = "ഇതിനകം മറ്റൊരു ടീമിലാണോ?"
+billing = "സബ്‌സ്‌ക്രിപ്ഷൻ, വാലറ്റ്, പേയ്‌മെന്റ് രീതി, നിലവിലുള്ള ലൈസൻസുകൾ എന്നിവ അതേപടി തുടരും. ബില്ലിംഗ് കോൺടാക്റ്റ് വിശദാംശങ്ങൾ സ്വയം മാറില്ല."
+billingDetails = "ബില്ലിംഗ് വിശദാംശങ്ങൾ"
+billingUnchanged = "സബ്‌സ്‌ക്രിപ്ഷനും ബില്ലിംഗും അതേപടി തുടരും"
+bothDone = "സെർവർ, ക്ലൗഡ് ഉടമസ്ഥാവകാശങ്ങൾ ഇപ്പോൾ പൊരുത്തപ്പെട്ടു."
+cancel = "കൈമാറ്റം റദ്ദാക്കുക"
+check = "വീണ്ടും പരിശോധിക്കുക"
+checkAccount = "അക്കൗണ്ട് പരിശോധിക്കുക"
+chooseEmail = "{{team}}-ൽ അവരുടെ അക്കൗണ്ട് തിരഞ്ഞെടുക്കുക, അല്ലെങ്കിൽ ക്ഷണിക്കാൻ ഒരു ഇമെയിൽ നൽകുക."
+close = "കൈമാറ്റ ഡയലോഗ് അടയ്ക്കുക"
+cloudAccount = "Stirling അക്കൗണ്ട്"
+cloudScopeStyled = "<user>{{name}}</user> {{team}}, അതിലെ അംഗങ്ങൾ, ബില്ലിംഗ് എന്നിവ കൈകാര്യം ചെയ്യും."
+cloudTargetChanged = "മറ്റൊരു ക്ലൗഡ് അംഗത്തെ തിരഞ്ഞെടുക്കുക. ഈ അക്കൗണ്ട് ഇനി കൈമാറ്റത്തിന് യോഗ്യമല്ല."
+confirm = "ആക്സസ്, ഉടമസ്ഥാവകാശ മാറ്റങ്ങൾ ഞാൻ മനസ്സിലാക്കുന്നു."
+done = "ഉടമസ്ഥാവകാശം കൈമാറി"
+error = "ഈ ഘട്ടം പൂർത്തിയാക്കാനായില്ല. സ്വീകരിക്കുന്നയാൾ സജീവമാണെന്നും സെർവർ ബന്ധിപ്പിച്ചിരിക്കുന്നതാണെന്നും പരിശോധിക്കുക, തുടർന്ന് വീണ്ടും പരിശോധിക്കുക. തീർപ്പാകാത്ത കൈമാറ്റം ഇവിടെ പുനരാരംഭിക്കാം."
+finish = "സെർവർ കൈമാറ്റം പൂർത്തിയാക്കുക"
+inProgress = "മറ്റൊരു സ്വീകരിക്കുന്നയാൾക്ക് ഇതിനകം തീർപ്പാകാത്ത കൈമാറ്റമുണ്ട്. ഈ ഡയലോഗ് അടച്ച് Users-ൽ നിന്ന് അത് പുനരാരംഭിക്കുക."
+instances = "ഈ ടീമിന് {{count}} ലിങ്ക് ചെയ്ത സെർവറുകളുണ്ട്. അവരുടെ ക്ലൗഡ് ബില്ലിംഗ് ഈ ടീമിനൊപ്പം തുടരും; മറ്റ് സെർവറുകളുടെ പ്രാദേശിക ഉടമകൾ മാറില്ല."
+invitationSent = "ക്ഷണം അയച്ചു"
+invite = "ക്ഷണം അയയ്ക്കുക"
+inviteAddress = "{{team}}-ലേക്ക് <account>{{email}}</account>-നെ ക്ഷണിക്കുക."
+inviteBlocked = "ക്ഷണം അയയ്ക്കാനായില്ല. ലഭ്യമായ ടീം സീറ്റുകളും സ്വീകരിക്കുന്നയാൾക്ക് ഇതിനകം പണമടച്ച സബ്‌സ്‌ക്രിപ്ഷൻ ഉണ്ടോയെന്നും പരിശോധിക്കുക."
+linkChanged = "സെർവറിന്റെ ക്ലൗഡ് ലിങ്ക് മാറി. പുനരാരംഭിക്കുന്നതിന് മുമ്പ് യഥാർത്ഥ ലിങ്ക് പുനഃസ്ഥാപിക്കാൻ സെർവർ ഓപ്പറേറ്ററോട് ആവശ്യപ്പെടുക."
+linkedServerCount = "{{count}} ലിങ്ക് ചെയ്ത സെർവറുകൾ"
+linkRevoked = "ഈ സെർവറിന്റെ ക്ലൗഡ് ലിങ്ക് ഇനി സാധുവല്ല. കൈമാറ്റം റദ്ദാക്കുക, തുടർന്ന് ക്രമീകരണങ്ങളിൽ നിങ്ങളുടെ Stirling അക്കൗണ്ട് വീണ്ടും ബന്ധിപ്പിക്കുക. ഉടമസ്ഥാവകാശം മാറില്ല."
+localScope = "അവർ ഈ സെർവറിന്റെ ഉടമയാകും, ബില്ലിംഗും ക്ലൗഡ് കണക്ഷനുകളും കൈകാര്യം ചെയ്യും. നിങ്ങൾക്ക് അഡ്മിനിസ്ട്രേറ്റർ ആക്സസ് തുടരും, പക്ഷേ ആ ക്രമീകരണങ്ങളിലേക്കുള്ള ആക്സസ് നഷ്ടപ്പെടും."
+membershipDetails = "ടീം അംഗത്വ വിശദാംശങ്ങൾ"
+membershipFirst = "കൈമാറ്റം സ്ഥിരീകരിക്കുന്നതിന് മുമ്പ് അവർ ടീമിൽ ചേരണം."
+membershipRequired = "ഉടമസ്ഥാവകാശം കൈമാറുന്നതിന് മുമ്പ് സ്വീകരിക്കുന്നയാൾ ഈ ക്ലൗഡ് ടീമിൽ ചേരണം. അവരുടെ ക്ഷണം സ്വീകരിക്കാൻ അവരോട് ആവശ്യപ്പെടുക, തുടർന്ന് വീണ്ടും പരിശോധിക്കുക."
+newOwnerLabel = "പുതിയ ഉടമ"
+newOwnerStyled = "<user>{{name}}</user> ഇപ്പോൾ ഉടമയാണ്."
+noEmailMatches = "പൊരുത്തപ്പെടുന്ന അംഗങ്ങളില്ല. ക്ഷണിക്കാൻ ഒരു ഇമെയിൽ നൽകുക."
+otherTeam = "അവർ മറ്റൊരു ടീമിലാണെങ്കിൽ, സ്വീകരിക്കുന്നത് അവരുടെ അക്കൗണ്ട് മാറ്റിയേക്കാം. പണമടച്ച അക്കൗണ്ടോ മറ്റൊരു ടീമിന്റെ ഉടമസ്ഥാവകാശമോ ആദ്യം പരിഹരിക്കേണ്ടി വരാം. ഞങ്ങൾ അവരുടെ സബ്‌സ്‌ക്രിപ്ഷൻ മാറ്റുകയോ ടീമുകൾ ലയിപ്പിക്കുകയോ ചെയ്യില്ല."
+ownerChanged = "ഈ കൈമാറ്റം ആരംഭിച്ചതിന് ശേഷം ക്ലൗഡ് ഉടമസ്ഥാവകാശം മാറി. ഈ കൈമാറ്റം റദ്ദാക്കി നിലവിലെ ക്ലൗഡ് ഉടമയുമായി വീണ്ടും ആരംഭിക്കുക."
+ownerRequired = "നിലവിലെ ക്ലൗഡ് ടീം ഉടമയായി സൈൻ ഇൻ ചെയ്യുക, തുടർന്ന് ഈ ഘട്ടം വീണ്ടും ശ്രമിക്കുക."
+partialError = "ക്ലൗഡ് ഉടമസ്ഥാവകാശം കൈമാറി. രണ്ട് ഉടമകളെയും പൊരുത്തത്തിലാക്കാൻ സെർവർ കൈമാറ്റം പൂർത്തിയാക്കുക."
+partialTargetChanged = "തിരഞ്ഞെടുത്ത സെർവർ ഉപയോക്താവിന്റെ ആക്സസും യഥാർത്ഥ അക്കൗണ്ട് വിശദാംശങ്ങളും പുനഃസ്ഥാപിക്കുക, തുടർന്ന് സെർവർ കൈമാറ്റം പൂർത്തിയാക്കുക. ക്ലൗഡ് ഉടമസ്ഥാവകാശം ഇതിനകം കൈമാറിയിട്ടുണ്ട്."
+pending = "{{name}}-ലേക്ക് ഉടമസ്ഥാവകാശ കൈമാറ്റം തീർപ്പാകാതെ കിടക്കുന്നു."
+personalTeam = "വ്യക്തിഗത ടീമുകൾക്ക് ഉടമസ്ഥാവകാശം കൈമാറാൻ കഴിയില്ല."
+prepareHelp = "സ്വീകരിക്കുന്നയാൾ അവരുടെ ആദ്യ സെർവർ ലോഗിൻ പൂർത്തിയാക്കിയിരിക്കണം. നിങ്ങൾക്ക് ഇവിടെ വീണ്ടും ശ്രമിക്കാം, അല്ലെങ്കിൽ മറ്റൊരാളെ തിരഞ്ഞെടുക്കാൻ Users-ലേക്ക് മടങ്ങാം."
+resume = "കൈമാറ്റം പുനരാരംഭിക്കുക"
+searchEmail = "ഒരു ഇമെയിൽ തിരയുക അല്ലെങ്കിൽ നൽകുക"
+serverAccount = "സെർവർ അക്കൗണ്ട്"
+serverDetails = "ലിങ്ക് ചെയ്ത സെർവർ വിശദാംശങ്ങൾ"
+signIn = "ക്ലൗഡിലേക്ക് സൈൻ ഇൻ ചെയ്യുക"
+startFromInstanceBody = "ഈ ടീമിന് ലിങ്ക് ചെയ്ത സെർവറുകളുണ്ട്. സ്വയം-ഹോസ്റ്റ് ചെയ്ത സെർവറിൽ, Settings → Users തുറന്ന് സ്വീകരിക്കുന്നയാളുടെ റോൾ Org Owner ആയി മാറ്റുക. ആ പ്രവാഹം സെർവർ കൈമാറ്റം പൂർത്തിയാക്കുന്നതിന് മുമ്പ് ക്ലൗഡ് ഉടമസ്ഥാവകാശം കൈമാറുന്നു."
+startFromInstanceTitle = "നിങ്ങളുടെ സ്വയം-ഹോസ്റ്റ് ചെയ്ത സെർവറിൽ നിന്ന് ആരംഭിക്കുക"
+stayOwner = "കൈമാറ്റം വരെ നിങ്ങൾ ഉടമയായി തുടരും."
+targetChanged = "സ്വീകരിക്കുന്നയാളുടെ അക്കൗണ്ട് മാറി. അവരുടെ ആക്സസ് പുനഃസ്ഥാപിക്കുക അല്ലെങ്കിൽ ഈ കൈമാറ്റം റദ്ദാക്കി അവരെ വീണ്ടും തിരഞ്ഞെടുക്കുക."
+title = "ഉടമസ്ഥാവകാശം കൈമാറുക"
+transfer = "ഉടമസ്ഥാവകാശം കൈമാറുക"
+waitingForEmail = "{{email}} {{team}}-ൽ ചേരുന്നതിന് കാത്തിരിക്കുന്നു."
+working = "ഉടമസ്ഥാവകാശം പരിശോധിക്കുകയും അപ്ഡേറ്റ് ചെയ്യുകയും ചെയ്യുന്നു..."
+yourCloudAccess = "നിങ്ങൾ ടീം അംഗമാകും, ഉടമ ആക്സസ് നഷ്ടപ്പെടും."
+
 [pageEdit]
 deselectAll = "ഒന്നും തിരഞ്ഞെടുക്കരുത്"
 selectAll = "എല്ലാം തിരഞ്ഞെടുക്കുക"
 
 [pageEditor]
+dragPreviewAlt = "വലിച്ചിടുന്നു"
+filePosition = "സ്ഥാനം {{position}}"
+pageLabel = "പേജ് {{page}}"
 title = "പേജ് എഡിറ്റർ"
+
+[pageEditor.actions]
+deletePage = "പേജ് ഇല്ലാതാക്കുക"
+insertFileAfter = "ശേഷം ഫയൽ ചേർക്കുക"
+moveLeft = "ഇടത്തേക്ക് നീക്കുക"
+moveRight = "വലത്തേക്ക് നീക്കുക"
+rotateLeft = "ഇടത്തേക്ക് തിരിക്കുക"
+rotateRight = "വലത്തേക്ക് തിരിക്കുക"
+splitAfter = "ശേഷം വിഭജിക്കുക"
 
 [pageEditor.emptyState]
 body = "പേജുകൾ എഡിറ്റ് ചെയ്യാൻ ഫയലുകൾ ചേർക്കുക"
 title = "PDF ഫയലുകൾ ലോഡ് ചെയ്തിട്ടില്ല"
+
+[pageEditor.fileDropdown]
+addFile = "ഫയൽ ചേർക്കുക"
+selectedCount = "{{selected}}/{{total}} ഫയലുകൾ തിരഞ്ഞെടുത്തു"
+untitled = "ശീർഷകമില്ലാത്തത്"
 
 [pageEditor.toolbar]
 delete = "തെരഞ്ഞെടുത്തത് ഇല്ലാതാക്കുക"
@@ -6391,6 +6637,11 @@ portrait = "പോർട്രെയിറ്റ്"
 label = "വായന ദിശ:"
 ltr = "ഇടതുകൂടെ വലത്തോട്ട്"
 rtl = "വലത്തുകൂടെ ഇടത്തോട്ട്"
+
+[pageLayout.steps]
+advanced = "വിപുലമായ ക്രമീകരണങ്ങൾ"
+layout = "ലേയൗട്ട് ക്രമീകരണങ്ങൾ"
+marginsBorders = "മാർജിനുകളും ബോർഡറുകളും"
 
 [pageLayout.tooltip.header]
 title = "പേജ് ലേഔട്ട് ഗൈഡ്"
@@ -6712,6 +6963,7 @@ teamChangeUnavailable = "ഷെഡ്യൂൾ ചെയ്ത Team മാറ്
 teamPending = "നിങ്ങളുടെ Team വാങ്ങൽ ഇപ്പോഴും പ്രോസസ്സിലാണ്. കുറച്ച് കഴിഞ്ഞ് ഈ പേജ് പുതുക്കുക."
 teamProcessing = "Team വാങ്ങൽ പ്രോസസ്സിംഗ്"
 teamScheduled = "നിങ്ങളുടെ Team മാറ്റം {{date}} ന് ഷെഡ്യൂൾ ചെയ്തിരിക്കുന്നു. അന്നുവരെ നിങ്ങളുടെ നിലവിലെ ശേഷി സജീവമായി തുടരും."
+unknownError = "അജ്ഞാത പിശക് സംഭവിച്ചു"
 upgradeComplete = "അപ്‌ഗ്രേഡ് പൂർത്തിയായി"
 upgradeCompleteMessage = "നിങ്ങളുടെ സബ്സ്ക്രിപ്ഷൻ വിജയകരമായി അപ്‌ഗ്രേഡ് ചെയ്തു. നിലവിലുള്ള ലൈസൻസ് കീ അപ്‌ഡേറ്റ് ചെയ്തു."
 upgradeSuccess = "പേയ്മെന്റ് വിജയകരം! നിങ്ങളുടെ സബ്സ്ക്രിപ്ഷൻ അപ്‌ഗ്രേഡ് ചെയ്തു. ലൈസൻസ് നിങ്ങളുടെ സെർവറിൽ അപ്‌ഡേറ്റ് ചെയ്തു. ഉടൻ തന്നെ ഒരു സ്ഥിരീകരണ ഇമെയിൽ ലഭിക്കും."
@@ -6766,6 +7018,14 @@ selectedMonthly = "മാസന്ത്യം"
 selectedYearly = "വാർഷികം"
 selectMonthly = "മാസികം തിരഞ്ഞെടുക്കുക"
 selectYearly = "വാർഷികം തിരഞ്ഞെടുക്കുക"
+
+[payment.priceDisplay]
+basePrice = "അടിസ്ഥാന വില"
+perPeriod = "/{{period}}"
+perSeat = "ഒരു സീറ്റിന്"
+perSeatPeriod = "/സീറ്റ്/{{period}}"
+totalSeats_one = "ആകെ ({{count}} സീറ്റ്)"
+totalSeats_other = "ആകെ ({{count}} സീറ്റുകൾ)"
 
 [payment.upgradeTeam]
 title = "Teamലേക്ക് അപ്‌ഗ്രേഡ് ചെയ്യുക"
@@ -6985,6 +7245,10 @@ save = "Save"
 style = "Style"
 tapToPlace = "ടെക്സ്റ്റ് പോകേണ്ടിടത്ത് പേജിൽ tap ചെയ്യുക"
 unlock = "Unlock"
+
+[pdfTextEditor.pageView]
+pageNumber = "പേജ് {{page}}"
+renderFailed = "പേജ് റെൻഡർ ചെയ്യാൻ പരാജയപ്പെട്ടു"
 
 [pdfTextEditor.password]
 cancel = "റദ്ദാക്കുക"
@@ -7212,6 +7476,7 @@ title = "പൈപ്പ്ലൈൻ"
 contact = "ഞങ്ങളെ സമീപിക്കുക"
 current = "നിലവിലെ പ്ലാൻ"
 featureComparison = "ഫീച്ചർ താരതമ്യം"
+fetchError = "വിലനിർണ്ണയ ഡാറ്റ ലഭ്യമാക്കാൻ പരാജയപ്പെട്ടു"
 from = "മുതൽ"
 hideComparison = "ഫീച്ചർ താരതമ്യം മറയ്ക്കുക"
 licensedSeats = "ലൈസൻസുചെയ്തത്: {{count}} സീറ്റുകൾ"
@@ -7227,6 +7492,8 @@ withServer = "+ സെർവർ പ്ലാൻ"
 [plan.api]
 large = "5,000 ക്രെഡിറ്റുകൾ"
 medium = "1,000 ക്രെഡിറ്റുകൾ"
+perCredit = "ഒരു ക്രെഡിറ്റിന് {{price}}"
+perCreditWithDiscount = "ഒരു ക്രെഡിറ്റിന് {{price}} • {{discount}}% കിഴിവ്"
 small = "500 ക്രെഡിറ്റുകൾ"
 xsmall = "100 ക്രെഡിറ്റുകൾ"
 
@@ -7302,14 +7569,9 @@ upToFiveUsers = "5 ഉപയോക്താക്കൾ വരെ"
 usageTrackingPrometheus = "ഉപയോഗ ട്രാക്കിംഗ് & Prometheus"
 usersIncluded = "100 ഉപയോക്താക്കൾ ഉൾപ്പെടുത്തിയിട്ടുണ്ട്"
 
-[plan.licenseWarning]
-body = "നിങ്ങൾക്ക് {{total}} ഉപയോക്താക്കളുണ്ട്, പക്ഷേ സൗജന്യ നിരയിൽ ഓരോ സെർവർക്കും {{limit}} ഉപയോക്താക്കളെ മാത്രമേ പിന്തുണയ്ക്കൂ. Stirling PDF സുഗമമായി പ്രവർത്തിക്കാൻ അപ്‌ഗ്രേഡ് ചെയ്യുക."
-cta = "പ്ലാനുകൾ കാണുക"
-overLimit = "{{limit}}-ൽ കൂടുതലായി"
-title = "സൗജന്യ സെൽഫ്-ഹോസ്റ്റഡ് പരിധി എത്തി"
-
 [plan.period]
 month = "മാസം"
+year = "വർഷം"
 
 [plan.pro]
 highlight1 = "പരിമിതിയില്ലാത്ത ടൂൾ ഉപയോഗം"
@@ -7435,6 +7697,9 @@ pdfa-1 = "PDF/A-1b"
 pdfa-2b = "PDF/A-2b"
 pdfa-3b = "PDF/A-3b"
 
+[portal.accountLink]
+ownerRequired = "Org ഉടമയ്ക്ക് മാത്രമേ ഈ സെർവർ ലിങ്ക് ചെയ്യാനോ ലിങ്ക് ഒഴിവാക്കാനോ കഴിയൂ."
+
 [portal.accountLink.card]
 billingNote = "Unattended processing നിങ്ങളുടെ org wallet-ലേക്ക് ബിൽ ചെയ്യപ്പെടും."
 connectDescription = "Stirling Cloudലെ നിങ്ങളുടെ ടീമിന്റെ പ്രോസസ്സിംഗ് അലവൻസ് ഉപയോഗിക്കാൻ ഈ സെർവർ കണക്റ്റ് ചെയ്യുക."
@@ -7556,6 +7821,7 @@ identity = "Stirling അക്കൗണ്ട്"
 linkTitle = "നിങ്ങളുടെ Stirling അക്കൗണ്ട് ലിങ്ക് ചെയ്യുക"
 noAuthorizeUrl = "തുടരാൻ Stirling ഒരു സ്ഥലം തിരികെ നൽകിയില്ല. കുറച്ച് കഴിഞ്ഞ് വീണ്ടും ശ്രമിക്കുക."
 startFailed = "കണക്ഷൻ ആരംഭിക്കാൻ Stirling-ൽ എത്താനായില്ല. ഈ സർവറിന്റെ outbound നെറ്റ്‌വർക്ക് ആക്സസ് പരിശോധിച്ച് വീണ്ടും ശ്രമിക്കുക."
+transferPending = "ഒരു ഉടമസ്ഥാവകാശ കൈമാറ്റം തീർപ്പാകാതെ കിടക്കുന്നു. പൂർത്തിയാക്കാനോ റദ്ദാക്കാനോ Settings → Users-ലേക്ക് പോകുക, തുടർന്ന് വീണ്ടും ലിങ്ക് ചെയ്യാൻ ശ്രമിക്കുക."
 
 [portal.accountLink.modal.loginNotConfigured]
 after = "hosted Stirling അക്കൗണ്ടുമായി in-app linking സജ്ജമാക്കാൻ."
@@ -9441,6 +9707,7 @@ labelId = "Label ID"
 labelIdHelp = "Purview portal-ിൽ നിന്നുള്ള label-ന്റെ GUID. ഒരു label പ്രയോഗിക്കുന്നത് അതിന്റെ metadata PDF-ലേക്ക് എഴുതും; encrypt ചെയ്യാൻ കഴിയില്ല, അതിന് Microsoft client ആവശ്യമാണ്."
 labelName = "Label പേര് (optional)"
 labelNameHelp = "ആളുകൾക്കും tools-നും label തിരിച്ചറിയാൻ ID-ക്കൊപ്പം രേഖപ്പെടുത്തുന്നു."
+labelNamePlaceholder = "രഹസ്യം"
 
 [portal.policies.config.purview.fields.method]
 help = "ഒരു policy പ്രയോഗിച്ച label-നെയും ഒരാൾ തിരഞ്ഞെടുത്ത label-നെയും Purview വേർതിരിക്കുന്നു."
@@ -10425,31 +10692,6 @@ unlimited = "{{used}} · Unlimited"
 [printFile]
 title = "ഫയൽ അച്ചടിക്കുക"
 
-[processingFolders.downloads]
-approve = "എന്റെ Downloads പ്രോസസ്സ് ചെയ്യുക"
-cancelSweep = "റദ്ദാക്കുക"
-capped = "നിങ്ങൾക്ക് {{found}} PDFs ഉണ്ട്; ആദ്യ {{limit}} ഇപ്പോൾ പ്രോസസ്സ് ചെയ്യും, ബാക്കിയുള്ളവ തുടർന്ന് വരും."
-close = "പൂർത്തിയായി"
-explain_one = "നിങ്ങളുടെ Downloads ഫോൾഡറിൽ ഇതിനകം ഉള്ള {{count}} PDF Stirling-ന് വർഗ്ഗീകരിച്ച് ഫലങ്ങൾ ഇവിടെ തുറക്കാനാകും."
-explain_other = "നിങ്ങളുടെ Downloads ഫോൾഡറിൽ ഇതിനകം ഉള്ള {{count}} PDFs Stirling-ന് വർഗ്ഗീകരിച്ച് ഫലങ്ങൾ ഇവിടെ തുറക്കാനാകും."
-failed = "അത് സജ്ജീകരിക്കാൻ കഴിഞ്ഞില്ല. നിങ്ങളുടെ ഫയലുകൾ മാറ്റിയിട്ടില്ല."
-finished_one = "{{count}} ഫയൽ വർഗ്ഗീകരിച്ച് അവയിൽ {{opened}} ഇവിടെ തുറന്നു, പ്രവർത്തിക്കാൻ തയ്യാറാണ്."
-finished_other = "{{count}} ഫയലുകൾ വർഗ്ഗീകരിച്ച് അവയിൽ {{opened}} ഇവിടെ തുറന്നു, പ്രവർത്തിക്കാൻ തയ്യാറാണ്."
-nothingNew_one = "പ്രോസസ്സ് ചെയ്യാൻ പുതുതായി ഒന്നുമില്ല - ഈ {{count}} ഫയൽ ഇതിനകം കടന്നുപോയിട്ടുണ്ട്."
-nothingNew_other = "പ്രോസസ്സ് ചെയ്യാൻ പുതുതായി ഒന്നുമില്ല - ഈ {{count}} ഫയലുകൾ ഇതിനകം കടന്നുപോയിട്ടുണ്ട്."
-notModified = "Downloads-ലെ നിങ്ങളുടെ ഫയലുകൾ മാറ്റിയിട്ടില്ല - Stirling അവ വായിച്ച് ഇവിടെ തുറക്കുന്നു."
-notNow = "ഇപ്പോൾ വേണ്ട"
-progressCounts = "{{total}}-ൽ പ്രോസസ്സ് ചെയ്തത്"
-someFailed_one = "{{count}} പ്രോസസ്സ് ചെയ്യാൻ കഴിഞ്ഞില്ല, മാറ്റമില്ലാതെ വിട്ടു."
-someFailed_other = "{{count}} പ്രോസസ്സ് ചെയ്യാൻ കഴിഞ്ഞില്ല, മാറ്റമില്ലാതെ വിട്ടു."
-stillRunning = "ചില ഫയലുകൾ ഇപ്പോഴും പശ്ചാത്തലത്തിൽ പ്രോസസ്സ് ചെയ്യപ്പെടുന്നു."
-title = "നിങ്ങളുടെ Downloads ക്രമീകരിക്കണോ?"
-trigger_one = "Downloads-ലെ {{count}} PDF പ്രോസസ്സ് ചെയ്യുക"
-trigger_other = "Downloads-ലെ {{count}} PDFs പ്രോസസ്സ് ചെയ്യുക"
-typesFound_one = "{{count}} പ്രമാണ തരം കണ്ടെത്തി"
-typesFound_other = "{{count}} പ്രമാണ തരങ്ങൾ കണ്ടെത്തി"
-working = "പ്രോസസ്സ് ചെയ്യുന്നു ..."
-
 [processingFolders.setup]
 addFolder = "ഫോൾഡർ ചേർക്കുക"
 advancedSteps = "ഈ wizard-ന് എഡിറ്റ് ചെയ്യാൻ കഴിയാത്ത ഒരു processing setup ഈ ഫോൾഡർ ഉപയോഗിക്കുന്നു. ഇതിന്റെ സംരക്ഷിച്ച ഘട്ടങ്ങൾ മാറ്റിയിട്ടില്ല."
@@ -10527,6 +10769,10 @@ label = "Client ID"
 [provider.googledrive.enabled]
 description = "ഉപയോക്താക്കൾക്ക് Google Drive-ൽ നിന്ന് നേരിട്ട് ഫയലുകൾ ഇംപോർട്ട് ചെയ്യാൻ അനുവദിക്കുക"
 label = "Google Drive File Picker പ്രവർത്തനക്ഷമമാക്കുക"
+
+[provider.googledrive.errors]
+notConfigured = "Google Drive ക്രമീകരിച്ചിട്ടില്ല"
+pickerFailed = "Google Drive picker തുറക്കാൻ പരാജയപ്പെട്ടു"
 
 [provider.oauth2.generic]
 name = "Generic OAuth2"
@@ -10775,6 +11021,7 @@ applyWarning = "⚠️ സ്ഥിരമായി പ്രയോഗിക്�
 colorLabel = "റെഡാക്ഷൻ നിറം"
 controlsTitle = "മാനുവൽ റെഡാക്ഷൻ നിയന്ത്രണങ്ങൾ"
 instructions = "റെഡാക്ഷനായി ഉള്ളടക്കം അടയാളപ്പെടുത്താൻ PDF-ൽ ടെക്സ്റ്റ് തിരഞ്ഞെടുക്കുകയോ പ്രദേശങ്ങൾ വരയ്ക്കുകയോ ചെയ്യുക."
+notImplemented = "നടപ്പിലാക്കിയാൽ മാനുവൽ റെഡാക്ഷൻ ഇന്റർഫേസ് ഇവിടെ ലഭ്യമാകും."
 title = "റെഡാക്ഷൻ ഉപകരണങ്ങൾ"
 
 [redact.modeSelector]
@@ -11102,6 +11349,9 @@ failed = "PDF തിരിക്കുന്നതിനിടെ ഒരു പ�
 [rotate.preview]
 title = "റോട്ടേഷൻ പ്രിവ്യൂ"
 
+[rotate.settings]
+title = "ക്രമീകരണങ്ങൾ"
+
 [rotate.tooltip.controls]
 text = "ഓറിയന്റേഷൻ ക്രമീകരിക്കാൻ റോട്ടേഷൻ ബട്ടണുകൾ ഉപയോഗിക്കുക. ഇടത് ബട്ടൺ ആന്റി-ക്ലോക്ക്വൈസ് തിരിക്കും, വലത് ബട്ടൺ ക്ലോക്ക്വൈസ് തിരിക്കും. ഓരോ ക്ലിക്കിലും 90 ഡിഗ്രി വീതം തിരിക്കും."
 title = "നിയന്ത്രണങ്ങൾ"
@@ -11119,6 +11369,16 @@ hideSmallLabels = "ചെറിയ labels മറയ്ക്കുക"
 physicalValues = "Physical"
 scaled = "Scaled"
 showAllLabels = "എല്ലാ labels-ഉം കാണിക്കുക"
+
+[ruler.units]
+cm = "സെന്റിമീറ്റർ (cm)"
+ft = "അടി (ft)"
+in = "ഇഞ്ച് (in)"
+km = "കിലോമീറ്റർ (km)"
+m = "മീറ്റർ (m)"
+mi = "മൈൽ (mi)"
+mm = "മില്ലിമീറ്റർ (mm)"
+yd = "യാർഡ് (yd)"
 
 [sanitize]
 desc = "PDF ഫയലുകളിൽ നിന്ന് സാധ്യതയുള്ള ഹാനികരമായ ഘടകങ്ങൾ നീക്കംചെയ്യുക."
@@ -11184,6 +11444,7 @@ calibrationPaperDistance = "അളന്ന പേജ് ദൂരം: {{distanc
 calibrationTitle = "സ്കെയിൽ കാലിബ്രേറ്റ് ചെയ്യുക"
 calibrationTooltip = "സ്കെയിൽ സ്വയമേവ കണക്കാക്കാൻ അറിയാവുന്ന ഒരു ദൂരം അളക്കുക"
 customScale = "ഇഷ്ടാനുസൃത സ്കെയിൽ"
+customUnit = "{{unit}} (ഇഷ്ടാനുസൃതം)"
 noneSet = "ഇഷ്ടാനുസൃത സ്കെയിൽ സജ്ജമാക്കിയിട്ടില്ല"
 presets = "മുൻകൂട്ടി സജ്ജമാക്കിയ സ്കെയിലുകൾ"
 ratio = "സ്കെയിൽ അനുപാതം"
@@ -11207,6 +11468,9 @@ title = "എടുത്ത ചിത്രങ്ങൾ"
 
 [scannerImageSplit.error]
 failed = "ചിത്ര സ്കാൻസ് എടുക്കുന്നതിനിടെ ഒരു പിശക് സംഭവിച്ചു."
+
+[scannerImageSplit.settings]
+title = "ക്രമീകരണങ്ങൾ"
 
 [scannerImageSplit.tooltip]
 headsUp = "ശ്രദ്ധിക്കുക"
@@ -11274,6 +11538,9 @@ general = "പൊതുവായത്"
 limits = "പരിധികളും പ്രകടനവും"
 models = "മോഡലുകളും ദാതാക്കളും"
 title = "AI"
+
+[settings.billing]
+title = "ബില്ലിംഗ്"
 
 [settings.configuration]
 advanced = "അഡ്വാൻസ്ഡ്"
@@ -11348,8 +11615,6 @@ defaultPdfEditor = "സ്വതേയുള്ള PDF എഡിറ്റർ"
 defaultPdfEditorActive = "Stirling PDF നിങ്ങളുടെ സ്വതേയുള്ള PDF എഡിറ്ററാണ്"
 defaultPdfEditorChecking = "പരിശോധിക്കുന്നു..."
 defaultPdfEditorInactive = "മറ്റൊരു അപ്ലിക്കേഷൻ സ്വതേയുള്ളതായി സജ്ജമാക്കിയിരിക്കുന്നു"
-defaultPdfEditorRemind = "ഡിഫോൾട്ടായി സജ്ജമാക്കാൻ എന്നെ ഓർമ്മിപ്പിക്കുക"
-defaultPdfEditorRemindDescription = "Stirling PDF നിങ്ങളുടെ ഡിഫോൾട്ട് PDF ആപ്ലിക്കേഷൻ അല്ലാത്തപ്പോൾ ഒരു ബാനർ കാണിക്കുക."
 defaultPdfEditorSet = "ഇതിനകം സ്വതേയുള്ളത്"
 defaultStartupView = "തുറക്കുമ്പോൾ സ്വതവേയുള്ള ദൃശ്യം"
 defaultStartupViewDescription = "ആപ്പ് തുടങ്ങുമ്പോൾ ഇടത് കോളത്തിലെ ഏത് ടാബ് സജീവമായിരിക്കണം എന്ന് തിരഞ്ഞെടുക്കുക"
@@ -11618,6 +11883,15 @@ people = "അംഗങ്ങൾ"
 teams = "ടീമുകൾ"
 title = "വർക്ക്‌സ്പേസ്"
 
+[setup.error]
+loginIncomplete = "ലോഗിൻ പൂർത്തിയാക്കാൻ പരാജയപ്പെട്ടു"
+noSaasServer = "SaaS സെർവർ ക്രമീകരിച്ചിട്ടില്ല"
+noServer = "സെർവർ ക്രമീകരിച്ചിട്ടില്ല"
+saasLoginFailed = "SaaS ലോഗിൻ പരാജയപ്പെട്ടു"
+saasLoginIncomplete = "SaaS ലോഗിൻ പൂർത്തിയാക്കാൻ പരാജയപ്പെട്ടു"
+selfHostedLoginFailed = "സ്വയം-ഹോസ്റ്റ് ചെയ്ത ലോഗിൻ പരാജയപ്പെട്ടു"
+signupIncomplete = "സൈൻ അപ്പ് പൂർത്തിയാക്കാൻ പരാജയപ്പെട്ടു"
+
 [setup.login]
 connectingTo = "കണക്റ്റ് ചെയ്യുന്നു:"
 oauthPending = "ഓതന്റിക്കേഷനായി ബ്രൗസർ തുറക്കുന്നു..."
@@ -11661,6 +11935,7 @@ configFetchError = "സർവർ കോൺഫിഗറേഷൻ കൊണ്ട�
 emptyUrl = "ദയവായി ഒരു സെർവർ URL നൽകുക"
 invalidUrl = "അസാധുവായ URL ഫോർമാറ്റ്. https://your-server.com പോലുള്ള സാധുവായ URL നൽകുക"
 testFailed = "കണക്ഷൻ ടെസ്റ്റ് പരാജയപ്പെട്ടു"
+unknown = "അജ്ഞാത പിശക്"
 unreachable = "സെർവറുമായി ബന്ധപ്പെടാൻ കഴിഞ്ഞില്ല"
 
 [setup.server.error.securityDisabled]
@@ -11769,6 +12044,7 @@ canvas = "Canvas-യിൽ ഒപ്പ് വരച്ച ശേഷം മോ�
 image = "മുകളിൽ ഒപ്പിന്റെ ചിത്രം അപ്‌ലോഡ് ചെയ്ത ശേഷം, PDF-ിലെ ഏതെങ്കിലും സ്ഥലത്ത് ക്ലിക്ക് ചെയ്ത് ഒപ്പ് സ്ഥാപിക്കുക."
 noSignature = "സ്ഥാപിക്കൽ ടൂളുകൾ പ്രാപ്തമാക്കാൻ മുകളിൽ ഒരു ഒപ്പ് സൃഷ്ടിക്കുക."
 paused = "സ്ഥാപിക്കൽ നിർത്തിയിരിക്കുന്നു"
+placeAnnotation = "നിങ്ങളുടെ അനോട്ടേഷൻ സ്ഥാപിക്കാൻ PDF-ൽ എവിടെയെങ്കിലും ക്ലിക്ക് ചെയ്യുക."
 resumeHint = "സ്ഥാപിക്കൽ പുനരാരംഭിച്ച് ക്ലിക്ക് ചെയ്ത് നിങ്ങളുടെ ഒപ്പ് ചേർക്കുക."
 saved = "മുകളിൽ നിന്ന് ഒരു സേവ് ചെയ്ത ഒപ്പ് തിരഞ്ഞെടുക്കുക, തുടർന്ന് PDF-ൽ എവിടെയെങ്കിലും ക്ലിക്ക് ചെയ്ത് സ്ഥാപിക്കുക."
 text = "മുകളിൽ നിങ്ങളുടെ പേര് നൽകിയ ശേഷം, PDF-ിലെ ഏതെങ്കിലും സ്ഥലത്ത് ക്ലിക്ക് ചെയ്ത് ഒപ്പ് സ്ഥാപിക്കുക."
@@ -11922,7 +12198,9 @@ signUpWith = "Sign up with"
 skip = "Skip"
 subtitle = "തുടങ്ങാൻ Stirling PDF-ൽ ചേരുക"
 title = "ഒരു അക്കൗണ്ട് സൃഷ്ടിക്കുക"
+unableToAccessTool = "ടൂളിലേക്ക് ആക്സസ് ചെയ്യാനായില്ല: {{error}}"
 unexpectedError = "പ്രതീക്ഷിക്കാത്ത പിശക്: {{message}}"
+unknownError = "അജ്ഞാത പിശക്"
 
 [sizes]
 large = "വലുത്"
@@ -11995,6 +12273,14 @@ rightToLeft = "വലത്തുനിന്ന് ഇടത്തേയ്ക�
 [split.poster.pageSize]
 description = "പ്രിന്റിംഗിനുള്ള ഔട്ട്പുട്ട് പേജുകളുടെ വലിപ്പം"
 label = "ലക്ഷ്യമിടുന്ന പേജ് വലിപ്പം"
+
+[split.poster.pageSize.options]
+a3 = "A3 (297 × 420 mm)"
+a4 = "A4 (210 × 297 mm)"
+a5 = "A5 (148 × 210 mm)"
+legal = "Legal (8.5 × 14 in)"
+letter = "Letter (8.5 × 11 in)"
+tabloid = "Tabloid (11 × 17 in)"
 
 [split.poster.xFactor]
 description = "ഓരോ പേജും വിഭജിക്കേണ്ട കോളങ്ങളുടെ എണ്ണം"
@@ -12267,6 +12553,7 @@ confirmCancelInvite = "ഈ ആഹ്വാനം റദ്ദാക്കണമ�
 confirmLeave = "ഈ ടീമിൽ നിന്ന് പുറത്തുപോകണമെന്ന് നിങ്ങള്‍ക്ക് തീർച്ചയാണോ?"
 confirmLeaveLeader = "ടീം ലീഡറായി, പോകുന്നത് നിങ്ങളെ ടീമിൽ നിന്ന് നീക്കം ചെയ്യുന്നതാണ്. തീർച്ചയാണോ?"
 confirmRemove = "ഈ അംഗത്തെ നീക്കം ചെയ്യണമെന്ന് നിങ്ങള്‍ക്ക് തീർച്ചയാണോ?"
+currentUnavailable = "നിങ്ങളുടെ നിലവിലെ ടീമിനെ തിരിച്ചറിയാനായില്ല. വീണ്ടും ശ്രമിക്കുക, അല്ലെങ്കിൽ ഇത് തുടരുകയാണെങ്കിൽ പിന്തുണയെ ബന്ധപ്പെടുക."
 editName = "ടീം നാമം തിരുത്തുക"
 inviteCancelled = "ആഹ്വാനം റദ്ദാക്കി"
 inviteError = "ആഹ്വാനം അയക്കൽ പരാജയപ്പെട്ടു"
@@ -12292,10 +12579,8 @@ renameCancel = "Rename റദ്ദാക്കുക"
 renameError = "ടീം പുനർനാമകരണം പരാജയപ്പെട്ടു"
 renameSubmit = "Team name സംരക്ഷിക്കുക"
 renameSuccess = "ടീം വിജയകരമായി പുനർനാമകരണം ചെയ്തു"
-transferBody = "{{email}}-നെ team owner ആക്കണോ? അവർ team membership-ഉം organization billing settings-ഉം നിയന്ത്രിക്കും. നിങ്ങൾ member ആകും. team-ന്റെ subscription-ഉം wallet-ഉം team-നൊപ്പം തുടരും."
 transferError = "Ownership കൈമാറാൻ കഴിഞ്ഞില്ല. team refresh ചെയ്ത് വീണ്ടും ശ്രമിക്കുക."
 transferSuccess = "Team ownership കൈമാറി. നിങ്ങളുടെ role ഇപ്പോൾ member ആണ്."
-transferTitle = "team ownership കൈമാറുക"
 
 [team.invitationBanner]
 acceptButton = "സ്വീകരിക്കുക"
@@ -12396,6 +12681,10 @@ WORD = "ഒരു Word പ്രമാണം"
 XML = "ഒരു XML ഫയൽ"
 XPS = "ഒരു XPS പ്രമാണം"
 ZIP = "ഒരു ZIP ആർക്കൈവ്"
+
+[toolLoading]
+generic = "ടൂൾ ലോഡ് ചെയ്യുന്നു..."
+named = "{{toolName}} ലോഡ് ചെയ്യുന്നു..."
 
 [toolPanel]
 alpha = "Alpha"
@@ -12501,6 +12790,8 @@ stable = "STABLE"
 updateAvailable = "അപ്‌ഡേറ്റ് ലഭ്യമാണ്"
 urgentUpdateAvailable = "ത്വരിത അപ്‌ഡേറ്റ്"
 version = "പതിപ്പ്"
+versionCount_one = "{{count}} പതിപ്പ്"
+versionCount_other = "{{count}} പതിപ്പുകൾ"
 versionHistory = "വേർഷൻ ചരിത്രം"
 viewGuide = "ഗൈഡ് കാണുക"
 whatsNewIn = "ഇതിലെ പുതുമകൾ"
@@ -12528,6 +12819,7 @@ title = "URL PDF-ലേക്ക്"
 aboutUsageAnalytics = "Usage Analytics കുറിച്ച്"
 configureSettings = "ആനലിറ്റിക്സ് സജ്ജീകരണങ്ങൾ കോൺഫിഗർ ചെയ്യുക"
 error = "ഉപയോഗ സ്ഥിതിവിവരങ്ങൾ ലോഡ് ചെയ്യുന്നതിൽ പിശക്"
+loadFailed = "ഉപയോഗ സ്ഥിതിവിവരക്കണക്കുകൾ ലോഡ് ചെയ്യാൻ പരാജയപ്പെട്ടു"
 noData = "ഡാറ്റ ലഭ്യമല്ല"
 noDataMessage = "ഈ സമയം ഉപയോഗ സ്ഥിതിവിവരങ്ങൾ ലഭ്യമല്ല."
 usageAnalyticsExplanation = "Usage analytics, endpoint അഭ്യർത്ഥനകളും ടൂൾ ഉപയോഗ പാറ്റേൺസും ട്രാക്ക് ചെയ്യുന്നു. ഓഡിറ്റ് ലോഗിംഗ് ഡാഷ്ബോർഡുമായി ചേർന്നാൽ, സിസ്റ്റം പ്രവർത്തനം, പ്രകടനം, സുരക്ഷാ ഇവന്റുകൾ എന്നിവയിൽ പൂർണ്ണ ദൃശ്യമാനത ലഭിക്കും."
@@ -12591,7 +12883,6 @@ removeTeam = "ടീമിൽ നിന്ന് നീക്കം ചെയ്
 rename = "Team rename ചെയ്യുക"
 resetPw = "Password റീസെറ്റ് ചെയ്യുക"
 suspend = "Suspend"
-transferOwnership = "ownership കൈമാറുക"
 unlock = "Account unlock ചെയ്യുക"
 
 [users.activity]
@@ -12631,8 +12922,6 @@ disableMfaTitle = "MFA റീസെറ്റ് ചെയ്യുക"
 removeBody = "{{name}}-നെ organization-ൽ നിന്ന് സ്ഥിരമായി നീക്കംചെയ്യണോ? ഇത് പഴയപടിയാക്കാനാവില്ല."
 removeTeamBody = "{{name}}-നെ ടീമിൽ നിന്ന് നീക്കം ചെയ്യണോ? അവർക്ക് അക്കൗണ്ട് തുടരും, പക്ഷേ ഈ ടീമിന്റെ വിഭവങ്ങളിലേക്കുള്ള ആക്‌സസ് നഷ്ടപ്പെടും."
 removeTitle = "Member നീക്കംചെയ്യുക"
-transferOwnershipBody = "{{name}}-നെ organization owner ആക്കണോ? അവർ admin ആകും. നിങ്ങൾ admin ആയി തുടരും, പക്ഷേ ownership നഷ്ടപ്പെടും. പുതിയ owner അല്ലെങ്കിൽ server operator-ന് മാത്രമേ അത് തിരിച്ചുകൈമാറാൻ കഴിയൂ."
-transferOwnershipTitle = "organization ownership കൈമാറുക"
 
 [users.empty]
 description = "സഹകരണം തുടങ്ങാൻ നിങ്ങളുടെ ടീമിനെ ക്ഷണിക്കുക."
@@ -12825,6 +13114,7 @@ signaturesInvalid = "{{count}} അസാധുവുകൾ"
 signaturesUnverified_one = "{{count}} അവലോകനം ആവശ്യമുണ്ട്"
 signaturesUnverified_other = "{{count}} അവലോകനം ആവശ്യമുണ്ട്"
 signaturesValid = "{{count}} പൂർണ്ണമായും സാധുവാണ്"
+thumbnailAlt = "{{fileName}} തംബ്നെയിൽ"
 title = "ഒപ്പ് സ്ഥിരീകരണ റിപ്പോർട്ട്"
 
 [validateSignature.report.fields]
@@ -12862,6 +13152,7 @@ lastPage = "അവസാന പേജ്"
 loadingEngine = "PDF Engine ലോഡ് ചെയ്യുന്നു..."
 moreOptions = "കൂടുതൽ"
 nextPage = "അടുത്ത പേജ്"
+noPdfProvided = "PDF നൽകിയിട്ടില്ല"
 onlyPdfSupported = "വ്യൂവറിന് PDF ഫയലുകൾ മാത്രം പിന്തുണയ്ക്കാം. ഈ ഫയൽ വേറെ ഒരു ഫോർമാറ്റാണെന്ന് തോന്നുന്നു."
 pageNavigation = "പേജ് നാവിഗേഷൻ"
 previousPage = "മുൻപത്തെ പേജ്"
@@ -12899,8 +13190,17 @@ collapseAll = "എല്ലാ ബുക്ക്‌മാർക്കുകള�
 editorOnly = "ഈ പ്രമാണത്തിന്റെ bookmarks editor-ൽ മാത്രമേ എഡിറ്റ് ചെയ്യാൻ കഴിയൂ."
 empty = "No bookmarks in this document"
 expandAll = "എല്ലാ ബുക്ക്‌മാർക്കുകളും വിപുലീകരിക്കുക"
+loadFailed = "ബുക്ക്‌മാർക്കുകൾ ലോഡ് ചെയ്യാൻ പരാജയപ്പെട്ടു"
+loading = "ബുക്ക്‌മാർക്കുകൾ ലോഡ് ചെയ്യുന്നു..."
+noDocument = "ബുക്ക്‌മാർക്കുകൾ കാണാൻ ഒരു PDF തുറക്കുക."
+noSearchResults = "നിങ്ങളുടെ തിരയലുമായി പൊരുത്തപ്പെടുന്ന ബുക്ക്‌മാർക്കുകളില്ല"
+openEditor = "പുനഃക്രമീകരിക്കാനോ നെസ്റ്റ് ചെയ്യാനോ വേണമോ? Bookmark Editor തുറക്കുക"
+pageLabel = "പേജ്"
+pageNumber = "പേജ് {{page}}"
+saveFailed = "ബുക്ക്‌മാർക്ക് സംരക്ഷിക്കാൻ പരാജയപ്പെട്ടു"
 searchPlaceholder = "ബുക്ക്‌മാർക്കുകൾ തിരയുക"
 title = "Bookmarks"
+untitled = "ശീർഷകമില്ലാത്തത്"
 
 [viewer.comments]
 addComment = "കമന്റ് ചേർക്കുക"
@@ -12948,16 +13248,26 @@ unsavedDesc = "നിങ്ങൾക്ക് സംരക്ഷിക്കാ�
 
 [viewer.layers]
 closeSidebar = "ലെയറുകളുടെ സൈഡ്‌ബാർ അടയ്ക്കുക"
+empty = "ഈ പ്രമാണത്തിന് ലെയറുകളില്ല."
 hideAll = "എല്ലാ ലെയറുകളും മറയ്ക്കുക"
+loadFailed = "ലെയറുകൾ ലോഡ് ചെയ്യാൻ പരാജയപ്പെട്ടു."
+loading = "ലെയറുകൾ ലോഡ് ചെയ്യുന്നു..."
+noDocument = "ലെയറുകൾ കാണാൻ ഒരു PDF തുറക്കുക."
+readFailed = "PDF ലെയറുകൾ വായിക്കാൻ പരാജയപ്പെട്ടു"
 showAll = "എല്ലാ ലെയറുകളും കാണിക്കുക"
 title = "Layers"
 
 [viewer.link]
 delete = "ലിങ്ക് ഇല്ലാതാക്കുക"
+goTo = "{{label}}-ലേക്ക് പോകുക"
+open = "ലിങ്ക് തുറക്കുക"
+openAria = "ലിങ്ക് തുറക്കുക"
+page = "പേജ് {{page}}"
 
 [viewer.nonPdf]
 columnDefault = "നിര {{index}}"
 convertToPdf = "PDF ആയി മാറിക്കുക"
+copied = "പകർത്തി"
 csvStats = "{{rows}} വരികൾ · {{columns}} നിരകൾ · {{size}}"
 emptyFile = "ശൂന്യ ഫയൽ"
 htmlHidePreview = "പ്രിവ്യൂ മറയ്ക്കുക"
@@ -12968,6 +13278,8 @@ htmlShowPreview = "എങ്കിലും പ്രിവ്യൂ കാണ�
 invalidJson = "അസാധുവായ JSON — അസംസ്കൃത ഉള്ളടക്കം കാണിക്കുന്നു"
 lineNumbers = "വരി നമ്പറുകൾ"
 loading = "ലോഡ് ചെയ്യുന്നു..."
+noFile = "ഫയൽ ലോഡ് ചെയ്തിട്ടില്ല"
+previewUnavailable = "ഈ ഫയൽ തരത്തിന് പ്രിവ്യൂ ലഭ്യമല്ല"
 renderMarkdown = "മാർക്ക്ഡൗൺ റെൻഡർ ചെയ്യുക"
 sortedBy = "ക്രമീകരിച്ചത്: {{column}}"
 textStats = "{{lines}} വരികൾ · {{size}}"
@@ -12994,11 +13306,28 @@ next = "അടുത്ത ഫലം"
 previous = "മുൻ ഫലം"
 resultsOf = "ആകെ {{total}}യിൽ"
 
+[viewer.sidebar]
+close = "സൈഡ്‌ബാർ അടയ്ക്കുക"
+searchPlaceholder = "തിരയുക..."
+
 [viewer.signature]
 delete = "കൈയൊപ്പ് ഇല്ലാതാക്കുക"
+previewAlt = "ഒപ്പ് പ്രിവ്യൂ"
+
+[viewer.signatureField]
+badge = "ഒപ്പ്"
+fieldTitle = "ഒപ്പ് ഫീൽഡ്: {{name}}"
+signed = "ഒപ്പിട്ടു"
+signedWithReason = "ഒപ്പിട്ടു: {{reason}}"
+unsignedFieldTitle = "ഒപ്പിടാത്ത ഒപ്പ് ഫീൽഡ്: {{name}}"
+withTime = "{{label}} ({{time}})"
 
 [viewer.thumbnails]
 closeSidebar = "തംബ്നെയിലുകളുടെ സൈഡ്‌ബാർ അടയ്ക്കുക"
+failed = "പരാജയപ്പെട്ടു"
+pageNumber = "പേജ് {{page}}"
+thumbnailAlt = "പേജ് {{page}} തംബ്നെയിൽ"
+title = "പേജുകൾ"
 
 [viewPdf]
 tags = "കാണുക,വായിക്കുക,വ്യാഖ്യാനിക്കുക,ടെക്സ്റ്റ്,ചിത്രം,ഹൈലൈറ്റ്,തിരുത്തുക"
@@ -13006,169 +13335,6 @@ title = "PDF കാണുക/തിരുത്തുക"
 
 [warning]
 tooltipTitle = "മുന്നറിയിപ്പ്"
-
-[watchedFolders]
-alreadyInFolder = "Already in this folder"
-defaultFolderWarning = "This is a default folder and will be recreated on next reload."
-deleteConfirmBody = "This will remove the folder and its run history. Files already downloaded are not affected."
-deleteConfirmTitle = "Delete folder?"
-folderNotFound = "Folder not found"
-newFolder = "New folder"
-noFolders = "No watched folders yet"
-sidebarTitle = "Watched Folders"
-title = "Watched Folders"
-
-[watchedFolders.actions]
-back = "Back"
-collapse = "Collapse"
-dismiss = "Dismiss"
-download = "Download"
-downloadInput = "Download input"
-downloadOutput = "Download output"
-expand = "Expand"
-retry = "Retry"
-
-[watchedFolders.card]
-delete = "Delete folder"
-edit = "Edit folder"
-
-[watchedFolders.home]
-addAnother = "Add another Watched Folder"
-addAnotherDesc = "Automatically process files with a new pipeline"
-create = "Create your first Watched Folder"
-deleteFolder = "Delete folder"
-editFolder = "Edit folder"
-empty = "No watched folders yet"
-emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
-emptyTitle = "Automate your PDF workflows"
-file = "file"
-files = "files"
-pause = "Pause"
-resume = "Resume"
-
-[watchedFolders.howItWorks]
-step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
-step1Title = "Drop files"
-step2Desc = "Your configured tools process each file automatically"
-step2Title = "Pipeline runs"
-step3Desc = "Download processed files from inside the folder"
-step3Title = "Output ready"
-title = "How Watched Folders work"
-
-[watchedFolders.modal]
-advanced = "Advanced"
-automation = "Automation"
-automationNameFallback = "Watched Folder automation"
-automationRequired = "Add at least one configured step before saving."
-autoNumber = "Auto-number"
-autoNumberExample = "e.g. document.pdf → document (1).pdf"
-autoScanHelp = "New PDF files in this folder are processed automatically every 10 seconds."
-changeFolder = "Change"
-chooseFolder = "Choose"
-clearFolder = "Clear"
-color = "Accent color"
-createFolder = "Create Folder"
-createTitle = "New Watched Folder"
-editTitle = "Edit Watched Folder"
-inputFolder = "Input folder"
-inputFolderNotChosen = "No folder chosen — required for auto-scan"
-inputSource = "Input source"
-inputSourceBrowser = "Browser — drop files here"
-inputSourceLocal = "Local folder (auto-scan)"
-inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
-localOutputFolder = "Local output folder"
-maxRetries = "Max retries"
-name = "Folder name"
-namePlaceholder = "My Watched Folder"
-nameRequired = "Folder name is required"
-nameTooLong = "Folder name must be 50 characters or less"
-outputFolderNotSet = "Not set — outputs stay in app"
-outputFolderUnsupported = "Not supported in this browser"
-outputModeNewDesc = "Output is saved as a new separate file"
-outputModeVersion = "Replace original?"
-outputModeVersionDesc = "Output becomes a new version of the input file rather than a separate file"
-outputName = "Output filename prefix"
-outputNamePrefix = "Filename prefix"
-outputNameSuffix = "Suffix"
-positionPrefix = "Prefix"
-positionSuffix = "Suffix"
-replaceOriginal = "Replace original file"
-retryDelay = "Delay (minutes)"
-saveChanges = "Save Changes"
-saveFailed = "Failed to save folder. Please try again."
-sectionFolder = "Folder"
-sectionSourceOutput = "Source & Output"
-sectionSteps = "Steps"
-
-[watchedFolders.status]
-active = "Active"
-done = "Done"
-paused = "Paused"
-processing = "Processing"
-
-[watchedFolders.time]
-daysAgo = "{{count}}d ago"
-hoursAgo = "{{count}}h ago"
-justNow = "just now"
-minutesAgo = "{{count}}m ago"
-
-[watchedFolders.workbench]
-activity = "Activity"
-addFiles = "Add files"
-allTime = "All time"
-cancel = "Cancel"
-chartTooltipComplete = "{{count}} complete"
-chartTooltipFailed = "{{count}} failed"
-clearSelection = "Clear selection"
-countProcessing = "{{count}} processing"
-countQueued = "{{count}} queued"
-countSelected = "{{count}} selected"
-dataSaved = "Saved"
-dayRunning = "day running"
-daysRunning = "days running"
-delete = "Delete"
-deleteConfirmBody = "Remove notifications only clears the activity log. Delete outputs also removes the processed files from storage. Your original input files are never touched."
-deleteOutputs = "Delete outputs"
-directionIn = "in"
-directionOut = "out"
-dropToProcess = "Drop to process"
-export = "Export"
-exportSeparately = "Export separately"
-exportZip = "Export zip"
-failed = "Failed"
-filesProcessedOverTime = "Files processed over time"
-filterAll = "All"
-filterPending = "Pending"
-inputs = "Inputs"
-inputSize = "Input size"
-legendComplete = "Complete"
-noActivity = "No activity yet — drop a PDF to start"
-noActivityMatch = "No matching activity"
-noInputFolder = "No input folder — edit to configure"
-outputs = "Outputs"
-pause = "Pause"
-preview = "Preview"
-previewInput = "Preview input"
-previewLoadFailed = "Could not load file preview."
-previewOutput = "Preview output"
-queued = "Queued"
-queuedWaiting = "Queued — waiting to run"
-removeEntries = "Remove {{count}} entries"
-removeEntry = "Remove entry"
-removeNotificationsOnly = "Remove notifications only"
-resume = "Resume"
-retryAll = "Retry all"
-retryIn = "retry in {{count}}m"
-retryingSoon = "retrying…"
-retryMixedConfirm = "Some selected files have already completed and will be skipped. Only failed files will be retried. Continue?"
-running = "Running"
-search = "Search…"
-selectAll = "Select all {{count}}"
-sortNameAsc = "A → Z"
-sortNameDesc = "Z → A"
-sortNewest = "Newest"
-sortOldest = "Oldest"
-watching = "Watching: {{name}}"
 
 [watermark]
 desc = "PDF ഫയലുകളിൽ ടെക്സ്റ്റ് അല്ലെങ്കിൽ ഇമേജ് വാട്ടർമാർക്കുകൾ ചേർക്കുക"
@@ -13371,6 +13537,10 @@ certTypeServer = "സെർവർ സർട്ടിഫിക്കറ്റ് 
 completedDeclined = "നിങ്ങൾ ഈ ഡോക്യുമെന്റ് നിരസിച്ചു."
 completedSigned = "നിങ്ങൾ ഈ ഡോക്യുമെന്റിൽ ഒപ്പുവച്ചു."
 decline = "നിരസിക്കുക"
+declineConfirm = "ഈ പ്രമാണത്തിൽ ഒപ്പിടുന്നത് നിരസിക്കണമെന്ന് നിങ്ങൾക്ക് ഉറപ്പാണോ?"
+declineFailed = "നിരസിക്കാൻ പരാജയപ്പെട്ടു: {{error}}"
+declineSuccess = "നിങ്ങൾ ഈ ഒപ്പിടൽ അഭ്യർത്ഥന നിരസിച്ചു."
+defaultReason = "പ്രമാണ ഒപ്പിടൽ"
 downloadDocument = "ഡോക്യുമെന്റ് ഡൗൺലോഡ് ചെയ്യുക"
 dueDate = "അവസാന തീയതി: {{date}}"
 errorTitle = "പിശക്"
@@ -13381,6 +13551,7 @@ locationPlaceholder = "ഉദാ., San Francisco, CA"
 pageNumber = "പേജ് നമ്പർ (ഐച്ഛികം)"
 reason = "കാരണം"
 reasonPlaceholder = "ഉദാ., ഡോക്യുമെന്റ് അംഗീകാരം"
+selectCertificateFile = "ദയവായി ഒരു സർട്ടിഫിക്കറ്റ് ഫയൽ തിരഞ്ഞെടുക്കുക"
 sessionNotFound = "സെഷൻ കണ്ടെത്താനായില്ല അല്ലെങ്കിൽ പ്രവേശനം നിരസിച്ചു."
 signDocument = "ഡോക്യുമെന്റിൽ ഒപ്പിടുക"
 statusDeclined = "നിരസിച്ചു"
@@ -13388,7 +13559,9 @@ statusNotified = "അറിയിച്ചിട്ടുണ്ട്"
 statusPending = "പെൻഡിംഗ്"
 statusSigned = "ഒപ്പുവച്ചു"
 statusViewed = "കണ്ടു"
+submitFailed = "ഒപ്പ് സമർപ്പിക്കാൻ പരാജയപ്പെട്ടു: {{error}}"
 submitSignature = "കൈയൊപ്പ് സമർപ്പിക്കുക"
+submitSuccess = "ഒപ്പ് വിജയകരമായി സമർപ്പിച്ചു!"
 
 [workspace]
 title = "വർക്ക്സ്പേസ്"
