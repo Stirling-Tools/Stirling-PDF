@@ -4159,7 +4159,7 @@ targetDeviceDesc = "選擇為閱讀裝置最佳化的輸出設定檔"
 [convert.formatGroups]
 archive = "封存"
 document = "文件"
-ebook = "eBook"
+ebook = "電子書"
 email = "電子郵件"
 file = "檔案"
 image = "影像"
@@ -7236,7 +7236,7 @@ decodeImage = "無法解碼所選圖片。"
 insertImage = "無法插入所選圖片。"
 
 [pdfTextEditor.externalEdit]
-pngFileType = "PNG image"
+pngFileType = "PNG 圖片"
 
 [pdfTextEditor.find]
 close = "關閉尋找列"
@@ -7345,10 +7345,19 @@ mixed = "{{count}} 個物件"
 multiGeometry = "請選取單一物件以編輯其位置與大小。"
 nothingSelected = "未選取任何項目"
 nothingSelectedHint = "點擊頁面上的任何文字、圖片或形狀，即可在此編輯。"
+ocrDocumentChanged = "OCR 執行期間文件已變更。請再次執行 OCR 以包含最新變更。"
+ocrInvalidResult = "OCR 未傳回 PDF。請再試一次。"
+ocrNoLanguages = "伺服器上未安裝 OCR 語言。"
+ocrRunning = "正在辨識文字..."
+ocrUnavailable = "此伺服器無法使用 OCR。"
 oneImage = "圖片"
 oneShape = "形狀"
 oneText = "文字"
 pages = "頁面"
+runOcr = "執行 OCR"
+scanHint_one = "此頁面是掃描影像，沒有可編輯的文字。請先執行 OCR，使其文字可編輯。"
+scanHint_other = "{{count}} 個頁面是掃描影像，沒有可編輯的文字。請先執行 OCR，使其文字可編輯。"
+scannedText = "掃描文字 · 已變更的字詞會以相符字型覆蓋並重繪。"
 tabDocument = "文件"
 tabSelected = "所選項目"
 textBoxes = "文字框"
@@ -7744,7 +7753,7 @@ successMessage = "您的授權已成功啟用。您現在可以關閉此視窗�
 
 [plan.team]
 maxUsers = "100 位使用者"
-name = "Team"
+name = "團隊"
 
 [policies.activity]
 outputsUnavailable = "政策輸出結果已無法下載。"
@@ -7951,7 +7960,7 @@ cancel = "取消"
 continueReauth = "再次登入"
 exhaustedTitle = "讓您的工作流程持續執行"
 identity = "Stirling 帳戶"
-linkTitle = "連結您的 Stirling 帳戶"
+linkTitle = "連結你的 Stirling 帳戶"
 noAuthorizeUrl = "Stirling 未提供可繼續前往的網址。請稍後再試。"
 startFailed = "無法連上 Stirling 以開始連線。請檢查此伺服器的對外網路存取，然後再試一次。"
 transferPending = "有一項所有權轉移待處理。請前往設定 → 使用者完成或取消它，然後再次嘗試連結。"
@@ -8170,14 +8179,14 @@ sub = "完整的 PDF 編輯器。"
 [portal.billing.identity.processor]
 chipMetered = "計量處理"
 chipPipelines = "管線與 API"
-name = "Processor"
+name = "處理器"
 sub = "Team 基本費用加上每點 {{rate}}"
 subNoRate = "Team 基本費用加上計量處理費用"
 
 [portal.billing.identity.team]
 chipFleet = "集中管理"
 chipIncluded = "每月內含 {{allowance}} 點"
-name = "Team"
+name = "團隊"
 sub = "最多 {{users}} 位使用者"
 subNoLimit = "使用者人數無上限"
 
@@ -8289,7 +8298,7 @@ prepaidRemaining = "剩餘預付點數"
 prepaidTooltip = "會在計量帳務前扣抵，且不受您的支出上限限制。"
 raiseLimit = "提高上限"
 remainingOf = "{{remaining}} / {{total}}"
-rowName = "Processor"
+rowName = "處理器"
 spendAgainstLimit = "本週期已計量 {{spend}} / {{cap}}"
 
 [portal.billing.seats]
@@ -8569,7 +8578,7 @@ label = "密碼"
 
 [portal.connections.types.consigno.fields.tenantId]
 helperText = "僅在您的組織使用 tenants 時需要。"
-label = "Tenant"
+label = "租戶"
 
 [portal.connections.types.consigno.fields.username]
 label = "使用者名稱"
@@ -8635,15 +8644,15 @@ label = "Basic auth"
 label = "Header auth"
 
 [portal.connections.types.n8n.fields.authType.options.none]
-label = "None"
+label = "無"
 
 [portal.connections.types.n8n.fields.headerName]
 helperText = "來自 n8n credential 的 header name，而不是其值。"
-label = "Header name"
+label = "Header 名稱"
 placeholder = "X-N8N-Key"
 
 [portal.connections.types.n8n.fields.token]
-label = "Header value"
+label = "Header 值"
 
 [portal.connections.types.nextcloud]
 baseUrlPlaceholder = "https://your-server/remote.php/dav"
@@ -8651,7 +8660,7 @@ description = "將處理後的文件存入 Nextcloud。"
 label = "Nextcloud"
 
 [portal.connections.types.nextcloud.fields.appPassword]
-label = "App password"
+label = "App 密碼"
 
 [portal.connections.types.presidio]
 baseUrlPlaceholder = "http://presidio-analyzer:3000"
@@ -8676,7 +8685,7 @@ placeholder = "cb46c030-1825-4e81-a295-151c039dbf02"
 
 [portal.connections.types.s3]
 description = "來源可讀取且 pipeline 輸出可寫入的 S3 bucket。"
-label = "S3 storage"
+label = "S3 儲存空間"
 
 [portal.connections.types.s3.fields.accessKeyId]
 label = "Access key ID"
@@ -8793,7 +8802,7 @@ fieldCount_other = "{{count}} 個欄位"
 filterAll = "全部"
 filterAriaLabel = "依垂直領域篩選 endpoints"
 lead = "每種文件類型都是 typed endpoint。POST 檔案，接收經 schema 驗證的 JSON。可在下方依垂直領域篩選。"
-title = "Endpoints"
+title = "端點"
 
 [portal.docs.errors]
 codeCaption = "422 Unprocessable Entity"
@@ -8811,7 +8820,7 @@ title = "文件無法使用"
 [portal.docs.quickstart]
 eyebrow = "開始使用"
 lead = "將您的第一份文件傳送到 typed endpoint，並透過三個步驟取回結構化 JSON。無需模型訓練，也無需 prompt engineering。"
-title = "Quickstart"
+title = "快速入門"
 
 [portal.docs.quickstart.callout]
 bodyAfterLink = "以取得可複製貼上的範例。"
@@ -8834,7 +8843,7 @@ codeCaption = "200 OK"
 title = "讀取結構化結果"
 
 [portal.docs.rateLimits]
-burst = "Burst"
+burst = "突發"
 codeCaption = "429 Too Many Requests"
 concurrency = "並行數"
 eyebrow = "開始使用"
@@ -8846,7 +8855,7 @@ title = "速率限制與配額"
 cloneButton = "複製 recipe"
 eyebrow = "PLAYBOOKS"
 lead = "串接來源、操作和目的地的端對端模式。每個都對應到可複製的管線。"
-title = "Recipes"
+title = "範例"
 
 [portal.docs.sdks]
 eyebrow = "SDKS"
@@ -8858,7 +8867,7 @@ beta = "Beta"
 deprecated = "已淘汰"
 
 [portal.docs.skills]
-eyebrow = "SKILLS"
+eyebrow = "技能"
 lead = "代理程式以單一工具呼叫的內建命名能力。每項 skill 都是附有 evals 的確定性操作鏈。"
 title = "代理程式 skills"
 
@@ -9972,7 +9981,7 @@ label = "Index"
 placeholder = "stirling-audit"
 
 [portal.policies.operations.fields.issueKey]
-label = "Issue key"
+label = "問題鍵"
 placeholder = "OPS-42"
 
 [portal.policies.operations.fields.message]
@@ -9983,7 +9992,7 @@ label = "訊息"
 label = "Method"
 
 [portal.policies.operations.fields.pageId]
-label = "Page ID"
+label = "頁面 ID"
 placeholder = "66186"
 
 [portal.policies.operations.fields.path]
@@ -12275,6 +12284,163 @@ image = "影像"
 saved = "已儲存"
 text = "文字"
 title = "簽名類型"
+
+[sign.wallet]
+apply_one = "套用 {{count}} 個簽名"
+apply_other = "套用 {{count}} 個簽名"
+applyEmpty = "套用簽名"
+count = "{{count}} / {{max}}"
+default = "預設"
+loading = "正在載入你的簽名..."
+new = "新簽名"
+shared = "已分享"
+sharedHint = "所有人都可以使用這些簽名"
+unsaved = "未儲存"
+yours = "你的簽名"
+
+[sign.wallet.create]
+cancel = "取消"
+full = "你的資料庫已滿（{{max}} 個簽名）。請刪除一個以儲存更多。"
+makeDefault = "設為預設"
+method = "建立方式"
+name = "名稱"
+save = "儲存到我的簽名"
+saveBrowserHint = "保存在此瀏覽器中，下次可直接使用。"
+saveHint = "下次簽名時可重複使用。"
+subtitle = "建立一次，即可在任何文件上重複使用。"
+title = "新簽名"
+use = "使用簽名"
+who = "誰可以使用"
+whoEveryone = "所有人"
+whoMe = "只有我"
+
+[sign.wallet.defaultName]
+draw = "我的簽名"
+initials = "縮寫"
+phone = "手機簽名"
+type = "輸入的簽名"
+upload = "上傳的簽名"
+
+[sign.wallet.delete]
+body = "「{{name}}」已從你的簽名中移除。你已簽署的文件會保留它。"
+confirm = "刪除"
+title = "要刪除此簽名嗎？"
+
+[sign.wallet.draw]
+bold = "粗筆"
+clear = "清除"
+fine = "細筆"
+hint = "在線上方簽名"
+medium = "中等筆"
+pad = "簽名板"
+pen = "筆"
+tip = "使用滑鼠、觸控板、筆或手指"
+undo = "復原"
+
+[sign.wallet.ink]
+black = "黑色墨水"
+blue = "藍色墨水"
+label = "墨水"
+navy = "深藍色墨水"
+
+[sign.wallet.intro]
+body = "建立一次。它會儲存在這裡，準備用於你簽署的每份文件。"
+privacy = "除非你選擇分享，否則已儲存的簽名只有你能看到。"
+privacyBrowser = "已儲存的簽名會保留在此瀏覽器中。"
+title = "新增你的簽名"
+
+[sign.wallet.menu]
+delete = "刪除"
+discard = "捨棄"
+makeDefault = "設為預設"
+options = "{{name}} 的選項"
+place = "放置到頁面"
+removeDefault = "移除預設"
+rename = "重新命名"
+save = "儲存到我的簽名"
+share = "與所有人分享"
+stop = "停止放置"
+
+[sign.wallet.phone]
+expires = "{{time}} 後過期"
+qr = "用手機簽名的 QR code"
+received = "已從你的手機收到"
+receiveFailed = "無法讀取該簽名。請掃描新代碼再試一次。"
+step1 = "用手機相機掃描代碼"
+step1Hint = "它會在手機瀏覽器中開啟，不需要 App。"
+step2 = "繪製、輸入或拍攝你的簽名"
+step2Hint = "專為手指設計的大畫布。"
+step3 = "它會自動顯示在這裡"
+step3Hint = "簽名時請保持此視窗開啟。"
+waiting = "正在等待你的手機..."
+
+[sign.wallet.placed]
+empty = "你放置在頁面上的簽名會列在這裡。"
+fallbackName = "簽名"
+page = "第 {{page}} 頁"
+remove = "移除 {{name}}"
+show = "在頁面上顯示 {{name}}"
+title = "在此文件上（{{count}}）"
+
+[sign.wallet.rename]
+save = "儲存"
+title = "重新命名簽名"
+
+[sign.wallet.status]
+idle = "選擇簽名以放置"
+placing = "點選頁面以放置 {{name}}。"
+stop = "停止"
+
+[sign.wallet.tabs]
+draw = "繪製"
+phone = "手機"
+type = "輸入"
+upload = "上傳"
+
+[sign.wallet.toast]
+applyFailed = "無法套用簽名"
+applyFailedBody = "你的簽名仍在文件上。請再試一次。"
+deleteFailed = "無法刪除簽名"
+draftExists = "請先儲存或捨棄未儲存的簽名"
+initialsFailed = "無法儲存你的縮寫"
+initialsPartial = "你的簽名已儲存，但縮寫未儲存。請嘗試單獨儲存你的縮寫。"
+renameFailed = "無法重新命名簽名"
+saved = "已儲存到你的簽名"
+saveFailed = "無法儲存簽名"
+saveFailedBody = "它仍可放置在此文件上。"
+shared = "已與所有人分享"
+shareFailed = "無法分享簽名"
+
+[sign.wallet.type]
+initials = "縮寫"
+initialsLimit = "儲存縮寫需要兩個可用的簽名欄位。"
+name = "你的姓名"
+namePlaceholder = "輸入你的姓名"
+previewName = "你的姓名"
+saveInitials = "也儲存我的縮寫"
+style = "樣式"
+styleOption = "樣式 {{index}}"
+
+[sign.wallet.upload]
+browse = "或瀏覽檔案"
+drop = "將圖片拖放到這裡"
+failed = "無法讀取該圖片。"
+hint = "PNG、JPG 或 WebP，最大 {{size}} MB。白色背景會自動移除。"
+ink = "墨水顏色"
+inkBlack = "黑色"
+inkBlue = "藍色"
+inkOriginal = "原始"
+preview = "上傳的簽名預覽"
+processing = "正在清理圖片..."
+rejected = "請選擇最大 {{size}} MB 的 PNG、JPG 或 WebP 圖片。"
+removeBackground = "移除背景"
+removeBackgroundHint = "白紙會變成透明"
+replace = "取代"
+rotate = "旋轉"
+rotateLeft = "向左旋轉"
+rotateRight = "向右旋轉"
+trim = "裁切至簽名"
+trimHint = "裁切周圍空白區域"
 
 [signatureSettings.tooltip]
 header = "簽章外觀設定"

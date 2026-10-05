@@ -742,10 +742,10 @@ title = "Tài liệu & RAG"
 
 [admin.settings.ai.documents.embeddingApiKey]
 description = "Để trống để dùng thông tin xác thực môi trường riêng của engine. Áp dụng cho các triển khai tự lưu trữ một engine."
-generic = "Embedding API key"
-openai = "OpenAI API key"
+generic = "Khóa Embedding API"
+openai = "Khóa OpenAI API"
 setPlaceholder = "Đã lưu - để trống để giữ key hiện tại"
-voyageai = "VoyageAI API key"
+voyageai = "Khóa VoyageAI API"
 
 [admin.settings.ai.documents.embeddingBaseUrl]
 description = "Base URL của endpoint embedding tương thích OpenAI / Ollama, ví dụ http://ollama:11434/v1. Phải trỏ tới endpoint nội bộ đáng tin cậy (nhạy cảm với SSRF)."
@@ -892,10 +892,10 @@ description = "Chọn nhà cung cấp LLM và các mô hình thông minh/nhanh m
 title = "Mô hình & Nhà cung cấp"
 
 [admin.settings.ai.models.apiKey]
-anthropic = "Anthropic API key"
+anthropic = "Khóa Anthropic API"
 description = "Để trống để dùng thông tin xác thực môi trường riêng của engine. Áp dụng cho các triển khai tự lưu trữ một engine."
-generic = "API key"
-openai = "OpenAI API key"
+generic = "Khóa API"
+openai = "Khóa OpenAI API"
 setPlaceholder = "Đã lưu - để trống để giữ key hiện tại"
 
 [admin.settings.ai.models.baseUrl]
@@ -5760,7 +5760,7 @@ title = "Đọc"
 [home.redact]
 desc = "Che/xóa (bôi đen) PDF dựa trên văn bản đã chọn, hình dạng đã vẽ và/hoặc trang đã chọn"
 tags = "kiểm duyệt,bôi đen,ẩn,redact,redaction,bôi đen,che,xóa dữ liệu nhạy cảm,ẩn văn bản,quyền riêng tư,bảo mật,GDPR,PII,dữ liệu nhạy cảm,xóa vĩnh viễn,che phủ,redaction pháp lý"
-title = "Redact"
+title = "Che nội dung"
 
 [home.removeAnnotations]
 desc = "Xóa tất cả các bình luận/chú thích khỏi PDF"
@@ -6076,7 +6076,7 @@ title = "Tổng quan cài đặt gộp"
 [mobileScanner]
 addMore = "Thêm nữa"
 back = "Quay lại"
-camera = "Camera"
+camera = "Máy ảnh"
 cameraAccessDenied = "Bị từ chối truy cập camera. Vui lòng bật quyền camera."
 cameraDescription = "Quét tài liệu bằng camera thiết bị với tự động phát hiện viền"
 capture = "Chụp ảnh"
@@ -7345,10 +7345,19 @@ mixed = "{{count}} đối tượng"
 multiGeometry = "Chọn một đối tượng để chỉnh sửa vị trí và kích thước của nó."
 nothingSelected = "Chưa chọn gì"
 nothingSelectedHint = "Nhấp vào bất kỳ văn bản, hình ảnh hoặc hình dạng nào trên trang để chỉnh sửa tại đây."
+ocrDocumentChanged = "Tài liệu đã thay đổi trong khi OCR đang chạy. Chạy OCR lại để bao gồm các thay đổi mới nhất của bạn."
+ocrInvalidResult = "OCR không trả về PDF. Vui lòng thử lại."
+ocrNoLanguages = "Không có ngôn ngữ OCR nào được cài đặt trên server."
+ocrRunning = "Đang nhận dạng văn bản..."
+ocrUnavailable = "OCR không khả dụng trên server này."
 oneImage = "Hình ảnh"
 oneShape = "Hình dạng"
 oneText = "Văn bản"
 pages = "Trang"
+runOcr = "Chạy OCR"
+scanHint_one = "Trang này là hình ảnh được quét, không có văn bản để chỉnh sửa. Chạy OCR trước để có thể chỉnh sửa văn bản."
+scanHint_other = "{{count}} trang là hình ảnh được quét, không có văn bản để chỉnh sửa. Chạy OCR trước để có thể chỉnh sửa văn bản."
+scannedText = "Văn bản đã quét · các từ đã thay đổi được che và vẽ lại bằng phông chữ phù hợp."
 tabDocument = "Tài liệu"
 tabSelected = "Đã chọn"
 textBoxes = "Hộp văn bản"
@@ -8431,7 +8440,7 @@ helperText = "Stirling lưu trữ mục này ở dạng mã hóa và không bao 
 label = "Access token"
 
 [portal.connections.commonFields.apiKey]
-label = "API key"
+label = "Khóa API"
 
 [portal.connections.commonFields.apiToken]
 label = "API token"
@@ -8559,7 +8568,7 @@ label = "Server URL"
 placeholder = "https://your-org.consignocloud.com/api/v1"
 
 [portal.connections.types.consigno.fields.clientId]
-label = "API key"
+label = "Khóa API"
 
 [portal.connections.types.consigno.fields.clientSecret]
 label = "API secret"
@@ -8635,7 +8644,7 @@ label = "Basic auth"
 label = "Header auth"
 
 [portal.connections.types.n8n.fields.authType.options.none]
-label = "None"
+label = "Không có"
 
 [portal.connections.types.n8n.fields.headerName]
 helperText = "Tên header từ thông tin xác thực n8n, không phải giá trị của nó."
@@ -11254,7 +11263,7 @@ title = "Chức năng"
 title = "Giới thiệu về Xóa chú thích"
 
 [removeBlanks]
-submit = "Xóa trang trắng"
+submit = "Xóa trang trống"
 tags = "xóa,dọn dẹp,trống,xóa trang trắng,xóa các trang trắng,trang trống,trang trắng,xóa trang trống,dọn dẹp,cleanup blank"
 title = "Xóa trang trắng"
 
@@ -11677,7 +11686,7 @@ title = "Thanh toán"
 
 [settings.configuration]
 advanced = "Nâng cao"
-connections = "Single sign-on"
+connections = "Đăng nhập một lần"
 database = "Cơ sở dữ liệu"
 endpoints = "Endpoints"
 features = "Tính năng"
@@ -11738,7 +11747,7 @@ saas = "Stirling Cloud"
 selfhosted = "Tự lưu trữ"
 
 [settings.developer]
-apiKeys = "API Keys"
+apiKeys = "Khóa API"
 apiKeysDescription = "Khóa cá nhân để gọi Stirling API từ script và tích hợp."
 title = "Nhà phát triển"
 
@@ -11993,7 +12002,7 @@ success = "Đã cập nhật mật khẩu thành công. Vui lòng đăng nhập 
 update = "Cập nhật mật khẩu"
 
 [settings.securityAuth]
-connections = "Single sign-on"
+connections = "Đăng nhập một lần"
 security = "Đăng nhập & bảo mật"
 telegram = "Telegram"
 title = "Bảo mật & đăng nhập"
@@ -12275,6 +12284,163 @@ image = "Hình ảnh"
 saved = "Đã lưu"
 text = "Văn bản"
 title = "Loại chữ ký"
+
+[sign.wallet]
+apply_one = "Áp dụng {{count}} chữ ký"
+apply_other = "Áp dụng {{count}} chữ ký"
+applyEmpty = "Áp dụng chữ ký"
+count = "{{count}} trên {{max}}"
+default = "Mặc định"
+loading = "Đang tải chữ ký của bạn..."
+new = "Chữ ký mới"
+shared = "Đã chia sẻ"
+sharedHint = "Mọi người đều có thể sử dụng các chữ ký này"
+unsaved = "Chưa lưu"
+yours = "Chữ ký của bạn"
+
+[sign.wallet.create]
+cancel = "Hủy"
+full = "Thư viện của bạn đã đầy ({{max}} chữ ký). Xóa một chữ ký để lưu thêm."
+makeDefault = "Đặt làm mặc định"
+method = "Cách tạo"
+name = "Tên"
+save = "Lưu vào chữ ký của tôi"
+saveBrowserHint = "Được lưu trong trình duyệt này, sẵn sàng cho lần sau."
+saveHint = "Sẵn sàng để tái sử dụng lần sau khi bạn ký."
+subtitle = "Tạo một lần, tái sử dụng trên bất kỳ tài liệu nào."
+title = "Chữ ký mới"
+use = "Sử dụng chữ ký"
+who = "Ai có thể sử dụng"
+whoEveryone = "Mọi người"
+whoMe = "Chỉ mình tôi"
+
+[sign.wallet.defaultName]
+draw = "Chữ ký của tôi"
+initials = "Chữ cái đầu"
+phone = "Chữ ký qua điện thoại"
+type = "Chữ ký đã nhập"
+upload = "Chữ ký đã tải lên"
+
+[sign.wallet.delete]
+body = "\"{{name}}\" đã bị xóa khỏi chữ ký của bạn. Các tài liệu bạn đã ký vẫn giữ chữ ký đó."
+confirm = "Xóa"
+title = "Xóa chữ ký này?"
+
+[sign.wallet.draw]
+bold = "Bút đậm"
+clear = "Xóa"
+fine = "Bút mảnh"
+hint = "Ký phía trên dòng"
+medium = "Bút vừa"
+pad = "Bảng ký"
+pen = "Bút"
+tip = "Sử dụng chuột, bàn di chuột, bút hoặc ngón tay"
+undo = "Hoàn tác"
+
+[sign.wallet.ink]
+black = "Mực đen"
+blue = "Mực xanh"
+label = "Mực"
+navy = "Mực xanh navy"
+
+[sign.wallet.intro]
+body = "Tạo một lần. Chữ ký được lưu ở đây, sẵn sàng cho mọi tài liệu bạn ký."
+privacy = "Chữ ký đã lưu là riêng tư với bạn trừ khi bạn chọn chia sẻ chúng."
+privacyBrowser = "Chữ ký đã lưu sẽ ở trong trình duyệt này."
+title = "Thêm chữ ký của bạn"
+
+[sign.wallet.menu]
+delete = "Xóa"
+discard = "Hủy bỏ"
+makeDefault = "Đặt làm mặc định"
+options = "Tùy chọn cho {{name}}"
+place = "Đặt trên trang"
+removeDefault = "Bỏ làm mặc định"
+rename = "Đổi tên"
+save = "Lưu vào chữ ký của tôi"
+share = "Chia sẻ với mọi người"
+stop = "Dừng đặt"
+
+[sign.wallet.phone]
+expires = "Hết hạn sau {{time}}"
+qr = "QR code để ký trên điện thoại của bạn"
+received = "Đã nhận từ điện thoại của bạn"
+receiveFailed = "Không thể đọc chữ ký đó. Quét mã mới để thử lại."
+step1 = "Quét mã bằng máy ảnh điện thoại của bạn"
+step1Hint = "Mã sẽ mở trong trình duyệt điện thoại, không cần ứng dụng."
+step2 = "Vẽ, nhập hoặc chụp chữ ký của bạn"
+step2Hint = "Một canvas lớn được thiết kế cho ngón tay."
+step3 = "Chữ ký tự động xuất hiện ở đây"
+step3Hint = "Giữ cửa sổ này mở trong khi bạn ký."
+waiting = "Đang chờ điện thoại của bạn..."
+
+[sign.wallet.placed]
+empty = "Các chữ ký bạn đặt trên trang sẽ được liệt kê ở đây."
+fallbackName = "Chữ ký"
+page = "Trang {{page}}"
+remove = "Xóa {{name}}"
+show = "Hiển thị {{name}} trên trang"
+title = "Trên tài liệu này ({{count}})"
+
+[sign.wallet.rename]
+save = "Lưu"
+title = "Đổi tên chữ ký"
+
+[sign.wallet.status]
+idle = "Chọn một chữ ký để đặt"
+placing = "Nhấp vào trang để đặt {{name}}."
+stop = "Dừng"
+
+[sign.wallet.tabs]
+draw = "Vẽ"
+phone = "Điện thoại"
+type = "Nhập"
+upload = "Tải lên"
+
+[sign.wallet.toast]
+applyFailed = "Không thể áp dụng chữ ký"
+applyFailedBody = "Chữ ký của bạn vẫn còn trên tài liệu. Hãy thử lại."
+deleteFailed = "Không thể xóa chữ ký"
+draftExists = "Trước tiên hãy lưu hoặc hủy bỏ chữ ký chưa lưu của bạn"
+initialsFailed = "Không thể lưu chữ cái đầu của bạn"
+initialsPartial = "Chữ ký của bạn đã được lưu, nhưng chữ cái đầu thì chưa. Hãy thử lưu chữ cái đầu riêng."
+renameFailed = "Không thể đổi tên chữ ký"
+saved = "Đã lưu vào chữ ký của bạn"
+saveFailed = "Không thể lưu chữ ký"
+saveFailedBody = "Chữ ký vẫn sẵn sàng để đặt trên tài liệu này."
+shared = "Đã chia sẻ với mọi người"
+shareFailed = "Không thể chia sẻ chữ ký"
+
+[sign.wallet.type]
+initials = "Chữ cái đầu"
+initialsLimit = "Lưu chữ cái đầu cần hai vị trí chữ ký trống."
+name = "Tên của bạn"
+namePlaceholder = "Nhập tên của bạn"
+previewName = "Tên của bạn"
+saveInitials = "Đồng thời lưu chữ cái đầu của tôi"
+style = "Kiểu"
+styleOption = "Kiểu {{index}}"
+
+[sign.wallet.upload]
+browse = "hoặc duyệt tệp"
+drop = "Thả hình ảnh vào đây"
+failed = "Không thể đọc hình ảnh đó."
+hint = "PNG, JPG hoặc WebP tối đa {{size}} MB. Nền trắng sẽ tự động được xóa."
+ink = "Màu mực"
+inkBlack = "Đen"
+inkBlue = "Xanh"
+inkOriginal = "Gốc"
+preview = "Xem trước chữ ký đã tải lên"
+processing = "Đang làm sạch hình ảnh..."
+rejected = "Chọn hình ảnh PNG, JPG hoặc WebP tối đa {{size}} MB."
+removeBackground = "Xóa nền"
+removeBackgroundHint = "Giấy trắng trở nên trong suốt"
+replace = "Thay thế"
+rotate = "Xoay"
+rotateLeft = "Xoay trái"
+rotateRight = "Xoay phải"
+trim = "Cắt gọn theo chữ ký"
+trimHint = "Cắt bỏ khoảng trống xung quanh"
 
 [signatureSettings.tooltip]
 header = "Cài đặt giao diện chữ ký"
@@ -12565,7 +12731,7 @@ accessLimitedCommenter = "Quyền bình luận sắp ra mắt. Hãy yêu cầu q
 accessLimitedTitle = "Quyền truy cập hạn chế"
 accessLimitedViewer = "Liên kết này chỉ cho phép xem. Hãy yêu cầu quyền chỉnh sửa nếu bạn cần tải xuống."
 addUser = "Thêm"
-bulkDescription = "Tạo một liên kết để chia sẻ tất cả tệp đã chọn với người dùng đã đăng nhập."
+bulkDescription = "Tạo một liên kết để chia sẻ tất cả các tệp đã chọn với người dùng đã đăng nhập."
 bulkTitle = "Chia sẻ tệp đã chọn"
 commenterHint = "Tính năng bình luận sắp ra mắt."
 copied = "Đã sao chép liên kết vào bộ nhớ tạm"

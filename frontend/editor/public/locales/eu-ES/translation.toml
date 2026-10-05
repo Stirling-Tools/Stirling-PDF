@@ -1529,7 +1529,7 @@ label = "Eskatu lehendik dagoen Stirling kontu bat"
 
 [admin.settings.mcp.resourceId]
 description = "Zerbitzari honen /mcp URL publikoa. Tokenek beren audience-an zerrendatu behar dute (RFC 8707), bestela baztertu egingo dira."
-label = "Resource ID"
+label = "Baliabidearen ID"
 
 [admin.settings.mcp.scopes]
 description = "Eskatu mcp.tools.read irakurketa-eragiketetarako eta mcp.tools.write idazketa/AI eragiketetarako."
@@ -2351,7 +2351,7 @@ label = "Ireki {{title}}-rako menua"
 [automate.importModal]
 cancel = "Ezeztatu"
 confirm = "Inportatu"
-detectedAutomation = "Automate JSON"
+detectedAutomation = "Automatizazio JSON"
 detectedFolderScan = "Karpeta-eskaneatze JSON"
 dropHint = "Jaregin JSON hemen edo egin klik fitxategi bat aukeratzeko"
 dropSubhint = "Bai Automate bai Karpeta-eskaneatze konfigurazioak onartzen dira"
@@ -3505,7 +3505,7 @@ resume = "Curriculuma"
 retrospective = "Atzera begirakoa"
 return-authorization = "Itzulketa-baimena"
 risk-assessment = "Arrisku-ebaluazioa"
-roadmap = "Roadmap"
+roadmap = "Ibilbide-orria"
 safety-data-sheet = "Segurtasun-datuen orria"
 safety-procedure = "Segurtasun-prozedura"
 sales-proposal = "Salmenta-proposamena"
@@ -3980,7 +3980,7 @@ tip = "Every action your assistant runs is performed as your account and counts 
 viewApiKeys = "Ikusi API gakoak"
 
 [config.mcp.copy]
-configLabel = "Config"
+configLabel = "Konfigurazioa"
 copied = "Kopiatuta"
 copy = "Kopiatu"
 endpointLabel = "Endpoint URL"
@@ -4215,7 +4215,7 @@ scarf = "Scarf Pixel"
 
 [createPortfolio]
 coverTitle = "Azaleko orriaren izenburua"
-coverTitlePlaceholder = "PDF Portfolio"
+coverTitlePlaceholder = "PDF portfolioa"
 description = "Hautatutako fitxategi bakoitza osorik mantentzen da PDF berrian, edozein motatakoa dela ere. Portfolioak onartzen ez dituzten irakurgailuek azaleko orri bat erakusten dute fitxategiak erantsita."
 goToFileEditor = "Joan fitxategi-editorera"
 info = "Zure fitxategiak PDF bakarrean konbinatzen ditu, fitxategi bakoitza barruan osorik mantenduz. Ireki emaitza fitxategiak arakatzeko eta edozein bere kabuz ikusi edo gordetzeko."
@@ -5966,7 +5966,7 @@ showCookieBanner = "Cookie-hobespenak"
 terms = "Baldintzak eta erabilera-baldintzak"
 
 [licenses]
-title = "3rd Party Licenses"
+title = "Hirugarrenen lizentziak"
 
 [localMode]
 automationUnavailable = "Hasi saioa Stirling Cloud-en edo auto-ostatatutako zerbitzari batean prozesatze-karpetak eta pipelineak erabiltzeko."
@@ -6335,7 +6335,7 @@ activeFiles = "<strong>Fitxategi aktiboak</strong> ikuspegiak tresnan kargatu di
 allTools = "Hau <strong>Tresnak</strong> panela da; bertan eskuragarri dauden PDF tresna guztiak arakatu eta hauta ditzakezu."
 close = "Itxi"
 cropSettings = "Orain moztu nahi dugun fitxategia hautatu dugunez, <strong>Moztu</strong> tresna konfigura dezakegu PDFa moztu nahi dugun eremua aukeratzeko."
-dialogLabel = "Onboarding"
+dialogLabel = "Hasierako gida"
 fileCheckbox = "Lan-mahaiko fitxategiak prozesatzeko hautatzen dira. Batch eragiketetarako hainbat fitxategi hauta ditzakezu ezkerreko fitxategien alboko barran."
 fileReplacement = "Aldatutako fitxategiak automatikoki ordezkatuko du jatorrizkoa Lan-mahaian, errazago beste tresna batzuekin berriz prozesatzeko."
 filesButton = "Sarbide azkarreko barrako <strong>Fitxategiak</strong> botoiak PDFak igotzea ahalbidetzen dizu tresnekin erabiltzeko."
@@ -7345,10 +7345,19 @@ mixed = "{{count}} objektu"
 multiGeometry = "Hautatu objektu bakarra bere kokapena eta tamaina editatzeko."
 nothingSelected = "Ez dago ezer hautatuta"
 nothingSelectedHint = "Egin klik orriko edozein testu, irudi edo forman hemen editatzeko."
+ocrDocumentChanged = "Dokumentua aldatu egin da OCR exekutatzen ari zen bitartean. Exekutatu OCR berriro azken aldaketak sartzeko."
+ocrInvalidResult = "OCR-k ez du PDF bat itzuli. Saiatu berriro."
+ocrNoLanguages = "Ez dago OCR hizkuntzarik instalatuta zerbitzarian."
+ocrRunning = "Testua ezagutzen..."
+ocrUnavailable = "OCR ez dago erabilgarri zerbitzari honetan."
 oneImage = "Irudia"
 oneShape = "Forma"
 oneText = "Testua"
 pages = "Orriak"
+runOcr = "Exekutatu OCR"
+scanHint_one = "Orrialde hau eskaneatutako irudi bat da, editatzeko testurik gabe. Exekutatu OCR lehenik haren testua editagarri egiteko."
+scanHint_other = "{{count}} orrialde eskaneatutako irudiak dira, editatzeko testurik gabe. Exekutatu OCR lehenik haien testua editagarri egiteko."
+scannedText = "Eskaneatutako testua · aldatutako hitzak estali eta bat datorren letra-tipo batean berriro marrazten dira."
 tabDocument = "Dokumentua"
 tabSelected = "Hautatuta"
 textBoxes = "Testu-koadroak"
@@ -7549,9 +7558,9 @@ tags = "artxibo,epe-luze,estandar,bihurketa,biltegiratzea,kontserbazioa"
 title = "PDFa PDF/A bihurtu"
 
 [pdfToPDFUA]
-header = "PDF To PDF/UA"
+header = "PDFtik PDF/UAra"
 tags = "irisgarritasuna,irisgarria,etiketatua,pantaila-irakurgailua,wcag,eaa,section 508,bihurketa"
-title = "PDF To PDF/UA"
+title = "PDFtik PDF/UAra"
 
 [pdfToPDFX]
 tags = "inprimaketa,estandarra,bihurketa,produkzioa,aurre-inprimaketa,artxiboa"
@@ -8170,7 +8179,7 @@ sub = "PDF Editor osoa."
 [portal.billing.identity.processor]
 chipMetered = "Neurtutako prozesamendua"
 chipPipelines = "Pipelineak eta API"
-name = "Processor"
+name = "Prozesadorea"
 sub = "Team oinarria gehi {{rate}} kreditu bakoitzeko"
 subNoRate = "Team oinarria gehi neurtutako prozesamendua"
 
@@ -8289,7 +8298,7 @@ prepaidRemaining = "Geratzen diren aurrez ordaindutako kredituak"
 prepaidTooltip = "Neurtutako fakturazioa baino lehen erabiltzen dira, eta zure gastu-mugatik kanpo."
 raiseLimit = "Igo muga"
 remainingOf = "{{remaining}} / {{total}}"
-rowName = "Processor"
+rowName = "Prozesadorea"
 spendAgainstLimit = "{{spend}} / {{cap}} neurtuta ziklo honetan"
 
 [portal.billing.seats]
@@ -8534,7 +8543,7 @@ label = "Erabiltzaile-izena"
 [portal.connections.types.clamav]
 baseUrlPlaceholder = "http://clamav-rest:9000"
 description = "Eskaneatu dokumentuak malware bila zuk exekutatzen duzun zerbitzari batean - ezer ez da zure saretik ateratzen."
-label = "ClamAV (self-hosted)"
+label = "ClamAV (autoostatatua)"
 
 [portal.connections.types.cloudmersive]
 description = "Dokumentuen birus- eta eduki-eskaneatzea politika batean."
@@ -8656,7 +8665,7 @@ label = "Aplikazioaren pasahitza"
 [portal.connections.types.presidio]
 baseUrlPlaceholder = "http://presidio-analyzer:3000"
 description = "Detektatu datu pertsonalak dokumentuaren testuan zuk exekutatzen duzun Presidio zerbitzari bat erabiliz."
-label = "Presidio (self-hosted)"
+label = "Presidio (autoostatatua)"
 
 [portal.connections.types.purview]
 description = "Irakurri eta aplikatu Microsoft Purview sentsibilitate-etiketak PDFetan."
@@ -8811,7 +8820,7 @@ title = "Dokumentazioa ez dago erabilgarri"
 [portal.docs.quickstart]
 eyebrow = "HASTEN"
 lead = "Bidali zure lehen dokumentua endpoint tipatu batera eta jaso JSON egituratua hiru urratsetan. Ez dago eredu-entrenamendurik, ez prompt engineering-ik."
-title = "Quickstart"
+title = "Hasiera azkarra"
 
 [portal.docs.quickstart.callout]
 bodyAfterLink = "kopiatu-itsasteko errezetetarako."
@@ -9112,7 +9121,7 @@ done = "Eginda"
 guide = "Ireki {{name}} gida"
 openInBrowser = "Ireki arakatzailean ordez"
 sectionDesktop = "Mahaigaineko aplikazioa"
-sectionSelfHosted = "Self-hosted"
+sectionSelfHosted = "Autoostatatua"
 title = "Instalatu Stirling PDF Editor"
 
 [portal.home.download.docker]
@@ -9171,7 +9180,7 @@ options = "Ikusi zabalkunde-aukerak"
 start = "Zabaldu editorea"
 
 [portal.home.editor.target]
-cloud = "Managed Cloud"
+cloud = "Kudeatutako Cloud"
 docker = "Norberak ostatatua · Docker"
 kubernetes = "Norberak ostatatua · Kubernetes"
 
@@ -10486,7 +10495,7 @@ subtitle = "Zure solutions engineer-ek hedapenean zehar gidatuko du zure taldea.
 title = "Programatu dei bat"
 
 [portal.procurement.setup]
-airgap = "Air-gapped"
+airgap = "Saretik isolatua"
 airgapSub = "Zigilatua, irteerarik gabe"
 back = "Atzera"
 businessName = "Enpresaren izena"
@@ -12275,6 +12284,163 @@ image = "Irudia"
 saved = "Gordeta"
 text = "Testua"
 title = "Sinadura mota"
+
+[sign.wallet]
+apply_one = "Aplikatu {{count}} sinadura"
+apply_other = "Aplikatu {{count}} sinadura"
+applyEmpty = "Aplikatu sinadurak"
+count = "{{count}} / {{max}}"
+default = "Lehenetsia"
+loading = "Zure sinadurak kargatzen..."
+new = "Sinadura berria"
+shared = "Partekatua"
+sharedHint = "Denek erabil ditzakete hauek"
+unsaved = "Gorde gabe"
+yours = "Zure sinadurak"
+
+[sign.wallet.create]
+cancel = "Utzi"
+full = "Zure liburutegia beteta dago ({{max}} sinadura). Ezabatu bat gehiago gordetzeko."
+makeDefault = "Ezarri lehenetsi gisa"
+method = "Nola sortu"
+name = "Izena"
+save = "Gorde nire sinaduretan"
+saveBrowserHint = "Nabigatzaile honetan gordeko da, hurrengorako prest."
+saveHint = "Hurrengoan sinatzean berrerabiltzeko prest."
+subtitle = "Sortu behin, berrerabili edozein dokumentutan."
+title = "Sinadura berria"
+use = "Erabili sinadura"
+who = "Nork erabil dezake"
+whoEveryone = "Denek"
+whoMe = "Nik bakarrik"
+
+[sign.wallet.defaultName]
+draw = "Nire sinadura"
+initials = "Inizialak"
+phone = "Telefonoko sinadura"
+type = "Idatzitako sinadura"
+upload = "Kargatutako sinadura"
+
+[sign.wallet.delete]
+body = "\"{{name}}\" zure sinaduretatik kendu da. Dagoeneko sinatu dituzun dokumentuek mantendu egiten dute."
+confirm = "Ezabatu"
+title = "Sinadura hau ezabatu?"
+
+[sign.wallet.draw]
+bold = "Luma lodia"
+clear = "Garbitu"
+fine = "Luma fina"
+hint = "Sinatu lerroaren gainean"
+medium = "Luma ertaina"
+pad = "Sinadura-taula"
+pen = "Luma"
+tip = "Erabili sagua, trackpad-a, luma edo hatza"
+undo = "Desegin"
+
+[sign.wallet.ink]
+black = "Tinta beltza"
+blue = "Tinta urdina"
+label = "Tinta"
+navy = "Tinta urdin iluna"
+
+[sign.wallet.intro]
+body = "Sortu behin. Hemen gordetzen da, sinatzen duzun dokumentu guztietarako prest."
+privacy = "Gordetako sinadurak pribatuak dira zuretzat, partekatzea aukeratzen ez baduzu."
+privacyBrowser = "Gordetako sinadurak nabigatzaile honetan geratzen dira."
+title = "Gehitu zure sinadura"
+
+[sign.wallet.menu]
+delete = "Ezabatu"
+discard = "Baztertu"
+makeDefault = "Ezarri lehenetsi gisa"
+options = "{{name}} sinadurarako aukerak"
+place = "Jarri orrialdean"
+removeDefault = "Kendu lehenetsi gisa"
+rename = "Aldatu izena"
+save = "Gorde nire sinaduretan"
+share = "Partekatu denekin"
+stop = "Utzi jartzeari"
+
+[sign.wallet.phone]
+expires = "{{time}} barru iraungiko da"
+qr = "QR kodea telefonoan sinatzeko"
+received = "Zure telefonotik jasota"
+receiveFailed = "Ezin izan da sinadura hori irakurri. Eskaneatu kode berria berriro saiatzeko."
+step1 = "Eskaneatu kodea zure telefonoaren kamerarekin"
+step1Hint = "Telefonoaren nabigatzailean irekitzen da; ez da aplikaziorik behar."
+step2 = "Marraztu, idatzi edo atera argazkia zure sinadurari"
+step2Hint = "Hatzarekin erabiltzeko egindako marrazteko eremu handi bat."
+step3 = "Automatikoki agertuko da hemen"
+step3Hint = "Mantendu leiho hau irekita sinatzen duzun bitartean."
+waiting = "Zure telefonoaren zain..."
+
+[sign.wallet.placed]
+empty = "Orrialdean jartzen dituzun sinadurak hemen zerrendatzen dira."
+fallbackName = "Sinadura"
+page = "{{page}}. orrialdea"
+remove = "Kendu {{name}}"
+show = "Erakutsi {{name}} orrialdean"
+title = "Dokumentu honetan ({{count}})"
+
+[sign.wallet.rename]
+save = "Gorde"
+title = "Aldatu sinaduraren izena"
+
+[sign.wallet.status]
+idle = "Aukeratu sinadura bat jartzeko"
+placing = "Egin klik orrialdean {{name}} jartzeko."
+stop = "Gelditu"
+
+[sign.wallet.tabs]
+draw = "Marraztu"
+phone = "Telefonoa"
+type = "Idatzi"
+upload = "Kargatu"
+
+[sign.wallet.toast]
+applyFailed = "Ezin izan dira sinadurak aplikatu"
+applyFailedBody = "Zure sinadurak oraindik dokumentuan daude. Saiatu berriro."
+deleteFailed = "Ezin izan da sinadura ezabatu"
+draftExists = "Gorde edo baztertu gorde gabeko sinadura lehenik"
+initialsFailed = "Ezin izan dira zure inizialak gorde"
+initialsPartial = "Zure sinadura gorde da, baina zure inizialak ez. Saiatu zure inizialak bereizita gordetzen."
+renameFailed = "Ezin izan da sinaduraren izena aldatu"
+saved = "Zure sinaduretan gorde da"
+saveFailed = "Ezin izan da sinadura gorde"
+saveFailedBody = "Oraindik dokumentu honetan jartzeko prest dago."
+shared = "Denekin partekatuta"
+shareFailed = "Ezin izan da sinadura partekatu"
+
+[sign.wallet.type]
+initials = "Inizialak"
+initialsLimit = "Inizialak gordetzeko bi sinadura-leku libre behar dira."
+name = "Zure izena"
+namePlaceholder = "Idatzi zure izena"
+previewName = "Zure izena"
+saveInitials = "Gorde nire inizialak ere"
+style = "Estiloa"
+styleOption = "{{index}}. estiloa"
+
+[sign.wallet.upload]
+browse = "edo arakatu fitxategiak"
+drop = "Jaregin irudi bat hemen"
+failed = "Ezin izan da irudi hori irakurri."
+hint = "PNG, JPG edo WebP, gehienez {{size}} MB. Atzeko plano zuriak automatikoki kentzen dira."
+ink = "Tinta-kolorea"
+inkBlack = "Beltza"
+inkBlue = "Urdina"
+inkOriginal = "Jatorrizkoa"
+preview = "Kargatutako sinaduraren aurrebista"
+processing = "Irudia garbitzen..."
+rejected = "Aukeratu PNG, JPG edo WebP irudi bat, gehienez {{size}} MB."
+removeBackground = "Kendu atzeko planoa"
+removeBackgroundHint = "Paper zuria garden bihurtzen da"
+replace = "Ordeztu"
+rotate = "Biratu"
+rotateLeft = "Biratu ezkerrera"
+rotateRight = "Biratu eskuinera"
+trim = "Moztu sinadurara"
+trimHint = "Inguruko espazio hutsa mozten du"
 
 [signatureSettings.tooltip]
 header = "Sinaduraren itxuraren ezarpenak"

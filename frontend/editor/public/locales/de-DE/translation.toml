@@ -244,7 +244,7 @@ sharedHeading = "Geteilte Signaturen"
 
 [addImage.saved.type]
 canvas = "Zeichnung"
-image = "Upload"
+image = "Hochladen"
 text = "Text"
 
 [addImage.step]
@@ -464,7 +464,7 @@ sharedHeading = "Geteilte Signaturen"
 
 [addText.saved.type]
 canvas = "Zeichnung"
-image = "Upload"
+image = "Hochladen"
 text = "Text"
 
 [addText.step]
@@ -6818,7 +6818,7 @@ bullet1 = "<strong>all</strong> → wählt alle Seiten"
 title = "Spezielle Schlüsselwörter"
 
 [payg.activity]
-docs = "docs"
+docs = "Dokumente"
 empty = "In diesem Zeitraum noch keine abrechenbare Aktivität."
 subtitle = "Nur AI und Automatisierung werden von Ihrem Budget abgezogen. Alltägliche Tools sind kostenlos und werden hier nicht aufgeführt."
 title = "Aktuelle abrechenbare Aktivität"
@@ -7345,10 +7345,19 @@ mixed = "{{count}} Objekte"
 multiGeometry = "Wählen Sie ein einzelnes Objekt aus, um seine Position und Größe zu bearbeiten."
 nothingSelected = "Nichts ausgewählt"
 nothingSelectedHint = "Klicken Sie auf Text, Bild oder Form auf der Seite, um es hier zu bearbeiten."
+ocrDocumentChanged = "Das Dokument wurde geändert, während OCR ausgeführt wurde. Führen Sie OCR erneut aus, um Ihre neuesten Änderungen einzubeziehen."
+ocrInvalidResult = "OCR hat keine PDF zurückgegeben. Bitte versuchen Sie es erneut."
+ocrNoLanguages = "Auf dem Server sind keine OCR-Sprachen installiert."
+ocrRunning = "Text wird erkannt..."
+ocrUnavailable = "OCR ist auf diesem Server nicht verfügbar."
 oneImage = "Bild"
 oneShape = "Form"
 oneText = "Text"
 pages = "Seiten"
+runOcr = "OCR ausführen"
+scanHint_one = "Diese Seite ist ein gescanntes Bild ohne bearbeitbaren Text. Führen Sie zuerst OCR aus, um den Text bearbeitbar zu machen."
+scanHint_other = "{{count}} Seiten sind gescannte Bilder ohne bearbeitbaren Text. Führen Sie zuerst OCR aus, um den Text bearbeitbar zu machen."
+scannedText = "Gescannter Text · geänderte Wörter werden abgedeckt und in einer passenden Schrift neu gezeichnet."
 tabDocument = "Dokument"
 tabSelected = "Ausgewählt"
 textBoxes = "Textfelder"
@@ -8431,10 +8440,10 @@ helperText = "Stirling speichert dies verschlüsselt und zeigt es nie wieder an.
 label = "Access Token"
 
 [portal.connections.commonFields.apiKey]
-label = "API key"
+label = "API-Schlüssel"
 
 [portal.connections.commonFields.apiToken]
-label = "API token"
+label = "API-Token"
 
 [portal.connections.commonFields.baseUrl]
 helperText = "Schritte, die diese Verbindung verwenden, können nur Pfade unter dieser URL aufrufen, niemals einen anderen Host."
@@ -8487,7 +8496,7 @@ label = "Authentifizierung"
 label = "Benutzername und Passwort"
 
 [portal.connections.types.api.fields.authType.options.bearer]
-label = "Bearer token"
+label = "Bearer-Token"
 
 [portal.connections.types.api.fields.authType.options.header]
 label = "Token in einem benutzerdefinierten Header"
@@ -8559,10 +8568,10 @@ label = "Server-URL"
 placeholder = "https://your-org.consignocloud.com/api/v1"
 
 [portal.connections.types.consigno.fields.clientId]
-label = "API key"
+label = "API-Schlüssel"
 
 [portal.connections.types.consigno.fields.clientSecret]
-label = "API secret"
+label = "API-Secret"
 
 [portal.connections.types.consigno.fields.password]
 label = "Passwort"
@@ -8629,10 +8638,10 @@ helperText = "Passen Sie die Authentication an, die im n8n Webhook-Knoten einges
 label = "Webhook-Authentifizierung"
 
 [portal.connections.types.n8n.fields.authType.options.basic]
-label = "Basic auth"
+label = "Basic Auth"
 
 [portal.connections.types.n8n.fields.authType.options.header]
-label = "Header auth"
+label = "Header Auth"
 
 [portal.connections.types.n8n.fields.authType.options.none]
 label = "Keine"
@@ -8664,14 +8673,14 @@ label = "Microsoft Purview"
 
 [portal.connections.types.purview.fields.clientId]
 helperText = "Optional. Nur erforderlich, um Labels nach Name auszuwählen; Labeling funktioniert auch ohne."
-label = "Application (client) ID"
+label = "Application (Client) ID"
 
 [portal.connections.types.purview.fields.clientSecret]
-label = "Client secret"
+label = "Client Secret"
 
 [portal.connections.types.purview.fields.tenantId]
 helperText = "Wird auf jedes Label als SiteId gestempelt, damit Purview-fähige Tools wissen, welche Organisation es angewendet hat."
-label = "Directory (tenant) ID"
+label = "Directory (Tenant) ID"
 placeholder = "cb46c030-1825-4e81-a295-151c039dbf02"
 
 [portal.connections.types.s3]
@@ -8679,7 +8688,7 @@ description = "Ein S3-Bucket, aus dem Quellen lesen und in den Pipeline-Ausgaben
 label = "S3-Speicher"
 
 [portal.connections.types.s3.fields.accessKeyId]
-label = "Access key ID"
+label = "Access Key ID"
 
 [portal.connections.types.s3.fields.bucket]
 label = "Bucket"
@@ -8692,7 +8701,7 @@ label = "Endpoint"
 label = "Region"
 
 [portal.connections.types.s3.fields.secretAccessKey]
-label = "Secret access key"
+label = "Secret Access Key"
 
 [portal.connections.types.sendgrid]
 description = "Ein Dokument oder eine Benachrichtigung per E-Mail senden, wenn eine Richtlinie ausgeführt wird."
@@ -10889,7 +10898,7 @@ scope = "Dateiimport"
 
 [provider.googledrive.apiKey]
 description = "Google API Key für die Google Picker API aus der Google Cloud Console"
-label = "API Key"
+label = "API-Schlüssel"
 
 [provider.googledrive.appId]
 description = "Google Drive App-ID aus der Google Cloud Console"
@@ -11667,10 +11676,10 @@ title = "Über"
 
 [settings.ai]
 documents = "Dokumente & RAG"
-general = "AI Engine"
+general = "KI-Engine"
 limits = "Limits & Leistung"
 models = "Modelle & Anbieter"
-title = "AI"
+title = "KI"
 
 [settings.billing]
 title = "Abrechnung"
@@ -12276,6 +12285,163 @@ saved = "Gespeichert"
 text = "Text"
 title = "Signaturtyp"
 
+[sign.wallet]
+apply_one = "{{count}} Signatur anwenden"
+apply_other = "{{count}} Signaturen anwenden"
+applyEmpty = "Signaturen anwenden"
+count = "{{count}} von {{max}}"
+default = "Standard"
+loading = "Ihre Signaturen werden geladen..."
+new = "Neue Signatur"
+shared = "Geteilt"
+sharedHint = "Jeder kann diese verwenden"
+unsaved = "Ungespeichert"
+yours = "Ihre Signaturen"
+
+[sign.wallet.create]
+cancel = "Abbrechen"
+full = "Ihre Bibliothek ist voll ({{max}} Signaturen). Löschen Sie eine, um weitere zu speichern."
+makeDefault = "Als Standard festlegen"
+method = "So erstellen Sie sie"
+name = "Name"
+save = "In meinen Signaturen speichern"
+saveBrowserHint = "Wird in diesem Browser gespeichert und ist beim nächsten Mal bereit."
+saveHint = "Bereit zur Wiederverwendung bei Ihrer nächsten Signatur."
+subtitle = "Einmal erstellen, in jedem Dokument wiederverwenden."
+title = "Neue Signatur"
+use = "Signatur verwenden"
+who = "Wer kann sie verwenden"
+whoEveryone = "Jeder"
+whoMe = "Nur ich"
+
+[sign.wallet.defaultName]
+draw = "Meine Signatur"
+initials = "Initialen"
+phone = "Telefon-Signatur"
+type = "Getippte Signatur"
+upload = "Hochgeladene Signatur"
+
+[sign.wallet.delete]
+body = "\"{{name}}\" wird aus Ihren Signaturen entfernt. Bereits von Ihnen signierte Dokumente behalten sie."
+confirm = "Löschen"
+title = "Diese Signatur löschen?"
+
+[sign.wallet.draw]
+bold = "Dicker Stift"
+clear = "Löschen"
+fine = "Feiner Stift"
+hint = "Über der Linie unterschreiben"
+medium = "Mittlerer Stift"
+pad = "Signaturfeld"
+pen = "Stift"
+tip = "Verwenden Sie Maus, Trackpad, Stift oder Finger"
+undo = "Rückgängig"
+
+[sign.wallet.ink]
+black = "Schwarze Tinte"
+blue = "Blaue Tinte"
+label = "Tinte"
+navy = "Marineblaue Tinte"
+
+[sign.wallet.intro]
+body = "Einmal erstellen. Sie wird hier gespeichert und ist für jedes Dokument bereit, das Sie signieren."
+privacy = "Gespeicherte Signaturen sind privat für Sie, es sei denn, Sie teilen sie."
+privacyBrowser = "Gespeicherte Signaturen bleiben in diesem Browser."
+title = "Ihre Signatur hinzufügen"
+
+[sign.wallet.menu]
+delete = "Löschen"
+discard = "Verwerfen"
+makeDefault = "Als Standard festlegen"
+options = "Optionen für {{name}}"
+place = "Auf Seite platzieren"
+removeDefault = "Nicht mehr als Standard verwenden"
+rename = "Umbenennen"
+save = "In meinen Signaturen speichern"
+share = "Mit allen teilen"
+stop = "Platzieren beenden"
+
+[sign.wallet.phone]
+expires = "Läuft in {{time}} ab"
+qr = "QR code zum Signieren auf Ihrem Telefon"
+received = "Von Ihrem Telefon empfangen"
+receiveFailed = "Diese Signatur konnte nicht gelesen werden. Scannen Sie den neuen Code, um es erneut zu versuchen."
+step1 = "Scannen Sie den Code mit der Kamera Ihres Telefons"
+step1Hint = "Er wird im Browser des Telefons geöffnet, keine App erforderlich."
+step2 = "Zeichnen, tippen oder fotografieren Sie Ihre Signatur"
+step2Hint = "Ein großer Canvas, gemacht für einen Finger."
+step3 = "Sie erscheint automatisch hier"
+step3Hint = "Lassen Sie dieses Fenster geöffnet, während Sie signieren."
+waiting = "Warten auf Ihr Telefon..."
+
+[sign.wallet.placed]
+empty = "Signaturen, die Sie auf der Seite platzieren, werden hier aufgelistet."
+fallbackName = "Signatur"
+page = "Seite {{page}}"
+remove = "{{name}} entfernen"
+show = "{{name}} auf der Seite anzeigen"
+title = "In diesem Dokument ({{count}})"
+
+[sign.wallet.rename]
+save = "Speichern"
+title = "Signatur umbenennen"
+
+[sign.wallet.status]
+idle = "Wählen Sie eine Signatur aus, um sie zu platzieren"
+placing = "Klicken Sie auf die Seite, um {{name}} zu platzieren."
+stop = "Stopp"
+
+[sign.wallet.tabs]
+draw = "Zeichnen"
+phone = "Telefon"
+type = "Tippen"
+upload = "Hochladen"
+
+[sign.wallet.toast]
+applyFailed = "Signaturen konnten nicht angewendet werden"
+applyFailedBody = "Ihre Signaturen sind noch im Dokument. Versuchen Sie es erneut."
+deleteFailed = "Die Signatur konnte nicht gelöscht werden"
+draftExists = "Speichern oder verwerfen Sie zuerst Ihre ungespeicherte Signatur"
+initialsFailed = "Ihre Initialen konnten nicht gespeichert werden"
+initialsPartial = "Ihre Signatur wurde gespeichert, aber Ihre Initialen nicht. Versuchen Sie, Ihre Initialen separat zu speichern."
+renameFailed = "Die Signatur konnte nicht umbenannt werden"
+saved = "In Ihren Signaturen gespeichert"
+saveFailed = "Die Signatur konnte nicht gespeichert werden"
+saveFailedBody = "Sie ist weiterhin bereit, in diesem Dokument platziert zu werden."
+shared = "Mit allen geteilt"
+shareFailed = "Die Signatur konnte nicht geteilt werden"
+
+[sign.wallet.type]
+initials = "Initialen"
+initialsLimit = "Zum Speichern von Initialen sind zwei freie Signaturplätze erforderlich."
+name = "Ihr Name"
+namePlaceholder = "Geben Sie Ihren Namen ein"
+previewName = "Ihr Name"
+saveInitials = "Meine Initialen ebenfalls speichern"
+style = "Stil"
+styleOption = "Stil {{index}}"
+
+[sign.wallet.upload]
+browse = "oder Dateien durchsuchen"
+drop = "Bild hier ablegen"
+failed = "Dieses Bild konnte nicht gelesen werden."
+hint = "PNG, JPG oder WebP bis zu {{size}} MB. Weiße Hintergründe werden automatisch entfernt."
+ink = "Tintenfarbe"
+inkBlack = "Schwarz"
+inkBlue = "Blau"
+inkOriginal = "Original"
+preview = "Vorschau der hochgeladenen Signatur"
+processing = "Bild wird bereinigt..."
+rejected = "Wählen Sie ein PNG-, JPG- oder WebP-Bild mit bis zu {{size}} MB aus."
+removeBackground = "Hintergrund entfernen"
+removeBackgroundHint = "Weißes Papier wird transparent"
+replace = "Ersetzen"
+rotate = "Drehen"
+rotateLeft = "Nach links drehen"
+rotateRight = "Nach rechts drehen"
+trim = "Auf Signatur zuschneiden"
+trimHint = "Schneidet den leeren Bereich darum herum ab"
+
 [signatureSettings.tooltip]
 header = "Einstellungen für Signaturdarstellung"
 
@@ -12423,9 +12589,9 @@ label = "Zielseitengröße"
 a3 = "A3 (297 × 420 mm)"
 a4 = "A4 (210 × 297 mm)"
 a5 = "A5 (148 × 210 mm)"
-legal = "Legal (8.5 × 14 in)"
-letter = "Letter (8.5 × 11 in)"
-tabloid = "Tabloid (11 × 17 in)"
+legal = "Legal (8,5 × 14 Zoll)"
+letter = "Letter (8,5 × 11 Zoll)"
+tabloid = "Tabloid (11 × 17 Zoll)"
 
 [split.poster.xFactor]
 description = "Anzahl der Spalten, in die jede Seite unterteilt wird"
@@ -12675,7 +12841,7 @@ showMore = "{{count}} weitere anzeigen"
 docs = "Dokumente"
 files = "Dateien"
 pages = "Seiten"
-processor = "Processor"
+processor = "Prozessor"
 settings = "Einstellungen"
 tools = "Tools"
 
@@ -12839,7 +13005,7 @@ pdfTools = "PDF-Tools"
 placeholder = "Wählen Sie ein Tool, um zu starten"
 premiumFeature = "Premium-Funktion:"
 searchTools = "Tools suchen"
-toolsHeader = "PDF Tools"
+toolsHeader = "PDF-Tools"
 viewAllTools = "Alle Tools anzeigen"
 
 [toolPanel.fullscreen]
@@ -13044,10 +13210,10 @@ yearsAgo_one = "vor {{count}} Jahr"
 yearsAgo_other = "vor {{count}} Jahren"
 
 [users.cap]
-addProcessor = "+ Processor"
+addProcessor = "+ Prozessor"
 approver = "Genehmigt Richtlinie"
 editor = "Editor"
-processor = "Processor"
+processor = "Prozessor"
 
 [users.columns]
 capabilities = "Fähigkeiten"

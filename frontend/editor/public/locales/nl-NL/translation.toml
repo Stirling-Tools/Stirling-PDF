@@ -244,7 +244,7 @@ sharedHeading = "Gedeelde handtekeningen"
 
 [addImage.saved.type]
 canvas = "Tekening"
-image = "Upload"
+image = "Uploaden"
 text = "Tekst"
 
 [addImage.step]
@@ -464,7 +464,7 @@ sharedHeading = "Gedeelde handtekeningen"
 
 [addText.saved.type]
 canvas = "Tekening"
-image = "Upload"
+image = "Uploaden"
 text = "Tekst"
 
 [addText.step]
@@ -749,7 +749,7 @@ voyageai = "VoyageAI API key"
 
 [admin.settings.ai.documents.embeddingBaseUrl]
 description = "Base URL van het OpenAI-compatibele / Ollama embeddings-endpoint, bijv. http://ollama:11434/v1. Moet verwijzen naar een vertrouwd intern endpoint (SSRF-gevoelig)."
-label = "Embedding base URL"
+label = "Embedding basis-URL"
 
 [admin.settings.ai.documents.embeddingModel]
 description = "Naam van het embedding-model. Vrije tekst; suggesties zijn alleen hints."
@@ -901,7 +901,7 @@ setPlaceholder = "Opgeslagen - laat leeg om de huidige key te behouden"
 [admin.settings.ai.models.baseUrl]
 contextWindow = "Gebruik een contextvenster van ten minste 16.384 tokens. Kleinere vensters laten stilzwijgend een deel van de prompt weg. Ollama gebruikt standaard 4.096 - verhoog OLLAMA_CONTEXT_LENGTH."
 description = "Base URL van het OpenAI-compatibele / Ollama-endpoint, bijv. http://ollama:11434/v1."
-label = "Provider base URL"
+label = "Provider basis-URL"
 warning = "De base URL moet verwijzen naar een vertrouwd intern endpoint. De engine doet er server-side verzoeken naartoe, dus een niet-vertrouwde waarde is SSRF-gevoelig."
 
 [admin.settings.ai.models.fastMaxTokens]
@@ -3429,7 +3429,7 @@ maintenance-log = "Onderhoudslogboek"
 manual = "Handleiding"
 market-research = "Marktonderzoek"
 marketing-plan = "Marketingplan"
-media-kit = "Media kit"
+media-kit = "Mediakit"
 medical-invoice = "Medische factuur"
 medical-report = "Medisch rapport"
 meeting-agenda = "Vergaderagenda"
@@ -7345,10 +7345,19 @@ mixed = "{{count}} objecten"
 multiGeometry = "Selecteer één object om de positie en grootte te bewerken."
 nothingSelected = "Niets geselecteerd"
 nothingSelectedHint = "Klik op tekst, een afbeelding of een vorm op de pagina om deze hier te bewerken."
+ocrDocumentChanged = "Het document is gewijzigd terwijl OCR werd uitgevoerd. Voer OCR opnieuw uit om je laatste wijzigingen mee te nemen."
+ocrInvalidResult = "OCR heeft geen PDF geretourneerd. Probeer het opnieuw."
+ocrNoLanguages = "Er zijn geen OCR-talen op de server geïnstalleerd."
+ocrRunning = "Tekst herkennen..."
+ocrUnavailable = "OCR is niet beschikbaar op deze server."
 oneImage = "Afbeelding"
 oneShape = "Vorm"
 oneText = "Tekst"
 pages = "Pagina's"
+runOcr = "OCR uitvoeren"
+scanHint_one = "Deze pagina is een gescande afbeelding zonder tekst om te bewerken. Voer eerst OCR uit om de tekst bewerkbaar te maken."
+scanHint_other = "{{count}} pagina's zijn gescande afbeeldingen zonder tekst om te bewerken. Voer eerst OCR uit om de tekst bewerkbaar te maken."
+scannedText = "Gescande tekst · gewijzigde woorden worden bedekt en opnieuw getekend in een passend lettertype."
 tabDocument = "Document"
 tabSelected = "Geselecteerd"
 textBoxes = "Tekstvakken"
@@ -7695,7 +7704,7 @@ editingTextInPdfsCaps = "Tekst in PDF's bewerken"
 enterpriseFeatures = "Enterprise-functies (SAML, Auditing)"
 perSeatLicensing = "Licentie per seat"
 saveWithAnnualBilling = "Bespaar met jaarlijkse facturatie"
-selfHosted = "Self-hosted"
+selfHosted = "Zelf gehost"
 selfHostedOnInfrastructure = "Self-hosted op uw infrastructuur"
 ssoOAuth = "SSO (OAuth2/OIDC)"
 upToFiveUsers = "Tot 5 gebruikers"
@@ -8500,7 +8509,7 @@ label = "Inloggen voor een token"
 
 [portal.connections.types.api.fields.baseUrl]
 helperText = "Stappen die deze verbinding gebruiken, kunnen alleen paden onder deze URL aanroepen, nooit een andere host."
-label = "Base URL"
+label = "Basis-URL"
 placeholder = "https://api.example.com/v1"
 
 [portal.connections.types.api.fields.headerName]
@@ -9643,7 +9652,7 @@ toggleOn = "Documenten worden gerouteerd op basis van de eerste documentvoorwaar
 valuePlaceholder = "Voer exacte waarden in, gescheiden door komma's"
 
 [portal.pipelines.composer]
-addTool = "Tool toevoegen"
+addTool = "Een tool toevoegen"
 create = "Pipeline maken"
 createPaused = "Gepauzeerd maken"
 editingUnsupported = "Het weergeven van deze toolparams voor bewerking wordt nog niet ondersteund."
@@ -10503,7 +10512,7 @@ invitesPlaceholder = "sam@acme.com, lee@acme.com"
 scheduleCall = "Een gesprek plannen"
 seats = "Mensen die testen"
 seatsPlaceholder = "bijv. 15"
-selfhost = "Self-hosted"
+selfhost = "Zelf gehost"
 selfhostSub = "Docker of Kubernetes"
 start = "Proefperiode starten"
 stepOf = "Stap {{n}} van {{total}}"
@@ -12276,6 +12285,163 @@ saved = "Opgeslagen"
 text = "Tekst"
 title = "Type handtekening"
 
+[sign.wallet]
+apply_one = "{{count}} handtekening toepassen"
+apply_other = "{{count}} handtekeningen toepassen"
+applyEmpty = "Handtekeningen toepassen"
+count = "{{count}} van {{max}}"
+default = "Standaard"
+loading = "Je handtekeningen laden..."
+new = "Nieuwe handtekening"
+shared = "Gedeeld"
+sharedHint = "Iedereen kan deze gebruiken"
+unsaved = "Niet opgeslagen"
+yours = "Je handtekeningen"
+
+[sign.wallet.create]
+cancel = "Annuleren"
+full = "Je bibliotheek is vol ({{max}} handtekeningen). Verwijder er één om meer op te slaan."
+makeDefault = "Instellen als standaard"
+method = "Hoe je deze maakt"
+name = "Naam"
+save = "Opslaan in mijn handtekeningen"
+saveBrowserHint = "Bewaard in deze browser, klaar voor de volgende keer."
+saveHint = "Klaar om opnieuw te gebruiken wanneer je de volgende keer ondertekent."
+subtitle = "Maak deze één keer en hergebruik hem op elk document."
+title = "Nieuwe handtekening"
+use = "Handtekening gebruiken"
+who = "Wie kan deze gebruiken"
+whoEveryone = "Iedereen"
+whoMe = "Alleen ik"
+
+[sign.wallet.defaultName]
+draw = "Mijn handtekening"
+initials = "Initialen"
+phone = "Telefoonhandtekening"
+type = "Getypte handtekening"
+upload = "Geüploade handtekening"
+
+[sign.wallet.delete]
+body = "\"{{name}}\" is verwijderd uit je handtekeningen. Documenten die je al hebt ondertekend behouden deze."
+confirm = "Verwijderen"
+title = "Deze handtekening verwijderen?"
+
+[sign.wallet.draw]
+bold = "Dikke pen"
+clear = "Wissen"
+fine = "Fijne pen"
+hint = "Onderteken boven de lijn"
+medium = "Middelgrote pen"
+pad = "Handtekeningpad"
+pen = "Pen"
+tip = "Gebruik een muis, trackpad, pen of vinger"
+undo = "Ongedaan maken"
+
+[sign.wallet.ink]
+black = "Zwarte inkt"
+blue = "Blauwe inkt"
+label = "Inkt"
+navy = "Donkerblauwe inkt"
+
+[sign.wallet.intro]
+body = "Maak deze één keer. Hij wordt hier opgeslagen, klaar voor elk document dat je ondertekent."
+privacy = "Opgeslagen handtekeningen zijn privé voor jou, tenzij je ervoor kiest ze te delen."
+privacyBrowser = "Opgeslagen handtekeningen blijven in deze browser."
+title = "Voeg je handtekening toe"
+
+[sign.wallet.menu]
+delete = "Verwijderen"
+discard = "Weggooien"
+makeDefault = "Instellen als standaard"
+options = "Opties voor {{name}}"
+place = "Op pagina plaatsen"
+removeDefault = "Niet meer als standaard"
+rename = "Naam wijzigen"
+save = "Opslaan in mijn handtekeningen"
+share = "Delen met iedereen"
+stop = "Plaatsen stoppen"
+
+[sign.wallet.phone]
+expires = "Verloopt over {{time}}"
+qr = "QR code om op je telefoon te ondertekenen"
+received = "Ontvangen van je telefoon"
+receiveFailed = "Kon die handtekening niet lezen. Scan de nieuwe code om het opnieuw te proberen."
+step1 = "Scan de code met de camera van je telefoon"
+step1Hint = "Deze wordt geopend in de browser van de telefoon, geen app nodig."
+step2 = "Teken, typ of fotografeer je handtekening"
+step2Hint = "Een groot tekenvlak gemaakt voor een vinger."
+step3 = "Deze verschijnt hier automatisch"
+step3Hint = "Houd dit venster open terwijl je ondertekent."
+waiting = "Wachten op je telefoon..."
+
+[sign.wallet.placed]
+empty = "Handtekeningen die je op de pagina plaatst, worden hier weergegeven."
+fallbackName = "Handtekening"
+page = "Pagina {{page}}"
+remove = "{{name}} verwijderen"
+show = "{{name}} op de pagina tonen"
+title = "Op dit document ({{count}})"
+
+[sign.wallet.rename]
+save = "Opslaan"
+title = "Naam van handtekening wijzigen"
+
+[sign.wallet.status]
+idle = "Kies een handtekening om deze te plaatsen"
+placing = "Klik op de pagina om {{name}} te plaatsen."
+stop = "Stoppen"
+
+[sign.wallet.tabs]
+draw = "Tekenen"
+phone = "Telefoon"
+type = "Typen"
+upload = "Uploaden"
+
+[sign.wallet.toast]
+applyFailed = "Kon handtekeningen niet toepassen"
+applyFailedBody = "Je handtekeningen staan nog steeds op het document. Probeer het opnieuw."
+deleteFailed = "Kon de handtekening niet verwijderen"
+draftExists = "Sla eerst je niet-opgeslagen handtekening op of gooi deze weg"
+initialsFailed = "Kon je initialen niet opslaan"
+initialsPartial = "Je handtekening is opgeslagen, maar je initialen niet. Probeer je initialen apart op te slaan."
+renameFailed = "Kon de naam van de handtekening niet wijzigen"
+saved = "Opgeslagen in je handtekeningen"
+saveFailed = "Kon de handtekening niet opslaan"
+saveFailedBody = "Deze is nog steeds klaar om op dit document te plaatsen."
+shared = "Gedeeld met iedereen"
+shareFailed = "Kon de handtekening niet delen"
+
+[sign.wallet.type]
+initials = "Initialen"
+initialsLimit = "Voor het opslaan van initialen zijn twee vrije plekken voor handtekeningen nodig."
+name = "Je naam"
+namePlaceholder = "Typ je naam"
+previewName = "Je naam"
+saveInitials = "Ook mijn initialen opslaan"
+style = "Stijl"
+styleOption = "Stijl {{index}}"
+
+[sign.wallet.upload]
+browse = "of blader door bestanden"
+drop = "Sleep hier een afbeelding naartoe"
+failed = "Kon die afbeelding niet lezen."
+hint = "PNG, JPG of WebP tot {{size}} MB. Witte achtergronden worden automatisch verwijderd."
+ink = "Inktkleur"
+inkBlack = "Zwart"
+inkBlue = "Blauw"
+inkOriginal = "Origineel"
+preview = "Voorbeeld van geüploade handtekening"
+processing = "De afbeelding wordt opgeschoond..."
+rejected = "Kies een PNG, JPG of WebP-afbeelding tot {{size}} MB."
+removeBackground = "Achtergrond verwijderen"
+removeBackgroundHint = "Wit papier wordt transparant"
+replace = "Vervangen"
+rotate = "Roteren"
+rotateLeft = "Linksom draaien"
+rotateRight = "Rechtsom draaien"
+trim = "Bijsnijden tot handtekening"
+trimHint = "Snijdt de lege ruimte eromheen weg"
+
 [signatureSettings.tooltip]
 header = "Instellingen voor handtekeningweergave"
 
@@ -13051,7 +13217,7 @@ processor = "Processor"
 
 [users.columns]
 capabilities = "Mogelijkheden"
-email = "Email"
+email = "E-mail"
 person = "Persoon"
 role = "Rol"
 status = "Status"

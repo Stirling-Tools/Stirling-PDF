@@ -169,7 +169,7 @@ signedInAs = "के रूप में साइन इन: {{email}}"
 tags = "पृष्ठांकन,लेबल,व्यवस्थित,अनुक्रमणिका"
 
 [addAttachments]
-tags = "embed,attach,include,attachments,attach files,embed files,include files,add files,file attachment,associated files,supplementary files"
+tags = "एम्बेड,अटैच,शामिल करें,attachments,फाइलें अटैच करें,फाइलें एम्बेड करें,फाइलें शामिल करें,फाइलें जोड़ें,file attachment,संबंधित फाइलें,पूरक फाइलें"
 
 [addAttachments.error]
 failed = "PDF में संलग्नक जोड़ते समय एक त्रुटि हुई।"
@@ -263,7 +263,7 @@ name = "टेक्स्ट"
 placeholder = "टेक्स्ट दर्ज करें"
 
 [addImage.type]
-canvas = "Canvas"
+canvas = "कैनवास"
 image = "छवि"
 saved = "सहेजा गया"
 text = "टेक्स्ट"
@@ -280,7 +280,7 @@ positionAndPages = "स्थिति और पृष्ठ"
 preview = "स्थिति चयन"
 previewDisclaimer = "पूर्वावलोकन अनुमानित है। अंतिम आउटपुट PDF फ़ॉन्ट मेट्रिक्स के कारण भिन्न हो सकता है।"
 submit = "पृष्ठ संख्या जोड़ें"
-tags = "number,pagination,count,add page numbers,page numbering,page numbers,footer,header,number pages,sequential,pagination tool"
+tags = "नंबर,pagination,गिनती,पेज नंबर जोड़ें,page numbering,page numbers,footer,header,पेज नंबर करें,क्रमिक,pagination tool"
 title = "पृष्ठ संख्या जोड़ें"
 zeroPad = "Zero‑pad चौड़ाई (Bates Stamping)"
 zeroPadTooltip = "पृष्ठ संख्याओं को इस चौड़ाई तक Zero‑pad (Bates Stamp) करें (उदा., 3 ⇒ 001)। अक्षम करने के लिए 0 सेट करें।"
@@ -484,7 +484,7 @@ name = "टेक्स्ट सामग्री"
 placeholder = "जो टेक्स्ट आप जोड़ना चाहते हैं, दर्ज करें"
 
 [addText.type]
-canvas = "Canvas"
+canvas = "कैनवास"
 image = "छवि"
 saved = "सहेजा गया"
 text = "टेक्स्ट"
@@ -503,7 +503,7 @@ green = "हरा"
 noPreview = "पूर्वावलोकन के लिए एक PDF चुनें"
 red = "लाल"
 saturation = "संतृप्ति:"
-tags = "contrast,brightness,saturation,adjust colors,color correction,enhance,lighten,darken,improve quality,color balance,hue,vibrance"
+tags = "contrast,brightness,saturation,रंग समायोजित करें,color correction,enhance,lighten,darken,गुणवत्ता सुधारें,color balance,hue,vibrance"
 title = "रंग/Contrast समायोजित करें"
 
 [adjustContrast.error]
@@ -753,7 +753,7 @@ label = "Embedding base URL"
 
 [admin.settings.ai.documents.embeddingModel]
 description = "Embedding model नाम। मुक्त टेक्स्ट; सुझाव केवल संकेत हैं।"
-label = "Embedding model"
+label = "Embedding मॉडल"
 
 [admin.settings.ai.documents.embeddingProvider]
 description = "दस्तावेज़ टेक्स्ट को vector embeddings में बदलने के लिए उपयोग किया गया provider।"
@@ -885,7 +885,7 @@ label = "प्रति request अधिकतम pages"
 
 [admin.settings.ai.limits.modelMaxConcurrency]
 description = "पूरे engine में एक साथ चल रहे in-flight model calls की अधिकतम संख्या।"
-label = "Model max concurrency"
+label = "मॉडल अधिकतम concurrency"
 
 [admin.settings.ai.models]
 description = "LLM provider और AI engine द्वारा उपयोग किए जाने वाले smart/fast models चुनें। सहेजने पर AI engine पर लागू होता है।"
@@ -1254,7 +1254,7 @@ watchedFolder = "Pipeline watched folder"
 add = "जोड़ें"
 empty = "कोई folders अनुमत नहीं। Folder sources और outputs फिलहाल अक्षम हैं।"
 hint = "absolute paths दर्ज करें, उदाहरण के लिए /data/inbox।"
-label = "Allowed folder roots"
+label = "अनुमत folder roots"
 placeholder = "/data/inbox"
 remove = "folder root हटाएँ"
 
@@ -1484,7 +1484,7 @@ label = "अतिरिक्त accepted audiences (वैकल्पिक)"
 
 [admin.settings.mcp.allowedOps]
 description = "यदि सेट है, तो केवल ये operation ids expose किए जाते हैं (allow-list; comma या space separated)। नीचे blocked किए गए किसी भी tool को छोड़कर सभी enabled tools expose करने के लिए खाली छोड़ें।"
-label = "Allowed tools"
+label = "अनुमत tools"
 
 [admin.settings.mcp.blockedOps]
 description = "MCP से छिपाने के लिए operation ids (comma या space separated), उदा. add-password remove-password। सभी enabled tools expose करने के लिए खाली छोड़ें।"
@@ -2054,8 +2054,8 @@ tags = "attachments,add,remove,embed,file,extract,manage"
 title = "अटैचमेंट प्रबंधित करें"
 
 [attachments.badges]
-deleted = "DELETED"
-renamed = "RENAMED"
+deleted = "हटाया गया"
+renamed = "नाम बदला गया"
 staged = "STAGED"
 
 [audit]
@@ -2071,7 +2071,7 @@ notAvailableMessage = "गतिविधि record करना शुरू �
 
 [audit.charts]
 byType = "प्रकार के अनुसार ईवेंट्स"
-byUser = "Top Users"
+byUser = "शीर्ष उपयोगकर्ता"
 day = "दिन"
 error = "चार्ट लोड करने में त्रुटि"
 month = "माह"
@@ -2301,7 +2301,7 @@ importPartialSuccess_other = "{{count}} unmapped operations के साथ imp
 importSuccess = "ऑटोमेशन आयात किया गया: {{name}}"
 invalidStep = "अमान्य चरण"
 reviewTitle = "स्वचालन परिणाम"
-tags = "workflow,sequence,automation,automate,batch,batch processing,pipeline,chain,multi-step,recurring,scheduled,automatic,process multiple,bulk operations"
+tags = "workflow,sequence,automation,automate,batch,batch processing,pipeline,chain,multi-step,recurring,scheduled,automatic,कई प्रोसेस करें,bulk operations"
 title = "स्वचालन"
 
 [automate.config]
@@ -2429,7 +2429,7 @@ title = "कम confidence pages को मिलान के लिए घु�
 applied = "{{degrees}}° CW"
 confidenceValue = "Confidence {{value}}"
 noChange = "कोई बदलाव नहीं"
-pageLabel = "Page {{number}}"
+pageLabel = "पेज {{number}}"
 summary = "{{total}} pages में से {{rotated}} घुमाए गए, {{unchanged}} वैसे ही छोड़े गए"
 title = "Detection report"
 
@@ -3646,7 +3646,7 @@ saturation = "Saturation और brightness"
 title = "रंग चुनें"
 
 [common]
-actions = "Actions"
+actions = "कार्रवाइयाँ"
 back = "वापस"
 cancel = "रद्द करें"
 change = "बदलें"
@@ -3981,17 +3981,17 @@ viewApiKeys = "API keys देखें"
 
 [config.mcp.copy]
 configLabel = "Config"
-copied = "Copied"
-copy = "Copy"
+copied = "कॉपी किया गया"
+copy = "कॉपी करें"
 endpointLabel = "Endpoint URL"
 tooltip = "{{label}} copy करें"
-tooltipCopied = "{{label}} copied"
+tooltipCopied = "{{label}} कॉपी किया गया"
 
 [config.mcp.endpoint]
 label = "आपका MCP endpoint"
 
 [config.mcp.setup]
-addTo = "Add to"
+addTo = "इसमें जोड़ें"
 hint = "अपना client चुनें, snippet को दिखाई गई file में paste करें, फिर उसे restart करें। पहली बार उपयोग पर आप अपने Stirling account से sign in करेंगे - copy करने के लिए कोई keys नहीं।"
 title = "अपना AI assistant connect करें"
 
@@ -4108,7 +4108,7 @@ pdfUaAltTextScanFailed = "Images list नहीं की जा सकीं।
 pdfUaAltTextSingleFileOnly = "Descriptions एक document से संबंधित होते हैं: image अपनी position से पहचानी जाती है, जो हर file में अलग image होती है। इन {{fileCount}} files को tag करने के लिए convert करें, फिर उनकी images का वर्णन करने के लिए एक-एक करके convert करें।"
 pdfUaEmbedFonts = "Missing fonts embed करें"
 pdfUaEmbedFontsHelp = "PDF/UA में हर font embedded होना आवश्यक है। इसे बंद करना तेज़ है लेकिन आमतौर पर conformance रोकता है।"
-pdfUaFigureLabel = "Page {{page}} {{kind}}"
+pdfUaFigureLabel = "पेज {{page}} {{kind}}"
 pdfUaFigurePlaceholder = "यह image reader को क्या बताती है"
 pdfUaFindImages = "Description चाहिए ऐसी images ढूँढें"
 pdfUaLanguage = "Document language"
@@ -4513,7 +4513,7 @@ title = "एंडपॉइंट सांख्यिकी"
 [error]
 _value = "त्रुटि"
 dismissAllErrors = "सभी त्रुटियाँ खारिज करें"
-failedFiles = "Failed files: {{ids}}"
+failedFiles = "विफल फाइलें: {{ids}}"
 generic = "एक त्रुटि हुई"
 invalidOrCorruptedFiles = "अमान्य/corrupted file(s) के कारण process विफल हुआ"
 networkError = "Network error"
@@ -4621,7 +4621,7 @@ delete = "हटाएं"
 deleteAll = "सब हटाएँ"
 download = "डाउनलोड करें"
 downloadSelected = "Files डाउनलोड करें"
-filesSelected = "files"
+filesSelected = "फाइलें"
 filesStored = "फ़ाइलें संग्रहीत"
 loadingFiles = "फ़ाइलें लोड हो रही हैं..."
 noFiles = "कोई फ़ाइल उपलब्ध नहीं"
@@ -4645,7 +4645,7 @@ sortByDate = "तिथि के अनुसार क्रमबद्ध �
 sortByName = "नाम के अनुसार क्रमबद्ध करें"
 sortBySize = "आकार के अनुसार क्रमबद्ध करें"
 storage = "स्टोरेज"
-storageUsed = "Storage used"
+storageUsed = "उपयोग किया गया storage"
 title = "PDF फ़ाइलें अपलोड करें"
 unsupported = "असमर्थित"
 unzip = "अनज़िप"
@@ -4743,11 +4743,11 @@ viewAll = "सभी {{count}} फ़ाइलें देखें"
 closeViewer = "व्यूअर बंद करें"
 dataLost = "Data lost"
 dataLostTooltip = "इस browser ने इस file की contents खो दी हैं। इसके साथ काम जारी रखने के लिए इसे फिर upload करें।"
-delete = "Delete"
+delete = "हटाएँ"
 duplicate = "Duplicate"
-moreActions = "More actions"
+moreActions = "अधिक कार्रवाइयाँ"
 openInViewer = "व्यूअर में खोलें"
-rename = "Rename"
+rename = "नाम बदलें"
 savedToServer = "Server पर सहेजा गया"
 updateOnServer = "Server पर update करें"
 uploadToServer = "Server पर upload करें"
@@ -4760,11 +4760,11 @@ subtitle = "Files sidebar में categories दिखाएँ या छि�
 title = "Sidebar श्रेणियाँ"
 
 [fileSidebar.rename]
-cancel = "Cancel"
+cancel = "रद्द करें"
 error = "File का नाम बदला नहीं जा सका।"
 illegalCharacters = "File name में \\ / : * ? \" < > | नहीं हो सकते"
-label = "File name"
-save = "Rename"
+label = "फाइल नाम"
+save = "नाम बदलें"
 title = "File का नाम बदलें"
 
 [filesPage]
@@ -4806,8 +4806,8 @@ deleteFolderKeepHint = "अंदर की files Stirling library में mov
 deleteFolderTitle = "फ़ोल्डर हटाएं?"
 deselectAll = "चयन साफ़ करें"
 details = "विवरण"
-detailsCount_one = "{{count}} file selected"
-detailsCount_other = "{{count}} files selected"
+detailsCount_one = "{{count}} फाइल चयनित"
+detailsCount_other = "{{count}} फाइलें चयनित"
 dismissError = "खारिज करें"
 download = "डाउनलोड"
 downloadAll = "सभी डाउनलोड करें"
@@ -4817,7 +4817,7 @@ dropOverlaySub = "Files Recents में दिखाई देती हैं
 dropOverlaySubFolder = "वे इस फ़ोल्डर में जोड़ी जाएँगी।"
 duplicate = "Duplicate"
 file = "फ़ाइल"
-fileInfo = "File info"
+fileInfo = "फाइल जानकारी"
 fileMenu = "फ़ाइल क्रियाएँ"
 folder = "फ़ोल्डर"
 folderItems_one = "{{count}} item"
@@ -6594,7 +6594,7 @@ yourCloudAccess = "आप टीम सदस्य बन जाएँगे �
 
 [pageEdit]
 deselectAll = "कोई नहीं"
-selectAll = "सभी चुनें"
+selectAll = "सभी चेक करें"
 
 [pageEditor]
 dragPreviewAlt = "खींचा जा रहा है"
@@ -6888,7 +6888,7 @@ freeBody = "PDFs देखें, edit, merge, split, sign, watermark, compress,
 freeTitle = "Unlimited PDF editing"
 
 [payg.free.hero]
-barAria = "Free PDFs remaining"
+barAria = "बचे हुए Free PDFs"
 capSuffix = "इस महीने {{limit}} में से free PDFs बचे"
 metaCategories = "Automation · AI · API requests"
 
@@ -6904,8 +6904,8 @@ limitReached = "Limit पहुँच गई"
 plentyLeft = "काफी बचा है"
 
 [payg.gates]
-ai = "AI tools (AI Create, suggestions, AI-OCR)"
-automation = "Automations & pipelines"
+ai = "AI tools (AI Create, सुझाव, AI-OCR)"
+automation = "Automations और pipelines"
 client = "Browser-only tools (viewer, page editor, file management)"
 offsite = "Server tools (compress, OCR, convert, watermark…)"
 pauses = "cap पर pause होता है"
@@ -6991,7 +6991,7 @@ backAria = "पीछे"
 closeAria = "बंद करें"
 
 [payg.upgrade.button]
-cancel = "Cancel"
+cancel = "रद्द करें"
 continue = "जारी रखें →"
 finish = "Finish"
 
@@ -7345,10 +7345,19 @@ mixed = "{{count}} ऑब्जेक्ट"
 multiGeometry = "इसकी स्थिति और आकार संपादित करने के लिए एक ही ऑब्जेक्ट चुनें।"
 nothingSelected = "कुछ चयनित नहीं"
 nothingSelectedHint = "यहाँ edit करने के लिए page पर किसी भी text, image या shape पर click करें।"
+ocrDocumentChanged = "OCR चलते समय document बदल गया। अपने नवीनतम बदलाव शामिल करने के लिए OCR फिर से चलाएँ।"
+ocrInvalidResult = "OCR ने PDF नहीं लौटाया। कृपया फिर से प्रयास करें।"
+ocrNoLanguages = "Server पर कोई OCR languages इंस्टॉल नहीं हैं।"
+ocrRunning = "Text पहचाना जा रहा है..."
+ocrUnavailable = "इस server पर OCR उपलब्ध नहीं है।"
 oneImage = "छवि"
 oneShape = "Shape"
 oneText = "टेक्स्ट"
 pages = "पेज"
+runOcr = "OCR चलाएँ"
+scanHint_one = "यह पेज एक scanned image है जिसमें edit करने के लिए कोई text नहीं है। इसका text editable बनाने के लिए पहले OCR चलाएँ।"
+scanHint_other = "{{count}} पेज scanned images हैं जिनमें edit करने के लिए कोई text नहीं है। उनका text editable बनाने के लिए पहले OCR चलाएँ।"
+scannedText = "Scanned text · बदले हुए शब्द ढके गए हैं और matching font में फिर से बनाए गए हैं।"
 tabDocument = "दस्तावेज़"
 tabSelected = "चयनित"
 textBoxes = "टेक्स्ट बॉक्स"
@@ -8229,7 +8238,7 @@ unitsPending_other = "linked instances से {{units}} meter units sync pending
 
 [portal.billing.prepaid.buy]
 back = "वापस"
-cancel = "Cancel"
+cancel = "रद्द करें"
 cancelPurchase = "purchase cancel करें"
 close = "बंद करें"
 continueToPayment = "payment पर जारी रखें"
@@ -8860,7 +8869,7 @@ deprecated = "Deprecated"
 [portal.docs.skills]
 eyebrow = "SKILLS"
 lead = "Bundled, named capabilities जिन्हें आपका agent single tool के रूप में invoke करता है। हर skill deterministic op chain है जिसके साथ evals attached हैं।"
-title = "Agent skills"
+title = "Agent कौशल"
 
 [portal.docs.toc]
 title = "इस page पर"
@@ -8884,7 +8893,7 @@ title = "दस्तावेज़"
 
 [portal.documents.audit]
 approved = "स्वीकृत"
-archived = "Archived"
+archived = "संग्रहीत"
 elevation = "अधिकार उन्नयन"
 empty = "अभी तक कोई इवेंट रिकॉर्ड नहीं किया गया।"
 extracted = "प्रोसेस किया गया"
@@ -8959,7 +8968,7 @@ sensitiveLabel = "संवेदनशील"
 [portal.documents.table.columns]
 action = "पाइपलाइन / कार्रवाई"
 document = "दस्तावेज़"
-labels = "Labels"
+labels = "लेबल"
 product = "उत्पाद"
 status = "स्थिति"
 time = "समय"
@@ -9084,19 +9093,19 @@ view = "Error देखें"
 
 [portal.failures.origin]
 pipeline = "Pipeline"
-policy = "Policy run"
-tool = "Editor tool"
+policy = "Policy रन"
+tool = "Editor टूल"
 
 [portal.failures.outcome]
 dismissed = "खारिज किया गया"
 fileRemoved = "फ़ाइल delete की गई"
-open = "Open"
-resolved = "Resolved"
+open = "खुला"
+resolved = "हल हो गया"
 
 [portal.failures.scope]
 ariaLabel = "समीक्षा स्थिति"
-closed = "Closed"
-open = "Open"
+closed = "बंद"
+open = "खुला"
 
 [portal.failures.source]
 editor = "Editor"
@@ -9214,10 +9223,10 @@ subheading = "आपके workspace में हर authentication, configurat
 
 [portal.infrastructure.audit.columns]
 actor = "कर्ता"
-event = "Event"
+event = "इवेंट"
 latency = "Latency"
 status = "स्थिति"
-target = "Resource"
+target = "संसाधन"
 timestamp = "Timestamp"
 
 [portal.infrastructure.audit.empty]
@@ -9406,8 +9415,8 @@ heading = "Master key rotation"
 hint = "Scope keys को नई master key के तहत re-wrap करता है; file contents कभी rewrite नहीं होते। नई key configuration में set होती है और restart पर apply होती है, इसलिए यह button केवल re-wrap करता है।"
 pendingRows = "पुराने version पर rows"
 rewrap = "Keys re-wrap करें"
-rewrapped_one = "{{count}} key row re-wrapped."
-rewrapped_other = "{{count}} key rows re-wrapped."
+rewrapped_one = "{{count}} key row फिर से wrap की गई।"
+rewrapped_other = "{{count}} key rows फिर से wrap की गईं।"
 runbook = "Rotation runbook"
 
 [portal.infrastructure.encryption.rotation.confirm]
@@ -9513,10 +9522,10 @@ infrastructure = "इन्फ्रास्ट्रक्चर"
 integrations = "इंटीग्रेशन"
 pipelines = "पाइपलाइन्स"
 policies = "पॉलिसियाँ"
-procurement = "Procurement"
+procurement = "खरीद"
 review = "समीक्षा"
 sources = "स्रोत"
-usage = "Usage & Billing"
+usage = "उपयोग और बिलिंग"
 users = "उपयोगकर्ता"
 
 [portal.nav.section]
@@ -9565,7 +9574,7 @@ searchTools = "टूल खोजें"
 sendToSystem = "दूसरे सिस्टम को भेजें"
 stepsIncompatible = "ये चरण उनके पिछले चरण द्वारा उत्पन्न चीज़ पर नहीं चल सकते: {{tools}}।"
 stepsNeedSetup = "सेव करने से पहले इन चरणों का सेटअप अभी भी आवश्यक है: {{tools}}।"
-supportingFiles = "Supporting files"
+supportingFiles = "सहायक files"
 testRun = "File के साथ test करें"
 unknownStep = "अपरिचित operation, जैसा है वैसा रखा गया।"
 unsavedBody = "आपके पास unsaved बदलाव हैं। बाहर निकलने से पहले उन्हें save करें, या छोड़ दें?"
@@ -9651,7 +9660,7 @@ editSource = "Source संपादित करें"
 name = "नाम"
 namePlaceholder = "Pipeline नाम"
 noToolSettings = "इस टूल में कोई configurable settings नहीं हैं।"
-output = "Destination"
+output = "गंतव्य"
 save = "बदलाव save करें"
 scheduleEvery = "हर"
 trigger = "Trigger"
@@ -9715,8 +9724,8 @@ running = "Running"
 
 [portal.pipelines.inspector]
 multipleBody = "उन्हें साथ में move करने के लिए किसी को भी line पर drag करें, या उन्हें हटाने के लिए Delete दबाएँ।"
-multipleSelected_one = "{{count}} step selected"
-multipleSelected_other = "{{count}} steps selected"
+multipleSelected_one = "{{count}} step चयनित"
+multipleSelected_other = "{{count}} steps चयनित"
 noSelectionBody = "यह बदलने के लिए कि यह क्या करता है, graph में कोई node चुनें।"
 noSelectionTitle = "कुछ भी selected नहीं"
 
@@ -10162,7 +10171,7 @@ connectInput = "Input source connect करें"
 consumed = "इस source का processing mode check करें: consume successful run के बाद originals delete करता है। इन्हें रखने के लिए Edit input source में Track चुनें।"
 delivery = "Delivery"
 desktopExternal = "इस database connection को web app के Processor में manage करें, या results को इस folder में return करने के लिए output type बदलें।"
-destination = "Destination"
+destination = "गंतव्य"
 editInput = "Input source edit करें"
 editor = "Editor में खोली गई files"
 editorDestination = "Editor workspace"
@@ -10256,7 +10265,7 @@ email = "Email intake"
 
 [portal.procurement]
 subtitle = "अपनी टीम का मूल्यांकन, अनुबंध और ऑनबोर्डिंग कराएं। हर दस्तावेज़ एक जगह।"
-title = "Procurement"
+title = "खरीद"
 
 [portal.procurement.agreement]
 agreeCta = "Agreement पर sign करें"
@@ -10789,7 +10798,7 @@ summary = "Workspace, settings और members पर पूर्ण governance�
 3 = "Team Owner जो कुछ कर सकता है, वह सब"
 
 [portal.users.roles.guest]
-label = "Guest"
+label = "अतिथि"
 summary = "सीमित या केवल web access; personal configs नहीं रख सकता।"
 
 [portal.users.roles.guest.permissions]
@@ -10799,7 +10808,7 @@ summary = "सीमित या केवल web access; personal configs न�
 3 = "जहां साझा किया गया हो वहां read-only"
 
 [portal.users.roles.member]
-label = "Member"
+label = "सदस्य"
 summary = "नियमित user — shared resources और अपने configs के साथ काम करता है।"
 
 [portal.users.roles.member.permissions]
@@ -12275,6 +12284,163 @@ image = "इमेज"
 saved = "सहेजा गया"
 text = "टेक्स्ट"
 title = "हस्ताक्षर प्रकार"
+
+[sign.wallet]
+apply_one = "{{count}} हस्ताक्षर लागू करें"
+apply_other = "{{count}} हस्ताक्षर लागू करें"
+applyEmpty = "हस्ताक्षर लागू करें"
+count = "{{max}} में से {{count}}"
+default = "डिफ़ॉल्ट"
+loading = "आपके हस्ताक्षर लोड हो रहे हैं..."
+new = "नया हस्ताक्षर"
+shared = "साझा"
+sharedHint = "हर कोई इनका उपयोग कर सकता है"
+unsaved = "सहेजा नहीं गया"
+yours = "आपके हस्ताक्षर"
+
+[sign.wallet.create]
+cancel = "रद्द करें"
+full = "आपकी लाइब्रेरी भरी हुई है ({{max}} हस्ताक्षर)। अधिक सहेजने के लिए एक हटाएँ।"
+makeDefault = "डिफ़ॉल्ट बनाएँ"
+method = "इसे कैसे बनाएँ"
+name = "नाम"
+save = "मेरे हस्ताक्षरों में सहेजें"
+saveBrowserHint = "इस browser में रखा गया, अगली बार के लिए तैयार।"
+saveHint = "अगली बार हस्ताक्षर करते समय फिर से उपयोग के लिए तैयार।"
+subtitle = "एक बार बनाएँ, किसी भी दस्तावेज़ पर फिर से उपयोग करें।"
+title = "नया हस्ताक्षर"
+use = "हस्ताक्षर उपयोग करें"
+who = "कौन इसका उपयोग कर सकता है"
+whoEveryone = "हर कोई"
+whoMe = "सिर्फ़ मैं"
+
+[sign.wallet.defaultName]
+draw = "मेरा हस्ताक्षर"
+initials = "आद्याक्षर"
+phone = "Phone हस्ताक्षर"
+type = "टाइप किया हुआ हस्ताक्षर"
+upload = "अपलोड किया हुआ हस्ताक्षर"
+
+[sign.wallet.delete]
+body = "\"{{name}}\" आपके हस्ताक्षरों से हटा दिया गया है। जिन दस्तावेज़ों पर आप पहले ही हस्ताक्षर कर चुके हैं, उनमें यह बना रहेगा।"
+confirm = "हटाएँ"
+title = "यह हस्ताक्षर हटाएँ?"
+
+[sign.wallet.draw]
+bold = "मोटा pen"
+clear = "साफ़ करें"
+fine = "बारीक pen"
+hint = "रेखा के ऊपर हस्ताक्षर करें"
+medium = "मध्यम pen"
+pad = "Signature pad"
+pen = "Pen"
+tip = "Mouse, trackpad, pen या उंगली का उपयोग करें"
+undo = "पूर्ववत करें"
+
+[sign.wallet.ink]
+black = "काली स्याही"
+blue = "नीली स्याही"
+label = "स्याही"
+navy = "Navy स्याही"
+
+[sign.wallet.intro]
+body = "एक बार बनाएँ। यह यहाँ सहेजा जाता है, आपके हर दस्तावेज़ के लिए तैयार जिस पर आप हस्ताक्षर करते हैं।"
+privacy = "सहेजे गए हस्ताक्षर आपके लिए निजी हैं, जब तक आप उन्हें साझा करना न चुनें।"
+privacyBrowser = "सहेजे गए हस्ताक्षर इस browser में रहते हैं।"
+title = "अपना हस्ताक्षर जोड़ें"
+
+[sign.wallet.menu]
+delete = "हटाएँ"
+discard = "त्यागें"
+makeDefault = "डिफ़ॉल्ट बनाएँ"
+options = "{{name}} के लिए विकल्प"
+place = "पेज पर रखें"
+removeDefault = "डिफ़ॉल्ट से हटाएँ"
+rename = "नाम बदलें"
+save = "मेरे हस्ताक्षरों में सहेजें"
+share = "सभी के साथ साझा करें"
+stop = "रखना बंद करें"
+
+[sign.wallet.phone]
+expires = "{{time}} में समाप्त होता है"
+qr = "अपने phone पर हस्ताक्षर करने के लिए QR code"
+received = "आपके phone से प्राप्त हुआ"
+receiveFailed = "उस हस्ताक्षर को पढ़ा नहीं जा सका। फिर कोशिश करने के लिए नया code scan करें।"
+step1 = "अपने phone camera से code scan करें"
+step1Hint = "यह phone browser में खुलता है, app की ज़रूरत नहीं।"
+step2 = "अपना हस्ताक्षर draw करें, type करें या photo लें"
+step2Hint = "उंगली के लिए बना बड़ा canvas।"
+step3 = "यह यहाँ अपने आप दिखाई देता है"
+step3Hint = "हस्ताक्षर करते समय यह window खुली रखें।"
+waiting = "आपके phone की प्रतीक्षा हो रही है..."
+
+[sign.wallet.placed]
+empty = "आप पेज पर जो हस्ताक्षर रखते हैं, वे यहाँ सूचीबद्ध हैं।"
+fallbackName = "हस्ताक्षर"
+page = "पेज {{page}}"
+remove = "{{name}} हटाएँ"
+show = "पेज पर {{name}} दिखाएँ"
+title = "इस दस्तावेज़ पर ({{count}})"
+
+[sign.wallet.rename]
+save = "सहेजें"
+title = "हस्ताक्षर का नाम बदलें"
+
+[sign.wallet.status]
+idle = "रखने के लिए कोई हस्ताक्षर चुनें"
+placing = "{{name}} रखने के लिए पेज पर क्लिक करें।"
+stop = "रोकें"
+
+[sign.wallet.tabs]
+draw = "Draw"
+phone = "Phone"
+type = "Type"
+upload = "Upload"
+
+[sign.wallet.toast]
+applyFailed = "हस्ताक्षर लागू नहीं किए जा सके"
+applyFailedBody = "आपके हस्ताक्षर अभी भी दस्तावेज़ पर हैं। फिर कोशिश करें।"
+deleteFailed = "हस्ताक्षर हटाया नहीं जा सका"
+draftExists = "पहले अपना सहेजा न गया हस्ताक्षर सहेजें या त्यागें"
+initialsFailed = "आपके आद्याक्षर सहेजे नहीं जा सके"
+initialsPartial = "आपका हस्ताक्षर सहेजा गया, लेकिन आपके आद्याक्षर नहीं। अपने आद्याक्षर अलग से सहेजने की कोशिश करें।"
+renameFailed = "हस्ताक्षर का नाम नहीं बदला जा सका"
+saved = "आपके हस्ताक्षरों में सहेजा गया"
+saveFailed = "हस्ताक्षर सहेजा नहीं जा सका"
+saveFailedBody = "यह अभी भी इस दस्तावेज़ पर रखने के लिए तैयार है।"
+shared = "सभी के साथ साझा किया गया"
+shareFailed = "हस्ताक्षर साझा नहीं किया जा सका"
+
+[sign.wallet.type]
+initials = "आद्याक्षर"
+initialsLimit = "आद्याक्षर सहेजने के लिए दो खाली signature slots चाहिए।"
+name = "आपका नाम"
+namePlaceholder = "अपना नाम type करें"
+previewName = "आपका नाम"
+saveInitials = "मेरे आद्याक्षर भी सहेजें"
+style = "Style"
+styleOption = "Style {{index}}"
+
+[sign.wallet.upload]
+browse = "या files browse करें"
+drop = "यहाँ image drop करें"
+failed = "वह image पढ़ी नहीं जा सकी।"
+hint = "PNG, JPG या WebP {{size}} MB तक। सफेद backgrounds अपने आप हटा दिए जाते हैं।"
+ink = "स्याही का रंग"
+inkBlack = "काला"
+inkBlue = "नीला"
+inkOriginal = "Original"
+preview = "अपलोड किए गए हस्ताक्षर का preview"
+processing = "image साफ़ की जा रही है..."
+rejected = "{{size}} MB तक की PNG, JPG या WebP image चुनें।"
+removeBackground = "Background हटाएँ"
+removeBackgroundHint = "सफेद कागज़ transparent हो जाता है"
+replace = "बदलें"
+rotate = "घुमाएँ"
+rotateLeft = "बाएँ घुमाएँ"
+rotateRight = "दाएँ घुमाएँ"
+trim = "हस्ताक्षर तक trim करें"
+trimHint = "इसके आसपास की खाली जगह crop करता है"
 
 [signatureSettings.tooltip]
 header = "हस्ताक्षर रूप सेटिंग्स"

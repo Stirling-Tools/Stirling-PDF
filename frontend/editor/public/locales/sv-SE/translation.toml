@@ -742,10 +742,10 @@ title = "Dokument och RAG"
 
 [admin.settings.ai.documents.embeddingApiKey]
 description = "Lämna tomt för att använda motorns egna miljöuppgifter. Gäller för självhostade distributioner med en enda motor."
-generic = "Embedding API key"
-openai = "OpenAI API key"
+generic = "Embedding API-nyckel"
+openai = "OpenAI API-nyckel"
 setPlaceholder = "Sparad – lämna tomt för att behålla den aktuella nyckeln"
-voyageai = "VoyageAI API key"
+voyageai = "VoyageAI API-nyckel"
 
 [admin.settings.ai.documents.embeddingBaseUrl]
 description = "Base URL för den OpenAI-kompatibla / Ollama-embeddings-slutpunkten, t.ex. http://ollama:11434/v1. Måste peka på en betrodd intern slutpunkt (SSRF-känsligt)."
@@ -892,10 +892,10 @@ description = "Välj LLM-leverantör och de smarta/snabba modeller som AI-motorn
 title = "Modeller och leverantörer"
 
 [admin.settings.ai.models.apiKey]
-anthropic = "Anthropic API key"
+anthropic = "Anthropic API-nyckel"
 description = "Lämna tomt för att använda motorns egna miljöuppgifter. Gäller för självhostade distributioner med en enda motor."
-generic = "API key"
-openai = "OpenAI API key"
+generic = "API-nyckel"
+openai = "OpenAI API-nyckel"
 setPlaceholder = "Sparad – lämna tomt för att behålla den aktuella nyckeln"
 
 [admin.settings.ai.models.baseUrl]
@@ -1476,7 +1476,7 @@ label = "SMTP-användarnamn"
 [admin.settings.mcp]
 apikeyNote = "Klienter skickar en Stirling API key i X-API-KEY-headern (eller Authorization: Bearer <key>). Nyckeln kopplas till den Stirling-användare som äger den – endast förberedda konton får åtkomst, och åtgärder granskas som den användaren. Hantera nycklar under Konto > API Keys."
 description = "Exponera Stirlings PDF-verktyg och AI-agenter för MCP-klienter via en OAuth-skyddad endpoint."
-title = "MCP Server"
+title = "MCP-server"
 
 [admin.settings.mcp.acceptedAudiences]
 description = "Extra token audience-värden som accepteras utöver Resource ID (kommaseparerade eller separerade med mellanslag). Lämna tomt för strikt RFC 8707. Behövs för IdP:er som inte kan skapa resursaudiences – t.ex. utfärdar Supabases OAuth-server alltid aud=authenticated."
@@ -1510,7 +1510,7 @@ title = "Anslut en MCP-klient"
 
 [admin.settings.mcp.issuerUri]
 description = "Din OAuth2 auktoriseringsserver (måste publicera /.well-known/openid-configuration). Krävs när aktiverad."
-label = "OAuth Issuer URL"
+label = "OAuth-utfärdarens URL"
 
 [admin.settings.mcp.jwksUri]
 description = "Lämna tomt för att hitta den från issuer. Ange endast om din IdP tillhandahåller nycklar på en icke-standard URL."
@@ -1529,7 +1529,7 @@ label = "Kräv ett befintligt Stirling-konto"
 
 [admin.settings.mcp.resourceId]
 description = "Denna servers offentliga /mcp URL. Tokens måste ange den i sin audience (RFC 8707), annars avvisas de."
-label = "Resource ID"
+label = "Resurs-ID"
 
 [admin.settings.mcp.scopes]
 description = "Kräv mcp.tools.read för läsåtgärder och mcp.tools.write för skriv-/AI-åtgärder."
@@ -1537,7 +1537,7 @@ label = "Tillämpa OAuth scopes"
 
 [admin.settings.mcp.usernameClaim]
 description = "JWT claim matchas mot ett Stirling-användarnamn (t.ex. sub, email, preferred_username)."
-label = "Username claim"
+label = "Användarnamnsanspråk"
 
 [admin.settings.plan.noData]
 message = "Denna server kunde inte nå licenstjänsten. Försök igen eller kontrollera licensnyckeln."
@@ -3975,15 +3975,15 @@ warning = "⚠️ Varning: Denna åtgärd kommer att generera nya API-nycklar oc
 [config.mcp]
 description = "Model Context Protocol (MCP) låter AI-assistenter som Claude använda dina Stirling PDF-verktyg direkt. Anslut en klient en gång så kan din assistent konvertera, redigera, säkra och bearbeta dokument åt dig."
 guestInfo = "Gästanvändare kan inte ansluta MCP-klienter. Skapa ett konto för att använda MCP-servern och låta din AI-assistent köra Stirling PDF-verktyg åt dig."
-navLabel = "MCP Server"
+navLabel = "MCP-server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
 viewApiKeys = "Visa API keys"
 
 [config.mcp.copy]
-configLabel = "Config"
+configLabel = "Konfiguration"
 copied = "Kopierad"
 copy = "Kopiera"
-endpointLabel = "Endpoint URL"
+endpointLabel = "Endpoint-URL"
 tooltip = "Kopiera {{label}}"
 tooltipCopied = "{{label}} kopierad"
 
@@ -4159,7 +4159,7 @@ targetDeviceDesc = "Välj en utmatningsprofil optimerad för läsarenheten"
 [convert.formatGroups]
 archive = "Arkiv"
 document = "Dokument"
-ebook = "eBook"
+ebook = "e-bok"
 email = "E-post"
 file = "Fil"
 image = "Bild"
@@ -6924,7 +6924,7 @@ meterTitle = "Automation · AI · API"
 askLeader = "Endast teamägaren kan ändra taket."
 
 [payg.members]
-docs = "PDFs"
+docs = "PDF-filer"
 subtitle = "Fakturerbara PDFs som varje teammedlem har bearbetat under denna period."
 title = "Användning per teammedlem"
 
@@ -6959,12 +6959,12 @@ aiPromo = "Skapa, redigera och ställ frågor om PDF-filer med AI"
 apiPromo = "Anslut dina appar och AI-assistenter"
 automationPromo = "Automatisera repetitiva PDF-uppgifter"
 createAccount = "Skapa kostnadsfritt konto"
-editorLabel = "PDF Editor"
+editorLabel = "PDF-redigerare"
 login = "Logga in"
 manualToolsPromo = "Obegränsat med kostnadsfria manuella PDF-verktyg"
-processorLabel = "PDF Processor"
+processorLabel = "PDF-processor"
 processorTitle = "Skapa ett konto för att låsa upp det bästa av Stirling"
-readerLabel = "PDF Reader"
+readerLabel = "PDF-läsare"
 
 [payg.spendCapMeter]
 barAria = "Kostnad mot tak"
@@ -7201,7 +7201,7 @@ downloadTooltip = "Spara och ladda ner den redigerade PDF-filen"
 save = "Spara PDF"
 saveTooltip = "Tillämpa ändringar på filen i din arbetsyta ({{shortcut}})"
 tags = "redigera text,ändra text,ändra text,redigera innehåll,uppdatera text,skriv om,korrigera,ändra,rödmarkera,revidera,texteditor,innehållseditor"
-title = "PDF Text Editor"
+title = "PDF-textredigerare"
 unsaved = "(osparad)"
 workbenchLabel = "Redigerare"
 
@@ -7345,10 +7345,19 @@ mixed = "{{count}} objekt"
 multiGeometry = "Välj ett enskilt objekt för att redigera dess position och storlek."
 nothingSelected = "Inget markerat"
 nothingSelectedHint = "Klicka på valfri text, bild eller form på sidan för att redigera den här."
+ocrDocumentChanged = "Dokumentet ändrades medan OCR kördes. Kör OCR igen för att inkludera dina senaste ändringar."
+ocrInvalidResult = "OCR returnerade inte en PDF. Försök igen."
+ocrNoLanguages = "Inga OCR-språk är installerade på servern."
+ocrRunning = "Känner igen text..."
+ocrUnavailable = "OCR är inte tillgängligt på den här servern."
 oneImage = "Bild"
 oneShape = "Form"
 oneText = "Text"
 pages = "Sidor"
+runOcr = "Kör OCR"
+scanHint_one = "Den här sidan är en skannad bild utan text att redigera. Kör OCR först för att göra texten redigerbar."
+scanHint_other = "{{count}} sidor är skannade bilder utan text att redigera. Kör OCR först för att göra deras text redigerbar."
+scannedText = "Skannad text · ändrade ord täcks över och ritas om med ett matchande typsnitt."
 tabDocument = "Dokument"
 tabSelected = "Markerat"
 textBoxes = "Textrutor"
@@ -7762,7 +7771,7 @@ rowIdle = "{{label}} körs automatiskt"
 rowRunning = "{{label}} körs nu"
 runsToday_one = "{{count}} körning idag"
 runsToday_other = "{{count}} körningar idag"
-title = "PDF Processor"
+title = "PDF-processor"
 triggerExport = "Körs vid export"
 triggerImport = "Körs vid import"
 
@@ -8223,7 +8232,7 @@ segmentAutomationDesc = "Automatiseringar och pipelines"
 segmentAutomationLabel = "Automatisering"
 summary = "{{unique}} unika · {{units}} mätarenheter · {{avg}} i genomsnitt per PDF"
 summaryNoRate = "{{unique}} unika · {{units}} mätarenheter"
-unit = "PDFs"
+unit = "PDF-filer"
 unitsPending_one = "{{units}} mätarenhet väntar på synk från länkade instanser"
 unitsPending_other = "{{units}} mätarenheter väntar på synk från länkade instanser"
 
@@ -8444,7 +8453,7 @@ label = "Server-URL"
 label = "E-post"
 
 [portal.connections.commonFields.host]
-label = "Host"
+label = "Värd"
 
 [portal.connections.commonFields.password]
 label = "Lösenord"
@@ -8457,7 +8466,7 @@ label = "Användarnamn"
 
 [portal.connections.commonFields.webhookUrl]
 helperText = "Klistra in URL som tjänsten gav dig. Endast sökvägar under den kan anropas."
-label = "Webhook URL"
+label = "Webhook-URL"
 
 [portal.connections.fields]
 name = "Anslutningsnamn"
@@ -8500,7 +8509,7 @@ label = "Logga in för en token"
 
 [portal.connections.types.api.fields.baseUrl]
 helperText = "Steg som använder denna anslutning kan bara anropa sökvägar under denna URL, aldrig en annan host."
-label = "Base URL"
+label = "Bas-URL"
 placeholder = "https://api.example.com/v1"
 
 [portal.connections.types.api.fields.headerName]
@@ -8526,7 +8535,7 @@ label = "Skicka token som denna header"
 
 [portal.connections.types.api.fields.tokenResponseHeader]
 helperText = "Svarsheadern som inloggningsanropet returnerar token i, t.ex. X-Auth-Token."
-label = "Token response header"
+label = "Header för tokensvar"
 
 [portal.connections.types.api.fields.username]
 label = "Användarnamn"
@@ -8632,7 +8641,7 @@ label = "Webhook-autentisering"
 label = "Basic auth"
 
 [portal.connections.types.n8n.fields.authType.options.header]
-label = "Header auth"
+label = "Header-auth"
 
 [portal.connections.types.n8n.fields.authType.options.none]
 label = "Ingen"
@@ -8667,7 +8676,7 @@ helperText = "Valfritt. Behövs bara för att välja etiketter efter namn; etike
 label = "Application (client) ID"
 
 [portal.connections.types.purview.fields.clientSecret]
-label = "Client secret"
+label = "Klienthemlighet"
 
 [portal.connections.types.purview.fields.tenantId]
 helperText = "Stämplas på varje etikett som dess SiteId, så Purview-medvetna verktyg vet vilken organisation som tillämpade den."
@@ -8679,7 +8688,7 @@ description = "En S3 bucket som källor kan läsa från och pipeline-utdata kan 
 label = "S3-lagring"
 
 [portal.connections.types.s3.fields.accessKeyId]
-label = "Access key ID"
+label = "Åtkomstnyckel-ID"
 
 [portal.connections.types.s3.fields.bucket]
 label = "Bucket"
@@ -8692,7 +8701,7 @@ label = "Endpoint"
 label = "Region"
 
 [portal.connections.types.s3.fields.secretAccessKey]
-label = "Secret access key"
+label = "Hemlig åtkomstnyckel"
 
 [portal.connections.types.sendgrid]
 description = "Skicka ett dokument eller en avisering via e-post när en policy körs."
@@ -10897,7 +10906,7 @@ label = "App-ID"
 
 [provider.googledrive.clientId]
 description = "Google OAuth 2.0 Client ID från Google Cloud Console"
-label = "Client ID"
+label = "Klient-ID"
 
 [provider.googledrive.enabled]
 description = "Tillåt användare att importera filer direkt från Google Drive"
@@ -10921,11 +10930,11 @@ label = "Blockera registrering"
 
 [provider.oauth2.generic.clientId]
 description = "OAuth2 Client ID från din leverantör"
-label = "Client ID"
+label = "Klient-ID"
 
 [provider.oauth2.generic.clientSecret]
 description = "OAuth2 Client Secret från din leverantör"
-label = "Client Secret"
+label = "Klienthemlighet"
 
 [provider.oauth2.generic.enabled]
 description = "Aktivera autentisering via en anpassad OAuth2-leverantör"
@@ -10952,11 +10961,11 @@ scope = "Autentisering för inloggning"
 
 [provider.oauth2.github.clientId]
 description = "OAuth2 Client ID från GitHub Developer Settings"
-label = "Client ID"
+label = "Klient-ID"
 
 [provider.oauth2.github.clientSecret]
 description = "OAuth2 Client Secret från GitHub Developer Settings"
-label = "Client Secret"
+label = "Klienthemlighet"
 
 [provider.oauth2.github.scopes]
 description = "Kommaseparerade OAuth2-scopes"
@@ -10971,11 +10980,11 @@ scope = "Autentisering för inloggning"
 
 [provider.oauth2.google.clientId]
 description = "OAuth2 Client ID från Google Cloud Console"
-label = "Client ID"
+label = "Klient-ID"
 
 [provider.oauth2.google.clientSecret]
 description = "OAuth2 Client Secret från Google Cloud Console"
-label = "Client Secret"
+label = "Klienthemlighet"
 
 [provider.oauth2.google.scopes]
 description = "Kommaseparerade OAuth2-scopes"
@@ -10990,11 +10999,11 @@ scope = "SSO"
 
 [provider.oauth2.keycloak.clientId]
 description = "OAuth2 Client ID från Keycloak"
-label = "Client ID"
+label = "Klient-ID"
 
 [provider.oauth2.keycloak.clientSecret]
 description = "OAuth2 Client Secret från Keycloak"
-label = "Client Secret"
+label = "Klienthemlighet"
 
 [provider.oauth2.keycloak.issuer]
 description = "URL till Keycloak-realmets OpenID Connect Discovery-slutpunkt"
@@ -11030,7 +11039,7 @@ label = "IDP-certifikat"
 
 [provider.saml2.idpIssuer]
 description = "ID för din leverantör"
-label = "IDP Issuer"
+label = "IDP-utfärdare"
 
 [provider.saml2.idpMetadataUri]
 description = "URI till din leverantörs metadata"
@@ -11684,7 +11693,7 @@ features = "Funktioner"
 folderAccess = "Mappåtkomst"
 integrations = "Integrationer"
 legal = "Juridiska dokument"
-mcp = "MCP Server"
+mcp = "MCP-server"
 privacy = "Integritet"
 storageSharing = "Fillagring och delning"
 systemSettings = "Systeminställningar"
@@ -12275,6 +12284,163 @@ image = "Bild"
 saved = "Sparad"
 text = "Text"
 title = "Signaturtyp"
+
+[sign.wallet]
+apply_one = "Använd {{count}} signatur"
+apply_other = "Använd {{count}} signaturer"
+applyEmpty = "Använd signaturer"
+count = "{{count}} av {{max}}"
+default = "Standard"
+loading = "Läser in dina signaturer..."
+new = "Ny signatur"
+shared = "Delad"
+sharedHint = "Alla kan använda dessa"
+unsaved = "Osparad"
+yours = "Dina signaturer"
+
+[sign.wallet.create]
+cancel = "Avbryt"
+full = "Ditt bibliotek är fullt ({{max}} signaturer). Ta bort en för att spara fler."
+makeDefault = "Gör till standard"
+method = "Hur den ska skapas"
+name = "Namn"
+save = "Spara i mina signaturer"
+saveBrowserHint = "Sparas i den här webbläsaren, redo till nästa gång."
+saveHint = "Redo att återanvända nästa gång du signerar."
+subtitle = "Skapa den en gång, återanvänd den på valfritt dokument."
+title = "Ny signatur"
+use = "Använd signatur"
+who = "Vem kan använda den"
+whoEveryone = "Alla"
+whoMe = "Bara jag"
+
+[sign.wallet.defaultName]
+draw = "Min signatur"
+initials = "Initialer"
+phone = "Telefonsignatur"
+type = "Skriven signatur"
+upload = "Uppladdad signatur"
+
+[sign.wallet.delete]
+body = "\"{{name}}\" tas bort från dina signaturer. Dokument du redan har signerat behåller den."
+confirm = "Ta bort"
+title = "Ta bort den här signaturen?"
+
+[sign.wallet.draw]
+bold = "Tjock penna"
+clear = "Rensa"
+fine = "Tunn penna"
+hint = "Signera ovanför linjen"
+medium = "Medelstor penna"
+pad = "Signaturplatta"
+pen = "Penna"
+tip = "Använd mus, styrplatta, penna eller finger"
+undo = "Ångra"
+
+[sign.wallet.ink]
+black = "Svart bläck"
+blue = "Blått bläck"
+label = "Bläck"
+navy = "Marinblått bläck"
+
+[sign.wallet.intro]
+body = "Skapa den en gång. Den sparas här, redo för varje dokument du signerar."
+privacy = "Sparade signaturer är privata för dig om du inte väljer att dela dem."
+privacyBrowser = "Sparade signaturer stannar i den här webbläsaren."
+title = "Lägg till din signatur"
+
+[sign.wallet.menu]
+delete = "Ta bort"
+discard = "Kassera"
+makeDefault = "Gör till standard"
+options = "Alternativ för {{name}}"
+place = "Placera på sida"
+removeDefault = "Ta bort som standard"
+rename = "Byt namn"
+save = "Spara i mina signaturer"
+share = "Dela med alla"
+stop = "Sluta placera"
+
+[sign.wallet.phone]
+expires = "Går ut om {{time}}"
+qr = "QR-kod för att signera på din telefon"
+received = "Mottagen från din telefon"
+receiveFailed = "Kunde inte läsa signaturen. Skanna den nya koden för att försöka igen."
+step1 = "Skanna koden med telefonens kamera"
+step1Hint = "Den öppnas i telefonens webbläsare, ingen app behövs."
+step2 = "Rita, skriv eller fotografera din signatur"
+step2Hint = "En stor canvas gjord för ett finger."
+step3 = "Den visas här automatiskt"
+step3Hint = "Håll det här fönstret öppet medan du signerar."
+waiting = "Väntar på din telefon..."
+
+[sign.wallet.placed]
+empty = "Signaturer du placerar på sidan listas här."
+fallbackName = "Signatur"
+page = "Sida {{page}}"
+remove = "Ta bort {{name}}"
+show = "Visa {{name}} på sidan"
+title = "På det här dokumentet ({{count}})"
+
+[sign.wallet.rename]
+save = "Spara"
+title = "Byt namn på signatur"
+
+[sign.wallet.status]
+idle = "Välj en signatur för att placera den"
+placing = "Klicka på sidan för att placera {{name}}."
+stop = "Stopp"
+
+[sign.wallet.tabs]
+draw = "Rita"
+phone = "Telefon"
+type = "Skriv"
+upload = "Ladda upp"
+
+[sign.wallet.toast]
+applyFailed = "Kunde inte använda signaturer"
+applyFailedBody = "Dina signaturer finns fortfarande på dokumentet. Försök igen."
+deleteFailed = "Kunde inte ta bort signaturen"
+draftExists = "Spara eller kassera din osparade signatur först"
+initialsFailed = "Kunde inte spara dina initialer"
+initialsPartial = "Din signatur sparades, men dina initialer gjorde det inte. Försök spara dina initialer separat."
+renameFailed = "Kunde inte byta namn på signaturen"
+saved = "Sparad i dina signaturer"
+saveFailed = "Kunde inte spara signaturen"
+saveFailedBody = "Den är fortfarande redo att placeras på det här dokumentet."
+shared = "Delad med alla"
+shareFailed = "Kunde inte dela signaturen"
+
+[sign.wallet.type]
+initials = "Initialer"
+initialsLimit = "För att spara initialer behövs två lediga signaturplatser."
+name = "Ditt namn"
+namePlaceholder = "Skriv ditt namn"
+previewName = "Ditt namn"
+saveInitials = "Spara även mina initialer"
+style = "Stil"
+styleOption = "Stil {{index}}"
+
+[sign.wallet.upload]
+browse = "eller bläddra bland filer"
+drop = "Släpp en bild här"
+failed = "Kunde inte läsa bilden."
+hint = "PNG, JPG eller WebP upp till {{size}} MB. Vita bakgrunder tas bort automatiskt."
+ink = "Bläckfärg"
+inkBlack = "Svart"
+inkBlue = "Blå"
+inkOriginal = "Original"
+preview = "Förhandsgranskning av uppladdad signatur"
+processing = "Rensar bilden..."
+rejected = "Välj en PNG-, JPG- eller WebP-bild upp till {{size}} MB."
+removeBackground = "Ta bort bakgrund"
+removeBackgroundHint = "Vitt papper blir transparent"
+replace = "Ersätt"
+rotate = "Rotera"
+rotateLeft = "Rotera åt vänster"
+rotateRight = "Rotera åt höger"
+trim = "Beskär till signaturen"
+trimHint = "Beskär det tomma utrymmet runt den"
 
 [signatureSettings.tooltip]
 header = "Inställningar för signaturutseende"
@@ -13051,7 +13217,7 @@ processor = "Processor"
 
 [users.columns]
 capabilities = "Funktioner"
-email = "Email"
+email = "E-post"
 person = "Person"
 role = "Roll"
 status = "Status"

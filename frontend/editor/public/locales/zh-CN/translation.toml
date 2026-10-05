@@ -3983,7 +3983,7 @@ viewApiKeys = "查看 API 密钥"
 configLabel = "配置"
 copied = "已复制"
 copy = "复制"
-endpointLabel = "Endpoint URL"
+endpointLabel = "端点 URL"
 tooltip = "复制 {{label}}"
 tooltipCopied = "已复制 {{label}}"
 
@@ -4159,7 +4159,7 @@ targetDeviceDesc = "选择为阅读设备优化的输出配置"
 [convert.formatGroups]
 archive = "归档"
 document = "文档"
-ebook = "eBook"
+ebook = "电子书"
 email = "电子邮件"
 file = "文件"
 image = "图像"
@@ -7345,10 +7345,19 @@ mixed = "{{count}} 个对象"
 multiGeometry = "选择单个对象以编辑其位置和大小。"
 nothingSelected = "未选择任何内容"
 nothingSelectedHint = "点击页面上的任意文本、图像或形状，即可在此编辑。"
+ocrDocumentChanged = "OCR 运行时文档发生了更改。请再次运行 OCR 以包含最新更改。"
+ocrInvalidResult = "OCR 未返回 PDF。请重试。"
+ocrNoLanguages = "服务器上未安装 OCR 语言。"
+ocrRunning = "正在识别文本..."
+ocrUnavailable = "此服务器上 OCR 不可用。"
 oneImage = "图片"
 oneShape = "形状"
 oneText = "文本"
 pages = "页面"
+runOcr = "运行 OCR"
+scanHint_one = "此页面是扫描图像，没有可编辑的文本。请先运行 OCR，使其文本可编辑。"
+scanHint_other = "{{count}} 页是扫描图像，没有可编辑的文本。请先运行 OCR，使其文本可编辑。"
+scannedText = "扫描文本 · 更改的词语会被覆盖，并使用匹配字体重新绘制。"
 tabDocument = "文档"
 tabSelected = "已选择"
 textBoxes = "文本框"
@@ -7549,9 +7558,9 @@ tags = "归档、长期、标准、转换、存储、保存"
 title = "PDF 转 PDF/A"
 
 [pdfToPDFUA]
-header = "PDF To PDF/UA"
+header = "PDF 转 PDF/UA"
 tags = "可访问性,无障碍,已标记,屏幕阅读器,wcag,eaa,section 508,转换"
-title = "PDF To PDF/UA"
+title = "PDF 转 PDF/UA"
 
 [pdfToPDFX]
 tags = "打印,标准,转换,生产,印前,归档"
@@ -7744,7 +7753,7 @@ successMessage = "您的许可证已成功激活。现在可以关闭此窗口�
 
 [plan.team]
 maxUsers = "100 位用户"
-name = "Team"
+name = "团队"
 
 [policies.activity]
 outputsUnavailable = "策略输出已无法下载。"
@@ -8170,14 +8179,14 @@ sub = "完整的 PDF 编辑器。"
 [portal.billing.identity.processor]
 chipMetered = "按量处理"
 chipPipelines = "流水线和 API"
-name = "Processor"
+name = "处理器"
 sub = "Team 基础费用加每积分 {{rate}}"
 subNoRate = "Team 基础费用加按量处理"
 
 [portal.billing.identity.team]
 chipFleet = "机群控制"
 chipIncluded = "每月包含 {{allowance}} 个积分"
-name = "Team"
+name = "团队"
 sub = "最多 {{users}} 位用户"
 subNoLimit = "无用户限制"
 
@@ -8289,7 +8298,7 @@ prepaidRemaining = "剩余预付积分"
 prepaidTooltip = "先于按量计费使用，且不计入你的支出限额。"
 raiseLimit = "提高限额"
 remainingOf = "{{remaining}} / {{total}}"
-rowName = "Processor"
+rowName = "处理器"
 spendAgainstLimit = "本周期按量计费 {{spend}} / {{cap}}"
 
 [portal.billing.seats]
@@ -8428,10 +8437,10 @@ label = "文件与附件"
 
 [portal.connections.commonFields.accessToken]
 helperText = "Stirling 会加密存储此信息，且不会再次显示。"
-label = "Access token"
+label = "访问令牌"
 
 [portal.connections.commonFields.apiKey]
-label = "API key"
+label = "API 密钥"
 
 [portal.connections.commonFields.apiToken]
 label = "API token"
@@ -8444,13 +8453,13 @@ label = "服务器 URL"
 label = "电子邮件"
 
 [portal.connections.commonFields.host]
-label = "Host"
+label = "主机"
 
 [portal.connections.commonFields.password]
 label = "密码"
 
 [portal.connections.commonFields.port]
-label = "Port"
+label = "端口"
 
 [portal.connections.commonFields.username]
 label = "用户名"
@@ -8559,10 +8568,10 @@ label = "服务器 URL"
 placeholder = "https://your-org.consignocloud.com/api/v1"
 
 [portal.connections.types.consigno.fields.clientId]
-label = "API key"
+label = "API 密钥"
 
 [portal.connections.types.consigno.fields.clientSecret]
-label = "API secret"
+label = "API 密钥"
 
 [portal.connections.types.consigno.fields.password]
 label = "密码"
@@ -8626,24 +8635,24 @@ label = "n8n"
 
 [portal.connections.types.n8n.fields.authType]
 helperText = "与 n8n Webhook 节点上设置的 Authentication 匹配。"
-label = "Webhook authentication"
+label = "Webhook 认证"
 
 [portal.connections.types.n8n.fields.authType.options.basic]
-label = "Basic auth"
+label = "基本认证"
 
 [portal.connections.types.n8n.fields.authType.options.header]
-label = "Header auth"
+label = "请求头认证"
 
 [portal.connections.types.n8n.fields.authType.options.none]
 label = "无"
 
 [portal.connections.types.n8n.fields.headerName]
 helperText = "来自 n8n 凭据的 header 名称，而不是其值。"
-label = "Header name"
+label = "请求头名称"
 placeholder = "X-N8N-Key"
 
 [portal.connections.types.n8n.fields.token]
-label = "Header value"
+label = "请求头值"
 
 [portal.connections.types.nextcloud]
 baseUrlPlaceholder = "https://your-server/remote.php/dav"
@@ -8692,7 +8701,7 @@ label = "端点"
 label = "区域"
 
 [portal.connections.types.s3.fields.secretAccessKey]
-label = "Secret access key"
+label = "秘密访问密钥"
 
 [portal.connections.types.sendgrid]
 description = "当策略运行时发送文档或通知电子邮件。"
@@ -9965,7 +9974,7 @@ placeholder = "processor@acme.com"
 
 [portal.policies.operations.fields.headers]
 helperText = "标头名称/值对的 JSON 对象。连接的凭据会为你添加。"
-label = "Headers"
+label = "请求头"
 
 [portal.policies.operations.fields.index]
 label = "索引"
@@ -10391,7 +10400,7 @@ ctaQuote = "审阅你的报价"
 ctaReviewQuote = "审阅报价"
 ctaTrial = "构建你的报价"
 documents = "文档"
-eyebrow = "Enterprise"
+eyebrow = "企业版"
 eyebrowCompany = "{{company}} 企业版"
 inviteTeammates = "邀请队友"
 licenseKey = "许可证密钥"
@@ -10450,7 +10459,7 @@ trialFileHint = "这是你的试用许可证文件。协议就位后，请回来
 [portal.procurement.link]
 cta = "关联账户"
 description = "采购基于你关联的 Stirling 账户运行：我们通过它配置试用、为报价定价并开始计费。关联账户即可开始。"
-eyebrow = "Enterprise"
+eyebrow = "企业版"
 title = "关联你的账户以开始"
 
 [portal.procurement.live]
@@ -12275,6 +12284,163 @@ image = "图像"
 saved = "已保存"
 text = "文本"
 title = "签名类型"
+
+[sign.wallet]
+apply_one = "应用 {{count}} 个签名"
+apply_other = "应用 {{count}} 个签名"
+applyEmpty = "应用签名"
+count = "{{count}} / {{max}}"
+default = "默认"
+loading = "正在加载你的签名..."
+new = "新签名"
+shared = "已共享"
+sharedHint = "所有人都可以使用这些签名"
+unsaved = "未保存"
+yours = "你的签名"
+
+[sign.wallet.create]
+cancel = "取消"
+full = "你的签名库已满（{{max}} 个签名）。删除一个以保存更多。"
+makeDefault = "设为默认"
+method = "如何创建"
+name = "名称"
+save = "保存到我的签名"
+saveBrowserHint = "保存在此浏览器中，下次即可使用。"
+saveHint = "下次签名时可重复使用。"
+subtitle = "创建一次，可在任何文档中重复使用。"
+title = "新签名"
+use = "使用签名"
+who = "谁可以使用"
+whoEveryone = "所有人"
+whoMe = "仅我"
+
+[sign.wallet.defaultName]
+draw = "我的签名"
+initials = "缩写签名"
+phone = "手机签名"
+type = "文字签名"
+upload = "上传的签名"
+
+[sign.wallet.delete]
+body = "\"{{name}}\" 已从你的签名中移除。你已签署的文档会保留它。"
+confirm = "删除"
+title = "删除此签名？"
+
+[sign.wallet.draw]
+bold = "粗笔"
+clear = "清除"
+fine = "细笔"
+hint = "在线条上方签名"
+medium = "中等笔"
+pad = "签名板"
+pen = "笔"
+tip = "使用鼠标、触控板、笔或手指"
+undo = "撤销"
+
+[sign.wallet.ink]
+black = "黑色墨迹"
+blue = "蓝色墨迹"
+label = "墨迹"
+navy = "海军蓝墨迹"
+
+[sign.wallet.intro]
+body = "创建一次。它会保存在这里，供你签署每个文档时使用。"
+privacy = "除非你选择共享，否则保存的签名仅你可见。"
+privacyBrowser = "保存的签名会保留在此浏览器中。"
+title = "添加你的签名"
+
+[sign.wallet.menu]
+delete = "删除"
+discard = "放弃"
+makeDefault = "设为默认"
+options = "{{name}} 的选项"
+place = "放置到页面"
+removeDefault = "取消默认"
+rename = "重命名"
+save = "保存到我的签名"
+share = "与所有人共享"
+stop = "停止放置"
+
+[sign.wallet.phone]
+expires = "{{time}} 后过期"
+qr = "用于在手机上签名的 QR code"
+received = "已从你的手机接收"
+receiveFailed = "无法读取该签名。请扫描新代码重试。"
+step1 = "用手机相机扫描代码"
+step1Hint = "它会在手机浏览器中打开，无需 app。"
+step2 = "绘制、输入或拍摄你的签名"
+step2Hint = "专为手指设计的大画布。"
+step3 = "它会自动显示在这里"
+step3Hint = "签名时请保持此窗口打开。"
+waiting = "正在等待你的手机..."
+
+[sign.wallet.placed]
+empty = "你放置在页面上的签名会列在这里。"
+fallbackName = "签名"
+page = "第 {{page}} 页"
+remove = "移除 {{name}}"
+show = "在页面上显示 {{name}}"
+title = "在此文档上（{{count}}）"
+
+[sign.wallet.rename]
+save = "保存"
+title = "重命名签名"
+
+[sign.wallet.status]
+idle = "选择一个签名进行放置"
+placing = "点击页面以放置 {{name}}。"
+stop = "停止"
+
+[sign.wallet.tabs]
+draw = "绘制"
+phone = "手机"
+type = "输入"
+upload = "上传"
+
+[sign.wallet.toast]
+applyFailed = "无法应用签名"
+applyFailedBody = "你的签名仍在文档上。请重试。"
+deleteFailed = "无法删除签名"
+draftExists = "请先保存或放弃未保存的签名"
+initialsFailed = "无法保存你的缩写签名"
+initialsPartial = "你的签名已保存，但缩写签名未保存。请尝试单独保存缩写签名。"
+renameFailed = "无法重命名签名"
+saved = "已保存到你的签名"
+saveFailed = "无法保存签名"
+saveFailedBody = "它仍可放置到此文档上。"
+shared = "已与所有人共享"
+shareFailed = "无法共享签名"
+
+[sign.wallet.type]
+initials = "缩写签名"
+initialsLimit = "保存缩写签名需要两个空闲签名槽位。"
+name = "你的姓名"
+namePlaceholder = "输入你的姓名"
+previewName = "你的姓名"
+saveInitials = "同时保存我的缩写签名"
+style = "样式"
+styleOption = "样式 {{index}}"
+
+[sign.wallet.upload]
+browse = "或浏览文件"
+drop = "将图像拖放到这里"
+failed = "无法读取该图像。"
+hint = "PNG、JPG 或 WebP，最大 {{size}} MB。白色背景会自动移除。"
+ink = "墨迹颜色"
+inkBlack = "黑色"
+inkBlue = "蓝色"
+inkOriginal = "原始"
+preview = "上传的签名预览"
+processing = "正在清理图像..."
+rejected = "请选择最大 {{size}} MB 的 PNG、JPG 或 WebP 图像。"
+removeBackground = "移除背景"
+removeBackgroundHint = "白纸会变为透明"
+replace = "替换"
+rotate = "旋转"
+rotateLeft = "向左旋转"
+rotateRight = "向右旋转"
+trim = "裁剪到签名"
+trimHint = "裁剪其周围的空白区域"
 
 [signatureSettings.tooltip]
 header = "签名外观设置"

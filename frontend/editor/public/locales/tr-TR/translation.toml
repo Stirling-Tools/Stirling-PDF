@@ -263,7 +263,7 @@ name = "Metin"
 placeholder = "Metin girin"
 
 [addImage.type]
-canvas = "Canvas"
+canvas = "Tuval"
 image = "Görüntü"
 saved = "Kaydedilmiş"
 text = "Metin"
@@ -484,7 +484,7 @@ name = "Metin içeriği"
 placeholder = "Ekleyeceğiniz metni girin"
 
 [addText.type]
-canvas = "Canvas"
+canvas = "Tuval"
 image = "Görüntü"
 saved = "Kaydedilmiş"
 text = "Metin"
@@ -742,10 +742,10 @@ title = "Belgeler ve RAG"
 
 [admin.settings.ai.documents.embeddingApiKey]
 description = "Engine'in kendi ortam kimlik bilgisini kullanmak için boş bırakın. Kendi barındırılan tek engine dağıtımları için geçerlidir."
-generic = "Embedding API key"
-openai = "OpenAI API key"
+generic = "Embedding API anahtarı"
+openai = "OpenAI API anahtarı"
 setPlaceholder = "Kaydedildi - geçerli key'i korumak için boş bırakın"
-voyageai = "VoyageAI API key"
+voyageai = "VoyageAI API anahtarı"
 
 [admin.settings.ai.documents.embeddingBaseUrl]
 description = "OpenAI uyumlu / Ollama embeddings endpoint'inin temel URL'si, örn. http://ollama:11434/v1. Güvenilir bir dahili endpoint'e işaret etmelidir (SSRF açısından hassas)."
@@ -753,7 +753,7 @@ label = "Embedding temel URL'si"
 
 [admin.settings.ai.documents.embeddingModel]
 description = "Embedding model adı. Serbest metin; öneriler yalnızca ipucudur."
-label = "Embedding model"
+label = "Embedding modeli"
 
 [admin.settings.ai.documents.embeddingProvider]
 description = "Belge metnini vektör embedding'lere dönüştürmek için kullanılan sağlayıcı."
@@ -892,10 +892,10 @@ description = "AI engine'in kullandığı LLM sağlayıcısını ve akıllı/hı
 title = "Modeller ve Sağlayıcılar"
 
 [admin.settings.ai.models.apiKey]
-anthropic = "Anthropic API key"
+anthropic = "Anthropic API anahtarı"
 description = "Engine'in kendi ortam kimlik bilgisini kullanmak için boş bırakın. Kendi barındırılan tek engine dağıtımları için geçerlidir."
-generic = "API key"
-openai = "OpenAI API key"
+generic = "API anahtarı"
+openai = "OpenAI API anahtarı"
 setPlaceholder = "Kaydedildi - geçerli key'i korumak için boş bırakın"
 
 [admin.settings.ai.models.baseUrl]
@@ -1510,7 +1510,7 @@ title = "Bir MCP istemcisi bağlayın"
 
 [admin.settings.mcp.issuerUri]
 description = "OAuth2 authorization server'ınız (/.well-known/openid-configuration yayınlamalıdır). Etkinleştirildiğinde zorunludur."
-label = "OAuth Issuer URL"
+label = "OAuth Veren URL"
 
 [admin.settings.mcp.jwksUri]
 description = "Issuer'dan keşfetmek için boş bırakın. Yalnızca IdP'niz anahtarları standart olmayan bir URL'de sunuyorsa ayarlayın."
@@ -1529,7 +1529,7 @@ label = "Mevcut bir Stirling hesabı gerektir"
 
 [admin.settings.mcp.resourceId]
 description = "Bu sunucunun herkese açık /mcp URL'si. Token'lar bunu audience'larında listelemelidir (RFC 8707), aksi halde reddedilir."
-label = "Resource ID"
+label = "Kaynak ID"
 
 [admin.settings.mcp.scopes]
 description = "Okuma işlemleri için mcp.tools.read, yazma/AI işlemleri için mcp.tools.write gerektir."
@@ -3351,7 +3351,7 @@ credit-note = "Alacak dekontu"
 customs-declaration = "Gümrük beyannamesi"
 customs-form = "Gümrük formu"
 cv = "CV"
-datasheet = "Datasheet"
+datasheet = "Veri sayfası"
 debit-note = "Borç dekontu"
 deed = "Tapu senedi"
 delivery-note = "Teslimat notu"
@@ -4125,7 +4125,7 @@ selectSourceFormatFirst = "Önce bir kaynak biçim seçin"
 settings = "Ayarlar"
 single = "Tek"
 sourceFormatPlaceholder = "Kaynak biçim"
-strictMode = "Strict Mode"
+strictMode = "Katı Mod"
 strictModeDesc = "Dönüştürme mükemmel değilse hata ver (VeraPDF doğrulaması kullanır)"
 svgPdfOptions = "SVG'den PDF'ye Seçenekleri"
 svgToPdf = "SVG → PDF"
@@ -7345,10 +7345,19 @@ mixed = "{{count}} nesne"
 multiGeometry = "Konumunu ve boyutunu düzenlemek için tek bir nesne seçin."
 nothingSelected = "Hiçbir şey seçili değil"
 nothingSelectedHint = "Burada düzenlemek için sayfadaki herhangi bir metne, görüntüye veya şekle tıklayın."
+ocrDocumentChanged = "OCR çalışırken belge değişti. En son değişikliklerinizi dahil etmek için OCR'ı tekrar çalıştırın."
+ocrInvalidResult = "OCR bir PDF döndürmedi. Lütfen tekrar deneyin."
+ocrNoLanguages = "Sunucuda yüklü OCR dili yok."
+ocrRunning = "Metin tanınıyor..."
+ocrUnavailable = "OCR bu sunucuda kullanılamıyor."
 oneImage = "Resim"
 oneShape = "Şekil"
 oneText = "Metin"
 pages = "Sayfalar"
+runOcr = "OCR çalıştır"
+scanHint_one = "Bu sayfa, düzenlenecek metni olmayan taranmış bir görüntüdür. Metnini düzenlenebilir yapmak için önce OCR çalıştırın."
+scanHint_other = "{{count}} sayfa, düzenlenecek metni olmayan taranmış görüntülerdir. Metinlerini düzenlenebilir yapmak için önce OCR çalıştırın."
+scannedText = "Taranmış metin · değiştirilen kelimelerin üzeri kapatılır ve eşleşen bir yazı tipiyle yeniden çizilir."
 tabDocument = "Belge"
 tabSelected = "Seçili"
 textBoxes = "Metin kutuları"
@@ -8096,7 +8105,7 @@ usage = "Kullanım"
 [portal.billing.compare]
 current = "Geçerli"
 enterpriseData = "Veri yerleşimi ve SCIM"
-enterpriseName = "Enterprise"
+enterpriseName = "Kurumsal"
 enterprisePrice = "Anlaşmanıza göre"
 enterpriseProcessing = "Ölçümlü veya sabit"
 enterpriseSignIn = "SAML ve denetim"
@@ -8170,14 +8179,14 @@ sub = "Tam PDF Düzenleyici."
 [portal.billing.identity.processor]
 chipMetered = "Ölçümlü işleme"
 chipPipelines = "İş hatları ve API"
-name = "Processor"
+name = "İşleyici"
 sub = "Team tabanı artı kredi başına {{rate}}"
 subNoRate = "Team tabanı artı ölçümlü işleme"
 
 [portal.billing.identity.team]
 chipFleet = "Filo kontrolü"
 chipIncluded = "Aylık {{allowance}} dahil kredi"
-name = "Team"
+name = "Ekip"
 sub = "En fazla {{users}} kullanıcı"
 subNoLimit = "Kullanıcı sınırı yok"
 
@@ -8289,7 +8298,7 @@ prepaidRemaining = "Kalan ön ödemeli krediler"
 prepaidTooltip = "Ölçümlü faturalandırmadan önce ve harcama limitinizin dışında kullanılır."
 raiseLimit = "Limiti artır"
 remainingOf = "{{total}} içinden {{remaining}}"
-rowName = "Processor"
+rowName = "İşleyici"
 spendAgainstLimit = "Bu döngüde {{cap}} içinden {{spend}} ölçümlü"
 
 [portal.billing.seats]
@@ -8312,7 +8321,7 @@ plan = "Planınız"
 [portal.billing.serverPlan]
 active = "Etkin self-hosted lisans"
 connectBody = "Cloud işleme kredileri eklemek için bağlanın. Sunucu lisansınız etkin kalır."
-enterprise = "Enterprise"
+enterprise = "Kurumsal"
 enterpriseConnectBody = "Enterprise lisansınız bu sunucuda işlemeyi içerir. Hesap bağlamak isteğe bağlıdır."
 included = "Lisansınıza dahil"
 seats = "{{seats}} lisanslı koltuk"
@@ -10391,7 +10400,7 @@ ctaQuote = "Teklifinizi inceleyin"
 ctaReviewQuote = "Teklifi incele"
 ctaTrial = "Teklifinizi oluşturun"
 documents = "Belgeler"
-eyebrow = "Enterprise"
+eyebrow = "Kurumsal"
 eyebrowCompany = "{{company}} Kurumsal"
 inviteTeammates = "Takım arkadaşlarını davet et"
 licenseKey = "Lisans anahtarı"
@@ -10450,7 +10459,7 @@ trialFileHint = "Bu, deneme lisans dosyanızdır. Sözleşmeniz yürürlüğe gi
 [portal.procurement.link]
 cta = "Hesabı bağla"
 description = "Satın alma, bağlı Stirling hesabınızda çalışır: denemeyi hazırlama, teklifinizi fiyatlandırma ve faturalandırmayı başlatma şeklimiz budur. Başlamak için bir hesap bağlayın."
-eyebrow = "Enterprise"
+eyebrow = "Kurumsal"
 title = "Başlamak için hesabınızı bağlayın"
 
 [portal.procurement.live]
@@ -11677,7 +11686,7 @@ title = "Faturalandırma"
 
 [settings.configuration]
 advanced = "Gelişmiş"
-connections = "Single sign-on"
+connections = "Tek oturum açma"
 database = "Veritabanı"
 endpoints = "Uç Noktalar"
 features = "Özellikler"
@@ -11993,7 +12002,7 @@ success = "Şifre başarıyla güncellendi. Lütfen yeniden oturum açın."
 update = "Şifreyi güncelle"
 
 [settings.securityAuth]
-connections = "Single sign-on"
+connections = "Tek oturum açma"
 security = "Oturum açma ve güvenlik"
 telegram = "Telegram"
 title = "Güvenlik ve oturum açma"
@@ -12275,6 +12284,163 @@ image = "Görüntü"
 saved = "Kaydedildi"
 text = "Metin"
 title = "İmza Türü"
+
+[sign.wallet]
+apply_one = "{{count}} imza uygula"
+apply_other = "{{count}} imza uygula"
+applyEmpty = "İmzaları uygula"
+count = "{{count}} / {{max}}"
+default = "Varsayılan"
+loading = "İmzalarınız yükleniyor..."
+new = "Yeni imza"
+shared = "Paylaşılan"
+sharedHint = "Bunları herkes kullanabilir"
+unsaved = "Kaydedilmemiş"
+yours = "İmzalarınız"
+
+[sign.wallet.create]
+cancel = "İptal"
+full = "Kitaplığınız dolu ({{max}} imza). Daha fazla kaydetmek için birini silin."
+makeDefault = "Varsayılan yap"
+method = "Nasıl oluşturulsun"
+name = "Ad"
+save = "İmzalarıma kaydet"
+saveBrowserHint = "Bu tarayıcıda tutulur, bir sonraki sefer için hazırdır."
+saveHint = "Bir sonraki imzalamanızda yeniden kullanıma hazır."
+subtitle = "Bir kez oluşturun, herhangi bir belgede yeniden kullanın."
+title = "Yeni imza"
+use = "İmzayı kullan"
+who = "Kim kullanabilir"
+whoEveryone = "Herkes"
+whoMe = "Yalnızca ben"
+
+[sign.wallet.defaultName]
+draw = "İmzam"
+initials = "Baş harfler"
+phone = "Telefon imzası"
+type = "Yazılı imza"
+upload = "Yüklenen imza"
+
+[sign.wallet.delete]
+body = "\"{{name}}\" imzalarınızdan kaldırıldı. Zaten imzaladığınız belgelerde kalır."
+confirm = "Sil"
+title = "Bu imza silinsin mi?"
+
+[sign.wallet.draw]
+bold = "Kalın kalem"
+clear = "Temizle"
+fine = "İnce kalem"
+hint = "Çizginin üzerine imzalayın"
+medium = "Orta kalem"
+pad = "İmza pedi"
+pen = "Kalem"
+tip = "Fare, trackpad, kalem veya parmak kullanın"
+undo = "Geri al"
+
+[sign.wallet.ink]
+black = "Siyah mürekkep"
+blue = "Mavi mürekkep"
+label = "Mürekkep"
+navy = "Lacivert mürekkep"
+
+[sign.wallet.intro]
+body = "Bir kez oluşturun. Burada kaydedilir, imzaladığınız her belge için hazırdır."
+privacy = "Kaydedilen imzalar, paylaşmayı seçmediğiniz sürece size özeldir."
+privacyBrowser = "Kaydedilen imzalar bu tarayıcıda kalır."
+title = "İmzanızı ekleyin"
+
+[sign.wallet.menu]
+delete = "Sil"
+discard = "Vazgeç"
+makeDefault = "Varsayılan yap"
+options = "{{name}} için seçenekler"
+place = "Sayfaya yerleştir"
+removeDefault = "Varsayılan olmaktan çıkar"
+rename = "Yeniden adlandır"
+save = "İmzalarıma kaydet"
+share = "Herkesle paylaş"
+stop = "Yerleştirmeyi durdur"
+
+[sign.wallet.phone]
+expires = "{{time}} içinde sona erer"
+qr = "Telefonunuzda imzalamak için QR kod"
+received = "Telefonunuzdan alındı"
+receiveFailed = "Bu imza okunamadı. Tekrar denemek için yeni kodu tarayın."
+step1 = "Kodu telefon kameranızla tarayın"
+step1Hint = "Telefon tarayıcısında açılır, uygulama gerekmez."
+step2 = "İmzanızı çizin, yazın veya fotoğrafını çekin"
+step2Hint = "Parmak için yapılmış büyük bir tuval."
+step3 = "Burada otomatik olarak görünür"
+step3Hint = "İmzalarken bu pencereyi açık tutun."
+waiting = "Telefonunuz bekleniyor..."
+
+[sign.wallet.placed]
+empty = "Sayfaya yerleştirdiğiniz imzalar burada listelenir."
+fallbackName = "İmza"
+page = "Sayfa {{page}}"
+remove = "{{name}} kaldır"
+show = "{{name}} sayfada göster"
+title = "Bu belgede ({{count}})"
+
+[sign.wallet.rename]
+save = "Kaydet"
+title = "İmzayı yeniden adlandır"
+
+[sign.wallet.status]
+idle = "Yerleştirmek için bir imza seçin"
+placing = "{{name}} yerleştirmek için sayfaya tıklayın."
+stop = "Durdur"
+
+[sign.wallet.tabs]
+draw = "Çiz"
+phone = "Telefon"
+type = "Yaz"
+upload = "Yükle"
+
+[sign.wallet.toast]
+applyFailed = "İmzalar uygulanamadı"
+applyFailedBody = "İmzalarınız hâlâ belgede. Tekrar deneyin."
+deleteFailed = "İmza silinemedi"
+draftExists = "Önce kaydedilmemiş imzanızı kaydedin veya vazgeçin"
+initialsFailed = "Baş harfleriniz kaydedilemedi"
+initialsPartial = "İmzanız kaydedildi, ancak baş harfleriniz kaydedilmedi. Baş harflerinizi ayrı olarak kaydetmeyi deneyin."
+renameFailed = "İmza yeniden adlandırılamadı"
+saved = "İmzalarınıza kaydedildi"
+saveFailed = "İmza kaydedilemedi"
+saveFailedBody = "Bu belgeye yerleştirmek için hâlâ hazır."
+shared = "Herkesle paylaşıldı"
+shareFailed = "İmza paylaşılamadı"
+
+[sign.wallet.type]
+initials = "Baş harfler"
+initialsLimit = "Baş harfleri kaydetmek için iki boş imza yuvası gerekir."
+name = "Adınız"
+namePlaceholder = "Adınızı yazın"
+previewName = "Adınız"
+saveInitials = "Baş harflerimi de kaydet"
+style = "Stil"
+styleOption = "Stil {{index}}"
+
+[sign.wallet.upload]
+browse = "veya dosyalara göz atın"
+drop = "Buraya bir görüntü bırakın"
+failed = "Bu görüntü okunamadı."
+hint = "{{size}} MB'a kadar PNG, JPG veya WebP. Beyaz arka planlar otomatik olarak kaldırılır."
+ink = "Mürekkep rengi"
+inkBlack = "Siyah"
+inkBlue = "Mavi"
+inkOriginal = "Orijinal"
+preview = "Yüklenen imza önizlemesi"
+processing = "Görüntü temizleniyor..."
+rejected = "{{size}} MB'a kadar bir PNG, JPG veya WebP görüntüsü seçin."
+removeBackground = "Arka planı kaldır"
+removeBackgroundHint = "Beyaz kağıt şeffaf olur"
+replace = "Değiştir"
+rotate = "Döndür"
+rotateLeft = "Sola döndür"
+rotateRight = "Sağa döndür"
+trim = "İmzaya kırp"
+trimHint = "Etrafındaki boş alanı kırpar"
 
 [signatureSettings.tooltip]
 header = "İmza Görünümü Ayarları"

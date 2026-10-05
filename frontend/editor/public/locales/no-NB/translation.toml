@@ -1529,7 +1529,7 @@ label = "Krev en eksisterende Stirling-konto"
 
 [admin.settings.mcp.resourceId]
 description = "Denne serverens offentlige /mcp URL. Tokens må oppgi den i audience (RFC 8707), ellers avvises de."
-label = "Resource ID"
+label = "Ressurs-ID"
 
 [admin.settings.mcp.scopes]
 description = "Krev mcp.tools.read for leseoperasjoner og mcp.tools.write for skrive-/AI-operasjoner."
@@ -2352,7 +2352,7 @@ label = "Åpne meny for {{title}}"
 cancel = "Avbryt"
 confirm = "Importer"
 detectedAutomation = "Automate JSON"
-detectedFolderScan = "Folder Scanning JSON"
+detectedFolderScan = "Mappeskanning JSON"
 dropHint = "Slipp JSON her eller klikk for å velge en fil"
 dropSubhint = "Både Automate- og Folder Scanning-konfigurasjoner godtas"
 dropzoneAriaLabel = "Slipp en JSON-fil for automatisering her"
@@ -7345,10 +7345,19 @@ mixed = "{{count}} objekter"
 multiGeometry = "Velg ett enkelt objekt for å redigere posisjon og størrelse."
 nothingSelected = "Ingenting valgt"
 nothingSelectedHint = "Klikk på tekst, bilde eller form på siden for å redigere det her."
+ocrDocumentChanged = "Dokumentet ble endret mens OCR kjørte. Kjør OCR på nytt for å inkludere de siste endringene dine."
+ocrInvalidResult = "OCR returnerte ikke en PDF. Prøv igjen."
+ocrNoLanguages = "Ingen OCR-språk er installert på serveren."
+ocrRunning = "Gjenkjenner tekst..."
+ocrUnavailable = "OCR er ikke tilgjengelig på denne serveren."
 oneImage = "Bilde"
 oneShape = "Form"
 oneText = "Tekst"
 pages = "Sider"
+runOcr = "Kjør OCR"
+scanHint_one = "Denne siden er et skannet bilde uten tekst å redigere. Kjør OCR først for å gjøre teksten redigerbar."
+scanHint_other = "{{count}} sider er skannede bilder uten tekst å redigere. Kjør OCR først for å gjøre teksten redigerbar."
+scannedText = "Skannet tekst · endrede ord dekkes til og tegnes på nytt med en tilsvarende skrifttype."
 tabDocument = "Dokument"
 tabSelected = "Valgt"
 textBoxes = "Tekstbokser"
@@ -8170,7 +8179,7 @@ sub = "Den fullstendige PDF Editor."
 [portal.billing.identity.processor]
 chipMetered = "Målt behandling"
 chipPipelines = "Pipelines og API"
-name = "Processor"
+name = "Prosessor"
 sub = "Team-base pluss {{rate}} per kreditt"
 subNoRate = "Team-base pluss målt behandling"
 
@@ -8289,7 +8298,7 @@ prepaidRemaining = "Forhåndsbetalte kreditter igjen"
 prepaidTooltip = "Brukes før målt fakturering, og utenfor forbruksgrensen din."
 raiseLimit = "Øk grensen"
 remainingOf = "{{remaining}} av {{total}}"
-rowName = "Processor"
+rowName = "Prosessor"
 spendAgainstLimit = "{{spend}} av {{cap}} målt denne syklusen"
 
 [portal.billing.seats]
@@ -8428,7 +8437,7 @@ label = "Fil og legg ved"
 
 [portal.connections.commonFields.accessToken]
 helperText = "Stirling lagrer dette kryptert og viser det aldri igjen."
-label = "Access token"
+label = "Tilgangstoken"
 
 [portal.connections.commonFields.apiKey]
 label = "API key"
@@ -8487,7 +8496,7 @@ label = "Autentisering"
 label = "Brukernavn og passord"
 
 [portal.connections.types.api.fields.authType.options.bearer]
-label = "Bearer token"
+label = "Bearer-token"
 
 [portal.connections.types.api.fields.authType.options.header]
 label = "Token i en egendefinert header"
@@ -11677,7 +11686,7 @@ title = "Fakturering"
 
 [settings.configuration]
 advanced = "Avansert"
-connections = "Single sign-on"
+connections = "Enkel pålogging"
 database = "Database"
 endpoints = "Endepunkter"
 features = "Funksjoner"
@@ -11993,7 +12002,7 @@ success = "Passordet ble oppdatert. Logg inn på nytt."
 update = "Oppdater passord"
 
 [settings.securityAuth]
-connections = "Single sign-on"
+connections = "Enkel pålogging"
 security = "Innlogging og sikkerhet"
 telegram = "Telegram"
 title = "Sikkerhet og innlogging"
@@ -12275,6 +12284,163 @@ image = "Bilde"
 saved = "Lagret"
 text = "Tekst"
 title = "Signaturtype"
+
+[sign.wallet]
+apply_one = "Bruk {{count}} signatur"
+apply_other = "Bruk {{count}} signaturer"
+applyEmpty = "Bruk signaturer"
+count = "{{count}} av {{max}}"
+default = "Standard"
+loading = "Laster signaturene dine..."
+new = "Ny signatur"
+shared = "Delt"
+sharedHint = "Alle kan bruke disse"
+unsaved = "Ikke lagret"
+yours = "Dine signaturer"
+
+[sign.wallet.create]
+cancel = "Avbryt"
+full = "Biblioteket ditt er fullt ({{max}} signaturer). Slett én for å lagre flere."
+makeDefault = "Gjør til standard"
+method = "Slik oppretter du den"
+name = "Navn"
+save = "Lagre i signaturene mine"
+saveBrowserHint = "Lagres i denne nettleseren, klar til neste gang."
+saveHint = "Klar til å brukes igjen neste gang du signerer."
+subtitle = "Opprett den én gang, bruk den på nytt i alle dokumenter."
+title = "Ny signatur"
+use = "Bruk signatur"
+who = "Hvem kan bruke den"
+whoEveryone = "Alle"
+whoMe = "Bare meg"
+
+[sign.wallet.defaultName]
+draw = "Min signatur"
+initials = "Initialer"
+phone = "Telefonsignatur"
+type = "Skrevet signatur"
+upload = "Opplastet signatur"
+
+[sign.wallet.delete]
+body = "\"{{name}}\" er fjernet fra signaturene dine. Dokumenter du allerede har signert, beholder den."
+confirm = "Slett"
+title = "Slette denne signaturen?"
+
+[sign.wallet.draw]
+bold = "Tykk penn"
+clear = "Tøm"
+fine = "Tynn penn"
+hint = "Signer over linjen"
+medium = "Middels penn"
+pad = "Signaturfelt"
+pen = "Penn"
+tip = "Bruk mus, styreflate, penn eller finger"
+undo = "Angre"
+
+[sign.wallet.ink]
+black = "Svart blekk"
+blue = "Blått blekk"
+label = "Blekk"
+navy = "Marineblått blekk"
+
+[sign.wallet.intro]
+body = "Opprett den én gang. Den lagres her, klar for hvert dokument du signerer."
+privacy = "Lagrede signaturer er private for deg med mindre du velger å dele dem."
+privacyBrowser = "Lagrede signaturer blir i denne nettleseren."
+title = "Legg til signaturen din"
+
+[sign.wallet.menu]
+delete = "Slett"
+discard = "Forkast"
+makeDefault = "Gjør til standard"
+options = "Alternativer for {{name}}"
+place = "Plasser på siden"
+removeDefault = "Fjern som standard"
+rename = "Gi nytt navn"
+save = "Lagre i signaturene mine"
+share = "Del med alle"
+stop = "Stopp plassering"
+
+[sign.wallet.phone]
+expires = "Utløper om {{time}}"
+qr = "QR code for å signere på telefonen"
+received = "Mottatt fra telefonen din"
+receiveFailed = "Kunne ikke lese den signaturen. Skann den nye koden for å prøve igjen."
+step1 = "Skann koden med telefonkameraet"
+step1Hint = "Den åpnes i telefonens nettleser, ingen app nødvendig."
+step2 = "Tegn, skriv eller fotografer signaturen din"
+step2Hint = "Et stort lerret laget for en finger."
+step3 = "Den vises her automatisk"
+step3Hint = "Hold dette vinduet åpent mens du signerer."
+waiting = "Venter på telefonen din..."
+
+[sign.wallet.placed]
+empty = "Signaturer du plasserer på siden, vises her."
+fallbackName = "Signatur"
+page = "Side {{page}}"
+remove = "Fjern {{name}}"
+show = "Vis {{name}} på siden"
+title = "På dette dokumentet ({{count}})"
+
+[sign.wallet.rename]
+save = "Lagre"
+title = "Gi signatur nytt navn"
+
+[sign.wallet.status]
+idle = "Velg en signatur for å plassere den"
+placing = "Klikk på siden for å plassere {{name}}."
+stop = "Stopp"
+
+[sign.wallet.tabs]
+draw = "Tegn"
+phone = "Telefon"
+type = "Skriv"
+upload = "Last opp"
+
+[sign.wallet.toast]
+applyFailed = "Kunne ikke bruke signaturene"
+applyFailedBody = "Signaturene dine er fortsatt på dokumentet. Prøv igjen."
+deleteFailed = "Kunne ikke slette signaturen"
+draftExists = "Lagre eller forkast den ulagrede signaturen først"
+initialsFailed = "Kunne ikke lagre initialene dine"
+initialsPartial = "Signaturen din ble lagret, men initialene dine ble ikke det. Prøv å lagre initialene separat."
+renameFailed = "Kunne ikke gi signaturen nytt navn"
+saved = "Lagret i signaturene dine"
+saveFailed = "Kunne ikke lagre signaturen"
+saveFailedBody = "Den er fortsatt klar til å plasseres på dette dokumentet."
+shared = "Delt med alle"
+shareFailed = "Kunne ikke dele signaturen"
+
+[sign.wallet.type]
+initials = "Initialer"
+initialsLimit = "Lagring av initialer krever to ledige signaturplasser."
+name = "Navnet ditt"
+namePlaceholder = "Skriv navnet ditt"
+previewName = "Navnet ditt"
+saveInitials = "Lagre også initialene mine"
+style = "Stil"
+styleOption = "Stil {{index}}"
+
+[sign.wallet.upload]
+browse = "eller bla gjennom filer"
+drop = "Slipp et bilde her"
+failed = "Kunne ikke lese det bildet."
+hint = "PNG, JPG eller WebP opptil {{size}} MB. Hvite bakgrunner fjernes automatisk."
+ink = "Blekkfarge"
+inkBlack = "Svart"
+inkBlue = "Blå"
+inkOriginal = "Original"
+preview = "Forhåndsvisning av opplastet signatur"
+processing = "Rydder opp i bildet..."
+rejected = "Velg et PNG, JPG eller WebP-bilde opptil {{size}} MB."
+removeBackground = "Fjern bakgrunn"
+removeBackgroundHint = "Hvitt papir blir gjennomsiktig"
+replace = "Erstatt"
+rotate = "Roter"
+rotateLeft = "Roter mot venstre"
+rotateRight = "Roter mot høyre"
+trim = "Beskjær til signatur"
+trimHint = "Beskjærer det tomme området rundt den"
 
 [signatureSettings.tooltip]
 header = "Innstillinger for signaturutforming"

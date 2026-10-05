@@ -1341,7 +1341,7 @@ label = "Omejitev nalaganja datotek"
 
 [admin.settings.general.frontendUrl]
 description = "Osnovni URL za frontend (npr. https://pdf.example.com). Uporablja se za povezave v e-poštnih povabilih in mobilna nalaganja prek QR kode. Pustite prazno za uporabo URL-ja zaledja."
-label = "Frontend URL"
+label = "URL vmesnika"
 
 [admin.settings.general.hideDisabledTools]
 description = "Skrij onemogočena orodja iz vmesnika"
@@ -1537,7 +1537,7 @@ label = "Uveljavi obsege OAuth"
 
 [admin.settings.mcp.usernameClaim]
 description = "JWT claim, ki se ujema z uporabniškim imenom Stirling (npr. sub, email, preferred_username)."
-label = "Username claim"
+label = "Zahtevek uporabniškega imena"
 
 [admin.settings.plan.noData]
 message = "Ta strežnik ni mogel doseči licenčne storitve. Poskusite znova ali preverite licenčni ključ."
@@ -3983,7 +3983,7 @@ viewApiKeys = "Ogled API ključev"
 configLabel = "Konfiguracija"
 copied = "Kopirano"
 copy = "Kopiraj"
-endpointLabel = "Endpoint URL"
+endpointLabel = "URL končne točke"
 tooltip = "Kopiraj {{label}}"
 tooltipCopied = "{{label}} kopirano"
 
@@ -7345,10 +7345,19 @@ mixed = "{{count}} predmetov"
 multiGeometry = "Izberite en predmet za urejanje njegovega položaja in velikosti."
 nothingSelected = "Nič ni izbrano"
 nothingSelectedHint = "Kliknite katero koli besedilo, sliko ali obliko na strani, da jo tukaj uredite."
+ocrDocumentChanged = "Dokument se je med izvajanjem OCR spremenil. Znova zaženite OCR, da vključite najnovejše spremembe."
+ocrInvalidResult = "OCR ni vrnil PDF. Poskusite znova."
+ocrNoLanguages = "Na strežniku ni nameščenih jezikov OCR."
+ocrRunning = "Prepoznavanje besedila..."
+ocrUnavailable = "OCR na tem strežniku ni na voljo."
 oneImage = "Slika"
 oneShape = "Oblika"
 oneText = "Besedilo"
 pages = "Strani"
+runOcr = "Zaženi OCR"
+scanHint_one = "Ta stran je optično prebrana slika brez besedila za urejanje. Najprej zaženite OCR, da bo njeno besedilo mogoče urejati."
+scanHint_other = "{{count}} strani so optično prebrane slike brez besedila za urejanje. Najprej zaženite OCR, da bo njihovo besedilo mogoče urejati."
+scannedText = "Optično prebrano besedilo · spremenjene besede so prekrite in znova izrisane z ustrezno pisavo."
 tabDocument = "Dokument"
 tabSelected = "Izbrano"
 textBoxes = "Besedilna polja"
@@ -8105,7 +8114,7 @@ enterpriseUsers = "Brez omejitve"
 enterpriseWhere = "Plus več vozlišč in izolirano okolje"
 exploreEnterprise = "Raziščite Enterprise"
 freeData = "Ostane tam, kjer ga izvajate"
-freeName = "Free"
+freeName = "Brezplačno"
 freePrice = "Brez kartice, brez poteka"
 freeProcessing = "{{allowance}} kreditov na mesec"
 freeProcessingUnknown = "Mesečna kvota kreditov"
@@ -8164,7 +8173,7 @@ oauthSso = "SSO (OAuth2/OIDC)"
 chipAnywhere = "Splet, namizje in samostojno gostovanje"
 chipCredits = "{{allowance}} brezplačnih kreditov mesečno"
 chipTools = "Vsako orodje PDF"
-name = "Free"
+name = "Brezplačno"
 sub = "Celoten urejevalnik PDF."
 
 [portal.billing.identity.processor]
@@ -8569,7 +8578,7 @@ label = "Geslo"
 
 [portal.connections.types.consigno.fields.tenantId]
 helperText = "Potrebno samo, če vaša organizacija uporablja tenant-e."
-label = "Tenant"
+label = "Najemnik"
 
 [portal.connections.types.consigno.fields.username]
 label = "Uporabniško ime"
@@ -8793,7 +8802,7 @@ fieldCount_other = "{{count}} polj"
 filterAll = "Vse"
 filterAriaLabel = "Filtriraj endpoints po vertikali"
 lead = "Vsaka vrsta dokumenta je tipiziran endpoint. POST datoteko, prejmite s shemo potrjen JSON. Filtrirajte po vertikali spodaj."
-title = "Endpoints"
+title = "Končne točke"
 
 [portal.docs.errors]
 codeCaption = "422 Unprocessable Entity"
@@ -8811,7 +8820,7 @@ title = "Dokumentacija ni na voljo"
 [portal.docs.quickstart]
 eyebrow = "ZAČETEK"
 lead = "Pošljite svoj prvi dokument na tipiziran endpoint in v treh korakih prejmite strukturiran JSON. Brez učenja modela, brez prompt engineering."
-title = "Quickstart"
+title = "Hitri začetek"
 
 [portal.docs.quickstart.callout]
 bodyAfterLink = "za recepte za kopiranje in lepljenje."
@@ -12275,6 +12284,163 @@ image = "Slika"
 saved = "Shranjeno"
 text = "Besedilo"
 title = "Vrsta podpisa"
+
+[sign.wallet]
+apply_one = "Uporabi {{count}} podpis"
+apply_other = "Uporabi {{count}} podpisov"
+applyEmpty = "Uporabi podpise"
+count = "{{count}} od {{max}}"
+default = "Privzeto"
+loading = "Nalaganje vaših podpisov..."
+new = "Nov podpis"
+shared = "V skupni rabi"
+sharedHint = "Uporabijo jih lahko vsi"
+unsaved = "Neshranjeno"
+yours = "Vaši podpisi"
+
+[sign.wallet.create]
+cancel = "Prekliči"
+full = "Vaša knjižnica je polna ({{max}} podpisov). Izbrišite enega, da shranite več."
+makeDefault = "Nastavi kot privzeto"
+method = "Kako ga ustvariti"
+name = "Ime"
+save = "Shrani med moje podpise"
+saveBrowserHint = "Shranjeno v tem brskalniku, pripravljeno za naslednjič."
+saveHint = "Pripravljeno za ponovno uporabo ob naslednjem podpisovanju."
+subtitle = "Ustvarite ga enkrat, uporabite na katerem koli dokumentu."
+title = "Nov podpis"
+use = "Uporabi podpis"
+who = "Kdo ga lahko uporablja"
+whoEveryone = "Vsi"
+whoMe = "Samo jaz"
+
+[sign.wallet.defaultName]
+draw = "Moj podpis"
+initials = "Inicialke"
+phone = "Podpis s telefona"
+type = "Vtipkan podpis"
+upload = "Naložen podpis"
+
+[sign.wallet.delete]
+body = "\"{{name}}\" je odstranjen iz vaših podpisov. Dokumenti, ki ste jih že podpisali, ga ohranijo."
+confirm = "Izbriši"
+title = "Izbrisati ta podpis?"
+
+[sign.wallet.draw]
+bold = "Debelo pero"
+clear = "Počisti"
+fine = "Tanko pero"
+hint = "Podpišite se nad črto"
+medium = "Srednje pero"
+pad = "Podpisna ploščica"
+pen = "Pero"
+tip = "Uporabite miško, sledilno ploščico, pero ali prst"
+undo = "Razveljavi"
+
+[sign.wallet.ink]
+black = "Črno črnilo"
+blue = "Modro črnilo"
+label = "Črnilo"
+navy = "Temno modro črnilo"
+
+[sign.wallet.intro]
+body = "Ustvarite ga enkrat. Shranjen je tukaj, pripravljen za vsak dokument, ki ga podpišete."
+privacy = "Shranjeni podpisi so zasebni, razen če jih delite z drugimi."
+privacyBrowser = "Shranjeni podpisi ostanejo v tem brskalniku."
+title = "Dodajte svoj podpis"
+
+[sign.wallet.menu]
+delete = "Izbriši"
+discard = "Zavrzi"
+makeDefault = "Nastavi kot privzeto"
+options = "Možnosti za {{name}}"
+place = "Postavi na stran"
+removeDefault = "Odstrani kot privzeto"
+rename = "Preimenuj"
+save = "Shrani med moje podpise"
+share = "Deli z vsemi"
+stop = "Ustavi postavljanje"
+
+[sign.wallet.phone]
+expires = "Poteče čez {{time}}"
+qr = "QR code za podpis na telefonu"
+received = "Prejeto iz vašega telefona"
+receiveFailed = "Tega podpisa ni bilo mogoče prebrati. Optično preberite novo kodo in poskusite znova."
+step1 = "Optično preberite kodo s kamero telefona"
+step1Hint = "Odpre se v brskalniku telefona, aplikacija ni potrebna."
+step2 = "Narišite, vtipkajte ali fotografirajte svoj podpis"
+step2Hint = "Veliko platno, prilagojeno prstu."
+step3 = "Samodejno se prikaže tukaj"
+step3Hint = "Med podpisovanjem pustite to okno odprto."
+waiting = "Čakanje na vaš telefon..."
+
+[sign.wallet.placed]
+empty = "Podpisi, ki jih postavite na stran, so navedeni tukaj."
+fallbackName = "Podpis"
+page = "Stran {{page}}"
+remove = "Odstrani {{name}}"
+show = "Prikaži {{name}} na strani"
+title = "Na tem dokumentu ({{count}})"
+
+[sign.wallet.rename]
+save = "Shrani"
+title = "Preimenuj podpis"
+
+[sign.wallet.status]
+idle = "Izberite podpis, da ga postavite"
+placing = "Kliknite stran, da postavite {{name}}."
+stop = "Ustavi"
+
+[sign.wallet.tabs]
+draw = "Nariši"
+phone = "Telefon"
+type = "Vtipkaj"
+upload = "Naloži"
+
+[sign.wallet.toast]
+applyFailed = "Podpisov ni bilo mogoče uporabiti"
+applyFailedBody = "Vaši podpisi so še vedno na dokumentu. Poskusite znova."
+deleteFailed = "Podpisa ni bilo mogoče izbrisati"
+draftExists = "Najprej shranite ali zavrzite neshranjen podpis"
+initialsFailed = "Vaših inicialk ni bilo mogoče shraniti"
+initialsPartial = "Vaš podpis je bil shranjen, inicialke pa ne. Poskusite inicialke shraniti ločeno."
+renameFailed = "Podpisa ni bilo mogoče preimenovati"
+saved = "Shranjeno med vaše podpise"
+saveFailed = "Podpisa ni bilo mogoče shraniti"
+saveFailedBody = "Še vedno je pripravljen za postavitev na ta dokument."
+shared = "Deljeno z vsemi"
+shareFailed = "Podpisa ni bilo mogoče deliti"
+
+[sign.wallet.type]
+initials = "Inicialke"
+initialsLimit = "Za shranjevanje inicialk sta potrebni dve prosti mesti za podpis."
+name = "Vaše ime"
+namePlaceholder = "Vtipkajte svoje ime"
+previewName = "Vaše ime"
+saveInitials = "Shrani tudi moje inicialke"
+style = "Slog"
+styleOption = "Slog {{index}}"
+
+[sign.wallet.upload]
+browse = "ali prebrskajte datoteke"
+drop = "Spustite sliko sem"
+failed = "Te slike ni bilo mogoče prebrati."
+hint = "PNG, JPG ali WebP do {{size}} MB. Bela ozadja so samodejno odstranjena."
+ink = "Barva črnila"
+inkBlack = "Črna"
+inkBlue = "Modra"
+inkOriginal = "Izvirno"
+preview = "Predogled naloženega podpisa"
+processing = "Čiščenje slike..."
+rejected = "Izberite sliko PNG, JPG ali WebP do {{size}} MB."
+removeBackground = "Odstrani ozadje"
+removeBackgroundHint = "Bel papir postane prosojen"
+replace = "Zamenjaj"
+rotate = "Zavrti"
+rotateLeft = "Zavrti levo"
+rotateRight = "Zavrti desno"
+trim = "Obreži na podpis"
+trimHint = "Obreže prazen prostor okoli njega"
 
 [signatureSettings.tooltip]
 header = "Nastavitve videza podpisa"

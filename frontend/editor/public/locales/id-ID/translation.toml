@@ -263,7 +263,7 @@ name = "Teks"
 placeholder = "Masukkan teks"
 
 [addImage.type]
-canvas = "Canvas"
+canvas = "Kanvas"
 image = "Gambar"
 saved = "Tersimpan"
 text = "Teks"
@@ -415,7 +415,7 @@ europeanDate = "Tanggal Eropa"
 legal-footer = "Footer Hukum"
 page-numbers = "Nomor Halaman"
 pageNumberFooter = "Footer Nomor Halaman"
-timestamp = "Timestamp"
+timestamp = "Stempel waktu"
 
 [addText]
 applySignatures = "Terapkan Teks"
@@ -484,7 +484,7 @@ name = "Konten teks"
 placeholder = "Masukkan teks yang ingin Anda tambahkan"
 
 [addText.type]
-canvas = "Canvas"
+canvas = "Kanvas"
 image = "Gambar"
 saved = "Tersimpan"
 text = "Teks"
@@ -1341,7 +1341,7 @@ label = "Batas Unggah File"
 
 [admin.settings.general.frontendUrl]
 description = "URL dasar untuk frontend (mis., https://pdf.example.com). Digunakan untuk tautan undangan email dan unggah Kode QR seluler. Biarkan kosong untuk menggunakan backend URL."
-label = "Frontend URL"
+label = "URL Frontend"
 
 [admin.settings.general.hideDisabledTools]
 description = "Sembunyikan alat yang dinonaktifkan dari antarmuka"
@@ -1510,7 +1510,7 @@ title = "Hubungkan klien MCP"
 
 [admin.settings.mcp.issuerUri]
 description = "Server otorisasi OAuth2 Anda (harus memublikasikan /.well-known/openid-configuration). Wajib saat diaktifkan."
-label = "OAuth Issuer URL"
+label = "URL Penerbit OAuth"
 
 [admin.settings.mcp.jwksUri]
 description = "Biarkan kosong untuk menemukannya dari issuer. Atur hanya jika IdP Anda menyediakan kunci di URL non-standar."
@@ -1529,7 +1529,7 @@ label = "Wajibkan akun Stirling yang sudah ada"
 
 [admin.settings.mcp.resourceId]
 description = "URL publik /mcp server ini. Token harus mencantumkannya dalam audience (RFC 8707) atau akan ditolak."
-label = "Resource ID"
+label = "ID Sumber Daya"
 
 [admin.settings.mcp.scopes]
 description = "Wajibkan mcp.tools.read untuk operasi baca dan mcp.tools.write untuk operasi tulis/AI."
@@ -1537,7 +1537,7 @@ label = "Terapkan OAuth scopes"
 
 [admin.settings.mcp.usernameClaim]
 description = "JWT claim yang dicocokkan dengan nama pengguna Stirling (mis. sub, email, preferred_username)."
-label = "Username claim"
+label = "Klaim username"
 
 [admin.settings.plan.noData]
 message = "Server ini tidak dapat menjangkau layanan lisensi. Coba lagi, atau periksa kunci lisensi."
@@ -1837,7 +1837,7 @@ placeholder = "Tambahkan ID pengguna lalu tekan Enter"
 
 [admin.settings.telegram.botToken]
 description = "Token API yang diberikan oleh BotFather untuk bot Telegram Anda."
-label = "Bot Token"
+label = "Token Bot"
 
 [admin.settings.telegram.botUsername]
 description = "Nama pengguna publik bot Telegram Anda."
@@ -3641,7 +3641,7 @@ tooltip = "Operasi ini akan menggunakan kredit cloud Anda"
 tooltip = "Pilih warna dari layar"
 
 [colorPicker]
-hue = "Hue"
+hue = "Rona"
 saturation = "Saturasi dan kecerahan"
 title = "Pilih warna"
 
@@ -3862,7 +3862,7 @@ title = "Ringkasan Pengaturan Kompresi"
 
 [compress.tooltip.lineArt]
 text = "Konversi halaman ke hitam-putih kontras tinggi menggunakan ImageMagick. Gunakan tingkat detail untuk mengontrol seberapa banyak konten menjadi hitam, dan penekanan tepi untuk mengontrol seberapa agresif tepi terdeteksi."
-title = "Line Art"
+title = "Seni Garis"
 
 [compress.tooltip.qualityAdjustment]
 bullet1 = "Nilai lebih rendah mempertahankan kualitas"
@@ -3980,10 +3980,10 @@ tip = "Every action your assistant runs is performed as your account and counts 
 viewApiKeys = "Lihat kunci API"
 
 [config.mcp.copy]
-configLabel = "Config"
+configLabel = "Konfigurasi"
 copied = "Disalin"
 copy = "Salin"
-endpointLabel = "Endpoint URL"
+endpointLabel = "URL Endpoint"
 tooltip = "Salin {{label}}"
 tooltipCopied = "{{label}} disalin"
 
@@ -7345,10 +7345,19 @@ mixed = "{{count}} objek"
 multiGeometry = "Pilih satu objek untuk mengedit posisi dan ukurannya."
 nothingSelected = "Tidak ada yang dipilih"
 nothingSelectedHint = "Klik teks, gambar, atau bentuk apa pun di halaman untuk mengeditnya di sini."
+ocrDocumentChanged = "Dokumen berubah saat OCR sedang berjalan. Jalankan OCR lagi untuk menyertakan perubahan terbaru Anda."
+ocrInvalidResult = "OCR tidak mengembalikan PDF. Silakan coba lagi."
+ocrNoLanguages = "Tidak ada bahasa OCR yang terpasang di server."
+ocrRunning = "Mengenali teks..."
+ocrUnavailable = "OCR tidak tersedia di server ini."
 oneImage = "Gambar"
 oneShape = "Bentuk"
 oneText = "Teks"
 pages = "Halaman"
+runOcr = "Jalankan OCR"
+scanHint_one = "Halaman ini adalah gambar hasil scan tanpa teks untuk diedit. Jalankan OCR terlebih dahulu agar teksnya dapat diedit."
+scanHint_other = "{{count}} halaman adalah gambar hasil scan tanpa teks untuk diedit. Jalankan OCR terlebih dahulu agar teksnya dapat diedit."
+scannedText = "Teks hasil scan · kata yang diubah ditutup dan digambar ulang dengan font yang sesuai."
 tabDocument = "Dokumen"
 tabSelected = "Dipilih"
 textBoxes = "Kotak teks"
@@ -8428,7 +8437,7 @@ label = "File & lampirkan"
 
 [portal.connections.commonFields.accessToken]
 helperText = "Stirling menyimpannya terenkripsi dan tidak pernah menampilkannya lagi."
-label = "Access token"
+label = "Token akses"
 
 [portal.connections.commonFields.apiKey]
 label = "API key"
@@ -8438,7 +8447,7 @@ label = "API token"
 
 [portal.connections.commonFields.baseUrl]
 helperText = "Langkah yang menggunakan koneksi ini hanya dapat memanggil path di bawah URL ini, tidak pernah host lain."
-label = "Server URL"
+label = "URL Server"
 
 [portal.connections.commonFields.email]
 label = "Email"
@@ -8457,7 +8466,7 @@ label = "Nama pengguna"
 
 [portal.connections.commonFields.webhookUrl]
 helperText = "Tempel URL yang diberikan layanan kepada Anda. Hanya path di bawahnya yang dapat dipanggil."
-label = "Webhook URL"
+label = "URL Webhook"
 
 [portal.connections.fields]
 name = "Nama koneksi"
@@ -8555,7 +8564,7 @@ label = "ConsignO Cloud"
 
 [portal.connections.types.consigno.fields.baseUrl]
 helperText = "Environment ConsignO Cloud Anda, termasuk /api/v1."
-label = "Server URL"
+label = "URL Server"
 placeholder = "https://your-org.consignocloud.com/api/v1"
 
 [portal.connections.types.consigno.fields.clientId]
@@ -9218,7 +9227,7 @@ event = "Peristiwa"
 latency = "Latensi"
 status = "Status"
 target = "Sumber daya"
-timestamp = "Timestamp"
+timestamp = "Stempel waktu"
 
 [portal.infrastructure.audit.empty]
 description = "Aktivitas workspace akan muncul di sini saat terjadi."
@@ -10933,7 +10942,7 @@ label = "Aktifkan OAuth2 Generik"
 
 [provider.oauth2.generic.issuer]
 description = "Penyedia yang mendukung OpenID Connect Discovery (/.well-known/openid-configuration)"
-label = "Issuer URL"
+label = "URL Penerbit"
 
 [provider.oauth2.generic.provider]
 description = "Nama penyedia OAuth2 Anda (mis., Azure AD, Okta)"
@@ -10998,7 +11007,7 @@ label = "Client Secret"
 
 [provider.oauth2.keycloak.issuer]
 description = "URL dari endpoint OpenID Connect Discovery realm Keycloak"
-label = "Issuer URL"
+label = "URL Penerbit"
 
 [provider.oauth2.keycloak.scopes]
 description = "Scopes OAuth2 dipisahkan koma"
@@ -11126,7 +11135,7 @@ thumbnails = "Halaman"
 [redact]
 submit = "Manual Redaction"
 tags = "Redact,Sembunyikan,hitamkan,hitam,marker,tersembunyi,redact otomatis,redact manual"
-title = "Redact"
+title = "Redaksi"
 
 [redact.auto]
 colorLabel = "Warna Kotak"
@@ -12276,6 +12285,163 @@ saved = "Tersimpan"
 text = "Teks"
 title = "Jenis Tanda Tangan"
 
+[sign.wallet]
+apply_one = "Terapkan {{count}} tanda tangan"
+apply_other = "Terapkan {{count}} tanda tangan"
+applyEmpty = "Terapkan tanda tangan"
+count = "{{count}} dari {{max}}"
+default = "Default"
+loading = "Memuat tanda tangan Anda..."
+new = "Tanda tangan baru"
+shared = "Dibagikan"
+sharedHint = "Semua orang dapat menggunakannya"
+unsaved = "Belum disimpan"
+yours = "Tanda tangan Anda"
+
+[sign.wallet.create]
+cancel = "Batal"
+full = "Pustaka Anda penuh ({{max}} tanda tangan). Hapus satu untuk menyimpan lebih banyak."
+makeDefault = "Jadikan default"
+method = "Cara membuatnya"
+name = "Nama"
+save = "Simpan ke tanda tangan saya"
+saveBrowserHint = "Disimpan di browser ini, siap untuk digunakan lain kali."
+saveHint = "Siap digunakan kembali saat Anda menandatangani berikutnya."
+subtitle = "Buat sekali, gunakan kembali pada dokumen apa pun."
+title = "Tanda tangan baru"
+use = "Gunakan tanda tangan"
+who = "Siapa yang dapat menggunakannya"
+whoEveryone = "Semua orang"
+whoMe = "Hanya saya"
+
+[sign.wallet.defaultName]
+draw = "Tanda tangan saya"
+initials = "Inisial"
+phone = "Tanda tangan ponsel"
+type = "Tanda tangan yang diketik"
+upload = "Tanda tangan yang diupload"
+
+[sign.wallet.delete]
+body = "\"{{name}}\" dihapus dari tanda tangan Anda. Dokumen yang sudah Anda tanda tangani tetap menyimpannya."
+confirm = "Hapus"
+title = "Hapus tanda tangan ini?"
+
+[sign.wallet.draw]
+bold = "Pena tebal"
+clear = "Hapus"
+fine = "Pena halus"
+hint = "Tanda tangani di atas garis"
+medium = "Pena sedang"
+pad = "Pad tanda tangan"
+pen = "Pena"
+tip = "Gunakan mouse, trackpad, pena, atau jari"
+undo = "Urungkan"
+
+[sign.wallet.ink]
+black = "Tinta hitam"
+blue = "Tinta biru"
+label = "Tinta"
+navy = "Tinta navy"
+
+[sign.wallet.intro]
+body = "Buat sekali. Ini disimpan di sini, siap untuk setiap dokumen yang Anda tanda tangani."
+privacy = "Tanda tangan yang disimpan bersifat pribadi untuk Anda kecuali Anda memilih untuk membagikannya."
+privacyBrowser = "Tanda tangan yang disimpan tetap berada di browser ini."
+title = "Tambahkan tanda tangan Anda"
+
+[sign.wallet.menu]
+delete = "Hapus"
+discard = "Buang"
+makeDefault = "Jadikan default"
+options = "Opsi untuk {{name}}"
+place = "Tempatkan di halaman"
+removeDefault = "Hapus sebagai default"
+rename = "Ganti nama"
+save = "Simpan ke tanda tangan saya"
+share = "Bagikan dengan semua orang"
+stop = "Berhenti menempatkan"
+
+[sign.wallet.phone]
+expires = "Kedaluwarsa dalam {{time}}"
+qr = "QR code untuk menandatangani di ponsel Anda"
+received = "Diterima dari ponsel Anda"
+receiveFailed = "Tidak dapat membaca tanda tangan itu. Pindai kode baru untuk mencoba lagi."
+step1 = "Pindai kode dengan kamera ponsel Anda"
+step1Hint = "Ini terbuka di browser ponsel, tidak perlu aplikasi."
+step2 = "Gambar, ketik, atau foto tanda tangan Anda"
+step2Hint = "Kanvas besar yang dibuat untuk jari."
+step3 = "Akan muncul di sini secara otomatis"
+step3Hint = "Biarkan jendela ini tetap terbuka saat Anda menandatangani."
+waiting = "Menunggu ponsel Anda..."
+
+[sign.wallet.placed]
+empty = "Tanda tangan yang Anda tempatkan di halaman akan tercantum di sini."
+fallbackName = "Tanda tangan"
+page = "Halaman {{page}}"
+remove = "Hapus {{name}}"
+show = "Tampilkan {{name}} di halaman"
+title = "Pada dokumen ini ({{count}})"
+
+[sign.wallet.rename]
+save = "Simpan"
+title = "Ganti nama tanda tangan"
+
+[sign.wallet.status]
+idle = "Pilih tanda tangan untuk menempatkannya"
+placing = "Klik halaman untuk menempatkan {{name}}."
+stop = "Berhenti"
+
+[sign.wallet.tabs]
+draw = "Gambar"
+phone = "Ponsel"
+type = "Ketik"
+upload = "Unggah"
+
+[sign.wallet.toast]
+applyFailed = "Tidak dapat menerapkan tanda tangan"
+applyFailedBody = "Tanda tangan Anda masih ada di dokumen. Coba lagi."
+deleteFailed = "Tidak dapat menghapus tanda tangan"
+draftExists = "Simpan atau buang tanda tangan Anda yang belum disimpan terlebih dahulu"
+initialsFailed = "Tidak dapat menyimpan inisial Anda"
+initialsPartial = "Tanda tangan Anda telah disimpan, tetapi inisial Anda belum. Coba simpan inisial Anda secara terpisah."
+renameFailed = "Tidak dapat mengganti nama tanda tangan"
+saved = "Disimpan ke tanda tangan Anda"
+saveFailed = "Tidak dapat menyimpan tanda tangan"
+saveFailedBody = "Tanda tangan masih siap ditempatkan pada dokumen ini."
+shared = "Dibagikan kepada semua orang"
+shareFailed = "Tidak dapat membagikan tanda tangan"
+
+[sign.wallet.type]
+initials = "Inisial"
+initialsLimit = "Menyimpan inisial memerlukan dua slot tanda tangan yang tersedia."
+name = "Nama Anda"
+namePlaceholder = "Ketik nama Anda"
+previewName = "Nama Anda"
+saveInitials = "Simpan juga inisial saya"
+style = "Gaya"
+styleOption = "Gaya {{index}}"
+
+[sign.wallet.upload]
+browse = "atau telusuri file"
+drop = "Letakkan gambar di sini"
+failed = "Tidak dapat membaca gambar tersebut."
+hint = "PNG, JPG, atau WebP hingga {{size}} MB. Latar belakang putih dihapus secara otomatis."
+ink = "Warna tinta"
+inkBlack = "Hitam"
+inkBlue = "Biru"
+inkOriginal = "Asli"
+preview = "Pratinjau tanda tangan yang diunggah"
+processing = "Membersihkan gambar..."
+rejected = "Pilih gambar PNG, JPG, atau WebP hingga {{size}} MB."
+removeBackground = "Hapus latar belakang"
+removeBackgroundHint = "Kertas putih menjadi transparan"
+replace = "Ganti"
+rotate = "Putar"
+rotateLeft = "Putar ke kiri"
+rotateRight = "Putar ke kanan"
+trim = "Pangkas sesuai tanda tangan"
+trimHint = "Memangkas ruang kosong di sekitarnya"
+
 [signatureSettings.tooltip]
 header = "Pengaturan Tampilan Tanda Tangan"
 
@@ -12663,7 +12829,7 @@ uploadButton = "Unggah ke Server"
 
 [superSearch]
 all = "Semua"
-ariaLabel = "Super search"
+ariaLabel = "Pencarian super"
 filtersAriaLabel = "Filter pencarian"
 hint = "Ketik untuk mencari"
 placeholder = "Cari Stirling"
@@ -12672,10 +12838,10 @@ showLess = "Tampilkan lebih sedikit"
 showMore = "Tampilkan {{count}} lagi"
 
 [superSearch.group]
-docs = "Docs"
+docs = "Dokumen"
 files = "File"
 pages = "Halaman"
-processor = "Processor"
+processor = "Pemroses"
 settings = "Pengaturan"
 tools = "Alat"
 
@@ -12931,7 +13097,7 @@ notes = "Catatan"
 releaseNotes = "Catatan Rilis"
 showLess = "Tampilkan lebih sedikit versi"
 showMore = "Tampilkan semua {{count}} versi"
-stable = "STABLE"
+stable = "STABIL"
 updateAvailable = "Pembaruan Tersedia"
 urgentUpdateAvailable = "Pembaruan Mendesak"
 version = "Versi"
@@ -13020,7 +13186,7 @@ you = "(Anda)"
 cancelInvite = "Batalkan undangan"
 createFromDefault = "Buat tim dari Default"
 deleteTeam = "Hapus tim"
-disableMfa = "Reset MFA"
+disableMfa = "Atur ulang MFA"
 move = "Pindahkan ke tim"
 reinstate = "Aktifkan kembali"
 remove = "Hapus dari org"

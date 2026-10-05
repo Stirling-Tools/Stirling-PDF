@@ -742,10 +742,10 @@ title = "Documenti e RAG"
 
 [admin.settings.ai.documents.embeddingApiKey]
 description = "Lascia vuoto per usare le credenziali di ambiente del motore. Si applica alle distribuzioni self-hosted con motore singolo."
-generic = "Embedding API key"
-openai = "OpenAI API key"
+generic = "Chiave API di embedding"
+openai = "Chiave API OpenAI"
 setPlaceholder = "Salvata - lascia vuoto per mantenere la chiave corrente"
-voyageai = "VoyageAI API key"
+voyageai = "Chiave API VoyageAI"
 
 [admin.settings.ai.documents.embeddingBaseUrl]
 description = "URL di base dell'endpoint di embeddings compatibile con OpenAI / Ollama, es. http://ollama:11434/v1. Deve puntare a un endpoint interno attendibile (sensibile a SSRF)."
@@ -892,10 +892,10 @@ description = "Scegli il provider LLM e i modelli smart/veloci usati dal motore 
 title = "Modelli e provider"
 
 [admin.settings.ai.models.apiKey]
-anthropic = "Anthropic API key"
+anthropic = "Chiave API Anthropic"
 description = "Lascia vuoto per usare le credenziali di ambiente del motore. Si applica alle distribuzioni self-hosted con motore singolo."
-generic = "API key"
-openai = "OpenAI API key"
+generic = "Chiave API"
+openai = "Chiave API OpenAI"
 setPlaceholder = "Salvata - lascia vuoto per mantenere la chiave corrente"
 
 [admin.settings.ai.models.baseUrl]
@@ -1837,7 +1837,7 @@ placeholder = "Aggiungi ID utente e premi invio"
 
 [admin.settings.telegram.botToken]
 description = "Token API fornito da BotFather per il tuo bot Telegram."
-label = "Bot Token"
+label = "Token del bot"
 
 [admin.settings.telegram.botUsername]
 description = "Il nome utente pubblico del tuo bot Telegram."
@@ -2351,7 +2351,7 @@ label = "Apri menu per {{title}}"
 [automate.importModal]
 cancel = "Annulla"
 confirm = "Importa"
-detectedAutomation = "Automate JSON"
+detectedAutomation = "Automazione JSON"
 detectedFolderScan = "Scansione cartelle JSON"
 dropHint = "Trascina qui il JSON o fai clic per scegliere un file"
 dropSubhint = "Sono accettate sia le configurazioni Automate sia quelle di Folder Scanning"
@@ -7345,10 +7345,19 @@ mixed = "{{count}} oggetti"
 multiGeometry = "Seleziona un singolo oggetto per modificarne posizione e dimensioni."
 nothingSelected = "Nessuna selezione"
 nothingSelectedHint = "Fai clic su qualsiasi testo, immagine o forma nella pagina per modificarlo qui."
+ocrDocumentChanged = "Il documento è cambiato mentre OCR era in esecuzione. Esegui di nuovo OCR per includere le modifiche più recenti."
+ocrInvalidResult = "OCR non ha restituito un PDF. Riprova."
+ocrNoLanguages = "Sul server non sono installate lingue OCR."
+ocrRunning = "Riconoscimento del testo..."
+ocrUnavailable = "OCR non è disponibile su questo server."
 oneImage = "Immagine"
 oneShape = "Forma"
 oneText = "Testo"
 pages = "Pagine"
+runOcr = "Esegui OCR"
+scanHint_one = "Questa pagina è un'immagine scansionata senza testo da modificare. Esegui prima OCR per rendere il testo modificabile."
+scanHint_other = "{{count}} pagine sono immagini scansionate senza testo da modificare. Esegui prima OCR per rendere il loro testo modificabile."
+scannedText = "Testo scansionato · le parole modificate sono coperte e ridisegnate con un font corrispondente."
 tabDocument = "Documento"
 tabSelected = "Selezionato"
 textBoxes = "Caselle di testo"
@@ -8428,13 +8437,13 @@ label = "File e allegati"
 
 [portal.connections.commonFields.accessToken]
 helperText = "Stirling lo archivia crittografato e non lo mostra più."
-label = "Access token"
+label = "Token di accesso"
 
 [portal.connections.commonFields.apiKey]
-label = "API key"
+label = "Chiave API"
 
 [portal.connections.commonFields.apiToken]
-label = "API token"
+label = "Token API"
 
 [portal.connections.commonFields.baseUrl]
 helperText = "I passaggi che usano questa connessione possono chiamare solo percorsi sotto questo URL, mai un altro host."
@@ -8559,7 +8568,7 @@ label = "URL server"
 placeholder = "https://your-org.consignocloud.com/api/v1"
 
 [portal.connections.types.consigno.fields.clientId]
-label = "API key"
+label = "Chiave API"
 
 [portal.connections.types.consigno.fields.clientSecret]
 label = "Segreto API"
@@ -12276,6 +12285,163 @@ saved = "Salvate"
 text = "Testo"
 title = "Tipo di firma"
 
+[sign.wallet]
+apply_one = "Applica {{count}} firma"
+apply_other = "Applica {{count}} firme"
+applyEmpty = "Applica firme"
+count = "{{count}} di {{max}}"
+default = "Predefinita"
+loading = "Caricamento delle tue firme..."
+new = "Nuova firma"
+shared = "Condivisa"
+sharedHint = "Tutti possono usarle"
+unsaved = "Non salvata"
+yours = "Le tue firme"
+
+[sign.wallet.create]
+cancel = "Annulla"
+full = "La tua libreria è piena ({{max}} firme). Eliminane una per salvarne altre."
+makeDefault = "Imposta come predefinita"
+method = "Come crearla"
+name = "Nome"
+save = "Salva nelle mie firme"
+saveBrowserHint = "Conservata in questo browser, pronta per la prossima volta."
+saveHint = "Pronta da riutilizzare la prossima volta che firmi."
+subtitle = "Creala una volta, riutilizzala su qualsiasi documento."
+title = "Nuova firma"
+use = "Usa firma"
+who = "Chi può usarla"
+whoEveryone = "Tutti"
+whoMe = "Solo io"
+
+[sign.wallet.defaultName]
+draw = "La mia firma"
+initials = "Iniziali"
+phone = "Firma da telefono"
+type = "Firma digitata"
+upload = "Firma caricata"
+
+[sign.wallet.delete]
+body = "\"{{name}}\" è stata rimossa dalle tue firme. I documenti che hai già firmato la mantengono."
+confirm = "Elimina"
+title = "Eliminare questa firma?"
+
+[sign.wallet.draw]
+bold = "Penna spessa"
+clear = "Cancella"
+fine = "Penna fine"
+hint = "Firma sopra la linea"
+medium = "Penna media"
+pad = "Pad firma"
+pen = "Penna"
+tip = "Usa mouse, trackpad, penna o dito"
+undo = "Annulla"
+
+[sign.wallet.ink]
+black = "Inchiostro nero"
+blue = "Inchiostro blu"
+label = "Inchiostro"
+navy = "Inchiostro blu navy"
+
+[sign.wallet.intro]
+body = "Creala una volta. Viene salvata qui, pronta per ogni documento che firmi."
+privacy = "Le firme salvate sono private, a meno che tu non scelga di condividerle."
+privacyBrowser = "Le firme salvate restano in questo browser."
+title = "Aggiungi la tua firma"
+
+[sign.wallet.menu]
+delete = "Elimina"
+discard = "Scarta"
+makeDefault = "Imposta come predefinita"
+options = "Opzioni per {{name}}"
+place = "Posiziona sulla pagina"
+removeDefault = "Rimuovi come predefinita"
+rename = "Rinomina"
+save = "Salva nelle mie firme"
+share = "Condividi con tutti"
+stop = "Interrompi posizionamento"
+
+[sign.wallet.phone]
+expires = "Scade tra {{time}}"
+qr = "QR code per firmare sul telefono"
+received = "Ricevuta dal telefono"
+receiveFailed = "Impossibile leggere quella firma. Scansiona il nuovo codice per riprovare."
+step1 = "Scansiona il codice con la fotocamera del telefono"
+step1Hint = "Si apre nel browser del telefono, nessuna app necessaria."
+step2 = "Disegna, digita o fotografa la tua firma"
+step2Hint = "Un'ampia area di disegno pensata per il dito."
+step3 = "Appare qui automaticamente"
+step3Hint = "Tieni questa finestra aperta mentre firmi."
+waiting = "In attesa del tuo telefono..."
+
+[sign.wallet.placed]
+empty = "Le firme che posizioni sulla pagina sono elencate qui."
+fallbackName = "Firma"
+page = "Pagina {{page}}"
+remove = "Rimuovi {{name}}"
+show = "Mostra {{name}} sulla pagina"
+title = "Su questo documento ({{count}})"
+
+[sign.wallet.rename]
+save = "Salva"
+title = "Rinomina firma"
+
+[sign.wallet.status]
+idle = "Scegli una firma per posizionarla"
+placing = "Fai clic sulla pagina per posizionare {{name}}."
+stop = "Interrompi"
+
+[sign.wallet.tabs]
+draw = "Disegna"
+phone = "Telefono"
+type = "Digita"
+upload = "Carica"
+
+[sign.wallet.toast]
+applyFailed = "Impossibile applicare le firme"
+applyFailedBody = "Le tue firme sono ancora sul documento. Riprova."
+deleteFailed = "Impossibile eliminare la firma"
+draftExists = "Salva o scarta prima la firma non salvata"
+initialsFailed = "Impossibile salvare le iniziali"
+initialsPartial = "La tua firma è stata salvata, ma le iniziali no. Prova a salvare le iniziali separatamente."
+renameFailed = "Impossibile rinominare la firma"
+saved = "Salvata nelle tue firme"
+saveFailed = "Impossibile salvare la firma"
+saveFailedBody = "È ancora pronta per essere posizionata su questo documento."
+shared = "Condivisa con tutti"
+shareFailed = "Impossibile condividere la firma"
+
+[sign.wallet.type]
+initials = "Iniziali"
+initialsLimit = "Per salvare le iniziali servono due slot firma liberi."
+name = "Il tuo nome"
+namePlaceholder = "Digita il tuo nome"
+previewName = "Il tuo nome"
+saveInitials = "Salva anche le mie iniziali"
+style = "Stile"
+styleOption = "Stile {{index}}"
+
+[sign.wallet.upload]
+browse = "oppure sfoglia i file"
+drop = "Rilascia un'immagine qui"
+failed = "Impossibile leggere quell'immagine."
+hint = "PNG, JPG o WebP fino a {{size}} MB. Gli sfondi bianchi vengono rimossi automaticamente."
+ink = "Colore inchiostro"
+inkBlack = "Nero"
+inkBlue = "Blu"
+inkOriginal = "Originale"
+preview = "Anteprima firma caricata"
+processing = "Pulizia dell'immagine..."
+rejected = "Scegli un'immagine PNG, JPG o WebP fino a {{size}} MB."
+removeBackground = "Rimuovi sfondo"
+removeBackgroundHint = "La carta bianca diventa trasparente"
+replace = "Sostituisci"
+rotate = "Ruota"
+rotateLeft = "Ruota a sinistra"
+rotateRight = "Ruota a destra"
+trim = "Ritaglia alla firma"
+trimHint = "Ritaglia lo spazio vuoto intorno"
+
 [signatureSettings.tooltip]
 header = "Impostazioni aspetto firma"
 
@@ -13044,10 +13210,10 @@ yearsAgo_one = "{{count}} anno fa"
 yearsAgo_other = "{{count}} anni fa"
 
 [users.cap]
-addProcessor = "+ Processor"
+addProcessor = "+ Elaboratore"
 approver = "Approva criterio"
 editor = "Editor"
-processor = "Processor"
+processor = "Elaboratore"
 
 [users.columns]
 capabilities = "Funzionalità"
@@ -13168,7 +13334,7 @@ admin = "Admin"
 guest = "Ospite"
 member = "Membro"
 orgOwner = "Proprietario dell'organizzazione"
-teamOwner = "Team Lead"
+teamOwner = "Responsabile team"
 
 [users.seats]
 full = "Ogni postazione con licenza è in uso. Liberane una o aumenta il numero di postazioni per aggiungere altre persone."

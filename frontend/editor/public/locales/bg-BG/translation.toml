@@ -778,7 +778,7 @@ label = "Top K"
 connection = "Връзка"
 description = "Изберете къде да работи AI. Промените тук се прилагат при рестарт."
 restartNote = "Промяната на URL или който и да е timeout влиза в сила след рестарт."
-title = "AI Engine"
+title = "AI двигател"
 
 [admin.settings.ai.general.capabilities]
 description = "Включвайте или изключвайте отделни AI функции. Изключените функции са скрити в приложението."
@@ -1071,7 +1071,7 @@ label = "Доставчик"
 
 [admin.settings.connections.oauth2.scopes]
 description = "Списък с OAuth2 scopes, разделени със запетая (напр. openid, profile, email)"
-label = "OAuth2 Scopes"
+label = "OAuth2 обхвати"
 
 [admin.settings.connections.oauth2.useAsUsername]
 description = "OAuth2 претенцията, която да се използва като потребителско име (напр. email, sub)"
@@ -1537,7 +1537,7 @@ label = "Налагане на OAuth scopes"
 
 [admin.settings.mcp.usernameClaim]
 description = "JWT claim, сравняван с Stirling потребителско име (напр. sub, email, preferred_username)."
-label = "Username claim"
+label = "Иск за потребителско име"
 
 [admin.settings.plan.noData]
 message = "Този сървър не можа да се свърже с услугата за лиценз. Опитайте отново или проверете лицензионния ключ."
@@ -3567,7 +3567,7 @@ work-instruction = "Работна инструкция"
 work-order = "Работна поръчка"
 
 [classificationDemo]
-folderName = "Downloads"
+folderName = "Изтегляния"
 
 [classificationDemo.buttons]
 done = "Готово"
@@ -6594,7 +6594,7 @@ yourCloudAccess = "Ще станете член на екипа и ще загу
 
 [pageEdit]
 deselectAll = "Нито един"
-selectAll = "Избери всички"
+selectAll = "Маркиране на всички"
 
 [pageEditor]
 dragPreviewAlt = "Плъзгане"
@@ -6924,7 +6924,7 @@ meterTitle = "Автоматизация · AI · API"
 askLeader = "Само собственикът на екипа ви може да променя лимита."
 
 [payg.members]
-docs = "PDFs"
+docs = "PDF файлове"
 subtitle = "Таксувани PDFs, които всеки съотборник е обработил през този период."
 title = "Използване от членове на екипа"
 
@@ -6962,9 +6962,9 @@ createAccount = "Създаване на безплатен акаунт"
 editorLabel = "PDF редактор"
 login = "Вход"
 manualToolsPromo = "Неограничени безплатни ръчни PDF инструменти"
-processorLabel = "PDF Processor"
+processorLabel = "PDF процесор"
 processorTitle = "Създайте акаунт, за да отключите най-доброто от Stirling"
-readerLabel = "PDF Reader"
+readerLabel = "PDF четец"
 
 [payg.spendCapMeter]
 barAria = "Разход спрямо лимита"
@@ -7201,7 +7201,7 @@ downloadTooltip = "Запазване и изтегляне на редакти�
 save = "Запазване на PDF"
 saveTooltip = "Прилагане на промените към файла във вашето работно пространство ({{shortcut}})"
 tags = "редактиране на текст,промяна на текст,смяна на текст,редактиране на съдържание,актуализиране на текст,пренаписване,коригиране,поправяне,червени корекции,ревизиране,текстов редактор,редактор на съдържание"
-title = "PDF Text Editor"
+title = "Редактор на PDF текст"
 unsaved = "(незапазено)"
 workbenchLabel = "Редактор"
 
@@ -7345,10 +7345,19 @@ mixed = "{{count}} обекта"
 multiGeometry = "Изберете един обект, за да редактирате позицията и размера му."
 nothingSelected = "Нищо не е избрано"
 nothingSelectedHint = "Щракнете върху текст, изображение или фигура на страницата, за да го редактирате тук."
+ocrDocumentChanged = "Документът беше променен, докато OCR се изпълняваше. Стартирайте OCR отново, за да включите последните си промени."
+ocrInvalidResult = "OCR не върна PDF. Моля, опитайте отново."
+ocrNoLanguages = "На сървъра няма инсталирани OCR езици."
+ocrRunning = "Разпознаване на текст..."
+ocrUnavailable = "OCR не е наличен на този сървър."
 oneImage = "Изображение"
 oneShape = "Фигура"
 oneText = "Текст"
 pages = "Страници"
+runOcr = "Стартиране на OCR"
+scanHint_one = "Тази страница е сканирано изображение без текст за редактиране. Първо стартирайте OCR, за да направите текста ѝ редактируем."
+scanHint_other = "{{count}} страници са сканирани изображения без текст за редактиране. Първо стартирайте OCR, за да направите текста им редактируем."
+scannedText = "Сканиран текст · променените думи са покрити и преначертани със съответстващ шрифт."
 tabDocument = "Документ"
 tabSelected = "Избрано"
 textBoxes = "Текстови полета"
@@ -7762,7 +7771,7 @@ rowIdle = "{{label}} се изпълнява автоматично"
 rowRunning = "{{label}} се изпълнява сега"
 runsToday_one = "{{count}} изпълнение днес"
 runsToday_other = "{{count}} изпълнения днес"
-title = "PDF Processor"
+title = "PDF процесор"
 triggerExport = "Изпълнява се при експортиране"
 triggerImport = "Изпълнява се при импортиране"
 
@@ -7978,7 +7987,7 @@ sub = "Управлявайте връзката на този сървър с �
 [portal.accountLink.panel.loadError]
 forbidden = "Само собственикът на екипа може да управлява свързаните инстанции."
 generic = "Връзките ви не можаха да бъдат проверени. Опитайте отново."
-title = "Свързаните инстанции не можаха да бъдат заредени"
+title = "Неуспешно зареждане на свързаните инстанции"
 
 [portal.accountLink.pipelines]
 editorExport = "Редактор · преди изтегляне"
@@ -8223,7 +8232,7 @@ segmentAutomationDesc = "Автоматизации и pipelines"
 segmentAutomationLabel = "Автоматизация"
 summary = "{{unique}} уникални · {{units}} мерни единици · {{avg}} средно на PDF"
 summaryNoRate = "{{unique}} уникални · {{units}} мерни единици"
-unit = "PDFs"
+unit = "PDF файлове"
 unitsPending_one = "{{units}} мерна единица очаква синхронизация от свързани instances"
 unitsPending_other = "{{units}} мерни единици очакват синхронизация от свързани instances"
 
@@ -8428,7 +8437,7 @@ label = "Файл и прикачване"
 
 [portal.connections.commonFields.accessToken]
 helperText = "Stirling съхранява това криптирано и никога не го показва отново."
-label = "Access token"
+label = "Токен за достъп"
 
 [portal.connections.commonFields.apiKey]
 label = "API key"
@@ -8478,7 +8487,7 @@ searchPlaceholder = "Търсене на интеграции - опитайте
 
 [portal.connections.types.api]
 description = "Извикайте произволен HTTP API от правило. Вие избирате URL, удостоверяването и payload."
-label = "Custom API"
+label = "Потребителски API"
 
 [portal.connections.types.api.fields.authType]
 label = "Удостоверяване"
@@ -8689,7 +8698,7 @@ helperText = "Оставете празно за AWS. Задайте това з
 label = "Endpoint"
 
 [portal.connections.types.s3.fields.region]
-label = "Region"
+label = "Регион"
 
 [portal.connections.types.s3.fields.secretAccessKey]
 label = "Secret access key"
@@ -8716,7 +8725,7 @@ helperText = "Оставете празно, ако се удостоверяв�
 
 [portal.connections.types.sftp.fields.privateKey]
 helperText = "По избор. Поставете OpenSSH private key, за да се удостоверите с ключ вместо с password."
-label = "Private key"
+label = "Частен ключ"
 
 [portal.connections.types.slack]
 description = "Публикувайте съобщение в Slack, когато правило обработи документ."
@@ -8729,10 +8738,10 @@ label = "SMB / Мрежово споделяне"
 
 [portal.connections.types.smb.fields.domain]
 helperText = "По избор. Windows domain или workgroup, ако server-ът ви използва такъв."
-label = "Domain"
+label = "Домейн"
 
 [portal.connections.types.smb.fields.share]
-label = "Share"
+label = "Споделяне"
 placeholder = "documents"
 
 [portal.connections.types.splunk]
@@ -9111,7 +9120,7 @@ body = "Изтеглете desktop app или self-host-нете server-а."
 done = "Готово"
 guide = "Отворете ръководството за {{name}}"
 openInBrowser = "Отваряне в browser вместо това"
-sectionDesktop = "Desktop app"
+sectionDesktop = "Настолно приложение"
 sectionSelfHosted = "Self-hosted"
 title = "Инсталирайте Stirling PDF Editor"
 
@@ -9161,7 +9170,7 @@ title = "Windows"
 
 [portal.home.editor]
 activeOfDeployed = "{{active}} от {{total}} активни през последните 30 дни"
-name = "PDF Editor"
+name = "PDF редактор"
 open = "Отвори в браузър"
 updated = "актуализирано {{time}}"
 
@@ -10245,7 +10254,7 @@ title = "Все още няма поток"
 
 [portal.processorFlow.sources]
 comingSoonTag = "Свързване"
-editor = "Stirling PDF Editor"
+editor = "Stirling PDF редактор"
 heading = "Източници"
 perDay = "{{n}} / 24h"
 
@@ -10941,7 +10950,7 @@ label = "Име на доставчика"
 
 [provider.oauth2.generic.scopes]
 description = "OAuth2 scopes, разделени със запетаи"
-label = "Scopes"
+label = "Обхвати"
 
 [provider.oauth2.generic.useAsUsername]
 description = "Поле за използване като потребителско име"
@@ -10960,7 +10969,7 @@ label = "Client Secret"
 
 [provider.oauth2.github.scopes]
 description = "OAuth2 scopes, разделени със запетаи"
-label = "Scopes"
+label = "Обхвати"
 
 [provider.oauth2.github.useAsUsername]
 description = "Поле за използване като потребителско име (email, login, name)"
@@ -10979,7 +10988,7 @@ label = "Client Secret"
 
 [provider.oauth2.google.scopes]
 description = "OAuth2 scopes, разделени със запетаи"
-label = "Scopes"
+label = "Обхвати"
 
 [provider.oauth2.google.useAsUsername]
 description = "Поле за използване като потребителско име (email, name, given_name, family_name)"
@@ -11002,7 +11011,7 @@ label = "Issuer URL"
 
 [provider.oauth2.keycloak.scopes]
 description = "OAuth2 scopes, разделени със запетаи"
-label = "Scopes"
+label = "Обхвати"
 
 [provider.oauth2.keycloak.useAsUsername]
 description = "Поле за използване като потребителско име (email, name, given_name, family_name, preferred_username)"
@@ -11414,7 +11423,7 @@ submit = "Замени"
 title = "Замяна-инвертиране-на-цвят"
 
 [replace-color.selectText]
-1 = "Опции за замяна или инвертиране на цвят"
+1 = "Опции за замяна или обръщане на цветове"
 10 = "Изберете цвят на текста"
 11 = "Изберете цвят на фона"
 5 = "Цветови опции с висок контраст"
@@ -11667,7 +11676,7 @@ title = "Относно"
 
 [settings.ai]
 documents = "Документи и RAG"
-general = "AI Engine"
+general = "AI двигател"
 limits = "Ограничения и производителност"
 models = "Модели и доставчици"
 title = "AI"
@@ -11677,7 +11686,7 @@ title = "Фактуриране"
 
 [settings.configuration]
 advanced = "Разширени"
-connections = "Single sign-on"
+connections = "Еднократно вписване"
 database = "База данни"
 endpoints = "Крайни точки"
 features = "Функции"
@@ -11993,7 +12002,7 @@ success = "Паролата е актуализирана успешно. Мол
 update = "Актуализиране на паролата"
 
 [settings.securityAuth]
-connections = "Single sign-on"
+connections = "Еднократно вписване"
 security = "Вход и сигурност"
 telegram = "Telegram"
 title = "Сигурност и вход"
@@ -12275,6 +12284,163 @@ image = "Изображение"
 saved = "Запазени"
 text = "Текст"
 title = "Тип подпис"
+
+[sign.wallet]
+apply_one = "Приложи {{count}} подпис"
+apply_other = "Приложи {{count}} подписа"
+applyEmpty = "Приложи подписи"
+count = "{{count}} от {{max}}"
+default = "По подразбиране"
+loading = "Зареждане на вашите подписи..."
+new = "Нов подпис"
+shared = "Споделен"
+sharedHint = "Всеки може да ги използва"
+unsaved = "Незапазен"
+yours = "Вашите подписи"
+
+[sign.wallet.create]
+cancel = "Отказ"
+full = "Вашата библиотека е пълна ({{max}} подписа). Изтрийте един, за да запазите още."
+makeDefault = "Задай по подразбиране"
+method = "Как да го създадете"
+name = "Име"
+save = "Запази в моите подписи"
+saveBrowserHint = "Съхранява се в този браузър, готов за следващия път."
+saveHint = "Готов за повторна употреба следващия път, когато подписвате."
+subtitle = "Създайте го веднъж, използвайте го повторно на всеки документ."
+title = "Нов подпис"
+use = "Използвай подпис"
+who = "Кой може да го използва"
+whoEveryone = "Всички"
+whoMe = "Само аз"
+
+[sign.wallet.defaultName]
+draw = "Моят подпис"
+initials = "Инициали"
+phone = "Подпис от телефон"
+type = "Въведен подпис"
+upload = "Качен подпис"
+
+[sign.wallet.delete]
+body = "\"{{name}}\" е премахнат от вашите подписи. Документите, които вече сте подписали, го запазват."
+confirm = "Изтрий"
+title = "Да се изтрие ли този подпис?"
+
+[sign.wallet.draw]
+bold = "Дебела писалка"
+clear = "Изчисти"
+fine = "Тънка писалка"
+hint = "Подпишете над линията"
+medium = "Средна писалка"
+pad = "Поле за подпис"
+pen = "Писалка"
+tip = "Използвайте мишка, тракпад, писалка или пръст"
+undo = "Отмяна"
+
+[sign.wallet.ink]
+black = "Черно мастило"
+blue = "Синьо мастило"
+label = "Мастило"
+navy = "Тъмносиньо мастило"
+
+[sign.wallet.intro]
+body = "Създайте го веднъж. Запазва се тук, готов за всеки документ, който подписвате."
+privacy = "Запазените подписи са лични за вас, освен ако не изберете да ги споделите."
+privacyBrowser = "Запазените подписи остават в този браузър."
+title = "Добавете своя подпис"
+
+[sign.wallet.menu]
+delete = "Изтрий"
+discard = "Отхвърли"
+makeDefault = "Задай по подразбиране"
+options = "Опции за {{name}}"
+place = "Постави на страницата"
+removeDefault = "Премахни като по подразбиране"
+rename = "Преименувай"
+save = "Запази в моите подписи"
+share = "Сподели с всички"
+stop = "Спри поставянето"
+
+[sign.wallet.phone]
+expires = "Изтича след {{time}}"
+qr = "QR код за подписване на телефона"
+received = "Получено от вашия телефон"
+receiveFailed = "Неуспешно прочитане на този подпис. Сканирайте новия код, за да опитате отново."
+step1 = "Сканирайте кода с камерата на телефона си"
+step1Hint = "Отваря се в браузъра на телефона, не е нужно приложение."
+step2 = "Нарисувайте, въведете или снимайте своя подпис"
+step2Hint = "Голямо платно, направено за пръст."
+step3 = "Появява се тук автоматично"
+step3Hint = "Дръжте този прозорец отворен, докато подписвате."
+waiting = "Изчакване на вашия телефон..."
+
+[sign.wallet.placed]
+empty = "Подписите, които поставяте на страницата, са изброени тук."
+fallbackName = "Подпис"
+page = "Страница {{page}}"
+remove = "Премахни {{name}}"
+show = "Покажи {{name}} на страницата"
+title = "В този документ ({{count}})"
+
+[sign.wallet.rename]
+save = "Запази"
+title = "Преименуване на подпис"
+
+[sign.wallet.status]
+idle = "Изберете подпис, за да го поставите"
+placing = "Щракнете върху страницата, за да поставите {{name}}."
+stop = "Стоп"
+
+[sign.wallet.tabs]
+draw = "Рисуване"
+phone = "Телефон"
+type = "Въвеждане"
+upload = "Качване"
+
+[sign.wallet.toast]
+applyFailed = "Неуспешно прилагане на подписите"
+applyFailedBody = "Вашите подписи все още са в документа. Опитайте отново."
+deleteFailed = "Неуспешно изтриване на подписа"
+draftExists = "Първо запазете или отхвърлете незапазения си подпис"
+initialsFailed = "Неуспешно запазване на вашите инициали"
+initialsPartial = "Вашият подпис беше запазен, но инициалите ви не бяха. Опитайте да запазите инициалите си отделно."
+renameFailed = "Неуспешно преименуване на подписа"
+saved = "Запазено във вашите подписи"
+saveFailed = "Неуспешно запазване на подписа"
+saveFailedBody = "Той все още е готов за поставяне в този документ."
+shared = "Споделено с всички"
+shareFailed = "Неуспешно споделяне на подписа"
+
+[sign.wallet.type]
+initials = "Инициали"
+initialsLimit = "Запазването на инициали изисква две свободни места за подписи."
+name = "Вашето име"
+namePlaceholder = "Въведете името си"
+previewName = "Вашето име"
+saveInitials = "Запази и моите инициали"
+style = "Стил"
+styleOption = "Стил {{index}}"
+
+[sign.wallet.upload]
+browse = "или прегледайте файлове"
+drop = "Пуснете изображение тук"
+failed = "Неуспешно прочитане на това изображение."
+hint = "PNG, JPG или WebP до {{size}} MB. Белите фонове се премахват автоматично."
+ink = "Цвят на мастилото"
+inkBlack = "Черно"
+inkBlue = "Синьо"
+inkOriginal = "Оригинал"
+preview = "Преглед на качения подпис"
+processing = "Почистване на изображението..."
+rejected = "Изберете PNG, JPG или WebP изображение до {{size}} MB."
+removeBackground = "Премахване на фона"
+removeBackgroundHint = "Бялата хартия става прозрачна"
+replace = "Замени"
+rotate = "Завърти"
+rotateLeft = "Завърти наляво"
+rotateRight = "Завърти надясно"
+trim = "Изрязване до подписа"
+trimHint = "Изрязва празното пространство около него"
 
 [signatureSettings.tooltip]
 header = "Настройки за външен вид на подписа"

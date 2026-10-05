@@ -742,10 +742,10 @@ title = "Έγγραφα & RAG"
 
 [admin.settings.ai.documents.embeddingApiKey]
 description = "Αφήστε το κενό για να χρησιμοποιηθεί το διαπιστευτήριο περιβάλλοντος της ίδιας της μηχανής. Ισχύει για αυτοφιλοξενούμενες αναπτύξεις μίας μηχανής."
-generic = "Embedding API key"
-openai = "OpenAI API key"
+generic = "Κλειδί API Embedding"
+openai = "Κλειδί API OpenAI"
 setPlaceholder = "Αποθηκεύτηκε - αφήστε κενό για να διατηρήσετε το τρέχον key"
-voyageai = "VoyageAI API key"
+voyageai = "Κλειδί API VoyageAI"
 
 [admin.settings.ai.documents.embeddingBaseUrl]
 description = "Βασικό URL του endpoint embeddings συμβατού με OpenAI / Ollama, π.χ. http://ollama:11434/v1. Πρέπει να δείχνει σε αξιόπιστο εσωτερικό endpoint (ευαίσθητο σε SSRF)."
@@ -892,10 +892,10 @@ description = "Επιλέξτε τον πάροχο LLM και τα smart/fast �
 title = "Μοντέλα & Πάροχοι"
 
 [admin.settings.ai.models.apiKey]
-anthropic = "Anthropic API key"
+anthropic = "Κλειδί API Anthropic"
 description = "Αφήστε το κενό για να χρησιμοποιηθεί το διαπιστευτήριο περιβάλλοντος της ίδιας της μηχανής. Ισχύει για αυτοφιλοξενούμενες αναπτύξεις μίας μηχανής."
-generic = "API key"
-openai = "OpenAI API key"
+generic = "Κλειδί API"
+openai = "Κλειδί API OpenAI"
 setPlaceholder = "Αποθηκεύτηκε - αφήστε κενό για να διατηρήσετε το τρέχον key"
 
 [admin.settings.ai.models.baseUrl]
@@ -2352,7 +2352,7 @@ label = "Άνοιγμα μενού για {{title}}"
 cancel = "Ακύρωση"
 confirm = "Εισαγωγή"
 detectedAutomation = "Automate JSON"
-detectedFolderScan = "Folder Scanning JSON"
+detectedFolderScan = "JSON σάρωσης φακέλων"
 dropHint = "Αποθέστε εδώ ένα JSON ή κάντε κλικ για να επιλέξετε αρχείο"
 dropSubhint = "Γίνονται αποδεκτές ρυθμίσεις Automate και Folder Scanning"
 dropzoneAriaLabel = "Αποθέστε εδώ ένα αρχείο JSON αυτοματοποίησης"
@@ -3293,7 +3293,7 @@ operations = "Λειτουργίες"
 projects = "Έργα"
 property = "Ακίνητα"
 reports = "Αναφορές"
-sales = "Marketing"
+sales = "Μάρκετινγκ"
 travel = "Ταξίδια"
 
 [classification.labels]
@@ -6847,7 +6847,7 @@ startFailed = "Δεν ήταν δυνατή η έναρξη της συνεδρ�
 backend = "Το backend είναι σε mock mode· δεν δημιουργήθηκε πραγματική συνεδρία Stripe."
 continue = "Συνέχεια με mock συνδρομή"
 noKey = "Το VITE_STRIPE_PUBLISHABLE_KEY δεν έχει οριστεί. Το πραγματικό iframe θα εμφανιστεί εδώ μόλις ρυθμιστεί."
-title = "Stripe Embedded Checkout (mock mode)"
+title = "Stripe Embedded Checkout (λειτουργία mock)"
 
 [payg.confirm]
 bodyWithAllowance = "Η ομάδα σας μπορεί πλέον να εκτελεί αυτοματισμούς, AI και API λειτουργίες πέρα από τα {{limit}} δωρεάν PDF σας."
@@ -6870,7 +6870,7 @@ title = "Δεν ήταν δυνατή η φόρτωση του πλάνου σα
 
 [payg.free.cta]
 benefit1Body = "αλυσίδα εργαλείων, προγραμματισμός εκτελέσεων, μαζική επεξεργασία"
-benefit1Title = "Automation pipelines"
+benefit1Title = "Pipeline αυτοματισμού"
 benefit2Body = "summarise, classify, redact, AI-OCR"
 benefit2Title = "Εργαλεία AI"
 benefit3Body = "καλέστε οποιοδήποτε Stirling endpoint προγραμματιστικά"
@@ -7014,7 +7014,7 @@ aiTitle = "Εργαλεία AI"
 apiBody = "προγραμματιστική πρόσβαση σε οποιοδήποτε Stirling endpoint"
 apiTitle = "Κλήσεις API"
 automationBody = "αλυσιδωτά εργαλεία ή προγραμματισμένες εκτελέσεις που δεν χρειάζονται clicks"
-automationTitle = "Automation pipelines"
+automationTitle = "Pipeline αυτοματισμού"
 footnoteUnlimited = "Τα χειροκίνητα εργαλεία (προβολή, επεξεργασία, συγχώνευση, διαχωρισμός, υδατογράφημα, συμπίεση, χειροκίνητο OCR) είναι πάντα δωρεάν, ακόμη και αφού χρησιμοποιηθούν οι συμπεριλαμβανόμενες πιστώσεις σας. Η διαφορά είναι ο τύπος εργασίας, όχι το πού κάνετε κλικ."
 title = "Τι μετράμε για τη χρέωση"
 
@@ -7345,10 +7345,19 @@ mixed = "{{count}} αντικείμενα"
 multiGeometry = "Επιλέξτε ένα μόνο αντικείμενο για να επεξεργαστείτε τη θέση και το μέγεθός του."
 nothingSelected = "Δεν έχει επιλεγεί τίποτα"
 nothingSelectedHint = "Κάντε click σε οποιοδήποτε κείμενο, εικόνα ή σχήμα στη σελίδα για να το επεξεργαστείτε εδώ."
+ocrDocumentChanged = "Το έγγραφο άλλαξε ενώ εκτελούνταν το OCR. Εκτελέστε ξανά το OCR για να συμπεριλάβετε τις πιο πρόσφατες αλλαγές σας."
+ocrInvalidResult = "Το OCR δεν επέστρεψε PDF. Δοκιμάστε ξανά."
+ocrNoLanguages = "Δεν υπάρχουν εγκατεστημένες γλώσσες OCR στον server."
+ocrRunning = "Αναγνώριση κειμένου..."
+ocrUnavailable = "Το OCR δεν είναι διαθέσιμο σε αυτόν τον server."
 oneImage = "Εικόνα"
 oneShape = "Σχήμα"
 oneText = "Κείμενο"
 pages = "Σελίδες"
+runOcr = "Εκτέλεση OCR"
+scanHint_one = "Αυτή η σελίδα είναι σαρωμένη εικόνα χωρίς κείμενο προς επεξεργασία. Εκτελέστε πρώτα OCR για να κάνετε το κείμενό της επεξεργάσιμο."
+scanHint_other = "{{count}} σελίδες είναι σαρωμένες εικόνες χωρίς κείμενο προς επεξεργασία. Εκτελέστε πρώτα OCR για να κάνετε το κείμενό τους επεξεργάσιμο."
+scannedText = "Σαρωμένο κείμενο · οι αλλαγμένες λέξεις καλύπτονται και σχεδιάζονται ξανά με αντίστοιχη γραμματοσειρά."
 tabDocument = "Έγγραφο"
 tabSelected = "Επιλεγμένο"
 textBoxes = "Πλαίσια κειμένου"
@@ -7943,7 +7952,7 @@ unnamed = "Ανώνυμο instance"
 description = "Συνδέστε έναν self-hosted server στην ομάδα σας για να τον δείτε εδώ."
 otherDescription = "Αυτή είναι η μόνη συνδεδεμένη παρουσία που εμφανίζεται για την ομάδα σας."
 otherTitle = "Δεν υπάρχουν άλλες συνδεδεμένες παρουσίες"
-title = "Δεν υπάρχουν συνδεδεμένα instances"
+title = "Δεν υπάρχουν συνδεδεμένες εγκαταστάσεις"
 
 [portal.accountLink.modal]
 callbackMismatch = "Η διαμορφωμένη διεύθυνση frontend αυτού του διακομιστή δεν ταιριάζει με τη διεύθυνση που ανοίξατε. Ανοίξτε τον διακομιστή στη διαμορφωμένη διεύθυνσή του ή ενημερώστε το Frontend URL στις Γενικές ρυθμίσεις και δοκιμάστε ξανά."
@@ -7967,7 +7976,7 @@ openFailed = "Δεν ήταν δυνατό το άνοιγμα του προγρ
 
 [portal.accountLink.panel]
 instancesSub = "Self-hosted servers συνδεδεμένοι στην ίδια ομάδα."
-instancesTitle = "Συνδεδεμένα instances"
+instancesTitle = "Συνδεδεμένες εγκαταστάσεις"
 manageCloud = "Διαχείριση στο stirling.com"
 otherInstancesSub = "Άλλοι αυτοφιλοξενούμενοι διακομιστές συνδεδεμένοι στην ίδια ομάδα στο Stirling Cloud."
 otherInstancesTitle = "Άλλες συνδεδεμένες παρουσίες"
@@ -7978,7 +7987,7 @@ sub = "Διαχειριστείτε τη σύνδεση αυτού του server
 [portal.accountLink.panel.loadError]
 forbidden = "Μόνο ο κάτοχος της ομάδας μπορεί να διαχειριστεί συνδεδεμένα instances."
 generic = "Δεν ήταν δυνατός ο έλεγχος των συνδέσεών σας. Δοκιμάστε ξανά."
-title = "Δεν ήταν δυνατή η φόρτωση των συνδεδεμένων instances"
+title = "Δεν ήταν δυνατή η φόρτωση των συνδεδεμένων εγκαταστάσεων"
 
 [portal.accountLink.pipelines]
 editorExport = "Editor · πριν από τη λήψη"
@@ -8526,7 +8535,7 @@ label = "Στείλτε το token ως αυτό το header"
 
 [portal.connections.types.api.fields.tokenResponseHeader]
 helperText = "Το response header στο οποίο η κλήση σύνδεσης επιστρέφει το token, π.χ. X-Auth-Token."
-label = "Token response header"
+label = "Header απάντησης token"
 
 [portal.connections.types.api.fields.username]
 label = "Όνομα χρήστη"
@@ -8626,7 +8635,7 @@ label = "n8n"
 
 [portal.connections.types.n8n.fields.authType]
 helperText = "Ταιριάξτε το Authentication που έχει οριστεί στον n8n Webhook node."
-label = "Webhook authentication"
+label = "Έλεγχος ταυτότητας webhook"
 
 [portal.connections.types.n8n.fields.authType.options.basic]
 label = "Basic auth"
@@ -8635,15 +8644,15 @@ label = "Basic auth"
 label = "Header auth"
 
 [portal.connections.types.n8n.fields.authType.options.none]
-label = "None"
+label = "Κανένα"
 
 [portal.connections.types.n8n.fields.headerName]
 helperText = "Το header name από το n8n credential, όχι η τιμή του."
-label = "Header name"
+label = "Όνομα header"
 placeholder = "X-N8N-Key"
 
 [portal.connections.types.n8n.fields.token]
-label = "Header value"
+label = "Τιμή header"
 
 [portal.connections.types.nextcloud]
 baseUrlPlaceholder = "https://your-server/remote.php/dav"
@@ -9342,7 +9351,7 @@ description = "Ένα κλειδί δημιουργείται την πρώτη 
 title = "Δεν υπάρχουν ακόμη κλειδιά"
 
 [portal.infrastructure.encryption.masterKey]
-backend = "Storage backend"
+backend = "Backend αποθήκευσης"
 compareNote = "Συγκρίνετέ το με το fingerprint στο αντίγραφο ασφαλείας του κλειδιού σας και στο αρχείο καταγραφής εκκίνησης."
 copied = "Αντιγράφηκε"
 copy = "Αντιγραφή"
@@ -10262,7 +10271,7 @@ title = "Προμήθειες"
 agreeCta = "Υπογραφή συμφωνίας"
 confidential = "Εμπιστευτικό"
 confirm = "Έχω διαβάσει και συμφωνώ με αυτήν τη Συμφωνία και δηλώνω ότι είμαι εξουσιοδοτημένος να την υπογράψω εκ μέρους του οργανισμού που αναφέρεται παραπάνω."
-docName = "Stirling Enterprise Agreement"
+docName = "Συμφωνία Stirling Enterprise"
 docSub = "MSA, Order Form, EULA και DPA, συνδυασμένα σε μία υπογραφή."
 download = "Λήψη"
 downloadDraftError = "Δεν ήταν δυνατή η δημιουργία του PDF συμφωνίας - ο renderer εγγράφων δεν είναι διαθέσιμος. Δοκιμάστε ξανά σύντομα ή επικοινωνήστε με την υποστήριξη."
@@ -10361,7 +10370,7 @@ years_one = "{{count}} έτος"
 years_other = "{{count}} έτη"
 
 [portal.procurement.documents]
-agreement = "Enterprise Agreement"
+agreement = "Συμφωνία Enterprise"
 agreementSub = "MSA, Order Form και DPA σε μία υπογραφή."
 download = "Λήψη"
 eula = "EULA & Εμπορικοί Όροι"
@@ -11126,7 +11135,7 @@ thumbnails = "Σελίδες"
 [redact]
 submit = "Απόκρυψη"
 tags = "Redact,απόκρυψη,μαύρισμα,μαύρο,μαρκαδόρος,κρυφό,auto redact,manual redact"
-title = "Redact"
+title = "Απόκρυψη"
 
 [redact.auto]
 colorLabel = "Χρώμα πλαισίου"
@@ -12196,7 +12205,7 @@ text = "Αφού εισαγάγετε το όνομά σας παραπάνω, �
 title = "Πώς να προσθέσετε υπογραφή"
 
 [sign.mobile]
-createFromPhone = "Mobile upload"
+createFromPhone = "Ανέβασμα από κινητό"
 description = "Σαρώστε αυτόν τον QR code με το τηλέφωνο ή το tablet σας, σχεδιάστε την υπογραφή σας και θα εμφανιστεί εδώ αυτόματα."
 error = "Σφάλμα σύνδεσης"
 expiryWarning = "Ο QR Code λήγει σύντομα"
@@ -12275,6 +12284,163 @@ image = "Εικόνα"
 saved = "Αποθηκευμένες"
 text = "Κείμενο"
 title = "Τύπος υπογραφής"
+
+[sign.wallet]
+apply_one = "Εφαρμογή {{count}} υπογραφής"
+apply_other = "Εφαρμογή {{count}} υπογραφών"
+applyEmpty = "Εφαρμογή υπογραφών"
+count = "{{count}} από {{max}}"
+default = "Προεπιλογή"
+loading = "Φόρτωση των υπογραφών σας..."
+new = "Νέα υπογραφή"
+shared = "Κοινόχρηστη"
+sharedHint = "Όλοι μπορούν να τις χρησιμοποιήσουν"
+unsaved = "Μη αποθηκευμένη"
+yours = "Οι υπογραφές σας"
+
+[sign.wallet.create]
+cancel = "Ακύρωση"
+full = "Η βιβλιοθήκη σας είναι πλήρης ({{max}} υπογραφές). Διαγράψτε μία για να αποθηκεύσετε περισσότερες."
+makeDefault = "Ορισμός ως προεπιλογής"
+method = "Πώς να τη δημιουργήσετε"
+name = "Όνομα"
+save = "Αποθήκευση στις υπογραφές μου"
+saveBrowserHint = "Διατηρείται σε αυτόν τον browser, έτοιμη για την επόμενη φορά."
+saveHint = "Έτοιμη για επαναχρησιμοποίηση την επόμενη φορά που θα υπογράψετε."
+subtitle = "Δημιουργήστε τη μία φορά, επαναχρησιμοποιήστε τη σε οποιοδήποτε έγγραφο."
+title = "Νέα υπογραφή"
+use = "Χρήση υπογραφής"
+who = "Ποιος μπορεί να τη χρησιμοποιήσει"
+whoEveryone = "Όλοι"
+whoMe = "Μόνο εγώ"
+
+[sign.wallet.defaultName]
+draw = "Η υπογραφή μου"
+initials = "Αρχικά"
+phone = "Υπογραφή τηλεφώνου"
+type = "Πληκτρολογημένη υπογραφή"
+upload = "Ανεβασμένη υπογραφή"
+
+[sign.wallet.delete]
+body = "Η υπογραφή \"{{name}}\" αφαιρέθηκε από τις υπογραφές σας. Τα έγγραφα που έχετε ήδη υπογράψει τη διατηρούν."
+confirm = "Διαγραφή"
+title = "Διαγραφή αυτής της υπογραφής;"
+
+[sign.wallet.draw]
+bold = "Χοντρό στυλό"
+clear = "Εκκαθάριση"
+fine = "Λεπτό στυλό"
+hint = "Υπογράψτε πάνω από τη γραμμή"
+medium = "Μεσαίο στυλό"
+pad = "Πλαίσιο υπογραφής"
+pen = "Στυλό"
+tip = "Χρησιμοποιήστε ποντίκι, trackpad, στυλό ή δάχτυλο"
+undo = "Αναίρεση"
+
+[sign.wallet.ink]
+black = "Μαύρο μελάνι"
+blue = "Μπλε μελάνι"
+label = "Μελάνι"
+navy = "Σκούρο μπλε μελάνι"
+
+[sign.wallet.intro]
+body = "Δημιουργήστε τη μία φορά. Αποθηκεύεται εδώ, έτοιμη για κάθε έγγραφο που υπογράφετε."
+privacy = "Οι αποθηκευμένες υπογραφές είναι ιδιωτικές για εσάς, εκτός αν επιλέξετε να τις κοινοποιήσετε."
+privacyBrowser = "Οι αποθηκευμένες υπογραφές παραμένουν σε αυτόν τον browser."
+title = "Προσθέστε την υπογραφή σας"
+
+[sign.wallet.menu]
+delete = "Διαγραφή"
+discard = "Απόρριψη"
+makeDefault = "Ορισμός ως προεπιλογής"
+options = "Επιλογές για {{name}}"
+place = "Τοποθέτηση στη σελίδα"
+removeDefault = "Αφαίρεση ως προεπιλογής"
+rename = "Μετονομασία"
+save = "Αποθήκευση στις υπογραφές μου"
+share = "Κοινή χρήση με όλους"
+stop = "Διακοπή τοποθέτησης"
+
+[sign.wallet.phone]
+expires = "Λήγει σε {{time}}"
+qr = "QR code για υπογραφή στο τηλέφωνό σας"
+received = "Λήφθηκε από το τηλέφωνό σας"
+receiveFailed = "Δεν ήταν δυνατή η ανάγνωση αυτής της υπογραφής. Σαρώστε τον νέο κωδικό για να δοκιμάσετε ξανά."
+step1 = "Σαρώστε τον κωδικό με την κάμερα του τηλεφώνου σας"
+step1Hint = "Ανοίγει στον browser του τηλεφώνου, δεν απαιτείται εφαρμογή."
+step2 = "Σχεδιάστε, πληκτρολογήστε ή φωτογραφίστε την υπογραφή σας"
+step2Hint = "Ένας μεγάλος καμβάς φτιαγμένος για δάχτυλο."
+step3 = "Εμφανίζεται εδώ αυτόματα"
+step3Hint = "Κρατήστε αυτό το παράθυρο ανοιχτό ενώ υπογράφετε."
+waiting = "Αναμονή για το τηλέφωνό σας..."
+
+[sign.wallet.placed]
+empty = "Οι υπογραφές που τοποθετείτε στη σελίδα εμφανίζονται εδώ."
+fallbackName = "Υπογραφή"
+page = "Σελίδα {{page}}"
+remove = "Αφαίρεση {{name}}"
+show = "Εμφάνιση {{name}} στη σελίδα"
+title = "Σε αυτό το έγγραφο ({{count}})"
+
+[sign.wallet.rename]
+save = "Αποθήκευση"
+title = "Μετονομασία υπογραφής"
+
+[sign.wallet.status]
+idle = "Επιλέξτε μια υπογραφή για να την τοποθετήσετε"
+placing = "Κάντε κλικ στη σελίδα για να τοποθετήσετε {{name}}."
+stop = "Διακοπή"
+
+[sign.wallet.tabs]
+draw = "Σχεδίαση"
+phone = "Τηλέφωνο"
+type = "Πληκτρολόγηση"
+upload = "Ανέβασμα"
+
+[sign.wallet.toast]
+applyFailed = "Δεν ήταν δυνατή η εφαρμογή των υπογραφών"
+applyFailedBody = "Οι υπογραφές σας παραμένουν στο έγγραφο. Δοκιμάστε ξανά."
+deleteFailed = "Δεν ήταν δυνατή η διαγραφή της υπογραφής"
+draftExists = "Αποθηκεύστε ή απορρίψτε πρώτα τη μη αποθηκευμένη υπογραφή σας"
+initialsFailed = "Δεν ήταν δυνατή η αποθήκευση των αρχικών σας"
+initialsPartial = "Η υπογραφή σας αποθηκεύτηκε, αλλά τα αρχικά σας όχι. Δοκιμάστε να αποθηκεύσετε τα αρχικά σας ξεχωριστά."
+renameFailed = "Δεν ήταν δυνατή η μετονομασία της υπογραφής"
+saved = "Αποθηκεύτηκε στις υπογραφές σας"
+saveFailed = "Δεν ήταν δυνατή η αποθήκευση της υπογραφής"
+saveFailedBody = "Παραμένει έτοιμη για τοποθέτηση σε αυτό το έγγραφο."
+shared = "Κοινοποιήθηκε σε όλους"
+shareFailed = "Δεν ήταν δυνατή η κοινοποίηση της υπογραφής"
+
+[sign.wallet.type]
+initials = "Αρχικά"
+initialsLimit = "Η αποθήκευση αρχικών απαιτεί δύο ελεύθερες θέσεις υπογραφής."
+name = "Το όνομά σας"
+namePlaceholder = "Πληκτρολογήστε το όνομά σας"
+previewName = "Το όνομά σας"
+saveInitials = "Αποθήκευση και των αρχικών μου"
+style = "Στυλ"
+styleOption = "Στυλ {{index}}"
+
+[sign.wallet.upload]
+browse = "ή περιηγηθείτε στα αρχεία"
+drop = "Αφήστε μια εικόνα εδώ"
+failed = "Δεν ήταν δυνατή η ανάγνωση αυτής της εικόνας."
+hint = "PNG, JPG ή WebP έως {{size}} MB. Τα λευκά φόντα αφαιρούνται αυτόματα."
+ink = "Χρώμα μελανιού"
+inkBlack = "Μαύρο"
+inkBlue = "Μπλε"
+inkOriginal = "Αρχικό"
+preview = "Προεπισκόπηση μεταφορτωμένης υπογραφής"
+processing = "Καθαρισμός της εικόνας..."
+rejected = "Επιλέξτε εικόνα PNG, JPG ή WebP έως {{size}} MB."
+removeBackground = "Αφαίρεση φόντου"
+removeBackgroundHint = "Το λευκό χαρτί γίνεται διαφανές"
+replace = "Αντικατάσταση"
+rotate = "Περιστροφή"
+rotateLeft = "Περιστροφή αριστερά"
+rotateRight = "Περιστροφή δεξιά"
+trim = "Περικοπή στην υπογραφή"
+trimHint = "Περικόπτει τον κενό χώρο γύρω της"
 
 [signatureSettings.tooltip]
 header = "Ρυθμίσεις εμφάνισης υπογραφής"
@@ -12566,7 +12732,7 @@ accessLimitedTitle = "Περιορισμένη πρόσβαση"
 accessLimitedViewer = "Αυτός ο σύνδεσμος είναι μόνο για προβολή. Ζητήστε από τον κάτοχο πρόσβαση επεξεργαστή αν χρειάζεστε λήψη."
 addUser = "Προσθήκη"
 bulkDescription = "Δημιουργήστε έναν σύνδεσμο για κοινή χρήση όλων των επιλεγμένων αρχείων με συνδεδεμένους χρήστες."
-bulkTitle = "Κοινή χρήση επιλεγμένων αρχείων"
+bulkTitle = "Κοινοποίηση επιλεγμένων αρχείων"
 commenterHint = "Η δυνατότητα σχολιασμού έρχεται σύντομα."
 copied = "Ο σύνδεσμος αντιγράφηκε στο πρόχειρο"
 copy = "Αντιγραφή"
@@ -12675,7 +12841,7 @@ showMore = "Εμφάνιση {{count}} ακόμη"
 docs = "Έγγραφα"
 files = "Αρχεία"
 pages = "Σελίδες"
-processor = "Processor"
+processor = "Επεξεργαστής"
 settings = "Ρυθμίσεις"
 tools = "Εργαλεία"
 
@@ -12839,7 +13005,7 @@ pdfTools = "Εργαλεία PDF"
 placeholder = "Επιλέξτε ένα εργαλείο για να ξεκινήσετε"
 premiumFeature = "Premium λειτουργία:"
 searchTools = "Αναζήτηση εργαλείων"
-toolsHeader = "PDF Tools"
+toolsHeader = "Εργαλεία PDF"
 viewAllTools = "Προβολή όλων των εργαλείων"
 
 [toolPanel.fullscreen]
@@ -12931,7 +13097,7 @@ notes = "Σημειώσεις"
 releaseNotes = "Σημειώσεις έκδοσης"
 showLess = "Εμφάνιση λιγότερων εκδόσεων"
 showMore = "Εμφάνιση όλων των {{count}} εκδόσεων"
-stable = "STABLE"
+stable = "ΣΤΑΘΕΡΗ"
 updateAvailable = "Διαθέσιμη ενημέρωση"
 urgentUpdateAvailable = "Επείγουσα ενημέρωση"
 version = "Έκδοση"
@@ -13044,10 +13210,10 @@ yearsAgo_one = "πριν από {{count}} έτος"
 yearsAgo_other = "πριν από {{count}} έτη"
 
 [users.cap]
-addProcessor = "+ Processor"
+addProcessor = "+ Επεξεργαστής"
 approver = "Εγκρίνει πολιτική"
-editor = "Editor"
-processor = "Processor"
+editor = "Συντάκτης"
+processor = "Επεξεργαστής"
 
 [users.columns]
 capabilities = "Δυνατότητες"
@@ -13168,7 +13334,7 @@ admin = "Διαχειριστής"
 guest = "Επισκέπτης"
 member = "Μέλος"
 orgOwner = "Κάτοχος οργανισμού"
-teamOwner = "Team Lead"
+teamOwner = "Επικεφαλής ομάδας"
 
 [users.seats]
 full = "Κάθε αδειοδοτημένη θέση χρησιμοποιείται. Ελευθερώστε μία ή αυξήστε τον αριθμό θέσεων, για να προσθέσετε κάποιον άλλο."
@@ -13642,7 +13808,7 @@ downloadAll = "Λήψη όλων"
 exitRedaction = "Έξοδος από λειτουργία απόκρυψης"
 exportAll = "Εξαγωγή PDF"
 exportSelected = "Εξαγωγή επιλεγμένων σελίδων"
-formFill = "Form Editor"
+formFill = "Επεξεργαστής φορμών"
 hideToolbar = "Απόκρυψη toolbar"
 moreActions = "Περισσότερες ενέργειες"
 multiTool = "Πολυεργαλείο"

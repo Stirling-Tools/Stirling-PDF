@@ -263,7 +263,7 @@ name = "Text"
 placeholder = "Introdueix text"
 
 [addImage.type]
-canvas = "Canvas"
+canvas = "Llenç"
 image = "Imatge"
 saved = "Desat"
 text = "Text"
@@ -484,7 +484,7 @@ name = "Contingut del text"
 placeholder = "Introdueix el text que vols afegir"
 
 [addText.type]
-canvas = "Canvas"
+canvas = "Llenç"
 image = "Imatge"
 saved = "Desat"
 text = "Text"
@@ -1529,7 +1529,7 @@ label = "Requereix un compte de Stirling existent"
 
 [admin.settings.mcp.resourceId]
 description = "La URL pública /mcp d'aquest servidor. Els tokens l'han d'incloure a la seva audiència (RFC 8707) o es rebutjaran."
-label = "Resource ID"
+label = "ID del recurs"
 
 [admin.settings.mcp.scopes]
 description = "Requereix mcp.tools.read per a operacions de lectura i mcp.tools.write per a operacions d'escriptura/AI."
@@ -6335,7 +6335,7 @@ activeFiles = "La vista <strong>Fitxers actius</strong> mostra tots els PDFs que
 allTools = "Aquest és el tauler <strong>Eines</strong>, on pots explorar i seleccionar totes les eines PDF disponibles."
 close = "Tanca"
 cropSettings = "Ara que hem seleccionat el fitxer que volem retallar, podem configurar l’eina Retalla per triar l’àrea a la qual volem retallar el PDF."
-dialogLabel = "Onboarding"
+dialogLabel = "Introducció"
 fileCheckbox = "Els fitxers de la taula de treball estan seleccionats per processar-los. Pots seleccionar diversos fitxers per a operacions per lots amb la barra lateral esquerra de fitxers."
 fileReplacement = "El fitxer modificat substituirà automàticament l’original a la Taula de treball, cosa que us permetrà passar-lo fàcilment per més eines."
 filesButton = "El botó de <strong>Fitxers</strong> a la barra d’accés ràpid us permet pujar PDF per utilitzar les eines."
@@ -7345,10 +7345,19 @@ mixed = "{{count}} objectes"
 multiGeometry = "Seleccioneu un únic objecte per editar-ne la posició i la mida."
 nothingSelected = "No hi ha res seleccionat"
 nothingSelectedHint = "Fes clic a qualsevol text, imatge o forma de la pàgina per editar-ho aquí."
+ocrDocumentChanged = "El document ha canviat mentre s'executava l'OCR. Torna a executar l'OCR per incloure els darrers canvis."
+ocrInvalidResult = "L'OCR no ha retornat cap PDF. Torna-ho a provar."
+ocrNoLanguages = "No hi ha cap idioma d'OCR instal·lat al servidor."
+ocrRunning = "S'està reconeixent el text..."
+ocrUnavailable = "L'OCR no està disponible en aquest servidor."
 oneImage = "Imatge"
 oneShape = "Forma"
 oneText = "Text"
 pages = "Pàgines"
+runOcr = "Executa l'OCR"
+scanHint_one = "Aquesta pàgina és una imatge escanejada sense text per editar. Executa primer l'OCR perquè el text sigui editable."
+scanHint_other = "{{count}} pàgines són imatges escanejades sense text per editar. Executa primer l'OCR perquè el text sigui editable."
+scannedText = "Text escanejat · les paraules modificades es cobreixen i es redibuixen amb una font coincident."
 tabDocument = "Document"
 tabSelected = "Seleccionat"
 textBoxes = "Quadres de text"
@@ -7421,7 +7430,7 @@ addText = "Afegeix text"
 clickPageToAddText = "Feu clic a la pàgina per afegir text"
 document = "Document"
 group = "Agrupa"
-groupingAuto = "Auto"
+groupingAuto = "Automàtic"
 groupingAutoHint = "Agrupa les línies espaiades igualment en paràgrafs. Canviar això torna a llegir el document i esborra l'historial de desfer."
 groupingLine = "Línia"
 groupTooltip = "Fusiona els fragments seleccionats en un paràgraf ({{shortcut}})"
@@ -8170,7 +8179,7 @@ sub = "L'Editor de PDF complet."
 [portal.billing.identity.processor]
 chipMetered = "Processament mesurat"
 chipPipelines = "Canalitzacions i API"
-name = "Processor"
+name = "Processador"
 sub = "Base de Team més {{rate}} per crèdit"
 subNoRate = "Base de Team més processament mesurat"
 
@@ -8289,7 +8298,7 @@ prepaidRemaining = "Crèdits prepagats restants"
 prepaidTooltip = "Es consumeixen abans de la facturació mesurada i fora del teu límit de despesa."
 raiseLimit = "Augmenta el límit"
 remainingOf = "{{remaining}} de {{total}}"
-rowName = "Processor"
+rowName = "Processador"
 spendAgainstLimit = "{{spend}} de {{cap}} mesurats aquest cicle"
 
 [portal.billing.seats]
@@ -8487,7 +8496,7 @@ label = "Autenticació"
 label = "Nom d'usuari i contrasenya"
 
 [portal.connections.types.api.fields.authType.options.bearer]
-label = "Bearer token"
+label = "Token Bearer"
 
 [portal.connections.types.api.fields.authType.options.header]
 label = "Token en una capçalera personalitzada"
@@ -8569,7 +8578,7 @@ label = "Contrasenya"
 
 [portal.connections.types.consigno.fields.tenantId]
 helperText = "Només cal si la teva organització utilitza tenants."
-label = "Tenant"
+label = "Inquilí"
 
 [portal.connections.types.consigno.fields.username]
 label = "Nom d'usuari"
@@ -8629,10 +8638,10 @@ helperText = "Fes coincidir l'autenticació configurada al node n8n Webhook."
 label = "Autenticació del webhook"
 
 [portal.connections.types.n8n.fields.authType.options.basic]
-label = "Basic auth"
+label = "Autenticació bàsica"
 
 [portal.connections.types.n8n.fields.authType.options.header]
-label = "Header auth"
+label = "Autenticació per capçalera"
 
 [portal.connections.types.n8n.fields.authType.options.none]
 label = "Cap"
@@ -9120,7 +9129,7 @@ detailBody = "Executa la imatge oficial al teu servidor."
 note = "S'obre a :8080. Inici de sessió predeterminat: admin / stirling."
 tagline = "Executa el servidor en un contenidor"
 title = "Docker"
-variantFat = "Fat"
+variantFat = "Completa"
 variantLite = "Ultra-Lite"
 variantStandard = "Estàndard"
 
@@ -9171,7 +9180,7 @@ options = "Mostra les opcions de desplegament"
 start = "Desplega l'Editor"
 
 [portal.home.editor.target]
-cloud = "Managed Cloud"
+cloud = "Cloud gestionat"
 docker = "Autoallotjat · Docker"
 kubernetes = "Autoallotjat · Kubernetes"
 
@@ -10719,7 +10728,7 @@ collectionHint = "Fes servir una col·lecció o un índex existent configurat pe
 connection = "Connexió a la base de dades"
 description = "Una destinació de sortida per a fragments de documents preparats. La base de dades genera incrustacions; els originals romanen a la font d’entrada quan se selecciona el mode de seguiment."
 label = "Base de dades vectorial"
-namespace = "Namespace / tenant"
+namespace = "Namespace / inquilí"
 namespaceHint = "Namespace de Pinecone o tenant de Weaviate opcional. Deixa-ho buit per al namespace predeterminat o per a una col·lecció d’un sol tenant."
 textField = "Camp de text"
 textFieldHint = "El camp que la base de dades incrusta, que coincideix amb l’esquema de la col·lecció o el mapa de camps de Pinecone."
@@ -11091,7 +11100,7 @@ label = "Nom d'usuari SMTP"
 [quickAccess]
 allTools = "Eines"
 automate = "Auto"
-config = "Config"
+config = "Configuració"
 files = "Fitxers"
 
 [quickNav]
@@ -12275,6 +12284,163 @@ image = "Imatge"
 saved = "Desades"
 text = "Text"
 title = "Tipus de signatura"
+
+[sign.wallet]
+apply_one = "Aplica {{count}} signatura"
+apply_other = "Aplica {{count}} signatures"
+applyEmpty = "Aplica signatures"
+count = "{{count}} de {{max}}"
+default = "Predeterminada"
+loading = "S'estan carregant les teves signatures..."
+new = "Nova signatura"
+shared = "Compartida"
+sharedHint = "Tothom les pot utilitzar"
+unsaved = "No desada"
+yours = "Les teves signatures"
+
+[sign.wallet.create]
+cancel = "Cancel·la"
+full = "La teva biblioteca és plena ({{max}} signatures). Suprimeix-ne una per desar-ne més."
+makeDefault = "Fes-la predeterminada"
+method = "Com crear-la"
+name = "Nom"
+save = "Desa a les meves signatures"
+saveBrowserHint = "Es conserva en aquest navegador, a punt per a la pròxima vegada."
+saveHint = "A punt per reutilitzar-la la pròxima vegada que signis."
+subtitle = "Crea-la una vegada i reutilitza-la en qualsevol document."
+title = "Nova signatura"
+use = "Utilitza la signatura"
+who = "Qui la pot utilitzar"
+whoEveryone = "Tothom"
+whoMe = "Només jo"
+
+[sign.wallet.defaultName]
+draw = "La meva signatura"
+initials = "Inicials"
+phone = "Signatura del telèfon"
+type = "Signatura escrita"
+upload = "Signatura carregada"
+
+[sign.wallet.delete]
+body = "\"{{name}}\" s'ha eliminat de les teves signatures. Els documents que ja has signat la conserven."
+confirm = "Suprimeix"
+title = "Vols suprimir aquesta signatura?"
+
+[sign.wallet.draw]
+bold = "Bolígraf gruixut"
+clear = "Esborra"
+fine = "Bolígraf fi"
+hint = "Signa sobre la línia"
+medium = "Bolígraf mitjà"
+pad = "Tauleta de signatura"
+pen = "Bolígraf"
+tip = "Utilitza un ratolí, trackpad, llapis o dit"
+undo = "Desfés"
+
+[sign.wallet.ink]
+black = "Tinta negra"
+blue = "Tinta blava"
+label = "Tinta"
+navy = "Tinta blau marí"
+
+[sign.wallet.intro]
+body = "Crea-la una vegada. Es desa aquí, a punt per a cada document que signis."
+privacy = "Les signatures desades són privades per a tu, tret que decideixis compartir-les."
+privacyBrowser = "Les signatures desades romanen en aquest navegador."
+title = "Afegeix la teva signatura"
+
+[sign.wallet.menu]
+delete = "Suprimeix"
+discard = "Descarta"
+makeDefault = "Fes-la predeterminada"
+options = "Opcions per a {{name}}"
+place = "Col·loca a la pàgina"
+removeDefault = "Treu-la com a predeterminada"
+rename = "Canvia el nom"
+save = "Desa a les meves signatures"
+share = "Comparteix amb tothom"
+stop = "Deixa de col·locar"
+
+[sign.wallet.phone]
+expires = "Caduca d'aquí a {{time}}"
+qr = "Codi QR per signar al telèfon"
+received = "Rebuda del telèfon"
+receiveFailed = "No s'ha pogut llegir aquesta signatura. Escaneja el codi nou per tornar-ho a provar."
+step1 = "Escaneja el codi amb la càmera del telèfon"
+step1Hint = "S'obre al navegador del telèfon, no cal cap app."
+step2 = "Dibuixa, escriu o fotografia la teva signatura"
+step2Hint = "Un llenç gran fet per a un dit."
+step3 = "Apareix aquí automàticament"
+step3Hint = "Mantén aquesta finestra oberta mentre signes."
+waiting = "S'està esperant el telèfon..."
+
+[sign.wallet.placed]
+empty = "Les signatures que col·loquis a la pàgina es mostraran aquí."
+fallbackName = "Signatura"
+page = "Pàgina {{page}}"
+remove = "Elimina {{name}}"
+show = "Mostra {{name}} a la pàgina"
+title = "En aquest document ({{count}})"
+
+[sign.wallet.rename]
+save = "Desa"
+title = "Canvia el nom de la signatura"
+
+[sign.wallet.status]
+idle = "Tria una signatura per col·locar-la"
+placing = "Fes clic a la pàgina per col·locar {{name}}."
+stop = "Atura"
+
+[sign.wallet.tabs]
+draw = "Dibuixa"
+phone = "Telèfon"
+type = "Escriu"
+upload = "Carrega"
+
+[sign.wallet.toast]
+applyFailed = "No s'han pogut aplicar les signatures"
+applyFailedBody = "Les teves signatures encara són al document. Torna-ho a provar."
+deleteFailed = "No s'ha pogut suprimir la signatura"
+draftExists = "Desa o descarta primer la signatura no desada"
+initialsFailed = "No s'han pogut desar les inicials"
+initialsPartial = "La teva signatura s'ha desat, però les inicials no. Prova de desar les inicials per separat."
+renameFailed = "No s'ha pogut canviar el nom de la signatura"
+saved = "S'ha desat a les teves signatures"
+saveFailed = "No s'ha pogut desar la signatura"
+saveFailedBody = "Encara està a punt per col·locar-la en aquest document."
+shared = "Compartida amb tothom"
+shareFailed = "No s'ha pogut compartir la signatura"
+
+[sign.wallet.type]
+initials = "Inicials"
+initialsLimit = "Per desar les inicials calen dos espais de signatura lliures."
+name = "El teu nom"
+namePlaceholder = "Escriu el teu nom"
+previewName = "El teu nom"
+saveInitials = "Desa també les meves inicials"
+style = "Estil"
+styleOption = "Estil {{index}}"
+
+[sign.wallet.upload]
+browse = "o explora els fitxers"
+drop = "Deixa anar una imatge aquí"
+failed = "No s'ha pogut llegir aquesta imatge."
+hint = "PNG, JPG o WebP de fins a {{size}} MB. Els fons blancs s'eliminen automàticament."
+ink = "Color de la tinta"
+inkBlack = "Negre"
+inkBlue = "Blau"
+inkOriginal = "Original"
+preview = "Previsualització de la signatura carregada"
+processing = "S'està netejant la imatge..."
+rejected = "Tria una imatge PNG, JPG o WebP de fins a {{size}} MB."
+removeBackground = "Elimina el fons"
+removeBackgroundHint = "El paper blanc es torna transparent"
+replace = "Substitueix"
+rotate = "Gira"
+rotateLeft = "Gira a l'esquerra"
+rotateRight = "Gira a la dreta"
+trim = "Retalla fins a la signatura"
+trimHint = "Retalla l'espai buit del voltant"
 
 [signatureSettings.tooltip]
 header = "Paràmetres d'aparença de la signatura"

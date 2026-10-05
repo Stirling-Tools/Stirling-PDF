@@ -263,7 +263,7 @@ name = "نص"
 placeholder = "أدخل النص"
 
 [addImage.type]
-canvas = "Canvas"
+canvas = "لوحة الرسم"
 image = "صورة"
 saved = "محفوظ"
 text = "نص"
@@ -484,7 +484,7 @@ name = "محتوى النص"
 placeholder = "أدخل النص الذي تريد إضافته"
 
 [addText.type]
-canvas = "Canvas"
+canvas = "لوحة الرسم"
 image = "صورة"
 saved = "محفوظ"
 text = "نص"
@@ -772,7 +772,7 @@ reindexNote = "إذا غيّرت نموذج التضمين، فأعد فهرسة
 
 [admin.settings.ai.documents.topK]
 description = "عدد المقاطع الأكثر صلة التي يتم استرجاعها في كل بحث."
-label = "Top K"
+label = "أعلى K"
 
 [admin.settings.ai.general]
 connection = "الاتصال"
@@ -1510,7 +1510,7 @@ title = "توصيل عميل MCP"
 
 [admin.settings.mcp.issuerUri]
 description = "خادم تفويض OAuth2 الخاص بك (يجب أن ينشر /.well-known/openid-configuration). مطلوب عند التمكين."
-label = "OAuth Issuer URL"
+label = "URL مُصدِر OAuth"
 
 [admin.settings.mcp.jwksUri]
 description = "اتركه فارغًا لاكتشافه من المُصدر. اضبطه فقط إذا كان IdP لديك يقدّم المفاتيح على URL غير قياسي."
@@ -1529,7 +1529,7 @@ label = "يتطلب حساب Stirling موجودًا"
 
 [admin.settings.mcp.resourceId]
 description = "URL العام لهذا الخادم /mcp. يجب أن تدرجه الرموز ضمن جمهورها (RFC 8707) وإلا فسيتم رفضها."
-label = "Resource ID"
+label = "معرّف المورد"
 
 [admin.settings.mcp.scopes]
 description = "يتطلب mcp.tools.read لعمليات القراءة وmcp.tools.write لعمليات الكتابة/AI."
@@ -3983,7 +3983,7 @@ viewApiKeys = "عرض مفاتيح API"
 configLabel = "الإعدادات"
 copied = "تم النسخ"
 copy = "نسخ"
-endpointLabel = "Endpoint URL"
+endpointLabel = "URL نقطة النهاية"
 tooltip = "نسخ {{label}}"
 tooltipCopied = "تم نسخ {{label}}"
 
@@ -6924,7 +6924,7 @@ meterTitle = "الأتمتة · AI · API"
 askLeader = "مالك فريقك فقط يمكنه تغيير الحد الأقصى."
 
 [payg.members]
-docs = "PDFs"
+docs = "ملفات PDF"
 subtitle = "ملفات PDF القابلة للفوترة التي عالجها كل عضو في الفريق خلال هذه الفترة."
 title = "استخدام أعضاء الفريق"
 
@@ -7345,10 +7345,19 @@ mixed = "{{count}} كائنات"
 multiGeometry = "حدد كائنًا واحدًا لتحرير موضعه وحجمه."
 nothingSelected = "لا شيء محدد"
 nothingSelectedHint = "انقر أي نص أو صورة أو شكل على الصفحة لتحريره هنا."
+ocrDocumentChanged = "تغيّر المستند أثناء تشغيل OCR. شغّل OCR مرة أخرى لتضمين أحدث تغييراتك."
+ocrInvalidResult = "لم يُرجع OCR ملف PDF. يُرجى المحاولة مرة أخرى."
+ocrNoLanguages = "لا توجد لغات OCR مثبتة على الخادم."
+ocrRunning = "جارٍ التعرف على النص..."
+ocrUnavailable = "OCR غير متاح على هذا الخادم."
 oneImage = "صورة"
 oneShape = "شكل"
 oneText = "نص"
 pages = "الصفحات"
+runOcr = "تشغيل OCR"
+scanHint_one = "هذه الصفحة صورة ممسوحة ضوئيًا ولا تحتوي على نص لتحريره. شغّل OCR أولًا لجعل نصها قابلًا للتحرير."
+scanHint_other = "{{count}} صفحات هي صور ممسوحة ضوئيًا ولا تحتوي على نص لتحريره. شغّل OCR أولًا لجعل نصها قابلًا للتحرير."
+scannedText = "نص ممسوح ضوئيًا · الكلمات المعدلة مغطاة ويُعاد رسمها بخط مطابق."
 tabDocument = "المستند"
 tabSelected = "المحدد"
 textBoxes = "مربعات النص"
@@ -7744,7 +7753,7 @@ successMessage = "تم تفعيل ترخيصك بنجاح. يمكنك الآن �
 
 [plan.team]
 maxUsers = "100 مستخدم"
-name = "Team"
+name = "الفريق"
 
 [policies.activity]
 outputsUnavailable = "لم تعد مخرجات السياسة متاحة للتنزيل."
@@ -7839,7 +7848,7 @@ connectDescription = "اربط هذا الخادم لاستخدام رصيد م�
 disconnectBody = "سيتوقف هذا الخادم عن استخدام رصيد معالجة فريقك في Stirling Cloud. ستبقى ملفاتك المحلية على هذا الخادم. للاتصال مرة أخرى، اتبع خطوات الاتصال الأصلية."
 disconnectTitle = "قطع اتصال هذه النسخة؟"
 eyebrow = "هذا المثيل"
-linkButton = "ربط حساب Stirling الخاص بك"
+linkButton = "ربط حسابك في Stirling"
 loading = "جارٍ التحقق من اتصال الحساب"
 notLinked = "غير متصل"
 signedInAs = "تم تسجيل الدخول إلى Stirling Cloud باسم"
@@ -7951,7 +7960,7 @@ cancel = "إلغاء"
 continueReauth = "تسجيل الدخول مرة أخرى"
 exhaustedTitle = "حافظ على سير مهام عملك"
 identity = "حساب Stirling"
-linkTitle = "ربط حساب Stirling الخاص بك"
+linkTitle = "ربط حسابك في Stirling"
 noAuthorizeUrl = "لم يُرجع Stirling مكانًا للمتابعة. حاول مرة أخرى بعد قليل."
 startFailed = "تعذر الوصول إلى Stirling لبدء الاتصال. تحقق من وصول الشبكة الصادر لهذا الخادم، ثم حاول مرة أخرى."
 transferPending = "يوجد نقل ملكية معلق. انتقل إلى الإعدادات → المستخدمون لإنهائه أو إلغائه، ثم حاول الربط مرة أخرى."
@@ -8096,7 +8105,7 @@ usage = "الاستخدام"
 [portal.billing.compare]
 current = "الحالي"
 enterpriseData = "إقامة البيانات وSCIM"
-enterpriseName = "Enterprise"
+enterpriseName = "المؤسسة"
 enterprisePrice = "بموجب اتفاقيتك"
 enterpriseProcessing = "محسوبة بالاستخدام أو ثابتة"
 enterpriseSignIn = "SAML والتدقيق"
@@ -8105,7 +8114,7 @@ enterpriseUsers = "بلا حد أقصى"
 enterpriseWhere = "بالإضافة إلى تعدد العقد والعزل عن الشبكة"
 exploreEnterprise = "استكشاف Enterprise"
 freeData = "تبقى حيث تقوم بتشغيلها"
-freeName = "Free"
+freeName = "مجاني"
 freePrice = "لا بطاقة، لا انتهاء صلاحية"
 freeProcessing = "{{allowance}} رصيد شهريًا"
 freeProcessingUnknown = "حصة رصيد شهرية"
@@ -8125,7 +8134,7 @@ rowSupport = "الدعم"
 rowUsers = "المستخدمون"
 rowWhere = "مكان التشغيل"
 teamData = "Google Drive، قاعدة بياناتك الخاصة"
-teamName = "Team"
+teamName = "الفريق"
 teamPrice = "$99/شهريًا لكل 100 مستخدم"
 teamProcessing = "{{allowance}} شهريًا، ثم محسوبة بالاستخدام"
 teamProcessingUnknown = "حصة أكبر، ثم محسوبة بالاستخدام"
@@ -8170,14 +8179,14 @@ sub = "محرر PDF الكامل."
 [portal.billing.identity.processor]
 chipMetered = "معالجة محسوبة بالعداد"
 chipPipelines = "مسارات المعالجة و API"
-name = "Processor"
+name = "المعالج"
 sub = "أساس Team بالإضافة إلى {{rate}} لكل رصيد"
 subNoRate = "أساس Team بالإضافة إلى معالجة محسوبة بالعداد"
 
 [portal.billing.identity.team]
 chipFleet = "التحكم في الأسطول"
 chipIncluded = "{{allowance}} رصيد مضمن شهريًا"
-name = "Team"
+name = "الفريق"
 sub = "حتى {{users}} مستخدمين"
 subNoLimit = "بدون حد للمستخدمين"
 
@@ -8223,7 +8232,7 @@ segmentAutomationDesc = "الأتمتة ومسارات المعالجة"
 segmentAutomationLabel = "الأتمتة"
 summary = "{{unique}} فريد · {{units}} وحدة قياس · متوسط {{avg}} لكل PDF"
 summaryNoRate = "{{unique}} فريد · {{units}} وحدة قياس"
-unit = "PDFs"
+unit = "ملفات PDF"
 unitsPending_one = "{{units}} وحدة قياس بانتظار المزامنة من المثيلات المرتبطة"
 unitsPending_other = "{{units}} وحدات قياس بانتظار المزامنة من المثيلات المرتبطة"
 
@@ -8289,7 +8298,7 @@ prepaidRemaining = "الأرصدة المدفوعة مسبقًا المتبقي�
 prepaidTooltip = "تُستخدم قبل الفوترة المحسوبة بالعداد، وخارج حد الإنفاق لديك."
 raiseLimit = "رفع الحد"
 remainingOf = "{{remaining}} من {{total}}"
-rowName = "Processor"
+rowName = "المعالج"
 spendAgainstLimit = "{{spend}} من {{cap}} محسوب بالعداد في هذه الدورة"
 
 [portal.billing.seats]
@@ -8312,7 +8321,7 @@ plan = "خطتك"
 [portal.billing.serverPlan]
 active = "ترخيص مستضاف ذاتيًا نشط"
 connectBody = "اتصل لإضافة أرصدة معالجة سحابية. يظل ترخيص خادمك نشطًا."
-enterprise = "Enterprise"
+enterprise = "المؤسسة"
 enterpriseConnectBody = "يتضمن ترخيص Enterprise الخاص بك المعالجة على هذا الخادم. ربط حساب اختياري."
 included = "مضمن مع ترخيصك"
 seats = "{{seats}} مقاعد مرخصة"
@@ -8487,7 +8496,7 @@ label = "المصادقة"
 label = "اسم المستخدم وكلمة المرور"
 
 [portal.connections.types.api.fields.authType.options.bearer]
-label = "Bearer token"
+label = "رمز Bearer"
 
 [portal.connections.types.api.fields.authType.options.header]
 label = "رمز في ترويسة مخصصة"
@@ -8629,10 +8638,10 @@ helperText = "طابق Authentication المضبوط في عقدة n8n Webhook."
 label = "مصادقة Webhook"
 
 [portal.connections.types.n8n.fields.authType.options.basic]
-label = "Basic auth"
+label = "مصادقة Basic"
 
 [portal.connections.types.n8n.fields.authType.options.header]
-label = "Header auth"
+label = "مصادقة Header"
 
 [portal.connections.types.n8n.fields.authType.options.none]
 label = "لا شيء"
@@ -8793,7 +8802,7 @@ fieldCount_other = "{{count}} حقول"
 filterAll = "الكل"
 filterAriaLabel = "تصفية endpoints حسب المجال"
 lead = "كل نوع مستند هو endpoint بنوع محدد. أرسل ملفًا عبر POST، واستلم JSON تم التحقق منه بالمخطط. صفِّ حسب المجال أدناه."
-title = "Endpoints"
+title = "نقاط النهاية"
 
 [portal.docs.errors]
 codeCaption = "422 Unprocessable Entity"
@@ -9083,7 +9092,7 @@ copy = "نسخ الخطأ"
 view = "عرض الخطأ"
 
 [portal.failures.origin]
-pipeline = "Pipeline"
+pipeline = "خط المعالجة"
 policy = "تشغيل السياسة"
 tool = "أداة المحرر"
 
@@ -9171,7 +9180,7 @@ options = "عرض خيارات النشر"
 start = "نشر المحرر"
 
 [portal.home.editor.target]
-cloud = "Managed Cloud"
+cloud = "سحابة مُدارة"
 docker = "مستضاف ذاتيًا · Docker"
 kubernetes = "مستضاف ذاتيًا · Kubernetes"
 
@@ -12275,6 +12284,163 @@ image = "صورة"
 saved = "محفوظ"
 text = "نص"
 title = "نوع التوقيع"
+
+[sign.wallet]
+apply_one = "تطبيق {{count}} توقيع"
+apply_other = "تطبيق {{count}} توقيعات"
+applyEmpty = "تطبيق التوقيعات"
+count = "{{count}} من {{max}}"
+default = "افتراضي"
+loading = "جارٍ تحميل توقيعاتك..."
+new = "توقيع جديد"
+shared = "مشترك"
+sharedHint = "يمكن للجميع استخدام هذه"
+unsaved = "غير محفوظ"
+yours = "توقيعاتك"
+
+[sign.wallet.create]
+cancel = "إلغاء"
+full = "مكتبتك ممتلئة ({{max}} توقيعات). احذف واحدًا لحفظ المزيد."
+makeDefault = "تعيين كافتراضي"
+method = "كيفية إنشائه"
+name = "الاسم"
+save = "حفظ في توقيعاتي"
+saveBrowserHint = "محفوظ في هذا المتصفح، جاهز للمرة القادمة."
+saveHint = "جاهز لإعادة الاستخدام في المرة القادمة التي توقّع فيها."
+subtitle = "أنشئه مرة واحدة، وأعد استخدامه على أي مستند."
+title = "توقيع جديد"
+use = "استخدام التوقيع"
+who = "من يمكنه استخدامه"
+whoEveryone = "الجميع"
+whoMe = "أنا فقط"
+
+[sign.wallet.defaultName]
+draw = "توقيعي"
+initials = "الأحرف الأولى"
+phone = "توقيع الهاتف"
+type = "توقيع مكتوب"
+upload = "توقيع مرفوع"
+
+[sign.wallet.delete]
+body = "تمت إزالة \"{{name}}\" من توقيعاتك. المستندات التي وقّعتها بالفعل تحتفظ به."
+confirm = "حذف"
+title = "هل تريد حذف هذا التوقيع؟"
+
+[sign.wallet.draw]
+bold = "قلم عريض"
+clear = "مسح"
+fine = "قلم رفيع"
+hint = "وقّع فوق الخط"
+medium = "قلم متوسط"
+pad = "لوحة التوقيع"
+pen = "قلم"
+tip = "استخدم فأرة أو لوحة لمس أو قلمًا أو إصبعًا"
+undo = "تراجع"
+
+[sign.wallet.ink]
+black = "حبر أسود"
+blue = "حبر أزرق"
+label = "الحبر"
+navy = "حبر كحلي"
+
+[sign.wallet.intro]
+body = "أنشئه مرة واحدة. يُحفظ هنا، جاهز لكل مستند توقّعه."
+privacy = "التوقيعات المحفوظة خاصة بك ما لم تختر مشاركتها."
+privacyBrowser = "تبقى التوقيعات المحفوظة في هذا المتصفح."
+title = "إضافة توقيعك"
+
+[sign.wallet.menu]
+delete = "حذف"
+discard = "تجاهل"
+makeDefault = "تعيين كافتراضي"
+options = "خيارات {{name}}"
+place = "وضع على الصفحة"
+removeDefault = "إزالة كافتراضي"
+rename = "إعادة تسمية"
+save = "حفظ في توقيعاتي"
+share = "مشاركة مع الجميع"
+stop = "إيقاف الوضع"
+
+[sign.wallet.phone]
+expires = "ينتهي خلال {{time}}"
+qr = "QR code للتوقيع على هاتفك"
+received = "تم الاستلام من هاتفك"
+receiveFailed = "تعذرت قراءة ذلك التوقيع. امسح الرمز الجديد للمحاولة مرة أخرى."
+step1 = "امسح الرمز بكاميرا هاتفك"
+step1Hint = "يُفتح في متصفح الهاتف، ولا حاجة إلى تطبيق."
+step2 = "ارسم توقيعك أو اكتبه أو صوّره"
+step2Hint = "لوحة رسم كبيرة مصممة للإصبع."
+step3 = "سيظهر هنا تلقائيًا"
+step3Hint = "أبقِ هذه النافذة مفتوحة أثناء التوقيع."
+waiting = "في انتظار هاتفك..."
+
+[sign.wallet.placed]
+empty = "تُعرض هنا التوقيعات التي تضعها على الصفحة."
+fallbackName = "التوقيع"
+page = "الصفحة {{page}}"
+remove = "إزالة {{name}}"
+show = "إظهار {{name}} على الصفحة"
+title = "على هذا المستند ({{count}})"
+
+[sign.wallet.rename]
+save = "حفظ"
+title = "إعادة تسمية التوقيع"
+
+[sign.wallet.status]
+idle = "اختر توقيعًا لوضعه"
+placing = "انقر على الصفحة لوضع {{name}}."
+stop = "إيقاف"
+
+[sign.wallet.tabs]
+draw = "رسم"
+phone = "الهاتف"
+type = "كتابة"
+upload = "رفع"
+
+[sign.wallet.toast]
+applyFailed = "تعذر تطبيق التوقيعات"
+applyFailedBody = "لا تزال توقيعاتك على المستند. حاول مرة أخرى."
+deleteFailed = "تعذر حذف التوقيع"
+draftExists = "احفظ توقيعك غير المحفوظ أو تجاهله أولًا"
+initialsFailed = "تعذر حفظ الأحرف الأولى"
+initialsPartial = "تم حفظ توقيعك، لكن لم تُحفظ أحرفك الأولى. حاول حفظ أحرفك الأولى بشكل منفصل."
+renameFailed = "تعذر إعادة تسمية التوقيع"
+saved = "تم الحفظ في توقيعاتك"
+saveFailed = "تعذر حفظ التوقيع"
+saveFailedBody = "لا يزال جاهزًا لوضعه على هذا المستند."
+shared = "تمت المشاركة مع الجميع"
+shareFailed = "تعذرت مشاركة التوقيع"
+
+[sign.wallet.type]
+initials = "الأحرف الأولى"
+initialsLimit = "يتطلب حفظ الأحرف الأولى خانتين فارغتين للتوقيع."
+name = "اسمك"
+namePlaceholder = "اكتب اسمك"
+previewName = "اسمك"
+saveInitials = "احفظ أحرفي الأولى أيضًا"
+style = "النمط"
+styleOption = "النمط {{index}}"
+
+[sign.wallet.upload]
+browse = "أو تصفح الملفات"
+drop = "أفلِت صورة هنا"
+failed = "تعذرت قراءة تلك الصورة."
+hint = "PNG أو JPG أو WebP حتى {{size}} MB. تتم إزالة الخلفيات البيضاء تلقائيًا."
+ink = "لون الحبر"
+inkBlack = "أسود"
+inkBlue = "أزرق"
+inkOriginal = "الأصلي"
+preview = "معاينة التوقيع المرفوع"
+processing = "جارٍ تنظيف الصورة..."
+rejected = "اختر صورة PNG أو JPG أو WebP حتى {{size}} MB."
+removeBackground = "إزالة الخلفية"
+removeBackgroundHint = "تتحول الورقة البيضاء إلى شفافة"
+replace = "استبدال"
+rotate = "تدوير"
+rotateLeft = "تدوير لليسار"
+rotateRight = "تدوير لليمين"
+trim = "اقتصاص إلى التوقيع"
+trimHint = "يقتص المساحة الفارغة حوله"
 
 [signatureSettings.tooltip]
 header = "إعدادات مظهر التوقيع"

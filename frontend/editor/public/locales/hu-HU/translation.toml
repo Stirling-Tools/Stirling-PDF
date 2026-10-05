@@ -742,10 +742,10 @@ title = "Dokumentumok és RAG"
 
 [admin.settings.ai.documents.embeddingApiKey]
 description = "Hagyja üresen a motor saját környezeti hitelesítő adatainak használatához. Saját üzemeltetésű, egymotoros telepítésekre vonatkozik."
-generic = "Embedding API key"
-openai = "OpenAI API key"
+generic = "Embedding API-kulcs"
+openai = "OpenAI API-kulcs"
 setPlaceholder = "Mentve – hagyja üresen az aktuális kulcs megtartásához"
-voyageai = "VoyageAI API key"
+voyageai = "VoyageAI API-kulcs"
 
 [admin.settings.ai.documents.embeddingBaseUrl]
 description = "Az OpenAI-kompatibilis / Ollama embeddings végpont alap URL-je, pl. http://ollama:11434/v1. Megbízható belső végpontra kell mutatnia (SSRF-érzékeny)."
@@ -892,10 +892,10 @@ description = "Válassza ki az LLM-szolgáltatót és az AI-motor által haszná
 title = "Modellek és szolgáltatók"
 
 [admin.settings.ai.models.apiKey]
-anthropic = "Anthropic API key"
+anthropic = "Anthropic API-kulcs"
 description = "Hagyja üresen a motor saját környezeti hitelesítő adatainak használatához. Saját üzemeltetésű, egymotoros telepítésekre vonatkozik."
-generic = "API key"
-openai = "OpenAI API key"
+generic = "API-kulcs"
+openai = "OpenAI API-kulcs"
 setPlaceholder = "Mentve – hagyja üresen az aktuális kulcs megtartásához"
 
 [admin.settings.ai.models.baseUrl]
@@ -1476,7 +1476,7 @@ label = "SMTP felhasználónév"
 [admin.settings.mcp]
 apikeyNote = "Az ügyfelek egy Stirling API key-t küldenek az X-API-KEY fejlécben (vagy Authorization: Bearer <key>). A kulcs a tulajdonos Stirling felhasználójához van rendelve – csak előre létrehozott fiókok kapnak hozzáférést, és a műveletek az adott felhasználóként kerülnek naplózásra. A kulcsok kezelése: Fiók > API Keys."
 description = "Tegye elérhetővé a Stirling PDF-eszközeit és AI-ügynökeit MCP kliensek számára egy OAuth-védett végponton keresztül."
-title = "MCP Server"
+title = "MCP szerver"
 
 [admin.settings.mcp.acceptedAudiences]
 description = "A Resource ID mellett elfogadott extra token audience értékek (vesszővel vagy szóközzel elválasztva). Hagyja üresen a szigorú RFC 8707 használatához. Olyan IdP-khez szükséges, amelyek nem tudnak resource audience-t kibocsátani – pl. a Supabase OAuth szervere mindig aud=authenticated értéket ad ki."
@@ -1529,7 +1529,7 @@ label = "Meglévő Stirling fiók megkövetelése"
 
 [admin.settings.mcp.resourceId]
 description = "A szerver nyilvános /mcp URL-je. A tokenek audience mezőjében szerepelnie kell (RFC 8707), különben elutasításra kerülnek."
-label = "Resource ID"
+label = "Erőforrás-azonosító"
 
 [admin.settings.mcp.scopes]
 description = "mcp.tools.read megkövetelése olvasási műveletekhez, és mcp.tools.write írási/AI műveletekhez."
@@ -3357,7 +3357,7 @@ deed = "Okirat"
 delivery-note = "Szállítólevél"
 demand-letter = "Fizetési felszólítás"
 design-document = "Tervezési dokumentum"
-diploma = "Diploma"
+diploma = "Oklevél"
 discharge-summary = "Zárójelentés"
 dissertation = "Disszertáció"
 donation-receipt = "Adományozási nyugta"
@@ -3561,7 +3561,7 @@ waiver = "Lemondó nyilatkozat"
 warehouse-receipt = "Raktári nyugta"
 warranty-document = "Garanciadokumentum"
 waybill = "Szállítmánykísérő levél"
-white-paper = "White paper"
+white-paper = "Fehér könyv"
 will = "Végrendelet"
 work-instruction = "Munkautasítás"
 work-order = "Munkamegrendelés"
@@ -3975,12 +3975,12 @@ warning = "⚠️ Figyelmeztetés: Ez a művelet új API-kulcsokat hoz létre, �
 [config.mcp]
 description = "A Model Context Protocol (MCP) lehetővé teszi, hogy az olyan AI asszisztensek, mint a Claude, közvetlenül használják a Stirling PDF eszközeit. Csatlakoztasson egyszer egy klienst, és az asszisztense az Ön nevében konvertálhat, szerkeszthet, biztosíthat és feldolgozhat dokumentumokat."
 guestInfo = "A vendégfelhasználók nem csatlakoztathatnak MCP klienseket. Hozzon létre fiókot az MCP szerver használatához, és engedje, hogy AI asszisztense az Ön nevében futtassa a Stirling PDF eszközeit."
-navLabel = "MCP Server"
+navLabel = "MCP szerver"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
 viewApiKeys = "API keys megtekintése"
 
 [config.mcp.copy]
-configLabel = "Config"
+configLabel = "Konfiguráció"
 copied = "Másolva"
 copy = "Másolás"
 endpointLabel = "Endpoint URL"
@@ -7345,10 +7345,19 @@ mixed = "{{count}} objektum"
 multiGeometry = "Válassz egyetlen objektumot a pozíció és méret szerkesztéséhez."
 nothingSelected = "Nincs kijelölés"
 nothingSelectedHint = "Kattints bármelyik szövegre, képre vagy alakzatra az oldalon, hogy itt szerkeszthesd."
+ocrDocumentChanged = "A dokumentum megváltozott az OCR futása közben. Futtassa újra az OCR-t a legutóbbi módosítások belefoglalásához."
+ocrInvalidResult = "Az OCR nem adott vissza PDF-et. Próbálja újra."
+ocrNoLanguages = "Nincs OCR nyelv telepítve a szerveren."
+ocrRunning = "Szöveg felismerése..."
+ocrUnavailable = "Az OCR nem érhető el ezen a szerveren."
 oneImage = "Kép"
 oneShape = "Alakzat"
 oneText = "Szöveg"
 pages = "Oldalak"
+runOcr = "OCR futtatása"
+scanHint_one = "Ez az oldal egy beolvasott kép, szerkeszthető szöveg nélkül. Először futtassa az OCR-t, hogy a szöveg szerkeszthető legyen."
+scanHint_other = "{{count}} oldal beolvasott kép, szerkeszthető szöveg nélkül. Először futtassa az OCR-t, hogy a szövegük szerkeszthető legyen."
+scannedText = "Beolvasott szöveg · a módosított szavak fedésre kerülnek, és megfelelő betűtípussal újrarajzolódnak."
 tabDocument = "Dokumentum"
 tabSelected = "Kijelölt"
 textBoxes = "Szövegdobozok"
@@ -8105,7 +8114,7 @@ enterpriseUsers = "Nincs felső korlát"
 enterpriseWhere = "Emellett többcsomópontos és izolált"
 exploreEnterprise = "Enterprise felfedezése"
 freeData = "Ott marad, ahol futtatja"
-freeName = "Free"
+freeName = "Ingyenes"
 freePrice = "Nincs kártya, nincs lejárat"
 freeProcessing = "{{allowance}} kredit havonta"
 freeProcessingUnknown = "Havi kreditkeret"
@@ -8170,7 +8179,7 @@ sub = "A teljes PDF-szerkesztő."
 [portal.billing.identity.processor]
 chipMetered = "Mért feldolgozás"
 chipPipelines = "Folyamatok és API"
-name = "Processor"
+name = "Processzor"
 sub = "Team alapdíj plusz {{rate}} kreditenként"
 subNoRate = "Team alapdíj plusz mért feldolgozás"
 
@@ -8289,7 +8298,7 @@ prepaidRemaining = "Megmaradt előre fizetett kreditek"
 prepaidTooltip = "A mért számlázás előtt kerül felhasználásra, és kívül esik a költési limitjén."
 raiseLimit = "Limit emelése"
 remainingOf = "{{total}} kreditből {{remaining}}"
-rowName = "Processor"
+rowName = "Processzor"
 spendAgainstLimit = "{{cap}} összegből {{spend}} mért ebben a ciklusban"
 
 [portal.billing.seats]
@@ -8428,13 +8437,13 @@ label = "Fájl és csatolás"
 
 [portal.connections.commonFields.accessToken]
 helperText = "A Stirling ezt titkosítva tárolja, és többé nem jeleníti meg."
-label = "Access token"
+label = "Hozzáférési token"
 
 [portal.connections.commonFields.apiKey]
-label = "API key"
+label = "API-kulcs"
 
 [portal.connections.commonFields.apiToken]
-label = "API token"
+label = "API-token"
 
 [portal.connections.commonFields.baseUrl]
 helperText = "Az ezt a kapcsolatot használó lépések csak ezen URL alatti útvonalakat hívhatnak meg, másik hostot soha."
@@ -8559,10 +8568,10 @@ label = "Szerver URL"
 placeholder = "https://your-org.consignocloud.com/api/v1"
 
 [portal.connections.types.consigno.fields.clientId]
-label = "API key"
+label = "API-kulcs"
 
 [portal.connections.types.consigno.fields.clientSecret]
-label = "API secret"
+label = "API-titok"
 
 [portal.connections.types.consigno.fields.password]
 label = "Jelszó"
@@ -8664,14 +8673,14 @@ label = "Microsoft Purview"
 
 [portal.connections.types.purview.fields.clientId]
 helperText = "Opcionális. Csak címkék név szerinti kiválasztásához szükséges; a címkézés enélkül is működik."
-label = "Application (client) ID"
+label = "Alkalmazás (kliens) ID"
 
 [portal.connections.types.purview.fields.clientSecret]
-label = "Client secret"
+label = "Kliens titok"
 
 [portal.connections.types.purview.fields.tenantId]
 helperText = "Minden címkére SiteId-ként kerül rábélyegzésre, hogy a Purview-kompatibilis eszközök tudják, melyik szervezet alkalmazta."
-label = "Directory (tenant) ID"
+label = "Címtár (tenant) ID"
 placeholder = "cb46c030-1825-4e81-a295-151c039dbf02"
 
 [portal.connections.types.s3]
@@ -8679,7 +8688,7 @@ description = "Egy S3 bucket, amelyből a források olvashatnak, és amelybe a p
 label = "S3 tároló"
 
 [portal.connections.types.s3.fields.accessKeyId]
-label = "Access key ID"
+label = "Hozzáférési kulcs ID"
 
 [portal.connections.types.s3.fields.bucket]
 label = "Bucket"
@@ -8692,7 +8701,7 @@ label = "Endpoint"
 label = "Régió"
 
 [portal.connections.types.s3.fields.secretAccessKey]
-label = "Secret access key"
+label = "Titkos hozzáférési kulcs"
 
 [portal.connections.types.sendgrid]
 description = "Dokumentum vagy értesítés küldése emailben, amikor egy szabály fut."
@@ -8705,7 +8714,7 @@ label = "SFTP"
 
 [portal.connections.types.sftp.fields.hostKeyFingerprint]
 helperText = "Opcionális. A szerver SHA-256 host key fingerprintje (innen: `ssh-keyscan host | ssh-keygen -lf -`). Ha be van állítva, csak az ezt a kulcsot bemutató szerver fogadható el; ha üres, az első csatlakozáskor látott kulcs rögzítésre kerül, és a későbbi változások elutasításra kerülnek."
-label = "Host key fingerprint"
+label = "Host kulcs ujjlenyomata"
 placeholder = "SHA256:..."
 
 [portal.connections.types.sftp.fields.passphrase]
@@ -8811,7 +8820,7 @@ title = "A Docs nem érhető el"
 [portal.docs.quickstart]
 eyebrow = "ELSŐ LÉPÉSEK"
 lead = "Küldje el első dokumentumát egy típusos endpointnak, és kapjon vissza strukturált JSON-t három lépésben. Nincs modellképzés, nincs prompt engineering."
-title = "Quickstart"
+title = "Gyors kezdés"
 
 [portal.docs.quickstart.callout]
 bodyAfterLink = "másolható receptekért."
@@ -8869,7 +8878,7 @@ title = "Ezen az oldalon"
 codeCaption = "document.processed"
 eyebrow = "API REFERENCIA"
 lead = "Iratkozzon fel a document.processed, pipeline.completed és quota.threshold eseményekre. A payloadok HMAC-SHA256-tal vannak aláírva."
-title = "Webhooks"
+title = "Webhookok"
 
 [portal.docs.webhooks.callout]
 afterHelper = "helpert mellékelnek."
@@ -11667,7 +11676,7 @@ title = "Névjegy"
 
 [settings.ai]
 documents = "Dokumentumok és RAG"
-general = "AI Engine"
+general = "AI-motor"
 limits = "Korlátok és teljesítmény"
 models = "Modellek és szolgáltatók"
 title = "AI"
@@ -11684,7 +11693,7 @@ features = "Funkciók"
 folderAccess = "Mappahozzáférés"
 integrations = "Integrációk"
 legal = "Jogi dokumentumok"
-mcp = "MCP Server"
+mcp = "MCP szerver"
 privacy = "Adatvédelem"
 storageSharing = "Fájltárolás és megosztás"
 systemSettings = "Rendszerbeállítások"
@@ -12275,6 +12284,163 @@ image = "Kép"
 saved = "Mentett"
 text = "Szöveg"
 title = "Aláírás típusa"
+
+[sign.wallet]
+apply_one = "{{count}} aláírás alkalmazása"
+apply_other = "{{count}} aláírás alkalmazása"
+applyEmpty = "Aláírások alkalmazása"
+count = "{{count}} / {{max}}"
+default = "Alapértelmezett"
+loading = "Aláírásai betöltése..."
+new = "Új aláírás"
+shared = "Megosztott"
+sharedHint = "Mindenki használhatja ezeket"
+unsaved = "Nincs mentve"
+yours = "Az Ön aláírásai"
+
+[sign.wallet.create]
+cancel = "Mégse"
+full = "A könyvtára megtelt ({{max}} aláírás). Töröljön egyet, hogy többet menthessen."
+makeDefault = "Beállítás alapértelmezettként"
+method = "Létrehozás módja"
+name = "Név"
+save = "Mentés az aláírásaim közé"
+saveBrowserHint = "Ebben a böngészőben marad, készen a következő alkalomra."
+saveHint = "Készen áll az újrafelhasználásra a következő aláíráskor."
+subtitle = "Hozza létre egyszer, majd használja újra bármely dokumentumon."
+title = "Új aláírás"
+use = "Aláírás használata"
+who = "Ki használhatja"
+whoEveryone = "Mindenki"
+whoMe = "Csak én"
+
+[sign.wallet.defaultName]
+draw = "Saját aláírásom"
+initials = "Monogram"
+phone = "Telefonos aláírás"
+type = "Gépelt aláírás"
+upload = "Feltöltött aláírás"
+
+[sign.wallet.delete]
+body = "„{{name}}” eltávolítva az aláírásai közül. A már aláírt dokumentumok megtartják."
+confirm = "Törlés"
+title = "Törli ezt az aláírást?"
+
+[sign.wallet.draw]
+bold = "Vastag toll"
+clear = "Törlés"
+fine = "Vékony toll"
+hint = "Írjon alá a vonal fölött"
+medium = "Közepes toll"
+pad = "Aláírópad"
+pen = "Toll"
+tip = "Használjon egeret, trackpadet, tollat vagy ujjat"
+undo = "Visszavonás"
+
+[sign.wallet.ink]
+black = "Fekete tinta"
+blue = "Kék tinta"
+label = "Tinta"
+navy = "Sötétkék tinta"
+
+[sign.wallet.intro]
+body = "Hozza létre egyszer. Itt lesz mentve, készen minden aláírandó dokumentumhoz."
+privacy = "A mentett aláírások privátak, hacsak nem választja a megosztásukat."
+privacyBrowser = "A mentett aláírások ebben a böngészőben maradnak."
+title = "Adja hozzá aláírását"
+
+[sign.wallet.menu]
+delete = "Törlés"
+discard = "Elvetés"
+makeDefault = "Beállítás alapértelmezettként"
+options = "{{name}} beállításai"
+place = "Elhelyezés az oldalon"
+removeDefault = "Eltávolítás alapértelmezettként"
+rename = "Átnevezés"
+save = "Mentés az aláírásaim közé"
+share = "Megosztás mindenkivel"
+stop = "Elhelyezés leállítása"
+
+[sign.wallet.phone]
+expires = "Lejár: {{time}}"
+qr = "QR kód a telefonos aláíráshoz"
+received = "Megérkezett a telefonjáról"
+receiveFailed = "Nem sikerült beolvasni ezt az aláírást. Próbálja újra az új kód beolvasásával."
+step1 = "Olvassa be a kódot a telefon kamerájával"
+step1Hint = "A telefon böngészőjében nyílik meg, nincs szükség alkalmazásra."
+step2 = "Rajzolja meg, gépelje be vagy fényképezze le az aláírását"
+step2Hint = "Nagy vászon, ujjhoz tervezve."
+step3 = "Automatikusan megjelenik itt"
+step3Hint = "Tartsa nyitva ezt az ablakot, amíg aláír."
+waiting = "Várakozás a telefonjára..."
+
+[sign.wallet.placed]
+empty = "Az oldalon elhelyezett aláírások itt jelennek meg."
+fallbackName = "Aláírás"
+page = "{{page}}. oldal"
+remove = "{{name}} eltávolítása"
+show = "{{name}} megjelenítése az oldalon"
+title = "Ezen a dokumentumon ({{count}})"
+
+[sign.wallet.rename]
+save = "Mentés"
+title = "Aláírás átnevezése"
+
+[sign.wallet.status]
+idle = "Válasszon aláírást az elhelyezéshez"
+placing = "Kattintson az oldalra {{name}} elhelyezéséhez."
+stop = "Leállítás"
+
+[sign.wallet.tabs]
+draw = "Rajzolás"
+phone = "Telefon"
+type = "Gépelés"
+upload = "Feltöltés"
+
+[sign.wallet.toast]
+applyFailed = "Nem sikerült alkalmazni az aláírásokat"
+applyFailedBody = "Az aláírásai továbbra is a dokumentumon vannak. Próbálja újra."
+deleteFailed = "Nem sikerült törölni az aláírást"
+draftExists = "Először mentse vagy vesse el a nem mentett aláírását"
+initialsFailed = "Nem sikerült menteni a monogramját"
+initialsPartial = "Az aláírása mentve lett, de a monogramja nem. Próbálja külön menteni a monogramját."
+renameFailed = "Nem sikerült átnevezni az aláírást"
+saved = "Mentve az aláírásai közé"
+saveFailed = "Nem sikerült menteni az aláírást"
+saveFailedBody = "Továbbra is készen áll az elhelyezésre ezen a dokumentumon."
+shared = "Megosztva mindenkivel"
+shareFailed = "Nem sikerült megosztani az aláírást"
+
+[sign.wallet.type]
+initials = "Monogram"
+initialsLimit = "A monogram mentéséhez két szabad aláíráshely szükséges."
+name = "Az Ön neve"
+namePlaceholder = "Írja be a nevét"
+previewName = "Az Ön neve"
+saveInitials = "A monogramom mentése is"
+style = "Stílus"
+styleOption = "{{index}}. stílus"
+
+[sign.wallet.upload]
+browse = "vagy fájlok böngészése"
+drop = "Húzzon ide egy képet"
+failed = "Nem sikerült beolvasni ezt a képet."
+hint = "PNG, JPG vagy WebP legfeljebb {{size}} MB méretig. A fehér hátterek automatikusan eltávolításra kerülnek."
+ink = "Tinta színe"
+inkBlack = "Fekete"
+inkBlue = "Kék"
+inkOriginal = "Eredeti"
+preview = "Feltöltött aláírás előnézete"
+processing = "Kép tisztítása..."
+rejected = "Válasszon legfeljebb {{size}} MB méretű PNG, JPG vagy WebP képet."
+removeBackground = "Háttér eltávolítása"
+removeBackgroundHint = "A fehér papír átlátszóvá válik"
+replace = "Csere"
+rotate = "Forgatás"
+rotateLeft = "Forgatás balra"
+rotateRight = "Forgatás jobbra"
+trim = "Vágás az aláíráshoz"
+trimHint = "Levágja a körülötte lévő üres helyet"
 
 [signatureSettings.tooltip]
 header = "Aláírás megjelenésének beállításai"

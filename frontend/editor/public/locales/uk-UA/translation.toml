@@ -3980,7 +3980,7 @@ tip = "Every action your assistant runs is performed as your account and counts 
 viewApiKeys = "Переглянути ключі API"
 
 [config.mcp.copy]
-configLabel = "Config"
+configLabel = "Конфігурація"
 copied = "Скопійовано"
 copy = "Копіювати"
 endpointLabel = "Endpoint URL"
@@ -5941,9 +5941,9 @@ currentTeamAllowance = "Поточний ліміт для вашої legacy-к�
 loadError = "Не вдалося перевірити вашу наявну підписку. Спробуйте ще раз перед придбанням іншого плану."
 loading = "Перевірка вашої підписки..."
 portalError = "Не вдалося відкрити виставлення рахунків Stripe. Спробуйте ще раз."
-pro = "Pro (legacy)"
+pro = "Pro (застарілий)"
 retry = "Спробувати ще раз"
-team = "Team (legacy)"
+team = "Team (застарілий)"
 teamUsers = "Ваша команда: {{used}} з {{limit}} користувачів"
 unlimitedUsers = "Ваша команда: необмежена кількість користувачів ({{used}} використовується)"
 usersUnavailable = "Не вдалося підтвердити ліміт користувачів вашої команди. Зверніться до підтримки, щоб перевірити ваш legacy-план."
@@ -6594,7 +6594,7 @@ yourCloudAccess = "Ви станете учасником команди й вт
 
 [pageEdit]
 deselectAll = "Нічого"
-selectAll = "Вибрати все"
+selectAll = "Позначити все"
 
 [pageEditor]
 dragPreviewAlt = "Перетягування"
@@ -6870,7 +6870,7 @@ title = "Не вдалося завантажити ваш план"
 
 [payg.free.cta]
 benefit1Body = "зв’язуйте інструменти, плануйте запуски, обробляйте пакетно"
-benefit1Title = "Automation pipelines"
+benefit1Title = "Конвеєри автоматизації"
 benefit2Body = "summarise, classify, redact, AI-OCR"
 benefit2Title = "Інструменти AI"
 benefit3Body = "викликайте будь-який Stirling endpoint програмно"
@@ -6924,7 +6924,7 @@ meterTitle = "Автоматизація · AI · API"
 askLeader = "Лише власник вашої команди може змінити ліміт."
 
 [payg.members]
-docs = "PDFs"
+docs = "PDF"
 subtitle = "Оплачувані PDFs, які кожен учасник команди обробив у цьому періоді."
 title = "Використання учасниками команди"
 
@@ -7014,7 +7014,7 @@ aiTitle = "Інструменти AI"
 apiBody = "програмний доступ до будь-якого Stirling endpoint"
 apiTitle = "Виклики API"
 automationBody = "зв’язані інструменти або заплановані запуски, які не потребують кліків"
-automationTitle = "Automation pipelines"
+automationTitle = "Конвеєри автоматизації"
 footnoteUnlimited = "Ручні інструменти (перегляд, редагування, об’єднання, розділення, водяні знаки, стискання, ручний OCR) завжди безкоштовні, навіть після використання включених кредитів. Різниця полягає в типі роботи, а не в тому, де ви натискаєте."
 title = "Що ми зараховуємо до billing"
 
@@ -7236,7 +7236,7 @@ decodeImage = "Не вдалося декодувати вибране зобр�
 insertImage = "Не вдалося вставити вибране зображення."
 
 [pdfTextEditor.externalEdit]
-pngFileType = "PNG image"
+pngFileType = "PNG зображення"
 
 [pdfTextEditor.find]
 close = "Закрити панель пошуку"
@@ -7345,10 +7345,19 @@ mixed = "{{count}} об’єктів"
 multiGeometry = "Виберіть один об’єкт, щоб редагувати його позицію та розмір."
 nothingSelected = "Нічого не вибрано"
 nothingSelectedHint = "Клацніть будь-який текст, зображення або фігуру на сторінці, щоб редагувати їх тут."
+ocrDocumentChanged = "Документ змінився під час виконання OCR. Запустіть OCR знову, щоб включити останні зміни."
+ocrInvalidResult = "OCR не повернув PDF. Спробуйте ще раз."
+ocrNoLanguages = "На сервері не встановлено мов OCR."
+ocrRunning = "Розпізнавання тексту..."
+ocrUnavailable = "OCR недоступний на цьому сервері."
 oneImage = "Зображення"
 oneShape = "Фігура"
 oneText = "Текст"
 pages = "Сторінки"
+runOcr = "Запустити OCR"
+scanHint_one = "Ця сторінка є сканованим зображенням без тексту для редагування. Спочатку запустіть OCR, щоб зробити її текст доступним для редагування."
+scanHint_other = "{{count}} сторінок є сканованими зображеннями без тексту для редагування. Спочатку запустіть OCR, щоб зробити їхній текст доступним для редагування."
+scannedText = "Сканований текст · змінені слова закриваються та перемальовуються відповідним шрифтом."
 tabDocument = "Документ"
 tabSelected = "Вибране"
 textBoxes = "Текстові поля"
@@ -7549,9 +7558,9 @@ tags = "архів,довгостроковий,стандартний,конв�
 title = "PDF в PDF/A"
 
 [pdfToPDFUA]
-header = "PDF To PDF/UA"
+header = "PDF у PDF/UA"
 tags = "доступність,доступний,тегований,screen reader,wcag,eaa,section 508,конвертація"
-title = "PDF To PDF/UA"
+title = "PDF у PDF/UA"
 
 [pdfToPDFX]
 tags = "друк,стандарт,конвертація,виробництво,додрукарська підготовка,архів"
@@ -8223,7 +8232,7 @@ segmentAutomationDesc = "Автоматизації та конвеєри"
 segmentAutomationLabel = "Автоматизація"
 summary = "{{unique}} унікальних · {{units}} одиниць лічильника · {{avg}} середнє на PDF"
 summaryNoRate = "{{unique}} унікальних · {{units}} одиниць лічильника"
-unit = "PDFs"
+unit = "PDF"
 unitsPending_one = "{{units}} одиниця лічильника очікує синхронізації з пов’язаних екземплярів"
 unitsPending_other = "{{units}} одиниць лічильника очікують синхронізації з пов’язаних екземплярів"
 
@@ -8428,17 +8437,17 @@ label = "Файли та вкладення"
 
 [portal.connections.commonFields.accessToken]
 helperText = "Stirling зберігає це зашифрованим і більше ніколи не показує."
-label = "Access token"
+label = "Токен доступу"
 
 [portal.connections.commonFields.apiKey]
-label = "API key"
+label = "API ключ"
 
 [portal.connections.commonFields.apiToken]
-label = "API token"
+label = "API токен"
 
 [portal.connections.commonFields.baseUrl]
 helperText = "Кроки, що використовують це з’єднання, можуть викликати лише шляхи під цим URL, ніколи інший host."
-label = "Server URL"
+label = "URL сервера"
 
 [portal.connections.commonFields.email]
 label = "Email"
@@ -8555,11 +8564,11 @@ label = "ConsignO Cloud"
 
 [portal.connections.types.consigno.fields.baseUrl]
 helperText = "Ваше середовище ConsignO Cloud, включно з /api/v1."
-label = "Server URL"
+label = "URL сервера"
 placeholder = "https://your-org.consignocloud.com/api/v1"
 
 [portal.connections.types.consigno.fields.clientId]
-label = "API key"
+label = "API ключ"
 
 [portal.connections.types.consigno.fields.clientSecret]
 label = "API secret"
@@ -8626,7 +8635,7 @@ label = "n8n"
 
 [portal.connections.types.n8n.fields.authType]
 helperText = "Зіставте Authentication, встановлену на n8n Webhook node."
-label = "Webhook authentication"
+label = "Автентифікація Webhook"
 
 [portal.connections.types.n8n.fields.authType.options.basic]
 label = "Basic auth"
@@ -8635,15 +8644,15 @@ label = "Basic auth"
 label = "Header auth"
 
 [portal.connections.types.n8n.fields.authType.options.none]
-label = "None"
+label = "Немає"
 
 [portal.connections.types.n8n.fields.headerName]
 helperText = "Ім’я header з облікових даних n8n, а не його значення."
-label = "Header name"
+label = "Назва заголовка"
 placeholder = "X-N8N-Key"
 
 [portal.connections.types.n8n.fields.token]
-label = "Header value"
+label = "Значення заголовка"
 
 [portal.connections.types.nextcloud]
 baseUrlPlaceholder = "https://your-server/remote.php/dav"
@@ -8651,7 +8660,7 @@ description = "Розміщуйте оброблені документи в Nex
 label = "Nextcloud"
 
 [portal.connections.types.nextcloud.fields.appPassword]
-label = "App password"
+label = "Пароль застосунку"
 
 [portal.connections.types.presidio]
 baseUrlPlaceholder = "http://presidio-analyzer:3000"
@@ -8689,7 +8698,7 @@ helperText = "Залиште порожнім для AWS. Установіть �
 label = "Endpoint"
 
 [portal.connections.types.s3.fields.region]
-label = "Region"
+label = "Регіон"
 
 [portal.connections.types.s3.fields.secretAccessKey]
 label = "Secret access key"
@@ -8705,7 +8714,7 @@ label = "SFTP"
 
 [portal.connections.types.sftp.fields.hostKeyFingerprint]
 helperText = "Необов’язково. SHA-256 відбиток host key сервера (з `ssh-keyscan host | ssh-keygen -lf -`). Якщо задано, приймається лише сервер, що надає цей ключ; якщо порожньо, ключ, побачений під час першого підключення, закріплюється, а подальші зміни відхиляються."
-label = "Host key fingerprint"
+label = "Відбиток ключа Host"
 placeholder = "SHA256:..."
 
 [portal.connections.types.sftp.fields.passphrase]
@@ -8729,7 +8738,7 @@ label = "SMB / Мережевий ресурс"
 
 [portal.connections.types.smb.fields.domain]
 helperText = "Необов’язково. Windows domain або workgroup, якщо ваш сервер їх використовує."
-label = "Domain"
+label = "Домен"
 
 [portal.connections.types.smb.fields.share]
 label = "Share"
@@ -12275,6 +12284,163 @@ image = "Зображення"
 saved = "Збережені"
 text = "Текст"
 title = "Тип підпису"
+
+[sign.wallet]
+apply_one = "Застосувати {{count}} підпис"
+apply_other = "Застосувати {{count}} підписів"
+applyEmpty = "Застосувати підписи"
+count = "{{count}} з {{max}}"
+default = "За замовчуванням"
+loading = "Завантаження ваших підписів..."
+new = "Новий підпис"
+shared = "Спільний"
+sharedHint = "Усі можуть використовувати ці підписи"
+unsaved = "Не збережено"
+yours = "Ваші підписи"
+
+[sign.wallet.create]
+cancel = "Скасувати"
+full = "Ваша бібліотека заповнена ({{max}} підписів). Видаліть один, щоб зберегти більше."
+makeDefault = "Зробити за замовчуванням"
+method = "Як його створити"
+name = "Назва"
+save = "Зберегти до моїх підписів"
+saveBrowserHint = "Зберігається в цьому браузері, готовий для наступного разу."
+saveHint = "Готовий до повторного використання наступного разу, коли ви підписуватимете."
+subtitle = "Створіть один раз і використовуйте повторно в будь-якому документі."
+title = "Новий підпис"
+use = "Використати підпис"
+who = "Хто може його використовувати"
+whoEveryone = "Усі"
+whoMe = "Лише я"
+
+[sign.wallet.defaultName]
+draw = "Мій підпис"
+initials = "Ініціали"
+phone = "Підпис із телефона"
+type = "Набраний підпис"
+upload = "Завантажений підпис"
+
+[sign.wallet.delete]
+body = "\"{{name}}\" видалено з ваших підписів. Документи, які ви вже підписали, збережуть його."
+confirm = "Видалити"
+title = "Видалити цей підпис?"
+
+[sign.wallet.draw]
+bold = "Товсте перо"
+clear = "Очистити"
+fine = "Тонке перо"
+hint = "Підпишіть над лінією"
+medium = "Середнє перо"
+pad = "Панель підпису"
+pen = "Перо"
+tip = "Використовуйте мишу, трекпад, перо або палець"
+undo = "Скасувати"
+
+[sign.wallet.ink]
+black = "Чорне чорнило"
+blue = "Синє чорнило"
+label = "Чорнило"
+navy = "Темно-синє чорнило"
+
+[sign.wallet.intro]
+body = "Створіть один раз. Він зберігається тут і готовий для кожного документа, який ви підписуєте."
+privacy = "Збережені підписи приватні для вас, якщо ви не вирішите поділитися ними."
+privacyBrowser = "Збережені підписи залишаються в цьому браузері."
+title = "Додайте свій підпис"
+
+[sign.wallet.menu]
+delete = "Видалити"
+discard = "Відхилити"
+makeDefault = "Зробити за замовчуванням"
+options = "Параметри для {{name}}"
+place = "Розмістити на сторінці"
+removeDefault = "Прибрати як типовий"
+rename = "Перейменувати"
+save = "Зберегти до моїх підписів"
+share = "Поділитися з усіма"
+stop = "Припинити розміщення"
+
+[sign.wallet.phone]
+expires = "Спливає через {{time}}"
+qr = "QR код для підпису на телефоні"
+received = "Отримано з вашого телефона"
+receiveFailed = "Не вдалося прочитати цей підпис. Відскануйте новий код, щоб спробувати ще раз."
+step1 = "Відскануйте код камерою телефона"
+step1Hint = "Він відкриється в браузері телефона, застосунок не потрібен."
+step2 = "Намалюйте, наберіть або сфотографуйте свій підпис"
+step2Hint = "Велике полотно, створене для пальця."
+step3 = "Він автоматично з’явиться тут"
+step3Hint = "Тримайте це вікно відкритим, поки підписуєте."
+waiting = "Очікування вашого телефона..."
+
+[sign.wallet.placed]
+empty = "Підписи, які ви розміщуєте на сторінці, відображаються тут."
+fallbackName = "Підпис"
+page = "Сторінка {{page}}"
+remove = "Видалити {{name}}"
+show = "Показати {{name}} на сторінці"
+title = "У цьому документі ({{count}})"
+
+[sign.wallet.rename]
+save = "Зберегти"
+title = "Перейменувати підпис"
+
+[sign.wallet.status]
+idle = "Виберіть підпис, щоб розмістити його"
+placing = "Клацніть сторінку, щоб розмістити {{name}}."
+stop = "Стоп"
+
+[sign.wallet.tabs]
+draw = "Малювати"
+phone = "Телефон"
+type = "Набрати"
+upload = "Завантажити"
+
+[sign.wallet.toast]
+applyFailed = "Не вдалося застосувати підписи"
+applyFailedBody = "Ваші підписи все ще на документі. Спробуйте ще раз."
+deleteFailed = "Не вдалося видалити підпис"
+draftExists = "Спочатку збережіть або відхиліть незбережений підпис"
+initialsFailed = "Не вдалося зберегти ваші ініціали"
+initialsPartial = "Ваш підпис збережено, але ініціали — ні. Спробуйте зберегти ініціали окремо."
+renameFailed = "Не вдалося перейменувати підпис"
+saved = "Збережено до ваших підписів"
+saveFailed = "Не вдалося зберегти підпис"
+saveFailedBody = "Він усе ще готовий для розміщення в цьому документі."
+shared = "Поділено з усіма"
+shareFailed = "Не вдалося поділитися підписом"
+
+[sign.wallet.type]
+initials = "Ініціали"
+initialsLimit = "Для збереження ініціалів потрібні два вільні слоти підписів."
+name = "Ваше ім’я"
+namePlaceholder = "Введіть своє ім’я"
+previewName = "Ваше ім’я"
+saveInitials = "Також зберегти мої ініціали"
+style = "Стиль"
+styleOption = "Стиль {{index}}"
+
+[sign.wallet.upload]
+browse = "або перегляньте файли"
+drop = "Перетягніть зображення сюди"
+failed = "Не вдалося прочитати це зображення."
+hint = "PNG, JPG або WebP до {{size}} MB. Білий фон видаляється автоматично."
+ink = "Колір чорнила"
+inkBlack = "Чорний"
+inkBlue = "Синій"
+inkOriginal = "Оригінальний"
+preview = "Попередній перегляд завантаженого підпису"
+processing = "Очищення зображення..."
+rejected = "Виберіть PNG, JPG або WebP зображення до {{size}} MB."
+removeBackground = "Видалити фон"
+removeBackgroundHint = "Білий папір стає прозорим"
+replace = "Замінити"
+rotate = "Повернути"
+rotateLeft = "Повернути ліворуч"
+rotateRight = "Повернути праворуч"
+trim = "Обрізати до підпису"
+trimHint = "Обрізає порожній простір навколо"
 
 [signatureSettings.tooltip]
 header = "Параметри вигляду підпису"

@@ -263,7 +263,7 @@ name = "Mətn"
 placeholder = "Mətn daxil edin"
 
 [addImage.type]
-canvas = "Canvas"
+canvas = "Kanvas"
 image = "Şəkil"
 saved = "Saxlanılmış"
 text = "Mətn"
@@ -484,7 +484,7 @@ name = "Mətn məzmunu"
 placeholder = "Əlavə etmək istədiyiniz mətni daxil edin"
 
 [addText.type]
-canvas = "Canvas"
+canvas = "Kanvas"
 image = "Şəkil"
 saved = "Saxlanılmış"
 text = "Mətn"
@@ -1529,7 +1529,7 @@ label = "Mövcud Stirling hesabı tələb et"
 
 [admin.settings.mcp.resourceId]
 description = "Bu serverin ictimai /mcp URL-si. Token-lər onu auditoriyalarında göstərməlidir (RFC 8707), əks halda rədd edilir."
-label = "Resource ID"
+label = "Resurs ID"
 
 [admin.settings.mcp.scopes]
 description = "Oxuma əməliyyatları üçün mcp.tools.read, yazma/AI əməliyyatları üçün mcp.tools.write tələb edin."
@@ -4125,7 +4125,7 @@ selectSourceFormatFirst = "Əvvəlcə mənbə formatını seçin"
 settings = "Parametrlər"
 single = "Tək"
 sourceFormatPlaceholder = "Mənbə formatı"
-strictMode = "Strict Mode"
+strictMode = "Ciddi rejim"
 strictModeDesc = "Çevirmə mükəmməl deyilsə xəta ver (VeraPDF yoxlamasından istifadə edir)"
 svgPdfOptions = "SVG to PDF seçimləri"
 svgToPdf = "SVG → PDF"
@@ -7345,10 +7345,19 @@ mixed = "{{count}} obyekt"
 multiGeometry = "Mövqeyini və ölçüsünü redaktə etmək üçün tək obyekt seçin."
 nothingSelected = "Heç nə seçilməyib"
 nothingSelectedHint = "Burada redaktə etmək üçün səhifədə istənilən mətnə, şəkilə və ya fiqura klikləyin."
+ocrDocumentChanged = "OCR işləyərkən sənəd dəyişdi. Son dəyişikliklərinizi daxil etmək üçün OCR-ni yenidən işə salın."
+ocrInvalidResult = "OCR PDF qaytarmadı. Yenidən cəhd edin."
+ocrNoLanguages = "Serverdə OCR dilləri quraşdırılmayıb."
+ocrRunning = "Mətn tanınır..."
+ocrUnavailable = "OCR bu serverdə əlçatan deyil."
 oneImage = "Şəkil"
 oneShape = "Fiqur"
 oneText = "Mətn"
 pages = "Səhifələr"
+runOcr = "OCR-ni işə sal"
+scanHint_one = "Bu səhifə redaktə ediləcək mətni olmayan skan edilmiş şəkildir. Mətnini redaktə edilə bilən etmək üçün əvvəlcə OCR-ni işə salın."
+scanHint_other = "{{count}} səhifə redaktə ediləcək mətni olmayan skan edilmiş şəkillərdir. Mətnlərini redaktə edilə bilən etmək üçün əvvəlcə OCR-ni işə salın."
+scannedText = "Skan edilmiş mətn · dəyişdirilmiş sözlər örtülür və uyğun şriftlə yenidən çəkilir."
 tabDocument = "Sənəd"
 tabSelected = "Seçilmiş"
 textBoxes = "Mətn qutuları"
@@ -7762,7 +7771,7 @@ rowIdle = "{{label}} avtomatik işləyir"
 rowRunning = "{{label}} indi işləyir"
 runsToday_one = "Bu gün {{count}} icra"
 runsToday_other = "Bu gün {{count}} icra"
-title = "PDF Processor"
+title = "PDF Prosessoru"
 triggerExport = "İxrac zamanı işləyir"
 triggerImport = "İdxal zamanı işləyir"
 
@@ -8170,7 +8179,7 @@ sub = "Tam PDF Redaktoru."
 [portal.billing.identity.processor]
 chipMetered = "Sayğaclı emal"
 chipPipelines = "Pipeline-lar və API"
-name = "Processor"
+name = "Prosessor"
 sub = "Team bazası üstəgəl kredit başına {{rate}}"
 subNoRate = "Team bazası üstəgəl sayğaclı emal"
 
@@ -8289,7 +8298,7 @@ prepaidRemaining = "Qalan əvvəlcədən ödənilmiş kreditlər"
 prepaidTooltip = "Sayğaclı hesablaşmadan əvvəl və xərcləmə limitinizdən kənar istifadə olunur."
 raiseLimit = "Limiti artır"
 remainingOf = "{{total}}-dən {{remaining}}"
-rowName = "Processor"
+rowName = "Prosessor"
 spendAgainstLimit = "Bu dövrdə {{cap}}-dən {{spend}} sayğaclı"
 
 [portal.billing.seats]
@@ -8626,7 +8635,7 @@ label = "n8n"
 
 [portal.connections.types.n8n.fields.authType]
 helperText = "n8n Webhook node-da təyin edilmiş Authentication ilə uyğunlaşdırın."
-label = "Webhook authentication"
+label = "Webhook autentifikasiyası"
 
 [portal.connections.types.n8n.fields.authType.options.basic]
 label = "Basic auth"
@@ -8635,7 +8644,7 @@ label = "Basic auth"
 label = "Header auth"
 
 [portal.connections.types.n8n.fields.authType.options.none]
-label = "None"
+label = "Yoxdur"
 
 [portal.connections.types.n8n.fields.headerName]
 helperText = "n8n credential-dakı header adı, onun dəyəri deyil."
@@ -8811,7 +8820,7 @@ title = "Docs əlçatan deyil"
 [portal.docs.quickstart]
 eyebrow = "BAŞLANĞIC"
 lead = "İlk sənədinizi tipli endpoint-ə göndərin və üç addımda strukturlaşdırılmış JSON geri alın. Model təlimi və prompt mühəndisliyi yoxdur."
-title = "Quickstart"
+title = "Sürətli başlanğıc"
 
 [portal.docs.quickstart.callout]
 bodyAfterLink = "copy-paste reseptləri üçün."
@@ -9548,7 +9557,7 @@ editorDestination = "Redaktor"
 editorDestinationDetail = "İşə saldığınız faylı əvəz edir"
 inputs = "Giriş"
 inputSource = "Giriş mənbəyi"
-inputTrigger = "Trigger"
+inputTrigger = "Tətikləyici"
 keepEditing = "Redaktəyə davam et"
 moreActions = "Daha çox əməl"
 needsConfiguring = "Quraşdırma tələb olunur"
@@ -9654,7 +9663,7 @@ noToolSettings = "Bu alətin konfiqurasiya edilə bilən parametri yoxdur."
 output = "Təyinat"
 save = "Dəyişiklikləri saxla"
 scheduleEvery = "Hər"
-trigger = "Trigger"
+trigger = "Tətikləyici"
 triggerManual = "Yalnız manual"
 
 [portal.pipelines.composer.runsEvery]
@@ -9750,7 +9759,7 @@ name = "Pipeline"
 sources = "Mənbələr"
 status = "Status"
 steps = "Addımlar"
-trigger = "Trigger"
+trigger = "Tətikləyici"
 type = "Növ"
 
 [portal.pipelines.templates]
@@ -9980,7 +9989,7 @@ helperText = "Mesaj body-si kimi göndərilir. {{document.*}} və {{run.*}} hər
 label = "Mesaj"
 
 [portal.policies.operations.fields.method]
-label = "Method"
+label = "Metod"
 
 [portal.policies.operations.fields.pageId]
 label = "Səhifə ID-si"
@@ -10533,7 +10542,7 @@ account-link = "Hesab bağlantısı"
 
 [portal.shell.sidebar]
 appEditor = "Redaktor"
-appProcessor = "Processor"
+appProcessor = "Prosessor"
 linkAccount = "Stirling hesabını əlaqələndir"
 primaryNav = "Əsas naviqasiya"
 
@@ -10629,7 +10638,7 @@ noPolicies = "Editordan hələ heç bir siyasət işə salınmayıb."
 
 [portal.sources.types.email]
 description = "Xüsusi mailbox-a göndərilən əlavələri sənədlərə çevirin."
-label = "Email inbox"
+label = "Email gələnlər qutusu"
 
 [portal.sources.types.folder]
 description = "Yeni sənədlər üçün serverdəki kataloqu izləyin."
@@ -11103,7 +11112,7 @@ invite = "Dəvət et"
 landmark = "Sürətli naviqasiya"
 noProcessorAccess = "Processor girişi üçün adminə müraciət edin"
 notifications = "Bildirişlər"
-processor = "Processor"
+processor = "Prosessor"
 reader = "Oxuyucu"
 signInToUse = "Bundan istifadə etmək üçün daxil olun"
 
@@ -12276,6 +12285,163 @@ saved = "Saxlanmış"
 text = "Mətn"
 title = "İmza növü"
 
+[sign.wallet]
+apply_one = "{{count}} imzanı tətbiq et"
+apply_other = "{{count}} imzanı tətbiq et"
+applyEmpty = "İmzaları tətbiq et"
+count = "{{max}}-dən {{count}}"
+default = "Defolt"
+loading = "İmzalarınız yüklənir..."
+new = "Yeni imza"
+shared = "Paylaşılıb"
+sharedHint = "Hər kəs bunlardan istifadə edə bilər"
+unsaved = "Yadda saxlanılmayıb"
+yours = "İmzalarınız"
+
+[sign.wallet.create]
+cancel = "Ləğv et"
+full = "Kitabxananız doludur ({{max}} imza). Daha çox saxlamaq üçün birini silin."
+makeDefault = "Defolt et"
+method = "Onu necə yaratmaq olar"
+name = "Ad"
+save = "İmzalarımda saxla"
+saveBrowserHint = "Bu brauzerdə saxlanılır, növbəti dəfə üçün hazırdır."
+saveHint = "Növbəti dəfə imzalayanda yenidən istifadə üçün hazırdır."
+subtitle = "Bir dəfə yaradın, istənilən sənəddə yenidən istifadə edin."
+title = "Yeni imza"
+use = "İmzadan istifadə et"
+who = "Kim istifadə edə bilər"
+whoEveryone = "Hər kəs"
+whoMe = "Yalnız mən"
+
+[sign.wallet.defaultName]
+draw = "Mənim imzam"
+initials = "İnisiallar"
+phone = "Telefon imzası"
+type = "Yazılmış imza"
+upload = "Yüklənmiş imza"
+
+[sign.wallet.delete]
+body = "\"{{name}}\" imzalarınızdan silinir. Artıq imzaladığınız sənədlər onu saxlayır."
+confirm = "Sil"
+title = "Bu imzanı silmək istəyirsiniz?"
+
+[sign.wallet.draw]
+bold = "Qalın qələm"
+clear = "Təmizlə"
+fine = "İncə qələm"
+hint = "Xəttin üstündə imzalayın"
+medium = "Orta qələm"
+pad = "İmza paneli"
+pen = "Qələm"
+tip = "Siçan, trackpad, qələm və ya barmaqdan istifadə edin"
+undo = "Geri al"
+
+[sign.wallet.ink]
+black = "Qara mürəkkəb"
+blue = "Mavi mürəkkəb"
+label = "Mürəkkəb"
+navy = "Tünd göy mürəkkəb"
+
+[sign.wallet.intro]
+body = "Bir dəfə yaradın. Burada saxlanılır və imzaladığınız hər sənəd üçün hazırdır."
+privacy = "Saxlanılmış imzalar, onları paylaşmağı seçmədiyiniz müddətcə yalnız sizə məxsusdur."
+privacyBrowser = "Saxlanılmış imzalar bu brauzerdə qalır."
+title = "İmzanızı əlavə edin"
+
+[sign.wallet.menu]
+delete = "Sil"
+discard = "Ləğv et"
+makeDefault = "Defolt et"
+options = "{{name}} üçün seçimlər"
+place = "Səhifədə yerləşdir"
+removeDefault = "Defoltdan çıxar"
+rename = "Adını dəyiş"
+save = "İmzalarımda saxla"
+share = "Hər kəslə paylaş"
+stop = "Yerləşdirməyi dayandır"
+
+[sign.wallet.phone]
+expires = "{{time}} ərzində bitir"
+qr = "Telefonunuzda imzalamaq üçün QR kod"
+received = "Telefonunuzdan alındı"
+receiveFailed = "Həmin imzanı oxumaq mümkün olmadı. Yenidən cəhd etmək üçün yeni kodu skan edin."
+step1 = "Kodu telefon kameranızla skan edin"
+step1Hint = "Telefon brauzerində açılır, tətbiq lazım deyil."
+step2 = "İmzanızı çəkin, yazın və ya şəklini çəkin"
+step2Hint = "Barmaq üçün hazırlanmış böyük kanvas."
+step3 = "Burada avtomatik görünür"
+step3Hint = "İmzalayarkən bu pəncərəni açıq saxlayın."
+waiting = "Telefonunuz gözlənilir..."
+
+[sign.wallet.placed]
+empty = "Səhifədə yerləşdirdiyiniz imzalar burada siyahılanır."
+fallbackName = "İmza"
+page = "Səhifə {{page}}"
+remove = "{{name}} sil"
+show = "{{name}} səhifədə göstər"
+title = "Bu sənəddə ({{count}})"
+
+[sign.wallet.rename]
+save = "Yadda saxla"
+title = "İmzanın adını dəyiş"
+
+[sign.wallet.status]
+idle = "Yerləşdirmək üçün imza seçin"
+placing = "{{name}} yerləşdirmək üçün səhifəyə klikləyin."
+stop = "Dayandır"
+
+[sign.wallet.tabs]
+draw = "Çək"
+phone = "Telefon"
+type = "Yaz"
+upload = "Yüklə"
+
+[sign.wallet.toast]
+applyFailed = "İmzaları tətbiq etmək mümkün olmadı"
+applyFailedBody = "İmzalarınız hələ də sənəddədir. Yenidən cəhd edin."
+deleteFailed = "İmzanı silmək mümkün olmadı"
+draftExists = "Əvvəlcə yadda saxlanılmamış imzanızı saxlayın və ya ləğv edin"
+initialsFailed = "İnisiallarınızı saxlamaq mümkün olmadı"
+initialsPartial = "İmzanız saxlanıldı, lakin inisiallarınız saxlanılmadı. İnisiallarınızı ayrıca saxlamağa cəhd edin."
+renameFailed = "İmzanın adını dəyişmək mümkün olmadı"
+saved = "İmzalarınıza saxlanıldı"
+saveFailed = "İmzanı saxlamaq mümkün olmadı"
+saveFailedBody = "O, hələ də bu sənəddə yerləşdirilməyə hazırdır."
+shared = "Hər kəslə paylaşıldı"
+shareFailed = "İmzanı paylaşmaq mümkün olmadı"
+
+[sign.wallet.type]
+initials = "İnisiallar"
+initialsLimit = "İnisialları saxlamaq üçün iki boş imza yeri lazımdır."
+name = "Adınız"
+namePlaceholder = "Adınızı yazın"
+previewName = "Adınız"
+saveInitials = "İnisiallarımı da saxla"
+style = "Stil"
+styleOption = "Stil {{index}}"
+
+[sign.wallet.upload]
+browse = "və ya fayllara baxın"
+drop = "Şəkli buraya buraxın"
+failed = "Həmin şəkli oxumaq mümkün olmadı."
+hint = "{{size}} MB-a qədər PNG, JPG və ya WebP. Ağ fonlar avtomatik silinir."
+ink = "Mürəkkəb rəngi"
+inkBlack = "Qara"
+inkBlue = "Mavi"
+inkOriginal = "Orijinal"
+preview = "Yüklənmiş imza önizləməsi"
+processing = "Şəkil təmizlənir..."
+rejected = "{{size}} MB-a qədər PNG, JPG və ya WebP şəkli seçin."
+removeBackground = "Fonu sil"
+removeBackgroundHint = "Ağ kağız şəffaf olur"
+replace = "Əvəz et"
+rotate = "Döndür"
+rotateLeft = "Sola döndür"
+rotateRight = "Sağa döndür"
+trim = "İmzaya qədər kəs"
+trimHint = "Ətrafındakı boş sahəni kəsir"
+
 [signatureSettings.tooltip]
 header = "İmzanın Görünüşü Tənzimləmələri"
 
@@ -12675,7 +12841,7 @@ showMore = "Daha {{count}} göstər"
 docs = "Sənədlər"
 files = "Fayllar"
 pages = "Səhifələr"
-processor = "Processor"
+processor = "Prosessor"
 settings = "Parametrlər"
 tools = "Alətlər"
 
@@ -13044,10 +13210,10 @@ yearsAgo_one = "{{count}} il əvvəl"
 yearsAgo_other = "{{count}} il əvvəl"
 
 [users.cap]
-addProcessor = "+ Processor"
+addProcessor = "+ Prosessor"
 approver = "Siyasəti təsdiqləyir"
 editor = "Redaktor"
-processor = "Processor"
+processor = "Prosessor"
 
 [users.columns]
 capabilities = "İmkanlar"
@@ -13682,7 +13848,7 @@ certificateFile = "Sertifikat Faylı"
 certificateFilePlaceholder = "Sertifikat faylını seçin"
 certificatePassword = "Sertifikat Parolu"
 certificateType = "Sertifikat Növü"
-certTypeJks = "JKS Keystore"
+certTypeJks = "JKS açar anbarı"
 certTypeP12 = "P12/PKCS12 Sertifikatı"
 certTypeServer = "Server Sertifikatı (mövcuddursa)"
 completedDeclined = "Bu sənəddən imtina etdiniz."

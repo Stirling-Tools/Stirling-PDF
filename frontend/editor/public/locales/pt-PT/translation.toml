@@ -244,7 +244,7 @@ sharedHeading = "Assinaturas partilhadas"
 
 [addImage.saved.type]
 canvas = "Desenho"
-image = "Upload"
+image = "Carregar"
 text = "Texto"
 
 [addImage.step]
@@ -263,7 +263,7 @@ name = "Texto"
 placeholder = "Introduza texto"
 
 [addImage.type]
-canvas = "Canvas"
+canvas = "Tela"
 image = "Imagem"
 saved = "Guardado"
 text = "Texto"
@@ -415,7 +415,7 @@ europeanDate = "Data europeia"
 legal-footer = "Rodapé legal"
 page-numbers = "Números de página"
 pageNumberFooter = "Rodapé com número de página"
-timestamp = "Timestamp"
+timestamp = "Carimbo de data/hora"
 
 [addText]
 applySignatures = "Aplicar texto"
@@ -464,7 +464,7 @@ sharedHeading = "Assinaturas partilhadas"
 
 [addText.saved.type]
 canvas = "Desenho"
-image = "Upload"
+image = "Carregar"
 text = "Texto"
 
 [addText.step]
@@ -484,7 +484,7 @@ name = "Conteúdo do texto"
 placeholder = "Introduza o texto que pretende adicionar"
 
 [addText.type]
-canvas = "Canvas"
+canvas = "Tela"
 image = "Imagem"
 saved = "Guardado"
 text = "Texto"
@@ -1391,7 +1391,7 @@ title = "Aviso de responsabilidade legal"
 
 [admin.settings.legal.impressum]
 description = "URL ou nome de ficheiro para o impressum (obrigatório em algumas jurisdições)"
-label = "Impressum"
+label = "Ficha técnica"
 
 [admin.settings.legal.loginAgreement]
 defaultLocaleHint = "— usado como alternativa quando um idioma não tem ficheiro."
@@ -1529,7 +1529,7 @@ label = "Exigir uma conta Stirling existente"
 
 [admin.settings.mcp.resourceId]
 description = "O URL público /mcp deste servidor. Os tokens têm de o listar na sua audiência (RFC 8707) ou são rejeitados."
-label = "Resource ID"
+label = "ID do recurso"
 
 [admin.settings.mcp.scopes]
 description = "Exigir mcp.tools.read para operações de leitura e mcp.tools.write para operações de escrita/AI."
@@ -2351,7 +2351,7 @@ label = "Abrir menu para {{title}}"
 [automate.importModal]
 cancel = "Cancelar"
 confirm = "Importar"
-detectedAutomation = "Automate JSON"
+detectedAutomation = "Automatizar JSON"
 detectedFolderScan = "JSON de varrimento de pastas"
 dropHint = "Largue o JSON aqui ou clique para escolher um ficheiro"
 dropSubhint = "São aceites configurações de Automate e de Varrimento de Pastas"
@@ -7345,10 +7345,19 @@ mixed = "{{count}} objetos"
 multiGeometry = "Selecione um único objeto para editar a sua posição e tamanho."
 nothingSelected = "Nada selecionado"
 nothingSelectedHint = "Clique em qualquer texto, imagem ou forma na página para editá-lo aqui."
+ocrDocumentChanged = "O documento foi alterado enquanto o OCR estava em execução. Execute o OCR novamente para incluir as alterações mais recentes."
+ocrInvalidResult = "O OCR não devolveu um PDF. Tente novamente."
+ocrNoLanguages = "Não há idiomas de OCR instalados no servidor."
+ocrRunning = "A reconhecer texto..."
+ocrUnavailable = "O OCR não está disponível neste servidor."
 oneImage = "Imagem"
 oneShape = "Forma"
 oneText = "Texto"
 pages = "Páginas"
+runOcr = "Executar OCR"
+scanHint_one = "Esta página é uma imagem digitalizada sem texto para editar. Execute primeiro o OCR para tornar o texto editável."
+scanHint_other = "{{count}} páginas são imagens digitalizadas sem texto para editar. Execute primeiro o OCR para tornar o respetivo texto editável."
+scannedText = "Texto digitalizado · as palavras alteradas são cobertas e redesenhadas numa fonte correspondente."
 tabDocument = "Documento"
 tabSelected = "Selecionado"
 textBoxes = "Caixas de texto"
@@ -8629,10 +8638,10 @@ helperText = "Corresponda à Authentication definida no nó n8n Webhook."
 label = "Autenticação de webhook"
 
 [portal.connections.types.n8n.fields.authType.options.basic]
-label = "Basic auth"
+label = "Autenticação básica"
 
 [portal.connections.types.n8n.fields.authType.options.header]
-label = "Header auth"
+label = "Autenticação por cabeçalho"
 
 [portal.connections.types.n8n.fields.authType.options.none]
 label = "Nenhuma"
@@ -10933,7 +10942,7 @@ label = "Ativar OAuth2 Genérico"
 
 [provider.oauth2.generic.issuer]
 description = "Fornecedor que suporta OpenID Connect Discovery (/.well-known/openid-configuration)"
-label = "Issuer URL"
+label = "URL do emissor"
 
 [provider.oauth2.generic.provider]
 description = "O nome do seu fornecedor OAuth2 (p. ex., Azure AD, Okta)"
@@ -10998,7 +11007,7 @@ label = "Segredo do Cliente"
 
 [provider.oauth2.keycloak.issuer]
 description = "URL do endpoint OpenID Connect Discovery do realm do Keycloak"
-label = "Issuer URL"
+label = "URL do emissor"
 
 [provider.oauth2.keycloak.scopes]
 description = "Scopes OAuth2 separados por vírgulas"
@@ -11038,11 +11047,11 @@ label = "URI de Metadados do IDP"
 
 [provider.saml2.idpSingleLoginUrl]
 description = "O URL para iniciar o SSO"
-label = "IDP Single Login URL"
+label = "URL de Login Único IDP"
 
 [provider.saml2.idpSingleLogoutUrl]
 description = "O URL para iniciar o SLO"
-label = "IDP Single Logout URL"
+label = "URL de Logout Único IDP"
 
 [provider.saml2.privateKey]
 description = "O caminho da sua chave privada"
@@ -11738,7 +11747,7 @@ saas = "Stirling Cloud"
 selfhosted = "Autoalojado"
 
 [settings.developer]
-apiKeys = "API Keys"
+apiKeys = "Chaves API"
 apiKeysDescription = "Chaves pessoais para chamar a Stirling API a partir de scripts e integrações."
 title = "Programador"
 
@@ -12275,6 +12284,163 @@ image = "Imagem"
 saved = "Guardadas"
 text = "Texto"
 title = "Tipo de Assinatura"
+
+[sign.wallet]
+apply_one = "Aplicar {{count}} assinatura"
+apply_other = "Aplicar {{count}} assinaturas"
+applyEmpty = "Aplicar assinaturas"
+count = "{{count}} de {{max}}"
+default = "Predefinição"
+loading = "A carregar as suas assinaturas..."
+new = "Nova assinatura"
+shared = "Partilhada"
+sharedHint = "Todos podem utilizá-las"
+unsaved = "Não guardada"
+yours = "As suas assinaturas"
+
+[sign.wallet.create]
+cancel = "Cancelar"
+full = "A sua biblioteca está cheia ({{max}} assinaturas). Elimine uma para guardar mais."
+makeDefault = "Tornar predefinição"
+method = "Como criá-la"
+name = "Nome"
+save = "Guardar nas minhas assinaturas"
+saveBrowserHint = "Guardada neste navegador, pronta para a próxima vez."
+saveHint = "Pronta para reutilizar da próxima vez que assinar."
+subtitle = "Crie-a uma vez, reutilize-a em qualquer documento."
+title = "Nova assinatura"
+use = "Usar assinatura"
+who = "Quem pode utilizá-la"
+whoEveryone = "Todos"
+whoMe = "Apenas eu"
+
+[sign.wallet.defaultName]
+draw = "A minha assinatura"
+initials = "Iniciais"
+phone = "Assinatura por telemóvel"
+type = "Assinatura digitada"
+upload = "Assinatura carregada"
+
+[sign.wallet.delete]
+body = "\"{{name}}\" foi removida das suas assinaturas. Os documentos que já assinou mantêm-na."
+confirm = "Eliminar"
+title = "Eliminar esta assinatura?"
+
+[sign.wallet.draw]
+bold = "Caneta grossa"
+clear = "Limpar"
+fine = "Caneta fina"
+hint = "Assine acima da linha"
+medium = "Caneta média"
+pad = "Bloco de assinatura"
+pen = "Caneta"
+tip = "Use um rato, trackpad, caneta ou dedo"
+undo = "Anular"
+
+[sign.wallet.ink]
+black = "Tinta preta"
+blue = "Tinta azul"
+label = "Tinta"
+navy = "Tinta azul-marinho"
+
+[sign.wallet.intro]
+body = "Crie-a uma vez. Fica guardada aqui, pronta para todos os documentos que assinar."
+privacy = "As assinaturas guardadas são privadas, salvo se optar por partilhá-las."
+privacyBrowser = "As assinaturas guardadas permanecem neste navegador."
+title = "Adicionar a sua assinatura"
+
+[sign.wallet.menu]
+delete = "Eliminar"
+discard = "Descartar"
+makeDefault = "Tornar predefinição"
+options = "Opções para {{name}}"
+place = "Colocar na página"
+removeDefault = "Remover como predefinição"
+rename = "Mudar o nome"
+save = "Guardar nas minhas assinaturas"
+share = "Partilhar com todos"
+stop = "Parar de colocar"
+
+[sign.wallet.phone]
+expires = "Expira em {{time}}"
+qr = "QR code para assinar no telemóvel"
+received = "Recebida do seu telemóvel"
+receiveFailed = "Não foi possível ler essa assinatura. Digitalize o novo código para tentar novamente."
+step1 = "Digitalize o código com a câmara do telemóvel"
+step1Hint = "Abre no navegador do telemóvel, sem app necessária."
+step2 = "Desenhe, digite ou fotografe a sua assinatura"
+step2Hint = "Uma tela grande feita para o dedo."
+step3 = "Aparece aqui automaticamente"
+step3Hint = "Mantenha esta janela aberta enquanto assina."
+waiting = "À espera do seu telemóvel..."
+
+[sign.wallet.placed]
+empty = "As assinaturas que colocar na página são listadas aqui."
+fallbackName = "Assinatura"
+page = "Página {{page}}"
+remove = "Remover {{name}}"
+show = "Mostrar {{name}} na página"
+title = "Neste documento ({{count}})"
+
+[sign.wallet.rename]
+save = "Guardar"
+title = "Mudar o nome da assinatura"
+
+[sign.wallet.status]
+idle = "Escolha uma assinatura para a colocar"
+placing = "Clique na página para colocar {{name}}."
+stop = "Parar"
+
+[sign.wallet.tabs]
+draw = "Desenhar"
+phone = "Telemóvel"
+type = "Digitar"
+upload = "Carregar"
+
+[sign.wallet.toast]
+applyFailed = "Não foi possível aplicar as assinaturas"
+applyFailedBody = "As suas assinaturas ainda estão no documento. Tente novamente."
+deleteFailed = "Não foi possível eliminar a assinatura"
+draftExists = "Guarde ou descarte primeiro a assinatura não guardada"
+initialsFailed = "Não foi possível guardar as suas iniciais"
+initialsPartial = "A sua assinatura foi guardada, mas as suas iniciais não. Tente guardar as suas iniciais separadamente."
+renameFailed = "Não foi possível mudar o nome da assinatura"
+saved = "Guardada nas suas assinaturas"
+saveFailed = "Não foi possível guardar a assinatura"
+saveFailedBody = "Ainda está pronta para ser colocada neste documento."
+shared = "Partilhada com todos"
+shareFailed = "Não foi possível partilhar a assinatura"
+
+[sign.wallet.type]
+initials = "Iniciais"
+initialsLimit = "Guardar iniciais requer dois espaços livres para assinaturas."
+name = "O seu nome"
+namePlaceholder = "Digite o seu nome"
+previewName = "O seu nome"
+saveInitials = "Guardar também as minhas iniciais"
+style = "Estilo"
+styleOption = "Estilo {{index}}"
+
+[sign.wallet.upload]
+browse = "ou procurar ficheiros"
+drop = "Largue uma imagem aqui"
+failed = "Não foi possível ler essa imagem."
+hint = "PNG, JPG ou WebP até {{size}} MB. Os fundos brancos são removidos automaticamente."
+ink = "Cor da tinta"
+inkBlack = "Preto"
+inkBlue = "Azul"
+inkOriginal = "Original"
+preview = "Pré-visualização da assinatura carregada"
+processing = "A limpar a imagem..."
+rejected = "Escolha uma imagem PNG, JPG ou WebP até {{size}} MB."
+removeBackground = "Remover fundo"
+removeBackgroundHint = "O papel branco torna-se transparente"
+replace = "Substituir"
+rotate = "Rodar"
+rotateLeft = "Rodar para a esquerda"
+rotateRight = "Rodar para a direita"
+trim = "Recortar à assinatura"
+trimHint = "Recorta o espaço vazio à volta"
 
 [signatureSettings.tooltip]
 header = "Definições de aparência da assinatura"

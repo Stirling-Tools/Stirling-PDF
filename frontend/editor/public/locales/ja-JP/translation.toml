@@ -743,9 +743,9 @@ title = "ドキュメント & RAG"
 [admin.settings.ai.documents.embeddingApiKey]
 description = "エンジン独自の環境認証情報を使用する場合は空白のままにします。セルフホストの単一エンジン構成に適用されます。"
 generic = "埋め込み API key"
-openai = "OpenAI API key"
+openai = "OpenAI APIキー"
 setPlaceholder = "保存済み - 現在の key を保持するには空白のままにしてください"
-voyageai = "VoyageAI API key"
+voyageai = "VoyageAI APIキー"
 
 [admin.settings.ai.documents.embeddingBaseUrl]
 description = "OpenAI 互換 / Ollama 埋め込みエンドポイントの Base URL。例: http://ollama:11434/v1。信頼できる内部エンドポイントを指す必要があります（SSRF に注意）。"
@@ -892,10 +892,10 @@ description = "AI エンジンが使用する LLM プロバイダーとスマー
 title = "モデル & プロバイダー"
 
 [admin.settings.ai.models.apiKey]
-anthropic = "Anthropic API key"
+anthropic = "Anthropic APIキー"
 description = "エンジン独自の環境認証情報を使用する場合は空白のままにします。セルフホストの単一エンジン構成に適用されます。"
-generic = "API key"
-openai = "OpenAI API key"
+generic = "APIキー"
+openai = "OpenAI APIキー"
 setPlaceholder = "保存済み - 現在の key を保持するには空白のままにしてください"
 
 [admin.settings.ai.models.baseUrl]
@@ -1051,11 +1051,11 @@ label = "登録をブロック"
 
 [admin.settings.connections.oauth2.clientId]
 description = "プロバイダから発行された OAuth2 の Client ID"
-label = "Client ID"
+label = "クライアントID"
 
 [admin.settings.connections.oauth2.clientSecret]
 description = "プロバイダから発行された OAuth2 の Client Secret"
-label = "Client Secret"
+label = "クライアントシークレット"
 
 [admin.settings.connections.oauth2.enabled]
 description = "OAuth2 プロバイダを使用した認証を許可"
@@ -1063,7 +1063,7 @@ label = "OAuth2 を有効化"
 
 [admin.settings.connections.oauth2.issuer]
 description = "OAuth2 プロバイダの Issuer URL"
-label = "Issuer URL"
+label = "発行者URL"
 
 [admin.settings.connections.oauth2.provider]
 description = "認証に使用する OAuth2 プロバイダ"
@@ -1098,7 +1098,7 @@ label = "プロバイダ"
 
 [admin.settings.connections.saml2.registrationId]
 description = "SAML2 の登録識別子"
-label = "Registration ID"
+label = "登録ID"
 
 [admin.settings.connections.ssoAutoLogin]
 description = "認証が必要な場合に自動的に SSO ログインへリダイレクト"
@@ -1510,7 +1510,7 @@ title = "MCP クライアントを接続"
 
 [admin.settings.mcp.issuerUri]
 description = "OAuth2 認可サーバー（/.well-known/openid-configuration を公開している必要があります）。有効化時は必須です。"
-label = "OAuth Issuer URL"
+label = "OAuth発行者URL"
 
 [admin.settings.mcp.jwksUri]
 description = "issuer から検出する場合は空白のままにします。IdP が非標準の URL でキーを提供する場合のみ設定します。"
@@ -1529,7 +1529,7 @@ label = "既存の Stirling アカウントを必須にする"
 
 [admin.settings.mcp.resourceId]
 description = "このサーバーの公開 /mcp URL。トークンは audience（RFC 8707）にこれを含める必要があり、含まれない場合は拒否されます。"
-label = "Resource ID"
+label = "リソースID"
 
 [admin.settings.mcp.scopes]
 description = "読み取り操作には mcp.tools.read、書き込み/AI 操作には mcp.tools.write を要求します。"
@@ -1537,7 +1537,7 @@ label = "OAuth scopes を適用"
 
 [admin.settings.mcp.usernameClaim]
 description = "Stirling ユーザー名と照合する JWT claim（例: sub, email, preferred_username）。"
-label = "Username claim"
+label = "ユーザー名クレーム"
 
 [admin.settings.plan.noData]
 message = "このサーバーはライセンスサービスに接続できませんでした。再試行するか、ライセンスキーを確認してください。"
@@ -3983,7 +3983,7 @@ viewApiKeys = "API key を表示"
 configLabel = "Config"
 copied = "コピーしました"
 copy = "コピー"
-endpointLabel = "Endpoint URL"
+endpointLabel = "エンドポイントURL"
 tooltip = "{{label}} をコピー"
 tooltipCopied = "{{label}} をコピーしました"
 
@@ -6818,7 +6818,7 @@ bullet1 = "<strong>all</strong> → すべてのページを選択"
 title = "特殊キーワード"
 
 [payg.activity]
-docs = "docs"
+docs = "ドキュメント"
 empty = "この期間の請求対象アクティビティはまだありません。"
 subtitle = "予算を消費するのはAIと自動化のみです。通常のツールは無料で、ここには表示されません。"
 title = "最近の請求対象アクティビティ"
@@ -7345,10 +7345,19 @@ mixed = "{{count}}個のオブジェクト"
 multiGeometry = "位置とサイズを編集するには、単一のオブジェクトを選択してください。"
 nothingSelected = "何も選択されていません"
 nothingSelectedHint = "ページ上のテキスト、画像、図形をクリックすると、ここで編集できます。"
+ocrDocumentChanged = "OCRの実行中にドキュメントが変更されました。最新の変更を含めるには、OCRを再度実行してください。"
+ocrInvalidResult = "OCRがPDFを返しませんでした。もう一度お試しください。"
+ocrNoLanguages = "サーバーにOCR言語がインストールされていません。"
+ocrRunning = "テキストを認識中..."
+ocrUnavailable = "このサーバーではOCRを利用できません。"
 oneImage = "画像"
 oneShape = "図形"
 oneText = "テキスト"
 pages = "ページ"
+runOcr = "OCRを実行"
+scanHint_one = "このページはスキャン画像で、編集できるテキストがありません。テキストを編集可能にするには、先にOCRを実行してください。"
+scanHint_other = "{{count}}ページはスキャン画像で、編集できるテキストがありません。テキストを編集可能にするには、先にOCRを実行してください。"
+scannedText = "スキャンされたテキスト · 変更された単語は覆われ、一致するフォントで再描画されます。"
 tabDocument = "ドキュメント"
 tabSelected = "選択済み"
 textBoxes = "テキストボックス"
@@ -7483,7 +7492,7 @@ flipVertical = "垂直方向に反転"
 fontColour = "フォント色"
 fontSize = "フォントサイズ"
 formatting = "テキスト書式"
-italic = "Italic"
+italic = "斜体"
 italicUnavailable = "このフォントには italic バージョンがありません。デバイスフォントを読み込むか、別のフォントファミリーを選択してください。"
 lock = "選択項目をロック"
 lockTooltip = "選択項目をロック - 誤編集を防ぎます"
@@ -7549,9 +7558,9 @@ tags = "アーカイブ,長期,標準,変換,保存,保全"
 title = "PDFをPDF/Aに変換"
 
 [pdfToPDFUA]
-header = "PDF To PDF/UA"
+header = "PDF から PDF/UA へ"
 tags = "アクセシビリティ,アクセス可能,タグ付き,スクリーンリーダー,wcag,eaa,section 508,変換"
-title = "PDF To PDF/UA"
+title = "PDF から PDF/UA へ"
 
 [pdfToPDFX]
 tags = "印刷,標準,変換,制作,プリプレス,アーカイブ"
@@ -8431,10 +8440,10 @@ helperText = "Stirling はこれを暗号化して保存し、二度と表示し
 label = "アクセストークン"
 
 [portal.connections.commonFields.apiKey]
-label = "API key"
+label = "APIキー"
 
 [portal.connections.commonFields.apiToken]
-label = "API token"
+label = "APIトークン"
 
 [portal.connections.commonFields.baseUrl]
 helperText = "この接続を使用するステップは、この URL 配下のパスのみ呼び出せます。別のホストは呼び出せません。"
@@ -8559,10 +8568,10 @@ label = "サーバー URL"
 placeholder = "https://your-org.consignocloud.com/api/v1"
 
 [portal.connections.types.consigno.fields.clientId]
-label = "API key"
+label = "APIキー"
 
 [portal.connections.types.consigno.fields.clientSecret]
-label = "API secret"
+label = "APIシークレット"
 
 [portal.connections.types.consigno.fields.password]
 label = "Password"
@@ -8639,11 +8648,11 @@ label = "None"
 
 [portal.connections.types.n8n.fields.headerName]
 helperText = "n8n認証情報のヘッダー名です。値ではありません。"
-label = "Header name"
+label = "ヘッダー名"
 placeholder = "X-N8N-Key"
 
 [portal.connections.types.n8n.fields.token]
-label = "Header value"
+label = "ヘッダー値"
 
 [portal.connections.types.nextcloud]
 baseUrlPlaceholder = "https://your-server/remote.php/dav"
@@ -8651,7 +8660,7 @@ description = "処理済みドキュメントを Nextcloud に保存します。
 label = "Nextcloud"
 
 [portal.connections.types.nextcloud.fields.appPassword]
-label = "App password"
+label = "アプリパスワード"
 
 [portal.connections.types.presidio]
 baseUrlPlaceholder = "http://presidio-analyzer:3000"
@@ -8664,22 +8673,22 @@ label = "Microsoft Purview"
 
 [portal.connections.types.purview.fields.clientId]
 helperText = "任意。名前でラベルを選択する場合にのみ必要です。ラベル付けはこれがなくても動作します。"
-label = "Application (client) ID"
+label = "アプリケーション（クライアント）ID"
 
 [portal.connections.types.purview.fields.clientSecret]
-label = "Client secret"
+label = "クライアントシークレット"
 
 [portal.connections.types.purview.fields.tenantId]
 helperText = "すべてのラベルに SiteId としてスタンプされるため、Purview 対応ツールはどの組織が適用したかを認識できます。"
-label = "Directory (tenant) ID"
+label = "ディレクトリ（テナント）ID"
 placeholder = "cb46c030-1825-4e81-a295-151c039dbf02"
 
 [portal.connections.types.s3]
 description = "ソースが読み取り、pipeline 出力が書き込みできる S3 バケット。"
-label = "S3 storage"
+label = "S3ストレージ"
 
 [portal.connections.types.s3.fields.accessKeyId]
-label = "Access key ID"
+label = "アクセスキーID"
 
 [portal.connections.types.s3.fields.bucket]
 label = "Bucket"
@@ -8692,7 +8701,7 @@ label = "Endpoint"
 label = "Region"
 
 [portal.connections.types.s3.fields.secretAccessKey]
-label = "Secret access key"
+label = "シークレットアクセスキー"
 
 [portal.connections.types.sendgrid]
 description = "policy 実行時にドキュメントまたは通知をメール送信します。"
@@ -8709,14 +8718,14 @@ label = "ホスト key fingerprint"
 placeholder = "SHA256:..."
 
 [portal.connections.types.sftp.fields.passphrase]
-label = "Key passphrase"
+label = "キーパスフレーズ"
 
 [portal.connections.types.sftp.fields.password]
 helperText = "代わりに private key で認証する場合は空白のままにします。"
 
 [portal.connections.types.sftp.fields.privateKey]
 helperText = "任意。password の代わりに key で認証するには OpenSSH private key を貼り付けてください。"
-label = "Private key"
+label = "秘密鍵"
 
 [portal.connections.types.slack]
 description = "policy がドキュメントを処理したときに Slack へメッセージを投稿します。"
@@ -8725,14 +8734,14 @@ label = "Slack"
 [portal.connections.types.smb]
 description = "SMB / CIFS ネットワーク共有（Windows または Samba）を監視します。"
 hostPlaceholder = "fileserver.example.com"
-label = "SMB / Network share"
+label = "SMB / ネットワーク共有"
 
 [portal.connections.types.smb.fields.domain]
 helperText = "任意。サーバーが使用している場合の Windows domain または workgroup。"
 label = "Domain"
 
 [portal.connections.types.smb.fields.share]
-label = "Share"
+label = "共有"
 placeholder = "documents"
 
 [portal.connections.types.splunk]
@@ -9960,15 +9969,15 @@ label = "ファイルフィールド名"
 placeholder = "file"
 
 [portal.policies.operations.fields.from]
-label = "From"
+label = "差出人"
 placeholder = "processor@acme.com"
 
 [portal.policies.operations.fields.headers]
 helperText = "ヘッダー名/値ペアの JSON オブジェクトです。接続の認証情報は自動的に追加されます。"
-label = "Headers"
+label = "ヘッダー"
 
 [portal.policies.operations.fields.index]
-label = "Index"
+label = "インデックス"
 placeholder = "stirling-audit"
 
 [portal.policies.operations.fields.issueKey]
@@ -9980,7 +9989,7 @@ helperText = "メッセージ本文として送信されます。{{document.*}} 
 label = "メッセージ"
 
 [portal.policies.operations.fields.method]
-label = "Method"
+label = "メソッド"
 
 [portal.policies.operations.fields.pageId]
 label = "ページ ID"
@@ -9988,7 +9997,7 @@ placeholder = "66186"
 
 [portal.policies.operations.fields.path]
 helperText = "接続のベース URL に追加されます。別のホストには絶対に到達できません。"
-label = "Path"
+label = "パス"
 placeholder = "/v1/scan"
 
 [portal.policies.operations.fields.remotePath]
@@ -10013,7 +10022,7 @@ helperText = "Presidio はこのテキストを分析します。{{document.titl
 label = "チェックするテキスト"
 
 [portal.policies.operations.fields.to]
-label = "To"
+label = "宛先"
 placeholder = "records@acme.com"
 
 [portal.policies.operations.fields.username]
@@ -10933,7 +10942,7 @@ label = "汎用 OAuth2 を有効化"
 
 [provider.oauth2.generic.issuer]
 description = "OpenID Connect Discovery（/.well-known/openid-configuration）対応のプロバイダー"
-label = "Issuer URL"
+label = "発行者URL"
 
 [provider.oauth2.generic.provider]
 description = "OAuth2 プロバイダー名（例：Azure AD、Okta）"
@@ -10998,7 +11007,7 @@ label = "クライアントシークレット"
 
 [provider.oauth2.keycloak.issuer]
 description = "Keycloak レルムの OpenID Connect Discovery エンドポイントの URL"
-label = "Issuer URL"
+label = "発行者URL"
 
 [provider.oauth2.keycloak.scopes]
 description = "カンマ区切りの OAuth2 スコープ"
@@ -11030,7 +11039,7 @@ label = "IDP 証明書"
 
 [provider.saml2.idpIssuer]
 description = "プロバイダーの ID"
-label = "IDP Issuer"
+label = "IDP発行者"
 
 [provider.saml2.idpMetadataUri]
 description = "プロバイダーのメタデータ用 URI"
@@ -12275,6 +12284,163 @@ image = "画像"
 saved = "保存済み"
 text = "テキスト"
 title = "署名タイプ"
+
+[sign.wallet]
+apply_one = "{{count}}個の署名を適用"
+apply_other = "{{count}}個の署名を適用"
+applyEmpty = "署名を適用"
+count = "{{count}} / {{max}}"
+default = "デフォルト"
+loading = "署名を読み込み中..."
+new = "新しい署名"
+shared = "共有済み"
+sharedHint = "全員が使用できます"
+unsaved = "未保存"
+yours = "あなたの署名"
+
+[sign.wallet.create]
+cancel = "キャンセル"
+full = "ライブラリがいっぱいです（{{max}}個の署名）。さらに保存するには1つ削除してください。"
+makeDefault = "デフォルトに設定"
+method = "作成方法"
+name = "名前"
+save = "自分の署名に保存"
+saveBrowserHint = "このブラウザに保存され、次回すぐに使えます。"
+saveHint = "次回の署名時に再利用できます。"
+subtitle = "一度作成すれば、どのドキュメントでも再利用できます。"
+title = "新しい署名"
+use = "署名を使用"
+who = "使用できるユーザー"
+whoEveryone = "全員"
+whoMe = "自分のみ"
+
+[sign.wallet.defaultName]
+draw = "自分の署名"
+initials = "イニシャル"
+phone = "スマートフォン署名"
+type = "入力した署名"
+upload = "アップロードした署名"
+
+[sign.wallet.delete]
+body = "「{{name}}」はあなたの署名から削除されます。すでに署名済みのドキュメントには残ります。"
+confirm = "削除"
+title = "この署名を削除しますか？"
+
+[sign.wallet.draw]
+bold = "太いペン"
+clear = "クリア"
+fine = "細いペン"
+hint = "線の上に署名してください"
+medium = "中くらいのペン"
+pad = "署名パッド"
+pen = "ペン"
+tip = "マウス、トラックパッド、ペン、または指を使用してください"
+undo = "元に戻す"
+
+[sign.wallet.ink]
+black = "黒インク"
+blue = "青インク"
+label = "インク"
+navy = "ネイビーインク"
+
+[sign.wallet.intro]
+body = "一度作成します。ここに保存され、署名するすべてのドキュメントで使えます。"
+privacy = "保存された署名は、共有を選択しない限りあなた専用です。"
+privacyBrowser = "保存された署名はこのブラウザに保持されます。"
+title = "署名を追加"
+
+[sign.wallet.menu]
+delete = "削除"
+discard = "破棄"
+makeDefault = "デフォルトに設定"
+options = "{{name}}のオプション"
+place = "ページに配置"
+removeDefault = "デフォルトから解除"
+rename = "名前を変更"
+save = "自分の署名に保存"
+share = "全員と共有"
+stop = "配置を停止"
+
+[sign.wallet.phone]
+expires = "{{time}}で期限切れ"
+qr = "スマートフォンで署名するためのQRコード"
+received = "スマートフォンから受信しました"
+receiveFailed = "その署名を読み取れませんでした。新しいコードをスキャンしてもう一度お試しください。"
+step1 = "スマートフォンのカメラでコードをスキャン"
+step1Hint = "スマートフォンのブラウザで開きます。アプリは不要です。"
+step2 = "署名を描く、入力する、または撮影する"
+step2Hint = "指で使いやすい大きなキャンバスです。"
+step3 = "ここに自動的に表示されます"
+step3Hint = "署名中はこのウィンドウを開いたままにしてください。"
+waiting = "スマートフォンを待機中..."
+
+[sign.wallet.placed]
+empty = "ページに配置した署名がここに一覧表示されます。"
+fallbackName = "署名"
+page = "ページ {{page}}"
+remove = "{{name}}を削除"
+show = "ページ上の{{name}}を表示"
+title = "このドキュメント上（{{count}}）"
+
+[sign.wallet.rename]
+save = "保存"
+title = "署名の名前を変更"
+
+[sign.wallet.status]
+idle = "配置する署名を選択してください"
+placing = "ページをクリックして{{name}}を配置します。"
+stop = "停止"
+
+[sign.wallet.tabs]
+draw = "描画"
+phone = "スマートフォン"
+type = "入力"
+upload = "アップロード"
+
+[sign.wallet.toast]
+applyFailed = "署名を適用できませんでした"
+applyFailedBody = "署名はまだドキュメント上にあります。もう一度お試しください。"
+deleteFailed = "署名を削除できませんでした"
+draftExists = "先に未保存の署名を保存または破棄してください"
+initialsFailed = "イニシャルを保存できませんでした"
+initialsPartial = "署名は保存されましたが、イニシャルは保存されませんでした。イニシャルを別途保存してみてください。"
+renameFailed = "署名の名前を変更できませんでした"
+saved = "あなたの署名に保存しました"
+saveFailed = "署名を保存できませんでした"
+saveFailedBody = "このドキュメントにはまだ配置できます。"
+shared = "全員と共有しました"
+shareFailed = "署名を共有できませんでした"
+
+[sign.wallet.type]
+initials = "イニシャル"
+initialsLimit = "イニシャルを保存するには、空き署名スロットが2つ必要です。"
+name = "あなたの名前"
+namePlaceholder = "名前を入力"
+previewName = "あなたの名前"
+saveInitials = "イニシャルも保存"
+style = "スタイル"
+styleOption = "スタイル {{index}}"
+
+[sign.wallet.upload]
+browse = "またはファイルを参照"
+drop = "画像をここにドロップ"
+failed = "その画像を読み取れませんでした。"
+hint = "{{size}} MBまでのPNG、JPG、またはWebP。白い背景は自動的に削除されます。"
+ink = "インクの色"
+inkBlack = "黒"
+inkBlue = "青"
+inkOriginal = "オリジナル"
+preview = "アップロードした署名のプレビュー"
+processing = "画像をクリーンアップ中..."
+rejected = "{{size}} MBまでのPNG、JPG、またはWebP画像を選択してください。"
+removeBackground = "背景を削除"
+removeBackgroundHint = "白い紙が透明になります"
+replace = "置き換え"
+rotate = "回転"
+rotateLeft = "左に回転"
+rotateRight = "右に回転"
+trim = "署名に合わせてトリミング"
+trimHint = "周囲の空白を切り抜きます"
 
 [signatureSettings.tooltip]
 header = "署名の外観設定"

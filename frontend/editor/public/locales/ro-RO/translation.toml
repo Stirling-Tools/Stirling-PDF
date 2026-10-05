@@ -263,7 +263,7 @@ name = "Text"
 placeholder = "Introduceți text"
 
 [addImage.type]
-canvas = "Canvas"
+canvas = "Pânză"
 image = "Imagine"
 saved = "Salvat"
 text = "Text"
@@ -484,7 +484,7 @@ name = "Conținut text"
 placeholder = "Introduceți textul pe care doriți să-l adăugați"
 
 [addText.type]
-canvas = "Canvas"
+canvas = "Pânză"
 image = "Imagine"
 saved = "Salvat"
 text = "Text"
@@ -2271,7 +2271,7 @@ balancedHint = "Recomandat pentru majoritatea formularelor."
 high = "Amănunțit"
 highHint = "Găsește mai multe câmpuri, dar poate adăuga unele acolo unde nu este cazul."
 label = "Sensibilitatea detectării"
-low = "Strict"
+low = "Strictă"
 lowHint = "Doar potriviri foarte sigure - mai puține câmpuri, mai puține greșeli."
 
 [autoFormDetection.settings]
@@ -3862,7 +3862,7 @@ title = "Prezentare generală a setărilor de comprimare"
 
 [compress.tooltip.lineArt]
 text = "Convertește paginile în alb-negru cu contrast ridicat folosind ImageMagick. Folosiți nivelul de detaliu pentru a controla cât conținut devine negru și accentuarea muchiilor pentru a controla cât de agresiv sunt detectate muchiile."
-title = "Line Art"
+title = "Artă liniară"
 
 [compress.tooltip.qualityAdjustment]
 bullet1 = "Valorile mai mici păstrează calitatea"
@@ -6962,7 +6962,7 @@ createAccount = "Creează cont gratuit"
 editorLabel = "Editor PDF"
 login = "Autentifică-te"
 manualToolsPromo = "Instrumente PDF manuale gratuite nelimitate"
-processorLabel = "PDF Processor"
+processorLabel = "Procesor PDF"
 processorTitle = "Creează un cont pentru a debloca ce e mai bun din Stirling"
 readerLabel = "Cititor PDF"
 
@@ -7345,10 +7345,19 @@ mixed = "{{count}} obiecte"
 multiGeometry = "Selectează un singur obiect pentru a-i edita poziția și dimensiunea."
 nothingSelected = "Nimic selectat"
 nothingSelectedHint = "Fă clic pe orice text, imagine sau formă de pe pagină pentru a o edita aici."
+ocrDocumentChanged = "Documentul s-a schimbat în timp ce OCR rula. Rulează OCR din nou pentru a include cele mai recente modificări."
+ocrInvalidResult = "OCR nu a returnat un PDF. Te rugăm să încerci din nou."
+ocrNoLanguages = "Nu sunt instalate limbi OCR pe server."
+ocrRunning = "Se recunoaște textul..."
+ocrUnavailable = "OCR nu este disponibil pe acest server."
 oneImage = "Imagine"
 oneShape = "Formă"
 oneText = "Text"
 pages = "Pagini"
+runOcr = "Rulează OCR"
+scanHint_one = "Această pagină este o imagine scanată fără text de editat. Rulează mai întâi OCR pentru a-i face textul editabil."
+scanHint_other = "{{count}} pagini sunt imagini scanate fără text de editat. Rulează mai întâi OCR pentru a le face textul editabil."
+scannedText = "Text scanat · cuvintele modificate sunt acoperite și redesenate cu un font potrivit."
 tabDocument = "Document"
 tabSelected = "Selectat"
 textBoxes = "Casete de text"
@@ -7762,7 +7771,7 @@ rowIdle = "{{label}} rulează automat"
 rowRunning = "{{label}} rulează acum"
 runsToday_one = "{{count}} rulare astăzi"
 runsToday_other = "{{count}} rulări astăzi"
-title = "PDF Processor"
+title = "Procesor PDF"
 triggerExport = "Rulează la export"
 triggerImport = "Rulează la import"
 
@@ -7943,7 +7952,7 @@ unnamed = "Instanță fără nume"
 description = "Conectează un server self-hosted la echipa ta pentru a-l vedea aici."
 otherDescription = "Aceasta este singura instanță conectată afișată pentru echipa dvs."
 otherTitle = "Nu există alte instanțe conectate"
-title = "Nu există instanțe conectate"
+title = "Nicio instanță conectată"
 
 [portal.accountLink.modal]
 callbackMismatch = "Adresa frontend configurată a acestui server nu se potrivește cu adresa pe care ați deschis-o. Deschideți serverul la adresa configurată sau actualizați Frontend URL în setările generale, apoi încercați din nou."
@@ -8170,7 +8179,7 @@ sub = "Editorul PDF complet."
 [portal.billing.identity.processor]
 chipMetered = "Procesare contorizată"
 chipPipelines = "Pipeline-uri și API"
-name = "Processor"
+name = "Procesor"
 sub = "Bază Team plus {{rate}} per credit"
 subNoRate = "Bază Team plus procesare contorizată"
 
@@ -8289,7 +8298,7 @@ prepaidRemaining = "Credite preplătite rămase"
 prepaidTooltip = "Utilizate înainte de facturarea contorizată și în afara limitei dvs. de cheltuieli."
 raiseLimit = "Măriți limita"
 remainingOf = "{{remaining}} din {{total}}"
-rowName = "Processor"
+rowName = "Procesor"
 spendAgainstLimit = "{{spend}} din {{cap}} contorizat în acest ciclu"
 
 [portal.billing.seats]
@@ -9161,7 +9170,7 @@ title = "Windows"
 
 [portal.home.editor]
 activeOfDeployed = "{{active}} din {{total}} active în ultimele 30 de zile"
-name = "PDF Editor"
+name = "Editor PDF"
 open = "Deschideți în browser"
 updated = "actualizat {{time}}"
 
@@ -9171,7 +9180,7 @@ options = "Vedeți opțiunile de implementare"
 start = "Implementați Editorul"
 
 [portal.home.editor.target]
-cloud = "Managed Cloud"
+cloud = "Cloud gestionat"
 docker = "Self-hosted · Docker"
 kubernetes = "Self-hosted · Kubernetes"
 
@@ -10245,7 +10254,7 @@ title = "Încă nu există flux"
 
 [portal.processorFlow.sources]
 comingSoonTag = "Conectați"
-editor = "Stirling PDF Editor"
+editor = "Editor Stirling PDF"
 heading = "Surse"
 perDay = "{{n}} / 24h"
 
@@ -12276,6 +12285,163 @@ saved = "Salvate"
 text = "Text"
 title = "Tip de semnătură"
 
+[sign.wallet]
+apply_one = "Aplică {{count}} semnătură"
+apply_other = "Aplică {{count}} semnături"
+applyEmpty = "Aplică semnături"
+count = "{{count}} din {{max}}"
+default = "Implicită"
+loading = "Se încarcă semnăturile tale..."
+new = "Semnătură nouă"
+shared = "Partajată"
+sharedHint = "Toată lumea le poate folosi"
+unsaved = "Nesalvată"
+yours = "Semnăturile tale"
+
+[sign.wallet.create]
+cancel = "Anulează"
+full = "Biblioteca ta este plină ({{max}} semnături). Șterge una pentru a salva mai multe."
+makeDefault = "Setează ca implicită"
+method = "Cum să o creezi"
+name = "Nume"
+save = "Salvează în semnăturile mele"
+saveBrowserHint = "Păstrată în acest browser, gata pentru data viitoare."
+saveHint = "Gata de reutilizat data viitoare când semnezi."
+subtitle = "Creeaz-o o singură dată, reutilizeaz-o pe orice document."
+title = "Semnătură nouă"
+use = "Folosește semnătura"
+who = "Cine o poate folosi"
+whoEveryone = "Toată lumea"
+whoMe = "Doar eu"
+
+[sign.wallet.defaultName]
+draw = "Semnătura mea"
+initials = "Inițiale"
+phone = "Semnătură de pe telefon"
+type = "Semnătură tastată"
+upload = "Semnătură încărcată"
+
+[sign.wallet.delete]
+body = "\"{{name}}\" este eliminată din semnăturile tale. Documentele pe care le-ai semnat deja o păstrează."
+confirm = "Șterge"
+title = "Ștergi această semnătură?"
+
+[sign.wallet.draw]
+bold = "Stilou gros"
+clear = "Șterge"
+fine = "Stilou fin"
+hint = "Semnează deasupra liniei"
+medium = "Stilou mediu"
+pad = "Pad de semnătură"
+pen = "Stilou"
+tip = "Folosește un mouse, trackpad, stilou sau deget"
+undo = "Anulează"
+
+[sign.wallet.ink]
+black = "Cerneală neagră"
+blue = "Cerneală albastră"
+label = "Cerneală"
+navy = "Cerneală bleumarin"
+
+[sign.wallet.intro]
+body = "Creeaz-o o singură dată. Este salvată aici, gata pentru fiecare document pe care îl semnezi."
+privacy = "Semnăturile salvate sunt private pentru tine, cu excepția cazului în care alegi să le partajezi."
+privacyBrowser = "Semnăturile salvate rămân în acest browser."
+title = "Adaugă semnătura ta"
+
+[sign.wallet.menu]
+delete = "Șterge"
+discard = "Renunță"
+makeDefault = "Setează ca implicită"
+options = "Opțiuni pentru {{name}}"
+place = "Plasează pe pagină"
+removeDefault = "Elimină ca implicită"
+rename = "Redenumește"
+save = "Salvează în semnăturile mele"
+share = "Partajează cu toată lumea"
+stop = "Oprește plasarea"
+
+[sign.wallet.phone]
+expires = "Expiră în {{time}}"
+qr = "QR code pentru a semna pe telefon"
+received = "Primită de pe telefonul tău"
+receiveFailed = "Nu s-a putut citi acea semnătură. Scanează noul cod pentru a încerca din nou."
+step1 = "Scanează codul cu camera telefonului"
+step1Hint = "Se deschide în browserul telefonului, nu este necesară nicio aplicație."
+step2 = "Desenează, tastează sau fotografiază semnătura"
+step2Hint = "O pânză mare, făcută pentru deget."
+step3 = "Apare aici automat"
+step3Hint = "Ține această fereastră deschisă în timp ce semnezi."
+waiting = "Se așteaptă telefonul tău..."
+
+[sign.wallet.placed]
+empty = "Semnăturile pe care le plasezi pe pagină sunt listate aici."
+fallbackName = "Semnătură"
+page = "Pagina {{page}}"
+remove = "Elimină {{name}}"
+show = "Afișează {{name}} pe pagină"
+title = "Pe acest document ({{count}})"
+
+[sign.wallet.rename]
+save = "Salvează"
+title = "Redenumește semnătura"
+
+[sign.wallet.status]
+idle = "Alege o semnătură pentru a o plasa"
+placing = "Fă clic pe pagină pentru a plasa {{name}}."
+stop = "Oprește"
+
+[sign.wallet.tabs]
+draw = "Desenează"
+phone = "Telefon"
+type = "Tastează"
+upload = "Încarcă"
+
+[sign.wallet.toast]
+applyFailed = "Nu s-au putut aplica semnăturile"
+applyFailedBody = "Semnăturile tale sunt încă pe document. Încearcă din nou."
+deleteFailed = "Nu s-a putut șterge semnătura"
+draftExists = "Salvează sau renunță mai întâi la semnătura nesalvată"
+initialsFailed = "Nu s-au putut salva inițialele tale"
+initialsPartial = "Semnătura ta a fost salvată, dar inițialele tale nu. Încearcă să îți salvezi inițialele separat."
+renameFailed = "Nu s-a putut redenumi semnătura"
+saved = "Salvată în semnăturile tale"
+saveFailed = "Nu s-a putut salva semnătura"
+saveFailedBody = "Este încă gata de plasat pe acest document."
+shared = "Partajată cu toată lumea"
+shareFailed = "Nu s-a putut partaja semnătura"
+
+[sign.wallet.type]
+initials = "Inițiale"
+initialsLimit = "Salvarea inițialelor necesită două sloturi libere pentru semnături."
+name = "Numele tău"
+namePlaceholder = "Tastează numele tău"
+previewName = "Numele tău"
+saveInitials = "Salvează și inițialele mele"
+style = "Stil"
+styleOption = "Stil {{index}}"
+
+[sign.wallet.upload]
+browse = "sau răsfoiește fișiere"
+drop = "Plasează o imagine aici"
+failed = "Nu s-a putut citi acea imagine."
+hint = "PNG, JPG sau WebP până la {{size}} MB. Fundalurile albe sunt eliminate automat."
+ink = "Culoarea cernelii"
+inkBlack = "Negru"
+inkBlue = "Albastru"
+inkOriginal = "Original"
+preview = "Previzualizarea semnăturii încărcate"
+processing = "Se curăță imaginea..."
+rejected = "Alege o imagine PNG, JPG sau WebP de până la {{size}} MB."
+removeBackground = "Elimină fundalul"
+removeBackgroundHint = "Hârtia albă devine transparentă"
+replace = "Înlocuiește"
+rotate = "Rotește"
+rotateLeft = "Rotește la stânga"
+rotateRight = "Rotește la dreapta"
+trim = "Decupează la semnătură"
+trimHint = "Decupează spațiul gol din jurul acesteia"
+
 [signatureSettings.tooltip]
 header = "Setări de aspect ale semnăturii"
 
@@ -13054,7 +13220,7 @@ capabilities = "Capabilități"
 email = "Email"
 person = "Persoană"
 role = "Rol"
-status = "Status"
+status = "Stare"
 team = "Echipă"
 
 [users.confirm]
@@ -13277,9 +13443,9 @@ _value = "Semnătură"
 
 [validateSignature.status]
 complete = "Validare finalizată"
-invalid = "Invalid"
+invalid = "Invalidă"
 untrustedShort = "Neverificat"
-valid = "Valid"
+valid = "Validă"
 validUntrusted = "Valid, semnatar neverificat"
 
 [viewer]

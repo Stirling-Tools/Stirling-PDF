@@ -753,11 +753,11 @@ label = "Embedding base URL"
 
 [admin.settings.ai.documents.embeddingModel]
 description = "ชื่อโมเดล embedding ข้อความอิสระ; คำแนะนำเป็นเพียงแนวทางเท่านั้น"
-label = "Embedding model"
+label = "โมเดล Embedding"
 
 [admin.settings.ai.documents.embeddingProvider]
 description = "ผู้ให้บริการที่ใช้แปลงข้อความเอกสารเป็น vector embeddings"
-label = "Embedding provider"
+label = "ผู้ให้บริการ Embedding"
 
 [admin.settings.ai.documents.maxSearches]
 description = "จำนวนสูงสุดของการค้นหาแบบดึงข้อมูลที่ agent สามารถเรียกใช้ได้ต่อคำขอ"
@@ -822,7 +822,7 @@ label = "ผู้ตรวจสอบคณิตศาสตร์"
 
 [admin.settings.ai.general.features.pdfComment]
 description = "เพิ่มความคิดเห็นตรวจทานและคำอธิบายประกอบที่เขียนโดย AI ลงใน PDF"
-label = "PDF comment agent"
+label = "เอเจนต์ความคิดเห็น PDF"
 
 [admin.settings.ai.general.longRunningTimeoutSeconds]
 description = "หมดเวลาสำหรับการทำงานของ agent ที่หนักขึ้น เช่น การสร้างเอกสาร"
@@ -2357,8 +2357,8 @@ dropHint = "วาง JSON ที่นี่ หรือคลิกเพื�
 dropSubhint = "ยอมรับคอนฟิกทั้ง Automate และ Folder Scanning"
 dropzoneAriaLabel = "วางไฟล์ JSON การทำงานอัตโนมัติที่นี่"
 intro = "วางไฟล์ JSON หรือวางเนื้อหาด้านล่าง ระบบจะตรวจจับรูปแบบ (Automate หรือ Folder Scanning) โดยอัตโนมัติ"
-opCount_one = "{{count}} operation"
-opCount_other = "{{count}} operations"
+opCount_one = "{{count}} การดำเนินการ"
+opCount_other = "{{count}} การดำเนินการ"
 parseError = "ไม่สามารถแยกวิเคราะห์: {{message}}"
 pasteLabel = "หรือวาง JSON"
 pastePlaceholder = "วาง JSON การทำงานอัตโนมัติของคุณที่นี่…"
@@ -3223,7 +3223,7 @@ open = "เปิดผู้ช่วย Stirling AI"
 
 [chat.header]
 agentMenu = "ตัวเลือกเอเจนต์ของ Stirling"
-assistant = "AI Assistant"
+assistant = "ผู้ช่วย AI"
 clearChat = "ล้างแชต"
 
 [chat.input]
@@ -4199,7 +4199,7 @@ title = "การวิเคราะห์"
 
 [cookieBanner.preferencesModal.description]
 1 = "Stirling PDF ใช้คุกกี้และเทคโนโลยีที่คล้ายกันเพื่อยกระดับประสบการณ์ของคุณและเข้าใจการใช้งานเครื่องมือของเรา ซึ่งช่วยให้เราปรับปรุงประสิทธิภาพ พัฒนาฟีเจอร์ที่คุณให้ความสำคัญ และสนับสนุนผู้ใช้อย่างต่อเนื่อง"
-2 = "Stirling PDF ไม่สามารถ—และจะไม่มีวัน—ติดตามหรือเข้าถึงเนื้อหาของเอกสารที่คุณใช้"
+2 = "Stirling PDF ไม่สามารถและจะไม่มีวันติดตามหรือเข้าถึงเนื้อหาของเอกสารที่คุณใช้"
 3 = "ความเป็นส่วนตัวและความไว้วางใจของคุณคือหัวใจสำคัญของงานที่เราทำ"
 
 [cookieBanner.preferencesModal.necessary]
@@ -6593,7 +6593,7 @@ working = "กำลังตรวจสอบและอัปเดตคว
 yourCloudAccess = "คุณจะกลายเป็นสมาชิกทีมและเสียสิทธิ์การเข้าถึงในฐานะเจ้าของ"
 
 [pageEdit]
-deselectAll = "ไม่เลือกเลย"
+deselectAll = "ไม่มี"
 selectAll = "เลือกทั้งหมด"
 
 [pageEditor]
@@ -7345,10 +7345,19 @@ mixed = "{{count}} วัตถุ"
 multiGeometry = "เลือกวัตถุเดียวเพื่อแก้ไขตำแหน่งและขนาด"
 nothingSelected = "ไม่ได้เลือกอะไร"
 nothingSelectedHint = "คลิกข้อความ รูปภาพ หรือรูปร่างใดก็ได้บนหน้าเพื่อแก้ไขที่นี่"
+ocrDocumentChanged = "เอกสารเปลี่ยนแปลงระหว่างที่ OCR กำลังทำงาน เรียกใช้ OCR อีกครั้งเพื่อรวมการเปลี่ยนแปลงล่าสุดของคุณ"
+ocrInvalidResult = "OCR ไม่ได้ส่งคืน PDF โปรดลองอีกครั้ง"
+ocrNoLanguages = "ไม่มีภาษา OCR ติดตั้งอยู่บนเซิร์ฟเวอร์"
+ocrRunning = "กำลังรู้จำข้อความ..."
+ocrUnavailable = "OCR ไม่พร้อมใช้งานบนเซิร์ฟเวอร์นี้"
 oneImage = "รูปภาพ"
 oneShape = "รูปร่าง"
 oneText = "ข้อความ"
 pages = "หน้า"
+runOcr = "เรียกใช้ OCR"
+scanHint_one = "หน้านี้เป็นภาพสแกนที่ไม่มีข้อความให้แก้ไข เรียกใช้ OCR ก่อนเพื่อทำให้ข้อความแก้ไขได้"
+scanHint_other = "{{count}} หน้าเป็นภาพสแกนที่ไม่มีข้อความให้แก้ไข เรียกใช้ OCR ก่อนเพื่อทำให้ข้อความแก้ไขได้"
+scannedText = "ข้อความที่สแกน · คำที่เปลี่ยนแปลงจะถูกปิดทับและวาดใหม่ด้วยฟอนต์ที่เข้ากัน"
 tabDocument = "เอกสาร"
 tabSelected = "เลือกแล้ว"
 textBoxes = "กล่องข้อความ"
@@ -8384,10 +8393,10 @@ rowName = "ผู้ใช้"
 [portal.components.billingUnit]
 approval = "การอนุมัติ"
 check = "การตรวจสอบ"
-event = "event"
+event = "เหตุการณ์"
 render = "render"
 review = "การรีวิว"
-session = "session"
+session = "เซสชัน"
 signature = "ลายเซ็น"
 
 [portal.components.maturity]
@@ -9084,7 +9093,7 @@ view = "ดูข้อผิดพลาด"
 
 [portal.failures.origin]
 pipeline = "Pipeline"
-policy = "Policy run"
+policy = "การเรียกใช้ Policy"
 tool = "เครื่องมือ Editor"
 
 [portal.failures.outcome]
@@ -9880,7 +9889,7 @@ summary = "Route เอกสารไปยังปลายทางที่
 summary = "ตรวจจับและ redact PII, ลบ active content (JavaScript) และใส่ลายน้ำเอกสาร"
 
 [portal.policies.config.security.rules]
-0 = "Redact PII"
+0 = "ปกปิด PII"
 1 = "ลบ JavaScript"
 2 = "ลายน้ำ"
 
@@ -11126,7 +11135,7 @@ thumbnails = "หน้า"
 [redact]
 submit = "Manual Redaction"
 tags = "Redact,ซ่อน,ปิดทับ,ดำ,marker,ซ่อนอยู่,auto redact,manual redact"
-title = "Redact"
+title = "ปกปิดข้อมูล"
 
 [redact.auto]
 colorLabel = "สีกรอบ"
@@ -11780,7 +11789,7 @@ themeDark = "มืด"
 themeDescription = "เลือกสว่าง มืด หรือทำตามระบบของคุณเพื่อให้สลับอัตโนมัติ"
 themeLight = "สว่าง"
 themeReset = "คืนค่าธีมเป็นค่าเริ่มต้น"
-themeSystem = "System"
+themeSystem = "ระบบ"
 title = "ทั่วไป"
 user = "ผู้ใช้"
 
@@ -11804,8 +11813,8 @@ tools = "เครื่องมือ"
 
 [settings.general.updates]
 checkForUpdates = "ตรวจสอบอัปเดต"
-currentBackendVersion = "Current Backend Version"
-currentFrontendVersion = "Current Frontend Version"
+currentBackendVersion = "เวอร์ชัน Backend ปัจจุบัน"
+currentFrontendVersion = "เวอร์ชัน Frontend ปัจจุบัน"
 description = "ตรวจสอบอัปเดตและดูข้อมูลเวอร์ชัน"
 latestVersion = "เวอร์ชันล่าสุด"
 managedByAdmin = "จัดการโดยผู้ดูแลระบบ"
@@ -11869,8 +11878,8 @@ windows = "ให้มี Ctrl, Alt หรือปุ่มดัดแปล�
 
 [settings.legal]
 description = "ข้อกำหนด นโยบายความเป็นส่วนตัว และการตั้งค่าคุกกี้ของคุณ"
-label = "Legal"
-title = "Legal"
+label = "กฎหมาย"
+title = "กฎหมาย"
 
 [settings.legal.cookiePreferences]
 description = "ตรวจสอบหรือเปลี่ยนตัวเลือกการยินยอม cookie ของคุณ"
@@ -11964,7 +11973,7 @@ title = "อัปเกรดแผนของคุณ"
 [settings.policiesPrivacy]
 legal = "เอกสารทางกฎหมาย"
 privacy = "ความเป็นส่วนตัว"
-title = "Legal & privacy"
+title = "กฎหมายและความเป็นส่วนตัว"
 
 [settings.preferences]
 appearance = "รูปลักษณ์"
@@ -12275,6 +12284,163 @@ image = "รูปภาพ"
 saved = "ที่บันทึกไว้"
 text = "ข้อความ"
 title = "ประเภทลายเซ็น"
+
+[sign.wallet]
+apply_one = "ใช้ {{count}} ลายเซ็น"
+apply_other = "ใช้ {{count}} ลายเซ็น"
+applyEmpty = "ใช้ลายเซ็น"
+count = "{{count}} จาก {{max}}"
+default = "ค่าเริ่มต้น"
+loading = "กำลังโหลดลายเซ็นของคุณ..."
+new = "ลายเซ็นใหม่"
+shared = "แชร์แล้ว"
+sharedHint = "ทุกคนสามารถใช้ได้"
+unsaved = "ยังไม่ได้บันทึก"
+yours = "ลายเซ็นของคุณ"
+
+[sign.wallet.create]
+cancel = "ยกเลิก"
+full = "คลังของคุณเต็มแล้ว ({{max}} ลายเซ็น) ลบหนึ่งรายการเพื่อบันทึกเพิ่ม"
+makeDefault = "ตั้งเป็นค่าเริ่มต้น"
+method = "วิธีสร้าง"
+name = "ชื่อ"
+save = "บันทึกไปยังลายเซ็นของฉัน"
+saveBrowserHint = "เก็บไว้ในเบราว์เซอร์นี้ พร้อมใช้ครั้งถัดไป"
+saveHint = "พร้อมนำกลับมาใช้ในครั้งถัดไปที่คุณลงนาม"
+subtitle = "สร้างครั้งเดียว แล้วใช้ซ้ำกับเอกสารใดก็ได้"
+title = "ลายเซ็นใหม่"
+use = "ใช้ลายเซ็น"
+who = "ใครสามารถใช้ได้"
+whoEveryone = "ทุกคน"
+whoMe = "เฉพาะฉัน"
+
+[sign.wallet.defaultName]
+draw = "ลายเซ็นของฉัน"
+initials = "ชื่อย่อ"
+phone = "ลายเซ็นจากโทรศัพท์"
+type = "ลายเซ็นที่พิมพ์"
+upload = "ลายเซ็นที่อัปโหลด"
+
+[sign.wallet.delete]
+body = "\"{{name}}\" ถูกลบออกจากลายเซ็นของคุณแล้ว เอกสารที่คุณลงนามไปแล้วจะยังคงมีลายเซ็นนี้อยู่"
+confirm = "ลบ"
+title = "ลบลายเซ็นนี้หรือไม่?"
+
+[sign.wallet.draw]
+bold = "ปากกาหนา"
+clear = "ล้าง"
+fine = "ปากกาบาง"
+hint = "ลงนามเหนือเส้น"
+medium = "ปากกาขนาดกลาง"
+pad = "แผ่นลายเซ็น"
+pen = "ปากกา"
+tip = "ใช้เมาส์ แทร็กแพด ปากกา หรือนิ้ว"
+undo = "เลิกทำ"
+
+[sign.wallet.ink]
+black = "หมึกสีดำ"
+blue = "หมึกสีน้ำเงิน"
+label = "หมึก"
+navy = "หมึกสีน้ำเงินกรมท่า"
+
+[sign.wallet.intro]
+body = "สร้างครั้งเดียว บันทึกไว้ที่นี่ พร้อมใช้กับทุกเอกสารที่คุณลงนาม"
+privacy = "ลายเซ็นที่บันทึกไว้เป็นส่วนตัวสำหรับคุณ เว้นแต่คุณจะเลือกแชร์"
+privacyBrowser = "ลายเซ็นที่บันทึกไว้จะอยู่ในเบราว์เซอร์นี้"
+title = "เพิ่มลายเซ็นของคุณ"
+
+[sign.wallet.menu]
+delete = "ลบ"
+discard = "ละทิ้ง"
+makeDefault = "ตั้งเป็นค่าเริ่มต้น"
+options = "ตัวเลือกสำหรับ {{name}}"
+place = "วางบนหน้า"
+removeDefault = "นำออกจากค่าเริ่มต้น"
+rename = "เปลี่ยนชื่อ"
+save = "บันทึกไปยังลายเซ็นของฉัน"
+share = "แชร์กับทุกคน"
+stop = "หยุดการวาง"
+
+[sign.wallet.phone]
+expires = "หมดอายุใน {{time}}"
+qr = "QR code เพื่อลงนามบนโทรศัพท์ของคุณ"
+received = "ได้รับจากโทรศัพท์ของคุณแล้ว"
+receiveFailed = "ไม่สามารถอ่านลายเซ็นนั้นได้ สแกนโค้ดใหม่เพื่อลองอีกครั้ง"
+step1 = "สแกนโค้ดด้วยกล้องโทรศัพท์ของคุณ"
+step1Hint = "จะเปิดในเบราว์เซอร์ของโทรศัพท์ ไม่ต้องใช้แอป"
+step2 = "วาด พิมพ์ หรือถ่ายรูปลายเซ็นของคุณ"
+step2Hint = "พื้นที่วาดขนาดใหญ่ที่ออกแบบมาสำหรับนิ้ว"
+step3 = "จะปรากฏที่นี่โดยอัตโนมัติ"
+step3Hint = "เปิดหน้าต่างนี้ไว้ขณะที่คุณลงนาม"
+waiting = "กำลังรอโทรศัพท์ของคุณ..."
+
+[sign.wallet.placed]
+empty = "ลายเซ็นที่คุณวางบนหน้าจะแสดงอยู่ที่นี่"
+fallbackName = "ลายเซ็น"
+page = "หน้า {{page}}"
+remove = "ลบ {{name}}"
+show = "แสดง {{name}} บนหน้า"
+title = "บนเอกสารนี้ ({{count}})"
+
+[sign.wallet.rename]
+save = "บันทึก"
+title = "เปลี่ยนชื่อลายเซ็น"
+
+[sign.wallet.status]
+idle = "เลือกลายเซ็นเพื่อวาง"
+placing = "คลิกหน้ากระดาษเพื่อวาง {{name}}"
+stop = "หยุด"
+
+[sign.wallet.tabs]
+draw = "วาด"
+phone = "โทรศัพท์"
+type = "พิมพ์"
+upload = "อัปโหลด"
+
+[sign.wallet.toast]
+applyFailed = "ไม่สามารถใช้ลายเซ็นได้"
+applyFailedBody = "ลายเซ็นของคุณยังอยู่บนเอกสาร ลองอีกครั้ง"
+deleteFailed = "ไม่สามารถลบลายเซ็นได้"
+draftExists = "บันทึกหรือละทิ้งลายเซ็นที่ยังไม่ได้บันทึกของคุณก่อน"
+initialsFailed = "ไม่สามารถบันทึกชื่อย่อของคุณได้"
+initialsPartial = "บันทึกลายเซ็นของคุณแล้ว แต่ยังไม่ได้บันทึกชื่อย่อของคุณ ลองบันทึกชื่อย่อแยกต่างหาก"
+renameFailed = "ไม่สามารถเปลี่ยนชื่อลายเซ็นได้"
+saved = "บันทึกไปยังลายเซ็นของคุณแล้ว"
+saveFailed = "ไม่สามารถบันทึกลายเซ็นได้"
+saveFailedBody = "ยังพร้อมให้วางบนเอกสารนี้"
+shared = "แชร์กับทุกคนแล้ว"
+shareFailed = "ไม่สามารถแชร์ลายเซ็นได้"
+
+[sign.wallet.type]
+initials = "ชื่อย่อ"
+initialsLimit = "การบันทึกชื่อย่อต้องใช้ช่องลายเซ็นว่างสองช่อง"
+name = "ชื่อของคุณ"
+namePlaceholder = "พิมพ์ชื่อของคุณ"
+previewName = "ชื่อของคุณ"
+saveInitials = "บันทึกชื่อย่อของฉันด้วย"
+style = "สไตล์"
+styleOption = "สไตล์ {{index}}"
+
+[sign.wallet.upload]
+browse = "หรือเรียกดูไฟล์"
+drop = "วางรูปภาพที่นี่"
+failed = "ไม่สามารถอ่านรูปภาพนั้นได้"
+hint = "PNG, JPG หรือ WebP สูงสุด {{size}} MB พื้นหลังสีขาวจะถูกลบออกโดยอัตโนมัติ"
+ink = "สีหมึก"
+inkBlack = "ดำ"
+inkBlue = "น้ำเงิน"
+inkOriginal = "ต้นฉบับ"
+preview = "ตัวอย่างลายเซ็นที่อัปโหลด"
+processing = "กำลังทำความสะอาดรูปภาพ..."
+rejected = "เลือกรูปภาพ PNG, JPG หรือ WebP ขนาดสูงสุด {{size}} MB"
+removeBackground = "ลบพื้นหลัง"
+removeBackgroundHint = "กระดาษสีขาวจะกลายเป็นโปร่งใส"
+replace = "แทนที่"
+rotate = "หมุน"
+rotateLeft = "หมุนซ้าย"
+rotateRight = "หมุนขวา"
+trim = "ตัดขอบให้พอดีกับลายเซ็น"
+trimHint = "ครอบตัดพื้นที่ว่างรอบ ๆ ออก"
 
 [signatureSettings.tooltip]
 header = "การตั้งค่าลักษณะลายเซ็น"
@@ -12662,8 +12828,8 @@ updateButton = "อัปเดตบนเซิร์ฟเวอร์"
 uploadButton = "อัปโหลดไปยังเซิร์ฟเวอร์"
 
 [superSearch]
-all = "All"
-ariaLabel = "Super search"
+all = "ทั้งหมด"
+ariaLabel = "การค้นหาแบบครอบคลุม"
 filtersAriaLabel = "ตัวกรองการค้นหา"
 hint = "พิมพ์เพื่อค้นหา"
 placeholder = "ค้นหา Stirling"
@@ -12672,12 +12838,12 @@ showLess = "แสดงน้อยลง"
 showMore = "แสดงเพิ่มอีก {{count}} รายการ"
 
 [superSearch.group]
-docs = "Docs"
-files = "Files"
-pages = "Pages"
-processor = "Processor"
-settings = "Settings"
-tools = "Tools"
+docs = "เอกสาร"
+files = "ไฟล์"
+pages = "หน้า"
+processor = "ตัวประมวลผล"
+settings = "การตั้งค่า"
+tools = "เครื่องมือ"
 
 [survey]
 title = "แบบสำรวจ Stirling-PDF"
@@ -12911,7 +13077,7 @@ title = "ผลการปลดล็อกฟอร์ม"
 
 [update]
 allReleases = "รุ่นทั้งหมด"
-breaking = "Breaking"
+breaking = "มีการเปลี่ยนแปลงสำคัญ"
 breakingChanges = "การเปลี่ยนแปลงที่มีผลกระทบ"
 breakingChangesDefault = "เวอร์ชันนี้มีการเปลี่ยนแปลงที่มีผลกระทบ"
 close = "ปิด"
@@ -12931,7 +13097,7 @@ notes = "บันทึก"
 releaseNotes = "บันทึกรุ่น"
 showLess = "แสดงเวอร์ชันน้อยลง"
 showMore = "แสดงทั้งหมด {{count}} เวอร์ชัน"
-stable = "STABLE"
+stable = "เสถียร"
 updateAvailable = "มีอัปเดต"
 urgentUpdateAvailable = "อัปเดตเร่งด่วน"
 version = "เวอร์ชัน"
@@ -13044,13 +13210,13 @@ yearsAgo_one = "{{count}} ปีก่อน"
 yearsAgo_other = "{{count}} ปีก่อน"
 
 [users.cap]
-addProcessor = "+ Processor"
+addProcessor = "+ ตัวประมวลผล"
 approver = "อนุมัตินโยบาย"
-editor = "Editor"
-processor = "Processor"
+editor = "ผู้แก้ไข"
+processor = "ตัวประมวลผล"
 
 [users.columns]
-capabilities = "Capabilities"
+capabilities = "ความสามารถ"
 email = "Email"
 person = "บุคคล"
 role = "บทบาท"

@@ -415,7 +415,7 @@ europeanDate = "Data europeia"
 legal-footer = "Rodapé jurídico"
 page-numbers = "Números de página"
 pageNumberFooter = "Rodapé com número de página"
-timestamp = "Timestamp"
+timestamp = "Carimbo de data/hora"
 
 [addText]
 applySignatures = "Aplicar texto"
@@ -7345,10 +7345,19 @@ mixed = "{{count}} objetos"
 multiGeometry = "Selecione um único objeto para editar sua posição e tamanho."
 nothingSelected = "Nada selecionado"
 nothingSelectedHint = "Clique em qualquer texto, imagem ou forma na página para editá-lo aqui."
+ocrDocumentChanged = "O documento foi alterado enquanto o OCR estava em execução. Execute o OCR novamente para incluir suas alterações mais recentes."
+ocrInvalidResult = "O OCR não retornou um PDF. Tente novamente."
+ocrNoLanguages = "Nenhum idioma de OCR está instalado no servidor."
+ocrRunning = "Reconhecendo texto..."
+ocrUnavailable = "OCR não está disponível neste servidor."
 oneImage = "Imagem"
 oneShape = "Forma"
 oneText = "Texto"
 pages = "Páginas"
+runOcr = "Executar OCR"
+scanHint_one = "Esta página é uma imagem digitalizada sem texto para editar. Execute o OCR primeiro para tornar o texto editável."
+scanHint_other = "{{count}} páginas são imagens digitalizadas sem texto para editar. Execute o OCR primeiro para tornar o texto editável."
+scannedText = "Texto digitalizado · palavras alteradas são cobertas e redesenhadas em uma fonte correspondente."
 tabDocument = "Documento"
 tabSelected = "Selecionado"
 textBoxes = "Caixas de texto"
@@ -7744,7 +7753,7 @@ successMessage = "Sua licença foi ativada com sucesso. Agora você pode fechar 
 
 [plan.team]
 maxUsers = "100 usuários"
-name = "Team"
+name = "Equipe"
 
 [policies.activity]
 outputsUnavailable = "Os resultados da política não estão mais disponíveis para download."
@@ -8170,14 +8179,14 @@ sub = "O Editor de PDF completo."
 [portal.billing.identity.processor]
 chipMetered = "Processamento medido"
 chipPipelines = "Pipelines e API"
-name = "Processor"
+name = "Processador"
 sub = "Base Team mais {{rate}} por crédito"
 subNoRate = "Base Team mais processamento medido"
 
 [portal.billing.identity.team]
 chipFleet = "Controle de frota"
 chipIncluded = "{{allowance}} créditos incluídos mensalmente"
-name = "Team"
+name = "Equipe"
 sub = "Até {{users}} usuários"
 subNoLimit = "Sem limite de usuários"
 
@@ -8289,7 +8298,7 @@ prepaidRemaining = "Créditos pré-pagos restantes"
 prepaidTooltip = "Usados antes do faturamento medido e fora do seu limite de gastos."
 raiseLimit = "Aumentar limite"
 remainingOf = "{{remaining}} de {{total}}"
-rowName = "Processor"
+rowName = "Processador"
 spendAgainstLimit = "{{spend}} de {{cap}} medidos neste ciclo"
 
 [portal.billing.seats]
@@ -8629,13 +8638,13 @@ helperText = "Corresponda à Authentication definida no nó n8n Webhook."
 label = "Autenticação de Webhook"
 
 [portal.connections.types.n8n.fields.authType.options.basic]
-label = "Basic auth"
+label = "Autenticação básica"
 
 [portal.connections.types.n8n.fields.authType.options.header]
-label = "Header auth"
+label = "Autenticação por header"
 
 [portal.connections.types.n8n.fields.authType.options.none]
-label = "None"
+label = "Nenhuma"
 
 [portal.connections.types.n8n.fields.headerName]
 helperText = "O nome do header da credencial n8n, não seu valor."
@@ -12275,6 +12284,163 @@ image = "Imagem"
 saved = "Salva"
 text = "Texto"
 title = "Tipo de assinatura"
+
+[sign.wallet]
+apply_one = "Aplicar {{count}} assinatura"
+apply_other = "Aplicar {{count}} assinaturas"
+applyEmpty = "Aplicar assinaturas"
+count = "{{count}} de {{max}}"
+default = "Padrão"
+loading = "Carregando suas assinaturas..."
+new = "Nova assinatura"
+shared = "Compartilhada"
+sharedHint = "Todos podem usar estas"
+unsaved = "Não salva"
+yours = "Suas assinaturas"
+
+[sign.wallet.create]
+cancel = "Cancelar"
+full = "Sua biblioteca está cheia ({{max}} assinaturas). Exclua uma para salvar mais."
+makeDefault = "Tornar padrão"
+method = "Como criar"
+name = "Nome"
+save = "Salvar nas minhas assinaturas"
+saveBrowserHint = "Mantida neste navegador, pronta para a próxima vez."
+saveHint = "Pronta para reutilizar na próxima vez que você assinar."
+subtitle = "Crie uma vez, reutilize em qualquer documento."
+title = "Nova assinatura"
+use = "Usar assinatura"
+who = "Quem pode usar"
+whoEveryone = "Todos"
+whoMe = "Somente eu"
+
+[sign.wallet.defaultName]
+draw = "Minha assinatura"
+initials = "Iniciais"
+phone = "Assinatura do telefone"
+type = "Assinatura digitada"
+upload = "Assinatura enviada"
+
+[sign.wallet.delete]
+body = "\"{{name}}\" foi removida das suas assinaturas. Documentos que você já assinou a mantêm."
+confirm = "Excluir"
+title = "Excluir esta assinatura?"
+
+[sign.wallet.draw]
+bold = "Caneta grossa"
+clear = "Limpar"
+fine = "Caneta fina"
+hint = "Assine acima da linha"
+medium = "Caneta média"
+pad = "Bloco de assinatura"
+pen = "Caneta"
+tip = "Use um mouse, trackpad, caneta ou dedo"
+undo = "Desfazer"
+
+[sign.wallet.ink]
+black = "Tinta preta"
+blue = "Tinta azul"
+label = "Tinta"
+navy = "Tinta azul-marinho"
+
+[sign.wallet.intro]
+body = "Crie uma vez. Ela é salva aqui, pronta para cada documento que você assinar."
+privacy = "Assinaturas salvas são privadas para você, a menos que escolha compartilhá-las."
+privacyBrowser = "Assinaturas salvas ficam neste navegador."
+title = "Adicionar sua assinatura"
+
+[sign.wallet.menu]
+delete = "Excluir"
+discard = "Descartar"
+makeDefault = "Tornar padrão"
+options = "Opções para {{name}}"
+place = "Colocar na página"
+removeDefault = "Remover como padrão"
+rename = "Renomear"
+save = "Salvar nas minhas assinaturas"
+share = "Compartilhar com todos"
+stop = "Parar de colocar"
+
+[sign.wallet.phone]
+expires = "Expira em {{time}}"
+qr = "QR code para assinar no seu telefone"
+received = "Recebida do seu telefone"
+receiveFailed = "Não foi possível ler essa assinatura. Escaneie o novo código para tentar novamente."
+step1 = "Escaneie o código com a câmera do seu telefone"
+step1Hint = "Ele abre no navegador do telefone, sem precisar de app."
+step2 = "Desenhe, digite ou fotografe sua assinatura"
+step2Hint = "Um canvas grande feito para um dedo."
+step3 = "Ela aparece aqui automaticamente"
+step3Hint = "Mantenha esta janela aberta enquanto assina."
+waiting = "Aguardando seu telefone..."
+
+[sign.wallet.placed]
+empty = "Assinaturas que você coloca na página são listadas aqui."
+fallbackName = "Assinatura"
+page = "Página {{page}}"
+remove = "Remover {{name}}"
+show = "Mostrar {{name}} na página"
+title = "Neste documento ({{count}})"
+
+[sign.wallet.rename]
+save = "Salvar"
+title = "Renomear assinatura"
+
+[sign.wallet.status]
+idle = "Escolha uma assinatura para colocá-la"
+placing = "Clique na página para colocar {{name}}."
+stop = "Parar"
+
+[sign.wallet.tabs]
+draw = "Desenhar"
+phone = "Telefone"
+type = "Digitar"
+upload = "Upload"
+
+[sign.wallet.toast]
+applyFailed = "Não foi possível aplicar as assinaturas"
+applyFailedBody = "Suas assinaturas ainda estão no documento. Tente novamente."
+deleteFailed = "Não foi possível excluir a assinatura"
+draftExists = "Salve ou descarte sua assinatura não salva primeiro"
+initialsFailed = "Não foi possível salvar suas iniciais"
+initialsPartial = "Sua assinatura foi salva, mas suas iniciais não. Tente salvar suas iniciais separadamente."
+renameFailed = "Não foi possível renomear a assinatura"
+saved = "Salva nas suas assinaturas"
+saveFailed = "Não foi possível salvar a assinatura"
+saveFailedBody = "Ela ainda está pronta para ser colocada neste documento."
+shared = "Compartilhada com todos"
+shareFailed = "Não foi possível compartilhar a assinatura"
+
+[sign.wallet.type]
+initials = "Iniciais"
+initialsLimit = "Salvar iniciais precisa de dois espaços livres de assinatura."
+name = "Seu nome"
+namePlaceholder = "Digite seu nome"
+previewName = "Seu nome"
+saveInitials = "Salvar também minhas iniciais"
+style = "Estilo"
+styleOption = "Estilo {{index}}"
+
+[sign.wallet.upload]
+browse = "ou procurar arquivos"
+drop = "Solte uma imagem aqui"
+failed = "Não foi possível ler essa imagem."
+hint = "PNG, JPG ou WebP até {{size}} MB. Fundos brancos são removidos automaticamente."
+ink = "Cor da tinta"
+inkBlack = "Preta"
+inkBlue = "Azul"
+inkOriginal = "Original"
+preview = "Prévia da assinatura enviada"
+processing = "Limpando a imagem..."
+rejected = "Escolha uma imagem PNG, JPG ou WebP de até {{size}} MB."
+removeBackground = "Remover fundo"
+removeBackgroundHint = "Papel branco fica transparente"
+replace = "Substituir"
+rotate = "Girar"
+rotateLeft = "Girar para a esquerda"
+rotateRight = "Girar para a direita"
+trim = "Recortar para a assinatura"
+trimHint = "Corta o espaço vazio ao redor"
 
 [signatureSettings.tooltip]
 header = "Configurações de aparência da assinatura"

@@ -1341,7 +1341,7 @@ label = "Лимит загрузки файлов"
 
 [admin.settings.general.frontendUrl]
 description = "Базовый URL фронтенда (например, https://pdf.example.com). Используется для ссылок приглашений по email и загрузок через мобильный QR‑код. Оставьте пустым, чтобы использовать URL бэкенда."
-label = "Frontend URL"
+label = "URL фронтенда"
 
 [admin.settings.general.hideDisabledTools]
 description = "Скрывать отключенные инструменты из интерфейса"
@@ -1510,7 +1510,7 @@ title = "Подключить MCP-клиент"
 
 [admin.settings.mcp.issuerUri]
 description = "Ваш сервер авторизации OAuth2 (должен публиковать /.well-known/openid-configuration). Обязательно при включении."
-label = "OAuth Issuer URL"
+label = "URL эмитента OAuth"
 
 [admin.settings.mcp.jwksUri]
 description = "Оставьте пустым, чтобы обнаружить его через issuer. Указывайте только если ваш IdP предоставляет ключи по нестандартному URL."
@@ -1529,7 +1529,7 @@ label = "Требовать существующий аккаунт Stirling"
 
 [admin.settings.mcp.resourceId]
 description = "Публичный URL /mcp этого сервера. Токены должны содержать его в audience (RFC 8707), иначе они будут отклонены."
-label = "Resource ID"
+label = "ID ресурса"
 
 [admin.settings.mcp.scopes]
 description = "Требовать mcp.tools.read для операций чтения и mcp.tools.write для операций записи/AI."
@@ -3429,7 +3429,7 @@ maintenance-log = "Журнал обслуживания"
 manual = "Руководство"
 market-research = "Маркетинговое исследование"
 marketing-plan = "Маркетинговый план"
-media-kit = "Media kit"
+media-kit = "Медиакит"
 medical-invoice = "Медицинский счёт"
 medical-report = "Медицинский отчёт"
 meeting-agenda = "Повестка встречи"
@@ -3458,7 +3458,7 @@ payslip = "Расчётный листок"
 performance-review = "Оценка эффективности"
 permit = "Разрешение"
 petition = "Петиция"
-pitch-deck = "Pitch deck"
+pitch-deck = "Презентация"
 power-of-attorney = "Доверенность"
 prescription = "Рецепт"
 presentation = "Презентация"
@@ -3490,7 +3490,7 @@ referral-letter = "Направительное письмо"
 registration-confirmation = "Подтверждение регистрации"
 registration-form = "Регистрационная форма"
 regulatory-filing = "Регуляторная подача"
-release-notes = "Release notes"
+release-notes = "Примечания к выпуску"
 remittance-advice = "Платёжное уведомление"
 rental-agreement = "Договор найма"
 report = "Отчёт"
@@ -3505,7 +3505,7 @@ resume = "Резюме"
 retrospective = "Ретроспектива"
 return-authorization = "Разрешение на возврат"
 risk-assessment = "Оценка рисков"
-roadmap = "Roadmap"
+roadmap = "Дорожная карта"
 safety-data-sheet = "Паспорт безопасности"
 safety-procedure = "Процедура безопасности"
 sales-proposal = "Коммерческое предложение по продажам"
@@ -3561,7 +3561,7 @@ waiver = "Отказ от прав"
 warehouse-receipt = "Складская расписка"
 warranty-document = "Гарантийный документ"
 waybill = "Транспортная накладная"
-white-paper = "White paper"
+white-paper = "Белая книга"
 will = "Завещание"
 work-instruction = "Рабочая инструкция"
 work-order = "Наряд на работу"
@@ -3983,7 +3983,7 @@ viewApiKeys = "Просмотреть ключи API"
 configLabel = "Конфигурация"
 copied = "Скопировано"
 copy = "Копировать"
-endpointLabel = "Endpoint URL"
+endpointLabel = "URL конечной точки"
 tooltip = "Копировать {{label}}"
 tooltipCopied = "{{label}} скопировано"
 
@@ -6870,7 +6870,7 @@ title = "Не удалось загрузить ваш план"
 
 [payg.free.cta]
 benefit1Body = "объединяйте инструменты в цепочки, планируйте запуски, обрабатывайте пакетно"
-benefit1Title = "Automation pipelines"
+benefit1Title = "Конвейеры автоматизации"
 benefit2Body = "summarise, classify, redact, AI-OCR"
 benefit2Title = "Инструменты AI"
 benefit3Body = "вызывайте любые endpoints Stirling программно"
@@ -7014,7 +7014,7 @@ aiTitle = "Инструменты AI"
 apiBody = "программный доступ к любому endpoint Stirling"
 apiTitle = "Вызовы API"
 automationBody = "цепочки инструментов или запланированные запуски, не требующие кликов"
-automationTitle = "Automation pipelines"
+automationTitle = "Конвейеры автоматизации"
 footnoteUnlimited = "Ручные инструменты (просмотр, редактирование, объединение, разделение, добавление водяных знаков, сжатие, ручной OCR) всегда бесплатны, даже после использования включенных кредитов. Различие в типе работы, а не в том, где вы нажимаете."
 title = "Что мы учитываем в биллинге"
 
@@ -7201,7 +7201,7 @@ downloadTooltip = "Сохранить и скачать отредактиров
 save = "Сохранить PDF"
 saveTooltip = "Применить изменения к файлу в вашей рабочей области ({{shortcut}})"
 tags = "редактировать текст,изменить текст,изменить текст,редактировать содержимое,обновить текст,переписать,исправить,внести правки,правки,пересмотреть,текстовый редактор,редактор содержимого"
-title = "PDF Text Editor"
+title = "Редактор текста PDF"
 unsaved = "(не сохранено)"
 workbenchLabel = "Редактор"
 
@@ -7345,10 +7345,19 @@ mixed = "{{count}} объектов"
 multiGeometry = "Выберите один объект, чтобы изменить его положение и размер."
 nothingSelected = "Ничего не выбрано"
 nothingSelectedHint = "Нажмите любой текст, изображение или фигуру на странице, чтобы редактировать это здесь."
+ocrDocumentChanged = "Документ изменился во время выполнения OCR. Запустите OCR снова, чтобы включить последние изменения."
+ocrInvalidResult = "OCR не вернул PDF. Повторите попытку."
+ocrNoLanguages = "На сервере не установлены языки OCR."
+ocrRunning = "Распознавание текста..."
+ocrUnavailable = "OCR недоступен на этом сервере."
 oneImage = "Изображение"
 oneShape = "Фигура"
 oneText = "Текст"
 pages = "Страницы"
+runOcr = "Запустить OCR"
+scanHint_one = "Эта страница является отсканированным изображением без текста для редактирования. Сначала запустите OCR, чтобы сделать ее текст доступным для редактирования."
+scanHint_other = "{{count}} страниц являются отсканированными изображениями без текста для редактирования. Сначала запустите OCR, чтобы сделать их текст доступным для редактирования."
+scannedText = "Отсканированный текст · измененные слова закрываются и перерисовываются подходящим шрифтом."
 tabDocument = "Документ"
 tabSelected = "Выбрано"
 textBoxes = "Текстовые блоки"
@@ -8428,13 +8437,13 @@ label = "Файлы и вложения"
 
 [portal.connections.commonFields.accessToken]
 helperText = "Stirling хранит это в зашифрованном виде и больше никогда не показывает."
-label = "Access token"
+label = "Токен доступа"
 
 [portal.connections.commonFields.apiKey]
-label = "API key"
+label = "Ключ API"
 
 [portal.connections.commonFields.apiToken]
-label = "API token"
+label = "Токен API"
 
 [portal.connections.commonFields.baseUrl]
 helperText = "Шаги, использующие это подключение, могут вызывать только пути в рамках этого URL, но не другой host."
@@ -8559,17 +8568,17 @@ label = "URL сервера"
 placeholder = "https://your-org.consignocloud.com/api/v1"
 
 [portal.connections.types.consigno.fields.clientId]
-label = "API key"
+label = "Ключ API"
 
 [portal.connections.types.consigno.fields.clientSecret]
-label = "API secret"
+label = "Секрет API"
 
 [portal.connections.types.consigno.fields.password]
 label = "Пароль"
 
 [portal.connections.types.consigno.fields.tenantId]
 helperText = "Нужно только если ваша организация использует tenants."
-label = "Tenant"
+label = "Тенант"
 
 [portal.connections.types.consigno.fields.username]
 label = "Имя пользователя"
@@ -8629,13 +8638,13 @@ helperText = "Соответствует Authentication, заданной в у�
 label = "Аутентификация Webhook"
 
 [portal.connections.types.n8n.fields.authType.options.basic]
-label = "Basic auth"
+label = "Базовая аутентификация"
 
 [portal.connections.types.n8n.fields.authType.options.header]
-label = "Header auth"
+label = "Аутентификация через заголовок"
 
 [portal.connections.types.n8n.fields.authType.options.none]
-label = "None"
+label = "Нет"
 
 [portal.connections.types.n8n.fields.headerName]
 helperText = "Имя header из учетных данных n8n, а не его значение."
@@ -8664,14 +8673,14 @@ label = "Microsoft Purview"
 
 [portal.connections.types.purview.fields.clientId]
 helperText = "Необязательно. Нужно только для выбора меток по имени; нанесение меток работает и без этого."
-label = "Application (client) ID"
+label = "ID приложения (клиента)"
 
 [portal.connections.types.purview.fields.clientSecret]
-label = "Client secret"
+label = "Секрет клиента"
 
 [portal.connections.types.purview.fields.tenantId]
 helperText = "Проставляется на каждой метке как SiteId, чтобы инструменты, совместимые с Purview, знали, какая организация ее применила."
-label = "Directory (tenant) ID"
+label = "ID каталога (тенанта)"
 placeholder = "cb46c030-1825-4e81-a295-151c039dbf02"
 
 [portal.connections.types.s3]
@@ -8679,20 +8688,20 @@ description = "S3 bucket, из которого источники могут ч
 label = "Хранилище S3"
 
 [portal.connections.types.s3.fields.accessKeyId]
-label = "Access key ID"
+label = "ID ключа доступа"
 
 [portal.connections.types.s3.fields.bucket]
 label = "Bucket"
 
 [portal.connections.types.s3.fields.endpoint]
 helperText = "Оставьте пустым для AWS. Установите это для MinIO или другого S3-совместимого хранилища."
-label = "Endpoint"
+label = "Конечная точка"
 
 [portal.connections.types.s3.fields.region]
 label = "Регион"
 
 [portal.connections.types.s3.fields.secretAccessKey]
-label = "Secret access key"
+label = "Секретный ключ доступа"
 
 [portal.connections.types.sendgrid]
 description = "Отправляйте документ или уведомление по Email, когда выполняется политика."
@@ -8716,7 +8725,7 @@ helperText = "Оставьте пустым, если вместо этого в
 
 [portal.connections.types.sftp.fields.privateKey]
 helperText = "Необязательно. Вставьте OpenSSH private key для аутентификации с ключом вместо пароля."
-label = "Private key"
+label = "Закрытый ключ"
 
 [portal.connections.types.slack]
 description = "Публикуйте сообщение в Slack, когда политика обрабатывает документ."
@@ -8787,17 +8796,17 @@ lead = "Встраиваемый UI для очередей проверки и 
 title = "Готовые просмотрщики"
 
 [portal.docs.endpoints]
-eyebrow = "API REFERENCE"
+eyebrow = "СПРАВОЧНИК API"
 fieldCount_one = "{{count}} поле"
 fieldCount_other = "{{count}} полей"
 filterAll = "Все"
 filterAriaLabel = "Фильтровать endpoints по вертикали"
 lead = "Каждый тип документа — это типизированный endpoint. Отправьте файл через POST и получите JSON, проверенный по схеме. Фильтруйте по вертикали ниже."
-title = "Endpoints"
+title = "Конечные точки"
 
 [portal.docs.errors]
 codeCaption = "422 Unprocessable Entity"
-eyebrow = "API REFERENCE"
+eyebrow = "СПРАВОЧНИК API"
 lead = "Ошибки возвращают стабильный машиночитаемый код и сообщение для человека. Тело 4xx всегда включает request_id для поддержки."
 title = "Ошибки"
 
@@ -8817,7 +8826,7 @@ title = "Быстрый старт"
 bodyAfterLink = "с готовыми рецептами для копирования."
 bodyBeforeLink = "встройте тот же вызов в pipeline, чтобы связать в цепочку валидацию, редактирование и доставку — или предоставьте его агенту через MCP. См."
 label = "Далее:"
-link = "Playbooks"
+link = "Сценарии"
 
 [portal.docs.quickstart.step1]
 body = "Создайте scoped key на вкладке Infrastructure. Ключи несут ограничения скорости и необязательный IP allowlist. Экспортируйте его в shell:"
@@ -8834,7 +8843,7 @@ codeCaption = "200 OK"
 title = "Прочитайте структурированный результат"
 
 [portal.docs.rateLimits]
-burst = "Burst"
+burst = "Пакет"
 codeCaption = "429 Too Many Requests"
 concurrency = "Параллелизм"
 eyebrow = "НАЧАЛО РАБОТЫ"
@@ -8844,12 +8853,12 @@ title = "Ограничения скорости и квоты"
 
 [portal.docs.recipes]
 cloneButton = "Клонировать рецепт"
-eyebrow = "PLAYBOOKS"
+eyebrow = "СЦЕНАРИИ"
 lead = "Сквозные шаблоны, связывающие источники, операции и назначения. Каждый соответствует pipeline, который можно клонировать."
 title = "Рецепты"
 
 [portal.docs.sdks]
-eyebrow = "SDKS"
+eyebrow = "SDK"
 lead = "Клиенты first-party с типизированными ответами, автоматическими повторами и потоковыми загрузками. Все отслеживают один и тот же каталог endpoint."
 title = "Официальные SDK"
 
@@ -8858,7 +8867,7 @@ beta = "Beta"
 deprecated = "Устарело"
 
 [portal.docs.skills]
-eyebrow = "SKILLS"
+eyebrow = "НАВЫКИ"
 lead = "Встроенные именованные возможности, которые ваш агент вызывает как единый инструмент. Каждый skill — детерминированная цепочка операций с привязанными evals."
 title = "Навыки агента"
 
@@ -8867,7 +8876,7 @@ title = "На этой странице"
 
 [portal.docs.webhooks]
 codeCaption = "document.processed"
-eyebrow = "API REFERENCE"
+eyebrow = "СПРАВОЧНИК API"
 lead = "Подпишитесь на события document.processed, pipeline.completed и quota.threshold. Payloads подписываются HMAC-SHA256."
 title = "Webhooks"
 
@@ -11030,19 +11039,19 @@ label = "Сертификат IDP"
 
 [provider.saml2.idpIssuer]
 description = "ID вашего провайдера"
-label = "IDP Issuer"
+label = "Эмитент IDP"
 
 [provider.saml2.idpMetadataUri]
 description = "URI метаданных вашего провайдера"
-label = "IDP Metadata URI"
+label = "URI метаданных IDP"
 
 [provider.saml2.idpSingleLoginUrl]
 description = "URL для инициирования SSO"
-label = "IDP Single Login URL"
+label = "URL единого входа IDP"
 
 [provider.saml2.idpSingleLogoutUrl]
 description = "URL для инициирования SLO"
-label = "IDP Single Logout URL"
+label = "URL единого выхода IDP"
 
 [provider.saml2.privateKey]
 description = "Путь к вашему приватному ключу"
@@ -11054,7 +11063,7 @@ label = "Имя провайдера"
 
 [provider.saml2.registrationId]
 description = "Имя вашего приложения Service Provider (SP)"
-label = "Registration ID"
+label = "ID регистрации"
 
 [provider.saml2.spCert]
 description = "Путь к вашему подписывающему сертификату"
@@ -12276,6 +12285,163 @@ saved = "Сохранённое"
 text = "Текст"
 title = "Тип подписи"
 
+[sign.wallet]
+apply_one = "Применить {{count}} подпись"
+apply_other = "Применить подписи: {{count}}"
+applyEmpty = "Применить подписи"
+count = "{{count}} из {{max}}"
+default = "По умолчанию"
+loading = "Загрузка ваших подписей..."
+new = "Новая подпись"
+shared = "Общие"
+sharedHint = "Их могут использовать все"
+unsaved = "Не сохранено"
+yours = "Ваши подписи"
+
+[sign.wallet.create]
+cancel = "Отмена"
+full = "Ваша библиотека заполнена ({{max}} подписей). Удалите одну, чтобы сохранить еще."
+makeDefault = "Сделать по умолчанию"
+method = "Как ее создать"
+name = "Имя"
+save = "Сохранить в мои подписи"
+saveBrowserHint = "Хранится в этом браузере и будет готова в следующий раз."
+saveHint = "Готова к повторному использованию при следующем подписании."
+subtitle = "Создайте один раз и используйте в любом документе."
+title = "Новая подпись"
+use = "Использовать подпись"
+who = "Кто может ее использовать"
+whoEveryone = "Все"
+whoMe = "Только я"
+
+[sign.wallet.defaultName]
+draw = "Моя подпись"
+initials = "Инициалы"
+phone = "Подпись с телефона"
+type = "Текстовая подпись"
+upload = "Загруженная подпись"
+
+[sign.wallet.delete]
+body = "\"{{name}}\" удалена из ваших подписей. В уже подписанных документах она сохранится."
+confirm = "Удалить"
+title = "Удалить эту подпись?"
+
+[sign.wallet.draw]
+bold = "Толстое перо"
+clear = "Очистить"
+fine = "Тонкое перо"
+hint = "Подпишите над линией"
+medium = "Среднее перо"
+pad = "Панель для подписи"
+pen = "Перо"
+tip = "Используйте мышь, трекпад, перо или палец"
+undo = "Отменить"
+
+[sign.wallet.ink]
+black = "Черные чернила"
+blue = "Синие чернила"
+label = "Чернила"
+navy = "Темно-синие чернила"
+
+[sign.wallet.intro]
+body = "Создайте один раз. Она сохранится здесь и будет готова для каждого документа, который вы подписываете."
+privacy = "Сохраненные подписи видны только вам, если вы не решите поделиться ими."
+privacyBrowser = "Сохраненные подписи остаются в этом браузере."
+title = "Добавьте свою подпись"
+
+[sign.wallet.menu]
+delete = "Удалить"
+discard = "Отменить"
+makeDefault = "Сделать по умолчанию"
+options = "Параметры для {{name}}"
+place = "Разместить на странице"
+removeDefault = "Убрать как подпись по умолчанию"
+rename = "Переименовать"
+save = "Сохранить в мои подписи"
+share = "Поделиться со всеми"
+stop = "Остановить размещение"
+
+[sign.wallet.phone]
+expires = "Истекает через {{time}}"
+qr = "QR-код для подписи на телефоне"
+received = "Получено с вашего телефона"
+receiveFailed = "Не удалось прочитать эту подпись. Отсканируйте новый код, чтобы повторить попытку."
+step1 = "Отсканируйте код камерой телефона"
+step1Hint = "Он откроется в браузере телефона, приложение не требуется."
+step2 = "Нарисуйте, введите или сфотографируйте свою подпись"
+step2Hint = "Большой холст, удобный для пальца."
+step3 = "Она автоматически появится здесь"
+step3Hint = "Оставьте это окно открытым во время подписания."
+waiting = "Ожидание вашего телефона..."
+
+[sign.wallet.placed]
+empty = "Подписи, которые вы размещаете на странице, перечислены здесь."
+fallbackName = "Подпись"
+page = "Страница {{page}}"
+remove = "Удалить {{name}}"
+show = "Показать {{name}} на странице"
+title = "В этом документе ({{count}})"
+
+[sign.wallet.rename]
+save = "Сохранить"
+title = "Переименовать подпись"
+
+[sign.wallet.status]
+idle = "Выберите подпись, чтобы разместить ее"
+placing = "Нажмите на страницу, чтобы разместить {{name}}."
+stop = "Остановить"
+
+[sign.wallet.tabs]
+draw = "Нарисовать"
+phone = "Телефон"
+type = "Ввести"
+upload = "Загрузить"
+
+[sign.wallet.toast]
+applyFailed = "Не удалось применить подписи"
+applyFailedBody = "Ваши подписи все еще находятся в документе. Повторите попытку."
+deleteFailed = "Не удалось удалить подпись"
+draftExists = "Сначала сохраните или отмените несохраненную подпись"
+initialsFailed = "Не удалось сохранить ваши инициалы"
+initialsPartial = "Ваша подпись сохранена, но инициалы — нет. Попробуйте сохранить инициалы отдельно."
+renameFailed = "Не удалось переименовать подпись"
+saved = "Сохранено в ваши подписи"
+saveFailed = "Не удалось сохранить подпись"
+saveFailedBody = "Она все еще готова к размещению в этом документе."
+shared = "Доступно всем"
+shareFailed = "Не удалось поделиться подписью"
+
+[sign.wallet.type]
+initials = "Инициалы"
+initialsLimit = "Для сохранения инициалов нужны два свободных слота для подписей."
+name = "Ваше имя"
+namePlaceholder = "Введите свое имя"
+previewName = "Ваше имя"
+saveInitials = "Также сохранить мои инициалы"
+style = "Стиль"
+styleOption = "Стиль {{index}}"
+
+[sign.wallet.upload]
+browse = "или выберите файлы"
+drop = "Перетащите изображение сюда"
+failed = "Не удалось прочитать это изображение."
+hint = "PNG, JPG или WebP до {{size}} MB. Белый фон удаляется автоматически."
+ink = "Цвет чернил"
+inkBlack = "Черный"
+inkBlue = "Синий"
+inkOriginal = "Исходный"
+preview = "Предпросмотр загруженной подписи"
+processing = "Очистка изображения..."
+rejected = "Выберите изображение PNG, JPG или WebP до {{size}} MB."
+removeBackground = "Удалить фон"
+removeBackgroundHint = "Белая бумага становится прозрачной"
+replace = "Заменить"
+rotate = "Повернуть"
+rotateLeft = "Повернуть влево"
+rotateRight = "Повернуть вправо"
+trim = "Обрезать до подписи"
+trimHint = "Обрезает пустое пространство вокруг нее"
+
 [signatureSettings.tooltip]
 header = "Настройки внешнего вида подписи"
 
@@ -12931,7 +13097,7 @@ notes = "Примечания"
 releaseNotes = "Заметки о выпуске"
 showLess = "Показать меньше версий"
 showMore = "Показать все {{count}} версий"
-stable = "STABLE"
+stable = "СТАБИЛЬНАЯ"
 updateAvailable = "Доступно обновление"
 urgentUpdateAvailable = "Срочное обновление"
 version = "Версия"

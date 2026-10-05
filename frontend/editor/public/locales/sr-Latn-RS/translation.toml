@@ -1510,7 +1510,7 @@ title = "Povežite MCP klijenta"
 
 [admin.settings.mcp.issuerUri]
 description = "Vaš OAuth2 autorizacioni server (mora da objavljuje /.well-known/openid-configuration). Obavezno kada je omogućeno."
-label = "OAuth Issuer URL"
+label = "URL izdavaoca OAuth"
 
 [admin.settings.mcp.jwksUri]
 description = "Ostavite prazno da se otkrije od izdavaoca. Postavite samo ako vaš IdP servira ključeve na nestandardnom URL-u."
@@ -1537,7 +1537,7 @@ label = "Sprovodi OAuth scopes"
 
 [admin.settings.mcp.usernameClaim]
 description = "JWT claim koji se uparuje sa Stirling korisničkim imenom (npr. sub, email, preferred_username)."
-label = "Username claim"
+label = "Claim za korisničko ime"
 
 [admin.settings.plan.noData]
 message = "Podaci o planovima trenutno nisu dostupni."
@@ -3428,8 +3428,8 @@ loan-document = "Dokument o zajmu"
 maintenance-log = "Dnevnik održavanja"
 manual = "Priručnik"
 market-research = "Istraživanje tržišta"
-marketing-plan = "Marketing plan"
-media-kit = "Media kit"
+marketing-plan = "Marketinški plan"
+media-kit = "Medijski paket"
 medical-invoice = "Medicinska faktura"
 medical-report = "Medicinski izveštaj"
 meeting-agenda = "Dnevni red sastanka"
@@ -3561,7 +3561,7 @@ waiver = "Odricanje"
 warehouse-receipt = "Skladišna potvrda"
 warranty-document = "Garantni dokument"
 waybill = "Tovarni list"
-white-paper = "White paper"
+white-paper = "Bela knjiga"
 will = "Testament"
 work-instruction = "Radno uputstvo"
 work-order = "Radni nalog"
@@ -3980,7 +3980,7 @@ tip = "Every action your assistant runs is performed as your account and counts 
 viewApiKeys = "Prikaži API ključeve"
 
 [config.mcp.copy]
-configLabel = "Config"
+configLabel = "Konfiguracija"
 copied = "Kopirano"
 copy = "Kopiraj"
 endpointLabel = "Endpoint URL"
@@ -5302,7 +5302,7 @@ removeOption = "Ukloni opciju"
 required = "Obavezno"
 requiredHelp = "Obrazac se ne može poslati dok ovo polje ne bude popunjeno."
 signatureNote = "Samo čuvar mesta - ovde se ne potpisuje. Označava gde potpis treba da bude, tako da PDF potpisnik (Adobe Acrobat, usluga potpisivanja itd.) postavi potpis na ovo mesto kada se dokument potpiše."
-tooltip = "Tooltip"
+tooltip = "Opis alata"
 tooltipHelp = "Savet prikazan kada neko pređe pokazivačem preko polja u PDF čitaču."
 type = "Tip"
 typeHelp = "Koja je vrsta ovog polja. Promena ponovo kreira polje, pa se njegova trenutna vrednost ne prenosi."
@@ -7297,7 +7297,7 @@ tooltip = "Prečice na tastaturi (?)"
 [pdfTextEditor.help.clipboard]
 copyDesc = "Kopiraj izabrani tekst"
 cutDesc = "Iseci izabrano (kopiraj + obriši)"
-heading = "Clipboard"
+heading = "Privremena memorija"
 pasteDesc = "Nalepi tekst iz clipboard kao novi niz"
 pastePlainDesc = "Nalepi kao običan tekst"
 
@@ -7345,10 +7345,19 @@ mixed = "{{count}} objekata"
 multiGeometry = "Izaberite jedan objekat da uredite njegov položaj i veličinu."
 nothingSelected = "Ništa nije izabrano"
 nothingSelectedHint = "Kliknite na bilo koji tekst, sliku ili oblik na stranici da ga uredite ovde."
+ocrDocumentChanged = "Dokument je promenjen dok je OCR radio. Ponovo pokrenite OCR da biste uključili najnovije izmene."
+ocrInvalidResult = "OCR nije vratio PDF. Pokušajte ponovo."
+ocrNoLanguages = "Na serveru nisu instalirani OCR jezici."
+ocrRunning = "Prepoznavanje teksta..."
+ocrUnavailable = "OCR nije dostupan na ovom serveru."
 oneImage = "Slika"
 oneShape = "Oblik"
 oneText = "Tekst"
 pages = "Stranice"
+runOcr = "Pokreni OCR"
+scanHint_one = "Ova stranica je skenirana slika bez teksta za uređivanje. Prvo pokrenite OCR da bi njen tekst mogao da se uređuje."
+scanHint_other = "{{count}} stranica su skenirane slike bez teksta za uređivanje. Prvo pokrenite OCR da bi njihov tekst mogao da se uređuje."
+scannedText = "Skenirani tekst · izmenjene reči su prekrivene i ponovo iscrtane odgovarajućim fontom."
 tabDocument = "Dokument"
 tabSelected = "Izabrano"
 textBoxes = "Tekstualni okviri"
@@ -8534,7 +8543,7 @@ label = "Korisničko ime"
 [portal.connections.types.clamav]
 baseUrlPlaceholder = "http://clamav-rest:9000"
 description = "Skenirajte dokumente na malware na serveru koji pokrećete - ništa ne napušta vašu mrežu."
-label = "ClamAV (self-hosted)"
+label = "ClamAV (samostalno hostovan)"
 
 [portal.connections.types.cloudmersive]
 description = "Skeniranje virusa i sadržaja za dokumente u pravilu."
@@ -8656,7 +8665,7 @@ label = "Lozinka aplikacije"
 [portal.connections.types.presidio]
 baseUrlPlaceholder = "http://presidio-analyzer:3000"
 description = "Otkrijte lične podatke u tekstu dokumenta koristeći Presidio server koji pokrećete."
-label = "Presidio (self-hosted)"
+label = "Presidio (samostalno hostovan)"
 
 [portal.connections.types.purview]
 description = "Čitajte i primenjujte Microsoft Purview oznake osetljivosti na PDF-ove."
@@ -8896,7 +8905,7 @@ reviewed = "U proveri"
 sectionsAriaLabel = "Odeljci detalja dokumenta"
 
 [portal.documents.drawer.tabs]
-audit = "Audit"
+audit = "Revizija"
 extractions = "Ekstrakcije"
 overview = "Pregled"
 
@@ -9112,7 +9121,7 @@ done = "Gotovo"
 guide = "Otvori {{name}} vodič"
 openInBrowser = "Otvori u pregledaču umesto toga"
 sectionDesktop = "Desktop aplikacija"
-sectionSelfHosted = "Self-hosted"
+sectionSelfHosted = "Samostalno hostovano"
 title = "Instalirajte Stirling PDF Editor"
 
 [portal.home.download.docker]
@@ -9172,8 +9181,8 @@ start = "Implementiraj Editor"
 
 [portal.home.editor.target]
 cloud = "Upravljani Cloud"
-docker = "Self-hosted · Docker"
-kubernetes = "Self-hosted · Kubernetes"
+docker = "Samostalno hostovano · Docker"
+kubernetes = "Samostalno hostovano · Kubernetes"
 
 [portal.home.greeting]
 afternoon = "Dobar dan"
@@ -9347,7 +9356,7 @@ compareNote = "Uporedite ovo sa fingerprint-om u rezervnoj kopiji ključa i u st
 copied = "Kopirano"
 copy = "Kopiraj"
 copyFailed = "Ovaj pregledač nije dozvolio kopiranje. Fingerprint je izabran, pa ga kopirajte ručno."
-fingerprint = "Fingerprint"
+fingerprint = "Otisak"
 fingerprintHelp = "Čemu služi ovaj fingerprint?"
 heading = "Glavni ključ"
 notMaterialised = "Mehanizam ključeva još nije pokrenut na ovom čvoru."
@@ -10503,7 +10512,7 @@ invitesPlaceholder = "sam@acme.com, lee@acme.com"
 scheduleCall = "Zakaži poziv"
 seats = "Osobe koje testiraju"
 seatsPlaceholder = "npr. 15"
-selfhost = "Self-hosted"
+selfhost = "Samostalno hostovano"
 selfhostSub = "Docker ili Kubernetes"
 start = "Započni probni period"
 stepOf = "Korak {{n}} od {{total}}"
@@ -12275,6 +12284,163 @@ image = "Slika"
 saved = "Sačuvano"
 text = "Tekst"
 title = "Tip potpisa"
+
+[sign.wallet]
+apply_one = "Primeni {{count}} potpis"
+apply_other = "Primeni {{count}} potpisa"
+applyEmpty = "Primeni potpise"
+count = "{{count}} od {{max}}"
+default = "Podrazumevano"
+loading = "Učitavanje vaših potpisa..."
+new = "Novi potpis"
+shared = "Deljeno"
+sharedHint = "Svi mogu da ih koriste"
+unsaved = "Nesačuvano"
+yours = "Vaši potpisi"
+
+[sign.wallet.create]
+cancel = "Otkaži"
+full = "Vaša biblioteka je puna ({{max}} potpisa). Obrišite jedan da biste sačuvali još."
+makeDefault = "Postavi kao podrazumevano"
+method = "Kako da ga kreirate"
+name = "Ime"
+save = "Sačuvaj u moje potpise"
+saveBrowserHint = "Čuva se u ovom pregledaču, spremno za sledeći put."
+saveHint = "Spremno za ponovnu upotrebu sledeći put kada potpisujete."
+subtitle = "Kreirajte ga jednom, koristite ga na bilo kom dokumentu."
+title = "Novi potpis"
+use = "Koristi potpis"
+who = "Ko može da ga koristi"
+whoEveryone = "Svi"
+whoMe = "Samo ja"
+
+[sign.wallet.defaultName]
+draw = "Moj potpis"
+initials = "Inicijali"
+phone = "Potpis telefonom"
+type = "Ukucani potpis"
+upload = "Otpremljeni potpis"
+
+[sign.wallet.delete]
+body = "\"{{name}}\" je uklonjen iz vaših potpisa. Dokumenti koje ste već potpisali ga zadržavaju."
+confirm = "Obriši"
+title = "Obrisati ovaj potpis?"
+
+[sign.wallet.draw]
+bold = "Debela olovka"
+clear = "Obriši"
+fine = "Tanka olovka"
+hint = "Potpišite se iznad linije"
+medium = "Srednja olovka"
+pad = "Tabla za potpis"
+pen = "Olovka"
+tip = "Koristite miš, trackpad, olovku ili prst"
+undo = "Poništi"
+
+[sign.wallet.ink]
+black = "Crno mastilo"
+blue = "Plavo mastilo"
+label = "Mastilo"
+navy = "Teget mastilo"
+
+[sign.wallet.intro]
+body = "Kreirajte ga jednom. Sačuvan je ovde, spreman za svaki dokument koji potpisujete."
+privacy = "Sačuvani potpisi su privatni za vas osim ako ne izaberete da ih delite."
+privacyBrowser = "Sačuvani potpisi ostaju u ovom pregledaču."
+title = "Dodajte svoj potpis"
+
+[sign.wallet.menu]
+delete = "Obriši"
+discard = "Odbaci"
+makeDefault = "Postavi kao podrazumevano"
+options = "Opcije za {{name}}"
+place = "Postavi na stranicu"
+removeDefault = "Ukloni kao podrazumevano"
+rename = "Preimenuj"
+save = "Sačuvaj u moje potpise"
+share = "Deli sa svima"
+stop = "Zaustavi postavljanje"
+
+[sign.wallet.phone]
+expires = "Ističe za {{time}}"
+qr = "QR code za potpisivanje na telefonu"
+received = "Primljeno sa vašeg telefona"
+receiveFailed = "Nije moguće pročitati taj potpis. Skenirajte novi kod da pokušate ponovo."
+step1 = "Skenirajte kod kamerom telefona"
+step1Hint = "Otvara se u pregledaču telefona, aplikacija nije potrebna."
+step2 = "Nacrtajte, ukucajte ili fotografišite svoj potpis"
+step2Hint = "Veliko platno napravljeno za prst."
+step3 = "Automatski se pojavljuje ovde"
+step3Hint = "Držite ovaj prozor otvoren dok potpisujete."
+waiting = "Čeka se vaš telefon..."
+
+[sign.wallet.placed]
+empty = "Potpisi koje postavite na stranicu navedeni su ovde."
+fallbackName = "Potpis"
+page = "Stranica {{page}}"
+remove = "Ukloni {{name}}"
+show = "Prikaži {{name}} na stranici"
+title = "Na ovom dokumentu ({{count}})"
+
+[sign.wallet.rename]
+save = "Sačuvaj"
+title = "Preimenuj potpis"
+
+[sign.wallet.status]
+idle = "Izaberite potpis da ga postavite"
+placing = "Kliknite na stranicu da postavite {{name}}."
+stop = "Zaustavi"
+
+[sign.wallet.tabs]
+draw = "Crtaj"
+phone = "Telefon"
+type = "Ukucaj"
+upload = "Otpremi"
+
+[sign.wallet.toast]
+applyFailed = "Nije moguće primeniti potpise"
+applyFailedBody = "Vaši potpisi su i dalje na dokumentu. Pokušajte ponovo."
+deleteFailed = "Nije moguće obrisati potpis"
+draftExists = "Prvo sačuvajte ili odbacite nesačuvani potpis"
+initialsFailed = "Nije moguće sačuvati vaše inicijale"
+initialsPartial = "Vaš potpis je sačuvan, ali vaši inicijali nisu. Pokušajte da sačuvate inicijale zasebno."
+renameFailed = "Nije moguće preimenovati potpis"
+saved = "Sačuvano u vaše potpise"
+saveFailed = "Nije moguće sačuvati potpis"
+saveFailedBody = "I dalje je spreman za postavljanje na ovaj dokument."
+shared = "Deljeno sa svima"
+shareFailed = "Nije moguće deliti potpis"
+
+[sign.wallet.type]
+initials = "Inicijali"
+initialsLimit = "Za čuvanje inicijala potrebna su dva slobodna mesta za potpise."
+name = "Vaše ime"
+namePlaceholder = "Unesite svoje ime"
+previewName = "Vaše ime"
+saveInitials = "Sačuvaj i moje inicijale"
+style = "Stil"
+styleOption = "Stil {{index}}"
+
+[sign.wallet.upload]
+browse = "ili pregledajte fajlove"
+drop = "Prevucite sliku ovde"
+failed = "Nije moguće pročitati tu sliku."
+hint = "PNG, JPG ili WebP do {{size}} MB. Bele pozadine se automatski uklanjaju."
+ink = "Boja mastila"
+inkBlack = "Crna"
+inkBlue = "Plava"
+inkOriginal = "Original"
+preview = "Pregled otpremljenog potpisa"
+processing = "Čišćenje slike..."
+rejected = "Izaberite PNG, JPG ili WebP sliku do {{size}} MB."
+removeBackground = "Ukloni pozadinu"
+removeBackgroundHint = "Beli papir postaje providan"
+replace = "Zameni"
+rotate = "Rotiraj"
+rotateLeft = "Rotiraj ulevo"
+rotateRight = "Rotiraj udesno"
+trim = "Opseci na potpis"
+trimHint = "Opseca prazan prostor oko njega"
 
 [signatureSettings.tooltip]
 header = "Podešavanja izgleda potpisa"

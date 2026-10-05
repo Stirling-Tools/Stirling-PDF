@@ -742,10 +742,10 @@ title = "Dokumenty a RAG"
 
 [admin.settings.ai.documents.embeddingApiKey]
 description = "Ponechte prázdné, chcete-li použít vlastní přihlašovací údaj prostředí enginu. Platí pro self-hosted nasazení s jedním enginem."
-generic = "Embedding API key"
-openai = "OpenAI API key"
+generic = "Klíč API pro embedding"
+openai = "Klíč OpenAI API"
 setPlaceholder = "Uloženo – ponechte prázdné pro zachování aktuálního klíče"
-voyageai = "VoyageAI API key"
+voyageai = "Klíč VoyageAI API"
 
 [admin.settings.ai.documents.embeddingBaseUrl]
 description = "Základní URL endpointu embeddingů kompatibilního s OpenAI / Ollama, např. http://ollama:11434/v1. Musí odkazovat na důvěryhodný interní endpoint (citlivé na SSRF)."
@@ -753,7 +753,7 @@ label = "Základní URL embeddingů"
 
 [admin.settings.ai.documents.embeddingModel]
 description = "Název embedding modelu. Volný text; návrhy jsou pouze nápovědou."
-label = "Embedding model"
+label = "Model embeddingu"
 
 [admin.settings.ai.documents.embeddingProvider]
 description = "Poskytovatel používaný k převodu textu dokumentu na vektorové embeddingy."
@@ -892,10 +892,10 @@ description = "Vyberte poskytovatele LLM a chytré/rychlé modely, které AI eng
 title = "Modely a poskytovatelé"
 
 [admin.settings.ai.models.apiKey]
-anthropic = "Anthropic API key"
+anthropic = "Klíč Anthropic API"
 description = "Ponechte prázdné, chcete-li použít vlastní přihlašovací údaj prostředí enginu. Platí pro self-hosted nasazení s jedním enginem."
-generic = "API key"
-openai = "OpenAI API key"
+generic = "Klíč API"
+openai = "Klíč OpenAI API"
 setPlaceholder = "Uloženo – ponechte prázdné pro zachování aktuálního klíče"
 
 [admin.settings.ai.models.baseUrl]
@@ -1537,7 +1537,7 @@ label = "Vynutit OAuth scopes"
 
 [admin.settings.mcp.usernameClaim]
 description = "JWT claim porovnávaný s uživatelským jménem Stirling (např. sub, email, preferred_username)."
-label = "Username claim"
+label = "Claim uživatelského jména"
 
 [admin.settings.plan.noData]
 message = "Tento server se nemohl spojit se službou licencí. Zkuste to znovu nebo zkontrolujte licenční klíč."
@@ -7201,7 +7201,7 @@ downloadTooltip = "Uložit a stáhnout upravené PDF"
 save = "Uložit PDF"
 saveTooltip = "Použít změny na soubor ve vašem pracovním prostoru ({{shortcut}})"
 tags = "upravit text,změnit text,upravit text,upravit obsah,aktualizovat text,přepsat,opravit,doplnit,redline,revidovat,textový editor,editor obsahu"
-title = "PDF Text Editor"
+title = "Editor textu PDF"
 unsaved = "(neuloženo)"
 workbenchLabel = "Editor"
 
@@ -7345,10 +7345,19 @@ mixed = "{{count}} objektů"
 multiGeometry = "Vyberte jeden objekt pro úpravu jeho polohy a velikosti."
 nothingSelected = "Nic není vybráno"
 nothingSelectedHint = "Klikněte na libovolný text, obrázek nebo tvar na stránce a zde jej upravte."
+ocrDocumentChanged = "Dokument se během běhu OCR změnil. Spusťte OCR znovu, aby zahrnovalo nejnovější změny."
+ocrInvalidResult = "OCR nevrátilo PDF. Zkuste to prosím znovu."
+ocrNoLanguages = "Na serveru nejsou nainstalovány žádné jazyky OCR."
+ocrRunning = "Rozpoznávání textu..."
+ocrUnavailable = "OCR není na tomto serveru dostupné."
 oneImage = "Obrázek"
 oneShape = "Tvar"
 oneText = "Text"
 pages = "Stránky"
+runOcr = "Spustit OCR"
+scanHint_one = "Tato stránka je naskenovaný obrázek bez textu k úpravě. Nejprve spusťte OCR, aby bylo možné její text upravovat."
+scanHint_other = "Počet naskenovaných stránek bez textu k úpravě: {{count}}. Nejprve spusťte OCR, aby bylo možné jejich text upravovat."
+scannedText = "Naskenovaný text · změněná slova jsou překryta a překreslena odpovídajícím písmem."
 tabDocument = "Dokument"
 tabSelected = "Vybrané"
 textBoxes = "Textová pole"
@@ -8170,7 +8179,7 @@ sub = "Úplný PDF Editor."
 [portal.billing.identity.processor]
 chipMetered = "Měřené zpracování"
 chipPipelines = "Pipeline a API"
-name = "Processor"
+name = "Procesor"
 sub = "Základ Team plus {{rate}} za kredit"
 subNoRate = "Základ Team plus měřené zpracování"
 
@@ -8289,7 +8298,7 @@ prepaidRemaining = "Zbývající předplacené kredity"
 prepaidTooltip = "Čerpá se před měřenou fakturací a mimo váš limit útraty."
 raiseLimit = "Zvýšit limit"
 remainingOf = "{{remaining}} z {{total}}"
-rowName = "Processor"
+rowName = "Procesor"
 spendAgainstLimit = "{{spend}} z {{cap}} měřeno v tomto cyklu"
 
 [portal.billing.seats]
@@ -8431,10 +8440,10 @@ helperText = "Stirling to ukládá šifrovaně a už to nikdy nezobrazí."
 label = "Přístupový token"
 
 [portal.connections.commonFields.apiKey]
-label = "API key"
+label = "Klíč API"
 
 [portal.connections.commonFields.apiToken]
-label = "API token"
+label = "Token API"
 
 [portal.connections.commonFields.baseUrl]
 helperText = "Kroky používající toto připojení mohou volat pouze cesty pod touto URL, nikdy jiného hostitele."
@@ -8559,10 +8568,10 @@ label = "URL serveru"
 placeholder = "https://your-org.consignocloud.com/api/v1"
 
 [portal.connections.types.consigno.fields.clientId]
-label = "API key"
+label = "Klíč API"
 
 [portal.connections.types.consigno.fields.clientSecret]
-label = "API secret"
+label = "Tajný klíč API"
 
 [portal.connections.types.consigno.fields.password]
 label = "Heslo"
@@ -8679,7 +8688,7 @@ description = "S3 bucket, ze kterého mohou zdroje číst a do kterého mohou v�
 label = "S3 úložiště"
 
 [portal.connections.types.s3.fields.accessKeyId]
-label = "Access key ID"
+label = "ID přístupového klíče"
 
 [portal.connections.types.s3.fields.bucket]
 label = "Bucket"
@@ -8692,7 +8701,7 @@ label = "Endpoint"
 label = "Region"
 
 [portal.connections.types.s3.fields.secretAccessKey]
-label = "Secret access key"
+label = "Tajný přístupový klíč"
 
 [portal.connections.types.sendgrid]
 description = "Odeslat dokument nebo oznámení e-mailem, když se spustí zásada."
@@ -9112,7 +9121,7 @@ done = "Hotovo"
 guide = "Otevřít průvodce {{name}}"
 openInBrowser = "Místo toho otevřít v prohlížeči"
 sectionDesktop = "Desktopová aplikace"
-sectionSelfHosted = "Self-hosted"
+sectionSelfHosted = "Vlastní hostování"
 title = "Nainstalovat Stirling PDF Editor"
 
 [portal.home.download.docker]
@@ -9172,8 +9181,8 @@ start = "Nasadit Editor"
 
 [portal.home.editor.target]
 cloud = "Spravovaný Cloud"
-docker = "Self-hosted · Docker"
-kubernetes = "Self-hosted · Kubernetes"
+docker = "Vlastní hostování · Docker"
+kubernetes = "Vlastní hostování · Kubernetes"
 
 [portal.home.greeting]
 afternoon = "Dobré odpoledne"
@@ -9654,7 +9663,7 @@ noToolSettings = "Tento nástroj nemá žádná konfigurovatelná nastavení."
 output = "Cíl"
 save = "Uložit změny"
 scheduleEvery = "Spustit každých"
-trigger = "Trigger"
+trigger = "Spouštěč"
 triggerManual = "Pouze ručně"
 
 [portal.pipelines.composer.runsEvery]
@@ -9750,7 +9759,7 @@ name = "Pipeline"
 sources = "Zdroje"
 status = "Stav"
 steps = "Kroky"
-trigger = "Trigger"
+trigger = "Spouštěč"
 type = "Typ"
 
 [portal.pipelines.templates]
@@ -10262,7 +10271,7 @@ title = "Pořízení"
 agreeCta = "Podepsat smlouvu"
 confidential = "Důvěrné"
 confirm = "Přečetl(a) jsem si tuto smlouvu a souhlasím s ní a prohlašuji, že jsem oprávněn(a) ji podepsat jménem výše uvedené organizace."
-docName = "Stirling Enterprise Agreement"
+docName = "Smlouva Stirling Enterprise"
 docSub = "MSA, Order Form, EULA a DPA, sloučené do jednoho podpisu."
 download = "Stáhnout"
 downloadDraftError = "Nepodařilo se vygenerovat PDF dohody – renderer dokumentů není dostupný. Zkuste to prosím brzy znovu nebo kontaktujte podporu."
@@ -10271,7 +10280,7 @@ legalName = "Název právnické osoby"
 legalNamePlaceholder = "Právnická osoba, která bude podepisovat"
 loadError = "Dohodu se nepodařilo načíst. Zkuste to prosím znovu."
 loading = "Načítání dohody..."
-ref = "Ref {{ref}} · {{version}}"
+ref = "Ref. {{ref}} · {{version}}"
 requestChanges = "Požádat o změny"
 scrollHint = "Posuňte pro kontrolu"
 signatory = "Jméno podepisující osoby"
@@ -10311,11 +10320,11 @@ postalCode = "PSČ"
 postalCodePlaceholder = "94105"
 posture = "Správa"
 posture_count = "~{{count}} zásad"
-posture_essentials = "Essentials"
+posture_essentials = "Základní"
 posture_essentialsSub = "Klasifikace + sdílení — výchozí nastavení"
-posture_governed = "Governed"
+posture_governed = "Řízený"
 posture_governedSub = "Přidává zabezpečení a směrování"
-posture_regulated = "Regulated"
+posture_regulated = "Regulovaný"
 posture_regulatedSub = "Každá kategorie — Compliance, Retention, Ingestion"
 qbr = "Čtvrtletní obchodní hodnocení"
 qbrSub = "Váš SE každý kvartál zkontroluje používání a roadmapu"
@@ -10361,7 +10370,7 @@ years_one = "{{count}} rok"
 years_other = "{{count}} let"
 
 [portal.procurement.documents]
-agreement = "Enterprise Agreement"
+agreement = "Smlouva Enterprise"
 agreementSub = "MSA, Order Form a DPA v jednom podpisu."
 download = "Stáhnout"
 eula = "EULA a obchodní podmínky"
@@ -10486,7 +10495,7 @@ subtitle = "Váš solutions engineer provede váš tým zavedením. Vyberte čas
 title = "Naplánovat hovor"
 
 [portal.procurement.setup]
-airgap = "Air-gapped"
+airgap = "Izolované prostředí"
 airgapSub = "Uzavřené, bez odchozí komunikace"
 back = "Zpět"
 businessName = "Název firmy"
@@ -10503,7 +10512,7 @@ invitesPlaceholder = "sam@acme.com, lee@acme.com"
 scheduleCall = "Naplánovat hovor"
 seats = "Testující osoby"
 seatsPlaceholder = "např. 15"
-selfhost = "Self-hosted"
+selfhost = "Vlastní hostování"
 selfhostSub = "Docker nebo Kubernetes"
 start = "Spustit zkušební verzi"
 stepOf = "Krok {{n}} z {{total}}"
@@ -10533,7 +10542,7 @@ account-link = "Připojení účtu"
 
 [portal.shell.sidebar]
 appEditor = "Editor"
-appProcessor = "Processor"
+appProcessor = "Procesor"
 linkAccount = "Propojit účet Stirling"
 primaryNav = "Primární navigace"
 
@@ -10889,7 +10898,7 @@ scope = "Import souborů"
 
 [provider.googledrive.apiKey]
 description = "Google API Key pro Google Picker API z Google Cloud Console"
-label = "API Key"
+label = "Klíč API"
 
 [provider.googledrive.appId]
 description = "Google Drive App ID z Google Cloud Console"
@@ -11103,7 +11112,7 @@ invite = "Pozvat"
 landmark = "Rychlá navigace"
 noProcessorAccess = "Požádejte administrátora o přístup k procesoru"
 notifications = "Oznámení"
-processor = "Processor"
+processor = "Procesor"
 reader = "Čtečka"
 signInToUse = "Přihlaste se, abyste to mohli používat"
 
@@ -11126,7 +11135,7 @@ thumbnails = "Stránky"
 [redact]
 submit = "Začernit"
 tags = "Redact,Skrýt,začernit,černá,marker,skryté,automatická redakce,ruční redakce"
-title = "Redact"
+title = "Redigovat"
 
 [redact.auto]
 colorLabel = "Barva rámečku"
@@ -12276,6 +12285,163 @@ saved = "Uložené"
 text = "Text"
 title = "Typ podpisu"
 
+[sign.wallet]
+apply_one = "Použít {{count}} podpis"
+apply_other = "Použít {{count}} podpisů"
+applyEmpty = "Použít podpisy"
+count = "{{count}} z {{max}}"
+default = "Výchozí"
+loading = "Načítání vašich podpisů..."
+new = "Nový podpis"
+shared = "Sdílené"
+sharedHint = "Může je používat každý"
+unsaved = "Neuložené"
+yours = "Vaše podpisy"
+
+[sign.wallet.create]
+cancel = "Zrušit"
+full = "Vaše knihovna je plná ({{max}} podpisů). Smažte jeden, abyste mohli uložit další."
+makeDefault = "Nastavit jako výchozí"
+method = "Jak jej vytvořit"
+name = "Název"
+save = "Uložit do mých podpisů"
+saveBrowserHint = "Uloženo v tomto prohlížeči, připraveno na příště."
+saveHint = "Připraveno k opětovnému použití při příštím podpisu."
+subtitle = "Vytvořte jej jednou a používejte jej v jakémkoli dokumentu."
+title = "Nový podpis"
+use = "Použít podpis"
+who = "Kdo jej může používat"
+whoEveryone = "Každý"
+whoMe = "Pouze já"
+
+[sign.wallet.defaultName]
+draw = "Můj podpis"
+initials = "Iniciály"
+phone = "Podpis z telefonu"
+type = "Napsaný podpis"
+upload = "Nahraný podpis"
+
+[sign.wallet.delete]
+body = "„{{name}}“ byl odstraněn z vašich podpisů. Dokumenty, které jste již podepsali, jej zachovají."
+confirm = "Smazat"
+title = "Smazat tento podpis?"
+
+[sign.wallet.draw]
+bold = "Silné pero"
+clear = "Vymazat"
+fine = "Jemné pero"
+hint = "Podepište se nad čáru"
+medium = "Střední pero"
+pad = "Podpisová plocha"
+pen = "Pero"
+tip = "Použijte myš, trackpad, pero nebo prst"
+undo = "Zpět"
+
+[sign.wallet.ink]
+black = "Černý inkoust"
+blue = "Modrý inkoust"
+label = "Inkoust"
+navy = "Tmavě modrý inkoust"
+
+[sign.wallet.intro]
+body = "Vytvořte jej jednou. Uloží se zde a bude připraven pro každý dokument, který podepíšete."
+privacy = "Uložené podpisy jsou soukromé, pokud se je nerozhodnete sdílet."
+privacyBrowser = "Uložené podpisy zůstanou v tomto prohlížeči."
+title = "Přidat váš podpis"
+
+[sign.wallet.menu]
+delete = "Smazat"
+discard = "Zahodit"
+makeDefault = "Nastavit jako výchozí"
+options = "Možnosti pro {{name}}"
+place = "Umístit na stránku"
+removeDefault = "Odebrat jako výchozí"
+rename = "Přejmenovat"
+save = "Uložit do mých podpisů"
+share = "Sdílet se všemi"
+stop = "Ukončit umisťování"
+
+[sign.wallet.phone]
+expires = "Platnost vyprší za {{time}}"
+qr = "QR code pro podpis v telefonu"
+received = "Přijato z vašeho telefonu"
+receiveFailed = "Tento podpis se nepodařilo načíst. Naskenujte nový kód a zkuste to znovu."
+step1 = "Naskenujte kód fotoaparátem telefonu"
+step1Hint = "Otevře se v prohlížeči telefonu, není potřeba žádná aplikace."
+step2 = "Nakreslete, napište nebo vyfoťte svůj podpis"
+step2Hint = "Velké plátno navržené pro prst."
+step3 = "Automaticky se zobrazí zde"
+step3Hint = "Ponechte toto okno otevřené, zatímco se podepisujete."
+waiting = "Čekání na váš telefon..."
+
+[sign.wallet.placed]
+empty = "Zde jsou uvedeny podpisy, které umístíte na stránku."
+fallbackName = "Podpis"
+page = "Strana {{page}}"
+remove = "Odebrat {{name}}"
+show = "Zobrazit {{name}} na stránce"
+title = "V tomto dokumentu ({{count}})"
+
+[sign.wallet.rename]
+save = "Uložit"
+title = "Přejmenovat podpis"
+
+[sign.wallet.status]
+idle = "Vyberte podpis, který chcete umístit"
+placing = "Kliknutím na stránku umístíte {{name}}."
+stop = "Zastavit"
+
+[sign.wallet.tabs]
+draw = "Nakreslit"
+phone = "Telefon"
+type = "Napsat"
+upload = "Nahrát"
+
+[sign.wallet.toast]
+applyFailed = "Podpisy se nepodařilo použít"
+applyFailedBody = "Vaše podpisy jsou stále v dokumentu. Zkuste to znovu."
+deleteFailed = "Podpis se nepodařilo smazat"
+draftExists = "Nejprve uložte nebo zahoďte svůj neuložený podpis"
+initialsFailed = "Vaše iniciály se nepodařilo uložit"
+initialsPartial = "Váš podpis byl uložen, ale vaše iniciály ne. Zkuste iniciály uložit samostatně."
+renameFailed = "Podpis se nepodařilo přejmenovat"
+saved = "Uloženo do vašich podpisů"
+saveFailed = "Podpis se nepodařilo uložit"
+saveFailedBody = "Je stále připraven k umístění do tohoto dokumentu."
+shared = "Sdíleno se všemi"
+shareFailed = "Podpis se nepodařilo sdílet"
+
+[sign.wallet.type]
+initials = "Iniciály"
+initialsLimit = "Uložení iniciál vyžaduje dva volné sloty pro podpisy."
+name = "Vaše jméno"
+namePlaceholder = "Zadejte své jméno"
+previewName = "Vaše jméno"
+saveInitials = "Uložit také mé iniciály"
+style = "Styl"
+styleOption = "Styl {{index}}"
+
+[sign.wallet.upload]
+browse = "nebo procházet soubory"
+drop = "Přetáhněte sem obrázek"
+failed = "Tento obrázek se nepodařilo načíst."
+hint = "PNG, JPG nebo WebP do {{size}} MB. Bílá pozadí budou automaticky odstraněna."
+ink = "Barva inkoustu"
+inkBlack = "Černá"
+inkBlue = "Modrá"
+inkOriginal = "Původní"
+preview = "Náhled nahraného podpisu"
+processing = "Čištění obrázku..."
+rejected = "Vyberte obrázek PNG, JPG nebo WebP do {{size}} MB."
+removeBackground = "Odstranit pozadí"
+removeBackgroundHint = "Bílý papír bude průhledný"
+replace = "Nahradit"
+rotate = "Otočit"
+rotateLeft = "Otočit doleva"
+rotateRight = "Otočit doprava"
+trim = "Oříznout na podpis"
+trimHint = "Ořízne prázdné místo kolem něj"
+
 [signatureSettings.tooltip]
 header = "Nastavení vzhledu podpisu"
 
@@ -13164,7 +13330,7 @@ title = "Resetovat heslo"
 tooShort = "Heslo musí mít alespoň 8 znaků"
 
 [users.role]
-admin = "Admin"
+admin = "Správce"
 guest = "Host"
 member = "Člen"
 orgOwner = "Vlastník organizace"

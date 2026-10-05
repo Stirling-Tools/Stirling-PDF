@@ -743,9 +743,9 @@ title = "문서 및 RAG"
 [admin.settings.ai.documents.embeddingApiKey]
 description = "엔진 자체 환경 자격 증명을 사용하려면 비워 두세요. 자체 호스팅 단일 엔진 배포에 적용됩니다."
 generic = "임베딩 API key"
-openai = "OpenAI API key"
+openai = "OpenAI API 키"
 setPlaceholder = "저장됨 - 현재 key를 유지하려면 비워 두세요"
-voyageai = "VoyageAI API key"
+voyageai = "VoyageAI API 키"
 
 [admin.settings.ai.documents.embeddingBaseUrl]
 description = "OpenAI 호환 / Ollama 임베딩 엔드포인트의 기본 URL입니다. 예: http://ollama:11434/v1. 신뢰할 수 있는 내부 엔드포인트를 가리켜야 합니다(SSRF에 민감)."
@@ -892,10 +892,10 @@ description = "AI 엔진이 사용하는 LLM 제공업체와 스마트/빠른 �
 title = "모델 및 제공업체"
 
 [admin.settings.ai.models.apiKey]
-anthropic = "Anthropic API key"
+anthropic = "Anthropic API 키"
 description = "엔진 자체 환경 자격 증명을 사용하려면 비워 두세요. 자체 호스팅 단일 엔진 배포에 적용됩니다."
-generic = "API key"
-openai = "OpenAI API key"
+generic = "API 키"
+openai = "OpenAI API 키"
 setPlaceholder = "저장됨 - 현재 key를 유지하려면 비워 두세요"
 
 [admin.settings.ai.models.baseUrl]
@@ -1510,7 +1510,7 @@ title = "MCP 클라이언트 연결"
 
 [admin.settings.mcp.issuerUri]
 description = "사용자의 OAuth2 authorization server (/.well-known/openid-configuration을 게시해야 함). 활성화 시 필요합니다."
-label = "OAuth Issuer URL"
+label = "OAuth 발급자 URL"
 
 [admin.settings.mcp.jwksUri]
 description = "발급자에서 검색하려면 비워 두세요. IdP가 비표준 URL에서 키를 제공하는 경우에만 설정하세요."
@@ -1529,7 +1529,7 @@ label = "기존 Stirling 계정 필요"
 
 [admin.settings.mcp.resourceId]
 description = "이 서버의 공개 /mcp URL. 토큰은 audience(RFC 8707)에 이를 포함해야 하며, 그렇지 않으면 거부됩니다."
-label = "Resource ID"
+label = "리소스 ID"
 
 [admin.settings.mcp.scopes]
 description = "읽기 작업에는 mcp.tools.read를, 쓰기/AI 작업에는 mcp.tools.write를 요구합니다."
@@ -1537,7 +1537,7 @@ label = "OAuth scopes 적용"
 
 [admin.settings.mcp.usernameClaim]
 description = "Stirling 사용자 이름과 일치시키는 JWT claim(예: sub, email, preferred_username)."
-label = "Username claim"
+label = "사용자 이름 클레임"
 
 [admin.settings.plan.noData]
 message = "이 서버가 라이선스 서비스에 연결할 수 없습니다. 다시 시도하거나 라이선스 키를 확인하세요."
@@ -3223,7 +3223,7 @@ open = "Stirling AI assistant 열기"
 
 [chat.header]
 agentMenu = "Stirling 에이전트 옵션"
-assistant = "AI Assistant"
+assistant = "AI 어시스턴트"
 clearChat = "채팅 지우기"
 
 [chat.input]
@@ -3652,7 +3652,7 @@ cancel = "취소"
 change = "변경"
 clearFilters = "필터 지우기"
 close = "닫기"
-codeSample = "Code sample"
+codeSample = "코드 샘플"
 collapse = "접기"
 confirm = "확인"
 continue = "계속"
@@ -3980,10 +3980,10 @@ tip = "Every action your assistant runs is performed as your account and counts 
 viewApiKeys = "API keys 보기"
 
 [config.mcp.copy]
-configLabel = "Config"
+configLabel = "구성"
 copied = "복사됨"
 copy = "복사"
-endpointLabel = "Endpoint URL"
+endpointLabel = "엔드포인트 URL"
 tooltip = "{{label}} 복사"
 tooltipCopied = "{{label}} 복사됨"
 
@@ -4125,7 +4125,7 @@ selectSourceFormatFirst = "먼저 원본 형식을 선택하세요"
 settings = "설정"
 single = "단일"
 sourceFormatPlaceholder = "원본 형식"
-strictMode = "Strict Mode"
+strictMode = "엄격 모드"
 strictModeDesc = "변환이 완벽하지 않으면 오류 처리(VeraPDF 검증 사용)"
 svgPdfOptions = "SVG to PDF 옵션"
 svgToPdf = "SVG → PDF"
@@ -6447,7 +6447,7 @@ title = "보안 검사"
 
 [onboarding.serverLicense]
 freeBody = "당사의 <strong>Open-Core</strong> 라이선스에는 <strong>OAuth SSO</strong>와 최대 <strong>{{freeTierLimit}}</strong>명의 사용자 이용이 무료로 포함됩니다. 중단 없이 확장하려면 월 $99에 <strong>100명의 사용자</strong>를 지원하는 Stirling Team 플랜을 권장합니다."
-freeTitle = "Team plan"
+freeTitle = "Team 플랜"
 overLimitBody = "라이선스는 최대 <strong>{{freeTierLimit}}</strong>명의 사용자를 무료로 허용합니다. 현재 <strong>{{overLimitUserCopy}}</strong>명의 Stirling 사용자가 있습니다. 중단 없이 계속하려면 Stirling Team plan으로 업그레이드하세요 - <strong>100명 사용자</strong>, PDF 텍스트 편집, 전체 관리자 제어를 월 $99에 제공합니다."
 overLimitTitle = "Team plan 필요"
 seePlans = "요금제 보기 →"
@@ -6912,7 +6912,7 @@ pauses = "한도에서 일시 중지"
 title = "한도에 도달하면 어떻게 되나요"
 
 [payg.header]
-eyebrow = "Processor plan · {{start}} – {{end}}"
+eyebrow = "Processor 플랜 · {{start}} – {{end}}"
 freeBody = "보기, 편집, 병합, 분할, 서명, 워터마크, 압축, 변환 및 수동 OCR — 어디서 실행하든 원하는 만큼 사용하세요."
 freeLabel = "항상 무료"
 freeTitle = "무제한 PDF 편집"
@@ -7287,7 +7287,7 @@ label = "임베드됨"
 label = "표준"
 
 [pdfTextEditor.fonts.status.subset]
-label = "Subset"
+label = "서브셋"
 
 [pdfTextEditor.help]
 ariaLabel = "키보드 단축키"
@@ -7345,10 +7345,19 @@ mixed = "개체 {{count}}개"
 multiGeometry = "위치와 크기를 편집하려면 단일 개체를 선택하세요."
 nothingSelected = "선택된 항목 없음"
 nothingSelectedHint = "페이지에서 텍스트, 이미지 또는 도형을 클릭해 여기에서 편집하세요."
+ocrDocumentChanged = "OCR 실행 중 문서가 변경되었습니다. 최신 변경 사항을 포함하려면 OCR을 다시 실행하세요."
+ocrInvalidResult = "OCR이 PDF를 반환하지 않았습니다. 다시 시도하세요."
+ocrNoLanguages = "서버에 OCR 언어가 설치되어 있지 않습니다."
+ocrRunning = "텍스트 인식 중..."
+ocrUnavailable = "이 서버에서는 OCR을 사용할 수 없습니다."
 oneImage = "이미지"
 oneShape = "도형"
 oneText = "텍스트"
 pages = "페이지"
+runOcr = "OCR 실행"
+scanHint_one = "이 페이지는 편집할 텍스트가 없는 스캔 이미지입니다. 먼저 OCR을 실행하여 텍스트를 편집 가능하게 만드세요."
+scanHint_other = "{{count}}페이지는 편집할 텍스트가 없는 스캔 이미지입니다. 먼저 OCR을 실행하여 텍스트를 편집 가능하게 만드세요."
+scannedText = "스캔된 텍스트 · 변경된 단어는 가려지고 일치하는 글꼴로 다시 그려집니다."
 tabDocument = "문서"
 tabSelected = "선택됨"
 textBoxes = "텍스트 상자"
@@ -7483,7 +7492,7 @@ flipVertical = "세로로 뒤집기"
 fontColour = "글꼴 색상"
 fontSize = "글꼴 크기"
 formatting = "텍스트 서식"
-italic = "Italic"
+italic = "기울임꼴"
 italicUnavailable = "이 글꼴에는 italic 버전이 없습니다. 장치 글꼴을 로드하거나 다른 글꼴 모음을 선택하세요."
 lock = "선택 항목 잠금"
 lockTooltip = "선택 항목 잠금 - 실수로 편집하는 것을 방지합니다"
@@ -7549,9 +7558,9 @@ tags = "아카이브,장기,표준,변환,저장,보존"
 title = "PDF를 PDF/A로"
 
 [pdfToPDFUA]
-header = "PDF To PDF/UA"
+header = "PDF에서 PDF/UA로"
 tags = "접근성,접근 가능,태그됨,screen reader,wcag,eaa,section 508,변환"
-title = "PDF To PDF/UA"
+title = "PDF에서 PDF/UA로"
 
 [pdfToPDFX]
 tags = "인쇄,표준,변환,제작,프리프레스,보관"
@@ -7620,7 +7629,7 @@ popular = "인기"
 selectPlan = "플랜 선택"
 showComparison = "모든 기능 비교"
 upgrade = "업그레이드"
-withServer = "+ Team plan"
+withServer = "+ Team 플랜"
 
 [plan.api]
 large = "5,000 크레딧"
@@ -8029,7 +8038,7 @@ inputAriaLabel = "Assistant에게 질문"
 inputPlaceholder = "Stirling에 대해 질문하세요…"
 open = "Assistant 열기"
 send = "보내기"
-title = "Assistant"
+title = "어시스턴트"
 tryAsking = "질문해 보세요"
 typing = "입력 중"
 
@@ -8105,7 +8114,7 @@ enterpriseUsers = "제한 없음"
 enterpriseWhere = "추가로 다중 노드 및 air-gapped 지원"
 exploreEnterprise = "Enterprise 살펴보기"
 freeData = "실행한 위치에 유지됩니다"
-freeName = "Free"
+freeName = "무료"
 freePrice = "카드 필요 없음, 만료 없음"
 freeProcessing = "월 {{allowance}} 크레딧"
 freeProcessingUnknown = "월간 크레딧 한도"
@@ -8164,7 +8173,7 @@ oauthSso = "SSO (OAuth2/OIDC)"
 chipAnywhere = "Web, desktop 및 자체 호스팅"
 chipCredits = "매월 {{allowance}} 무료 크레딧"
 chipTools = "모든 PDF 도구"
-name = "Free"
+name = "무료"
 sub = "전체 PDF Editor."
 
 [portal.billing.identity.processor]
@@ -8216,7 +8225,7 @@ legendValue_one = "{{formatted}}개 PDF"
 legendValue_other = "{{formatted}}개 PDF"
 segbarAriaLabel = "카테고리별 PDF 분할"
 segmentAgentsDesc = "AI agent 작업"
-segmentAgentsLabel = "Agents"
+segmentAgentsLabel = "에이전트"
 segmentApiDesc = "직접 API 요청"
 segmentApiLabel = "API"
 segmentAutomationDesc = "자동화 및 파이프라인"
@@ -8431,10 +8440,10 @@ helperText = "Stirling은 이를 암호화하여 저장하며 다시 표시하�
 label = "액세스 토큰"
 
 [portal.connections.commonFields.apiKey]
-label = "API key"
+label = "API 키"
 
 [portal.connections.commonFields.apiToken]
-label = "API token"
+label = "API 토큰"
 
 [portal.connections.commonFields.baseUrl]
 helperText = "이 연결을 사용하는 단계는 이 URL 아래의 경로만 호출할 수 있으며, 다른 호스트는 호출할 수 없습니다."
@@ -8447,13 +8456,13 @@ label = "Email"
 label = "Host"
 
 [portal.connections.commonFields.password]
-label = "Password"
+label = "비밀번호"
 
 [portal.connections.commonFields.port]
 label = "Port"
 
 [portal.connections.commonFields.username]
-label = "Username"
+label = "사용자 이름"
 
 [portal.connections.commonFields.webhookUrl]
 helperText = "서비스가 제공한 URL을 붙여넣으세요. 그 아래의 경로만 호출할 수 있습니다."
@@ -8487,7 +8496,7 @@ label = "인증"
 label = "Username 및 password"
 
 [portal.connections.types.api.fields.authType.options.bearer]
-label = "Bearer token"
+label = "Bearer 토큰"
 
 [portal.connections.types.api.fields.authType.options.header]
 label = "사용자 지정 헤더의 토큰"
@@ -8500,7 +8509,7 @@ label = "토큰을 받기 위해 로그인"
 
 [portal.connections.types.api.fields.baseUrl]
 helperText = "이 연결을 사용하는 단계는 이 URL 아래의 경로만 호출할 수 있으며, 다른 호스트는 호출할 수 없습니다."
-label = "Base URL"
+label = "기본 URL"
 placeholder = "https://api.example.com/v1"
 
 [portal.connections.types.api.fields.headerName]
@@ -8512,7 +8521,7 @@ label = "로그인 경로"
 placeholder = "/auth/login"
 
 [portal.connections.types.api.fields.password]
-label = "Password"
+label = "비밀번호"
 
 [portal.connections.types.api.fields.resultUrlHosts]
 helperText = "API가 다운로드 링크로 응답하면, 이 호스트만 가져올 수 있습니다. 쉼표로 구분하세요. 비워 두면 기본 URL 자체 호스트만 허용됩니다."
@@ -8529,7 +8538,7 @@ helperText = "로그인 호출이 토큰을 반환하는 응답 헤더입니다.
 label = "토큰 응답 헤더"
 
 [portal.connections.types.api.fields.username]
-label = "Username"
+label = "사용자 이름"
 
 [portal.connections.types.clamav]
 baseUrlPlaceholder = "http://clamav-rest:9000"
@@ -8559,20 +8568,20 @@ label = "서버 URL"
 placeholder = "https://your-org.consignocloud.com/api/v1"
 
 [portal.connections.types.consigno.fields.clientId]
-label = "API key"
+label = "API 키"
 
 [portal.connections.types.consigno.fields.clientSecret]
-label = "API secret"
+label = "API 시크릿"
 
 [portal.connections.types.consigno.fields.password]
-label = "Password"
+label = "비밀번호"
 
 [portal.connections.types.consigno.fields.tenantId]
 helperText = "조직에서 테넌트를 사용하는 경우에만 필요합니다."
 label = "테넌트"
 
 [portal.connections.types.consigno.fields.username]
-label = "Username"
+label = "사용자 이름"
 
 [portal.connections.types.discord]
 baseUrlPlaceholder = "https://discord.com/api/webhooks/..."
@@ -8593,7 +8602,7 @@ label = "FTP / FTPS"
 label = "연결 모드"
 
 [portal.connections.types.ftp.fields.passive.options]
-active = "Active"
+active = "활성"
 passive = "Passive (권장)"
 
 [portal.connections.types.ftp.fields.security]
@@ -8626,7 +8635,7 @@ label = "n8n"
 
 [portal.connections.types.n8n.fields.authType]
 helperText = "n8n Webhook 노드에 설정된 Authentication과 일치시킵니다."
-label = "Webhook authentication"
+label = "Webhook 인증"
 
 [portal.connections.types.n8n.fields.authType.options.basic]
 label = "Basic auth"
@@ -8635,15 +8644,15 @@ label = "Basic auth"
 label = "Header auth"
 
 [portal.connections.types.n8n.fields.authType.options.none]
-label = "None"
+label = "없음"
 
 [portal.connections.types.n8n.fields.headerName]
 helperText = "n8n credential의 header name이며, 값이 아닙니다."
-label = "Header name"
+label = "Header 이름"
 placeholder = "X-N8N-Key"
 
 [portal.connections.types.n8n.fields.token]
-label = "Header value"
+label = "Header 값"
 
 [portal.connections.types.nextcloud]
 baseUrlPlaceholder = "https://your-server/remote.php/dav"
@@ -8676,7 +8685,7 @@ placeholder = "cb46c030-1825-4e81-a295-151c039dbf02"
 
 [portal.connections.types.s3]
 description = "소스가 읽고 파이프라인 출력이 쓸 수 있는 S3 버킷입니다."
-label = "S3 storage"
+label = "S3 스토리지"
 
 [portal.connections.types.s3.fields.accessKeyId]
 label = "액세스 key ID"
@@ -8686,13 +8695,13 @@ label = "Bucket"
 
 [portal.connections.types.s3.fields.endpoint]
 helperText = "AWS의 경우 비워 두세요. MinIO 또는 다른 S3 호환 저장소의 경우 이를 설정하세요."
-label = "Endpoint"
+label = "엔드포인트"
 
 [portal.connections.types.s3.fields.region]
 label = "Region"
 
 [portal.connections.types.s3.fields.secretAccessKey]
-label = "Secret access key"
+label = "비밀 액세스 키"
 
 [portal.connections.types.sendgrid]
 description = "정책이 실행될 때 문서 또는 알림을 Email로 보냅니다."
@@ -8709,14 +8718,14 @@ label = "호스트 key 지문"
 placeholder = "SHA256:..."
 
 [portal.connections.types.sftp.fields.passphrase]
-label = "Key passphrase"
+label = "키 암호문"
 
 [portal.connections.types.sftp.fields.password]
 helperText = "대신 private key로 인증하는 경우 비워 두세요."
 
 [portal.connections.types.sftp.fields.privateKey]
 helperText = "선택 사항입니다. password 대신 key로 인증하려면 OpenSSH private key를 붙여넣으세요."
-label = "Private key"
+label = "개인 키"
 
 [portal.connections.types.slack]
 description = "정책이 문서를 처리할 때 Slack에 메시지를 게시합니다."
@@ -8753,9 +8762,9 @@ label = "Microsoft Teams"
 [portal.connections.types.vectordb]
 baseUrlPlaceholder = "https://your-database-host"
 description = "Weaviate 또는 Pinecone 서버 측 embedding을 사용하여 문서 청크를 인덱싱합니다. Weaviate 서버 URL 또는 Pinecone 인덱스 호스트를 사용하세요. Private endpoints를 사용하려면 운영자가 policies.allowPrivateApiEndpoints를 활성화해야 합니다."
-label = "Vector database"
+label = "벡터 데이터베이스"
 pinecone = "Pinecone"
-vendor = "Database"
+vendor = "데이터베이스"
 weaviate = "Weaviate"
 
 [portal.connections.types.webhook]
@@ -8784,20 +8793,20 @@ title = "인증"
 codeCaption = "viewer 임베드"
 eyebrow = "구성 요소"
 lead = "검토 대기열 및 문서 검사를 위한 임베드 가능한 UI입니다. 자체 스타일을 가져오거나 제공된 테마를 사용하세요."
-title = "Drop-in viewers"
+title = "드롭인 뷰어"
 
 [portal.docs.endpoints]
-eyebrow = "API REFERENCE"
+eyebrow = "API 참조"
 fieldCount_one = "{{count}}개 필드"
 fieldCount_other = "{{count}}개 필드"
 filterAll = "전체"
 filterAriaLabel = "vertical별 endpoint 필터링"
 lead = "모든 문서 유형은 typed endpoint입니다. 파일을 POST하면 스키마로 검증된 JSON을 받습니다. 아래에서 vertical별로 필터링하세요."
-title = "Endpoints"
+title = "엔드포인트"
 
 [portal.docs.errors]
-codeCaption = "422 Unprocessable Entity"
-eyebrow = "API REFERENCE"
+codeCaption = "422 처리할 수 없는 엔티티"
+eyebrow = "API 참조"
 lead = "오류는 안정적인 machine-readable code와 사람이 읽을 수 있는 메시지를 반환합니다. 4xx 본문에는 항상 지원을 위한 request_id가 포함됩니다."
 title = "오류"
 
@@ -8811,13 +8820,13 @@ title = "Docs를 사용할 수 없음"
 [portal.docs.quickstart]
 eyebrow = "시작하기"
 lead = "typed endpoint로 첫 문서를 보내고 세 단계로 구조화된 JSON을 받으세요. 모델 학습이나 프롬프트 엔지니어링이 필요 없습니다."
-title = "Quickstart"
+title = "빠른 시작"
 
 [portal.docs.quickstart.callout]
 bodyAfterLink = "에서 복사-붙여넣기용 레시피를 확인하세요."
 bodyBeforeLink = "동일한 호출을 파이프라인에 연결하여 검증, 수정, 전달을 체인으로 이어가거나 — MCP를 통해 agent에 노출하세요."
 label = "다음:"
-link = "Playbooks"
+link = "플레이북"
 
 [portal.docs.quickstart.step1]
 body = "Infrastructure 탭에서 범위가 지정된 키를 만드세요. 키에는 rate limit과 선택적 IP allowlist가 포함됩니다. 이를 shell로 내보내세요:"
@@ -8834,8 +8843,8 @@ codeCaption = "200 OK"
 title = "구조화된 결과 읽기"
 
 [portal.docs.rateLimits]
-burst = "Burst"
-codeCaption = "429 Too Many Requests"
+burst = "버스트"
+codeCaption = "429 요청이 너무 많음"
 concurrency = "동시성"
 eyebrow = "시작하기"
 lead = "한도는 플랜에 따라 확장됩니다. 429 응답에는 Retry-After 헤더가 포함되며, SDK가 자동으로 back off합니다."
@@ -8844,7 +8853,7 @@ title = "Rate limits 및 할당량"
 
 [portal.docs.recipes]
 cloneButton = "레시피 복제"
-eyebrow = "PLAYBOOKS"
+eyebrow = "플레이북"
 lead = "소스, 작업, 대상을 체인으로 연결하는 end-to-end 패턴입니다. 각 항목은 복제할 수 있는 파이프라인에 매핑됩니다."
 title = "레시피"
 
@@ -8855,19 +8864,19 @@ title = "공식 SDKs"
 
 [portal.docs.sdks.status]
 beta = "Beta"
-deprecated = "Deprecated"
+deprecated = "사용 중단됨"
 
 [portal.docs.skills]
-eyebrow = "SKILLS"
+eyebrow = "스킬"
 lead = "agent가 단일 도구로 호출하는 번들형 명명된 기능입니다. 각 skill은 eval이 연결된 결정적 작업 체인입니다."
-title = "Agent skills"
+title = "에이전트 스킬"
 
 [portal.docs.toc]
 title = "이 페이지에서"
 
 [portal.docs.webhooks]
 codeCaption = "document.processed"
-eyebrow = "API REFERENCE"
+eyebrow = "API 참조"
 lead = "document.processed, pipeline.completed, quota.threshold 이벤트를 구독하세요. Payload는 HMAC-SHA256으로 서명됩니다."
 title = "Webhooks"
 
@@ -9283,7 +9292,7 @@ done = "완료"
 keyNameLabel = "키 이름"
 keyNamePlaceholder = "예: 프로덕션 수집"
 secretKeyCaption = "비밀 키"
-secretWarning = "이를 secrets manager에 저장하세요. Stirling은 항상 해시만 저장하므로 나중에 복구할 방법이 없습니다."
+secretWarning = "이를 시크릿 관리자에 저장하세요. Stirling은 항상 해시만 저장하므로 나중에 복구할 방법이 없습니다."
 subtitle = "나중에 알아볼 수 있도록 키에 이름을 지정하세요. 언제든지 취소할 수 있습니다."
 subtitleCreated = "지금 이 비밀을 복사하세요 — 다시 표시되지 않습니다."
 title = "API 키 생성"
@@ -9347,7 +9356,7 @@ compareNote = "키 백업 및 시작 로그의 fingerprint와 비교하세요."
 copied = "복사됨"
 copy = "복사"
 copyFailed = "이 브라우저에서 복사를 허용하지 않았습니다. fingerprint가 선택되어 있으므로 수동으로 복사하세요."
-fingerprint = "Fingerprint"
+fingerprint = "지문"
 fingerprintHelp = "이 fingerprint는 무엇에 사용되나요?"
 heading = "마스터 키"
 notMaterialised = "이 노드에서 키 메커니즘이 아직 시작되지 않았습니다."
@@ -10311,11 +10320,11 @@ postalCode = "우편번호"
 postalCodePlaceholder = "94105"
 posture = "거버넌스"
 posture_count = "~{{count}}개 정책"
-posture_essentials = "Essentials"
+posture_essentials = "필수"
 posture_essentialsSub = "분류 + 공유 — 기본값"
-posture_governed = "Governed"
+posture_governed = "관리형"
 posture_governedSub = "보안 및 라우팅 추가"
-posture_regulated = "Regulated"
+posture_regulated = "규제됨"
 posture_regulatedSub = "모든 범주 — 규정 준수, 보존, 수집"
 qbr = "분기별 비즈니스 리뷰"
 qbrSub = "담당 SE가 매 분기 사용량과 로드맵을 검토합니다"
@@ -10342,7 +10351,7 @@ slPrioritySub = "같은 영업일 · 지정 CSM · 포함"
 slStandard = "표준"
 slStandardSub = "다음 영업일 · 공유 CSM · 포함"
 stepOf = "{{total}}단계 중 {{n}}단계"
-taxId = "VAT / Tax ID"
+taxId = "VAT / 세금 ID"
 taxIdPlaceholder = "선택 사항"
 term = "기간"
 termDiscount = "{{pct}}% 다년 약정 할인 적용됨"
@@ -11411,10 +11420,10 @@ title = "복구 결과"
 
 [replace-color]
 submit = "교체"
-title = "색상 교체-반전"
+title = "색상 바꾸기-반전"
 
 [replace-color.selectText]
-1 = "색상 교체 또는 반전 옵션"
+1 = "색상 바꾸기 또는 반전 옵션"
 10 = "텍스트 색상 선택"
 11 = "배경 색상 선택"
 5 = "고대비 색상 옵션"
@@ -11677,7 +11686,7 @@ title = "청구"
 
 [settings.configuration]
 advanced = "고급"
-connections = "Single sign-on"
+connections = "Single Sign-On"
 database = "데이터베이스"
 endpoints = "엔드포인트"
 features = "기능"
@@ -11993,7 +12002,7 @@ success = "비밀번호가 성공적으로 업데이트되었습니다. 다시 �
 update = "비밀번호 업데이트"
 
 [settings.securityAuth]
-connections = "Single sign-on"
+connections = "Single Sign-On"
 security = "로그인 및 보안"
 telegram = "Telegram"
 title = "보안 및 로그인"
@@ -12275,6 +12284,163 @@ image = "이미지"
 saved = "저장됨"
 text = "텍스트"
 title = "서명 유형"
+
+[sign.wallet]
+apply_one = "{{count}}개 서명 적용"
+apply_other = "{{count}}개 서명 적용"
+applyEmpty = "서명 적용"
+count = "{{count}} / {{max}}"
+default = "기본"
+loading = "서명을 불러오는 중..."
+new = "새 서명"
+shared = "공유됨"
+sharedHint = "모두가 사용할 수 있습니다"
+unsaved = "저장되지 않음"
+yours = "내 서명"
+
+[sign.wallet.create]
+cancel = "취소"
+full = "라이브러리가 가득 찼습니다({{max}}개 서명). 더 저장하려면 하나를 삭제하세요."
+makeDefault = "기본값으로 설정"
+method = "만드는 방법"
+name = "이름"
+save = "내 서명에 저장"
+saveBrowserHint = "이 브라우저에 보관되어 다음에 바로 사용할 수 있습니다."
+saveHint = "다음 서명 시 다시 사용할 준비가 되었습니다."
+subtitle = "한 번 만들고 모든 문서에서 재사용하세요."
+title = "새 서명"
+use = "서명 사용"
+who = "사용 가능한 사람"
+whoEveryone = "모두"
+whoMe = "나만"
+
+[sign.wallet.defaultName]
+draw = "내 서명"
+initials = "이니셜"
+phone = "휴대폰 서명"
+type = "입력한 서명"
+upload = "업로드한 서명"
+
+[sign.wallet.delete]
+body = "\"{{name}}\"이(가) 내 서명에서 제거됩니다. 이미 서명한 문서에는 그대로 유지됩니다."
+confirm = "삭제"
+title = "이 서명을 삭제하시겠습니까?"
+
+[sign.wallet.draw]
+bold = "굵은 펜"
+clear = "지우기"
+fine = "가는 펜"
+hint = "선 위에 서명하세요"
+medium = "중간 펜"
+pad = "서명 패드"
+pen = "펜"
+tip = "마우스, 트랙패드, 펜 또는 손가락을 사용하세요"
+undo = "실행 취소"
+
+[sign.wallet.ink]
+black = "검정 잉크"
+blue = "파란 잉크"
+label = "잉크"
+navy = "남색 잉크"
+
+[sign.wallet.intro]
+body = "한 번 만드세요. 여기에 저장되어 서명하는 모든 문서에 사용할 수 있습니다."
+privacy = "저장된 서명은 공유를 선택하지 않는 한 본인에게만 비공개입니다."
+privacyBrowser = "저장된 서명은 이 브라우저에 남아 있습니다."
+title = "서명 추가"
+
+[sign.wallet.menu]
+delete = "삭제"
+discard = "폐기"
+makeDefault = "기본값으로 설정"
+options = "{{name}} 옵션"
+place = "페이지에 배치"
+removeDefault = "기본값 해제"
+rename = "이름 변경"
+save = "내 서명에 저장"
+share = "모두와 공유"
+stop = "배치 중지"
+
+[sign.wallet.phone]
+expires = "{{time}} 후 만료"
+qr = "휴대폰에서 서명하기 위한 QR 코드"
+received = "휴대폰에서 수신됨"
+receiveFailed = "해당 서명을 읽을 수 없습니다. 새 코드를 스캔하여 다시 시도하세요."
+step1 = "휴대폰 카메라로 코드를 스캔하세요"
+step1Hint = "휴대폰 브라우저에서 열리며 앱이 필요하지 않습니다."
+step2 = "서명을 그리거나 입력하거나 촬영하세요"
+step2Hint = "손가락용 큰 캔버스입니다."
+step3 = "여기에 자동으로 표시됩니다"
+step3Hint = "서명하는 동안 이 창을 열어 두세요."
+waiting = "휴대폰을 기다리는 중..."
+
+[sign.wallet.placed]
+empty = "페이지에 배치한 서명이 여기에 나열됩니다."
+fallbackName = "서명"
+page = "페이지 {{page}}"
+remove = "{{name}} 제거"
+show = "페이지에 {{name}} 표시"
+title = "이 문서에 있음 ({{count}})"
+
+[sign.wallet.rename]
+save = "저장"
+title = "서명 이름 변경"
+
+[sign.wallet.status]
+idle = "배치할 서명을 선택하세요"
+placing = "{{name}}을(를) 배치하려면 페이지를 클릭하세요."
+stop = "중지"
+
+[sign.wallet.tabs]
+draw = "그리기"
+phone = "휴대폰"
+type = "입력"
+upload = "업로드"
+
+[sign.wallet.toast]
+applyFailed = "서명을 적용할 수 없습니다"
+applyFailedBody = "서명은 아직 문서에 있습니다. 다시 시도하세요."
+deleteFailed = "서명을 삭제할 수 없습니다"
+draftExists = "먼저 저장되지 않은 서명을 저장하거나 폐기하세요"
+initialsFailed = "이니셜을 저장할 수 없습니다"
+initialsPartial = "서명은 저장되었지만 이니셜은 저장되지 않았습니다. 이니셜을 별도로 저장해 보세요."
+renameFailed = "서명 이름을 변경할 수 없습니다"
+saved = "내 서명에 저장됨"
+saveFailed = "서명을 저장할 수 없습니다"
+saveFailedBody = "이 문서에 배치할 준비는 되어 있습니다."
+shared = "모두와 공유됨"
+shareFailed = "서명을 공유할 수 없습니다"
+
+[sign.wallet.type]
+initials = "이니셜"
+initialsLimit = "이니셜을 저장하려면 빈 서명 슬롯이 두 개 필요합니다."
+name = "이름"
+namePlaceholder = "이름 입력"
+previewName = "이름"
+saveInitials = "내 이니셜도 저장"
+style = "스타일"
+styleOption = "스타일 {{index}}"
+
+[sign.wallet.upload]
+browse = "또는 파일 찾아보기"
+drop = "여기에 이미지 놓기"
+failed = "해당 이미지를 읽을 수 없습니다."
+hint = "PNG, JPG 또는 WebP, 최대 {{size}} MB. 흰색 배경은 자동으로 제거됩니다."
+ink = "잉크 색상"
+inkBlack = "검정"
+inkBlue = "파랑"
+inkOriginal = "원본"
+preview = "업로드한 서명 미리보기"
+processing = "이미지 정리 중..."
+rejected = "최대 {{size}} MB의 PNG, JPG 또는 WebP 이미지를 선택하세요."
+removeBackground = "배경 제거"
+removeBackgroundHint = "흰 종이가 투명해집니다"
+replace = "교체"
+rotate = "회전"
+rotateLeft = "왼쪽으로 회전"
+rotateRight = "오른쪽으로 회전"
+trim = "서명에 맞게 자르기"
+trimHint = "주변의 빈 공간을 잘라냅니다"
 
 [signatureSettings.tooltip]
 header = "서명 모양 설정"

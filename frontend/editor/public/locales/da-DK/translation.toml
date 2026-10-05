@@ -1537,7 +1537,7 @@ label = "Håndhæv OAuth scopes"
 
 [admin.settings.mcp.usernameClaim]
 description = "JWT claim matches mod et Stirling-brugernavn (f.eks. sub, email, preferred_username)."
-label = "Username claim"
+label = "Brugernavn claim"
 
 [admin.settings.plan.noData]
 message = "Denne server kunne ikke nå licenstjenesten. Prøv igen, eller kontrollér licensnøglen."
@@ -2357,7 +2357,7 @@ dropHint = "Træk og slip JSON her, eller klik for at vælge en fil"
 dropSubhint = "Både Automate- og Folder Scanning-konfigurationer accepteres"
 dropzoneAriaLabel = "Slip en Automate-JSON-fil her"
 intro = "Træk og slip en JSON-fil, eller indsæt dens indhold nedenfor. Formatet (Automate eller Folder Scanning) registreres automatisk."
-opCount_one = "{{count}} operation"
+opCount_one = "{{count}} handling"
 opCount_other = "{{count}} operationer"
 parseError = "Kunne ikke fortolke: {{message}}"
 pasteLabel = "Eller indsæt JSON"
@@ -3641,7 +3641,7 @@ tooltip = "Denne handling vil bruge dine cloud-kreditter"
 tooltip = "Vælg farve fra skærmen"
 
 [colorPicker]
-hue = "Hue"
+hue = "Farvetone"
 saturation = "Mætning og lysstyrke"
 title = "Vælg farve"
 
@@ -7345,10 +7345,19 @@ mixed = "{{count}} objekter"
 multiGeometry = "Vælg et enkelt objekt for at redigere dets position og størrelse."
 nothingSelected = "Intet valgt"
 nothingSelectedHint = "Klik på tekst, billede eller form på siden for at redigere det her."
+ocrDocumentChanged = "Dokumentet blev ændret, mens OCR kørte. Kør OCR igen for at inkludere dine seneste ændringer."
+ocrInvalidResult = "OCR returnerede ikke en PDF. Prøv igen."
+ocrNoLanguages = "Der er ikke installeret nogen OCR-sprog på serveren."
+ocrRunning = "Genkender tekst..."
+ocrUnavailable = "OCR er ikke tilgængelig på denne server."
 oneImage = "Billede"
 oneShape = "Form"
 oneText = "Tekst"
 pages = "Sider"
+runOcr = "Kør OCR"
+scanHint_one = "Denne side er et scannet billede uden tekst, der kan redigeres. Kør OCR først for at gøre teksten redigerbar."
+scanHint_other = "{{count}} sider er scannede billeder uden tekst, der kan redigeres. Kør OCR først for at gøre teksten redigerbar."
+scannedText = "Scannet tekst · ændrede ord er dækket og gentegnet med en matchende skrifttype."
 tabDocument = "Dokument"
 tabSelected = "Valgt"
 textBoxes = "Tekstbokse"
@@ -12276,6 +12285,163 @@ saved = "Gemt"
 text = "Tekst"
 title = "Underskriftstype"
 
+[sign.wallet]
+apply_one = "Anvend {{count}} underskrift"
+apply_other = "Anvend {{count}} underskrifter"
+applyEmpty = "Anvend underskrifter"
+count = "{{count}} af {{max}}"
+default = "Standard"
+loading = "Indlæser dine underskrifter..."
+new = "Ny underskrift"
+shared = "Delt"
+sharedHint = "Alle kan bruge disse"
+unsaved = "Ikke gemt"
+yours = "Dine underskrifter"
+
+[sign.wallet.create]
+cancel = "Annuller"
+full = "Dit bibliotek er fuldt ({{max}} underskrifter). Slet en for at gemme flere."
+makeDefault = "Gør til standard"
+method = "Sådan opretter du den"
+name = "Navn"
+save = "Gem i mine underskrifter"
+saveBrowserHint = "Gemmes i denne browser, klar til næste gang."
+saveHint = "Klar til genbrug næste gang du underskriver."
+subtitle = "Opret den én gang, og genbrug den på ethvert dokument."
+title = "Ny underskrift"
+use = "Brug underskrift"
+who = "Hvem kan bruge den"
+whoEveryone = "Alle"
+whoMe = "Kun mig"
+
+[sign.wallet.defaultName]
+draw = "Min underskrift"
+initials = "Initialer"
+phone = "Telefonunderskrift"
+type = "Indtastet underskrift"
+upload = "Uploadet underskrift"
+
+[sign.wallet.delete]
+body = "\"{{name}}\" er fjernet fra dine underskrifter. Dokumenter, du allerede har underskrevet, beholder den."
+confirm = "Slet"
+title = "Slet denne underskrift?"
+
+[sign.wallet.draw]
+bold = "Fed pen"
+clear = "Ryd"
+fine = "Fin pen"
+hint = "Skriv under over linjen"
+medium = "Medium pen"
+pad = "Signaturpad"
+pen = "Pen"
+tip = "Brug en mus, trackpad, pen eller finger"
+undo = "Fortryd"
+
+[sign.wallet.ink]
+black = "Sort blæk"
+blue = "Blåt blæk"
+label = "Blæk"
+navy = "Marineblåt blæk"
+
+[sign.wallet.intro]
+body = "Opret den én gang. Den gemmes her, klar til hvert dokument, du underskriver."
+privacy = "Gemte signaturer er private for dig, medmindre du vælger at dele dem."
+privacyBrowser = "Gemte signaturer bliver i denne browser."
+title = "Tilføj din signatur"
+
+[sign.wallet.menu]
+delete = "Slet"
+discard = "Kassér"
+makeDefault = "Gør til standard"
+options = "Indstillinger for {{name}}"
+place = "Placer på siden"
+removeDefault = "Fjern som standard"
+rename = "Omdøb"
+save = "Gem i mine signaturer"
+share = "Del med alle"
+stop = "Stop placering"
+
+[sign.wallet.phone]
+expires = "Udløber om {{time}}"
+qr = "QR-kode til at underskrive på din telefon"
+received = "Modtaget fra din telefon"
+receiveFailed = "Kunne ikke læse den signatur. Scan den nye kode for at prøve igen."
+step1 = "Scan koden med dit telefonkamera"
+step1Hint = "Den åbnes i telefonens browser, ingen app nødvendig."
+step2 = "Tegn, skriv eller fotografer din signatur"
+step2Hint = "Et stort lærred lavet til en finger."
+step3 = "Den vises automatisk her"
+step3Hint = "Hold dette vindue åbent, mens du underskriver."
+waiting = "Venter på din telefon..."
+
+[sign.wallet.placed]
+empty = "Signaturer, du placerer på siden, vises her."
+fallbackName = "Signatur"
+page = "Side {{page}}"
+remove = "Fjern {{name}}"
+show = "Vis {{name}} på siden"
+title = "På dette dokument ({{count}})"
+
+[sign.wallet.rename]
+save = "Gem"
+title = "Omdøb signatur"
+
+[sign.wallet.status]
+idle = "Vælg en signatur for at placere den"
+placing = "Klik på siden for at placere {{name}}."
+stop = "Stop"
+
+[sign.wallet.tabs]
+draw = "Tegn"
+phone = "Telefon"
+type = "Skriv"
+upload = "Upload"
+
+[sign.wallet.toast]
+applyFailed = "Kunne ikke anvende signaturer"
+applyFailedBody = "Dine signaturer er stadig på dokumentet. Prøv igen."
+deleteFailed = "Kunne ikke slette signaturen"
+draftExists = "Gem eller kassér først din ugemte signatur"
+initialsFailed = "Kunne ikke gemme dine initialer"
+initialsPartial = "Din signatur blev gemt, men dine initialer blev ikke. Prøv at gemme dine initialer separat."
+renameFailed = "Kunne ikke omdøbe signaturen"
+saved = "Gemt i dine signaturer"
+saveFailed = "Kunne ikke gemme signaturen"
+saveFailedBody = "Den er stadig klar til at blive placeret på dette dokument."
+shared = "Delt med alle"
+shareFailed = "Kunne ikke dele signaturen"
+
+[sign.wallet.type]
+initials = "Initialer"
+initialsLimit = "Gemning af initialer kræver to ledige signaturpladser."
+name = "Dit navn"
+namePlaceholder = "Skriv dit navn"
+previewName = "Dit navn"
+saveInitials = "Gem også mine initialer"
+style = "Stil"
+styleOption = "Stil {{index}}"
+
+[sign.wallet.upload]
+browse = "eller gennemse filer"
+drop = "Slip et billede her"
+failed = "Kunne ikke læse det billede."
+hint = "PNG, JPG eller WebP op til {{size}} MB. Hvide baggrunde fjernes automatisk."
+ink = "Blækfarve"
+inkBlack = "Sort"
+inkBlue = "Blå"
+inkOriginal = "Original"
+preview = "Forhåndsvisning af uploadet signatur"
+processing = "Renser billedet..."
+rejected = "Vælg et PNG-, JPG- eller WebP-billede op til {{size}} MB."
+removeBackground = "Fjern baggrund"
+removeBackgroundHint = "Hvidt papir bliver gennemsigtigt"
+replace = "Erstat"
+rotate = "Roter"
+rotateLeft = "Roter til venstre"
+rotateRight = "Roter til højre"
+trim = "Beskær til signatur"
+trimHint = "Beskærer det tomme område omkring den"
+
 [signatureSettings.tooltip]
 header = "Indstillinger for underskriftsudseende"
 
@@ -13046,7 +13212,7 @@ yearsAgo_other = "{{count}} år siden"
 [users.cap]
 addProcessor = "+ Processor"
 approver = "Godkender politik"
-editor = "Editor"
+editor = "Redaktør"
 processor = "Processor"
 
 [users.columns]

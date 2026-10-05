@@ -743,9 +743,9 @@ title = "文档与 RAG"
 [admin.settings.ai.documents.embeddingApiKey]
 description = "留空以使用引擎自身的环境凭据。适用于自托管的单引擎部署。"
 generic = "嵌入 API key"
-openai = "OpenAI API key"
+openai = "OpenAI API 密钥"
 setPlaceholder = "已保存 - 留空以保留当前 key"
-voyageai = "VoyageAI API key"
+voyageai = "VoyageAI API 密钥"
 
 [admin.settings.ai.documents.embeddingBaseUrl]
 description = "OpenAI 兼容 / Ollama 嵌入端点的基础 URL，例如 http://ollama:11434/v1。必须指向受信任的内部端点（SSRF 敏感）。"
@@ -892,10 +892,10 @@ description = "选择 AI 引擎使用的 LLM 提供商以及智能/快速模型�
 title = "模型与提供商"
 
 [admin.settings.ai.models.apiKey]
-anthropic = "Anthropic API key"
+anthropic = "Anthropic API 密钥"
 description = "留空以使用引擎自身的环境凭据。适用于自托管的单引擎部署。"
-generic = "API key"
-openai = "OpenAI API key"
+generic = "API 密钥"
+openai = "OpenAI API 密钥"
 setPlaceholder = "已保存 - 留空以保留当前 key"
 
 [admin.settings.ai.models.baseUrl]
@@ -1510,7 +1510,7 @@ title = "连接 MCP 客户端"
 
 [admin.settings.mcp.issuerUri]
 description = "您的 OAuth2 授权服务器（必须发布 /.well-known/openid-configuration）。启用时必填。"
-label = "OAuth Issuer URL"
+label = "OAuth 颁发者 URL"
 
 [admin.settings.mcp.jwksUri]
 description = "留空则从 issuer 自动发现。仅当您的 IdP 在非标准 URL 提供 key 时才设置。"
@@ -1529,7 +1529,7 @@ label = "要求已有 Stirling 账户"
 
 [admin.settings.mcp.resourceId]
 description = "此服务器的公开 /mcp URL。Token 必须在其 audience 中列出该值（RFC 8707），否则会被拒绝。"
-label = "Resource ID"
+label = "资源 ID"
 
 [admin.settings.mcp.scopes]
 description = "读取操作要求 mcp.tools.read，写入/AI 操作要求 mcp.tools.write。"
@@ -3983,7 +3983,7 @@ viewApiKeys = "查看 API key"
 configLabel = "配置"
 copied = "已复制"
 copy = "复制"
-endpointLabel = "Endpoint URL"
+endpointLabel = "端点 URL"
 tooltip = "复制 {{label}}"
 tooltipCopied = "已复制 {{label}}"
 
@@ -4159,7 +4159,7 @@ targetDeviceDesc = "选择为阅读设备优化的输出配置"
 [convert.formatGroups]
 archive = "归档"
 document = "文档"
-ebook = "eBook"
+ebook = "电子书"
 email = "电子邮件"
 file = "文件"
 image = "图像"
@@ -4215,7 +4215,7 @@ scarf = "Scarf 像素"
 
 [createPortfolio]
 coverTitle = "封面页标题"
-coverTitlePlaceholder = "PDF Portfolio"
+coverTitlePlaceholder = "PDF 作品集"
 description = "每个选定文件都会完整保留在新的 PDF 内，无论其类型如何。不支持 portfolios 的阅读器会显示一个带有附件文件的封面页。"
 goToFileEditor = "转到文件编辑器"
 info = "将您的文件合并为一个 PDF，并在其中完整保留每个文件。打开结果即可浏览文件，并单独查看或保存其中任意文件。"
@@ -6594,7 +6594,7 @@ yourCloudAccess = "您将成为团队成员并失去所有者访问权限。"
 
 [pageEdit]
 deselectAll = "无"
-selectAll = "全选"
+selectAll = "全部勾选"
 
 [pageEditor]
 dragPreviewAlt = "正在拖动"
@@ -6912,7 +6912,7 @@ pauses = "达到上限时暂停"
 title = "达到上限时会发生什么"
 
 [payg.header]
-eyebrow = "Processor plan · {{start}} – {{end}}"
+eyebrow = "处理器计划 · {{start}} – {{end}}"
 freeBody = "查看、编辑、合并、拆分、签名、加水印、压缩、转换和手动 OCR — 想用多少就用多少，无论从哪里触发。"
 freeLabel = "永久免费"
 freeTitle = "无限制 PDF 编辑"
@@ -7345,10 +7345,19 @@ mixed = "{{count}} 个对象"
 multiGeometry = "选择单个对象以编辑其位置和大小。"
 nothingSelected = "未选择任何内容"
 nothingSelectedHint = "点击页面上的任意文本、图像或形状以在此处编辑。"
+ocrDocumentChanged = "OCR 运行时文档已更改。请再次运行 OCR 以包含最新更改。"
+ocrInvalidResult = "OCR 未返回 PDF。请重试。"
+ocrNoLanguages = "服务器上未安装 OCR 语言。"
+ocrRunning = "正在识别文本..."
+ocrUnavailable = "此服务器上 OCR 不可用。"
 oneImage = "图片"
 oneShape = "形状"
 oneText = "文本"
 pages = "页面"
+runOcr = "运行 OCR"
+scanHint_one = "此页面是扫描图像，没有可编辑文本。请先运行 OCR，使其文本可编辑。"
+scanHint_other = "{{count}} 个页面是扫描图像，没有可编辑文本。请先运行 OCR，使其文本可编辑。"
+scannedText = "扫描文本 · 更改的单词会被覆盖并以匹配的字体重绘。"
 tabDocument = "文档"
 tabSelected = "已选择"
 textBoxes = "文本框"
@@ -7549,9 +7558,9 @@ tags = "ཡིག་མཛོད།,དུས་ཡུན་རིང་པོ�
 title = "PDF ནས་ PDF/A ལ།"
 
 [pdfToPDFUA]
-header = "PDF To PDF/UA"
+header = "PDF 转 PDF/UA"
 tags = "可访问性,无障碍,带标签,屏幕阅读器,wcag,eaa,section 508,转换"
-title = "PDF To PDF/UA"
+title = "PDF 转 PDF/UA"
 
 [pdfToPDFX]
 tags = "打印,标准,转换,生产,印前,归档"
@@ -8170,14 +8179,14 @@ sub = "完整的 PDF 编辑器。"
 [portal.billing.identity.processor]
 chipMetered = "按量计费处理"
 chipPipelines = "流水线和 API"
-name = "Processor"
+name = "处理器"
 sub = "Team 基础费加每积分 {{rate}}"
 subNoRate = "Team 基础费加按量计费处理"
 
 [portal.billing.identity.team]
 chipFleet = "集群控制"
 chipIncluded = "每月包含 {{allowance}} 个积分"
-name = "Team"
+name = "团队"
 sub = "最多 {{users}} 位用户"
 subNoLimit = "无用户限制"
 
@@ -8212,8 +8221,8 @@ update = "更新"
 [portal.billing.pdfsProcessed]
 emptyPeriod = "本周期尚未处理。"
 eyebrow = "本周期已处理 PDFs"
-legendValue_one = "{{formatted}} PDFs"
-legendValue_other = "{{formatted}} PDFs"
+legendValue_one = "{{formatted}} 个 PDFs"
+legendValue_other = "{{formatted}} 个 PDFs"
 segbarAriaLabel = "按类别拆分的 PDF"
 segmentAgentsDesc = "AI 智能体操作"
 segmentAgentsLabel = "智能体"
@@ -8289,7 +8298,7 @@ prepaidRemaining = "剩余预付积分"
 prepaidTooltip = "在按量计费前使用，且不计入您的支出限额。"
 raiseLimit = "提高限额"
 remainingOf = "剩余 {{remaining}} / {{total}}"
-rowName = "Processor"
+rowName = "处理器"
 spendAgainstLimit = "本周期按量计费 {{spend}} / {{cap}}"
 
 [portal.billing.seats]
@@ -8312,7 +8321,7 @@ plan = "您的计划"
 [portal.billing.serverPlan]
 active = "活动的自托管许可证"
 connectBody = "连接以添加云处理积分。您的服务器许可证会保持活动状态。"
-enterprise = "Enterprise"
+enterprise = "企业版"
 enterpriseConnectBody = "您的 Enterprise 许可证包含此服务器上的处理。连接账户是可选的。"
 included = "包含在您的许可证中"
 seats = "{{seats}} 个授权席位"
@@ -8431,10 +8440,10 @@ helperText = "Stirling 会加密存储此项，并且不会再次显示。"
 label = "访问 token"
 
 [portal.connections.commonFields.apiKey]
-label = "API key"
+label = "API 密钥"
 
 [portal.connections.commonFields.apiToken]
-label = "API token"
+label = "API 令牌"
 
 [portal.connections.commonFields.baseUrl]
 helperText = "使用此连接的步骤只能调用此 URL 下的路径，不能调用其他主机。"
@@ -8487,7 +8496,7 @@ label = "身份验证"
 label = "用户名和密码"
 
 [portal.connections.types.api.fields.authType.options.bearer]
-label = "Bearer token"
+label = "Bearer 令牌"
 
 [portal.connections.types.api.fields.authType.options.header]
 label = "自定义 header 中的 token"
@@ -8519,7 +8528,7 @@ helperText = "如果 API 回复下载链接，只能获取这些主机。用逗�
 label = "允许的结果主机"
 
 [portal.connections.types.api.fields.token]
-label = "Token"
+label = "令牌"
 
 [portal.connections.types.api.fields.tokenHeaderName]
 label = "将 token 作为此 header 发送"
@@ -8559,7 +8568,7 @@ label = "服务器 URL"
 placeholder = "https://your-org.consignocloud.com/api/v1"
 
 [portal.connections.types.consigno.fields.clientId]
-label = "API key"
+label = "API 密钥"
 
 [portal.connections.types.consigno.fields.clientSecret]
 label = "API secret"
@@ -8569,7 +8578,7 @@ label = "密码"
 
 [portal.connections.types.consigno.fields.tenantId]
 helperText = "仅当你的组织使用 tenants 时需要。"
-label = "Tenant"
+label = "租户"
 
 [portal.connections.types.consigno.fields.username]
 label = "用户名"
@@ -8629,21 +8638,21 @@ helperText = "匹配 n8n Webhook 节点上设置的 Authentication。"
 label = "Webhook 认证"
 
 [portal.connections.types.n8n.fields.authType.options.basic]
-label = "Basic auth"
+label = "基本认证"
 
 [portal.connections.types.n8n.fields.authType.options.header]
-label = "Header auth"
+label = "Header 认证"
 
 [portal.connections.types.n8n.fields.authType.options.none]
-label = "None"
+label = "无"
 
 [portal.connections.types.n8n.fields.headerName]
 helperText = "来自 n8n 凭据的 header 名称，而不是其值。"
-label = "Header name"
+label = "Header 名称"
 placeholder = "X-N8N-Key"
 
 [portal.connections.types.n8n.fields.token]
-label = "Header value"
+label = "Header 值"
 
 [portal.connections.types.nextcloud]
 baseUrlPlaceholder = "https://your-server/remote.php/dav"
@@ -8651,7 +8660,7 @@ description = "将处理后的文档归档到 Nextcloud。"
 label = "Nextcloud"
 
 [portal.connections.types.nextcloud.fields.appPassword]
-label = "App password"
+label = "App 密码"
 
 [portal.connections.types.presidio]
 baseUrlPlaceholder = "http://presidio-analyzer:3000"
@@ -8664,35 +8673,35 @@ label = "Microsoft Purview"
 
 [portal.connections.types.purview.fields.clientId]
 helperText = "可选。仅在按名称选择标签时需要；没有它也可以标记。"
-label = "Application (client) ID"
+label = "应用程序（客户端）ID"
 
 [portal.connections.types.purview.fields.clientSecret]
-label = "Client secret"
+label = "客户端密钥"
 
 [portal.connections.types.purview.fields.tenantId]
 helperText = "作为 SiteId 印到每个标签上，以便支持 Purview 的工具知道由哪个组织应用。"
-label = "Directory (tenant) ID"
+label = "目录（租户）ID"
 placeholder = "cb46c030-1825-4e81-a295-151c039dbf02"
 
 [portal.connections.types.s3]
 description = "S3 bucket，源可从中读取，流水线输出可写入其中。"
-label = "S3 storage"
+label = "S3 存储"
 
 [portal.connections.types.s3.fields.accessKeyId]
-label = "Access key ID"
+label = "访问密钥 ID"
 
 [portal.connections.types.s3.fields.bucket]
-label = "Bucket"
+label = "存储桶"
 
 [portal.connections.types.s3.fields.endpoint]
 helperText = "AWS 留空。为 MinIO 或其他 S3 兼容存储设置此项。"
-label = "Endpoint"
+label = "端点"
 
 [portal.connections.types.s3.fields.region]
-label = "Region"
+label = "区域"
 
 [portal.connections.types.s3.fields.secretAccessKey]
-label = "Secret access key"
+label = "秘密访问密钥"
 
 [portal.connections.types.sendgrid]
 description = "当策略运行时发送文档或通知电子邮件。"
@@ -8709,14 +8718,14 @@ label = "主机 key fingerprint"
 placeholder = "SHA256:..."
 
 [portal.connections.types.sftp.fields.passphrase]
-label = "Key passphrase"
+label = "密钥密码短语"
 
 [portal.connections.types.sftp.fields.password]
 helperText = "如果你改用 private key 进行身份验证，请留空。"
 
 [portal.connections.types.sftp.fields.privateKey]
 helperText = "可选。粘贴 OpenSSH private key，以使用 key 而不是密码进行身份验证。"
-label = "Private key"
+label = "私钥"
 
 [portal.connections.types.slack]
 description = "当策略处理文档时向 Slack 发布消息。"
@@ -8729,10 +8738,10 @@ label = "SMB / 网络共享"
 
 [portal.connections.types.smb.fields.domain]
 helperText = "可选。如果你的服务器使用 Windows domain 或 workgroup，请填写。"
-label = "Domain"
+label = "域"
 
 [portal.connections.types.smb.fields.share]
-label = "Share"
+label = "共享"
 placeholder = "documents"
 
 [portal.connections.types.splunk]
@@ -8817,7 +8826,7 @@ title = "快速开始"
 bodyAfterLink = "获取可复制粘贴的配方。"
 bodyBeforeLink = "将同一调用接入流水线，以串联验证、遮盖和交付——或通过 MCP 将其暴露给智能体。查看"
 label = "下一步："
-link = "Playbooks"
+link = "操作手册"
 
 [portal.docs.quickstart.step1]
 body = "从基础设施选项卡创建一个限定范围的密钥。密钥带有速率限制和可选的 IP allowlist。将其导出到您的 shell："
@@ -8844,12 +8853,12 @@ title = "速率限制和配额"
 
 [portal.docs.recipes]
 cloneButton = "克隆配方"
-eyebrow = "PLAYBOOKS"
+eyebrow = "操作手册"
 lead = "串联来源、操作和目标位置的端到端模式。每个都映射到一个可克隆的流水线。"
 title = "配方"
 
 [portal.docs.sdks]
-eyebrow = "SDKS"
+eyebrow = "SDKs"
 lead = "第一方客户端，提供类型化响应、自动重试和流式上传。全部跟踪同一端点目录。"
 title = "官方 SDKs"
 
@@ -9083,7 +9092,7 @@ copy = "复制错误"
 view = "查看错误"
 
 [portal.failures.origin]
-pipeline = "Pipeline"
+pipeline = "流水线"
 policy = "策略运行"
 tool = "编辑器工具"
 
@@ -9503,7 +9512,7 @@ loading = "正在加载…"
 title = "法律文件"
 
 [portal.nav]
-agent-builder = "Agent Builder"
+agent-builder = "Agent 构建器"
 components = "组件"
 docs = "文档"
 documents = "文档"
@@ -10245,7 +10254,7 @@ title = "暂无流程"
 
 [portal.processorFlow.sources]
 comingSoonTag = "连接"
-editor = "Stirling PDF Editor"
+editor = "Stirling PDF 编辑器"
 heading = "来源"
 perDay = "{{n}} / 24h"
 
@@ -10262,7 +10271,7 @@ title = "采购"
 agreeCta = "签署协议"
 confidential = "机密"
 confirm = "我已阅读并同意本协议，并声明我已获授权代表上述组织签署该协议。"
-docName = "Stirling Enterprise Agreement"
+docName = "Stirling 企业协议"
 docSub = "MSA、订单表、EULA 和 DPA，合并为一次签名。"
 download = "下载"
 downloadDraftError = "无法生成协议 PDF - 文档渲染器不可用。请稍后重试或联系支持。"
@@ -10391,7 +10400,7 @@ ctaQuote = "审核您的报价"
 ctaReviewQuote = "审阅报价"
 ctaTrial = "构建您的报价"
 documents = "文档"
-eyebrow = "Enterprise"
+eyebrow = "企业版"
 eyebrowCompany = "{{company}} 企业版"
 inviteTeammates = "邀请队友"
 licenseKey = "许可证密钥"
@@ -10889,7 +10898,7 @@ scope = "文件导入"
 
 [provider.googledrive.apiKey]
 description = "来自 Google Cloud Console 的 Google Picker API 的 Google API Key"
-label = "API Key"
+label = "API 密钥"
 
 [provider.googledrive.appId]
 description = "来自 Google Cloud Console 的 Google Drive App ID"
@@ -10897,7 +10906,7 @@ label = "App ID"
 
 [provider.googledrive.clientId]
 description = "来自 Google Cloud Console 的 Google OAuth 2.0 Client ID"
-label = "Client ID"
+label = "客户端 ID"
 
 [provider.googledrive.enabled]
 description = "允许用户直接从 Google Drive 导入文件"
@@ -10921,11 +10930,11 @@ label = "阻止注册"
 
 [provider.oauth2.generic.clientId]
 description = "来自您的提供商的 OAuth2 Client ID"
-label = "Client ID"
+label = "客户端 ID"
 
 [provider.oauth2.generic.clientSecret]
 description = "来自您的提供商的 OAuth2 Client Secret"
-label = "Client Secret"
+label = "客户端密钥"
 
 [provider.oauth2.generic.enabled]
 description = "使用自定义 OAuth2 提供商进行认证"
@@ -10933,7 +10942,7 @@ label = "启用通用 OAuth2"
 
 [provider.oauth2.generic.issuer]
 description = "支持 OpenID Connect Discovery（/.well-known/openid-configuration）的提供商"
-label = "Issuer URL"
+label = "颁发者 URL"
 
 [provider.oauth2.generic.provider]
 description = "您的 OAuth2 提供商名称（例如 Azure AD、Okta）"
@@ -10952,11 +10961,11 @@ scope = "登录认证"
 
 [provider.oauth2.github.clientId]
 description = "来自 GitHub Developer Settings 的 OAuth2 Client ID"
-label = "Client ID"
+label = "客户端 ID"
 
 [provider.oauth2.github.clientSecret]
 description = "来自 GitHub Developer Settings 的 OAuth2 Client Secret"
-label = "Client Secret"
+label = "客户端密钥"
 
 [provider.oauth2.github.scopes]
 description = "以逗号分隔的 OAuth2 作用域"
@@ -10971,11 +10980,11 @@ scope = "登录认证"
 
 [provider.oauth2.google.clientId]
 description = "来自 Google Cloud Console 的 OAuth2 Client ID"
-label = "Client ID"
+label = "客户端 ID"
 
 [provider.oauth2.google.clientSecret]
 description = "来自 Google Cloud Console 的 OAuth2 Client Secret"
-label = "Client Secret"
+label = "客户端密钥"
 
 [provider.oauth2.google.scopes]
 description = "以逗号分隔的 OAuth2 作用域"
@@ -10990,15 +10999,15 @@ scope = "SSO"
 
 [provider.oauth2.keycloak.clientId]
 description = "来自 Keycloak 的 OAuth2 Client ID"
-label = "Client ID"
+label = "客户端 ID"
 
 [provider.oauth2.keycloak.clientSecret]
 description = "来自 Keycloak 的 OAuth2 Client Secret"
-label = "Client Secret"
+label = "客户端密钥"
 
 [provider.oauth2.keycloak.issuer]
 description = "Keycloak Realm 的 OpenID Connect 发现端点 URL"
-label = "Issuer URL"
+label = "颁发者 URL"
 
 [provider.oauth2.keycloak.scopes]
 description = "以逗号分隔的 OAuth2 作用域"
@@ -11030,7 +11039,7 @@ label = "IDP 证书"
 
 [provider.saml2.idpIssuer]
 description = "您的提供商的 ID"
-label = "IDP Issuer"
+label = "IDP 颁发者"
 
 [provider.saml2.idpMetadataUri]
 description = "您的提供商元数据的 URI"
@@ -11667,7 +11676,7 @@ title = "关于"
 
 [settings.ai]
 documents = "文档与 RAG"
-general = "AI Engine"
+general = "AI 引擎"
 limits = "限制与性能"
 models = "模型与提供商"
 title = "AI"
@@ -12275,6 +12284,163 @@ image = "图片"
 saved = "已保存"
 text = "文本"
 title = "签名类型"
+
+[sign.wallet]
+apply_one = "应用 {{count}} 个签名"
+apply_other = "应用 {{count}} 个签名"
+applyEmpty = "应用签名"
+count = "{{count}} / {{max}}"
+default = "默认"
+loading = "正在加载您的签名..."
+new = "新建签名"
+shared = "共享"
+sharedHint = "所有人都可以使用这些"
+unsaved = "未保存"
+yours = "您的签名"
+
+[sign.wallet.create]
+cancel = "取消"
+full = "您的库已满（{{max}} 个签名）。请删除一个以保存更多。"
+makeDefault = "设为默认"
+method = "如何创建"
+name = "名称"
+save = "保存到我的签名"
+saveBrowserHint = "保存在此浏览器中，下次可直接使用。"
+saveHint = "下次签名时可重复使用。"
+subtitle = "创建一次，可在任何文档中重复使用。"
+title = "新建签名"
+use = "使用签名"
+who = "谁可以使用它"
+whoEveryone = "所有人"
+whoMe = "仅我"
+
+[sign.wallet.defaultName]
+draw = "我的签名"
+initials = "姓名首字母"
+phone = "手机签名"
+type = "输入的签名"
+upload = "上传的签名"
+
+[sign.wallet.delete]
+body = "\"{{name}}\" 已从您的签名中移除。您已签署的文档会保留它。"
+confirm = "删除"
+title = "删除此签名？"
+
+[sign.wallet.draw]
+bold = "粗笔"
+clear = "清除"
+fine = "细笔"
+hint = "在线上方签名"
+medium = "中等笔"
+pad = "签名板"
+pen = "笔"
+tip = "使用鼠标、触控板、笔或手指"
+undo = "撤销"
+
+[sign.wallet.ink]
+black = "黑色墨迹"
+blue = "蓝色墨迹"
+label = "墨迹"
+navy = "深蓝色墨迹"
+
+[sign.wallet.intro]
+body = "创建一次。它会保存在这里，可用于您签署的每个文档。"
+privacy = "除非您选择共享，否则保存的签名仅您可见。"
+privacyBrowser = "保存的签名会保留在此浏览器中。"
+title = "添加您的签名"
+
+[sign.wallet.menu]
+delete = "删除"
+discard = "放弃"
+makeDefault = "设为默认"
+options = "{{name}} 的选项"
+place = "放置到页面上"
+removeDefault = "取消默认"
+rename = "重命名"
+save = "保存到我的签名"
+share = "与所有人共享"
+stop = "停止放置"
+
+[sign.wallet.phone]
+expires = "{{time}} 后过期"
+qr = "用于在手机上签名的 QR code"
+received = "已从您的手机接收"
+receiveFailed = "无法读取该签名。请扫描新代码重试。"
+step1 = "用手机摄像头扫描代码"
+step1Hint = "它会在手机浏览器中打开，无需 App。"
+step2 = "绘制、输入或拍摄您的签名"
+step2Hint = "为手指设计的大画布。"
+step3 = "它会自动显示在这里"
+step3Hint = "签名时请保持此窗口打开。"
+waiting = "正在等待您的手机..."
+
+[sign.wallet.placed]
+empty = "您放置在页面上的签名会列在这里。"
+fallbackName = "签名"
+page = "第 {{page}} 页"
+remove = "移除 {{name}}"
+show = "在页面上显示 {{name}}"
+title = "在此文档中（{{count}}）"
+
+[sign.wallet.rename]
+save = "保存"
+title = "重命名签名"
+
+[sign.wallet.status]
+idle = "选择一个签名以放置"
+placing = "单击页面以放置 {{name}}。"
+stop = "停止"
+
+[sign.wallet.tabs]
+draw = "绘制"
+phone = "手机"
+type = "输入"
+upload = "上传"
+
+[sign.wallet.toast]
+applyFailed = "无法应用签名"
+applyFailedBody = "您的签名仍在文档上。请重试。"
+deleteFailed = "无法删除签名"
+draftExists = "请先保存或放弃未保存的签名"
+initialsFailed = "无法保存您的姓名首字母"
+initialsPartial = "您的签名已保存，但姓名首字母未保存。请尝试单独保存姓名首字母。"
+renameFailed = "无法重命名签名"
+saved = "已保存到您的签名"
+saveFailed = "无法保存签名"
+saveFailedBody = "它仍可放置在此文档上。"
+shared = "已与所有人共享"
+shareFailed = "无法共享签名"
+
+[sign.wallet.type]
+initials = "姓名首字母"
+initialsLimit = "保存姓名首字母需要两个空闲签名槽位。"
+name = "您的姓名"
+namePlaceholder = "输入您的姓名"
+previewName = "您的姓名"
+saveInitials = "同时保存我的姓名首字母"
+style = "样式"
+styleOption = "样式 {{index}}"
+
+[sign.wallet.upload]
+browse = "或浏览文件"
+drop = "将图像拖放到这里"
+failed = "无法读取该图像。"
+hint = "PNG、JPG 或 WebP，最大 {{size}} MB。白色背景会自动移除。"
+ink = "墨迹颜色"
+inkBlack = "黑色"
+inkBlue = "蓝色"
+inkOriginal = "原始"
+preview = "上传的签名预览"
+processing = "正在清理图像..."
+rejected = "请选择最大 {{size}} MB 的 PNG、JPG 或 WebP 图像。"
+removeBackground = "移除背景"
+removeBackgroundHint = "白纸会变为透明"
+replace = "替换"
+rotate = "旋转"
+rotateLeft = "向左旋转"
+rotateRight = "向右旋转"
+trim = "裁剪到签名"
+trimHint = "裁剪周围的空白区域"
 
 [signatureSettings.tooltip]
 header = "签名外观设置"

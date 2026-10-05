@@ -263,7 +263,7 @@ name = "متن"
 placeholder = "متن را وارد کنید"
 
 [addImage.type]
-canvas = "Canvas"
+canvas = "بوم"
 image = "تصویر"
 saved = "ذخیره‌شده"
 text = "متن"
@@ -484,7 +484,7 @@ name = "محتوای متن"
 placeholder = "متنی را که می‌خواهید اضافه کنید وارد کنید"
 
 [addText.type]
-canvas = "Canvas"
+canvas = "بوم"
 image = "تصویر"
 saved = "ذخیره‌شده"
 text = "متن"
@@ -3862,7 +3862,7 @@ title = "مرور تنظیمات فشرده‌سازی"
 
 [compress.tooltip.lineArt]
 text = "تبدیل صفحات به سیاه‌وسفید با کنتراست بالا با استفاده از ImageMagick. از «سطح جزئیات» برای کنترل میزان سیاه‌شدن محتوا و از «تأکید لبه‌ها» برای کنترل شدت تشخیص لبه‌ها استفاده کنید."
-title = "Line Art"
+title = "طراحی خطی"
 
 [compress.tooltip.qualityAdjustment]
 bullet1 = "مقادیر پایین کیفیت را حفظ می‌کنند"
@@ -7345,10 +7345,19 @@ mixed = "{{count}} شیء"
 multiGeometry = "برای ویرایش موقعیت و اندازه، یک شیء واحد را انتخاب کنید."
 nothingSelected = "چیزی انتخاب نشده است"
 nothingSelectedHint = "روی هر متن، تصویر یا شکل در صفحه کلیک کنید تا آن را اینجا ویرایش کنید."
+ocrDocumentChanged = "سند هنگام اجرای OCR تغییر کرد. برای اعمال آخرین تغییرات، OCR را دوباره اجرا کنید."
+ocrInvalidResult = "OCR یک PDF برنگرداند. لطفاً دوباره تلاش کنید."
+ocrNoLanguages = "هیچ زبان OCR روی سرور نصب نشده است."
+ocrRunning = "در حال تشخیص متن..."
+ocrUnavailable = "OCR روی این سرور در دسترس نیست."
 oneImage = "تصویر"
 oneShape = "شکل"
 oneText = "متن"
 pages = "صفحات"
+runOcr = "اجرای OCR"
+scanHint_one = "این صفحه یک تصویر اسکن‌شده است و متنی برای ویرایش ندارد. ابتدا OCR را اجرا کنید تا متن آن قابل ویرایش شود."
+scanHint_other = "{{count}} صفحه تصویر اسکن‌شده هستند و متنی برای ویرایش ندارند. ابتدا OCR را اجرا کنید تا متن آن‌ها قابل ویرایش شود."
+scannedText = "متن اسکن‌شده · واژه‌های تغییرکرده پوشانده شده و با فونت مشابه دوباره رسم می‌شوند."
 tabDocument = "سند"
 tabSelected = "انتخاب‌شده"
 textBoxes = "کادرهای متن"
@@ -7468,7 +7477,7 @@ bringForward = "آوردن به جلو"
 bringToFront = "آوردن به جلوی همه"
 caseLower = "حروف کوچک"
 caseSentence = "حالت جمله"
-caseTitle = "Title Case"
+caseTitle = "حروف عنوان"
 caseUpper = "حروف بزرگ"
 changeCase = "تغییر حالت حروف"
 changeCaseTooltip = "تغییر حالت حروف (فقط اجراهای متن)"
@@ -7744,7 +7753,7 @@ successMessage = "لایسنس شما با موفقیت فعال شد. اکنو�
 
 [plan.team]
 maxUsers = "100 کاربر"
-name = "Team"
+name = "تیم"
 
 [policies.activity]
 outputsUnavailable = "خروجی‌های خط‌مشی دیگر برای دانلود در دسترس نیستند."
@@ -7930,7 +7939,7 @@ export = "Pipeline «{{pipeline}}» پیش از دانلود متوقف شد، �
 manage = "باز کردن تنظیمات pipeline"
 manual = "Pipeline «{{pipeline}}» هنگام اجرای شما متوقف شد، زیرا اعتبار این سرور تمام شده است."
 openFailed = "برای مدیریت این pipeline، پردازشگر را روی سرور متصل خود باز کنید."
-pipeline = "Pipeline"
+pipeline = "پایپ‌لاین"
 upload = "Pipeline «{{pipeline}}» پس از آپلود متوقف شد، زیرا اعتبار این سرور تمام شده است."
 
 [portal.accountLink.gate]
@@ -8096,7 +8105,7 @@ usage = "مصرف"
 [portal.billing.compare]
 current = "فعلی"
 enterpriseData = "محل نگهداری داده‌ها و SCIM"
-enterpriseName = "Enterprise"
+enterpriseName = "سازمانی"
 enterprisePrice = "طبق توافق شما"
 enterpriseProcessing = "مصرفی یا ثابت"
 enterpriseSignIn = "SAML و حسابرسی"
@@ -8125,7 +8134,7 @@ rowSupport = "پشتیبانی"
 rowUsers = "کاربران"
 rowWhere = "محل اجرا"
 teamData = "Google Drive، پایگاه داده خودتان"
-teamName = "Team"
+teamName = "تیم"
 teamPrice = "$99/mo به‌ازای هر 100 کاربر"
 teamProcessing = "{{allowance}} در ماه، سپس مصرفی"
 teamProcessingUnknown = "سهمیه بزرگ‌تر، سپس مصرفی"
@@ -8170,14 +8179,14 @@ sub = "ویرایشگر کامل PDF."
 [portal.billing.identity.processor]
 chipMetered = "پردازش اندازه‌گیری‌شده"
 chipPipelines = "Pipelineها و API"
-name = "Processor"
+name = "پردازشگر"
 sub = "پایه Team به‌علاوه {{rate}} برای هر اعتبار"
 subNoRate = "پایه Team به‌علاوه پردازش اندازه‌گیری‌شده"
 
 [portal.billing.identity.team]
 chipFleet = "کنترل ناوگان"
 chipIncluded = "{{allowance}} اعتبار شامل‌شده ماهانه"
-name = "Team"
+name = "تیم"
 sub = "تا {{users}} کاربر"
 subNoLimit = "بدون محدودیت کاربر"
 
@@ -8569,7 +8578,7 @@ label = "رمز عبور"
 
 [portal.connections.types.consigno.fields.tenantId]
 helperText = "فقط اگر سازمان شما از tenantها استفاده می‌کند لازم است."
-label = "Tenant"
+label = "مستأجر"
 
 [portal.connections.types.consigno.fields.username]
 label = "نام کاربری"
@@ -8593,7 +8602,7 @@ label = "FTP / FTPS"
 label = "حالت اتصال"
 
 [portal.connections.types.ftp.fields.passive.options]
-active = "Active"
+active = "فعال"
 passive = "Passive (توصیه‌شده)"
 
 [portal.connections.types.ftp.fields.security]
@@ -8635,7 +8644,7 @@ label = "Basic auth"
 label = "Header auth"
 
 [portal.connections.types.n8n.fields.authType.options.none]
-label = "None"
+label = "هیچ‌کدام"
 
 [portal.connections.types.n8n.fields.headerName]
 helperText = "نام header از credential در n8n، نه مقدار آن."
@@ -8729,10 +8738,10 @@ label = "SMB / اشتراک شبکه"
 
 [portal.connections.types.smb.fields.domain]
 helperText = "اختیاری. اگر سرور شما از آن استفاده می‌کند، domain یا workgroup ویندوز."
-label = "Domain"
+label = "دامنه"
 
 [portal.connections.types.smb.fields.share]
-label = "Share"
+label = "اشتراک‌گذاری"
 placeholder = "documents"
 
 [portal.connections.types.splunk]
@@ -8817,7 +8826,7 @@ title = "شروع سریع"
 bodyAfterLink = "برای دستورالعمل‌های آماده کپی."
 bodyBeforeLink = "همان فراخوانی را در یک خط لوله وصل کنید تا اعتبارسنجی، حذف و تحویل را زنجیره کنید — یا آن را از طریق MCP در اختیار یک عامل قرار دهید. ببینید"
 label = "بعدی:"
-link = "Playbooks"
+link = "راهنماهای عملی"
 
 [portal.docs.quickstart.step1]
 body = "یک کلید محدوده‌بندی‌شده از تب Infrastructure ایجاد کنید. کلیدها محدودیت‌های نرخ و یک allowlist اختیاری IP دارند. آن را به shell خود export کنید:"
@@ -8844,7 +8853,7 @@ title = "محدودیت‌های نرخ و سهمیه‌ها"
 
 [portal.docs.recipes]
 cloneButton = "کلون کردن recipe"
-eyebrow = "PLAYBOOKS"
+eyebrow = "راهنماهای عملی"
 lead = "الگوهای سرتاسری که منابع، عملیات و مقصدها را زنجیره می‌کنند. هرکدام به یک خط لوله نگاشت می‌شود که می‌توانید کلون کنید."
 title = "Recipeها"
 
@@ -9083,7 +9092,7 @@ copy = "کپی خطا"
 view = "مشاهده خطا"
 
 [portal.failures.origin]
-pipeline = "Pipeline"
+pipeline = "پایپ‌لاین"
 policy = "اجرای سیاست"
 tool = "ابزار ویرایشگر"
 
@@ -9171,7 +9180,7 @@ options = "مشاهده گزینه‌های استقرار"
 start = "استقرار ویرایشگر"
 
 [portal.home.editor.target]
-cloud = "Managed Cloud"
+cloud = "Cloud مدیریت‌شده"
 docker = "خودمیزبان · Docker"
 kubernetes = "خودمیزبان · Kubernetes"
 
@@ -9215,7 +9224,7 @@ subheading = "هر رویداد احراز هویت، پیکربندی و پرد
 [portal.infrastructure.audit.columns]
 actor = "عامل"
 event = "رویداد"
-latency = "Latency"
+latency = "تأخیر"
 status = "وضعیت"
 target = "منبع"
 timestamp = "Timestamp"
@@ -10719,7 +10728,7 @@ collectionHint = "از collection یا index موجود که برای embedding 
 connection = "اتصال پایگاه داده"
 description = "یک مقصد خروجی برای قطعه‌های سند آماده‌شده. پایگاه داده embeddingها را تولید می‌کند؛ وقتی حالت track انتخاب شده باشد، اصل‌ها در منبع ورودی شما باقی می‌مانند."
 label = "پایگاه داده برداری"
-namespace = "Namespace / tenant"
+namespace = "Namespace / مستأجر"
 namespaceHint = "Namespace اختیاری Pinecone یا tenant در Weaviate. برای namespace پیش‌فرض یا collection تک‌مستأجره خالی بگذارید."
 textField = "فیلد متن"
 textFieldHint = "فیلدی که پایگاه داده embedding می‌کند، مطابق با schema مربوط به collection یا نقشه فیلد Pinecone."
@@ -12275,6 +12284,163 @@ image = "تصویر"
 saved = "ذخیره‌شده"
 text = "متن"
 title = "نوع امضا"
+
+[sign.wallet]
+apply_one = "اعمال {{count}} امضا"
+apply_other = "اعمال {{count}} امضا"
+applyEmpty = "اعمال امضاها"
+count = "{{count}} از {{max}}"
+default = "پیش‌فرض"
+loading = "در حال بارگذاری امضاهای شما..."
+new = "امضای جدید"
+shared = "اشتراکی"
+sharedHint = "همه می‌توانند از این‌ها استفاده کنند"
+unsaved = "ذخیره‌نشده"
+yours = "امضاهای شما"
+
+[sign.wallet.create]
+cancel = "لغو"
+full = "کتابخانه شما پر است ({{max}} امضا). برای ذخیره موارد بیشتر، یکی را حذف کنید."
+makeDefault = "تنظیم به‌عنوان پیش‌فرض"
+method = "نحوه ایجاد آن"
+name = "نام"
+save = "ذخیره در امضاهای من"
+saveBrowserHint = "در این مرورگر نگه داشته می‌شود و برای دفعه بعد آماده است."
+saveHint = "برای استفاده دوباره در امضای بعدی آماده است."
+subtitle = "یک‌بار ایجاد کنید، روی هر سندی دوباره استفاده کنید."
+title = "امضای جدید"
+use = "استفاده از امضا"
+who = "چه کسی می‌تواند از آن استفاده کند"
+whoEveryone = "همه"
+whoMe = "فقط من"
+
+[sign.wallet.defaultName]
+draw = "امضای من"
+initials = "حروف اول"
+phone = "امضای تلفنی"
+type = "امضای تایپ‌شده"
+upload = "امضای بارگذاری‌شده"
+
+[sign.wallet.delete]
+body = "\"{{name}}\" از امضاهای شما حذف می‌شود. اسنادی که قبلاً امضا کرده‌اید آن را حفظ می‌کنند."
+confirm = "حذف"
+title = "این امضا حذف شود؟"
+
+[sign.wallet.draw]
+bold = "قلم ضخیم"
+clear = "پاک کردن"
+fine = "قلم نازک"
+hint = "بالای خط امضا کنید"
+medium = "قلم متوسط"
+pad = "صفحه امضا"
+pen = "قلم"
+tip = "از ماوس، ترک‌پد، قلم یا انگشت استفاده کنید"
+undo = "واگرد"
+
+[sign.wallet.ink]
+black = "جوهر مشکی"
+blue = "جوهر آبی"
+label = "جوهر"
+navy = "جوهر سرمه‌ای"
+
+[sign.wallet.intro]
+body = "یک‌بار ایجاد کنید. اینجا ذخیره می‌شود و برای هر سندی که امضا می‌کنید آماده است."
+privacy = "امضاهای ذخیره‌شده خصوصی هستند، مگر اینکه انتخاب کنید آن‌ها را به اشتراک بگذارید."
+privacyBrowser = "امضاهای ذخیره‌شده در این مرورگر باقی می‌مانند."
+title = "افزودن امضای شما"
+
+[sign.wallet.menu]
+delete = "حذف"
+discard = "دور انداختن"
+makeDefault = "تنظیم به‌عنوان پیش‌فرض"
+options = "گزینه‌های {{name}}"
+place = "قرار دادن روی صفحه"
+removeDefault = "حذف از حالت پیش‌فرض"
+rename = "تغییر نام"
+save = "ذخیره در امضاهای من"
+share = "اشتراک‌گذاری با همه"
+stop = "توقف قرار دادن"
+
+[sign.wallet.phone]
+expires = "منقضی می‌شود در {{time}}"
+qr = "QR code برای امضا روی گوشی شما"
+received = "از گوشی شما دریافت شد"
+receiveFailed = "خواندن آن امضا ممکن نبود. برای تلاش دوباره کد جدید را اسکن کنید."
+step1 = "کد را با دوربین گوشی خود اسکن کنید"
+step1Hint = "در مرورگر گوشی باز می‌شود، نیازی به app نیست."
+step2 = "امضای خود را بکشید، تایپ کنید یا از آن عکس بگیرید"
+step2Hint = "یک بوم بزرگ مناسب انگشت."
+step3 = "اینجا به‌صورت خودکار ظاهر می‌شود"
+step3Hint = "هنگام امضا، این پنجره را باز نگه دارید."
+waiting = "در انتظار گوشی شما..."
+
+[sign.wallet.placed]
+empty = "امضاهایی که روی صفحه قرار می‌دهید اینجا فهرست می‌شوند."
+fallbackName = "امضا"
+page = "صفحه {{page}}"
+remove = "حذف {{name}}"
+show = "نمایش {{name}} روی صفحه"
+title = "روی این سند ({{count}})"
+
+[sign.wallet.rename]
+save = "ذخیره"
+title = "تغییر نام امضا"
+
+[sign.wallet.status]
+idle = "یک امضا انتخاب کنید تا آن را قرار دهید"
+placing = "برای قرار دادن {{name}} روی صفحه کلیک کنید."
+stop = "توقف"
+
+[sign.wallet.tabs]
+draw = "رسم"
+phone = "گوشی"
+type = "تایپ"
+upload = "بارگذاری"
+
+[sign.wallet.toast]
+applyFailed = "اعمال امضاها ممکن نبود"
+applyFailedBody = "امضاهای شما هنوز روی سند هستند. دوباره تلاش کنید."
+deleteFailed = "حذف امضا ممکن نبود"
+draftExists = "ابتدا امضای ذخیره‌نشده خود را ذخیره یا دور بیندازید"
+initialsFailed = "ذخیره حروف اول شما ممکن نبود"
+initialsPartial = "امضای شما ذخیره شد، اما حروف اول شما ذخیره نشد. حروف اول خود را جداگانه ذخیره کنید."
+renameFailed = "تغییر نام امضا ممکن نبود"
+saved = "در امضاهای شما ذخیره شد"
+saveFailed = "ذخیره امضا ممکن نبود"
+saveFailedBody = "هنوز برای قرار دادن روی این سند آماده است."
+shared = "با همه به اشتراک گذاشته شد"
+shareFailed = "اشتراک‌گذاری امضا ممکن نبود"
+
+[sign.wallet.type]
+initials = "حروف اول"
+initialsLimit = "ذخیره حروف اول به دو جای خالی برای امضا نیاز دارد."
+name = "نام شما"
+namePlaceholder = "نام خود را تایپ کنید"
+previewName = "نام شما"
+saveInitials = "حروف اول من را هم ذخیره کن"
+style = "سبک"
+styleOption = "سبک {{index}}"
+
+[sign.wallet.upload]
+browse = "یا فایل‌ها را مرور کنید"
+drop = "یک تصویر را اینجا رها کنید"
+failed = "خواندن آن تصویر ممکن نبود."
+hint = "PNG، JPG یا WebP تا {{size}} MB. پس‌زمینه‌های سفید به‌صورت خودکار حذف می‌شوند."
+ink = "رنگ جوهر"
+inkBlack = "مشکی"
+inkBlue = "آبی"
+inkOriginal = "اصلی"
+preview = "پیش‌نمایش امضای بارگذاری‌شده"
+processing = "در حال پاک‌سازی تصویر..."
+rejected = "یک تصویر PNG، JPG یا WebP تا {{size}} MB انتخاب کنید."
+removeBackground = "حذف پس‌زمینه"
+removeBackgroundHint = "کاغذ سفید شفاف می‌شود"
+replace = "جایگزینی"
+rotate = "چرخاندن"
+rotateLeft = "چرخاندن به چپ"
+rotateRight = "چرخاندن به راست"
+trim = "برش تا محدوده امضا"
+trimHint = "فضای خالی اطراف آن را برش می‌دهد"
 
 [signatureSettings.tooltip]
 header = "تنظیمات ظاهر امضا"

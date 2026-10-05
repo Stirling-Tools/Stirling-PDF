@@ -3980,7 +3980,7 @@ tip = "Every action your assistant runs is performed as your account and counts 
 viewApiKeys = "Ver claves API"
 
 [config.mcp.copy]
-configLabel = "Config"
+configLabel = "Configuración"
 copied = "Copiado"
 copy = "Copiar"
 endpointLabel = "URL del endpoint"
@@ -7345,10 +7345,19 @@ mixed = "{{count}} objetos"
 multiGeometry = "Selecciona un solo objeto para editar su posición y tamaño."
 nothingSelected = "Nada seleccionado"
 nothingSelectedHint = "Haz clic en cualquier texto, imagen o forma de la página para editarlo aquí."
+ocrDocumentChanged = "El documento cambió mientras se ejecutaba el OCR. Ejecuta el OCR de nuevo para incluir tus últimos cambios."
+ocrInvalidResult = "El OCR no devolvió un PDF. Inténtalo de nuevo."
+ocrNoLanguages = "No hay idiomas de OCR instalados en el servidor."
+ocrRunning = "Reconociendo texto..."
+ocrUnavailable = "El OCR no está disponible en este servidor."
 oneImage = "Imagen"
 oneShape = "Forma"
 oneText = "Texto"
 pages = "Páginas"
+runOcr = "Ejecutar OCR"
+scanHint_one = "Esta página es una imagen escaneada sin texto que editar. Ejecuta primero el OCR para que su texto sea editable."
+scanHint_other = "{{count}} páginas son imágenes escaneadas sin texto que editar. Ejecuta primero el OCR para que su texto sea editable."
+scannedText = "Texto escaneado · las palabras modificadas se cubren y se vuelven a dibujar con una fuente coincidente."
 tabDocument = "Documento"
 tabSelected = "Seleccionado"
 textBoxes = "Cuadros de texto"
@@ -7744,7 +7753,7 @@ successMessage = "Tu licencia se ha activado correctamente. Ya puedes cerrar est
 
 [plan.team]
 maxUsers = "100 usuarios"
-name = "Team"
+name = "Equipo"
 
 [policies.activity]
 outputsUnavailable = "Los resultados de la política ya no están disponibles para descargar."
@@ -8125,7 +8134,7 @@ rowSupport = "Soporte"
 rowUsers = "Usuarios"
 rowWhere = "Dónde se ejecuta"
 teamData = "Google Drive, tu propia base de datos"
-teamName = "Team"
+teamName = "Equipo"
 teamPrice = "$99/mes por cada 100 usuarios"
 teamProcessing = "{{allowance}} al mes, luego por uso"
 teamProcessingUnknown = "Una asignación mayor, luego por uso"
@@ -8164,20 +8173,20 @@ oauthSso = "SSO (OAuth2/OIDC)"
 chipAnywhere = "Web, escritorio y autoalojado"
 chipCredits = "{{allowance}} créditos gratuitos al mes"
 chipTools = "Todas las herramientas PDF"
-name = "Free"
+name = "Gratis"
 sub = "El editor PDF completo."
 
 [portal.billing.identity.processor]
 chipMetered = "Procesamiento medido"
 chipPipelines = "Flujos y API"
-name = "Processor"
+name = "Procesador"
 sub = "Base Team más {{rate}} por crédito"
 subNoRate = "Base Team más procesamiento medido"
 
 [portal.billing.identity.team]
 chipFleet = "Control de flota"
 chipIncluded = "{{allowance}} créditos incluidos al mes"
-name = "Team"
+name = "Equipo"
 sub = "Hasta {{users}} usuarios"
 subNoLimit = "Sin límite de usuarios"
 
@@ -8289,7 +8298,7 @@ prepaidRemaining = "Créditos prepago restantes"
 prepaidTooltip = "Se usan antes de la facturación medida y fuera de tu límite de gasto."
 raiseLimit = "Aumentar límite"
 remainingOf = "{{remaining}} de {{total}}"
-rowName = "Processor"
+rowName = "Procesador"
 spendAgainstLimit = "{{spend}} de {{cap}} medidos este ciclo"
 
 [portal.billing.seats]
@@ -8487,7 +8496,7 @@ label = "Autenticación"
 label = "Nombre de usuario y contraseña"
 
 [portal.connections.types.api.fields.authType.options.bearer]
-label = "Bearer token"
+label = "Token Bearer"
 
 [portal.connections.types.api.fields.authType.options.header]
 label = "Token en una cabecera personalizada"
@@ -11411,7 +11420,7 @@ title = "Resultados de Reparación"
 
 [replace-color]
 submit = "Reemplazar"
-title = "Reemplazar-Invertir-Color"
+title = "Reemplazar-invertir-color"
 
 [replace-color.selectText]
 1 = "Opciones para reemplazar o invertir color"
@@ -11625,7 +11634,7 @@ useCase2 = "Divida lotes de cama plana en archivos separados"
 useCase3 = "Divida collages en fotos individuales"
 useCase4 = "Extraiga fotos de documentos"
 whatThisDoes = "Qué hace esto"
-whatThisDoesDesc = "Encuentra y extrae automáticamente cada foto de una página escaneada o imagen compuesta, sin recorte manual."
+whatThisDoesDesc = "Busca y extrae automáticamente cada foto de una página escaneada o imagen compuesta, sin recorte manual."
 whenToUse = "Cuándo usar"
 
 [ScannerImageSplit.selectText]
@@ -12275,6 +12284,163 @@ image = "Imagen"
 saved = "Guardadas"
 text = "Texto"
 title = "Tipo de Firma"
+
+[sign.wallet]
+apply_one = "Aplicar {{count}} firma"
+apply_other = "Aplicar {{count}} firmas"
+applyEmpty = "Aplicar firmas"
+count = "{{count}} de {{max}}"
+default = "Predeterminada"
+loading = "Cargando tus firmas..."
+new = "Nueva firma"
+shared = "Compartidas"
+sharedHint = "Todos pueden usarlas"
+unsaved = "Sin guardar"
+yours = "Tus firmas"
+
+[sign.wallet.create]
+cancel = "Cancelar"
+full = "Tu biblioteca está llena ({{max}} firmas). Elimina una para guardar más."
+makeDefault = "Hacer predeterminada"
+method = "Cómo crearla"
+name = "Nombre"
+save = "Guardar en mis firmas"
+saveBrowserHint = "Se conserva en este navegador, lista para la próxima vez."
+saveHint = "Lista para reutilizarla la próxima vez que firmes."
+subtitle = "Créala una vez y reutilízala en cualquier documento."
+title = "Nueva firma"
+use = "Usar firma"
+who = "Quién puede usarla"
+whoEveryone = "Todos"
+whoMe = "Solo yo"
+
+[sign.wallet.defaultName]
+draw = "Mi firma"
+initials = "Iniciales"
+phone = "Firma del teléfono"
+type = "Firma escrita"
+upload = "Firma subida"
+
+[sign.wallet.delete]
+body = "\"{{name}}\" se elimina de tus firmas. Los documentos que ya firmaste la conservan."
+confirm = "Eliminar"
+title = "¿Eliminar esta firma?"
+
+[sign.wallet.draw]
+bold = "Lápiz grueso"
+clear = "Borrar"
+fine = "Lápiz fino"
+hint = "Firma sobre la línea"
+medium = "Lápiz medio"
+pad = "Panel de firma"
+pen = "Lápiz"
+tip = "Usa un ratón, trackpad, lápiz o dedo"
+undo = "Deshacer"
+
+[sign.wallet.ink]
+black = "Tinta negra"
+blue = "Tinta azul"
+label = "Tinta"
+navy = "Tinta azul marino"
+
+[sign.wallet.intro]
+body = "Créala una vez. Se guarda aquí, lista para cada documento que firmes."
+privacy = "Las firmas guardadas son privadas para ti a menos que elijas compartirlas."
+privacyBrowser = "Las firmas guardadas permanecen en este navegador."
+title = "Añade tu firma"
+
+[sign.wallet.menu]
+delete = "Eliminar"
+discard = "Descartar"
+makeDefault = "Hacer predeterminada"
+options = "Opciones para {{name}}"
+place = "Colocar en la página"
+removeDefault = "Quitar como predeterminada"
+rename = "Renombrar"
+save = "Guardar en mis firmas"
+share = "Compartir con todos"
+stop = "Dejar de colocar"
+
+[sign.wallet.phone]
+expires = "Caduca en {{time}}"
+qr = "Código QR para firmar en tu teléfono"
+received = "Recibida desde tu teléfono"
+receiveFailed = "No se ha podido leer esa firma. Escanea el nuevo código para intentarlo de nuevo."
+step1 = "Escanea el código con la cámara de tu teléfono"
+step1Hint = "Se abre en el navegador del teléfono, no hace falta ninguna app."
+step2 = "Dibuja, escribe o fotografía tu firma"
+step2Hint = "Un lienzo grande pensado para un dedo."
+step3 = "Aparece aquí automáticamente"
+step3Hint = "Mantén esta ventana abierta mientras firmas."
+waiting = "Esperando a tu teléfono..."
+
+[sign.wallet.placed]
+empty = "Las firmas que coloques en la página aparecerán aquí."
+fallbackName = "Firma"
+page = "Página {{page}}"
+remove = "Eliminar {{name}}"
+show = "Mostrar {{name}} en la página"
+title = "En este documento ({{count}})"
+
+[sign.wallet.rename]
+save = "Guardar"
+title = "Renombrar firma"
+
+[sign.wallet.status]
+idle = "Elige una firma para colocarla"
+placing = "Haz clic en la página para colocar {{name}}."
+stop = "Detener"
+
+[sign.wallet.tabs]
+draw = "Dibujar"
+phone = "Teléfono"
+type = "Escribir"
+upload = "Subir"
+
+[sign.wallet.toast]
+applyFailed = "No se han podido aplicar las firmas"
+applyFailedBody = "Tus firmas siguen en el documento. Inténtalo de nuevo."
+deleteFailed = "No se ha podido eliminar la firma"
+draftExists = "Primero guarda o descarta tu firma sin guardar"
+initialsFailed = "No se han podido guardar tus iniciales"
+initialsPartial = "Tu firma se ha guardado, pero tus iniciales no. Intenta guardar tus iniciales por separado."
+renameFailed = "No se ha podido renombrar la firma"
+saved = "Guardada en tus firmas"
+saveFailed = "No se ha podido guardar la firma"
+saveFailedBody = "Sigue lista para colocarla en este documento."
+shared = "Compartida con todos"
+shareFailed = "No se ha podido compartir la firma"
+
+[sign.wallet.type]
+initials = "Iniciales"
+initialsLimit = "Guardar iniciales requiere dos espacios de firma libres."
+name = "Tu nombre"
+namePlaceholder = "Escribe tu nombre"
+previewName = "Tu nombre"
+saveInitials = "Guardar también mis iniciales"
+style = "Estilo"
+styleOption = "Estilo {{index}}"
+
+[sign.wallet.upload]
+browse = "o explora archivos"
+drop = "Suelta una imagen aquí"
+failed = "No se ha podido leer esa imagen."
+hint = "PNG, JPG o WebP de hasta {{size}} MB. Los fondos blancos se eliminan automáticamente."
+ink = "Color de tinta"
+inkBlack = "Negro"
+inkBlue = "Azul"
+inkOriginal = "Original"
+preview = "Vista previa de la firma subida"
+processing = "Limpiando la imagen..."
+rejected = "Elige una imagen PNG, JPG o WebP de hasta {{size}} MB."
+removeBackground = "Eliminar fondo"
+removeBackgroundHint = "El papel blanco se vuelve transparente"
+replace = "Reemplazar"
+rotate = "Girar"
+rotateLeft = "Girar a la izquierda"
+rotateRight = "Girar a la derecha"
+trim = "Recortar a la firma"
+trimHint = "Recorta el espacio vacío alrededor"
 
 [signatureSettings.tooltip]
 header = "Ajustes de apariencia de la firma"
