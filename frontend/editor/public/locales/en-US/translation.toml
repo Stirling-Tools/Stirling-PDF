@@ -175,12 +175,8 @@ tags = "embed,attach,include,attachments,attach files,embed files,include files,
 failed = "An error occurred while adding attachments to the PDF."
 
 [AddAttachmentsRequest]
-addMoreFiles = "Add more files..."
 attachments = "Select Attachments"
-info = "Select files to attach to your PDF. These files will be embedded and accessible through the PDF's attachment panel."
-placeholder = "Choose files..."
-removeFile = "Remove file"
-selectedFiles = "Selected Files"
+info = "View, add, extract, rename, or delete embedded PDF attachments. Changes are staged cleanly and saved to your document in one pass."
 submit = "Add Attachments"
 
 [AddAttachmentsRequest.error]
@@ -193,7 +189,7 @@ title = "Attachment Results"
 title = "What it does"
 
 [AddAttachmentsRequest.tooltip.header]
-title = "About Add Attachments"
+title = "About Manage Attachments"
 
 [addImage]
 applySignatures = "Apply Images"
@@ -2039,13 +2035,28 @@ description = "A free, private PDF editor you can run on any infrastructure."
 dismiss = "Dismiss"
 
 [attachments]
+addAttachments = "Add attachments..."
 convertToPdfA3b = "Convert to PDF/A-3b"
-convertToPdfA3bDescription = "Creates an archival PDF with embedded attachments"
 convertToPdfA3bTooltip = "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files."
 convertToPdfA3bTooltipHeader = "About PDF/A-3b Conversion"
 convertToPdfA3bTooltipTitle = "What it does"
-tags = "attachments,add,remove,embed,file"
-title = "Add Attachments"
+discardChanges = "Discard"
+downloadSingle = "Download attachment"
+duplicateName = "An attachment named '{{name}}' already exists."
+extractAll = "Extract all"
+filterPlaceholder = "Filter attachments..."
+noAttachments = "No attachments inside this PDF yet. Drop files below or click to browse."
+remove = "Remove attachment"
+rename = "Rename attachment"
+restore = "Undo delete"
+saveChanges = "Save Changes ({{count}})"
+tags = "attachments,add,remove,embed,file,extract,manage"
+title = "Manage Attachments"
+
+[attachments.badges]
+deleted = "DELETED"
+renamed = "RENAMED"
+staged = "STAGED"
 
 [audit]
 configureAudit = "Configure Audit Logging"
@@ -5517,9 +5528,9 @@ signUp = "Sign Up Free"
 title = "You're using Stirling PDF as a guest!"
 
 [home.addAttachments]
-desc = "Add or remove embedded files (attachments) to/from a PDF"
-tags = "embed,attach,include,attachments,attach files,embed files,include files,add files,file attachment,associated files,supplementary files"
-title = "Add Attachments"
+desc = "View, add, extract, rename, or delete embedded PDF attachments"
+tags = "embed,attach,include,attachments,attach files,embed files,include files,add files,file attachment,associated files,supplementary files,extract,manage"
+title = "Manage Attachments"
 
 [home.addImage]
 desc = "Adds a image onto a set location on the PDF"
@@ -7336,10 +7347,19 @@ mixed = "{{count}} objects"
 multiGeometry = "Select a single object to edit its position and size."
 nothingSelected = "Nothing selected"
 nothingSelectedHint = "Click any text, image or shape on the page to edit it here."
+ocrDocumentChanged = "The document changed while OCR was running. Run OCR again to include your latest changes."
+ocrInvalidResult = "OCR did not return a PDF. Please try again."
+ocrNoLanguages = "No OCR languages are installed on the server."
+ocrRunning = "Recognizing text..."
+ocrUnavailable = "OCR is unavailable on this server."
 oneImage = "Image"
 oneShape = "Shape"
 oneText = "Text"
 pages = "Pages"
+runOcr = "Run OCR"
+scanHint_one = "This page is a scanned image with no text to edit. Run OCR first to make its text editable."
+scanHint_other = "{{count}} pages are scanned images with no text to edit. Run OCR first to make their text editable."
+scannedText = "Scanned text · changed words are covered and redrawn in a matching font."
 tabDocument = "Document"
 tabSelected = "Selected"
 textBoxes = "Text boxes"
@@ -11678,12 +11698,15 @@ title = "Billing"
 
 [settings.configuration]
 advanced = "Advanced"
+connections = "Single sign-on"
 database = "Database"
 endpoints = "Endpoints"
 features = "Features"
 folderAccess = "Folder Access"
 integrations = "Integrations"
+legal = "Legal documents"
 mcp = "MCP Server"
+privacy = "Privacy"
 storageSharing = "File Storage & Sharing"
 systemSettings = "System Settings"
 
@@ -11818,7 +11841,7 @@ updateBehaviorError = "Could not change update behavior"
 updateBehaviorErrorLocked = "This setting is locked by your administrator."
 updateBehaviorLockedDescription = "Your administrator has configured how Stirling-PDF handles updates on this machine. Contact them to change this."
 updateBehaviorSaved = "Update behavior saved."
-versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
+versionMismatch = "Your desktop application and server are running different versions. Update both to the same version to avoid compatibility issues."
 viewDetails = "View Details"
 
 [settings.general.versionInfo]
@@ -12103,6 +12126,8 @@ filterSigned = "Signed"
 fromOwner = "From {{owner}}"
 newRequest = "Request signatures"
 signedCount = "{{signed}}/{{total}} signed"
+signInRequiredBody = "Sign in to request signatures and see requests sent to you."
+signInRequiredTitle = "Sign in required"
 
 [sharedSign.empty]
 active = "No pending sign requests or active sessions"

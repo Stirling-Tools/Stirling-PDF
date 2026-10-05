@@ -253,15 +253,13 @@ export function rankFileResults(
       group: "files",
       title: item.name,
       // The file-type doc icon (PDF/image/doc/…) the sidebar and grid use,
-      // rather than a flat generic file glyph. Sized by height so the portrait
-      // doc shape sits level with the square tool/settings icons instead of
-      // overflowing the row.
+      // rather than a flat generic file glyph.
       icon: createElement(FileDocIcon, {
         variant: getFileDocVariant(
           detectFileExtension(item.name.toLowerCase()),
           (item.type ?? "").toLowerCase(),
         ),
-        style: { height: "1.15rem", width: "auto" },
+        size: "1.15rem",
       }),
       score,
       onSelect: () => openFile(item),
@@ -474,7 +472,7 @@ export function assembleSuperSearchGroups(
 /**
  * The editor's results provider: the shared sources wired to in-app select
  * actions (open file → viewer, select tool in the workbench, deep-link into
- * the settings modal, route into the Processor).
+ * the settings page, route into the Processor).
  *
  * @param query   current search text
  * @param active  whether the search surface is open; gates the My Files load
