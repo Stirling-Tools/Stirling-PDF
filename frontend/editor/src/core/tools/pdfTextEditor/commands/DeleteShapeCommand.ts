@@ -3,6 +3,7 @@ import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
 import type { Page } from "@app/tools/pdfTextEditor/model/Page";
 import type { ShapeObject } from "@app/tools/pdfTextEditor/model/ShapeObject";
+import type { PageRuleSnapshot } from "@app/tools/pdfTextEditor/types";
 import { transformObject } from "@app/tools/pdfTextEditor/util/objectTransform";
 
 interface PageInsertModule {
@@ -32,6 +33,8 @@ export class DeleteShapeCommand implements Command {
   private readonly pageIndex: number;
   private readonly shapeId: string;
   private removed: ShapeObject | null = null;
+  private removedRules: PageRuleSnapshot[] = [];
+  private removedFills: PageRuleSnapshot[] = [];
   /** Position among the shapes and in the page's object list, for revert. */
   private shapeIndex = -1;
   private objectIndex = -1;
@@ -60,6 +63,14 @@ export class DeleteShapeCommand implements Command {
       if (!m.FPDFPage_RemoveObject(page.pagePtr, shape.pdfiumObjPtr)) return;
     }
     this.removed = shape;
+    this.removedRules = page.rules.filter(
+      (rule) => rule.ptr === shape.pdfiumObjPtr,
+    );
+    this.removedFills = page.fills.filter(
+      (fill) => fill.ptr === shape.pdfiumObjPtr,
+    );
+    page.setRules(page.rules.filter((rule) => rule.ptr !== shape.pdfiumObjPtr));
+    page.setFills(page.fills.filter((fill) => fill.ptr !== shape.pdfiumObjPtr));
     page.setShapes(page.shapes.filter((s) => s !== shape));
     page.markDirty();
     page.markNeedsGenerate();
@@ -90,6 +101,10 @@ export class DeleteShapeCommand implements Command {
       shape,
     );
     page.setShapes(shapes);
+    page.setRules([...page.rules, ...this.removedRules]);
+    page.setFills([...page.fills, ...this.removedFills]);
+    this.removedRules = [];
+    this.removedFills = [];
     this.removed = null;
     page.markDirty();
     page.markNeedsGenerate();
