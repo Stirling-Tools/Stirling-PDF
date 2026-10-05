@@ -59,6 +59,7 @@ function fakeGitHub(items: TurnItem[] = [], { labelled = false, alreadyRemoved =
           return { data: { mergeable: null, mergeable_state: "unknown", labels, head: { ref: BRANCH, repo: { full_name: FORK } } } };
         },
         update: async () => assert.fail("no closes"),
+        listFiles: async () => assert.fail("no file lists"),
       },
     },
   };

@@ -6,6 +6,7 @@ export const LABELS = {
   backlogCleanup: "backlog-cleanup",
   waitingOnAuthor: "waiting-on-author",
   conflicts: "has conflicts", // must match CONFLICT_LABEL in pr-conflict-labeler.yml
+  largePrApproved: "large-pr-approved",
 };
 
 /** The login github.token acts as, so the actor on every write these bots make. */
@@ -37,6 +38,9 @@ export interface GitHubClient {
     pulls: {
       get(params: Repo & { pull_number: number }): Promise<{ data: PullData }>;
       update(params: Repo & { pull_number: number; state: "closed" }): Promise<unknown>;
+      listFiles(
+        params: Repo & { pull_number: number; per_page: number; page: number },
+      ): Promise<{ data: { filename: string; additions: number; deletions: number }[] }>;
     };
   };
 }
