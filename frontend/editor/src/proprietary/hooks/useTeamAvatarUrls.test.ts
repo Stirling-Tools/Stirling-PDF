@@ -140,17 +140,23 @@ describe("useTeamAvatarUrls", () => {
     expect(client.createSignedUrls).not.toHaveBeenCalled();
   });
 
-  it("falls back to initials when signing errors", async () => {
+  it("drops already-signed urls when a later signing is refused", async () => {
+    client.createSignedUrls.mockResolvedValue(
+      signed([[ALICE, "https://sb/alice"]]),
+    );
+    const { result, rerender } = renderHook(
+      (m: Array<{ supabaseId: string }>) => useTeamAvatarUrls(m),
+      { initialProps: [{ supabaseId: ALICE }] },
+    );
+    await waitFor(() => expect(result.current[ALICE]).toBe("https://sb/alice"));
+
+    // Losing access to the bucket surfaces as a refusal on the next sign.
     client.createSignedUrls.mockResolvedValue({
       data: null,
       error: { message: "nope" },
     });
+    rerender([{ supabaseId: ALICE }, { supabaseId: BOB }]);
 
-    const { result } = renderHook(() =>
-      useTeamAvatarUrls([{ supabaseId: ALICE }]),
-    );
-
-    await waitFor(() => expect(client.createSignedUrls).toHaveBeenCalled());
-    expect(result.current).toEqual({});
+    await waitFor(() => expect(result.current).toEqual({}));
   });
 });

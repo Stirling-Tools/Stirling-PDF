@@ -72,7 +72,14 @@ export function useTeamAvatarUrls(
           .from(PROFILE_BUCKET)
           .createSignedUrls(paths, SIGNED_URL_TTL_SECONDS);
 
-        if (cancelled || error || request !== requestRef.current) return;
+        if (cancelled || request !== requestRef.current) return;
+        if (error) {
+          // Drop what we held rather than keep serving it. A refusal is how losing access to
+          // the bucket shows up, so the safe reading of a failure is that these are no longer
+          // ours to show.
+          setUrls({});
+          return;
+        }
 
         const next: Record<string, string> = {};
         for (const entry of data ?? []) {
