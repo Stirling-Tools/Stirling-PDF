@@ -11,6 +11,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedStatic;
 
@@ -28,6 +29,59 @@ class ConfigInitializerRestartTest {
 
     private static String read(Path settings, String... keyPath) throws IOException {
         return String.valueOf(new YamlHelper(settings).getValueByExactKeyPath(keyPath));
+    }
+
+    @Test
+    void storageAndSigningDefaultOnAtFirstBoot(@TempDir Path tmp) throws Exception {
+        Path settings = tmp.resolve("settings.yml");
+        try (MockedStatic<InstallationPathConfig> paths =
+                mockStatic(InstallationPathConfig.class)) {
+            paths.when(InstallationPathConfig::getSettingsPath).thenReturn(settings.toString());
+            paths.when(InstallationPathConfig::getCustomSettingsPath)
+                    .thenReturn(tmp.resolve("custom_settings.yml").toString());
+
+            new ConfigInitializer().ensureConfigExists();
+
+            assertEquals("true", read(settings, "storage", "enabled"));
+            assertEquals("true", read(settings, "storage", "signing", "enabled"));
+            assertEquals("local", read(settings, "storage", "provider"));
+            assertEquals("false", read(settings, "storage", "sharing", "enabled"));
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+            value = {"-,-", "false,-", "-,false", "false,false", "true,false", "false,true"},
+            nullValues = "-")
+    void storageOptOutsSurviveUpgradeAndRestart(
+            String storageEnabled, String signingEnabled, @TempDir Path tmp) throws Exception {
+        Path settings = tmp.resolve("settings.yml");
+        // Startup replaces files shorter than 31 lines instead of merging their settings.
+        Files.writeString(
+                settings,
+                "# Existing installation\n".repeat(32)
+                        + "storage:\n  provider: local\n"
+                        + (storageEnabled == null ? "" : "  enabled: " + storageEnabled + "\n")
+                        + (signingEnabled == null
+                                ? ""
+                                : "  signing:\n    enabled: " + signingEnabled + "\n"));
+        try (MockedStatic<InstallationPathConfig> paths =
+                mockStatic(InstallationPathConfig.class)) {
+            paths.when(InstallationPathConfig::getSettingsPath).thenReturn(settings.toString());
+            paths.when(InstallationPathConfig::getCustomSettingsPath)
+                    .thenReturn(tmp.resolve("custom_settings.yml").toString());
+            ConfigInitializer initializer = new ConfigInitializer();
+
+            for (int restart = 0; restart < 2; restart++) {
+                initializer.ensureConfigExists();
+                assertEquals(
+                        storageEnabled == null ? "true" : storageEnabled,
+                        read(settings, "storage", "enabled"));
+                assertEquals(
+                        signingEnabled == null ? "true" : signingEnabled,
+                        read(settings, "storage", "signing", "enabled"));
+            }
+        }
     }
 
     @Test
