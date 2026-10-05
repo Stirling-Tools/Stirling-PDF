@@ -227,7 +227,7 @@ function LinkStyling({
       : undefined;
   const isUnderline = strokeStyle === PdfAnnotationBorderStyle.UNDERLINE;
   return (
-    // icon-lint-allow: runtime-generated-svg, each link's box is measured from the annotation rect
+    // icon-lint-allow: runtime-generated-svg -- each link's box is measured from the annotation rect
     <svg
       style={{
         position: "absolute",
