@@ -635,7 +635,7 @@ function PageLayers({
         onAnnotationMenuAnchor={onAnnotationMenuAnchor}
       />
       {/* LinkLayer: uses EmbedPDF annotation state for link rendering */}
-<LinkLayer
+      <LinkLayer
         documentId={documentId}
         pageIndex={pageIndex}
         selectionActive={isAnnotationMode}
