@@ -1,7 +1,7 @@
 // One-off script: generate `link-annotations-sample.pdf`, two pages that carry
-// four borderless URI link annotations each. Links render through LinkLayer
-// overlays; this fixture pins that overlay count and that the annotation layer
-// draws no per-link SVG hit box.
+// four borderless URI link annotations each. Borderless so the renderer takes
+// its underline branch, four per page so a page that grows or loses an overlay
+// is a count mismatch rather than a visual guess.
 //
 // Run with: node generate-link-annotations-sample.mjs
 import { PDFDocument, StandardFonts, PDFName } from "@cantoo/pdf-lib";

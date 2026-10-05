@@ -29,9 +29,6 @@ test("link annotations render as overlays with no annotation-layer hit boxes", a
     { timeout: 15_000 },
   );
 
-  // Each link keeps exactly one annotation-layer SVG for its underline or
-  // border styling; LinkLayer owns the clickable overlay, so no SVG may carry
-  // a transparent hit rect.
   await expect(firstPage.locator("svg")).toHaveCount(LINKS_PER_PAGE);
   await expect(firstPage.locator("svg rect:not([stroke])")).toHaveCount(0);
 });
@@ -59,8 +56,6 @@ test("annotation editing selects a link instead of navigating", async ({
   const popups: string[] = [];
   page.on("popup", (popup) => popups.push(popup.url()));
 
-  // The annotate tool turns annotation editing on, so the overlay must route
-  // the click to selection; outside it the same click follows the link.
   await page.goto("/annotate");
   await page.locator('input[type="file"]').first().setInputFiles(LINK_PDF);
   const firstPage = page.locator('[data-page-index="0"]').first();

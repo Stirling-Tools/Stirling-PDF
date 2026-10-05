@@ -260,8 +260,8 @@ LinkToolbar.displayName = "LinkToolbar";
 interface LinkLayerProps {
   documentId: string;
   pageIndex: number;
-  /** Annotation editing is active: a link click selects its annotation for
-   *  editing instead of following the link. */
+  /** While annotation editing is active, a click selects the link's
+   *  annotation instead of following it. */
   selectionActive?: boolean;
 }
 

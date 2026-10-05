@@ -200,14 +200,9 @@ function normalizePageRotation(rotation: number | null | undefined): number {
   return ((Math.round(value) % 4) + 4) % 4;
 }
 
-// Visual half of the built-in link renderer: underline/border styling only,
-// with no hit rect. LinkLayer owns link hit-testing, so the annotation layer
-// must not add a transparent rect per link — but the renderer entry keeps the
-// built-in matching, preview, and interaction fields, so link styling,
-// selection, and drag/resize keep working exactly as before. Two deliberate
-// exceptions: no selectOverride (an IRT reply link selects itself rather than
-// its parent) and no renderLocked (locked links fall back to the styling
-// render, which needs no hit-testing anyway).
+// LinkLayer owns link hit-testing, so this draws the underline or border and
+// nothing else: adding the built-in renderer's transparent rect back would
+// double every link's clickable overlay.
 function LinkStyling({
   rect,
   scale,
@@ -272,6 +267,10 @@ function LinkStyling({
   );
 }
 
+// Replaces the built-in link renderer, so every field it drops is a decision:
+// no selectOverride, because the default selects a threaded reply link itself
+// rather than its parent, and no renderLocked, because a locked link needs no
+// hit target of its own.
 const LINK_RENDERERS: BoxedAnnotationRenderer[] = [
   {
     id: "link",
@@ -293,8 +292,8 @@ const LINK_RENDERERS: BoxedAnnotationRenderer[] = [
       );
     },
     renderPreview: ({ data, bounds, scale }) => {
-      // Preview data is untyped once the renderer is boxed; links carry the
-      // same stroke fields the built-in preview reads.
+      // BoxedAnnotationRenderer erases the preview data type, so `data` arrives
+      // as unknown.
       const { strokeWidth, strokeColor } = data as {
         strokeWidth: number;
         strokeColor: string;
