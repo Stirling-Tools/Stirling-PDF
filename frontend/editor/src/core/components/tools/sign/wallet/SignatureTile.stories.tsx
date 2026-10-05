@@ -4,6 +4,7 @@ import {
   SignatureTile,
 } from "@app/components/tools/sign/wallet/SignatureTile";
 
+// icon-lint-allow: storybook-fixture -- Fake signature image for the wallet tile stories.
 const SIGNATURE =
   "data:image/svg+xml;base64," +
   btoa(
