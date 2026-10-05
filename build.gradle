@@ -85,7 +85,7 @@ tasks.named('clean') {
 
 // Configure main class for the root project
 springBoot {
-    mainClass = 'stirling.software.SPDF.SPDFApplication'
+    mainClass = 'stirling.software.spdf.SPDFApplication'
 }
 
 allprojects {
@@ -253,6 +253,7 @@ subprojects {
         implementation rootProject.libs.logback.classic
         compileOnly rootProject.libs.lombok
         annotationProcessor rootProject.libs.lombok
+        implementation rootProject.libs.jspecify
 
         // Jackson 3 (Spring Boot 4 uses tools.jackson)
         implementation 'org.springframework.boot:spring-boot-starter-jackson'
