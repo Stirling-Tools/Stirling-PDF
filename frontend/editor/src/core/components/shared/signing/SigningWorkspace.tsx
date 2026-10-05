@@ -7,6 +7,7 @@ import { Button } from "@app/ui/Button";
 import { Icon } from "@app/ui/Icon";
 import { SigningSessionsTable } from "@app/components/shared/signing/SigningSessionsTable";
 import { useGroupSigningEnabled } from "@app/hooks/useGroupSigningEnabled";
+import { useAuth } from "@app/auth/UseSession";
 import { useSigningSessionController } from "@app/hooks/signing/useSigningSessionController";
 import { useAllFiles } from "@app/contexts/FileContext";
 import { useViewer } from "@app/contexts/ViewerContext";
@@ -29,6 +30,33 @@ import {
 import "@app/components/shared/signing/signing.css";
 
 const Viewer = lazy(() => import("@app/components/viewer/Viewer"));
+
+/** Guests are told to sign in rather than that the server has signing off. */
+function SigningUnavailableNotice() {
+  const { t } = useTranslation();
+  const { isAnonymous } = useAuth();
+  if (isAnonymous) {
+    return (
+      <Alert
+        color="yellow"
+        title={t("sharedSign.signInRequiredTitle", "Sign in required")}
+      >
+        {t(
+          "sharedSign.signInRequiredBody",
+          "Sign in to request signatures and see requests sent to you.",
+        )}
+      </Alert>
+    );
+  }
+  return (
+    <Alert>
+      {t(
+        "sharedSign.disabledBody",
+        "Collaborative signing isn't enabled on this server.",
+      )}
+    </Alert>
+  );
+}
 
 /** Owns session navigation and gives the document and signing controls their own workspace. */
 export default function SigningWorkspace() {
@@ -151,12 +179,7 @@ export default function SigningWorkspace() {
       )}
       {!enabled ? (
         <div className="signing-workspace__body">
-          <Alert>
-            {t(
-              "sharedSign.disabledBody",
-              "Collaborative signing isn't enabled on this server.",
-            )}
-          </Alert>
+          <SigningUnavailableNotice />
         </div>
       ) : opening ? (
         <Center h="100%">

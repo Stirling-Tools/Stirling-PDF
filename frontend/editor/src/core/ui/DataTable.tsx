@@ -125,17 +125,7 @@ export interface DataTableProps<T> {
 }
 
 function SortGlyph() {
-  return (
-    <svg
-      width="10"
-      height="10"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      aria-hidden
-    >
-      <path d="M12 8 6 15h12z" />
-    </svg>
-  );
+  return <Icon name="triangle" size={10} filled />;
 }
 
 const CHEVRON_COLUMN_KEY = "__affordance";

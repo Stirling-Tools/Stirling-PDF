@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { MeterBar, remainingMeter } from "@app/billing";
@@ -18,20 +19,12 @@ const LOW_CREDITS = 100;
 
 function Chevron() {
   return (
-    <svg
-      className="portal-connect__next-chevron"
-      viewBox="0 0 24 24"
-      width="16"
-      height="16"
-      fill="none"
-      stroke="currentColor"
+    <Icon
+      name="chevron-right"
+      size={16}
       strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <polyline points="9 6 15 12 9 18" />
-    </svg>
+      className="portal-connect__next-chevron"
+    />
   );
 }
 

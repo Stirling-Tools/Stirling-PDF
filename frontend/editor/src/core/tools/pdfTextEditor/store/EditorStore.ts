@@ -259,6 +259,7 @@ export class EditorStore {
         revision: live.revision,
         runs: live.runs.map((r) => r.snapshot()),
         images: live.images.map((img) => img.snapshot()),
+        shapes: live.shapes.map((shape) => shape.snapshot()),
         // Regrouping re-populates the page, which re-reads its annotations.
         annotations: live.annotations,
       };
@@ -269,6 +270,11 @@ export class EditorStore {
   /** Begin a load and return a token. */
   beginLoad(): number {
     return ++this.loadToken;
+  }
+
+  /** Identifies the latest document load, including workbench and password opens. */
+  get currentLoadToken(): number {
+    return this.loadToken;
   }
 
   isCurrentLoad(token: number): boolean {
@@ -298,6 +304,7 @@ export class EditorStore {
   }
 
   clearDocument(): void {
+    this.loadToken++;
     this.disposeDocumentIfAny();
     resetCharcodeCaches();
     this.history.clear();
@@ -474,6 +481,7 @@ export class EditorStore {
       page.loaded = false;
       page.setRuns([]);
       page.setImages([]);
+      page.setShapes([]);
       PdfiumTextReader.populate(doc, page, mode);
     }
   }
@@ -501,6 +509,7 @@ export class EditorStore {
         revision: live.revision,
         runs: live.runs.map((r) => r.snapshot()),
         images: live.images.map((img) => img.snapshot()),
+        shapes: live.shapes.map((shape) => shape.snapshot()),
       };
     });
     if (!changed) return;
@@ -548,6 +557,7 @@ export class EditorStore {
   }
 
   dispose(): void {
+    this.loadToken++;
     this.disposeDocumentIfAny();
     this.listeners.clear();
   }

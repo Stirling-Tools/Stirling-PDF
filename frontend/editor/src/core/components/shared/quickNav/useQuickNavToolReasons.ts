@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useMultipleEndpointsEnabled } from "@app/hooks/useEndpointConfig";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useGroupSigningEnabled } from "@app/hooks/useGroupSigningEnabled";
+import { useAuth } from "@app/auth/UseSession";
 import { getDisabledLabel } from "@app/components/tools/fullscreen/shared";
 import type {
   QuickNavToolReasons,
@@ -23,7 +24,8 @@ const ENDPOINT_ENTRIES = Object.keys(
 
 /** Shared signing is a feature toggle rather than an endpoint, so it has its own cause. */
 type EndpointCause = "missingDependency" | "disabledByAdmin";
-type Cause = EndpointCause | "groupSigningOff";
+// Guest-only; left out of CAUSES so it is never read back for whoever signs in next.
+type Cause = EndpointCause | "groupSigningOff" | "signInRequired";
 type Causes = Partial<Record<QuickNavEntryId, Cause>>;
 const CAUSES: Cause[] = [
   "missingDependency",
@@ -90,12 +92,15 @@ export function useQuickNavToolReasons(): QuickNavToolReasons | null {
 
   const { loading: configLoading } = useAppConfig();
   const groupSigningEnabled = useGroupSigningEnabled();
+  const { isAnonymous } = useAuth();
 
   const live = useMemo(() => {
     // A half answer would dim entries it can't see yet.
     if (loading || configLoading) return null;
     const causes = causesFor(endpointStatus, endpointDetails);
-    if (!groupSigningEnabled) causes.sharedSign = "groupSigningOff";
+    if (!groupSigningEnabled) {
+      causes.sharedSign = isAnonymous ? "signInRequired" : "groupSigningOff";
+    }
     return causes;
   }, [
     loading,
@@ -103,6 +108,7 @@ export function useQuickNavToolReasons(): QuickNavToolReasons | null {
     endpointStatus,
     endpointDetails,
     groupSigningEnabled,
+    isAnonymous,
   ]);
 
   // Keyed on contents: the object is rebuilt every render.
@@ -118,6 +124,13 @@ export function useQuickNavToolReasons(): QuickNavToolReasons | null {
     const reasons: QuickNavToolReasons = {};
     for (const entry of Object.keys(causes) as QuickNavEntryId[]) {
       const cause = causes[entry];
+      if (cause === "signInRequired") {
+        reasons[entry] = t(
+          "sharedSign.signInRequiredBody",
+          "Sign in to request signatures and see requests sent to you.",
+        ).replace(/\.\s*$/, "");
+        continue;
+      }
       if (cause === "groupSigningOff") {
         // The tool's own wording, minus the full stop.
         reasons[entry] = t(
