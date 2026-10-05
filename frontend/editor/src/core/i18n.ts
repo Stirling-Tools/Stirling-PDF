@@ -29,7 +29,11 @@ i18n
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
-    fallbackLng: "en-US",
+    // i18next fetches fallbackLng resources at init and suspense waits for
+    // all of them, so an eager fallback gates first paint on a file that only
+    // covers keys missing from the active locale. It loads in the background
+    // via loadFallbackInBackground instead.
+    fallbackLng: false,
     supportedLngs: Object.keys(supportedLanguages),
     load: "currentOnly",
     nonExplicitSupportedLngs: false,
@@ -80,6 +84,32 @@ i18n.on("languageChanged", (lng) => {
   document.documentElement.lang = lng;
 });
 
+// Fallback languages requested in the background so far. The guard keeps a
+// second trigger (init completing after the server config lands, or vice
+// versa) from fetching the same file twice.
+const backgroundFallbacks = new Set<string>();
+
+// Fetch the fallback language without blocking paint. Late keys re-render on
+// arrival through the `loaded` binding above; until then missing keys stay
+// empty per transEmptyNodeValue.
+function loadFallbackInBackground(): void {
+  const configured = i18n.options.fallbackLng;
+  const fallback =
+    typeof configured === "string" ? configured : configured?.[0];
+  const current = normalizeLanguageCode(i18n.language || "");
+  if (
+    !fallback ||
+    backgroundFallbacks.has(fallback) ||
+    normalizeLanguageCode(fallback) === current
+  ) {
+    return;
+  }
+  backgroundFallbacks.add(fallback);
+  void i18n.loadLanguages(fallback).catch(() => {
+    backgroundFallbacks.delete(fallback);
+  });
+}
+
 // Track browser-detected language on first initialization
 i18n.on("initialized", () => {
   // If no source is set yet, mark current language as browser-detected
@@ -93,6 +123,7 @@ i18n.on("initialized", () => {
       );
     }
   }
+  loadFallbackInBackground();
 });
 
 /**
@@ -200,6 +231,7 @@ export function updateSupportedLanguages(
     // Apply server default (respects user choice if already set)
     setLanguageWithPriority(validDefault, LanguageSource.ServerDefault);
   }
+  loadFallbackInBackground();
 }
 
 /**
