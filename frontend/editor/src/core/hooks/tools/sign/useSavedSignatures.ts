@@ -91,7 +91,10 @@ export const useSavedSignatures = () => {
     storageType === "backend"
       ? MAX_SAVED_SIGNATURES_BACKEND
       : MAX_SAVED_SIGNATURES_LOCALSTORAGE;
-  const isAtCapacity = savedSignatures.length >= maxLimit;
+  const ownCount = savedSignatures.filter(
+    (entry) => entry.scope !== "shared",
+  ).length;
+  const isAtCapacity = ownCount >= maxLimit;
 
   const addSignature = useCallback(
     async (
@@ -107,7 +110,7 @@ export const useSavedSignatures = () => {
         return { success: false, reason: "invalid" };
       }
 
-      if (isAtCapacity) {
+      if (isAtCapacity && scope !== "shared") {
         return { success: false, reason: "limit" };
       }
 
@@ -133,15 +136,17 @@ export const useSavedSignatures = () => {
         return { success: false, reason: "invalid" };
       }
     },
-    [savedSignatures.length, storageType],
+    [isAtCapacity, storageType],
   );
 
-  const removeSignature = useCallback(async (id: string) => {
+  const removeSignature = useCallback(async (id: string): Promise<boolean> => {
     try {
       await signatureStorageService.deleteSignature(id);
       setSavedSignatures((prev) => prev.filter((entry) => entry.id !== id));
+      return true;
     } catch (error) {
       console.error("[useSavedSignatures] Failed to delete signature:", error);
+      return false;
     }
   }, []);
 
@@ -170,11 +175,13 @@ export const useSavedSignatures = () => {
             ),
           );
         }
+        return true;
       } catch (error) {
         console.error(
           "[useSavedSignatures] Failed to update signature label:",
           error,
         );
+        return false;
       }
     },
     [storageType],
@@ -231,6 +238,7 @@ export const useSavedSignatures = () => {
 
   return {
     savedSignatures,
+    ownCount,
     isAtCapacity,
     maxLimit,
     addSignature,

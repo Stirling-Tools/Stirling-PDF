@@ -11,6 +11,22 @@ import {
   type ExtendedPdfiumRuntime,
 } from "@app/services/pdfiumService";
 
+/** Row-by-row copy for padded strides, where rows are not contiguous. */
+function copyRows(
+  heap: Uint8Array,
+  bufferPtr: number,
+  stride: number,
+  w: number,
+  h: number,
+): Uint8ClampedArray<ArrayBuffer> {
+  const pixels = new Uint8ClampedArray(w * h * 4);
+  for (let y = 0; y < h; y++) {
+    const srcRow = bufferPtr + y * stride;
+    pixels.set(heap.subarray(srcRow, srcRow + w * 4), y * w * 4);
+  }
+  return pixels;
+}
+
 /** FPDF_ANNOT (0x01) | FPDF_LCD_TEXT (0x10). */
 const PDFIUM_RENDER_FLAGS = 0x01 | 0x10;
 
@@ -76,14 +92,18 @@ export async function renderPdfiumPageDataUrl(
       const bufferPtr = m.FPDFBitmap_GetBuffer(bitmapPtr);
       const stride = m.FPDFBitmap_GetStride(bitmapPtr);
       const heap = (m.pdfium as typeof m.pdfium & ExtendedPdfiumRuntime).HEAPU8;
-      const pixels = new Uint8ClampedArray(w * h * 4);
-
       // @embedpdf/pdfium WASM stores pixels in RGBA byte order (not BGRA),
-      // so copy rows directly without channel swapping.
-      for (let y = 0; y < h; y++) {
-        const srcRow = bufferPtr + y * stride;
-        pixels.set(heap.subarray(srcRow, srcRow + w * 4), y * w * 4);
-      }
+      // so rows copy directly without channel swapping. The view below is
+      // safe: putImageData runs synchronously with no wasm call between, so
+      // no memory.grow can detach it (unlike retained ImageData elsewhere).
+      const pixels =
+        stride === w * 4
+          ? new Uint8ClampedArray(
+              heap.buffer as ArrayBuffer,
+              bufferPtr,
+              w * h * 4,
+            )
+          : copyRows(heap, bufferPtr, stride, w, h);
 
       const canvas = document.createElement("canvas");
       canvas.width = w;

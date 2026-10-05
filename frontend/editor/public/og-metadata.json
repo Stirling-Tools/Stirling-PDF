@@ -217,8 +217,8 @@
     },
     "addAttachments": {
       "image": "/og_images/add-attachments.png",
-      "title": "Add Attachments to PDF - Stirling PDF",
-      "description": "Add or remove embedded files (attachments) to/from a PDF"
+      "title": "Manage PDF Attachments - Stirling PDF",
+      "description": "View, add, extract, rename, or delete embedded PDF attachments"
     },
     "createPortfolio": {
       "image": "/og_images/home.png",
@@ -981,10 +981,6 @@
   },
   "navLinks": [
     {
-      "path": "/add-attachments",
-      "label": "Add Attachments to PDF"
-    },
-    {
       "path": "/add-image",
       "label": "Add Image to PDF"
     },
@@ -1111,6 +1107,10 @@
     {
       "path": "/img-to-pdf",
       "label": "Image to PDF Converter"
+    },
+    {
+      "path": "/add-attachments",
+      "label": "Manage PDF Attachments"
     },
     {
       "path": "/markdown-to-pdf",

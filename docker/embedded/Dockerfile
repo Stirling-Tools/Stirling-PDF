@@ -7,7 +7,7 @@ ARG BASE_IMAGE=stirlingtools/stirling-pdf-base:${BASE_VERSION}
 # Stage 1: Build the Java application and frontend
 FROM gradle:9.7.1-jdk25@sha256:e06837018d077ee7f1218e53499425ca7615702ad58856d980c154caa17eb093 AS app-build
 
-ARG TASK_VERSION=3.53.1
+ARG TASK_VERSION=3.54.0
 ARG NODE_MAJOR_VERSION=24
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl ca-certificates \
@@ -62,22 +62,24 @@ ENV STIRLING_FLAVOR=${STIRLING_FLAVOR}
 ARG BUILD_PORTAL=true
 
 # Which Stirling account the portal connects to. Build-time because Vite inlines VITE_* into the
-# bundle; there is no runtime override. Empty leaves the committed .env.proprietary defaults, which
-# is what an ordinary image wants: no Stirling account and no connect flow. The publishable key is
-# client-side by design, not a secret. Pass the URL and the key from the same Supabase project or
-# the browser accepts the pair and Supabase rejects it, which surfaces later as "session expired".
+# bundle; there is no runtime override. Empty keeps the committed frontend .env defaults, which are
+# production Stirling, so a stock image links with no build args. Overriding VITE_SAAS_API_URL
+# also means setting STIRLING_BILLING_ACCOUNT_LINK_SAAS_BASE_URL on the container, or the browser
+# and the server link against different SaaS. The publishable key is client-side by design, not a
+# secret. Pass the URL and the key from the same Supabase project or the browser accepts the pair
+# and Supabase rejects it, which surfaces later as "session expired".
 ARG VITE_SUPABASE_URL=""
 ARG VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY=""
 ARG VITE_SAAS_API_URL=""
 
 # Bundle only the JPDFium native for this image's target arch.
 ARG TARGETARCH
-# Exported only when non-empty: Vite reads process.env ahead of the .env files, so exporting an
-# empty value would blank the committed default rather than fall back to it.
+# Every ARG reaches RUN as an environment variable, empty ones included, and Vite lets any VITE_*
+# in process.env beat the .env files. Unset the empty ones or they blank the committed defaults.
 RUN JPDFIUM_PLATFORM="$([ "$TARGETARCH" = arm64 ] && echo linux-arm64 || echo linux-x64)" && \
-    if [ -n "${VITE_SUPABASE_URL}" ]; then export VITE_SUPABASE_URL="${VITE_SUPABASE_URL}"; fi; \
-    if [ -n "${VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY}" ]; then export VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY="${VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY}"; fi; \
-    if [ -n "${VITE_SAAS_API_URL}" ]; then export VITE_SAAS_API_URL="${VITE_SAAS_API_URL}"; fi; \
+    if [ -z "${VITE_SUPABASE_URL}" ]; then unset VITE_SUPABASE_URL; fi; \
+    if [ -z "${VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY}" ]; then unset VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY; fi; \
+    if [ -z "${VITE_SAAS_API_URL}" ]; then unset VITE_SAAS_API_URL; fi; \
     STIRLING_FLAVOR=${STIRLING_FLAVOR} \
     gradle clean build \
       -PbuildWithFrontend=true \

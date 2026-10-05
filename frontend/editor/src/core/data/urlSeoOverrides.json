@@ -228,8 +228,8 @@
     "description": "Add text or add image stamps at set locations"
   },
   "/add-attachments": {
-    "title": "Add Attachments to PDF",
-    "description": "Add or remove embedded files (attachments) to/from a PDF"
+    "title": "Manage PDF Attachments",
+    "description": "View, add, extract, rename, or delete embedded PDF attachments"
   },
   "/extract-pages": {
     "title": "Extract PDF Pages",
