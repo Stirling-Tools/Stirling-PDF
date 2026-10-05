@@ -14,6 +14,7 @@ import { PolicyEnforcementOverlay } from "@app/components/viewer/PolicyEnforceme
 type SignatureOverlayPassThrough = Pick<
   EmbedPdfViewerProps,
   | "signaturePreviews"
+  | "readOnlySignaturePreviews"
   | "signaturePreviewsReadOnly"
   | "signaturePlacementMode"
   | "signaturePlacementData"

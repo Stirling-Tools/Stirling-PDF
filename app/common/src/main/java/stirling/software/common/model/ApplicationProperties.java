@@ -1394,7 +1394,7 @@ public class ApplicationProperties {
 
     @Data
     public static class Storage {
-        private boolean enabled = false;
+        private boolean enabled = true;
         private String provider = "local";
         private Local local = new Local();
         private S3 s3 = new S3();
@@ -1496,7 +1496,7 @@ public class ApplicationProperties {
 
         @Data
         public static class Signing {
-            private boolean enabled = false;
+            private boolean enabled = true;
 
             // Signing user-picker scope: 'org' (default) = whole instance, anything else =
             // caller's team only (fail-closed). The saas profile pins 'team'.

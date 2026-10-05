@@ -11,7 +11,6 @@ import NoToolsFound from "@app/components/tools/shared/NoToolsFound";
 import { renderToolButtons } from "@app/components/tools/shared/renderToolButtons";
 import ToolButton from "@app/components/tools/toolPicker/ToolButton";
 import { useToolWorkflowData } from "@app/contexts/ToolWorkflowContext";
-import { useSigningBadgeCount } from "@app/hooks/signing/useSigningBadgeCount";
 import { useIsScrolled } from "@app/hooks/useIsScrolled";
 import { ToolId } from "@app/types/toolId";
 import { getSubcategoryLabel } from "@app/data/toolsTaxonomy";
@@ -84,29 +83,13 @@ const ToolPicker = ({
     [visibleSections],
   );
 
-  // Signing items needing the user's attention: requests awaiting their
-  // signature, plus their own sessions newly signed since last opened
-  // (0 when group signing is disabled).
-  const signingBadgeCount = useSigningBadgeCount();
-
   const recommendedItems = useMemo(() => {
     const items: Array<{ id: string; tool: ToolRegistryEntry }> = [];
     quickSection?.subcategories.forEach((sc: SubcategoryGroup) =>
       sc.tools.forEach((toolEntry) => items.push(toolEntry)),
     );
-    // While signing needs the user's attention, surface Shared Signing at the
-    // top of Recommended so it's easy to find without hunting in the Signing group.
-    if (signingBadgeCount > 0) {
-      const sharedSignTool = toolRegistry["sharedSign" as ToolId];
-      if (sharedSignTool) {
-        return [
-          { id: "sharedSign", tool: sharedSignTool },
-          ...items.filter(({ id }) => id !== "sharedSign"),
-        ];
-      }
-    }
     return items;
-  }, [quickSection, signingBadgeCount, toolRegistry]);
+  }, [quickSection]);
 
   const allSection = useMemo(
     () => visibleSections.find((s) => s.key === "all"),
@@ -186,9 +169,6 @@ const ToolPicker = ({
                       onSelect={onSelect}
                       hasStars
                       showDescription
-                      badgeCount={
-                        id === "sharedSign" ? signingBadgeCount : undefined
-                      }
                     />
                   ))}
               </div>
@@ -243,9 +223,6 @@ const ToolPicker = ({
                         isSelected={selectedToolKey === id}
                         onSelect={onSelect}
                         hasStars
-                        badgeCount={
-                          id === "sharedSign" ? signingBadgeCount : undefined
-                        }
                       />
                     ))}
                   </div>

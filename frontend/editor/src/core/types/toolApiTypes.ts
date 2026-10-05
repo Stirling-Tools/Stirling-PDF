@@ -1413,10 +1413,12 @@ export interface WorkflowCreationRequest {
   workflowType?: "SIGNING" | "REVIEW" | "APPROVAL";
 }
 export interface SecurityCertSignValidateCertificateRequest {
+  certFile?: File;
   certType: string;
   jksFile?: File;
   p12File?: File;
   password?: string;
+  privateKeyFile?: File;
 }
 export type SecurityGetInfoOnPdfRequest = Record<string, never>;
 export type SecurityRemoveCertSignRequest = Record<string, never>;
@@ -1913,7 +1915,12 @@ export const TOOL_FILE_FIELDS = {
     "p12File",
     "jksFile",
   ],
-  "/api/v1/security/cert-sign/validate-certificate": ["p12File", "jksFile"],
+  "/api/v1/security/cert-sign/validate-certificate": [
+    "p12File",
+    "privateKeyFile",
+    "certFile",
+    "jksFile",
+  ],
   "/api/v1/security/validate-signature": ["certFile"],
 } as const satisfies Partial<Record<ToolEndpoint, readonly string[]>>;
 

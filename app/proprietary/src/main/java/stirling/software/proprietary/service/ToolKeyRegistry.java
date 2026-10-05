@@ -22,7 +22,6 @@ public class ToolKeyRegistry {
                     // CORE_REGULAR_TOOL_IDS
                     "certSign",
                     "sign",
-                    "sharedSign",
                     "addText",
                     "addPassword",
                     "removePassword",
