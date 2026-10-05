@@ -743,9 +743,9 @@ title = "文件與 RAG"
 [admin.settings.ai.documents.embeddingApiKey]
 description = "留空以使用 engine 自身的環境認證。適用於自架單一 engine 部署。"
 generic = "嵌入 API key"
-openai = "OpenAI API key"
+openai = "OpenAI API 金鑰"
 setPlaceholder = "已儲存 - 留空以保留目前的 key"
-voyageai = "VoyageAI API key"
+voyageai = "VoyageAI API 金鑰"
 
 [admin.settings.ai.documents.embeddingBaseUrl]
 description = "OpenAI 相容 / Ollama embeddings 端點的基礎 URL，例如 http://ollama:11434/v1。必須指向受信任的內部端點（SSRF 敏感）。"
@@ -892,10 +892,10 @@ description = "選擇 LLM 提供者，以及 AI engine 使用的智慧/快速模
 title = "模型與提供者"
 
 [admin.settings.ai.models.apiKey]
-anthropic = "Anthropic API key"
+anthropic = "Anthropic API 金鑰"
 description = "留空以使用 engine 自身的環境認證。適用於自架單一 engine 部署。"
-generic = "API key"
-openai = "OpenAI API key"
+generic = "API 金鑰"
+openai = "OpenAI API 金鑰"
 setPlaceholder = "已儲存 - 留空以保留目前的 key"
 
 [admin.settings.ai.models.baseUrl]
@@ -1815,7 +1815,7 @@ label = "啟用共用連結"
 
 [admin.settings.storage.signing.enabled]
 description = "允許使用者建立多方參與的文件簽署工作階段。需先啟用伺服器檔案儲存。"
-label = "啟用群組簽署（Alpha）"
+title = "啟用群組簽署"
 
 [admin.settings.telegram]
 description = "設定 Telegram 機器人的連線、存取控制與回饋行為。"
@@ -2744,7 +2744,6 @@ reason = "原因"
 serverCertMessage = "使用伺服器憑證 - 不需要檔案或密碼"
 showLogo = "顯示 Logo"
 signatureProgress = "{{signedCount}}/{{totalCount}} 個簽章"
-signed = "已簽署"
 tags = "驗證,PEM,P12,官方,加密,簽署,憑證,PKCS12,JKS,伺服器,手動,自動"
 title = "憑證簽章"
 viewed = "已檢視"
@@ -2809,7 +2808,13 @@ reasonPlaceholder = "例如：核准、審閱..."
 
 [certSign.collab.finalize]
 button = "定稿並載入已簽署的 PDF"
+confirmAction = "確認並完成"
+confirmDescription = "完成後將關閉此工作階段，無法再提交簽名。"
+confirmTitle = "要完成此簽署工作階段嗎？"
 early = "以目前的簽章提前定稿"
+excluded = "簽名不會被納入的參與者"
+included = "已納入的簽名"
+requiresSignature = "至少一位參與者必須簽署後，您才能完成。"
 
 [certSign.collab.participant]
 certInvalid = "✗ {{error}}"
@@ -2826,7 +2831,6 @@ includeSummaryPageHelp = "末尾會新增一頁包含所有簽章中繼資料的
 [certSign.collab.sessionDetail]
 addParticipants = "新增參與者"
 addParticipantsError = "無法新增參與者"
-backToList = "回到工作階段清單"
 deleteConfirm = "確定要刪除嗎？此操作無法復原。"
 deleteError = "無法刪除工作階段"
 deleteSession = "刪除工作階段"
@@ -2835,14 +2839,11 @@ finalizeError = "無法完成定稿"
 loadPdfError = "無法載入已簽署的 PDF"
 loadSignedPdf = "將已簽署的 PDF 載入使用中檔案"
 messageLabel = "訊息"
-owner = "擁有者"
 participantRemoved = "已移除參與者"
 participants = "參與者"
 participantsAdded = "已成功新增參與者"
-removeParticipant = "移除"
 removeParticipantError = "無法移除參與者"
 selectUsers = "選擇使用者..."
-sessionInfo = "工作階段資訊"
 
 [certSign.collab.sessionList]
 active = "進行中"
@@ -2855,11 +2856,10 @@ title = "簽章外觀"
 [certSign.collab.signRequest]
 addedToFiles = "文件已新增至使用中檔案"
 addToFiles = "新增至使用中檔案"
-advancedSettings = "進階設定"
-backToList = "回到簽署要求清單"
 certificateChoice = "選擇用於簽署的憑證"
 changeSignature = "變更簽名"
 clearSignature = "清除簽名"
+closed = "此工作階段已完成。您可以檢視最終文件，但不再接受其他簽名或拒絕。"
 completeAndSign = "完成並簽署"
 createNewSignature = "建立新簽名"
 decline = "拒絕要求"
@@ -2876,7 +2876,6 @@ invalidFileType = "請選擇圖片檔案"
 location = "地點（選填）"
 locationPlaceholder = "簽署地點？"
 noCertificate = "請選擇憑證檔案"
-noSignatures = "請在 PDF 上至少放置一個簽名"
 p12File = "P12/PFX 憑證檔案"
 password = "憑證密碼"
 penColor = "筆跡顏色"
@@ -2894,16 +2893,15 @@ signatureText = "簽名文字"
 signatureTextPlaceholder = "請輸入姓名..."
 signatureTypeLabel = "簽名類型"
 signButton = "簽署文件"
-signingTitle = "簽署"
 textColor = "文字顏色"
 typeSignature = "輸入姓名以建立簽名"
-uploadCert = "自訂憑證"
-uploadCertDesc = "使用自己的 P12/PFX 憑證"
+uploadCert = "上傳憑證"
+uploadCertDesc = "使用您自己的 PKCS12、PFX、PEM 或 JKS 憑證。"
 uploadSignature = "上傳簽名圖片"
-usePersonalCert = "個人憑證"
-usePersonalCertDesc = "為帳號自動產生"
-useServerCert = "組織憑證"
-useServerCertDesc = "組織共用憑證"
+usePersonalCert = "Stirling Sign · 個人"
+usePersonalCertDesc = "使用為您的帳戶建立的憑證簽署。"
+useServerCert = "Stirling Sign · 組織"
+useServerCertDesc = "使用此伺服器的共用組織憑證簽署。"
 useSignature = "使用簽名"
 
 [certSign.collab.signRequest.certModal]
@@ -2912,10 +2910,13 @@ certInvalidFallback = "憑證無效"
 certNetworkError = "無法驗證憑證"
 certValidating = "正在驗證憑證..."
 certValidUntil = "憑證有效至 {{date}}"
-description_one = "您已放置 {{count}} 個簽名。請選擇憑證以完成簽署。"
-description_other = "您已放置 {{count}} 個簽名。請選擇憑證以完成簽署。"
+description_one = "{{count}} 個可見標記已就緒。請選擇憑證以完成簽署。"
+description_other = "{{count}} 個可見標記已就緒。請選擇憑證以完成簽署。"
+description_zero = "您的憑證將在沒有可見標記的情況下簽署文件。"
+details = "簽署詳細資料（選用）"
+format = "憑證格式"
 sign = "簽署文件"
-title = "設定憑證"
+title = "選擇簽署方式"
 
 [certSign.collab.signRequest.mode]
 move = "移動簽名"
@@ -2968,11 +2969,11 @@ visible = "顯示"
 yourSignatures = "簽名（{{count}}）"
 
 [certSign.collab.userSelector]
-inviteUsers = "新增使用者"
 loadError = "無法載入使用者清單"
 noTeam = "無團隊"
 noUsers = "找不到其他使用者。"
 placeholder = "選擇使用者..."
+you = "{{name}}（您）"
 
 [certSign.device]
 stepTitle = "此裝置"
@@ -4167,7 +4168,7 @@ multipleFiles = "多個檔案"
 presentation = "簡報"
 spreadsheet = "試算表"
 text = "文字"
-web = "Web"
+web = "網頁"
 
 [convert.formatOptions]
 any = "任何"
@@ -4726,7 +4727,7 @@ dropToAdd = "拖放檔案以加入"
 duplicateFailed = "無法複製檔案"
 expand = "展開側邊欄"
 googleDrive = "Google Drive"
-library = "PDF Library"
+library = "PDF 資料庫"
 myFiles = "檔案庫"
 noFiles = "尚無檔案"
 openFileManager = "瀏覽所有檔案與資料夾"
@@ -5450,9 +5451,6 @@ multimedia = "多媒體"
 
 [groupSigning.steps]
 back = "上一步"
-completed = "已完成"
-current = "進行中"
-stepLabel = "步驟 {{number}}"
 
 [groupSigning.steps.configureDefaults]
 continue = "繼續"
@@ -5460,7 +5458,6 @@ invisible = "簽章將為隱藏（僅中繼資料）"
 locationLabel = "地點："
 preview = "預覽"
 reasonLabel = "理由："
-title = "設定簽名選項"
 visible = "簽章將顯示於第 {{page}} 頁"
 
 [groupSigning.steps.review]
@@ -5472,14 +5469,13 @@ location = "地點："
 logo = "Logo："
 logoHidden = "無 Logo"
 logoShown = "顯示 Stirling PDF Logo"
-participantCount_one = "{{count}} 位參與者將依序簽署"
-participantCount_other = "{{count}} 位參與者將依序簽署"
+participantCount_one = "已選取 {{count}} 位參與者"
+participantCount_other = "已選取 {{count}} 位參與者"
 participants = "參與者"
 reason = "理由："
 send = "傳送簽署要求"
 signatureSettings = "簽名設定"
 title = "審閱工作階段詳細資訊"
-titleShort = "審閱並傳送"
 visibility = "顯示方式："
 visible = "顯示於第 {{page}} 頁"
 
@@ -5487,7 +5483,6 @@ visible = "顯示於第 {{page}} 頁"
 continue = "繼續"
 noFile = "請從使用中檔案中選擇一個 PDF 檔案，以建立簽署工作階段。"
 selectedFile = "已選取的檔案"
-title = "選擇檔案"
 
 [groupSigning.steps.selectParticipants]
 continue = "繼續"
@@ -5495,31 +5490,30 @@ count_one = "已選取 {{count}} 位參與者"
 count_other = "已選取 {{count}} 位參與者"
 label = "選擇參與者"
 placeholder = "選擇要簽署的參與者..."
-title = "選擇參與者"
 
 [groupSigning.tooltip]
 header = "關於群組簽署"
 
 [groupSigning.tooltip.finalization]
-bullet1 = "所有簽章將依照指定的參與者順序套用"
-bullet2 = "如有需要，可使用部分簽章提前定稿"
-bullet3 = "定稿後即無法修改工作階段"
-description = "所有參與者簽署完成（或選擇提前定稿）後，即可產生最終的已簽署 PDF。"
+bullet1 = "最終 PDF 包含所有已接受的簽名"
+bullet2 = "在以部分簽名完成前，請檢閱尚未完成的參與者"
+bullet3 = "完成後會關閉請求；尚未完成的參與者將無法再簽署"
+description = "至少一位參與者簽署後，擁有者可以完成請求並產生已簽署的 PDF。"
 title = "定稿流程"
 
 [groupSigning.tooltip.roles]
 bullet1 = "擁有者（您）：建立工作階段、設定簽名預設值、文件定稿"
-bullet2 = "參與者：建立自己的簽名、選擇憑證、放置於 PDF 上"
-bullet3 = "參與者無法修改簽章的顯示方式、理由或地點設定"
-description = "您可控制所有參與者的簽章外觀設定。"
+bullet2 = "參與者：選擇憑證，並可選擇在 PDF 上放置可見簽名"
+bullet3 = "參與者可在提交前調整簽署原因和位置"
+description = "擁有者設定請求預設值；每位參與者選擇自己的憑證和選用的可見標記。"
 title = "參與者角色"
 
 [groupSigning.tooltip.sequential]
-bullet1 = "第一位參與者必須先簽署，第二位才能存取文件"
-bullet2 = "確保符合法規的簽署順序"
-bullet3 = "可在清單中拖曳參與者以調整順序"
-description = "參與者依您指定的順序簽署文件。每位簽署者輪到時會收到通知。"
-title = "依序簽署"
+bullet1 = "參與者不需要等待其他簽署者"
+bullet2 = "在簽署工作階段中追蹤每位參與者的進度"
+bullet3 = "到期日是提醒；不會使存取權過期"
+description = "指派的參與者可以依任何順序獨立檢閱和簽署。"
+title = "以任何順序簽署"
 
 [guestBanner]
 dismiss = "關閉橫幅"
@@ -5828,7 +5822,6 @@ tags = "偵測,分割,照片,detect,split,photos,auto detect,detect photos,split
 title = "偵測並分割掃描照片"
 
 [home.sharedSign]
-desc = "向他人請求簽署並追蹤簽署工作階段"
 title = "共享簽署"
 
 [home.showJS]
@@ -7426,7 +7419,9 @@ groupedTitle = "此 PDF 中群組的一部分：可以刪除但無法移動。"
 
 [pdfTextEditor.sidebar]
 addImage = "新增圖片"
+addTable = "新增表格"
 addText = "新增文字"
+clickPageToAddTable = "點擊頁面以新增表格"
 clickPageToAddText = "點選頁面以新增文字"
 document = "文件"
 group = "群組"
@@ -7435,11 +7430,14 @@ groupingAutoHint = "將行距相同的文字行組成段落。變更此設定會
 groupingLine = "單行"
 groupTooltip = "將所選文字框合併為一個段落（{{shortcut}}）"
 groupTooltipDisabled = "請選取至少 2 個文字框以合併"
+image = "圖片"
 noFile = "未載入檔案"
 noFileHint = "請從左側 [檔案] 面板選取 PDF，或將 PDF 拖放至此處，編輯器便會自動開啟。"
 opening = "正在開啟文件..."
 paragraph = "段落"
 rulers = "尺規與參考線"
+table = "表格"
+text = "文字"
 textBoxWidth = "新增文字框的寬度"
 textGrouping = "文字分組"
 ungroup = "取消群組"
@@ -7460,6 +7458,24 @@ loadingProgress = "載入進度"
 noDocument = "未載入文件。"
 pickPrompt = "請從左側 [檔案] 面板選取 PDF，開始編輯。"
 renderingPreview = "正在繪製預覽"
+
+[pdfTextEditor.table]
+addColumn = "新增欄"
+addRow = "新增列"
+column = "欄"
+deleteColumn = "刪除欄"
+deleteRow = "刪除列"
+done = "完成"
+doneHint = "停止以表格方式編輯此項目"
+edit = "編輯"
+editHint = "以表格方式編輯 - 在儲存格中輸入、新增或移除列和欄"
+move = "移動"
+moveTable = "拖曳以移動整個表格"
+recognizedHint = "已辨識的表格 - 點擊以選取其所有文字"
+resizeColumn = "拖曳以調整此欄大小（Alt：與下一欄共用）"
+resizeRow = "拖曳以調整此列大小（Alt：與下一列共用）"
+resizeTable = "拖曳以調整整個表格大小"
+row = "列"
 
 [pdfTextEditor.toolbar]
 addTextTooltip = "新增文字框，然後點選頁面"
@@ -8321,7 +8337,7 @@ plan = "您的方案"
 [portal.billing.serverPlan]
 active = "有效的自架授權"
 connectBody = "連線即可增加雲端處理點數。伺服器授權仍然有效。"
-enterprise = "Enterprise"
+enterprise = "企業版"
 enterpriseConnectBody = "Enterprise 授權已包含此伺服器上的處理功能。可自行選擇是否連線帳戶。"
 included = "授權已包含"
 seats = "{{seats}} 個授權席位"
@@ -8437,29 +8453,29 @@ label = "檔案與附件"
 
 [portal.connections.commonFields.accessToken]
 helperText = "Stirling 會加密儲存此項目，且不會再次顯示。"
-label = "Access token"
+label = "存取權杖"
 
 [portal.connections.commonFields.apiKey]
-label = "API key"
+label = "API 金鑰"
 
 [portal.connections.commonFields.apiToken]
-label = "API token"
+label = "API 權杖"
 
 [portal.connections.commonFields.baseUrl]
 helperText = "使用此連線的步驟只能呼叫此 URL 下的路徑，絕不能呼叫其他主機。"
 label = "伺服器 URL"
 
 [portal.connections.commonFields.email]
-label = "Email"
+label = "電子郵件"
 
 [portal.connections.commonFields.host]
-label = "Host"
+label = "主機"
 
 [portal.connections.commonFields.password]
 label = "密碼"
 
 [portal.connections.commonFields.port]
-label = "Port"
+label = "連接埠"
 
 [portal.connections.commonFields.username]
 label = "使用者名稱"
@@ -8509,7 +8525,7 @@ label = "登入以取得 token"
 
 [portal.connections.types.api.fields.baseUrl]
 helperText = "使用此連線的步驟只能呼叫此 URL 下的路徑，絕不能呼叫其他主機。"
-label = "Base URL"
+label = "基底 URL"
 placeholder = "https://api.example.com/v1"
 
 [portal.connections.types.api.fields.headerName]
@@ -8528,14 +8544,14 @@ helperText = "如果 API 回覆下載連結，只能擷取這些 hosts。以逗�
 label = "允許的結果 hosts"
 
 [portal.connections.types.api.fields.token]
-label = "Token"
+label = "權杖"
 
 [portal.connections.types.api.fields.tokenHeaderName]
 label = "以此 header 傳送 token"
 
 [portal.connections.types.api.fields.tokenResponseHeader]
 helperText = "登入呼叫回傳 token 的 response header，例如 X-Auth-Token。"
-label = "Token response header"
+label = "權杖回應標頭"
 
 [portal.connections.types.api.fields.username]
 label = "使用者名稱"
@@ -8551,7 +8567,7 @@ label = "Cloudmersive"
 
 [portal.connections.types.cloudmersiveadvanced]
 description = "封鎖包含巨集、可執行檔、指令碼或嵌入物件的文件 - 不只是已知惡意軟體。"
-label = "Cloudmersive Advanced Scan"
+label = "Cloudmersive 進階掃描"
 
 [portal.connections.types.confluence]
 baseUrlPlaceholder = "https://your-site.atlassian.net/wiki/api/v2"
@@ -8568,10 +8584,10 @@ label = "伺服器 URL"
 placeholder = "https://your-org.consignocloud.com/api/v1"
 
 [portal.connections.types.consigno.fields.clientId]
-label = "API key"
+label = "API 金鑰"
 
 [portal.connections.types.consigno.fields.clientSecret]
-label = "API secret"
+label = "API 密鑰"
 
 [portal.connections.types.consigno.fields.password]
 label = "密碼"
@@ -8638,10 +8654,10 @@ helperText = "符合 n8n Webhook 節點上設定的 Authentication。"
 label = "Webhook 驗證"
 
 [portal.connections.types.n8n.fields.authType.options.basic]
-label = "Basic auth"
+label = "基本驗證"
 
 [portal.connections.types.n8n.fields.authType.options.header]
-label = "Header auth"
+label = "標頭驗證"
 
 [portal.connections.types.n8n.fields.authType.options.none]
 label = "無"
@@ -8673,14 +8689,14 @@ label = "Microsoft Purview"
 
 [portal.connections.types.purview.fields.clientId]
 helperText = "選填。只有在需要依名稱選取標籤時才需要；沒有它也能標記。"
-label = "Application (client) ID"
+label = "應用程式（用戶端）ID"
 
 [portal.connections.types.purview.fields.clientSecret]
-label = "Client secret"
+label = "用戶端密碼"
 
 [portal.connections.types.purview.fields.tenantId]
 helperText = "會加蓋到每個標籤作為其 SiteId，讓支援 Purview 的工具知道是哪個組織套用的。"
-label = "Directory (tenant) ID"
+label = "目錄（租用戶）ID"
 placeholder = "cb46c030-1825-4e81-a295-151c039dbf02"
 
 [portal.connections.types.s3]
@@ -8688,20 +8704,20 @@ description = "來源可讀取且 pipeline 輸出可寫入的 S3 bucket。"
 label = "S3 儲存空間"
 
 [portal.connections.types.s3.fields.accessKeyId]
-label = "Access key ID"
+label = "存取金鑰 ID"
 
 [portal.connections.types.s3.fields.bucket]
 label = "Bucket"
 
 [portal.connections.types.s3.fields.endpoint]
 helperText = "AWS 請留空。若使用 MinIO 或其他 S3 相容儲存，請設定此項。"
-label = "Endpoint"
+label = "端點"
 
 [portal.connections.types.s3.fields.region]
-label = "Region"
+label = "區域"
 
 [portal.connections.types.s3.fields.secretAccessKey]
-label = "Secret access key"
+label = "秘密存取金鑰"
 
 [portal.connections.types.sendgrid]
 description = "當 policy 執行時，透過 Email 傳送文件或通知。"
@@ -8714,18 +8730,18 @@ label = "SFTP"
 
 [portal.connections.types.sftp.fields.hostKeyFingerprint]
 helperText = "選填。伺服器的 SHA-256 host key fingerprint（來自 `ssh-keyscan host | ssh-keygen -lf -`）。設定後，只接受提供此 key 的伺服器；留空時，首次連線時看到的 key 會被釘選，之後若變更會被拒絕。"
-label = "Host key fingerprint"
+label = "主機金鑰指紋"
 placeholder = "SHA256:..."
 
 [portal.connections.types.sftp.fields.passphrase]
-label = "Key passphrase"
+label = "金鑰密碼片語"
 
 [portal.connections.types.sftp.fields.password]
 helperText = "如果您改用 private key 驗證，請留空。"
 
 [portal.connections.types.sftp.fields.privateKey]
 helperText = "選填。貼上 OpenSSH private key，以使用 key 而非密碼進行驗證。"
-label = "Private key"
+label = "私密金鑰"
 
 [portal.connections.types.slack]
 description = "當 policy 處理文件時，將訊息發布到 Slack。"
@@ -8738,10 +8754,10 @@ label = "SMB / 網路共用"
 
 [portal.connections.types.smb.fields.domain]
 helperText = "選填。如果您的伺服器使用 Windows domain 或工作群組，請填寫。"
-label = "Domain"
+label = "網域"
 
 [portal.connections.types.smb.fields.share]
-label = "Share"
+label = "共用"
 placeholder = "documents"
 
 [portal.connections.types.splunk]
@@ -9170,7 +9186,7 @@ title = "Windows"
 
 [portal.home.editor]
 activeOfDeployed = "過去 30 天有 {{active}} 個使用中，共部署 {{total}} 個"
-name = "PDF Editor"
+name = "PDF 編輯器"
 open = "在瀏覽器中開啟"
 updated = "已於 {{time}} 更新"
 
@@ -9180,7 +9196,7 @@ options = "檢視部署選項"
 start = "部署 Editor"
 
 [portal.home.editor.target]
-cloud = "Managed Cloud"
+cloud = "受管理雲端"
 docker = "自託管 · Docker"
 kubernetes = "自託管 · Kubernetes"
 
@@ -9974,10 +9990,10 @@ placeholder = "processor@acme.com"
 
 [portal.policies.operations.fields.headers]
 helperText = "標頭名稱/值配對的 JSON 物件。系統會為您新增連線的憑證。"
-label = "Headers"
+label = "標頭"
 
 [portal.policies.operations.fields.index]
-label = "Index"
+label = "索引"
 placeholder = "stirling-audit"
 
 [portal.policies.operations.fields.issueKey]
@@ -9989,7 +10005,7 @@ helperText = "作為訊息主體傳送。{{document.*}} 和 {{run.*}} 會依每�
 label = "訊息"
 
 [portal.policies.operations.fields.method]
-label = "Method"
+label = "方法"
 
 [portal.policies.operations.fields.pageId]
 label = "頁面 ID"
@@ -12102,28 +12118,15 @@ description = "輸入您自架 Stirling PDF 伺服器的完整 URL"
 label = "伺服器 URL"
 
 [sharedSign]
-backToSessions = "返回工作階段"
-createdOn = "建立於 {{date}}"
 disabledBody = "此伺服器未啟用協作簽署。"
-disabledTitle = "未啟用"
-due = "到期 {{date}}"
 filterDeclined = "已拒絕"
-filterMine = "我的"
 filterOverdue = "逾期"
 filterSigned = "已簽署"
-fromOwner = "來自 {{owner}}"
-newRequest = "請求簽署"
-signedCount = "{{signed}}/{{total}} 已簽署"
 signInRequiredBody = "登入以要求簽名並查看傳送給您的要求。"
 signInRequiredTitle = "需要登入"
 
-[sharedSign.empty]
-active = "沒有待處理的簽署請求或進行中的工作階段"
-completed = "沒有已完成的工作階段"
-
 [sharedSign.tab]
 active = "進行中"
-completed = "已完成"
 
 [showJS]
 done = "已擷取 JavaScript"
@@ -12473,10 +12476,68 @@ bullet3 = "隱藏簽章仍提供加密驗證"
 description = "控制簽章是否顯示於文件上，或以隱藏方式嵌入。"
 title = "簽章顯示方式"
 
+[signingDetail]
+allSigned = "所有人都已簽署。請檢閱文件，然後完成定稿。"
+awaitingOwner = "擁有者準備好後會完成文件定稿。"
+certificateNext = "在下一步選擇你的憑證。"
+earlyHint = "你可以使用已收到的簽名立即完成定稿，或等待其餘參與者。"
+finalDocument = "已簽署文件"
+finalizeTitle = "完成文件定稿"
+finalReady = "你的已簽署 PDF 已可在工作台中開啟。"
+inProgressPreview = "包含已提交簽名的進行中預覽。擁有者尚未完成此文件定稿。"
+manageSession = "管理簽署工作階段"
+moveHint = "在文件上選取簽名以移動、調整大小或移除。"
+notified = "已通知"
+optional = "選用"
+ownerNext = "返回你的工作階段，檢閱所有人的簽名，並在準備好後完成文件定稿。"
+placeHint = "點擊文件以放置你的簽名。"
+progress = "簽署進度"
+readyToSign = "準備好簽署了嗎？"
+refreshPreview = "重新整理預覽"
+removePerson = "移除 {{name}}"
+requestClosed = "此請求已關閉"
+requestTitle = "簽署請求"
+signatureSubmitted = "你的簽名已提交"
+signedCount = "{{signed}} / {{total}} 已簽署"
+signMyRequest = "簽署此文件"
+viewOnly = "你仍可在此檢閱文件。"
+visibleSignature = "可見簽名"
+visibleSignatureHelp = "關於可見簽名"
+
+[signMenu]
+anyOrder = "參與者可以任意順序簽署。擁有者會在檢閱收集到的簽名後完成文件定稿。"
+certificateHint = "使用憑證"
+certificateTitle = "數位簽章"
+closedStatus = "已關閉"
+completedTab = "已完成"
+dueDate = "截止日期（選用）"
+newActivity = "自你上次檢視此工作階段後有新活動"
+noActive = "沒有進行中的工作階段"
+noCompleted = "沒有已完成的工作階段"
+noMatches = "沒有符合的工作階段"
+noUnread = "你已全部處理完畢"
+optionalMarks = "可見標記為選用。「完成並簽署」也可僅使用憑證。"
+ownerProgress = "你的請求 · {{signed}} / {{total}} 已簽署"
+personalHint = "繪製、輸入或上傳"
+personalTitle = "個人簽名"
+request = "請求簽署"
+search = "尋找文件或人員"
+send = "傳送簽署請求"
+sessionFilter = "工作階段檢視"
+sessions = "簽署工作階段"
+settings = "外觀與摘要頁面（選用）"
+signFailed = "簽署失敗。請檢查你的憑證並再試一次；你放置的標記會保留。"
+submitted = "已提交 · 等待完成定稿"
+title = "簽署"
+triggerUnreadCount_one = "簽署 · {{count}} 個未讀工作階段"
+triggerUnreadCount_other = "簽署 · {{count}} 個未讀工作階段"
+unreadTab = "未讀"
+
 [signRequest]
+accessExpired = "你對此簽署請求的存取權已過期。請向寄件者索取新的請求。"
 declined = "簽署要求已拒絕"
+expired = "存取權已過期"
 fetchFailed = "無法載入簽署要求"
-signed = "文件簽署成功"
 
 [signSession]
 created = "簽署要求已傳送"
@@ -12512,6 +12573,52 @@ title = "建立帳號"
 unableToAccessTool = "無法存取工具：{{error}}"
 unexpectedError = "未預期的錯誤：{{message}}"
 unknownError = "未知錯誤"
+
+[signWorkspace]
+changeDocument = "變更 PDF"
+chooseDocument = "選擇已開啟的 PDF"
+chooseFromLibrary = "從資料庫選擇"
+chooseParticipants = "選擇參與者"
+choosePdf = "選擇 PDF"
+choosePdfHeading = "從你的文件開始"
+clearDate = "清除日期"
+created = "已建立"
+createdByMe = "由我建立"
+datesAndOptions = "日期與選項"
+document = "文件"
+dueDate = "截止日期"
+dueDateHelp = "這是目標日期。參與者在此日期後仍可簽署。"
+dueDateHelpLabel = "關於到期日"
+empty = "這裡尚無工作階段。"
+expand = "展開簽署工作階段"
+inviteLoadError = "無法載入邀請選項。請關閉此對話框後再試一次。"
+invitePerson = "新增團隊成員：{{name}}"
+inviteTeammate = "新增團隊成員"
+inviteUnavailable = "您的帳戶或伺服器設定無法新增團隊成員。"
+navigation = "簽署導覽"
+needsYou = "需要您的簽名"
+nextMonth = "下個月"
+nextStep = "下一步"
+noDueDate = "沒有到期日"
+noMatches = "沒有符合您搜尋或篩選條件的工作階段。"
+noOpenPdfs = "從您的檔案庫選擇 PDF，或從電腦新增一個。"
+noPeopleMatch = "沒有符合您搜尋的人員。"
+noPreview = "文件預覽無法使用"
+owner = "擁有者"
+participants = "參與者"
+participantsSelected = "已選取 {{count}} 個"
+personalHeading = "簽署文件"
+previousMonth = "上個月"
+refresh = "重新整理工作階段"
+requestSteps = "簽署請求步驟"
+search = "搜尋文件或人員"
+searchParticipants = "搜尋人員或團隊"
+selectOnePdf = "為此簽署請求選擇一個 PDF。"
+signingOrderHelp = "關於簽署順序"
+status = "狀態"
+unavailable = "此工作階段已無法使用。請重新整理清單以查看您目前的工作階段。"
+upcoming = "即將到來"
+uploadFailed = "無法開啟此 PDF。請再試一次。"
 
 [sizes]
 large = "大"

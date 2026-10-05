@@ -1815,7 +1815,7 @@ label = "Megosztási linkek engedélyezése"
 
 [admin.settings.storage.signing.enabled]
 description = "Engedélyezi több résztvevős dokumentum-aláírási munkamenetek létrehozását. A szerveres fájltárolás engedélyezése szükséges."
-label = "Csoportos aláírás engedélyezése (Alpha)"
+title = "Csoportos aláírás engedélyezése"
 
 [admin.settings.telegram]
 description = "A Telegram bot csatlakozásának, hozzáférésének és visszajelzési viselkedésének konfigurálása."
@@ -1944,7 +1944,7 @@ chinese = "Kínai (egyszerűsített)"
 japanese = "Japán"
 korean = "Koreai"
 roman = "Latin"
-thai = "Thai"
+thai = "thai"
 
 [analytics]
 learnMore = "További információ az analitikánkról"
@@ -2744,7 +2744,6 @@ reason = "Ok"
 serverCertMessage = "Kiszolgálói tanúsítvány használata - nincs szükség fájlokra vagy jelszóra"
 showLogo = "Logó megjelenítése"
 signatureProgress = "{{signedCount}}/{{totalCount}} aláírás"
-signed = "Aláírva"
 tags = "hitelesítés,PEM,P12,hivatalos,titkosítás,aláírás,tanúsítvány,PKCS12,JKS,szerver,kézi,automatikus"
 title = "Tanúsítvánnyal aláírás"
 viewed = "Megtekintve"
@@ -2809,7 +2808,13 @@ reasonPlaceholder = "pl. Jóváhagyás, Áttekintés..."
 
 [certSign.collab.finalize]
 button = "Véglegesítés és az aláírt PDF betöltése"
+confirmAction = "Megerősítés és véglegesítés"
+confirmDescription = "A véglegesítés lezárja ezt a munkamenetet. Több aláírás nem küldhető be."
+confirmTitle = "Véglegesíti ezt az aláírási munkamenetet?"
 early = "Véglegesítés a jelenlegi aláírásokkal"
+excluded = "Résztvevők, akiknek az aláírása nem lesz belefoglalva"
+included = "Belefoglalt aláírások"
+requiresSignature = "Legalább egy résztvevőnek alá kell írnia, mielőtt véglegesítheti."
 
 [certSign.collab.participant]
 certInvalid = "✗ {{error}}"
@@ -2826,7 +2831,6 @@ includeSummaryPageHelp = "A dokumentum végére egy összefoglaló oldal kerül 
 [certSign.collab.sessionDetail]
 addParticipants = "Résztvevők hozzáadása"
 addParticipantsError = "A résztvevők hozzáadása sikertelen"
-backToList = "Vissza a munkamenetekhez"
 deleteConfirm = "Biztos benne? Ez a művelet nem vonható vissza."
 deleteError = "A munkamenet törlése sikertelen"
 deleteSession = "Munkamenet törlése"
@@ -2835,14 +2839,11 @@ finalizeError = "A munkamenet véglegesítése sikertelen"
 loadPdfError = "Az aláírt PDF betöltése sikertelen"
 loadSignedPdf = "Aláírt PDF betöltése az Aktív fájlok közé"
 messageLabel = "Üzenet"
-owner = "Tulajdonos"
 participantRemoved = "Résztvevő eltávolítva"
 participants = "Résztvevők"
 participantsAdded = "A résztvevők hozzáadása sikeres"
-removeParticipant = "Eltávolítás"
 removeParticipantError = "A résztvevő eltávolítása sikertelen"
 selectUsers = "Felhasználók kiválasztása..."
-sessionInfo = "Munkamenet-információ"
 
 [certSign.collab.sessionList]
 active = "Aktív"
@@ -2855,11 +2856,10 @@ title = "Aláírás megjelenése"
 [certSign.collab.signRequest]
 addedToFiles = "A dokumentum hozzáadva az aktív fájlokhoz"
 addToFiles = "Hozzáadás az aktív fájlokhoz"
-advancedSettings = "Speciális beállítások"
-backToList = "Vissza az aláírási kérelmekhez"
 certificateChoice = "Válasszon tanúsítványt az aláíráshoz"
 changeSignature = "Aláírás megváltoztatása"
 clearSignature = "Aláírás törlése"
+closed = "Ez a munkamenet véglegesítve van. Megtekintheti a végleges dokumentumot, de további aláírások vagy elutasítások nem fogadhatók el."
 completeAndSign = "Kitöltés és aláírás"
 createNewSignature = "Új aláírás létrehozása"
 decline = "Kérelem elutasítása"
@@ -2876,7 +2876,6 @@ invalidFileType = "Válasszon képfájlt"
 location = "Hely (opcionális)"
 locationPlaceholder = "Honnan ír alá?"
 noCertificate = "Válasszon tanúsítványfájlt"
-noSignatures = "Helyezzen el legalább egy aláírást a PDF-en"
 p12File = "P12/PFX tanúsítványfájl"
 password = "Tanúsítvány jelszava"
 penColor = "Toll színe"
@@ -2894,16 +2893,15 @@ signatureText = "Aláírás szövege"
 signatureTextPlaceholder = "Adja meg a nevét..."
 signatureTypeLabel = "Aláírás típusa"
 signButton = "Dokumentum aláírása"
-signingTitle = "Aláírás"
 textColor = "Szöveg színe"
 typeSignature = "Írja be a nevét az aláírás létrehozásához"
-uploadCert = "Egyéni tanúsítvány"
-uploadCertDesc = "Használja saját P12/PFX tanúsítványát"
+uploadCert = "Tanúsítvány feltöltése"
+uploadCertDesc = "Használja saját PKCS12, PFX, PEM vagy JKS tanúsítványát."
 uploadSignature = "Töltse fel az aláírás képfájlját"
-usePersonalCert = "Személyes tanúsítvány"
-usePersonalCertDesc = "Automatikusan generálva a fiókjához"
-useServerCert = "Szervezeti tanúsítvány"
-useServerCertDesc = "Megosztott szervezeti tanúsítvány"
+usePersonalCert = "Stirling Sign · Személyes"
+usePersonalCertDesc = "Aláírás a fiókjához létrehozott tanúsítvánnyal."
+useServerCert = "Stirling Sign · Szervezet"
+useServerCertDesc = "Aláírás a szerver megosztott szervezeti tanúsítványával."
 useSignature = "Aláírás használata"
 
 [certSign.collab.signRequest.certModal]
@@ -2912,10 +2910,13 @@ certInvalidFallback = "Érvénytelen tanúsítvány"
 certNetworkError = "A tanúsítvány nem ellenőrizhető"
 certValidating = "Tanúsítvány ellenőrzése..."
 certValidUntil = "A tanúsítvány érvényes eddig: {{date}}"
-description_one = "{{count}} aláírást helyezett el. Válassza ki a tanúsítványát az aláírás befejezéséhez."
-description_other = "{{count}} aláírást helyezett el. Válassza ki a tanúsítványát az aláírás befejezéséhez."
+description_one = "{{count}} látható jelölés készen áll. Válasszon tanúsítványt az aláírás befejezéséhez."
+description_other = "{{count}} látható jelölés készen áll. Válasszon tanúsítványt az aláírás befejezéséhez."
+description_zero = "A tanúsítványa látható jelölések nélkül írja alá a dokumentumot."
+details = "Aláírás részletei (opcionális)"
+format = "Tanúsítvány formátuma"
 sign = "Dokumentum aláírása"
-title = "Tanúsítvány beállítása"
+title = "Válassza ki az aláírás módját"
 
 [certSign.collab.signRequest.mode]
 move = "Aláírás mozgatása"
@@ -2968,11 +2969,11 @@ visible = "Látható"
 yourSignatures = "Az Ön aláírásai ({{count}})"
 
 [certSign.collab.userSelector]
-inviteUsers = "Felhasználók hozzáadása"
 loadError = "A felhasználók betöltése sikertelen"
 noTeam = "Nincs csapat"
 noUsers = "Nem található más felhasználó."
 placeholder = "Felhasználók kiválasztása..."
+you = "{{name}} (Ön)"
 
 [certSign.device]
 stepTitle = "Ez az eszköz"
@@ -5450,9 +5451,6 @@ multimedia = "Multimédia"
 
 [groupSigning.steps]
 back = "Vissza"
-completed = "Kész"
-current = "Aktuális"
-stepLabel = "{{number}}. lépés"
 
 [groupSigning.steps.configureDefaults]
 continue = "Folytatás"
@@ -5460,7 +5458,6 @@ invisible = "Az aláírások láthatatlanok lesznek (csak metaadat)"
 locationLabel = "Hely:"
 preview = "Előnézet"
 reasonLabel = "Indoklás:"
-title = "Aláírási beállítások konfigurálása"
 visible = "Az aláírások a(z) {{page}}. oldalon lesznek láthatók"
 
 [groupSigning.steps.review]
@@ -5472,14 +5469,13 @@ location = "Hely:"
 logo = "Logó:"
 logoHidden = "Nincs logó"
 logoShown = "Stirling PDF logó megjelenítve"
-participantCount_one = "{{count}} résztvevő sorrendben aláír"
-participantCount_other = "{{count}} résztvevő sorrendben aláír"
+participantCount_one = "{{count}} résztvevő kiválasztva"
+participantCount_other = "{{count}} résztvevő kiválasztva"
 participants = "Résztvevők"
 reason = "Indoklás:"
 send = "Aláírási kérelmek küldése"
 signatureSettings = "Aláírás beállításai"
 title = "Munkamenet részleteinek áttekintése"
-titleShort = "Áttekintés és küldés"
 visibility = "Láthatóság:"
 visible = "Látható a(z) {{page}}. oldalon"
 
@@ -5487,7 +5483,6 @@ visible = "Látható a(z) {{page}}. oldalon"
 continue = "Folytatás"
 noFile = "Válasszon ki egyetlen PDF fájlt az aktív fájlok közül az aláírási munkamenet létrehozásához."
 selectedFile = "Kiválasztott dokumentum"
-title = "Dokumentum kiválasztása"
 
 [groupSigning.steps.selectParticipants]
 continue = "Folytatás"
@@ -5495,31 +5490,30 @@ count_one = "{{count}} résztvevő kiválasztva"
 count_other = "{{count}} résztvevő kiválasztva"
 label = "Résztvevők kiválasztása"
 placeholder = "Válassza ki az aláíró résztvevőket..."
-title = "Résztvevők kiválasztása"
 
 [groupSigning.tooltip]
 header = "A csoportos aláírásról"
 
 [groupSigning.tooltip.finalization]
-bullet1 = "Minden aláírás az Ön által meghatározott résztvevői sorrendben kerül alkalmazásra"
-bullet2 = "Szükség esetén részleges aláírásokkal is véglegesíthet"
-bullet3 = "A véglegesítés után a munkamenet nem módosítható"
-description = "Miután minden résztvevő aláírt (vagy korábban véglegesít), elkészítheti a végleges, aláírt PDF-et."
+bullet1 = "A végleges PDF tartalmazza az összes elfogadott aláírást"
+bullet2 = "Tekintse át a függőben lévő résztvevőket, mielőtt részleges aláírásokkal véglegesít"
+bullet3 = "A véglegesítés lezárja a kérést; a függőben lévő résztvevők már nem írhatnak alá"
+description = "Miután legalább egy résztvevő aláírt, a tulajdonos véglegesítheti a kérést és létrehozhatja az aláírt PDF-et."
 title = "Véglegesítési folyamat"
 
 [groupSigning.tooltip.roles]
 bullet1 = "Tulajdonos (Ön): munkamenetet hoz létre, beállítja az aláírási alapértelmezéseket, véglegesíti a dokumentumot"
-bullet2 = "Résztvevők: elkészítik az aláírásukat, tanúsítványt választanak, elhelyezik a PDF-en"
-bullet3 = "A résztvevők nem módosíthatják az aláírás láthatóságát, okát vagy helyét"
-description = "Ön szabályozza az aláírás megjelenésének beállításait minden résztvevő számára."
+bullet2 = "Résztvevők: Válasszanak tanúsítványt, és opcionálisan helyezzenek el látható aláírást a PDF-en"
+bullet3 = "A résztvevők a beküldés előtt módosíthatják az aláírás okát és helyét"
+description = "A tulajdonos beállítja a kérés alapértelmezéseit; minden résztvevő kiválasztja a tanúsítványát és az opcionális látható jelölést."
 title = "Szerepkörök"
 
 [groupSigning.tooltip.sequential]
-bullet1 = "Az első résztvevőnek alá kell írnia, mielőtt a második hozzáférhet a dokumentumhoz"
-bullet2 = "Biztosítja a megfelelő aláírási sorrendet a jogszabályok betartásához"
-bullet3 = "A résztvevők sorrendje a listában húzással módosítható"
-description = "A résztvevők az Ön által meghatározott sorrendben írják alá a dokumentumot. Minden aláíró értesítést kap, amikor rá kerül a sor."
-title = "Szekvenciális aláírás"
+bullet1 = "A résztvevőknek nem kell más aláíróra várniuk"
+bullet2 = "Kövesse nyomon minden résztvevő előrehaladását az aláírási munkamenetekben"
+bullet3 = "A határidő emlékeztető; nem jár le miatta a hozzáférés"
+description = "A kijelölt résztvevők önállóan, bármilyen sorrendben áttekinthetik és aláírhatják."
+title = "Aláírás tetszőleges sorrendben"
 
 [guestBanner]
 dismiss = "Banner elrejtése"
@@ -5828,7 +5822,6 @@ tags = "felismerés,felosztás,fotók,automatikus felismerés,fotók felismerés
 title = "Szkennelt fényképek felismerése és szétvágása"
 
 [home.sharedSign]
-desc = "Kérjen aláírásokat másoktól, és kövesse nyomon az aláírási munkameneteket"
 title = "Közös aláírás"
 
 [home.showJS]
@@ -7284,7 +7277,7 @@ warn = "{{count}} hiányokkal"
 label = "Beágyazott"
 
 [pdfTextEditor.fonts.status.standard]
-label = "Standard"
+label = "Szabványos"
 
 [pdfTextEditor.fonts.status.subset]
 label = "Részhalmaz"
@@ -7426,7 +7419,9 @@ groupedTitle = "A PDF-ben egy csoport része: törölhető, de nem mozgatható."
 
 [pdfTextEditor.sidebar]
 addImage = "Kép hozzáadása"
+addTable = "Táblázat hozzáadása"
 addText = "Szöveg hozzáadása"
+clickPageToAddTable = "Kattintson az oldalra táblázat hozzáadásához"
 clickPageToAddText = "Kattints az oldalra szöveg hozzáadásához"
 document = "Dokumentum"
 group = "Csoportosítás"
@@ -7435,11 +7430,14 @@ groupingAutoHint = "Az egyenlő távolságú sorokat bekezdésekké csoportosít
 groupingLine = "Sor"
 groupTooltip = "Kijelölt szakaszok egyesítése egy bekezdésbe ({{shortcut}})"
 groupTooltipDisabled = "Az egyesítéshez válassz ki legalább 2 szakaszt"
+image = "Kép"
 noFile = "Nincs betöltött fájl"
 noFileHint = "Válassz egy PDF-et a bal oldali Fájlok panelről, vagy dobj be egyet. A szerkesztő automatikusan megnyitja."
 opening = "Dokumentum megnyitása..."
 paragraph = "Bekezdés"
 rulers = "Vonalzók és segédvonalak"
+table = "Táblázat"
+text = "Szöveg"
 textBoxWidth = "Új szövegdoboz szélessége"
 textGrouping = "Szövegcsoportosítás"
 ungroup = "Csoport bontása"
@@ -7460,6 +7458,24 @@ loadingProgress = "Betöltési folyamat"
 noDocument = "Nincs betöltött dokumentum."
 pickPrompt = "A szerkesztés megkezdéséhez válassz egy PDF-et a bal oldali Fájlok panelről."
 renderingPreview = "Előnézet renderelése"
+
+[pdfTextEditor.table]
+addColumn = "Oszlop hozzáadása"
+addRow = "Sor hozzáadása"
+column = "Oszl."
+deleteColumn = "Oszlop törlése"
+deleteRow = "Sor törlése"
+done = "Kész"
+doneHint = "A szerkesztés leállítása táblázatként"
+edit = "Szerkesztés"
+editHint = "Szerkesztés táblázatként – írjon a cellákba, adjon hozzá vagy távolítson el sorokat és oszlopokat"
+move = "Mozgatás"
+moveTable = "Húzza a teljes táblázat mozgatásához"
+recognizedHint = "Felismert táblázat – kattintson az összes szövegének kijelöléséhez"
+resizeColumn = "Húzza az oszlop átméretezéséhez (Alt: megosztás a következővel)"
+resizeRow = "Húzza a sor átméretezéséhez (Alt: megosztás a következővel)"
+resizeTable = "Húzza a teljes táblázat átméretezéséhez"
+row = "Sor"
 
 [pdfTextEditor.toolbar]
 addTextTooltip = "Szövegdoboz hozzáadása – majd kattints az oldalra"
@@ -8578,7 +8594,7 @@ label = "Jelszó"
 
 [portal.connections.types.consigno.fields.tenantId]
 helperText = "Csak akkor szükséges, ha a szervezete tenantokat használ."
-label = "Tenant"
+label = "Bérlő"
 
 [portal.connections.types.consigno.fields.username]
 label = "Felhasználónév"
@@ -8695,7 +8711,7 @@ label = "Bucket"
 
 [portal.connections.types.s3.fields.endpoint]
 helperText = "Hagyja üresen AWS esetén. Állítsa be MinIO-hoz vagy más S3-kompatibilis tárolóhoz."
-label = "Endpoint"
+label = "Végpont"
 
 [portal.connections.types.s3.fields.region]
 label = "Régió"
@@ -8738,7 +8754,7 @@ label = "SMB / Hálózati megosztás"
 
 [portal.connections.types.smb.fields.domain]
 helperText = "Opcionális. A Windows domain vagy munkacsoport, ha a szervere használ ilyet."
-label = "Domain"
+label = "Tartomány"
 
 [portal.connections.types.smb.fields.share]
 label = "Megosztás"
@@ -8858,12 +8874,12 @@ lead = "Végponttól végpontig tartó minták, amelyek forrásokat, műveleteke
 title = "Receptek"
 
 [portal.docs.sdks]
-eyebrow = "SDKS"
+eyebrow = "SDK-k"
 lead = "Első féltől származó kliensek típusos válaszokkal, automatikus újrapróbálkozásokkal és streamelt feltöltésekkel. Mind ugyanazt az endpointkatalógust követi."
 title = "Hivatalos SDK-k"
 
 [portal.docs.sdks.status]
-beta = "Beta"
+beta = "Béta"
 deprecated = "Elavult"
 
 [portal.docs.skills]
@@ -8905,7 +8921,7 @@ reviewed = "Felülvizsgálat alatt"
 sectionsAriaLabel = "Dokumentum részleteinek szakaszai"
 
 [portal.documents.drawer.tabs]
-audit = "Audit"
+audit = "Auditnapló"
 extractions = "Kinyerések"
 overview = "Áttekintés"
 
@@ -9092,7 +9108,7 @@ copy = "Hiba másolása"
 view = "Hiba megtekintése"
 
 [portal.failures.origin]
-pipeline = "Pipeline"
+pipeline = "Folyamat"
 policy = "Szabályzat futtatása"
 tool = "Szerkesztőeszköz"
 
@@ -9482,7 +9498,7 @@ typedName = "{{tool}} neve"
 
 [portal.integrations.filters]
 all = "Összes"
-audit = "Audit"
+audit = "Auditnapló"
 connected = "Csatlakoztatva"
 notify = "Értesítés"
 security = "Biztonság"
@@ -9512,7 +9528,7 @@ loading = "Betöltés…"
 title = "Jogi dokumentum"
 
 [portal.nav]
-agent-builder = "Agent Builder"
+agent-builder = "Ügynökkészítő"
 components = "Komponensek"
 docs = "Dokumentáció"
 documents = "Dokumentumok"
@@ -9529,7 +9545,7 @@ usage = "Használat és számlázás"
 users = "Felhasználók"
 
 [portal.nav.section]
-platform = "PDF Platform"
+platform = "PDF platform"
 processor = "PDF-feldolgozó"
 
 [portal.pipelines]
@@ -9755,7 +9771,7 @@ active = "Aktív"
 paused = "Szüneteltetve"
 
 [portal.pipelines.table]
-name = "Pipeline"
+name = "Folyamat"
 sources = "Források"
 status = "Állapot"
 steps = "Lépések"
@@ -9844,7 +9860,7 @@ label = "Archiválási profil"
 label = "Microsoft Purview érzékenységi címke alkalmazása"
 
 [portal.policies.config.purview.fields]
-connection = "Purview tenant"
+connection = "Purview-bérlő"
 labelId = "Címke ID"
 labelIdHelp = "A címke GUID-ja a Purview portálról. A címke alkalmazása metaadatokat ír a PDF-re; titkosítani nem tud, ahhoz a Microsoft kliens szükséges."
 labelName = "Címke neve (opcionális)"
@@ -9861,7 +9877,7 @@ standard = "Automatikusan alkalmazottként"
 label = "Microsoft Purview címke olvasása"
 
 [portal.policies.config.purviewRead.fields]
-connection = "Purview tenant"
+connection = "Purview-bérlő"
 connectionHelp = "Beolvassa a dokumentumon már meglévő címkét, hogy a későbbi lépések ez alapján működhessenek."
 
 [portal.policies.config.retention]
@@ -9960,7 +9976,7 @@ label = "JSON törzs"
 label = "Fiók"
 
 [portal.policies.operations.fields.domain]
-label = "Mailgun domain"
+label = "Mailgun-tartomány"
 placeholder = "mg.acme.com"
 
 [portal.policies.operations.fields.fileFieldName]
@@ -9974,7 +9990,7 @@ placeholder = "processor@acme.com"
 
 [portal.policies.operations.fields.headers]
 helperText = "Header név/érték párok JSON objektuma. A kapcsolat hitelesítő adatai automatikusan hozzáadódnak."
-label = "Headers"
+label = "Fejlécek"
 
 [portal.policies.operations.fields.index]
 label = "Index"
@@ -9989,7 +10005,7 @@ helperText = "Az üzenet törzseként lesz elküldve. A {{document.*}} és {{run
 label = "Üzenet"
 
 [portal.policies.operations.fields.method]
-label = "Method"
+label = "Módszer"
 
 [portal.policies.operations.fields.pageId]
 label = "Oldal ID"
@@ -10271,7 +10287,7 @@ title = "Beszerzés"
 agreeCta = "Megállapodás aláírása"
 confidential = "Bizalmas"
 confirm = "Elolvastam és elfogadom ezt a Megállapodást, és kijelentem, hogy jogosult vagyok azt a fent megnevezett szervezet nevében aláírni."
-docName = "Stirling Enterprise Agreement"
+docName = "Stirling Enterprise-megállapodás"
 docSub = "MSA, Order Form, EULA és DPA egyetlen aláírásban egyesítve."
 download = "Letöltés"
 downloadDraftError = "Nem sikerült létrehozni a megállapodás PDF-jét – a dokumentumrenderelő nem érhető el. Kérjük, próbálja újra rövidesen, vagy lépjen kapcsolatba a támogatással."
@@ -10370,7 +10386,7 @@ years_one = "{{count}} év"
 years_other = "{{count}} év"
 
 [portal.procurement.documents]
-agreement = "Enterprise Agreement"
+agreement = "Enterprise-megállapodás"
 agreementSub = "MSA, Order Form és DPA egyetlen aláírásban."
 download = "Letöltés"
 eula = "EULA és kereskedelmi feltételek"
@@ -10495,7 +10511,7 @@ subtitle = "A solutions engineer-je végigvezeti csapatát a bevezetésen. Vála
 title = "Hívás ütemezése"
 
 [portal.procurement.setup]
-airgap = "Air-gapped"
+airgap = "Izolált környezet"
 airgapSub = "Zárt, nincs kimenő kapcsolat"
 back = "Vissza"
 businessName = "Vállalkozás neve"
@@ -10728,7 +10744,7 @@ collectionHint = "Használjon egy meglévő gyűjteményt vagy indexet, amely ki
 connection = "Adatbázis-kapcsolat"
 description = "Kimeneti célhely az előkészített dokumentumdarabokhoz. Az adatbázis generálja a beágyazásokat; az eredetik a bemeneti forrásban maradnak, ha a követési mód van kiválasztva."
 label = "Vektoradatbázis"
-namespace = "Namespace / tenant"
+namespace = "Névtér / bérlő"
 namespaceHint = "Opcionális Pinecone namespace vagy Weaviate tenant. Hagyja üresen az alapértelmezett namespace-hez vagy egytenantos gyűjteményhez."
 textField = "Szövegmező"
 textFieldHint = "Az a mező, amelyet az adatbázis beágyaz, és amely megfelel a gyűjtemény sémájának vagy a Pinecone mezőtérképének."
@@ -12102,28 +12118,15 @@ description = "Adja meg az önhostolt Stirling PDF szerver teljes URL-jét"
 label = "Szerver URL"
 
 [sharedSign]
-backToSessions = "Vissza a munkamenetekhez"
-createdOn = "Létrehozva {{date}}"
 disabledBody = "A közös aláírás nincs engedélyezve ezen a szerveren."
-disabledTitle = "Nincs engedélyezve"
-due = "Esedékes {{date}}"
 filterDeclined = "Elutasítva"
-filterMine = "Saját"
 filterOverdue = "Lejárt"
 filterSigned = "Aláírva"
-fromOwner = "Feladó {{owner}}"
-newRequest = "Aláírások kérése"
-signedCount = "{{signed}}/{{total}} aláírva"
 signInRequiredBody = "Jelentkezz be aláírások kéréséhez és a neked küldött kérések megtekintéséhez."
 signInRequiredTitle = "Bejelentkezés szükséges"
 
-[sharedSign.empty]
-active = "Nincsenek függőben lévő aláíráskérések vagy aktív munkamenetek"
-completed = "Nincsenek befejezett munkamenetek"
-
 [sharedSign.tab]
 active = "Aktív"
-completed = "Befejezett"
 
 [showJS]
 done = "JavaScript kinyerve"
@@ -12473,10 +12476,68 @@ bullet3 = "A láthatatlan aláírások is kriptográfiai hitelesítést nyújtan
 description = "Szabályozza, hogy az aláírás látható-e a dokumentumban vagy láthatatlanul legyen beágyazva."
 title = "Aláírás láthatósága"
 
+[signingDetail]
+allSigned = "Mindenki aláírta. Tekintse át a dokumentumot, majd véglegesítse."
+awaitingOwner = "A tulajdonos véglegesíti a dokumentumot, amikor készen áll rá."
+certificateNext = "A következő lépésben válassza ki a tanúsítványát."
+earlyHint = "Most véglegesítheti a beérkezett aláírásokkal, vagy megvárhatja a többi résztvevőt."
+finalDocument = "Aláírt dokumentum"
+finalizeTitle = "Dokumentum véglegesítése"
+finalReady = "Az aláírt PDF készen áll a munkaterületen való megnyitásra."
+inProgressPreview = "Folyamatban lévő előnézet a beküldött aláírásokkal. A tulajdonos még nem véglegesítette ezt a dokumentumot."
+manageSession = "Aláírási munkamenet kezelése"
+moveHint = "Válasszon ki egy aláírást a dokumentumon az áthelyezéshez, átméretezéshez vagy eltávolításhoz."
+notified = "Értesítve"
+optional = "Opcionális"
+ownerNext = "Térjen vissza a munkamenetéhez, hogy áttekintse mindenki aláírását, és véglegesítse a dokumentumot, amikor készen áll."
+placeHint = "Kattintson a dokumentumra az aláírás elhelyezéséhez."
+progress = "Aláírási előrehaladás"
+readyToSign = "Készen áll az aláírásra?"
+refreshPreview = "Előnézet frissítése"
+removePerson = "{{name}} eltávolítása"
+requestClosed = "Ez a kérés le van zárva"
+requestTitle = "Aláírási kérés"
+signatureSubmitted = "Az aláírása beküldve"
+signedCount = "{{signed}} / {{total}} aláírva"
+signMyRequest = "Dokumentum aláírása"
+viewOnly = "Itt továbbra is áttekintheti a dokumentumot."
+visibleSignature = "Látható aláírás"
+visibleSignatureHelp = "A látható aláírásokról"
+
+[signMenu]
+anyOrder = "A résztvevők bármilyen sorrendben aláírhatnak. A tulajdonos a begyűjtött aláírások áttekintése után véglegesíti a dokumentumot."
+certificateHint = "Tanúsítvány használata"
+certificateTitle = "Digitális aláírás"
+closedStatus = "Lezárva"
+completedTab = "Befejezve"
+dueDate = "Határidő (opcionális)"
+newActivity = "Új tevékenység a munkamenet legutóbbi megtekintése óta"
+noActive = "Nincsenek aktív munkamenetek"
+noCompleted = "Nincsenek befejezett munkamenetek"
+noMatches = "Nincs egyező munkamenet"
+noUnread = "Mindent elolvasott"
+optionalMarks = "A látható jelölések opcionálisak. A Kitöltés és aláírás önmagában tanúsítvánnyal is működik."
+ownerProgress = "Az Ön kérése · {{signed}} / {{total}} aláírva"
+personalHint = "Rajzolás, gépelés vagy feltöltés"
+personalTitle = "Személyes aláírás"
+request = "Aláírások kérése"
+search = "Dokumentum vagy személy keresése"
+send = "Aláírási kérés küldése"
+sessionFilter = "Munkamenetnézetek"
+sessions = "Aláírási munkamenetek"
+settings = "Megjelenés és összefoglaló oldal (opcionális)"
+signFailed = "Az aláírás sikertelen. Ellenőrizze a tanúsítványát, és próbálja újra; az elhelyezett jelölései megmaradnak."
+submitted = "Beküldve · véglegesítésre vár"
+title = "Aláírás"
+triggerUnreadCount_one = "Aláírás · {{count}} olvasatlan munkamenet"
+triggerUnreadCount_other = "Aláírás · {{count}} olvasatlan munkamenet"
+unreadTab = "Olvasatlan"
+
 [signRequest]
+accessExpired = "Az aláírási kéréshez való hozzáférése lejárt. Kérjen új kérést a küldőtől."
 declined = "Aláírási kérelem elutasítva"
+expired = "A hozzáférés lejárt"
 fetchFailed = "Az aláírási kérelem betöltése sikertelen"
-signed = "A dokumentum sikeresen aláírva"
 
 [signSession]
 created = "Aláírási kérelem elküldve"
@@ -12512,6 +12573,52 @@ title = "Fiók létrehozása"
 unableToAccessTool = "Nem lehet hozzáférni az eszközhöz: {{error}}"
 unexpectedError = "Váratlan hiba: {{message}}"
 unknownError = "Ismeretlen hiba"
+
+[signWorkspace]
+changeDocument = "PDF cseréje"
+chooseDocument = "Megnyitott PDF kiválasztása"
+chooseFromLibrary = "Kiválasztás a könyvtárból"
+chooseParticipants = "Résztvevők kiválasztása"
+choosePdf = "PDF kiválasztása"
+choosePdfHeading = "Kezdje a dokumentumával"
+clearDate = "Dátum törlése"
+created = "Létrehozva"
+createdByMe = "Általam létrehozva"
+datesAndOptions = "Dátumok és beállítások"
+document = "Dokumentum"
+dueDate = "Határidő"
+dueDateHelp = "Ez egy céldátum. A résztvevők ezután is aláírhatnak."
+dueDateHelpLabel = "A határidőkről"
+empty = "Itt még nincsenek munkamenetek."
+expand = "Aláírási munkamenetek kibontása"
+inviteLoadError = "Nem sikerült betölteni a meghívási beállításokat. Zárja be ezt a párbeszédablakot, és próbálja újra."
+invitePerson = "Csapattárs hozzáadása: {{name}}"
+inviteTeammate = "Csapattárs hozzáadása"
+inviteUnavailable = "Csapattársak hozzáadása nem érhető el az Ön fiókjához vagy szerverkonfigurációjához."
+navigation = "Aláírási navigáció"
+needsYou = "Az Ön aláírása szükséges"
+nextMonth = "Következő hónap"
+nextStep = "Tovább"
+noDueDate = "Nincs határidő"
+noMatches = "Nincs a keresésnek vagy szűrőnek megfelelő munkamenet."
+noOpenPdfs = "Válasszon egy PDF-et a könyvtárából, vagy adjon hozzá egyet a számítógépéről."
+noPeopleMatch = "Nincs a keresésnek megfelelő személy."
+noPreview = "A dokumentum előnézete nem érhető el"
+owner = "Tulajdonos"
+participants = "Résztvevők"
+participantsSelected = "{{count}} kiválasztva"
+personalHeading = "Dokumentum aláírása"
+previousMonth = "Előző hónap"
+refresh = "Munkamenetek frissítése"
+requestSteps = "Aláírási kérés lépései"
+search = "Dokumentumok vagy személyek keresése"
+searchParticipants = "Személyek vagy csapatok keresése"
+selectOnePdf = "Válasszon egy PDF-et ehhez az aláírási kéréshez."
+signingOrderHelp = "Az aláírási sorrendről"
+status = "Állapot"
+unavailable = "Ez a munkamenet már nem érhető el. Frissítse a listát az aktuális munkamenetek megtekintéséhez."
+upcoming = "Közelgő"
+uploadFailed = "Nem sikerült megnyitni ezt a PDF-et. Kérjük, próbálja újra."
 
 [sizes]
 large = "Nagy"
@@ -12589,9 +12696,9 @@ label = "Céloldal-méret"
 a3 = "A3 (297 × 420 mm)"
 a4 = "A4 (210 × 297 mm)"
 a5 = "A5 (148 × 210 mm)"
-legal = "Legal (8.5 × 14 in)"
-letter = "Letter (8.5 × 11 in)"
-tabloid = "Tabloid (11 × 17 in)"
+legal = "Legal (8,5 × 14 hüvelyk)"
+letter = "Letter (8,5 × 11 hüvelyk)"
+tabloid = "Tabloid (11 × 17 hüvelyk)"
 
 [split.poster.xFactor]
 description = "Az egyes oldalak felosztásához használt oszlopok száma"

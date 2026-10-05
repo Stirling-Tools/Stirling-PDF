@@ -1815,7 +1815,7 @@ label = "Включить ссылки общего доступа"
 
 [admin.settings.storage.signing.enabled]
 description = "Разрешить пользователям создавать сессии подписания документа с несколькими участниками. Требуется включить хранение файлов на сервере."
-label = "Включить групповое подписание (Alpha)"
+title = "Включить групповое подписание"
 
 [admin.settings.telegram]
 description = "Настройте подключение бота Telegram, контроль доступа и поведение обратной связи."
@@ -2744,7 +2744,6 @@ reason = "Причина"
 serverCertMessage = "Используется сертификат сервера — файлы и пароль не требуются"
 showLogo = "Показывать логотип"
 signatureProgress = "{{signedCount}}/{{totalCount}} подписей"
-signed = "Подписано"
 tags = "аутентификация,PEM,P12,официальный,шифровать,подписать,сертификат,PKCS12,JKS,сервер,ручной,авто"
 title = "Подписание сертификатом"
 viewed = "Просмотрено"
@@ -2809,7 +2808,13 @@ reasonPlaceholder = "например, «Утверждение», «Прове�
 
 [certSign.collab.finalize]
 button = "Завершить и загрузить подписанный PDF"
+confirmAction = "Подтвердить и завершить"
+confirmDescription = "Завершение закрывает этот сеанс. Новые подписи больше нельзя отправить."
+confirmTitle = "Завершить этот сеанс подписания?"
 early = "Завершить с текущими подписями"
+excluded = "Участники, чьи подписи не будут включены"
+included = "Включенные подписи"
+requiresSignature = "Прежде чем завершить, хотя бы один участник должен подписать."
 
 [certSign.collab.participant]
 certInvalid = "✗ {{error}}"
@@ -2826,7 +2831,6 @@ includeSummaryPageHelp = "В конце будет добавлена стран
 [certSign.collab.sessionDetail]
 addParticipants = "Добавить участников"
 addParticipantsError = "Не удалось добавить участников"
-backToList = "Назад к сессиям"
 deleteConfirm = "Вы уверены? Действие необратимо."
 deleteError = "Не удалось удалить сессию"
 deleteSession = "Удалить сессию"
@@ -2835,14 +2839,11 @@ finalizeError = "Не удалось завершить сессию"
 loadPdfError = "Не удалось загрузить подписанный PDF"
 loadSignedPdf = "Загрузить подписанный PDF в активные файлы"
 messageLabel = "Сообщение"
-owner = "Владелец"
 participantRemoved = "Участник удалён"
 participants = "Участники"
 participantsAdded = "Участники успешно добавлены"
-removeParticipant = "Удалить"
 removeParticipantError = "Не удалось удалить участника"
 selectUsers = "Выберите пользователей..."
-sessionInfo = "Информация о сессии"
 
 [certSign.collab.sessionList]
 active = "Активные"
@@ -2855,11 +2856,10 @@ title = "Внешний вид подписи"
 [certSign.collab.signRequest]
 addedToFiles = "Документ добавлен в активные файлы"
 addToFiles = "Добавить в активные файлы"
-advancedSettings = "Дополнительные настройки"
-backToList = "Назад к запросам подписи"
 certificateChoice = "Выберите сертификат для подписи"
 changeSignature = "Изменить подпись"
 clearSignature = "Очистить подпись"
+closed = "Этот сеанс завершен. Вы можете просмотреть итоговый документ, но новые подписи или отказы больше не принимаются."
 completeAndSign = "Завершить и подписать"
 createNewSignature = "Создать новую подпись"
 decline = "Отклонить запрос"
@@ -2876,7 +2876,6 @@ invalidFileType = "Выберите файл изображения"
 location = "Местоположение (необязательно)"
 locationPlaceholder = "Откуда вы подписываете?"
 noCertificate = "Выберите файл сертификата"
-noSignatures = "Разместите хотя бы одну подпись на PDF"
 p12File = "Файл сертификата P12/PFX"
 password = "Пароль сертификата"
 penColor = "Цвет пера"
@@ -2894,16 +2893,15 @@ signatureText = "Текст подписи"
 signatureTextPlaceholder = "Введите ваше имя..."
 signatureTypeLabel = "Тип подписи"
 signButton = "Подписать документ"
-signingTitle = "Подписание"
 textColor = "Цвет текста"
 typeSignature = "Введите своё имя, чтобы создать подпись"
-uploadCert = "Собственный сертификат"
-uploadCertDesc = "Используйте свой сертификат P12/PFX"
+uploadCert = "Загрузить сертификат"
+uploadCertDesc = "Используйте собственный сертификат PKCS12, PFX, PEM или JKS."
 uploadSignature = "Загрузите изображение подписи"
-usePersonalCert = "Личный сертификат"
-usePersonalCertDesc = "Автоматически сгенерирован для вашей учётной записи"
-useServerCert = "Сертификат организации"
-useServerCertDesc = "Общий сертификат организации"
+usePersonalCert = "Stirling Sign · Личный"
+usePersonalCertDesc = "Подписать сертификатом, созданным для вашей учетной записи."
+useServerCert = "Stirling Sign · Организация"
+useServerCertDesc = "Подписать общим сертификатом организации этого сервера."
 useSignature = "Использовать подпись"
 
 [certSign.collab.signRequest.certModal]
@@ -2912,10 +2910,13 @@ certInvalidFallback = "Недействительный сертификат"
 certNetworkError = "Не удалось подтвердить сертификат"
 certValidating = "Проверка сертификата..."
 certValidUntil = "Сертификат действителен до {{date}}"
-description_one = "Вы разместили {{count}} подпись. Выберите сертификат, чтобы завершить подписание."
-description_other = "Вы разместили {{count}} подписей. Выберите сертификат, чтобы завершить подписание."
+description_one = "{{count}} видимая отметка готова. Выберите сертификат, чтобы завершить подписание."
+description_other = "{{count}} видимых отметок готовы. Выберите сертификат, чтобы завершить подписание."
+description_zero = "Ваш сертификат подпишет документ без видимых отметок."
+details = "Сведения о подписании (необязательно)"
+format = "Формат сертификата"
 sign = "Подписать документ"
-title = "Настройка сертификата"
+title = "Выберите способ подписания"
 
 [certSign.collab.signRequest.mode]
 move = "Переместить подпись"
@@ -2968,11 +2969,11 @@ visible = "Видимая"
 yourSignatures = "Ваши подписи ({{count}})"
 
 [certSign.collab.userSelector]
-inviteUsers = "Добавить пользователей"
 loadError = "Не удалось загрузить пользователей"
 noTeam = "Без команды"
 noUsers = "Другие пользователи не найдены."
 placeholder = "Выберите пользователей..."
+you = "{{name}} (Вы)"
 
 [certSign.device]
 stepTitle = "Это устройство"
@@ -5450,9 +5451,6 @@ multimedia = "Мультимедиа"
 
 [groupSigning.steps]
 back = "Назад"
-completed = "Завершено"
-current = "Текущий"
-stepLabel = "Шаг {{number}}"
 
 [groupSigning.steps.configureDefaults]
 continue = "Продолжить"
@@ -5460,7 +5458,6 @@ invisible = "Подписи будут невидимыми (только мет
 locationLabel = "Местоположение:"
 preview = "Предпросмотр"
 reasonLabel = "Причина:"
-title = "Настроить параметры подписи"
 visible = "Подписи будут видимы на странице {{page}}"
 
 [groupSigning.steps.review]
@@ -5472,14 +5469,13 @@ location = "Местоположение:"
 logo = "Логотип:"
 logoHidden = "Без логотипа"
 logoShown = "Логотип Stirling PDF отображается"
-participantCount_one = "{{count}} участник подпишет по порядку"
-participantCount_other = "{{count}} участников подпишут по порядку"
+participantCount_one = "Выбран {{count}} участник"
+participantCount_other = "Выбрано участников: {{count}}"
 participants = "Участники"
 reason = "Причина:"
 send = "Отправить запросы на подпись"
 signatureSettings = "Настройки подписи"
 title = "Проверка сведений о сессии"
-titleShort = "Проверка и отправка"
 visibility = "Видимость:"
 visible = "Видима на странице {{page}}"
 
@@ -5487,7 +5483,6 @@ visible = "Видима на странице {{page}}"
 continue = "Продолжить"
 noFile = "Выберите один PDF-файл из активных файлов, чтобы создать сессию подписания."
 selectedFile = "Выбранный документ"
-title = "Выберите документ"
 
 [groupSigning.steps.selectParticipants]
 continue = "Продолжить"
@@ -5495,31 +5490,30 @@ count_one = "Выбран {{count}} участник"
 count_other = "Выбрано {{count}} участников"
 label = "Выберите участников"
 placeholder = "Выберите участников для подписи..."
-title = "Выбор участников"
 
 [groupSigning.tooltip]
 header = "О групповом подписании"
 
 [groupSigning.tooltip.finalization]
-bullet1 = "Все подписи применяются в указанном вами порядке участников"
-bullet2 = "При необходимости можно завершить с неполным набором подписей"
-bullet3 = "После завершения сессию нельзя изменить"
-description = "Когда все участники подпишут (или вы решите завершить раньше), вы сможете сгенерировать финальный подписанный PDF."
+bullet1 = "Итоговый PDF включает все принятые подписи"
+bullet2 = "Проверьте оставшихся участников перед завершением с частичным набором подписей"
+bullet3 = "Завершение закрывает запрос; оставшиеся участники больше не смогут подписать"
+description = "После того как хотя бы один участник подпишет, владелец может завершить запрос и создать подписанный PDF."
 title = "Процесс завершения"
 
 [groupSigning.tooltip.roles]
 bullet1 = "Владелец (вы): создаёт сессию, настраивает значения по умолчанию, завершает документ"
-bullet2 = "Участники: создают подпись, выбирают сертификат, размещают на PDF"
-bullet3 = "Участники не могут изменять видимость, причину или местоположение подписи"
-description = "Вы управляете настройками внешнего вида подписи для всех участников."
+bullet2 = "Участники: выберите сертификат и при необходимости разместите видимую подпись в PDF"
+bullet3 = "Участники могут изменить причину и место подписи перед отправкой"
+description = "Владелец задает настройки запроса по умолчанию; каждый участник выбирает свой сертификат и необязательную видимую отметку."
 title = "Роли участников"
 
 [groupSigning.tooltip.sequential]
-bullet1 = "Первый участник должен подписать, прежде чем второй получит доступ к документу"
-bullet2 = "Обеспечивает корректный порядок подписания для юридической соответствия"
-bullet3 = "Вы можете менять порядок участников, перетаскивая их в списке"
-description = "Участники подписывают документы в указанном вами порядке. Каждый подписант получает уведомление, когда наступает его очередь."
-title = "Последовательное подписание"
+bullet1 = "Участникам не нужно ждать другого подписанта"
+bullet2 = "Отслеживайте прогресс каждого участника в сеансах подписания"
+bullet3 = "Срок выполнения — это напоминание; он не прекращает доступ"
+description = "Назначенные участники могут просматривать и подписывать независимо, в любом порядке."
+title = "Подписание в любом порядке"
 
 [guestBanner]
 dismiss = "Скрыть баннер"
@@ -5828,7 +5822,6 @@ tags = "обнаружить,разделить,фото,автообнаруж�
 title = "Найти и разбить скан-фото"
 
 [home.sharedSign]
-desc = "Запрашивайте подписи у других и отслеживайте сеансы подписания"
 title = "Совместное подписание"
 
 [home.showJS]
@@ -7426,7 +7419,9 @@ groupedTitle = "Часть группы в этом PDF: ее можно уда�
 
 [pdfTextEditor.sidebar]
 addImage = "Добавить изображение"
+addTable = "Добавить таблицу"
 addText = "Добавить текст"
+clickPageToAddTable = "Нажмите на страницу, чтобы добавить таблицу"
 clickPageToAddText = "Нажмите страницу, чтобы добавить текст"
 document = "Документ"
 group = "Группировать"
@@ -7435,11 +7430,14 @@ groupingAutoHint = "Группирует строки с одинаковыми 
 groupingLine = "Строка"
 groupTooltip = "Объединить выбранные фрагменты в один абзац ({{shortcut}})"
 groupTooltipDisabled = "Выберите 2+ фрагмента для объединения"
+image = "Изображение"
 noFile = "Файл не загружен"
 noFileHint = "Выберите PDF на панели файлов слева или перетащите его сюда. Редактор откроет его автоматически."
 opening = "Открытие документа..."
 paragraph = "Абзац"
 rulers = "Линейки и направляющие"
+table = "Таблица"
+text = "Текст"
 textBoxWidth = "Ширина нового текстового блока"
 textGrouping = "Группировка текста"
 ungroup = "Разгруппировать"
@@ -7460,6 +7458,24 @@ loadingProgress = "Ход загрузки"
 noDocument = "Документ не загружен."
 pickPrompt = "Выберите PDF на панели файлов слева, чтобы начать редактирование."
 renderingPreview = "Отрисовка предпросмотра"
+
+[pdfTextEditor.table]
+addColumn = "Добавить столбец"
+addRow = "Добавить строку"
+column = "Столбец"
+deleteColumn = "Удалить столбец"
+deleteRow = "Удалить строку"
+done = "Готово"
+doneHint = "Прекратить редактировать это как таблицу"
+edit = "Редактировать"
+editHint = "Редактировать как таблицу — вводите текст в ячейки, добавляйте или удаляйте строки и столбцы"
+move = "Переместить"
+moveTable = "Перетащите, чтобы переместить всю таблицу"
+recognizedHint = "Распознанная таблица — нажмите, чтобы выделить весь ее текст"
+resizeColumn = "Перетащите, чтобы изменить размер этого столбца (Alt: разделить со следующим)"
+resizeRow = "Перетащите, чтобы изменить размер этой строки (Alt: разделить со следующей)"
+resizeTable = "Перетащите, чтобы изменить размер всей таблицы"
+row = "Строка"
 
 [pdfTextEditor.toolbar]
 addTextTooltip = "Добавить текстовый блок — затем нажмите страницу"
@@ -7753,7 +7769,7 @@ successMessage = "Ваша лицензия успешно активирова�
 
 [plan.team]
 maxUsers = "100 пользователей"
-name = "Team"
+name = "Командный"
 
 [policies.activity]
 outputsUnavailable = "Результаты политики больше недоступны для скачивания."
@@ -8105,7 +8121,7 @@ usage = "Использование"
 [portal.billing.compare]
 current = "Текущий"
 enterpriseData = "Размещение данных и SCIM"
-enterpriseName = "Enterprise"
+enterpriseName = "Корпоративный"
 enterprisePrice = "Согласно вашему соглашению"
 enterpriseProcessing = "По счётчику или фиксированно"
 enterpriseSignIn = "SAML и аудит"
@@ -8114,7 +8130,7 @@ enterpriseUsers = "Без ограничений"
 enterpriseWhere = "Плюс multi-node и air-gapped"
 exploreEnterprise = "Изучить Enterprise"
 freeData = "Остаются там, где вы запускаете сервис"
-freeName = "Free"
+freeName = "Бесплатный"
 freePrice = "Без карты, без срока действия"
 freeProcessing = "{{allowance}} кредитов в месяц"
 freeProcessingUnknown = "Ежемесячный лимит кредитов"
@@ -8134,7 +8150,7 @@ rowSupport = "Поддержка"
 rowUsers = "Пользователи"
 rowWhere = "Где работает"
 teamData = "Google Drive, ваша собственная база данных"
-teamName = "Team"
+teamName = "Командный"
 teamPrice = "$99/мес за 100 пользователей"
 teamProcessing = "{{allowance}} в месяц, затем по счётчику"
 teamProcessingUnknown = "Больший лимит, затем по счётчику"
@@ -8173,20 +8189,20 @@ oauthSso = "SSO (OAuth2/OIDC)"
 chipAnywhere = "Web, desktop и self-hosted"
 chipCredits = "{{allowance}} бесплатных кредитов ежемесячно"
 chipTools = "Все PDF-инструменты"
-name = "Free"
+name = "Бесплатный"
 sub = "Полный PDF Editor."
 
 [portal.billing.identity.processor]
 chipMetered = "Тарифицируемая обработка"
 chipPipelines = "Конвейеры и API"
-name = "Processor"
+name = "Процессор"
 sub = "База Team плюс {{rate}} за кредит"
 subNoRate = "База Team плюс тарифицируемая обработка"
 
 [portal.billing.identity.team]
 chipFleet = "Управление парком"
 chipIncluded = "{{allowance}} включенных кредитов ежемесячно"
-name = "Team"
+name = "Командный"
 sub = "До {{users}} пользователей"
 subNoLimit = "Без ограничения пользователей"
 
@@ -8298,7 +8314,7 @@ prepaidRemaining = "Осталось предоплаченных кредито
 prepaidTooltip = "Расходуются перед тарифицируемой оплатой и вне вашего лимита расходов."
 raiseLimit = "Увеличить лимит"
 remainingOf = "{{remaining}} из {{total}}"
-rowName = "Processor"
+rowName = "Процессор"
 spendAgainstLimit = "{{spend}} из {{cap}} тарифицировано в этом цикле"
 
 [portal.billing.seats]
@@ -8321,7 +8337,7 @@ plan = "Ваш план"
 [portal.billing.serverPlan]
 active = "Активная self-hosted лицензия"
 connectBody = "Подключитесь, чтобы добавить кредиты облачной обработки. Лицензия вашего сервера останется активной."
-enterprise = "Enterprise"
+enterprise = "Корпоративный"
 enterpriseConnectBody = "Ваша лицензия Enterprise включает обработку на этом сервере. Подключение учетной записи необязательно."
 included = "Включено в вашу лицензию"
 seats = "{{seats}} лицензированных мест"
@@ -8400,7 +8416,7 @@ session = "сессия"
 signature = "подпись"
 
 [portal.components.maturity]
-beta = "Beta"
+beta = "Бета"
 ga = "GA"
 
 [portal.connections]
@@ -8453,7 +8469,7 @@ label = "URL сервера"
 label = "Email"
 
 [portal.connections.commonFields.host]
-label = "Host"
+label = "Хост"
 
 [portal.connections.commonFields.password]
 label = "Пароль"
@@ -8496,7 +8512,7 @@ label = "Аутентификация"
 label = "Имя пользователя и пароль"
 
 [portal.connections.types.api.fields.authType.options.bearer]
-label = "Bearer token"
+label = "Bearer-токен"
 
 [portal.connections.types.api.fields.authType.options.header]
 label = "Токен в пользовательском заголовке"
@@ -8691,7 +8707,7 @@ label = "Хранилище S3"
 label = "ID ключа доступа"
 
 [portal.connections.types.s3.fields.bucket]
-label = "Bucket"
+label = "Бакет"
 
 [portal.connections.types.s3.fields.endpoint]
 helperText = "Оставьте пустым для AWS. Установите это для MinIO или другого S3-совместимого хранилища."
@@ -8863,7 +8879,7 @@ lead = "Клиенты first-party с типизированными ответ�
 title = "Официальные SDK"
 
 [portal.docs.sdks.status]
-beta = "Beta"
+beta = "Бета"
 deprecated = "Устарело"
 
 [portal.docs.skills]
@@ -9529,8 +9545,8 @@ usage = "Использование и оплата"
 users = "Пользователи"
 
 [portal.nav.section]
-platform = "PDF Platform"
-processor = "PDF Processor"
+platform = "PDF-платформа"
+processor = "PDF-процессор"
 
 [portal.pipelines]
 permissionsRetry = "Повторить"
@@ -10225,7 +10241,7 @@ description = "Выберите, что этот конвейер делает �
 footnote = "Подсчеты приведены за последние 24 часа. Скорость потока показана для примера."
 liveBadge = "Работает"
 stats = "{{connected}} подключено · {{processed}} PDF обработано"
-title = "PDF Processor"
+title = "PDF-процессор"
 
 [portal.processorFlow.lens]
 ariaLabel = "Режим просмотра"
@@ -10320,11 +10336,11 @@ postalCode = "Почтовый индекс"
 postalCodePlaceholder = "94105"
 posture = "Управление"
 posture_count = "~{{count}} политик"
-posture_essentials = "Essentials"
+posture_essentials = "Базовый"
 posture_essentialsSub = "Классификация + совместный доступ — настройки по умолчанию"
-posture_governed = "Governed"
+posture_governed = "Управляемый"
 posture_governedSub = "Добавляет безопасность и маршрутизацию"
-posture_regulated = "Regulated"
+posture_regulated = "Регулируемый"
 posture_regulatedSub = "Каждая категория — Compliance, Retention, Ingestion"
 qbr = "Ежеквартальные бизнес-обзоры"
 qbrSub = "Ваш инженер по решениям каждый квартал анализирует использование и roadmap"
@@ -10370,7 +10386,7 @@ years_one = "{{count}} год"
 years_other = "{{count}} лет"
 
 [portal.procurement.documents]
-agreement = "Enterprise Agreement"
+agreement = "Корпоративное соглашение"
 agreementSub = "MSA, Order Form и DPA в одной подписи."
 download = "Скачать"
 eula = "EULA и коммерческие условия"
@@ -10400,7 +10416,7 @@ ctaQuote = "Проверить ваше предложение"
 ctaReviewQuote = "Просмотреть предложение"
 ctaTrial = "Собрать ваше предложение"
 documents = "Документы"
-eyebrow = "Enterprise"
+eyebrow = "Корпоративный"
 eyebrowCompany = "{{company}} Enterprise"
 inviteTeammates = "Пригласить коллег"
 licenseKey = "Лицензионный ключ"
@@ -10459,7 +10475,7 @@ trialFileHint = "Это ваш файл пробной лицензии. Пос�
 [portal.procurement.link]
 cta = "Привязать аккаунт"
 description = "Закупка работает через ваш привязанный аккаунт Stirling: так мы предоставляем пробный период, рассчитываем предложение и запускаем биллинг. Привяжите аккаунт, чтобы начать."
-eyebrow = "Enterprise"
+eyebrow = "Корпоративный"
 title = "Привяжите аккаунт, чтобы начать"
 
 [portal.procurement.live]
@@ -10906,7 +10922,7 @@ label = "ID приложения"
 
 [provider.googledrive.clientId]
 description = "Google OAuth 2.0 Client ID из Google Cloud Console"
-label = "Client ID"
+label = "ID клиента"
 
 [provider.googledrive.enabled]
 description = "Разрешить пользователям импортировать файлы напрямую из Google Drive"
@@ -10930,11 +10946,11 @@ label = "Блокировать регистрацию"
 
 [provider.oauth2.generic.clientId]
 description = "OAuth2 Client ID от вашего провайдера"
-label = "Client ID"
+label = "ID клиента"
 
 [provider.oauth2.generic.clientSecret]
 description = "OAuth2 Client Secret от вашего провайдера"
-label = "Client Secret"
+label = "Секрет клиента"
 
 [provider.oauth2.generic.enabled]
 description = "Включить аутентификацию с использованием произвольного провайдера OAuth2"
@@ -10942,7 +10958,7 @@ label = "Включить универсальный OAuth2"
 
 [provider.oauth2.generic.issuer]
 description = "Провайдер, поддерживающий OpenID Connect Discovery (/.well-known/openid-configuration)"
-label = "Issuer URL"
+label = "URL издателя"
 
 [provider.oauth2.generic.provider]
 description = "Имя вашего провайдера OAuth2 (например, Azure AD, Okta)"
@@ -10961,11 +10977,11 @@ scope = "Аутентификация входа"
 
 [provider.oauth2.github.clientId]
 description = "OAuth2 Client ID из GitHub Developer Settings"
-label = "Client ID"
+label = "ID клиента"
 
 [provider.oauth2.github.clientSecret]
 description = "OAuth2 Client Secret из GitHub Developer Settings"
-label = "Client Secret"
+label = "Секрет клиента"
 
 [provider.oauth2.github.scopes]
 description = "OAuth2 scopes, разделенные запятыми"
@@ -10980,11 +10996,11 @@ scope = "Аутентификация входа"
 
 [provider.oauth2.google.clientId]
 description = "OAuth2 Client ID из Google Cloud Console"
-label = "Client ID"
+label = "ID клиента"
 
 [provider.oauth2.google.clientSecret]
 description = "OAuth2 Client Secret из Google Cloud Console"
-label = "Client Secret"
+label = "Секрет клиента"
 
 [provider.oauth2.google.scopes]
 description = "OAuth2 scopes, разделенные запятыми"
@@ -10999,15 +11015,15 @@ scope = "SSO"
 
 [provider.oauth2.keycloak.clientId]
 description = "OAuth2 Client ID из Keycloak"
-label = "Client ID"
+label = "ID клиента"
 
 [provider.oauth2.keycloak.clientSecret]
 description = "OAuth2 Client Secret из Keycloak"
-label = "Client Secret"
+label = "Секрет клиента"
 
 [provider.oauth2.keycloak.issuer]
 description = "URL конечной точки OpenID Connect Discovery realm в Keycloak"
-label = "Issuer URL"
+label = "URL издателя"
 
 [provider.oauth2.keycloak.scopes]
 description = "OAuth2 scopes, разделенные запятыми"
@@ -11083,19 +11099,19 @@ label = "Адрес отправителя"
 
 [provider.smtp.host]
 description = "Имя хоста или IP-адрес вашего SMTP-сервера"
-label = "SMTP Host"
+label = "SMTP-хост"
 
 [provider.smtp.password]
 description = "Пароль для аутентификации SMTP"
-label = "SMTP Password"
+label = "SMTP-пароль"
 
 [provider.smtp.port]
 description = "Номер порта для подключения SMTP (обычно 25, 465 или 587)"
-label = "SMTP Port"
+label = "SMTP-порт"
 
 [provider.smtp.username]
 description = "Имя пользователя для аутентификации SMTP"
-label = "SMTP Username"
+label = "SMTP-имя пользователя"
 
 [quickAccess]
 allTools = "Инстр."
@@ -12102,28 +12118,15 @@ description = "Введите полный URL вашего self-hosted серв
 label = "URL сервера"
 
 [sharedSign]
-backToSessions = "Назад к сеансам"
-createdOn = "Создано {{date}}"
 disabledBody = "Совместное подписание не включено на этом сервере."
-disabledTitle = "Не включено"
-due = "Срок до {{date}}"
 filterDeclined = "Отклонено"
-filterMine = "Мои"
 filterOverdue = "Просрочено"
 filterSigned = "Подписано"
-fromOwner = "От {{owner}}"
-newRequest = "Запросить подписи"
-signedCount = "{{signed}}/{{total}} подписано"
 signInRequiredBody = "Войдите, чтобы запрашивать подписи и видеть отправленные вам запросы."
 signInRequiredTitle = "Требуется вход"
 
-[sharedSign.empty]
-active = "Нет ожидающих запросов подписи или активных сеансов"
-completed = "Нет завершённых сеансов"
-
 [sharedSign.tab]
 active = "Активные"
-completed = "Завершённые"
 
 [showJS]
 done = "JavaScript извлечен"
@@ -12473,10 +12476,68 @@ bullet3 = "Невидимые подписи всё равно обеспечи�
 description = "Определяет, будет ли подпись видна в документе или встроена невидимо."
 title = "Видимость подписи"
 
+[signingDetail]
+allSigned = "Все подписали. Просмотрите документ, затем завершите."
+awaitingOwner = "Владелец завершит документ, когда будет готов."
+certificateNext = "Выберите сертификат на следующем шаге."
+earlyHint = "Вы можете завершить сейчас с полученными подписями или дождаться оставшихся участников."
+finalDocument = "Подписанный документ"
+finalizeTitle = "Завершить документ"
+finalReady = "Ваш подписанный PDF готов к открытию в рабочей области."
+inProgressPreview = "Предпросмотр в процессе с отправленными подписями. Владелец еще не завершил этот документ."
+manageSession = "Управление сеансом подписания"
+moveHint = "Выберите подпись в документе, чтобы переместить, изменить размер или удалить ее."
+notified = "Уведомлен"
+optional = "Необязательно"
+ownerNext = "Вернитесь к своей сессии, чтобы проверить подписи всех участников и завершить документ, когда будете готовы."
+placeHint = "Нажмите на документ, чтобы разместить свою подпись."
+progress = "Ход подписания"
+readyToSign = "Готовы подписать?"
+refreshPreview = "Обновить предпросмотр"
+removePerson = "Удалить {{name}}"
+requestClosed = "Этот запрос закрыт"
+requestTitle = "Запрос подписи"
+signatureSubmitted = "Ваша подпись отправлена"
+signedCount = "Подписано {{signed}} / {{total}}"
+signMyRequest = "Подписать этот документ"
+viewOnly = "Вы всё еще можете просмотреть документ здесь."
+visibleSignature = "Видимая подпись"
+visibleSignatureHelp = "О видимых подписях"
+
+[signMenu]
+anyOrder = "Участники могут подписывать в любом порядке. Владелец завершает документ после проверки собранных подписей."
+certificateHint = "Использовать сертификат"
+certificateTitle = "Цифровая подпись"
+closedStatus = "Закрыто"
+completedTab = "Завершенные"
+dueDate = "Срок выполнения (необязательно)"
+newActivity = "Новая активность с момента вашего последнего просмотра этой сессии"
+noActive = "Нет активных сессий"
+noCompleted = "Нет завершенных сессий"
+noMatches = "Нет подходящих сессий"
+noUnread = "У вас всё просмотрено"
+optionalMarks = "Видимые метки необязательны. Заполнить и подписать также работает только с сертификатом."
+ownerProgress = "Ваш запрос · подписано {{signed}} / {{total}}"
+personalHint = "Нарисуйте, введите или загрузите"
+personalTitle = "Личная подпись"
+request = "Запросить подписи"
+search = "Найти документ или человека"
+send = "Отправить запрос на подпись"
+sessionFilter = "Представления сессий"
+sessions = "Сессии подписания"
+settings = "Оформление и страница сводки (необязательно)"
+signFailed = "Не удалось подписать. Проверьте сертификат и попробуйте снова; размещенные вами метки сохранены."
+submitted = "Отправлено · ожидает завершения"
+title = "Подписать"
+triggerUnreadCount_one = "Подписать · {{count}} непрочитанная сессия"
+triggerUnreadCount_other = "Подписать · {{count}} непрочитанных сессий"
+unreadTab = "Непрочитанные"
+
 [signRequest]
+accessExpired = "Ваш доступ к этому запросу подписи истек. Попросите отправителя создать новый запрос."
 declined = "Запрос подписи отклонён"
+expired = "Доступ истек"
 fetchFailed = "Не удалось загрузить запрос подписи"
-signed = "Документ успешно подписан"
 
 [signSession]
 created = "Запрос подписи отправлен"
@@ -12512,6 +12573,52 @@ title = "Создать аккаунт"
 unableToAccessTool = "Не удается получить доступ к инструменту: {{error}}"
 unexpectedError = "Непредвиденная ошибка: {{message}}"
 unknownError = "Неизвестная ошибка"
+
+[signWorkspace]
+changeDocument = "Изменить PDF"
+chooseDocument = "Выберите открытый PDF"
+chooseFromLibrary = "Выбрать из библиотеки"
+chooseParticipants = "Выберите участников"
+choosePdf = "Выберите PDF"
+choosePdfHeading = "Начните с вашего документа"
+clearDate = "Очистить дату"
+created = "Создано"
+createdByMe = "Создано мной"
+datesAndOptions = "Даты и параметры"
+document = "Документ"
+dueDate = "Срок выполнения"
+dueDateHelp = "Это целевая дата. Участники всё равно могут подписать после нее."
+dueDateHelpLabel = "О сроках выполнения"
+empty = "Здесь пока нет сессий."
+expand = "Развернуть сессии подписания"
+inviteLoadError = "Не удалось загрузить параметры приглашения. Закройте это диалоговое окно и попробуйте снова."
+invitePerson = "Добавить коллегу: {{name}}"
+inviteTeammate = "Добавить коллегу"
+inviteUnavailable = "Добавление коллег недоступно для вашей учетной записи или конфигурации сервера."
+navigation = "Навигация по подписанию"
+needsYou = "Требуется ваша подпись"
+nextMonth = "Следующий месяц"
+nextStep = "Далее"
+noDueDate = "Нет срока выполнения"
+noMatches = "Нет сессий, соответствующих вашему поиску или фильтру."
+noOpenPdfs = "Выберите PDF из своей библиотеки или добавьте его с компьютера."
+noPeopleMatch = "Нет людей, соответствующих вашему поиску."
+noPreview = "Предпросмотр документа недоступен"
+owner = "Владелец"
+participants = "Участники"
+participantsSelected = "Выбрано: {{count}}"
+personalHeading = "Подписать документ"
+previousMonth = "Предыдущий месяц"
+refresh = "Обновить сессии"
+requestSteps = "Шаги запроса подписи"
+search = "Поиск документов или людей"
+searchParticipants = "Поиск людей или команд"
+selectOnePdf = "Выберите один PDF для этого запроса подписи."
+signingOrderHelp = "О порядке подписания"
+status = "Статус"
+unavailable = "Эта сессия больше недоступна. Обновите список, чтобы увидеть ваши текущие сессии."
+upcoming = "Предстоящие"
+uploadFailed = "Не удалось открыть этот PDF. Повторите попытку."
 
 [sizes]
 large = "Большой"

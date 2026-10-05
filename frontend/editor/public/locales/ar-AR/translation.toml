@@ -1283,7 +1283,7 @@ label = "بيانات وصفية مخصصة"
 [admin.settings.general.customMetadata.author]
 description = "المؤلف الافتراضي لبيانات PDF الوصفية (مثال: اسم المستخدم)"
 label = "المؤلف الافتراضي"
-placeholder = "username"
+placeholder = "اسم المستخدم"
 
 [admin.settings.general.customMetadata.autoUpdate]
 description = "تحديث بيانات PDF الوصفية تلقائيًا على جميع المستندات المعالجة"
@@ -1391,7 +1391,7 @@ title = "تحذير المسؤولية القانونية"
 
 [admin.settings.legal.impressum]
 description = "عنوان URL أو اسم الملف الخاص بـ Impressum (مطلوب في بعض السلطات القضائية)"
-label = "Impressum"
+label = "بيانات الناشر"
 
 [admin.settings.legal.loginAgreement]
 defaultLocaleHint = "— تُستخدم كخيار احتياطي عندما لا تحتوي لغة ما على ملف."
@@ -1815,7 +1815,7 @@ label = "تمكين روابط المشاركة"
 
 [admin.settings.storage.signing.enabled]
 description = "السماح للمستخدمين بإنشاء جلسات توقيع بمشاركة عدة أطراف. يتطلب تمكين تخزين ملفات الخادم."
-label = "تمكين التوقيع الجماعي (ألفا)"
+title = "تفعيل توقيع المجموعة"
 
 [admin.settings.telegram]
 description = "اضبط اتصال روبوت Telegram، ضوابط الوصول، وسلوك التغذية الراجعة."
@@ -2744,7 +2744,6 @@ reason = "السبب"
 serverCertMessage = "باستخدام شهادة الخادم - لا حاجة إلى ملفات أو كلمة مرور"
 showLogo = "إظهار الشعار"
 signatureProgress = "{{signedCount}}/{{totalCount}} توقيعات"
-signed = "موقّع"
 tags = "مصادقة,PEM,P12,رسمي,تشفير,توقيع,شهادة,PKCS12,JKS,خادم,يدوي,تلقائي"
 title = "توقيع الشهادة"
 viewed = "تمت المشاهدة"
@@ -2809,7 +2808,13 @@ reasonPlaceholder = "مثال: موافقة، مراجعة..."
 
 [certSign.collab.finalize]
 button = "إنهاء وتحميل ملف PDF الموقّع"
+confirmAction = "تأكيد وإنهاء"
+confirmDescription = "سيؤدي الإنهاء إلى إغلاق هذه الجلسة. لا يمكن إرسال أي توقيعات أخرى."
+confirmTitle = "هل تريد إنهاء جلسة التوقيع هذه؟"
 early = "إنهاء بالتواقيع الحالية"
+excluded = "المشاركون الذين لن تُضمَّن توقيعاتهم"
+included = "التوقيعات المضمنة"
+requiresSignature = "يجب أن يوقّع مشارك واحد على الأقل قبل أن تتمكن من الإنهاء."
 
 [certSign.collab.participant]
 certInvalid = "✗ {{error}}"
@@ -2826,7 +2831,6 @@ includeSummaryPageHelp = "ستُضاف صفحة ملخص في النهاية ت�
 [certSign.collab.sessionDetail]
 addParticipants = "إضافة مشاركين"
 addParticipantsError = "تعذّر إضافة المشاركين"
-backToList = "العودة إلى الجلسات"
 deleteConfirm = "هل أنت متأكد؟ لا يمكن التراجع عن ذلك."
 deleteError = "فشل حذف الجلسة"
 deleteSession = "حذف الجلسة"
@@ -2835,14 +2839,11 @@ finalizeError = "تعذّر إنهاء الجلسة"
 loadPdfError = "تعذّر تحميل ملف PDF الموقّع"
 loadSignedPdf = "تحميل ملف PDF الموقّع إلى الملفات النشطة"
 messageLabel = "رسالة"
-owner = "المالك"
 participantRemoved = "تمت إزالة المشارك"
 participants = "المشاركون"
 participantsAdded = "تمت إضافة المشاركين بنجاح"
-removeParticipant = "إزالة"
 removeParticipantError = "تعذّر إزالة المشارك"
 selectUsers = "اختر المستخدمين..."
-sessionInfo = "معلومات الجلسة"
 
 [certSign.collab.sessionList]
 active = "نشطة"
@@ -2855,11 +2856,10 @@ title = "مظهر التوقيع"
 [certSign.collab.signRequest]
 addedToFiles = "تمت إضافة المستند إلى الملفات النشطة"
 addToFiles = "إضافة إلى الملفات النشطة"
-advancedSettings = "إعدادات متقدمة"
-backToList = "العودة إلى طلبات التوقيع"
 certificateChoice = "اختر شهادة للتوقيع بها"
 changeSignature = "تغيير التوقيع"
 clearSignature = "مسح التوقيع"
+closed = "تم إنهاء هذه الجلسة. يمكنك عرض المستند النهائي، ولكن لن تُقبل أي توقيعات أو رفض إضافي."
 completeAndSign = "إكمال والتوقيع"
 createNewSignature = "إنشاء توقيع جديد"
 decline = "رفض الطلب"
@@ -2876,7 +2876,6 @@ invalidFileType = "يرجى اختيار ملف صورة"
 location = "الموقع (اختياري)"
 locationPlaceholder = "من أين توقّع؟"
 noCertificate = "يرجى اختيار ملف شهادة"
-noSignatures = "يرجى وضع توقيع واحد على الأقل على ملف PDF"
 p12File = "ملف شهادة P12/PFX"
 password = "كلمة مرور الشهادة"
 penColor = "لون القلم"
@@ -2894,16 +2893,15 @@ signatureText = "نص التوقيع"
 signatureTextPlaceholder = "أدخل اسمك..."
 signatureTypeLabel = "نوع التوقيع"
 signButton = "توقيع المستند"
-signingTitle = "التوقيع"
 textColor = "لون النص"
 typeSignature = "اكتب اسمك لإنشاء توقيع"
-uploadCert = "شهادة مخصصة"
-uploadCertDesc = "استخدم شهادة P12/PFX الخاصة بك"
+uploadCert = "رفع شهادة"
+uploadCertDesc = "استخدم شهادة PKCS12 أو PFX أو PEM أو JKS الخاصة بك."
 uploadSignature = "ارفع صورة توقيعك"
-usePersonalCert = "شهادة شخصية"
-usePersonalCertDesc = "تُنشأ تلقائيًا لحسابك"
-useServerCert = "شهادة المؤسسة"
-useServerCertDesc = "شهادة مؤسسة مشتركة"
+usePersonalCert = "Stirling Sign · شخصي"
+usePersonalCertDesc = "وقّع باستخدام الشهادة التي تم إنشاؤها لحسابك."
+useServerCert = "Stirling Sign · المؤسسة"
+useServerCertDesc = "وقّع باستخدام شهادة المؤسسة المشتركة لهذا الخادم."
 useSignature = "استخدم التوقيع"
 
 [certSign.collab.signRequest.certModal]
@@ -2912,10 +2910,13 @@ certInvalidFallback = "شهادة غير صالحة"
 certNetworkError = "تعذّر التحقق من الشهادة"
 certValidating = "جارٍ التحقق من الشهادة..."
 certValidUntil = "الشهادة صالحة حتى {{date}}"
-description_one = "لقد وضعت توقيعًا واحدًا. اختر شهادتك لإكمال التوقيع."
-description_other = "لقد وضعت {{count}} توقيعات. اختر شهادتك لإكمال التوقيع."
+description_one = "{{count}} علامة مرئية جاهزة. اختر شهادة لإكمال التوقيع."
+description_other = "{{count}} علامات مرئية جاهزة. اختر شهادة لإكمال التوقيع."
+description_zero = "ستوقّع شهادتك المستند دون علامات مرئية."
+details = "تفاصيل التوقيع (اختياري)"
+format = "تنسيق الشهادة"
 sign = "توقيع المستند"
-title = "تهيئة الشهادة"
+title = "اختر طريقة التوقيع"
 
 [certSign.collab.signRequest.mode]
 move = "نقل التوقيع"
@@ -2968,11 +2969,11 @@ visible = "مرئي"
 yourSignatures = "تواقيعك ({{count}})"
 
 [certSign.collab.userSelector]
-inviteUsers = "إضافة مستخدمين"
 loadError = "فشل في تحميل المستخدمين"
 noTeam = "لا يوجد فريق"
 noUsers = "لم يتم العثور على مستخدمين آخرين."
 placeholder = "اختر المستخدمين..."
+you = "{{name}} (أنت)"
 
 [certSign.device]
 stepTitle = "هذا الجهاز"
@@ -4077,11 +4078,11 @@ convertTo = "التحويل إلى"
 desc = "حوّل الملفات بين صيغ مختلفة"
 downloadHtml = "تنزيل ملف HTML الوسيط بدلًا من PDF"
 dpi = "DPI"
-ebookToPdf = "eBook → PDF"
+ebookToPdf = "كتاب إلكتروني → PDF"
 emailOptions = "خيارات البريد إلى PDF"
-emlToPdf = "Email → PDF"
+emlToPdf = "البريد الإلكتروني → PDF"
 errorConversion = "حدث خطأ أثناء تحويل الملف."
-fileToPdf = "Office/Document → PDF"
+fileToPdf = "Office/مستند → PDF"
 fillPage = "ملء الصفحة"
 fitDocumentToPage = "ملاءمة المستند للصفحة"
 fitOption = "خيار الملاءمة"
@@ -5450,9 +5451,6 @@ multimedia = "وسائط متعددة"
 
 [groupSigning.steps]
 back = "رجوع"
-completed = "مكتمل"
-current = "حالي"
-stepLabel = "الخطوة {{number}}"
 
 [groupSigning.steps.configureDefaults]
 continue = "متابعة"
@@ -5460,7 +5458,6 @@ invisible = "ستكون التواقيع غير مرئية (بيانات وصف�
 locationLabel = "الموقع:"
 preview = "معاينة"
 reasonLabel = "السبب:"
-title = "تهيئة إعدادات التوقيع"
 visible = "ستكون التواقيع مرئية على الصفحة {{page}}"
 
 [groupSigning.steps.review]
@@ -5472,14 +5469,13 @@ location = "الموقع:"
 logo = "الشعار:"
 logoHidden = "بدون شعار"
 logoShown = "يظهر شعار Stirling PDF"
-participantCount_one = "سيوقع مشارك واحد بالترتيب"
-participantCount_other = "سيوقع {{count}} مشاركين بالترتيب"
+participantCount_one = "تم تحديد {{count}} مشارك"
+participantCount_other = "تم تحديد {{count}} مشاركين"
 participants = "المشاركون"
 reason = "السبب:"
 send = "إرسال طلبات التوقيع"
 signatureSettings = "إعدادات التوقيع"
 title = "مراجعة تفاصيل الجلسة"
-titleShort = "مراجعة وإرسال"
 visibility = "الظهور:"
 visible = "مرئي على الصفحة {{page}}"
 
@@ -5487,7 +5483,6 @@ visible = "مرئي على الصفحة {{page}}"
 continue = "متابعة"
 noFile = "يرجى اختيار ملف PDF واحد من ملفاتك النشطة لإنشاء جلسة توقيع."
 selectedFile = "المستند المحدد"
-title = "اختيار مستند"
 
 [groupSigning.steps.selectParticipants]
 continue = "متابعة"
@@ -5495,31 +5490,30 @@ count_one = "تم تحديد مشارك واحد"
 count_other = "تم تحديد {{count}} مشاركين"
 label = "اختر المشاركين"
 placeholder = "اختر المشاركين للتوقيع..."
-title = "اختيار المشاركين"
 
 [groupSigning.tooltip]
 header = "نبذة عن التوقيع الجماعي"
 
 [groupSigning.tooltip.finalization]
-bullet1 = "تُطبَّق جميع التواقيع حسب ترتيب المشاركين الذي حددته"
-bullet2 = "يمكنك الإنهاء بتواقيع جزئية عند الحاجة"
-bullet3 = "بعد الإنهاء، لا يمكن تعديل الجلسة"
-description = "عند توقيع جميع المشاركين (أو إذا اخترت الإنهاء مبكرًا)، يمكنك إنشاء ملف PDF النهائي الموقّع."
+bullet1 = "يتضمن PDF النهائي جميع التوقيعات المقبولة"
+bullet2 = "راجع المشاركين المتبقين قبل الإنهاء بتوقيعات جزئية"
+bullet3 = "يؤدي الإنهاء إلى إغلاق الطلب؛ لن يتمكن المشاركون المتبقون من التوقيع بعد ذلك"
+description = "بعد أن يوقّع مشارك واحد على الأقل، يمكن للمالك إنهاء الطلب وإنشاء PDF الموقّع."
 title = "عملية الإنهاء"
 
 [groupSigning.tooltip.roles]
 bullet1 = "المالك (أنت): ينشئ الجلسة، يضبط افتراضات التوقيع، ينهي المستند"
-bullet2 = "المشاركون: ينشئون توقيعهم، يختارون الشهادة، يضعونها على ملف PDF"
-bullet3 = "لا يمكن للمشاركين تعديل إعدادات الظهور أو السبب أو الموقع للتوقيع"
-description = "أنت تتحكم في إعدادات مظهر التوقيع لجميع المشاركين."
+bullet2 = "المشاركون: اختر شهادة وضع توقيعًا مرئيًا على PDF اختياريًا"
+bullet3 = "يمكن للمشاركين تعديل سبب التوقيع وموقعه قبل الإرسال"
+description = "يضبط المالك الإعدادات الافتراضية للطلب؛ يختار كل مشارك شهادته والعلامة المرئية الاختيارية الخاصة به."
 title = "أدوار المشاركين"
 
 [groupSigning.tooltip.sequential]
-bullet1 = "يجب أن يوقّع المشارك الأول قبل أن يتمكن الثاني من الوصول إلى المستند"
-bullet2 = "يضمن ترتيب توقيع مناسبًا للامتثال القانوني"
-bullet3 = "يمكنك إعادة ترتيب المشاركين بسحبهم في القائمة"
-description = "يوقّع المشاركون المستندات بالترتيب الذي تحدده. يتلقى كل موقّع إشعارًا عندما يحين دوره."
-title = "التوقيع المتسلسل"
+bullet1 = "لا يحتاج المشاركون إلى انتظار موقّع آخر"
+bullet2 = "تتبّع تقدم كل مشارك في جلسات التوقيع"
+bullet3 = "تاريخ الاستحقاق تذكير؛ ولا يؤدي إلى انتهاء صلاحية الوصول"
+description = "يمكن للمشاركين المعينين المراجعة والتوقيع بشكل مستقل، بأي ترتيب."
+title = "التوقيع بأي ترتيب"
 
 [guestBanner]
 dismiss = "إخفاء الشريط"
@@ -5828,7 +5822,6 @@ tags = "اكتشاف,تقسيم,photos,اكتشاف تلقائي,اكتشاف ph
 title = "كشف وتقسيم صور ممسوحة"
 
 [home.sharedSign]
-desc = "اطلب توقيعات من الآخرين وتتبع جلسات التوقيع"
 title = "توقيع مشترك"
 
 [home.showJS]
@@ -7426,7 +7419,9 @@ groupedTitle = "جزء من مجموعة في PDF هذا: يمكن حذفه لك
 
 [pdfTextEditor.sidebar]
 addImage = "إضافة صورة"
+addTable = "إضافة جدول"
 addText = "إضافة نص"
+clickPageToAddTable = "انقر على الصفحة لإضافة جدول"
 clickPageToAddText = "انقر على الصفحة لإضافة نص"
 document = "المستند"
 group = "تجميع"
@@ -7435,11 +7430,14 @@ groupingAutoHint = "يجمع الأسطر المتساوية التباعد في
 groupingLine = "سطر"
 groupTooltip = "دمج التدفقات المحددة في فقرة واحدة ({{shortcut}})"
 groupTooltipDisabled = "حدد 2+ تدفقات للدمج"
+image = "صورة"
 noFile = "لم يتم تحميل أي ملف"
 noFileHint = "اختر PDF من لوحة الملفات على اليسار، أو أفلت واحدًا هنا. سيفتحه المحرر تلقائيًا."
 opening = "جارٍ فتح المستند..."
 paragraph = "فقرة"
 rulers = "المساطر والأدلة"
+table = "جدول"
+text = "نص"
 textBoxWidth = "عرض مربع النص الجديد"
 textGrouping = "تجميع النص"
 ungroup = "إلغاء التجميع"
@@ -7460,6 +7458,24 @@ loadingProgress = "تقدم التحميل"
 noDocument = "لم يتم تحميل أي مستند."
 pickPrompt = "اختر PDF من لوحة الملفات على اليسار لبدء التحرير."
 renderingPreview = "جارٍ عرض المعاينة"
+
+[pdfTextEditor.table]
+addColumn = "إضافة عمود"
+addRow = "إضافة صف"
+column = "عمود"
+deleteColumn = "حذف عمود"
+deleteRow = "حذف صف"
+done = "تم"
+doneHint = "إيقاف تحرير هذا كجدول"
+edit = "تحرير"
+editHint = "تحرير كجدول - اكتب في الخلايا، وأضف أو أزل الصفوف والأعمدة"
+move = "نقل"
+moveTable = "اسحب لنقل الجدول بالكامل"
+recognizedHint = "جدول تم التعرف عليه - انقر لتحديد كل نصه"
+resizeColumn = "اسحب لتغيير حجم هذا العمود (Alt: المشاركة مع التالي)"
+resizeRow = "اسحب لتغيير حجم هذا الصف (Alt: المشاركة مع التالي)"
+resizeTable = "اسحب لتغيير حجم الجدول بالكامل"
+row = "صف"
 
 [pdfTextEditor.toolbar]
 addTextTooltip = "إضافة مربع نص - ثم انقر على الصفحة"
@@ -8863,7 +8879,7 @@ lead = "عملاء الطرف الأول باستجابات ذات أنواع م
 title = "SDKs الرسمية"
 
 [portal.docs.sdks.status]
-beta = "Beta"
+beta = "تجريبي"
 deprecated = "مهمل"
 
 [portal.docs.skills]
@@ -10538,7 +10554,7 @@ subtitle = "أي شيء من عمليات تشغيل سياستك ومحرري �
 title = "مراجعة"
 
 [portal.settings.sections]
-account-link = "ربط الحساب"
+account-link = "اتصال الحساب"
 
 [portal.shell.sidebar]
 appEditor = "المحرر"
@@ -10906,7 +10922,7 @@ label = "معرّف التطبيق"
 
 [provider.googledrive.clientId]
 description = "Google OAuth 2.0 Client ID من Google Cloud Console"
-label = "Client ID"
+label = "معرّف العميل"
 
 [provider.googledrive.enabled]
 description = "السماح للمستخدمين باستيراد الملفات مباشرةً من Google Drive"
@@ -10930,11 +10946,11 @@ label = "حظر التسجيل"
 
 [provider.oauth2.generic.clientId]
 description = "OAuth2 Client ID من مزوّدك"
-label = "Client ID"
+label = "معرّف العميل"
 
 [provider.oauth2.generic.clientSecret]
 description = "OAuth2 Client Secret من مزوّدك"
-label = "Client Secret"
+label = "سر العميل"
 
 [provider.oauth2.generic.enabled]
 description = "تمكين المصادقة باستخدام مزوّد OAuth2 مخصص"
@@ -10942,7 +10958,7 @@ label = "تمكين OAuth2 عام"
 
 [provider.oauth2.generic.issuer]
 description = "مزوّد يدعم OpenID Connect Discovery (/.well-known/openid-configuration)"
-label = "Issuer URL"
+label = "URL جهة الإصدار"
 
 [provider.oauth2.generic.provider]
 description = "اسم مزوّد OAuth2 لديك (مثل Azure AD، Okta)"
@@ -10961,11 +10977,11 @@ scope = "مصادقة تسجيل الدخول"
 
 [provider.oauth2.github.clientId]
 description = "OAuth2 Client ID من إعدادات مطوري GitHub"
-label = "Client ID"
+label = "معرّف العميل"
 
 [provider.oauth2.github.clientSecret]
 description = "OAuth2 Client Secret من إعدادات مطوري GitHub"
-label = "Client Secret"
+label = "سر العميل"
 
 [provider.oauth2.github.scopes]
 description = "نطاقات OAuth2 مفصولة بفواصل"
@@ -10980,11 +10996,11 @@ scope = "مصادقة تسجيل الدخول"
 
 [provider.oauth2.google.clientId]
 description = "OAuth2 Client ID من Google Cloud Console"
-label = "Client ID"
+label = "معرّف العميل"
 
 [provider.oauth2.google.clientSecret]
 description = "OAuth2 Client Secret من Google Cloud Console"
-label = "Client Secret"
+label = "سر العميل"
 
 [provider.oauth2.google.scopes]
 description = "نطاقات OAuth2 مفصولة بفواصل"
@@ -10999,15 +11015,15 @@ scope = "SSO"
 
 [provider.oauth2.keycloak.clientId]
 description = "OAuth2 Client ID من Keycloak"
-label = "Client ID"
+label = "معرّف العميل"
 
 [provider.oauth2.keycloak.clientSecret]
 description = "OAuth2 Client Secret من Keycloak"
-label = "Client Secret"
+label = "سر العميل"
 
 [provider.oauth2.keycloak.issuer]
 description = "عنوان URL لنقطة اكتشاف OpenID Connect الخاصة بـ realm في Keycloak"
-label = "Issuer URL"
+label = "URL جهة الإصدار"
 
 [provider.oauth2.keycloak.scopes]
 description = "نطاقات OAuth2 مفصولة بفواصل"
@@ -11043,15 +11059,15 @@ label = "مُصدِر IDP"
 
 [provider.saml2.idpMetadataUri]
 description = "URI لبيانات التعريف الخاصة بمزوّدك"
-label = "IDP Metadata URI"
+label = "URI بيانات تعريف IDP"
 
 [provider.saml2.idpSingleLoginUrl]
 description = "عنوان URL لبدء SSO"
-label = "IDP Single Login URL"
+label = "URL تسجيل الدخول الأحادي لـ IDP"
 
 [provider.saml2.idpSingleLogoutUrl]
 description = "عنوان URL لبدء SLO"
-label = "IDP Single Logout URL"
+label = "URL تسجيل الخروج الأحادي لـ IDP"
 
 [provider.saml2.privateKey]
 description = "مسار مفتاحك الخاص"
@@ -12102,28 +12118,15 @@ description = "أدخل عنوان URL الكامل لخادم Stirling PDF ال
 label = "عنوان URL للخادم"
 
 [sharedSign]
-backToSessions = "الرجوع إلى الجلسات"
-createdOn = "تم الإنشاء في {{date}}"
 disabledBody = "ميزة التوقيع التعاوني غير مفعّلة على هذا الخادم."
-disabledTitle = "غير مفعّل"
-due = "مستحق بتاريخ {{date}}"
 filterDeclined = "مرفوضة"
-filterMine = "خاصة بي"
 filterOverdue = "متأخرة"
 filterSigned = "موقّعة"
-fromOwner = "من {{owner}}"
-newRequest = "طلب التوقيعات"
-signedCount = "{{signed}}/{{total}} موقّعة"
 signInRequiredBody = "سجّل الدخول لطلب التوقيعات ورؤية الطلبات المرسلة إليك."
 signInRequiredTitle = "تسجيل الدخول مطلوب"
 
-[sharedSign.empty]
-active = "لا توجد طلبات توقيع معلّقة أو جلسات نشطة"
-completed = "لا توجد جلسات مكتملة"
-
 [sharedSign.tab]
 active = "نشطة"
-completed = "مكتملة"
 
 [showJS]
 done = "تم استخراج JavaScript"
@@ -12473,10 +12476,68 @@ bullet3 = "لا تزال التواقيع غير المرئية توفّر تح�
 description = "يتحكم فيما إذا كان التوقيع مرئيًا على المستند أو مُضمّنًا بشكل غير مرئي."
 title = "ظهور التوقيع"
 
+[signingDetail]
+allSigned = "وقّع الجميع. راجع المستند، ثم قم بالإنهاء."
+awaitingOwner = "سينهي المالك المستند عندما يكون جاهزًا."
+certificateNext = "اختر شهادتك في الخطوة التالية."
+earlyHint = "يمكنك الإنهاء الآن بالتوقيعات المستلمة، أو الانتظار لبقية المشاركين."
+finalDocument = "المستند الموقّع"
+finalizeTitle = "إنهاء المستند"
+finalReady = "ملف PDF الموقّع الخاص بك جاهز للفتح في مساحة العمل."
+inProgressPreview = "معاينة قيد التقدم مع التوقيعات المرسلة. لم ينهِ المالك هذا المستند بعد."
+manageSession = "إدارة جلسة التوقيع"
+moveHint = "حدد توقيعًا على المستند لنقله أو تغيير حجمه أو إزالته."
+notified = "تم الإشعار"
+optional = "اختياري"
+ownerNext = "ارجع إلى جلستك لمراجعة توقيعات الجميع وإنهاء المستند عندما تكون جاهزًا."
+placeHint = "انقر على المستند لوضع توقيعك."
+progress = "تقدم التوقيع"
+readyToSign = "جاهز للتوقيع؟"
+refreshPreview = "تحديث المعاينة"
+removePerson = "إزالة {{name}}"
+requestClosed = "هذا الطلب مغلق"
+requestTitle = "طلب توقيع"
+signatureSubmitted = "تم إرسال توقيعك"
+signedCount = "وقّع {{signed}} / {{total}}"
+signMyRequest = "وقّع هذا المستند"
+viewOnly = "لا يزال بإمكانك مراجعة المستند هنا."
+visibleSignature = "التوقيع المرئي"
+visibleSignatureHelp = "حول التوقيعات المرئية"
+
+[signMenu]
+anyOrder = "يمكن للمشاركين التوقيع بأي ترتيب. ينهي المالك المستند بعد مراجعة التوقيعات المجمعة."
+certificateHint = "استخدام شهادة"
+certificateTitle = "توقيع رقمي"
+closedStatus = "مغلق"
+completedTab = "مكتمل"
+dueDate = "تاريخ الاستحقاق (اختياري)"
+newActivity = "نشاط جديد منذ آخر مرة شاهدت فيها هذه الجلسة"
+noActive = "لا توجد جلسات نشطة"
+noCompleted = "لا توجد جلسات مكتملة"
+noMatches = "لا توجد جلسات مطابقة"
+noUnread = "أنت مطّلع على كل جديد"
+optionalMarks = "العلامات المرئية اختيارية. يعمل الإكمال والتوقيع أيضًا بشهادة فقط."
+ownerProgress = "طلبك · وقّع {{signed}} / {{total}}"
+personalHint = "ارسم أو اكتب أو ارفع"
+personalTitle = "توقيع شخصي"
+request = "طلب توقيعات"
+search = "ابحث عن مستند أو شخص"
+send = "إرسال طلب التوقيع"
+sessionFilter = "عروض الجلسات"
+sessions = "جلسات التوقيع"
+settings = "المظهر وصفحة الملخص (اختياري)"
+signFailed = "فشل التوقيع. تحقق من شهادتك وحاول مرة أخرى؛ تم الاحتفاظ بالعلامات التي وضعتها."
+submitted = "تم الإرسال · بانتظار الإنهاء"
+title = "توقيع"
+triggerUnreadCount_one = "توقيع · {{count}} جلسة غير مقروءة"
+triggerUnreadCount_other = "توقيع · {{count}} جلسات غير مقروءة"
+unreadTab = "غير مقروء"
+
 [signRequest]
+accessExpired = "انتهت صلاحية وصولك إلى طلب التوقيع هذا. اطلب من المرسل طلبًا جديدًا."
 declined = "تم رفض طلب التوقيع"
+expired = "انتهت صلاحية الوصول"
 fetchFailed = "تعذّر تحميل طلب التوقيع"
-signed = "تم توقيع المستند بنجاح"
 
 [signSession]
 created = "تم إرسال طلب التوقيع"
@@ -12512,6 +12573,52 @@ title = "إنشاء حساب"
 unableToAccessTool = "تعذر الوصول إلى الأداة: {{error}}"
 unexpectedError = "خطأ غير متوقع: {{message}}"
 unknownError = "خطأ غير معروف"
+
+[signWorkspace]
+changeDocument = "تغيير PDF"
+chooseDocument = "اختر PDF مفتوحًا"
+chooseFromLibrary = "اختر من المكتبة"
+chooseParticipants = "اختر المشاركين"
+choosePdf = "اختر PDF"
+choosePdfHeading = "ابدأ بمستندك"
+clearDate = "مسح التاريخ"
+created = "تم الإنشاء"
+createdByMe = "أنشأته أنا"
+datesAndOptions = "التواريخ والخيارات"
+document = "المستند"
+dueDate = "تاريخ الاستحقاق"
+dueDateHelp = "هذا تاريخ مستهدف. لا يزال بإمكان المشاركين التوقيع بعده."
+dueDateHelpLabel = "حول تواريخ الاستحقاق"
+empty = "لا توجد جلسات هنا بعد."
+expand = "توسيع جلسات التوقيع"
+inviteLoadError = "تعذر تحميل خيارات الدعوة. أغلق مربع الحوار هذا وحاول مرة أخرى."
+invitePerson = "إضافة زميل فريق: {{name}}"
+inviteTeammate = "إضافة زميل فريق"
+inviteUnavailable = "إضافة زملاء الفريق غير متاحة لحسابك أو لإعدادات الخادم."
+navigation = "التنقل في التوقيع"
+needsYou = "يحتاج إلى توقيعك"
+nextMonth = "الشهر التالي"
+nextStep = "التالي"
+noDueDate = "لا يوجد تاريخ استحقاق"
+noMatches = "لا توجد جلسات تطابق بحثك أو عامل التصفية."
+noOpenPdfs = "اختر PDF من مكتبتك أو أضف واحدًا من جهاز الكمبيوتر."
+noPeopleMatch = "لا يوجد أشخاص يطابقون بحثك."
+noPreview = "معاينة المستند غير متاحة"
+owner = "المالك"
+participants = "المشاركون"
+participantsSelected = "تم تحديد {{count}}"
+personalHeading = "وقّع مستندًا"
+previousMonth = "الشهر السابق"
+refresh = "تحديث الجلسات"
+requestSteps = "خطوات طلب التوقيع"
+search = "البحث في المستندات أو الأشخاص"
+searchParticipants = "البحث عن أشخاص أو فرق"
+selectOnePdf = "اختر PDF واحدًا لطلب التوقيع هذا."
+signingOrderHelp = "حول ترتيب التوقيع"
+status = "الحالة"
+unavailable = "لم تعد هذه الجلسة متاحة. حدّث القائمة لرؤية جلساتك الحالية."
+upcoming = "القادمة"
+uploadFailed = "تعذر فتح PDF هذا. يرجى المحاولة مرة أخرى."
 
 [sizes]
 large = "كبير"
@@ -12586,12 +12693,12 @@ description = "حجم صفحات الإخراج للطباعة"
 label = "حجم الصفحة المستهدف"
 
 [split.poster.pageSize.options]
-a3 = "A3 (297 × 420 mm)"
-a4 = "A4 (210 × 297 mm)"
-a5 = "A5 (148 × 210 mm)"
-legal = "Legal (8.5 × 14 in)"
-letter = "Letter (8.5 × 11 in)"
-tabloid = "Tabloid (11 × 17 in)"
+a3 = "A3 (297 × 420 مم)"
+a4 = "A4 (210 × 297 مم)"
+a5 = "A5 (148 × 210 مم)"
+legal = "Legal (8.5 × 14 بوصة)"
+letter = "Letter (8.5 × 11 بوصة)"
+tabloid = "Tabloid (11 × 17 بوصة)"
 
 [split.poster.xFactor]
 description = "عدد الأعمدة التي تُقسَّم إليها كل صفحة"

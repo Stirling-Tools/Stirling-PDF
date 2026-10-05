@@ -1815,7 +1815,7 @@ label = "공유 링크 사용"
 
 [admin.settings.storage.signing.enabled]
 description = "사용자가 다중 참여자 문서 서명 세션을 만들 수 있도록 허용합니다. 서버 파일 저장 기능이 활성화되어 있어야 합니다."
-label = "그룹 서명 사용(Alpha)"
+title = "그룹 서명 활성화"
 
 [admin.settings.telegram]
 description = "Telegram 봇 연결, 접근 제어, 피드백 동작을 구성합니다."
@@ -2744,7 +2744,6 @@ reason = "사유"
 serverCertMessage = "서버 인증서 사용 중 - 파일이나 비밀번호가 필요 없습니다"
 showLogo = "로고 표시"
 signatureProgress = "{{signedCount}}/{{totalCount}} 서명"
-signed = "서명됨"
 tags = "인증,PEM,P12,공식,암호화,서명,인증서,PKCS12,JKS,서버,수동,자동"
 title = "인증서 서명"
 viewed = "열람됨"
@@ -2809,7 +2808,13 @@ reasonPlaceholder = "예: 승인, 검토..."
 
 [certSign.collab.finalize]
 button = "최종 완료 후 서명된 PDF 로드"
+confirmAction = "확인 및 최종 확정"
+confirmDescription = "최종 확정하면 이 세션이 닫힙니다. 더 이상 서명을 제출할 수 없습니다."
+confirmTitle = "이 서명 세션을 최종 확정하시겠습니까?"
 early = "현재 서명으로 최종 완료"
+excluded = "서명이 포함되지 않을 참가자"
+included = "포함된 서명"
+requiresSignature = "최종 확정하려면 최소 한 명의 참가자가 서명해야 합니다."
 
 [certSign.collab.participant]
 certInvalid = "✗ {{error}}"
@@ -2826,7 +2831,6 @@ includeSummaryPageHelp = "모든 서명 메타데이터가 포함된 요약 페�
 [certSign.collab.sessionDetail]
 addParticipants = "참여자 추가"
 addParticipantsError = "참여자 추가에 실패했습니다"
-backToList = "세션 목록으로 돌아가기"
 deleteConfirm = "정말로 진행하시겠습니까? 이 작업은 되돌릴 수 없습니다."
 deleteError = "세션 삭제에 실패했습니다"
 deleteSession = "세션 삭제"
@@ -2835,14 +2839,11 @@ finalizeError = "세션 최종 완료에 실패했습니다"
 loadPdfError = "서명된 PDF를 불러오지 못했습니다"
 loadSignedPdf = "서명된 PDF를 활성 파일로 로드"
 messageLabel = "메시지"
-owner = "소유자"
 participantRemoved = "참여자가 제거되었습니다"
 participants = "참여자"
 participantsAdded = "참여자가 성공적으로 추가되었습니다"
-removeParticipant = "제거"
 removeParticipantError = "참여자 제거에 실패했습니다"
 selectUsers = "사용자 선택..."
-sessionInfo = "세션 정보"
 
 [certSign.collab.sessionList]
 active = "진행 중"
@@ -2855,11 +2856,10 @@ title = "서명 모양"
 [certSign.collab.signRequest]
 addedToFiles = "문서가 활성 파일에 추가되었습니다"
 addToFiles = "활성 파일에 추가"
-advancedSettings = "고급 설정"
-backToList = "서명 요청 목록으로 돌아가기"
 certificateChoice = "서명에 사용할 인증서를 선택하세요"
 changeSignature = "서명 변경"
 clearSignature = "서명 지우기"
+closed = "이 세션은 최종 확정되었습니다. 최종 문서를 볼 수 있지만, 더 이상 서명하거나 거부할 수 없습니다."
 completeAndSign = "완료 및 서명"
 createNewSignature = "새 서명 만들기"
 decline = "요청 거부"
@@ -2876,7 +2876,6 @@ invalidFileType = "이미지 파일을 선택하세요"
 location = "위치(선택 사항)"
 locationPlaceholder = "어디에서 서명하나요?"
 noCertificate = "인증서 파일을 선택하세요"
-noSignatures = "PDF에 최소 한 개 이상의 서명을 배치하세요"
 p12File = "P12/PFX 인증서 파일"
 password = "인증서 비밀번호"
 penColor = "펜 색상"
@@ -2894,16 +2893,15 @@ signatureText = "서명 텍스트"
 signatureTextPlaceholder = "이름을 입력하세요..."
 signatureTypeLabel = "서명 유형"
 signButton = "문서 서명"
-signingTitle = "서명 중"
 textColor = "텍스트 색상"
 typeSignature = "이름을 입력하여 서명을 만드세요"
-uploadCert = "사용자 지정 인증서"
-uploadCertDesc = "본인의 P12/PFX 인증서 사용"
+uploadCert = "인증서 업로드"
+uploadCertDesc = "자신의 PKCS12, PFX, PEM 또는 JKS 인증서를 사용하세요."
 uploadSignature = "서명 이미지를 업로드"
-usePersonalCert = "개인 인증서"
-usePersonalCertDesc = "귀하의 계정에 대해 자동 생성됨"
-useServerCert = "조직 인증서"
-useServerCertDesc = "공유 조직 인증서"
+usePersonalCert = "Stirling Sign · 개인"
+usePersonalCertDesc = "계정용으로 생성된 인증서로 서명합니다."
+useServerCert = "Stirling Sign · 조직"
+useServerCertDesc = "이 서버의 공유 조직 인증서로 서명합니다."
 useSignature = "서명 사용"
 
 [certSign.collab.signRequest.certModal]
@@ -2912,10 +2910,13 @@ certInvalidFallback = "유효하지 않은 인증서"
 certNetworkError = "인증서를 검증할 수 없습니다"
 certValidating = "인증서 검증 중..."
 certValidUntil = "인증서 유효 기간: {{date}}까지"
-description_one = "서명 {{count}}개를 배치했습니다. 서명을 완료하려면 인증서를 선택하세요."
-description_other = "서명 {{count}}개를 배치했습니다. 서명을 완료하려면 인증서를 선택하세요."
+description_one = "{{count}}개의 표시 마크가 준비되었습니다. 서명을 완료할 인증서를 선택하세요."
+description_other = "{{count}}개의 표시 마크가 준비되었습니다. 서명을 완료할 인증서를 선택하세요."
+description_zero = "인증서가 표시 마크 없이 문서에 서명합니다."
+details = "서명 세부 정보(선택 사항)"
+format = "인증서 형식"
 sign = "문서 서명"
-title = "인증서 구성"
+title = "서명 방법 선택"
 
 [certSign.collab.signRequest.mode]
 move = "서명 이동"
@@ -2968,11 +2969,11 @@ visible = "보임"
 yourSignatures = "내 서명({{count}})"
 
 [certSign.collab.userSelector]
-inviteUsers = "사용자 추가"
 loadError = "사용자를 불러오지 못했습니다"
 noTeam = "팀 없음"
 noUsers = "다른 사용자를 찾을 수 없습니다."
 placeholder = "사용자 선택..."
+you = "{{name}} (본인)"
 
 [certSign.device]
 stepTitle = "이 장치"
@@ -3161,9 +3162,9 @@ text = "문서를 설명하는 일반적인 PDF 메타데이터 필드입니다.
 title = "표준 필드"
 
 [changeMetadata.trapped]
-false = "False"
+false = "거짓"
 label = "트래핑 상태"
-true = "True"
+true = "참"
 unknown = "알 수 없음"
 
 [changePermissions]
@@ -4121,7 +4122,7 @@ pdfUaProfile = "준수 수준"
 pdfUaSignatureWarning = "이 PDF는 디지털 서명되어 있습니다. 태그 지정은 서명이 적용된 페이지 내용을 다시 쓰므로 서명이 더 이상 검증되지 않습니다. 먼저 변환한 다음 다시 서명하세요."
 pdfUaTitle = "문서 제목"
 pdfUaTitleHelp = "파일 이름 대신 리더에 표시됩니다. 비워 두면 첫 번째 제목이 사용됩니다."
-selectSourceFormatFirst = "먼저 원본 형식을 선택하세요"
+selectSourceFormatFirst = "먼저 소스 형식을 선택하세요"
 settings = "설정"
 single = "단일"
 sourceFormatPlaceholder = "원본 형식"
@@ -5450,9 +5451,6 @@ multimedia = "멀티미디어"
 
 [groupSigning.steps]
 back = "뒤로"
-completed = "완료됨"
-current = "현재"
-stepLabel = "단계 {{number}}"
 
 [groupSigning.steps.configureDefaults]
 continue = "계속"
@@ -5460,7 +5458,6 @@ invisible = "서명은 보이지 않습니다(메타데이터만)"
 locationLabel = "위치:"
 preview = "미리보기"
 reasonLabel = "사유:"
-title = "서명 설정 구성"
 visible = "서명은 페이지 {{page}}에 표시됩니다"
 
 [groupSigning.steps.review]
@@ -5472,14 +5469,13 @@ location = "위치:"
 logo = "로고:"
 logoHidden = "로고 없음"
 logoShown = "Stirling PDF 로고 표시됨"
-participantCount_one = "{{count}}명의 참가자가 순서대로 서명합니다"
-participantCount_other = "{{count}}명의 참가자가 순서대로 서명합니다"
+participantCount_one = "{{count}}명의 참가자가 선택됨"
+participantCount_other = "{{count}}명의 참가자가 선택됨"
 participants = "참여자"
 reason = "사유:"
 send = "서명 요청 보내기"
 signatureSettings = "서명 설정"
 title = "세션 세부 정보 검토"
-titleShort = "검토 및 보내기"
 visibility = "표시 여부:"
 visible = "페이지 {{page}}에 표시"
 
@@ -5487,7 +5483,6 @@ visible = "페이지 {{page}}에 표시"
 continue = "계속"
 noFile = "서명 세션을 만들려면 활성 파일에서 단일 PDF 파일을 선택하세요."
 selectedFile = "선택한 문서"
-title = "문서 선택"
 
 [groupSigning.steps.selectParticipants]
 continue = "계속"
@@ -5495,31 +5490,30 @@ count_one = "{{count}}명의 참가자 선택됨"
 count_other = "{{count}}명의 참가자 선택됨"
 label = "참여자 선택"
 placeholder = "서명할 참여자 선택..."
-title = "참여자 선택"
 
 [groupSigning.tooltip]
 header = "그룹 서명 정보"
 
 [groupSigning.tooltip.finalization]
-bullet1 = "모든 서명은 지정한 참여자 순서대로 적용됩니다"
-bullet2 = "필요 시 일부 서명만으로도 최종 완료할 수 있습니다"
-bullet3 = "최종 완료 후에는 세션을 수정할 수 없습니다"
-description = "모든 참여자가 서명하면(또는 조기 최종 완료를 선택하면) 최종 서명된 PDF를 생성할 수 있습니다."
+bullet1 = "최종 PDF에는 수락된 모든 서명이 포함됩니다"
+bullet2 = "부분 서명으로 최종 확정하기 전에 미완료 참가자를 검토하세요"
+bullet3 = "최종 확정하면 요청이 닫히며, 미완료 참가자는 더 이상 서명할 수 없습니다"
+description = "최소 한 명의 참가자가 서명한 후, 소유자는 요청을 최종 확정하고 서명된 PDF를 생성할 수 있습니다."
 title = "최종 완료 프로세스"
 
 [groupSigning.tooltip.roles]
 bullet1 = "소유자(본인): 세션 생성, 서명 기본값 구성, 문서 최종 완료"
-bullet2 = "참여자: 자신의 서명 생성, 인증서 선택, PDF에 배치"
-bullet3 = "참여자는 서명의 표시 여부, 사유, 위치 설정을 변경할 수 없습니다"
-description = "모든 참여자에 대한 서명 표시 설정을 제어합니다."
+bullet2 = "참가자: 인증서를 선택하고 필요에 따라 PDF에 표시되는 서명을 배치합니다"
+bullet3 = "참가자는 제출하기 전에 서명 사유와 위치를 조정할 수 있습니다"
+description = "소유자는 요청 기본값을 설정하고, 각 참가자는 자신의 인증서와 선택적 표시 마크를 선택합니다."
 title = "참여자 역할"
 
 [groupSigning.tooltip.sequential]
-bullet1 = "첫 번째 참여자가 서명해야 두 번째 참여자가 문서에 접근할 수 있습니다"
-bullet2 = "법적 준수를 위한 올바른 서명 순서를 보장합니다"
-bullet3 = "목록에서 드래그하여 참여자 순서를 변경할 수 있습니다"
-description = "지정한 순서대로 참여자가 문서에 서명합니다. 각 서명자는 자신의 차례가 되면 알림을 받습니다."
-title = "순차 서명"
+bullet1 = "참가자는 다른 서명자를 기다릴 필요가 없습니다"
+bullet2 = "서명 세션에서 각 참가자의 진행 상황을 추적하세요"
+bullet3 = "마감일은 알림이며, 접근 권한을 만료시키지 않습니다"
+description = "지정된 참가자는 어떤 순서로든 독립적으로 검토하고 서명할 수 있습니다."
+title = "순서와 관계없이 서명"
 
 [guestBanner]
 dismiss = "배너 닫기"
@@ -5828,7 +5822,6 @@ tags = "감지,분할,사진,자동 감지,사진 감지,사진 분할,사진 �
 title = "스캔한 사진 감지 및 분할"
 
 [home.sharedSign]
-desc = "다른 사람에게 서명을 요청하고 서명 세션을 추적합니다"
 title = "공동 서명"
 
 [home.showJS]
@@ -6959,12 +6952,12 @@ aiPromo = "AI로 PDF를 만들고, 편집하고, 질문하기"
 apiPromo = "앱과 AI 어시스턴트 연결"
 automationPromo = "반복적인 PDF 작업 자동화"
 createAccount = "무료 계정 만들기"
-editorLabel = "PDF Editor"
+editorLabel = "PDF 편집기"
 login = "로그인"
 manualToolsPromo = "무제한 무료 수동 PDF 도구"
-processorLabel = "PDF Processor"
+processorLabel = "PDF 프로세서"
 processorTitle = "계정을 만들어 Stirling의 최고의 기능을 잠금 해제하세요"
-readerLabel = "PDF Reader"
+readerLabel = "PDF 리더"
 
 [payg.spendCapMeter]
 barAria = "한도 대비 지출"
@@ -7201,7 +7194,7 @@ downloadTooltip = "편집한 PDF를 저장하고 다운로드"
 save = "PDF 저장"
 saveTooltip = "작업 공간의 파일에 변경 사항 적용 ({{shortcut}})"
 tags = "텍스트 편집,텍스트 수정,텍스트 변경,콘텐츠 편집,텍스트 업데이트,다시 쓰기,수정,개정,수정 표시,개정,텍스트 편집기,콘텐츠 편집기"
-title = "PDF Text Editor"
+title = "PDF 텍스트 편집기"
 unsaved = "(저장되지 않음)"
 workbenchLabel = "편집기"
 
@@ -7426,7 +7419,9 @@ groupedTitle = "이 PDF의 그룹 일부입니다: 삭제는 가능하지만 이
 
 [pdfTextEditor.sidebar]
 addImage = "이미지 추가"
+addTable = "표 추가"
 addText = "텍스트 추가"
+clickPageToAddTable = "표를 추가하려면 페이지를 클릭하세요"
 clickPageToAddText = "텍스트를 추가하려면 페이지 클릭"
 document = "문서"
 group = "그룹"
@@ -7435,11 +7430,14 @@ groupingAutoHint = "간격이 같은 줄을 단락으로 그룹화합니다. 이
 groupingLine = "줄"
 groupTooltip = "선택한 run을 하나의 단락으로 병합 ({{shortcut}})"
 groupTooltipDisabled = "병합하려면 2개 이상의 run을 선택하세요"
+image = "이미지"
 noFile = "로드된 파일 없음"
 noFileHint = "왼쪽 파일 패널에서 PDF를 선택하거나 여기에 놓으세요. 편집기가 자동으로 엽니다."
 opening = "문서 여는 중..."
 paragraph = "단락"
 rulers = "눈금자 및 가이드"
+table = "표"
+text = "텍스트"
 textBoxWidth = "새 텍스트 상자 너비"
 textGrouping = "텍스트 그룹화"
 ungroup = "그룹 해제"
@@ -7460,6 +7458,24 @@ loadingProgress = "로드 진행률"
 noDocument = "로드된 문서가 없습니다."
 pickPrompt = "편집을 시작하려면 왼쪽 파일 패널에서 PDF를 선택하세요."
 renderingPreview = "미리보기 렌더링 중"
+
+[pdfTextEditor.table]
+addColumn = "열 추가"
+addRow = "행 추가"
+column = "열"
+deleteColumn = "열 삭제"
+deleteRow = "행 삭제"
+done = "완료"
+doneHint = "이 항목을 표로 편집하는 것을 중지"
+edit = "편집"
+editHint = "표로 편집 - 셀에 입력하고 행과 열을 추가하거나 제거하세요"
+move = "이동"
+moveTable = "전체 표를 이동하려면 드래그하세요"
+recognizedHint = "인식된 표 - 모든 텍스트를 선택하려면 클릭하세요"
+resizeColumn = "이 열의 크기를 조정하려면 드래그하세요(Alt: 다음 열과 공유)"
+resizeRow = "이 행의 크기를 조정하려면 드래그하세요(Alt: 다음 행과 공유)"
+resizeTable = "전체 표의 크기를 조정하려면 드래그하세요"
+row = "행"
 
 [pdfTextEditor.toolbar]
 addTextTooltip = "텍스트 상자 추가 - 그런 다음 페이지 클릭"
@@ -7753,7 +7769,7 @@ successMessage = "라이선스가 성공적으로 활성화되었습니다. 이�
 
 [plan.team]
 maxUsers = "사용자 100명"
-name = "Team"
+name = "팀"
 
 [policies.activity]
 outputsUnavailable = "정책 출력물을 더 이상 다운로드할 수 없습니다."
@@ -7771,7 +7787,7 @@ rowIdle = "{{label}}이(가) 자동으로 실행됩니다"
 rowRunning = "{{label}}이(가) 지금 실행 중입니다"
 runsToday_one = "오늘 {{count}}회 실행"
 runsToday_other = "오늘 {{count}}회 실행"
-title = "PDF Processor"
+title = "PDF 프로세서"
 triggerExport = "내보내기 시 실행"
 triggerImport = "가져오기 시 실행"
 
@@ -7952,7 +7968,7 @@ unnamed = "이름 없는 인스턴스"
 description = "self-hosted 서버를 팀에 연결하면 여기에 표시됩니다."
 otherDescription = "팀에 표시되는 연결된 인스턴스는 이것뿐입니다."
 otherTitle = "다른 연결된 인스턴스 없음"
-title = "연결된 인스턴스 없음"
+title = "연결된 인스턴스가 없습니다"
 
 [portal.accountLink.modal]
 callbackMismatch = "이 서버에 구성된 프론트엔드 주소가 열어둔 주소와 일치하지 않습니다. 구성된 주소로 서버를 열거나 일반 설정에서 Frontend URL을 업데이트한 다음 다시 시도하세요."
@@ -8105,7 +8121,7 @@ usage = "사용량"
 [portal.billing.compare]
 current = "현재"
 enterpriseData = "데이터 레지던시 및 SCIM"
-enterpriseName = "Enterprise"
+enterpriseName = "엔터프라이즈"
 enterprisePrice = "계약에 따름"
 enterpriseProcessing = "종량제 또는 정액제"
 enterpriseSignIn = "SAML 및 감사"
@@ -8134,7 +8150,7 @@ rowSupport = "지원"
 rowUsers = "사용자"
 rowWhere = "실행 위치"
 teamData = "Google Drive, 자체 데이터베이스"
-teamName = "Team"
+teamName = "팀"
 teamPrice = "사용자 100명당 $99/월"
 teamProcessing = "월 {{allowance}}, 이후 종량제"
 teamProcessingUnknown = "더 큰 한도, 이후 종량제"
@@ -8179,14 +8195,14 @@ sub = "전체 PDF Editor."
 [portal.billing.identity.processor]
 chipMetered = "종량제 처리"
 chipPipelines = "파이프라인 및 API"
-name = "Processor"
+name = "프로세서"
 sub = "Team 기본 요금에 크레딧당 {{rate}} 추가"
 subNoRate = "Team 기본 요금에 종량제 처리 추가"
 
 [portal.billing.identity.team]
 chipFleet = "Fleet 제어"
 chipIncluded = "매월 {{allowance}} 포함 크레딧"
-name = "Team"
+name = "팀"
 sub = "최대 {{users}}명 사용자"
 subNoLimit = "사용자 제한 없음"
 
@@ -8298,7 +8314,7 @@ prepaidRemaining = "남은 선불 크레딧"
 prepaidTooltip = "종량제 결제 전에 차감되며 지출 한도 외부에 있습니다."
 raiseLimit = "한도 올리기"
 remainingOf = "{{total}} 중 {{remaining}}"
-rowName = "Processor"
+rowName = "프로세서"
 spendAgainstLimit = "이번 주기 {{cap}} 중 {{spend}} 종량제"
 
 [portal.billing.seats]
@@ -8321,11 +8337,11 @@ plan = "내 요금제"
 [portal.billing.serverPlan]
 active = "활성 자체 호스팅 라이선스"
 connectBody = "Cloud 처리 크레딧을 추가하려면 연결하세요. 서버 라이선스는 활성 상태로 유지됩니다."
-enterprise = "Enterprise"
+enterprise = "엔터프라이즈"
 enterpriseConnectBody = "Enterprise 라이선스에는 이 서버의 처리가 포함됩니다. 계정 연결은 선택 사항입니다."
 included = "라이선스에 포함됨"
 seats = "{{seats}} 라이선스 시트"
-server = "Server"
+server = "서버"
 unlimited = "무제한 사용자"
 
 [portal.billing.simple]
@@ -8400,7 +8416,7 @@ session = "세션"
 signature = "서명"
 
 [portal.components.maturity]
-beta = "Beta"
+beta = "베타"
 ga = "GA"
 
 [portal.connections]
@@ -8450,16 +8466,16 @@ helperText = "이 연결을 사용하는 단계는 이 URL 아래의 경로만 �
 label = "서버 URL"
 
 [portal.connections.commonFields.email]
-label = "Email"
+label = "이메일"
 
 [portal.connections.commonFields.host]
-label = "Host"
+label = "호스트"
 
 [portal.connections.commonFields.password]
 label = "비밀번호"
 
 [portal.connections.commonFields.port]
-label = "Port"
+label = "포트"
 
 [portal.connections.commonFields.username]
 label = "사용자 이름"
@@ -8638,10 +8654,10 @@ helperText = "n8n Webhook 노드에 설정된 Authentication과 일치시킵니�
 label = "Webhook 인증"
 
 [portal.connections.types.n8n.fields.authType.options.basic]
-label = "Basic auth"
+label = "Basic 인증"
 
 [portal.connections.types.n8n.fields.authType.options.header]
-label = "Header auth"
+label = "Header 인증"
 
 [portal.connections.types.n8n.fields.authType.options.none]
 label = "없음"
@@ -8691,14 +8707,14 @@ label = "S3 스토리지"
 label = "액세스 key ID"
 
 [portal.connections.types.s3.fields.bucket]
-label = "Bucket"
+label = "버킷"
 
 [portal.connections.types.s3.fields.endpoint]
 helperText = "AWS의 경우 비워 두세요. MinIO 또는 다른 S3 호환 저장소의 경우 이를 설정하세요."
 label = "엔드포인트"
 
 [portal.connections.types.s3.fields.region]
-label = "Region"
+label = "리전"
 
 [portal.connections.types.s3.fields.secretAccessKey]
 label = "비밀 액세스 키"
@@ -8738,7 +8754,7 @@ label = "SMB / 네트워크 공유"
 
 [portal.connections.types.smb.fields.domain]
 helperText = "선택 사항입니다. 서버에서 사용하는 경우 Windows 도메인 또는 작업 그룹입니다."
-label = "Domain"
+label = "도메인"
 
 [portal.connections.types.smb.fields.share]
 label = "공유"
@@ -8858,12 +8874,12 @@ lead = "소스, 작업, 대상을 체인으로 연결하는 end-to-end 패턴입
 title = "레시피"
 
 [portal.docs.sdks]
-eyebrow = "SDKS"
+eyebrow = "SDK"
 lead = "typed responses, 자동 재시도, 스트리밍 업로드를 갖춘 first-party clients입니다. 모두 동일한 endpoint 카탈로그를 추적합니다."
 title = "공식 SDKs"
 
 [portal.docs.sdks.status]
-beta = "Beta"
+beta = "베타"
 deprecated = "사용 중단됨"
 
 [portal.docs.skills]
@@ -9512,7 +9528,7 @@ loading = "불러오는 중…"
 title = "법적 문서"
 
 [portal.nav]
-agent-builder = "Agent Builder"
+agent-builder = "에이전트 빌더"
 components = "구성 요소"
 docs = "문서"
 documents = "문서"
@@ -9974,10 +9990,10 @@ placeholder = "processor@acme.com"
 
 [portal.policies.operations.fields.headers]
 helperText = "헤더 이름/값 쌍의 JSON 객체입니다. 연결의 자격 증명은 자동으로 추가됩니다."
-label = "Headers"
+label = "헤더"
 
 [portal.policies.operations.fields.index]
-label = "Index"
+label = "인덱스"
 placeholder = "stirling-audit"
 
 [portal.policies.operations.fields.issueKey]
@@ -9989,7 +10005,7 @@ helperText = "메시지 본문으로 전송됩니다. {{document.*}} 및 {{run.*
 label = "메시지"
 
 [portal.policies.operations.fields.method]
-label = "Method"
+label = "메서드"
 
 [portal.policies.operations.fields.pageId]
 label = "페이지 ID"
@@ -9997,7 +10013,7 @@ placeholder = "66186"
 
 [portal.policies.operations.fields.path]
 helperText = "연결의 기본 URL에 추가됩니다. 다른 호스트에는 절대 도달할 수 없습니다."
-label = "Path"
+label = "경로"
 placeholder = "/v1/scan"
 
 [portal.policies.operations.fields.remotePath]
@@ -10338,11 +10354,11 @@ s2Title = "약정 및 서비스"
 s3Sub = "견적 및 그로부터 생성되는 계약에 사용됩니다."
 s3Title = "상세 정보"
 serviceLevel = "서비스 수준"
-size_compact = "Compact"
+size_compact = "컴팩트"
 size_compactSub = "대부분 텍스트, 1 MB 미만"
-size_heavy = "Heavy"
+size_heavy = "헤비"
 size_heavySub = "스캔 또는 이미지 많음, 5 MB+"
-size_standard = "Standard"
+size_standard = "표준"
 size_standardSub = "텍스트와 이미지 혼합, 1~5 MB"
 slDedicated = "전담"
 slDedicatedSub = "영업시간 4시간 · 전담 SE / CSM · +$30,000/년"
@@ -10400,8 +10416,8 @@ ctaQuote = "견적 검토"
 ctaReviewQuote = "견적 검토"
 ctaTrial = "견적 만들기"
 documents = "문서"
-eyebrow = "Enterprise"
-eyebrowCompany = "{{company}} Enterprise"
+eyebrow = "엔터프라이즈"
+eyebrowCompany = "{{company}} 엔터프라이즈"
 inviteTeammates = "팀원 초대"
 licenseKey = "라이선스 키"
 liveSub = "조직이 프로비저닝되었고 라이선스가 활성 상태입니다."
@@ -10459,7 +10475,7 @@ trialFileHint = "이것은 평가판 라이선스 파일입니다. 계약이 완
 [portal.procurement.link]
 cta = "계정 연결"
 description = "조달은 연결된 Stirling 계정에서 실행됩니다. 이 계정으로 평가판을 프로비저닝하고, 견적 가격을 책정하며, 청구를 시작합니다. 시작하려면 계정을 연결하세요."
-eyebrow = "Enterprise"
+eyebrow = "엔터프라이즈"
 title = "시작하려면 계정을 연결하세요"
 
 [portal.procurement.live]
@@ -12102,28 +12118,15 @@ description = "자가 호스팅 Stirling PDF 서버의 전체 URL을 입력하�
 label = "서버 URL"
 
 [sharedSign]
-backToSessions = "세션으로 돌아가기"
-createdOn = "생성됨 {{date}}"
 disabledBody = "이 서버에서는 공동 서명이 활성화되어 있지 않습니다."
-disabledTitle = "활성화되지 않음"
-due = "마감일 {{date}}"
 filterDeclined = "거부됨"
-filterMine = "내 항목"
 filterOverdue = "기한 초과"
 filterSigned = "서명됨"
-fromOwner = "{{owner}}로부터"
-newRequest = "서명 요청"
-signedCount = "{{signed}}/{{total}} 서명됨"
 signInRequiredBody = "서명을 요청하고 본인에게 전송된 요청을 보려면 로그인하세요."
 signInRequiredTitle = "로그인 필요"
 
-[sharedSign.empty]
-active = "대기 중인 서명 요청이나 활성 세션이 없습니다"
-completed = "완료된 세션이 없습니다"
-
 [sharedSign.tab]
 active = "활성"
-completed = "완료됨"
 
 [showJS]
 done = "JavaScript 추출 완료"
@@ -12473,10 +12476,68 @@ bullet3 = "보이지 않는 서명도 암호학적 검증을 제공합니다"
 description = "문서에 서명을 보이게 할지, 보이지 않게 임베드할지 제어합니다."
 title = "서명 표시 여부"
 
+[signingDetail]
+allSigned = "모든 참여자가 서명했습니다. 문서를 검토한 후 최종 확정하세요."
+awaitingOwner = "소유자가 준비되면 문서를 최종 확정합니다."
+certificateNext = "다음 단계에서 인증서를 선택하세요."
+earlyHint = "받은 서명으로 지금 최종 확정하거나, 남은 참여자를 기다릴 수 있습니다."
+finalDocument = "서명된 문서"
+finalizeTitle = "문서 최종 확정"
+finalReady = "서명된 PDF를 워크벤치에서 열 준비가 되었습니다."
+inProgressPreview = "제출된 서명이 포함된 진행 중 미리보기입니다. 소유자가 아직 이 문서를 최종 확정하지 않았습니다."
+manageSession = "서명 세션 관리"
+moveHint = "문서에서 서명을 선택하여 이동, 크기 조정 또는 제거하세요."
+notified = "알림 전송됨"
+optional = "선택 사항"
+ownerNext = "세션으로 돌아가 모든 참여자의 서명을 검토하고 준비되면 문서를 최종 확정하세요."
+placeHint = "문서를 클릭하여 서명을 배치하세요."
+progress = "서명 진행 상황"
+readyToSign = "서명할 준비가 되셨나요?"
+refreshPreview = "미리보기 새로 고침"
+removePerson = "{{name}} 제거"
+requestClosed = "이 요청은 종료되었습니다"
+requestTitle = "서명 요청"
+signatureSubmitted = "서명이 제출되었습니다"
+signedCount = "{{signed}} / {{total}} 서명됨"
+signMyRequest = "이 문서에 서명"
+viewOnly = "여기에서 문서를 계속 검토할 수 있습니다."
+visibleSignature = "표시되는 서명"
+visibleSignatureHelp = "표시되는 서명 정보"
+
+[signMenu]
+anyOrder = "참가자는 어떤 순서로든 서명할 수 있습니다. 소유자는 수집된 서명을 검토한 후 문서를 최종 확정합니다."
+certificateHint = "인증서 사용"
+certificateTitle = "디지털 서명"
+closedStatus = "종료됨"
+completedTab = "완료됨"
+dueDate = "기한(선택 사항)"
+newActivity = "이 세션을 마지막으로 본 이후 새 활동이 있습니다"
+noActive = "활성 세션 없음"
+noCompleted = "완료된 세션 없음"
+noMatches = "일치하는 세션 없음"
+noUnread = "모두 확인했습니다"
+optionalMarks = "표시되는 마크는 선택 사항입니다. 완료 및 서명은 인증서만으로도 작동합니다."
+ownerProgress = "내 요청 · {{signed}} / {{total}} 서명됨"
+personalHint = "그리기, 입력 또는 업로드"
+personalTitle = "개인 서명"
+request = "서명 요청"
+search = "문서 또는 사람 찾기"
+send = "서명 요청 보내기"
+sessionFilter = "세션 보기"
+sessions = "서명 세션"
+settings = "모양 및 요약 페이지(선택 사항)"
+signFailed = "서명에 실패했습니다. 인증서를 확인한 후 다시 시도하세요. 배치한 마크는 보존됩니다."
+submitted = "제출됨 · 최종 확정 대기 중"
+title = "서명"
+triggerUnreadCount_one = "서명 · 읽지 않은 세션 {{count}}개"
+triggerUnreadCount_other = "서명 · 읽지 않은 세션 {{count}}개"
+unreadTab = "읽지 않음"
+
 [signRequest]
+accessExpired = "이 서명 요청에 대한 접근 권한이 만료되었습니다. 보낸 사람에게 새 요청을 요청하세요."
 declined = "서명 요청이 거부되었습니다"
+expired = "접근 만료됨"
 fetchFailed = "서명 요청을 불러오지 못했습니다"
-signed = "문서가 성공적으로 서명되었습니다"
 
 [signSession]
 created = "서명 요청을 전송했습니다"
@@ -12512,6 +12573,52 @@ title = "계정 만들기"
 unableToAccessTool = "도구에 액세스할 수 없습니다: {{error}}"
 unexpectedError = "예기치 않은 오류: {{message}}"
 unknownError = "알 수 없는 오류"
+
+[signWorkspace]
+changeDocument = "PDF 변경"
+chooseDocument = "열려 있는 PDF 선택"
+chooseFromLibrary = "라이브러리에서 선택"
+chooseParticipants = "참가자 선택"
+choosePdf = "PDF 선택"
+choosePdfHeading = "문서로 시작"
+clearDate = "날짜 지우기"
+created = "생성됨"
+createdByMe = "내가 생성함"
+datesAndOptions = "날짜 및 옵션"
+document = "문서"
+dueDate = "기한"
+dueDateHelp = "이 날짜는 목표 날짜입니다. 참가자는 이 날짜 이후에도 서명할 수 있습니다."
+dueDateHelpLabel = "기한 정보"
+empty = "아직 여기에 세션이 없습니다."
+expand = "서명 세션 펼치기"
+inviteLoadError = "초대 옵션을 불러올 수 없습니다. 이 대화 상자를 닫고 다시 시도하세요."
+invitePerson = "팀원 추가: {{name}}"
+inviteTeammate = "팀원 추가"
+inviteUnavailable = "계정 또는 서버 구성에서 팀원 추가를 사용할 수 없습니다."
+navigation = "서명 탐색"
+needsYou = "내 서명 필요"
+nextMonth = "다음 달"
+nextStep = "다음"
+noDueDate = "기한 없음"
+noMatches = "검색 또는 필터와 일치하는 세션이 없습니다."
+noOpenPdfs = "라이브러리에서 PDF를 선택하거나 컴퓨터에서 추가하세요."
+noPeopleMatch = "검색과 일치하는 사람이 없습니다."
+noPreview = "문서 미리보기를 사용할 수 없음"
+owner = "소유자"
+participants = "참가자"
+participantsSelected = "{{count}}개 선택됨"
+personalHeading = "문서에 서명"
+previousMonth = "이전 달"
+refresh = "세션 새로 고침"
+requestSteps = "서명 요청 단계"
+search = "문서 또는 사람 검색"
+searchParticipants = "사람 또는 팀 검색"
+selectOnePdf = "이 서명 요청에 사용할 PDF 하나를 선택하세요."
+signingOrderHelp = "서명 순서 정보"
+status = "상태"
+unavailable = "이 세션은 더 이상 사용할 수 없습니다. 현재 세션을 보려면 목록을 새로 고치세요."
+upcoming = "예정"
+uploadFailed = "이 PDF를 열 수 없습니다. 다시 시도하세요."
 
 [sizes]
 large = "크게"

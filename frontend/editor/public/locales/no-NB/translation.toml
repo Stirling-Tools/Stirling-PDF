@@ -742,10 +742,10 @@ title = "Dokumenter og RAG"
 
 [admin.settings.ai.documents.embeddingApiKey]
 description = "La stå tomt for å bruke motorens egen miljølegitimasjon. Gjelder selvhostede enkelmotordistribusjoner."
-generic = "Embedding API key"
-openai = "OpenAI API key"
+generic = "Embedding API-nøkkel"
+openai = "OpenAI API-nøkkel"
 setPlaceholder = "Lagret – la stå tomt for å beholde gjeldende nøkkel"
-voyageai = "VoyageAI API key"
+voyageai = "VoyageAI API-nøkkel"
 
 [admin.settings.ai.documents.embeddingBaseUrl]
 description = "Base-URL for OpenAI-kompatibelt / Ollama embeddings-endepunkt, f.eks. http://ollama:11434/v1. Må peke til et pålitelig internt endepunkt (SSRF-sensitivt)."
@@ -892,10 +892,10 @@ description = "Velg LLM-leverandøren og de smarte/raske modellene AI-motoren br
 title = "Modeller og leverandører"
 
 [admin.settings.ai.models.apiKey]
-anthropic = "Anthropic API key"
+anthropic = "Anthropic API-nøkkel"
 description = "La stå tomt for å bruke motorens egen miljølegitimasjon. Gjelder selvhostede enkelmotordistribusjoner."
-generic = "API key"
-openai = "OpenAI API key"
+generic = "API-nøkkel"
+openai = "OpenAI API-nøkkel"
 setPlaceholder = "Lagret – la stå tomt for å beholde gjeldende nøkkel"
 
 [admin.settings.ai.models.baseUrl]
@@ -1341,7 +1341,7 @@ label = "Grense for filopplasting"
 
 [admin.settings.general.frontendUrl]
 description = "Basis-URL for frontend (f.eks. https://pdf.example.com). Brukes for e-postinvitasjonslenker og mobile QR-kodeopplastinger. La stå tomt for å bruke backend-URL."
-label = "Frontend URL"
+label = "Frontend-URL"
 
 [admin.settings.general.hideDisabledTools]
 description = "Skjul deaktiverte verktøy fra grensesnittet"
@@ -1476,7 +1476,7 @@ label = "SMTP-brukernavn"
 [admin.settings.mcp]
 apikeyNote = "Klienter sender en Stirling API key i X-API-KEY-headeren (eller Authorization: Bearer <key>). Nøkkelen kobles til den tilhørende Stirling-brukeren – bare klargjorte kontoer får tilgang, og handlinger revideres som den brukeren. Administrer nøkler under Konto > API-nøkler."
 description = "Gjør Stirlings PDF-verktøy og AI-agenter tilgjengelige for MCP-klienter over et OAuth-beskyttet endepunkt."
-title = "MCP Server"
+title = "MCP-server"
 
 [admin.settings.mcp.acceptedAudiences]
 description = "Ekstra audience-verdier for token som godtas i tillegg til Resource ID (kommaseparert eller mellomromsseparert). La stå tomt for streng RFC 8707. Trengs for IdP-er som ikke kan utstede resource audiences – f.eks. utsteder Supabase sin OAuth-server alltid aud=authenticated."
@@ -1815,7 +1815,7 @@ label = "Aktiver delingslenker"
 
 [admin.settings.storage.signing.enabled]
 description = "Tillat brukere å opprette signeringsøkter med flere deltakere. Krever at fillagring på serveren er aktivert."
-label = "Aktiver gruppesignering (Alpha)"
+title = "Aktiver gruppesignering"
 
 [admin.settings.telegram]
 description = "Konfigurer Telegram-bottilkobling, tilgangskontroll og tilbakemeldingsatferd."
@@ -2351,7 +2351,7 @@ label = "Åpne meny for {{title}}"
 [automate.importModal]
 cancel = "Avbryt"
 confirm = "Importer"
-detectedAutomation = "Automate JSON"
+detectedAutomation = "Automatiserings-JSON"
 detectedFolderScan = "Mappeskanning JSON"
 dropHint = "Slipp JSON her eller klikk for å velge en fil"
 dropSubhint = "Både Automate- og Folder Scanning-konfigurasjoner godtas"
@@ -2744,7 +2744,6 @@ reason = "Årsak"
 serverCertMessage = "Bruker serversertifikat – ingen filer eller passord kreves"
 showLogo = "Vis logo"
 signatureProgress = "{{signedCount}}/{{totalCount}} signaturer"
-signed = "Signert"
 tags = "autentiser,PEM,P12,offisiell,krypter,signer,sertifikat,PKCS12,JKS,server,manuell,auto"
 title = "Sertifikatsignering"
 viewed = "Vist"
@@ -2809,7 +2808,13 @@ reasonPlaceholder = "f.eks. Godkjenning, Gjennomgang ..."
 
 [certSign.collab.finalize]
 button = "Ferdigstill og last inn signert PDF"
+confirmAction = "Bekreft og fullfør"
+confirmDescription = "Fullføring lukker denne økten. Ingen flere signaturer kan sendes inn."
+confirmTitle = "Fullføre denne signeringsøkten?"
 early = "Ferdigstill med nåværende signaturer"
+excluded = "Deltakere hvis signaturer ikke blir inkludert"
+included = "Signaturer inkludert"
+requiresSignature = "Minst én deltaker må signere før du kan fullføre."
 
 [certSign.collab.participant]
 certInvalid = "✗ {{error}}"
@@ -2826,7 +2831,6 @@ includeSummaryPageHelp = "En oppsummeringsside legges til på slutten med all si
 [certSign.collab.sessionDetail]
 addParticipants = "Legg til deltakere"
 addParticipantsError = "Kunne ikke legge til deltakere"
-backToList = "Tilbake til økter"
 deleteConfirm = "Er du sikker? Dette kan ikke angres."
 deleteError = "Kunne ikke slette økt"
 deleteSession = "Slett økt"
@@ -2835,14 +2839,11 @@ finalizeError = "Kunne ikke ferdigstille økt"
 loadPdfError = "Kunne ikke laste signert PDF"
 loadSignedPdf = "Last inn signert PDF i aktive filer"
 messageLabel = "Melding"
-owner = "Eier"
 participantRemoved = "Deltaker fjernet"
 participants = "Deltakere"
 participantsAdded = "Deltakere lagt til"
-removeParticipant = "Fjern"
 removeParticipantError = "Kunne ikke fjerne deltaker"
 selectUsers = "Velg brukere ..."
-sessionInfo = "Øktinformasjon"
 
 [certSign.collab.sessionList]
 active = "Aktiv"
@@ -2855,11 +2856,10 @@ title = "Signaturutforming"
 [certSign.collab.signRequest]
 addedToFiles = "Dokument lagt til i aktive filer"
 addToFiles = "Legg til i aktive filer"
-advancedSettings = "Avanserte innstillinger"
-backToList = "Tilbake til signeringsforespørsler"
 certificateChoice = "Velg et sertifikat å signere med"
 changeSignature = "Endre signatur"
 clearSignature = "Fjern signatur"
+closed = "Denne økten er fullført. Du kan vise det endelige dokumentet, men ingen flere signaturer eller avslag godtas."
 completeAndSign = "Fullfør og signer"
 createNewSignature = "Opprett ny signatur"
 decline = "Avslå forespørsel"
@@ -2876,7 +2876,6 @@ invalidFileType = "Velg en bildefil"
 location = "Sted (valgfritt)"
 locationPlaceholder = "Hvor signerer du fra?"
 noCertificate = "Velg en sertifikatfil"
-noSignatures = "Plasser minst én signatur på PDF-en"
 p12File = "P12/PFX-sertifikatfil"
 password = "Sertifikatpassord"
 penColor = "Pennfarge"
@@ -2894,16 +2893,15 @@ signatureText = "Signaturtekst"
 signatureTextPlaceholder = "Skriv inn navnet ditt ..."
 signatureTypeLabel = "Signaturtype"
 signButton = "Signer dokument"
-signingTitle = "Signering"
 textColor = "Tekstfarge"
 typeSignature = "Skriv inn navnet ditt for å opprette en signatur"
-uploadCert = "Egendefinert sertifikat"
-uploadCertDesc = "Bruk ditt eget P12/PFX-sertifikat"
+uploadCert = "Last opp et sertifikat"
+uploadCertDesc = "Bruk ditt eget PKCS12-, PFX-, PEM- eller JKS-sertifikat."
 uploadSignature = "Last opp signaturbildet ditt"
-usePersonalCert = "Personlig sertifikat"
-usePersonalCertDesc = "Genereres automatisk for kontoen din"
-useServerCert = "Organisasjonssertifikat"
-useServerCertDesc = "Delt organisasjonssertifikat"
+usePersonalCert = "Stirling Sign · Personlig"
+usePersonalCertDesc = "Signer med sertifikatet som er opprettet for kontoen din."
+useServerCert = "Stirling Sign · Organisasjon"
+useServerCertDesc = "Signer med denne serverens delte organisasjonssertifikat."
 useSignature = "Bruk signatur"
 
 [certSign.collab.signRequest.certModal]
@@ -2912,10 +2910,13 @@ certInvalidFallback = "Ugyldig sertifikat"
 certNetworkError = "Kunne ikke validere sertifikat"
 certValidating = "Validerer sertifikat ..."
 certValidUntil = "Sertifikat gyldig til {{date}}"
-description_one = "Du har plassert {{count}} signatur. Velg sertifikatet ditt for å fullføre signeringen."
-description_other = "Du har plassert {{count}} signaturer. Velg sertifikatet ditt for å fullføre signeringen."
+description_one = "{{count}} synlig markering er klar. Velg et sertifikat for å fullføre signeringen."
+description_other = "{{count}} synlige markeringer er klare. Velg et sertifikat for å fullføre signeringen."
+description_zero = "Sertifikatet ditt signerer dokumentet uten synlige markeringer."
+details = "Signeringsdetaljer (valgfritt)"
+format = "Sertifikatformat"
 sign = "Signer dokument"
-title = "Konfigurer sertifikat"
+title = "Velg hvordan du vil signere"
 
 [certSign.collab.signRequest.mode]
 move = "Flytt signatur"
@@ -2968,11 +2969,11 @@ visible = "Synlig"
 yourSignatures = "Dine signaturer ({{count}})"
 
 [certSign.collab.userSelector]
-inviteUsers = "Legg til brukere"
 loadError = "Kunne ikke laste brukere"
 noTeam = "Ingen team"
 noUsers = "Ingen andre brukere funnet."
 placeholder = "Velg brukere ..."
+you = "{{name}} (Du)"
 
 [certSign.device]
 stepTitle = "Denne enheten"
@@ -3975,7 +3976,7 @@ warning = "⚠️ Advarsel: Denne handlingen vil generere nye API-nøkler og gj�
 [config.mcp]
 description = "Model Context Protocol (MCP) lar AI-assistenter som Claude bruke Stirling PDF-verktøyene dine direkte. Koble til en klient én gang, så kan assistenten konvertere, redigere, sikre og behandle dokumenter på dine vegne."
 guestInfo = "Gjestebrukere kan ikke koble til MCP-klienter. Opprett en konto for å bruke MCP-serveren og la AI-assistenten din kjøre Stirling PDF-verktøy på dine vegne."
-navLabel = "MCP Server"
+navLabel = "MCP-server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
 viewApiKeys = "Vis API-nøkler"
 
@@ -4159,7 +4160,7 @@ targetDeviceDesc = "Velg en utdata-profil optimalisert for leserenheten"
 [convert.formatGroups]
 archive = "Arkiv"
 document = "Dokument"
-ebook = "eBook"
+ebook = "e-bok"
 email = "E-post"
 file = "Fil"
 image = "Bilde"
@@ -5384,7 +5385,7 @@ annotations = "Merknader"
 fonts = "Skrifter"
 images = "Bilder"
 links = "Lenker"
-multimedia = "Multimedia"
+multimedia = "Multimedier"
 size = "Størrelse"
 unnamedImage = "Bilde"
 xobjects = "XObject-antall"
@@ -5446,13 +5447,10 @@ formFields = "Skjemafelt"
 images = "Bilder"
 javaScript = "JavaScript"
 layers = "Lag"
-multimedia = "Multimedia"
+multimedia = "Multimedier"
 
 [groupSigning.steps]
 back = "Tilbake"
-completed = "Fullført"
-current = "Gjeldende"
-stepLabel = "Trinn {{number}}"
 
 [groupSigning.steps.configureDefaults]
 continue = "Fortsett"
@@ -5460,7 +5458,6 @@ invisible = "Signaturer vil være usynlige (kun metadata)"
 locationLabel = "Sted:"
 preview = "Forhåndsvisning"
 reasonLabel = "Årsak:"
-title = "Konfigurer signaturinnstillinger"
 visible = "Signaturer vil være synlige på side {{page}}"
 
 [groupSigning.steps.review]
@@ -5472,14 +5469,13 @@ location = "Sted:"
 logo = "Logo:"
 logoHidden = "Ingen logo"
 logoShown = "Stirling PDF-logo vises"
-participantCount_one = "{{count}} deltaker signerer i rekkefølge"
-participantCount_other = "{{count}} deltakere signerer i rekkefølge"
+participantCount_one = "{{count}} deltaker valgt"
+participantCount_other = "{{count}} deltakere valgt"
 participants = "Deltakere"
 reason = "Årsak:"
 send = "Send signeringsforespørsler"
 signatureSettings = "Signaturinnstillinger"
 title = "Gjennomgå øktsdetaljer"
-titleShort = "Gjennomgå og send"
 visibility = "Synlighet:"
 visible = "Synlig på side {{page}}"
 
@@ -5487,7 +5483,6 @@ visible = "Synlig på side {{page}}"
 continue = "Fortsett"
 noFile = "Velg én PDF-fil fra dine aktive filer for å opprette en signeringsøkt."
 selectedFile = "Valgt dokument"
-title = "Velg dokument"
 
 [groupSigning.steps.selectParticipants]
 continue = "Fortsett"
@@ -5495,31 +5490,30 @@ count_one = "{{count}} deltaker valgt"
 count_other = "{{count}} deltakere valgt"
 label = "Velg deltakere"
 placeholder = "Velg deltakere som skal signere ..."
-title = "Velg deltakere"
 
 [groupSigning.tooltip]
 header = "Om gruppesignering"
 
 [groupSigning.tooltip.finalization]
-bullet1 = "Alle signaturer legges til i den deltakerrekkefølgen du spesifiserte"
-bullet2 = "Du kan ferdigstille med delvise signaturer ved behov"
-bullet3 = "Når ferdigstilt, kan ikke økten endres"
-description = "Når alle deltakere har signert (eller du velger å ferdigstille tidlig), kan du generere den endelige signerte PDF-en."
+bullet1 = "Den endelige PDF-en inkluderer alle aksepterte signaturer"
+bullet2 = "Gå gjennom utestående deltakere før du fullfører med delvise signaturer"
+bullet3 = "Fullføring lukker forespørselen; utestående deltakere kan ikke lenger signere"
+description = "Etter at minst én deltaker har signert, kan eieren fullføre forespørselen og generere den signerte PDF-en."
 title = "Ferdigstillingsprosess"
 
 [groupSigning.tooltip.roles]
 bullet1 = "Eier (deg): Oppretter økt, konfigurerer signaturstandarder, ferdigstiller dokument"
-bullet2 = "Deltakere: Oppretter sin signatur, velger sertifikat, plasserer på PDF"
-bullet3 = "Deltakere kan ikke endre innstillinger for synlighet, årsak eller sted"
-description = "Du kontrollerer innstillingene for signaturutforming for alle deltakere."
+bullet2 = "Deltakere: Velg et sertifikat og plasser eventuelt en synlig signatur på PDF-en"
+bullet3 = "Deltakere kan justere signaturgrunn og plassering før innsending"
+description = "Eieren angir standardverdier for forespørselen; hver deltaker velger sitt sertifikat og en valgfri synlig markering."
 title = "Deltakerroller"
 
 [groupSigning.tooltip.sequential]
-bullet1 = "Første deltaker må signere før den neste får tilgang til dokumentet"
-bullet2 = "Sikrer korrekt signeringsrekkefølge for juridisk etterlevelse"
-bullet3 = "Du kan endre rekkefølgen ved å dra deltakere i listen"
-description = "Deltakere signerer dokumenter i den rekkefølgen du angir. Hver signerer får et varsel når det er deres tur."
-title = "Sekvensiell signering"
+bullet1 = "Deltakere trenger ikke å vente på en annen underskriver"
+bullet2 = "Spor fremdriften til hver deltaker i signeringsøkter"
+bullet3 = "En forfallsdato er en påminnelse; den utløper ikke tilgangen"
+description = "Tildelte deltakere kan se gjennom og signere uavhengig, i valgfri rekkefølge."
+title = "Signering i valgfri rekkefølge"
 
 [guestBanner]
 dismiss = "Lukk banner"
@@ -5828,7 +5822,6 @@ tags = "oppdag,del,foto,oppdag automatisk,oppdag foto,del foto,separer foto,del 
 title = "Oppdag & del skannede bilder"
 
 [home.sharedSign]
-desc = "Be om signaturer fra andre og spor signeringsøkter"
 title = "Delt signering"
 
 [home.showJS]
@@ -6959,12 +6952,12 @@ aiPromo = "Opprett, rediger og still spørsmål om PDF-er med AI"
 apiPromo = "Koble til appene dine og AI-assistenter"
 automationPromo = "Automatiser gjentakende PDF-oppgaver"
 createAccount = "Opprett gratis konto"
-editorLabel = "PDF Editor"
+editorLabel = "PDF-redigerer"
 login = "Logg inn"
 manualToolsPromo = "Ubegrensede gratis manuelle PDF-verktøy"
-processorLabel = "PDF Processor"
+processorLabel = "PDF-prosessor"
 processorTitle = "Opprett en konto for å låse opp det beste fra Stirling"
-readerLabel = "PDF Reader"
+readerLabel = "PDF-leser"
 
 [payg.spendCapMeter]
 barAria = "Forbruk mot tak"
@@ -7201,7 +7194,7 @@ downloadTooltip = "Lagre og last ned den redigerte PDF-en"
 save = "Lagre PDF"
 saveTooltip = "Bruk endringer på filen i arbeidsområdet ditt ({{shortcut}})"
 tags = "rediger tekst,endre tekst,endre tekst,rediger innhold,oppdater tekst,skriv om,korriger,endre,redline,revider,teksteditor,innholdseditor"
-title = "PDF Text Editor"
+title = "PDF-tekstredigerer"
 unsaved = "(ulagret)"
 workbenchLabel = "Redigeringsprogram"
 
@@ -7426,7 +7419,9 @@ groupedTitle = "Del av en gruppe i denne PDF-en: den kan slettes, men ikke flytt
 
 [pdfTextEditor.sidebar]
 addImage = "Legg til bilde"
+addTable = "Legg til tabell"
 addText = "Legg til tekst"
+clickPageToAddTable = "Klikk på siden for å legge til en tabell"
 clickPageToAddText = "Klikk på siden for å legge til tekst"
 document = "Dokument"
 group = "Grupper"
@@ -7435,11 +7430,14 @@ groupingAutoHint = "Grupperer linjer med lik avstand i avsnitt. Endring av dette
 groupingLine = "Linje"
 groupTooltip = "Slå sammen valgte tekstsekvenser til ett avsnitt ({{shortcut}})"
 groupTooltipDisabled = "Velg 2+ tekstsekvenser for å slå sammen"
+image = "Bilde"
 noFile = "Ingen fil lastet"
 noFileHint = "Velg en PDF fra Fil-panelet til venstre, eller slipp en inn. Redigeringsprogrammet åpner den automatisk."
 opening = "Åpner dokument..."
 paragraph = "Avsnitt"
 rulers = "Linjal og hjelpelinjer"
+table = "Tabell"
+text = "Tekst"
 textBoxWidth = "Ny tekstboksbredde"
 textGrouping = "Tekstgruppering"
 ungroup = "Opphev gruppering"
@@ -7460,6 +7458,24 @@ loadingProgress = "Lastefremdrift"
 noDocument = "Ingen dokument lastet."
 pickPrompt = "Velg en PDF fra Fil-panelet til venstre for å begynne å redigere."
 renderingPreview = "Gjengir forhåndsvisning"
+
+[pdfTextEditor.table]
+addColumn = "Legg til kolonne"
+addRow = "Legg til rad"
+column = "Kol."
+deleteColumn = "Slett kolonne"
+deleteRow = "Slett rad"
+done = "Ferdig"
+doneHint = "Slutt å redigere dette som en tabell"
+edit = "Rediger"
+editHint = "Rediger som en tabell – skriv i celler, legg til eller fjern rader og kolonner"
+move = "Flytt"
+moveTable = "Dra for å flytte hele tabellen"
+recognizedHint = "Gjenkjent tabell – klikk for å velge all tekst i den"
+resizeColumn = "Dra for å endre størrelsen på denne kolonnen (Alt: del med den neste)"
+resizeRow = "Dra for å endre størrelsen på denne raden (Alt: del med den neste)"
+resizeTable = "Dra for å endre størrelsen på hele tabellen"
+row = "Rad"
 
 [pdfTextEditor.toolbar]
 addTextTooltip = "Legg til en tekstboks – klikk deretter på siden"
@@ -7771,7 +7787,7 @@ rowIdle = "{{label}} kjører automatisk"
 rowRunning = "{{label}} kjører nå"
 runsToday_one = "{{count}} kjøring i dag"
 runsToday_other = "{{count}} kjøringer i dag"
-title = "PDF Processor"
+title = "PDF-behandler"
 triggerExport = "Kjører ved eksport"
 triggerImport = "Kjører ved import"
 
@@ -8440,10 +8456,10 @@ helperText = "Stirling lagrer dette kryptert og viser det aldri igjen."
 label = "Tilgangstoken"
 
 [portal.connections.commonFields.apiKey]
-label = "API key"
+label = "API-nøkkel"
 
 [portal.connections.commonFields.apiToken]
-label = "API token"
+label = "API-token"
 
 [portal.connections.commonFields.baseUrl]
 helperText = "Trinn som bruker denne tilkoblingen kan bare kalle stier under denne URL-en, aldri en annen host."
@@ -8568,10 +8584,10 @@ label = "Server-URL"
 placeholder = "https://your-org.consignocloud.com/api/v1"
 
 [portal.connections.types.consigno.fields.clientId]
-label = "API key"
+label = "API-nøkkel"
 
 [portal.connections.types.consigno.fields.clientSecret]
-label = "API secret"
+label = "API-hemmelighet"
 
 [portal.connections.types.consigno.fields.password]
 label = "Passord"
@@ -8673,14 +8689,14 @@ label = "Microsoft Purview"
 
 [portal.connections.types.purview.fields.clientId]
 helperText = "Valgfritt. Trengs bare for å velge etiketter etter navn; merking fungerer uten det."
-label = "Application (client) ID"
+label = "Applikasjons-ID (klient)"
 
 [portal.connections.types.purview.fields.clientSecret]
-label = "Client secret"
+label = "Klienthemmelighet"
 
 [portal.connections.types.purview.fields.tenantId]
 helperText = "Stemples på hver etikett som dens SiteId, slik at Purview-aware verktøy vet hvilken organisasjon som brukte den."
-label = "Directory (tenant) ID"
+label = "Katalog-ID (tenant)"
 placeholder = "cb46c030-1825-4e81-a295-151c039dbf02"
 
 [portal.connections.types.s3]
@@ -8688,7 +8704,7 @@ description = "En S3 bucket som kilder kan lese fra og pipeline-utdata kan skriv
 label = "S3-lagring"
 
 [portal.connections.types.s3.fields.accessKeyId]
-label = "Access key ID"
+label = "Tilgangsnøkkel-ID"
 
 [portal.connections.types.s3.fields.bucket]
 label = "Bucket"
@@ -8701,7 +8717,7 @@ label = "Endepunkt"
 label = "Region"
 
 [portal.connections.types.s3.fields.secretAccessKey]
-label = "Secret access key"
+label = "Hemmelig tilgangsnøkkel"
 
 [portal.connections.types.sendgrid]
 description = "Send et dokument eller et varsel på e-post når en policy kjører."
@@ -8714,7 +8730,7 @@ label = "SFTP"
 
 [portal.connections.types.sftp.fields.hostKeyFingerprint]
 helperText = "Valgfritt. Serverens SHA-256 host key fingerprint (fra `ssh-keyscan host | ssh-keygen -lf -`). Når angitt, godtas bare en server som presenterer denne nøkkelen; når tomt, festes nøkkelen som sees ved første tilkobling, og senere endringer avvises."
-label = "Host key fingerprint"
+label = "Host key-fingeravtrykk"
 placeholder = "SHA256:..."
 
 [portal.connections.types.sftp.fields.passphrase]
@@ -9165,7 +9181,7 @@ title = "Manuelt serveroppsett"
 altLabel = "Eller via winget"
 detailBody = "Kjør installasjonsprogrammet, eller bruk en pakkebehandler."
 downloadBtn = "Last ned installasjonsprogram"
-tagline = "Native app for Microsoft Windows"
+tagline = "Innebygd app for Microsoft Windows"
 title = "Windows"
 
 [portal.home.editor]
@@ -9776,7 +9792,7 @@ storage-folder-watch = "Nye filer i lagringsmappe"
 
 [portal.pipelines.type]
 pipeline = "Pipeline"
-policy = "Policy"
+policy = "Retningslinje"
 
 [portal.policies]
 defaultName = "{{category}}-pipeline"
@@ -9974,7 +9990,7 @@ placeholder = "processor@acme.com"
 
 [portal.policies.operations.fields.headers]
 helperText = "Et JSON-objekt med par av headernavn/-verdier. Tilkoblingens legitimasjon legges til for deg."
-label = "Headers"
+label = "Headere"
 
 [portal.policies.operations.fields.index]
 label = "Indeks"
@@ -10522,7 +10538,7 @@ talkFirst = "Foretrekker du å snakke først?"
 title = "Sett opp prøveperioden din"
 viewEula = "Les den"
 workEmail = "Jobb-e-post"
-workEmailPlaceholder = "you@company.com"
+workEmailPlaceholder = "du@company.com"
 
 [portal.procurement.trial]
 body = "Forlengelse legger til 7 dager og varsler løsningsingeniøren din."
@@ -11679,7 +11695,7 @@ documents = "Dokumenter og RAG"
 general = "AI-motor"
 limits = "Grenser og ytelse"
 models = "Modeller og leverandører"
-title = "AI"
+title = "KI"
 
 [settings.billing]
 title = "Fakturering"
@@ -12102,28 +12118,15 @@ description = "Skriv inn full URL til din selvhostede Stirling PDF-server"
 label = "Server-URL"
 
 [sharedSign]
-backToSessions = "Tilbake til økter"
-createdOn = "Opprettet {{date}}"
 disabledBody = "Delt signering er ikke aktivert på denne serveren."
-disabledTitle = "Ikke aktivert"
-due = "Forfaller {{date}}"
 filterDeclined = "Avslått"
-filterMine = "Mine"
 filterOverdue = "Forfalt"
 filterSigned = "Signert"
-fromOwner = "Fra {{owner}}"
-newRequest = "Be om signaturer"
-signedCount = "{{signed}}/{{total}} signert"
 signInRequiredBody = "Logg inn for å be om signaturer og se forespørsler sendt til deg."
 signInRequiredTitle = "Innlogging kreves"
 
-[sharedSign.empty]
-active = "Ingen ventende signeringsforespørsler eller aktive økter"
-completed = "Ingen fullførte økter"
-
 [sharedSign.tab]
 active = "Aktive"
-completed = "Fullførte"
 
 [showJS]
 done = "JavaScript hentet ut"
@@ -12473,10 +12476,68 @@ bullet3 = "Usynlige signaturer gir fortsatt kryptografisk validering"
 description = "Styrer om signaturen er synlig på dokumentet eller innebygd usynlig."
 title = "Signatursynlighet"
 
+[signingDetail]
+allSigned = "Alle har signert. Se gjennom dokumentet, og fullfør deretter."
+awaitingOwner = "Eieren fullfører dokumentet når de er klare."
+certificateNext = "Velg sertifikatet ditt i neste trinn."
+earlyHint = "Du kan fullføre nå med signaturene som er mottatt, eller vente på de resterende deltakerne."
+finalDocument = "Signert dokument"
+finalizeTitle = "Fullfør dokument"
+finalReady = "Din signerte PDF er klar til å åpnes i arbeidsbenken."
+inProgressPreview = "Forhåndsvisning under arbeid med innsendte signaturer. Eieren har ikke fullført dette dokumentet ennå."
+manageSession = "Administrer signeringsøkt"
+moveHint = "Velg en signatur i dokumentet for å flytte, endre størrelse på eller fjerne den."
+notified = "Varslet"
+optional = "Valgfritt"
+ownerNext = "Gå tilbake til økten din for å se gjennom alles signaturer og fullføre dokumentet når du er klar."
+placeHint = "Klikk på dokumentet for å plassere signaturen din."
+progress = "Signaturfremdrift"
+readyToSign = "Klar til å signere?"
+refreshPreview = "Oppdater forhåndsvisning"
+removePerson = "Fjern {{name}}"
+requestClosed = "Denne forespørselen er lukket"
+requestTitle = "Signaturforespørsel"
+signatureSubmitted = "Signaturen din er sendt inn"
+signedCount = "{{signed}} / {{total}} signert"
+signMyRequest = "Signer dette dokumentet"
+viewOnly = "Du kan fortsatt se gjennom dokumentet her."
+visibleSignature = "Synlig signatur"
+visibleSignatureHelp = "Om synlige signaturer"
+
+[signMenu]
+anyOrder = "Deltakere kan signere i hvilken som helst rekkefølge. Eieren fullfører dokumentet etter å ha gjennomgått de innsamlede signaturene."
+certificateHint = "Bruk et sertifikat"
+certificateTitle = "Digital signatur"
+closedStatus = "Lukket"
+completedTab = "Fullført"
+dueDate = "Forfallsdato (valgfritt)"
+newActivity = "Ny aktivitet siden du sist så denne økten"
+noActive = "Ingen aktive økter"
+noCompleted = "Ingen fullførte økter"
+noMatches = "Ingen samsvarende økter"
+noUnread = "Du er ajour"
+optionalMarks = "Synlige merker er valgfrie. Fullfør og signer fungerer også med kun et sertifikat."
+ownerProgress = "Din forespørsel · {{signed}} / {{total}} signert"
+personalHint = "Tegn, skriv eller last opp"
+personalTitle = "Personlig signatur"
+request = "Be om signaturer"
+search = "Finn et dokument eller en person"
+send = "Send signeringsforespørsel"
+sessionFilter = "Øktvisninger"
+sessions = "Signeringsøkter"
+settings = "Utseende og sammendragsside (valgfritt)"
+signFailed = "Signering mislyktes. Kontroller sertifikatet ditt og prøv igjen; de plasserte merkene dine er bevart."
+submitted = "Sendt inn · venter på fullføring"
+title = "Signer"
+triggerUnreadCount_one = "Signer · {{count}} ulest økt"
+triggerUnreadCount_other = "Signer · {{count}} uleste økter"
+unreadTab = "Ulest"
+
 [signRequest]
+accessExpired = "Tilgangen din til denne signeringsforespørselen er utløpt. Be avsenderen om en ny forespørsel."
 declined = "Signeringsforespørsel avslått"
+expired = "Tilgang utløpt"
 fetchFailed = "Kunne ikke laste signeringsforespørsel"
-signed = "Dokument signert"
 
 [signSession]
 created = "Signeringsforespørsel sendt"
@@ -12512,6 +12573,52 @@ title = "Opprett en konto"
 unableToAccessTool = "Får ikke tilgang til verktøy: {{error}}"
 unexpectedError = "Uventet feil: {{message}}"
 unknownError = "Ukjent feil"
+
+[signWorkspace]
+changeDocument = "Endre PDF"
+chooseDocument = "Velg en åpen PDF"
+chooseFromLibrary = "Velg fra bibliotek"
+chooseParticipants = "Velg deltakere"
+choosePdf = "Velg en PDF"
+choosePdfHeading = "Start med dokumentet ditt"
+clearDate = "Fjern dato"
+created = "Opprettet"
+createdByMe = "Opprettet av meg"
+datesAndOptions = "Datoer og alternativer"
+document = "Dokument"
+dueDate = "Forfallsdato"
+dueDateHelp = "Dette er en måldato. Deltakere kan fortsatt signere etter den."
+dueDateHelpLabel = "Om frister"
+empty = "Ingen økter her ennå."
+expand = "Utvid signeringsøkter"
+inviteLoadError = "Kunne ikke laste inn invitasjonsalternativer. Lukk denne dialogboksen og prøv igjen."
+invitePerson = "Legg til teammedlem: {{name}}"
+inviteTeammate = "Legg til et teammedlem"
+inviteUnavailable = "Å legge til teammedlemmer er ikke tilgjengelig for kontoen din eller serverkonfigurasjonen."
+navigation = "Signeringsnavigasjon"
+needsYou = "Trenger signaturen din"
+nextMonth = "Neste måned"
+nextStep = "Neste"
+noDueDate = "Ingen frist"
+noMatches = "Ingen økter samsvarer med søket eller filteret ditt."
+noOpenPdfs = "Velg en PDF fra biblioteket ditt eller legg til en fra datamaskinen din."
+noPeopleMatch = "Ingen personer samsvarer med søket ditt."
+noPreview = "Dokumentforhåndsvisning utilgjengelig"
+owner = "Eier"
+participants = "Deltakere"
+participantsSelected = "{{count}} valgt"
+personalHeading = "Signer et dokument"
+previousMonth = "Forrige måned"
+refresh = "Oppdater økter"
+requestSteps = "Trinn for signeringsforespørsel"
+search = "Søk etter dokumenter eller personer"
+searchParticipants = "Søk etter personer eller team"
+selectOnePdf = "Velg én PDF for denne signeringsforespørselen."
+signingOrderHelp = "Om signeringsrekkefølge"
+status = "Status"
+unavailable = "Denne økten er ikke lenger tilgjengelig. Oppdater listen for å se dine nåværende økter."
+upcoming = "Kommende"
+uploadFailed = "Kunne ikke åpne denne PDF-en. Prøv igjen."
 
 [sizes]
 large = "Stor"
@@ -12998,7 +13105,7 @@ generic = "Laster verktøy..."
 named = "Laster {{toolName}}..."
 
 [toolPanel]
-alpha = "Alpha"
+alpha = "Alfa"
 backToAllTools = "Tilbake til alle verktøy"
 goBack = "Gå tilbake"
 pdfTools = "PDF-verktøy"

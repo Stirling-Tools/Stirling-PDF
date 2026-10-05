@@ -1815,7 +1815,7 @@ label = "共有リンクを有効化"
 
 [admin.settings.storage.signing.enabled]
 description = "複数参加者のドキュメント署名セッションの作成を許可します。サーバーファイルストレージの有効化が必要です。"
-label = "グループ署名（アルファ）を有効化"
+title = "グループ署名を有効化"
 
 [admin.settings.telegram]
 description = "Telegram ボットの接続、アクセス制御、フィードバック動作を構成します。"
@@ -2351,7 +2351,7 @@ label = "{{title}} のメニューを開く"
 [automate.importModal]
 cancel = "キャンセル"
 confirm = "インポート"
-detectedAutomation = "Automate JSON"
+detectedAutomation = "自動化 JSON"
 detectedFolderScan = "フォルダースキャンの JSON"
 dropHint = "ここに JSON をドロップするか、クリックしてファイルを選択"
 dropSubhint = "Automate と Folder Scanning の両方の設定を受け付けます"
@@ -2744,7 +2744,6 @@ reason = "理由"
 serverCertMessage = "サーバー証明書を使用 - ファイルやパスワードは不要です"
 showLogo = "ロゴを表示"
 signatureProgress = "{{signedCount}}/{{totalCount}} 件の署名"
-signed = "署名済み"
 tags = "認証,PEM,P12,公式,暗号化,署名,証明書,PKCS12,JKS,サーバー,手動,自動"
 title = "証明書による署名"
 viewed = "閲覧済み"
@@ -2809,7 +2808,13 @@ reasonPlaceholder = "例）承認、レビュー..."
 
 [certSign.collab.finalize]
 button = "最終化して署名済みPDFを読み込む"
+confirmAction = "確認して確定"
+confirmDescription = "確定するとこのセッションは終了します。これ以上署名を送信できません。"
+confirmTitle = "この署名セッションを確定しますか？"
 early = "現在の署名で最終化"
+excluded = "署名が含まれない参加者"
+included = "含まれる署名"
+requiresSignature = "確定する前に、少なくとも1人の参加者が署名する必要があります。"
 
 [certSign.collab.participant]
 certInvalid = "✗ {{error}}"
@@ -2826,7 +2831,6 @@ includeSummaryPageHelp = "末尾にすべての署名メタデータを含む要
 [certSign.collab.sessionDetail]
 addParticipants = "参加者を追加"
 addParticipantsError = "参加者の追加に失敗しました"
-backToList = "セッション一覧に戻る"
 deleteConfirm = "実行しますか？元に戻せません。"
 deleteError = "セッションの削除に失敗しました"
 deleteSession = "セッションを削除"
@@ -2835,14 +2839,11 @@ finalizeError = "セッションの最終化に失敗しました"
 loadPdfError = "署名済みPDFの読み込みに失敗しました"
 loadSignedPdf = "署名済みPDFをアクティブファイルに読み込む"
 messageLabel = "メッセージ"
-owner = "所有者"
 participantRemoved = "参加者を削除しました"
 participants = "参加者"
 participantsAdded = "参加者を追加しました"
-removeParticipant = "削除"
 removeParticipantError = "参加者の削除に失敗しました"
 selectUsers = "ユーザーを選択..."
-sessionInfo = "セッション情報"
 
 [certSign.collab.sessionList]
 active = "アクティブ"
@@ -2855,11 +2856,10 @@ title = "署名の外観"
 [certSign.collab.signRequest]
 addedToFiles = "ドキュメントをアクティブファイルに追加しました"
 addToFiles = "アクティブファイルに追加"
-advancedSettings = "詳細設定"
-backToList = "署名リクエストに戻る"
 certificateChoice = "署名に使用する証明書を選択"
 changeSignature = "署名を変更"
 clearSignature = "署名をクリア"
+closed = "このセッションは確定済みです。最終文書を表示できますが、これ以上の署名または辞退は受け付けられません。"
 completeAndSign = "完了して署名"
 createNewSignature = "新しい署名を作成"
 decline = "リクエストを辞退"
@@ -2876,7 +2876,6 @@ invalidFileType = "画像ファイルを選択してください"
 location = "場所（任意）"
 locationPlaceholder = "どこで署名していますか？"
 noCertificate = "証明書ファイルを選択してください"
-noSignatures = "少なくとも1つの署名をPDFに配置してください"
 p12File = "P12/PFX 証明書ファイル"
 password = "証明書のパスワード"
 penColor = "ペンの色"
@@ -2894,16 +2893,15 @@ signatureText = "署名テキスト"
 signatureTextPlaceholder = "名前を入力..."
 signatureTypeLabel = "署名タイプ"
 signButton = "ドキュメントに署名"
-signingTitle = "署名"
 textColor = "テキストの色"
 typeSignature = "名前を入力して署名を作成"
-uploadCert = "カスタム証明書"
-uploadCertDesc = "自分の P12/PFX 証明書を使用"
+uploadCert = "証明書をアップロード"
+uploadCertDesc = "独自の PKCS12、PFX、PEM、または JKS 証明書を使用します。"
 uploadSignature = "署名画像をアップロード"
-usePersonalCert = "個人証明書"
-usePersonalCertDesc = "あなたのアカウント用に自動生成されます"
-useServerCert = "組織証明書"
-useServerCertDesc = "共有の組織証明書"
+usePersonalCert = "Stirling Sign · 個人"
+usePersonalCertDesc = "アカウント用に作成された証明書で署名します。"
+useServerCert = "Stirling Sign · 組織"
+useServerCertDesc = "このサーバーの共有組織証明書で署名します。"
 useSignature = "署名を使用"
 
 [certSign.collab.signRequest.certModal]
@@ -2912,10 +2910,13 @@ certInvalidFallback = "無効な証明書"
 certNetworkError = "証明書を検証できませんでした"
 certValidating = "証明書を検証しています..."
 certValidUntil = "証明書は{{date}}まで有効"
-description_one = "{{count}} 個の署名を配置しました。署名を完了するには証明書を選択してください。"
-description_other = "{{count}} 個の署名を配置しました。署名を完了するには証明書を選択してください。"
+description_one = "{{count}} 個の表示マークの準備ができています。署名を完了するには証明書を選択してください。"
+description_other = "{{count}} 個の表示マークの準備ができています。署名を完了するには証明書を選択してください。"
+description_zero = "証明書は表示マークなしで文書に署名します。"
+details = "署名の詳細（任意）"
+format = "証明書形式"
 sign = "ドキュメントに署名"
-title = "証明書を設定"
+title = "署名方法を選択"
 
 [certSign.collab.signRequest.mode]
 move = "署名を移動"
@@ -2968,11 +2969,11 @@ visible = "表示"
 yourSignatures = "あなたの署名（{{count}}）"
 
 [certSign.collab.userSelector]
-inviteUsers = "ユーザーを追加"
 loadError = "ユーザーの読み込みに失敗しました"
 noTeam = "チームなし"
 noUsers = "他のユーザーが見つかりません。"
 placeholder = "ユーザーを選択..."
+you = "{{name}} (自分)"
 
 [certSign.device]
 stepTitle = "このデバイス"
@@ -5450,9 +5451,6 @@ multimedia = "マルチメディア"
 
 [groupSigning.steps]
 back = "戻る"
-completed = "完了"
-current = "現在"
-stepLabel = "ステップ {{number}}"
 
 [groupSigning.steps.configureDefaults]
 continue = "続行"
@@ -5460,7 +5458,6 @@ invisible = "署名は非表示になります（メタデータのみ）"
 locationLabel = "場所:"
 preview = "プレビュー"
 reasonLabel = "理由:"
-title = "署名設定を設定"
 visible = "署名はページ {{page}} に表示されます"
 
 [groupSigning.steps.review]
@@ -5472,14 +5469,13 @@ location = "場所:"
 logo = "ロゴ:"
 logoHidden = "ロゴなし"
 logoShown = "Stirling PDF ロゴを表示"
-participantCount_one = "{{count}} 人の参加者が順番に署名します"
-participantCount_other = "{{count}} 人の参加者が順番に署名します"
+participantCount_one = "{{count}} 人の参加者が選択されました"
+participantCount_other = "{{count}} 人の参加者が選択されました"
 participants = "参加者"
 reason = "理由:"
 send = "署名リクエストを送信"
 signatureSettings = "署名設定"
 title = "セッション詳細の確認"
-titleShort = "確認して送信"
 visibility = "表示状態:"
 visible = "ページ {{page}} に表示"
 
@@ -5487,7 +5483,6 @@ visible = "ページ {{page}} に表示"
 continue = "続行"
 noFile = "署名セッションを作成するには、アクティブファイルから1つのPDFファイルを選択してください。"
 selectedFile = "選択したドキュメント"
-title = "ドキュメントを選択"
 
 [groupSigning.steps.selectParticipants]
 continue = "続行"
@@ -5495,31 +5490,30 @@ count_one = "{{count}} 人の参加者を選択済み"
 count_other = "{{count}} 人の参加者を選択済み"
 label = "参加者を選択"
 placeholder = "参加者を選択..."
-title = "参加者を選択"
 
 [groupSigning.tooltip]
 header = "グループ署名について"
 
 [groupSigning.tooltip.finalization]
-bullet1 = "すべての署名は指定した参加者の順序で適用されます"
-bullet2 = "必要に応じて一部の署名だけで最終化できます"
-bullet3 = "最終化後はセッションを変更できません"
-description = "全参加者の署名完了後（または早期最終化を選択した場合）、最終的な署名済みPDFを生成できます。"
+bullet1 = "最終 PDF には承認されたすべての署名が含まれます"
+bullet2 = "一部の署名で確定する前に、未対応の参加者を確認してください"
+bullet3 = "確定するとリクエストは終了し、未対応の参加者は署名できなくなります"
+description = "少なくとも1人の参加者が署名した後、所有者はリクエストを確定し、署名済み PDF を生成できます。"
 title = "最終化プロセス"
 
 [groupSigning.tooltip.roles]
 bullet1 = "所有者（あなた）: セッションを作成し、署名の既定値を設定し、ドキュメントを最終化"
-bullet2 = "参加者: 署名を作成し、証明書を選択してPDFに配置"
-bullet3 = "参加者は署名の表示、理由、場所の設定を変更できません"
-description = "すべての参加者の署名の外観設定をあなたが管理します。"
+bullet2 = "参加者: 証明書を選択し、必要に応じて PDF 上に表示署名を配置します"
+bullet3 = "参加者は送信前に署名の理由と場所を調整できます"
+description = "所有者がリクエストの既定値を設定し、各参加者が証明書と任意の表示マークを選択します。"
 title = "参加者の役割"
 
 [groupSigning.tooltip.sequential]
-bullet1 = "2人目がドキュメントにアクセスする前に、最初の参加者が署名する必要があります"
-bullet2 = "法令順守のため適切な署名順序を確保"
-bullet3 = "リスト内でドラッグして参加者の順序を変更できます"
-description = "参加者は指定した順序でドキュメントに署名します。各署名者は自分の順番になると通知を受け取ります。"
-title = "順次署名"
+bullet1 = "参加者は他の署名者を待つ必要はありません"
+bullet2 = "署名セッションで各参加者の進捗を追跡します"
+bullet3 = "期限日はリマインダーであり、アクセス期限ではありません"
+description = "割り当てられた参加者は任意の順序で個別に確認および署名できます。"
+title = "任意の順序で署名"
 
 [guestBanner]
 dismiss = "バナーを閉じる"
@@ -5828,7 +5822,6 @@ tags = "検出,分割,写真,自動検出,写真検出,写真分割,写真分離
 title = "スキャン写真の検出と分割"
 
 [home.sharedSign]
-desc = "他のユーザーに署名を依頼し、署名セッションを追跡します"
 title = "共同署名"
 
 [home.showJS]
@@ -7426,7 +7419,9 @@ groupedTitle = "このPDF内のグループの一部です。削除はできま�
 
 [pdfTextEditor.sidebar]
 addImage = "画像を追加"
+addTable = "表を追加"
 addText = "テキストを追加"
+clickPageToAddTable = "表を追加するにはページをクリック"
 clickPageToAddText = "ページをクリックしてテキストを追加"
 document = "ドキュメント"
 group = "グループ化"
@@ -7435,11 +7430,14 @@ groupingAutoHint = "等間隔の行を段落にグループ化します。これ
 groupingLine = "行"
 groupTooltip = "選択したランを1つの段落に結合（{{shortcut}}）"
 groupTooltipDisabled = "結合するには2つ以上のランを選択してください"
+image = "画像"
 noFile = "ファイルが読み込まれていません"
 noFileHint = "左側のファイルパネルから PDF を選択するか、ここにドロップしてください。エディターが自動的に開きます。"
 opening = "ドキュメントを開いています..."
 paragraph = "段落"
 rulers = "ルーラーとガイド"
+table = "表"
+text = "テキスト"
 textBoxWidth = "新しいテキストボックスの幅"
 textGrouping = "テキストのグループ化"
 ungroup = "グループ解除"
@@ -7460,6 +7458,24 @@ loadingProgress = "読み込み進行状況"
 noDocument = "ドキュメントが読み込まれていません。"
 pickPrompt = "編集を開始するには、左側のファイルパネルから PDF を選択してください。"
 renderingPreview = "プレビューをレンダリング中"
+
+[pdfTextEditor.table]
+addColumn = "列を追加"
+addRow = "行を追加"
+column = "列"
+deleteColumn = "列を削除"
+deleteRow = "行を削除"
+done = "完了"
+doneHint = "これを表として編集するのを停止"
+edit = "編集"
+editHint = "表として編集 - セルに入力し、行と列を追加または削除します"
+move = "移動"
+moveTable = "ドラッグして表全体を移動"
+recognizedHint = "認識された表 - クリックしてそのテキストをすべて選択"
+resizeColumn = "ドラッグしてこの列のサイズを変更 (Alt: 次の列と共有)"
+resizeRow = "ドラッグしてこの行のサイズを変更 (Alt: 次の行と共有)"
+resizeTable = "ドラッグして表全体のサイズを変更"
+row = "行"
 
 [pdfTextEditor.toolbar]
 addTextTooltip = "テキストボックスを追加 - その後ページをクリック"
@@ -8453,16 +8469,16 @@ label = "サーバー URL"
 label = "Email"
 
 [portal.connections.commonFields.host]
-label = "Host"
+label = "ホスト"
 
 [portal.connections.commonFields.password]
-label = "Password"
+label = "パスワード"
 
 [portal.connections.commonFields.port]
-label = "Port"
+label = "ポート"
 
 [portal.connections.commonFields.username]
-label = "Username"
+label = "ユーザー名"
 
 [portal.connections.commonFields.webhookUrl]
 helperText = "サービスから提供された URL を貼り付けてください。その配下のパスのみ呼び出せます。"
@@ -8496,7 +8512,7 @@ label = "認証"
 label = "Username と password"
 
 [portal.connections.types.api.fields.authType.options.bearer]
-label = "Bearer token"
+label = "Bearerトークン"
 
 [portal.connections.types.api.fields.authType.options.header]
 label = "カスタムヘッダー内のトークン"
@@ -8521,7 +8537,7 @@ label = "ログインパス"
 placeholder = "/auth/login"
 
 [portal.connections.types.api.fields.password]
-label = "Password"
+label = "パスワード"
 
 [portal.connections.types.api.fields.resultUrlHosts]
 helperText = "API がダウンロードリンクを返す場合、これらのホストのみ取得できます。カンマで区切ってください。空白の場合は base URL 自身のホストのみ許可されます。"
@@ -8538,7 +8554,7 @@ helperText = "ログイン呼び出しがトークンを返すレスポンスヘ
 label = "トークンレスポンスヘッダー"
 
 [portal.connections.types.api.fields.username]
-label = "Username"
+label = "ユーザー名"
 
 [portal.connections.types.clamav]
 baseUrlPlaceholder = "http://clamav-rest:9000"
@@ -8574,14 +8590,14 @@ label = "APIキー"
 label = "APIシークレット"
 
 [portal.connections.types.consigno.fields.password]
-label = "Password"
+label = "パスワード"
 
 [portal.connections.types.consigno.fields.tenantId]
 helperText = "組織がテナントを使用している場合にのみ必要です。"
 label = "テナント"
 
 [portal.connections.types.consigno.fields.username]
-label = "Username"
+label = "ユーザー名"
 
 [portal.connections.types.discord]
 baseUrlPlaceholder = "https://discord.com/api/webhooks/..."
@@ -8602,7 +8618,7 @@ label = "FTP / FTPS"
 label = "接続モード"
 
 [portal.connections.types.ftp.fields.passive.options]
-active = "Active"
+active = "アクティブ"
 passive = "Passive（推奨）"
 
 [portal.connections.types.ftp.fields.security]
@@ -8638,13 +8654,13 @@ helperText = "n8n Webhookノードで設定されたAuthenticationに合わせ�
 label = "Webhook認証"
 
 [portal.connections.types.n8n.fields.authType.options.basic]
-label = "Basic auth"
+label = "Basic認証"
 
 [portal.connections.types.n8n.fields.authType.options.header]
-label = "Header auth"
+label = "Header認証"
 
 [portal.connections.types.n8n.fields.authType.options.none]
-label = "None"
+label = "なし"
 
 [portal.connections.types.n8n.fields.headerName]
 helperText = "n8n認証情報のヘッダー名です。値ではありません。"
@@ -8691,14 +8707,14 @@ label = "S3ストレージ"
 label = "アクセスキーID"
 
 [portal.connections.types.s3.fields.bucket]
-label = "Bucket"
+label = "バケット"
 
 [portal.connections.types.s3.fields.endpoint]
 helperText = "AWS の場合は空白のままにします。MinIO または別の S3 互換ストアの場合に設定します。"
-label = "Endpoint"
+label = "エンドポイント"
 
 [portal.connections.types.s3.fields.region]
-label = "Region"
+label = "リージョン"
 
 [portal.connections.types.s3.fields.secretAccessKey]
 label = "シークレットアクセスキー"
@@ -8738,7 +8754,7 @@ label = "SMB / ネットワーク共有"
 
 [portal.connections.types.smb.fields.domain]
 helperText = "任意。サーバーが使用している場合の Windows domain または workgroup。"
-label = "Domain"
+label = "ドメイン"
 
 [portal.connections.types.smb.fields.share]
 label = "共有"
@@ -9180,7 +9196,7 @@ options = "デプロイオプションを表示"
 start = "Editor をデプロイ"
 
 [portal.home.editor.target]
-cloud = "Managed Cloud"
+cloud = "マネージドクラウド"
 docker = "セルフホスト型 · Docker"
 kubernetes = "セルフホスト型 · Kubernetes"
 
@@ -9512,7 +9528,7 @@ loading = "読み込み中…"
 title = "法的文書"
 
 [portal.nav]
-agent-builder = "Agent Builder"
+agent-builder = "エージェントビルダー"
 components = "コンポーネント"
 docs = "ドキュメント"
 documents = "ドキュメント"
@@ -10400,8 +10416,8 @@ ctaQuote = "見積もりを確認"
 ctaReviewQuote = "見積を確認"
 ctaTrial = "見積もりを作成"
 documents = "ドキュメント"
-eyebrow = "Enterprise"
-eyebrowCompany = "{{company}} Enterprise"
+eyebrow = "エンタープライズ"
+eyebrowCompany = "{{company}} エンタープライズ"
 inviteTeammates = "チームメイトを招待"
 licenseKey = "ライセンスキー"
 liveSub = "組織はプロビジョニング済みで、ライセンスは有効です。"
@@ -10459,7 +10475,7 @@ trialFileHint = "これはトライアルライセンスファイルです。契
 [portal.procurement.link]
 cta = "アカウントをリンク"
 description = "調達はリンクされた Stirling アカウントで実行されます。トライアルのプロビジョニング、見積もり価格の算出、請求の開始に使用します。開始するにはアカウントをリンクしてください。"
-eyebrow = "Enterprise"
+eyebrow = "エンタープライズ"
 title = "開始するにはアカウントをリンク"
 
 [portal.procurement.live]
@@ -10728,7 +10744,7 @@ collectionHint = "サーバー側埋め込み用に設定された既存のコ�
 connection = "データベース接続"
 description = "準備済みドキュメントチャンクの出力先です。データベースが embeddings を生成します。Track モードが選択されている場合、元ファイルは入力ソースに残ります。"
 label = "ベクターデータベース"
-namespace = "Namespace / tenant"
+namespace = "Namespace / テナント"
 namespaceHint = "任意の Pinecone namespace または Weaviate tenant。デフォルトの namespace または単一 tenant コレクションの場合は空のままにします。"
 textField = "テキストフィールド"
 textFieldHint = "データベースが埋め込むフィールドです。コレクションスキーマまたは Pinecone フィールドマップと一致します。"
@@ -11693,7 +11709,7 @@ features = "機能"
 folderAccess = "フォルダーアクセス"
 integrations = "連携"
 legal = "法的文書"
-mcp = "MCP Server"
+mcp = "MCPサーバー"
 privacy = "プライバシー"
 storageSharing = "ファイルストレージと共有"
 systemSettings = "システム設定"
@@ -12102,28 +12118,15 @@ description = "セルフホストの Stirling PDF サーバーの完全な URL �
 label = "サーバー URL"
 
 [sharedSign]
-backToSessions = "セッションに戻る"
-createdOn = "{{date}} に作成"
 disabledBody = "このサーバーでは共同署名が有効になっていません。"
-disabledTitle = "無効"
-due = "期限 {{date}}"
 filterDeclined = "辞退"
-filterMine = "自分の"
 filterOverdue = "期限超過"
 filterSigned = "署名済み"
-fromOwner = "{{owner}} から"
-newRequest = "署名を依頼"
-signedCount = "{{signed}}/{{total}} 署名済み"
 signInRequiredBody = "署名を依頼し、自分に送信された依頼を確認するにはサインインしてください。"
 signInRequiredTitle = "サインインが必要です"
 
-[sharedSign.empty]
-active = "保留中の署名依頼やアクティブなセッションはありません"
-completed = "完了したセッションはありません"
-
 [sharedSign.tab]
 active = "アクティブ"
-completed = "完了"
 
 [showJS]
 done = "JavaScript を抽出しました"
@@ -12473,10 +12476,68 @@ bullet3 = "非表示の署名でも暗号学的な検証が提供されます"
 description = "署名をドキュメント上に表示するか、非表示で埋め込むかを制御します。"
 title = "署名の表示"
 
+[signingDetail]
+allSigned = "全員が署名しました。ドキュメントを確認してから確定してください。"
+awaitingOwner = "所有者は準備ができ次第、ドキュメントを確定します。"
+certificateNext = "次のステップで証明書を選択してください。"
+earlyHint = "受信済みの署名で今すぐ確定するか、残りの参加者を待つことができます。"
+finalDocument = "署名済みドキュメント"
+finalizeTitle = "ドキュメントを確定"
+finalReady = "署名済みPDFをワークベンチで開く準備ができました。"
+inProgressPreview = "送信済み署名を含む進行中のプレビューです。所有者はまだこのドキュメントを確定していません。"
+manageSession = "署名セッションを管理"
+moveHint = "ドキュメント上の署名を選択して、移動、サイズ変更、または削除します。"
+notified = "通知済み"
+optional = "任意"
+ownerNext = "セッションに戻って全員の署名を確認し、準備ができたらドキュメントを確定してください。"
+placeHint = "ドキュメントをクリックして署名を配置してください。"
+progress = "署名の進行状況"
+readyToSign = "署名する準備はできましたか？"
+refreshPreview = "プレビューを更新"
+removePerson = "{{name}} を削除"
+requestClosed = "このリクエストは終了しています"
+requestTitle = "署名リクエスト"
+signatureSubmitted = "署名が送信されました"
+signedCount = "{{signed}} / {{total}} が署名済み"
+signMyRequest = "このドキュメントに署名"
+viewOnly = "ここで引き続きドキュメントを確認できます。"
+visibleSignature = "可視署名"
+visibleSignatureHelp = "可視署名について"
+
+[signMenu]
+anyOrder = "参加者は任意の順序で署名できます。オーナーは収集された署名を確認した後、ドキュメントを確定します。"
+certificateHint = "証明書を使用"
+certificateTitle = "デジタル署名"
+closedStatus = "終了"
+completedTab = "完了"
+dueDate = "期限日（任意）"
+newActivity = "このセッションを最後に表示してから新しいアクティビティがあります"
+noActive = "アクティブなセッションはありません"
+noCompleted = "完了したセッションはありません"
+noMatches = "一致するセッションはありません"
+noUnread = "すべて確認済みです"
+optionalMarks = "可視マークは任意です。Complete & Sign は証明書のみでも機能します。"
+ownerProgress = "あなたのリクエスト · {{signed}} / {{total}} が署名済み"
+personalHint = "描画、入力、またはアップロード"
+personalTitle = "個人署名"
+request = "署名をリクエスト"
+search = "ドキュメントまたは人物を検索"
+send = "署名リクエストを送信"
+sessionFilter = "セッション表示"
+sessions = "署名セッション"
+settings = "外観と概要ページ（任意）"
+signFailed = "署名に失敗しました。証明書を確認してもう一度お試しください。配置したマークは保持されます。"
+submitted = "送信済み · 確定待ち"
+title = "署名"
+triggerUnreadCount_one = "署名 · 未読セッション {{count}} 件"
+triggerUnreadCount_other = "署名 · 未読セッション {{count}} 件"
+unreadTab = "未読"
+
 [signRequest]
+accessExpired = "この署名リクエストへのアクセスは期限切れです。送信者に新しいリクエストを依頼してください。"
 declined = "署名リクエストを辞退しました"
+expired = "アクセス期限切れ"
 fetchFailed = "署名リクエストの読み込みに失敗しました"
-signed = "ドキュメントの署名に成功しました"
 
 [signSession]
 created = "署名リクエストを送信しました"
@@ -12512,6 +12573,52 @@ title = "アカウントを作成"
 unableToAccessTool = "ツールにアクセスできません: {{error}}"
 unexpectedError = "予期しないエラー: {{message}}"
 unknownError = "不明なエラー"
+
+[signWorkspace]
+changeDocument = "PDF を変更"
+chooseDocument = "開いている PDF を選択"
+chooseFromLibrary = "ライブラリから選択"
+chooseParticipants = "参加者を選択"
+choosePdf = "PDF を選択"
+choosePdfHeading = "ドキュメントから開始"
+clearDate = "日付をクリア"
+created = "作成済み"
+createdByMe = "自分が作成"
+datesAndOptions = "日付とオプション"
+document = "ドキュメント"
+dueDate = "期限日"
+dueDateHelp = "これは目標日です。参加者はこの日を過ぎても署名できます。"
+dueDateHelpLabel = "期限日について"
+empty = "ここにはまだセッションがありません。"
+expand = "署名セッションを展開"
+inviteLoadError = "招待オプションを読み込めませんでした。このダイアログを閉じて、もう一度お試しください。"
+invitePerson = "チームメイトを追加: {{name}}"
+inviteTeammate = "チームメイトを追加"
+inviteUnavailable = "ご利用のアカウントまたはサーバー設定では、チームメイトの追加は利用できません。"
+navigation = "署名ナビゲーション"
+needsYou = "あなたの署名が必要です"
+nextMonth = "翌月"
+nextStep = "次へ"
+noDueDate = "期限日なし"
+noMatches = "検索またはフィルターに一致するセッションはありません。"
+noOpenPdfs = "ライブラリから PDF を選択するか、コンピューターから追加してください。"
+noPeopleMatch = "検索に一致する人物はいません。"
+noPreview = "ドキュメントのプレビューは利用できません"
+owner = "オーナー"
+participants = "参加者"
+participantsSelected = "{{count}} 件選択済み"
+personalHeading = "ドキュメントに署名"
+previousMonth = "前月"
+refresh = "セッションを更新"
+requestSteps = "署名リクエストの手順"
+search = "ドキュメントまたは人物を検索"
+searchParticipants = "人物またはチームを検索"
+selectOnePdf = "この署名リクエスト用に PDF を 1 つ選択してください。"
+signingOrderHelp = "署名順序について"
+status = "ステータス"
+unavailable = "このセッションは利用できなくなりました。リストを更新して現在のセッションを確認してください。"
+upcoming = "近日予定"
+uploadFailed = "この PDF を開けませんでした。もう一度お試しください。"
 
 [sizes]
 large = "大"

@@ -1815,7 +1815,7 @@ label = "Povolit odkazy ke sdílení"
 
 [admin.settings.storage.signing.enabled]
 description = "Umožnit uživatelům vytvářet relace podepisování s více účastníky. Vyžaduje povolené ukládání souborů na serveru."
-label = "Povolit skupinové podepisování (Alpha)"
+title = "Povolit skupinové podepisování"
 
 [admin.settings.telegram]
 description = "Nastavte připojení Telegram bota, řízení přístupu a způsob zpětné vazby."
@@ -2744,7 +2744,6 @@ reason = "Důvod"
 serverCertMessage = "Používá se serverový certifikát – nejsou vyžadovány žádné soubory ani heslo"
 showLogo = "Zobrazit logo"
 signatureProgress = "{{signedCount}}/{{totalCount}} podpisů"
-signed = "Podepsáno"
 tags = "ověřit,PEM,P12,oficiální,šifrovat,podepsat,certifikát,PKCS12,JKS,server,ruční,auto"
 title = "Podepisování certifikátem"
 viewed = "Zobrazeno"
@@ -2809,7 +2808,13 @@ reasonPlaceholder = "např. Schválení, Kontrola..."
 
 [certSign.collab.finalize]
 button = "Dokončit a načíst podepsané PDF"
+confirmAction = "Potvrdit a dokončit"
+confirmDescription = "Dokončením se tato relace uzavře. Nebude možné odeslat žádné další podpisy."
+confirmTitle = "Dokončit tuto relaci podepisování?"
 early = "Dokončit s aktuálními podpisy"
+excluded = "Účastníci, jejichž podpisy nebudou zahrnuty"
+included = "Zahrnuté podpisy"
+requiresSignature = "Před dokončením se musí podepsat alespoň jeden účastník."
 
 [certSign.collab.participant]
 certInvalid = "✗ {{error}}"
@@ -2826,7 +2831,6 @@ includeSummaryPageHelp = "Na konec bude přidána souhrnná stránka se všemi m
 [certSign.collab.sessionDetail]
 addParticipants = "Přidat účastníky"
 addParticipantsError = "Nepodařilo se přidat účastníky"
-backToList = "Zpět na relace"
 deleteConfirm = "Opravdu? Tuto akci nelze vrátit."
 deleteError = "Relaci se nepodařilo smazat"
 deleteSession = "Smazat relaci"
@@ -2835,14 +2839,11 @@ finalizeError = "Nepodařilo se dokončit relaci"
 loadPdfError = "Nepodařilo se načíst podepsané PDF"
 loadSignedPdf = "Načíst podepsané PDF mezi aktivní soubory"
 messageLabel = "Zpráva"
-owner = "Vlastník"
 participantRemoved = "Účastník odstraněn"
 participants = "Účastníci"
 participantsAdded = "Účastníci byli úspěšně přidáni"
-removeParticipant = "Odebrat"
 removeParticipantError = "Nepodařilo se odebrat účastníka"
 selectUsers = "Vyberte uživatele..."
-sessionInfo = "Informace o relaci"
 
 [certSign.collab.sessionList]
 active = "Aktivní"
@@ -2855,11 +2856,10 @@ title = "Vzhled podpisu"
 [certSign.collab.signRequest]
 addedToFiles = "Dokument přidán mezi aktivní soubory"
 addToFiles = "Přidat mezi aktivní soubory"
-advancedSettings = "Pokročilá nastavení"
-backToList = "Zpět na požadavky na podpis"
 certificateChoice = "Vyberte certifikát pro podepsání"
 changeSignature = "Změnit podpis"
 clearSignature = "Vymazat podpis"
+closed = "Tato relace je dokončena. Můžete zobrazit konečný dokument, ale další podpisy ani odmítnutí nejsou přijímány."
 completeAndSign = "Dokončit a podepsat"
 createNewSignature = "Vytvořit nový podpis"
 decline = "Odmítnout požadavek"
@@ -2876,7 +2876,6 @@ invalidFileType = "Vyberte soubor obrázku"
 location = "Místo (volitelné)"
 locationPlaceholder = "Odkud podepisujete?"
 noCertificate = "Vyberte soubor certifikátu"
-noSignatures = "Umístěte na PDF alespoň jeden podpis"
 p12File = "Soubor certifikátu P12/PFX"
 password = "Heslo certifikátu"
 penColor = "Barva pera"
@@ -2894,16 +2893,15 @@ signatureText = "Text podpisu"
 signatureTextPlaceholder = "Zadejte své jméno..."
 signatureTypeLabel = "Typ podpisu"
 signButton = "Podepsat dokument"
-signingTitle = "Podepisování"
 textColor = "Barva textu"
 typeSignature = "Zadejte své jméno pro vytvoření podpisu"
-uploadCert = "Vlastní certifikát"
-uploadCertDesc = "Použijte vlastní certifikát P12/PFX"
+uploadCert = "Nahrát certifikát"
+uploadCertDesc = "Použijte vlastní certifikát PKCS12, PFX, PEM nebo JKS."
 uploadSignature = "Nahrajte obrázek svého podpisu"
-usePersonalCert = "Osobní certifikát"
-usePersonalCertDesc = "Automaticky vytvořen pro váš účet"
-useServerCert = "Certifikát organizace"
-useServerCertDesc = "Sdílený certifikát organizace"
+usePersonalCert = "Stirling Sign · Osobní"
+usePersonalCertDesc = "Podepsat certifikátem vytvořeným pro váš účet."
+useServerCert = "Stirling Sign · Organizace"
+useServerCertDesc = "Podepsat sdíleným organizačním certifikátem tohoto serveru."
 useSignature = "Použít podpis"
 
 [certSign.collab.signRequest.certModal]
@@ -2912,10 +2910,13 @@ certInvalidFallback = "Neplatný certifikát"
 certNetworkError = "Nepodařilo se ověřit certifikát"
 certValidating = "Ověřování certifikátu..."
 certValidUntil = "Certifikát platný do {{date}}"
-description_one = "Umístili jste {{count}} podpis. Vyberte svůj certifikát pro dokončení podepisování."
-description_other = "Umístili jste {{count}} podpisů. Vyberte svůj certifikát pro dokončení podepisování."
+description_one = "{{count}} viditelná značka je připravena. Vyberte certifikát pro dokončení podpisu."
+description_other = "{{count}} viditelných značek je připraveno. Vyberte certifikát pro dokončení podpisu."
+description_zero = "Váš certifikát podepíše dokument bez viditelných značek."
+details = "Podrobnosti podpisu (volitelné)"
+format = "Formát certifikátu"
 sign = "Podepsat dokument"
-title = "Nastavení certifikátu"
+title = "Vyberte způsob podepsání"
 
 [certSign.collab.signRequest.mode]
 move = "Přesunout podpis"
@@ -2968,11 +2969,11 @@ visible = "Viditelný"
 yourSignatures = "Vaše podpisy ({{count}})"
 
 [certSign.collab.userSelector]
-inviteUsers = "Přidat uživatele"
 loadError = "Nepodařilo se načíst uživatele"
 noTeam = "Žádný tým"
 noUsers = "Nebyli nalezeni žádní další uživatelé."
 placeholder = "Vyberte uživatele..."
+you = "{{name}} (Vy)"
 
 [certSign.device]
 stepTitle = "Toto zařízení"
@@ -3351,7 +3352,7 @@ credit-note = "Dobropis"
 customs-declaration = "Celní prohlášení"
 customs-form = "Celní formulář"
 cv = "CV"
-datasheet = "Datasheet"
+datasheet = "Datový list"
 debit-note = "Vrubopis"
 deed = "Listina"
 delivery-note = "Dodací list"
@@ -5302,7 +5303,7 @@ removeOption = "Odebrat možnost"
 required = "Povinné"
 requiredHelp = "Formulář nelze odeslat, dokud není toto pole vyplněno."
 signatureNote = "Pouze zástupné místo - zde nepodepisujete. Označuje, kam patří podpis, aby nástroj pro podepisování PDF (Adobe Acrobat, podpisová služba atd.) při podpisu dokumentu umístil podpis na toto místo."
-tooltip = "Tooltip"
+tooltip = "Popisek"
 tooltipHelp = "Nápověda zobrazená, když někdo najede na pole v prohlížeči PDF."
 type = "Typ"
 typeHelp = "Jaký druh pole to je. Změna pole znovu vytvoří, takže jeho aktuální hodnota nebude zachována."
@@ -5450,9 +5451,6 @@ multimedia = "Multimédia"
 
 [groupSigning.steps]
 back = "Zpět"
-completed = "Dokončeno"
-current = "Aktuální"
-stepLabel = "Krok {{number}}"
 
 [groupSigning.steps.configureDefaults]
 continue = "Pokračovat"
@@ -5460,7 +5458,6 @@ invisible = "Podpisy budou neviditelné (pouze metadata)"
 locationLabel = "Místo:"
 preview = "Náhled"
 reasonLabel = "Důvod:"
-title = "Nastavit parametry podpisu"
 visible = "Podpisy budou viditelné na stránce {{page}}"
 
 [groupSigning.steps.review]
@@ -5472,14 +5469,13 @@ location = "Místo:"
 logo = "Logo:"
 logoHidden = "Bez loga"
 logoShown = "Zobrazeno logo Stirling PDF"
-participantCount_one = "{{count}} účastník podepíše v pořadí"
-participantCount_other = "{{count}} účastníků podepíše v pořadí"
+participantCount_one = "{{count}} vybraný účastník"
+participantCount_other = "{{count}} vybraných účastníků"
 participants = "Účastníci"
 reason = "Důvod:"
 send = "Odeslat požadavky na podpis"
 signatureSettings = "Nastavení podpisu"
 title = "Zkontrolovat údaje relace"
-titleShort = "Zkontrolovat a odeslat"
 visibility = "Viditelnost:"
 visible = "Viditelné na stránce {{page}}"
 
@@ -5487,7 +5483,6 @@ visible = "Viditelné na stránce {{page}}"
 continue = "Pokračovat"
 noFile = "Vyberte jeden soubor PDF z vašich aktivních souborů pro vytvoření relace podepisování."
 selectedFile = "Vybraný dokument"
-title = "Vyberte dokument"
 
 [groupSigning.steps.selectParticipants]
 continue = "Pokračovat"
@@ -5495,31 +5490,30 @@ count_one = "Vybrán {{count}} účastník"
 count_other = "Vybráno {{count}} účastníků"
 label = "Vyberte účastníky"
 placeholder = "Zvolte účastníky k podpisu..."
-title = "Zvolte účastníky"
 
 [groupSigning.tooltip]
 header = "O skupinovém podepisování"
 
 [groupSigning.tooltip.finalization]
-bullet1 = "Všechny podpisy se aplikují v pořadí účastníků, které jste určili"
-bullet2 = "V případě potřeby můžete dokončit i s neúplnými podpisy"
-bullet3 = "Po dokončení již relaci nelze upravovat"
-description = "Jakmile všichni účastníci podepíší (nebo se rozhodnete dokončit dříve), můžete vygenerovat finální podepsané PDF."
+bullet1 = "Konečný PDF obsahuje všechny přijaté podpisy"
+bullet2 = "Před dokončením s částečnými podpisy zkontrolujte zbývající účastníky"
+bullet3 = "Dokončení uzavře požadavek; zbývající účastníci se již nemohou podepsat"
+description = "Jakmile se podepíše alespoň jeden účastník, vlastník může požadavek dokončit a vygenerovat podepsaný PDF."
 title = "Proces dokončení"
 
 [groupSigning.tooltip.roles]
 bullet1 = "Vlastník (vy): Vytváří relaci, nastavuje výchozí podpisové parametry, dokončuje dokument"
-bullet2 = "Účastníci: Vytvářejí svůj podpis, volí certifikát, umisťují na PDF"
-bullet3 = "Účastníci nemohou měnit nastavení viditelnosti, důvodu ani místa podpisu"
-description = "Nastavení vzhledu podpisů ovládáte pro všechny účastníky."
+bullet2 = "Účastníci: Vyberte certifikát a volitelně umístěte viditelný podpis na PDF"
+bullet3 = "Účastníci mohou před odesláním upravit důvod a umístění podpisu"
+description = "Vlastník nastaví výchozí hodnoty požadavku; každý účastník si vybere svůj certifikát a volitelnou viditelnou značku."
 title = "Role účastníků"
 
 [groupSigning.tooltip.sequential]
-bullet1 = "První účastník musí podepsat, než se druhý dostane k dokumentu"
-bullet2 = "Zajišťuje správné pořadí podpisů pro právní soulad"
-bullet3 = "Účastníky můžete přeřadit přetažením v seznamu"
-description = "Účastníci podepisují dokumenty v pořadí, které určíte. Každý podepisující obdrží oznámení, když je na řadě."
-title = "Sekvenční podepisování"
+bullet1 = "Účastníci nemusí čekat na jiného podepisujícího"
+bullet2 = "Sledujte postup každého účastníka v relacích podepisování"
+bullet3 = "Datum splnění je připomínka; neukončuje platnost přístupu"
+description = "Přiřazení účastníci mohou dokument nezávisle zkontrolovat a podepsat v libovolném pořadí."
+title = "Podepisování v libovolném pořadí"
 
 [guestBanner]
 dismiss = "Skrýt banner"
@@ -5828,7 +5822,6 @@ tags = "detekovat,rozdělit,fotky,automatická detekce,detekovat fotky,rozdělit
 title = "Najít a rozdělit fotky"
 
 [home.sharedSign]
-desc = "Požádejte o podpisy od ostatních a sledujte relace podepisování"
 title = "Sdílené podepisování"
 
 [home.showJS]
@@ -6959,12 +6952,12 @@ aiPromo = "Vytvářejte, upravujte a ptejte se na PDF pomocí AI"
 apiPromo = "Připojte své aplikace a AI asistenty"
 automationPromo = "Automatizujte opakující se úlohy PDF"
 createAccount = "Vytvořit bezplatný účet"
-editorLabel = "PDF Editor"
+editorLabel = "Editor PDF"
 login = "Přihlásit se"
 manualToolsPromo = "Neomezené bezplatné ruční nástroje PDF"
-processorLabel = "PDF Processor"
+processorLabel = "Procesor PDF"
 processorTitle = "Vytvořte si účet a odemkněte to nejlepší ze Stirling"
-readerLabel = "PDF Reader"
+readerLabel = "Čtečka PDF"
 
 [payg.spendCapMeter]
 barAria = "Útrata vůči limitu"
@@ -7426,7 +7419,9 @@ groupedTitle = "Součást skupiny v tomto PDF: lze ji odstranit, ale ne přesuno
 
 [pdfTextEditor.sidebar]
 addImage = "Přidat obrázek"
+addTable = "Přidat tabulku"
 addText = "Přidat text"
+clickPageToAddTable = "Kliknutím na stránku přidáte tabulku"
 clickPageToAddText = "Klikněte na stránku pro přidání textu"
 document = "Dokument"
 group = "Seskupit"
@@ -7435,11 +7430,14 @@ groupingAutoHint = "Seskupuje stejně rozmístěné řádky do odstavců. Změna
 groupingLine = "Řádek"
 groupTooltip = "Sloučit vybrané úseky do jednoho odstavce ({{shortcut}})"
 groupTooltipDisabled = "Vyberte 2+ úseky ke sloučení"
+image = "Obrázek"
 noFile = "Není načten žádný soubor"
 noFileHint = "Vyberte PDF z panelu Soubory vlevo nebo ho sem pusťte. Editor ho automaticky otevře."
 opening = "Otevírání dokumentu..."
 paragraph = "Odstavec"
 rulers = "Pravítka a vodítka"
+table = "Tabulka"
+text = "Text"
 textBoxWidth = "Šířka nového textového pole"
 textGrouping = "Seskupování textu"
 ungroup = "Zrušit seskupení"
@@ -7460,6 +7458,24 @@ loadingProgress = "Průběh načítání"
 noDocument = "Není načten žádný dokument."
 pickPrompt = "Začněte úpravy výběrem PDF z panelu Soubory vlevo."
 renderingPreview = "Vykreslování náhledu"
+
+[pdfTextEditor.table]
+addColumn = "Přidat sloupec"
+addRow = "Přidat řádek"
+column = "Sl."
+deleteColumn = "Odstranit sloupec"
+deleteRow = "Odstranit řádek"
+done = "Hotovo"
+doneHint = "Přestat upravovat jako tabulku"
+edit = "Upravit"
+editHint = "Upravit jako tabulku – psát do buněk, přidávat nebo odebírat řádky a sloupce"
+move = "Přesunout"
+moveTable = "Přetažením přesunete celou tabulku"
+recognizedHint = "Rozpoznaná tabulka – kliknutím vyberete celý její text"
+resizeColumn = "Přetažením změníte velikost tohoto sloupce (Alt: sdílet s dalším)"
+resizeRow = "Přetažením změníte velikost tohoto řádku (Alt: sdílet s dalším)"
+resizeTable = "Přetažením změníte velikost celé tabulky"
+row = "Řádek"
 
 [pdfTextEditor.toolbar]
 addTextTooltip = "Přidat textové pole – poté klikněte na stránku"
@@ -7514,7 +7530,7 @@ unlockTooltip = "Odemknout výběr – znovu umožní úpravy"
 
 [pdfTextEditor.tooltip.alpha]
 text = "Tento alpha prohlížeč se stále vyvíjí – některá písma, barvy, efekty průhlednosti a detaily rozvržení se mohou mírně lišit. Před sdílením prosím zkontrolujte vygenerované PDF."
-title = "Alpha Viewer"
+title = "Prohlížeč Alpha"
 
 [pdfTextEditor.tooltip.header]
 title = "Omezení náhledu"
@@ -7771,7 +7787,7 @@ rowIdle = "{{label}} se spouští automaticky"
 rowRunning = "{{label}} právě běží"
 runsToday_one = "Dnes {{count}} spuštění"
 runsToday_other = "Dnes {{count}} spuštění"
-title = "PDF Processor"
+title = "PDF procesor"
 triggerExport = "Spouští se při exportu"
 triggerImport = "Spouští se při importu"
 
@@ -9512,7 +9528,7 @@ loading = "Načítání…"
 title = "Právní dokument"
 
 [portal.nav]
-agent-builder = "Agent Builder"
+agent-builder = "Tvůrce agentů"
 components = "Komponenty"
 docs = "Dokumentace"
 documents = "Dokumenty"
@@ -9844,7 +9860,7 @@ label = "Archivní profil"
 label = "Použít štítek citlivosti Microsoft Purview"
 
 [portal.policies.config.purview.fields]
-connection = "Purview tenant"
+connection = "Tenant Purview"
 labelId = "ID štítku"
 labelIdHelp = "GUID štítku z portálu Purview. Použití štítku zapíše jeho metadata do PDF; nedokáže jej zašifrovat, k tomu je potřeba klient Microsoft."
 labelName = "Název štítku (volitelné)"
@@ -9861,7 +9877,7 @@ standard = "Jako použitý automaticky"
 label = "Přečíst štítek Microsoft Purview"
 
 [portal.policies.config.purviewRead.fields]
-connection = "Purview tenant"
+connection = "Tenant Purview"
 connectionHelp = "Přečte štítek, který dokument již nese, aby na něj mohly navazující kroky reagovat."
 
 [portal.policies.config.retention]
@@ -10329,7 +10345,7 @@ posture_regulatedSub = "Každá kategorie — Compliance, Retention, Ingestion"
 qbr = "Čtvrtletní obchodní hodnocení"
 qbrSub = "Váš SE každý kvartál zkontroluje používání a roadmapu"
 region = "Stát / region"
-regionPlaceholder = "California"
+regionPlaceholder = "Kalifornie"
 running = "{{annual}} / rok · {{years}}leté {{tcv}}"
 s1Sub = "Váš tým a PDFs, které očekáváte zpracovat každý rok."
 s1Title = "Kolik toho budete zpracovávat?"
@@ -10464,7 +10480,7 @@ title = "Pro začátek propojte svůj účet"
 
 [portal.procurement.live]
 description = "Vaše předplatné je aktivní a licence byla vydána. Váš tým je zřízen a fakturace začala."
-eyebrow = "Live"
+eyebrow = "Živě"
 title = "Jste live na Stirling Enterprise"
 
 [portal.procurement.milestone]
@@ -10739,7 +10755,7 @@ description = "Přijímejte dokumenty podepsaným HTTP POST z libovolného exter
 label = "Webhook"
 
 [portal.sources.types.webhook.detail]
-deliveryUrl = "Delivery URL"
+deliveryUrl = "URL pro doručení"
 secretNote = "Podpisový tajný klíč se zobrazí jednou, při vytvoření webhook. Pro jeho obměnu zdroj znovu vytvořte."
 
 [portal.sources.types.webhook.reveal]
@@ -10749,7 +10765,7 @@ secret = "Podpisový tajný klíč"
 secretHelp = "Podepište nezpracované tělo každého doručení tímto klíčem (HMAC-SHA256) a odešlete jej jako hlavičku X-Stirling-Signature."
 secretWarning = "Zkopírujte podpisový tajný klíč nyní. Kvůli vaší bezpečnosti se zobrazí pouze jednou a později jej nelze získat."
 title = "Webhook vytvořen"
-url = "Delivery URL"
+url = "URL pro doručení"
 usage = "Odešlete každý dokument metodou POST jako nezpracované tělo požadavku na delivery URL s binárním typem obsahu (application/pdf nebo application/octet-stream). Odkazující zásady se při přijetí spustí automaticky."
 
 [portal.sources.wizard]
@@ -10950,7 +10966,7 @@ label = "Název poskytovatele"
 
 [provider.oauth2.generic.scopes]
 description = "OAuth2 scopes oddělené čárkami"
-label = "Scopes"
+label = "Rozsahy"
 
 [provider.oauth2.generic.useAsUsername]
 description = "Pole použité jako uživatelské jméno"
@@ -10969,7 +10985,7 @@ label = "Client Secret"
 
 [provider.oauth2.github.scopes]
 description = "OAuth2 scopes oddělené čárkami"
-label = "Scopes"
+label = "Rozsahy"
 
 [provider.oauth2.github.useAsUsername]
 description = "Pole použité jako uživatelské jméno (email, login, name)"
@@ -10988,7 +11004,7 @@ label = "Client Secret"
 
 [provider.oauth2.google.scopes]
 description = "OAuth2 scopes oddělené čárkami"
-label = "Scopes"
+label = "Rozsahy"
 
 [provider.oauth2.google.useAsUsername]
 description = "Pole použité jako uživatelské jméno (email, name, given_name, family_name)"
@@ -11011,7 +11027,7 @@ label = "URL vydavatele"
 
 [provider.oauth2.keycloak.scopes]
 description = "OAuth2 scopes oddělené čárkami"
-label = "Scopes"
+label = "Rozsahy"
 
 [provider.oauth2.keycloak.useAsUsername]
 description = "Pole použité jako uživatelské jméno (email, name, given_name, family_name, preferred_username)"
@@ -11905,7 +11921,7 @@ module = "Modul"
 version = "Verze"
 
 [settings.licensingAnalytics]
-audit = "Audit log"
+audit = "Auditní log"
 auditDescription = "Kdo na tomto serveru co udělal a jak dlouho se tento záznam uchovává."
 plan = "Plán"
 planDescription = "Vaše licence, místa a co aktuální plán odemyká."
@@ -12102,28 +12118,15 @@ description = "Zadejte úplnou URL vašeho samohostovaného serveru Stirling PDF
 label = "URL serveru"
 
 [sharedSign]
-backToSessions = "Zpět k relacím"
-createdOn = "Vytvořeno {{date}}"
 disabledBody = "Sdílené podepisování není na tomto serveru povoleno."
-disabledTitle = "Není povoleno"
-due = "Do {{date}}"
 filterDeclined = "Odmítnuto"
-filterMine = "Moje"
 filterOverdue = "Po termínu"
 filterSigned = "Podepsáno"
-fromOwner = "Od {{owner}}"
-newRequest = "Požádat o podpisy"
-signedCount = "{{signed}}/{{total}} podepsáno"
 signInRequiredBody = "Přihlaste se, abyste mohli požádat o podpisy a vidět požadavky odeslané vám."
 signInRequiredTitle = "Je vyžadováno přihlášení"
 
-[sharedSign.empty]
-active = "Žádné čekající žádosti o podpis ani aktivní relace"
-completed = "Žádné dokončené relace"
-
 [sharedSign.tab]
 active = "Aktivní"
-completed = "Dokončené"
 
 [showJS]
 done = "JavaScript byl extrahován"
@@ -12473,10 +12476,68 @@ bullet3 = "Neviditelné podpisy stále poskytují kryptografické ověření"
 description = "Určuje, zda je podpis na dokumentu viditelný, nebo je vložen neviditelně."
 title = "Viditelnost podpisu"
 
+[signingDetail]
+allSigned = "Všichni podepsali. Zkontrolujte dokument a poté jej dokončete."
+awaitingOwner = "Vlastník dokument dokončí, jakmile bude připraven."
+certificateNext = "V dalším kroku vyberte svůj certifikát."
+earlyHint = "Nyní můžete dokončit s již obdrženými podpisy, nebo počkat na zbývající účastníky."
+finalDocument = "Podepsaný dokument"
+finalizeTitle = "Dokončit dokument"
+finalReady = "Vaše podepsané PDF je připraveno k otevření na pracovní ploše."
+inProgressPreview = "Náhled rozpracovaného dokumentu s odeslanými podpisy. Vlastník tento dokument ještě nedokončil."
+manageSession = "Spravovat relaci podepisování"
+moveHint = "Vyberte podpis v dokumentu, chcete-li jej přesunout, změnit jeho velikost nebo odstranit."
+notified = "Upozorněno"
+optional = "Volitelné"
+ownerNext = "Vraťte se do své relace, zkontrolujte podpisy všech účastníků a dokument dokončete, až budete připraveni."
+placeHint = "Kliknutím do dokumentu umístěte svůj podpis."
+progress = "Průběh podpisů"
+readyToSign = "Připraveni podepsat?"
+refreshPreview = "Obnovit náhled"
+removePerson = "Odebrat {{name}}"
+requestClosed = "Tato žádost je uzavřena"
+requestTitle = "Žádost o podpis"
+signatureSubmitted = "Váš podpis byl odeslán"
+signedCount = "Podepsáno {{signed}} / {{total}}"
+signMyRequest = "Podepsat tento dokument"
+viewOnly = "Dokument si zde stále můžete prohlédnout."
+visibleSignature = "Viditelný podpis"
+visibleSignatureHelp = "O viditelných podpisech"
+
+[signMenu]
+anyOrder = "Účastníci mohou podepsat v libovolném pořadí. Vlastník dokument dokončí po kontrole shromážděných podpisů."
+certificateHint = "Použít certifikát"
+certificateTitle = "Digitální podpis"
+closedStatus = "Uzavřeno"
+completedTab = "Dokončené"
+dueDate = "Termín dokončení (volitelné)"
+newActivity = "Nová aktivita od vaší poslední návštěvy této relace"
+noActive = "Žádné aktivní relace"
+noCompleted = "Žádné dokončené relace"
+noMatches = "Žádné odpovídající relace"
+noUnread = "Vše máte vyřízeno"
+optionalMarks = "Viditelné značky jsou volitelné. Vyplnit a podepsat funguje i pouze s certifikátem."
+ownerProgress = "Vaše žádost · podepsáno {{signed}} / {{total}}"
+personalHint = "Nakreslit, napsat nebo nahrát"
+personalTitle = "Osobní podpis"
+request = "Vyžádat podpisy"
+search = "Najít dokument nebo osobu"
+send = "Odeslat žádost o podpis"
+sessionFilter = "Zobrazení relací"
+sessions = "Relace podepisování"
+settings = "Vzhled a souhrnná stránka (volitelné)"
+signFailed = "Podepisování se nezdařilo. Zkontrolujte svůj certifikát a zkuste to znovu; vaše umístěné značky zůstanou zachovány."
+submitted = "Odesláno · čeká na dokončení"
+title = "Podepsat"
+triggerUnreadCount_one = "Podepsat · {{count}} nepřečtená relace"
+triggerUnreadCount_other = "Podepsat · {{count}} nepřečtených relací"
+unreadTab = "Nepřečtené"
+
 [signRequest]
+accessExpired = "Váš přístup k této žádosti o podpis vypršel. Požádejte odesílatele o novou žádost."
 declined = "Požadavek na podpis byl odmítnut"
+expired = "Přístup vypršel"
 fetchFailed = "Nepodařilo se načíst požadavek na podpis"
-signed = "Dokument byl úspěšně podepsán"
 
 [signSession]
 created = "Požadavek na podpis odeslán"
@@ -12512,6 +12573,52 @@ title = "Vytvořit účet"
 unableToAccessTool = "Nelze získat přístup k nástroji: {{error}}"
 unexpectedError = "Neočekávaná chyba: {{message}}"
 unknownError = "Neznámá chyba"
+
+[signWorkspace]
+changeDocument = "Změnit PDF"
+chooseDocument = "Vyberte otevřené PDF"
+chooseFromLibrary = "Vybrat z knihovny"
+chooseParticipants = "Vyberte účastníky"
+choosePdf = "Vyberte PDF"
+choosePdfHeading = "Začněte svým dokumentem"
+clearDate = "Vymazat datum"
+created = "Vytvořeno"
+createdByMe = "Vytvořeno mnou"
+datesAndOptions = "Data a možnosti"
+document = "Dokument"
+dueDate = "Termín dokončení"
+dueDateHelp = "Toto je cílové datum. Účastníci mohou podepsat i po něm."
+dueDateHelpLabel = "O termínech dokončení"
+empty = "Zatím zde nejsou žádné relace."
+expand = "Rozbalit relace podepisování"
+inviteLoadError = "Nepodařilo se načíst možnosti pozvánky. Zavřete toto dialogové okno a zkuste to znovu."
+invitePerson = "Přidat člena týmu: {{name}}"
+inviteTeammate = "Přidat člena týmu"
+inviteUnavailable = "Přidávání členů týmu není pro váš účet nebo konfiguraci serveru dostupné."
+navigation = "Navigace podepisování"
+needsYou = "Vyžaduje váš podpis"
+nextMonth = "Příští měsíc"
+nextStep = "Další"
+noDueDate = "Bez termínu dokončení"
+noMatches = "Vašemu hledání nebo filtru neodpovídají žádné relace."
+noOpenPdfs = "Vyberte PDF z knihovny nebo přidejte některé ze svého počítače."
+noPeopleMatch = "Vašemu hledání neodpovídají žádné osoby."
+noPreview = "Náhled dokumentu není k dispozici"
+owner = "Vlastník"
+participants = "Účastníci"
+participantsSelected = "Vybráno {{count}}"
+personalHeading = "Podepsat dokument"
+previousMonth = "Předchozí měsíc"
+refresh = "Obnovit relace"
+requestSteps = "Kroky žádosti o podpis"
+search = "Hledat dokumenty nebo osoby"
+searchParticipants = "Hledat osoby nebo týmy"
+selectOnePdf = "Vyberte jeden PDF pro tuto žádost o podpis."
+signingOrderHelp = "O pořadí podepisování"
+status = "Stav"
+unavailable = "Tato relace již není dostupná. Obnovte seznam, abyste viděli své aktuální relace."
+upcoming = "Nadcházející"
+uploadFailed = "Tento PDF se nepodařilo otevřít. Zkuste to prosím znovu."
 
 [sizes]
 large = "Velké"
@@ -12589,9 +12696,9 @@ label = "Cílová velikost stránky"
 a3 = "A3 (297 × 420 mm)"
 a4 = "A4 (210 × 297 mm)"
 a5 = "A5 (148 × 210 mm)"
-legal = "Legal (8.5 × 14 in)"
-letter = "Letter (8.5 × 11 in)"
-tabloid = "Tabloid (11 × 17 in)"
+legal = "Legal (8,5 × 14 palců)"
+letter = "Letter (8,5 × 11 palců)"
+tabloid = "Tabloid (11 × 17 palců)"
 
 [split.poster.xFactor]
 description = "Počet sloupců, na které se každá stránka rozdělí"

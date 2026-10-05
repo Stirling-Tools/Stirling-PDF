@@ -1815,7 +1815,7 @@ label = "Paylaşma Linklərini Aktiv et"
 
 [admin.settings.storage.signing.enabled]
 description = "İstifadəçilərə çox iştirakçılı sənəd imzalama sessiyaları yaratmağa icazə verin. Server fayl saxlaması aktiv olmalıdır."
-label = "Qrup İmzalanmasını Aktiv et (Alfa)"
+title = "Qrup imzalamanı aktivləşdir"
 
 [admin.settings.telegram]
 description = "Telegram bot bağlantısını, giriş nəzarətlərini və geribildirim davranışını konfiqurasiya edin."
@@ -2744,7 +2744,6 @@ reason = "Səbəb"
 serverCertMessage = "Server sertifikatından istifadə olunur - fayl və ya parol tələb olunmur"
 showLogo = "Loqonu Göstər"
 signatureProgress = "{{signedCount}}/{{totalCount}} imza"
-signed = "İmzalanıb"
 tags = "autentifikasiya,PEM,P12,rəsmi,şifrələ,imzala,sertifikat,PKCS12,JKS,server,manual,avtomatik"
 title = "Sertifikatla İmzala"
 viewed = "Baxılıb"
@@ -2809,7 +2808,13 @@ reasonPlaceholder = "məs., Təsdiq, İcmal..."
 
 [certSign.collab.finalize]
 button = "Yekunlaşdır və İmzalanmış PDF-i Yüklə"
+confirmAction = "Təsdiqlə və yekunlaşdır"
+confirmDescription = "Yekunlaşdırma bu sessiyanı bağlayır. Daha imza göndərilə bilməz."
+confirmTitle = "Bu imzalama sessiyası yekunlaşdırılsın?"
 early = "Mövcud imzalarla yekunlaşdır"
+excluded = "İmzaları daxil edilməyəcək iştirakçılar"
+included = "Daxil edilmiş imzalar"
+requiresSignature = "Yekunlaşdırmaq üçün ən azı bir iştirakçı imzalamalıdır."
 
 [certSign.collab.participant]
 certInvalid = "✗ {{error}}"
@@ -2826,7 +2831,6 @@ includeSummaryPageHelp = "Sonda bütün imza metadata-sı ilə xülasə səhifə
 [certSign.collab.sessionDetail]
 addParticipants = "İştirakçı əlavə et"
 addParticipantsError = "İştirakçıları əlavə etmək mümkün olmadı"
-backToList = "Sessiyalara qayıt"
 deleteConfirm = "Əminsiniz? Bu əməliyyatı geri qaytarmaq olmaz."
 deleteError = "Sessiyanı silmək mümkün olmadı"
 deleteSession = "Sessiyanı sil"
@@ -2835,14 +2839,11 @@ finalizeError = "Sessiyanı yekunlaşdırmaq mümkün olmadı"
 loadPdfError = "İmzalanmış PDF-i yükləmək mümkün olmadı"
 loadSignedPdf = "İmzalanmış PDF-i Aktiv Fayllara Yüklə"
 messageLabel = "Mesaj"
-owner = "Sahib"
 participantRemoved = "İştirakçı silindi"
 participants = "İştirakçılar"
 participantsAdded = "İştirakçılar uğurla əlavə olundu"
-removeParticipant = "Sil"
 removeParticipantError = "İştirakçını silmək mümkün olmadı"
 selectUsers = "İstifadəçiləri seçin..."
-sessionInfo = "Sessiya məlumatı"
 
 [certSign.collab.sessionList]
 active = "Aktiv"
@@ -2855,11 +2856,10 @@ title = "İmzanın görünüşü"
 [certSign.collab.signRequest]
 addedToFiles = "Sənəd aktiv fayllara əlavə olundu"
 addToFiles = "Aktiv Fayllara Əlavə et"
-advancedSettings = "Ətraflı tənzimləmələr"
-backToList = "İmza Sorğularına qayıt"
 certificateChoice = "İmzalamaq üçün sertifikat seçin"
 changeSignature = "İmzanı dəyiş"
 clearSignature = "İmzanı sil"
+closed = "Bu sessiya yekunlaşdırılıb. Yekun sənədə baxa bilərsiniz, lakin əlavə imzalar və ya imtinalar qəbul edilmir."
 completeAndSign = "Tamamla və İmzala"
 createNewSignature = "Yeni İmza Yarat"
 decline = "Sorğudan imtina et"
@@ -2876,7 +2876,6 @@ invalidFileType = "Zəhmət olmasa şəkil faylı seçin"
 location = "Məkan (Seçim üzrə)"
 locationPlaceholder = "Haradan imzalayırsınız?"
 noCertificate = "Zəhmət olmasa sertifikat faylı seçin"
-noSignatures = "Zəhmət olmasa PDF üzərinə ən azı bir imza yerləşdirin"
 p12File = "P12/PFX Sertifikat Faylı"
 password = "Sertifikat şifrəsi"
 penColor = "Qələm rəngi"
@@ -2894,16 +2893,15 @@ signatureText = "İmza mətni"
 signatureTextPlaceholder = "Adınızı daxil edin..."
 signatureTypeLabel = "İmza növü"
 signButton = "Sənədi imzala"
-signingTitle = "İmzalama"
 textColor = "Mətn rəngi"
 typeSignature = "İmza yaratmaq üçün adınızı yazın"
-uploadCert = "Fərdi sertifikat"
-uploadCertDesc = "Öz P12/PFX sertifikatınızdan istifadə edin"
+uploadCert = "Sertifikat yüklə"
+uploadCertDesc = "Öz PKCS12, PFX, PEM və ya JKS sertifikatınızdan istifadə edin."
 uploadSignature = "İmzanızın şəklini yükləyin"
-usePersonalCert = "Şəxsi sertifikat"
-usePersonalCertDesc = "Hesabınız üçün avtomatik yaradılır"
-useServerCert = "Təşkilat sertifikatı"
-useServerCertDesc = "Paylaşılan təşkilat sertifikatı"
+usePersonalCert = "Stirling Sign · Şəxsi"
+usePersonalCertDesc = "Hesabınız üçün yaradılmış sertifikatla imzalayın."
+useServerCert = "Stirling Sign · Təşkilat"
+useServerCertDesc = "Bu serverin ortaq təşkilat sertifikatı ilə imzalayın."
 useSignature = "İmzadan istifadə et"
 
 [certSign.collab.signRequest.certModal]
@@ -2912,10 +2910,13 @@ certInvalidFallback = "Etibarsız sertifikat"
 certNetworkError = "Sertifikatı yoxlamaq mümkün olmadı"
 certValidating = "Sertifikat yoxlanılır..."
 certValidUntil = "Sertifikatın qüvvə müddəti {{date}} tarixədək"
-description_one = "{{count}} imza yerləşdirmisiniz. İmzalamanı tamamlamaq üçün sertifikatınızı seçin."
-description_other = "{{count}} imza yerləşdirmisiniz. İmzalamanı tamamlamaq üçün sertifikatınızı seçin."
+description_one = "{{count}} görünən işarə hazırdır. İmzalamanı tamamlamaq üçün sertifikat seçin."
+description_other = "{{count}} görünən işarə hazırdır. İmzalamanı tamamlamaq üçün sertifikat seçin."
+description_zero = "Sertifikatınız sənədi görünən işarələr olmadan imzalayacaq."
+details = "İmzalama təfərrüatları (istəyə bağlı)"
+format = "Sertifikat formatı"
 sign = "Sənədi imzala"
-title = "Sertifikatı tənzimlə"
+title = "Necə imzalamağı seçin"
 
 [certSign.collab.signRequest.mode]
 move = "İmzanı hərəkət etdir"
@@ -2968,11 +2969,11 @@ visible = "Görünən"
 yourSignatures = "İmzalarınız ({{count}})"
 
 [certSign.collab.userSelector]
-inviteUsers = "İstifadəçi əlavə et"
 loadError = "İstifadəçiləri yükləmək mümkün olmadı"
 noTeam = "Komanda yoxdur"
 noUsers = "Başqa istifadəçi tapılmadı."
 placeholder = "İstifadəçiləri seçin..."
+you = "{{name}} (Siz)"
 
 [certSign.device]
 stepTitle = "Bu cihaz"
@@ -3301,7 +3302,7 @@ academic-record = "Akademik qeyd"
 action-plan = "Fəaliyyət planı"
 addendum = "Əlavə"
 advertisement = "Reklam"
-affidavit = "Affidavit"
+affidavit = "Andlı ifadə"
 agenda = "Gündəlik"
 amendment = "Düzəliş"
 analytics-report = "Analitika hesabatı"
@@ -5450,9 +5451,6 @@ multimedia = "Multimedia"
 
 [groupSigning.steps]
 back = "Geri"
-completed = "Tamamlandı"
-current = "Cari"
-stepLabel = "Addım {{number}}"
 
 [groupSigning.steps.configureDefaults]
 continue = "Davam et"
@@ -5460,7 +5458,6 @@ invisible = "İmzalar görünməyəcək (yalnız metadata)"
 locationLabel = "Məkan:"
 preview = "Ön baxış"
 reasonLabel = "Səbəb:"
-title = "İmza tənzimləmələrini tənzimlə"
 visible = "İmzalar {{page}}-ci səhifədə görünəcək"
 
 [groupSigning.steps.review]
@@ -5472,14 +5469,13 @@ location = "Məkan:"
 logo = "Loqo:"
 logoHidden = "Loqo yoxdur"
 logoShown = "Stirling PDF loqosu göstərilir"
-participantCount_one = "{{count}} iştirakçı ardıcıllıqla imzalayacaq"
-participantCount_other = "{{count}} iştirakçı ardıcıllıqla imzalayacaq"
+participantCount_one = "{{count}} iştirakçı seçildi"
+participantCount_other = "{{count}} iştirakçı seçildi"
 participants = "İştirakçılar"
 reason = "Səbəb:"
 send = "İmzalama Sorğularını Göndər"
 signatureSettings = "İmza tənzimləmələri"
 title = "Sessiya Detalları İcmalı"
-titleShort = "İcmal və Göndər"
 visibility = "Görünürlük:"
 visible = "{{page}}-ci səhifədə görünən"
 
@@ -5487,7 +5483,6 @@ visible = "{{page}}-ci səhifədə görünən"
 continue = "Davam et"
 noFile = "İmzalama sessiyası yaratmaq üçün aktiv fayllarınızdan tək bir PDF faylı seçin."
 selectedFile = "Seçilmiş sənəd"
-title = "Sənədi seçin"
 
 [groupSigning.steps.selectParticipants]
 continue = "Davam et"
@@ -5495,31 +5490,30 @@ count_one = "{{count}} iştirakçı seçildi"
 count_other = "{{count}} iştirakçı seçildi"
 label = "İştirakçıları seçin"
 placeholder = "İştirakçıları imzalamaq üçün seçin..."
-title = "İştirakçıları seçin"
 
 [groupSigning.tooltip]
 header = "Qrup imzalanması haqqında"
 
 [groupSigning.tooltip.finalization]
-bullet1 = "Bütün imzalar göstərdiyiniz iştirakçı ardıcıllığına görə tətbiq olunur"
-bullet2 = "Lazım olsa qismən imzalarla yekunlaşdıra bilərsiniz"
-bullet3 = "Yekunlaşdırıldıqdan sonra sessiya dəyişdirilə bilməz"
-description = "Bütün iştirakçılar imzaladıqdan sonra (və ya erkən yekunlaşdırma seçsəniz) yekun imzalanmış PDF-i yarada bilərsiniz."
+bullet1 = "Yekun PDF bütün qəbul edilmiş imzaları ehtiva edir"
+bullet2 = "Qismən imzalarla yekunlaşdırmadan əvvəl gözləyən iştirakçıları nəzərdən keçirin"
+bullet3 = "Yekunlaşdırma sorğunu bağlayır; gözləyən iştirakçılar artıq imzalaya bilməz"
+description = "Ən azı bir iştirakçı imzaladıqdan sonra sahib sorğunu yekunlaşdıra və imzalanmış PDF yarada bilər."
 title = "Yekunlaşdırma Prosesi"
 
 [groupSigning.tooltip.roles]
 bullet1 = "Sahib (siz): Sessiya yaradır, imza standartlarını qurur, sənədi yekunlaşdırır"
-bullet2 = "İştirakçılar: Öz imzalarını yaradır, sertifikatı seçir, PDF üzərinə yerləşdirir"
-bullet3 = "İştirakçılar imzanın görünürlüyü, səbəb və məkan tənzimləmələrini dəyişə bilməz"
-description = "Bütün iştirakçılar üçün imza görünüşü tənzimləmələrinə siz nəzarət edirsiniz."
+bullet2 = "İştirakçılar: Sertifikat seçin və istəyə bağlı olaraq PDF-də görünən imza yerləşdirin"
+bullet3 = "İştirakçılar göndərməzdən əvvəl imza səbəbini və yerini tənzimləyə bilərlər"
+description = "Sahib sorğu üçün standartları təyin edir; hər iştirakçı öz sertifikatını və istəyə bağlı görünən işarəni seçir."
 title = "İştirakçı Rolları"
 
 [groupSigning.tooltip.sequential]
-bullet1 = "İkinci şəxs sənədə çıxmadan əvvəl birinci iştirakçı imzalamalıdır"
-bullet2 = "Hüquqi uyğunluq üçün düzgün imzalama sırasını təmin edir"
-bullet3 = "İştirakçıları siyahıda sürükləyərək sıralamanı dəyişə bilərsiniz"
-description = "İştirakçılar sənədləri sizin verdiyiniz ardıcıllıqla imzalayır. Növbəsi çatdıqda hər imzalayana bildiriş göndərilir."
-title = "Ardıcıllıqla İmzalama"
+bullet1 = "İştirakçıların başqa imzalayanı gözləməsinə ehtiyac yoxdur"
+bullet2 = "Signing Sessions bölməsində hər iştirakçının irəliləyişini izləyin"
+bullet3 = "Son tarix xatırlatmadır; giriş müddətini bitirmir"
+description = "Təyin edilmiş iştirakçılar istənilən ardıcıllıqla müstəqil şəkildə nəzərdən keçirə və imzalaya bilərlər."
+title = "İstənilən ardıcıllıqla imzalama"
 
 [guestBanner]
 dismiss = "Banneri bağla"
@@ -5652,7 +5646,7 @@ title = "Şəbəkəsiz quraşdırma"
 
 [home.devApi]
 desc = "API sənədləşməsinə keçid"
-tags = "API,development,documentation,developer,REST,integration,endpoints,programmatic,automation,scripting"
+tags = "API,inkişaf,sənədləşdirmə,tərtibatçı,REST,inteqrasiya,endpointlər,proqramatik,avtomatlaşdırma,skriptləşdirmə"
 title = "API"
 
 [home.devFolderScanning]
@@ -5662,7 +5656,7 @@ title = "Avtomatik qovluq skanı"
 
 [home.devSsoGuide]
 desc = "SSO təlimatına keçid"
-tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
+tags = "SSO,tək giriş,autentifikasiya,SAML,OAuth,OIDC,login,enterprise,identifikasiya provayderi,IdP"
 title = "SSO təlimatı"
 
 [home.editTableOfContents]
@@ -5828,7 +5822,6 @@ tags = "aşkar et,böl,fotolar,avtomatik aşkar et,fotoları aşkar et,fotoları
 title = "Skan şəkilləri tap və böl"
 
 [home.sharedSign]
-desc = "Başqalarından imza tələb edin və imzalama sessiyalarını izləyin"
 title = "Birgə imzalama"
 
 [home.showJS]
@@ -5855,7 +5848,7 @@ tags = "böl,bölmələr,ayır,bölmələrə görə böl,tor bölməsi,səhifəl
 title = "PDF-i bölmələrə görə böl"
 
 [home.swagger]
-tags = "API,documentation,test,swagger,API docs,REST API,endpoints,developer,API reference,API testing,OpenAPI,integration,developer docs"
+tags = "API,sənədləşdirmə,test,swagger,API docs,REST API,endpointlər,tərtibatçı,API istinadı,API testi,OpenAPI,inteqrasiya,tərtibatçı sənədləri"
 title = "API sənədləşməsi"
 
 [home.timestampPdf]
@@ -7426,7 +7419,9 @@ groupedTitle = "Bu PDF-də qrupun bir hissəsidir: silinə bilər, lakin köçü
 
 [pdfTextEditor.sidebar]
 addImage = "Şəkil əlavə et"
+addTable = "Cədvəl əlavə et"
 addText = "Mətn əlavə et"
+clickPageToAddTable = "Cədvəl əlavə etmək üçün səhifəyə klikləyin"
 clickPageToAddText = "Mətn əlavə etmək üçün səhifəyə klikləyin"
 document = "Sənəd"
 group = "Qruplaşdır"
@@ -7435,11 +7430,14 @@ groupingAutoHint = "Bərabər aralıqlı sətirləri abzaslarda qruplaşdırır.
 groupingLine = "Sətir"
 groupTooltip = "Seçilmiş fraqmentləri bir abzasda birləşdir ({{shortcut}})"
 groupTooltipDisabled = "Birləşdirmək üçün 2+ fraqment seçin"
+image = "Şəkil"
 noFile = "Fayl yüklənməyib"
 noFileHint = "Soldakı Files panelindən PDF seçin və ya buraya buraxın. Redaktor onu avtomatik açacaq."
 opening = "Sənəd açılır..."
 paragraph = "Abzas"
 rulers = "Xətkeşlər və bələdçilər"
+table = "Cədvəl"
+text = "Mətn"
 textBoxWidth = "Yeni mətn qutusunun eni"
 textGrouping = "Mətn qruplaşdırılması"
 ungroup = "Qrupdan çıxar"
@@ -7460,6 +7458,24 @@ loadingProgress = "Yükləmə gedişatı"
 noDocument = "Sənəd yüklənməyib."
 pickPrompt = "Redaktəyə başlamaq üçün soldakı Files panelindən PDF seçin."
 renderingPreview = "Önbaxış render edilir"
+
+[pdfTextEditor.table]
+addColumn = "Sütun əlavə et"
+addRow = "Sətir əlavə et"
+column = "Sütun"
+deleteColumn = "Sütunu sil"
+deleteRow = "Sətiri sil"
+done = "Hazırdır"
+doneHint = "Bunu cədvəl kimi redaktə etməyi dayandır"
+edit = "Redaktə et"
+editHint = "Cədvəl kimi redaktə et - xanalara yazın, sətir və sütun əlavə edin və ya silin"
+move = "Köçür"
+moveTable = "Bütün cədvəli köçürmək üçün sürükləyin"
+recognizedHint = "Tanınmış cədvəl - bütün mətnini seçmək üçün klikləyin"
+resizeColumn = "Bu sütunun ölçüsünü dəyişmək üçün sürükləyin (Alt: növbəti ilə paylaş)"
+resizeRow = "Bu sətirin ölçüsünü dəyişmək üçün sürükləyin (Alt: növbəti ilə paylaş)"
+resizeTable = "Bütün cədvəlin ölçüsünü dəyişmək üçün sürükləyin"
+row = "Sətir"
 
 [pdfTextEditor.toolbar]
 addTextTooltip = "Mətn qutusu əlavə et - sonra səhifəyə klikləyin"
@@ -7560,7 +7576,7 @@ title = "PDF-i PDF/A-ya"
 [pdfToPDFUA]
 header = "PDF To PDF/UA"
 tags = "əlçatanlıq,əlçatan,tagged,screen reader,wcag,eaa,section 508,çevirmə"
-title = "PDF To PDF/UA"
+title = "PDF-dən PDF/UA-ya"
 
 [pdfToPDFX]
 tags = "çap,standart,çevrilmə,istehsal,prepress,arxiv"
@@ -8543,7 +8559,7 @@ label = "İstifadəçi adı"
 [portal.connections.types.clamav]
 baseUrlPlaceholder = "http://clamav-rest:9000"
 description = "İşlətdiyiniz serverdə sənədləri zərərli proqramlara görə skan edin - heç nə şəbəkənizdən çıxmır."
-label = "ClamAV (self-hosted)"
+label = "ClamAV (öz serverində)"
 
 [portal.connections.types.cloudmersive]
 description = "Siyasətdə sənədlər üçün virus və məzmun skanı."
@@ -8665,7 +8681,7 @@ label = "Tətbiq şifrəsi"
 [portal.connections.types.presidio]
 baseUrlPlaceholder = "http://presidio-analyzer:3000"
 description = "İşlətdiyiniz Presidio serverindən istifadə edərək sənəd mətnində şəxsi məlumatları aşkar edin."
-label = "Presidio (self-hosted)"
+label = "Presidio (öz serverində)"
 
 [portal.connections.types.purview]
 description = "PDF-lərdə Microsoft Purview həssaslıq etiketlərini oxuyun və tətbiq edin."
@@ -8725,7 +8741,7 @@ helperText = "Əvəzində private key ilə autentifikasiya edirsinizsə boş bur
 
 [portal.connections.types.sftp.fields.privateKey]
 helperText = "İstəyə bağlı. Şifrə əvəzinə açarla autentifikasiya etmək üçün OpenSSH private key yapışdırın."
-label = "Private key"
+label = "Şəxsi açar"
 
 [portal.connections.types.slack]
 description = "Siyasət sənədi emal etdikdə Slack-ə mesaj göndərin."
@@ -8738,7 +8754,7 @@ label = "SMB / Şəbəkə paylaşımı"
 
 [portal.connections.types.smb.fields.domain]
 helperText = "İstəyə bağlı. Serveriniz istifadə edirsə Windows domain-i və ya iş qrupu."
-label = "Domain"
+label = "Domen"
 
 [portal.connections.types.smb.fields.share]
 label = "Paylaşım"
@@ -8843,7 +8859,7 @@ codeCaption = "200 OK"
 title = "Strukturlaşdırılmış nəticəni oxu"
 
 [portal.docs.rateLimits]
-burst = "Burst"
+burst = "Ani artım"
 codeCaption = "429 Too Many Requests"
 concurrency = "Paralellik"
 eyebrow = "BAŞLANĞIC"
@@ -9121,7 +9137,7 @@ done = "Hazır"
 guide = "{{name}} bələdçisini aç"
 openInBrowser = "Əvəzinə brauzerdə aç"
 sectionDesktop = "Desktop tətbiqi"
-sectionSelfHosted = "Self-hosted"
+sectionSelfHosted = "Öz serverində"
 title = "Stirling PDF Editor quraşdır"
 
 [portal.home.download.docker]
@@ -9512,7 +9528,7 @@ loading = "Yüklənir…"
 title = "Hüquqi sənəd"
 
 [portal.nav]
-agent-builder = "Agent Builder"
+agent-builder = "Agent qurucusu"
 components = "Komponentlər"
 docs = "Sənədləşmə"
 documents = "Sənədlər"
@@ -9954,13 +9970,13 @@ label = "Sənədi necə göndərmək"
 
 [portal.policies.operations.fields.bodyTemplate]
 helperText = "Olduğu kimi göndərilən JSON body. {{document.base64}} faylı daşıyır; {{document.*}} və {{run.*}} hər sənəd üçün doldurulur."
-label = "JSON body"
+label = "JSON gövdəsi"
 
 [portal.policies.operations.fields.connection]
 label = "Hesab"
 
 [portal.policies.operations.fields.domain]
-label = "Mailgun domain"
+label = "Mailgun domeni"
 placeholder = "mg.acme.com"
 
 [portal.policies.operations.fields.fileFieldName]
@@ -9974,7 +9990,7 @@ placeholder = "processor@acme.com"
 
 [portal.policies.operations.fields.headers]
 helperText = "Header adı/dəyəri cütlərindən ibarət JSON obyekt. Bağlantının credential-ı sizin üçün əlavə olunur."
-label = "Headers"
+label = "Başlıqlar"
 
 [portal.policies.operations.fields.index]
 label = "İndeks"
@@ -9997,7 +10013,7 @@ placeholder = "66186"
 
 [portal.policies.operations.fields.path]
 helperText = "Bağlantının əsas URL-nə əlavə olunur. Heç vaxt başqa host-a çata bilməz."
-label = "Path"
+label = "Yol"
 placeholder = "/v1/scan"
 
 [portal.policies.operations.fields.remotePath]
@@ -10370,7 +10386,7 @@ years_one = "{{count}} il"
 years_other = "{{count}} il"
 
 [portal.procurement.documents]
-agreement = "Enterprise Agreement"
+agreement = "Korporativ Müqavilə"
 agreementSub = "MSA, Order Form və DPA bir imzada."
 download = "Endir"
 eula = "EULA və Kommersiya Şərtləri"
@@ -10400,8 +10416,8 @@ ctaQuote = "Təklifinizi nəzərdən keçirin"
 ctaReviewQuote = "Təklifi nəzərdən keçir"
 ctaTrial = "Təklifinizi qurun"
 documents = "Sənədlər"
-eyebrow = "Enterprise"
-eyebrowCompany = "{{company}} Enterprise"
+eyebrow = "Korporativ"
+eyebrowCompany = "{{company}} Korporativ"
 inviteTeammates = "Komanda yoldaşlarını dəvət et"
 licenseKey = "Lisenziya açarı"
 liveSub = "Təşkilatınız təmin edilib və lisenziyanız aktivdir."
@@ -10459,7 +10475,7 @@ trialFileHint = "Bu, sınaq lisenziya faylınızdır. Razılaşmanız qüvvəyə
 [portal.procurement.link]
 cta = "Hesabı əlaqələndir"
 description = "Satınalma əlaqələndirilmiş Stirling hesabınızda işləyir: sınağı təmin etməyimiz, təklifinizi qiymətləndirməyimiz və hesablaşmanı başlatmağımız belə olur. Başlamaq üçün hesabı əlaqələndirin."
-eyebrow = "Enterprise"
+eyebrow = "Korporativ"
 title = "Başlamaq üçün hesabınızı əlaqələndirin"
 
 [portal.procurement.live]
@@ -10495,7 +10511,7 @@ subtitle = "Həllər mühəndisiniz komandanızı yayım boyunca yönləndirəc�
 title = "Zəng planlaşdır"
 
 [portal.procurement.setup]
-airgap = "Air-gapped"
+airgap = "Şəbəkədən təcrid edilmiş"
 airgapSub = "Bağlı, outbound yoxdur"
 back = "Geri"
 businessName = "Biznes adı"
@@ -10512,7 +10528,7 @@ invitesPlaceholder = "sam@acme.com, lee@acme.com"
 scheduleCall = "Zəng planlaşdır"
 seats = "Test edən insanlar"
 seatsPlaceholder = "məs. 15"
-selfhost = "Self-hosted"
+selfhost = "Öz serverində yerləşdirilən"
 selfhostSub = "Docker və ya Kubernetes"
 start = "Sınağa başla"
 stepOf = "Addım {{n}} / {{total}}"
@@ -10739,7 +10755,7 @@ description = "İstənilən xarici sistemdən imzalanmış HTTP POST ilə sənə
 label = "Webhook"
 
 [portal.sources.types.webhook.detail]
-deliveryUrl = "Delivery URL"
+deliveryUrl = "Çatdırılma URL-i"
 secretNote = "Signing secret webhook yaradıldıqda bir dəfə göstərilir. Onu dəyişmək üçün mənbəni yenidən yaradın."
 
 [portal.sources.types.webhook.reveal]
@@ -10749,7 +10765,7 @@ secret = "İmzalama sirri"
 secretHelp = "Hər delivery-nin raw body-sini bu açarla imzalayın (HMAC-SHA256) və X-Stirling-Signature header-i kimi göndərin."
 secretWarning = "Signing secret-i indi kopyalayın. Təhlükəsizliyiniz üçün o yalnız bir dəfə göstərilir və sonra əldə edilə bilməz."
 title = "Webhook yaradıldı"
-url = "Delivery URL"
+url = "Çatdırılma URL-i"
 usage = "Hər sənədi binary content type (application/pdf və ya application/octet-stream) ilə raw request body kimi delivery URL-ə POST edin. İstinad edən siyasətlər gəlişdə avtomatik işləyir."
 
 [portal.sources.wizard]
@@ -10898,11 +10914,11 @@ scope = "Fayl idxalı"
 
 [provider.googledrive.apiKey]
 description = "Google Cloud Console-dan Google Picker API üçün Google API Key"
-label = "API Key"
+label = "API açarı"
 
 [provider.googledrive.appId]
 description = "Google Cloud Console-dan Google Drive App ID"
-label = "App ID"
+label = "Tətbiq ID-si"
 
 [provider.googledrive.clientId]
 description = "Google Cloud Console-dan Google OAuth 2.0 Client ID"
@@ -10917,7 +10933,7 @@ notConfigured = "Google Drive konfiqurasiya edilməyib"
 pickerFailed = "Google Drive seçicisini açmaq alınmadı"
 
 [provider.oauth2.generic]
-name = "Generic OAuth2"
+name = "Ümumi OAuth2"
 scope = "SSO"
 
 [provider.oauth2.generic.autoCreateUser]
@@ -11035,7 +11051,7 @@ label = "SAML2-ni aktiv et"
 
 [provider.saml2.idpCert]
 description = "Sertifikat yolu (məs., classpath:okta.cert)"
-label = "IDP Certificate"
+label = "IDP Sertifikatı"
 
 [provider.saml2.idpIssuer]
 description = "Provayderinizin ID-si"
@@ -11055,7 +11071,7 @@ label = "IDP Single Logout URL"
 
 [provider.saml2.privateKey]
 description = "Şəxsi açar yolunuz"
-label = "Private Key"
+label = "Şəxsi açar"
 
 [provider.saml2.provider]
 description = "SAML2 provayderinizin adı"
@@ -11063,14 +11079,14 @@ label = "Provayderin adı"
 
 [provider.saml2.registrationId]
 description = "Service Provider (SP) tətbiqinizin adı"
-label = "Registration ID"
+label = "Qeydiyyat ID-si"
 
 [provider.saml2.spCert]
 description = "İmzalama sertifikatı yolunuz"
-label = "SP Certificate"
+label = "SP Sertifikatı"
 
 [provider.smtp]
-name = "SMTP Mail"
+name = "SMTP Poçtu"
 scope = "Email bildirişləri"
 
 [provider.smtp.enabled]
@@ -11087,15 +11103,15 @@ label = "SMTP Host"
 
 [provider.smtp.password]
 description = "SMTP autentifikasiyası üçün şifrə"
-label = "SMTP Password"
+label = "SMTP Şifrəsi"
 
 [provider.smtp.port]
 description = "SMTP bağlantısı üçün port nömrəsi (adətən 25, 465 və ya 587)"
-label = "SMTP Port"
+label = "SMTP Portu"
 
 [provider.smtp.username]
 description = "SMTP autentifikasiyası üçün istifadəçi adı"
-label = "SMTP Username"
+label = "SMTP İstifadəçi adı"
 
 [quickAccess]
 allTools = "Alətlər"
@@ -11676,7 +11692,7 @@ title = "Haqqında"
 
 [settings.ai]
 documents = "Sənədlər və RAG"
-general = "AI Engine"
+general = "AI Mühərriki"
 limits = "Limitlər və performans"
 models = "Modellər və təminatçılar"
 title = "AI"
@@ -12099,31 +12115,18 @@ title = "Giriş aktiv deyil"
 
 [setup.server.url]
 description = "Öz Stirling PDF serverinizin tam URL ünvanını daxil edin"
-label = "Server URL"
+label = "Server URL-i"
 
 [sharedSign]
-backToSessions = "Sessiyalara qayıt"
-createdOn = "Yaradılıb {{date}}"
 disabledBody = "Bu serverdə birgə imzalama aktiv deyil."
-disabledTitle = "Aktiv deyil"
-due = "Son tarix {{date}}"
 filterDeclined = "Rədd edilib"
-filterMine = "Mənim"
 filterOverdue = "Vaxtı keçib"
 filterSigned = "İmzalanıb"
-fromOwner = "{{owner}} tərəfindən"
-newRequest = "İmza tələb et"
-signedCount = "{{signed}}/{{total}} imzalanıb"
 signInRequiredBody = "İmzalar tələb etmək və sizə göndərilən sorğuları görmək üçün daxil olun."
 signInRequiredTitle = "Daxil olmaq tələb olunur"
 
-[sharedSign.empty]
-active = "Gözləyən imza tələbi və ya aktiv sessiya yoxdur"
-completed = "Tamamlanmış sessiya yoxdur"
-
 [sharedSign.tab]
 active = "Aktiv"
-completed = "Tamamlanmış"
 
 [showJS]
 done = "JavaScript çıxarıldı"
@@ -12473,10 +12476,68 @@ bullet3 = "Görünməz imzalar da kriptoqrafik təsdiq təmin edir"
 description = "İmzanın sənəddə görünən olub-olmadığını və ya gizli yerləşdirildiyini idarə edir."
 title = "İmzanın Görünürlüyü"
 
+[signingDetail]
+allSigned = "Hamı imzaladı. Sənədi nəzərdən keçirin, sonra yekunlaşdırın."
+awaitingOwner = "Sahib hazır olduqda sənədi yekunlaşdıracaq."
+certificateNext = "Növbəti addımda sertifikatınızı seçin."
+earlyHint = "Alınmış imzalarla indi yekunlaşdıra və ya qalan iştirakçıları gözləyə bilərsiniz."
+finalDocument = "İmzalanmış sənəd"
+finalizeTitle = "Sənədi yekunlaşdır"
+finalReady = "İmzalanmış PDF-iniz iş sahəsində açılmağa hazırdır."
+inProgressPreview = "Təqdim edilmiş imzalarla davam edən önizləmə. Sahibi bu sənədi hələ yekunlaşdırmayıb."
+manageSession = "İmzalama sessiyasını idarə et"
+moveHint = "İmzanı köçürmək, ölçüsünü dəyişmək və ya silmək üçün sənəddə imza seçin."
+notified = "Bildiriş göndərildi"
+optional = "İstəyə bağlı"
+ownerNext = "Hamının imzalarını nəzərdən keçirmək və hazır olduqda sənədi yekunlaşdırmaq üçün sessiyanıza qayıdın."
+placeHint = "İmzanızı yerləşdirmək üçün sənədə klikləyin."
+progress = "İmza prosesi"
+readyToSign = "İmzalamağa hazırsınız?"
+refreshPreview = "Önizləməni yenilə"
+removePerson = "{{name}} sil"
+requestClosed = "Bu sorğu bağlanıb"
+requestTitle = "İmza sorğusu"
+signatureSubmitted = "İmzanız təqdim edildi"
+signedCount = "{{signed}} / {{total}} imzalandı"
+signMyRequest = "Bu sənədi imzala"
+viewOnly = "Sənədi burada hələ də nəzərdən keçirə bilərsiniz."
+visibleSignature = "Görünən imza"
+visibleSignatureHelp = "Görünən imzalar haqqında"
+
+[signMenu]
+anyOrder = "İştirakçılar istənilən qaydada imzalaya bilərlər. Sahib toplanmış imzaları nəzərdən keçirdikdən sonra sənədi yekunlaşdırır."
+certificateHint = "Sertifikat istifadə et"
+certificateTitle = "Rəqəmsal imza"
+closedStatus = "Bağlanıb"
+completedTab = "Tamamlanıb"
+dueDate = "Son tarix (istəyə bağlı)"
+newActivity = "Bu sessiyaya son baxışınızdan sonra yeni fəaliyyət var"
+noActive = "Aktiv sessiya yoxdur"
+noCompleted = "Tamamlanmış sessiya yoxdur"
+noMatches = "Uyğun sessiya yoxdur"
+noUnread = "Hamısını oxumusunuz"
+optionalMarks = "Görünən işarələr istəyə bağlıdır. Tamamla və İmzala yalnız sertifikatla da işləyir."
+ownerProgress = "Sorğunuz · {{signed}} / {{total}} imzalandı"
+personalHint = "Çəkin, yazın və ya yükləyin"
+personalTitle = "Şəxsi imza"
+request = "İmzalar tələb et"
+search = "Sənəd və ya şəxs tap"
+send = "İmzalama sorğusu göndər"
+sessionFilter = "Sessiya görünüşləri"
+sessions = "İmzalama sessiyaları"
+settings = "Görünüş və xülasə səhifəsi (istəyə bağlı)"
+signFailed = "İmzalama uğursuz oldu. Sertifikatınızı yoxlayın və yenidən cəhd edin; yerləşdirdiyiniz işarələr saxlanılıb."
+submitted = "Təqdim edildi · yekunlaşdırma gözlənilir"
+title = "İmzala"
+triggerUnreadCount_one = "İmzala · {{count}} oxunmamış sessiya"
+triggerUnreadCount_other = "İmzala · {{count}} oxunmamış sessiya"
+unreadTab = "Oxunmamış"
+
 [signRequest]
+accessExpired = "Bu imzalama sorğusuna girişinizin müddəti bitib. Göndərəndən yeni sorğu istəyin."
 declined = "İmza sorğusundan imtina edildi"
+expired = "Girişin müddəti bitib"
 fetchFailed = "İmza sorğusunu yükləmək mümkün olmadı"
-signed = "Sənəd uğurla imzalandı"
 
 [signSession]
 created = "İmzalama sorğusu göndərildi"
@@ -12512,6 +12573,52 @@ title = "Hesab yaradın"
 unableToAccessTool = "Alətə daxil olmaq mümkün deyil: {{error}}"
 unexpectedError = "Gözlənilməz xəta: {{message}}"
 unknownError = "Naməlum xəta"
+
+[signWorkspace]
+changeDocument = "PDF-i dəyiş"
+chooseDocument = "Açıq PDF seçin"
+chooseFromLibrary = "Kitabxanadan seçin"
+chooseParticipants = "İştirakçıları seçin"
+choosePdf = "PDF seçin"
+choosePdfHeading = "Sənədinizlə başlayın"
+clearDate = "Tarixi təmizlə"
+created = "Yaradıldı"
+createdByMe = "Mənim tərəfimdən yaradılıb"
+datesAndOptions = "Tarixlər və seçimlər"
+document = "Sənəd"
+dueDate = "Son tarix"
+dueDateHelp = "Bu hədəf tarixdir. İştirakçılar ondan sonra da imzalaya bilərlər."
+dueDateHelpLabel = "Son tarixlər haqqında"
+empty = "Burada hələ sessiya yoxdur."
+expand = "İmzalama sessiyalarını genişləndir"
+inviteLoadError = "Dəvət seçimlərini yükləmək mümkün olmadı. Bu dialoqu bağlayın və yenidən cəhd edin."
+invitePerson = "Komanda yoldaşı əlavə edin: {{name}}"
+inviteTeammate = "Komanda yoldaşı əlavə edin"
+inviteUnavailable = "Komanda yoldaşları əlavə etmək hesabınız və ya server konfiqurasiyanız üçün əlçatan deyil."
+navigation = "İmzalama naviqasiyası"
+needsYou = "İmzanız tələb olunur"
+nextMonth = "Növbəti ay"
+nextStep = "Növbəti"
+noDueDate = "Son tarix yoxdur"
+noMatches = "Axtarışınıza və ya filtrinizə uyğun sessiya yoxdur."
+noOpenPdfs = "Kitabxananızdan bir PDF seçin və ya kompüterinizdən əlavə edin."
+noPeopleMatch = "Axtarışınıza uyğun şəxs yoxdur."
+noPreview = "Sənəd önizləməsi əlçatan deyil"
+owner = "Sahib"
+participants = "İştirakçılar"
+participantsSelected = "{{count}} seçildi"
+personalHeading = "Sənəd imzalayın"
+previousMonth = "Əvvəlki ay"
+refresh = "Sessiyaları yeniləyin"
+requestSteps = "İmzalama sorğusu addımları"
+search = "Sənədləri və ya şəxsləri axtarın"
+searchParticipants = "Şəxsləri və ya komandaları axtarın"
+selectOnePdf = "Bu imzalama sorğusu üçün bir PDF seçin."
+signingOrderHelp = "İmzalama ardıcıllığı haqqında"
+status = "Status"
+unavailable = "Bu sessiya artıq əlçatan deyil. Cari sessiyalarınızı görmək üçün siyahını yeniləyin."
+upcoming = "Qarşıdan gələn"
+uploadFailed = "Bu PDF-i açmaq mümkün olmadı. Zəhmət olmasa, yenidən cəhd edin."
 
 [sizes]
 large = "Böyük"
@@ -13097,7 +13204,7 @@ notes = "Qeydlər"
 releaseNotes = "Buraxılış qeydləri"
 showLess = "Daha az versiya göstər"
 showMore = "Bütün {{count}} versiyanı göstər"
-stable = "STABLE"
+stable = "STABİL"
 updateAvailable = "Yeniləmə mövcuddur"
 urgentUpdateAvailable = "Təcili yeniləmə"
 version = "Versiya"
@@ -13163,7 +13270,7 @@ totalEndpoints = "Cəmi Endpoint sayı"
 totalVisits = "Cəmi ziyarət sayı"
 
 [usage.table]
-endpoint = "Endpoint"
+endpoint = "Son nöqtə"
 noData = "Məlumat yoxdur"
 percentage = "Faiz"
 title = "Ətraflı statistika"

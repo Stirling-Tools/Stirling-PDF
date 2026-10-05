@@ -742,14 +742,14 @@ title = "เอกสารและ RAG"
 
 [admin.settings.ai.documents.embeddingApiKey]
 description = "เว้นว่างเพื่อใช้ข้อมูลรับรองสภาพแวดล้อมของ engine เอง ใช้กับการติดตั้งแบบ self-hosted single-engine"
-generic = "Embedding API key"
-openai = "OpenAI API key"
+generic = "คีย์ API สำหรับ Embedding"
+openai = "คีย์ API ของ OpenAI"
 setPlaceholder = "บันทึกแล้ว - เว้นว่างเพื่อคง key ปัจจุบันไว้"
-voyageai = "VoyageAI API key"
+voyageai = "คีย์ API ของ VoyageAI"
 
 [admin.settings.ai.documents.embeddingBaseUrl]
 description = "Base URL ของ endpoint embeddings ที่เข้ากันได้กับ OpenAI / Ollama เช่น http://ollama:11434/v1 ต้องชี้ไปยัง endpoint ภายในที่เชื่อถือได้ (ไวต่อ SSRF)"
-label = "Embedding base URL"
+label = "URL ฐานสำหรับ Embedding"
 
 [admin.settings.ai.documents.embeddingModel]
 description = "ชื่อโมเดล embedding ข้อความอิสระ; คำแนะนำเป็นเพียงแนวทางเท่านั้น"
@@ -778,7 +778,7 @@ label = "Top K"
 connection = "การเชื่อมต่อ"
 description = "เลือกตำแหน่งที่ AI ทำงาน การเปลี่ยนแปลงที่นี่จะมีผลเมื่อรีสตาร์ท"
 restartNote = "การเปลี่ยน URL หรือ timeout ใด ๆ จะมีผลหลังจากรีสตาร์ท"
-title = "AI Engine"
+title = "เอนจิน AI"
 
 [admin.settings.ai.general.capabilities]
 description = "เปิดหรือปิดฟีเจอร์ AI แต่ละรายการ ฟีเจอร์ที่ปิดจะถูกซ่อนในแอป"
@@ -869,7 +869,7 @@ label = "หมดเวลาคำขอ (วินาที)"
 
 [admin.settings.ai.general.url]
 description = "URL ภายในของ Python AI engine เช่น http://stirling-pdf-engine:5001"
-label = "AI engine URL"
+label = "URL เอนจิน AI"
 
 [admin.settings.ai.limits]
 description = "กรอบจำกัดปริมาณงานที่คำขอ AI สามารถทำได้และจำนวนที่ทำงานพร้อมกัน นำไปใช้กับ AI engine เมื่อบันทึก"
@@ -892,16 +892,16 @@ description = "เลือกผู้ให้บริการ LLM และ
 title = "โมเดลและผู้ให้บริการ"
 
 [admin.settings.ai.models.apiKey]
-anthropic = "Anthropic API key"
+anthropic = "คีย์ API ของ Anthropic"
 description = "เว้นว่างเพื่อใช้ข้อมูลรับรองสภาพแวดล้อมของ engine เอง ใช้กับการติดตั้งแบบ self-hosted single-engine"
-generic = "API key"
-openai = "OpenAI API key"
+generic = "คีย์ API"
+openai = "คีย์ API ของ OpenAI"
 setPlaceholder = "บันทึกแล้ว - เว้นว่างเพื่อคง key ปัจจุบันไว้"
 
 [admin.settings.ai.models.baseUrl]
 contextWindow = "ใช้ context window อย่างน้อย 16,384 tokens หน้าต่างที่เล็กกว่าจะตัดบางส่วนของ prompt ออกโดยไม่แจ้งเตือน ค่าเริ่มต้นของ Ollama คือ 4,096 - เพิ่ม OLLAMA_CONTEXT_LENGTH"
 description = "Base URL ของ endpoint ที่เข้ากันได้กับ OpenAI / Ollama เช่น http://ollama:11434/v1"
-label = "Provider base URL"
+label = "URL ฐานของผู้ให้บริการ"
 warning = "Base URL ต้องชี้ไปยัง endpoint ภายในที่เชื่อถือได้ engine จะส่งคำขอฝั่งเซิร์ฟเวอร์ไปยังค่านั้น ดังนั้นค่าที่ไม่น่าเชื่อถือจึงไวต่อ SSRF"
 
 [admin.settings.ai.models.fastMaxTokens]
@@ -946,7 +946,7 @@ secondsAgo = "{{count}} วินาทีที่แล้ว"
 secretLabel = "ความลับที่ใช้ร่วมกัน"
 smartModel = "โมเดลอัจฉริยะ"
 title = "สถานะ"
-url = "Engine URL"
+url = "URL เอนจิน"
 
 [admin.settings.ai.status.cloud]
 hostDown = "ล่ม"
@@ -1815,7 +1815,7 @@ label = "เปิดใช้งานลิงก์แชร์"
 
 [admin.settings.storage.signing.enabled]
 description = "อนุญาตให้ผู้ใช้สร้างเซสชันการลงนามเอกสารหลายผู้เข้าร่วม จำเป็นต้องเปิดใช้งานการจัดเก็บไฟล์บนเซิร์ฟเวอร์"
-label = "เปิดใช้งานการลงนามแบบกลุ่ม (อัลฟา)"
+title = "เปิดใช้งานการลงนามแบบกลุ่ม"
 
 [admin.settings.telegram]
 description = "กำหนดค่าการเชื่อมต่อบอต Telegram การควบคุมการเข้าถึง และพฤติกรรมข้อความตอบกลับ"
@@ -2352,7 +2352,7 @@ label = "เปิดเมนูสำหรับ {{title}}"
 cancel = "ยกเลิก"
 confirm = "นำเข้า"
 detectedAutomation = "Automate JSON"
-detectedFolderScan = "Folder Scanning JSON"
+detectedFolderScan = "JSON การสแกนโฟลเดอร์"
 dropHint = "วาง JSON ที่นี่ หรือคลิกเพื่อเลือกไฟล์"
 dropSubhint = "ยอมรับคอนฟิกทั้ง Automate และ Folder Scanning"
 dropzoneAriaLabel = "วางไฟล์ JSON การทำงานอัตโนมัติที่นี่"
@@ -2744,7 +2744,6 @@ reason = "เหตุผล"
 serverCertMessage = "กำลังใช้ใบรับรองของเซิร์ฟเวอร์ - ไม่ต้องใช้ไฟล์หรือรหัสผ่าน"
 showLogo = "แสดงโลโก้"
 signatureProgress = "{{signedCount}}/{{totalCount}} ลายเซ็น"
-signed = "ลงนามแล้ว"
 tags = "ยืนยันตัวตน,PEM,P12,ทางการ,เข้ารหัส,ลงนาม,ใบรับรอง,PKCS12,JKS,server,manual,auto"
 title = "การเซ็นชื่อด้วยใบรับรอง"
 viewed = "เปิดดูแล้ว"
@@ -2809,7 +2808,13 @@ reasonPlaceholder = "เช่น อนุมัติ, ตรวจทาน..
 
 [certSign.collab.finalize]
 button = "สรุปผลและโหลด PDF ที่ลงนามแล้ว"
+confirmAction = "ยืนยันและสรุปขั้นสุดท้าย"
+confirmDescription = "การสรุปขั้นสุดท้ายจะปิดเซสชันนี้ จะไม่สามารถส่งลายเซ็นเพิ่มเติมได้"
+confirmTitle = "สรุปเซสชันการลงนามนี้เป็นขั้นสุดท้ายหรือไม่?"
 early = "สรุปผลด้วยลายเซ็นปัจจุบัน"
+excluded = "ผู้เข้าร่วมที่ลายเซ็นจะไม่ถูกรวมไว้"
+included = "ลายเซ็นที่รวมไว้"
+requiresSignature = "ต้องมีผู้เข้าร่วมอย่างน้อยหนึ่งคนลงนามก่อนจึงจะสรุปขั้นสุดท้ายได้"
 
 [certSign.collab.participant]
 certInvalid = "✗ {{error}}"
@@ -2826,7 +2831,6 @@ includeSummaryPageHelp = "จะมีการเพิ่มหน้าสร
 [certSign.collab.sessionDetail]
 addParticipants = "เพิ่มผู้เข้าร่วม"
 addParticipantsError = "ไม่สามารถเพิ่มผู้เข้าร่วมได้"
-backToList = "ย้อนกลับไปยังเซสชัน"
 deleteConfirm = "แน่ใจหรือไม่? การดำเนินการนี้ไม่สามารถยกเลิกได้"
 deleteError = "ไม่สามารถลบเซสชันได้"
 deleteSession = "ลบเซสชัน"
@@ -2835,14 +2839,11 @@ finalizeError = "ไม่สามารถสรุปผลเซสชัน
 loadPdfError = "ไม่สามารถโหลด PDF ที่ลงนามแล้วได้"
 loadSignedPdf = "โหลด PDF ที่ลงนามแล้วไปยังไฟล์ที่ใช้งานอยู่"
 messageLabel = "ข้อความ"
-owner = "เจ้าของ"
 participantRemoved = "ลบผู้เข้าร่วมแล้ว"
 participants = "ผู้เข้าร่วม"
 participantsAdded = "เพิ่มผู้เข้าร่วมเรียบร้อยแล้ว"
-removeParticipant = "ลบ"
 removeParticipantError = "ไม่สามารถลบผู้เข้าร่วมได้"
 selectUsers = "เลือกผู้ใช้..."
-sessionInfo = "ข้อมูลเซสชัน"
 
 [certSign.collab.sessionList]
 active = "ใช้งานอยู่"
@@ -2855,11 +2856,10 @@ title = "ลักษณะลายเซ็น"
 [certSign.collab.signRequest]
 addedToFiles = "เพิ่มเอกสารไปยังไฟล์ที่ใช้งานอยู่แล้ว"
 addToFiles = "เพิ่มไปยังไฟล์ที่ใช้งานอยู่"
-advancedSettings = "การตั้งค่าขั้นสูง"
-backToList = "ย้อนกลับไปยังคำขอลงนาม"
 certificateChoice = "เลือกใบรับรองสำหรับการลงนาม"
 changeSignature = "เปลี่ยนลายเซ็น"
 clearSignature = "ล้างลายเซ็น"
+closed = "เซสชันนี้ถูกสรุปขั้นสุดท้ายแล้ว คุณสามารถดูเอกสารฉบับสุดท้ายได้ แต่ไม่สามารถลงลายเซ็นหรือปฏิเสธเพิ่มเติมได้"
 completeAndSign = "เสร็จสิ้นและลงนาม"
 createNewSignature = "สร้างลายเซ็นใหม่"
 decline = "ปฏิเสธคำขอ"
@@ -2876,7 +2876,6 @@ invalidFileType = "โปรดเลือกไฟล์รูปภาพ"
 location = "สถานที่ (ไม่บังคับ)"
 locationPlaceholder = "คุณกำลังลงนามจากที่ไหน?"
 noCertificate = "โปรดเลือกไฟล์ใบรับรอง"
-noSignatures = "โปรดวางลายเซ็นอย่างน้อยหนึ่งลายเซ็นบน PDF"
 p12File = "ไฟล์ใบรับรอง P12/PFX"
 password = "รหัสผ่านใบรับรอง"
 penColor = "สีปากกา"
@@ -2894,16 +2893,15 @@ signatureText = "ข้อความลายเซ็น"
 signatureTextPlaceholder = "กรอกชื่อของคุณ..."
 signatureTypeLabel = "ประเภทลายเซ็น"
 signButton = "ลงนามเอกสาร"
-signingTitle = "การลงนาม"
 textColor = "สีข้อความ"
 typeSignature = "พิมพ์ชื่อของคุณเพื่อสร้างลายเซ็น"
-uploadCert = "ใบรับรองกำหนดเอง"
-uploadCertDesc = "ใช้ใบรับรอง P12/PFX ของคุณเอง"
+uploadCert = "อัปโหลดใบรับรอง"
+uploadCertDesc = "ใช้ใบรับรอง PKCS12, PFX, PEM หรือ JKS ของคุณเอง"
 uploadSignature = "อัปโหลดรูปภาพลายเซ็นของคุณ"
-usePersonalCert = "ใบรับรองส่วนบุคคล"
-usePersonalCertDesc = "สร้างอัตโนมัติสำหรับบัญชีของคุณ"
-useServerCert = "ใบรับรองขององค์กร"
-useServerCertDesc = "ใบรับรองที่ใช้ร่วมกันขององค์กร"
+usePersonalCert = "Stirling Sign · ส่วนบุคคล"
+usePersonalCertDesc = "ลงนามด้วยใบรับรองที่สร้างสำหรับบัญชีของคุณ"
+useServerCert = "Stirling Sign · องค์กร"
+useServerCertDesc = "ลงนามด้วยใบรับรององค์กรที่ใช้ร่วมกันของเซิร์ฟเวอร์นี้"
 useSignature = "ใช้ลายเซ็น"
 
 [certSign.collab.signRequest.certModal]
@@ -2912,10 +2910,13 @@ certInvalidFallback = "ใบรับรองไม่ถูกต้อง"
 certNetworkError = "ไม่สามารถตรวจสอบความถูกต้องของใบรับรองได้"
 certValidating = "กำลังตรวจสอบความถูกต้องของใบรับรอง..."
 certValidUntil = "ใบรับรองใช้ได้จนถึง {{date}}"
-description_one = "คุณวางลายเซ็น {{count}} ตำแหน่งแล้ว เลือกใบรับรองของคุณเพื่อดำเนินการลงนามให้เสร็จ"
-description_other = "คุณวางลายเซ็น {{count}} ตำแหน่งแล้ว เลือกใบรับรองของคุณเพื่อดำเนินการลงนามให้เสร็จ"
+description_one = "เครื่องหมายที่มองเห็นได้ {{count}} รายการพร้อมแล้ว เลือกใบรับรองเพื่อเสร็จสิ้นการลงนาม"
+description_other = "เครื่องหมายที่มองเห็นได้ {{count}} รายการพร้อมแล้ว เลือกใบรับรองเพื่อเสร็จสิ้นการลงนาม"
+description_zero = "ใบรับรองของคุณจะลงนามในเอกสารโดยไม่มีเครื่องหมายที่มองเห็นได้"
+details = "รายละเอียดการลงนาม (ไม่บังคับ)"
+format = "รูปแบบใบรับรอง"
 sign = "ลงนามเอกสาร"
-title = "กำหนดค่าใบรับรอง"
+title = "เลือกวิธีลงนาม"
 
 [certSign.collab.signRequest.mode]
 move = "ย้ายลายเซ็น"
@@ -2968,11 +2969,11 @@ visible = "แสดง"
 yourSignatures = "ลายเซ็นของคุณ ({{count}})"
 
 [certSign.collab.userSelector]
-inviteUsers = "เพิ่มผู้ใช้"
 loadError = "ไม่สามารถโหลดผู้ใช้ได้"
 noTeam = "ไม่มีทีม"
 noUsers = "ไม่พบผู้ใช้อื่น"
 placeholder = "เลือกผู้ใช้..."
+you = "{{name}} (คุณ)"
 
 [certSign.device]
 stepTitle = "อุปกรณ์นี้"
@@ -3567,7 +3568,7 @@ work-instruction = "คำแนะนำการทำงาน"
 work-order = "ใบสั่งงาน"
 
 [classificationDemo]
-folderName = "Downloads"
+folderName = "ดาวน์โหลด"
 
 [classificationDemo.buttons]
 done = "เสร็จสิ้น"
@@ -3612,7 +3613,7 @@ counts = "ประมวลผล PDF แล้วจากทั้งหม�
 
 [classificationDemo.results]
 documentCount_one = "{{count}} PDF"
-documentCount_other = "{{count}} PDFs"
+documentCount_other = "{{count}} PDF"
 failedBody = "Stirling ไม่สามารถอ่านโฟลเดอร์ Downloads ของคุณได้ ไม่มีการเปลี่ยนแปลงใดๆ บนคอมพิวเตอร์ของคุณ"
 failedTitle = "การดำเนินการนั้นไม่เสร็จสิ้น"
 heading = "Downloads ของคุณ จัดเรียงแล้ว"
@@ -4081,7 +4082,7 @@ ebookToPdf = "eBook → PDF"
 emailOptions = "ตัวเลือก Email เป็น PDF"
 emlToPdf = "อีเมล → PDF"
 errorConversion = "เกิดข้อผิดพลาดระหว่างการแปลงไฟล์"
-fileToPdf = "Office/Document → PDF"
+fileToPdf = "Office/เอกสาร → PDF"
 fillPage = "เติมหน้า"
 fitDocumentToPage = "ปรับเอกสารให้พอดีกับหน้า"
 fitOption = "ตัวเลือกการปรับพอดี"
@@ -4125,7 +4126,7 @@ selectSourceFormatFirst = "เลือก format ต้นทางก่อน
 settings = "การตั้งค่า"
 single = "เดี่ยว"
 sourceFormatPlaceholder = "รูปแบบต้นทาง"
-strictMode = "Strict Mode"
+strictMode = "โหมดเข้มงวด"
 strictModeDesc = "เกิดข้อผิดพลาดหากการแปลงไม่สมบูรณ์แบบ (ใช้การตรวจสอบ VeraPDF)"
 svgPdfOptions = "ตัวเลือก SVG to PDF"
 svgToPdf = "SVG → PDF"
@@ -4167,7 +4168,7 @@ multipleFiles = "หลายไฟล์"
 presentation = "งานนำเสนอ"
 spreadsheet = "สเปรดชีต"
 text = "ข้อความ"
-web = "Web"
+web = "เว็บ"
 
 [convert.formatOptions]
 any = "ใดก็ได้"
@@ -5450,9 +5451,6 @@ multimedia = "มัลติมีเดีย"
 
 [groupSigning.steps]
 back = "ย้อนกลับ"
-completed = "เสร็จสมบูรณ์"
-current = "ปัจจุบัน"
-stepLabel = "ขั้นตอนที่ {{number}}"
 
 [groupSigning.steps.configureDefaults]
 continue = "ดำเนินการต่อ"
@@ -5460,7 +5458,6 @@ invisible = "ลายเซ็นจะไม่แสดง (เฉพาะ�
 locationLabel = "สถานที่:"
 preview = "แสดงตัวอย่าง"
 reasonLabel = "เหตุผล:"
-title = "กำหนดค่าการตั้งค่าลายเซ็น"
 visible = "ลายเซ็นจะแสดงบนหน้า {{page}}"
 
 [groupSigning.steps.review]
@@ -5472,14 +5469,13 @@ location = "สถานที่:"
 logo = "โลโก้:"
 logoHidden = "ไม่มีโลโก้"
 logoShown = "แสดงโลโก้ Stirling PDF"
-participantCount_one = "ผู้เข้าร่วม {{count}} คนจะลงนามตามลำดับ"
-participantCount_other = "ผู้เข้าร่วม {{count}} คนจะลงนามตามลำดับ"
+participantCount_one = "เลือกผู้เข้าร่วม {{count}} คนแล้ว"
+participantCount_other = "เลือกผู้เข้าร่วม {{count}} คนแล้ว"
 participants = "ผู้เข้าร่วม"
 reason = "เหตุผล:"
 send = "ส่งคำขอลงนาม"
 signatureSettings = "การตั้งค่าลายเซ็น"
 title = "ตรวจทานรายละเอียดเซสชัน"
-titleShort = "ตรวจทานและส่ง"
 visibility = "การแสดงผล:"
 visible = "แสดงบนหน้า {{page}}"
 
@@ -5487,7 +5483,6 @@ visible = "แสดงบนหน้า {{page}}"
 continue = "ดำเนินการต่อ"
 noFile = "โปรดเลือกไฟล์ PDF เดียวจากไฟล์ที่ใช้งานอยู่เพื่อสร้างเซสชันการลงนาม"
 selectedFile = "เอกสารที่เลือก"
-title = "เลือกเอกสาร"
 
 [groupSigning.steps.selectParticipants]
 continue = "ดำเนินการต่อ"
@@ -5495,31 +5490,30 @@ count_one = "เลือกผู้เข้าร่วมแล้ว {{coun
 count_other = "เลือกผู้เข้าร่วมแล้ว {{count}} คน"
 label = "เลือกผู้เข้าร่วม"
 placeholder = "เลือกผู้เข้าร่วมเพื่อลงนาม..."
-title = "เลือกผู้เข้าร่วม"
 
 [groupSigning.tooltip]
 header = "เกี่ยวกับการลงนามแบบกลุ่ม"
 
 [groupSigning.tooltip.finalization]
-bullet1 = "จะใช้ลายเซ็นทั้งหมดตามลำดับผู้เข้าร่วมที่คุณกำหนด"
-bullet2 = "คุณสามารถสรุปผลด้วยลายเซ็นบางส่วนได้หากจำเป็น"
-bullet3 = "เมื่อสรุปผลแล้วจะไม่สามารถแก้ไขเซสชันได้"
-description = "เมื่อผู้เข้าร่วมทั้งหมดลงนามแล้ว (หรือคุณเลือกสรุปผลล่วงหน้า) คุณสามารถสร้าง PDF ฉบับลงนามสุดท้ายได้"
+bullet1 = "PDF ฉบับสุดท้ายรวมลายเซ็นที่ยอมรับทั้งหมด"
+bullet2 = "ตรวจสอบผู้เข้าร่วมที่ยังค้างอยู่ก่อนสรุปขั้นสุดท้ายด้วยลายเซ็นบางส่วน"
+bullet3 = "การสรุปขั้นสุดท้ายจะปิดคำขอ ผู้เข้าร่วมที่ยังค้างอยู่จะไม่สามารถลงนามได้อีก"
+description = "หลังจากมีผู้เข้าร่วมอย่างน้อยหนึ่งคนลงนามแล้ว เจ้าของสามารถสรุปคำขอขั้นสุดท้ายและสร้าง PDF ที่ลงนามแล้วได้"
 title = "กระบวนการสรุปผล"
 
 [groupSigning.tooltip.roles]
 bullet1 = "เจ้าของ (คุณ): สร้างเซสชัน กำหนดค่าเริ่มต้นของลายเซ็น สรุปผลเอกสาร"
-bullet2 = "ผู้เข้าร่วม: สร้างลายเซ็น เลือกใบรับรอง วางบน PDF"
-bullet3 = "ผู้เข้าร่วมไม่สามารถแก้ไขการตั้งค่าการแสดงผล เหตุผล หรือสถานที่ของลายเซ็นได้"
-description = "คุณควบคุมการตั้งค่าลักษณะลายเซ็นสำหรับผู้เข้าร่วมทั้งหมด"
+bullet2 = "ผู้เข้าร่วม: เลือกใบรับรองและเลือกวางลายเซ็นที่มองเห็นได้บน PDF"
+bullet3 = "ผู้เข้าร่วมสามารถปรับเหตุผลและตำแหน่งลายเซ็นก่อนส่งได้"
+description = "เจ้าของตั้งค่าเริ่มต้นของคำขอ ผู้เข้าร่วมแต่ละคนเลือกใบรับรองและเครื่องหมายที่มองเห็นได้ตามต้องการ"
 title = "บทบาทของผู้เข้าร่วม"
 
 [groupSigning.tooltip.sequential]
-bullet1 = "ผู้เข้าร่วมคนแรกต้องลงนามก่อน คนที่สองจึงจะเข้าถึงเอกสารได้"
-bullet2 = "รับรองลำดับการลงนามที่ถูกต้องตามข้อกำหนดทางกฎหมาย"
-bullet3 = "คุณสามารถจัดเรียงลำดับผู้เข้าร่วมใหม่ได้โดยการลากในรายการ"
-description = "ผู้เข้าร่วมจะลงนามเอกสารตามลำดับที่คุณกำหนด ผู้ลงนามแต่ละคนจะได้รับการแจ้งเตือนเมื่อถึงคิว"
-title = "การลงนามตามลำดับ"
+bullet1 = "ผู้เข้าร่วมไม่จำเป็นต้องรอผู้ลงนามคนอื่น"
+bullet2 = "ติดตามความคืบหน้าของผู้เข้าร่วมแต่ละคนในเซสชันการลงนาม"
+bullet3 = "วันครบกำหนดเป็นการเตือนความจำ ไม่ได้ทำให้สิทธิ์เข้าถึงหมดอายุ"
+description = "ผู้เข้าร่วมที่ได้รับมอบหมายสามารถตรวจสอบและลงนามได้อย่างอิสระตามลำดับใดก็ได้"
+title = "การลงนามตามลำดับใดก็ได้"
 
 [guestBanner]
 dismiss = "ปิดแบนเนอร์"
@@ -5828,7 +5822,6 @@ tags = "ตรวจจับ,แยก,ภาพถ่าย,ตรวจจั
 title = "ตรวจจับและแยกรูปถ่ายที่สแกน"
 
 [home.sharedSign]
-desc = "ขอลายเซ็นจากผู้อื่นและติดตามเซสชันการลงนาม"
 title = "การลงนามร่วมกัน"
 
 [home.showJS]
@@ -6847,7 +6840,7 @@ startFailed = "ไม่สามารถเริ่ม checkout session ไ�
 backend = "Backend อยู่ใน mock mode; ไม่มีการสร้าง Stripe session จริง"
 continue = "ดำเนินการต่อด้วย mock subscription"
 noKey = "ไม่ได้ตั้งค่า VITE_STRIPE_PUBLISHABLE_KEY iframe จริงจะแสดงที่นี่เมื่อกำหนดค่าแล้ว"
-title = "Stripe Embedded Checkout (mock mode)"
+title = "Stripe Embedded Checkout (โหมดจำลอง)"
 
 [payg.confirm]
 bodyWithAllowance = "ตอนนี้ทีมของคุณสามารถเรียกใช้งาน automation, AI และ API ได้เกิน {{limit}} PDF ฟรีของคุณ"
@@ -6870,7 +6863,7 @@ title = "ไม่สามารถโหลดแผนของคุณไ�
 
 [payg.free.cta]
 benefit1Body = "เชื่อมเครื่องมือ ตั้งเวลารัน ประมวลผลแบบ batch"
-benefit1Title = "Automation pipelines"
+benefit1Title = "ไปป์ไลน์อัตโนมัติ"
 benefit2Body = "summarise, classify, redact, AI-OCR"
 benefit2Title = "เครื่องมือ AI"
 benefit3Body = "เรียก Stirling endpoint ใดก็ได้แบบ programmatic"
@@ -6905,7 +6898,7 @@ plentyLeft = "เหลืออีกมาก"
 
 [payg.gates]
 ai = "เครื่องมือ AI (AI Create, คำแนะนำ, AI-OCR)"
-automation = "Automations & pipelines"
+automation = "ระบบอัตโนมัติและไปป์ไลน์"
 client = "เครื่องมือเฉพาะเบราว์เซอร์ (viewer, ตัวแก้ไขหน้า, การจัดการไฟล์)"
 offsite = "เครื่องมือ Server (บีบอัด, OCR, แปลง, ลายน้ำ…)"
 pauses = "หยุดที่ cap"
@@ -6918,13 +6911,13 @@ freeLabel = "ฟรีเสมอ"
 freeTitle = "แก้ไข PDF ไม่จำกัด"
 meterBody = "เริ่มต้นด้วย PDFs ฟรี {{limit}} รายการ จากนั้นคิดเงินต่อ PDF จนถึง cap ของคุณ"
 meterLabel = "คิดตามการใช้งาน"
-meterTitle = "Automation · AI · API"
+meterTitle = "ระบบอัตโนมัติ · AI · API"
 
 [payg.member]
 askLeader = "มีเพียงเจ้าของทีมของคุณเท่านั้นที่เปลี่ยน cap ได้"
 
 [payg.members]
-docs = "PDFs"
+docs = "PDF"
 subtitle = "PDFs ที่เรียกเก็บเงินได้ซึ่งเพื่อนร่วมทีมแต่ละคนประมวลผลในช่วงเวลานี้"
 title = "การใช้งานของสมาชิกทีม"
 
@@ -6959,12 +6952,12 @@ aiPromo = "สร้าง แก้ไข และถามเกี่ยว�
 apiPromo = "เชื่อมต่อแอปและผู้ช่วย AI ของคุณ"
 automationPromo = "ทำงาน PDF ที่ซ้ำๆ ให้เป็นอัตโนมัติ"
 createAccount = "สร้างบัญชีฟรี"
-editorLabel = "PDF Editor"
+editorLabel = "ตัวแก้ไข PDF"
 login = "เข้าสู่ระบบ"
 manualToolsPromo = "เครื่องมือ PDF แบบใช้เองฟรีไม่จำกัด"
-processorLabel = "PDF Processor"
+processorLabel = "ตัวประมวลผล PDF"
 processorTitle = "สร้างบัญชีเพื่อปลดล็อกสิ่งที่ดีที่สุดของ Stirling"
-readerLabel = "PDF Reader"
+readerLabel = "ตัวอ่าน PDF"
 
 [payg.spendCapMeter]
 barAria = "การใช้จ่ายเทียบกับ cap"
@@ -7014,7 +7007,7 @@ aiTitle = "เครื่องมือ AI"
 apiBody = "การเข้าถึง endpoint ใดก็ได้ของ Stirling แบบ programmatic"
 apiTitle = "การเรียก API"
 automationBody = "เครื่องมือแบบ chain หรือการรันตามกำหนดเวลาที่ไม่ต้องคลิก"
-automationTitle = "Automation pipelines"
+automationTitle = "ไปป์ไลน์อัตโนมัติ"
 footnoteUnlimited = "เครื่องมือแบบใช้เอง (การดู การแก้ไข การผสาน การแยก การใส่ลายน้ำ การบีบอัด manual OCR) ใช้งานได้ฟรีเสมอ แม้หลังจากใช้เครดิตที่รวมไว้หมดแล้ว ความแตกต่างคือประเภทของงาน ไม่ใช่ตำแหน่งที่คุณคลิก"
 title = "สิ่งที่เรานับในการเรียกเก็บเงิน"
 
@@ -7031,7 +7024,7 @@ confirm = "คุณสมัครสมาชิกแล้ว"
 default = "อัปเกรดเป็นแผน Processor"
 
 [payg.usage]
-breakdown = "AI {{ai}} • Automation {{automation}} • API {{api}}"
+breakdown = "AI {{ai}} • ระบบอัตโนมัติ {{automation}} • API {{api}}"
 capLine = "cap {{cap}}/mo"
 estBill = "≈ {{amount}} จนถึงตอนนี้ในช่วงเวลานี้"
 firstFree = "{{free}} รายการแรกฟรี"
@@ -7201,7 +7194,7 @@ downloadTooltip = "บันทึกและดาวน์โหลด PDF �
 save = "บันทึก PDF"
 saveTooltip = "ใช้การเปลี่ยนแปลงกับไฟล์ในพื้นที่ทำงานของคุณ ({{shortcut}})"
 tags = "แก้ไขข้อความ,ปรับเปลี่ยนข้อความ,เปลี่ยนข้อความ,แก้ไขเนื้อหา,อัปเดตข้อความ,เขียนใหม่,แก้ไขให้ถูกต้อง,แก้ไขเพิ่มเติม,redline,ปรับปรุง,ตัวแก้ไขข้อความ,ตัวแก้ไขเนื้อหา"
-title = "PDF Text Editor"
+title = "ตัวแก้ไขข้อความ PDF"
 unsaved = "(ยังไม่ได้บันทึก)"
 workbenchLabel = "ตัวแก้ไข"
 
@@ -7426,7 +7419,9 @@ groupedTitle = "เป็นส่วนหนึ่งของกลุ่ม�
 
 [pdfTextEditor.sidebar]
 addImage = "เพิ่มรูปภาพ"
+addTable = "เพิ่มตาราง"
 addText = "เพิ่มข้อความ"
+clickPageToAddTable = "คลิกหน้าเพื่อเพิ่มตาราง"
 clickPageToAddText = "คลิกหน้าเพื่อเพิ่มข้อความ"
 document = "เอกสาร"
 group = "จัดกลุ่ม"
@@ -7435,11 +7430,14 @@ groupingAutoHint = "จัดกลุ่มบรรทัดที่มีร
 groupingLine = "บรรทัด"
 groupTooltip = "รวม runs ที่เลือกเป็นหนึ่งย่อหน้า ({{shortcut}})"
 groupTooltipDisabled = "เลือก 2+ runs เพื่อรวม"
+image = "รูปภาพ"
 noFile = "ไม่ได้โหลดไฟล์"
 noFileHint = "เลือก PDF จากแผงไฟล์ทางซ้าย หรือวางไฟล์เข้ามา ตัวแก้ไขจะเปิดไฟล์โดยอัตโนมัติ"
 opening = "กำลังเปิดเอกสาร..."
 paragraph = "ย่อหน้า"
 rulers = "ไม้บรรทัดและเส้นนำแนว"
+table = "ตาราง"
+text = "ข้อความ"
 textBoxWidth = "ความกว้างกล่องข้อความใหม่"
 textGrouping = "การจัดกลุ่มข้อความ"
 ungroup = "ยกเลิกการจัดกลุ่ม"
@@ -7461,6 +7459,24 @@ noDocument = "ไม่ได้โหลดเอกสาร"
 pickPrompt = "เลือก PDF จากแผงไฟล์ทางซ้ายเพื่อเริ่มแก้ไข"
 renderingPreview = "กำลังเรนเดอร์ตัวอย่าง"
 
+[pdfTextEditor.table]
+addColumn = "เพิ่มคอลัมน์"
+addRow = "เพิ่มแถว"
+column = "คอลัมน์"
+deleteColumn = "ลบคอลัมน์"
+deleteRow = "ลบแถว"
+done = "เสร็จสิ้น"
+doneHint = "หยุดแก้ไขรายการนี้เป็นตาราง"
+edit = "แก้ไข"
+editHint = "แก้ไขเป็นตาราง - พิมพ์ในเซลล์ เพิ่มหรือลบแถวและคอลัมน์"
+move = "ย้าย"
+moveTable = "ลากเพื่อย้ายทั้งตาราง"
+recognizedHint = "ตารางที่รู้จำแล้ว - คลิกเพื่อเลือกข้อความทั้งหมดในตาราง"
+resizeColumn = "ลากเพื่อปรับขนาดคอลัมน์นี้ (Alt: แบ่งร่วมกับคอลัมน์ถัดไป)"
+resizeRow = "ลากเพื่อปรับขนาดแถวนี้ (Alt: แบ่งร่วมกับแถวถัดไป)"
+resizeTable = "ลากเพื่อปรับขนาดทั้งตาราง"
+row = "แถว"
+
 [pdfTextEditor.toolbar]
 addTextTooltip = "เพิ่มกล่องข้อความ - จากนั้นคลิกหน้า"
 advancedColour = "สีขั้นสูง"
@@ -7477,7 +7493,7 @@ bringForward = "นำมาข้างหน้า"
 bringToFront = "นำมาไว้หน้าสุด"
 caseLower = "ตัวพิมพ์เล็ก"
 caseSentence = "รูปแบบประโยค"
-caseTitle = "Title Case"
+caseTitle = "ตัวพิมพ์ใหญ่แบบชื่อเรื่อง"
 caseUpper = "ตัวพิมพ์ใหญ่"
 changeCase = "เปลี่ยนตัวพิมพ์"
 changeCaseTooltip = "เปลี่ยนตัวพิมพ์ (เฉพาะ text runs)"
@@ -7558,9 +7574,9 @@ tags = "การจัดเก็บ, ระยะยาว, มาตรฐ�
 title = "PDF เป็น PDF/A"
 
 [pdfToPDFUA]
-header = "PDF To PDF/UA"
+header = "PDF เป็น PDF/UA"
 tags = "accessibility,เข้าถึงได้,tagged,screen reader,wcag,eaa,section 508,conversion"
-title = "PDF To PDF/UA"
+title = "PDF เป็น PDF/UA"
 
 [pdfToPDFX]
 tags = "พิมพ์,มาตรฐาน,แปลง,การผลิต,ก่อนพิมพ์,เก็บถาวร"
@@ -7753,7 +7769,7 @@ successMessage = "เปิดใช้งานไลเซนส์ของ�
 
 [plan.team]
 maxUsers = "100 ผู้ใช้"
-name = "Team"
+name = "ทีม"
 
 [policies.activity]
 outputsUnavailable = "ผลลัพธ์ของนโยบายไม่สามารถดาวน์โหลดได้อีกต่อไป"
@@ -7771,7 +7787,7 @@ rowIdle = "{{label}} ทำงานโดยอัตโนมัติ"
 rowRunning = "{{label}} กำลังทำงานอยู่ตอนนี้"
 runsToday_one = "วันนี้เรียกใช้ {{count}} ครั้ง"
 runsToday_other = "วันนี้เรียกใช้ {{count}} ครั้ง"
-title = "PDF Processor"
+title = "ตัวประมวลผล PDF"
 triggerExport = "ทำงานเมื่อส่งออก"
 triggerImport = "ทำงานเมื่อนำเข้า"
 
@@ -8114,7 +8130,7 @@ enterpriseUsers = "ไม่จำกัด"
 enterpriseWhere = "รวมถึงหลายโหนดและแยกจากเครือข่ายภายนอก"
 exploreEnterprise = "สำรวจ Enterprise"
 freeData = "คงอยู่ในที่ที่คุณเรียกใช้"
-freeName = "Free"
+freeName = "ฟรี"
 freePrice = "ไม่ต้องใช้บัตร ไม่มีวันหมดอายุ"
 freeProcessing = "{{allowance}} เครดิตต่อเดือน"
 freeProcessingUnknown = "โควตาเครดิตรายเดือน"
@@ -8134,7 +8150,7 @@ rowSupport = "การสนับสนุน"
 rowUsers = "ผู้ใช้"
 rowWhere = "ตำแหน่งที่ทำงาน"
 teamData = "Google Drive, ฐานข้อมูลของคุณเอง"
-teamName = "Team"
+teamName = "ทีม"
 teamPrice = "$99/เดือน ต่อผู้ใช้ 100 คน"
 teamProcessing = "{{allowance}} ต่อเดือน จากนั้นคิดตามการใช้งาน"
 teamProcessingUnknown = "โควตาที่มากขึ้น จากนั้นคิดตามการใช้งาน"
@@ -8179,14 +8195,14 @@ sub = "PDF Editor แบบเต็ม"
 [portal.billing.identity.processor]
 chipMetered = "การประมวลผลตามมิเตอร์"
 chipPipelines = "Pipeline และ API"
-name = "Processor"
+name = "ตัวประมวลผล"
 sub = "ฐาน Team บวก {{rate}} ต่อเครดิต"
 subNoRate = "ฐาน Team บวกการประมวลผลตามมิเตอร์"
 
 [portal.billing.identity.team]
 chipFleet = "การควบคุม Fleet"
 chipIncluded = "รวมเครดิต {{allowance}} ต่อเดือน"
-name = "Team"
+name = "ทีม"
 sub = "สูงสุด {{users}} ผู้ใช้"
 subNoLimit = "ไม่จำกัดผู้ใช้"
 
@@ -8298,7 +8314,7 @@ prepaidRemaining = "เครดิตแบบชำระล่วงหน้
 prepaidTooltip = "ใช้ก่อนการเรียกเก็บเงินตามมิเตอร์ และอยู่นอกวงเงินใช้จ่ายของคุณ"
 raiseLimit = "เพิ่มวงเงิน"
 remainingOf = "{{remaining}} จาก {{total}}"
-rowName = "Processor"
+rowName = "ตัวประมวลผล"
 spendAgainstLimit = "{{spend}} จาก {{cap}} ตามมิเตอร์ในรอบนี้"
 
 [portal.billing.seats]
@@ -8325,7 +8341,7 @@ enterprise = "Enterprise"
 enterpriseConnectBody = "ไลเซนส์ Enterprise ของคุณรวมการประมวลผลบนเซิร์ฟเวอร์นี้ การเชื่อมต่อบัญชีเป็นทางเลือก"
 included = "รวมอยู่ในไลเซนส์ของคุณ"
 seats = "{{seats}} seat ที่มีไลเซนส์"
-server = "Server"
+server = "เซิร์ฟเวอร์"
 unlimited = "ผู้ใช้ไม่จำกัด"
 
 [portal.billing.simple]
@@ -8394,7 +8410,7 @@ rowName = "ผู้ใช้"
 approval = "การอนุมัติ"
 check = "การตรวจสอบ"
 event = "เหตุการณ์"
-render = "render"
+render = "เรนเดอร์"
 review = "การรีวิว"
 session = "เซสชัน"
 signature = "ลายเซ็น"
@@ -8437,17 +8453,17 @@ label = "ไฟล์และแนบ"
 
 [portal.connections.commonFields.accessToken]
 helperText = "Stirling จัดเก็บข้อมูลนี้แบบเข้ารหัสและจะไม่แสดงอีก"
-label = "Access token"
+label = "โทเคนการเข้าถึง"
 
 [portal.connections.commonFields.apiKey]
-label = "API key"
+label = "คีย์ API"
 
 [portal.connections.commonFields.apiToken]
-label = "API token"
+label = "โทเคน API"
 
 [portal.connections.commonFields.baseUrl]
 helperText = "ขั้นตอนที่ใช้การเชื่อมต่อนี้สามารถเรียกได้เฉพาะ paths ภายใต้ URL นี้เท่านั้น ไม่ใช่ host อื่น"
-label = "Server URL"
+label = "URL เซิร์ฟเวอร์"
 
 [portal.connections.commonFields.email]
 label = "Email"
@@ -8487,7 +8503,7 @@ searchPlaceholder = "ค้นหา integrations - ลอง \"sign\", \"ocr\" 
 
 [portal.connections.types.api]
 description = "เรียก HTTP API ใดก็ได้จาก policy คุณเลือก URL, การยืนยันตัวตน และ payload"
-label = "Custom API"
+label = "API แบบกำหนดเอง"
 
 [portal.connections.types.api.fields.authType]
 label = "การยืนยันตัวตน"
@@ -8517,7 +8533,7 @@ label = "ชื่อ Header"
 placeholder = "X-API-Key"
 
 [portal.connections.types.api.fields.loginPath]
-label = "Login path"
+label = "เส้นทาง Login"
 placeholder = "/auth/login"
 
 [portal.connections.types.api.fields.password]
@@ -8535,7 +8551,7 @@ label = "ส่ง token เป็น header นี้"
 
 [portal.connections.types.api.fields.tokenResponseHeader]
 helperText = "Response header ที่การเรียกเข้าสู่ระบบส่งคืน token เช่น X-Auth-Token"
-label = "Token response header"
+label = "Header การตอบกลับของ Token"
 
 [portal.connections.types.api.fields.username]
 label = "ชื่อผู้ใช้"
@@ -8543,7 +8559,7 @@ label = "ชื่อผู้ใช้"
 [portal.connections.types.clamav]
 baseUrlPlaceholder = "http://clamav-rest:9000"
 description = "สแกนเอกสารเพื่อหามัลแวร์บนเซิร์ฟเวอร์ที่คุณเรียกใช้ - ไม่มีสิ่งใดออกจากเครือข่ายของคุณ"
-label = "ClamAV (self-hosted)"
+label = "ClamAV (โฮสต์เอง)"
 
 [portal.connections.types.cloudmersive]
 description = "การสแกนไวรัสและเนื้อหาสำหรับเอกสารใน policy"
@@ -8564,14 +8580,14 @@ label = "ConsignO Cloud"
 
 [portal.connections.types.consigno.fields.baseUrl]
 helperText = "สภาพแวดล้อม ConsignO Cloud ของคุณ รวมถึง /api/v1"
-label = "Server URL"
+label = "URL เซิร์ฟเวอร์"
 placeholder = "https://your-org.consignocloud.com/api/v1"
 
 [portal.connections.types.consigno.fields.clientId]
-label = "API key"
+label = "คีย์ API"
 
 [portal.connections.types.consigno.fields.clientSecret]
-label = "API secret"
+label = "ความลับ API"
 
 [portal.connections.types.consigno.fields.password]
 label = "รหัสผ่าน"
@@ -8635,7 +8651,7 @@ label = "n8n"
 
 [portal.connections.types.n8n.fields.authType]
 helperText = "ให้ตรงกับ Authentication ที่ตั้งไว้บน n8n Webhook node"
-label = "Webhook authentication"
+label = "การยืนยันตัวตน Webhook"
 
 [portal.connections.types.n8n.fields.authType.options.basic]
 label = "Basic auth"
@@ -8648,11 +8664,11 @@ label = "ไม่มี"
 
 [portal.connections.types.n8n.fields.headerName]
 helperText = "ชื่อ header จาก n8n credential ไม่ใช่ค่าของมัน"
-label = "Header name"
+label = "ชื่อ Header"
 placeholder = "X-N8N-Key"
 
 [portal.connections.types.n8n.fields.token]
-label = "Header value"
+label = "ค่า Header"
 
 [portal.connections.types.nextcloud]
 baseUrlPlaceholder = "https://your-server/remote.php/dav"
@@ -8660,12 +8676,12 @@ description = "จัดเก็บเอกสารที่ประมว�
 label = "Nextcloud"
 
 [portal.connections.types.nextcloud.fields.appPassword]
-label = "App password"
+label = "รหัสผ่านแอป"
 
 [portal.connections.types.presidio]
 baseUrlPlaceholder = "http://presidio-analyzer:3000"
 description = "ตรวจจับข้อมูลส่วนบุคคลในข้อความเอกสารโดยใช้ Presidio server ที่คุณเรียกใช้"
-label = "Presidio (self-hosted)"
+label = "Presidio (โฮสต์เอง)"
 
 [portal.connections.types.purview]
 description = "อ่านและใช้ Microsoft Purview sensitivity labels บน PDFs"
@@ -8718,7 +8734,7 @@ label = "Host key fingerprint"
 placeholder = "SHA256:..."
 
 [portal.connections.types.sftp.fields.passphrase]
-label = "Key passphrase"
+label = "รหัสผ่านคีย์"
 
 [portal.connections.types.sftp.fields.password]
 helperText = "เว้นว่างหากคุณยืนยันตัวตนด้วย private key แทน"
@@ -8796,7 +8812,7 @@ lead = "UI ที่ฝังได้สำหรับคิวรีวิว
 title = "Viewers แบบวางใช้งานได้ทันที"
 
 [portal.docs.endpoints]
-eyebrow = "API REFERENCE"
+eyebrow = "เอกสารอ้างอิง API"
 fieldCount_one = "{{count}} ฟิลด์"
 fieldCount_other = "{{count}} ฟิลด์"
 filterAll = "ทั้งหมด"
@@ -8806,7 +8822,7 @@ title = "Endpoints"
 
 [portal.docs.errors]
 codeCaption = "422 Unprocessable Entity"
-eyebrow = "API REFERENCE"
+eyebrow = "เอกสารอ้างอิง API"
 lead = "ข้อผิดพลาดส่งคืนโค้ดที่เครื่องอ่านได้แบบคงที่พร้อมข้อความสำหรับมนุษย์ เนื้อหา 4xx จะมี request_id สำหรับการสนับสนุนเสมอ"
 title = "ข้อผิดพลาด"
 
@@ -8845,7 +8861,7 @@ title = "อ่านผลลัพธ์แบบมีโครงสร้�
 [portal.docs.rateLimits]
 burst = "Burst"
 codeCaption = "429 Too Many Requests"
-concurrency = "Concurrency"
+concurrency = "การทำงานพร้อมกัน"
 eyebrow = "เริ่มต้นใช้งาน"
 lead = "ขีดจำกัดจะปรับตามแผนของคุณ การตอบกลับ 429 จะมี header Retry-After; SDKs จะ back off โดยอัตโนมัติ"
 requestsPerMinute = "คำขอ / นาที"
@@ -8853,21 +8869,21 @@ title = "ขีดจำกัดอัตราและโควต้า"
 
 [portal.docs.recipes]
 cloneButton = "โคลน recipe"
-eyebrow = "PLAYBOOKS"
+eyebrow = "Playbooks"
 lead = "รูปแบบครบวงจรที่เชื่อมโยงแหล่งที่มา การดำเนินการ และปลายทาง แต่ละรายการแมปกับ pipeline ที่คุณสามารถโคลนได้"
-title = "Recipes"
+title = "สูตรการใช้งาน"
 
 [portal.docs.sdks]
-eyebrow = "SDKS"
+eyebrow = "SDKs"
 lead = "ไคลเอนต์จากผู้ให้บริการโดยตรงพร้อมการตอบกลับแบบมีชนิด การลองใหม่อัตโนมัติ และการอัปโหลดแบบสตรีม ทั้งหมดติดตามแค็ตตาล็อก endpoint เดียวกัน"
 title = "SDKs อย่างเป็นทางการ"
 
 [portal.docs.sdks.status]
-beta = "Beta"
+beta = "เบต้า"
 deprecated = "เลิกใช้แล้ว"
 
 [portal.docs.skills]
-eyebrow = "SKILLS"
+eyebrow = "ทักษะ"
 lead = "ความสามารถที่รวมมาและตั้งชื่อไว้ ซึ่งเอเจนต์ของคุณเรียกใช้เป็นเครื่องมือเดียว แต่ละ skill เป็นสายการดำเนินการแบบกำหนดแน่นอนพร้อมการประเมินแนบอยู่"
 title = "ทักษะเอเจนต์"
 
@@ -8876,7 +8892,7 @@ title = "บนหน้านี้"
 
 [portal.docs.webhooks]
 codeCaption = "document.processed"
-eyebrow = "API REFERENCE"
+eyebrow = "เอกสารอ้างอิง API"
 lead = "สมัครรับ events document.processed, pipeline.completed และ quota.threshold Payloads จะถูกลงชื่อด้วย HMAC-SHA256"
 title = "Webhooks"
 
@@ -8960,7 +8976,7 @@ processed = "ประมวลผลแล้ว"
 
 [portal.documents.table]
 auto = "อัตโนมัติ"
-editorAction = "Editor"
+editorAction = "ตัวแก้ไข"
 empty = "ไม่มีเอกสารที่ตรงกับตัวกรองนี้"
 rowActions = "การดำเนินการของแถว"
 sensitiveLabel = "ละเอียดอ่อน"
@@ -8968,7 +8984,7 @@ sensitiveLabel = "ละเอียดอ่อน"
 [portal.documents.table.columns]
 action = "Pipeline / การดำเนินการ"
 document = "เอกสาร"
-labels = "Labels"
+labels = "ป้ายกำกับ"
 product = "ผลิตภัณฑ์"
 status = "สถานะ"
 time = "เวลา"
@@ -9108,7 +9124,7 @@ closed = "ปิดแล้ว"
 open = "เปิด"
 
 [portal.failures.source]
-editor = "Editor"
+editor = "ตัวแก้ไข"
 
 [portal.failures.unavailable]
 description = "คิวนี้มองเห็นได้สำหรับหัวหน้าทีมใน workspace ที่เรียกใช้นโยบาย"
@@ -9121,7 +9137,7 @@ done = "เสร็จสิ้น"
 guide = "เปิดคู่มือ {{name}}"
 openInBrowser = "เปิดในเบราว์เซอร์แทน"
 sectionDesktop = "แอป Desktop"
-sectionSelfHosted = "Self-hosted"
+sectionSelfHosted = "โฮสต์เอง"
 title = "ติดตั้ง Stirling PDF Editor"
 
 [portal.home.download.docker]
@@ -9170,7 +9186,7 @@ title = "Windows"
 
 [portal.home.editor]
 activeOfDeployed = "ใช้งานอยู่ {{active}} จาก {{total}} ใน 30 วันที่ผ่านมา"
-name = "PDF Editor"
+name = "ตัวแก้ไข PDF"
 open = "เปิดในเบราว์เซอร์"
 updated = "อัปเดตเมื่อ {{time}}"
 
@@ -9191,7 +9207,7 @@ morning = "สวัสดีตอนเช้า"
 
 [portal.infrastructure.apiKeys]
 createKey = "สร้างคีย์"
-heading = "API keys"
+heading = "คีย์ API"
 subheading = "ข้อมูลรับรองส่วนบุคคล โดยแต่ละรายการมีการติดตามการใช้งานของตัวเอง"
 
 [portal.infrastructure.apiKeys.card]
@@ -9216,7 +9232,7 @@ title = "เพิกถอน API key"
 
 [portal.infrastructure.audit]
 filterAriaLabel = "กรองเหตุการณ์ตรวจสอบตามหมวดหมู่"
-heading = "Audit logs"
+heading = "บันทึกการตรวจสอบ"
 latencyValue = "{{value}} ms"
 noEventsInCategory = "ไม่มีเหตุการณ์ในหมวดหมู่นี้"
 subheading = "ทุกเหตุการณ์การยืนยันตัวตน การกำหนดค่า และการประมวลผลใน workspace ของคุณ"
@@ -9227,7 +9243,7 @@ event = "เหตุการณ์"
 latency = "เวลาแฝง"
 status = "สถานะ"
 target = "ทรัพยากร"
-timestamp = "Timestamp"
+timestamp = "ประทับเวลา"
 
 [portal.infrastructure.audit.empty]
 description = "กิจกรรมใน workspace จะแสดงที่นี่เมื่อเกิดขึ้น"
@@ -9247,7 +9263,7 @@ title = "ส่งออก audit log"
 [portal.infrastructure.audit.export.fields]
 date = "วันที่"
 documentName = "ชื่อเอกสาร"
-ipAddress = "IP address"
+ipAddress = "ที่อยู่ IP"
 outcome = "ผลลัพธ์"
 tool = "เครื่องมือ"
 username = "ชื่อผู้ใช้"
@@ -9291,7 +9307,7 @@ createKey = "สร้างคีย์"
 done = "เสร็จสิ้น"
 keyNameLabel = "ชื่อคีย์"
 keyNamePlaceholder = "เช่น Production ingest"
-secretKeyCaption = "Secret key"
+secretKeyCaption = "คีย์ลับ"
 secretWarning = "เก็บสิ่งนี้ไว้ใน secrets manager Stirling จะเก็บเฉพาะ hash เท่านั้น จึงไม่สามารถกู้คืนได้ในภายหลัง"
 subtitle = "ตั้งชื่อ key เพื่อให้คุณจำได้ในภายหลัง คุณสามารถเพิกถอนได้ทุกเมื่อ"
 subtitleCreated = "คัดลอก secret นี้ตอนนี้ — จะไม่แสดงอีกครั้ง"
@@ -9343,7 +9359,7 @@ subheading = "หนึ่งคีย์ต่อหนึ่ง scope กา�
 [portal.infrastructure.encryption.keys.columns]
 actions = "การดำเนินการ"
 lastChange = "การเปลี่ยนแปลงล่าสุด"
-scope = "Scope"
+scope = "ขอบเขต"
 status = "สถานะ"
 
 [portal.infrastructure.encryption.keys.empty]
@@ -9351,14 +9367,14 @@ description = "คีย์จะถูกสร้างเมื่อมี�
 title = "ยังไม่มีคีย์"
 
 [portal.infrastructure.encryption.masterKey]
-backend = "Storage backend"
+backend = "แบ็กเอนด์พื้นที่จัดเก็บ"
 compareNote = "เปรียบเทียบสิ่งนี้กับ fingerprint ในข้อมูลสำรองคีย์ของคุณและใน startup log"
 copied = "คัดลอกแล้ว"
 copy = "คัดลอก"
 copyFailed = "เบราว์เซอร์นี้ไม่อนุญาตให้คัดลอก เลือก fingerprint ไว้แล้ว โปรดคัดลอกด้วยตนเอง"
-fingerprint = "Fingerprint"
+fingerprint = "ลายนิ้วมือ"
 fingerprintHelp = "fingerprint นี้ใช้ทำอะไร"
-heading = "Master key"
+heading = "คีย์หลัก"
 notMaterialised = "กลไกคีย์ยังไม่ได้เริ่มบน node นี้"
 s3StreamingNote = "ขณะที่มีสิ่งใดถูกเข้ารหัส การดาวน์โหลดจาก object-store จะถูก stream ผ่านเซิร์ฟเวอร์นี้แทนการ redirect จึงใช้ bandwidth ของเซิร์ฟเวอร์นี้"
 subheading = "Wrap คีย์ทุก scope ไม่เคยแสดงหรือรับผ่าน API"
@@ -9477,12 +9493,12 @@ connectionCount_other = "การเชื่อมต่อ {{count}} รา�
 customApi = "API แบบกำหนดเอง"
 searchPlaceholder = "ค้นหา Integrations"
 subtitle = "ทุกอย่างที่ Stirling สามารถสื่อสารด้วยได้ ข้อมูลประจำตัวจะถูกสร้างที่นี่ครั้งเดียว แล้วอ้างอิงโดยแหล่งที่มา นโยบาย และไปป์ไลน์"
-title = "Integrations"
+title = "การผสานการทำงาน"
 typedName = "ชื่อ {{tool}}"
 
 [portal.integrations.filters]
 all = "ทั้งหมด"
-audit = "Audit"
+audit = "การตรวจสอบ"
 connected = "เชื่อมต่อแล้ว"
 notify = "แจ้งเตือน"
 security = "ความปลอดภัย"
@@ -9497,7 +9513,7 @@ title = "ไม่พบรายการที่ตรงกัน"
 connected = "เชื่อมต่อแล้ว"
 
 [portal.integrations.table]
-integration = "Integration"
+integration = "การผสานการทำงาน"
 worksWith = "ใช้งานร่วมกับ"
 
 [portal.integrations.worksWith]
@@ -9512,14 +9528,14 @@ loading = "กำลังโหลด…"
 title = "เอกสารทางกฎหมาย"
 
 [portal.nav]
-agent-builder = "Agent Builder"
-components = "Components"
-docs = "Documentation"
+agent-builder = "ตัวสร้าง Agent"
+components = "คอมโพเนนต์"
+docs = "เอกสาร"
 documents = "เอกสาร"
-editor = "Editor"
+editor = "ตัวแก้ไข"
 home = "หน้าแรก"
 infrastructure = "โครงสร้างพื้นฐาน"
-integrations = "Integrations"
+integrations = "การผสานการทำงาน"
 pipelines = "Pipelines"
 policies = "นโยบาย"
 procurement = "การจัดซื้อ"
@@ -9553,7 +9569,7 @@ chooseDestination = "เลือกปลายทาง"
 chooseOperation = "เลือกสิ่งที่ขั้นตอนนี้ทำ"
 chooseSource = "เลือกแหล่งที่มา"
 discard = "ละทิ้งการเปลี่ยนแปลง"
-editorDestination = "Editor"
+editorDestination = "ตัวแก้ไข"
 editorDestinationDetail = "แทนที่ไฟล์ที่คุณเรียกใช้งาน"
 inputs = "อินพุต"
 inputSource = "แหล่งที่มาของอินพุต"
@@ -9621,7 +9637,7 @@ includeOriginalHint = "ส่ง PDF ไปพร้อมกับข้อค�
 index = "จัดทำดัชนีเข้าสู่ knowledge base"
 indexHint = "ฝังเอกสารเพื่อให้ค้นหาและถามเกี่ยวกับเอกสารได้ ต้องใช้ AI engine"
 nothingToDo = "เปิดอย่างน้อยหนึ่งอย่างระหว่างการจัดทำดัชนีหรือการส่งออก มิฉะนั้นขั้นตอนนี้จะไม่มีอะไรทำและการทำงานจะล้มเหลว"
-overlap = "Overlap"
+overlap = "การซ้อนทับ"
 overlapHint = "อักขระที่ซ้ำกันระหว่าง chunk ข้างเคียง เพื่อให้ประโยคที่ถูกแบ่งข้ามสอง chunk ยังคงค้นหาได้"
 overlapTooBig = "Overlap ต้องเล็กกว่าขนาด chunk ({{chunkSize}})"
 prepareDestination = "เตรียม chunk สำหรับปลายทางนี้"
@@ -9634,7 +9650,7 @@ aiToolDisabled = "ไม่พร้อมใช้งานจนกว่า�
 aiUnavailable = "การ routing ตามประเภทเอกสารถูกปิดใช้งานเนื่องจากการจำแนกประเภทด้วย AI ไม่พร้อมใช้งาน ให้ route ตามคุณสมบัติเอกสารแทน"
 extensionPlaceholder = "pdf, docx, png"
 fallback = "อย่างอื่นทั้งหมดไปที่"
-heading = "Routes"
+heading = "เส้นทาง"
 matchAuthor = "ผู้เขียน PDF"
 matchBy = "จับคู่ตาม"
 matchDocumentType = "ประเภทเอกสาร (การจำแนกประเภทด้วย AI)"
@@ -9681,7 +9697,7 @@ minutes = "นาที"
 
 [portal.pipelines.definition]
 subtitle = "Pipeline ตามที่จะถูกบันทึก"
-title = "Definition"
+title = "ข้อกำหนด"
 
 [portal.pipelines.delete]
 body = "ลบ \"{{name}}\" หรือไม่? การดำเนินการนี้ย้อนกลับไม่ได้"
@@ -9770,7 +9786,7 @@ title = "Template"
 editor-export = "ทุกการส่งออก"
 editor-upload = "ทุกการอัปโหลด"
 folder-watch = "เฝ้าดูโฟลเดอร์"
-manual = "Manual"
+manual = "ด้วยตนเอง"
 schedule = "ตามกำหนดเวลา"
 storage-folder-watch = "ไฟล์ใหม่ในโฟลเดอร์ storage"
 
@@ -9803,7 +9819,7 @@ label = "การเก็บรักษา"
 
 [portal.policies.categories.routing]
 desc = "Route เอกสารอัตโนมัติไปยังทีม โฟลเดอร์ หรือระบบที่ถูกต้อง"
-label = "Routing"
+label = "การกำหนดเส้นทาง"
 
 [portal.policies.categories.security]
 desc = "ตรวจจับ PII, redact, ลบ active content และใส่ลายน้ำเอกสาร"
@@ -9844,7 +9860,7 @@ label = "โปรไฟล์ archive"
 label = "ใช้ป้ายกำกับความละเอียดอ่อนของ Microsoft Purview"
 
 [portal.policies.config.purview.fields]
-connection = "Purview tenant"
+connection = "ผู้เช่า Purview"
 labelId = "Label ID"
 labelIdHelp = "GUID ของป้ายกำกับจาก Purview portal การใช้ป้ายกำกับจะเขียน metadata ลงใน PDF; ไม่สามารถเข้ารหัสได้ ซึ่งต้องใช้ Microsoft client"
 labelName = "ชื่อป้ายกำกับ (ไม่บังคับ)"
@@ -9861,7 +9877,7 @@ standard = "ตามที่ใช้โดยอัตโนมัติ"
 label = "อ่านป้ายกำกับ Microsoft Purview"
 
 [portal.policies.config.purviewRead.fields]
-connection = "Purview tenant"
+connection = "ผู้เช่า Purview"
 connectionHelp = "อ่านป้ายกำกับที่เอกสารมีอยู่แล้ว เพื่อให้ขั้นตอนถัดไปดำเนินการกับป้ายกำกับนั้นได้"
 
 [portal.policies.config.retention]
@@ -10189,7 +10205,7 @@ invalidChunks = "เลือกขนาด chunk ตั้งแต่ 64 ถ�
 keepOriginal = "เก็บต้นฉบับและส่งไปยังปลายทาง"
 keepOriginalHelp = "สำเนาจะทำงานในพื้นหลัง ไฟล์ใน editor ของคุณจะไม่เปลี่ยนแปลง ผลลัพธ์จะถูกบันทึกไปยังปลายทางด้านล่าง"
 noDatabase = "ยังไม่ได้ตั้งค่าปลายทางฐานข้อมูลเวกเตอร์ เชื่อมต่อแหล่งที่มาด้านล่าง แล้วเลือกหรือสร้างการเชื่อมต่อฐานข้อมูลและ collection"
-output = "Output"
+output = "เอาต์พุต"
 outputType = "ประเภท Output"
 recheck = "ตรวจสอบอีกครั้ง"
 retained = "แหล่งที่มานี้ไม่ลบ input หลังประมวลผล เลือกปลายทางแยกต่างหากเพื่อเก็บไฟล์ต้นฉบับไว้โดยไม่เปลี่ยนแปลง"
@@ -10271,7 +10287,7 @@ title = "การจัดซื้อ"
 agreeCta = "ลงนามข้อตกลง"
 confidential = "ลับ"
 confirm = "ฉันได้อ่านและยอมรับข้อตกลงนี้แล้ว และฉันรับรองว่าฉันได้รับอนุญาตให้ลงนามในนามขององค์กรที่ระบุไว้ข้างต้น"
-docName = "Stirling Enterprise Agreement"
+docName = "ข้อตกลง Stirling Enterprise"
 docSub = "MSA, Order Form, EULA และ DPA รวมไว้ในการลงนามครั้งเดียว"
 download = "ดาวน์โหลด"
 downloadDraftError = "ไม่สามารถสร้าง PDF ข้อตกลงได้ - ตัวเรนเดอร์เอกสารไม่พร้อมใช้งาน โปรดลองอีกครั้งในอีกสักครู่หรือติดต่อฝ่ายสนับสนุน"
@@ -10309,7 +10325,7 @@ continue = "ดำเนินการต่อ"
 done = "เสร็จสิ้น"
 eula = "ฉันได้อ่านและยอมรับ Stirling Enterprise EULA แล้ว ซึ่งควบคุมข้อตกลงที่สร้างจากใบเสนอราคานี้"
 generate = "สร้างใบเสนอราคา"
-indemnification = "Enhanced IP Protection"
+indemnification = "การคุ้มครอง IP ขั้นสูง"
 indemnificationSub = "ขยายการป้องกัน IP ของเราไปยังการอ้างสิทธิ์ด้านสิทธิบัตร การคุ้มครองพื้นฐานด้านลิขสิทธิ์ เครื่องหมายการค้า และความลับทางการค้ารวมอยู่ฟรี"
 paperEyebrow = "ใบเสนอราคาสำหรับ Enterprise"
 paperFor = "จัดเตรียมสำหรับ"
@@ -10373,7 +10389,7 @@ years_other = "{{count}} ปี"
 agreement = "ข้อตกลง Enterprise"
 agreementSub = "MSA, Order Form และ DPA ในการลงนามครั้งเดียว"
 download = "ดาวน์โหลด"
-eula = "EULA & Commercial Terms"
+eula = "EULA และเงื่อนไขเชิงพาณิชย์"
 eulaSub = "เงื่อนไขซอฟต์แวร์และการค้าแบบ self-serve"
 invoice = "ใบแจ้งหนี้"
 invoiceSub = "ใบแจ้งหนี้การสมัครสมาชิกฉบับแรกของคุณ"
@@ -10381,7 +10397,7 @@ laterInvoice = "พร้อมใช้งานหลังจากคุณ�
 laterQuote = "พร้อมใช้งานเมื่อออกใบเสนอราคาของคุณแล้ว"
 quote = "ใบเสนอราคา"
 quoteSub = "ใบเสนอราคา Enterprise แบบแยกรายการของคุณ"
-sla = "SLA Exhibit"
+sla = "เอกสารแนบ SLA"
 slaSub = "ระดับการสนับสนุนและเป้าหมายเวลาตอบกลับ"
 subprocessors = "ผู้ประมวลผลย่อย"
 subprocessorsSub = "บุคคลที่สามที่ประมวลผลข้อมูลในนามของคุณ"
@@ -10443,7 +10459,7 @@ label = "ใบเสนอราคา"
 [portal.procurement.journeySteps.trial]
 blurb = "ประเมิน Stirling กับเอกสารและเวิร์กโฟลว์ของคุณ"
 gatingAction = "สร้างใบเสนอราคาของคุณ"
-label = "Trial"
+label = "ทดลองใช้"
 
 [portal.procurement.license]
 copied = "คัดลอกแล้ว"
@@ -10512,7 +10528,7 @@ invitesPlaceholder = "sam@acme.com, lee@acme.com"
 scheduleCall = "นัดหมายการโทร"
 seats = "ผู้ทดสอบ"
 seatsPlaceholder = "เช่น 15"
-selfhost = "Self-hosted"
+selfhost = "โฮสต์เอง"
 selfhostSub = "Docker หรือ Kubernetes"
 start = "เริ่มทดลองใช้"
 stepOf = "ขั้นตอน {{n}} จาก {{total}}"
@@ -10531,7 +10547,7 @@ cancel = "ยกเลิก trial"
 extend = "ขยาย 7 วัน"
 maxed = "ถึงขีดจำกัดแล้ว"
 subtitle = "trial ฟรีของคุณใช้งานได้ถึง {{date}} ไม่ต้องใช้บัตร"
-title = "Enterprise trial"
+title = "ทดลองใช้ Enterprise"
 
 [portal.review]
 subtitle = "รายการใด ๆ จากการรันนโยบายของคุณและตัวแก้ไขของทีมที่ต้องการความสนใจจากคุณ"
@@ -10541,8 +10557,8 @@ title = "ตรวจสอบ"
 account-link = "การเชื่อมต่อบัญชี"
 
 [portal.shell.sidebar]
-appEditor = "Editor"
-appProcessor = "Processor"
+appEditor = "ตัวแก้ไข"
+appProcessor = "โปรเซสเซอร์"
 linkAccount = "เชื่อมโยงบัญชี Stirling"
 primaryNav = "การนำทางหลัก"
 
@@ -10633,7 +10649,7 @@ label = "Dropbox"
 
 [portal.sources.types.editor]
 description = "เอกสารที่ทีมของคุณประมวลผลใน editor ครอบคลุมการรันนโยบายและ AI"
-label = "Editor"
+label = "ตัวแก้ไข"
 noPolicies = "ยังไม่มีนโยบายที่รันจาก editor"
 
 [portal.sources.types.email]
@@ -10654,8 +10670,8 @@ helperText = "การใช้เนื้อหาไฟล์เพื่อ
 label = "การตรวจจับการเปลี่ยนแปลง"
 
 [portal.sources.types.folder.fields.identity.options]
-hash = "File Metadata & Content"
-stat = "File Metadata"
+hash = "เมตาดาต้าไฟล์และเนื้อหา"
+stat = "เมตาดาต้าไฟล์"
 
 [portal.sources.types.folder.fields.mode]
 helperText = "สิ่งที่จะเกิดขึ้นกับไฟล์ต้นฉบับเมื่อประมวลผลแล้ว \"เก็บไว้\" จะจดจำสิ่งที่จัดการแล้ว ดังนั้นไฟล์จะถูกประมวลผลอีกครั้งก็ต่อเมื่อมีการเปลี่ยนแปลงจริง"
@@ -10684,7 +10700,7 @@ label = "Google Drive"
 
 [portal.sources.types.network]
 description = "เฝ้าดู SMB network share เพื่อหาเอกสารใหม่"
-label = "Network drive"
+label = "ไดรฟ์เครือข่าย"
 
 [portal.sources.types.onedrive]
 description = "เฝ้าดูโฟลเดอร์ OneDrive เพื่อหาเอกสารใหม่"
@@ -10798,7 +10814,7 @@ summary = "การกำกับดูแลเต็มรูปแบบเ
 3 = "ทุกอย่างที่ Team Owner ทำได้"
 
 [portal.users.roles.guest]
-label = "Guest"
+label = "ผู้เยี่ยมชม"
 summary = "การเข้าถึงแบบจำกัดหรือ web-only; ไม่สามารถมีการกำหนดค่าส่วนตัวได้"
 
 [portal.users.roles.guest.permissions]
@@ -10808,7 +10824,7 @@ summary = "การเข้าถึงแบบจำกัดหรือ we
 3 = "อ่านอย่างเดียวเมื่อแชร์"
 
 [portal.users.roles.member]
-label = "Member"
+label = "สมาชิก"
 summary = "ผู้ใช้ทั่วไป — ทำงานกับทรัพยากรที่แชร์และการกำหนดค่าของตนเอง"
 
 [portal.users.roles.member.permissions]
@@ -10818,7 +10834,7 @@ summary = "ผู้ใช้ทั่วไป — ทำงานกับท�
 3 = "ไม่มีการจัดการ S3 หรือ workspace"
 
 [portal.users.roles.team_owner]
-label = "Team owner"
+label = "เจ้าของทีม"
 summary = "เป็นเจ้าของทีม — จัดการทรัพยากรของสมาชิกและการกำหนดค่าที่แชร์ของทีม"
 
 [portal.users.roles.team_owner.permissions]
@@ -10828,8 +10844,8 @@ summary = "เป็นเจ้าของทีม — จัดการท�
 3 = "ทุกอย่างที่ Member ทำได้"
 
 [portal.users.seats]
-limited = "{{used}} / {{limit}} seats"
-unlimited = "{{used}} seats · Unlimited"
+limited = "{{used}} / {{limit}} ที่นั่ง"
+unlimited = "{{used}} ที่นั่ง · ไม่จำกัด"
 
 [printFile]
 title = "พิมพ์ไฟล์"
@@ -11686,7 +11702,7 @@ title = "การเรียกเก็บเงิน"
 
 [settings.configuration]
 advanced = "ขั้นสูง"
-connections = "Single sign-on"
+connections = "การลงชื่อเข้าใช้ครั้งเดียว"
 database = "ฐานข้อมูล"
 endpoints = "Endpoints"
 features = "ฟีเจอร์"
@@ -11891,21 +11907,21 @@ title = "เอกสารทางกฎหมาย"
 
 [settings.licenses]
 backendDescription = "Licenses สำหรับ dependencies ของ backend ที่รวมมากับเซิร์ฟเวอร์นี้"
-backendLabel = "Backend Licenses"
-backendTitle = "Backend 3rd Party Licenses"
+backendLabel = "ใบอนุญาต Backend"
+backendTitle = "ใบอนุญาตบุคคลที่สามของ Backend"
 empty = "ไม่พบ dependencies"
 frontendDescription = "Licenses สำหรับ dependencies ของ frontend ที่รวมอยู่ใน release build"
-frontendLabel = "Frontend Licenses"
-frontendTitle = "Frontend 3rd Party Licenses"
-license = "License"
+frontendLabel = "ใบอนุญาต Frontend"
+frontendTitle = "ใบอนุญาตบุคคลที่สามของ Frontend"
+license = "ใบอนุญาต"
 listDescription = "รายการจะแสดงโดยตรงใน UI จาก release bundle หรือ backend endpoint"
 listTitle = "Dependencies ที่รวมมา"
 loadError = "โหลด third-party licenses ไม่สำเร็จ"
-module = "Module"
-version = "Version"
+module = "โมดูล"
+version = "เวอร์ชัน"
 
 [settings.licensingAnalytics]
-audit = "Audit log"
+audit = "บันทึกการตรวจสอบ"
 auditDescription = "ใครทำอะไรบนเซิร์ฟเวอร์นี้ และบันทึกนั้นจะถูกเก็บไว้นานเท่าใด"
 plan = "แผน"
 planDescription = "ใบอนุญาต สิทธิ์ผู้ใช้ และสิ่งที่แผนปัจจุบันปลดล็อกให้คุณ"
@@ -11978,7 +11994,7 @@ title = "กฎหมายและความเป็นส่วนตั�
 [settings.preferences]
 appearance = "รูปลักษณ์"
 description = "ลักษณะและการทำงานของตัวแก้ไขสำหรับคุณและบัญชีของคุณ"
-downloads = "Downloads"
+downloads = "ดาวน์โหลด"
 editorDefaults = "ค่าเริ่มต้นของตัวแก้ไข"
 title = "ค่ากำหนด"
 
@@ -12002,10 +12018,10 @@ success = "อัปเดตรหัสผ่านเรียบร้อย
 update = "อัปเดตรหัสผ่าน"
 
 [settings.securityAuth]
-connections = "Single sign-on"
-security = "Sign-in & security"
+connections = "การลงชื่อเข้าใช้ครั้งเดียว"
+security = "การลงชื่อเข้าใช้และความปลอดภัย"
 telegram = "Telegram"
-title = "Security & sign-in"
+title = "ความปลอดภัยและการลงชื่อเข้าใช้"
 
 [settings.server]
 system = "ระบบ"
@@ -12102,28 +12118,15 @@ description = "ป้อน URL แบบเต็มของเซิร์ฟ
 label = "URL เซิร์ฟเวอร์"
 
 [sharedSign]
-backToSessions = "กลับไปยังเซสชัน"
-createdOn = "สร้างเมื่อ {{date}}"
 disabledBody = "ไม่ได้เปิดใช้งานการลงนามร่วมกันบนเซิร์ฟเวอร์นี้"
-disabledTitle = "ไม่ได้เปิดใช้งาน"
-due = "ครบกำหนด {{date}}"
 filterDeclined = "ปฏิเสธแล้ว"
-filterMine = "ของฉัน"
 filterOverdue = "เกินกำหนด"
 filterSigned = "ลงนามแล้ว"
-fromOwner = "จาก {{owner}}"
-newRequest = "ขอลายเซ็น"
-signedCount = "{{signed}}/{{total}} ลงนามแล้ว"
 signInRequiredBody = "ลงชื่อเข้าใช้เพื่อขอลายเซ็นและดูคำขอที่ส่งถึงคุณ"
 signInRequiredTitle = "ต้องลงชื่อเข้าใช้"
 
-[sharedSign.empty]
-active = "ไม่มีคำขอลายเซ็นที่รอดำเนินการหรือเซสชันที่ใช้งานอยู่"
-completed = "ไม่มีเซสชันที่เสร็จสมบูรณ์"
-
 [sharedSign.tab]
 active = "ใช้งานอยู่"
-completed = "เสร็จสมบูรณ์"
 
 [showJS]
 done = "แยก JavaScript แล้ว"
@@ -12473,10 +12476,68 @@ bullet3 = "ลายเซ็นที่ไม่แสดงยังคงใ
 description = "ควบคุมว่าลายเซ็นจะแสดงบนเอกสารหรือฝังแบบไม่แสดง"
 title = "การแสดงผลของลายเซ็น"
 
+[signingDetail]
+allSigned = "ทุกคนลงนามแล้ว ตรวจสอบเอกสาร จากนั้นดำเนินการขั้นสุดท้าย"
+awaitingOwner = "เจ้าของจะดำเนินการเอกสารขั้นสุดท้ายเมื่อพร้อม"
+certificateNext = "เลือกใบรับรองของคุณในขั้นตอนถัดไป"
+earlyHint = "คุณสามารถดำเนินการขั้นสุดท้ายตอนนี้ด้วยลายเซ็นที่ได้รับแล้ว หรือรอผู้เข้าร่วมที่เหลือ"
+finalDocument = "เอกสารที่ลงนามแล้ว"
+finalizeTitle = "ดำเนินการเอกสารขั้นสุดท้าย"
+finalReady = "PDF ที่ลงนามแล้วของคุณพร้อมเปิดในพื้นที่ทำงาน"
+inProgressPreview = "ตัวอย่างระหว่างดำเนินการพร้อมลายเซ็นที่ส่งแล้ว เจ้าของยังไม่ได้ดำเนินการเอกสารนี้ขั้นสุดท้าย"
+manageSession = "จัดการเซสชันการลงนาม"
+moveHint = "เลือกลายเซ็นบนเอกสารเพื่อย้าย ปรับขนาด หรือลบ"
+notified = "แจ้งเตือนแล้ว"
+optional = "ไม่บังคับ"
+ownerNext = "กลับไปที่เซสชันของคุณเพื่อตรวจสอบลายเซ็นของทุกคนและดำเนินการเอกสารขั้นสุดท้ายเมื่อคุณพร้อม"
+placeHint = "คลิกบนเอกสารเพื่อวางลายเซ็นของคุณ"
+progress = "ความคืบหน้าของลายเซ็น"
+readyToSign = "พร้อมลงนามหรือยัง?"
+refreshPreview = "รีเฟรชตัวอย่าง"
+removePerson = "ลบ {{name}}"
+requestClosed = "คำขอนี้ถูกปิดแล้ว"
+requestTitle = "คำขอลายเซ็น"
+signatureSubmitted = "ส่งลายเซ็นของคุณแล้ว"
+signedCount = "ลงนามแล้ว {{signed}} / {{total}}"
+signMyRequest = "ลงนามเอกสารนี้"
+viewOnly = "คุณยังสามารถตรวจสอบเอกสารได้ที่นี่"
+visibleSignature = "ลายเซ็นที่มองเห็นได้"
+visibleSignatureHelp = "เกี่ยวกับลายเซ็นที่มองเห็นได้"
+
+[signMenu]
+anyOrder = "ผู้เข้าร่วมสามารถลงนามในลำดับใดก็ได้ เจ้าของจะดำเนินการเอกสารขั้นสุดท้ายหลังจากตรวจสอบลายเซ็นที่รวบรวมแล้ว"
+certificateHint = "ใช้ใบรับรอง"
+certificateTitle = "ลายเซ็นดิจิทัล"
+closedStatus = "ปิดแล้ว"
+completedTab = "เสร็จสมบูรณ์"
+dueDate = "วันครบกำหนด (ไม่บังคับ)"
+newActivity = "มีกิจกรรมใหม่ตั้งแต่ครั้งล่าสุดที่คุณดูเซสชันนี้"
+noActive = "ไม่มีเซสชันที่ใช้งานอยู่"
+noCompleted = "ไม่มีเซสชันที่เสร็จสมบูรณ์"
+noMatches = "ไม่มีเซสชันที่ตรงกัน"
+noUnread = "ไม่มีรายการค้างแล้ว"
+optionalMarks = "เครื่องหมายที่มองเห็นได้เป็นทางเลือก Complete & Sign ยังทำงานได้ด้วยใบรับรองเพียงอย่างเดียว"
+ownerProgress = "คำขอของคุณ · ลงนามแล้ว {{signed}} / {{total}}"
+personalHint = "วาด พิมพ์ หรืออัปโหลด"
+personalTitle = "ลายเซ็นส่วนตัว"
+request = "ขอลายเซ็น"
+search = "ค้นหาเอกสารหรือบุคคล"
+send = "ส่งคำขอลงนาม"
+sessionFilter = "มุมมองเซสชัน"
+sessions = "เซสชันการลงนาม"
+settings = "ลักษณะที่ปรากฏและหน้าสรุป (ไม่บังคับ)"
+signFailed = "การลงนามล้มเหลว ตรวจสอบใบรับรองของคุณแล้วลองอีกครั้ง เครื่องหมายที่คุณวางไว้จะถูกเก็บไว้"
+submitted = "ส่งแล้ว · รอการดำเนินการขั้นสุดท้าย"
+title = "ลงนาม"
+triggerUnreadCount_one = "ลงนาม · {{count}} เซสชันที่ยังไม่ได้อ่าน"
+triggerUnreadCount_other = "ลงนาม · {{count}} เซสชันที่ยังไม่ได้อ่าน"
+unreadTab = "ยังไม่ได้อ่าน"
+
 [signRequest]
+accessExpired = "สิทธิ์เข้าถึงคำขอลงนามนี้ของคุณหมดอายุแล้ว ขอคำขอใหม่จากผู้ส่ง"
 declined = "คำขอลงนามถูกปฏิเสธ"
+expired = "สิทธิ์เข้าถึงหมดอายุ"
 fetchFailed = "ไม่สามารถโหลดคำขอลงนามได้"
-signed = "ลงนามเอกสารสำเร็จ"
 
 [signSession]
 created = "ส่งคำขอลงนามแล้ว"
@@ -12512,6 +12573,52 @@ title = "สร้างบัญชี"
 unableToAccessTool = "ไม่สามารถเข้าถึงเครื่องมือได้: {{error}}"
 unexpectedError = "ข้อผิดพลาดที่ไม่คาดคิด: {{message}}"
 unknownError = "ข้อผิดพลาดที่ไม่ทราบสาเหตุ"
+
+[signWorkspace]
+changeDocument = "เปลี่ยน PDF"
+chooseDocument = "เลือก PDF ที่เปิดอยู่"
+chooseFromLibrary = "เลือกจากไลบรารี"
+chooseParticipants = "เลือกผู้เข้าร่วม"
+choosePdf = "เลือก PDF"
+choosePdfHeading = "เริ่มด้วยเอกสารของคุณ"
+clearDate = "ล้างวันที่"
+created = "สร้างแล้ว"
+createdByMe = "สร้างโดยฉัน"
+datesAndOptions = "วันที่และตัวเลือก"
+document = "เอกสาร"
+dueDate = "วันครบกำหนด"
+dueDateHelp = "นี่คือวันที่เป้าหมาย ผู้เข้าร่วมยังสามารถลงนามหลังจากวันดังกล่าวได้"
+dueDateHelpLabel = "เกี่ยวกับวันครบกำหนด"
+empty = "ยังไม่มีเซสชันที่นี่"
+expand = "ขยายเซสชันการลงนาม"
+inviteLoadError = "ไม่สามารถโหลดตัวเลือกคำเชิญได้ ปิดกล่องโต้ตอบนี้แล้วลองอีกครั้ง"
+invitePerson = "เพิ่มเพื่อนร่วมทีม: {{name}}"
+inviteTeammate = "เพิ่มเพื่อนร่วมทีม"
+inviteUnavailable = "การเพิ่มเพื่อนร่วมทีมไม่พร้อมใช้งานสำหรับบัญชีหรือการกำหนดค่าเซิร์ฟเวอร์ของคุณ"
+navigation = "การนำทางการลงนาม"
+needsYou = "ต้องการลายเซ็นของคุณ"
+nextMonth = "เดือนถัดไป"
+nextStep = "ถัดไป"
+noDueDate = "ไม่มีวันครบกำหนด"
+noMatches = "ไม่มีเซสชันที่ตรงกับการค้นหาหรือตัวกรองของคุณ"
+noOpenPdfs = "เลือก PDF จากไลบรารีของคุณหรือเพิ่มจากคอมพิวเตอร์ของคุณ"
+noPeopleMatch = "ไม่มีบุคคลที่ตรงกับการค้นหาของคุณ"
+noPreview = "ไม่สามารถดูตัวอย่างเอกสารได้"
+owner = "เจ้าของ"
+participants = "ผู้เข้าร่วม"
+participantsSelected = "เลือกแล้ว {{count}} รายการ"
+personalHeading = "ลงนามเอกสาร"
+previousMonth = "เดือนก่อนหน้า"
+refresh = "รีเฟรชเซสชัน"
+requestSteps = "ขั้นตอนคำขอลงนาม"
+search = "ค้นหาเอกสารหรือผู้คน"
+searchParticipants = "ค้นหาผู้คนหรือทีม"
+selectOnePdf = "เลือก PDF หนึ่งไฟล์สำหรับคำขอลงนามนี้"
+signingOrderHelp = "เกี่ยวกับลำดับการลงนาม"
+status = "สถานะ"
+unavailable = "เซสชันนี้ไม่พร้อมใช้งานอีกต่อไป รีเฟรชรายการเพื่อดูเซสชันปัจจุบันของคุณ"
+upcoming = "กำลังจะมาถึง"
+uploadFailed = "ไม่สามารถเปิด PDF นี้ได้ โปรดลองอีกครั้ง"
 
 [sizes]
 large = "ใหญ่"

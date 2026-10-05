@@ -653,7 +653,7 @@ installApp = "Встановлення застосунку"
 label = "Обмеження виконавця процесів"
 libreOffice = "LibreOffice"
 ocrMyPdf = "OCRmyPDF"
-pdfToHtml = "PDF to HTML"
+pdfToHtml = "PDF у HTML"
 pythonOpenCv = "Python OpenCV"
 qpdf = "QPDF"
 tesseract = "Tesseract OCR"
@@ -1529,7 +1529,7 @@ label = "Вимагати наявний обліковий запис Stirling"
 
 [admin.settings.mcp.resourceId]
 description = "Публічний URL /mcp цього сервера. Токени мають містити його у своїй аудиторії (RFC 8707), інакше їх буде відхилено."
-label = "Resource ID"
+label = "ID ресурсу"
 
 [admin.settings.mcp.scopes]
 description = "Вимагати mcp.tools.read для операцій читання та mcp.tools.write для операцій запису/AI."
@@ -1815,11 +1815,11 @@ label = "Увімкнути посилання для спільного дос�
 
 [admin.settings.storage.signing.enabled]
 description = "Дозволити користувачам створювати сеанси підписання документів із кількома учасниками. Потрібно ввімкнути зберігання файлів на сервері."
-label = "Увімкнути групове підписання (Alpha)"
+title = "Увімкнути групове підписання"
 
 [admin.settings.telegram]
 description = "Налаштуйте підключення бота Telegram, контроль доступу та поведінку зворотного зв’язку."
-title = "Telegram Bot"
+title = "Бот Telegram"
 
 [admin.settings.telegram.accessControl]
 description = "Обмежте, які користувачі або канали можуть взаємодіяти з ботом."
@@ -2744,7 +2744,6 @@ reason = "Причина"
 serverCertMessage = "Використовується серверний сертифікат - файли та пароль не потрібні"
 showLogo = "Показати логотип"
 signatureProgress = "{{signedCount}}/{{totalCount}} підписів"
-signed = "Підписано"
 tags = "автентифікувати,PEM,P12,офіційний,шифрувати,підписати,сертифікат,PKCS12,JKS,сервер,вручну,авто"
 title = "Підпис сертифікатом"
 viewed = "Переглянуто"
@@ -2809,7 +2808,13 @@ reasonPlaceholder = "напр., Затвердження, Перегляд..."
 
 [certSign.collab.finalize]
 button = "Завершити та завантажити підписаний PDF"
+confirmAction = "Підтвердити й завершити"
+confirmDescription = "Завершення закриє цей сеанс. Більше підписів надіслати не можна."
+confirmTitle = "Завершити цей сеанс підписання?"
 early = "Завершити з поточними підписами"
+excluded = "Учасники, чиї підписи не будуть включені"
+included = "Підписи включено"
+requiresSignature = "Принаймні один учасник має підписати, перш ніж ви зможете завершити."
 
 [certSign.collab.participant]
 certInvalid = "✗ {{error}}"
@@ -2826,7 +2831,6 @@ includeSummaryPageHelp = "Наприкінці буде додано сторі�
 [certSign.collab.sessionDetail]
 addParticipants = "Додати учасників"
 addParticipantsError = "Не вдалося додати учасників"
-backToList = "Назад до сеансів"
 deleteConfirm = "Ви впевнені? Це неможливо скасувати."
 deleteError = "Не вдалося видалити сеанс"
 deleteSession = "Видалити сеанс"
@@ -2835,14 +2839,11 @@ finalizeError = "Не вдалося завершити сеанс"
 loadPdfError = "Не вдалося завантажити підписаний PDF"
 loadSignedPdf = "Завантажити підписаний PDF до активних файлів"
 messageLabel = "Повідомлення"
-owner = "Власник"
 participantRemoved = "Учасника видалено"
 participants = "Учасники"
 participantsAdded = "Учасників успішно додано"
-removeParticipant = "Видалити"
 removeParticipantError = "Не вдалося видалити учасника"
 selectUsers = "Виберіть користувачів..."
-sessionInfo = "Інформація про сеанс"
 
 [certSign.collab.sessionList]
 active = "Активні"
@@ -2855,11 +2856,10 @@ title = "Вигляд підпису"
 [certSign.collab.signRequest]
 addedToFiles = "Документ додано до активних файлів"
 addToFiles = "Додати до активних файлів"
-advancedSettings = "Розширені налаштування"
-backToList = "Назад до запитів на підпис"
 certificateChoice = "Виберіть сертифікат для підписання"
 changeSignature = "Змінити підпис"
 clearSignature = "Очистити підпис"
+closed = "Цей сеанс завершено. Ви можете переглянути фінальний документ, але подальші підписи або відмови не приймаються."
 completeAndSign = "Завершити й підписати"
 createNewSignature = "Створити новий підпис"
 decline = "Відхилити запит"
@@ -2876,7 +2876,6 @@ invalidFileType = "Виберіть файл зображення"
 location = "Місцезнаходження (необов’язково)"
 locationPlaceholder = "Звідки ви підписуєте?"
 noCertificate = "Виберіть файл сертифіката"
-noSignatures = "Розмістіть щонайменше один підпис на PDF"
 p12File = "Файл сертифіката P12/PFX"
 password = "Пароль сертифіката"
 penColor = "Колір пера"
@@ -2894,16 +2893,15 @@ signatureText = "Текст підпису"
 signatureTextPlaceholder = "Введіть своє ім’я..."
 signatureTypeLabel = "Тип підпису"
 signButton = "Підписати документ"
-signingTitle = "Підписання"
 textColor = "Колір тексту"
 typeSignature = "Введіть своє ім’я, щоб створити підпис"
-uploadCert = "Власний сертифікат"
-uploadCertDesc = "Використовуйте власний сертифікат P12/PFX"
+uploadCert = "Завантажити сертифікат"
+uploadCertDesc = "Використайте власний сертифікат PKCS12, PFX, PEM або JKS."
 uploadSignature = "Завантажте зображення свого підпису"
-usePersonalCert = "Персональний сертифікат"
-usePersonalCertDesc = "Автоматично створений для вашого облікового запису"
-useServerCert = "Сертифікат організації"
-useServerCertDesc = "Спільний сертифікат організації"
+usePersonalCert = "Stirling Sign · Особистий"
+usePersonalCertDesc = "Підписати сертифікатом, створеним для вашого облікового запису."
+useServerCert = "Stirling Sign · Організація"
+useServerCertDesc = "Підписати спільним сертифікатом організації цього сервера."
 useSignature = "Використати підпис"
 
 [certSign.collab.signRequest.certModal]
@@ -2912,10 +2910,13 @@ certInvalidFallback = "Недійсний сертифікат"
 certNetworkError = "Не вдалося перевірити сертифікат"
 certValidating = "Перевірка сертифіката..."
 certValidUntil = "Сертифікат дійсний до {{date}}"
-description_one = "Ви розмістили {{count}} підпис. Виберіть свій сертифікат, щоб завершити підписання."
-description_other = "Ви розмістили {{count}} підписів. Виберіть свій сертифікат, щоб завершити підписання."
+description_one = "{{count}} видима позначка готова. Виберіть сертифікат, щоб завершити підписання."
+description_other = "{{count}} видимих позначок готові. Виберіть сертифікат, щоб завершити підписання."
+description_zero = "Ваш сертифікат підпише документ без видимих позначок."
+details = "Деталі підписання (необов’язково)"
+format = "Формат сертифіката"
 sign = "Підписати документ"
-title = "Налаштування сертифіката"
+title = "Виберіть спосіб підписання"
 
 [certSign.collab.signRequest.mode]
 move = "Перемістити підпис"
@@ -2968,11 +2969,11 @@ visible = "Видимий"
 yourSignatures = "Ваші підписи ({{count}})"
 
 [certSign.collab.userSelector]
-inviteUsers = "Додати користувачів"
 loadError = "Не вдалося завантажити користувачів"
 noTeam = "Без команди"
 noUsers = "Інших користувачів не знайдено."
 placeholder = "Виберіть користувачів..."
+you = "{{name}} (Ви)"
 
 [certSign.device]
 stepTitle = "Цей пристрій"
@@ -4121,7 +4122,7 @@ pdfUaProfile = "Рівень відповідності"
 pdfUaSignatureWarning = "Цей PDF має цифровий підпис. Додавання тегів переписує вміст сторінки, який покриває підпис, тому підпис перестане перевірятися. Спочатку конвертуйте, потім підпишіть повторно."
 pdfUaTitle = "Назва документа"
 pdfUaTitleHelp = "Показується читачем замість імені файлу. Якщо залишити порожнім, використовується перший заголовок."
-selectSourceFormatFirst = "Спочатку виберіть вихідний формат"
+selectSourceFormatFirst = "Спочатку виберіть формат джерела"
 settings = "Налаштування"
 single = "Один"
 sourceFormatPlaceholder = "Вихідний формат"
@@ -4167,7 +4168,7 @@ multipleFiles = "Кілька файлів"
 presentation = "Презентація"
 spreadsheet = "Електронна таблиця"
 text = "Текст"
-web = "Web"
+web = "Веб"
 
 [convert.formatOptions]
 any = "Будь-який"
@@ -5450,9 +5451,6 @@ multimedia = "Мультимедіа"
 
 [groupSigning.steps]
 back = "Назад"
-completed = "Завершено"
-current = "Поточний"
-stepLabel = "Крок {{number}}"
 
 [groupSigning.steps.configureDefaults]
 continue = "Продовжити"
@@ -5460,7 +5458,6 @@ invisible = "Підписи будуть невидимими (лише мета
 locationLabel = "Місцезнаходження:"
 preview = "Перегляд"
 reasonLabel = "Причина:"
-title = "Налаштувати параметри підпису"
 visible = "Підписи будуть видимими на сторінці {{page}}"
 
 [groupSigning.steps.review]
@@ -5472,14 +5469,13 @@ location = "Місцезнаходження:"
 logo = "Логотип:"
 logoHidden = "Без логотипа"
 logoShown = "Показано логотип Stirling PDF"
-participantCount_one = "{{count}} учасник підпише по черзі"
-participantCount_other = "{{count}} учасників підпишуть по черзі"
+participantCount_one = "Вибрано {{count}} учасника"
+participantCount_other = "Вибрано {{count}} учасників"
 participants = "Учасники"
 reason = "Причина:"
 send = "Надіслати запити на підписання"
 signatureSettings = "Налаштування підпису"
 title = "Переглянути деталі сеансу"
-titleShort = "Перегляд і надсилання"
 visibility = "Видимість:"
 visible = "Видимий на сторінці {{page}}"
 
@@ -5487,7 +5483,6 @@ visible = "Видимий на сторінці {{page}}"
 continue = "Продовжити"
 noFile = "Виберіть один файл PDF зі своїх активних файлів, щоб створити сеанс підписання."
 selectedFile = "Вибраний документ"
-title = "Виберіть документ"
 
 [groupSigning.steps.selectParticipants]
 continue = "Продовжити"
@@ -5495,31 +5490,30 @@ count_one = "Вибрано {{count}} учасника"
 count_other = "Вибрано {{count}} учасників"
 label = "Виберіть учасників"
 placeholder = "Виберіть учасників для підписання..."
-title = "Виберіть учасників"
 
 [groupSigning.tooltip]
 header = "Про групове підписання"
 
 [groupSigning.tooltip.finalization]
-bullet1 = "Усі підписи застосовуються у вказаному вами порядку учасників"
-bullet2 = "За потреби ви можете завершити з частиною підписів"
-bullet3 = "Після завершення сеанс не можна змінити"
-description = "Після того як усі учасники підписали (або ви вирішили завершити раніше), ви можете згенерувати остаточний підписаний PDF."
+bullet1 = "Фінальний PDF містить усі прийняті підписи"
+bullet2 = "Перегляньте учасників, що залишилися, перед завершенням із частковими підписами"
+bullet3 = "Завершення закриває запит; учасники, що залишилися, більше не зможуть підписати"
+description = "Після того як принаймні один учасник підписав, власник може завершити запит і створити підписаний PDF."
 title = "Процес завершення"
 
 [groupSigning.tooltip.roles]
 bullet1 = "Власник (ви): створює сеанс, налаштовує параметри підпису за замовчуванням, завершує документ"
-bullet2 = "Учасники: створюють свій підпис, обирають сертифікат, розміщують на PDF"
-bullet3 = "Учасники не можуть змінювати налаштування видимості, причини чи місцезнаходження підпису"
-description = "Ви керуєте налаштуванням вигляду підпису для всіх учасників."
+bullet2 = "Учасники: вибирають сертифікат і за бажанням розміщують видимий підпис у PDF"
+bullet3 = "Учасники можуть змінити причину та місце підпису перед надсиланням"
+description = "Власник задає типові параметри запиту; кожен учасник вибирає свій сертифікат і необов’язкову видиму позначку."
 title = "Ролі учасників"
 
 [groupSigning.tooltip.sequential]
-bullet1 = "Перший учасник має підписати, перш ніж другий отримає доступ до документа"
-bullet2 = "Забезпечує належний порядок підписання для юридичної відповідності"
-bullet3 = "Ви можете змінити порядок учасників, перетягуючи їх у списку"
-description = "Учасники підписують документи у визначеному вами порядку. Кожен підписант отримує сповіщення, коли настає його черга."
-title = "Послідовне підписання"
+bullet1 = "Учасникам не потрібно чекати іншого підписанта"
+bullet2 = "Відстежуйте прогрес кожного учасника в сеансах підписання"
+bullet3 = "Кінцева дата є нагадуванням; вона не скасовує доступ"
+description = "Призначені учасники можуть переглядати й підписувати незалежно, у будь-якому порядку."
+title = "Підписання в будь-якому порядку"
 
 [guestBanner]
 dismiss = "Закрити банер"
@@ -5828,7 +5822,6 @@ tags = "виявити,розділити,фото,автовиявлення,в
 title = "Виявити і поділити скан-фото"
 
 [home.sharedSign]
-desc = "Запитуйте підписи від інших і відстежуйте сеанси підписання"
 title = "Спільне підписання"
 
 [home.showJS]
@@ -6847,7 +6840,7 @@ startFailed = "Не вдалося запустити сеанс оформле�
 backend = "Backend у mock mode; реальний сеанс Stripe не створено."
 continue = "Продовжити з mock subscription"
 noKey = "VITE_STRIPE_PUBLISHABLE_KEY не встановлено. Реальний iframe з’явиться тут після налаштування."
-title = "Stripe Embedded Checkout (mock mode)"
+title = "Stripe Embedded Checkout (режим імітації)"
 
 [payg.confirm]
 bodyWithAllowance = "Тепер ваша команда може виконувати автоматизацію, AI та API операції понад ваші {{limit}} безкоштовних PDFs."
@@ -6959,12 +6952,12 @@ aiPromo = "Створюйте, редагуйте й запитуйте про P
 apiPromo = "Підключайте свої застосунки та AI-асистентів"
 automationPromo = "Автоматизуйте повторювані PDF-завдання"
 createAccount = "Створити безкоштовний обліковий запис"
-editorLabel = "PDF Editor"
+editorLabel = "Редактор PDF"
 login = "Увійти"
 manualToolsPromo = "Необмежені безкоштовні ручні PDF-інструменти"
-processorLabel = "PDF Processor"
+processorLabel = "Обробник PDF"
 processorTitle = "Створіть обліковий запис, щоб розблокувати найкраще від Stirling"
-readerLabel = "PDF Reader"
+readerLabel = "Засіб читання PDF"
 
 [payg.spendCapMeter]
 barAria = "Витрати відносно ліміту"
@@ -7201,7 +7194,7 @@ downloadTooltip = "Зберегти й завантажити відредаго
 save = "Зберегти PDF"
 saveTooltip = "Застосувати зміни до файлу у вашій робочій області ({{shortcut}})"
 tags = "редагувати текст,змінити текст,змінити текст,редагувати вміст,оновити текст,переписати,виправити,уточнити,виправлення,переглянути,редактор тексту,редактор вмісту"
-title = "PDF Text Editor"
+title = "Редактор тексту PDF"
 unsaved = "(не збережено)"
 workbenchLabel = "Редактор"
 
@@ -7426,7 +7419,9 @@ groupedTitle = "Частина групи в цьому PDF: її можна в�
 
 [pdfTextEditor.sidebar]
 addImage = "Додати зображення"
+addTable = "Додати таблицю"
 addText = "Додати текст"
+clickPageToAddTable = "Клацніть сторінку, щоб додати таблицю"
 clickPageToAddText = "Натисніть сторінку, щоб додати текст"
 document = "Документ"
 group = "Згрупувати"
@@ -7435,11 +7430,14 @@ groupingAutoHint = "Групує рівновіддалені рядки в аб
 groupingLine = "Рядок"
 groupTooltip = "Об’єднати вибрані фрагменти в один абзац ({{shortcut}})"
 groupTooltipDisabled = "Виберіть 2+ фрагменти для об’єднання"
+image = "Зображення"
 noFile = "Файл не завантажено"
 noFileHint = "Виберіть PDF на панелі Файли ліворуч або перетягніть його сюди. Редактор відкриє його автоматично."
 opening = "Відкриття документа..."
 paragraph = "Абзац"
 rulers = "Лінійки та напрямні"
+table = "Таблиця"
+text = "Текст"
 textBoxWidth = "Ширина нового текстового поля"
 textGrouping = "Групування тексту"
 ungroup = "Розгрупувати"
@@ -7460,6 +7458,24 @@ loadingProgress = "Хід завантаження"
 noDocument = "Документ не завантажено."
 pickPrompt = "Виберіть PDF на панелі Файли ліворуч, щоб почати редагування."
 renderingPreview = "Візуалізація попереднього перегляду"
+
+[pdfTextEditor.table]
+addColumn = "Додати стовпець"
+addRow = "Додати рядок"
+column = "Стовп."
+deleteColumn = "Видалити стовпець"
+deleteRow = "Видалити рядок"
+done = "Готово"
+doneHint = "Припинити редагувати це як таблицю"
+edit = "Редагувати"
+editHint = "Редагувати як таблицю — вводьте в клітинках, додавайте або видаляйте рядки та стовпці"
+move = "Перемістити"
+moveTable = "Перетягніть, щоб перемістити всю таблицю"
+recognizedHint = "Розпізнана таблиця — клацніть, щоб вибрати весь її текст"
+resizeColumn = "Перетягніть, щоб змінити розмір цього стовпця (Alt: поділитися з наступним)"
+resizeRow = "Перетягніть, щоб змінити розмір цього рядка (Alt: поділитися з наступним)"
+resizeTable = "Перетягніть, щоб змінити розмір усієї таблиці"
+row = "Рядок"
 
 [pdfTextEditor.toolbar]
 addTextTooltip = "Додати текстове поле — потім натисніть сторінку"
@@ -7771,7 +7787,7 @@ rowIdle = "{{label}} запускається автоматично"
 rowRunning = "{{label}} виконується зараз"
 runsToday_one = "{{count}} запуск сьогодні"
 runsToday_other = "{{count}} запусків сьогодні"
-title = "PDF Processor"
+title = "Обробник PDF"
 triggerExport = "Запускається під час експорту"
 triggerImport = "Запускається під час імпорту"
 
@@ -8453,20 +8469,20 @@ label = "URL сервера"
 label = "Email"
 
 [portal.connections.commonFields.host]
-label = "Host"
+label = "Хост"
 
 [portal.connections.commonFields.password]
 label = "Пароль"
 
 [portal.connections.commonFields.port]
-label = "Port"
+label = "Порт"
 
 [portal.connections.commonFields.username]
 label = "Ім’я користувача"
 
 [portal.connections.commonFields.webhookUrl]
 helperText = "Вставте URL, який надав сервіс. Викликати можна лише шляхи під ним."
-label = "Webhook URL"
+label = "URL Webhook"
 
 [portal.connections.fields]
 name = "Назва з’єднання"
@@ -8487,7 +8503,7 @@ searchPlaceholder = "Пошук інтеграцій - спробуйте «sign
 
 [portal.connections.types.api]
 description = "Викликайте будь-який HTTP API з політики. Ви вибираєте URL, автентифікацію і payload."
-label = "Custom API"
+label = "Користувацький API"
 
 [portal.connections.types.api.fields.authType]
 label = "Автентифікація"
@@ -8496,7 +8512,7 @@ label = "Автентифікація"
 label = "Ім’я користувача та пароль"
 
 [portal.connections.types.api.fields.authType.options.bearer]
-label = "Bearer token"
+label = "Токен Bearer"
 
 [portal.connections.types.api.fields.authType.options.header]
 label = "Токен у власному заголовку"
@@ -8509,7 +8525,7 @@ label = "Увійти для токена"
 
 [portal.connections.types.api.fields.baseUrl]
 helperText = "Кроки, що використовують це з’єднання, можуть викликати лише шляхи під цим URL, ніколи інший host."
-label = "Base URL"
+label = "Базовий URL"
 placeholder = "https://api.example.com/v1"
 
 [portal.connections.types.api.fields.headerName]
@@ -8543,7 +8559,7 @@ label = "Ім’я користувача"
 [portal.connections.types.clamav]
 baseUrlPlaceholder = "http://clamav-rest:9000"
 description = "Скануйте документи на malware на сервері, яким ви керуєте - нічого не залишає вашу мережу."
-label = "ClamAV (self-hosted)"
+label = "ClamAV (самостійно розгорнутий)"
 
 [portal.connections.types.cloudmersive]
 description = "Сканування документів на віруси та вміст у політиці."
@@ -8551,7 +8567,7 @@ label = "Cloudmersive"
 
 [portal.connections.types.cloudmersiveadvanced]
 description = "Блокуйте документи, що містять макроси, виконувані файли, скрипти або вбудовані об’єкти - не лише відоме malware."
-label = "Cloudmersive Advanced Scan"
+label = "Розширене сканування Cloudmersive"
 
 [portal.connections.types.confluence]
 baseUrlPlaceholder = "https://your-site.atlassian.net/wiki/api/v2"
@@ -8571,14 +8587,14 @@ placeholder = "https://your-org.consignocloud.com/api/v1"
 label = "API ключ"
 
 [portal.connections.types.consigno.fields.clientSecret]
-label = "API secret"
+label = "Секрет API"
 
 [portal.connections.types.consigno.fields.password]
 label = "Пароль"
 
 [portal.connections.types.consigno.fields.tenantId]
 helperText = "Потрібно лише якщо ваша організація використовує tenant."
-label = "Tenant"
+label = "Тенант"
 
 [portal.connections.types.consigno.fields.username]
 label = "Ім’я користувача"
@@ -8610,8 +8626,8 @@ helperText = "Звичайний FTP надсилає облікові дані 
 label = "Шифрування"
 
 [portal.connections.types.ftp.fields.security.options]
-explicit = "FTPS (explicit / AUTH TLS)"
-implicit = "FTPS (implicit)"
+explicit = "FTPS (явний / AUTH TLS)"
+implicit = "FTPS (неявний)"
 none = "Немає (звичайний FTP)"
 
 [portal.connections.types.googlechat]
@@ -8638,10 +8654,10 @@ helperText = "Зіставте Authentication, встановлену на n8n W
 label = "Автентифікація Webhook"
 
 [portal.connections.types.n8n.fields.authType.options.basic]
-label = "Basic auth"
+label = "Базова автентифікація"
 
 [portal.connections.types.n8n.fields.authType.options.header]
-label = "Header auth"
+label = "Автентифікація через заголовок"
 
 [portal.connections.types.n8n.fields.authType.options.none]
 label = "Немає"
@@ -8665,7 +8681,7 @@ label = "Пароль застосунку"
 [portal.connections.types.presidio]
 baseUrlPlaceholder = "http://presidio-analyzer:3000"
 description = "Виявляйте персональні дані в тексті документа за допомогою сервера Presidio, яким ви керуєте."
-label = "Presidio (self-hosted)"
+label = "Presidio (самостійно розгорнутий)"
 
 [portal.connections.types.purview]
 description = "Читайте та застосовуйте мітки чутливості Microsoft Purview до PDF."
@@ -8673,22 +8689,22 @@ label = "Microsoft Purview"
 
 [portal.connections.types.purview.fields.clientId]
 helperText = "Необов’язково. Потрібно лише для вибору міток за назвою; маркування працює й без цього."
-label = "Application (client) ID"
+label = "ID застосунку (клієнта)"
 
 [portal.connections.types.purview.fields.clientSecret]
-label = "Client secret"
+label = "Секрет клієнта"
 
 [portal.connections.types.purview.fields.tenantId]
 helperText = "Штампується на кожну мітку як її SiteId, щоб інструменти, сумісні з Purview, знали, яка організація її застосувала."
-label = "Directory (tenant) ID"
+label = "ID каталогу (тенанта)"
 placeholder = "cb46c030-1825-4e81-a295-151c039dbf02"
 
 [portal.connections.types.s3]
 description = "S3 bucket, з якого джерела можуть читати і до якого виходи конвеєра можуть записувати."
-label = "S3 storage"
+label = "Сховище S3"
 
 [portal.connections.types.s3.fields.accessKeyId]
-label = "Access key ID"
+label = "ID ключа доступу"
 
 [portal.connections.types.s3.fields.bucket]
 label = "Bucket"
@@ -8701,7 +8717,7 @@ label = "Endpoint"
 label = "Регіон"
 
 [portal.connections.types.s3.fields.secretAccessKey]
-label = "Secret access key"
+label = "Секретний ключ доступу"
 
 [portal.connections.types.sendgrid]
 description = "Надсилайте документ або сповіщення Email, коли політика запускається."
@@ -8741,7 +8757,7 @@ helperText = "Необов’язково. Windows domain або workgroup, як
 label = "Домен"
 
 [portal.connections.types.smb.fields.share]
-label = "Share"
+label = "Спільний ресурс"
 placeholder = "documents"
 
 [portal.connections.types.splunk]
@@ -8796,17 +8812,17 @@ lead = "Вбудовуваний UI для черг перевірки та ін
 title = "Готові переглядачі"
 
 [portal.docs.endpoints]
-eyebrow = "API REFERENCE"
+eyebrow = "ДОВІДНИК API"
 fieldCount_one = "{{count}} поле"
 fieldCount_other = "{{count}} полів"
 filterAll = "Усі"
 filterAriaLabel = "Фільтрувати endpoints за вертикаллю"
 lead = "Кожен тип документа — це typed endpoint. POST файл і отримайте JSON, перевірений за схемою. Фільтруйте за вертикаллю нижче."
-title = "Endpoints"
+title = "Кінцеві точки"
 
 [portal.docs.errors]
 codeCaption = "422 Unprocessable Entity"
-eyebrow = "API REFERENCE"
+eyebrow = "ДОВІДНИК API"
 lead = "Помилки повертають стабільний машинозчитуваний код і повідомлення для людини. Тіло 4xx завжди містить request_id для підтримки."
 title = "Помилки"
 
@@ -8820,13 +8836,13 @@ title = "Документація недоступна"
 [portal.docs.quickstart]
 eyebrow = "ПОЧАТОК РОБОТИ"
 lead = "Надішліть свій перший документ на typed endpoint і отримайте структурований JSON у три кроки. Без навчання моделі й prompt engineering."
-title = "Quickstart"
+title = "Швидкий старт"
 
 [portal.docs.quickstart.callout]
 bodyAfterLink = "для рецептів copy-paste."
 bodyBeforeLink = "підключіть той самий виклик до конвеєра, щоб зв’язати валідацію, приховування та доставку — або надайте його агенту через MCP. Див."
 label = "Далі:"
-link = "Playbooks"
+link = "Сценарії"
 
 [portal.docs.quickstart.step1]
 body = "Створіть scoped key на вкладці Infrastructure. Ключі мають обмеження швидкості й необов’язковий IP allowlist. Експортуйте його у ваш shell:"
@@ -8843,7 +8859,7 @@ codeCaption = "200 OK"
 title = "Прочитайте структурований результат"
 
 [portal.docs.rateLimits]
-burst = "Burst"
+burst = "Сплеск"
 codeCaption = "429 Too Many Requests"
 concurrency = "Паралельність"
 eyebrow = "ПОЧАТОК РОБОТИ"
@@ -8853,7 +8869,7 @@ title = "Обмеження швидкості та квоти"
 
 [portal.docs.recipes]
 cloneButton = "Клонувати рецепт"
-eyebrow = "PLAYBOOKS"
+eyebrow = "СЦЕНАРІЇ"
 lead = "Наскрізні шаблони, що зв’язують джерела, операції та призначення. Кожен відповідає конвеєру, який можна клонувати."
 title = "Рецепти"
 
@@ -8867,7 +8883,7 @@ beta = "Beta"
 deprecated = "Застаріло"
 
 [portal.docs.skills]
-eyebrow = "SKILLS"
+eyebrow = "НАВИЧКИ"
 lead = "Вбудовані іменовані можливості, які ваш агент викликає як один інструмент. Кожна навичка — це детермінований ланцюг операцій із прикріпленими оцінюваннями."
 title = "Навички агента"
 
@@ -8876,7 +8892,7 @@ title = "На цій сторінці"
 
 [portal.docs.webhooks]
 codeCaption = "document.processed"
-eyebrow = "API REFERENCE"
+eyebrow = "ДОВІДНИК API"
 lead = "Підпишіться на події document.processed, pipeline.completed і quota.threshold. Payloads підписуються за допомогою HMAC-SHA256."
 title = "Вебхуки"
 
@@ -9129,7 +9145,7 @@ detailBody = "Запустіть офіційний image на своєму се
 note = "Відкривається на :8080. Стандартний вхід: admin / stirling."
 tagline = "Запустіть сервер у container"
 title = "Docker"
-variantFat = "Fat"
+variantFat = "Повна"
 variantLite = "Ultra-Lite"
 variantStandard = "Standard"
 
@@ -10223,7 +10239,7 @@ description = "Виберіть, що цей пайплайн робить із 
 
 [portal.processorFlow]
 footnote = "Підрахунки наведено за останні 24 години. Швидкість потоку є ілюстративною."
-liveBadge = "Live"
+liveBadge = "Наживо"
 stats = "{{connected}} підключено · {{processed}} PDF оброблено"
 title = "PDF-процесор"
 
@@ -10271,7 +10287,7 @@ title = "Закупівля"
 agreeCta = "Підписати угоду"
 confidential = "Конфіденційно"
 confirm = "Я прочитав(-ла) і погоджуюся з цією Угодою та підтверджую, що маю повноваження підписати її від імені організації, зазначеної вище."
-docName = "Stirling Enterprise Agreement"
+docName = "Угода Stirling Enterprise"
 docSub = "MSA, Order Form, EULA і DPA, об'єднані в один підпис."
 download = "Завантажити"
 downloadDraftError = "Не вдалося згенерувати PDF угоди — рендерер документа недоступний. Спробуйте невдовзі ще раз або зверніться до служби підтримки."
@@ -10280,7 +10296,7 @@ legalName = "Назва юридичної особи"
 legalNamePlaceholder = "Юридична особа, яка підписуватиме"
 loadError = "Не вдалося завантажити угоду. Спробуйте ще раз."
 loading = "Завантаження угоди..."
-ref = "Ref {{ref}} · {{version}}"
+ref = "Реф. {{ref}} · {{version}}"
 requestChanges = "Запросити зміни"
 scrollHint = "Прокрутіть, щоб переглянути"
 signatory = "Ім'я підписанта"
@@ -10351,7 +10367,7 @@ slPrioritySub = "Той самий робочий день · іменний CSM
 slStandard = "Стандартний"
 slStandardSub = "Наступного робочого дня · спільний CSM · включено"
 stepOf = "Крок {{n}} з {{total}}"
-taxId = "VAT / Tax ID"
+taxId = "ПДВ / податковий ID"
 taxIdPlaceholder = "Необов'язково"
 term = "Термін"
 termDiscount = "Застосовано знижку {{pct}}% за багаторічне зобов’язання"
@@ -10370,7 +10386,7 @@ years_one = "{{count}} рік"
 years_other = "{{count}} років"
 
 [portal.procurement.documents]
-agreement = "Enterprise Agreement"
+agreement = "Корпоративна угода"
 agreementSub = "MSA, Order Form і DPA в одному підписі."
 download = "Завантажити"
 eula = "EULA та комерційні умови"
@@ -10464,7 +10480,7 @@ title = "Прив’яжіть ваш обліковий запис, щоб по
 
 [portal.procurement.live]
 description = "Ваша підписка активна, і ліцензію видано. Вашу команду підготовлено, і білінг розпочато."
-eyebrow = "Live"
+eyebrow = "Наживо"
 title = "Ви вже працюєте в Stirling Enterprise"
 
 [portal.procurement.milestone]
@@ -10495,7 +10511,7 @@ subtitle = "Ваш solutions engineer проведе вашу команду ч�
 title = "Запланувати дзвінок"
 
 [portal.procurement.setup]
-airgap = "Air-gapped"
+airgap = "Ізольоване середовище"
 airgapSub = "Ізольовано, без вихідних з'єднань"
 back = "Назад"
 businessName = "Назва компанії"
@@ -10512,7 +10528,7 @@ invitesPlaceholder = "sam@acme.com, lee@acme.com"
 scheduleCall = "Запланувати дзвінок"
 seats = "Користувачі для тестування"
 seatsPlaceholder = "наприклад, 15"
-selfhost = "Self-hosted"
+selfhost = "Самостійне розгортання"
 selfhostSub = "Docker або Kubernetes"
 start = "Почати пробний період"
 stepOf = "Крок {{n}} з {{total}}"
@@ -10638,7 +10654,7 @@ noPolicies = "Поки що немає політик, запущених з edi
 
 [portal.sources.types.email]
 description = "Перетворюйте вкладення, надіслані до спеціальної поштової скриньки, на документи."
-label = "Email inbox"
+label = "Вхідні Email"
 
 [portal.sources.types.folder]
 description = "Відстежувати каталог на сервері для нових документів."
@@ -10739,7 +10755,7 @@ description = "Отримуйте документи через підписан
 label = "Webhook"
 
 [portal.sources.types.webhook.detail]
-deliveryUrl = "Delivery URL"
+deliveryUrl = "URL доставки"
 secretNote = "Секрет підписання показується один раз, коли webhook створено. Повторно створіть джерело, щоб змінити його."
 
 [portal.sources.types.webhook.reveal]
@@ -10749,7 +10765,7 @@ secret = "Секрет підписання"
 secretHelp = "Підписуйте сире тіло кожної доставки цим ключем (HMAC-SHA256) і надсилайте його як заголовок X-Stirling-Signature."
 secretWarning = "Скопіюйте секрет підписання зараз. З міркувань безпеки він показується лише один раз і не може бути отриманий пізніше."
 title = "Webhook створено"
-url = "Delivery URL"
+url = "URL доставки"
 usage = "POST кожен документ як сире тіло запиту на Delivery URL з binary content type (application/pdf або application/octet-stream). Політики, що посилаються на нього, автоматично запускаються після надходження."
 
 [portal.sources.wizard]
@@ -10898,15 +10914,15 @@ scope = "Імпорт файлів"
 
 [provider.googledrive.apiKey]
 description = "Ключ Google API для Google Picker API з Google Cloud Console"
-label = "API Key"
+label = "Ключ API"
 
 [provider.googledrive.appId]
 description = "Google Drive App ID з Google Cloud Console"
-label = "App ID"
+label = "ID застосунку"
 
 [provider.googledrive.clientId]
 description = "Google OAuth 2.0 Client ID з Google Cloud Console"
-label = "Client ID"
+label = "ID клієнта"
 
 [provider.googledrive.enabled]
 description = "Дозволити користувачам імпортувати файли безпосередньо з Google Drive"
@@ -10930,11 +10946,11 @@ label = "Блокувати реєстрацію"
 
 [provider.oauth2.generic.clientId]
 description = "OAuth2 Client ID від вашого постачальника"
-label = "Client ID"
+label = "ID клієнта"
 
 [provider.oauth2.generic.clientSecret]
 description = "OAuth2 Client Secret від вашого постачальника"
-label = "Client Secret"
+label = "Секрет клієнта"
 
 [provider.oauth2.generic.enabled]
 description = "Увімкнути автентифікацію з використанням власного постачальника OAuth2"
@@ -10942,7 +10958,7 @@ label = "Увімкнути загальний OAuth2"
 
 [provider.oauth2.generic.issuer]
 description = "Постачальник, який підтримує OpenID Connect Discovery (/.well-known/openid-configuration)"
-label = "Issuer URL"
+label = "URL видавця"
 
 [provider.oauth2.generic.provider]
 description = "Назва вашого постачальника OAuth2 (напр., Azure AD, Okta)"
@@ -10961,11 +10977,11 @@ scope = "Автентифікація входу"
 
 [provider.oauth2.github.clientId]
 description = "OAuth2 Client ID з GitHub Developer Settings"
-label = "Client ID"
+label = "ID клієнта"
 
 [provider.oauth2.github.clientSecret]
 description = "OAuth2 Client Secret з GitHub Developer Settings"
-label = "Client Secret"
+label = "Секрет клієнта"
 
 [provider.oauth2.github.scopes]
 description = "Області доступу OAuth2, розділені комами"
@@ -10980,11 +10996,11 @@ scope = "Автентифікація входу"
 
 [provider.oauth2.google.clientId]
 description = "OAuth2 Client ID з Google Cloud Console"
-label = "Client ID"
+label = "ID клієнта"
 
 [provider.oauth2.google.clientSecret]
 description = "OAuth2 Client Secret з Google Cloud Console"
-label = "Client Secret"
+label = "Секрет клієнта"
 
 [provider.oauth2.google.scopes]
 description = "Області доступу OAuth2, розділені комами"
@@ -10999,15 +11015,15 @@ scope = "SSO"
 
 [provider.oauth2.keycloak.clientId]
 description = "OAuth2 Client ID з Keycloak"
-label = "Client ID"
+label = "ID клієнта"
 
 [provider.oauth2.keycloak.clientSecret]
 description = "OAuth2 Client Secret з Keycloak"
-label = "Client Secret"
+label = "Секрет клієнта"
 
 [provider.oauth2.keycloak.issuer]
 description = "URL кінцевої точки OpenID Connect Discovery realm у Keycloak"
-label = "Issuer URL"
+label = "URL видавця"
 
 [provider.oauth2.keycloak.scopes]
 description = "Області доступу OAuth2, розділені комами"
@@ -11039,19 +11055,19 @@ label = "Сертифікат IDP"
 
 [provider.saml2.idpIssuer]
 description = "ID вашого постачальника"
-label = "IDP Issuer"
+label = "Видавець IDP"
 
 [provider.saml2.idpMetadataUri]
 description = "URI метаданих вашого постачальника"
-label = "IDP Metadata URI"
+label = "URI метаданих IDP"
 
 [provider.saml2.idpSingleLoginUrl]
 description = "URL для ініціювання SSO"
-label = "IDP Single Login URL"
+label = "URL єдиного входу IDP"
 
 [provider.saml2.idpSingleLogoutUrl]
 description = "URL для ініціювання SLO"
-label = "IDP Single Logout URL"
+label = "URL єдиного виходу IDP"
 
 [provider.saml2.privateKey]
 description = "Шлях до вашого приватного ключа"
@@ -11083,19 +11099,19 @@ label = "Адреса відправника"
 
 [provider.smtp.host]
 description = "Ім’я хоста або IP-адреса вашого сервера SMTP"
-label = "SMTP Host"
+label = "SMTP-хост"
 
 [provider.smtp.password]
 description = "Пароль для автентифікації SMTP"
-label = "SMTP Password"
+label = "Пароль SMTP"
 
 [provider.smtp.port]
 description = "Номер порту для підключення SMTP (зазвичай 25, 465 або 587)"
-label = "SMTP Port"
+label = "Порт SMTP"
 
 [provider.smtp.username]
 description = "Ім’я користувача для автентифікації SMTP"
-label = "SMTP Username"
+label = "Ім’я користувача SMTP"
 
 [quickAccess]
 allTools = "Інструменти"
@@ -12102,28 +12118,15 @@ description = "Введіть повну URL-адресу вашого само�
 label = "URL сервера"
 
 [sharedSign]
-backToSessions = "Назад до сеансів"
-createdOn = "Створено {{date}}"
 disabledBody = "Спільне підписання не увімкнено на цьому сервері."
-disabledTitle = "Не увімкнено"
-due = "Строк до {{date}}"
 filterDeclined = "Відхилено"
-filterMine = "Мої"
 filterOverdue = "Прострочено"
 filterSigned = "Підписано"
-fromOwner = "Від {{owner}}"
-newRequest = "Запросити підписи"
-signedCount = "{{signed}}/{{total}} підписано"
 signInRequiredBody = "Увійдіть, щоб запитувати підписи та бачити запити, надіслані вам."
 signInRequiredTitle = "Потрібен вхід"
 
-[sharedSign.empty]
-active = "Немає очікуваних запитів на підпис чи активних сеансів"
-completed = "Немає завершених сеансів"
-
 [sharedSign.tab]
 active = "Активні"
-completed = "Завершені"
 
 [showJS]
 done = "JavaScript витягнуто"
@@ -12473,10 +12476,68 @@ bullet3 = "Невидимі підписи все одно забезпечую�
 description = "Керує тим, чи підпис видимий у документі або вбудований невидимо."
 title = "Видимість підпису"
 
+[signingDetail]
+allSigned = "Усі підписали. Перегляньте документ, а потім завершіть."
+awaitingOwner = "Власник завершить документ, коли буде готовий."
+certificateNext = "На наступному кроці виберіть свій сертифікат."
+earlyHint = "Ви можете завершити зараз із отриманими підписами або зачекати на решту учасників."
+finalDocument = "Підписаний документ"
+finalizeTitle = "Завершити документ"
+finalReady = "Ваш підписаний PDF готовий до відкриття в робочій області."
+inProgressPreview = "Попередній перегляд у процесі з поданими підписами. Власник ще не завершив цей документ."
+manageSession = "Керувати сеансом підписання"
+moveHint = "Виберіть підпис у документі, щоб перемістити, змінити розмір або видалити його."
+notified = "Сповіщено"
+optional = "Необов’язково"
+ownerNext = "Поверніться до свого сеансу, щоб переглянути підписи всіх учасників і завершити документ, коли будете готові."
+placeHint = "Натисніть на документ, щоб розмістити свій підпис."
+progress = "Хід підписання"
+readyToSign = "Готові підписати?"
+refreshPreview = "Оновити попередній перегляд"
+removePerson = "Видалити {{name}}"
+requestClosed = "Цей запит закрито"
+requestTitle = "Запит на підпис"
+signatureSubmitted = "Ваш підпис подано"
+signedCount = "{{signed}} / {{total}} підписано"
+signMyRequest = "Підписати цей документ"
+viewOnly = "Ви все ще можете переглянути документ тут."
+visibleSignature = "Видимий підпис"
+visibleSignatureHelp = "Про видимі підписи"
+
+[signMenu]
+anyOrder = "Учасники можуть підписувати в будь-якому порядку. Власник завершує документ після перегляду зібраних підписів."
+certificateHint = "Використати сертифікат"
+certificateTitle = "Цифровий підпис"
+closedStatus = "Закрито"
+completedTab = "Завершено"
+dueDate = "Дата виконання (необов’язково)"
+newActivity = "Нова активність відтоді, як ви востаннє переглядали цей сеанс"
+noActive = "Немає активних сеансів"
+noCompleted = "Немає завершених сеансів"
+noMatches = "Немає відповідних сеансів"
+noUnread = "Усе переглянуто"
+optionalMarks = "Видимі позначки необов’язкові. Заповнити й підписати також працює лише із сертифікатом."
+ownerProgress = "Ваш запит · {{signed}} / {{total}} підписано"
+personalHint = "Намалюйте, введіть або завантажте"
+personalTitle = "Особистий підпис"
+request = "Запитати підписи"
+search = "Знайти документ або особу"
+send = "Надіслати запит на підписання"
+sessionFilter = "Подання сеансів"
+sessions = "Сеанси підписання"
+settings = "Вигляд і сторінка підсумку (необов’язково)"
+signFailed = "Не вдалося підписати. Перевірте свій сертифікат і спробуйте ще раз; розміщені позначки збережено."
+submitted = "Подано · очікує завершення"
+title = "Підпис"
+triggerUnreadCount_one = "Підпис · {{count}} непрочитаний сеанс"
+triggerUnreadCount_other = "Підпис · {{count}} непрочитаних сеансів"
+unreadTab = "Непрочитане"
+
 [signRequest]
+accessExpired = "Ваш доступ до цього запиту на підписання минув. Попросіть відправника надіслати новий запит."
 declined = "Запит на підпис відхилено"
+expired = "Доступ минув"
 fetchFailed = "Не вдалося завантажити запит на підпис"
-signed = "Документ успішно підписано"
 
 [signSession]
 created = "Запит на підписання надіслано"
@@ -12512,6 +12573,52 @@ title = "Створити обліковий запис"
 unableToAccessTool = "Не вдається отримати доступ до інструмента: {{error}}"
 unexpectedError = "Неочікувана помилка: {{message}}"
 unknownError = "Невідома помилка"
+
+[signWorkspace]
+changeDocument = "Змінити PDF"
+chooseDocument = "Виберіть відкритий PDF"
+chooseFromLibrary = "Вибрати з бібліотеки"
+chooseParticipants = "Виберіть учасників"
+choosePdf = "Виберіть PDF"
+choosePdfHeading = "Почніть зі свого документа"
+clearDate = "Очистити дату"
+created = "Створено"
+createdByMe = "Створено мною"
+datesAndOptions = "Дати й параметри"
+document = "Документ"
+dueDate = "Дата виконання"
+dueDateHelp = "Це цільова дата. Учасники все ще можуть підписати після неї."
+dueDateHelpLabel = "Про дати виконання"
+empty = "Тут ще немає сеансів."
+expand = "Розгорнути сеанси підписання"
+inviteLoadError = "Не вдалося завантажити параметри запрошення. Закрийте це діалогове вікно й спробуйте ще раз."
+invitePerson = "Додати колегу: {{name}}"
+inviteTeammate = "Додати колегу"
+inviteUnavailable = "Додавання колег недоступне для вашого облікового запису або конфігурації сервера."
+navigation = "Навігація підписання"
+needsYou = "Потрібен ваш підпис"
+nextMonth = "Наступний місяць"
+nextStep = "Далі"
+noDueDate = "Без дати виконання"
+noMatches = "Немає сеансів, що відповідають вашому пошуку або фільтру."
+noOpenPdfs = "Виберіть PDF зі своєї бібліотеки або додайте його з комп’ютера."
+noPeopleMatch = "Немає людей, що відповідають вашому пошуку."
+noPreview = "Попередній перегляд документа недоступний"
+owner = "Власник"
+participants = "Учасники"
+participantsSelected = "Вибрано: {{count}}"
+personalHeading = "Підписати документ"
+previousMonth = "Попередній місяць"
+refresh = "Оновити сеанси"
+requestSteps = "Кроки запиту на підписання"
+search = "Пошук документів або людей"
+searchParticipants = "Пошук людей або команд"
+selectOnePdf = "Виберіть один PDF для цього запиту на підписання."
+signingOrderHelp = "Про порядок підписання"
+status = "Статус"
+unavailable = "Цей сеанс більше недоступний. Оновіть список, щоб побачити поточні сеанси."
+upcoming = "Майбутні"
+uploadFailed = "Не вдалося відкрити цей PDF. Спробуйте ще раз."
 
 [sizes]
 large = "Великий"

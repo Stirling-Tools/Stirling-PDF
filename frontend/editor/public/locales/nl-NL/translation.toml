@@ -742,10 +742,10 @@ title = "Documenten & RAG"
 
 [admin.settings.ai.documents.embeddingApiKey]
 description = "Laat leeg om de eigen omgevingsreferentie van de engine te gebruiken. Van toepassing op zelfgehoste single-engine-implementaties."
-generic = "Embedding API key"
-openai = "OpenAI API key"
+generic = "Embedding API-sleutel"
+openai = "OpenAI API-sleutel"
 setPlaceholder = "Opgeslagen - laat leeg om de huidige key te behouden"
-voyageai = "VoyageAI API key"
+voyageai = "VoyageAI API-sleutel"
 
 [admin.settings.ai.documents.embeddingBaseUrl]
 description = "Base URL van het OpenAI-compatibele / Ollama embeddings-endpoint, bijv. http://ollama:11434/v1. Moet verwijzen naar een vertrouwd intern endpoint (SSRF-gevoelig)."
@@ -892,10 +892,10 @@ description = "Kies de LLM-provider en de slimme/snelle modellen die de AI engin
 title = "Modellen & providers"
 
 [admin.settings.ai.models.apiKey]
-anthropic = "Anthropic API key"
+anthropic = "Anthropic API-sleutel"
 description = "Laat leeg om de eigen omgevingsreferentie van de engine te gebruiken. Van toepassing op zelfgehoste single-engine-implementaties."
-generic = "API key"
-openai = "OpenAI API key"
+generic = "API-sleutel"
+openai = "OpenAI API-sleutel"
 setPlaceholder = "Opgeslagen - laat leeg om de huidige key te behouden"
 
 [admin.settings.ai.models.baseUrl]
@@ -1537,7 +1537,7 @@ label = "OAuth scopes afdwingen"
 
 [admin.settings.mcp.usernameClaim]
 description = "JWT claim die wordt vergeleken met een Stirling-gebruikersnaam (bijv. sub, email, preferred_username)."
-label = "Username claim"
+label = "Gebruikersnaam-claim"
 
 [admin.settings.plan.noData]
 message = "Deze server kon de licentieservice niet bereiken. Probeer opnieuw of controleer de licentiesleutel."
@@ -1815,7 +1815,7 @@ label = "Koppelingen voor delen inschakelen"
 
 [admin.settings.storage.signing.enabled]
 description = "Gebruikers toestaan ondertekeningssessies met meerdere deelnemers te maken. Vereist dat serverbestandsopslag is ingeschakeld."
-label = "Groepsondertekenen inschakelen (Alpha)"
+title = "Groepsondertekening inschakelen"
 
 [admin.settings.telegram]
 description = "Configureer Telegram-botconnectiviteit, toegangsbeheer en feedbackgedrag."
@@ -2744,7 +2744,6 @@ reason = "Reden"
 serverCertMessage = "Servercertificaat gebruiken - geen bestanden of wachtwoord nodig"
 showLogo = "Logo tonen"
 signatureProgress = "{{signedCount}}/{{totalCount}} handtekeningen"
-signed = "Ondertekend"
 tags = "authenticeren,PEM,P12,officieel,versleutelen,ondertekenen,certificaat,PKCS12,JKS,server,handmatig,auto"
 title = "Certificaat ondertekening"
 viewed = "Bekeken"
@@ -2809,7 +2808,13 @@ reasonPlaceholder = "bijv. Goedkeuring, Review..."
 
 [certSign.collab.finalize]
 button = "Finaliseren en ondertekende PDF laden"
+confirmAction = "Bevestigen en finaliseren"
+confirmDescription = "Door te finaliseren wordt deze sessie gesloten. Er kunnen geen handtekeningen meer worden ingediend."
+confirmTitle = "Deze ondertekeningssessie finaliseren?"
 early = "Finaliseren met huidige handtekeningen"
+excluded = "Deelnemers van wie de handtekeningen niet worden opgenomen"
+included = "Opgenomen handtekeningen"
+requiresSignature = "Minstens één deelnemer moet ondertekenen voordat je kunt finaliseren."
 
 [certSign.collab.participant]
 certInvalid = "✗ {{error}}"
@@ -2826,7 +2831,6 @@ includeSummaryPageHelp = "Aan het einde wordt een overzichtspagina toegevoegd me
 [certSign.collab.sessionDetail]
 addParticipants = "Deelnemers toevoegen"
 addParticipantsError = "Deelnemers toevoegen mislukt"
-backToList = "Terug naar sessies"
 deleteConfirm = "Weet u het zeker? Dit kan niet ongedaan worden gemaakt."
 deleteError = "Sessie verwijderen mislukt"
 deleteSession = "Sessie verwijderen"
@@ -2835,14 +2839,11 @@ finalizeError = "Sessie finaliseren mislukt"
 loadPdfError = "Ondertekende PDF laden mislukt"
 loadSignedPdf = "Ondertekende PDF laden in actieve bestanden"
 messageLabel = "Bericht"
-owner = "Eigenaar"
 participantRemoved = "Deelnemer verwijderd"
 participants = "Deelnemers"
 participantsAdded = "Deelnemers succesvol toegevoegd"
-removeParticipant = "Verwijderen"
 removeParticipantError = "Deelnemer verwijderen mislukt"
 selectUsers = "Gebruikers selecteren..."
-sessionInfo = "Sessie-informatie"
 
 [certSign.collab.sessionList]
 active = "Actief"
@@ -2855,11 +2856,10 @@ title = "Weergave van handtekening"
 [certSign.collab.signRequest]
 addedToFiles = "Document toegevoegd aan actieve bestanden"
 addToFiles = "Toevoegen aan actieve bestanden"
-advancedSettings = "Geavanceerde instellingen"
-backToList = "Terug naar ondertekeningsverzoeken"
 certificateChoice = "Selecteer een certificaat om mee te ondertekenen"
 changeSignature = "Handtekening wijzigen"
 clearSignature = "Handtekening wissen"
+closed = "Deze sessie is gefinaliseerd. Je kunt het definitieve document bekijken, maar verdere handtekeningen of weigeringen worden niet geaccepteerd."
 completeAndSign = "Voltooien en ondertekenen"
 createNewSignature = "Nieuwe handtekening maken"
 decline = "Verzoek weigeren"
@@ -2876,7 +2876,6 @@ invalidFileType = "Selecteer een afbeeldingsbestand"
 location = "Locatie (optioneel)"
 locationPlaceholder = "Vanwaar ondertekent u?"
 noCertificate = "Selecteer een certificaatbestand"
-noSignatures = "Plaats ten minste één handtekening op de PDF"
 p12File = "P12/PFX-certificaatbestand"
 password = "Certificaatwachtwoord"
 penColor = "Penkleur"
@@ -2894,16 +2893,15 @@ signatureText = "Handtekeningtekst"
 signatureTextPlaceholder = "Voer uw naam in..."
 signatureTypeLabel = "Handtekeningtype"
 signButton = "Document ondertekenen"
-signingTitle = "Ondertekenen"
 textColor = "Tekstkleur"
 typeSignature = "Typ uw naam om een handtekening te maken"
-uploadCert = "Aangepast certificaat"
-uploadCertDesc = "Gebruik uw eigen P12/PFX-certificaat"
+uploadCert = "Upload een certificaat"
+uploadCertDesc = "Gebruik je eigen PKCS12-, PFX-, PEM- of JKS-certificaat."
 uploadSignature = "Upload uw handtekeningafbeelding"
-usePersonalCert = "Persoonlijk certificaat"
-usePersonalCertDesc = "Automatisch gegenereerd voor uw account"
-useServerCert = "Organisatiecertificaat"
-useServerCertDesc = "Gedeeld organisatiecertificaat"
+usePersonalCert = "Stirling Sign · Persoonlijk"
+usePersonalCertDesc = "Onderteken met het certificaat dat voor je account is aangemaakt."
+useServerCert = "Stirling Sign · Organisatie"
+useServerCertDesc = "Onderteken met het gedeelde organisatiecertificaat van deze server."
 useSignature = "Gebruik handtekening"
 
 [certSign.collab.signRequest.certModal]
@@ -2912,10 +2910,13 @@ certInvalidFallback = "Ongeldig certificaat"
 certNetworkError = "Certificaat kon niet worden gevalideerd"
 certValidating = "Certificaat wordt gevalideerd..."
 certValidUntil = "Certificaat geldig tot {{date}}"
-description_one = "Je hebt {{count}} handtekening geplaatst. Kies je certificaat om het ondertekenen te voltooien."
-description_other = "Je hebt {{count}} handtekeningen geplaatst. Kies je certificaat om het ondertekenen te voltooien."
+description_one = "{{count}} zichtbare markering is gereed. Kies een certificaat om de ondertekening te voltooien."
+description_other = "{{count}} zichtbare markeringen zijn gereed. Kies een certificaat om de ondertekening te voltooien."
+description_zero = "Je certificaat ondertekent het document zonder zichtbare markeringen."
+details = "Ondertekeningsdetails (optioneel)"
+format = "Certificaatformaat"
 sign = "Document ondertekenen"
-title = "Certificaat configureren"
+title = "Kies hoe je wilt ondertekenen"
 
 [certSign.collab.signRequest.mode]
 move = "Handtekening verplaatsen"
@@ -2968,11 +2969,11 @@ visible = "Zichtbaar"
 yourSignatures = "Uw handtekeningen ({{count}})"
 
 [certSign.collab.userSelector]
-inviteUsers = "Gebruikers toevoegen"
 loadError = "Gebruikers laden mislukt"
 noTeam = "Geen team"
 noUsers = "Geen andere gebruikers gevonden."
 placeholder = "Gebruikers selecteren..."
+you = "{{name}} (jij)"
 
 [certSign.device]
 stepTitle = "Dit apparaat"
@@ -5450,9 +5451,6 @@ multimedia = "Multimedia"
 
 [groupSigning.steps]
 back = "Terug"
-completed = "Voltooid"
-current = "Huidig"
-stepLabel = "Stap {{number}}"
 
 [groupSigning.steps.configureDefaults]
 continue = "Doorgaan"
@@ -5460,7 +5458,6 @@ invisible = "Handtekeningen zijn onzichtbaar (alleen metadata)"
 locationLabel = "Locatie:"
 preview = "Voorbeeld"
 reasonLabel = "Reden:"
-title = "Handtekeninginstellingen configureren"
 visible = "Handtekeningen zijn zichtbaar op pagina {{page}}"
 
 [groupSigning.steps.review]
@@ -5472,14 +5469,13 @@ location = "Locatie:"
 logo = "Logo:"
 logoHidden = "Geen logo"
 logoShown = "Stirling PDF-logo weergegeven"
-participantCount_one = "{{count}} deelnemer ondertekent op volgorde"
-participantCount_other = "{{count}} deelnemers ondertekenen op volgorde"
+participantCount_one = "{{count}} deelnemer geselecteerd"
+participantCount_other = "{{count}} deelnemers geselecteerd"
 participants = "Deelnemers"
 reason = "Reden:"
 send = "Ondertekeningsverzoeken verzenden"
 signatureSettings = "Handtekeninginstellingen"
 title = "Sessiedetails controleren"
-titleShort = "Controleren en verzenden"
 visibility = "Zichtbaarheid:"
 visible = "Zichtbaar op pagina {{page}}"
 
@@ -5487,7 +5483,6 @@ visible = "Zichtbaar op pagina {{page}}"
 continue = "Doorgaan"
 noFile = "Selecteer één PDF-bestand uit uw actieve bestanden om een ondertekeningssessie te maken."
 selectedFile = "Geselecteerd document"
-title = "Document selecteren"
 
 [groupSigning.steps.selectParticipants]
 continue = "Doorgaan"
@@ -5495,31 +5490,30 @@ count_one = "{{count}} deelnemer geselecteerd"
 count_other = "{{count}} deelnemers geselecteerd"
 label = "Deelnemers selecteren"
 placeholder = "Deelnemers kiezen om te ondertekenen..."
-title = "Deelnemers kiezen"
 
 [groupSigning.tooltip]
 header = "Over groepsondertekenen"
 
 [groupSigning.tooltip.finalization]
-bullet1 = "Alle handtekeningen worden toegepast in de door u opgegeven deelnemersvolgorde"
-bullet2 = "U kunt indien nodig met gedeeltelijke handtekeningen finaliseren"
-bullet3 = "Na finalisatie kan de sessie niet meer worden gewijzigd"
-description = "Zodra alle deelnemers hebben getekend (of u ervoor kiest eerder te finaliseren), kunt u de definitieve ondertekende PDF genereren."
+bullet1 = "De definitieve PDF bevat alle geaccepteerde handtekeningen"
+bullet2 = "Controleer openstaande deelnemers voordat u afrondt met gedeeltelijke handtekeningen"
+bullet3 = "Afronding sluit het verzoek; openstaande deelnemers kunnen niet meer ondertekenen"
+description = "Nadat ten minste één deelnemer heeft ondertekend, kan de eigenaar het verzoek afronden en de ondertekende PDF genereren."
 title = "Finalisatieproces"
 
 [groupSigning.tooltip.roles]
 bullet1 = "Eigenaar (u): Maakt sessie, configureert standaard handtekeningen, finaliseert document"
-bullet2 = "Deelnemers: Maken hun handtekening, kiezen certificaat, plaatsen op PDF"
-bullet3 = "Deelnemers kunnen zichtbaarheid, reden of locatie-instellingen niet wijzigen"
-description = "U beheert de instellingen voor de handtekeningweergave voor alle deelnemers."
+bullet2 = "Deelnemers: kies een certificaat en plaats eventueel een zichtbare handtekening op de PDF"
+bullet3 = "Deelnemers kunnen hun reden en locatie voor de handtekening aanpassen voordat ze indienen"
+description = "De eigenaar stelt de standaardwaarden voor het verzoek in; elke deelnemer kiest diens certificaat en optionele zichtbare markering."
 title = "Rollen van deelnemers"
 
 [groupSigning.tooltip.sequential]
-bullet1 = "Eerste deelnemer moet tekenen voordat de tweede toegang krijgt tot het document"
-bullet2 = "Zorgt voor juiste ondertekeningsvolgorde voor juridische naleving"
-bullet3 = "U kunt deelnemers herschikken door ze in de lijst te slepen"
-description = "Deelnemers ondertekenen documenten in de door u opgegeven volgorde. Elke ondertekenaar ontvangt een melding wanneer hij/zij aan de beurt is."
-title = "Sequentieel ondertekenen"
+bullet1 = "Deelnemers hoeven niet te wachten op een andere ondertekenaar"
+bullet2 = "Volg de voortgang van elke deelnemer in Ondertekeningssessies"
+bullet3 = "Een deadline is een herinnering; de toegang verloopt hierdoor niet"
+description = "Toegewezen deelnemers kunnen onafhankelijk en in elke volgorde beoordelen en ondertekenen."
+title = "Ondertekenen in elke volgorde"
 
 [guestBanner]
 dismiss = "Banner sluiten"
@@ -5828,7 +5822,6 @@ tags = "detecteren,splitsen,foto's,auto detecteren,foto's detecteren,foto's spli
 title = "Gescande foto's detecteren en splitsen"
 
 [home.sharedSign]
-desc = "Vraag handtekeningen aan bij anderen en houd ondertekeningssessies bij"
 title = "Gedeeld ondertekenen"
 
 [home.showJS]
@@ -6818,7 +6811,7 @@ bullet1 = "<strong>all</strong> → selecteert alle pagina's"
 title = "Speciale sleutelwoorden"
 
 [payg.activity]
-docs = "docs"
+docs = "documenten"
 empty = "Nog geen factureerbare activiteit in deze periode."
 subtitle = "Alleen AI en automatisering gebruiken je budget. Dagelijkse tools zijn gratis en worden hier niet vermeld."
 title = "Recente factureerbare activiteit"
@@ -6959,12 +6952,12 @@ aiPromo = "Maak, bewerk en stel vragen over PDFs met AI"
 apiPromo = "Verbind je apps en AI-assistenten"
 automationPromo = "Automatiseer herhalende PDF-taken"
 createAccount = "Gratis account maken"
-editorLabel = "PDF Editor"
+editorLabel = "PDF-editor"
 login = "Inloggen"
 manualToolsPromo = "Onbeperkte gratis handmatige PDF-tools"
-processorLabel = "PDF Processor"
+processorLabel = "PDF-verwerker"
 processorTitle = "Maak een account om het beste van Stirling te ontgrendelen"
-readerLabel = "PDF Reader"
+readerLabel = "PDF-lezer"
 
 [payg.spendCapMeter]
 barAria = "Uitgaven tegenover limiet"
@@ -7426,7 +7419,9 @@ groupedTitle = "Onderdeel van een groep in deze PDF: het kan worden verwijderd, 
 
 [pdfTextEditor.sidebar]
 addImage = "Afbeelding toevoegen"
+addTable = "Tabel toevoegen"
 addText = "Tekst toevoegen"
+clickPageToAddTable = "Klik op de pagina om een tabel toe te voegen"
 clickPageToAddText = "Klik op de pagina om tekst toe te voegen"
 document = "Document"
 group = "Groeperen"
@@ -7435,11 +7430,14 @@ groupingAutoHint = "Groepeert regels met gelijke afstand in alinea's. Als je dit
 groupingLine = "Regel"
 groupTooltip = "Geselecteerde runs samenvoegen tot één alinea ({{shortcut}})"
 groupTooltipDisabled = "Selecteer 2+ runs om samen te voegen"
+image = "Afbeelding"
 noFile = "Geen bestand geladen"
 noFileHint = "Kies een PDF uit het Bestandenpaneel links, of sleep er een in. De editor opent deze automatisch."
 opening = "Document openen..."
 paragraph = "Alinea"
 rulers = "Linialen en hulplijnen"
+table = "Tabel"
+text = "Tekst"
 textBoxWidth = "Breedte van nieuw tekstvak"
 textGrouping = "Tekstgroepering"
 ungroup = "Groepering opheffen"
@@ -7460,6 +7458,24 @@ loadingProgress = "Laadvoortgang"
 noDocument = "Geen document geladen."
 pickPrompt = "Kies een PDF uit het Bestandenpaneel links om te beginnen met bewerken."
 renderingPreview = "Voorbeeld renderen"
+
+[pdfTextEditor.table]
+addColumn = "Kolom toevoegen"
+addRow = "Rij toevoegen"
+column = "Kol"
+deleteColumn = "Kolom verwijderen"
+deleteRow = "Rij verwijderen"
+done = "Gereed"
+doneHint = "Stop met bewerken als tabel"
+edit = "Bewerken"
+editHint = "Bewerken als tabel - typ in cellen, voeg rijen en kolommen toe of verwijder ze"
+move = "Verplaatsen"
+moveTable = "Sleep om de hele tabel te verplaatsen"
+recognizedHint = "Herkende tabel - klik om alle tekst te selecteren"
+resizeColumn = "Sleep om de grootte van deze kolom te wijzigen (Alt: delen met de volgende)"
+resizeRow = "Sleep om de grootte van deze rij te wijzigen (Alt: delen met de volgende)"
+resizeTable = "Sleep om de grootte van de hele tabel te wijzigen"
+row = "Rij"
 
 [pdfTextEditor.toolbar]
 addTextTooltip = "Tekstvak toevoegen - klik daarna op de pagina"
@@ -7771,7 +7787,7 @@ rowIdle = "{{label}} wordt automatisch uitgevoerd"
 rowRunning = "{{label}} wordt nu uitgevoerd"
 runsToday_one = "{{count}} uitvoering vandaag"
 runsToday_other = "{{count}} uitvoeringen vandaag"
-title = "PDF Processor"
+title = "PDF-verwerker"
 triggerExport = "Wordt uitgevoerd bij exporteren"
 triggerImport = "Wordt uitgevoerd bij importeren"
 
@@ -8437,13 +8453,13 @@ label = "Bestand & bijlage"
 
 [portal.connections.commonFields.accessToken]
 helperText = "Stirling slaat dit versleuteld op en toont het nooit meer."
-label = "Access token"
+label = "Toegangstoken"
 
 [portal.connections.commonFields.apiKey]
-label = "API key"
+label = "API-sleutel"
 
 [portal.connections.commonFields.apiToken]
-label = "API token"
+label = "API-token"
 
 [portal.connections.commonFields.baseUrl]
 helperText = "Stappen die deze verbinding gebruiken, kunnen alleen paden onder deze URL aanroepen, nooit een andere host."
@@ -8568,10 +8584,10 @@ label = "Server-URL"
 placeholder = "https://your-org.consignocloud.com/api/v1"
 
 [portal.connections.types.consigno.fields.clientId]
-label = "API key"
+label = "API-sleutel"
 
 [portal.connections.types.consigno.fields.clientSecret]
-label = "API secret"
+label = "API-secret"
 
 [portal.connections.types.consigno.fields.password]
 label = "Wachtwoord"
@@ -8676,7 +8692,7 @@ helperText = "Optioneel. Alleen nodig om labels op naam te kiezen; labelen werkt
 label = "Application (client) ID"
 
 [portal.connections.types.purview.fields.clientSecret]
-label = "Client secret"
+label = "Clientgeheim"
 
 [portal.connections.types.purview.fields.tenantId]
 helperText = "Wordt op elk label gestempeld als SiteId, zodat Purview-bewuste tools weten welke organisatie het heeft toegepast."
@@ -8688,7 +8704,7 @@ description = "Een S3 bucket waaruit bronnen kunnen lezen en waar Pipeline-uitvo
 label = "S3-opslag"
 
 [portal.connections.types.s3.fields.accessKeyId]
-label = "Access key ID"
+label = "Toegangssleutel-ID"
 
 [portal.connections.types.s3.fields.bucket]
 label = "Bucket"
@@ -8701,7 +8717,7 @@ label = "Endpoint"
 label = "Regio"
 
 [portal.connections.types.s3.fields.secretAccessKey]
-label = "Secret access key"
+label = "Geheime toegangssleutel"
 
 [portal.connections.types.sendgrid]
 description = "E-mail een document of melding wanneer een beleidsregel wordt uitgevoerd."
@@ -8714,7 +8730,7 @@ label = "SFTP"
 
 [portal.connections.types.sftp.fields.hostKeyFingerprint]
 helperText = "Optioneel. De SHA-256 host key fingerprint van de server (van `ssh-keyscan host | ssh-keygen -lf -`). Indien ingesteld, wordt alleen een server geaccepteerd die deze key presenteert; indien leeg, wordt de key die bij de eerste verbinding wordt gezien gepind en worden latere wijzigingen geweigerd."
-label = "Host key fingerprint"
+label = "Hostsleutel-vingerafdruk"
 placeholder = "SHA256:..."
 
 [portal.connections.types.sftp.fields.passphrase]
@@ -8725,7 +8741,7 @@ helperText = "Laat leeg als je in plaats daarvan met een private key authenticee
 
 [portal.connections.types.sftp.fields.privateKey]
 helperText = "Optioneel. Plak een OpenSSH private key om te authenticeren met een key in plaats van een wachtwoord."
-label = "Private key"
+label = "Privésleutel"
 
 [portal.connections.types.slack]
 description = "Plaats een bericht op Slack wanneer een beleidsregel een document verwerkt."
@@ -8793,7 +8809,7 @@ title = "Authenticatie"
 codeCaption = "de viewer insluiten"
 eyebrow = "COMPONENTEN"
 lead = "Insluitbare UI voor beoordelingswachtrijen en documentinspectie. Breng je eigen stijlen mee of gebruik het meegeleverde thema."
-title = "Drop-in viewers"
+title = "Insluitbare viewers"
 
 [portal.docs.endpoints]
 eyebrow = "API-REFERENTIE"
@@ -8820,7 +8836,7 @@ title = "Docs niet beschikbaar"
 [portal.docs.quickstart]
 eyebrow = "AAN DE SLAG"
 lead = "Stuur je eerste document naar een getypeerd endpoint en ontvang gestructureerde JSON terug in drie stappen. Geen modeltraining, geen prompt engineering."
-title = "Quickstart"
+title = "Snelstart"
 
 [portal.docs.quickstart.callout]
 bodyAfterLink = "voor copy-paste-recepten."
@@ -8845,7 +8861,7 @@ title = "Het gestructureerde resultaat lezen"
 [portal.docs.rateLimits]
 burst = "Burst"
 codeCaption = "429 Too Many Requests"
-concurrency = "Concurrency"
+concurrency = "Gelijktijdigheid"
 eyebrow = "AAN DE SLAG"
 lead = "Limieten schalen mee met je abonnement. Een 429-response bevat een Retry-After-header; de SDKs vertragen automatisch."
 requestsPerMinute = "Verzoeken / minuut"
@@ -9343,7 +9359,7 @@ subheading = "Eén sleutel per scope. Het intrekken van een sleutel blokkeert he
 [portal.infrastructure.encryption.keys.columns]
 actions = "Acties"
 lastChange = "Laatste wijziging"
-scope = "Scope"
+scope = "Bereik"
 status = "Status"
 
 [portal.infrastructure.encryption.keys.empty]
@@ -9356,7 +9372,7 @@ compareNote = "Vergelijk dit met de fingerprint in je sleutelback-up en in het o
 copied = "Gekopieerd"
 copy = "Kopiëren"
 copyFailed = "Deze browser stond kopiëren niet toe. De fingerprint is geselecteerd, dus kopieer deze handmatig."
-fingerprint = "Fingerprint"
+fingerprint = "Vingerafdruk"
 fingerprintHelp = "Waarvoor is deze fingerprint?"
 heading = "Mastersleutel"
 notMaterialised = "De sleutelmechanismen zijn nog niet gestart op dit knooppunt."
@@ -9845,7 +9861,7 @@ label = "Een Microsoft Purview-gevoeligheidslabel toepassen"
 
 [portal.policies.config.purview.fields]
 connection = "Purview-tenant"
-labelId = "Label ID"
+labelId = "Label-ID"
 labelIdHelp = "De GUID van het label, uit de Purview-portal. Door een label toe te passen wordt de metadata ervan naar de PDF geschreven; het kan niet versleutelen, daarvoor is de Microsoft-client nodig."
 labelName = "Labelnaam (optioneel)"
 labelNameHelp = "Wordt naast de ID vastgelegd zodat mensen en tools het label kunnen herkennen."
@@ -9981,7 +9997,7 @@ label = "Index"
 placeholder = "stirling-audit"
 
 [portal.policies.operations.fields.issueKey]
-label = "Issue key"
+label = "Issuesleutel"
 placeholder = "OPS-42"
 
 [portal.policies.operations.fields.message]
@@ -9992,7 +10008,7 @@ label = "Bericht"
 label = "Methode"
 
 [portal.policies.operations.fields.pageId]
-label = "Page ID"
+label = "Pagina-ID"
 placeholder = "66186"
 
 [portal.policies.operations.fields.path]
@@ -10324,7 +10340,7 @@ posture_essentials = "Essentials"
 posture_essentialsSub = "Classificatie + Delen — de standaardinstellingen"
 posture_governed = "Governed"
 posture_governedSub = "Voegt Beveiliging en Routering toe"
-posture_regulated = "Regulated"
+posture_regulated = "Gereguleerd"
 posture_regulatedSub = "Elke categorie — Compliance, Bewaring, Ingestie"
 qbr = "Kwartaalreviews"
 qbrSub = "Je SE beoordeelt elk kwartaal gebruik en roadmap"
@@ -10346,9 +10362,9 @@ size_standard = "Standaard"
 size_standardSub = "Gemengde tekst en afbeeldingen, 1 tot 5 MB"
 slDedicated = "Dedicated"
 slDedicatedSub = "4 kantooruren · dedicated SE / CSM · +$30.000/jaar"
-slPriority = "Priority"
+slPriority = "Prioriteit"
 slPrioritySub = "Dezelfde werkdag · named CSM · inbegrepen"
-slStandard = "Standard"
+slStandard = "Standaard"
 slStandardSub = "Volgende werkdag · gedeelde CSM · inbegrepen"
 stepOf = "Stap {{n}} van {{total}}"
 taxId = "BTW / belastingnummer"
@@ -10356,7 +10372,7 @@ taxIdPlaceholder = "Optioneel"
 term = "Looptijd"
 termDiscount = "{{pct}}% korting voor meerjarig commitment toegepast"
 title = "Stel je offerte samen"
-training = "Onboarding & training"
+training = "Onboarding en training"
 trainingSub = "Live sessies om je team op weg te helpen"
 users = "Totaal aantal gebruikers"
 usersPlaceholder = "bijv. 250"
@@ -10739,17 +10755,17 @@ description = "Ontvang documenten via ondertekende HTTP POST vanuit elk extern s
 label = "Webhook"
 
 [portal.sources.types.webhook.detail]
-deliveryUrl = "Delivery URL"
+deliveryUrl = "Aflever-URL"
 secretNote = "Het signing secret wordt één keer getoond, wanneer de webhook wordt gemaakt. Maak de bron opnieuw aan om het te roteren."
 
 [portal.sources.types.webhook.reveal]
 copy = "Kopiëren"
 done = "Gereed"
-secret = "Signing secret"
+secret = "Ondertekeningsgeheim"
 secretHelp = "Onderteken de ruwe body van elke levering met deze sleutel (HMAC-SHA256) en verzend deze als de X-Stirling-Signature-header."
 secretWarning = "Kopieer het signing secret nu. Voor je veiligheid wordt het slechts één keer getoond en kan het later niet worden opgehaald."
 title = "Webhook aangemaakt"
-url = "Delivery URL"
+url = "Aflever-URL"
 usage = "POST elk document als de ruwe request body naar de delivery URL met een binair content type (application/pdf of application/octet-stream). Verwijzend beleid wordt automatisch uitgevoerd bij aankomst."
 
 [portal.sources.wizard]
@@ -10828,7 +10844,7 @@ summary = "Bezit een team — beheert de resources en gedeelde configuraties van
 3 = "Alles wat Member kan doen"
 
 [portal.users.seats]
-limited = "{{used}} / {{limit}} seats"
+limited = "{{used}} / {{limit}} plaatsen"
 unlimited = "{{used}} seats · Onbeperkt"
 
 [printFile]
@@ -12102,28 +12118,15 @@ description = "Voer de volledige URL van uw self-hosted Stirling PDF-server in"
 label = "Server-URL"
 
 [sharedSign]
-backToSessions = "Terug naar sessies"
-createdOn = "Aangemaakt {{date}}"
 disabledBody = "Gedeeld ondertekenen is niet ingeschakeld op deze server."
-disabledTitle = "Niet ingeschakeld"
-due = "Vervalt {{date}}"
 filterDeclined = "Geweigerd"
-filterMine = "Van mij"
 filterOverdue = "Verlopen"
 filterSigned = "Ondertekend"
-fromOwner = "Van {{owner}}"
-newRequest = "Handtekeningen aanvragen"
-signedCount = "{{signed}}/{{total}} ondertekend"
 signInRequiredBody = "Meld je aan om handtekeningen aan te vragen en verzoeken te bekijken die naar jou zijn verzonden."
 signInRequiredTitle = "Aanmelden vereist"
 
-[sharedSign.empty]
-active = "Geen openstaande handtekeningaanvragen of actieve sessies"
-completed = "Geen voltooide sessies"
-
 [sharedSign.tab]
 active = "Actief"
-completed = "Voltooid"
 
 [showJS]
 done = "JavaScript geëxtraheerd"
@@ -12473,10 +12476,68 @@ bullet3 = "Onzichtbare handtekeningen bieden nog steeds cryptografische validati
 description = "Bepaalt of de handtekening zichtbaar is op het document of onzichtbaar wordt ingesloten."
 title = "Zichtbaarheid van handtekening"
 
+[signingDetail]
+allSigned = "Iedereen heeft ondertekend. Controleer het document en rond het daarna af."
+awaitingOwner = "De eigenaar rondt het document af zodra die klaar is."
+certificateNext = "Kies je certificaat in de volgende stap."
+earlyHint = "Je kunt nu afronden met de ontvangen handtekeningen, of wachten op de resterende deelnemers."
+finalDocument = "Ondertekend document"
+finalizeTitle = "Document afronden"
+finalReady = "Je ondertekende PDF is klaar om te openen in de werkbank."
+inProgressPreview = "Voorbeeld in uitvoering met ingediende handtekeningen. De eigenaar heeft dit document nog niet afgerond."
+manageSession = "Ondertekensessie beheren"
+moveHint = "Selecteer een handtekening op het document om deze te verplaatsen, de grootte te wijzigen of te verwijderen."
+notified = "Op de hoogte gesteld"
+optional = "Optioneel"
+ownerNext = "Ga terug naar je sessie om ieders handtekeningen te controleren en het document af te ronden wanneer je klaar bent."
+placeHint = "Klik op het document om je handtekening te plaatsen."
+progress = "Voortgang handtekeningen"
+readyToSign = "Klaar om te ondertekenen?"
+refreshPreview = "Voorbeeld vernieuwen"
+removePerson = "{{name}} verwijderen"
+requestClosed = "Dit verzoek is gesloten"
+requestTitle = "Ondertekenverzoek"
+signatureSubmitted = "Je handtekening is ingediend"
+signedCount = "{{signed}} / {{total}} ondertekend"
+signMyRequest = "Dit document ondertekenen"
+viewOnly = "Je kunt het document hier nog steeds bekijken."
+visibleSignature = "Zichtbare handtekening"
+visibleSignatureHelp = "Over zichtbare handtekeningen"
+
+[signMenu]
+anyOrder = "Deelnemers kunnen in willekeurige volgorde ondertekenen. De eigenaar rondt het document af na controle van de verzamelde handtekeningen."
+certificateHint = "Gebruik een certificaat"
+certificateTitle = "Digitale handtekening"
+closedStatus = "Gesloten"
+completedTab = "Voltooid"
+dueDate = "Streefdatum (optioneel)"
+newActivity = "Nieuwe activiteit sinds je deze sessie voor het laatst hebt bekeken"
+noActive = "Geen actieve sessies"
+noCompleted = "Geen voltooide sessies"
+noMatches = "Geen overeenkomende sessies"
+noUnread = "Je bent helemaal bij"
+optionalMarks = "Zichtbare markeringen zijn optioneel. Voltooien en ondertekenen werkt ook alleen met een certificaat."
+ownerProgress = "Je verzoek · {{signed}} / {{total}} ondertekend"
+personalHint = "Teken, typ of upload"
+personalTitle = "Persoonlijke handtekening"
+request = "Handtekeningen aanvragen"
+search = "Een document of persoon zoeken"
+send = "Ondertekenverzoek verzenden"
+sessionFilter = "Sessieweergaven"
+sessions = "Ondertekensessies"
+settings = "Uiterlijk en overzichtspagina (optioneel)"
+signFailed = "Ondertekenen mislukt. Controleer je certificaat en probeer het opnieuw; je geplaatste markeringen blijven behouden."
+submitted = "Ingediend · wacht op afronding"
+title = "Ondertekenen"
+triggerUnreadCount_one = "Ondertekenen · {{count}} ongelezen sessie"
+triggerUnreadCount_other = "Ondertekenen · {{count}} ongelezen sessies"
+unreadTab = "Ongelezen"
+
 [signRequest]
+accessExpired = "Je toegang tot dit ondertekenverzoek is verlopen. Vraag de afzender om een nieuw verzoek."
 declined = "Ondertekeningsverzoek geweigerd"
+expired = "Toegang verlopen"
 fetchFailed = "Ondertekeningsverzoek laden mislukt"
-signed = "Document succesvol ondertekend"
 
 [signSession]
 created = "Ondertekeningsverzoek verzonden"
@@ -12512,6 +12573,52 @@ title = "Account aanmaken"
 unableToAccessTool = "Geen toegang tot tool: {{error}}"
 unexpectedError = "Onverwachte fout: {{message}}"
 unknownError = "Onbekende fout"
+
+[signWorkspace]
+changeDocument = "PDF wijzigen"
+chooseDocument = "Kies een geopende PDF"
+chooseFromLibrary = "Kies uit bibliotheek"
+chooseParticipants = "Kies deelnemers"
+choosePdf = "Kies een PDF"
+choosePdfHeading = "Begin met je document"
+clearDate = "Datum wissen"
+created = "Aangemaakt"
+createdByMe = "Door mij aangemaakt"
+datesAndOptions = "Datums en opties"
+document = "Document"
+dueDate = "Streefdatum"
+dueDateHelp = "Dit is een streefdatum. Deelnemers kunnen daarna nog steeds ondertekenen."
+dueDateHelpLabel = "Over streefdatums"
+empty = "Hier zijn nog geen sessies."
+expand = "Ondertekensessies uitvouwen"
+inviteLoadError = "Kon de uitnodigingsopties niet laden. Sluit dit dialoogvenster en probeer het opnieuw."
+invitePerson = "Teamgenoot toevoegen: {{name}}"
+inviteTeammate = "Een teamgenoot toevoegen"
+inviteUnavailable = "Teamgenoten toevoegen is niet beschikbaar voor je account of serverconfiguratie."
+navigation = "Navigatie voor ondertekenen"
+needsYou = "Heeft je handtekening nodig"
+nextMonth = "Volgende maand"
+nextStep = "Volgende"
+noDueDate = "Geen vervaldatum"
+noMatches = "Geen sessies komen overeen met je zoekopdracht of filter."
+noOpenPdfs = "Kies een PDF uit je bibliotheek of voeg er een toe vanaf je computer."
+noPeopleMatch = "Geen personen komen overeen met je zoekopdracht."
+noPreview = "Documentvoorbeeld niet beschikbaar"
+owner = "Eigenaar"
+participants = "Deelnemers"
+participantsSelected = "{{count}} geselecteerd"
+personalHeading = "Een document ondertekenen"
+previousMonth = "Vorige maand"
+refresh = "Sessies vernieuwen"
+requestSteps = "Stappen voor ondertekenverzoek"
+search = "Documenten of personen zoeken"
+searchParticipants = "Personen of teams zoeken"
+selectOnePdf = "Kies één PDF voor dit ondertekenverzoek."
+signingOrderHelp = "Over ondertekenvolgorde"
+status = "Status"
+unavailable = "Deze sessie is niet meer beschikbaar. Vernieuw de lijst om je huidige sessies te zien."
+upcoming = "Aankomend"
+uploadFailed = "Kon deze PDF niet openen. Probeer het opnieuw."
 
 [sizes]
 large = "Groot"
@@ -12838,7 +12945,7 @@ showLess = "Minder tonen"
 showMore = "Nog {{count}} tonen"
 
 [superSearch.group]
-docs = "Docs"
+docs = "Documenten"
 files = "Bestanden"
 pages = "Pagina's"
 processor = "Processor"

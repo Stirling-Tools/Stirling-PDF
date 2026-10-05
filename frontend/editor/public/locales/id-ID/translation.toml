@@ -1815,7 +1815,7 @@ label = "Aktifkan Tautan Berbagi"
 
 [admin.settings.storage.signing.enabled]
 description = "Izinkan pengguna membuat sesi penandatanganan dokumen multi-peserta. Memerlukan penyimpanan file di server diaktifkan."
-label = "Aktifkan Penandatanganan Grup (Alpha)"
+title = "Aktifkan Penandatanganan Grup"
 
 [admin.settings.telegram]
 description = "Konfigurasikan konektivitas bot Telegram, kontrol akses, dan perilaku umpan balik."
@@ -2351,7 +2351,7 @@ label = "Buka menu untuk {{title}}"
 [automate.importModal]
 cancel = "Batal"
 confirm = "Impor"
-detectedAutomation = "Automate JSON"
+detectedAutomation = "Otomatisasi JSON"
 detectedFolderScan = "JSON Pemindaian Folder"
 dropHint = "Letakkan JSON di sini atau klik untuk memilih file"
 dropSubhint = "Konfigurasi Automate dan Folder Scanning keduanya diterima"
@@ -2744,7 +2744,6 @@ reason = "Alasan"
 serverCertMessage = "Menggunakan sertifikat server - tidak perlu file atau kata sandi"
 showLogo = "Tampilkan Logo"
 signatureProgress = "{{signedCount}}/{{totalCount}} tanda tangan"
-signed = "Ditandatangani"
 tags = "autentikasi,PEM,P12,resmi,enkripsi,tanda tangan,sertifikat,PKCS12,JKS,server,manual,otomatis"
 title = "Penandatanganan Sertifikat"
 viewed = "Dilihat"
@@ -2809,7 +2808,13 @@ reasonPlaceholder = "mis. Persetujuan, Tinjauan..."
 
 [certSign.collab.finalize]
 button = "Finalisasi dan Muat PDF Bertanda Tangan"
+confirmAction = "Konfirmasi dan finalisasi"
+confirmDescription = "Finalisasi akan menutup sesi ini. Tidak ada tanda tangan lagi yang dapat dikirimkan."
+confirmTitle = "Finalisasi sesi penandatanganan ini?"
 early = "Finalisasi dengan Tanda Tangan Saat Ini"
+excluded = "Peserta yang tanda tangannya tidak akan disertakan"
+included = "Tanda tangan disertakan"
+requiresSignature = "Setidaknya satu peserta harus menandatangani sebelum Anda dapat melakukan finalisasi."
 
 [certSign.collab.participant]
 certInvalid = "✗ {{error}}"
@@ -2826,7 +2831,6 @@ includeSummaryPageHelp = "Sebuah halaman ringkasan akan ditambahkan di akhir den
 [certSign.collab.sessionDetail]
 addParticipants = "Tambah Peserta"
 addParticipantsError = "Gagal menambahkan peserta"
-backToList = "Kembali ke Sesi"
 deleteConfirm = "Anda yakin? Ini tidak dapat dibatalkan."
 deleteError = "Gagal menghapus sesi"
 deleteSession = "Hapus Sesi"
@@ -2835,14 +2839,11 @@ finalizeError = "Gagal memfinalisasi sesi"
 loadPdfError = "Gagal memuat PDF bertanda tangan"
 loadSignedPdf = "Muat PDF Bertanda Tangan ke File Aktif"
 messageLabel = "Pesan"
-owner = "Pemilik"
 participantRemoved = "Peserta dihapus"
 participants = "Peserta"
 participantsAdded = "Peserta berhasil ditambahkan"
-removeParticipant = "Hapus"
 removeParticipantError = "Gagal menghapus peserta"
 selectUsers = "Pilih pengguna..."
-sessionInfo = "Info Sesi"
 
 [certSign.collab.sessionList]
 active = "Aktif"
@@ -2855,11 +2856,10 @@ title = "Tampilan Tanda Tangan"
 [certSign.collab.signRequest]
 addedToFiles = "Dokumen ditambahkan ke file aktif"
 addToFiles = "Tambahkan ke File Aktif"
-advancedSettings = "Pengaturan Lanjutan"
-backToList = "Kembali ke Permintaan Tanda Tangan"
 certificateChoice = "Pilih sertifikat untuk menandatangani"
 changeSignature = "Ubah tanda tangan"
 clearSignature = "Hapus Tanda Tangan"
+closed = "Sesi ini telah difinalisasi. Anda dapat melihat dokumen final, tetapi tanda tangan atau penolakan lebih lanjut tidak diterima."
 completeAndSign = "Lengkapi & Tanda Tangani"
 createNewSignature = "Buat Tanda Tangan Baru"
 decline = "Tolak Permintaan"
@@ -2876,7 +2876,6 @@ invalidFileType = "Pilih file gambar"
 location = "Lokasi (Opsional)"
 locationPlaceholder = "Dari mana Anda menandatangani?"
 noCertificate = "Pilih file sertifikat"
-noSignatures = "Tempatkan setidaknya satu tanda tangan pada PDF"
 p12File = "File Sertifikat P12/PFX"
 password = "Kata Sandi Sertifikat"
 penColor = "Warna Pena"
@@ -2894,16 +2893,15 @@ signatureText = "Teks Tanda Tangan"
 signatureTextPlaceholder = "Masukkan nama Anda..."
 signatureTypeLabel = "Jenis Tanda Tangan"
 signButton = "Tanda Tangani Dokumen"
-signingTitle = "Penandatanganan"
 textColor = "Warna Teks"
 typeSignature = "Ketik nama Anda untuk membuat tanda tangan"
-uploadCert = "Sertifikat Kustom"
-uploadCertDesc = "Gunakan sertifikat P12/PFX Anda sendiri"
+uploadCert = "Unggah sertifikat"
+uploadCertDesc = "Gunakan sertifikat PKCS12, PFX, PEM, atau JKS Anda sendiri."
 uploadSignature = "Unggah gambar tanda tangan Anda"
-usePersonalCert = "Sertifikat Pribadi"
-usePersonalCertDesc = "Dibuat otomatis untuk akun Anda"
-useServerCert = "Sertifikat Organisasi"
-useServerCertDesc = "Sertifikat organisasi bersama"
+usePersonalCert = "Stirling Sign · Personal"
+usePersonalCertDesc = "Tandatangani dengan sertifikat yang dibuat untuk akun Anda."
+useServerCert = "Stirling Sign · Organization"
+useServerCertDesc = "Tandatangani dengan sertifikat organisasi bersama server ini."
 useSignature = "Gunakan tanda tangan"
 
 [certSign.collab.signRequest.certModal]
@@ -2912,10 +2910,13 @@ certInvalidFallback = "Sertifikat tidak valid"
 certNetworkError = "Tidak dapat memvalidasi sertifikat"
 certValidating = "Memvalidasi sertifikat..."
 certValidUntil = "Sertifikat berlaku hingga {{date}}"
-description_one = "Anda telah menempatkan {{count}} tanda tangan. Pilih sertifikat Anda untuk menyelesaikan penandatanganan."
-description_other = "Anda telah menempatkan {{count}} tanda tangan. Pilih sertifikat Anda untuk menyelesaikan penandatanganan."
+description_one = "{{count}} tanda terlihat sudah siap. Pilih sertifikat untuk menyelesaikan penandatanganan."
+description_other = "{{count}} tanda terlihat sudah siap. Pilih sertifikat untuk menyelesaikan penandatanganan."
+description_zero = "Sertifikat Anda akan menandatangani dokumen tanpa tanda terlihat."
+details = "Detail penandatanganan (opsional)"
+format = "Format sertifikat"
 sign = "Tanda Tangani Dokumen"
-title = "Konfigurasikan Sertifikat"
+title = "Pilih cara menandatangani"
 
 [certSign.collab.signRequest.mode]
 move = "Pindahkan Tanda Tangan"
@@ -2968,11 +2969,11 @@ visible = "Terlihat"
 yourSignatures = "Tanda Tangan Anda ({{count}})"
 
 [certSign.collab.userSelector]
-inviteUsers = "Tambah Pengguna"
 loadError = "Gagal memuat pengguna"
 noTeam = "Tidak Ada Tim"
 noUsers = "Tidak ada pengguna lain yang ditemukan."
 placeholder = "Pilih pengguna..."
+you = "{{name}} (Anda)"
 
 [certSign.device]
 stepTitle = "Perangkat ini"
@@ -3351,7 +3352,7 @@ credit-note = "Nota kredit"
 customs-declaration = "Deklarasi bea cukai"
 customs-form = "Formulir bea cukai"
 cv = "CV"
-datasheet = "Datasheet"
+datasheet = "Lembar data"
 debit-note = "Nota debit"
 deed = "Akta"
 delivery-note = "Surat jalan"
@@ -3567,7 +3568,7 @@ work-instruction = "Instruksi kerja"
 work-order = "Perintah kerja"
 
 [classificationDemo]
-folderName = "Downloads"
+folderName = "Unduhan"
 
 [classificationDemo.buttons]
 done = "Selesai"
@@ -5450,9 +5451,6 @@ multimedia = "Multimedia"
 
 [groupSigning.steps]
 back = "Kembali"
-completed = "Selesai"
-current = "Saat ini"
-stepLabel = "Langkah {{number}}"
 
 [groupSigning.steps.configureDefaults]
 continue = "Lanjutkan"
@@ -5460,7 +5458,6 @@ invisible = "Tanda tangan akan tidak terlihat (hanya metadata)"
 locationLabel = "Lokasi:"
 preview = "Pratinjau"
 reasonLabel = "Alasan:"
-title = "Konfigurasikan Pengaturan Tanda Tangan"
 visible = "Tanda tangan akan terlihat pada halaman {{page}}"
 
 [groupSigning.steps.review]
@@ -5472,14 +5469,13 @@ location = "Lokasi:"
 logo = "Logo:"
 logoHidden = "Tanpa logo"
 logoShown = "Logo Stirling PDF ditampilkan"
-participantCount_one = "{{count}} peserta akan menandatangani secara berurutan"
-participantCount_other = "{{count}} peserta akan menandatangani secara berurutan"
+participantCount_one = "{{count}} peserta dipilih"
+participantCount_other = "{{count}} peserta dipilih"
 participants = "Peserta"
 reason = "Alasan:"
 send = "Kirim Permintaan Penandatanganan"
 signatureSettings = "Pengaturan Tanda Tangan"
 title = "Tinjau Detail Sesi"
-titleShort = "Tinjau & Kirim"
 visibility = "Visibilitas:"
 visible = "Terlihat pada halaman {{page}}"
 
@@ -5487,7 +5483,6 @@ visible = "Terlihat pada halaman {{page}}"
 continue = "Lanjutkan"
 noFile = "Pilih satu file PDF dari file aktif Anda untuk membuat sesi penandatanganan."
 selectedFile = "Dokumen terpilih"
-title = "Pilih Dokumen"
 
 [groupSigning.steps.selectParticipants]
 continue = "Lanjutkan"
@@ -5495,31 +5490,30 @@ count_one = "{{count}} peserta dipilih"
 count_other = "{{count}} peserta dipilih"
 label = "Pilih peserta"
 placeholder = "Pilih peserta untuk menandatangani..."
-title = "Pilih Peserta"
 
 [groupSigning.tooltip]
 header = "Tentang Penandatanganan Grup"
 
 [groupSigning.tooltip.finalization]
-bullet1 = "Semua tanda tangan diterapkan sesuai urutan peserta yang Anda tentukan"
-bullet2 = "Anda dapat memfinalisasi dengan tanda tangan sebagian bila diperlukan"
-bullet3 = "Setelah difinalisasi, sesi tidak dapat diubah"
-description = "Setelah semua peserta menandatangani (atau Anda memilih memfinalisasi lebih awal), Anda dapat membuat PDF final yang ditandatangani."
+bullet1 = "PDF final mencakup semua tanda tangan yang diterima"
+bullet2 = "Tinjau peserta yang belum selesai sebelum finalisasi dengan tanda tangan parsial"
+bullet3 = "Finalisasi menutup permintaan; peserta yang belum selesai tidak dapat lagi menandatangani"
+description = "Setelah setidaknya satu peserta menandatangani, pemilik dapat memfinalisasi permintaan dan menghasilkan PDF yang ditandatangani."
 title = "Proses Finalisasi"
 
 [groupSigning.tooltip.roles]
 bullet1 = "Pemilik (Anda): Membuat sesi, mengonfigurasi default tanda tangan, memfinalisasi dokumen"
-bullet2 = "Peserta: Membuat tanda tangan, memilih sertifikat, menempatkannya pada PDF"
-bullet3 = "Peserta tidak dapat mengubah pengaturan visibilitas, alasan, atau lokasi tanda tangan"
-description = "Anda mengontrol pengaturan tampilan tanda tangan untuk semua peserta."
+bullet2 = "Peserta: Pilih sertifikat dan secara opsional tempatkan tanda tangan terlihat pada PDF"
+bullet3 = "Peserta dapat menyesuaikan alasan dan lokasi tanda tangan sebelum mengirimkan"
+description = "Pemilik mengatur default permintaan; setiap peserta memilih sertifikat dan tanda terlihat opsional mereka."
 title = "Peran Peserta"
 
 [groupSigning.tooltip.sequential]
-bullet1 = "Peserta pertama harus menandatangani sebelum peserta kedua dapat mengakses dokumen"
-bullet2 = "Memastikan urutan penandatanganan yang tepat untuk kepatuhan hukum"
-bullet3 = "Anda dapat mengubah urutan peserta dengan menyeret mereka dalam daftar"
-description = "Peserta menandatangani dokumen sesuai urutan yang Anda tentukan. Setiap penanda tangan menerima pemberitahuan saat gilirannya."
-title = "Penandatanganan Berurutan"
+bullet1 = "Peserta tidak perlu menunggu penandatangan lain"
+bullet2 = "Lacak kemajuan setiap peserta di Sesi Penandatanganan"
+bullet3 = "Tanggal jatuh tempo adalah pengingat; tidak mengakhiri akses"
+description = "Peserta yang ditugaskan dapat meninjau dan menandatangani secara mandiri, dalam urutan apa pun."
+title = "Penandatanganan dalam Urutan Apa Pun"
 
 [guestBanner]
 dismiss = "Tutup banner"
@@ -5828,7 +5822,6 @@ tags = "deteksi,pisah,foto,deteksi otomatis,deteksi foto,pisah foto,pisahkan fot
 title = "Deteksi & Pecah Foto Pindai"
 
 [home.sharedSign]
-desc = "Minta tanda tangan dari orang lain dan lacak sesi penandatanganan"
 title = "Penandatanganan Bersama"
 
 [home.showJS]
@@ -6959,12 +6952,12 @@ aiPromo = "Buat, edit, dan tanyakan tentang PDF dengan AI"
 apiPromo = "Hubungkan aplikasi dan asisten AI Anda"
 automationPromo = "Otomatiskan tugas PDF berulang"
 createAccount = "Buat akun gratis"
-editorLabel = "PDF Editor"
+editorLabel = "Editor PDF"
 login = "Masuk"
 manualToolsPromo = "Tool PDF manual gratis tanpa batas"
-processorLabel = "PDF Processor"
+processorLabel = "Pemroses PDF"
 processorTitle = "Buat akun untuk membuka yang terbaik dari Stirling"
-readerLabel = "PDF Reader"
+readerLabel = "Pembaca PDF"
 
 [payg.spendCapMeter]
 barAria = "Pengeluaran terhadap batas"
@@ -7201,7 +7194,7 @@ downloadTooltip = "Simpan dan unduh PDF yang diedit"
 save = "Simpan PDF"
 saveTooltip = "Terapkan perubahan ke file di workspace Anda ({{shortcut}})"
 tags = "edit teks,ubah teks,ganti teks,edit konten,perbarui teks,tulis ulang,koreksi,perbaiki,redline,revisi,editor teks,editor konten"
-title = "PDF Text Editor"
+title = "Editor Teks PDF"
 unsaved = "(belum disimpan)"
 workbenchLabel = "Editor"
 
@@ -7426,7 +7419,9 @@ groupedTitle = "Bagian dari grup dalam PDF ini: dapat dihapus tetapi tidak dapat
 
 [pdfTextEditor.sidebar]
 addImage = "Tambahkan gambar"
+addTable = "Tambah tabel"
 addText = "Tambahkan teks"
+clickPageToAddTable = "Klik halaman untuk menambahkan tabel"
 clickPageToAddText = "Klik halaman untuk menambahkan teks"
 document = "Dokumen"
 group = "Kelompokkan"
@@ -7435,11 +7430,14 @@ groupingAutoHint = "Mengelompokkan baris dengan jarak sama menjadi paragraf. Men
 groupingLine = "Baris"
 groupTooltip = "Gabungkan run terpilih menjadi satu paragraf ({{shortcut}})"
 groupTooltipDisabled = "Pilih 2+ run untuk digabungkan"
+image = "Gambar"
 noFile = "Tidak ada file yang dimuat"
 noFileHint = "Pilih PDF dari panel File di kiri, atau jatuhkan satu di sini. Editor akan membukanya secara otomatis."
 opening = "Membuka dokumen..."
 paragraph = "Paragraf"
 rulers = "Penggaris dan panduan"
+table = "Tabel"
+text = "Teks"
 textBoxWidth = "Lebar kotak teks baru"
 textGrouping = "Pengelompokan teks"
 ungroup = "Pisahkan grup"
@@ -7460,6 +7458,24 @@ loadingProgress = "Progres pemuatan"
 noDocument = "Tidak ada dokumen yang dimuat."
 pickPrompt = "Pilih PDF dari panel File di kiri untuk mulai mengedit."
 renderingPreview = "Merender pratinjau"
+
+[pdfTextEditor.table]
+addColumn = "Tambah kolom"
+addRow = "Tambah baris"
+column = "Kol"
+deleteColumn = "Hapus kolom"
+deleteRow = "Hapus baris"
+done = "Selesai"
+doneHint = "Berhenti mengedit ini sebagai tabel"
+edit = "Edit"
+editHint = "Edit sebagai tabel - ketik di sel, tambah atau hapus baris dan kolom"
+move = "Pindahkan"
+moveTable = "Seret untuk memindahkan seluruh tabel"
+recognizedHint = "Tabel dikenali - klik untuk memilih semua teksnya"
+resizeColumn = "Seret untuk mengubah ukuran kolom ini (Alt: bagi dengan kolom berikutnya)"
+resizeRow = "Seret untuk mengubah ukuran baris ini (Alt: bagi dengan baris berikutnya)"
+resizeTable = "Seret untuk mengubah ukuran seluruh tabel"
+row = "Baris"
 
 [pdfTextEditor.toolbar]
 addTextTooltip = "Tambahkan kotak teks - lalu klik halaman"
@@ -7492,7 +7508,7 @@ flipVertical = "Balik vertikal"
 fontColour = "Warna font"
 fontSize = "Ukuran font"
 formatting = "Pemformatan teks"
-italic = "Italic"
+italic = "Miring"
 italicUnavailable = "Font ini tidak memiliki versi italic. Muat font perangkat Anda atau pilih keluarga font lain."
 lock = "Kunci pilihan"
 lockTooltip = "Kunci pilihan - mencegah edit tidak sengaja"
@@ -7704,7 +7720,7 @@ editingTextInPdfsCaps = "Mengedit teks dalam PDF"
 enterpriseFeatures = "Fitur enterprise (SAML, Audit)"
 perSeatLicensing = "Lisensi per kursi"
 saveWithAnnualBilling = "Hemat dengan penagihan tahunan"
-selfHosted = "Self-hosted"
+selfHosted = "Dihosting sendiri"
 selfHostedOnInfrastructure = "Self-hosted pada infrastruktur Anda"
 ssoOAuth = "SSO (OAuth2/OIDC)"
 upToFiveUsers = "Hingga 5 pengguna"
@@ -7771,7 +7787,7 @@ rowIdle = "{{label}} berjalan otomatis"
 rowRunning = "{{label}} sedang berjalan sekarang"
 runsToday_one = "{{count}} eksekusi hari ini"
 runsToday_other = "{{count}} eksekusi hari ini"
-title = "PDF Processor"
+title = "Pemroses PDF"
 triggerExport = "Berjalan saat ekspor"
 triggerImport = "Berjalan saat impor"
 
@@ -8170,7 +8186,7 @@ viewQuote = "Lihat penawaran"
 oauthSso = "SSO (OAuth2/OIDC)"
 
 [portal.billing.identity.free]
-chipAnywhere = "Web, desktop & self-hosted"
+chipAnywhere = "Web, desktop & dihosting sendiri"
 chipCredits = "{{allowance}} kredit gratis bulanan"
 chipTools = "Setiap alat PDF"
 name = "Gratis"
@@ -8179,7 +8195,7 @@ sub = "PDF Editor lengkap."
 [portal.billing.identity.processor]
 chipMetered = "Pemrosesan bermeter"
 chipPipelines = "Pipeline & API"
-name = "Processor"
+name = "Pemroses"
 sub = "Basis Team ditambah {{rate}} per kredit"
 subNoRate = "Basis Team ditambah pemrosesan bermeter"
 
@@ -8298,7 +8314,7 @@ prepaidRemaining = "Kredit prabayar tersisa"
 prepaidTooltip = "Digunakan sebelum penagihan bermeter, dan di luar batas pengeluaran Anda."
 raiseLimit = "Naikkan batas"
 remainingOf = "{{remaining}} dari {{total}}"
-rowName = "Processor"
+rowName = "Pemroses"
 spendAgainstLimit = "{{spend}} dari {{cap}} bermeter siklus ini"
 
 [portal.billing.seats]
@@ -8440,10 +8456,10 @@ helperText = "Stirling menyimpannya terenkripsi dan tidak pernah menampilkannya 
 label = "Token akses"
 
 [portal.connections.commonFields.apiKey]
-label = "API key"
+label = "Kunci API"
 
 [portal.connections.commonFields.apiToken]
-label = "API token"
+label = "Token API"
 
 [portal.connections.commonFields.baseUrl]
 helperText = "Langkah yang menggunakan koneksi ini hanya dapat memanggil path di bawah URL ini, tidak pernah host lain."
@@ -8509,7 +8525,7 @@ label = "Login untuk token"
 
 [portal.connections.types.api.fields.baseUrl]
 helperText = "Langkah yang menggunakan koneksi ini hanya dapat memanggil path di bawah URL ini, tidak pernah host lain."
-label = "Base URL"
+label = "URL dasar"
 placeholder = "https://api.example.com/v1"
 
 [portal.connections.types.api.fields.headerName]
@@ -8543,7 +8559,7 @@ label = "Nama pengguna"
 [portal.connections.types.clamav]
 baseUrlPlaceholder = "http://clamav-rest:9000"
 description = "Pindai dokumen dari malware di server yang Anda jalankan - tidak ada yang keluar dari jaringan Anda."
-label = "ClamAV (self-hosted)"
+label = "ClamAV (dihosting sendiri)"
 
 [portal.connections.types.cloudmersive]
 description = "Pemindaian virus dan konten untuk dokumen dalam kebijakan."
@@ -8568,10 +8584,10 @@ label = "URL Server"
 placeholder = "https://your-org.consignocloud.com/api/v1"
 
 [portal.connections.types.consigno.fields.clientId]
-label = "API key"
+label = "Kunci API"
 
 [portal.connections.types.consigno.fields.clientSecret]
-label = "API secret"
+label = "Secret API"
 
 [portal.connections.types.consigno.fields.password]
 label = "Kata sandi"
@@ -8665,7 +8681,7 @@ label = "Kata sandi aplikasi"
 [portal.connections.types.presidio]
 baseUrlPlaceholder = "http://presidio-analyzer:3000"
 description = "Deteksi data pribadi dalam teks dokumen menggunakan server Presidio yang Anda jalankan."
-label = "Presidio (self-hosted)"
+label = "Presidio (dihosting sendiri)"
 
 [portal.connections.types.purview]
 description = "Baca dan terapkan label sensitivitas Microsoft Purview pada PDF."
@@ -8688,7 +8704,7 @@ description = "Bucket S3 yang dapat dibaca oleh sumber dan dapat ditulis oleh ou
 label = "Penyimpanan S3"
 
 [portal.connections.types.s3.fields.accessKeyId]
-label = "Access key ID"
+label = "ID kunci akses"
 
 [portal.connections.types.s3.fields.bucket]
 label = "Bucket"
@@ -8701,7 +8717,7 @@ label = "Endpoint"
 label = "Region"
 
 [portal.connections.types.s3.fields.secretAccessKey]
-label = "Secret access key"
+label = "Kunci akses rahasia"
 
 [portal.connections.types.sendgrid]
 description = "Kirim email dokumen atau notifikasi saat kebijakan berjalan."
@@ -8725,7 +8741,7 @@ helperText = "Biarkan kosong jika Anda mengautentikasi dengan private key sebaga
 
 [portal.connections.types.sftp.fields.privateKey]
 helperText = "Opsional. Tempel private key OpenSSH untuk mengautentikasi dengan key alih-alih kata sandi."
-label = "Private key"
+label = "Kunci privat"
 
 [portal.connections.types.slack]
 description = "Posting pesan ke Slack saat kebijakan memproses dokumen."
@@ -8864,7 +8880,7 @@ title = "SDK resmi"
 
 [portal.docs.sdks.status]
 beta = "Beta"
-deprecated = "Deprecated"
+deprecated = "Tidak digunakan lagi"
 
 [portal.docs.skills]
 eyebrow = "SKILLS"
@@ -8878,7 +8894,7 @@ title = "Di halaman ini"
 codeCaption = "document.processed"
 eyebrow = "REFERENSI API"
 lead = "Berlangganan event document.processed, pipeline.completed, dan quota.threshold. Payload ditandatangani dengan HMAC-SHA256."
-title = "Webhooks"
+title = "Webhook"
 
 [portal.docs.webhooks.callout]
 afterHelper = "helper."
@@ -8953,7 +8969,7 @@ description = "Saat sumber memasukkan dokumen ke pipeline Anda, dokumen akan mun
 title = "Tidak ada dokumen dalam antrean"
 
 [portal.documents.status]
-error = "Error"
+error = "Kesalahan"
 flagged = "Perlu Ditinjau"
 inReview = "Dalam Peninjauan"
 processed = "Diproses"
@@ -9121,7 +9137,7 @@ done = "Selesai"
 guide = "Buka panduan {{name}}"
 openInBrowser = "Buka di browser saja"
 sectionDesktop = "Aplikasi desktop"
-sectionSelfHosted = "Self-hosted"
+sectionSelfHosted = "Dihosting sendiri"
 title = "Instal Stirling PDF Editor"
 
 [portal.home.download.docker]
@@ -9181,8 +9197,8 @@ start = "Deploy Editor"
 
 [portal.home.editor.target]
 cloud = "Managed Cloud"
-docker = "Self-hosted · Docker"
-kubernetes = "Self-hosted · Kubernetes"
+docker = "Dihosting sendiri · Docker"
+kubernetes = "Dihosting sendiri · Kubernetes"
 
 [portal.home.greeting]
 afternoon = "Selamat siang"
@@ -9280,7 +9296,7 @@ processing = "Pemrosesan"
 security = "Keamanan"
 
 [portal.infrastructure.auditStatusLabel]
-danger = "Error"
+danger = "Kesalahan"
 info = "Info"
 success = "Berhasil"
 warning = "Peringatan"
@@ -9663,7 +9679,7 @@ noToolSettings = "Alat ini tidak memiliki pengaturan yang dapat dikonfigurasi."
 output = "Tujuan"
 save = "Simpan perubahan"
 scheduleEvery = "Jalankan setiap"
-trigger = "Trigger"
+trigger = "Pemicu"
 triggerManual = "Hanya manual"
 
 [portal.pipelines.composer.runsEvery]
@@ -9759,7 +9775,7 @@ name = "Pipeline"
 sources = "Sumber"
 status = "Status"
 steps = "Langkah"
-trigger = "Trigger"
+trigger = "Pemicu"
 type = "Jenis"
 
 [portal.pipelines.templates]
@@ -9997,7 +10013,7 @@ placeholder = "66186"
 
 [portal.policies.operations.fields.path]
 helperText = "Ditambahkan ke URL dasar koneksi. Ini tidak pernah dapat menjangkau host lain."
-label = "Path"
+label = "Jalur"
 placeholder = "/v1/scan"
 
 [portal.policies.operations.fields.remotePath]
@@ -10271,7 +10287,7 @@ title = "Pengadaan"
 agreeCta = "Tandatangani perjanjian"
 confidential = "Rahasia"
 confirm = "Saya telah membaca dan menyetujui Perjanjian ini, dan saya menyatakan bahwa saya berwenang untuk menandatanganinya atas nama organisasi yang disebutkan di atas."
-docName = "Stirling Enterprise Agreement"
+docName = "Perjanjian Enterprise Stirling"
 docSub = "MSA, Order Form, EULA, dan DPA, digabungkan menjadi satu tanda tangan."
 download = "Unduh"
 downloadDraftError = "Tidak dapat membuat PDF perjanjian - perender dokumen tidak tersedia. Silakan coba lagi sebentar lagi atau hubungi dukungan."
@@ -10370,7 +10386,7 @@ years_one = "{{count}} tahun"
 years_other = "{{count}} tahun"
 
 [portal.procurement.documents]
-agreement = "Enterprise Agreement"
+agreement = "Perjanjian Enterprise"
 agreementSub = "MSA, Order Form, dan DPA dalam satu tanda tangan."
 download = "Unduh"
 eula = "EULA & Ketentuan Komersial"
@@ -10512,7 +10528,7 @@ invitesPlaceholder = "sam@acme.com, lee@acme.com"
 scheduleCall = "Jadwalkan panggilan"
 seats = "Orang yang menguji"
 seatsPlaceholder = "mis. 15"
-selfhost = "Self-hosted"
+selfhost = "Dihosting sendiri"
 selfhostSub = "Docker atau Kubernetes"
 start = "Mulai uji coba"
 stepOf = "Langkah {{n}} dari {{total}}"
@@ -11744,7 +11760,7 @@ user = "Masuk sebagai"
 [settings.connection.mode]
 local = "Hanya Lokal"
 saas = "Stirling Cloud"
-selfhosted = "Self-Hosted"
+selfhosted = "Dihosting Sendiri"
 
 [settings.developer]
 apiKeys = "Kunci API"
@@ -12102,28 +12118,15 @@ description = "Masukkan URL lengkap server Stirling PDF self-hosted Anda"
 label = "URL Server"
 
 [sharedSign]
-backToSessions = "Kembali ke sesi"
-createdOn = "Dibuat {{date}}"
 disabledBody = "Penandatanganan kolaboratif tidak diaktifkan di server ini."
-disabledTitle = "Tidak diaktifkan"
-due = "Jatuh tempo {{date}}"
 filterDeclined = "Ditolak"
-filterMine = "Milik saya"
 filterOverdue = "Lewat jatuh tempo"
 filterSigned = "Sudah ditandatangani"
-fromOwner = "Dari {{owner}}"
-newRequest = "Minta tanda tangan"
-signedCount = "{{signed}}/{{total}} ditandatangani"
 signInRequiredBody = "Masuk untuk meminta tanda tangan dan melihat permintaan yang dikirim kepada Anda."
 signInRequiredTitle = "Perlu masuk"
 
-[sharedSign.empty]
-active = "Tidak ada permintaan tanda tangan yang tertunda atau sesi aktif"
-completed = "Tidak ada sesi yang selesai"
-
 [sharedSign.tab]
 active = "Aktif"
-completed = "Selesai"
 
 [showJS]
 done = "JavaScript diekstrak"
@@ -12473,10 +12476,68 @@ bullet3 = "Tanda tangan tidak terlihat tetap memberikan validasi kriptografis"
 description = "Mengontrol apakah tanda tangan terlihat pada dokumen atau disematkan secara tidak terlihat."
 title = "Visibilitas Tanda Tangan"
 
+[signingDetail]
+allSigned = "Semua orang telah menandatangani. Tinjau dokumen, lalu finalisasi."
+awaitingOwner = "Pemilik akan memfinalisasi dokumen setelah siap."
+certificateNext = "Pilih sertifikat Anda pada langkah berikutnya."
+earlyHint = "Anda dapat memfinalisasi sekarang dengan tanda tangan yang diterima, atau menunggu peserta yang tersisa."
+finalDocument = "Dokumen yang ditandatangani"
+finalizeTitle = "Finalisasi dokumen"
+finalReady = "PDF yang telah Anda tandatangani siap dibuka di workbench."
+inProgressPreview = "Pratinjau dalam proses dengan tanda tangan yang telah dikirim. Pemilik belum memfinalisasi dokumen ini."
+manageSession = "Kelola sesi penandatanganan"
+moveHint = "Pilih tanda tangan pada dokumen untuk memindahkan, mengubah ukuran, atau menghapusnya."
+notified = "Diberi tahu"
+optional = "Opsional"
+ownerNext = "Kembali ke sesi Anda untuk meninjau tanda tangan semua orang dan memfinalisasi dokumen saat Anda siap."
+placeHint = "Klik pada dokumen untuk menempatkan tanda tangan Anda."
+progress = "Progres tanda tangan"
+readyToSign = "Siap menandatangani?"
+refreshPreview = "Segarkan pratinjau"
+removePerson = "Hapus {{name}}"
+requestClosed = "Permintaan ini ditutup"
+requestTitle = "Permintaan tanda tangan"
+signatureSubmitted = "Tanda tangan Anda telah dikirim"
+signedCount = "{{signed}} / {{total}} ditandatangani"
+signMyRequest = "Tanda tangani dokumen ini"
+viewOnly = "Anda masih dapat meninjau dokumen di sini."
+visibleSignature = "Tanda tangan terlihat"
+visibleSignatureHelp = "Tentang tanda tangan terlihat"
+
+[signMenu]
+anyOrder = "Peserta dapat menandatangani dalam urutan apa pun. Pemilik memfinalisasi dokumen setelah meninjau tanda tangan yang terkumpul."
+certificateHint = "Gunakan sertifikat"
+certificateTitle = "Tanda tangan digital"
+closedStatus = "Ditutup"
+completedTab = "Selesai"
+dueDate = "Tanggal jatuh tempo (opsional)"
+newActivity = "Aktivitas baru sejak terakhir kali Anda melihat sesi ini"
+noActive = "Tidak ada sesi aktif"
+noCompleted = "Tidak ada sesi selesai"
+noMatches = "Tidak ada sesi yang cocok"
+noUnread = "Anda sudah mengikuti semuanya"
+optionalMarks = "Tanda yang terlihat bersifat opsional. Selesaikan & Tanda Tangani juga berfungsi hanya dengan sertifikat."
+ownerProgress = "Permintaan Anda · {{signed}} / {{total}} ditandatangani"
+personalHint = "Gambar, ketik, atau upload"
+personalTitle = "Tanda tangan pribadi"
+request = "Minta tanda tangan"
+search = "Cari dokumen atau orang"
+send = "Kirim permintaan penandatanganan"
+sessionFilter = "Tampilan sesi"
+sessions = "Sesi penandatanganan"
+settings = "Tampilan dan halaman ringkasan (opsional)"
+signFailed = "Penandatanganan gagal. Periksa sertifikat Anda dan coba lagi; tanda yang Anda tempatkan dipertahankan."
+submitted = "Dikirim · menunggu finalisasi"
+title = "Tanda tangan"
+triggerUnreadCount_one = "Tanda tangan · {{count}} sesi belum dibaca"
+triggerUnreadCount_other = "Tanda tangan · {{count}} sesi belum dibaca"
+unreadTab = "Belum dibaca"
+
 [signRequest]
+accessExpired = "Akses Anda ke permintaan penandatanganan ini telah kedaluwarsa. Minta permintaan baru kepada pengirim."
 declined = "Permintaan tanda tangan ditolak"
+expired = "Akses kedaluwarsa"
 fetchFailed = "Gagal memuat permintaan tanda tangan"
-signed = "Dokumen berhasil ditandatangani"
 
 [signSession]
 created = "Permintaan penandatanganan dikirim"
@@ -12512,6 +12573,52 @@ title = "Buat akun"
 unableToAccessTool = "Tidak dapat mengakses alat: {{error}}"
 unexpectedError = "Kesalahan tak terduga: {{message}}"
 unknownError = "Kesalahan tidak diketahui"
+
+[signWorkspace]
+changeDocument = "Ganti PDF"
+chooseDocument = "Pilih PDF yang terbuka"
+chooseFromLibrary = "Pilih dari pustaka"
+chooseParticipants = "Pilih peserta"
+choosePdf = "Pilih PDF"
+choosePdfHeading = "Mulai dengan dokumen Anda"
+clearDate = "Hapus tanggal"
+created = "Dibuat"
+createdByMe = "Dibuat oleh saya"
+datesAndOptions = "Tanggal & opsi"
+document = "Dokumen"
+dueDate = "Tanggal jatuh tempo"
+dueDateHelp = "Ini adalah tanggal target. Peserta masih dapat menandatangani setelahnya."
+dueDateHelpLabel = "Tentang tanggal jatuh tempo"
+empty = "Belum ada sesi di sini."
+expand = "Perluas sesi penandatanganan"
+inviteLoadError = "Tidak dapat memuat opsi undangan. Tutup dialog ini dan coba lagi."
+invitePerson = "Tambahkan rekan tim: {{name}}"
+inviteTeammate = "Tambahkan rekan tim"
+inviteUnavailable = "Menambahkan rekan tim tidak tersedia untuk akun atau konfigurasi server Anda."
+navigation = "Navigasi penandatanganan"
+needsYou = "Memerlukan tanda tangan Anda"
+nextMonth = "Bulan berikutnya"
+nextStep = "Berikutnya"
+noDueDate = "Tidak ada tanggal jatuh tempo"
+noMatches = "Tidak ada sesi yang cocok dengan pencarian atau filter Anda."
+noOpenPdfs = "Pilih PDF dari pustaka Anda atau tambahkan dari komputer Anda."
+noPeopleMatch = "Tidak ada orang yang cocok dengan pencarian Anda."
+noPreview = "Pratinjau dokumen tidak tersedia"
+owner = "Pemilik"
+participants = "Peserta"
+participantsSelected = "{{count}} dipilih"
+personalHeading = "Tandatangani dokumen"
+previousMonth = "Bulan sebelumnya"
+refresh = "Segarkan sesi"
+requestSteps = "Langkah permintaan penandatanganan"
+search = "Cari dokumen atau orang"
+searchParticipants = "Cari orang atau tim"
+selectOnePdf = "Pilih satu PDF untuk permintaan penandatanganan ini."
+signingOrderHelp = "Tentang urutan penandatanganan"
+status = "Status"
+unavailable = "Sesi ini tidak lagi tersedia. Segarkan daftar untuk melihat sesi Anda saat ini."
+upcoming = "Akan datang"
+uploadFailed = "Tidak dapat membuka PDF ini. Silakan coba lagi."
 
 [sizes]
 large = "Besar"
@@ -13109,7 +13216,7 @@ whatsNewIn = "Apa yang baru di"
 
 [update.priority]
 low = "Rendah"
-minor = "Minor"
+minor = "Kecil"
 normal = "Normal"
 urgent = "Mendesak"
 

@@ -1815,7 +1815,7 @@ label = "Paylaşım Bağlantılarını Etkinleştir"
 
 [admin.settings.storage.signing.enabled]
 description = "Kullanıcıların çok katılımcılı belge imzalama oturumları oluşturmasına izin verin. Sunucu dosya depolamasının etkin olmasını gerektirir."
-label = "Grup İmzalama'yı Etkinleştir (Alfa)"
+title = "Grup imzalamayı etkinleştir"
 
 [admin.settings.telegram]
 description = "Telegram bot bağlantısını, erişim kontrollerini ve geri bildirim davranışını yapılandırın."
@@ -2744,7 +2744,6 @@ reason = "Neden"
 serverCertMessage = "Sunucu sertifikası kullanılıyor - dosya veya parola gerekmez"
 showLogo = "Logo Göster"
 signatureProgress = "{{signedCount}}/{{totalCount}} imza"
-signed = "İmzalandı"
 tags = "kimlik doğrula,PEM,P12,resmi,şifrele,imzala,sertifika,PKCS12,JKS,sunucu,manuel,otomatik"
 title = "Sertifika İmzalama"
 viewed = "Görüntülendi"
@@ -2809,7 +2808,13 @@ reasonPlaceholder = "örn. Onay, İnceleme..."
 
 [certSign.collab.finalize]
 button = "Sonlandır ve İmzalı PDF'yi Yükle"
+confirmAction = "Onayla ve sonlandır"
+confirmDescription = "Sonlandırma bu oturumu kapatır. Artık başka imza gönderilemez."
+confirmTitle = "Bu imzalama oturumu sonlandırılsın mı?"
 early = "Mevcut İmzalarla Sonlandır"
+excluded = "İmzaları dahil edilmeyecek katılımcılar"
+included = "Dahil edilen imzalar"
+requiresSignature = "Sonlandırabilmeniz için en az bir katılımcının imzalaması gerekir."
 
 [certSign.collab.participant]
 certInvalid = "✗ {{error}}"
@@ -2826,7 +2831,6 @@ includeSummaryPageHelp = "Tüm imza metaverilerini içeren bir özet sayfası so
 [certSign.collab.sessionDetail]
 addParticipants = "Katılımcı Ekle"
 addParticipantsError = "Katılımcılar eklenemedi"
-backToList = "Oturumlara Geri Dön"
 deleteConfirm = "Emin misiniz? Bu işlem geri alınamaz."
 deleteError = "Oturum silinemedi"
 deleteSession = "Oturumu Sil"
@@ -2835,14 +2839,11 @@ finalizeError = "Oturum sonlandırılamadı"
 loadPdfError = "İmzalı PDF yüklenemedi"
 loadSignedPdf = "İmzalı PDF'yi Aktif Dosyalara Yükle"
 messageLabel = "Mesaj"
-owner = "Sahip"
 participantRemoved = "Katılımcı kaldırıldı"
 participants = "Katılımcılar"
 participantsAdded = "Katılımcılar başarıyla eklendi"
-removeParticipant = "Kaldır"
 removeParticipantError = "Katılımcı kaldırılamadı"
 selectUsers = "Kullanıcı seçin..."
-sessionInfo = "Oturum Bilgileri"
 
 [certSign.collab.sessionList]
 active = "Aktif"
@@ -2855,11 +2856,10 @@ title = "İmza Görünümü"
 [certSign.collab.signRequest]
 addedToFiles = "Belge aktif dosyalara eklendi"
 addToFiles = "Aktif Dosyalara Ekle"
-advancedSettings = "Gelişmiş Ayarlar"
-backToList = "İmza İsteklerine Geri Dön"
 certificateChoice = "İmzalamak için bir sertifika seçin"
 changeSignature = "İmzayı değiştir"
 clearSignature = "İmzayı Temizle"
+closed = "Bu oturum sonlandırıldı. Nihai belgeyi görüntüleyebilirsiniz, ancak başka imza veya reddetme kabul edilmez."
 completeAndSign = "Tamamla ve İmzala"
 createNewSignature = "Yeni İmza Oluştur"
 decline = "İsteği Reddet"
@@ -2876,7 +2876,6 @@ invalidFileType = "Lütfen bir resim dosyası seçin"
 location = "Konum (İsteğe bağlı)"
 locationPlaceholder = "Nereden imzalıyorsunuz?"
 noCertificate = "Lütfen bir sertifika dosyası seçin"
-noSignatures = "Lütfen PDF üzerine en az bir imza yerleştirin"
 p12File = "P12/PFX Sertifika Dosyası"
 password = "Sertifika Parolası"
 penColor = "Kalem Rengi"
@@ -2894,16 +2893,15 @@ signatureText = "İmza Metni"
 signatureTextPlaceholder = "Adınızı girin..."
 signatureTypeLabel = "İmza Türü"
 signButton = "Belgeyi İmzala"
-signingTitle = "İmzalama"
 textColor = "Metin Rengi"
 typeSignature = "İmza oluşturmak için adınızı yazın"
-uploadCert = "Özel Sertifika"
-uploadCertDesc = "Kendi P12/PFX sertifikanızı kullanın"
+uploadCert = "Sertifika yükle"
+uploadCertDesc = "Kendi PKCS12, PFX, PEM veya JKS sertifikanızı kullanın."
 uploadSignature = "İmza görselinizi yükleyin"
-usePersonalCert = "Kişisel Sertifika"
-usePersonalCertDesc = "Hesabınız için otomatik oluşturulur"
-useServerCert = "Kuruluş Sertifikası"
-useServerCertDesc = "Paylaşılan kuruluş sertifikası"
+usePersonalCert = "Stirling Sign · Kişisel"
+usePersonalCertDesc = "Hesabınız için oluşturulan sertifikayla imzalayın."
+useServerCert = "Stirling Sign · Kuruluş"
+useServerCertDesc = "Bu sunucunun paylaşılan kuruluş sertifikasıyla imzalayın."
 useSignature = "İmzayı kullan"
 
 [certSign.collab.signRequest.certModal]
@@ -2912,10 +2910,13 @@ certInvalidFallback = "Geçersiz sertifika"
 certNetworkError = "Sertifika doğrulanamadı"
 certValidating = "Sertifika doğrulanıyor..."
 certValidUntil = "Sertifika {{date}} tarihine kadar geçerli"
-description_one = "{{count}} imza yerleştirdiniz. İmzalamayı tamamlamak için sertifikanızı seçin."
-description_other = "{{count}} imza yerleştirdiniz. İmzalamayı tamamlamak için sertifikanızı seçin."
+description_one = "{{count}} görünür işaret hazır. İmzalamayı tamamlamak için bir sertifika seçin."
+description_other = "{{count}} görünür işaret hazır. İmzalamayı tamamlamak için bir sertifika seçin."
+description_zero = "Sertifikanız belgeyi görünür işaretler olmadan imzalayacak."
+details = "İmzalama ayrıntıları (isteğe bağlı)"
+format = "Sertifika formatı"
 sign = "Belgeyi İmzala"
-title = "Sertifikayı Yapılandır"
+title = "Nasıl imzalayacağınızı seçin"
 
 [certSign.collab.signRequest.mode]
 move = "İmzayı Taşı"
@@ -2968,11 +2969,11 @@ visible = "Görünür"
 yourSignatures = "İmzalarınız ({{count}})"
 
 [certSign.collab.userSelector]
-inviteUsers = "Kullanıcı Ekle"
 loadError = "Kullanıcılar yüklenemedi"
 noTeam = "Ekip Yok"
 noUsers = "Başka kullanıcı bulunamadı."
 placeholder = "Kullanıcı seçin..."
+you = "{{name}} (Siz)"
 
 [certSign.device]
 stepTitle = "Bu cihaz"
@@ -3980,10 +3981,10 @@ tip = "Every action your assistant runs is performed as your account and counts 
 viewApiKeys = "API key'leri görüntüle"
 
 [config.mcp.copy]
-configLabel = "Config"
+configLabel = "Yapılandırma"
 copied = "Kopyalandı"
 copy = "Kopyala"
-endpointLabel = "Endpoint URL"
+endpointLabel = "Uç nokta URL"
 tooltip = "{{label}} kopyala"
 tooltipCopied = "{{label}} kopyalandı"
 
@@ -4077,7 +4078,7 @@ convertTo = "Şuna dönüştür"
 desc = "Farklı formatlar arasında dosya dönüştürün"
 downloadHtml = "PDF yerine ara HTML dosyasını indir"
 dpi = "DPI"
-ebookToPdf = "eBook → PDF"
+ebookToPdf = "e-Kitap → PDF"
 emailOptions = "E-postadan PDF'e Seçenekleri"
 emlToPdf = "E-posta → PDF"
 errorConversion = "Dosya dönüştürülürken bir hata oluştu."
@@ -4159,7 +4160,7 @@ targetDeviceDesc = "Okuyucu cihaz için optimize edilmiş bir çıktı profili s
 [convert.formatGroups]
 archive = "Arşiv"
 document = "Belge"
-ebook = "eBook"
+ebook = "e-Kitap"
 email = "E-posta"
 file = "Dosya"
 image = "Görsel"
@@ -5450,9 +5451,6 @@ multimedia = "Multimedya"
 
 [groupSigning.steps]
 back = "Geri"
-completed = "Tamamlandı"
-current = "Mevcut"
-stepLabel = "Adım {{number}}"
 
 [groupSigning.steps.configureDefaults]
 continue = "Devam et"
@@ -5460,7 +5458,6 @@ invisible = "İmzalar görünmez olacak (yalnızca metaveri)"
 locationLabel = "Konum:"
 preview = "Önizleme"
 reasonLabel = "Neden:"
-title = "İmza Ayarlarını Yapılandır"
 visible = "İmzalar {{page}}. sayfada görünür olacak"
 
 [groupSigning.steps.review]
@@ -5472,14 +5469,13 @@ location = "Konum:"
 logo = "Logo:"
 logoHidden = "Logo yok"
 logoShown = "Stirling PDF logosu gösteriliyor"
-participantCount_one = "{{count}} katılımcı sırayla imzalayacak"
-participantCount_other = "{{count}} katılımcı sırayla imzalayacak"
+participantCount_one = "{{count}} katılımcı seçildi"
+participantCount_other = "{{count}} katılımcı seçildi"
 participants = "Katılımcılar"
 reason = "Neden:"
 send = "İmzalama İsteklerini Gönder"
 signatureSettings = "İmza Ayarları"
 title = "Oturum Ayrıntılarını Gözden Geçir"
-titleShort = "Gözden Geçir ve Gönder"
 visibility = "Görünürlük:"
 visible = "{{page}}. sayfada görünür"
 
@@ -5487,7 +5483,6 @@ visible = "{{page}}. sayfada görünür"
 continue = "Devam et"
 noFile = "Bir imzalama oturumu oluşturmak için lütfen aktif dosyalarınızdan tek bir PDF dosyası seçin."
 selectedFile = "Seçilen belge"
-title = "Belge Seç"
 
 [groupSigning.steps.selectParticipants]
 continue = "Devam et"
@@ -5495,31 +5490,30 @@ count_one = "{{count}} katılımcı seçildi"
 count_other = "{{count}} katılımcı seçildi"
 label = "Katılımcıları seçin"
 placeholder = "İmzalamaları için katılımcıları seçin..."
-title = "Katılımcıları Seç"
 
 [groupSigning.tooltip]
 header = "Grup İmzalama Hakkında"
 
 [groupSigning.tooltip.finalization]
-bullet1 = "Tüm imzalar belirttiğiniz katılımcı sırasıyla uygulanır"
-bullet2 = "Gerektiğinde kısmi imzalarla sonlandırabilirsiniz"
-bullet3 = "Sonlandırıldıktan sonra oturum değiştirilemez"
-description = "Tüm katılımcılar imzaladığında (veya erken sonlandırmayı seçtiğinizde), nihai imzalı PDF'yi oluşturabilirsiniz."
+bullet1 = "Nihai PDF, kabul edilen tüm imzaları içerir"
+bullet2 = "Kısmi imzalarla sonlandırmadan önce bekleyen katılımcıları gözden geçirin"
+bullet3 = "Sonlandırma isteği kapatır; bekleyen katılımcılar artık imzalayamaz"
+description = "En az bir katılımcı imzaladıktan sonra, sahip isteği sonlandırabilir ve imzalı PDF oluşturabilir."
 title = "Sonlandırma Süreci"
 
 [groupSigning.tooltip.roles]
 bullet1 = "Sahip (siz): Oturumu oluşturur, imza varsayılanlarını yapılandırır, belgeyi sonlandırır"
-bullet2 = "Katılımcılar: İmzalarını oluşturur, sertifika seçer, PDF'ye yerleştirir"
-bullet3 = "Katılımcılar imza görünürlüğü, nedeni veya konum ayarlarını değiştiremez"
-description = "Tüm katılımcılar için imza görünümü ayarlarını siz kontrol edersiniz."
+bullet2 = "Katılımcılar: Bir sertifika seçin ve isteğe bağlı olarak PDF üzerine görünür bir imza yerleştirin"
+bullet3 = "Katılımcılar göndermeden önce imza nedenlerini ve konumlarını ayarlayabilir"
+description = "Sahip, isteğin varsayılanlarını belirler; her katılımcı kendi sertifikasını ve isteğe bağlı görünür işaretini seçer."
 title = "Katılımcı Rolleri"
 
 [groupSigning.tooltip.sequential]
-bullet1 = "İlk katılımcı imzalamadan ikinci kişi belgeye erişemez"
-bullet2 = "Hukuki uyum için doğru imzalama sırasını sağlar"
-bullet3 = "Listedeki sıralarını sürükleyerek katılımcıları yeniden sıralayabilirsiniz"
-description = "Katılımcılar belirttiğiniz sırada belgeleri imzalar. Her imzalayan, sırası geldiğinde bir bildirim alır."
-title = "Sıralı İmzalama"
+bullet1 = "Katılımcıların başka bir imzalayanı beklemesine gerek yoktur"
+bullet2 = "Her katılımcının ilerlemesini İmzalama Oturumları içinde takip edin"
+bullet3 = "Son tarih bir hatırlatmadır; erişimi sona erdirmez"
+description = "Atanan katılımcılar herhangi bir sırada bağımsız olarak inceleyebilir ve imzalayabilir."
+title = "Herhangi Bir Sırada İmzalama"
 
 [guestBanner]
 dismiss = "Afişi kapat"
@@ -5828,7 +5822,6 @@ tags = "algıla,böl,fotoğraflar,otomatik algıla,fotoğrafları algıla,fotoğ
 title = "Taranan Fotoğrafı Bul ve Böl"
 
 [home.sharedSign]
-desc = "Başkalarından imza isteyin ve imzalama oturumlarını takip edin"
 title = "Paylaşımlı İmzalama"
 
 [home.showJS]
@@ -7426,7 +7419,9 @@ groupedTitle = "Bu PDF içinde bir grubun parçası: silinebilir ancak taşınam
 
 [pdfTextEditor.sidebar]
 addImage = "Resim ekle"
+addTable = "Tablo ekle"
 addText = "Metin ekle"
+clickPageToAddTable = "Tablo eklemek için sayfaya tıklayın"
 clickPageToAddText = "Metin eklemek için sayfaya tıklayın"
 document = "Belge"
 group = "Grupla"
@@ -7435,11 +7430,14 @@ groupingAutoHint = "Eşit aralıklı satırları paragraflar halinde gruplar. Bu
 groupingLine = "Satır"
 groupTooltip = "Seçili çalışmaları tek bir paragrafta birleştir ({{shortcut}})"
 groupTooltipDisabled = "Birleştirmek için 2+ çalışma seçin"
+image = "Görsel"
 noFile = "Dosya yüklenmedi"
 noFileHint = "Soldaki Dosyalar panelinden bir PDF seçin veya içeri bırakın. Düzenleyici bunu otomatik olarak açacak."
 opening = "Belge açılıyor..."
 paragraph = "Paragraf"
 rulers = "Cetveller ve kılavuzlar"
+table = "Tablo"
+text = "Metin"
 textBoxWidth = "Yeni metin kutusu genişliği"
 textGrouping = "Metin gruplama"
 ungroup = "Grubu çöz"
@@ -7460,6 +7458,24 @@ loadingProgress = "Yükleme ilerlemesi"
 noDocument = "Yüklü belge yok."
 pickPrompt = "Düzenlemeye başlamak için soldaki Dosyalar panelinden bir PDF seçin."
 renderingPreview = "Önizleme oluşturuluyor"
+
+[pdfTextEditor.table]
+addColumn = "Sütun ekle"
+addRow = "Satır ekle"
+column = "Süt"
+deleteColumn = "Sütunu sil"
+deleteRow = "Satırı sil"
+done = "Bitti"
+doneHint = "Bunu tablo olarak düzenlemeyi durdur"
+edit = "Düzenle"
+editHint = "Tablo olarak düzenle - hücrelere yazın, satır ve sütun ekleyin veya kaldırın"
+move = "Taşı"
+moveTable = "Tüm tabloyu taşımak için sürükleyin"
+recognizedHint = "Tanınan tablo - tüm metnini seçmek için tıklayın"
+resizeColumn = "Bu sütunu yeniden boyutlandırmak için sürükleyin (Alt: sonrakiyle paylaş)"
+resizeRow = "Bu satırı yeniden boyutlandırmak için sürükleyin (Alt: sonrakiyle paylaş)"
+resizeTable = "Tüm tabloyu yeniden boyutlandırmak için sürükleyin"
+row = "Satır"
 
 [pdfTextEditor.toolbar]
 addTextTooltip = "Bir metin kutusu ekleyin - ardından sayfaya tıklayın"
@@ -7753,7 +7769,7 @@ successMessage = "Lisansınız başarıyla etkinleştirildi. Bu pencereyi şimdi
 
 [plan.team]
 maxUsers = "100 kullanıcı"
-name = "Team"
+name = "Ekip"
 
 [policies.activity]
 outputsUnavailable = "Politika çıktıları artık indirilemiyor."
@@ -8443,7 +8459,7 @@ label = "Erişim token'ı"
 label = "API anahtarı"
 
 [portal.connections.commonFields.apiToken]
-label = "API token"
+label = "API tokeni"
 
 [portal.connections.commonFields.baseUrl]
 helperText = "Bu bağlantıyı kullanan adımlar yalnızca bu URL altındaki yolları çağırabilir, asla başka bir host'u değil."
@@ -8571,14 +8587,14 @@ placeholder = "https://your-org.consignocloud.com/api/v1"
 label = "API anahtarı"
 
 [portal.connections.types.consigno.fields.clientSecret]
-label = "API secret"
+label = "API gizli anahtarı"
 
 [portal.connections.types.consigno.fields.password]
 label = "Parola"
 
 [portal.connections.types.consigno.fields.tenantId]
 helperText = "Yalnızca kuruluşunuz tenant kullanıyorsa gereklidir."
-label = "Tenant"
+label = "Kiracı"
 
 [portal.connections.types.consigno.fields.username]
 label = "Kullanıcı adı"
@@ -8638,10 +8654,10 @@ helperText = "n8n Webhook node üzerinde ayarlanan Authentication ile eşleştir
 label = "Webhook kimlik doğrulaması"
 
 [portal.connections.types.n8n.fields.authType.options.basic]
-label = "Basic auth"
+label = "Temel kimlik doğrulama"
 
 [portal.connections.types.n8n.fields.authType.options.header]
-label = "Header auth"
+label = "Başlık kimlik doğrulaması"
 
 [portal.connections.types.n8n.fields.authType.options.none]
 label = "Yok"
@@ -8676,7 +8692,7 @@ helperText = "İsteğe bağlı. Yalnızca etiketleri ada göre seçmek için ger
 label = "Uygulama (client) ID"
 
 [portal.connections.types.purview.fields.clientSecret]
-label = "Client secret"
+label = "İstemci sırrı"
 
 [portal.connections.types.purview.fields.tenantId]
 helperText = "Her etikete SiteId olarak damgalanır, böylece Purview uyumlu araçlar hangi kuruluşun uyguladığını bilir."
@@ -8695,13 +8711,13 @@ label = "Bucket"
 
 [portal.connections.types.s3.fields.endpoint]
 helperText = "AWS için boş bırakın. MinIO veya başka bir S3 uyumlu depo için bunu ayarlayın."
-label = "Endpoint"
+label = "Uç nokta"
 
 [portal.connections.types.s3.fields.region]
 label = "Bölge"
 
 [portal.connections.types.s3.fields.secretAccessKey]
-label = "Secret access key"
+label = "Gizli erişim anahtarı"
 
 [portal.connections.types.sendgrid]
 description = "Bir ilke çalıştığında bir belgeyi veya bildirimi email ile gönderin."
@@ -8714,18 +8730,18 @@ label = "SFTP"
 
 [portal.connections.types.sftp.fields.hostKeyFingerprint]
 helperText = "İsteğe bağlı. Sunucunun SHA-256 host key fingerprint'i (`ssh-keyscan host | ssh-keygen -lf -` çıktısından). Ayarlandığında yalnızca bu key'i sunan bir sunucu kabul edilir; boş bırakıldığında ilk bağlantıda görülen key sabitlenir ve sonraki değişiklikler reddedilir."
-label = "Host key fingerprint"
+label = "Host anahtarı parmak izi"
 placeholder = "SHA256:..."
 
 [portal.connections.types.sftp.fields.passphrase]
-label = "Key passphrase"
+label = "Anahtar parolası"
 
 [portal.connections.types.sftp.fields.password]
 helperText = "Bunun yerine private key ile kimlik doğruluyorsanız boş bırakın."
 
 [portal.connections.types.sftp.fields.privateKey]
 helperText = "İsteğe bağlı. Parola yerine key ile kimlik doğrulamak için bir OpenSSH private key yapıştırın."
-label = "Private key"
+label = "Özel anahtar"
 
 [portal.connections.types.slack]
 description = "Bir ilke bir belgeyi işlediğinde Slack'e mesaj gönderin."
@@ -8738,7 +8754,7 @@ label = "SMB / Ağ paylaşımı"
 
 [portal.connections.types.smb.fields.domain]
 helperText = "İsteğe bağlı. Sunucunuz kullanıyorsa Windows domain'i veya çalışma grubu."
-label = "Domain"
+label = "Etki alanı"
 
 [portal.connections.types.smb.fields.share]
 label = "Paylaşım"
@@ -8843,7 +8859,7 @@ codeCaption = "200 OK"
 title = "Yapılandırılmış sonucu okuyun"
 
 [portal.docs.rateLimits]
-burst = "Burst"
+burst = "Ani artış"
 codeCaption = "429 Too Many Requests"
 concurrency = "Eşzamanlılık"
 eyebrow = "BAŞLANGIÇ"
@@ -9239,7 +9255,7 @@ error = "Dışa aktarma başarısız. Lütfen tekrar deneyin."
 exportButton = "Dışa aktar"
 exporting = "Dışa aktarılıyor…"
 fieldsLegend = "Sütunlar"
-format = "Format"
+format = "Biçim"
 open = "Dışa aktar"
 subtitle = "Denetim etkinliklerini CSV veya JSON olarak indirin. Dahil edilecek sütunları seçin."
 title = "Denetim günlüğünü dışa aktar"
@@ -9512,7 +9528,7 @@ loading = "Yükleniyor…"
 title = "Yasal belge"
 
 [portal.nav]
-agent-builder = "Agent Builder"
+agent-builder = "Ajan Oluşturucu"
 components = "Bileşenler"
 docs = "Dokümantasyon"
 documents = "Belgeler"
@@ -9844,7 +9860,7 @@ label = "Arşiv profili"
 label = "Bir Microsoft Purview duyarlılık etiketi uygula"
 
 [portal.policies.config.purview.fields]
-connection = "Purview tenant"
+connection = "Purview kiracısı"
 labelId = "Etiket ID"
 labelIdHelp = "Purview portalından etiketin GUID'si. Bir etiket uygulamak, meta verilerini PDF üzerine yazar; şifreleyemez, bunun için Microsoft client gerekir."
 labelName = "Etiket adı (isteğe bağlı)"
@@ -9861,7 +9877,7 @@ standard = "Otomatik uygulanmış olarak"
 label = "Bir Microsoft Purview etiketi oku"
 
 [portal.policies.config.purviewRead.fields]
-connection = "Purview tenant"
+connection = "Purview kiracısı"
 connectionHelp = "Belgenin zaten taşıdığı etiketi okur, böylece sonraki adımlar buna göre işlem yapabilir."
 
 [portal.policies.config.retention]
@@ -9960,7 +9976,7 @@ label = "JSON gövdesi"
 label = "Hesap"
 
 [portal.policies.operations.fields.domain]
-label = "Mailgun domain"
+label = "Mailgun alan adı"
 placeholder = "mg.acme.com"
 
 [portal.policies.operations.fields.fileFieldName]
@@ -9974,7 +9990,7 @@ placeholder = "processor@acme.com"
 
 [portal.policies.operations.fields.headers]
 helperText = "Header ad/değer çiftlerinden oluşan bir JSON nesnesi. Bağlantının kimlik bilgisi sizin için eklenir."
-label = "Headers"
+label = "Başlıklar"
 
 [portal.policies.operations.fields.index]
 label = "Dizin"
@@ -10495,7 +10511,7 @@ subtitle = "Çözüm mühendisiniz ekibinize yayına alma sürecinde rehberlik e
 title = "Görüşme planla"
 
 [portal.procurement.setup]
-airgap = "Air-gapped"
+airgap = "İnternetten izole"
 airgapSub = "Kapalı, dışa giden yok"
 back = "Geri"
 businessName = "İşletme adı"
@@ -10728,7 +10744,7 @@ collectionHint = "Sunucu tarafı embedding için yapılandırılmış mevcut bir
 connection = "Database bağlantısı"
 description = "Hazırlanan belge parçaları için bir çıktı hedefi. Database embedding’leri oluşturur; track modu seçildiğinde orijinaller giriş kaynağınızda kalır."
 label = "Vektör veritabanı"
-namespace = "Namespace / tenant"
+namespace = "Namespace / kiracı"
 namespaceHint = "İsteğe bağlı Pinecone namespace veya Weaviate tenant. Varsayılan namespace ya da tek tenant’lı bir koleksiyon için boş bırakın."
 textField = "Metin alanı"
 textFieldHint = "Database’in embedding oluşturduğu alan; koleksiyon şeması veya Pinecone alan eşlemesiyle uyumlu olmalıdır."
@@ -11676,7 +11692,7 @@ title = "Hakkında"
 
 [settings.ai]
 documents = "Belgeler ve RAG"
-general = "AI Engine"
+general = "AI Motoru"
 limits = "Sınırlar ve Performans"
 models = "Modeller ve Sağlayıcılar"
 title = "AI"
@@ -11693,7 +11709,7 @@ features = "Özellikler"
 folderAccess = "Klasör Erişimi"
 integrations = "Entegrasyonlar"
 legal = "Yasal belgeler"
-mcp = "MCP Server"
+mcp = "MCP Sunucusu"
 privacy = "Gizlilik"
 storageSharing = "Dosya Depolama ve Paylaşma"
 systemSettings = "Sistem Ayarları"
@@ -12102,28 +12118,15 @@ description = "Öz barındırılan Stirling PDF sunucunuzun tam URL'sini girin"
 label = "Sunucu URL'si"
 
 [sharedSign]
-backToSessions = "Oturumlara geri dön"
-createdOn = "Oluşturuldu {{date}}"
 disabledBody = "Paylaşımlı imzalama bu sunucuda etkin değil."
-disabledTitle = "Etkin değil"
-due = "Son tarih {{date}}"
 filterDeclined = "Reddedilenler"
-filterMine = "Benimkiler"
 filterOverdue = "Süresi geçenler"
 filterSigned = "İmzalananlar"
-fromOwner = "Gönderen {{owner}}"
-newRequest = "İmza iste"
-signedCount = "{{signed}}/{{total}} imzalandı"
 signInRequiredBody = "İmza istemek ve size gönderilen istekleri görmek için oturum açın."
 signInRequiredTitle = "Oturum açma gerekli"
 
-[sharedSign.empty]
-active = "Bekleyen imza isteği veya aktif oturum yok"
-completed = "Tamamlanmış oturum yok"
-
 [sharedSign.tab]
 active = "Aktif"
-completed = "Tamamlananlar"
 
 [showJS]
 done = "JavaScript çıkarıldı"
@@ -12473,10 +12476,68 @@ bullet3 = "Görünmez imzalar yine de kriptografik doğrulama sağlar"
 description = "İmzanın belgede görünür olup olmayacağını veya görünmez şekilde gömüleceğini kontrol eder."
 title = "İmza Görünürlüğü"
 
+[signingDetail]
+allSigned = "Herkes imzaladı. Belgeyi inceleyin, ardından sonlandırın."
+awaitingOwner = "Sahibi hazır olduğunda belgeyi sonlandıracak."
+certificateNext = "Sonraki adımda sertifikanızı seçin."
+earlyHint = "Alınan imzalarla şimdi sonlandırabilir veya kalan katılımcıları bekleyebilirsiniz."
+finalDocument = "İmzalı belge"
+finalizeTitle = "Belgeyi sonlandır"
+finalReady = "İmzalanmış PDF’niz çalışma alanında açılmaya hazır."
+inProgressPreview = "Gönderilmiş imzalarla devam eden önizleme. Sahibi bu belgeyi henüz sonlandırmadı."
+manageSession = "İmzalama oturumunu yönet"
+moveHint = "Taşımak, yeniden boyutlandırmak veya kaldırmak için belgedeki bir imzayı seçin."
+notified = "Bildirim gönderildi"
+optional = "İsteğe bağlı"
+ownerNext = "Herkesin imzalarını incelemek ve hazır olduğunuzda belgeyi sonlandırmak için oturumunuza dönün."
+placeHint = "İmzanızı yerleştirmek için belgeye tıklayın."
+progress = "İmza ilerlemesi"
+readyToSign = "İmzalamaya hazır mısınız?"
+refreshPreview = "Önizlemeyi yenile"
+removePerson = "{{name}} kişisini kaldır"
+requestClosed = "Bu istek kapalı"
+requestTitle = "İmza isteği"
+signatureSubmitted = "İmzanız gönderildi"
+signedCount = "{{signed}} / {{total}} imzalandı"
+signMyRequest = "Bu belgeyi imzala"
+viewOnly = "Belgeyi burada incelemeye devam edebilirsiniz."
+visibleSignature = "Görünür imza"
+visibleSignatureHelp = "Görünür imzalar hakkında"
+
+[signMenu]
+anyOrder = "Katılımcılar herhangi bir sırayla imzalayabilir. Sahip, toplanan imzaları inceledikten sonra belgeyi sonlandırır."
+certificateHint = "Sertifika kullan"
+certificateTitle = "Dijital imza"
+closedStatus = "Kapalı"
+completedTab = "Tamamlandı"
+dueDate = "Son tarih (isteğe bağlı)"
+newActivity = "Bu oturumu son görüntülemenizden bu yana yeni etkinlik var"
+noActive = "Aktif oturum yok"
+noCompleted = "Tamamlanmış oturum yok"
+noMatches = "Eşleşen oturum yok"
+noUnread = "Güncelsiniz"
+optionalMarks = "Görünür işaretler isteğe bağlıdır. Tamamla ve İmzala yalnızca bir sertifikayla da çalışır."
+ownerProgress = "İsteğiniz · {{signed}} / {{total}} imzalandı"
+personalHint = "Çizin, yazın veya yükleyin"
+personalTitle = "Kişisel imza"
+request = "İmza iste"
+search = "Belge veya kişi bul"
+send = "İmzalama isteği gönder"
+sessionFilter = "Oturum görünümleri"
+sessions = "İmzalama oturumları"
+settings = "Görünüm ve özet sayfası (isteğe bağlı)"
+signFailed = "İmzalama başarısız oldu. Sertifikanızı kontrol edip tekrar deneyin; yerleştirdiğiniz işaretler korunur."
+submitted = "Gönderildi · sonlandırma bekleniyor"
+title = "İmzala"
+triggerUnreadCount_one = "İmzala · {{count}} okunmamış oturum"
+triggerUnreadCount_other = "İmzala · {{count}} okunmamış oturum"
+unreadTab = "Okunmamış"
+
 [signRequest]
+accessExpired = "Bu imzalama isteğine erişiminizin süresi doldu. Gönderenden yeni bir istek isteyin."
 declined = "İmza isteği reddedildi"
+expired = "Erişim süresi doldu"
 fetchFailed = "İmza isteği yüklenemedi"
-signed = "Belge başarıyla imzalandı"
 
 [signSession]
 created = "İmzalama isteği gönderildi"
@@ -12512,6 +12573,52 @@ title = "Hesap oluşturun"
 unableToAccessTool = "Araca erişilemiyor: {{error}}"
 unexpectedError = "Beklenmeyen hata: {{message}}"
 unknownError = "Bilinmeyen hata"
+
+[signWorkspace]
+changeDocument = "PDF değiştir"
+chooseDocument = "Açık bir PDF seç"
+chooseFromLibrary = "Kütüphaneden seç"
+chooseParticipants = "Katılımcıları seç"
+choosePdf = "Bir PDF seç"
+choosePdfHeading = "Belgenizle başlayın"
+clearDate = "Tarihi temizle"
+created = "Oluşturuldu"
+createdByMe = "Benim tarafımdan oluşturuldu"
+datesAndOptions = "Tarihler ve seçenekler"
+document = "Belge"
+dueDate = "Son tarih"
+dueDateHelp = "Bu bir hedef tarihtir. Katılımcılar bu tarihten sonra da imzalayabilir."
+dueDateHelpLabel = "Son tarihler hakkında"
+empty = "Burada henüz oturum yok."
+expand = "İmzalama oturumlarını genişlet"
+inviteLoadError = "Davet seçenekleri yüklenemedi. Bu iletişim kutusunu kapatıp tekrar deneyin."
+invitePerson = "Ekip arkadaşı ekle: {{name}}"
+inviteTeammate = "Ekip arkadaşı ekle"
+inviteUnavailable = "Ekip arkadaşları ekleme, hesabınız veya sunucu yapılandırmanız için kullanılamıyor."
+navigation = "İmzalama gezinmesi"
+needsYou = "İmzanız gerekiyor"
+nextMonth = "Sonraki ay"
+nextStep = "İleri"
+noDueDate = "Son tarih yok"
+noMatches = "Aramanız veya filtrenizle eşleşen oturum yok."
+noOpenPdfs = "Kütüphanenizden bir PDF seçin veya bilgisayarınızdan bir tane ekleyin."
+noPeopleMatch = "Aramanızla eşleşen kişi yok."
+noPreview = "Belge önizlemesi kullanılamıyor"
+owner = "Sahip"
+participants = "Katılımcılar"
+participantsSelected = "{{count}} seçildi"
+personalHeading = "Bir belge imzala"
+previousMonth = "Önceki ay"
+refresh = "Oturumları yenile"
+requestSteps = "İmzalama isteği adımları"
+search = "Belgeleri veya kişileri ara"
+searchParticipants = "Kişileri veya ekipleri ara"
+selectOnePdf = "Bu imzalama isteği için bir PDF seçin."
+signingOrderHelp = "İmzalama sırası hakkında"
+status = "Durum"
+unavailable = "Bu oturum artık kullanılamıyor. Geçerli oturumlarınızı görmek için listeyi yenileyin."
+upcoming = "Yaklaşan"
+uploadFailed = "Bu PDF açılamadı. Lütfen tekrar deneyin."
 
 [sizes]
 large = "Büyük"

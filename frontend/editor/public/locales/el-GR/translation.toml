@@ -1537,7 +1537,7 @@ label = "Επιβολή OAuth scopes"
 
 [admin.settings.mcp.usernameClaim]
 description = "JWT claim που αντιστοιχίζεται με όνομα χρήστη Stirling (π.χ. sub, email, preferred_username)."
-label = "Username claim"
+label = "Αξίωση ονόματος χρήστη"
 
 [admin.settings.plan.noData]
 message = "Αυτός ο server δεν μπόρεσε να επικοινωνήσει με την υπηρεσία άδειας. Δοκιμάστε ξανά ή ελέγξτε το κλειδί άδειας."
@@ -1815,7 +1815,7 @@ label = "Ενεργοποίηση συνδέσμων κοινής χρήσης"
 
 [admin.settings.storage.signing.enabled]
 description = "Να επιτρέπεται στους χρήστες να δημιουργούν συνεδρίες υπογραφής εγγράφων με πολλούς συμμετέχοντες. Απαιτεί ενεργοποιημένη την αποθήκευση αρχείων στον διακομιστή."
-label = "Ενεργοποίηση ομαδικής υπογραφής (Alpha)"
+title = "Ενεργοποίηση ομαδικής υπογραφής"
 
 [admin.settings.telegram]
 description = "Ρυθμίστε τη συνδεσιμότητα του bot Telegram, τους ελέγχους πρόσβασης και τα μηνύματα ανατροφοδότησης."
@@ -2351,7 +2351,7 @@ label = "Άνοιγμα μενού για {{title}}"
 [automate.importModal]
 cancel = "Ακύρωση"
 confirm = "Εισαγωγή"
-detectedAutomation = "Automate JSON"
+detectedAutomation = "JSON αυτοματοποίησης"
 detectedFolderScan = "JSON σάρωσης φακέλων"
 dropHint = "Αποθέστε εδώ ένα JSON ή κάντε κλικ για να επιλέξετε αρχείο"
 dropSubhint = "Γίνονται αποδεκτές ρυθμίσεις Automate και Folder Scanning"
@@ -2744,7 +2744,6 @@ reason = "Αιτία"
 serverCertMessage = "Χρήση πιστοποιητικού διακομιστή - δεν απαιτούνται αρχεία ή κωδικός πρόσβασης"
 showLogo = "Εμφάνιση λογότυπου"
 signatureProgress = "{{signedCount}}/{{totalCount}} υπογραφές"
-signed = "Υπογεγραμμένο"
 tags = "έλεγχος ταυτότητας,PEM,P12,επίσημο,κρυπτογράφηση,υπογραφή,πιστοποιητικό,PKCS12,JKS,server,χειροκίνητο,αυτόματο"
 title = "Υπογραφή με πιστοποιητικό"
 viewed = "Προβλήθηκε"
@@ -2809,7 +2808,13 @@ reasonPlaceholder = "π.χ. Έγκριση, Ανασκόπηση..."
 
 [certSign.collab.finalize]
 button = "Οριστικοποίηση και φόρτωση υπογεγραμμένου PDF"
+confirmAction = "Επιβεβαίωση και οριστικοποίηση"
+confirmDescription = "Η οριστικοποίηση κλείνει αυτήν τη συνεδρία. Δεν μπορούν να υποβληθούν άλλες υπογραφές."
+confirmTitle = "Οριστικοποίηση αυτής της συνεδρίας υπογραφής;"
 early = "Οριστικοποίηση με τις τρέχουσες υπογραφές"
+excluded = "Συμμετέχοντες των οποίων οι υπογραφές δεν θα συμπεριληφθούν"
+included = "Περιλαμβανόμενες υπογραφές"
+requiresSignature = "Τουλάχιστον ένας συμμετέχων πρέπει να υπογράψει πριν μπορέσετε να οριστικοποιήσετε."
 
 [certSign.collab.participant]
 certInvalid = "✗ {{error}}"
@@ -2826,7 +2831,6 @@ includeSummaryPageHelp = "Θα προστεθεί στο τέλος μια σε�
 [certSign.collab.sessionDetail]
 addParticipants = "Προσθήκη συμμετεχόντων"
 addParticipantsError = "Αποτυχία προσθήκης συμμετεχόντων"
-backToList = "Επιστροφή στις συνεδρίες"
 deleteConfirm = "Είστε βέβαιοι; Αυτό δεν μπορεί να αναιρεθεί."
 deleteError = "Αποτυχία διαγραφής συνεδρίας"
 deleteSession = "Διαγραφή συνεδρίας"
@@ -2835,14 +2839,11 @@ finalizeError = "Αποτυχία οριστικοποίησης συνεδρί�
 loadPdfError = "Αποτυχία φόρτωσης υπογεγραμμένου PDF"
 loadSignedPdf = "Φόρτωση υπογεγραμμένου PDF στα ενεργά αρχεία"
 messageLabel = "Μήνυμα"
-owner = "Κάτοχος"
 participantRemoved = "Ο συμμετέχων αφαιρέθηκε"
 participants = "Συμμετέχοντες"
 participantsAdded = "Οι συμμετέχοντες προστέθηκαν με επιτυχία"
-removeParticipant = "Αφαίρεση"
 removeParticipantError = "Αποτυχία αφαίρεσης συμμετέχοντα"
 selectUsers = "Επιλέξτε χρήστες..."
-sessionInfo = "Πληροφορίες συνεδρίας"
 
 [certSign.collab.sessionList]
 active = "Ενεργές"
@@ -2855,11 +2856,10 @@ title = "Εμφάνιση υπογραφής"
 [certSign.collab.signRequest]
 addedToFiles = "Το έγγραφο προστέθηκε στα ενεργά αρχεία"
 addToFiles = "Προσθήκη στα ενεργά αρχεία"
-advancedSettings = "Σύνθετες ρυθμίσεις"
-backToList = "Επιστροφή στα αιτήματα υπογραφής"
 certificateChoice = "Επιλέξτε πιστοποιητικό για υπογραφή"
 changeSignature = "Αλλαγή υπογραφής"
 clearSignature = "Καθαρισμός υπογραφής"
+closed = "Αυτή η συνεδρία έχει οριστικοποιηθεί. Μπορείτε να δείτε το τελικό έγγραφο, αλλά δεν γίνονται δεκτές περαιτέρω υπογραφές ή απορρίψεις."
 completeAndSign = "Ολοκλήρωση & Υπογραφή"
 createNewSignature = "Δημιουργία νέας υπογραφής"
 decline = "Απόρριψη αιτήματος"
@@ -2876,7 +2876,6 @@ invalidFileType = "Επιλέξτε ένα αρχείο εικόνας"
 location = "Τοποθεσία (Προαιρετικό)"
 locationPlaceholder = "Από πού υπογράφετε;"
 noCertificate = "Επιλέξτε αρχείο πιστοποιητικού"
-noSignatures = "Τοποθετήστε τουλάχιστον μία υπογραφή στο PDF"
 p12File = "Αρχείο πιστοποιητικού P12/PFX"
 password = "Κωδικός πρόσβασης πιστοποιητικού"
 penColor = "Χρώμα πένας"
@@ -2894,16 +2893,15 @@ signatureText = "Κείμενο υπογραφής"
 signatureTextPlaceholder = "Εισαγάγετε το όνομά σας..."
 signatureTypeLabel = "Τύπος υπογραφής"
 signButton = "Υπογραφή εγγράφου"
-signingTitle = "Υπογραφή"
 textColor = "Χρώμα κειμένου"
 typeSignature = "Πληκτρολογήστε το όνομά σας για να δημιουργήσετε υπογραφή"
-uploadCert = "Προσαρμοσμένο πιστοποιητικό"
-uploadCertDesc = "Χρησιμοποιήστε το δικό σας πιστοποιητικό P12/PFX"
+uploadCert = "Μεταφόρτωση πιστοποιητικού"
+uploadCertDesc = "Χρησιμοποιήστε το δικό σας πιστοποιητικό PKCS12, PFX, PEM ή JKS."
 uploadSignature = "Μεταφόρτωση εικόνας υπογραφής"
-usePersonalCert = "Προσωπικό πιστοποιητικό"
-usePersonalCertDesc = "Δημιουργείται αυτόματα για τον λογαριασμό σας"
-useServerCert = "Πιστοποιητικό οργανισμού"
-useServerCertDesc = "Κοινόχρηστο πιστοποιητικό οργανισμού"
+usePersonalCert = "Stirling Sign · Προσωπικό"
+usePersonalCertDesc = "Υπογράψτε με το πιστοποιητικό που δημιουργήθηκε για τον λογαριασμό σας."
+useServerCert = "Stirling Sign · Οργανισμός"
+useServerCertDesc = "Υπογράψτε με το κοινόχρηστο πιστοποιητικό οργανισμού αυτού του server."
 useSignature = "Χρήση υπογραφής"
 
 [certSign.collab.signRequest.certModal]
@@ -2912,10 +2910,13 @@ certInvalidFallback = "Μη έγκυρο πιστοποιητικό"
 certNetworkError = "Δεν ήταν δυνατή η επικύρωση του πιστοποιητικού"
 certValidating = "Γίνεται επικύρωση πιστοποιητικού..."
 certValidUntil = "Το πιστοποιητικό ισχύει έως {{date}}"
-description_one = "Έχετε τοποθετήσει {{count}} υπογραφή. Επιλέξτε το πιστοποιητικό σας για να ολοκληρώσετε την υπογραφή."
-description_other = "Έχετε τοποθετήσει {{count}} υπογραφές. Επιλέξτε το πιστοποιητικό σας για να ολοκληρώσετε την υπογραφή."
+description_one = "{{count}} ορατό σημάδι είναι έτοιμο. Επιλέξτε ένα πιστοποιητικό για να ολοκληρώσετε την υπογραφή."
+description_other = "{{count}} ορατά σημάδια είναι έτοιμα. Επιλέξτε ένα πιστοποιητικό για να ολοκληρώσετε την υπογραφή."
+description_zero = "Το πιστοποιητικό σας θα υπογράψει το έγγραφο χωρίς ορατά σημάδια."
+details = "Λεπτομέρειες υπογραφής (προαιρετικά)"
+format = "Μορφή πιστοποιητικού"
 sign = "Υπογραφή εγγράφου"
-title = "Ρύθμιση πιστοποιητικού"
+title = "Επιλέξτε τρόπο υπογραφής"
 
 [certSign.collab.signRequest.mode]
 move = "Μετακίνηση υπογραφής"
@@ -2968,11 +2969,11 @@ visible = "Ορατή"
 yourSignatures = "Οι υπογραφές σας ({{count}})"
 
 [certSign.collab.userSelector]
-inviteUsers = "Προσθήκη χρηστών"
 loadError = "Αποτυχία φόρτωσης χρηστών"
 noTeam = "Χωρίς ομάδα"
 noUsers = "Δεν βρέθηκαν άλλοι χρήστες."
 placeholder = "Επιλέξτε χρήστες..."
+you = "{{name}} (Εσείς)"
 
 [certSign.device]
 stepTitle = "Αυτή η συσκευή"
@@ -3351,7 +3352,7 @@ credit-note = "Πιστωτικό σημείωμα"
 customs-declaration = "Τελωνειακή δήλωση"
 customs-form = "Τελωνειακή φόρμα"
 cv = "CV"
-datasheet = "Datasheet"
+datasheet = "Φύλλο δεδομένων"
 debit-note = "Χρεωστικό σημείωμα"
 deed = "Πράξη"
 delivery-note = "Δελτίο παράδοσης"
@@ -3467,7 +3468,7 @@ price-list = "Τιμοκατάλογος"
 pricing-sheet = "Φύλλο τιμολόγησης"
 privacy-policy = "Πολιτική απορρήτου"
 product-sheet = "Φύλλο προϊόντος"
-proforma-invoice = "Proforma invoice"
+proforma-invoice = "Προτιμολόγιο"
 progress-report = "Αναφορά προόδου"
 project-charter = "Καταστατικό έργου"
 project-plan = "Σχέδιο έργου"
@@ -5450,9 +5451,6 @@ multimedia = "Πολυμέσα"
 
 [groupSigning.steps]
 back = "Πίσω"
-completed = "Ολοκληρώθηκε"
-current = "Τρέχον"
-stepLabel = "Βήμα {{number}}"
 
 [groupSigning.steps.configureDefaults]
 continue = "Συνέχεια"
@@ -5460,7 +5458,6 @@ invisible = "Οι υπογραφές θα είναι αόρατες (μόνο μ
 locationLabel = "Τοποθεσία:"
 preview = "Προεπισκόπηση"
 reasonLabel = "Λόγος:"
-title = "Διαμόρφωση ρυθμίσεων υπογραφής"
 visible = "Οι υπογραφές θα είναι ορατές στη σελίδα {{page}}"
 
 [groupSigning.steps.review]
@@ -5472,14 +5469,13 @@ location = "Τοποθεσία:"
 logo = "Λογότυπο:"
 logoHidden = "Χωρίς λογότυπο"
 logoShown = "Εμφανίζεται το λογότυπο του Stirling PDF"
-participantCount_one = "{{count}} συμμετέχων θα υπογράψει με σειρά"
-participantCount_other = "{{count}} συμμετέχοντες θα υπογράψουν με σειρά"
+participantCount_one = "Επιλέχθηκε {{count}} συμμετέχων"
+participantCount_other = "Επιλέχθηκαν {{count}} συμμετέχοντες"
 participants = "Συμμετέχοντες"
 reason = "Λόγος:"
 send = "Αποστολή αιτημάτων υπογραφής"
 signatureSettings = "Ρυθμίσεις υπογραφής"
 title = "Επισκόπηση λεπτομερειών συνεδρίας"
-titleShort = "Επισκόπηση & Αποστολή"
 visibility = "Ορατότητα:"
 visible = "Ορατή στη σελίδα {{page}}"
 
@@ -5487,7 +5483,6 @@ visible = "Ορατή στη σελίδα {{page}}"
 continue = "Συνέχεια"
 noFile = "Επιλέξτε ένα μόνο αρχείο PDF από τα ενεργά αρχεία σας για να δημιουργήσετε συνεδρία υπογραφής."
 selectedFile = "Επιλεγμένο έγγραφο"
-title = "Επιλογή εγγράφου"
 
 [groupSigning.steps.selectParticipants]
 continue = "Συνέχεια"
@@ -5495,31 +5490,30 @@ count_one = "{{count}} συμμετέχων επιλέχθηκε"
 count_other = "{{count}} συμμετέχοντες επιλέχθηκαν"
 label = "Επιλέξτε συμμετέχοντες"
 placeholder = "Επιλέξτε συμμετέχοντες για υπογραφή..."
-title = "Επιλογή συμμετεχόντων"
 
 [groupSigning.tooltip]
 header = "Σχετικά με την ομαδική υπογραφή"
 
 [groupSigning.tooltip.finalization]
-bullet1 = "Όλες οι υπογραφές εφαρμόζονται με τη σειρά συμμετεχόντων που ορίσατε"
-bullet2 = "Μπορείτε να οριστικοποιήσετε με μερικές υπογραφές αν χρειάζεται"
-bullet3 = "Μόλις οριστικοποιηθεί, η συνεδρία δεν μπορεί να τροποποιηθεί"
-description = "Μόλις όλοι οι συμμετέχοντες υπογράψουν (ή επιλέξετε να οριστικοποιήσετε νωρίτερα), μπορείτε να δημιουργήσετε το τελικό υπογεγραμμένο PDF."
+bullet1 = "Το τελικό PDF περιλαμβάνει όλες τις αποδεκτές υπογραφές"
+bullet2 = "Ελέγξτε τους εκκρεμείς συμμετέχοντες πριν την οριστικοποίηση με μερικές υπογραφές"
+bullet3 = "Η οριστικοποίηση κλείνει το αίτημα· οι εκκρεμείς συμμετέχοντες δεν μπορούν πλέον να υπογράψουν"
+description = "Αφού υπογράψει τουλάχιστον ένας συμμετέχων, ο κάτοχος μπορεί να οριστικοποιήσει το αίτημα και να δημιουργήσει το υπογεγραμμένο PDF."
 title = "Διαδικασία οριστικοποίησης"
 
 [groupSigning.tooltip.roles]
 bullet1 = "Κάτοχος (εσείς): Δημιουργεί συνεδρία, διαμορφώνει προεπιλογές υπογραφής, οριστικοποιεί το έγγραφο"
-bullet2 = "Συμμετέχοντες: Δημιουργούν την υπογραφή τους, επιλέγουν πιστοποιητικό, τοποθετούν στο PDF"
-bullet3 = "Οι συμμετέχοντες δεν μπορούν να τροποποιήσουν τις ρυθμίσεις ορατότητας, λόγου ή τοποθεσίας υπογραφής"
-description = "Ελέγχετε τις ρυθμίσεις εμφάνισης υπογραφής για όλους τους συμμετέχοντες."
+bullet2 = "Συμμετέχοντες: Επιλέξτε ένα πιστοποιητικό και προαιρετικά τοποθετήστε μια ορατή υπογραφή στο PDF"
+bullet3 = "Οι συμμετέχοντες μπορούν να προσαρμόσουν την αιτία και την τοποθεσία της υπογραφής τους πριν την υποβολή"
+description = "Ο κάτοχος ορίζει τις προεπιλογές του αιτήματος· κάθε συμμετέχων επιλέγει το πιστοποιητικό του και προαιρετικά ένα ορατό σημάδι."
 title = "Ρόλοι συμμετεχόντων"
 
 [groupSigning.tooltip.sequential]
-bullet1 = "Ο πρώτος συμμετέχων πρέπει να υπογράψει πριν αποκτήσει πρόσβαση ο δεύτερος στο έγγραφο"
-bullet2 = "Εξασφαλίζει τη σωστή σειρά υπογραφών για νομική συμμόρφωση"
-bullet3 = "Μπορείτε να αλλάξετε τη σειρά συμμετεχόντων σύροντάς τους στη λίστα"
-description = "Οι συμμετέχοντες υπογράφουν τα έγγραφα με τη σειρά που ορίζετε. Κάθε υπογράφων λαμβάνει ειδοποίηση όταν έρθει η σειρά του."
-title = "Διαδοχική υπογραφή"
+bullet1 = "Οι συμμετέχοντες δεν χρειάζεται να περιμένουν άλλον υπογράφοντα"
+bullet2 = "Παρακολουθήστε την πρόοδο κάθε συμμετέχοντα στις συνεδρίες υπογραφής"
+bullet3 = "Η ημερομηνία λήξης είναι υπενθύμιση· δεν λήγει την πρόσβαση"
+description = "Οι ανατεθειμένοι συμμετέχοντες μπορούν να ελέγχουν και να υπογράφουν ανεξάρτητα, με οποιαδήποτε σειρά."
+title = "Υπογραφή με οποιαδήποτε σειρά"
 
 [guestBanner]
 dismiss = "Απόκρυψη banner"
@@ -5828,7 +5822,6 @@ tags = "εντοπισμός,διαχωρισμός,φωτογραφίες,αυ�
 title = "Εντοπισμός & χωρισμός φωτ."
 
 [home.sharedSign]
-desc = "Ζητήστε υπογραφές από άλλους και παρακολουθήστε συνεδρίες υπογραφής"
 title = "Κοινή υπογραφή"
 
 [home.showJS]
@@ -7426,7 +7419,9 @@ groupedTitle = "Μέρος ομάδας σε αυτό το PDF: μπορεί ν�
 
 [pdfTextEditor.sidebar]
 addImage = "Προσθήκη εικόνας"
+addTable = "Προσθήκη πίνακα"
 addText = "Προσθήκη κειμένου"
+clickPageToAddTable = "Κάντε κλικ στη σελίδα για να προσθέσετε πίνακα"
 clickPageToAddText = "Κάντε κλικ στη σελίδα για προσθήκη κειμένου"
 document = "Έγγραφο"
 group = "Ομαδοποίηση"
@@ -7435,11 +7430,14 @@ groupingAutoHint = "Ομαδοποιεί γραμμές με ίσες αποστ
 groupingLine = "Γραμμή"
 groupTooltip = "Συγχώνευση επιλεγμένων διαδρομών σε μία παράγραφο ({{shortcut}})"
 groupTooltipDisabled = "Επιλέξτε 2+ διαδρομές για συγχώνευση"
+image = "Εικόνα"
 noFile = "Δεν φορτώθηκε αρχείο"
 noFileHint = "Επιλέξτε ένα PDF από το πλαίσιο Αρχεία στα αριστερά ή αποθέστε ένα. Ο editor θα το ανοίξει αυτόματα."
 opening = "Άνοιγμα εγγράφου..."
 paragraph = "Παράγραφος"
 rulers = "Χάρακες και οδηγοί"
+table = "Πίνακας"
+text = "Κείμενο"
 textBoxWidth = "Πλάτος νέου πλαισίου κειμένου"
 textGrouping = "Ομαδοποίηση κειμένου"
 ungroup = "Αποομαδοποίηση"
@@ -7460,6 +7458,24 @@ loadingProgress = "Πρόοδος φόρτωσης"
 noDocument = "Δεν φορτώθηκε έγγραφο."
 pickPrompt = "Επιλέξτε ένα PDF από το πλαίσιο Αρχεία στα αριστερά για να ξεκινήσετε την επεξεργασία."
 renderingPreview = "Απόδοση προεπισκόπησης"
+
+[pdfTextEditor.table]
+addColumn = "Προσθήκη στήλης"
+addRow = "Προσθήκη γραμμής"
+column = "Στήλη"
+deleteColumn = "Διαγραφή στήλης"
+deleteRow = "Διαγραφή γραμμής"
+done = "Τέλος"
+doneHint = "Διακοπή επεξεργασίας αυτού ως πίνακα"
+edit = "Επεξεργασία"
+editHint = "Επεξεργασία ως πίνακα - πληκτρολογήστε σε κελιά, προσθέστε ή αφαιρέστε γραμμές και στήλες"
+move = "Μετακίνηση"
+moveTable = "Σύρετε για να μετακινήσετε ολόκληρο τον πίνακα"
+recognizedHint = "Αναγνωρισμένος πίνακας - κάντε κλικ για να επιλέξετε όλο το κείμενό του"
+resizeColumn = "Σύρετε για να αλλάξετε το μέγεθος αυτής της στήλης (Alt: κοινή χρήση με την επόμενη)"
+resizeRow = "Σύρετε για να αλλάξετε το μέγεθος αυτής της γραμμής (Alt: κοινή χρήση με την επόμενη)"
+resizeTable = "Σύρετε για να αλλάξετε το μέγεθος ολόκληρου του πίνακα"
+row = "Σειρά"
 
 [pdfTextEditor.toolbar]
 addTextTooltip = "Προσθήκη πλαισίου κειμένου - έπειτα κάντε κλικ στη σελίδα"
@@ -7771,7 +7787,7 @@ rowIdle = "Το {{label}} εκτελείται αυτόματα"
 rowRunning = "Το {{label}} εκτελείται τώρα"
 runsToday_one = "{{count}} εκτέλεση σήμερα"
 runsToday_other = "{{count}} εκτελέσεις σήμερα"
-title = "PDF Processor"
+title = "Επεξεργαστής PDF"
 triggerExport = "Εκτελείται κατά την εξαγωγή"
 triggerImport = "Εκτελείται κατά την εισαγωγή"
 
@@ -7848,7 +7864,7 @@ connectDescription = "Συνδέστε αυτόν τον διακομιστή γ
 disconnectBody = "Αυτός ο διακομιστής θα σταματήσει να χρησιμοποιεί το όριο επεξεργασίας της ομάδας σας στο Stirling Cloud. Τα τοπικά αρχεία σας παραμένουν σε αυτόν τον διακομιστή. Για να συνδεθείτε ξανά, ακολουθήστε τα αρχικά βήματα σύνδεσης."
 disconnectTitle = "Αποσύνδεση αυτής της παρουσίας;"
 eyebrow = "Αυτό το instance"
-linkButton = "Σύνδεση του λογαριασμού σας Stirling"
+linkButton = "Συνδέστε τον λογαριασμό σας Stirling"
 loading = "Έλεγχος σύνδεσης λογαριασμού"
 notLinked = "Δεν είναι συνδεδεμένο"
 signedInAs = "Συνδεδεμένος στο Stirling Cloud ως"
@@ -7960,7 +7976,7 @@ cancel = "Ακύρωση"
 continueReauth = "Σύνδεση ξανά"
 exhaustedTitle = "Διατηρήστε τις ροές εργασίας σας σε λειτουργία"
 identity = "Λογαριασμός Stirling"
-linkTitle = "Σύνδεση του λογαριασμού σας Stirling"
+linkTitle = "Συνδέστε τον λογαριασμό σας Stirling"
 noAuthorizeUrl = "Το Stirling δεν επέστρεψε σημείο συνέχισης. Δοκιμάστε ξανά σε λίγο."
 startFailed = "Δεν ήταν δυνατή η επικοινωνία με το Stirling για την έναρξη της σύνδεσης. Ελέγξτε την εξερχόμενη πρόσβαση δικτύου αυτού του διακομιστή και δοκιμάστε ξανά."
 transferPending = "Εκκρεμεί μεταβίβαση κυριότητας. Μεταβείτε στις Ρυθμίσεις → Χρήστες για να την ολοκληρώσετε ή να την ακυρώσετε και έπειτα δοκιμάστε ξανά τη σύνδεση."
@@ -8114,7 +8130,7 @@ enterpriseUsers = "Χωρίς όριο"
 enterpriseWhere = "Επιπλέον multi-node και air-gapped"
 exploreEnterprise = "Εξερευνήστε το Enterprise"
 freeData = "Παραμένουν εκεί όπου το εκτελείτε"
-freeName = "Free"
+freeName = "Δωρεάν"
 freePrice = "Χωρίς κάρτα, χωρίς λήξη"
 freeProcessing = "{{allowance}} πιστώσεις τον μήνα"
 freeProcessingUnknown = "Μηνιαίο όριο πιστώσεων"
@@ -8173,13 +8189,13 @@ oauthSso = "SSO (OAuth2/OIDC)"
 chipAnywhere = "Web, desktop & αυτοφιλοξενούμενο"
 chipCredits = "{{allowance}} δωρεάν credits μηνιαίως"
 chipTools = "Κάθε εργαλείο PDF"
-name = "Free"
+name = "Δωρεάν"
 sub = "Ο πλήρης PDF Editor."
 
 [portal.billing.identity.processor]
 chipMetered = "Μετρημένη επεξεργασία"
 chipPipelines = "Ροές εργασίας & API"
-name = "Processor"
+name = "Επεξεργαστής"
 sub = "Βάση Team συν {{rate}} ανά credit"
 subNoRate = "Βάση Team συν μετρημένη επεξεργασία"
 
@@ -8298,7 +8314,7 @@ prepaidRemaining = "Προπληρωμένα credits που απομένουν"
 prepaidTooltip = "Χρησιμοποιούνται πριν από τη μετρημένη χρέωση και εκτός του ορίου δαπάνης σας."
 raiseLimit = "Αύξηση ορίου"
 remainingOf = "{{remaining}} από {{total}}"
-rowName = "Processor"
+rowName = "Επεξεργαστής"
 spendAgainstLimit = "{{spend}} από {{cap}} μετρημένα σε αυτόν τον κύκλο"
 
 [portal.billing.seats]
@@ -8437,17 +8453,17 @@ label = "Αρχείο & επισύναψη"
 
 [portal.connections.commonFields.accessToken]
 helperText = "Το Stirling το αποθηκεύει κρυπτογραφημένο και δεν το εμφανίζει ποτέ ξανά."
-label = "Access token"
+label = "Διακριτικό πρόσβασης"
 
 [portal.connections.commonFields.apiKey]
-label = "API key"
+label = "Κλειδί API"
 
 [portal.connections.commonFields.apiToken]
-label = "API token"
+label = "Διακριτικό API"
 
 [portal.connections.commonFields.baseUrl]
 helperText = "Τα βήματα που χρησιμοποιούν αυτή τη σύνδεση μπορούν να καλούν μόνο διαδρομές κάτω από αυτό το URL, ποτέ άλλο host."
-label = "Server URL"
+label = "URL διακομιστή"
 
 [portal.connections.commonFields.email]
 label = "Email"
@@ -8459,7 +8475,7 @@ label = "Host"
 label = "Κωδικός πρόσβασης"
 
 [portal.connections.commonFields.port]
-label = "Port"
+label = "Θύρα"
 
 [portal.connections.commonFields.username]
 label = "Όνομα χρήστη"
@@ -8528,7 +8544,7 @@ helperText = "Αν το API απαντήσει με σύνδεσμο λήψης,
 label = "Επιτρεπόμενοι hosts αποτελεσμάτων"
 
 [portal.connections.types.api.fields.token]
-label = "Token"
+label = "Διακριτικό"
 
 [portal.connections.types.api.fields.tokenHeaderName]
 label = "Στείλτε το token ως αυτό το header"
@@ -8543,7 +8559,7 @@ label = "Όνομα χρήστη"
 [portal.connections.types.clamav]
 baseUrlPlaceholder = "http://clamav-rest:9000"
 description = "Σάρωση εγγράφων για malware σε server που εκτελείτε - τίποτα δεν φεύγει από το δίκτυό σας."
-label = "ClamAV (self-hosted)"
+label = "ClamAV (αυτοφιλοξενούμενο)"
 
 [portal.connections.types.cloudmersive]
 description = "Σάρωση ιών και περιεχομένου για έγγραφα σε μια πολιτική."
@@ -8564,14 +8580,14 @@ label = "ConsignO Cloud"
 
 [portal.connections.types.consigno.fields.baseUrl]
 helperText = "Το περιβάλλον ConsignO Cloud σας, συμπεριλαμβανομένου του /api/v1."
-label = "Server URL"
+label = "URL διακομιστή"
 placeholder = "https://your-org.consignocloud.com/api/v1"
 
 [portal.connections.types.consigno.fields.clientId]
-label = "API key"
+label = "Κλειδί API"
 
 [portal.connections.types.consigno.fields.clientSecret]
-label = "API secret"
+label = "Μυστικό API"
 
 [portal.connections.types.consigno.fields.password]
 label = "Κωδικός πρόσβασης"
@@ -8665,7 +8681,7 @@ label = "Κωδικός πρόσβασης εφαρμογής"
 [portal.connections.types.presidio]
 baseUrlPlaceholder = "http://presidio-analyzer:3000"
 description = "Ανίχνευση προσωπικών δεδομένων σε κείμενο εγγράφου χρησιμοποιώντας έναν Presidio server που εκτελείτε."
-label = "Presidio (self-hosted)"
+label = "Presidio (αυτοφιλοξενούμενο)"
 
 [portal.connections.types.purview]
 description = "Ανάγνωση και εφαρμογή ετικετών ευαισθησίας Microsoft Purview σε PDFs."
@@ -8673,14 +8689,14 @@ label = "Microsoft Purview"
 
 [portal.connections.types.purview.fields.clientId]
 helperText = "Προαιρετικό. Απαιτείται μόνο για επιλογή ετικετών με βάση το όνομα· η επισήμανση λειτουργεί χωρίς αυτό."
-label = "Application (client) ID"
+label = "ID εφαρμογής (client)"
 
 [portal.connections.types.purview.fields.clientSecret]
-label = "Client secret"
+label = "Μυστικό client"
 
 [portal.connections.types.purview.fields.tenantId]
 helperText = "Σφραγίζεται σε κάθε ετικέτα ως SiteId, ώστε τα εργαλεία που γνωρίζουν το Purview να ξέρουν ποιος οργανισμός την εφάρμοσε."
-label = "Directory (tenant) ID"
+label = "ID καταλόγου (tenant)"
 placeholder = "cb46c030-1825-4e81-a295-151c039dbf02"
 
 [portal.connections.types.s3]
@@ -8688,7 +8704,7 @@ description = "Ένα S3 bucket από το οποίο οι πηγές μπορ�
 label = "Αποθήκευση S3"
 
 [portal.connections.types.s3.fields.accessKeyId]
-label = "Access key ID"
+label = "ID κλειδιού πρόσβασης"
 
 [portal.connections.types.s3.fields.bucket]
 label = "Bucket"
@@ -8698,10 +8714,10 @@ helperText = "Αφήστε κενό για AWS. Ορίστε το για MinIO �
 label = "Endpoint"
 
 [portal.connections.types.s3.fields.region]
-label = "Region"
+label = "Περιοχή"
 
 [portal.connections.types.s3.fields.secretAccessKey]
-label = "Secret access key"
+label = "Μυστικό κλειδί πρόσβασης"
 
 [portal.connections.types.sendgrid]
 description = "Αποστολή email με έγγραφο ή ειδοποίηση όταν εκτελείται μια πολιτική."
@@ -8714,18 +8730,18 @@ label = "SFTP"
 
 [portal.connections.types.sftp.fields.hostKeyFingerprint]
 helperText = "Προαιρετικό. Το SHA-256 host key fingerprint του server (από `ssh-keyscan host | ssh-keygen -lf -`). Όταν οριστεί, γίνεται αποδεκτός μόνο server που παρουσιάζει αυτό το key· όταν είναι κενό, το key που εμφανίζεται στην πρώτη σύνδεση καρφιτσώνεται και μεταγενέστερες αλλαγές απορρίπτονται."
-label = "Host key fingerprint"
+label = "Αποτύπωμα κλειδιού host"
 placeholder = "SHA256:..."
 
 [portal.connections.types.sftp.fields.passphrase]
-label = "Key passphrase"
+label = "Συνθηματική φράση κλειδιού"
 
 [portal.connections.types.sftp.fields.password]
 helperText = "Αφήστε κενό αν κάνετε έλεγχο ταυτότητας με private key αντί για κωδικό πρόσβασης."
 
 [portal.connections.types.sftp.fields.privateKey]
 helperText = "Προαιρετικό. Επικολλήστε ένα OpenSSH private key για έλεγχο ταυτότητας με key αντί για κωδικό πρόσβασης."
-label = "Private key"
+label = "Ιδιωτικό κλειδί"
 
 [portal.connections.types.slack]
 description = "Δημοσίευση μηνύματος στο Slack όταν μια πολιτική επεξεργάζεται ένα έγγραφο."
@@ -8796,7 +8812,7 @@ lead = "Ενσωματώσιμο UI για ουρές ελέγχου και επ
 title = "Ενσωματούμενοι viewers"
 
 [portal.docs.endpoints]
-eyebrow = "API REFERENCE"
+eyebrow = "ΑΝΑΦΟΡΑ API"
 fieldCount_one = "{{count}} πεδίο"
 fieldCount_other = "{{count}} πεδία"
 filterAll = "Όλα"
@@ -8806,7 +8822,7 @@ title = "Endpoints"
 
 [portal.docs.errors]
 codeCaption = "422 Unprocessable Entity"
-eyebrow = "API REFERENCE"
+eyebrow = "ΑΝΑΦΟΡΑ API"
 lead = "Τα σφάλματα επιστρέφουν έναν σταθερό, αναγνώσιμο από μηχανή κωδικό και ένα ανθρώπινο μήνυμα. Το σώμα 4xx περιλαμβάνει πάντα ένα request_id για υποστήριξη."
 title = "Σφάλματα"
 
@@ -8820,7 +8836,7 @@ title = "Η τεκμηρίωση δεν είναι διαθέσιμη"
 [portal.docs.quickstart]
 eyebrow = "ΞΕΚΙΝΩΝΤΑΣ"
 lead = "Στείλτε το πρώτο σας έγγραφο σε ένα typed endpoint και λάβετε δομημένο JSON πίσω σε τρία βήματα. Χωρίς εκπαίδευση μοντέλου, χωρίς prompt engineering."
-title = "Quickstart"
+title = "Γρήγορη εκκίνηση"
 
 [portal.docs.quickstart.callout]
 bodyAfterLink = "για συνταγές copy-paste."
@@ -8876,7 +8892,7 @@ title = "Σε αυτήν τη σελίδα"
 
 [portal.docs.webhooks]
 codeCaption = "document.processed"
-eyebrow = "API REFERENCE"
+eyebrow = "ΑΝΑΦΟΡΑ API"
 lead = "Εγγραφείτε σε συμβάντα document.processed, pipeline.completed και quota.threshold. Τα payloads υπογράφονται με HMAC-SHA256."
 title = "Webhooks"
 
@@ -8960,7 +8976,7 @@ processed = "Επεξεργασμένο"
 
 [portal.documents.table]
 auto = "Αυτόματο"
-editorAction = "Editor"
+editorAction = "Επεξεργαστής"
 empty = "Κανένα έγγραφο δεν αντιστοιχεί σε αυτό το φίλτρο."
 rowActions = "Ενέργειες γραμμής"
 sensitiveLabel = "Ευαίσθητο"
@@ -9108,7 +9124,7 @@ closed = "Κλειστά"
 open = "Ανοιχτά"
 
 [portal.failures.source]
-editor = "Editor"
+editor = "Επεξεργαστής"
 
 [portal.failures.unavailable]
 description = "Αυτή η ουρά είναι ορατή στους επικεφαλής ομάδας σε χώρους εργασίας που εκτελούν πολιτικές."
@@ -9121,7 +9137,7 @@ done = "Τέλος"
 guide = "Άνοιγμα του οδηγού {{name}}"
 openInBrowser = "Άνοιγμα στο browser αντί γι' αυτό"
 sectionDesktop = "Εφαρμογή desktop"
-sectionSelfHosted = "Self-hosted"
+sectionSelfHosted = "Αυτοφιλοξενούμενο"
 title = "Εγκατάσταση του Stirling PDF Editor"
 
 [portal.home.download.docker]
@@ -9170,7 +9186,7 @@ title = "Windows"
 
 [portal.home.editor]
 activeOfDeployed = "{{active}} από {{total}} ενεργά τις τελευταίες 30 ημέρες"
-name = "PDF Editor"
+name = "Επεξεργαστής PDF"
 open = "Άνοιγμα σε browser"
 updated = "ενημερώθηκε {{time}}"
 
@@ -9180,9 +9196,9 @@ options = "Προβολή επιλογών ανάπτυξης"
 start = "Ανάπτυξη του Editor"
 
 [portal.home.editor.target]
-cloud = "Managed Cloud"
-docker = "Self-hosted · Docker"
-kubernetes = "Self-hosted · Kubernetes"
+cloud = "Διαχειριζόμενο Cloud"
+docker = "Αυτοφιλοξενούμενο · Docker"
+kubernetes = "Αυτοφιλοξενούμενο · Kubernetes"
 
 [portal.home.greeting]
 afternoon = "Καλό απόγευμα"
@@ -9191,7 +9207,7 @@ morning = "Καλημέρα"
 
 [portal.infrastructure.apiKeys]
 createKey = "Δημιουργία key"
-heading = "API keys"
+heading = "Κλειδιά API"
 subheading = "Προσωπικά διαπιστευτήρια, το καθένα με τη δική του παρακολούθηση χρήσης."
 
 [portal.infrastructure.apiKeys.card]
@@ -9254,8 +9270,8 @@ username = "Όνομα χρήστη"
 
 [portal.infrastructure.audit.filters]
 all = "Όλα"
-auth = "Auth"
-config = "Config"
+auth = "Έλεγχος ταυτότητας"
+config = "Ρύθμιση"
 elevation = "Αναβάθμιση πρόσβασης"
 policy = "Πολιτική"
 processing = "Επεξεργασία"
@@ -9266,7 +9282,7 @@ description = "Το αρχείο καταγραφής ελέγχου είναι 
 title = "Δεν έχετε πρόσβαση"
 
 [portal.infrastructure.audit.metrics]
-config = "Config"
+config = "Ρύθμιση"
 policy = "Πολιτική"
 processing = "Επεξεργασία"
 totalEvents = "Συνολικά συμβάντα · 24h"
@@ -9291,7 +9307,7 @@ createKey = "Δημιουργία key"
 done = "Τέλος"
 keyNameLabel = "Όνομα key"
 keyNamePlaceholder = "π.χ. Production ingest"
-secretKeyCaption = "Secret key"
+secretKeyCaption = "Μυστικό κλειδί"
 secretWarning = "Αποθηκεύστε το σε έναν secrets manager. Το Stirling αποθηκεύει πάντα μόνο ένα hash, επομένως δεν υπάρχει τρόπος να ανακτηθεί αργότερα."
 subtitle = "Δώστε στο κλειδί ένα όνομα ώστε να μπορείτε να το αναγνωρίσετε αργότερα. Μπορείτε να το ανακαλέσετε οποιαδήποτε στιγμή."
 subtitleCreated = "Αντιγράψτε αυτό το secret τώρα — δεν θα εμφανιστεί ξανά."
@@ -9529,8 +9545,8 @@ usage = "Χρήση & Χρέωση"
 users = "Χρήστες"
 
 [portal.nav.section]
-platform = "PDF Platform"
-processor = "PDF Processor"
+platform = "Πλατφόρμα PDF"
+processor = "Επεξεργαστής PDF"
 
 [portal.pipelines]
 permissionsRetry = "Επανάληψη"
@@ -9954,7 +9970,7 @@ label = "Πώς να σταλεί το έγγραφο"
 
 [portal.policies.operations.fields.bodyTemplate]
 helperText = "Ένα JSON body που αποστέλλεται ως έχει. Το {{document.base64}} μεταφέρει το αρχείο· τα {{document.*}} και {{run.*}} συμπληρώνονται ανά έγγραφο."
-label = "JSON body"
+label = "Σώμα JSON"
 
 [portal.policies.operations.fields.connection]
 label = "Λογαριασμός"
@@ -9989,7 +10005,7 @@ helperText = "Αποστέλλεται ως σώμα μηνύματος. Τα {{
 label = "Μήνυμα"
 
 [portal.policies.operations.fields.method]
-label = "Method"
+label = "Μέθοδος"
 
 [portal.policies.operations.fields.pageId]
 label = "Page ID"
@@ -9997,7 +10013,7 @@ placeholder = "66186"
 
 [portal.policies.operations.fields.path]
 helperText = "Προστίθεται στο base URL της σύνδεσης. Δεν μπορεί ποτέ να φτάσει σε άλλον host."
-label = "Path"
+label = "Διαδρομή"
 placeholder = "/v1/scan"
 
 [portal.policies.operations.fields.remotePath]
@@ -10225,7 +10241,7 @@ description = "Επιλέξτε τι κάνει αυτό το pipeline σε κά
 footnote = "Οι μετρήσεις αφορούν τις τελευταίες 24 ώρες. Η ταχύτητα ροής είναι ενδεικτική."
 liveBadge = "Live"
 stats = "{{connected}} συνδεδεμένα · {{processed}} PDF επεξεργασμένα"
-title = "PDF Processor"
+title = "Επεξεργαστής PDF"
 
 [portal.processorFlow.lens]
 ariaLabel = "Λειτουργία προβολής"
@@ -10280,7 +10296,7 @@ legalName = "Όνομα νομικής οντότητας"
 legalNamePlaceholder = "Η νομική οντότητα που θα υπογράψει"
 loadError = "Δεν ήταν δυνατή η φόρτωση της συμφωνίας. Δοκιμάστε ξανά."
 loading = "Φόρτωση της συμφωνίας..."
-ref = "Ref {{ref}} · {{version}}"
+ref = "Αναφ. {{ref}} · {{version}}"
 requestChanges = "Αίτημα αλλαγών"
 scrollHint = "Κάντε κύλιση για έλεγχο"
 signatory = "Όνομα υπογράφοντος"
@@ -10381,9 +10397,9 @@ laterInvoice = "Διαθέσιμο αφού αποδεχτείτε"
 laterQuote = "Διαθέσιμο μόλις εκδοθεί η προσφορά σας"
 quote = "Προσφορά"
 quoteSub = "Η αναλυτική enterprise προσφορά σας."
-sla = "SLA Exhibit"
+sla = "Παράρτημα SLA"
 slaSub = "Επίπεδα υποστήριξης και στόχοι απόκρισης."
-subprocessors = "Subprocessors"
+subprocessors = "Υποεπεξεργαστές"
 subprocessorsSub = "Τρίτα μέρη που επεξεργάζονται δεδομένα για λογαριασμό σας."
 subtitle = "Τα έγγραφα της συμφωνίας σας, διαθέσιμα ανά πάσα στιγμή."
 title = "Έγγραφα"
@@ -10739,17 +10755,17 @@ description = "Λάβετε έγγραφα μέσω υπογεγραμμένου
 label = "Webhook"
 
 [portal.sources.types.webhook.detail]
-deliveryUrl = "Delivery URL"
+deliveryUrl = "URL παράδοσης"
 secretNote = "Το signing secret εμφανίζεται μία φορά, όταν δημιουργείται το webhook. Δημιουργήστε ξανά την πηγή για να το αλλάξετε."
 
 [portal.sources.types.webhook.reveal]
 copy = "Αντιγραφή"
 done = "Τέλος"
-secret = "Signing secret"
+secret = "Μυστικό υπογραφής"
 secretHelp = "Υπογράψτε το raw body κάθε παράδοσης με αυτό το κλειδί (HMAC-SHA256) και στείλτε το ως X-Stirling-Signature header."
 secretWarning = "Αντιγράψτε τώρα το signing secret. Για την ασφάλειά σας εμφανίζεται μόνο μία φορά και δεν μπορεί να ανακτηθεί αργότερα."
 title = "Το webhook δημιουργήθηκε"
-url = "Delivery URL"
+url = "URL παράδοσης"
 usage = "Κάντε POST κάθε έγγραφο ως raw request body στο delivery URL με binary content type (application/pdf ή application/octet-stream). Οι πολιτικές που το αναφέρουν εκτελούνται αυτόματα κατά την άφιξη."
 
 [portal.sources.wizard]
@@ -10898,7 +10914,7 @@ scope = "Εισαγωγή αρχείων"
 
 [provider.googledrive.apiKey]
 description = "Google API Key για το Google Picker API από το Google Cloud Console"
-label = "API Key"
+label = "Κλειδί API"
 
 [provider.googledrive.appId]
 description = "Google Drive App ID από το Google Cloud Console"
@@ -10917,7 +10933,7 @@ notConfigured = "Το Google Drive δεν έχει ρυθμιστεί"
 pickerFailed = "Αποτυχία ανοίγματος του επιλογέα Google Drive"
 
 [provider.oauth2.generic]
-name = "Generic OAuth2"
+name = "Γενικό OAuth2"
 scope = "SSO"
 
 [provider.oauth2.generic.autoCreateUser]
@@ -11035,7 +11051,7 @@ label = "Ενεργοποίηση SAML2"
 
 [provider.saml2.idpCert]
 description = "Η διαδρομή πιστοποιητικού (π.χ., classpath:okta.cert)"
-label = "IDP Certificate"
+label = "Πιστοποιητικό IDP"
 
 [provider.saml2.idpIssuer]
 description = "Το ID του παρόχου σας"
@@ -11676,7 +11692,7 @@ title = "Σχετικά"
 
 [settings.ai]
 documents = "Έγγραφα & RAG"
-general = "AI Engine"
+general = "Μηχανή AI"
 limits = "Όρια & Απόδοση"
 models = "Μοντέλα & Πάροχοι"
 title = "AI"
@@ -11747,7 +11763,7 @@ saas = "Stirling Cloud"
 selfhosted = "Self-Hosted"
 
 [settings.developer]
-apiKeys = "API Keys"
+apiKeys = "Κλειδιά API"
 apiKeysDescription = "Προσωπικά κλειδιά για κλήση του Stirling API από scripts και ενσωματώσεις."
 title = "Προγραμματιστής"
 
@@ -12102,28 +12118,15 @@ description = "Εισαγάγετε το πλήρες URL του self-hosted δ�
 label = "URL διακομιστή"
 
 [sharedSign]
-backToSessions = "Πίσω στις συνεδρίες"
-createdOn = "Δημιουργήθηκε στις {{date}}"
 disabledBody = "Η συνεργατική υπογραφή δεν είναι ενεργοποιημένη σε αυτόν τον διακομιστή."
-disabledTitle = "Μη ενεργοποιημένο"
-due = "Λήγει στις {{date}}"
 filterDeclined = "Απορριφθέντα"
-filterMine = "Δικά μου"
 filterOverdue = "Εκπρόθεσμα"
 filterSigned = "Υπογεγραμμένα"
-fromOwner = "Από {{owner}}"
-newRequest = "Αίτημα υπογραφών"
-signedCount = "{{signed}}/{{total}} υπογεγραμμένα"
 signInRequiredBody = "Συνδεθείτε για να ζητήσετε υπογραφές και να δείτε αιτήματα που σας έχουν σταλεί."
 signInRequiredTitle = "Απαιτείται σύνδεση"
 
-[sharedSign.empty]
-active = "Δεν υπάρχουν εκκρεμή αιτήματα υπογραφής ή ενεργές συνεδρίες"
-completed = "Δεν υπάρχουν ολοκληρωμένες συνεδρίες"
-
 [sharedSign.tab]
 active = "Ενεργά"
-completed = "Ολοκληρωμένα"
 
 [showJS]
 done = "Η JavaScript εξήχθη"
@@ -12473,10 +12476,68 @@ bullet3 = "Οι αόρατες υπογραφές εξακολουθούν να 
 description = "Ελέγχει εάν η υπογραφή είναι ορατή στο έγγραφο ή ενσωματωμένη αόρατα."
 title = "Ορατότητα υπογραφής"
 
+[signingDetail]
+allSigned = "Όλοι έχουν υπογράψει. Ελέγξτε το έγγραφο και μετά οριστικοποιήστε το."
+awaitingOwner = "Ο κάτοχος θα οριστικοποιήσει το έγγραφο μόλις είναι έτοιμος."
+certificateNext = "Επιλέξτε το πιστοποιητικό σας στο επόμενο βήμα."
+earlyHint = "Μπορείτε να οριστικοποιήσετε τώρα με τις υπογραφές που έχουν ληφθεί ή να περιμένετε τους υπόλοιπους συμμετέχοντες."
+finalDocument = "Υπογεγραμμένο έγγραφο"
+finalizeTitle = "Οριστικοποίηση εγγράφου"
+finalReady = "Το υπογεγραμμένο PDF σας είναι έτοιμο να ανοίξει στον χώρο εργασίας."
+inProgressPreview = "Προεπισκόπηση σε εξέλιξη με τις υποβληθείσες υπογραφές. Ο κάτοχος δεν έχει οριστικοποιήσει ακόμη αυτό το έγγραφο."
+manageSession = "Διαχείριση συνεδρίας υπογραφής"
+moveHint = "Επιλέξτε μια υπογραφή στο έγγραφο για να τη μετακινήσετε, να αλλάξετε το μέγεθός της ή να την αφαιρέσετε."
+notified = "Ειδοποιήθηκε"
+optional = "Προαιρετικό"
+ownerNext = "Επιστρέψτε στη συνεδρία σας για να ελέγξετε τις υπογραφές όλων και να οριστικοποιήσετε το έγγραφο όταν είστε έτοιμοι."
+placeHint = "Κάντε κλικ στο έγγραφο για να τοποθετήσετε την υπογραφή σας."
+progress = "Πρόοδος υπογραφών"
+readyToSign = "Έτοιμοι να υπογράψετε;"
+refreshPreview = "Ανανέωση προεπισκόπησης"
+removePerson = "Αφαίρεση {{name}}"
+requestClosed = "Αυτό το αίτημα έχει κλείσει"
+requestTitle = "Αίτημα υπογραφής"
+signatureSubmitted = "Η υπογραφή σας υποβλήθηκε"
+signedCount = "{{signed}} / {{total}} υπογεγραμμένα"
+signMyRequest = "Υπογράψτε αυτό το έγγραφο"
+viewOnly = "Μπορείτε ακόμα να ελέγξετε το έγγραφο εδώ."
+visibleSignature = "Ορατή υπογραφή"
+visibleSignatureHelp = "Σχετικά με τις ορατές υπογραφές"
+
+[signMenu]
+anyOrder = "Οι συμμετέχοντες μπορούν να υπογράψουν με οποιαδήποτε σειρά. Ο κάτοχος οριστικοποιεί το έγγραφο αφού ελέγξει τις συγκεντρωμένες υπογραφές."
+certificateHint = "Χρήση πιστοποιητικού"
+certificateTitle = "Ψηφιακή υπογραφή"
+closedStatus = "Κλειστό"
+completedTab = "Ολοκληρωμένα"
+dueDate = "Προθεσμία (προαιρετικά)"
+newActivity = "Νέα δραστηριότητα από την τελευταία προβολή αυτής της συνεδρίας"
+noActive = "Δεν υπάρχουν ενεργές συνεδρίες"
+noCompleted = "Δεν υπάρχουν ολοκληρωμένες συνεδρίες"
+noMatches = "Δεν υπάρχουν συνεδρίες που ταιριάζουν"
+noUnread = "Είστε πλήρως ενημερωμένοι"
+optionalMarks = "Τα ορατά σημάδια είναι προαιρετικά. Η λειτουργία Ολοκλήρωση & Υπογραφή λειτουργεί επίσης μόνο με πιστοποιητικό."
+ownerProgress = "Το αίτημά σας · {{signed}} / {{total}} υπογεγραμμένα"
+personalHint = "Σχεδιάστε, πληκτρολογήστε ή μεταφορτώστε"
+personalTitle = "Προσωπική υπογραφή"
+request = "Αίτημα υπογραφών"
+search = "Βρείτε ένα έγγραφο ή άτομο"
+send = "Αποστολή αιτήματος υπογραφής"
+sessionFilter = "Προβολές συνεδριών"
+sessions = "Συνεδρίες υπογραφής"
+settings = "Εμφάνιση και σελίδα σύνοψης (προαιρετικά)"
+signFailed = "Η υπογραφή απέτυχε. Ελέγξτε το πιστοποιητικό σας και δοκιμάστε ξανά· τα σημάδια που τοποθετήσατε διατηρούνται."
+submitted = "Υποβλήθηκε · αναμονή οριστικοποίησης"
+title = "Υπογραφή"
+triggerUnreadCount_one = "Υπογραφή · {{count}} μη αναγνωσμένη συνεδρία"
+triggerUnreadCount_other = "Υπογραφή · {{count}} μη αναγνωσμένες συνεδρίες"
+unreadTab = "Μη αναγνωσμένα"
+
 [signRequest]
+accessExpired = "Η πρόσβασή σας σε αυτό το αίτημα υπογραφής έχει λήξει. Ζητήστε από τον αποστολέα ένα νέο αίτημα."
 declined = "Το αίτημα υπογραφής απορρίφθηκε"
+expired = "Η πρόσβαση έληξε"
 fetchFailed = "Αποτυχία φόρτωσης αιτήματος υπογραφής"
-signed = "Το έγγραφο υπογράφηκε με επιτυχία"
 
 [signSession]
 created = "Το αίτημα υπογραφής εστάλη"
@@ -12512,6 +12573,52 @@ title = "Δημιουργία λογαριασμού"
 unableToAccessTool = "Δεν είναι δυνατή η πρόσβαση στο εργαλείο: {{error}}"
 unexpectedError = "Απρόσμενο σφάλμα: {{message}}"
 unknownError = "Άγνωστο σφάλμα"
+
+[signWorkspace]
+changeDocument = "Αλλαγή PDF"
+chooseDocument = "Επιλέξτε ένα ανοιχτό PDF"
+chooseFromLibrary = "Επιλογή από τη βιβλιοθήκη"
+chooseParticipants = "Επιλέξτε συμμετέχοντες"
+choosePdf = "Επιλέξτε ένα PDF"
+choosePdfHeading = "Ξεκινήστε με το έγγραφό σας"
+clearDate = "Εκκαθάριση ημερομηνίας"
+created = "Δημιουργήθηκε"
+createdByMe = "Δημιουργήθηκε από εμένα"
+datesAndOptions = "Ημερομηνίες & επιλογές"
+document = "Έγγραφο"
+dueDate = "Προθεσμία"
+dueDateHelp = "Αυτή είναι μια ημερομηνία-στόχος. Οι συμμετέχοντες μπορούν να υπογράψουν και μετά από αυτήν."
+dueDateHelpLabel = "Σχετικά με τις προθεσμίες"
+empty = "Δεν υπάρχουν ακόμα συνεδρίες εδώ."
+expand = "Ανάπτυξη συνεδριών υπογραφής"
+inviteLoadError = "Δεν ήταν δυνατή η φόρτωση των επιλογών πρόσκλησης. Κλείστε αυτό το παράθυρο διαλόγου και δοκιμάστε ξανά."
+invitePerson = "Προσθήκη συνεργάτη: {{name}}"
+inviteTeammate = "Προσθήκη συνεργάτη"
+inviteUnavailable = "Η προσθήκη συνεργατών δεν είναι διαθέσιμη για τον λογαριασμό σας ή τη διαμόρφωση του server."
+navigation = "Πλοήγηση υπογραφής"
+needsYou = "Χρειάζεται την υπογραφή σας"
+nextMonth = "Επόμενος μήνας"
+nextStep = "Επόμενο"
+noDueDate = "Χωρίς προθεσμία"
+noMatches = "Καμία συνεδρία δεν ταιριάζει με την αναζήτηση ή το φίλτρο σας."
+noOpenPdfs = "Επιλέξτε ένα PDF από τη βιβλιοθήκη σας ή προσθέστε ένα από τον υπολογιστή σας."
+noPeopleMatch = "Κανένα άτομο δεν ταιριάζει με την αναζήτησή σας."
+noPreview = "Η προεπισκόπηση εγγράφου δεν είναι διαθέσιμη"
+owner = "Κάτοχος"
+participants = "Συμμετέχοντες"
+participantsSelected = "{{count}} επιλεγμένοι"
+personalHeading = "Υπογράψτε ένα έγγραφο"
+previousMonth = "Προηγούμενος μήνας"
+refresh = "Ανανέωση συνεδριών"
+requestSteps = "Βήματα αιτήματος υπογραφής"
+search = "Αναζήτηση εγγράφων ή ατόμων"
+searchParticipants = "Αναζήτηση ατόμων ή ομάδων"
+selectOnePdf = "Επιλέξτε ένα PDF για αυτό το αίτημα υπογραφής."
+signingOrderHelp = "Σχετικά με τη σειρά υπογραφής"
+status = "Κατάσταση"
+unavailable = "Αυτή η συνεδρία δεν είναι πλέον διαθέσιμη. Ανανεώστε τη λίστα για να δείτε τις τρέχουσες συνεδρίες σας."
+upcoming = "Επερχόμενες"
+uploadFailed = "Δεν ήταν δυνατό το άνοιγμα αυτού του PDF. Δοκιμάστε ξανά."
 
 [sizes]
 large = "Μεγάλο"

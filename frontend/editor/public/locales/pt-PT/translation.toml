@@ -1815,7 +1815,7 @@ label = "Ativar ligações de partilha"
 
 [admin.settings.storage.signing.enabled]
 description = "Permitir que os utilizadores criem sessões de assinatura com vários participantes. Requer o armazenamento de ficheiros no servidor ativado."
-label = "Ativar assinatura em grupo (Alpha)"
+title = "Ativar assinatura de grupo"
 
 [admin.settings.telegram]
 description = "Configurar a conectividade do bot Telegram, controlos de acesso e comportamento de feedback."
@@ -2744,7 +2744,6 @@ reason = "Razão"
 serverCertMessage = "A usar certificado do servidor - não são necessários ficheiros nem palavra-passe"
 showLogo = "Mostrar Logo"
 signatureProgress = "{{signedCount}}/{{totalCount}} assinaturas"
-signed = "Assinado"
 tags = "autenticar,PEM,P12,oficial,encriptar,assinar,certificado,PKCS12,JKS,servidor,manual,automático"
 title = "Assinatura de Certificado"
 viewed = "Visto"
@@ -2809,7 +2808,13 @@ reasonPlaceholder = "ex.: Aprovação, Revisão..."
 
 [certSign.collab.finalize]
 button = "Finalizar e carregar o PDF assinado"
+confirmAction = "Confirmar e finalizar"
+confirmDescription = "A finalização encerra esta sessão. Não poderão ser submetidas mais assinaturas."
+confirmTitle = "Finalizar esta sessão de assinatura?"
 early = "Finalizar com as assinaturas atuais"
+excluded = "Participantes cujas assinaturas não serão incluídas"
+included = "Assinaturas incluídas"
+requiresSignature = "Pelo menos um participante tem de assinar antes de poder finalizar."
 
 [certSign.collab.participant]
 certInvalid = "✗ {{error}}"
@@ -2826,7 +2831,6 @@ includeSummaryPageHelp = "Será adicionada no fim uma página de resumo com todo
 [certSign.collab.sessionDetail]
 addParticipants = "Adicionar participantes"
 addParticipantsError = "Não foi possível adicionar participantes"
-backToList = "Voltar às sessões"
 deleteConfirm = "Tem a certeza? Esta ação não pode ser anulada."
 deleteError = "Não foi possível eliminar a sessão"
 deleteSession = "Eliminar sessão"
@@ -2835,14 +2839,11 @@ finalizeError = "Não foi possível finalizar a sessão"
 loadPdfError = "Não foi possível carregar o PDF assinado"
 loadSignedPdf = "Carregar o PDF assinado nos ficheiros ativos"
 messageLabel = "Mensagem"
-owner = "Proprietário"
 participantRemoved = "Participante removido"
 participants = "Participantes"
 participantsAdded = "Participantes adicionados com sucesso"
-removeParticipant = "Remover"
 removeParticipantError = "Não foi possível remover o participante"
 selectUsers = "Selecionar utilizadores..."
-sessionInfo = "Informações da sessão"
 
 [certSign.collab.sessionList]
 active = "Ativo"
@@ -2855,11 +2856,10 @@ title = "Aparência da assinatura"
 [certSign.collab.signRequest]
 addedToFiles = "Documento adicionado aos ficheiros ativos"
 addToFiles = "Adicionar aos ficheiros ativos"
-advancedSettings = "Definições avançadas"
-backToList = "Voltar aos pedidos de assinatura"
 certificateChoice = "Selecione um certificado para assinar"
 changeSignature = "Alterar assinatura"
 clearSignature = "Limpar assinatura"
+closed = "Esta sessão foi finalizada. Pode ver o documento final, mas não são aceites mais assinaturas ou recusas."
 completeAndSign = "Concluir e Assinar"
 createNewSignature = "Criar nova assinatura"
 decline = "Recusar pedido"
@@ -2876,7 +2876,6 @@ invalidFileType = "Por favor, selecione um ficheiro de imagem"
 location = "Localização (opcional)"
 locationPlaceholder = "De onde está a assinar?"
 noCertificate = "Por favor, selecione um ficheiro de certificado"
-noSignatures = "Coloque pelo menos uma assinatura no PDF"
 p12File = "Ficheiro de Certificado P12/PFX"
 password = "Palavra-passe do certificado"
 penColor = "Cor da caneta"
@@ -2894,16 +2893,15 @@ signatureText = "Texto da assinatura"
 signatureTextPlaceholder = "Introduza o seu nome..."
 signatureTypeLabel = "Tipo de assinatura"
 signButton = "Assinar documento"
-signingTitle = "Assinatura"
 textColor = "Cor do texto"
 typeSignature = "Escreva o seu nome para criar uma assinatura"
-uploadCert = "Certificado personalizado"
-uploadCertDesc = "Utilize o seu próprio certificado P12/PFX"
+uploadCert = "Carregar um certificado"
+uploadCertDesc = "Use o seu próprio certificado PKCS12, PFX, PEM ou JKS."
 uploadSignature = "Carregar a imagem da sua assinatura"
-usePersonalCert = "Certificado pessoal"
-usePersonalCertDesc = "Gerado automaticamente para a sua conta"
-useServerCert = "Certificado da organização"
-useServerCertDesc = "Certificado partilhado da organização"
+usePersonalCert = "Stirling Sign · Pessoal"
+usePersonalCertDesc = "Assine com o certificado criado para a sua conta."
+useServerCert = "Stirling Sign · Organização"
+useServerCertDesc = "Assine com o certificado de organização partilhado deste servidor."
 useSignature = "Usar assinatura"
 
 [certSign.collab.signRequest.certModal]
@@ -2912,10 +2910,13 @@ certInvalidFallback = "Certificado inválido"
 certNetworkError = "Não foi possível validar o certificado"
 certValidating = "A validar certificado..."
 certValidUntil = "Certificado válido até {{date}}"
-description_one = "Colocou {{count}} assinatura. Escolha o seu certificado para concluir a assinatura."
-description_other = "Colocou {{count}} assinaturas. Escolha o seu certificado para concluir a assinatura."
+description_one = "{{count}} marca visível está pronta. Escolha um certificado para terminar a assinatura."
+description_other = "{{count}} marcas visíveis estão prontas. Escolha um certificado para terminar a assinatura."
+description_zero = "O seu certificado assinará o documento sem marcas visíveis."
+details = "Detalhes da assinatura (opcional)"
+format = "Formato do certificado"
 sign = "Assinar documento"
-title = "Configurar certificado"
+title = "Escolha como assinar"
 
 [certSign.collab.signRequest.mode]
 move = "Mover assinatura"
@@ -2968,11 +2969,11 @@ visible = "Visível"
 yourSignatures = "As suas assinaturas ({{count}})"
 
 [certSign.collab.userSelector]
-inviteUsers = "Adicionar utilizadores"
 loadError = "Não foi possível carregar utilizadores"
 noTeam = "Sem equipa"
 noUsers = "Nenhum outro utilizador encontrado."
 placeholder = "Selecionar utilizadores..."
+you = "{{name}} (Você)"
 
 [certSign.device]
 stepTitle = "Este dispositivo"
@@ -5450,9 +5451,6 @@ multimedia = "Multimédia"
 
 [groupSigning.steps]
 back = "Voltar"
-completed = "Concluído"
-current = "Atual"
-stepLabel = "Passo {{number}}"
 
 [groupSigning.steps.configureDefaults]
 continue = "Continuar"
@@ -5460,7 +5458,6 @@ invisible = "As assinaturas serão invisíveis (apenas metadados)"
 locationLabel = "Localização:"
 preview = "Pré-visualização"
 reasonLabel = "Motivo:"
-title = "Configurar definições de assinatura"
 visible = "As assinaturas serão visíveis na página {{page}}"
 
 [groupSigning.steps.review]
@@ -5472,14 +5469,13 @@ location = "Localização:"
 logo = "Logótipo:"
 logoHidden = "Sem logótipo"
 logoShown = "Logótipo do Stirling PDF mostrado"
-participantCount_one = "{{count}} participante assinará por ordem"
-participantCount_other = "{{count}} participantes assinarão por ordem"
+participantCount_one = "{{count}} participante selecionado"
+participantCount_other = "{{count}} participantes selecionados"
 participants = "Participantes"
 reason = "Motivo:"
 send = "Enviar pedidos de assinatura"
 signatureSettings = "Definições da assinatura"
 title = "Rever detalhes da sessão"
-titleShort = "Rever e Enviar"
 visibility = "Visibilidade:"
 visible = "Visível na página {{page}}"
 
@@ -5487,7 +5483,6 @@ visible = "Visível na página {{page}}"
 continue = "Continuar"
 noFile = "Selecione um único ficheiro PDF dos seus ficheiros ativos para criar uma sessão de assinatura."
 selectedFile = "Documento selecionado"
-title = "Selecionar documento"
 
 [groupSigning.steps.selectParticipants]
 continue = "Continuar"
@@ -5495,31 +5490,30 @@ count_one = "{{count}} participante selecionado"
 count_other = "{{count}} participantes selecionados"
 label = "Selecionar participantes"
 placeholder = "Escolher participantes para assinar..."
-title = "Escolher participantes"
 
 [groupSigning.tooltip]
 header = "Sobre a Assinatura em Grupo"
 
 [groupSigning.tooltip.finalization]
-bullet1 = "Todas as assinaturas são aplicadas pela ordem de participantes que especificou"
-bullet2 = "Pode finalizar com assinaturas parciais, se necessário"
-bullet3 = "Depois de finalizada, a sessão não pode ser modificada"
-description = "Quando todos os participantes assinarem (ou optar por finalizar antecipadamente), pode gerar o PDF final assinado."
+bullet1 = "O PDF final inclui todas as assinaturas aceites"
+bullet2 = "Reveja os participantes pendentes antes de finalizar com assinaturas parciais"
+bullet3 = "A finalização encerra o pedido; os participantes pendentes já não poderão assinar"
+description = "Depois de pelo menos um participante assinar, o proprietário pode finalizar o pedido e gerar o PDF assinado."
 title = "Processo de finalização"
 
 [groupSigning.tooltip.roles]
 bullet1 = "Proprietário (você): cria a sessão, configura predefinições de assinatura, finaliza o documento"
-bullet2 = "Participantes: criam a sua assinatura, escolhem o certificado, colocam no PDF"
-bullet3 = "Os participantes não podem modificar as definições de visibilidade, motivo ou localização da assinatura"
-description = "Controla as definições de aparência da assinatura para todos os participantes."
+bullet2 = "Participantes: Escolhem um certificado e, opcionalmente, colocam uma assinatura visível no PDF"
+bullet3 = "Os participantes podem ajustar o motivo e a localização da assinatura antes de submeter"
+description = "O proprietário define as predefinições do pedido; cada participante escolhe o seu certificado e a marca visível opcional."
 title = "Papéis dos participantes"
 
 [groupSigning.tooltip.sequential]
-bullet1 = "O primeiro participante tem de assinar antes de o segundo poder aceder ao documento"
-bullet2 = "Garante a ordem de assinatura adequada para conformidade legal"
-bullet3 = "Pode reordenar participantes arrastando-os na lista"
-description = "Os participantes assinam os documentos pela ordem que especificar. Cada signatário recebe uma notificação quando é a sua vez."
-title = "Assinatura sequencial"
+bullet1 = "Os participantes não precisam de esperar por outro signatário"
+bullet2 = "Acompanhe o progresso de cada participante em Sessões de assinatura"
+bullet3 = "A data de vencimento é um lembrete; não expira o acesso"
+description = "Os participantes atribuídos podem rever e assinar de forma independente, por qualquer ordem."
+title = "Assinar por qualquer ordem"
 
 [guestBanner]
 dismiss = "Fechar banner"
@@ -5828,7 +5822,6 @@ tags = "detetar,dividir,fotos,deteção automática,detetar fotos,dividir fotos,
 title = "Detetar e separar fotos"
 
 [home.sharedSign]
-desc = "Pedir assinaturas a outras pessoas e acompanhar sessões de assinatura"
 title = "Assinatura partilhada"
 
 [home.showJS]
@@ -6818,7 +6811,7 @@ bullet1 = "<strong>all</strong> → seleciona todas as páginas"
 title = "Palavras-Chave Especiais"
 
 [payg.activity]
-docs = "docs"
+docs = "documentos"
 empty = "Ainda não há atividade faturável neste período."
 subtitle = "Apenas AI e automação usam o seu orçamento. As ferramentas do dia a dia são gratuitas e não aparecem aqui."
 title = "Atividade faturável recente"
@@ -7426,7 +7419,9 @@ groupedTitle = "Parte de um grupo neste PDF: pode ser eliminado, mas não movido
 
 [pdfTextEditor.sidebar]
 addImage = "Adicionar imagem"
+addTable = "Adicionar tabela"
 addText = "Adicionar texto"
+clickPageToAddTable = "Clique na página para adicionar uma tabela"
 clickPageToAddText = "Clique na página para adicionar texto"
 document = "Documento"
 group = "Agrupar"
@@ -7435,11 +7430,14 @@ groupingAutoHint = "Agrupa linhas com espaçamento igual em parágrafos. Alterar
 groupingLine = "Linha"
 groupTooltip = "Unir segmentos selecionados num parágrafo ({{shortcut}})"
 groupTooltipDisabled = "Selecione 2+ segmentos para unir"
+image = "Imagem"
 noFile = "Nenhum ficheiro carregado"
 noFileHint = "Escolha um PDF no painel Ficheiros à esquerda ou solte um aqui. O editor irá abri-lo automaticamente."
 opening = "A abrir documento..."
 paragraph = "Parágrafo"
 rulers = "Réguas e guias"
+table = "Tabela"
+text = "Texto"
 textBoxWidth = "Largura da nova caixa de texto"
 textGrouping = "Agrupamento de texto"
 ungroup = "Desagrupar"
@@ -7460,6 +7458,24 @@ loadingProgress = "Progresso do carregamento"
 noDocument = "Nenhum documento carregado."
 pickPrompt = "Escolha um PDF no painel Ficheiros à esquerda para começar a editar."
 renderingPreview = "A renderizar pré-visualização"
+
+[pdfTextEditor.table]
+addColumn = "Adicionar coluna"
+addRow = "Adicionar linha"
+column = "Col."
+deleteColumn = "Eliminar coluna"
+deleteRow = "Eliminar linha"
+done = "Concluído"
+doneHint = "Parar de editar isto como tabela"
+edit = "Editar"
+editHint = "Editar como tabela - escreva nas células, adicione ou remova linhas e colunas"
+move = "Mover"
+moveTable = "Arraste para mover a tabela inteira"
+recognizedHint = "Tabela reconhecida - clique para selecionar todo o seu texto"
+resizeColumn = "Arraste para redimensionar esta coluna (Alt: partilhar com a seguinte)"
+resizeRow = "Arraste para redimensionar esta linha (Alt: partilhar com a seguinte)"
+resizeTable = "Arraste para redimensionar a tabela inteira"
+row = "Linha"
 
 [pdfTextEditor.toolbar]
 addTextTooltip = "Adicionar uma caixa de texto - depois clique na página"
@@ -8186,7 +8202,7 @@ subNoRate = "Base Team mais processamento medido"
 [portal.billing.identity.team]
 chipFleet = "Controlo da frota"
 chipIncluded = "{{allowance}} créditos incluídos mensalmente"
-name = "Team"
+name = "Equipa"
 sub = "Até {{users}} utilizadores"
 subNoLimit = "Sem limite de utilizadores"
 
@@ -8820,7 +8836,7 @@ title = "Documentação indisponível"
 [portal.docs.quickstart]
 eyebrow = "INTRODUÇÃO"
 lead = "Envie o seu primeiro documento para um endpoint tipado e receba JSON estruturado em três passos. Sem treino de modelos, sem prompt engineering."
-title = "Quickstart"
+title = "Início rápido"
 
 [portal.docs.quickstart.callout]
 bodyAfterLink = "para receitas prontas a copiar e colar."
@@ -8843,7 +8859,7 @@ codeCaption = "200 OK"
 title = "Ler o resultado estruturado"
 
 [portal.docs.rateLimits]
-burst = "Burst"
+burst = "Rajada"
 codeCaption = "429 Too Many Requests"
 concurrency = "Concorrência"
 eyebrow = "INTRODUÇÃO"
@@ -10538,7 +10554,7 @@ subtitle = "Tudo das execuções das suas políticas e dos editores da sua equip
 title = "Revisão"
 
 [portal.settings.sections]
-account-link = "Ligação da conta"
+account-link = "Ligação de conta"
 
 [portal.shell.sidebar]
 appEditor = "Editor"
@@ -10950,7 +10966,7 @@ label = "Nome do Fornecedor"
 
 [provider.oauth2.generic.scopes]
 description = "Scopes OAuth2 separados por vírgulas"
-label = "Scopes"
+label = "Âmbitos"
 
 [provider.oauth2.generic.useAsUsername]
 description = "Campo a usar como nome de utilizador"
@@ -10969,7 +10985,7 @@ label = "Segredo do Cliente"
 
 [provider.oauth2.github.scopes]
 description = "Scopes OAuth2 separados por vírgulas"
-label = "Scopes"
+label = "Âmbitos"
 
 [provider.oauth2.github.useAsUsername]
 description = "Campo a usar como nome de utilizador (email, login, name)"
@@ -10988,7 +11004,7 @@ label = "Segredo do Cliente"
 
 [provider.oauth2.google.scopes]
 description = "Scopes OAuth2 separados por vírgulas"
-label = "Scopes"
+label = "Âmbitos"
 
 [provider.oauth2.google.useAsUsername]
 description = "Campo a usar como nome de utilizador (email, name, given_name, family_name)"
@@ -11011,7 +11027,7 @@ label = "URL do emissor"
 
 [provider.oauth2.keycloak.scopes]
 description = "Scopes OAuth2 separados por vírgulas"
-label = "Scopes"
+label = "Âmbitos"
 
 [provider.oauth2.keycloak.useAsUsername]
 description = "Campo a usar como nome de utilizador (email, name, given_name, family_name, preferred_username)"
@@ -11693,7 +11709,7 @@ features = "Funcionalidades"
 folderAccess = "Acesso a pastas"
 integrations = "Integrações"
 legal = "Documentos legais"
-mcp = "MCP Server"
+mcp = "Servidor MCP"
 privacy = "Privacidade"
 storageSharing = "Armazenamento de Ficheiros e Partilha"
 systemSettings = "Definições do sistema"
@@ -12102,28 +12118,15 @@ description = "Introduza o URL completo do seu servidor Stirling PDF autoalojado
 label = "URL do servidor"
 
 [sharedSign]
-backToSessions = "Voltar às sessões"
-createdOn = "Criado em {{date}}"
 disabledBody = "A assinatura colaborativa não está ativada neste servidor."
-disabledTitle = "Não ativado"
-due = "Vence em {{date}}"
 filterDeclined = "Recusado"
-filterMine = "Minhas"
 filterOverdue = "Em atraso"
 filterSigned = "Assinado"
-fromOwner = "De {{owner}}"
-newRequest = "Pedir assinaturas"
-signedCount = "{{signed}}/{{total}} assinados"
 signInRequiredBody = "Inicie sessão para pedir assinaturas e ver os pedidos que lhe foram enviados."
 signInRequiredTitle = "Início de sessão necessário"
 
-[sharedSign.empty]
-active = "Sem pedidos de assinatura pendentes ou sessões ativas"
-completed = "Sem sessões concluídas"
-
 [sharedSign.tab]
 active = "Ativas"
-completed = "Concluídas"
 
 [showJS]
 done = "JavaScript extraído"
@@ -12473,10 +12476,68 @@ bullet3 = "Assinaturas invisíveis continuam a fornecer validação criptográfi
 description = "Controla se a assinatura é visível no documento ou incorporada de forma invisível."
 title = "Visibilidade da assinatura"
 
+[signingDetail]
+allSigned = "Todos assinaram. Reveja o documento e, em seguida, finalize."
+awaitingOwner = "O proprietário irá finalizar o documento quando estiver pronto."
+certificateNext = "Escolha o seu certificado no passo seguinte."
+earlyHint = "Pode finalizar agora com as assinaturas recebidas ou aguardar pelos restantes participantes."
+finalDocument = "Documento assinado"
+finalizeTitle = "Finalizar documento"
+finalReady = "O seu PDF assinado está pronto para abrir na área de trabalho."
+inProgressPreview = "Pré-visualização em curso com assinaturas submetidas. O proprietário ainda não finalizou este documento."
+manageSession = "Gerir sessão de assinatura"
+moveHint = "Selecione uma assinatura no documento para a mover, redimensionar ou remover."
+notified = "Notificado"
+optional = "Opcional"
+ownerNext = "Regresse à sua sessão para rever as assinaturas de todos e finalizar o documento quando estiver pronto."
+placeHint = "Clique no documento para colocar a sua assinatura."
+progress = "Progresso da assinatura"
+readyToSign = "Pronto para assinar?"
+refreshPreview = "Atualizar pré-visualização"
+removePerson = "Remover {{name}}"
+requestClosed = "Este pedido está fechado"
+requestTitle = "Pedido de assinatura"
+signatureSubmitted = "A sua assinatura foi submetida"
+signedCount = "{{signed}} / {{total}} assinaram"
+signMyRequest = "Assinar este documento"
+viewOnly = "Ainda pode rever o documento aqui."
+visibleSignature = "Assinatura visível"
+visibleSignatureHelp = "Sobre assinaturas visíveis"
+
+[signMenu]
+anyOrder = "Os participantes podem assinar por qualquer ordem. O proprietário finaliza o documento depois de rever as assinaturas recolhidas."
+certificateHint = "Usar um certificado"
+certificateTitle = "Assinatura digital"
+closedStatus = "Fechada"
+completedTab = "Concluídas"
+dueDate = "Data limite (opcional)"
+newActivity = "Nova atividade desde a última vez que viu esta sessão"
+noActive = "Sem sessões ativas"
+noCompleted = "Sem sessões concluídas"
+noMatches = "Sem sessões correspondentes"
+noUnread = "Está tudo em dia"
+optionalMarks = "As marcas visíveis são opcionais. Concluir e Assinar também funciona apenas com um certificado."
+ownerProgress = "O seu pedido · {{signed}} / {{total}} assinaram"
+personalHint = "Desenhe, escreva ou faça upload"
+personalTitle = "Assinatura pessoal"
+request = "Pedir assinaturas"
+search = "Encontrar um documento ou pessoa"
+send = "Enviar pedido de assinatura"
+sessionFilter = "Vistas de sessão"
+sessions = "Sessões de assinatura"
+settings = "Aspeto e página de resumo (opcional)"
+signFailed = "A assinatura falhou. Verifique o seu certificado e tente novamente; as marcas colocadas foram preservadas."
+submitted = "Submetido · a aguardar finalização"
+title = "Assinar"
+triggerUnreadCount_one = "Assinar · {{count}} sessão não lida"
+triggerUnreadCount_other = "Assinar · {{count}} sessões não lidas"
+unreadTab = "Não lidas"
+
 [signRequest]
+accessExpired = "O seu acesso a este pedido de assinatura expirou. Peça ao remetente um novo pedido."
 declined = "Pedido de assinatura recusado"
+expired = "Acesso expirado"
 fetchFailed = "Não foi possível carregar o pedido de assinatura"
-signed = "Documento assinado com sucesso"
 
 [signSession]
 created = "Pedido de assinatura enviado"
@@ -12512,6 +12573,52 @@ title = "Criar uma conta"
 unableToAccessTool = "Não é possível aceder à ferramenta: {{error}}"
 unexpectedError = "Erro inesperado: {{message}}"
 unknownError = "Erro desconhecido"
+
+[signWorkspace]
+changeDocument = "Alterar PDF"
+chooseDocument = "Escolher um PDF aberto"
+chooseFromLibrary = "Escolher da biblioteca"
+chooseParticipants = "Escolher participantes"
+choosePdf = "Escolher um PDF"
+choosePdfHeading = "Comece com o seu documento"
+clearDate = "Limpar data"
+created = "Criada"
+createdByMe = "Criada por mim"
+datesAndOptions = "Datas e opções"
+document = "Documento"
+dueDate = "Data limite"
+dueDateHelp = "Esta é uma data-alvo. Os participantes ainda podem assinar depois dela."
+dueDateHelpLabel = "Sobre datas limite"
+empty = "Ainda não há sessões aqui."
+expand = "Expandir sessões de assinatura"
+inviteLoadError = "Não foi possível carregar as opções de convite. Feche esta caixa de diálogo e tente novamente."
+invitePerson = "Adicionar colega de equipa: {{name}}"
+inviteTeammate = "Adicionar um colega de equipa"
+inviteUnavailable = "Adicionar colegas de equipa não está disponível para a sua conta ou configuração do servidor."
+navigation = "Navegação de assinatura"
+needsYou = "Precisa da sua assinatura"
+nextMonth = "Mês seguinte"
+nextStep = "Seguinte"
+noDueDate = "Sem data limite"
+noMatches = "Nenhuma sessão corresponde à sua pesquisa ou filtro."
+noOpenPdfs = "Escolha um PDF da sua biblioteca ou adicione um a partir do seu computador."
+noPeopleMatch = "Nenhuma pessoa corresponde à sua pesquisa."
+noPreview = "Pré-visualização do documento indisponível"
+owner = "Proprietário"
+participants = "Participantes"
+participantsSelected = "{{count}} selecionados"
+personalHeading = "Assinar um documento"
+previousMonth = "Mês anterior"
+refresh = "Atualizar sessões"
+requestSteps = "Passos do pedido de assinatura"
+search = "Pesquisar documentos ou pessoas"
+searchParticipants = "Pesquisar pessoas ou equipas"
+selectOnePdf = "Escolha um PDF para este pedido de assinatura."
+signingOrderHelp = "Sobre a ordem de assinatura"
+status = "Estado"
+unavailable = "Esta sessão já não está disponível. Atualize a lista para ver as suas sessões atuais."
+upcoming = "Próximas"
+uploadFailed = "Não foi possível abrir este PDF. Tente novamente."
 
 [sizes]
 large = "Grande"

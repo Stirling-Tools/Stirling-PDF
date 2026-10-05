@@ -1815,7 +1815,7 @@ label = "Włącz linki udostępniania"
 
 [admin.settings.storage.signing.enabled]
 description = "Zezwalaj użytkownikom na tworzenie wieloosobowych sesji podpisywania dokumentów. Wymaga włączonego przechowywania plików na serwerze."
-label = "Włącz podpisywanie grupowe (Alpha)"
+title = "Włącz podpisywanie grupowe"
 
 [admin.settings.telegram]
 description = "Skonfiguruj łączność bota Telegram, kontrolę dostępu i zachowanie komunikatów zwrotnych."
@@ -2744,7 +2744,6 @@ reason = "Organizacja"
 serverCertMessage = "Używanie certyfikatu serwera — pliki ani hasło nie są wymagane"
 showLogo = "Pokaż logo"
 signatureProgress = "{{signedCount}}/{{totalCount}} podpisów"
-signed = "Podpisano"
 tags = "uwierzytelnij,PEM,P12,oficjalny,szyfruj,podpisz,certyfikat,PKCS12,JKS,serwer,ręcznie,auto"
 title = "Podpisywanie certyfikatem"
 viewed = "Wyświetlono"
@@ -2809,7 +2808,13 @@ reasonPlaceholder = "np. Akceptacja, Przegląd..."
 
 [certSign.collab.finalize]
 button = "Sfinalizuj i wczytaj podpisany PDF"
+confirmAction = "Potwierdź i finalizuj"
+confirmDescription = "Finalizacja zamyka tę sesję. Nie będzie można przesłać więcej podpisów."
+confirmTitle = "Sfinalizować tę sesję podpisywania?"
 early = "Sfinalizuj z aktualnymi podpisami"
+excluded = "Uczestnicy, których podpisy nie zostaną uwzględnione"
+included = "Uwzględnione podpisy"
+requiresSignature = "Co najmniej jeden uczestnik musi podpisać, zanim będzie można sfinalizować."
 
 [certSign.collab.participant]
 certInvalid = "✗ {{error}}"
@@ -2826,7 +2831,6 @@ includeSummaryPageHelp = "Na końcu zostanie dodana strona podsumowania ze wszys
 [certSign.collab.sessionDetail]
 addParticipants = "Dodaj uczestników"
 addParticipantsError = "Nie udało się dodać uczestników"
-backToList = "Wróć do sesji"
 deleteConfirm = "Na pewno? Tej operacji nie można cofnąć."
 deleteError = "Nie udało się usunąć sesji"
 deleteSession = "Usuń sesję"
@@ -2835,14 +2839,11 @@ finalizeError = "Nie udało się sfinalizować sesji"
 loadPdfError = "Nie udało się wczytać podpisanego PDF-a"
 loadSignedPdf = "Wczytaj podpisany PDF do aktywnych plików"
 messageLabel = "Wiadomość"
-owner = "Właściciel"
 participantRemoved = "Uczestnik usunięty"
 participants = "Uczestnicy"
 participantsAdded = "Pomyślnie dodano uczestników"
-removeParticipant = "Usuń"
 removeParticipantError = "Nie udało się usunąć uczestnika"
 selectUsers = "Wybierz użytkowników..."
-sessionInfo = "Informacje o sesji"
 
 [certSign.collab.sessionList]
 active = "Aktywne"
@@ -2855,11 +2856,10 @@ title = "Wygląd podpisu"
 [certSign.collab.signRequest]
 addedToFiles = "Dokument dodany do aktywnych plików"
 addToFiles = "Dodaj do aktywnych plików"
-advancedSettings = "Ustawienia zaawansowane"
-backToList = "Wróć do próśb o podpis"
 certificateChoice = "Wybierz certyfikat do podpisu"
 changeSignature = "Zmień podpis"
 clearSignature = "Wyczyść podpis"
+closed = "Ta sesja została sfinalizowana. Możesz wyświetlić finalny dokument, ale kolejne podpisy ani odmowy nie są już akceptowane."
 completeAndSign = "Zakończ i podpisz"
 createNewSignature = "Utwórz nowy podpis"
 decline = "Odrzuć prośbę"
@@ -2876,7 +2876,6 @@ invalidFileType = "Wybierz plik obrazu"
 location = "Lokalizacja (opcjonalnie)"
 locationPlaceholder = "Skąd podpisujesz?"
 noCertificate = "Wybierz plik certyfikatu"
-noSignatures = "Umieść co najmniej jeden podpis w pliku PDF"
 p12File = "Plik certyfikatu P12/PFX"
 password = "Hasło certyfikatu"
 penColor = "Kolor pióra"
@@ -2894,16 +2893,15 @@ signatureText = "Tekst podpisu"
 signatureTextPlaceholder = "Wpisz swoje imię i nazwisko..."
 signatureTypeLabel = "Typ podpisu"
 signButton = "Podpisz dokument"
-signingTitle = "Podpisywanie"
 textColor = "Kolor tekstu"
 typeSignature = "Wpisz swoje imię i nazwisko, aby utworzyć podpis"
-uploadCert = "Własny certyfikat"
-uploadCertDesc = "Użyj własnego certyfikatu P12/PFX"
+uploadCert = "Prześlij certyfikat"
+uploadCertDesc = "Użyj własnego certyfikatu PKCS12, PFX, PEM lub JKS."
 uploadSignature = "Prześlij obraz swojego podpisu"
-usePersonalCert = "Certyfikat osobisty"
-usePersonalCertDesc = "Automatycznie generowany dla twojego konta"
-useServerCert = "Certyfikat organizacji"
-useServerCertDesc = "Współdzielony certyfikat organizacji"
+usePersonalCert = "Stirling Sign · Osobisty"
+usePersonalCertDesc = "Podpisz certyfikatem utworzonym dla Twojego konta."
+useServerCert = "Stirling Sign · Organizacja"
+useServerCertDesc = "Podpisz współdzielonym certyfikatem organizacji tego serwera."
 useSignature = "Użyj podpisu"
 
 [certSign.collab.signRequest.certModal]
@@ -2912,10 +2910,13 @@ certInvalidFallback = "Nieprawidłowy certyfikat"
 certNetworkError = "Nie można zweryfikować certyfikatu"
 certValidating = "Weryfikowanie certyfikatu..."
 certValidUntil = "Certyfikat ważny do {{date}}"
-description_one = "Umieściłeś {{count}} podpis. Wybierz certyfikat, aby ukończyć podpisywanie."
-description_other = "Umieściłeś {{count}} podpisów. Wybierz certyfikat, aby ukończyć podpisywanie."
+description_one = "{{count}} widoczny znacznik jest gotowy. Wybierz certyfikat, aby zakończyć podpisywanie."
+description_other = "{{count}} widoczne znaczniki są gotowe. Wybierz certyfikat, aby zakończyć podpisywanie."
+description_zero = "Twój certyfikat podpisze dokument bez widocznych znaczników."
+details = "Szczegóły podpisywania (opcjonalnie)"
+format = "Format certyfikatu"
 sign = "Podpisz dokument"
-title = "Skonfiguruj certyfikat"
+title = "Wybierz sposób podpisania"
 
 [certSign.collab.signRequest.mode]
 move = "Przesuń podpis"
@@ -2968,11 +2969,11 @@ visible = "Widoczny"
 yourSignatures = "Twoje podpisy ({{count}})"
 
 [certSign.collab.userSelector]
-inviteUsers = "Dodaj użytkowników"
 loadError = "Nie udało się wczytać użytkowników"
 noTeam = "Brak zespołu"
 noUsers = "Nie znaleziono innych użytkowników."
 placeholder = "Wybierz użytkowników..."
+you = "{{name}} (Ty)"
 
 [certSign.device]
 stepTitle = "To urządzenie"
@@ -3437,7 +3438,7 @@ meeting-minutes = "Protokół spotkania"
 meeting-notes = "Notatki ze spotkania"
 membership-document = "Dokument członkowski"
 memo = "Notatka"
-memorandum-of-understanding = "Memorandum of understanding"
+memorandum-of-understanding = "Memorandum porozumienia"
 mortgage-document = "Dokument hipoteczny"
 nda = "NDA"
 newsletter = "Newsletter"
@@ -3561,7 +3562,7 @@ waiver = "Zrzeczenie się"
 warehouse-receipt = "Kwit magazynowy"
 warranty-document = "Dokument gwarancyjny"
 waybill = "List przewozowy"
-white-paper = "White paper"
+white-paper = "Biała księga"
 will = "Testament"
 work-instruction = "Instrukcja pracy"
 work-order = "Zlecenie pracy"
@@ -5450,9 +5451,6 @@ multimedia = "Multimedia"
 
 [groupSigning.steps]
 back = "Wstecz"
-completed = "Zakończono"
-current = "Bieżący"
-stepLabel = "Krok {{number}}"
 
 [groupSigning.steps.configureDefaults]
 continue = "Kontynuuj"
@@ -5460,7 +5458,6 @@ invisible = "Podpisy będą niewidoczne (tylko metadane)"
 locationLabel = "Lokalizacja:"
 preview = "Podgląd"
 reasonLabel = "Powód:"
-title = "Skonfiguruj ustawienia podpisu"
 visible = "Podpisy będą widoczne na stronie {{page}}"
 
 [groupSigning.steps.review]
@@ -5472,14 +5469,13 @@ location = "Lokalizacja:"
 logo = "Logo:"
 logoHidden = "Bez logo"
 logoShown = "Wyświetlane logo Stirling PDF"
-participantCount_one = "{{count}} uczestnik podpisze w kolejności"
-participantCount_other = "{{count}} uczestników podpisze w kolejności"
+participantCount_one = "Wybrano {{count}} uczestnika"
+participantCount_other = "Wybrano {{count}} uczestników"
 participants = "Uczestnicy"
 reason = "Powód:"
 send = "Wyślij prośby o podpis"
 signatureSettings = "Ustawienia podpisu"
 title = "Przejrzyj szczegóły sesji"
-titleShort = "Przegląd i wysyłka"
 visibility = "Widoczność:"
 visible = "Widoczne na stronie {{page}}"
 
@@ -5487,7 +5483,6 @@ visible = "Widoczne na stronie {{page}}"
 continue = "Kontynuuj"
 noFile = "Wybierz jeden plik PDF z aktywnych plików, aby utworzyć sesję podpisywania."
 selectedFile = "Wybrany dokument"
-title = "Wybierz dokument"
 
 [groupSigning.steps.selectParticipants]
 continue = "Kontynuuj"
@@ -5495,31 +5490,30 @@ count_one = "Wybrano {{count}} uczestnika"
 count_other = "Wybrano {{count}} uczestników"
 label = "Wybierz uczestników"
 placeholder = "Wybierz uczestników do podpisu..."
-title = "Wybierz uczestników"
 
 [groupSigning.tooltip]
 header = "O podpisywaniu grupowym"
 
 [groupSigning.tooltip.finalization]
-bullet1 = "Wszystkie podpisy są nakładane w ustalonej przez ciebie kolejności uczestników"
-bullet2 = "W razie potrzeby możesz sfinalizować z częściowymi podpisami"
-bullet3 = "Po finalizacji sesji nie można modyfikować"
-description = "Gdy wszyscy uczestnicy podpiszą (lub zdecydujesz się na wcześniejszą finalizację), możesz wygenerować ostateczny podpisany PDF."
+bullet1 = "Finalny PDF zawiera wszystkie zaakceptowane podpisy"
+bullet2 = "Przejrzyj oczekujących uczestników przed finalizacją z częściowymi podpisami"
+bullet3 = "Finalizacja zamyka żądanie; oczekujący uczestnicy nie będą już mogli podpisać"
+description = "Po podpisaniu przez co najmniej jednego uczestnika właściciel może sfinalizować żądanie i wygenerować podpisany PDF."
 title = "Proces finalizacji"
 
 [groupSigning.tooltip.roles]
 bullet1 = "Właściciel (ty): Tworzy sesję, konfiguruje domyślne ustawienia podpisu, finalizuje dokument"
-bullet2 = "Uczestnicy: Tworzą swój podpis, wybierają certyfikat, umieszczają go na PDF"
-bullet3 = "Uczestnicy nie mogą modyfikować ustawień widoczności, powodu ani lokalizacji podpisu"
-description = "Kontrolujesz ustawienia wyglądu podpisu dla wszystkich uczestników."
+bullet2 = "Uczestnicy: wybierzcie certyfikat i opcjonalnie umieśćcie widoczny podpis na PDF"
+bullet3 = "Uczestnicy mogą dostosować powód i lokalizację podpisu przed przesłaniem"
+description = "Właściciel ustawia domyślne wartości żądania; każdy uczestnik wybiera swój certyfikat i opcjonalny widoczny znacznik."
 title = "Role uczestników"
 
 [groupSigning.tooltip.sequential]
-bullet1 = "Pierwszy uczestnik musi podpisać, zanim drugi uzyska dostęp do dokumentu"
-bullet2 = "Zapewnia właściwą kolejność podpisów dla zgodności prawnej"
-bullet3 = "Możesz zmienić kolejność uczestników, przeciągając ich na liście"
-description = "Uczestnicy podpisują dokumenty w ustalonej przez ciebie kolejności. Każdy otrzymuje powiadomienie, gdy przyjdzie jego kolej."
-title = "Sekwencyjne podpisywanie"
+bullet1 = "Uczestnicy nie muszą czekać na innego podpisującego"
+bullet2 = "Śledź postęp każdego uczestnika w sesjach podpisywania"
+bullet3 = "Termin jest przypomnieniem; nie powoduje wygaśnięcia dostępu"
+description = "Przypisani uczestnicy mogą przeglądać i podpisywać niezależnie, w dowolnej kolejności."
+title = "Podpisywanie w dowolnej kolejności"
 
 [guestBanner]
 dismiss = "Zamknij baner"
@@ -5828,7 +5822,6 @@ tags = "wykryj,podziel,zdjęcia,automatycznie wykryj,wykryj zdjęcia,podziel zdj
 title = "Wykryj i podziel zeskanowane zdjęcia"
 
 [home.sharedSign]
-desc = "Poproś innych o podpisy i śledź sesje podpisywania"
 title = "Wspólne podpisywanie"
 
 [home.showJS]
@@ -7426,7 +7419,9 @@ groupedTitle = "Część grupy w tym PDF: można ją usunąć, ale nie przenieś
 
 [pdfTextEditor.sidebar]
 addImage = "Dodaj obraz"
+addTable = "Dodaj tabelę"
 addText = "Dodaj tekst"
+clickPageToAddTable = "Kliknij stronę, aby dodać tabelę"
 clickPageToAddText = "Kliknij stronę, aby dodać tekst"
 document = "Dokument"
 group = "Grupuj"
@@ -7435,11 +7430,14 @@ groupingAutoHint = "Grupuje równomiernie rozstawione wiersze w akapity. Zmiana 
 groupingLine = "Wiersz"
 groupTooltip = "Scal zaznaczone fragmenty w jeden akapit ({{shortcut}})"
 groupTooltipDisabled = "Wybierz co najmniej 2 fragmenty, aby scalić"
+image = "Obraz"
 noFile = "Nie wczytano pliku"
 noFileHint = "Wybierz PDF z panelu Pliki po lewej albo upuść go tutaj. Edytor otworzy go automatycznie."
 opening = "Otwieranie dokumentu..."
 paragraph = "Akapit"
 rulers = "Linijki i prowadnice"
+table = "Tabela"
+text = "Tekst"
 textBoxWidth = "Szerokość nowego pola tekstowego"
 textGrouping = "Grupowanie tekstu"
 ungroup = "Rozgrupuj"
@@ -7460,6 +7458,24 @@ loadingProgress = "Postęp wczytywania"
 noDocument = "Nie wczytano dokumentu."
 pickPrompt = "Wybierz PDF z panelu Pliki po lewej, aby rozpocząć edycję."
 renderingPreview = "Renderowanie podglądu"
+
+[pdfTextEditor.table]
+addColumn = "Dodaj kolumnę"
+addRow = "Dodaj wiersz"
+column = "Kol."
+deleteColumn = "Usuń kolumnę"
+deleteRow = "Usuń wiersz"
+done = "Gotowe"
+doneHint = "Zakończ edytowanie tego jako tabeli"
+edit = "Edytuj"
+editHint = "Edytuj jako tabelę — wpisuj w komórkach, dodawaj lub usuwaj wiersze i kolumny"
+move = "Przenieś"
+moveTable = "Przeciągnij, aby przenieść całą tabelę"
+recognizedHint = "Rozpoznana tabela — kliknij, aby zaznaczyć cały jej tekst"
+resizeColumn = "Przeciągnij, aby zmienić szerokość tej kolumny (Alt: podziel z następną)"
+resizeRow = "Przeciągnij, aby zmienić wysokość tego wiersza (Alt: podziel z następnym)"
+resizeTable = "Przeciągnij, aby zmienić rozmiar całej tabeli"
+row = "Wiersz"
 
 [pdfTextEditor.toolbar]
 addTextTooltip = "Dodaj pole tekstowe — następnie kliknij stronę"
@@ -8114,7 +8130,7 @@ enterpriseUsers = "Bez limitu"
 enterpriseWhere = "Plus multi-node i air-gapped"
 exploreEnterprise = "Poznaj Enterprise"
 freeData = "Pozostają tam, gdzie uruchamiasz usługę"
-freeName = "Free"
+freeName = "Darmowy"
 freePrice = "Bez karty, bez wygaśnięcia"
 freeProcessing = "{{allowance}} kredytów miesięcznie"
 freeProcessingUnknown = "Miesięczny limit kredytów"
@@ -8134,7 +8150,7 @@ rowSupport = "Wsparcie"
 rowUsers = "Użytkownicy"
 rowWhere = "Gdzie działa"
 teamData = "Google Drive, Twoja własna baza danych"
-teamName = "Team"
+teamName = "Zespół"
 teamPrice = "$99/mies. za 100 użytkowników"
 teamProcessing = "{{allowance}} miesięcznie, potem według zużycia"
 teamProcessingUnknown = "Większy limit, potem według zużycia"
@@ -8173,7 +8189,7 @@ oauthSso = "SSO (OAuth2/OIDC)"
 chipAnywhere = "Web, desktop i samodzielnie hostowane"
 chipCredits = "{{allowance}} darmowych kredytów miesięcznie"
 chipTools = "Każde narzędzie PDF"
-name = "Free"
+name = "Bezpłatny"
 sub = "Pełny Edytor PDF."
 
 [portal.billing.identity.processor]
@@ -8186,7 +8202,7 @@ subNoRate = "Podstawa Team plus przetwarzanie mierzone"
 [portal.billing.identity.team]
 chipFleet = "Kontrola floty"
 chipIncluded = "{{allowance}} kredytów wliczonych miesięcznie"
-name = "Team"
+name = "Zespół"
 sub = "Do {{users}} użytkowników"
 subNoLimit = "Brak limitu użytkowników"
 
@@ -8543,7 +8559,7 @@ label = "Nazwa użytkownika"
 [portal.connections.types.clamav]
 baseUrlPlaceholder = "http://clamav-rest:9000"
 description = "Skanuj dokumenty pod kątem malware na serwerze, który uruchamiasz — nic nie opuszcza Twojej sieci."
-label = "ClamAV (self-hosted)"
+label = "ClamAV (samodzielnie hostowane)"
 
 [portal.connections.types.cloudmersive]
 description = "Skanowanie dokumentów pod kątem wirusów i treści w zasadzie."
@@ -8665,7 +8681,7 @@ label = "Hasło aplikacji"
 [portal.connections.types.presidio]
 baseUrlPlaceholder = "http://presidio-analyzer:3000"
 description = "Wykrywaj dane osobowe w tekście dokumentu za pomocą uruchamianego przez Ciebie serwera Presidio."
-label = "Presidio (self-hosted)"
+label = "Presidio (samodzielnie hostowane)"
 
 [portal.connections.types.purview]
 description = "Odczytuj i stosuj etykiety poufności Microsoft Purview na PDF."
@@ -8820,7 +8836,7 @@ title = "Dokumentacja niedostępna"
 [portal.docs.quickstart]
 eyebrow = "PIERWSZE KROKI"
 lead = "Wyślij pierwszy dokument do typowanego endpointu i otrzymaj ustrukturyzowany JSON w trzech krokach. Bez trenowania modelu, bez prompt engineering."
-title = "Quickstart"
+title = "Szybki start"
 
 [portal.docs.quickstart.callout]
 bodyAfterLink = "z gotowymi przepisami do kopiowania."
@@ -9121,7 +9137,7 @@ done = "Gotowe"
 guide = "Otwórz przewodnik {{name}}"
 openInBrowser = "Otwórz w przeglądarce zamiast tego"
 sectionDesktop = "Aplikacja desktopowa"
-sectionSelfHosted = "Self-hosted"
+sectionSelfHosted = "Samodzielnie hostowane"
 title = "Zainstaluj Stirling PDF Editor"
 
 [portal.home.download.docker]
@@ -10495,7 +10511,7 @@ subtitle = "Twój solutions engineer przeprowadzi zespół przez wdrożenie. Wyb
 title = "Zaplanuj rozmowę"
 
 [portal.procurement.setup]
-airgap = "Air-gapped"
+airgap = "Odizolowane od sieci"
 airgapSub = "Odizolowane, bez połączeń wychodzących"
 back = "Wstecz"
 businessName = "Nazwa firmy"
@@ -10512,7 +10528,7 @@ invitesPlaceholder = "sam@acme.com, lee@acme.com"
 scheduleCall = "Umów rozmowę"
 seats = "Osoby testujące"
 seatsPlaceholder = "np. 15"
-selfhost = "Self-hosted"
+selfhost = "Samodzielnie hostowane"
 selfhostSub = "Docker lub Kubernetes"
 start = "Rozpocznij wersję próbną"
 stepOf = "Krok {{n}} z {{total}}"
@@ -10898,15 +10914,15 @@ scope = "Import plików"
 
 [provider.googledrive.apiKey]
 description = "Klucz Google API dla Google Picker API z Google Cloud Console"
-label = "API Key"
+label = "Klucz API"
 
 [provider.googledrive.appId]
 description = "App ID Google Drive z Google Cloud Console"
-label = "App ID"
+label = "ID aplikacji"
 
 [provider.googledrive.clientId]
 description = "Identyfikator klienta Google OAuth 2.0 z Google Cloud Console"
-label = "Client ID"
+label = "ID klienta"
 
 [provider.googledrive.enabled]
 description = "Pozwól użytkownikom importować pliki bezpośrednio z Google Drive"
@@ -10930,11 +10946,11 @@ label = "Zablokuj rejestrację"
 
 [provider.oauth2.generic.clientId]
 description = "Identyfikator klienta OAuth2 od Twojego dostawcy"
-label = "Client ID"
+label = "ID klienta"
 
 [provider.oauth2.generic.clientSecret]
 description = "Tajny klucz klienta OAuth2 od Twojego dostawcy"
-label = "Client Secret"
+label = "Sekret klienta"
 
 [provider.oauth2.generic.enabled]
 description = "Włącz uwierzytelnianie przy użyciu niestandardowego dostawcy OAuth2"
@@ -10942,7 +10958,7 @@ label = "Włącz ogólny OAuth2"
 
 [provider.oauth2.generic.issuer]
 description = "Dostawca obsługujący OpenID Connect Discovery (/.well-known/openid-configuration)"
-label = "Issuer URL"
+label = "URL wystawcy"
 
 [provider.oauth2.generic.provider]
 description = "Nazwa Twojego dostawcy OAuth2 (np. Azure AD, Okta)"
@@ -10961,11 +10977,11 @@ scope = "Uwierzytelnianie logowania"
 
 [provider.oauth2.github.clientId]
 description = "Identyfikator klienta OAuth2 z GitHub Developer Settings"
-label = "Client ID"
+label = "ID klienta"
 
 [provider.oauth2.github.clientSecret]
 description = "Tajny klucz klienta OAuth2 z GitHub Developer Settings"
-label = "Client Secret"
+label = "Sekret klienta"
 
 [provider.oauth2.github.scopes]
 description = "Zakresy OAuth2 oddzielone przecinkami"
@@ -10980,11 +10996,11 @@ scope = "Uwierzytelnianie logowania"
 
 [provider.oauth2.google.clientId]
 description = "Identyfikator klienta OAuth2 z Google Cloud Console"
-label = "Client ID"
+label = "ID klienta"
 
 [provider.oauth2.google.clientSecret]
 description = "Tajny klucz klienta OAuth2 z Google Cloud Console"
-label = "Client Secret"
+label = "Sekret klienta"
 
 [provider.oauth2.google.scopes]
 description = "Zakresy OAuth2 oddzielone przecinkami"
@@ -10999,15 +11015,15 @@ scope = "SSO"
 
 [provider.oauth2.keycloak.clientId]
 description = "Identyfikator klienta OAuth2 z Keycloak"
-label = "Client ID"
+label = "ID klienta"
 
 [provider.oauth2.keycloak.clientSecret]
 description = "Tajny klucz klienta OAuth2 z Keycloak"
-label = "Client Secret"
+label = "Sekret klienta"
 
 [provider.oauth2.keycloak.issuer]
 description = "Adres URL punktu OpenID Connect Discovery dla obszaru (realm) w Keycloak"
-label = "Issuer URL"
+label = "URL wystawcy"
 
 [provider.oauth2.keycloak.scopes]
 description = "Zakresy OAuth2 oddzielone przecinkami"
@@ -11039,19 +11055,19 @@ label = "Certyfikat IDP"
 
 [provider.saml2.idpIssuer]
 description = "Identyfikator Twojego dostawcy"
-label = "IDP Issuer"
+label = "Wystawca IDP"
 
 [provider.saml2.idpMetadataUri]
 description = "URI metadanych Twojego dostawcy"
-label = "IDP Metadata URI"
+label = "URI metadanych IDP"
 
 [provider.saml2.idpSingleLoginUrl]
 description = "URL inicjujący SSO"
-label = "IDP Single Login URL"
+label = "URL pojedynczego logowania IDP"
 
 [provider.saml2.idpSingleLogoutUrl]
 description = "URL inicjujący SLO"
-label = "IDP Single Logout URL"
+label = "URL pojedynczego wylogowania IDP"
 
 [provider.saml2.privateKey]
 description = "Ścieżka do Twojego klucza prywatnego"
@@ -11686,7 +11702,7 @@ title = "Rozliczenia"
 
 [settings.configuration]
 advanced = "Zaawansowane"
-connections = "Single sign-on"
+connections = "Jednokrotne logowanie"
 database = "Baza danych"
 endpoints = "Endpointy"
 features = "Funkcje"
@@ -12002,7 +12018,7 @@ success = "Hasło pomyślnie zaktualizowano. Zaloguj się ponownie."
 update = "Zaktualizuj hasło"
 
 [settings.securityAuth]
-connections = "Single sign-on"
+connections = "Jednokrotne logowanie"
 security = "Logowanie i bezpieczeństwo"
 telegram = "Telegram"
 title = "Bezpieczeństwo i logowanie"
@@ -12042,7 +12058,7 @@ connectingTo = "Łączenie z:"
 oauthPending = "Otwieranie przeglądarki do uwierzytelnienia..."
 orContinueWith = "Lub kontynuuj e‑mailem"
 skipSignIn = "Kontynuuj bez logowania"
-sso = "Single Sign-On"
+sso = "Jednokrotne logowanie"
 submit = "Zaloguj"
 
 [setup.login.error]
@@ -12102,28 +12118,15 @@ description = "Wpisz pełny URL własnego serwera Stirling PDF"
 label = "URL serwera"
 
 [sharedSign]
-backToSessions = "Wróć do sesji"
-createdOn = "Utworzono {{date}}"
 disabledBody = "Wspólne podpisywanie nie jest włączone na tym serwerze."
-disabledTitle = "Nie włączone"
-due = "Termin {{date}}"
 filterDeclined = "Odrzucone"
-filterMine = "Moje"
 filterOverdue = "Po terminie"
 filterSigned = "Podpisane"
-fromOwner = "Od {{owner}}"
-newRequest = "Poproś o podpisy"
-signedCount = "{{signed}}/{{total}} podpisanych"
 signInRequiredBody = "Zaloguj się, aby prosić o podpisy i zobaczyć prośby wysłane do Ciebie."
 signInRequiredTitle = "Wymagane logowanie"
 
-[sharedSign.empty]
-active = "Brak oczekujących próśb o podpisy ani aktywnych sesji"
-completed = "Brak zakończonych sesji"
-
 [sharedSign.tab]
 active = "Aktywne"
-completed = "Zakończone"
 
 [showJS]
 done = "JavaScript wyodrębniony"
@@ -12473,10 +12476,68 @@ bullet3 = "Niewidoczne podpisy nadal zapewniają kryptograficzną walidację"
 description = "Kontroluje, czy podpis jest widoczny na dokumencie, czy osadzony niewidocznie."
 title = "Widoczność podpisu"
 
+[signingDetail]
+allSigned = "Wszyscy podpisali. Sprawdź dokument, a następnie go sfinalizuj."
+awaitingOwner = "Właściciel sfinalizuje dokument, gdy będzie gotowy."
+certificateNext = "Wybierz swój certyfikat w następnym kroku."
+earlyHint = "Możesz sfinalizować teraz z otrzymanymi podpisami lub poczekać na pozostałych uczestników."
+finalDocument = "Podpisany dokument"
+finalizeTitle = "Finalizuj dokument"
+finalReady = "Twój podpisany PDF jest gotowy do otwarcia w obszarze roboczym."
+inProgressPreview = "Podgląd w toku z przesłanymi podpisami. Właściciel nie sfinalizował jeszcze tego dokumentu."
+manageSession = "Zarządzaj sesją podpisywania"
+moveHint = "Wybierz podpis na dokumencie, aby go przenieść, zmienić rozmiar lub usunąć."
+notified = "Powiadomiono"
+optional = "Opcjonalne"
+ownerNext = "Wróć do swojej sesji, aby sprawdzić podpisy wszystkich osób i sfinalizować dokument, gdy będziesz gotowy."
+placeHint = "Kliknij dokument, aby umieścić swój podpis."
+progress = "Postęp podpisywania"
+readyToSign = "Gotowy do podpisania?"
+refreshPreview = "Odśwież podgląd"
+removePerson = "Usuń {{name}}"
+requestClosed = "Ta prośba jest zamknięta"
+requestTitle = "Prośba o podpis"
+signatureSubmitted = "Twój podpis został przesłany"
+signedCount = "Podpisano {{signed}} / {{total}}"
+signMyRequest = "Podpisz ten dokument"
+viewOnly = "Nadal możesz tutaj przejrzeć dokument."
+visibleSignature = "Widoczny podpis"
+visibleSignatureHelp = "Informacje o widocznych podpisach"
+
+[signMenu]
+anyOrder = "Uczestnicy mogą podpisywać w dowolnej kolejności. Właściciel finalizuje dokument po sprawdzeniu zebranych podpisów."
+certificateHint = "Użyj certyfikatu"
+certificateTitle = "Podpis cyfrowy"
+closedStatus = "Zamknięte"
+completedTab = "Ukończone"
+dueDate = "Termin (opcjonalnie)"
+newActivity = "Nowa aktywność od ostatniego wyświetlenia tej sesji"
+noActive = "Brak aktywnych sesji"
+noCompleted = "Brak ukończonych sesji"
+noMatches = "Brak pasujących sesji"
+noUnread = "Wszystko nadrobione"
+optionalMarks = "Widoczne oznaczenia są opcjonalne. Ukończ i podpisz działa także wyłącznie z certyfikatem."
+ownerProgress = "Twoja prośba · podpisano {{signed}} / {{total}}"
+personalHint = "Narysuj, wpisz lub prześlij"
+personalTitle = "Podpis osobisty"
+request = "Poproś o podpisy"
+search = "Znajdź dokument lub osobę"
+send = "Wyślij prośbę o podpis"
+sessionFilter = "Widoki sesji"
+sessions = "Sesje podpisywania"
+settings = "Wygląd i strona podsumowania (opcjonalnie)"
+signFailed = "Podpisywanie nie powiodło się. Sprawdź swój certyfikat i spróbuj ponownie; umieszczone oznaczenia zostały zachowane."
+submitted = "Przesłano · oczekuje na finalizację"
+title = "Podpisz"
+triggerUnreadCount_one = "Podpisz · {{count}} nieprzeczytana sesja"
+triggerUnreadCount_other = "Podpisz · {{count}} nieprzeczytanych sesji"
+unreadTab = "Nieprzeczytane"
+
 [signRequest]
+accessExpired = "Twój dostęp do tej prośby o podpis wygasł. Poproś nadawcę o nową prośbę."
 declined = "Prośba o podpis została odrzucona"
+expired = "Dostęp wygasł"
 fetchFailed = "Nie udało się wczytać prośby o podpis"
-signed = "Dokument pomyślnie podpisany"
 
 [signSession]
 created = "Wysłano prośbę o podpis"
@@ -12512,6 +12573,52 @@ title = "Utwórz konto"
 unableToAccessTool = "Nie można uzyskać dostępu do narzędzia: {{error}}"
 unexpectedError = "Nieoczekiwany błąd: {{message}}"
 unknownError = "Nieznany błąd"
+
+[signWorkspace]
+changeDocument = "Zmień PDF"
+chooseDocument = "Wybierz otwarty PDF"
+chooseFromLibrary = "Wybierz z biblioteki"
+chooseParticipants = "Wybierz uczestników"
+choosePdf = "Wybierz PDF"
+choosePdfHeading = "Zacznij od swojego dokumentu"
+clearDate = "Wyczyść datę"
+created = "Utworzono"
+createdByMe = "Utworzone przeze mnie"
+datesAndOptions = "Daty i opcje"
+document = "Dokument"
+dueDate = "Termin"
+dueDateHelp = "To jest data docelowa. Uczestnicy nadal mogą podpisać po jej upływie."
+dueDateHelpLabel = "Informacje o terminach"
+empty = "Nie ma tu jeszcze sesji."
+expand = "Rozwiń sesje podpisywania"
+inviteLoadError = "Nie można wczytać opcji zaproszenia. Zamknij to okno dialogowe i spróbuj ponownie."
+invitePerson = "Dodaj członka zespołu: {{name}}"
+inviteTeammate = "Dodaj członka zespołu"
+inviteUnavailable = "Dodawanie członków zespołu nie jest dostępne dla Twojego konta lub konfiguracji serwera."
+navigation = "Nawigacja podpisywania"
+needsYou = "Wymaga Twojego podpisu"
+nextMonth = "Następny miesiąc"
+nextStep = "Dalej"
+noDueDate = "Brak terminu"
+noMatches = "Żadne sesje nie pasują do wyszukiwania lub filtra."
+noOpenPdfs = "Wybierz PDF z biblioteki lub dodaj go z komputera."
+noPeopleMatch = "Żadne osoby nie pasują do wyszukiwania."
+noPreview = "Podgląd dokumentu niedostępny"
+owner = "Właściciel"
+participants = "Uczestnicy"
+participantsSelected = "Wybrano {{count}}"
+personalHeading = "Podpisz dokument"
+previousMonth = "Poprzedni miesiąc"
+refresh = "Odśwież sesje"
+requestSteps = "Kroki prośby o podpis"
+search = "Wyszukaj dokumenty lub osoby"
+searchParticipants = "Wyszukaj osoby lub zespoły"
+selectOnePdf = "Wybierz jeden PDF dla tej prośby o podpis."
+signingOrderHelp = "Informacje o kolejności podpisywania"
+status = "Status"
+unavailable = "Ta sesja nie jest już dostępna. Odśwież listę, aby zobaczyć aktualne sesje."
+upcoming = "Nadchodzące"
+uploadFailed = "Nie można otworzyć tego PDF. Spróbuj ponownie."
 
 [sizes]
 large = "duży"

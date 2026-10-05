@@ -742,22 +742,22 @@ title = "ഡോക്യുമെന്റുകളും RAG"
 
 [admin.settings.ai.documents.embeddingApiKey]
 description = "engine-ന്റെ സ്വന്തം environment credential ഉപയോഗിക്കാൻ ശൂന്യമായി വിടുക. Self-hosted single-engine deployments-ന് ബാധകം."
-generic = "Embedding API key"
-openai = "OpenAI API key"
+generic = "Embedding API കീ"
+openai = "OpenAI API കീ"
 setPlaceholder = "സേവ് ചെയ്തു - നിലവിലെ key നിലനിർത്താൻ ശൂന്യമായി വിടുക"
-voyageai = "VoyageAI API key"
+voyageai = "VoyageAI API കീ"
 
 [admin.settings.ai.documents.embeddingBaseUrl]
 description = "OpenAI-compatible / Ollama embeddings endpoint-ന്റെ Base URL, ഉദാ. http://ollama:11434/v1. വിശ്വസനീയമായ internal endpoint-ലേക്ക് പോയിന്റ് ചെയ്യണം (SSRF-sensitive)."
-label = "Embedding base URL"
+label = "Embedding അടിസ്ഥാന URL"
 
 [admin.settings.ai.documents.embeddingModel]
 description = "Embedding model പേര്. Free text; നിർദ്ദേശങ്ങൾ സൂചനകൾ മാത്രമാണ്."
-label = "Embedding model"
+label = "Embedding മോഡൽ"
 
 [admin.settings.ai.documents.embeddingProvider]
 description = "ഡോക്യുമെന്റ് ടെക്സ്റ്റ് vector embeddings ആക്കാൻ ഉപയോഗിക്കുന്ന provider."
-label = "Embedding provider"
+label = "Embedding പ്രൊവൈഡർ"
 
 [admin.settings.ai.documents.maxSearches]
 description = "ഓരോ അഭ്യർത്ഥനയ്ക്കും agent നടത്താവുന്ന retrieval searches-ന്റെ പരമാവധി എണ്ണം."
@@ -778,7 +778,7 @@ label = "Top K"
 connection = "കണക്ഷൻ"
 description = "AI എവിടെ run ചെയ്യണമെന്ന് തിരഞ്ഞെടുക്കുക. ഇവിടെയുള്ള മാറ്റങ്ങൾ restart ചെയ്യുമ്പോൾ ബാധകമാകും."
 restartNote = "URL അല്ലെങ്കിൽ ഏതെങ്കിലും timeout മാറ്റുന്നത് restart കഴിഞ്ഞാൽ പ്രാബല്യത്തിൽ വരും."
-title = "AI Engine"
+title = "AI എഞ്ചിൻ"
 
 [admin.settings.ai.general.capabilities]
 description = "ഓരോ AI സവിശേഷതയും ഓൺ അല്ലെങ്കിൽ ഓഫ് ചെയ്യുക. പ്രവർത്തനരഹിതമാക്കിയ സവിശേഷതകൾ app-ൽ മറയ്ക്കും."
@@ -802,7 +802,7 @@ label = "AI പ്രവർത്തനക്ഷമമാക്കുക"
 
 [admin.settings.ai.general.features.chat]
 description = "PDFs-ുമായി പ്രവർത്തിക്കാൻ സംഭാഷണ assistant."
-label = "Chat assistant"
+label = "ചാറ്റ് അസിസ്റ്റന്റ്"
 
 [admin.settings.ai.general.features.classify]
 description = "ഡോക്യുമെന്റുകൾ തരം അല്ലെങ്കിൽ ഉള്ളടക്കം പ്രകാരം സ്വയമേവ വർഗ്ഗീകരിക്കുക."
@@ -818,11 +818,11 @@ label = "ഡോക്യുമെന്റ് ചോദ്യങ്ങൾ"
 
 [admin.settings.ai.general.features.mathAuditor]
 description = "ഗണിത, സംഖ്യാത്മക പിശകുകൾക്കായി ഡോക്യുമെന്റുകൾ പരിശോധിക്കുക."
-label = "Math auditor"
+label = "ഗണിത ഓഡിറ്റർ"
 
 [admin.settings.ai.general.features.pdfComment]
 description = "PDF-ലേക്ക് AI എഴുതിയ review comments-കളും annotations-കളും ചേർക്കുക."
-label = "PDF comment agent"
+label = "PDF കമന്റ് ഏജന്റ്"
 
 [admin.settings.ai.general.longRunningTimeoutSeconds]
 description = "ഡോക്യുമെന്റ് generation പോലുള്ള കൂടുതൽ ഭാരമുള്ള agent operations-നുള്ള timeout."
@@ -869,7 +869,7 @@ label = "അഭ്യർത്ഥന ടൈംഔട്ട് (സെക്ക�
 
 [admin.settings.ai.general.url]
 description = "Python AI engine-ന്റെ internal URL, ഉദാ. http://stirling-pdf-engine:5001."
-label = "AI engine URL"
+label = "AI എഞ്ചിൻ URL"
 
 [admin.settings.ai.limits]
 description = "AI requests എത്ര ജോലി ചെയ്യാമെന്നും ഒരേസമയം എത്ര എണ്ണം പ്രവർത്തിക്കാമെന്നും നിയന്ത്രിക്കുന്ന guardrails. സേവ് ചെയ്യുമ്പോൾ AI engine-ന് ബാധകമാകും."
@@ -885,44 +885,44 @@ label = "ഓരോ request-ലും പരമാവധി pages"
 
 [admin.settings.ai.limits.modelMaxConcurrency]
 description = "മുഴുവൻ engine-ലും ഒരേസമയം നടക്കാവുന്ന in-flight model calls-ന്റെ പരമാവധി എണ്ണം."
-label = "Model max concurrency"
+label = "മോഡലിന്റെ പരമാവധി സമാന്തരത"
 
 [admin.settings.ai.models]
 description = "AI engine ഉപയോഗിക്കുന്ന LLM provider-ഉം smart/fast models-ഉം തിരഞ്ഞെടുക്കുക. സേവ് ചെയ്യുമ്പോൾ AI engine-ന് ബാധകമാകും."
 title = "മോഡലുകളും പ്രൊവൈഡർമാരും"
 
 [admin.settings.ai.models.apiKey]
-anthropic = "Anthropic API key"
+anthropic = "Anthropic API കീ"
 description = "engine-ന്റെ സ്വന്തം environment credential ഉപയോഗിക്കാൻ ശൂന്യമായി വിടുക. Self-hosted single-engine deployments-ന് ബാധകം."
-generic = "API key"
-openai = "OpenAI API key"
+generic = "API കീ"
+openai = "OpenAI API കീ"
 setPlaceholder = "സേവ് ചെയ്തു - നിലവിലെ key നിലനിർത്താൻ ശൂന്യമായി വിടുക"
 
 [admin.settings.ai.models.baseUrl]
 contextWindow = "കുറഞ്ഞത് 16,384 tokens ഉള്ള context window ഉപയോഗിക്കുക. ചെറിയ windows prompt-ന്റെ ഭാഗം നിശബ്ദമായി ഒഴിവാക്കും. Ollama default 4,096 ആണ് - OLLAMA_CONTEXT_LENGTH ഉയർത്തുക."
 description = "OpenAI-compatible / Ollama endpoint-ന്റെ Base URL, ഉദാ. http://ollama:11434/v1."
-label = "Provider base URL"
+label = "പ്രൊവൈഡറിന്റെ അടിസ്ഥാന URL"
 warning = "base URL വിശ്വസനീയമായ internal endpoint-ലേക്ക് പോയിന്റ് ചെയ്യണം. engine അതിലേക്ക് server-side requests നടത്തും, അതിനാൽ വിശ്വസനീയമല്ലാത്ത value SSRF-sensitive ആണ്."
 
 [admin.settings.ai.models.fastMaxTokens]
 description = "fast model-നുള്ള പരമാവധി output tokens."
-label = "Fast model max tokens"
+label = "ഫാസ്റ്റ് മോഡലിന്റെ പരമാവധി ടോക്കണുകൾ"
 
 [admin.settings.ai.models.fastModel]
 description = "ലഘു tasks-നുള്ള ചെലവ് കുറഞ്ഞ, വേഗത്തിലുള്ള model. Free text; നിർദ്ദേശങ്ങൾ സൂചനകൾ മാത്രമാണ്."
-label = "Fast model"
+label = "ഫാസ്റ്റ് മോഡൽ"
 
 [admin.settings.ai.models.provider]
 description = "engine സംസാരിക്കുന്ന LLM provider."
-label = "Provider"
+label = "പ്രൊവൈഡർ"
 
 [admin.settings.ai.models.smartMaxTokens]
 description = "smart model-നുള്ള പരമാവധി output tokens."
-label = "Smart model max tokens"
+label = "സ്മാർട്ട് മോഡലിന്റെ പരമാവധി ടോക്കണുകൾ"
 
 [admin.settings.ai.models.smartModel]
 description = "സങ്കീർണ്ണ reasoning-നുള്ള ഉയർന്ന കഴിവുള്ള model. Free text; നിർദ്ദേശങ്ങൾ സൂചനകൾ മാത്രമാണ്."
-label = "Smart model"
+label = "സ്മാർട്ട് മോഡൽ"
 
 [admin.settings.ai.saved]
 body = "മാറ്റങ്ങൾ സ്വയമേവ AI engine-ലേക്ക് push ചെയ്യും."
@@ -935,7 +935,7 @@ capabilitiesValue = "{{total}} ൽ {{on}} on"
 checked = "പരിശോധിച്ചു"
 checking = "engine പരിശോധിക്കുന്നു…"
 description = "engine എത്തിച്ചേരാനാകുമോ, ഇത് ഈ server സ്വീകരിക്കുന്നുണ്ടോ, എന്താണ് പ്രവർത്തിപ്പിക്കുന്നത് എന്നിവ."
-fastModel = "Fast model"
+fastModel = "ഫാസ്റ്റ് മോഡൽ"
 justNow = "ഇപ്പോഴേ"
 latency = "പ്രതികരണ സമയം"
 linkLabel = "അക്കൗണ്ട് ലിങ്ക്"
@@ -943,10 +943,10 @@ minutesAgo = "{{count}} മിനിറ്റ് മുമ്പ്"
 recheck = "വീണ്ടും പരിശോധിക്കുക"
 runningOn = "പ്രവർത്തിക്കുന്നത്"
 secondsAgo = "{{count}} സെക്കൻഡ് മുമ്പ്"
-secretLabel = "Shared secret"
-smartModel = "Smart model"
+secretLabel = "പങ്കിട്ട രഹസ്യം"
+smartModel = "സ്മാർട്ട് മോഡൽ"
 title = "സ്ഥിതി"
-url = "Engine URL"
+url = "എഞ്ചിൻ URL"
 
 [admin.settings.ai.status.cloud]
 hostDown = "ഡൗൺ"
@@ -1063,7 +1063,7 @@ label = "OAuth2 പ്രാപ്തമാക്കുക"
 
 [admin.settings.connections.oauth2.issuer]
 description = "OAuth2 പ്രൊവൈഡറിന്റെ issuer URL"
-label = "Issuer URL"
+label = "ഇഷ്യൂവർ URL"
 
 [admin.settings.connections.oauth2.provider]
 description = "ഓതന്റിക്കേഷനായി ഉപയോഗിക്കുന്ന OAuth2 പ്രൊവൈഡർ"
@@ -1221,7 +1221,7 @@ title = "സവിശേഷതകൾ"
 
 [admin.settings.features.serverCertificate]
 description = "\"Sign with Stirling-PDF\" signing feature പിന്തുണയ്ക്കുന്ന certificate സൃഷ്ടിക്കുക."
-label = "Certificate Signing"
+label = "സർട്ടിഫിക്കറ്റ് സൈനിംഗ്"
 
 [admin.settings.features.serverCertificate.enabled]
 description = "ഈ server സൃഷ്ടിക്കുന്ന certificate ഉപയോഗിച്ച് \"Sign with Stirling-PDF\" നൽകുക"
@@ -1510,7 +1510,7 @@ title = "ഒരു MCP client connect ചെയ്യുക"
 
 [admin.settings.mcp.issuerUri]
 description = "നിങ്ങളുടെ OAuth2 authorization server (/.well-known/openid-configuration publish ചെയ്യണം). പ്രവർത്തനക്ഷമമാക്കിയാൽ ആവശ്യമുണ്ട്."
-label = "OAuth Issuer URL"
+label = "OAuth ഇഷ്യൂവർ URL"
 
 [admin.settings.mcp.jwksUri]
 description = "Issuer-ൽ നിന്ന് discover ചെയ്യാൻ ശൂന്യമാക്കുക. നിങ്ങളുടെ IdP non-standard URL-ൽ keys serve ചെയ്താൽ മാത്രം set ചെയ്യുക."
@@ -1520,7 +1520,7 @@ placeholder = "Issuer-ൽ നിന്ന് auto-discovered"
 [admin.settings.mcp.mode]
 apikey = "API key (Stirling ഓരോ-ഉപയോക്തൃ കീ)"
 description = "OAuth-ന് external IdP ആവശ്യമുണ്ട്. API key ഒരു Stirling per-user API key (X-API-KEY) ഉപയോഗിക്കുന്നു - self-host-ന് ഏറ്റവും ലളിതം."
-label = "Authentication mode"
+label = "ഓതന്റിക്കേഷൻ മോഡ്"
 oauth = "OAuth 2.1 (ബാഹ്യ IdP)"
 
 [admin.settings.mcp.requireAccount]
@@ -1529,7 +1529,7 @@ label = "നിലവിലുള്ള Stirling account ആവശ്യമാ�
 
 [admin.settings.mcp.resourceId]
 description = "ഈ server-ന്റെ public /mcp URL. Tokens അവരുടെ audience-ൽ ഇത് list ചെയ്യണം (RFC 8707), അല്ലെങ്കിൽ അവ നിരസിക്കും."
-label = "Resource ID"
+label = "റിസോഴ്‌സ് ID"
 
 [admin.settings.mcp.scopes]
 description = "Read ops-ന് mcp.tools.read, write/AI ops-ന് mcp.tools.write ആവശ്യപ്പെടുക."
@@ -1537,7 +1537,7 @@ label = "OAuth scopes നിർബന്ധമാക്കുക"
 
 [admin.settings.mcp.usernameClaim]
 description = "Stirling username-ുമായി പൊരുത്തപ്പെടുത്തുന്ന JWT claim (ഉദാ. sub, email, preferred_username)."
-label = "Username claim"
+label = "ഉപയോക്തൃനാമ ക്ലെയിം"
 
 [admin.settings.plan.noData]
 message = "ഈ server-ന് licence service-ൽ എത്താനായില്ല. വീണ്ടും ശ്രമിക്കുക, അല്ലെങ്കിൽ licence key പരിശോധിക്കുക."
@@ -1815,7 +1815,7 @@ label = "ഷെയർ ലിങ്കുകൾ പ്രവർത്തനക്
 
 [admin.settings.storage.signing.enabled]
 description = "ബഹു-പങ്കാളി ഡോക്യുമെന്റ് ഒപ്പിടൽ സെഷനുകൾ സൃഷ്ടിക്കാൻ ഉപയോക്താക്കൾക്ക് അനുവാദം നൽകുക. ഇതിന് സെർവർ ഫയൽ സംഭരണം പ്രവർത്തനക്ഷമമാക്കണം."
-label = "ഗ്രൂപ്പ് സൈൻ ചെയ്യൽ പ്രവർത്തനക്ഷമമാക്കുക (ആൽഫ)"
+title = "ഗ്രൂപ്പ് സൈനിംഗ് പ്രവർത്തനക്ഷമമാക്കുക"
 
 [admin.settings.telegram]
 description = "Telegram ബോട്ടിന്റെ കണക്റ്റിവിറ്റി, ആക്സസ് നിയന്ത്രണങ്ങൾ, ഫീഡ്ബാക്ക് പെരുമാറ്റം എന്നിവ കോൺഫിഗർ ചെയ്യുക."
@@ -2056,7 +2056,7 @@ title = "Attachments നിയന്ത്രിക്കുക"
 [attachments.badges]
 deleted = "ഇല്ലാതാക്കി"
 renamed = "പേര് മാറ്റി"
-staged = "STAGED"
+staged = "സ്റ്റേജ് ചെയ്തത്"
 
 [audit]
 configureAudit = "ഓഡിറ്റ് ലോഗിംഗ് കോൺഫിഗർ ചെയ്യുക"
@@ -2352,7 +2352,7 @@ label = "{{title}} നുള്ള മെനു തുറക്കുക"
 cancel = "റദ്ദാക്കുക"
 confirm = "ഇംപോർട്ട്"
 detectedAutomation = "Automate JSON"
-detectedFolderScan = "Folder Scanning JSON"
+detectedFolderScan = "ഫോൾഡർ സ്കാനിംഗ് JSON"
 dropHint = "JSON ഇവിടെ ഡ്രോപ്പ് ചെയ്യുകയോ ഒരു ഫയൽ തിരഞ്ഞെടുക്കാൻ ക്ലിക്ക് ചെയ്യുകയോ ചെയ്യുക"
 dropSubhint = "Automate മാത്രമല്ല ഫോൾഡർ സ്കാനിംഗ് കോൺഫിഗറേഷനുകളും സ്വീകരിക്കുന്നു"
 dropzoneAriaLabel = "ഒരു ഓട്ടോമേഷൻ JSON ഫയൽ ഇവിടെ ഡ്രോപ്പ് ചെയ്യുക"
@@ -2426,7 +2426,7 @@ failed = "PDF സ്വയമേവ തിരിക്കുമ്പോൾ ഒ�
 title = "കുറഞ്ഞ വിശ്വാസ്യതയുള്ള pages പൊരുത്തപ്പെടാൻ തിരിക്കുക"
 
 [autoRotate.report]
-applied = "{{degrees}}° CW"
+applied = "{{degrees}}° ഘടികാരദിശയിൽ"
 confidenceValue = "വിശ്വാസ്യത {{value}}"
 noChange = "മാറ്റമില്ല"
 pageLabel = "പേജ് {{number}}"
@@ -2467,7 +2467,7 @@ text = "Auto ആദ്യം page-ലെ text വായിക്കുന്ന�
 title = "കണ്ടെത്തൽ രീതി"
 
 [autoRotate.tooltip.header]
-title = "Auto Rotate"
+title = "ഓട്ടോ റൊട്ടേറ്റ്"
 
 [autoRotate.tooltip.inferUndetected]
 text = "ശൂന്യമായ അല്ലെങ്കിൽ ഏകദേശം ശൂന്യമായ pages സ്വതന്ത്രമായി പരിശോധിക്കാൻ കഴിയില്ല. വായിക്കാൻ കഴിഞ്ഞ ഓരോ page-നും ഒരേ തിരിവ് ആവശ്യമാണെങ്കിൽ, ഇവയും അതിനോട് പൊരുത്തപ്പെടാൻ തിരിക്കും."
@@ -2734,7 +2734,7 @@ logoTitle = "ലോഗോ"
 name = "പേര്"
 noLogo = "ലോഗോ ഇല്ല"
 pageNumber = "പേജ് നമ്പർ"
-password = "Certificate Password"
+password = "സർട്ടിഫിക്കറ്റ് പാസ്‌വേഡ്"
 passwordOptional = "പാസ്‌വേഡ് ഇല്ലെങ്കിൽ ഒഴിവാക്കുക"
 pemCertificateLabel = "സർട്ടിഫിക്കറ്റ് (.pem / .crt)"
 pemPrivateKeyLabel = "സ്വകാര്യ കീ (.pem / .key)"
@@ -2744,7 +2744,6 @@ reason = "കാരണം"
 serverCertMessage = "സെർവർ സർട്ടിഫിക്കറ്റ് ഉപയോഗിക്കുന്നു - ഫയലുകളും പാസ്‌വേഡും ആവശ്യമില്ല"
 showLogo = "ലോഗോ കാണിക്കുക"
 signatureProgress = "{{signedCount}}/{{totalCount}} ഒപ്പുകൾ"
-signed = "ഒപ്പിട്ടു"
 tags = "അംഗീകരിക്കുക,PEM,P12,ഔദ്യോഗികം,എൻക്രിപ്റ്റ്,സൈൻ,സർട്ടിഫിക്കറ്റ്,PKCS12,JKS,സെർവർ,മാനുവൽ,ഓട്ടോ"
 title = "സർട്ടിഫിക്കറ്റ് ഒപ്പിടൽ"
 viewed = "കണ്ടു"
@@ -2809,7 +2808,13 @@ reasonPlaceholder = "ഉദാ: അംഗീകാരം, പരിശോധന.
 
 [certSign.collab.finalize]
 button = "അന്തിമീകരിച്ച് ഒപ്പിട്ട PDF ലോഡ് ചെയ്യുക"
+confirmAction = "സ്ഥിരീകരിച്ച് അന്തിമമാക്കുക"
+confirmDescription = "അന്തിമമാക്കുന്നത് ഈ സെഷൻ അടയ്ക്കും. ഇനി ഒപ്പുകൾ സമർപ്പിക്കാനാകില്ല."
+confirmTitle = "ഈ സൈനിംഗ് സെഷൻ അന്തിമമാക്കണോ?"
 early = "നിലവിലുള്ള ഒപ്പുകളോടെ അന്തിമീകരിക്കുക"
+excluded = "ഒപ്പുകൾ ഉൾപ്പെടുത്താത്ത പങ്കാളികൾ"
+included = "ഉൾപ്പെടുത്തിയ ഒപ്പുകൾ"
+requiresSignature = "അന്തിമമാക്കുന്നതിന് മുമ്പ് കുറഞ്ഞത് ഒരാൾ എങ്കിലും ഒപ്പിടണം."
 
 [certSign.collab.participant]
 certInvalid = "✗ {{error}}"
@@ -2826,7 +2831,6 @@ includeSummaryPageHelp = "അവസാനത്തിൽ എല്ലാ ഒപ�
 [certSign.collab.sessionDetail]
 addParticipants = "പങ്കാളികളെ ചേർക്കുക"
 addParticipantsError = "പങ്കാളികളെ ചേർക്കാൻ കഴിഞ്ഞില്ല"
-backToList = "സെഷനുകളിലേക്ക് തിരികെ"
 deleteConfirm = "ഉറപ്പാണോ? ഇത് പിൻവലിക്കാൻ കഴിയില്ല."
 deleteError = "സെഷൻ ഇല്ലാതാക്കാൻ കഴിഞ്ഞില്ല"
 deleteSession = "സെഷൻ ഇല്ലാതാക്കുക"
@@ -2835,14 +2839,11 @@ finalizeError = "സെഷൻ അന്തിമീകരിക്കാൻ ക�
 loadPdfError = "ഒപ്പിട്ട PDF ലോഡ് ചെയ്യാൻ കഴിഞ്ഞില്ല"
 loadSignedPdf = "ഒപ്പിട്ട PDF സജീവ ഫയലുകളിലേക്ക് ലോഡ് ചെയ്യുക"
 messageLabel = "സന്ദേശം"
-owner = "ഉടമ"
 participantRemoved = "പങ്കാളിയെ നീക്കി"
 participants = "പങ്കാളികൾ"
 participantsAdded = "പങ്കാളികളെ വിജയകരമായി ചേർത്തു"
-removeParticipant = "നീക്കുക"
 removeParticipantError = "പങ്കാളിയെ നീക്കാൻ കഴിഞ്ഞില്ല"
 selectUsers = "ഉപയോക്താക്കളെ തിരഞ്ഞെടുക്കുക..."
-sessionInfo = "സെഷൻ വിവരം"
 
 [certSign.collab.sessionList]
 active = "സജീവം"
@@ -2855,11 +2856,10 @@ title = "ഒപ്പിന്റെ രൂപഭാവം"
 [certSign.collab.signRequest]
 addedToFiles = "ഡോക്യുമെന്റ് സജീവ ഫയലുകളിൽ ചേർത്തു"
 addToFiles = "സജീവ ഫയലുകളിലേക്ക് ചേർക്കുക"
-advancedSettings = "അഡ്വാൻസ്ഡ് ക്രമീകരണങ്ങൾ"
-backToList = "ഒപ്പ് അഭ്യർത്ഥനകളിലേക്ക് തിരികെ"
 certificateChoice = "ഒപ്പിടാൻ ഒരു സർട്ടിഫിക്കറ്റ് തിരഞ്ഞെടുക്കുക"
 changeSignature = "ഒപ്പ് മാറ്റുക"
 clearSignature = "ഒപ്പ് മായ്ക്കുക"
+closed = "ഈ സെഷൻ അന്തിമമാക്കി. നിങ്ങൾക്ക് അന്തിമ പ്രമാണം കാണാൻ കഴിയും, പക്ഷേ ഇനി ഒപ്പുകളോ നിരസിക്കലുകളോ സ്വീകരിക്കില്ല."
 completeAndSign = "പൂർത്തിയാക്കി ഒപ്പിടുക"
 createNewSignature = "പുതിയ ഒപ്പ് സൃഷ്ടിക്കുക"
 decline = "അഭ്യർത്ഥന നിരസിക്കുക"
@@ -2867,7 +2867,7 @@ declineButton = "നിരസിക്കുക"
 deleteSelected = "തിരഞ്ഞെടുത്ത ഒപ്പ് ഇല്ലാതാക്കുക"
 drawSignature = "താഴെ നിങ്ങളുടെ ഒപ്പ് വരയ്ക്കുക"
 fileTooLarge = "ഫയൽ വലുപ്പം 5MB-ൽ കുറവായിരിക്കണം"
-fontBrushScript = "Brush Script MT (cursive)"
+fontBrushScript = "Brush Script MT (കഴ്‌സീവ്)"
 fontFamily = "അക്ഷരശൈലി"
 fontSize = "ഫോണ്ട് വലുപ്പം: {{size}}px"
 fontSizePlaceholder = "വലുപ്പം"
@@ -2876,7 +2876,6 @@ invalidFileType = "ദയവായി ഒരു ഇമേജ് ഫയൽ തി
 location = "സ്ഥാനം (ഐച്ഛികം)"
 locationPlaceholder = "നിങ്ങൾ ഏത് സ്ഥലത്ത് നിന്ന് ഒപ്പിടുന്നു?"
 noCertificate = "ദയവായി ഒരു സർട്ടിഫിക്കറ്റ് ഫയൽ തിരഞ്ഞെടുക്കുക"
-noSignatures = "PDF-ൽ കുറഞ്ഞത് ഒരു ഒപ്പെങ്കിലും ഇടുക"
 p12File = "P12/PFX സർട്ടിഫിക്കറ്റ് ഫയൽ"
 password = "സർട്ടിഫിക്കറ്റ് പാസ്‌വേഡ്"
 penColor = "പെന്നിന്റെ നിറം"
@@ -2894,16 +2893,15 @@ signatureText = "ഒപ്പ് വാചകം"
 signatureTextPlaceholder = "നിങ്ങളുടെ പേര് നൽകുക..."
 signatureTypeLabel = "ഒപ്പിന്റെ തരം"
 signButton = "ഡോക്യുമെന്റ് ഒപ്പിടുക"
-signingTitle = "ഒപ്പിടൽ"
 textColor = "വാചകത്തിന്റെ നിറം"
 typeSignature = "ഒപ്പ് സൃഷ്ടിക്കാൻ നിങ്ങളുടെ പേര് ടൈപ്പ് ചെയ്യുക"
-uploadCert = "ഇഷ്ടാനുസൃത സർട്ടിഫിക്കറ്റ്"
-uploadCertDesc = "നിങ്ങളുടെ സ്വന്തം P12/PFX സർട്ടിഫിക്കറ്റ് ഉപയോഗിക്കുക"
+uploadCert = "ഒരു സർട്ടിഫിക്കറ്റ് അപ്‌ലോഡ് ചെയ്യുക"
+uploadCertDesc = "നിങ്ങളുടെ സ്വന്തം PKCS12, PFX, PEM അല്ലെങ്കിൽ JKS സർട്ടിഫിക്കറ്റ് ഉപയോഗിക്കുക."
 uploadSignature = "നിങ്ങളുടെ ഒപ്പ് ഇമേജ് അപ്‌ലോഡ് ചെയ്യുക"
-usePersonalCert = "പേഴ്‌സണൽ സർട്ടിഫിക്കറ്റ്"
-usePersonalCertDesc = "നിങ്ങളുടെ അക്കൗണ്ടിന് സ്വയം സൃഷ്ടിച്ചത്"
-useServerCert = "ഓർഗനൈസേഷൻ സർട്ടിഫിക്കറ്റ്"
-useServerCertDesc = "ഓർഗനൈസേഷനിൽ പങ്കിടുന്ന സർട്ടിഫിക്കറ്റ്"
+usePersonalCert = "Stirling Sign · വ്യക്തിഗതം"
+usePersonalCertDesc = "നിങ്ങളുടെ അക്കൗണ്ടിനായി സൃഷ്ടിച്ച സർട്ടിഫിക്കറ്റ് ഉപയോഗിച്ച് ഒപ്പിടുക."
+useServerCert = "Stirling Sign · സ്ഥാപനം"
+useServerCertDesc = "ഈ സെർവറിന്റെ പങ്കിട്ട സ്ഥാപന സർട്ടിഫിക്കറ്റ് ഉപയോഗിച്ച് ഒപ്പിടുക."
 useSignature = "കയ്യൊപ്പ് ഉപയോഗിക്കുക"
 
 [certSign.collab.signRequest.certModal]
@@ -2912,10 +2910,13 @@ certInvalidFallback = "അസാധുവായ സർട്ടിഫിക്�
 certNetworkError = "സർട്ടിഫിക്കറ്റ് സാധൂകരിക്കാൻ കഴിഞ്ഞില്ല"
 certValidating = "സർട്ടിഫിക്കറ്റ് സാധൂകരിക്കുന്നു..."
 certValidUntil = "സർട്ടിഫിക്കറ്റ് {{date}} വരെ സാധുവാണ്"
-description_one = "നിങ്ങൾ {{count}} ഒപ്പ് വെച്ചിട്ടുണ്ട്. Signing പൂർത്തിയാക്കാൻ നിങ്ങളുടെ certificate തിരഞ്ഞെടുക്കുക."
-description_other = "നിങ്ങൾ {{count}} ഒപ്പുകൾ വെച്ചിട്ടുണ്ട്. Signing പൂർത്തിയാക്കാൻ നിങ്ങളുടെ certificate തിരഞ്ഞെടുക്കുക."
+description_one = "{{count}} ദൃശ്യ അടയാളം തയ്യാറാണ്. സൈനിംഗ് പൂർത്തിയാക്കാൻ ഒരു സർട്ടിഫിക്കറ്റ് തിരഞ്ഞെടുക്കുക."
+description_other = "{{count}} ദൃശ്യ അടയാളങ്ങൾ തയ്യാറാണ്. സൈനിംഗ് പൂർത്തിയാക്കാൻ ഒരു സർട്ടിഫിക്കറ്റ് തിരഞ്ഞെടുക്കുക."
+description_zero = "നിങ്ങളുടെ സർട്ടിഫിക്കറ്റ് ദൃശ്യ അടയാളങ്ങളില്ലാതെ പ്രമാണത്തിൽ ഒപ്പിടും."
+details = "സൈനിംഗ് വിശദാംശങ്ങൾ (ഓപ്ഷണൽ)"
+format = "സർട്ടിഫിക്കറ്റ് ഫോർമാറ്റ്"
 sign = "ഡോക്യുമെന്റ് ഒപ്പിടുക"
-title = "സർട്ടിഫിക്കറ്റ് കോൺഫിഗർ ചെയ്യുക"
+title = "എങ്ങനെ ഒപ്പിടണമെന്ന് തിരഞ്ഞെടുക്കുക"
 
 [certSign.collab.signRequest.mode]
 move = "ഒപ്പ് നീക്കുക"
@@ -2968,11 +2969,11 @@ visible = "ദൃശ്യമായ"
 yourSignatures = "നിങ്ങളുടെ ഒപ്പുകൾ ({{count}})"
 
 [certSign.collab.userSelector]
-inviteUsers = "ഉപയോക്താക്കളെ ചേർക്കുക"
 loadError = "ഉപയോക്താക്കളെ ലോഡ് ചെയ്യാൻ കഴിഞ്ഞില്ല"
 noTeam = "ടീം ഇല്ല"
 noUsers = "മറ്റ് ഉപയോക്താക്കളെ കണ്ടെത്താനായില്ല."
 placeholder = "ഉപയോക്താക്കളെ തിരഞ്ഞെടുക്കുക..."
+you = "{{name}} (നിങ്ങൾ)"
 
 [certSign.device]
 stepTitle = "ഈ ഉപകരണം"
@@ -3223,7 +3224,7 @@ open = "Stirling AI assistant തുറക്കുക"
 
 [chat.header]
 agentMenu = "Stirling ഏജന്റ് ഓപ്ഷനുകൾ"
-assistant = "AI Assistant"
+assistant = "AI അസിസ്റ്റന്റ്"
 clearChat = "ചാറ്റ് മായ്ക്കുക"
 
 [chat.input]
@@ -3307,7 +3308,7 @@ amendment = "ഭേദഗതി"
 analytics-report = "Analytics റിപ്പോർട്ട്"
 announcement = "പ്രഖ്യാപനം"
 annual-report = "വാർഷിക റിപ്പോർട്ട്"
-api-documentation = "API documentation"
+api-documentation = "API ഡോക്യുമെന്റേഷൻ"
 application-form = "അപേക്ഷാ ഫോം"
 appraisal-report = "വിലയിരുത്തൽ റിപ്പോർട്ട്"
 architecture-document = "ആർക്കിടെക്ചർ ഡോക്യുമെന്റ്"
@@ -3317,8 +3318,8 @@ audit-report = "ഓഡിറ്റ് റിപ്പോർട്ട്"
 balance-sheet = "ബാലൻസ് ഷീറ്റ്"
 bank-statement = "ബാങ്ക് സ്റ്റേറ്റ്മെന്റ്"
 benefits-summary = "ആനുകൂല്യ സംഗ്രഹം"
-bill-of-lading = "Bill of lading"
-bill-of-materials = "Bill of materials"
+bill-of-lading = "ബിൽ ഓഫ് ലേഡിംഗ്"
+bill-of-materials = "മെറ്റീരിയൽസ് ബിൽ"
 blueprint = "ബ്ലൂപ്രിന്റ്"
 board-report = "ബോർഡ് റിപ്പോർട്ട്"
 board-resolution = "ബോർഡ് പ്രമേയം"
@@ -3330,9 +3331,9 @@ business-proposal = "ബിസിനസ് പ്രൊപ്പോസൽ"
 bylaws = "ബൈലോകൾ"
 campaign-brief = "ക്യാമ്പെയ്ൻ സംക്ഷേപം"
 case-study = "കേസ് സ്റ്റഡി"
-cash-flow-statement = "Cash flow statement"
+cash-flow-statement = "ക്യാഷ് ഫ്ലോ സ്റ്റേറ്റ്മെന്റ്"
 catalog = "കാറ്റലോഗ്"
-cease-and-desist = "Cease and desist"
+cease-and-desist = "സീസ് ആൻഡ് ഡിസിസ്റ്റ്"
 certificate = "സർട്ടിഫിക്കറ്റ്"
 certificate-of-completion = "പൂർത്തീകരണ സർട്ടിഫിക്കറ്റ്"
 change-log = "മാറ്റങ്ങളുടെ ലോഗ്"
@@ -3347,22 +3348,22 @@ contract = "കരാർ"
 course-syllabus = "കോഴ്സ് സിലബസ്"
 court-filing = "കോടതി ഫയലിംഗ്"
 cover-letter = "കവർ ലെറ്റർ"
-credit-note = "Credit note"
+credit-note = "ക്രെഡിറ്റ് നോട്ട്"
 customs-declaration = "കസ്റ്റംസ് ഡിക്ലറേഷൻ"
 customs-form = "കസ്റ്റംസ് ഫോം"
 cv = "CV"
-datasheet = "Datasheet"
-debit-note = "Debit note"
+datasheet = "ഡാറ്റാഷീറ്റ്"
+debit-note = "ഡെബിറ്റ് നോട്ട്"
 deed = "ആധാരം"
-delivery-note = "Delivery note"
+delivery-note = "ഡെലിവറി നോട്ട്"
 demand-letter = "ഡിമാൻഡ് ലെറ്റർ"
 design-document = "ഡിസൈൻ ഡോക്യുമെന്റ്"
 diploma = "ഡിപ്ലോമ"
 discharge-summary = "ഡിസ്ചാർജ് സംഗ്രഹം"
 dissertation = "പ്രബന്ധം"
 donation-receipt = "സംഭാവന രസീത്"
-dunning-letter = "Dunning letter"
-email-thread = "Email thread"
+dunning-letter = "കുടിശ്ശിക ഓർമ്മപ്പെടുത്തൽ കത്ത്"
+email-thread = "Email ത്രെഡ്"
 employee-handbook = "ജീവനക്കാരുടെ ഹാൻഡ്ബുക്ക്"
 employment-contract = "തൊഴിൽ കരാർ"
 estimate = "എസ്റ്റിമേറ്റ്"
@@ -3392,12 +3393,12 @@ grant-agreement = "ഗ്രാന്റ് കരാർ"
 grant-application = "ഗ്രാന്റ് അപേക്ഷ"
 hoa-document = "HOA ഡോക്യുമെന്റ്"
 home-inspection-report = "വീട് പരിശോധന റിപ്പോർട്ട്"
-hr-memo = "HR memo"
-hr-policy = "HR policy"
+hr-memo = "HR മെമോ"
+hr-policy = "HR നയം"
 immigration-document = "ഇമിഗ്രേഷൻ ഡോക്യുമെന്റ്"
 immunization-record = "പ്രതിരോധ കുത്തിവയ്പ് രേഖ"
 incident-report = "സംഭവ റിപ്പോർട്ട്"
-income-statement = "Income statement"
+income-statement = "വരുമാന സ്റ്റേറ്റ്മെന്റ്"
 index = "ഇൻഡക്സ്"
 inspection-report = "പരിശോധന റിപ്പോർട്ട്"
 insurance-certificate = "ഇൻഷുറൻസ് സർട്ടിഫിക്കറ്റ്"
@@ -3420,7 +3421,7 @@ legal-notice = "നിയമ നോട്ടീസ്"
 legal-opinion = "നിയമാഭിപ്രായം"
 lesson-plan = "പാഠ പദ്ധതി"
 letter = "കത്ത്"
-letter-of-intent = "Letter of intent"
+letter-of-intent = "ലെറ്റർ ഓഫ് ഇന്റന്റ്"
 license = "ലൈസൻസ്"
 license-agreement = "ലൈസൻസ് കരാർ"
 loan-agreement = "വായ്പ കരാർ"
@@ -3436,38 +3437,38 @@ meeting-agenda = "മീറ്റിംഗ് അജണ്ട"
 meeting-minutes = "മീറ്റിംഗ് മിനിറ്റുകൾ"
 meeting-notes = "മീറ്റിംഗ് കുറിപ്പുകൾ"
 membership-document = "അംഗത്വ ഡോക്യുമെന്റ്"
-memo = "Memo"
-memorandum-of-understanding = "Memorandum of understanding"
+memo = "മെമോ"
+memorandum-of-understanding = "ധാരണാപത്രം"
 mortgage-document = "മോർട്ട്ഗേജ് ഡോക്യുമെന്റ്"
 nda = "NDA"
 newsletter = "ന്യൂസ്‌ലെറ്റർ"
-non-compete-agreement = "Non-compete agreement"
+non-compete-agreement = "നോൺ-കമ്പീറ്റ് കരാർ"
 notice = "നോട്ടീസ്"
 offer-letter = "ഓഫർ ലെറ്റർ"
 onboarding-document = "Onboarding ഡോക്യുമെന്റ്"
 order-confirmation = "ഓർഡർ സ്ഥിരീകരണം"
 order-form = "ഓർഡർ ഫോം"
 organization-chart = "ഓർഗനൈസേഷൻ ചാർട്ട്"
-packing-slip = "Packing slip"
+packing-slip = "പാക്കിംഗ് സ്ലിപ്പ്"
 partnership-agreement = "പാർട്ണർഷിപ്പ് കരാർ"
 patent = "പേറ്റന്റ്"
 pathology-report = "പാത്തോളജി റിപ്പോർട്ട്"
 payment-reminder = "പേയ്മെന്റ് ഓർമ്മപ്പെടുത്തൽ"
 payroll-document = "Payroll ഡോക്യുമെന്റ്"
-payslip = "Payslip"
+payslip = "പേസ്ലിപ്പ്"
 performance-review = "പ്രകടന വിലയിരുത്തൽ"
 permit = "പെർമിറ്റ്"
 petition = "ഹർജി"
-pitch-deck = "Pitch deck"
-power-of-attorney = "Power of attorney"
+pitch-deck = "പിച്ച് ഡെക്ക്"
+power-of-attorney = "പവർ ഓഫ് അറ്റോർണി"
 prescription = "പ്രിസ്ക്രിപ്ഷൻ"
 presentation = "പ്രസന്റേഷൻ"
 press-release = "പ്രസ് റിലീസ്"
 price-list = "വില പട്ടിക"
-pricing-sheet = "Pricing sheet"
+pricing-sheet = "പ്രൈസിംഗ് ഷീറ്റ്"
 privacy-policy = "സ്വകാര്യതാ നയം"
 product-sheet = "ഉൽപ്പന്ന ഷീറ്റ്"
-proforma-invoice = "Proforma invoice"
+proforma-invoice = "പ്രൊഫോർമ ഇൻവോയ്സ്"
 progress-report = "പുരോഗതി റിപ്പോർട്ട്"
 project-charter = "പ്രോജക്റ്റ് ചാർട്ടർ"
 project-plan = "പ്രോജക്റ്റ് പ്ലാൻ"
@@ -3476,12 +3477,12 @@ property-listing = "പ്രോപ്പർട്ടി ലിസ്റ്റ�
 proposal = "പ്രൊപ്പോസൽ"
 public-notice = "പൊതു നോട്ടീസ്"
 purchase-agreement = "വാങ്ങൽ കരാർ"
-purchase-order = "Purchase order"
+purchase-order = "പർച്ചേസ് ഓർഡർ"
 quality-report = "ഗുണനിലവാര റിപ്പോർട്ട്"
 quarterly-report = "ത്രൈമാസ റിപ്പോർട്ട്"
 questionnaire = "ചോദ്യാവലി"
-quick-start-guide = "Quick start guide"
-quote = "Quote"
+quick-start-guide = "ക്വിക്ക് സ്റ്റാർട്ട് ഗൈഡ്"
+quote = "ക്വോട്ട്"
 radiology-report = "റേഡിയോളജി റിപ്പോർട്ട്"
 receipt = "രസീത്"
 recommendation-letter = "ശുപാർശ കത്ത്"
@@ -3490,44 +3491,44 @@ referral-letter = "റഫറൽ കത്ത്"
 registration-confirmation = "രജിസ്ട്രേഷൻ സ്ഥിരീകരണം"
 registration-form = "രജിസ്ട്രേഷൻ ഫോം"
 regulatory-filing = "നിയന്ത്രണ ഫയലിംഗ്"
-release-notes = "Release notes"
-remittance-advice = "Remittance advice"
+release-notes = "റിലീസ് നോട്ടുകൾ"
+remittance-advice = "റെമിറ്റൻസ് അഡ്വൈസ്"
 rental-agreement = "വാടക കരാർ"
 report = "റിപ്പോർട്ട്"
-request-for-proposal = "Request for proposal"
-request-for-quotation = "Request for quotation"
+request-for-proposal = "പ്രൊപ്പോസലിനുള്ള അഭ്യർത്ഥന"
+request-for-quotation = "ക്വട്ടേഷനുള്ള അഭ്യർത്ഥന"
 requirements-document = "ആവശ്യകതാ ഡോക്യുമെന്റ്"
 research-abstract = "ഗവേഷണ സംഗ്രഹം"
 research-paper = "ഗവേഷണ പേപ്പർ"
 reservation = "റിസർവേഷൻ"
 resignation-letter = "രാജിക്കത്ത്"
-resume = "Resume"
-retrospective = "Retrospective"
-return-authorization = "Return authorization"
+resume = "റെസ്യൂമെ"
+retrospective = "റെട്രോസ്പെക്റ്റീവ്"
+return-authorization = "റിട്ടേൺ ഓതറൈസേഷൻ"
 risk-assessment = "റിസ്ക് വിലയിരുത്തൽ"
 roadmap = "റോഡ്മാപ്പ്"
-safety-data-sheet = "Safety data sheet"
+safety-data-sheet = "സുരക്ഷാ ഡാറ്റാഷീറ്റ്"
 safety-procedure = "സുരക്ഷാ നടപടിക്രമം"
 sales-proposal = "സെയിൽസ് പ്രൊപ്പോസൽ"
 sales-report = "സെയിൽസ് റിപ്പോർട്ട്"
 schematic = "സ്കീമാറ്റിക്"
-scope-of-work = "Scope of work"
+scope-of-work = "ജോലിയുടെ വ്യാപ്തി"
 service-agreement = "സേവന കരാർ"
 service-report = "സേവന റിപ്പോർട്ട്"
-settlement-agreement = "Settlement agreement"
-shareholder-agreement = "Shareholder agreement"
+settlement-agreement = "സെറ്റിൽമെന്റ് കരാർ"
+shareholder-agreement = "ഷെയർഹോൾഡർ കരാർ"
 shipping-confirmation = "ഷിപ്പിംഗ് സ്ഥിരീകരണം"
 specification = "സ്പെസിഫിക്കേഷൻ"
 sponsorship-agreement = "സ്പോൺസർഷിപ്പ് കരാർ"
-standard-operating-procedure = "Standard operating procedure"
-statement-of-account = "Statement of account"
-statement-of-work = "Statement of work"
+standard-operating-procedure = "സ്റ്റാൻഡേർഡ് ഓപ്പറേറ്റിംഗ് പ്രൊസീജർ"
+statement-of-account = "അക്കൗണ്ട് സ്റ്റേറ്റ്മെന്റ്"
+statement-of-work = "ജോലിയുടെ സ്റ്റേറ്റ്മെന്റ്"
 status-report = "സ്ഥിതി റിപ്പോർട്ട്"
 stock-report = "സ്റ്റോക്ക് റിപ്പോർട്ട്"
 study-guide = "പഠന ഗൈഡ്"
-subpoena = "Subpoena"
+subpoena = "സബ്‌പീന"
 subscription-confirmation = "സബ്‌സ്‌ക്രിപ്ഷൻ സ്ഥിരീകരണം"
-supply-order = "Supply order"
+supply-order = "സപ്ലൈ ഓർഡർ"
 survey-form = "സർവേ ഫോം"
 survey-results = "സർവേ ഫലങ്ങൾ"
 sustainability-report = "സുസ്ഥിരതാ റിപ്പോർട്ട്"
@@ -3547,27 +3548,27 @@ test-report = "ടെസ്റ്റ് റിപ്പോർട്ട്"
 thesis = "തീസിസ്"
 ticket = "ടിക്കറ്റ്"
 timeline = "ടൈംലൈൻ"
-timesheet = "Timesheet"
-title-document = "Title document"
+timesheet = "ടൈംഷീറ്റ്"
+title-document = "ടൈറ്റിൽ ഡോക്യുമെന്റ്"
 training-material = "പരിശീലന മെറ്റീരിയൽ"
 transcript = "ട്രാൻസ്ക്രിപ്റ്റ്"
 travel-itinerary = "യാത്രാ പദ്ധതി"
 trust-document = "ട്രസ്റ്റ് ഡോക്യുമെന്റ്"
 user-guide = "ഉപയോക്തൃ ഗൈഡ്"
-utility-bill = "Utility bill"
+utility-bill = "യൂട്ടിലിറ്റി ബിൽ"
 vendor-agreement = "വെൻഡർ കരാർ"
 visa-document = "വിസ ഡോക്യുമെന്റ്"
-waiver = "Waiver"
-warehouse-receipt = "Warehouse receipt"
+waiver = "വെയിവർ"
+warehouse-receipt = "വെയർഹൗസ് രസീത്"
 warranty-document = "വാറന്റി ഡോക്യുമെന്റ്"
-waybill = "Waybill"
-white-paper = "White paper"
+waybill = "വേ ബിൽ"
+white-paper = "വൈറ്റ് പേപ്പർ"
 will = "വിൽ"
 work-instruction = "ജോലി നിർദ്ദേശം"
-work-order = "Work order"
+work-order = "വർക്ക് ഓർഡർ"
 
 [classificationDemo]
-folderName = "Downloads"
+folderName = "ഡൗൺലോഡുകൾ"
 
 [classificationDemo.buttons]
 done = "പൂർത്തിയായി"
@@ -3980,7 +3981,7 @@ tip = "Every action your assistant runs is performed as your account and counts 
 viewApiKeys = "API keys കാണുക"
 
 [config.mcp.copy]
-configLabel = "Config"
+configLabel = "കോൺഫിഗ്"
 copied = "പകർത്തി"
 copy = "പകർത്തുക"
 endpointLabel = "Endpoint URL"
@@ -4117,7 +4118,7 @@ pdfUaNoImagesNeedingText = "ഒരു image-നും description missing അല
 pdfUaOptions = "PDF/UA ഓപ്ഷനുകൾ"
 pdfUaOverrideLanguage = "Document-ന്റെ സ്വന്തം language replace ചെയ്യുക"
 pdfUaOverrideLanguageHelp = "മുകളിലുള്ള language ശരിയും document-ന്റെ സ്വന്തം തെറ്റുമാണെങ്കിൽ മാത്രം tick ചെയ്യുക. എഴുതാത്ത language-ലേക്ക് document relabel ചെയ്യുന്നത് screen reader-നെ മനസ്സിലാകാത്തതാക്കും."
-pdfUaProfile = "Conformance level"
+pdfUaProfile = "അനുരൂപതാ നില"
 pdfUaSignatureWarning = "ഈ PDF digitally signed ആണ്. Tagging signature cover ചെയ്യുന്ന page content rewrite ചെയ്യും, അതിനാൽ signature verify ചെയ്യുന്നത് നിർത്തും. ആദ്യം convert ചെയ്ത്, തുടർന്ന് re-sign ചെയ്യുക."
 pdfUaTitle = "ഡോക്യുമെന്റ് ശീർഷകം"
 pdfUaTitleHelp = "Filename-ന് പകരം reader കാണിക്കുന്നത്. ശൂന്യമാക്കിയാൽ, ആദ്യ heading ഉപയോഗിക്കും."
@@ -4125,7 +4126,7 @@ selectSourceFormatFirst = "ആദ്യം source format തിരഞ്ഞെ�
 settings = "ക്രമീകരണങ്ങൾ"
 single = "ഒറ്റ"
 sourceFormatPlaceholder = "ഉറവിട ഫോർമാറ്റ്"
-strictMode = "Strict Mode"
+strictMode = "കർശന മോഡ്"
 strictModeDesc = "Conversion perfect അല്ലെങ്കിൽ error (VeraPDF verification ഉപയോഗിക്കുന്നു)"
 svgPdfOptions = "SVG to PDF ഓപ്ഷനുകൾ"
 svgToPdf = "SVG → PDF"
@@ -4377,13 +4378,13 @@ title = "അഡ്മിനിസ്‌ട്രേറ്റർ അനുമത�
 tags = "air-gapped,offline,ഒറ്റപ്പെട്ട,no internet,disconnected,സുരക്ഷിതം,network isolation,standalone"
 
 [devApi]
-tags = "API,development,documentation,developer,REST,integration,endpoints,programmatic,automation,scripting"
+tags = "API,വികസനം,ഡോക്യുമെന്റേഷൻ,ഡെവലപ്പർ,REST,സംയോജനം,എൻഡ്പോയിന്റുകൾ,പ്രോഗ്രാമാറ്റിക്,ഓട്ടോമേഷൻ,സ്ക്രിപ്റ്റിംഗ്"
 
 [devFolderScanning]
 tags = "automation,ഫോൾഡർ,scanning,watch folder,hot folder,automatic processing,batch,monitor folder,auto process,folder monitoring"
 
 [devSsoGuide]
-tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
+tags = "SSO,single sign-on,പ്രമാണീകരണം,SAML,OAuth,OIDC,login,എന്റർപ്രൈസ്,ഐഡന്റിറ്റി പ്രൊവൈഡർ,IdP"
 
 [dropdownList]
 noItems = "Items ലഭ്യമല്ല"
@@ -4726,7 +4727,7 @@ dropToAdd = "ചേർക്കാൻ files drop ചെയ്യുക"
 duplicateFailed = "File duplicate ചെയ്യാനായില്ല"
 expand = "സൈഡ്ബാർ വിപുലീകരിക്കുക"
 googleDrive = "Google Drive"
-library = "PDF Library"
+library = "PDF ലൈബ്രറി"
 myFiles = "ഫയൽ ലൈബ്രറി"
 noFiles = "ഫയലുകളൊന്നുമില്ല"
 openFileManager = "എല്ലാ ഫയലുകളും ഫോൾഡറുകളും ബ്രൗസ് ചെയ്യുക"
@@ -5450,9 +5451,6 @@ multimedia = "മൾട്ടിമീഡിയ"
 
 [groupSigning.steps]
 back = "തിരികെ"
-completed = "പൂർത്തിയായി"
-current = "നിലവിലെ"
-stepLabel = "ഘട്ടം {{number}}"
 
 [groupSigning.steps.configureDefaults]
 continue = "തുടരുക"
@@ -5460,7 +5458,6 @@ invisible = "ഒപ്പുകൾ അദൃശ്യമായിരിക്ക
 locationLabel = "സ്ഥലം:"
 preview = "പ്രിവ്യൂ"
 reasonLabel = "കാരണം:"
-title = "ഒപ്പ് ക്രമീകരണങ്ങൾ കോൺഫിഗർ ചെയ്യുക"
 visible = "ഒപ്പുകൾ പേജ് {{page}}-ൽ ദൃശ്യമായിരിക്കും"
 
 [groupSigning.steps.review]
@@ -5472,14 +5469,13 @@ location = "സ്ഥലം:"
 logo = "ലോഗോ:"
 logoHidden = "ലോഗോ ഇല്ല"
 logoShown = "Stirling PDF ലോഗോ പ്രദർശിപ്പിക്കും"
-participantCount_one = "{{count}} പങ്കാളി ക്രമത്തിൽ ഒപ്പിടും"
-participantCount_other = "{{count}} പങ്കാളികൾ ക്രമത്തിൽ ഒപ്പിടും"
+participantCount_one = "{{count}} പങ്കെടുക്കുന്നയാൾ തിരഞ്ഞെടുത്തു"
+participantCount_other = "{{count}} പങ്കെടുക്കുന്നവർ തിരഞ്ഞെടുത്തു"
 participants = "പങ്കാളികൾ"
 reason = "കാരണം:"
 send = "ഒപ്പ് അഭ്യർത്ഥനകൾ അയയ്ക്കുക"
 signatureSettings = "ഒപ്പ് ക്രമീകരണങ്ങൾ"
 title = "സെഷൻ വിശദാംശങ്ങൾ പരിശോധിക്കുക"
-titleShort = "പരിശോധിച്ച് അയയ്ക്കുക"
 visibility = "ദൃശ്യത:"
 visible = "പേജ് {{page}}-ൽ ദൃശ്യമായി"
 
@@ -5487,7 +5483,6 @@ visible = "പേജ് {{page}}-ൽ ദൃശ്യമായി"
 continue = "തുടരുക"
 noFile = "ഒരു സൈൻ സെഷൻ സൃഷ്ടിക്കാൻ നിങ്ങളുടെ സജീവ ഫയലുകളിൽ നിന്ന് ഒറ്റ PDF ഫയൽ തിരഞ്ഞെടുക്കുക."
 selectedFile = "തിരഞ്ഞെടുത്ത ഡോക്യുമെന്റ്"
-title = "ഡോക്യുമെന്റ് തിരഞ്ഞെടുക്കുക"
 
 [groupSigning.steps.selectParticipants]
 continue = "തുടരുക"
@@ -5495,31 +5490,30 @@ count_one = "{{count}} പങ്കാളിയെ തിരഞ്ഞെടു�
 count_other = "{{count}} പങ്കാളികളെ തിരഞ്ഞെടുത്തു"
 label = "പങ്കാളികളെ തിരഞ്ഞെടുക്കുക"
 placeholder = "ഒപ്പിടാൻ പങ്കാളികളെ തിരഞ്ഞെടുക്കുക..."
-title = "പങ്കാളികളെ തിരഞ്ഞെടുക്കുക"
 
 [groupSigning.tooltip]
 header = "ഗ്രൂപ്പ് സൈൻ ചെയ്യൽ സംബന്ധിച്ച്"
 
 [groupSigning.tooltip.finalization]
-bullet1 = "നിങ്ങൾ നൽകിയിരിക്കുന്ന പങ്കാളികളുടെ ക്രമത്തിൽ എല്ലാ ഒപ്പുകളും പ്രയോഗിക്കും"
-bullet2 = "ആവശ്യമെങ്കിൽ ഭാഗിക ഒപ്പുകളോടെയും അന്തിമീകരിക്കാം"
-bullet3 = "അന്തിമീകരിച്ചതിന് ശേഷം സെഷൻ മാറ്റാൻ കഴിയില്ല"
-description = "എല്ലാ പങ്കാളികളും ഒപ്പിട്ടതിന് ശേഷം (അല്ലെങ്കിൽ നിങ്ങൾ നേരത്തെ അന്തിമീകരിക്കാൻ തിരഞ്ഞെടുക്കുമ്പോൾ) അന്തിമ ഒപ്പിട്ട PDF സൃഷ്ടിക്കാം."
+bullet1 = "അവസാന PDF-ൽ സ്വീകരിച്ച എല്ലാ ഒപ്പുകളും ഉൾപ്പെടുന്നു"
+bullet2 = "ഭാഗിക ഒപ്പുകളോടെ അന്തിമമാക്കുന്നതിന് മുമ്പ് ബാക്കിയുള്ള പങ്കെടുക്കുന്നവരെ അവലോകനം ചെയ്യുക"
+bullet3 = "അന്തിമമാക്കൽ അഭ്യർത്ഥന അടയ്ക്കുന്നു; ബാക്കിയുള്ള പങ്കെടുക്കുന്നവർക്ക് ഇനി ഒപ്പിടാൻ കഴിയില്ല"
+description = "കുറഞ്ഞത് ഒരു പങ്കെടുക്കുന്നയാൾ ഒപ്പിട്ടതിന് ശേഷം, ഉടമയ്ക്ക് അഭ്യർത്ഥന അന്തിമമാക്കി ഒപ്പിട്ട PDF സൃഷ്ടിക്കാനാകും."
 title = "അന്തിമീകരണ പ്രക്രിയ"
 
 [groupSigning.tooltip.roles]
 bullet1 = "ഉടമ (നിങ്ങൾ): സെഷൻ സൃഷ്ടിക്കുന്നു, ഒപ്പ് ഡിഫോൾട്ടുകൾ കോൺഫിഗർ ചെയ്യുന്നു, ഡോക്യുമെന്റ് അന്തിമീകരിക്കുന്നു"
-bullet2 = "പങ്കാളികൾ: അവരുടെ ഒപ്പ് സൃഷ്ടിക്കുന്നു, സർട്ടിഫിക്കറ്റ് തിരഞ്ഞെടുക്കുന്നു, PDF-ൽ ഇടുന്നു"
-bullet3 = "പങ്കാളികൾക്ക് ഒപ്പിന്റെ ദൃശ്യത, കാരണമോ, സ്ഥാനമോ മാറ്റാൻ കഴിയില്ല"
-description = "എല്ലാ പങ്കാളികൾക്കും ഒപ്പിന്റെ രൂപഭാവ ക്രമീകരണങ്ങൾ നിങ്ങൾ നിയന്ത്രിക്കുന്നു."
+bullet2 = "പങ്കെടുക്കുന്നവർ: ഒരു സർട്ടിഫിക്കറ്റ് തിരഞ്ഞെടുക്കുകയും PDF-ൽ ദൃശ്യമാകുന്ന ഒപ്പ് ഐച്ഛികമായി സ്ഥാപിക്കുകയും ചെയ്യുക"
+bullet3 = "സമർപ്പിക്കുന്നതിന് മുമ്പ് പങ്കെടുക്കുന്നവർക്ക് അവരുടെ ഒപ്പിന്റെ കാരണവും സ്ഥാനവും ക്രമീകരിക്കാനാകും"
+description = "ഉടമ അഭ്യർത്ഥനയുടെ ഡിഫോൾട്ടുകൾ സജ്ജമാക്കുന്നു; ഓരോ പങ്കെടുക്കുന്നയാളും അവരുടെ സർട്ടിഫിക്കറ്റും ഐച്ഛികമായ ദൃശ്യമാകുന്ന അടയാളവും തിരഞ്ഞെടുക്കുന്നു."
 title = "പങ്കാളികളുടെ പങ്കുകൾ"
 
 [groupSigning.tooltip.sequential]
-bullet1 = "ആദ്യത്തെ പങ്കാളി ഒപ്പിടുന്നതിനു മുമ്പ് രണ്ടാമത്തവൻക്ക് ഡോക്യുമെന്റ് ആക്‌സസ് ലഭിക്കില്ല"
-bullet2 = "നിയമാനുസൃത ക്രമം ഉറപ്പാക്കുന്നു"
-bullet3 = "പട്ടികയിൽ ഇഴുതി നീക്കി പങ്കാളികളുടെ ക്രമം മാറ്റാം"
-description = "നിങ്ങൾ നിർദ്ദേശിച്ച ക്രമത്തിൽ പങ്കാളികൾ ഡോക്യുമെന്റിൽ ഒപ്പിടും. അവരുടെ ടേൺ വരുമ്പോൾ ഓരോ ഒപ്പുവെയ്ക്കുന്നവർക്കും അറിയിപ്പ് ലഭിക്കും."
-title = "ക്രമാനുസൃത ഒപ്പിടൽ"
+bullet1 = "പങ്കെടുക്കുന്നവർ മറ്റൊരു ഒപ്പിടുന്നയാളെ കാത്തിരിക്കേണ്ടതില്ല"
+bullet2 = "Signing Sessions-ൽ ഓരോ പങ്കെടുക്കുന്നയാളുടെയും പുരോഗതി ട്രാക്ക് ചെയ്യുക"
+bullet3 = "അവസാന തീയതി ഒരു ഓർമ്മപ്പെടുത്തലാണ്; അത് ആക്സസ് കാലഹരണപ്പെടുത്തുന്നില്ല"
+description = "നിയോഗിച്ച പങ്കെടുക്കുന്നവർക്ക് ഏത് ക്രമത്തിലും സ്വതന്ത്രമായി അവലോകനം ചെയ്ത് ഒപ്പിടാനാകും."
+title = "ഏത് ക്രമത്തിലും ഒപ്പിടൽ"
 
 [guestBanner]
 dismiss = "ബാനർ ഒഴിവാക്കുക"
@@ -5569,7 +5563,7 @@ title = "അനോട്ടേറ്റ്"
 
 [home.autoFormDetection]
 desc = "AI ഉപയോഗിച്ച് ഫോം ഫീൽഡുകൾ സ്വയം കണ്ടെത്തി നിങ്ങളുടെ PDF പൂരിപ്പിക്കാവുന്നതാക്കുക."
-tags = "form,detect,fillable,acroform,auto detect,ai,fields,make fillable,form detection"
+tags = "ഫോം,കണ്ടെത്തുക,പൂരിപ്പിക്കാവുന്നത്,acroform,സ്വയം കണ്ടെത്തുക,ai,ഫീൽഡുകൾ,പൂരിപ്പിക്കാവുന്നതാക്കുക,ഫോം കണ്ടെത്തൽ"
 title = "ഓട്ടോ ഫോം കണ്ടെത്തൽ"
 unavailable = "ഈ സെർവറിൽ ഇൻസ്റ്റാൾ ചെയ്തിട്ടില്ലാത്ത AI കണ്ടെത്തൽ മോഡൽ ആവശ്യമാണ്. ഒരു അഡ്മിനിസ്ട്രേറ്റർക്ക് Settings > Features > AI Form Detection എന്നതിൽ അത് ചേർക്കാം."
 
@@ -5586,7 +5580,7 @@ title = "PDF ഓട്ടോ റീനെയിം"
 [home.autoRotate]
 desc = "ഓരോ page-ന്റെയും orientation കണ്ടെത്തി സ്വയമേവ നേരെയാക്കി തിരിക്കുക."
 tags = "സ്വയമേവ തിരിക്കുക,orientation ശരിയാക്കുക,തലകീഴായി,വശത്തേക്ക്,നേരെയാക്കുക,orient,orientation കണ്ടെത്തുക,rotation ശരിയാക്കുക,auto orient,scanned,OSD"
-title = "Auto Rotate"
+title = "സ്വയം തിരിക്കുക"
 
 [home.autoSizeSplitPDF]
 tags = "ഓട്ടോ,സ്പ്ലിറ്റ്,വലുപ്പം"
@@ -5598,12 +5592,12 @@ title = "പേജുകൾ സ്വയം വിഭജിക്കുക"
 
 [home.bookletImposition]
 desc = "പ്രിന്റിംഗിനും ബൈൻഡിംഗിനും വേണ്ടിയുള്ള ശരിയായ പേജ് ക്രമവും മൾട്ടി-പേജ് ലേയൗട്ടും ഉൾപ്പെടുത്തി ബുക്ക്‌ലെറ്റുകൾ സൃഷ്ടിക്കുക"
-tags = "booklet,print,binding,imposition,booklet printing,saddle stitch,fold,pamphlet,brochure,print booklet,duplex,two-sided,signature,book layout,page imposition,print layout"
+tags = "ബുക്ക്‌ലെറ്റ്,പ്രിന്റ്,ബൈൻഡിംഗ്,ഇംപോസിഷൻ,ബുക്ക്‌ലെറ്റ് പ്രിന്റിംഗ്,saddle stitch,fold,pamphlet,brochure,പ്രിന്റ് ബുക്ക്‌ലെറ്റ്,duplex,two-sided,signature,book layout,page imposition,print layout"
 title = "ബുക്ക്‌ലെറ്റ് ഇംപോസിഷൻ"
 
 [home.certSign]
 desc = "ഒരു സർട്ടിഫിക്കറ്റ്/കീ (PEM/P12) ഉപയോഗിച്ച് ഒരു PDF ഒപ്പിടുന്നു"
-tags = "authenticate,PEM,P12,official,encrypt,sign,certificate,PKCS12,JKS,server,manual,auto,digital certificate,certificate signature,PKI,cryptographic signature,trusted signature"
+tags = "പ്രമാണീകരിക്കുക,PEM,P12,ഔദ്യോഗികം,എൻക്രിപ്റ്റ്,ഒപ്പിടുക,സർട്ടിഫിക്കറ്റ്,PKCS12,JKS,സർവർ,മാനുവൽ,auto,ഡിജിറ്റൽ സർട്ടിഫിക്കറ്റ്,സർട്ടിഫിക്കറ്റ് ഒപ്പ്,PKI,ക്രിപ്‌റ്റോഗ്രാഫിക് ഒപ്പ്,വിശ്വസനീയ ഒപ്പ്"
 title = "സർട്ടിഫിക്കറ്റ് ഉപയോഗിച്ച് ഒപ്പിടുക"
 
 [home.changeMetadata]
@@ -5652,7 +5646,7 @@ title = "Air-gapped സെറ്റപ്പ്"
 
 [home.devApi]
 desc = "API ഡോക്യുമെന്റേഷനിലേക്കുള്ള ലിങ്ക്"
-tags = "API,development,documentation,developer,REST,integration,endpoints,programmatic,automation,scripting"
+tags = "API,വികസനം,ഡോക്യുമെന്റേഷൻ,ഡെവലപ്പർ,REST,സംയോജനം,എൻഡ്പോയിന്റുകൾ,പ്രോഗ്രാമാറ്റിക്,ഓട്ടോമേഷൻ,സ്ക്രിപ്റ്റിംഗ്"
 title = "API"
 
 [home.devFolderScanning]
@@ -5662,7 +5656,7 @@ title = "ഓട്ടോമേറ്റഡ് ഫോൾഡർ സ്കാനി
 
 [home.devSsoGuide]
 desc = "SSO ഗൈഡിലേക്കുള്ള ലിങ്ക്"
-tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
+tags = "SSO,single sign-on,പ്രമാണീകരണം,SAML,OAuth,OIDC,login,എന്റർപ്രൈസ്,ഐഡന്റിറ്റി പ്രൊവൈഡർ,IdP"
 title = "SSO ഗൈഡ്"
 
 [home.editTableOfContents]
@@ -5687,7 +5681,7 @@ title = "പരത്തുക"
 
 [home.formFill]
 desc = "വിഷ്വൽ എഡിറ്റർ ഉപയോഗിച്ച് PDF ഫോം ഫീൽഡുകൾ പൂരിപ്പിക്കുക, സൃഷ്ടിക്കുക, എഡിറ്റ് ചെയ്യുക, ഇല്ലാതാക്കുക"
-title = "Form Editor"
+title = "ഫോം എഡിറ്റർ"
 
 [home.getPdfInfo]
 desc = "PDF-കളെക്കുറിച്ചുള്ള സാധ്യമായ എല്ലാ വിവരങ്ങളും നേടുന്നു"
@@ -5760,7 +5754,7 @@ title = "വായിക്കുക"
 [home.redact]
 desc = "തിരഞ്ഞെടുത്ത ടെക്സ്റ്റ്, വരച്ച ആകൃതികൾ കൂടാതെ/അല്ലെങ്കിൽ തിരഞ്ഞെടുത്ത പേജ്(കൾ) അടിസ്ഥാനമാക്കി PDF redacts (കറുപ്പിക്കുന്നു) ചെയ്യുന്നു"
 tags = "censor,blackout,hide,redact,redaction,black out,block out,sensitive data നീക്കംചെയ്യുക,ടെക്സ്റ്റ് മറയ്ക്കുക,privacy,confidential,GDPR,PII,sensitive data,സ്ഥിരമായി നീക്കംചെയ്യുക,cover up,legal redaction"
-title = "Redact"
+title = "റിഡാക്റ്റ്"
 
 [home.removeAnnotations]
 desc = "ഒരു PDF-ൽ നിന്ന് എല്ലാ അഭിപ്രായങ്ങളും/വ്യാഖ്യാനങ്ങളും നീക്കം ചെയ്യുന്നു"
@@ -5828,7 +5822,6 @@ tags = "detect,split,photos,auto detect,photos detect ചെയ്യുക,phot
 title = "സ്കാൻ ചെയ്ത ഫോട്ടോകൾ കണ്ടെത്തുക & വിഭജിക്കുക"
 
 [home.sharedSign]
-desc = "മറ്റുള്ളവരിൽ നിന്ന് കയ്യൊപ്പുകൾ അഭ്യർത്ഥിച്ച് ഒപ്പിടൽ സെഷനുകൾ പിന്തുടരുക"
 title = "പങ്കിട്ട ഒപ്പിടൽ"
 
 [home.showJS]
@@ -5855,7 +5848,7 @@ tags = "split,sections,divide,sections പ്രകാരം split ചെയ്�
 title = "വിഭാഗങ്ങളായി PDF വിഭജിക്കുക"
 
 [home.swagger]
-tags = "API,documentation,test,swagger,API docs,REST API,endpoints,developer,API reference,API testing,OpenAPI,integration,developer docs"
+tags = "API,ഡോക്യുമെന്റേഷൻ,ടെസ്റ്റ്,swagger,API docs,REST API,എൻഡ്പോയിന്റുകൾ,ഡെവലപ്പർ,API reference,API testing,OpenAPI,സംയോജനം,developer docs"
 title = "API ഡോക്യുമെന്റേഷൻ"
 
 [home.timestampPdf]
@@ -5878,7 +5871,7 @@ title = "PDF കാണുക/എഡിറ്റ്"
 
 [home.watermark]
 desc = "നിങ്ങളുടെ PDF പ്രമാണത്തിലേക്ക് ഒരു ഇഷ്ടാനുസൃത വാട്ടർമാർക്ക് ചേർക്കുക."
-tags = "stamp,mark,overlay,watermark,branding,logo,confidential,draft,copyright,trademark,text overlay,image overlay,background text"
+tags = "സ്റ്റാമ്പ്,മാർക്ക്,ഓവർലേ,വാട്ടർമാർക്ക്,ബ്രാൻഡിംഗ്,ലോഗോ,രഹസ്യം,ഡ്രാഫ്റ്റ്,കോപ്പിറൈറ്റ്,ട്രേഡ്‌മാർക്ക്,ടെക്സ്റ്റ് ഓവർലേ,ഇമേജ് ഓവർലേ,പശ്ചാത്തല ടെക്സ്റ്റ്"
 title = "വാട്ടർമാർക്ക് ചേർക്കുക"
 
 [HTMLToPDF]
@@ -5941,9 +5934,9 @@ currentTeamAllowance = "നിങ്ങളുടെ legacy ടീമിനുള
 loadError = "നിങ്ങളുടെ നിലവിലുള്ള സബ്സ്ക്രിപ്ഷൻ പരിശോധിക്കാൻ ഞങ്ങൾക്ക് കഴിഞ്ഞില്ല. മറ്റൊരു പ്ലാൻ വാങ്ങുന്നതിന് മുമ്പ് വീണ്ടും ശ്രമിക്കുക."
 loading = "നിങ്ങളുടെ സബ്സ്ക്രിപ്ഷൻ പരിശോധിക്കുന്നു..."
 portalError = "Stripe ബില്ലിംഗ് തുറക്കാനായില്ല. ദയവായി വീണ്ടും ശ്രമിക്കുക."
-pro = "Pro (legacy)"
+pro = "Pro (ലെഗസി)"
 retry = "വീണ്ടും ശ്രമിക്കുക"
-team = "Team (legacy)"
+team = "Team (ലെഗസി)"
 teamUsers = "നിങ്ങളുടെ ടീം: {{limit}}ൽ {{used}} ഉപയോക്താക്കൾ"
 unlimitedUsers = "നിങ്ങളുടെ ടീം: പരിധിയില്ലാത്ത ഉപയോക്താക്കൾ ({{used}} ഉപയോഗത്തിൽ)"
 usersUnavailable = "നിങ്ങളുടെ ടീമിന്റെ ഉപയോക്തൃ അലവൻസ് സ്ഥിരീകരിക്കാൻ ഞങ്ങൾക്ക് കഴിഞ്ഞില്ല. നിങ്ങളുടെ legacy പ്ലാൻ പരിശോധിക്കാൻ supportനെ ബന്ധപ്പെടുക."
@@ -6139,7 +6132,7 @@ takePhoto = "ഒരു ഫോട്ടോ എടുക്കുക"
 [mobileSign.tab]
 draw = "വരയ്ക്കുക"
 photo = "ഫോട്ടോ"
-type = "Type"
+type = "ടൈപ്പ് ചെയ്യുക"
 
 [mobileSign.type]
 placeholder = "നിങ്ങളുടെ പേര്"
@@ -6335,7 +6328,7 @@ activeFiles = "<strong>Active Files</strong> view-ൽ നിങ്ങൾ tool-�
 allTools = "ഇത് <strong>Tools</strong> panel ആണ്, ഇവിടെ ലഭ്യമായ എല്ലാ PDF tools-ൽ നിന്നും നിങ്ങൾക്ക് browse ചെയ്ത് select ചെയ്യാം."
 close = "അടയ്ക്കുക"
 cropSettings = "ഇപ്പോൾ നമുക്ക് ക്രോപ്പ് ചെയ്യാൻ വേണ്ട ഫയൽ തെരഞ്ഞെടുത്തതിനാൽ, PDF ക്രോപ്പ് ചെയ്യേണ്ട പ്രദേശം തീരുമാനിക്കാൻ ക്രോപ്പ് ടൂൾ ക്രമീകരിക്കാം."
-dialogLabel = "Onboarding"
+dialogLabel = "ഓൺബോർഡിംഗ്"
 fileCheckbox = "വർക്ക്‌ബെഞ്ചിലുള്ള ഫയലുകൾ processing-നായി തിരഞ്ഞെടുത്തിരിക്കുന്നു. ഇടത് files sidebar ഉപയോഗിച്ച് batch operations-നായി ഒന്നിലധികം ഫയലുകൾ തിരഞ്ഞെടുക്കാം."
 fileReplacement = "മാറ്റം വരുത്തിയ ഫയൽ വർക്ക്ബെഞ്ചിലെ യഥാർത്ഥ ഫയലിനെ സ്വമേധയായി മാറ്റിസ്ഥാപിക്കും, ഇതിലൂടെ കൂടുതൽ ടൂളുകൾ പ്രവർത്തിപ്പിക്കുന്നത് എളുപ്പമാകും."
 filesButton = "ക്വിക് ആക്സസ് ബാറിലെ <strong>ഫയലുകൾ</strong> ബട്ടൺ ഉപയോഗിച്ച് നിങ്ങൾക്ക് ടൂളുകളിൽ ഉപയോഗിക്കാൻ PDFകൾ അപ്‌ലോഡ് ചെയ്യാം."
@@ -6399,7 +6392,7 @@ enable = "MFA പ്രവർത്തനക്ഷമമാക്കുക"
 enableError = "two-factor authentication പ്രവർത്തനക്ഷമമാക്കാനായില്ല. code പരിശോധിച്ച് വീണ്ടും ശ്രമിക്കുക."
 enterCode = "നിങ്ങളുടെ app-ൽ നിന്നുള്ള 6-digit code നൽകുക."
 enterCodeError = "തുടരാൻ authentication code നൽകുക."
-logout = "Logout"
+logout = "ലോഗ് ഔട്ട്"
 openAuthenticator = "Google Authenticator, Authy, അല്ലെങ്കിൽ 1Password തുറക്കുക."
 qrCodeLoading = "നിങ്ങളുടെ QR കോഡ് സൃഷ്ടിക്കുന്നു…"
 regenerateQrCode = "QR code വീണ്ടും സൃഷ്ടിക്കുക"
@@ -6408,7 +6401,7 @@ setupError = "two-factor setup ആരംഭിക്കാനായില്ല.
 setupKey = "സെറ്റപ്പ് കീ (മാനുവൽ എൻട്രി)"
 stepByStep = "ഘട്ടം ഘട്ടമായി"
 success = "MFA പ്രവർത്തനക്ഷമമാക്കി. നിങ്ങൾക്ക് ഇപ്പോൾ തുടരാം."
-title = "Multi-Factor Authentication Setup"
+title = "മൾട്ടി-ഫാക്ടർ പ്രമാണീകരണ സജ്ജീകരണം"
 
 [onboarding.planOverview]
 adminBodyLoginDisabled = "ലോഗിൻ മോഡ് സജീവമാക്കിയാൽ, നിങ്ങൾക്ക് ഉപയോക്താക്കളെയും സെറ്റിങ്ങുകളെയും മാനേജ് ചെയ്യാനും സെർവർ ഹെൽത്ത് മോണിറ്റർ ചെയ്യാനും കഴിയും. നിങ്ങളുടെ സെർവറിലെ ആദ്യ <strong>{{freeTierLimit}}</strong> പേർക്ക് Stirling സൗജന്യമായി ഉപയോഗിക്കാം."
@@ -6447,7 +6440,7 @@ title = "സുരക്ഷാ പരിശോധന"
 
 [onboarding.serverLicense]
 freeBody = "ഞങ്ങളുടെ <strong>Open-Core</strong> ലൈസൻസിൽ <strong>OAuth SSO</strong>യും പരമാവധി <strong>{{freeTierLimit}}</strong> ഉപയോക്താക്കളും സൗജന്യമായി ഉൾപ്പെടുന്നു. തടസ്സമില്ലാതെ വിപുലീകരിക്കാൻ Stirling Team പ്ലാൻ ഞങ്ങൾ ശുപാർശ ചെയ്യുന്നു — പ്രതിമാസം $99-ന് <strong>100 ഉപയോക്താക്കൾ</strong>."
-freeTitle = "Team plan"
+freeTitle = "Team പ്ലാൻ"
 overLimitBody = "ഞങ്ങളുടെ licensing <strong>{{freeTierLimit}}</strong> വരെ users-നെ സൗജന്യമായി അനുവദിക്കുന്നു. നിങ്ങൾക്ക് <strong>{{overLimitUserCopy}}</strong> Stirling users ഉണ്ട്. തടസ്സമില്ലാതെ തുടരാൻ Stirling Team plan-ലേക്ക് upgrade ചെയ്യുക - <strong>100 users</strong>, PDF text editing, കൂടാതെ $99/mo-ക്ക് full admin control."
 overLimitTitle = "Team plan ആവശ്യമാണ്"
 seePlans = "പ്ലാനുകൾ കാണുക →"
@@ -6824,9 +6817,9 @@ subtitle = "AI, automation എന്നിവ മാത്രമാണ് നി
 title = "സമീപകാല billable activity"
 
 [payg.cap]
-amount = "Cap amount"
-custom = "Custom"
-docsEstimate = "≈ {{docs}} credits / month"
+amount = "പരിധി തുക"
+custom = "കസ്റ്റം"
+docsEstimate = "≈ {{docs}} ക്രെഡിറ്റുകൾ / മാസം"
 docsRate = "{{rate}} / credit നിരക്കിൽ"
 noCapDesc = "മുകളിലെ പരിധിയില്ലാതെ usage billed ചെയ്യും. നിങ്ങൾക്ക് ഏത് സമയത്തും cap വീണ്ടും enable ചെയ്യാം."
 noCapLabel = "Cap ഇല്ല"
@@ -6838,7 +6831,7 @@ title = "പ്രതിമാസ spending cap"
 
 [payg.checkout]
 connecting = "Stripe-ലേക്ക് connect ചെയ്യുന്നു…"
-errorTitle = "Stripe error"
+errorTitle = "Stripe പിശക്"
 
 [payg.checkout.error]
 startFailed = "Checkout session ആരംഭിക്കാൻ കഴിഞ്ഞില്ല"
@@ -6847,11 +6840,11 @@ startFailed = "Checkout session ആരംഭിക്കാൻ കഴിഞ്�
 backend = "Backend mock mode-ൽ ആണ്; യഥാർത്ഥ Stripe session സൃഷ്ടിച്ചില്ല."
 continue = "Mock subscription ഉപയോഗിച്ച് തുടരുക"
 noKey = "VITE_STRIPE_PUBLISHABLE_KEY unset ആണ്. Configure ചെയ്താൽ real iframe ഇവിടെ mount ചെയ്യും."
-title = "Stripe Embedded Checkout (mock mode)"
+title = "Stripe Embedded Checkout (മോക്ക് മോഡ്)"
 
 [payg.confirm]
 bodyWithAllowance = "നിങ്ങളുടെ ടീമിന് ഇപ്പോൾ നിങ്ങളുടെ {{limit}} സൗജന്യ PDFsനപ്പുറം automation, AI, API പ്രവർത്തനങ്ങൾ റൺ ചെയ്യാം."
-capValue = "{{symbol}}{{amount}} / month"
+capValue = "{{symbol}}{{amount}} / മാസം"
 noCap = "Cap ഇല്ല"
 note = "ഈ പേജിൽ നിന്ന് ഏത് സമയത്തും cap മാറ്റാം, cancel ചെയ്യാം, അല്ലെങ്കിൽ Stripe customer portal തുറക്കാം."
 summaryLabel = "പ്രതിമാസ ceiling"
@@ -6870,11 +6863,11 @@ title = "നിങ്ങളുടെ plan load ചെയ്യാൻ കഴി�
 
 [payg.free.cta]
 benefit1Body = "ടൂളുകൾ chain ചെയ്യുക, runs schedule ചെയ്യുക, batch process ചെയ്യുക"
-benefit1Title = "Automation pipelines"
+benefit1Title = "ഓട്ടോമേഷൻ പൈപ്പ്‌ലൈനുകൾ"
 benefit2Body = "summarise, classify, redact, AI-OCR"
-benefit2Title = "AI tools"
+benefit2Title = "AI ഉപകരണങ്ങൾ"
 benefit3Body = "ഏത് Stirling endpoint-ും programmatically call ചെയ്യുക"
-benefit3Title = "API access"
+benefit3Title = "API ആക്സസ്"
 button = "Processor on ചെയ്യുക →"
 reassurance = "Minimum ഇല്ല · test ചെയ്യാൻ $0 cap set ചെയ്യുക · എപ്പോഴും cancel ചെയ്യാം"
 subtitleWithAllowance = "automation, AI, API എന്നിവ ഉപയോഗിച്ച് നിങ്ങളുടെ {{limit}} സൗജന്യ PDFs കഴിഞ്ഞും തുടരുക. നിങ്ങൾ നിയന്ത്രണത്തിൽ തുടരാൻ മാസാന്ത പരിധി സജ്ജമാക്കുക."
@@ -6890,13 +6883,13 @@ freeTitle = "പരിധിയില്ലാത്ത PDF editing"
 [payg.free.hero]
 barAria = "ശേഷിക്കുന്ന സൗജന്യ PDFs"
 capSuffix = "ഈ മാസം ശേഷിക്കുന്ന {{limit}} സൗജന്യ PDFs-ൽ"
-metaCategories = "Automation · AI · API requests"
+metaCategories = "ഓട്ടോമേഷൻ · AI · API അഭ്യർത്ഥനകൾ"
 
 [payg.free.member]
 ownerOnly = "Processor on ചെയ്യാൻ നിങ്ങളുടെ team owner-ന് മാത്രമേ കഴിയൂ. Manual tools നിങ്ങൾക്ക് ഇഷ്ടമുള്ളത്ര സൗജന്യമായി ഉപയോഗിക്കാം."
 
 [payg.free.proc]
-eyebrow = "Processor plan · metered"
+eyebrow = "പ്രോസസർ പ്ലാൻ · മീറ്റർഡ്"
 
 [payg.free.state]
 approachingLimit = "പരിധിയോട് അടുക്കുന്നു"
@@ -6904,21 +6897,21 @@ limitReached = "പരിധിയിലെത്തി"
 plentyLeft = "ധാരാളം ശേഷിക്കുന്നു"
 
 [payg.gates]
-ai = "AI tools (AI Create, suggestions, AI-OCR)"
-automation = "Automations & pipelines"
-client = "Browser-only tools (viewer, page editor, file management)"
-offsite = "Server tools (compress, OCR, convert, watermark…)"
+ai = "AI ഉപകരണങ്ങൾ (AI Create, നിർദ്ദേശങ്ങൾ, AI-OCR)"
+automation = "ഓട്ടോമേഷനുകളും പൈപ്പ്‌ലൈനുകളും"
+client = "ബ്രൗസറിൽ മാത്രം പ്രവർത്തിക്കുന്ന ഉപകരണങ്ങൾ (വ്യൂവർ, പേജ് എഡിറ്റർ, ഫയൽ മാനേജ്മെന്റ്)"
+offsite = "സർവർ ഉപകരണങ്ങൾ (കംപ്രസ്, OCR, കൺവേർട്ട്, വാട്ടർമാർക്ക്…)"
 pauses = "cap-ൽ pause ചെയ്യും"
 title = "Cap എത്തിയാൽ എന്ത് സംഭവിക്കും"
 
 [payg.header]
-eyebrow = "Processor plan · {{start}} – {{end}}"
+eyebrow = "പ്രോസസർ പ്ലാൻ · {{start}} – {{end}}"
 freeBody = "View, edit, merge, split, sign, watermark, compress, convert, manual OCR — നിങ്ങൾക്ക് ആവശ്യമുള്ളത്ര, എവിടെ നിന്ന് trigger ചെയ്താലും."
 freeLabel = "എപ്പോഴും സൗജന്യം"
 freeTitle = "പരിധിയില്ലാത്ത PDF editing"
 meterBody = "ആരംഭിക്കാൻ {{limit}} സൗജന്യ PDFs, തുടർന്ന് നിങ്ങളുടെ cap വരെ ഓരോ PDF-നുമനുസരിച്ച് billed ചെയ്യും."
-meterLabel = "Metered"
-meterTitle = "Automation · AI · API"
+meterLabel = "മീറ്റർഡ്"
+meterTitle = "ഓട്ടോമേഷൻ · AI · API"
 
 [payg.member]
 askLeader = "Cap മാറ്റാൻ നിങ്ങളുടെ team owner-ന് മാത്രമേ കഴിയൂ."
@@ -6939,7 +6932,7 @@ low = "നിങ്ങളുടെ prepaid capacity-യുടെ {{pct}}% മാ
 
 [payg.prepaid.card]
 subtitle = "metered billing-നും spend cap-നും പുറത്തായി ആദ്യം ഉപയോഗിക്കുന്നു."
-title = "Prepaid capacity"
+title = "പ്രീപെയ്ഡ് ശേഷി"
 
 [payg.prepaid.meter]
 capSuffix = "{{total}} prepaid credits-ൽ"
@@ -6959,17 +6952,17 @@ aiPromo = "AI ഉപയോഗിച്ച് PDFs സൃഷ്ടിക്കു
 apiPromo = "നിങ്ങളുടെ ആപ്പുകളും AI അസിസ്റ്റന്റുകളും കണക്റ്റ് ചെയ്യുക"
 automationPromo = "ആവർത്തിക്കുന്ന PDF ജോലികൾ ഓട്ടോമേറ്റ് ചെയ്യുക"
 createAccount = "സൗജന്യ അക്കൗണ്ട് സൃഷ്ടിക്കുക"
-editorLabel = "PDF Editor"
+editorLabel = "PDF എഡിറ്റർ"
 login = "ലോഗിൻ ചെയ്യുക"
 manualToolsPromo = "പരിധിയില്ലാത്ത സൗജന്യ മാനുവൽ PDF ടൂളുകൾ"
-processorLabel = "PDF Processor"
+processorLabel = "PDF പ്രോസസർ"
 processorTitle = "Stirlingലെ മികച്ചത് അൺലോക്ക് ചെയ്യാൻ ഒരു അക്കൗണ്ട് സൃഷ്ടിക്കുക"
-readerLabel = "PDF Reader"
+readerLabel = "PDF റീഡർ"
 
 [payg.spendCapMeter]
 barAria = "Cap-നോട് താരതമ്യത്തിലുള്ള spend"
-capSuffix = "/ {{amount}} cap"
-metaCategories = "Automation · AI · API spend"
+capSuffix = "/ {{amount}} പരിധി"
+metaCategories = "ഓട്ടോമേഷൻ · AI · API ചെലവ്"
 resets = "ഓരോ billing period-ലും reset ചെയ്യും"
 
 [payg.state]
@@ -7001,7 +6994,7 @@ title = "നിങ്ങളുടെ പ്രതിമാസ spend ceiling set 
 usdNote = "USD-ൽ കണക്കാക്കിയത്. Subscribe ചെയ്ത ശേഷം നിങ്ങളുടെ സ്വന്തം currency-യിൽ ഏത് സമയത്തും cap ക്രമീകരിക്കാം."
 
 [payg.upgrade.checkout]
-capValue = "{{symbol}}{{amount}} / month"
+capValue = "{{symbol}}{{amount}} / മാസം"
 edit = "എഡിറ്റ് ചെയ്യുക"
 help = "നിങ്ങളുടെ card details Stripe handle ചെയ്യുന്നു. Stirling അവ ഒരിക്കലും കാണില്ല."
 loading = "Checkout load ചെയ്യുന്നു…"
@@ -7010,11 +7003,11 @@ title = "നിങ്ങളുടെ payment method ചേർക്കുക"
 
 [payg.upgrade.help]
 aiBody = "summarise, classify, redact, AI-OCR"
-aiTitle = "AI tools"
+aiTitle = "AI ഉപകരണങ്ങൾ"
 apiBody = "ഏത് Stirling endpoint-ിലേക്കുമുള്ള programmatic access"
-apiTitle = "API calls"
+apiTitle = "API കോളുകൾ"
 automationBody = "Clicks ആവശ്യമില്ലാത്ത chained tools അല്ലെങ്കിൽ scheduled runs"
-automationTitle = "Automation pipelines"
+automationTitle = "ഓട്ടോമേഷൻ പൈപ്പ്‌ലൈനുകൾ"
 footnoteUnlimited = "മാനുവൽ ടൂളുകൾ (കാണൽ, എഡിറ്റിംഗ്, മെർജിംഗ്, സ്പ്ലിറ്റിംഗ്, വാട്ടർമാർക്കിംഗ്, കമ്പ്രസ്സിംഗ്, മാനുവൽ OCR) ഉൾപ്പെടുത്തിയ ക്രെഡിറ്റുകൾ ഉപയോഗിച്ചുകഴിഞ്ഞാലും എപ്പോഴും സൗജന്യമാണ്. വ്യത്യാസം ജോലിയുടെ തരത്തിലാണ്, നിങ്ങൾ എവിടെ ക്ലിക്ക് ചെയ്യുന്നു എന്നതിൽ അല്ല."
 title = "Billing-ലേക്ക് ഞങ്ങൾ count ചെയ്യുന്നത്"
 
@@ -7031,8 +7024,8 @@ confirm = "നിങ്ങൾ subscribed ആണ്"
 default = "Processor plan-ലേക്ക് upgrade ചെയ്യുക"
 
 [payg.usage]
-breakdown = "AI {{ai}} • Automation {{automation}} • API {{api}}"
-capLine = "{{cap}}/mo cap"
+breakdown = "AI {{ai}} • ഓട്ടോമേഷൻ {{automation}} • API {{api}}"
+capLine = "{{cap}}/മാസ പരിധി"
 estBill = "≈ ഈ period-ൽ ഇതുവരെ {{amount}}"
 firstFree = "ആദ്യ {{free}} സൗജന്യം"
 noCap = "പ്രതിമാസ cap ഇല്ല"
@@ -7180,7 +7173,7 @@ title = "പേജ് ഓർഗനൈസർ"
 7 = "ആദ്യത്തേത് നീക്കം ചെയ്യുക"
 8 = "അവസാനത്തേത് നീക്കം ചെയ്യുക"
 9 = "ആദ്യത്തേതും അവസാനത്തേതും നീക്കം ചെയ്യുക"
-_value = "Organization mode"
+_value = "ക്രമീകരണ മോഡ്"
 
 [pdfOrganiser.mode.desc]
 BOOKLET_SORT = "ബുക്ക്‌ലെറ്റ് പ്രിന്റിംഗിനായി പേജുകൾ ക്രമപ്പെടുത്തുക (അവസാനം, ആദ്യത്തേത്, രണ്ടാമത്ത്, രണ്ടാം അവസാനത്തേത്, …)."
@@ -7201,7 +7194,7 @@ downloadTooltip = "എഡിറ്റ് ചെയ്ത PDF സേവ് ചെ
 save = "PDF സേവ് ചെയ്യുക"
 saveTooltip = "നിങ്ങളുടെ വർക്ക്സ്പേസിലെ ഫയലിൽ മാറ്റങ്ങൾ പ്രയോഗിക്കുക ({{shortcut}})"
 tags = "ടെക്സ്റ്റ് edit ചെയ്യുക,ടെക്സ്റ്റ് modify ചെയ്യുക,ടെക്സ്റ്റ് change ചെയ്യുക,content edit ചെയ്യുക,ടെക്സ്റ്റ് update ചെയ്യുക,rewrite,correct,amend,redline,revise,text editor,content editor"
-title = "PDF Text Editor"
+title = "PDF ടെക്സ്റ്റ് എഡിറ്റർ"
 unsaved = "(സേവ് ചെയ്തിട്ടില്ല)"
 workbenchLabel = "എഡിറ്റർ"
 
@@ -7236,7 +7229,7 @@ decodeImage = "തിരഞ്ഞെടുത്ത ചിത്രം ഡീക
 insertImage = "തിരഞ്ഞെടുത്ത ചിത്രം ചേർക്കാനായില്ല."
 
 [pdfTextEditor.externalEdit]
-pngFileType = "PNG image"
+pngFileType = "PNG ചിത്രം"
 
 [pdfTextEditor.find]
 close = "കണ്ടെത്തൽ ബാർ അടയ്ക്കുക"
@@ -7276,18 +7269,18 @@ ok = "ഓരോ ഫോണ്ടിലും പൂർണ്ണ അക്ഷര�
 warnOther = "{{count}} ഫോണ്ടുകളിൽ ചില അക്ഷരങ്ങളോ അക്കങ്ങളോ കുറവാണ് - അവ ടൈപ്പ് ചെയ്യുമ്പോൾ സ്റ്റാൻഡേർഡ് fallback ഫോണ്ട് ഉപയോഗിക്കും."
 
 [pdfTextEditor.fonts.pill]
-info = "Embedded"
+info = "ഉൾച്ചേർത്തത്"
 ok = "എല്ലാ glyphs"
 warn = "{{count}} വിടവുകളോടെ"
 
 [pdfTextEditor.fonts.status.embedded]
-label = "Embedded"
+label = "ഉൾച്ചേർത്തത്"
 
 [pdfTextEditor.fonts.status.standard]
 label = "സ്റ്റാൻഡേർഡ്"
 
 [pdfTextEditor.fonts.status.subset]
-label = "Subset"
+label = "ഉപസെറ്റ്"
 
 [pdfTextEditor.help]
 ariaLabel = "കീബോർഡ് ഷോർട്ട്കട്ടുകൾ"
@@ -7297,7 +7290,7 @@ tooltip = "കീബോർഡ് ഷോർട്ട്കട്ടുകൾ (?)"
 [pdfTextEditor.help.clipboard]
 copyDesc = "തിരഞ്ഞെടുത്ത ടെക്സ്റ്റ് കോപ്പി ചെയ്യുക"
 cutDesc = "തിരഞ്ഞെടുത്തത് കട്ട് ചെയ്യുക (കോപ്പി + ഡിലീറ്റ്)"
-heading = "Clipboard"
+heading = "ക്ലിപ്പ്ബോർഡ്"
 pasteDesc = "clipboard ടെക്സ്റ്റ് പുതിയ run ആയി പേസ്റ്റ് ചെയ്യുക"
 pastePlainDesc = "plain text ആയി പേസ്റ്റ് ചെയ്യുക"
 
@@ -7327,7 +7320,7 @@ openDesc = "കണ്ടെത്തൽ ബാർ തുറക്കുക (മ�
 firstLastDesc = "ആദ്യ / അവസാന പേജ്"
 heading = "നാവിഗേഷൻ"
 pageDesc = "മുമ്പത്തെ / അടുത്ത പേജ്"
-zoomDesc = "Zoom in / out"
+zoomDesc = "സൂം ഇൻ / ഔട്ട്"
 
 [pdfTextEditor.inspector]
 document = "ഡോക്യുമെന്റ്"
@@ -7367,7 +7360,7 @@ x = "X"
 y = "Y"
 
 [pdfTextEditor.mobile]
-actions = "Editor actions"
+actions = "എഡിറ്റർ പ്രവർത്തനങ്ങൾ"
 addImage = "ചിത്രം"
 addText = "ടെക്സ്റ്റ്"
 cancel = "റദ്ദാക്കുക"
@@ -7377,13 +7370,13 @@ document = "ഡോക്യുമെന്റ്"
 done = "പൂർത്തിയായി"
 download = "Save ചെയ്ത് download ചെയ്യുക"
 find = "കണ്ടെത്തുക"
-lock = "Lock"
+lock = "ലോക്ക്"
 openPdf = "ഒരു PDF തുറക്കുക"
 panelHint = "Editing Workspace view-ൽ നടക്കുന്നു. മാറ്റാൻ പേജിലെ text tap ചെയ്യുക."
-save = "Save"
-style = "Style"
+save = "സേവ്"
+style = "സ്റ്റൈൽ"
 tapToPlace = "ടെക്സ്റ്റ് പോകേണ്ടിടത്ത് പേജിൽ tap ചെയ്യുക"
-unlock = "Unlock"
+unlock = "അൺലോക്ക്"
 
 [pdfTextEditor.pageView]
 pageNumber = "പേജ് {{page}}"
@@ -7416,7 +7409,7 @@ saveAnyway = "എന്തായാലും സേവ് ചെയ്യുക"
 title = "സേവ് ചെയ്യുന്നത് ഈ PDF മാറ്റും"
 
 [pdfTextEditor.settings]
-advanced = "Advanced"
+advanced = "അഡ്വാൻസ്ഡ്"
 find = "ഡോക്യുമെന്റിൽ കണ്ടെത്തുക"
 findTooltip = "കണ്ടെത്തുക ({{shortcut}})"
 view = "കാണുക"
@@ -7426,7 +7419,9 @@ groupedTitle = "ഈ PDF-ലെ ഒരു group-ന്റെ ഭാഗമാണ�
 
 [pdfTextEditor.sidebar]
 addImage = "ചിത്രം ചേർക്കുക"
+addTable = "പട്ടിക ചേർക്കുക"
 addText = "ടെക്സ്റ്റ് ചേർക്കുക"
+clickPageToAddTable = "ഒരു പട്ടിക ചേർക്കാൻ പേജിൽ ക്ലിക്ക് ചെയ്യുക"
 clickPageToAddText = "ടെക്സ്റ്റ് ചേർക്കാൻ പേജ് ക്ലിക്ക് ചെയ്യുക"
 document = "ഡോക്യുമെന്റ്"
 group = "ഗ്രൂപ്പ്"
@@ -7435,11 +7430,14 @@ groupingAutoHint = "സമദൂരത്തിലുള്ള വരികള�
 groupingLine = "വരി"
 groupTooltip = "തിരഞ്ഞെടുത്ത runs ഒറ്റ പാരഗ്രാഫായി മെർജ് ചെയ്യുക ({{shortcut}})"
 groupTooltipDisabled = "മെർജ് ചെയ്യാൻ 2+ runs തിരഞ്ഞെടുക്കുക"
+image = "ചിത്രം"
 noFile = "ഫയൽ ലോഡ് ചെയ്തിട്ടില്ല"
 noFileHint = "ഇടതുവശത്തെ Files പാനലിൽ നിന്ന് ഒരു PDF തിരഞ്ഞെടുക്കുക, അല്ലെങ്കിൽ ഒന്ന് ഇടുക. എഡിറ്റർ അത് സ്വയം തുറക്കും."
 opening = "ഡോക്യുമെന്റ് തുറക്കുന്നു..."
 paragraph = "പാരഗ്രാഫ്"
-rulers = "Rulers and guides"
+rulers = "റൂളറുകളും ഗൈഡുകളും"
+table = "പട്ടിക"
+text = "ടെക്സ്റ്റ്"
 textBoxWidth = "പുതിയ ടെക്സ്റ്റ് ബോക്സ് വീതി"
 textGrouping = "ടെക്സ്റ്റ് ഗ്രൂപ്പിംഗ്"
 ungroup = "അൺഗ്രൂപ്പ്"
@@ -7447,7 +7445,7 @@ ungroupTooltip = "ഈ പാരഗ്രാഫിനെ ഓരോ വരിക�
 ungroupTooltipDisabled = "അൺഗ്രൂപ്പ് ചെയ്യാൻ multi-line പാരഗ്രാഫ് തിരഞ്ഞെടുക്കുക"
 widthGrow = "വളരുക"
 widthGrowHint = "നിങ്ങൾ ടൈപ്പ് ചെയ്യുമ്പോൾ Grow ബോക്സ് വീതിയാക്കും; Wrap അതിന്റെ വീതി നിലനിർത്തി പുതിയ വരികളിലേക്ക് ഒഴുക്കും."
-widthWrap = "Wrap"
+widthWrap = "റാപ്പ്"
 
 [pdfTextEditor.spellcheck]
 auto = "സ്വയമേവ"
@@ -7460,6 +7458,24 @@ loadingProgress = "ലോഡിംഗ് പുരോഗതി"
 noDocument = "ഡോക്യുമെന്റ് ലോഡ് ചെയ്തിട്ടില്ല."
 pickPrompt = "എഡിറ്റിംഗ് ആരംഭിക്കാൻ ഇടതുവശത്തെ Files പാനലിൽ നിന്ന് ഒരു PDF തിരഞ്ഞെടുക്കുക."
 renderingPreview = "പ്രിവ്യൂ റെൻഡർ ചെയ്യുന്നു"
+
+[pdfTextEditor.table]
+addColumn = "കോളം ചേർക്കുക"
+addRow = "വരി ചേർക്കുക"
+column = "കോളം"
+deleteColumn = "കോളം ഇല്ലാതാക്കുക"
+deleteRow = "വരി ഇല്ലാതാക്കുക"
+done = "പൂർത്തിയായി"
+doneHint = "ഇത് പട്ടികയായി എഡിറ്റ് ചെയ്യുന്നത് നിർത്തുക"
+edit = "എഡിറ്റ്"
+editHint = "പട്ടികയായി എഡിറ്റ് ചെയ്യുക - സെല്ലുകളിൽ ടൈപ്പ് ചെയ്യുക, വരികളും കോളങ്ങളും ചേർക്കുകയോ നീക്കം ചെയ്യുകയോ ചെയ്യുക"
+move = "നീക്കുക"
+moveTable = "മുഴുവൻ പട്ടികയും നീക്കാൻ ഡ്രാഗ് ചെയ്യുക"
+recognizedHint = "തിരിച്ചറിഞ്ഞ പട്ടിക - അതിലെ മുഴുവൻ ടെക്സ്റ്റും തിരഞ്ഞെടുക്കാൻ ക്ലിക്ക് ചെയ്യുക"
+resizeColumn = "ഈ കോളത്തിന്റെ വലുപ്പം മാറ്റാൻ ഡ്രാഗ് ചെയ്യുക (Alt: അടുത്തതിനൊപ്പം പങ്കിടുക)"
+resizeRow = "ഈ വരിയുടെ വലുപ്പം മാറ്റാൻ ഡ്രാഗ് ചെയ്യുക (Alt: അടുത്തതിനൊപ്പം പങ്കിടുക)"
+resizeTable = "മുഴുവൻ പട്ടികയുടെ വലുപ്പം മാറ്റാൻ ഡ്രാഗ് ചെയ്യുക"
+row = "വരി"
 
 [pdfTextEditor.toolbar]
 addTextTooltip = "ടെക്സ്റ്റ് ബോക്സ് ചേർക്കുക - തുടർന്ന് പേജ് ക്ലിക്ക് ചെയ്യുക"
@@ -7475,14 +7491,14 @@ alignTop = "മുകളിലേക്ക് align ചെയ്യുക"
 arrange = "ക്രമീകരിക്കുക"
 bringForward = "മുന്നോട്ട് കൊണ്ടുവരിക"
 bringToFront = "ഏറ്റവും മുന്നിലേക്ക് കൊണ്ടുവരിക"
-caseLower = "lowercase"
-caseSentence = "Sentence case"
-caseTitle = "Title Case"
-caseUpper = "UPPERCASE"
+caseLower = "ചെറിയക്ഷരം"
+caseSentence = "വാക്യ കേസ്"
+caseTitle = "ടൈറ്റിൽ കേസ്"
+caseUpper = "വലിയക്ഷരം"
 changeCase = "കേസ് മാറ്റുക"
 changeCaseTooltip = "കേസ് മാറ്റുക (text runs മാത്രം)"
 delete = "തിരഞ്ഞെടുത്തത് ഡിലീറ്റ് ചെയ്യുക"
-deleteTooltip = "Delete (Del or Backspace)"
+deleteTooltip = "ഇല്ലാതാക്കുക (Del അല്ലെങ്കിൽ Backspace)"
 distributeHorizontally = "തിരശ്ചീനമായി distribute ചെയ്യുക"
 distributeLabel = "Distribute · 3+ ഒബ്ജക്റ്റുകൾ ആവശ്യമാണ്"
 distributeVertically = "ലംബമായി distribute ചെയ്യുക"
@@ -7507,8 +7523,8 @@ rotateLeft = "90° ഇടത്തേക്ക് റൊട്ടേറ്റ്
 rotateRight = "90° വലത്തേക്ക് റൊട്ടേറ്റ് ചെയ്യുക"
 sendBackward = "പിന്നോട്ട് അയയ്ക്കുക"
 sendToBack = "ഏറ്റവും പിന്നിലേക്ക് അയയ്ക്കുക"
-undo = "Undo"
-undoTooltip = "Undo ({{shortcut}})"
+undo = "പഴയപടിയാക്കുക"
+undoTooltip = "പഴയപടിയാക്കുക ({{shortcut}})"
 unlock = "തിരഞ്ഞെടുപ്പ് അൺലോക്ക് ചെയ്യുക"
 unlockTooltip = "തിരഞ്ഞെടുപ്പ് അൺലോക്ക് ചെയ്യുക - വീണ്ടും എഡിറ്റ് ചെയ്യാവുന്നതാക്കുന്നു"
 
@@ -7530,8 +7546,8 @@ title = "ടെക്സ്റ്റും ചിത്രവും കേന്
 [pdfTextEditor.zoom]
 fit = "ഫിറ്റ്"
 fitToWidth = "വീതിയിലേക്ക് ഫിറ്റ് ചെയ്യുക"
-in = "Zoom in"
-out = "Zoom out"
+in = "സൂം ഇൻ"
+out = "സൂം ഔട്ട്"
 reset = "zoom 100% ലേക്ക് reset ചെയ്യുക"
 
 [PDFToCSV]
@@ -7558,9 +7574,9 @@ tags = "ആർക്കൈവ്,ദീർഘകാല,മാനദണ്ഡം,
 title = "PDF PDF/A-ലേക്ക്"
 
 [pdfToPDFUA]
-header = "PDF To PDF/UA"
-tags = "accessibility,accessible,tagged,screen reader,wcag,eaa,section 508,conversion"
-title = "PDF To PDF/UA"
+header = "PDF-ൽ നിന്ന് PDF/UA-ലേക്ക്"
+tags = "പ്രവേശനക്ഷമത,പ്രവേശനക്ഷമമായ,ടാഗ് ചെയ്തത്,സ്ക്രീൻ റീഡർ,wcag,eaa,section 508,പരിവർത്തനം"
+title = "PDF-ൽ നിന്ന് PDF/UA-ലേക്ക്"
 
 [pdfToPDFX]
 tags = "പ്രിന്റ്,സ്റ്റാൻഡേർഡ്,കൺവർഷൻ,പ്രൊഡക്ഷൻ,പ്രീപ്രസ്,ആർക്കൈവ്"
@@ -7597,9 +7613,9 @@ tags = "doc,docx,odt,വേഡ്,രൂപാന്തരം,ഫോർമാറ
 title = "PDF വേഡിലേക്ക്"
 
 [PDFToXLSX]
-header = "PDF to Excel"
-tags = "spreadsheet,excel,xlsx,table,extract,convert"
-title = "PDF to Excel (XLSX)"
+header = "PDF-ൽ നിന്ന് Excel-ലേക്ക്"
+tags = "സ്പ്രെഡ്ഷീറ്റ്,excel,xlsx,പട്ടിക,എക്സ്ട്രാക്റ്റ്,പരിവർത്തനം"
+title = "PDF-ൽ നിന്ന് Excel (XLSX)-ലേക്ക്"
 
 [PDFToXML]
 header = "PDF XML-ലേക്ക്"
@@ -7629,7 +7645,7 @@ popular = "ജനപ്രിയം"
 selectPlan = "പ്ലാൻ തിരഞ്ഞെടുക്കുക"
 showComparison = "എല്ലാ സവിശേഷതകളും താരതമ്യം ചെയ്യുക"
 upgrade = "അപ്‌ഗ്രേഡ്"
-withServer = "+ Team plan"
+withServer = "+ Team പ്ലാൻ"
 
 [plan.api]
 large = "5,000 ക്രെഡിറ്റുകൾ"
@@ -7640,7 +7656,7 @@ small = "500 ക്രെഡിറ്റുകൾ"
 xsmall = "100 ക്രെഡിറ്റുകൾ"
 
 [plan.availablePlans]
-currency = "Billing currency"
+currency = "ബില്ലിംഗ് കറൻസി"
 subtitle = "നിങ്ങളുടെ ആവശ്യങ്ങൾക്ക് അനുയോജ്യമായ പ്ലാൻ തിരഞ്ഞെടുക്കുക"
 title = "ലഭ്യമായ പ്ലാനുകൾ"
 
@@ -7771,7 +7787,7 @@ rowIdle = "{{label}} സ്വയം റൺ ചെയ്യും"
 rowRunning = "{{label}} ഇപ്പോൾ റൺ ചെയ്യുന്നു"
 runsToday_one = "ഇന്ന് {{count}} run"
 runsToday_other = "ഇന്ന് {{count}} runs"
-title = "PDF Processor"
+title = "PDF പ്രോസസർ"
 triggerExport = "കയറ്റുമതിയിൽ റൺ ചെയ്യും"
 triggerImport = "ഇറക്കുമതിയിൽ റൺ ചെയ്യും"
 
@@ -8129,7 +8145,7 @@ open = "Plans താരതമ്യം ചെയ്യുക"
 rowData = "നിങ്ങളുടെ data"
 rowHeader = "ഫീച്ചർ"
 rowProcessing = "പ്രോസസ്സിംഗ്"
-rowSignIn = "Sign-in"
+rowSignIn = "സൈൻ-ഇൻ"
 rowSupport = "പിന്തുണ"
 rowUsers = "ഉപയോക്താക്കൾ"
 rowWhere = "പ്രവർത്തിക്കുന്ന സ്ഥലം"
@@ -8179,7 +8195,7 @@ sub = "പൂർണ്ണ PDF Editor."
 [portal.billing.identity.processor]
 chipMetered = "മീറ്റർ ചെയ്ത പ്രോസസ്സിംഗ്"
 chipPipelines = "പൈപ്പ്ലൈനുകൾ & API"
-name = "Processor"
+name = "പ്രോസസർ"
 sub = "Team base കൂടാതെ ഓരോ ക്രെഡിറ്റിനും {{rate}}"
 subNoRate = "Team base കൂടാതെ metered processing"
 
@@ -8298,7 +8314,7 @@ prepaidRemaining = "ബാക്കിയുള്ള prepaid ക്രെഡി
 prepaidTooltip = "Metered billing-ന് മുമ്പ് ഉപയോഗിക്കുന്നു, നിങ്ങളുടെ ചെലവ് പരിധിക്ക് പുറത്താണ്."
 raiseLimit = "പരിധി ഉയർത്തുക"
 remainingOf = "{{total}}-ൽ {{remaining}}"
-rowName = "Processor"
+rowName = "പ്രോസസർ"
 spendAgainstLimit = "ഈ cycle-ൽ {{cap}}-ൽ {{spend}} metered"
 
 [portal.billing.seats]
@@ -8487,10 +8503,10 @@ searchPlaceholder = "integrations search ചെയ്യുക - \"sign\", \"ocr
 
 [portal.connections.types.api]
 description = "policy-യിൽ നിന്ന് ഏത് HTTP API-യും call ചെയ്യുക. URL, authentication, payload എന്നിവ നിങ്ങൾ തിരഞ്ഞെടുക്കുന്നു."
-label = "Custom API"
+label = "ഇഷ്ടാനുസൃത API"
 
 [portal.connections.types.api.fields.authType]
-label = "Authentication"
+label = "പ്രാമാണീകരണം"
 
 [portal.connections.types.api.fields.authType.options.basic]
 label = "Username ഉം password ഉം"
@@ -8517,7 +8533,7 @@ label = "Header പേര്"
 placeholder = "X-API-Key"
 
 [portal.connections.types.api.fields.loginPath]
-label = "Login path"
+label = "ലോഗിൻ പാത്ത്"
 placeholder = "/auth/login"
 
 [portal.connections.types.api.fields.password]
@@ -8635,7 +8651,7 @@ label = "n8n"
 
 [portal.connections.types.n8n.fields.authType]
 helperText = "n8n Webhook node-ൽ സജ്ജമാക്കിയ Authentication-നോട് പൊരുത്തപ്പെടുത്തുക."
-label = "Webhook authentication"
+label = "Webhook പ്രാമാണീകരണം"
 
 [portal.connections.types.n8n.fields.authType.options.basic]
 label = "Basic auth"
@@ -8762,9 +8778,9 @@ label = "Microsoft Teams"
 [portal.connections.types.vectordb]
 baseUrlPlaceholder = "https://your-database-host"
 description = "Weaviate അല്ലെങ്കിൽ Pinecone server-side embedding ഉപയോഗിച്ച് document chunks index ചെയ്യുക. Weaviate server URL അല്ലെങ്കിൽ Pinecone index host ഉപയോഗിക്കുക. Private endpoints-ന് operator policies.allowPrivateApiEndpoints പ്രവർത്തനക്ഷമമാക്കണം."
-label = "Vector database"
+label = "വെക്ടർ ഡാറ്റാബേസ്"
 pinecone = "Pinecone"
-vendor = "Database"
+vendor = "ഡാറ്റാബേസ്"
 weaviate = "Weaviate"
 
 [portal.connections.types.webhook]
@@ -8787,18 +8803,18 @@ eyebrow = "തുടക്കം"
 lead = "എല്ലാ requests-ഉം bearer token ഉപയോഗിച്ച് authenticate ചെയ്യുന്നു. Keys environment അനുസരിച്ച് scoped ആണ്; rotate ചെയ്യാത്ത പക്ഷം ഒരിക്കലും expire ചെയ്യില്ല."
 liveKey = "Production keys — billed, നിങ്ങളുടെ plan അനുസരിച്ച് rate-limited."
 testKey = "Sandbox keys — സൗജന്യം, synthetic fixtures തിരികെ നൽകും."
-title = "Authentication"
+title = "പ്രാമാണീകരണം"
 
 [portal.docs.components]
 codeCaption = "viewer embed ചെയ്യുക"
 eyebrow = "ഘടകങ്ങൾ"
 lead = "Review queues-ക്കും document inspection-ക്കും embeddable UI. നിങ്ങളുടെ സ്വന്തം styles കൊണ്ടുവരിക അല്ലെങ്കിൽ shipped theme ഉപയോഗിക്കുക."
-title = "Drop-in viewers"
+title = "ഡ്രോപ്പ്-ഇൻ വ്യൂവർകൾ"
 
 [portal.docs.endpoints]
 eyebrow = "API റഫറൻസ്"
-fieldCount_one = "{{count}} field"
-fieldCount_other = "{{count}} fields"
+fieldCount_one = "{{count}} ഫീൽഡ്"
+fieldCount_other = "{{count}} ഫീൽഡുകൾ"
 filterAll = "എല്ലാം"
 filterAriaLabel = "Vertical അനുസരിച്ച് endpoints filter ചെയ്യുക"
 lead = "ഓരോ document type-വും typed endpoint ആണ്. ഒരു file POST ചെയ്യുക, schema-validated JSON സ്വീകരിക്കുക. താഴെ vertical അനുസരിച്ച് filter ചെയ്യുക."
@@ -8820,13 +8836,13 @@ title = "Docs ലഭ്യമല്ല"
 [portal.docs.quickstart]
 eyebrow = "തുടക്കം"
 lead = "നിങ്ങളുടെ ആദ്യ document typed endpoint-ലേക്ക് അയച്ച് structured JSON മൂന്ന് ഘട്ടങ്ങളിൽ തിരികെ നേടുക. Model training വേണ്ട, prompt engineering വേണ്ട."
-title = "Quickstart"
+title = "ക്വിക്‌സ്റ്റാർട്ട്"
 
 [portal.docs.quickstart.callout]
 bodyAfterLink = "copy-paste recipes-ക്കായി."
 bodyBeforeLink = "validation, redaction, delivery എന്നിവ chain ചെയ്യാൻ അതേ call pipeline-ിലേക്ക് wire ചെയ്യുക — അല്ലെങ്കിൽ MCP വഴി agent-ന് expose ചെയ്യുക. കാണുക"
 label = "അടുത്തത്:"
-link = "Playbooks"
+link = "പ്ലേബുക്കുകൾ"
 
 [portal.docs.quickstart.step1]
 body = "Infrastructure tab-ൽ നിന്ന് scoped key സൃഷ്ടിക്കുക. Keys rate limits-ഉം optional IP allowlist-ഉം വഹിക്കും. അത് നിങ്ങളുടെ shell-ലേക്ക് export ചെയ്യുക:"
@@ -8843,19 +8859,19 @@ codeCaption = "200 OK"
 title = "Structured result വായിക്കുക"
 
 [portal.docs.rateLimits]
-burst = "Burst"
+burst = "ബർസ്റ്റ്"
 codeCaption = "429 Too Many Requests"
-concurrency = "Concurrency"
+concurrency = "സമകാലികത"
 eyebrow = "തുടക്കം"
 lead = "Limits നിങ്ങളുടെ plan അനുസരിച്ച് scale ചെയ്യും. 429 response Retry-After header ഉൾക്കൊള്ളും; SDKs സ്വയമേവ back off ചെയ്യും."
 requestsPerMinute = "Requests / മിനിറ്റ്"
-title = "Rate limits & quotas"
+title = "റേറ്റ് പരിധികളും ക്വാട്ടകളും"
 
 [portal.docs.recipes]
 cloneButton = "Recipe clone ചെയ്യുക"
-eyebrow = "PLAYBOOKS"
+eyebrow = "പ്ലേബുക്കുകൾ"
 lead = "Sources, operations, destinations എന്നിവ chain ചെയ്യുന്ന end-to-end patterns. ഓരോന്നും നിങ്ങൾക്ക് clone ചെയ്യാവുന്ന pipeline-ലേക്ക് map ചെയ്യുന്നു."
-title = "Recipes"
+title = "റെസിപ്പികൾ"
 
 [portal.docs.sdks]
 eyebrow = "SDKS"
@@ -8863,13 +8879,13 @@ lead = "Typed responses, automatic retries, streaming uploads എന്നിവ
 title = "ഔദ്യോഗിക SDKകൾ"
 
 [portal.docs.sdks.status]
-beta = "Beta"
-deprecated = "Deprecated"
+beta = "ബീറ്റ"
+deprecated = "ഒഴിവാക്കിയിരിക്കുന്നു"
 
 [portal.docs.skills]
 eyebrow = "SKILLS"
 lead = "നിങ്ങളുടെ agent ഒരൊറ്റ tool ആയി invoke ചെയ്യുന്ന bundled, named capabilities. ഓരോ skill-വും evals attached ആയ deterministic op chain ആണ്."
-title = "Agent skills"
+title = "Agent കഴിവുകൾ"
 
 [portal.docs.toc]
 title = "ഈ page-ൽ"
@@ -9191,7 +9207,7 @@ morning = "ശുഭ പ്രഭാതം"
 
 [portal.infrastructure.apiKeys]
 createKey = "Key സൃഷ്ടിക്കുക"
-heading = "API keys"
+heading = "API കീകൾ"
 subheading = "ഓരോന്നിനും സ്വന്തം ഉപയോഗ ട്രാക്കിംഗുള്ള വ്യക്തിഗത credentials."
 
 [portal.infrastructure.apiKeys.card]
@@ -9222,12 +9238,12 @@ noEventsInCategory = "ഈ category-യിൽ events ഇല്ല."
 subheading = "നിങ്ങളുടെ workspace-ിലുടനീളമുള്ള എല്ലാ authentication, configuration, processing events."
 
 [portal.infrastructure.audit.columns]
-actor = "Actor"
-event = "Event"
-latency = "Latency"
+actor = "പ്രവർത്തകൻ"
+event = "ഇവന്റ്"
+latency = "ലേറ്റൻസി"
 status = "സ്ഥിതി"
-target = "Resource"
-timestamp = "Timestamp"
+target = "റിസോഴ്‌സ്"
+timestamp = "സമയമുദ്ര"
 
 [portal.infrastructure.audit.empty]
 description = "Workspace activity സംഭവിക്കുമ്പോൾ ഇവിടെ ദൃശ്യമാകും."
@@ -9239,7 +9255,7 @@ error = "Export പരാജയപ്പെട്ടു. വീണ്ടും �
 exportButton = "എക്സ്പോർട്ട്"
 exporting = "Export ചെയ്യുന്നു…"
 fieldsLegend = "കോളങ്ങൾ"
-format = "Format"
+format = "ഫോർമാറ്റ്"
 open = "എക്സ്പോർട്ട്"
 subtitle = "Audit events CSV അല്ലെങ്കിൽ JSON ആയി ഡൗൺലോഡ് ചെയ്യുക. ഉൾപ്പെടുത്തേണ്ട columns തിരഞ്ഞെടുക്കുക."
 title = "Audit log export ചെയ്യുക"
@@ -9247,9 +9263,9 @@ title = "Audit log export ചെയ്യുക"
 [portal.infrastructure.audit.export.fields]
 date = "തീയതി"
 documentName = "ഡോക്യുമെന്റ് പേര്"
-ipAddress = "IP address"
+ipAddress = "IP വിലാസം"
 outcome = "ഫലം"
-tool = "Tool"
+tool = "ടൂൾ"
 username = "ഉപയോക്തൃനാമം"
 
 [portal.infrastructure.audit.filters]
@@ -9258,7 +9274,7 @@ auth = "Auth"
 config = "Config"
 elevation = "Elevation"
 policy = "നയം"
-processing = "Processing"
+processing = "പ്രോസസ്സിംഗ്"
 security = "സുരക്ഷ"
 
 [portal.infrastructure.audit.forbidden]
@@ -9268,7 +9284,7 @@ title = "നിങ്ങൾക്ക് access ഇല്ല"
 [portal.infrastructure.audit.metrics]
 config = "Config"
 policy = "നയം"
-processing = "Processing"
+processing = "പ്രോസസ്സിംഗ്"
 totalEvents = "ആകെ events · 24h"
 
 [portal.infrastructure.auditCatLabel]
@@ -9276,7 +9292,7 @@ auth = "Auth"
 config = "Config"
 elevation = "Elevation"
 policy = "നയം"
-processing = "Processing"
+processing = "പ്രോസസ്സിംഗ്"
 security = "സുരക്ഷ"
 
 [portal.infrastructure.auditStatusLabel]
@@ -9291,7 +9307,7 @@ createKey = "Key സൃഷ്ടിക്കുക"
 done = "പൂർത്തിയായി"
 keyNameLabel = "Key പേര്"
 keyNamePlaceholder = "ഉദാ. Production ingest"
-secretKeyCaption = "Secret key"
+secretKeyCaption = "രഹസ്യ കീ"
 secretWarning = "ഇത് ഒരു secrets manager-ൽ സൂക്ഷിക്കുക. Stirling എപ്പോഴും hash മാത്രം സംഭരിക്കുന്നതിനാൽ പിന്നീട് ഇത് വീണ്ടെടുക്കാൻ മാർഗമില്ല."
 subtitle = "പിന്നീട് തിരിച്ചറിയാൻ key-യ്ക്ക് ഒരു പേര് നൽകുക. ഏത് സമയത്തും അത് revoke ചെയ്യാം."
 subtitleCreated = "ഈ secret ഇപ്പോൾ copy ചെയ്യുക — ഇത് വീണ്ടും കാണിക്കില്ല."
@@ -9311,8 +9327,8 @@ title = "Audit events-ന് Enterprise licence ആവശ്യമാണ്"
 [portal.infrastructure.encryption.coverage]
 decryptOnlyNote = "പുതിയ uploads plaintext ആയി സംഭരിക്കുന്നു. മുമ്പ് encrypt ചെയ്ത files ഇപ്പോഴും വായിക്കാനാകും."
 encrypted = "Encrypted ഫയലുകൾ"
-heading = "Coverage"
-percentEncrypted = "{{percent}}% encrypted"
+heading = "കവറേജ്"
+percentEncrypted = "{{percent}}% എൻക്രിപ്റ്റ് ചെയ്തു"
 plaintext = "Plaintext ഫയലുകൾ"
 progressLabel = "സംഭരിച്ച ഫയലുകളുടെ {{percent}}% encrypted"
 subheading = "My Files-ലെയും signing workflows-ലെയും files ഉൾക്കൊള്ളുന്നു. Network sources ഉൾപ്പെടെ pipeline നേരിട്ട് വായിക്കുന്ന files ഇവിടെ സംഭരിക്കപ്പെടുന്നില്ല, encrypt ചെയ്യപ്പെടുന്നുമില്ല."
@@ -9332,8 +9348,8 @@ title = "ഈ key നിങ്ങൾക്കായി സൃഷ്ടിച്�
 changedAt = "{{when}}-ന് മാറ്റി"
 changedBy = "{{actor}} വഴി"
 changedByAt = "{{when}}-ന് {{actor}} വഴി"
-heading = "Scope keys"
-keyVersion = "Version {{version}}"
+heading = "Scope കീകൾ"
+keyVersion = "പതിപ്പ് {{version}}"
 neverChanged = "ഒരിക്കലും മാറ്റിയിട്ടില്ല"
 restore = "ആക്സസ് പുനഃസ്ഥാപിക്കുക"
 retiredNote = "Retired key അതിന് കീഴിൽ സംഭരിച്ച files ഇപ്പോഴും decrypt ചെയ്യും, പക്ഷേ പുതിയ key പുതിയ uploads wrap ചെയ്യും."
@@ -9362,12 +9378,12 @@ heading = "Master key"
 notMaterialised = "ഈ node-ൽ key machinery ഇതുവരെ ആരംഭിച്ചിട്ടില്ല."
 s3StreamingNote = "എന്തെങ്കിലും encrypted ആയിരിക്കുമ്പോൾ, object-store downloads redirect ചെയ്യുന്നതിന് പകരം ഈ server വഴി stream ചെയ്യും, അതിനാൽ അതിന്റെ bandwidth ഉപയോഗിക്കും."
 subheading = "ഓരോ scope key-യും wrap ചെയ്യുന്നു. API വഴി ഒരിക്കലും കാണിക്കുകയോ സ്വീകരിക്കുകയോ ചെയ്യില്ല."
-version = "Version"
+version = "പതിപ്പ്"
 
 [portal.infrastructure.encryption.migration]
 backlog_one = "{{formatted}} file plaintext ആയി സംഭരിച്ചിരിക്കുന്നു, ഇപ്പോൾ encrypt ചെയ്യാം."
 backlog_other = "{{formatted}} files plaintext ആയി സംഭരിച്ചിരിക്കുന്നു, ഇപ്പോൾ encrypt ചെയ്യാം."
-encrypted = "Encrypted"
+encrypted = "എൻക്രിപ്റ്റ് ചെയ്തു"
 failedCount = "പരാജയപ്പെട്ടു"
 heading = "നിലവിലുള്ള files encrypt ചെയ്യുക"
 hint = "Encryption ഓണാക്കുന്നതിന് മുമ്പ് ബാക്കിയുണ്ടായിരുന്ന plaintext backlog encrypt ചെയ്യുന്നു. Progress memory-യിൽ സൂക്ഷിക്കുന്നു, അതിനാൽ backend restart അത് not started ആയി reset ചെയ്യും. വീണ്ടും run ചെയ്യുന്നത് ഇതിനകം encrypted ആയ files skip ചെയ്യും."
@@ -9435,8 +9451,8 @@ title_other = "{{count}} key rows ഇപ്പോഴും previous master key-�
 
 [portal.infrastructure.encryption.scope]
 global = "എല്ലാ ഉപയോക്താക്കളും"
-source = "Source {{id}}"
-team = "Team {{id}}"
+source = "ഉറവിടം {{id}}"
+team = "ടീം {{id}}"
 
 [portal.infrastructure.encryption.status]
 ACTIVE = "സജീവം"
@@ -9503,34 +9519,34 @@ worksWith = "ഇവയുമായി പ്രവർത്തിക്കുന
 [portal.integrations.worksWith]
 pipelines = "പൈപ്പ്ലൈനുകൾ"
 policies = "നയങ്ങൾ"
-sources = "Sources"
+sources = "ഉറവിടങ്ങൾ"
 
 [portal.legal]
-draft = "{{label}} · draft"
+draft = "{{label}} · ഡ്രാഫ്റ്റ്"
 loadError = "ഈ ഡോക്യുമെന്റ് load ചെയ്യാനായില്ല. ദയവായി വീണ്ടും ശ്രമിക്കുക."
 loading = "Load ചെയ്യുന്നു…"
 title = "നിയമ ഡോക്യുമെന്റ്"
 
 [portal.nav]
 agent-builder = "Agent Builder"
-components = "Components"
+components = "ഘടകങ്ങൾ"
 docs = "ഡോക്യുമെന്റേഷൻ"
 documents = "ഡോക്യുമെന്റുകൾ"
 editor = "Editor"
-home = "Home"
-infrastructure = "Infrastructure"
+home = "ഹോം"
+infrastructure = "ഇൻഫ്രാസ്ട്രക്ചർ"
 integrations = "ഇന്റഗ്രേഷനുകൾ"
 pipelines = "പൈപ്പ്‌ലൈനുകൾ"
 policies = "നയങ്ങൾ"
-procurement = "Procurement"
+procurement = "പ്രൊക്യൂർമെന്റ്"
 review = "അവലോകനം"
 sources = "ഉറവിടങ്ങൾ"
 usage = "ഉപയോഗവും ബില്ലിംഗും"
-users = "Users"
+users = "ഉപയോക്താക്കൾ"
 
 [portal.nav.section]
-platform = "PDF Platform"
-processor = "PDF Processor"
+platform = "PDF പ്ലാറ്റ്‌ഫോം"
+processor = "PDF പ്രോസസ്സർ"
 
 [portal.pipelines]
 permissionsRetry = "വീണ്ടും ശ്രമിക്കുക"
@@ -9555,9 +9571,9 @@ chooseSource = "ഒരു source തിരഞ്ഞെടുക്കുക"
 discard = "മാറ്റങ്ങൾ ഉപേക്ഷിക്കുക"
 editorDestination = "Editor"
 editorDestinationDetail = "നിങ്ങൾ run ചെയ്ത file മാറ്റിസ്ഥാപിക്കുന്നു"
-inputs = "Input"
-inputSource = "Input source"
-inputTrigger = "Trigger"
+inputs = "ഇൻപുട്ട്"
+inputSource = "ഇൻപുട്ട് ഉറവിടം"
+inputTrigger = "ട്രിഗർ"
 keepEditing = "Editing തുടരുക"
 moreActions = "കൂടുതൽ പ്രവർത്തനങ്ങൾ"
 needsConfiguring = "സജ്ജീകരണം ആവശ്യമാണ്"
@@ -9574,7 +9590,7 @@ searchTools = "Tools search ചെയ്യുക"
 sendToSystem = "മറ്റൊരു system-ലേക്ക് അയയ്ക്കുക"
 stepsIncompatible = "മുമ്പത്തെ step സൃഷ്ടിക്കുന്നതിൽ ഈ steps പ്രവർത്തിക്കാൻ കഴിയില്ല: {{tools}}."
 stepsNeedSetup = "save ചെയ്യുന്നതിന് മുമ്പ് ഈ steps-ന് ഇനിയും സജ്ജീകരണം ആവശ്യമാണ്: {{tools}}."
-supportingFiles = "Supporting files"
+supportingFiles = "പിന്തുണയ്ക്കുന്ന ഫയലുകൾ"
 testRun = "ഒരു ഫയൽ ഉപയോഗിച്ച് ടെസ്റ്റ് ചെയ്യുക"
 unknownStep = "തിരിച്ചറിയാത്ത operation, അതേപടി സൂക്ഷിച്ചു."
 unsavedBody = "നിങ്ങൾക്ക് save ചെയ്യാത്ത മാറ്റങ്ങളുണ്ട്. പോകുന്നതിനുമുമ്പ് അവ save ചെയ്യണോ, അല്ലെങ്കിൽ ഉപേക്ഷിക്കണോ?"
@@ -9608,7 +9624,7 @@ undeclared-operation = "ഈ step എന്താണ് സ്വീകരിക�
 label = "Icon മാറ്റുക"
 
 [portal.pipelines.builder.ingest]
-chunkSize = "Chunk size"
+chunkSize = "Chunk വലുപ്പം"
 chunkSizeHint = "ഓരോ chunk-ലുമുള്ള characters. ചെറുതായ chunks കൂടുതൽ കൃത്യമായി retrieve ചെയ്യും; വലുതായവ കൂടുതൽ context ഒരുമിച്ച് സൂക്ഷിക്കും."
 destinationNeedsChunks = "ഈ vector database destination-ന് chunks മാത്രം export ചെയ്യുന്ന final AI ingestion step ആവശ്യമാണ്."
 editorPdfOnly = "PDFs മാത്രം editor-ലേക്ക് മടങ്ങാം. Chunks അല്ലെങ്കിൽ Markdown export ചെയ്യാൻ, Keep originals തിരഞ്ഞെടുക്കുകയും Output-ന്റെ കീഴിൽ destination-ലേക്ക് അയയ്ക്കുകയും ചെയ്യുക."
@@ -9621,7 +9637,7 @@ includeOriginalHint = "Export ചെയ്ത text-ിനൊപ്പം PDF del
 index = "Knowledge base-ലേക്ക് index ചെയ്യുക"
 indexHint = "Document embed ചെയ്യുന്നു, അതിനാൽ തിരയാനും ചോദിക്കാനും കഴിയും. AI engine ആവശ്യമാണ്."
 nothingToDo = "Indexing അല്ലെങ്കിൽ export ഇവയിൽ കുറഞ്ഞത് ഒന്ന് ഓണാക്കുക, ഇല്ലെങ്കിൽ ഈ step-ന് ചെയ്യാൻ ഒന്നുമില്ല, run പരാജയപ്പെടും."
-overlap = "Overlap"
+overlap = "ഓവർലാപ്പ്"
 overlapHint = "അടുത്തടുത്ത chunks തമ്മിൽ ആവർത്തിക്കുന്ന characters, അതിനാൽ രണ്ടായി split ചെയ്ത sentence-ും കണ്ടെത്താനാകും."
 overlapTooBig = "Overlap chunk size ({{chunkSize}})-നേക്കാൾ ചെറുതായിരിക്കണം."
 prepareDestination = "ഈ destination-നായി chunks തയ്യാറാക്കുക"
@@ -9634,14 +9650,14 @@ aiToolDisabled = "Settings-ൽ AI classification പ്രവർത്തനക�
 aiUnavailable = "AI classification ലഭ്യമല്ലാത്തതിനാൽ document-type routing disabled ആണ്. പകരം document property അടിസ്ഥാനമാക്കി route ചെയ്യുക."
 extensionPlaceholder = "pdf, docx, png"
 fallback = "മറ്റെല്ലാം പോകുന്നത്"
-heading = "Routes"
-matchAuthor = "PDF author"
-matchBy = "Match by"
-matchDocumentType = "Document type (AI classification)"
+heading = "റൂട്ടുകൾ"
+matchAuthor = "PDF രചയിതാവ്"
+matchBy = "ഇതുപ്രകാരം പൊരുത്തപ്പെടുത്തുക"
+matchDocumentType = "ഡോക്യുമെന്റ് തരം (AI വർഗ്ഗീകരണം)"
 matchDocumentTypeDisabled = "Document type (AI ലഭ്യമല്ല)"
-matchExtension = "File extension"
-matchFilename = "Exact filename"
-matchTitle = "PDF title"
+matchExtension = "ഫയൽ എക്സ്റ്റൻഷൻ"
+matchFilename = "കൃത്യമായ ഫയൽനാമം"
+matchTitle = "PDF ശീർഷകം"
 matchValues = "പൊരുത്തപ്പെടുത്തേണ്ട values"
 needsClassify = "Document-type routing ഉപയോഗിക്കാൻ Classify step ചേർക്കുക, അല്ലെങ്കിൽ പകരം document property-യിൽ match ചെയ്യുക."
 nodeSummary_one = "1 route, തുടർന്ന് fallback"
@@ -9660,10 +9676,10 @@ editSource = "Source edit ചെയ്യുക"
 name = "പേര്"
 namePlaceholder = "Pipeline പേര്"
 noToolSettings = "ഈ tool-ന് configurable settings ഇല്ല."
-output = "Destination"
+output = "ലക്ഷ്യസ്ഥാനം"
 save = "മാറ്റങ്ങൾ save ചെയ്യുക"
 scheduleEvery = "ഓരോ"
-trigger = "Trigger"
+trigger = "ട്രിഗർ"
 triggerManual = "Manual മാത്രം"
 
 [portal.pipelines.composer.runsEvery]
@@ -9681,7 +9697,7 @@ minutes = "മിനിറ്റുകൾ"
 
 [portal.pipelines.definition]
 subtitle = "സംരക്ഷിക്കപ്പെടുന്നതുപോലെയുള്ള pipeline."
-title = "Definition"
+title = "നിർവചനം"
 
 [portal.pipelines.delete]
 body = "\"{{name}}\" delete ചെയ്യണോ? ഇത് പഴയപടി ആക്കാൻ കഴിയില്ല."
@@ -9724,8 +9740,8 @@ running = "പ്രവർത്തിക്കുന്നു"
 
 [portal.pipelines.inspector]
 multipleBody = "അവയെ ഒരുമിച്ച് നീക്കാൻ ഏതെങ്കിലും ഒരു line-ലേക്ക് drag ചെയ്യുക, അല്ലെങ്കിൽ നീക്കം ചെയ്യാൻ Delete അമർത്തുക."
-multipleSelected_one = "{{count}} step selected"
-multipleSelected_other = "{{count}} steps selected"
+multipleSelected_one = "{{count}} ഘട്ടം തിരഞ്ഞെടുത്തു"
+multipleSelected_other = "{{count}} ഘട്ടങ്ങൾ തിരഞ്ഞെടുത്തു"
 noSelectionBody = "അത് എന്താണ് ചെയ്യുന്നതെന്ന് മാറ്റാൻ graph-ൽ ഒരു node തിരഞ്ഞെടുക്കുക."
 noSelectionTitle = "തിരഞ്ഞെടുത്തതൊന്നുമില്ല"
 
@@ -9752,26 +9768,26 @@ timeout = "Run പ്രതീക്ഷിച്ചതിലും കൂടു�
 
 [portal.pipelines.status]
 active = "സജീവം"
-paused = "Paused"
+paused = "താൽക്കാലികമായി നിർത്തി"
 
 [portal.pipelines.table]
 name = "പൈപ്പ്ലൈൻ"
 sources = "ഉറവിടങ്ങൾ"
 status = "സ്ഥിതി"
-steps = "Steps"
-trigger = "Trigger"
+steps = "ഘട്ടങ്ങൾ"
+trigger = "ട്രിഗർ"
 type = "തരം"
 
 [portal.pipelines.templates]
 setUp = "സജ്ജമാക്കുക"
-title = "Templates"
+title = "ടെംപ്ലേറ്റുകൾ"
 
 [portal.pipelines.trigger]
 editor-export = "ഓരോ export-ലും"
 editor-upload = "ഓരോ upload-ലും"
-folder-watch = "Folder watch"
-manual = "Manual"
-schedule = "Scheduled"
+folder-watch = "ഫോൾഡർ നിരീക്ഷണം"
+manual = "മാനുവൽ"
+schedule = "ഷെഡ്യൂൾ ചെയ്തത്"
 storage-folder-watch = "Storage folder-ലെ പുതിയ files"
 
 [portal.pipelines.type]
@@ -9791,19 +9807,19 @@ label = "വർഗ്ഗീകരണം"
 
 [portal.policies.categories.compliance]
 desc = "മറഞ്ഞിരിക്കുന്ന data നീക്കം ചെയ്യുക, archiving-നായി PDF/A-യിലേക്ക് convert ചെയ്യുക, കൂടാതെ deliver ചെയ്യുന്നതിന് മുമ്പ് ഓരോ document-ഉം standard-നോട് validate ചെയ്യുക."
-label = "Compliance"
+label = "കംപ്ലയൻസ്"
 
 [portal.policies.categories.ingestion]
 description = "Documents വായിക്കുക, തിരയാവുന്ന chunks തയ്യാറാക്കുക, knowledge base അല്ലെങ്കിൽ export destination-ലേക്ക് deliver ചെയ്യുക."
-label = "Ingestion"
+label = "ഇൻജെഷൻ"
 
 [portal.policies.categories.retention]
 desc = "ഡോക്യുമെന്റുകൾ എത്രകാലം സൂക്ഷിക്കണം, എപ്പോൾ archive ചെയ്യണം, എപ്പോൾ delete ചെയ്യണം എന്നിവ സജ്ജമാക്കുക."
-label = "Retention"
+label = "റിട്ടൻഷൻ"
 
 [portal.policies.categories.routing]
 desc = "ഡോക്യുമെന്റുകൾ ശരിയായ team, folder, system എന്നിവയിലേക്ക് auto-route ചെയ്യുക."
-label = "Routing"
+label = "റൂട്ടിംഗ്"
 
 [portal.policies.categories.security]
 desc = "PII detect ചെയ്യുക, redact ചെയ്യുക, active content strip ചെയ്യുക, documents watermark ചെയ്യുക."
@@ -9816,7 +9832,7 @@ scopeAll = "എല്ലാ ഡോക്യുമെന്റുകളും"
 summary = "upload ചെയ്യുന്ന ഓരോ ഡോക്യുമെന്റിനെയും നിങ്ങളുടെ team-ന്റെ labels-നോട് classify ചെയ്ത് അതിന്റെ metadata tag ചെയ്യുന്നു."
 
 [portal.policies.config.classification.rules]
-0 = "Classify"
+0 = "വർഗ്ഗീകരിക്കുക"
 1 = "metadata tag ചെയ്യുക"
 
 [portal.policies.config.compliance]
@@ -9833,12 +9849,12 @@ description = "Process ചെയ്യേണ്ട documents തിരഞ്ഞ�
 [portal.policies.config.ingestion.rules]
 0 = "Text വായിക്കുക"
 1 = "Chunk"
-2 = "Index"
+2 = "ഇൻഡെക്സ് ചെയ്യുക"
 3 = "Original സൂക്ഷിക്കുക"
 
 [portal.policies.config.pdfa.fields.outputFormat]
 help = "PDF/A-2b മിക്ക archives-നും അനുയോജ്യമാണ്. PDF/A-1b ആണ് ഏറ്റവും strict ഉം വ്യാപകമായി അംഗീകരിക്കപ്പെടുന്നതും; PDF/A-3b കൂടാതെ attachments അനുവദിക്കുന്നു."
-label = "Archival profile"
+label = "ആർക്കൈവൽ പ്രൊഫൈൽ"
 
 [portal.policies.config.purview]
 label = "Microsoft Purview sensitivity label പ്രയോഗിക്കുക"
@@ -9868,9 +9884,9 @@ connectionHelp = "ഡോക്യുമെന്റ് ഇതിനകം വഹ
 summary = "ഡോക്യുമെന്റുകൾ എത്രകാലം സൂക്ഷിക്കണം, എപ്പോൾ archive ചെയ്യണം, എപ്പോൾ delete ചെയ്യണം എന്നിവ enforce ചെയ്യുന്നു."
 
 [portal.policies.config.retention.fields]
-archiveAfter = "Archive after"
+archiveAfter = "ഇതിന് ശേഷം ആർക്കൈവ് ചെയ്യുക"
 immutableHold = "Immutable hold"
-keepFor = "Keep for"
+keepFor = "ഇതിനായി സൂക്ഷിക്കുക"
 
 [portal.policies.config.retention.rules]
 0 = "Retention hold"
@@ -9896,7 +9912,7 @@ summary = "PII detect ചെയ്ത് redact ചെയ്യുന്നു, 
 [portal.policies.endpoints]
 addWatermark = "Watermark"
 autoRedact = "PII റിഡാക്റ്റ് ചെയ്യുക"
-classifyAndLabel = "Classify"
+classifyAndLabel = "വർഗ്ഗീകരിക്കുക"
 compressPdf = "കംപ്രസ് ചെയ്യുക"
 flatten = "ഫ്ലാറ്റൻ ചെയ്യുക"
 ingest = "Knowledge search-നായി തയ്യാറാക്കുക"
@@ -10015,7 +10031,7 @@ placeholder = "signer@acme.com"
 
 [portal.policies.operations.fields.subject]
 label = "വിഷയം"
-placeholder = "Processed: {{document.filename}}"
+placeholder = "പ്രോസസ്സ് ചെയ്തു: {{document.filename}}"
 
 [portal.policies.operations.fields.text]
 helperText = "Presidio ഈ text വിശകലനം ചെയ്യുന്നു. {{document.title}} ഉപയോഗിക്കുക അല്ലെങ്കിൽ പരിശോധിക്കേണ്ട text paste ചെയ്യുക."
@@ -10280,7 +10296,7 @@ legalName = "നിയമപരമായ സ്ഥാപന നാമം"
 legalNamePlaceholder = "sign ചെയ്യുന്ന legal entity"
 loadError = "agreement load ചെയ്യാനായില്ല. ദയവായി വീണ്ടും ശ്രമിക്കുക."
 loading = "agreement load ചെയ്യുന്നു..."
-ref = "Ref {{ref}} · {{version}}"
+ref = "റഫറൻസ് {{ref}} · {{version}}"
 requestChanges = "മാറ്റങ്ങൾ അഭ്യർത്ഥിക്കുക"
 scrollHint = "review ചെയ്യാൻ scroll ചെയ്യുക"
 signatory = "ഒപ്പിടുന്നയാളുടെ പേര്"
@@ -10294,7 +10310,7 @@ addons = "ആഡ്-ഓണുകൾ"
 addressLine1 = "വിലാസ വരി 1"
 addressLine1Placeholder = "500 Howard St"
 addressLine2 = "വിലാസ വരി 2"
-addressLine2Placeholder = "Suite, floor, building"
+addressLine2Placeholder = "സ്യൂട്ട്, നില, കെട്ടിടം"
 back = "പിന്നോട്ട്"
 businessName = "ബിസിനസ് പേര്"
 businessNamePlaceholder = "നിങ്ങളുടെ കമ്പനി"
@@ -10311,7 +10327,7 @@ eula = "ഞാൻ Stirling Enterprise EULA വായിച്ചു, അംഗ�
 generate = "ക്വോട്ട് സൃഷ്ടിക്കുക"
 indemnification = "മെച്ചപ്പെടുത്തിയ IP സംരക്ഷണം"
 indemnificationSub = "ഞങ്ങളുടെ IP പ്രതിരോധം പേറ്റന്റ് ക്ലെയിമുകളിലേക്കും വിപുലീകരിക്കുന്നു. അടിസ്ഥാന copyright, trademark, trade-secret indemnification സൗജന്യമായി ഉൾപ്പെടുത്തിയിരിക്കുന്നു."
-paperEyebrow = "Enterprise quote"
+paperEyebrow = "എന്റർപ്രൈസ് ക്വോട്ട്"
 paperFor = "ഇതിനായി തയ്യാറാക്കിയത്"
 pdfSize = "PDF വലുപ്പം"
 poNumber = "PO നമ്പർ"
@@ -10329,7 +10345,7 @@ posture_regulatedSub = "ഓരോ category — Compliance, Retention, Ingestion"
 qbr = "ത്രൈമാസ ബിസിനസ് അവലോകനങ്ങൾ"
 qbrSub = "നിങ്ങളുടെ SE ഓരോ ത്രൈമാസവും ഉപയോഗവും roadmap-ഉം അവലോകനം ചെയ്യും"
 region = "സംസ്ഥാനം / പ്രദേശം"
-regionPlaceholder = "California"
+regionPlaceholder = "കാലിഫോർണിയ"
 running = "{{annual}} / വർഷം · {{years}}-വർഷ {{tcv}}"
 s1Sub = "നിങ്ങളുടെ ടീവും ഓരോ വർഷവും പ്രവർത്തിപ്പിക്കുമെന്ന് പ്രതീക്ഷിക്കുന്ന PDFs-ഉം."
 s1Title = "നിങ്ങൾ എത്ര പ്രോസസ്സ് ചെയ്യും?"
@@ -10370,7 +10386,7 @@ years_one = "{{count}} വർഷം"
 years_other = "{{count}} വർഷങ്ങൾ"
 
 [portal.procurement.documents]
-agreement = "Enterprise Agreement"
+agreement = "Enterprise കരാർ"
 agreementSub = "MSA, Order Form, DPA എന്നിവ ഒരൊറ്റ signature-ൽ."
 download = "ഡൗൺലോഡ്"
 eula = "EULA & വാണിജ്യ നിബന്ധനകൾ"
@@ -10379,9 +10395,9 @@ invoice = "ഇൻവോയ്സ്"
 invoiceSub = "നിങ്ങളുടെ ആദ്യ subscription invoice."
 laterInvoice = "നിങ്ങൾ accept ചെയ്ത ശേഷം ലഭ്യം"
 laterQuote = "നിങ്ങളുടെ quote issue ചെയ്താൽ ലഭ്യം"
-quote = "Quote"
+quote = "ക്വോട്ട്"
 quoteSub = "നിങ്ങളുടെ itemised enterprise quote."
-sla = "SLA Exhibit"
+sla = "SLA എക്സിബിറ്റ്"
 slaSub = "Support tiers, response targets എന്നിവ."
 subprocessors = "സബ്‌പ്രോസസ്സറുകൾ"
 subprocessorsSub = "നിങ്ങളുടെ വേണ്ടി data process ചെയ്യുന്ന third parties."
@@ -10638,7 +10654,7 @@ noPolicies = "editor-ൽ നിന്ന് ഇതുവരെ policies run ച�
 
 [portal.sources.types.email]
 description = "dedicated mailbox-ലേക്ക് അയച്ച attachments ഡോക്യുമെന്റുകളാക്കി മാറ്റുക."
-label = "Email inbox"
+label = "Email ഇൻബോക്സ്"
 
 [portal.sources.types.folder]
 description = "പുതിയ ഡോക്യുമെന്റുകൾക്കായി server-ിലെ ഒരു directory നിരീക്ഷിക്കുക."
@@ -10727,7 +10743,7 @@ collection = "Collection / index പേര്"
 collectionHint = "server-side embedding-നായി കോൺഫിഗർ ചെയ്ത നിലവിലുള്ള collection അല്ലെങ്കിൽ index ഉപയോഗിക്കുക."
 connection = "Database കണക്ഷൻ"
 description = "തയ്യാറാക്കിയ പ്രമാണ ചങ്കുകൾക്കായുള്ള ഒരു ഔട്ട്പുട്ട് ലക്ഷ്യസ്ഥാനം. database embeddings സൃഷ്ടിക്കുന്നു; track mode തിരഞ്ഞെടുത്താൽ യഥാർത്ഥങ്ങൾ നിങ്ങളുടെ input source-ൽ തന്നെ തുടരും."
-label = "Vector database"
+label = "വെക്റ്റർ ഡാറ്റാബേസ്"
 namespace = "Namespace / tenant"
 namespaceHint = "ഐച്ഛിക Pinecone namespace അല്ലെങ്കിൽ Weaviate tenant. default namespace അല്ലെങ്കിൽ single-tenant collection-നായി ശൂന്യമായി വിടുക."
 textField = "ടെക്സ്റ്റ് ഫീൽഡ്"
@@ -10739,17 +10755,17 @@ description = "ഏതൊരു external system-ൽ നിന്നുമുള�
 label = "Webhook"
 
 [portal.sources.types.webhook.detail]
-deliveryUrl = "Delivery URL"
+deliveryUrl = "ഡെലിവറി URL"
 secretNote = "webhook സൃഷ്ടിക്കുമ്പോൾ signing secret ഒരിക്കൽ മാത്രം കാണിക്കും. അത് roll ചെയ്യാൻ source വീണ്ടും സൃഷ്ടിക്കുക."
 
 [portal.sources.types.webhook.reveal]
 copy = "പകർത്തുക"
 done = "പൂർത്തിയായി"
-secret = "Signing secret"
+secret = "സൈനിംഗ് സീക്രട്ട്"
 secretHelp = "ഈ key (HMAC-SHA256) ഉപയോഗിച്ച് ഓരോ delivery-യുടെയും raw body sign ചെയ്ത് X-Stirling-Signature header ആയി അയയ്ക്കുക."
 secretWarning = "signing secret ഇപ്പോൾ copy ചെയ്യുക. നിങ്ങളുടെ സുരക്ഷയ്ക്കായി ഇത് ഒരിക്കൽ മാത്രം കാണിക്കും, പിന്നീട് retrieve ചെയ്യാൻ കഴിയില്ല."
 title = "Webhook സൃഷ്ടിച്ചു"
-url = "Delivery URL"
+url = "ഡെലിവറി URL"
 usage = "binary content type (application/pdf അല്ലെങ്കിൽ application/octet-stream) ഉപയോഗിച്ച് delivery URL-ലേക്ക് raw request body ആയി ഓരോ ഡോക്യുമെന്റും POST ചെയ്യുക. Referencing policies arrival-ൽ സ്വയമേവ run ചെയ്യും."
 
 [portal.sources.wizard]
@@ -10788,7 +10804,7 @@ body = "നിങ്ങളുടെ Stirling account session കാലഹരണ�
 title = "ഉപയോക്താക്കൾ"
 
 [portal.users.roles.admin]
-label = "Admin (Org owner)"
+label = "Admin (Org ഉടമ)"
 summary = "Workspace, settings, members എന്നിവയിൽ പൂർണ്ണ governance."
 
 [portal.users.roles.admin.permissions]
@@ -10798,7 +10814,7 @@ summary = "Workspace, settings, members എന്നിവയിൽ പൂർണ
 3 = "Team Owner ചെയ്യാനാകുന്നതെല്ലാം"
 
 [portal.users.roles.guest]
-label = "Guest"
+label = "അതിഥി"
 summary = "പരിമിതമായ അല്ലെങ്കിൽ web-only access; personal configs കൈവശം വയ്ക്കാനാവില്ല."
 
 [portal.users.roles.guest.permissions]
@@ -10808,7 +10824,7 @@ summary = "പരിമിതമായ അല്ലെങ്കിൽ web-only a
 3 = "പങ്കിട്ടിടത്ത് read-only"
 
 [portal.users.roles.member]
-label = "Member"
+label = "അംഗം"
 summary = "സാധാരണ ഉപയോക്താവ് — shared resources-ഉം സ്വന്തം configs-ഉം ഉപയോഗിച്ച് പ്രവർത്തിക്കുന്നു."
 
 [portal.users.roles.member.permissions]
@@ -10818,7 +10834,7 @@ summary = "സാധാരണ ഉപയോക്താവ് — shared resource
 3 = "S3 അല്ലെങ്കിൽ workspace management ഇല്ല"
 
 [portal.users.roles.team_owner]
-label = "Team owner"
+label = "ടീം ഉടമ"
 summary = "ഒരു team-ന്റെ ഉടമ — അതിന്റെ members' resources-ഉം shared configs-ഉം നിയന്ത്രിക്കുന്നു."
 
 [portal.users.roles.team_owner.permissions]
@@ -10946,7 +10962,7 @@ label = "Issuer URL"
 
 [provider.oauth2.generic.provider]
 description = "നിങ്ങളുടെ OAuth2 provider-ന്റെ പേര് (ഉദാ., Azure AD, Okta)"
-label = "Provider Name"
+label = "Provider പേര്"
 
 [provider.oauth2.generic.scopes]
 description = "കോമ ഉപയോഗിച്ച് വേർതിരിച്ച OAuth2 scopes"
@@ -11059,7 +11075,7 @@ label = "Private Key"
 
 [provider.saml2.provider]
 description = "നിങ്ങളുടെ SAML2 provider-ന്റെ പേര്"
-label = "Provider Name"
+label = "Provider പേര്"
 
 [provider.saml2.registrationId]
 description = "നിങ്ങളുടെ Service Provider (SP) ആപ്പിന്റെ പേര്"
@@ -11891,15 +11907,15 @@ title = "നിയമ പ്രമാണങ്ങൾ"
 
 [settings.licenses]
 backendDescription = "ഈ server-നൊപ്പം bundled ചെയ്ത backend dependencies-ന്റെ licenses."
-backendLabel = "Backend Licenses"
-backendTitle = "Backend 3rd Party Licenses"
+backendLabel = "Backend ലൈസൻസുകൾ"
+backendTitle = "Backend 3rd Party ലൈസൻസുകൾ"
 empty = "Dependencies കണ്ടെത്തിയില്ല."
 frontendDescription = "Release build-ലേക്ക് bundled ചെയ്ത frontend dependencies-ന്റെ licenses."
-frontendLabel = "Frontend Licenses"
-frontendTitle = "Frontend 3rd Party Licenses"
-license = "License"
+frontendLabel = "Frontend ലൈസൻസുകൾ"
+frontendTitle = "Frontend 3rd Party ലൈസൻസുകൾ"
+license = "ലൈസൻസ്"
 listDescription = "Release bundle അല്ലെങ്കിൽ backend endpoint-ൽ നിന്ന് list നേരിട്ട് UI-ൽ കാണിക്കുന്നു."
-listTitle = "Bundled dependencies"
+listTitle = "ബണ്ടിൽ ചെയ്ത dependencies"
 loadError = "Third-party licenses ലോഡ് ചെയ്യുന്നതിൽ പരാജയപ്പെട്ടു"
 module = "Module"
 version = "Version"
@@ -11932,7 +11948,7 @@ estimatedCost = "അനുമാനിച്ച ചെലവ്: {{amount}}"
 freeTierInfo = "Free പ്ലാനിൽ മാസത്തിൽ {{freeCredits}} ക്രെഡിറ്റുകൾ ഉൾപ്പെടുന്നു. മാസത്തിൽ {{teamCredits}} ക്രെഡിറ്റുകളും pay-as-you-go overage billing-ഉം ലഭിക്കാൻ Team-ലേക്ക് അപ്‌ഗ്രേഡ് ചെയ്യുക."
 included = "{{count}} ക്രെഡിറ്റുകൾ/മാസം (ഉൾപ്പെടുത്തിയിരിക്കുന്നു)"
 noOverage = "ഈ മാസം overage ചാർജുകളില്ല. നിങ്ങൾ ഉൾപ്പെടുത്തിയ {{count}} ക്രെഡിറ്റുകൾ ഉപയോഗിക്കുകയാണ്."
-overage = "+ {{count}} overage"
+overage = "+ {{count}} അധിക ഉപയോഗം"
 overageInfo = "Overage ക്രെഡിറ്റുകൾ ഓരോ ക്രെഡിറ്റിനും {{price}} നിരക്കിൽ ബില്ലുചെയ്യപ്പെടുന്നു. മാസിക അലവൻസിന് മുകളിലുള്ള ഉപയോഗത്തിനുവേണ്ടി മാത്രമേ നിങ്ങൾ പണമടയ്‌ക്കൂ."
 title = "ക്രെഡിറ്റ് ഉപയോഗം"
 
@@ -12003,9 +12019,9 @@ update = "പാസ്‌വേഡ് അപ്‌ഡേറ്റ് ചെയ�
 
 [settings.securityAuth]
 connections = "Single sign-on"
-security = "Sign-in & security"
+security = "Sign-in & സുരക്ഷ"
 telegram = "Telegram"
-title = "Security & sign-in"
+title = "സുരക്ഷ & sign-in"
 
 [settings.server]
 system = "സിസ്റ്റം"
@@ -12102,28 +12118,15 @@ description = "നിങ്ങളുടെ സെൽഫ്-ഹോസ്റ്റ
 label = "സെർവർ URL"
 
 [sharedSign]
-backToSessions = "സെഷനങ്ങളിലേക്ക് തിരികെ"
-createdOn = "സൃഷ്ടിച്ചത് {{date}}"
 disabledBody = "ഈ സർവറിൽ സഹകരണ ഒപ്പിടൽ പ്രവർത്തനക്ഷമമാക്കിയിട്ടില്ല."
-disabledTitle = "പ്രവർത്തനക്ഷമമല്ല"
-due = "അവസാന തീയതി {{date}}"
 filterDeclined = "നിരസിച്ചത്"
-filterMine = "എന്റേത്"
 filterOverdue = "കാലാവധി കഴിഞ്ഞത്"
 filterSigned = "ഒപ്പിട്ടത്"
-fromOwner = "{{owner}} നിന്നുള്ളത്"
-newRequest = "കയ്യൊപ്പുകൾ അഭ്യർത്ഥിക്കുക"
-signedCount = "{{signed}}/{{total}} ഒപ്പിട്ടത്"
 signInRequiredBody = "സിഗ്നേച്ചറുകൾ അഭ്യർത്ഥിക്കാനും നിങ്ങൾക്ക് അയച്ച അഭ്യർത്ഥനകൾ കാണാനും sign in ചെയ്യുക."
 signInRequiredTitle = "Sign in ആവശ്യമാണ്"
 
-[sharedSign.empty]
-active = "കാത്തിരിക്കുന്ന ഒപ്പിടൽ അഭ്യർത്ഥനകളോ സജീവ സെഷനുകളോ ഒന്നുമില്ല"
-completed = "പൂർത്തിയായ സെഷനുകളൊന്നുമില്ല"
-
 [sharedSign.tab]
 active = "സജീവം"
-completed = "പൂർത്തിയായത്"
 
 [showJS]
 done = "JavaScript എക്സ്ട്രാക്റ്റ് ചെയ്തു"
@@ -12205,7 +12208,7 @@ text = "മുകളിൽ നിങ്ങളുടെ പേര് നൽകി
 title = "ഒപ്പ് എങ്ങനെ ചേർക്കാം"
 
 [sign.mobile]
-createFromPhone = "Mobile upload"
+createFromPhone = "മൊബൈൽ അപ്‌ലോഡ്"
 description = "നിങ്ങളുടെ phone അല്ലെങ്കിൽ tablet ഉപയോഗിച്ച് ഈ QR code scan ചെയ്യുക, നിങ്ങളുടെ signature വരയ്ക്കുക, അത് ഇവിടെ സ്വയമേവ പ്രത്യക്ഷപ്പെടും."
 error = "കണക്ഷൻ പിശക്"
 expiryWarning = "QR Code ഉടൻ കാലഹരണപ്പെടും"
@@ -12274,7 +12277,7 @@ colorLabel = "ടെക്സ്റ്റ് നിറം"
 fontLabel = "ഫോണ്ട്"
 fontSizeLabel = "ഫോണ്ട് വലിപ്പം"
 fontSizePlaceholder = "ഫോണ്ട് വലിപ്പം ടൈപ്പ് ചെയ്യുക അല്ലെങ്കിൽ തിരഞ്ഞെടുക്കുക (8-200)"
-name = "Text"
+name = "ടെക്സ്റ്റ്"
 placeholder = "ടെക്സ്റ്റ് നൽകുക"
 
 [sign.type]
@@ -12332,10 +12335,10 @@ clear = "ക്ലിയർ"
 fine = "നേർത്ത പേന"
 hint = "വരയ്ക്ക് മുകളിൽ ഒപ്പിടുക"
 medium = "ഇടത്തരം പേന"
-pad = "Signature pad"
+pad = "സിഗ്നേച്ചർ പാഡ്"
 pen = "പേന"
 tip = "മൗസ്, ട്രാക്ക്പാഡ്, പേന അല്ലെങ്കിൽ വിരൽ ഉപയോഗിക്കുക"
-undo = "Undo"
+undo = "പഴയപടിയാക്കുക"
 
 [sign.wallet.ink]
 black = "കറുത്ത മഷി"
@@ -12351,12 +12354,12 @@ title = "നിങ്ങളുടെ ഒപ്പ് ചേർക്കുക"
 
 [sign.wallet.menu]
 delete = "ഡിലീറ്റ് ചെയ്യുക"
-discard = "Discard"
+discard = "ഉപേക്ഷിക്കുക"
 makeDefault = "ഡിഫോൾട്ടാക്കുക"
 options = "{{name}}-ന്റെ ഓപ്ഷനുകൾ"
 place = "പേജിൽ സ്ഥാപിക്കുക"
 removeDefault = "ഡിഫോൾട്ടിൽ നിന്ന് നീക്കം ചെയ്യുക"
-rename = "Rename"
+rename = "പേരുമാറ്റുക"
 save = "എന്റെ ഒപ്പുകളിൽ സേവ് ചെയ്യുക"
 share = "എല്ലാവരുമായും പങ്കിടുക"
 stop = "സ്ഥാപിക്കുന്നത് നിർത്തുക"
@@ -12418,8 +12421,8 @@ name = "നിങ്ങളുടെ പേര്"
 namePlaceholder = "നിങ്ങളുടെ പേര് ടൈപ്പ് ചെയ്യുക"
 previewName = "നിങ്ങളുടെ പേര്"
 saveInitials = "എന്റെ ഇനിഷ്യലുകളും സേവ് ചെയ്യുക"
-style = "Style"
-styleOption = "Style {{index}}"
+style = "ശൈലി"
+styleOption = "ശൈലി {{index}}"
 
 [sign.wallet.upload]
 browse = "അല്ലെങ്കിൽ ഫയലുകൾ browse ചെയ്യുക"
@@ -12429,14 +12432,14 @@ hint = "PNG, JPG അല്ലെങ്കിൽ WebP {{size}} MB വരെ. വ�
 ink = "മഷിയുടെ നിറം"
 inkBlack = "കറുപ്പ്"
 inkBlue = "നീല"
-inkOriginal = "Original"
+inkOriginal = "ഒറിജിനൽ"
 preview = "അപ്‌ലോഡ് ചെയ്ത ഒപ്പിന്റെ preview"
 processing = "image വൃത്തിയാക്കുന്നു..."
 rejected = "{{size}} MB വരെ ഉള്ള PNG, JPG അല്ലെങ്കിൽ WebP image തിരഞ്ഞെടുക്കുക."
 removeBackground = "പശ്ചാത്തലം നീക്കം ചെയ്യുക"
 removeBackgroundHint = "വെളുത്ത പേപ്പർ transparent ആകും"
 replace = "മാറ്റിസ്ഥാപിക്കുക"
-rotate = "Rotate"
+rotate = "തിരിക്കുക"
 rotateLeft = "ഇടത്തേക്ക് rotate ചെയ്യുക"
 rotateRight = "വലത്തേക്ക് തിരിക്കുക"
 trim = "ഒപ്പിലേക്ക് ട്രിം ചെയ്യുക"
@@ -12473,10 +12476,68 @@ bullet3 = "അദൃശ്യ ഒപ്പുകൾക്കും ക്രി�
 description = "ഒപ്പ് ഡോക്യുമെന്റിൽ ദൃശ്യമാകണോ അദൃശ്യമാകണോ എന്നത് നിയന്ത്രിക്കുന്നു."
 title = "ഒപ്പിന്റെ ദൃശ്യത"
 
+[signingDetail]
+allSigned = "എല്ലാവരും ഒപ്പിട്ടു. ഡോക്യുമെന്റ് പരിശോധിച്ച ശേഷം അന്തിമമാക്കുക."
+awaitingOwner = "ഉടമ തയ്യാറായാൽ ഡോക്യുമെന്റ് അന്തിമമാക്കും."
+certificateNext = "അടുത്ത ഘട്ടത്തിൽ നിങ്ങളുടെ certificate തിരഞ്ഞെടുക്കുക."
+earlyHint = "ലഭിച്ച ഒപ്പുകളോടെ ഇപ്പോൾ തന്നെ അന്തിമമാക്കാം, അല്ലെങ്കിൽ ശേഷിക്കുന്ന പങ്കെടുക്കുന്നവർക്കായി കാത്തിരിക്കാം."
+finalDocument = "ഒപ്പിട്ട ഡോക്യുമെന്റ്"
+finalizeTitle = "ഡോക്യുമെന്റ് അന്തിമമാക്കുക"
+finalReady = "നിങ്ങളുടെ ഒപ്പിട്ട PDF workbench-ൽ തുറക്കാൻ തയ്യാറാണ്."
+inProgressPreview = "സമർപ്പിച്ച ഒപ്പുകളോടെയുള്ള പുരോഗമിക്കുന്ന preview. ഉടമ ഇതുവരെ ഈ ഡോക്യുമെന്റ് അന്തിമമാക്കിയിട്ടില്ല."
+manageSession = "സൈനിംഗ് സെഷൻ നിയന്ത്രിക്കുക"
+moveHint = "നീക്കാനോ വലുപ്പം മാറ്റാനോ നീക്കം ചെയ്യാനോ ഡോക്യുമെന്റിലെ ഒരു ഒപ്പ് തിരഞ്ഞെടുക്കുക."
+notified = "അറിയിച്ചു"
+optional = "ഓപ്ഷണൽ"
+ownerNext = "എല്ലാവരുടെയും ഒപ്പുകൾ പരിശോധിച്ച് തയ്യാറാകുമ്പോൾ ഡോക്യുമെന്റ് അന്തിമമാക്കാൻ നിങ്ങളുടെ സെഷനിലേക്ക് മടങ്ങുക."
+placeHint = "നിങ്ങളുടെ ഒപ്പ് സ്ഥാപിക്കാൻ ഡോക്യുമെന്റിൽ ക്ലിക്ക് ചെയ്യുക."
+progress = "ഒപ്പ് പുരോഗതി"
+readyToSign = "ഒപ്പിടാൻ തയ്യാറാണോ?"
+refreshPreview = "Preview പുതുക്കുക"
+removePerson = "{{name}} നീക്കം ചെയ്യുക"
+requestClosed = "ഈ അഭ്യർത്ഥന അടച്ചിരിക്കുന്നു"
+requestTitle = "ഒപ്പ് അഭ്യർത്ഥന"
+signatureSubmitted = "നിങ്ങളുടെ ഒപ്പ് സമർപ്പിച്ചു"
+signedCount = "{{signed}} / {{total}} ഒപ്പിട്ടു"
+signMyRequest = "ഈ ഡോക്യുമെന്റിൽ ഒപ്പിടുക"
+viewOnly = "ഇവിടെ നിങ്ങൾക്ക് ഇപ്പോഴും ഡോക്യുമെന്റ് പരിശോധിക്കാം."
+visibleSignature = "ദൃശ്യമായ ഒപ്പ്"
+visibleSignatureHelp = "ദൃശ്യമായ ഒപ്പുകളെക്കുറിച്ച്"
+
+[signMenu]
+anyOrder = "പങ്കെടുക്കുന്നവർക്ക് ഏത് ക്രമത്തിലും ഒപ്പിടാം. ശേഖരിച്ച ഒപ്പുകൾ പരിശോധിച്ചതിന് ശേഷം ഉടമ ഡോക്യുമെന്റ് അന്തിമമാക്കും."
+certificateHint = "ഒരു certificate ഉപയോഗിക്കുക"
+certificateTitle = "Digital signature"
+closedStatus = "അടച്ചിരിക്കുന്നു"
+completedTab = "പൂർത്തിയായവ"
+dueDate = "അവസാന തീയതി (ഓപ്ഷണൽ)"
+newActivity = "നിങ്ങൾ അവസാനമായി ഈ സെഷൻ കണ്ടതിന് ശേഷം പുതിയ activity ഉണ്ട്"
+noActive = "സജീവ സെഷനുകളൊന്നുമില്ല"
+noCompleted = "പൂർത്തിയായ സെഷനുകളൊന്നുമില്ല"
+noMatches = "പൊരുത്തപ്പെടുന്ന സെഷനുകളൊന്നുമില്ല"
+noUnread = "നിങ്ങൾ എല്ലാം കണ്ടു"
+optionalMarks = "ദൃശ്യമായ അടയാളങ്ങൾ ഓപ്ഷണലാണ്. Complete & Sign ഒരു certificate മാത്രം ഉപയോഗിച്ചും പ്രവർത്തിക്കും."
+ownerProgress = "നിങ്ങളുടെ അഭ്യർത്ഥന · {{signed}} / {{total}} ഒപ്പിട്ടു"
+personalHint = "വരയ്ക്കുക, ടൈപ്പ് ചെയ്യുക അല്ലെങ്കിൽ അപ്‌ലോഡ് ചെയ്യുക"
+personalTitle = "വ്യക്തിഗത ഒപ്പ്"
+request = "ഒപ്പുകൾ അഭ്യർത്ഥിക്കുക"
+search = "ഒരു പ്രമാണമോ വ്യക്തിയെയോ കണ്ടെത്തുക"
+send = "ഒപ്പിടൽ അഭ്യർത്ഥന അയയ്ക്കുക"
+sessionFilter = "സെഷൻ കാഴ്ചകൾ"
+sessions = "ഒപ്പിടൽ സെഷനുകൾ"
+settings = "രൂപഭാവവും സംഗ്രഹ പേജും (ഐച്ഛികം)"
+signFailed = "ഒപ്പിടൽ പരാജയപ്പെട്ടു. നിങ്ങളുടെ സർട്ടിഫിക്കറ്റ് പരിശോധിച്ച് വീണ്ടും ശ്രമിക്കുക; നിങ്ങൾ വെച്ച അടയാളങ്ങൾ സംരക്ഷിച്ചിരിക്കുന്നു."
+submitted = "സമർപ്പിച്ചു · അന്തിമീകരണത്തിനായി കാത്തിരിക്കുന്നു"
+title = "ഒപ്പിടുക"
+triggerUnreadCount_one = "ഒപ്പിടുക · {{count}} വായിക്കാത്ത സെഷൻ"
+triggerUnreadCount_other = "ഒപ്പിടുക · {{count}} വായിക്കാത്ത സെഷനുകൾ"
+unreadTab = "വായിക്കാത്തത്"
+
 [signRequest]
+accessExpired = "ഈ ഒപ്പിടൽ അഭ്യർത്ഥനയിലേക്കുള്ള നിങ്ങളുടെ ആക്സസ് കാലഹരണപ്പെട്ടു. പുതിയ അഭ്യർത്ഥനയ്ക്കായി അയച്ചയാളോട് ചോദിക്കുക."
 declined = "ഒപ്പ് അഭ്യർത്ഥന നിരസിച്ചു"
+expired = "ആക്സസ് കാലഹരണപ്പെട്ടു"
 fetchFailed = "ഒപ്പ് അഭ്യർത്ഥന ലോഡ് ചെയ്യാൻ കഴിഞ്ഞില്ല"
-signed = "ഡോക്യുമെന്റ് വിജയകരമായി ഒപ്പിട്ടു"
 
 [signSession]
 created = "സൈൻ ചെയ്യൽ അഭ്യർത്ഥന അയച്ചു"
@@ -12512,6 +12573,52 @@ title = "ഒരു അക്കൗണ്ട് സൃഷ്ടിക്കുക
 unableToAccessTool = "ടൂളിലേക്ക് ആക്സസ് ചെയ്യാനായില്ല: {{error}}"
 unexpectedError = "പ്രതീക്ഷിക്കാത്ത പിശക്: {{message}}"
 unknownError = "അജ്ഞാത പിശക്"
+
+[signWorkspace]
+changeDocument = "PDF മാറ്റുക"
+chooseDocument = "തുറന്ന PDF തിരഞ്ഞെടുക്കുക"
+chooseFromLibrary = "ലൈബ്രറിയിൽ നിന്ന് തിരഞ്ഞെടുക്കുക"
+chooseParticipants = "പങ്കാളികളെ തിരഞ്ഞെടുക്കുക"
+choosePdf = "ഒരു PDF തിരഞ്ഞെടുക്കുക"
+choosePdfHeading = "നിങ്ങളുടെ പ്രമാണത്തോടെ ആരംഭിക്കുക"
+clearDate = "തീയതി മായ്ക്കുക"
+created = "സൃഷ്ടിച്ചത്"
+createdByMe = "ഞാൻ സൃഷ്ടിച്ചത്"
+datesAndOptions = "തീയതികളും ഓപ്ഷനുകളും"
+document = "പ്രമാണം"
+dueDate = "നിശ്ചിത തീയതി"
+dueDateHelp = "ഇത് ഒരു ലക്ഷ്യ തീയതിയാണ്. പങ്കാളികൾക്ക് അതിന് ശേഷവും ഒപ്പിടാം."
+dueDateHelpLabel = "നിശ്ചിത തീയതികളെക്കുറിച്ച്"
+empty = "ഇവിടെ ഇതുവരെ സെഷനുകളൊന്നുമില്ല."
+expand = "ഒപ്പിടൽ സെഷനുകൾ വിപുലീകരിക്കുക"
+inviteLoadError = "ക്ഷണ ഓപ്ഷനുകൾ ലോഡ് ചെയ്യാനായില്ല. ഈ ഡയലോഗ് അടച്ച് വീണ്ടും ശ്രമിക്കുക."
+invitePerson = "ടീം അംഗത്തെ ചേർക്കുക: {{name}}"
+inviteTeammate = "ഒരു ടീം അംഗത്തെ ചേർക്കുക"
+inviteUnavailable = "നിങ്ങളുടെ അക്കൗണ്ടിനോ സെർവർ കോൺഫിഗറേഷനിനോ ടീം അംഗങ്ങളെ ചേർക്കൽ ലഭ്യമല്ല."
+navigation = "ഒപ്പിടൽ നാവിഗേഷൻ"
+needsYou = "നിങ്ങളുടെ ഒപ്പ് ആവശ്യമാണ്"
+nextMonth = "അടുത്ത മാസം"
+nextStep = "അടുത്തത്"
+noDueDate = "നിശ്ചിത തീയതി ഇല്ല"
+noMatches = "നിങ്ങളുടെ തിരച്ചിലിനോ ഫിൽറ്ററിനോ പൊരുത്തപ്പെടുന്ന സെഷനുകളില്ല."
+noOpenPdfs = "നിങ്ങളുടെ ലൈബ്രറിയിൽ നിന്ന് ഒരു PDF തിരഞ്ഞെടുക്കുക അല്ലെങ്കിൽ നിങ്ങളുടെ കമ്പ്യൂട്ടറിൽ നിന്ന് ഒന്ന് ചേർക്കുക."
+noPeopleMatch = "നിങ്ങളുടെ തിരച്ചിലിനോട് പൊരുത്തപ്പെടുന്ന ആളുകളില്ല."
+noPreview = "പ്രമാണ പ്രിവ്യൂ ലഭ്യമല്ല"
+owner = "ഉടമ"
+participants = "പങ്കാളികൾ"
+participantsSelected = "{{count}} തിരഞ്ഞെടുത്തു"
+personalHeading = "ഒരു പ്രമാണത്തിൽ ഒപ്പിടുക"
+previousMonth = "മുൻ മാസം"
+refresh = "സെഷനുകൾ പുതുക്കുക"
+requestSteps = "ഒപ്പിടൽ അഭ്യർത്ഥന ഘട്ടങ്ങൾ"
+search = "പ്രമാണങ്ങളോ ആളുകളോ തിരയുക"
+searchParticipants = "ആളുകളെയോ ടീമുകളെയോ തിരയുക"
+selectOnePdf = "ഈ ഒപ്പിടൽ അഭ്യർത്ഥനയ്ക്കായി ഒരു PDF തിരഞ്ഞെടുക്കുക."
+signingOrderHelp = "ഒപ്പിടൽ ക്രമത്തെക്കുറിച്ച്"
+status = "സ്ഥിതി"
+unavailable = "ഈ സെഷൻ ഇനി ലഭ്യമല്ല. നിങ്ങളുടെ നിലവിലെ സെഷനുകൾ കാണാൻ പട്ടിക പുതുക്കുക."
+upcoming = "വരാനിരിക്കുന്നത്"
+uploadFailed = "ഈ PDF തുറക്കാനായില്ല. ദയവായി വീണ്ടും ശ്രമിക്കുക."
 
 [sizes]
 large = "വലുത്"

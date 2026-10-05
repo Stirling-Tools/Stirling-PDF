@@ -300,7 +300,7 @@ title = "पृष्ठ क्रमांक परिणाम"
 [addPassword]
 desc = "अपने PDF दस्तावेज़ को पासवर्ड से एन्क्रिप्ट करें।"
 submit = "एन्क्रिप्ट करें"
-tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
+tags = "एन्क्रिप्ट,पासवर्ड,लॉक,सुरक्षित,सुरक्षा,एन्क्रिप्शन,सुरक्षित रखना,गोपनीय,निजी,एक्सेस सीमित करें"
 title = "पासवर्ड जोड़ें"
 
 [addPassword.encryption.keyLength]
@@ -350,7 +350,7 @@ title = "अनुमतियां बदलें"
 pagePreviewAlt = "पृष्ठ पूर्वावलोकन"
 preview = "स्टैम्प का पूर्वावलोकन"
 stampPreviewAlt = "स्टैम्प पूर्वावलोकन"
-tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
+tags = "स्टैम्प,चिह्न,सील,स्वीकृत,अस्वीकृत,गोपनीय,स्टैम्प टूल,रबर स्टैम्प,तारीख स्टैम्प,अनुमोदन स्टैम्प,प्राप्त,अमान्य,कॉपी,मूल"
 
 [AddStampRequest]
 alphabet = "वर्णमाला"
@@ -408,19 +408,19 @@ title = "मुहर के परिणाम"
 custom = "कस्टम"
 dateHeader = "तारीख Header"
 doc-info = "दस्तावेज़ जानकारी"
-draft = "Draft Watermark"
-draftWatermark = "Draft Watermark"
+draft = "ड्राफ्ट वॉटरमार्क"
+draftWatermark = "ड्राफ्ट वॉटरमार्क"
 european-date = "यूरोपीय तारीख (DD/MM/YYYY)"
 europeanDate = "यूरोपीय तारीख"
 legal-footer = "कानूनी Footer"
 page-numbers = "पृष्ठ संख्याएँ"
 pageNumberFooter = "पृष्ठ संख्या Footer"
-timestamp = "Timestamp"
+timestamp = "टाइमस्टैम्प"
 
 [addText]
 applySignatures = "टेक्स्ट लागू करें"
 header = "PDFs में टेक्स्ट जोड़ें"
-tags = "text,annotation,label"
+tags = "टेक्स्ट,एनोटेशन,लेबल"
 title = "टेक्स्ट जोड़ें"
 
 [addText.canvas]
@@ -514,7 +514,7 @@ title = "समायोजित PDF"
 
 [adjustPageScale]
 submit = "पृष्ठ स्केल समायोजित करें"
-tags = "resize,modify,dimension,adapt"
+tags = "आकार बदलें,संशोधित करें,आयाम,अनुकूलित करें"
 title = "पृष्ठ स्केल समायोजित करें"
 
 [adjustPageScale.error]
@@ -742,14 +742,14 @@ title = "दस्तावेज़ और RAG"
 
 [admin.settings.ai.documents.embeddingApiKey]
 description = "engine के अपने environment credential का उपयोग करने के लिए खाली छोड़ें। स्वयं-होस्टेड single-engine deployments पर लागू होता है।"
-generic = "Embedding API key"
-openai = "OpenAI API key"
+generic = "Embedding API कुंजी"
+openai = "OpenAI API कुंजी"
 setPlaceholder = "सहेजा गया - वर्तमान key रखने के लिए खाली छोड़ें"
-voyageai = "VoyageAI API key"
+voyageai = "VoyageAI API कुंजी"
 
 [admin.settings.ai.documents.embeddingBaseUrl]
 description = "OpenAI-compatible / Ollama embeddings endpoint का Base URL, जैसे http://ollama:11434/v1। किसी विश्वसनीय internal endpoint की ओर इशारा करना चाहिए (SSRF-संवेदनशील)।"
-label = "Embedding base URL"
+label = "Embedding बेस URL"
 
 [admin.settings.ai.documents.embeddingModel]
 description = "Embedding model नाम। मुक्त टेक्स्ट; सुझाव केवल संकेत हैं।"
@@ -757,7 +757,7 @@ label = "Embedding मॉडल"
 
 [admin.settings.ai.documents.embeddingProvider]
 description = "दस्तावेज़ टेक्स्ट को vector embeddings में बदलने के लिए उपयोग किया गया provider।"
-label = "Embedding provider"
+label = "Embedding प्रदाता"
 
 [admin.settings.ai.documents.maxSearches]
 description = "प्रति request agent द्वारा चलाए जा सकने वाले retrieval searches की अधिकतम संख्या।"
@@ -778,7 +778,7 @@ label = "Top K"
 connection = "कनेक्शन"
 description = "चुनें कि AI कहाँ चलता है। यहाँ किए गए बदलाव restart पर लागू होते हैं।"
 restartNote = "URL या किसी भी टाइमआउट को बदलना रीस्टार्ट के बाद प्रभावी होता है।"
-title = "AI Engine"
+title = "AI इंजन"
 
 [admin.settings.ai.general.capabilities]
 description = "व्यक्तिगत AI सुविधाओं को चालू या बंद करें। अक्षम सुविधाएँ app में छिपी रहती हैं।"
@@ -802,7 +802,7 @@ label = "AI सक्षम करें"
 
 [admin.settings.ai.general.features.chat]
 description = "PDFs के साथ काम करने के लिए संवादात्मक assistant।"
-label = "Chat assistant"
+label = "चैट सहायक"
 
 [admin.settings.ai.general.features.classify]
 description = "दस्तावेज़ों को प्रकार या सामग्री के आधार पर स्वचालित रूप से वर्गीकृत करें।"
@@ -818,11 +818,11 @@ label = "दस्तावेज़ प्रश्न"
 
 [admin.settings.ai.general.features.mathAuditor]
 description = "गणितीय और संख्यात्मक त्रुटियों के लिए दस्तावेज़ों की समीक्षा करें।"
-label = "Math auditor"
+label = "गणित ऑडिटर"
 
 [admin.settings.ai.general.features.pdfComment]
 description = "PDF में AI-लिखित समीक्षा टिप्पणियाँ और annotations जोड़ें।"
-label = "PDF comment agent"
+label = "PDF टिप्पणी एजेंट"
 
 [admin.settings.ai.general.longRunningTimeoutSeconds]
 description = "दस्तावेज़ generation जैसे भारी agent operations के लिए timeout।"
@@ -869,7 +869,7 @@ label = "Request timeout (सेकंड)"
 
 [admin.settings.ai.general.url]
 description = "Python AI engine का internal URL, जैसे http://stirling-pdf-engine:5001।"
-label = "AI engine URL"
+label = "AI इंजन URL"
 
 [admin.settings.ai.limits]
 description = "AI requests कितना काम कर सकती हैं और कितनी साथ-साथ चल सकती हैं, इसके लिए guardrails। सहेजने पर AI engine पर लागू होता है।"
@@ -892,37 +892,37 @@ description = "LLM provider और AI engine द्वारा उपयोग 
 title = "Models और Providers"
 
 [admin.settings.ai.models.apiKey]
-anthropic = "Anthropic API key"
+anthropic = "Anthropic API कुंजी"
 description = "engine के अपने environment credential का उपयोग करने के लिए खाली छोड़ें। स्वयं-होस्टेड single-engine deployments पर लागू होता है।"
-generic = "API key"
-openai = "OpenAI API key"
+generic = "API कुंजी"
+openai = "OpenAI API कुंजी"
 setPlaceholder = "सहेजा गया - वर्तमान key रखने के लिए खाली छोड़ें"
 
 [admin.settings.ai.models.baseUrl]
 contextWindow = "कम से कम 16,384 tokens की context window का उपयोग करें। छोटी windows prompt का हिस्सा चुपचाप हटा देती हैं। Ollama डिफ़ॉल्ट रूप से 4,096 है - OLLAMA_CONTEXT_LENGTH बढ़ाएं।"
 description = "OpenAI-compatible / Ollama endpoint का Base URL, जैसे http://ollama:11434/v1।"
-label = "Provider base URL"
+label = "प्रदाता बेस URL"
 warning = "base URL किसी विश्वसनीय internal endpoint की ओर इशारा करना चाहिए। engine इसे server-side requests करेगा, इसलिए अविश्वसनीय value SSRF-संवेदनशील है।"
 
 [admin.settings.ai.models.fastMaxTokens]
 description = "fast model के लिए अधिकतम output tokens।"
-label = "Fast model max tokens"
+label = "फास्ट मॉडल अधिकतम टोकन"
 
 [admin.settings.ai.models.fastModel]
 description = "हल्के tasks के लिए सस्ता, तेज़ model। मुक्त टेक्स्ट; सुझाव केवल संकेत हैं।"
-label = "Fast model"
+label = "फास्ट मॉडल"
 
 [admin.settings.ai.models.provider]
 description = "engine किस LLM provider से बात करता है।"
-label = "Provider"
+label = "प्रदाता"
 
 [admin.settings.ai.models.smartMaxTokens]
 description = "smart model के लिए अधिकतम output tokens।"
-label = "Smart model max tokens"
+label = "स्मार्ट मॉडल अधिकतम टोकन"
 
 [admin.settings.ai.models.smartModel]
 description = "जटिल reasoning के लिए उच्च-क्षमता वाला model। मुक्त टेक्स्ट; सुझाव केवल संकेत हैं।"
-label = "Smart model"
+label = "स्मार्ट मॉडल"
 
 [admin.settings.ai.saved]
 body = "बदलाव AI engine को स्वचालित रूप से भेज दिए जाते हैं।"
@@ -1221,7 +1221,7 @@ title = "फ़ीचर्स"
 
 [admin.settings.features.serverCertificate]
 description = "वह certificate जनरेट करें जो \"Sign with Stirling-PDF\" signing सुविधा को support करता है।"
-label = "Certificate Signing"
+label = "प्रमाणपत्र हस्ताक्षर"
 
 [admin.settings.features.serverCertificate.enabled]
 description = "इस server द्वारा जनरेट किए गए certificate का उपयोग करके \"Sign with Stirling-PDF\" प्रदान करें"
@@ -1242,13 +1242,13 @@ label = "सर्टिफ़िकेट वैधता (दिन)"
 [admin.settings.folderAccess]
 description = "वे directories जिनसे folder sources और folder outputs को पढ़ने और लिखने की अनुमति है। यह एक security boundary है: automations को इस list के बाहर किसी server path पर कभी point नहीं किया जा सकता।"
 securityNote = "folder sources और outputs को पूरी तरह अक्षम करने के लिए इसे खाली छोड़ें। Stirling की अपनी configuration directory हमेशा प्रतिबंधित रहती है।"
-title = "Folder Access"
+title = "फ़ोल्डर एक्सेस"
 
 [admin.settings.folderAccess.implied]
 description = "Stirling-managed ये directories हमेशा अनुमत हैं और यहाँ बदली नहीं जा सकतीं।"
-serverStorage = "Server file storage"
+serverStorage = "सर्वर फ़ाइल स्टोरेज"
 title = "हमेशा अनुमत"
-watchedFolder = "Pipeline watched folder"
+watchedFolder = "Pipeline देखे जाने वाला फ़ोल्डर"
 
 [admin.settings.folderAccess.roots]
 add = "जोड़ें"
@@ -1321,7 +1321,7 @@ label = "फिनिश्ड फ़ोल्डर्स डायरेक्
 
 [admin.settings.general.customPaths.pipeline.pipelineDir]
 description = "Pipeline resources के लिए base directory (default के लिए खाली छोड़ें: /pipeline)"
-label = "Pipeline Directory"
+label = "Pipeline डायरेक्टरी"
 
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 description = "वह डायरेक्टरी जहाँ पाइपलाइन आने वाले PDF मॉनिटर करती है (डिफ़ॉल्ट हेतु खाली छोड़ें: /pipeline/watchedFolders)"
@@ -1329,7 +1329,7 @@ label = "वॉच्ड फ़ोल्डर्स डायरेक्टर
 
 [admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
 description = "Directories जहाँ pipeline incoming PDFs के लिए monitor करता है (प्रति पंक्ति एक या comma-separated; default के लिए खाली छोड़ें: /pipeline/watchedFolders)"
-label = "Watched Folders Directories"
+label = "देखे जाने वाले फ़ोल्डर डायरेक्टरी"
 
 [admin.settings.general.defaultLocale]
 description = "नए उपयोगकर्ताओं के लिए डिफ़ॉल्ट भाषा (उदा., en_US, es_ES)"
@@ -1488,7 +1488,7 @@ label = "अनुमत tools"
 
 [admin.settings.mcp.blockedOps]
 description = "MCP से छिपाने के लिए operation ids (comma या space separated), उदा. add-password remove-password। सभी enabled tools expose करने के लिए खाली छोड़ें।"
-label = "Blocked tools"
+label = "अवरुद्ध टूल्स"
 
 [admin.settings.mcp.enabled]
 description = "जब बंद हो (default), कोई /mcp endpoint, metadata, या MCP beans load नहीं होते।"
@@ -1520,7 +1520,7 @@ placeholder = "issuer से auto-discovered"
 [admin.settings.mcp.mode]
 apikey = "API कुंजी (Stirling प्रति-उपयोगकर्ता कुंजी)"
 description = "OAuth को external IdP चाहिए। API key प्रति-user Stirling API key (X-API-KEY) उपयोग करती है - self-host के लिए सबसे सरल।"
-label = "Authentication mode"
+label = "प्रमाणीकरण मोड"
 oauth = "OAuth 2.1 (बाहरी IdP)"
 
 [admin.settings.mcp.requireAccount]
@@ -1815,7 +1815,7 @@ label = "शेयर लिंक सक्षम करें"
 
 [admin.settings.storage.signing.enabled]
 description = "उपयोगकर्ताओं को बहु-प्रतिभागी दस्तावेज़ हस्ताक्षर सत्र बनाने की अनुमति दें। इसके लिए सर्वर फ़ाइल भंडारण सक्षम होना आवश्यक है।"
-label = "समूह हस्ताक्षर सक्षम करें (अल्फा)"
+title = "समूह हस्ताक्षर सक्षम करें"
 
 [admin.settings.telegram]
 description = "Telegram बॉट कनेक्टिविटी, एक्सेस नियंत्रण और फ़ीडबैक व्यवहार कॉन्फ़िगर करें।"
@@ -1953,7 +1953,7 @@ paragraph2 = "कृपया Stirling-PDF को बढ़ने में म�
 title = "क्या आप Stirling PDF को बेहतर बनाने में मदद करना चाहते हैं?"
 
 [annotate]
-tags = "annotate,highlight,draw,markup,comment,notes,review,redline,feedback,markup tools,sticky notes,shapes,arrows,text box,freehand"
+tags = "एनोटेट,हाइलाइट,ड्रॉ,मार्कअप,टिप्पणी,नोट्स,समीक्षा,रेडलाइन,फ़ीडबैक,मार्कअप टूल्स,स्टिकी नोट्स,आकृतियाँ,तीर,टेक्स्ट बॉक्स,फ्रीहैंड"
 
 [annotation]
 alignCenter = "बीच में संरेखित करें"
@@ -2050,13 +2050,13 @@ remove = "अटैचमेंट हटाएँ"
 rename = "अटैचमेंट का नाम बदलें"
 restore = "delete undo करें"
 saveChanges = "बदलाव सहेजें ({{count}})"
-tags = "attachments,add,remove,embed,file,extract,manage"
+tags = "अटैचमेंट,जोड़ें,हटाएँ,एम्बेड,फ़ाइल,निकालें,प्रबंधित करें"
 title = "अटैचमेंट प्रबंधित करें"
 
 [attachments.badges]
 deleted = "हटाया गया"
 renamed = "नाम बदला गया"
-staged = "STAGED"
+staged = "स्टेज्ड"
 
 [audit]
 configureAudit = "ऑडिट लॉगिंग कॉन्फ़िगर करें"
@@ -2352,13 +2352,13 @@ label = "{{title}} के लिए मेनू खोलें"
 cancel = "रद्द करें"
 confirm = "आयात करें"
 detectedAutomation = "Automate JSON"
-detectedFolderScan = "Folder Scanning JSON"
+detectedFolderScan = "फ़ोल्डर स्कैनिंग JSON"
 dropHint = "यहाँ JSON छोड़ें या फ़ाइल चुनने के लिए क्लिक करें"
 dropSubhint = "Automate और Folder Scanning दोनों कॉन्फ़िग स्वीकार्य हैं"
 dropzoneAriaLabel = "यहाँ एक ऑटोमेशन JSON फ़ाइल छोड़ें"
 intro = "एक JSON फ़ाइल यहाँ छोड़ें या उसकी सामग्री नीचे पेस्ट करें। फ़ॉर्मेट (Automate या Folder Scanning) स्वतः पहचाना जाएगा।"
-opCount_one = "{{count}} operation"
-opCount_other = "{{count}} operations"
+opCount_one = "{{count}} ऑपरेशन"
+opCount_other = "{{count}} ऑपरेशन"
 parseError = "पार्स नहीं किया जा सका: {{message}}"
 pasteLabel = "या JSON पेस्ट करें"
 pastePlaceholder = "अपना ऑटोमेशन JSON यहाँ पेस्ट करें…"
@@ -2386,7 +2386,7 @@ finish = "समाप्त करें"
 run = "स्वचालन चलाएँ"
 running = "स्वचालन चल रहा है..."
 signInToRun = "ऑटोमेशन चलाने के लिए साइन इन करें।"
-steps_one = "{{count}} step"
+steps_one = "{{count}} चरण"
 steps_other = "{{count}} चरण"
 unnamed = "बिना-नाम स्वचालन"
 
@@ -2404,20 +2404,20 @@ secureWorkflowDesc = "JavaScript और एम्बेडेड फ़ाइल
 
 [autoRename]
 description = "यह टूल सामग्री के आधार पर PDF फ़ाइलों का नाम स्वतः बदल देगा। यह दस्तावेज़ का विश्लेषण कर पाठ से सबसे उपयुक्त शीर्षक खोजता है।"
-tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
+tags = "ऑटो-डिटेक्ट,हेडर-आधारित,व्यवस्थित करें,फिर से लेबल करें,ऑटो रीनेम,स्वचालित नाम बदलना,स्मार्ट रीनेम,सामग्री के आधार पर नाम बदलें,फ़ाइलनाम,फ़ाइल नामकरण,शीर्षक पहचानें"
 
 [autoRotate]
 submit = "ऑटो रोटेट"
 tags = "ऑटो रोटेट,orientation ठीक करें,उल्टा,बगल की ओर,सीधा करें,orient,orientation detect करें,rotation सही करें,auto orient,scanned,OSD"
 
 [autoRotate.confidenceThreshold]
-title = "Confidence threshold"
+title = "विश्वास सीमा"
 
 [autoRotate.detectionMode]
-auto = "Auto"
+auto = "ऑटो"
 osd = "केवल OCR"
 text = "केवल टेक्स्ट"
-title = "Detection method"
+title = "पहचान विधि"
 
 [autoRotate.error]
 failed = "PDF को auto-rotate करते समय error हुआ।"
@@ -2426,12 +2426,12 @@ failed = "PDF को auto-rotate करते समय error हुआ।"
 title = "कम confidence pages को मिलान के लिए घुमाएँ"
 
 [autoRotate.report]
-applied = "{{degrees}}° CW"
-confidenceValue = "Confidence {{value}}"
+applied = "{{degrees}}° घड़ी की दिशा में"
+confidenceValue = "विश्वास {{value}}"
 noChange = "कोई बदलाव नहीं"
 pageLabel = "पेज {{number}}"
 summary = "{{total}} pages में से {{rotated}} घुमाए गए, {{unchanged}} वैसे ही छोड़े गए"
-title = "Detection report"
+title = "पहचान रिपोर्ट"
 
 [autoRotate.report.method]
 inferred = "मिलान किया गया"
@@ -2453,21 +2453,21 @@ tooFewGlyphs = "बहुत कम text"
 title = "Auto Rotate परिणाम"
 
 [autoRotate.settings]
-title = "Settings"
+title = "सेटिंग्स"
 
 [autoRotate.tooltip.confidenceThreshold]
 text = "page को घुमाने से पहले check को कितना निश्चित होना चाहिए। अधिक pages घुमाने के लिए इसे घटाएँ, अधिक pages को untouched छोड़ने के लिए बढ़ाएँ।"
-title = "Confidence threshold"
+title = "विश्वास सीमा"
 
 [autoRotate.tooltip.description]
 text = "यह पता लगाता है कि प्रत्येक page किस दिशा में होना चाहिए और उसे सही दिशा में घुमा देता है। जो pages पहले से सीधे हैं, उन्हें वैसे ही छोड़ दिया जाता है।"
 
 [autoRotate.tooltip.detectionMode]
 text = "Auto पहले page पर text पढ़ता है, फिर यदि वह पर्याप्त न हो तो page को image के रूप में देखता है। Text only image check को छोड़ देता है, जो उन documents के लिए सबसे तेज़ है जिन्हें कभी scan नहीं किया गया था। OCR only हर page को image मानता है।"
-title = "Detection method"
+title = "पहचान विधि"
 
 [autoRotate.tooltip.header]
-title = "Auto Rotate"
+title = "ऑटो रोटेट"
 
 [autoRotate.tooltip.inferUndetected]
 text = "खाली या लगभग खाली pages को अपने-आप check नहीं किया जा सकता। जब पढ़े जा सकने वाले हर page को समान turn की आवश्यकता होती है, तो इन pages को उनसे match करने के लिए घुमा दिया जाता है।"
@@ -2530,7 +2530,7 @@ errorFallback = "कृपया फिर से प्रयास करे�
 [bookletImposition]
 paperSizeNote = "पेपर आकार आपके पहले पृष्ठ से स्वतः निकाला जाता है।"
 submit = "बुकलेट बनाएँ"
-tags = "booklet,imposition,printing,binding,folding,signature"
+tags = "बुकलेट,इम्पोज़िशन,प्रिंटिंग,बाइंडिंग,फोल्डिंग,सिग्नेचर"
 title = "बुकलेट इम्पोज़िशन"
 
 [bookletImposition.addBorder]
@@ -2734,7 +2734,7 @@ logoTitle = "लोगो"
 name = "नाम"
 noLogo = "कोई लोगो नहीं"
 pageNumber = "पृष्ठ संख्या"
-password = "Certificate Password"
+password = "प्रमाणपत्र पासवर्ड"
 passwordOptional = "पासवर्ड न हो तो खाली छोड़ें"
 pemCertificateLabel = "प्रमाणपत्र (.pem / .crt)"
 pemPrivateKeyLabel = "निजी कुंजी (.pem / .key)"
@@ -2744,8 +2744,7 @@ reason = "कारण"
 serverCertMessage = "सर्वर प्रमाणपत्र का उपयोग हो रहा है - कोई फ़ाइल या पासवर्ड आवश्यक नहीं"
 showLogo = "लोगो दिखाएं"
 signatureProgress = "{{signedCount}}/{{totalCount}} हस्ताक्षर"
-signed = "हस्ताक्षरित"
-tags = "authenticate,PEM,P12,official,encrypt,sign,certificate,PKCS12,JKS,server,manual,auto"
+tags = "प्रमाणित करें,PEM,P12,आधिकारिक,एन्क्रिप्ट,हस्ताक्षर,प्रमाणपत्र,PKCS12,JKS,सर्वर,मैनुअल,ऑटो"
 title = "प्रमाणपत्र हस्ताक्षर"
 viewed = "देखा गया"
 
@@ -2809,7 +2808,13 @@ reasonPlaceholder = "जैसे: मंजूरी, समीक्षा..."
 
 [certSign.collab.finalize]
 button = "अंतिम रूप दें और हस्ताक्षरित PDF लोड करें"
+confirmAction = "पुष्टि करें और अंतिम रूप दें"
+confirmDescription = "अंतिम रूप देने से यह सत्र बंद हो जाता है। अब और हस्ताक्षर सबमिट नहीं किए जा सकते।"
+confirmTitle = "इस हस्ताक्षर सत्र को अंतिम रूप दें?"
 early = "वर्तमान हस्ताक्षरों के साथ अंतिम रूप दें"
+excluded = "वे प्रतिभागी जिनके हस्ताक्षर शामिल नहीं किए जाएँगे"
+included = "हस्ताक्षर शामिल"
+requiresSignature = "अंतिम रूप देने से पहले कम से कम एक प्रतिभागी को हस्ताक्षर करना होगा।"
 
 [certSign.collab.participant]
 certInvalid = "✗ {{error}}"
@@ -2826,7 +2831,6 @@ includeSummaryPageHelp = "अंत में सभी हस्ताक्ष
 [certSign.collab.sessionDetail]
 addParticipants = "प्रतिभागी जोड़ें"
 addParticipantsError = "प्रतिभागी जोड़ने में विफल"
-backToList = "सत्रों पर वापस"
 deleteConfirm = "क्या आप सुनिश्चित हैं? इसे वापस नहीं लिया जा सकता।"
 deleteError = "सत्र हटाने में विफल"
 deleteSession = "सत्र हटाएं"
@@ -2835,14 +2839,11 @@ finalizeError = "सत्र अंतिम रूप देने में �
 loadPdfError = "हस्ताक्षरित PDF लोड करने में विफल"
 loadSignedPdf = "हस्ताक्षरित PDF को सक्रिय फ़ाइलों में लोड करें"
 messageLabel = "संदेश"
-owner = "मालिक"
 participantRemoved = "प्रतिभागी हटाया गया"
 participants = "प्रतिभागी"
 participantsAdded = "प्रतिभागी सफलतापूर्वक जोड़े गए"
-removeParticipant = "हटाएँ"
 removeParticipantError = "प्रतिभागी हटाने में विफल"
 selectUsers = "उपयोगकर्ता चुनें..."
-sessionInfo = "सत्र जानकारी"
 
 [certSign.collab.sessionList]
 active = "सक्रिय"
@@ -2855,11 +2856,10 @@ title = "हस्ताक्षर रूप"
 [certSign.collab.signRequest]
 addedToFiles = "दस्तावेज़ सक्रिय फ़ाइलों में जोड़ा गया"
 addToFiles = "सक्रिय फ़ाइलों में जोड़ें"
-advancedSettings = "उन्नत सेटिंग्स"
-backToList = "हस्ताक्षर अनुरोधों पर वापस"
 certificateChoice = "हस्ताक्षर करने के लिए एक प्रमाणपत्र चुनें"
 changeSignature = "हस्ताक्षर बदलें"
 clearSignature = "हस्ताक्षर साफ़ करें"
+closed = "यह सत्र अंतिम रूप दिया जा चुका है। आप अंतिम दस्तावेज़ देख सकते हैं, लेकिन आगे कोई हस्ताक्षर या अस्वीकृति स्वीकार नहीं की जाएगी।"
 completeAndSign = "पूर्ण करें और हस्ताक्षर करें"
 createNewSignature = "नया हस्ताक्षर बनाएं"
 decline = "अनुरोध अस्वीकार करें"
@@ -2876,7 +2876,6 @@ invalidFileType = "कृपया एक छवि फ़ाइल चुने
 location = "स्थान (वैकल्पिक)"
 locationPlaceholder = "आप कहाँ से हस्ताक्षर कर रहे हैं?"
 noCertificate = "कृपया एक प्रमाणपत्र फ़ाइल चुनें"
-noSignatures = "कृपया PDF पर कम से कम एक हस्ताक्षर रखें"
 p12File = "P12/PFX प्रमाणपत्र फ़ाइल"
 password = "प्रमाणपत्र पासवर्ड"
 penColor = "पेन का रंग"
@@ -2894,16 +2893,15 @@ signatureText = "हस्ताक्षर पाठ"
 signatureTextPlaceholder = "अपना नाम दर्ज करें..."
 signatureTypeLabel = "हस्ताक्षर प्रकार"
 signButton = "दस्तावेज़ पर हस्ताक्षर करें"
-signingTitle = "हस्ताक्षर करना"
 textColor = "पाठ का रंग"
 typeSignature = "हस्ताक्षर बनाने के लिए अपना नाम टाइप करें"
-uploadCert = "कस्टम प्रमाणपत्र"
-uploadCertDesc = "अपना P12/PFX प्रमाणपत्र उपयोग करें"
+uploadCert = "प्रमाणपत्र अपलोड करें"
+uploadCertDesc = "अपना PKCS12, PFX, PEM या JKS प्रमाणपत्र उपयोग करें।"
 uploadSignature = "अपने हस्ताक्षर की छवि अपलोड करें"
-usePersonalCert = "व्यक्तिगत प्रमाणपत्र"
-usePersonalCertDesc = "आपके खाते के लिए स्वतः जनरेटेड"
-useServerCert = "संगठन प्रमाणपत्र"
-useServerCertDesc = "साझा संगठन प्रमाणपत्र"
+usePersonalCert = "Stirling Sign · व्यक्तिगत"
+usePersonalCertDesc = "अपने खाते के लिए बनाए गए प्रमाणपत्र से हस्ताक्षर करें।"
+useServerCert = "Stirling Sign · संगठन"
+useServerCertDesc = "इस सर्वर के साझा संगठन प्रमाणपत्र से हस्ताक्षर करें।"
 useSignature = "हस्ताक्षर का उपयोग करें"
 
 [certSign.collab.signRequest.certModal]
@@ -2912,10 +2910,13 @@ certInvalidFallback = "अमान्य प्रमाणपत्र"
 certNetworkError = "प्रमाणपत्र सत्यापित नहीं कर सके"
 certValidating = "प्रमाणपत्र सत्यापित किया जा रहा है..."
 certValidUntil = "प्रमाणपत्र {{date}} तक मान्य"
-description_one = "आपने {{count}} signature रखा है। signing पूरा करने के लिए अपना certificate चुनें।"
-description_other = "आपने {{count}} signatures रखे हैं। signing पूरा करने के लिए अपना certificate चुनें।"
+description_one = "{{count}} दृश्यमान चिह्न तैयार है। हस्ताक्षर पूरा करने के लिए प्रमाणपत्र चुनें।"
+description_other = "{{count}} दृश्यमान चिह्न तैयार हैं। हस्ताक्षर पूरा करने के लिए प्रमाणपत्र चुनें।"
+description_zero = "आपका प्रमाणपत्र दस्तावेज़ पर बिना दृश्यमान चिह्नों के हस्ताक्षर करेगा।"
+details = "हस्ताक्षर विवरण (वैकल्पिक)"
+format = "प्रमाणपत्र फ़ॉर्मेट"
 sign = "दस्तावेज़ पर हस्ताक्षर करें"
-title = "प्रमाणपत्र कॉन्फ़िगर करें"
+title = "हस्ताक्षर करने का तरीका चुनें"
 
 [certSign.collab.signRequest.mode]
 move = "हस्ताक्षर स्थानांतरित करें"
@@ -2968,11 +2969,11 @@ visible = "दृश्यमान"
 yourSignatures = "आपके हस्ताक्षर ({{count}})"
 
 [certSign.collab.userSelector]
-inviteUsers = "उपयोगकर्ता जोड़ें"
 loadError = "उपयोगकर्ता लोड करने में विफल"
 noTeam = "कोई टीम नहीं"
 noUsers = "अन्य कोई उपयोगकर्ता नहीं मिला।"
 placeholder = "उपयोगकर्ता चुनें..."
+you = "{{name}} (आप)"
 
 [certSign.device]
 stepTitle = "यह डिवाइस"
@@ -3061,7 +3062,7 @@ title = "क्रेडेंशियल्स बदलें"
 [changeMetadata]
 filenamePrefix = "metadata"
 submit = "बदलें"
-tags = "edit,modify,update,metadata,properties,document properties,author,title,subject,keywords,creator,producer,info,document info,file properties"
+tags = "संपादित करें,संशोधित करें,अपडेट करें,मेटाडेटा,गुण,दस्तावेज़ गुण,लेखक,शीर्षक,विषय,कीवर्ड,निर्माता,प्रोड्यूसर,जानकारी,दस्तावेज़ जानकारी,फ़ाइल गुण"
 
 [changeMetadata.advanced]
 title = "उन्नत विकल्प"
@@ -3169,7 +3170,7 @@ unknown = "अज्ञात"
 [changePermissions]
 desc = "दस्तावेज़ प्रतिबंध और अनुमतियाँ बदलें।"
 submit = "अनुमतियां बदलें"
-tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
+tags = "अनुमतियाँ,प्रतिबंध,अधिकार,एक्सेस नियंत्रण,अनुमति दें,अस्वीकार करें,प्रिंटिंग,कॉपी करना,संपादन,अनुमतियाँ संशोधित करें,सुरक्षा सेटिंग्स,उपयोगकर्ता अधिकार"
 title = "अनुमतियां बदलें"
 
 [changePermissions.error]
@@ -3223,7 +3224,7 @@ open = "Stirling AI assistant खोलें"
 
 [chat.header]
 agentMenu = "Stirling एजेंट विकल्प"
-assistant = "AI Assistant"
+assistant = "AI सहायक"
 clearChat = "चैट साफ़ करें"
 
 [chat.input]
@@ -3351,7 +3352,7 @@ credit-note = "क्रेडिट नोट"
 customs-declaration = "कस्टम्स घोषणा"
 customs-form = "कस्टम्स फ़ॉर्म"
 cv = "CV"
-datasheet = "Datasheet"
+datasheet = "डेटाशीट"
 debit-note = "डेबिट नोट"
 deed = "डीड"
 delivery-note = "डिलीवरी नोट"
@@ -3362,7 +3363,7 @@ discharge-summary = "डिस्चार्ज सारांश"
 dissertation = "शोध प्रबंध"
 donation-receipt = "दान रसीद"
 dunning-letter = "भुगतान अनुस्मारक पत्र"
-email-thread = "Email thread"
+email-thread = "Email थ्रेड"
 employee-handbook = "कर्मचारी हैंडबुक"
 employment-contract = "रोज़गार अनुबंध"
 estimate = "अनुमान"
@@ -3480,7 +3481,7 @@ purchase-order = "खरीद आदेश"
 quality-report = "गुणवत्ता रिपोर्ट"
 quarterly-report = "त्रैमासिक रिपोर्ट"
 questionnaire = "प्रश्नावली"
-quick-start-guide = "Quick start guide"
+quick-start-guide = "क्विक स्टार्ट गाइड"
 quote = "कोटेशन"
 radiology-report = "रेडियोलॉजी रिपोर्ट"
 receipt = "रसीद"
@@ -3490,7 +3491,7 @@ referral-letter = "रेफ़रल पत्र"
 registration-confirmation = "पंजीकरण पुष्टि"
 registration-form = "पंजीकरण फ़ॉर्म"
 regulatory-filing = "नियामक फाइलिंग"
-release-notes = "Release notes"
+release-notes = "रिलीज़ नोट्स"
 remittance-advice = "प्रेषण सलाह"
 rental-agreement = "किराया अनुबंध"
 report = "रिपोर्ट"
@@ -3641,7 +3642,7 @@ tooltip = "यह ऑपरेशन आपके क्लाउड क्र�
 tooltip = "स्क्रीन से रंग चुनें"
 
 [colorPicker]
-hue = "Hue"
+hue = "ह्यू"
 saturation = "Saturation और brightness"
 title = "रंग चुनें"
 
@@ -3652,7 +3653,7 @@ cancel = "रद्द करें"
 change = "बदलें"
 clearFilters = "फ़िल्टर साफ़ करें"
 close = "बंद करें"
-codeSample = "Code sample"
+codeSample = "कोड नमूना"
 collapse = "समेटें"
 confirm = "पुष्टि करें"
 continue = "जारी रखें"
@@ -3682,7 +3683,7 @@ search = "खोजें"
 settingsSections = "सेटिंग्स अनुभाग"
 showAllTotal = "सभी {{total}} दिखाएँ"
 showLess = "कम दिखाएँ"
-stepOf = "Step {{current}} of {{total}}"
+stepOf = "चरण {{current}} / {{total}}"
 
 [compare]
 clearSelected = "चयनित साफ़ करें"
@@ -3811,7 +3812,7 @@ message = "ये दस्तावेज़ अत्यधिक असमा
 [compress]
 desc = "फ़ाइल आकार कम करने के लिए PDFs को संपीड़ित करें।"
 submit = "कम्प्रेस करें"
-tags = "shrink,reduce,optimize,compress,smaller,downsize,file size,reduce size,minimize,make smaller,decrease size,optimize size"
+tags = "सिकोड़ें,कम करें,ऑप्टिमाइज़ करें,कंप्रेस करें,छोटा,डाउनसाइज़,फ़ाइल आकार,आकार कम करें,मिनिमाइज़ करें,छोटा बनाएँ,आकार घटाएँ,आकार ऑप्टिमाइज़ करें"
 title = "कम्प्रेस"
 
 [compress.compressionLevel]
@@ -3846,7 +3847,7 @@ title = "संपीड़न विधि"
 [compress.settings]
 desiredSize = "वांछित फ़ाइल आकार"
 desiredSizePlaceholder = "आकार दर्ज करें"
-desiredSizeUnit = "Size unit"
+desiredSizeUnit = "आकार इकाई"
 title = "सेटिंग्स"
 
 [compress.tooltip.description]
@@ -3876,7 +3877,7 @@ tags = "कम्प्रेस,छोटा,छोटा"
 [config]
 plan = "प्लान"
 planDescription = "आपका प्लान, credits और spend limit, और उनसे जुड़े invoices।"
-team = "Team"
+team = "टीम"
 teamDescription = "इस workspace को कौन साझा करता है, और वे invitations जो अभी भी उत्तर की प्रतीक्षा में हैं।"
 
 [config.account.overview]
@@ -3890,7 +3891,7 @@ enterEmailConfirm = "हटाने की पुष्टि के लिए,
 guestDescription = "आप अतिथि के रूप में साइन इन हैं। कृपया ऊपर अपना खाता अपग्रेड करने पर विचार करें।"
 label = "अवलोकन"
 manageAccountPreferences = "अपने खाता वरीयताएँ प्रबंधित करें"
-signedInAs = "Account"
+signedInAs = "खाता"
 title = "खाता सेटिंग्स"
 
 [config.account.profilePicture]
@@ -4111,26 +4112,26 @@ pdfUaEmbedFontsHelp = "PDF/UA में हर font embedded होना आव
 pdfUaFigureLabel = "पेज {{page}} {{kind}}"
 pdfUaFigurePlaceholder = "यह image reader को क्या बताती है"
 pdfUaFindImages = "Description चाहिए ऐसी images ढूँढें"
-pdfUaLanguage = "Document language"
+pdfUaLanguage = "दस्तावेज़ भाषा"
 pdfUaLanguageHelp = "BCP-47 tag जैसे en-GB। केवल तब उपयोग होता है जब document पहले से अपनी language घोषित नहीं करता।"
 pdfUaNoImagesNeedingText = "किसी image में description missing नहीं है।"
-pdfUaOptions = "PDF/UA Options"
+pdfUaOptions = "PDF/UA विकल्प"
 pdfUaOverrideLanguage = "Document की अपनी language बदलें"
 pdfUaOverrideLanguageHelp = "इसे केवल तभी tick करें जब ऊपर की language सही हो और document की अपनी language गलत हो। किसी document को ऐसी language में relabel करना जिसमें वह लिखा नहीं है, screen reader को समझ से बाहर बना देता है।"
-pdfUaProfile = "Conformance level"
+pdfUaProfile = "अनुपालन स्तर"
 pdfUaSignatureWarning = "यह PDF digitally signed है। Tagging उस page content को rewrite करती है जिसे signature cover करता है, इसलिए signature verify होना बंद हो जाएगा। पहले convert करें, फिर दोबारा sign करें।"
-pdfUaTitle = "Document title"
+pdfUaTitle = "दस्तावेज़ शीर्षक"
 pdfUaTitleHelp = "Reader द्वारा filename के बजाय दिखाया जाता है। खाली छोड़ने पर, first heading उपयोग होती है।"
 selectSourceFormatFirst = "पहले source format चुनें"
 settings = "सेटिंग्स"
 single = "एकल"
 sourceFormatPlaceholder = "स्रोत फ़ॉर्मेट"
-strictMode = "Strict Mode"
+strictMode = "सख्त मोड"
 strictModeDesc = "यदि conversion perfect नहीं है तो error (VeraPDF verification का उपयोग करता है)"
-svgPdfOptions = "SVG to PDF Options"
+svgPdfOptions = "SVG से PDF विकल्प"
 svgToPdf = "SVG → PDF"
 svgVectorNote = "SVG files को किसी भी resolution पर crisp output के लिए vector graphics के रूप में render किया जाता है। SVG के dimensions PDF page size निर्धारित करते हैं।"
-tags = "transform,change,convert,PDF to Word,PDF to Excel,PDF to image,Word to PDF,Excel to PDF,PowerPoint to PDF,HTML to PDF,export,import,file conversion,format change,save as"
+tags = "रूपांतरित करें,बदलें,कन्वर्ट करें,PDF से Word,PDF से Excel,PDF से image,Word से PDF,Excel से PDF,PowerPoint से PDF,HTML से PDF,export,import,file conversion,format change,save as"
 targetFormatPlaceholder = "लक्ष्य फ़ॉर्मेट"
 title = "बदलें"
 webOptions = "Web to PDF विकल्प"
@@ -4314,7 +4315,7 @@ saveFilesTitle_other = "{{count}} files सहेजें"
 
 [desktop.saasError]
 body = "इस tool को cloud processing की आवश्यकता है लेकिन एक error आया: {{error}}। कृपया अपना connection जाँचें और फिर प्रयास करें।"
-title = "Cloud Processing Failed"
+title = "Cloud प्रोसेसिंग विफल"
 
 [desktop.titleBar]
 maximize = "अधिकतम करें"
@@ -4374,7 +4375,7 @@ message = "Stirling-PDF को इस मशीन पर स्वयं को
 title = "प्रशासक अनुमतियाँ आवश्यक"
 
 [devAirgapped]
-tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
+tags = "air-gapped,offline,अलग-थलग,no internet,डिस्कनेक्टेड,सुरक्षित,network isolation,standalone"
 
 [devApi]
 tags = "API,development,documentation,developer,REST,integration,endpoints,programmatic,automation,scripting"
@@ -4399,7 +4400,7 @@ editSecretValue = "गोपनीय मान संपादित करे�
 
 [editTableOfContents]
 submit = "Table of Contents लागू करें"
-tags = "bookmarks,contents,edit,table of contents,TOC,outline,navigation,chapters,sections,add bookmarks,edit bookmarks,PDF outline"
+tags = "बुकमार्क,सामग्री,एडिट,विषय-सूची,TOC,outline,navigation,अध्याय,सेक्शन,बुकमार्क जोड़ें,बुकमार्क एडिट करें,PDF outline"
 workbenchLabel = "आउटलाइन कार्यक्षेत्र"
 
 [editTableOfContents.actions]
@@ -4516,11 +4517,11 @@ dismissAllErrors = "सभी त्रुटियाँ खारिज कर
 failedFiles = "विफल फाइलें: {{ids}}"
 generic = "एक त्रुटि हुई"
 invalidOrCorruptedFiles = "अमान्य/corrupted file(s) के कारण process विफल हुआ"
-networkError = "Network error"
-requestError = "Request error"
-requestFailed = "Request failed"
+networkError = "Network त्रुटि"
+requestError = "Request त्रुटि"
+requestFailed = "Request विफल"
 requestFallback = "आपकी request process करते समय error हुआ।"
-serverError = "Server error"
+serverError = "Server त्रुटि"
 unknown = "अज्ञात error हुआ"
 
 [error.pdfOpen]
@@ -4535,7 +4536,7 @@ unsupportedSecurity = "यह PDF unsupported security scheme का उपय�
 [error.processing]
 cancelled = "Processing user द्वारा cancel की गई।"
 corruption = "यह PDF file corrupted या encrypted लगती है। कृपया दूसरी file आज़माएँ।"
-failed = "Processing failed: {{message}}"
+failed = "प्रोसेसिंग विफल: {{message}}"
 memory = "इस file को process करने के लिए memory पर्याप्त नहीं है। अन्य applications बंद करें या छोटी file process करें।"
 network = "Network connection failed। कृपया अपना internet connection जाँचें और फिर प्रयास करें।"
 parsing = "PDF process करने में विफल: {{message}}"
@@ -4563,7 +4564,7 @@ tags = "निकालें"
 
 [extractPages]
 submit = "पृष्ठ निकालें"
-tags = "pull,select,copy,extract,extract pages,get pages,pull out,save pages,export pages,copy pages,select pages,specific pages"
+tags = "निकालें,चुनें,कॉपी करें,extract,पेज निकालें,पेज प्राप्त करें,बाहर निकालें,पेज सेव करें,पेज export करें,पेज कॉपी करें,पेज चुनें,विशिष्ट पेज"
 title = "पृष्ठ निकालें"
 
 [extractPages.error]
@@ -4651,7 +4652,7 @@ unsupported = "असमर्थित"
 unzip = "अनज़िप"
 updateOnServer = "सर्वर पर अपडेट करें"
 uploadToServer = "सर्वर पर अपलोड करें"
-versionHistory = "Version history"
+versionHistory = "वर्शन इतिहास"
 
 [filePicker]
 add_one = "{{count}} फ़ाइल जोड़ें"
@@ -4720,14 +4721,14 @@ collapse = "साइडबार समेटें"
 customizeGroups = "समूह अनुकूलित करें"
 dataLostBody = "इस browser ने इस file की contents खो दी हैं। इसके साथ काम जारी रखने के लिए इसे फिर upload करें।"
 dataLostTitle = "File data उपलब्ध नहीं है"
-downloadFailed = "Download failed"
+downloadFailed = "डाउनलोड विफल"
 dropHint = "शुरू करने के लिए फ़ाइलें खोलें"
 dropToAdd = "जोड़ने के लिए files drop करें"
 duplicateFailed = "File duplicate नहीं की जा सकी"
 expand = "साइडबार फैलाएँ"
 googleDrive = "Google Drive"
-library = "PDF Library"
-myFiles = "File library"
+library = "PDF लाइब्रेरी"
+myFiles = "File लाइब्रेरी"
 noFiles = "अभी कोई फ़ाइल नहीं"
 openFileManager = "सभी files और folders browse करें"
 openFromComputer = "कंप्यूटर से खोलें"
@@ -4741,17 +4742,17 @@ viewAll = "सभी {{count}} फ़ाइलें देखें"
 
 [fileSidebar.fileItem]
 closeViewer = "व्यूअर बंद करें"
-dataLost = "Data lost"
+dataLost = "डेटा खो गया"
 dataLostTooltip = "इस browser ने इस file की contents खो दी हैं। इसके साथ काम जारी रखने के लिए इसे फिर upload करें।"
 delete = "हटाएँ"
-duplicate = "Duplicate"
+duplicate = "डुप्लिकेट"
 moreActions = "अधिक कार्रवाइयाँ"
 openInViewer = "व्यूअर में खोलें"
 rename = "नाम बदलें"
 savedToServer = "Server पर सहेजा गया"
 updateOnServer = "Server पर update करें"
 uploadToServer = "Server पर upload करें"
-versionHistory = "Version history"
+versionHistory = "वर्शन इतिहास"
 
 [fileSidebar.groupsModal]
 done = "हो गया"
@@ -4774,7 +4775,7 @@ addToLibrary = "Stirling लाइब्रेरी में जोड़े�
 addToLibraryFailed = "कुछ फ़ाइलें जोड़ी नहीं जा सकीं"
 addToWorkspace = "वर्कस्पेस में जोड़ें"
 addToWorkspaceCount = "{{count}} को वर्कस्पेस में जोड़ें"
-allFiles = "Stirling library"
+allFiles = "Stirling लाइब्रेरी"
 back = "वापस"
 backToFolder = "{{folder}} पर वापस"
 backToMyFiles = "File library पर वापस जाएँ"
@@ -4815,13 +4816,13 @@ downloadVersion = "यह संस्करण डाउनलोड करे�
 dropOverlay = "अपलोड करने के लिए फ़ाइलें छोड़ें"
 dropOverlaySub = "Files Recents में दिखाई देती हैं। उन्हें कभी भी folders में organize करें।"
 dropOverlaySubFolder = "वे इस फ़ोल्डर में जोड़ी जाएँगी।"
-duplicate = "Duplicate"
+duplicate = "डुप्लिकेट"
 file = "फ़ाइल"
 fileInfo = "फाइल जानकारी"
 fileMenu = "फ़ाइल क्रियाएँ"
 folder = "फ़ोल्डर"
-folderItems_one = "{{count}} item"
-folderItems_other = "{{count}} items"
+folderItems_one = "{{count}} आइटम"
+folderItems_other = "{{count}} आइटम"
 folderMenu = "फ़ोल्डर क्रियाएँ"
 folderSettings = "फ़ोल्डर सेटिंग्स"
 inPath = "{{path}} में"
@@ -4846,7 +4847,7 @@ open = "खोलें"
 openVersionInWorkspace = "वर्कस्पेस में खोलें"
 originFilter = "स्रोत द्वारा फ़िल्टर करें"
 recentFiles = "हाल की"
-refresh = "Refresh"
+refresh = "रिफ्रेश"
 refreshNeedsConnection = "सर्वर से रीफ़्रेश करने के लिए साइन इन करें।"
 remove = "हटाएं"
 removeLocalFolder = "Stirling से अनमाउंट करें"
@@ -4866,8 +4867,8 @@ shareDisabledHint = "इस सर्वर पर फ़ाइल साझा 
 shareManage = "शेयरिंग प्रबंधित करें"
 showDetails = "विवरण दिखाएं"
 signInRequired = "Cloud storage उपयोग करने के लिए sign in करें।"
-summary_one = "{{count}} item"
-summary_other = "{{count}} items"
+summary_one = "{{count}} आइटम"
+summary_other = "{{count}} आइटम"
 tree = "फ़ोल्डर"
 unmount = "अनमाउंट"
 unmountFolderBody = "\"{{name}}\" को अनमाउंट करें? फ़ोल्डर और इसकी फ़ाइलें आपकी डिस्क पर रहेंगी।"
@@ -4876,12 +4877,12 @@ upload = "अपलोड"
 uploadFromMobile = "मोबाइल से अपलोड करें"
 versionActions = "संस्करण क्रियाएँ"
 versionCollapse = "बीच के संस्करण समेटें"
-versionHistory = "Version history"
+versionHistory = "वर्शन इतिहास"
 versionHistoryEmpty = "इस file के कोई earlier versions नहीं हैं।"
 versionOrigin = "मूल अपलोड"
 versionsCount = "{{count}} संस्करण"
 versionShowHidden = "{{count}} पहले के संस्करण दिखाएं"
-viewVersionHistory = "Version journey ({{count}})"
+viewVersionHistory = "वर्शन यात्रा ({{count}})"
 
 [filesPage.appearance]
 colour = "रंग"
@@ -5450,9 +5451,6 @@ multimedia = "मल्टीमीडिया"
 
 [groupSigning.steps]
 back = "वापस"
-completed = "पूर्ण"
-current = "वर्तमान"
-stepLabel = "चरण {{number}}"
 
 [groupSigning.steps.configureDefaults]
 continue = "जारी रखें"
@@ -5460,7 +5458,6 @@ invisible = "हस्ताक्षर अदृश्य होंगे (क
 locationLabel = "स्थान:"
 preview = "पूर्वावलोकन"
 reasonLabel = "कारण:"
-title = "हस्ताक्षर सेटिंग्स कॉन्फ़िगर करें"
 visible = "हस्ताक्षर पृष्ठ {{page}} पर दृश्य होंगे"
 
 [groupSigning.steps.review]
@@ -5472,14 +5469,13 @@ location = "स्थान:"
 logo = "लोगो:"
 logoHidden = "कोई लोगो नहीं"
 logoShown = "Stirling PDF लोगो दिखाया गया"
-participantCount_one = "{{count}} प्रतिभागी क्रम से sign करेगा"
-participantCount_other = "{{count}} प्रतिभागी क्रम से sign करेंगे"
+participantCount_one = "{{count}} प्रतिभागी चुना गया"
+participantCount_other = "{{count}} प्रतिभागी चुने गए"
 participants = "प्रतिभागी"
 reason = "कारण:"
 send = "हस्ताक्षर अनुरोध भेजें"
 signatureSettings = "हस्ताक्षर सेटिंग्स"
 title = "सत्र विवरण की समीक्षा करें"
-titleShort = "समीक्षा करें और भेजें"
 visibility = "दृश्यता:"
 visible = "पृष्ठ {{page}} पर दृश्य"
 
@@ -5487,7 +5483,6 @@ visible = "पृष्ठ {{page}} पर दृश्य"
 continue = "जारी रखें"
 noFile = "हस्ताक्षर सत्र बनाने के लिए कृपया अपनी सक्रिय फ़ाइलों से एकल PDF फ़ाइल चुनें।"
 selectedFile = "चयनित दस्तावेज़"
-title = "दस्तावेज़ चुनें"
 
 [groupSigning.steps.selectParticipants]
 continue = "जारी रखें"
@@ -5495,31 +5490,30 @@ count_one = "{{count}} प्रतिभागी चुना गया"
 count_other = "{{count}} प्रतिभागी चुने गए"
 label = "प्रतिभागी चुनें"
 placeholder = "हस्ताक्षर करने के लिए प्रतिभागी चुनें..."
-title = "प्रतिभागी चुनें"
 
 [groupSigning.tooltip]
 header = "समूह हस्ताक्षर के बारे में"
 
 [groupSigning.tooltip.finalization]
-bullet1 = "सभी हस्ताक्षर आपके द्वारा निर्दिष्ट प्रतिभागी क्रम में लागू होते हैं"
-bullet2 = "आवश्यक होने पर आप आंशिक हस्ताक्षरों के साथ अंतिम रूप दे सकते हैं"
-bullet3 = "एक बार अंतिम रूप देने के बाद, सत्र संशोधित नहीं किया जा सकता"
-description = "जब सभी प्रतिभागी हस्ताक्षर कर लें (या आप पहले अंतिम रूप देना चुनें), तो आप अंतिम हस्ताक्षरित PDF जनरेट कर सकते हैं।"
+bullet1 = "अंतिम PDF में सभी स्वीकृत हस्ताक्षर शामिल हैं"
+bullet2 = "आंशिक हस्ताक्षरों के साथ अंतिम रूप देने से पहले लंबित प्रतिभागियों की समीक्षा करें"
+bullet3 = "अंतिम रूप देने से request बंद हो जाती है; लंबित प्रतिभागी अब हस्ताक्षर नहीं कर सकते"
+description = "कम से कम एक प्रतिभागी के हस्ताक्षर करने के बाद, मालिक request को अंतिम रूप देकर हस्ताक्षरित PDF जनरेट कर सकता है।"
 title = "अंतिमकरण प्रक्रिया"
 
 [groupSigning.tooltip.roles]
 bullet1 = "मालिक (आप): सत्र बनाते हैं, डिफ़ॉल्ट हस्ताक्षर कॉन्फ़िगर करते हैं, दस्तावेज़ को अंतिम रूप देते हैं"
-bullet2 = "प्रतिभागी: अपना हस्ताक्षर बनाते हैं, प्रमाणपत्र चुनते हैं, PDF पर रखते हैं"
-bullet3 = "प्रतिभागी हस्ताक्षर की दृश्यता, कारण, या स्थान सेटिंग्स संशोधित नहीं कर सकते"
-description = "आप सभी प्रतिभागियों के लिए हस्ताक्षर रूप सेटिंग्स नियंत्रित करते हैं।"
+bullet2 = "प्रतिभागी: एक certificate चुनें और वैकल्पिक रूप से PDF पर दृश्यमान हस्ताक्षर रखें"
+bullet3 = "प्रतिभागी सबमिट करने से पहले अपने हस्ताक्षर का कारण और स्थान समायोजित कर सकते हैं"
+description = "मालिक request defaults सेट करता है; प्रत्येक प्रतिभागी अपना certificate और वैकल्पिक दृश्यमान mark चुनता है।"
 title = "प्रतिभागी भूमिकाएं"
 
 [groupSigning.tooltip.sequential]
-bullet1 = "दूसरा प्रतिभागी दस्तावेज़ तक पहुँचने से पहले पहले को हस्ताक्षर करना होगा"
-bullet2 = "कानूनी अनुपालन के लिए सही हस्ताक्षर क्रम सुनिश्चित करता है"
-bullet3 = "आप सूची में प्रतिभागियों को खींचकर उनका क्रम बदल सकते हैं"
-description = "प्रतिभागी आपके द्वारा निर्दिष्ट क्रम में दस्तावेज़ों पर हस्ताक्षर करते हैं। जब किसी की बारी आती है तो प्रत्येक साइनर को सूचना मिलती है।"
-title = "क्रमवार हस्ताक्षर"
+bullet1 = "प्रतिभागियों को किसी अन्य signer का इंतज़ार करने की आवश्यकता नहीं है"
+bullet2 = "Signing Sessions में प्रत्येक प्रतिभागी की प्रगति ट्रैक करें"
+bullet3 = "Due date एक रिमाइंडर है; इससे access समाप्त नहीं होता"
+description = "असाइन किए गए प्रतिभागी किसी भी क्रम में स्वतंत्र रूप से समीक्षा और हस्ताक्षर कर सकते हैं।"
+title = "किसी भी क्रम में हस्ताक्षर"
 
 [guestBanner]
 dismiss = "बैनर बंद करें"
@@ -5549,7 +5543,7 @@ title = "पासवर्ड जोड़ें"
 
 [home.addStamp]
 desc = "निर्धारित स्थानों पर टेक्स्ट या इमेज स्टैम्प जोड़ें"
-tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
+tags = "स्टैम्प,मार्क,सील,स्वीकृत,अस्वीकृत,गोपनीय,stamp tool,rubber stamp,date stamp,approval stamp,प्राप्त,void,copy,original"
 title = "PDF में स्टैम्प जोड़ें"
 
 [home.addText]
@@ -5586,7 +5580,7 @@ title = "PDF फ़ाइल ऑटो रिनेम"
 [home.autoRotate]
 desc = "प्रत्येक page की orientation detect करें और उसे स्वचालित रूप से सीधा घुमाएँ।"
 tags = "ऑटो रोटेट,orientation ठीक करें,उल्टा,बगल की ओर,सीधा करें,orient,orientation detect करें,rotation सही करें,auto orient,scanned,OSD"
-title = "Auto Rotate"
+title = "ऑटो रोटेट"
 
 [home.autoSizeSplitPDF]
 tags = "ऑटो,विभाजित करें,आकार"
@@ -5608,7 +5602,7 @@ title = "प्रमाणपत्र से हस्ताक्षर क�
 
 [home.changeMetadata]
 desc = "PDF दस्तावेज से मेटाडेटा बदलें/हटाएं/जोड़ें"
-tags = "edit,modify,update,metadata,properties,document properties,author,title,subject,keywords,creator,producer,info,document info,file properties"
+tags = "एडिट,बदलें,अपडेट,metadata,properties,document properties,author,title,subject,keywords,creator,producer,info,document info,file properties"
 title = "मेटाडेटा बदलें"
 
 [home.changePermissions]
@@ -5632,7 +5626,7 @@ title = "कम्प्रेस"
 
 [home.convert]
 desc = "विभिन्न फ़ॉर्मेट के बीच फ़ाइलें रूपांतरित करें"
-tags = "transform,change,convert,PDF to Word,PDF to Excel,PDF to image,Word to PDF,Excel to PDF,PowerPoint to PDF,HTML to PDF,export,import,file conversion,format change,save as"
+tags = "रूपांतरित करें,बदलें,कन्वर्ट करें,PDF से Word,PDF से Excel,PDF से image,Word से PDF,Excel से PDF,PowerPoint से PDF,HTML से PDF,export,import,file conversion,format change,save as"
 title = "बदलें"
 
 [home.createPortfolio]
@@ -5647,7 +5641,7 @@ title = "PDF क्रॉप करें"
 
 [home.devAirgapped]
 desc = "एयर-गैप्ड सेटअप गाइड के लिए लिंक"
-tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
+tags = "air-gapped,offline,अलग-थलग,no internet,डिस्कनेक्टेड,सुरक्षित,network isolation,standalone"
 title = "एयर-गैप्ड सेटअप"
 
 [home.devApi]
@@ -5687,7 +5681,7 @@ title = "समतल करें"
 
 [home.formFill]
 desc = "Visual editor के साथ PDF form fields भरें, बनाएँ, edit करें और हटाएँ"
-title = "Form Editor"
+title = "फ़ॉर्म एडिटर"
 
 [home.getPdfInfo]
 desc = "PDF से संभव सभी जानकारी प्राप्त करें"
@@ -5760,7 +5754,7 @@ title = "पढ़ें"
 [home.redact]
 desc = "चयनित text, बनाई गई shapes और/या चयनित page(s) के आधार पर PDF को redact (काला) करता है"
 tags = "censor,blackout,hide,redact,redaction,black out,block out,sensitive हटाएँ,text hide करें,privacy,confidential,GDPR,PII,sensitive data,permanently remove,cover up,legal redaction"
-title = "Redact"
+title = "रिडैक्ट"
 
 [home.removeAnnotations]
 desc = "PDF से सभी टिप्पणियां/एनोटेशन हटाएं"
@@ -5828,7 +5822,6 @@ tags = "detect,split,photos,auto detect,photos detect करें,photos split 
 title = "स्कैन फ़ोटो पहचानें-बाँटें"
 
 [home.sharedSign]
-desc = "दूसरों से हस्ताक्षर अनुरोध करें और हस्ताक्षर सत्रों को ट्रैक करें"
 title = "साझा हस्ताक्षर"
 
 [home.showJS]
@@ -5878,7 +5871,7 @@ title = "PDF देखें/संपादित करें"
 
 [home.watermark]
 desc = "अपने PDF दस्तावेज में कस्टम वॉटरमार्क जोड़ें।"
-tags = "stamp,mark,overlay,watermark,branding,logo,confidential,draft,copyright,trademark,text overlay,image overlay,background text"
+tags = "स्टैम्प,मार्क,overlay,watermark,branding,logo,गोपनीय,draft,copyright,trademark,text overlay,image overlay,background text"
 title = "वॉटरमार्क जोड़ें"
 
 [HTMLToPDF]
@@ -6120,7 +6113,7 @@ clear = "साफ़ करें"
 drawingArea = "हस्ताक्षर ड्रॉइंग क्षेत्र"
 invalidSession = "Session समाप्त हो गया"
 invalidSessionMessage = "यह QR code अब मान्य नहीं है। अपने कंप्यूटर पर Sign tool खोलें और नया code scan करें।"
-penSizeLabel = "Pen size"
+penSizeLabel = "पेन आकार"
 send = "कंप्यूटर पर भेजें"
 sendAnother = "एक और signature भेजें"
 sendError = "Signature भेजा नहीं जा सका। कनेक्शन जाँचें और फिर कोशिश करें।"
@@ -6138,12 +6131,12 @@ takePhoto = "Photo लें"
 
 [mobileSign.tab]
 draw = "Draw"
-photo = "Photo"
+photo = "फ़ोटो"
 type = "Type"
 
 [mobileSign.type]
 placeholder = "आपका नाम"
-previewPlaceholder = "Signature preview"
+previewPlaceholder = "हस्ताक्षर preview"
 
 [mobileUpload]
 description = "फ़ोटो अपलोड करने के लिए स्कैन करें। छवियाँ स्वतः PDF में बदल जाती हैं।"
@@ -6169,7 +6162,7 @@ openProcessor = "PDF Processor खोलें"
 
 [navFooter.credits]
 count = "{{total}} में से {{remaining}}"
-label = "Free credits"
+label = "मुफ़्त क्रेडिट"
 
 [notifications]
 adoptFailed = "दस्तावेज़ अनलॉक हो गया था लेकिन यहाँ खोला नहीं जा सका। टूल को सीधे आज़माएँ।"
@@ -6346,7 +6339,7 @@ pinButton = "यदि आप चाहते हैं कि आपके फ�
 results = "टूल के चलने के बाद, <strong>Review</strong> चरण इस पैनल में परिणामों का पूर्वावलोकन दिखाएगा, और आपको क्रिया पूर्ववत करने या फ़ाइल डाउनलोड करने देगा। "
 runButton = "टूल कॉन्फ़िगर हो जाने के बाद, यह बटन सभी चयनित PDF पर टूल चलाने देता है।"
 selectCropTool = "आइए, <strong>Crop</strong> टूल चुनते हैं ताकि किसी एक टूल का उपयोग दिखा सकें।"
-stepOf = "Step {{current}} of {{total}}"
+stepOf = "चरण {{current}} / {{total}}"
 toolInterface = "यह <strong>Crop</strong> टूल इंटरफ़ेस है। जैसा कि आप देख सकते हैं, यहाँ अभी ज्यादा कुछ नहीं है क्योंकि हमने काम करने के लिए अभी कोई PDF फ़ाइल नहीं जोड़ी है।"
 workbench = "यह <strong>Workbench</strong> है - मुख्य क्षेत्र जहाँ आप अपनी PDF देखते और संपादित करते हैं।"
 wrapUp = "सब तैयार है! आप इस tour को कभी भी फिर चला सकते हैं - बस <strong>Settings</strong> खोलें और Help के अंतर्गत <strong>Tours</strong> section में इसे ढूँढें।"
@@ -6405,10 +6398,10 @@ qrCodeLoading = "आपका QR कोड जनरेट किया जा �
 regenerateQrCode = "QR code फिर से बनाएँ"
 scanQrCode = "QR code scan करें या नीचे setup key दर्ज करें।"
 setupError = "two-factor setup शुरू नहीं कर सके। कृपया फिर प्रयास करें।"
-setupKey = "Setup key (manual entry)"
-stepByStep = "Step-by-step"
+setupKey = "Setup key (मैनुअल एंट्री)"
+stepByStep = "चरण-दर-चरण"
 success = "MFA सक्षम हो गया है। अब आप जारी रख सकते हैं।"
-title = "Multi-Factor Authentication Setup"
+title = "Multi-Factor Authentication सेटअप"
 
 [onboarding.planOverview]
 adminBodyLoginDisabled = "एक बार आप लॉगिन मोड सक्षम कर दें, आप उपयोगकर्ताओं को प्रबंधित कर सकते हैं, सेटिंग्स कॉन्फ़िगर कर सकते हैं, और सर्वर स्वास्थ्य मॉनिटर कर सकते हैं। आपके सर्वर पर पहले <strong>{{freeTierLimit}}</strong> लोग Stirling मुफ्त में उपयोग कर पाएँगे।"
@@ -6447,7 +6440,7 @@ title = "सुरक्षा जाँच"
 
 [onboarding.serverLicense]
 freeBody = "हमारे <strong>Open-Core</strong> लाइसेंस में <strong>OAuth SSO</strong> और अधिकतम <strong>{{freeTierLimit}}</strong> उपयोगकर्ता मुफ़्त शामिल हैं। बिना रुकावट विस्तार के लिए हम Stirling Team प्लान की सलाह देते हैं — $99/माह में <strong>100 उपयोगकर्ता</strong>।"
-freeTitle = "Team plan"
+freeTitle = "टीम प्लान"
 overLimitBody = "हमारी licensing <strong>{{freeTierLimit}}</strong> users तक free अनुमति देती है। आपके पास <strong>{{overLimitUserCopy}}</strong> Stirling users हैं। बिना रुकावट जारी रखने के लिए Stirling Team plan पर upgrade करें - <strong>100 users</strong>, PDF text editing, और $99/mo में पूरा admin control।"
 overLimitTitle = "Team plan आवश्यक है"
 seePlans = "प्लान देखें →"
@@ -6824,21 +6817,21 @@ subtitle = "केवल AI और automation आपके budget से उप�
 title = "हाल की billable activity"
 
 [payg.cap]
-amount = "Cap amount"
-custom = "Custom"
-docsEstimate = "≈ {{docs}} credits / month"
+amount = "सीमा राशि"
+custom = "कस्टम"
+docsEstimate = "≈ {{docs}} क्रेडिट / महीना"
 docsRate = "{{rate}} / credit पर"
 noCapDesc = "Usage बिना upper limit के billed होता है। आप किसी भी समय cap फिर enable कर सकते हैं।"
-noCapLabel = "No cap"
-noneShort = "No cap"
-perMonth = "/ month"
+noCapLabel = "कोई सीमा नहीं"
+noneShort = "कोई सीमा नहीं"
+perMonth = "/ महीना"
 save = "Cap update करें"
 subtitle = "अपना maximum spend सेट करें। हम current price tier का उपयोग करके इसे PDFs में convert करते हैं।"
-title = "Monthly spending cap"
+title = "मासिक खर्च सीमा"
 
 [payg.checkout]
 connecting = "Stripe से connect किया जा रहा है…"
-errorTitle = "Stripe error"
+errorTitle = "Stripe त्रुटि"
 
 [payg.checkout.error]
 startFailed = "Checkout session शुरू नहीं किया जा सका"
@@ -6851,10 +6844,10 @@ title = "Stripe Embedded Checkout (mock mode)"
 
 [payg.confirm]
 bodyWithAllowance = "आपकी टीम अब आपके {{limit}} मुफ़्त PDFs से आगे automation, AI, और API ऑपरेशन चला सकती है।"
-capValue = "{{symbol}}{{amount}} / month"
-noCap = "No cap"
+capValue = "{{symbol}}{{amount}} / महीना"
+noCap = "कोई सीमा नहीं"
 note = "आप इस page से कभी भी अपना cap बदल सकते हैं, cancel कर सकते हैं, या Stripe customer portal खोल सकते हैं।"
-summaryLabel = "Monthly ceiling"
+summaryLabel = "मासिक सीमा"
 title = "Processor plan में आपका स्वागत है"
 
 [payg.docHelp]
@@ -6885,7 +6878,7 @@ eyebrow = "Editor plan · हमेशा free"
 
 [payg.free.header]
 freeBody = "PDFs देखें, edit, merge, split, sign, watermark, compress, convert और manual OCR करें — जितना चाहें, चाहे आप इसे कहीं से भी trigger करें।"
-freeTitle = "Unlimited PDF editing"
+freeTitle = "असीमित PDF editing"
 
 [payg.free.hero]
 barAria = "बचे हुए Free PDFs"
@@ -6906,7 +6899,7 @@ plentyLeft = "काफी बचा है"
 [payg.gates]
 ai = "AI tools (AI Create, सुझाव, AI-OCR)"
 automation = "Automations और pipelines"
-client = "Browser-only tools (viewer, page editor, file management)"
+client = "केवल Browser tools (viewer, page editor, file management)"
 offsite = "Server tools (compress, OCR, convert, watermark…)"
 pauses = "cap पर pause होता है"
 title = "Cap पहुँचने पर क्या होता है"
@@ -6915,7 +6908,7 @@ title = "Cap पहुँचने पर क्या होता है"
 eyebrow = "Processor plan · {{start}} – {{end}}"
 freeBody = "PDFs देखें, edit, merge, split, sign, watermark, compress, convert और manual OCR करें — जितना चाहें, चाहे आप इसे कहीं से भी trigger करें।"
 freeLabel = "हमेशा free"
-freeTitle = "Unlimited PDF editing"
+freeTitle = "असीमित PDF editing"
 meterBody = "शुरू में {{limit}} free PDFs, फिर आपके cap तक per PDF billed।"
 meterLabel = "Metered"
 meterTitle = "Automation · AI · API"
@@ -6926,10 +6919,10 @@ askLeader = "केवल आपकी team owner cap बदल सकती ह
 [payg.members]
 docs = "PDFs"
 subtitle = "इस period में हर teammate द्वारा process किए गए billable PDFs।"
-title = "Team member usage"
+title = "टीम सदस्य उपयोग"
 
 [payg.prepaid]
-chip = "Prepaid year"
+chip = "Prepaid वर्ष"
 
 [payg.prepaid.banner]
 exhausted = "आपकी prepaid capacity उपयोग हो चुकी है; metered billing फिर शुरू हो गई है। discount बनाए रखने के लिए top up करें।"
@@ -6939,7 +6932,7 @@ low = "आपकी prepaid capacity का {{pct}}% बचा है। process
 
 [payg.prepaid.card]
 subtitle = "metered billing से पहले और आपके spend cap के बाहर उपयोग किया जाता है।"
-title = "Prepaid capacity"
+title = "Prepaid क्षमता"
 
 [payg.prepaid.meter]
 capSuffix = "{{total}} prepaid credits में से"
@@ -6951,8 +6944,8 @@ healthy = "काफी बचा है"
 low = "कम हो रहा है"
 
 [payg.role]
-leader = "Team owner"
-member = "Member"
+leader = "टीम मालिक"
+member = "सदस्य"
 
 [payg.signupRequired]
 aiPromo = "AI के साथ PDFs बनाएँ, संपादित करें और उनके बारे में पूछें"
@@ -6967,14 +6960,14 @@ processorTitle = "Stirling की बेहतरीन सुविधाएँ
 readerLabel = "PDF रीडर"
 
 [payg.spendCapMeter]
-barAria = "Spend against cap"
-capSuffix = "/ {{amount}} cap"
-metaCategories = "Automation · AI · API spend"
+barAria = "सीमा के मुकाबले खर्च"
+capSuffix = "/ {{amount}} सीमा"
+metaCategories = "Automation · AI · API खर्च"
 resets = "हर billing period में reset होता है"
 
 [payg.state]
 degraded = "Cap पहुँच गया"
-full = "Healthy"
+full = "ठीक"
 warned = "Cap के करीब"
 
 [payg.stripe]
@@ -6984,7 +6977,7 @@ title = "Stripe में billing manage करें"
 
 [payg.stripe.toast.unavailable]
 body = "Billing portal अभी उपलब्ध नहीं है। थोड़ी देर में फिर कोशिश करें।"
-title = "Billing portal unavailable"
+title = "Billing portal उपलब्ध नहीं"
 
 [payg.upgrade]
 backAria = "पीछे"
@@ -6993,7 +6986,7 @@ closeAria = "बंद करें"
 [payg.upgrade.button]
 cancel = "रद्द करें"
 continue = "जारी रखें →"
-finish = "Finish"
+finish = "समाप्त करें"
 
 [payg.upgrade.cap]
 help = "हम इससे ऊपर कभी charge नहीं करेंगे। यदि testing के दौरान सब कुछ free रखना चाहते हैं तो $0 सेट करें।"
@@ -7001,11 +6994,11 @@ title = "अपना monthly spend ceiling सेट करें"
 usdNote = "USD में अनुमानित। Subscribe करने के बाद आप कभी भी अपनी currency में अपना cap adjust कर सकते हैं।"
 
 [payg.upgrade.checkout]
-capValue = "{{symbol}}{{amount}} / month"
-edit = "Edit"
+capValue = "{{symbol}}{{amount}} / महीना"
+edit = "एडिट"
 help = "Stripe आपकी card details संभालता है। Stirling उन्हें कभी नहीं देखता।"
 loading = "Checkout load हो रहा है…"
-noCap = "No cap"
+noCap = "कोई सीमा नहीं"
 title = "अपना payment method जोड़ें"
 
 [payg.upgrade.help]
@@ -7032,12 +7025,12 @@ default = "Processor plan में upgrade करें"
 
 [payg.usage]
 breakdown = "AI {{ai}} • Automation {{automation}} • API {{api}}"
-capLine = "{{cap}}/mo cap"
+capLine = "{{cap}}/mo सीमा"
 estBill = "≈ इस period में अब तक {{amount}}"
 firstFree = "पहले {{free}} free"
-noCap = "No monthly cap"
-ofLimitProcessed = "/ {{limit}} PDFs processed"
-processed = "PDFs processed"
+noCap = "कोई मासिक सीमा नहीं"
+ofLimitProcessed = "/ {{limit}} PDFs प्रोसेस किए गए"
+processed = "PDFs प्रोसेस किए गए"
 resetsIn = "{{days}} दिनों में reset"
 resetsTomorrow = "कल reset होगा"
 thisPeriod = "यह billing period"
@@ -7180,7 +7173,7 @@ title = "पृष्ठ व्यवस्थापक"
 7 = "प्रथम हटाएं"
 8 = "अंतिम हटाएं"
 9 = "प्रथम और अंतिम हटाएं"
-_value = "Organization mode"
+_value = "Organization मोड"
 
 [pdfOrganiser.mode.desc]
 BOOKLET_SORT = "बुकलेट प्रिंटिंग के लिए पृष्ठ व्यवस्थित करें (अंतिम, पहला, दूसरा, दूसरा अंतिम, …)।"
@@ -7211,7 +7204,7 @@ stamp = "स्टैम्प एनोटेशन - पेज टेक्स
 widget = "फ़ॉर्म फ़ील्ड - पेज टेक्स्ट नहीं, इसलिए इसे यहाँ संपादित नहीं किया जा सकता"
 
 [pdfTextEditor.commands]
-edit = "Edit"
+edit = "एडिट"
 mergeRuns_one = "{{count}} run को paragraph में merge करें"
 mergeRuns_other = "{{count}} runs को paragraph में merge करें"
 setColour = "{{run}} पर colour सेट करें"
@@ -7241,13 +7234,13 @@ pngFileType = "PNG image"
 [pdfTextEditor.find]
 close = "find बार बंद करें"
 count = "{{total}} में से {{current}}"
-findPlaceholder = "Find"
+findPlaceholder = "ढूँढें"
 ignoreAccents = "accents अनदेखा करें"
 matchCase = "केस मिलाएँ"
 next = "अगला मिलान"
 noMatches = "कोई मिलान नहीं"
 previous = "पिछला मिलान"
-replace = "Replace"
+replace = "बदलें"
 replaceAll = "सभी बदलें"
 replaced = "{{count}} बदले गए"
 replacePlaceholder = "इससे बदलें"
@@ -7319,7 +7312,7 @@ shiftClickDesc = "चयन में run जोड़ें / हटाएँ"
 undoRedoDesc = "Undo / Redo"
 
 [pdfTextEditor.help.find]
-heading = "Find & replace"
+heading = "ढूँढें और बदलें"
 nextDesc = "अगला मिलान (पिछले के लिए Shift जोड़ें)"
 openDesc = "find बार खोलें (और replace)"
 
@@ -7401,9 +7394,9 @@ title = "पासवर्ड आवश्यक"
 [pdfTextEditor.rulers]
 guide = "{{value}} {{unit}} पर alignment guide - हटाने के लिए ruler पर खींचें"
 hint = "alignment guide जोड़ने के लिए ruler से खींचें"
-horizontal = "Horizontal ruler"
+horizontal = "क्षैतिज रूलर"
 unit = "pt"
-vertical = "Vertical ruler"
+vertical = "ऊर्ध्वाधर रूलर"
 
 [pdfTextEditor.run]
 lockedTitle = "लॉक है - संपादित करने के लिए Unlock बटन इस्तेमाल करें"
@@ -7418,7 +7411,7 @@ title = "सहेजने से यह PDF बदल जाएगा"
 [pdfTextEditor.settings]
 advanced = "उन्नत"
 find = "दस्तावेज़ में find करें"
-findTooltip = "Find ({{shortcut}})"
+findTooltip = "खोजें ({{shortcut}})"
 view = "दृश्य"
 
 [pdfTextEditor.shape]
@@ -7426,28 +7419,33 @@ groupedTitle = "इस PDF में group का हिस्सा: इसे 
 
 [pdfTextEditor.sidebar]
 addImage = "छवि जोड़ें"
+addTable = "तालिका जोड़ें"
 addText = "टेक्स्ट जोड़ें"
+clickPageToAddTable = "तालिका जोड़ने के लिए पेज पर क्लिक करें"
 clickPageToAddText = "टेक्स्ट जोड़ने के लिए पेज पर क्लिक करें"
 document = "दस्तावेज़"
 group = "समूहित करें"
-groupingAuto = "Auto"
+groupingAuto = "ऑटो"
 groupingAutoHint = "बराबर दूरी वाली लाइनों को पैराग्राफ़ में समूहित करता है। इसे बदलने से दस्तावेज़ फिर से पढ़ा जाता है और undo history साफ़ हो जाती है।"
-groupingLine = "Line"
+groupingLine = "रेखा"
 groupTooltip = "चयनित runs को एक पैराग्राफ़ में मर्ज करें ({{shortcut}})"
 groupTooltipDisabled = "मर्ज करने के लिए 2+ runs चुनें"
+image = "छवि"
 noFile = "कोई फ़ाइल लोड नहीं"
 noFileHint = "बाईं ओर Files पैनल से PDF चुनें, या एक यहाँ छोड़ें। एडिटर इसे अपने-आप खोल देगा।"
 opening = "दस्तावेज़ खुल रहा है..."
 paragraph = "पैराग्राफ़"
 rulers = "Rulers और guides"
+table = "तालिका"
+text = "टेक्स्ट"
 textBoxWidth = "नए टेक्स्ट बॉक्स की चौड़ाई"
 textGrouping = "टेक्स्ट grouping"
-ungroup = "Ungroup"
+ungroup = "समूह हटाएं"
 ungroupTooltip = "इस पैराग्राफ़ को प्रति लाइन एक run में विभाजित करें"
 ungroupTooltipDisabled = "Ungroup करने के लिए multi-line पैराग्राफ़ चुनें"
-widthGrow = "Grow"
+widthGrow = "बढ़ाएं"
 widthGrowHint = "Grow आपके टाइप करते समय बॉक्स को चौड़ा करता है; Wrap उसकी चौड़ाई रखता है और नई लाइनों पर प्रवाहित करता है।"
-widthWrap = "Wrap"
+widthWrap = "रैप करें"
 
 [pdfTextEditor.spellcheck]
 auto = "स्वचालित"
@@ -7460,6 +7458,24 @@ loadingProgress = "लोडिंग प्रगति"
 noDocument = "कोई दस्तावेज़ लोड नहीं।"
 pickPrompt = "संपादन शुरू करने के लिए बाईं ओर Files पैनल से PDF चुनें।"
 renderingPreview = "Preview render हो रहा है"
+
+[pdfTextEditor.table]
+addColumn = "कॉलम जोड़ें"
+addRow = "पंक्ति जोड़ें"
+column = "कॉलम"
+deleteColumn = "कॉलम हटाएं"
+deleteRow = "पंक्ति हटाएं"
+done = "हो गया"
+doneHint = "इसे तालिका के रूप में संपादित करना बंद करें"
+edit = "संपादित करें"
+editHint = "तालिका के रूप में संपादित करें - सेल में टाइप करें, पंक्तियां और कॉलम जोड़ें या हटाएं"
+move = "ले जाएं"
+moveTable = "पूरी तालिका को ले जाने के लिए खींचें"
+recognizedHint = "पहचानी गई तालिका - इसके सभी टेक्स्ट को चुनने के लिए क्लिक करें"
+resizeColumn = "इस कॉलम का आकार बदलने के लिए खींचें (Alt: अगले के साथ साझा करें)"
+resizeRow = "इस पंक्ति का आकार बदलने के लिए खींचें (Alt: अगले के साथ साझा करें)"
+resizeTable = "पूरी तालिका का आकार बदलने के लिए खींचें"
+row = "पंक्ति"
 
 [pdfTextEditor.toolbar]
 addTextTooltip = "टेक्स्ट बॉक्स जोड़ें - फिर पेज पर क्लिक करें"
@@ -7475,14 +7491,14 @@ alignTop = "ऊपर align करें"
 arrange = "व्यवस्थित करें"
 bringForward = "आगे लाएँ"
 bringToFront = "सबसे आगे लाएँ"
-caseLower = "lowercase"
-caseSentence = "Sentence case"
-caseTitle = "Title Case"
-caseUpper = "UPPERCASE"
+caseLower = "लोअरकेस"
+caseSentence = "वाक्य केस"
+caseTitle = "शीर्षक केस"
+caseUpper = "अपरकेस"
 changeCase = "Case बदलें"
 changeCaseTooltip = "Case बदलें (केवल text runs)"
 delete = "चयनित हटाएँ"
-deleteTooltip = "Delete (Del or Backspace)"
+deleteTooltip = "हटाएं (Del या Backspace)"
 distributeHorizontally = "क्षैतिज रूप से distribute करें"
 distributeLabel = "Distribute · 3+ ऑब्जेक्ट चाहिए"
 distributeVertically = "लंबवत रूप से distribute करें"
@@ -7492,7 +7508,7 @@ flipVertical = "लंबवत flip करें"
 fontColour = "फ़ॉन्ट रंग"
 fontSize = "फ़ॉन्ट आकार"
 formatting = "टेक्स्ट formatting"
-italic = "Italic"
+italic = "इटैलिक"
 italicUnavailable = "इस फ़ॉन्ट का italic संस्करण नहीं है। अपने डिवाइस फ़ॉन्ट लोड करें या कोई दूसरा फ़ॉन्ट family चुनें।"
 lock = "चयन लॉक करें"
 lockTooltip = "चयन लॉक करें - आकस्मिक संपादन रोकता है"
@@ -7500,15 +7516,15 @@ more = "अधिक कार्रवाइयाँ"
 order = "क्रम"
 outlineColour = "Outline रंग"
 outlineWidth = "Outline चौड़ाई (0 = कोई नहीं)"
-redo = "Redo"
-redoTooltip = "Redo ({{shortcut}})"
+redo = "फिर से करें"
+redoTooltip = "फिर से करें ({{shortcut}})"
 replaceImage = "बदलें, placement बनाए रखें"
 rotateLeft = "90° बाएँ घुमाएँ"
 rotateRight = "90° दाएँ घुमाएँ"
 sendBackward = "पीछे भेजें"
 sendToBack = "सबसे पीछे भेजें"
-undo = "Undo"
-undoTooltip = "Undo ({{shortcut}})"
+undo = "पूर्ववत करें"
+undoTooltip = "पूर्ववत करें ({{shortcut}})"
 unlock = "चयन अनलॉक करें"
 unlockTooltip = "चयन अनलॉक करें - इसे फिर से संपादन योग्य बनाता है"
 
@@ -7528,10 +7544,10 @@ text = "यह कार्यक्षेत्र टेक्स्ट सं
 title = "टेक्स्ट और छवि फोकस"
 
 [pdfTextEditor.zoom]
-fit = "Fit"
+fit = "फिट करें"
 fitToWidth = "चौड़ाई में fit करें"
-in = "Zoom in"
-out = "Zoom out"
+in = "ज़ूम इन"
+out = "ज़ूम आउट"
 reset = "Zoom को 100% पर reset करें"
 
 [PDFToCSV]
@@ -7558,12 +7574,12 @@ tags = "संग्रह,लंबी अवधि,मानक,रूपा�
 title = "PDF से PDF/A"
 
 [pdfToPDFUA]
-header = "PDF To PDF/UA"
-tags = "accessibility,accessible,tagged,screen reader,wcag,eaa,section 508,conversion"
-title = "PDF To PDF/UA"
+header = "PDF से PDF/UA"
+tags = "सुलभता,सुलभ,टैग किया हुआ,screen reader,wcag,eaa,section 508,रूपांतरण"
+title = "PDF से PDF/UA"
 
 [pdfToPDFX]
-tags = "print,standard,conversion,production,prepress,archive"
+tags = "प्रिंट,मानक,रूपांतरण,उत्पादन,प्रीप्रेस,आर्काइव"
 title = "PDF से PDF/X"
 
 [PDFToPresentation]
@@ -7598,7 +7614,7 @@ title = "PDF से Word"
 
 [PDFToXLSX]
 header = "PDF से Excel"
-tags = "spreadsheet,excel,xlsx,table,extract,convert"
+tags = "स्प्रेडशीट,excel,xlsx,तालिका,निकालें,रूपांतरित करें"
 title = "PDF से Excel (XLSX)"
 
 [PDFToXML]
@@ -7629,7 +7645,7 @@ popular = "लोकप्रिय"
 selectPlan = "प्लान चुनें"
 showComparison = "सभी फीचर्स की तुलना करें"
 upgrade = "अपग्रेड करें"
-withServer = "+ Team plan"
+withServer = "+ Team प्लान"
 
 [plan.api]
 large = "5,000 क्रेडिट्स"
@@ -7640,7 +7656,7 @@ small = "500 क्रेडिट्स"
 xsmall = "100 क्रेडिट्स"
 
 [plan.availablePlans]
-currency = "Billing currency"
+currency = "बिलिंग मुद्रा"
 subtitle = "अपनी जरूरतों के अनुसार प्लान चुनें"
 title = "उपलब्ध प्लान"
 
@@ -7789,9 +7805,9 @@ summaryMore = "{{first}}, {{second}} और {{more}} अन्य"
 summaryTwo = "{{first}} और {{second}}"
 
 [policies.labels]
-categoryCount = "categories"
+categoryCount = "श्रेणियां"
 hideCategory = "category छिपाएँ"
-labelCount = "labels"
+labelCount = "लेबल"
 sharedNote = "ये labels built in हैं और आपकी पूरी team में shared हैं।"
 showCategory = "category दिखाएँ"
 
@@ -7976,7 +7992,7 @@ openFailed = "आपका browser नहीं खोल सके। खात
 
 [portal.accountLink.panel]
 instancesSub = "उसी team से connected self-hosted servers।"
-instancesTitle = "Connected instances"
+instancesTitle = "कनेक्टेड इंस्टेंस"
 manageCloud = "stirling.com पर प्रबंधित करें"
 otherInstancesSub = "Stirling Cloud में उसी टीम से जुड़े अन्य self-hosted सर्वर।"
 otherInstancesTitle = "अन्य कनेक्टेड instances"
@@ -8038,7 +8054,7 @@ inputAriaLabel = "assistant से पूछें"
 inputPlaceholder = "Stirling के बारे में पूछें…"
 open = "assistant खोलें"
 send = "भेजें"
-title = "Assistant"
+title = "सहायक"
 tryAsking = "पूछकर देखें"
 typing = "टाइप हो रहा है"
 
@@ -8055,7 +8071,7 @@ title = "Processor चालू करें"
 
 [portal.billing.activation.payg]
 sub = "monthly limit सेट करें। जितना चलाएँ, उतना भुगतान करें।"
-title = "Pay as you go"
+title = "उपयोग के अनुसार भुगतान"
 
 [portal.billing.activation.prepay]
 badge = "2 महीने free"
@@ -8072,14 +8088,14 @@ close = "बंद करें"
 title = "लगभग हो गया"
 
 [portal.billing.checkout.cap]
-amountAria = "Monthly spend limit"
+amountAria = "मासिक खर्च सीमा"
 continue = "payment पर जारी रखें"
 error = "आपकी spend limit सेट नहीं कर सके"
 title = "अपनी spend limit सेट करें"
 
 [portal.billing.checkout.card]
-fields = "Card number · MM / YY · CVC · ZIP"
-label = "Card details"
+fields = "कार्ड नंबर · MM / YY · CVC · ZIP"
+label = "कार्ड विवरण"
 note = "Card details Stripe द्वारा collect किए जाते हैं। Stirling कभी PAN या CVC store नहीं करता।"
 
 [portal.billing.checkout.error]
@@ -8095,17 +8111,17 @@ limit = "Monthly spend limit {{amount}}/mo। Processing limit पर pause ह�
 limitNoCap = "कोई spend limit नहीं। Processing pause नहीं होगी। Invoices monthly post होते हैं।"
 
 [portal.billing.chip]
-invoices = "Invoices"
-nav = "Sections"
-payment = "Payment"
-plan = "Plan"
-procurement = "Procurement"
-usage = "Usage"
+invoices = "चालान"
+nav = "अनुभाग"
+payment = "भुगतान"
+plan = "प्लान"
+procurement = "खरीद"
+usage = "उपयोग"
 
 [portal.billing.compare]
 current = "वर्तमान"
 enterpriseData = "डेटा रेजिडेंसी और SCIM"
-enterpriseName = "Enterprise"
+enterpriseName = "एंटरप्राइज"
 enterprisePrice = "आपके अनुबंध के अनुसार"
 enterpriseProcessing = "मीटर-आधारित या फ्लैट"
 enterpriseSignIn = "SAML और ऑडिटिंग"
@@ -8114,7 +8130,7 @@ enterpriseUsers = "कोई सीमा नहीं"
 enterpriseWhere = "साथ ही multi-node और air-gapped"
 exploreEnterprise = "Enterprise देखें"
 freeData = "जहाँ आप इसे चलाते हैं, वहीं रहता है"
-freeName = "Free"
+freeName = "मुफ़्त"
 freePrice = "कोई कार्ड नहीं, कोई समाप्ति नहीं"
 freeProcessing = "हर महीने {{allowance}} क्रेडिट"
 freeProcessingUnknown = "मासिक क्रेडिट भत्ता"
@@ -8173,7 +8189,7 @@ oauthSso = "SSO (OAuth2/OIDC)"
 chipAnywhere = "Web, desktop और self-hosted"
 chipCredits = "हर महीने {{allowance}} मुफ्त क्रेडिट्स"
 chipTools = "हर PDF tool"
-name = "Free"
+name = "मुफ़्त"
 sub = "पूरा PDF Editor।"
 
 [portal.billing.identity.processor]
@@ -8184,7 +8200,7 @@ sub = "Team base plus {{rate}} प्रति क्रेडिट"
 subNoRate = "Team base plus metered प्रोसेसिंग"
 
 [portal.billing.identity.team]
-chipFleet = "Fleet control"
+chipFleet = "फ्लीट नियंत्रण"
 chipIncluded = "हर महीने {{allowance}} शामिल क्रेडिट्स"
 name = "Team"
 sub = "{{users}} उपयोगकर्ताओं तक"
@@ -8209,11 +8225,11 @@ view = "देखें"
 
 [portal.billing.payment]
 billedTo = "बिल किया गया"
-card = "{{brand}} ending {{last4}}"
-cardWithExpiry = "{{brand}} ending {{last4}} · expires {{month}} / {{year}}"
+card = "{{brand}} जिसके अंत में {{last4}} है"
+cardWithExpiry = "{{brand}} जिसके अंत में {{last4}} है · समाप्ति {{month}} / {{year}}"
 dateUnavailable = "बिलिंग तारीख अभी उपलब्ध नहीं है"
 invoicesTo = "Invoices यहां जाते हैं"
-method = "Payment method"
+method = "भुगतान विधि"
 nextInvoice = "अगला invoice"
 noCard = "फ़ाइल में कोई card नहीं"
 update = "अपडेट करें"
@@ -8224,14 +8240,14 @@ eyebrow = "इस अवधि में processed PDFs"
 legendValue_one = "{{formatted}} PDFs"
 legendValue_other = "{{formatted}} PDFs"
 segbarAriaLabel = "PDFs category के अनुसार split"
-segmentAgentsDesc = "AI agent actions"
+segmentAgentsDesc = "AI agent क्रियाएं"
 segmentAgentsLabel = "Agents"
-segmentApiDesc = "Direct API requests"
+segmentApiDesc = "सीधे API अनुरोध"
 segmentApiLabel = "API"
 segmentAutomationDesc = "Automations और pipelines"
 segmentAutomationLabel = "Automation"
-summary = "{{unique}} unique · {{units}} meter units · {{avg}} avg per PDF"
-summaryNoRate = "{{unique}} unique · {{units}} meter units"
+summary = "{{unique}} अद्वितीय · {{units}} मीटर यूनिट · प्रति PDF औसत {{avg}}"
+summaryNoRate = "{{unique}} अद्वितीय · {{units}} मीटर यूनिट"
 unit = "PDFs"
 unitsPending_one = "linked instances से {{units}} meter unit sync pending है"
 unitsPending_other = "linked instances से {{units}} meter units sync pending हैं"
@@ -8243,11 +8259,11 @@ cancelPurchase = "purchase cancel करें"
 close = "बंद करें"
 continueToPayment = "payment पर जारी रखें"
 creditTitle = "वर्ष के लिए prepay करें"
-finalise = "Finalise"
+finalise = "अंतिम रूप दें"
 invoiceErrorTitle = "invoice generate नहीं कर सके"
 loadingTitle = "आपका quote load हो रहा है"
 payTitle = "अपने year के लिए pay करें"
-step = "Step {{current}} of {{total}}"
+step = "चरण {{current}} / {{total}}"
 
 [portal.billing.prepaid.calc]
 currency = "कोटेशन मुद्रा"
@@ -8321,7 +8337,7 @@ plan = "आपका प्लान"
 [portal.billing.serverPlan]
 active = "सक्रिय self-hosted लाइसेंस"
 connectBody = "Cloud processing credits जोड़ने के लिए कनेक्ट करें। आपका सर्वर लाइसेंस सक्रिय रहता है।"
-enterprise = "Enterprise"
+enterprise = "एंटरप्राइज"
 enterpriseConnectBody = "आपके Enterprise लाइसेंस में इस सर्वर पर प्रोसेसिंग शामिल है। खाता कनेक्ट करना वैकल्पिक है।"
 included = "आपके लाइसेंस में शामिल"
 seats = "{{seats}} लाइसेंस प्राप्त सीटें"
@@ -8660,7 +8676,7 @@ description = "processed documents को Nextcloud में file करें�
 label = "Nextcloud"
 
 [portal.connections.types.nextcloud.fields.appPassword]
-label = "App password"
+label = "App पासवर्ड"
 
 [portal.connections.types.presidio]
 baseUrlPlaceholder = "http://presidio-analyzer:3000"
@@ -8685,7 +8701,7 @@ placeholder = "cb46c030-1825-4e81-a295-151c039dbf02"
 
 [portal.connections.types.s3]
 description = "एक S3 bucket जिसे sources पढ़ सकते हैं और pipeline outputs लिख सकते हैं।"
-label = "S3 storage"
+label = "S3 स्टोरेज"
 
 [portal.connections.types.s3.fields.accessKeyId]
 label = "Access key ID"
@@ -8698,7 +8714,7 @@ helperText = "AWS के लिए खाली छोड़ें। MinIO य�
 label = "Endpoint"
 
 [portal.connections.types.s3.fields.region]
-label = "Region"
+label = "क्षेत्र"
 
 [portal.connections.types.s3.fields.secretAccessKey]
 label = "Secret access key"
@@ -8734,7 +8750,7 @@ label = "Slack"
 [portal.connections.types.smb]
 description = "SMB / CIFS network share (Windows या Samba) watch करें।"
 hostPlaceholder = "fileserver.example.com"
-label = "SMB / Network share"
+label = "SMB / नेटवर्क शेयर"
 
 [portal.connections.types.smb.fields.domain]
 helperText = "Optional। Windows domain या workgroup, यदि आपका server एक उपयोग करता है।"
@@ -8793,12 +8809,12 @@ title = "प्रमाणीकरण"
 codeCaption = "viewer embed करें"
 eyebrow = "घटक"
 lead = "review queues और document inspection के लिए embeddable UI। अपनी styles लाएँ या shipped theme का उपयोग करें।"
-title = "Drop-in viewers"
+title = "ड्रॉप-इन व्यूअर"
 
 [portal.docs.endpoints]
 eyebrow = "API संदर्भ"
-fieldCount_one = "{{count}} field"
-fieldCount_other = "{{count}} fields"
+fieldCount_one = "{{count}} फ़ील्ड"
+fieldCount_other = "{{count}} फ़ील्ड"
 filterAll = "सभी"
 filterAriaLabel = "vertical के अनुसार endpoints filter करें"
 lead = "हर document type एक typed endpoint है। फ़ाइल POST करें, schema-validated JSON प्राप्त करें। नीचे vertical के अनुसार filter करें।"
@@ -8820,7 +8836,7 @@ title = "Docs उपलब्ध नहीं"
 [portal.docs.quickstart]
 eyebrow = "शुरुआत करें"
 lead = "अपना पहला document typed endpoint पर भेजें और तीन चरणों में structured JSON वापस पाएँ। कोई model training नहीं, कोई prompt engineering नहीं।"
-title = "Quickstart"
+title = "त्वरित शुरुआत"
 
 [portal.docs.quickstart.callout]
 bodyAfterLink = "copy-paste recipes के लिए।"
@@ -8848,14 +8864,14 @@ codeCaption = "429 Too Many Requests"
 concurrency = "Concurrency"
 eyebrow = "शुरुआत करें"
 lead = "Limits आपके प्लान के साथ scale होती हैं। 429 response में Retry-After header शामिल होता है; SDKs अपने-आप back off करते हैं।"
-requestsPerMinute = "Requests / minute"
+requestsPerMinute = "Requests / मिनट"
 title = "Rate limits और quotas"
 
 [portal.docs.recipes]
 cloneButton = "recipe clone करें"
 eyebrow = "PLAYBOOKS"
 lead = "End-to-end patterns जो sources, operations और destinations को chain करते हैं। हर एक ऐसी pipeline से map होता है जिसे आप clone कर सकते हैं।"
-title = "Recipes"
+title = "रेसिपी"
 
 [portal.docs.sdks]
 eyebrow = "SDKS"
@@ -9216,7 +9232,7 @@ title = "API key रद्द करें"
 
 [portal.infrastructure.audit]
 filterAriaLabel = "श्रेणी के आधार पर audit events फ़िल्टर करें"
-heading = "Audit logs"
+heading = "ऑडिट लॉग"
 latencyValue = "{{value}} ms"
 noEventsInCategory = "इस श्रेणी में कोई events नहीं।"
 subheading = "आपके workspace में हर authentication, configuration, और processing event."
@@ -9224,10 +9240,10 @@ subheading = "आपके workspace में हर authentication, configurat
 [portal.infrastructure.audit.columns]
 actor = "कर्ता"
 event = "इवेंट"
-latency = "Latency"
+latency = "विलंबता"
 status = "स्थिति"
 target = "संसाधन"
-timestamp = "Timestamp"
+timestamp = "टाइमस्टैम्प"
 
 [portal.infrastructure.audit.empty]
 description = "Workspace गतिविधि होते ही यहाँ दिखाई देगी।"
@@ -9239,7 +9255,7 @@ error = "Export विफल रहा। कृपया फिर से क�
 exportButton = "निर्यात करें"
 exporting = "निर्यात हो रहा है…"
 fieldsLegend = "कॉलम"
-format = "Format"
+format = "फ़ॉर्मैट"
 open = "निर्यात करें"
 subtitle = "Audit events को CSV या JSON के रूप में डाउनलोड करें। शामिल करने के लिए कॉलम चुनें।"
 title = "Audit log export करें"
@@ -9259,7 +9275,7 @@ config = "Config"
 elevation = "अधिकार उन्नयन"
 policy = "नीति"
 processing = "Processing"
-security = "Security"
+security = "सुरक्षा"
 
 [portal.infrastructure.audit.forbidden]
 description = "Audit log टीम लीड और admins के लिए उपलब्ध है। एक्सेस के लिए अपने टीम लीड या admin से पूछें।"
@@ -9299,7 +9315,7 @@ title = "API key बनाएँ"
 titleCreated = "Key बनाई गई"
 
 [portal.infrastructure.encryption]
-heading = "Encryption at rest"
+heading = "स्थिर डेटा का एन्क्रिप्शन"
 hintLabel = "इस section के बारे में अधिक"
 subheading = "Stored files disk, database या object storage तक पहुंचने से पहले encrypted होती हैं।"
 unknown = "अज्ञात"
@@ -9310,10 +9326,10 @@ title = "Audit events के लिए Enterprise licence चाहिए"
 
 [portal.infrastructure.encryption.coverage]
 decryptOnlyNote = "नए uploads plaintext के रूप में stored होते हैं। पहले encrypted files अभी भी readable हैं।"
-encrypted = "Encrypted files"
-heading = "Coverage"
-percentEncrypted = "{{percent}}% encrypted"
-plaintext = "Plaintext files"
+encrypted = "एन्क्रिप्टेड फ़ाइलें"
+heading = "कवरेज"
+percentEncrypted = "{{percent}}% एन्क्रिप्टेड"
+plaintext = "Plaintext फ़ाइलें"
 progressLabel = "Stored files में से {{percent}}% encrypted"
 subheading = "My Files और signing workflows में files को cover करता है। कोई pipeline जिन files को जगह पर पढ़ती है, जिनमें network sources शामिल हैं, वे यहां stored नहीं हैं और encrypted नहीं हैं।"
 
@@ -9333,25 +9349,25 @@ changedAt = "{{when}} को बदला गया"
 changedBy = "{{actor}} द्वारा"
 changedByAt = "{{actor}} द्वारा {{when}} को"
 heading = "Scope keys"
-keyVersion = "Version {{version}}"
+keyVersion = "संस्करण {{version}}"
 neverChanged = "कभी नहीं बदला गया"
 restore = "Access restore करें"
 retiredNote = "Retired key अभी भी उसके तहत stored files को decrypt करती है, लेकिन नई uploads को newer key wrap करती है।"
-revoke = "Revoke"
+revoke = "रद्द करें"
 subheading = "प्रति scope एक key। Key revoke करने से उसके तहत stored हर चीज़ के reads block हो जाते हैं।"
 
 [portal.infrastructure.encryption.keys.columns]
-actions = "Actions"
+actions = "कार्रवाइयाँ"
 lastChange = "अंतिम बदलाव"
 scope = "Scope"
-status = "Status"
+status = "स्थिति"
 
 [portal.infrastructure.encryption.keys.empty]
 description = "Key पहली बार तब बनती है जब कोई file upload करता है, startup पर नहीं।"
 title = "अभी तक कोई keys नहीं"
 
 [portal.infrastructure.encryption.masterKey]
-backend = "Storage backend"
+backend = "स्टोरेज बैकएंड"
 compareNote = "इसे अपने key backup और startup log में fingerprint से compare करें।"
 copied = "कॉपी किया गया"
 copy = "कॉपी करें"
@@ -9362,20 +9378,20 @@ heading = "Master key"
 notMaterialised = "इस node पर key machinery अभी शुरू नहीं हुई है।"
 s3StreamingNote = "जब कुछ भी encrypted होता है, object-store downloads redirect होने के बजाय इस सर्वर के through stream होते हैं, इसलिए वे इसकी bandwidth उपयोग करते हैं।"
 subheading = "हर scope key को wrap करता है। API पर कभी दिखाया या स्वीकार नहीं किया जाता।"
-version = "Version"
+version = "संस्करण"
 
 [portal.infrastructure.encryption.migration]
 backlog_one = "{{formatted}} file plaintext के रूप में stored है और अब encrypted की जा सकती है।"
 backlog_other = "{{formatted}} files plaintext के रूप में stored हैं और अब encrypted की जा सकती हैं।"
-encrypted = "Encrypted"
-failedCount = "Failed"
+encrypted = "एन्क्रिप्टेड"
+failedCount = "विफल"
 heading = "मौजूदा files encrypt करें"
 hint = "Encryption चालू होने से पहले बचे plaintext backlog को encrypt करता है। Progress memory में रखी जाती है, इसलिए backend restart इसे not started पर reset कर देता है। फिर चलाने पर पहले से encrypted files skip हो जाती हैं।"
 noBacklog = "हर stored file पहले से encrypted है।"
 progressLabel = "{{total}} files में से {{processed}} encrypted"
 requiresEncryptionOn = "इसे चलाने से पहले encryption चालू करें: backlog उसी write path का उपयोग करके encrypted होता है जो नई uploads के लिए है।"
 runAgain = "फिर चलाएं"
-skipped = "Skipped"
+skipped = "छोड़ा गया"
 skippedHelp = "Skipped का क्या मतलब है?"
 skippedNote = "Skipped files को run के दौरान किसी user ने replace कर दिया था, इसलिए उनकी copy को वैसे ही छोड़ दिया गया।"
 start = "शुरू करें"
@@ -9395,10 +9411,10 @@ description = "Migration चलते समय encryption बंद कर द�
 title = "Run जल्दी रुक गया"
 
 [portal.infrastructure.encryption.migration.state]
-COMPLETED = "Completed"
-FAILED = "Failed"
+COMPLETED = "पूर्ण"
+FAILED = "विफल"
 IDLE = "शुरू नहीं हुआ"
-RUNNING = "Running"
+RUNNING = "चल रहा है"
 
 [portal.infrastructure.encryption.revoke]
 cancel = "रद्द करें"
@@ -9410,7 +9426,7 @@ title = "इस key का access revoke करें?"
 uploadsContinue = "नई uploads काम करती रहती हैं। उन्हें fresh key मिलती है, इसलिए वे readable रहती हैं।"
 
 [portal.infrastructure.encryption.rotation]
-currentVersion = "Current version"
+currentVersion = "वर्तमान संस्करण"
 heading = "Master key rotation"
 hint = "Scope keys को नई master key के तहत re-wrap करता है; file contents कभी rewrite नहीं होते। नई key configuration में set होती है और restart पर apply होती है, इसलिए यह button केवल re-wrap करता है।"
 pendingRows = "पुराने version पर rows"
@@ -9435,13 +9451,13 @@ title_other = "{{count}} key rows अभी भी previous master key पर �
 
 [portal.infrastructure.encryption.scope]
 global = "सभी उपयोगकर्ता"
-source = "Source {{id}}"
-team = "Team {{id}}"
+source = "स्रोत {{id}}"
+team = "टीम {{id}}"
 
 [portal.infrastructure.encryption.status]
-ACTIVE = "Active"
-DISABLED = "Revoked"
-RETIRED = "Retired"
+ACTIVE = "सक्रिय"
+DISABLED = "रद्द किया गया"
+RETIRED = "रिटायर्ड"
 
 [portal.infrastructure.encryption.unavailable.forbidden]
 description = "आपके खाते को encryption settings देखने की अनुमति नहीं है।"
@@ -9462,7 +9478,7 @@ title = "Status उपलब्ध नहीं"
 [portal.infrastructure.encryption.writeState]
 decryptOnly = "केवल decrypt"
 encrypting = "नई uploads encrypt हो रही हैं"
-off = "Off"
+off = "बंद"
 
 [portal.infrastructure.keyLabel]
 active = "सक्रिय"
@@ -9506,7 +9522,7 @@ policies = "नीतियाँ"
 sources = "स्रोत"
 
 [portal.legal]
-draft = "{{label}} · draft"
+draft = "{{label}} · ड्राफ्ट"
 loadError = "यह दस्तावेज़ लोड नहीं हो सका। कृपया फिर से प्रयास करें।"
 loading = "लोड हो रहा है…"
 title = "कानूनी दस्तावेज़"
@@ -9635,13 +9651,13 @@ aiUnavailable = "Document-type routing disabled है क्योंकि AI 
 extensionPlaceholder = "pdf, docx, png"
 fallback = "बाकी सब यहां जाता है"
 heading = "Routes"
-matchAuthor = "PDF author"
+matchAuthor = "PDF लेखक"
 matchBy = "इसके आधार पर match करें"
-matchDocumentType = "Document type (AI classification)"
-matchDocumentTypeDisabled = "Document type (AI unavailable)"
-matchExtension = "File extension"
-matchFilename = "Exact filename"
-matchTitle = "PDF title"
+matchDocumentType = "दस्तावेज़ प्रकार (AI वर्गीकरण)"
+matchDocumentTypeDisabled = "दस्तावेज़ प्रकार (AI अनुपलब्ध)"
+matchExtension = "फ़ाइल एक्सटेंशन"
+matchFilename = "सटीक फ़ाइल नाम"
+matchTitle = "PDF शीर्षक"
 matchValues = "Match करने के लिए values"
 needsClassify = "Document-type routing उपयोग करने के लिए Classify step जोड़ें, या इसके बजाय document property पर match करें।"
 nodeSummary_one = "1 route, फिर fallback"
@@ -9663,7 +9679,7 @@ noToolSettings = "इस टूल में कोई configurable settings न
 output = "गंतव्य"
 save = "बदलाव save करें"
 scheduleEvery = "हर"
-trigger = "Trigger"
+trigger = "ट्रिगर"
 triggerManual = "केवल Manual"
 
 [portal.pipelines.composer.runsEvery]
@@ -9681,7 +9697,7 @@ minutes = "मिनट"
 
 [portal.pipelines.definition]
 subtitle = "Pipeline जैसी save की जाएगी।"
-title = "Definition"
+title = "परिभाषा"
 
 [portal.pipelines.delete]
 body = "\"{{name}}\" हटाएँ? इसे पूर्ववत नहीं किया जा सकता।"
@@ -9719,8 +9735,8 @@ output = "Destination जोड़ें"
 
 [portal.pipelines.graph.run]
 done = "हो गया"
-failed = "Failed"
-running = "Running"
+failed = "विफल"
+running = "चल रहा है"
 
 [portal.pipelines.inspector]
 multipleBody = "उन्हें साथ में move करने के लिए किसी को भी line पर drag करें, या उन्हें हटाने के लिए Delete दबाएँ।"
@@ -9758,28 +9774,28 @@ paused = "रोकी गई"
 name = "पाइपलाइन"
 sources = "स्रोत"
 status = "स्थिति"
-steps = "Steps"
-trigger = "Trigger"
+steps = "चरण"
+trigger = "ट्रिगर"
 type = "प्रकार"
 
 [portal.pipelines.templates]
 setUp = "Setup करें"
-title = "Templates"
+title = "टेम्पलेट्स"
 
 [portal.pipelines.trigger]
 editor-export = "हर export"
 editor-upload = "हर upload"
-folder-watch = "Folder watch"
-manual = "Manual"
-schedule = "Scheduled"
+folder-watch = "फ़ोल्डर निगरानी"
+manual = "मैन्युअल"
+schedule = "निर्धारित"
 storage-folder-watch = "Storage folder में नई files"
 
 [portal.pipelines.type]
-pipeline = "Pipeline"
-policy = "Policy"
+pipeline = "पाइपलाइन"
+policy = "नीति"
 
 [portal.policies]
-defaultName = "{{category}} Pipeline"
+defaultName = "{{category}} पाइपलाइन"
 
 [portal.policies.card]
 comingSoon = "Enterprise में अपग्रेड करें"
@@ -9791,23 +9807,23 @@ label = "वर्गीकरण"
 
 [portal.policies.categories.compliance]
 desc = "छिपा डेटा हटाएँ, archiving के लिए PDF/A में convert करें, और deliver होने से पहले हर document को standard के विरुद्ध validate करें।"
-label = "Compliance"
+label = "अनुपालन"
 
 [portal.policies.categories.ingestion]
 description = "Documents पढ़ें, searchable chunks तैयार करें, और उन्हें knowledge base या export destination तक deliver करें।"
-label = "Ingestion"
+label = "इनजेशन"
 
 [portal.policies.categories.retention]
 desc = "सेट करें कि दस्तावेज़ कितने समय तक रखे जाएँ, कब archive हों, और कब delete हों।"
-label = "Retention"
+label = "प्रतिधारण"
 
 [portal.policies.categories.routing]
 desc = "दस्तावेज़ों को सही team, folder, या system पर auto-route करें।"
-label = "Routing"
+label = "रूटिंग"
 
 [portal.policies.categories.security]
 desc = "PII detect करें, redact करें, active content हटाएँ, और documents पर watermark लगाएँ।"
-label = "Security"
+label = "सुरक्षा"
 
 [portal.policies.config]
 scopeAll = "सभी दस्तावेज़"
@@ -9833,12 +9849,12 @@ description = "Process करने के लिए documents चुनें, 
 [portal.policies.config.ingestion.rules]
 0 = "Text पढ़ें"
 1 = "Chunk"
-2 = "Index"
+2 = "इंडेक्स"
 3 = "Original रखें"
 
 [portal.policies.config.pdfa.fields.outputFormat]
 help = "PDF/A-2b अधिकांश archives के लिए उपयुक्त है। PDF/A-1b सबसे strict और सबसे widely accepted है; PDF/A-3b attachments की भी अनुमति देता है।"
-label = "Archival profile"
+label = "आर्काइवल प्रोफ़ाइल"
 
 [portal.policies.config.purview]
 label = "Microsoft Purview sensitivity label लागू करें"
@@ -9869,21 +9885,21 @@ summary = "दस्तावेज़ कितने समय तक रख�
 
 [portal.policies.config.retention.fields]
 archiveAfter = "इसके बाद archive करें"
-immutableHold = "Immutable hold"
+immutableHold = "अपरिवर्तनीय होल्ड"
 keepFor = "इसके लिए रखें"
 
 [portal.policies.config.retention.rules]
-0 = "Retention hold"
-1 = "Auto-archive"
-2 = "Deletion block"
+0 = "प्रतिधारण होल्ड"
+1 = "ऑटो-आर्काइव"
+2 = "हटाने का ब्लॉक"
 
 [portal.policies.config.routing]
 summary = "Type और classification के आधार पर documents को सही destination पर route करता है।"
 
 [portal.policies.config.routing.rules]
-0 = "Auto-classify"
+0 = "ऑटो-क्लासिफ़ाई"
 1 = "Folder में route करें"
-2 = "Webhook notify"
+2 = "Webhook सूचना"
 
 [portal.policies.config.security]
 summary = "PII detect और redact करता है, active content (JavaScript) हटाता है, और documents पर watermark लगाता है।"
@@ -9891,13 +9907,13 @@ summary = "PII detect और redact करता है, active content (JavaScr
 [portal.policies.config.security.rules]
 0 = "PII redact करें"
 1 = "JavaScript हटाएँ"
-2 = "Watermark"
+2 = "वाटरमार्क"
 
 [portal.policies.endpoints]
-addWatermark = "Watermark"
+addWatermark = "वाटरमार्क"
 autoRedact = "PII संपादित करें"
 classifyAndLabel = "वर्गीकृत करें"
-compressPdf = "Compress"
+compressPdf = "संपीड़ित करें"
 flatten = "Flatten"
 ingest = "Knowledge search के लिए तैयार करें"
 ocrPdf = "OCR"
@@ -9911,7 +9927,7 @@ noResults = "कोई चरण इससे मेल नहीं खात�
 searchPlaceholder = "चरण खोजें - \"scan\", \"attach\" या product नाम आज़माएँ"
 
 [portal.policies.operations.bodyMode]
-binary = "Raw file bytes"
+binary = "कच्ची फ़ाइल बाइट्स"
 json = "JSON payload के अंदर"
 multipart = "file upload (multipart) के रूप में"
 
@@ -9954,18 +9970,18 @@ label = "दस्तावेज़ कैसे भेजें"
 
 [portal.policies.operations.fields.bodyTemplate]
 helperText = "एक JSON body जो as-is भेजी जाती है। {{document.base64}} फ़ाइल रखता है; {{document.*}} और {{run.*}} प्रति दस्तावेज़ भरे जाते हैं।"
-label = "JSON body"
+label = "JSON बॉडी"
 
 [portal.policies.operations.fields.connection]
 label = "खाता"
 
 [portal.policies.operations.fields.domain]
-label = "Mailgun domain"
+label = "Mailgun डोमेन"
 placeholder = "mg.acme.com"
 
 [portal.policies.operations.fields.fileFieldName]
 helperText = "form field जिसके अंतर्गत API दस्तावेज़ की अपेक्षा करता है।"
-label = "File field name"
+label = "फ़ाइल फ़ील्ड नाम"
 placeholder = "file"
 
 [portal.policies.operations.fields.from]
@@ -9974,10 +9990,10 @@ placeholder = "processor@acme.com"
 
 [portal.policies.operations.fields.headers]
 helperText = "header name/value pairs का JSON object। connection का credential आपके लिए जोड़ा जाता है।"
-label = "Headers"
+label = "हेडर्स"
 
 [portal.policies.operations.fields.index]
-label = "Index"
+label = "इंडेक्स"
 placeholder = "stirling-audit"
 
 [portal.policies.operations.fields.issueKey]
@@ -9989,7 +10005,7 @@ helperText = "message body के रूप में भेजा गया। 
 label = "संदेश"
 
 [portal.policies.operations.fields.method]
-label = "Method"
+label = "विधि"
 
 [portal.policies.operations.fields.pageId]
 label = "Page ID"
@@ -9997,7 +10013,7 @@ placeholder = "66186"
 
 [portal.policies.operations.fields.path]
 helperText = "connection के base URL में जोड़ा गया। यह कभी दूसरे host तक नहीं पहुँच सकता।"
-label = "Path"
+label = "पथ"
 placeholder = "/v1/scan"
 
 [portal.policies.operations.fields.remotePath]
@@ -10015,7 +10031,7 @@ placeholder = "signer@acme.com"
 
 [portal.policies.operations.fields.subject]
 label = "विषय"
-placeholder = "Processed: {{document.filename}}"
+placeholder = "प्रोसेस्ड: {{document.filename}}"
 
 [portal.policies.operations.fields.text]
 helperText = "Presidio इस text का विश्लेषण करता है। {{document.title}} का उपयोग करें या वह text paste करें जिसे आप जाँचना चाहते हैं।"
@@ -10026,7 +10042,7 @@ label = "को"
 placeholder = "records@acme.com"
 
 [portal.policies.operations.fields.username]
-label = "Nextcloud username"
+label = "Nextcloud उपयोगकर्ता नाम"
 placeholder = "svc-stirling"
 
 [portal.policies.operations.googlechatNotify]
@@ -10161,25 +10177,25 @@ saveFailed = "Pipeline save नहीं हो सकी। कृपया फ
 
 [portal.policies.wizard.locations]
 aiSettings = "AI settings खोलें"
-builtin = "Stirling knowledge base"
+builtin = "Stirling ज्ञानकोष"
 builtinHelp = "Stirling में searchable chunks index करता है और processed PDF को नीचे destination पर लौटाता है। AI settings में embedding provider configured होना चाहिए।"
 checking = "Ingestion availability check की जा रही है..."
 chooseOutput = "Save करने से पहले enabled output destination चुनें।"
 chooseSource = "Documents कहां से आते हैं चुनें"
-chunkSettings = "Chunk settings"
+chunkSettings = "Chunk सेटिंग्स"
 connectInput = "Input source connect करें"
 consumed = "इस source का processing mode check करें: consume successful run के बाद originals delete करता है। इन्हें रखने के लिए Edit input source में Track चुनें।"
-delivery = "Delivery"
+delivery = "डिलीवरी"
 desktopExternal = "इस database connection को web app के Processor में manage करें, या results को इस folder में return करने के लिए output type बदलें।"
 destination = "गंतव्य"
 editInput = "Input source edit करें"
 editor = "Editor में खोली गई files"
-editorDestination = "Editor workspace"
+editorDestination = "एडिटर वर्कस्पेस"
 editorOutput = "Processed PDFs editor workspace में return होते हैं।"
 engineUnavailable = "AI engine disabled या unreachable है। Chunks तैयार करने के लिए इसे enable करें, या केवल OCR चलाने के लिए knowledge search बंद करें।"
 export = "Database के बिना chunks export करें"
 exportHelp = "Processed PDF और chunks (JSONL) को नीचे destination पर save करता है। AI engine chunks तैयार करता है; कोई database या embedding provider needed नहीं है।"
-external = "Connected vector database"
+external = "कनेक्टेड vector database"
 externalHelp = "Chunks को selected database में भेजता है, जो embeddings generate करता है। Run एक indexing receipt return करता है।"
 folder = "Input: {{name}}. Vector database पर deliver करते समय originals retained रहते हैं।"
 folderOutput = "Processed files इस folder में saved होती हैं। Corpus exports original PDF रखते हैं।"
@@ -10189,14 +10205,14 @@ invalidChunks = "64 से 32768 तक chunk size और 0 से 4096 तक o
 keepOriginal = "Originals रखें और destination पर भेजें"
 keepOriginalHelp = "एक copy background में चलती है। आपकी editor files unchanged रहती हैं; results नीचे destination पर saved होते हैं।"
 noDatabase = "कोई vector database destination set up नहीं है। नीचे source connect करें, फिर उसका database connection और collection चुनें या बनाएं।"
-output = "Output"
-outputType = "Output type"
+output = "आउटपुट"
+outputType = "आउटपुट प्रकार"
 recheck = "फिर check करें"
 retained = "यह source processing के बाद inputs delete नहीं करता। Original files unchanged रखने के लिए अलग destination चुनें।"
 returnToEditor = "Results editor में return करें"
 returnToFolder = "Results इस folder में return करें"
-savedDatabase = "Saved vector database"
-source = "Input source"
+savedDatabase = "सहेजा गया vector database"
+source = "इनपुट स्रोत"
 
 [portal.policies.wizard.routing]
 chooseDestination = "Destination चुनें"
@@ -10223,20 +10239,20 @@ description = "चुनें कि यह pipeline हर process किए �
 
 [portal.processorFlow]
 footnote = "गिनती पिछले 24 घंटों की है। Flow speed illustrative है।"
-liveBadge = "Live"
+liveBadge = "लाइव"
 stats = "{{connected}} कनेक्टेड · {{processed}} PDFs प्रोसेस किए गए"
-title = "PDF Processor"
+title = "PDF प्रोसेसर"
 
 [portal.processorFlow.lens]
-ariaLabel = "View mode"
-flow = "Flow"
+ariaLabel = "दृश्य मोड"
+flow = "फ़्लो"
 sankey = "Sankey"
 
 [portal.processorFlow.outcomes]
 count = "{{n}} · 24h"
 failed = "विफल"
 heading = "परिणाम"
-success = "Delivered"
+success = "डिलीवर किया गया"
 
 [portal.processorFlow.policies]
 activeCount = "{{n}} सक्रिय"
@@ -10261,7 +10277,7 @@ perDay = "{{n}} / 24h"
 [portal.processorFlow.sources.comingSoon]
 apiMcp = "API · MCP"
 cloud = "Drive · Box · S3"
-email = "Email intake"
+email = "Email इनटेक"
 
 [portal.procurement]
 subtitle = "अपनी टीम का मूल्यांकन, अनुबंध और ऑनबोर्डिंग कराएं। हर दस्तावेज़ एक जगह।"
@@ -10271,7 +10287,7 @@ title = "खरीद"
 agreeCta = "Agreement पर sign करें"
 confidential = "गोपनीय"
 confirm = "मैंने इस Agreement को पढ़ लिया है और इससे सहमत हूँ, और मैं प्रतिनिधित्व करता/करती हूँ कि मैं ऊपर नामित संगठन की ओर से इसे sign करने के लिए अधिकृत हूँ।"
-docName = "Stirling Enterprise Agreement"
+docName = "Stirling Enterprise अनुबंध"
 docSub = "MSA, Order Form, EULA और DPA, एक signature में संयुक्त।"
 download = "डाउनलोड"
 downloadDraftError = "agreement PDF generate नहीं हो सका - document renderer उपलब्ध नहीं है। कृपया थोड़ी देर बाद फिर से प्रयास करें या support से संपर्क करें।"
@@ -10280,7 +10296,7 @@ legalName = "कानूनी entity name"
 legalNamePlaceholder = "वह legal entity जो हस्ताक्षर करेगी"
 loadError = "agreement लोड नहीं हो सका। कृपया फिर से प्रयास करें।"
 loading = "agreement लोड हो रहा है..."
-ref = "Ref {{ref}} · {{version}}"
+ref = "संदर्भ {{ref}} · {{version}}"
 requestChanges = "बदलाव का अनुरोध करें"
 scrollHint = "समीक्षा के लिए scroll करें"
 signatory = "हस्ताक्षरकर्ता का नाम"
@@ -10290,11 +10306,11 @@ signatoryTitlePlaceholder = "जैसे General Counsel"
 signError = "आपका signature रिकॉर्ड नहीं हो सका। कृपया फिर से प्रयास करें।"
 
 [portal.procurement.builder]
-addons = "Add-ons"
+addons = "ऐड-ऑन"
 addressLine1 = "पता पंक्ति 1"
 addressLine1Placeholder = "500 Howard St"
 addressLine2 = "पता पंक्ति 2"
-addressLine2Placeholder = "Suite, floor, building"
+addressLine2Placeholder = "Suite, फ़्लोर, बिल्डिंग"
 back = "वापस"
 businessName = "व्यवसाय का नाम"
 businessNamePlaceholder = "आपकी कंपनी"
@@ -10309,22 +10325,22 @@ continue = "जारी रखें"
 done = "हो गया"
 eula = "मैंने Stirling Enterprise EULA पढ़ लिया है और उससे सहमत हूं। यह इस quote से जनरेट किए गए agreement को नियंत्रित करता है।"
 generate = "Quote जनरेट करें"
-indemnification = "Enhanced IP Protection"
+indemnification = "उन्नत IP सुरक्षा"
 indemnificationSub = "हमारी IP defense को patent claims तक बढ़ाता है। Baseline copyright, trademark और trade-secret indemnification मुफ्त में शामिल है।"
-paperEyebrow = "Enterprise quote"
+paperEyebrow = "Enterprise कोट"
 paperFor = "इसके लिए तैयार"
-pdfSize = "PDF size"
-poNumber = "PO number"
+pdfSize = "PDF आकार"
+poNumber = "PO नंबर"
 poNumberPlaceholder = "वैकल्पिक"
-postalCode = "Postal code"
+postalCode = "डाक कोड"
 postalCodePlaceholder = "94105"
-posture = "Governance"
+posture = "गवर्नेंस"
 posture_count = "~{{count}} नीतियाँ"
 posture_essentials = "Essentials"
 posture_essentialsSub = "Classification + Sharing — डिफ़ॉल्ट"
-posture_governed = "Governed"
+posture_governed = "गवर्न्ड"
 posture_governedSub = "Security और Routing जोड़ता है"
-posture_regulated = "Regulated"
+posture_regulated = "विनियमित"
 posture_regulatedSub = "हर category — Compliance, Retention, Ingestion"
 qbr = "त्रैमासिक व्यवसाय समीक्षाएँ"
 qbrSub = "आपका SE हर तिमाही उपयोग और roadmap की समीक्षा करता है"
@@ -10370,7 +10386,7 @@ years_one = "{{count}} वर्ष"
 years_other = "{{count}} वर्ष"
 
 [portal.procurement.documents]
-agreement = "Enterprise Agreement"
+agreement = "Enterprise अनुबंध"
 agreementSub = "MSA, Order Form और DPA एक signature में।"
 download = "डाउनलोड"
 eula = "EULA और वाणिज्यिक शर्तें"
@@ -10464,7 +10480,7 @@ title = "शुरू करने के लिए अपना account लि�
 
 [portal.procurement.live]
 description = "आपकी subscription सक्रिय है और आपका licence जारी कर दिया गया है। आपकी टीम provisioned है और billing शुरू हो गई है।"
-eyebrow = "Live"
+eyebrow = "लाइव"
 title = "आप Stirling Enterprise पर live हैं"
 
 [portal.procurement.milestone]
@@ -11135,7 +11151,7 @@ thumbnails = "पृष्ठ"
 [redact]
 submit = "गोपनीयकृत करें"
 tags = "Redact,छिपाएँ,black out,काला,marker,छिपा हुआ,auto redact,manual redact"
-title = "Redact"
+title = "रेडैक्ट"
 
 [redact.auto]
 colorLabel = "बॉक्स का रंग"
@@ -11676,7 +11692,7 @@ title = "परिचय"
 
 [settings.ai]
 documents = "दस्तावेज़ और RAG"
-general = "AI Engine"
+general = "AI इंजन"
 limits = "सीमाएँ और प्रदर्शन"
 models = "मॉडल और प्रदाता"
 title = "AI"
@@ -11891,18 +11907,18 @@ title = "कानूनी दस्तावेज़"
 
 [settings.licenses]
 backendDescription = "इस server के साथ bundled backend dependencies के licenses।"
-backendLabel = "Backend Licenses"
-backendTitle = "Backend 3rd Party Licenses"
+backendLabel = "Backend लाइसेंस"
+backendTitle = "Backend तृतीय-पक्ष लाइसेंस"
 empty = "कोई dependencies नहीं मिली।"
 frontendDescription = "Release build में bundled frontend dependencies के licenses।"
-frontendLabel = "Frontend Licenses"
-frontendTitle = "Frontend 3rd Party Licenses"
-license = "License"
+frontendLabel = "Frontend लाइसेंस"
+frontendTitle = "Frontend तृतीय-पक्ष लाइसेंस"
+license = "लाइसेंस"
 listDescription = "सूची release bundle या backend endpoint से सीधे UI में दिखाई जाती है।"
 listTitle = "बंडल की गई निर्भरताएँ"
 loadError = "Third-party licenses लोड करने में विफल"
-module = "Module"
-version = "Version"
+module = "मॉड्यूल"
+version = "संस्करण"
 
 [settings.licensingAnalytics]
 audit = "ऑडिट लॉग"
@@ -12102,28 +12118,15 @@ description = "अपने सेल्फ-होस्टेड Stirling PDF �
 label = "सर्वर URL"
 
 [sharedSign]
-backToSessions = "सत्रों पर वापस जाएँ"
-createdOn = "निर्मित {{date}}"
 disabledBody = "इस सर्वर पर सहयोगी हस्ताक्षर सक्रिय नहीं है।"
-disabledTitle = "सक्रिय नहीं है"
-due = "अंतिम तिथि {{date}}"
 filterDeclined = "अस्वीकृत"
-filterMine = "मेरे"
 filterOverdue = "अतिदेय"
 filterSigned = "हस्ताक्षरित"
-fromOwner = "{{owner}} से"
-newRequest = "हस्ताक्षर अनुरोध करें"
-signedCount = "{{signed}}/{{total}} हस्ताक्षरित"
 signInRequiredBody = "हस्ताक्षर अनुरोध करने और आपको भेजे गए अनुरोध देखने के लिए साइन इन करें।"
 signInRequiredTitle = "साइन इन आवश्यक है"
 
-[sharedSign.empty]
-active = "कोई लंबित हस्ताक्षर अनुरोध या सक्रिय सत्र नहीं"
-completed = "कोई पूर्ण सत्र नहीं"
-
 [sharedSign.tab]
 active = "सक्रिय"
-completed = "पूर्ण"
 
 [showJS]
 done = "JavaScript निकाला गया"
@@ -12332,8 +12335,8 @@ clear = "साफ़ करें"
 fine = "बारीक pen"
 hint = "रेखा के ऊपर हस्ताक्षर करें"
 medium = "मध्यम pen"
-pad = "Signature pad"
-pen = "Pen"
+pad = "हस्ताक्षर पैड"
+pen = "पेन"
 tip = "Mouse, trackpad, pen या उंगली का उपयोग करें"
 undo = "पूर्ववत करें"
 
@@ -12392,10 +12395,10 @@ placing = "{{name}} रखने के लिए पेज पर क्लि�
 stop = "रोकें"
 
 [sign.wallet.tabs]
-draw = "Draw"
-phone = "Phone"
-type = "Type"
-upload = "Upload"
+draw = "ड्रॉ करें"
+phone = "फ़ोन"
+type = "टाइप करें"
+upload = "अपलोड करें"
 
 [sign.wallet.toast]
 applyFailed = "हस्ताक्षर लागू नहीं किए जा सके"
@@ -12418,8 +12421,8 @@ name = "आपका नाम"
 namePlaceholder = "अपना नाम type करें"
 previewName = "आपका नाम"
 saveInitials = "मेरे आद्याक्षर भी सहेजें"
-style = "Style"
-styleOption = "Style {{index}}"
+style = "शैली"
+styleOption = "शैली {{index}}"
 
 [sign.wallet.upload]
 browse = "या files browse करें"
@@ -12429,7 +12432,7 @@ hint = "PNG, JPG या WebP {{size}} MB तक। सफेद backgrounds अ�
 ink = "स्याही का रंग"
 inkBlack = "काला"
 inkBlue = "नीला"
-inkOriginal = "Original"
+inkOriginal = "मूल"
 preview = "अपलोड किए गए हस्ताक्षर का preview"
 processing = "image साफ़ की जा रही है..."
 rejected = "{{size}} MB तक की PNG, JPG या WebP image चुनें।"
@@ -12473,10 +12476,68 @@ bullet3 = "अदृश्य हस्ताक्षर अभी भी क�
 description = "नियंत्रित करता है कि हस्ताक्षर दस्तावेज़ पर दृश्यमान हो या अदृश्य रूप से एम्बेड हो।"
 title = "हस्ताक्षर की दृश्यता"
 
+[signingDetail]
+allSigned = "सभी ने हस्ताक्षर कर दिए हैं। दस्तावेज़ की समीक्षा करें, फिर अंतिम रूप दें।"
+awaitingOwner = "स्वामी तैयार होने पर दस्तावेज़ को अंतिम रूप देंगे।"
+certificateNext = "अगले चरण में अपना प्रमाणपत्र चुनें।"
+earlyHint = "आप प्राप्त हस्ताक्षरों के साथ अभी अंतिम रूप दे सकते हैं, या शेष प्रतिभागियों की प्रतीक्षा कर सकते हैं।"
+finalDocument = "हस्ताक्षरित दस्तावेज़"
+finalizeTitle = "दस्तावेज़ को अंतिम रूप दें"
+finalReady = "आपका हस्ताक्षरित PDF वर्कबेंच में खोलने के लिए तैयार है।"
+inProgressPreview = "सबमिट किए गए हस्ताक्षरों के साथ प्रगति में पूर्वावलोकन। स्वामी ने अभी तक इस दस्तावेज़ को अंतिम रूप नहीं दिया है।"
+manageSession = "हस्ताक्षर सत्र प्रबंधित करें"
+moveHint = "हस्ताक्षर को स्थानांतरित करने, आकार बदलने या हटाने के लिए दस्तावेज़ पर उसका चयन करें।"
+notified = "सूचित किया गया"
+optional = "वैकल्पिक"
+ownerNext = "सभी के हस्ताक्षरों की समीक्षा करने के लिए अपने सत्र पर लौटें और तैयार होने पर दस्तावेज़ को अंतिम रूप दें।"
+placeHint = "अपना हस्ताक्षर रखने के लिए दस्तावेज़ पर क्लिक करें।"
+progress = "हस्ताक्षर प्रगति"
+readyToSign = "हस्ताक्षर करने के लिए तैयार हैं?"
+refreshPreview = "पूर्वावलोकन रीफ़्रेश करें"
+removePerson = "{{name}} को हटाएँ"
+requestClosed = "यह अनुरोध बंद है"
+requestTitle = "हस्ताक्षर अनुरोध"
+signatureSubmitted = "आपका हस्ताक्षर सबमिट हो गया है"
+signedCount = "{{signed}} / {{total}} हस्ताक्षरित"
+signMyRequest = "इस दस्तावेज़ पर हस्ताक्षर करें"
+viewOnly = "आप अभी भी यहाँ दस्तावेज़ की समीक्षा कर सकते हैं।"
+visibleSignature = "दृश्यमान हस्ताक्षर"
+visibleSignatureHelp = "दृश्यमान हस्ताक्षरों के बारे में"
+
+[signMenu]
+anyOrder = "प्रतिभागी किसी भी क्रम में हस्ताक्षर कर सकते हैं। एकत्रित हस्ताक्षरों की समीक्षा के बाद स्वामी दस्तावेज़ को अंतिम रूप देते हैं।"
+certificateHint = "प्रमाणपत्र का उपयोग करें"
+certificateTitle = "डिजिटल हस्ताक्षर"
+closedStatus = "बंद"
+completedTab = "पूर्ण"
+dueDate = "नियत तारीख (वैकल्पिक)"
+newActivity = "आपके द्वारा इस सत्र को पिछली बार देखने के बाद नई गतिविधि"
+noActive = "कोई सक्रिय सत्र नहीं"
+noCompleted = "कोई पूर्ण सत्र नहीं"
+noMatches = "कोई मिलते-जुलते सत्र नहीं"
+noUnread = "आप पूरी तरह अपडेट हैं"
+optionalMarks = "दृश्यमान निशान वैकल्पिक हैं। Complete & Sign केवल प्रमाणपत्र के साथ भी काम करता है।"
+ownerProgress = "आपका अनुरोध · {{signed}} / {{total}} हस्ताक्षरित"
+personalHint = "ड्रॉ करें, टाइप करें या अपलोड करें"
+personalTitle = "व्यक्तिगत हस्ताक्षर"
+request = "हस्ताक्षर अनुरोध करें"
+search = "दस्तावेज़ या व्यक्ति खोजें"
+send = "हस्ताक्षर अनुरोध भेजें"
+sessionFilter = "सत्र दृश्य"
+sessions = "हस्ताक्षर सत्र"
+settings = "दिखावट और सारांश पेज (वैकल्पिक)"
+signFailed = "हस्ताक्षर विफल रहा। अपना प्रमाणपत्र जाँचें और फिर से प्रयास करें; आपके रखे गए निशान सुरक्षित हैं।"
+submitted = "सबमिट किया गया · अंतिम रूप देने की प्रतीक्षा में"
+title = "हस्ताक्षर"
+triggerUnreadCount_one = "हस्ताक्षर · {{count}} अपठित सत्र"
+triggerUnreadCount_other = "हस्ताक्षर · {{count}} अपठित सत्र"
+unreadTab = "अपठित"
+
 [signRequest]
+accessExpired = "इस हस्ताक्षर अनुरोध तक आपकी पहुँच समाप्त हो गई है। भेजने वाले से नया अनुरोध माँगें।"
 declined = "हस्ताक्षर अनुरोध अस्वीकृत"
+expired = "पहुँच समाप्त हो गई"
 fetchFailed = "हस्ताक्षर अनुरोध लोड करने में विफल"
-signed = "दस्तावेज़ सफलतापूर्वक हस्ताक्षरित"
 
 [signSession]
 created = "हस्ताक्षर अनुरोध भेजा गया"
@@ -12512,6 +12573,52 @@ title = "खाता बनाएँ"
 unableToAccessTool = "टूल तक पहुँचने में असमर्थ: {{error}}"
 unexpectedError = "अप्रत्याशित त्रुटि: {{message}}"
 unknownError = "अज्ञात त्रुटि"
+
+[signWorkspace]
+changeDocument = "PDF बदलें"
+chooseDocument = "खुला PDF चुनें"
+chooseFromLibrary = "लाइब्रेरी से चुनें"
+chooseParticipants = "प्रतिभागी चुनें"
+choosePdf = "PDF चुनें"
+choosePdfHeading = "अपने दस्तावेज़ से शुरू करें"
+clearDate = "तारीख साफ़ करें"
+created = "बनाया गया"
+createdByMe = "मेरे द्वारा बनाया गया"
+datesAndOptions = "तारीखें और विकल्प"
+document = "दस्तावेज़"
+dueDate = "नियत तारीख"
+dueDateHelp = "यह एक लक्षित तारीख है। प्रतिभागी इसके बाद भी हस्ताक्षर कर सकते हैं।"
+dueDateHelpLabel = "नियत तारीखों के बारे में"
+empty = "यहाँ अभी कोई सत्र नहीं है।"
+expand = "हस्ताक्षर सत्र विस्तृत करें"
+inviteLoadError = "आमंत्रण विकल्प लोड नहीं हो सके। यह डायलॉग बंद करें और फिर से प्रयास करें।"
+invitePerson = "टीममेट जोड़ें: {{name}}"
+inviteTeammate = "टीममेट जोड़ें"
+inviteUnavailable = "आपके खाते या सर्वर कॉन्फ़िगरेशन के लिए टीममेट जोड़ना उपलब्ध नहीं है।"
+navigation = "हस्ताक्षर नेविगेशन"
+needsYou = "आपके हस्ताक्षर की आवश्यकता है"
+nextMonth = "अगला महीना"
+nextStep = "अगला"
+noDueDate = "कोई नियत तारीख नहीं"
+noMatches = "कोई सत्र आपकी खोज या फ़िल्टर से मेल नहीं खाता।"
+noOpenPdfs = "अपनी लाइब्रेरी से PDF चुनें या अपने कंप्यूटर से एक जोड़ें।"
+noPeopleMatch = "कोई व्यक्ति आपकी खोज से मेल नहीं खाता।"
+noPreview = "दस्तावेज़ पूर्वावलोकन उपलब्ध नहीं"
+owner = "स्वामी"
+participants = "प्रतिभागी"
+participantsSelected = "{{count}} चयनित"
+personalHeading = "दस्तावेज़ पर हस्ताक्षर करें"
+previousMonth = "पिछला महीना"
+refresh = "सत्र रीफ़्रेश करें"
+requestSteps = "हस्ताक्षर अनुरोध चरण"
+search = "दस्तावेज़ या लोग खोजें"
+searchParticipants = "लोग या टीमें खोजें"
+selectOnePdf = "इस हस्ताक्षर अनुरोध के लिए एक PDF चुनें।"
+signingOrderHelp = "हस्ताक्षर क्रम के बारे में"
+status = "स्थिति"
+unavailable = "यह सत्र अब उपलब्ध नहीं है। अपने वर्तमान सत्र देखने के लिए सूची रीफ़्रेश करें।"
+upcoming = "आगामी"
+uploadFailed = "यह PDF खोला नहीं जा सका। कृपया फिर से प्रयास करें।"
 
 [sizes]
 large = "बड़ा"
@@ -12838,7 +12945,7 @@ showLess = "कम दिखाएँ"
 showMore = "{{count}} और दिखाएँ"
 
 [superSearch.group]
-docs = "Docs"
+docs = "दस्तावेज़"
 files = "फ़ाइलें"
 pages = "पृष्ठ"
 processor = "प्रोसेसर"
@@ -13334,7 +13441,7 @@ admin = "Admin"
 guest = "अतिथि"
 member = "सदस्य"
 orgOwner = "संगठन स्वामी"
-teamOwner = "Team Lead"
+teamOwner = "टीम लीड"
 
 [users.seats]
 full = "हर लाइसेंस प्राप्त सीट उपयोग में है। किसी और को जोड़ने के लिए एक सीट खाली करें, या सीट संख्या बढ़ाएँ।"

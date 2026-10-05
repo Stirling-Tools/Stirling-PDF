@@ -772,7 +772,7 @@ reindexNote = "اگر مدل embedding را تغییر داده‌اید، اس�
 
 [admin.settings.ai.documents.topK]
 description = "تعداد مرتبط‌ترین بخش‌های بازیابی‌شده در هر جست‌وجو."
-label = "Top K"
+label = "K برتر"
 
 [admin.settings.ai.general]
 connection = "اتصال"
@@ -1098,7 +1098,7 @@ label = "ارائه‌دهنده"
 
 [admin.settings.connections.saml2.registrationId]
 description = "شناسه ثبت‌نام SAML2"
-label = "Registration ID"
+label = "شناسه ثبت‌نام"
 
 [admin.settings.connections.ssoAutoLogin]
 description = "هدایت خودکار به ورود SSO زمانی که احراز هویت لازم است"
@@ -1341,7 +1341,7 @@ label = "محدودیت بارگذاری فایل"
 
 [admin.settings.general.frontendUrl]
 description = "آدرس پایه برای فرانت‌اند (مثلاً https://pdf.example.com). برای لینک‌های دعوت ایمیل و آپلودهای کد QR موبایل استفاده می‌شود. برای استفاده از آدرس بک‌اند خالی بگذارید."
-label = "Frontend URL"
+label = "URL فرانت‌اند"
 
 [admin.settings.general.hideDisabledTools]
 description = "ابزارهای غیرفعال را از رابط کاربری پنهان کنید"
@@ -1510,7 +1510,7 @@ title = "اتصال یک کلاینت MCP"
 
 [admin.settings.mcp.issuerUri]
 description = "سرور مجوزدهی OAuth2 شما (باید /.well-known/openid-configuration را منتشر کند). هنگام فعال بودن الزامی است."
-label = "OAuth Issuer URL"
+label = "URL صادرکننده OAuth"
 
 [admin.settings.mcp.jwksUri]
 description = "برای کشف از issuer خالی بگذارید. فقط اگر IdP شما کلیدها را در URL غیر استاندارد ارائه می‌کند تنظیم کنید."
@@ -1529,7 +1529,7 @@ label = "نیاز به یک حساب موجود Stirling"
 
 [admin.settings.mcp.resourceId]
 description = "URL عمومی /mcp این سرور. توکن‌ها باید آن را در audience خود فهرست کنند (RFC 8707)، وگرنه رد می‌شوند."
-label = "Resource ID"
+label = "شناسه منبع"
 
 [admin.settings.mcp.scopes]
 description = "برای عملیات خواندن mcp.tools.read و برای عملیات نوشتن/AI mcp.tools.write را الزامی کنید."
@@ -1815,7 +1815,7 @@ label = "فعال‌سازی لینک‌های اشتراک"
 
 [admin.settings.storage.signing.enabled]
 description = "به کاربران اجازه دهید نشست‌های امضای چندشرکت‌کننده بسازند. نیازمند فعال بودن ذخیره‌سازی فایل روی سرور است."
-label = "فعال‌سازی امضای گروهی (آلفا)"
+title = "فعال‌سازی امضای گروهی"
 
 [admin.settings.telegram]
 description = "پیکربندی اتصال ربات تلگرام، کنترل‌های دسترسی و رفتار بازخورد."
@@ -2744,7 +2744,6 @@ reason = "دلیل"
 serverCertMessage = "در حال استفاده از گواهی سرور - نیازی به فایل یا گذرواژه نیست"
 showLogo = "نمایش لوگو"
 signatureProgress = "{{signedCount}}/{{totalCount}} امضا"
-signed = "امضا شد"
 tags = "احراز هویت,PEM,P12,رسمی,رمزگذاری,امضا,گواهی,PKCS12,JKS,سرور,دستی,خودکار"
 title = "امضای گواهی"
 viewed = "مشاهده شد"
@@ -2809,7 +2808,13 @@ reasonPlaceholder = "مثلاً: تأیید، بازبینی..."
 
 [certSign.collab.finalize]
 button = "نهایی‌سازی و بارگذاری PDF امضاشده"
+confirmAction = "تأیید و نهایی‌سازی"
+confirmDescription = "نهایی‌سازی این جلسه را می‌بندد. دیگر هیچ امضایی قابل ارسال نیست."
+confirmTitle = "این جلسه امضا نهایی شود؟"
 early = "نهایی‌سازی با امضاهای فعلی"
+excluded = "شرکت‌کنندگانی که امضای آن‌ها لحاظ نخواهد شد"
+included = "امضاهای لحاظ‌شده"
+requiresSignature = "پیش از نهایی‌سازی، حداقل یک شرکت‌کننده باید امضا کند."
 
 [certSign.collab.participant]
 certInvalid = "✗ {{error}}"
@@ -2826,7 +2831,6 @@ includeSummaryPageHelp = "یک صفحه خلاصه در انتها با تمام
 [certSign.collab.sessionDetail]
 addParticipants = "افزودن شرکت‌کنندگان"
 addParticipantsError = "افزودن شرکت‌کنندگان ناموفق بود"
-backToList = "بازگشت به نشست‌ها"
 deleteConfirm = "مطمئن هستید؟ این کار قابل بازگشت نیست."
 deleteError = "حذف نشست ناموفق بود"
 deleteSession = "حذف نشست"
@@ -2835,14 +2839,11 @@ finalizeError = "نهایی‌سازی نشست ناموفق بود"
 loadPdfError = "بارگذاری PDF امضاشده ناموفق بود"
 loadSignedPdf = "بارگذاری PDF امضاشده در فایل‌های فعال"
 messageLabel = "پیام"
-owner = "مالک"
 participantRemoved = "شرکت‌کننده حذف شد"
 participants = "شرکت‌کنندگان"
 participantsAdded = "شرکت‌کنندگان با موفقیت افزوده شدند"
-removeParticipant = "حذف"
 removeParticipantError = "حذف شرکت‌کننده ناموفق بود"
 selectUsers = "کاربران را انتخاب کنید..."
-sessionInfo = "اطلاعات نشست"
 
 [certSign.collab.sessionList]
 active = "فعال"
@@ -2855,11 +2856,10 @@ title = "ظاهر امضا"
 [certSign.collab.signRequest]
 addedToFiles = "سند به فایل‌های فعال افزوده شد"
 addToFiles = "افزودن به فایل‌های فعال"
-advancedSettings = "تنظیمات پیشرفته"
-backToList = "بازگشت به درخواست‌های امضا"
 certificateChoice = "یک گواهی برای امضا انتخاب کنید"
 changeSignature = "تغییر امضا"
 clearSignature = "پاک کردن امضا"
+closed = "این جلسه نهایی شده است. می‌توانید سند نهایی را مشاهده کنید، اما امضا یا رد کردن بیشتر پذیرفته نمی‌شود."
 completeAndSign = "تکمیل و امضا"
 createNewSignature = "ایجاد امضای جدید"
 decline = "رد درخواست"
@@ -2876,7 +2876,6 @@ invalidFileType = "لطفاً یک فایل تصویر انتخاب کنید"
 location = "مکان (اختیاری)"
 locationPlaceholder = "از کجا امضا می‌کنید؟"
 noCertificate = "لطفاً یک فایل گواهی انتخاب کنید"
-noSignatures = "لطفاً حداقل یک امضا روی PDF قرار دهید"
 p12File = "فایل گواهی P12/PFX"
 password = "گذرواژه گواهی"
 penColor = "رنگ قلم"
@@ -2894,16 +2893,15 @@ signatureText = "متن امضا"
 signatureTextPlaceholder = "نام خود را وارد کنید..."
 signatureTypeLabel = "نوع امضا"
 signButton = "امضای سند"
-signingTitle = "امضا"
 textColor = "رنگ متن"
 typeSignature = "برای ایجاد امضا نام خود را تایپ کنید"
-uploadCert = "گواهی سفارشی"
-uploadCertDesc = "از گواهی P12/PFX خود استفاده کنید"
+uploadCert = "آپلود گواهی"
+uploadCertDesc = "از گواهی PKCS12، PFX، PEM یا JKS خودتان استفاده کنید."
 uploadSignature = "بارگذاری تصویر امضای خود"
-usePersonalCert = "گواهی شخصی"
-usePersonalCertDesc = "به‌صورت خودکار برای حساب شما ایجاد می‌شود"
-useServerCert = "گواهی سازمان"
-useServerCertDesc = "گواهی مشترک سازمان"
+usePersonalCert = "Stirling Sign · شخصی"
+usePersonalCertDesc = "با گواهی ایجادشده برای حساب خود امضا کنید."
+useServerCert = "Stirling Sign · سازمان"
+useServerCertDesc = "با گواهی سازمانی مشترک این سرور امضا کنید."
 useSignature = "استفاده از امضا"
 
 [certSign.collab.signRequest.certModal]
@@ -2912,10 +2910,13 @@ certInvalidFallback = "گواهی نامعتبر"
 certNetworkError = "امکان اعتبارسنجی گواهی نبود"
 certValidating = "در حال اعتبارسنجی گواهی..."
 certValidUntil = "گواهی تا {{date}} معتبر است"
-description_one = "شما {{count}} امضا قرار داده‌اید. برای تکمیل امضا، گواهی خود را انتخاب کنید."
-description_other = "شما {{count}} امضا قرار داده‌اید. برای تکمیل امضا، گواهی خود را انتخاب کنید."
+description_one = "{{count}} نشان قابل مشاهده آماده است. برای تکمیل امضا، یک گواهی انتخاب کنید."
+description_other = "{{count}} نشان قابل مشاهده آماده است. برای تکمیل امضا، یک گواهی انتخاب کنید."
+description_zero = "گواهی شما سند را بدون نشان قابل مشاهده امضا خواهد کرد."
+details = "جزئیات امضا (اختیاری)"
+format = "فرمت گواهی"
 sign = "امضای سند"
-title = "پیکربندی گواهی"
+title = "روش امضا را انتخاب کنید"
 
 [certSign.collab.signRequest.mode]
 move = "جابه‌جایی امضا"
@@ -2968,11 +2969,11 @@ visible = "مرئی"
 yourSignatures = "امضاهای شما ({{count}})"
 
 [certSign.collab.userSelector]
-inviteUsers = "افزودن کاربران"
 loadError = "بارگذاری کاربران ناموفق بود"
 noTeam = "بدون تیم"
 noUsers = "کاربر دیگری یافت نشد."
 placeholder = "کاربران را انتخاب کنید..."
+you = "{{name}} (شما)"
 
 [certSign.device]
 stepTitle = "این دستگاه"
@@ -3567,7 +3568,7 @@ work-instruction = "دستورالعمل کار"
 work-order = "دستور کار"
 
 [classificationDemo]
-folderName = "Downloads"
+folderName = "دانلودها"
 
 [classificationDemo.buttons]
 done = "انجام شد"
@@ -3980,10 +3981,10 @@ tip = "Every action your assistant runs is performed as your account and counts 
 viewApiKeys = "مشاهده کلیدهای API"
 
 [config.mcp.copy]
-configLabel = "Config"
+configLabel = "پیکربندی"
 copied = "کپی شد"
 copy = "کپی"
-endpointLabel = "Endpoint URL"
+endpointLabel = "URL Endpoint"
 tooltip = "کپی {{label}}"
 tooltipCopied = "{{label}} کپی شد"
 
@@ -4215,7 +4216,7 @@ scarf = "Scarf Pixel"
 
 [createPortfolio]
 coverTitle = "عنوان صفحه جلد"
-coverTitlePlaceholder = "PDF Portfolio"
+coverTitlePlaceholder = "پورتفولیوی PDF"
 description = "هر فایل انتخاب‌شده، صرف‌نظر از نوع آن، به‌طور کامل داخل PDF جدید نگه داشته می‌شود. خواننده‌هایی که از portfolio پشتیبانی نمی‌کنند، یک صفحه جلد با فایل‌های پیوست‌شده نشان می‌دهند."
 goToFileEditor = "رفتن به ویرایشگر فایل"
 info = "فایل‌های شما را در یک PDF ترکیب می‌کند که هر فایل را به‌طور کامل داخل خود نگه می‌دارد. نتیجه را باز کنید تا فایل‌ها را مرور کنید و هرکدام را جداگانه ببینید یا ذخیره کنید."
@@ -5450,9 +5451,6 @@ multimedia = "چندرسانه‌ای"
 
 [groupSigning.steps]
 back = "بازگشت"
-completed = "تکمیل شد"
-current = "جاری"
-stepLabel = "گام {{number}}"
 
 [groupSigning.steps.configureDefaults]
 continue = "ادامه"
@@ -5460,7 +5458,6 @@ invisible = "امضاها نامرئی خواهند بود (فقط فراداد�
 locationLabel = "مکان:"
 preview = "پیش‌نمایش"
 reasonLabel = "دلیل:"
-title = "پیکربندی تنظیمات امضا"
 visible = "امضاها روی صفحه {{page}} مرئی خواهند بود"
 
 [groupSigning.steps.review]
@@ -5472,14 +5469,13 @@ location = "مکان:"
 logo = "لوگو:"
 logoHidden = "بدون لوگو"
 logoShown = "لوگوی Stirling PDF نمایش داده می‌شود"
-participantCount_one = "{{count}} شرکت‌کننده به‌ترتیب امضا خواهد کرد"
-participantCount_other = "{{count}} شرکت‌کننده به‌ترتیب امضا خواهند کرد"
+participantCount_one = "{{count}} شرکت‌کننده انتخاب شد"
+participantCount_other = "{{count}} شرکت‌کننده انتخاب شدند"
 participants = "شرکت‌کنندگان"
 reason = "دلیل:"
 send = "ارسال درخواست‌های امضا"
 signatureSettings = "تنظیمات امضا"
 title = "بازبینی جزئیات نشست"
-titleShort = "بازبینی و ارسال"
 visibility = "قابلیت مشاهده:"
 visible = "روی صفحه {{page}} مرئی"
 
@@ -5487,7 +5483,6 @@ visible = "روی صفحه {{page}} مرئی"
 continue = "ادامه"
 noFile = "لطفاً برای ایجاد یک نشست امضا یک فایل PDF واحد از فایل‌های فعال خود انتخاب کنید."
 selectedFile = "سند انتخاب‌شده"
-title = "انتخاب سند"
 
 [groupSigning.steps.selectParticipants]
 continue = "ادامه"
@@ -5495,31 +5490,30 @@ count_one = "{{count}} شرکت‌کننده انتخاب شد"
 count_other = "{{count}} شرکت‌کننده انتخاب شدند"
 label = "انتخاب شرکت‌کنندگان"
 placeholder = "شرکت‌کنندگان را برای امضا انتخاب کنید..."
-title = "انتخاب شرکت‌کنندگان"
 
 [groupSigning.tooltip]
 header = "درباره امضای گروهی"
 
 [groupSigning.tooltip.finalization]
-bullet1 = "تمام امضاها به‌ترتیبی که مشخص کرده‌اید اعمال می‌شوند"
-bullet2 = "در صورت نیاز می‌توانید با امضاهای ناقص نهایی‌سازی کنید"
-bullet3 = "پس از نهایی‌سازی، نشست قابل تغییر نیست"
-description = "پس از اینکه همه شرکت‌کنندگان امضا کردند (یا اگر تصمیم بگیرید زودتر نهایی‌سازی کنید)، می‌توانید PDF نهایی امضاشده را تولید کنید."
+bullet1 = "PDF نهایی شامل همه امضاهای پذیرفته‌شده است"
+bullet2 = "پیش از نهایی‌سازی با امضاهای جزئی، شرکت‌کنندگان باقی‌مانده را بررسی کنید"
+bullet3 = "نهایی‌سازی درخواست را می‌بندد؛ شرکت‌کنندگان باقی‌مانده دیگر نمی‌توانند امضا کنند"
+description = "پس از اینکه حداقل یک شرکت‌کننده امضا کرد، مالک می‌تواند درخواست را نهایی کرده و PDF امضاشده را ایجاد کند."
 title = "فرآیند نهایی‌سازی"
 
 [groupSigning.tooltip.roles]
 bullet1 = "مالک (شما): ایجاد نشست، پیکربندی پیش‌فرض‌های امضا، نهایی‌سازی سند"
-bullet2 = "شرکت‌کنندگان: ایجاد امضای خود، انتخاب گواهی، قرار دادن روی PDF"
-bullet3 = "شرکت‌کنندگان نمی‌توانند تنظیمات قابلیت مشاهده، دلیل یا مکان امضا را تغییر دهند"
-description = "شما تنظیمات ظاهر امضا را برای همه شرکت‌کنندگان کنترل می‌کنید."
+bullet2 = "شرکت‌کنندگان: یک گواهی انتخاب کنید و در صورت تمایل یک امضای قابل مشاهده روی PDF قرار دهید"
+bullet3 = "شرکت‌کنندگان می‌توانند پیش از ارسال، دلیل و محل امضای خود را تنظیم کنند"
+description = "مالک پیش‌فرض‌های درخواست را تنظیم می‌کند؛ هر شرکت‌کننده گواهی خود و نشان قابل مشاهده اختیاری را انتخاب می‌کند."
 title = "نقش‌های شرکت‌کنندگان"
 
 [groupSigning.tooltip.sequential]
-bullet1 = "شرکت‌کننده اول باید امضا کند تا نفر دوم به سند دسترسی یابد"
-bullet2 = "ترتیب صحیح امضا برای انطباق حقوقی را تضمین می‌کند"
-bullet3 = "می‌توانید با کشیدن در فهرست، ترتیب شرکت‌کنندگان را تغییر دهید"
-description = "شرکت‌کنندگان به ترتیبی که مشخص می‌کنید اسناد را امضا می‌کنند. هر امضاکننده هنگامی که نوبتش شود اعلان دریافت می‌کند."
-title = "امضای ترتیبی"
+bullet1 = "شرکت‌کنندگان نیازی ندارند منتظر امضاکننده دیگری بمانند"
+bullet2 = "پیشرفت هر شرکت‌کننده را در جلسات امضا پیگیری کنید"
+bullet3 = "تاریخ سررسید یک یادآوری است؛ دسترسی را منقضی نمی‌کند"
+description = "شرکت‌کنندگان اختصاص‌داده‌شده می‌توانند به‌صورت مستقل و با هر ترتیبی بررسی و امضا کنند."
+title = "امضا با هر ترتیبی"
 
 [guestBanner]
 dismiss = "بستن بنر"
@@ -5828,7 +5822,6 @@ tags = "تشخیص،تقسیم،عکس‌ها،تشخیص خودکار،تشخی
 title = "شناسایی و تفکیک عکس‌های اسکن‌شده"
 
 [home.sharedSign]
-desc = "از دیگران درخواست امضا کنید و نشست‌های امضا را پیگیری کنید"
 title = "امضای اشتراکی"
 
 [home.showJS]
@@ -7426,7 +7419,9 @@ groupedTitle = "بخشی از یک گروه در این PDF است: می‌تو�
 
 [pdfTextEditor.sidebar]
 addImage = "افزودن تصویر"
+addTable = "افزودن جدول"
 addText = "افزودن متن"
+clickPageToAddTable = "برای افزودن جدول، روی صفحه کلیک کنید"
 clickPageToAddText = "برای افزودن متن روی صفحه کلیک کنید"
 document = "سند"
 group = "گروه‌بندی"
@@ -7435,11 +7430,14 @@ groupingAutoHint = "خطوط با فاصله برابر را در پاراگرا
 groupingLine = "خط"
 groupTooltip = "ادغام اجراهای انتخاب‌شده در یک پاراگراف ({{shortcut}})"
 groupTooltipDisabled = "برای ادغام، 2+ اجرا انتخاب کنید"
+image = "تصویر"
 noFile = "هیچ فایلی بارگذاری نشده است"
 noFileHint = "از پنل فایل‌ها در سمت چپ یک PDF انتخاب کنید یا یکی را اینجا رها کنید. ویرایشگر آن را به‌طور خودکار باز می‌کند."
 opening = "در حال باز کردن سند..."
 paragraph = "پاراگراف"
 rulers = "خط‌کش‌ها و راهنماها"
+table = "جدول"
+text = "متن"
 textBoxWidth = "عرض کادر متن جدید"
 textGrouping = "گروه‌بندی متن"
 ungroup = "لغو گروه‌بندی"
@@ -7460,6 +7458,24 @@ loadingProgress = "پیشرفت بارگذاری"
 noDocument = "هیچ سندی بارگذاری نشده است."
 pickPrompt = "برای شروع ویرایش، از پنل فایل‌ها در سمت چپ یک PDF انتخاب کنید."
 renderingPreview = "در حال رندر پیش‌نمایش"
+
+[pdfTextEditor.table]
+addColumn = "افزودن ستون"
+addRow = "افزودن ردیف"
+column = "ستون"
+deleteColumn = "حذف ستون"
+deleteRow = "حذف ردیف"
+done = "تمام"
+doneHint = "ویرایش این مورد به‌عنوان جدول را متوقف کنید"
+edit = "ویرایش"
+editHint = "ویرایش به‌عنوان جدول - در سلول‌ها تایپ کنید، ردیف‌ها و ستون‌ها را اضافه یا حذف کنید"
+move = "جابجایی"
+moveTable = "برای جابجایی کل جدول بکشید"
+recognizedHint = "جدول شناسایی‌شده - برای انتخاب همه متن آن کلیک کنید"
+resizeColumn = "برای تغییر اندازه این ستون بکشید (Alt: با ستون بعدی تقسیم شود)"
+resizeRow = "برای تغییر اندازه این ردیف بکشید (Alt: با ردیف بعدی تقسیم شود)"
+resizeTable = "برای تغییر اندازه کل جدول بکشید"
+row = "ردیف"
 
 [pdfTextEditor.toolbar]
 addTextTooltip = "افزودن کادر متن - سپس روی صفحه کلیک کنید"
@@ -7492,7 +7508,7 @@ flipVertical = "وارونه‌سازی عمودی"
 fontColour = "رنگ فونت"
 fontSize = "اندازه فونت"
 formatting = "قالب‌بندی متن"
-italic = "Italic"
+italic = "ایتالیک"
 italicUnavailable = "این فونت نسخه Italic ندارد. فونت‌های دستگاه خود را بارگذاری کنید یا خانواده فونت دیگری انتخاب کنید."
 lock = "قفل کردن انتخاب"
 lockTooltip = "قفل کردن انتخاب - از ویرایش‌های تصادفی جلوگیری می‌کند"
@@ -8453,20 +8469,20 @@ label = "URL سرور"
 label = "ایمیل"
 
 [portal.connections.commonFields.host]
-label = "Host"
+label = "میزبان"
 
 [portal.connections.commonFields.password]
 label = "رمز عبور"
 
 [portal.connections.commonFields.port]
-label = "Port"
+label = "پورت"
 
 [portal.connections.commonFields.username]
 label = "نام کاربری"
 
 [portal.connections.commonFields.webhookUrl]
 helperText = "URL ارائه‌شده توسط سرویس را جای‌گذاری کنید. فقط مسیرهای زیر آن قابل فراخوانی هستند."
-label = "Webhook URL"
+label = "URL وب‌هوک"
 
 [portal.connections.fields]
 name = "نام اتصال"
@@ -8496,7 +8512,7 @@ label = "احراز هویت"
 label = "نام کاربری و رمز عبور"
 
 [portal.connections.types.api.fields.authType.options.bearer]
-label = "Bearer token"
+label = "توکن Bearer"
 
 [portal.connections.types.api.fields.authType.options.header]
 label = "توکن در header سفارشی"
@@ -8638,10 +8654,10 @@ helperText = "با Authentication تنظیم‌شده روی node وبهوک n8n
 label = "احراز هویت Webhook"
 
 [portal.connections.types.n8n.fields.authType.options.basic]
-label = "Basic auth"
+label = "احراز هویت Basic"
 
 [portal.connections.types.n8n.fields.authType.options.header]
-label = "Header auth"
+label = "احراز هویت Header"
 
 [portal.connections.types.n8n.fields.authType.options.none]
 label = "هیچ‌کدام"
@@ -8673,14 +8689,14 @@ label = "Microsoft Purview"
 
 [portal.connections.types.purview.fields.clientId]
 helperText = "اختیاری. فقط برای انتخاب برچسب‌ها با نام لازم است؛ برچسب‌گذاری بدون آن هم کار می‌کند."
-label = "Application (client) ID"
+label = "شناسه Application (client)"
 
 [portal.connections.types.purview.fields.clientSecret]
 label = "راز client"
 
 [portal.connections.types.purview.fields.tenantId]
 helperText = "روی هر برچسب به‌عنوان SiteId آن درج می‌شود تا ابزارهای آگاه از Purview بدانند کدام سازمان آن را اعمال کرده است."
-label = "Directory (tenant) ID"
+label = "شناسه Directory (tenant)"
 placeholder = "cb46c030-1825-4e81-a295-151c039dbf02"
 
 [portal.connections.types.s3]
@@ -8688,7 +8704,7 @@ description = "یک bucket در S3 که منابع می‌توانند از آن
 label = "ذخیره‌سازی S3"
 
 [portal.connections.types.s3.fields.accessKeyId]
-label = "Access key ID"
+label = "شناسه کلید دسترسی"
 
 [portal.connections.types.s3.fields.bucket]
 label = "Bucket"
@@ -8698,10 +8714,10 @@ helperText = "برای AWS خالی بگذارید. برای MinIO یا ذخیر
 label = "Endpoint"
 
 [portal.connections.types.s3.fields.region]
-label = "Region"
+label = "منطقه"
 
 [portal.connections.types.s3.fields.secretAccessKey]
-label = "Secret access key"
+label = "کلید دسترسی محرمانه"
 
 [portal.connections.types.sendgrid]
 description = "وقتی یک خط‌مشی اجرا می‌شود، سند یا اعلان را ایمیل کنید."
@@ -8863,7 +8879,7 @@ lead = "کلاینت‌های رسمی با پاسخ‌های تایپ‌شده�
 title = "SDKهای رسمی"
 
 [portal.docs.sdks.status]
-beta = "Beta"
+beta = "بتا"
 deprecated = "منسوخ‌شده"
 
 [portal.docs.skills]
@@ -9227,7 +9243,7 @@ event = "رویداد"
 latency = "تأخیر"
 status = "وضعیت"
 target = "منبع"
-timestamp = "Timestamp"
+timestamp = "زمان"
 
 [portal.infrastructure.audit.empty]
 description = "فعالیت فضای کاری هنگام وقوع اینجا نمایش داده می‌شود."
@@ -9236,11 +9252,11 @@ title = "هیچ رویداد حسابرسی وجود ندارد"
 [portal.infrastructure.audit.export]
 cancel = "لغو"
 error = "Export ناموفق بود. لطفاً دوباره تلاش کنید."
-exportButton = "Export"
+exportButton = "خروجی گرفتن"
 exporting = "در حال export…"
 fieldsLegend = "ستون‌ها"
-format = "Format"
-open = "Export"
+format = "فرمت"
+open = "خروجی گرفتن"
 subtitle = "رویدادهای حسابرسی را به‌صورت CSV یا JSON دانلود کنید. ستون‌های موردنظر برای شامل شدن را انتخاب کنید."
 title = "Export گزارش حسابرسی"
 
@@ -12102,28 +12118,15 @@ description = "URL کامل سرور خودمیزبان Stirling PDF خود را
 label = "URL سرور"
 
 [sharedSign]
-backToSessions = "بازگشت به نشست‌ها"
-createdOn = "ایجاد شده در {{date}}"
 disabledBody = "امضای اشتراکی در این سرور فعال نیست."
-disabledTitle = "غیرفعال"
-due = "سررسید {{date}}"
 filterDeclined = "رد شده"
-filterMine = "مربوط به من"
 filterOverdue = "گذشته از موعد"
 filterSigned = "امضا شده"
-fromOwner = "از طرف {{owner}}"
-newRequest = "درخواست امضا"
-signedCount = "{{signed}}/{{total}} امضا شده"
 signInRequiredBody = "برای درخواست امضا و دیدن درخواست‌های ارسال‌شده به شما وارد شوید."
 signInRequiredTitle = "ورود لازم است"
 
-[sharedSign.empty]
-active = "هیچ درخواست امضای در انتظار یا نشست فعالی وجود ندارد"
-completed = "هیچ نشست تکمیل شده‌ای وجود ندارد"
-
 [sharedSign.tab]
 active = "فعال"
-completed = "تکمیل شده"
 
 [showJS]
 done = "JavaScript استخراج شد"
@@ -12473,10 +12476,68 @@ bullet3 = "امضاهای نامرئی همچنان اعتبارسنجی رمز�
 description = "کنترل می‌کند امضا روی سند مرئی باشد یا نامرئی جاسازی شود."
 title = "قابلیت مشاهده امضا"
 
+[signingDetail]
+allSigned = "همه امضا کرده‌اند. سند را بررسی کنید، سپس نهایی کنید."
+awaitingOwner = "مالک پس از آماده شدن، سند را نهایی خواهد کرد."
+certificateNext = "در مرحله بعد گواهی خود را انتخاب کنید."
+earlyHint = "می‌توانید اکنون با امضاهای دریافت‌شده نهایی کنید، یا منتظر شرکت‌کنندگان باقی‌مانده بمانید."
+finalDocument = "سند امضاشده"
+finalizeTitle = "نهایی‌سازی سند"
+finalReady = "PDF امضاشده شما آماده باز شدن در میزکار است."
+inProgressPreview = "پیش‌نمایش در حال انجام با امضاهای ارسال‌شده. مالک هنوز این سند را نهایی نکرده است."
+manageSession = "مدیریت جلسه امضا"
+moveHint = "یک امضا را روی سند انتخاب کنید تا آن را جابه‌جا، تغییر اندازه یا حذف کنید."
+notified = "اطلاع‌رسانی شد"
+optional = "اختیاری"
+ownerNext = "به جلسه خود بازگردید تا امضاهای همه را بررسی کنید و هر زمان آماده بودید سند را نهایی کنید."
+placeHint = "برای قرار دادن امضای خود، روی سند کلیک کنید."
+progress = "پیشرفت امضا"
+readyToSign = "آماده امضا هستید؟"
+refreshPreview = "تازه‌سازی پیش‌نمایش"
+removePerson = "حذف {{name}}"
+requestClosed = "این درخواست بسته شده است"
+requestTitle = "درخواست امضا"
+signatureSubmitted = "امضای شما ارسال شد"
+signedCount = "{{signed}} / {{total}} امضا شده"
+signMyRequest = "این سند را امضا کنید"
+viewOnly = "همچنان می‌توانید سند را اینجا بررسی کنید."
+visibleSignature = "امضای قابل مشاهده"
+visibleSignatureHelp = "درباره امضاهای قابل مشاهده"
+
+[signMenu]
+anyOrder = "شرکت‌کنندگان می‌توانند به هر ترتیبی امضا کنند. مالک پس از بررسی امضاهای جمع‌آوری‌شده، سند را نهایی می‌کند."
+certificateHint = "استفاده از گواهی"
+certificateTitle = "امضای دیجیتال"
+closedStatus = "بسته شده"
+completedTab = "تکمیل‌شده"
+dueDate = "تاریخ سررسید (اختیاری)"
+newActivity = "فعالیت جدید از آخرین باری که این جلسه را مشاهده کردید"
+noActive = "هیچ جلسه فعالی وجود ندارد"
+noCompleted = "هیچ جلسه تکمیل‌شده‌ای وجود ندارد"
+noMatches = "هیچ جلسه مطابقی وجود ندارد"
+noUnread = "همه موارد را دیده‌اید"
+optionalMarks = "نشانه‌های قابل مشاهده اختیاری هستند. تکمیل و امضا فقط با گواهی نیز کار می‌کند."
+ownerProgress = "درخواست شما · {{signed}} / {{total}} امضا شده"
+personalHint = "رسم، تایپ یا آپلود کنید"
+personalTitle = "امضای شخصی"
+request = "درخواست امضا"
+search = "یافتن سند یا شخص"
+send = "ارسال درخواست امضا"
+sessionFilter = "نماهای جلسه"
+sessions = "جلسات امضا"
+settings = "ظاهر و صفحه خلاصه (اختیاری)"
+signFailed = "امضا ناموفق بود. گواهی خود را بررسی کنید و دوباره تلاش کنید؛ نشانه‌های قرار داده‌شده شما حفظ می‌شوند."
+submitted = "ارسال شده · در انتظار نهایی‌سازی"
+title = "امضا"
+triggerUnreadCount_one = "امضا · {{count}} جلسه خوانده‌نشده"
+triggerUnreadCount_other = "امضا · {{count}} جلسه خوانده‌نشده"
+unreadTab = "خوانده‌نشده"
+
 [signRequest]
+accessExpired = "دسترسی شما به این درخواست امضا منقضی شده است. از فرستنده درخواست جدیدی بخواهید."
 declined = "درخواست امضا رد شد"
+expired = "دسترسی منقضی شده است"
 fetchFailed = "بارگذاری درخواست امضا ناموفق بود"
-signed = "سند با موفقیت امضا شد"
 
 [signSession]
 created = "درخواست امضا ارسال شد"
@@ -12512,6 +12573,52 @@ title = "ایجاد حساب"
 unableToAccessTool = "دسترسی به ابزار ممکن نیست: {{error}}"
 unexpectedError = "خطای غیرمنتظره: {{message}}"
 unknownError = "خطای ناشناخته"
+
+[signWorkspace]
+changeDocument = "تغییر PDF"
+chooseDocument = "انتخاب یک PDF باز"
+chooseFromLibrary = "انتخاب از کتابخانه"
+chooseParticipants = "انتخاب شرکت‌کنندگان"
+choosePdf = "انتخاب یک PDF"
+choosePdfHeading = "با سند خود شروع کنید"
+clearDate = "پاک کردن تاریخ"
+created = "ایجاد شده"
+createdByMe = "ایجاد شده توسط من"
+datesAndOptions = "تاریخ‌ها و گزینه‌ها"
+document = "سند"
+dueDate = "تاریخ سررسید"
+dueDateHelp = "این یک تاریخ هدف است. شرکت‌کنندگان همچنان می‌توانند پس از آن امضا کنند."
+dueDateHelpLabel = "درباره تاریخ‌های سررسید"
+empty = "هنوز هیچ جلسه‌ای اینجا نیست."
+expand = "گسترش جلسات امضا"
+inviteLoadError = "گزینه‌های دعوت بارگیری نشد. این پنجره را ببندید و دوباره تلاش کنید."
+invitePerson = "افزودن هم‌تیمی: {{name}}"
+inviteTeammate = "افزودن هم‌تیمی"
+inviteUnavailable = "افزودن هم‌تیمی‌ها برای حساب شما یا پیکربندی سرور در دسترس نیست."
+navigation = "ناوبری امضا"
+needsYou = "به امضای شما نیاز دارد"
+nextMonth = "ماه بعد"
+nextStep = "بعدی"
+noDueDate = "بدون تاریخ سررسید"
+noMatches = "هیچ جلسه‌ای با جستجو یا فیلتر شما مطابقت ندارد."
+noOpenPdfs = "یک PDF از کتابخانه خود انتخاب کنید یا یکی از رایانه خود اضافه کنید."
+noPeopleMatch = "هیچ فردی با جستجوی شما مطابقت ندارد."
+noPreview = "پیش‌نمایش سند در دسترس نیست"
+owner = "مالک"
+participants = "شرکت‌کنندگان"
+participantsSelected = "{{count}} انتخاب شده"
+personalHeading = "امضای یک سند"
+previousMonth = "ماه قبل"
+refresh = "تازه‌سازی جلسات"
+requestSteps = "مراحل درخواست امضا"
+search = "جستجوی اسناد یا افراد"
+searchParticipants = "جستجوی افراد یا تیم‌ها"
+selectOnePdf = "برای این درخواست امضا یک PDF انتخاب کنید."
+signingOrderHelp = "درباره ترتیب امضا"
+status = "وضعیت"
+unavailable = "این جلسه دیگر در دسترس نیست. فهرست را تازه‌سازی کنید تا جلسات فعلی خود را ببینید."
+upcoming = "پیش‌رو"
+uploadFailed = "این PDF باز نشد. لطفاً دوباره تلاش کنید."
 
 [sizes]
 large = "بزرگ"
@@ -12732,7 +12839,7 @@ accessLimitedTitle = "دسترسی محدود"
 accessLimitedViewer = "این لینک فقط قابل مشاهده است. اگر نیاز به دانلود دارید از مالک دسترسی ویرایشگر بخواهید."
 addUser = "افزودن"
 bulkDescription = "یک لینک ایجاد کنید تا همه فایل‌های انتخاب‌شده را با کاربران واردشده به اشتراک بگذارید."
-bulkTitle = "اشتراک‌گذاری فایل‌های انتخاب‌شده"
+bulkTitle = "اشتراک‌گذاری فایل‌های علامت‌خورده"
 commenterHint = "امکان نظر دادن به‌زودی فراهم می‌شود."
 copied = "لینک در کلیپ‌بورد کپی شد"
 copy = "کپی"
