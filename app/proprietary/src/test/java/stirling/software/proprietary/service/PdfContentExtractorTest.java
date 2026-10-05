@@ -28,9 +28,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import stirling.software.SPDF.pdf.parser.PdfModels.Bounds;
-import stirling.software.SPDF.pdf.parser.PdfModels.TableFragment;
-import stirling.software.SPDF.pdf.parser.TabulaTableParser;
 import stirling.software.proprietary.model.api.ai.AiPdfContentType;
 import stirling.software.proprietary.model.api.ai.AiWorkflowFileRequest;
 import stirling.software.proprietary.model.api.ai.FolioType;
@@ -41,6 +38,9 @@ import stirling.software.proprietary.service.PdfContentExtractor.LoadedFile;
 import stirling.software.proprietary.service.PdfContentExtractor.PdfContentResult;
 import stirling.software.proprietary.service.PdfContentExtractor.TextBlock;
 import stirling.software.proprietary.service.PdfContentExtractor.WorkflowArtifact;
+import stirling.software.spdf.pdf.parser.PdfModels.Bounds;
+import stirling.software.spdf.pdf.parser.PdfModels.TableFragment;
+import stirling.software.spdf.pdf.parser.TabulaTableParser;
 
 /**
  * Unit tests for {@link PdfContentExtractor}. Exercises the low-level extraction methods against

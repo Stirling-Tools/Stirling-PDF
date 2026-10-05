@@ -29,9 +29,6 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.pdf.parser.PageImageLocator;
-import stirling.software.SPDF.pdf.parser.PdfModels.TableFragment;
-import stirling.software.SPDF.pdf.parser.TabulaTableParser;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.RegexPatternUtils;
@@ -39,6 +36,9 @@ import stirling.software.proprietary.model.api.ai.AiPdfContentType;
 import stirling.software.proprietary.model.api.ai.AiWorkflowFileRequest;
 import stirling.software.proprietary.model.api.ai.AiWorkflowTextSelection;
 import stirling.software.proprietary.model.api.ai.FolioType;
+import stirling.software.spdf.pdf.parser.PageImageLocator;
+import stirling.software.spdf.pdf.parser.PdfModels.TableFragment;
+import stirling.software.spdf.pdf.parser.TabulaTableParser;
 
 @Slf4j
 @Service

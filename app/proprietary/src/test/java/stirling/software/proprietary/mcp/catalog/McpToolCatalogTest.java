@@ -17,8 +17,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
-import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.spdf.config.EndpointConfiguration;
 
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;

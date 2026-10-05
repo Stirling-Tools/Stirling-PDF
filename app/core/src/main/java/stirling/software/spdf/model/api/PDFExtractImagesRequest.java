@@ -1,0 +1,16 @@
+package stirling.software.spdf.model.api;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+@Data
+@EqualsAndHashCode(callSuper = true)
+public class PDFExtractImagesRequest extends PDFWithImageFormatRequest {
+
+    // @Schema(
+    //         description =
+    //                 "Boolean to enable/disable the saving of duplicate images, true to enable"
+    //                         + " duplicates",
+    //         defaultValue = "false")
+    // private Boolean allowDuplicates;
+}

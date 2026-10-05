@@ -66,8 +66,8 @@ class MathAuditorOrchestratorTest {
     void setUp() throws IOException {
         objectMapper = JsonMapper.builder().build();
         // Real extractor; tabula is never reached for text-only requisitions but stub leniently.
-        stirling.software.SPDF.pdf.parser.TabulaTableParser tabula =
-                org.mockito.Mockito.mock(stirling.software.SPDF.pdf.parser.TabulaTableParser.class);
+        stirling.software.spdf.pdf.parser.TabulaTableParser tabula =
+                org.mockito.Mockito.mock(stirling.software.spdf.pdf.parser.TabulaTableParser.class);
         lenient().when(tabula.parse(any(PDDocument.class), anyInt())).thenReturn(List.of());
         pdfContentExtractor = new PdfContentExtractor(tabula);
         orchestrator =

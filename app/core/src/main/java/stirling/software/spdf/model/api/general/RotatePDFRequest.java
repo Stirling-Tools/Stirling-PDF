@@ -1,0 +1,21 @@
+package stirling.software.spdf.model.api.general;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+import stirling.software.common.model.api.PDFFile;
+
+@Data
+@EqualsAndHashCode(callSuper = true)
+public class RotatePDFRequest extends PDFFile {
+
+    @Schema(
+            description =
+                    "The clockwise angle by which to rotate all pages in the PDF file. Must be a multiple of 90.",
+            type = "integer",
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            allowableValues = {"0", "90", "180", "270"})
+    private Integer angle = 90;
+}

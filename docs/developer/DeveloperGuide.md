@@ -502,13 +502,13 @@ For Stirling 2.0, new features are built as React components:
 ### Adding a New Feature to the Backend (API)
 
 1. **Create a New Controller:**
-   - Create a new Java class in the `stirling-pdf/src/main/java/stirling/software/SPDF/controller/api` directory.
+   - Create a new Java class in the `stirling-pdf/src/main/java/stirling/software/spdf/controller/api` directory.
    - Annotate the class with `@RestController` and `@RequestMapping` to define the API endpoint.
    - Ensure to add API documentation annotations like `@Tag(name = "General", description = "General APIs")` and `@Operation(summary = "Crops a PDF document", description = "This operation takes an input PDF file and crops it according to the given coordinates.")`.
    - If the endpoint transforms a document, declare what it accepts and produces with `@ToolIO`, for example `@ToolIO(produces = ToolFormat.PDF)`. This is what lets a pipeline containing the step be checked before it runs, so a chain that cannot work is caught in the builder rather than part-way through a job. Endpoints under the tool namespaces are required to carry it - `ToolIODeclarationCoverageTest` fails the build otherwise. See [Declaring tool inputs and outputs](#declaring-tool-inputs-and-outputs).
 
    ```java
-   package stirling.software.SPDF.controller.api;
+   package stirling.software.spdf.controller.api;
 
    import org.springframework.web.bind.annotation.GetMapping;
    import org.springframework.web.bind.annotation.RequestMapping;
@@ -530,11 +530,11 @@ For Stirling 2.0, new features are built as React components:
    ```
 
 2. **Define the Service Layer:** (Not required but often useful)
-   - Create a new service class in the `stirling-pdf/src/main/java/stirling/software/SPDF/service` directory.
+   - Create a new service class in the `stirling-pdf/src/main/java/stirling/software/spdf/service` directory.
    - Implement the business logic for the new feature.
 
    ```java
-   package stirling.software.SPDF.service;
+   package stirling.software.spdf.service;
 
    import org.springframework.stereotype.Service;
 
@@ -553,13 +553,13 @@ For Stirling 2.0, new features are built as React components:
 - Autowire the service class in the controller and use it to handle the API request.
 
   ```java
-  package stirling.software.SPDF.controller.api;
+  package stirling.software.spdf.controller.api;
 
   import org.springframework.beans.factory.annotation.Autowired;
   import org.springframework.web.bind.annotation.GetMapping;
   import org.springframework.web.bind.annotation.RequestMapping;
   import org.springframework.web.bind.annotation.RestController;
-  import stirling.software.SPDF.service.NewFeatureService;
+  import stirling.software.spdf.service.NewFeatureService;
   import io.swagger.v3.oas.annotations.Operation;
   import io.swagger.v3.oas.annotations.tags.Tag;
 

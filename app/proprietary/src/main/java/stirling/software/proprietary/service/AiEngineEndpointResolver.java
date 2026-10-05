@@ -15,7 +15,7 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.config.EndpointConfiguration;
+import stirling.software.spdf.config.EndpointConfiguration;
 
 /**
  * Discovers every {@code /api/v1/...} request mapping in the application and exposes the subset

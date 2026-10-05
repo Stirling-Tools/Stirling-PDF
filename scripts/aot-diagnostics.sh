@@ -254,7 +254,7 @@ fi
 hdr "JAR Layout"
 if [ -f /app/app.jar ] && [ -d /app/lib ]; then
   pass "Spring Boot 4 layered layout: /app/app.jar + /app/lib/"
-  info "  Classpath: -cp /app/app.jar:/app/lib/* stirling.software.SPDF.SPDFApplication"
+  info "  Classpath: -cp /app/app.jar:/app/lib/* stirling.software.spdf.SPDFApplication"
   JAR_LAYOUT="layered"
 elif [ -f /app.jar ]; then
   pass "Single JAR layout: /app.jar"
@@ -313,7 +313,7 @@ if [ "$RUN_SMOKE_TEST" = true ]; then
       -Dstirling.datasource.url="jdbc:h2:mem:aotsmoke;DB_CLOSE_DELAY=-1;MODE=PostgreSQL")
 
     case "$JAR_LAYOUT" in
-      layered)  SMOKE_CMD+=(-cp "/app/app.jar:/app/lib/*" stirling.software.SPDF.SPDFApplication) ;;
+      layered)  SMOKE_CMD+=(-cp "/app/app.jar:/app/lib/*" stirling.software.spdf.SPDFApplication) ;;
       single)   SMOKE_CMD+=(-jar /app.jar) ;;
       exploded) SMOKE_CMD+=(-cp /app org.springframework.boot.loader.launch.JarLauncher) ;;
     esac

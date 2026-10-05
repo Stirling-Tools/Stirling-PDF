@@ -1,0 +1,266 @@
+package stirling.software.spdf.controller.api.filters;
+
+import java.io.IOException;
+
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.multipart.MultipartFile;
+
+import io.github.pixee.security.Filenames;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
+import lombok.RequiredArgsConstructor;
+
+import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.api.FilterApi;
+import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
+import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.PdfUtils;
+import stirling.software.common.util.TempFileManager;
+import stirling.software.common.util.WebResponseUtils;
+import stirling.software.spdf.model.api.PDFComparisonAndCount;
+import stirling.software.spdf.model.api.PDFWithPageNums;
+import stirling.software.spdf.model.api.filter.ContainsTextRequest;
+import stirling.software.spdf.model.api.filter.FileSizeRequest;
+import stirling.software.spdf.model.api.filter.PageRotationRequest;
+import stirling.software.spdf.model.api.filter.PageSizeRequest;
+
+@FilterApi
+@RequiredArgsConstructor
+public class FilterController {
+
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
+
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/filter-contains-text",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
+    @ToolIO(produces = ToolFormat.PDF)
+    @Operation(summary = "Checks if a PDF contains set text, returns true if does")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "PDF passed filter",
+                content = @Content(mediaType = MediaType.APPLICATION_PDF_VALUE)),
+        @ApiResponse(
+                responseCode = "204",
+                description = "PDF did not pass filter",
+                content = @Content())
+    })
+    public ResponseEntity<Resource> containsText(@ModelAttribute ContainsTextRequest request)
+            throws IOException, InterruptedException {
+        MultipartFile inputFile = request.getFileInput();
+        String text = request.getText();
+        String pageNumber = request.getPageNumbers();
+
+        try (PDDocument pdfDocument = pdfDocumentFactory.load(inputFile)) {
+            if (PdfUtils.hasText(pdfDocument, pageNumber, text)) {
+                return WebResponseUtils.pdfDocToWebResponse(
+                        pdfDocument,
+                        Filenames.toSimpleFileName(inputFile.getOriginalFilename()),
+                        tempFileManager);
+            }
+        }
+        return ResponseEntity.noContent().build();
+    }
+
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/filter-contains-image",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
+    @ToolIO(produces = ToolFormat.PDF)
+    @Operation(summary = "Checks if a PDF contains an image")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "PDF passed filter",
+                content = @Content(mediaType = MediaType.APPLICATION_PDF_VALUE)),
+        @ApiResponse(
+                responseCode = "204",
+                description = "PDF did not pass filter",
+                content = @Content())
+    })
+    public ResponseEntity<Resource> containsImage(@ModelAttribute PDFWithPageNums request)
+            throws IOException, InterruptedException {
+        MultipartFile inputFile = request.getFileInput();
+        String pageNumber = request.getPageNumbers();
+
+        try (PDDocument pdfDocument = pdfDocumentFactory.load(inputFile)) {
+            if (PdfUtils.hasImages(pdfDocument, pageNumber)) {
+                return WebResponseUtils.pdfDocToWebResponse(
+                        pdfDocument,
+                        Filenames.toSimpleFileName(inputFile.getOriginalFilename()),
+                        tempFileManager);
+            }
+        }
+        return ResponseEntity.noContent().build();
+    }
+
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/filter-page-count",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
+    @ToolIO(produces = ToolFormat.PDF)
+    @Operation(summary = "Checks if a PDF is greater, less or equal to a setPageCount")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "PDF passed filter",
+                content = @Content(mediaType = MediaType.APPLICATION_PDF_VALUE)),
+        @ApiResponse(
+                responseCode = "204",
+                description = "PDF did not pass filter",
+                content = @Content())
+    })
+    public ResponseEntity<byte[]> pageCount(@ModelAttribute PDFComparisonAndCount request)
+            throws IOException, InterruptedException {
+        MultipartFile inputFile = request.getFileInput();
+        int pageCount = request.getPageCount();
+        String comparator = request.getComparator();
+
+        boolean valid;
+        try (PDDocument document = pdfDocumentFactory.load(inputFile)) {
+            int actualPageCount = document.getNumberOfPages();
+            valid = compare(actualPageCount, pageCount, comparator);
+        }
+
+        return valid
+                ? WebResponseUtils.multiPartFileToWebResponse(inputFile)
+                : ResponseEntity.noContent().build();
+    }
+
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/filter-page-size",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
+    @ToolIO(produces = ToolFormat.PDF)
+    @Operation(summary = "Checks if a PDF is of a certain size")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "PDF passed filter",
+                content = @Content(mediaType = MediaType.APPLICATION_PDF_VALUE)),
+        @ApiResponse(
+                responseCode = "204",
+                description = "PDF did not pass filter",
+                content = @Content())
+    })
+    public ResponseEntity<byte[]> pageSize(@ModelAttribute PageSizeRequest request)
+            throws IOException, InterruptedException {
+        MultipartFile inputFile = request.getFileInput();
+        String standardPageSize = request.getStandardPageSize();
+        String comparator = request.getComparator();
+
+        final boolean valid;
+        try (PDDocument document = pdfDocumentFactory.load(inputFile)) {
+            PDPage firstPage = document.getPage(0);
+            PDRectangle actualPageSize = firstPage.getMediaBox();
+
+            float actualArea = actualPageSize.getWidth() * actualPageSize.getHeight();
+            PDRectangle standardSize = PdfUtils.textToPageSize(standardPageSize);
+            float standardArea = standardSize.getWidth() * standardSize.getHeight();
+
+            valid = compare(actualArea, standardArea, comparator);
+        }
+
+        return valid
+                ? WebResponseUtils.multiPartFileToWebResponse(inputFile)
+                : ResponseEntity.noContent().build();
+    }
+
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/filter-file-size",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
+    @ToolIO(produces = ToolFormat.PDF)
+    @Operation(summary = "Checks if a PDF is a set file size")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "PDF passed filter",
+                content = @Content(mediaType = MediaType.APPLICATION_PDF_VALUE)),
+        @ApiResponse(
+                responseCode = "204",
+                description = "PDF did not pass filter",
+                content = @Content())
+    })
+    public ResponseEntity<byte[]> fileSize(@ModelAttribute FileSizeRequest request)
+            throws IOException, InterruptedException {
+        MultipartFile inputFile = request.getFileInput();
+        long fileSize = request.getFileSize();
+        String comparator = request.getComparator();
+
+        long actualFileSize = inputFile.getSize();
+        boolean valid = compare(actualFileSize, fileSize, comparator);
+
+        return valid
+                ? WebResponseUtils.multiPartFileToWebResponse(inputFile)
+                : ResponseEntity.noContent().build();
+    }
+
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/filter-page-rotation",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
+    @ToolIO(produces = ToolFormat.PDF)
+    @Operation(summary = "Checks if a PDF is of a certain rotation")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "PDF passed filter",
+                content = @Content(mediaType = MediaType.APPLICATION_PDF_VALUE)),
+        @ApiResponse(
+                responseCode = "204",
+                description = "PDF did not pass filter",
+                content = @Content())
+    })
+    public ResponseEntity<byte[]> pageRotation(@ModelAttribute PageRotationRequest request)
+            throws IOException, InterruptedException {
+        MultipartFile inputFile = request.getFileInput();
+        int rotation = request.getRotation();
+        String comparator = request.getComparator();
+
+        boolean valid;
+        try (PDDocument document = pdfDocumentFactory.load(inputFile)) {
+            PDPage firstPage = document.getPage(0);
+            int actualRotation = firstPage.getRotation();
+            valid = compare(actualRotation, rotation, comparator);
+        }
+
+        return valid
+                ? WebResponseUtils.multiPartFileToWebResponse(inputFile)
+                : ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Compares two values based on the provided comparator.
+     *
+     * @param <T> The type of the values being compared.
+     * @param actual The actual value.
+     * @param expected The expected value.
+     * @param comparator The comparator to use (e.g., "Greater", "Less", "Equal").
+     * @return True if the comparison is valid, false otherwise.
+     */
+    private static <T extends Comparable<T>> boolean compare(
+            T actual, T expected, String comparator) {
+        return switch (comparator) {
+            case "Greater" -> actual.compareTo(expected) > 0;
+            case "Equal" -> actual.compareTo(expected) == 0;
+            case "Less" -> actual.compareTo(expected) < 0;
+            default ->
+                    throw ExceptionUtils.createInvalidArgumentException("comparator", comparator);
+        };
+    }
+}

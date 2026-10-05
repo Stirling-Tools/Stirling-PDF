@@ -156,7 +156,7 @@ bootJar {
 
 // Configure main class for Spring Boot
 springBoot {
-    mainClass = 'stirling.software.SPDF.SPDFApplication'
+    mainClass = 'stirling.software.spdf.SPDFApplication'
 }
 
 // Frontend build tasks - only enabled with -PbuildWithFrontend=true

@@ -33,8 +33,6 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.config.EndpointConfiguration;
-import stirling.software.SPDF.config.EndpointConfiguration.DisableReason;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.GeneralUtils;
@@ -43,6 +41,8 @@ import stirling.software.proprietary.formdetection.inference.UnloadableModel;
 import stirling.software.proprietary.formdetection.model.FormDetectionStatus;
 import stirling.software.proprietary.formdetection.model.ModelCatalogEntry;
 import stirling.software.proprietary.formdetection.model.ModelStatusResponse;
+import stirling.software.spdf.config.EndpointConfiguration;
+import stirling.software.spdf.config.EndpointConfiguration.DisableReason;
 
 /**
  * Downloads, verifies and tracks the detection model. Single-flight install, SHA-256 verified,

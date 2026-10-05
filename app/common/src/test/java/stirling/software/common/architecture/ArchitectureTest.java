@@ -29,7 +29,7 @@ class ArchitectureTest {
                         .resideInAPackage("stirling.software.common..")
                         .should()
                         .dependOnClassesThat()
-                        .resideInAPackage("stirling.software.SPDF..");
+                        .resideInAPackage("stirling.software.spdf..");
         rule.check(commonClasses);
     }
 

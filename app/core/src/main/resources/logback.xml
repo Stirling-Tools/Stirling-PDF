@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-	<define name="LOG_PATH" class="stirling.software.SPDF.config.LogbackPropertyLoader" />
+	<define name="LOG_PATH" class="stirling.software.spdf.config.LogbackPropertyLoader" />
 
     <!-- Console Appender -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
