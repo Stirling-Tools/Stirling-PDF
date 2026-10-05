@@ -20,20 +20,24 @@ import tools.jackson.databind.ObjectMapper;
  */
 public class OpenAiModeration implements StoreModeration {
 
+    private static final String BASE_URL = "https://api.openai.com/v1";
+    private static final String MODEL = "omni-moderation-latest";
+    private static final Duration TIMEOUT = Duration.ofSeconds(8);
+
     private final HttpClient http;
     private final ObjectMapper mapper = new ObjectMapper();
     private final URI endpoint;
     private final String apiKey;
-    private final String model;
-    private final Duration timeout;
 
-    public OpenAiModeration(
-            HttpClient http, String baseUrl, String apiKey, String model, Duration timeout) {
+    public OpenAiModeration(HttpClient http, String apiKey) {
+        this(http, BASE_URL, apiKey);
+    }
+
+    /** For tests, against a local stand-in for the API. */
+    OpenAiModeration(HttpClient http, String baseUrl, String apiKey) {
         this.http = http;
         this.endpoint = URI.create(baseUrl.replaceAll("/+$", "") + "/moderations");
         this.apiKey = apiKey;
-        this.model = model;
-        this.timeout = timeout;
     }
 
     @Override
@@ -46,10 +50,10 @@ public class OpenAiModeration implements StoreModeration {
         if (texts.isEmpty()) {
             return List.of();
         }
-        String body = mapper.writeValueAsString(Map.of("model", model, "input", texts));
+        String body = mapper.writeValueAsString(Map.of("model", MODEL, "input", texts));
         HttpRequest request =
                 HttpRequest.newBuilder(endpoint)
-                        .timeout(timeout)
+                        .timeout(TIMEOUT)
                         .header("Authorization", "Bearer " + apiKey)
                         .header("Content-Type", "application/json")
                         .POST(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8))

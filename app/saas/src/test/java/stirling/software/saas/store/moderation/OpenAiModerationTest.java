@@ -8,7 +8,6 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.http.HttpClient;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -21,8 +20,8 @@ import com.sun.net.httpserver.HttpServer;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
-/** The two providers speak their APIs correctly, against a local stand-in for each. */
-class ModerationProvidersTest {
+/** OpenAI's moderation API is spoken correctly, against a local stand-in for it. */
+class OpenAiModerationTest {
 
     private final ObjectMapper mapper = new ObjectMapper();
     private final HttpClient http = HttpClient.newHttpClient();
@@ -44,12 +43,7 @@ class ModerationProvidersTest {
                             new String(
                                     exchange.getRequestBody().readAllBytes(),
                                     StandardCharsets.UTF_8));
-                    String auth = exchange.getRequestHeaders().getFirst("Authorization");
-                    requestAuth.set(
-                            auth != null
-                                    ? auth
-                                    : exchange.getRequestHeaders()
-                                            .getFirst("Ocp-Apim-Subscription-Key"));
+                    requestAuth.set(exchange.getRequestHeaders().getFirst("Authorization"));
                     byte[] bytes = responseBody.getBytes(StandardCharsets.UTF_8);
                     exchange.sendResponseHeaders(status, bytes.length);
                     try (OutputStream out = exchange.getResponseBody()) {
@@ -79,13 +73,7 @@ class ModerationProvidersTest {
                    "category_scores": {"harassment": 0.4, "self-harm/intent": 0.9, "hate": 0.2}}
                 ]}
                 """;
-        OpenAiModeration openAi =
-                new OpenAiModeration(
-                        http,
-                        base() + "/v1/",
-                        "sk-test",
-                        "omni-moderation-latest",
-                        Duration.ofSeconds(5));
+        OpenAiModeration openAi = new OpenAiModeration(http, base() + "/v1/", "sk-test");
 
         List<StoreModeration.Verdict> verdicts = openAi.check(List.of("fine", "not fine"));
 
@@ -101,43 +89,10 @@ class ModerationProvidersTest {
     @Test
     void openAiErrorsAreUnavailableNotClean() {
         status = 429;
-        OpenAiModeration openAi =
-                new OpenAiModeration(http, base(), "sk-test", "m", Duration.ofSeconds(5));
+        OpenAiModeration openAi = new OpenAiModeration(http, base(), "sk-test");
 
         assertThatThrownBy(() -> openAi.check(List.of("text")))
                 .isInstanceOf(StoreModeration.UnavailableException.class)
                 .hasMessageContaining("429");
-    }
-
-    @Test
-    void azureFlagsAtTheSeverityThreshold() throws Exception {
-        responseBody =
-                """
-                {"categoriesAnalysis": [
-                  {"category": "Hate", "severity": 0},
-                  {"category": "SelfHarm", "severity": 4},
-                  {"category": "Sexual", "severity": 2}
-                ]}
-                """;
-        AzureContentSafetyModeration azure =
-                new AzureContentSafetyModeration(
-                        http, base() + "/", "azure-key", 2, Duration.ofSeconds(5));
-
-        List<StoreModeration.Verdict> verdicts = azure.check(List.of("text"));
-
-        assertThat(verdicts).containsExactly(new StoreModeration.Verdict(true, "self harm"));
-        assertThat(requestPath.get())
-                .isEqualTo("/contentsafety/text:analyze?api-version=2024-09-01");
-        assertThat(requestAuth.get()).isEqualTo("azure-key");
-        assertThat(mapper.readTree(requestBody.get()).path("text").asString()).isEqualTo("text");
-    }
-
-    @Test
-    void azureBelowTheThresholdIsClean() throws Exception {
-        responseBody = "{\"categoriesAnalysis\": [{\"category\": \"Hate\", \"severity\": 2}]}";
-        AzureContentSafetyModeration azure =
-                new AzureContentSafetyModeration(http, base(), "k", 4, Duration.ofSeconds(5));
-
-        assertThat(azure.check(List.of("text"))).containsExactly(StoreModeration.Verdict.CLEAN);
     }
 }

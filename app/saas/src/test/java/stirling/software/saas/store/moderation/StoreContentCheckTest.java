@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 
 import stirling.software.saas.store.StoreFinding;
 
-/** Flagged fields block by name, an outage follows the fail policy, and verdicts are reused. */
+/** Flagged fields block by name, an outage falls back to the word list, and verdicts are reused. */
 class StoreContentCheckTest {
 
     /** Flags any text containing "nasty"; counts the texts it was asked about. */
@@ -43,7 +43,7 @@ class StoreContentCheckTest {
 
     @Test
     void aFlaggedFieldBlocksByNameAndNeverEchoesTheText() {
-        StoreContentCheck check = new StoreContentCheck(new FakeModeration(), false);
+        StoreContentCheck check = new StoreContentCheck(new FakeModeration());
 
         List<StoreFinding> findings =
                 check.audit(fields("Invoice intake", "A nasty description of the pipeline"));
@@ -63,27 +63,25 @@ class StoreContentCheckTest {
     @Test
     void cleanTextPassesAndBlankFieldsAreNotSent() {
         FakeModeration provider = new FakeModeration();
-        StoreContentCheck check = new StoreContentCheck(provider, false);
+        StoreContentCheck check = new StoreContentCheck(provider);
 
         assertThat(check.audit(fields("Invoice intake", "Makes invoices searchable"))).isEmpty();
         assertThat(provider.asked).containsExactly("Invoice intake", "Makes invoices searchable");
     }
 
     @Test
-    void anOutageFallsBackToTheWordListUnlessFailClosed() {
+    void anOutageFallsBackToTheWordList() {
         FakeModeration provider = new FakeModeration();
         provider.down = true;
 
-        assertThat(new StoreContentCheck(provider, false).audit(fields("A", "B"))).isEmpty();
-        assertThat(new StoreContentCheck(provider, true).audit(fields("A", "B")))
-                .extracting(StoreFinding::code)
-                .containsExactly("content-check-unavailable");
+        // The listing is public and removable, so an outage must not stop every publish.
+        assertThat(new StoreContentCheck(provider).audit(fields("A", "B"))).isEmpty();
     }
 
     @Test
     void thePublishAfterAPreflightReusesItsVerdicts() {
         FakeModeration provider = new FakeModeration();
-        StoreContentCheck check = new StoreContentCheck(provider, false);
+        StoreContentCheck check = new StoreContentCheck(provider);
 
         check.audit(fields("Invoice intake", "Makes invoices searchable"));
         check.audit(fields("Invoice intake", "Makes invoices searchable and small"));

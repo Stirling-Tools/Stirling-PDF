@@ -15,9 +15,9 @@ import stirling.software.saas.store.StoreFinding;
  * local word list has passed it. A flagged field is a block naming the field and the category,
  * never the words.
  *
- * <p>When the provider cannot answer, publishing goes ahead on the word list alone unless {@code
- * failClosed} is set, in which case it is refused until the provider is back. Verdicts are cached
- * by text for a few minutes, so the preflight and the publish that follows it cost one call.
+ * <p>When the provider cannot answer, publishing goes ahead on the word list alone: the listing is
+ * public and removable, so an outage should not stop every publish. Verdicts are cached by text for
+ * a few minutes, so the preflight and the publish that follows it cost one call.
  */
 @Slf4j
 public class StoreContentCheck {
@@ -31,7 +31,6 @@ public class StoreContentCheck {
     private record Cached(StoreModeration.Verdict verdict, long at) {}
 
     private final StoreModeration provider;
-    private final boolean failClosed;
     private final Map<String, Cached> cache =
             new LinkedHashMap<>(16, 0.75f, true) {
                 @Override
@@ -40,14 +39,13 @@ public class StoreContentCheck {
                 }
             };
 
-    public StoreContentCheck(StoreModeration provider, boolean failClosed) {
+    public StoreContentCheck(StoreModeration provider) {
         this.provider = provider;
-        this.failClosed = failClosed;
     }
 
     /** No hosted check: the word list is the only text check. */
     public static StoreContentCheck disabled() {
-        return new StoreContentCheck(null, false);
+        return new StoreContentCheck(null);
     }
 
     public boolean enabled() {
@@ -64,19 +62,6 @@ public class StoreContentCheck {
         try {
             verdicts = verdicts(present.stream().map(Field::text).toList());
         } catch (StoreModeration.UnavailableException e) {
-            if (failClosed) {
-                log.warn(
-                        "Store content check unavailable ({}), refusing: {}",
-                        provider.name(),
-                        e.getMessage());
-                return List.of(
-                        StoreFinding.block(
-                                "content-check-unavailable",
-                                "The content check is not available",
-                                "The store could not check this listing's text just now. Try again in a"
-                                        + " few minutes.",
-                                StoreFinding.Where.details()));
-            }
             log.warn(
                     "Store content check unavailable ({}), publishing on the word list alone: {}",
                     provider.name(),
