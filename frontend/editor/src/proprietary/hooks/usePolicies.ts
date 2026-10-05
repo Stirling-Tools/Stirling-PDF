@@ -31,14 +31,29 @@ const reconcileRetryDelay = (attempt: number) =>
 
 // One in-flight reconcile read shared across mounts. A remount (or StrictMode
 // double-invoke) would otherwise fire an identical fetch; the entry clears on
-// settle so retries and later sessions still refetch.
-let reconcileInFlight: ReturnType<typeof fetchPoliciesByCategory> | null = null;
+// settle so retries and later sessions still refetch. Keyed by session so a
+// sign-in mid-flight cannot join the outgoing session's read and reconcile its
+// team policies into the new one.
+let reconcileInFlight: {
+  sessionKey: string | null;
+  promise: ReturnType<typeof fetchPoliciesByCategory>;
+} | null = null;
 
-function fetchPoliciesShared(): ReturnType<typeof fetchPoliciesByCategory> {
-  reconcileInFlight ??= fetchPoliciesByCategory().finally(() => {
-    reconcileInFlight = null;
-  });
-  return reconcileInFlight;
+function fetchPoliciesShared(
+  sessionKey: string | null,
+): ReturnType<typeof fetchPoliciesByCategory> {
+  if (reconcileInFlight?.sessionKey === sessionKey) {
+    return reconcileInFlight.promise;
+  }
+  const entry = {
+    sessionKey,
+    promise: fetchPoliciesByCategory().finally(() => {
+      // Identity check: a newer session's entry must survive this settle.
+      if (reconcileInFlight === entry) reconcileInFlight = null;
+    }),
+  };
+  reconcileInFlight = entry;
+  return entry.promise;
 }
 
 export function usePolicies() {
@@ -68,7 +83,7 @@ export function usePolicies() {
     const reconcile = async () => {
       let byCategory;
       try {
-        byCategory = await fetchPoliciesShared();
+        byCategory = await fetchPoliciesShared(sessionKey);
       } catch {
         if (cancelled || attempt >= RECONCILE_MAX_ATTEMPTS) return;
         timer = setTimeout(reconcile, reconcileRetryDelay(attempt++));

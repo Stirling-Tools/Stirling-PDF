@@ -175,4 +175,27 @@ describe("usePolicies", () => {
     rerender();
     await waitFor(() => expect(api.listPolicies).toHaveBeenCalledTimes(2));
   });
+
+  it("does not let a sign-in join the outgoing session's in-flight read", async () => {
+    api.userId = "user-1";
+    let releaseSignedOutRead: (() => void) | undefined;
+    api.listPolicies.mockImplementationOnce(async () => {
+      await new Promise<void>((resolve) => {
+        releaseSignedOutRead = resolve;
+      });
+      return [];
+    });
+
+    const { rerender } = renderHook(() => usePolicies());
+    await waitFor(() => expect(api.listPolicies).toHaveBeenCalledTimes(1));
+
+    // Signing in while user-1's read is still open must not reuse it: the read
+    // was issued for the old session, so its rows are user-1's policies.
+    api.userId = "user-2";
+    rerender();
+    expect(api.listPolicies).toHaveBeenCalledTimes(2);
+
+    releaseSignedOutRead?.();
+    await waitFor(() => expect(api.listPolicies).toHaveBeenCalledTimes(2));
+  });
 });
