@@ -381,6 +381,7 @@ function fakeGitHub(
           return { data: { mergeable, mergeable_state: mergeableState, labels: [], head: { ref: "feature", repo: null } } };
         },
         update: async ({ pull_number }) => write(`close #${pull_number}`),
+        listFiles: async () => assert.fail("no file lists"),
       },
     },
   };
