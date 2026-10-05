@@ -11,6 +11,8 @@ This directory contains all development-related documentation for Stirling PDF.
 - **[EXCEPTION_HANDLING_GUIDE.md](./EXCEPTION_HANDLING_GUIDE.md)** - Exception handling patterns and i18n best practices
 - **[CODE_COMMENTS.md](./CODE_COMMENTS.md)** - What a comment is for, what not to write, and the `task comment-lint` rules
 - **[HowToAddNewLanguage.md](./HowToAddNewLanguage.md)** - Internationalization and translation guide
+- **[STYLELINT.md](./STYLELINT.md)** - CSS and stylesheet linting rules and usage
+- **[FILE_HISTORY_SPECIFICATION.md](./FILE_HISTORY_SPECIFICATION.md)** - File history and workflow state specifications
 
 ### Configuration & Operations
 - **[DATABASE.md](./DATABASE.md)** - Database setup and configuration
@@ -21,6 +23,9 @@ This directory contains all development-related documentation for Stirling PDF.
 ### Features & Documentation
 - **[AGENTS.md](../../AGENTS.md)** - Agent-based functionality documentation
 - **[USERS.md](./USERS.md)** - User-focused documentation and guides
+- **[counter_translation.md](../counter_translation.md)** - Translation progress calculation script documentation
+- **[data-extraction.md](../data-extraction.md)** - Data extraction specifications and tool workflows
+- **[type3_fallback_plan.md](../type3_fallback_plan.md)** - Type3 font fallback plan and library catalog
 
 ## 🔗 Related Files in Root
 - **[README.md](../../README.md)** - Project overview and quick start

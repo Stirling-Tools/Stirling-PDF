@@ -2,7 +2,7 @@
 
 ## Overview
 
-The script [`scripts/counter_translation.py`](../scripts/counter_translation.py) checks the translation progress of the property files in the directory `app/core/src/main/resources/`.
+The script [`scripts/counter_translation_v3.py`](../scripts/counter_translation_v3.py) checks the translation progress of the property files in the directory `app/core/src/main/resources/`.
 It compares each `messages_*.properties` file with the English reference file `messages_en_US.properties` and calculates a percentage of completion for each language.
 
 In addition to console output, the script automatically updates the progress badges in the project’s `README.md` and maintains the configuration file [`scripts/ignore_translation.toml`](../scripts/ignore_translation.toml), which lists translation keys to be ignored for each language.
@@ -16,7 +16,7 @@ In addition to console output, the script automatically updates the progress bad
 ## Default usage
 
 ```bash
-python scripts/counter_translation.py
+python scripts/counter_translation_v3.py
 ```
 
 This command:
@@ -29,7 +29,7 @@ This command:
 ## Check a single language
 
 ```bash
-python scripts/counter_translation.py --lang messages_fr_FR.properties
+python scripts/counter_translation_v3.py --lang messages_fr_FR.properties
 ```
 
 - The specified file can be given as a relative (to the resources folder) or absolute path.
@@ -41,7 +41,7 @@ python scripts/counter_translation.py --lang messages_fr_FR.properties
 For scripts or CI pipelines, the output can be reduced to just the percentage value:
 
 ```bash
-python scripts/counter_translation.py --lang messages_fr_FR.properties --show-percentage
+python scripts/counter_translation_v3.py --lang messages_fr_FR.properties --show-percentage
 ```
 
 The console will then only print `87` (without the percent symbol or any extra text).
