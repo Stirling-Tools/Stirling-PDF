@@ -42,18 +42,19 @@ for (const dpi of [96, 150, 600]) {
       .poll(() =>
         page.evaluate(
           () =>
-            (window as unknown as { __editor_store: EditorStore })
-              .__editor_store.state.pages[0]?.runs.length,
+            (
+              window as unknown as { __editor_store: EditorStore }
+            ).__editor_store.getState().pages[0]?.runs.length,
         ),
       )
       .toBe(6);
     const targets = await page.evaluate(() =>
-      (
-        window as unknown as { __editor_store: EditorStore }
-      ).__editor_store.state.pages[0].runs.map(({ id, text }) => ({
-        id,
-        text,
-      })),
+      (window as unknown as { __editor_store: EditorStore }).__editor_store
+        .getState()
+        .pages[0].runs.map(({ id, text }) => ({
+          id,
+          text,
+        })),
     );
     for (const target of targets) {
       await page.evaluate(({ id, text }) => {
