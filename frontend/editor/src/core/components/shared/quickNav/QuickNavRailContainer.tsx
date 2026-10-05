@@ -2,7 +2,10 @@ import { useTranslation } from "react-i18next";
 import { NavSurface } from "@app/ui/NavSurface";
 import { Icon } from "@app/ui/Icon";
 import { QuickNavBrand } from "@app/components/shared/quickNav/QuickNavBrand";
-import type { QuickNavIdentity } from "@app/contexts/QuickNavHostContext";
+import type {
+  QuickNavAccountMenu,
+  QuickNavIdentity,
+} from "@app/contexts/QuickNavHostContext";
 import {
   QuickNavRailBase,
   RailButton,
@@ -24,6 +27,9 @@ export interface QuickNavRailContainerProps extends Omit<
 > {
   /** The rail owns the account control, so the sidebars drop their own row. */
   onOpenAccount?: () => void;
+  /** Where the account menu's shortcuts navigate; defaults to opening settings. */
+  onOpenAccountShortcut?: (to: string) => void;
+  resolveAccountMenu?: () => QuickNavAccountMenu | undefined;
   /** Marks the avatar current for the whole settings page, which it now owns. */
   accountActive?: boolean;
   /** Omitted in builds with no docs to browse. */
@@ -40,6 +46,8 @@ export interface QuickNavRailContainerProps extends Omit<
 /** The fixed-width column the rail sits in. */
 export function QuickNavRailContainer({
   onOpenAccount,
+  onOpenAccountShortcut,
+  resolveAccountMenu,
   accountActive = false,
   onOpenDocs,
   docsActive = false,
@@ -85,7 +93,9 @@ export function QuickNavRailContainer({
               )}
               {onOpenAccount && (
                 <QuickNavRailAccount
-                  onOpen={onOpenAccount}
+                  onOpenSettings={onOpenAccount}
+                  onOpenShortcut={onOpenAccountShortcut ?? onOpenAccount}
+                  resolveMenu={resolveAccountMenu}
                   identity={identity}
                   active={accountActive}
                 />

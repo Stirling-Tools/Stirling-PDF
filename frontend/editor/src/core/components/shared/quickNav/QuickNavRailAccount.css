@@ -12,15 +12,26 @@
   padding-bottom: 0.3125rem;
 }
 
-.quick-nav-rail-avatar-target {
+.quick-nav-rail-avatar-target,
+.quick-nav-rail-avatar__disc {
   display: inline-flex;
 }
 
 /* Appearance comes from the shared Avatar; only the button reset is ours. */
 .quick-nav-rail-avatar {
+  display: inline-flex;
   border: none;
+  border-radius: 50%;
   padding: 0;
+  background: none;
+  cursor: pointer;
   user-select: none;
+  transition: transform var(--motion-fast);
+}
+
+.quick-nav-rail-avatar:hover,
+.quick-nav-rail-avatar[aria-expanded="true"] {
+  transform: scale(1.05);
 }
 
 .quick-nav-rail-avatar:focus-visible {
@@ -31,4 +42,31 @@
 /* Current-destination ring, echoing the edge bar the app entries use. */
 .quick-nav-rail-account[data-active] .quick-nav-rail-avatar {
   box-shadow: 0 0 0 0.125rem var(--c-accent-fg, var(--c-primary));
+}
+
+/* Clears the rail's outer edge rather than sitting on its border. */
+.quick-nav-account-menu {
+  margin-left: var(--space-2);
+}
+
+.quick-nav-account-menu__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1_5) var(--space-2);
+}
+
+.quick-nav-account-menu__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+/* Outranks the item's own hover colour. */
+.quick-nav-account-menu .quick-nav-account-menu__sign-out:hover {
+  color: var(--c-danger);
 }

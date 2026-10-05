@@ -32,10 +32,18 @@ vi.mock("@app/services/thumbnailGenerationService", () => ({
   thumbnailGenerationService: { generateThumbnails: vi.fn(async () => []) },
 }));
 
+/** The avatar is decorative inside its named button, so query the picture itself. */
+const railPicture = () =>
+  document.querySelector<HTMLImageElement>(".quick-nav-rail-avatar img");
+
 function Account() {
   const host = useQuickNavHost();
   return (
-    <QuickNavRailAccount identity={host?.identity ?? null} onOpen={() => {}} />
+    <QuickNavRailAccount
+      identity={host?.identity ?? null}
+      onOpenSettings={() => {}}
+      onOpenShortcut={() => {}}
+    />
   );
 }
 
@@ -77,11 +85,11 @@ describe("quick-nav identity during view switches", () => {
 
   it("keeps the name and avatar through unmount, session loading and picture loading", () => {
     const switchView = setup();
-    expect(screen.getByRole("img")).toHaveAttribute("src", "/ada.png");
+    expect(railPicture()).toHaveAttribute("src", "/ada.png");
 
     switchView(null);
     expect(screen.getByRole("button", { name: /Ada/ })).toBeInTheDocument();
-    expect(screen.getByRole("img")).toHaveAttribute("src", "/ada.png");
+    expect(railPicture()).toHaveAttribute("src", "/ada.png");
 
     auth.displayName = null;
     auth.loading = true;
@@ -89,33 +97,33 @@ describe("quick-nav identity during view switches", () => {
     picture.loading = true;
     switchView("processor");
     expect(screen.getByRole("button", { name: /Ada/ })).toBeInTheDocument();
-    expect(screen.getByRole("img")).toHaveAttribute("src", "/ada.png");
+    expect(railPicture()).toHaveAttribute("src", "/ada.png");
 
     auth.displayName = "Grace";
     auth.loading = false;
     switchView("processor");
     expect(screen.getByRole("button", { name: /Ada/ })).toBeInTheDocument();
-    expect(screen.getByRole("img")).toHaveAttribute("src", "/ada.png");
+    expect(railPicture()).toHaveAttribute("src", "/ada.png");
 
     picture.url = "/grace.png";
     picture.loading = false;
     switchView("processor");
     expect(screen.getByRole("button", { name: /Grace/ })).toBeInTheDocument();
-    expect(screen.getByRole("img")).toHaveAttribute("src", "/grace.png");
+    expect(railPicture()).toHaveAttribute("src", "/grace.png");
 
     auth.displayName = null;
     picture.url = null;
     auth.loading = true;
     switchView("editor");
     expect(screen.getByRole("button", { name: /Grace/ })).toBeInTheDocument();
-    expect(screen.getByRole("img")).toHaveAttribute("src", "/grace.png");
+    expect(railPicture()).toHaveAttribute("src", "/grace.png");
 
     auth.loading = false;
     switchView("editor");
     expect(
       screen.getByRole("button", { name: /auth.displayName.user/ }),
     ).toBeInTheDocument();
-    expect(screen.queryByRole("img")).not.toBeInTheDocument();
+    expect(railPicture()).toBeNull();
   });
 
   it("waits for the account endpoint before replacing an identity without an auth name", async () => {
@@ -131,11 +139,11 @@ describe("quick-nav identity during view switches", () => {
     picture.url = null;
     switchView("processor");
     expect(screen.getByRole("button", { name: /Ada/ })).toBeInTheDocument();
-    expect(screen.getByRole("img")).toHaveAttribute("src", "/ada.png");
+    expect(railPicture()).toHaveAttribute("src", "/ada.png");
 
     await act(async () => resolveAccount({ username: "Grace" }));
     expect(screen.getByRole("button", { name: /Grace/ })).toBeInTheDocument();
-    expect(screen.queryByRole("img")).not.toBeInTheDocument();
+    expect(railPicture()).toBeNull();
   });
 
   it("replaces the cached identity when the account lookup rejects after sign-out", async () => {
@@ -156,6 +164,6 @@ describe("quick-nav identity during view switches", () => {
     expect(
       screen.getByRole("button", { name: /auth.displayName.user/ }),
     ).toBeInTheDocument();
-    expect(screen.queryByRole("img")).not.toBeInTheDocument();
+    expect(railPicture()).toBeNull();
   });
 });
