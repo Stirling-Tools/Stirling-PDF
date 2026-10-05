@@ -166,7 +166,7 @@ const TOOL_SEO_TITLES = {
   addText: "Add Text to PDF",
   addImage: "Add Image to PDF",
   addStamp: "Add Stamp to PDF",
-  addAttachments: "Add Attachments to PDF",
+  addAttachments: "Manage PDF Attachments",
   extractPages: "Extract PDF Pages",
   removePages: "Delete Pages from PDF",
   removeBlanks: "Remove Blank Pages from PDF",

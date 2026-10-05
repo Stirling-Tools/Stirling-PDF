@@ -253,15 +253,13 @@ export function rankFileResults(
       group: "files",
       title: item.name,
       // The file-type doc icon (PDF/image/doc/…) the sidebar and grid use,
-      // rather than a flat generic file glyph. Sized by height so the portrait
-      // doc shape sits level with the square tool/settings icons instead of
-      // overflowing the row.
+      // rather than a flat generic file glyph.
       icon: createElement(FileDocIcon, {
         variant: getFileDocVariant(
           detectFileExtension(item.name.toLowerCase()),
           (item.type ?? "").toLowerCase(),
         ),
-        style: { height: "1.15rem", width: "auto" },
+        size: "1.15rem",
       }),
       score,
       onSelect: () => openFile(item),

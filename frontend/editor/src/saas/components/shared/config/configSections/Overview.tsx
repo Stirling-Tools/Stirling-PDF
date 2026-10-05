@@ -3,7 +3,6 @@ import {
   Alert,
   Divider,
   Group,
-  Image,
   LoadingOverlay,
   PasswordInput,
   Text,
@@ -22,7 +21,7 @@ import {
   linkOAuthIdentity,
   supabase,
 } from "@app/auth/supabase";
-import { oauthIconUrl } from "@app/auth/ui/oauthIcons";
+import { ProviderMark } from "@app/auth/ui/ProviderMark";
 import { oauthProviders } from "@app/constants/authProviders";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { absoluteWithBasePath } from "@app/constants/app";
@@ -586,9 +585,9 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
                       variant="secondary"
                       size="sm"
                       leftSection={
-                        <Image
-                          src={oauthIconUrl(provider.file)}
-                          alt={provider.label}
+                        <ProviderMark
+                          file={provider.file}
+                          label={provider.label}
                           style={{ width: 16, height: 16 }}
                         />
                       }
