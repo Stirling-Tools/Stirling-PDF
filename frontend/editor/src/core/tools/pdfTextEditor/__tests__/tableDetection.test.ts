@@ -469,6 +469,96 @@ describe("detectTables", () => {
     expect(rowSpans(pins, 3, 2)).toEqual([{ start: 0, span: 3 }]);
   });
 
+  it("keeps the drawn columns when merged labels bridge the text bands", () => {
+    const xs = [36, 132, 321, 393, 473, 576];
+    const ys = [641, 607, 569, 515, 473, 431, 377, 339];
+    const cells = [
+      ["Workstream", "Task", "Owner", "State", "Hours"],
+      ["North programme", "", "Ada", "Active", "18.5"],
+      ["Ops", "Archive intake\nBox 01 to Box 12", "Lin", "Ready", "7.0"],
+      ["", "Metadata review", "Sam", "Review", "12.5"],
+      ["QA", "Needs sign-off", "Jo", "Hold", "4.0"],
+      ["Docs", "Export proof\nKeep both lines", "May", "", "3.25"],
+      ["Shared checkpoint", "", "", "Review", "45.25"],
+    ];
+    const spans = [
+      { row: 1, col: 0, rowSpan: 1, colSpan: 2 },
+      { row: 2, col: 0, rowSpan: 2, colSpan: 1 },
+      { row: 6, col: 0, rowSpan: 1, colSpan: 3 },
+    ];
+    const runs: TextRunSnapshot[] = [];
+    for (const [r, row] of cells.entries()) {
+      for (const [c, text] of row.entries()) {
+        if (!text) continue;
+        const span = spans.find((s) => s.row === r && s.col === c);
+        const centre = (ys[r] + ys[r + (span?.rowSpan ?? 1)]) / 2;
+        const lines = text.split("\n");
+        for (const [line, value] of lines.entries()) {
+          const width = value.length * 5.5;
+          const x = c === 4 && r > 0 ? xs[c + 1] - 10 - width : xs[c] + 10;
+          const y = centre - 6 + ((lines.length - 1) / 2 - line) * 14;
+          runs.push(run(x, y, width, value));
+        }
+      }
+    }
+    const rules = [];
+    for (let c = 0; c < xs.length; c++) {
+      for (let r = 0; r < cells.length; r++) {
+        if (
+          spans.some(
+            (s) =>
+              s.row <= r &&
+              r < s.row + s.rowSpan &&
+              s.col < c &&
+              c < s.col + s.colSpan,
+          )
+        )
+          continue;
+        rules.push(vRule(xs[c], ys[r + 1], ys[r]));
+      }
+    }
+    for (let r = 0; r < ys.length; r++) {
+      for (let c = 0; c < xs.length - 1; c++) {
+        if (
+          spans.some(
+            (s) =>
+              s.row < r &&
+              r < s.row + s.rowSpan &&
+              s.col <= c &&
+              c < s.col + s.colSpan,
+          )
+        )
+          continue;
+        rules.push(hRule(ys[r], xs[c], xs[c + 1]));
+      }
+    }
+    const [table] = detectTables(runs, 0, {}, rules);
+    expect({
+      rows: table.rows,
+      cols: table.cols,
+      pageRuled: table.pageRuled,
+    }).toEqual({
+      rows: 7,
+      cols: 5,
+      pageRuled: true,
+    });
+    expect(table.colEdges).toEqual(xs);
+    expect(table.rowEdges).toEqual(ys);
+    expect(
+      table.cells
+        .filter((c) => c.rowSpan > 1 || c.colSpan > 1)
+        .map((c) => ({
+          row: c.row,
+          col: c.col,
+          rowSpan: c.rowSpan,
+          colSpan: c.colSpan,
+        })),
+    ).toEqual(spans);
+    expect(
+      table.cells.find((c) => c.row === 2 && c.col === 1)?.runIds,
+    ).toHaveLength(2);
+  });
+
   it("keeps a boundary that only crosses part of the table", () => {
     // The old rule - at least half the table's height - threw this away, and
     // with it the whole merge structure.

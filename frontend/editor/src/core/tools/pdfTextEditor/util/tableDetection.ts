@@ -599,6 +599,48 @@ function splitBlocks(rows: Row[], minGap: number): Row[][] {
   return blocks;
 }
 
+// A merged label can bridge the whitespace between otherwise separate columns.
+// Use the drawn tracks when both axes form a grid and every column contains
+// text in multiple rows; unrelated page borders cannot establish empty tracks.
+function ruledColumnBands(block: Row[], rules: PageRect[]): Band[] | null {
+  const cands = block.flatMap((row) => row.cands);
+  if (cands.length === 0) return null;
+  const pins = columnPins(
+    ruleLines(rules, true),
+    block,
+    Math.min(...cands.map((c) => c.left)),
+    Math.max(...cands.map((c) => c.right)),
+  );
+  if (pins.length < 3) return null;
+  const edges = pins.map((pin) => pin.at);
+  const horizontal = rowPins(
+    ruleLines(rules, false),
+    edges,
+    block[block.length - 1].bottom,
+    block[0].top,
+  );
+  const rows = [block[0].top, ...block.map((row) => row.bottom)];
+  if (
+    horizontal.length !== rows.length ||
+    horizontal.some((pin, i) => Math.abs(pin.at - rows[i]) > RULE_COLLINEAR_EPS)
+  )
+    return null;
+  const bands = edges.slice(0, -1).map((left, i) => ({
+    left,
+    right: edges[i + 1],
+  }));
+  if (
+    bands.some(
+      (band) =>
+        block.filter((row) =>
+          row.cands.some((c) => c.cx > band.left && c.cx < band.right),
+        ).length < 2,
+    )
+  )
+    return null;
+  return bands;
+}
+
 function buildTable(
   block: Row[],
   bands: Band[],
@@ -831,13 +873,15 @@ export function detectTables(
     // heading line does not smear the bands together.
     const multiRunRows = block.filter((r) => r.cands.length >= 2);
     if (multiRunRows.length < opts.minRows) continue;
-    const bands = mergeAlignmentBands(
-      columnBands(
-        multiRunRows.flatMap((r) => r.cands),
-        minColGap,
-      ),
-      block,
-    );
+    const bands =
+      ruledColumnBands(block, rules) ??
+      mergeAlignmentBands(
+        columnBands(
+          multiRunRows.flatMap((r) => r.cands),
+          minColGap,
+        ),
+        block,
+      );
     const table = buildTable(
       block,
       bands,
