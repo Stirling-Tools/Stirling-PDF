@@ -40,9 +40,9 @@ class OfficeConversionServiceTest {
         service = new OfficeConversionService(properties, endpoints);
     }
 
-    @ParameterizedTest(name = "legacy={0}, LibreOffice={1} -> Office Convert {2}")
-    @CsvSource({"false,true,true", "false,false,true", "true,true,false", "true,false,true"})
-    void legacyKeepsLibreOfficeOnlyWhenInstalled(
+    @ParameterizedTest(name = "legacy={0}, LibreOffice={1} -> Stirling Office Convert {2}")
+    @CsvSource({"false,true,true", "false,false,true", "true,true,false", "true,false,false"})
+    void onlyTheFlagSwitchesToStirlingOfficeConvert(
             boolean legacy, boolean libreOffice, boolean expected) {
         properties.getSystem().setStirlingOfficeConversion(!legacy);
         when(endpoints.isGroupEnabled("LibreOffice")).thenReturn(libreOffice);
@@ -74,6 +74,7 @@ class OfficeConversionServiceTest {
             word.write(out);
         }
         Path pdf = dir.resolve("out.pdf");
+        properties.getSystem().setStirlingOfficeConversion(true);
         OfficeToPdfService toPdf = new OfficeToPdfService(service, properties);
 
         assertThat(toPdf.handles("docx")).isTrue();

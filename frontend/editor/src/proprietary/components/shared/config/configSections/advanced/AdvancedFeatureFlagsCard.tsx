@@ -90,7 +90,7 @@ export function AdvancedFeatureFlagsCard({
           )}
           info={t(
             "admin.settings.advanced.stirlingOfficeConversion.description",
-            "Stirling Office Convert is in beta. Do you want to enable it? It offers better conversions, faster and with less memory than LibreOffice. It is always used when LibreOffice is not installed.",
+            "Stirling Office Convert is in beta. It offers better conversions, faster and with less memory than LibreOffice.",
           )}
           pending={isFieldPending("stirlingOfficeConversion")}
           checked={settings.stirlingOfficeConversion || false}

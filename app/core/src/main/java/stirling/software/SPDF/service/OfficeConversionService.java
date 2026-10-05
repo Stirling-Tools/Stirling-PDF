@@ -60,9 +60,9 @@ public class OfficeConversionService {
         return endpointConfiguration.isGroupEnabled("LibreOffice");
     }
 
-    /** Stirling Office Convert replaces LibreOffice unless legacy is chosen and it is installed. */
+    /** Stirling Office Convert replaces LibreOffice only when the admin enables it. */
     public boolean replacesLibreOffice() {
-        return !legacy() || !libreOfficeAvailable();
+        return !legacy();
     }
 
     public OfficeConvert.Settings settings() {
