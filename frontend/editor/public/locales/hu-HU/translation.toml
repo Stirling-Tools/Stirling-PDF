@@ -667,6 +667,10 @@ label = "Munkamenet-korlát"
 description = "Maximális futási idő"
 label = "Időkorlát (perc)"
 
+[admin.settings.advanced.stirlingOfficeConversion]
+description = "A Stirling Office Convert béta verzióban van. Jobb konverziókat kínál, gyorsabban és kevesebb memóriahasználattal, mint a LibreOffice."
+label = "Új Stirling Office konverzió használata"
+
 [admin.settings.advanced.tempFileManagement]
 description = "Ideiglenes fájltárolás és takarítási viselkedés konfigurálása"
 label = "Ideiglenes fájlok kezelése"
@@ -4126,6 +4130,8 @@ selectSourceFormatFirst = "Először válasszon forrásformátumot"
 settings = "Beállítások"
 single = "Egyetlen"
 sourceFormatPlaceholder = "Forrásformátum"
+stirlingOfficeConvert = "Stirling Office Convert használata (béta)"
+stirlingOfficeConvertDescription = "Jobb, gyorsabb konverziók kevesebb memóriahasználattal. Kapcsolja ki a standard konverter használatához."
 strictMode = "Szigorú mód"
 strictModeDesc = "Hiba, ha a konverzió nem tökéletes (VeraPDF ellenőrzést használ)"
 svgPdfOptions = "SVG PDF-be beállítások"

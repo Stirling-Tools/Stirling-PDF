@@ -667,6 +667,10 @@ label = "محدودیت نشست"
 description = "حداکثر زمان اجرا"
 label = "مهلت (دقیقه)"
 
+[admin.settings.advanced.stirlingOfficeConversion]
+description = "Stirling Office Convert در نسخه بتا است. تبدیل‌های بهتر و سریع‌تری را با مصرف حافظه کمتر نسبت به LibreOffice ارائه می‌دهد."
+label = "استفاده از تبدیل جدید Stirling Office"
+
 [admin.settings.advanced.tempFileManagement]
 description = "پیکربندی ذخیره‌سازی فایل‌های موقت و رفتار پاکسازی"
 label = "مدیریت فایل‌های موقت"
@@ -4126,6 +4130,8 @@ selectSourceFormatFirst = "ابتدا یک قالب مبدأ انتخاب کنی
 settings = "تنظیمات"
 single = "تکی"
 sourceFormatPlaceholder = "قالب مبدأ"
+stirlingOfficeConvert = "استفاده از Stirling Office Convert (بتا)"
+stirlingOfficeConvertDescription = "تبدیل‌های بهتر و سریع‌تر با مصرف حافظه کمتر. برای استفاده از مبدل استاندارد، آن را خاموش کنید."
 strictMode = "حالت سخت‌گیرانه"
 strictModeDesc = "در صورت کامل نبودن تبدیل خطا بده (از تأیید VeraPDF استفاده می‌کند)"
 svgPdfOptions = "گزینه‌های SVG به PDF"

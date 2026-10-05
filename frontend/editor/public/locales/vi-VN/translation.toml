@@ -667,6 +667,10 @@ label = "Giới hạn phiên"
 description = "Thời gian thực thi tối đa"
 label = "Thời gian chờ (phút)"
 
+[admin.settings.advanced.stirlingOfficeConversion]
+description = "Stirling Office Convert đang ở beta. Công cụ này cung cấp khả năng chuyển đổi tốt hơn, nhanh hơn và dùng ít bộ nhớ hơn LibreOffice."
+label = "Sử dụng chuyển đổi Stirling Office mới"
+
 [admin.settings.advanced.tempFileManagement]
 description = "Cấu hình lưu trữ tạm thời và hành vi dọn dẹp"
 label = "Quản lý tệp tạm"
@@ -4126,6 +4130,8 @@ selectSourceFormatFirst = "Trước tiên hãy chọn định dạng nguồn"
 settings = "Cài đặt"
 single = "Một tệp"
 sourceFormatPlaceholder = "Định dạng nguồn"
+stirlingOfficeConvert = "Sử dụng Stirling Office Convert (beta)"
+stirlingOfficeConvertDescription = "Chuyển đổi tốt hơn, nhanh hơn với ít bộ nhớ hơn. Tắt để sử dụng trình chuyển đổi tiêu chuẩn."
 strictMode = "Chế độ nghiêm ngặt"
 strictModeDesc = "Báo lỗi nếu chuyển đổi không hoàn hảo (dùng xác minh VeraPDF)"
 svgPdfOptions = "Tùy chọn SVG sang PDF"

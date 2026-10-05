@@ -667,6 +667,10 @@ label = "Limite de sessions"
 description = "Temps d’exécution maximal"
 label = "Délai d’expiration (minutes)"
 
+[admin.settings.advanced.stirlingOfficeConversion]
+description = "Stirling Office Convert est en version bêta. Il offre de meilleures conversions, plus rapides et avec moins de mémoire que LibreOffice."
+label = "Utiliser la nouvelle conversion Stirling Office"
+
 [admin.settings.advanced.tempFileManagement]
 description = "Configurer le stockage des fichiers temporaires et le comportement de nettoyage"
 label = "Gestion des fichiers temporaires"
@@ -4126,6 +4130,8 @@ selectSourceFormatFirst = "Choisissez d'abord un format source"
 settings = "Paramètres"
 single = "Unique"
 sourceFormatPlaceholder = "Format source"
+stirlingOfficeConvert = "Utiliser Stirling Office Convert (bêta)"
+stirlingOfficeConvertDescription = "Des conversions meilleures et plus rapides avec moins de mémoire. Désactivez cette option pour utiliser le convertisseur standard."
 strictMode = "Mode strict"
 strictModeDesc = "Erreur si la conversion n'est pas parfaite (utilise la vérification VeraPDF)"
 svgPdfOptions = "Options SVG vers PDF"

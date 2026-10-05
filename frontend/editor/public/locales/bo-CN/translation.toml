@@ -667,6 +667,10 @@ label = "ཚོགས་འདུའི་ཚད་གཞི།"
 description = "ཆེས་མང་བའི་ལག་བསྟར་དུས་ཚོད།"
 label = "དུས་ཚོད་ཕྱིར་ཐོན་(སྐར་མ་)།"
 
+[admin.settings.advanced.stirlingOfficeConversion]
+description = "Stirling Office Convert ནི beta ཚོད་ལྟའི་གནས་སྐབས་སུ་ཡོད། དེས LibreOffice ལས་སྒྱུར་སྤོར་ལེགས་པ། མགྱོགས་པ། དྲན་གསོག་ཉུང་བ་སྤྱོད་པ་མཁོ་འདོན་བྱེད།"
+label = "Stirling Office སྒྱུར་སྤོར་གསར་པ་སྤྱོད།"
+
 [admin.settings.advanced.tempFileManagement]
 description = "གནས་སྐབས་ཀྱི་ཡིག་ཆ་གསོག་འཇོག་དང་གཙང་སྦྲ་བྱེད་པའི་སྤྱོད་ཚུལ་བཀོད་སྒྲིག་བྱེད་པ།"
 label = "ཊེམ་པི་ཡིག་ཆ་དོ་དམ།"
@@ -4126,6 +4130,8 @@ selectSourceFormatFirst = "སྔོན་ལ་ཁུངས་ཀྱི་ར�
 settings = "སྒྲིག་སྟངས།"
 single = "ཁེར་ཧྲེང"
 sourceFormatPlaceholder = "འབྱུང་ཁུངས་རྣམ་གྲངས།"
+stirlingOfficeConvert = "Stirling Office Convert (beta) སྤྱོད།"
+stirlingOfficeConvertDescription = "དྲན་གསོག་ཉུང་བས་སྒྱུར་སྤོར་ལེགས་པ་དང་མགྱོགས་པ། ཚད་ལྡན་སྒྱུར་ཆས་སྤྱོད་པར་ཁ་རྒྱགပါ།"
 strictMode = "ནན་མོའི་རྣམ་པ"
 strictModeDesc = "སྒྱུར་བ་འཐུས་ཚང་མིན་ན་ནོར་འཁྲུལ་སྟོན (VeraPDF verification སྤྱོད)"
 svgPdfOptions = "SVG to PDF གདམ་ག"

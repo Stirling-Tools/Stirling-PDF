@@ -667,6 +667,10 @@ label = "Sessionsgrænse"
 description = "Maksimal køretid"
 label = "Tidsgrænse (minutter)"
 
+[admin.settings.advanced.stirlingOfficeConversion]
+description = "Stirling Office Convert er i beta. Det tilbyder bedre konverteringer, hurtigere og med mindre hukommelse end LibreOffice."
+label = "Brug ny Stirling Office-konvertering"
+
 [admin.settings.advanced.tempFileManagement]
 description = "Konfigurer lagring af midlertidige filer og oprydningsadfærd"
 label = "Håndtering af midlertidige filer"
@@ -4126,6 +4130,8 @@ selectSourceFormatFirst = "Vælg først et kildeformat"
 settings = "Indstillinger"
 single = "Enkelt"
 sourceFormatPlaceholder = "Kildeformat"
+stirlingOfficeConvert = "Brug Stirling Office Convert (beta)"
+stirlingOfficeConvertDescription = "Bedre, hurtigere konverteringer med mindre hukommelse. Slå fra for at bruge standardkonverteren."
 strictMode = "Streng tilstand"
 strictModeDesc = "Fejl hvis konverteringen ikke er perfekt (bruger VeraPDF-verifikation)"
 svgPdfOptions = "SVG til PDF-indstillinger"

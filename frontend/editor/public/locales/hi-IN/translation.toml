@@ -667,6 +667,10 @@ label = "सेशन सीमा"
 description = "अधिकतम निष्पादन समय"
 label = "टाइमआउट (मिनट)"
 
+[admin.settings.advanced.stirlingOfficeConversion]
+description = "Stirling Office Convert बीटा में है। यह LibreOffice की तुलना में कम मेमोरी में बेहतर और तेज़ कन्वर्ज़न प्रदान करता है।"
+label = "नए Stirling Office कन्वर्ज़न का उपयोग करें"
+
 [admin.settings.advanced.tempFileManagement]
 description = "अस्थायी फ़ाइल स्टोरेज और क्लीनअप व्यवहार कॉन्फ़िगर करें"
 label = "अस्थायी फ़ाइल प्रबंधन"
@@ -4126,6 +4130,8 @@ selectSourceFormatFirst = "पहले source format चुनें"
 settings = "सेटिंग्स"
 single = "एकल"
 sourceFormatPlaceholder = "स्रोत फ़ॉर्मेट"
+stirlingOfficeConvert = "Stirling Office Convert (बीटा) का उपयोग करें"
+stirlingOfficeConvertDescription = "कम मेमोरी में बेहतर, तेज़ कन्वर्ज़न। मानक कन्वर्टर का उपयोग करने के लिए बंद करें।"
 strictMode = "सख्त मोड"
 strictModeDesc = "यदि conversion perfect नहीं है तो error (VeraPDF verification का उपयोग करता है)"
 svgPdfOptions = "SVG से PDF विकल्प"

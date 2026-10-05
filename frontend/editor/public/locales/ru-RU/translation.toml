@@ -667,6 +667,10 @@ label = "Лимит сессий"
 description = "Максимальное время выполнения"
 label = "Тайм-аут (минуты)"
 
+[admin.settings.advanced.stirlingOfficeConversion]
+description = "Stirling Office Convert находится в бета-версии. Он обеспечивает более качественное и быстрое преобразование с меньшим использованием памяти, чем LibreOffice."
+label = "Использовать новое преобразование Stirling Office"
+
 [admin.settings.advanced.tempFileManagement]
 description = "Настройка хранения временных файлов и поведения очистки"
 label = "Управление временными файлами"
@@ -4126,6 +4130,8 @@ selectSourceFormatFirst = "Сначала выберите исходный фо
 settings = "Настройки"
 single = "Один"
 sourceFormatPlaceholder = "Исходный формат"
+stirlingOfficeConvert = "Использовать Stirling Office Convert (бета)"
+stirlingOfficeConvertDescription = "Более качественное и быстрое преобразование с меньшим использованием памяти. Отключите, чтобы использовать стандартный конвертер."
 strictMode = "Строгий режим"
 strictModeDesc = "Ошибка, если конвертация не идеальна (использует проверку VeraPDF)"
 svgPdfOptions = "Параметры SVG в PDF"

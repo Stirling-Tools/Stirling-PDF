@@ -667,6 +667,10 @@ label = "ขีดจำกัดเซสชัน"
 description = "เวลาในการทำงานสูงสุด"
 label = "ระยะหมดเวลา (นาที)"
 
+[admin.settings.advanced.stirlingOfficeConversion]
+description = "Stirling Office Convert อยู่ในเวอร์ชันเบต้า ให้การแปลงที่ดีกว่า เร็วกว่า และใช้หน่วยความจำน้อยกว่า LibreOffice"
+label = "ใช้การแปลง Stirling Office แบบใหม่"
+
 [admin.settings.advanced.tempFileManagement]
 description = "กำหนดค่าการจัดเก็บไฟล์ชั่วคราวและพฤติกรรมการล้างไฟล์"
 label = "การจัดการไฟล์ชั่วคราว"
@@ -4126,6 +4130,8 @@ selectSourceFormatFirst = "เลือก format ต้นทางก่อน
 settings = "การตั้งค่า"
 single = "เดี่ยว"
 sourceFormatPlaceholder = "รูปแบบต้นทาง"
+stirlingOfficeConvert = "ใช้ Stirling Office Convert (เบต้า)"
+stirlingOfficeConvertDescription = "การแปลงที่ดีกว่า เร็วกว่า และใช้หน่วยความจำน้อยลง ปิดใช้งานเพื่อใช้ตัวแปลงมาตรฐาน"
 strictMode = "โหมดเข้มงวด"
 strictModeDesc = "เกิดข้อผิดพลาดหากการแปลงไม่สมบูรณ์แบบ (ใช้การตรวจสอบ VeraPDF)"
 svgPdfOptions = "ตัวเลือก SVG to PDF"

@@ -667,6 +667,10 @@ label = "Teorainn Seisiúin"
 description = "Am reatha uasta"
 label = "Teorainn Ama (nóiméid)"
 
+[admin.settings.advanced.stirlingOfficeConversion]
+description = "Tá Stirling Office Convert i mbéite. Cuireann sé tiontuithe níos fearr ar fáil, níos tapúla agus le níos lú cuimhne ná LibreOffice."
+label = "Úsáid tiontú nua Stirling Office"
+
 [admin.settings.advanced.tempFileManagement]
 description = "Cumraigh stóráil agus iompar glanta comhad sealadach"
 label = "Bainistíocht Comhad Sealadach"
@@ -4126,6 +4130,8 @@ selectSourceFormatFirst = "Roghnaigh formáid fhoinse ar dtús"
 settings = "Socruithe"
 single = "Aonair"
 sourceFormatPlaceholder = "Formáid fhoinseach"
+stirlingOfficeConvert = "Úsáid Stirling Office Convert (béite)"
+stirlingOfficeConvertDescription = "Tiontuithe níos fearr agus níos tapúla le níos lú cuimhne. Múch é chun an tiontaire caighdeánach a úsáid."
 strictMode = "Mód Docht"
 strictModeDesc = "Earráid mura bhfuil an tiontú foirfe (úsáideann sé fíorú VeraPDF)"
 svgPdfOptions = "Roghanna SVG go PDF"

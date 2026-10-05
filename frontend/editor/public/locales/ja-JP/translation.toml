@@ -667,6 +667,10 @@ label = "セッション上限"
 description = "最大実行時間"
 label = "タイムアウト（分）"
 
+[admin.settings.advanced.stirlingOfficeConversion]
+description = "Stirling Office Convert はベータ版です。LibreOffice よりも少ないメモリで、より高速かつ高品質な変換を提供します。"
+label = "新しい Stirling Office 変換を使用"
+
 [admin.settings.advanced.tempFileManagement]
 description = "一時ファイルの保存場所とクリーンアップ動作を構成"
 label = "一時ファイル管理"
@@ -4126,6 +4130,8 @@ selectSourceFormatFirst = "先にソース形式を選択してください"
 settings = "設定"
 single = "単一"
 sourceFormatPlaceholder = "変換元形式"
+stirlingOfficeConvert = "Stirling Office Convert（ベータ版）を使用"
+stirlingOfficeConvertDescription = "少ないメモリで、より高品質かつ高速に変換します。標準コンバーターを使用するにはオフにしてください。"
 strictMode = "厳格モード"
 strictModeDesc = "変換が完全でない場合はエラーにします（VeraPDF 検証を使用）"
 svgPdfOptions = "SVG から PDF のオプション"

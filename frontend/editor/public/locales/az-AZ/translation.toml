@@ -667,6 +667,10 @@ label = "Sessiya limiti"
 description = "Maksimal icra müddəti"
 label = "Vaxt məhdudu (dəqiqə)"
 
+[admin.settings.advanced.stirlingOfficeConversion]
+description = "Stirling Office Convert beta mərhələsindədir. O, LibreOffice ilə müqayisədə daha yaxşı, daha sürətli və daha az yaddaşla çevirmələr təklif edir."
+label = "Yeni Stirling Office çevirməsindən istifadə edin"
+
 [admin.settings.advanced.tempFileManagement]
 description = "Müvəqqəti fayl saxlama və təmizləmə davranışını konfiqurasiya edin"
 label = "Müvəqqəti Fayl İdarəetməsi"
@@ -4126,6 +4130,8 @@ selectSourceFormatFirst = "Əvvəlcə mənbə formatını seçin"
 settings = "Parametrlər"
 single = "Tək"
 sourceFormatPlaceholder = "Mənbə formatı"
+stirlingOfficeConvert = "Stirling Office Convert-dən istifadə edin (beta)"
+stirlingOfficeConvertDescription = "Daha az yaddaşla daha yaxşı, daha sürətli çevirmələr. Standart çeviricidən istifadə etmək üçün söndürün."
 strictMode = "Ciddi rejim"
 strictModeDesc = "Çevirmə mükəmməl deyilsə xəta ver (VeraPDF yoxlamasından istifadə edir)"
 svgPdfOptions = "SVG to PDF seçimləri"

@@ -667,6 +667,10 @@ label = "Limită sesiune"
 description = "Timp maxim de execuție"
 label = "Timp de expirare (minute)"
 
+[admin.settings.advanced.stirlingOfficeConversion]
+description = "Stirling Office Convert este în beta. Oferă conversii mai bune, mai rapide și cu mai puțină memorie decât LibreOffice."
+label = "Utilizează noua conversie Stirling Office"
+
 [admin.settings.advanced.tempFileManagement]
 description = "Configurați stocarea fișierelor temporare și comportamentul de curățare"
 label = "Gestionarea fișierelor temporare"
@@ -4126,6 +4130,8 @@ selectSourceFormatFirst = "Alegeți mai întâi un format sursă"
 settings = "Setări"
 single = "Unic"
 sourceFormatPlaceholder = "Format sursă"
+stirlingOfficeConvert = "Utilizează Stirling Office Convert (beta)"
+stirlingOfficeConvertDescription = "Conversii mai bune și mai rapide, cu mai puțină memorie. Dezactivează pentru a utiliza convertorul standard."
 strictMode = "Mod strict"
 strictModeDesc = "Eroare dacă conversia nu este perfectă (folosește verificarea VeraPDF)"
 svgPdfOptions = "Opțiuni SVG în PDF"

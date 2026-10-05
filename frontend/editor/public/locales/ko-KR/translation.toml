@@ -667,6 +667,10 @@ label = "세션 제한"
 description = "최대 실행 시간"
 label = "시간 제한(분)"
 
+[admin.settings.advanced.stirlingOfficeConversion]
+description = "Stirling Office Convert는 베타 버전입니다. LibreOffice보다 더 적은 메모리로 더 빠르고 향상된 변환을 제공합니다."
+label = "새 Stirling Office 변환 사용"
+
 [admin.settings.advanced.tempFileManagement]
 description = "임시 파일 저장 및 정리 동작을 구성합니다"
 label = "임시 파일 관리"
@@ -4126,6 +4130,8 @@ selectSourceFormatFirst = "먼저 소스 형식을 선택하세요"
 settings = "설정"
 single = "단일"
 sourceFormatPlaceholder = "원본 형식"
+stirlingOfficeConvert = "Stirling Office Convert 사용(베타)"
+stirlingOfficeConvertDescription = "더 적은 메모리로 더 빠르고 향상된 변환을 제공합니다. 표준 변환기를 사용하려면 끄세요."
 strictMode = "엄격 모드"
 strictModeDesc = "변환이 완벽하지 않으면 오류 처리(VeraPDF 검증 사용)"
 svgPdfOptions = "SVG to PDF 옵션"

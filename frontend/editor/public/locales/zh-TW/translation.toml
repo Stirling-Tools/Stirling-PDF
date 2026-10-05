@@ -667,6 +667,10 @@ label = "工作階段上限"
 description = "最長執行時間"
 label = "逾時（分鐘）"
 
+[admin.settings.advanced.stirlingOfficeConversion]
+description = "Stirling Office Convert 目前為測試版。相較於 LibreOffice，它能以更快速度與更少記憶體提供更好的轉換效果。"
+label = "使用新的 Stirling Office 轉換功能"
+
 [admin.settings.advanced.tempFileManagement]
 description = "設定暫存檔案的儲存與清理行為"
 label = "暫存檔案管理"
@@ -4126,6 +4130,8 @@ selectSourceFormatFirst = "請先選擇來源格式"
 settings = "設定"
 single = "單一"
 sourceFormatPlaceholder = "來源格式"
+stirlingOfficeConvert = "使用 Stirling Office Convert（測試版）"
+stirlingOfficeConvertDescription = "以更少記憶體進行更好、更快速的轉換。關閉此選項以使用標準轉換器。"
 strictMode = "嚴格模式"
 strictModeDesc = "轉換不完美時回報錯誤（使用 VeraPDF 驗證）"
 svgPdfOptions = "SVG 轉 PDF 選項"

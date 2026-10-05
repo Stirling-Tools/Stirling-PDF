@@ -667,6 +667,10 @@ label = "Oturum Sınırı"
 description = "Azami yürütme süresi"
 label = "Zaman Aşımı (dakika)"
 
+[admin.settings.advanced.stirlingOfficeConversion]
+description = "Stirling Office Convert beta aşamasındadır. LibreOffice'e göre daha iyi, daha hızlı ve daha az bellek kullanan dönüşümler sunar."
+label = "Yeni Stirling Office dönüşümünü kullan"
+
 [admin.settings.advanced.tempFileManagement]
 description = "Geçici dosya depolama ve temizleme davranışını yapılandırın"
 label = "Geçici Dosya Yönetimi"
@@ -4126,6 +4130,8 @@ selectSourceFormatFirst = "Önce bir kaynak biçim seçin"
 settings = "Ayarlar"
 single = "Tek"
 sourceFormatPlaceholder = "Kaynak biçim"
+stirlingOfficeConvert = "Stirling Office Convert'i kullan (beta)"
+stirlingOfficeConvertDescription = "Daha az bellekle daha iyi ve daha hızlı dönüşümler. Standart dönüştürücüyü kullanmak için kapatın."
 strictMode = "Katı Mod"
 strictModeDesc = "Dönüştürme mükemmel değilse hata ver (VeraPDF doğrulaması kullanır)"
 svgPdfOptions = "SVG'den PDF'ye Seçenekleri"

@@ -667,6 +667,10 @@ label = "Batas Sesi"
 description = "Waktu eksekusi maksimum"
 label = "Batas Waktu (menit)"
 
+[admin.settings.advanced.stirlingOfficeConversion]
+description = "Stirling Office Convert masih dalam versi beta. Menawarkan konversi yang lebih baik, lebih cepat, dan menggunakan lebih sedikit memori dibandingkan LibreOffice."
+label = "Gunakan konversi Stirling Office yang baru"
+
 [admin.settings.advanced.tempFileManagement]
 description = "Konfigurasikan penyimpanan file sementara dan perilaku pembersihan"
 label = "Manajemen File Temp"
@@ -4126,6 +4130,8 @@ selectSourceFormatFirst = "Pilih format sumber terlebih dahulu"
 settings = "Pengaturan"
 single = "Tunggal"
 sourceFormatPlaceholder = "Format sumber"
+stirlingOfficeConvert = "Gunakan Stirling Office Convert (beta)"
+stirlingOfficeConvertDescription = "Konversi yang lebih baik dan lebih cepat dengan lebih sedikit memori. Nonaktifkan untuk menggunakan konverter standar."
 strictMode = "Mode Ketat"
 strictModeDesc = "Kesalahan jika konversi tidak sempurna (menggunakan verifikasi VeraPDF)"
 svgPdfOptions = "Opsi SVG ke PDF"

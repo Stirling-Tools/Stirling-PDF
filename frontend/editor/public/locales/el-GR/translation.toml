@@ -667,6 +667,10 @@ label = "Όριο συνεδριών"
 description = "Μέγιστος χρόνος εκτέλεσης"
 label = "Χρονικό όριο (λεπτά)"
 
+[admin.settings.advanced.stirlingOfficeConversion]
+description = "Το Stirling Office Convert είναι σε beta. Προσφέρει καλύτερες μετατροπές, ταχύτερα και με λιγότερη μνήμη από το LibreOffice."
+label = "Χρήση της νέας μετατροπής Stirling Office"
+
 [admin.settings.advanced.tempFileManagement]
 description = "Ρυθμίστε την αποθήκευση και τον καθαρισμό προσωρινών αρχείων"
 label = "Διαχείριση προσωρινών αρχείων"
@@ -4126,6 +4130,8 @@ selectSourceFormatFirst = "Επιλέξτε πρώτα μορφή πηγής"
 settings = "Ρυθμίσεις"
 single = "Μονό"
 sourceFormatPlaceholder = "Μορφή προέλευσης"
+stirlingOfficeConvert = "Χρήση του Stirling Office Convert (beta)"
+stirlingOfficeConvertDescription = "Καλύτερες, ταχύτερες μετατροπές με λιγότερη μνήμη. Απενεργοποιήστε το για να χρησιμοποιήσετε τον τυπικό μετατροπέα."
 strictMode = "Αυστηρή λειτουργία"
 strictModeDesc = "Σφάλμα αν η μετατροπή δεν είναι τέλεια (χρησιμοποιεί επαλήθευση VeraPDF)"
 svgPdfOptions = "Επιλογές SVG σε PDF"

@@ -667,6 +667,10 @@ label = "Limit relací"
 description = "Maximální doba běhu"
 label = "Časový limit (minuty)"
 
+[admin.settings.advanced.stirlingOfficeConversion]
+description = "Stirling Office Convert je ve verzi beta. Nabízí lepší a rychlejší převody s menší spotřebou paměti než LibreOffice."
+label = "Použít nový převod Stirling Office"
+
 [admin.settings.advanced.tempFileManagement]
 description = "Nakonfigurujte úložiště dočasných souborů a chování čištění"
 label = "Správa dočasných souborů"
@@ -4126,6 +4130,8 @@ selectSourceFormatFirst = "Nejprve vyberte zdrojový formát"
 settings = "Nastavení"
 single = "Jeden"
 sourceFormatPlaceholder = "Zdrojový formát"
+stirlingOfficeConvert = "Použít Stirling Office Convert (beta)"
+stirlingOfficeConvertDescription = "Lepší a rychlejší převody s menší spotřebou paměti. Vypněte pro použití standardního převodníku."
 strictMode = "Striktní režim"
 strictModeDesc = "Chyba, pokud převod není dokonalý (používá ověření VeraPDF)"
 svgPdfOptions = "Možnosti SVG na PDF"

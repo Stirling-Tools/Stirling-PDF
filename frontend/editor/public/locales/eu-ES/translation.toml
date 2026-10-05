@@ -667,6 +667,10 @@ label = "Saio-muga"
 description = "Gehienezko exekuzio-denbora"
 label = "Denbora-muga (minutuak)"
 
+[admin.settings.advanced.stirlingOfficeConversion]
+description = "Stirling Office Convert beta bertsioan dago. LibreOffice baino bihurketa hobeak eta azkarragoak eskaintzen ditu, memoria gutxiagorekin."
+label = "Erabili Stirling Office bihurketa berria"
+
 [admin.settings.advanced.tempFileManagement]
 description = "Konfiguratu aldi baterako fitxategien biltegiratzea eta garbiketaren portaera"
 label = "Aldi baterako fitxategien kudeaketa"
@@ -4126,6 +4130,8 @@ selectSourceFormatFirst = "Aukeratu lehenik jatorri-formatu bat"
 settings = "Ezarpenak"
 single = "Bakarra"
 sourceFormatPlaceholder = "Iturburu formatua"
+stirlingOfficeConvert = "Erabili Stirling Office Convert (beta)"
+stirlingOfficeConvertDescription = "Bihurketa hobeak eta azkarragoak, memoria gutxiagorekin. Desaktibatu bihurgailu estandarra erabiltzeko."
 strictMode = "Modu zorrotza"
 strictModeDesc = "Errorea bihurketa perfektua ez bada (VeraPDF egiaztapena erabiltzen du)"
 svgPdfOptions = "SVGtik PDFra aukerak"

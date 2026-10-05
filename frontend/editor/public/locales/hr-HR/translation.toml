@@ -667,6 +667,10 @@ label = "Ograničenje sesija"
 description = "Maksimalno vrijeme izvođenja"
 label = "Vrijeme isteka (minute)"
 
+[admin.settings.advanced.stirlingOfficeConversion]
+description = "Stirling Office Convert je u beta verziji. Nudi bolje i brže pretvorbe uz manje memorije nego LibreOffice."
+label = "Koristi novu Stirling Office pretvorbu"
+
 [admin.settings.advanced.tempFileManagement]
 description = "Konfigurirajte pohranu privremenih datoteka i ponašanje čišćenja"
 label = "Upravljanje privremenim datotekama"
@@ -4126,6 +4130,8 @@ selectSourceFormatFirst = "Najprije odaberite izvorni format"
 settings = "Postavke"
 single = "Jedan"
 sourceFormatPlaceholder = "Izvorni format"
+stirlingOfficeConvert = "Koristi Stirling Office Convert (beta)"
+stirlingOfficeConvertDescription = "Bolje i brže pretvorbe uz manje memorije. Isključite za korištenje standardnog pretvarača."
 strictMode = "Strogi način"
 strictModeDesc = "Pogreška ako pretvorba nije savršena (koristi VeraPDF provjeru)"
 svgPdfOptions = "Opcije SVG u PDF"

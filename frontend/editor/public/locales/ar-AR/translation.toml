@@ -667,6 +667,10 @@ label = "حدّ الجلسات"
 description = "الحد الأقصى لوقت التنفيذ"
 label = "المهلة (بالدقائق)"
 
+[admin.settings.advanced.stirlingOfficeConversion]
+description = "Stirling Office Convert في إصدار تجريبي. يوفّر تحويلات أفضل وأسرع وباستخدام ذاكرة أقل من LibreOffice."
+label = "استخدام تحويل Stirling Office الجديد"
+
 [admin.settings.advanced.tempFileManagement]
 description = "تهيئة تخزين الملفات المؤقتة وسلوك التنظيف"
 label = "إدارة الملفات المؤقتة"
@@ -4126,6 +4130,8 @@ selectSourceFormatFirst = "اختر تنسيق المصدر أولًا"
 settings = "إعدادات"
 single = "مفرد"
 sourceFormatPlaceholder = "صيغة المصدر"
+stirlingOfficeConvert = "استخدام Stirling Office Convert (إصدار تجريبي)"
+stirlingOfficeConvertDescription = "تحويلات أفضل وأسرع باستخدام ذاكرة أقل. عطّله لاستخدام المحوّل القياسي."
 strictMode = "الوضع الصارم"
 strictModeDesc = "خطأ إذا لم تكن عملية التحويل مثالية (يستخدم تحقق VeraPDF)"
 svgPdfOptions = "خيارات SVG إلى PDF"

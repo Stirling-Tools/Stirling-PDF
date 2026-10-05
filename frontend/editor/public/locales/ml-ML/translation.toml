@@ -667,6 +667,10 @@ label = "സെഷൻ പരിധി"
 description = "പരമാവധി നിർവഹണ സമയം"
 label = "ടൈംഔട്ട് (മിനിറ്റ്)"
 
+[admin.settings.advanced.stirlingOfficeConversion]
+description = "Stirling Office Convert ബീറ്റയിലാണ്. LibreOffice-നെക്കാൾ വേഗത്തിലും കുറഞ്ഞ മെമ്മറിയിലും മികച്ച പരിവർത്തനങ്ങൾ ഇത് നൽകുന്നു."
+label = "പുതിയ Stirling Office പരിവർത്തനം ഉപയോഗിക്കുക"
+
 [admin.settings.advanced.tempFileManagement]
 description = "താൽക്കാലിക ഫയൽ സംഭരണവും ക്ലീൻ‌അപ്പ് പെരുമാറ്റവും ക്രമീകരിക്കുക"
 label = "ടെംപ് ഫയൽ മാനേജ്മെന്റ്"
@@ -4126,6 +4130,8 @@ selectSourceFormatFirst = "ആദ്യം source format തിരഞ്ഞെ�
 settings = "ക്രമീകരണങ്ങൾ"
 single = "ഒറ്റ"
 sourceFormatPlaceholder = "ഉറവിട ഫോർമാറ്റ്"
+stirlingOfficeConvert = "Stirling Office Convert (ബീറ്റ) ഉപയോഗിക്കുക"
+stirlingOfficeConvertDescription = "കുറഞ്ഞ മെമ്മറിയിൽ മികച്ചതും വേഗത്തിലുള്ളതുമായ പരിവർത്തനങ്ങൾ. സാധാരണ കൺവെർട്ടർ ഉപയോഗിക്കാൻ ഓഫാക്കുക."
 strictMode = "കർശന മോഡ്"
 strictModeDesc = "Conversion perfect അല്ലെങ്കിൽ error (VeraPDF verification ഉപയോഗിക്കുന്നു)"
 svgPdfOptions = "SVG to PDF ഓപ്ഷനുകൾ"
