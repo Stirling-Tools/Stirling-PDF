@@ -53,6 +53,7 @@ import stirling.software.common.util.ProcessExecutor.Processes;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.common.util.ZipBombGuard;
 
 /**
  * Unit tests for {@link ConvertOfficeController}. The external LibreOffice/unoconvert boundary is
@@ -199,6 +200,9 @@ class ConvertOfficeControllerTest {
         @DisplayName("converts handled formats without LibreOffice")
         void convertsInProcess() throws Exception {
             when(officeToPdfService.handles("docx", null)).thenReturn(true);
+            when(officeDocumentSanitizer.isSanitizableExtension("docx")).thenReturn(true);
+            when(officeDocumentSanitizer.sanitize(any(byte[].class), anyString()))
+                    .thenAnswer(inv -> inv.getArgument(0));
             Mockito.doAnswer(
                             inv -> {
                                 Files.writeString(inv.getArgument(1), "%PDF in process");
@@ -212,8 +216,25 @@ class ConvertOfficeControllerTest {
 
                 assertThat(Files.readString(pdf.toPath())).isEqualTo("%PDF in process");
                 pe.verifyNoInteractions();
-                Mockito.verifyNoInteractions(officeDocumentSanitizer);
+                Mockito.verify(officeDocumentSanitizer).sanitize(any(byte[].class), anyString());
                 deleteWorkdir(pdf);
+            }
+        }
+
+        @Test
+        @DisplayName("a file the sanitizer refuses reaches neither converter")
+        void refusedBySanitizer() throws Exception {
+            when(officeToPdfService.handles("docx", null)).thenReturn(true);
+            when(officeDocumentSanitizer.isSanitizableExtension("docx")).thenReturn(true);
+            when(officeDocumentSanitizer.sanitize(any(byte[].class), anyString()))
+                    .thenThrow(new ZipBombGuard.ZipBombException("too big"));
+
+            try (MockedStatic<ProcessExecutor> pe = Mockito.mockStatic(ProcessExecutor.class)) {
+                assertThatThrownBy(() -> controller.convertToPdf(docxFile("x".getBytes())))
+                        .isInstanceOf(ZipBombGuard.ZipBombException.class);
+                pe.verifyNoInteractions();
+                Mockito.verify(officeToPdfService, Mockito.never())
+                        .convert(any(Path.class), any(Path.class));
             }
         }
 

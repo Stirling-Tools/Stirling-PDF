@@ -98,7 +98,7 @@ public class ConvertOfficeController {
         Path outputPath = workDir.resolve(baseName + ".pdf");
 
         if (officeToPdfService.handles(extensionLower, useStirlingOfficeConvert)) {
-            if (convertInProcess(inputFile, workDir, inputPath, outputPath)) {
+            if (convertInProcess(inputFile, extensionLower, workDir, inputPath, outputPath)) {
                 return outputPath.toFile();
             }
         } else if (!officeConversionService.libreOfficeAvailable()) {
@@ -221,10 +221,28 @@ public class ConvertOfficeController {
 
     /** False when LibreOffice should retry the file; the original upload is converted as is. */
     private boolean convertInProcess(
-            MultipartFile inputFile, Path workDir, Path inputPath, Path outputPath)
+            MultipartFile inputFile,
+            String extension,
+            Path workDir,
+            Path inputPath,
+            Path outputPath)
             throws IOException {
         try {
-            Files.copy(inputFile.getInputStream(), inputPath, StandardCopyOption.REPLACE_EXISTING);
+            // Same sanitizing and ZIP budget as the LibreOffice path; a refused file never falls
+            // back.
+            if (officeDocumentSanitizer.isSanitizableExtension(extension)) {
+                Files.write(
+                        inputPath,
+                        officeDocumentSanitizer.sanitize(inputFile.getBytes(), extension));
+            } else {
+                Files.copy(
+                        inputFile.getInputStream(), inputPath, StandardCopyOption.REPLACE_EXISTING);
+            }
+        } catch (IOException | RuntimeException e) {
+            FileUtils.deleteQuietly(workDir.toFile());
+            throw e;
+        }
+        try {
             officeToPdfService.convert(inputPath, outputPath);
             return true;
         } catch (IOException | RuntimeException e) {
