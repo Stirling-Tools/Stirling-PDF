@@ -73,6 +73,8 @@ export interface EmbedPdfViewerProps {
   previewFile?: File | null;
   // ── Signature overlay pass-through (opt-in; all default off) ──────────────
   signaturePreviews?: SignaturePreview[];
+  /** Submitted marks rendered separately from editable previews and excluded from submission. */
+  readOnlySignaturePreviews?: SignaturePreview[];
   signaturePreviewsReadOnly?: boolean;
   signaturePlacementMode?: boolean;
   signaturePlacementData?: string;
@@ -114,6 +116,7 @@ const EmbedPdfViewerContent = ({
   onClose,
   previewFile,
   signaturePreviews,
+  readOnlySignaturePreviews,
   signaturePreviewsReadOnly,
   signaturePlacementMode,
   signaturePlacementData,
@@ -1865,6 +1868,7 @@ const EmbedPdfViewerContent = ({
                 // Future: Handle signature completion
               }}
               signaturePreviews={signaturePreviews}
+              readOnlySignaturePreviews={readOnlySignaturePreviews}
               signaturePreviewsReadOnly={signaturePreviewsReadOnly}
               signaturePlacementMode={signaturePlacementMode}
               signaturePlacementData={signaturePlacementData}

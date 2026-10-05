@@ -4,6 +4,7 @@ export const BASE_WORKBENCH_TYPES = [
   "pageEditor",
   "fileEditor",
   "myFiles",
+  "signing",
 ] as const;
 
 export type BaseWorkbenchType = (typeof BASE_WORKBENCH_TYPES)[number];
