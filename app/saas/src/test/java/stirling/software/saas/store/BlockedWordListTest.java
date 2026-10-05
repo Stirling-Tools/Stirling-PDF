@@ -11,8 +11,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 /** The bundled list blocks profanity through the usual dodges and leaves ordinary words alone. */
 class BlockedWordListTest {
 
-    // The list the app loads: the bundled files, no operator file.
-    private final BlockedWordList bundled = new BlockedWordList("");
+    // The list the app loads by default: the vendored English list, the roots, no operator file.
+    private final BlockedWordList bundled = new BlockedWordList("en", "");
 
     @Test
     void theBundledListIsNotEmpty() {
@@ -38,10 +38,11 @@ class BlockedWordListTest {
                 "blowjob",
                 "c u n t",
                 "dickhead detector",
-                "pissed off",
+                "pissing contest",
                 "porn filter",
                 "wanker",
-                "f*ck"
+                "camwhore",
+                "s h i t"
             })
     void profanityIsBlocked(String text) {
         assertThat(bundled.firstMatch(text)).as(text).isPresent();
@@ -65,7 +66,17 @@ class BlockedWordListTest {
                 "Fire retardant data sheets",
                 "Shell scripts say hello",
                 "Step 1 of 3, then OCR",
-                "Matsushita product sheets"
+                "Matsushita product sheets",
+                "Sexual harassment complaint intake",
+                "Abuse case files for the safeguarding team",
+                "Adult social care and welfare claim forms",
+                "Attack surface report",
+                "Jewish community archive",
+                "Asian markets research",
+                "RAM and CPU usage report",
+                "Pros and cons of each template",
+                "Market domination analysis",
+                "Page xx of yy"
             })
     void ordinaryWordsAreNot(String text) {
         assertThat(bundled.firstMatch(text)).as(text).isEmpty();
@@ -82,5 +93,51 @@ class BlockedWordListTest {
         assertThat(list.firstMatch("a plonk")).contains("plonk");
         assertThat(list.firstMatch("this is very bad")).contains("very bad");
         assertThat(list.firstMatch("verybad")).contains("verybad");
+    }
+
+    @Test
+    void otherLanguagesAreOptIn() {
+        // "con" is French profanity and an ordinary English word, which is why only English loads
+        // by default.
+        assertThat(bundled.firstMatch("Pros and con lists")).isEmpty();
+        BlockedWordList withFrench = new BlockedWordList("en,fr", "");
+        assertThat(withFrench.firstMatch("quel con")).isPresent();
+    }
+
+    @Test
+    void unspacedLanguagesMatchInsideARunOfText() {
+        String entry = firstEntry("zh");
+        BlockedWordList chinese = new BlockedWordList("zh", "");
+
+        assertThat(chinese.firstMatch("这是" + entry + "的文件")).isPresent();
+    }
+
+    @Test
+    void aRootWithoutALetterIsIgnored() {
+        BlockedWordList chinese = new BlockedWordList("zh", "");
+        // "13" alone is slang in the list; the 13th of the month must still get through.
+        assertThat(chinese.firstMatch("会议在13号开始")).isEmpty();
+    }
+
+    @Test
+    void anUnknownLanguageIsSkipped() {
+        assertThat(new BlockedWordList("xx-not-a-language", "").isEmpty()).isFalse();
+    }
+
+    private static String firstEntry(String language) {
+        try (var in =
+                BlockedWordListTest.class
+                        .getClassLoader()
+                        .getResourceAsStream("store/wordlists/ldnoobw/" + language + ".txt")) {
+            return new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8)
+                    .lines()
+                    // A real word: two or more Han characters, not the list's numeric slang.
+                    .filter(line -> line.trim().matches("\\p{IsHan}{2,}"))
+                    .findFirst()
+                    .orElseThrow()
+                    .trim();
+        } catch (java.io.IOException e) {
+            throw new IllegalStateException(e);
+        }
     }
 }

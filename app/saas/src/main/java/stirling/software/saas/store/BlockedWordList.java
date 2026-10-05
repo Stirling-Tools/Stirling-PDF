@@ -43,22 +43,38 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>{@code two words} matches that run of whole words.
  * </ul>
  *
- * <p>The allow list names whole words that are never a hit whatever they contain ("Scunthorpe").
- * The bundled English list is a default; {@code stirling.store.blocked-words-file} adds an
- * operator's own entries on top.
+ * <p>The words themselves are not ours. They are the LDNOOBW lists, vendored unmodified under
+ * {@code store/wordlists/ldnoobw} (CC BY 4.0, see the NOTICE there), one file per language, loaded
+ * as whole words and phrases for the languages in {@code stirling.store.blocked-words.languages}
+ * ({@code en} by default: a whole-word list in one language collides with ordinary words in
+ * another, French "con" with English "pros and cons"). Languages written without spaces between
+ * words (Chinese, Japanese, Thai) are matched anywhere instead. What is ours is matcher
+ * configuration: {@code blocked-roots.txt}, the few roots worth matching inside a word, and {@code
+ * allowed-words.txt}, the whole words that are never a hit ("Scunthorpe", clinical and legal
+ * vocabulary). {@code stirling.store.blocked-words-file} adds an operator's own entries, in the
+ * three-kind syntax above.
+ *
+ * <p>This is the fast, offline first pass. The store's content check ({@link
+ * stirling.software.saas.store.moderation.StoreContentCheck}) then judges the text in context and
+ * in any language.
  */
 @Slf4j
 @Component
 @ConditionalOnProperty(name = "stirling.store.enabled", havingValue = "true")
 public class BlockedWordList {
 
-    private static final String BLOCKED_RESOURCE = "store/blocked-words.txt";
+    private static final String ROOTS_RESOURCE = "store/blocked-roots.txt";
     private static final String ALLOWED_RESOURCE = "store/allowed-words.txt";
-    private static final Pattern NOT_ALNUM_OR_SPACE = Pattern.compile("[^a-z0-9\\s]");
-    private static final Pattern REPEATS = Pattern.compile("([a-z])\\1{2,}");
-    private static final Pattern DOUBLES = Pattern.compile("([a-z])\\1");
+    private static final String LIST_RESOURCE = "store/wordlists/ldnoobw/%s.txt";
+
+    /** Written without spaces between words, so a whole-word match would never fire. */
+    private static final Set<String> UNSPACED_LANGUAGES = Set.of("zh", "ja", "th");
+
+    private static final Pattern NOT_LETTER_DIGIT_OR_SPACE = Pattern.compile("[^\\p{L}\\p{N}\\s]");
+    private static final Pattern REPEATS = Pattern.compile("(\\p{L})\\1{2,}");
+    private static final Pattern DOUBLES = Pattern.compile("(\\p{L})\\1");
     private static final Pattern WHITESPACE = Pattern.compile("\\s+");
-    private static final Pattern HAS_LETTER = Pattern.compile("[a-z]");
+    private static final Pattern HAS_LETTER = Pattern.compile("\\p{L}");
 
     /** Fewer single letters in a row than this are just initials, not a spelled-out word. */
     private static final int SPELLED_OUT_MIN = 3;
@@ -80,14 +96,29 @@ public class BlockedWordList {
             return words.size() + roots.size() + phrases.size();
         }
 
+        /** A line in the three-kind syntax: {@code *root}, {@code word} or {@code two words}. */
         void add(String line) {
             String trimmed = line == null ? "" : line.trim();
             if (trimmed.isEmpty() || trimmed.startsWith("#")) {
                 return;
             }
             boolean root = trimmed.startsWith("*");
-            String folded = fold(root ? trimmed.substring(1) : trimmed);
-            if (folded.isEmpty()) {
+            addEntry(root ? trimmed.substring(1) : trimmed, root);
+        }
+
+        /** A line of a vendored list: a plain word or phrase, no syntax. */
+        void addListed(String line, boolean root) {
+            String trimmed = line == null ? "" : line.trim();
+            if (!trimmed.isEmpty()) {
+                addEntry(trimmed, root);
+            }
+        }
+
+        private void addEntry(String entry, boolean root) {
+            String folded = fold(entry);
+            // A root with no letter in it ("13", internet slang in the Chinese list) would match
+            // every number that contains it.
+            if (folded.isEmpty() || (root && !HAS_LETTER.matcher(folded).find())) {
                 return;
             }
             if (root) {
@@ -103,8 +134,22 @@ public class BlockedWordList {
     }
 
     @Autowired
-    public BlockedWordList(@Value("${stirling.store.blocked-words-file:}") String extraFile) {
-        readResource(BLOCKED_RESOURCE, blocked::add);
+    public BlockedWordList(
+            @Value("${stirling.store.blocked-words.languages:en}") String languages,
+            @Value("${stirling.store.blocked-words-file:}") String extraFile) {
+        for (String language : languages.split(",")) {
+            String code = language.trim().toLowerCase(Locale.ROOT);
+            if (code.isEmpty()) {
+                continue;
+            }
+            boolean unspaced = UNSPACED_LANGUAGES.contains(code);
+            if (!readResource(
+                    String.format(LIST_RESOURCE, code),
+                    line -> blocked.addListed(line, unspaced))) {
+                log.warn("No bundled blocked-word list for language '{}'", code);
+            }
+        }
+        readResource(ROOTS_RESOURCE, blocked::add);
         readResource(ALLOWED_RESOURCE, this::allow);
         if (extraFile != null && !extraFile.isBlank()) {
             try {
@@ -187,7 +232,7 @@ public class BlockedWordList {
             }
             sb.append(HAS_LETTER.matcher(word).find() ? unleet(word) : word);
         }
-        String folded = NOT_ALNUM_OR_SPACE.matcher(sb).replaceAll("");
+        String folded = NOT_LETTER_DIGIT_OR_SPACE.matcher(sb).replaceAll("");
         return WHITESPACE.matcher(REPEATS.matcher(folded).replaceAll("$1")).replaceAll(" ").trim();
     }
 
@@ -245,18 +290,21 @@ public class BlockedWordList {
         }
     }
 
-    private static void readResource(String resource, Consumer<String> sink) {
+    /** Whether the resource exists. */
+    private static boolean readResource(String resource, Consumer<String> sink) {
         try (InputStream in =
                 BlockedWordList.class.getClassLoader().getResourceAsStream(resource)) {
             if (in == null) {
-                return;
+                return false;
             }
             try (BufferedReader reader =
                     new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
                 reader.lines().forEach(sink);
             }
+            return true;
         } catch (IOException e) {
             log.warn("Could not read {}: {}", resource, e.getMessage());
+            return false;
         }
     }
 }

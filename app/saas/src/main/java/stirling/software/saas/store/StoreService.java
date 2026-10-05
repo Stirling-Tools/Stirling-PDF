@@ -33,6 +33,7 @@ import stirling.software.proprietary.security.database.repository.UserRepository
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.saas.security.TeamSecurityExpressions;
+import stirling.software.saas.store.moderation.StoreContentCheck;
 
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
@@ -88,6 +89,7 @@ public class StoreService {
     private final StoreManifestSanitizer sanitizer;
     private final StoreTextAuditor textAuditor;
     private final ObjectMapper objectMapper;
+    private final StoreContentCheck contentCheck;
 
     public PreflightReport preflight(PublishRequest request) {
         Policy policy = publishSource(request).policy();
@@ -173,9 +175,22 @@ public class StoreService {
         return new Prepared(report, result);
     }
 
-    /** Text audit plus the category check: everything a listing's words must pass. */
+    /**
+     * Everything a listing's words must pass: the local text audit and category check, then, when
+     * those pass, the hosted content check, which judges the words in context and in any language.
+     */
     private List<StoreFinding> auditDetails(PublishRequest request, boolean curated) {
         List<StoreFinding> findings = new ArrayList<>(textAuditor.audit(request, curated));
+        if (findings.stream().noneMatch(StoreFinding::blocks)) {
+            findings.addAll(
+                    contentCheck.audit(
+                            List.of(
+                                    new StoreContentCheck.Field("Name", request.trimmedName()),
+                                    new StoreContentCheck.Field(
+                                            "Description", request.trimmedDescription()),
+                                    new StoreContentCheck.Field(
+                                            "What changed", request.trimmedWhatChanged()))));
+        }
         if (!CATEGORIES.contains(normalisedCategory(request.category()))) {
             findings.add(
                     StoreFinding.block(

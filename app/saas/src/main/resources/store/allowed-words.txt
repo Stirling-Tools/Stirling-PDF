@@ -1,5 +1,8 @@
-# Tokens that must never count as a blocked-word hit even if a blocked list folds onto them.
-# Whole tokens, one per line. The classic place-name and dictionary collisions live here.
+# Whole words that are never a blocked-word hit, whatever list or root they collide with. The
+# store's content check still judges them in context, so allowing a word here only stops the
+# word-list pass from refusing it on sight.
+
+# Place names and dictionary words that contain a root.
 scunthorpe
 penistone
 lightwater
@@ -10,15 +13,48 @@ assessment
 class
 classic
 classification
-# Words containing a root from blocked-words.txt, or folding onto one.
 shiitake
 shitake
 swank
 swanky
 swankier
 swankiest
+wankel
 niggard
 niggardly
 niggardliness
 matsushita
-wankel
+
+# Clinical, legal and historical vocabulary from the vendored lists. Real pipelines process
+# medical records, HR complaints, court bundles and archives that use these words plainly.
+sex
+sexual
+sexually
+sexuality
+intercourse
+genitals
+penis
+vagina
+vulva
+anus
+rectum
+nipple
+nipples
+semen
+ejaculation
+masturbation
+incest
+rape
+raping
+rapist
+paedophile
+pedophile
+swastika
+negro
+eunuch
+bondage
+domination
+
+# Short tokens a list entry folds onto: "s&m" becomes "sm", and "xx" is a placeholder.
+sm
+xx

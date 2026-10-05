@@ -32,4 +32,26 @@ class StoreBeanWiringTest {
             assertThat(context.getBean(StoreManifestSanitizer.class)).isNotNull();
         }
     }
+
+    @Test
+    void theContentCheckIsOffWithoutAProviderKey() {
+        try (AnnotationConfigApplicationContext context =
+                new AnnotationConfigApplicationContext()) {
+            context.getEnvironment().setActiveProfiles("saas");
+            context.getEnvironment()
+                    .getPropertySources()
+                    .addFirst(
+                            new MapPropertySource(
+                                    "store", Map.of("stirling.store.enabled", "true")));
+            context.register(stirling.software.saas.store.moderation.StoreModerationConfig.class);
+            context.refresh();
+
+            assertThat(
+                            context.getBean(
+                                            stirling.software.saas.store.moderation
+                                                    .StoreContentCheck.class)
+                                    .enabled())
+                    .isFalse();
+        }
+    }
 }

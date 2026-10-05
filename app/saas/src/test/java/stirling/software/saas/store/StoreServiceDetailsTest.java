@@ -25,6 +25,7 @@ import stirling.software.proprietary.policy.store.PolicyStore;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.saas.security.TeamSecurityExpressions;
+import stirling.software.saas.store.moderation.StoreContentCheck;
 
 import tools.jackson.databind.ObjectMapper;
 
@@ -58,7 +59,8 @@ class StoreServiceDetailsTest {
                         mock(UserRepository.class),
                         new StoreManifestSanitizer(),
                         new StoreTextAuditor(BlockedWordList.of(List.of(), List.of())),
-                        mapper);
+                        mapper,
+                        StoreContentCheck.disabled());
         when(authority.canEditPolicies()).thenReturn(true);
         when(teamSecurity.currentUserTeamId()).thenReturn(TEAM);
         when(teamSecurity.currentUserId()).thenReturn(42L);
