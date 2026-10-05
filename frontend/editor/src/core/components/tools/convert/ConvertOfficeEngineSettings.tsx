@@ -34,7 +34,7 @@ const ConvertOfficeEngineSettings = ({
       )}
       description={t(
         "convert.stirlingOfficeConvertDescription",
-        "Better, faster conversions with less memory. Turn off to use LibreOffice.",
+        "Better, faster conversions with less memory. Turn off to use the standard converter.",
       )}
       checked={checked}
       onChange={(event) =>
