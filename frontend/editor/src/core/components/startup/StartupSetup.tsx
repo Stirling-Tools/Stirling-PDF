@@ -1,9 +1,10 @@
 import { useState, type ReactNode } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Modal, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@app/auth/UseSession";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { qk } from "@app/query/keys";
 import { useServerExperience } from "@app/hooks/useServerExperience";
 import { useAccountLogout } from "@app/extensions/accountLogout";
 import { accountService, type AccountData } from "@app/services/accountService";
@@ -40,6 +41,7 @@ export function StartupSetup({
 }) {
   const { t } = useTranslation();
   const { config, refetch } = useAppConfig();
+  const queryClient = useQueryClient();
   const { user, signOut, isAnonymous } = useAuth();
   const { effectiveIsAdmin } = useServerExperience();
   const accountLogout = useAccountLogout();
@@ -54,7 +56,14 @@ export function StartupSetup({
     queryFn: async () => {
       // Editor and Processor have separate query caches. Re-read server settings
       // on entry so an analytics choice made in the other app is respected.
-      if (refreshConfigOnMount) await refetch();
+      // Config is session-fixed, so a repeat only replays the initial fetch;
+      // an in-flight one is joined, not duplicated.
+      if (refreshConfigOnMount) {
+        const state = queryClient.getQueryState(qk.appConfig());
+        if (state?.data === undefined && state?.fetchStatus !== "fetching") {
+          await refetch();
+        }
+      }
       if (!loginEnabled || !user || isAnonymous) return null;
       const [account, login] = await Promise.all([
         accountService.getAccountData(),
