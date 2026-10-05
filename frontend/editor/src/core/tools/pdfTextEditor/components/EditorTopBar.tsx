@@ -15,6 +15,7 @@ import { useEditorSession } from "@app/tools/pdfTextEditor/store/EditorSession";
 import { useElementWidth } from "@app/tools/pdfTextEditor/hooks/useElementWidth";
 import { modShortcut } from "@app/utils/hotkeys";
 import "@app/tools/pdfTextEditor/components/EditorTopBar.css";
+import "@app/components/viewer/ViewerBarControls.css";
 
 const COMPACT_BELOW_PX = 900;
 
@@ -27,6 +28,22 @@ interface EditorTopBarProps {
   onShowHelp: () => void;
   hasDocument: boolean;
   dirty: boolean;
+  /** Formatting and object groups for the selection; off when the selection
+   * carries its own floating bar. */
+  showSelectionTools?: boolean;
+  /** Extra controls at the trailing end, before help. */
+  trailing?: React.ReactNode;
+  /** Find and replace, opened as a panel from the Find button. Without it,
+   * the caller shows find elsewhere. */
+  findPanel?: React.ReactNode;
+  /** Show the open file and its switcher at the leading end. */
+  showFile?: boolean;
+  /** Name each control beside its icon, for a bar with room to spare. */
+  labelled?: boolean;
+  /** Shown at the leading end in place of the file, e.g. a mode marker. */
+  lead?: React.ReactNode;
+  /** A faint brand tint: the bar is a mode strip under another toolbar. */
+  tinted?: boolean;
 }
 
 export function EditorTopBar({
@@ -38,6 +55,13 @@ export function EditorTopBar({
   onShowHelp,
   hasDocument,
   dirty,
+  showSelectionTools = true,
+  trailing,
+  findPanel,
+  showFile = true,
+  labelled = false,
+  lead,
+  tinted = false,
 }: EditorTopBarProps) {
   const { t } = useTranslation();
   const session = useEditorSession();
@@ -51,6 +75,20 @@ export function EditorTopBar({
     : t("pdfTextEditor.sidebar.addText", "Add text");
   const addImageLabel = t("pdfTextEditor.sidebar.addImage", "Add image");
   const findLabel = t("pdfTextEditor.settings.find", "Find in document");
+  // On the viewer's labelled strip an armed tool reads as a soft tint, like
+  // the viewer's own mode buttons; the compact bar keeps the solid fill.
+  const toggleLook = (on: boolean) =>
+    labelled
+      ? ({
+          variant: "tertiary",
+          accent: "neutral",
+          className: "viewer-bar-button",
+          "data-active": on ? "true" : undefined,
+        } as const)
+      : ({
+          variant: on ? "primary" : "tertiary",
+          accent: on ? "default" : "neutral",
+        } as const);
   const helpLabel = t("pdfTextEditor.help.ariaLabel", "Keyboard shortcuts");
 
   return (
@@ -58,22 +96,28 @@ export function EditorTopBar({
       className="pdf-editor-topbar"
       data-testid="pdf-editor-toolbar"
       data-compact={compact ? "true" : "false"}
+      data-tinted={tinted ? "true" : undefined}
       ref={barRef}
     >
-      <div className="pdf-editor-topbar__lead">
-        {session?.fileName ? (
-          <EditorFileSwitcher
-            currentFileId={session.fileId}
-            currentFileName={session.fileName}
-            dirty={dirty}
-            onPick={session.pickFile}
-          />
-        ) : (
-          <Text size="xs" c="dimmed" px={6}>
-            {t("pdfTextEditor.sidebar.noFile", "No file loaded")}
-          </Text>
-        )}
-      </div>
+      {!showFile && lead && (
+        <div className="pdf-editor-topbar__lead">{lead}</div>
+      )}
+      {showFile && (
+        <div className="pdf-editor-topbar__lead">
+          {session?.fileName ? (
+            <EditorFileSwitcher
+              currentFileId={session.fileId}
+              currentFileName={session.fileName}
+              dirty={dirty}
+              onPick={session.pickFile}
+            />
+          ) : (
+            <Text size="xs" c="dimmed" px={6}>
+              {t("pdfTextEditor.sidebar.noFile", "No file loaded")}
+            </Text>
+          )}
+        </div>
+      )}
 
       {hasDocument && (
         <div className="pdf-editor-topbar__band">
@@ -93,7 +137,9 @@ export function EditorTopBar({
               data-testid="pdf-editor-undo"
               style={NO_SHRINK}
               leftSection={<Icon name="undo-2" size={20} />}
-            />
+            >
+              {labelled ? t("pdfTextEditor.toolbar.undo", "Undo") : null}
+            </Button>
           </Tooltip>
           <Tooltip
             label={t("pdfTextEditor.toolbar.redoTooltip", {
@@ -111,7 +157,9 @@ export function EditorTopBar({
               data-testid="pdf-editor-redo"
               style={NO_SHRINK}
               leftSection={<Icon name="redo-2" size={20} />}
-            />
+            >
+              {labelled ? t("pdfTextEditor.toolbar.redo", "Redo") : null}
+            </Button>
           </Tooltip>
 
           <ToolbarSeparator />
@@ -172,8 +220,7 @@ export function EditorTopBar({
               >
                 <Button
                   size="sm"
-                  variant={addTextArmed ? "primary" : "tertiary"}
-                  accent={addTextArmed ? "default" : "neutral"}
+                  {...toggleLook(addTextArmed)}
                   leftSection={<Icon name="type" size={20} />}
                   onClick={onToggleAddText}
                   data-testid="pdf-editor-add-text"
@@ -198,33 +245,85 @@ export function EditorTopBar({
                   aria-label={t("pdfTextEditor.sidebar.addImage", "Add image")}
                   data-testid="pdf-editor-add-image"
                   style={NO_SHRINK}
-                />
+                >
+                  {labelled
+                    ? t("pdfTextEditor.sidebar.addImage", "Add image")
+                    : null}
+                </Button>
               </Tooltip>
-              <Tooltip
-                label={t("pdfTextEditor.settings.findTooltip", {
-                  defaultValue: "Find ({{shortcut}})",
-                  shortcut: modShortcut("F"),
-                })}
-              >
-                <Button
-                  variant={findOpen ? "primary" : "tertiary"}
-                  accent={findOpen ? "default" : "neutral"}
-                  size="sm"
-                  aria-pressed={findOpen}
-                  onClick={onToggleFind}
-                  aria-label={t(
-                    "pdfTextEditor.settings.find",
-                    "Find in document",
-                  )}
-                  data-testid="pdf-editor-open-find"
-                  style={NO_SHRINK}
-                  leftSection={<Icon name="search" size={20} />}
-                />
-              </Tooltip>
+              {findPanel ? (
+                <Popover
+                  opened={findOpen}
+                  onChange={(open) => {
+                    if (!open && findOpen) onToggleFind();
+                  }}
+                  position="bottom-start"
+                  shadow="md"
+                  offset={8}
+                  withArrow
+                  // Editing the page while finding is the point of it, so only
+                  // the button, Escape or the panel's own close put it away.
+                  closeOnClickOutside={false}
+                  withinPortal
+                >
+                  <Popover.Target>
+                    <span style={{ display: "inline-flex" }}>
+                      <Tooltip
+                        label={t("pdfTextEditor.settings.findTooltip", {
+                          defaultValue: "Find ({{shortcut}})",
+                          shortcut: modShortcut("F"),
+                        })}
+                      >
+                        <Button
+                          {...toggleLook(findOpen)}
+                          size="sm"
+                          aria-pressed={findOpen}
+                          onClick={onToggleFind}
+                          aria-label={t(
+                            "pdfTextEditor.settings.find",
+                            "Find in document",
+                          )}
+                          data-testid="pdf-editor-open-find"
+                          style={NO_SHRINK}
+                          leftSection={<Icon name="search" size={20} />}
+                        >
+                          {labelled
+                            ? t("pdfTextEditor.toolbar.find", "Find")
+                            : null}
+                        </Button>
+                      </Tooltip>
+                    </span>
+                  </Popover.Target>
+                  <Popover.Dropdown>{findPanel}</Popover.Dropdown>
+                </Popover>
+              ) : (
+                <Tooltip
+                  label={t("pdfTextEditor.settings.findTooltip", {
+                    defaultValue: "Find ({{shortcut}})",
+                    shortcut: modShortcut("F"),
+                  })}
+                >
+                  <Button
+                    {...toggleLook(findOpen)}
+                    size="sm"
+                    aria-pressed={findOpen}
+                    onClick={onToggleFind}
+                    aria-label={t(
+                      "pdfTextEditor.settings.find",
+                      "Find in document",
+                    )}
+                    data-testid="pdf-editor-open-find"
+                    style={NO_SHRINK}
+                    leftSection={<Icon name="search" size={20} />}
+                  >
+                    {labelled ? t("pdfTextEditor.toolbar.find", "Find") : null}
+                  </Button>
+                </Tooltip>
+              )}
             </>
           )}
 
-          {hasSelection && (
+          {hasSelection && showSelectionTools && (
             <>
               <ToolbarSeparator />
               {compact ? (
@@ -260,6 +359,7 @@ export function EditorTopBar({
       )}
 
       <div className="pdf-editor-topbar__trail">
+        {hasDocument && trailing}
         {hasDocument && !compact && (
           <Tooltip
             label={t("pdfTextEditor.help.tooltip", "Keyboard shortcuts (?)")}

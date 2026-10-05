@@ -99,6 +99,9 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   handleToolSelectForced: (toolId: ToolId) => void;
   handleBackToTools: () => void;
   handleReaderToggle: () => void;
+  /** Select a tool as a mode of the current view: the address stays put, so
+   * it reads as switching mode rather than navigating to the tool. */
+  selectToolInPlace: (toolId: ToolId) => void;
 
   // Computed values
   filteredTools: Array<{
@@ -150,6 +153,9 @@ export interface ToolWorkflowActionsValue {
   handleToolSelectForced: (toolId: ToolId) => void;
   handleBackToTools: () => void;
   handleReaderToggle: () => void;
+  /** Select a tool as a mode of the current view: the address stays put, so
+   * it reads as switching mode rather than navigating to the tool. */
+  selectToolInPlace: (toolId: ToolId) => void;
   setLeftPanelView: (view: "toolPicker" | "toolContent") => void;
   setReaderMode: (mode: boolean) => void;
   setToolPanelMode: (mode: ToolPanelMode) => void;
@@ -396,9 +402,9 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   // This runs once to navigate to the user's preferred tab (read/automate)
   // instead of always starting on the tools tab.
   const hasAppliedStartupView = React.useRef(false);
-  // Set when the startup view picks the tool, so the URL sync knows this
-  // selection came from a preference and must not be written to the address.
-  const startupSelectedToolRef = React.useRef<ToolId | null>(null);
+  // Set when a selection sets the view rather than the address (the startup
+  // view preference, an in-place mode switch), so the URL sync leaves it out.
+  const viewOnlySelectionRef = React.useRef<ToolId | null>(null);
   useEffect(() => {
     if (hasAppliedStartupView.current) return;
     // The URL wins: the startup view decides what you see when you arrive at the
@@ -412,13 +418,13 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     const startupView = preferences.defaultStartupView;
     if (startupView === "read") {
       hasAppliedStartupView.current = true;
-      startupSelectedToolRef.current = "read";
+      viewOnlySelectionRef.current = "read";
       markReaderModeFromPreference();
       setReaderMode(true);
       actions.setSelectedTool("read");
     } else if (startupView === "automate") {
       hasAppliedStartupView.current = true;
-      startupSelectedToolRef.current = "automate";
+      viewOnlySelectionRef.current = "automate";
       actions.setSelectedTool("automate");
       setLeftPanelView("toolContent");
     }
@@ -589,7 +595,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     handleBackToTools,
     allTools,
     true,
-    startupSelectedToolRef,
+    viewOnlySelectionRef,
   );
 
   // Ref-backed wrappers so callback identities stay stable across renders.
@@ -606,6 +612,11 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     (id: ToolId) => handleToolSelectForcedRef.current(id),
     [],
   );
+
+  const stableSelectToolInPlace = useCallback((id: ToolId) => {
+    viewOnlySelectionRef.current = id;
+    handleToolSelectRef.current(id);
+  }, []);
 
   const handleBackToToolsRef = useRef(handleBackToTools);
   handleBackToToolsRef.current = handleBackToTools;
@@ -663,6 +674,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       handleToolSelectForced: stableHandleToolSelectForced,
       handleBackToTools: stableHandleBackToTools,
       handleReaderToggle: stableHandleReaderToggle,
+      selectToolInPlace: stableSelectToolInPlace,
       setLeftPanelView,
       setReaderMode: stableSetReaderMode,
       setToolPanelMode: stableSetToolPanelMode,
@@ -741,6 +753,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       handleToolSelectForced,
       handleBackToTools,
       handleReaderToggle,
+      selectToolInPlace: stableSelectToolInPlace,
 
       // Computed
       filteredTools,

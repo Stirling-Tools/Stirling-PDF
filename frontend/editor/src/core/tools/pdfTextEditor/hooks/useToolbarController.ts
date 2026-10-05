@@ -43,6 +43,29 @@ import { readImageObjectPixels } from "@app/tools/pdfTextEditor/util/imagePixels
 
 type AlignMode = "left" | "center-h" | "right" | "top" | "middle-v" | "bottom";
 
+/** Restack every selected text run and image; shared by the toolbar and its shortcuts. */
+export function changeSelectionZOrder(store: EditorStore, mode: ZOrderMode) {
+  const doc = store.document;
+  if (!doc) return;
+  const selRuns = new Set(store.selection.value.runIds);
+  const selImages = new Set(store.selection.value.imageIds);
+  if (selRuns.size === 0 && selImages.size === 0) return;
+  for (const p of doc.loadedPages()) {
+    for (const r of p.runs) {
+      if (!selRuns.has(r.id)) continue;
+      store.dispatch(
+        new ChangeZOrderCommand({ pageIndex: p.index, runId: r.id, mode }),
+      );
+    }
+    for (const im of p.images) {
+      if (!selImages.has(im.id)) continue;
+      store.dispatch(
+        new ChangeZOrderCommand({ pageIndex: p.index, imageId: im.id, mode }),
+      );
+    }
+  }
+}
+
 // Everything the contextual `Toolbar` needs, derived from the shared
 // `EditorStore`.
 export function useToolbarController(
@@ -91,31 +114,7 @@ export function useToolbarController(
   }, [store]);
 
   const onChangeZOrder = useCallback(
-    (mode: ZOrderMode) => {
-      const doc = store.document;
-      if (!doc) return;
-      const selRuns = new Set(store.selection.value.runIds);
-      const selImages = new Set(store.selection.value.imageIds);
-      if (selRuns.size === 0 && selImages.size === 0) return;
-      for (const p of doc.loadedPages()) {
-        for (const r of p.runs) {
-          if (!selRuns.has(r.id)) continue;
-          store.dispatch(
-            new ChangeZOrderCommand({ pageIndex: p.index, runId: r.id, mode }),
-          );
-        }
-        for (const im of p.images) {
-          if (!selImages.has(im.id)) continue;
-          store.dispatch(
-            new ChangeZOrderCommand({
-              pageIndex: p.index,
-              imageId: im.id,
-              mode,
-            }),
-          );
-        }
-      }
-    },
+    (mode: ZOrderMode) => changeSelectionZOrder(store, mode),
     [store],
   );
 

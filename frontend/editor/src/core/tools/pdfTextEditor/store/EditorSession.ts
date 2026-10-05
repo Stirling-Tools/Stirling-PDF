@@ -4,6 +4,8 @@ import type { FileId } from "@app/types/file";
 export interface EditorSession {
   fileName: string | null;
   fileId: FileId | null;
+  /** Unsaved edits on the open document. */
+  dirty: boolean;
   save: () => void;
   download: () => void;
   pickFile: (file: File) => void;

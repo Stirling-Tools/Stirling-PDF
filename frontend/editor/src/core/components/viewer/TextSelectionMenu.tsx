@@ -52,7 +52,8 @@ function TextSelectionMenuInner({
   const { provides: selection } = useSelectionCapability();
   const { provides: annotationProvides } = useAnnotation(documentId ?? "");
 
-  const { handleToolSelectForced, setLeftPanelView } = useToolWorkflow();
+  const { handleToolSelectForced, setLeftPanelView, selectToolInPlace } =
+    useToolWorkflow();
   const {
     setRedactionMode,
     activateRedact,
@@ -301,6 +302,23 @@ function TextSelectionMenuInner({
         onMouseDown={(e) => e.preventDefault()}
       >
         <div className="embedpdf-text-selection-menu">
+          <Tooltip label={t("viewer.editText", "Edit text")} withArrow>
+            <button
+              type="button"
+              className="embedpdf-text-selection-btn"
+              onClick={() => {
+                if (documentId) selection?.clear(documentId);
+                selectToolInPlace("pdfTextEditor");
+              }}
+              aria-label={t("viewer.editText", "Edit text")}
+              data-testid="viewer-selection-edit-text"
+            >
+              <Icon name="type" size={20} />
+            </button>
+          </Tooltip>
+
+          <span className="embedpdf-floating-divider" />
+
           <Tooltip label={t("viewer.copyText", "Copy")} withArrow>
             <button
               type="button"

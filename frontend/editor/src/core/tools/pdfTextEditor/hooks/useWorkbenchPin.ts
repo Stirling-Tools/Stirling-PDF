@@ -13,6 +13,8 @@ interface PinOptions {
   icon: React.ReactNode;
   component: CustomWorkbenchViewRegistration["component"];
   takeOverScreen: boolean;
+  /** Edit on the viewer's pages: pin the viewer and register no canvas. */
+  inViewer: boolean;
 }
 
 // Register the custom workbench view and open it when the editor tool is
@@ -24,6 +26,7 @@ export function useWorkbenchPin({
   icon,
   component,
   takeOverScreen,
+  inViewer,
 }: PinOptions): () => void {
   const {
     registerCustomWorkbenchView,
@@ -64,14 +67,16 @@ export function useWorkbenchPin({
   takeOverRef.current = takeOverScreen;
   useEffect(() => {
     const v = viewRef.current;
+    setLeftPanelView("toolContent");
+    if (inViewer) return undefined;
     register(takeOverRef.current);
     setCustomWorkbenchViewData(v.workbenchViewId, { kind: "pdfTextEditor" });
-    setLeftPanelView("toolContent");
     return () => {
       clearCustomWorkbenchViewData(v.workbenchViewId);
       unregisterCustomWorkbenchView(v.workbenchViewId);
     };
   }, [
+    inViewer,
     register,
     unregisterCustomWorkbenchView,
     setCustomWorkbenchViewData,
@@ -81,17 +86,19 @@ export function useWorkbenchPin({
 
   const registeredTakeOverRef = useRef(takeOverScreen);
   useEffect(() => {
+    if (inViewer) return;
     if (registeredTakeOverRef.current === takeOverScreen) return;
     registeredTakeOverRef.current = takeOverScreen;
     register(takeOverScreen);
-  }, [register, takeOverScreen]);
+  }, [inViewer, register, takeOverScreen]);
 
   const actionsRef = useRef(navigationActions);
   actionsRef.current = navigationActions;
 
+  const target = inViewer ? "viewer" : workbenchId;
   const pin = useCallback(() => {
-    actionsRef.current.setWorkbench(workbenchId);
-  }, [workbenchId]);
+    actionsRef.current.setWorkbench(target);
+  }, [target]);
 
   // Open the canvas once, when the tool is picked. Re-pinning on every
   // workbench change would bounce the user straight back here the moment they
@@ -104,9 +111,9 @@ export function useWorkbenchPin({
     }
     if (pinnedRef.current) return;
     pinnedRef.current = true;
-    if (navigationState.workbench === workbenchId) return;
-    actionsRef.current.setWorkbench(workbenchId);
-  }, [navigationState.selectedTool, navigationState.workbench, workbenchId]);
+    if (navigationState.workbench === target) return;
+    actionsRef.current.setWorkbench(target);
+  }, [navigationState.selectedTool, navigationState.workbench, target]);
 
   return pin;
 }

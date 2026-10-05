@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { TextInput, Tooltip } from "@mantine/core";
+import { TextInput } from "@mantine/core";
 import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
-import "@app/tools/pdfTextEditor/components/FindBar.css";
+import "@app/components/viewer/FindPanel.css";
 import { EditTextCommand } from "@app/tools/pdfTextEditor/commands/EditTextCommand";
 import { CompositeCommand } from "@app/tools/pdfTextEditor/commands/CompositeCommand";
 import {
@@ -205,41 +206,56 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
           total: matches.length,
         });
 
-  const toggles: Array<{
+  const findOptions: Array<{
     on: boolean;
     set: () => void;
     label: string;
-    glyph: string;
-    underline?: boolean;
     testId: string;
   }> = [
     {
       on: matchCase,
       set: () => setMatchCase((v) => !v),
       label: t("pdfTextEditor.find.matchCase", "Match case"),
-      glyph: "Aa",
       testId: "pdf-editor-find-match-case",
     },
     {
       on: wholeWord,
       set: () => setWholeWord((v) => !v),
       label: t("pdfTextEditor.find.wholeWord", "Whole word"),
-      glyph: "ab",
-      underline: true,
       testId: "pdf-editor-find-whole-word",
     },
     {
       on: ignoreAccents,
       set: () => setIgnoreAccents((v) => !v),
       label: t("pdfTextEditor.find.ignoreAccents", "Ignore accents"),
-      glyph: "\u00e1",
       testId: "pdf-editor-find-ignore-accents",
     },
   ];
 
+  const onEscape = (e: React.KeyboardEvent) => {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      onClose();
+    }
+  };
+
   return (
-    <div className="pdf-editor-findbar" data-testid="pdf-editor-find-bar">
-      <div className="pdf-editor-findbar__grid">
+    <div className="find-panel" data-testid="pdf-editor-find-bar">
+      <div className="find-panel__head">
+        <span className="find-panel__title">
+          {t("pdfTextEditor.find.title", "Find and replace")}
+        </span>
+        <ActionIcon
+          variant="tertiary"
+          size="sm"
+          onClick={onClose}
+          aria-label={t("pdfTextEditor.find.close", "Close find bar")}
+          data-testid="pdf-editor-find-close"
+        >
+          <Icon name="x" size="1rem" />
+        </ActionIcon>
+      </div>
+      <div className="find-panel__row">
         <TextInput
           ref={inputRef}
           value={query}
@@ -247,38 +263,17 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
           placeholder={t("pdfTextEditor.find.findPlaceholder", "Find")}
           aria-label={t("pdfTextEditor.find.findPlaceholder", "Find")}
           data-testid="pdf-editor-find-input"
-          size="xs"
-          rightSectionWidth={132}
-          rightSectionPointerEvents="all"
+          leftSection={<Icon name="search" size="1rem" />}
+          rightSectionWidth="auto"
           rightSection={
-            <span className="pdf-editor-findbar__inline">
-              <span
-                className="pdf-editor-findbar__count"
-                data-testid="pdf-editor-find-count"
-                role="status"
-                aria-live="polite"
-                aria-atomic="true"
-              >
-                {countLabel}
-              </span>
-              {toggles.map((toggle) => (
-                <Tooltip key={toggle.testId} label={toggle.label}>
-                  <button
-                    type="button"
-                    className={
-                      toggle.underline
-                        ? "pdf-editor-findbar__toggle pdf-editor-findbar__toggle--underlined"
-                        : "pdf-editor-findbar__toggle"
-                    }
-                    aria-pressed={toggle.on}
-                    aria-label={toggle.label}
-                    data-testid={toggle.testId}
-                    onClick={toggle.set}
-                  >
-                    {toggle.glyph}
-                  </button>
-                </Tooltip>
-              ))}
+            <span
+              className="find-panel__count"
+              data-testid="pdf-editor-find-count"
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              {countLabel}
             </span>
           }
           onKeyDown={(e) => {
@@ -286,40 +281,44 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
               e.preventDefault();
               if (e.shiftKey) prev();
               else next();
-            } else if (e.key === "Escape") {
-              e.preventDefault();
-              onClose();
-            }
+            } else onEscape(e);
           }}
         />
-        <span className="pdf-editor-findbar__divider" aria-hidden />
-        <div className="pdf-editor-findbar__actions">
-          <Tooltip label={t("pdfTextEditor.find.previous", "Previous match")}>
-            <Button
-              size="sm"
-              variant="tertiary"
-              accent="neutral"
-              onClick={prev}
-              disabled={matches.length === 0}
-              aria-label={t("pdfTextEditor.find.previous", "Previous match")}
-              data-testid="pdf-editor-find-prev"
-              leftSection={<Icon name="chevron-up" size={20} />}
-            />
-          </Tooltip>
-          <Tooltip label={t("pdfTextEditor.find.next", "Next match")}>
-            <Button
-              size="sm"
-              variant="tertiary"
-              accent="neutral"
-              onClick={next}
-              disabled={matches.length === 0}
-              aria-label={t("pdfTextEditor.find.next", "Next match")}
-              data-testid="pdf-editor-find-next"
-              leftSection={<Icon name="chevron-down" size={20} />}
-            />
-          </Tooltip>
-        </div>
-
+        <ActionIcon
+          variant="tertiary"
+          onClick={prev}
+          disabled={matches.length === 0}
+          aria-label={t("pdfTextEditor.find.previous", "Previous match")}
+          data-testid="pdf-editor-find-prev"
+        >
+          <Icon name="chevron-up" size="1rem" />
+        </ActionIcon>
+        <ActionIcon
+          variant="tertiary"
+          onClick={next}
+          disabled={matches.length === 0}
+          aria-label={t("pdfTextEditor.find.next", "Next match")}
+          data-testid="pdf-editor-find-next"
+        >
+          <Icon name="chevron-down" size="1rem" />
+        </ActionIcon>
+      </div>
+      <div className="find-panel__options">
+        {findOptions.map((option) => (
+          <button
+            key={option.testId}
+            type="button"
+            className="find-panel__option"
+            aria-pressed={option.on}
+            data-testid={option.testId}
+            onClick={option.set}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+      <div className="find-panel__divider" />
+      <div className="find-panel__row">
         <TextInput
           value={replace}
           onChange={(e) => setReplace(e.currentTarget.value)}
@@ -332,67 +331,43 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
             "Replace with",
           )}
           data-testid="pdf-editor-replace-input"
-          size="xs"
-          rightSectionWidth={132}
-          rightSection={
-            replaceCount !== null ? (
-              <span className="pdf-editor-findbar__inline">
-                <span className="pdf-editor-findbar__count">
-                  {t("pdfTextEditor.find.replaced", "{{count}} replaced", {
-                    count: replaceCount,
-                  })}
-                </span>
-              </span>
-            ) : null
-          }
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();
               if (e.shiftKey) doReplaceAll();
               else doReplaceOne();
-            } else if (e.key === "Escape") {
-              e.preventDefault();
-              onClose();
-            }
+            } else onEscape(e);
           }}
         />
-        <span className="pdf-editor-findbar__divider" aria-hidden />
-        <div className="pdf-editor-findbar__actions">
-          <Button
-            size="sm"
-            variant="tertiary"
-            accent="neutral"
-            onClick={doReplaceOne}
-            disabled={matches.length === 0 || !query}
-            data-testid="pdf-editor-replace-one"
-          >
-            {t("pdfTextEditor.find.replace", "Replace")}
-          </Button>
-          <Button
-            size="sm"
-            variant="tertiary"
-            accent="neutral"
-            onClick={doReplaceAll}
-            disabled={matches.length === 0 || !query}
-            data-testid="pdf-editor-replace-all"
-          >
-            {t("pdfTextEditor.find.replaceAll", "Replace all")}
-          </Button>
-        </div>
       </div>
-
-      <Tooltip label={t("pdfTextEditor.find.close", "Close find bar")}>
+      <div className="find-panel__row find-panel__row--end">
+        {replaceCount !== null && (
+          <span className="find-panel__status">
+            {t("pdfTextEditor.find.replaced", "{{count}} replaced", {
+              count: replaceCount,
+            })}
+          </span>
+        )}
         <Button
+          size="sm"
           variant="tertiary"
           accent="neutral"
+          onClick={doReplaceOne}
+          disabled={matches.length === 0 || !query}
+          data-testid="pdf-editor-replace-one"
+        >
+          {t("pdfTextEditor.find.replace", "Replace")}
+        </Button>
+        <Button
           size="sm"
-          className="pdf-editor-findbar__close"
-          onClick={onClose}
-          aria-label={t("pdfTextEditor.find.close", "Close find bar")}
-          data-testid="pdf-editor-find-close"
-          leftSection={<Icon name="x" size={20} />}
-        />
-      </Tooltip>
+          variant="secondary"
+          onClick={doReplaceAll}
+          disabled={matches.length === 0 || !query}
+          data-testid="pdf-editor-replace-all"
+        >
+          {t("pdfTextEditor.find.replaceAll", "Replace all")}
+        </Button>
+      </div>
     </div>
   );
 }

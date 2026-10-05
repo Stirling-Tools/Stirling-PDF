@@ -55,6 +55,20 @@ export class HistoryStack {
     return { undo: this.undoStack.length, redo: this.redoStack.length };
   }
 
+  /**
+   * Both stacks, read-only, for a history list: `done` oldest first, `undone`
+   * with the next redo LAST (the order redo pops them).
+   */
+  entries(): { done: readonly Command[]; undone: readonly Command[] } {
+    return { done: this.undoStack, undone: this.redoStack };
+  }
+
+  /** Forget the undone steps, making the current point the newest. */
+  discardRedo(): void {
+    this.redoStack.length = 0;
+    this.lastCoalesceKey = null;
+  }
+
   /** The command a plain undo would revert next (null when empty). */
   peekUndo(): Command | null {
     return this.undoStack[this.undoStack.length - 1] ?? null;

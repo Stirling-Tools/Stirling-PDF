@@ -14,11 +14,13 @@ import type { BaseToolProps } from "@app/types/tool";
 import { useEditorStore } from "@app/tools/pdfTextEditor/hooks/useEditorStore";
 import { setEditorSession } from "@app/tools/pdfTextEditor/store/EditorSession";
 import { useIsMobile } from "@app/hooks/useIsMobile";
+import { useViewer } from "@app/contexts/ViewerContext";
 import {
   useDocumentLoader,
   ensureAllPagesRead,
 } from "@app/tools/pdfTextEditor/hooks/useDocumentLoader";
 import { useAutoLoadFile } from "@app/tools/pdfTextEditor/hooks/useAutoLoadFile";
+import { useParagraphActions } from "@app/tools/pdfTextEditor/hooks/useParagraphActions";
 import { useWorkbenchPin } from "@app/tools/pdfTextEditor/hooks/useWorkbenchPin";
 import { useUnsavedChangesGuard } from "@app/tools/pdfTextEditor/hooks/useUnsavedChangesGuard";
 import { useEditorTestGlobal } from "@app/tools/pdfTextEditor/hooks/useEditorTestGlobal";
@@ -30,7 +32,7 @@ import { DiscardChangesModal } from "@app/tools/pdfTextEditor/components/Discard
 import { HelpOverlay } from "@app/tools/pdfTextEditor/components/HelpOverlay";
 import { PasswordPromptModal } from "@app/tools/pdfTextEditor/components/PasswordPromptModal";
 import { EditorPanelActions } from "@app/tools/pdfTextEditor/components/EditorPanelActions";
-import { EditorSidebar } from "@app/tools/pdfTextEditor/components/EditorSidebar";
+import { ViewerEditPanel } from "@app/tools/pdfTextEditor/components/ViewerEditPanel";
 import { MobileEditorSheets } from "@app/tools/pdfTextEditor/components/MobileEditorSheets";
 import { EditorFileInputs } from "@app/tools/pdfTextEditor/components/EditorFileInputs";
 import { PageStage } from "@app/tools/pdfTextEditor/components/PageStage";
@@ -38,8 +40,6 @@ import { InsertImageCommand } from "@app/tools/pdfTextEditor/commands/InsertImag
 import { InsertTextCommand } from "@app/tools/pdfTextEditor/commands/InsertTextCommand";
 import { DisplayTransform } from "@app/tools/pdfTextEditor/model/DisplayTransform";
 import { jpegExifOrientation } from "@app/tools/pdfTextEditor/util/jpegOrientation";
-import { MergeRunsCommand } from "@app/tools/pdfTextEditor/commands/MergeRunsCommand";
-import { UngroupParagraphCommand } from "@app/tools/pdfTextEditor/commands/UngroupParagraphCommand";
 import { exportToBlob } from "@app/tools/pdfTextEditor/util/exportPdf";
 import {
   detectSaveRisks,
@@ -61,22 +61,35 @@ const INSERTED_IMAGE_RATIO = 0.4;
 export default function PdfTextEditor(_props: BaseToolProps) {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
+  const { setActiveFileId } = useViewer();
   const { store, state } = useEditorStore();
   const load = useDocumentLoader(store);
 
   const [selection, setSelection] = useState<SelectionState>(
     store.selection.value,
   );
-  const [openedFileName, setOpenedFileName] = useState<string | null>(null);
+  // Seeded from the store: it can outlive this panel with the document open.
+  const [openedFileName, setOpenedFileName] = useState<string | null>(() =>
+    store.document ? (store.source?.fileName ?? null) : null,
+  );
   // Set only when the document came from the workbench; a drag-dropped
   // file has no fileId and can only be downloaded. Mirrored into state so the
   // sidebar's file switcher can mark which workbench file is open.
-  const sourceFileIdRef = useRef<FileId | null>(null);
-  const [sourceFileId, setSourceFileId] = useState<FileId | null>(null);
-  const setSourceFile = useCallback((id: FileId | null) => {
-    sourceFileIdRef.current = id;
-    setSourceFileId(id);
-  }, []);
+  const initialSourceId = store.document
+    ? ((store.source?.fileId ?? null) as FileId | null)
+    : null;
+  const sourceFileIdRef = useRef<FileId | null>(initialSourceId);
+  const [sourceFileId, setSourceFileId] = useState<FileId | null>(
+    initialSourceId,
+  );
+  const setSourceFile = useCallback(
+    (id: FileId | null) => {
+      sourceFileIdRef.current = id;
+      setSourceFileId(id);
+      store.source = { fileName: store.source?.fileName ?? null, fileId: id };
+    },
+    [store],
+  );
   const { addFiles, consumeFiles, selectors } = useFileContext();
   const { setSelectedFiles } = useFileSelection();
   // Saving replaces the workbench file, so for a moment the selection points at
@@ -92,16 +105,21 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     icon: <Icon name="file-text" size={20} />,
     component: PageStage,
     takeOverScreen: isMobile,
+    inViewer: !isMobile,
   });
   // Uploading flips the workbench to Active Files, so landing a document has to
   // pin the canvas back. useAutoLoadFile only fires for a genuine file change.
   const handleFileChosen = useCallback(
     (name: string, fileId?: FileId) => {
       setOpenedFileName(name);
+      store.source = { fileName: name, fileId: fileId ?? null };
       setSourceFile(fileId ?? null);
+      // Editing happens on the viewer's pages, so the viewer shows whatever
+      // the editor opens.
+      if (!isMobile && fileId) setActiveFileId(fileId);
       pinWorkbench();
     },
-    [pinWorkbench, setSourceFile],
+    [pinWorkbench, setSourceFile, store, isMobile, setActiveFileId],
   );
   const { openFile: openWorkbenchFile, adopt: adoptFile } = useAutoLoadFile(
     load,
@@ -109,6 +127,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     sourceFileId,
     applying,
     state,
+    !isMobile,
   );
 
   useEffect(() => store.selection.subscribe(setSelection), [store]);
@@ -413,57 +432,10 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     store.setFindOpen(false);
   }, [store]);
 
-  const handleUngroupSelection = useCallback(() => {
-    const doc = store.document;
-    if (!doc) return;
-    const ids = store.selection.value.runIds;
-    // Snapshot the target runs first - dispatching mutates page.runs, and
-    // the ungroup replaces the paragraph run with per-line runs.
-    const targets: Array<{ pageIndex: number; runId: string }> = [];
-    for (const pageIdx of doc.loadedPages().map((p) => p.index)) {
-      for (const r of doc.page(pageIdx).runs) {
-        if (!ids.includes(r.id)) continue;
-        if (r.paragraphMemberPtrs.length < 2) continue;
-        targets.push({ pageIndex: pageIdx, runId: r.id });
-      }
-    }
-    const resultIds: string[] = [];
-    for (const t of targets) {
-      const cmd = new UngroupParagraphCommand(t);
-      store.dispatch(cmd);
-      resultIds.push(...cmd.resultRunIds);
-    }
-    // Reconcile selection against the new run model so the toolbar keeps
-    // acting on real runs instead of the now-removed paragraph ids.
-    if (resultIds.length > 0) store.selection.selectMany(resultIds);
-    else store.selection.clear();
-  }, [store]);
-
-  const handleMergeSelection = useCallback(() => {
-    const doc = store.document;
-    if (!doc) return;
-    const selectedIds = new Set(store.selection.value.runIds);
-    if (selectedIds.size < 2) return;
-    const byPage = new Map<number, string[]>();
-    for (const page of doc.loadedPages()) {
-      for (const r of page.runs) {
-        if (!selectedIds.has(r.id)) continue;
-        const list = byPage.get(r.pageIndex) ?? [];
-        list.push(r.id);
-        byPage.set(r.pageIndex, list);
-      }
-    }
-    // Collect every page's new representative, then select them all once -
-    // selecting inside the loop left only the last page's merge selected.
-    const reps: string[] = [];
-    for (const [pageIndex, runIds] of byPage) {
-      if (runIds.length < 2) continue;
-      const cmd = new MergeRunsCommand({ pageIndex, runIds });
-      store.dispatch(cmd);
-      if (cmd.representativeRunId) reps.push(cmd.representativeRunId);
-    }
-    if (reps.length > 0) store.selection.selectMany(reps);
-  }, [store]);
+  const {
+    mergeSelection: handleMergeSelection,
+    ungroupSelection: handleUngroupSelection,
+  } = useParagraphActions(store);
 
   useEditorKeyboardShortcuts({
     store,
@@ -515,6 +487,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         return;
       }
       setOpenedFileName(file.name);
+      store.source = { fileName: file.name, fileId: null };
       // Dropped/picked from disk: no workbench file to replace yet, but claim
       // it so a later workbench arrival cannot auto-open over these edits.
       adoptFile(file);
@@ -564,6 +537,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     setEditorSession({
       fileName: openedFileName,
       fileId: sourceFileId,
+      dirty: state.dirty,
       save: handleSave,
       download: handleDownload,
       pickFile: onPickWorkbenchFile,
@@ -573,6 +547,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   }, [
     openedFileName,
     sourceFileId,
+    state.dirty,
     handleSave,
     handleDownload,
     onPickWorkbenchFile,
@@ -654,9 +629,15 @@ export default function PdfTextEditor(_props: BaseToolProps) {
           </Text>
         </>
       ) : (
-        <EditorSidebar {...sidebarProps} />
+        <ViewerEditPanel
+          {...sidebarProps}
+          onSave={handleSave}
+          onDownload={handleDownload}
+        />
       )}
-      {state.hasDocument && (
+      {/* Desktop edits on the viewer's pages, where the panel carries its own
+          save; the phone's full-screen canvas keeps the footer bar. */}
+      {state.hasDocument && isMobile && (
         <EditorPanelActions
           compact={isMobile}
           openedFileName={openedFileName}

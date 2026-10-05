@@ -1,4 +1,6 @@
 import React, {
+  Suspense,
+  lazy,
   useCallback,
   useLayoutEffect,
   useMemo,
@@ -29,7 +31,10 @@ import { isStirlingFile } from "@app/types/fileContext";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import { useNavigationState } from "@app/contexts/NavigationContext";
+import {
+  useNavigationGuard,
+  useNavigationState,
+} from "@app/contexts/NavigationContext";
 import { ViewerContext, useViewer } from "@app/contexts/ViewerContext";
 import { WorkbenchType, isBaseWorkbench } from "@app/types/workbench";
 import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
@@ -58,6 +63,11 @@ import { renderWithTooltip } from "@app/components/shared/workbenchBar/workbench
 import { WorkbenchBarActionsProps } from "@app/components/shared/workbenchBar/types";
 import { useIsMobile, useIsPhone } from "@app/hooks/useIsMobile";
 import "@app/components/shared/WorkbenchBar.css";
+
+// The editor bundle only loads once text editing is switched on.
+const EditorDocSwitcher = lazy(
+  () => import("@app/tools/pdfTextEditor/components/EditorDocSwitcher"),
+);
 import { NotificationBell } from "@app/components/notifications/NotificationBell";
 
 const SECTION_ORDER: WorkbenchBarSection[] = ["top", "middle", "bottom"];
@@ -298,6 +308,19 @@ export default function WorkbenchBar({
     viewerContext?.printActions?.print?.();
   }, [viewerContext]);
 
+  const { requestNavigation } = useNavigationGuard();
+  const { handleBackToTools } = useToolWorkflow();
+  // On desktop the viewer is its own surface: files are picked and closed from
+  // its document switcher, and the x leaves the viewer for the file list
+  // (and leaves text editing, asking first about unsaved edits).
+  const viewerOwnsBar = !isMobile && currentView === "viewer";
+  const handleCloseViewer = useCallback(() => {
+    requestNavigation(() => {
+      handleBackToTools();
+      setCurrentView("fileEditor");
+    });
+  }, [requestNavigation, handleBackToTools, setCurrentView]);
+
   const handleClose = useCallback(async () => {
     if (currentView === "fileEditor") {
       await fileActions.clearAllFiles();
@@ -362,7 +385,10 @@ export default function WorkbenchBar({
     saveAsIconName: icons.saveAs,
     onPrint: handlePrint,
     onExport: handleExportAll,
-    onClose: handleClose,
+    onClose: viewerOwnsBar ? handleCloseViewer : handleClose,
+    closeLabel: viewerOwnsBar
+      ? t("workbenchBar.closeViewer", "Close viewer")
+      : undefined,
   };
 
   const toggleMobileTools = useCallback(
@@ -422,8 +448,10 @@ export default function WorkbenchBar({
   );
 
   // View options
-  // Tools that own a custom workbench ship their own canvas.
-  const ownsCustomWorkbenchAsDefault = selectedTool === "pdfTextEditor";
+  // Tools that own a custom workbench ship their own canvas. The text editor
+  // does only on phones; on desktop it edits on the viewer's own pages.
+  const ownsCustomWorkbenchAsDefault =
+    selectedTool === "pdfTextEditor" && isMobile;
   const viewOptions: ViewOption[] = [
     ...(ownsCustomWorkbenchAsDefault
       ? []
@@ -539,23 +567,32 @@ export default function WorkbenchBar({
       )}
       {/* Not in the library: it browses files rather than showing one, and the
           rail is what moves between surfaces. */}
-      {currentView !== "myFiles" && (hasFiles || isCustomView) && (
-        <SegmentedControl<WorkbenchType>
-          className="workbench-bar-views"
-          size="sm"
-          value={currentView}
-          onChange={setCurrentView}
-          variant="secondary"
-          options={viewOptions.map((opt) => ({
-            value: opt.value,
-            label: (
-              <>
-                {opt.icon}
-                <span className="workbench-bar-view-label">{opt.label}</span>
-              </>
-            ),
-          }))}
-        />
+      {/* In the viewer the document is the choice; other views keep the
+          view switcher, which also leads back to the viewer. */}
+      {viewerOwnsBar ? (
+        <Suspense fallback={null}>
+          <EditorDocSwitcher />
+        </Suspense>
+      ) : (
+        currentView !== "myFiles" &&
+        (hasFiles || isCustomView) && (
+          <SegmentedControl<WorkbenchType>
+            className="workbench-bar-views"
+            size="sm"
+            value={currentView}
+            onChange={setCurrentView}
+            variant="secondary"
+            options={viewOptions.map((opt) => ({
+              value: opt.value,
+              label: (
+                <>
+                  {opt.icon}
+                  <span className="workbench-bar-view-label">{opt.label}</span>
+                </>
+              ),
+            }))}
+          />
+        )
       )}
       {barLeadButtons.map((btn) => {
         const content = renderButton(btn);

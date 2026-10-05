@@ -134,6 +134,12 @@ export class EditorStore {
   private loadToken = 0;
   /** File awaiting a password retry; held off the view state (not serialisable). */
   private _pendingPasswordFile: File | null = null;
+  /**
+   * Where the open document came from. Kept with the document, not the panel:
+   * the panel remounts while the store keeps the document warm, and must not
+   * forget which workbench file it is editing.
+   */
+  source: { fileName: string | null; fileId: string | null } | null = null;
 
   constructor() {
     this.history = new HistoryStack();
@@ -305,6 +311,7 @@ export class EditorStore {
     this.bakedDirty = false;
     this.selection.clear();
     this._pendingPasswordFile = null;
+    this.source = null;
     this.state = INITIAL;
     this.notify();
   }
@@ -427,6 +434,16 @@ export class EditorStore {
       return;
     }
     this.resnapshot();
+    this.patch({ dirty: this.isDirty() });
+  }
+
+  /**
+   * Commit to the current point in history: the steps undone past it are
+   * dropped, so they can neither be redone nor linger behind a save.
+   */
+  discardRedo(): void {
+    if (!this.history.canRedo) return;
+    this.history.discardRedo();
     this.patch({ dirty: this.isDirty() });
   }
 

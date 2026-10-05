@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Box, TextInput, Text, Group } from "@mantine/core";
+import { TextInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { ViewerContext } from "@app/contexts/ViewerContext";
+import "@app/components/viewer/FindPanel.css";
 
 interface SearchInterfaceProps {
   visible: boolean;
@@ -24,7 +25,6 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
 
   const searchActions = viewerContext?.searchActions;
   const [searchQuery, setSearchQuery] = useState("");
-  const [jumpToValue, setJumpToValue] = useState("");
   const [resultInfo, setResultInfo] = useState<{
     currentIndex: number;
     totalResults: number;
@@ -156,34 +156,6 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
     setResultInfo(null);
   };
 
-  // No longer need to sync with external API on mount - removed
-
-  const handleJumpToResult = (index: number) => {
-    if (resultInfo && index >= 1 && index <= resultInfo.totalResults) {
-      // Convert to 0-based index for the API
-      searchActions?.goToResult?.(index - 1);
-    }
-  };
-
-  const handleJumpToSubmit = () => {
-    const index = parseInt(jumpToValue, 10);
-    if (
-      !isNaN(index) &&
-      resultInfo &&
-      index >= 1 &&
-      index <= resultInfo.totalResults
-    ) {
-      handleJumpToResult(index);
-      setJumpToValue(""); // Clear the input after jumping
-    }
-  };
-
-  const handleJumpToKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleJumpToSubmit();
-    }
-  };
-
   const handleInputBlur = () => {
     // Close popover on blur if no text is entered
     if (!searchQuery.trim()) {
@@ -196,17 +168,24 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
     onClose();
   };
 
+  const hasResults = !!resultInfo && resultInfo.totalResults > 0;
+  const countLabel = isSearching
+    ? t("search.searching", "Searching...")
+    : resultInfo
+      ? hasResults
+        ? t("viewer.search.count", "{{current}} of {{total}}", {
+            current: resultInfo.currentIndex,
+            total: resultInfo.totalResults,
+          })
+        : t("search.noResults", "No results found")
+      : "";
+
   return (
-    <Box
-      style={{
-        padding: "0px",
-      }}
-    >
-      {/* Header with close button */}
-      <Group mb="md" justify="space-between">
-        <Text size="sm" fw={600}>
+    <div className="find-panel">
+      <div className="find-panel__head">
+        <span className="find-panel__title">
           {t("search.title", "Search PDF")}
-        </Text>
+        </span>
         <ActionIcon
           variant="tertiary"
           size="sm"
@@ -215,100 +194,58 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
         >
           <Icon name="x" size="1rem" />
         </ActionIcon>
-      </Group>
-
-      {/* Search input */}
-      <Group mb="md">
+      </div>
+      <div className="find-panel__row">
         <TextInput
           ref={inputRef}
           placeholder={t("search.placeholder", "Enter search term...")}
           value={searchQuery}
-          onChange={(e) => {
-            const newValue = e.currentTarget.value;
-            setSearchQuery(newValue);
-          }}
+          onChange={(e) => setSearchQuery(e.currentTarget.value)}
           onKeyDown={handleKeyDown}
           onBlur={handleInputBlur}
-          style={{ flex: 1 }}
+          leftSection={<Icon name="search" size="1rem" />}
+          rightSectionWidth="auto"
+          rightSectionPointerEvents="all"
           rightSection={
-            searchQuery.trim() && (
-              <ActionIcon
-                variant="tertiary"
-                onClick={handleClearSearch}
-                aria-label={t("viewer.search.clear", "Clear search")}
-              >
-                <Icon name="x" size="0.875rem" />
-              </ActionIcon>
-            )
+            searchQuery.trim() ? (
+              <span className="find-panel__row">
+                <span
+                  className="find-panel__count"
+                  role="status"
+                  aria-live="polite"
+                >
+                  {countLabel}
+                </span>
+                <ActionIcon
+                  variant="tertiary"
+                  size="sm"
+                  onClick={handleClearSearch}
+                  aria-label={t("viewer.search.clear", "Clear search")}
+                  style={{ marginRight: 4 }}
+                >
+                  <Icon name="x" size="0.875rem" />
+                </ActionIcon>
+              </span>
+            ) : null
           }
         />
-      </Group>
-
-      {/* Results info and navigation - always show */}
-      <Group justify="space-between" align="center">
-        <Group gap="xs" align="center">
-          <TextInput
-            size="xs"
-            value={jumpToValue}
-            onChange={(e) => {
-              const newValue = e.currentTarget.value;
-              setJumpToValue(newValue);
-
-              // Jump immediately as user types
-              const index = parseInt(newValue, 10);
-              if (
-                resultInfo &&
-                !isNaN(index) &&
-                index >= 1 &&
-                index <= resultInfo.totalResults
-              ) {
-                handleJumpToResult(index);
-              }
-            }}
-            onKeyDown={handleJumpToKeyDown}
-            onBlur={() => setJumpToValue("")} // Clear on blur instead of submit
-            placeholder={(resultInfo?.currentIndex || 0).toString()}
-            style={{ width: "3rem" }}
-            type="number"
-            min="1"
-            max={resultInfo?.totalResults || 0}
-            disabled={!resultInfo || resultInfo.totalResults === 0}
-          />
-          <Text size="sm" c="dimmed">
-            {t("viewer.search.resultsOf", "of {{total}}", {
-              total: resultInfo?.totalResults || 0,
-            })}
-          </Text>
-        </Group>
-
-        <Group gap="xs">
-          <ActionIcon
-            variant="tertiary"
-            size="sm"
-            onClick={handlePrevious}
-            disabled={!resultInfo || resultInfo.totalResults === 0}
-            aria-label={t("viewer.search.previous", "Previous result")}
-          >
-            <Icon name="chevron-up" size="1rem" />
-          </ActionIcon>
-          <ActionIcon
-            variant="tertiary"
-            size="sm"
-            onClick={handleNext}
-            disabled={!resultInfo || resultInfo.totalResults === 0}
-            aria-label={t("viewer.search.next", "Next result")}
-          >
-            <Icon name="chevron-down" size="1rem" />
-          </ActionIcon>
-        </Group>
-      </Group>
-
-      {/* Loading state */}
-      {isSearching && (
-        <Text size="xs" c="dimmed" ta="center" mt="sm">
-          {t("search.searching", "Searching...")}
-        </Text>
-      )}
-    </Box>
+        <ActionIcon
+          variant="tertiary"
+          onClick={handlePrevious}
+          disabled={!hasResults}
+          aria-label={t("viewer.search.previous", "Previous result")}
+        >
+          <Icon name="chevron-up" size="1rem" />
+        </ActionIcon>
+        <ActionIcon
+          variant="tertiary"
+          onClick={handleNext}
+          disabled={!hasResults}
+          aria-label={t("viewer.search.next", "Next result")}
+        >
+          <Icon name="chevron-down" size="1rem" />
+        </ActionIcon>
+      </div>
+    </div>
   );
 }

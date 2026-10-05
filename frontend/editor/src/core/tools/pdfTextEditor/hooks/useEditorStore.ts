@@ -50,6 +50,27 @@ export function useEditorStore(): {
   return { store, state };
 }
 
+/**
+ * Subscribe to the singleton without owning its lifetime. For surfaces that
+ * mount and unmount freely (virtualised viewer pages): an owning subscriber's
+ * unmount schedules disposal, which would drop the document mid-scroll.
+ */
+export function useEditorStoreView(): {
+  store: EditorStore;
+  state: ReturnType<EditorStore["getState"]>;
+} {
+  const store = useMemo(() => {
+    if (!__singleton) __singleton = new EditorStore();
+    return __singleton;
+  }, []);
+  const [state, setState] = useState(store.getState());
+  useEffect(() => {
+    setState(store.getState());
+    return store.subscribe(setState);
+  }, [store]);
+  return { store, state };
+}
+
 /** Test-only - drop the singleton so the next mount starts fresh. */
 export function __resetEditorStoreForTests(): void {
   if (__singleton) {

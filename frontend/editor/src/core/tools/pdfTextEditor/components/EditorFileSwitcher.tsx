@@ -2,6 +2,7 @@ import { Menu, Text, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
 import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useAllFiles } from "@app/contexts/FileContext";
 import type { FileId } from "@app/types/file";
 
@@ -11,6 +12,10 @@ interface Props {
   currentFileName: string;
   dirty: boolean;
   onPick: (file: File) => void;
+  /** Remove a document from the workbench, from its row in the menu. */
+  onClose?: (file: File) => void;
+  /** Leave for the Active Files view. */
+  onViewActiveFiles?: () => void;
 }
 
 export function EditorFileSwitcher({
@@ -18,6 +23,8 @@ export function EditorFileSwitcher({
   currentFileName,
   dirty,
   onPick,
+  onClose,
+  onViewActiveFiles,
 }: Props) {
   const { t } = useTranslation();
   const { files } = useAllFiles();
@@ -37,7 +44,9 @@ export function EditorFileSwitcher({
     </span>
   );
 
-  if (pdfs.length < 2) {
+  // A menu still earns its place with one file when it also closes it or
+  // leads to the file list.
+  if (pdfs.length < 2 && !onClose && !onViewActiveFiles) {
     return (
       <Tooltip label={currentFileName}>
         <Text
@@ -88,14 +97,53 @@ export function EditorFileSwitcher({
               data-testid="pdf-editor-file-switch"
               data-current={current ? "true" : "false"}
               onClick={() => {
-                if (fileId == null) return;
+                if (fileId == null || current) return;
                 onPick(file);
               }}
+              rightSection={
+                onClose && fileId != null ? (
+                  <Tooltip
+                    label={t("pdfTextEditor.fileSwitcher.close", "Close")}
+                  >
+                    <ActionIcon
+                      size="sm"
+                      variant="tertiary"
+                      aria-label={t("pdfTextEditor.fileSwitcher.closeFile", {
+                        defaultValue: "Close {{name}}",
+                        name: file.name,
+                      })}
+                      data-testid="pdf-editor-file-close"
+                      onClick={(e) => {
+                        // Closing a row must not also switch to it.
+                        e.stopPropagation();
+                        onClose(file);
+                      }}
+                    >
+                      <Icon name="x" size={14} />
+                    </ActionIcon>
+                  </Tooltip>
+                ) : undefined
+              }
             >
               {file.name}
             </Menu.Item>
           );
         })}
+        {onViewActiveFiles && (
+          <>
+            <Menu.Divider />
+            <Menu.Item
+              leftSection={<Icon name="folder" size={20} />}
+              onClick={onViewActiveFiles}
+              data-testid="pdf-editor-view-active-files"
+            >
+              {t(
+                "pdfTextEditor.fileSwitcher.viewActiveFiles",
+                "View active files",
+              )}
+            </Menu.Item>
+          </>
+        )}
       </Menu.Dropdown>
     </Menu>
   );

@@ -1,5 +1,6 @@
 import React, { useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { BarButton } from "@app/components/viewer/ViewerBarControls";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { ViewerContext } from "@app/contexts/ViewerContext";
@@ -27,11 +28,17 @@ import { Icon } from "@app/ui/Icon";
 interface ViewerAnnotationControlsProps {
   currentView: string;
   disabled?: boolean;
+  /**
+   * Only the Redact control, named beside its icon, for a toolbar that keeps
+   * annotation visibility in a menu of its own.
+   */
+  labelled?: boolean;
 }
 
 export default function ViewerAnnotationControls({
   currentView,
   disabled = false,
+  labelled = false,
 }: ViewerAnnotationControlsProps) {
   const { t } = useTranslation();
   const { setLeftPanelView } = useToolWorkflow();
@@ -172,6 +179,19 @@ export default function ViewerAnnotationControls({
   // NOTE: This early return is placed AFTER all hooks to satisfy React's rules of hooks
   if (isSignMode) {
     return null;
+  }
+
+  if (labelled) {
+    return (
+      <BarButton
+        icon="file-x"
+        label={t("workbenchBar.redactShort", "Redact")}
+        active={isRedactMode}
+        disabled={disabled || currentView !== "viewer"}
+        onClick={() => void handleRedactionToggle()}
+        testId="viewer-redact"
+      />
+    );
   }
 
   return (

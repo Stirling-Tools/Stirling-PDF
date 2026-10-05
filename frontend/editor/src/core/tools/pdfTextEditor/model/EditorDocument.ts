@@ -32,15 +32,19 @@ export class EditorDocument {
   private formEnvPtr: number | null = null;
   private formEnvTried = false;
   private readonly formLoadedPages = new Set<number>();
+  /** False for a handle borrowed from the viewer: closing it is the viewer's job. */
+  private readonly ownsDocument: boolean;
 
   private constructor(
     module: WrappedPdfiumModule,
     docPtr: number,
     openedBytes: Uint8Array,
+    ownsDocument = true,
   ) {
     this.module = module;
     this.docPtr = docPtr;
     this.openedBytes = openedBytes;
+    this.ownsDocument = ownsDocument;
     this.pageCache = new Map();
     this.ownedFonts = new Map();
     this._disposed = false;
@@ -58,6 +62,16 @@ export class EditorDocument {
     // footprint; past a point the gradient repair is not worth that.
     const keep = prepared.length <= MAX_RETAINED_BYTES ? prepared : EMPTY;
     return new EditorDocument(module, docPtr, keep);
+  }
+
+  /**
+   * Wrap a document another reader already opened on the shared module. The
+   * load-time repairs never ran on it and there are no retained bytes, so the
+   * save-time repairs that re-read them are skipped.
+   */
+  static async adopt(docPtr: number): Promise<EditorDocument> {
+    const module = await getPdfiumModule();
+    return new EditorDocument(module, docPtr, EMPTY, false);
   }
 
   /** Page indices whose content stream has been regenerated this session. */
@@ -110,6 +124,24 @@ export class EditorDocument {
       this.formLoadedPages.add(page.pagePtr);
     } catch {
       /* best-effort: the page still renders without the form layer */
+    }
+  }
+
+  /** Display size of a page without loading it: stubbing a long document must
+   * not parse every page up front. */
+  pageSize(index: number): { width: number; height: number } {
+    const m = this.module;
+    const buf = m.pdfium.wasmExports.malloc(8);
+    try {
+      if (!m.FPDF_GetPageSizeByIndexF(this.docPtr, index, buf)) {
+        return { width: 0, height: 0 };
+      }
+      return {
+        width: m.pdfium.getValue(buf, "float"),
+        height: m.pdfium.getValue(buf + 4, "float"),
+      };
+    } finally {
+      m.pdfium.wasmExports.free(buf);
     }
   }
 
@@ -183,6 +215,6 @@ export class EditorDocument {
       font.dispose();
     }
     this.ownedFonts.clear();
-    closeDocAndFreeBuffer(this.module, this.docPtr);
+    if (this.ownsDocument) closeDocAndFreeBuffer(this.module, this.docPtr);
   }
 }

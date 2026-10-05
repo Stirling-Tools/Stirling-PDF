@@ -28,10 +28,11 @@ export function useNavigationUrlSync(
   registry: ToolRegistry,
   enableSync: boolean = true,
   /**
-   * Tool the default-startup-view preference selected, if any. That selection
-   * sets the view, not the address, so it must not be written to the URL.
+   * Tool selected as a view rather than a destination (the startup-view
+   * preference, an in-place mode switch), if any. It must not be written to the
+   * URL, and the address it leaves untouched must not cancel it.
    */
-  startupSelectedToolRef?: MutableRefObject<ToolId | null>,
+  viewOnlySelectionRef?: MutableRefObject<ToolId | null>,
 ) {
   const { config } = useAppConfig();
   const premiumEnabled = config?.premiumEnabled;
@@ -41,6 +42,8 @@ export function useNavigationUrlSync(
   const prevSelectedTool = useRef<ToolId | null>(null);
   // A pixel is a move, not a render.
   const countedPath = useRef<string | null>(null);
+  // The tool address a view-only selection is stepping off, until it has.
+  const steppingOff = useRef<string | null>(null);
 
   // Held in a ref so neither pass below depends on it: a write that re-ran on
   // every address change would answer a Back by returning to the tool it left.
@@ -109,10 +112,25 @@ export function useNavigationUrlSync(
       firePixel(window.location.pathname);
     }
 
+    if (steppingOff.current !== null && pathname !== steppingOff.current) {
+      steppingOff.current = null;
+    }
+
     // Disagreement is the trigger, not arrival: a Back can land on the address a
     // tool was picked from, where the path is unchanged but the selection is not.
     const route = parseToolRoute(registry, here.current);
     if (route.toolId === selectedTool) return;
+    // A view-only selection never wrote its address, so a tool-less address is
+    // expected here, not a request to leave it.
+    if (!route.toolId && selectedTool === viewOnlySelectionRef?.current) return;
+    // Nor is the old tool's address, still showing while the step off it lands.
+    // Once it has, a return to that address (a Back) means it again.
+    if (
+      selectedTool === viewOnlySelectionRef?.current &&
+      pathname === steppingOff.current
+    ) {
+      return;
+    }
     if (route.toolId) {
       checkPremiumAndSelect(route.toolId);
     } else {
@@ -125,6 +143,7 @@ export function useNavigationUrlSync(
     registry,
     enableSync,
     checkPremiumAndSelect,
+    viewOnlySelectionRef,
   ]);
 
   // Selection -> address. The pass above owns what an address change means.
@@ -134,7 +153,7 @@ export function useNavigationUrlSync(
     // of whatever the address asked for.
     if (!hasInitialized.current) return;
 
-    const startupTool = startupSelectedToolRef?.current ?? null;
+    const viewOnlyTool = viewOnlySelectionRef?.current ?? null;
     const previous = prevSelectedTool.current;
 
     // Only a change of selection is a navigation: the registry's identity churns,
@@ -142,12 +161,20 @@ export function useNavigationUrlSync(
     // moment it landed.
     if (selectedTool !== previous) {
       if (selectedTool) {
-        // A startup-view selection is a view preference, not a navigation, or
-        // every visit to /editor becomes /read. The marker survives until the
-        // selection moves off it (cleared below).
-        if (startupTool !== selectedTool) {
+        // A view-only selection is not a navigation, or every visit to /editor
+        // becomes /read. The marker survives until the selection moves off it
+        // (cleared below).
+        if (viewOnlyTool !== selectedTool) {
           const target = toolRoute(selectedTool, registry, here.current);
           if (target) navigate(target); // Pushed: picking a tool is a navigation
+        } else if (parseToolRoute(registry, here.current).toolId !== null) {
+          // Left for from another tool's address: that address would pull the
+          // selection straight back, so step off it to the tool-less one.
+          const target = editorHomeRoute(here.current);
+          if (target) {
+            steppingOff.current = here.current.pathname;
+            navigate(target);
+          }
         }
       } else if (previous !== null) {
         // Only a tool's own address is this hook's to clear: the library and the
@@ -160,17 +187,17 @@ export function useNavigationUrlSync(
       }
     }
 
-    // Spent once the user leaves the startup-applied tool, so re-picking it
-    // later is a real navigation and does update the URL.
+    // Spent once the user leaves the view-only tool, so re-picking it later is
+    // a real navigation and does update the URL.
     if (
-      startupSelectedToolRef &&
-      startupTool !== null &&
-      previous === startupTool &&
-      selectedTool !== startupTool
+      viewOnlySelectionRef &&
+      viewOnlyTool !== null &&
+      previous === viewOnlyTool &&
+      selectedTool !== viewOnlyTool
     ) {
-      startupSelectedToolRef.current = null;
+      viewOnlySelectionRef.current = null;
     }
 
     prevSelectedTool.current = selectedTool;
-  }, [selectedTool, registry, enableSync, startupSelectedToolRef, navigate]);
+  }, [selectedTool, registry, enableSync, viewOnlySelectionRef, navigate]);
 }

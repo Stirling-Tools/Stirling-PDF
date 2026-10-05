@@ -226,6 +226,8 @@ export interface ViewerContextType {
   // PDF page color rendering mode (viewer-only, never modifies the PDF)
   pdfRenderMode: PdfRenderMode;
   cyclePdfRenderMode: () => void;
+  /** Pick a page colour filter directly; saved like a cycled one. */
+  setPdfRenderMode: (mode: PdfRenderMode) => void;
 }
 
 export const ViewerContext = createContext<ViewerContextType | null>(null);
@@ -438,6 +440,11 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
       preferencesService.setPreference("pdfRenderMode", next);
       return next;
     });
+  }, []);
+
+  const setPdfRenderMode = useCallback((mode: PdfRenderMode) => {
+    preferencesService.setPreference("pdfRenderMode", mode);
+    setPdfRenderModeState(mode);
   }, []);
 
   // State getters - read from bridge refs
@@ -699,6 +706,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     // PDF page rendering mode
     pdfRenderMode,
     cyclePdfRenderMode,
+    setPdfRenderMode,
   };
 
   return (

@@ -1,0 +1,151 @@
+/* Rides on the viewer's floating-menu look (TextSelectionMenu.css) so the
+   editing bubble reads as the same family as the text-selection one. */
+
+.pdf-edit-pill {
+  position: fixed;
+  z-index: 250; /* under Mantine popovers (300), so its own dropdowns sit on top */
+  transform: translate(-50%, -100%);
+  pointer-events: auto;
+  animation: pdf-edit-pill-in 140ms cubic-bezier(0.2, 0.9, 0.3, 1.2);
+  transform-origin: 50% 100%;
+}
+
+.pdf-edit-pill[data-below="true"] {
+  transform: translate(-50%, 0);
+  transform-origin: 50% 0;
+}
+
+@keyframes pdf-edit-pill-in {
+  from {
+    opacity: 0;
+    scale: 0.94;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pdf-edit-pill {
+    animation: none;
+  }
+}
+
+.pdf-edit-pill__menu {
+  gap: 4px;
+  padding: 5px 6px;
+  border-radius: 12px;
+}
+
+.pdf-edit-pill__menu .embedpdf-floating-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+}
+
+.pdf-edit-pill__menu .embedpdf-floating-divider {
+  height: 20px;
+  margin: 0 3px;
+}
+
+/* Font family: a labelled chip rather than an icon, so the current face is
+   visible at a glance. */
+.pdf-edit-pill__menu .pdf-edit-pill__chip {
+  width: auto;
+  max-width: 150px;
+  gap: 4px;
+  padding: 0 8px 0 10px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.pdf-edit-pill__chip-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pdf-edit-pill__stepper {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.pdf-edit-pill__stepper .embedpdf-floating-btn {
+  width: 28px;
+}
+
+.pdf-edit-pill__menu .pdf-edit-pill__size {
+  width: auto;
+  min-width: 34px;
+  padding: 0 4px;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.pdf-edit-pill__swatch {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 2px var(--c-floating-menu-bg),
+    0 0 0 3px rgba(255, 255, 255, 0.55);
+}
+
+.pdf-edit-pill__sizes {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2px;
+}
+
+.pdf-edit-pill__sizes .mantine-Menu-item {
+  justify-content: center;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  padding: 6px 10px;
+}
+
+.pdf-edit-pill__fonts {
+  max-height: 320px;
+  min-width: 200px;
+  overflow-y: auto;
+}
+
+/* A disabled button swallows pointer events, so this wrapper holds the hover
+   that shows why it is off. */
+.pdf-edit-pill__tip-target {
+  display: inline-flex;
+}
+
+/* A dropdown trigger: its icon plus a caret, which marks it as opening
+   something rather than acting at once. */
+.pdf-edit-pill__menu
+  .pdf-edit-pill__trigger:not(.pdf-edit-pill__chip):not(.pdf-edit-pill__size) {
+  width: auto;
+  gap: 1px;
+  padding: 0 3px 0 7px;
+}
+
+.pdf-edit-pill__caret {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+/* Marked while its dropdown is open, so the two read as one. */
+.pdf-edit-pill__menu .embedpdf-floating-btn[data-open="true"] {
+  background-color: rgba(255, 255, 255, 0.16);
+  color: var(--c-text-on-primary);
+}
+
+/* Panels share one inset, so every dropdown off the bar sits alike. */
+.mantine-Popover-dropdown.pdf-edit-pill__dropdown {
+  padding: 10px;
+}
+
+.pdf-edit-pill__sizes .mantine-Menu-item[data-current="true"] {
+  font-weight: 700;
+  color: var(--c-primary);
+}

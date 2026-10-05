@@ -9,6 +9,7 @@ import { ImageHandle } from "@app/tools/pdfTextEditor/components/ImageHandle";
 import { AnnotationOutline } from "@app/tools/pdfTextEditor/components/AnnotationOutline";
 import { DisplayTransform } from "@app/tools/pdfTextEditor/model/DisplayTransform";
 import { PageGuides } from "@app/tools/pdfTextEditor/components/PageRulers";
+import { LockBadge } from "@app/tools/pdfTextEditor/components/LockBadge";
 import { useDevicePixelRatio } from "@app/tools/pdfTextEditor/hooks/useDevicePixelRatio";
 
 interface PageViewProps {
@@ -19,6 +20,11 @@ interface PageViewProps {
   /** Fires when the page's bitmap finishes its first render. */
   onFirstRendered?: (pageIndex: number) => void;
   scale: number;
+  /**
+   * Hosted inside a viewer page: fill the host box and stay transparent until
+   * painted, so the host's own render stands in while this page loads.
+   */
+  embedded?: boolean;
   widthMode: import("@app/tools/pdfTextEditor/types").WidthMode;
   /** Show the page rulers and alignment guides. */
   showRulers?: boolean;
@@ -38,6 +44,13 @@ interface PageViewProps {
   ) => void;
   /** Wrap-mode reflow request; maxWidthPt in PDF points. */
   onWrapRun?: (pageIndex: number, runId: string, maxWidthPt: number) => void;
+  /** Press anywhere on the page, before any run or image handles it. */
+  onPagePointerDown?: (e: React.PointerEvent<HTMLDivElement>) => void;
+  /** Unlock one locked run or image from its on-page badge. */
+  onUnlock?: (
+    pageIndex: number,
+    target: { runId: string } | { imageId: string },
+  ) => void;
   /** Fires when the user clicks on a non-text area of the page. */
   onPageClick?: (pageIndex: number, pageX: number, pageY: number) => void;
   /** Fires when an image's drag OR resize completes. */
@@ -68,6 +81,7 @@ export function PageView({
   document,
   page,
   scale,
+  embedded = false,
   widthMode,
   showRulers,
   selectedRunIds,
@@ -79,6 +93,8 @@ export function PageView({
   onMoveRun,
   onWrapRun,
   onPageClick,
+  onPagePointerDown,
+  onUnlock,
   onTransformImage,
   onFirstVisible,
   onFirstRendered,
@@ -210,17 +226,22 @@ export function PageView({
 
   return (
     <Box
-      pos="relative"
-      mx="auto"
-      mb="lg"
+      pos={embedded ? "absolute" : "relative"}
+      mx={embedded ? undefined : "auto"}
+      mb={embedded ? undefined : "lg"}
       ref={containerRef}
-      style={{
-        width: raster.width,
-        height: raster.height,
-        boxShadow: "0 0 4px rgba(0,0,0,0.2)",
-        background: "#fff",
-      }}
+      style={
+        embedded
+          ? { inset: 0, zIndex: 20 }
+          : {
+              width: raster.width,
+              height: raster.height,
+              boxShadow: "0 0 4px rgba(0,0,0,0.2)",
+              background: "#fff",
+            }
+      }
       data-testid={`pdf-editor-page-${page.pageIndex}`}
+      onPointerDown={onPagePointerDown}
       onClick={(e) => {
         if (!onPageClick) return;
         // Convert from CSS pixel coords (origin upper-left) into PDF
@@ -243,7 +264,7 @@ export function PageView({
           height: raster.height,
         }}
       />
-      {!nearViewport && (
+      {!nearViewport && !embedded && (
         <Box
           pos="absolute"
           top={0}
@@ -265,7 +286,7 @@ export function PageView({
           Page {page.pageIndex + 1}
         </Box>
       )}
-      {rendering && nearViewport && (
+      {rendering && nearViewport && !embedded && (
         <Box pos="absolute" top={8} right={8} style={{ pointerEvents: "none" }}>
           <Loader size="xs" />
         </Box>
@@ -358,6 +379,34 @@ export function PageView({
             }
           />
         ))}
+        {onUnlock &&
+          page.runs
+            .filter((run) => run.locked)
+            .map((run) => (
+              <LockBadge
+                key={`lock-${run.id}`}
+                rect={run.bounds}
+                pageHeight={page.height}
+                transform={transform}
+                scale={cssScale}
+                onUnlock={() => onUnlock(page.pageIndex, { runId: run.id })}
+                testId={`pdf-editor-unlock-${run.id}`}
+              />
+            ))}
+        {onUnlock &&
+          page.images
+            .filter((image) => image.locked)
+            .map((image) => (
+              <LockBadge
+                key={`lock-${image.id}`}
+                rect={image.bounds}
+                pageHeight={page.height}
+                transform={transform}
+                scale={cssScale}
+                onUnlock={() => onUnlock(page.pageIndex, { imageId: image.id })}
+                testId={`pdf-editor-unlock-${image.id}`}
+              />
+            ))}
         {showRulers && (
           <PageGuides
             pageIndex={page.pageIndex}

@@ -60,7 +60,7 @@ export function SpellcheckControl({
       <Group justify="space-between" wrap="nowrap" gap="sm">
         {/* The row's own text names the switch; passing `label` too would
             print it twice, once either side of the control. */}
-        <Text size="xs" id="pdf-editor-spellcheck-label">
+        <Text size="sm" id="pdf-editor-spellcheck-label">
           {t("pdfTextEditor.spellcheck.enable", "Check spelling as you type")}
         </Text>
         <ToggleSwitch
@@ -71,18 +71,21 @@ export function SpellcheckControl({
           data-testid="pdf-editor-spellcheck-toggle"
         />
       </Group>
-      <Select
-        size="xs"
-        data={options}
-        value={pref.lang}
-        onChange={(value) => setSpellcheckLang(value ?? SPELLCHECK_AUTO)}
-        disabled={!pref.enabled}
-        aria-label={t(
-          "pdfTextEditor.spellcheck.language",
-          "Dictionary language",
-        )}
-        data-testid="pdf-editor-spellcheck-language"
-      />
+      {/* Only offered while on: a disabled picker under an off switch read
+          as a second, broken setting. */}
+      {pref.enabled && (
+        <Select
+          size="xs"
+          data={options}
+          value={pref.lang}
+          onChange={(value) => setSpellcheckLang(value ?? SPELLCHECK_AUTO)}
+          aria-label={t(
+            "pdfTextEditor.spellcheck.language",
+            "Dictionary language",
+          )}
+          data-testid="pdf-editor-spellcheck-language"
+        />
+      )}
     </Stack>
   );
 }

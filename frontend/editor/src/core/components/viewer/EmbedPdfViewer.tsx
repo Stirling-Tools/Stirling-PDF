@@ -1,4 +1,6 @@
 import React, {
+  Suspense,
+  lazy,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -61,6 +63,10 @@ import { useMeasurementManager } from "@app/hooks/useMeasurementManager";
 import { ScaleCalibrationDialog } from "@app/components/viewer/ScaleCalibrationDialog";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
 import { alert } from "@app/components/toast";
+
+const ViewerEditToolbar = lazy(
+  () => import("@app/tools/pdfTextEditor/components/ViewerEditToolbar"),
+);
 
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -584,6 +590,9 @@ const EmbedPdfViewerContent = ({
   // FormFill tool mode — uses PDFBox backend for full-fidelity form handling
   const isFormFillToolActive = (selectedTool as string) === "formFill";
 
+  // Text editing happens on the viewer's own pages rather than a separate canvas.
+  const isTextEditActive = selectedTool === "pdfTextEditor" && !previewFile;
+
   // Form overlays are shown in BOTH modes:
   // - Normal viewer: form overlays visible (PDFium WASM, frontend-only)
   // - formFill tool: form overlays visible (PDFBox, backend)
@@ -756,8 +765,10 @@ const EmbedPdfViewerContent = ({
   const policyEnforcingRef = useRef(false);
   policyEnforcingRef.current = policyEnforcing;
 
-  // Handle keyboard shortcuts
+  // Handle keyboard shortcuts. Text editing brings its own (caret keys,
+  // undo), so the viewer's stand down rather than fight them.
   useEffect(() => {
+    if (isTextEditActive) return;
     const handleKeyDown = (event: KeyboardEvent) => {
       const mod = event.ctrlKey || event.metaKey;
 
@@ -895,6 +906,7 @@ const EmbedPdfViewerContent = ({
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [
+    isTextEditActive,
     isViewerHovered,
     isSearchInterfaceVisible,
     zoomActions,
@@ -1990,6 +2002,11 @@ const EmbedPdfViewerContent = ({
         </Center>
       ) : (
         <>
+          {isTextEditActive && (
+            <Suspense fallback={null}>
+              <ViewerEditToolbar />
+            </Suspense>
+          )}
           {/* EmbedPDF Viewer */}
           <Box
             ref={pdfContainerRef}
@@ -2028,6 +2045,7 @@ const EmbedPdfViewerContent = ({
               enableRedaction={shouldEnableRedaction}
               enableFormFill={shouldEnableFormFill}
               formEditingActive={isFormFillToolActive}
+              textEditFileId={isTextEditActive ? currentFileStableId : null}
               isManualRedactionMode={isManualRedactMode}
               signatureApiRef={signatureApiRef}
               annotationApiRef={annotationApiRef}

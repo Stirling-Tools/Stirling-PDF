@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
 import type {
   TextRunSnapshot,
   WidthMode,
@@ -366,7 +365,6 @@ export function TextRunOverlay({
   onMove,
   onWrap,
 }: TextRunOverlayProps) {
-  const { t } = useTranslation();
   // Subscribed, so toggling the preference re-renders every overlay.
   const spellcheck = useSpellcheckPreference();
   const ref = useRef<HTMLDivElement | null>(null);
@@ -760,14 +758,6 @@ export function TextRunOverlay({
       spellCheck={spellcheck.enabled && focused}
       lang={spellcheckLang ?? undefined}
       data-locked={run.locked ? "true" : undefined}
-      title={
-        run.locked
-          ? t(
-              "pdfTextEditor.run.lockedTitle",
-              "Locked - use the Unlock button to edit",
-            )
-          : undefined
-      }
       onKeyDown={(e) => {
         // A caret parked on the container (a click past the text lands there)
         // makes Firefox insert the keystroke as a sibling of the line blocks,
@@ -1033,12 +1023,10 @@ export function TextRunOverlay({
                 : "transparent",
         caretColor: toCssHex(run.fill),
         // Selected keeps a ring: the 10% tint alone is near-invisible over a
-        // coloured band. Locked gets a muted ring so it does not read as
-        // something you can type into.
+        // coloured band. A locked run draws none: its LockBadge zone owns the
+        // hover, the outline and the way to unlock, so there is one target.
         outline: run.locked
-          ? hovered || selected
-            ? "1px solid rgba(120,120,120,0.55)"
-            : "1px dashed transparent"
+          ? "1px dashed transparent"
           : dragging
             ? "2px solid #2c7be5"
             : selected
@@ -1058,6 +1046,9 @@ export function TextRunOverlay({
               ? "grab"
               : undefined,
         overflow: "hidden",
+        // Locked: inert to the pointer, so the LockBadge zone above it is
+        // the only thing that answers.
+        pointerEvents: run.locked ? "none" : undefined,
       }}
     />
   );

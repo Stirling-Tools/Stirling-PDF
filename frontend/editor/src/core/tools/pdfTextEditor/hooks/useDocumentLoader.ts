@@ -7,6 +7,11 @@ import {
 } from "@app/services/pdfiumService";
 import type { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
 import type { PageSnapshot } from "@app/tools/pdfTextEditor/types";
+import { DisplayTransform } from "@app/tools/pdfTextEditor/model/DisplayTransform";
+import {
+  sharedEngineEnabled,
+  viewerDocumentPtr,
+} from "@app/services/sharedPdfiumEngine";
 
 const EAGER_PAGE_LIMIT = 5;
 
@@ -28,15 +33,30 @@ export function useDocumentLoader(store: EditorStore) {
       });
       try {
         await yieldToBrowser();
-        const bytes = new Uint8Array(await file.arrayBuffer());
-        if (!store.isCurrentLoad(token)) return;
-        store.setProgress({
-          stage: "Parsing PDF",
-          current: 0,
-          total: 0,
-        });
-        await yieldToBrowser();
-        const doc = await EditorDocument.open(bytes, password);
+        const openStart = performance.now();
+        // The viewer's own open document, when it runs on the shared module:
+        // no second copy of the bytes, no second parse.
+        const borrowed =
+          sharedEngineEnabled() && password === undefined
+            ? await viewerDocumentPtr((file as { fileId?: string }).fileId)
+            : null;
+        let doc: EditorDocument;
+        if (borrowed) {
+          doc = await EditorDocument.adopt(borrowed);
+        } else {
+          const bytes = new Uint8Array(await file.arrayBuffer());
+          if (!store.isCurrentLoad(token)) return;
+          store.setProgress({
+            stage: "Parsing PDF",
+            current: 0,
+            total: 0,
+          });
+          await yieldToBrowser();
+          doc = await EditorDocument.open(bytes, password);
+        }
+        console.info(
+          `[spike] editor document ${borrowed ? "adopted from viewer" : "opened"} in ${Math.round(performance.now() - openStart)}ms`,
+        );
         if (!store.isCurrentLoad(token)) {
           // A newer load superseded us before we installed our doc - free
           // it ourselves (setDocument never took ownership).
@@ -47,7 +67,12 @@ export function useDocumentLoader(store: EditorStore) {
           }
           return;
         }
+        const tSet = performance.now();
         await store.setDocument(doc);
+        console.info(
+          `[spike] setDocument ${Math.round(performance.now() - tSet)}ms`,
+        );
+        const tEager = performance.now();
 
         const total = doc.pageCount;
         const eager = Math.min(EAGER_PAGE_LIMIT, total);
@@ -76,21 +101,37 @@ export function useDocumentLoader(store: EditorStore) {
             display: page.display.toData(),
           });
         }
+        console.info(
+          `[spike] eager ${eager} pages read in ${Math.round(performance.now() - tEager)}ms`,
+        );
+        const tRest = performance.now();
+        // Unread pages are stubbed from their size alone; the real page (and
+        // its crop/rotation transform) loads on first visibility.
         for (let i = eager; i < total; i++) {
-          const page = doc.page(i);
+          const size = doc.pageSize(i);
           snapshots.push({
             pageIndex: i,
-            width: page.width,
-            height: page.height,
+            width: size.width,
+            height: size.height,
             dirty: false,
             revision: 0,
             runs: [],
             images: [],
-            display: page.display.toData(),
+            display: DisplayTransform.identity(
+              size.width,
+              size.height,
+            ).toData(),
           });
         }
+        console.info(
+          `[spike] ${total - eager} page stubs in ${Math.round(performance.now() - tRest)}ms`,
+        );
         if (!store.isCurrentLoad(token)) return;
+        const tPub = performance.now();
         store.publishPages(snapshots);
+        console.info(
+          `[spike] publishPages ${Math.round(performance.now() - tPub)}ms`,
+        );
         store.setProgress({
           stage: "Ready",
           current: total,
@@ -141,6 +182,9 @@ export function ensureAllPagesRead(store: EditorStore): void {
     const page = doc.page(p.pageIndex);
     return {
       ...p,
+      width: page.width,
+      height: page.height,
+      display: page.display.toData(),
       revision: page.revision,
       runs: page.runs.map((r) => r.snapshot()),
       images: page.images.map((img) => img.snapshot()),
@@ -168,6 +212,9 @@ export function ensurePageRead(store: EditorStore, pageIndex: number): void {
     p.pageIndex === pageIndex
       ? {
           ...p,
+          width: page.width,
+          height: page.height,
+          display: page.display.toData(),
           revision: page.revision,
           runs: page.runs.map((r) => r.snapshot()),
           images: page.images.map((img) => img.snapshot()),

@@ -1,0 +1,44 @@
+.pdf-action-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px 2px;
+  min-width: 232px;
+}
+
+.pdf-action-grid__section + .pdf-action-grid__section {
+  padding-top: 10px;
+  border-top: 1px solid var(--c-border-subtle);
+}
+
+.pdf-action-grid__heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+  padding: 0 4px;
+}
+
+/* Matches the menus' section labels, so panels and menus read as one family. */
+.pdf-action-grid__label {
+  color: var(--c-text-muted);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 500;
+}
+
+.pdf-action-grid__hint {
+  color: var(--c-text-subtle);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.pdf-action-grid__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
+.pdf-action-grid__cell {
+  display: inline-flex;
+}

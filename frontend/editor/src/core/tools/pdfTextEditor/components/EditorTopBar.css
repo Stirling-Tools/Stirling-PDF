@@ -72,3 +72,45 @@
     max-width: 8rem;
   }
 }
+
+/* As a mode strip under the viewer's toolbar: a faint tint of the brand
+   colour sets it apart from the bar above without competing with the page. */
+.pdf-editor-topbar[data-tinted="true"] {
+  background: color-mix(in srgb, var(--c-primary) 5%, var(--c-bg-raised));
+  border-bottom-color: color-mix(
+    in srgb,
+    var(--c-primary) 18%,
+    var(--c-border-subtle)
+  );
+}
+
+/* The mode marker at the strip's leading end. */
+.pdf-editor-topbar__mode {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px 0 8px;
+  margin-right: 0.25rem;
+  border-radius: 999px;
+  background: var(--c-primary-subtle);
+  color: var(--c-primary);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Disabled controls fade in place; a filled box read as a different control.
+   Specific enough to beat the shared dark-theme disabled surface. */
+[data-theme]
+  .pdf-editor-topbar
+  .sui-btn.mantine-Button-root:disabled:not([data-loading]),
+[data-theme]
+  .pdf-editor-topbar
+  .sui-btn.mantine-Button-root[data-disabled]:not([data-loading]),
+.pdf-editor-topbar .mantine-Button-root:disabled,
+.pdf-editor-topbar .mantine-Button-root[data-disabled] {
+  background: transparent;
+  color: var(--c-text-subtle);
+  opacity: 0.6;
+}

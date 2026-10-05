@@ -6,6 +6,7 @@ import {
   isFocusInFormField,
   pageElements,
 } from "@app/tools/pdfTextEditor/util/dom";
+import { changeSelectionZOrder } from "@app/tools/pdfTextEditor/hooks/useToolbarController";
 
 interface KeyboardShortcutCallbacks {
   store: EditorStore;
@@ -43,6 +44,26 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
     function onMetaKey(e: KeyboardEvent) {
       const meta = e.ctrlKey || e.metaKey;
       if (!meta) return;
+      // Restacking, as in other editors: ] forward, [ backward, Shift to the
+      // end. Read by physical key, since Shift turns ] into } on most layouts.
+      if (e.code === "BracketRight" || e.code === "BracketLeft") {
+        if (isFocusInContentEditable()) return;
+        const sel = store.selection.value;
+        if (sel.runIds.length === 0 && sel.imageIds.length === 0) return;
+        e.preventDefault();
+        const up = e.code === "BracketRight";
+        changeSelectionZOrder(
+          store,
+          up
+            ? e.shiftKey
+              ? "to-front"
+              : "forward"
+            : e.shiftKey
+              ? "to-back"
+              : "backward",
+        );
+        return;
+      }
       // Normalise: with Shift or CapsLock the letter arrives UPPERCASE.
       switch (e.key.toLowerCase()) {
         case "z":
