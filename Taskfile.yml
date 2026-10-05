@@ -2,6 +2,7 @@ version: '3'
 
 output: prefixed
 
+# Loaded for every task. Move any STIRLING_CHECK_JOBS override from root .env.local to .task/.env.local.
 dotenv: ['.task/.env.local', '.task/.env']
 
 vars:

@@ -30,7 +30,7 @@ Closes #(issue_number)
 
 ### Translations (if applicable)
 
-- [ ] I ran [`scripts/counter_translation.py`](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/docs/counter_translation.md)
+- [ ] I ran [`scripts/counter_translation_v3.py`](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/docs/counter_translation.md)
 
 ### UI Changes (if applicable)
 
