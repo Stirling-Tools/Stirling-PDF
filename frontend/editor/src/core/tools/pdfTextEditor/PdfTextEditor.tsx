@@ -11,8 +11,10 @@ import { useFileContext, useFileSelection } from "@app/contexts/FileContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
 import type { FileId } from "@app/types/file";
+import type { ToolId } from "@app/types/toolId";
 import type { BaseToolProps } from "@app/types/tool";
 import { useEditorStore } from "@app/tools/pdfTextEditor/hooks/useEditorStore";
+import { useEditorOcr } from "@app/tools/pdfTextEditor/hooks/useEditorOcr";
 import { setEditorSession } from "@app/tools/pdfTextEditor/store/EditorSession";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import {
@@ -152,7 +154,12 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   // file it came from, or add it if the document was opened from disk. Without
   // this the editor is an island and the next tool runs on the pre-edit bytes.
   const applyToWorkbench = useCallback(
-    async (blob: Blob, filename: string) => {
+    async (
+      blob: Blob,
+      filename: string,
+      toolId: ToolId = "pdfTextEditor",
+      isCurrent: () => boolean = () => true,
+    ): Promise<File | null> => {
       const edited = new File([blob], filename, { type: "application/pdf" });
       const sourceId = sourceFileIdRef.current;
       const parentStub = sourceId
@@ -168,23 +175,30 @@ export default function PdfTextEditor(_props: BaseToolProps) {
           const { stirlingFiles, stubs } = await createStirlingFilesAndStubs(
             [edited],
             parentStub,
-            "pdfTextEditor",
+            toolId,
           );
+          if (!isCurrent()) return null;
           assertFilesNotBlocked(policyIds);
           await consumeFiles([sourceId], stirlingFiles, stubs);
           // Claim the replacement before releasing the hold, otherwise the
           // editor sees an unfamiliar selection and re-opens the file it just
           // wrote, throwing away undo history.
-          if (stirlingFiles[0]) adoptFile(stirlingFiles[0]);
-          setSourceFile(stubs[0]?.id ?? null);
-          return;
+          if (isCurrent()) {
+            if (stirlingFiles[0]) adoptFile(stirlingFiles[0]);
+            setSourceFile(stubs[0]?.id ?? null);
+          }
+          return stirlingFiles[0] ?? null;
         }
+        if (!isCurrent()) return null;
         const added = await addFiles([edited], {
           selectFiles: true,
           derivedFromTool: true,
         });
-        if (added[0]) adoptFile(added[0]);
-        setSourceFile(added[0]?.fileId ?? null);
+        if (isCurrent()) {
+          if (added[0]) adoptFile(added[0]);
+          setSourceFile(added[0]?.fileId ?? null);
+        }
+        return added[0] ?? null;
       } finally {
         setApplying(false);
       }
@@ -192,9 +206,29 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     [addFiles, adoptFile, consumeFiles, selectors, setSourceFile],
   );
 
+  const applyOcrResult = useCallback(
+    async (file: File, isCurrent: () => boolean) => {
+      const stored = await applyToWorkbench(file, file.name, "ocr", isCurrent);
+      if (!stored || !isCurrent()) return;
+      setOpenedFileName(stored.name);
+      const loading = load(stored);
+      const token = store.currentLoadToken;
+      await loading;
+      if (mountedRef.current && store.isCurrentLoad(token)) pinWorkbench();
+    },
+    [applyToWorkbench, load, pinWorkbench, store],
+  );
+  const ocr = useEditorOcr({
+    store,
+    fileName: openedFileName,
+    fileId: sourceFileId,
+    onComplete: applyOcrResult,
+  });
+
   const doSave = useCallback(
     async (download: boolean) => {
-      if (!store.document || savingRef.current) return;
+      if (!store.document || savingRef.current || store.getState().loading)
+        return;
       savingRef.current = true;
       store.setError(null);
       const sourceId = sourceFileIdRef.current;
@@ -236,7 +270,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   const runSave = useCallback(
     async (download: boolean) => {
       const doc = store.document;
-      if (!doc || savingRef.current) return;
+      if (!doc || savingRef.current || store.getState().loading) return;
       // Re-evaluate on EVERY save: the ack only covers the exact risk set
       // the user saw. A new risk appearing later must warn again.
       const risks = detectSaveRisks(doc);
@@ -668,6 +702,11 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     onSetGroupingMode: (mode: GroupingMode) => store.setGroupingMode(mode),
     onSetWidthMode: (m: WidthMode) => store.setWidthMode(m),
     onSetShowRulers: (show: boolean) => store.setShowRulers(show),
+    onRunOcr: () => {
+      if (!savingRef.current && !applying) void ocr.runOcr();
+    },
+    ocrRunning: ocr.running,
+    ocrAvailable: state.loading && !ocr.running ? null : ocr.available,
   };
 
   return (

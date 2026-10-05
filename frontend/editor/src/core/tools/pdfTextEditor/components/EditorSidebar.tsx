@@ -7,7 +7,10 @@ import { useSelectionGeometry } from "@app/tools/pdfTextEditor/hooks/useSelectio
 import { DocumentInspector } from "@app/tools/pdfTextEditor/components/inspector/DocumentInspector";
 import { SelectionInspector } from "@app/tools/pdfTextEditor/components/inspector/SelectionInspector";
 import { analyzePageFonts } from "@app/tools/pdfTextEditor/util/pageFonts";
-import { ScanHint } from "@app/tools/pdfTextEditor/components/ScanHint";
+import {
+  ScanHint,
+  type ScanHintProps,
+} from "@app/tools/pdfTextEditor/components/ScanHint";
 import type { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
 import type {
   EditorViewState,
@@ -19,7 +22,7 @@ import type {
   WidthMode,
 } from "@app/tools/pdfTextEditor/types";
 
-interface SidebarProps {
+interface SidebarProps extends Omit<ScanHintProps, "pages"> {
   store: EditorStore;
   state: EditorViewState;
   selection: SelectionState;
@@ -46,6 +49,9 @@ export function EditorSidebar({
   onSetGroupingMode,
   onSetWidthMode,
   onSetShowRulers,
+  onRunOcr,
+  ocrRunning,
+  ocrAvailable,
   initialTab = "selected",
 }: SidebarProps) {
   const { t } = useTranslation();
@@ -118,7 +124,12 @@ export function EditorSidebar({
               onUngroup={onUngroup}
             />
           ) : (
-            <NothingSelected pages={state.pages} />
+            <NothingSelected
+              pages={state.pages}
+              onRunOcr={onRunOcr}
+              ocrRunning={ocrRunning}
+              ocrAvailable={ocrAvailable}
+            />
           )}
         </Tabs.Panel>
         <Tabs.Panel value="document">
@@ -138,7 +149,7 @@ export function EditorSidebar({
 }
 
 /** What the Selected tab shows before the user has picked anything. */
-function NothingSelected({ pages }: { pages: EditorViewState["pages"] }) {
+function NothingSelected(props: ScanHintProps) {
   const { t } = useTranslation();
   return (
     <Center p="xl" data-testid="pdf-editor-nothing-selected">
@@ -157,7 +168,7 @@ function NothingSelected({ pages }: { pages: EditorViewState["pages"] }) {
             "Click any text, image or shape on the page to edit it here.",
           )}
         </Text>
-        <ScanHint pages={pages} />
+        <ScanHint {...props} />
       </Stack>
     </Center>
   );

@@ -1,6 +1,7 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import path from "path";
+import { readFile } from "node:fs/promises";
 import {
   downloadBytes,
   saveAndDownload,
@@ -646,20 +647,54 @@ test("dragging a scanned block moves its text off the scan", async ({
 });
 
 // A scan nobody OCR'd has no text to edit; say so and offer the fix.
-test("a scan without OCR points the user at the OCR tool", async ({ page }) => {
+test("a scan without OCR runs OCR in one click and reloads editable text", async ({
+  page,
+}) => {
+  const ocrPdf = await readFile(FIX("scanned-ocr-hocr.pdf"));
+  let requests = 0;
+  await page.route("**/api/v1/ui-data/ocr-pdf", (route) =>
+    route.fulfill({ json: { languages: ["eng", "osd"] } }),
+  );
+  await page.route("**/api/v1/misc/ocr-pdf", async (route) => {
+    requests++;
+    const body = route.request().postDataBuffer()!.toString("latin1");
+    expect(body).toContain('name="fileInput"');
+    expect(body).toContain('name="languages"\r\n\r\neng');
+    expect(body).toContain('name="ocrType"\r\n\r\nskip-text');
+    expect(body).toContain('name="ocrRenderType"\r\n\r\nhocr');
+    await route.fulfill({ contentType: "application/pdf", body: ocrPdf });
+  });
   await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
   await expect(page.getByTestId("pdf-editor-root")).toBeVisible({
     timeout: 30_000,
   });
   await open(page, "scanned-no-ocr.pdf");
   await expect(page.getByTestId("pdf-editor-scan-hint")).toBeVisible();
-  await page.getByTestId("pdf-editor-scan-hint-ocr").click();
-  await expect(page).toHaveURL(/\/ocr/);
-  // Dropped straight into the editor, the file still landed in the library,
-  // so OCR opens with it already selected.
-  await expect(page.getByText("scanned-no-ocr.pdf").first()).toBeVisible({
-    timeout: 15_000,
+  await expect(page.getByTestId("pdf-editor-scan-hint-ocr")).toBeEnabled();
+  await page.getByTestId("pdf-editor-root").screenshot({
+    path: test.info().outputPath("ocr-sidebar.png"),
   });
+  await page.screenshot({ path: test.info().outputPath("ocr-editor.png") });
+  await page.getByTestId("pdf-editor-scan-hint-ocr").click();
+  await expect
+    .poll(
+      async () => (await runs(page)).filter((r) => r.renderMode === 3).length,
+      { timeout: 60_000 },
+    )
+    .toBeGreaterThan(0);
+  await expect(page.getByTestId("pdf-editor-scan-hint")).toBeHidden();
+  await expect(page).toHaveURL(/\/pdf-text-editor/);
+  expect(requests).toBe(1);
+  const run = (await runs(page)).find((r) => r.text.includes("Jane Example"))!;
+  expect(run).toBeDefined();
+  await replaceRunText(
+    page,
+    run.id,
+    run.text.replace("Jane Example", "Alex Example"),
+  );
+  expect((await runs(page)).some((r) => r.text.includes("Alex Example"))).toBe(
+    true,
+  );
 });
 
 // A shorter word must not leave a hole: the scanned words after it slide left

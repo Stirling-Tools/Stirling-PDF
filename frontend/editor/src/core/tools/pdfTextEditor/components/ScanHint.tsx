@@ -1,7 +1,6 @@
 import { Stack, Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
-import { useToolWorkflowActions } from "@app/contexts/ToolWorkflowContext";
 import type { PageSnapshot } from "@app/tools/pdfTextEditor/types";
 
 // A page that is one big picture with no text on it: a scan nobody has OCR'd.
@@ -13,10 +12,21 @@ function isUnreadScan(page: PageSnapshot): boolean {
   );
 }
 
-/** Points a user at OCR when the pages they opened are scans with no text. */
-export function ScanHint({ pages }: { pages: PageSnapshot[] }) {
+/** Offers OCR when the pages they opened are scans with no text. */
+export interface ScanHintProps {
+  pages: PageSnapshot[];
+  onRunOcr: () => void;
+  ocrRunning: boolean;
+  ocrAvailable: boolean | null;
+}
+
+export function ScanHint({
+  pages,
+  onRunOcr,
+  ocrRunning,
+  ocrAvailable,
+}: ScanHintProps) {
   const { t } = useTranslation();
-  const { handleToolSelect } = useToolWorkflowActions();
   const scans = pages.filter(isUnreadScan).length;
   if (scans === 0) return null;
   return (
@@ -33,11 +43,21 @@ export function ScanHint({ pages }: { pages: PageSnapshot[] }) {
       <Button
         size="sm"
         variant="secondary"
-        onClick={() => handleToolSelect("ocr")}
+        onClick={onRunOcr}
+        loading={ocrRunning}
+        disabled={!ocrAvailable}
         data-testid="pdf-editor-scan-hint-ocr"
       >
         {t("pdfTextEditor.inspector.runOcr", "Run OCR")}
       </Button>
+      {ocrAvailable === false && !ocrRunning && (
+        <Text size="xs" c="dimmed" ta="center">
+          {t(
+            "pdfTextEditor.inspector.ocrUnavailable",
+            "OCR is unavailable on this server.",
+          )}
+        </Text>
+      )}
     </Stack>
   );
 }
