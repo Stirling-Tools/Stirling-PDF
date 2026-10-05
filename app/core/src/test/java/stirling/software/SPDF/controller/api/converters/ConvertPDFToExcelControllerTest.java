@@ -44,7 +44,7 @@ class ConvertPDFToExcelControllerTest {
     @BeforeEach
     void setUp() throws Exception {
         // These cover the legacy converters; Stirling Office Convert has its own tests.
-        lenient().when(officeConversionService.legacy()).thenReturn(true);
+        lenient().when(officeConversionService.legacy(null)).thenReturn(true);
         lenient()
                 .when(tempFileManager.createManagedTempFile(anyString()))
                 .thenAnswer(
@@ -85,7 +85,7 @@ class ConvertPDFToExcelControllerTest {
                                             Mockito.eq(true)))
                     .thenReturn(List.of(1));
 
-            ResponseEntity<Resource> response = controller.pdfToExcel(request);
+            ResponseEntity<Resource> response = controller.pdfToExcel(request, null);
 
             // tabula may or may not find tables in an empty page
             assertNotNull(response);

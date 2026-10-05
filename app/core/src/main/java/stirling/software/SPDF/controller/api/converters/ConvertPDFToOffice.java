@@ -11,6 +11,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -56,11 +57,13 @@ public class ConvertPDFToOffice {
             summary = "Convert PDF to Presentation format",
             description = "This endpoint converts a given PDF file to a Presentation format.")
     public ResponseEntity<Resource> processPdfToPresentation(
-            @ModelAttribute PdfToPresentationRequest request)
+            @ModelAttribute PdfToPresentationRequest request,
+            @RequestParam(value = "useStirlingOfficeConvert", required = false)
+                    Boolean useStirlingOfficeConvert)
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
         String outputFormat = request.getOutputFormat();
-        if (officeConversionService.replacesLibreOffice()) {
+        if (officeConversionService.replacesLibreOffice(useStirlingOfficeConvert)) {
             return convert(
                     inputFile,
                     outputFormat,
@@ -86,7 +89,9 @@ public class ConvertPDFToOffice {
             summary = "Convert PDF to Text or RTF format",
             description = "This endpoint converts a given PDF file to Text or RTF format.")
     public ResponseEntity<Resource> processPdfToRTForTXT(
-            @ModelAttribute PdfToTextOrRTFRequest request)
+            @ModelAttribute PdfToTextOrRTFRequest request,
+            @RequestParam(value = "useStirlingOfficeConvert", required = false)
+                    Boolean useStirlingOfficeConvert)
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
         String outputFormat = request.getOutputFormat();
@@ -94,8 +99,8 @@ public class ConvertPDFToOffice {
         // Legacy text came from PDFBox, not LibreOffice, so it never needs the fallback.
         boolean officeConvert =
                 plainText
-                        ? !officeConversionService.legacy()
-                        : officeConversionService.replacesLibreOffice();
+                        ? !officeConversionService.legacy(useStirlingOfficeConvert)
+                        : officeConversionService.replacesLibreOffice(useStirlingOfficeConvert);
         if (officeConvert) {
             return convert(
                     inputFile,
@@ -130,11 +135,14 @@ public class ConvertPDFToOffice {
     @Operation(
             summary = "Convert PDF to Word document",
             description = "This endpoint converts a given PDF file to a Word document format.")
-    public ResponseEntity<Resource> processPdfToWord(@ModelAttribute PdfToWordRequest request)
+    public ResponseEntity<Resource> processPdfToWord(
+            @ModelAttribute PdfToWordRequest request,
+            @RequestParam(value = "useStirlingOfficeConvert", required = false)
+                    Boolean useStirlingOfficeConvert)
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
         String outputFormat = request.getOutputFormat();
-        if (officeConversionService.replacesLibreOffice()) {
+        if (officeConversionService.replacesLibreOffice(useStirlingOfficeConvert)) {
             return convert(
                     inputFile,
                     outputFormat,

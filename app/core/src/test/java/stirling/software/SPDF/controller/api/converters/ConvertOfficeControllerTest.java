@@ -198,7 +198,7 @@ class ConvertOfficeControllerTest {
         @Test
         @DisplayName("converts handled formats without LibreOffice")
         void convertsInProcess() throws Exception {
-            when(officeToPdfService.handles("docx")).thenReturn(true);
+            when(officeToPdfService.handles("docx", null)).thenReturn(true);
             Mockito.doAnswer(
                             inv -> {
                                 Files.writeString(inv.getArgument(1), "%PDF in process");
@@ -220,7 +220,7 @@ class ConvertOfficeControllerTest {
         @Test
         @DisplayName("retries with LibreOffice when the in-process conversion fails")
         void fallsBackToLibreOffice() throws Exception {
-            when(officeToPdfService.handles("docx")).thenReturn(true);
+            when(officeToPdfService.handles("docx", null)).thenReturn(true);
             Mockito.doThrow(new IOException("unreadable"))
                     .when(officeToPdfService)
                     .convert(any(Path.class), any(Path.class));
@@ -252,7 +252,7 @@ class ConvertOfficeControllerTest {
         @Test
         @DisplayName("rethrows when LibreOffice cannot take over")
         void noFallback() throws Exception {
-            when(officeToPdfService.handles("docx")).thenReturn(true);
+            when(officeToPdfService.handles("docx", null)).thenReturn(true);
             Mockito.doThrow(new IOException("unreadable"))
                     .when(officeToPdfService)
                     .convert(any(Path.class), any(Path.class));
@@ -509,7 +509,7 @@ class ConvertOfficeControllerTest {
                                                 any(TempFile.class), anyString()))
                         .thenReturn(expected);
 
-                ResponseEntity<Resource> response = controller.processFileToPDF(generalFile);
+                ResponseEntity<Resource> response = controller.processFileToPDF(generalFile, null);
 
                 assertThat(response).isSameAs(expected);
                 wr.verify(
@@ -538,7 +538,7 @@ class ConvertOfficeControllerTest {
                 ProcessExecutor executor = ProcessExecutor.getInstance(Processes.LIBRE_OFFICE);
                 when(executor.runCommandWithOutputHandling(any(List.class))).thenReturn(result);
 
-                assertThatThrownBy(() -> controller.processFileToPDF(generalFile))
+                assertThatThrownBy(() -> controller.processFileToPDF(generalFile, null))
                         .isInstanceOf(IllegalStateException.class);
 
                 // a failed conversion never reaches the document factory

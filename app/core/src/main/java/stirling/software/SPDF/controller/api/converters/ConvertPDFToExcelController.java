@@ -18,6 +18,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -64,7 +65,10 @@ public class ConvertPDFToExcelController {
             description =
                     "Extracts tabular data from each page of a PDF and writes it into an Excel"
                             + " workbook, one sheet per table.")
-    public ResponseEntity<Resource> pdfToExcel(@ModelAttribute PDFWithPageNums request)
+    public ResponseEntity<Resource> pdfToExcel(
+            @ModelAttribute PDFWithPageNums request,
+            @RequestParam(value = "useStirlingOfficeConvert", required = false)
+                    Boolean useStirlingOfficeConvert)
             throws Exception {
         String baseName =
                 GeneralUtils.removeExtension(request.getFileInput().getOriginalFilename());
@@ -73,7 +77,7 @@ public class ConvertPDFToExcelController {
         try (PDDocument document = pdfDocumentFactory.load(request)) {
             List<Integer> pages = request.getPageNumbersList(document, true);
             boolean written =
-                    officeConversionService.legacy()
+                    officeConversionService.legacy(useStirlingOfficeConvert)
                             ? writeTabula(document, pages, tempOut.getPath())
                             : writeOfficeConvert(document, pages, tempOut.getPath());
             if (!written) {

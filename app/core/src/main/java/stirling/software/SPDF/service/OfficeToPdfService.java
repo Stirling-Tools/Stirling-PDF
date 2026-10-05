@@ -50,7 +50,11 @@ public class OfficeToPdfService {
 
     /** Whether files with this extension convert in process rather than with LibreOffice. */
     public boolean handles(String extension) {
-        return officeConversionService.replacesLibreOffice()
+        return handles(extension, null);
+    }
+
+    public boolean handles(String extension, Boolean choice) {
+        return officeConversionService.replacesLibreOffice(choice)
                 && OfficeToPdf.Format.recognises(Path.of("file." + extension));
     }
 

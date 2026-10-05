@@ -17,6 +17,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
@@ -67,6 +68,11 @@ public class ConvertOfficeController {
     }
 
     public File convertToPdf(MultipartFile inputFile) throws IOException, InterruptedException {
+        return convertToPdf(inputFile, null);
+    }
+
+    public File convertToPdf(MultipartFile inputFile, Boolean useStirlingOfficeConvert)
+            throws IOException, InterruptedException {
         // Check for valid file extension and sanitize filename
         String originalFilename = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
         if (originalFilename == null || originalFilename.isBlank()) {
@@ -91,7 +97,7 @@ public class ConvertOfficeController {
         Path inputPath = workDir.resolve(baseName + "." + extensionLower);
         Path outputPath = workDir.resolve(baseName + ".pdf");
 
-        if (officeToPdfService.handles(extensionLower)) {
+        if (officeToPdfService.handles(extensionLower, useStirlingOfficeConvert)) {
             if (convertInProcess(inputFile, workDir, inputPath, outputPath)) {
                 return outputPath.toFile();
             }
@@ -254,13 +260,16 @@ public class ConvertOfficeController {
             description =
                     "This endpoint converts a given file to a PDF using Stirling Office Convert or"
                             + " LibreOffice")
-    public ResponseEntity<Resource> processFileToPDF(@ModelAttribute GeneralFile generalFile)
+    public ResponseEntity<Resource> processFileToPDF(
+            @ModelAttribute GeneralFile generalFile,
+            @RequestParam(value = "useStirlingOfficeConvert", required = false)
+                    Boolean useStirlingOfficeConvert)
             throws Exception {
         MultipartFile inputFile = generalFile.getFileInput();
         File file = null;
         TempFile tempOut = null;
         try {
-            file = convertToPdf(inputFile);
+            file = convertToPdf(inputFile, useStirlingOfficeConvert);
 
             tempOut = tempFileManager.createManagedTempFile(".pdf");
             try (PDDocument doc = pdfDocumentFactory.load(file)) {

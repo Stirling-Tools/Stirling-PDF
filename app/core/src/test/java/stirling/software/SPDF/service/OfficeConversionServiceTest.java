@@ -51,6 +51,15 @@ class OfficeConversionServiceTest {
     }
 
     @Test
+    void aPerRequestChoiceOverridesTheSetting() {
+        assertThat(service.replacesLibreOffice(true)).isTrue();
+        assertThat(service.replacesLibreOffice(null)).isFalse();
+        properties.getSystem().setStirlingOfficeConversion(true);
+        assertThat(service.replacesLibreOffice(false)).isFalse();
+        assertThat(service.replacesLibreOffice(null)).isTrue();
+    }
+
+    @Test
     void convertsPdfToWord() throws Exception {
         Path docx = dir.resolve("out.docx");
         try (PDDocument pdf = textPdf("Hello from Stirling")) {

@@ -51,9 +51,16 @@ public class OfficeConversionService {
         return FORMATS.containsKey(format) || "ppt".equals(format);
     }
 
-    /** Whether the admin chose the legacy converters (LibreOffice, Tabula, plain text). */
+    /** Whether the legacy converters (LibreOffice, Tabula, plain text) apply. */
     public boolean legacy() {
-        return !applicationProperties.getSystem().isStirlingOfficeConversion();
+        return legacy(null);
+    }
+
+    /** {@code choice} is the caller's per-request pick; null follows the admin setting. */
+    public boolean legacy(Boolean choice) {
+        return choice != null
+                ? !choice
+                : !applicationProperties.getSystem().isStirlingOfficeConversion();
     }
 
     public boolean libreOfficeAvailable() {
@@ -63,6 +70,10 @@ public class OfficeConversionService {
     /** Stirling Office Convert replaces LibreOffice only when the admin enables it. */
     public boolean replacesLibreOffice() {
         return !legacy();
+    }
+
+    public boolean replacesLibreOffice(Boolean choice) {
+        return !legacy(choice);
     }
 
     public OfficeConvert.Settings settings() {
