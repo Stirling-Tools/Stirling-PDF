@@ -18,15 +18,15 @@ Closes #(issue_number)
 
 - [ ] I have read the [Contribution Guidelines](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/CONTRIBUTING.md)
 - [ ] I have read the [Stirling-PDF Developer Guide](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/DeveloperGuide.md) (if applicable)
-- [ ] I have read the [How to add new languages to Stirling-PDF](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/devGuide/HowToAddNewLanguage.md) (if applicable)
+- [ ] I have read the [How to add new languages to Stirling-PDF](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/docs/developer/HowToAddNewLanguage.md) (if applicable)
 - [ ] I have performed a self-review of my own code
-- [ ] Every comment I added says something the code does not ([guide](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/devGuide/CODE_COMMENTS.md))
+- [ ] Every comment I added says something the code does not ([guide](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/docs/developer/CODE_COMMENTS.md))
 - [ ] My changes generate no new warnings
 
 ### Documentation
 
 - [ ] I have updated relevant docs on [Stirling-PDF's doc repo](https://github.com/Stirling-Tools/Stirling-Tools.github.io/blob/main/docs/) (if functionality has heavily changed)
-- [ ] I have read the section [Add New Translation Tags](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/devGuide/HowToAddNewLanguage.md#add-new-translation-tags) (for new translation tags only)
+- [ ] I have read the section [Add New Translation Tags](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/docs/developer/HowToAddNewLanguage.md#add-new-translation-tags) (for new translation tags only)
 
 ### Translations (if applicable)
 

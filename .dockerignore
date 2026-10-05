@@ -74,8 +74,6 @@ test_*.pdf
 # Testing and documentation (not needed in build)
 testing/
 docs/
-devGuide/
-devTools/
 *.md
 README*
 

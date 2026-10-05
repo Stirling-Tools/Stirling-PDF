@@ -58,7 +58,6 @@ updates:
 
   - package-ecosystem: npm
     directories:
-      - /devTools
       - /frontend
       - /testing/compose/mcp-client-check
     schedule:

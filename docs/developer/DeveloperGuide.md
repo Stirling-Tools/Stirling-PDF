@@ -131,7 +131,7 @@ Stirling-PDF can be packaged as a cross-platform desktop application using Tauri
 
 Using Taskfile: `task desktop:dev` (development) or `task desktop:build` (production build).
 
-See [the frontend README](frontend/README.md#tauri) for detailed build instructions.
+See [the frontend README](../../frontend/README.md#tauri) for detailed build instructions.
 
 ## 5. Project Structure
 
