@@ -39,11 +39,7 @@ public class StoreManifestSanitizer {
     /**
      * The sanitised chain plus its report. {@code tools} is the operation list for the catalogue.
      */
-    public record Result(
-            List<StoreFinding> findings,
-            StoreManifest manifest,
-            List<String> tools,
-            boolean needsSetup) {}
+    public record Result(List<StoreFinding> findings, StoreManifest manifest, List<String> tools) {}
 
     private static final String INTEGRATION_PREFIX = "/api/v1/integration/";
     // Every repetition below has a constant upper bound, and each repeated label ends in a
@@ -207,7 +203,6 @@ public class StoreManifestSanitizer {
             tools.add(operation);
         }
 
-        boolean needsSetup = required.stream().anyMatch(r -> "parameter".equals(r.kind()));
         StoreManifest manifest =
                 new StoreManifest(
                         StoreManifest.SCHEMA_VERSION,
@@ -219,7 +214,7 @@ public class StoreManifestSanitizer {
                         required,
                         suggestedTrigger,
                         null);
-        return new Result(findings, manifest, tools, needsSetup);
+        return new Result(findings, manifest, tools);
     }
 
     /** Whether a settings key names a secret, judged on its camelCase or snake_case tokens. */

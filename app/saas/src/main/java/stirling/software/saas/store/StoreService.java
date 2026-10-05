@@ -263,7 +263,6 @@ public class StoreService {
         listing.setManifestJson(objectMapper.writeValueAsString(manifest));
         listing.setManifestSchemaVersion(manifest.manifestSchemaVersion());
         listing.setToolsJson(objectMapper.writeValueAsString(prepared.result().tools()));
-        listing.setNeedsConnections(prepared.result().needsSetup());
         listing.setLatestChange(request.trimmedWhatChanged());
         listing.setPublishedByUserId(teamSecurity.currentUserId());
         listing.setRightsAcceptedAt(now());

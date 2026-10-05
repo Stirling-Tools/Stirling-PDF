@@ -97,7 +97,6 @@ class StoreManifestSanitizerTest {
         assertThat(result.manifest().steps()).hasSize(1);
         assertThat(result.manifest().steps().get(0).parameters()).containsEntry("optimizeLevel", 6);
         assertThat(result.tools()).containsExactly("/api/v1/misc/compress-pdf");
-        assertThat(result.needsSetup()).isFalse();
     }
 
     @Test
@@ -135,7 +134,6 @@ class StoreManifestSanitizerTest {
                             assertThat(f.severity()).isEqualTo(StoreFinding.Severity.WARN);
                             assertThat(f.title()).contains("Add password");
                         });
-        assertThat(result.needsSetup()).isTrue();
     }
 
     @Test

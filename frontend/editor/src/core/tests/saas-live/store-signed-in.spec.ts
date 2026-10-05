@@ -208,7 +208,6 @@ test("publishing clean text creates a listing with a store id", async () => {
   expect(listing.storeId).toMatch(/^sp-[0-9a-hjkmnp-tv-z]{8}$/);
   storeId = listing.storeId;
   expect(listing.name).toBe(NAME);
-  expect(listing.needsConnections).toBe(true);
   expect(listing.viewer.isTeammate).toBe(true);
   expect(listing.viewer.author?.displayName).toBeTruthy();
   publisherName = listing.viewer.author.displayName;

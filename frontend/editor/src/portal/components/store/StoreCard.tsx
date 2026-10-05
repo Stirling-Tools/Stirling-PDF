@@ -64,11 +64,6 @@ export function StoreCard({ listing, preview = false }: StoreCardProps) {
             {t("portal.store.card.byStirling")}
           </Chip>
         )}
-        {listing.needsConnections && (
-          <Chip size="xs" accent="warning" showDot={false}>
-            {t("portal.store.card.needsConnection")}
-          </Chip>
-        )}
       </div>
 
       <p className="portal-store__card-desc">{listing.description}</p>

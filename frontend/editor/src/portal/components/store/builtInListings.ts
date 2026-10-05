@@ -42,7 +42,7 @@ export function builtInListings(t: TFunction): StoreListingDetail[] {
       installCount: 0,
       updatedAt: "",
       curated: true,
-      needsConnections: config.needsSource === true,
+      needsConnections: false,
       starred: null,
       firstPublishedAt: "",
       latestChange: null,

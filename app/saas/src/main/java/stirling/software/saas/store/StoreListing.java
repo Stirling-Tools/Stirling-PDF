@@ -90,6 +90,10 @@ public class StoreListing {
     @Column(name = "tools_json", nullable = false, columnDefinition = "text")
     private String toolsJson = "[]";
 
+    /**
+     * Reserved for steps that need a connection on install, such as AI; nothing sets it yet. A
+     * cleared secret is not a connection: requiredOnInstall already covers it.
+     */
     @Column(name = "needs_connections", nullable = false)
     private boolean needsConnections;
 
