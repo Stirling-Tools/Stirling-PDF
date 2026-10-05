@@ -6,6 +6,7 @@ import {
   SignaturePreview,
 } from "@app/utils/signaturePreview";
 import { useSignature } from "@app/contexts/SignatureContext";
+import { useViewer } from "@app/contexts/ViewerContext";
 import {
   MAX_PREVIEW_WIDTH_RATIO,
   MAX_PREVIEW_HEIGHT_RATIO,
@@ -30,7 +31,18 @@ export const SignaturePlacementOverlay: React.FC<
 > = ({ containerRef, isActive, signatureConfig }) => {
   const [preview, setPreview] = useState<SignaturePreview | null>(null);
   const [cursor, setCursor] = useState<{ x: number; y: number } | null>(null);
-  const { setPlacementPreviewSize } = useSignature();
+  const { placementSize, setPlacementSize } = useSignature();
+  const { getZoomState, registerImmediateZoomUpdate } = useViewer();
+  const [currentZoom, setCurrentZoom] = useState(
+    () => getZoomState()?.currentZoom ?? 1,
+  );
+
+  useEffect(() => {
+    setCurrentZoom(getZoomState()?.currentZoom ?? 1);
+    return registerImmediateZoomUpdate((percent) => {
+      setCurrentZoom(Math.max(percent / 100, 0.01));
+    });
+  }, [getZoomState, registerImmediateZoomUpdate]);
 
   useEffect(() => {
     let cancelled = false;
@@ -82,7 +94,7 @@ export const SignaturePlacementOverlay: React.FC<
     };
   }, [containerRef, isActive]);
 
-  const scaledSize = useMemo(() => {
+  const initialPlacementSize = useMemo(() => {
     if (!preview || !containerRef.current) {
       return null;
     }
@@ -118,19 +130,23 @@ export const SignaturePlacementOverlay: React.FC<
     };
   }, [preview, containerRef]);
 
-  useEffect(() => {
-    if (!isActive || !scaledSize) {
-      setPlacementPreviewSize(null);
-    } else {
-      setPlacementPreviewSize(scaledSize);
+  const scaledSize = useMemo(() => {
+    const pdfSize = placementSize ?? initialPlacementSize;
+    if (!pdfSize) {
+      return null;
     }
-  }, [isActive, scaledSize, setPlacementPreviewSize]);
+
+    return {
+      width: pdfSize.width * currentZoom,
+      height: pdfSize.height * currentZoom,
+    };
+  }, [placementSize, initialPlacementSize, currentZoom]);
 
   useEffect(() => {
-    return () => {
-      setPlacementPreviewSize(null);
-    };
-  }, [setPlacementPreviewSize]);
+    if (isActive && initialPlacementSize && !placementSize) {
+      setPlacementSize(initialPlacementSize);
+    }
+  }, [isActive, initialPlacementSize, placementSize, setPlacementSize]);
 
   const display = useMemo(() => {
     if (!preview || !scaledSize || !cursor || !containerRef.current) {
