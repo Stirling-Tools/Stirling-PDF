@@ -147,6 +147,7 @@ const EmbedPdfViewerContent = ({
     getScrollState,
     getSpreadState,
     getZoomState,
+    registerImmediateZoomUpdate,
     getRotationState,
     zoomRestorePendingRef,
     notifyZoomRestoreSettled,
@@ -185,6 +186,8 @@ const EmbedPdfViewerContent = ({
     historyApiRef,
     signatureConfig,
     isPlacementMode,
+    isApplyingSignatures,
+    signaturesApplied,
   } = useSignature();
 
   // Track whether there are unsaved annotation changes in this viewer session.
@@ -598,6 +601,21 @@ const EmbedPdfViewerContent = ({
     isInAnnotationTool && isPlacementMode && signatureConfig,
   );
 
+  const [signatureLineZoom, setSignatureLineZoom] = useState<number | null>(
+    null,
+  );
+  useEffect(() => {
+    if (selectedTool !== "sign") {
+      setSignatureLineZoom(null);
+      return;
+    }
+    setSignatureLineZoom(getZoomState()?.currentZoom ?? 1);
+    const unregister = registerImmediateZoomUpdate((percent) => {
+      setSignatureLineZoom(Math.max(percent / 100, 0.01));
+    });
+    return () => unregister?.();
+  }, [selectedTool, getZoomState, registerImmediateZoomUpdate]);
+
   // Determine which file to display — use activeFileId (stable) not activeFileIndex (shifts on removal)
   const currentFile = React.useMemo(() => {
     if (previewFile) {
@@ -715,6 +733,7 @@ const EmbedPdfViewerContent = ({
   // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (isApplyingSignatures) return;
       const mod = event.ctrlKey || event.metaKey;
 
       // Ctrl+P (print) must be intercepted unconditionally
@@ -863,6 +882,7 @@ const EmbedPdfViewerContent = ({
     viewerApplyChanges,
     cyclePdfRenderMode,
     viewerKeyCommand,
+    isApplyingSignatures,
     selectionActions,
     getScrollState,
   ]);
@@ -893,6 +913,17 @@ const EmbedPdfViewerContent = ({
     setHasUnsavedChanges,
     setRedactionsApplied,
   ]);
+
+  const previousSignaturesAppliedRef = useRef(signaturesApplied);
+  useEffect(() => {
+    const wasApplied = previousSignaturesAppliedRef.current;
+    previousSignaturesAppliedRef.current = signaturesApplied;
+    if (wasApplied || !signaturesApplied) return;
+    // Signature Apply saves through FileContext rather than the viewer save callback.
+    savedHistoryRevisionRef.current = historyRevisionRef.current;
+    hasAnnotationChangesRef.current = false;
+    setHasUnsavedChanges(false);
+  }, [signaturesApplied, setHasUnsavedChanges]);
 
   // Watch the annotation history API to detect when the document becomes "dirty".
   // We treat any change that makes the history undoable as unsaved changes until
@@ -1729,6 +1760,7 @@ const EmbedPdfViewerContent = ({
         flexDirection: "column",
         overflow: "hidden",
         contain: "layout style paint",
+        pointerEvents: isApplyingSignatures ? "none" : undefined,
       }}
     >
       {/* Close Button - Only show in preview mode */}
@@ -1855,6 +1887,7 @@ const EmbedPdfViewerContent = ({
               containerRef={pdfContainerRef}
               isActive={isPlacementOverlayActive}
               signatureConfig={signatureConfig}
+              signatureLineZoom={signatureLineZoom}
             />
             <RulerOverlay
               ref={rulerOverlayRef}
