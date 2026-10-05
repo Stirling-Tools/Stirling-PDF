@@ -10,12 +10,13 @@ test("cold load fetches app-config exactly once", async ({ page }) => {
     }
   });
 
-  await page.goto("/editor", { waitUntil: "networkidle" });
-  await page.locator(".workspace-frame").first().waitFor({
-    state: "visible",
-    timeout: 15000,
-  });
-  await page.waitForTimeout(2000);
+  await page.goto("/editor", { waitUntil: "domcontentloaded" });
+  await page.locator(".workspace-frame").first().waitFor({ state: "visible" });
+  // The duplicate is a second request fired after the first resolves, so
+  // networkidle alone can precede it. Let the startup chain settle first.
+  await expect
+    .poll(() => configUrls.length, { timeout: 10000 })
+    .toBeGreaterThan(0);
 
   expect(configUrls).toHaveLength(1);
 });

@@ -418,7 +418,22 @@ describe("AppConfigContext", () => {
     // Cached, so no loading flash and no second request.
     expect(second.result.current.loading).toBe(false);
     expect(second.result.current.config).toEqual({ enableLogin: false });
+    expect(second.result.current.carriedIn).toBe(true);
     expect(apiClient.get).toHaveBeenCalledTimes(1);
+  });
+
+  it("reports carriedIn false when this session did the fetching", async () => {
+    vi.mocked(apiClient.get).mockResolvedValue({
+      status: 200,
+      data: { enableLogin: false },
+    });
+
+    const { result } = renderHook(() => useAppConfig(), { wrapper });
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    // Nothing was cached beforehand, so this config is this session's own
+    // answer and cannot have gone stale.
+    expect(result.current.carriedIn).toBe(false);
   });
 
   it("honours maxRetries for network failures", async () => {

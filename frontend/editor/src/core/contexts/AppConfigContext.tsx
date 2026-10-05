@@ -27,6 +27,13 @@ interface AppConfigContextValue {
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
+  /**
+   * True when config was already in the query cache before this provider
+   * fetched, i.e. it came from another app rather than this session. Consumers
+   * that re-read config on entry use this to tell a possibly stale carried-in
+   * value from the fetch this session already performed.
+   */
+  carriedIn: boolean;
 }
 
 const AppConfigContext = createContext<AppConfigContextValue | undefined>({
@@ -34,6 +41,7 @@ const AppConfigContext = createContext<AppConfigContextValue | undefined>({
   loading: true,
   error: null,
   refetch: async () => {},
+  carriedIn: false,
 });
 
 export interface AppConfigProviderProps {
@@ -80,6 +88,12 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
   const queryClient = useQueryClient();
   // Auth pages skip the fetch until sign-in asks for one.
   const [signedIn, setSignedIn] = useState(false);
+  // Sampled once, before this provider's own fetch settles. Consumers mount
+  // only after config resolves, so by the time they read the cache the two
+  // cases are indistinguishable.
+  const [carriedIn] = useState(
+    () => queryClient.getQueryData(qk.appConfig()) !== undefined,
+  );
   // fetchQuery, not refetchQueries: the latter skips a disabled query, and
   // enabling one whose cache is still fresh doesn't fetch either. Sign-in has
   // to force the request — a pre-login 401 leaves a cached default behind.
@@ -135,6 +149,7 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
             : false,
       error: error ? errorMessage(error) : null,
       refetch,
+      carriedIn,
     }),
     [
       data,
@@ -146,6 +161,7 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
       autoFetch,
       fetching,
       refetch,
+      carriedIn,
     ],
   );
 
