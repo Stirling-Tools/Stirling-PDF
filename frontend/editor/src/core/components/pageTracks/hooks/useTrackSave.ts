@@ -221,6 +221,14 @@ export function useTrackSave(
           });
         } else {
           console.error("[PageTracks] save failed", error);
+          alert({
+            alertType: "error",
+            title: t("pageTracks.saveFailed.title", "Couldn't save changes"),
+            body: t(
+              "pageTracks.saveFailed.body",
+              "Your edits haven't been lost. Try saving again.",
+            ),
+          });
         }
         return null;
       } finally {

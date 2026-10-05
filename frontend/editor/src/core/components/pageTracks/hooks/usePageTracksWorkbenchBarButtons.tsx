@@ -290,8 +290,6 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
       labels.save,
       hasPages,
       hasSelection,
-      selectedCount,
-      totalPages,
       canUndo,
       canRedo,
       isDirty,

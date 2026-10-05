@@ -64,7 +64,10 @@ export interface WorkbenchExportFile {
  * what it shows is open. Each is optional; the bar's default runs for the rest.
  */
 export interface WorkbenchViewFileActions {
-  /** The files to download in place of the open ones, or null to cancel. */
+  /**
+   * The files to download in place of the open ones, or null to cancel. The bar
+   * cancels silently, so a view returning null has already told the user why.
+   */
   getExportFiles?: () => Promise<WorkbenchExportFile[] | null>;
   onClose?: () => void;
 }

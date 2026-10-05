@@ -793,12 +793,23 @@ export default function PageTracks() {
       }
       return files;
     } catch (error) {
-      if (!(error instanceof PolicyBlockedError)) throw error;
-      alert({
-        alertType: "warning",
-        title: t("policy.recoveryTitle"),
-        body: t("policy.recoveryBody"),
-      });
+      if (error instanceof PolicyBlockedError) {
+        alert({
+          alertType: "warning",
+          title: t("policy.recoveryTitle"),
+          body: t("policy.recoveryBody"),
+        });
+      } else {
+        console.error("[PageTracks] export failed", error);
+        alert({
+          alertType: "error",
+          title: t("pageTracks.exportFailed.title", "Couldn't download"),
+          body: t(
+            "pageTracks.exportFailed.body",
+            "The edited files couldn't be prepared. Try again.",
+          ),
+        });
+      }
       return null;
     }
   }, [changedSet, fileSelectors, t, workspace]);

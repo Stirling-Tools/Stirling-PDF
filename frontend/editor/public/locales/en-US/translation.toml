@@ -6795,6 +6795,14 @@ page = "Delete page"
 body = "Add PDFs to expand them into editable page tracks"
 title = "No PDF files loaded"
 
+[pageTracks.exportFailed]
+body = "The edited files couldn't be prepared. Try again."
+title = "Couldn't download"
+
+[pageTracks.saveFailed]
+body = "Your edits haven't been lost. Try saving again."
+title = "Couldn't save changes"
+
 [pageTracks.track]
 close = "Close file"
 collapse = "Collapse"
