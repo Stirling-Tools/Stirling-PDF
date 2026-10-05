@@ -17,11 +17,11 @@ confirmCloseDiscard = "放弃更改并关闭"
 confirmCloseMessage = "确定要关闭此文件吗？"
 confirmCloseSave = "保存并关闭"
 confirmCloseSaveFailed_one = "已保存，但存在错误。{{count}} 个文件 未能保存。"
-confirmCloseSaveFailed_other = "Saved with errors. {{count}} files could not be saved."
+confirmCloseSaveFailed_other = "已保存但有错误。{{count}} 个文件无法保存。"
 confirmCloseSaveFailedTitle = "保存失败"
 confirmCloseUnsaved = "此文件有未保存的更改。"
 confirmCloseUnsavedList_one = "您有 {{count}} 个文件 含有未保存的更改。\n\n{{fileList}}"
-confirmCloseUnsavedList_other = "You have {{count}} files with unsaved changes.\n\n{{fileList}}"
+confirmCloseUnsavedList_other = "您有 {{count}} 个文件存在未保存的更改。\n\n{{fileList}}"
 custom = "མཚན་ཉིད་རང་སྒྲིག..."
 customPosition = "自定义位置"
 customTextTooltip = "页码的可选自定义格式。使用 {n} 作为数字占位符。示例：“Page {n}” 将显示 “Page 1”、“Page 2”等。"
@@ -41,7 +41,7 @@ fileDiskUnavailable = "无法访问磁盘上的文件"
 fileNotSavedToDisk = "未保存到磁盘"
 fileOriginalDeleted = "原文件已删除 - 保存以保留副本"
 fileSavedToDisk = "文件已保存到磁盘"
-fileSelected = "已选择：{{filename}}"
+fileSelected = "{{filename}}"
 filesSelected = "{{count}} 个文件"
 font = "ཡིག་གཟུགས་ཌྷ"
 fontSizeTooltip = "页码文本的磅值大小。数值越大文本越大。"
@@ -62,7 +62,7 @@ marginTooltip = "页码与页面边缘之间的距离。"
 moreOptions = "更多选项"
 never = "从不"
 no = "མིན།"
-noFileSelected = "未选择文件。请上传一个。"
+noFileSelected = "未加载文件。请上传一个文件。"
 noFilesToUndo = "无法撤销：上次操作未处理任何文件"
 noOperationToUndo = "没有可撤销的操作"
 nothingToUndo = "没有可撤销的操作"
@@ -75,7 +75,7 @@ page = "ཤོག་ངོས།"
 pageNum = "ཤོག་གིངས།"
 pageOrderPrompt = "ཤོག་ངོས་གོ་རིམ་རང་སྒྲིག（ཤོག་གྲངས་ཀྱི་ཐོ་གཞུང་ངམ་རྩིས་རྒྱག་བྱེད་ཐབས་ 2n+1 ལྟ་བུ་འཇུག་རོགས།）"
 pages = "ཤོག་ངོས་ཁག"
-pageSelectionPrompt = "ཤོག་ངོས་འདེམས་སྒྲུག（ཤོག་གྲངས་ཀྱི་ཐོ་གཞུང་ 1,5,6 འམ་རྩིས་རྒྱག་བྱེད་ཐབས་ 2n+1 ལྟ་བུ་འཇུག་རོགས།）"
+pageSelectionPrompt = "自定义页面选择（输入以逗号分隔的页码列表，如 1,5,6，或类似 2n+1 的函数）"
 password = "གསང་ཚིག།"
 pin = "固定文件（工具运行后保持活动）"
 pro = "ཆེད་ལས།"
@@ -106,7 +106,7 @@ undoSuccess = "已成功撤销操作"
 unknown = "མི་ཤེས་པ།"
 unpin = "取消固定文件（工具运行后替换）"
 unsavedChanges = "您的 PDF 有未保存的更改。"
-unsavedChangesBody = "You have unsaved changes to your PDF. Are you sure you want to leave?"
+unsavedChangesBody = "您的 PDF 有未保存的更改。确定要离开吗？"
 unsavedChangesTitle = "未保存的更改"
 unsupported = "不支持"
 username = "སྤྱོད་མཁན་མིང་།"
@@ -169,18 +169,14 @@ signedInAs = "已登录为：{{email}}"
 tags = "ཤོག་གྲངས་རྒྱག་པ།,མིང་རྟགས།,གོ་སྒྲིག,དཀར་ཆག"
 
 [addAttachments]
-tags = "embed,attach,include,attachments,attach files,embed files,include files,add files,file attachment,associated files,supplementary files"
+tags = "嵌入,附加,包含,附件,附加文件,嵌入文件,包含文件,添加文件,文件附件,关联文件,补充文件"
 
 [addAttachments.error]
 failed = "向 PDF 添加附件时发生错误。"
 
 [AddAttachmentsRequest]
-addMoreFiles = "添加更多文件..."
 attachments = "选择附件"
-info = "选择要附加到 PDF 的文件。这些文件将被嵌入，并可通过 PDF 的附件面板访问。"
-placeholder = "选择文件..."
-removeFile = "移除文件"
-selectedFiles = "已选文件"
+info = "查看、添加、提取、重命名或删除嵌入的 PDF 附件。更改会被清晰暂存，并一次性保存到您的文档中。"
 submit = "添加附件"
 
 [AddAttachmentsRequest.error]
@@ -193,11 +189,11 @@ title = "附件结果"
 title = "功能说明"
 
 [AddAttachmentsRequest.tooltip.header]
-title = "关于添加附件"
+title = "关于管理附件"
 
 [addImage]
 applySignatures = "应用图像"
-header = "PDF ལ་པར་རིས་སྣོན་པ།"
+header = "向 PDF 添加图像"
 tags = "པར་རིས།,jpg,པར།,འདྲ་པར།"
 title = "པར་རིས་སྣོན་པ།"
 
@@ -208,7 +204,7 @@ colorPickerTitle = "Choose stroke colour"
 failed = "向 PDF 添加图像时出错。"
 
 [addImage.image]
-hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
+hint = "支持 PNG、JPEG、GIF、BMP、TIFF 和 SVG 文件。SVG 文件将转换为 PNG 以便嵌入。"
 label = "图像文件"
 name = "图像"
 placeholder = "上传图像"
@@ -230,26 +226,26 @@ resume = "恢复放置"
 title = "添加图像结果"
 
 [addImage.saved]
-defaultCanvasLabel = "Drawing signature"
+defaultCanvasLabel = "手绘签名"
 defaultImageLabel = "已上传的图像"
 defaultLabel = "图像"
-defaultTextLabel = "Typed signature"
-delete = "Remove"
-emptyTitle = "No saved signatures yet"
-heading = "Saved signatures"
-label = "Label"
-limitTitle = "Limit reached"
-next = "Next"
-personalHeading = "Personal Signatures"
-prev = "Previous"
-savePersonal = "Save Personal"
-saveShared = "Save Shared"
-sharedHeading = "Shared Signatures"
+defaultTextLabel = "键入签名"
+delete = "移除"
+emptyTitle = "尚无已保存的签名"
+heading = "已保存的签名"
+label = "标签"
+limitTitle = "已达到限制"
+next = "下一步"
+personalHeading = "个人签名"
+prev = "上一步"
+savePersonal = "保存个人签名"
+saveShared = "保存共享签名"
+sharedHeading = "共享签名"
 
 [addImage.saved.type]
-canvas = "Drawing"
-image = "Upload"
-text = "Text"
+canvas = "手绘"
+image = "上传"
+text = "文本"
 
 [addImage.step]
 createDesc = "上传要添加的图像"
@@ -261,33 +257,33 @@ configure = "配置图像"
 
 [addImage.text]
 colorLabel = "Text colour"
-fontLabel = "Font"
-fontSizeLabel = "Font size"
-name = "Text"
-placeholder = "Enter text"
+fontLabel = "字体"
+fontSizeLabel = "字体大小"
+name = "文本"
+placeholder = "输入文本"
 
 [addImage.type]
-canvas = "Canvas"
-image = "Image"
-saved = "Saved"
-text = "Text"
+canvas = "画布"
+image = "图像"
+saved = "已保存"
+text = "文本"
 
 [addPageNumbers]
 customize = "自定义外观"
-customNumberDesc = "སྔོན་སྒྲིག་ནི་ {n} ཡིན། 'ཤོག་ངོས་ {n} / {total}', 'ཡི་གེ-{n}', '{filename}-{n}' སོགས་ཀྱང་ངོས་ལེན་བྱེད།"
+customNumberDesc = "例如 \"Page {n}\"，或留空仅显示数字"
 fontName = "ཡིག་གཟུགས་མིང་"
 fontSize = "ཡིག་གཟུགས་ཆེ་ཆུང་"
-numberPagesDesc = "ཨང་གྲངས་རྒྱག་རྒྱུའི་ཤོག་ངོས། སྔོན་སྒྲིག་ནི་'ཚང་མ་'ཡིན། 1-5 ཡང་ན་ 2,5,9 སོགས་ཀྱང་ངོས་ལེན་བྱེད།"
+numberPagesDesc = "例如 1,3,5-8，或留空表示所有页面"
 pagePreviewAlt = "页面预览"
 pagesAndStarting = "页面与起始编号"
 positionAndPages = "位置与页面"
 preview = "位置选择"
 previewDisclaimer = "预览为近似效果。由于 PDF 字体度量，最终输出可能有所不同。"
 submit = "ཤོག་གྲངས་སྣོན་པ།"
-tags = "number,pagination,count,add page numbers,page numbering,page numbers,footer,header,number pages,sequential,pagination tool"
+tags = "编号,分页,计数,添加页码,页面编号,页码,页脚,页眉,给页面编号,顺序,分页工具"
 title = "ཤོག་གྲངས་སྣོན་པ།"
-zeroPad = "Zero‑pad Width (Bates Stamping)"
-zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
+zeroPad = "零填充宽度（Bates Stamping）"
+zeroPadTooltip = "将页码零填充（Bates Stamp）到此宽度（例如 3 ⇒ 001）。设为 0 可禁用。"
 
 [addPageNumbers.error]
 failed = "添加页码操作失败"
@@ -299,12 +295,12 @@ title = "页码结果"
 2 = "མཐའ་མཚམས་ཀྱི་ཆེ་ཆུང་།"
 4 = "འགོ་འཛུགས་ཨང་གྲངས།"
 5 = "ཨང་གྲངས་རྒྱག་རྒྱུའི་ཤོག་ངོས།"
-6 = "རང་སྒྲིག་ཡི་གེ"
+6 = "自定义文本格式"
 
 [addPassword]
 desc = "使用密码加密您的 PDF 文档。"
 submit = "གསང་བསྒྱུར།"
-tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
+tags = "加密,密码,锁定,安全,保护,安全性,加密,防护,机密,私密,限制访问"
 title = "གསང་ཚིག་སྣོན་པ།"
 
 [addPassword.encryption.keyLength]
@@ -354,53 +350,53 @@ title = "更改权限"
 pagePreviewAlt = "页面预览"
 preview = "预览印章"
 stampPreviewAlt = "印章预览"
-tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
+tags = "印章,标记,印鉴,已批准,已拒绝,机密,印章工具,橡皮章,日期章,批准章,已收到,作废,副本,原件"
 
 [AddStampRequest]
 alphabet = "ཡི་གེའི་གཟུགས།"
-clickToExpand = "Click to expand"
+clickToExpand = "点击展开"
 customColor = "ཡི་གེའི་ཚོས་མདོག་རང་སྒྲིག"
-customDateDesc = "Custom format"
+customDateDesc = "自定义格式"
 customPosition = "在预览窗口中拖动印章到所需位置。"
-dateDesc = "Current date"
-datetimeDesc = "Date and time combined"
-dateTimeVars = "Date & Time"
-dynamicVariables = "Dynamic Variables"
-examples = "Examples"
-filenameDesc = "Filename without extension"
-filenameFullDesc = "Filename with extension"
-fileVars = "File Information"
+dateDesc = "当前日期"
+datetimeDesc = "日期和时间组合"
+dateTimeVars = "日期和时间"
+dynamicVariables = "动态变量"
+examples = "示例"
+filenameDesc = "不含扩展名的文件名"
+filenameFullDesc = "含扩展名的文件名"
+fileVars = "文件信息"
 fontSize = "ཡི་གེ/པར་རིས་ཀྱི་ཆེ་ཆུང་།"
 imageSize = "图像大小"
 margin = "边距"
-metadataDesc = "From PDF document properties"
-metadataVars = "Document Metadata"
-multiLine = "multi-line"
+metadataDesc = "来自 PDF 文档属性"
+metadataVars = "文档元数据"
+multiLine = "多行"
 noStampSelected = "未选择印章。返回步骤 1。"
 opacity = "གསལ་ཚད།"
-otherVars = "Other"
-pageNumberDesc = "Current page number"
-pageVars = "Page Information"
+otherVars = "其他"
+pageNumberDesc = "当前页码"
+pageVars = "页面信息"
 position = "གནས་ས།"
 positionAndFormatting = "位置与格式"
-preview = "Preview:"
+preview = "预览："
 quickPosition = "选择页面上的位置以放置印章。"
 rotation = "འཁོར་སྐྱོད།"
 selectedImageAlt = "已选印章图像"
-selectTemplate = "Select a template..."
+selectTemplate = "选择模板..."
 stampSetup = "印章设置"
 stampText = "ཐེལ་ཙེའི་ཡི་གེ"
-stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
+stampTextDescription = "使用下面的动态变量。使用 @@ 表示字面量 @。使用 \\n 表示换行。"
 stampType = "ཐེལ་ཙེའི་རིགས།"
-submit = "ཕུལ་བ།"
+submit = "添加印章"
 tags = "ཐེལ་ཙེ།,པར་རིས་སྣོན་པ།,དཀྱིལ་སྒྲིག་པར་རིས།,ཆུ་རྟགས།,PDF,ནང་འཇུག,རང་སྒྲིག,སྒྲིག་སྦྱོར།"
-timeDesc = "Current time"
+timeDesc = "当前时间"
 title = "PDF ལ་ཐེལ་ཙེ་རྒྱག་པ།"
-totalPagesDesc = "Total number of pages"
-useTemplate = "Use Template"
-uuidDesc = "Short unique identifier (8 chars)"
-variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
-yearMonthDayDesc = "Individual date parts"
+totalPagesDesc = "总页数"
+useTemplate = "使用模板"
+uuidDesc = "短唯一标识符（8 个字符）"
+variablesHelp = "点击任意变量可将其插入印章文本。使用 @@ 表示字面量 @。"
+yearMonthDayDesc = "单独的日期部分"
 
 [AddStampRequest.error]
 failed = "将印章添加到 PDF 时发生错误。"
@@ -409,17 +405,17 @@ failed = "将印章添加到 PDF 时发生错误。"
 title = "印章结果"
 
 [AddStampRequest.template]
-custom = "Custom"
-dateHeader = "Date Header"
-doc-info = "Document Info"
-draft = "Draft Watermark"
-draftWatermark = "Draft Watermark"
-european-date = "European Date (DD/MM/YYYY)"
-europeanDate = "European Date"
-legal-footer = "Legal Footer"
-page-numbers = "Page Numbers"
-pageNumberFooter = "Page Number Footer"
-timestamp = "Timestamp"
+custom = "自定义"
+dateHeader = "日期页眉"
+doc-info = "文档信息"
+draft = "草稿水印"
+draftWatermark = "草稿水印"
+european-date = "欧洲日期（DD/MM/YYYY）"
+europeanDate = "欧洲日期"
+legal-footer = "法律页脚"
+page-numbers = "页码"
+pageNumberFooter = "页码页脚"
+timestamp = "时间戳"
 
 [addText]
 applySignatures = "应用文本"
@@ -450,26 +446,26 @@ resume = "恢复放置"
 title = "添加文本结果"
 
 [addText.saved]
-defaultCanvasLabel = "Drawing signature"
-defaultImageLabel = "Uploaded signature"
-defaultLabel = "Signature"
-defaultTextLabel = "Typed signature"
-delete = "Remove"
-emptyTitle = "No saved signatures yet"
-heading = "Saved signatures"
-label = "Label"
-limitTitle = "Limit reached"
-next = "Next"
-personalHeading = "Personal Signatures"
-prev = "Previous"
-savePersonal = "Save Personal"
-saveShared = "Save Shared"
-sharedHeading = "Shared Signatures"
+defaultCanvasLabel = "手绘签名"
+defaultImageLabel = "已上传签名"
+defaultLabel = "签名"
+defaultTextLabel = "键入签名"
+delete = "移除"
+emptyTitle = "尚无已保存的签名"
+heading = "已保存的签名"
+label = "标签"
+limitTitle = "已达到限制"
+next = "下一步"
+personalHeading = "个人签名"
+prev = "上一步"
+savePersonal = "保存个人签名"
+saveShared = "保存共享签名"
+sharedHeading = "共享签名"
 
 [addText.saved.type]
-canvas = "Drawing"
-image = "Upload"
-text = "Text"
+canvas = "手绘"
+image = "上传"
+text = "文本"
 
 [addText.step]
 createDesc = "输入要添加的文本"
@@ -488,10 +484,10 @@ name = "文本内容"
 placeholder = "输入要添加的文本"
 
 [addText.type]
-canvas = "Canvas"
-image = "Image"
-saved = "Saved"
-text = "Text"
+canvas = "画布"
+image = "图像"
+saved = "已保存"
+text = "文本"
 
 [adjust-contrast]
 tags = "ཚོས་གཞི་ལེགས་སྒྲིག,སྙོམ་སྒྲིག,བཟོ་བཅོས།,ཡར་རྒྱས།,ཚོས་མདངས་ལེགས་སྒྲིག"
@@ -507,8 +503,8 @@ green = "绿"
 noPreview = "选择一个 PDF 以预览"
 red = "红"
 saturation = "མདོག་ཚད།"
-tags = "contrast,brightness,saturation,adjust colors,color correction,enhance,lighten,darken,improve quality,color balance,hue,vibrance"
-title = "འོད་ཁྱད་སྙོམ་སྒྲིག"
+tags = "对比度,亮度,饱和度,调整颜色,色彩校正,增强,变亮,变暗,提高质量,色彩平衡,色相,鲜艳度"
+title = "调整颜色/对比度"
 
 [adjustContrast.error]
 failed = "调整颜色/对比度失败"
@@ -780,7 +776,7 @@ label = "Top K"
 
 [admin.settings.ai.general]
 connection = "连接"
-description = "将 Stirling 连接到 Python AI 引擎，并选择公开哪些 AI 功能。更改将在重启后应用。"
+description = "选择 AI 运行的位置。此处的更改将在重启后生效。"
 restartNote = "更改 URL 或任何超时设置后，需要重启才会生效。"
 title = "AI 引擎"
 
@@ -1000,7 +996,7 @@ clickToUpgrade = "点击查看方案详情"
 [admin.settings.connections]
 connect = "连接"
 connectedServicesDescription = "此服务器已连接的服务。登录提供方位于“登录与安全”下。"
-description = "配置外部身份验证提供方，如 OAuth2 和 SAML。"
+description = "邮件、Telegram、Drive，以及从手机上传。"
 disconnect = "断开连接"
 disconnected = "已成功断开提供方"
 disconnectError = "断开提供方失败"
@@ -1132,7 +1128,7 @@ deleteConfirmAction = "删除备份"
 deleteFailed = "删除备份失败"
 deleteSuccess = "备份已删除"
 deleteTitle = "删除备份"
-description = "为企业部署配置自定义数据库连接设置。"
+description = "连接自定义数据库，并备份或恢复当前使用的数据库。"
 download = "下载"
 downloadFailed = "下载备份失败"
 embedded = "嵌入式 H2"
@@ -1224,12 +1220,12 @@ description = "配置可选功能与特性。"
 title = "功能"
 
 [admin.settings.features.serverCertificate]
-description = "为\"使用 Stirling-PDF 签名\"功能配置服务器端证书"
-label = "服务器证书"
+description = "生成支持 \"Sign with Stirling-PDF\" 签名功能的证书。"
+label = "证书签名"
 
 [admin.settings.features.serverCertificate.enabled]
-description = "为\"使用 Stirling-PDF 签名\"选项启用服务器端证书"
-label = "启用服务器证书"
+description = "使用此服务器生成的证书提供 \"Sign with Stirling-PDF\""
+label = "启用证书签名"
 
 [admin.settings.features.serverCertificate.organizationName]
 description = "生成证书中的组织名称"
@@ -1264,7 +1260,7 @@ remove = "移除文件夹根目录"
 
 [admin.settings.general]
 branding = "品牌与外观"
-description = "配置全局应用设置，包括品牌和默认行为。"
+description = "此服务器的运行方式：品牌、存储、公开的工具，以及它可以访问的路径。"
 system = "系统"
 title = "系统设置"
 ui = "用户界面"
@@ -1324,16 +1320,16 @@ description = "输出已处理 PDF 的目录（留空使用默认：/pipeline/fi
 label = "完成文件夹目录"
 
 [admin.settings.general.customPaths.pipeline.pipelineDir]
-description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
-label = "Pipeline Directory"
+description = "pipeline 资源的基础目录（留空则使用默认值：/pipeline）"
+label = "Pipeline 目录"
 
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 description = "流水线监控输入 PDF 的目录（留空使用默认：/pipeline/watchedFolders）"
 label = "监控文件夹目录"
 
 [admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
-description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
-label = "Watched Folders Directories"
+description = "pipeline 监控传入 PDF 的目录（每行一个或用逗号分隔；留空则使用默认值：/pipeline/watchedFolders）"
+label = "监控文件夹目录"
 
 [admin.settings.general.defaultLocale]
 description = "新用户的默认语言（例如：en_US, es_ES）"
@@ -1377,7 +1373,7 @@ description = "将更新通知仅限于管理员用户"
 label = "仅向管理员显示更新"
 
 [admin.settings.legal]
-description = "配置法律文档与政策的链接。"
+description = "法律文档、登录协议、分析和搜索可见性。"
 documentsDescription = "向用户显示的条款、隐私、cookies 和 impressum 链接。"
 title = "法律文档"
 
@@ -1478,74 +1474,74 @@ description = "SMTP 认证用户名"
 label = "SMTP 用户名"
 
 [admin.settings.mcp]
-apikeyNote = "Clients send a Stirling API key in the X-API-KEY header (or Authorization: Bearer <key>). The key maps to its owning Stirling user - only provisioned accounts get in, and actions are audited as that user. Manage keys under Account > API Keys."
-description = "Expose Stirling's PDF tools and AI agents to MCP clients over an OAuth-protected endpoint."
+apikeyNote = "客户端在 X-API-KEY header 中发送 Stirling API key（或 Authorization: Bearer <key>）。该 key 映射到其所属的 Stirling 用户——只有已配置的账户可进入，操作会以该用户身份进行审计。在账户 > API Keys 下管理 key。"
+description = "通过受 OAuth 保护的端点，将 Stirling 的 PDF 工具和 AI agent 暴露给 MCP 客户端。"
 title = "MCP Server"
 
 [admin.settings.mcp.acceptedAudiences]
-description = "Extra token audience values accepted besides the Resource ID (comma or space separated). Leave blank for strict RFC 8707. Needed for IdPs that cannot mint resource audiences - e.g. Supabase's OAuth server always issues aud=authenticated."
-label = "Additional accepted audiences (optional)"
+description = "除 Resource ID 之外额外接受的 token audience 值（用逗号或空格分隔）。留空则严格遵循 RFC 8707。对于无法生成 resource audience 的 IdP 是必需的——例如 Supabase 的 OAuth server 总是发出 aud=authenticated。"
+label = "额外接受的 audience（可选）"
 
 [admin.settings.mcp.allowedOps]
-description = "If set, ONLY these operation ids are exposed (an allow-list; comma or space separated). Leave blank to expose all enabled tools except any blocked below."
-label = "Allowed tools"
+description = "如果设置，仅公开这些 operation id（允许列表；用逗号或空格分隔）。留空则公开所有已启用工具，但不包括下方被阻止的工具。"
+label = "允许的工具"
 
 [admin.settings.mcp.blockedOps]
-description = "Operation ids to hide from MCP (comma or space separated), e.g. add-password remove-password. Leave blank to expose all enabled tools."
-label = "Blocked tools"
+description = "要从 MCP 隐藏的 operation id（用逗号或空格分隔），例如 add-password remove-password。留空则公开所有已启用工具。"
+label = "被阻止的工具"
 
 [admin.settings.mcp.enabled]
-description = "When off (default), no /mcp endpoint, metadata, or MCP beans are loaded."
-label = "Enable MCP Server"
+description = "关闭时（默认），不会加载 /mcp 端点、元数据或 MCP beans。"
+label = "启用 MCP Server"
 
 [admin.settings.mcp.guide]
-step1 = "Enter your OAuth issuer + resource ID above, Save, and restart."
-step1ApiKey = "Create an API key under Account > API Keys (each user uses their own)."
-step2 = "In your MCP client add a"
-step2b = "server pointing at:"
-step3 = "The client auto-discovers OAuth from:"
-step3ApiKey = "Send the key in an"
-step3ApiKeyb = "header (or Authorization: Bearer <key>). No OAuth or metadata discovery is used."
-step4 = "Approve the sign-in; the client retries with a token. Tools appear grouped: convert, pages, misc, security, ai."
-step4ApiKey = "Tools appear grouped: convert, pages, misc, security, ai - and every call is audited as the key's owner."
-tip = "Tip: register the resource ID as an allowed audience in your IdP. Tested with MCP Inspector and Claude Desktop."
-tipApiKey = "Tip: API-key mode needs no external IdP - simplest for self-host. The key maps to its owning Stirling user."
-title = "Connect an MCP client"
+step1 = "在上方输入 OAuth issuer + resource ID，保存并重启。"
+step1ApiKey = "在账户 > API Keys 下创建 API key（每个用户使用自己的）。"
+step2 = "在您的 MCP 客户端中添加一个"
+step2b = "指向以下地址的 server："
+step3 = "客户端会从以下位置自动发现 OAuth："
+step3ApiKey = "在以下位置发送 key："
+step3ApiKeyb = "header（或 Authorization: Bearer <key>）。不会使用 OAuth 或元数据发现。"
+step4 = "批准登录；客户端会使用 token 重试。工具会按组显示：convert、pages、misc、security、ai。"
+step4ApiKey = "工具会按组显示：convert、pages、misc、security、ai——每次调用都会以 key 所有者的身份进行审计。"
+tip = "提示：将 resource ID 注册为 IdP 中允许的 audience。已使用 MCP Inspector 和 Claude Desktop 测试。"
+tipApiKey = "提示：API-key 模式不需要外部 IdP——最适合自托管。该 key 会映射到其所属的 Stirling 用户。"
+title = "连接 MCP 客户端"
 
 [admin.settings.mcp.issuerUri]
-description = "Your OAuth2 authorization server (must publish /.well-known/openid-configuration). Required when enabled."
+description = "您的 OAuth2 授权服务器（必须发布 /.well-known/openid-configuration）。启用时必填。"
 label = "OAuth Issuer URL"
 
 [admin.settings.mcp.jwksUri]
-description = "Leave blank to discover it from the issuer. Set only if your IdP serves keys at a non-standard URL."
-label = "JWKS URL (optional)"
-placeholder = "Auto-discovered from issuer"
+description = "留空则从 issuer 自动发现。仅当您的 IdP 在非标准 URL 提供 key 时才设置。"
+label = "JWKS URL（可选）"
+placeholder = "从 issuer 自动发现"
 
 [admin.settings.mcp.mode]
 apikey = "API key（Stirling 每用户密钥）"
-description = "OAuth needs an external IdP. API key uses a Stirling per-user API key (X-API-KEY) - simplest for self-host."
-label = "Authentication mode"
+description = "OAuth 需要外部 IdP。API key 使用 Stirling 的每用户 API key（X-API-KEY）——最适合自托管。"
+label = "身份验证模式"
 oauth = "OAuth 2.1（外部 IdP）"
 
 [admin.settings.mcp.requireAccount]
-description = "Only let tokens through if their subject maps to a provisioned, enabled Stirling user."
-label = "Require an existing Stirling account"
+description = "仅当 token 的 subject 映射到已配置且已启用的 Stirling 用户时才允许通过。"
+label = "要求已有 Stirling 账户"
 
 [admin.settings.mcp.resourceId]
-description = "This server's public /mcp URL. Tokens must list it in their audience (RFC 8707) or they are rejected."
+description = "此服务器的公开 /mcp URL。Token 必须在其 audience 中列出该值（RFC 8707），否则会被拒绝。"
 label = "Resource ID"
 
 [admin.settings.mcp.scopes]
-description = "Require mcp.tools.read for read ops and mcp.tools.write for write/AI ops."
-label = "Enforce OAuth scopes"
+description = "读取操作要求 mcp.tools.read，写入/AI 操作要求 mcp.tools.write。"
+label = "强制 OAuth scopes"
 
 [admin.settings.mcp.usernameClaim]
-description = "JWT claim matched against a Stirling username (e.g. sub, email, preferred_username)."
-label = "Username claim"
+description = "与 Stirling 用户名匹配的 JWT claim（例如 sub、email、preferred_username）。"
+label = "用户名 claim"
 
 [admin.settings.plan.noData]
-message = "当前无法获取套餐数据。"
-title = "无可用数据"
+message = "此服务器无法连接到 licence 服务。请重试，或检查 licence key。"
+title = "无方案数据"
 
 [admin.settings.premium]
 description = "配置你的高级或企业许可证密钥。"
@@ -1577,7 +1573,7 @@ file = "证书文件"
 text = "许可证密钥"
 
 [admin.settings.premium.key]
-description = "输入你的高级或企业许可证密钥"
+description = "输入您的 premium 或 enterprise license key。提供 key 后，Premium 功能将自动启用。"
 label = "许可证密钥"
 success = "许可证密钥已保存"
 successMessage = "您的许可证密钥已成功激活，无需重启。"
@@ -1601,7 +1597,7 @@ title = "功能设置"
 
 [admin.settings.privacy]
 analytics = "分析与跟踪"
-description = "配置隐私和数据收集设置。"
+description = "此服务器报告自身信息的内容及接收方。"
 searchEngine = "搜索引擎可见性"
 title = "隐私"
 
@@ -1654,7 +1650,7 @@ description = "跟踪用户操作和系统事件，用于合规与安全监控"
 label = "启用审计日志"
 
 [admin.settings.security.audit.level]
-description = "0=关闭，1=基础，2=标准，3=详细"
+description = "审计级别：OFF (0) = 不记录 | BASIC (1) = 文件修改（压缩/拆分/合并等）和设置 | STANDARD (2) = 文件操作 + 用户操作 | VERBOSE (3) = 包括轮询在内的所有请求。较高级别包含较低级别的所有事件。"
 label = "审计等级"
 
 [admin.settings.security.audit.levelDetails]
@@ -1664,7 +1660,7 @@ standard = "在 BASIC 事件基础上，另外：用户登录/登出、账户变
 verbose = "在 STANDARD 事件基础上，另外：持续轮询调用、所有 GET 请求、详细时间信息。警告：日志量大且影响性能。"
 
 [admin.settings.security.audit.retentionDays]
-description = "保留审计日志的天数"
+description = "保留审计日志的天数（0 = 无限期保留）"
 label = "审计保留（天）"
 
 [admin.settings.security.csrfDisabled]
@@ -1783,15 +1779,15 @@ description = "失败登录尝试被重置前的时间"
 label = "登录重置时间（分钟）"
 
 [admin.settings.security.ssoNotice]
-message = "OAuth2 和 SAML2 身份验证提供方已移至“连接”菜单，便于管理。"
+message = "OAuth2 和 SAML2 身份验证提供程序位于单点登录下，紧邻本节。"
 title = "在找 SSO/SAML 设置？"
 
 [admin.settings.security.xFrameOptions]
-deny = "Deny (Prevents all framing)"
-description = "Controls whether the application can be embedded in iframes"
-disabled = "Disabled (No X-Frame-Options header)"
+deny = "拒绝（阻止所有框架嵌入）"
+description = "控制应用程序是否可以嵌入 iframe"
+disabled = "已禁用（无 X-Frame-Options header）"
 label = "X-Frame-Options"
-sameorigin = "Same Origin (Allow framing from same domain)"
+sameorigin = "同源（允许来自同一域的框架嵌入）"
 
 [admin.settings.storage]
 description = "控制服务器存储和共享选项。"
@@ -1926,14 +1922,14 @@ title = "未保存的更改"
 
 [adminOnboarding]
 adminTools = "最后，我们提供高级管理工具，如用于跟踪系统活动的 <strong>审计</strong> 和用于监控用户如何与平台交互的 <strong>使用分析</strong>。"
-configButton = "点击 <strong>配置</strong> 按钮以访问所有系统设置和管理控件。"
+configButton = "打开 <strong>设置</strong> 以访问所有系统配置和管理控制。"
 connectionsSection = "<strong>连接</strong> 部分支持多种登录方式，包括自定义 SSO 和 SAML 提供商（如 Google 和 GitHub），以及用于通知和通信的邮件集成。"
 databaseSection = "对于高级生产环境，我们提供允许 <strong>外部数据库挂接</strong> 的设置，以便与您现有的基础设施集成。"
 settingsOverview = "这是 <strong>设置面板</strong>。管理员设置按类别组织，便于导航。"
 systemCustomization = "我们有多种方式自定义 UI：<strong>系统设置</strong> 可更改应用名称和语言，<strong>功能</strong> 可进行服务器证书管理，<strong>端点</strong> 可为您的用户启用或禁用特定工具。"
 teamsAndUsers = "在这里管理 <strong>团队</strong> 和单个用户。您可以通过邮件、可分享链接邀请新用户，或自行创建自定义账户。"
 welcome = "欢迎使用 <strong>管理员导览</strong>！让我们一起探索提供给系统管理员的强大企业功能和设置。"
-wrapUp = "管理员导览结束！您已看到让 Stirling PDF 成为组织强大且可定制解决方案的企业功能。可随时从 <strong>帮助</strong> 菜单访问此导览。"
+wrapUp = "管理员导览到此结束！您已经了解了让 Stirling PDF 成为强大且可自定义的组织解决方案的企业功能。您可以随时重新播放——只需打开 <strong>设置</strong>，并在帮助下的 <strong>导览</strong> 部分找到它。"
 
 [adminUserSettings]
 admin = "དོ་དམ་པ།"
@@ -1951,13 +1947,13 @@ roman = "罗马字母"
 thai = "泰语"
 
 [analytics]
-learnMore = "了解更多"
-paragraph1 = "Stirling PDF ལ་ཐོན་རྫས་ལེགས་སུ་གཏོང་བར་རོགས་རམ་བྱེད་པའི་གདམ་ག་ཡོད་པའི་དཔྱད་ཞིབ་ཡོད། ང་ཚོས་སྒེར་གྱི་ཆ་འཕྲིན་དང་ཡིག་ཆའི་ནང་དོན་གང་ཡང་རྗེས་འདེད་མི་བྱེད།"
+learnMore = "了解更多关于我们分析的信息"
+paragraph1 = "Stirling PDF 提供可选择加入的分析功能，帮助我们改进产品。我们不会跟踪任何个人信息或文件内容。"
 paragraph2 = "Stirling-PDF འཕེལ་རྒྱས་དང་ང་ཚོའི་སྤྱོད་མཁན་ལེགས་པོར་རྟོགས་པར་རོགས་རམ་བྱེད་པའི་ཆེད་དུ་དཔྱད་ཞིབ་སྤྱོད་འགོ་འཛུགས་རོགས།"
-title = "ཁྱེད་ཀྱིས་ Stirling PDF ལེགས་སུ་གཏོང་འདོད་དམ།"
+title = "您愿意帮助让 Stirling PDF 变得更好吗？"
 
 [annotate]
-tags = "annotate,highlight,draw,markup,comment,notes,review,redline,feedback,markup tools,sticky notes,shapes,arrows,text box,freehand"
+tags = "批注,高亮,绘制,标记,评论,注释,审阅,红线,反馈,标记工具,便签,形状,箭头,文本框,手绘"
 
 [annotation]
 alignCenter = "居中对齐"
@@ -1990,7 +1986,7 @@ delete = "删除"
 deleted = "注释已删除"
 drawing = "绘图"
 editSelectDescription = "单击现有注释以编辑其颜色、不透明度、文本或大小。"
-editText = "编辑文本框"
+editText = "编辑"
 fillColor = "填充颜色"
 fillOpacity = "填充不透明度"
 fontSize = "字号"
@@ -2033,19 +2029,34 @@ undoDelete = "撤销"
 width = "宽度"
 
 [app]
-description = "免费的 Adobe Acrobat 替代方案（下载量 1000 万+）"
+description = "一个免费、私密的 PDF 编辑器，可在任何基础设施上运行。"
 
 [appBanner]
-dismiss = "Dismiss"
+dismiss = "关闭"
 
 [attachments]
+addAttachments = "添加附件..."
 convertToPdfA3b = "转换为 PDF/A-3b"
-convertToPdfA3bDescription = "创建带嵌入附件的归档 PDF"
 convertToPdfA3bTooltip = "PDF/A-3b 是一种确保长期保存的归档格式。它允许将任意文件格式作为附件嵌入。转换需要 Ghostscript，对于大文件可能耗时更长。"
 convertToPdfA3bTooltipHeader = "关于 PDF/A-3b 转换"
 convertToPdfA3bTooltipTitle = "功能说明"
-tags = "附件,添加,删除,嵌入,文件"
-title = "添加附件"
+discardChanges = "放弃"
+downloadSingle = "下载附件"
+duplicateName = "名为 '{{name}}' 的附件已存在。"
+extractAll = "全部提取"
+filterPlaceholder = "筛选附件..."
+noAttachments = "此 PDF 中尚无附件。将文件拖放到下方或点击浏览。"
+remove = "移除附件"
+rename = "重命名附件"
+restore = "撤销删除"
+saveChanges = "保存更改（{{count}}）"
+tags = "附件,添加,移除,嵌入,文件,提取,管理"
+title = "管理附件"
+
+[attachments.badges]
+deleted = "已删除"
+renamed = "已重命名"
+staged = "已暂存"
 
 [audit]
 configureAudit = "配置审计日志"
@@ -2055,12 +2066,12 @@ disabledMessage = "请在应用配置中启用审计日志以跟踪系统事件�
 enterpriseRequired = "需要企业版许可证"
 enterpriseRequiredMessage = "审计日志系统是企业功能。请升级到企业版许可证以访问审计日志和分析功能。"
 goToSettings = "前往审计设置"
-notAvailable = "审计系统不可用"
-notAvailableMessage = "审计系统未配置或不可用。"
+notAvailable = "审计日志已关闭"
+notAvailableMessage = "在登录与安全中开启以开始记录活动。"
 
 [audit.charts]
 byType = "按类型分类的事件"
-byUser = "按用户分类的事件"
+byUser = "热门用户"
 day = "日"
 error = "加载图表时出错"
 month = "月"
@@ -2285,12 +2296,12 @@ desc = "通过将 PDF 操作串联起来构建多步工作流。非常适合重�
 export = "导出"
 exportForFolderScanning = "导出用于文件夹扫描"
 import = "导入"
-importPartialSuccess_one = "Imported with {{count}} unmapped operation: {{ops}}"
-importPartialSuccess_other = "Imported with {{count}} unmapped operations: {{ops}}"
+importPartialSuccess_one = "已导入，但有 {{count}} 个未映射操作：{{ops}}"
+importPartialSuccess_other = "已导入，但有 {{count}} 个未映射操作：{{ops}}"
 importSuccess = "已导入自动化：{{name}}"
 invalidStep = "无效步骤"
 reviewTitle = "自动化结果"
-tags = "workflow,sequence,automation,automate,batch,batch processing,pipeline,chain,multi-step,recurring,scheduled,automatic,process multiple,bulk operations"
+tags = "workflow,序列,自动化,自动执行,批量,批处理,pipeline,链式,多步骤,重复,计划,自动,处理多个,批量操作"
 title = "自动化"
 
 [automate.config]
@@ -2346,8 +2357,8 @@ dropHint = "将 JSON 拖到此处，或点击选择文件"
 dropSubhint = "支持自动化和文件夹扫描两种配置"
 dropzoneAriaLabel = "将一个自动化 JSON 文件拖到此处"
 intro = "拖放一个 JSON 文件，或在下方粘贴其内容。格式（自动化或文件夹扫描）将自动检测。"
-opCount_one = "{{count}} operation"
-opCount_other = "{{count}} operations"
+opCount_one = "{{count}} 个操作"
+opCount_other = "{{count}} 个操作"
 parseError = "无法解析：{{message}}"
 pasteLabel = "或粘贴 JSON"
 pastePlaceholder = "在此粘贴您的自动化 JSON…"
@@ -2375,7 +2386,7 @@ finish = "完成"
 run = "运行自动化"
 running = "正在运行自动化..."
 signInToRun = "登录以运行自动化。"
-steps_one = "{{count}} step"
+steps_one = "{{count}} 个步骤"
 steps_other = "{{count}} 个步骤"
 unnamed = "未命名的自动化"
 
@@ -2393,11 +2404,11 @@ secureWorkflowDesc = "通过移除可能的恶意内容（如 JavaScript 和嵌�
 
 [autoRename]
 description = "此工具将根据内容自动重命名 PDF 文件。它会分析文档以从文本中找到最合适的标题。"
-tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
+tags = "自动检测,基于标题,整理,重新标记,自动重命名,智能重命名,按内容重命名,文件名,文件命名,检测标题"
 
 [autoRotate]
 submit = "自动旋转"
-tags = "auto rotate,fix orientation,upside down,sideways,straighten,orient,detect orientation,correct rotation,auto orient,scanned,OSD"
+tags = "自动旋转,修正方向,上下颠倒,侧向,校直,定向,检测方向,校正旋转,自动定向,扫描,OSD"
 
 [autoRotate.confidenceThreshold]
 title = "置信度阈值"
@@ -2476,7 +2487,16 @@ checking = "正在检查后端状态..."
 offline = "后端离线"
 online = "后端在线"
 starting = "后端正在启动..."
+unavailable = "Backend 不可用"
 wait = "请等待后端启动完成后再试。"
+
+[backendHealth.restart]
+attempting = "正在尝试重启...（{{attempt}}/{{max}}）"
+failedBody = "无法恢复本地 backend。请重启应用。"
+failedTitle = "Backend 重启失败"
+stoppedTitle = "Backend 意外停止"
+successBody = "本地 backend 已恢复在线。"
+successTitle = "Backend 已重启"
 
 [backendStartup]
 notFoundTitle = "未找到后端"
@@ -2714,7 +2734,7 @@ logoTitle = "徽标"
 name = "མིང་།"
 noLogo = "无徽标"
 pageNumber = "页码"
-password = "ཁྱེད་ཀྱི་ལྡེ་མིག་མཛོད་དམ་སྒེར་གྱི་ལྡེ་མིག་གི་གསང་ཚིག་འཇུག་པ། (གལ་སྲིད་ཡོད་ན།)"
+password = "证书密码"
 passwordOptional = "若无密码则留空"
 pemCertificateLabel = "证书 (.pem / .crt)"
 pemPrivateKeyLabel = "私钥 (.pem / .key)"
@@ -2725,7 +2745,7 @@ serverCertMessage = "正在使用服务器证书 - 无需文件或密码"
 showLogo = "མཚོན་རྟགས་སྟོན།"
 signatureProgress = "{{signedCount}}/{{totalCount}} 个签名"
 signed = "已签署"
-tags = "ར་སྤྲོད།,PEM,P12,གཞུང་འབྲེལ།,གསང་སྡོམ།"
+tags = "身份验证,PEM,P12,官方,加密,签名,证书,PKCS12,JKS,服务器,手动,自动"
 title = "ལག་ཁྱེར་མིང་རྟགས།"
 viewed = "已查看"
 
@@ -2782,8 +2802,8 @@ title = "我该使用哪个选项？"
 stepTitle = "证书格式"
 
 [certSign.collab.addParticipants]
-add_one = "Add {{count}} Participant"
-add_other = "Add {{count}} Participants"
+add_one = "添加 {{count}} 位参与者"
+add_other = "添加 {{count}} 位参与者"
 reasonHelp = "为这些参与者预设签署理由（可选，签署时可覆盖）"
 reasonPlaceholder = "例如：审批、审核…"
 
@@ -2892,8 +2912,8 @@ certInvalidFallback = "证书无效"
 certNetworkError = "无法验证证书"
 certValidating = "正在验证证书…"
 certValidUntil = "证书有效期至 {{date}}"
-description_one = "You have placed {{count}} signature. Choose your certificate to complete signing."
-description_other = "You have placed {{count}} signatures. Choose your certificate to complete signing."
+description_one = "您已放置 {{count}} 个签名。请选择您的证书以完成签名。"
+description_other = "您已放置 {{count}} 个签名。请选择您的证书以完成签名。"
 sign = "签署文档"
 title = "配置证书"
 
@@ -3041,7 +3061,7 @@ title = "ངོ་སྤྲོད་ལག་ཁྱེར་བསྒྱུར�
 [changeMetadata]
 filenamePrefix = "元数据"
 submit = "བསྒྱུར་བ།"
-tags = "edit,modify,update,metadata,properties,document properties,author,title,subject,keywords,creator,producer,info,document info,file properties"
+tags = "编辑,修改,更新,元数据,属性,文档属性,作者,标题,主题,关键词,创建者,生成器,信息,文档信息,文件属性"
 
 [changeMetadata.advanced]
 title = "高级选项"
@@ -3149,7 +3169,7 @@ unknown = "未知"
 [changePermissions]
 desc = "更改文档限制和权限。"
 submit = "更改权限"
-tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
+tags = "权限,限制,权利,访问控制,允许,拒绝,打印,复制,编辑,修改权限,安全设置,用户权利"
 title = "更改权限"
 
 [changePermissions.error]
@@ -3195,19 +3215,19 @@ text = "要使这些权限不可更改，请使用添加密码工具设置所有
 copy = "复制消息"
 
 [chat.emptyState]
-text = "Ask a question about your documents or get help with PDF tools."
+text = "询问有关您文档的问题，或获取 PDF 工具帮助。"
 
 [chat.fab]
-close = "Close chat"
-open = "Open Stirling AI assistant"
+close = "关闭聊天"
+open = "打开 Stirling AI 助手"
 
 [chat.header]
 agentMenu = "Stirling 代理选项"
-assistant = "AI Assistant"
+assistant = "AI 助手"
 clearChat = "清空聊天"
 
 [chat.input]
-disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
+disclaimer = "AI 可能会出错。分享前请务必验证输出。"
 placeholder = "你想做什么？"
 send = "发送消息"
 
@@ -3220,11 +3240,11 @@ executing_tool_single = "正在运行 {{tool}}..."
 executing_tool_step = "正在运行 {{tool}}（第 {{step}} 步，共 {{total}} 步）..."
 extracting_content = "正在从您的文档中提取内容..."
 processing = "正在处理提取的内容..."
-ranForMinutes_one = "Ran for 1 minute"
-ranForMinutes_other = "Ran for {{count}} minutes"
-ranForMinutesSeconds = "Ran for {{minutes}} min, {{seconds}} sec"
-ranForSeconds_one = "Ran for 1 second"
-ranForSeconds_other = "Ran for {{count}} seconds"
+ranForMinutes_one = "运行了 1 分钟"
+ranForMinutes_other = "运行了 {{count}} 分钟"
+ranForMinutesSeconds = "运行了 {{minutes}} 分 {{seconds}} 秒"
+ranForSeconds_one = "运行了 1 秒"
+ranForSeconds_other = "运行了 {{count}} 秒"
 thinking = "思考中..."
 whole_doc_compression_round = "正在整合笔记..."
 whole_doc_read_done = "已完成读取文档..."
@@ -3252,7 +3272,7 @@ need_clarification = "你能再澄清一下你的请求吗？"
 not_found = "我找不到所需信息。"
 processing = "正在处理（{{outcome}}）..."
 unsupported_capability = "不支持的能力：{{capability}}"
-usage_limit_reached = "You've reached your usage limit. Check your plan options to keep going."
+usage_limit_reached = "您已达到使用限制。请查看您的方案选项以继续使用。"
 
 [chat.toolsUsed]
 summary_one = "已运行 1 个工具"
@@ -3621,18 +3641,18 @@ tooltip = "此操作将使用您的云额度"
 tooltip = "从屏幕取色"
 
 [colorPicker]
-hue = "Hue"
-saturation = "Saturation and brightness"
+hue = "色相"
+saturation = "饱和度和亮度"
 title = "选择颜色"
 
 [common]
-actions = "Actions"
+actions = "操作"
 back = "返回"
 cancel = "取消"
 change = "更改"
 clearFilters = "清除筛选器"
 close = "关闭"
-codeSample = "Code sample"
+codeSample = "代码示例"
 collapse = "折叠"
 confirm = "确认"
 continue = "继续"
@@ -3641,7 +3661,7 @@ copy = "复制"
 copyCode = "复制代码"
 dismiss = "关闭"
 done = "完成"
-enterValue = "Enter value"
+enterValue = "输入值"
 error = "错误"
 expand = "展开"
 filterEmpty = "没有可筛选的内容"
@@ -3651,7 +3671,7 @@ moreInformation = "更多信息"
 next = "下一步"
 noData = "无数据"
 nOfTotal = "{{current}} / {{total}}"
-open = "Open"
+open = "打开"
 preview = "预览"
 previous = "上一步"
 refresh = "刷新"
@@ -3662,7 +3682,7 @@ search = "搜索"
 settingsSections = "设置部分"
 showAllTotal = "显示全部 {{total}}"
 showLess = "显示更少"
-stepOf = "Step {{current}} of {{total}}"
+stepOf = "第 {{current}} 步，共 {{total}} 步"
 
 [compare]
 clearSelected = "清除所选"
@@ -3685,7 +3705,7 @@ zoomIn = "放大"
 zoomOut = "缩小"
 
 [compare.clear]
-confirm = "清除并返回"
+confirm = "清除所选"
 confirmBody = "这将关闭当前比较并返回到“活动文件”。"
 confirmTitle = "清除已选 PDF？"
 
@@ -3704,7 +3724,7 @@ title = "这些 PDF 看起来差异很大"
 
 [compare.edited]
 label = "已编辑 PDF"
-placeholder = "Select the edited PDF"
+placeholder = "选择已编辑的 PDF"
 selectBaseFirst = "请先选择原始 PDF"
 
 [compare.error]
@@ -3725,7 +3745,7 @@ message = "འདེམས་པའི་ PDF གཅིག་གམ་གཉི�
 
 [compare.original]
 label = "原始 PDF"
-placeholder = "Select the original PDF"
+placeholder = "选择原始 PDF"
 
 [compare.pixel]
 base = "原始"
@@ -3791,7 +3811,7 @@ message = "这些文档差异很大。为节省时间已停止比较。"
 [compress]
 desc = "压缩 PDF 以减小文件大小。"
 submit = "སྡུད་སྒྲིལ།"
-tags = "shrink,reduce,optimize,compress,smaller,downsize,file size,reduce size,minimize,make smaller,decrease size,optimize size"
+tags = "缩小,减小,优化,压缩,更小,缩减,文件大小,减小大小,最小化,变小,降低大小,优化大小"
 title = "སྡུད་སྒྲིལ།"
 
 [compress.compressionLevel]
@@ -3826,7 +3846,7 @@ title = "压缩方式"
 [compress.settings]
 desiredSize = "期望的文件大小"
 desiredSizePlaceholder = "输入大小"
-desiredSizeUnit = "Size unit"
+desiredSizeUnit = "大小单位"
 title = "设置"
 
 [compress.tooltip.description]
@@ -3856,7 +3876,7 @@ tags = "བསྡུས་པ།,ཆུང་ཆུང་།,ཆུང་ཆུ�
 [config]
 plan = "套餐"
 planDescription = "您的计划、额度和支出限制，以及相关发票。"
-team = "Team"
+team = "团队"
 teamDescription = "共享此工作区的人员，以及仍在等待答复的邀请。"
 
 [config.account.overview]
@@ -3870,7 +3890,7 @@ enterEmailConfirm = "为确认删除，请在下方输入您的邮箱地址（{{
 guestDescription = "您以访客身份登录。考虑升级您的账户。"
 label = "概览"
 manageAccountPreferences = "管理您的账户偏好"
-signedInAs = "登录身份"
+signedInAs = "账户"
 title = "账户设置"
 
 [config.account.profilePicture]
@@ -3953,27 +3973,27 @@ title = "刷新 API 密钥"
 warning = "⚠️ 警告：此操作将生成新的 API 密钥，并使之前的密钥失效。"
 
 [config.mcp]
-description = "Model Context Protocol (MCP) lets AI assistants like Claude use your Stirling PDF tools directly. Connect a client once and your assistant can convert, edit, secure and process documents on your behalf."
-guestInfo = "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf."
+description = "Model Context Protocol (MCP) 让 Claude 等 AI 助手可以直接使用您的 Stirling PDF 工具。连接一次客户端后，您的助手即可代表您转换、编辑、保护和处理文档。"
+guestInfo = "访客用户无法连接 MCP 客户端。创建账户即可使用 MCP server，并让您的 AI 助手代表您运行 Stirling PDF 工具。"
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
-viewApiKeys = "View API keys"
+viewApiKeys = "查看 API key"
 
 [config.mcp.copy]
-configLabel = "Config"
-copied = "Copied"
-copy = "Copy"
+configLabel = "配置"
+copied = "已复制"
+copy = "复制"
 endpointLabel = "Endpoint URL"
-tooltip = "Copy {{label}}"
-tooltipCopied = "{{label}} copied"
+tooltip = "复制 {{label}}"
+tooltipCopied = "已复制 {{label}}"
 
 [config.mcp.endpoint]
-label = "Your MCP endpoint"
+label = "您的 MCP endpoint"
 
 [config.mcp.setup]
-addTo = "Add to"
-hint = "Pick your client, paste the snippet into the file shown, then restart it. You'll sign in with your Stirling account on first use - no keys to copy."
-title = "Connect your AI assistant"
+addTo = "添加到"
+hint = "选择您的客户端，将片段粘贴到显示的文件中，然后重启它。首次使用时，您将使用 Stirling 账户登录——无需复制 key。"
+title = "连接您的 AI 助手"
 
 [config.overview]
 description = "当前应用设置和配置信息。"
@@ -4047,8 +4067,8 @@ color = "颜色"
 colorType = "颜色类型"
 combineImages = "合并图像"
 combineImagesDescription = "将所有图像合并为一个 PDF，或为每个图像创建单独的 PDF"
-combineSvgs = "Combine SVGs into single PDF"
-combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+combineSvgs = "将 SVG 合并为单个 PDF"
+combineSvgsDescription = "将所有 SVG 文件合并为一个多页 PDF，或为每个 SVG 创建单独的 PDF"
 conversionResults = "转换结果"
 convertFiles = "转换文件"
 convertFrom = "从以下格式转换"
@@ -4077,40 +4097,40 @@ output = "输出"
 outputFormat = "输出格式"
 pdfaAccessibleFormat = "{{format}}（可访问）"
 pdfaDigitalSignatureWarning = "该 PDF 包含数字签名。下一步将移除它。"
-pdfaNote = "PDF/A-1b 兼容性更好，PDF/A-2b 支持更多功能。"
+pdfaNote = "PDF/A-1b 兼容性更好，PDF/A-2b 支持更多功能，PDF/A-3b 支持嵌入文件。"
 pdfaOptions = "PDF/A 选项"
 pdfOptions = "PDF 选项"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
 pdfToEpub = "PDF → EPUB"
-pdfUaAltTextNotice = "Images need a written description before a document can be certified. Descriptions are never generated automatically, because an invented one passes the checker while telling a screen-reader user nothing. Any image left without one is reported, and the file comes back tagged but not certified."
-pdfUaAltTextScanFailed = "The images could not be listed. Convert anyway and the response reports what is missing."
-pdfUaAltTextSingleFileOnly = "Descriptions belong to one document: an image is identified by its position, which is a different image in every file. Convert these {{fileCount}} files to tag them, then convert one at a time to describe its images."
-pdfUaEmbedFonts = "Embed missing fonts"
-pdfUaEmbedFontsHelp = "PDF/UA requires every font to be embedded. Turning this off is faster but usually prevents conformance."
-pdfUaFigureLabel = "Page {{page}} {{kind}}"
-pdfUaFigurePlaceholder = "What this image tells the reader"
-pdfUaFindImages = "Find images needing a description"
-pdfUaLanguage = "Document language"
-pdfUaLanguageHelp = "A BCP-47 tag such as en-GB. Used only when the document does not already declare its own language."
-pdfUaNoImagesNeedingText = "No image is missing a description."
-pdfUaOptions = "PDF/UA Options"
-pdfUaOverrideLanguage = "Replace the document's own language"
-pdfUaOverrideLanguageHelp = "Only tick this if the language above is right and the document's own is wrong. Relabelling a document into a language it is not written in makes a screen reader unintelligible."
-pdfUaProfile = "Conformance level"
-pdfUaSignatureWarning = "This PDF is digitally signed. Tagging rewrites the page content the signature covers, so the signature will stop verifying. Convert first, then re-sign."
-pdfUaTitle = "Document title"
-pdfUaTitleHelp = "Shown by a reader instead of the filename. Left blank, the first heading is used."
+pdfUaAltTextNotice = "文档认证前，图像需要书面描述。描述绝不会自动生成，因为编造的描述虽然能通过检查器，却无法为屏幕阅读器用户提供任何信息。任何未提供描述的图像都会被报告，文件会返回为已标记但未认证。"
+pdfUaAltTextScanFailed = "无法列出图像。仍可转换，响应会报告缺失内容。"
+pdfUaAltTextSingleFileOnly = "描述属于单个文档：图像由其位置标识，而每个文件中的同一位置可能是不同图像。请转换这 {{fileCount}} 个文件以添加标签，然后一次转换一个文件来描述其图像。"
+pdfUaEmbedFonts = "嵌入缺失字体"
+pdfUaEmbedFontsHelp = "PDF/UA 要求嵌入每种字体。关闭此项速度更快，但通常会阻止符合规范。"
+pdfUaFigureLabel = "第 {{page}} 页 {{kind}}"
+pdfUaFigurePlaceholder = "此图像告诉读者的内容"
+pdfUaFindImages = "查找需要描述的图像"
+pdfUaLanguage = "文档语言"
+pdfUaLanguageHelp = "BCP-47 标签，例如 en-GB。仅在文档尚未声明自身语言时使用。"
+pdfUaNoImagesNeedingText = "没有缺少描述的图像。"
+pdfUaOptions = "PDF/UA 选项"
+pdfUaOverrideLanguage = "替换文档自身语言"
+pdfUaOverrideLanguageHelp = "仅当上方语言正确且文档自身语言错误时勾选此项。将文档重新标记为其并未使用的语言会使屏幕阅读器难以理解。"
+pdfUaProfile = "符合级别"
+pdfUaSignatureWarning = "此 PDF 已进行数字签名。添加标签会重写签名覆盖的页面内容，因此签名将无法通过验证。请先转换，再重新签名。"
+pdfUaTitle = "文档标题"
+pdfUaTitleHelp = "阅读器显示此标题而不是文件名。留空则使用第一个标题。"
 selectSourceFormatFirst = "请先选择源格式"
 settings = "设置"
 single = "单个"
 sourceFormatPlaceholder = "源格式"
-strictMode = "Strict Mode"
-strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
-svgPdfOptions = "SVG to PDF Options"
+strictMode = "严格模式"
+strictModeDesc = "如果转换不完美则报错（使用 VeraPDF 验证）"
+svgPdfOptions = "SVG 转 PDF 选项"
 svgToPdf = "SVG → PDF"
-svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
-tags = "transform,change,convert,PDF to Word,PDF to Excel,PDF to image,Word to PDF,Excel to PDF,PowerPoint to PDF,HTML to PDF,export,import,file conversion,format change,save as"
+svgVectorNote = "SVG 文件会渲染为矢量图形，在任何分辨率下都能清晰输出。SVG 中的尺寸决定 PDF 页面大小。"
+tags = "转换,更改,转换,PDF to Word,PDF to Excel,PDF to image,Word to PDF,Excel to PDF,PowerPoint to PDF,HTML to PDF,导出,导入,文件转换,格式更改,另存为"
 targetFormatPlaceholder = "目标格式"
 title = "转换"
 webOptions = "网页转 PDF 选项"
@@ -4161,8 +4181,8 @@ showPreferencesBtn = "管理偏好"
 title = "我们如何使用 Cookies"
 
 [cookieBanner.popUp.description]
-1 = "我们使用 cookies 和其他技术，让 Stirling PDF 为你更好地工作——帮助我们改进工具，并持续构建你会喜欢的功能。"
-2 = "If you’d rather not, clicking 'No Thanks' will only enable the essential cookies needed to keep things running smoothly."
+1 = "我们使用 cookies 和其他技术，让 Stirling PDF 更好地为您服务——帮助我们改进工具，并持续构建您会喜欢的功能。"
+2 = "如果您不愿意，点击“不了，谢谢”将只启用保持正常运行所需的必要 cookies。"
 
 [cookieBanner.preferencesModal]
 acceptAllBtn = "全部接受"
@@ -4174,16 +4194,16 @@ subtitle = "Cookie 使用"
 title = "同意偏好中心"
 
 [cookieBanner.preferencesModal.analytics]
-description = "这些 cookies 帮助我们了解我们的工具是如何被使用的，从而让我们专注于构建社区最看重的功能。请放心——Stirling PDF 不能且绝不会跟踪你处理的文档内容。"
+description = "这些 cookies 帮助我们了解工具的使用方式，以便专注构建社区最重视的功能。请放心——Stirling PDF 不能，也绝不会跟踪您处理的文档内容。"
 title = "分析"
 
 [cookieBanner.preferencesModal.description]
 1 = "Stirling PDF 使用 cookies 和类似技术来提升你的体验，并了解我们的工具如何被使用。这有助于我们改进性能、开发你关心的功能，并为用户提供持续支持。"
-2 = "Stirling PDF 不能——也绝不会——跟踪或访问你使用的文档内容。"
+2 = "Stirling PDF 不能，也绝不会跟踪或访问您使用的文档内容。"
 3 = "你的隐私与信任是我们工作的核心。"
 
 [cookieBanner.preferencesModal.necessary]
-description = "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms—which is why they can’t be turned off."
+description = "这些 cookies 对网站正常运行至关重要。它们启用核心功能，例如设置隐私偏好、登录和填写表单——因此无法关闭。"
 
 [cookieBanner.preferencesModal.necessary.title]
 1 = "严格必要的 Cookies"
@@ -4215,9 +4235,9 @@ title = "关于 PDF Portfolios"
 
 [crop]
 autoCrop = "自动裁剪空白"
-noFileSelected = "选择一个 PDF 文件开始裁剪"
+noFileSelected = "添加 PDF 文件以开始裁剪"
 reset = "重置为完整 PDF"
-submit = "ཕུལ་བ།"
+submit = "应用裁剪"
 title = "གཏུབ་གཅོད།"
 
 [crop.automation]
@@ -4281,12 +4301,20 @@ message = "设置默认 PDF 处理程序失败"
 title = "错误"
 
 [defaultApp.settingsOpened]
-message = "请在系统设置中选择 Stirling PDF"
+message = "在 Windows 设置中搜索 'PDF'，并选择 Stirling PDF 作为默认应用"
 title = "已打开设置"
 
 [defaultApp.success]
 message = "Stirling PDF 已设为您的默认 PDF 编辑器"
 title = "已设为默认应用"
+
+[desktop.fileSave]
+saveFilesTitle_one = "保存 {{count}} 个文件"
+saveFilesTitle_other = "保存 {{count}} 个文件"
+
+[desktop.saasError]
+body = "此工具需要云端处理，但遇到错误：{{error}}。请检查您的连接并重试。"
+title = "云端处理失败"
 
 [desktop.titleBar]
 maximize = "最大化"
@@ -4346,24 +4374,24 @@ message = "Stirling-PDF 无权在此设备上自行更新。"
 title = "需要管理员权限"
 
 [devAirgapped]
-tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
+tags = "air-gapped,离线,隔离,无互联网,已断开,安全,网络隔离,独立"
 
 [devApi]
-tags = "API,development,documentation,developer,REST,integration,endpoints,programmatic,automation,scripting"
+tags = "API,开发,文档,开发者,REST,集成,endpoints,程序化,自动化,脚本"
 
 [devFolderScanning]
-tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,batch,monitor folder,auto process,folder monitoring"
+tags = "自动化,文件夹,扫描,监视文件夹,热文件夹,自动处理,批量,监控文件夹,自动处理,文件夹监控"
 
 [devSsoGuide]
-tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
+tags = "SSO,单点登录,身份验证,SAML,OAuth,OIDC,登录,企业,身份提供商,IdP"
 
 [dropdownList]
-noItems = "No items available"
-noResults = "No results found"
+noItems = "没有可用项目"
+noResults = "未找到结果"
 searchPlaceholder = "搜索..."
 selectedCount = "已选择 {{count}} 个"
-selectLanguages = "Select languages"
-selectOption = "Select an option"
+selectLanguages = "选择语言"
+selectOption = "选择一个选项"
 
 [editableSecretField]
 edit = "编辑"
@@ -4371,7 +4399,7 @@ editSecretValue = "编辑机密值"
 
 [editTableOfContents]
 submit = "应用目录"
-tags = "bookmarks,contents,edit,table of contents,TOC,outline,navigation,chapters,sections,add bookmarks,edit bookmarks,PDF outline"
+tags = "书签,目录,编辑,目录,TOC,大纲,导航,章节,小节,添加书签,编辑书签,PDF 大纲"
 workbenchLabel = "大纲工作区"
 
 [editTableOfContents.actions]
@@ -4469,8 +4497,8 @@ title = "移除密码以继续"
 unlock = "解锁并继续"
 unlockAll = "用于全部（{{count}}）"
 unlockAllPartialFail = "密码错误：{{names}}"
-unlockAllSuccess_one = "Unlocked {{count}} file."
-unlockAllSuccess_other = "Unlocked {{count}} files."
+unlockAllSuccess_one = "已解锁 {{count}} 个文件。"
+unlockAllSuccess_other = "已解锁 {{count}} 个文件。"
 unlockPrompt = "解锁 PDF 以继续"
 viewerLocked = "此 PDF 受密码保护"
 viewerUnlock = "解锁"
@@ -4485,7 +4513,37 @@ title = "端点统计"
 [error]
 _value = "ནོར་འཁྲུལ།"
 dismissAllErrors = "清除所有错误"
+failedFiles = "失败文件：{{ids}}"
 generic = "发生错误"
+invalidOrCorruptedFiles = "由于文件无效/损坏，处理失败"
+networkError = "网络错误"
+requestError = "请求错误"
+requestFailed = "请求失败"
+requestFallback = "处理您的请求时出错。"
+serverError = "服务器错误"
+unknown = "发生未知错误"
+
+[error.pdfOpen]
+code = "无法打开 PDF（错误 {{code}}）。"
+corrupted = "PDF 文件已损坏，无法读取。"
+invalid = "此文件不是有效的 PDF，或已损坏。"
+pageLoadFailed = "此 PDF 中的某一页无法加载。"
+passwordProtected = "此 PDF 受密码保护。"
+unknown = "无法打开 PDF（未知错误）。"
+unsupportedSecurity = "此 PDF 使用不受支持的安全方案。"
+
+[error.processing]
+cancelled = "处理已被用户取消。"
+corruption = "此 PDF 文件似乎已损坏或已加密。请尝试其他文件。"
+failed = "处理失败：{{message}}"
+memory = "内存不足，无法处理此文件。请尝试关闭其他应用程序或处理较小的文件。"
+network = "网络连接失败。请检查您的互联网连接并重试。"
+parsing = "处理 PDF 失败：{{message}}"
+timeout = "处理超时。此文件可能过大或过于复杂，无法处理。"
+
+[errorBoundary]
+title = "出现问题"
+tryAgain = "重试"
 
 [extractImages]
 allowDuplicates = "བསྐྱར་ཟློས་པར་རིས་ཉར་ཚགས།"
@@ -4505,7 +4563,7 @@ tags = "ཕྱིར་འདོན།"
 
 [extractPages]
 submit = "提取页面"
-tags = "pull,select,copy,extract,extract pages,get pages,pull out,save pages,export pages,copy pages,select pages,specific pages"
+tags = "拉取,选择,复制,提取,提取页面,获取页面,抽出,保存页面,导出页面,复制页面,选择页面,特定页面"
 title = "提取页面"
 
 [extractPages.error]
@@ -4558,12 +4616,12 @@ failed = "从 {{name}} 提取文件失败"
 [fileManager]
 addToUpload = "添加到上传"
 clearAll = "全部清除"
-clearSelection = "清除选择"
+clearSelection = "清除"
 delete = "删除"
 deleteAll = "全部删除"
 download = "下载"
-downloadSelected = "下载所选"
-filesSelected = "个文件已选择"
+downloadSelected = "下载文件"
+filesSelected = "个文件"
 filesStored = "个文件已存储"
 loadingFiles = "正在加载文件..."
 noFiles = "暂无文件"
@@ -4571,7 +4629,7 @@ noFilesFound = "未找到与搜索匹配的文件"
 openInFileEditor = "在文件编辑器中打开"
 openInPageEditor = "在页面编辑器中打开"
 reloadFiles = "重新加载文件"
-saveSelected = "保存所选"
+saveSelected = "保存文件"
 searchFiles = "搜索文件..."
 share = "共享"
 shared = "共享"
@@ -4582,18 +4640,18 @@ sharedWithYou = "与您共享"
 showAll = "显示全部"
 showAllCount_one = "显示全部（{{count}} 个文件）"
 showAllCount_other = "显示全部（{{count}} 个文件）"
-sortBy = "Sort files"
+sortBy = "排序文件"
 sortByDate = "按日期排序"
 sortByName = "按名称排序"
 sortBySize = "按大小排序"
 storage = "存储"
-storageUsed = "Storage used"
+storageUsed = "已用存储"
 title = "上传 PDF 文件"
 unsupported = "不支持"
 unzip = "解压"
 updateOnServer = "在服务器上更新"
 uploadToServer = "上传到服务器"
-versionHistory = "Version history"
+versionHistory = "版本历史"
 
 [filePicker]
 add_one = "添加 {{count}} 个文件"
@@ -4628,8 +4686,8 @@ previewOf = "{{name}} 的预览"
 addFiles = "添加文件"
 created = "创建时间"
 notIncludedInToolRun = "未包含在本次工具运行中"
-selectFromWorkbench = "从工作台选择文件，或 "
-selectMultipleFromWorkbench = "从工作台至少选择 {{count}} 个文件，或 "
+selectFromWorkbench = "将文件添加到工作台或 "
+selectMultipleFromWorkbench = "将至少 {{count}} 个文件添加到工作台或 "
 size = "文件大小"
 title = "文件"
 upload = "上传"
@@ -4660,18 +4718,18 @@ addFiles = "添加文件"
 addingFiles = "正在添加文件…"
 collapse = "折叠侧边栏"
 customizeGroups = "自定义分组"
-dataLostBody = "This browser lost this file's contents. Upload it again to keep working with it."
-dataLostTitle = "File data is unavailable"
-downloadFailed = "Download failed"
+dataLostBody = "此浏览器丢失了此文件的内容。请重新上传以继续处理。"
+dataLostTitle = "文件数据不可用"
+downloadFailed = "下载失败"
 dropHint = "打开文件以开始"
-dropToAdd = "Drop files to add"
-duplicateFailed = "Could not duplicate file"
+dropToAdd = "拖放文件以添加"
+duplicateFailed = "无法复制文件"
 expand = "展开侧边栏"
 googleDrive = "Google Drive"
 library = "PDF 库"
-myFiles = "我的文件"
+myFiles = "文件库"
 noFiles = "尚无文件"
-openFileManager = "打开文件管理器"
+openFileManager = "浏览所有文件和文件夹"
 openFromComputer = "从电脑打开"
 openSettings = "打开设置"
 other = "其他"
@@ -4683,31 +4741,31 @@ viewAll = "查看全部 {{count}} 个文件"
 
 [fileSidebar.fileItem]
 closeViewer = "关闭查看器"
-dataLost = "Data lost"
-dataLostTooltip = "This browser lost this file's contents. Upload it again to keep working with it."
-delete = "Delete"
-duplicate = "Duplicate"
-moreActions = "More actions"
+dataLost = "数据丢失"
+dataLostTooltip = "此浏览器丢失了此文件的内容。请重新上传以继续处理。"
+delete = "删除"
+duplicate = "复制"
+moreActions = "更多操作"
 openInViewer = "在查看器中打开"
-rename = "Rename"
-savedToServer = "Saved to server"
-updateOnServer = "Update on server"
-uploadToServer = "Upload to server"
-versionHistory = "Version history"
+rename = "重命名"
+savedToServer = "已保存到服务器"
+updateOnServer = "在服务器上更新"
+uploadToServer = "上传到服务器"
+versionHistory = "版本历史"
 
 [fileSidebar.groupsModal]
 done = "完成"
-reset = "重置为默认值"
-subtitle = "将文件归入父类别。向类别添加现有或新标签、重命名类别，或创建自己的类别。不属于任何类别的文件会显示在“其他”下。"
+reset = "显示全部"
+subtitle = "显示或隐藏文件侧边栏中的类别。"
 title = "侧边栏类别"
 
 [fileSidebar.rename]
-cancel = "Cancel"
-error = "Could not rename the file."
-illegalCharacters = "A file name can't contain \\ / : * ? \" < > |"
-label = "File name"
-save = "Rename"
-title = "Rename file"
+cancel = "取消"
+error = "无法重命名文件。"
+illegalCharacters = "文件名不能包含 \\ / : * ? \" < > |"
+label = "文件名"
+save = "重命名"
+title = "重命名文件"
 
 [filesPage]
 addedToLibrary = "已添加到 Stirling 库"
@@ -4716,10 +4774,10 @@ addToLibrary = "添加到 Stirling 库…"
 addToLibraryFailed = "部分文件无法添加"
 addToWorkspace = "添加到工作区"
 addToWorkspaceCount = "添加 {{count}} 个到工作区"
-allFiles = "所有文件"
+allFiles = "Stirling 库"
 back = "返回"
 backToFolder = "返回到 {{folder}}"
-backToMyFiles = "返回到我的文件"
+backToMyFiles = "返回文件库"
 breadcrumbs = "文件夹路径"
 breadcrumbsOverflow = "显示上级文件夹"
 bulkActions = "操作"
@@ -4730,40 +4788,40 @@ closeDetails = "关闭详情"
 create = "创建"
 cycleBlocked = "无法将文件夹移动到其自身的子文件夹中。"
 delete = "删除"
-deleteFilesChoiceBody = "Some of these files are saved both on this device and in the cloud. Where should they be deleted from?"
-deleteFilesCloudBody_one = "Delete 1 file from the cloud? This cannot be undone."
-deleteFilesCloudBody_other = "Delete {{count}} files from the cloud? This cannot be undone."
-deleteFilesError = "Could not delete. Try again."
-deleteFilesLocalBody_one = "Delete 1 file from this device? This cannot be undone."
-deleteFilesLocalBody_other = "Delete {{count}} files from this device? This cannot be undone."
-deleteFilesTitle_one = "Delete 1 file?"
-deleteFilesTitle_other = "Delete {{count}} files?"
+deleteFilesChoiceBody = "其中一些文件同时保存在此设备和云端。要从哪里删除它们？"
+deleteFilesCloudBody_one = "从云端删除 1 个文件？此操作无法撤销。"
+deleteFilesCloudBody_other = "从云端删除 {{count}} 个文件？此操作无法撤销。"
+deleteFilesError = "无法删除。请重试。"
+deleteFilesLocalBody_one = "从此设备删除 1 个文件？此操作无法撤销。"
+deleteFilesLocalBody_other = "从此设备删除 {{count}} 个文件？此操作无法撤销。"
+deleteFilesTitle_one = "删除 1 个文件？"
+deleteFilesTitle_other = "删除 {{count}} 个文件？"
 deleteFolder = "删除文件夹"
 deleteFolderBody = "删除文件夹“{{name}}”？"
-deleteFolderContents_one = "Also delete {{count}} file inside the folder"
-deleteFolderContents_other = "Also delete {{count}} files inside the folder"
+deleteFolderContents_one = "同时删除文件夹内的 {{count}} 个文件"
+deleteFolderContents_other = "同时删除文件夹内的 {{count}} 个文件"
 deleteFolderContentsWarning = "文件将被永久移除且无法恢复。"
 deleteFolderError = "无法删除该文件夹。请重试。"
-deleteFolderKeepHint = "其中的文件将移动到所有文件。"
+deleteFolderKeepHint = "其中的文件将移动到 Stirling 库。"
 deleteFolderTitle = "删除文件夹？"
 deselectAll = "清除选择"
 details = "详情"
-detailsCount_one = "{{count}} file selected"
-detailsCount_other = "{{count}} files selected"
+detailsCount_one = "已选择 {{count}} 个文件"
+detailsCount_other = "已选择 {{count}} 个文件"
 dismissError = "关闭"
 download = "下载"
 downloadAll = "全部下载"
 downloadVersion = "下载此版本"
 dropOverlay = "拖放文件以上传"
-dropOverlaySub = "文件会先位于“本地”。使用“移动到”或“保存到云端”将它们整理到文件夹中。"
+dropOverlaySub = "文件会显示在最近使用中。您可以随时将它们整理到文件夹中。"
 dropOverlaySubFolder = "它们将被添加到此文件夹。"
-duplicate = "Duplicate"
+duplicate = "复制"
 file = "文件"
-fileInfo = "File info"
+fileInfo = "文件信息"
 fileMenu = "文件操作"
 folder = "文件夹"
-folderItems_one = "{{count}} item"
-folderItems_other = "{{count}} items"
+folderItems_one = "{{count}} 个项目"
+folderItems_other = "{{count}} 个项目"
 folderMenu = "文件夹操作"
 folderSettings = "文件夹设置"
 inPath = "位于 {{path}}"
@@ -4777,18 +4835,18 @@ moveIntoMountFailed_one = "{{count}} 个文件无法写入文件夹。"
 moveIntoMountFailed_other = "{{count}} 个文件无法写入文件夹。"
 moveIntoVirtualCloudSkipped_one = "{{count}} 个服务器文件保留在原处。服务器文件不能位于仅浏览器文件夹中。"
 moveIntoVirtualCloudSkipped_other = "{{count}} 个服务器文件保留在原处。服务器文件不能位于仅浏览器文件夹中。"
-moveSkippedRemote_one = "{{count}} file couldn't be moved on the server (no permission or already deleted)."
-moveSkippedRemote_other = "{{count}} files couldn't be moved on the server (no permission or already deleted)."
+moveSkippedRemote_one = "{{count}} 个文件无法在服务器上移动（无权限或已删除）。"
+moveSkippedRemote_other = "{{count}} 个文件无法在服务器上移动（无权限或已删除）。"
 moveTo = "移动到…"
 newFolder = "新建文件夹"
-newFolderStorageDisabled = "服务器未启用文件夹存储。请联系管理员开启。"
-newFolderTabUnavailable = "切换到“全部”或“云端”以创建文件夹。"
+newFolderStorageDisabled = "未启用服务器文件夹存储。"
+newFolderTabUnavailable = "切换到 Stirling 库以创建文件夹。"
 offlineNoFolderEdits = "服务器文件夹同步不可用——已禁用文件夹更改。请检查登录和存储配置。"
 open = "打开"
 openVersionInWorkspace = "在工作区中打开"
 originFilter = "按来源筛选"
 recentFiles = "最近使用"
-refresh = "从服务器刷新"
+refresh = "刷新"
 refreshNeedsConnection = "登录以从服务器刷新。"
 remove = "删除"
 removeLocalFolder = "从 Stirling 卸载"
@@ -4807,9 +4865,9 @@ serverFolderNeedsConnection = "登录 Stirling Cloud 或连接自托管服务器
 shareDisabledHint = "此服务器未启用文件共享。请联系管理员启用。"
 shareManage = "管理共享"
 showDetails = "显示详情"
-signInRequired = "Sign in to use cloud storage."
-summary_one = "{{count}} item"
-summary_other = "{{count}} items"
+signInRequired = "登录以使用云存储。"
+summary_one = "{{count}} 个项目"
+summary_other = "{{count}} 个项目"
 tree = "文件夹"
 unmount = "卸载"
 unmountFolderBody = "卸载 \"{{name}}\"？该文件夹及其文件会保留在您的磁盘上。"
@@ -4818,12 +4876,12 @@ upload = "上传"
 uploadFromMobile = "从移动设备上传"
 versionActions = "版本操作"
 versionCollapse = "折叠中间版本"
-versionHistory = "Version history"
-versionHistoryEmpty = "This file has no earlier versions."
+versionHistory = "版本历史"
+versionHistoryEmpty = "此文件没有早期版本。"
 versionOrigin = "原始上传"
 versionsCount = "{{count}} 个版本"
 versionShowHidden = "显示更早的 {{count}} 个版本"
-viewVersionHistory = "Version journey ({{count}})"
+viewVersionHistory = "版本历程（{{count}}）"
 
 [filesPage.appearance]
 colour = "颜色"
@@ -4842,12 +4900,12 @@ status = "状态"
 type = "类型"
 
 [filesPage.deleteScope]
-cloud = "Cloud only"
-cloudHint = "Deletes from the server. A copy stays on this device."
-device = "This device only"
-deviceHint = "Removes the local copy. The cloud copy is kept."
-everywhere = "Everywhere"
-everywhereHint = "Deletes the file from this device and the cloud."
+cloud = "仅云端"
+cloudHint = "从服务器删除。副本会保留在此设备上。"
+device = "仅此设备"
+deviceHint = "移除本地副本。云端副本会保留。"
+everywhere = "所有位置"
+everywhereHint = "从此设备和云端删除该文件。"
 
 [filesPage.diskLink]
 conflict = "磁盘已更改"
@@ -4883,8 +4941,8 @@ offlineTitle = "无云端文件缓存"
 title = "还没有云端文件"
 
 [filesPage.empty.noResults]
-hint = "No files in this folder match your filter. Try a different term or clear the filter."
-title = "No matching files"
+hint = "此文件夹中没有符合筛选条件的文件。请尝试其他词或清除筛选。"
+title = "没有匹配文件"
 
 [filesPage.empty.recent]
 hint = "你打开或编辑过的文件会显示在这里。"
@@ -4903,23 +4961,33 @@ actionFailed = "无法{{action}}。"
 actionFailedDetail = "无法{{action}}：{{message}}"
 addFolderFailed = "无法添加文件夹。"
 addFolderFailedDetail = "无法添加文件夹：{{message}}"
-cloudDeleteFailed_one = "Couldn't delete 1 file from the cloud."
-cloudDeleteFailed_other = "Couldn't delete {{count}} files from the cloud."
+cloudDeleteFailed_one = "无法从云端删除 1 个文件。"
+cloudDeleteFailed_other = "无法从云端删除 {{count}} 个文件。"
+createOutsideMount = "无法在挂载目录外创建文件夹"
 deleteFolderFailed = "无法删除文件夹。"
 deleteFolderFailedDetail = "无法删除文件夹：{{message}}"
-downloadFailed = "Could not download the file."
-duplicateFailed = "Could not duplicate the file."
+diskFoldersUnsupported = "此构建无法在磁盘上创建文件夹"
+downloadFailed = "无法下载文件。"
+duplicateFailed = "无法复制文件。"
 folderAppearanceFailed = "无法更新文件夹外观。"
 folderAppearanceFailedDetail = "无法更新文件夹外观：{{message}}"
+folderDetachFailed = "文件夹已删除，但某些文件无法在本地分离。请刷新以修复。"
+folderOperationFailed = "文件夹操作失败"
+folderSyncFailed = "文件夹同步失败：{{message}}"
+loadFilesFailed = "加载文件失败"
+moveAcrossKinds = "文件夹只能在自身类型内移动"
 moveFilesFailed = "无法移动文件。"
 moveFilesFailedDetail = "无法移动文件：{{message}}"
 moveFolderFailed = "无法移动文件夹。"
 moveFolderFailedDetail = "无法移动文件夹：{{message}}"
+moveLocalFolder = "本地文件夹位于其目录所在位置"
 openDiskFileFailed = "无法打开 {{name}}。"
 openDiskFileFailedDetail = "无法打开 {{name}}：{{message}}"
 processingStatusUnavailable = "无法刷新处理状态。在连接恢复前，文件锁已释放。"
 readFolderFailed = "无法读取文件夹。"
 readFolderFailedDetail = "无法读取文件夹：{{message}}"
+recolourLocalFolder = "本地文件夹暂不能重新着色"
+removeDiskSubfolder = "挂载目录的子文件夹会在磁盘上移除"
 removeFilesFailed = "无法删除文件。"
 removeFilesFailedDetail = "无法删除文件：{{message}}"
 removeFolderFailed = "无法移除文件夹。"
@@ -4989,7 +5057,7 @@ cloudHint = "存储在 Stirling 服务器上"
 diskFileHint = "存储在您的计算机上"
 diskHint = "磁盘上已挂载文件夹中的文件"
 local = "本地"
-localHint = "仅存储在此浏览器中"
+localHint = "未备份"
 shared = "已共享"
 sharedHint = "通过链接与你共享"
 
@@ -5018,9 +5086,9 @@ back = "返回"
 cancel = "取消"
 
 [filesPage.search]
-clear = "Clear filter"
-label = "Filter files by name"
-placeholder = "Filter files…"
+clear = "清除搜索"
+label = "搜索文件名"
+placeholder = "搜索文件名…"
 
 [filesPage.sort]
 label = "排序文件"
@@ -5051,6 +5119,22 @@ grid = "网格视图"
 label = "视图模式"
 list = "列表视图"
 
+[fileStorage.unreadable]
+body = "\"{{name}}\" 已保存在此浏览器中，但其内容已无法读取。请重新上传该文件以继续处理。"
+title = "文件数据不可用"
+
+[fileSync.openFailed]
+multiple_one = "无法打开 {{count}} 个文件，包括 \"{{name}}\"。"
+multiple_other = "无法打开 {{count}} 个文件，包括 \"{{name}}\"。"
+single = "无法打开 \"{{name}}\"。"
+singleWithStatus = "无法打开 \"{{name}}\"（HTTP {{status}}）。"
+title = "某些文件无法打开"
+
+[fileSync.pullFailed]
+body = "仅显示此浏览器中缓存的文件。连接恢复后请刷新重试。"
+signInTitle = "需要登录才能加载云端文件"
+unreachableTitle = "无法连接到云端库"
+
 [fileToPDF]
 tags = "བསྒྱུར་བཅོས།,རྣམ་གཞག,ཡིག་ཆ།,པར།,སྟོན་བྱེད།,ཡི་གེ,བསྒྱུར་བ།,ཡིག་ཚང་།,docs,word,excel,powerpoint"
 title = "ཡིག་ཆ་ནས་ PDF ལ།"
@@ -5058,6 +5142,7 @@ title = "ཡིག་ཆ་ནས་ PDF ལ།"
 [fileUpload]
 dropFilesHere = "将文件拖到此处或点击上传按钮"
 dropFilesHereOpen = "拖放文件到此处或点击“打开”按钮"
+droppedFileUnreadable = "无法读取拖放的文件。"
 filesAvailableCount_one = "{{count}} 个文件可用"
 filesAvailableCount_other = "{{count}} 个文件可用"
 loadFromStorage = "从存储加载"
@@ -5067,7 +5152,7 @@ open = "打开"
 openFile = "打开文件"
 openFiles = "打开多个文件"
 selectedCount = "已选择 {{count}} 个"
-selectFile = "Select {{name}}"
+selectFile = "选择 {{name}}"
 selectFromStorage = "从存储中选择"
 upload = "上传"
 uploadFile = "上传文件"
@@ -5089,13 +5174,14 @@ passwordMustBeDifferent = "新密码必须与当前密码不同"
 passwordsDoNotMatch = "两次新密码不一致"
 passwordTooShort = "密码长度至少为 8 个字符"
 reEnterNewPassword = "请再次输入新密码"
+setPasswordTitle = "设置您的密码"
 title = "首次登录"
 welcomeMessage = "出于安全原因，首次登录时必须更改密码。"
 welcomeTitle = "欢迎！"
 
 [flatten]
 submit = "སྙོམས་པ།"
-tags = "simplify,remove,interactive,flatten,flatten form,remove form fields,make static,finalize form,lock form,disable editing,convert to image,non-editable"
+tags = "简化,移除,交互式,扁平化,扁平化表单,移除表单字段,变为静态,完成表单,锁定表单,禁用编辑,转换为图像,不可编辑"
 title = "སྙ�མས་པ།"
 
 [flatten.error]
@@ -5141,17 +5227,17 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "全部已保存"
-analyzingFields = "Analysing form fields..."
+analyzingFields = "正在分析表单字段..."
 applyFailed = "无法应用更改"
 extractCsvError = "提取 CSV 失败"
 extractXlsxError = "提取 XLSX 失败"
-filled = "filled"
+filled = "已填写"
 flattenAfterFilling = "填写后扁平化"
 goToPage = "转到此页面"
-noFields = "No fillable form fields found in this PDF."
+noFields = "此 PDF 中未找到可填写的表单字段。"
 page = "页面"
-placeholderEnter = "Enter"
-placeholderSelect = "Select"
+placeholderEnter = "输入"
+placeholderSelect = "选择"
 requiredAbbreviation = "必填"
 requiredFieldsError = "请填写所有必填字段"
 rescanFields = "重新扫描字段"
@@ -5337,8 +5423,8 @@ pages = "页数"
 pdfVersion = "PDF 版本"
 permsAll = "允许所有权限"
 permsMixed = "部分权限受限"
-permsRestricted_one = "{{count}} restriction"
-permsRestricted_other = "{{count}} restrictions"
+permsRestricted_one = "{{count}} 项限制"
+permsRestricted_other = "{{count}} 项限制"
 securityTitle = "安全状态"
 technical = "技术"
 title = "PDF 摘要"
@@ -5369,7 +5455,7 @@ current = "当前"
 stepLabel = "第 {{number}} 步"
 
 [groupSigning.steps.configureDefaults]
-continue = "继续到审阅"
+continue = "继续"
 invisible = "签名将不可见（仅元数据）"
 locationLabel = "位置："
 preview = "预览"
@@ -5386,8 +5472,8 @@ location = "位置："
 logo = "徽标："
 logoHidden = "无徽标"
 logoShown = "已显示 Stirling PDF 徽标"
-participantCount_one = "{{count}} participant will sign in order"
-participantCount_other = "{{count}} participants will sign in order"
+participantCount_one = "{{count}} 位参与者将按顺序签名"
+participantCount_other = "{{count}} 位参与者将按顺序签名"
 participants = "参与者"
 reason = "理由："
 send = "发送签署请求"
@@ -5398,15 +5484,15 @@ visibility = "可见性："
 visible = "显示在第 {{page}} 页"
 
 [groupSigning.steps.selectDocument]
-continue = "继续到参与者选择"
+continue = "继续"
 noFile = "请从您的活动文件中选择一个 PDF 以创建签署会话。"
 selectedFile = "已选文档"
 title = "选择文档"
 
 [groupSigning.steps.selectParticipants]
-continue = "继续到签名设置"
-count_one = "{{count}} participant selected"
-count_other = "{{count}} participants selected"
+continue = "继续"
+count_one = "已选择 {{count}} 位参与者"
+count_other = "已选择 {{count}} 位参与者"
 label = "选择参与者"
 placeholder = "选择需要签署的参与者…"
 title = "选择参与者"
@@ -5442,43 +5528,43 @@ signUp = "免费注册"
 title = "你正在以访客身份使用 Stirling PDF！"
 
 [home.addAttachments]
-desc = "向 PDF 添加或移除内嵌文件（附件）"
-tags = "嵌入,附件,包含"
-title = "添加附件"
+desc = "查看、添加、提取、重命名或删除嵌入的 PDF 附件"
+tags = "嵌入,附加,包含,附件,附加文件,嵌入文件,包含文件,添加文件,文件附件,关联文件,补充文件,提取,管理"
+title = "管理附件"
 
 [home.addImage]
 desc = "PDF ནང་གནས་ས་ངེས་ཅན་ཞིག་ཏུ་པར་རིས་སྣོན་པ།"
-tags = "插入,嵌入,放置"
+tags = "插入,嵌入,放置,添加图像,插入图像,放置图像,嵌入图像,添加照片,添加图片,添加 Logo,图形,插入图片,放置照片,PNG,JPG,JPEG"
 title = "པར་རིས་སྣོན་པ།"
 
 [home.addPageNumbers]
 desc = "ཡིག་ཆའི་ནང་གནས་ས་ངེས་ཅན་དུ་ཤོག་གྲངས་སྣོན་པ།"
-tags = "编号,分页,计数"
+tags = "编号,分页,计数,添加页码,页码编号,页码,页脚,页眉,为页面编号,顺序,分页工具"
 title = "ཤོག་གྲངས་སྣོན་པ།"
 
 [home.addPassword]
-desc = "PDF ཡིག་ཆར་གསང་ཚིག་གིས་གསང་སྡོམ་བྱེད་པ།"
-tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
+desc = "为 PDF 文件添加密码保护和限制"
+tags = "加密,密码,锁定,安全,保护,安全性,加密,防护,机密,私密,限制访问"
 title = "གསང་ཚིག་སྣོན་པ།"
 
 [home.addStamp]
 desc = "在指定位置添加文字或图像印章"
-tags = "印章,标记,盖章"
+tags = "印章,标记,图章,已批准,已拒绝,机密,印章工具,橡皮章,日期章,批准章,已接收,作废,副本,原件"
 title = "向 PDF 添加印章"
 
 [home.addText]
 desc = "在 PDF 任意位置添加自定义文本"
-tags = "文本,注释,标签"
+tags = "文本,注释,标签,添加文本,插入文本,放置文本,文本框,添加标签,添加说明,在 PDF 上输入,在 PDF 上书写,添加文字,添加备注,文本叠加,打字机"
 title = "添加文本"
 
 [home.adjustContrast]
-desc = "PDF ཡི་འོད་ཁྱད། ཚོས་ཟིལ། དང་གསལ་ཚད་སྙོམ་སྒྲིག་བྱེད་པ།"
-tags = "对比度,亮度,饱和度"
+desc = "调整 PDF 的颜色/对比度、饱和度和亮度"
+tags = "对比度,亮度,饱和度,调整颜色,颜色校正,增强,变亮,变暗,提高质量,色彩平衡,色相,鲜艳度"
 title = "ཚོས་གཞི སྒྲིག"
 
 [home.annotate]
 desc = "在查看器中高亮、绘制、添加笔记和形状"
-tags = "注释,高亮,绘制"
+tags = "注释,高亮,绘制,标注,评论,备注,审阅,红线,反馈,标注工具,便签,形状,箭头,文本框,手绘"
 title = "注释"
 
 [home.autoFormDetection]
@@ -5489,17 +5575,17 @@ unavailable = "需要 AI 检测模型，但此服务器未安装。管理员可�
 
 [home.automate]
 desc = "通过串联 PDF 动作构建多步工作流。适合重复性任务。"
-tags = "工作流,序列,自动化"
+tags = "workflow,序列,自动化,自动执行,批量,批处理,流水线,链式,多步骤,重复,计划,自动,处理多个,批量操作"
 title = "自动化"
 
 [home.autoRename]
 desc = "根据检测到的页眉自动重命名 PDF 文件"
-tags = "自动检测,基于页眉,组织,重命名"
+tags = "自动检测,基于页眉,整理,重新标记,自动重命名,自动重命名,智能重命名,按内容重命名,文件名,文件命名,检测标题"
 title = "自动重命名 PDF 文件"
 
 [home.autoRotate]
 desc = "检测每页方向并自动旋转为正向。"
-tags = "auto rotate,fix orientation,upside down,sideways,straighten,orient,detect orientation,correct rotation,auto orient,scanned,OSD"
+tags = "自动旋转,修正方向,倒置,横向偏转,校正,定向,检测方向,纠正旋转,自动定向,扫描,OSD"
 title = "自动旋转"
 
 [home.autoSizeSplitPDF]
@@ -5507,27 +5593,27 @@ tags = "自动,拆分,大小"
 title = "按大小/页数自动拆分"
 
 [home.autoSplitPDF]
-tags = "自动,拆分,QR"
+tags = "自动,拆分,QR,自动拆分,QR 码,QR 拆分,条形码,自动拆分,分隔页,分隔页,扫描分隔,批量扫描"
 title = "ཤོག་ངོས རང་འགུལ བགོ"
 
 [home.bookletImposition]
 desc = "创建用于打印和装订的小册子，包含正确的页序与多页布局"
-tags = "小册子,打印,装订"
+tags = "小册子,打印,装订,拼版,小册子打印,骑马订,折叠,宣传册,手册,打印小册子,双面,双面,书帖,书籍布局,页面拼版,打印布局"
 title = "小册子拼版"
 
 [home.certSign]
 desc = "ལག་ཁྱེར་/ལྡེ་མིག་ (PEM/P12) གྱིས་ PDF ལ་མིང་རྟགས་རྒྱག་པ།"
-tags = "认证,PEM,P12,官方,加密,签名,证书,PKCS12,JKS,服务器,手动,自动"
+tags = "认证,PEM,P12,官方,加密,签名,证书,PKCS12,JKS,服务器,手动,自动,数字证书,证书签名,PKI,加密签名,受信签名"
 title = "ས་ཡིག མིང་རྟགས"
 
 [home.changeMetadata]
 desc = "PDF ཡིག་ཆ་ནས་གནས་ཆ་བསྒྱུར་བའམ་སུབ་པ།སྣོན་པ།"
-tags = "编辑,修改,更新"
+tags = "编辑,修改,更新,元数据,属性,文档属性,作者,标题,主题,关键词,创建者,生成器,信息,文档信息,文件属性"
 title = "གནས་ཆ་སྒྱུར་བཅོས།"
 
 [home.changePermissions]
 desc = "更改文档限制与权限"
-tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
+tags = "权限,限制,权利,访问控制,允许,拒绝,打印,复制,编辑,修改权限,安全设置,用户权限"
 title = "更改权限"
 
 [home.classify]
@@ -5536,17 +5622,17 @@ title = "分类"
 
 [home.compare]
 desc = "PDF ཡིག་ཆ་གཉིས་ཀྱི་ཁྱད་པར་བསྡུར་བ།"
-tags = "差异"
+tags = "差异,比较,diff,比较 PDF,比较文档,查找差异,显示差异,更改,更改了什么,跟踪更改,修订,版本比较,并排,对比,delta"
 title = "PDF བསྡུར་བ།"
 
 [home.compress]
 desc = "ཡིག་ཆའི་ཆེ་ཆུང་ཆུང་དུ་གཏོང་ཆེད་ PDF སྡུད་སྒྲིལ་བྱེད་པ།"
-tags = "压缩,减小,优化"
+tags = "缩小,减少,优化,压缩,更小,缩减,文件大小,减小大小,最小化,变小,降低大小,优化大小"
 title = "སྡུད་སྒྲིལ།"
 
 [home.convert]
 desc = "在不同格式之间转换文件"
-tags = "转换,更改"
+tags = "转换,更改,转换,PDF to Word,PDF to Excel,PDF to image,Word to PDF,Excel to PDF,PowerPoint to PDF,HTML to PDF,导出,导入,文件转换,格式更改,另存为"
 title = "转换"
 
 [home.createPortfolio]
@@ -5556,65 +5642,65 @@ title = "创建 Portfolio"
 
 [home.crop]
 desc = "ཆེ་ཆུང་ཆུང་དུ་གཏོང་ཆེད་ PDF གཏུབ་གཅོད་བྱེད་པ། (ཡི་གེ་རྣམས་སྲུང་སྐྱོབ་བྱེད་ཐུབ།)"
-tags = "裁剪,剪切,调整大小"
+tags = "修剪,裁切,调整大小,裁剪,裁剪 PDF,修剪 PDF,修剪边距,移除边距,裁切边缘,修剪边框,移除空白,裁剪页面,修剪页面,减小边距,设置边距"
 title = "PDF གཏུབ་གཅོད།"
 
 [home.devAirgapped]
 desc = "链接到离线隔离部署指南"
-tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
+tags = "air-gapped,离线,隔离,无互联网,断开连接,安全,网络隔离,独立运行"
 title = "离线隔离部署"
 
 [home.devApi]
 desc = "链接到 API 文档"
-tags = "API,开发,文档"
+tags = "API,开发,文档,开发者,REST,集成,endpoints,程序化,自动化,脚本"
 title = "API"
 
 [home.devFolderScanning]
 desc = "链接到自动化文件夹扫描指南"
-tags = "自动化,文件夹,扫描"
+tags = "自动化,文件夹,扫描,监视文件夹,热文件夹,自动处理,批量,监控文件夹,自动处理,文件夹监控"
 title = "自动化文件夹扫描"
 
 [home.devSsoGuide]
 desc = "链接到 SSO 指南"
-tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
+tags = "SSO,单点登录,认证,SAML,OAuth,OIDC,login,企业,身份提供商,IdP"
 title = "SSO 指南"
 
 [home.editTableOfContents]
 desc = "在 PDF 文档中添加或编辑书签与目录"
-tags = "书签,目录,编辑"
+tags = "书签,目录,编辑,目录,TOC,大纲,导航,章节,部分,添加书签,编辑书签,PDF 大纲"
 title = "编辑目录"
 
 [home.extractImages]
 desc = "PDF ནས་པར་རིས་ཚང་མ་ཕྱིར་བཏོན་ནས་ zip ནང་ཉར་ཚགས་བྱེད་པ།"
-tags = "提取,保存,导出"
+tags = "提取,保存,导出,提取图像,获取图像,保存图像,导出图像,提取照片,提取图片,拉取图像,下载图像,拆取图像,提取图形,保存照片"
 title = "པར་རིས བཏོན"
 
 [home.extractPages]
 desc = "从 PDF 文档中提取特定页面"
-tags = "提取,选择,复制"
+tags = "提取,选择,复制,提取,提取页面,获取页面,取出,保存页面,导出页面,复制页面,选择页面,特定页面"
 title = "提取页面"
 
 [home.flatten]
 desc = "PDF ནས་སྤྱོད་སྒོ་ཅན་གྱི་ཆ་ཤས་དང་འགེངས་ཤོག་ཚང་མ་སུབ་པ།"
-tags = "扁平化,移除,交互"
+tags = "简化,移除,交互式,扁平化,扁平化表单,移除表单字段,设为静态,完成表单,锁定表单,禁用编辑,转换为图像,不可编辑"
 title = "སྙོམས་པ།"
 
 [home.formFill]
-desc = "使用可视化编辑器交互式填写 PDF 表单字段"
-title = "填写表单"
+desc = "使用可视化编辑器填写、创建、编辑和删除 PDF 表单字段"
+title = "表单编辑器"
 
 [home.getPdfInfo]
 desc = "PDF ཡི་གནས་ཚུལ་ཡོད་ཚད་ལེན་པ།"
-tags = "信息,元数据,详情"
+tags = "信息,元数据,详细信息,PDF 信息,文档信息,属性,文件信息,获取信息,显示信息,查看属性,文档属性,统计,页数,文件详情,检查"
 title = "PDF གནས་ཚུལ ལེན"
 
 [home.manageCertificates]
-tags = "证书,导入,导出"
+tags = "证书,导入,导出,管理证书,数字证书,证书管理,PFX,P12,keystore,导入证书,导出证书,证书存储,PKI"
 title = "管理证书"
 
 [home.merge]
 desc = "PDF མང་པོ་གཅིག་ཏུ་སྡེབ་སྦྱོར་བྱེད་པ།"
-tags = "合并,组合,联合"
+tags = "合并,连接,联合,合并,合并 PDF,合并 PDF,连接 PDF,串联,追加,拼接,合并文件,连接文件,合并文档"
 title = "སྡེབ་སྦྱོར།"
 
 [home.mobile]
@@ -5629,22 +5715,22 @@ workspace = "工作区"
 
 [home.multiTool]
 desc = "སྡེབ་སྦྱོར། འཁོར་སྐྱོད། བསྐྱར་སྒྲིག ཁ་གྱེས། དང་ཤོག་ངོས་སུབ་པ།"
-tags = "多功能,工具"
+tags = "多个,工具,多工具,一体化,瑞士军刀,页面整理器,页面编辑器,编辑页面,管理页面,整理,重新整理"
 title = "PDF ལག་ཆ་མང་པོ།"
 
 [home.ocr]
 desc = "བཤེར་འབེབས་གཙང་སེལ་དང་ PDF ནང་གི་པར་རིས་ནས་ཡི་གེ་ངོས་འཛིན་བྱས་ཏེ་ཡི་གེའི་རྣམ་པར་བསྐྱར་སྣོན་བྱེད་པ།"
-tags = "提取,扫描"
+tags = "提取,扫描,OCR,optical character recognition,文本识别,扫描转文本,图像转文本,扫描文档,可搜索 PDF,使可搜索,提取文本,识别文本,读取扫描件"
 title = "OCR / བཤེར་འབེབས་གཙང་སེལ།"
 
 [home.overlay-pdfs]
-desc = "PDF གཞན་ཞིག་གི་སྟེང་དུ་ PDF བརྩེགས་པ།"
-tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
+desc = "将一个 PDF 叠加到另一个 PDF 上"
+tags = "叠加,合并,合并,图层,叠放,叠加 PDF,分层 PDF,合并 PDF,堆叠,叠加页面,背景,前景,合成"
 title = "PDF སྟེང་བརྩེགས།"
 
 [home.pageLayout]
 desc = "PDF ཡིག་ཆའི་ཤོག་ངོས་མང་པོ་ཤོག་ངོས་གཅིག་ཏུ་སྡེབ་སྦྱོར་བྱེད་པ།"
-tags = "布局,排列,组合"
+tags = "布局,排列,合并,N-up,2-up,4-up,每页多个,每张纸的页数,布局页面,平铺,网格布局,多页布局,合并到页面,讲义"
 title = "ཤོག་ངོས མང་པོ སྒྲིག"
 
 [home.pdfCommentAgent]
@@ -5653,92 +5739,92 @@ tags = "AI,代理,评论,注释,便签,审阅,反馈,笔记"
 title = "添加 AI 评论"
 
 [home.pdfOrganiser]
-tags = "组织,重新排列,重新排序"
+tags = "整理,重新排列,重新排序,排列页面,排序,移动页面,删除页面,移除页面,页面管理,页面整理器,重新排序"
 title = "གོ་སྒྲིག"
 
 [home.pdfTextEditor]
 desc = "审阅并编辑 Stirling PDF 的 JSON 导出，支持分组文本编辑与 PDF 再生成"
-tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
+tags = "编辑文本,修改文本,更改文本,编辑内容,更新文本,重写,更正,修订,红线,修订,文本编辑器,内容编辑器"
 title = "PDF 文本编辑器"
 
 [home.pdfToSinglePage]
 desc = "PDF ཡི་ཤོག་ངོས་ཚང་མ་ཤོག་ངོས་ཆེན་པོ་གཅིག་ཏུ་སྡེབ་སྦྱོར་བྱེད་པ།"
-tags = "合并,整合,单页"
+tags = "合并,合并,单个,单页,一页,合并为单页,全部合并,拼接页面,垂直串联,长页面,海报"
 title = "PDF ལས ཤོག་ངོས གཅིག"
 
 [home.read]
 desc = "查看并注释 PDF。高亮文本、绘图或插入评论以便审阅与协作。"
-tags = "查看,打开,显示"
+tags = "查看,打开,显示,阅读,查看器,PDF 查看器,PDF 阅读器,打开 PDF,查看 PDF,显示 PDF,预览,浏览"
 title = "阅读"
 
 [home.redact]
-desc = "འདེམས་སྒྲུག་བྱས་པའི་ཡི་གེ། བྲིས་པའི་དབྱིབས། དང་/ཡང་ན་འདེམས་སྒྲུག་བྱས་པའི་ཤོག་ངོས་གཞིར་བཟུང་ནས་ PDF སྒྲིབ་སྲུང་བྱེད་པ།"
-tags = "涂黑,遮蔽,隐藏"
+desc = "根据选定文本、绘制的形状和/或选定页面对 PDF 进行遮盖（涂黑）"
+tags = "审查,涂黑,隐藏,遮盖,遮盖处理,涂黑,遮挡,移除敏感内容,隐藏文本,隐私,机密,GDPR,PII,敏感数据,永久移除,覆盖,法律遮盖"
 title = "སྒྲིབ"
 
 [home.removeAnnotations]
 desc = "PDF ནང་གི་མཆན་འགྲེལ་ཚང་མ་སུབ་པ།"
-tags = "删除,清理,去除"
+tags = "删除,清理,剥离,移除注释,移除评论,删除评论,移除标注,移除高亮,清理注释,剥离评论,移除备注,删除标注,清除评论"
 title = "མཆན་འགྲེལ་སུབ་པ།"
 
 [home.removeBlanks]
 desc = "PDF ནང་གི་སྟོང་ཤོག་རང་འགུལ་ངོས་འཛིན་དང་སུབ་པ།"
-tags = "删除,清理,空白"
+tags = "删除,清理,空白,移除空白,删除空白页,空页面,白页,移除空页面,清理,清理空白"
 title = "སྟོང་ཤོག་སུབ་པ།"
 
 [home.removeCertSign]
 desc = "PDF ནས་ལག་ཁྱེར་མིང་རྟགས་སུབ་པ།"
-tags = "移除,删除,解锁"
+tags = "移除,删除,解锁,移除证书,移除签名,删除签名,未签名,移除数字签名,剥离签名,移除证书,取消签名"
 title = "ས་ཡིག མིང་རྟགས སུབ"
 
 [home.removeImage]
 desc = "ཡིག་ཆའི་ཆེ་ཆུང་ཆུང་དུ་གཏོང་ཆེད་ PDF ནས་པར་རིས་སུབ་པ།"
-tags = "移除,删除,清理"
+tags = "移除,删除,清理,移除图像,删除图像,剥离图像,移除图片,删除照片,清理图像,减小大小,移除图形"
 title = "པར་རིས་སུབ་པ།"
 
 [home.removePages]
 desc = "从 PDF 文档中删除特定页面"
-tags = "删除,提取,排除"
+tags = "删除,提取,排除,移除页面,删除页面,移除页面,删除页面,排除页面,取出页面,丢弃页面,删除页面"
 title = "删除页面"
 
 [home.removePassword]
 desc = "PDF ཡིག་ཆ་ནས་གསང་ཚིག་སྲུང་སྐྱོབ་སུབ་པ།"
-tags = "解锁"
+tags = "解锁,移除密码,解锁 PDF,解密,移除加密,取消保护,打开受保护 PDF,密码移除,解锁受保护,禁用密码,移除安全性,移除所有者密码"
 title = "གསང་ཚིག་སུབ་པ།"
 
 [home.reorganizePages]
 desc = "通过可视化拖放来重新排列、复制或删除 PDF 页面。"
-tags = "重新排列,重新排序,组织"
+tags = "重新排列,重新排序,整理,重新整理,移动页面,页面顺序,页面排序,排列页面,打乱,重新排序"
 title = "重新组织页面"
 
 [home.repair]
 desc = "སྐྱོན་ཤོར་བའམ་གཏོར་བཤིག་ཐེབས་པའི་ PDF བཟོ་བཅོས་བྱེད་ཐབས་བྱེད་པ།"
-tags = "修复,还原"
+tags = "修复,恢复,修复,修复 PDF,修复损坏,修复损坏文件,修复 PDF,修复损坏文件,损坏的 PDF,损坏的 PDF,受损 PDF,恢复,修复错误,PDF 无法打开,无法打开 PDF,PDF 错误,故障排除,恢复 PDF,重建,已损坏"
 title = "བཟོ་བཅོས།"
 
 [home.replaceColor]
 desc = "替换或反转 PDF 文档中的颜色"
-tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
+tags = "替换颜色,反转颜色,颜色替换,交换颜色,更改颜色,反转,负片,颜色交换,查找并替换颜色,转换颜色,颜色更改"
 title = "替换与反转颜色"
 
 [home.rotate]
 desc = "PDF ལས་སླ་པོའི་ངང་འཁོར་སྐྱོད་བྱེད་པ།"
-tags = "旋转,翻转,方向"
+tags = "转动,翻转,定向,旋转,方向,横向,纵向,90 度,180 度,顺时针,逆时针,逆时针,修正方向"
 title = "འཁོར་སྐྱོད།"
 
 [home.sanitize]
 desc = "从 PDF 文件中移除潜在有害元素"
-tags = "清理,净化,移除"
+tags = "清理,清除,移除,净化,移除脚本,移除 javascript,移除元数据,剥离元数据,安全,清理文档,移除隐藏数据,隐私"
 title = "净化"
 
 [home.scalePages]
 desc = "ཤོག་ངོས་དང་/ཡང་ན་དེའི་ནང་དོན་གྱི་ཆེ་ཆུང་/ཚད་བསྒྱུར་བ།"
-tags = "调整大小,缩放,缩放比例"
+tags = "调整大小,调整,缩放,页面大小,调整页面大小,缩放页面,更改大小,调整大小,放大,缩小页面,适合页面,A4,letter size"
 title = "ཤོག་ངོས ཚད སྒྲིག"
 
 [home.scannerImageSplit]
 desc = "检测并将扫描的照片拆分为独立页面"
-tags = "检测,拆分,照片"
+tags = "检测,拆分,照片,自动检测,检测照片,拆分照片,分离照片,拆分扫描图像,多张照片,自动拆分,照片检测,图像检测,扫描分离"
 title = "检测并拆分扫描照片"
 
 [home.sharedSign]
@@ -5747,29 +5833,29 @@ title = "协作签署"
 
 [home.showJS]
 desc = "PDF ནང་དུ་བཅུག་པའི་ JS གང་ཡོད་འཚོལ་ཞིབ་དང་མངོན་སྟོན་བྱེད་པ།"
-tags = "JavaScript,代码,脚本"
+tags = "javascript,代码,脚本,显示 javascript,显示 JS,查找 javascript,检测 javascript,查看 javascript,嵌入脚本,恶意软件,安全,检查,debug"
 title = "Javascript སྟོན་པ།"
 
 [home.sign]
 desc = "རི་མོ། ཡི་གེ། པར་རིས་བཅས་ཀྱི་སྒོ་ནས་ PDF ལ་མིང་རྟགས་སྣོན་པ།"
-tags = "签名,署名"
+tags = "签名,亲笔签名,e-sign,电子签名,数字签名,签署文档,批准,签署确认,授权,背书,墨迹签名,手写"
 title = "མིང་རྟགས།"
 
 [home.split]
 desc = "PDF ཡིག་ཆ་མང་པོར་བགོ་བ།"
-tags = "分割,拆分,分开"
+tags = "划分,分离,拆开,拆分,提取页面,分离页面,拆分文档,拆开,分离文件,解除装订,按页面拆分,按章节划分"
 title = "ཁ་གྱེས།"
 
 [home.splitByChapters]
-tags = "拆分,章节,结构"
+tags = "拆分,章节,结构,按章节拆分,按书签拆分,书签,大纲,目录,TOC 拆分,章节拆分,按部分划分"
 title = "ལེའུ་ལྟར་ PDF ཁ་གྱེས།"
 
 [home.splitBySections]
-tags = "拆分,分区,分割"
+tags = "拆分,部分,划分,按部分拆分,网格拆分,划分页面,拆分为部分,裁切页面,划分网格,部分拆分,水平拆分,垂直拆分"
 title = "按分区拆分 PDF"
 
 [home.swagger]
-tags = "API,文档,测试"
+tags = "API,文档,测试,swagger,API 文档,REST API,endpoints,开发者,API reference,API 测试,OpenAPI,集成,开发者文档"
 title = "API 文档"
 
 [home.timestampPdf]
@@ -5779,12 +5865,12 @@ title = "PDF 加时间戳"
 
 [home.unlockPDFForms]
 desc = "去除 PDF 文档表单字段的只读属性。"
-tags = "解锁,启用,编辑"
+tags = "解锁,启用,编辑,解锁表单,启用表单,可编辑表单,移除只读,设为可编辑,解锁字段,启用编辑,表单字段,可填写,取消保护表单"
 title = "解锁 PDF 表单"
 
 [home.validateSignature]
 desc = "PDF ཡིག་ཆའི་ནང་གི་ཨང་ཀིའི་མིང་རྟགས་དང་ལག་ཁྱེར་ར་སྤྲོད་བྱེད་པ།"
-tags = "验证,校验,证书"
+tags = "验证,核验,证书,验证签名,核验签名,检查签名,数字签名,证书验证,签名验证,真实,信任,已签名,验证证书"
 title = "PDF མིང་རྟགས དག་བཤེར"
 
 [home.viewPdf]
@@ -5792,7 +5878,7 @@ title = "查看/编辑 PDF"
 
 [home.watermark]
 desc = "PDF ཡིག་ཆར་རང་སྒྲིག་གི་ཆུ་རྟགས་སྣོན་པ།"
-tags = "水印,标记,覆盖"
+tags = "印章,标记,叠加,水印,品牌,logo,机密,草稿,版权,商标,文本叠加,图像叠加,背景文本"
 title = "ཆུ་རྟགས་སྣོན་པ།"
 
 [HTMLToPDF]
@@ -5845,7 +5931,7 @@ addFiles = "添加文件"
 mobileUpload = "从手机上传"
 openFromComputer = "从电脑打开"
 settingUpSession = "正在设置您的会话..."
-uploadFromComputer = "从电脑上传"
+uploadFromComputer = "浏览文件"
 
 [language]
 direction = "ltr"
@@ -5894,7 +5980,7 @@ signIn = "登录"
 accountCreatedSuccess = "账号创建成功！您现在可以登录。"
 backToSignIn = "返回登录"
 changePasswordWarning = "首次登录后请更改密码"
-createAccount = "Create an account"
+createAccount = "创建账户"
 credentialsUpdated = "您的凭据已更新。请重新登录。"
 defaultCredentials = "默认登录凭据"
 email = "邮箱"
@@ -5927,6 +6013,7 @@ signin = "ནང་འཛུལ།"
 signingIn = "正在登录..."
 signInWith = "使用以下方式登录"
 signInWithProvider = "使用 {{provider}} 登录"
+ssoRedirectFailed = "SSO 重定向失败"
 title = "�ང་འཛུལ།"
 unexpectedError = "意外错误：{{message}}"
 updatePassword = "更新密码"
@@ -5949,7 +6036,7 @@ goToFileEditor = "前往文件编辑器"
 submit = "སྡེབ་སྦྱོར།"
 tags = "སྡེབ་སྦྱོར།,ཤོག་ངོས་བཀོལ་སྤྱོད།,རྒྱབ་ངོས།,ཞབས་ཞུ་ཕྱོགས།"
 title = "སྡེབ་སྦྱོར།"
-viewerModeHint = "合并需要 2 个或更多文件。前往文件编辑器进行选择。"
+viewerModeHint = "合并需要 2 个或更多文件。请前往文件编辑器添加它们。"
 
 [merge.error]
 failed = "合并 PDF 时发生错误。"
@@ -5975,7 +6062,7 @@ title = "设置"
 ascending = "升序"
 dateModified = "修改日期"
 descending = "降序"
-description = "文件将按选择顺序合并。可拖动重新排序或在下方排序。"
+description = "文件将按显示顺序合并。拖动以重新排序，或在下方排序。"
 filename = "文件名"
 label = "排序依据"
 sort = "排序"
@@ -6029,34 +6116,34 @@ uploadWithCount = "上传（{{total}}）"
 validating = "正在验证会话..."
 
 [mobileSign]
-clear = "Clear"
+clear = "清除"
 drawingArea = "签名绘制区域"
-invalidSession = "Session expired"
-invalidSessionMessage = "This QR code is no longer valid. Open the Sign tool on your computer and scan the new code."
-penSizeLabel = "Pen size"
-send = "Send to computer"
-sendAnother = "Send another signature"
-sendError = "Could not send the signature. Check the connection and try again."
-sentMessage = "Signature sent to your computer. You can send another or close this page."
-tabsLabel = "Signature source"
-undo = "Undo"
-validating = "Checking session…"
+invalidSession = "会话已过期"
+invalidSessionMessage = "此 QR 码不再有效。请在电脑上打开签名工具并扫描新代码。"
+penSizeLabel = "笔触大小"
+send = "发送到电脑"
+sendAnother = "发送另一个签名"
+sendError = "无法发送签名。请检查连接并重试。"
+sentMessage = "签名已发送到您的电脑。您可以发送另一个签名或关闭此页面。"
+tabsLabel = "签名来源"
+undo = "撤销"
+validating = "正在检查会话…"
 
 [mobileSign.photo]
-fromGallery = "From gallery"
-hint = "Photograph a signature on white paper, or choose an existing image."
-invalidType = "Please choose an image file."
+fromGallery = "从相册选择"
+hint = "拍摄白纸上的签名，或选择现有图像。"
+invalidType = "请选择图像文件。"
 previewAlt = "签名"
-takePhoto = "Take a photo"
+takePhoto = "拍照"
 
 [mobileSign.tab]
-draw = "Draw"
-photo = "Photo"
-type = "Type"
+draw = "绘制"
+photo = "照片"
+type = "输入"
 
 [mobileSign.type]
-placeholder = "Your name"
-previewPlaceholder = "Signature preview"
+placeholder = "您的姓名"
+previewPlaceholder = "签名预览"
 
 [mobileUpload]
 description = "扫码上传照片。图像将自动转换为 PDF。"
@@ -6064,8 +6151,8 @@ descriptionNoConvert = "从移动设备扫码上传照片。"
 error = "连接错误"
 expiryWarning = "会话即将过期"
 expiryWarningMessage = "此 QR 码将在 {{seconds}} 秒后过期。将自动生成新代码。"
-filesReceived_one = "{{count}} file received"
-filesReceived_other = "{{count}} files received"
+filesReceived_one = "已收到 {{count}} 个文件"
+filesReceived_other = "已收到 {{count}} 个文件"
 instructions = "用手机相机扫描。图像会自动转换为 PDF。"
 instructionsNoConvert = "用手机相机扫描以上传文件。"
 pollingError = "检查文件时出错"
@@ -6077,21 +6164,21 @@ tags = "ལག་ཆ་མང་པོ།,བཀོལ་སྤྱོད་མ�
 title = "PDF ལག་ཆ་མང་པོ།"
 
 [navFooter]
-openEditor = "Open PDF Editor"
-openProcessor = "Open PDF Processor"
+openEditor = "打开 PDF 编辑器"
+openProcessor = "打开 PDF 处理器"
 
 [navFooter.credits]
-count = "{{remaining}} of {{total}}"
-label = "Free credits"
+count = "{{remaining}} / {{total}}"
+label = "免费额度"
 
 [notifications]
 adoptFailed = "文档已解锁，但无法在此处打开。请直接尝试该工具。"
-empty = "没有要报告的内容。"
+empty = "您已全部处理完毕。"
 handoffUnavailable = "此浏览器不允许处理器将文档传递给编辑器。请改为从编辑器打开。"
 inSmartFolder = "此文档位于智能文件夹中，因此会在服务器上处理，而不是在这里处理。"
 inSmartFolderNamed = "{{name}} 位于智能文件夹中，因此会在服务器上处理，而不是在这里处理。"
-noDocumentLinked = "此失败未关联到特定文档，因此这里没有可打开的内容。"
-notOnThisDevice = "此文档不在此设备上，因此无法在这里打开。"
+noDocumentLinked = "此失败未关联到特定文档，因此无法在此处打开或重试。"
+notOnThisDevice = "此文档不在此设备上，因此无法在此处打开或重试。"
 occurrences = "{{count}} 次"
 open = "通知"
 repairAdoptFailed = "文档已修复，但无法在此处打开。请直接尝试修复工具。"
@@ -6127,32 +6214,32 @@ message = "您可以关闭此窗口并返回 Stirling PDF。"
 title = "认证成功"
 
 [oauthConsent]
-approve = "Allow access"
-approving = "Allowing..."
-decisionFailed = "Could not submit your decision. Please try again."
-deny = "Deny"
-denying = "Denying..."
+approve = "允许访问"
+approving = "正在允许..."
+decisionFailed = "无法提交您的决定。请重试。"
+deny = "拒绝"
+denying = "正在拒绝..."
 loadFailed = "This authorisation request is invalid or has expired. Close this tab and try connecting again from the app."
 loading = "Loading authorisation request..."
 missingId = "Missing authorisation request. Start the connection from your app and try again."
-redirecting = "Returning you to the app..."
-requesting = "{{app}} wants to access your Stirling PDF account"
-scopesIntro = "This will allow {{app}} to:"
-signedInAs = "Signed in as {{name}}"
-signInButton = "Sign in to continue"
-signInPrompt = "Sign in to your Stirling PDF account to continue connecting the app."
+redirecting = "正在返回应用..."
+requesting = "{{app}} 想要访问您的 Stirling PDF 账户"
+scopesIntro = "这将允许 {{app}}："
+signedInAs = "已以 {{name}} 身份登录"
+signInButton = "登录以继续"
+signInPrompt = "登录您的 Stirling PDF 账户以继续连接应用。"
 title = "Authorise access"
-unknownApp = "A third-party application"
+unknownApp = "第三方应用程序"
 
 [oauthConsent.access]
-actAsYou = "Act as you - everything {{app}} does runs under your account and counts towards your usage"
-tools = "Use your Stirling PDF tools on your behalf - convert, edit, sign, secure and process your documents"
+actAsYou = "以您的身份操作 - {{app}} 执行的所有操作都在您的账户下运行，并计入您的使用量"
+tools = "代表您使用 Stirling PDF 工具 - 转换、编辑、签名、保护和处理您的文档"
 
 [oauthConsent.scope]
-email = "See your email address"
-openid = "Confirm your identity"
-phone = "See your phone number"
-profile = "See your basic profile information"
+email = "查看您的 Email 地址"
+openid = "确认您的身份"
+phone = "查看您的电话号码"
+profile = "查看您的基本个人资料信息"
 
 [ocr]
 desc = "清理扫描并检测 PDF 中图像里的文本，然后以文本形式重新加入。"
@@ -6244,12 +6331,12 @@ text = "决定文本输出的格式："
 title = "输出"
 
 [onboarding]
-activeFiles = "<strong>活动文件</strong> 视图显示您加载到工具中的所有 PDF，并允许您选择要处理的文件。"
-allTools = "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools."
+activeFiles = "<strong>活动文件</strong>视图显示您已加载到工具中的所有 PDF。"
+allTools = "这是<strong>工具</strong>面板，您可以在此浏览并选择所有可用的 PDF 工具。"
 close = "关闭"
 cropSettings = "现在我们已选择要裁剪的文件，可以配置裁剪工具以选择我们希望裁剪到的区域。"
-dialogLabel = "Onboarding"
-fileCheckbox = "点击其中一个文件即可将其选中进行处理。您可以选择多个文件执行批量操作。"
+dialogLabel = "引导"
+fileCheckbox = "工作台上的文件已选择用于处理。您可以使用左侧文件侧边栏选择多个文件进行批量操作。"
 fileReplacement = "修改后的文件会自动替换工作台中的原文件，方便您继续通过更多工具处理。"
 filesButton = "<strong>文件</strong> 按钮位于快速访问栏，可用于上传需要使用工具处理的 PDF。"
 fileSources = "您可以在这里上传新文件或访问最近的文件。演示中，我们将使用一个示例文件。"
@@ -6262,7 +6349,7 @@ selectCropTool = "让我们选择 <strong>裁剪</strong> 工具来演示如何�
 stepOf = "第 {{current}} 步，共 {{total}} 步"
 toolInterface = "这是 <strong>裁剪</strong> 工具界面。如您所见，因为我们还没有添加任何要处理的 PDF 文件，所以这里内容不多。"
 workbench = "这是 <strong>工作台</strong> - 查看和编辑您的 PDF 的主区域。"
-wrapUp = "一切就绪！您已了解应用的主要区域及其用法。随时点击 <strong>帮助</strong> 按钮再次查看此导览。"
+wrapUp = "您已准备就绪！您可以随时重播此导览 - 只需打开<strong>设置</strong>，并在帮助下的<strong>导览</strong>部分找到它。"
 
 [onboarding.buttons]
 back = "返回"
@@ -6336,20 +6423,20 @@ cta = "查看处理器"
 title = "查看 Stirling 处理器"
 
 [onboarding.saas.freeEditor]
-freeLine = "The editor is now <free>completely free</free>."
-premium = "We've added loads of new features, including <strong>Policies</strong> and <strong>Agent Chat</strong>."
-title = "Welcome to Stirling"
+freeLine = "编辑器现在<free>完全免费</free>。"
+premium = "我们添加了大量新功能，包括<strong>策略</strong>和<strong>Agent Chat</strong>。"
+title = "欢迎使用 Stirling"
 
 [onboarding.saas.team]
-addButton = "Add"
-createBody = "Work on documents together: teammates share files, automations and your plan. Add the first member by email to create your team."
-createTitle = "Create your team"
+addButton = "添加"
+createBody = "共同处理文档：团队成员共享文件、自动化和您的套餐。通过 Email 添加第一位成员来创建您的团队。"
+createTitle = "创建您的团队"
 inviteBody = "Everyone on your team shares files, automations and your plan. Add teammates by email and they'll get an invitation."
-inviteTitle = "Invite members to your team"
+inviteTitle = "邀请成员加入您的团队"
 
 [onboarding.saas.usage]
-body = "Automations, AI and API requests draw from your free allowance. Manual editing never counts against it."
-title = "Your free Processor allowance"
+body = "自动化、AI 和 API 请求会消耗您的免费额度。手动编辑永远不会计入。"
+title = "您的免费处理器额度"
 
 [onboarding.securityCheck]
 message = "应用近期发生重大变更，可能需要服务器管理员留意。请确认您的角色以继续。"
@@ -6360,9 +6447,9 @@ title = "安全检查"
 
 [onboarding.serverLicense]
 freeBody = "我们的 <strong>开源内核（Open-Core）</strong> 许可免费提供 <strong>OAuth SSO</strong>，并支持最多 <strong>{{freeTierLimit}}</strong> 名用户。为顺畅扩展，我们推荐 Stirling Team 方案 — 每月 99 美元，包含 <strong>100 名用户</strong>。"
-freeTitle = "服务器许可证"
-overLimitBody = "我们的许可每台服务器最多允许 <strong>{{freeTierLimit}}</strong> 名用户免费使用。您共有 <strong>{{overLimitUserCopy}}</strong> 名 Stirling 用户。为避免中断，请升级到 Stirling Server 方案 - <strong>无限席位</strong>、PDF 文本编辑，以及每台服务器 $99/月 的完整管理员控制。"
-overLimitTitle = "需要服务器许可证"
+freeTitle = "团队套餐"
+overLimitBody = "我们的许可允许最多 <strong>{{freeTierLimit}}</strong> 位用户免费使用。您有 <strong>{{overLimitUserCopy}}</strong> 位 Stirling 用户。要继续不间断使用，请升级到 Stirling Team plan - <strong>100 位用户</strong>、PDF 文本编辑和完整管理员控制，每月 $99。"
+overLimitTitle = "需要团队套餐"
 seePlans = "查看方案 →"
 upgrade = "立即升级 →"
 
@@ -6506,7 +6593,7 @@ working = "正在检查并更新所有权..."
 yourCloudAccess = "您将成为团队成员并失去所有者访问权限。"
 
 [pageEdit]
-deselectAll = "取消全选"
+deselectAll = "无"
 selectAll = "全选"
 
 [pageEditor]
@@ -6523,6 +6610,32 @@ moveRight = "右移"
 rotateLeft = "向左旋转"
 rotateRight = "向右旋转"
 splitAfter = "在后面拆分"
+
+[pageEditor.commands]
+addSplitAt = "在位置 {{position}} 添加拆分"
+addSplits_one = "添加 {{count}} 个拆分"
+addSplits_other = "添加 {{count}} 个拆分"
+deletePages_one = "删除 {{count}} 页"
+deletePages_other = "删除 {{count}} 页"
+insertFiles_one = "在第 {{page}} 页后插入 {{count}} 个文件"
+insertFiles_other = "在第 {{page}} 页后插入 {{count}} 个文件"
+insertPageBreaks_one = "插入 {{count}} 个分页符"
+insertPageBreaks_other = "插入 {{count}} 个分页符"
+insertPageBreaksAll = "在所有页面后插入分页符"
+removeAllSplits = "移除所有拆分"
+removeSplitAt = "移除位置 {{position}} 的拆分"
+removeSplits_one = "移除 {{count}} 个拆分"
+removeSplits_other = "移除 {{count}} 个拆分"
+reorderPages = "重新排序页面"
+rotatePageLeft = "向左旋转页面"
+rotatePageRight = "向右旋转页面"
+rotatePagesLeft_one = "将 {{count}} 页向左旋转"
+rotatePagesLeft_other = "将 {{count}} 页向左旋转"
+rotatePagesRight_one = "将 {{count}} 页向右旋转"
+rotatePagesRight_other = "将 {{count}} 页向右旋转"
+splitAllPages = "拆分所有页面"
+toggleSplits_one = "切换 {{count}} 个拆分位置"
+toggleSplits_other = "切换 {{count}} 个拆分位置"
 
 [pageEditor.emptyState]
 body = "添加文件以开始编辑页面"
@@ -6705,115 +6818,115 @@ bullet1 = "<strong>all</strong> → 选择所有页面"
 title = "特殊关键字"
 
 [payg.activity]
-docs = "docs"
-empty = "No billable activity yet this period."
-subtitle = "Only AI and automation draw from your budget. Everyday tools are free and aren't listed here."
-title = "Recent billable activity"
+docs = "文档"
+empty = "本周期尚无可计费活动。"
+subtitle = "只有 AI 和自动化会消耗您的预算。日常工具免费，不会列在此处。"
+title = "近期可计费活动"
 
 [payg.cap]
-amount = "Cap amount"
-custom = "Custom"
-docsEstimate = "≈ {{docs}} processed PDFs / month"
-docsRate = "at {{rate}} / PDF"
-noCapDesc = "Usage is billed without an upper limit. You can re-enable a cap at any time."
-noCapLabel = "No cap"
-noneShort = "No cap"
-perMonth = "/ month"
-save = "Update cap"
-subtitle = "Set your maximum spend. We convert this to PDFs using the current price tier."
-title = "Monthly spending cap"
+amount = "上限金额"
+custom = "自定义"
+docsEstimate = "≈ {{docs}} 额度 / 月"
+docsRate = "按 {{rate}} / 额度"
+noCapDesc = "使用量计费无上限。您可以随时重新启用上限。"
+noCapLabel = "无上限"
+noneShort = "无上限"
+perMonth = "/ 月"
+save = "更新上限"
+subtitle = "设置您的最高支出。我们会使用当前价格档位将其转换为 PDF 数量。"
+title = "每月支出上限"
 
 [payg.checkout]
-connecting = "Connecting to Stripe…"
-errorTitle = "Stripe error"
+connecting = "正在连接到 Stripe…"
+errorTitle = "Stripe 错误"
 
 [payg.checkout.error]
-startFailed = "Couldn't start checkout session"
+startFailed = "无法启动结账会话"
 
 [payg.checkout.mock]
-backend = "Backend is in mock mode; no real Stripe session was created."
-continue = "Continue with mock subscription"
-noKey = "VITE_STRIPE_PUBLISHABLE_KEY is unset. Real iframe mounts here once configured."
-title = "Stripe Embedded Checkout (mock mode)"
+backend = "Backend 处于 mock 模式；未创建真实的 Stripe 会话。"
+continue = "继续使用 mock 订阅"
+noKey = "VITE_STRIPE_PUBLISHABLE_KEY 未设置。配置后真实 iframe 将挂载在此处。"
+title = "Stripe Embedded Checkout（mock 模式）"
 
 [payg.confirm]
 bodyWithAllowance = "您的团队现在可以在 {{limit}} 个免费 PDF 之外运行自动化、AI 和 API 操作。"
-capValue = "{{symbol}}{{amount}} / month"
-noCap = "No cap"
-note = "You can change your cap, cancel, or open the Stripe customer portal any time from this page."
-summaryLabel = "Monthly ceiling"
-title = "Welcome to the Processor plan"
+capValue = "{{symbol}}{{amount}} / 月"
+noCap = "无上限"
+note = "您可以随时从此页面更改上限、取消或打开 Stripe 客户门户。"
+summaryLabel = "每月上限"
+title = "欢迎使用 Processor plan"
 
 [payg.docHelp]
-billable = "Only automation runs, AI tools, and API calls count. Manual tools in the editor are always free."
-chains = "Running the same file through several steps of one automation counts it once, not once per step."
-perFile = "Each file you process counts as one PDF. Very long or very large files can count as more than one."
-refunds = "If a job fails on its first step, the PDF is credited back automatically."
-toggle = "What counts as a PDF?"
+billable = "只有自动化运行、AI 工具和 API 调用会计入。编辑器中的手动工具始终免费。"
+chains = "通过一个自动化的多个步骤处理同一文件只计一次，而不是每步计一次。"
+perFile = "您处理的每个文件都计为一个 PDF。非常长或非常大的文件可能会计为多个。"
+refunds = "如果任务在第一步失败，PDF 会自动退回额度。"
+toggle = "什么会计为一个 PDF？"
 
 [payg.error]
-body = "We couldn't reach the billing service. Refresh the page to try again."
-title = "Couldn't load your plan"
+body = "我们无法连接到计费服务。请刷新页面重试。"
+title = "无法加载您的套餐"
 
 [payg.free.cta]
-benefit1Body = "chain tools, schedule runs, batch process"
-benefit1Title = "Automation pipelines"
+benefit1Body = "链式工具、计划运行、批处理"
+benefit1Title = "自动化流水线"
 benefit2Body = "summarise, classify, redact, AI-OCR"
-benefit2Title = "AI tools"
-benefit3Body = "call any Stirling endpoint programmatically"
-benefit3Title = "API access"
-button = "Turn on Processor →"
-reassurance = "No minimum · Set a $0 cap to test · Cancel anytime"
+benefit2Title = "AI 工具"
+benefit3Body = "以编程方式调用任意 Stirling endpoint"
+benefit3Title = "API 访问"
+button = "开启 Processor →"
+reassurance = "无最低消费 · 设置 $0 上限以测试 · 随时取消"
 subtitleWithAllowance = "通过自动化、AI 和 API 继续使用超过 {{limit}} 个免费 PDF。设置每月上限，让一切尽在掌控。"
-title = "Turn on the Processor plan"
+title = "开启 Processor plan"
 
 [payg.free.editor]
-eyebrow = "Editor plan · Always free"
+eyebrow = "Editor plan · 永久免费"
 
 [payg.free.header]
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
-freeTitle = "Unlimited PDF editing"
+freeBody = "查看、编辑、合并、拆分、签名、加水印、压缩、转换和手动 OCR — 想用多少就用多少，无论从哪里触发。"
+freeTitle = "无限制 PDF 编辑"
 
 [payg.free.hero]
-barAria = "Free PDFs remaining"
-capSuffix = "/ {{limit}} free PDFs"
-metaCategories = "Automation · AI · API requests"
+barAria = "剩余免费 PDF"
+capSuffix = "本月还剩 {{limit}} 个免费 PDF"
+metaCategories = "自动化 · AI · API 请求"
 
 [payg.free.member]
-ownerOnly = "Only your team owner can turn on Processor. Manual tools stay free for you to use as much as you like."
+ownerOnly = "只有您的团队所有者可以开启 Processor。手动工具仍免费，您可以随意使用。"
 
 [payg.free.proc]
-eyebrow = "Processor plan · metered"
+eyebrow = "Processor plan · 按量计费"
 
 [payg.free.state]
-approachingLimit = "Approaching limit"
-limitReached = "Limit reached"
-plentyLeft = "Plenty left"
+approachingLimit = "接近限制"
+limitReached = "已达到限制"
+plentyLeft = "剩余充足"
 
 [payg.gates]
-ai = "AI tools (AI Create, suggestions, AI-OCR)"
-automation = "Automations & pipelines"
-client = "Browser-only tools (viewer, page editor, file management)"
-offsite = "Server tools (compress, OCR, convert, watermark…)"
-pauses = "pauses at cap"
-title = "What happens when the cap is reached"
+ai = "AI 工具（AI Create、建议、AI-OCR）"
+automation = "自动化与流水线"
+client = "仅浏览器工具（查看器、页面编辑器、文件管理）"
+offsite = "服务器工具（压缩、OCR、转换、水印…）"
+pauses = "达到上限时暂停"
+title = "达到上限时会发生什么"
 
 [payg.header]
 eyebrow = "Processor plan · {{start}} – {{end}}"
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
-freeLabel = "Always free"
-freeTitle = "Unlimited PDF editing"
-meterBody = "{{limit}} free PDFs to start, then billed per PDF up to your cap."
-meterLabel = "Metered"
-meterTitle = "Automation · AI · API"
+freeBody = "查看、编辑、合并、拆分、签名、加水印、压缩、转换和手动 OCR — 想用多少就用多少，无论从哪里触发。"
+freeLabel = "永久免费"
+freeTitle = "无限制 PDF 编辑"
+meterBody = "开始有 {{limit}} 个免费 PDF，之后按 PDF 计费，最高不超过您的上限。"
+meterLabel = "按量计费"
+meterTitle = "自动化 · AI · API"
 
 [payg.member]
-askLeader = "Only your team owner can change the cap."
+askLeader = "只有您的团队所有者可以更改上限。"
 
 [payg.members]
 docs = "PDFs"
-subtitle = "Billable PDFs each teammate has processed this period."
-title = "Team member usage"
+subtitle = "本周期每位队友已处理的可计费 PDF。"
+title = "团队成员用量"
 
 [payg.prepaid]
 chip = "预付年度"
@@ -6838,8 +6951,8 @@ healthy = "剩余充足"
 low = "即将用完"
 
 [payg.role]
-leader = "Team owner"
-member = "Member"
+leader = "团队所有者"
+member = "成员"
 
 [payg.signupRequired]
 aiPromo = "使用 AI 创建、编辑并询问 PDF 内容"
@@ -6854,85 +6967,86 @@ processorTitle = "创建账户以解锁 Stirling 的最佳功能"
 readerLabel = "PDF 阅读器"
 
 [payg.spendCapMeter]
-barAria = "Spend against cap"
-capSuffix = "/ {{amount}} cap"
-metaCategories = "Automation · AI · API spend"
-resets = "Resets each billing period"
+barAria = "相对于上限的支出"
+capSuffix = "/ {{amount}} 上限"
+metaCategories = "自动化 · AI · API 支出"
+resets = "每个计费周期重置"
 
 [payg.state]
-degraded = "Cap reached"
-full = "Healthy"
-warned = "Approaching cap"
+degraded = "已达到上限"
+full = "正常"
+warned = "接近上限"
 
 [payg.stripe]
-open = "Open billing portal"
-subtitle = "Receipts, invoices, payment method, billing currency."
-title = "Manage billing in Stripe"
+open = "打开计费门户"
+subtitle = "收据、发票、付款方式、计费货币。"
+title = "在 Stripe 中管理计费"
 
 [payg.stripe.toast.unavailable]
-body = "Billing portal isn't available right now. Try again in a moment."
-title = "Billing portal unavailable"
+body = "计费门户当前不可用。请稍后重试。"
+title = "计费门户不可用"
 
 [payg.upgrade]
-backAria = "Back"
-closeAria = "Close"
+backAria = "返回"
+closeAria = "关闭"
 
 [payg.upgrade.button]
-cancel = "Cancel"
-continue = "Continue →"
-finish = "Finish"
+cancel = "取消"
+continue = "继续 →"
+finish = "完成"
 
 [payg.upgrade.cap]
-help = "We'll never charge above this. Set $0 if you want to keep everything free while testing."
-title = "Set your monthly spend ceiling"
-usdNote = "Estimated in USD. You can adjust your cap any time after subscribing, in your own currency."
+help = "我们绝不会收取超过此金额的费用。如果您想在测试时保持一切免费，请设置 $0。"
+title = "设置您的每月支出上限"
+usdNote = "以 USD 估算。订阅后，您可以随时用自己的货币调整上限。"
 
 [payg.upgrade.checkout]
-capValue = "{{symbol}}{{amount}} / month"
-edit = "Edit"
-help = "Stripe handles your card details. Stirling never sees them."
-loading = "Loading checkout…"
-noCap = "No cap"
-title = "Add your payment method"
+capValue = "{{symbol}}{{amount}} / 月"
+edit = "编辑"
+help = "Stripe 处理您的银行卡详细信息。Stirling 永远不会看到它们。"
+loading = "正在加载结账…"
+noCap = "无上限"
+title = "添加您的付款方式"
 
 [payg.upgrade.help]
 aiBody = "summarise, classify, redact, AI-OCR"
-aiTitle = "AI tools"
-apiBody = "programmatic access to any Stirling endpoint"
-apiTitle = "API calls"
-automationBody = "chained tools or scheduled runs that don't need clicks"
-automationTitle = "Automation pipelines"
+aiTitle = "AI 工具"
+apiBody = "对任意 Stirling endpoint 的程序化访问"
+apiTitle = "API 调用"
+automationBody = "不需要点击的链式工具或计划运行"
+automationTitle = "自动化流水线"
 footnoteUnlimited = "手动工具（查看、编辑、合并、拆分、加水印、压缩、手动 OCR）始终免费，即使包含的额度已用完也是如此。区别在于工作类型，而不是您点击的位置。"
-title = "What we count toward billing"
+title = "我们计入计费的内容"
 
 [payg.upgrade.promise]
-body = "You only pay for automation pipelines, AI tools, and API calls, the work that goes beyond a single click. Edit, merge, split, sign, compress as much as you want, no charge."
-highlight = "Manual tools stay free, always."
+body = "您只需为自动化流水线、AI 工具和 API 调用付费，即超出单次点击的工作。编辑、合并、拆分、签名、压缩随意使用，免费。"
+highlight = "手动工具始终免费。"
 
 [payg.upgrade.steps]
-cap = "Set monthly ceiling"
-payment = "Add payment method"
+cap = "设置每月上限"
+payment = "添加付款方式"
 
 [payg.upgrade.title]
-confirm = "You're subscribed"
-default = "Upgrade to Processor plan"
+confirm = "您已订阅"
+default = "升级到 Processor plan"
 
 [payg.usage]
-breakdown = "AI {{ai}} • Automation {{automation}} • API {{api}}"
-capLine = "{{cap}}/mo cap"
-estBill = "≈ {{amount}} so far this period"
-firstFree = "First {{free}} free"
-noCap = "No monthly cap"
-ofLimitProcessed = "/ {{limit}} PDFs processed"
-processed = "PDFs processed"
-resetsIn = "Resets in {{days}} days"
-resetsTomorrow = "Resets tomorrow"
-thisPeriod = "This billing period"
+breakdown = "AI {{ai}} • 自动化 {{automation}} • API {{api}}"
+capLine = "{{cap}}/月上限"
+estBill = "≈ 本周期目前 {{amount}}"
+firstFree = "前 {{free}} 个免费"
+noCap = "无每月上限"
+ofLimitProcessed = "/ {{limit}} 个 PDF 已处理"
+processed = "已处理 PDF"
+resetsIn = "{{days}} 天后重置"
+resetsTomorrow = "明天重置"
+thisPeriod = "本计费周期"
 
 [payment]
 billingPeriod = "账单周期"
 cancelTeamChange = "保留当前方案"
 canCloseWindow = "现在可以关闭此窗口。"
+createSessionFailed = "创建结账会话失败"
 error = "支付错误"
 generatingLicense = "正在生成许可证密钥..."
 licenseActivated = "许可证已激活！您的许可证密钥已保存。确认邮件已发送至您的注册邮箱。"
@@ -6948,6 +7062,7 @@ monthly = "按月"
 paymentCanceled = "已取消支付。未产生任何费用。"
 perMonth = "/月"
 perUserBlock = "每 100 位用户"
+planPeriodUnavailable = "所选套餐周期不可用"
 preparing = "正在准备结账..."
 redirecting = "正在跳转到安全结账..."
 success = "支付成功！"
@@ -7065,7 +7180,7 @@ title = "ཤོག་ངོས་གོ་སྒྲིག་བྱེད་མ�
 7 = "移除第一页"
 8 = "移除最后一页"
 9 = "དང་པོ་དང་མཐའ་མ་སུབ་པ།"
-_value = "རྣམ་པ།"
+_value = "整理模式"
 
 [pdfOrganiser.mode.desc]
 BOOKLET_SORT = "为小册子打印排列页面（最后、第一、第二、倒数第二，…）。"
@@ -7085,8 +7200,8 @@ download = "下载"
 downloadTooltip = "保存并下载已编辑的 PDF"
 save = "保存 PDF"
 saveTooltip = "将更改应用到工作区中的文件（{{shortcut}}）"
-tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
-title = "PDF JSON 编辑器"
+tags = "编辑文本,修改文本,更改文本,编辑内容,更新文本,重写,更正,修订,红线,修订,文本编辑器,内容编辑器"
+title = "PDF 文本编辑器"
 unsaved = "（未保存）"
 workbenchLabel = "编辑器"
 
@@ -7094,6 +7209,16 @@ workbenchLabel = "编辑器"
 freetext = "注释文本 - 不是页面文本，因此无法在此处编辑"
 stamp = "图章注释 - 不是页面文本，因此无法在此处编辑"
 widget = "表单字段 - 不是页面文本，因此无法在此处编辑"
+
+[pdfTextEditor.commands]
+edit = "编辑"
+mergeRuns_one = "将 {{count}} 个 run 合并到一个段落"
+mergeRuns_other = "将 {{count}} 个 runs 合并到一个段落"
+setColour = "设置 {{run}} 的颜色"
+setOutline = "设置 {{run}} 的轮廓"
+typeInto = "输入到 {{run}}"
+ungroupParagraph = "取消组合段落 {{run}}"
+wrap = "换行 {{run}}"
 
 [pdfTextEditor.discard]
 body = "打开 {{name}} 会关闭您正在编辑的文档。未保存的更改将丢失。"
@@ -7109,6 +7234,9 @@ title = "拖放 PDF 以打开"
 [pdfTextEditor.error]
 decodeImage = "无法解码所选图片。"
 insertImage = "无法插入所选图片。"
+
+[pdfTextEditor.externalEdit]
+pngFileType = "PNG 图像"
 
 [pdfTextEditor.find]
 close = "关闭查找栏"
@@ -7184,7 +7312,7 @@ deleteDesc = "移除所选内容"
 duplicateDesc = "复制所选内容"
 groupDesc = "将所选文本段组合为一个段落"
 heading = "编辑"
-marqueeDesc = "框选多个对象"
+marqueeDesc = "在空白区域拖动以选择多个对象（Shift 可追加）"
 moveDesc = "移动文本段"
 selectAllDesc = "全选"
 shiftClickDesc = "将文本段添加到选择或从选择中移除"
@@ -7211,19 +7339,21 @@ heightHint = "文本框高度随其字号和行数变化。"
 image = "图片"
 images = "图片"
 manyImages = "{{count}} 张图片"
+manyShapes = "{{count}} 个形状"
 manyText = "文本 · {{count}} 个框"
 mixed = "{{count}} 个对象"
 multiGeometry = "选择单个对象以编辑其位置和大小。"
 nothingSelected = "未选择任何内容"
-nothingSelectedHint = "点击页面上的任何文本或图片，在此处进行编辑。"
+nothingSelectedHint = "点击页面上的任意文本、图像或形状以在此处编辑。"
 oneImage = "图片"
+oneShape = "形状"
 oneText = "文本"
 pages = "页面"
 tabDocument = "文档"
 tabSelected = "已选择"
 textBoxes = "文本框"
 width = "宽度"
-widthHint = "文本框宽度随其内容和换行变化。"
+widthHint = "文本会重新换行以适应宽度。"
 x = "X"
 y = "Y"
 
@@ -7281,6 +7411,9 @@ advanced = "高级"
 find = "在文档中查找"
 findTooltip = "查找（{{shortcut}}）"
 view = "视图"
+
+[pdfTextEditor.shape]
+groupedTitle = "此 PDF 中某个组的一部分：可删除但不可移动。"
 
 [pdfTextEditor.sidebar]
 addImage = "添加图片"
@@ -7340,7 +7473,7 @@ caseUpper = "大写"
 changeCase = "更改大小写"
 changeCaseTooltip = "更改大小写（仅文本段）"
 delete = "删除所选内容"
-deleteTooltip = "删除 (Del)"
+deleteTooltip = "删除（Del 或 Backspace）"
 distributeHorizontally = "水平分布"
 distributeLabel = "分布 · 需要 3+ 个对象"
 distributeVertically = "垂直分布"
@@ -7371,7 +7504,7 @@ unlock = "解锁选择"
 unlockTooltip = "解锁选择 - 使其可再次编辑"
 
 [pdfTextEditor.tooltip.alpha]
-text = "该 Alpha 查看器仍在完善——某些字体、颜色、透明效果和布局细节可能略有变化。请在分享前仔细检查生成的 PDF。"
+text = "此 alpha 查看器仍在发展中——某些字体、颜色、透明效果和布局细节可能会略有变化。分享前请仔细检查生成的 PDF。"
 title = "Alpha 查看器"
 
 [pdfTextEditor.tooltip.header]
@@ -7417,7 +7550,7 @@ title = "PDF ནས་ PDF/A ལ།"
 
 [pdfToPDFUA]
 header = "PDF To PDF/UA"
-tags = "accessibility,accessible,tagged,screen reader,wcag,eaa,section 508,conversion"
+tags = "可访问性,无障碍,带标签,屏幕阅读器,wcag,eaa,section 508,转换"
 title = "PDF To PDF/UA"
 
 [pdfToPDFX]
@@ -7435,7 +7568,7 @@ tags = "ཤོག་ངོས་གཅིག"
 [pdfToSinglePage]
 description = "此工具会将 PDF 的所有页面合并为一个大的单页。宽度保持与原始页面一致，但高度为所有页面高度之和。"
 submit = "ཤོག་ངོས་གཅིག་ལ་བསྒྱུར་བ།"
-tags = "combine,merge,single,single page,one page,merge to single,combine all,stitch pages,concatenate vertical,long page,poster"
+tags = "合并,合并,单个,单页,一页,合并为单页,全部合并,拼接页面,垂直串联,长页面,海报"
 title = "PDF ནས་ཤོག་ངོས་གཅིག་ལ།"
 
 [pdfToSinglePage.error]
@@ -7487,7 +7620,7 @@ popular = "热门"
 selectPlan = "选择方案"
 showComparison = "比较全部功能"
 upgrade = "升级"
-withServer = "+ 服务器方案"
+withServer = "+ 团队套餐"
 
 [plan.api]
 large = "5,000 点"
@@ -7498,7 +7631,7 @@ small = "500 点"
 xsmall = "100 点"
 
 [plan.availablePlans]
-currency = "Billing currency"
+currency = "计费货币"
 subtitle = "选择最符合您需求的套餐"
 title = "可用套餐"
 
@@ -7507,8 +7640,8 @@ highlight1 = "定制定价"
 highlight2 = "专属支持"
 highlight3 = "最新功能"
 name = "企业版"
-requiresServer = "需要服务器"
-requiresServerMessage = "请先升级到服务器方案，再升级到企业版。"
+requiresServer = "需要团队套餐"
+requiresServerMessage = "请先升级到团队套餐，然后再升级到 Enterprise。"
 
 [plan.feature]
 api = "API 访问"
@@ -7548,10 +7681,10 @@ included = "已包含"
 name = "免费"
 
 [plan.freeLimit]
-cta = "View Processor Plan"
-dismiss = "Maybe Later"
-message = "That's your whole free allowance for automation, AI and the API. Seriously impressive! Keep the momentum going for just pennies a day."
-title = "Woah, {{total}} PDFs Processed!"
+cta = "查看 Processor Plan"
+dismiss = "稍后再说"
+message = "这是您本月用于自动化、AI 和 API 的全部免费额度。真的很出色！下个月会重置，或者现在只需每天几分钱即可继续保持进度。"
+title = "哇，已处理 {{total}} 个 PDF！"
 
 [plan.highlights]
 advancedIntegrations = "高级集成"
@@ -7580,15 +7713,15 @@ highlight3 = "无水印"
 name = "专业版"
 
 [plan.spendCap]
-cta = "View Spending Limit"
-dismiss = "Not Now"
-message = "You've made the most of this month's cap. That's a load of automation, AI and API work! Bump it up whenever you like to keep going."
-title = "You're on a Roll!"
+cta = "查看支出限制"
+dismiss = "现在不要"
+message = "您已充分使用本月上限。这是大量自动化、AI 和 API 工作！您可以随时提高上限以继续。"
+title = "您势头正好！"
 
 [plan.static]
 activateLicense = "激活您的许可证"
 contactToUpgrade = "联系我们以升级或自定义您的套餐"
-getLicense = "获取服务器许可证"
+getLicense = "获取团队套餐"
 monthlyBilling = "按月计费"
 selectPeriod = "选择计费周期"
 upgradeToEnterprise = "升级到企业版"
@@ -7611,7 +7744,7 @@ successMessage = "您的许可证已成功激活。您现在可以关闭此窗�
 
 [plan.team]
 maxUsers = "100 位用户"
-name = "Team"
+name = "团队"
 
 [policies.activity]
 outputsUnavailable = "策略输出已无法下载。"
@@ -7638,7 +7771,7 @@ applying = "正在应用 {{names}}"
 applyingProgress = "正在应用 {{names}}（{{done}}/{{total}}）"
 exportFailureBody = "无法应用安全策略。文件已原样导出。"
 exportFailureTitle = "未强制执行即导出"
-failureBody = "{{total}} 个文件中有 {{failures}} 个无法处理，已原样导出。"
+failureBody = "某些策略无法应用到 {{total}} 个文件中的 {{failures}} 个。"
 failureTitle = "未完全强制执行即导出"
 printPolicyAppliedBody = "此 PDF 已为满足策略而更新。请检查更改后再打印。"
 printPolicyAppliedTitle = "打印前已应用策略"
@@ -7657,10 +7790,10 @@ showCategory = "显示类别"
 account = "已标注的账户号码"
 card = "信用卡/借记卡"
 email = "电子邮件地址"
-fieldLabel = "PII to redact"
+fieldLabel = "要遮盖的 PII"
 iban = "IBAN 号码"
 phone = "电话号码"
-placeholder = "Select PII types"
+placeholder = "选择 PII 类型"
 routing = "美国银行路由号码（ABA）"
 ssn = "社会安全号码"
 
@@ -7701,25 +7834,25 @@ pdfa-3b = "PDF/A-3b"
 ownerRequired = "只有组织所有者可以关联或取消关联此服务器。"
 
 [portal.accountLink.card]
-billingNote = "无人值守处理费用将从您的组织钱包中扣除。"
+billingNote = "此服务器共享您团队在 Stirling Cloud 中的处理额度。"
 connectDescription = "连接此服务器，以使用您的团队在 Stirling Cloud 中的处理额度。"
 disconnectBody = "此服务器将停止使用您的团队在 Stirling Cloud 中的处理额度。您的本地文件会保留在此服务器上。若要再次连接，请按照原始连接步骤操作。"
 disconnectTitle = "断开此实例？"
-eyebrow = "账户链接"
-linkButton = "链接您的 Stirling 账户"
+eyebrow = "此实例"
+linkButton = "连接您的 Stirling 账户"
 loading = "正在检查账户连接"
-notLinked = "未链接"
+notLinked = "未连接"
 signedInAs = "已登录 Stirling Cloud，身份为"
 statusError = "无法检查账户连接"
-title = "将此组织链接到其 Stirling 账户"
-unlink = "取消链接"
+title = "Stirling Cloud"
+unlink = "断开此实例连接"
 
 [portal.accountLink.card.error]
-title = "无法链接"
+title = "无法更新连接"
 
 [portal.accountLink.card.loginNotConfigured]
 description = "请让您的服务器管理员启用到 Stirling Cloud 的连接。"
-title = "未配置 SaaS 登录"
+title = "账户连接不可用"
 
 [portal.accountLink.connect]
 adminRequired = "请让您的服务器管理员打开用量和账单，并关联 Stirling 账户以获得更多每月额度。手动 PDF 工具仍可使用。"
@@ -7807,10 +7940,10 @@ retry = "重试"
 unnamed = "未命名实例"
 
 [portal.accountLink.instances.empty]
-description = "链接此组织的账户，然后注册您的自托管实例，即可在此处查看它们。"
+description = "将自托管服务器连接到您的团队后，即可在此处查看。"
 otherDescription = "这是为您的团队显示的唯一已连接实例。"
 otherTitle = "没有其他已连接实例"
-title = "没有已链接的实例"
+title = "没有已连接实例"
 
 [portal.accountLink.modal]
 callbackMismatch = "此服务器配置的前端地址与您打开的地址不匹配。请使用其配置地址打开服务器，或在常规设置中更新 Frontend URL，然后重试。"
@@ -7818,34 +7951,34 @@ cancel = "取消"
 continueReauth = "重新登录"
 exhaustedTitle = "保持您的工作流运行"
 identity = "Stirling 账户"
-linkTitle = "链接您的 Stirling 账户"
+linkTitle = "连接您的 Stirling 账户"
 noAuthorizeUrl = "Stirling 未返回可继续的位置。请稍后重试。"
 startFailed = "无法连接到 Stirling 以开始连接。请检查此服务器的出站网络访问，然后重试。"
 transferPending = "有一个所有权转移待处理。请前往设置 → 用户完成或取消它，然后再次尝试关联。"
 
 [portal.accountLink.modal.loginNotConfigured]
-after = "以启用应用内链接到托管 Stirling 账户。"
+after = "以便此服务器在您回来时完成连接。"
 and = "和"
 before = "设置"
-title = "未配置 SaaS 登录"
+title = "Stirling 连接未配置"
 
 [portal.accountLink.notice]
 openFailed = "无法打开您的浏览器。请在已连接的服务器上打开“使用量和账单”以关联账户。"
 
 [portal.accountLink.panel]
-instancesSub = "注册到此组织的每个自托管实例。撤销凭据可立即切断其无人值守访问。"
-instancesTitle = "已链接实例"
+instancesSub = "连接到同一团队的自托管服务器。"
+instancesTitle = "已连接实例"
 manageCloud = "在 stirling.com 上管理"
 otherInstancesSub = "在 Stirling Cloud 中连接到同一团队的其他自托管服务器。"
 otherInstancesTitle = "其他已连接实例"
 revokeError = "无法撤销实例"
 sessionRequired = "续订账单访问后，将显示已连接实例。"
-sub = "将此自托管组织链接到其 Stirling 账户，以便无人值守处理费用从您的组织钱包中扣除。"
+sub = "管理此服务器与您的 Stirling Cloud 账户的连接。"
 
 [portal.accountLink.panel.loadError]
-forbidden = "只有团队所有者可以查看组织的已链接实例。"
-generic = "无法加载团队的已链接实例。请稍后重试。"
-title = "无法加载已链接实例"
+forbidden = "只有团队所有者可以管理已连接实例。"
+generic = "无法检查您的连接。请重试。"
+title = "无法加载已连接实例"
 
 [portal.accountLink.pipelines]
 editorExport = "编辑器 · 下载前"
@@ -7922,7 +8055,7 @@ title = "预付一年"
 
 [portal.billing.checkout]
 noClientSecret = "Edge function 未返回 client_secret。"
-title = "启用 Processor 方案"
+title = "添加付款方式"
 
 [portal.billing.checkout.activationSlow]
 body = "您的付款已成功，但激活时间比平时稍长。它会自动启用——关闭此窗口后，稍后会显示在这里。"
@@ -8077,11 +8210,11 @@ noCard = "未登记银行卡"
 update = "更新"
 
 [portal.billing.pdfsProcessed]
-emptyPeriod = "本周期还没有按量处理。"
+emptyPeriod = "本周期尚未处理。"
 eyebrow = "本周期已处理 PDFs"
 legendValue_one = "{{formatted}} PDFs"
 legendValue_other = "{{formatted}} PDFs"
-segbarAriaLabel = "按类别拆分的按量 PDFs"
+segbarAriaLabel = "按类别拆分的 PDF"
 segmentAgentsDesc = "AI 智能体操作"
 segmentAgentsLabel = "智能体"
 segmentApiDesc = "直接 API 请求"
@@ -8090,7 +8223,7 @@ segmentAutomationDesc = "自动化和流水线"
 segmentAutomationLabel = "自动化"
 summary = "{{unique}} 唯一 · {{units}} 计量单位 · 每个 PDF 平均 {{avg}}"
 summaryNoRate = "{{unique}} 唯一 · {{units}} 计量单位"
-unit = "按量 PDFs"
+unit = "PDFs"
 unitsPending_one = "{{units}} 个计量单位正在等待从关联实例同步"
 unitsPending_other = "{{units}} 个计量单位正在等待从关联实例同步"
 
@@ -8488,12 +8621,12 @@ label = "Mailgun"
 
 [portal.connections.types.n8n]
 baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
-description = "Hand documents to an n8n workflow, and take back whatever it produces."
+description = "将文档交给 n8n workflow，并取回它产生的任何结果。"
 label = "n8n"
 
 [portal.connections.types.n8n.fields.authType]
-helperText = "Match the Authentication set on the n8n Webhook node."
-label = "Webhook authentication"
+helperText = "匹配 n8n Webhook 节点上设置的 Authentication。"
+label = "Webhook 认证"
 
 [portal.connections.types.n8n.fields.authType.options.basic]
 label = "Basic auth"
@@ -8505,7 +8638,7 @@ label = "Header auth"
 label = "None"
 
 [portal.connections.types.n8n.fields.headerName]
-helperText = "The header name from the n8n credential, not its value."
+helperText = "来自 n8n 凭据的 header 名称，而不是其值。"
 label = "Header name"
 placeholder = "X-N8N-Key"
 
@@ -8826,7 +8959,7 @@ sensitiveLabel = "敏感"
 [portal.documents.table.columns]
 action = "管道 / 操作"
 document = "文档"
-labels = "Labels"
+labels = "标签"
 product = "产品"
 status = "状态"
 time = "时间"
@@ -8840,13 +8973,13 @@ title = "此页面出现问题"
 [portal.failures]
 closedBySystem = "Stirling"
 noMatches = "没有与当前筛选器匹配的内容"
-occurrences = "{{count}} occurrences"
+occurrences = "{{count}} 次出现"
 searchPlaceholder = "搜索问题、用户和错误"
 
 [portal.failures.action]
-acknowledge = "Acknowledge"
+acknowledge = "确认"
 decrypt = "解锁"
-dismiss = "Dismiss"
+dismiss = "忽略"
 openInTool = "重试"
 repair = "修复"
 viewFile = "查看文件"
@@ -8862,14 +8995,14 @@ source = "来源"
 user = "用户"
 
 [portal.failures.disabled]
-closed = "This failure is already closed."
+closed = "此失败已关闭。"
 noDocument = "此失败未记录到特定文档，因此这里没有可打开的内容。"
 unattended = "此文件由文件夹、存储桶或 webhook 提供，因此没有人的浏览器正在保留它以供打开。"
-unavailable = "Not available for this failure."
+unavailable = "此失败不可用。"
 
 [portal.failures.empty]
-description = "Policy runs that fail will appear here with the actions you can take."
-title = "No failures recorded"
+description = "来自策略运行或编辑器工具、需要查看的任何内容都会显示在这里。"
+title = "没有需要您注意的事项"
 
 [portal.failures.emptyClosed]
 description = "您忽略或解决的项目会保留在此处，并显示其结果。"
@@ -8894,8 +9027,8 @@ description = "您的文件中没有内容，因此运行没有可处理的内�
 title = "空文件"
 
 [portal.failures.kind.inputPasswordProtected]
-description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
-title = "Password-protected document"
+description = "您的文件受密码保护，因此运行无法读取它。"
+title = "受密码保护的文档"
 
 [portal.failures.kind.inputUnavailable]
 description = "无法访问此次运行背后的文件，因此从未处理。"
@@ -8942,8 +9075,8 @@ description = "此服务器缺少该步骤所需的软件，因此运行无法�
 title = "软件未安装"
 
 [portal.failures.kind.unknown]
-description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
-title = "Unrecognised failure"
+description = "出现了 Stirling 尚未识别的问题。"
+title = "无法识别的问题"
 
 [portal.failures.log]
 copy = "复制错误"
@@ -8951,8 +9084,8 @@ view = "查看错误"
 
 [portal.failures.origin]
 pipeline = "Pipeline"
-policy = "Policy"
-tool = "Tool run"
+policy = "策略运行"
+tool = "编辑器工具"
 
 [portal.failures.outcome]
 dismissed = "已忽略"
@@ -9027,8 +9160,8 @@ tagline = "适用于 Microsoft Windows 的原生应用"
 title = "Windows"
 
 [portal.home.editor]
-activeOfDeployed = "本月 {{total}} 个中有 {{active}} 个处于活跃状态"
-name = "Stirling PDF Editor"
+activeOfDeployed = "过去 30 天内 {{total}} 个中有 {{active}} 个处于活动状态"
+name = "PDF 编辑器"
 open = "在浏览器中打开"
 updated = "已更新 {{time}}"
 
@@ -9038,7 +9171,7 @@ options = "查看部署选项"
 start = "部署 Editor"
 
 [portal.home.editor.target]
-cloud = "Managed Cloud"
+cloud = "托管云"
 docker = "自托管 · Docker"
 kubernetes = "自托管 · Kubernetes"
 
@@ -9050,7 +9183,7 @@ morning = "早上好"
 [portal.infrastructure.apiKeys]
 createKey = "创建密钥"
 heading = "API 密钥"
-subheading = "带每密钥速率限制、权限和 IP 允许列表的范围化凭据。"
+subheading = "个人凭据，每个都有自己的使用跟踪。"
 
 [portal.infrastructure.apiKeys.card]
 created = "已创建"
@@ -9060,7 +9193,7 @@ usageMonth = "本月用量"
 usageToday = "今日用量"
 
 [portal.infrastructure.apiKeys.empty]
-description = "创建范围化密钥以开始调用 Stirling API。"
+description = "创建 key 以开始调用 Stirling API。"
 title = "尚无 API 密钥"
 
 [portal.infrastructure.apiKeys.error]
@@ -9148,10 +9281,10 @@ cancel = "取消"
 createKey = "创建密钥"
 done = "完成"
 keyNameLabel = "密钥名称"
-keyNamePlaceholder = "例如：生产 · 摄取"
+keyNamePlaceholder = "例如 Production ingest"
 secretKeyCaption = "秘密密钥"
-secretWarning = "请将其存储在密钥管理器中。Stirling 只会存储哈希 — 之后无法恢复。"
-subtitle = "将密钥范围限制为所需的最小范围。您可以随时轮换或吊销。"
+secretWarning = "请将其存储在 secrets manager 中。Stirling 只会存储哈希，因此之后无法恢复它。"
+subtitle = "为 key 命名，以便日后识别。您可以随时撤销它。"
 subtitleCreated = "立即复制此密钥 — 它不会再次显示。"
 title = "创建 API 密钥"
 titleCreated = "密钥已创建"
@@ -9348,8 +9481,8 @@ signing = "签名"
 storage = "存储"
 
 [portal.integrations.noResults]
-description = "No integrations match your filters. Try a different category or search."
-title = "No matches"
+description = "没有集成与您的筛选条件匹配。请尝试其他类别或搜索。"
+title = "没有匹配项"
 
 [portal.integrations.status]
 connected = "已连接"
@@ -9372,7 +9505,7 @@ title = "法律文件"
 [portal.nav]
 agent-builder = "Agent Builder"
 components = "组件"
-docs = "开发者文档"
+docs = "文档"
 documents = "文档"
 editor = "编辑器"
 home = "首页"
@@ -9393,7 +9526,7 @@ processor = "PDF 处理器"
 [portal.pipelines]
 permissionsRetry = "重试"
 permissionsUnavailable = "无法检查您是否可以管理策略，因此策略操作暂时不可用。"
-subtitle = "后端上的每个自动化文档管道：一组来源上的有序操作链，由触发器运行。点击一行查看其步骤和来源。"
+subtitle = "自动化您的文档 workflow。从模板开始进行简单的引导式设置，或从头构建自定义 pipeline。可将任何 pipeline 强制为策略，以便在每个文档上运行。"
 title = "管道"
 
 [portal.pipelines.actions]
@@ -9403,7 +9536,7 @@ newCustomPipeline = "新建自定义流水线"
 title = "所有流水线"
 
 [portal.pipelines.builder]
-activate = "Activate"
+activate = "激活"
 back = "返回管道"
 cannotFollow = "无法接收 {{produced}}"
 chooseAccount = "选择一个账户"
@@ -9417,13 +9550,13 @@ inputs = "输入"
 inputSource = "输入来源"
 inputTrigger = "触发器"
 keepEditing = "继续编辑"
-moreActions = "More actions"
+moreActions = "更多操作"
 needsConfiguring = "需要设置"
-needsDestination = "No destination chosen"
-needsSource = "No source chosen"
+needsDestination = "未选择目标"
+needsSource = "未选择来源"
 noToolMatches = "没有工具匹配您的搜索。"
-pause = "Pause"
-rename = "Rename pipeline"
+pause = "暂停"
+rename = "重命名流水线"
 runOn = "运行于"
 runOnExport = "每次导出"
 runOnTooltip = "选择此流水线何时在您的文件上运行：添加文件时，或导出文件时。"
@@ -9432,34 +9565,34 @@ searchTools = "搜索工具"
 sendToSystem = "发送到另一个系统"
 stepsIncompatible = "这些步骤无法在其上一步生成的内容上运行：{{tools}}。"
 stepsNeedSetup = "保存前这些步骤仍需要设置：{{tools}}。"
-supportingFiles = "Supporting files"
-testRun = "Test with a file"
+supportingFiles = "支持文件"
+testRun = "用文件测试"
 unknownStep = "无法识别的操作，已按原样保留。"
 unsavedBody = "您有未保存的更改。离开前保存，还是放弃？"
 unsavedTitle = "未保存的更改"
 usesDefaults = "使用默认设置运行"
-viewDefinition = "View definition"
+viewDefinition = "查看定义"
 
 [portal.pipelines.builder.blocker]
 aiClassification = "在设置中启用 AI 分类，或移除“分类”步骤"
-destination = "Choose a destination"
-heading = "To create this pipeline:"
-incompatible = "Fix steps that can't run in order: {{tools}}"
+destination = "选择目标位置"
+heading = "要创建此流水线："
+incompatible = "修复无法按顺序运行的步骤：{{tools}}"
 managerOnly = "只有管理员或团队负责人可以修改策略"
-name = "Give the pipeline a name"
+name = "为流水线命名"
 routing = "为每条路线提供文档类型和目标位置"
 routingNeedsClassify = "添加“分类”步骤，或关闭按文档类型路由"
-saveHeading = "To save your changes:"
-schedule = "Set how often it runs"
-setup = "Finish setting up: {{tools}}"
-source = "Choose an input source"
+saveHeading = "要保存更改："
+schedule = "设置运行频率"
+setup = "完成设置：{{tools}}"
+source = "选择输入源"
 
 [portal.pipelines.builder.diagnostic]
-fan-in = "合并上一步中的每个文件"
-fan-out = "对上一步中的每个文件运行一次"
-format-mismatch = "需要 {{accepts}}，但上一步生成 {{produced}}"
-output-uncertain = "可能不会运行：上一步的输出取决于其设置方式"
-source-mismatch = "需要 {{accepts}}，但此流水线的输入是 {{produced}}"
+fan-in = "合并每个传入文件"
+fan-out = "每个传入文件运行一次"
+format-mismatch = "发送 {{produced}}，需要 {{accepts}}"
+output-uncertain = "可能不会运行：输出取决于设置"
+source-mismatch = "输入为 {{produced}}，需要 {{accepts}}"
 undeclared-operation = "无法检查此步骤接受的内容"
 
 [portal.pipelines.builder.icon]
@@ -9512,25 +9645,25 @@ valuePlaceholder = "输入精确值，用逗号分隔"
 [portal.pipelines.composer]
 addTool = "添加工具"
 create = "创建管道"
-createPaused = "Create paused"
+createPaused = "创建为暂停状态"
 editingUnsupported = "尚不支持显示这些工具参数用于编辑。"
-editSource = "Edit source"
+editSource = "编辑源"
 name = "名称"
-namePlaceholder = "例如：修订扫描"
+namePlaceholder = "流水线名称"
 noToolSettings = "此工具没有可配置的设置。"
-output = "输出"
+output = "目标位置"
 save = "保存更改"
 scheduleEvery = "每隔"
 trigger = "触发器"
 triggerManual = "仅手动"
 
 [portal.pipelines.composer.runsEvery]
-days_one = "Runs every day"
-days_other = "Runs every {{count}} days"
-hours_one = "Runs every hour"
-hours_other = "Runs every {{count}} hours"
-minutes_one = "Runs every minute"
-minutes_other = "Runs every {{count}} minutes"
+days_one = "每天运行"
+days_other = "每 {{count}} 天运行"
+hours_one = "每小时运行"
+hours_other = "每 {{count}} 小时运行"
+minutes_one = "每分钟运行"
+minutes_other = "每 {{count}} 分钟运行"
 
 [portal.pipelines.composer.unit]
 days = "天"
@@ -9538,8 +9671,8 @@ hours = "小时"
 minutes = "分钟"
 
 [portal.pipelines.definition]
-subtitle = "The pipeline as it would be saved."
-title = "Definition"
+subtitle = "流水线将按此内容保存。"
+title = "定义"
 
 [portal.pipelines.delete]
 body = "删除 \"{{name}}\"？此操作无法撤销。"
@@ -9548,7 +9681,7 @@ confirm = "删除"
 title = "删除管道？"
 
 [portal.pipelines.detail]
-clearHistory = "清除历史记录"
+clearHistory = "处理源中被忽略的文件"
 delete = "删除管道"
 run = "立即运行"
 
@@ -9565,35 +9698,35 @@ label = "作为策略强制执行"
 managerOnly = "只有管理员或团队负责人可以将流水线作为策略强制执行"
 
 [portal.pipelines.graph]
-addFirstTool = "Add a tool"
-dragHint = "Drop on a line to move it"
-insertHere = "Add a tool here"
-removeNode = "Remove {{name}}"
-showError = "Show why {{name}} failed"
+addFirstTool = "添加工具"
+dragHint = "拖放到线上以移动它"
+insertHere = "在此处添加工具"
+removeNode = "移除 {{name}}"
+showError = "显示 {{name}} 失败原因"
 
 [portal.pipelines.graph.add]
-input = "Add a source"
-output = "Add a destination"
+input = "添加源"
+output = "添加目标位置"
 
 [portal.pipelines.graph.run]
-done = "Done"
-failed = "Failed"
-running = "Running"
+done = "完成"
+failed = "失败"
+running = "运行中"
 
 [portal.pipelines.inspector]
-multipleBody = "Drag any of them onto a line to move them together, or press Delete to remove them."
-multipleSelected_one = "{{count}} step selected"
-multipleSelected_other = "{{count}} steps selected"
-noSelectionBody = "Pick a node in the graph to change what it does."
-noSelectionTitle = "Nothing selected"
+multipleBody = "将其中任意一个拖到线上以一起移动，或按 Delete 将其移除。"
+multipleSelected_one = "已选择 {{count}} 个步骤"
+multipleSelected_other = "已选择 {{count}} 个步骤"
+noSelectionBody = "在图中选择一个节点以更改其操作。"
+noSelectionTitle = "未选择任何内容"
 
 [portal.pipelines.inspector.status]
-completed_one = "Finished the only step"
-completed_other = "Finished all {{count}} steps"
-failed_one = "Failed on the only step"
-failed_other = "Failed after {{done}} of {{count}} steps"
-running_one = "Running the only step"
-running_other = "Running step {{done}} of {{count}}"
+completed_one = "已完成唯一步骤"
+completed_other = "已完成全部 {{count}} 个步骤"
+failed_one = "唯一步骤失败"
+failed_other = "在 {{count}} 个步骤中的 {{done}} 个之后失败"
+running_one = "正在运行唯一步骤"
+running_other = "正在运行第 {{done}} / {{count}} 步"
 
 [portal.pipelines.run]
 allProcessed_one = "无需运行：来源中的 {{count}} 个文档已处理。"
@@ -9603,8 +9736,8 @@ completed_other = "全部 {{count}} 次运行已完成。"
 empty = "没有可运行内容：来源中没有要处理的文档。"
 failed = "运行失败：{{error}}"
 inFlight = "没有新的可运行内容：文档仍在从早先的运行中处理中。"
-parked_one = "无需运行：{{count}} 个文档此前失败并已暂存。修复原因后，清除历史记录以重试。"
-parked_other = "无需运行：{{count}} 个文档此前失败并已暂存。修复原因后，清除历史记录以重试。"
+parked_one = "没有可运行内容：{{count}} 个文档之前失败并已搁置。修复原因后，重新处理源以重试。"
+parked_other = "没有可运行内容：{{count}} 个文档之前失败并已搁置。修复原因后，重新处理源以重试。"
 running = "运行已开始；仍在进行中。"
 timeout = "运行耗时超过预期；它可能仍会在后台完成。"
 
@@ -9617,7 +9750,7 @@ name = "管道"
 sources = "来源"
 status = "状态"
 steps = "步骤"
-trigger = "Trigger"
+trigger = "触发器"
 type = "类型"
 
 [portal.pipelines.templates]
@@ -9637,7 +9770,7 @@ pipeline = "流水线"
 policy = "策略"
 
 [portal.policies]
-defaultName = "{{category}} 策略"
+defaultName = "{{category}} 流水线"
 
 [portal.policies.card]
 comingSoon = "升级到企业版"
@@ -9648,7 +9781,7 @@ desc = "在上传时识别每个文档的类型，并标记其元数据以便归
 label = "分类"
 
 [portal.policies.categories.compliance]
-desc = "在每个文档上强制执行 HIPAA、GDPR、SOC 2 或 FedRAMP 要求。"
+desc = "移除隐藏数据，转换为 PDF/A 以便归档，并在交付前按标准验证每个文档。"
 label = "合规"
 
 [portal.policies.categories.ingestion]
@@ -9678,21 +9811,21 @@ summary = "根据您团队的标签对每个上传文档进行分类，并标记
 1 = "标记元数据"
 
 [portal.policies.config.compliance]
-summary = "在文档离开系统前，根据监管框架验证文档。"
+summary = "移除隐藏数据，转换为 PDF/A 归档格式，并按标准验证结果。"
 
 [portal.policies.config.compliance.rules]
-0 = "框架扫描"
-1 = "强制操作"
-2 = "审计轨迹"
+0 = "移除隐藏数据"
+1 = "转换为 PDF/A"
+2 = "验证合规性"
 
 [portal.policies.config.ingestion]
 description = "选择要处理的文档，使其文本可搜索，并将块发送到数据库或导出。"
 
 [portal.policies.config.ingestion.rules]
-0 = "分类"
-1 = "提取"
-2 = "命名"
-3 = "规范化"
+0 = "读取文本"
+1 = "分块"
+2 = "索引"
+3 = "保留原始文件"
 
 [portal.policies.config.pdfa.fields.outputFormat]
 help = "PDF/A-2b 适合大多数归档。PDF/A-1b 最严格且最广泛接受；PDF/A-3b 还允许附件。"
@@ -9900,22 +10033,22 @@ description = "将处理后的文档作为附件发送。"
 label = "通过电子邮件发送文档（Mailgun）"
 
 [portal.policies.operations.n8nGate]
-description = "Your workflow decides whether the run carries on."
-label = "Ask an n8n workflow to approve"
-note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+description = "您的 workflow 决定此次运行是否继续。"
+label = "请求 n8n workflow 批准"
+note = "workflow 必须回复 {\"approved\": true}。其他任何内容——包括超时——都会停止运行并搁置该文档。"
 
 [portal.policies.operations.n8nNotify]
-description = "Sends the run's details, not the document."
-label = "Tell an n8n workflow"
+description = "发送运行详情，而不是文档。"
+label = "通知 n8n workflow"
 
 [portal.policies.operations.n8nSend]
-description = "Sends the document and the run's details to your workflow."
-label = "Send the document to n8n"
+description = "将文档和运行详情发送到您的 workflow。"
+label = "将文档发送到 n8n"
 
 [portal.policies.operations.n8nTransform]
-description = "Your workflow processes the document and the file it returns replaces it."
-label = "Process the document in n8n"
-note = "Set the Webhook node to respond \"Using Respond to Webhook Node\", and return a file. On the default \"Immediately\" setting n8n replies with an acknowledgement, and that would replace the document."
+description = "您的 workflow 会处理文档，并用返回的文件替换它。"
+label = "在 n8n 中处理文档"
+note = "将 Webhook 节点设置为以 \"Using Respond to Webhook Node\" 响应，并返回一个文件。在默认的 \"Immediately\" 设置下，n8n 会回复确认信息，而这会替换文档。"
 
 [portal.policies.operations.nextcloudUpload]
 description = "将处理后的文档写入文件夹。"
@@ -9962,7 +10095,7 @@ label = "触发 Zap 或 Make 场景"
 cancel = "取消"
 customise = "自定义"
 customiseUnavailable = "完整构建器位于 Processor 上"
-enablePolicy = "启用政策"
+enablePolicy = "创建流水线"
 saveChanges = "保存更改"
 
 [portal.policies.wizard.capability.classify]
@@ -10014,8 +10147,8 @@ description = "每个上传文档都会根据内置标签进行分类，并标�
 labelsHeading = "分类标签"
 
 [portal.policies.wizard.errors]
-noTools = "请先在工作流中启用至少一个工具。"
-saveFailed = "无法保存政策。请重试。"
+noTools = "至少启用一个操作。"
+saveFailed = "无法保存流水线。请重试。"
 
 [portal.policies.wizard.locations]
 aiSettings = "打开 AI 设置"
@@ -10073,11 +10206,11 @@ sourceHeading = "监视"
 connect = "连接来源"
 
 [portal.policies.wizard.title]
-edit = "编辑 {{category}} 政策"
-setUp = "设置 {{category}} 政策"
+edit = "编辑 {{category}} 流水线"
+setUp = "设置 {{category}} 流水线"
 
 [portal.policies.wizard.workflow]
-description = "选择此政策对其处理的每个文档执行的操作。"
+description = "选择此流水线对其处理的每个文档执行的操作。"
 
 [portal.processorFlow]
 footnote = "计数基于过去 24 小时。流程速度仅作示意。"
@@ -10126,9 +10259,9 @@ subtitle = "让您的团队完成评估、签约和入门。所有文档集中�
 title = "采购"
 
 [portal.procurement.agreement]
-agreeCta = "同意并订阅"
+agreeCta = "签署协议"
 confidential = "机密"
-confirm = "我已阅读并同意 Stirling Enterprise Agreement。"
+confirm = "我已阅读并同意本协议，并声明我已获授权代表上述组织签署该协议。"
 docName = "Stirling Enterprise Agreement"
 docSub = "MSA、订单表、EULA 和 DPA，合并为一次签名。"
 download = "下载"
@@ -10167,8 +10300,8 @@ continue = "继续"
 done = "完成"
 eula = "我已阅读并同意 Stirling Enterprise EULA。它管理由此报价生成的协议。"
 generate = "生成报价"
-indemnification = "IP 赔偿"
-indemnificationSub = "我们根据 EULA 为符合条件的 IP 索赔提供抗辩"
+indemnification = "增强 IP 保护"
+indemnificationSub = "将我们的 IP 防御扩展到专利索赔。基础版权、商标和商业秘密赔偿免费包含。"
 paperEyebrow = "企业报价"
 paperFor = "准备给"
 pdfSize = "PDF 大小"
@@ -10203,9 +10336,9 @@ size_heavySub = "扫描件或大量图片，5 MB+"
 size_standard = "标准"
 size_standardSub = "文本和图片混合，1 到 5 MB"
 slDedicated = "专属"
-slDedicatedSub = "4 个工作小时 · 专属客户经理 · +30%"
+slDedicatedSub = "4 个工作小时 · 专属 SE / CSM · +$30,000/年"
 slPriority = "优先"
-slPrioritySub = "同一工作日 · 指定 CSM · +15%"
+slPrioritySub = "同一工作日 · 指定 CSM · 已包含"
 slStandard = "标准"
 slStandardSub = "下一工作日 · 共享 CSM · 已包含"
 stepOf = "第 {{n}} 步，共 {{total}} 步"
@@ -10258,7 +10391,7 @@ ctaQuote = "审核您的报价"
 ctaReviewQuote = "审阅报价"
 ctaTrial = "构建您的报价"
 documents = "文档"
-eyebrow = "企业采购"
+eyebrow = "Enterprise"
 eyebrowCompany = "{{company}} 企业版"
 inviteTeammates = "邀请队友"
 licenseKey = "许可证密钥"
@@ -10396,7 +10529,7 @@ subtitle = "来自你的策略运行和团队编辑器、需要你关注的任�
 title = "审核"
 
 [portal.settings.sections]
-account-link = "账户关联"
+account-link = "账户连接"
 
 [portal.shell.sidebar]
 appEditor = "编辑器"
@@ -10411,7 +10544,7 @@ search = "搜索"
 
 [portal.sources]
 processingModeHelp = "跟踪模式会保留原件，并且每个版本只处理一次。快照模式会保留原件，并在每次运行时处理它们。消耗模式会在成功交付后删除原件。"
-subtitle = "可重复使用的输入连接，将文档送入 Stirling。配置一次连接，然后可在任意数量的政策中引用它。点击一行可查看其配置以及使用它的政策。"
+subtitle = "可复用的输入连接，用于将文档送入 Stirling。配置一次源，然后可在任意数量的流水线中引用。"
 title = "来源"
 
 [portal.sources.actions]
@@ -10445,20 +10578,20 @@ confirm = "删除"
 title = "删除来源？"
 
 [portal.sources.networkFields.connection]
-helperText = "包含服务器地址和凭据的已保存连接。由引用它的每个来源重复使用。"
+helperText = "已保存的连接，包含服务器地址和凭据。由使用它的每个源共享。"
 label = "连接"
 
 [portal.sources.networkFields.directory]
-helperText = "服务器上要轮询的文件夹，相对于登录主目录或共享根目录。留空表示根目录。"
+helperText = "要监控的服务器文件夹，相对于登录主目录或共享根目录。"
 label = "文件夹"
-placeholder = "incoming/"
+placeholder = "登录主目录或共享根目录"
 
 [portal.sources.networkFields.mode]
-label = "读取模式"
+label = "处理后"
 
 [portal.sources.networkFields.mode.options]
-consume = "Consume：每个文件只处理一次"
-snapshot = "Snapshot：每次运行重新读取文件夹"
+consume = "删除文件"
+snapshot = "保留原位"
 track = "保留原件；仅处理一次变更"
 
 [portal.sources.networkFields.recursive]
@@ -10478,7 +10611,7 @@ unused = "未使用"
 documents = "文档"
 source = "来源"
 status = "状态"
-type = "Type"
+type = "类型"
 usedBy = "政策"
 
 [portal.sources.types.box]
@@ -10503,25 +10636,25 @@ description = "监视服务器上的目录以发现新文档。"
 label = "文件夹"
 
 [portal.sources.types.folder.fields.directory]
-helperText = "Stirling 监视以处理文件的绝对路径。"
-label = "目录路径"
+helperText = "要监控新文件的文件夹绝对路径。"
+label = "文件夹"
 placeholder = "/data/incoming"
 
 [portal.sources.types.folder.fields.identity]
-helperText = "内容检查会读取每个已更改文件，因此不会重新处理仅重命名或触碰但未改变内容的文件。"
+helperText = "使用文件内容进行变更检测较慢，但更准确。"
 label = "更改检测"
 
 [portal.sources.types.folder.fields.identity.options]
-hash = "大小、日期和内容检查"
-stat = "大小和修改日期"
+hash = "文件元数据和内容"
+stat = "文件元数据"
 
 [portal.sources.types.folder.fields.mode]
-helperText = "处理后是否将原始文件保留在原位置。如果原始文件保留在原位置，则流水线下次扫描源时会重新处理它。"
-label = "读取模式"
+helperText = "原始文件处理完成后会发生什么。\"保留\" 会记住已处理过的内容，因此文件只有在实际发生变化时才会再次处理。"
+label = "处理后"
 
 [portal.sources.types.folder.fields.mode.options]
-consume = "消耗：每个文件只处理一次"
-snapshot = "快照：每次运行都重新读取文件夹"
+consume = "删除文件"
+snapshot = "保留它，并在每次扫描时再次处理"
 track = "保留它，并且仅在发生变化时再次处理"
 
 [portal.sources.types.folder.fields.recursive]
@@ -10553,21 +10686,21 @@ description = "从 Amazon S3 或 S3-compatible 存储桶中拉取文档。"
 label = "Amazon S3"
 
 [portal.sources.types.s3.fields.connection]
-helperText = "保存的连接，包含存储桶和凭据。由引用它的每个来源和流水线输出重复使用。"
+helperText = "已保存的连接，包含 bucket 和凭据。由使用它的每个源和流水线输出共享。"
 label = "连接"
 
 [portal.sources.types.s3.fields.mode]
-label = "读取模式"
+label = "处理后"
 
 [portal.sources.types.s3.fields.mode.options]
-consume = "Consume：每个对象只处理一次"
-snapshot = "Snapshot：每次运行重新读取存储桶"
+consume = "删除对象"
+snapshot = "保留原位"
 track = "保留原件；仅处理一次变更"
 
 [portal.sources.types.s3.fields.prefix]
-helperText = "仅处理键以此前缀开头的对象。"
-label = "键前缀"
-placeholder = "incoming/"
+helperText = "bucket 中要监控的文件夹（key prefix）。"
+label = "文件夹"
+placeholder = "整个 bucket"
 
 [portal.sources.types.sftp]
 description = "轮询 SFTP 投递文件夹以获取新文档。"
@@ -10619,7 +10752,7 @@ type = "类型"
 close = "关闭"
 
 [portal.usage]
-subtitle = "在一个控制台中管理 Stirling 已计费的每个 PDF 的消耗、发票和方案。"
+subtitle = "您的方案、用量和所有发票。"
 title = "用量与计费"
 
 [portal.usage.error]
@@ -10686,8 +10819,8 @@ summary = "拥有团队——管理其成员的资源和共享配置。"
 3 = "成员能做的一切"
 
 [portal.users.seats]
-limited = "{{used}} / {{limit}}"
-unlimited = "{{used}} · 无限"
+limited = "{{used}} / {{limit}} 个席位"
+unlimited = "{{used}} 个席位 · 无限"
 
 [printFile]
 title = "ཡིག་ཆ་པར་འདེབས།"
@@ -10956,7 +11089,7 @@ description = "SMTP 认证用户名"
 label = "SMTP 用户名"
 
 [quickAccess]
-allTools = "All Tools"
+allTools = "工具"
 automate = "自动化"
 config = "配置"
 files = "文件"
@@ -10975,7 +11108,7 @@ reader = "阅读器"
 signInToUse = "登录以使用此功能"
 
 [read]
-tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
+tags = "查看,打开,显示,阅读,查看器,PDF viewer,PDF reader,打开 PDF,查看 PDF,显示 PDF,预览,浏览"
 
 [reader.rail]
 addDocument = "添加文件"
@@ -10992,8 +11125,8 @@ thumbnails = "页面"
 
 [redact]
 submit = "སྒྲིབ་སྲུང་།"
-tags = "སྒྲིབ་སྲུང་།,སྦས་པ།,ནག་པོས་སྒྲིབ་པ།,ནག་པོ།,རྟགས་རྒྱག,སྦས་པ།,ལག་བཟོས།"
-title = "ལག་བཟོས་སྒྲིབ་སྲུང་།"
+tags = "遮盖,隐藏,涂黑,黑色,标记,隐藏内容,自动遮盖,手动遮盖"
+title = "遮盖"
 
 [redact.auto]
 colorLabel = "框颜色"
@@ -11121,8 +11254,8 @@ title = "功能说明"
 title = "关于移除注释"
 
 [removeBlanks]
-submit = "སྟོང་ཤོག་སུབ་པ།"
-tags = "delete,clean,empty,remove blank,delete blank pages,empty pages,white pages,remove empty,clean up,cleanup blank"
+submit = "移除空白页"
+tags = "删除,清理,空白,移除空白,删除空白页,空页面,白页,移除空页,清理,清理空白"
 title = "སྟོང་ཤོག་སུབ་པ།"
 
 [removeBlanks.error]
@@ -11181,7 +11314,7 @@ title = "证书移除结果"
 
 [removeImage]
 submit = "པར་རིས་སུབ་པ།"
-tags = "remove,delete,clean,remove image,delete image,strip images,remove pictures,delete photos,clean images,reduce size,remove graphics"
+tags = "移除,删除,清理,移除图片,删除图片,剥离图片,移除照片,删除照片,清理图片,减小大小,移除图形"
 title = "པ�་རིས་སུབ་པ།"
 
 [removeImage.error]
@@ -11233,7 +11366,7 @@ title = "页面选择"
 
 [removePassword]
 desc = "从您的 PDF 文档中移除密码保护。"
-submit = "སུབ་པ།"
+submit = "移除密码"
 tags = "བདེ་འཇགས།,གསང་སྡོམ་གྲོལ་བ།,ཉེན་སྲུང་།,གསང་ཚིག་མེད་པ།,གསང་ཚིག་སུབ་པ།"
 title = "གསང་ཚིག་སུབ་པ།"
 
@@ -11253,7 +11386,7 @@ description = "移除密码保护需要用于加密 PDF 的密码。这将解密
 
 [reorganizePages]
 submit = "重新整理页面"
-tags = "rearrange,reorder,organize,reorganize,move pages,page order,sort pages,arrange pages,shuffle,resequence"
+tags = "重新排列,重新排序,整理,重组,移动页面,页面顺序,排序页面,排列页面,打乱,重新编号"
 
 [reorganizePages.error]
 failed = "重新整理页面失败"
@@ -11278,10 +11411,10 @@ title = "修复结果"
 
 [replace-color]
 submit = "བརྗེ་སྒྱུར།"
-title = "ཚོས་གཞིའི་གདམ་ག་མཐོ་རིམ།"
+title = "替换-反转-颜色"
 
 [replace-color.selectText]
-1 = "ཚོས་གཞི་བརྗེ་སྒྱུར་རམ་ལྡོག་སྒྱུར་གྱི་གདམ་ག"
+1 = "替换或反转颜色选项"
 10 = "ཡི་གེའི་ཚོས་གཞི་འདེམས་པ།"
 11 = "རྒྱབ་ལྗོངས་ཀྱི་ཚོས་གཞི་འདེམས་པ།"
 5 = "འོད་ཁྱད་མཐོ་བའི་ཚོས་གཞིའི་གདམ་ག"
@@ -11339,7 +11472,7 @@ title = "反转所有颜色"
 rotateLeft = "逆时针旋转"
 rotateRight = "顺时针旋转"
 selectRotation = "选择旋转角度（顺时针）"
-submit = "འཁོར་སྐྱོད།"
+submit = "应用旋转"
 tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation"
 title = "旋转 PDF"
 
@@ -11428,7 +11561,7 @@ title = "PDF གཙང་སེལ།"
 tags = "གཙང་སེལ།,བདེ་འཇགས།,ཉེན་མེད།,ཉེན་ཁ་སེལ་བ།"
 
 [scalePages]
-tags = "resize,adjust,scale,page size,resize page,scale page,change size,adjust size,enlarge,shrink page,fit to page,A4,letter size"
+tags = "调整大小,调整,缩放,页面大小,调整页面大小,缩放页面,更改大小,调整尺寸,放大,缩小页面,适合页面,A4,letter size"
 title = "ཤོག་ངོས་ཆེ་ཆུང་སྙོམ་སྒྲིག"
 
 [scaleSettings]
@@ -11459,11 +11592,11 @@ unit = "单位"
 unitInvalid = "无效单位：{{scaleUnit}}"
 
 [scannerEffect]
-tags = "scan,simulate,create,fake scan,look scanned,scanner effect,make look scanned,photocopy effect,simulate scanner,realistic scan"
+tags = "扫描,模拟,创建,伪扫描,看起来已扫描,扫描仪效果,使其看起来已扫描,复印效果,模拟扫描仪,真实扫描"
 
 [scannerImageSplit]
 submit = "提取图像扫描"
-tags = "separate,auto-detect,scans,multi-photo,organize"
+tags = "分离,自动检测,扫描件,多照片,整理"
 title = "已提取的图像"
 
 [scannerImageSplit.error]
@@ -11492,19 +11625,19 @@ useCase2 = "将平板扫描的批量图片拆分为单个文件"
 useCase3 = "将拼贴拆分为单张照片"
 useCase4 = "从文档中提取照片"
 whatThisDoes = "功能简介"
-whatThisDoesDesc = "自动在扫描页或合成图中查找并提取每张照片——无需手动裁剪。"
+whatThisDoesDesc = "自动从扫描页面或组合图像中查找并提取每张照片，无需手动裁剪。"
 whenToUse = "适用场景"
 
 [ScannerImageSplit.selectText]
 1 = "�ུར་ཚད་མཚམས།"
-10 = "ཕྱིར་འདོན་པའི་ནང་དཀར་མཐའ་འགོག་པའི་ཆེད་དུ་སྣོན་པ་དང་སུབ་པ་བྱེད་པ�� (སྔོན་སྒྲིག 1)"
-2 = "པར་རིས་འཁོར་སྐྱོད་བྱེད་དགོས་པའི་ཉུང་མཐའི་ཟུར་ཚད་སྒྲིག་འགོད་བྱེད་པ། (སྔོན་སྒྲིག 10)"
+10 = "每张已保存照片周围的额外边距（像素），避免边缘被裁掉。"
+2 = "自动校正照片前所需的倾斜角度（度）。"
 3 = "བཟོད་སྲན་ཚད།"
-4 = "ཚོད་དཔག་བྱས་པའི་རྒྱབ་ལྗོངས་ཚོས་གཞིའི་མཐའ་འཁོར་གྱི་ཚོས་མདོག་འགྱུར་བའི་ཁྱབ་ཚད་ཐག་གཅོད་བྱེད་པ། (སྔོན་སྒྲིག 30)"
+4 = "颜色与页面背景匹配到什么程度才算背景。值越高越宽松，越低越严格。"
 5 = "ཉུང་མཐའི་རྒྱ་ཁྱོན།"
-6 = "པར་རིས་ཤིག་གི་ཉུང་མཐའི་རྒྱ་ཁྱོན་མཚམས་སྒྲིག་འགོད་བྱེད་པ། (སྔོན་སྒྲིག 10000)"
+6 = "保留的最小照片大小（像素²），用于避免微小碎片。"
 7 = "ཉུང་མཐའི་མཐའ་འཁོར་རྒྱ་ཁྱོན།"
-8 = "པར་རིས་ཤིག་གི་ཉུང་མཐའི་མཐའ་འཁོར་རྒྱ་ཁྱོན་མཚམས་སྒྲིག་འགོད་བྱེད་པ།"
+8 = "查找照片时考虑的最小边缘/形状（过滤灰尘和斑点）。"
 9 = "མཐའ་མཚམས་ཆེ་ཆུང་།"
 
 [search]
@@ -11534,7 +11667,7 @@ title = "关于"
 
 [settings.ai]
 documents = "文档与 RAG"
-general = "常规"
+general = "AI Engine"
 limits = "限制与性能"
 models = "模型与提供商"
 title = "AI"
@@ -11544,12 +11677,15 @@ title = "计费"
 
 [settings.configuration]
 advanced = "高级"
+connections = "单点登录"
 database = "数据库"
 endpoints = "端点"
 features = "功能"
 folderAccess = "文件夹访问权限"
 integrations = "集成"
+legal = "法律文件"
 mcp = "MCP Server"
+privacy = "隐私"
 storageSharing = "文件存储与共享"
 systemSettings = "系统设置"
 
@@ -11617,7 +11753,7 @@ defaultPdfEditorChecking = "正在检查..."
 defaultPdfEditorInactive = "已由其他应用设为默认"
 defaultPdfEditorSet = "已是默认"
 defaultStartupView = "启动时的默认视图"
-defaultStartupViewDescription = "选择应用启动时左侧栏中默认激活的选项卡"
+defaultStartupViewDescription = "选择应用启动时激活的视图"
 defaultToolPickerMode = "默认工具选择器模式"
 defaultToolPickerModeDescription = "选择工具选择器默认以全屏或侧边栏打开"
 defaultViewerZoom = "阅读器默认缩放"
@@ -11641,10 +11777,10 @@ themeAccentDefaultHint = "默认主题（推荐）"
 themeAccentDescription = "按钮、链接和高亮会遵循该颜色，并为应用轻微着色。浅色和深色模式各自有单独设置。系统会使用当前启用的设置。"
 themeAccentLight = "浅色模式强调色"
 themeDark = "深色"
-themeDescription = "在浅色与深色模式之间切换"
+themeDescription = "选择浅色、深色或跟随系统，以便自动切换。"
 themeLight = "浅色"
 themeReset = "将主题恢复为默认"
-themeSystem = "System"
+themeSystem = "系统"
 title = "常规"
 user = "用户"
 
@@ -11668,8 +11804,8 @@ tools = "工具"
 
 [settings.general.updates]
 checkForUpdates = "检查更新"
-currentBackendVersion = "Current Backend Version"
-currentFrontendVersion = "Current Frontend Version"
+currentBackendVersion = "当前后端版本"
+currentFrontendVersion = "当前前端版本"
 description = "检查更新并查看版本信息"
 latestVersion = "最新版本"
 managedByAdmin = "由管理员管理"
@@ -11684,7 +11820,7 @@ updateBehaviorError = "无法更改更新行为"
 updateBehaviorErrorLocked = "此设置已被你的管理员锁定。"
 updateBehaviorLockedDescription = "你的管理员已配置此设备上 Stirling-PDF 的更新处理方式。若需更改，请联系他们。"
 updateBehaviorSaved = "已保存更新行为。"
-versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
+versionMismatch = "您的桌面应用程序和服务器正在运行不同版本。请将两者更新为相同版本以避免兼容性问题。"
 viewDetails = "查看详情"
 
 [settings.general.versionInfo]
@@ -11733,16 +11869,16 @@ windows = "快捷键需包含 Ctrl、Alt 或其他修饰键。"
 
 [settings.legal]
 description = "条款、隐私政策和你的 cookie 偏好设置。"
-label = "Legal"
-title = "Legal"
+label = "法律"
+title = "法律"
 
 [settings.legal.cookiePreferences]
-description = "Review or change your cookie consent choices."
-manage = "Manage"
+description = "查看或更改您的 cookie 同意选择。"
+manage = "管理"
 
 [settings.legal.documents]
-description = "Policies and legal information for this service."
-title = "Legal Documents"
+description = "此服务的政策和法律信息。"
+title = "法律文件"
 
 [settings.licenses]
 backendDescription = "与此服务器捆绑的后端依赖项许可证。"
@@ -11760,7 +11896,7 @@ module = "模块"
 version = "版本"
 
 [settings.licensingAnalytics]
-audit = "审计"
+audit = "审计日志"
 auditDescription = "谁在此服务器上做了什么，以及该记录保留多久。"
 plan = "方案"
 planDescription = "你的许可证、席位以及当前计划解锁的内容。"
@@ -11803,9 +11939,9 @@ trial = "试用"
 
 [settings.planBilling.team]
 managedByTeam = "由团队管理"
-memberCount_one = "{{count}} team member"
-memberCount_other = "{{count}} team members"
-memberCount_zero = "no team members"
+memberCount_one = "{{count}} 位团队成员"
+memberCount_other = "{{count}} 位团队成员"
+memberCount_zero = "无团队成员"
 
 [settings.planBilling.trial]
 daysRemaining = "剩余 {{days}} 天"
@@ -11826,9 +11962,9 @@ subtitle = "升级到团队版可获得："
 title = "升级您的套餐"
 
 [settings.policiesPrivacy]
-legal = "法律"
+legal = "法律文件"
 privacy = "隐私"
-title = "政策与隐私"
+title = "法律与隐私"
 
 [settings.preferences]
 appearance = "外观"
@@ -11857,10 +11993,10 @@ success = "密码更新成功。请重新登录。"
 update = "更新密码"
 
 [settings.securityAuth]
-connections = "连接"
-security = "安全"
+connections = "单点登录"
+security = "登录与安全"
 telegram = "Telegram"
-title = "安全与认证"
+title = "安全与登录"
 
 [settings.server]
 system = "系统"
@@ -11927,16 +12063,23 @@ title = "无法连接到服务器"
 subtitle = "输入自托管服务器的 URL"
 testing = "正在测试连接..."
 title = "连接到服务器"
-useLast = "Last used server: {{serverUrl}}"
+useLast = "上次使用的服务器：{{serverUrl}}"
 
 [setup.server.error]
-configFetch = "获取服务器配置失败。请检查 URL 后重试。"
+configFetch = "无法获取服务器配置（状态 {{status}}）"
 configFetchError = "获取服务器配置失败：{{error}}"
+dnsFailed = "无法解析 hostname：{{hostname}}"
 emptyUrl = "请输入服务器 URL"
+httpOnly = "服务器只能通过 HTTP 访问（不能通过 HTTPS）。"
+httpsOnly = "服务器只能通过 HTTPS 访问，不能通过 HTTP。"
 invalidUrl = "URL 格式无效。请输入有效的 URL，例如 https://your-server.com"
+methodMismatch = "服务器响应 HEAD 请求，但不响应 GET 请求。"
+networkBlocked = "未检测到互联网连接。所有网络请求都失败。"
+serverUnreachable = "无法连接到服务器。互联网可用，但此特定服务器不可达。"
 testFailed = "连接测试失败"
 unknown = "未知错误"
 unreachable = "无法连接到服务器"
+userAgentBlocked = "服务器阻止 Tauri/桌面应用 User-Agent，但允许浏览器 User-Agent。"
 
 [setup.server.error.securityDisabled]
 body = "此服务器未启用登录。要连接到该服务器，必须启用身份验证："
@@ -11962,6 +12105,8 @@ filterSigned = "已签署"
 fromOwner = "来自 {{owner}}"
 newRequest = "请求签名"
 signedCount = "{{signed}}/{{total}} 已签署"
+signInRequiredBody = "登录后才能请求签名并查看发送给您的请求。"
+signInRequiredTitle = "需要登录"
 
 [sharedSign.empty]
 active = "没有待处理的签名请求或活跃会话"
@@ -11996,7 +12141,7 @@ last = "ཤོག་ངོས་མཐའ་མ།"
 maintainRatio = "བསྡུར་ཚད་རྒྱུན་འཁྱོངས་སྒོ་རྒྱག་པ།"
 next = "ཤོག་ངོས་རྗེས་མ།"
 noSavedSigs = "ཉར་ཚགས་བྱས་པའི་མིང་རྟགས་མ་རྙེད།"
-penSizePlaceholder = "Type or select pen size (1-200)"
+penSizePlaceholder = "输入或选择笔大小 (1-200)"
 personalSigs = "སྒེར་གྱི་མིང་རྟགས།"
 previous = "ཤོག་ངོས་སྔོན་མ།"
 redo = "重做"
@@ -12006,7 +12151,7 @@ sharedSigningRequest = "请求签名"
 sharedSigningStepDesc = "将此文档发送给他人签署，而不是由您自己签署。"
 sharedSigs = "མཉམ་སྤྱོད་མིང་རྟགས།"
 submit = "签署文档"
-tags = "signature,autograph,e-sign,electronic signature,digital signature,sign document,approval,signoff,authorize,endorse,ink signature,handwriting"
+tags = "签名,亲笔签名,电子签名,电子签名,数字签名,签署文档,批准,签署确认,授权,背书,墨迹签名,手写"
 title = "མིང་རྟགས།"
 undo = "撤销"
 updateAndPlace = "更新并放置"
@@ -12035,7 +12180,7 @@ backgroundRemovalFailedTitle = "背景移除失败"
 hint = "上传您的签名 PNG 或 JPG 图片"
 label = "上传签名图片"
 placeholder = "选择图像文件"
-previewAlt = "Current image signature"
+previewAlt = "当前图片签名"
 processing = "正在处理图像..."
 removeBackground = "移除白色背景（变为透明）"
 
@@ -12051,15 +12196,15 @@ text = "在上方输入您的姓名后，在 PDF 任意位置点击以放置签�
 title = "如何添加签名"
 
 [sign.mobile]
-createFromPhone = "Mobile upload"
-description = "Scan this QR code with your phone or tablet, draw your signature, and it will appear here automatically."
-error = "Connection Error"
-expiryWarning = "QR Code Expiring Soon"
-expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."
-instructions = "Open the camera app on your phone and scan this code. Keep this window open while you draw."
-pollingError = "Error checking for the signature"
-sessionCreateError = "Failed to create session"
-title = "Draw on your phone"
+createFromPhone = "移动设备上传"
+description = "用您的手机或平板扫描此 QR 码，绘制签名，它会自动显示在这里。"
+error = "连接错误"
+expiryWarning = "QR 码即将过期"
+expiryWarningMessage = "此 QR 码将在 {{seconds}} 秒后过期。将自动生成新代码。"
+instructions = "打开手机上的相机应用并扫描此代码。绘制时请保持此窗口打开。"
+pollingError = "检查签名时出错"
+sessionCreateError = "创建会话失败"
+title = "在手机上绘制"
 
 [sign.mode]
 move = "移动签名"
@@ -12120,8 +12265,8 @@ colorLabel = "文本颜色"
 fontLabel = "字体"
 fontSizeLabel = "字号"
 fontSizePlaceholder = "输入或选择字号 (8-200)"
-name = "签署人姓名"
-placeholder = "输入您的全名"
+name = "文本"
+placeholder = "输入文本"
 
 [sign.type]
 canvas = "画布"
@@ -12173,7 +12318,7 @@ createFailed = "创建签署请求失败"
 
 [signup]
 accountCreatedSuccessfully = "账号创建成功！您现在可以登录。"
-alreadyHaveAccount = "已有账号？登录"
+alreadyHaveAccount = "我已有账户"
 checkEmailConfirmation = "请检查邮箱中的确认链接以完成注册。"
 confirmPassword = "确认密码"
 confirmPasswordPlaceholder = "确认密码"
@@ -12194,8 +12339,8 @@ passwordsDoNotMatch = "两次输入的密码不一致"
 passwordTooShort = "密码长度至少为 6 个字符"
 pleaseFillAllFields = "请填写所有字段"
 signUp = "注册"
-signUpWith = "Sign up with"
-skip = "Skip"
+signUpWith = "使用以下方式注册"
+skip = "跳过"
 subtitle = "加入 Stirling PDF 开始使用"
 title = "创建账号"
 unableToAccessTool = "无法访问工具：{{error}}"
@@ -12213,7 +12358,7 @@ resultsTitle = "拆分结果"
 selectMethod = "选择一种拆分方法"
 splitPages = "ཁ་གྱེས་བྱ་རྒྱུའི་ཤོག་ངོས་འཇུག་པ།"
 submit = "ཁ་གྱེས།"
-tags = "divide,separate,break,split,extract pages,separate pages,divide document,break apart,separate files,unbind,split by page,divide by chapter"
+tags = "拆分,分离,断开,分割,提取页面,分离页面,拆分文档,拆开,分离文件,解绑,按页拆分,按章节拆分"
 title = "PDF ཁ་གྱེས།"
 
 [split.error]
@@ -12420,8 +12565,8 @@ accessLimitedCommenter = "即将支持评论权限。若需下载，请向所有
 accessLimitedTitle = "受限访问"
 accessLimitedViewer = "此链接仅可查看。若需下载，请向所有者请求编辑权限。"
 addUser = "添加"
-bulkDescription = "创建一个链接，将所有所选文件共享给已登录用户。"
-bulkTitle = "共享所选文件"
+bulkDescription = "创建一个链接，与已登录用户共享所有勾选的文件。"
+bulkTitle = "共享已勾选文件"
 commenterHint = "即将支持评论。"
 copied = "链接已复制到剪贴板"
 copy = "复制"
@@ -12439,8 +12584,8 @@ errorTitle = "共享失败"
 expiredBody = "此共享链接无效或已过期。"
 expiredTitle = "链接已过期"
 failure = "无法生成共享链接。请重试。"
-fileCount_one = "{{count}} file"
-fileCount_other = "{{count}} files"
+fileCount_one = "{{count}} 个文件"
+fileCount_other = "{{count}} 个文件"
 fileLabel = "文件"
 generate = "生成链接"
 generated = "已生成共享链接"
@@ -12500,14 +12645,14 @@ viewed = "已查看"
 viewsCount = "查看次数：{{count}}"
 
 [storageUpload]
-bulkDescription = "这会将所选文件上传到您的服务器存储。"
-bulkTitle = "上传所选文件"
+bulkDescription = "这会将勾选的文件上传到您的服务器存储。"
+bulkTitle = "上传已勾选文件"
 description = "这会将当前文件上传到服务器存储，供您自行访问。"
 errorTitle = "上传失败"
 failure = "上传失败。请检查您的登录和存储设置。"
 featureDisabled = "此服务器未启用保存到服务器功能。"
-fileCount_one = "{{count}} file"
-fileCount_other = "{{count}} files"
+fileCount_one = "{{count}} 个文件"
+fileCount_other = "{{count}} 个文件"
 fileLabel = "文件"
 hint = "公共链接和访问模式由您的服务器设置控制。"
 more = " +{{count}} 更多"
@@ -12517,25 +12662,25 @@ updateButton = "在服务器上更新"
 uploadButton = "上传到服务器"
 
 [superSearch]
-all = "All"
-ariaLabel = "Super search"
-filtersAriaLabel = "Search filters"
-hint = "Type to search"
-placeholder = "Search Stirling"
+all = "全部"
+ariaLabel = "超级搜索"
+filtersAriaLabel = "搜索筛选器"
+hint = "输入以搜索"
+placeholder = "搜索 Stirling"
 placeholderShort = "搜索"
-showLess = "Show less"
-showMore = "Show {{count}} more"
+showLess = "显示更少"
+showMore = "再显示 {{count}} 个"
 
 [superSearch.group]
-docs = "Docs"
-files = "Files"
-pages = "Pages"
-processor = "Processor"
-settings = "Settings"
-tools = "Tools"
+docs = "文档"
+files = "文件"
+pages = "页面"
+processor = "处理器"
+settings = "设置"
+tools = "工具"
 
 [survey]
-title = "Stirling-PDF Survey"
+title = "Stirling-PDF 调查"
 
 [swagger]
 clickHere = "点击此处"
@@ -12564,9 +12709,9 @@ leaveError = "离开团队失败"
 leaveSuccess = "已成功离开团队"
 loading = "正在加载团队信息..."
 makeOwner = "设为所有者"
-memberCount_one = "{{count}} member"
-memberCount_other = "{{count}} members"
-memberCount_zero = "no members"
+memberCount_one = "{{count}} 名成员"
+memberCount_other = "{{count}} 名成员"
+memberCount_zero = "无成员"
 memberRemoved = "已成功移除成员"
 namePlaceholder = "输入团队名称"
 noOwner = "此团队没有所有者"
@@ -12654,7 +12799,7 @@ scopeFiles = "文件"
 scopeThisFile = "此文件"
 selectFilesHint = "在“活动文件”中选择文件以运行此工具"
 singleFileScope = "仅应用于：{{fileName}}"
-viewerMode = "切换到文件编辑器以选择多个文件。"
+viewerMode = "切换到文件编辑器以添加多个文件。"
 
 [toolFormat]
 ANY = "任何文件"
@@ -12694,7 +12839,7 @@ pdfTools = "PDF 工具"
 placeholder = "选择一个工具以开始"
 premiumFeature = "高级功能："
 searchTools = "搜索工具"
-toolsHeader = "工具"
+toolsHeader = "PDF 工具"
 viewAllTools = "查看所有工具"
 
 [toolPanel.fullscreen]
@@ -12743,7 +12888,7 @@ signing = "签名"
 verification = "验证"
 
 [toolRenderer]
-notFound = "Tool not found: {{tool}}"
+notFound = "未找到工具：{{tool}}"
 
 [tools]
 noSearchResults = "未找到工具"
@@ -12754,7 +12899,7 @@ close = "关闭提示"
 
 [unlockPDFForms]
 description = "此工具将移除 PDF 表单字段的只读限制，使其可编辑和可填写。"
-submit = "Remove"
+submit = "解锁表单"
 tags = "移除,删除,表单,字段,只读"
 title = "移除表单字段的只读属性"
 
@@ -12808,7 +12953,7 @@ attentionBodyAdmin = "查看许可要求以保持此服务器合规。"
 attentionTitle = "此服务器需要管理员关注"
 message = "充分利用 Stirling PDF，享受 100 名用户、PDF 文本编辑和高级功能"
 seeInfo = "查看信息"
-title = "升级到服务器方案"
+title = "升级到 Team 方案"
 upgradeButton = "立即升级"
 
 [URLToPDF]
@@ -12820,8 +12965,8 @@ aboutUsageAnalytics = "关于使用分析"
 configureSettings = "配置分析设置"
 error = "加载使用统计时出错"
 loadFailed = "加载使用情况统计失败"
-noData = "暂无数据"
-noDataMessage = "当前无使用统计数据。"
+noData = "暂无用量"
+noDataMessage = "当用户开始运行工具后，Endpoint 活动会显示在这里。"
 usageAnalyticsExplanation = "使用分析会跟踪端点请求和工具使用模式。结合审计日志仪表板，您可以全面掌握系统活动、性能与安全事件。"
 viewAuditLogs = "查看审计日志"
 
@@ -12905,11 +13050,11 @@ editor = "编辑器"
 processor = "处理器"
 
 [users.columns]
-capabilities = "Capabilities"
+capabilities = "能力"
 email = "Email"
-person = "Person"
-role = "Role"
-status = "Status"
+person = "人员"
+role = "角色"
+status = "状态"
 team = "团队"
 
 [users.confirm]
@@ -12954,7 +13099,7 @@ method = "添加方式"
 methodDirect = "直接创建账户"
 methodEmail = "通过电子邮件邀请"
 password = "密码"
-passwordError = "密码长度必须至少为 8 个字符"
+passwordError = "密码必须至少为 6 个字符"
 processorDeferred = "邀请已发送，但尚无法授予处理器访问权限 - 他们加入后可从名册中设置。"
 processorDesc = "治理界面、运行管道、代理和 API。"
 role = "角色"
@@ -12963,7 +13108,7 @@ subtitle2 = "他们将收到一封加入你的 Stirling 工作区的电子邮件
 team = "团队"
 title = "邀请人员"
 username = "用户名"
-usernameError = "用户名必须至少包含 3 个字符"
+usernameError = "请输入有效的用户名（3-50 个字符）或 email 地址"
 usernamePlaceholder = "jsmith"
 
 [users.invites]
@@ -12975,8 +13120,8 @@ expiresToday = "今天过期"
 title = "待处理邀请"
 
 [users.invites.columns]
-expires = "Expires"
-invitee = "Invitee"
+expires = "过期时间"
+invitee = "受邀者"
 
 [users.loadError]
 description = "连接后端时出错，或者你没有访问权限。请重试。"
@@ -13023,7 +13168,7 @@ admin = "管理员"
 guest = "访客"
 member = "成员"
 orgOwner = "组织所有者"
-teamOwner = "团队所有者"
+teamOwner = "团队负责人"
 
 [users.seats]
 full = "所有许可席位均已使用。请释放一个席位，或增加席位数量，才能添加其他人。"
@@ -13106,10 +13251,10 @@ generatedAt = "生成时间"
 noPdf = "成功验证后将提供 PDF 报告。"
 page = "页面"
 shortTitle = "签名摘要"
-signatureCountLabel_one = "{{count}} signature"
-signatureCountLabel_other = "{{count}} signatures"
-signaturesFound_one = "{{count}} signature detected"
-signaturesFound_other = "{{count}} signatures detected"
+signatureCountLabel_one = "{{count}} 个签名"
+signatureCountLabel_other = "{{count}} 个签名"
+signaturesFound_one = "检测到 {{count}} 个签名"
+signaturesFound_other = "检测到 {{count}} 个签名"
 signaturesInvalid = "{{count}} 个无效"
 signaturesUnverified_one = "{{count}} 个需要复查"
 signaturesUnverified_other = "{{count}} 个需要复查"
@@ -13139,7 +13284,7 @@ validUntrusted = "有效，但签名者未验证"
 
 [viewer]
 cannotPreviewFile = "无法预览文件"
-copyText = "Copy"
+copyText = "复制"
 disableColorFilter = "禁用颜色滤镜"
 documentUpdated = "文档已更新"
 dualPageView = "双页视图"
@@ -13153,7 +13298,7 @@ loadingEngine = "正在加载 PDF 引擎..."
 moreOptions = "更多"
 nextPage = "下一页"
 noPdfProvided = "未提供 PDF"
-onlyPdfSupported = "此查看器仅支持 PDF 文件。该文件似乎为其他格式。"
+onlyPdfSupported = "此文件格式不支持预览。"
 pageNavigation = "页面导航"
 previousPage = "上一页"
 saveChangesErrorBody = "无法保存该文档。请重试。"
@@ -13182,13 +13327,13 @@ title = "附件"
 untitled = "未命名"
 
 [viewer.bookmarks]
-addBookmark = "Add bookmark"
+addBookmark = "添加书签"
 bookmarkTitle = "书签标题"
 bookmarkTitleRequired = "必须填写书签标题"
 closeSidebar = "关闭书签侧边栏"
 collapseAll = "折叠所有书签"
 editorOnly = "此文档的书签只能在编辑器中编辑。"
-empty = "No bookmarks in this document"
+empty = "此文档中没有书签"
 expandAll = "展开所有书签"
 loadFailed = "加载书签失败"
 loading = "正在加载书签..."
@@ -13199,7 +13344,7 @@ pageLabel = "页面"
 pageNumber = "第 {{page}} 页"
 saveFailed = "保存书签失败"
 searchPlaceholder = "搜索书签"
-title = "Bookmarks"
+title = "书签"
 untitled = "无标题"
 
 [viewer.comments]
@@ -13220,14 +13365,14 @@ goToLink = "前往链接"
 hint = "使用“评论”“插入文本”或“替换文本”工具添加评论。它们将按页显示在此处。"
 locateAnnotation = "在文档中定位"
 moreActions = "更多操作"
-nComments_one = "{{count}} comment"
-nComments_other = "{{count}} comments"
-noMatch = "No comments match your search"
+nComments_one = "{{count}} 条评论"
+nComments_other = "{{count}} 条评论"
+noMatch = "没有与搜索匹配的评论"
 pageLabel = "第 {{page}} 页"
 placingHint = "单击页面进行放置…（取消）"
 removeCommentOnly = "仅移除评论"
 saveReply = "保存回复"
-searchPlaceholder = "Search comments"
+searchPlaceholder = "搜索评论"
 title = "评论"
 typeComment = "评论"
 typeInsertText = "插入文本"
@@ -13255,7 +13400,7 @@ loading = "正在加载图层..."
 noDocument = "打开 PDF 以查看其图层。"
 readFailed = "读取 PDF 图层失败"
 showAll = "显示所有图层"
-title = "Layers"
+title = "图层"
 
 [viewer.link]
 delete = "删除链接"
@@ -13273,9 +13418,9 @@ emptyFile = "空文件"
 htmlHidePreview = "隐藏预览"
 htmlPreview = "HTML 预览"
 htmlPreviewMobileHidden = "HTML 页面按桌面宽度布局，因此这里默认关闭预览。"
-htmlPreviewWarning = "HTML 预览 — 外部资源可能无法加载 · {{size}}"
+htmlPreviewWarning = "HTML 预览 - 外部资源可能无法加载 · {{size}}"
 htmlShowPreview = "仍然显示预览"
-invalidJson = "无效的 JSON — 正在显示原始内容"
+invalidJson = "无效 JSON - 显示原始内容"
 lineNumbers = "行号"
 loading = "正在加载…"
 noFile = "未加载文件"
@@ -13283,6 +13428,12 @@ previewUnavailable = "此文件类型无法预览"
 renderMarkdown = "渲染 Markdown"
 sortedBy = "排序依据：{{column}}"
 textStats = "{{lines}} 行 · {{size}}"
+
+[viewer.nonPdf.fileType]
+file = "文件"
+image = "图像"
+spreadsheet = "电子表格"
+text = "文本"
 
 [viewer.portfolio]
 addFile = "添加文件"
@@ -13339,7 +13490,7 @@ tooltipTitle = "警告"
 [watermark]
 desc = "向 PDF 文件添加文本或图像水印"
 submit = "རྟགས་ཐེལ་སྣོན་པ།"
-tags = "stamp,mark,overlay,watermark,branding,logo,confidential,draft,copyright,trademark,text overlay,image overlay,background text"
+tags = "印章,标记,叠加,水印,品牌,logo,机密,草稿,版权,商标,文本叠加,图像叠加,背景文本"
 title = "རྟ�ས་ཐེལ་སྣོན་པ།"
 
 [watermark.error]
@@ -13491,8 +13642,8 @@ downloadAll = "全部下载"
 exitRedaction = "退出涂黑模式"
 exportAll = "导出 PDF"
 exportSelected = "导出所选页面"
-formFill = "填写表单"
-hideToolbar = "Hide toolbar"
+formFill = "表单编辑器"
+hideToolbar = "隐藏工具栏"
 moreActions = "更多操作"
 multiTool = "多功能工具"
 panMode = "平移模式"
@@ -13516,10 +13667,10 @@ selectLanguage = "选择语言"
 share = "共享"
 showAllTools = "显示所有工具"
 showFewerTools = "折叠工具栏"
-showToolbar = "Show toolbar"
+showToolbar = "显示工具栏"
 toggleAnnotations = "切换注释可见性"
 toggleAttachments = "切换附件"
-toggleBookmarks = "切换书签"
+toggleBookmarks = "书签（目录）"
 toggleComments = "评论"
 toggleLayers = "切换图层"
 toggleSidebar = "切换侧边栏"
@@ -13547,7 +13698,7 @@ errorTitle = "错误"
 from = "来自：{{name}}"
 loadingSession = "正在加载会话..."
 location = "位置"
-locationPlaceholder = "e.g., San Francisco, CA"
+locationPlaceholder = "例如，San Francisco, CA"
 pageNumber = "页码（可选）"
 reason = "原因"
 reasonPlaceholder = "例如：文档审批"
@@ -13570,8 +13721,8 @@ title = "工作区"
 description = "管理工作区成员及其权限"
 
 [workspace.people.license]
-users_one = "user"
-users_other = "users"
+users_one = "用户"
+users_other = "用户"
 
 [workspace.teams]
 description = "管理团队并组织工作区成员"
@@ -13579,6 +13730,6 @@ description = "管理团队并组织工作区成员"
 [zipWarning]
 cancel = "取消"
 confirm = "解压"
-message_one = "This ZIP contains {{count}} file. Extract anyway?"
-message_other = "This ZIP contains {{count}} files. Extract anyway?"
+message_one = "此 ZIP 包含 {{count}} 个文件。仍要解压吗？"
+message_other = "此 ZIP 包含 {{count}} 个文件。仍要解压吗？"
 title = "大型 ZIP 文件"

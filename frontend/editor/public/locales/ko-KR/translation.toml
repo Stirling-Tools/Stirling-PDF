@@ -17,11 +17,11 @@ confirmCloseDiscard = "변경 사항 버리고 닫기"
 confirmCloseMessage = "이 파일을 닫으시겠습니까?"
 confirmCloseSave = "저장하고 닫기"
 confirmCloseSaveFailed_one = "오류가 있는 상태로 저장되었습니다. {{count}}개 파일은(는) 저장할 수 없었습니다."
-confirmCloseSaveFailed_other = "Saved with errors. {{count}} files could not be saved."
+confirmCloseSaveFailed_other = "오류와 함께 저장되었습니다. {{count}}개 파일을 저장할 수 없습니다."
 confirmCloseSaveFailedTitle = "저장 실패"
 confirmCloseUnsaved = "이 파일에는 저장되지 않은 변경 사항이 있습니다."
 confirmCloseUnsavedList_one = "저장되지 않은 변경 사항이 있는 파일이(가) {{count}}개 있습니다.\n\n{{fileList}}"
-confirmCloseUnsavedList_other = "You have {{count}} files with unsaved changes.\n\n{{fileList}}"
+confirmCloseUnsavedList_other = "저장되지 않은 변경 사항이 있는 파일이 {{count}}개 있습니다.\n\n{{fileList}}"
 custom = "사용자 지정..."
 customPosition = "사용자 지정 위치"
 customTextTooltip = "페이지 번호에 대한 선택적 사용자 지정 형식입니다. 숫자 자리에는 {n}을 사용하세요. 예: \"페이지 {n}\"은 \"페이지 1\", \"페이지 2\"처럼 표시됩니다."
@@ -41,7 +41,7 @@ fileDiskUnavailable = "디스크의 파일에 접근할 수 없습니다"
 fileNotSavedToDisk = "디스크에 저장되지 않았습니다"
 fileOriginalDeleted = "원본이 삭제됨 - 사본을 유지하려면 저장하세요"
 fileSavedToDisk = "파일이 디스크에 저장되었습니다"
-fileSelected = "선택됨: {{filename}}"
+fileSelected = "{{filename}}"
 filesSelected = "{{count}}개 파일"
 font = "글꼴"
 fontSizeTooltip = "페이지 번호 텍스트의 포인트 크기입니다. 숫자가 클수록 텍스트가 커집니다."
@@ -62,7 +62,7 @@ marginTooltip = "페이지 번호와 페이지 가장자리 사이의 거리입�
 moreOptions = "추가 옵션"
 never = "안 함"
 no = "아니오"
-noFileSelected = "선택된 파일이 없습니다. 업로드해 주세요."
+noFileSelected = "로드된 파일이 없습니다. 파일을 업로드하세요."
 noFilesToUndo = "실행 취소할 수 없음: 마지막 작업에서 처리된 파일이 없습니다"
 noOperationToUndo = "실행 취소할 작업이 없습니다"
 nothingToUndo = "실행 취소할 항목이 없습니다"
@@ -75,7 +75,7 @@ page = "페이지"
 pageNum = "페이지 번호"
 pageOrderPrompt = "사용자 지정 페이지 순서 (쉼표로 구분된 페이지 번호 목록 또는 2n+1과 같은 함수 입력):"
 pages = "페이지"
-pageSelectionPrompt = "사용자 지정 페이지 선택 (페이지 번호 1,5,6 또는 2n+1과 같은 함수를 쉼표로 구분하여 목록 입력):"
+pageSelectionPrompt = "사용자 지정 페이지 선택(쉼표로 구분된 페이지 번호 목록 1,5,6 또는 2n+1 같은 함수 입력)"
 password = "비밀번호"
 pin = "파일 고정(도구 실행 후에도 유지)"
 pro = "프로"
@@ -106,7 +106,7 @@ undoSuccess = "작업을 성공적으로 취소했습니다"
 unknown = "알 수 없음"
 unpin = "파일 고정 해제(도구 실행 후 교체)"
 unsavedChanges = "PDF에 저장되지 않은 변경 사항이 있습니다."
-unsavedChangesBody = "You have unsaved changes to your PDF. Are you sure you want to leave?"
+unsavedChangesBody = "PDF에 저장되지 않은 변경 사항이 있습니다. 정말 나가시겠습니까?"
 unsavedChangesTitle = "저장되지 않은 변경 사항"
 unsupported = "지원되지 않음"
 username = "사용자 이름"
@@ -169,18 +169,14 @@ signedInAs = "로그인 계정: {{email}}"
 tags = "페이지매김,레이블,정리,색인"
 
 [addAttachments]
-tags = "embed,attach,include,attachments,attach files,embed files,include files,add files,file attachment,associated files,supplementary files"
+tags = "삽입,첨부,포함,첨부 파일,파일 첨부,파일 삽입,파일 포함,파일 추가,파일 첨부,연결된 파일,보조 파일"
 
 [addAttachments.error]
 failed = "PDF에 첨부 파일을 추가하는 동안 오류가 발생했습니다."
 
 [AddAttachmentsRequest]
-addMoreFiles = "파일 더 추가..."
 attachments = "첨부 파일 선택"
-info = "PDF에 첨부할 파일을 선택하세요. 선택한 파일은 포함되며 PDF의 첨부 패널을 통해 접근할 수 있습니다."
-placeholder = "파일 선택..."
-removeFile = "파일 제거"
-selectedFiles = "선택된 파일"
+info = "내장된 PDF 첨부 파일을 보고, 추가하고, 추출하고, 이름을 변경하거나 삭제합니다. 변경 사항은 깔끔하게 준비되어 한 번에 문서에 저장됩니다."
 submit = "첨부 추가"
 
 [AddAttachmentsRequest.error]
@@ -193,7 +189,7 @@ title = "첨부 결과"
 title = "기능"
 
 [AddAttachmentsRequest.tooltip.header]
-title = "첨부 파일 추가 정보"
+title = "첨부 파일 관리 정보"
 
 [addImage]
 applySignatures = "이미지 적용"
@@ -208,7 +204,7 @@ colorPickerTitle = "Choose stroke colour"
 failed = "PDF에 이미지를 추가하는 중 오류가 발생했습니다."
 
 [addImage.image]
-hint = "Supports PNG, JPEG, GIF, BMP, TIFF, and SVG files. SVG files will be converted to PNG for embedding."
+hint = "PNG, JPEG, GIF, BMP, TIFF, SVG 파일을 지원합니다. SVG 파일은 삽입을 위해 PNG로 변환됩니다."
 label = "이미지 파일"
 name = "이미지"
 placeholder = "이미지 업로드"
@@ -230,26 +226,26 @@ resume = "배치 재개"
 title = "이미지 추가 결과"
 
 [addImage.saved]
-defaultCanvasLabel = "Drawing signature"
+defaultCanvasLabel = "그리기 서명"
 defaultImageLabel = "업로드된 이미지"
 defaultLabel = "이미지"
-defaultTextLabel = "Typed signature"
-delete = "Remove"
-emptyTitle = "No saved signatures yet"
-heading = "Saved signatures"
-label = "Label"
-limitTitle = "Limit reached"
-next = "Next"
-personalHeading = "Personal Signatures"
-prev = "Previous"
-savePersonal = "Save Personal"
-saveShared = "Save Shared"
-sharedHeading = "Shared Signatures"
+defaultTextLabel = "입력한 서명"
+delete = "제거"
+emptyTitle = "아직 저장된 서명이 없습니다"
+heading = "저장된 서명"
+label = "레이블"
+limitTitle = "한도에 도달했습니다"
+next = "다음"
+personalHeading = "개인 서명"
+prev = "이전"
+savePersonal = "개인용으로 저장"
+saveShared = "공유용으로 저장"
+sharedHeading = "공유 서명"
 
 [addImage.saved.type]
-canvas = "Drawing"
-image = "Upload"
-text = "Text"
+canvas = "그리기"
+image = "업로드"
+text = "텍스트"
 
 [addImage.step]
 createDesc = "추가할 이미지를 업로드하세요"
@@ -261,33 +257,33 @@ configure = "이미지 구성"
 
 [addImage.text]
 colorLabel = "Text colour"
-fontLabel = "Font"
-fontSizeLabel = "Font size"
-name = "Text"
-placeholder = "Enter text"
+fontLabel = "글꼴"
+fontSizeLabel = "글꼴 크기"
+name = "텍스트"
+placeholder = "텍스트 입력"
 
 [addImage.type]
-canvas = "Canvas"
-image = "Image"
-saved = "Saved"
-text = "Text"
+canvas = "캔버스"
+image = "이미지"
+saved = "저장됨"
+text = "텍스트"
 
 [addPageNumbers]
 customize = "모양 사용자 지정"
-customNumberDesc = "기본값은 {n}, '페이지 {n} / {total}', '텍스트-{n}', '{filename}-{n}' 등도 가능"
+customNumberDesc = "예: \"페이지 {n}\" 또는 숫자만 사용하려면 비워 두세요"
 fontName = "글꼴 이름"
 fontSize = "글꼴 크기"
-numberPagesDesc = "번호를 매길 페이지, 기본값 'all', 1-5 또는 2,5,9 등도 가능"
+numberPagesDesc = "예: 1,3,5-8 또는 모든 페이지는 비워 두세요"
 pagePreviewAlt = "페이지 미리보기"
 pagesAndStarting = "페이지 및 시작 번호"
 positionAndPages = "위치 및 페이지"
 preview = "위치 선택"
 previewDisclaimer = "미리보기는 대략적인 표시입니다. 최종 출력은 PDF 글꼴 메트릭에 따라 달라질 수 있습니다."
 submit = "페이지 번호 추가"
-tags = "number,pagination,count,add page numbers,page numbering,page numbers,footer,header,number pages,sequential,pagination tool"
+tags = "번호,페이지 매기기,개수,페이지 번호 추가,페이지 번호 매기기,페이지 번호,바닥글,머리글,페이지 번호 지정,순차,페이지 매기기 도구"
 title = "페이지 번호 추가"
-zeroPad = "Zero‑pad Width (Bates Stamping)"
-zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
+zeroPad = "0 채우기 너비(Bates 스탬핑)"
+zeroPadTooltip = "페이지 번호를 이 너비로 0 채우기(Bates Stamp)합니다(예: 3 ⇒ 001). 비활성화하려면 0으로 설정하세요."
 
 [addPageNumbers.error]
 failed = "페이지 번호 추가 작업에 실패했습니다"
@@ -299,12 +295,12 @@ title = "페이지 번호 결과"
 2 = "여백 크기"
 4 = "시작 번호"
 5 = "번호를 매길 페이지"
-6 = "사용자 지정 텍스트"
+6 = "사용자 지정 텍스트 형식"
 
 [addPassword]
 desc = "PDF 문서를 비밀번호로 암호화합니다."
 submit = "암호화"
-tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
+tags = "암호화,비밀번호,잠금,보안,보호,보안,암호화,보호,기밀,비공개,접근 제한"
 title = "비밀번호 추가"
 
 [addPassword.encryption.keyLength]
@@ -354,53 +350,53 @@ title = "권한 변경"
 pagePreviewAlt = "페이지 미리보기"
 preview = "스탬프 미리보기"
 stampPreviewAlt = "스탬프 미리보기"
-tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
+tags = "스탬프,표시,인장,승인됨,거부됨,기밀,스탬프 도구,고무 스탬프,날짜 스탬프,승인 스탬프,수신됨,무효,복사본,원본"
 
 [AddStampRequest]
 alphabet = "알파벳"
-clickToExpand = "Click to expand"
+clickToExpand = "클릭하여 펼치기"
 customColor = "사용자 지정 텍스트 색상"
-customDateDesc = "Custom format"
+customDateDesc = "사용자 지정 형식"
 customPosition = "미리보기 창에서 스탬프를 원하는 위치로 드래그하세요."
-dateDesc = "Current date"
-datetimeDesc = "Date and time combined"
-dateTimeVars = "Date & Time"
-dynamicVariables = "Dynamic Variables"
-examples = "Examples"
-filenameDesc = "Filename without extension"
-filenameFullDesc = "Filename with extension"
-fileVars = "File Information"
+dateDesc = "현재 날짜"
+datetimeDesc = "날짜와 시간 결합"
+dateTimeVars = "날짜 및 시간"
+dynamicVariables = "동적 변수"
+examples = "예시"
+filenameDesc = "확장자 없는 파일 이름"
+filenameFullDesc = "확장자가 포함된 파일 이름"
+fileVars = "파일 정보"
 fontSize = "글꼴/이미지 크기"
 imageSize = "이미지 크기"
 margin = "여백"
-metadataDesc = "From PDF document properties"
-metadataVars = "Document Metadata"
-multiLine = "multi-line"
+metadataDesc = "PDF 문서 속성에서 가져옴"
+metadataVars = "문서 메타데이터"
+multiLine = "여러 줄"
 noStampSelected = "선택된 스탬프가 없습니다. 1단계로 돌아가세요."
 opacity = "불투명도"
-otherVars = "Other"
-pageNumberDesc = "Current page number"
-pageVars = "Page Information"
+otherVars = "기타"
+pageNumberDesc = "현재 페이지 번호"
+pageVars = "페이지 정보"
 position = "위치"
 positionAndFormatting = "위치 및 서식"
-preview = "Preview:"
+preview = "미리보기:"
 quickPosition = "페이지에서 스탬프 위치를 선택하세요."
 rotation = "회전"
 selectedImageAlt = "선택한 스탬프 이미지"
-selectTemplate = "Select a template..."
+selectTemplate = "템플릿 선택..."
 stampSetup = "스탬프 설정"
 stampText = "스탬프 텍스트"
-stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
+stampTextDescription = "아래 동적 변수를 사용하세요. 문자 @를 그대로 사용하려면 @@를 사용하세요. 새 줄에는 \\n을 사용하세요."
 stampType = "스탬프 유형"
-submit = "제출"
+submit = "스탬프 추가"
 tags = "스탬프,이미지 추가,중앙 이미지,워터마크,PDF,삽입,사용자 지정"
-timeDesc = "Current time"
+timeDesc = "현재 시간"
 title = "PDF 스탬프"
-totalPagesDesc = "Total number of pages"
-useTemplate = "Use Template"
-uuidDesc = "Short unique identifier (8 chars)"
-variablesHelp = "Click on any variable to insert it into your stamp text. Use @@ for literal @."
-yearMonthDayDesc = "Individual date parts"
+totalPagesDesc = "총 페이지 수"
+useTemplate = "템플릿 사용"
+uuidDesc = "짧은 고유 식별자(8자)"
+variablesHelp = "변수를 클릭하면 스탬프 텍스트에 삽입됩니다. 문자 @를 그대로 사용하려면 @@를 사용하세요."
+yearMonthDayDesc = "개별 날짜 부분"
 
 [AddStampRequest.error]
 failed = "PDF에 스탬프를 추가하는 중 오류가 발생했습니다."
@@ -409,17 +405,17 @@ failed = "PDF에 스탬프를 추가하는 중 오류가 발생했습니다."
 title = "스탬프 결과"
 
 [AddStampRequest.template]
-custom = "Custom"
-dateHeader = "Date Header"
-doc-info = "Document Info"
-draft = "Draft Watermark"
-draftWatermark = "Draft Watermark"
-european-date = "European Date (DD/MM/YYYY)"
-europeanDate = "European Date"
-legal-footer = "Legal Footer"
-page-numbers = "Page Numbers"
-pageNumberFooter = "Page Number Footer"
-timestamp = "Timestamp"
+custom = "사용자 지정"
+dateHeader = "날짜 머리글"
+doc-info = "문서 정보"
+draft = "초안 워터마크"
+draftWatermark = "초안 워터마크"
+european-date = "유럽식 날짜(DD/MM/YYYY)"
+europeanDate = "유럽식 날짜"
+legal-footer = "법적 바닥글"
+page-numbers = "페이지 번호"
+pageNumberFooter = "페이지 번호 바닥글"
+timestamp = "타임스탬프"
 
 [addText]
 applySignatures = "텍스트 적용"
@@ -450,26 +446,26 @@ resume = "배치 재개"
 title = "텍스트 추가 결과"
 
 [addText.saved]
-defaultCanvasLabel = "Drawing signature"
-defaultImageLabel = "Uploaded signature"
-defaultLabel = "Signature"
-defaultTextLabel = "Typed signature"
-delete = "Remove"
-emptyTitle = "No saved signatures yet"
-heading = "Saved signatures"
-label = "Label"
-limitTitle = "Limit reached"
-next = "Next"
-personalHeading = "Personal Signatures"
-prev = "Previous"
-savePersonal = "Save Personal"
-saveShared = "Save Shared"
-sharedHeading = "Shared Signatures"
+defaultCanvasLabel = "그리기 서명"
+defaultImageLabel = "업로드된 서명"
+defaultLabel = "서명"
+defaultTextLabel = "입력한 서명"
+delete = "제거"
+emptyTitle = "아직 저장된 서명이 없습니다"
+heading = "저장된 서명"
+label = "레이블"
+limitTitle = "한도에 도달했습니다"
+next = "다음"
+personalHeading = "개인 서명"
+prev = "이전"
+savePersonal = "개인용으로 저장"
+saveShared = "공유용으로 저장"
+sharedHeading = "공유 서명"
 
 [addText.saved.type]
-canvas = "Drawing"
-image = "Upload"
-text = "Text"
+canvas = "그리기"
+image = "업로드"
+text = "텍스트"
 
 [addText.step]
 createDesc = "추가할 텍스트를 입력하세요"
@@ -488,10 +484,10 @@ name = "텍스트 내용"
 placeholder = "추가할 텍스트를 입력하세요"
 
 [addText.type]
-canvas = "Canvas"
-image = "Image"
-saved = "Saved"
-text = "Text"
+canvas = "캔버스"
+image = "이미지"
+saved = "저장됨"
+text = "텍스트"
 
 [adjust-contrast]
 tags = "색상-보정,조정,수정,향상"
@@ -507,8 +503,8 @@ green = "초록"
 noPreview = "미리볼 PDF를 선택하세요"
 red = "빨강"
 saturation = "채도:"
-tags = "contrast,brightness,saturation,adjust colors,color correction,enhance,lighten,darken,improve quality,color balance,hue,vibrance"
-title = "대비 조정"
+tags = "대비,밝기,채도,색상 조정,색상 보정,향상,밝게,어둡게,품질 개선,색상 균형,색조,선명도"
+title = "색상/대비 조정"
 
 [adjustContrast.error]
 failed = "색상/대비 조정에 실패했습니다"
@@ -780,7 +776,7 @@ label = "Top K"
 
 [admin.settings.ai.general]
 connection = "연결"
-description = "Stirling을 Python AI 엔진에 연결하고 노출할 AI 기능을 선택합니다. 변경 사항은 다시 시작 시 적용됩니다."
+description = "AI가 실행되는 위치를 선택하세요. 여기의 변경 사항은 재시작 후 적용됩니다."
 restartNote = "URL 또는 시간 제한을 변경하면 재시작 후 적용됩니다."
 title = "AI 엔진"
 
@@ -1000,7 +996,7 @@ clickToUpgrade = "클릭하여 플랜 상세 보기"
 [admin.settings.connections]
 connect = "연결"
 connectedServicesDescription = "이 서버에 연결된 서비스입니다. 로그인 공급자는 로그인 및 보안 아래에 있습니다."
-description = "OAuth2 및 SAML 같은 외부 인증 제공자를 구성합니다."
+description = "메일, Telegram, Drive 및 휴대폰에서 업로드."
 disconnect = "연결 해제"
 disconnected = "제공자가 성공적으로 연결 해제되었습니다"
 disconnectError = "제공자 연결 해제에 실패했습니다"
@@ -1132,7 +1128,7 @@ deleteConfirmAction = "백업 삭제"
 deleteFailed = "백업 삭제에 실패했습니다"
 deleteSuccess = "백업이 삭제되었습니다"
 deleteTitle = "백업 삭제"
-description = "엔터프라이즈 배포를 위한 사용자 지정 데이터베이스 연결 설정을 구성합니다."
+description = "사용자 지정 데이터베이스에 연결하고, 사용 중인 데이터베이스를 백업하거나 복원합니다."
 download = "다운로드"
 downloadFailed = "백업 다운로드에 실패했습니다"
 embedded = "내장형 H2"
@@ -1224,12 +1220,12 @@ description = "선택적 기능과 동작을 구성합니다."
 title = "기능"
 
 [admin.settings.features.serverCertificate]
-description = "\"Sign with Stirling-PDF\" 기능을 위한 서버 측 인증서 생성 구성"
-label = "서버 인증서"
+description = "\"Stirling-PDF로 서명\" 서명 기능을 지원하는 인증서를 생성합니다."
+label = "인증서 서명"
 
 [admin.settings.features.serverCertificate.enabled]
-description = "\"Sign with Stirling-PDF\" 옵션을 위한 서버 측 인증서 활성화"
-label = "서버 인증서 활성화"
+description = "이 서버가 생성하는 인증서를 사용하여 \"Stirling-PDF로 서명\" 제공"
+label = "인증서 서명 활성화"
 
 [admin.settings.features.serverCertificate.organizationName]
 description = "생성된 인증서의 조직 이름"
@@ -1264,7 +1260,7 @@ remove = "폴더 루트 제거"
 
 [admin.settings.general]
 branding = "브랜딩 및 모양"
-description = "브랜딩 및 기본 동작을 포함한 시스템 전반의 애플리케이션 설정을 구성합니다."
+description = "이 서버가 실행되는 방식: 브랜딩, 저장소, 제공하는 도구 및 접근 가능한 경로."
 system = "시스템"
 title = "시스템 설정"
 ui = "사용자 인터페이스"
@@ -1324,16 +1320,16 @@ description = "처리된 PDF가 출력되는 디렉터리(기본값 사용 시 �
 label = "처리 완료 폴더 디렉터리"
 
 [admin.settings.general.customPaths.pipeline.pipelineDir]
-description = "Base directory for pipeline resources (leave empty for default: /pipeline)"
-label = "Pipeline Directory"
+description = "파이프라인 리소스의 기본 디렉터리(기본값을 사용하려면 비워 두기: /pipeline)"
+label = "파이프라인 디렉터리"
 
 [admin.settings.general.customPaths.pipeline.watchedFoldersDir]
 description = "파이프라인이 들어오는 PDF를 감시하는 디렉터리(기본값 사용 시 비워두세요: /pipeline/watchedFolders)"
 label = "감시 폴더 디렉터리"
 
 [admin.settings.general.customPaths.pipeline.watchedFoldersDirs]
-description = "Directories where pipeline monitors for incoming PDFs (one per line or comma-separated; leave empty for default: /pipeline/watchedFolders)"
-label = "Watched Folders Directories"
+description = "파이프라인이 들어오는 PDF를 모니터링하는 디렉터리(한 줄에 하나 또는 쉼표로 구분; 기본값을 사용하려면 비워 두기: /pipeline/watchedFolders)"
+label = "감시 폴더 디렉터리"
 
 [admin.settings.general.defaultLocale]
 description = "신규 사용자의 기본 언어(예: en_US, es_ES)"
@@ -1377,7 +1373,7 @@ description = "업데이트 알림을 관리자 사용자로만 제한"
 label = "관리자에게만 업데이트 표시"
 
 [admin.settings.legal]
-description = "법적 문서 및 정책에 대한 링크를 구성합니다."
+description = "법적 문서, 로그인 동의, 분석 및 검색 노출 여부."
 documentsDescription = "사용자에게 표시되는 약관, 개인정보 처리방침, 쿠키 및 impressum 링크입니다."
 title = "법적 문서"
 
@@ -1478,74 +1474,74 @@ description = "SMTP 인증 사용자 이름"
 label = "SMTP 사용자 이름"
 
 [admin.settings.mcp]
-apikeyNote = "Clients send a Stirling API key in the X-API-KEY header (or Authorization: Bearer <key>). The key maps to its owning Stirling user - only provisioned accounts get in, and actions are audited as that user. Manage keys under Account > API Keys."
-description = "Expose Stirling's PDF tools and AI agents to MCP clients over an OAuth-protected endpoint."
+apikeyNote = "클라이언트는 X-API-KEY 헤더(또는 Authorization: Bearer <key>)로 Stirling API key를 보냅니다. 키는 소유한 Stirling 사용자에 매핑됩니다. 프로비저닝된 계정만 접근할 수 있으며, 작업은 해당 사용자로 감사됩니다. Account > API Keys에서 키를 관리하세요."
+description = "OAuth로 보호되는 엔드포인트를 통해 Stirling의 PDF 도구와 AI 에이전트를 MCP 클라이언트에 노출합니다."
 title = "MCP Server"
 
 [admin.settings.mcp.acceptedAudiences]
-description = "Extra token audience values accepted besides the Resource ID (comma or space separated). Leave blank for strict RFC 8707. Needed for IdPs that cannot mint resource audiences - e.g. Supabase's OAuth server always issues aud=authenticated."
-label = "Additional accepted audiences (optional)"
+description = "Resource ID 외에 허용되는 추가 토큰 audience 값(쉼표 또는 공백으로 구분). 엄격한 RFC 8707을 사용하려면 비워 두세요. 리소스 audience를 발급할 수 없는 IdP에 필요합니다. 예: Supabase의 OAuth 서버는 항상 aud=authenticated를 발급합니다."
+label = "추가로 허용되는 audience(선택 사항)"
 
 [admin.settings.mcp.allowedOps]
-description = "If set, ONLY these operation ids are exposed (an allow-list; comma or space separated). Leave blank to expose all enabled tools except any blocked below."
-label = "Allowed tools"
+description = "설정하면 이 operation id만 노출됩니다(허용 목록; 쉼표 또는 공백으로 구분). 비워 두면 아래에서 차단된 항목을 제외한 모든 활성화된 도구가 노출됩니다."
+label = "허용된 도구"
 
 [admin.settings.mcp.blockedOps]
-description = "Operation ids to hide from MCP (comma or space separated), e.g. add-password remove-password. Leave blank to expose all enabled tools."
-label = "Blocked tools"
+description = "MCP에서 숨길 operation id(쉼표 또는 공백으로 구분), 예: add-password remove-password. 비워 두면 모든 활성화된 도구가 노출됩니다."
+label = "차단된 도구"
 
 [admin.settings.mcp.enabled]
-description = "When off (default), no /mcp endpoint, metadata, or MCP beans are loaded."
-label = "Enable MCP Server"
+description = "꺼져 있으면(기본값) /mcp 엔드포인트, 메타데이터 또는 MCP beans가 로드되지 않습니다."
+label = "MCP Server 활성화"
 
 [admin.settings.mcp.guide]
-step1 = "Enter your OAuth issuer + resource ID above, Save, and restart."
-step1ApiKey = "Create an API key under Account > API Keys (each user uses their own)."
-step2 = "In your MCP client add a"
-step2b = "server pointing at:"
-step3 = "The client auto-discovers OAuth from:"
-step3ApiKey = "Send the key in an"
-step3ApiKeyb = "header (or Authorization: Bearer <key>). No OAuth or metadata discovery is used."
-step4 = "Approve the sign-in; the client retries with a token. Tools appear grouped: convert, pages, misc, security, ai."
-step4ApiKey = "Tools appear grouped: convert, pages, misc, security, ai - and every call is audited as the key's owner."
-tip = "Tip: register the resource ID as an allowed audience in your IdP. Tested with MCP Inspector and Claude Desktop."
-tipApiKey = "Tip: API-key mode needs no external IdP - simplest for self-host. The key maps to its owning Stirling user."
-title = "Connect an MCP client"
+step1 = "위에 OAuth 발급자 + resource ID를 입력하고 저장한 다음 재시작하세요."
+step1ApiKey = "Account > API Keys에서 API key를 생성하세요(각 사용자는 자신의 키를 사용)."
+step2 = "MCP 클라이언트에 다음을 추가하세요:"
+step2b = "서버가 가리킬 위치:"
+step3 = "클라이언트가 다음에서 OAuth를 자동 검색합니다:"
+step3ApiKey = "키를 다음에 보내세요:"
+step3ApiKeyb = "헤더(또는 Authorization: Bearer <key>). OAuth 또는 메타데이터 검색은 사용되지 않습니다."
+step4 = "로그인을 승인하면 클라이언트가 토큰으로 다시 시도합니다. 도구는 convert, pages, misc, security, ai로 그룹화되어 나타납니다."
+step4ApiKey = "도구는 convert, pages, misc, security, ai로 그룹화되어 나타나며, 모든 호출은 키 소유자로 감사됩니다."
+tip = "팁: resource ID를 IdP에서 허용된 audience로 등록하세요. MCP Inspector와 Claude Desktop으로 테스트되었습니다."
+tipApiKey = "팁: API-key 모드에는 외부 IdP가 필요하지 않아 self-host에 가장 간단합니다. 키는 소유한 Stirling 사용자에 매핑됩니다."
+title = "MCP 클라이언트 연결"
 
 [admin.settings.mcp.issuerUri]
-description = "Your OAuth2 authorization server (must publish /.well-known/openid-configuration). Required when enabled."
+description = "사용자의 OAuth2 authorization server (/.well-known/openid-configuration을 게시해야 함). 활성화 시 필요합니다."
 label = "OAuth Issuer URL"
 
 [admin.settings.mcp.jwksUri]
-description = "Leave blank to discover it from the issuer. Set only if your IdP serves keys at a non-standard URL."
-label = "JWKS URL (optional)"
-placeholder = "Auto-discovered from issuer"
+description = "발급자에서 검색하려면 비워 두세요. IdP가 비표준 URL에서 키를 제공하는 경우에만 설정하세요."
+label = "JWKS URL (선택 사항)"
+placeholder = "발급자에서 자동 검색됨"
 
 [admin.settings.mcp.mode]
 apikey = "API key (Stirling 사용자별 키)"
-description = "OAuth needs an external IdP. API key uses a Stirling per-user API key (X-API-KEY) - simplest for self-host."
-label = "Authentication mode"
+description = "OAuth에는 외부 IdP가 필요합니다. API key는 Stirling 사용자별 API key(X-API-KEY)를 사용하며 self-host에 가장 간단합니다."
+label = "인증 모드"
 oauth = "OAuth 2.1 (외부 IdP)"
 
 [admin.settings.mcp.requireAccount]
-description = "Only let tokens through if their subject maps to a provisioned, enabled Stirling user."
-label = "Require an existing Stirling account"
+description = "subject가 프로비저닝되고 활성화된 Stirling 사용자에 매핑되는 경우에만 토큰을 허용합니다."
+label = "기존 Stirling 계정 필요"
 
 [admin.settings.mcp.resourceId]
-description = "This server's public /mcp URL. Tokens must list it in their audience (RFC 8707) or they are rejected."
+description = "이 서버의 공개 /mcp URL. 토큰은 audience(RFC 8707)에 이를 포함해야 하며, 그렇지 않으면 거부됩니다."
 label = "Resource ID"
 
 [admin.settings.mcp.scopes]
-description = "Require mcp.tools.read for read ops and mcp.tools.write for write/AI ops."
-label = "Enforce OAuth scopes"
+description = "읽기 작업에는 mcp.tools.read를, 쓰기/AI 작업에는 mcp.tools.write를 요구합니다."
+label = "OAuth scopes 적용"
 
 [admin.settings.mcp.usernameClaim]
-description = "JWT claim matched against a Stirling username (e.g. sub, email, preferred_username)."
+description = "Stirling 사용자 이름과 일치시키는 JWT claim(예: sub, email, preferred_username)."
 label = "Username claim"
 
 [admin.settings.plan.noData]
-message = "현재 요금제 데이터가 없습니다."
-title = "데이터 없음"
+message = "이 서버가 라이선스 서비스에 연결할 수 없습니다. 다시 시도하거나 라이선스 키를 확인하세요."
+title = "플랜 데이터 없음"
 
 [admin.settings.premium]
 description = "프리미엄 또는 엔터프라이즈 라이선스 키를 구성합니다."
@@ -1577,7 +1573,7 @@ file = "인증서 파일"
 text = "라이선스 키"
 
 [admin.settings.premium.key]
-description = "프리미엄 또는 엔터프라이즈 라이선스 키를 입력하세요"
+description = "프리미엄 또는 엔터프라이즈 라이선스 키를 입력하세요. 키가 제공되면 프리미엄 기능이 자동으로 활성화됩니다."
 label = "라이선스 키"
 success = "라이선스 키 저장됨"
 successMessage = "라이선스 키가 성공적으로 활성화되었습니다. 재시작이 필요 없습니다."
@@ -1601,7 +1597,7 @@ title = "기능 설정"
 
 [admin.settings.privacy]
 analytics = "분석 및 추적"
-description = "개인정보 및 데이터 수집 설정을 구성합니다."
+description = "이 서버가 자신에 대해 무엇을 누구에게 보고하는지."
 searchEngine = "검색 엔진 노출"
 title = "개인정보"
 
@@ -1654,7 +1650,7 @@ description = "컴플라이언스 및 보안 모니터링을 위해 사용자 �
 label = "감사 로깅 활성화"
 
 [admin.settings.security.audit.level]
-description = "0=OFF, 1=BASIC, 2=STANDARD, 3=VERBOSE"
+description = "감사 수준: OFF (0) = 로깅 없음 | BASIC (1) = 파일 수정(압축/분할/병합 등) 및 설정 | STANDARD (2) = 파일 작업 + 사용자 작업 | VERBOSE (3) = 폴링을 포함한 모든 요청. 더 높은 수준에는 낮은 수준의 모든 이벤트가 포함됩니다."
 label = "감사 수준"
 
 [admin.settings.security.audit.levelDetails]
@@ -1664,7 +1660,7 @@ standard = "BASIC 이벤트에 추가: 사용자 로그인/로그아웃, 계정 
 verbose = "STANDARD 이벤트에 추가: 지속 폴링 호출, 모든 GET 요청, 상세 타이밍. 경고: 로그 용량 증가 및 성능 영향."
 
 [admin.settings.security.audit.retentionDays]
-description = "감사 로그를 보존할 기간(일)"
+description = "감사 로그를 보관할 일수(0 = 무기한 보관)"
 label = "감사 로그 보존 기간(일)"
 
 [admin.settings.security.csrfDisabled]
@@ -1783,15 +1779,15 @@ description = "로그인 실패 횟수가 재설정되기까지의 시간"
 label = "로그인 재설정 시간(분)"
 
 [admin.settings.security.ssoNotice]
-message = "OAuth2 및 SAML2 인증 제공자는 더 쉬운 관리를 위해 Connections 메뉴로 이동했습니다."
+message = "OAuth2 및 SAML2 인증 공급자는 이 섹션 옆의 Single sign-on 아래에 있습니다."
 title = "SSO/SAML 설정을 찾고 계신가요?"
 
 [admin.settings.security.xFrameOptions]
-deny = "Deny (Prevents all framing)"
-description = "Controls whether the application can be embedded in iframes"
-disabled = "Disabled (No X-Frame-Options header)"
+deny = "거부(모든 프레이밍 방지)"
+description = "애플리케이션을 iframe에 삽입할 수 있는지 제어합니다"
+disabled = "비활성화(X-Frame-Options 헤더 없음)"
 label = "X-Frame-Options"
-sameorigin = "Same Origin (Allow framing from same domain)"
+sameorigin = "동일 출처(동일 도메인에서 프레이밍 허용)"
 
 [admin.settings.storage]
 description = "서버 저장소 및 공유 옵션을 관리합니다."
@@ -1926,14 +1922,14 @@ title = "저장되지 않은 변경 사항"
 
 [adminOnboarding]
 adminTools = "마지막으로 시스템 활동을 추적하는 <strong>감사</strong>와 사용자가 플랫폼과 상호작용하는 방식을 모니터링하는 <strong>사용량 분석</strong> 같은 고급 관리 도구를 제공합니다."
-configButton = "<strong>구성</strong> 버튼을 클릭하여 모든 시스템 설정과 관리 제어에 접근하세요."
+configButton = "모든 시스템 구성 및 관리 제어에 접근하려면 <strong>Settings</strong>를 여세요."
 connectionsSection = "<strong>연결</strong> 섹션은 Google 및 GitHub 같은 사용자 지정 SSO와 SAML 공급자를 포함한 다양한 로그인 방법을 지원하며, 알림과 커뮤니케이션을 위한 이메일 연동도 지원합니다."
 databaseSection = "고급 운영 환경을 위해 <strong>외부 데이터베이스 연동</strong>을 허용하는 설정을 제공하여 기존 인프라와 통합할 수 있습니다."
 settingsOverview = "여기는 <strong>설정 패널</strong>입니다. 관리자 설정은 손쉬운 탐색을 위해 카테고리별로 구성되어 있습니다."
 systemCustomization = "UI를 맞춤화할 수 있는 다양한 방법을 제공합니다. <strong>시스템 설정</strong>에서 앱 이름과 언어를 변경하고, <strong>기능</strong>에서 서버 인증서를 관리하며, <strong>엔드포인트</strong>에서 사용자에게 특정 도구를 활성화하거나 비활성화할 수 있습니다."
 teamsAndUsers = "여기에서 <strong>팀</strong>과 개별 사용자를 관리합니다. 이메일, 공유 링크로 새 사용자를 초대하거나, 직접 맞춤 계정을 생성할 수 있습니다."
 welcome = "<strong>관리자 투어</strong>에 오신 것을 환영합니다! 시스템 관리자를 위한 강력한 엔터프라이즈 기능과 설정을 살펴보겠습니다."
-wrapUp = "관리자 투어를 마쳤습니다! Stirling PDF를 강력하고 맞춤화 가능한 조직용 솔루션으로 만들어 주는 엔터프라이즈 기능을 살펴보았습니다. <strong>도움말</strong> 메뉴에서 언제든지 이 투어를 다시 볼 수 있습니다."
+wrapUp = "관리자 투어가 끝났습니다! Stirling PDF를 조직을 위한 강력하고 사용자 지정 가능한 솔루션으로 만드는 엔터프라이즈 기능을 살펴보셨습니다. 언제든지 다시 볼 수 있습니다. <strong>Settings</strong>를 열고 도움말 아래 <strong>Tours</strong> 섹션에서 찾으세요."
 
 [adminUserSettings]
 admin = "관리자"
@@ -1951,13 +1947,13 @@ roman = "로마자"
 thai = "태국어"
 
 [analytics]
-learnMore = "자세히 알아보기"
-paragraph1 = "Stirling PDF는 제품 개선을 위한 선택적 분석 기능이 있습니다. 개인정보나 파일 내용은 추적하지 않습니다."
+learnMore = "분석에 대해 자세히 알아보기"
+paragraph1 = "Stirling PDF에는 제품 개선에 도움이 되는 선택형 분석 기능이 있습니다. 개인 정보나 파일 내용은 추적하지 않습니다."
 paragraph2 = "Stirling-PDF의 성장을 돕고 사용자를 더 잘 이해할 수 있도록 분석 기능 활성화를 고려해주세요."
-title = "Stirling PDF를 더 좋게 만들고 싶으신가요?"
+title = "Stirling PDF를 더 좋게 만드는 데 도움을 주시겠습니까?"
 
 [annotate]
-tags = "annotate,highlight,draw,markup,comment,notes,review,redline,feedback,markup tools,sticky notes,shapes,arrows,text box,freehand"
+tags = "주석,강조 표시,그리기,마크업,댓글,메모,검토,레드라인,피드백,마크업 도구,스티커 메모,도형,화살표,텍스트 상자,자유 그리기"
 
 [annotation]
 alignCenter = "가운데 정렬"
@@ -1990,7 +1986,7 @@ delete = "삭제"
 deleted = "주석이 삭제되었습니다"
 drawing = "그리기"
 editSelectDescription = "기존 주석을 클릭해 색상, 불투명도, 텍스트, 크기를 편집하세요."
-editText = "텍스트 상자 편집"
+editText = "편집"
 fillColor = "채우기 색상"
 fillOpacity = "채우기 불투명도"
 fontSize = "글꼴 크기"
@@ -2033,19 +2029,34 @@ undoDelete = "실행 취소"
 width = "너비"
 
 [app]
-description = "무료 Adobe Acrobat 대안(1,000만+ 다운로드)"
+description = "모든 인프라에서 실행할 수 있는 무료 비공개 PDF 편집기입니다."
 
 [appBanner]
-dismiss = "Dismiss"
+dismiss = "닫기"
 
 [attachments]
+addAttachments = "첨부 파일 추가..."
 convertToPdfA3b = "PDF/A-3b로 변환"
-convertToPdfA3bDescription = "첨부 파일이 포함된 보관용 PDF를 생성합니다"
 convertToPdfA3bTooltip = "PDF/A-3b는 장기 보존을 보장하는 보관 형식입니다. 임의의 파일 형식을 첨부 파일로 포함할 수 있습니다. 변환에는 Ghostscript가 필요하며 큰 파일은 시간이 더 걸릴 수 있습니다."
 convertToPdfA3bTooltipHeader = "PDF/A-3b 변환 정보"
 convertToPdfA3bTooltipTitle = "기능"
-tags = "embed,attach,file,attachment,attachments"
-title = "Add attachments"
+discardChanges = "폐기"
+downloadSingle = "첨부 파일 다운로드"
+duplicateName = "이름이 '{{name}}'인 첨부 파일이 이미 있습니다."
+extractAll = "모두 추출"
+filterPlaceholder = "첨부 파일 필터링..."
+noAttachments = "이 PDF에는 아직 첨부 파일이 없습니다. 아래에 파일을 놓거나 클릭하여 찾아보세요."
+remove = "첨부 파일 제거"
+rename = "첨부 파일 이름 변경"
+restore = "삭제 취소"
+saveChanges = "변경 사항 저장({{count}})"
+tags = "첨부 파일,추가,제거,삽입,파일,추출,관리"
+title = "첨부 파일 관리"
+
+[attachments.badges]
+deleted = "삭제됨"
+renamed = "이름 변경됨"
+staged = "준비됨"
 
 [audit]
 configureAudit = "감사 로깅 구성"
@@ -2055,12 +2066,12 @@ disabledMessage = "시스템 이벤트를 추적하려면 애플리케이션 구
 enterpriseRequired = "엔터프라이즈 라이선스 필요"
 enterpriseRequiredMessage = "감사 로깅 시스템은 엔터프라이즈 기능입니다. 감사 로그와 분석에 접근하려면 엔터프라이즈 라이선스로 업그레이드하세요."
 goToSettings = "감사 설정으로 이동"
-notAvailable = "감사 시스템을 사용할 수 없습니다"
-notAvailableMessage = "감사 시스템이 구성되어 있지 않거나 사용할 수 없습니다."
+notAvailable = "감사 로깅이 꺼져 있습니다"
+notAvailableMessage = "활동 기록을 시작하려면 로그인 및 보안에서 켜세요."
 
 [audit.charts]
 byType = "유형별 이벤트"
-byUser = "사용자별 이벤트"
+byUser = "상위 사용자"
 day = "일간"
 error = "차트를 불러오는 중 오류"
 month = "월간"
@@ -2285,12 +2296,12 @@ desc = "PDF 작업을 연결해 다단계 워크플로를 구성하세요. 반�
 export = "내보내기"
 exportForFolderScanning = "폴더 스캔용으로 내보내기"
 import = "가져오기"
-importPartialSuccess_one = "Imported with {{count}} unmapped operation: {{ops}}"
-importPartialSuccess_other = "Imported with {{count}} unmapped operations: {{ops}}"
+importPartialSuccess_one = "매핑되지 않은 작업 {{count}}개와 함께 가져왔습니다: {{ops}}"
+importPartialSuccess_other = "매핑되지 않은 작업 {{count}}개와 함께 가져왔습니다: {{ops}}"
 importSuccess = "가져온 자동화: {{name}}"
 invalidStep = "잘못된 단계"
 reviewTitle = "자동화 결과"
-tags = "workflow,sequence,automation,automate,batch,batch processing,pipeline,chain,multi-step,recurring,scheduled,automatic,process multiple,bulk operations"
+tags = "워크플로,순서,자동화,자동화,배치,배치 처리,파이프라인,체인,다단계,반복,예약됨,자동,여러 개 처리,대량 작업"
 title = "자동화"
 
 [automate.config]
@@ -2346,8 +2357,8 @@ dropHint = "여기에 JSON을 놓거나 클릭하여 파일을 선택하세요"
 dropSubhint = "자동화 및 폴더 스캔 구성 모두 허용됩니다"
 dropzoneAriaLabel = "자동화 JSON 파일을 여기에 놓으세요"
 intro = "JSON 파일을 놓거나 아래에 내용을 붙여넣으세요. 형식(자동화 또는 폴더 스캔)은 자동으로 감지됩니다."
-opCount_one = "{{count}} operation"
-opCount_other = "{{count}} operations"
+opCount_one = "작업 {{count}}개"
+opCount_other = "작업 {{count}}개"
 parseError = "구문 분석할 수 없습니다: {{message}}"
 pasteLabel = "또는 JSON 붙여넣기"
 pastePlaceholder = "자동화 JSON을 여기에 붙여넣으세요…"
@@ -2375,7 +2386,7 @@ finish = "완료"
 run = "자동화 실행"
 running = "자동화 실행 중..."
 signInToRun = "자동화를 실행하려면 로그인하세요."
-steps_one = "{{count}} step"
+steps_one = "{{count}}단계"
 steps_other = "{{count}} 단계"
 unnamed = "이름 없는 자동화"
 
@@ -2393,7 +2404,7 @@ secureWorkflowDesc = "JavaScript 및 포함된 파일과 같은 잠재적으로 
 
 [autoRename]
 description = "이 도구는 내용에 따라 PDF 파일 이름을 자동으로 바꿉니다. 문서를 분석하여 텍스트에서 가장 적합한 제목을 찾습니다."
-tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
+tags = "자동 감지,헤더 기반,정리,레이블 변경,자동 이름 변경,자동 이름 변경,스마트 이름 변경,내용으로 이름 변경,파일 이름,파일 명명,제목 감지"
 
 [autoRotate]
 submit = "자동 회전"
@@ -2476,7 +2487,16 @@ checking = "백엔드 상태 확인 중..."
 offline = "백엔드 오프라인"
 online = "백엔드 온라인"
 starting = "백엔드 시작 중..."
+unavailable = "Backend를 사용할 수 없습니다"
 wait = "백엔드가 실행을 마칠 때까지 기다린 후 다시 시도하세요."
+
+[backendHealth.restart]
+attempting = "재시작 시도 중... ({{attempt}}/{{max}})"
+failedBody = "로컬 backend를 복구할 수 없습니다. 앱을 재시작하세요."
+failedTitle = "Backend 재시작 실패"
+stoppedTitle = "Backend가 예기치 않게 중지됨"
+successBody = "로컬 backend가 다시 Online 상태입니다."
+successTitle = "Backend 재시작됨"
 
 [backendStartup]
 notFoundTitle = "백엔드를 찾을 수 없음"
@@ -2714,7 +2734,7 @@ logoTitle = "로고"
 name = "이름"
 noLogo = "로고 없음"
 pageNumber = "페이지 번호"
-password = "키스토어 또는 개인 키 비밀번호 입력 (있는 경우):"
+password = "인증서 비밀번호"
 passwordOptional = "비밀번호가 없으면 비워 두세요"
 pemCertificateLabel = "인증서 (.pem / .crt)"
 pemPrivateKeyLabel = "개인 키 (.pem / .key)"
@@ -2725,7 +2745,7 @@ serverCertMessage = "서버 인증서 사용 중 - 파일이나 비밀번호가 
 showLogo = "로고 표시"
 signatureProgress = "{{signedCount}}/{{totalCount}} 서명"
 signed = "서명됨"
-tags = "인증,PEM,P12,공식,암호화"
+tags = "인증,PEM,P12,공식,암호화,서명,인증서,PKCS12,JKS,서버,수동,자동"
 title = "인증서 서명"
 viewed = "열람됨"
 
@@ -2782,8 +2802,8 @@ title = "어떤 옵션을 사용해야 하나요?"
 stepTitle = "인증서 형식"
 
 [certSign.collab.addParticipants]
-add_one = "Add {{count}} Participant"
-add_other = "Add {{count}} Participants"
+add_one = "참가자 {{count}}명 추가"
+add_other = "참가자 {{count}}명 추가"
 reasonHelp = "이 참여자들을 위한 서명 사유를 미리 설정합니다(선택 사항, 서명 시 변경 가능)"
 reasonPlaceholder = "예: 승인, 검토..."
 
@@ -2892,8 +2912,8 @@ certInvalidFallback = "유효하지 않은 인증서"
 certNetworkError = "인증서를 검증할 수 없습니다"
 certValidating = "인증서 검증 중..."
 certValidUntil = "인증서 유효 기간: {{date}}까지"
-description_one = "You have placed {{count}} signature. Choose your certificate to complete signing."
-description_other = "You have placed {{count}} signatures. Choose your certificate to complete signing."
+description_one = "서명 {{count}}개를 배치했습니다. 서명을 완료하려면 인증서를 선택하세요."
+description_other = "서명 {{count}}개를 배치했습니다. 서명을 완료하려면 인증서를 선택하세요."
 sign = "문서 서명"
 title = "인증서 구성"
 
@@ -3041,7 +3061,7 @@ title = "자격 증명 변경"
 [changeMetadata]
 filenamePrefix = "메타데이터"
 submit = "변경"
-tags = "edit,modify,update,metadata,properties,document properties,author,title,subject,keywords,creator,producer,info,document info,file properties"
+tags = "편집,수정,업데이트,메타데이터,속성,문서 속성,작성자,제목,주제,키워드,생성자,제작자,정보,문서 정보,파일 속성"
 
 [changeMetadata.advanced]
 title = "고급 옵션"
@@ -3149,7 +3169,7 @@ unknown = "알 수 없음"
 [changePermissions]
 desc = "문서 제한 및 권한을 변경합니다."
 submit = "권한 변경"
-tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
+tags = "권한,제한,권리,접근 제어,허용,거부,인쇄,복사,편집,권한 수정,보안 설정,사용자 권한"
 title = "권한 변경"
 
 [changePermissions.error]
@@ -3195,11 +3215,11 @@ text = "이 권한을 변경할 수 없도록 하려면, 비밀번호 추가 도
 copy = "메시지 복사"
 
 [chat.emptyState]
-text = "Ask a question about your documents or get help with PDF tools."
+text = "문서에 대해 질문하거나 PDF 도구에 대한 도움을 받아보세요."
 
 [chat.fab]
-close = "Close chat"
-open = "Open Stirling AI assistant"
+close = "채팅 닫기"
+open = "Stirling AI assistant 열기"
 
 [chat.header]
 agentMenu = "Stirling 에이전트 옵션"
@@ -3207,7 +3227,7 @@ assistant = "AI Assistant"
 clearChat = "채팅 지우기"
 
 [chat.input]
-disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
+disclaimer = "AI는 실수할 수 있습니다. 공유하기 전에 출력을 반드시 확인하세요."
 placeholder = "무엇을 하시겠습니까?"
 send = "메시지 보내기"
 
@@ -3220,11 +3240,11 @@ executing_tool_single = "{{tool}} 실행 중..."
 executing_tool_step = "{{tool}} 실행 중 ({{total}}단계 중 {{step}}단계)..."
 extracting_content = "문서에서 콘텐츠를 추출하는 중..."
 processing = "추출된 콘텐츠를 처리하는 중..."
-ranForMinutes_one = "Ran for 1 minute"
-ranForMinutes_other = "Ran for {{count}} minutes"
-ranForMinutesSeconds = "Ran for {{minutes}} min, {{seconds}} sec"
-ranForSeconds_one = "Ran for 1 second"
-ranForSeconds_other = "Ran for {{count}} seconds"
+ranForMinutes_one = "1분 동안 실행됨"
+ranForMinutes_other = "{{count}}분 동안 실행됨"
+ranForMinutesSeconds = "{{minutes}}분 {{seconds}}초 동안 실행됨"
+ranForSeconds_one = "1초 동안 실행됨"
+ranForSeconds_other = "{{count}}초 동안 실행됨"
 thinking = "생각하는 중..."
 whole_doc_compression_round = "메모를 통합하는 중..."
 whole_doc_read_done = "문서 읽기 완료..."
@@ -3252,7 +3272,7 @@ need_clarification = "요청을 명확히 해주시겠어요?"
 not_found = "요청한 정보를 찾을 수 없습니다."
 processing = "처리 중({{outcome}})..."
 unsupported_capability = "지원되지 않는 기능: {{capability}}"
-usage_limit_reached = "You've reached your usage limit. Check your plan options to keep going."
+usage_limit_reached = "사용 한도에 도달했습니다. 계속하려면 플랜 옵션을 확인하세요."
 
 [chat.toolsUsed]
 summary_one = "도구 1개 실행함"
@@ -3621,12 +3641,12 @@ tooltip = "이 작업은 클라우드 크레딧을 사용합니다"
 tooltip = "화면에서 색상 선택"
 
 [colorPicker]
-hue = "Hue"
-saturation = "Saturation and brightness"
+hue = "색조"
+saturation = "채도 및 밝기"
 title = "색상 선택"
 
 [common]
-actions = "Actions"
+actions = "작업"
 back = "뒤로"
 cancel = "취소"
 change = "변경"
@@ -3641,7 +3661,7 @@ copy = "복사"
 copyCode = "코드 복사"
 dismiss = "닫기"
 done = "완료"
-enterValue = "Enter value"
+enterValue = "값 입력"
 error = "오류"
 expand = "펼치기"
 filterEmpty = "필터링할 항목 없음"
@@ -3651,7 +3671,7 @@ moreInformation = "자세한 정보"
 next = "다음"
 noData = "데이터 없음"
 nOfTotal = "{{total}}개 중 {{current}}"
-open = "Open"
+open = "열기"
 preview = "미리보기"
 previous = "이전"
 refresh = "새로고침"
@@ -3662,7 +3682,7 @@ search = "검색"
 settingsSections = "설정 섹션"
 showAllTotal = "전체 {{total}}개 표시"
 showLess = "간단히 보기"
-stepOf = "Step {{current}} of {{total}}"
+stepOf = "{{total}}단계 중 {{current}}단계"
 
 [compare]
 clearSelected = "선택 항목 지우기"
@@ -3685,7 +3705,7 @@ zoomIn = "확대"
 zoomOut = "축소"
 
 [compare.clear]
-confirm = "지우고 돌아가기"
+confirm = "선택 항목 지우기"
 confirmBody = "현재 비교를 닫고 활성 파일로 돌아갑니다."
 confirmTitle = "선택한 PDF를 지울까요?"
 
@@ -3704,7 +3724,7 @@ title = "이 PDF는 서로 매우 다릅니다"
 
 [compare.edited]
 label = "수정된 PDF"
-placeholder = "Select the edited PDF"
+placeholder = "편집된 PDF 선택"
 selectBaseFirst = "먼저 원본 PDF를 선택하세요"
 
 [compare.error]
@@ -3725,7 +3745,7 @@ message = "선택한 PDF 중 하나 이상에 텍스트 내용이 없습니다. 
 
 [compare.original]
 label = "원본 PDF"
-placeholder = "Select the original PDF"
+placeholder = "원본 PDF 선택"
 
 [compare.pixel]
 base = "원본"
@@ -3791,7 +3811,7 @@ message = "문서 간 유사성이 매우 낮습니다. 시간을 절약하기 �
 [compress]
 desc = "PDF를 압축하여 파일 크기를 줄입니다."
 submit = "압축"
-tags = "shrink,reduce,optimize,compress,smaller,downsize,file size,reduce size,minimize,make smaller,decrease size,optimize size"
+tags = "축소,줄이기,최적화,압축,더 작게,크기 줄이기,파일 크기,크기 줄이기,최소화,더 작게 만들기,크기 감소,크기 최적화"
 title = "압축"
 
 [compress.compressionLevel]
@@ -3826,7 +3846,7 @@ title = "압축 방식"
 [compress.settings]
 desiredSize = "원하는 파일 크기"
 desiredSizePlaceholder = "크기 입력"
-desiredSizeUnit = "Size unit"
+desiredSizeUnit = "크기 단위"
 title = "설정"
 
 [compress.tooltip.description]
@@ -3856,7 +3876,7 @@ tags = "압축,작게,매우 작게"
 [config]
 plan = "요금제"
 planDescription = "내 플랜, 크레딧 및 지출 한도, 그리고 관련 청구서입니다."
-team = "Team"
+team = "팀"
 teamDescription = "이 작업 공간을 공유하는 사람과 아직 응답을 기다리는 초대입니다."
 
 [config.account.overview]
@@ -3870,7 +3890,7 @@ enterEmailConfirm = "삭제를 확인하려면 아래에 이메일 주소({{emai
 guestDescription = "게스트로 로그인되어 있습니다. 위에서 계정 업그레이드를 고려해 보세요."
 label = "개요"
 manageAccountPreferences = "계정 기본 설정 관리"
-signedInAs = "다음으로 로그인됨"
+signedInAs = "계정"
 title = "계정 설정"
 
 [config.account.profilePicture]
@@ -3953,27 +3973,27 @@ title = "API 키 새로고침"
 warning = "⚠️ 경고: 이 작업은 새 API 키를 생성하며 이전 키는 무효화됩니다."
 
 [config.mcp]
-description = "Model Context Protocol (MCP) lets AI assistants like Claude use your Stirling PDF tools directly. Connect a client once and your assistant can convert, edit, secure and process documents on your behalf."
-guestInfo = "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf."
+description = "Model Context Protocol (MCP)을 사용하면 Claude 같은 AI assistant가 Stirling PDF 도구를 직접 사용할 수 있습니다. 클라이언트를 한 번 연결하면 assistant가 사용자를 대신해 문서를 변환, 편집, 보안 처리 및 처리할 수 있습니다."
+guestInfo = "게스트 사용자는 MCP 클라이언트를 연결할 수 없습니다. MCP server를 사용하고 AI assistant가 사용자를 대신해 Stirling PDF 도구를 실행하도록 하려면 계정을 만드세요."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
-viewApiKeys = "View API keys"
+viewApiKeys = "API keys 보기"
 
 [config.mcp.copy]
 configLabel = "Config"
-copied = "Copied"
-copy = "Copy"
+copied = "복사됨"
+copy = "복사"
 endpointLabel = "Endpoint URL"
-tooltip = "Copy {{label}}"
-tooltipCopied = "{{label}} copied"
+tooltip = "{{label}} 복사"
+tooltipCopied = "{{label}} 복사됨"
 
 [config.mcp.endpoint]
-label = "Your MCP endpoint"
+label = "내 MCP endpoint"
 
 [config.mcp.setup]
-addTo = "Add to"
-hint = "Pick your client, paste the snippet into the file shown, then restart it. You'll sign in with your Stirling account on first use - no keys to copy."
-title = "Connect your AI assistant"
+addTo = "추가 위치"
+hint = "클라이언트를 선택하고 표시된 파일에 snippet을 붙여넣은 다음 재시작하세요. 처음 사용할 때 Stirling 계정으로 로그인하게 되며, 복사할 키는 없습니다."
+title = "AI assistant 연결"
 
 [config.overview]
 description = "현재 애플리케이션 설정 및 구성 세부 정보입니다."
@@ -4047,8 +4067,8 @@ color = "색상"
 colorType = "색상 유형"
 combineImages = "이미지 결합"
 combineImagesDescription = "모든 이미지를 하나의 PDF로 결합하거나 이미지마다 개별 PDF를 생성합니다"
-combineSvgs = "Combine SVGs into single PDF"
-combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
+combineSvgs = "SVG를 단일 PDF로 결합"
+combineSvgsDescription = "모든 SVG 파일을 여러 페이지가 있는 하나의 PDF로 결합하거나 각 SVG에 대해 별도의 PDF를 만듭니다"
 conversionResults = "변환 결과"
 convertFiles = "파일 변환"
 convertFrom = "다음에서 변환"
@@ -4077,40 +4097,40 @@ output = "출력"
 outputFormat = "출력 형식"
 pdfaAccessibleFormat = "{{format}} (접근 가능)"
 pdfaDigitalSignatureWarning = "PDF에 디지털 서명이 포함되어 있습니다. 다음 단계에서 제거됩니다."
-pdfaNote = "PDF/A-1b는 호환성이 더 높고, PDF/A-2b는 더 많은 기능을 지원합니다."
+pdfaNote = "PDF/A-1b는 호환성이 더 높고, PDF/A-2b는 더 많은 기능을 지원하며, PDF/A-3b는 내장 파일을 지원합니다."
 pdfaOptions = "PDF/A 옵션"
 pdfOptions = "PDF 옵션"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
 pdfToEpub = "PDF → EPUB"
-pdfUaAltTextNotice = "Images need a written description before a document can be certified. Descriptions are never generated automatically, because an invented one passes the checker while telling a screen-reader user nothing. Any image left without one is reported, and the file comes back tagged but not certified."
-pdfUaAltTextScanFailed = "The images could not be listed. Convert anyway and the response reports what is missing."
-pdfUaAltTextSingleFileOnly = "Descriptions belong to one document: an image is identified by its position, which is a different image in every file. Convert these {{fileCount}} files to tag them, then convert one at a time to describe its images."
-pdfUaEmbedFonts = "Embed missing fonts"
-pdfUaEmbedFontsHelp = "PDF/UA requires every font to be embedded. Turning this off is faster but usually prevents conformance."
-pdfUaFigureLabel = "Page {{page}} {{kind}}"
-pdfUaFigurePlaceholder = "What this image tells the reader"
-pdfUaFindImages = "Find images needing a description"
-pdfUaLanguage = "Document language"
-pdfUaLanguageHelp = "A BCP-47 tag such as en-GB. Used only when the document does not already declare its own language."
-pdfUaNoImagesNeedingText = "No image is missing a description."
-pdfUaOptions = "PDF/UA Options"
-pdfUaOverrideLanguage = "Replace the document's own language"
-pdfUaOverrideLanguageHelp = "Only tick this if the language above is right and the document's own is wrong. Relabelling a document into a language it is not written in makes a screen reader unintelligible."
-pdfUaProfile = "Conformance level"
-pdfUaSignatureWarning = "This PDF is digitally signed. Tagging rewrites the page content the signature covers, so the signature will stop verifying. Convert first, then re-sign."
-pdfUaTitle = "Document title"
-pdfUaTitleHelp = "Shown by a reader instead of the filename. Left blank, the first heading is used."
+pdfUaAltTextNotice = "문서를 인증하려면 이미지에 작성된 설명이 필요합니다. 설명은 자동으로 생성되지 않습니다. 만들어낸 설명은 검사기를 통과하더라도 스크린 리더 사용자에게 아무것도 전달하지 않기 때문입니다. 설명이 없는 이미지는 모두 보고되며, 파일은 태그가 지정되어 돌아오지만 인증되지는 않습니다."
+pdfUaAltTextScanFailed = "이미지를 나열할 수 없습니다. 그래도 변환하면 응답에서 누락된 항목을 보고합니다."
+pdfUaAltTextSingleFileOnly = "설명은 하나의 문서에 속합니다. 이미지는 위치로 식별되며, 이는 파일마다 다른 이미지입니다. 이 {{fileCount}}개 파일을 변환하여 태그를 지정한 다음, 이미지를 설명하려면 한 번에 하나씩 변환하세요."
+pdfUaEmbedFonts = "누락된 글꼴 삽입"
+pdfUaEmbedFontsHelp = "PDF/UA는 모든 글꼴이 삽입되어 있어야 합니다. 이를 끄면 더 빠르지만 일반적으로 준수를 방해합니다."
+pdfUaFigureLabel = "페이지 {{page}} {{kind}}"
+pdfUaFigurePlaceholder = "이 이미지가 독자에게 전달하는 내용"
+pdfUaFindImages = "설명이 필요한 이미지 찾기"
+pdfUaLanguage = "문서 언어"
+pdfUaLanguageHelp = "en-GB와 같은 BCP-47 태그입니다. 문서가 자체 언어를 아직 선언하지 않은 경우에만 사용됩니다."
+pdfUaNoImagesNeedingText = "설명이 누락된 이미지가 없습니다."
+pdfUaOptions = "PDF/UA 옵션"
+pdfUaOverrideLanguage = "문서의 자체 언어 교체"
+pdfUaOverrideLanguageHelp = "위 언어가 맞고 문서의 자체 언어가 잘못된 경우에만 선택하세요. 작성되지 않은 언어로 문서에 레이블을 다시 지정하면 스크린 리더가 이해할 수 없게 됩니다."
+pdfUaProfile = "준수 수준"
+pdfUaSignatureWarning = "이 PDF는 디지털 서명되어 있습니다. 태그 지정은 서명이 적용된 페이지 내용을 다시 쓰므로 서명이 더 이상 검증되지 않습니다. 먼저 변환한 다음 다시 서명하세요."
+pdfUaTitle = "문서 제목"
+pdfUaTitleHelp = "파일 이름 대신 리더에 표시됩니다. 비워 두면 첫 번째 제목이 사용됩니다."
 selectSourceFormatFirst = "먼저 원본 형식을 선택하세요"
 settings = "설정"
 single = "단일"
 sourceFormatPlaceholder = "원본 형식"
 strictMode = "Strict Mode"
-strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)"
-svgPdfOptions = "SVG to PDF Options"
+strictModeDesc = "변환이 완벽하지 않으면 오류 처리(VeraPDF 검증 사용)"
+svgPdfOptions = "SVG to PDF 옵션"
 svgToPdf = "SVG → PDF"
-svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
-tags = "transform,change,convert,PDF to Word,PDF to Excel,PDF to image,Word to PDF,Excel to PDF,PowerPoint to PDF,HTML to PDF,export,import,file conversion,format change,save as"
+svgVectorNote = "SVG 파일은 모든 해상도에서 선명한 출력을 위해 벡터 그래픽으로 렌더링됩니다. SVG의 치수가 PDF 페이지 크기를 결정합니다."
+tags = "변환,변경,변환,PDF to Word,PDF to Excel,PDF to image,Word to PDF,Excel to PDF,PowerPoint to PDF,HTML to PDF,내보내기,가져오기,파일 변환,형식 변경,다른 이름으로 저장"
 targetFormatPlaceholder = "대상 형식"
 title = "변환"
 webOptions = "웹 → PDF 옵션"
@@ -4161,8 +4181,8 @@ showPreferencesBtn = "환경설정 관리"
 title = "쿠키 사용 방식"
 
 [cookieBanner.popUp.description]
-1 = "우리는 Stirling PDF가 더 잘 작동하도록 쿠키 및 기타 기술을 사용합니다—도구 개선과 여러분이 좋아할 기능 개발에 도움이 됩니다."
-2 = "If you’d rather not, clicking 'No Thanks' will only enable the essential cookies needed to keep things running smoothly."
+1 = "Stirling PDF가 더 잘 작동하도록 쿠키 및 기타 기술을 사용합니다. 이를 통해 도구를 개선하고 사용자가 좋아할 기능을 계속 구축할 수 있습니다."
+2 = "원하지 않으면 '괜찮습니다'를 클릭하면 원활한 작동에 필요한 필수 쿠키만 활성화됩니다."
 
 [cookieBanner.preferencesModal]
 acceptAllBtn = "모두 동의"
@@ -4174,16 +4194,16 @@ subtitle = "쿠키 사용"
 title = "동의 환경설정 센터"
 
 [cookieBanner.preferencesModal.analytics]
-description = "이 쿠키는 도구가 어떻게 사용되는지 이해하는 데 도움이 되며, 커뮤니티가 가장 중요하게 여기는 기능 개발에 집중할 수 있게 합니다. 안심하세요—Stirling PDF는 여러분이 작업하는 문서의 내용을 추적할 수 없으며, 앞으로도 절대 그렇게 하지 않습니다."
+description = "이 쿠키는 도구가 어떻게 사용되는지 이해하는 데 도움이 되어 커뮤니티가 가장 중요하게 여기는 기능 구축에 집중할 수 있습니다. 안심하세요. Stirling PDF는 사용자가 작업하는 문서의 내용을 추적할 수 없으며 결코 추적하지 않습니다."
 title = "분석"
 
 [cookieBanner.preferencesModal.description]
 1 = "Stirling PDF는 쿠키와 유사 기술을 사용하여 여러분의 경험을 향상하고 도구 사용 방식을 이해합니다. 이는 성능 개선, 중요한 기능 개발, 지속적인 사용자 지원에 도움이 됩니다."
-2 = "Stirling PDF는 여러분이 사용하는 문서의 내용에 접근하거나 추적할 수 없으며, 앞으로도 그렇게 하지 않을 것입니다."
+2 = "Stirling PDF는 사용자가 사용하는 문서의 내용을 추적하거나 접근할 수 없으며, 결코 그렇게 하지 않습니다."
 3 = "여러분의 프라이버시와 신뢰는 우리의 핵심 가치입니다."
 
 [cookieBanner.preferencesModal.necessary]
-description = "These cookies are essential for the website to function properly. They enable core features like setting your privacy preferences, logging in, and filling out forms—which is why they can’t be turned off."
+description = "이 쿠키는 웹사이트가 제대로 작동하는 데 필수입니다. 개인정보 기본 설정 지정, 로그인, 양식 작성 같은 핵심 기능을 활성화하므로 끌 수 없습니다."
 
 [cookieBanner.preferencesModal.necessary.title]
 1 = "엄격히 필수 쿠키"
@@ -4215,9 +4235,9 @@ title = "PDF Portfolio 정보"
 
 [crop]
 autoCrop = "여백 자동 자르기"
-noFileSelected = "자르기를 시작하려면 PDF 파일을 선택하세요"
+noFileSelected = "자르기를 시작하려면 PDF 파일을 추가하세요"
 reset = "전체 PDF로 재설정"
-submit = "제출"
+submit = "자르기 적용"
 title = "자르기"
 
 [crop.automation]
@@ -4281,12 +4301,20 @@ message = "기본 PDF 처리기 설정에 실패했습니다"
 title = "오류"
 
 [defaultApp.settingsOpened]
-message = "시스템 설정에서 Stirling PDF를 선택하세요"
+message = "Windows 설정에서 'PDF'를 검색하고 Stirling PDF를 기본 앱으로 선택하세요"
 title = "설정 열림"
 
 [defaultApp.success]
 message = "Stirling PDF가 기본 PDF 편집기로 설정되었습니다"
 title = "기본 앱 설정됨"
+
+[desktop.fileSave]
+saveFilesTitle_one = "파일 {{count}}개 저장"
+saveFilesTitle_other = "파일 {{count}}개 저장"
+
+[desktop.saasError]
+body = "이 도구는 클라우드 처리가 필요하지만 오류가 발생했습니다: {{error}}. 연결을 확인하고 다시 시도하세요."
+title = "클라우드 처리 실패"
 
 [desktop.titleBar]
 maximize = "최대화"
@@ -4346,24 +4374,24 @@ message = "Stirling-PDF는 이 컴퓨터에서 자체적으로 업데이트할 �
 title = "관리자 권한 필요"
 
 [devAirgapped]
-tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
+tags = "에어 갭,오프라인,격리됨,인터넷 없음,연결 끊김,보안,네트워크 격리,독립형"
 
 [devApi]
-tags = "API,development,documentation,developer,REST,integration,endpoints,programmatic,automation,scripting"
+tags = "API,개발,문서,개발자,REST,통합,endpoints,프로그래밍 방식,자동화,scripting"
 
 [devFolderScanning]
-tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,batch,monitor folder,auto process,folder monitoring"
+tags = "자동화,폴더,스캔,감시 폴더,hot folder,자동 처리,배치,폴더 모니터링,자동 처리,폴더 모니터링"
 
 [devSsoGuide]
-tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
+tags = "SSO,single sign-on,인증,SAML,OAuth,OIDC,로그인,엔터프라이즈,identity provider,IdP"
 
 [dropdownList]
-noItems = "No items available"
-noResults = "No results found"
+noItems = "사용 가능한 항목이 없습니다"
+noResults = "결과를 찾을 수 없습니다"
 searchPlaceholder = "검색..."
 selectedCount = "{{count}}개 선택됨"
-selectLanguages = "Select languages"
-selectOption = "Select an option"
+selectLanguages = "언어 선택"
+selectOption = "옵션 선택"
 
 [editableSecretField]
 edit = "편집"
@@ -4371,7 +4399,7 @@ editSecretValue = "시크릿 값 편집"
 
 [editTableOfContents]
 submit = "목차 적용"
-tags = "bookmarks,contents,edit,table of contents,TOC,outline,navigation,chapters,sections,add bookmarks,edit bookmarks,PDF outline"
+tags = "북마크,목차,편집,목차,TOC,개요,탐색,장,섹션,북마크 추가,북마크 편집,PDF 개요"
 workbenchLabel = "개요 작업 공간"
 
 [editTableOfContents.actions]
@@ -4469,8 +4497,8 @@ title = "계속하려면 비밀번호 제거"
 unlock = "잠금 해제 및 계속"
 unlockAll = "모두에 적용 ({{count}})"
 unlockAllPartialFail = "잘못된 비밀번호: {{names}}"
-unlockAllSuccess_one = "Unlocked {{count}} file."
-unlockAllSuccess_other = "Unlocked {{count}} files."
+unlockAllSuccess_one = "파일 {{count}}개 잠금 해제됨."
+unlockAllSuccess_other = "파일 {{count}}개 잠금 해제됨."
 unlockPrompt = "계속하려면 PDF 잠금을 해제하세요"
 viewerLocked = "이 PDF는 암호로 보호되어 있습니다"
 viewerUnlock = "잠금 해제"
@@ -4485,7 +4513,37 @@ title = "엔드포인트 통계"
 [error]
 _value = "오류"
 dismissAllErrors = "모든 오류 닫기"
+failedFiles = "실패한 파일: {{ids}}"
 generic = "오류가 발생했습니다"
+invalidOrCorruptedFiles = "유효하지 않거나 손상된 파일로 인해 처리에 실패했습니다"
+networkError = "네트워크 오류"
+requestError = "요청 오류"
+requestFailed = "요청 실패"
+requestFallback = "요청을 처리하는 중 오류가 발생했습니다."
+serverError = "서버 오류"
+unknown = "알 수 없는 오류가 발생했습니다"
+
+[error.pdfOpen]
+code = "PDF를 열 수 없습니다(오류 {{code}})."
+corrupted = "PDF 파일이 손상되어 읽을 수 없습니다."
+invalid = "이 파일은 유효한 PDF가 아니거나 손상되었습니다."
+pageLoadFailed = "이 PDF의 페이지를 로드할 수 없습니다."
+passwordProtected = "이 PDF는 비밀번호로 보호되어 있습니다."
+unknown = "PDF를 열 수 없습니다(알 수 없는 오류)."
+unsupportedSecurity = "이 PDF는 지원되지 않는 보안 체계를 사용합니다."
+
+[error.processing]
+cancelled = "사용자가 처리를 취소했습니다."
+corruption = "이 PDF 파일은 손상되었거나 암호화된 것 같습니다. 다른 파일을 시도하세요."
+failed = "처리 실패: {{message}}"
+memory = "이 파일을 처리할 메모리가 부족합니다. 다른 애플리케이션을 닫거나 더 작은 파일을 처리해 보세요."
+network = "네트워크 연결에 실패했습니다. 인터넷 연결을 확인하고 다시 시도하세요."
+parsing = "PDF 처리 실패: {{message}}"
+timeout = "처리 시간이 초과되었습니다. 이 파일은 처리하기에 너무 크거나 복잡할 수 있습니다."
+
+[errorBoundary]
+title = "문제가 발생했습니다"
+tryAgain = "다시 시도"
 
 [extractImages]
 allowDuplicates = "중복 이미지 저장"
@@ -4505,7 +4563,7 @@ tags = "추출"
 
 [extractPages]
 submit = "페이지 추출"
-tags = "pull,select,copy,extract,extract pages,get pages,pull out,save pages,export pages,copy pages,select pages,specific pages"
+tags = "가져오기,선택,복사,추출,페이지 추출,페이지 가져오기,빼내기,페이지 저장,페이지 내보내기,페이지 복사,페이지 선택,특정 페이지"
 title = "페이지 추출"
 
 [extractPages.error]
@@ -4558,12 +4616,12 @@ failed = "{{name}}에서 파일을 추출하지 못했습니다"
 [fileManager]
 addToUpload = "업로드에 추가"
 clearAll = "모두 지우기"
-clearSelection = "선택 해제"
+clearSelection = "지우기"
 delete = "삭제"
 deleteAll = "모두 삭제"
 download = "다운로드"
-downloadSelected = "선택 항목 다운로드"
-filesSelected = "개 파일 선택됨"
+downloadSelected = "파일 다운로드"
+filesSelected = "파일"
 filesStored = "개 파일 저장됨"
 loadingFiles = "파일 불러오는 중..."
 noFiles = "사용 가능한 파일이 없습니다"
@@ -4571,7 +4629,7 @@ noFilesFound = "검색과 일치하는 파일이 없습니다"
 openInFileEditor = "파일 편집기에서 열기"
 openInPageEditor = "페이지 편집기에서 열기"
 reloadFiles = "파일 다시 불러오기"
-saveSelected = "선택 항목 저장"
+saveSelected = "파일 저장"
 searchFiles = "파일 검색..."
 share = "공유"
 shared = "공유됨"
@@ -4582,18 +4640,18 @@ sharedWithYou = "나와 공유됨"
 showAll = "모두 표시"
 showAllCount_one = "모두 표시 (파일 {{count}}개)"
 showAllCount_other = "모두 표시 (파일 {{count}}개)"
-sortBy = "Sort files"
+sortBy = "파일 정렬"
 sortByDate = "날짜순 정렬"
 sortByName = "이름순 정렬"
 sortBySize = "크기순 정렬"
 storage = "저장소"
-storageUsed = "Storage used"
+storageUsed = "사용된 저장소"
 title = "PDF 파일 업로드"
 unsupported = "지원되지 않음"
 unzip = "압축 해제"
 updateOnServer = "서버에 업데이트"
 uploadToServer = "서버에 업로드"
-versionHistory = "Version history"
+versionHistory = "버전 기록"
 
 [filePicker]
 add_one = "파일 {{count}}개 추가"
@@ -4628,8 +4686,8 @@ previewOf = "{{name}} 미리보기"
 addFiles = "파일 추가"
 created = "생성일"
 notIncludedInToolRun = "이 도구 실행에 포함되지 않음"
-selectFromWorkbench = "작업대에서 파일을 선택하거나 "
-selectMultipleFromWorkbench = "작업대에서 최소 {{count}}개의 파일을 선택하거나 "
+selectFromWorkbench = "워크벤치에 파일을 추가하거나 "
+selectMultipleFromWorkbench = "워크벤치에 최소 {{count}}개 파일을 추가하거나 "
 size = "파일 크기"
 title = "파일"
 upload = "업로드"
@@ -4660,18 +4718,18 @@ addFiles = "파일 추가"
 addingFiles = "파일 추가 중…"
 collapse = "사이드바 접기"
 customizeGroups = "그룹 사용자 지정"
-dataLostBody = "This browser lost this file's contents. Upload it again to keep working with it."
-dataLostTitle = "File data is unavailable"
-downloadFailed = "Download failed"
+dataLostBody = "이 브라우저에서 이 파일의 내용을 잃었습니다. 계속 작업하려면 다시 업로드하세요."
+dataLostTitle = "파일 데이터를 사용할 수 없습니다"
+downloadFailed = "다운로드 실패"
 dropHint = "시작하려면 파일을 여세요"
-dropToAdd = "Drop files to add"
-duplicateFailed = "Could not duplicate file"
+dropToAdd = "추가하려면 파일을 놓으세요"
+duplicateFailed = "파일을 복제할 수 없습니다"
 expand = "사이드바 펼치기"
 googleDrive = "Google Drive"
 library = "PDF 라이브러리"
-myFiles = "내 파일"
+myFiles = "파일 라이브러리"
 noFiles = "아직 파일이 없습니다"
-openFileManager = "파일 관리자 열기"
+openFileManager = "모든 파일 및 폴더 찾아보기"
 openFromComputer = "컴퓨터에서 열기"
 openSettings = "설정 열기"
 other = "기타"
@@ -4683,31 +4741,31 @@ viewAll = "{{count}}개 파일 모두 보기"
 
 [fileSidebar.fileItem]
 closeViewer = "뷰어 닫기"
-dataLost = "Data lost"
-dataLostTooltip = "This browser lost this file's contents. Upload it again to keep working with it."
-delete = "Delete"
-duplicate = "Duplicate"
-moreActions = "More actions"
+dataLost = "데이터 손실"
+dataLostTooltip = "이 브라우저에서 이 파일의 내용을 잃었습니다. 계속 작업하려면 다시 업로드하세요."
+delete = "삭제"
+duplicate = "복제"
+moreActions = "추가 작업"
 openInViewer = "뷰어에서 열기"
-rename = "Rename"
-savedToServer = "Saved to server"
-updateOnServer = "Update on server"
-uploadToServer = "Upload to server"
-versionHistory = "Version history"
+rename = "이름 변경"
+savedToServer = "서버에 저장됨"
+updateOnServer = "서버에서 업데이트"
+uploadToServer = "서버에 업로드"
+versionHistory = "버전 기록"
 
 [fileSidebar.groupsModal]
 done = "완료"
-reset = "기본값으로 재설정"
-subtitle = "파일을 상위 카테고리로 그룹화하세요. 기존 또는 새 라벨을 카테고리에 추가하거나, 이름을 변경하거나, 직접 만들 수 있습니다. 어떤 카테고리에도 속하지 않는 파일은 “기타” 아래에 표시됩니다."
+reset = "모두 표시"
+subtitle = "파일 사이드바에서 카테고리를 표시하거나 숨깁니다."
 title = "사이드바 카테고리"
 
 [fileSidebar.rename]
-cancel = "Cancel"
-error = "Could not rename the file."
-illegalCharacters = "A file name can't contain \\ / : * ? \" < > |"
-label = "File name"
-save = "Rename"
-title = "Rename file"
+cancel = "취소"
+error = "파일 이름을 변경할 수 없습니다."
+illegalCharacters = "파일 이름에는 \\ / : * ? \" < > | 문자를 포함할 수 없습니다"
+label = "파일 이름"
+save = "이름 변경"
+title = "파일 이름 변경"
 
 [filesPage]
 addedToLibrary = "Stirling 라이브러리에 추가됨"
@@ -4716,10 +4774,10 @@ addToLibrary = "Stirling 라이브러리에 추가…"
 addToLibraryFailed = "일부 파일을 추가할 수 없습니다"
 addToWorkspace = "작업 공간에 추가"
 addToWorkspaceCount = "{{count}}개를 작업 공간에 추가"
-allFiles = "전체 파일"
+allFiles = "Stirling 라이브러리"
 back = "뒤로"
 backToFolder = "{{folder}}로 돌아가기"
-backToMyFiles = "내 파일로 돌아가기"
+backToMyFiles = "파일 라이브러리로 돌아가기"
 breadcrumbs = "폴더 경로"
 breadcrumbsOverflow = "상위 폴더 표시"
 bulkActions = "작업"
@@ -4730,40 +4788,40 @@ closeDetails = "세부정보 닫기"
 create = "생성"
 cycleBlocked = "폴더를 자신의 하위 폴더로 이동할 수 없습니다."
 delete = "삭제"
-deleteFilesChoiceBody = "Some of these files are saved both on this device and in the cloud. Where should they be deleted from?"
-deleteFilesCloudBody_one = "Delete 1 file from the cloud? This cannot be undone."
-deleteFilesCloudBody_other = "Delete {{count}} files from the cloud? This cannot be undone."
-deleteFilesError = "Could not delete. Try again."
-deleteFilesLocalBody_one = "Delete 1 file from this device? This cannot be undone."
-deleteFilesLocalBody_other = "Delete {{count}} files from this device? This cannot be undone."
-deleteFilesTitle_one = "Delete 1 file?"
-deleteFilesTitle_other = "Delete {{count}} files?"
+deleteFilesChoiceBody = "이 파일 중 일부는 이 기기와 클라우드에 모두 저장되어 있습니다. 어디에서 삭제하시겠습니까?"
+deleteFilesCloudBody_one = "클라우드에서 파일 1개를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+deleteFilesCloudBody_other = "클라우드에서 파일 {{count}}개를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+deleteFilesError = "삭제할 수 없습니다. 다시 시도하세요."
+deleteFilesLocalBody_one = "이 기기에서 파일 1개를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+deleteFilesLocalBody_other = "이 기기에서 파일 {{count}}개를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+deleteFilesTitle_one = "파일 1개를 삭제하시겠습니까?"
+deleteFilesTitle_other = "파일 {{count}}개를 삭제하시겠습니까?"
 deleteFolder = "폴더 삭제"
 deleteFolderBody = "폴더 \"{{name}}\"을(를) 삭제하시겠습니까?"
-deleteFolderContents_one = "Also delete {{count}} file inside the folder"
-deleteFolderContents_other = "Also delete {{count}} files inside the folder"
+deleteFolderContents_one = "폴더 안의 파일 {{count}}개도 삭제"
+deleteFolderContents_other = "폴더 안의 파일 {{count}}개도 삭제"
 deleteFolderContentsWarning = "파일은 영구적으로 제거되며 복구할 수 없습니다."
 deleteFolderError = "폴더를 삭제할 수 없습니다. 다시 시도하세요."
-deleteFolderKeepHint = "안의 파일은 전체 파일로 이동됩니다."
+deleteFolderKeepHint = "안의 파일은 Stirling 라이브러리로 이동됩니다."
 deleteFolderTitle = "폴더를 삭제할까요?"
 deselectAll = "선택 해제"
 details = "세부정보"
-detailsCount_one = "{{count}} file selected"
-detailsCount_other = "{{count}} files selected"
+detailsCount_one = "파일 {{count}}개 선택됨"
+detailsCount_other = "파일 {{count}}개 선택됨"
 dismissError = "닫기"
 download = "다운로드"
 downloadAll = "전체 다운로드"
 downloadVersion = "이 버전 다운로드"
 dropOverlay = "업로드하려면 파일을 놓으세요"
-dropOverlaySub = "파일은 로컬에서 시작됩니다. '이동' 또는 '클라우드에 저장'으로 폴더에 정리하세요."
+dropOverlaySub = "파일은 최근 항목에 표시됩니다. 언제든지 폴더로 정리할 수 있습니다."
 dropOverlaySubFolder = "이 폴더에 추가됩니다."
-duplicate = "Duplicate"
+duplicate = "복제"
 file = "파일"
-fileInfo = "File info"
+fileInfo = "파일 정보"
 fileMenu = "파일 작업"
 folder = "폴더"
-folderItems_one = "{{count}} item"
-folderItems_other = "{{count}} items"
+folderItems_one = "항목 {{count}}개"
+folderItems_other = "항목 {{count}}개"
 folderMenu = "폴더 작업"
 folderSettings = "폴더 설정"
 inPath = "{{path}}에 있음"
@@ -4777,18 +4835,18 @@ moveIntoMountFailed_one = "{{count}}개 파일을 폴더에 쓸 수 없습니다
 moveIntoMountFailed_other = "{{count}}개 파일을 폴더에 쓸 수 없습니다."
 moveIntoVirtualCloudSkipped_one = "{{count}}개의 서버 파일이 제자리에 남았습니다. 서버 파일은 브라우저 전용 폴더에 있을 수 없습니다."
 moveIntoVirtualCloudSkipped_other = "{{count}}개의 서버 파일이 제자리에 남았습니다. 서버 파일은 브라우저 전용 폴더에 있을 수 없습니다."
-moveSkippedRemote_one = "{{count}} file couldn't be moved on the server (no permission or already deleted)."
-moveSkippedRemote_other = "{{count}} files couldn't be moved on the server (no permission or already deleted)."
+moveSkippedRemote_one = "서버에서 파일 {{count}}개를 이동할 수 없습니다(권한 없음 또는 이미 삭제됨)."
+moveSkippedRemote_other = "서버에서 파일 {{count}}개를 이동할 수 없습니다(권한 없음 또는 이미 삭제됨)."
 moveTo = "이동…"
 newFolder = "새 폴더"
-newFolderStorageDisabled = "서버 폴더 저장소가 활성화되어 있지 않습니다. 관리자에게 켜 달라고 요청하세요."
-newFolderTabUnavailable = "폴더를 만들려면 전체 또는 클라우드로 전환하세요."
+newFolderStorageDisabled = "서버 폴더 저장소가 활성화되어 있지 않습니다."
+newFolderTabUnavailable = "폴더를 만들려면 Stirling 라이브러리로 전환하세요."
 offlineNoFolderEdits = "서버 폴더 동기화를 사용할 수 없어 폴더 변경이 비활성화되었습니다. 로그인과 저장소 구성을 확인하세요."
 open = "열기"
 openVersionInWorkspace = "작업 공간에서 열기"
 originFilter = "원본별 필터"
 recentFiles = "최근 항목"
-refresh = "서버에서 새로고침"
+refresh = "새로 고침"
 refreshNeedsConnection = "서버에서 새로고침하려면 로그인하세요."
 remove = "삭제"
 removeLocalFolder = "Stirling에서 마운트 해제"
@@ -4807,9 +4865,9 @@ serverFolderNeedsConnection = "서버 폴더를 사용하려면 Stirling Cloud�
 shareDisabledHint = "이 서버에서는 파일 공유가 활성화되어 있지 않습니다. 관리자에게 활성화를 요청하세요."
 shareManage = "공유 관리"
 showDetails = "세부정보 보기"
-signInRequired = "Sign in to use cloud storage."
-summary_one = "{{count}} item"
-summary_other = "{{count}} items"
+signInRequired = "클라우드 저장소를 사용하려면 로그인하세요."
+summary_one = "항목 {{count}}개"
+summary_other = "항목 {{count}}개"
 tree = "폴더"
 unmount = "마운트 해제"
 unmountFolderBody = "\"{{name}}\"을(를) 마운트 해제할까요? 폴더와 파일은 디스크에 그대로 남습니다."
@@ -4818,12 +4876,12 @@ upload = "업로드"
 uploadFromMobile = "모바일에서 업로드"
 versionActions = "버전 작업"
 versionCollapse = "중간 버전 접기"
-versionHistory = "Version history"
-versionHistoryEmpty = "This file has no earlier versions."
+versionHistory = "버전 기록"
+versionHistoryEmpty = "이 파일에는 이전 버전이 없습니다."
 versionOrigin = "원본 업로드"
 versionsCount = "버전 {{count}}개"
 versionShowHidden = "이전 버전 {{count}}개 표시"
-viewVersionHistory = "Version journey ({{count}})"
+viewVersionHistory = "버전 여정({{count}})"
 
 [filesPage.appearance]
 colour = "색상"
@@ -4842,12 +4900,12 @@ status = "상태"
 type = "유형"
 
 [filesPage.deleteScope]
-cloud = "Cloud only"
-cloudHint = "Deletes from the server. A copy stays on this device."
-device = "This device only"
-deviceHint = "Removes the local copy. The cloud copy is kept."
-everywhere = "Everywhere"
-everywhereHint = "Deletes the file from this device and the cloud."
+cloud = "클라우드만"
+cloudHint = "서버에서 삭제합니다. 이 기기에는 복사본이 남아 있습니다."
+device = "이 기기만"
+deviceHint = "로컬 복사본을 제거합니다. 클라우드 복사본은 유지됩니다."
+everywhere = "모든 위치"
+everywhereHint = "이 기기와 클라우드에서 파일을 삭제합니다."
 
 [filesPage.diskLink]
 conflict = "디스크 변경됨"
@@ -4883,8 +4941,8 @@ offlineTitle = "캐시된 클라우드 파일 없음"
 title = "아직 클라우드 파일이 없습니다"
 
 [filesPage.empty.noResults]
-hint = "No files in this folder match your filter. Try a different term or clear the filter."
-title = "No matching files"
+hint = "이 폴더에 필터와 일치하는 파일이 없습니다. 다른 용어를 시도하거나 필터를 지우세요."
+title = "일치하는 파일 없음"
 
 [filesPage.empty.recent]
 hint = "열거나 편집한 파일이 여기에 표시됩니다."
@@ -4903,23 +4961,33 @@ actionFailed = "{{action}}할 수 없습니다."
 actionFailedDetail = "{{action}}할 수 없습니다: {{message}}"
 addFolderFailed = "폴더를 추가할 수 없습니다."
 addFolderFailedDetail = "폴더를 추가할 수 없습니다: {{message}}"
-cloudDeleteFailed_one = "Couldn't delete 1 file from the cloud."
-cloudDeleteFailed_other = "Couldn't delete {{count}} files from the cloud."
+cloudDeleteFailed_one = "클라우드에서 파일 1개를 삭제할 수 없습니다."
+cloudDeleteFailed_other = "클라우드에서 파일 {{count}}개를 삭제할 수 없습니다."
+createOutsideMount = "마운트된 디렉터리 밖에 폴더를 만들 수 없습니다"
 deleteFolderFailed = "폴더를 삭제할 수 없습니다."
 deleteFolderFailedDetail = "폴더를 삭제할 수 없습니다: {{message}}"
-downloadFailed = "Could not download the file."
-duplicateFailed = "Could not duplicate the file."
+diskFoldersUnsupported = "이 빌드는 디스크에 폴더를 만들 수 없습니다"
+downloadFailed = "파일을 다운로드할 수 없습니다."
+duplicateFailed = "파일을 복제할 수 없습니다."
 folderAppearanceFailed = "폴더 모양을 업데이트할 수 없습니다."
 folderAppearanceFailedDetail = "폴더 모양을 업데이트할 수 없습니다: {{message}}"
+folderDetachFailed = "폴더가 삭제되었지만 일부 파일을 로컬에서 분리할 수 없습니다. 새로 고침하여 수정하세요."
+folderOperationFailed = "폴더 작업 실패"
+folderSyncFailed = "폴더 동기화 실패: {{message}}"
+loadFilesFailed = "파일을 로드하지 못했습니다"
+moveAcrossKinds = "폴더는 같은 종류 내에서만 이동할 수 있습니다"
 moveFilesFailed = "파일을 이동할 수 없습니다."
 moveFilesFailedDetail = "파일을 이동할 수 없습니다: {{message}}"
 moveFolderFailed = "폴더를 이동할 수 없습니다."
 moveFolderFailedDetail = "폴더를 이동할 수 없습니다: {{message}}"
+moveLocalFolder = "로컬 폴더는 해당 디렉터리가 있는 위치에 있습니다"
 openDiskFileFailed = "{{name}}을(를) 열 수 없습니다."
 openDiskFileFailedDetail = "{{name}}을(를) 열 수 없습니다: {{message}}"
 processingStatusUnavailable = "처리 상태를 새로고침할 수 없습니다. 연결이 복구될 때까지 파일 잠금이 해제되었습니다."
 readFolderFailed = "폴더를 읽을 수 없습니다."
 readFolderFailedDetail = "폴더를 읽을 수 없습니다: {{message}}"
+recolourLocalFolder = "아직 로컬 폴더의 색상을 변경할 수 없습니다"
+removeDiskSubfolder = "마운트된 디렉터리의 하위 폴더는 디스크에서 제거됩니다"
 removeFilesFailed = "파일을 제거할 수 없습니다."
 removeFilesFailedDetail = "파일을 제거할 수 없습니다: {{message}}"
 removeFolderFailed = "폴더를 제거할 수 없습니다."
@@ -4989,7 +5057,7 @@ cloudHint = "Stirling 서버에 저장됨"
 diskFileHint = "컴퓨터에 저장됨"
 diskHint = "디스크의 마운트된 폴더에 있는 파일"
 local = "로컬"
-localHint = "이 브라우저에만 저장됨"
+localHint = "백업되지 않음"
 shared = "공유됨"
 sharedHint = "링크로 공유됨"
 
@@ -5018,9 +5086,9 @@ back = "뒤로"
 cancel = "취소"
 
 [filesPage.search]
-clear = "Clear filter"
-label = "Filter files by name"
-placeholder = "Filter files…"
+clear = "검색 지우기"
+label = "파일 이름 검색"
+placeholder = "파일 이름 검색…"
 
 [filesPage.sort]
 label = "파일 정렬"
@@ -5051,6 +5119,22 @@ grid = "격자 보기"
 label = "보기 모드"
 list = "목록 보기"
 
+[fileStorage.unreadable]
+body = "\"{{name}}\"은(는) 이 브라우저에 저장되어 있지만 내용을 더 이상 읽을 수 없습니다. 계속 작업하려면 파일을 다시 업로드하세요."
+title = "파일 데이터를 사용할 수 없습니다"
+
+[fileSync.openFailed]
+multiple_one = "\"{{name}}\"을(를) 포함한 파일 {{count}}개를 열 수 없습니다."
+multiple_other = "\"{{name}}\"을(를) 포함한 파일 {{count}}개를 열 수 없습니다."
+single = "\"{{name}}\"을(를) 열 수 없습니다."
+singleWithStatus = "\"{{name}}\"을(를) 열 수 없습니다(HTTP {{status}})."
+title = "일부 파일을 열 수 없습니다"
+
+[fileSync.pullFailed]
+body = "이 브라우저에 캐시된 파일만 표시합니다. 연결이 복구되면 새로 고침하여 다시 시도하세요."
+signInTitle = "클라우드 파일을 로드하려면 로그인이 필요합니다"
+unreachableTitle = "클라우드 라이브러리에 연결할 수 없습니다"
+
 [fileToPDF]
 tags = "변환,형식,문서,사진,슬라이드,텍스트,변환,오피스,문서,워드,엑셀,파워포인트"
 title = "파일을 PDF로"
@@ -5058,6 +5142,7 @@ title = "파일을 PDF로"
 [fileUpload]
 dropFilesHere = "여기에 파일을 끌어다 놓거나 업로드 버튼을 클릭하세요"
 dropFilesHereOpen = "파일을 여기로 끌어오거나 열기 버튼을 클릭하세요"
+droppedFileUnreadable = "놓은 파일을 읽을 수 없습니다."
 filesAvailableCount_one = "사용 가능한 파일 {{count}}개"
 filesAvailableCount_other = "사용 가능한 파일 {{count}}개"
 loadFromStorage = "저장소에서 불러오기"
@@ -5067,7 +5152,7 @@ open = "열기"
 openFile = "파일 열기"
 openFiles = "여러 파일 열기"
 selectedCount = "{{count}}개 선택됨"
-selectFile = "Select {{name}}"
+selectFile = "{{name}} 선택"
 selectFromStorage = "저장소에서 선택"
 upload = "업로드"
 uploadFile = "파일 업로드"
@@ -5089,13 +5174,14 @@ passwordMustBeDifferent = "새 비밀번호는 현재 비밀번호와 달라야 
 passwordsDoNotMatch = "새 비밀번호가 일치하지 않습니다"
 passwordTooShort = "비밀번호는 8자 이상이어야 합니다"
 reEnterNewPassword = "새 비밀번호를 다시 입력하세요"
+setPasswordTitle = "비밀번호 설정"
 title = "첫 로그인"
 welcomeMessage = "보안상의 이유로 첫 로그인 시 비밀번호를 변경해야 합니다."
 welcomeTitle = "환영합니다!"
 
 [flatten]
 submit = "평면화"
-tags = "simplify,remove,interactive,flatten,flatten form,remove form fields,make static,finalize form,lock form,disable editing,convert to image,non-editable"
+tags = "단순화,제거,대화형,병합,양식 병합,양식 필드 제거,정적으로 만들기,양식 완료,양식 잠금,편집 비활성화,이미지로 변환,편집 불가"
 title = "평면화"
 
 [flatten.error]
@@ -5141,17 +5227,17 @@ issues = "GitHub"
 
 [formFill]
 allSaved = "모두 저장됨"
-analyzingFields = "Analysing form fields..."
+analyzingFields = "양식 필드 분석 중..."
 applyFailed = "변경 사항을 적용할 수 없습니다"
 extractCsvError = "CSV 추출 실패"
 extractXlsxError = "XLSX 추출 실패"
-filled = "filled"
+filled = "채워짐"
 flattenAfterFilling = "채운 후 평면화"
 goToPage = "이 페이지로 이동"
-noFields = "No fillable form fields found in this PDF."
+noFields = "이 PDF에서 채울 수 있는 양식 필드를 찾을 수 없습니다."
 page = "페이지"
-placeholderEnter = "Enter"
-placeholderSelect = "Select"
+placeholderEnter = "입력"
+placeholderSelect = "선택"
 requiredAbbreviation = "필수"
 requiredFieldsError = "모든 필수 필드를 입력하세요"
 rescanFields = "필드 재검색"
@@ -5337,8 +5423,8 @@ pages = "페이지 수"
 pdfVersion = "PDF 버전"
 permsAll = "모든 권한 허용"
 permsMixed = "일부 권한이 제한됨"
-permsRestricted_one = "{{count}} restriction"
-permsRestricted_other = "{{count}} restrictions"
+permsRestricted_one = "제한 {{count}}개"
+permsRestricted_other = "제한 {{count}}개"
 securityTitle = "보안 상태"
 technical = "기술 정보"
 title = "PDF 요약"
@@ -5369,7 +5455,7 @@ current = "현재"
 stepLabel = "단계 {{number}}"
 
 [groupSigning.steps.configureDefaults]
-continue = "검토로 계속"
+continue = "계속"
 invisible = "서명은 보이지 않습니다(메타데이터만)"
 locationLabel = "위치:"
 preview = "미리보기"
@@ -5386,8 +5472,8 @@ location = "위치:"
 logo = "로고:"
 logoHidden = "로고 없음"
 logoShown = "Stirling PDF 로고 표시됨"
-participantCount_one = "{{count}} participant will sign in order"
-participantCount_other = "{{count}} participants will sign in order"
+participantCount_one = "{{count}}명의 참가자가 순서대로 서명합니다"
+participantCount_other = "{{count}}명의 참가자가 순서대로 서명합니다"
 participants = "참여자"
 reason = "사유:"
 send = "서명 요청 보내기"
@@ -5398,15 +5484,15 @@ visibility = "표시 여부:"
 visible = "페이지 {{page}}에 표시"
 
 [groupSigning.steps.selectDocument]
-continue = "참여자 선택으로 계속"
+continue = "계속"
 noFile = "서명 세션을 만들려면 활성 파일에서 단일 PDF 파일을 선택하세요."
 selectedFile = "선택한 문서"
 title = "문서 선택"
 
 [groupSigning.steps.selectParticipants]
-continue = "서명 설정으로 계속"
-count_one = "{{count}} participant selected"
-count_other = "{{count}} participants selected"
+continue = "계속"
+count_one = "{{count}}명의 참가자 선택됨"
+count_other = "{{count}}명의 참가자 선택됨"
 label = "참여자 선택"
 placeholder = "서명할 참여자 선택..."
 title = "참여자 선택"
@@ -5442,59 +5528,59 @@ signUp = "무료 가입"
 title = "Stirling PDF를 게스트로 사용 중입니다!"
 
 [home.addAttachments]
-desc = "PDF에 내장 파일(첨부 파일)을 추가하거나 제거"
-tags = "임베드,첨부,포함"
-title = "첨부 파일 추가"
+desc = "내장된 PDF 첨부 파일을 보기, 추가, 추출, 이름 변경 또는 삭제합니다"
+tags = "embed,첨부,포함,첨부 파일,파일 첨부,파일 embed,파일 포함,파일 추가,파일 첨부,연결된 파일,보조 파일,추출,관리"
+title = "첨부 파일 관리"
 
 [home.addImage]
 desc = "PDF의 지정된 위치에 이미지 추가"
-tags = "삽입,임베드,배치"
+tags = "삽입,embed,배치,이미지 추가,이미지 삽입,이미지 배치,이미지 embed,사진 추가,그림 추가,로고 추가,그래픽,그림 삽입,사진 배치,PNG,JPG,JPEG"
 title = "이미지 추가"
 
 [home.addPageNumbers]
 desc = "문서 전체에 지정된 위치에 페이지 번호 추가"
-tags = "번호,페이지 매김,개수"
+tags = "번호,페이지 매김,개수,페이지 번호 추가,페이지 번호 매기기,페이지 번호,바닥글,머리글,페이지 번호 지정,순차,페이지 매김 도구"
 title = "페이지 번호 추가"
 
 [home.addPassword]
-desc = "PDF 문서를 비밀번호로 암호화합니다."
-tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
+desc = "PDF 파일에 암호 보호 및 제한을 추가합니다"
+tags = "암호화,password,잠금,보안,보호,security,encryption,보호 장치,confidential,private,접근 제한"
 title = "비밀번호 추가"
 
 [home.addStamp]
 desc = "지정한 위치에 텍스트 또는 이미지 스탬프를 추가"
-tags = "스탬프,표식,도장"
+tags = "스탬프,표시,인장,승인됨,거부됨,confidential,스탬프 도구,고무 스탬프,날짜 스탬프,승인 스탬프,수신됨,무효,사본,원본"
 title = "PDF에 스탬프 추가"
 
 [home.addText]
 desc = "PDF 어디에나 사용자 텍스트를 추가합니다"
-tags = "텍스트,주석,레이블"
+tags = "텍스트,주석,레이블,텍스트 추가,텍스트 삽입,텍스트 배치,텍스트 상자,레이블 추가,캡션 추가,PDF에 입력,PDF에 쓰기,단어 추가,노트 추가,텍스트 오버레이,타자기"
 title = "텍스트 추가"
 
 [home.adjustContrast]
-desc = "PDF의 대비, 채도 및 밝기 조정"
-tags = "대비,밝기,채도"
+desc = "PDF의 색상/대비, 채도 및 밝기를 조정합니다"
+tags = "대비,밝기,채도,색상 조정,색상 보정,향상,밝게,어둡게,품질 개선,색상 균형,색조,선명도"
 title = "색상/대비 조정"
 
 [home.annotate]
 desc = "뷰어에서 강조 표시, 그리기, 메모와 도형 추가"
-tags = "주석,강조,그리기"
+tags = "주석,강조,그리기,마크업,댓글,노트,검토,수정 표시,피드백,마크업 도구,스티키 노트,도형,화살표,텍스트 상자,자유 그리기"
 title = "주석"
 
 [home.autoFormDetection]
 desc = "AI로 양식 필드를 자동 감지하고 PDF를 채울 수 있게 만듭니다."
-tags = "form,detect,fillable,acroform,auto detect,ai,fields,make fillable,form detection"
+tags = "양식,감지,채울 수 있음,acroform,자동 감지,ai,필드,채울 수 있게 만들기,양식 감지"
 title = "자동 양식 감지"
 unavailable = "AI 감지 모델이 필요하지만 이 서버에 설치되어 있지 않습니다. 관리자는 설정 > 기능 > AI Form Detection에서 추가할 수 있습니다."
 
 [home.automate]
 desc = "PDF 작업을 연결하여 다단계 워크플로를 구성하세요. 반복 작업에 이상적입니다."
-tags = "워크플로,시퀀스,자동화"
+tags = "workflow,시퀀스,자동화,automate,일괄,일괄 처리,pipeline,체인,다단계,반복,예약됨,자동,여러 개 처리,대량 작업"
 title = "자동화"
 
 [home.autoRename]
 desc = "감지된 헤더를 기반으로 PDF 파일 이름을 자동으로 변경합니다."
-tags = "자동 감지,헤더 기반,정리,이름 변경"
+tags = "자동 감지,헤더 기반,정리,레이블 변경,자동 이름 변경,자동 이름 변경,스마트 이름 변경,내용으로 이름 변경,파일 이름,파일 명명,제목 감지"
 title = "PDF 파일 자동 이름 변경"
 
 [home.autoRotate]
@@ -5507,27 +5593,27 @@ tags = "자동,분할,크기"
 title = "크기/개수별 자동 분할"
 
 [home.autoSplitPDF]
-tags = "자동,분할,QR"
+tags = "자동,분할,QR,자동 분할,QR code,QR 분할,바코드,자동 분할,구분 페이지,분리 페이지,스캔 구분자,일괄 스캔"
 title = "자동 페이지 분할"
 
 [home.bookletImposition]
 desc = "인쇄와 제본을 위해 올바른 페이지 순서와 다중 페이지 레이아웃으로 소책자를 만듭니다."
-tags = "소책자,인쇄,제본"
+tags = "소책자,인쇄,제본,임포지션,소책자 인쇄,중철,접기,팸플릿,브로슈어,소책자 인쇄,양면,양면 인쇄,시그니처,책 레이아웃,페이지 임포지션,인쇄 레이아웃"
 title = "소책자 면배열"
 
 [home.certSign]
 desc = "인증서/키(PEM/P12)로 PDF에 서명"
-tags = "인증,PEM,P12,공식,암호화,서명,인증서,PKCS12,JKS,서버,수동,자동"
+tags = "인증,PEM,P12,공식,암호화,서명,인증서,PKCS12,JKS,서버,수동,자동,디지털 인증서,인증서 서명,PKI,암호화 서명,신뢰할 수 있는 서명"
 title = "인증서로 서명"
 
 [home.changeMetadata]
 desc = "PDF 문서에서 메타데이터 변경/제거/추가"
-tags = "편집,수정,업데이트"
+tags = "편집,수정,업데이트,metadata,속성,문서 속성,작성자,제목,주제,키워드,생성자,제작자,정보,문서 정보,파일 속성"
 title = "메타데이터 변경"
 
 [home.changePermissions]
 desc = "문서 제한 및 권한 변경"
-tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
+tags = "권한,제한,권리,접근 제어,허용,거부,인쇄,복사,편집,권한 수정,보안 설정,사용자 권한"
 title = "권한 변경"
 
 [home.classify]
@@ -5536,85 +5622,85 @@ title = "분류"
 
 [home.compare]
 desc = "2개의 PDF 문서를 비교하고 차이점을 보여줍니다"
-tags = "차이"
+tags = "차이,비교,diff,PDF 비교,문서 비교,차이 찾기,차이 표시,변경 사항,변경된 내용,변경 사항 추적,수정본,버전 비교,나란히,대비,delta"
 title = "비교"
 
 [home.compress]
 desc = "PDF를 압축하여 파일 크기를 줄입니다."
-tags = "압축,축소,최적화"
+tags = "축소,줄이기,최적화,압축,더 작게,크기 축소,파일 크기,크기 줄이기,최소화,작게 만들기,크기 감소,크기 최적화"
 title = "압축"
 
 [home.convert]
 desc = "서로 다른 형식 간 파일 변환"
-tags = "변환,바꾸기"
+tags = "변환,변경,convert,PDF to Word,PDF to Excel,PDF to image,Word to PDF,Excel to PDF,PowerPoint to PDF,HTML to PDF,내보내기,가져오기,파일 변환,형식 변경,다른 이름으로 저장"
 title = "변환"
 
 [home.createPortfolio]
 desc = "여러 파일을 Adobe PDF Portfolio로 묶기"
-tags = "portfolio,collection,package,bundle,combine files,pdf portfolio,adobe portfolio,pdf collection,container"
+tags = "포트폴리오,컬렉션,패키지,번들,파일 결합,pdf 포트폴리오,adobe 포트폴리오,pdf 컬렉션,컨테이너"
 title = "Portfolio 만들기"
 
 [home.crop]
 desc = "PDF를 잘라서 크기 줄이기(텍스트 유지!)"
-tags = "여백자르기,잘라내기,크기 조정"
+tags = "자르기,잘라내기,크기 조정,크롭,PDF 자르기,PDF 트림,여백 트림,여백 제거,가장자리 자르기,테두리 트림,흰 여백 제거,페이지 자르기,페이지 트림,여백 줄이기,여백 설정"
 title = "PDF 자르기"
 
 [home.devAirgapped]
 desc = "격리 환경 설정 가이드로 이동"
-tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
+tags = "air-gapped,오프라인,격리됨,인터넷 없음,연결 끊김,보안,네트워크 격리,독립 실행형"
 title = "격리 환경 설정"
 
 [home.devApi]
 desc = "API 문서로 이동"
-tags = "API,개발,문서"
+tags = "API,개발,문서,개발자,REST,통합,endpoints,프로그래밍 방식,자동화,스크립팅"
 title = "API"
 
 [home.devFolderScanning]
 desc = "자동 폴더 스캔 가이드로 이동"
-tags = "자동화,폴더,스캔"
+tags = "자동화,폴더,스캔,감시 폴더,핫 폴더,자동 처리,일괄,폴더 모니터링,자동 처리,폴더 모니터링"
 title = "자동 폴더 스캔"
 
 [home.devSsoGuide]
 desc = "SSO 가이드로 이동"
-tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
+tags = "SSO,single sign-on,인증,SAML,OAuth,OIDC,login,기업,identity provider,IdP"
 title = "SSO 가이드"
 
 [home.editTableOfContents]
 desc = "PDF 문서에서 북마크와 목차를 추가하거나 편집"
-tags = "북마크,목차,편집"
+tags = "북마크,목차,편집,table of contents,TOC,개요,탐색,챕터,섹션,북마크 추가,북마크 편집,PDF 개요"
 title = "목차 편집"
 
 [home.extractImages]
 desc = "PDF에서 모든 이미지를 추출하여 zip으로 저장"
-tags = "추출,저장,내보내기"
+tags = "가져오기,저장,내보내기,이미지 추출,이미지 가져오기,이미지 저장,이미지 내보내기,사진 추출,그림 추출,이미지 가져오기,이미지 다운로드,이미지 추출,그래픽 추출,사진 저장"
 title = "이미지 추출"
 
 [home.extractPages]
 desc = "PDF 문서에서 특정 페이지를 추출"
-tags = "추출,선택,복사"
+tags = "가져오기,선택,복사,추출,페이지 추출,페이지 가져오기,꺼내기,페이지 저장,페이지 내보내기,페이지 복사,페이지 선택,특정 페이지"
 title = "페이지 추출"
 
 [home.flatten]
 desc = "PDF에서 모든 대화형 요소와 양식 제거"
-tags = "단순화,제거,대화형"
+tags = "단순화,제거,대화형,병합 처리,양식 병합 처리,양식 필드 제거,정적으로 만들기,양식 완료,양식 잠금,편집 비활성화,이미지로 변환,편집 불가"
 title = "평면화"
 
 [home.formFill]
-desc = "시각적 편집기로 PDF 양식 필드를 대화형으로 작성합니다"
-title = "양식 작성"
+desc = "시각적 편집기로 PDF 양식 필드를 채우고, 생성하고, 편집하고, 삭제합니다"
+title = "양식 편집기"
 
 [home.getPdfInfo]
 desc = "PDF에서 가능한 모든 정보 가져오기"
-tags = "정보,메타데이터,세부정보"
+tags = "정보,metadata,세부 정보,PDF 정보,문서 정보,속성,파일 정보,정보 가져오기,정보 표시,속성 보기,문서 속성,통계,페이지 수,파일 세부 정보,검사"
 title = "PDF 모든 정보 가져오기"
 
 [home.manageCertificates]
-tags = "인증서,가져오기,내보내기"
+tags = "인증서,가져오기,내보내기,인증서 관리,디지털 인증서,인증서 관리,PFX,P12,keystore,인증서 가져오기,인증서 내보내기,인증서 저장소,PKI"
 title = "인증서 관리"
 
 [home.merge]
 desc = "여러 PDF를 하나로 쉽게 병합합니다."
-tags = "결합,병합,통합"
+tags = "결합,연결,합치기,병합,PDF 병합,PDF 결합,PDF 연결,연결,추가,이어붙이기,파일 결합,파일 연결,문서 병합"
 title = "병합"
 
 [home.mobile]
@@ -5629,22 +5715,22 @@ workspace = "워크스페이스"
 
 [home.multiTool]
 desc = "병합, 회전, 재배치, 분할 및 페이지 제거"
-tags = "여러,도구"
+tags = "여러 개,도구,multi-tool,all-in-one,스위스 아미,페이지 정리 도구,페이지 편집기,페이지 편집,페이지 관리,정리,재정리"
 title = "PDF 멀티 도구"
 
 [home.ocr]
 desc = "스캔을 정리하고 PDF 내 이미지에서 텍스트를 감지하여 다시 텍스트로 추가합니다."
-tags = "추출,스캔"
+tags = "추출,스캔,OCR,optical character recognition,텍스트 인식,스캔을 텍스트로,이미지를 텍스트로,스캔된 문서,검색 가능한 PDF,검색 가능하게 만들기,텍스트 추출,텍스트 인식,스캔 읽기"
 title = "OCR / 스캔 정리"
 
 [home.overlay-pdfs]
-desc = "PDF를 다른 PDF 위에 오버레이"
-tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
+desc = "하나의 PDF를 다른 PDF 위에 오버레이합니다"
+tags = "오버레이,결합,병합,레이어,겹쳐 놓기,PDF 오버레이,PDF 레이어,PDF 결합,쌓기,페이지 오버레이,배경,전경,합성"
 title = "PDF 오버레이"
 
 [home.pageLayout]
 desc = "PDF 문서의 여러 페이지를 하나의 페이지로 병합"
-tags = "레이아웃,배치,결합"
+tags = "레이아웃,배치,결합,N-up,2-up,4-up,페이지당 여러 개,시트당 페이지,페이지 레이아웃,타일,그리드 레이아웃,다중 페이지 레이아웃,페이지에 결합,핸드아웃"
 title = "다중 페이지 레이아웃"
 
 [home.pdfCommentAgent]
@@ -5653,92 +5739,92 @@ tags = "AI,에이전트,댓글,주석,스티키 노트,검토,피드백,노트"
 title = "AI 댓글 추가"
 
 [home.pdfOrganiser]
-tags = "정리,재배치,순서변경"
+tags = "정리,재배열,순서 변경,페이지 배치,정렬,페이지 이동,페이지 삭제,페이지 제거,페이지 관리,페이지 정리 도구,순서 재지정"
 title = "정리"
 
 [home.pdfTextEditor]
 desc = "그룹화된 텍스트 편집과 PDF 재생성으로 Stirling PDF의 JSON 내보내기를 검토하고 편집하세요"
-tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
+tags = "텍스트 편집,텍스트 수정,텍스트 변경,콘텐츠 편집,텍스트 업데이트,다시 쓰기,수정,개정,수정 표시,개정,텍스트 편집기,콘텐츠 편집기"
 title = "PDF 텍스트 편집기"
 
 [home.pdfToSinglePage]
 desc = "모든 PDF 페이지를 하나의 큰 단일 페이지로 병합"
-tags = "결합,병합,단일"
+tags = "결합,병합,단일,단일 페이지,한 페이지,단일로 병합,모두 결합,페이지 이어붙이기,세로 연결,긴 페이지,포스터"
 title = "단일 큰 페이지"
 
 [home.read]
 desc = "PDF를 보고 주석을 추가하세요. 텍스트를 강조하고, 그리거나, 검토 및 협업을 위해 댓글을 삽입할 수 있습니다."
-tags = "보기,열기,표시"
+tags = "보기,열기,표시,읽기,뷰어,PDF viewer,PDF reader,PDF 열기,PDF 보기,PDF 표시,미리보기,탐색"
 title = "읽기"
 
 [home.redact]
-desc = "선택한 텍스트, 그린 도형 및/또는 선택한 페이지를 기반으로 PDF 검열"
-tags = "검열,블랙아웃,숨기기"
-title = "수동 검열"
+desc = "선택한 텍스트, 그린 도형 및/또는 선택한 페이지를 기준으로 PDF를 수정(검게 가림)합니다"
+tags = "검열,검게 가리기,숨기기,redact,redaction,검게 칠하기,가리기,민감 정보 제거,텍스트 숨기기,privacy,confidential,GDPR,PII,민감한 데이터,영구 제거,덮기,법적 수정"
+title = "수정"
 
 [home.removeAnnotations]
 desc = "PDF에서 모든 주석/메모를 제거합니다"
-tags = "삭제,정리,제거"
+tags = "삭제,정리,제거,주석 제거,댓글 제거,댓글 삭제,마크업 제거,강조 제거,주석 정리,댓글 제거,노트 제거,마크업 삭제,댓글 지우기"
 title = "주석 제거"
 
 [home.removeBlanks]
 desc = "문서에서 빈 페이지를 감지하고 제거합니다"
-tags = "삭제,정리,빈페이지"
+tags = "삭제,정리,빈,빈 페이지 제거,빈 페이지 삭제,빈 페이지,흰 페이지,빈 항목 제거,정리,빈 페이지 정리"
 title = "빈 페이지 제거"
 
 [home.removeCertSign]
 desc = "PDF에서 인증서 서명 제거"
-tags = "제거,삭제,잠금해제"
+tags = "제거,삭제,잠금 해제,인증서 제거,서명 제거,서명 삭제,서명 없음,디지털 서명 제거,서명 제거,인증서 제거,서명 해제"
 title = "인증서 서명 제거"
 
 [home.removeImage]
 desc = "파일 크기를 줄이기 위해 PDF에서 이미지 제거"
-tags = "제거,삭제,정리"
+tags = "제거,삭제,정리,이미지 제거,이미지 삭제,이미지 제거,그림 제거,사진 삭제,이미지 정리,크기 줄이기,그래픽 제거"
 title = "이미지 제거"
 
 [home.removePages]
 desc = "PDF 문서에서 원하지 않는 페이지를 삭제합니다."
-tags = "삭제,추출,제외"
+tags = "삭제,추출,제외,페이지 제거,페이지 삭제,페이지 제거,페이지 삭제,페이지 제외,페이지 빼내기,페이지 버리기,페이지 드롭"
 title = "제거"
 
 [home.removePassword]
 desc = "PDF 문서에서 비밀번호 보호를 제거합니다."
-tags = "잠금해제"
+tags = "잠금 해제,password 제거,PDF 잠금 해제,복호화,encryption 제거,보호 해제,보호된 PDF 열기,password 제거,보호된 항목 잠금 해제,password 비활성화,보안 제거,소유자 password 제거"
 title = "비밀번호 제거"
 
 [home.reorganizePages]
 desc = "시각적 드래그 앤 드롭으로 PDF 페이지를 재배열, 복제 또는 삭제합니다."
-tags = "재배치,재정렬,정리"
+tags = "재배열,순서 변경,정리,재정리,페이지 이동,페이지 순서,페이지 정렬,페이지 배치,섞기,순서 재지정"
 title = "페이지 재구성"
 
 [home.repair]
 desc = "손상/깨진 PDF를 복구 시도"
-tags = "수정,복원"
+tags = "수정,복원,복구,PDF 수정,깨진 항목 수정,손상된 항목 수정,PDF 복구,손상 복구,깨진 PDF,손상된 PDF,손상된 PDF,복구,오류 수정,PDF가 열리지 않음,PDF를 열 수 없음,PDF 오류,문제 해결,PDF 복원,재구성,손상됨"
 title = "복구"
 
 [home.replaceColor]
 desc = "PDF 문서의 색상을 교체하거나 반전합니다."
-tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
+tags = "색상 바꾸기,색상 반전,색상 교체,색상 교환,색상 변경,반전,네거티브,색상 교환,색상 찾아 바꾸기,색상 변환,색상 변경"
 title = "색상 교체 및 반전"
 
 [home.rotate]
 desc = "PDF를 쉽게 회전합니다."
-tags = "회전,뒤집기,방향"
+tags = "돌리기,뒤집기,방향 지정,회전,방향,가로,세로,90도,180도,시계 방향,반시계 방향,반시계 방향,방향 수정"
 title = "회전"
 
 [home.sanitize]
 desc = "PDF 파일에서 잠재적으로 유해한 요소를 제거합니다."
-tags = "정화,정리,제거"
+tags = "정리,삭제,제거,정리,스크립트 제거,javascript 제거,metadata 제거,metadata 제거,보안,문서 정리,숨겨진 데이터 제거,privacy"
 title = "정화"
 
 [home.scalePages]
 desc = "페이지 및 내용의 크기/배율을 변경합니다."
-tags = "크기 조정,조절,스케일"
+tags = "크기 조정,조정,배율,페이지 크기,페이지 크기 조정,페이지 배율 조정,크기 변경,크기 조정,확대,페이지 축소,페이지에 맞춤,A4,letter size"
 title = "페이지 크기/배율 조정"
 
 [home.scannerImageSplit]
 desc = "스캔한 사진을 감지하여 개별 페이지로 분할"
-tags = "감지,분할,사진"
+tags = "감지,분할,사진,자동 감지,사진 감지,사진 분할,사진 분리,스캔 이미지 분할,여러 사진,자동 분할,사진 감지,이미지 감지,스캔 분리"
 title = "스캔한 사진 감지 및 분할"
 
 [home.sharedSign]
@@ -5747,29 +5833,29 @@ title = "공동 서명"
 
 [home.showJS]
 desc = "PDF에 삽입된 JavaScript 검색 및 표시"
-tags = "javascript,코드,스크립트"
+tags = "javascript,code,script,javascript 표시,JS 표시,javascript 찾기,javascript 감지,javascript 보기,embedded scripts,malware,security,검사,debug"
 title = "JavaScript 보기"
 
 [home.sign]
 desc = "그리기, 텍스트 또는 이미지로 PDF에 서명 추가"
-tags = "서명,사인"
+tags = "서명,자필 서명,e-sign,electronic signature,digital signature,문서 서명,승인,서명 승인,권한 부여,보증,잉크 서명,필기"
 title = "서명"
 
 [home.split]
 desc = "PDF를 여러 문서로 분할"
-tags = "분할,분리,나누기"
+tags = "나누기,분리,분할,split,페이지 추출,페이지 분리,문서 나누기,분리,파일 분리,바인딩 해제,페이지별 분할,챕터별 나누기"
 title = "분할"
 
 [home.splitByChapters]
-tags = "분할,챕터,구조"
+tags = "분할,챕터,구조,챕터별 분할,북마크별 분할,북마크,개요,목차,TOC 분할,챕터 분할,섹션별 나누기"
 title = "챕터별 PDF 분할"
 
 [home.splitBySections]
-tags = "분할,섹션,나누기"
+tags = "분할,섹션,나누기,섹션별 분할,그리드 분할,페이지 나누기,섹션으로 분할,페이지 자르기,그리드 나누기,섹션 분할,가로 분할,세로 분할"
 title = "섹션별로 PDF 분할"
 
 [home.swagger]
-tags = "API,문서,테스트"
+tags = "API,문서,테스트,swagger,API docs,REST API,endpoints,개발자,API reference,API testing,OpenAPI,통합,developer docs"
 title = "API 문서"
 
 [home.timestampPdf]
@@ -5779,12 +5865,12 @@ title = "PDF 타임스탬프"
 
 [home.unlockPDFForms]
 desc = "PDF 문서의 양식 필드 읽기 전용 속성을 제거합니다."
-tags = "잠금해제,활성화,편집"
+tags = "잠금 해제,활성화,편집,양식 잠금 해제,양식 활성화,편집 가능한 양식,읽기 전용 제거,편집 가능하게 만들기,필드 잠금 해제,편집 활성화,양식 필드,채울 수 있음,양식 보호 해제"
 title = "PDF 양식 잠금 해제"
 
 [home.validateSignature]
 desc = "PDF 문서의 디지털 서명과 인증서 검증"
-tags = "검증,확인,인증서"
+tags = "검증,확인,인증서,서명 검증,서명 확인,서명 확인,디지털 서명,인증서 확인,서명 검증,정품,신뢰,서명됨,인증서 확인"
 title = "PDF 서명 검증"
 
 [home.viewPdf]
@@ -5792,7 +5878,7 @@ title = "PDF 보기/편집"
 
 [home.watermark]
 desc = "PDF 문서에 사용자 지정 워터마크를 추가합니다."
-tags = "스탬프,표식,오버레이"
+tags = "스탬프,표시,오버레이,워터마크,브랜딩,로고,confidential,초안,저작권,상표,텍스트 오버레이,이미지 오버레이,배경 텍스트"
 title = "워터마크 추가"
 
 [HTMLToPDF]
@@ -5845,7 +5931,7 @@ addFiles = "파일 추가"
 mobileUpload = "모바일에서 업로드"
 openFromComputer = "컴퓨터에서 열기"
 settingUpSession = "세션 설정 중..."
-uploadFromComputer = "컴퓨터에서 업로드"
+uploadFromComputer = "파일 찾아보기"
 
 [language]
 direction = "ltr"
@@ -5894,7 +5980,7 @@ signIn = "로그인"
 accountCreatedSuccess = "계정이 성공적으로 생성되었습니다! 이제 로그인할 수 있습니다."
 backToSignIn = "로그인 화면으로 돌아가기"
 changePasswordWarning = "첫 로그인 후 비밀번호를 변경하세요"
-createAccount = "Create an account"
+createAccount = "계정 만들기"
 credentialsUpdated = "자격 증명이 업데이트되었습니다. 다시 로그인하세요."
 defaultCredentials = "기본 로그인 정보"
 email = "이메일"
@@ -5927,6 +6013,7 @@ signin = "로그인"
 signingIn = "로그인 중..."
 signInWith = "다음으로 로그인"
 signInWithProvider = "{{provider}}로 로그인"
+ssoRedirectFailed = "SSO 리디렉션 실패"
 title = "로그인"
 unexpectedError = "예기치 않은 오류: {{message}}"
 updatePassword = "비밀번호 업데이트"
@@ -5949,7 +6036,7 @@ goToFileEditor = "파일 편집기로 이동"
 submit = "병합"
 tags = "병합,페이지 작업,백엔드,서버 사이드"
 title = "병합"
-viewerModeHint = "병합에는 2개 이상의 파일이 필요합니다. 파일 편집기로 이동하여 선택하세요."
+viewerModeHint = "병합에는 2개 이상의 파일이 필요합니다. 파일 편집기로 이동해 파일을 추가하세요."
 
 [merge.error]
 failed = "PDF를 병합하는 동안 오류가 발생했습니다."
@@ -5975,7 +6062,7 @@ title = "설정"
 ascending = "오름차순"
 dateModified = "수정 날짜"
 descending = "내림차순"
-description = "파일은 선택한 순서대로 병합됩니다. 아래에서 드래그하여 재정렬하거나 정렬하세요."
+description = "파일은 표시된 순서대로 병합됩니다. 드래그하여 순서를 바꾸거나 아래에서 정렬하세요."
 filename = "파일 이름"
 label = "정렬 기준"
 sort = "정렬"
@@ -6029,34 +6116,34 @@ uploadWithCount = "업로드 ({{total}})"
 validating = "세션 검증 중..."
 
 [mobileSign]
-clear = "Clear"
+clear = "지우기"
 drawingArea = "서명 그리기 영역"
-invalidSession = "Session expired"
-invalidSessionMessage = "This QR code is no longer valid. Open the Sign tool on your computer and scan the new code."
-penSizeLabel = "Pen size"
-send = "Send to computer"
-sendAnother = "Send another signature"
-sendError = "Could not send the signature. Check the connection and try again."
-sentMessage = "Signature sent to your computer. You can send another or close this page."
-tabsLabel = "Signature source"
-undo = "Undo"
-validating = "Checking session…"
+invalidSession = "세션이 만료되었습니다"
+invalidSessionMessage = "이 QR code는 더 이상 유효하지 않습니다. 컴퓨터에서 서명 도구를 열고 새 코드를 스캔하세요."
+penSizeLabel = "펜 크기"
+send = "컴퓨터로 보내기"
+sendAnother = "다른 서명 보내기"
+sendError = "서명을 보낼 수 없습니다. 연결을 확인하고 다시 시도하세요."
+sentMessage = "서명이 컴퓨터로 전송되었습니다. 다른 서명을 보내거나 이 페이지를 닫을 수 있습니다."
+tabsLabel = "서명 소스"
+undo = "실행 취소"
+validating = "세션 확인 중…"
 
 [mobileSign.photo]
-fromGallery = "From gallery"
-hint = "Photograph a signature on white paper, or choose an existing image."
-invalidType = "Please choose an image file."
+fromGallery = "갤러리에서"
+hint = "흰 종이에 서명을 촬영하거나 기존 이미지를 선택하세요."
+invalidType = "이미지 파일을 선택하세요."
 previewAlt = "서명"
-takePhoto = "Take a photo"
+takePhoto = "사진 찍기"
 
 [mobileSign.tab]
-draw = "Draw"
-photo = "Photo"
-type = "Type"
+draw = "그리기"
+photo = "사진"
+type = "입력"
 
 [mobileSign.type]
-placeholder = "Your name"
-previewPlaceholder = "Signature preview"
+placeholder = "이름"
+previewPlaceholder = "서명 미리보기"
 
 [mobileUpload]
 description = "스캔하여 사진을 업로드하세요. 이미지는 자동으로 PDF로 변환됩니다."
@@ -6064,8 +6151,8 @@ descriptionNoConvert = "모바일 기기에서 사진을 스캔해 업로드하�
 error = "연결 오류"
 expiryWarning = "세션 만료 임박"
 expiryWarningMessage = "이 QR 코드는 {{seconds}}초 후 만료됩니다. 새 코드가 자동으로 생성됩니다."
-filesReceived_one = "{{count}} file received"
-filesReceived_other = "{{count}} files received"
+filesReceived_one = "{{count}}개 파일 수신됨"
+filesReceived_other = "{{count}}개 파일 수신됨"
 instructions = "휴대폰 카메라로 스캔하세요. 이미지는 자동으로 PDF로 변환됩니다."
 instructionsNoConvert = "휴대폰 카메라로 스캔해 파일을 업로드하세요."
 pollingError = "파일 확인 중 오류"
@@ -6077,21 +6164,21 @@ tags = "멀티 도구,다중 작업,UI,클릭 드래그,프론트엔드,클라�
 title = "PDF 멀티 도구"
 
 [navFooter]
-openEditor = "Open PDF Editor"
-openProcessor = "Open PDF Processor"
+openEditor = "PDF Editor 열기"
+openProcessor = "PDF Processor 열기"
 
 [navFooter.credits]
-count = "{{remaining}} of {{total}}"
-label = "Free credits"
+count = "{{total}}개 중 {{remaining}}개"
+label = "무료 크레딧"
 
 [notifications]
 adoptFailed = "문서의 잠금이 해제되었지만 여기에서 열 수 없습니다. 도구를 직접 사용해 보세요."
-empty = "보고할 내용이 없습니다."
+empty = "모두 확인했습니다."
 handoffUnavailable = "이 브라우저는 처리기가 문서를 편집기로 전달하는 것을 허용하지 않습니다. 대신 편집기에서 여세요."
 inSmartFolder = "이 문서는 스마트 폴더에 있으므로 여기서가 아니라 서버에서 처리됩니다."
 inSmartFolderNamed = "{{name}}은(는) 스마트 폴더에 있으므로 여기서가 아니라 서버에서 처리됩니다."
-noDocumentLinked = "이 실패는 특정 문서와 연결되어 있지 않아 여기서 열 항목이 없습니다."
-notOnThisDevice = "이 문서는 이 장치에 없으므로 여기서 열 수 없습니다."
+noDocumentLinked = "이 실패는 특정 문서와 연결되어 있지 않아 여기서 열거나 다시 시도할 수 없습니다."
+notOnThisDevice = "이 문서는 이 기기에 없으므로 여기서 열거나 다시 시도할 수 없습니다."
 occurrences = "{{count}}회"
 open = "알림"
 repairAdoptFailed = "문서가 복구되었지만 여기에서 열 수 없습니다. Repair 도구를 직접 사용해 보세요."
@@ -6127,32 +6214,32 @@ message = "이 창을 닫고 Stirling PDF로 돌아가도 됩니다."
 title = "인증 성공"
 
 [oauthConsent]
-approve = "Allow access"
-approving = "Allowing..."
-decisionFailed = "Could not submit your decision. Please try again."
-deny = "Deny"
-denying = "Denying..."
+approve = "접근 허용"
+approving = "허용 중..."
+decisionFailed = "결정을 제출할 수 없습니다. 다시 시도하세요."
+deny = "거부"
+denying = "거부 중..."
 loadFailed = "This authorisation request is invalid or has expired. Close this tab and try connecting again from the app."
 loading = "Loading authorisation request..."
 missingId = "Missing authorisation request. Start the connection from your app and try again."
-redirecting = "Returning you to the app..."
-requesting = "{{app}} wants to access your Stirling PDF account"
-scopesIntro = "This will allow {{app}} to:"
-signedInAs = "Signed in as {{name}}"
-signInButton = "Sign in to continue"
-signInPrompt = "Sign in to your Stirling PDF account to continue connecting the app."
+redirecting = "앱으로 돌아가는 중..."
+requesting = "{{app}}이(가) Stirling PDF 계정에 접근하려고 합니다"
+scopesIntro = "이렇게 하면 {{app}}이(가) 다음을 할 수 있습니다:"
+signedInAs = "{{name}}(으)로 로그인됨"
+signInButton = "계속하려면 로그인"
+signInPrompt = "앱 연결을 계속하려면 Stirling PDF 계정에 로그인하세요."
 title = "Authorise access"
-unknownApp = "A third-party application"
+unknownApp = "타사 애플리케이션"
 
 [oauthConsent.access]
-actAsYou = "Act as you - everything {{app}} does runs under your account and counts towards your usage"
-tools = "Use your Stirling PDF tools on your behalf - convert, edit, sign, secure and process your documents"
+actAsYou = "사용자 대신 작업 - {{app}}이(가) 수행하는 모든 작업은 사용자 계정에서 실행되며 사용량에 포함됩니다"
+tools = "사용자 대신 Stirling PDF 도구 사용 - 문서 변환, 편집, 서명, 보안 및 처리"
 
 [oauthConsent.scope]
-email = "See your email address"
-openid = "Confirm your identity"
-phone = "See your phone number"
-profile = "See your basic profile information"
+email = "Email 주소 보기"
+openid = "신원 확인"
+phone = "전화번호 보기"
+profile = "기본 프로필 정보 보기"
 
 [ocr]
 desc = "스캔을 정리하고 PDF 내 이미지에서 텍스트를 감지하여 다시 텍스트로 추가합니다."
@@ -6244,12 +6331,12 @@ text = "텍스트 출력 형식을 선택하세요:"
 title = "출력"
 
 [onboarding]
-activeFiles = "<strong>활성 파일</strong> 보기에는 도구에 로드한 모든 PDF가 표시되며, 처리할 파일을 선택할 수 있습니다."
-allTools = "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools."
+activeFiles = "<strong>활성 파일</strong> 보기는 도구에 로드한 모든 PDF를 표시합니다."
+allTools = "여기는 사용 가능한 모든 PDF 도구를 찾아보고 선택할 수 있는 <strong>도구</strong> 패널입니다."
 close = "닫기"
 cropSettings = "이제 자르려는 파일을 선택했으므로, 자르기 도구를 구성하여 PDF를 자를 영역을 지정할 수 있습니다."
-dialogLabel = "Onboarding"
-fileCheckbox = "파일을 클릭하면 처리 대상으로 선택됩니다. 배치 작업을 위해 여러 파일을 선택할 수 있습니다."
+dialogLabel = "온보딩"
+fileCheckbox = "작업대의 파일이 처리 대상으로 선택됩니다. 왼쪽 파일 사이드바를 사용해 일괄 작업용으로 여러 파일을 선택할 수 있습니다."
 fileReplacement = "수정된 파일은 워크벤치에서 원본 파일을 자동으로 대체하므로, 더 많은 도구로 쉽게 이어서 작업할 수 있습니다."
 filesButton = "빠른 액세스 막대의 <strong>파일</strong> 버튼을 사용하면 도구로 처리할 PDF를 업로드할 수 있습니다."
 fileSources = "여기에서 새 파일을 업로드하거나 최근 파일에 접근할 수 있습니다. 투어에서는 샘플 파일을 사용하겠습니다."
@@ -6262,7 +6349,7 @@ selectCropTool = "도구 사용 방법을 보여주기 위해 <strong>자르기<
 stepOf = "{{total}}단계 중 {{current}}단계"
 toolInterface = "여기가 <strong>자르기</strong> 도구 인터페이스입니다. 아직 작업할 PDF 파일을 추가하지 않았기 때문에 볼 내용이 많지 않습니다."
 workbench = "여기는 <strong>워크벤치</strong>입니다. PDF를 보고 편집하는 주요 영역입니다."
-wrapUp = "이제 준비 완료입니다! 앱의 주요 영역과 사용 방법을 살펴보았습니다. 언제든지 <strong>도움말</strong> 버튼을 클릭하여 이 투어를 다시 볼 수 있습니다."
+wrapUp = "준비가 완료되었습니다! 이 투어는 언제든 다시 볼 수 있습니다. <strong>설정</strong>을 열고 도움말 아래 <strong>투어</strong> 섹션에서 찾으세요."
 
 [onboarding.buttons]
 back = "뒤로"
@@ -6336,20 +6423,20 @@ cta = "Processor 확인하기"
 title = "Stirling Processor 확인하기"
 
 [onboarding.saas.freeEditor]
-freeLine = "The editor is now <free>completely free</free>."
-premium = "We've added loads of new features, including <strong>Policies</strong> and <strong>Agent Chat</strong>."
-title = "Welcome to Stirling"
+freeLine = "편집기가 이제 <free>완전히 무료</free>입니다."
+premium = "<strong>정책</strong> 및 <strong>Agent Chat</strong>을 포함한 많은 새 기능을 추가했습니다."
+title = "Stirling에 오신 것을 환영합니다"
 
 [onboarding.saas.team]
-addButton = "Add"
-createBody = "Work on documents together: teammates share files, automations and your plan. Add the first member by email to create your team."
-createTitle = "Create your team"
+addButton = "추가"
+createBody = "문서를 함께 작업하세요: 팀원은 파일, 자동화 및 플랜을 공유합니다. Email로 첫 멤버를 추가해 팀을 만드세요."
+createTitle = "팀 만들기"
 inviteBody = "Everyone on your team shares files, automations and your plan. Add teammates by email and they'll get an invitation."
-inviteTitle = "Invite members to your team"
+inviteTitle = "팀에 멤버 초대"
 
 [onboarding.saas.usage]
-body = "Automations, AI and API requests draw from your free allowance. Manual editing never counts against it."
-title = "Your free Processor allowance"
+body = "자동화, AI 및 API 요청은 무료 허용량에서 차감됩니다. 수동 편집은 절대 포함되지 않습니다."
+title = "무료 Processor 허용량"
 
 [onboarding.securityCheck]
 message = "애플리케이션에 최근 큰 변경이 있었습니다. 서버 관리자의 확인이 필요할 수 있습니다. 계속하려면 본인의 역할을 확인하세요."
@@ -6360,9 +6447,9 @@ title = "보안 검사"
 
 [onboarding.serverLicense]
 freeBody = "당사의 <strong>Open-Core</strong> 라이선스에는 <strong>OAuth SSO</strong>와 최대 <strong>{{freeTierLimit}}</strong>명의 사용자 이용이 무료로 포함됩니다. 중단 없이 확장하려면 월 $99에 <strong>100명의 사용자</strong>를 지원하는 Stirling Team 플랜을 권장합니다."
-freeTitle = "서버 라이선스"
-overLimitBody = "당사의 라이선스는 서버당 무료로 최대 <strong>{{freeTierLimit}}</strong>명의 사용자를 허용합니다. 현재 <strong>{{overLimitUserCopy}}</strong>명의 Stirling 사용자가 있습니다. 중단 없이 계속 사용하려면 Stirling Server 플랜으로 업그레이드하세요 - <strong>무제한 좌석</strong>, PDF 텍스트 편집, 전체 관리자 제어 제공, $99/서버/월."
-overLimitTitle = "서버 라이선스 필요"
+freeTitle = "Team plan"
+overLimitBody = "라이선스는 최대 <strong>{{freeTierLimit}}</strong>명의 사용자를 무료로 허용합니다. 현재 <strong>{{overLimitUserCopy}}</strong>명의 Stirling 사용자가 있습니다. 중단 없이 계속하려면 Stirling Team plan으로 업그레이드하세요 - <strong>100명 사용자</strong>, PDF 텍스트 편집, 전체 관리자 제어를 월 $99에 제공합니다."
+overLimitTitle = "Team plan 필요"
 seePlans = "요금제 보기 →"
 upgrade = "지금 업그레이드 →"
 
@@ -6506,7 +6593,7 @@ working = "소유권 확인 및 업데이트 중..."
 yourCloudAccess = "팀 멤버가 되며 소유자 권한을 잃게 됩니다."
 
 [pageEdit]
-deselectAll = "모두 선택 해제"
+deselectAll = "없음"
 selectAll = "모두 선택"
 
 [pageEditor]
@@ -6523,6 +6610,32 @@ moveRight = "오른쪽으로 이동"
 rotateLeft = "왼쪽으로 회전"
 rotateRight = "오른쪽으로 회전"
 splitAfter = "뒤에서 분할"
+
+[pageEditor.commands]
+addSplitAt = "위치 {{position}}에 분할 추가"
+addSplits_one = "{{count}}개 분할 추가"
+addSplits_other = "{{count}}개 분할 추가"
+deletePages_one = "{{count}}개 페이지 삭제"
+deletePages_other = "{{count}}개 페이지 삭제"
+insertFiles_one = "{{page}}페이지 뒤에 {{count}}개 파일 삽입"
+insertFiles_other = "{{page}}페이지 뒤에 {{count}}개 파일 삽입"
+insertPageBreaks_one = "{{count}}개 페이지 나누기 삽입"
+insertPageBreaks_other = "{{count}}개 페이지 나누기 삽입"
+insertPageBreaksAll = "모든 페이지 뒤에 페이지 나누기 삽입"
+removeAllSplits = "모든 분할 제거"
+removeSplitAt = "위치 {{position}}의 분할 제거"
+removeSplits_one = "{{count}}개 분할 제거"
+removeSplits_other = "{{count}}개 분할 제거"
+reorderPages = "페이지 순서 변경"
+rotatePageLeft = "페이지 왼쪽으로 회전"
+rotatePageRight = "페이지 오른쪽으로 회전"
+rotatePagesLeft_one = "{{count}}개 페이지 왼쪽으로 회전"
+rotatePagesLeft_other = "{{count}}개 페이지 왼쪽으로 회전"
+rotatePagesRight_one = "{{count}}개 페이지 오른쪽으로 회전"
+rotatePagesRight_other = "{{count}}개 페이지 오른쪽으로 회전"
+splitAllPages = "모든 페이지 분할"
+toggleSplits_one = "{{count}}개 분할 위치 전환"
+toggleSplits_other = "{{count}}개 분할 위치 전환"
 
 [pageEditor.emptyState]
 body = "파일을 추가하여 페이지 편집을 시작하세요"
@@ -6705,115 +6818,115 @@ bullet1 = "<strong>all</strong> → 모든 페이지 선택"
 title = "특수 키워드"
 
 [payg.activity]
-docs = "docs"
-empty = "No billable activity yet this period."
-subtitle = "Only AI and automation draw from your budget. Everyday tools are free and aren't listed here."
-title = "Recent billable activity"
+docs = "문서"
+empty = "이 기간에는 아직 청구 가능한 활동이 없습니다."
+subtitle = "AI 및 자동화만 예산에서 차감됩니다. 일상 도구는 무료이며 여기에 표시되지 않습니다."
+title = "최근 청구 가능 활동"
 
 [payg.cap]
-amount = "Cap amount"
-custom = "Custom"
-docsEstimate = "≈ {{docs}} processed PDFs / month"
-docsRate = "at {{rate}} / PDF"
-noCapDesc = "Usage is billed without an upper limit. You can re-enable a cap at any time."
-noCapLabel = "No cap"
-noneShort = "No cap"
-perMonth = "/ month"
-save = "Update cap"
-subtitle = "Set your maximum spend. We convert this to PDFs using the current price tier."
-title = "Monthly spending cap"
+amount = "한도 금액"
+custom = "사용자 지정"
+docsEstimate = "≈ 월 {{docs}} 크레딧"
+docsRate = "크레딧당 {{rate}}"
+noCapDesc = "상한 없이 사용량이 청구됩니다. 언제든 한도를 다시 활성화할 수 있습니다."
+noCapLabel = "한도 없음"
+noneShort = "한도 없음"
+perMonth = "/월"
+save = "한도 업데이트"
+subtitle = "최대 지출액을 설정하세요. 현재 가격 등급을 사용해 이를 PDF로 변환합니다."
+title = "월간 지출 한도"
 
 [payg.checkout]
-connecting = "Connecting to Stripe…"
-errorTitle = "Stripe error"
+connecting = "Stripe에 연결 중…"
+errorTitle = "Stripe 오류"
 
 [payg.checkout.error]
-startFailed = "Couldn't start checkout session"
+startFailed = "checkout 세션을 시작할 수 없습니다"
 
 [payg.checkout.mock]
-backend = "Backend is in mock mode; no real Stripe session was created."
-continue = "Continue with mock subscription"
-noKey = "VITE_STRIPE_PUBLISHABLE_KEY is unset. Real iframe mounts here once configured."
-title = "Stripe Embedded Checkout (mock mode)"
+backend = "Backend가 mock 모드입니다. 실제 Stripe 세션이 생성되지 않았습니다."
+continue = "mock 구독으로 계속"
+noKey = "VITE_STRIPE_PUBLISHABLE_KEY가 설정되지 않았습니다. 구성되면 실제 iframe이 여기에 마운트됩니다."
+title = "Stripe Embedded Checkout (mock 모드)"
 
 [payg.confirm]
 bodyWithAllowance = "이제 팀은 {{limit}}개의 무료 PDF를 초과해 자동화, AI, API 작업을 실행할 수 있습니다."
-capValue = "{{symbol}}{{amount}} / month"
-noCap = "No cap"
-note = "You can change your cap, cancel, or open the Stripe customer portal any time from this page."
-summaryLabel = "Monthly ceiling"
-title = "Welcome to the Processor plan"
+capValue = "월 {{symbol}}{{amount}}"
+noCap = "한도 없음"
+note = "이 페이지에서 언제든 한도를 변경하거나, 취소하거나, Stripe 고객 포털을 열 수 있습니다."
+summaryLabel = "월간 상한"
+title = "Processor plan에 오신 것을 환영합니다"
 
 [payg.docHelp]
-billable = "Only automation runs, AI tools, and API calls count. Manual tools in the editor are always free."
-chains = "Running the same file through several steps of one automation counts it once, not once per step."
-perFile = "Each file you process counts as one PDF. Very long or very large files can count as more than one."
-refunds = "If a job fails on its first step, the PDF is credited back automatically."
-toggle = "What counts as a PDF?"
+billable = "자동화 실행, AI 도구 및 API 호출만 포함됩니다. 편집기의 수동 도구는 항상 무료입니다."
+chains = "같은 파일을 하나의 자동화에서 여러 단계로 실행해도 단계마다가 아니라 한 번만 계산됩니다."
+perFile = "처리하는 각 파일은 하나의 PDF로 계산됩니다. 매우 길거나 매우 큰 파일은 하나 이상으로 계산될 수 있습니다."
+refunds = "작업이 첫 단계에서 실패하면 PDF가 자동으로 다시 적립됩니다."
+toggle = "무엇이 PDF로 계산되나요?"
 
 [payg.error]
-body = "We couldn't reach the billing service. Refresh the page to try again."
-title = "Couldn't load your plan"
+body = "청구 서비스에 연결할 수 없습니다. 페이지를 새로고침하여 다시 시도하세요."
+title = "플랜을 불러올 수 없습니다"
 
 [payg.free.cta]
-benefit1Body = "chain tools, schedule runs, batch process"
-benefit1Title = "Automation pipelines"
+benefit1Body = "도구 체인, 실행 예약, 일괄 처리"
+benefit1Title = "자동화 pipelines"
 benefit2Body = "summarise, classify, redact, AI-OCR"
-benefit2Title = "AI tools"
-benefit3Body = "call any Stirling endpoint programmatically"
-benefit3Title = "API access"
-button = "Turn on Processor →"
-reassurance = "No minimum · Set a $0 cap to test · Cancel anytime"
+benefit2Title = "AI 도구"
+benefit3Body = "모든 Stirling endpoint를 프로그래밍 방식으로 호출"
+benefit3Title = "API 접근"
+button = "Processor 켜기 →"
+reassurance = "최소 금액 없음 · 테스트하려면 $0 한도 설정 · 언제든 취소"
 subtitleWithAllowance = "자동화, AI, API를 사용해 {{limit}}개의 무료 PDF 이후에도 계속 사용하세요. 월별 한도를 설정해 관리할 수 있습니다."
-title = "Turn on the Processor plan"
+title = "Processor plan 켜기"
 
 [payg.free.editor]
-eyebrow = "Editor plan · Always free"
+eyebrow = "Editor plan · 항상 무료"
 
 [payg.free.header]
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
-freeTitle = "Unlimited PDF editing"
+freeBody = "보기, 편집, 병합, 분할, 서명, 워터마크, 압축, 변환 및 수동 OCR — 어디서 실행하든 원하는 만큼 사용하세요."
+freeTitle = "무제한 PDF 편집"
 
 [payg.free.hero]
-barAria = "Free PDFs remaining"
-capSuffix = "/ {{limit}} free PDFs"
-metaCategories = "Automation · AI · API requests"
+barAria = "남은 무료 PDF"
+capSuffix = "이번 달 무료 PDF {{limit}}개 중 남음"
+metaCategories = "자동화 · AI · API 요청"
 
 [payg.free.member]
-ownerOnly = "Only your team owner can turn on Processor. Manual tools stay free for you to use as much as you like."
+ownerOnly = "팀 소유자만 Processor를 켤 수 있습니다. 수동 도구는 원하는 만큼 무료로 사용할 수 있습니다."
 
 [payg.free.proc]
-eyebrow = "Processor plan · metered"
+eyebrow = "Processor plan · 종량제"
 
 [payg.free.state]
-approachingLimit = "Approaching limit"
-limitReached = "Limit reached"
-plentyLeft = "Plenty left"
+approachingLimit = "한도에 가까움"
+limitReached = "한도 도달"
+plentyLeft = "충분히 남음"
 
 [payg.gates]
-ai = "AI tools (AI Create, suggestions, AI-OCR)"
-automation = "Automations & pipelines"
-client = "Browser-only tools (viewer, page editor, file management)"
-offsite = "Server tools (compress, OCR, convert, watermark…)"
-pauses = "pauses at cap"
-title = "What happens when the cap is reached"
+ai = "AI 도구 (AI Create, 제안, AI-OCR)"
+automation = "자동화 및 pipelines"
+client = "브라우저 전용 도구 (뷰어, 페이지 편집기, 파일 관리)"
+offsite = "서버 도구 (압축, OCR, 변환, 워터마크…)"
+pauses = "한도에서 일시 중지"
+title = "한도에 도달하면 어떻게 되나요"
 
 [payg.header]
 eyebrow = "Processor plan · {{start}} – {{end}}"
-freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
-freeLabel = "Always free"
-freeTitle = "Unlimited PDF editing"
-meterBody = "{{limit}} free PDFs to start, then billed per PDF up to your cap."
-meterLabel = "Metered"
-meterTitle = "Automation · AI · API"
+freeBody = "보기, 편집, 병합, 분할, 서명, 워터마크, 압축, 변환 및 수동 OCR — 어디서 실행하든 원하는 만큼 사용하세요."
+freeLabel = "항상 무료"
+freeTitle = "무제한 PDF 편집"
+meterBody = "시작 시 무료 PDF {{limit}}개, 이후 한도까지 PDF당 청구됩니다."
+meterLabel = "종량제"
+meterTitle = "자동화 · AI · API"
 
 [payg.member]
-askLeader = "Only your team owner can change the cap."
+askLeader = "팀 소유자만 한도를 변경할 수 있습니다."
 
 [payg.members]
-docs = "PDFs"
-subtitle = "Billable PDFs each teammate has processed this period."
-title = "Team member usage"
+docs = "PDF"
+subtitle = "이 기간 동안 각 팀원이 처리한 청구 가능 PDF입니다."
+title = "팀 멤버 사용량"
 
 [payg.prepaid]
 chip = "선불 연간"
@@ -6838,8 +6951,8 @@ healthy = "충분히 남음"
 low = "부족해지는 중"
 
 [payg.role]
-leader = "Team owner"
-member = "Member"
+leader = "팀 소유자"
+member = "멤버"
 
 [payg.signupRequired]
 aiPromo = "AI로 PDF를 만들고, 편집하고, 질문하기"
@@ -6854,85 +6967,86 @@ processorTitle = "계정을 만들어 Stirling의 최고의 기능을 잠금 해
 readerLabel = "PDF Reader"
 
 [payg.spendCapMeter]
-barAria = "Spend against cap"
-capSuffix = "/ {{amount}} cap"
-metaCategories = "Automation · AI · API spend"
-resets = "Resets each billing period"
+barAria = "한도 대비 지출"
+capSuffix = "/ {{amount}} 한도"
+metaCategories = "자동화 · AI · API 지출"
+resets = "각 청구 기간마다 재설정"
 
 [payg.state]
-degraded = "Cap reached"
-full = "Healthy"
-warned = "Approaching cap"
+degraded = "한도 도달"
+full = "정상"
+warned = "한도에 가까움"
 
 [payg.stripe]
-open = "Open billing portal"
-subtitle = "Receipts, invoices, payment method, billing currency."
-title = "Manage billing in Stripe"
+open = "청구 포털 열기"
+subtitle = "영수증, 청구서, 결제 수단, 청구 통화."
+title = "Stripe에서 청구 관리"
 
 [payg.stripe.toast.unavailable]
-body = "Billing portal isn't available right now. Try again in a moment."
-title = "Billing portal unavailable"
+body = "현재 청구 포털을 사용할 수 없습니다. 잠시 후 다시 시도하세요."
+title = "청구 포털을 사용할 수 없음"
 
 [payg.upgrade]
-backAria = "Back"
-closeAria = "Close"
+backAria = "뒤로"
+closeAria = "닫기"
 
 [payg.upgrade.button]
-cancel = "Cancel"
-continue = "Continue →"
-finish = "Finish"
+cancel = "취소"
+continue = "계속 →"
+finish = "완료"
 
 [payg.upgrade.cap]
-help = "We'll never charge above this. Set $0 if you want to keep everything free while testing."
-title = "Set your monthly spend ceiling"
-usdNote = "Estimated in USD. You can adjust your cap any time after subscribing, in your own currency."
+help = "이 금액을 초과하여 청구하지 않습니다. 테스트 중 모든 것을 무료로 유지하려면 $0로 설정하세요."
+title = "월간 지출 상한 설정"
+usdNote = "USD로 추정됩니다. 구독 후 언제든 본인 통화로 한도를 조정할 수 있습니다."
 
 [payg.upgrade.checkout]
-capValue = "{{symbol}}{{amount}} / month"
-edit = "Edit"
-help = "Stripe handles your card details. Stirling never sees them."
-loading = "Loading checkout…"
-noCap = "No cap"
-title = "Add your payment method"
+capValue = "월 {{symbol}}{{amount}}"
+edit = "편집"
+help = "Stripe가 카드 정보를 처리합니다. Stirling은 이를 절대 보지 않습니다."
+loading = "checkout 로드 중…"
+noCap = "한도 없음"
+title = "결제 수단 추가"
 
 [payg.upgrade.help]
 aiBody = "summarise, classify, redact, AI-OCR"
-aiTitle = "AI tools"
-apiBody = "programmatic access to any Stirling endpoint"
-apiTitle = "API calls"
-automationBody = "chained tools or scheduled runs that don't need clicks"
-automationTitle = "Automation pipelines"
+aiTitle = "AI 도구"
+apiBody = "모든 Stirling endpoint에 대한 프로그래밍 방식 접근"
+apiTitle = "API 호출"
+automationBody = "클릭이 필요 없는 연결된 도구 또는 예약된 실행"
+automationTitle = "자동화 pipelines"
 footnoteUnlimited = "수동 도구(보기, 편집, 병합, 분할, 워터마크, 압축, 수동 OCR)는 포함된 크레딧을 사용한 후에도 항상 무료입니다. 차이는 클릭하는 위치가 아니라 작업 유형입니다."
-title = "What we count toward billing"
+title = "청구에 포함되는 항목"
 
 [payg.upgrade.promise]
-body = "You only pay for automation pipelines, AI tools, and API calls, the work that goes beyond a single click. Edit, merge, split, sign, compress as much as you want, no charge."
-highlight = "Manual tools stay free, always."
+body = "자동화 pipelines, AI 도구 및 API 호출, 즉 단일 클릭을 넘어서는 작업에 대해서만 비용을 지불합니다. 편집, 병합, 분할, 서명, 압축은 원하는 만큼 무료입니다."
+highlight = "수동 도구는 항상 무료입니다."
 
 [payg.upgrade.steps]
-cap = "Set monthly ceiling"
-payment = "Add payment method"
+cap = "월간 상한 설정"
+payment = "결제 수단 추가"
 
 [payg.upgrade.title]
-confirm = "You're subscribed"
-default = "Upgrade to Processor plan"
+confirm = "구독되었습니다"
+default = "Processor plan으로 업그레이드"
 
 [payg.usage]
-breakdown = "AI {{ai}} • Automation {{automation}} • API {{api}}"
-capLine = "{{cap}}/mo cap"
-estBill = "≈ {{amount}} so far this period"
-firstFree = "First {{free}} free"
-noCap = "No monthly cap"
-ofLimitProcessed = "/ {{limit}} PDFs processed"
-processed = "PDFs processed"
-resetsIn = "Resets in {{days}} days"
-resetsTomorrow = "Resets tomorrow"
-thisPeriod = "This billing period"
+breakdown = "AI {{ai}} • 자동화 {{automation}} • API {{api}}"
+capLine = "월 {{cap}} 한도"
+estBill = "≈ 이 기간 현재 {{amount}}"
+firstFree = "처음 {{free}}개 무료"
+noCap = "월간 한도 없음"
+ofLimitProcessed = "/ {{limit}}개 PDF 처리됨"
+processed = "처리된 PDF"
+resetsIn = "{{days}}일 후 재설정"
+resetsTomorrow = "내일 재설정"
+thisPeriod = "현재 청구 기간"
 
 [payment]
 billingPeriod = "청구 기간"
 cancelTeamChange = "현재 플랜 유지"
 canCloseWindow = "이제 이 창을 닫아도 됩니다."
+createSessionFailed = "checkout 세션 생성 실패"
 error = "결제 오류"
 generatingLicense = "라이선스 키를 생성하는 중..."
 licenseActivated = "라이선스가 활성화되었습니다! 라이선스 키가 저장되었습니다. 등록된 이메일 주소로 확인 메일을 보냈습니다."
@@ -6948,6 +7062,7 @@ monthly = "월간"
 paymentCanceled = "결제가 취소되었습니다. 결제는 청구되지 않았습니다."
 perMonth = "/월"
 perUserBlock = "사용자 100명당"
+planPeriodUnavailable = "선택한 플랜 기간을 사용할 수 없습니다"
 preparing = "결제 준비 중..."
 redirecting = "보안 결제 페이지로 이동 중..."
 success = "결제 성공!"
@@ -7065,7 +7180,7 @@ title = "페이지 정리"
 7 = "첫 페이지 제거"
 8 = "마지막 페이지 제거"
 9 = "첫 페이지와 마지막 페이지 제거"
-_value = "모드"
+_value = "정리 모드"
 
 [pdfOrganiser.mode.desc]
 BOOKLET_SORT = "소책자 인쇄를 위한 페이지 배열(마지막, 첫 번째, 두 번째, 끝에서 두 번째 …)."
@@ -7085,8 +7200,8 @@ download = "다운로드"
 downloadTooltip = "편집한 PDF를 저장하고 다운로드"
 save = "PDF 저장"
 saveTooltip = "작업 공간의 파일에 변경 사항 적용 ({{shortcut}})"
-tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
-title = "PDF JSON 편집기"
+tags = "텍스트 편집,텍스트 수정,텍스트 변경,콘텐츠 편집,텍스트 업데이트,다시 쓰기,수정,개정,수정 표시,개정,텍스트 편집기,콘텐츠 편집기"
+title = "PDF Text Editor"
 unsaved = "(저장되지 않음)"
 workbenchLabel = "편집기"
 
@@ -7094,6 +7209,16 @@ workbenchLabel = "편집기"
 freetext = "주석 텍스트 - 페이지 텍스트가 아니므로 여기에서 편집할 수 없습니다"
 stamp = "스탬프 주석 - 페이지 텍스트가 아니므로 여기에서 편집할 수 없습니다"
 widget = "양식 필드 - 페이지 텍스트가 아니므로 여기에서 편집할 수 없습니다"
+
+[pdfTextEditor.commands]
+edit = "편집"
+mergeRuns_one = "{{count}}개 run을 단락으로 병합"
+mergeRuns_other = "{{count}}개 run을 단락으로 병합"
+setColour = "{{run}}에 색상 설정"
+setOutline = "{{run}}에 윤곽선 설정"
+typeInto = "{{run}}에 입력"
+ungroupParagraph = "단락 {{run}} 그룹 해제"
+wrap = "{{run}} 줄 바꿈"
 
 [pdfTextEditor.discard]
 body = "{{name}}을(를) 열면 편집 중인 문서가 닫힙니다. 저장되지 않은 변경 사항은 손실됩니다."
@@ -7109,6 +7234,9 @@ title = "열려면 PDF를 놓으세요"
 [pdfTextEditor.error]
 decodeImage = "선택한 이미지를 디코딩할 수 없습니다."
 insertImage = "선택한 이미지를 삽입할 수 없습니다."
+
+[pdfTextEditor.externalEdit]
+pngFileType = "PNG 이미지"
 
 [pdfTextEditor.find]
 close = "찾기 표시줄 닫기"
@@ -7184,7 +7312,7 @@ deleteDesc = "선택 항목 제거"
 duplicateDesc = "선택 항목 복제"
 groupDesc = "선택한 run을 하나의 단락으로 그룹화"
 heading = "편집"
-marqueeDesc = "Marquee 다중 선택"
+marqueeDesc = "빈 공간을 드래그해 여러 객체를 선택하세요 (Shift로 추가)"
 moveDesc = "텍스트 run 이동"
 selectAllDesc = "모두 선택"
 shiftClickDesc = "선택에 run 추가 / 제거"
@@ -7211,19 +7339,21 @@ heightHint = "텍스트 상자의 높이는 글자 크기와 줄 수를 따릅�
 image = "이미지"
 images = "이미지"
 manyImages = "이미지 {{count}}개"
+manyShapes = "{{count}}개 도형"
 manyText = "텍스트 · 상자 {{count}}개"
 mixed = "개체 {{count}}개"
 multiGeometry = "위치와 크기를 편집하려면 단일 개체를 선택하세요."
 nothingSelected = "선택된 항목 없음"
-nothingSelectedHint = "여기에서 편집하려면 페이지의 텍스트 또는 이미지를 클릭하세요."
+nothingSelectedHint = "페이지에서 텍스트, 이미지 또는 도형을 클릭해 여기에서 편집하세요."
 oneImage = "이미지"
+oneShape = "도형"
 oneText = "텍스트"
 pages = "페이지"
 tabDocument = "문서"
 tabSelected = "선택됨"
 textBoxes = "텍스트 상자"
 width = "너비"
-widthHint = "텍스트 상자의 너비는 내용과 줄바꿈을 따릅니다."
+widthHint = "텍스트는 너비에 맞게 다시 줄 바꿈됩니다."
 x = "X"
 y = "Y"
 
@@ -7281,6 +7411,9 @@ advanced = "고급"
 find = "문서에서 찾기"
 findTooltip = "찾기 ({{shortcut}})"
 view = "보기"
+
+[pdfTextEditor.shape]
+groupedTitle = "이 PDF의 그룹 일부입니다: 삭제는 가능하지만 이동할 수는 없습니다."
 
 [pdfTextEditor.sidebar]
 addImage = "이미지 추가"
@@ -7340,7 +7473,7 @@ caseUpper = "대문자"
 changeCase = "대소문자 변경"
 changeCaseTooltip = "대소문자 변경(텍스트 run만)"
 delete = "선택 항목 삭제"
-deleteTooltip = "삭제 (Del)"
+deleteTooltip = "삭제 (Del 또는 Backspace)"
 distributeHorizontally = "가로로 분배"
 distributeLabel = "분배 · 개체 3개 이상 필요"
 distributeVertically = "세로로 분배"
@@ -7371,7 +7504,7 @@ unlock = "선택 항목 잠금 해제"
 unlockTooltip = "선택 항목 잠금 해제 - 다시 편집 가능하게 합니다"
 
 [pdfTextEditor.tooltip.alpha]
-text = "이 알파 뷰어는 아직 발전 중입니다. 일부 글꼴, 색상, 투명 효과, 레이아웃 세부사항이 약간 달라질 수 있습니다. 공유 전 생성된 PDF를 꼭 다시 확인하세요."
+text = "이 alpha viewer는 아직 발전 중입니다. 특정 글꼴, 색상, 투명도 효과 및 레이아웃 세부 정보가 약간 달라질 수 있습니다. 공유하기 전에 생성된 PDF를 꼭 다시 확인하세요."
 title = "알파 뷰어"
 
 [pdfTextEditor.tooltip.header]
@@ -7417,7 +7550,7 @@ title = "PDF를 PDF/A로"
 
 [pdfToPDFUA]
 header = "PDF To PDF/UA"
-tags = "accessibility,accessible,tagged,screen reader,wcag,eaa,section 508,conversion"
+tags = "접근성,접근 가능,태그됨,screen reader,wcag,eaa,section 508,변환"
 title = "PDF To PDF/UA"
 
 [pdfToPDFX]
@@ -7435,7 +7568,7 @@ tags = "단일 페이지"
 [pdfToSinglePage]
 description = "이 도구는 PDF의 모든 페이지를 하나의 큰 단일 페이지로 병합합니다. 너비는 원본 페이지와 동일하게 유지되며, 높이는 모든 페이지 높이의 합이 됩니다."
 submit = "단일 페이지로 변환"
-tags = "combine,merge,single,single page,one page,merge to single,combine all,stitch pages,concatenate vertical,long page,poster"
+tags = "결합,병합,단일,단일 페이지,한 페이지,단일로 병합,모두 결합,페이지 이어붙이기,세로 연결,긴 페이지,포스터"
 title = "단일 페이지로 변환"
 
 [pdfToSinglePage.error]
@@ -7487,7 +7620,7 @@ popular = "인기"
 selectPlan = "플랜 선택"
 showComparison = "모든 기능 비교"
 upgrade = "업그레이드"
-withServer = "+ Server 플랜"
+withServer = "+ Team plan"
 
 [plan.api]
 large = "5,000 크레딧"
@@ -7498,7 +7631,7 @@ small = "500 크레딧"
 xsmall = "100 크레딧"
 
 [plan.availablePlans]
-currency = "Billing currency"
+currency = "청구 통화"
 subtitle = "필요에 맞는 요금제를 선택하세요"
 title = "이용 가능한 요금제"
 
@@ -7507,8 +7640,8 @@ highlight1 = "맞춤 가격"
 highlight2 = "전담 지원"
 highlight3 = "최신 기능"
 name = "엔터프라이즈"
-requiresServer = "서버 필요"
-requiresServerMessage = "Enterprise로 업그레이드하기 전에 먼저 Server 플랜으로 업그레이드하세요."
+requiresServer = "Team plan 필요"
+requiresServerMessage = "Enterprise로 업그레이드하기 전에 먼저 Team plan으로 업그레이드하세요."
 
 [plan.feature]
 api = "API 접근"
@@ -7548,10 +7681,10 @@ included = "포함"
 name = "무료"
 
 [plan.freeLimit]
-cta = "View Processor Plan"
-dismiss = "Maybe Later"
-message = "That's your whole free allowance for automation, AI and the API. Seriously impressive! Keep the momentum going for just pennies a day."
-title = "Woah, {{total}} PDFs Processed!"
+cta = "Processor Plan 보기"
+dismiss = "나중에"
+message = "이번 달 자동화, AI 및 API 무료 허용량을 모두 사용했습니다. 정말 인상적입니다! 다음 달에 재설정되거나, 하루 몇 푼으로 지금 흐름을 계속 이어가세요."
+title = "와, {{total}}개 PDF 처리 완료!"
 
 [plan.highlights]
 advancedIntegrations = "고급 통합"
@@ -7580,15 +7713,15 @@ highlight3 = "워터마크 없음"
 name = "프로"
 
 [plan.spendCap]
-cta = "View Spending Limit"
-dismiss = "Not Now"
-message = "You've made the most of this month's cap. That's a load of automation, AI and API work! Bump it up whenever you like to keep going."
-title = "You're on a Roll!"
+cta = "지출 한도 보기"
+dismiss = "지금 안 함"
+message = "이번 달 한도를 최대한 활용했습니다. 자동화, AI 및 API 작업을 많이 하셨네요! 계속 진행하려면 언제든 한도를 올리세요."
+title = "순조롭게 진행 중입니다!"
 
 [plan.static]
 activateLicense = "라이선스 활성화"
 contactToUpgrade = "요금제 업그레이드 또는 맞춤 설정은 문의해 주세요"
-getLicense = "서버 라이선스 받기"
+getLicense = "Team plan 받기"
 monthlyBilling = "월별 결제"
 selectPeriod = "결제 주기 선택"
 upgradeToEnterprise = "엔터프라이즈로 업그레이드"
@@ -7638,7 +7771,7 @@ applying = "{{names}} 적용 중"
 applyingProgress = "{{names}} 적용 중 ({{done}}/{{total}})"
 exportFailureBody = "보안 정책을 적용할 수 없습니다. 파일은 있는 그대로 내보냈습니다."
 exportFailureTitle = "정책 적용 없이 내보냄"
-failureBody = "{{total}}개 중 {{failures}}개 파일을 처리할 수 없어 있는 그대로 내보냈습니다."
+failureBody = "일부 정책을 {{total}}개 파일 중 {{failures}}개에 적용할 수 없습니다."
 failureTitle = "완전한 정책 적용 없이 내보냄"
 printPolicyAppliedBody = "정책을 충족하도록 이 PDF가 업데이트되었습니다. 변경 사항을 확인한 후 다시 인쇄하세요."
 printPolicyAppliedTitle = "인쇄 전에 정책 적용됨"
@@ -7657,10 +7790,10 @@ showCategory = "카테고리 표시"
 account = "계좌 번호(라벨 지정됨)"
 card = "신용/체크카드"
 email = "이메일 주소"
-fieldLabel = "PII to redact"
+fieldLabel = "수정할 PII"
 iban = "IBAN"
 phone = "전화번호"
-placeholder = "Select PII types"
+placeholder = "PII 유형 선택"
 routing = "미국 라우팅 번호(ABA)"
 ssn = "사회보장 번호"
 
@@ -7701,25 +7834,25 @@ pdfa-3b = "PDF/A-3b"
 ownerRequired = "조직 소유자만 이 서버를 연결하거나 연결 해제할 수 있습니다."
 
 [portal.accountLink.card]
-billingNote = "무인 처리는 조직 지갑에 청구됩니다."
+billingNote = "이 서버는 Stirling Cloud에서 팀의 처리 허용량을 공유합니다."
 connectDescription = "이 서버를 연결하여 Stirling Cloud에서 팀의 처리 허용량을 사용하세요."
 disconnectBody = "이 서버는 Stirling Cloud에서 팀의 처리 허용량 사용을 중지합니다. 로컬 파일은 이 서버에 그대로 남습니다. 다시 연결하려면 원래 연결 단계를 따르세요."
 disconnectTitle = "이 인스턴스의 연결을 해제할까요?"
-eyebrow = "계정 연결"
+eyebrow = "이 인스턴스"
 linkButton = "Stirling 계정 연결"
 loading = "계정 연결 확인 중"
 notLinked = "연결되지 않음"
 signedInAs = "다음 계정으로 Stirling Cloud에 로그인됨"
 statusError = "계정 연결을 확인할 수 없습니다"
-title = "이 조직을 Stirling 계정에 연결"
-unlink = "연결 해제"
+title = "Stirling Cloud"
+unlink = "이 인스턴스 연결 해제"
 
 [portal.accountLink.card.error]
-title = "연결할 수 없음"
+title = "연결을 업데이트할 수 없습니다"
 
 [portal.accountLink.card.loginNotConfigured]
 description = "서버 관리자에게 Stirling Cloud 연결을 활성화해 달라고 요청하세요."
-title = "SaaS 로그인이 구성되지 않음"
+title = "계정 연결을 사용할 수 없음"
 
 [portal.accountLink.connect]
 adminRequired = "서버 관리자에게 사용량 및 청구를 열고 더 많은 월간 크레딧을 위해 Stirling 계정을 연결해 달라고 요청하세요. 수동 PDF 도구는 계속 사용할 수 있습니다."
@@ -7807,7 +7940,7 @@ retry = "다시 시도"
 unnamed = "이름 없는 인스턴스"
 
 [portal.accountLink.instances.empty]
-description = "이 조직의 계정을 연결한 다음 자체 호스팅 인스턴스를 등록하면 여기에서 볼 수 있습니다."
+description = "self-hosted 서버를 팀에 연결하면 여기에 표시됩니다."
 otherDescription = "팀에 표시되는 연결된 인스턴스는 이것뿐입니다."
 otherTitle = "다른 연결된 인스턴스 없음"
 title = "연결된 인스턴스 없음"
@@ -7824,28 +7957,28 @@ startFailed = "연결을 시작하기 위해 Stirling에 연결할 수 없습니
 transferPending = "소유권 이전이 보류 중입니다. 설정 → 사용자로 이동하여 완료하거나 취소한 다음 다시 연결해 보세요."
 
 [portal.accountLink.modal.loginNotConfigured]
-after = "호스팅된 Stirling 계정에 대한 앱 내 연결을 활성화하세요."
+after = "돌아왔을 때 이 서버가 연결을 완료할 수 있도록 합니다."
 and = "및"
 before = "설정"
-title = "SaaS 로그인이 구성되지 않음"
+title = "Stirling 연결이 구성되지 않음"
 
 [portal.accountLink.notice]
 openFailed = "브라우저를 열 수 없습니다. 계정을 연결하려면 연결된 서버에서 사용량 및 결제를 여세요."
 
 [portal.accountLink.panel]
-instancesSub = "이 조직에 등록된 모든 자체 호스팅 인스턴스입니다. 자격 증명을 취소하면 무인 액세스가 즉시 차단됩니다."
+instancesSub = "같은 팀에 연결된 self-hosted 서버입니다."
 instancesTitle = "연결된 인스턴스"
 manageCloud = "stirling.com에서 관리"
 otherInstancesSub = "Stirling Cloud에서 같은 팀에 연결된 다른 자체 호스팅 서버입니다."
 otherInstancesTitle = "다른 연결된 인스턴스"
 revokeError = "인스턴스를 취소할 수 없음"
 sessionRequired = "결제 액세스를 갱신하면 연결된 인스턴스가 표시됩니다."
-sub = "무인 처리 비용이 조직 지갑에 청구되도록 이 자체 호스팅 조직을 Stirling 계정에 연결하세요."
+sub = "이 서버와 Stirling Cloud 계정의 연결을 관리합니다."
 
 [portal.accountLink.panel.loadError]
-forbidden = "팀 소유자만 조직의 연결된 인스턴스를 볼 수 있습니다."
-generic = "팀의 연결된 인스턴스를 불러올 수 없습니다. 잠시 후 다시 시도하세요."
-title = "연결된 인스턴스를 불러올 수 없음"
+forbidden = "팀 소유자만 연결된 인스턴스를 관리할 수 있습니다."
+generic = "연결을 확인할 수 없습니다. 다시 시도하세요."
+title = "연결된 인스턴스를 불러올 수 없습니다"
 
 [portal.accountLink.pipelines]
 editorExport = "Editor · 다운로드 전"
@@ -7922,7 +8055,7 @@ title = "1년 선불"
 
 [portal.billing.checkout]
 noClientSecret = "Edge function이 client_secret을 반환하지 않았습니다."
-title = "Processor 플랜 켜기"
+title = "결제 수단 추가"
 
 [portal.billing.checkout.activationSlow]
 body = "결제는 성공했지만 활성화가 평소보다 조금 더 오래 걸리고 있습니다. 자동으로 켜집니다 - 이를 닫으면 곧 여기에 표시됩니다."
@@ -8077,11 +8210,11 @@ noCard = "등록된 카드 없음"
 update = "업데이트"
 
 [portal.billing.pdfsProcessed]
-emptyPeriod = "이번 기간에는 아직 종량제 처리가 없습니다."
+emptyPeriod = "이 기간에는 아직 처리 내역이 없습니다."
 eyebrow = "이번 기간 처리된 PDFs"
-legendValue_one = "{{formatted}} PDFs"
-legendValue_other = "{{formatted}} PDFs"
-segbarAriaLabel = "카테고리별 종량제 PDFs 분할"
+legendValue_one = "{{formatted}}개 PDF"
+legendValue_other = "{{formatted}}개 PDF"
+segbarAriaLabel = "카테고리별 PDF 분할"
 segmentAgentsDesc = "AI agent 작업"
 segmentAgentsLabel = "Agents"
 segmentApiDesc = "직접 API 요청"
@@ -8090,7 +8223,7 @@ segmentAutomationDesc = "자동화 및 파이프라인"
 segmentAutomationLabel = "자동화"
 summary = "{{unique}} 고유 · {{units}} 미터 단위 · PDF당 평균 {{avg}}"
 summaryNoRate = "{{unique}} 고유 · {{units}} 미터 단위"
-unit = "종량제 PDFs"
+unit = "PDF"
 unitsPending_one = "연결된 인스턴스에서 {{units}} 미터 단위 동기화 대기 중"
 unitsPending_other = "연결된 인스턴스에서 {{units}} 미터 단위 동기화 대기 중"
 
@@ -8488,11 +8621,11 @@ label = "Mailgun"
 
 [portal.connections.types.n8n]
 baseUrlPlaceholder = "https://your-n8n/webhook/9f2c-..."
-description = "Hand documents to an n8n workflow, and take back whatever it produces."
+description = "문서를 n8n workflow로 넘기고, 생성된 결과를 다시 가져옵니다."
 label = "n8n"
 
 [portal.connections.types.n8n.fields.authType]
-helperText = "Match the Authentication set on the n8n Webhook node."
+helperText = "n8n Webhook 노드에 설정된 Authentication과 일치시킵니다."
 label = "Webhook authentication"
 
 [portal.connections.types.n8n.fields.authType.options.basic]
@@ -8505,7 +8638,7 @@ label = "Header auth"
 label = "None"
 
 [portal.connections.types.n8n.fields.headerName]
-helperText = "The header name from the n8n credential, not its value."
+helperText = "n8n credential의 header name이며, 값이 아닙니다."
 label = "Header name"
 placeholder = "X-N8N-Key"
 
@@ -8826,7 +8959,7 @@ sensitiveLabel = "민감"
 [portal.documents.table.columns]
 action = "파이프라인 / 작업"
 document = "문서"
-labels = "Labels"
+labels = "레이블"
 product = "제품"
 status = "상태"
 time = "시간"
@@ -8840,13 +8973,13 @@ title = "이 페이지에서 문제가 발생했습니다"
 [portal.failures]
 closedBySystem = "Stirling"
 noMatches = "현재 필터와 일치하는 항목이 없습니다"
-occurrences = "{{count}} occurrences"
+occurrences = "{{count}}건 발생"
 searchPlaceholder = "문제, 사용자 및 오류 검색"
 
 [portal.failures.action]
-acknowledge = "Acknowledge"
+acknowledge = "확인"
 decrypt = "잠금 해제"
-dismiss = "Dismiss"
+dismiss = "해제"
 openInTool = "다시 시도"
 repair = "복구"
 viewFile = "파일 보기"
@@ -8862,14 +8995,14 @@ source = "소스"
 user = "사용자"
 
 [portal.failures.disabled]
-closed = "This failure is already closed."
+closed = "이 실패는 이미 종료되었습니다."
 noDocument = "이 실패는 특정 문서에 대해 기록되지 않았으므로 여기서 열 항목이 없습니다."
 unattended = "이 파일은 폴더, 버킷 또는 webhook을 통해 전달되었으므로, 열기 위해 보관 중인 브라우저가 없습니다."
-unavailable = "Not available for this failure."
+unavailable = "이 실패에는 사용할 수 없습니다."
 
 [portal.failures.empty]
-description = "Policy runs that fail will appear here with the actions you can take."
-title = "No failures recorded"
+description = "확인이 필요한 정책 실행 또는 편집기 도구의 항목이 여기에 표시됩니다."
+title = "주의가 필요한 항목이 없습니다"
 
 [portal.failures.emptyClosed]
 description = "해제하거나 해결한 항목은 결과와 함께 여기에 보관됩니다."
@@ -8894,8 +9027,8 @@ description = "파일에 내용이 없어 실행에서 작업할 항목이 없�
 title = "빈 파일"
 
 [portal.failures.kind.inputPasswordProtected]
-description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
-title = "Password-protected document"
+description = "파일이 비밀번호로 보호되어 있어 실행에서 읽을 수 없습니다."
+title = "비밀번호로 보호된 문서"
 
 [portal.failures.kind.inputUnavailable]
 description = "이 실행의 기반 파일에 접근할 수 없어 처리되지 않았습니다."
@@ -8942,17 +9075,17 @@ description = "이 서버에 단계에 필요한 소프트웨어가 없어 실�
 title = "소프트웨어가 설치되지 않음"
 
 [portal.failures.kind.unknown]
-description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
-title = "Unrecognised failure"
+description = "Stirling이 아직 인식하지 못하는 문제가 발생했습니다."
+title = "인식되지 않은 문제"
 
 [portal.failures.log]
 copy = "오류 복사"
 view = "오류 보기"
 
 [portal.failures.origin]
-pipeline = "Pipeline"
-policy = "Policy"
-tool = "Tool run"
+pipeline = "파이프라인"
+policy = "정책 실행"
+tool = "편집기 도구"
 
 [portal.failures.outcome]
 dismissed = "해제됨"
@@ -8966,7 +9099,7 @@ closed = "종료됨"
 open = "열림"
 
 [portal.failures.source]
-editor = "Editor"
+editor = "편집기"
 
 [portal.failures.unavailable]
 description = "이 대기열은 정책을 실행하는 워크스페이스의 팀 리더에게 표시됩니다."
@@ -9027,8 +9160,8 @@ tagline = "Microsoft Windows용 네이티브 앱"
 title = "Windows"
 
 [portal.home.editor]
-activeOfDeployed = "이번 달 활성 {{active}} / {{total}}"
-name = "Stirling PDF Editor"
+activeOfDeployed = "최근 30일 동안 {{total}}개 중 {{active}}개 활성"
+name = "PDF 편집기"
 open = "브라우저에서 열기"
 updated = "{{time}} 업데이트됨"
 
@@ -9038,7 +9171,7 @@ options = "배포 옵션 보기"
 start = "Editor 배포"
 
 [portal.home.editor.target]
-cloud = "Managed Cloud"
+cloud = "관리형 Cloud"
 docker = "셀프 호스팅 · Docker"
 kubernetes = "셀프 호스팅 · Kubernetes"
 
@@ -9050,7 +9183,7 @@ morning = "좋은 아침입니다"
 [portal.infrastructure.apiKeys]
 createKey = "키 생성"
 heading = "API 키"
-subheading = "키별 속도 제한, 권한, IP 허용 목록이 있는 범위 지정 자격 증명입니다."
+subheading = "각각 자체 사용량 추적 기능이 있는 개인 자격 증명입니다."
 
 [portal.infrastructure.apiKeys.card]
 created = "생성됨"
@@ -9060,7 +9193,7 @@ usageMonth = "이번 달 사용량"
 usageToday = "오늘 사용량"
 
 [portal.infrastructure.apiKeys.empty]
-description = "Stirling API 호출을 시작하려면 범위 지정 키를 생성하세요."
+description = "키를 만들어 Stirling API 호출을 시작하세요."
 title = "아직 API 키가 없습니다"
 
 [portal.infrastructure.apiKeys.error]
@@ -9148,10 +9281,10 @@ cancel = "취소"
 createKey = "키 생성"
 done = "완료"
 keyNameLabel = "키 이름"
-keyNamePlaceholder = "예: Production · ingest"
+keyNamePlaceholder = "예: 프로덕션 수집"
 secretKeyCaption = "비밀 키"
 secretWarning = "이를 secrets manager에 저장하세요. Stirling은 항상 해시만 저장하므로 나중에 복구할 방법이 없습니다."
-subtitle = "키 범위는 필요한 최소한으로 지정하세요. 언제든지 교체하거나 취소할 수 있습니다."
+subtitle = "나중에 알아볼 수 있도록 키에 이름을 지정하세요. 언제든지 취소할 수 있습니다."
 subtitleCreated = "지금 이 비밀을 복사하세요 — 다시 표시되지 않습니다."
 title = "API 키 생성"
 titleCreated = "키 생성됨"
@@ -9201,7 +9334,7 @@ subheading = "Scope당 하나의 키입니다. 키를 취소하면 그 아래에
 [portal.infrastructure.encryption.keys.columns]
 actions = "작업"
 lastChange = "마지막 변경"
-scope = "Scope"
+scope = "범위"
 status = "상태"
 
 [portal.infrastructure.encryption.keys.empty]
@@ -9209,14 +9342,14 @@ description = "키는 시작 시가 아니라 누군가 처음 파일을 업로�
 title = "아직 키가 없습니다"
 
 [portal.infrastructure.encryption.masterKey]
-backend = "Storage backend"
+backend = "스토리지 백엔드"
 compareNote = "키 백업 및 시작 로그의 fingerprint와 비교하세요."
 copied = "복사됨"
 copy = "복사"
 copyFailed = "이 브라우저에서 복사를 허용하지 않았습니다. fingerprint가 선택되어 있으므로 수동으로 복사하세요."
 fingerprint = "Fingerprint"
 fingerprintHelp = "이 fingerprint는 무엇에 사용되나요?"
-heading = "Master key"
+heading = "마스터 키"
 notMaterialised = "이 노드에서 키 메커니즘이 아직 시작되지 않았습니다."
 s3StreamingNote = "암호화된 항목이 있는 동안 object-store 다운로드는 리디렉션되지 않고 이 서버를 통해 스트리밍되므로 서버의 대역폭을 사용합니다."
 subheading = "모든 scope 키를 래핑합니다. API를 통해 표시되거나 허용되지 않습니다."
@@ -9269,13 +9402,13 @@ uploadsContinue = "새 업로드는 계속 작동합니다. 새 키를 받으므
 
 [portal.infrastructure.encryption.rotation]
 currentVersion = "현재 버전"
-heading = "Master key rotation"
+heading = "마스터 키 교체"
 hint = "새 master key 아래에서 scope 키를 re-wrap합니다. 파일 내용은 다시 작성되지 않습니다. 새 키는 구성에서 설정되고 재시작 시 적용되므로 이 버튼은 re-wrap만 수행합니다."
 pendingRows = "이전 버전의 행"
 rewrap = "키 re-wrap"
 rewrapped_one = "{{count}}개 키 행이 re-wrap되었습니다."
 rewrapped_other = "{{count}}개 키 행이 re-wrap되었습니다."
-runbook = "Rotation runbook"
+runbook = "교체 runbook"
 
 [portal.infrastructure.encryption.rotation.confirm]
 cancel = "취소"
@@ -9294,7 +9427,7 @@ title_other = "{{count}}개 키 행이 아직 이전 master key에 있습니다"
 [portal.infrastructure.encryption.scope]
 global = "모든 사용자"
 source = "소스 {{id}}"
-team = "Team {{id}}"
+team = "팀 {{id}}"
 
 [portal.infrastructure.encryption.status]
 ACTIVE = "활성"
@@ -9348,8 +9481,8 @@ signing = "서명"
 storage = "스토리지"
 
 [portal.integrations.noResults]
-description = "No integrations match your filters. Try a different category or search."
-title = "No matches"
+description = "필터와 일치하는 통합이 없습니다. 다른 카테고리나 검색어를 시도해 보세요."
+title = "일치하는 항목 없음"
 
 [portal.integrations.status]
 connected = "연결됨"
@@ -9372,9 +9505,9 @@ title = "법적 문서"
 [portal.nav]
 agent-builder = "Agent Builder"
 components = "구성 요소"
-docs = "개발자 문서"
+docs = "문서"
 documents = "문서"
-editor = "Editor"
+editor = "편집기"
 home = "홈"
 infrastructure = "인프라"
 integrations = "통합"
@@ -9393,7 +9526,7 @@ processor = "PDF 프로세서"
 [portal.pipelines]
 permissionsRetry = "다시 시도"
 permissionsUnavailable = "정책을 관리할 수 있는지 확인할 수 없어 현재 정책 작업을 사용할 수 없습니다."
-subtitle = "백엔드의 모든 자동 문서 파이프라인: 소스 집합에 대한 순서 지정된 작업 체인이 트리거에 의해 실행됩니다. 행을 클릭하면 단계와 소스를 볼 수 있습니다."
+subtitle = "문서 워크플로를 자동화하세요. 간단한 안내식 설정을 위해 템플릿에서 시작하거나, 처음부터 사용자 지정 파이프라인을 구축하세요. 모든 문서에서 실행되도록 파이프라인을 정책으로 강제 적용할 수 있습니다."
 title = "파이프라인"
 
 [portal.pipelines.actions]
@@ -9403,7 +9536,7 @@ newCustomPipeline = "새 사용자 지정 파이프라인"
 title = "모든 파이프라인"
 
 [portal.pipelines.builder]
-activate = "Activate"
+activate = "활성화"
 back = "파이프라인으로 돌아가기"
 cannotFollow = "{{produced}}을(를) 사용할 수 없습니다"
 chooseAccount = "계정 선택"
@@ -9411,19 +9544,19 @@ chooseDestination = "대상 선택"
 chooseOperation = "이 단계에서 수행할 작업 선택"
 chooseSource = "소스 선택"
 discard = "변경 사항 버리기"
-editorDestination = "Editor"
+editorDestination = "편집기"
 editorDestinationDetail = "실행한 파일을 교체합니다"
 inputs = "입력"
 inputSource = "입력 소스"
 inputTrigger = "트리거"
 keepEditing = "계속 편집"
-moreActions = "More actions"
+moreActions = "추가 작업"
 needsConfiguring = "설정 필요"
-needsDestination = "No destination chosen"
-needsSource = "No source chosen"
+needsDestination = "선택한 대상 없음"
+needsSource = "선택한 소스 없음"
 noToolMatches = "검색과 일치하는 도구가 없습니다."
-pause = "Pause"
-rename = "Rename pipeline"
+pause = "일시 중지"
+rename = "파이프라인 이름 변경"
 runOn = "실행 시점"
 runOnExport = "내보낼 때마다"
 runOnTooltip = "파일에 이 파이프라인을 언제 실행할지 선택하세요: 추가할 때 또는 내보낼 때."
@@ -9432,34 +9565,34 @@ searchTools = "도구 검색"
 sendToSystem = "다른 시스템으로 보내기"
 stepsIncompatible = "이 단계들은 이전 단계가 생성한 항목에서 실행할 수 없습니다: {{tools}}."
 stepsNeedSetup = "저장하기 전에 아직 설정이 필요한 단계입니다: {{tools}}."
-supportingFiles = "Supporting files"
-testRun = "Test with a file"
+supportingFiles = "지원 파일"
+testRun = "파일로 테스트"
 unknownStep = "인식되지 않는 작업이며, 그대로 유지되었습니다."
 unsavedBody = "저장되지 않은 변경 사항이 있습니다. 나가기 전에 저장하시겠습니까, 아니면 버리시겠습니까?"
 unsavedTitle = "저장되지 않은 변경 사항"
 usesDefaults = "기본 설정으로 실행"
-viewDefinition = "View definition"
+viewDefinition = "정의 보기"
 
 [portal.pipelines.builder.blocker]
 aiClassification = "설정에서 AI 분류를 활성화하거나 Classify 단계를 제거하세요"
-destination = "Choose a destination"
-heading = "To create this pipeline:"
-incompatible = "Fix steps that can't run in order: {{tools}}"
+destination = "대상 선택"
+heading = "이 파이프라인을 만들려면:"
+incompatible = "순서대로 실행할 수 없는 단계 수정: {{tools}}"
 managerOnly = "관리자 또는 팀 리더만 정책을 수정할 수 있습니다"
-name = "Give the pipeline a name"
+name = "파이프라인 이름 지정"
 routing = "모든 경로에 문서 유형과 대상을 지정하세요"
 routingNeedsClassify = "Classify 단계를 추가하거나 문서 유형별 라우팅을 끄세요"
-saveHeading = "To save your changes:"
-schedule = "Set how often it runs"
-setup = "Finish setting up: {{tools}}"
-source = "Choose an input source"
+saveHeading = "변경 사항을 저장하려면:"
+schedule = "실행 주기 설정"
+setup = "설정 완료: {{tools}}"
+source = "입력 소스 선택"
 
 [portal.pipelines.builder.diagnostic]
-fan-in = "이전 단계의 모든 파일을 결합합니다"
-fan-out = "이전 단계의 파일마다 한 번씩 실행됩니다"
-format-mismatch = "{{accepts}}이(가) 필요하지만, 이전 단계는 {{produced}}을(를) 생성합니다"
-output-uncertain = "실행되지 않을 수 있음: 이전 단계의 출력은 설정 방식에 따라 달라집니다"
-source-mismatch = "{{accepts}}이(가) 필요하지만, 이 파이프라인의 입력은 {{produced}}입니다"
+fan-in = "모든 수신 파일을 결합합니다"
+fan-out = "수신 파일마다 한 번 실행합니다"
+format-mismatch = "{{produced}} 전송, {{accepts}} 필요"
+output-uncertain = "실행되지 않을 수 있음: 출력은 설정에 따라 달라집니다"
+source-mismatch = "입력은 {{produced}}, {{accepts}} 필요"
 undeclared-operation = "이 단계가 무엇을 허용하는지 확인할 수 없습니다"
 
 [portal.pipelines.builder.icon]
@@ -9512,25 +9645,25 @@ valuePlaceholder = "정확한 값을 쉼표로 구분하여 입력"
 [portal.pipelines.composer]
 addTool = "도구 추가"
 create = "파이프라인 생성"
-createPaused = "Create paused"
+createPaused = "일시 중지 상태로 만들기"
 editingUnsupported = "편집을 위해 이러한 도구 매개변수를 표시하는 기능은 아직 지원되지 않습니다."
-editSource = "Edit source"
+editSource = "소스 편집"
 name = "이름"
-namePlaceholder = "예: Redaction sweep"
+namePlaceholder = "파이프라인 이름"
 noToolSettings = "이 도구에는 구성 가능한 설정이 없습니다."
-output = "출력"
+output = "대상"
 save = "변경 사항 저장"
 scheduleEvery = "실행 주기"
 trigger = "트리거"
 triggerManual = "수동만"
 
 [portal.pipelines.composer.runsEvery]
-days_one = "Runs every day"
-days_other = "Runs every {{count}} days"
-hours_one = "Runs every hour"
-hours_other = "Runs every {{count}} hours"
-minutes_one = "Runs every minute"
-minutes_other = "Runs every {{count}} minutes"
+days_one = "매일 실행"
+days_other = "{{count}}일마다 실행"
+hours_one = "매시간 실행"
+hours_other = "{{count}}시간마다 실행"
+minutes_one = "매분 실행"
+minutes_other = "{{count}}분마다 실행"
 
 [portal.pipelines.composer.unit]
 days = "일"
@@ -9538,8 +9671,8 @@ hours = "시간"
 minutes = "분"
 
 [portal.pipelines.definition]
-subtitle = "The pipeline as it would be saved."
-title = "Definition"
+subtitle = "저장될 파이프라인입니다."
+title = "정의"
 
 [portal.pipelines.delete]
 body = "\"{{name}}\"을(를) 삭제하시겠습니까? 이 작업은 취소할 수 없습니다."
@@ -9548,7 +9681,7 @@ confirm = "삭제"
 title = "파이프라인을 삭제하시겠습니까?"
 
 [portal.pipelines.detail]
-clearHistory = "기록 지우기"
+clearHistory = "소스에서 무시된 파일 처리"
 delete = "파이프라인 삭제"
 run = "지금 실행"
 
@@ -9565,35 +9698,35 @@ label = "정책으로 강제 적용"
 managerOnly = "관리자 또는 팀 리더만 파이프라인을 정책으로 강제 적용할 수 있습니다"
 
 [portal.pipelines.graph]
-addFirstTool = "Add a tool"
-dragHint = "Drop on a line to move it"
-insertHere = "Add a tool here"
-removeNode = "Remove {{name}}"
-showError = "Show why {{name}} failed"
+addFirstTool = "도구 추가"
+dragHint = "이동하려면 선 위에 놓으세요"
+insertHere = "여기에 도구 추가"
+removeNode = "{{name}} 제거"
+showError = "{{name}} 실패 이유 표시"
 
 [portal.pipelines.graph.add]
-input = "Add a source"
-output = "Add a destination"
+input = "소스 추가"
+output = "대상 추가"
 
 [portal.pipelines.graph.run]
-done = "Done"
-failed = "Failed"
-running = "Running"
+done = "완료"
+failed = "실패"
+running = "실행 중"
 
 [portal.pipelines.inspector]
-multipleBody = "Drag any of them onto a line to move them together, or press Delete to remove them."
-multipleSelected_one = "{{count}} step selected"
-multipleSelected_other = "{{count}} steps selected"
-noSelectionBody = "Pick a node in the graph to change what it does."
-noSelectionTitle = "Nothing selected"
+multipleBody = "함께 이동하려면 아무 항목이나 선 위로 드래그하거나, 제거하려면 Delete 키를 누르세요."
+multipleSelected_one = "{{count}}개 단계 선택됨"
+multipleSelected_other = "{{count}}개 단계 선택됨"
+noSelectionBody = "그래프에서 노드를 선택하여 수행 작업을 변경하세요."
+noSelectionTitle = "선택된 항목 없음"
 
 [portal.pipelines.inspector.status]
-completed_one = "Finished the only step"
-completed_other = "Finished all {{count}} steps"
-failed_one = "Failed on the only step"
-failed_other = "Failed after {{done}} of {{count}} steps"
-running_one = "Running the only step"
-running_other = "Running step {{done}} of {{count}}"
+completed_one = "유일한 단계 완료"
+completed_other = "모든 {{count}}개 단계 완료"
+failed_one = "유일한 단계에서 실패"
+failed_other = "{{count}}개 단계 중 {{done}}개 후 실패"
+running_one = "유일한 단계 실행 중"
+running_other = "{{count}}개 중 {{done}}번째 단계 실행 중"
 
 [portal.pipelines.run]
 allProcessed_one = "실행할 항목이 없습니다: 소스의 문서 {{count}}개는 이미 처리되었습니다."
@@ -9603,8 +9736,8 @@ completed_other = "{{count}}개 실행이 모두 완료되었습니다."
 empty = "실행할 항목이 없습니다. 소스에 처리할 문서가 없습니다."
 failed = "실행 실패: {{error}}"
 inFlight = "새로 실행할 항목이 없습니다: 이전 실행의 문서가 아직 처리 중입니다."
-parked_one = "실행할 항목이 없습니다: 문서 {{count}}개가 이전에 실패하여 보류되어 있습니다. 원인을 수정한 다음 기록을 지워 다시 시도하세요."
-parked_other = "실행할 항목이 없습니다: 문서 {{count}}개가 이전에 실패하여 보류되어 있습니다. 원인을 수정한 다음 기록을 지워 다시 시도하세요."
+parked_one = "실행할 항목 없음: {{count}}개 문서가 이전에 실패하여 보류되었습니다. 원인을 해결한 다음 소스를 다시 처리하여 재시도하세요."
+parked_other = "실행할 항목 없음: {{count}}개 문서가 이전에 실패하여 보류되었습니다. 원인을 해결한 다음 소스를 다시 처리하여 재시도하세요."
 running = "실행이 시작되었으며 아직 진행 중입니다."
 timeout = "실행이 예상보다 오래 걸리고 있습니다. 백그라운드에서 계속 완료될 수 있습니다."
 
@@ -9617,7 +9750,7 @@ name = "파이프라인"
 sources = "소스"
 status = "상태"
 steps = "단계"
-trigger = "Trigger"
+trigger = "트리거"
 type = "유형"
 
 [portal.pipelines.templates]
@@ -9637,7 +9770,7 @@ pipeline = "파이프라인"
 policy = "정책"
 
 [portal.policies]
-defaultName = "{{category}} 정책"
+defaultName = "{{category}} 파이프라인"
 
 [portal.policies.card]
 comingSoon = "Enterprise로 업그레이드"
@@ -9648,7 +9781,7 @@ desc = "업로드 시 각 문서의 유형을 식별하고 정리 및 검색을 
 label = "분류"
 
 [portal.policies.categories.compliance]
-desc = "모든 문서에 HIPAA, GDPR, SOC 2 또는 FedRAMP 요구 사항을 적용합니다."
+desc = "숨겨진 데이터를 제거하고, 보관을 위해 PDF/A로 변환한 뒤, 전달 전에 모든 문서를 표준에 따라 검증합니다."
 label = "컴플라이언스"
 
 [portal.policies.categories.ingestion]
@@ -9678,21 +9811,21 @@ summary = "업로드된 모든 문서를 팀의 레이블에 따라 분류하고
 1 = "메타데이터 태그 지정"
 
 [portal.policies.config.compliance]
-summary = "문서가 시스템을 떠나기 전에 규제 프레임워크에 맞는지 검증합니다."
+summary = "숨겨진 데이터를 제거하고, PDF/A 보관 형식으로 변환한 뒤, 결과를 표준에 따라 검증합니다."
 
 [portal.policies.config.compliance.rules]
-0 = "프레임워크 스캔"
-1 = "작업 적용"
-2 = "감사 추적"
+0 = "숨겨진 데이터 제거"
+1 = "PDF/A로 변환"
+2 = "규정 준수 검증"
 
 [portal.policies.config.ingestion]
 description = "처리할 문서를 선택하고, 텍스트를 검색 가능하게 만들고, 청크를 database로 보내거나 내보냅니다."
 
 [portal.policies.config.ingestion.rules]
-0 = "분류"
-1 = "추출"
-2 = "이름 지정"
-3 = "정규화"
+0 = "텍스트 읽기"
+1 = "청크"
+2 = "색인"
+3 = "원본 유지"
 
 [portal.policies.config.pdfa.fields.outputFormat]
 help = "PDF/A-2b는 대부분의 아카이브에 적합합니다. PDF/A-1b가 가장 엄격하고 널리 허용되며, PDF/A-3b는 추가로 첨부 파일을 허용합니다."
@@ -9873,7 +10006,7 @@ placeholder = "signer@acme.com"
 
 [portal.policies.operations.fields.subject]
 label = "제목"
-placeholder = "Processed: {{document.filename}}"
+placeholder = "처리됨: {{document.filename}}"
 
 [portal.policies.operations.fields.text]
 helperText = "Presidio가 이 텍스트를 분석합니다. {{document.title}}을 사용하거나 확인할 텍스트를 붙여넣으세요."
@@ -9900,22 +10033,22 @@ description = "처리된 문서를 첨부 파일로 보냅니다."
 label = "문서 이메일 보내기(Mailgun)"
 
 [portal.policies.operations.n8nGate]
-description = "Your workflow decides whether the run carries on."
-label = "Ask an n8n workflow to approve"
-note = "The workflow must reply with {\"approved\": true}. Anything else — including a timeout — stops the run and parks the document."
+description = "워크플로가 실행을 계속할지 결정합니다."
+label = "n8n 워크플로에 승인 요청"
+note = "워크플로는 {\"approved\": true}로 응답해야 합니다. 타임아웃을 포함하여 그 외의 모든 응답은 실행을 중지하고 문서를 보류합니다."
 
 [portal.policies.operations.n8nNotify]
-description = "Sends the run's details, not the document."
-label = "Tell an n8n workflow"
+description = "문서가 아닌 실행 세부 정보를 보냅니다."
+label = "n8n 워크플로에 알림"
 
 [portal.policies.operations.n8nSend]
-description = "Sends the document and the run's details to your workflow."
-label = "Send the document to n8n"
+description = "문서와 실행 세부 정보를 워크플로로 보냅니다."
+label = "문서를 n8n으로 보내기"
 
 [portal.policies.operations.n8nTransform]
-description = "Your workflow processes the document and the file it returns replaces it."
-label = "Process the document in n8n"
-note = "Set the Webhook node to respond \"Using Respond to Webhook Node\", and return a file. On the default \"Immediately\" setting n8n replies with an acknowledgement, and that would replace the document."
+description = "워크플로가 문서를 처리하고 반환된 파일이 이를 대체합니다."
+label = "n8n에서 문서 처리"
+note = "Webhook 노드가 \"Using Respond to Webhook Node\"로 응답하도록 설정하고 파일을 반환하세요. 기본 \"Immediately\" 설정에서는 n8n이 확인 응답을 반환하며, 그것이 문서를 대체하게 됩니다."
 
 [portal.policies.operations.nextcloudUpload]
 description = "처리된 문서를 폴더에 기록합니다."
@@ -9962,7 +10095,7 @@ label = "Zap 또는 Make 시나리오 트리거"
 cancel = "취소"
 customise = "사용자 지정"
 customiseUnavailable = "전체 빌더는 Processor에 있습니다"
-enablePolicy = "정책 활성화"
+enablePolicy = "파이프라인 만들기"
 saveChanges = "변경 사항 저장"
 
 [portal.policies.wizard.capability.classify]
@@ -10014,8 +10147,8 @@ description = "업로드된 모든 문서는 기본 제공 레이블에 따라 �
 labelsHeading = "분류 레이블"
 
 [portal.policies.wizard.errors]
-noTools = "먼저 워크플로에서 하나 이상의 도구를 활성화하세요."
-saveFailed = "정책을 저장할 수 없습니다. 다시 시도하세요."
+noTools = "하나 이상의 작업을 활성화하세요."
+saveFailed = "파이프라인을 저장할 수 없습니다. 다시 시도하세요."
 
 [portal.policies.wizard.locations]
 aiSettings = "AI 설정 열기"
@@ -10073,11 +10206,11 @@ sourceHeading = "감시"
 connect = "소스 연결"
 
 [portal.policies.wizard.title]
-edit = "{{category}} 정책 편집"
-setUp = "{{category}} 정책 설정"
+edit = "{{category}} 파이프라인 편집"
+setUp = "{{category}} 파이프라인 설정"
 
 [portal.policies.wizard.workflow]
-description = "이 정책이 처리하는 모든 문서에 수행할 작업을 선택하세요."
+description = "이 파이프라인이 처리하는 모든 문서에 대해 수행할 작업을 선택하세요."
 
 [portal.processorFlow]
 footnote = "집계는 지난 24시간 기준입니다. 흐름 속도는 예시용입니다."
@@ -10112,7 +10245,7 @@ title = "아직 흐름 없음"
 
 [portal.processorFlow.sources]
 comingSoonTag = "연결"
-editor = "Stirling PDF Editor"
+editor = "Stirling PDF 편집기"
 heading = "소스"
 perDay = "{{n}} / 24시간"
 
@@ -10126,9 +10259,9 @@ subtitle = "팀 평가, 계약, 온보딩을 완료하세요. 모든 문서를 �
 title = "조달"
 
 [portal.procurement.agreement]
-agreeCta = "동의하고 구독"
+agreeCta = "계약서 서명"
 confidential = "기밀"
-confirm = "Stirling Enterprise Agreement를 읽었으며 이에 동의합니다."
+confirm = "본 계약서를 읽고 이에 동의하며, 위에 명시된 조직을 대신하여 서명할 권한이 있음을 진술합니다."
 docName = "Stirling Enterprise 계약서"
 docSub = "MSA, 주문서, EULA 및 DPA가 하나의 서명으로 결합되었습니다."
 download = "다운로드"
@@ -10167,8 +10300,8 @@ continue = "계속"
 done = "완료"
 eula = "Stirling Enterprise EULA를 읽었으며 이에 동의합니다. 이 견적에서 생성되는 계약에 적용됩니다."
 generate = "견적 생성"
-indemnification = "IP 면책"
-indemnificationSub = "EULA에 따라 적격 IP 클레임을 방어합니다"
+indemnification = "향상된 IP 보호"
+indemnificationSub = "당사의 IP 방어를 특허 청구까지 확장합니다. 기본 저작권, 상표 및 영업비밀 면책은 무료로 포함됩니다."
 paperEyebrow = "Enterprise 견적"
 paperFor = "대상"
 pdfSize = "PDF 크기"
@@ -10203,9 +10336,9 @@ size_heavySub = "스캔 또는 이미지 많음, 5 MB+"
 size_standard = "Standard"
 size_standardSub = "텍스트와 이미지 혼합, 1~5 MB"
 slDedicated = "전담"
-slDedicatedSub = "영업일 기준 4시간 · 전담 계정 매니저 · +30%"
+slDedicatedSub = "영업시간 4시간 · 전담 SE / CSM · +$30,000/년"
 slPriority = "우선"
-slPrioritySub = "영업일 당일 · 지정 CSM · +15%"
+slPrioritySub = "같은 영업일 · 지정 CSM · 포함"
 slStandard = "표준"
 slStandardSub = "다음 영업일 · 공유 CSM · 포함"
 stepOf = "{{total}}단계 중 {{n}}단계"
@@ -10258,7 +10391,7 @@ ctaQuote = "견적 검토"
 ctaReviewQuote = "견적 검토"
 ctaTrial = "견적 만들기"
 documents = "문서"
-eyebrow = "Enterprise 조달"
+eyebrow = "Enterprise"
 eyebrowCompany = "{{company}} Enterprise"
 inviteTeammates = "팀원 초대"
 licenseKey = "라이선스 키"
@@ -10353,7 +10486,7 @@ subtitle = "담당 솔루션 엔지니어가 팀의 롤아웃을 안내합니다
 title = "통화 예약"
 
 [portal.procurement.setup]
-airgap = "Air-gapped"
+airgap = "망 분리"
 airgapSub = "밀폐형, 아웃바운드 없음"
 back = "뒤로"
 businessName = "사업자명"
@@ -10411,7 +10544,7 @@ search = "검색"
 
 [portal.sources]
 processingModeHelp = "추적은 원본을 유지하고 각 버전을 한 번 처리합니다. 스냅샷은 원본을 유지하고 실행할 때마다 처리합니다. 소비는 성공적으로 전달한 후 원본을 삭제합니다."
-subtitle = "문서를 Stirling으로 공급하는 재사용 가능한 입력 연결입니다. 연결을 한 번 구성한 다음 여러 정책에서 참조하세요. 행을 클릭하면 해당 구성과 사용하는 정책을 볼 수 있습니다."
+subtitle = "문서를 Stirling으로 공급하는 재사용 가능한 입력 연결입니다. 소스를 한 번 구성한 다음 여러 파이프라인에서 참조하세요."
 title = "소스"
 
 [portal.sources.actions]
@@ -10445,20 +10578,20 @@ confirm = "삭제"
 title = "소스를 삭제하시겠습니까?"
 
 [portal.sources.networkFields.connection]
-helperText = "서버 주소와 자격 증명이 저장된 연결입니다. 이를 참조하는 모든 소스에서 재사용됩니다."
+helperText = "서버 주소와 자격 증명이 포함된 저장된 연결입니다. 이를 사용하는 모든 소스에서 공유됩니다."
 label = "연결"
 
 [portal.sources.networkFields.directory]
-helperText = "로그인 홈 또는 공유 루트를 기준으로 폴링할 서버의 폴더입니다. 루트의 경우 비워 두세요."
+helperText = "로그인 홈 또는 공유 루트를 기준으로 감시할 서버의 폴더입니다."
 label = "폴더"
-placeholder = "incoming/"
+placeholder = "로그인 홈 또는 공유 루트"
 
 [portal.sources.networkFields.mode]
-label = "읽기 모드"
+label = "처리 후"
 
 [portal.sources.networkFields.mode.options]
-consume = "소비: 각 파일을 한 번 처리"
-snapshot = "스냅샷: 실행할 때마다 폴더 다시 읽기"
+consume = "파일 삭제"
+snapshot = "그대로 두기"
 track = "원본 유지; 변경 사항 한 번 처리"
 
 [portal.sources.networkFields.recursive]
@@ -10478,7 +10611,7 @@ unused = "미사용"
 documents = "문서"
 source = "소스"
 status = "상태"
-type = "Type"
+type = "유형"
 usedBy = "정책"
 
 [portal.sources.types.box]
@@ -10503,25 +10636,25 @@ description = "서버의 디렉터리에서 새 문서를 감시합니다."
 label = "폴더"
 
 [portal.sources.types.folder.fields.directory]
-helperText = "Stirling이 처리할 파일을 감시하는 절대 경로입니다."
-label = "디렉터리 경로"
+helperText = "새 파일을 감시할 폴더의 절대 경로입니다."
+label = "폴더"
 placeholder = "/data/incoming"
 
 [portal.sources.types.folder.fields.identity]
-helperText = "콘텐츠 검사는 변경된 각 파일을 읽으므로, 콘텐츠를 변경하지 않는 이름 변경 및 터치는 다시 처리되지 않습니다."
+helperText = "변경 감지에 파일 내용을 사용하면 더 느리지만 더 정확합니다."
 label = "변경 감지"
 
 [portal.sources.types.folder.fields.identity.options]
-hash = "크기, 날짜 및 콘텐츠 검사"
-stat = "크기 및 수정 날짜"
+hash = "파일 메타데이터 및 내용"
+stat = "파일 메타데이터"
 
 [portal.sources.types.folder.fields.mode]
-helperText = "처리된 후 원본 파일을 그대로 둘지 여부입니다. 원본 파일을 그대로 두면 다음에 파이프라인이 소스를 스캔할 때 다시 처리됩니다."
-label = "읽기 모드"
+helperText = "처리된 후 원본 파일에 수행할 작업입니다. \"유지\"는 이미 처리한 내용을 기억하므로 파일이 실제로 변경된 경우에만 다시 처리됩니다."
+label = "처리 후"
 
 [portal.sources.types.folder.fields.mode.options]
-consume = "소비: 각 파일을 한 번 처리"
-snapshot = "스냅샷: 실행할 때마다 폴더 다시 읽기"
+consume = "파일 삭제"
+snapshot = "유지하고 스캔할 때마다 다시 처리"
 track = "유지하고 변경된 경우에만 다시 처리"
 
 [portal.sources.types.folder.fields.recursive]
@@ -10553,21 +10686,21 @@ description = "Amazon S3 또는 S3 호환 버킷에서 문서를 가져옵니다
 label = "Amazon S3"
 
 [portal.sources.types.s3.fields.connection]
-helperText = "버킷과 자격 증명을 보유한 저장된 연결입니다. 이를 참조하는 모든 소스 및 파이프라인 출력에서 재사용됩니다."
+helperText = "버킷과 자격 증명이 포함된 저장된 연결입니다. 이를 사용하는 모든 소스와 파이프라인 출력에서 공유됩니다."
 label = "연결"
 
 [portal.sources.types.s3.fields.mode]
-label = "읽기 모드"
+label = "처리 후"
 
 [portal.sources.types.s3.fields.mode.options]
-consume = "소비: 각 객체를 한 번 처리"
-snapshot = "스냅샷: 실행할 때마다 버킷 다시 읽기"
+consume = "객체 삭제"
+snapshot = "그대로 두기"
 track = "원본 유지; 변경 사항 한 번 처리"
 
 [portal.sources.types.s3.fields.prefix]
-helperText = "키가 이 접두사로 시작하는 객체만 처리됩니다."
-label = "키 접두사"
-placeholder = "incoming/"
+helperText = "감시할 버킷 내 폴더(키 prefix)입니다."
+label = "폴더"
+placeholder = "전체 버킷"
 
 [portal.sources.types.sftp]
 description = "새 문서를 위해 SFTP 드롭 폴더를 폴링합니다."
@@ -10585,8 +10718,8 @@ collection = "컬렉션 / 인덱스 이름"
 collectionHint = "서버 측 임베딩용으로 구성된 기존 컬렉션 또는 인덱스를 사용하세요."
 connection = "Database 연결"
 description = "준비된 문서 청크의 출력 대상입니다. Database가 임베딩을 생성하며, 추적 모드를 선택하면 원본은 입력 소스에 남아 있습니다."
-label = "Vector database"
-namespace = "Namespace / tenant"
+label = "벡터 데이터베이스"
+namespace = "Namespace / 테넌트"
 namespaceHint = "선택 사항인 Pinecone namespace 또는 Weaviate tenant입니다. 기본 namespace 또는 단일 tenant 컬렉션을 사용하려면 비워 두세요."
 textField = "텍스트 필드"
 textFieldHint = "컬렉션 스키마 또는 Pinecone 필드 맵과 일치하며 Database가 임베딩하는 필드입니다."
@@ -10619,7 +10752,7 @@ type = "유형"
 close = "닫기"
 
 [portal.usage]
-subtitle = "Stirling이 청구한 모든 PDF에 대한 사용량, 송장 및 플랜 관리를 하나의 콘솔에서 제공합니다."
+subtitle = "요금제, 사용량 및 모든 청구서입니다."
 title = "사용량 및 청구"
 
 [portal.usage.error]
@@ -10686,8 +10819,8 @@ summary = "팀을 소유하며, 팀 구성원의 리소스와 공유 구성을 �
 3 = "구성원이 할 수 있는 모든 작업"
 
 [portal.users.seats]
-limited = "{{used}} / {{limit}}"
-unlimited = "{{used}} · 무제한"
+limited = "{{used}} / {{limit}} 시트"
+unlimited = "{{used}} 시트 · 무제한"
 
 [printFile]
 title = "파일 인쇄"
@@ -10956,7 +11089,7 @@ description = "SMTP 인증용 사용자 이름"
 label = "SMTP 사용자 이름"
 
 [quickAccess]
-allTools = "All Tools"
+allTools = "도구"
 automate = "자동화"
 config = "구성"
 files = "파일"
@@ -10970,12 +11103,12 @@ invite = "초대"
 landmark = "빠른 탐색"
 noProcessorAccess = "관리자에게 processor 액세스를 요청하세요"
 notifications = "알림"
-processor = "Processor"
+processor = "프로세서"
 reader = "리더"
 signInToUse = "사용하려면 로그인하세요"
 
 [read]
-tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
+tags = "보기,열기,표시,읽기,뷰어,PDF 뷰어,PDF 리더,PDF 열기,PDF 보기,PDF 표시,미리보기,탐색"
 
 [reader.rail]
 addDocument = "파일 추가"
@@ -10992,8 +11125,8 @@ thumbnails = "페이지"
 
 [redact]
 submit = "검열"
-tags = "검열,숨김,검게-가림,검은색,마커,숨김,수동"
-title = "수동 검열"
+tags = "가리기,숨기기,검게 칠하기,검정,마커,숨김,자동 가리기,수동 가리기"
+title = "가리기"
 
 [redact.auto]
 colorLabel = "박스 색상"
@@ -11122,7 +11255,7 @@ title = "주석 제거 정보"
 
 [removeBlanks]
 submit = "빈 페이지 제거"
-tags = "delete,clean,empty,remove blank,delete blank pages,empty pages,white pages,remove empty,clean up,cleanup blank"
+tags = "삭제,정리,빈 페이지,빈 페이지 제거,빈 페이지 삭제,빈 페이지들,흰 페이지,빈 항목 제거,정리하기,빈 페이지 정리"
 title = "빈 페이지 제거"
 
 [removeBlanks.error]
@@ -11181,7 +11314,7 @@ title = "인증서 제거 결과"
 
 [removeImage]
 submit = "이미지 제거"
-tags = "remove,delete,clean,remove image,delete image,strip images,remove pictures,delete photos,clean images,reduce size,remove graphics"
+tags = "제거,삭제,정리,이미지 제거,이미지 삭제,이미지 없애기,그림 제거,사진 삭제,이미지 정리,크기 줄이기,그래픽 제거"
 title = "이미지 제거"
 
 [removeImage.error]
@@ -11233,7 +11366,7 @@ title = "페이지 선택"
 
 [removePassword]
 desc = "PDF 문서에서 비밀번호 보호를 제거합니다."
-submit = "제거"
+submit = "비밀번호 제거"
 tags = "보안,암호 해제,보안,비밀번호 해제,비밀번호 삭제"
 title = "비밀번호 제거"
 
@@ -11253,7 +11386,7 @@ description = "비밀번호 보호를 제거하려면 PDF를 암호화할 때 �
 
 [reorganizePages]
 submit = "페이지 재정렬"
-tags = "rearrange,reorder,organize,reorganize,move pages,page order,sort pages,arrange pages,shuffle,resequence"
+tags = "재배열,순서 변경,정리,재구성,페이지 이동,페이지 순서,페이지 정렬,페이지 배치,섞기,순서 재지정"
 
 [reorganizePages.error]
 failed = "페이지 재정렬에 실패했습니다"
@@ -11339,7 +11472,7 @@ title = "모든 색상 반전"
 rotateLeft = "반시계 방향으로 회전"
 rotateRight = "시계 방향으로 회전"
 selectRotation = "회전 각도 선택(시계 방향)"
-submit = "회전"
+submit = "회전 적용"
 tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation"
 title = "PDF 회전"
 
@@ -11428,7 +11561,7 @@ title = "PDF 정리"
 tags = "청소,보안,안전,위협-제거"
 
 [scalePages]
-tags = "resize,adjust,scale,page size,resize page,scale page,change size,adjust size,enlarge,shrink page,fit to page,A4,letter size"
+tags = "크기 조정,조정,배율,페이지 크기,페이지 크기 조정,페이지 배율 조정,크기 변경,크기 조절,확대,페이지 축소,페이지에 맞춤,A4,letter size"
 title = "페이지 크기 조정"
 
 [scaleSettings]
@@ -11459,11 +11592,11 @@ unit = "단위"
 unitInvalid = "잘못된 단위: {{scaleUnit}}"
 
 [scannerEffect]
-tags = "scan,simulate,create,fake scan,look scanned,scanner effect,make look scanned,photocopy effect,simulate scanner,realistic scan"
+tags = "스캔,시뮬레이션,생성,가짜 스캔,스캔한 것처럼 보이기,스캐너 효과,스캔처럼 만들기,복사 효과,스캐너 시뮬레이션,현실적인 스캔"
 
 [scannerImageSplit]
 submit = "이미지 스캔 추출"
-tags = "separate,auto-detect,scans,multi-photo,organize"
+tags = "분리,자동 감지,스캔,다중 사진,정리"
 title = "추출된 이미지"
 
 [scannerImageSplit.error]
@@ -11492,19 +11625,19 @@ useCase2 = "플랫베드 일괄 스캔을 개별 파일로 분할"
 useCase3 = "콜라주를 개별 사진으로 분리"
 useCase4 = "문서에서 사진 추출"
 whatThisDoes = "기능"
-whatThisDoesDesc = "스캔된 페이지나 합성 이미지에서 각 사진을 자동으로 찾아 추출합니다—수동 크롭이 필요 없습니다."
+whatThisDoesDesc = "스캔한 페이지 또는 합성 이미지에서 각 사진을 자동으로 찾아 추출합니다. 수동 자르기가 필요 없습니다."
 whenToUse = "사용 시점"
 
 [ScannerImageSplit.selectText]
 1 = "각도 임계값:"
-10 = "출력에서 흰색 테두리를 방지하기 위해 추가 및 제거되는 테두리의 크기를 설정합니다(기본값: 1)."
-2 = "이미지 회전에 필요한 최소 절대 각도를 설정합니다(기본값: 10)."
+10 = "가장자리가 잘리지 않도록 저장된 각 사진 주변의 추가 여백(픽셀 단위)."
+2 = "사진을 자동으로 바로잡기 전에 필요한 기울기(도 단위)."
 3 = "허용 오차:"
-4 = "예상 배경색 주변의 색상 변화 범위를 결정합니다(기본값: 30)."
+4 = "배경으로 간주하기 위해 색상이 페이지 배경과 얼마나 가깝게 일치해야 하는지입니다. 높을수록 느슨하고, 낮을수록 엄격합니다."
 5 = "최소 영역:"
-6 = "사진의 최소 영역 임계값을 설정합니다(기본값: 10000)."
+6 = "작은 조각을 피하기 위해 유지할 최소 사진 크기(픽셀²)."
 7 = "최소 윤곽 영역:"
-8 = "사진의 최소 윤곽선 영역 임계값을 설정합니다"
+8 = "사진을 찾을 때 고려할 최소 가장자리/형태입니다(먼지와 얼룩 필터링)."
 9 = "테두리 크기:"
 
 [search]
@@ -11534,7 +11667,7 @@ title = "정보"
 
 [settings.ai]
 documents = "문서 및 RAG"
-general = "일반"
+general = "AI 엔진"
 limits = "제한 및 성능"
 models = "모델 및 제공업체"
 title = "AI"
@@ -11544,12 +11677,15 @@ title = "청구"
 
 [settings.configuration]
 advanced = "고급"
+connections = "Single sign-on"
 database = "데이터베이스"
 endpoints = "엔드포인트"
 features = "기능"
 folderAccess = "폴더 접근"
 integrations = "통합"
+legal = "법적 문서"
 mcp = "MCP Server"
+privacy = "개인정보 보호"
 storageSharing = "파일 저장 및 공유"
 systemSettings = "시스템 설정"
 
@@ -11617,7 +11753,7 @@ defaultPdfEditorChecking = "확인 중..."
 defaultPdfEditorInactive = "다른 앱이 기본값으로 설정됨"
 defaultPdfEditorSet = "이미 기본값"
 defaultStartupView = "시작 시 기본 보기"
-defaultStartupViewDescription = "앱 시작 시 왼쪽 열에서 활성화할 탭을 선택하세요."
+defaultStartupViewDescription = "앱 시작 시 활성화할 보기를 선택하세요"
 defaultToolPickerMode = "기본 도구 선택기 모드"
 defaultToolPickerModeDescription = "도구 선택기를 기본으로 전체 화면 또는 사이드바 중 어떤 모드로 열지 선택하세요"
 defaultViewerZoom = "리더 기본 확대/축소"
@@ -11641,10 +11777,10 @@ themeAccentDefaultHint = "기본 테마(권장)"
 themeAccentDescription = "버튼, 링크 및 강조 표시가 이를 따르며 앱에 은은한 색조를 입힙니다. 라이트와 다크는 각각 별도로 적용됩니다. 시스템은 활성 상태인 것을 사용합니다."
 themeAccentLight = "라이트 모드 강조 색상"
 themeDark = "다크"
-themeDescription = "라이트 모드와 다크 모드를 전환합니다"
+themeDescription = "밝게, 어둡게 또는 시스템 설정 따르기를 선택하여 자동으로 전환되도록 하세요."
 themeLight = "라이트"
 themeReset = "테마를 기본값으로 복원"
-themeSystem = "System"
+themeSystem = "시스템"
 title = "일반"
 user = "사용자"
 
@@ -11668,8 +11804,8 @@ tools = "도구"
 
 [settings.general.updates]
 checkForUpdates = "업데이트 확인"
-currentBackendVersion = "Current Backend Version"
-currentFrontendVersion = "Current Frontend Version"
+currentBackendVersion = "현재 Backend 버전"
+currentFrontendVersion = "현재 Frontend 버전"
 description = "업데이트 확인 및 버전 정보 보기"
 latestVersion = "최신 버전"
 managedByAdmin = "관리자가 관리함"
@@ -11684,7 +11820,7 @@ updateBehaviorError = "업데이트 동작을 변경할 수 없습니다"
 updateBehaviorErrorLocked = "이 설정은 관리자가 잠갔습니다."
 updateBehaviorLockedDescription = "관리자가 이 컴퓨터에서 Stirling-PDF의 업데이트 방식을 구성했습니다. 변경하려면 관리자에게 문의하세요."
 updateBehaviorSaved = "업데이트 동작이 저장되었습니다."
-versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
+versionMismatch = "데스크톱 애플리케이션과 서버가 서로 다른 버전을 실행 중입니다. 호환성 문제를 방지하려면 둘 다 같은 버전으로 업데이트하세요."
 viewDetails = "자세히 보기"
 
 [settings.general.versionInfo]
@@ -11733,16 +11869,16 @@ windows = "단축키에 Ctrl, Alt 또는 다른 수정 키를 포함하세요."
 
 [settings.legal]
 description = "약관, 개인정보 처리방침 및 쿠키 기본 설정입니다."
-label = "Legal"
-title = "Legal"
+label = "법적 고지"
+title = "법적 고지"
 
 [settings.legal.cookiePreferences]
-description = "Review or change your cookie consent choices."
-manage = "Manage"
+description = "쿠키 동의 선택을 검토하거나 변경하세요."
+manage = "관리"
 
 [settings.legal.documents]
-description = "Policies and legal information for this service."
-title = "Legal Documents"
+description = "이 서비스의 정책 및 법적 정보입니다."
+title = "법적 문서"
 
 [settings.licenses]
 backendDescription = "이 서버에 번들로 포함된 backend 종속성의 라이선스입니다."
@@ -11760,7 +11896,7 @@ module = "모듈"
 version = "버전"
 
 [settings.licensingAnalytics]
-audit = "감사"
+audit = "감사 로그"
 auditDescription = "이 서버에서 누가 무엇을 했는지, 그리고 해당 기록이 얼마나 오래 보관되는지입니다."
 plan = "플랜"
 planDescription = "라이선스, 시트 및 현재 플랜으로 잠금 해제되는 항목입니다."
@@ -11803,9 +11939,9 @@ trial = "체험판"
 
 [settings.planBilling.team]
 managedByTeam = "팀에서 관리함"
-memberCount_one = "{{count}} team member"
-memberCount_other = "{{count}} team members"
-memberCount_zero = "no team members"
+memberCount_one = "{{count}}명 팀원"
+memberCount_other = "{{count}}명 팀원"
+memberCount_zero = "팀원 없음"
 
 [settings.planBilling.trial]
 daysRemaining = "{{days}}일 남음"
@@ -11826,9 +11962,9 @@ subtitle = "다음을 위해 Team으로 업그레이드하세요:"
 title = "요금제 업그레이드"
 
 [settings.policiesPrivacy]
-legal = "법률"
+legal = "법적 문서"
 privacy = "개인정보 보호"
-title = "정책 및 개인정보 보호"
+title = "법적 고지 및 개인정보 보호"
 
 [settings.preferences]
 appearance = "모양"
@@ -11857,10 +11993,10 @@ success = "비밀번호가 성공적으로 업데이트되었습니다. 다시 �
 update = "비밀번호 업데이트"
 
 [settings.securityAuth]
-connections = "연결"
-security = "보안"
+connections = "Single sign-on"
+security = "로그인 및 보안"
 telegram = "Telegram"
-title = "보안 및 인증"
+title = "보안 및 로그인"
 
 [settings.server]
 system = "시스템"
@@ -11927,16 +12063,23 @@ title = "서버에 연결할 수 없음"
 subtitle = "자가 호스팅 서버 URL을 입력하세요"
 testing = "연결 테스트 중..."
 title = "서버에 연결"
-useLast = "Last used server: {{serverUrl}}"
+useLast = "마지막으로 사용한 서버: {{serverUrl}}"
 
 [setup.server.error]
-configFetch = "서버 구성을 가져오지 못했습니다. URL을 확인하고 다시 시도하세요."
+configFetch = "서버 구성을 가져오지 못했습니다(status {{status}})"
 configFetchError = "서버 구성을 가져오지 못했습니다: {{error}}"
+dnsFailed = "호스트 이름을 확인할 수 없습니다: {{hostname}}"
 emptyUrl = "서버 URL을 입력하세요"
+httpOnly = "서버는 HTTP로만 접근할 수 있습니다(HTTPS 아님)."
+httpsOnly = "서버는 HTTPS로만 접근할 수 있으며 HTTP는 아닙니다."
 invalidUrl = "잘못된 URL 형식입니다. https://your-server.com 같은 올바른 URL을 입력하세요"
+methodMismatch = "서버가 HEAD 요청에는 응답하지만 GET 요청에는 응답하지 않습니다."
+networkBlocked = "인터넷 연결이 감지되지 않았습니다. 모든 네트워크 요청이 실패하고 있습니다."
+serverUnreachable = "서버에 연결할 수 없습니다. 인터넷은 작동하지만 이 특정 서버에 접근할 수 없습니다."
 testFailed = "연결 테스트에 실패했습니다"
 unknown = "알 수 없는 오류"
 unreachable = "서버에 연결할 수 없습니다"
+userAgentBlocked = "서버가 Tauri/데스크톱 앱 User-Agent는 차단하지만 브라우저 User-Agent는 허용합니다."
 
 [setup.server.error.securityDisabled]
 body = "이 서버에는 로그인이 활성화되어 있지 않습니다. 이 서버에 연결하려면 인증을 활성화해야 합니다:"
@@ -11962,6 +12105,8 @@ filterSigned = "서명됨"
 fromOwner = "{{owner}}로부터"
 newRequest = "서명 요청"
 signedCount = "{{signed}}/{{total}} 서명됨"
+signInRequiredBody = "서명을 요청하고 본인에게 전송된 요청을 보려면 로그인하세요."
+signInRequiredTitle = "로그인 필요"
 
 [sharedSign.empty]
 active = "대기 중인 서명 요청이나 활성 세션이 없습니다"
@@ -11996,7 +12141,7 @@ last = "마지막 페이지"
 maintainRatio = "종횡비 유지 토글"
 next = "다음 페이지"
 noSavedSigs = "저장된 서명이 없습니다"
-penSizePlaceholder = "Type or select pen size (1-200)"
+penSizePlaceholder = "펜 크기 입력 또는 선택(1-200)"
 personalSigs = "개인 서명"
 previous = "이전 페이지"
 redo = "다시 실행"
@@ -12006,7 +12151,7 @@ sharedSigningRequest = "서명 요청"
 sharedSigningStepDesc = "직접 서명하는 대신 이 문서를 다른 사람에게 보내 서명받습니다."
 sharedSigs = "공유 서명"
 submit = "문서 서명"
-tags = "signature,autograph,e-sign,electronic signature,digital signature,sign document,approval,signoff,authorize,endorse,ink signature,handwriting"
+tags = "서명,자필 서명,e-sign,전자 서명,digital signature,문서 서명,승인,signoff,권한 부여,보증,잉크 서명,손글씨"
 title = "서명"
 undo = "실행 취소"
 updateAndPlace = "업데이트 후 배치"
@@ -12035,7 +12180,7 @@ backgroundRemovalFailedTitle = "배경 제거 실패"
 hint = "서명 PNG 또는 JPG 이미지를 업로드하세요"
 label = "서명 이미지 업로드"
 placeholder = "이미지 파일 선택"
-previewAlt = "Current image signature"
+previewAlt = "현재 이미지 서명"
 processing = "이미지 처리 중..."
 removeBackground = "흰색 배경 제거(투명 처리)"
 
@@ -12051,15 +12196,15 @@ text = "위에 이름을 입력한 후, PDF의 아무 곳이나 클릭하여 서
 title = "서명 추가 방법"
 
 [sign.mobile]
-createFromPhone = "Mobile upload"
-description = "Scan this QR code with your phone or tablet, draw your signature, and it will appear here automatically."
-error = "Connection Error"
-expiryWarning = "QR Code Expiring Soon"
-expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."
-instructions = "Open the camera app on your phone and scan this code. Keep this window open while you draw."
-pollingError = "Error checking for the signature"
-sessionCreateError = "Failed to create session"
-title = "Draw on your phone"
+createFromPhone = "모바일 업로드"
+description = "휴대폰 또는 태블릿으로 이 QR 코드를 스캔하고 서명을 그리면 여기에 자동으로 나타납니다."
+error = "연결 오류"
+expiryWarning = "QR 코드가 곧 만료됩니다"
+expiryWarningMessage = "이 QR 코드는 {{seconds}}초 후 만료됩니다. 새 코드가 자동으로 생성됩니다."
+instructions = "휴대폰에서 카메라 앱을 열고 이 코드를 스캔하세요. 그리는 동안 이 창을 열어 두세요."
+pollingError = "서명 확인 중 오류"
+sessionCreateError = "세션 생성 실패"
+title = "휴대폰에서 그리기"
 
 [sign.mode]
 move = "서명 이동"
@@ -12120,8 +12265,8 @@ colorLabel = "텍스트 색상"
 fontLabel = "글꼴"
 fontSizeLabel = "글꼴 크기"
 fontSizePlaceholder = "글꼴 크기 입력 또는 선택(8-200)"
-name = "서명자 이름"
-placeholder = "성명을 입력하세요"
+name = "텍스트"
+placeholder = "텍스트 입력"
 
 [sign.type]
 canvas = "캔버스"
@@ -12173,7 +12318,7 @@ createFailed = "서명 요청 생성에 실패했습니다"
 
 [signup]
 accountCreatedSuccessfully = "계정이 성공적으로 생성되었습니다! 이제 로그인할 수 있습니다."
-alreadyHaveAccount = "이미 계정이 있으신가요? 로그인"
+alreadyHaveAccount = "이미 계정이 있습니다"
 checkEmailConfirmation = "등록을 완료하려면 이메일의 확인 링크를 확인하세요."
 confirmPassword = "비밀번호 확인"
 confirmPasswordPlaceholder = "비밀번호 확인"
@@ -12194,8 +12339,8 @@ passwordsDoNotMatch = "비밀번호가 일치하지 않습니다"
 passwordTooShort = "비밀번호는 최소 6자 이상이어야 합니다"
 pleaseFillAllFields = "모든 필드를 입력하세요"
 signUp = "가입"
-signUpWith = "Sign up with"
-skip = "Skip"
+signUpWith = "다음으로 가입"
+skip = "건너뛰기"
 subtitle = "Stirling PDF에 가입하여 시작하세요"
 title = "계정 만들기"
 unableToAccessTool = "도구에 액세스할 수 없습니다: {{error}}"
@@ -12213,7 +12358,7 @@ resultsTitle = "분할 결과"
 selectMethod = "분할 방법 선택"
 splitPages = "분할할 페이지 입력:"
 submit = "분할"
-tags = "divide,separate,break,split,extract pages,separate pages,divide document,break apart,separate files,unbind,split by page,divide by chapter"
+tags = "나누기,분리,끊기,분할,페이지 추출,페이지 분리,문서 나누기,분리하기,파일 분리,제본 해제,페이지별 분할,챕터별 나누기"
 title = "PDF 분할"
 
 [split.error]
@@ -12420,7 +12565,7 @@ accessLimitedCommenter = "댓글 액세스는 곧 제공될 예정입니다. 다
 accessLimitedTitle = "제한된 액세스"
 accessLimitedViewer = "이 링크는 보기 전용입니다. 다운로드가 필요하면 소유자에게 편집자 권한을 요청하세요."
 addUser = "추가"
-bulkDescription = "선택한 모든 파일을 로그인한 사용자와 공유할 수 있는 하나의 링크를 생성합니다."
+bulkDescription = "선택한 모든 파일을 로그인한 사용자와 공유할 링크 하나를 만듭니다."
 bulkTitle = "선택한 파일 공유"
 commenterHint = "댓글 기능은 곧 제공될 예정입니다."
 copied = "링크가 클립보드에 복사되었습니다"
@@ -12439,8 +12584,8 @@ errorTitle = "공유 실패"
 expiredBody = "이 공유 링크가 유효하지 않거나 만료되었습니다."
 expiredTitle = "링크 만료됨"
 failure = "공유 링크를 생성할 수 없습니다. 다시 시도하세요."
-fileCount_one = "{{count}} file"
-fileCount_other = "{{count}} files"
+fileCount_one = "{{count}}개 파일"
+fileCount_other = "{{count}}개 파일"
 fileLabel = "파일"
 generate = "링크 생성"
 generated = "공유 링크가 생성되었습니다"
@@ -12500,14 +12645,14 @@ viewed = "조회됨"
 viewsCount = "조회수: {{count}}"
 
 [storageUpload]
-bulkDescription = "선택한 파일을 서버 저장소에 업로드합니다."
+bulkDescription = "선택한 파일을 서버 스토리지에 업로드합니다."
 bulkTitle = "선택한 파일 업로드"
 description = "현재 파일을 서버 저장소에 업로드하여 본인이 액세스할 수 있습니다."
 errorTitle = "업로드 실패"
 failure = "업로드에 실패했습니다. 로그인 및 저장소 설정을 확인하세요."
 featureDisabled = "이 서버에서는 서버로 저장이 활성화되어 있지 않습니다."
-fileCount_one = "{{count}} file"
-fileCount_other = "{{count}} files"
+fileCount_one = "{{count}}개 파일"
+fileCount_other = "{{count}}개 파일"
 fileLabel = "파일"
 hint = "공개 링크와 액세스 모드는 서버 설정에서 제어됩니다."
 more = " +{{count}}개 더"
@@ -12517,25 +12662,25 @@ updateButton = "서버에서 업데이트"
 uploadButton = "서버로 업로드"
 
 [superSearch]
-all = "All"
-ariaLabel = "Super search"
-filtersAriaLabel = "Search filters"
-hint = "Type to search"
-placeholder = "Search Stirling"
+all = "전체"
+ariaLabel = "슈퍼 검색"
+filtersAriaLabel = "검색 필터"
+hint = "검색하려면 입력하세요"
+placeholder = "Stirling 검색"
 placeholderShort = "검색"
-showLess = "Show less"
-showMore = "Show {{count}} more"
+showLess = "간단히 보기"
+showMore = "{{count}}개 더 보기"
 
 [superSearch.group]
-docs = "Docs"
-files = "Files"
-pages = "Pages"
-processor = "Processor"
-settings = "Settings"
-tools = "Tools"
+docs = "문서"
+files = "파일"
+pages = "페이지"
+processor = "프로세서"
+settings = "설정"
+tools = "도구"
 
 [survey]
-title = "Stirling-PDF Survey"
+title = "Stirling-PDF 설문조사"
 
 [swagger]
 clickHere = "여기를 클릭하세요"
@@ -12564,9 +12709,9 @@ leaveError = "팀에서 나가지 못했습니다"
 leaveSuccess = "팀에서 성공적으로 나갔습니다"
 loading = "팀 정보를 불러오는 중..."
 makeOwner = "소유자로 지정"
-memberCount_one = "{{count}} member"
-memberCount_other = "{{count}} members"
-memberCount_zero = "no members"
+memberCount_one = "{{count}}명 구성원"
+memberCount_other = "{{count}}명 구성원"
+memberCount_zero = "구성원 없음"
 memberRemoved = "구성원이 제거되었습니다"
 namePlaceholder = "팀 이름을 입력하세요"
 noOwner = "이 팀에는 소유자가 없습니다"
@@ -12654,7 +12799,7 @@ scopeFiles = "파일"
 scopeThisFile = "이 파일"
 selectFilesHint = "이 도구를 실행하려면 활성 파일에서 파일을 선택하세요."
 singleFileScope = "다음에만 적용: {{fileName}}"
-viewerMode = "여러 파일을 선택하려면 파일 편집기로 전환하세요."
+viewerMode = "여러 파일을 추가하려면 파일 편집기로 전환하세요."
 
 [toolFormat]
 ANY = "모든 파일"
@@ -12694,7 +12839,7 @@ pdfTools = "PDF 도구"
 placeholder = "시작하려면 도구를 선택하세요"
 premiumFeature = "프리미엄 기능:"
 searchTools = "도구 검색"
-toolsHeader = "도구"
+toolsHeader = "PDF 도구"
 viewAllTools = "모든 도구 보기"
 
 [toolPanel.fullscreen]
@@ -12743,7 +12888,7 @@ signing = "서명"
 verification = "검증"
 
 [toolRenderer]
-notFound = "Tool not found: {{tool}}"
+notFound = "도구를 찾을 수 없음: {{tool}}"
 
 [tools]
 noSearchResults = "도구를 찾을 수 없습니다"
@@ -12754,7 +12899,7 @@ close = "툴팁 닫기"
 
 [unlockPDFForms]
 description = "이 도구는 PDF 양식 필드의 읽기 전용 제한을 제거하여 편집 및 입력 가능하도록 만듭니다."
-submit = "Remove"
+submit = "양식 잠금 해제"
 tags = "제거,삭제,양식,필드,읽기 전용"
 title = "양식 필드의 읽기 전용 제거"
 
@@ -12786,7 +12931,7 @@ notes = "노트"
 releaseNotes = "릴리스 노트"
 showLess = "버전 적게 표시"
 showMore = "{{count}}개 버전 모두 표시"
-stable = "STABLE"
+stable = "안정"
 updateAvailable = "업데이트 사용 가능"
 urgentUpdateAvailable = "긴급 업데이트"
 version = "버전"
@@ -12808,7 +12953,7 @@ attentionBodyAdmin = "이 서버가 규정을 준수하도록 라이선스 요�
 attentionTitle = "이 서버에 관리자 확인이 필요합니다"
 message = "100명의 사용자, PDF 텍스트 편집 및 고급 기능으로 Stirling PDF를 최대한 활용하세요"
 seeInfo = "정보 보기"
-title = "Server 플랜으로 업그레이드"
+title = "Team 요금제로 업그레이드"
 upgradeButton = "지금 업그레이드"
 
 [URLToPDF]
@@ -12820,8 +12965,8 @@ aboutUsageAnalytics = "사용 분석 정보"
 configureSettings = "분석 설정 구성"
 error = "사용 통계를 불러오는 중 오류"
 loadFailed = "사용량 통계를 불러오지 못했습니다"
-noData = "데이터가 없습니다"
-noDataMessage = "현재 사용 통계가 제공되지 않습니다."
+noData = "아직 사용량 없음"
+noDataMessage = "사용자가 도구를 실행하기 시작하면 Endpoint 활동이 여기에 표시됩니다."
 usageAnalyticsExplanation = "사용 분석은 엔드포인트 요청과 도구 사용 패턴을 추적합니다. 감사 로깅 대시보드와 결합하면 시스템 활동, 성능, 보안 이벤트를 완전히 가시화할 수 있습니다."
 viewAuditLogs = "감사 로그 보기"
 
@@ -12899,17 +13044,17 @@ yearsAgo_one = "{{count}}년 전"
 yearsAgo_other = "{{count}}년 전"
 
 [users.cap]
-addProcessor = "+ Processor"
+addProcessor = "+ 프로세서"
 approver = "정책 승인"
 editor = "편집기"
 processor = "프로세서"
 
 [users.columns]
-capabilities = "Capabilities"
+capabilities = "기능"
 email = "Email"
-person = "Person"
-role = "Role"
-status = "Status"
+person = "사용자"
+role = "역할"
+status = "상태"
 team = "팀"
 
 [users.confirm]
@@ -12954,7 +13099,7 @@ method = "추가 방법"
 methodDirect = "계정 직접 생성"
 methodEmail = "Email로 초대"
 password = "비밀번호"
-passwordError = "비밀번호는 8자 이상이어야 합니다"
+passwordError = "비밀번호는 6자 이상이어야 합니다"
 processorDeferred = "초대가 전송되었지만 아직 Processor 액세스 권한을 부여할 수 없습니다. 참여한 후 명단에서 설정하세요."
 processorDesc = "거버넌스 표면, 파이프라인 실행, 에이전트 및 API."
 role = "역할"
@@ -12963,7 +13108,7 @@ subtitle2 = "Stirling 작업 공간에 참여할 수 있도록 이메일을 받�
 team = "팀"
 title = "사용자 초대"
 username = "사용자 이름"
-usernameError = "사용자 이름은 최소 3자 이상이어야 합니다"
+usernameError = "유효한 사용자 이름(3-50자) 또는 이메일 주소를 입력하세요"
 usernamePlaceholder = "jsmith"
 
 [users.invites]
@@ -12975,8 +13120,8 @@ expiresToday = "오늘 만료"
 title = "대기 중인 초대"
 
 [users.invites.columns]
-expires = "Expires"
-invitee = "Invitee"
+expires = "만료"
+invitee = "초대 대상"
 
 [users.loadError]
 description = "백엔드에 연결하는 중 문제가 발생했거나 접근 권한이 없습니다. 다시 시도하세요."
@@ -13023,7 +13168,7 @@ admin = "관리자"
 guest = "게스트"
 member = "멤버"
 orgOwner = "조직 소유자"
-teamOwner = "팀 소유자"
+teamOwner = "팀 리드"
 
 [users.seats]
 full = "라이선스가 있는 모든 좌석이 사용 중입니다. 다른 사용자를 추가하려면 좌석을 비우거나 좌석 수를 늘리세요."
@@ -13106,10 +13251,10 @@ generatedAt = "생성 시각"
 noPdf = "검증이 성공하면 PDF 보고서를 사용할 수 있습니다."
 page = "페이지"
 shortTitle = "서명 요약"
-signatureCountLabel_one = "{{count}} signature"
-signatureCountLabel_other = "{{count}} signatures"
-signaturesFound_one = "{{count}} signature detected"
-signaturesFound_other = "{{count}} signatures detected"
+signatureCountLabel_one = "{{count}}개 서명"
+signatureCountLabel_other = "{{count}}개 서명"
+signaturesFound_one = "{{count}}개 서명 감지됨"
+signaturesFound_other = "{{count}}개 서명 감지됨"
 signaturesInvalid = "{{count}}개 유효하지 않음"
 signaturesUnverified_one = "{{count}}개 검토 필요"
 signaturesUnverified_other = "{{count}}개 검토 필요"
@@ -13139,7 +13284,7 @@ validUntrusted = "유효함, 서명자 확인되지 않음"
 
 [viewer]
 cannotPreviewFile = "파일을 미리보기할 수 없습니다"
-copyText = "Copy"
+copyText = "복사"
 disableColorFilter = "색상 필터 비활성화"
 documentUpdated = "문서가 업데이트됨"
 dualPageView = "두 페이지 보기"
@@ -13153,7 +13298,7 @@ loadingEngine = "PDF Engine 불러오는 중..."
 moreOptions = "더 보기"
 nextPage = "다음 페이지"
 noPdfProvided = "제공된 PDF가 없습니다"
-onlyPdfSupported = "뷰어는 PDF 파일만 지원합니다. 이 파일은 다른 형식인 것으로 보입니다."
+onlyPdfSupported = "이 파일 형식은 미리보기를 지원하지 않습니다."
 pageNavigation = "페이지 탐색"
 previousPage = "이전 페이지"
 saveChangesErrorBody = "문서를 저장할 수 없습니다. 다시 시도하세요."
@@ -13182,13 +13327,13 @@ title = "첨부 파일"
 untitled = "제목 없음"
 
 [viewer.bookmarks]
-addBookmark = "Add bookmark"
+addBookmark = "북마크 추가"
 bookmarkTitle = "북마크 제목"
 bookmarkTitleRequired = "북마크 제목은 필수입니다"
 closeSidebar = "북마크 사이드바 닫기"
 collapseAll = "모든 북마크 접기"
 editorOnly = "이 문서의 북마크는 편집기에서만 편집할 수 있습니다."
-empty = "No bookmarks in this document"
+empty = "이 문서에 북마크가 없습니다"
 expandAll = "모든 북마크 펼치기"
 loadFailed = "북마크를 불러오지 못했습니다"
 loading = "북마크 불러오는 중..."
@@ -13199,7 +13344,7 @@ pageLabel = "페이지"
 pageNumber = "{{page}}페이지"
 saveFailed = "북마크를 저장하지 못했습니다"
 searchPlaceholder = "북마크 검색"
-title = "Bookmarks"
+title = "북마크"
 untitled = "제목 없음"
 
 [viewer.comments]
@@ -13220,14 +13365,14 @@ goToLink = "링크로 이동"
 hint = "댓글, 텍스트 삽입, 텍스트 바꾸기 도구로 댓글을 추가하세요. 페이지별로 여기 표시됩니다."
 locateAnnotation = "문서에서 찾기"
 moreActions = "추가 작업"
-nComments_one = "{{count}} comment"
-nComments_other = "{{count}} comments"
-noMatch = "No comments match your search"
+nComments_one = "{{count}}개 댓글"
+nComments_other = "{{count}}개 댓글"
+noMatch = "검색과 일치하는 댓글이 없습니다"
 pageLabel = "페이지 {{page}}"
 placingHint = "페이지를 클릭하여 배치… (취소)"
 removeCommentOnly = "댓글만 제거"
 saveReply = "답글 저장"
-searchPlaceholder = "Search comments"
+searchPlaceholder = "댓글 검색"
 title = "댓글"
 typeComment = "댓글"
 typeInsertText = "텍스트 삽입"
@@ -13255,7 +13400,7 @@ loading = "레이어 불러오는 중..."
 noDocument = "레이어를 보려면 PDF를 여세요."
 readFailed = "PDF 레이어를 읽지 못했습니다"
 showAll = "모든 레이어 표시"
-title = "Layers"
+title = "레이어"
 
 [viewer.link]
 delete = "링크 삭제"
@@ -13273,9 +13418,9 @@ emptyFile = "빈 파일"
 htmlHidePreview = "미리보기 숨기기"
 htmlPreview = "HTML 미리보기"
 htmlPreviewMobileHidden = "HTML 페이지는 데스크톱 너비에 맞게 배치되므로 여기서는 미리보기가 기본적으로 꺼져 있습니다."
-htmlPreviewWarning = "HTML 미리보기 — 외부 리소스가 로드되지 않을 수 있습니다 · {{size}}"
+htmlPreviewWarning = "HTML 미리보기 - 외부 리소스가 로드되지 않을 수 있음 · {{size}}"
 htmlShowPreview = "그래도 미리보기 표시"
-invalidJson = "잘못된 JSON — 원본 내용을 표시합니다"
+invalidJson = "잘못된 JSON - 원시 콘텐츠 표시 중"
 lineNumbers = "줄 번호"
 loading = "로딩 중..."
 noFile = "불러온 파일이 없습니다"
@@ -13283,6 +13428,12 @@ previewUnavailable = "이 파일 형식은 미리보기를 사용할 수 없습�
 renderMarkdown = "마크다운 렌더링"
 sortedBy = "정렬 기준: {{column}}"
 textStats = "{{lines}}줄 · {{size}}"
+
+[viewer.nonPdf.fileType]
+file = "파일"
+image = "이미지"
+spreadsheet = "스프레드시트"
+text = "텍스트"
 
 [viewer.portfolio]
 addFile = "파일 추가"
@@ -13339,7 +13490,7 @@ tooltipTitle = "경고"
 [watermark]
 desc = "PDF에 텍스트 또는 이미지 워터마크 추가"
 submit = "워터마크 추가"
-tags = "stamp,mark,overlay,watermark,branding,logo,confidential,draft,copyright,trademark,text overlay,image overlay,background text"
+tags = "스탬프,마크,오버레이,워터마크,브랜딩,로고,기밀,초안,저작권,상표,텍스트 오버레이,이미지 오버레이,배경 텍스트"
 title = "워터마크 추가"
 
 [watermark.error]
@@ -13491,8 +13642,8 @@ downloadAll = "모두 다운로드"
 exitRedaction = "가리기 모드 종료"
 exportAll = "PDF 내보내기"
 exportSelected = "선택한 페이지 내보내기"
-formFill = "양식 채우기"
-hideToolbar = "Hide toolbar"
+formFill = "양식 편집기"
+hideToolbar = "도구 모음 숨기기"
 moreActions = "추가 작업"
 multiTool = "멀티 도구"
 panMode = "이동 모드"
@@ -13516,10 +13667,10 @@ selectLanguage = "언어 선택"
 share = "공유"
 showAllTools = "모든 도구 표시"
 showFewerTools = "도구 모음 접기"
-showToolbar = "Show toolbar"
+showToolbar = "도구 모음 표시"
 toggleAnnotations = "주석 표시 전환"
 toggleAttachments = "첨부 파일 표시 전환"
-toggleBookmarks = "책갈피 표시 전환"
+toggleBookmarks = "북마크(목차)"
 toggleComments = "댓글"
 toggleLayers = "레이어 표시 전환"
 toggleSidebar = "사이드바 표시 전환"
@@ -13570,8 +13721,8 @@ title = "워크스페이스"
 description = "워크스페이스 멤버와 권한을 관리하세요"
 
 [workspace.people.license]
-users_one = "user"
-users_other = "users"
+users_one = "사용자"
+users_other = "사용자"
 
 [workspace.teams]
 description = "팀을 관리하고 워크스페이스 멤버를 구성하세요"
@@ -13579,6 +13730,6 @@ description = "팀을 관리하고 워크스페이스 멤버를 구성하세요"
 [zipWarning]
 cancel = "취소"
 confirm = "압축 해제"
-message_one = "This ZIP contains {{count}} file. Extract anyway?"
-message_other = "This ZIP contains {{count}} files. Extract anyway?"
+message_one = "이 ZIP에는 {{count}}개 파일이 포함되어 있습니다. 그래도 추출하시겠습니까?"
+message_other = "이 ZIP에는 {{count}}개 파일이 포함되어 있습니다. 그래도 추출하시겠습니까?"
 title = "큰 ZIP 파일"
