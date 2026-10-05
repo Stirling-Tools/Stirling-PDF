@@ -5,11 +5,16 @@ import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useGroupSigningEnabled } from "@app/hooks/useGroupSigningEnabled";
 import { useAuth } from "@app/auth/UseSession";
 import { getDisabledLabel } from "@app/components/tools/fullscreen/shared";
-import type { QuickNavToolReasons } from "@app/contexts/QuickNavHostContext";
+import type {
+  QuickNavToolReasons,
+  QuickNavEntryId,
+} from "@app/contexts/QuickNavHostContext";
 import type { ToolId } from "@app/types/toolId";
 
 const ENTRY_ENDPOINTS = {
   automate: ["automate"],
+  sign: ["sign"],
+  certSign: ["cert-sign"],
 } satisfies Partial<Record<ToolId, string[]>>;
 
 // Object.keys widens to string, which a tool-id-keyed record can't be indexed by.
@@ -21,7 +26,7 @@ const ENDPOINT_ENTRIES = Object.keys(
 type EndpointCause = "missingDependency" | "disabledByAdmin";
 // Guest-only; left out of CAUSES so it is never read back for whoever signs in next.
 type Cause = EndpointCause | "groupSigningOff" | "signInRequired";
-type Causes = Partial<Record<ToolId, Cause>>;
+type Causes = Partial<Record<QuickNavEntryId, Cause>>;
 const CAUSES: Cause[] = [
   "missingDependency",
   "disabledByAdmin",
@@ -41,7 +46,7 @@ function readRemembered(): Causes | null {
     }
     const known = Object.entries(parsed as Record<string, unknown>).filter(
       ([, cause]) => CAUSES.includes(cause as Cause),
-    ) as [ToolId, Cause][];
+    ) as [QuickNavEntryId, Cause][];
     return Object.fromEntries(known);
   } catch {
     return null;
@@ -117,7 +122,7 @@ export function useQuickNavToolReasons(): QuickNavToolReasons | null {
   return useMemo(() => {
     if (!causes) return null;
     const reasons: QuickNavToolReasons = {};
-    for (const entry of Object.keys(causes) as ToolId[]) {
+    for (const entry of Object.keys(causes) as QuickNavEntryId[]) {
       const cause = causes[entry];
       if (cause === "signInRequired") {
         reasons[entry] = t(

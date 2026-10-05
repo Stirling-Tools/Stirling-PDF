@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { MultiSelect, Loader, Text, Stack } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { useNavigate } from "react-router-dom";
+import { MultiSelect, Loader, Text, Stack, TextInput } from "@mantine/core";
+import { Icon } from "@app/ui/Icon";
+import { InviteTeammateButton } from "@app/components/shared/InviteTeammateButton";
+import styles from "@app/components/shared/UserSelector.module.css";
 import { alert } from "@app/components/toast";
 import { fetchUsers } from "@app/api/users";
 import { useAuth } from "@app/auth/UseSession";
@@ -14,8 +15,10 @@ interface UserSelectorProps {
   value: number[];
   onChange: (userIds: number[]) => void;
   placeholder?: string;
+  label?: string;
   size?: "xs" | "sm" | "md" | "lg" | "xl";
   disabled?: boolean;
+  presentation?: "dropdown" | "cards";
 }
 
 type SelectItem = { value: string; label: string };
@@ -25,18 +28,21 @@ const UserSelector = ({
   value,
   onChange,
   placeholder,
+  label,
   size = "sm",
   disabled = false,
+  presentation = "dropdown",
 }: UserSelectorProps) => {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [stringValue, setStringValue] = useState<string[]>([]);
+  const [search, setSearch] = useState("");
 
   const {
     data: users,
     isPending: loading,
     error,
+    refetch,
   } = useQuery({ queryKey: qk.users(), queryFn: fetchUsers });
 
   useEffect(() => {
@@ -54,7 +60,6 @@ const UserSelector = ({
 
     (users ?? [])
       .filter((u) => u && u.userId && u.username)
-      .filter((u) => u.userId !== currentUserId)
       .filter((u) => u.teamName?.toLowerCase() !== "internal")
       .forEach((u) => {
         const teamName =
@@ -68,7 +73,15 @@ const UserSelector = ({
           displayName !== username
             ? `${displayName} (@${username})`
             : displayName;
-        usersByTeam[teamName].push({ value: String(u.userId), label });
+        usersByTeam[teamName].push({
+          value: String(u.userId),
+          label:
+            u.userId === currentUserId
+              ? t("certSign.collab.userSelector.you", "{{name}} (You)", {
+                  name: label,
+                })
+              : label,
+        });
       });
 
     return Object.entries(usersByTeam).map(([teamName, items]) => ({
@@ -77,7 +90,6 @@ const UserSelector = ({
     }));
   }, [users, user, t]);
 
-  // Process stringValue when value prop changes
   useEffect(() => {
     const safeValue = Array.isArray(value) ? value : [];
     const result = safeValue
@@ -90,26 +102,113 @@ const UserSelector = ({
     return <Loader size="sm" />;
   }
 
-  // No users available — prompt to invite
-  if (!selectData || selectData.length === 0) {
+  const inviteButton = (
+    <InviteTeammateButton
+      search={search}
+      disabled={disabled}
+      onInvited={() => {
+        setSearch("");
+        void refetch();
+      }}
+    />
+  );
+
+  if (selectData.length === 0 && presentation !== "cards") {
     return (
       <Stack gap="xs" align="flex-start">
         <Text size="sm" c="dimmed">
           {t("certSign.collab.userSelector.noUsers", "No other users found.")}
         </Text>
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={() => navigate("/settings/people")}
-        >
-          {t("certSign.collab.userSelector.inviteUsers", "Add Users")}
-        </Button>
+        {inviteButton}
+      </Stack>
+    );
+  }
+
+  if (presentation === "cards") {
+    const matchingGroups = selectData
+      .map((group) => ({
+        ...group,
+        items: group.items.filter((item) =>
+          `${item.label} ${group.group}`
+            .toLocaleLowerCase()
+            .includes(search.trim().toLocaleLowerCase()),
+        ),
+      }))
+      .filter((group) => group.items.length > 0);
+    return (
+      <Stack gap="md" role="group" aria-label={label}>
+        <TextInput
+          aria-label={t(
+            "signWorkspace.searchParticipants",
+            "Search people or teams",
+          )}
+          placeholder={t(
+            "signWorkspace.searchParticipants",
+            "Search people or teams",
+          )}
+          leftSection={<Icon name="search" size={18} />}
+          value={search}
+          onChange={(event) => setSearch(event.currentTarget.value)}
+          disabled={disabled}
+        />
+        <div className={styles.groups}>
+          {matchingGroups.map((group) => (
+            <div key={group.group}>
+              {group.group.toLowerCase() !== "default" && (
+                <Text size="xs" c="dimmed" mb="xs">
+                  {group.group}
+                </Text>
+              )}
+              <div className={styles.grid}>
+                {group.items.map((item) => {
+                  const id = Number(item.value);
+                  const selected = value.includes(id);
+                  return (
+                    <label
+                      key={id}
+                      className={styles.card}
+                      data-selected={selected}
+                    >
+                      <span className={styles.avatar} aria-hidden="true">
+                        {item.label.slice(0, 2).toLocaleUpperCase()}
+                      </span>
+                      <span className={styles.name}>{item.label}</span>
+                      <input
+                        type="checkbox"
+                        checked={selected}
+                        disabled={disabled}
+                        onChange={() =>
+                          onChange(
+                            selected
+                              ? value.filter((userId) => userId !== id)
+                              : [...value, id],
+                          )
+                        }
+                      />
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+        {matchingGroups.length === 0 && (
+          <Text size="sm" c="dimmed">
+            {t("signWorkspace.noPeopleMatch", "No people match your search.")}
+          </Text>
+        )}
+        {inviteButton}
       </Stack>
     );
   }
 
   return (
     <MultiSelect
+      label={label}
+      aria-label={
+        label ??
+        t("certSign.collab.userSelector.placeholder", "Select users...")
+      }
       data={selectData}
       value={stringValue}
       onChange={(selectedIds) => {
