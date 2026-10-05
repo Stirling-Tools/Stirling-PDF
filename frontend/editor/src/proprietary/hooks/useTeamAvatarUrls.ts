@@ -51,6 +51,15 @@ export function useTeamAvatarUrls(
     const sign = async () => {
       const request = ++requestRef.current;
       try {
+        // The bucket is private and RLS keys off auth.uid(), so signing while signed out is
+        // refused every time. Skipping it also keeps tests off the network.
+        const { data: auth } = await client.auth.getSession();
+        if (cancelled || request !== requestRef.current) return;
+        if (!auth?.session) {
+          setUrls({});
+          return;
+        }
+
         const paths: string[] = [];
         for (const id of ids) {
           if (!SUPABASE_ID.test(id)) {
