@@ -227,11 +227,15 @@ subprojects {
         resolutionStrategy.force rootProject.libs.jackson2.dataformat.yaml.get()
         resolutionStrategy.force rootProject.libs.jackson2.datatype.jdk8.get()
         resolutionStrategy.force rootProject.libs.jackson2.datatype.jsr310.get()
+        // Logback arrives via spring-boot-starter; pin it centrally rather than re-declaring it
+        // in every module.
+        resolutionStrategy.force rootProject.libs.logback.core.get()
+        resolutionStrategy.force rootProject.libs.logback.classic.get()
         // Keep BouncyCastle modules aligned to avoid runtime linkage errors
         resolutionStrategy.force rootProject.libs.bouncycastle.bcprov.get()
         resolutionStrategy.force rootProject.libs.bouncycastle.bcpkix.get()
         resolutionStrategy.force rootProject.libs.bouncycastle.bcutil.get()
-        resolutionStrategy.force "org.apache.santuario:xmlsec:4.0.4"
+        resolutionStrategy.force rootProject.libs.xmlsec.get()
         resolutionStrategy.force rootProject.libs.guava.get()
     }
 
@@ -248,9 +252,6 @@ subprojects {
     dependencies {
         implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
-        //tmp for security bumps
-        implementation rootProject.libs.logback.core
-        implementation rootProject.libs.logback.classic
         compileOnly rootProject.libs.lombok
         annotationProcessor rootProject.libs.lombok
         implementation rootProject.libs.jspecify
