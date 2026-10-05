@@ -1,7 +1,9 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Stack, Alert } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import PreferencesSection from "@core/components/shared/config/configSections/preferences/PreferencesSection";
+import PreferencesSection, {
+  type PreferencesSectionProps,
+} from "@core/components/shared/config/configSections/preferences/PreferencesSection";
 import { DefaultAppSettings } from "@app/components/shared/config/configSections/DefaultAppSettings";
 import { useDesktopInstall } from "@app/hooks/useDesktopInstall";
 import {
@@ -10,21 +12,15 @@ import {
   type UpdateModeInfo,
 } from "@app/services/desktopUpdateService";
 
-interface GeneralSectionProps {
-  /** Forwarded to the core section; the settings modal header already names it. */
-  hideTitle?: boolean;
-}
-
 /**
- * Desktop extension of GeneralSection.
- *
- * Adds default PDF editor settings, wires up the Tauri auto-updater install
- * flow, and exposes the user-facing update-mode control (prompt / auto /
- * disabled). When the mode is locked by a provisioning file the control is
- * still rendered but disabled, with a "Managed by administrator" hint, so
- * managed-deployment users can see what policy is in effect.
+ * Desktop Preferences page: the lower layers' props plus file defaults, the Tauri
+ * updater and the update-mode control (shown disabled when provisioning locks it).
  */
-const GeneralSection: React.FC<GeneralSectionProps> = () => {
+const GeneralSection: React.FC<PreferencesSectionProps> = ({
+  editorDefaultsSlot,
+  hideUpdateSection = false,
+  ...props
+}) => {
   const { t } = useTranslation();
   const install = useDesktopInstall();
   const [updateModeInfo, setUpdateModeInfo] = useState<UpdateModeInfo | null>(
@@ -96,9 +92,16 @@ const GeneralSection: React.FC<GeneralSectionProps> = () => {
         </Alert>
       )}
       <PreferencesSection
-        editorDefaultsSlot={<DefaultAppSettings />}
+        {...props}
+        editorDefaultsSlot={
+          <>
+            {editorDefaultsSlot}
+            <DefaultAppSettings />
+          </>
+        }
         // Mounting the card starts its summary request, so policy must be known first.
         hideUpdateSection={
+          hideUpdateSection ||
           !updateModeInfo ||
           (updateModeInfo.mode === "disabled" && updateModeInfo.locked)
         }

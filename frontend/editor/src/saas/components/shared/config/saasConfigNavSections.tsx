@@ -1,13 +1,10 @@
 import React from "react";
 import { type TFunction } from "i18next";
 import {
-  createConfigNavSections as createCoreConfigNavSections,
+  createPreferencesNavSection,
   type ConfigNavSection,
 } from "@core/components/shared/config/configNavSections";
 import type { ConfigNavItem } from "@app/components/shared/config/types";
-import HotkeysSection from "@app/components/shared/config/configSections/HotkeysSection";
-import GeneralSection from "@app/components/shared/config/configSections/GeneralSection";
-import PreferencesSection from "@core/components/shared/config/configSections/preferences/PreferencesSection";
 import PasswordSecurity from "@app/components/shared/config/configSections/PasswordSecurity";
 import ApiKeys from "@app/components/shared/config/configSections/ApiKeys";
 import McpSection from "@app/components/shared/config/configSections/McpSection";
@@ -23,43 +20,8 @@ type OverviewComponent = React.ComponentType<{ onLogoutClick: () => void }>;
 interface CreateSaasConfigNavSectionsOptions {
   isAnonymous?: boolean;
   t: TFunction<"translation", undefined>;
-  /** Close the settings modal — the Help tours need it to start the tour. */
+  /** Leaves settings; the Help tours need the page out of the way to run. */
   onRequestClose?: () => void;
-}
-
-function ensurePreferencesSection(
-  sections: ConfigNavSection[],
-  t: TFunction<"translation", undefined>,
-): ConfigNavSection[] {
-  const preferencesIndex = sections.findIndex(
-    (section) => section.id === "preferences",
-  );
-
-  if (preferencesIndex === -1) {
-    return [
-      ...sections,
-      {
-        id: "preferences",
-        title: t("settings.preferences.title", "Preferences"),
-        items: [
-          {
-            key: "general",
-            label: t("settings.general.title", "General"),
-            icon: "settings",
-            component: <GeneralSection />,
-          },
-          {
-            key: "hotkeys",
-            label: t("settings.hotkeys.title", "Keyboard Shortcuts"),
-            icon: "keyboard",
-            component: <HotkeysSection />,
-          },
-        ],
-      },
-    ];
-  }
-
-  return sections;
 }
 
 function appendDeveloperSection(
@@ -227,8 +189,6 @@ export function createSaasConfigNavSections(
     onRequestClose = () => {},
   }: CreateSaasConfigNavSectionsOptions,
 ): ConfigNavSection[] {
-  const baseSections = createCoreConfigNavSections(t);
-
   // Create Account section as the first section with Overview and Passwords & Security
   const accountSection: ConfigNavSection = {
     title: t("config.account.overview.title", "Account Settings"),
@@ -253,22 +213,15 @@ export function createSaasConfigNavSections(
     accountSection.items.push(createCloudTeamNavItem(t));
   }
 
-  let sections = [accountSection, ...baseSections];
-
-  // Suppress OSS-only sections (update checker, login config banner) not relevant in SaaS
-  sections = sections.map((section) => ({
-    ...section,
-    items: section.items.map((item) =>
-      item.key === "general"
-        ? {
-            ...item,
-            component: <PreferencesSection hideUpdateSection hideAdminBanner />,
-          }
-        : item,
-    ),
-  }));
-
-  sections = ensurePreferencesSection(sections, t);
+  // Login is always on and there is no local binary to update, so the setup
+  // banner and the update card stay off. Account lives in its own group above.
+  let sections = [
+    accountSection,
+    createPreferencesNavSection(t, {
+      hideAdminBanner: true,
+      hideUpdateSection: true,
+    }),
+  ];
   sections = appendDeveloperSection(sections, t);
   sections = appendMcpSection(sections, t);
 
