@@ -4,6 +4,7 @@ import {
   uploadFiles,
   openSettings,
   expandSettingsGroups,
+  revealPickerTool,
 } from "@app/tests/helpers/ui-helpers";
 
 /**
@@ -55,9 +56,8 @@ test.describe("15.1 Tour selectors - static layout", () => {
   });
 
   test("tool-button-crop is present in tool panel", async ({ page }) => {
-    await expect(
-      page.locator('[data-tour="tool-button-crop"]').first(),
-    ).toBeVisible({ timeout: 10_000 });
+    const tile = await revealPickerTool(page, "crop");
+    await expect(tile.first()).toBeVisible({ timeout: 10_000 });
   });
 
   // help-button: not yet implemented in the redesigned FileSidebar layout.

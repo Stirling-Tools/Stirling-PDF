@@ -91,6 +91,7 @@ export class UngroupParagraphCommand implements Command {
         fontSize: rep.fontSize,
         fill: { ...rep.fill },
         fontSubset: rep.fontSubset,
+        renderMode: rep.renderMode,
       });
       r.containerPtr = containers[i] ?? 0;
       newRuns.push(r);

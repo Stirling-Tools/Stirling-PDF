@@ -32,10 +32,13 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.server.ResponseStatusException;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfSigningService;
 import stirling.software.common.service.ServerCertificateServiceInterface;
@@ -67,6 +70,98 @@ class SigningFinalizationServiceMoreTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private SigningFinalizationService service;
+
+    @ParameterizedTest
+    @CsvSource({
+        "P12,valid-test.p12,p12Keystore",
+        "PFX,valid-test.p12,p12Keystore",
+        "PKCS12,valid-test.p12,p12Keystore",
+        "JKS,valid-test.jks,jksKeystore"
+    })
+    void decryptsPersistedKeystoreBeforeBindingBinaryFields(
+            String certType, String fixture, String field) throws Exception {
+        String fixturePassword = "JKS".equals(certType) ? "jkspass" : "testpass";
+        ApplicationProperties props = new ApplicationProperties();
+        props.getAutomaticallyGenerated().setKey("signing-regression-test-key");
+        MetadataEncryptionService encryption = new MetadataEncryptionService(props);
+        service =
+                new SigningFinalizationService(
+                        participantRepository,
+                        pdfDocumentFactory,
+                        objectMapper,
+                        pdfSigningService,
+                        encryption,
+                        serverCertificateService,
+                        userServerCertificateService);
+        var submission =
+                Map.of(
+                        "certType",
+                        certType,
+                        "password",
+                        encryption.encrypt(fixturePassword),
+                        field,
+                        encryption.encryptBytes(loadCert(fixture)));
+        WorkflowParticipant p = participant(1L, ParticipantStatus.SIGNED);
+        p.setParticipantMetadata(
+                objectMapper.readValue(
+                        objectMapper.writeValueAsString(
+                                Map.of("certificateSubmission", submission)),
+                        new tools.jackson.core.type.TypeReference<Map<String, Object>>() {}));
+        when(participantRepository.findById(1L)).thenReturn(Optional.of(p));
+        when(pdfSigningService.signWithKeystore(
+                        any(),
+                        any(),
+                        any(),
+                        anyBoolean(),
+                        any(),
+                        any(),
+                        any(),
+                        any(),
+                        anyBoolean()))
+                .thenAnswer(
+                        inv -> {
+                            java.security.KeyStore keystore = inv.getArgument(1);
+                            char[] password = inv.getArgument(2);
+                            assertThat(new String(password)).isEqualTo(fixturePassword);
+                            assertThat(keystore.getKey(keystore.aliases().nextElement(), password))
+                                    .isNotNull();
+                            return new byte[] {7, 8};
+                        });
+        assertThat(service.finalizeDocument(sessionOf(p), singlePagePdf())).containsExactly(7, 8);
+    }
+
+    @Test
+    void corruptEncryptedSubmissionFailsInsteadOfReturningUnsignedPdf() throws Exception {
+        ApplicationProperties props = new ApplicationProperties();
+        props.getAutomaticallyGenerated().setKey("signing-regression-test-key");
+        MetadataEncryptionService encryption = new MetadataEncryptionService(props);
+        service =
+                new SigningFinalizationService(
+                        participantRepository,
+                        pdfDocumentFactory,
+                        objectMapper,
+                        pdfSigningService,
+                        encryption,
+                        serverCertificateService,
+                        userServerCertificateService);
+        WorkflowParticipant p = participant(1L, ParticipantStatus.SIGNED);
+        p.setParticipantMetadata(
+                Map.of(
+                        "certificateSubmission",
+                        Map.of(
+                                "certType",
+                                "P12",
+                                "password",
+                                encryption.encrypt("testpass"),
+                                "p12Keystore",
+                                "enc:not-a-keystore")));
+        when(participantRepository.findById(1L)).thenReturn(Optional.of(p));
+        byte[] original = singlePagePdf();
+        assertThatThrownBy(() -> service.finalizeDocument(sessionOf(p), original))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("Cannot read certificate submission");
+        org.mockito.Mockito.verifyNoInteractions(pdfSigningService);
+    }
 
     @BeforeEach
     void setUp() {
@@ -304,8 +399,8 @@ class SigningFinalizationServiceMoreTest {
         }
 
         @Test
-        @DisplayName("skips SIGNED participant with no certificate submission")
-        void skipsSignedParticipantWithoutSubmission() throws Exception {
+        @DisplayName("rejects SIGNED participant with no certificate submission")
+        void rejectsSignedParticipantWithoutSubmission() throws Exception {
             WorkflowParticipant p = participant(1L, ParticipantStatus.SIGNED);
             // metadata empty -> extractCertificateSubmission returns null
             WorkflowSession session = sessionOf(p);
@@ -313,9 +408,9 @@ class SigningFinalizationServiceMoreTest {
             when(participantRepository.findById(1L)).thenReturn(Optional.of(p));
 
             byte[] original = singlePagePdf();
-            byte[] result = service.finalizeDocument(session, original);
-
-            assertThat(result).isEqualTo(original);
+            assertThatThrownBy(() -> service.finalizeDocument(session, original))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .hasMessageContaining("Missing certificate submission");
             verify(pdfSigningService, never())
                     .signWithKeystore(
                             any(),
@@ -348,11 +443,29 @@ class SigningFinalizationServiceMoreTest {
     @DisplayName("finalizeDocument - wet signatures")
     class WetSignatures {
 
+        void digitalSignaturePreservesWetSignatureOutput() throws Exception {
+            when(pdfSigningService.signWithKeystore(
+                            any(),
+                            any(),
+                            any(),
+                            anyBoolean(),
+                            any(),
+                            any(),
+                            any(),
+                            any(),
+                            anyBoolean()))
+                    .thenAnswer(inv -> inv.getArgument(0));
+            when(metadataEncryptionService.decrypt("testpass")).thenReturn("testpass");
+        }
+
         @Test
         @DisplayName("applies a wet signature overlay then returns the re-rendered PDF")
         void appliesWetSignature() throws Exception {
+            digitalSignaturePreservesWetSignatureOutput();
             WorkflowParticipant p = participant(1L, ParticipantStatus.SIGNED);
             p.setParticipantMetadata(wetSignatureMetadata(pngDataUrl(), 0));
+            p.getParticipantMetadata()
+                    .putAll(p12SubmissionMetadata(loadCert("valid-test.p12"), "testpass"));
             WorkflowSession session = sessionOf(p);
 
             byte[] original = singlePagePdf();
@@ -363,26 +476,27 @@ class SigningFinalizationServiceMoreTest {
 
             byte[] result = service.finalizeDocument(session, original);
 
-            // wet-sig pass produced a non-empty PDF; signing was skipped (no cert submission)
             assertThat(result).isNotNull();
             assertThat(result.length).isGreaterThan(0);
             verify(pdfDocumentFactory, times(1)).load(any(InputStream.class));
         }
 
         @Test
-        @DisplayName("skips wet signature whose page index exceeds the document")
-        void skipsOutOfRangeWetSignaturePage() throws Exception {
+        @DisplayName("rejects a wet signature whose page index exceeds the document")
+        void rejectsOutOfRangeWetSignaturePage() throws Exception {
             WorkflowParticipant p = participant(1L, ParticipantStatus.SIGNED);
             p.setParticipantMetadata(wetSignatureMetadata(pngDataUrl(), 99));
+            p.getParticipantMetadata()
+                    .putAll(p12SubmissionMetadata(loadCert("valid-test.p12"), "testpass"));
             WorkflowSession session = sessionOf(p);
 
             byte[] original = singlePagePdf();
             when(pdfDocumentFactory.load(any(InputStream.class))).thenReturn(loadDoc(original));
             when(participantRepository.findById(1L)).thenReturn(Optional.of(p));
 
-            byte[] result = service.finalizeDocument(session, original);
-
-            assertThat(result).isNotNull();
+            assertThatThrownBy(() -> service.finalizeDocument(session, original))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .hasMessageContaining("page does not exist");
             verify(pdfDocumentFactory, times(1)).load(any(InputStream.class));
         }
     }
