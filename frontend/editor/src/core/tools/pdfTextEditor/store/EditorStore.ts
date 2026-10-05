@@ -272,6 +272,11 @@ export class EditorStore {
     return ++this.loadToken;
   }
 
+  /** Identifies the latest document load, including workbench and password opens. */
+  get currentLoadToken(): number {
+    return this.loadToken;
+  }
+
   isCurrentLoad(token: number): boolean {
     return this.loadToken === token;
   }
@@ -299,6 +304,7 @@ export class EditorStore {
   }
 
   clearDocument(): void {
+    this.loadToken++;
     this.disposeDocumentIfAny();
     resetCharcodeCaches();
     this.history.clear();
@@ -551,6 +557,7 @@ export class EditorStore {
   }
 
   dispose(): void {
+    this.loadToken++;
     this.disposeDocumentIfAny();
     this.listeners.clear();
   }
