@@ -33,7 +33,6 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.WebResponseUtils;
 import stirling.software.proprietary.security.model.User;
@@ -47,6 +46,7 @@ import stirling.software.proprietary.workflow.model.WorkflowSession;
 import stirling.software.proprietary.workflow.service.CertificateSubmissionValidator;
 import stirling.software.proprietary.workflow.service.SigningSessionFinalizationService;
 import stirling.software.proprietary.workflow.service.WorkflowSessionService;
+import stirling.software.spdf.config.swagger.StandardPdfResponse;
 
 import tools.jackson.databind.ObjectMapper;
 

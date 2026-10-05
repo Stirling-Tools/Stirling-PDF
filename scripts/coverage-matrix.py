@@ -15,7 +15,7 @@ Columns:
 
 Bucketing rules:
   Backend (JaCoCo package -> area):
-    stirling/software/SPDF/**          -> core   (the main backend module)
+    stirling/software/spdf/**          -> core   (the main backend module)
     stirling/software/common/**        -> core   (shared infra, attributed to core)
     org/apache/pdfbox/**               -> core   (vendored helpers in common/core)
     stirling/software/proprietary/**   -> proprietary   (unless saas-flavoured)
@@ -117,7 +117,7 @@ def _classify_backend(package_name: str) -> str | None:
     if p.startswith("stirling.software.proprietary"):
         return "proprietary"
     if (
-        p.startswith("stirling.software.SPDF")
+        p.startswith("stirling.software.spdf")
         or p.startswith("stirling.software.common")
         or p.startswith("org.apache.pdfbox")
     ):

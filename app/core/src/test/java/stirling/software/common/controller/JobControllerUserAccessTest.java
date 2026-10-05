@@ -20,8 +20,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-import stirling.software.SPDF.service.pdfjson.JobOwnershipServiceImpl;
-import stirling.software.SPDF.service.pdfjson.NoOpJobOwnershipService;
 import stirling.software.common.cluster.inprocess.InProcessClusterBackplane;
 import stirling.software.common.cluster.inprocess.InProcessJobStore;
 import stirling.software.common.cluster.inprocess.LocalDiskFileStore;
@@ -34,6 +32,8 @@ import stirling.software.common.service.JobQueue;
 import stirling.software.common.service.TaskManager;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.common.util.JobContext;
+import stirling.software.spdf.service.pdfjson.JobOwnershipServiceImpl;
+import stirling.software.spdf.service.pdfjson.NoOpJobOwnershipService;
 
 class JobControllerUserAccessTest {
     private static final byte[] OUTPUT =

@@ -128,7 +128,7 @@ tasks.register('type3SignatureTool', JavaExec) {
     group = 'type3'
     description = 'Dump Type3 font signatures and glyph coverage for the Type3 library'
     classpath = sourceSets.main.runtimeClasspath
-    mainClass = 'stirling.software.SPDF.service.pdfjson.type3.tool.Type3SignatureTool'
+    mainClass = 'stirling.software.spdf.service.pdfjson.type3.tool.Type3SignatureTool'
     standardInput = System.in
 }
 

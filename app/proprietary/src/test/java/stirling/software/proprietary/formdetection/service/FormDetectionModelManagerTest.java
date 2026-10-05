@@ -30,13 +30,13 @@ import org.springframework.beans.factory.ObjectProvider;
 
 import com.sun.net.httpserver.HttpServer;
 
-import stirling.software.SPDF.config.EndpointConfiguration;
-import stirling.software.SPDF.config.EndpointConfiguration.DisableReason;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.formdetection.catalog.ModelCatalogService;
 import stirling.software.proprietary.formdetection.inference.UnloadableModel;
 import stirling.software.proprietary.formdetection.model.ModelCatalogEntry;
+import stirling.software.spdf.config.EndpointConfiguration;
+import stirling.software.spdf.config.EndpointConfiguration.DisableReason;
 
 class FormDetectionModelManagerTest {
 

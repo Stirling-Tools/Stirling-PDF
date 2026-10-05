@@ -1,0 +1,744 @@
+package stirling.software.spdf.config;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Service;
+
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.service.LicenseServiceInterface;
+import stirling.software.common.service.PdfaLevelAServiceInterface;
+
+@Service
+@Slf4j
+public class EndpointConfiguration {
+
+    public enum DisableReason {
+        CONFIG,
+        DEPENDENCY,
+        UNKNOWN
+    }
+
+    public static class EndpointAvailability {
+        private final boolean enabled;
+        private final DisableReason reason;
+
+        public EndpointAvailability(boolean enabled, DisableReason reason) {
+            this.enabled = enabled;
+            this.reason = reason;
+        }
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public DisableReason getReason() {
+            return reason;
+        }
+    }
+
+    private static final String REMOVE_BLANKS = "remove-blanks";
+    private final ApplicationProperties applicationProperties;
+    @Getter private Map<String, Boolean> endpointStatuses = new ConcurrentHashMap<>();
+    private Map<String, Set<String>> endpointGroups = new ConcurrentHashMap<>();
+    private Set<String> disabledGroups = ConcurrentHashMap.newKeySet();
+    private Map<String, DisableReason> endpointDisableReasons = new ConcurrentHashMap<>();
+    private Map<String, DisableReason> groupDisableReasons = new ConcurrentHashMap<>();
+    private Map<String, Set<String>> endpointAlternatives = new ConcurrentHashMap<>();
+    private final boolean runningProOrHigher;
+    @Autowired @Lazy private LicenseServiceInterface licenseService;
+    private final boolean pdfUaAvailable;
+
+    public EndpointConfiguration(
+            ApplicationProperties applicationProperties,
+            @Qualifier("runningProOrHigher") boolean runningProOrHigher,
+            @Autowired(required = false) PdfaLevelAServiceInterface pdfaLevelAService) {
+        this.applicationProperties = applicationProperties;
+        this.runningProOrHigher = runningProOrHigher;
+        // The PDF/UA tagger ships in the proprietary module, and so do its endpoints.
+        this.pdfUaAvailable = pdfaLevelAService != null;
+        init();
+        processEnvironmentConfigs();
+    }
+
+    private String normalizeEndpoint(String endpoint) {
+        if (endpoint == null) {
+            return null;
+        }
+        return endpoint.startsWith("/") ? endpoint.substring(1) : endpoint;
+    }
+
+    /**
+     * Translate a full request URI like {@code /api/v1/general/remove-pages} into the endpoint key
+     * used by this configuration ({@code remove-pages}). Convert endpoints are a special case -
+     * {@code /api/v1/convert/pdf/img} is registered as {@code pdf-to-img}. Returns {@code null} if
+     * the URI is not an {@code /api/v1/<group>/<endpoint>} path.
+     */
+    public static String endpointKeyForUri(String uri) {
+        if (uri == null || !uri.contains("/api/v1")) {
+            return null;
+        }
+        String[] parts = uri.split("/");
+        if (parts.length <= 4) {
+            return null;
+        }
+        if ("convert".equals(parts[3]) && parts.length > 5) {
+            return parts[4] + "-to-" + parts[5];
+        }
+        return parts[4];
+    }
+
+    /**
+     * Convenience wrapper around {@link #isEndpointEnabled(String)} that accepts a full request URI
+     * and translates it to the endpoint key. Falls back to treating the URI itself as a key for
+     * non-{@code /api/v1/...} paths so callers can pass arbitrary URIs.
+     */
+    public boolean isEndpointEnabledForUri(String uri) {
+        String key = endpointKeyForUri(uri);
+        return isEndpointEnabled(key != null ? key : uri);
+    }
+
+    public void enableEndpoint(String endpoint) {
+        String normalized = normalizeEndpoint(endpoint);
+        endpointStatuses.put(normalized, true);
+        endpointDisableReasons.remove(normalized);
+        log.debug("Enabled endpoint: {}", normalized);
+    }
+
+    public void disableEndpoint(String endpoint) {
+        disableEndpoint(endpoint, DisableReason.CONFIG);
+    }
+
+    public void disableEndpoint(String endpoint, DisableReason reason) {
+        String normalized = normalizeEndpoint(endpoint);
+        if (!Boolean.FALSE.equals(endpointStatuses.get(normalized))) {
+            log.debug("Disabling endpoint: {}", normalized);
+        }
+        endpointStatuses.put(normalized, false);
+        endpointDisableReasons.put(normalized, reason);
+    }
+
+    public boolean isEndpointEnabled(String endpoint) {
+        String original = endpoint;
+        if (endpoint.startsWith("/")) {
+            endpoint = endpoint.substring(1);
+        }
+        if (endpointGroups.getOrDefault("enterprise", Set.of()).contains(endpoint)
+                && !hasPaidPlan()) {
+            return false;
+        }
+
+        // Rule 1: Explicit flag wins - if disabled via disableEndpoint(), stay disabled
+        Boolean explicitStatus = endpointStatuses.get(endpoint);
+        if (Boolean.FALSE.equals(explicitStatus)) {
+            log.debug("isEndpointEnabled('{}') -> false (explicitly disabled)", original);
+            return false;
+        }
+
+        // Rule 2: Functional-group override - check if endpoint belongs to any disabled functional
+        // group
+        for (Map.Entry<String, Set<String>> entry : endpointGroups.entrySet()) {
+            String group = entry.getKey();
+            if (disabledGroups.contains(group) && entry.getValue().contains(endpoint)) {
+                // Skip tool groups (qpdf, OCRmyPDF, Ghostscript, LibreOffice, etc.)
+                if (!isToolGroup(group)) {
+                    log.debug(
+                            "isEndpointEnabled('{}') -> false (functional group '{}' disabled)",
+                            original,
+                            group);
+                    return false;
+                }
+            }
+        }
+
+        // Rule 3: Tool-group fallback - check if at least one alternative tool group is enabled
+        Set<String> alternatives = endpointAlternatives.get(endpoint);
+        if (alternatives != null && !alternatives.isEmpty()) {
+            boolean hasEnabledToolGroup =
+                    alternatives.stream()
+                            .anyMatch(toolGroup -> !disabledGroups.contains(toolGroup));
+            log.debug(
+                    "isEndpointEnabled('{}') -> {} (tool groups check)",
+                    original,
+                    hasEnabledToolGroup);
+            return hasEnabledToolGroup;
+        }
+
+        // Rule 4: Single-dependency check - if no alternatives defined, check if endpoint belongs
+        // to any disabled tool groups
+        for (Map.Entry<String, Set<String>> entry : endpointGroups.entrySet()) {
+            String group = entry.getKey();
+            if (isToolGroup(group)
+                    && disabledGroups.contains(group)
+                    && entry.getValue().contains(endpoint)) {
+                log.debug(
+                        "isEndpointEnabled('{}') -> false (single tool group '{}' disabled, no alternatives)",
+                        original,
+                        group);
+                return false;
+            }
+        }
+
+        // Default: enabled if not explicitly disabled
+        boolean enabled = !Boolean.FALSE.equals(explicitStatus);
+        log.debug("isEndpointEnabled('{}') -> {} (default)", original, enabled);
+        return enabled;
+    }
+
+    public boolean isGroupEnabled(String group) {
+        if ("enterprise".equals(group) && !hasPaidPlan()) return false;
+        // Rule 1: If group is explicitly disabled, it stays disabled
+        if (disabledGroups.contains(group)) {
+            log.debug("isGroupEnabled('{}') -> false (explicitly disabled)", group);
+            return false;
+        }
+
+        // Rule 2: For tool groups, they're enabled unless explicitly disabled (handled above)
+        if (isToolGroup(group)) {
+            log.debug("isGroupEnabled('{}') -> true (tool group not disabled)", group);
+            return true;
+        }
+
+        // Rule 3: For functional groups, check if all endpoints are enabled
+        Set<String> endpoints = endpointGroups.get(group);
+        if (endpoints == null || endpoints.isEmpty()) {
+            log.debug("isGroupEnabled('{}') -> false (no endpoints)", group);
+            return false;
+        }
+
+        // For functional groups, check each endpoint individually
+        for (String endpoint : endpoints) {
+            if (!isEndpointEnabledDirectly(endpoint)) {
+                log.debug(
+                        "isGroupEnabled('{}') -> false (endpoint '{}' disabled)", group, endpoint);
+                return false;
+            }
+        }
+
+        log.debug("isGroupEnabled('{}') -> true (all endpoints enabled)", group);
+        return true;
+    }
+
+    public void addEndpointToGroup(String group, String endpoint) {
+        endpointGroups.computeIfAbsent(group, k -> new HashSet<>()).add(endpoint);
+    }
+
+    public void addEndpointAlternative(String endpoint, String toolGroup) {
+        endpointAlternatives.computeIfAbsent(endpoint, k -> new HashSet<>()).add(toolGroup);
+    }
+
+    public void disableGroup(String group) {
+        disableGroup(group, DisableReason.CONFIG);
+    }
+
+    public void disableGroup(String group, DisableReason reason) {
+        if (disabledGroups.add(group)) {
+            if (isToolGroup(group)) {
+                log.debug(
+                        "Disabling tool group: {} (endpoints with alternatives remain available)",
+                        group);
+            } else {
+                log.debug(
+                        "Disabling functional group: {} (will disable all endpoints in group)",
+                        group);
+            }
+        }
+        groupDisableReasons.put(group, reason);
+        // Only cascade to endpoints for *functional* groups
+        if (!isToolGroup(group)) {
+            Set<String> endpoints = endpointGroups.get(group);
+            if (endpoints != null) {
+                endpoints.forEach(endpoint -> disableEndpoint(endpoint, reason));
+            }
+        }
+    }
+
+    public void enableGroup(String group) {
+        if (disabledGroups.remove(group)) {
+            log.debug("Enabling group: {}", group);
+        }
+        groupDisableReasons.remove(group);
+        Set<String> endpoints = endpointGroups.get(group);
+        if (endpoints != null) {
+            endpoints.forEach(this::enableEndpoint);
+        }
+    }
+
+    public EndpointAvailability getEndpointAvailability(String endpoint) {
+        boolean enabled = isEndpointEnabled(endpoint);
+        DisableReason reason = enabled ? null : determineDisableReason(endpoint);
+        return new EndpointAvailability(enabled, reason);
+    }
+
+    private DisableReason determineDisableReason(String endpoint) {
+        String normalized = normalizeEndpoint(endpoint);
+        if (Boolean.FALSE.equals(endpointStatuses.get(normalized))) {
+            return endpointDisableReasons.getOrDefault(normalized, DisableReason.CONFIG);
+        }
+
+        for (Map.Entry<String, Set<String>> entry : endpointGroups.entrySet()) {
+            String group = entry.getKey();
+            Set<String> endpoints = entry.getValue();
+            if (!disabledGroups.contains(group) || endpoints == null) {
+                continue;
+            }
+            if (endpoints.contains(normalized)) {
+                return groupDisableReasons.getOrDefault(group, DisableReason.CONFIG);
+            }
+        }
+
+        return DisableReason.UNKNOWN;
+    }
+
+    public Set<String> getDisabledGroups() {
+        return new HashSet<>(disabledGroups);
+    }
+
+    public void logDisabledEndpointsSummary() {
+        // Get all unique endpoints across all groups
+        Set<String> allEndpoints =
+                endpointGroups.values().stream()
+                        .flatMap(Set::stream)
+                        .collect(java.util.stream.Collectors.toSet());
+
+        // Check which endpoints are actually disabled (functionally unavailable)
+        List<String> functionallyDisabledEndpoints =
+                allEndpoints.stream()
+                        .filter(endpoint -> !isEndpointEnabled(endpoint))
+                        .sorted()
+                        .toList();
+
+        // Separate tool groups from functional groups
+        List<String> disabledToolGroups =
+                disabledGroups.stream().filter(this::isToolGroup).sorted().toList();
+
+        List<String> disabledFunctionalGroups =
+                disabledGroups.stream().filter(group -> !isToolGroup(group)).sorted().toList();
+
+        if (!disabledToolGroups.isEmpty()) {
+            log.info(
+                    "Disabled tool groups: {} (endpoints may have alternative implementations)",
+                    String.join(", ", disabledToolGroups));
+        }
+
+        if (!disabledFunctionalGroups.isEmpty()) {
+            log.info("Disabled functional groups: {}", String.join(", ", disabledFunctionalGroups));
+        }
+
+        if (!functionallyDisabledEndpoints.isEmpty()) {
+            log.info(
+                    "Total disabled endpoints: {}. Disabled endpoints: {}",
+                    functionallyDisabledEndpoints.size(),
+                    String.join(", ", functionallyDisabledEndpoints));
+        } else if (!disabledToolGroups.isEmpty()) {
+            log.info(
+                    "No endpoints disabled despite missing tools - fallback implementations available");
+        }
+    }
+
+    public void init() {
+        // Adding endpoints to "PageOps" group
+        addEndpointToGroup("PageOps", "remove-pages");
+        addEndpointToGroup("PageOps", "merge-pdfs");
+        addEndpointToGroup("PageOps", "split-pages");
+        addEndpointToGroup("PageOps", "rearrange-pages");
+        addEndpointToGroup("PageOps", "rotate-pdf");
+        addEndpointToGroup("PageOps", "auto-rotate-pdf");
+        addEndpointToGroup("PageOps", "multi-page-layout");
+        addEndpointToGroup("PageOps", "booklet-imposition");
+        addEndpointToGroup("PageOps", "scale-pages");
+        addEndpointToGroup("PageOps", "crop");
+        addEndpointToGroup("PageOps", "pdf-to-single-page");
+        addEndpointToGroup("PageOps", "auto-split-pdf");
+        addEndpointToGroup("PageOps", "split-by-size-or-count");
+        addEndpointToGroup("PageOps", "overlay-pdf");
+        addEndpointToGroup("PageOps", "split-pdf-by-sections");
+        addEndpointToGroup("PageOps", "split-pdf-by-chapters");
+        addEndpointToGroup("PageOps", "add-page-numbers");
+        addEndpointToGroup("PageOps", "extract-pages");
+
+        // Adding endpoints to "Convert" group (Frontend has 15 convert endpoints)
+        addEndpointToGroup("Convert", "pdf-to-img");
+        addEndpointToGroup("Convert", "img-to-pdf");
+        addEndpointToGroup("Convert", "pdf-to-pdfa");
+        addEndpointToGroup("Convert", "pdf-to-ua");
+        addEndpointToGroup("Convert", "file-to-pdf");
+        addEndpointToGroup("Convert", "pdf-to-word");
+        addEndpointToGroup("Convert", "pdf-to-presentation");
+        addEndpointToGroup("Convert", "pdf-to-text");
+        addEndpointToGroup("Convert", "pdf-to-html");
+        addEndpointToGroup("Convert", "pdf-to-xml");
+        addEndpointToGroup("Convert", "html-to-pdf");
+        addEndpointToGroup("Convert", "url-to-pdf");
+        addEndpointToGroup("Convert", "markdown-to-pdf");
+        addEndpointToGroup("Convert", "pdf-to-csv");
+        addEndpointToGroup("Convert", "pdf-to-markdown");
+        addEndpointToGroup("Convert", "eml-to-pdf");
+        addEndpointToGroup("Convert", "pdf-to-epub");
+        // Backend-only endpoints (not in frontend tool registry)
+        addEndpointToGroup("Convert", "pdf-to-vector");
+        addEndpointToGroup("Convert", "vector-to-pdf");
+        addEndpointToGroup("Convert", "pdf-to-video");
+        addEndpointToGroup("Convert", "cbz-to-pdf");
+        addEndpointToGroup("Convert", "pdf-to-cbz");
+        addEndpointToGroup("Convert", "pdf-to-json");
+        addEndpointToGroup("Convert", "json-to-pdf");
+        addEndpointToGroup("Convert", "pdf-to-rtf");
+
+        // Adding endpoints to "Security" group
+        addEndpointToGroup("Security", "add-password");
+        addEndpointToGroup("Security", "remove-password");
+        addEndpointToGroup("Security", "change-permissions");
+        addEndpointToGroup("Security", "add-watermark");
+        addEndpointToGroup("Security", "cert-sign");
+        addEndpointToGroup("Security", "remove-cert-sign");
+        addEndpointToGroup("Security", "sanitize-pdf");
+        addEndpointToGroup("Security", "timestamp-pdf");
+        addEndpointToGroup("Security", "auto-redact");
+        addEndpointToGroup("Security", "validate-signature");
+        addEndpointToGroup("Security", "add-stamp");
+        addEndpointToGroup("Security", "unlock-pdf-forms");
+        // Backend-only endpoints (not in frontend tool registry endpoints)
+        addEndpointToGroup("Security", "redact");
+        addEndpointToGroup("Security", "verify-pdf");
+        addEndpointToGroup("Security", "accessibility-report");
+        addEndpointToGroup("Security", "validate-compliance");
+        addEndpointToGroup("Security", "sign");
+
+        // Adding endpoints to "Other" group
+        addEndpointToGroup("Other", "ocr-pdf");
+        addEndpointToGroup("Other", "extract-images");
+        addEndpointToGroup("Other", "update-metadata");
+        addEndpointToGroup("Other", "flatten");
+        addEndpointToGroup("Other", REMOVE_BLANKS);
+        addEndpointToGroup("Other", "remove-annotations");
+        addEndpointToGroup("Other", "get-info-on-pdf");
+        addEndpointToGroup("Other", "add-attachments");
+        addEndpointToGroup("Other", "batch-process-attachments");
+        addEndpointToGroup("Other", "list-attachments");
+        addEndpointToGroup("Other", "extract-single-attachment");
+        addEndpointToGroup("Other", "replace-invert-pdf");
+        addEndpointToGroup("Other", "edit-table-of-contents");
+        addEndpointToGroup("Other", "text-editor-pdf");
+        // Backend-only endpoints (not in frontend tool registry endpoints)
+        addEndpointToGroup("Other", "add-image");
+        addEndpointToGroup("Other", "compare");
+        addEndpointToGroup("Other", "view-pdf");
+        addEndpointToGroup("Other", "multi-tool");
+        addEndpointToGroup("Other", "fields");
+        addEndpointToGroup("Other", "modify-fields");
+        addEndpointToGroup("Other", "delete-fields");
+        addEndpointToGroup("Other", "fill");
+
+        // Adding endpoints to "Advance" group
+        addEndpointToGroup("Advance", "compress-pdf");
+        addEndpointToGroup("Advance", "extract-image-scans");
+        addEndpointToGroup("Advance", "repair");
+        addEndpointToGroup("Advance", "auto-rename");
+        addEndpointToGroup("Advance", "scanner-effect");
+        addEndpointToGroup("Advance", "overlay-pdf");
+        // Backend-only endpoints
+        addEndpointToGroup("Advance", "adjust-contrast");
+
+        // Adding endpoints to "Automation" group
+        addEndpointToGroup("Automation", "handleData");
+        addEndpointToGroup("Automation", "automate"); // Alias for handleData (user-friendly name)
+        addEndpointToGroup("Automation", "pipeline");
+
+        // Adding endpoints to "DocParse" group (ingestion: chunk + index + export)
+        addEndpointToGroup("DocParse", "ingest");
+
+        // Adding endpoints to "DeveloperTools" group
+        addEndpointToGroup("DeveloperTools", "show-javascript");
+
+        // Adding endpoints to "DeveloperDocs" group (fake endpoints for link-only tools)
+        addEndpointToGroup("DeveloperDocs", "dev-api-docs");
+        addEndpointToGroup("DeveloperDocs", "dev-folder-scanning-docs");
+        addEndpointToGroup("DeveloperDocs", "dev-sso-guide-docs");
+        addEndpointToGroup("DeveloperDocs", "dev-airgapped-docs");
+
+        // CLI
+        addEndpointToGroup("CLI", "compress-pdf");
+        addEndpointToGroup("CLI", "extract-image-scans");
+        addEndpointToGroup("CLI", "repair");
+        addEndpointToGroup("CLI", "pdf-to-pdfa");
+        addEndpointToGroup("CLI", "file-to-pdf");
+        addEndpointToGroup("CLI", "pdf-to-word");
+        addEndpointToGroup("CLI", "pdf-to-presentation");
+        addEndpointToGroup("CLI", "pdf-to-html");
+        addEndpointToGroup("CLI", "pdf-to-xml");
+        addEndpointToGroup("CLI", "ocr-pdf");
+        addEndpointToGroup("CLI", "html-to-pdf");
+        addEndpointToGroup("CLI", "url-to-pdf");
+        addEndpointToGroup("CLI", "pdf-to-rtf");
+
+        // python
+        addEndpointToGroup("Python", "extract-image-scans");
+        addEndpointToGroup("Python", "html-to-pdf");
+        addEndpointToGroup("Python", "url-to-pdf");
+        addEndpointToGroup("Python", "file-to-pdf");
+
+        // openCV
+        addEndpointToGroup("OpenCV", "extract-image-scans");
+
+        // LibreOffice
+        addEndpointToGroup("LibreOffice", "file-to-pdf");
+        addEndpointToGroup("LibreOffice", "pdf-to-word");
+        addEndpointToGroup("LibreOffice", "pdf-to-presentation");
+        addEndpointToGroup("LibreOffice", "pdf-to-rtf");
+        addEndpointToGroup("LibreOffice", "pdf-to-html");
+        addEndpointToGroup("LibreOffice", "pdf-to-xml");
+        addEndpointToGroup("LibreOffice", "pdf-to-pdfa");
+
+        // Unoconvert
+        addEndpointToGroup("Unoconvert", "file-to-pdf");
+
+        // Java
+        addEndpointToGroup("Java", "merge-pdfs");
+        addEndpointToGroup("Java", "remove-pages");
+        addEndpointToGroup("Java", "split-pages");
+        addEndpointToGroup("Java", "rearrange-pages");
+        addEndpointToGroup("Java", "rotate-pdf");
+        addEndpointToGroup("Java", "pdf-to-img");
+        addEndpointToGroup("Java", "img-to-pdf");
+        addEndpointToGroup("Java", "add-password");
+        addEndpointToGroup("Java", "remove-password");
+        addEndpointToGroup("Java", "change-permissions");
+        addEndpointToGroup("Java", "add-watermark");
+        addEndpointToGroup("Java", "add-stamp");
+        addEndpointToGroup("Java", "add-image");
+        addEndpointToGroup("Java", "extract-images");
+        addEndpointToGroup("Java", "update-metadata");
+        addEndpointToGroup("Java", "cert-sign");
+        addEndpointToGroup("Java", "remove-cert-sign");
+        addEndpointToGroup("Java", "multi-page-layout");
+        addEndpointToGroup("Java", "booklet-imposition");
+        addEndpointToGroup("Java", "scale-pages");
+        addEndpointToGroup("Java", "add-page-numbers");
+        addEndpointToGroup("Java", "auto-rename");
+        addEndpointToGroup("Java", "auto-split-pdf");
+        addEndpointToGroup("Java", "sanitize-pdf");
+        addEndpointToGroup("Java", "timestamp-pdf");
+        addEndpointToGroup("Java", "crop");
+        addEndpointToGroup("Java", "get-info-on-pdf");
+        addEndpointToGroup("Java", "pdf-to-single-page");
+        addEndpointToGroup("Java", "markdown-to-pdf");
+        addEndpointToGroup("Java", "show-javascript");
+        addEndpointToGroup("Java", "auto-redact");
+        addEndpointToGroup("Java", "redact");
+        addEndpointToGroup("Java", "pdf-to-csv");
+        addEndpointToGroup("Java", "split-by-size-or-count");
+        addEndpointToGroup("Java", "overlay-pdf");
+        addEndpointToGroup("Java", "split-pdf-by-sections");
+        addEndpointToGroup("Java", "split-pdf-by-chapters");
+        addEndpointToGroup("Java", REMOVE_BLANKS);
+        addEndpointToGroup("Java", "remove-annotations");
+        addEndpointToGroup("Java", "pdf-to-text");
+        addEndpointToGroup("Java", "pdf-to-markdown");
+        addEndpointToGroup("Java", "add-attachments");
+        addEndpointToGroup("Java", "batch-process-attachments");
+        addEndpointToGroup("Java", "list-attachments");
+        addEndpointToGroup("Java", "extract-single-attachment");
+        addEndpointToGroup("Java", "compress-pdf");
+        addEndpointToGroup("Java", "cbz-to-pdf");
+        addEndpointToGroup("Java", "pdf-to-cbz");
+        addEndpointToGroup("Java", "pdf-to-json");
+        addEndpointToGroup("Java", "json-to-pdf");
+        addEndpointToGroup("Java", "pdf-to-video");
+        addEndpointToGroup("Java", "verify-pdf");
+        addEndpointToGroup("Java", "pdf-to-ua");
+        addEndpointToGroup("Java", "accessibility-report");
+        addEndpointToGroup("Java", "validate-compliance");
+        addEndpointToGroup("Java", "flatten");
+        addEndpointToGroup("Java", "unlock-pdf-forms");
+        addEndpointToGroup("Java", "validate-signature");
+        addEndpointToGroup("Java", "text-editor-pdf");
+        addEndpointToGroup("Java", "edit-table-of-contents");
+        addEndpointToGroup("Java", "pdf-to-epub");
+        addEndpointToGroup("Java", "eml-to-pdf");
+        addEndpointToGroup("Java", "handleData");
+        addEndpointToGroup("Java", "form-detection");
+        addEndpointToGroup("rar", "pdf-to-cbr");
+
+        // Javascript
+        addEndpointToGroup("Javascript", "rearrange-pages");
+        addEndpointToGroup("Javascript", "sign");
+        addEndpointToGroup("Javascript", "compare");
+        addEndpointToGroup("Javascript", "adjust-contrast");
+        addEndpointToGroup("Javascript", "text-editor-pdf");
+
+        /* qpdf */
+        addEndpointToGroup("qpdf", "repair");
+        addEndpointToGroup("qpdf", "compress-pdf");
+
+        /* Ghostscript */
+        addEndpointToGroup("Ghostscript", "repair");
+        addEndpointToGroup("Ghostscript", "compress-pdf");
+        addEndpointToGroup("Ghostscript", "crop");
+        addEndpointToGroup("Ghostscript", "replace-invert-pdf");
+        addEndpointToGroup("Ghostscript", "scanner-effect");
+        addEndpointToGroup("Ghostscript", "pdf-to-vector");
+        addEndpointToGroup("Ghostscript", "vector-to-pdf");
+
+        /* ImageMagick */
+        addEndpointToGroup("ImageMagick", "compress-pdf");
+
+        /* tesseract */
+        addEndpointToGroup("tesseract", "ocr-pdf");
+        addEndpointToGroup("tesseract", "auto-rotate-pdf");
+
+        /* OCRmyPDF */
+        addEndpointToGroup("OCRmyPDF", "ocr-pdf");
+
+        // Multi-tool endpoints - endpoints that can be handled by multiple tools
+        addEndpointAlternative("repair", "qpdf");
+        addEndpointAlternative("repair", "Ghostscript");
+        addEndpointAlternative("compress-pdf", "qpdf");
+        addEndpointAlternative("compress-pdf", "Ghostscript");
+        addEndpointAlternative("compress-pdf", "Java");
+        addEndpointAlternative("crop", "Ghostscript");
+        addEndpointAlternative("crop", "Java");
+        addEndpointAlternative("ocr-pdf", "tesseract");
+        addEndpointAlternative("ocr-pdf", "OCRmyPDF");
+
+        // file-to-pdf has multiple implementations
+        addEndpointAlternative("file-to-pdf", "LibreOffice");
+        addEndpointAlternative("file-to-pdf", "Unoconvert");
+        // Stirling Office Convert, when enabled, keeps Office conversions working without
+        // LibreOffice
+        if (applicationProperties.getSystem().isStirlingOfficeConversion()) {
+            addEndpointAlternative("file-to-pdf", "Java");
+            addEndpointAlternative("pdf-to-word", "Java");
+            addEndpointAlternative("pdf-to-presentation", "Java");
+            addEndpointAlternative("pdf-to-rtf", "Java");
+        }
+
+        // pdf-to-html and pdf-to-markdown can use either LibreOffice or Pdftohtml
+        addEndpointAlternative("pdf-to-html", "LibreOffice");
+        addEndpointAlternative("pdf-to-html", "Pdftohtml");
+        addEndpointAlternative("pdf-to-markdown", "Pdftohtml");
+
+        // markdown-to-pdf can use either Weasyprint or Java
+        addEndpointAlternative("markdown-to-pdf", "Weasyprint");
+        addEndpointAlternative("markdown-to-pdf", "Java");
+
+        // Weasyprint dependent endpoints
+        addEndpointToGroup("Weasyprint", "html-to-pdf");
+        addEndpointToGroup("Weasyprint", "url-to-pdf");
+        addEndpointToGroup("Weasyprint", "markdown-to-pdf");
+        addEndpointToGroup("Weasyprint", "eml-to-pdf");
+
+        // veraPDF dependent endpoints
+        addEndpointToGroup("veraPDF", "verify-pdf");
+        addEndpointToGroup("veraPDF", "pdf-to-ua");
+        addEndpointToGroup("veraPDF", "accessibility-report");
+        addEndpointToGroup("veraPDF", "validate-compliance");
+
+        // Pdftohtml dependent endpoints
+        addEndpointToGroup("Pdftohtml", "pdf-to-html");
+        addEndpointToGroup("Pdftohtml", "pdf-to-markdown");
+
+        // Calibre dependent endpoints
+        addEndpointToGroup("Calibre", "pdf-to-epub");
+    }
+
+    private void processEnvironmentConfigs() {
+        if (applicationProperties != null && applicationProperties.getEndpoints() != null) {
+            List<String> endpointsToRemove = applicationProperties.getEndpoints().getToRemove();
+            List<String> groupsToRemove = applicationProperties.getEndpoints().getGroupsToRemove();
+
+            if (endpointsToRemove != null) {
+                for (String endpoint : endpointsToRemove) {
+                    disableEndpoint(endpoint.trim());
+                }
+            }
+
+            if (groupsToRemove != null) {
+                for (String group : groupsToRemove) {
+                    disableGroup(group.trim());
+                }
+            }
+        }
+
+        if (!pdfUaAvailable) {
+            disableEndpoint("pdf-to-ua");
+            disableEndpoint("accessibility-report");
+        }
+
+        // Only FormDetectionModelManager (proprietary) can enable this; default it off so a core
+        // build does not advertise a tool whose controller is not on the classpath.
+        disableEndpoint("form-detection", DisableReason.DEPENDENCY);
+
+        if (!applicationProperties.getSystem().isEnableUrlToPDF()) {
+            disableEndpoint("url-to-pdf");
+        }
+    }
+
+    public Set<String> getEndpointsForGroup(String group) {
+        return endpointGroups.getOrDefault(group, new HashSet<>());
+    }
+
+    public Set<String> getAllEndpoints() {
+        return endpointGroups.values().stream()
+                .flatMap(Set::stream)
+                .collect(java.util.stream.Collectors.toSet());
+    }
+
+    private boolean hasPaidPlan() {
+        return licenseService == null ? runningProOrHigher : licenseService.isRunningProOrHigher();
+    }
+
+    private boolean isToolGroup(String group) {
+        return "qpdf".equals(group)
+                || "OCRmyPDF".equals(group)
+                || "Ghostscript".equals(group)
+                || "LibreOffice".equals(group)
+                || "tesseract".equals(group)
+                || "CLI".equals(group)
+                || "Python".equals(group)
+                || "OpenCV".equals(group)
+                || "Unoconvert".equals(group)
+                || "Java".equals(group)
+                || "Javascript".equals(group)
+                || "Weasyprint".equals(group)
+                || "Pdftohtml".equals(group)
+                || "ImageMagick".equals(group)
+                || "rar".equals(group)
+                || "Calibre".equals(group)
+                || "FFmpeg".equals(group)
+                || "veraPDF".equals(group);
+    }
+
+    private boolean isEndpointEnabledDirectly(String endpoint) {
+        if (endpoint.startsWith("/")) {
+            endpoint = endpoint.substring(1);
+        }
+
+        // Check explicit disable flag
+        Boolean explicitStatus = endpointStatuses.get(endpoint);
+        if (Boolean.FALSE.equals(explicitStatus)) {
+            return false;
+        }
+
+        // Check if endpoint belongs to any disabled functional group
+        for (Map.Entry<String, Set<String>> entry : endpointGroups.entrySet()) {
+            String group = entry.getKey();
+            if (disabledGroups.contains(group) && entry.getValue().contains(endpoint)) {
+                if (!isToolGroup(group)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+}

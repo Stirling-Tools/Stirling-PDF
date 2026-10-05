@@ -1374,7 +1374,7 @@ if [ -f "/app.jar" ]; then
 elif [ -f "/app/app.jar" ]; then
   # Spring Boot 4 layered JAR structure (exploded via extract --layers).
   # Use -cp (not -jar) so the classpath matches the AOT cache exactly.
-  JAVA_CMD+=("-cp" "/app/app.jar:/app/lib/*" "stirling.software.SPDF.SPDFApplication")
+  JAVA_CMD+=("-cp" "/app/app.jar:/app/lib/*" "stirling.software.spdf.SPDFApplication")
 else
   # Legacy fallback for Spring Boot 3 layered layout
   export JAVA_MAIN_CLASS=org.springframework.boot.loader.launch.JarLauncher
@@ -1505,7 +1505,7 @@ if [ "$AOT_GENERATE_BACKGROUND" = true ]; then
         _gen_rc=0
         if [ -f /app/app.jar ] && [ -d /app/lib ]; then
           generate_aot_cache "$AOT_CACHE" \
-            -cp "/app/app.jar:/app/lib/*" stirling.software.SPDF.SPDFApplication || _gen_rc=$?
+            -cp "/app/app.jar:/app/lib/*" stirling.software.spdf.SPDFApplication || _gen_rc=$?
         elif [ -f /app.jar ]; then
           generate_aot_cache "$AOT_CACHE" -jar /app.jar || _gen_rc=$?
         elif [ -d /app/BOOT-INF ]; then

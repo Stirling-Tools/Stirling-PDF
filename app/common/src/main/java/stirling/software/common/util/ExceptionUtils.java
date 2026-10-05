@@ -53,7 +53,7 @@ import lombok.extern.slf4j.Slf4j;
  * // - RFC 7807 structured response
  * }</pre>
  *
- * @see stirling.software.SPDF.exception.GlobalExceptionHandler
+ * @see stirling.software.spdf.exception.GlobalExceptionHandler
  */
 @Slf4j
 public class ExceptionUtils {
@@ -1206,7 +1206,7 @@ public class ExceptionUtils {
      * Error codes for consistent error tracking and documentation. Each error code includes a
      * unique identifier, i18n message key, and default message.
      *
-     * <p>These codes are used by {@link stirling.software.SPDF.exception.GlobalExceptionHandler} to
+     * <p>These codes are used by {@link stirling.software.spdf.exception.GlobalExceptionHandler} to
      * provide consistent RFC 7807 Problem Details responses.
      */
     @Getter
