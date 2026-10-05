@@ -577,7 +577,9 @@ export interface FormFormDetectionDetectRequest {
   confThreshold?: number;
 }
 export type GeneralExtractBookmarksRequest = Record<string, never>;
-export type GeneralFile = Record<string, never>;
+export interface GeneralFile {
+  useStirlingOfficeConvert?: boolean;
+}
 export type GeneralPdfToSinglePageRequest = Record<string, never>;
 export type GeneralRemoveImagePdfRequest = Record<string, never>;
 export interface HTMLToPdfRequest {
@@ -1019,18 +1021,21 @@ export interface PdfToPresentationRequest {
    * The output Presentation format
    */
   outputFormat: "ppt" | "pptx" | "odp";
+  useStirlingOfficeConvert?: boolean;
 }
 export interface PdfToTextOrRTFRequest {
   /**
    * The output Text or RTF format
    */
   outputFormat: "rtf" | "txt";
+  useStirlingOfficeConvert?: boolean;
 }
 export interface PdfToWordRequest {
   /**
    * The output Word document format
    */
   outputFormat: "doc" | "docx" | "odt";
+  useStirlingOfficeConvert?: boolean;
 }
 export interface PdfVectorExportRequest {
   /**
