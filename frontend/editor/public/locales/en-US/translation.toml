@@ -11689,12 +11689,15 @@ title = "Billing"
 
 [settings.configuration]
 advanced = "Advanced"
+connections = "Single sign-on"
 database = "Database"
 endpoints = "Endpoints"
 features = "Features"
 folderAccess = "Folder Access"
 integrations = "Integrations"
+legal = "Legal documents"
 mcp = "MCP Server"
+privacy = "Privacy"
 storageSharing = "File Storage & Sharing"
 systemSettings = "System Settings"
 
