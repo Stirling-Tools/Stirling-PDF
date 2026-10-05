@@ -1,7 +1,9 @@
 name: PR size limit
 
-# Fails PRs from outside the team that change more than MAX_LINES lines. The rules
-# live in .github/scripts/pr-size.ts; exempt logins in .github/config/pr-size-allowlist.json.
+# Fails PRs from outside the team that change more than MAX_LINES lines. The rules live
+# in .github/scripts/pr-size.ts; exempt logins in .github/config/pr-size-allowlist.json.
+# Comments and labels too-large only when STALE_PR_BOT_LIVE is "true": the comment
+# promises the close that stale-prs.yml only makes then.
 # pull_request_target so a first-time contributor's PR is checked without approval; it
 # reads the diff through the API and never checks out the PR's code.
 
@@ -24,7 +26,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read # actions/checkout
-      pull-requests: read # list the PR's files
+      issues: write # label the PR
+      pull-requests: write # list the PR's files, comment on and label it
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
@@ -41,8 +44,10 @@ jobs:
 
       - name: Check the PR size
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          LIVE: ${{ vars.STALE_PR_BOT_LIVE == 'true' }}
         with:
           github-token: ${{ github.token }}
           script: |
             const { checkPullRequestSize, readAllowlist } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/pr-size.ts`);
-            await checkPullRequestSize({ github, context, core, allowlist: await readAllowlist() });
+            await checkPullRequestSize({ github, context, core, allowlist: await readAllowlist(), live: process.env.LIVE === "true" });

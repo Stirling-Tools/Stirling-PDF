@@ -22,6 +22,7 @@ on:
       - ".github/scripts/package-lock.json"
       - ".github/scripts/tsconfig.json"
       - ".github/workflows/pr-conflict-labeler.yml"
+      - ".github/workflows/pr-size-limit.yml"
       - ".github/config/pr-size-allowlist.json"
 
 permissions:
@@ -50,7 +51,9 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
-          sparse-checkout: .github/scripts
+          sparse-checkout: |
+            .github/scripts
+            .github/config
 
       # Same Node as github-script v9, so the tests load the .ts the way the bot does.
       - name: Set up Node.js
@@ -98,7 +101,9 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
-          sparse-checkout: .github/scripts
+          sparse-checkout: |
+            .github/scripts
+            .github/config
 
       - name: Triage open PRs
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
