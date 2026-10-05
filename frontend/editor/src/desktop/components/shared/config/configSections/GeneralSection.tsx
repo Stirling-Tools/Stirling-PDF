@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 import PreferencesSection from "@core/components/shared/config/configSections/preferences/PreferencesSection";
 import { DefaultAppSettings } from "@app/components/shared/config/configSections/DefaultAppSettings";
 import { useDesktopInstall } from "@app/hooks/useDesktopInstall";
-import { useSaaSMode } from "@app/hooks/useSaaSMode";
 import {
   desktopUpdateService,
   type UpdateMode,
@@ -28,19 +27,16 @@ interface GeneralSectionProps {
 const GeneralSection: React.FC<GeneralSectionProps> = () => {
   const { t } = useTranslation();
   const install = useDesktopInstall();
-  // In SaaS connection mode the cloud owns app versioning — hide the update
-  // section (which also stops the core auto-check from firing).
-  const isSaaSMode = useSaaSMode();
-  const [updateModeInfo, setUpdateModeInfo] = useState<UpdateModeInfo>({
-    mode: "prompt",
-    locked: false,
-  });
+  const [updateModeInfo, setUpdateModeInfo] = useState<UpdateModeInfo | null>(
+    null,
+  );
   const [updateModeError, setUpdateModeError] = useState<string | null>(null);
 
-  // Check for Tauri updater availability on mount
+  // Provisioning can prohibit update requests before Settings opens.
   useEffect(() => {
+    if (!updateModeInfo || updateModeInfo.mode === "disabled") return;
     void install.checkTauriUpdate();
-  }, [install.checkTauriUpdate]);
+  }, [install.checkTauriUpdate, updateModeInfo]);
 
   // Load the current update mode + lock status on mount. We intentionally
   // re-fetch on every mount so that a provisioning file dropped while the
@@ -101,8 +97,9 @@ const GeneralSection: React.FC<GeneralSectionProps> = () => {
       )}
       <PreferencesSection
         editorDefaultsSlot={<DefaultAppSettings />}
+        // Mounting the card starts its summary request, so policy must be known first.
         hideUpdateSection={
-          isSaaSMode ||
+          !updateModeInfo ||
           (updateModeInfo.mode === "disabled" && updateModeInfo.locked)
         }
         desktopInstall={{
@@ -113,11 +110,15 @@ const GeneralSection: React.FC<GeneralSectionProps> = () => {
           canInstall: install.canInstall,
           actions: install.actions,
         }}
-        desktopUpdateMode={{
-          mode: updateModeInfo.mode,
-          locked: updateModeInfo.locked,
-          onChange: handleUpdateModeChange,
-        }}
+        desktopUpdateMode={
+          updateModeInfo
+            ? {
+                mode: updateModeInfo.mode,
+                locked: updateModeInfo.locked,
+                onChange: handleUpdateModeChange,
+              }
+            : undefined
+        }
       />
     </Stack>
   );

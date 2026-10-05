@@ -11832,7 +11832,7 @@ updateBehaviorError = "Could not change update behavior"
 updateBehaviorErrorLocked = "This setting is locked by your administrator."
 updateBehaviorLockedDescription = "Your administrator has configured how Stirling-PDF handles updates on this machine. Contact them to change this."
 updateBehaviorSaved = "Update behavior saved."
-versionMismatch = "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version."
+versionMismatch = "Your desktop application and server are running different versions. Update both to the same version to avoid compatibility issues."
 viewDetails = "View Details"
 
 [settings.general.versionInfo]
