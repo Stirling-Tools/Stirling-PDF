@@ -47,7 +47,7 @@ describe("tourUtils", () => {
       el.id = "target";
       vi.spyOn(el, "getClientRects").mockReturnValue([
         { width: 100, height: 40 } as DOMRect,
-      ]);
+      ] as unknown as DOMRectList);
       document.body.appendChild(el);
 
       const resizeSpy = vi.fn();
@@ -81,7 +81,7 @@ describe("tourUtils", () => {
       el.scrollIntoView = scrollIntoViewSpy;
       vi.spyOn(el, "getClientRects").mockReturnValue([
         { width: 80, height: 32 } as DOMRect,
-      ]);
+      ] as unknown as DOMRectList);
       document.body.appendChild(el);
 
       await revealPickerTool('[data-tour="tool-button-crop"]', 500);
@@ -115,7 +115,7 @@ describe("tourUtils", () => {
           button.scrollIntoView = vi.fn();
           vi.spyOn(button, "getClientRects").mockReturnValue([
             { width: 80, height: 32 } as DOMRect,
-          ]);
+          ] as unknown as DOMRectList);
           scroller.appendChild(button);
         }
       });
