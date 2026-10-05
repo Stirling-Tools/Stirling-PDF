@@ -4,7 +4,7 @@ import { supabase, isSupabaseConfigured } from "@app/services/supabaseClient";
 const PROFILE_BUCKET = "profile-pictures";
 const SIGNED_URL_TTL_SECONDS = 60 * 60;
 
-/** Re-sign well before expiry, so a long-lived settings modal never shows a dead image. */
+/** Re-sign well before expiry, so a long-lived roster never shows a dead image. */
 const REFRESH_INTERVAL_MS = 45 * 60 * 1000;
 
 /** Ids are interpolated into a storage path, so only a bare uuid is ever sent. */
@@ -19,8 +19,8 @@ interface HasSupabaseId {
  * Signed avatar URLs for a set of team members, keyed by Supabase id. Ids the bucket refuses are
  * absent, so callers fall back to initials.
  *
- * Keys off the set of ids rather than the member array: the roster polls every 10s, and an
- * unchanged roster must not re-sign on every poll.
+ * Keys off the set of ids rather than the member array: rosters poll on a timer, and an
+ * unchanged roster must not re-sign on every tick.
  */
 export function useTeamAvatarUrls(
   members: readonly HasSupabaseId[],

@@ -20,6 +20,7 @@ import { type Member, type RoleId } from "@portal/api/users";
 import type { Team } from "@portal/api/teams";
 import type { UsersCapabilities } from "@portal/api/usersCapabilities";
 import { avatarToneForMember } from "@portal/components/users/format";
+import { useTeamAvatarUrls } from "@app/hooks/useTeamAvatarUrls";
 
 /** Tab key standing for "no team filter". */
 const ALL_TEAMS = "__all__";
@@ -186,6 +187,8 @@ export function UsersDirectory({
     [members],
   );
 
+  const avatarUrls = useTeamAvatarUrls(members);
+
   const columns = useMemo<DataTableColumn<Member>[]>(() => {
     const isOwner = (m: Member) =>
       capabilities.adminRole ? m.orgOwner === true : m.teamLead === true;
@@ -268,7 +271,15 @@ export function UsersDirectory({
         key: "person",
         header: t("users.columns.person", "Person"),
         icon: (m) => (
-          <Avatar name={m.name} size="sm" tone={avatarToneForMember(m)} />
+          <Avatar
+            name={m.name}
+            size="sm"
+            src={
+              m.avatarUrl ??
+              (m.supabaseId ? avatarUrls[m.supabaseId] : undefined)
+            }
+            tone={avatarToneForMember(m)}
+          />
         ),
         primary: (m) => m.name,
         suffix: (m) => (m.isSelf ? t("users.you", "(you)") : undefined),
@@ -429,6 +440,7 @@ export function UsersDirectory({
     capabilities,
     roleOptions,
     members,
+    avatarUrls,
     teams,
     showApprover,
     showEmail,
