@@ -29,7 +29,7 @@ const UserSelector = ({
   disabled = false,
 }: UserSelectorProps) => {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, isAnonymous } = useAuth();
   const navigate = useNavigate();
   const [stringValue, setStringValue] = useState<string[]>([]);
 
@@ -37,7 +37,12 @@ const UserSelector = ({
     data: users,
     isPending: loading,
     error,
-  } = useQuery({ queryKey: qk.users(), queryFn: fetchUsers });
+  } = useQuery({
+    queryKey: qk.users(),
+    queryFn: fetchUsers,
+    // Guests have no team, so there is nobody to list or invite.
+    enabled: !isAnonymous,
+  });
 
   useEffect(() => {
     if (!error) return;
@@ -85,6 +90,17 @@ const UserSelector = ({
       .filter(Boolean);
     setStringValue(result);
   }, [value]);
+
+  if (isAnonymous) {
+    return (
+      <Text size="sm" c="dimmed">
+        {t(
+          "certSign.collab.userSelector.signInRequired",
+          "Sign in to request signatures from other people.",
+        )}
+      </Text>
+    );
+  }
 
   if (loading) {
     return <Loader size="sm" />;
