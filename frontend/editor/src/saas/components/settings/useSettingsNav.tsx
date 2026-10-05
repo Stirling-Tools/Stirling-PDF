@@ -30,6 +30,8 @@ export type { SettingsNav };
 // SaaS accounts live under Overview rather than as cards on Preferences.
 const SAAS_SECTION_ALIASES: Partial<Record<string, NavKey>> = {
   ...BASE_SECTION_ALIASES,
+  backendThirdPartyLicenses: "legal",
+  frontendThirdPartyLicenses: "legal",
   account: "overview",
 };
 

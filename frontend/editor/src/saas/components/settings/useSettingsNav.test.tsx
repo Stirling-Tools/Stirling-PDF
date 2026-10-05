@@ -21,7 +21,12 @@ vi.mock("@app/components/shared/config/configSections/Overview", () => ({
   default: () => null,
 }));
 vi.mock("@app/components/shared/config/saasConfigNavSections", () => ({
-  createSaasConfigNavSections: () => [],
+  createSaasConfigNavSections: () => [
+    {
+      title: "Legal",
+      items: [{ key: "legal", label: "Legal", icon: "gavel", component: null }],
+    },
+  ],
 }));
 vi.mock("@app/components/settings/portalSettingsNav", () => ({
   buildPortalSettingsSections: () => [
@@ -71,6 +76,26 @@ describe("Connected instances settings navigation", () => {
       const { result } = renderHook(() => useSettingsNav(vi.fn()));
       expect(result.current.aliases?.hotkeys).toBe("general");
       expect(result.current.aliases?.account).toBe("overview");
+    },
+  );
+
+  it.each([false, true])(
+    "routes retired license links to the Legal page with Processor access = %s",
+    (portalAccess) => {
+      state.portalAccess = portalAccess;
+      const { result } = renderHook(() => useSettingsNav(vi.fn()));
+      const availableKeys = result.current.sections.flatMap((section) =>
+        section.items.map((item) => item.key),
+      );
+
+      for (const retiredKey of [
+        "backendThirdPartyLicenses",
+        "frontendThirdPartyLicenses",
+      ]) {
+        const target = result.current.aliases?.[retiredKey];
+        expect(target).toBe("legal");
+        expect(availableKeys).toContain(target);
+      }
     },
   );
 
