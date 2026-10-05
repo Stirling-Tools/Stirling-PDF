@@ -415,19 +415,26 @@ function fitStyle(
   spans: SpanInk[],
   ref: SpanInk,
 ): ScanStyle | null {
-  const fit = (face: Face, family: string) => {
-    const size = sizeFor(face, ref);
+  const fit = (face: Face, family: string, k: number) => {
+    const size = sizeFor(face, ref) * k;
     const natural = spanOf(doc, page, ref.original, family, size);
     const stretch = clampStretch(ref.ink.body.width / Math.max(1e-3, natural));
-    return { face, family, size, stretch };
+    return { face, family, size, stretch, k };
   };
   // Typewriter evidence is sturdier than pixels on a blurry low-res scan, so
   // it settles the face; the pixels still pick the weight.
   const typewriter =
     faceFor(doc, page, state) === COURIER ||
     isEvenlySpaced(ref.ink.glyphCenters, ref.original);
-  const candidates = (typewriter ? [COURIER] : FACES)
-    .flatMap((face) => [fit(face, face.family), fit(face, face.bold)])
+  // Fit size for both weights before choosing one. Blur and overshoot can
+  // inflate glyph height enough to favour the wrong face at the initial size.
+  const faces = typewriter ? [COURIER] : FACES;
+  const sizes = faces
+    .flatMap((face) =>
+      [face.family, face.bold].flatMap((family) =>
+        [0.88, 0.91, 0.94, 0.97, 1, 1.03].map((k) => fit(face, family, k)),
+      ),
+    )
     .filter((c) => c.size > 2)
     .map((c) => ({
       ...c,
@@ -440,9 +447,36 @@ function fitStyle(
         stretch: c.stretch,
       }).score,
     }));
-  if (candidates.length === 0) return null;
-  const best = (cs: typeof candidates) =>
+  if (sizes.length === 0) return null;
+  const best = <T extends { score: number }>(cs: T[]) =>
     cs.reduce((p, q) => (q.score > p.score ? q : p));
+  const floor = Math.round(scanPixelSpan(doc, page, ref.ink.rect) / 2);
+  // Compare the tuned faces at the scan's softness. Blurring both images
+  // gives the scan a second blur, which makes regular strokes look bold.
+  const candidates = faces
+    .flatMap((face) => [face.family, face.bold])
+    .map((family) => sizes.filter((c) => c.family === family))
+    .filter((cs) => cs.length > 0)
+    .map((cs) => {
+      const c = best(cs);
+      const placement = {
+        text: ref.original,
+        x: ref.ink.body.x,
+        baseline: ref.baseline,
+        family: c.family,
+        size: c.size,
+        stretch: c.stretch,
+      };
+      const measured = softnessOf(doc, page, ref.ink, placement);
+      const softness = Math.min(2, Math.max(measured, floor));
+      const match = matchScan(doc, page, ref.ink, placement, softness);
+      return {
+        ...c,
+        softness,
+        score: match.score,
+        strokeRatio: match.weight,
+      };
+    });
   let chosen = best(candidates);
   // A typewritten block nearby tips a close call its way.
   const mono = candidates.filter((c) => c.face === COURIER);
@@ -452,37 +486,17 @@ function fitStyle(
     best(mono).score > chosen.score - 0.1
   )
     chosen = best(mono);
-  // Glyph height alone reads large: blur, round letters overshooting the cap
-  // line and digits taller than capitals all add to it. Let the pixels settle
-  // the size within a few percent.
-  const tries = [0.88, 0.91, 0.94, 0.97, 1, 1.03].map((k) => {
-    const size = chosen.size * k;
-    const natural = spanOf(doc, page, ref.original, chosen.family, size);
-    const stretch = clampStretch(ref.ink.body.width / Math.max(1e-3, natural));
-    const { score } = matchScan(doc, page, ref.ink, {
-      text: ref.original,
-      x: ref.ink.body.x,
-      baseline: ref.baseline,
-      family: chosen.family,
-      size,
-      stretch,
-    });
-    return { k, size, stretch, score };
-  });
-  const tuned = tries.reduce((p, q) => (q.score > p.score ? q : p));
-  chosen = { ...chosen, size: tuned.size, stretch: tuned.stretch };
-  // A blurry scan makes crisp new text stand out; match its softness too,
-  // and never go crisper than the scan's own pixels allow.
-  const floor = Math.round(scanPixelSpan(doc, page, ref.ink.rect) / 2);
-  const measured = softnessOf(doc, page, ref.ink, {
-    text: ref.original,
-    x: ref.ink.body.x,
-    baseline: ref.baseline,
-    family: chosen.family,
-    size: chosen.size,
-    stretch: chosen.stretch,
-  });
-  const softness = Math.min(2, Math.max(measured, floor));
+  // Regular and bold can have almost the same blurred outlines. Settle close
+  // matches using stroke thickness, rather than rewarding blur as extra ink.
+  const weights = candidates.filter(
+    (c) => c.face === chosen.face && c.score >= chosen.score - 0.1,
+  );
+  chosen = weights.reduce((p, q) =>
+    Math.abs(Math.log(q.strokeRatio)) < Math.abs(Math.log(p.strokeRatio))
+      ? q
+      : p,
+  );
+  const { softness } = chosen;
   // Blur thickens scanned strokes past any bold; add outline until the drawn
   // strokes, softened the same way, are as thick as the scanned ones.
   // Only past bold: on regular text blur alone would read as extra weight.
@@ -510,10 +524,12 @@ function fitStyle(
       Math.abs(Math.log(q.ratio)) < Math.abs(Math.log(p.ratio)) ? q : p,
     ).w;
   // One size for every line; the median shrugs off a line of lowercase.
-  const sizes = spans.map((s) => sizeFor(chosen.face, s)).filter((v) => v > 2);
+  const blockSizes = spans
+    .map((s) => sizeFor(chosen.face, s))
+    .filter((v) => v > 2);
   return {
     family: chosen.family,
-    fontSize: sizes.length ? median(sizes) * tuned.k : chosen.size,
+    fontSize: blockSizes.length ? median(blockSizes) * chosen.k : chosen.size,
     stretch: chosen.stretch,
     // Softened text is blurred again, so it starts from the scan's darkest ink.
     ink: softness > 0 ? ref.ink.core : ref.ink.fill,
