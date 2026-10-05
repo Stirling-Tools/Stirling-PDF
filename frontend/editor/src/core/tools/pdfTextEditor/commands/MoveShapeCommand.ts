@@ -45,6 +45,20 @@ export class MoveShapeCommand implements Command {
       x: shape.bounds.x + dx,
       y: shape.bounds.y + dy,
     };
+    page.setRules(
+      page.rules.map((rule) =>
+        rule.ptr === shape.pdfiumObjPtr
+          ? { ...rule, x: rule.x + dx, y: rule.y + dy }
+          : rule,
+      ),
+    );
+    page.setFills(
+      page.fills.map((fill) =>
+        fill.ptr === shape.pdfiumObjPtr
+          ? { ...fill, x: fill.x + dx, y: fill.y + dy }
+          : fill,
+      ),
+    );
     page.markDirty();
     page.markNeedsGenerate();
   }

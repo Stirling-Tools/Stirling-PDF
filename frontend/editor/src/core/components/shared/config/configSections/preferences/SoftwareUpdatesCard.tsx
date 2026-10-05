@@ -10,6 +10,11 @@ import { updateService, UpdateSummary } from "@app/services/updateService";
 import { useFrontendVersionInfo } from "@app/hooks/useFrontendVersionInfo";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import type { SoftwareUpdatesCardProps } from "@app/components/shared/config/configSections/preferences/preferencesCardProps";
+import {
+  AppVersionLabel,
+  BackendVersionLabel,
+  VersionMismatchMessage,
+} from "@app/components/shared/config/configSections/preferences/VersionLabels";
 
 /**
  * Version information and the update check. The page decides whether this card
@@ -28,14 +33,13 @@ export function SoftwareUpdatesCard({
   );
   const [updateModalOpened, setUpdateModalOpened] = useState(false);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
-  const { appVersion, mismatchVersion } = useFrontendVersionInfo(
-    config?.appVersion,
-  );
+  const { appVersion, backendVersion, mismatchVersion } =
+    useFrontendVersionInfo(config?.appVersion);
   const frontendVersionLabel = appVersion ?? t("common.loading", "Loading..."); // null = loading, shown only when appVersion !== undefined
 
   // The version update checks run against: the Tauri app version on desktop,
   // falling back to the backend version.
-  const currentVersion = appVersion ?? config?.appVersion ?? null;
+  const currentVersion = appVersion ?? backendVersion ?? null;
 
   // Check for updates on mount. The card is not rendered at all when the update
   // UI is hidden (SaaS build, managed-disabled desktop), so no call ever fires.
@@ -110,21 +114,14 @@ export function SoftwareUpdatesCard({
             <Group justify="space-between" align="center">
               <div>
                 <Text size="sm" c="dimmed">
-                  {t(
-                    "settings.general.updates.currentFrontendVersion",
-                    "Current Frontend Version",
-                  )}
-                  :{" "}
+                  <AppVersionLabel />:{" "}
                   <Text component="span" fw={500}>
                     {frontendVersionLabel}
                   </Text>
                 </Text>
                 {mismatchVersion && (
                   <Text size="sm" c="var(--color-red-dark)" mt={4}>
-                    {t(
-                      "settings.general.updates.versionMismatch",
-                      "Warning: A mismatch has been detected between the client version and the AppConfig version. Using different versions can lead to compatibility issues, errors, and security risks. Please ensure that server and client are using the same version.",
-                    )}
+                    <VersionMismatchMessage />
                   </Text>
                 )}
               </div>
@@ -132,15 +129,11 @@ export function SoftwareUpdatesCard({
           )}
           <Group justify="space-between" align="center">
             <div>
-              {config?.appVersion && (
+              {backendVersion && (
                 <Text size="sm" c="dimmed">
-                  {t(
-                    "settings.general.updates.currentBackendVersion",
-                    "Current Backend Version",
-                  )}
-                  :{" "}
+                  <BackendVersionLabel />:{" "}
                   <Text component="span" fw={500}>
-                    {config.appVersion}
+                    {backendVersion}
                   </Text>
                 </Text>
               )}
@@ -281,7 +274,7 @@ export function SoftwareUpdatesCard({
               String(Date.now() + 24 * 60 * 60 * 1000),
             );
           }}
-          currentVersion={appVersion ?? config?.appVersion ?? ""}
+          currentVersion={currentVersion ?? ""}
           updateSummary={updateSummary}
           machineInfo={{
             machineType: config?.machineType ?? "unknown",
