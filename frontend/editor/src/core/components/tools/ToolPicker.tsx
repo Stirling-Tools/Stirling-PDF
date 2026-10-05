@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useRef } from "react";
 import { Box, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
@@ -10,6 +10,7 @@ import { useFavoriteToolItems } from "@app/hooks/tools/useFavoriteToolItems";
 import NoToolsFound from "@app/components/tools/shared/NoToolsFound";
 import { renderToolButtons } from "@app/components/tools/shared/renderToolButtons";
 import ToolButton from "@app/components/tools/toolPicker/ToolButton";
+import { LazyToolSection } from "@app/components/tools/toolPicker/LazyToolSection";
 import { useToolWorkflowData } from "@app/contexts/ToolWorkflowContext";
 import { useIsScrolled } from "@app/hooks/useIsScrolled";
 import { ToolId } from "@app/types/toolId";
@@ -72,6 +73,9 @@ const ToolPicker = ({
   const { t } = useTranslation();
 
   const { scrolled, scrollRef } = useIsScrolled();
+  // The lazy sections observe against the scroller itself, so they need a
+  // stable ref alongside the callback ref that drives the header divider.
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
 
   const { sections: visibleSections } = useToolSections(filteredTools);
   const { favoriteTools, toolRegistry } = useToolWorkflowData();
@@ -112,7 +116,10 @@ const ToolPicker = ({
         </div>
       )}
       <Box
-        ref={scrollRef}
+        ref={(el: HTMLDivElement | null) => {
+          scrollerRef.current = el;
+          return scrollRef(el);
+        }}
         style={SCROLLABLE_STYLE}
         className="tool-picker-scrollable"
       >
@@ -230,21 +237,30 @@ const ToolPicker = ({
               )}
               {allSection &&
                 allSection.subcategories.map((sc: SubcategoryGroup) => (
-                  <Box key={sc.subcategoryId} w="100%">
-                    <div style={HEADER_TEXT_STYLE}>
-                      {toTitleCase(getSubcategoryLabel(t, sc.subcategoryId))}
-                    </div>
-                    {renderToolButtons(
-                      t,
-                      sc,
-                      selectedToolKey,
-                      onSelect,
-                      false,
-                      false,
-                      undefined,
-                      true,
+                  <LazyToolSection
+                    key={sc.subcategoryId}
+                    estimatedHeight={32 + sc.tools.length * 44}
+                    scrollRoot={scrollerRef}
+                    label={toTitleCase(
+                      getSubcategoryLabel(t, sc.subcategoryId),
                     )}
-                  </Box>
+                  >
+                    <Box w="100%">
+                      <div style={HEADER_TEXT_STYLE}>
+                        {toTitleCase(getSubcategoryLabel(t, sc.subcategoryId))}
+                      </div>
+                      {renderToolButtons(
+                        t,
+                        sc,
+                        selectedToolKey,
+                        onSelect,
+                        false,
+                        false,
+                        undefined,
+                        true,
+                      )}
+                    </Box>
+                  </LazyToolSection>
                 ))}
             </Stack>
 

@@ -23,6 +23,7 @@ import stirling.software.gradle.ModuleLicenseOverrideFilter
 ext {
     springBootVersion = "4.1.1"
     pdfboxVersion = "3.0.8"
+    officeConvertVersion = "0.2.2"
     imageioVersion = "3.15.2"
     lombokVersion = "1.18.46"
     bouncycastleVersion = "1.85"
