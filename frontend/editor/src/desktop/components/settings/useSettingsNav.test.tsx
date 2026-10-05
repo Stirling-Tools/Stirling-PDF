@@ -17,6 +17,7 @@ const state = vi.hoisted(() => ({
   connectionFails: false,
   workspace: true,
   loginEnabled: false,
+  admin: true,
 }));
 const ProprietaryPreferences = vi.hoisted(
   () => (_props: { accountSlot?: string }) => null,
@@ -96,7 +97,7 @@ vi.mock("@app/contexts/AppConfigContext", () => ({
 }));
 vi.mock("@app/auth/context", () => ({
   useAuth: () => ({
-    isAdmin: true,
+    isAdmin: state.admin,
     user: { orgOwner: state.owner },
     loading: state.loading,
   }),
@@ -124,6 +125,7 @@ beforeEach(() => {
   state.connectionFails = false;
   state.workspace = true;
   state.loginEnabled = false;
+  state.admin = true;
 });
 
 function preferencesPage(sections: SettingsNav["sections"]) {
@@ -319,3 +321,41 @@ it("does not offer billing to a local-mode owner", async () => {
       .some((item) => item.key === "billing"),
   ).toBe(false);
 });
+
+it.each([false, true])(
+  "retains the cloud Users entry in SaaS mode without a Spring admin role: owner=%s",
+  async (owner) => {
+    state.admin = false;
+    state.owner = owner;
+    state.loginEnabled = true;
+    state.roster = true;
+    state.workspace = false;
+    const { result } = renderHook(() => useSettingsNav(vi.fn()));
+    await waitFor(() => expect(result.current.pending).toBe(false));
+    const users = result.current.sections
+      .flatMap((section) => section.items)
+      .filter((item) => item.key === "users");
+    expect(users).toHaveLength(1);
+    // The cloud factory is mocked with a null component; the lazy Spring roster
+    // would have a React element, so this verifies which entry survives.
+    expect(users[0].component).toBeNull();
+  },
+);
+
+it.each(["selfhosted", "local"])(
+  "hides Users from a non-admin in mode=%s",
+  async (mode) => {
+    state.mode = mode;
+    state.admin = false;
+    state.loginEnabled = true;
+    state.roster = true;
+    state.workspace = false;
+    const { result } = renderHook(() => useSettingsNav(vi.fn()));
+    await waitFor(() => expect(result.current.pending).toBe(false));
+    expect(
+      result.current.sections
+        .flatMap((section) => section.items)
+        .some((item) => item.key === "users"),
+    ).toBe(false);
+  },
+);
