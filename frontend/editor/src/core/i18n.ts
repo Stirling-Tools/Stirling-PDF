@@ -119,7 +119,12 @@ function setLanguageWithPriority(
 
   // Only apply if new source has higher priority
   if (newPriority >= currentPriority) {
-    i18n.changeLanguage(language);
+    if (
+      normalizeLanguageCode(i18n.language || "") !==
+      normalizeLanguageCode(language)
+    ) {
+      i18n.changeLanguage(language);
+    }
     localStorage.setItem(I18N_STORAGE_KEYS.LANGUAGE, language);
     localStorage.setItem(I18N_STORAGE_KEYS.LANGUAGE_SOURCE, String(source));
     return true;

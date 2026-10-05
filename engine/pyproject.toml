@@ -8,7 +8,7 @@ dependencies = []
 [dependency-groups]
 # Runtime dependencies for the AI document engine service.
 engine = [
-    "cryptography>=50.0.0",
+    "cryptography>=50.0.1",
     "fastapi>=0.141.1",
     "opentelemetry-sdk>=1.39.1",
     "pgvector>=0.5.0",
@@ -63,7 +63,7 @@ tools = [
 ]
 # Release-signature verification dependencies.
 updater-signatures = [
-    "cryptography>=50.0.0",
+    "cryptography>=50.0.1",
 ]
 # Pinned repository-wide pre-commit tooling.
 pre-commit = [
