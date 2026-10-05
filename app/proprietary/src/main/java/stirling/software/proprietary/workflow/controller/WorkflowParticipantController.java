@@ -82,7 +82,7 @@ public class WorkflowParticipantController {
 
         WorkflowParticipant participant =
                 participantRepository
-                        .findByShareToken(token)
+                        .findByShareTokenWithSession(token)
                         .orElseThrow(
                                 () ->
                                         new ResponseStatusException(
@@ -148,7 +148,7 @@ public class WorkflowParticipantController {
 
         WorkflowParticipant participant =
                 participantRepository
-                        .findByShareToken(request.getParticipantToken())
+                        .findByShareTokenWithSession(request.getParticipantToken())
                         .orElseThrow(
                                 () ->
                                         new ResponseStatusException(
@@ -165,7 +165,9 @@ public class WorkflowParticipantController {
                     HttpStatus.BAD_REQUEST, "Participant has already completed their action");
         }
 
-        if (!participant.getWorkflowSession().isActive()) {
+        // Held across the save below: save() returns a fresh instance whose session is detached.
+        WorkflowSession session = participant.getWorkflowSession();
+        if (!session.isActive()) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "Workflow session is no longer active");
         }
@@ -182,7 +184,7 @@ public class WorkflowParticipantController {
             log.info(
                     "Participant {} submitted signature for session {}",
                     participant.getEmail(),
-                    participant.getWorkflowSession().getSessionId());
+                    session.getSessionId());
 
             return ResponseEntity.ok(WorkflowMapper.toParticipantResponse(participant, false));
 
@@ -207,7 +209,7 @@ public class WorkflowParticipantController {
 
         WorkflowParticipant participant =
                 participantRepository
-                        .findByShareToken(token)
+                        .findByShareTokenWithSession(token)
                         .orElseThrow(
                                 () ->
                                         new ResponseStatusException(
@@ -218,6 +220,9 @@ public class WorkflowParticipantController {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "Participant has already completed their action");
         }
+
+        // Held across the save below: save() returns a fresh instance whose session is detached.
+        WorkflowSession session = participant.getWorkflowSession();
 
         // Update status to DECLINED
         participant.setStatus(ParticipantStatus.DECLINED);
@@ -236,7 +241,7 @@ public class WorkflowParticipantController {
         log.info(
                 "Participant {} declined workflow session {}",
                 participant.getEmail(),
-                participant.getWorkflowSession().getSessionId());
+                session.getSessionId());
 
         return ResponseEntity.ok(WorkflowMapper.toParticipantResponse(participant, false));
     }
@@ -251,7 +256,7 @@ public class WorkflowParticipantController {
 
         WorkflowParticipant participant =
                 participantRepository
-                        .findByShareToken(token)
+                        .findByShareTokenWithSession(token)
                         .orElseThrow(
                                 () ->
                                         new ResponseStatusException(
