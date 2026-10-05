@@ -465,7 +465,7 @@ cucumber = [
     { name = "opencv-python-headless", specifier = ">=5.0.0.93" },
     { name = "pdf2image", specifier = ">=1.17.0" },
     { name = "pillow", specifier = ">=12.3.0" },
-    { name = "pypdf", extras = ["crypto"], specifier = ">=6.15.0" },
+    { name = "pypdf", extras = ["crypto"], specifier = ">=6.19.0" },
     { name = "qrcode", extras = ["pil"], specifier = ">=8.2" },
     { name = "reportlab", specifier = ">=5.0.1" },
     { name = "requests", specifier = ">=2.34.2" },
