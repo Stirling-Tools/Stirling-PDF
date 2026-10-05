@@ -66,6 +66,8 @@ def parse_locale(data: bytes, path: str) -> dict[str, object] | None:
 
 def collect_snapshots(repo: Path) -> tuple[int, dict[str, list[tuple[int, str | None, str | None]]]]:
     """Return (working-tree index, {lang: [(commit index, blob sha, path), ...]}) oldest first."""
+    if git("rev-parse", "--is-shallow-repository", cwd=repo).strip() == "true":
+        raise RuntimeError("Shallow clone: run `git fetch --unshallow` before scanning history")
     order = git("rev-list", "--first-parent", "--reverse", "HEAD", cwd=repo).split()
     index = {sha: i for i, sha in enumerate(order)}
 
