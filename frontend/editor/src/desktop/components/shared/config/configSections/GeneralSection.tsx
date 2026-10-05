@@ -27,16 +27,16 @@ interface GeneralSectionProps {
 const GeneralSection: React.FC<GeneralSectionProps> = () => {
   const { t } = useTranslation();
   const install = useDesktopInstall();
-  const [updateModeInfo, setUpdateModeInfo] = useState<UpdateModeInfo>({
-    mode: "prompt",
-    locked: false,
-  });
+  const [updateModeInfo, setUpdateModeInfo] = useState<UpdateModeInfo | null>(
+    null,
+  );
   const [updateModeError, setUpdateModeError] = useState<string | null>(null);
 
-  // Check for Tauri updater availability on mount
+  // Provisioning can prohibit update requests before Settings opens.
   useEffect(() => {
+    if (!updateModeInfo || updateModeInfo.mode === "disabled") return;
     void install.checkTauriUpdate();
-  }, [install.checkTauriUpdate]);
+  }, [install.checkTauriUpdate, updateModeInfo]);
 
   // Load the current update mode + lock status on mount. We intentionally
   // re-fetch on every mount so that a provisioning file dropped while the
@@ -97,9 +97,10 @@ const GeneralSection: React.FC<GeneralSectionProps> = () => {
       )}
       <PreferencesSection
         editorDefaultsSlot={<DefaultAppSettings />}
-        // Only an install-time (provisioning) "disabled" hides updates, in every connection mode.
+        // Mounting the card starts its summary request, so policy must be known first.
         hideUpdateSection={
-          updateModeInfo.mode === "disabled" && updateModeInfo.locked
+          !updateModeInfo ||
+          (updateModeInfo.mode === "disabled" && updateModeInfo.locked)
         }
         desktopInstall={{
           state: install.state,
@@ -109,11 +110,15 @@ const GeneralSection: React.FC<GeneralSectionProps> = () => {
           canInstall: install.canInstall,
           actions: install.actions,
         }}
-        desktopUpdateMode={{
-          mode: updateModeInfo.mode,
-          locked: updateModeInfo.locked,
-          onChange: handleUpdateModeChange,
-        }}
+        desktopUpdateMode={
+          updateModeInfo
+            ? {
+                mode: updateModeInfo.mode,
+                locked: updateModeInfo.locked,
+                onChange: handleUpdateModeChange,
+              }
+            : undefined
+        }
       />
     </Stack>
   );
