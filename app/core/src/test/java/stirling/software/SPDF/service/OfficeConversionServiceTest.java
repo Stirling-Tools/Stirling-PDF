@@ -44,7 +44,7 @@ class OfficeConversionServiceTest {
     @CsvSource({"false,true,true", "false,false,true", "true,true,false", "true,false,true"})
     void legacyKeepsLibreOfficeOnlyWhenInstalled(
             boolean legacy, boolean libreOffice, boolean expected) {
-        properties.getSystem().setLegacyOfficeConversion(legacy);
+        properties.getSystem().setStirlingOfficeConversion(!legacy);
         when(endpoints.isGroupEnabled("LibreOffice")).thenReturn(libreOffice);
 
         assertThat(service.replacesLibreOffice()).isEqualTo(expected);
@@ -89,7 +89,7 @@ class OfficeConversionServiceTest {
         OfficeToPdfService toPdf = new OfficeToPdfService(service, properties);
         assertThat(toPdf.handles("html")).isFalse();
 
-        properties.getSystem().setLegacyOfficeConversion(true);
+        properties.getSystem().setStirlingOfficeConversion(false);
         when(endpoints.isGroupEnabled("LibreOffice")).thenReturn(true);
         assertThat(toPdf.handles("docx")).isFalse();
     }

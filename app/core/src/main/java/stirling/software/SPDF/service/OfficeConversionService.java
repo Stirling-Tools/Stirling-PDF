@@ -53,7 +53,7 @@ public class OfficeConversionService {
 
     /** Whether the admin chose the legacy converters (LibreOffice, Tabula, plain text). */
     public boolean legacy() {
-        return applicationProperties.getSystem().isLegacyOfficeConversion();
+        return !applicationProperties.getSystem().isStirlingOfficeConversion();
     }
 
     public boolean libreOfficeAvailable() {

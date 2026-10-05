@@ -85,20 +85,20 @@ export function AdvancedFeatureFlagsCard({
 
         <SettingsToggleRow
           label={t(
-            "admin.settings.advanced.legacyOfficeConversion.label",
-            "Use legacy Office conversion",
+            "admin.settings.advanced.stirlingOfficeConversion.label",
+            "Use new Stirling Office conversion",
           )}
           info={t(
-            "admin.settings.advanced.legacyOfficeConversion.description",
-            "Convert Office files with LibreOffice as before instead of the built-in Stirling Office Convert. Stirling Office Convert is still used when LibreOffice is not installed.",
+            "admin.settings.advanced.stirlingOfficeConversion.description",
+            "Stirling Office Convert is in beta. Do you want to enable it? It offers better conversions, faster and with less memory than LibreOffice. It is always used when LibreOffice is not installed.",
           )}
-          pending={isFieldPending("legacyOfficeConversion")}
-          checked={settings.legacyOfficeConversion || false}
+          pending={isFieldPending("stirlingOfficeConversion")}
+          checked={settings.stirlingOfficeConversion || false}
           onChange={(checked) => {
             if (!loginEnabled) return;
             setSettings({
               ...settings,
-              legacyOfficeConversion: checked,
+              stirlingOfficeConversion: checked,
             });
           }}
           disabled={!loginEnabled}

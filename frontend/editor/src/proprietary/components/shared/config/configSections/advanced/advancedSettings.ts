@@ -42,7 +42,7 @@ export interface AdvancedSettingsData {
   enableUrlToPDF?: boolean;
   tessdataDir?: string;
   disableSanitize?: boolean;
-  legacyOfficeConversion?: boolean;
+  stirlingOfficeConversion?: boolean;
   tempFileManagement?: {
     baseTmpDir?: string;
     libreofficeDir?: string;

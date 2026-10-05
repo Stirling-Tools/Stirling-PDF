@@ -630,7 +630,7 @@ class ExtractImagesParams(ApiModel):
 
 class FileToPdfParams(ApiModel):
     """
-    This endpoint converts a given file to a PDF using LibreOffice API Input:ANY Output:PDF Type:SISO
+    This endpoint converts a given file to a PDF using Stirling Office Convert or LibreOffice Input:ANY Output:PDF Type:SISO
     """
 
 
