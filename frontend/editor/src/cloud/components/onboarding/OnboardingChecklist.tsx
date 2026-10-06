@@ -40,7 +40,8 @@ export function OnboardingChecklist() {
   const { t } = useTranslation();
   const { isAnonymous, loading } = useAuth();
   const account = useAccountCreatedAt();
-  const inviteTarget = useChecklistInviteTarget();
+  const invite = useChecklistInviteTarget();
+  const inviteTarget = invite.target;
 
   const [dismissed, setDismissed] = useState(isSnoozed);
   const [done, setDone] = useState<string[]>(() => getFlowProgress(FLOW_ID));
@@ -109,6 +110,7 @@ export function OnboardingChecklist() {
   if (
     loading ||
     account.loading ||
+    invite.loading ||
     isAnonymous ||
     isEstablishedAccount ||
     dismissed ||

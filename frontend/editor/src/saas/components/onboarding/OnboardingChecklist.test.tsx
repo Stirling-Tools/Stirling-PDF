@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { OnboardingChecklist } from "@app/components/onboarding/OnboardingChecklist";
 import type { AccountCreatedAt } from "@app/components/onboarding/accountCreatedAt";
-import type { NavKey } from "@app/components/shared/config/types";
+import type { ChecklistInviteTarget } from "@app/components/onboarding/checklistInviteTarget";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const FLOW = "onboarding::flow::saas-checklist";
@@ -12,7 +12,7 @@ const TOUR = "onboarding.checklist.takeTour.title";
 
 const { account, inviteTarget } = vi.hoisted(() => ({
   account: vi.fn<() => AccountCreatedAt>(),
-  inviteTarget: vi.fn<() => NavKey | null>(),
+  inviteTarget: vi.fn<() => ChecklistInviteTarget>(),
 }));
 
 vi.mock("@app/auth/UseSession", () => ({
@@ -49,7 +49,7 @@ describe("OnboardingChecklist", () => {
       loading: false,
       createdAt: new Date(Date.now() - DAY_MS),
     });
-    inviteTarget.mockReturnValue("users");
+    inviteTarget.mockReturnValue({ loading: false, target: "users" });
   });
 
   it("shows every step to a new account", () => {
@@ -82,8 +82,14 @@ describe("OnboardingChecklist", () => {
     expect(checklist()).not.toBeNull();
   });
 
+  it("stays hidden while the invite step is resolving", () => {
+    inviteTarget.mockReturnValue({ loading: true, target: null });
+    render(<OnboardingChecklist />);
+    expect(checklist()).toBeNull();
+  });
+
   it("drops the invite step when there is no one to invite", () => {
-    inviteTarget.mockReturnValue(null);
+    inviteTarget.mockReturnValue({ loading: false, target: null });
     render(<OnboardingChecklist />);
     expect(screen.queryByText(INVITE)).toBeNull();
     expect(screen.getByText("0 / 2")).toBeTruthy();
