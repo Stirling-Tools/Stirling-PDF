@@ -21,6 +21,7 @@ import { isBaseWorkbench } from "@app/types/workbench";
 import { VIEWER_SUPPORTED_EXTENSIONS } from "@app/utils/fileUtils";
 import { useIsPhone } from "@app/hooks/useIsMobile";
 import { useDropzoneFiles } from "@app/hooks/useDropzoneFiles";
+import { alert } from "@app/components/toast";
 import styles from "@app/components/layout/Workbench.module.css";
 
 import WorkbenchBar from "@app/components/shared/WorkbenchBar";
@@ -111,7 +112,24 @@ export default function Workbench() {
     setIsFileDragOver(false);
     const dropped = await getDropzoneFiles(e);
     const files = dropped.filter((item) => item instanceof File);
-    if (files.length > 0) await addFiles(files);
+    if (files.length === 0) return;
+    try {
+      await addFiles(files);
+    } catch (cause) {
+      alert({
+        alertType: "error",
+        title: t("filePicker.errorTitle", "Couldn't add files"),
+        body:
+          cause instanceof Error
+            ? cause.message
+            : t(
+                "filePicker.error",
+                "Could not add these files. Please try again.",
+              ),
+        expandable: false,
+        durationMs: 5000,
+      });
+    }
   };
 
   // The viewer's tool row can be retracted to give the document more height.
