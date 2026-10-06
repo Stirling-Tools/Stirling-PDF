@@ -85,7 +85,6 @@ interface WorkbenchBarProps {
   /** Whether the viewer's tool row is currently retracted. */
   viewerToolbarCollapsed?: boolean;
   /** Setter for the viewer tool-row retract state (owned by Workbench). */
-  onCollapseViewerToolbar?: (collapsed: boolean) => void;
 }
 
 export default function WorkbenchBar({
@@ -93,7 +92,6 @@ export default function WorkbenchBar({
   setCurrentView,
   hasFiles,
   viewerToolbarCollapsed = false,
-  onCollapseViewerToolbar,
 }: WorkbenchBarProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -192,6 +190,15 @@ export default function WorkbenchBar({
     () =>
       buttons.filter(
         (btn) => btn.section === "bar-lead" && (btn.visible ?? true),
+      ),
+    [buttons],
+  );
+
+  // Pinned to the tool row's right edge, clear of the centred lanes.
+  const rowEndButtons = useMemo(
+    () =>
+      buttons.filter(
+        (btn) => btn.section === "row-end" && (btn.visible ?? true),
       ),
     [buttons],
   );
@@ -394,10 +401,6 @@ export default function WorkbenchBar({
   const toggleMobileTools = useCallback(
     () => setMobileToolsExpanded((v) => !v),
     [],
-  );
-  const handleRetractToolbar = useCallback(
-    () => onCollapseViewerToolbar?.(true),
-    [onCollapseViewerToolbar],
   );
 
   const renderButton = useCallback(
@@ -614,9 +617,17 @@ export default function WorkbenchBar({
     </div>
   );
 
-  // Tool buttons - second row, only rendered when buttons exist. In the viewer
-  // the row is retractable: a handle on its right edge hides the whole row;
-  // Workbench then shows a tab below the bar to bring it back.
+  const renderRowButton = (btn: WorkbenchBarButtonConfig) => {
+    const content = renderButton(btn);
+    if (!content) return null;
+    return (
+      <div key={btn.id} className="workbench-bar-action-wrapper">
+        {content}
+      </div>
+    );
+  };
+
+  // Tool buttons - second row, only rendered when buttons exist.
   const toolRow =
     sectionsWithButtons.length > 0 && !(isViewer && viewerToolbarCollapsed) ? (
       <div
@@ -631,28 +642,22 @@ export default function WorkbenchBar({
             ({ section, buttons: sectionButtons }, idx) => (
               <React.Fragment key={section}>
                 {idx > 0 && <div className="workbench-bar-divider" />}
-                {sectionButtons.map((btn) => {
-                  const content = renderButton(btn);
-                  if (!content) return null;
-                  return (
-                    <div key={btn.id} className="workbench-bar-action-wrapper">
-                      {content}
-                    </div>
-                  );
-                })}
+                {sectionButtons.map((btn) => renderRowButton(btn))}
               </React.Fragment>
             ),
           )}
+          {/* A phone's row scrolls, so its end controls scroll with it. */}
+          {isMobile && rowEndButtons.map((btn) => renderRowButton(btn))}
         </div>
+        {!isMobile && rowEndButtons.length > 0 && (
+          <div className="workbench-bar-row-end">
+            {rowEndButtons.map((btn) => renderRowButton(btn))}
+          </div>
+        )}
         <WorkbenchBarToolbarHandle
           isMobile={isMobile}
           expanded={mobileToolsExpanded}
           onToggleExpanded={toggleMobileTools}
-          onRetract={
-            isViewer && onCollapseViewerToolbar
-              ? handleRetractToolbar
-              : undefined
-          }
         />
       </div>
     ) : null;

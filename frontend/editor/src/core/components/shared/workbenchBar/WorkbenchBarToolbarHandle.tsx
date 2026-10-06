@@ -7,20 +7,16 @@ interface WorkbenchBarToolbarHandleProps {
   /** Mobile only: whether the tool row is showing every tool rather than scrolling. */
   expanded: boolean;
   onToggleExpanded: () => void;
-  /** Desktop viewer only: retracts the whole tool row. Omit to render no handle. */
-  onRetract?: () => void;
 }
 
 /**
- * Handle pinned to the right of the tool row. On mobile it expands the row from
- * a single scrolling line to a wrapped grid; on the desktop viewer it retracts
- * the row entirely.
+ * Handle pinned to the right of the phone tool row: expands it from a single
+ * scrolling line to a wrapped grid.
  */
 export default function WorkbenchBarToolbarHandle({
   isMobile,
   expanded,
   onToggleExpanded,
-  onRetract,
 }: WorkbenchBarToolbarHandleProps) {
   const { t } = useTranslation();
 
@@ -49,18 +45,5 @@ export default function WorkbenchBarToolbarHandle({
     );
   }
 
-  if (!onRetract) return null;
-
-  return (
-    <Button
-      type="button"
-      variant="quiet"
-      className="workbench-bar-toolbar-handle workbench-bar-toolbar-handle-retract"
-      onClick={onRetract}
-      aria-expanded
-      aria-label={t("workbenchBar.hideToolbar", "Hide toolbar")}
-      title={t("workbenchBar.hideToolbar", "Hide toolbar")}
-      leftSection={<Icon name="chevron-up" size={"1rem"} />}
-    />
-  );
+  return null;
 }

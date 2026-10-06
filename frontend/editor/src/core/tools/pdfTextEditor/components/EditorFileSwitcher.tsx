@@ -27,7 +27,11 @@ export function EditorFileSwitcher({
   onViewActiveFiles,
 }: Props) {
   const { t } = useTranslation();
-  const { files } = useAllFiles();
+  const { files, fileStubs } = useAllFiles();
+  // A rename lands on the stored record; the File object keeps its old name.
+  const nameOf = (file: File) =>
+    fileStubs.find((s) => s.id === (file as File & { fileId?: FileId }).fileId)
+      ?.name ?? file.name;
 
   const pdfs = files.filter((f) => /\.pdf$/i.test(f.name));
   const label = (
@@ -110,7 +114,7 @@ export function EditorFileSwitcher({
                       variant="tertiary"
                       aria-label={t("pdfTextEditor.fileSwitcher.closeFile", {
                         defaultValue: "Close {{name}}",
-                        name: file.name,
+                        name: nameOf(file),
                       })}
                       data-testid="pdf-editor-file-close"
                       onClick={(e) => {
@@ -125,7 +129,7 @@ export function EditorFileSwitcher({
                 ) : undefined
               }
             >
-              {file.name}
+              {nameOf(file)}
             </Menu.Item>
           );
         })}

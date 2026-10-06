@@ -9,6 +9,7 @@ import {
 } from "@app/hooks/useWorkbenchBarButtons";
 import { Icon } from "@app/ui/Icon";
 import { SearchInterface } from "@app/components/viewer/SearchInterface";
+import { ViewerDocumentMenu } from "@app/components/viewer/ViewerDocumentMenu";
 import ViewerAnnotationControls from "@app/components/viewer/ViewerAnnotationControls";
 import { useSidebarContext } from "@app/contexts/SidebarContext";
 import { useWorkbenchBarTooltipSide } from "@app/hooks/useWorkbenchBarTooltipSide";
@@ -640,6 +641,12 @@ export function useViewerWorkbenchBarButtons(
             labelled
           />
         ),
+      },
+      {
+        id: "viewer-doc-menu",
+        section: "row-end" as const,
+        order: 60,
+        render: ({ disabled }) => <ViewerDocumentMenu disabled={disabled} />,
       },
     ];
 
