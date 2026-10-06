@@ -58,6 +58,7 @@ updates:
 
   - package-ecosystem: npm
     directories:
+      - /.github/scripts
       - /devTools
       - /frontend
       - /testing/compose/mcp-client-check
@@ -107,6 +108,9 @@ updates:
           - "i18next"
           - "i18next-*"
           - "react-i18next"
+      lucide:
+        patterns:
+          - "lucide-static"
       stripe:
         patterns:
           - "@stripe/*"

@@ -82,10 +82,13 @@ public class ConfigInitializer {
             migrateProFeaturesKeyCasing(settingsFile, settingsTemplateFile);
             boolean ssoAutoLoginMigrated =
                     migrateSsoAutoLoginToSecurity(settingsFile, settingsTemplateFile);
+            boolean signingScopeMigrated =
+                    migrateSigningUserListScope(settingsFile, settingsTemplateFile);
 
             boolean changesMade =
                     settingsTemplateFile.updateValuesFromYaml(settingsFile, settingsTemplateFile)
-                            || ssoAutoLoginMigrated;
+                            || ssoAutoLoginMigrated
+                            || signingScopeMigrated;
             if (changesMade) {
                 settingsTemplateFile.save(destPath);
                 log.info("Settings file updated based on template changes.");
@@ -152,6 +155,16 @@ public class ConfigInitializer {
                         List.of("premium", "proFeatures", "customMetadata", field), value);
             }
         }
+    }
+
+    private boolean migrateSigningUserListScope(YamlHelper yaml, YamlHelper template) {
+        if (yaml.getValueByExactKeyPath("storage", "signing", "userListScope") != null) {
+            return false;
+        }
+        Object legacyScope = yaml.getValueByExactKeyPath("storage", "encryption", "userListScope");
+        return legacyScope != null
+                && template.updateValue(
+                        List.of("storage", "signing", "userListScope"), legacyScope);
     }
 
     boolean migrateSsoAutoLoginToSecurity(YamlHelper yaml, YamlHelper template) {
