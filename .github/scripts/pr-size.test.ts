@@ -143,8 +143,8 @@ describe("check PR size", () => {
     const { failures, calls, comments } = await check(oversized(1001), files);
     assert.equal(failures.length, 1);
     assert.deepEqual(calls, ["list comments", "comment", "label too-large"]);
-    assert.match(comments[0]?.body ?? "", /@contributor, this PR changes 1001 lines/);
-    assert.match(comments[0]?.body ?? "", /large-pr-approved/);
+    assert.match(comments[0]?.body ?? "", /@contributor, this PR has been marked as too large because it changes 1001 lines/);
+    assert.match(comments[0]?.body ?? "", /add a comment explaining why/);
     assert.match(comments[0]?.body ?? "", /closed automatically/);
   });
 
@@ -171,7 +171,7 @@ describe("check PR size", () => {
     const labels = [...TOO_LARGE, { name: "large-pr-approved" }];
     const { failures } = await check(oversized(1200, labels), codeFiles(1200), { comments: approved });
     assert.deepEqual(failures, []);
-    assert.match(approved[0]?.body ?? "", /no longer holds this PR back: it is labelled `large-pr-approved`/);
+    assert.match(approved[0]?.body ?? "", /no longer marked as too large, because it is labelled `large-pr-approved`/);
   });
 
   it("leaves a PR it never warned alone", async () => {

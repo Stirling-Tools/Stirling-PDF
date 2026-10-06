@@ -321,7 +321,7 @@ function remedy(reason: Reason, pr: PullRequest): string {
     case "idleDraft":
       return "Any activity keeps it open, such as a push, a comment or marking it ready for review.";
     case "tooLarge":
-      return "Splitting it into smaller PRs keeps it open, as does a maintainer approving its size.";
+      return "Please split it into smaller PRs.";
   }
 }
 
