@@ -23,9 +23,9 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-import stirling.software.spdf.config.EndpointConfiguration;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.officeconvert.topdf.OfficeToPdf;
+import stirling.software.spdf.config.EndpointConfiguration;
 
 class OfficeConversionServiceTest {
 

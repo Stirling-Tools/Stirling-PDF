@@ -18,10 +18,6 @@ import io.swagger.v3.oas.annotations.Operation;
 
 import lombok.RequiredArgsConstructor;
 
-import stirling.software.spdf.model.api.converters.PdfToPresentationRequest;
-import stirling.software.spdf.model.api.converters.PdfToTextOrRTFRequest;
-import stirling.software.spdf.model.api.converters.PdfToWordRequest;
-import stirling.software.spdf.service.OfficeConversionService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.configuration.RuntimePathConfig;
@@ -38,6 +34,10 @@ import stirling.software.common.util.PDFToFile;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.spdf.model.api.converters.PdfToPresentationRequest;
+import stirling.software.spdf.model.api.converters.PdfToTextOrRTFRequest;
+import stirling.software.spdf.model.api.converters.PdfToWordRequest;
+import stirling.software.spdf.service.OfficeConversionService;
 
 @ConvertApi
 @RequiredArgsConstructor

@@ -17,11 +17,11 @@ import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 
-import stirling.software.spdf.config.EndpointConfiguration;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.officeconvert.OfficeConvert;
 import stirling.software.officeconvert.PdfToPptx;
 import stirling.software.officeconvert.legacy.PdfToPpt;
+import stirling.software.spdf.config.EndpointConfiguration;
 
 /**
  * PDF to Office in process through Stirling Office Convert, and the switch between it and the

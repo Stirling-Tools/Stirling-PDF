@@ -26,9 +26,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.spdf.config.EndpointConfiguration;
-import stirling.software.spdf.service.OfficeConversionService;
-import stirling.software.spdf.service.OfficeToPdfService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.configuration.RuntimePathConfig;
@@ -47,6 +44,9 @@ import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.spdf.config.EndpointConfiguration;
+import stirling.software.spdf.service.OfficeConversionService;
+import stirling.software.spdf.service.OfficeToPdfService;
 
 @ConvertApi
 @RequiredArgsConstructor
