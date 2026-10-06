@@ -40,6 +40,9 @@ export function copyRgbaToBgraHeap(
   stride: number,
 ): void {
   const rowBytes = width * 4;
+  if (!Number.isInteger(width) || !Number.isInteger(height)) {
+    throw new RangeError("Bitmap dimensions must be integers");
+  }
   const expectedBytes = rowBytes * height;
   if (rgba.byteLength !== expectedBytes) {
     throw new RangeError(

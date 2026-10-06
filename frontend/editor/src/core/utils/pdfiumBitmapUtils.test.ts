@@ -82,4 +82,17 @@ describe("copyRgbaToBgraHeap", () => {
       copyRgbaToBgraHeap(m, invalidRgba, 0, width, height, stride);
     }).toThrow(RangeError);
   });
+
+  it("throws RangeError if width or height are fractional", () => {
+    const { m } = createMockPdfium(64);
+    const rgba = new Uint8Array(12); // 1.5 * 2 * 4 = 12 — passes byte check without integer guard
+
+    expect(() => {
+      copyRgbaToBgraHeap(m, rgba, 0, 1.5, 2, 8);
+    }).toThrow(RangeError);
+
+    expect(() => {
+      copyRgbaToBgraHeap(m, rgba, 0, 2, 1.5, 8);
+    }).toThrow(RangeError);
+  });
 });
