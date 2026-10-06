@@ -46,6 +46,11 @@ dependencies {
     implementation "org.commonmark:commonmark:$commonmarkVersion" // https://mvnrepository.com/artifact/org.commonmark/commonmark
     implementation "org.commonmark:commonmark-ext-gfm-tables:$commonmarkVersion"
 
+    // Stirling Office Convert: PDF to Office, legacy .ppt output, and Office to PDF without LibreOffice.
+    implementation "com.stirling:stirling-office-convert:$officeConvertVersion"
+    implementation "com.stirling:stirling-office-convert-legacy:$officeConvertVersion"
+    implementation "com.stirling:stirling-office-convert-topdf:$officeConvertVersion"
+
     // General PDF dependencies
     implementation "org.apache.pdfbox:preflight:$pdfboxVersion"
     implementation "org.apache.pdfbox:xmpbox:$pdfboxVersion"
