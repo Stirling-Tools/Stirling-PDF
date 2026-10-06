@@ -63,6 +63,24 @@ beforeEach(() => {
 });
 
 describe("file picker caller contract", () => {
+  it("clears a caller's format and count restrictions when the next picker opens", () => {
+    const { result } = renderHook(useFilesModalContext, {
+      wrapper: FilesModalProvider,
+    });
+    act(() =>
+      result.current.openFilesModal({
+        supportedFormats: ["pdf"],
+        maxSelectable: 1,
+      }),
+    );
+    expect(result.current.supportedFormats).toEqual(["pdf"]);
+    expect(result.current.maxSelectable).toBe(1);
+    act(() => result.current.closeFilesModal());
+    act(() => result.current.openFilesModal());
+    expect(result.current.supportedFormats).toBeUndefined();
+    expect(result.current.maxSelectable).toBeNull();
+  });
+
   it("inserts readable files when a share is revoked and another local blob is missing", async () => {
     allowConsole.error(/Could not load selected file/);
     const first = new File(["first"], "First.pdf");

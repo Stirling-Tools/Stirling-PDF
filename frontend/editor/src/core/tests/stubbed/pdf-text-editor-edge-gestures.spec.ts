@@ -4,16 +4,12 @@ import path from "path";
 import type { EditorTestWindow } from "@app/tests/stubbed/editorTestTypes";
 
 /**
- * Direct manipulation: grab a box's frame to move it.
+ * Direct manipulation: grab a box's frame to move it, or its right edge to
+ * re-wrap it to a new width.
  *
- * The gesture used to require Ctrl, which nothing on the page advertised - the
- * sidebar carried a permanent instruction card instead. Ctrl still works, but
- * the frame is now the discoverable path.
- *
- * There is deliberately no drag-to-resize: re-wrapping runs through
- * ReflowWrapCommand, whose x-gap word grouping splits inside words on runs
- * with individually positioned glyphs. The last test here pins that down so
- * the handle is not reintroduced before the grouping is fixed.
+ * The move gesture used to require Ctrl, which nothing on the page advertised -
+ * the sidebar carried a permanent instruction card instead. Ctrl still works,
+ * but the frame is now the discoverable path.
  */
 const SAMPLE = path.join(
   import.meta.dirname,
@@ -54,6 +50,16 @@ async function shapeOf(page: Page, src: string): Promise<Shape> {
   }, src);
   if (!out) throw new Error(`run /${src}/ not found`);
   return out;
+}
+
+async function textOf(page: Page, needle: string): Promise<string> {
+  return page.evaluate(
+    (n: string) =>
+      (window as unknown as EditorTestWindow).__editor_store.doc
+        .page(0)
+        .runs.find((r) => new RegExp(n).test(r.text))?.text ?? "",
+    needle,
+  );
 }
 
 async function boxOf(page: Page, src: string) {
@@ -128,20 +134,30 @@ test.describe("PDF text editor - edge gestures", () => {
     expect(Math.abs(after.x - before.x)).toBeGreaterThan(5);
   });
 
-  test("a frame drag never rewrites the run's text", async ({ page }) => {
+  test("a left-frame drag never rewrites the run's text", async ({ page }) => {
     await open(page);
-    const textOf = (needle: string) =>
-      page.evaluate(
-        (n: string) =>
-          (window as unknown as EditorTestWindow).__editor_store.doc
-            .page(0)
-            .runs.find((r) => new RegExp(n).test(r.text))?.text ?? "",
-        needle,
-      );
-    const before = await textOf("Open Source");
+    const before = await textOf(page, "Open Source");
     const box = await boxOf(page, "Open Source");
 
-    // Straight at the right-hand edge - where a resize handle would have been.
+    await page.mouse.move(box.x + 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(box.x + 40, box.y + box.height / 2, { steps: 10 });
+    await page.mouse.up();
+    await page.waitForTimeout(600);
+
+    expect(await textOf(page, "Open Source")).toBe(before);
+  });
+
+  // A letter-spaced heading is drawn one glyph per object, which the reflow
+  // used to read as one word per glyph and wrap into one character per line.
+  test("a right-edge drag re-wraps between words, never inside them", async ({
+    page,
+  }) => {
+    await open(page);
+    const words = (text: string) => text.split(/\s+/).filter(Boolean);
+    const before = await textOf(page, "Open Source");
+    const box = await boxOf(page, "Open Source");
+
     await page.mouse.move(box.x + box.width - 2, box.y + box.height / 2);
     await page.mouse.down();
     await page.mouse.move(box.x + box.width * 0.5, box.y + box.height / 2, {
@@ -150,9 +166,9 @@ test.describe("PDF text editor - edge gestures", () => {
     await page.mouse.up();
     await page.waitForTimeout(600);
 
-    // Moving must never reflow. A resize here used to shred the run into
-    // one character per line.
-    expect(await textOf("Open Source")).toBe(before);
+    const after = await textOf(page, "Open");
+    expect(after).toContain("\n");
+    expect(words(after)).toEqual(words(before));
   });
 
   test("the insert verbs live in the toolbar, not the panel", async ({
