@@ -205,6 +205,25 @@ class RequestUriUtilsTest {
         assertTrue(RequestUriUtils.isPublicAuthEndpoint("/app/login", "/app"));
     }
 
+    // --- share-link download API (public links are checked by the service) ---
+
+    @Test
+    void testIsPublicAuthEndpoint_shareLinkDownloadApi() {
+        assertTrue(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/storage/share-links/00dcac3a-fc7a-4989-9c4f-97745484d62f", ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_shareLinkOtherApisStayProtected() {
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/storage/share-links/00dcac3a-fc7a-4989-9c4f-97745484d62f/metadata",
+                        ""));
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint("/api/v1/storage/share-links/accessed", ""));
+    }
+
     // --- share-link SPA bootstrap ---
 
     @Test

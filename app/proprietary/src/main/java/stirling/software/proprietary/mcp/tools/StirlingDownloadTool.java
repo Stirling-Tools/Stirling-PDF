@@ -1,39 +1,38 @@
 package stirling.software.proprietary.mcp.tools;
 
-import java.io.IOException;
 import java.util.Base64;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.MediaType;
+import org.springframework.http.MediaTypeFactory;
 import org.springframework.stereotype.Component;
 
 import stirling.software.common.model.ApplicationProperties;
-import stirling.software.common.service.FileStorage;
 import stirling.software.proprietary.mcp.McpCallContext;
 import stirling.software.proprietary.mcp.McpTool;
+import stirling.software.proprietary.mcp.McpToolAnnotations;
+import stirling.software.proprietary.mcp.files.McpFiles;
 
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
 
 /**
- * Fetches a stored file's content by fileId, returned inline as base64. For large results that were
- * not returned inline by an operation.
+ * Returns a stored file's content inline as base64, for clients that cannot open a download link
+ * (e.g. Claude Code).
  */
 @Component
 @ConditionalOnProperty(name = "mcp.enabled", havingValue = "true")
 public class StirlingDownloadTool implements McpTool {
 
     private final ObjectMapper mapper;
-    private final FileStorage fileStorage;
+    private final McpFiles files;
     private final ApplicationProperties applicationProperties;
 
     public StirlingDownloadTool(
-            ObjectMapper mapper,
-            FileStorage fileStorage,
-            ApplicationProperties applicationProperties) {
+            ObjectMapper mapper, McpFiles files, ApplicationProperties applicationProperties) {
         this.mapper = mapper;
-        this.fileStorage = fileStorage;
+        this.files = files;
         this.applicationProperties = applicationProperties;
     }
 
@@ -43,9 +42,19 @@ public class StirlingDownloadTool implements McpTool {
     }
 
     @Override
+    public String title() {
+        return "Download a result file";
+    }
+
+    @Override
+    public McpToolAnnotations annotations() {
+        return McpToolAnnotations.READ_ONLY;
+    }
+
+    @Override
     public String description() {
         return "Fetch a stored file's content by fileId (e.g. an operation result), returned inline"
-                + " as base64. Recommended only when a result was too large to be returned inline."
+                + " as base64. Only for clients that cannot open the result's download link."
                 + " Argument: { fileId: <id> }.";
     }
 
@@ -73,22 +82,16 @@ public class StirlingDownloadTool implements McpTool {
         }
         long maxInline = applicationProperties.getMcp().getMaxInlineResponseBytes();
         try {
-            if (!fileStorage.fileExists(fileId)) {
-                return McpResponses.error(
-                        mapper, "Unknown or inaccessible fileId '" + fileId + "'.");
-            }
-            long size = fileStorage.getFileSize(fileId);
-            if (size > maxInline) {
+            McpFiles.Loaded file = files.load(files.user(context), fileId);
+            if (file.bytes().length > maxInline) {
                 return McpResponses.error(
                         mapper,
                         "File is "
-                                + size
+                                + file.bytes().length
                                 + " bytes, over the inline limit of "
                                 + maxInline
-                                + " bytes. Raise mcp.maxInlineResponseBytes or retrieve it via the"
-                                + " Stirling UI/API.");
+                                + " bytes. Use the result's download link instead.");
             }
-            byte[] bytes = fileStorage.retrieveBytes(fileId);
             return McpResponses.result(
                     mapper,
                     false,
@@ -97,17 +100,17 @@ public class StirlingDownloadTool implements McpTool {
                             "File "
                                     + fileId
                                     + " ("
-                                    + bytes.length
+                                    + file.bytes().length
                                     + " bytes) included inline below."),
                     McpResponses.resourceBlock(
                             mapper,
                             "stirling://file/" + fileId,
-                            MediaType.APPLICATION_OCTET_STREAM_VALUE,
-                            Base64.getEncoder().encodeToString(bytes)));
-        } catch (SecurityException e) {
-            return McpResponses.error(mapper, "Unknown or inaccessible fileId '" + fileId + "'.");
-        } catch (IOException e) {
-            return McpResponses.error(mapper, "Failed to read fileId '" + fileId + "'.");
+                            MediaTypeFactory.getMediaType(file.name())
+                                    .orElse(MediaType.APPLICATION_OCTET_STREAM)
+                                    .toString(),
+                            Base64.getEncoder().encodeToString(file.bytes())));
+        } catch (McpFiles.McpFileException e) {
+            return McpResponses.error(mapper, e.getMessage());
         }
     }
 }

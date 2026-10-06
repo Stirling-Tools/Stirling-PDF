@@ -1,0 +1,101 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "stirling-pdf",
+  "version": "1.0.0",
+  "description": "Edit, convert, compress, secure and sign PDFs with Stirling PDF.",
+  "author": {
+    "name": "Stirling PDF",
+    "url": "https://www.stirling.com"
+  },
+  "homepage": "https://www.stirling.com",
+  "repository": "https://github.com/Stirling-Tools/Stirling-PDF",
+  "license": "MIT",
+  "keywords": ["pdf", "convert", "compress", "merge", "split", "ocr", "redact", "sign"],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Stirling PDF",
+        "shortDescription": "Edit, convert and secure PDFs",
+        "longDescription": "Stirling PDF brings a full PDF toolkit into ChatGPT. Attach a file or pick one from your device, then ask in plain language.\n\nWhat you can do:\n- Convert PDFs to and from Word, Excel, PowerPoint, images, HTML and Markdown\n- Compress, merge, split, rotate, reorder and remove pages\n- Run OCR on scanned documents to make them searchable\n- Add or remove passwords, redact text, add watermarks and digital signatures\n- Extract images, tables and metadata\n\nEvery result comes back as a file card with a download button. Your original file is never changed, and results are only reachable through a short-lived private link.\n\nSign in with your Stirling PDF account. Usage counts against your Stirling PDF plan.",
+        "developerName": "Stirling PDF",
+        "category": "Productivity",
+        "capabilities": [
+          "Convert PDFs to and from Office formats and images",
+          "Compress, merge, split and rotate PDFs",
+          "OCR scanned documents",
+          "Password-protect, redact and watermark PDFs",
+          "Digitally sign PDFs"
+        ],
+        "websiteURL": "https://www.stirling.com",
+        "supportURL": "https://www.stirling.com/contact-us",
+        "privacyPolicyURL": "https://www.stirling.com/legal/privacy-policy",
+        "termsOfServiceURL": "https://www.stirling.com/legal/terms-of-service",
+        "defaultPrompt": [
+          "Compress this PDF so I can email it",
+          "Convert this PDF to Word",
+          "Merge these PDFs into one file"
+        ],
+        "brandColor": "#8E3131",
+        "brandColorDark": "#D0605F",
+        "composerIcon": "./assets/logo.svg",
+        "logo": "./assets/logo.svg",
+        "screenshots": []
+      },
+      "review": {
+        "test_cases": {
+          "positive": [
+            {
+              "description": "Compress an attached PDF",
+              "prompt": "Compress this PDF so it is small enough to email.",
+              "tools_triggered": "stirling_misc",
+              "expected_behavior": "A file card shows the compressed PDF with its new size and a working Download button."
+            },
+            {
+              "description": "Convert an attached PDF to Word",
+              "prompt": "Turn this PDF into a Word document.",
+              "tools_triggered": "stirling_describe_operation, stirling_convert",
+              "expected_behavior": "A file card shows a .docx result that downloads and opens in Word."
+            },
+            {
+              "description": "Rotate pages",
+              "prompt": "Rotate every page of this PDF by 90 degrees.",
+              "tools_triggered": "stirling_pages",
+              "expected_behavior": "A file card shows the rotated PDF; downloading it shows all pages rotated."
+            },
+            {
+              "description": "Password-protect a PDF",
+              "prompt": "Add the password 'review-2026' to this PDF.",
+              "tools_triggered": "stirling_describe_operation, stirling_security",
+              "expected_behavior": "A file card shows the protected PDF; opening it asks for the password."
+            },
+            {
+              "description": "Pick a file without attaching it",
+              "prompt": "I want to compress a PDF from my computer.",
+              "tools_triggered": "stirling_select_file, stirling_upload, stirling_misc",
+              "expected_behavior": "A file picker appears in the chat; after choosing a PDF the assistant compresses it and shows a file card."
+            }
+          ],
+          "negative": [
+            {
+              "description": "Not a document task",
+              "prompt": "What is the weather in London?"
+            },
+            {
+              "description": "Request without any file",
+              "prompt": "Summarise the latest news for me."
+            },
+            {
+              "description": "Unsupported purchase action",
+              "prompt": "Buy me a PDF editor licence."
+            }
+          ]
+        },
+        "demo_recording_url": "",
+        "commerce": false
+      },
+      "publication": {
+        "release_notes": "First release: PDF conversion, editing, OCR, security and signing with in-chat file cards and file picker."
+      }
+    }
+  }
+}

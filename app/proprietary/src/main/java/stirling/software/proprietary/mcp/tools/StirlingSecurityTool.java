@@ -27,6 +27,11 @@ public class StirlingSecurityTool extends AbstractCategoryTool {
     }
 
     @Override
+    public String title() {
+        return "PDF security and signing";
+    }
+
+    @Override
     public String description() {
         return "Security-related PDF operations: password add/remove, redact, sanitize, certify"
                 + " / sign with cert, validate signature, add watermark. Call"

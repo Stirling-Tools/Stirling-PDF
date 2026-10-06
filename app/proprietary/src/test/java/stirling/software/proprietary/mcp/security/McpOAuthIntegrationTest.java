@@ -35,7 +35,9 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.mcp.McpDomainVerificationController;
 import stirling.software.proprietary.mcp.McpServerController;
+import stirling.software.proprietary.mcp.McpWidget;
 import stirling.software.proprietary.mcp.tools.DescribeOperationTool;
 import stirling.software.proprietary.mcp.tools.StirlingAiTool;
 import stirling.software.proprietary.mcp.tools.StirlingConvertTool;
@@ -58,6 +60,18 @@ import okhttp3.mockwebserver.RecordedRequest;
         classes = McpOAuthIntegrationTest.TestApp.class,
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class McpOAuthIntegrationTest {
+
+    @Test
+    void openaiChallenge_unsetIsNotFoundNotUnauthorized() throws Exception {
+        HttpResponse<String> response =
+                http.send(
+                        HttpRequest.newBuilder()
+                                .uri(URI.create(base() + "/.well-known/openai-apps-challenge"))
+                                .GET()
+                                .build(),
+                        HttpResponse.BodyHandlers.ofString());
+        assertThat(response.statusCode()).isEqualTo(404);
+    }
 
     private static final String ISSUER = "https://test-issuer.example.com";
     private static final String RESOURCE_ID = "http://localhost/mcp";
@@ -315,6 +329,8 @@ class McpOAuthIntegrationTest {
     @Import({
         McpSecurityConfig.class,
         McpServerController.class,
+        McpWidget.class,
+        McpDomainVerificationController.class,
         DescribeOperationTool.class,
         StirlingConvertTool.class,
         StirlingPagesTool.class,

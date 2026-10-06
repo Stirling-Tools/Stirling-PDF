@@ -50,7 +50,7 @@ class McpServerControllerTest {
                         new StirlingMiscTool(mapper, emptyCatalog, emptyExecutor),
                         new StirlingSecurityTool(mapper, emptyCatalog, emptyExecutor),
                         new StirlingAiTool(mapper, emptyCatalog, emptyEngine));
-        return new McpServerController(mapper, props, tools);
+        return new McpServerController(mapper, props, tools, new McpWidget(mapper, props));
     }
 
     private static <T> ObjectProvider<T> emptyProvider() {
@@ -234,5 +234,95 @@ class McpServerControllerTest {
 
         JsonNode result = mapper.valueToTree(response.getBody()).get("result");
         assertEquals("2025-06-18", result.get("protocolVersion").asText());
+    }
+
+    @Test
+    void toolsList_everyToolHasTitleAndExplicitAnnotations() throws Exception {
+        JsonNode body = mapper.readTree("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}");
+
+        JsonNode tools =
+                mapper.valueToTree(controller.handle(body).getBody()).get("result").get("tools");
+
+        for (JsonNode tool : tools) {
+            String name = tool.get("name").asText();
+            assertTrue(name.length() <= 64, name);
+            assertTrue(tool.hasNonNull("title"), name + " title");
+            JsonNode a = tool.get("annotations");
+            for (String hint : List.of("readOnlyHint", "destructiveHint", "openWorldHint")) {
+                assertTrue(a.get(hint).isBoolean(), name + " " + hint);
+            }
+        }
+    }
+
+    @Test
+    void toolsList_categoryToolsLinkWidgetAndDeclareFileParams() throws Exception {
+        JsonNode body = mapper.readTree("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}");
+
+        JsonNode tools =
+                mapper.valueToTree(controller.handle(body).getBody()).get("result").get("tools");
+
+        JsonNode convert = null;
+        JsonNode describe = null;
+        for (JsonNode t : tools) {
+            if (t.get("name").asText().equals("stirling_convert")) convert = t;
+            if (t.get("name").asText().equals("stirling_describe_operation")) describe = t;
+        }
+        assertEquals(McpWidget.URI, convert.get("_meta").get("ui").get("resourceUri").asText());
+        assertEquals(McpWidget.URI, convert.get("_meta").get("openai/outputTemplate").asText());
+        assertEquals("inputFile", convert.get("_meta").get("openai/fileParams").get(0).asText());
+        assertEquals(
+                "object",
+                convert.get("inputSchema").get("properties").get("inputFile").get("type").asText());
+        assertTrue(describe.get("annotations").get("readOnlyHint").asBoolean());
+        assertNull(describe.get("_meta"), "read-only describe has no widget");
+    }
+
+    @Test
+    void initialize_advertisesResourcesAndAppsExtension() throws Exception {
+        JsonNode body = mapper.readTree("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\"}");
+
+        JsonNode caps =
+                mapper.valueToTree(controller.handle(body).getBody())
+                        .get("result")
+                        .get("capabilities");
+
+        assertNotNull(caps.get("resources"));
+        assertEquals(
+                McpWidget.MIME_TYPE,
+                caps.get("extensions")
+                        .get("io.modelcontextprotocol/ui")
+                        .get("mimeTypes")
+                        .get(0)
+                        .asText());
+    }
+
+    @Test
+    void resourcesRead_returnsWidgetHtml() throws Exception {
+        JsonNode body =
+                mapper.readTree(
+                        "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"resources/read\",\"params\":{\"uri\":\""
+                                + McpWidget.URI
+                                + "\"}}");
+
+        JsonNode content =
+                mapper.valueToTree(controller.handle(body).getBody())
+                        .get("result")
+                        .get("contents")
+                        .get(0);
+
+        assertEquals(McpWidget.MIME_TYPE, content.get("mimeType").asText());
+        assertTrue(content.get("text").asText().contains("ui/initialize"));
+        assertNotNull(content.get("_meta").get("ui").get("csp"));
+    }
+
+    @Test
+    void resourcesRead_unknownUri_returnsNotFound() throws Exception {
+        JsonNode body =
+                mapper.readTree(
+                        "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"resources/read\",\"params\":{\"uri\":\"ui://nope\"}}");
+
+        JsonNode error = mapper.valueToTree(controller.handle(body).getBody()).get("error");
+
+        assertEquals(-32002, error.get("code").asInt());
     }
 }

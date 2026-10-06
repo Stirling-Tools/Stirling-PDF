@@ -1,35 +1,41 @@
 package stirling.software.proprietary.mcp.tools;
 
-import java.io.IOException;
+import java.util.List;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.http.MediaType;
+import org.springframework.http.MediaTypeFactory;
 import org.springframework.stereotype.Component;
 
-import lombok.extern.slf4j.Slf4j;
-
-import stirling.software.common.service.FileStorage;
 import stirling.software.proprietary.mcp.McpCallContext;
 import stirling.software.proprietary.mcp.McpTool;
+import stirling.software.proprietary.mcp.McpToolAnnotations;
+import stirling.software.proprietary.mcp.files.McpFileUrlFetcher;
+import stirling.software.proprietary.mcp.files.McpFiles;
+import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.storage.model.StoredFile;
 
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
 
 /**
- * Stores a file server-side and returns a fileId. For large files or multi-step workflows only -
- * most operations accept the file inline via their {@code file} argument.
+ * Stores a temporary file server-side and returns its fileId. Fed by chat attachments, the in-chat
+ * file picker, or base64 from clients that can send it.
  */
-@Slf4j
 @Component
 @ConditionalOnProperty(name = "mcp.enabled", havingValue = "true")
 public class StirlingUploadTool implements McpTool {
 
     private final ObjectMapper mapper;
-    private final FileStorage fileStorage;
+    private final McpFiles files;
+    private final McpFileUrlFetcher fileUrlFetcher;
 
-    public StirlingUploadTool(ObjectMapper mapper, FileStorage fileStorage) {
+    public StirlingUploadTool(
+            ObjectMapper mapper, McpFiles files, McpFileUrlFetcher fileUrlFetcher) {
         this.mapper = mapper;
-        this.fileStorage = fileStorage;
+        this.files = files;
+        this.fileUrlFetcher = fileUrlFetcher;
     }
 
     @Override
@@ -38,11 +44,25 @@ public class StirlingUploadTool implements McpTool {
     }
 
     @Override
+    public String title() {
+        return "Upload a file";
+    }
+
+    @Override
+    public McpToolAnnotations annotations() {
+        return McpToolAnnotations.PRODUCES_FILE;
+    }
+
+    @Override
+    public List<String> fileParams() {
+        return List.of(McpInputFiles.ATTACHMENT_ARG);
+    }
+
+    @Override
     public String description() {
-        return "Store a file server-side and get back a fileId to reuse across operations."
-                + " Recommended only for large files or multi-step workflows; for a single"
-                + " operation on a typical file, pass the file inline via the operation's `file`"
-                + " argument instead. Argument: { file: <base64>, fileName?: <name> }.";
+        return "Store a file on the Stirling PDF server and get back a fileId that any Stirling"
+                + " tool accepts. Use it to keep one file across several operations. Provide the"
+                + " file as a chat attachment (inputFile) or as base64 (file).";
     }
 
     @Override
@@ -54,7 +74,7 @@ public class StirlingUploadTool implements McpTool {
         McpToolSupport.stringProperty(props, "file", "Base64-encoded file content.");
         McpToolSupport.stringProperty(
                 props, "fileName", "Optional original filename (with extension).");
-        schema.putArray("required").add("file");
+        McpInputFiles.attachmentProperty(props);
         return schema;
     }
 
@@ -64,33 +84,24 @@ public class StirlingUploadTool implements McpTool {
             return McpResponses.error(
                     mapper, "Insufficient scope: stirling_upload requires 'mcp.tools.write'.");
         }
-        String base64 = McpToolSupport.textArg(arguments, "file");
-        if (base64 == null) {
-            return McpResponses.error(
-                    mapper, "Missing required argument: file (base64-encoded content).");
-        }
-        byte[] bytes = McpToolSupport.decodeBase64OrNull(base64);
-        if (bytes == null) {
-            return McpResponses.error(mapper, "The 'file' argument is not valid base64.");
-        }
-        String name = McpToolSupport.textArg(arguments, "fileName");
-        if (name == null) {
-            name = "upload.bin";
+        if (McpToolSupport.textArg(arguments, "fileId") != null) {
+            return McpResponses.error(mapper, "That file is already stored; reuse its fileId.");
         }
         try {
-            String fileId = fileStorage.storeBytes(bytes, name);
-            return McpResponses.text(
-                    mapper,
-                    "Stored '"
-                            + name
-                            + "' ("
-                            + bytes.length
-                            + " bytes) as fileId="
-                            + fileId
-                            + ". Pass this fileId to a Stirling operation's 'fileId' argument.");
-        } catch (IOException e) {
-            log.warn("MCP upload failed to store file", e);
-            return McpResponses.error(mapper, "Failed to store the uploaded file.");
+            User user = files.user(context);
+            McpInputFiles.Input input =
+                    McpInputFiles.resolve(arguments, files, user, fileUrlFetcher, "upload.bin");
+            if (input.error() != null) {
+                return McpResponses.error(mapper, input.error());
+            }
+            String type =
+                    MediaTypeFactory.getMediaType(input.name())
+                            .map(Object::toString)
+                            .orElse(MediaType.APPLICATION_OCTET_STREAM_VALUE);
+            StoredFile stored = files.store(user, input.bytes(), input.name(), type);
+            return McpResponses.storedFile(mapper, "upload", stored, null);
+        } catch (McpFiles.McpFileException e) {
+            return McpResponses.error(mapper, e.getMessage());
         }
     }
 }

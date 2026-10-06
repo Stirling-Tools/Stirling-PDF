@@ -3,7 +3,6 @@ package stirling.software.proprietary.mcp.tools;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
@@ -19,11 +18,14 @@ import org.springframework.web.client.RestClientResponseException;
 
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.common.model.ApplicationProperties;
-import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.InternalApiClient;
 import stirling.software.common.service.InternalApiTimeoutException;
+import stirling.software.proprietary.mcp.McpCallContext;
 import stirling.software.proprietary.mcp.catalog.OperationMeta;
+import stirling.software.proprietary.mcp.files.McpFileUrlFetcher;
+import stirling.software.proprietary.mcp.files.McpFiles;
+import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.storage.model.StoredFile;
 
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.JsonNode;
@@ -31,8 +33,8 @@ import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
 
 /**
- * Runs a JAVA_ENDPOINT operation: resolves the input file (inline base64 or a fileId), dispatches
- * to the Stirling endpoint over the loopback via {@link InternalApiClient}, and stores the result.
+ * Runs a JAVA_ENDPOINT operation: resolves the input file, dispatches to the Stirling endpoint over
+ * the loopback via {@link InternalApiClient}, and stores the result as a temporary file.
  */
 @Slf4j
 @Component
@@ -41,59 +43,34 @@ public class McpOperationExecutor {
 
     private final ObjectMapper mapper;
     private final InternalApiClient internalApiClient;
-    private final FileStorage fileStorage;
-    private final ApplicationProperties applicationProperties;
+    private final McpFiles files;
+    private final McpFileUrlFetcher fileUrlFetcher;
 
     public McpOperationExecutor(
             ObjectMapper mapper,
             InternalApiClient internalApiClient,
-            FileStorage fileStorage,
-            ApplicationProperties applicationProperties) {
+            McpFiles files,
+            McpFileUrlFetcher fileUrlFetcher) {
         this.mapper = mapper;
         this.internalApiClient = internalApiClient;
-        this.fileStorage = fileStorage;
-        this.applicationProperties = applicationProperties;
+        this.files = files;
+        this.fileUrlFetcher = fileUrlFetcher;
     }
 
-    public ObjectNode execute(OperationMeta meta, JsonNode arguments) {
-        String fileName = McpToolSupport.textArg(arguments, "fileName");
-        String fileId = McpToolSupport.textArg(arguments, "fileId");
-        byte[] inputBytes;
-        String inputName;
-        if (fileId != null) {
-            try {
-                if (!fileStorage.fileExists(fileId)) {
-                    return McpResponses.error(
-                            mapper,
-                            "Unknown or inaccessible fileId '"
-                                    + fileId
-                                    + "'. Re-upload with stirling_upload.");
-                }
-                inputBytes = fileStorage.retrieveBytes(fileId);
-            } catch (SecurityException e) {
-                return McpResponses.error(
-                        mapper,
-                        "Unknown or inaccessible fileId '"
-                                + fileId
-                                + "'. Re-upload with stirling_upload.");
-            } catch (IOException e) {
-                return McpResponses.error(mapper, "Could not read fileId '" + fileId + "'.");
-            }
-            inputName = fileName != null ? fileName : fileId;
-        } else {
-            String base64 = McpToolSupport.textArg(arguments, "file");
-            if (base64 == null) {
-                return McpResponses.error(
-                        mapper,
-                        "This operation needs an input file. Pass 'file' as base64 (recommended for"
-                                + " most files), or 'fileId' from stirling_upload for large files.");
-            }
-            inputBytes = McpToolSupport.decodeBase64OrNull(base64);
-            if (inputBytes == null) {
-                return McpResponses.error(mapper, "The 'file' argument is not valid base64.");
-            }
-            inputName = fileName != null ? fileName : "input.pdf";
+    public ObjectNode execute(OperationMeta meta, JsonNode arguments, McpCallContext context) {
+        User user;
+        try {
+            user = files.user(context);
+        } catch (McpFiles.McpFileException e) {
+            return McpResponses.error(mapper, e.getMessage());
         }
+        McpInputFiles.Input input =
+                McpInputFiles.resolve(arguments, files, user, fileUrlFetcher, "input.pdf");
+        if (input.error() != null) {
+            return McpResponses.error(mapper, input.error());
+        }
+        byte[] inputBytes = input.bytes();
+        String inputName = input.name();
 
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         body.add("fileInput", bytesResource(inputBytes, inputName));
@@ -125,10 +102,11 @@ public class McpOperationExecutor {
             return McpResponses.error(
                     mapper, meta.id() + " failed unexpectedly. See server logs for details.");
         }
-        return buildResult(meta, response);
+        return buildResult(meta, response, user);
     }
 
-    private ObjectNode buildResult(OperationMeta meta, ResponseEntity<Resource> response) {
+    private ObjectNode buildResult(
+            OperationMeta meta, ResponseEntity<Resource> response, User user) {
         Resource body = response.getBody();
         if (body == null) {
             return McpResponses.error(mapper, meta.id() + " returned an empty response.");
@@ -153,57 +131,20 @@ public class McpOperationExecutor {
                 contentType != null
                         ? contentType.toString()
                         : MediaType.APPLICATION_OCTET_STREAM_VALUE;
-        long maxInline = applicationProperties.getMcp().getMaxInlineResponseBytes();
         try {
-            long size = body.contentLength();
-            byte[] inline = null;
-            if (size >= 0 && size <= maxInline) {
-                try (InputStream is = body.getInputStream()) {
-                    inline = is.readAllBytes();
-                }
-            }
-            String fileId =
-                    inline != null
-                            ? fileStorage.storeBytes(inline, filename)
-                            : storeStreamed(body, filename);
-            String summary =
-                    meta.id()
-                            + " succeeded. Result: "
-                            + filename
-                            + " ("
-                            + size
-                            + " bytes), fileId="
-                            + fileId
-                            + ". ";
-            if (inline != null) {
-                return McpResponses.result(
-                        mapper,
-                        false,
-                        McpResponses.textBlock(
-                                mapper, summary + "The file is included inline below."),
-                        McpResponses.resourceBlock(
-                                mapper,
-                                "stirling://file/" + fileId,
-                                mimeType,
-                                Base64.getEncoder().encodeToString(inline)));
-            }
-            return McpResponses.result(
-                    mapper,
-                    false,
-                    McpResponses.textBlock(
-                            mapper,
-                            summary
-                                    + "Large result - fetch it with stirling_download {\"fileId\":\""
-                                    + fileId
-                                    + "\"}, or pass this fileId to another operation."));
-        } catch (IOException e) {
-            return McpResponses.error(mapper, "Failed to store " + meta.id() + " result.");
+            StoredFile stored = files.store(user, body, filename, mimeType, contentLength(body));
+            return McpResponses.storedFile(
+                    mapper, meta.id(), stored, files.downloadUrl(user, stored));
+        } catch (McpFiles.McpFileException e) {
+            return McpResponses.error(mapper, meta.id() + " succeeded but " + e.getMessage());
         }
     }
 
-    private String storeStreamed(Resource body, String filename) throws IOException {
-        try (InputStream is = body.getInputStream()) {
-            return fileStorage.storeInputStream(is, filename).fileId();
+    private static long contentLength(Resource body) {
+        try {
+            return body.contentLength();
+        } catch (IOException e) {
+            return -1;
         }
     }
 

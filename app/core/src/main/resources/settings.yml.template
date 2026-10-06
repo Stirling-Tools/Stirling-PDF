@@ -456,6 +456,12 @@ mcp:
   maxInlineResponseBytes: 10485760 # Max size (bytes) of an MCP tool response returned inline before it is rejected (default 10 MB)
   allowedOperations: [] # Tool allow-list (operation ids, e.g. ['compress-pdf']). Empty = all. When set, ONLY these are exposed over MCP.
   blockedOperations: [] # Tool deny-list (operation ids). Always removed from MCP even if otherwise allowed.
+  resultTtlMinutes: 60 # How long tool results are kept and downloadable. Results are stored as hidden files (needs storage.enabled); download buttons also need storage.sharing.enabled and system.frontendUrl
+  publicBaseUrl: "" # Public origin used in download links (e.g. https://api.example.com). Blank = derived from auth.resourceId or the request
+  fileUrlAllowedHosts: ['oaiusercontent.com', 'openai.com', 'chatgpt.com'] # Hosts (suffix match, HTTPS only) chat apps may pass file download URLs from (ChatGPT attachments). Empty = disabled
+  maxFileUrlBytes: 104857600 # Max size (bytes) of a file fetched from a chat app download URL (default 100 MB)
+  chatgptWidgetDomain: "" # Sandbox origin for the in-chat widget in ChatGPT (openai/widgetDomain). Required for ChatGPT app submission
+  openaiAppsChallenge: "" # Domain-verification token from the OpenAI platform, served at /.well-known/openai-apps-challenge. Blank = 404
   auth:
     mode: oauth # 'oauth' (full OAuth2 resource server) or 'apikey' (Stirling per-user API key via X-API-KEY header; no external IdP needed - the low-friction self-host option)
     issuerUri: "" # OAuth2 issuer URI (e.g. http://localhost:9000). Required when mode=oauth.

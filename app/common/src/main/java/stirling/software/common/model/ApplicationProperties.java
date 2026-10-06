@@ -575,6 +575,30 @@ public class ApplicationProperties {
         /** Results up to this size return inline as base64; larger ones return a fileId only. */
         private long maxInlineResponseBytes = 10L * 1024 * 1024;
 
+        /** How long tool results stay downloadable before storage deletes them. */
+        private int resultTtlMinutes = 60;
+
+        /**
+         * Public origin for result links, e.g. {@code https://api.example.com}. Blank = derived.
+         */
+        private String publicBaseUrl = "";
+
+        /**
+         * Hosts (suffix match, HTTPS only) a chat app may hand us file download URLs from, e.g.
+         * ChatGPT attachments via {@code openai/fileParams}. Empty disables URL file inputs.
+         */
+        private List<String> fileUrlAllowedHosts =
+                new ArrayList<>(List.of("oaiusercontent.com", "openai.com", "chatgpt.com"));
+
+        /** Max size of a file fetched from a chat app's download URL. */
+        private long maxFileUrlBytes = 100L * 1024 * 1024;
+
+        /** Sandbox origin ChatGPT should serve the widget from; required for app submission. */
+        private String chatgptWidgetDomain = "";
+
+        /** Token served at {@code /.well-known/openai-apps-challenge} for ChatGPT domain proof. */
+        private String openaiAppsChallenge = "";
+
         private Auth auth = new Auth();
 
         @Data
