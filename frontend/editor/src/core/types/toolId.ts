@@ -14,7 +14,6 @@ export type ToolKind = "regular" | "super" | "link";
 export const CORE_REGULAR_TOOL_IDS = [
   "certSign",
   "sign",
-  "sharedSign",
   "addText",
   "addPassword",
   "removePassword",
@@ -35,7 +34,6 @@ export const CORE_REGULAR_TOOL_IDS = [
   "annotate",
   "scannerImageSplit",
   "editTableOfContents",
-  "scannerEffect",
   "autoRename",
   "pageLayout",
   "scalePages",

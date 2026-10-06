@@ -22,7 +22,6 @@ public class ToolKeyRegistry {
                     // CORE_REGULAR_TOOL_IDS
                     "certSign",
                     "sign",
-                    "sharedSign",
                     "addText",
                     "addPassword",
                     "removePassword",
@@ -43,7 +42,6 @@ public class ToolKeyRegistry {
                     "annotate",
                     "scannerImageSplit",
                     "editTableOfContents",
-                    "scannerEffect",
                     "autoRename",
                     "pageLayout",
                     "scalePages",

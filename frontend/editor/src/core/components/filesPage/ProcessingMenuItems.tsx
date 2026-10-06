@@ -1,11 +1,6 @@
 import { Menu } from "@mantine/core";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
-import AutoModeIcon from "@mui/icons-material/AutoMode";
-import HistoryIcon from "@mui/icons-material/History";
-import PauseIcon from "@mui/icons-material/Pause";
-import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-import ReplayIcon from "@mui/icons-material/Replay";
-import TuneIcon from "@mui/icons-material/Tune";
 
 import { ProcessingFolderState } from "@app/hooks/useProcessingFolders";
 
@@ -49,7 +44,7 @@ export function ProcessingMenuItems({
       <>
         {heading}
         <Menu.Item
-          leftSection={<AutoModeIcon fontSize="small" />}
+          leftSection={<Icon name="workflow" size={20} />}
           onClick={onStart}
           disabled={disabled}
           title={disabled ? disabledHint : undefined}
@@ -66,7 +61,7 @@ export function ProcessingMenuItems({
       <>
         {heading}
         <Menu.Item
-          leftSection={<PlayArrowIcon fontSize="small" />}
+          leftSection={<Icon name="play" size={20} />}
           onClick={onResume}
           disabled={disabled}
           title={disabled ? disabledHint : undefined}
@@ -75,7 +70,7 @@ export function ProcessingMenuItems({
         </Menu.Item>
         {onEdit && (
           <Menu.Item
-            leftSection={<TuneIcon fontSize="small" />}
+            leftSection={<Icon name="sliders-horizontal" size={20} />}
             onClick={onEdit}
             disabled={disabled}
             title={disabled ? disabledHint : undefined}
@@ -85,7 +80,7 @@ export function ProcessingMenuItems({
         )}
         {onRevertAll && (
           <Menu.Item
-            leftSection={<HistoryIcon fontSize="small" />}
+            leftSection={<Icon name="rotate-ccw-clock" size={20} />}
             onClick={onRevertAll}
             disabled={disabled}
             title={disabled ? disabledHint : undefined}
@@ -95,7 +90,7 @@ export function ProcessingMenuItems({
         )}
         <Menu.Item
           color="red"
-          leftSection={<AutoModeIcon fontSize="small" />}
+          leftSection={<Icon name="workflow" size={20} />}
           onClick={onRemove}
           disabled={disabled}
           title={disabled ? disabledHint : undefined}
@@ -110,23 +105,26 @@ export function ProcessingMenuItems({
       {heading}
       {!continuous && (
         <Menu.Item
-          leftSection={<ReplayIcon fontSize="small" />}
+          leftSection={<Icon name="refresh-cw" size={20} />}
           onClick={onRun}
         >
           {t("filesPage.processing.sweep", "Retry failed files")}
         </Menu.Item>
       )}
-      <Menu.Item leftSection={<PauseIcon fontSize="small" />} onClick={onStop}>
+      <Menu.Item leftSection={<Icon name="pause" size={20} />} onClick={onStop}>
         {t("filesPage.processing.stop", "Pause processing")}
       </Menu.Item>
       {onEdit && (
-        <Menu.Item leftSection={<TuneIcon fontSize="small" />} onClick={onEdit}>
+        <Menu.Item
+          leftSection={<Icon name="sliders-horizontal" size={20} />}
+          onClick={onEdit}
+        >
           {t("filesPage.processing.edit", "Edit processing...")}
         </Menu.Item>
       )}
       {onRevertAll && (
         <Menu.Item
-          leftSection={<HistoryIcon fontSize="small" />}
+          leftSection={<Icon name="rotate-ccw-clock" size={20} />}
           onClick={onRevertAll}
         >
           {t("filesPage.processing.restoreAll", "Restore all originals")}
@@ -136,7 +134,7 @@ export function ProcessingMenuItems({
           should not require pausing it first. */}
       <Menu.Item
         color="red"
-        leftSection={<AutoModeIcon fontSize="small" />}
+        leftSection={<Icon name="workflow" size={20} />}
         onClick={onRemove}
         disabled={disabled}
         title={disabled ? disabledHint : undefined}

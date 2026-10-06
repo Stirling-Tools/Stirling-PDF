@@ -11,8 +11,7 @@ import {
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import auditService, { AuditStats } from "@app/services/auditService";
-import LocalIcon from "@app/components/shared/LocalIcon";
-
+import { Icon, type IconName } from "@app/ui/Icon";
 interface AuditStatsCardsProps {
   loginEnabled?: boolean;
   timePeriod: "day" | "week" | "month";
@@ -36,7 +35,9 @@ const AuditStatsCards: React.FC<AuditStatsCardsProps> = ({
         setStats(data);
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : "Failed to load statistics",
+          err instanceof Error
+            ? err.message
+            : t("audit.stats.loadFailed", "Failed to load statistics"),
         );
       } finally {
         setLoading(false);
@@ -132,7 +133,10 @@ const AuditStatsCards: React.FC<AuditStatsCardsProps> = ({
     return trend >= 0 ? "green" : "red";
   };
 
-  const getTrendIcon = (trend: number, lowerIsBetter: boolean = false) => {
+  const getTrendIcon = (
+    trend: number,
+    lowerIsBetter: boolean = false,
+  ): IconName => {
     const isPositive = lowerIsBetter ? trend <= 0 : trend >= 0;
     return isPositive ? "trending-up" : "trending-down";
   };
@@ -146,7 +150,7 @@ const AuditStatsCards: React.FC<AuditStatsCardsProps> = ({
             <Text size="sm" c="dimmed">
               {t("audit.stats.totalEvents", "Total Events")}
             </Text>
-            <LocalIcon icon="analytics" width="1.2rem" height="1.2rem" />
+            <Icon name="chart-column" size="1.2rem" />
           </Group>
           <Text size="xl" fw={700}>
             {stats.totalEvents.toLocaleString()}
@@ -157,10 +161,9 @@ const AuditStatsCards: React.FC<AuditStatsCardsProps> = ({
               variant="light"
               size="sm"
               leftSection={
-                <LocalIcon
-                  icon={getTrendIcon(trendPercent)}
-                  width="0.8rem"
-                  height="0.8rem"
+                <Icon
+                  name={getTrendIcon(trendPercent)}
+                  size="0.8rem"
                   style={{ marginRight: "0.25rem" }}
                 />
               }
@@ -179,11 +182,7 @@ const AuditStatsCards: React.FC<AuditStatsCardsProps> = ({
             <Text size="sm" c="dimmed">
               {t("audit.stats.successRate", "Success Rate")}
             </Text>
-            <LocalIcon
-              icon="check-circle-rounded"
-              width="1.2rem"
-              height="1.2rem"
-            />
+            <Icon name="circle-check" size="1.2rem" />
           </Group>
           <Text size="xl" fw={700}>
             {stats.successRate.toFixed(1)}%
@@ -221,7 +220,7 @@ const AuditStatsCards: React.FC<AuditStatsCardsProps> = ({
             <Text size="sm" c="dimmed">
               {t("audit.stats.activeUsers", "Active Users")}
             </Text>
-            <LocalIcon icon="group" width="1.2rem" height="1.2rem" />
+            <Icon name="users" size="1.2rem" />
           </Group>
           <Text size="xl" fw={700}>
             {stats.uniqueUsers}
@@ -232,10 +231,9 @@ const AuditStatsCards: React.FC<AuditStatsCardsProps> = ({
               variant="light"
               size="sm"
               leftSection={
-                <LocalIcon
-                  icon={getTrendIcon(userTrend)}
-                  width="0.8rem"
-                  height="0.8rem"
+                <Icon
+                  name={getTrendIcon(userTrend)}
+                  size="0.8rem"
                   style={{ marginRight: "0.25rem" }}
                 />
               }
@@ -253,7 +251,7 @@ const AuditStatsCards: React.FC<AuditStatsCardsProps> = ({
             <Text size="sm" c="dimmed">
               {t("audit.stats.avgLatency", "Avg Latency")}
             </Text>
-            <LocalIcon icon="speed" width="1.2rem" height="1.2rem" />
+            <Icon name="gauge" size="1.2rem" />
           </Group>
           <Text size="xl" fw={700}>
             {stats.avgLatencyMs > 0
@@ -266,10 +264,9 @@ const AuditStatsCards: React.FC<AuditStatsCardsProps> = ({
               variant="light"
               size="sm"
               leftSection={
-                <LocalIcon
-                  icon={getTrendIcon(latencyTrend, true)}
-                  width="0.8rem"
-                  height="0.8rem"
+                <Icon
+                  name={getTrendIcon(latencyTrend, true)}
+                  size="0.8rem"
                   style={{ marginRight: "0.25rem" }}
                 />
               }

@@ -24,6 +24,9 @@ import type { ProcurementSnapshot } from "@app/portal/api/procurement";
 import type { LegacyBillingState } from "@app/types/legacyBilling";
 import { formatPeriodDate } from "@app/billing";
 
+const fetchCheckoutPricing = vi.hoisted(() => vi.fn());
+vi.mock("@app/portal/billing/stripe", () => ({ fetchCheckoutPricing }));
+
 const legacyBilling: LegacyBillingState = {
   subscriptions: [],
   loading: false,
@@ -225,7 +228,15 @@ describe("Usage — link-free wallet renderer", () => {
 
   it("opens Team once for an over-capacity server and includes the actual allowance", async () => {
     checkoutEnabled = true;
-    fetchWallet.mockResolvedValue({ ...walletOf("free"), role: "leader" });
+    fetchWallet.mockResolvedValue({
+      ...walletOf("free"),
+      teamId: 42,
+      role: "leader",
+    });
+    fetchCheckoutPricing.mockResolvedValue({
+      currency: "gbp",
+      currencyLocked: false,
+    });
     renderUsage(
       <Usage localUsersInUse={7} localUserLimit={5} />,
       "/settings/billing?upgrade=team",
@@ -237,8 +248,11 @@ describe("Usage — link-free wallet renderer", () => {
         combinedChoose: true,
         minimumSeats: 7,
         capacityNotice: { users: 7, limit: 5 },
+        resolveCurrency: expect.any(Function),
       }),
     );
+    await checkout.openCheckout.mock.calls[0][1].resolveCurrency("gbp");
+    expect(fetchCheckoutPricing).toHaveBeenCalledWith(42, "currency", "gbp");
     expect(screen.getByTestId("location")).toHaveTextContent(
       "/settings/billing",
     );

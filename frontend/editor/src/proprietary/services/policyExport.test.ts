@@ -8,14 +8,18 @@ vi.mock("@app/services/policyStorage", () => ({
   loadPolicies: () => loadPolicies(),
 }));
 
-const runStoredPolicy = vi.fn(async (_id: string, _files: File[]) => "run-1");
+const runStoredPolicy = vi.fn(
+  async (_id: string, _files: File[], _fileId?: string, _source?: string) =>
+    "run-1",
+);
 const output = { name: "doc.pdf", type: "application/pdf" };
 let serverExternalOutput = false;
 const downloadPolicyOutput = vi.fn(
   async () => new Blob([], { type: output.type }),
 );
 vi.mock("@app/services/policyApi", () => ({
-  runStoredPolicy: (id: string, files: File[]) => runStoredPolicy(id, files),
+  runStoredPolicy: (...args: Parameters<typeof runStoredPolicy>) =>
+    runStoredPolicy(...args),
   // One output, so a run completes rather than throwing "produced no output" - which would abort
   // the per-file policy loop after the first policy and hide the order under test.
   getPolicyRun: async () => ({
@@ -37,9 +41,10 @@ vi.mock("@app/components/policies/policyRunStore", () => ({
 vi.mock("@app/components/policies/enforcementQueue", () => ({
   runQueued: <T>(_meta: unknown, task: () => Promise<T>) => task(),
 }));
+const { updateToast } = vi.hoisted(() => ({ updateToast: vi.fn() }));
 vi.mock("@app/components/toast", () => ({
   alert: () => "toast-1",
-  updateToast: vi.fn(),
+  updateToast,
   dismissToast: vi.fn(),
 }));
 vi.mock("@app/i18n", () => ({ default: { t: (key: string) => key } }));
@@ -53,23 +58,22 @@ const { recordRunStart } =
   await import("@app/components/policies/policyRunStore");
 
 /** An active export-time policy as the local store holds it. */
-const exportPolicy = (over: Partial<PolicyState>): PolicyState =>
-  ({
-    configured: true,
-    enabled: true,
-    backendId: "backend-1",
-    firstOperation: "/api/v1/misc/compress-pdf",
-    sources: [],
-    runsOnEditor: false,
-    scopeTypes: [],
-    reviewerEmail: "",
-    fieldValues: {},
-    outputMode: "new_version",
-    outputName: "",
-    runOn: "export",
-    isDefault: false,
-    ...over,
-  }) as PolicyState;
+const exportPolicy = (over: Partial<PolicyState>): PolicyState => ({
+  configured: true,
+  enabled: true,
+  backendId: "backend-1",
+  firstOperation: "/api/v1/misc/compress-pdf",
+  sources: [],
+  runsOnEditor: false,
+  scopeTypes: [],
+  reviewerEmail: "",
+  fieldValues: {},
+  outputMode: "new_version",
+  outputName: "",
+  runOn: "export",
+  isDefault: false,
+  ...over,
+});
 
 const pdf = () =>
   new File(["%PDF-1.4"], "doc.pdf", { type: "application/pdf" });
@@ -78,6 +82,7 @@ describe("export-time policy selection", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     runStoredPolicy.mockClear();
+    updateToast.mockClear();
     output.name = "doc.pdf";
     output.type = "application/pdf";
     serverExternalOutput = false;
@@ -85,6 +90,32 @@ describe("export-time policy selection", () => {
     vi.mocked(recordRunStart).mockClear();
   });
   afterEach(() => vi.useRealTimers());
+
+  it("retains the failure warning for an optional export policy with insufficient credits", async () => {
+    loadPolicies.mockReturnValue({
+      security: exportPolicy({ runsOnEditor: true, required: false }),
+    });
+    runStoredPolicy.mockRejectedValueOnce({
+      response: {
+        status: 402,
+        data: { error: "ACCOUNT_LINK_REQUIRED", reason: "FREE_TIER_EXHAUSTED" },
+      },
+    });
+    await enforceExportPolicies([pdf()], ["file-1"]);
+    expect(runStoredPolicy).toHaveBeenCalledWith(
+      "backend-1",
+      expect.any(Array),
+      undefined,
+      "background",
+    );
+    expect(updateToast).toHaveBeenCalledWith(
+      "toast-1",
+      expect.objectContaining({
+        alertType: "warning",
+        title: "policies.enforcement.failureTitle",
+      }),
+    );
+  });
 
   it("records server-reported external delivery when cached metadata says internal", async () => {
     loadPolicies.mockReturnValue({
@@ -103,6 +134,27 @@ describe("export-time policy selection", () => {
         status: "COMPLETED",
         externalOutput: true,
       }),
+    );
+  });
+
+  it("blocks export when a required policy has insufficient credits", async () => {
+    loadPolicies.mockReturnValue({
+      security: exportPolicy({ runsOnEditor: true, required: true }),
+    });
+    runStoredPolicy.mockRejectedValueOnce({
+      response: {
+        status: 402,
+        data: { error: "ACCOUNT_LINK_REQUIRED", reason: "FREE_TIER_EXHAUSTED" },
+      },
+    });
+    await expect(enforceExportPolicies([pdf()], ["file-1"])).rejects.toThrow(
+      "policy.exportBlocked",
+    );
+    expect(runStoredPolicy).toHaveBeenCalledWith(
+      "backend-1",
+      expect.any(Array),
+      undefined,
+      "background",
     );
   });
 
@@ -234,7 +286,7 @@ describe("export-time policy selection", () => {
         runsOnEditor: true,
         backendId: "backend-editor",
       }),
-    } as unknown as PoliciesByKey);
+    });
 
     const enforcement = enforceExportPolicies([pdf()], ["file-1"]);
     await vi.runAllTimersAsync();
@@ -243,6 +295,8 @@ describe("export-time policy selection", () => {
     expect(runStoredPolicy).toHaveBeenCalledWith(
       "backend-editor",
       expect.anything(),
+      undefined,
+      "background",
     );
   });
 
@@ -253,7 +307,7 @@ describe("export-time policy selection", () => {
         runsOnEditor: false,
         backendId: "backend-swept",
       }),
-    } as unknown as PoliciesByKey);
+    });
 
     const enforcement = enforceExportPolicies([pdf()], ["file-1"]);
     await vi.runAllTimersAsync();
@@ -270,7 +324,7 @@ describe("export-time policy selection", () => {
         runsOnEditor: true,
         backendId: "backend-security",
       }),
-    } as unknown as PoliciesByKey);
+    });
 
     const enforcement = enforceExportPolicies([pdf()], ["file-1"]);
     await vi.runAllTimersAsync();
@@ -279,6 +333,8 @@ describe("export-time policy selection", () => {
     expect(runStoredPolicy).toHaveBeenCalledWith(
       "backend-security",
       expect.anything(),
+      undefined,
+      "background",
     );
   });
 
@@ -294,7 +350,7 @@ describe("export-time policy selection", () => {
         backendId: "backend-first",
         order: 0,
       }),
-    } as unknown as PoliciesByKey);
+    });
 
     const enforcement = enforceExportPolicies([pdf()], ["file-1"]);
     await vi.runAllTimersAsync();

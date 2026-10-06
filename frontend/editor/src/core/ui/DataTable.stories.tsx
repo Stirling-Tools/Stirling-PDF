@@ -249,7 +249,6 @@ export const WithToolbar: Story = {
   ),
 };
 
-/** The one look choice: the `compact` variant. */
 export const Compact: Story = {
   render: () => (
     <DataTable<Region>
@@ -257,6 +256,41 @@ export const Compact: Story = {
       rows={REGIONS}
       rowKey={(r) => r.id}
       variant="compact"
+    />
+  ),
+};
+
+export const ComfortableWithProgress: Story = {
+  render: () => (
+    <DataTable
+      variant="comfortable"
+      columns={[
+        column.entity<{ name: string; signed: number; total: number }>({
+          key: "document",
+          header: "Document",
+          primary: (row) => row.name,
+        }),
+        column.badge<{ name: string; signed: number; total: number }>({
+          key: "status",
+          header: "Status",
+          get: (row) => ({
+            tone: row.signed === row.total ? "success" : "info",
+            label:
+              row.signed === row.total
+                ? "Ready to finalize"
+                : "Awaiting signatures",
+            progress: {
+              value: row.signed / row.total,
+              label: `${row.signed} / ${row.total} signed`,
+            },
+          }),
+        }),
+      ]}
+      rows={[
+        { name: "Agreement.pdf", signed: 1, total: 3 },
+        { name: "Approval.pdf", signed: 2, total: 2 },
+      ]}
+      rowKey={(row) => row.name}
     />
   ),
 };

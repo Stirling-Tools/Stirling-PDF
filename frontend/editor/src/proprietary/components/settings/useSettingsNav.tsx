@@ -4,11 +4,13 @@ import { useSettingsNav as useCoreSettingsNav } from "@core/components/settings/
 import type { SettingsNav } from "@app/components/settings/settingsNavTypes";
 import { usePortalAccessState } from "@app/hooks/usePortalAccess";
 import { useAuth } from "@app/auth/context";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useRosterAvailable } from "@app/hooks/useRosterAvailable";
 import { mergeSettingsGroups } from "@app/components/settings/mergeSettingsGroups";
 import {
   buildPortalSettingsSections,
   PORTAL_SECTION_ALIASES,
-  PORTAL_SUPERSEDED_SECTION_KEYS,
+  portalSupersededSectionKeys,
 } from "@app/components/settings/portalSettingsNav";
 
 export type { SettingsNav };
@@ -28,40 +30,72 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
   const base = useCoreSettingsNav(onLeave);
   const { granted: portalAccess, settled: accessSettled } =
     usePortalAccessState();
-  const { isAdmin, user } = useAuth();
-  const isOwner = isAdmin && user?.orgOwner === true;
+  const { isAdmin, user, loading } = useAuth();
+  const isOwner = isAdmin && !loading && user?.orgOwner === true;
+  const { config } = useAppConfig();
+  const rosterAvailable = useRosterAvailable();
 
   const portalSections = useMemo(
     () =>
-      portalAccess
-        ? buildPortalSettingsSections(t, {
-            includeEncryption: isAdmin,
-            includeBilling: isOwner,
-            includeAccountLink: isOwner,
-          })
-        : [],
-    [portalAccess, isAdmin, isOwner, t],
+      buildPortalSettingsSections(t, {
+        // The roster is this build's only one, so it does not wait on processor
+        // access the way the processor's own surfaces do.
+        includeRoster:
+          rosterAvailable &&
+          config?.enableLogin === true &&
+          isAdmin &&
+          !loading,
+        includeApiKeys: portalAccess,
+        includeEncryption: portalAccess && isAdmin,
+        includeBilling: portalAccess && isOwner,
+        includeAccountLink: portalAccess && isOwner,
+      }),
+    [
+      portalAccess,
+      isAdmin,
+      isOwner,
+      loading,
+      config?.enableLogin,
+      rosterAvailable,
+      t,
+    ],
   );
 
   const sections = useMemo(
     () =>
-      portalSections.length === 0
-        ? base.sections
-        : mergeSettingsGroups(
-            base.sections,
-            portalSections,
-            PORTAL_SUPERSEDED_SECTION_KEYS,
-          ),
+      mergeSettingsGroups(base.sections, portalSections, [
+        "plan",
+        "adminPlan",
+        ...portalSupersededSectionKeys(portalSections),
+      ]),
     [base.sections, portalSections],
   );
+
+  const portalAliases = { ...PORTAL_SECTION_ALIASES };
+  if (
+    !portalSections.some((group) =>
+      group.items.some((item) => item.key === "users"),
+    )
+  ) {
+    delete portalAliases.people;
+    delete portalAliases.teams;
+  }
+  if (
+    !portalSections.some((group) =>
+      group.items.some((item) => item.key === "billing"),
+    )
+  ) {
+    delete portalAliases.plan;
+    delete portalAliases.adminPlan;
+  }
 
   return {
     ...base,
     sections,
-    pending: !accessSettled,
+    pending: !accessSettled || loading,
     aliases:
       portalSections.length > 0
-        ? { ...base.aliases, ...PORTAL_SECTION_ALIASES }
+        ? { ...base.aliases, ...portalAliases }
         : base.aliases,
   };
 }

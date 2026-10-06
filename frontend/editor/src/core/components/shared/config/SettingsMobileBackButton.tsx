@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
+import { Icon } from "@app/ui/Icon";
 import { ActionIcon } from "@app/ui/ActionIcon";
 
 interface SettingsMobileBackButtonProps {
@@ -8,7 +8,7 @@ interface SettingsMobileBackButtonProps {
   onClick: () => void;
 }
 
-/** Returns the settings modal from a section back to the section list. */
+/** Returns the settings page from a section back to the section list. */
 export function SettingsMobileBackButton({
   show,
   onClick,
@@ -23,7 +23,7 @@ export function SettingsMobileBackButton({
       onClick={onClick}
       aria-label={t("settings.backToSections", "All settings")}
     >
-      <ArrowBackRoundedIcon sx={{ fontSize: "1.25rem" }} />
+      <Icon name="arrow-left" size={"1.25rem"} />
     </ActionIcon>
   );
 }

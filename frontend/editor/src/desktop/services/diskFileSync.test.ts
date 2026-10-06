@@ -1,27 +1,19 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import type { FileId } from "@app/types/file";
+import type { DiskFileState } from "@app/services/desktopFileLink";
 
 // The seam is a module-level const, so each behaviour is exercised by re-importing
 // the module under a fresh mock rather than by mutating a flag.
-const diskState = vi.hoisted(
-  () =>
-    ({
-      supported: true,
-      state: { availability: "present", size: 100, modifiedMs: 5000 },
-      bytes: new Uint8Array([1, 2, 3]).buffer as ArrayBuffer | null,
-    }) as {
-      supported: boolean;
-      state:
-        | { availability: "present"; size: number; modifiedMs: number }
-        | { availability: "gone" }
-        | {
-            availability: "unavailable";
-            reason: "permission" | "offline" | "unknown";
-          };
-      bytes: ArrayBuffer | null;
-    },
-);
+const diskState = vi.hoisted<{
+  supported: boolean;
+  state: DiskFileState;
+  bytes: ArrayBuffer | null;
+}>(() => ({
+  supported: true,
+  state: { availability: "present", size: 100, modifiedMs: 5000 },
+  bytes: new Uint8Array([1, 2, 3]).buffer,
+}));
 
 vi.mock("@app/services/desktopFileLink", () => ({
   get desktopFileLinkingSupported() {
@@ -86,7 +78,7 @@ function stub(overrides: Partial<StirlingFileStub> = {}): StirlingFileStub {
     diskSyncedSize: 100,
     diskSyncedModifiedMs: 5000,
     ...overrides,
-  } as StirlingFileStub;
+  };
 }
 
 beforeEach(() => {
@@ -212,6 +204,21 @@ describe("syncLinkedFileFromDisk", () => {
     expect(result.status).toBe("conflict");
   });
 
+  it("keeps a recorded conflict after the live editor state is lost on reload", async () => {
+    diskState.state = { availability: "present", size: 3, modifiedMs: 9000 };
+    const result = await syncLinkedFileFromDisk(
+      stub({ isDirty: false, diskConflictAt: 8000 }),
+    );
+    expect(result.status).toBe("conflict");
+  });
+
+  it("keeps a recorded conflict when disk metadata matches the saved baseline", async () => {
+    const result = await syncLinkedFileFromDisk(
+      stub({ isDirty: false, diskConflictAt: 8000 }),
+    );
+    expect(result.status).toBe("conflict");
+  });
+
   it("keeps an open editor's edits, which no stub flag records", async () => {
     // A page editor, annotation or redaction session is dirty long before any
     // version exists to set isDirty, so disk must not simply win.
@@ -225,7 +232,7 @@ describe("syncLinkedFileFromDisk", () => {
     // are the only bytes that version has.
     diskState.state = { availability: "present", size: 3, modifiedMs: 9000 };
     const result = await syncLinkedFileFromDisk(
-      stub({ isLeaf: false, versionNumber: 1 }),
+      stub({ isLeaf: false, versionNumber: 1, diskConflictAt: 8000 }),
     );
     expect(result.status).toBe("superseded");
   });

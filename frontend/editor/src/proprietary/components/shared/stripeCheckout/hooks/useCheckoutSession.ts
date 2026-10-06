@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+import i18n from "i18next";
 import licenseService, { PlanTier } from "@app/services/licenseService";
 import {
   resyncExistingLicense,
@@ -54,7 +55,10 @@ export const useCheckoutSession = (
     if (!selectedPlan) {
       setState({
         currentStage: "error",
-        error: "Selected plan period is not available",
+        error: i18n.t(
+          "payment.planPeriodUnavailable",
+          "Selected plan period is not available",
+        ),
         loading: false,
       });
       return;
@@ -128,7 +132,10 @@ export const useCheckoutSession = (
       const errorMessage =
         err instanceof Error
           ? err.message
-          : "Failed to create checkout session";
+          : i18n.t(
+              "payment.createSessionFailed",
+              "Failed to create checkout session",
+            );
       setState({
         currentStage: "error",
         error: errorMessage,

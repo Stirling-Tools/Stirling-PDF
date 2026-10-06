@@ -34,6 +34,7 @@ import type {
   PolicyRunView,
 } from "@app/services/policyPipeline";
 import { dispatchPaygLimitReached } from "@app/services/usageLimitBridge";
+import { reportFreeTierExhausted } from "@app/services/accountLinkBlock";
 import {
   dispatchableFileId,
   type DispatchableFileId,
@@ -46,6 +47,7 @@ import {
   policyDeliversOutputFiles,
 } from "@app/data/classificationPolicy";
 import { runPolicyOnFile } from "@app/services/policyDispatch";
+import { policyCreditContext } from "@app/services/policyCreditContext";
 import { policyAcceptsFile } from "@app/services/policyInput";
 import { splitFileName } from "@app/utils/fileUtils";
 import type { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
@@ -236,6 +238,13 @@ export function usePolicyAutoRun(): void {
       // Read now rather than leaving them a poll interval to hear about their own upload.
       if (view.status === "FAILED") refreshNotificationsNow();
       const code = view.errorCode;
+      if (code === "FREE_TIER_EXHAUSTED") {
+        if (!firedLimitModal.current.has(view.runId)) {
+          firedLimitModal.current.add(view.runId);
+          reportFreeTierExhausted(policyCreditContext(view.policyId));
+        }
+        return;
+      }
       if (code !== "PAYG_LIMIT_REACHED" && code !== "FEATURE_DEGRADED") return;
       if (firedLimitModal.current.has(view.runId)) return;
       firedLimitModal.current.add(view.runId);
@@ -391,7 +400,10 @@ export function usePolicyAutoRun(): void {
           run,
           () =>
             classificationLabelTargetStubs(run.fileId, fileStubsRef.current),
-          { updateStirlingFileStub, bumpRevision },
+          {
+            updateStirlingFileStub,
+            bumpRevision,
+          },
         ).finally(() => importing.current.delete(run.runId));
         continue;
       }
@@ -832,7 +844,7 @@ async function importOutputs(
     // Mark the outputs handled BEFORE adding them (belt-and-suspenders session
     // guard on top of derivedFromTool) so the auto-run never enforces the policy
     // on its own output — that would version endlessly in a loop.
-    for (const s of categorized) markHandled(s.id as string);
+    for (const s of categorized) markHandled(s.id);
     deliveredIds = categorized.map((s) => s.id as string);
     if (ctx.parentStub) {
       // Input is in the active workspace: version it in place, silently — the
@@ -863,7 +875,7 @@ async function importOutputs(
       derivedFromTool: true,
     });
     // Belt-and-suspenders session guard on top of derivedFromTool.
-    for (const f of added) markHandled(f.fileId as string);
+    for (const f of added) markHandled(f.fileId);
     deliveredIds = added.map((f) => f.fileId as string);
     // Mark each new-file output as tool-derived (the versioned path gets this from the
     // CONSUME_FILES reducer; the addFiles path doesn't). This is the real loop guard: the dispatch

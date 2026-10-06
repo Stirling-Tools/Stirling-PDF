@@ -1,3 +1,4 @@
+import i18n from "i18next";
 import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
 import type { RGBA } from "@app/tools/pdfTextEditor/types";
@@ -137,7 +138,11 @@ export class SetTextOutlineCommand implements Command {
   }
 
   describe(): string {
-    return `Set outline on ${this.runId}`;
+    return i18n.t(
+      "pdfTextEditor.commands.setOutline",
+      "Set outline on {{run}}",
+      { run: this.runId },
+    );
   }
 }
 
@@ -175,10 +180,7 @@ function readMemberInk(
   } catch {
     /* keep the run-level value */
   }
-  const exports = m.pdfium.wasmExports as unknown as {
-    malloc: (n: number) => number;
-    free: (p: number) => void;
-  };
+  const exports = m.pdfium.wasmExports;
   const r = exports.malloc(4);
   const g = exports.malloc(4);
   const b = exports.malloc(4);
