@@ -205,6 +205,70 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Free disk space on Linux
+        if: runner.os == 'Linux'
+        run: |
+          set +e
+          echo 'Disk space before cleanup:'
+          df -h /
+
+          for path in \
+            /usr/share/dotnet \
+            /opt/ghc \
+            /usr/local/lib/android \
+            /usr/local/share/boost; do
+            if [ -e "$path" ]; then
+              echo "Removing $path"
+              sudo rm -rf "$path"
+            fi
+          done
+
+          echo 'Disk space after cleanup:'
+          df -h /
+
+      - name: Free disk space on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Write-Host "Disk space before cleanup:"
+          Get-Volume -DriveLetter C | Select-Object DriveLetter, SizeRemaining, Size
+
+          $paths = @(
+            "$env:ProgramFiles\dotnet",
+            "${env:ProgramFiles(x86)}\Microsoft SDKs\Azure",
+            "$env:LOCALAPPDATA\Android\Sdk",
+            "C:\Android\android-sdk"
+          )
+
+          foreach ($path in $paths) {
+            if (Test-Path $path) {
+              Write-Host "Removing $path"
+              Remove-Item -LiteralPath $path -Recurse -Force -ErrorAction Continue
+            }
+          }
+
+          Write-Host "Disk space after cleanup:"
+          Get-Volume -DriveLetter C | Select-Object DriveLetter, SizeRemaining, Size
+
+      - name: Free disk space on macOS
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          set +e
+          echo "Disk space before cleanup:"
+          df -h /
+
+          for path in \
+            "/Users/runner/Library/Android/sdk" \
+            "/usr/local/share/powershell"; do
+            if [ -e "$path" ]; then
+              sudo rm -rf "$path"
+            fi
+          done
+
+          echo "Disk space after cleanup:"
+          df -h /
+
       - name: Install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04'
         run: |
