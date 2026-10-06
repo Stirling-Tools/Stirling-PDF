@@ -286,6 +286,43 @@ export default defineConfig(async ({ mode, command }) => {
     changeOrigin: true,
     secure: false,
     xfwd: true,
+    configure: (proxy: {
+      on: (
+        event: string,
+        handler: (err: unknown, req: unknown, res: unknown) => void,
+      ) => void;
+    }) => {
+      proxy.on("error", (err: unknown, _req: unknown, res: unknown) => {
+        const error = err as { code?: string };
+        const response = res as {
+          headersSent?: boolean;
+          writeHead?: (
+            status: number,
+            headers?: Record<string, string>,
+          ) => void;
+          end?: (body: string) => void;
+        };
+        // While Spring Boot is warming up (~10s), silence ECONNREFUSED/ECONNRESET proxy spam.
+        if (error.code === "ECONNREFUSED" || error.code === "ECONNRESET") {
+          if (
+            response &&
+            !response.headersSent &&
+            typeof response.writeHead === "function" &&
+            typeof response.end === "function"
+          ) {
+            response.writeHead(503, { "Content-Type": "application/json" });
+            response.end(
+              JSON.stringify({
+                status: "STARTING",
+                message: "Backend is warming up...",
+              }),
+            );
+          }
+          return;
+        }
+        console.error("[vite proxy error]", err);
+      });
+    },
   };
 
   // Shared between `vite` (dev) and `vite preview` (production-build serve, used
