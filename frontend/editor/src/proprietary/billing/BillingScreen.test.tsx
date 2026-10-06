@@ -1,3 +1,4 @@
+import { MantineProvider } from "@mantine/core";
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 
@@ -336,4 +337,53 @@ it("retains Plan and Usage while data is unavailable without inventing figures o
   expect(screen.getByText("Local license")).toBeInTheDocument();
   expect(screen.queryByText("The full PDF Editor.")).toBeNull();
   expect(screen.queryByRole("button", { name: "Add capacity" })).toBeNull();
+});
+
+describe("subscription end", () => {
+  const teamAndProcessor = {
+    ...subscribedWallet,
+    team: { held: true, licensedUsers: 100, usersInUse: 7 },
+    processor: { active: true },
+  };
+
+  it("offers a quiet cancel door only to a host that passes one", () => {
+    const onCancel = vi.fn();
+    const { rerender } = render(<BillingScreen wallet={teamAndProcessor} />);
+    expect(
+      screen.queryByRole("button", { name: "Cancel subscription" }),
+    ).not.toBeInTheDocument();
+    rerender(
+      <BillingScreen
+        wallet={teamAndProcessor}
+        onCancelSubscription={onCancel}
+      />,
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Cancel subscription" }),
+    );
+    expect(onCancel).toHaveBeenCalledOnce();
+  });
+
+  it("names each scheduled end and keeps the door for what still renews", () => {
+    const onResume = vi.fn();
+    render(
+      <MantineProvider>
+        <BillingScreen
+          wallet={{
+            ...teamAndProcessor,
+            team: { ...teamAndProcessor.team, endsAt: "2026-11-14T00:00:00Z" },
+          }}
+          onCancelSubscription={vi.fn()}
+          onResumeSubscription={onResume}
+        />
+      </MantineProvider>,
+    );
+    expect(screen.getByText(/^Team plan ends /)).toBeInTheDocument();
+    expect(screen.queryByText(/^Processor ends /)).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Cancel subscription" }),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Resume" }));
+    expect(onResume).toHaveBeenCalledOnce();
+  });
 });

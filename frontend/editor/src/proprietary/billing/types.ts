@@ -57,12 +57,16 @@ export interface TeamHolding {
       reportedAt: string | null;
     }[];
   } | null;
+  /** ISO instant the Team plan stops, once a cancel is scheduled; absent or null while it renews. */
+  endsAt?: string | null;
 }
 
 /** The Processor holding: metered automation beyond the free grant. */
 export interface ProcessorHolding {
   /** The team has a live metered subscription. The fact `status: "subscribed"` actually carried. */
   active: boolean;
+  /** ISO instant the metered subscription stops, once a cancel is scheduled. */
+  endsAt?: string | null;
 }
 
 export interface Wallet {

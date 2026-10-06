@@ -209,6 +209,60 @@ public class StripeSubscriptionDao {
         return rate;
     }
 
+    private static final String SCHEDULED_END =
+            "SELECT s.cancel_at_period_end, s.cancel_at,"
+                    + " COALESCE(MIN(si.current_period_end), s.current_period_end) AS period_end"
+                    + " FROM stripe.subscriptions s"
+                    + " LEFT JOIN stripe.subscription_items si ON si.subscription = s.id"
+                    + "   AND COALESCE(si.deleted, false) = false"
+                    + " WHERE s.status IN ('active', 'trialing', 'past_due') AND ";
+
+    private static final String SCHEDULED_END_GROUP =
+            " GROUP BY s.id, s.cancel_at_period_end, s.cancel_at, s.current_period_end";
+
+    /**
+     * When the subscription stops, once a cancel is scheduled for it. Empty while it renews, and
+     * when the mirror has not synced it. Since API 2025-03-31 the period end lives on the item, so
+     * the item's value wins over the subscription's legacy column.
+     */
+    public Optional<Instant> findScheduledEnd(String subscriptionId) {
+        if (subscriptionId == null || subscriptionId.isBlank()) {
+            return Optional.empty();
+        }
+        return scheduledEnd("s.id = ?" + SCHEDULED_END_GROUP, subscriptionId);
+    }
+
+    /** The same, for the team's live Team subscription in {@code team_capacity_subscriptions}. */
+    public Optional<Instant> findTeamScheduledEnd(long teamId) {
+        return scheduledEnd(
+                "s.id IN (SELECT subscription_id FROM team_capacity_subscriptions"
+                        + " WHERE team_id = ? AND canceled = false)"
+                        + SCHEDULED_END_GROUP,
+                teamId);
+    }
+
+    private Optional<Instant> scheduledEnd(String where, Object arg) {
+        try {
+            return jdbcTemplate
+                    .query(
+                            SCHEDULED_END + where,
+                            (rs, i) -> {
+                                long cancelAt = rs.getLong("cancel_at");
+                                if (!rs.wasNull()) return Instant.ofEpochSecond(cancelAt);
+                                if (!rs.getBoolean("cancel_at_period_end")) return null;
+                                long periodEnd = rs.getLong("period_end");
+                                return rs.wasNull() ? null : Instant.ofEpochSecond(periodEnd);
+                            },
+                            arg)
+                    .stream()
+                    .filter(Objects::nonNull)
+                    .findFirst();
+        } catch (DataAccessException e) {
+            log.warn("Scheduled subscription end unavailable: {}", e.getMessage());
+            return Optional.empty();
+        }
+    }
+
     private static LocalDateTime toLocal(long epochSeconds) {
         return LocalDateTime.ofInstant(Instant.ofEpochSecond(epochSeconds), ZoneId.systemDefault());
     }

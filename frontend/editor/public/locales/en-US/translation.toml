@@ -8041,6 +8041,7 @@ redirectingToEditor = "Redirecting to the editor..."
 
 [portal.billing]
 dataUnavailable = "Usage figures are currently unavailable."
+paymentAndInvoices = "Payment & invoices"
 
 [portal.billing.activation]
 maybeLater = "Maybe later"
@@ -8054,6 +8055,91 @@ title = "Pay as you go"
 badge = "2 months free"
 sub = "One invoice, card or bank transfer."
 title = "Prepay a year"
+
+[portal.billing.cancel]
+back = "Back"
+competitor = "Which tool are you moving to?"
+confirm = "Cancel {{name}}"
+continue = "Continue"
+continueCancelling = "Continue cancelling"
+detail = "What would have made you stay?"
+finish = "Done"
+keep = "Keep my plan"
+resume = "Resume {{name}}"
+stepLabel = "Step {{step}} of 3"
+
+[portal.billing.cancel.done]
+emailed = "We sent a confirmation to {{email}}. You can resume any time before the end date."
+ends = "Your {{name}} ends on {{date}}. Everything keeps working until then."
+
+[portal.billing.cancel.error]
+cancel = "We couldn't cancel just now. Nothing has changed. Please try again."
+contact = "Your message didn't send. Please try again, or email support@stirlingpdf.com."
+contactLimit = "You've already sent us three messages today. We'll be in touch."
+resume = "We couldn't resume just now. Please try again from Usage & Billing."
+
+[portal.billing.cancel.facts]
+after = "After that"
+charges = "Charges"
+chargesMetered = "Usage until then is billed on your final invoice. Nothing is refunded."
+chargesTeam = "No further charges. The current period is not refunded."
+endsOn = "Ends on"
+kept = "Files, pipelines and settings are kept."
+nothingChanges = "Nothing changes."
+prepaid = "Your {{credits}} prepaid credits stay yours to use."
+processor = "Processing beyond your free monthly credits stops."
+teamOver = "The free plan covers {{free}} users and you have {{users}}. You won't be able to add anyone until you're back under it."
+teamWithin = "Your team moves to the free plan, which covers {{free}} users."
+untilThen = "Until then"
+
+[portal.billing.cancel.message]
+context = "Sent with your message"
+label = "What's going on?"
+replyTo = "Reply to"
+send = "Send message"
+
+[portal.billing.cancel.offer]
+call = "Book a 15 minute call"
+limitAction = "Set a limit"
+limitBody = "The Processor has no standing fee. With a low limit you only pay for what runs."
+limitTitle = "Lower your spend limit"
+message = "Send a message"
+talkBody = "A person on our team reads every message. If something is wrong, we would like the chance to fix it."
+talkTitle = "Talk to us first"
+
+[portal.billing.cancel.product]
+both = "Team plan and Processor"
+processor = "Processor"
+team = "Team plan"
+
+[portal.billing.cancel.reason]
+label = "Why are you cancelling?"
+missingFeatures = "It's missing something we need"
+notWorking = "Something isn't working"
+other = "Something else"
+support = "Support didn't solve our problem"
+switching = "We're switching to another tool"
+temporary = "We only needed it for a project"
+tooComplex = "It's too hard to set up or use"
+tooExpensive = "It costs too much"
+unused = "We don't use it enough"
+
+[portal.billing.cancel.scope]
+both = "Both"
+label = "What do you want to cancel?"
+
+[portal.billing.cancel.sent]
+reply = "We will reply to {{email}}."
+unchanged = "Your plan has not changed. If we can't help, you can still cancel from Usage & Billing."
+
+[portal.billing.cancel.title]
+call = "Book a call"
+confirm = "Cancel {{name}}?"
+done = "{{name}} cancelled"
+message = "Send us a message"
+offer = "Before you go"
+reason = "Cancel your subscription"
+sent = "Message sent"
 
 [portal.billing.checkout]
 noClientSecret = "Edge function returned no client_secret."
@@ -8147,6 +8233,13 @@ estimated = "estimated · the meter settles at close"
 estimatedPending = "estimated · includes {{pending}} not yet synced from your instances"
 pdfs = "PDFs processed"
 users = "Users"
+
+[portal.billing.ends]
+cancel = "Cancel subscription"
+processor = "Processor ends {{date}}"
+resume = "Resume"
+resumeError = "Couldn't resume your subscription. Please try again."
+team = "Team plan ends {{date}}"
 
 [portal.billing.enterprise]
 cta = "Get an enterprise quote"
