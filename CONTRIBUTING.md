@@ -53,7 +53,7 @@ To keep the list of open Pull Requests manageable, PRs that appear abandoned wil
 - If a draft Pull Request has had no activity for 30 days, it will get the `Stale PR` label.
 - If the problem is still there 7 days after the warning, the Pull Request will be automatically closed.
 
-A closed Pull Request is not rejected. If you pick it up again, reopen it (or ask a maintainer to) and address the problem.
+A closed Pull Request is not rejected. If you pick it up again, please feel free to open a new Pull Request and address the problem.
 
 If you think a Pull Request is waiting on us rather than on you, say so in a comment.
 
