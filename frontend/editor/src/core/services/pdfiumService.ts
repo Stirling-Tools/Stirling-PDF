@@ -17,6 +17,8 @@ import {
   type WrappedPdfiumModule,
   type PdfiumModule,
 } from "@embedpdf/pdfium";
+
+export type { WrappedPdfiumModule };
 import {
   pdfiumWasmModulePromise,
   startEagerWasmCompilation,

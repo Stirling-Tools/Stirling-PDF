@@ -43,9 +43,7 @@ export function copyRgbaToBgraHeap(
   const heap = (m.pdfium as typeof m.pdfium & ExtendedPdfiumRuntime).HEAPU8;
 
   const canUseUint32 =
-    (rgba.byteOffset & 3) === 0 &&
-    (bufferPtr & 3) === 0 &&
-    (stride & 3) === 0;
+    (rgba.byteOffset & 3) === 0 && (bufferPtr & 3) === 0 && (stride & 3) === 0;
 
   if (stride === rowBytes) {
     if (canUseUint32) {
