@@ -138,7 +138,7 @@ export async function installTauri(page: Page) {
 
           case "plugin:event|listen":
             w.__listeners[args.event] = args.handler;
-            return Object.keys(w.__listeners).length;
+            return args.handler;
           case "plugin:event|unlisten":
             return null;
 
@@ -174,8 +174,8 @@ export async function installTauri(page: Page) {
 
     // `unlisten()` goes through this object, not __TAURI_INTERNALS__.
     w.__TAURI_EVENT_PLUGIN_INTERNALS__ = {
-      unregisterListener(event: string) {
-        delete w.__listeners[event];
+      unregisterListener(event: string, eventId: number) {
+        if (w.__listeners[event] === eventId) delete w.__listeners[event];
       },
     };
 

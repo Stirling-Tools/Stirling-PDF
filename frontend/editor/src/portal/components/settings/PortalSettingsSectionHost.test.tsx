@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { PortalSettingsSectionHost } from "@portal/components/settings/PortalSettingsSectionHost";
+import { PortalRosterHost } from "@portal/components/settings/PortalRosterHost";
 import { useLinkOptional } from "@portal/contexts/LinkContext";
 import {
   clearAccountLinkBlock,
@@ -53,6 +54,13 @@ function LinkState() {
   );
 }
 
+function RosterTransferSignIn() {
+  const { openLinkModal } = useUI();
+  return (
+    <button onClick={() => openLinkModal("reauth")}>Renew cloud sign-in</button>
+  );
+}
+
 function renderHost(path = "/settings/billing") {
   return render(
     <MemoryRouter initialEntries={[path]}>
@@ -68,6 +76,25 @@ describe("settings link status", () => {
     fetchStatus.mockReset();
     sessionStorage.clear();
     clearAccountLinkBlock();
+  });
+
+  it("supports transfer sign-in in the shared roster without mounting linking on entry", async () => {
+    fetchStatus.mockResolvedValue({ linked: true });
+    render(
+      <MemoryRouter initialEntries={["/settings/users"]}>
+        <PortalRosterHost>
+          <RosterTransferSignIn />
+        </PortalRosterHost>
+      </MemoryRouter>,
+    );
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(fetchStatus).not.toHaveBeenCalled();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Renew cloud sign-in" }),
+    );
+    expect(await screen.findByRole("dialog", { name: "reauth" })).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "Not now" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 
   it("does not claim an unlinked server while its status is still loading", async () => {

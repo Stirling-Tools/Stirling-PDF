@@ -1,5 +1,6 @@
 import { Button as MantineButton } from "@mantine/core";
 import { forwardRef } from "react";
+import { useTranslation } from "react-i18next";
 import type {
   ComponentPropsWithoutRef,
   CSSProperties,
@@ -150,6 +151,7 @@ const ButtonRoot = forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref,
   ) {
+    const { t } = useTranslation();
     const label = text ?? children;
     const hasLabel = label != null && label !== false && label !== "";
     // A labelless button collapses to a square icon-only button — but never when
@@ -162,7 +164,7 @@ const ButtonRoot = forwardRef<HTMLButtonElement, ButtonProps>(
     // accessible name; the spinner and any icon are decorative.
     const fallbackLabel =
       !hasLabel && loading && !rest["aria-label"] && !rest["aria-labelledby"]
-        ? "Loading"
+        ? t("common.loading", "Loading...")
         : undefined;
 
     // px/py override p for their axis; each stays undefined (= size default) if unset.

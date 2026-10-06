@@ -1,3 +1,4 @@
+import i18n from "i18next";
 import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
 import {
@@ -90,6 +91,7 @@ export class UngroupParagraphCommand implements Command {
         fontSize: rep.fontSize,
         fill: { ...rep.fill },
         fontSubset: rep.fontSubset,
+        renderMode: rep.renderMode,
       });
       r.containerPtr = containers[i] ?? 0;
       newRuns.push(r);
@@ -152,6 +154,10 @@ export class UngroupParagraphCommand implements Command {
   }
 
   describe(): string {
-    return `Ungroup paragraph ${this.runId}`;
+    return i18n.t(
+      "pdfTextEditor.commands.ungroupParagraph",
+      "Ungroup paragraph {{run}}",
+      { run: this.runId },
+    );
   }
 }

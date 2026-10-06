@@ -227,6 +227,7 @@ pub fn run() {
       pop_opened_files,
       clear_opened_files,
       file_disk_state,
+      commands::files::publish_processing_file,
       watch_disk_paths,
       unwatch_disk_paths,
       open_in_new_window,

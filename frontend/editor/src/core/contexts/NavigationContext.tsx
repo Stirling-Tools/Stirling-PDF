@@ -179,8 +179,8 @@ export const NavigationProvider: React.FC<{
         (state.workbench === "pageEditor" &&
           workbench !== "pageEditor" &&
           hasUnsavedChanges) ||
-        (state.workbench === "viewer" &&
-          workbench !== "viewer" &&
+        ((state.workbench === "viewer" || state.workbench === "signing") &&
+          workbench !== state.workbench &&
           hasUnsavedChanges) ||
         (state.workbench.startsWith("custom:") &&
           workbench !== state.workbench &&
@@ -249,8 +249,8 @@ export const NavigationProvider: React.FC<{
         (state.workbench === "pageEditor" &&
           workbench !== "pageEditor" &&
           hasUnsavedChanges) ||
-        (state.workbench === "viewer" &&
-          workbench !== "viewer" &&
+        ((state.workbench === "viewer" || state.workbench === "signing") &&
+          workbench !== state.workbench &&
           hasUnsavedChanges) ||
         (state.workbench.startsWith("custom:") &&
           workbench !== state.workbench &&
@@ -323,11 +323,14 @@ export const NavigationProvider: React.FC<{
 
   const requestNavigation = useCallback(
     (navigationFn: () => void) => {
-      if (!state.hasUnsavedChanges) {
+      const hasUnsavedChanges =
+        unsavedChangesCheckerRef.current?.() || state.hasUnsavedChanges;
+      if (!hasUnsavedChanges) {
         navigationFn();
         return;
       }
 
+      dispatch({ type: "SET_UNSAVED_CHANGES", payload: { hasChanges: true } });
       dispatch({ type: "SET_PENDING_NAVIGATION", payload: { navigationFn } });
       dispatch({ type: "SHOW_NAVIGATION_WARNING", payload: { show: true } });
     },

@@ -189,3 +189,33 @@ export async function dismissTourTooltip(page: Page): Promise<void> {
     await closeBtn.click();
   }
 }
+
+/**
+ * The tool picker mounts categories when they come near its viewport, so an
+ * offscreen tile or header is not in the DOM yet. Scroll the picker in steps
+ * until the target exists, then return it. No-op when it is already mounted.
+ */
+export async function revealInPicker(
+  page: Page,
+  target: Locator,
+): Promise<Locator> {
+  const scroller = page.locator(".tool-picker-scrollable").first();
+  for (let step = 0; step < 20 && (await target.count()) === 0; step += 1) {
+    await scroller.evaluate((el) => {
+      el.scrollTop = Math.min(el.scrollTop + el.clientHeight, el.scrollHeight);
+    });
+    await page.waitForTimeout(150);
+  }
+  return target;
+}
+
+/** Reveal a tool tile by its tool id, then return it. */
+export async function revealPickerTool(
+  page: Page,
+  toolId: string,
+): Promise<Locator> {
+  return revealInPicker(
+    page,
+    page.locator(`[data-tour="tool-button-${toolId}"]`),
+  );
+}
