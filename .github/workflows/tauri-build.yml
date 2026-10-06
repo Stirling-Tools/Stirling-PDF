@@ -288,6 +288,10 @@ jobs:
             frontend/editor/src-tauri/target/debug/deps/match_token*
             frontend/editor/src-tauri/target/debug/deps/refresh_token_fallback*
             frontend/editor/src-tauri/target/debug/libs/**
+            frontend/editor/src-tauri/target/release/.fingerprint/**
+            frontend/editor/src-tauri/target/release/deps/match_token*
+            frontend/editor/src-tauri/target/release/deps/refresh_token_fallback*
+            frontend/editor/src-tauri/target/release/libs/**
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7 # stable
@@ -916,6 +920,10 @@ jobs:
             frontend/editor/src-tauri/target/debug/deps/match_token*
             frontend/editor/src-tauri/target/debug/deps/refresh_token_fallback*
             frontend/editor/src-tauri/target/debug/libs/**
+            frontend/editor/src-tauri/target/release/.fingerprint/**
+            frontend/editor/src-tauri/target/release/deps/match_token*
+            frontend/editor/src-tauri/target/release/deps/refresh_token_fallback*
+            frontend/editor/src-tauri/target/release/libs/**
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7 # stable
