@@ -244,8 +244,22 @@ subprojects {
             mavenBom rootProject.libs.spring.boot.dependencies.get().toString()
         }
         dependencies {
-            // Override BOM-managed commons-lang3 for CVE-2025-48924 fix
+            // These are BOM-managed, and the imported Spring Boot platform wins over
+            // resolutionStrategy.force. Pin them here, which is the only mechanism that holds.
+            // - commons-lang3 3.20.0 fixes CVE-2025-48924 (DoS).
             dependency rootProject.libs.commons.lang3.get().toString()
+            // - h2 stays on 2.3.x: the 2.4 line changes the on-disk format and cannot read
+            //   databases written by earlier Stirling releases.
+            dependency rootProject.libs.h2.get().toString()
+            // - logback and the Jackson 2 family are BOM-managed too. Pinning them only in
+            //   resolutionStrategy.force left them silently on the BOM's older versions.
+            dependency rootProject.libs.logback.core.get().toString()
+            dependency rootProject.libs.logback.classic.get().toString()
+            dependency rootProject.libs.jackson2.core.get().toString()
+            dependency rootProject.libs.jackson2.databind.get().toString()
+            dependency rootProject.libs.jackson2.dataformat.yaml.get().toString()
+            dependency rootProject.libs.jackson2.datatype.jdk8.get().toString()
+            dependency rootProject.libs.jackson2.datatype.jsr310.get().toString()
         }
     }
 
