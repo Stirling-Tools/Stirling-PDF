@@ -3,6 +3,7 @@ package stirling.software.proprietary.policy.ledger;
 import java.util.Collection;
 import java.util.List;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -146,7 +147,7 @@ public interface ProcessedFileRepository
             @Param("policyId") String policyId,
             @Param("identityHash") String identityHash,
             @Param("gate") String gate,
-            @Param("contentHash") String contentHash,
+            @Param("contentHash") @Nullable String contentHash,
             @Param("status") ProcessedFileStatus status,
             @Param("now") long now);
 

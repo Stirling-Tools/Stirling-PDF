@@ -135,15 +135,18 @@ public class OnnxFormDetector implements UnloadableModel {
                                     () -> new IllegalStateException("Active model file missing"));
             try {
                 OrtEnvironment env = OrtEnvironment.getEnvironment();
-                OrtSession.SessionOptions opts = new OrtSession.SessionOptions();
-                try {
-                    opts.setIntraOpNumThreads(
-                            Math.max(1, Runtime.getRuntime().availableProcessors() / 2));
-                } catch (OrtException ignored) {
-                    // best-effort tuning
+                // SessionOptions owns native memory (closeOptions); leaving one per model load
+                // unreleased leaks it for the life of the process.
+                try (OrtSession.SessionOptions opts = new OrtSession.SessionOptions()) {
+                    try {
+                        opts.setIntraOpNumThreads(
+                                Math.max(1, Runtime.getRuntime().availableProcessors() / 2));
+                    } catch (OrtException ignored) {
+                        // best-effort tuning
+                    }
+                    closeSession();
+                    session = env.createSession(file.toString(), opts);
                 }
-                closeSession();
-                session = env.createSession(file.toString(), opts);
                 inputName = session.getInputNames().iterator().next();
                 loadedModelId = activeId;
                 log.info("Loaded ONNX session for Auto Form Detection model '{}'", activeId);

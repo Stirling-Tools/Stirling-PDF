@@ -1,12 +1,15 @@
 package stirling.software.proprietary.security.service;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.stereotype.Service;
+
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 
 import jakarta.annotation.PostConstruct;
 
@@ -23,11 +26,18 @@ public class LoginAttemptService {
 
     private final ApplicationProperties applicationProperties;
 
+    /**
+     * Ceiling on tracked usernames. Entries expire on their own after the reset window, and this
+     * bounds the set within it: the keys come straight from the login form, so without a cap a
+     * spray of distinct usernames grows the map for as long as the window lasts.
+     */
+    private static final int MAX_TRACKED_USERS = 10_000;
+
     private int MAX_ATTEMPT;
 
     private long ATTEMPT_INCREMENT_TIME;
 
-    private ConcurrentHashMap<String, AttemptCounter> attemptsCache;
+    private Cache<String, AttemptCounter> attemptsCache;
 
     private boolean isBlockedEnabled = true;
 
@@ -41,7 +51,16 @@ public class LoginAttemptService {
         ATTEMPT_INCREMENT_TIME =
                 TimeUnit.MINUTES.toMillis(
                         applicationProperties.getSecurity().getLoginResetTimeMinutes());
-        attemptsCache = new ConcurrentHashMap<>();
+        attemptsCache =
+                Caffeine.newBuilder()
+                        .maximumSize(MAX_TRACKED_USERS)
+                        .expireAfterWrite(
+                                Duration.ofMillis(
+                                        applicationProperties
+                                                        .getSecurity()
+                                                        .getLoginResetTimeMinutes()
+                                                * 60_000L))
+                        .build();
     }
 
     public void loginSucceeded(String key) {
@@ -49,7 +68,7 @@ public class LoginAttemptService {
             return;
         }
         String normalizedKey = key.toLowerCase(Locale.ROOT);
-        attemptsCache.remove(normalizedKey);
+        attemptsCache.invalidate(normalizedKey);
     }
 
     public void loginFailed(String key) {
@@ -57,7 +76,7 @@ public class LoginAttemptService {
             return;
         }
         String normalizedKey = key.toLowerCase(Locale.ROOT);
-        AttemptCounter attemptCounter = attemptsCache.get(normalizedKey);
+        AttemptCounter attemptCounter = attemptsCache.getIfPresent(normalizedKey);
         if (attemptCounter == null) {
             attemptCounter = new AttemptCounter();
             attemptsCache.put(normalizedKey, attemptCounter);
@@ -74,7 +93,7 @@ public class LoginAttemptService {
             return false;
         }
         String normalizedKey = key.toLowerCase(Locale.ROOT);
-        AttemptCounter attemptCounter = attemptsCache.get(normalizedKey);
+        AttemptCounter attemptCounter = attemptsCache.getIfPresent(normalizedKey);
         if (attemptCounter == null) {
             return false;
         }
@@ -86,7 +105,7 @@ public class LoginAttemptService {
             return;
         }
         String normalizedKey = key.toLowerCase(Locale.ROOT);
-        attemptsCache.remove(normalizedKey);
+        attemptsCache.invalidate(normalizedKey);
     }
 
     public boolean isBlockingEnabled() {
@@ -97,7 +116,7 @@ public class LoginAttemptService {
         if (!isBlockedEnabled) {
             return List.of();
         }
-        return attemptsCache.entrySet().stream()
+        return attemptsCache.asMap().entrySet().stream()
                 .filter(entry -> entry.getValue().getAttemptCount() >= MAX_ATTEMPT)
                 .map(Map.Entry::getKey)
                 .toList();
@@ -109,7 +128,7 @@ public class LoginAttemptService {
             return Integer.MAX_VALUE;
         }
         String normalizedKey = key.toLowerCase(Locale.ROOT);
-        AttemptCounter attemptCounter = attemptsCache.get(normalizedKey);
+        AttemptCounter attemptCounter = attemptsCache.getIfPresent(normalizedKey);
         if (attemptCounter == null) {
             return MAX_ATTEMPT;
         }

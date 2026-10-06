@@ -463,6 +463,10 @@ subprojects {
         tasks.named("forkedSpringBootRun") {
             dependsOn(":common:jar")
             dependsOn(":proprietary:jar")
+            // The springdoc plugin's forked run holds non-serializable state, so any build
+            // generating the OpenAPI docs runs without the configuration cache.
+            notCompatibleWithConfigurationCache(
+                    "forkedSpringBootRun comes from the springdoc plugin and is not CC-compatible")
         }
 
         tasks.register("copySwaggerDoc", Copy) {
@@ -678,8 +682,9 @@ tasks.named("test") {
 processResources.dependsOn(writeVersion)
 
 tasks.register('printVersion') {
+    def v = project.version
     doLast {
-        println project.version
+        println v
     }
 }
 

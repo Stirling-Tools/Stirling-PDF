@@ -9,8 +9,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Deque;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -277,7 +279,7 @@ public class ProcessExecutor {
     private ProcessExecutorResult runOnce(
             List<String> command, File workingDirectory, RunOutcome outcome)
             throws IOException, InterruptedException {
-        String messages = "";
+        StringBuilder messages = new StringBuilder();
         int exitCode = 1;
         UnoServerPool.UnoServerLease unoLease = null;
         boolean useSemaphore = true;
@@ -348,8 +350,8 @@ public class ProcessExecutor {
             Process process = processBuilder.start();
 
             // Read the error stream and standard output stream concurrently
-            List<String> errorLines = new ArrayList<>();
-            List<String> outputLines = new ArrayList<>();
+            BoundedOutput errorLines = new BoundedOutput();
+            BoundedOutput outputLines = new BoundedOutput();
 
             Thread errorReaderThread =
                     Thread.ofVirtual()
@@ -365,7 +367,7 @@ public class ProcessExecutor {
                                                             BoundedLineReader.readLine(
                                                                     errorReader, 5_000_000))
                                                     != null) {
-                                                errorLines.add(line);
+                                                errorLines.append(line);
                                                 if (liveUpdates) log.info(line);
                                             }
                                         } catch (InterruptedIOException e) {
@@ -390,7 +392,7 @@ public class ProcessExecutor {
                                                             BoundedLineReader.readLine(
                                                                     outputReader, 5_000_000))
                                                     != null) {
-                                                outputLines.add(line);
+                                                outputLines.append(line);
                                                 if (liveUpdates) log.info(line);
                                             }
                                         } catch (InterruptedIOException e) {
@@ -461,16 +463,16 @@ public class ProcessExecutor {
                             && commandToRun.getFirst().contains("qpdf");
 
             if (!outputLines.isEmpty()) {
-                String outputMessage = String.join("\n", outputLines);
-                messages += outputMessage;
+                String outputMessage = outputLines.text();
+                messages.append(outputMessage);
                 if (!liveUpdates) {
                     log.info("Command output:\n{}", outputMessage);
                 }
             }
 
             if (!errorLines.isEmpty()) {
-                String errorMessage = String.join("\n", errorLines);
-                messages += errorMessage;
+                String errorMessage = errorLines.text();
+                messages.append(errorMessage);
                 if (!liveUpdates) {
                     log.warn("Command error output:\n{}", errorMessage);
                 }
@@ -510,7 +512,7 @@ public class ProcessExecutor {
                 unoLease.close();
             }
         }
-        return new ProcessExecutorResult(exitCode, messages);
+        return new ProcessExecutorResult(exitCode, messages.toString());
     }
 
     private static final Set<String> LIBRE_OFFICE_ENV_ALLOWLIST =
@@ -810,6 +812,62 @@ public class ProcessExecutor {
         public ProcessExecutorResult(int rc, String messages) {
             this.rc = rc;
             this.messages = messages;
+        }
+    }
+
+    /**
+     * Keeps the head and tail of a tool's output and drops the middle.
+     *
+     * <p>Chatty tools are not hypothetical here - ocrmypdf runs with --verbose and logs one line
+     * per page - and the lines used to accumulate in a plain list with no ceiling, so a large job
+     * could pin an arbitrary number of strings in the JVM heap. The head and the tail are what a
+     * human reads when a tool fails, so the middle is what gets elided.
+     */
+    private static final class BoundedOutput {
+
+        private static final int MAX_LINES = 2_000;
+        private static final int HEAD_LINES = MAX_LINES / 2;
+        private static final String ELISION = "\n... [%d lines omitted] ...\n";
+
+        private final Deque<String> head = new ArrayDeque<>(HEAD_LINES);
+        private final Deque<String> tail = new ArrayDeque<>(HEAD_LINES);
+        private long totalLines;
+        private long totalChars;
+
+        void append(String line) {
+            totalLines++;
+            totalChars += line.length();
+            if (head.size() < HEAD_LINES) {
+                head.addLast(line);
+            } else if (totalLines <= MAX_LINES) {
+                tail.addLast(line);
+            } else {
+                tail.addLast(line);
+                tail.removeFirst();
+            }
+        }
+
+        boolean isEmpty() {
+            return totalLines == 0;
+        }
+
+        String text() {
+            if (totalLines == 0) {
+                return "";
+            }
+            StringBuilder text = new StringBuilder((int) Math.min(totalChars, 8_000_000) + 64);
+            for (String line : head) {
+                text.append(line).append('\n');
+            }
+            long omitted = totalLines - head.size() - tail.size();
+            if (omitted > 0) {
+                text.append(ELISION.formatted(omitted));
+            }
+            for (String line : tail) {
+                text.append(line).append('\n');
+            }
+            text.setLength(text.length() - 1);
+            return text.toString();
         }
     }
 }

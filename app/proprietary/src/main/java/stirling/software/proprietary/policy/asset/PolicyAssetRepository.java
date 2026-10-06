@@ -3,6 +3,7 @@ package stirling.software.proprietary.policy.asset;
 import java.util.List;
 import java.util.Optional;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -31,7 +32,7 @@ public interface PolicyAssetRepository extends JpaRepository<PolicyAssetEntity, 
             META
                     + " where ((:teamId is null and a.teamId is null) or a.teamId = :teamId) order"
                     + " by a.createdAt desc, a.id asc")
-    List<PolicyAsset> findMetaByTeam(@Param("teamId") Long teamId);
+    List<PolicyAsset> findMetaByTeam(@Param("teamId") @Nullable Long teamId);
 
     @Query(META + " order by a.createdAt desc, a.id asc")
     List<PolicyAsset> findAllMeta();
