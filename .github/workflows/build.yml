@@ -87,7 +87,11 @@ jobs:
               'gradle/**/*.gradle'
             ) }}
           CARGO_HASH_FILES: >-
-            ${{ hashFiles('frontend/editor/src-tauri/**') }}
+            ${{ hashFiles(
+              'frontend/editor/src-tauri/**',
+              'frontend/editor/src-tauri/Cargo.toml',
+              'frontend/editor/src-tauri/Cargo.lock'
+            ) }}
           FRONTEND_DIST_HASH_FILES: >-
             ${{ hashFiles('frontend/editor/src/**') }}
           UV_HASH_FILES: >-
