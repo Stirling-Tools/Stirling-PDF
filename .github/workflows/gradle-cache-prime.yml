@@ -66,7 +66,7 @@ jobs:
         id: cache
         uses: Ludy87/cache-the-planet/multi-cache@2275210b57156c2c99d8d57ccf444630ac6a3e8f
         with:
-          version: 3
+          version: 4
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
           manifest-branch: dev-cache-artifact
           manifest-path: .github/cache-data
