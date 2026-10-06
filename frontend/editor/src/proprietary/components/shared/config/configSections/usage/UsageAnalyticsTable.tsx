@@ -1,24 +1,60 @@
-import React from "react";
-import {
-  Card,
-  Text,
-  Stack,
-  Table,
-  TableThead,
-  TableTbody,
-  TableTr,
-  TableTh,
-  TableTd,
-} from "@mantine/core";
+import { useMemo, type FC } from "react";
+import { Card, Text, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { EndpointStatistic } from "@app/services/usageAnalyticsService";
+import { column, DataTable, type DataTableColumn } from "@app/ui";
+import { type EndpointStatistic } from "@app/services/usageAnalyticsService";
 
 interface UsageAnalyticsTableProps {
   data: EndpointStatistic[];
 }
 
-const UsageAnalyticsTable: React.FC<UsageAnalyticsTableProps> = ({ data }) => {
+interface RankedEndpointStatistic extends EndpointStatistic {
+  rank: number;
+}
+
+const UsageAnalyticsTable: FC<UsageAnalyticsTableProps> = ({ data }) => {
   const { t } = useTranslation();
+
+  const rows = useMemo<RankedEndpointStatistic[]>(
+    () =>
+      data.map((stat, index) => ({
+        ...stat,
+        rank: index + 1,
+      })),
+    [data],
+  );
+
+  const columns = useMemo<DataTableColumn<RankedEndpointStatistic>[]>(
+    () => [
+      column.muted({
+        key: "rank",
+        header: "#",
+        get: (r) => String(r.rank),
+        sortable: true,
+      }),
+      column.text({
+        key: "endpoint",
+        header: t("usage.table.endpoint", "Endpoint"),
+        get: (r) => r.endpoint,
+        sortable: true,
+      }),
+      column.number({
+        key: "visits",
+        header: t("usage.table.visits", "Visits"),
+        get: (r) => r.visits,
+        format: (n) => n.toLocaleString(),
+        sortable: true,
+      }),
+      column.text({
+        key: "percentage",
+        header: t("usage.table.percentage", "Percentage"),
+        get: (r) => `${r.percentage.toFixed(2)}%`,
+        sortBy: (r) => r.percentage,
+        sortable: true,
+      }),
+    ],
+    [t],
+  );
 
   return (
     <Card padding="lg" radius="md" withBorder>
@@ -27,98 +63,13 @@ const UsageAnalyticsTable: React.FC<UsageAnalyticsTableProps> = ({ data }) => {
           {t("usage.table.title", "Detailed Statistics")}
         </Text>
 
-        <Table
-          horizontalSpacing="md"
-          verticalSpacing="sm"
-          withRowBorders
-          highlightOnHover
-          style={{
-            "--table-border-color": "var(--mantine-color-gray-3)",
-          }}
-        >
-          <TableThead>
-            <TableTr style={{ backgroundColor: "var(--mantine-color-gray-0)" }}>
-              <TableTh
-                style={{
-                  fontWeight: 600,
-                  color: "var(--mantine-color-gray-7)",
-                }}
-                fz="sm"
-                w="5%"
-              >
-                #
-              </TableTh>
-              <TableTh
-                style={{
-                  fontWeight: 600,
-                  color: "var(--mantine-color-gray-7)",
-                }}
-                fz="sm"
-                w="55%"
-              >
-                {t("usage.table.endpoint", "Endpoint")}
-              </TableTh>
-              <TableTh
-                style={{
-                  fontWeight: 600,
-                  color: "var(--mantine-color-gray-7)",
-                }}
-                fz="sm"
-                w="20%"
-                ta="right"
-              >
-                {t("usage.table.visits", "Visits")}
-              </TableTh>
-              <TableTh
-                style={{
-                  fontWeight: 600,
-                  color: "var(--mantine-color-gray-7)",
-                }}
-                fz="sm"
-                w="20%"
-                ta="right"
-              >
-                {t("usage.table.percentage", "Percentage")}
-              </TableTh>
-            </TableTr>
-          </TableThead>
-          <TableTbody>
-            {data.length === 0 ? (
-              <TableTr>
-                <TableTd colSpan={4}>
-                  <Text ta="center" c="dimmed" py="xl">
-                    {t("usage.table.noData", "No data available")}
-                  </Text>
-                </TableTd>
-              </TableTr>
-            ) : (
-              data.map((stat, index) => (
-                <TableTr key={index}>
-                  <TableTd>
-                    <Text size="sm" c="dimmed">
-                      {index + 1}
-                    </Text>
-                  </TableTd>
-                  <TableTd>
-                    <Text size="sm" truncate>
-                      {stat.endpoint}
-                    </Text>
-                  </TableTd>
-                  <TableTd ta="right">
-                    <Text size="sm" fw={600}>
-                      {stat.visits.toLocaleString()}
-                    </Text>
-                  </TableTd>
-                  <TableTd ta="right">
-                    <Text size="sm" c="dimmed">
-                      {stat.percentage.toFixed(2)}%
-                    </Text>
-                  </TableTd>
-                </TableTr>
-              ))
-            )}
-          </TableTbody>
-        </Table>
+        <DataTable
+          columns={columns}
+          rows={rows}
+          rowKey={(r) => r.endpoint}
+          empty={t("usage.table.noData", "No data available")}
+          defaultSort={{ key: "visits", direction: "desc" }}
+        />
       </Stack>
     </Card>
   );

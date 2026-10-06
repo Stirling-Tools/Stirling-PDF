@@ -11913,6 +11913,7 @@ listDescription = "The list is shown directly in the UI from the release bundle 
 listTitle = "Bundled dependencies"
 loadError = "Failed to load third-party licenses"
 module = "Module"
+project = "Project"
 version = "Version"
 
 [settings.licensingAnalytics]
