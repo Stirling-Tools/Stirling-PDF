@@ -106,7 +106,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         automationSettings: null,
       },
       multiTool: {
-        icon: <Icon name="grid-2x2-plus" size="1.5rem" />,
+        icon: <Icon name="rows-3" size="1.5rem" />,
         name: t("home.multiTool.title", "Multi-Tool"),
         component: null,
         workbench: "pageEditor",
