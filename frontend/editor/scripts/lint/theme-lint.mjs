@@ -637,9 +637,9 @@ const CODE_EXEMPT_PATH = [
   /pdfTextEditor|pixelCompare|\/compare\.ts$|customPrimary|accentColors|formFieldColors/,
   /validateSignature\/outputtedPDFSections|CenteredMessageSection|StatusBadgeSection/,
   /\/viewer\/|Annotation|useViewerReadAloud|CommentsSidebar|\/constants\/search\.ts$|SignaturePreview/,
-  /ColorPicker|ColorControl|WatchedFolderManagementModal|watchedFolderPresets|fileColors|unifiedBackground|folder\.ts$|policyFolders/,
+  /ColorPicker|ColorControl|fileColors|unifiedBackground|folder\.ts$|policyFolders/,
   /OAuthButtons|oauthCallbackHtml/,
-  /mantineTheme|\/theme\.ts$|toolsTaxonomy|LayoutPreview|PageNumberPreview|CloudStorageIcons|BrandMarks/,
+  /mantineTheme|\/theme\.ts$|toolsTaxonomy|LayoutPreview|PageNumberPreview|BrandMarks/,
   /\/onboarding\//,
   /addStamp|addWatermark|\/tooltips\//,
   // Stories are checked like app code; colour-as-data lines opt out with

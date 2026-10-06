@@ -1,4 +1,5 @@
 use tauri::{AppHandle, Emitter, Manager, RunEvent, WindowEvent};
+use tauri_plugin_window_state::StateFlags;
 
 mod utils;
 pub mod commands;
@@ -129,7 +130,11 @@ pub fn run() {
     .plugin(tauri_plugin_deep_link::init())
     .plugin(tauri_plugin_notification::init())
     .plugin(tauri_plugin_updater::Builder::new().build())
-    .plugin(tauri_plugin_window_state::Builder::default().build())
+    .plugin(
+      tauri_plugin_window_state::Builder::default()
+        .with_state_flags(StateFlags::all() & !StateFlags::DECORATIONS)
+        .build()
+    )
     .manage(AppConnectionState::default())
     .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
       // Runs in the existing instance when a second launch is attempted
@@ -222,6 +227,7 @@ pub fn run() {
       pop_opened_files,
       clear_opened_files,
       file_disk_state,
+      commands::files::publish_processing_file,
       watch_disk_paths,
       unwatch_disk_paths,
       open_in_new_window,

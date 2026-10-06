@@ -194,4 +194,26 @@ class AiEngineClientTest {
 
         assertEquals(null, captor.getValue().headers().firstValue("X-Engine-Auth").orElse(null));
     }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void getWithTimeoutPutsThatTimeoutOnTheRequest() throws Exception {
+        HttpResponse<String> ok = mock(HttpResponse.class);
+        when(ok.statusCode()).thenReturn(200);
+        when(ok.body()).thenReturn("{}");
+        org.mockito.ArgumentCaptor<java.net.http.HttpRequest> captor =
+                org.mockito.ArgumentCaptor.forClass(java.net.http.HttpRequest.class);
+        when(httpClient.send(captor.capture(), any(HttpResponse.BodyHandler.class))).thenReturn(ok);
+
+        client.get("/health", null, java.time.Duration.ofSeconds(2));
+        client.get("/health", null);
+
+        assertEquals(
+                java.util.Optional.of(java.time.Duration.ofSeconds(2)),
+                captor.getAllValues().get(0).timeout());
+        assertEquals(
+                java.util.Optional.of(java.time.Duration.ofSeconds(5)),
+                captor.getAllValues().get(1).timeout(),
+                "the two-argument get keeps the configured timeout");
+    }
 }

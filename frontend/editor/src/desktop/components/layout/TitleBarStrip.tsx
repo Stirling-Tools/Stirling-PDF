@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { isTauri } from "@tauri-apps/api/core";
+import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
 import { getDesktopOs, DesktopOs } from "@app/services/platformService";
 import styles from "@app/components/layout/TitleBarStrip.module.css";
@@ -28,6 +29,7 @@ interface TitleBarStripProps {
  * the right, since Tauri has no native-caption-plus-content mode there.
  */
 export function TitleBarStrip({ children }: TitleBarStripProps) {
+  const { t } = useTranslation();
   const [os, setOs] = useState<DesktopOs>(seedOs);
   const [maximized, setMaximized] = useState(false);
   const isWindows = os === DesktopOs.Windows;
@@ -132,7 +134,7 @@ export function TitleBarStrip({ children }: TitleBarStripProps) {
             type="button"
             className={styles.button}
             onClick={() => void getCurrentWindow().minimize()}
-            aria-label="Minimize"
+            aria-label={t("desktop.titleBar.minimize", "Minimize")}
             tabIndex={-1}
           >
             <Icon name="minus" size="1em" />
@@ -141,7 +143,11 @@ export function TitleBarStrip({ children }: TitleBarStripProps) {
             type="button"
             className={styles.button}
             onClick={() => void getCurrentWindow().toggleMaximize()}
-            aria-label={maximized ? "Restore" : "Maximize"}
+            aria-label={
+              maximized
+                ? t("desktop.titleBar.restore", "Restore")
+                : t("desktop.titleBar.maximize", "Maximize")
+            }
             tabIndex={-1}
           >
             {maximized ? (
@@ -154,7 +160,7 @@ export function TitleBarStrip({ children }: TitleBarStripProps) {
             type="button"
             className={`${styles.button} ${styles.close}`}
             onClick={() => void getCurrentWindow().close()}
-            aria-label="Close"
+            aria-label={t("common.close", "Close")}
             tabIndex={-1}
           >
             <Icon name="x" size="1em" />

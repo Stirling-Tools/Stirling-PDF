@@ -219,6 +219,14 @@ public class AiEngineClient {
     }
 
     public String get(String path, String userId) throws IOException {
+        return get(
+                path,
+                userId,
+                Duration.ofSeconds(applicationProperties.getAiEngine().getTimeoutSeconds()));
+    }
+
+    /** GET with its own timeout, which also bounds the connect, so a probe cannot hang. */
+    public String get(String path, String userId, Duration timeout) throws IOException {
         ApplicationProperties.AiEngine config = applicationProperties.getAiEngine();
         if (!config.isEnabled()) {
             throw new ResponseStatusException(
@@ -233,7 +241,7 @@ public class AiEngineClient {
                 HttpRequest.newBuilder()
                         .uri(URI.create(url))
                         .header("Accept", "application/json")
-                        .timeout(Duration.ofSeconds(config.getTimeoutSeconds()))
+                        .timeout(timeout)
                         .GET();
         addUserHeader(builder, userId);
         addEngineAuthHeader(builder, target);

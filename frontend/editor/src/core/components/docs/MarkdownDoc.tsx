@@ -4,6 +4,7 @@ import ReactMarkdown, {
   type Components,
 } from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui";
 import { makeSlugger } from "@app/docs/headings";
 
@@ -30,6 +31,7 @@ function urlTransform(url: string): string {
  */
 
 function CopyButton({ text }: { text: string }) {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
   return (
     <Button
@@ -43,7 +45,7 @@ function CopyButton({ text }: { text: string }) {
         })
       }
     >
-      {copied ? "✓ Copied" : "Copy"}
+      {copied ? `✓ ${t("common.copied", "Copied!")}` : t("common.copy", "Copy")}
     </Button>
   );
 }

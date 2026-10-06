@@ -245,23 +245,13 @@ test.describe("Files page", () => {
       await expect(page.locator(".files-page-card.is-selected")).toHaveCount(2);
     });
 
-    test("checkboxes hidden in single-select, visible in multi-select", async ({
-      page,
-    }) => {
+    test("selection highlights cards without checkboxes", async ({ page }) => {
       await gotoFilesPage(page);
       const cards = page.locator(".files-page-card:not(.is-folder)");
-      // 0 selected: no checkboxes anywhere on file cards.
-      await expect(page.locator(".files-page-card-selector")).toHaveCount(0);
-
-      // 1 selected: still no checkbox (highlight border is the indicator).
       await cards.nth(0).click();
-      await expect(page.locator(".files-page-card-selector")).toHaveCount(0);
-
-      // 2+ selected: checkboxes appear on every file card.
       await cards.nth(1).click({ modifiers: ["ControlOrMeta"] });
-      await expect(
-        page.locator(".files-page-card-selector").first(),
-      ).toBeVisible();
+      await expect(page.locator(".files-page-card.is-selected")).toHaveCount(2);
+      await expect(page.locator(".files-page-card-selector")).toHaveCount(0);
     });
   });
 

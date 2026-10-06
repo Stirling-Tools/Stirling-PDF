@@ -65,6 +65,19 @@ export function clearAccountLinkBlock(): void {
 }
 
 /** Coalesces failures across navigation and reloads; blocked storage falls back to this app lifetime. */
+/**
+ * Lifts the block on a ledger read that shows room left. Called from the read
+ * itself, so it runs once per read that lands, unchanged or not, without a
+ * component watching for it. A read the block overtook is skipped: invalidating
+ * cancels it, and its answer was taken before the block.
+ */
+export function clearBlockIfAllowanceRemains(
+  balance: { remainingUnits: number },
+  signal: AbortSignal,
+): void {
+  if (!signal.aborted && balance.remainingUnits > 0) clearAccountLinkBlock();
+}
+
 export function acknowledgeAccountLinkPrompt(): void {
   shownInMemory = true;
   try {
