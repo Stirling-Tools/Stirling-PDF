@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Duration;
 import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -327,9 +328,20 @@ public class PdfJsonFallbackFontService {
 
     private String fallbackFontLocation;
 
-    private static final int MAX_FALLBACK_FONTS = 32;
+    /**
+     * Fallback fonts are whole CJK font files, so a count-based bound retains hundreds of
+     * megabytes: each Noto Sans CJK entry is ~20MB and there are enough distinct fallback ids to
+     * approach the entry limit. Budget the cache by bytes instead, and drop fonts that have not
+     * been used recently - re-reading them from disk is cheap.
+     */
+    private static final long MAX_FALLBACK_FONT_CACHE_BYTES = 64L * 1024 * 1024;
+
     private final Cache<String, byte[]> fallbackFontCache =
-            Caffeine.newBuilder().maximumSize(MAX_FALLBACK_FONTS).build();
+            Caffeine.newBuilder()
+                    .maximumWeight(MAX_FALLBACK_FONT_CACHE_BYTES)
+                    .weigher((String key, byte[] font) -> font.length)
+                    .expireAfterAccess(Duration.ofMinutes(30))
+                    .build();
 
     @jakarta.annotation.PostConstruct
     private void loadConfig() {
