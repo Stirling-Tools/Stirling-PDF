@@ -29,7 +29,15 @@ vi.mock("@app/contexts/ViewerContext", () => ({
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
-    t: (_key: string, fallback?: string) => fallback ?? _key,
+    t: (_key: string, fallback?: string, options?: Record<string, unknown>) => {
+      let str = fallback ?? _key;
+      if (options) {
+        for (const [k, v] of Object.entries(options)) {
+          str = str.replace(new RegExp(`{{${k}}}`, "g"), String(v));
+        }
+      }
+      return str;
+    },
   }),
 }));
 
