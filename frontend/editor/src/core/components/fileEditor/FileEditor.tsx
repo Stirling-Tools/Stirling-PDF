@@ -357,19 +357,17 @@ const FileEditor = ({
   const totalItems =
     activeStirlingFileStubs.length > 0 ? activeStirlingFileStubs.length + 1 : 0;
 
-  const { range, padTop, padBottom, setContainer } = useVirtualFileRows(
-    totalItems,
-    rowHeightPx(true),
-    true,
-  );
+  const {
+    range,
+    padTop,
+    padBottom,
+    active: isVirtualActive,
+    setContainer,
+  } = useVirtualFileRows(totalItems, rowHeightPx(true), true);
 
-  // Before virtualization measures its scroll container (padTop === 0 && padBottom === 0 && range.end === totalItems),
-  // avoid mounting the entire dataset on the initial render pass.
-  const isVirtualMeasured = padTop > 0 || padBottom > 0;
-  const effectiveEnd =
-    !isVirtualMeasured && range.end === totalItems && totalItems > 13
-      ? 13
-      : range.end;
+  // Before virtualization activates (before scroll container attaches and measures),
+  // avoid mounting the entire dataset on frame 0. Once active, always render the exact virtual range.
+  const effectiveEnd = !isVirtualActive && totalItems > 13 ? 13 : range.end;
 
   return (
     <Dropzone
