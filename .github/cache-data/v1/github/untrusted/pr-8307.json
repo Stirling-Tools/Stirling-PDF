@@ -2616,139 +2616,6 @@
       "artifact_name": "cache-untrusted-pr-8307-setup-uv-cache-linux-x64-420a352a55b0046aa1d09a146366286b74ff0eaef54219f651f225162df0f358-v3--4a9b08d0422afaf4b409b7cf81b3da328dded9513ba4d78773-part-000000",
       "workflow_run_id": 37229272285
     },
-    "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/npm-cache/windows-x64/9ca80c67d4c013fc2f0c1b6fc757b484447dea1d33e175df1cc7dc01cff3fa73-cache-d27537c9925fe8ad/v3": {
-      "object": "sha256:1882676ced9c191ce966cd8249250923d2e14b1be283d4c7983506f0776ff966",
-      "storage": "github-artifact",
-      "updated_at": "2026-10-04T19:58:16.925Z",
-      "source": "Stirling-Tools/Stirling-PDF",
-      "created_by": "Ludy87",
-      "size": 354338030,
-      "parts": [
-        {
-          "index": 0,
-          "object": "sha256:4c1756a93da8cb8d7b7b13291b387a07b10ae31682335385bbb3ceb83a453769",
-          "size": 25165824,
-          "artifact_id": 11313845065,
-          "artifact_name": "cache-untrusted-pr-8307-npm-cache-windows-x64-9ca80c67d4c013fc2f0c1b6fc757b484447dea1d33e175df1cc7dc01cff3fa73-v3--1882676ced9c191ce966cd8249250923d2e14b1be283d4c798350-part-000000",
-          "workflow_run_id": 37229272285
-        },
-        {
-          "index": 1,
-          "object": "sha256:70a1095366f5a9c7ef6ab55309125bf4e73618692130d6d36b2ae5fe07cb2aaf",
-          "size": 25165824,
-          "artifact_id": 11313124930,
-          "artifact_name": "cache-untrusted-pr-8307-npm-cache-windows-x64-9ca80c67d4c013fc2f0c1b6fc757b484447dea1d33e175df1cc7dc01cff3fa73-v3--1882676ced9c191ce966cd8249250923d2e14b1be283d4c798350-part-000001",
-          "workflow_run_id": 37229272285
-        },
-        {
-          "index": 2,
-          "object": "sha256:2a5bab776efa2de336adb448200913c0dc97d11be3ac1134e6566873e8650e59",
-          "size": 25165824,
-          "artifact_id": 11313840134,
-          "artifact_name": "cache-untrusted-pr-8307-npm-cache-windows-x64-9ca80c67d4c013fc2f0c1b6fc757b484447dea1d33e175df1cc7dc01cff3fa73-v3--1882676ced9c191ce966cd8249250923d2e14b1be283d4c798350-part-000002",
-          "workflow_run_id": 37229272285
-        },
-        {
-          "index": 3,
-          "object": "sha256:6a6476a3f8be74ecef262ff62d654994494108b59fc8218cfaecf2f3b7c51368",
-          "size": 25165824,
-          "artifact_id": 11313199637,
-          "artifact_name": "cache-untrusted-pr-8307-npm-cache-windows-x64-9ca80c67d4c013fc2f0c1b6fc757b484447dea1d33e175df1cc7dc01cff3fa73-v3--1882676ced9c191ce966cd8249250923d2e14b1be283d4c798350-part-000003",
-          "workflow_run_id": 37229272285
-        },
-        {
-          "index": 4,
-          "object": "sha256:d611f5bf09a4ee3febf60909a2d847e9bba0c8991c497963ee41ab71e5445496",
-          "size": 25165824,
-          "artifact_id": 11313209506,
-          "artifact_name": "cache-untrusted-pr-8307-npm-cache-windows-x64-9ca80c67d4c013fc2f0c1b6fc757b484447dea1d33e175df1cc7dc01cff3fa73-v3--1882676ced9c191ce966cd8249250923d2e14b1be283d4c798350-part-000004",
-          "workflow_run_id": 37229272285
-        },
-        {
-          "index": 5,
-          "object": "sha256:142e13da65dbb5334f1732408bf5fdb66231066f8d4bab13838a75cbae3a711e",
-          "size": 25165824,
-          "artifact_id": 11313670673,
-          "artifact_name": "cache-untrusted-pr-8307-npm-cache-windows-x64-9ca80c67d4c013fc2f0c1b6fc757b484447dea1d33e175df1cc7dc01cff3fa73-v3--1882676ced9c191ce966cd8249250923d2e14b1be283d4c798350-part-000005",
-          "workflow_run_id": 37229272285
-        },
-        {
-          "index": 6,
-          "object": "sha256:8b063a1c5d3ccc8743cda234f37b0f99c892915784aa55095d5cc7aaddc4b17d",
-          "size": 25165824,
-          "artifact_id": 11313755408,
-          "artifact_name": "cache-untrusted-pr-8307-npm-cache-windows-x64-9ca80c67d4c013fc2f0c1b6fc757b484447dea1d33e175df1cc7dc01cff3fa73-v3--1882676ced9c191ce966cd8249250923d2e14b1be283d4c798350-part-000006",
-          "workflow_run_id": 37229272285
-        },
-        {
-          "index": 7,
-          "object": "sha256:bc9f5f3c21245835443ff603fb3196f5489874709d502996ff9aff3ea89467ed",
-          "size": 25165824,
-          "artifact_id": 11313552113,
-          "artifact_name": "cache-untrusted-pr-8307-npm-cache-windows-x64-9ca80c67d4c013fc2f0c1b6fc757b484447dea1d33e175df1cc7dc01cff3fa73-v3--1882676ced9c191ce966cd8249250923d2e14b1be283d4c798350-part-000007",
-          "workflow_run_id": 37229272285
-        },
-        {
-          "index": 8,
-          "object": "sha256:ceae38fac3aea60cf59baf14f8275517d972f0cef51f65f0bc41cb64f3cc238b",
-          "size": 25165824,
-          "artifact_id": 11313755411,
-          "artifact_name": "cache-untrusted-pr-8307-npm-cache-windows-x64-9ca80c67d4c013fc2f0c1b6fc757b484447dea1d33e175df1cc7dc01cff3fa73-v3--1882676ced9c191ce966cd8249250923d2e14b1be283d4c798350-part-000008",
-          "workflow_run_id": 37229272285
-        },
-        {
-          "index": 9,
-          "object": "sha256:a00016450b76043c1a2b39ced1847649111b24fc5f4b582556f7039845464b3d",
-          "size": 25165824,
-          "artifact_id": 11313755414,
-          "artifact_name": "cache-untrusted-pr-8307-npm-cache-windows-x64-9ca80c67d4c013fc2f0c1b6fc757b484447dea1d33e175df1cc7dc01cff3fa73-v3--1882676ced9c191ce966cd8249250923d2e14b1be283d4c798350-part-000009",
-          "workflow_run_id": 37229272285
-        },
-        {
-          "index": 10,
-          "object": "sha256:2be576f2aba99eaf92b5f6072fc2a03398dd92c7f7a3e7285c53d7cd2903002a",
-          "size": 25165824,
-          "artifact_id": 11313304327,
-          "artifact_name": "cache-untrusted-pr-8307-npm-cache-windows-x64-9ca80c67d4c013fc2f0c1b6fc757b484447dea1d33e175df1cc7dc01cff3fa73-v3--1882676ced9c191ce966cd8249250923d2e14b1be283d4c798350-part-000010",
-          "workflow_run_id": 37229272285
-        },
-        {
-          "index": 11,
-          "object": "sha256:5eeb9178f49abe64c85a91cb9d189b3e4f4320dc8ee916a4bbb0f04a56008411",
-          "size": 25165824,
-          "artifact_id": 11313134879,
-          "artifact_name": "cache-untrusted-pr-8307-npm-cache-windows-x64-9ca80c67d4c013fc2f0c1b6fc757b484447dea1d33e175df1cc7dc01cff3fa73-v3--1882676ced9c191ce966cd8249250923d2e14b1be283d4c798350-part-000011",
-          "workflow_run_id": 37229272285
-        },
-        {
-          "index": 12,
-          "object": "sha256:d08c691a63dcee8327329c709402d9543d5b0aa9993e1342a2209ed4825a56d3",
-          "size": 25165824,
-          "artifact_id": 11313790326,
-          "artifact_name": "cache-untrusted-pr-8307-npm-cache-windows-x64-9ca80c67d4c013fc2f0c1b6fc757b484447dea1d33e175df1cc7dc01cff3fa73-v3--1882676ced9c191ce966cd8249250923d2e14b1be283d4c798350-part-000012",
-          "workflow_run_id": 37229272285
-        },
-        {
-          "index": 13,
-          "object": "sha256:e409020c460cedc360565873b183aaeb51c3edcea39024f349074aba65d1e3cb",
-          "size": 25165824,
-          "artifact_id": 11313124962,
-          "artifact_name": "cache-untrusted-pr-8307-npm-cache-windows-x64-9ca80c67d4c013fc2f0c1b6fc757b484447dea1d33e175df1cc7dc01cff3fa73-v3--1882676ced9c191ce966cd8249250923d2e14b1be283d4c798350-part-000013",
-          "workflow_run_id": 37229272285
-        },
-        {
-          "index": 14,
-          "object": "sha256:a6313dcee1c22113bdd2cd9914453fab5e0e98ec895705af0693284fa9868da3",
-          "size": 2016494,
-          "artifact_id": 11313463776,
-          "artifact_name": "cache-untrusted-pr-8307-npm-cache-windows-x64-9ca80c67d4c013fc2f0c1b6fc757b484447dea1d33e175df1cc7dc01cff3fa73-v3--1882676ced9c191ce966cd8249250923d2e14b1be283d4c798350-part-000014",
-          "workflow_run_id": 37229272285
-        }
-      ],
-      "artifact_id": 11313845065,
-      "artifact_name": "cache-untrusted-pr-8307-npm-cache-windows-x64-9ca80c67d4c013fc2f0c1b6fc757b484447dea1d33e175df1cc7dc01cff3fa73-v3--1882676ced9c191ce966cd8249250923d2e14b1be283d4c798350-part-000000",
-      "workflow_run_id": 37229272285
-    },
     "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/gradle-caches/linux-x64/89c32a363ab84e76decf9ee6aef9e61c766ef8d0a74ec5b274526d903d233a26/v3": {
       "object": "sha256:314b09c9eb24497969af71b084dcd96a1b0e597699442f582328ef58b7a2a898",
       "storage": "github-artifact",
@@ -4183,10 +4050,143 @@
       "artifact_id": 11432289105,
       "artifact_name": "cache-untrusted-pr-8307-npm-cache-macos-arm64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v3--631ec014ec5fecd198019709d9d1db973d2a15a60d4a9da870c0f-part-000000",
       "workflow_run_id": 37507797215
+    },
+    "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/npm-cache/windows-x64/fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-cache-cf6e306cf7c6dce4/v3": {
+      "object": "sha256:539b2b90c4d8f6fd17210bbf5ffe315d4b04049b62a62acab3d7503434b62d00",
+      "storage": "github-artifact",
+      "updated_at": "2026-10-06T18:13:44.626Z",
+      "source": "Stirling-Tools/Stirling-PDF",
+      "created_by": "Ludy87",
+      "size": 357378852,
+      "parts": [
+        {
+          "index": 0,
+          "object": "sha256:0392bb8b4caa3b5b38dd38c93c1eedbf378c2e6f6997fcd3558d63c30acd2fcd",
+          "size": 25165824,
+          "artifact_id": 11435085273,
+          "artifact_name": "cache-untrusted-pr-8307-npm-cache-windows-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v3--539b2b90c4d8f6fd17210bbf5ffe315d4b04049b62a62acab3d75-part-000000",
+          "workflow_run_id": 37507797215
+        },
+        {
+          "index": 1,
+          "object": "sha256:9b7deda72661d664c4262943c5f4275220c997ffb7814d1118aa7c0d8b169a6a",
+          "size": 25165824,
+          "artifact_id": 11434840406,
+          "artifact_name": "cache-untrusted-pr-8307-npm-cache-windows-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v3--539b2b90c4d8f6fd17210bbf5ffe315d4b04049b62a62acab3d75-part-000001",
+          "workflow_run_id": 37507797215
+        },
+        {
+          "index": 2,
+          "object": "sha256:30995b3cbd9a22c93b126c600c69ee59265d3373e4f2fc354847140cf699aa24",
+          "size": 25165824,
+          "artifact_id": 11434260496,
+          "artifact_name": "cache-untrusted-pr-8307-npm-cache-windows-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v3--539b2b90c4d8f6fd17210bbf5ffe315d4b04049b62a62acab3d75-part-000002",
+          "workflow_run_id": 37507797215
+        },
+        {
+          "index": 3,
+          "object": "sha256:e43070aaa22e7091969115e67272f395b9c46b928177b984e59159e90b33bfb8",
+          "size": 25165824,
+          "artifact_id": 11435230303,
+          "artifact_name": "cache-untrusted-pr-8307-npm-cache-windows-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v3--539b2b90c4d8f6fd17210bbf5ffe315d4b04049b62a62acab3d75-part-000003",
+          "workflow_run_id": 37507797215
+        },
+        {
+          "index": 4,
+          "object": "sha256:daf552edbc55d3a4e996eb2e4299fbd09c44f6e5437f0fcfa48be35b0c2bebe6",
+          "size": 25165824,
+          "artifact_id": 11435095343,
+          "artifact_name": "cache-untrusted-pr-8307-npm-cache-windows-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v3--539b2b90c4d8f6fd17210bbf5ffe315d4b04049b62a62acab3d75-part-000004",
+          "workflow_run_id": 37507797215
+        },
+        {
+          "index": 5,
+          "object": "sha256:a8d00f99d8667c7a8aedca7c41912e651707dd2de78021fcdf2cc9e1bca26978",
+          "size": 25165824,
+          "artifact_id": 11434655404,
+          "artifact_name": "cache-untrusted-pr-8307-npm-cache-windows-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v3--539b2b90c4d8f6fd17210bbf5ffe315d4b04049b62a62acab3d75-part-000005",
+          "workflow_run_id": 37507797215
+        },
+        {
+          "index": 6,
+          "object": "sha256:d4ae3cb9483ef6b2336f6c678f7b7afac34be8580b4a6a761f9312da1320f719",
+          "size": 25165824,
+          "artifact_id": 11434875445,
+          "artifact_name": "cache-untrusted-pr-8307-npm-cache-windows-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v3--539b2b90c4d8f6fd17210bbf5ffe315d4b04049b62a62acab3d75-part-000006",
+          "workflow_run_id": 37507797215
+        },
+        {
+          "index": 7,
+          "object": "sha256:ab579eaeb070d9551d112b2c414a99b09c3758a761bd726c6699f85c50ffd6b8",
+          "size": 25165824,
+          "artifact_id": 11435655303,
+          "artifact_name": "cache-untrusted-pr-8307-npm-cache-windows-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v3--539b2b90c4d8f6fd17210bbf5ffe315d4b04049b62a62acab3d75-part-000007",
+          "workflow_run_id": 37507797215
+        },
+        {
+          "index": 8,
+          "object": "sha256:987cf5127261b99f2c12abfcfeec2aa761e4457b14498898b9aa8754880bcb79",
+          "size": 25165824,
+          "artifact_id": 11435710252,
+          "artifact_name": "cache-untrusted-pr-8307-npm-cache-windows-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v3--539b2b90c4d8f6fd17210bbf5ffe315d4b04049b62a62acab3d75-part-000008",
+          "workflow_run_id": 37507797215
+        },
+        {
+          "index": 9,
+          "object": "sha256:ca7b9df626770eb05743f162b5983d315eac12f2a9415f7719d27bd4b332a6c1",
+          "size": 25165824,
+          "artifact_id": 11434575526,
+          "artifact_name": "cache-untrusted-pr-8307-npm-cache-windows-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v3--539b2b90c4d8f6fd17210bbf5ffe315d4b04049b62a62acab3d75-part-000009",
+          "workflow_run_id": 37507797215
+        },
+        {
+          "index": 10,
+          "object": "sha256:58ca2f43247d7960929c3f601336cc1f93985dbe8df78ec13567ffb61beabf16",
+          "size": 25165824,
+          "artifact_id": 11434680420,
+          "artifact_name": "cache-untrusted-pr-8307-npm-cache-windows-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v3--539b2b90c4d8f6fd17210bbf5ffe315d4b04049b62a62acab3d75-part-000010",
+          "workflow_run_id": 37507797215
+        },
+        {
+          "index": 11,
+          "object": "sha256:d4d1ac469339eec44714929b977c33c399687896c0df3bdb53c669d985907ead",
+          "size": 25165824,
+          "artifact_id": 11435710264,
+          "artifact_name": "cache-untrusted-pr-8307-npm-cache-windows-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v3--539b2b90c4d8f6fd17210bbf5ffe315d4b04049b62a62acab3d75-part-000011",
+          "workflow_run_id": 37507797215
+        },
+        {
+          "index": 12,
+          "object": "sha256:a2e9b4b30f7afc1cf09bf938ff78407c5ae42040e5e821b9636c837fedd6ed98",
+          "size": 25165824,
+          "artifact_id": 11435735222,
+          "artifact_name": "cache-untrusted-pr-8307-npm-cache-windows-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v3--539b2b90c4d8f6fd17210bbf5ffe315d4b04049b62a62acab3d75-part-000012",
+          "workflow_run_id": 37507797215
+        },
+        {
+          "index": 13,
+          "object": "sha256:3c0f56d17a14fc40f0d1c81bc8a65a5f20cdbb677adcbbc95cdc5a636aede6db",
+          "size": 25165824,
+          "artifact_id": 11435250339,
+          "artifact_name": "cache-untrusted-pr-8307-npm-cache-windows-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v3--539b2b90c4d8f6fd17210bbf5ffe315d4b04049b62a62acab3d75-part-000013",
+          "workflow_run_id": 37507797215
+        },
+        {
+          "index": 14,
+          "object": "sha256:052560453fa2b9c84891a0622a3ee23bb1db00aee52f753b4c903e58c3d29288",
+          "size": 5057316,
+          "artifact_id": 11435795171,
+          "artifact_name": "cache-untrusted-pr-8307-npm-cache-windows-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v3--539b2b90c4d8f6fd17210bbf5ffe315d4b04049b62a62acab3d75-part-000014",
+          "workflow_run_id": 37507797215
+        }
+      ],
+      "artifact_id": 11435085273,
+      "artifact_name": "cache-untrusted-pr-8307-npm-cache-windows-x64-fc1c61da4e81016f2b98ae3bb3532250a32679a8deb0c4f54fedd1d5e80d9baf-v3--539b2b90c4d8f6fd17210bbf5ffe315d4b04049b62a62acab3d75-part-000000",
+      "workflow_run_id": 37507797215
     }
   },
   "monitoring": {
     "window_started_at": "2026-10-06T18:10:39.555Z",
-    "writes": 1
+    "writes": 2
   }
 }
