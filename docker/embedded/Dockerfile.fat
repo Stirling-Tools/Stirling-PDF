@@ -55,7 +55,7 @@ COPY app/common/build.gradle                app/common/
 COPY app/proprietary/build.gradle           app/proprietary/
 
 # Use the image's gradle so the build skips downloading the wrapper distribution
-RUN --mount=type=cache,id=stirling-pdf-gradle-cache,target=/home/gradle/.gradle,sharing=shared \
+RUN --mount=type=cache,id=stirling-pdf-gradle-cache,target=/home/gradle/.gradle,sharing=private \
     gradle dependencies --no-daemon || true
 
 COPY . .
@@ -64,8 +64,8 @@ COPY . .
 ARG BUILD_PORTAL=true
 # Bundle only the JPDFium native for this image's target arch.
 ARG TARGETARCH
-RUN --mount=type=cache,id=stirling-pdf-npm-cache,target=/root/.npm,sharing=shared \
-    --mount=type=cache,id=stirling-pdf-gradle-cache,target=/home/gradle/.gradle,sharing=shared \
+RUN --mount=type=cache,id=stirling-pdf-npm-cache,target=/root/.npm,sharing=private \
+    --mount=type=cache,id=stirling-pdf-gradle-cache,target=/home/gradle/.gradle,sharing=private \
     JPDFIUM_PLATFORM="$([ "$TARGETARCH" = arm64 ] && echo linux-arm64 || echo linux-x64)" && \
     DISABLE_ADDITIONAL_FEATURES=false \
     gradle clean build \

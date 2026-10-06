@@ -77,7 +77,7 @@ ARG VITE_SAAS_API_URL=""
 ARG TARGETARCH
 # Every ARG reaches RUN as an environment variable, empty ones included, and Vite lets any VITE_*
 # in process.env beat the .env files. Unset the empty ones or they blank the committed defaults.
-RUN --mount=type=cache,id=stirling-pdf-npm-cache,target=/root/.npm,sharing=shared \
+RUN --mount=type=cache,id=stirling-pdf-npm-cache,target=/root/.npm,sharing=private \
     JPDFIUM_PLATFORM="$([ "$TARGETARCH" = arm64 ] && echo linux-arm64 || echo linux-x64)" && \
     if [ -z "${VITE_SUPABASE_URL}" ]; then unset VITE_SUPABASE_URL; fi; \
     if [ -z "${VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY}" ]; then unset VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY; fi; \

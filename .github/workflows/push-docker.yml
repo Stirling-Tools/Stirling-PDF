@@ -172,8 +172,6 @@ jobs:
           context: .
           file: ${{ matrix.file }}
           push: ${{ env.PUBLISH == 'true' }}
-          cache-from: type=gha,scope=stirling-pdf-${{ matrix.variant }}
-          cache-to: type=gha,mode=max,scope=stirling-pdf-${{ matrix.variant }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           # No BASE_VERSION pin: inherit the Dockerfile ARG default (single source of truth).
