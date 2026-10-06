@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import i18n from "i18next";
 import { generateId } from "@app/utils/generateId";
 import {
   signatureStorageService,
@@ -90,7 +91,10 @@ export const useSavedSignatures = () => {
     storageType === "backend"
       ? MAX_SAVED_SIGNATURES_BACKEND
       : MAX_SAVED_SIGNATURES_LOCALSTORAGE;
-  const isAtCapacity = savedSignatures.length >= maxLimit;
+  const ownCount = savedSignatures.filter(
+    (entry) => entry.scope !== "shared",
+  ).length;
+  const isAtCapacity = ownCount >= maxLimit;
 
   const addSignature = useCallback(
     async (
@@ -106,7 +110,7 @@ export const useSavedSignatures = () => {
         return { success: false, reason: "invalid" };
       }
 
-      if (isAtCapacity) {
+      if (isAtCapacity && scope !== "shared") {
         return { success: false, reason: "limit" };
       }
 
@@ -114,7 +118,9 @@ export const useSavedSignatures = () => {
       const newSignature: SavedSignature = {
         ...payload,
         id: generateId(),
-        label: (label || "Signature").trim() || "Signature",
+        label:
+          (label || "").trim() ||
+          i18n.t("sign.saved.defaultLabel", "Signature"),
         scope:
           scope || (storageType === "backend" ? "personal" : "localStorage"),
         createdAt: timestamp,
@@ -130,15 +136,17 @@ export const useSavedSignatures = () => {
         return { success: false, reason: "invalid" };
       }
     },
-    [savedSignatures.length, storageType],
+    [isAtCapacity, storageType],
   );
 
-  const removeSignature = useCallback(async (id: string) => {
+  const removeSignature = useCallback(async (id: string): Promise<boolean> => {
     try {
       await signatureStorageService.deleteSignature(id);
       setSavedSignatures((prev) => prev.filter((entry) => entry.id !== id));
+      return true;
     } catch (error) {
       console.error("[useSavedSignatures] Failed to delete signature:", error);
+      return false;
     }
   }, []);
 
@@ -157,18 +165,23 @@ export const useSavedSignatures = () => {
               entry.id === id
                 ? {
                     ...entry,
-                    label: nextLabel.trim() || entry.label || "Signature",
+                    label:
+                      nextLabel.trim() ||
+                      entry.label ||
+                      i18n.t("sign.saved.defaultLabel", "Signature"),
                     updatedAt: Date.now(),
                   }
                 : entry,
             ),
           );
         }
+        return true;
       } catch (error) {
         console.error(
           "[useSavedSignatures] Failed to update signature label:",
           error,
         );
+        return false;
       }
     },
     [storageType],
@@ -225,6 +238,7 @@ export const useSavedSignatures = () => {
 
   return {
     savedSignatures,
+    ownCount,
     isAtCapacity,
     maxLimit,
     addSignature,

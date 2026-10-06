@@ -1,4 +1,6 @@
 import type { ReactNode } from "react";
+import { Icon } from "@app/ui/Icon";
+import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
 import "@app/ui/SettingsShell.css";
 
@@ -42,13 +44,17 @@ export function SettingsShell({
   children,
   className,
 }: SettingsShellProps) {
+  const { t } = useTranslation();
   return (
     <div
       className={["sui-settings-shell", className ?? ""]
         .filter(Boolean)
         .join(" ")}
     >
-      <nav className="sui-settings-shell__nav" aria-label="Settings sections">
+      <nav
+        className="sui-settings-shell__nav"
+        aria-label={t("common.settingsSections", "Settings sections")}
+      >
         {sections.map((section) => (
           <div key={section.title} className="sui-settings-shell__group">
             <span className="sui-settings-shell__group-title">
@@ -98,23 +104,8 @@ export function SettingsShell({
                 shape="circle"
                 className="sui-settings-shell__close"
                 onClick={onClose}
-                aria-label="Close"
-                leftSection={
-                  <svg
-                    viewBox="0 0 24 24"
-                    width="16"
-                    height="16"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={1.75}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden
-                  >
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                    <line x1="6" y1="6" x2="18" y2="18" />
-                  </svg>
-                }
+                aria-label={t("common.close", "Close")}
+                leftSection={<Icon name="x" size={16} />}
               />
             )}
           </div>

@@ -8,6 +8,7 @@ const h = vi.hoisted(() => ({
   loading: false,
   configLoading: false,
   groupSigningEnabled: true,
+  isAnonymous: false,
 }));
 
 vi.mock("@app/hooks/useEndpointConfig", () => ({
@@ -33,6 +34,10 @@ vi.mock("@app/hooks/useGroupSigningEnabled", () => ({
   useGroupSigningEnabled: () => h.groupSigningEnabled,
 }));
 
+vi.mock("@app/auth/UseSession", () => ({
+  useAuth: () => ({ isAnonymous: h.isAnonymous }),
+}));
+
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (_key: string, fallback?: string) => fallback ?? _key,
@@ -47,6 +52,23 @@ describe("useQuickNavToolReasons", () => {
     h.loading = false;
     h.configLoading = false;
     h.groupSigningEnabled = true;
+    h.isAnonymous = false;
+  });
+
+  it("asks a guest to sign in and does not remember that for the next user", () => {
+    h.groupSigningEnabled = false;
+    h.isAnonymous = true;
+
+    const { result } = renderHook(() => useQuickNavToolReasons());
+    expect(result.current?.sharedSign).toBe(
+      "Sign in to request signatures and see requests sent to you",
+    );
+
+    h.loading = true;
+    h.groupSigningEnabled = true;
+    h.isAnonymous = false;
+    const next = renderHook(() => useQuickNavToolReasons());
+    expect(next.result.current?.sharedSign).toBeUndefined();
   });
 
   it("admits it does not know rather than reporting nothing wrong", () => {

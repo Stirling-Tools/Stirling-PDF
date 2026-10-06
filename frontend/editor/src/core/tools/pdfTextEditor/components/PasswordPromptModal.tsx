@@ -30,7 +30,7 @@ export function PasswordPromptModal({
   }, [prompt?.fileName, prompt?.retry]);
 
   const submit = () => {
-    if (!password) return;
+    if (!password || loading) return;
     onSubmit(password);
   };
 
@@ -38,6 +38,9 @@ export function PasswordPromptModal({
     <Modal
       opened={!!prompt}
       onClose={onCancel}
+      withCloseButton={!loading}
+      closeOnEscape={!loading}
+      closeOnClickOutside={!loading}
       title={t("pdfTextEditor.password.title", "Password required")}
       size="sm"
       data-testid="pdf-editor-password-modal"
