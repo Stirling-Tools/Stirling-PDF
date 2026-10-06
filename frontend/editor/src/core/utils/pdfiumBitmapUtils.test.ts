@@ -69,4 +69,17 @@ describe("copyRgbaToBgraHeap", () => {
     const expected = [3, 2, 1, 4];
     expect(Array.from(heap.subarray(0, 4))).toEqual(expected);
   });
+
+  it("throws RangeError if RGBA byteLength does not match width * height * 4", () => {
+    const width = 2;
+    const height = 2;
+    const stride = width * 4;
+    const { m } = createMockPdfium(64);
+
+    const invalidRgba = new Uint8Array(12); // Expected 16 bytes
+
+    expect(() => {
+      copyRgbaToBgraHeap(m, invalidRgba, 0, width, height, stride);
+    }).toThrow(RangeError);
+  });
 });

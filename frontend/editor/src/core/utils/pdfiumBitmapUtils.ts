@@ -40,6 +40,12 @@ export function copyRgbaToBgraHeap(
   stride: number,
 ): void {
   const rowBytes = width * 4;
+  const expectedBytes = rowBytes * height;
+  if (rgba.byteLength !== expectedBytes) {
+    throw new RangeError(
+      `Expected ${expectedBytes} RGBA bytes, got ${rgba.byteLength}`,
+    );
+  }
   const heap = (m.pdfium as typeof m.pdfium & ExtendedPdfiumRuntime).HEAPU8;
 
   const canUseUint32 =
