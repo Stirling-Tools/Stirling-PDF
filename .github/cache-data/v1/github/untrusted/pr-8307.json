@@ -6071,10 +6071,255 @@
       "artifact_id": 11439021801,
       "artifact_name": "cache-untrusted-pr-8307-gradle-wrapper-macos-arm64-89c32a363ab84e76decf9ee6aef9e61c766ef8d0a74ec5b274526d903d233a26-v4--157332f83a08dfcc06670080f92431c8687babbe1a1ea7ff-part-000000",
       "workflow_run_id": 37515325611
+    },
+    "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/tauri-target/macos-arm64/bcb3819ed34994fcab6ca239a15ef2120b2b5be2edfeb1d56eb2f782636ba218-cache-cf6e306cf7c6dce4/v4": {
+      "object": "sha256:a744ef8f48be1a3a0a487671bbe35baa26ec2cf323b87905023dee5124fa251a",
+      "storage": "github-artifact",
+      "updated_at": "2026-10-06T20:39:13.088Z",
+      "source": "Stirling-Tools/Stirling-PDF",
+      "created_by": "Ludy87",
+      "size": 716286170,
+      "parts": [
+        {
+          "index": 0,
+          "object": "sha256:bdf9a3b383e95a566e21c8267780e36c7e23fb86a4e1de85190158d1f7949c14",
+          "size": 25165824,
+          "artifact_id": 11443151951,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-target-macos-arm64-bcb3819ed34994fcab6ca239a15ef2120b2b5be2edfeb1d56eb2f782636ba218-v4--a744ef8f48be1a3a0a487671bbe35baa26ec2cf323b8790502-part-000000",
+          "workflow_run_id": 37526632925
+        },
+        {
+          "index": 1,
+          "object": "sha256:a6ea87f753e071a0924303d68a75f7fa680188b9ab74cd5af024844e4e0d5003",
+          "size": 25165824,
+          "artifact_id": 11442842228,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-target-macos-arm64-bcb3819ed34994fcab6ca239a15ef2120b2b5be2edfeb1d56eb2f782636ba218-v4--a744ef8f48be1a3a0a487671bbe35baa26ec2cf323b8790502-part-000001",
+          "workflow_run_id": 37526632925
+        },
+        {
+          "index": 2,
+          "object": "sha256:da8417d18fb748672b30c3dcd08564ad5f214c47f0c08dc50341e68ed2804792",
+          "size": 25165824,
+          "artifact_id": 11442997079,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-target-macos-arm64-bcb3819ed34994fcab6ca239a15ef2120b2b5be2edfeb1d56eb2f782636ba218-v4--a744ef8f48be1a3a0a487671bbe35baa26ec2cf323b8790502-part-000002",
+          "workflow_run_id": 37526632925
+        },
+        {
+          "index": 3,
+          "object": "sha256:c4c4bdd8eb894075567da48a5542d73c669ee209125cc7c614e8670e2eaa6655",
+          "size": 25165824,
+          "artifact_id": 11443122021,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-target-macos-arm64-bcb3819ed34994fcab6ca239a15ef2120b2b5be2edfeb1d56eb2f782636ba218-v4--a744ef8f48be1a3a0a487671bbe35baa26ec2cf323b8790502-part-000003",
+          "workflow_run_id": 37526632925
+        },
+        {
+          "index": 4,
+          "object": "sha256:d6a3a900d3f5ae4ea787f0a749f7099168de8d591f83ccc757829795d0638fae",
+          "size": 25165824,
+          "artifact_id": 11442837169,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-target-macos-arm64-bcb3819ed34994fcab6ca239a15ef2120b2b5be2edfeb1d56eb2f782636ba218-v4--a744ef8f48be1a3a0a487671bbe35baa26ec2cf323b8790502-part-000004",
+          "workflow_run_id": 37526632925
+        },
+        {
+          "index": 5,
+          "object": "sha256:f425851d57df4cc9b3ac79440bf9b113a0a7d8184b2786fefb91fe91d238e49c",
+          "size": 25165824,
+          "artifact_id": 11442697556,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-target-macos-arm64-bcb3819ed34994fcab6ca239a15ef2120b2b5be2edfeb1d56eb2f782636ba218-v4--a744ef8f48be1a3a0a487671bbe35baa26ec2cf323b8790502-part-000005",
+          "workflow_run_id": 37526632925
+        },
+        {
+          "index": 6,
+          "object": "sha256:1c5015469deb63ac993dee87c5e3e338b1659cc7e5aa53d360fa09f333249ac4",
+          "size": 25165824,
+          "artifact_id": 11443157051,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-target-macos-arm64-bcb3819ed34994fcab6ca239a15ef2120b2b5be2edfeb1d56eb2f782636ba218-v4--a744ef8f48be1a3a0a487671bbe35baa26ec2cf323b8790502-part-000006",
+          "workflow_run_id": 37526632925
+        },
+        {
+          "index": 7,
+          "object": "sha256:00e86474475a527bd839557bf39c586ef7f7a4c9eaf23ed12d7b17430d83e7bf",
+          "size": 25165824,
+          "artifact_id": 11443047080,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-target-macos-arm64-bcb3819ed34994fcab6ca239a15ef2120b2b5be2edfeb1d56eb2f782636ba218-v4--a744ef8f48be1a3a0a487671bbe35baa26ec2cf323b8790502-part-000007",
+          "workflow_run_id": 37526632925
+        },
+        {
+          "index": 8,
+          "object": "sha256:ba184e61e3a3e5dd980ccc7797eddf0b032bba15a5eaf04ed72766705eef271f",
+          "size": 25165824,
+          "artifact_id": 11442907206,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-target-macos-arm64-bcb3819ed34994fcab6ca239a15ef2120b2b5be2edfeb1d56eb2f782636ba218-v4--a744ef8f48be1a3a0a487671bbe35baa26ec2cf323b8790502-part-000008",
+          "workflow_run_id": 37526632925
+        },
+        {
+          "index": 9,
+          "object": "sha256:39d63ea8e758b4ae31547099c2d12426755e735d738bca89d961271c7890ea88",
+          "size": 25165824,
+          "artifact_id": 11442972275,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-target-macos-arm64-bcb3819ed34994fcab6ca239a15ef2120b2b5be2edfeb1d56eb2f782636ba218-v4--a744ef8f48be1a3a0a487671bbe35baa26ec2cf323b8790502-part-000009",
+          "workflow_run_id": 37526632925
+        },
+        {
+          "index": 10,
+          "object": "sha256:b8bb2a1ef8a3b4ce1f8f3b76b9afa2cd2cf019b95846b649cdc5c319a808bac1",
+          "size": 25165824,
+          "artifact_id": 11442947279,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-target-macos-arm64-bcb3819ed34994fcab6ca239a15ef2120b2b5be2edfeb1d56eb2f782636ba218-v4--a744ef8f48be1a3a0a487671bbe35baa26ec2cf323b8790502-part-000010",
+          "workflow_run_id": 37526632925
+        },
+        {
+          "index": 11,
+          "object": "sha256:948efa933802eeb49f57bb1b1d3eeb22521da3dd6a856f991b068d919009e6cf",
+          "size": 25165824,
+          "artifact_id": 11442947284,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-target-macos-arm64-bcb3819ed34994fcab6ca239a15ef2120b2b5be2edfeb1d56eb2f782636ba218-v4--a744ef8f48be1a3a0a487671bbe35baa26ec2cf323b8790502-part-000011",
+          "workflow_run_id": 37526632925
+        },
+        {
+          "index": 12,
+          "object": "sha256:c3c5b19488088afab5c5cb7f094f7c03c22112c3a040355fcf57d3855f9262fb",
+          "size": 25165824,
+          "artifact_id": 11443147093,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-target-macos-arm64-bcb3819ed34994fcab6ca239a15ef2120b2b5be2edfeb1d56eb2f782636ba218-v4--a744ef8f48be1a3a0a487671bbe35baa26ec2cf323b8790502-part-000012",
+          "workflow_run_id": 37526632925
+        },
+        {
+          "index": 13,
+          "object": "sha256:597af1806171af3bea395df80977edec47c19bd8aa5db439106ac90ed7fcedd6",
+          "size": 25165824,
+          "artifact_id": 11442862190,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-target-macos-arm64-bcb3819ed34994fcab6ca239a15ef2120b2b5be2edfeb1d56eb2f782636ba218-v4--a744ef8f48be1a3a0a487671bbe35baa26ec2cf323b8790502-part-000013",
+          "workflow_run_id": 37526632925
+        },
+        {
+          "index": 14,
+          "object": "sha256:d7ae8900a4c3b5edee202bd2ef66da5cb826df4599c66aac37ba566b6f19b78f",
+          "size": 25165824,
+          "artifact_id": 11442697594,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-target-macos-arm64-bcb3819ed34994fcab6ca239a15ef2120b2b5be2edfeb1d56eb2f782636ba218-v4--a744ef8f48be1a3a0a487671bbe35baa26ec2cf323b8790502-part-000014",
+          "workflow_run_id": 37526632925
+        },
+        {
+          "index": 15,
+          "object": "sha256:8ee9f1b3209ddd6cc8725ce8bd11a16e45744f2967ecf4587c15e1e6ab0df7d4",
+          "size": 25165824,
+          "artifact_id": 11442952286,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-target-macos-arm64-bcb3819ed34994fcab6ca239a15ef2120b2b5be2edfeb1d56eb2f782636ba218-v4--a744ef8f48be1a3a0a487671bbe35baa26ec2cf323b8790502-part-000015",
+          "workflow_run_id": 37526632925
+        },
+        {
+          "index": 16,
+          "object": "sha256:1e0c0d769b53a2c09fc5f7723d0b870eaca8f70c9e8471183d4eeecfceec1fbf",
+          "size": 25165824,
+          "artifact_id": 11442842286,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-target-macos-arm64-bcb3819ed34994fcab6ca239a15ef2120b2b5be2edfeb1d56eb2f782636ba218-v4--a744ef8f48be1a3a0a487671bbe35baa26ec2cf323b8790502-part-000016",
+          "workflow_run_id": 37526632925
+        },
+        {
+          "index": 17,
+          "object": "sha256:b39a0c437a03ebda432b35a51c1a36069f42189e5ad7ac328e42522a59606f6d",
+          "size": 25165824,
+          "artifact_id": 11443092060,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-target-macos-arm64-bcb3819ed34994fcab6ca239a15ef2120b2b5be2edfeb1d56eb2f782636ba218-v4--a744ef8f48be1a3a0a487671bbe35baa26ec2cf323b8790502-part-000017",
+          "workflow_run_id": 37526632925
+        },
+        {
+          "index": 18,
+          "object": "sha256:50c16a6ae7a46523fecdad305642cff4fdf86577e4f2d63fe166ff68fe4d5e31",
+          "size": 25165824,
+          "artifact_id": 11442707436,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-target-macos-arm64-bcb3819ed34994fcab6ca239a15ef2120b2b5be2edfeb1d56eb2f782636ba218-v4--a744ef8f48be1a3a0a487671bbe35baa26ec2cf323b8790502-part-000018",
+          "workflow_run_id": 37526632925
+        },
+        {
+          "index": 19,
+          "object": "sha256:b92b137e027f4a55df869d5a7f6718575f2c89721c9978b43f31ff93c0c70c7b",
+          "size": 25165824,
+          "artifact_id": 11443047128,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-target-macos-arm64-bcb3819ed34994fcab6ca239a15ef2120b2b5be2edfeb1d56eb2f782636ba218-v4--a744ef8f48be1a3a0a487671bbe35baa26ec2cf323b8790502-part-000019",
+          "workflow_run_id": 37526632925
+        },
+        {
+          "index": 20,
+          "object": "sha256:a935516d4113b8bd3a8b0cc5284494b8a3a9fa27fe66a9f9b720b279936c5ce5",
+          "size": 25165824,
+          "artifact_id": 11443087096,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-target-macos-arm64-bcb3819ed34994fcab6ca239a15ef2120b2b5be2edfeb1d56eb2f782636ba218-v4--a744ef8f48be1a3a0a487671bbe35baa26ec2cf323b8790502-part-000020",
+          "workflow_run_id": 37526632925
+        },
+        {
+          "index": 21,
+          "object": "sha256:6bb5aef12a09a9f559b71cacb59a5b6f96aec5109384c6d2416608021cfa46d8",
+          "size": 25165824,
+          "artifact_id": 11443007194,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-target-macos-arm64-bcb3819ed34994fcab6ca239a15ef2120b2b5be2edfeb1d56eb2f782636ba218-v4--a744ef8f48be1a3a0a487671bbe35baa26ec2cf323b8790502-part-000021",
+          "workflow_run_id": 37526632925
+        },
+        {
+          "index": 22,
+          "object": "sha256:e86b29d74f00fbb8e721a977c81493b40aa0e570f7e2f711c31d2640ac219d9a",
+          "size": 25165824,
+          "artifact_id": 11442712523,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-target-macos-arm64-bcb3819ed34994fcab6ca239a15ef2120b2b5be2edfeb1d56eb2f782636ba218-v4--a744ef8f48be1a3a0a487671bbe35baa26ec2cf323b8790502-part-000022",
+          "workflow_run_id": 37526632925
+        },
+        {
+          "index": 23,
+          "object": "sha256:fd29800abb7427e96c27c0c8ec1adc8c6b314b20f3ddbb340450e6800b709b5e",
+          "size": 25165824,
+          "artifact_id": 11442842318,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-target-macos-arm64-bcb3819ed34994fcab6ca239a15ef2120b2b5be2edfeb1d56eb2f782636ba218-v4--a744ef8f48be1a3a0a487671bbe35baa26ec2cf323b8790502-part-000023",
+          "workflow_run_id": 37526632925
+        },
+        {
+          "index": 24,
+          "object": "sha256:37ddb66c3a06c2abdd68da45b0913b25dea0a2357fddf2cee677eab5f1792d59",
+          "size": 25165824,
+          "artifact_id": 11442752364,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-target-macos-arm64-bcb3819ed34994fcab6ca239a15ef2120b2b5be2edfeb1d56eb2f782636ba218-v4--a744ef8f48be1a3a0a487671bbe35baa26ec2cf323b8790502-part-000024",
+          "workflow_run_id": 37526632925
+        },
+        {
+          "index": 25,
+          "object": "sha256:c319e0493e1ce66f31870a730e59a7df4af98f6da47bb985a6b30b6064f519c1",
+          "size": 25165824,
+          "artifact_id": 11442762346,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-target-macos-arm64-bcb3819ed34994fcab6ca239a15ef2120b2b5be2edfeb1d56eb2f782636ba218-v4--a744ef8f48be1a3a0a487671bbe35baa26ec2cf323b8790502-part-000025",
+          "workflow_run_id": 37526632925
+        },
+        {
+          "index": 26,
+          "object": "sha256:91b20f70bbd1e8af5b617eac87d6492076aca43e55606bdddc2dc1ada183d08e",
+          "size": 25165824,
+          "artifact_id": 11442832191,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-target-macos-arm64-bcb3819ed34994fcab6ca239a15ef2120b2b5be2edfeb1d56eb2f782636ba218-v4--a744ef8f48be1a3a0a487671bbe35baa26ec2cf323b8790502-part-000026",
+          "workflow_run_id": 37526632925
+        },
+        {
+          "index": 27,
+          "object": "sha256:9d7657a9607a6d064786419ac5189dd0b3346e25dbda9d97ffddd1c32616d450",
+          "size": 25165824,
+          "artifact_id": 11442742333,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-target-macos-arm64-bcb3819ed34994fcab6ca239a15ef2120b2b5be2edfeb1d56eb2f782636ba218-v4--a744ef8f48be1a3a0a487671bbe35baa26ec2cf323b8790502-part-000027",
+          "workflow_run_id": 37526632925
+        },
+        {
+          "index": 28,
+          "object": "sha256:8e19d30572d3f02e9b47df2bc41de806061798562429025ac7e4fbe30deb0e6e",
+          "size": 11643098,
+          "artifact_id": 11442842340,
+          "artifact_name": "cache-untrusted-pr-8307-tauri-target-macos-arm64-bcb3819ed34994fcab6ca239a15ef2120b2b5be2edfeb1d56eb2f782636ba218-v4--a744ef8f48be1a3a0a487671bbe35baa26ec2cf323b8790502-part-000028",
+          "workflow_run_id": 37526632925
+        }
+      ],
+      "artifact_id": 11443151951,
+      "artifact_name": "cache-untrusted-pr-8307-tauri-target-macos-arm64-bcb3819ed34994fcab6ca239a15ef2120b2b5be2edfeb1d56eb2f782636ba218-v4--a744ef8f48be1a3a0a487671bbe35baa26ec2cf323b8790502-part-000000",
+      "workflow_run_id": 37526632925
     }
   },
   "monitoring": {
-    "window_started_at": "2026-10-06T19:21:57.865Z",
-    "writes": 12
+    "window_started_at": "2026-10-06T20:39:13.088Z",
+    "writes": 1
   }
 }
