@@ -399,7 +399,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get update; \
     apt-get install -y --no-install-recommends \
       # Core tools
-      ca-certificates tzdata tini bash fontconfig curl libjemalloc2 \
+      ca-certificates tzdata tini bash fontconfig curl \
       # ffmpeg disabled due to raised CVEs
       # ffmpeg \
       poppler-utils fontforge \
