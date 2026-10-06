@@ -1,3 +1,4 @@
+import type { ScanEditState } from "@app/tools/pdfTextEditor/commands/scanTextEdit";
 import type {
   Affine,
   PageRect,
@@ -95,6 +96,8 @@ export class TextRun {
   // Pointer to the LATEST background cover-rect emitted on the page for this
   // run.
   coverRectPtr: number;
+  /** Word-level edit state once an invisible OCR run over a scan is edited. */
+  scanEdit: ScanEditState | null;
   /** Per-line sub-run snapshots for paragraph-aware partial edits. */
   paragraphLineSlots: ParagraphLineSlot[];
   // Which visual lines start at a break the WRAP put there rather than one the
@@ -106,6 +109,12 @@ export class TextRun {
   // Session-only lock: when true the run is skipped by all hit-tests (mouse,
   // marquee, Ctrl+A) and edit gestures are no-ops.
   locked: boolean;
+  /**
+   * Width the user resized the box to, in PDF points, or null to follow the
+   * ink. Kept apart from `bounds`, which a reflow sets to the glyphs' extent:
+   * text rarely fills its box, so the box would shrink back to the ink.
+   */
+  wrapWidthPt: number | null;
 
   constructor(
     init: TextRunSnapshot & {
@@ -147,7 +156,9 @@ export class TextRun {
     this.paragraphLineSlots = [];
     this.paragraphSoftStarts = [];
     this.coverRectPtr = 0;
+    this.scanEdit = null;
     this.locked = init.locked ?? false;
+    this.wrapWidthPt = init.wrapWidthPt ?? null;
   }
 
   // Captured pen positions are only valid for the text AND face they were
@@ -188,6 +199,7 @@ export class TextRun {
       paragraphBaselines: this.lineBaselines(),
       paragraphLineLefts: this.lineLefts(),
       locked: this.locked || undefined,
+      wrapWidthPt: this.wrapWidthPt ?? undefined,
     };
   }
 

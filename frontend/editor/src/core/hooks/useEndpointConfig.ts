@@ -5,6 +5,7 @@ import {
   fetchEndpointsAvailability,
 } from "@app/api/config";
 import { qk } from "@app/query/keys";
+import i18n from "i18next";
 import { CONFIG_STALE_TIME } from "@app/query/staleTime";
 import { useJwtConfigSync } from "@app/hooks/useJwtConfigSync";
 import type { EndpointAvailabilityDetails } from "@app/types/endpointAvailability";
@@ -13,7 +14,9 @@ const OPTIMISTIC: EndpointAvailabilityDetails = { enabled: true, reason: null };
 
 function message(error: unknown): string | null {
   if (!error) return null;
-  return error instanceof Error ? error.message : "Unknown error occurred";
+  return error instanceof Error
+    ? error.message
+    : i18n.t("error.unknown", "Unknown error occurred");
 }
 
 /** Whether one endpoint is enabled. `null` while loading and on failure. */

@@ -161,7 +161,9 @@ const AdminUsageSection: React.FC = () => {
       setData(response);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to load usage statistics",
+        err instanceof Error
+          ? err.message
+          : t("usage.loadFailed", "Failed to load usage statistics"),
       );
     } finally {
       setLoading(false);

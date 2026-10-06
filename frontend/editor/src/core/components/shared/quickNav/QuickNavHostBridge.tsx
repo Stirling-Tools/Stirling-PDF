@@ -21,6 +21,7 @@ export interface QuickNavHostBridgeProps {
   onSetReaderMode?: (on: boolean) => void;
   requestNavigation?: (go: () => void) => void;
   onGoToDefaultState?: () => void;
+  onGoToStartupView?: () => void;
   onSelectTool?: (toolId: ToolId) => void;
   activeTool?: ToolId | null;
   onShowFileLibrary?: () => void;
@@ -42,6 +43,7 @@ export function QuickNavHostBridge({
   onShowFileLibrary,
   onCreateProcessingFolder,
   onGoToDefaultState,
+  onGoToStartupView,
   toolReasons,
   onOpenFromComputer,
 }: QuickNavHostBridgeProps) {
@@ -78,6 +80,7 @@ export function QuickNavHostBridge({
       showFileLibrary: onShowFileLibrary,
       createProcessingFolder: onCreateProcessingFolder,
       goToDefaultState: onGoToDefaultState,
+      goToStartupView: onGoToStartupView,
       openFromComputer: onOpenFromComputer,
       toggleNotifications: () => setNotificationsOpen((open) => !open),
       onBrandFlourish: brandFlourish.trigger,

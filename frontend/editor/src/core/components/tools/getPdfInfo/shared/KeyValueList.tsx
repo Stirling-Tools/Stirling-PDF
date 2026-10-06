@@ -1,5 +1,6 @@
 import React from "react";
 import { Group, Stack, Text } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 
 interface KeyValueListProps {
   obj?: Record<string, unknown> | null;
@@ -7,10 +8,11 @@ interface KeyValueListProps {
 }
 
 const KeyValueList: React.FC<KeyValueListProps> = ({ obj, emptyLabel }) => {
+  const { t } = useTranslation();
   if (!obj || Object.keys(obj).length === 0) {
     return (
       <Text size="sm" c="dimmed">
-        {emptyLabel ?? "None detected"}
+        {emptyLabel ?? t("getPdfInfo.noneDetected", "None detected")}
       </Text>
     );
   }
