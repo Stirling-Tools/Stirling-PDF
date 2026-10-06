@@ -1,4 +1,11 @@
-import { useState, useEffect, useRef, Suspense, lazy } from "react";
+import {
+  useState,
+  useEffect,
+  useRef,
+  Suspense,
+  lazy,
+  type DragEvent,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
 import { Box, Loader, Center, Stack, Text } from "@mantine/core";
@@ -13,6 +20,7 @@ import {
 import { isBaseWorkbench } from "@app/types/workbench";
 import { VIEWER_SUPPORTED_EXTENSIONS } from "@app/utils/fileUtils";
 import { useIsPhone } from "@app/hooks/useIsMobile";
+import { useDropzoneFiles } from "@app/hooks/useDropzoneFiles";
 import styles from "@app/components/layout/Workbench.module.css";
 
 import WorkbenchBar from "@app/components/shared/WorkbenchBar";
@@ -65,6 +73,46 @@ export default function Workbench() {
   const { addFiles } = useFileHandler();
   const hasFiles = activeFiles.length > 0;
   const { t } = useTranslation();
+  const getDropzoneFiles = useDropzoneFiles();
+
+  // The whole canvas takes file drops, not just the content a view happens to
+  // render, so a short grid or a scrolled page still has somewhere to drop.
+  // Without files the landing page owns the drop.
+  const acceptsFileDrops =
+    hasFiles &&
+    !takeover &&
+    (currentView === "fileEditor" ||
+      currentView === "viewer" ||
+      currentView === "pageEditor");
+  // Page and file reorders are in-app drags with no "Files" type.
+  const isExternalFileDrag = (e: DragEvent<HTMLElement>) =>
+    acceptsFileDrops && e.dataTransfer.types.includes("Files");
+  // Every child the pointer crosses fires its own enter/leave pair, so a
+  // depth count, not the last event, says whether the drag is still inside.
+  const fileDragDepth = useRef(0);
+  const [isFileDragOver, setIsFileDragOver] = useState(false);
+  const handleFileDragEnter = (e: DragEvent<HTMLElement>) => {
+    if (!isExternalFileDrag(e)) return;
+    fileDragDepth.current += 1;
+    setIsFileDragOver(true);
+  };
+  const handleFileDragLeave = (e: DragEvent<HTMLElement>) => {
+    if (!isExternalFileDrag(e)) return;
+    fileDragDepth.current = Math.max(0, fileDragDepth.current - 1);
+    if (fileDragDepth.current === 0) setIsFileDragOver(false);
+  };
+  const handleFileDragOver = (e: DragEvent<HTMLElement>) => {
+    if (isExternalFileDrag(e)) e.preventDefault();
+  };
+  const handleFileDrop = async (e: DragEvent<HTMLElement>) => {
+    if (!isExternalFileDrag(e)) return;
+    e.preventDefault();
+    fileDragDepth.current = 0;
+    setIsFileDragOver(false);
+    const dropped = await getDropzoneFiles(e);
+    const files = dropped.filter((item) => item instanceof File);
+    if (files.length > 0) await addFiles(files);
+  };
 
   // The viewer's tool row can be retracted to give the document more height.
   // State lives here (not in WorkbenchBar) so the reopen tab can hang below the
@@ -205,7 +253,22 @@ export default function Workbench() {
       className="flex-1 h-full min-w-0 relative flex flex-col"
       data-tour="workbench"
       style={{ backgroundColor: "var(--c-bg)", minWidth: 0, minHeight: 0 }}
+      onDragEnter={handleFileDragEnter}
+      onDragLeave={handleFileDragLeave}
+      onDragOver={handleFileDragOver}
+      onDrop={handleFileDrop}
     >
+      {isFileDragOver && acceptsFileDrops && (
+        <div className={styles.fileDropOverlay} aria-live="polite">
+          <span className={styles.fileDropOverlayIcon}>
+            <Icon name="file-up" size="2.5rem" />
+          </span>
+          {t(
+            "workbench.dropOverlay",
+            "Drop files to add them to the workbench",
+          )}
+        </div>
+      )}
       {/* Phone only: above that the rail carries the bell, and here no bar does. */}
       {isPhone && !showWorkbenchBar && topControlsAvailable && (
         <div style={{ position: "absolute", top: 12, right: 12, zIndex: 20 }}>

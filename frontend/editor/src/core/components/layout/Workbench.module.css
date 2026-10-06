@@ -74,3 +74,36 @@
 .workbenchScrollable::-webkit-scrollbar-thumb:hover {
   background-color: var(--mantine-color-gray-5);
 }
+
+/* pointer-events: none so the drop lands on the workbench beneath, which owns it. */
+.fileDropOverlay {
+  position: absolute;
+  inset: 0.75rem;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  border: 2px dashed var(--c-border-strong);
+  border-radius: 1rem;
+  /* Translucent so the workbench stays visible. Must stay in sync with
+     .file-sidebar-drop-overlay (FileSidebar.css). */
+  background: color-mix(in srgb, var(--c-surface) 85%, transparent);
+  backdrop-filter: blur(2px);
+  color: var(--c-text);
+  font-size: 1.1rem;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.fileDropOverlayIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 50%;
+  background: var(--c-hover);
+  color: var(--c-text-muted);
+}

@@ -4600,15 +4600,12 @@ closeFile = "Close file"
 addFiles = "Add Files"
 closedFile = "Closed {{name}}"
 couldNotSave = "Could not save {{name}}"
-filesAdded_one = "Added {{count}} file"
-filesAdded_other = "Added {{count}} files"
 filesReordered_one = "File reordered"
 filesReordered_other = "{{count}} files reordered"
 loadedFromStorage_one = "Loaded {{count}} file from storage"
 loadedFromStorage_other = "Loaded {{count}} files from storage"
 loadFromStorageFailed = "Failed to load some files from storage"
 pinnedFile = "Pinned {{name}}"
-processFilesFailed = "Failed to process files"
 savedAndClosed = "Saved and closed {{name}}"
 saveFailed = "Save failed"
 unpinnedFile = "Unpinned {{name}}"
@@ -13921,6 +13918,9 @@ title = "Watermark Text"
 [watermark.watermarkType]
 image = "Image"
 text = "Text"
+
+[workbench]
+dropOverlay = "Drop files to add them to the workbench"
 
 [workbench.sessionRestore]
 none = "Your previous files are no longer stored on this device."
