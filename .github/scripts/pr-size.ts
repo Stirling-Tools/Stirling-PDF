@@ -74,17 +74,17 @@ export async function readAllowlist() {
 export function oversizedComment(login: string, lines: number) {
   return [
     COMMENT_MARKER,
-    `Hi @${login}, this PR changes ${lines} lines, not counting translations and lockfiles. PRs from contributors outside the team are limited to ${MAX_LINES} lines so that they can be reviewed properly, and this one can't be merged until it is within the limit.`,
+    `Hi @${login}, this PR has been marked as too large because it changes ${lines} lines, not counting translations and lockfiles. To keep reviews manageable, PRs from contributors outside the team are limited to ${MAX_LINES} lines.`,
     "",
-    `Please split it into smaller PRs that can each be reviewed on their own. If it really can't be split, say why here and a maintainer can add the \`${LABELS.largePrApproved}\` label.`,
+    "Please split it into smaller PRs that can each be reviewed on their own. If you think it can't be split, just add a comment explaining why so a maintainer can take a look.",
     "",
-    `If it is still over the limit in ${CLOSE_AFTER_WARNING_DAYS} days, it will be closed automatically.`,
+    `If this is still outstanding in ${CLOSE_AFTER_WARNING_DAYS} days, the PR will be closed automatically.`,
   ].join("\n");
 }
 
-const LIFTED = `${COMMENT_MARKER}\nThe size limit no longer holds this PR back`;
+const LIFTED = `${COMMENT_MARKER}\nThis PR is no longer marked as too large`;
 
-export const liftedComment = (reason: string) => `${LIFTED}: ${reason}.`;
+export const liftedComment = (reason: string) => `${LIFTED}, because ${reason}.`;
 
 async function allPages<T>(fetchPage: (page: number) => Promise<{ data: T[] }>) {
   const items: T[] = [];
@@ -143,7 +143,7 @@ export async function enforceSizeLimit(github: GitHubClient, repo: Repo, pr: Siz
     if (live) await warn(github, issue, pr, lines, labelled);
     return {
       held: true,
-      summary: `This PR changes ${lines} lines, not counting translations and lockfiles, over the ${MAX_LINES}-line limit for contributors outside the team. Split it into smaller PRs, or ask a maintainer to add the ${LABELS.largePrApproved} label.`,
+      summary: `This PR changes ${lines} lines, not counting translations and lockfiles, over the ${MAX_LINES}-line limit for contributors outside the team. Please split it into smaller PRs, or add a comment explaining why it can't be split.`,
     };
   }
   // Only a PR that was told it is too large hears that it no longer is.
