@@ -14,6 +14,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import stirling.software.common.model.api.security.UserSummaryDTO;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.model.User;
 
@@ -60,6 +61,30 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query(
             "SELECT u FROM User u JOIN FETCH u.authorities JOIN FETCH u.team WHERE u.team.id = :teamId")
     List<User> findAllByTeamId(@Param("teamId") Long teamId);
+
+    /** Picker summaries without loading each user's eager authorities and team entities. */
+    @Query(
+            """
+            SELECT new stirling.software.common.model.api.security.UserSummaryDTO(
+                u.id, u.username, u.username, t.name, true)
+            FROM User u LEFT JOIN u.team t
+            WHERE (u.enabled IS NULL OR u.enabled = true)
+                AND (u.authenticationType IS NULL OR LOWER(u.authenticationType) <> 'anonymous')
+            ORDER BY u.username, u.id
+            """)
+    List<UserSummaryDTO> findEnabledSigningUsers();
+
+    /** Team-scoped picker summaries; disabled and anonymous accounts cannot be recipients. */
+    @Query(
+            """
+            SELECT new stirling.software.common.model.api.security.UserSummaryDTO(
+                u.id, u.username, u.username, t.name, true)
+            FROM User u JOIN u.team t
+            WHERE t.id = :teamId AND (u.enabled IS NULL OR u.enabled = true)
+                AND (u.authenticationType IS NULL OR LOWER(u.authenticationType) <> 'anonymous')
+            ORDER BY u.username, u.id
+            """)
+    List<UserSummaryDTO> findEnabledSigningUsersByTeamId(@Param("teamId") Long teamId);
 
     /** Usernames alone, ordered and limited by the database, for callers that need no entities. */
     @Query(

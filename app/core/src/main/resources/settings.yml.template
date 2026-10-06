@@ -295,7 +295,6 @@ storage:
     linkExpirationDays: 3 # Number of days before share links expire
   signing:
     enabled: true # set to 'false' to disable shared signing (requires storage.enabled and security.enableLogin) [ALPHA]
-    userListScope: org # 'org' lists the whole instance; any other value limits the picker to the caller's team.
   # Encryption at rest for stored files (AES-256, per-team keys). Requires a Pro or
   # Enterprise licence. Key setup, cluster requirements, the encrypt-existing migration,
   # the revocation kill switch and master-key rotation are documented in
