@@ -361,6 +361,9 @@ public class PdfJsonFontService {
             } finally {
                 drain.shutdownNow();
             }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
         } catch (Exception e) {
             log.debug("Error checking for command {}: {}", command, e.getMessage());
             return false;

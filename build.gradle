@@ -465,7 +465,7 @@ subprojects {
             dependsOn(":proprietary:jar")
             // The springdoc plugin's forked run holds non-serializable state, so any build
             // generating the OpenAPI docs runs without the configuration cache.
-            notCompatibleWithConfigurationCache(
+            it.notCompatibleWithConfigurationCache(
                     "forkedSpringBootRun comes from the springdoc plugin and is not CC-compatible")
         }
 
