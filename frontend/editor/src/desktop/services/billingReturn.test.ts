@@ -20,14 +20,17 @@ vi.mock("@tauri-apps/api/window", () => ({
   }),
 }));
 
-import { noteBillingHandoff } from "@app/services/billingReturn";
+import {
+  cancelBillingHandoff,
+  noteBillingHandoff,
+} from "@app/services/billingReturn";
 
 const returns: string[] = [];
+window.addEventListener(STRIPE_RETURN_EVENT, (event) =>
+  returns.push((event as CustomEvent<string>).detail),
+);
 beforeEach(() => {
   returns.length = 0;
-  window.addEventListener(STRIPE_RETURN_EVENT, (event) =>
-    returns.push((event as CustomEvent<string>).detail),
-  );
 });
 
 it("refreshes on the first return to the window, not on every focus after it", () => {
@@ -43,4 +46,13 @@ it("refreshes on the first return to the window, not on every focus after it", (
     payload: "stirlingpdf://billing/return?payment_status=success",
   });
   expect(returns).toEqual(["", "?payment_status=success"]);
+});
+
+it("does not refresh for a handoff whose browser never opened", () => {
+  noteBillingHandoff();
+  cancelBillingHandoff();
+
+  h.focus!({ payload: true });
+
+  expect(returns).toEqual([]);
 });

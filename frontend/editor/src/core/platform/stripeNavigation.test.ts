@@ -20,6 +20,7 @@ describe("stripePageHref", () => {
     "https://evil.example/checkout",
     "https://stripe.com.evil.example/",
     "https://user@billing.stripe.com/p/session/abc",
+    "https://:secret@checkout.stripe.com/",
     "not a url",
   ])("refuses %s", (url) => {
     expect(stripePageHref(url)).toBeNull();

@@ -37,3 +37,8 @@ export function noteBillingHandoff(): void {
     announceReturn("");
   });
 }
+
+/** For a handoff whose browser never opened: there is nothing to come back from. */
+export function cancelBillingHandoff(): void {
+  handoffPending = false;
+}

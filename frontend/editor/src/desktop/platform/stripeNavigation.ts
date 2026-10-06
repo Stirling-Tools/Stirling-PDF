@@ -1,6 +1,11 @@
+import i18n from "@app/i18n";
+import { alert } from "@app/components/toast";
 import { openExternal } from "@app/platform/openExternal";
 import { STIRLING_SAAS_FRONTEND_URL } from "@app/constants/connection";
-import { noteBillingHandoff } from "@app/services/billingReturn";
+import {
+  cancelBillingHandoff,
+  noteBillingHandoff,
+} from "@app/services/billingReturn";
 import { stripePageHref } from "@core/platform/stripeNavigation";
 
 /**
@@ -18,18 +23,11 @@ export function stripeReturnUrl(): string {
   return `${webApp()}/desktop/return`;
 }
 
-/** Stripe's pages, or the web app's own fallback for a purchase that cannot finish here. */
+/** Stripe's pages, or the web app's billing page for a purchase that cannot finish here. */
 function browserHref(url: string): string | null {
   const stripe = stripePageHref(url);
   if (stripe) return stripe;
-  try {
-    const parsed = new URL(url);
-    return webApp() && parsed.origin === new URL(webApp()).origin
-      ? parsed.href
-      : null;
-  } catch {
-    return null;
-  }
+  return webApp() && url === stripeCheckoutFallbackUrl() ? url : null;
 }
 
 export function openStripePage(
@@ -42,7 +40,18 @@ export function openStripePage(
     return true;
   }
   noteBillingHandoff();
-  void openExternal(href);
+  openExternal(href).catch((error: unknown) => {
+    // Nothing opened, so there is no return to wait for.
+    cancelBillingHandoff();
+    console.error("[stripe] could not open the system browser:", error);
+    alert({
+      alertType: "error",
+      title: i18n.t(
+        "payment.browserOpenFailed",
+        "Couldn't open your browser. Try again.",
+      ),
+    });
+  });
   return true;
 }
 

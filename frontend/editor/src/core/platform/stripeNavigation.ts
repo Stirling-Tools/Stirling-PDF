@@ -26,7 +26,12 @@ export function stripePageHref(url: string): string | null {
   }
   const stripeHost =
     parsed.hostname === "stripe.com" || parsed.hostname.endsWith(".stripe.com");
-  if (parsed.protocol !== "https:" || !stripeHost || parsed.username) {
+  if (
+    parsed.protocol !== "https:" ||
+    !stripeHost ||
+    parsed.username ||
+    parsed.password
+  ) {
     return null;
   }
   return parsed.href;
