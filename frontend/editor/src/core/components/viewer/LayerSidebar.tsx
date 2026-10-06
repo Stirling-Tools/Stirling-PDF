@@ -247,23 +247,9 @@ export function LayerSidebar({
               }}
             >
               {isExpanded ? (
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 12 12"
-                  fill="currentColor"
-                >
-                  <path d="M2 4l4 4 4-4z" />
-                </svg>
+                <Icon name="chevron-down" size={12} strokeWidth={2.5} />
               ) : (
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 12 12"
-                  fill="currentColor"
-                >
-                  <path d="M4 2l4 4-4 4z" />
-                </svg>
+                <Icon name="chevron-right" size={12} strokeWidth={2.5} />
               )}
             </span>
           ) : (
