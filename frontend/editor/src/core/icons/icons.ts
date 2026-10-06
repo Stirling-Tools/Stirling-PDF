@@ -104,6 +104,7 @@ import DraftingCompass from "lucide-static/icons/drafting-compass.svg?react";
 import Droplet from "lucide-static/icons/droplet.svg?react";
 import Ellipsis from "lucide-static/icons/ellipsis.svg?react";
 import EllipsisVertical from "lucide-static/icons/ellipsis-vertical.svg?react";
+import Eraser from "lucide-static/icons/eraser.svg?react";
 import ExternalLink from "lucide-static/icons/external-link.svg?react";
 import Eye from "lucide-static/icons/eye.svg?react";
 import EyeOff from "lucide-static/icons/eye-off.svg?react";
@@ -305,6 +306,7 @@ import Terminal from "lucide-static/icons/terminal.svg?react";
 import TextAlignCenter from "lucide-static/icons/text-align-center.svg?react";
 import TextAlignEnd from "lucide-static/icons/text-align-end.svg?react";
 import TextAlignStart from "lucide-static/icons/text-align-start.svg?react";
+import TextWrap from "lucide-static/icons/text-wrap.svg?react";
 import ThumbsUp from "lucide-static/icons/thumbs-up.svg?react";
 import Ticket from "lucide-static/icons/ticket.svg?react";
 import Timeline from "lucide-static/icons/timeline.svg?react";
@@ -529,6 +531,7 @@ export const ICONS = {
   droplet: { Component: Droplet, kind: "lucide" },
   ellipsis: { Component: Ellipsis, kind: "lucide" },
   "ellipsis-vertical": { Component: EllipsisVertical, kind: "lucide" },
+  eraser: { Component: Eraser, kind: "lucide" },
   "external-link": { Component: ExternalLink, kind: "lucide" },
   eye: { Component: Eye, kind: "lucide" },
   "eye-off": { Component: EyeOff, kind: "lucide" },
@@ -730,6 +733,7 @@ export const ICONS = {
   "text-align-center": { Component: TextAlignCenter, kind: "lucide" },
   "text-align-end": { Component: TextAlignEnd, kind: "lucide" },
   "text-align-start": { Component: TextAlignStart, kind: "lucide" },
+  "text-wrap": { Component: TextWrap, kind: "lucide" },
   "thumbs-up": { Component: ThumbsUp, kind: "lucide" },
   ticket: { Component: Ticket, kind: "lucide" },
   timeline: { Component: Timeline, kind: "lucide" },

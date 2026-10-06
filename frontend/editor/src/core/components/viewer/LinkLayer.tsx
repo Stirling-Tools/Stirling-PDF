@@ -200,11 +200,15 @@ LinkToolbar.displayName = "LinkToolbar";
 interface LinkLayerProps {
   documentId: string;
   pageIndex: number;
+  /** While annotation editing is active, a click selects the link's
+   *  annotation instead of following it. */
+  selectionActive?: boolean;
 }
 
 export const LinkLayer: React.FC<LinkLayerProps> = ({
   documentId,
   pageIndex,
+  selectionActive = false,
 }) => {
   const { t } = useTranslation();
   const { provides: scroll } = useScroll(documentId);
@@ -479,6 +483,14 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                if (selectionActive) {
+                  if (scope) {
+                    scope.selectAnnotation(pageIndex, annotationLink.id);
+                  }
+                  setHoveredLinkId(null);
+                  setToolbarPlacement(null);
+                  return;
+                }
                 handleNavigate(annotationLink);
               }}
               onMouseDown={(e) => e.stopPropagation()}

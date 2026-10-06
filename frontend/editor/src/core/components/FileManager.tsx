@@ -9,7 +9,8 @@ interface FileManagerProps {
 
 /** Unmounting discards tentative selections; file ingestion remains owned by FilesModalContext. */
 export default function FileManager({ selectedTool }: FileManagerProps) {
-  const { isFilesModalOpen, closeFilesModal } = useFilesModalContext();
+  const { isFilesModalOpen, closeFilesModal, supportedFormats } =
+    useFilesModalContext();
   const [busy, setBusy] = useState(false);
   const [externalPickerOpen, setExternalPickerOpen] = useState(false);
   return (
@@ -21,7 +22,7 @@ export default function FileManager({ selectedTool }: FileManagerProps) {
     >
       {isFilesModalOpen && (
         <LibraryFilePicker
-          supportedFormats={selectedTool?.supportedFormats}
+          supportedFormats={supportedFormats ?? selectedTool?.supportedFormats}
           onBusyChange={setBusy}
           onExternalPickerChange={setExternalPickerOpen}
         />

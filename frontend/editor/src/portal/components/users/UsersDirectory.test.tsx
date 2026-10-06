@@ -158,14 +158,23 @@ describe("UsersDirectory — team strip", () => {
     expect(
       screen.queryByRole("columnheader", { name: "Status" }),
     ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("columnheader", { name: "Last active" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /^All/ }),
+    ).not.toBeInTheDocument();
   });
 
   it("shows identity and status columns when they carry information", () => {
     renderDirectory(selfHostedCaps, TEAMS, [
-      { ...MEMBER, status: "suspended" },
+      { ...MEMBER, status: "suspended", lastActive: "2 hours ago" },
     ]);
     expect(screen.getByRole("columnheader", { name: "Email" })).toBeVisible();
     expect(screen.getByRole("columnheader", { name: "Status" })).toBeVisible();
+    expect(
+      screen.getByRole("columnheader", { name: "Last active" }),
+    ).toBeVisible();
   });
 
   it("narrows the flat roster to the selected team", () => {
@@ -340,22 +349,18 @@ describe("read-only role visibility", () => {
       [owner, viewer],
       transfer,
     );
-    expect(screen.getByRole("textbox", { name: "Role for Alex" })).toHaveValue(
-      "Org Owner",
-    );
+    expect(screen.getByRole("cell", { name: "Org Owner" })).toBeVisible();
+    expect(screen.getByRole("cell", { name: "Member" })).toBeVisible();
     expect(
-      screen.getByRole("textbox", { name: "Role for Alex" }),
-    ).toHaveAttribute("readonly");
-    expect(screen.getByRole("textbox", { name: "Role for Priya" })).toHaveValue(
-      "Member",
-    );
+      screen.queryByRole("textbox", { name: /Role for/ }),
+    ).not.toBeInTheDocument();
     expect(transfer).not.toHaveBeenCalled();
   });
 });
 
 it("keeps self-hosted Admin and Team Lead labels readable without editing rights", () => {
   const members = [
-    { ...MEMBER, id: "1", name: "Admin", role: "admin" as const },
+    { ...MEMBER, id: "1", name: "Administrator", role: "admin" as const },
     { ...MEMBER, name: "Lead", role: "team_owner" as const, teamLead: true },
   ];
   renderDirectory(
@@ -363,12 +368,11 @@ it("keeps self-hosted Admin and Team Lead labels readable without editing rights
     TEAMS,
     members,
   );
-  expect(screen.getByRole("textbox", { name: "Role for Admin" })).toHaveValue(
-    "Admin",
-  );
-  expect(screen.getByRole("textbox", { name: "Role for Lead" })).toHaveValue(
-    "Team Lead",
-  );
+  expect(screen.getByRole("cell", { name: "Admin" })).toBeVisible();
+  expect(screen.getByRole("cell", { name: "Team Lead" })).toBeVisible();
+  expect(
+    screen.queryByRole("textbox", { name: /Role for/ }),
+  ).not.toBeInTheDocument();
 });
 
 describe("UsersDirectory — plan limit", () => {

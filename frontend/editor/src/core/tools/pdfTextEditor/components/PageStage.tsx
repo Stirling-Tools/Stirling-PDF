@@ -27,6 +27,7 @@ import { EditTextCommand } from "@app/tools/pdfTextEditor/commands/EditTextComma
 import { ReflowWrapCommand } from "@app/tools/pdfTextEditor/commands/ReflowWrapCommand";
 import { MoveShapeCommand } from "@app/tools/pdfTextEditor/commands/MoveShapeCommand";
 import { InsertTextCommand } from "@app/tools/pdfTextEditor/commands/InsertTextCommand";
+import { InsertTableCommand } from "@app/tools/pdfTextEditor/commands/InsertTableCommand";
 import { MoveTextRunCommand } from "@app/tools/pdfTextEditor/commands/MoveTextRunCommand";
 import { SetImageTransformCommand } from "@app/tools/pdfTextEditor/commands/SetImageTransformCommand";
 import type { SelectionState } from "@app/tools/pdfTextEditor/types";
@@ -124,6 +125,12 @@ export function PageStage() {
       hasDocument={state.hasDocument}
       dirty={state.dirty}
       addTextArmed={state.mode === "addText"}
+      addTableArmed={state.mode === "addTable"}
+      onToggleAddTable={() =>
+        store.setMode(
+          store.getState().mode === "addTable" ? "select" : "addTable",
+        )
+      }
       onToggleAddText={() =>
         store.setMode(
           store.getState().mode === "addText" ? "select" : "addText",
@@ -335,6 +342,7 @@ export function PageStage() {
                   <PageView
                     key={page.pageIndex}
                     document={store.document}
+                    store={store}
                     page={page}
                     scale={state.renderScale || DEFAULT_SCALE}
                     widthMode={state.widthMode}
@@ -392,6 +400,20 @@ export function PageStage() {
                       );
                     }}
                     onPageClick={(pageIndex, pageX, pageY) => {
+                      if (state.mode === "addTable") {
+                        const cmd = new InsertTableCommand({
+                          pageIndex,
+                          x: pageX,
+                          y: pageY,
+                          width: 360,
+                          height: 24 * 3,
+                          rows: 3,
+                          cols: 3,
+                        });
+                        store.dispatch(cmd);
+                        store.setMode("select");
+                        return;
+                      }
                       if (state.mode !== "addText") return;
                       const cmd = new InsertTextCommand({
                         pageIndex,
@@ -441,6 +463,7 @@ export function PageStage() {
           store={store}
           controller={controller}
           addTextArmed={state.mode === "addText"}
+          addTableArmed={state.mode === "addTable"}
           findOpen={state.findOpen}
         />
       )}
