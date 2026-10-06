@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { Modal, Text, Group } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import licenseService from "@app/services/licenseService";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
@@ -286,7 +286,10 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
       case "error":
         return (
           <ErrorStage
-            error={checkoutState.state.error || "An unknown error occurred"}
+            error={
+              checkoutState.state.error ||
+              t("payment.unknownError", "An unknown error occurred")
+            }
             onClose={handleClose}
           />
         );
@@ -312,7 +315,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
               onClick={navigation.goBack}
               aria-label={t("common.back", "Back")}
             >
-              <LocalIcon icon="arrow-back" width={20} height={20} />
+              <Icon name="arrow-left" size={20} />
             </ActionIcon>
           )}
           <Text fw={600} size="lg">

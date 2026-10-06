@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { Icon } from "@app/ui/Icon";
 import { InfoTooltip } from "@app/ui/InfoTooltip";
 import {
   TextInput,
@@ -12,7 +13,6 @@ import {
   Group,
   Alert,
 } from "@mantine/core";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import PendingBadge from "@app/components/shared/config/PendingBadge";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import {
@@ -82,7 +82,13 @@ export function AiModelsCard({
               { value: "anthropic", label: "Anthropic" },
               { value: "openai", label: "OpenAI" },
               { value: "ollama", label: "Ollama" },
-              { value: "custom", label: "Custom (OpenAI-compatible)" },
+              {
+                value: "custom",
+                label: t(
+                  "admin.settings.ai.customProvider",
+                  "Custom (OpenAI-compatible)",
+                ),
+              },
             ]}
             value={provider}
             onChange={(v) => {
@@ -264,9 +270,7 @@ export function AiModelsCard({
             <Alert
               variant="light"
               color="orange"
-              icon={
-                <LocalIcon icon="warning-rounded" width="1rem" height="1rem" />
-              }
+              icon={<Icon name="triangle-alert" size="1rem" />}
             >
               <Text size="xs">
                 {t(
@@ -281,9 +285,7 @@ export function AiModelsCard({
             <Alert
               variant="light"
               color="blue"
-              icon={
-                <LocalIcon icon="info-rounded" width="1rem" height="1rem" />
-              }
+              icon={<Icon name="info" size="1rem" />}
             >
               <Text size="xs">
                 {t(

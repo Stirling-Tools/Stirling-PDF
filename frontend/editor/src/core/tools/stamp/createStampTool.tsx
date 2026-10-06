@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef } from "react";
+import { useEffect, useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 import SignSettings, {
@@ -18,9 +18,11 @@ import { useSignature } from "@app/contexts/SignatureContext";
 import { useFileContext } from "@app/contexts/FileContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { flattenSignatures } from "@app/utils/signatureFlattening";
+import { SignatureWallet } from "@app/components/tools/sign/wallet/SignatureWallet";
 import SharedSigningLauncher from "@app/components/shared/signing/SharedSigningLauncher";
 import { SuggestedToolsSection } from "@app/components/tools/shared/SuggestedToolsSection";
 import { useGroupSigningEnabled } from "@app/hooks/useGroupSigningEnabled";
+import { alert } from "@app/components/toast";
 
 export type StampToolConfig = {
   toolId: ToolId;
@@ -30,6 +32,7 @@ export type StampToolConfig = {
   defaultSignatureType?: SignParameters["signatureType"];
   enableApplyAction?: boolean;
   enableSharedSigning?: boolean;
+  settingsPanel?: "stamp" | "wallet";
 };
 
 const STAMP_TOOL_DEFAULT_SOURCES: SignatureSource[] = [
@@ -48,6 +51,7 @@ export const createStampTool = (config: StampToolConfig) => {
     defaultSignatureType,
     enableApplyAction = false,
     enableSharedSigning = false,
+    settingsPanel = "stamp",
   } = config;
 
   const StampTool = (props: BaseToolProps) => {
@@ -57,11 +61,7 @@ export const createStampTool = (config: StampToolConfig) => {
         t(`${translationScope}.${key}`, defaultValue),
       [t, translationScope],
     );
-    const {
-      setWorkbench,
-      setHasUnsavedChanges,
-      unregisterUnsavedChangesChecker,
-    } = useNavigation();
+    const { setWorkbench, setHasUnsavedChanges } = useNavigation();
     const {
       setSignatureConfig,
       activateDrawMode,
@@ -73,6 +73,8 @@ export const createStampTool = (config: StampToolConfig) => {
       signatureApiRef,
       getImageData,
       setSignaturesApplied,
+      placedSignatures,
+      setApplyingSignatures,
     } = useSignature();
     const { consumeFiles, selectors } = useFileContext();
     const {
@@ -111,6 +113,10 @@ export const createStampTool = (config: StampToolConfig) => {
     ]);
 
     const hasOpenedViewer = useRef(false);
+    const [hasApplied, setHasApplied] = useState(false);
+    const [isApplying, setIsApplying] = useState(false);
+    const applyInFlightRef = useRef(false);
+    const showSuggestions = settingsPanel === "stamp" || hasApplied;
     const activeModeRef = useRef<"draw" | "placement" | null>(null);
 
     const handleSignaturePlacement = useCallback(() => {
@@ -143,19 +149,24 @@ export const createStampTool = (config: StampToolConfig) => {
       setSignatureConfig(base.params.parameters);
     }, [base.params.parameters, setSignatureConfig]);
 
-    const handleSaveToSystem = useCallback(async () => {
-      try {
-        unregisterUnsavedChangesChecker();
-        setHasUnsavedChanges(false);
+    useEffect(() => {
+      if (placedSignatures.length > 0) setHasUnsavedChanges(true);
+    }, [placedSignatures, setHasUnsavedChanges]);
 
+    const handleSaveToSystem = useCallback(async () => {
+      if (applyInFlightRef.current) return;
+      applyInFlightRef.current = true;
+      setIsApplying(true);
+      setApplyingSignatures(true);
+      handleDeactivateSignature();
+      try {
         const allFiles = selectors.getFiles();
         const fileIndex =
           activeFileIndex < allFiles.length ? activeFileIndex : 0;
         const originalFile = allFiles[fileIndex];
 
         if (!originalFile) {
-          console.error("No file available to replace");
-          return;
+          throw new Error("No file available to replace");
         }
 
         const flattenResult = await flattenSignatures({
@@ -177,37 +188,30 @@ export const createStampTool = (config: StampToolConfig) => {
 
           setActiveFileIndex(0);
           setSignaturesApplied(true);
+          setHasApplied(true);
           handleDeactivateSignature();
-
-          const hasSignatureReady = (() => {
-            const params = base.params.parameters;
-            switch (params.signatureType) {
-              case "canvas":
-              case "image":
-                return Boolean(params.signatureData);
-              case "text":
-                return Boolean(
-                  params.signerName && params.signerName.trim() !== "",
-                );
-              default:
-                return false;
-            }
-          })();
-
-          if (hasSignatureReady) {
-            if (typeof window !== "undefined") {
-              window.setTimeout(() => {
-                handleActivateSignaturePlacement();
-              }, 150);
-            } else {
-              handleActivateSignaturePlacement();
-            }
-          }
+          setHasUnsavedChanges(false);
         } else {
-          console.error("Signature flattening failed");
+          throw new Error("Signature flattening failed");
         }
       } catch (error) {
         console.error("Error saving signed document:", error);
+        setHasUnsavedChanges(true);
+        alert({
+          alertType: "error",
+          title: t(
+            "sign.wallet.toast.applyFailed",
+            "Could not apply signatures",
+          ),
+          body: t(
+            "sign.wallet.toast.applyFailedBody",
+            "Your signatures are still on the document. Try again.",
+          ),
+        });
+      } finally {
+        applyInFlightRef.current = false;
+        setIsApplying(false);
+        setApplyingSignatures(false);
       }
     }, [
       exportActions,
@@ -222,12 +226,47 @@ export const createStampTool = (config: StampToolConfig) => {
       setSignaturesApplied,
       getScrollState,
       handleDeactivateSignature,
-      handleActivateSignaturePlacement,
       setHasUnsavedChanges,
-      unregisterUnsavedChangesChecker,
+      setApplyingSignatures,
+      t,
       activeFileIndex,
       setActiveFileIndex,
     ]);
+
+    const renderSettings = () => {
+      const onSave = enableApplyAction ? handleSaveToSystem : undefined;
+      if (settingsPanel === "wallet") {
+        return (
+          <SignatureWallet
+            onParameterChange={base.params.updateParameter}
+            disabled={base.endpointLoading || isApplying}
+            applying={isApplying}
+            onActivateSignaturePlacement={handleActivateSignaturePlacement}
+            onDeactivateSignature={handleDeactivateSignature}
+            onUndo={undo}
+            onRedo={redo}
+            onSave={onSave}
+          />
+        );
+      }
+      return (
+        <SignSettings
+          parameters={base.params.parameters}
+          onParameterChange={base.params.updateParameter}
+          disabled={base.endpointLoading}
+          onActivateDrawMode={handleActivateDrawMode}
+          onActivateSignaturePlacement={handleActivateSignaturePlacement}
+          onDeactivateSignature={handleDeactivateSignature}
+          onUpdateDrawSettings={updateDrawSettings}
+          onUndo={undo}
+          onRedo={redo}
+          onSave={onSave}
+          translationScope={translationScope}
+          allowedSignatureSources={allowedSignatureSources}
+          defaultSignatureSource={defaultSignatureSource}
+        />
+      );
+    };
 
     const getSteps = () => {
       const steps = [];
@@ -237,23 +276,7 @@ export const createStampTool = (config: StampToolConfig) => {
           title: translateTool("steps.configure", "Configure Stamp"),
           isCollapsed: false,
           onCollapsedClick: undefined,
-          content: (
-            <SignSettings
-              parameters={base.params.parameters}
-              onParameterChange={base.params.updateParameter}
-              disabled={base.endpointLoading}
-              onActivateDrawMode={handleActivateDrawMode}
-              onActivateSignaturePlacement={handleActivateSignaturePlacement}
-              onDeactivateSignature={handleDeactivateSignature}
-              onUpdateDrawSettings={updateDrawSettings}
-              onUndo={undo}
-              onRedo={redo}
-              onSave={enableApplyAction ? handleSaveToSystem : undefined}
-              translationScope={translationScope}
-              allowedSignatureSources={allowedSignatureSources}
-              defaultSignatureSource={defaultSignatureSource}
-            />
-          ),
+          content: renderSettings(),
         });
 
         // Optional step: send the document to others to sign instead.
@@ -276,7 +299,7 @@ export const createStampTool = (config: StampToolConfig) => {
         isCollapsed: base.operation.files.length > 0,
       },
       steps: getSteps(),
-      preview: <SuggestedToolsSection />,
+      preview: showSuggestions ? <SuggestedToolsSection /> : null,
       review: {
         isVisible: false,
         operation: base.operation,

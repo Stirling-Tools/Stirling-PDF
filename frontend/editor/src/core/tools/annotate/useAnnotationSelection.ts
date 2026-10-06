@@ -171,12 +171,8 @@ export function useAnnotationSelection({
       }
       if (type === 3) {
         const background =
-          (annObject?.backgroundColor as string | undefined) ||
-          (annObject?.fillColor as string | undefined) ||
-          undefined;
-        const textColor =
-          (annObject?.textColor as string | undefined) ||
-          (annObject?.color as string | undefined);
+          annObject?.backgroundColor || annObject?.fillColor || undefined;
+        const textColor = annObject?.textColor || annObject?.color;
         if (textColor) {
           setTextColor(textColor);
         }
@@ -236,14 +232,10 @@ export function useAnnotationSelection({
       }
 
       if ([4, 5, 6, 7, 8].includes(type)) {
-        const stroke =
-          (annObject?.strokeColor as string | undefined) ??
-          (annObject?.color as string | undefined);
+        const stroke = annObject?.strokeColor ?? annObject?.color;
         if (stroke) setShapeStrokeColor(stroke);
         if ([5, 6, 7].includes(type)) {
-          const fill =
-            (annObject?.color as string | undefined) ??
-            (annObject?.fillColor as string | undefined);
+          const fill = annObject?.color ?? annObject?.fillColor;
           if (fill) setShapeFillColor(fill);
         }
         const opacity =

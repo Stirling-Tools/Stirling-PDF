@@ -12,7 +12,11 @@
  * PDF writer didn't embed one), we fall back to a translucent badge overlay.
  */
 import { useStaleBakedFieldNames } from "@app/tools/formFill/FormFillContext";
+import { getDocumentBytes } from "@app/services/documentBytesCache";
+import { documentHasFormFields } from "@app/services/documentFormProbe";
+import { runPdfiumScan } from "@app/services/pdfiumScanQueue";
 import React, { useEffect, useMemo, useRef, useState, memo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   renderSignatureFieldAppearances,
   extractSignatures,
@@ -50,11 +54,14 @@ async function resolveFields(
   _cachedSource = source;
 
   _cachePromise = (async () => {
-    const buf = await source.arrayBuffer();
-    const [appearances, signatures] = await Promise.all([
+    const buf = await getDocumentBytes(source);
+    if (!(await documentHasFormFields(buf, source.size))) return [];
+    // One main-thread scan at a time, so a second full document copy cannot
+    // be opened while this one runs.
+    const appearances = await runPdfiumScan(() =>
       renderSignatureFieldAppearances(buf),
-      extractSignatures(buf),
-    ]);
+    );
+    const signatures = await runPdfiumScan(() => extractSignatures(buf));
 
     return appearances.map((f, i) => {
       // Positional correlation is only reliable when both arrays have the same
@@ -115,6 +122,7 @@ function SignatureFieldOverlayInner({
   pageWidth,
   pageHeight,
 }: SignatureFieldOverlayProps) {
+  const { t } = useTranslation();
   const staleNames = useStaleBakedFieldNames();
   const [fields, setFields] = useState<ResolvedSignatureField[]>([]);
 
@@ -147,6 +155,19 @@ function SignatureFieldOverlayInner({
   );
 
   if (pageFields.length === 0) return null;
+
+  const getSignedTitle = (field: ResolvedSignatureField) => {
+    const label = field.reason
+      ? t("viewer.signatureField.signedWithReason", "Signed: {{reason}}", {
+          reason: field.reason,
+        })
+      : t("viewer.signatureField.signed", "Signed");
+    if (!field.time) return label;
+    return t("viewer.signatureField.withTime", "{{label}} ({{time}})", {
+      label,
+      time: field.time,
+    });
+  };
 
   return (
     <div
@@ -191,8 +212,12 @@ function SignatureFieldOverlayInner({
               }}
               title={
                 field.isSigned
-                  ? `Signed${field.reason ? `: ${field.reason}` : ""}${field.time ? ` (${field.time})` : ""}`
-                  : `Signature field: ${field.fieldName}`
+                  ? getSignedTitle(field)
+                  : t(
+                      "viewer.signatureField.fieldTitle",
+                      "Signature field: {{name}}",
+                      { name: field.fieldName },
+                    )
               }
             >
               <SignatureBitmapCanvas
@@ -230,8 +255,12 @@ function SignatureFieldOverlayInner({
             }}
             title={
               field.isSigned
-                ? `Signed${field.reason ? `: ${field.reason}` : ""}${field.time ? ` (${field.time})` : ""}`
-                : `Unsigned signature field: ${field.fieldName}`
+                ? getSignedTitle(field)
+                : t(
+                    "viewer.signatureField.unsignedFieldTitle",
+                    "Unsigned signature field: {{name}}",
+                    { name: field.fieldName },
+                  )
             }
           >
             <span
@@ -251,7 +280,9 @@ function SignatureFieldOverlayInner({
                 maxWidth: "100%",
               }}
             >
-              {field.isSigned ? "🔒 Signed" : "✎ Signature"}
+              {field.isSigned
+                ? `🔒 ${t("viewer.signatureField.signed", "Signed")}`
+                : `✎ ${t("viewer.signatureField.badge", "Signature")}`}
             </span>
           </div>
         );

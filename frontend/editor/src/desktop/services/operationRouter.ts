@@ -81,6 +81,12 @@ export class OperationRouter {
       /^\/api\/v1\/policies(?:\/|$)/, // Policy runs — must bill via the cloud
       /^\/api\/v1\/automation(?:[/?]|$)/, // Automate / classification meter - must bill via the cloud
       /^\/api\/v1\/ai\//, // AI engine (orchestrate, etc.) — runs in the cloud
+      // The roster follows the signed-in org. Listed path by path: their
+      // prefixes also carry this instance's settings and licence, which stay local.
+      /^\/api\/v1\/proprietary\/ui-data\/admin-settings(?:\/|$)/,
+      /^\/api\/v1\/proprietary\/ui-data\/teams(?:\/|$)/,
+      /^\/api\/v1\/user\/admin\//,
+      /^\/api\/v1\/admin\/access\/grants(?:\/|$)/,
       /^\/api\/v1\/processing-folders(?:[/?]|$)/, // Processing folders — proprietary controller
       /^\/api\/v1\/storage(?:[/?]|$)/, // Server folders and their processed outputs
       /^\/api\/v1\/notifications(?:[/?]|$)/, // Failure notifications — proprietary controller

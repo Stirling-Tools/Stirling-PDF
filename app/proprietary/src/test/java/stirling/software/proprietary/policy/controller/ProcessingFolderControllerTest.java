@@ -2,17 +2,21 @@ package stirling.software.proprietary.policy.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
@@ -52,6 +56,7 @@ import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.RoutingRule;
+import stirling.software.proprietary.policy.output.FolderOutputSink;
 import stirling.software.proprietary.policy.output.PolicyOutputSink;
 import stirling.software.proprietary.policy.output.StorageOutputSink;
 import stirling.software.proprietary.policy.source.InProcessSourceStore;
@@ -207,6 +212,116 @@ class ProcessingFolderControllerTest {
                         folderAccessGuard,
                         new SourceAccessGuard(userService, properties, policyManagementAuthority),
                         properties);
+    }
+
+    @Test
+    void aDestinationRefusesAPipelineItCannotDeliver() {
+        Source destination =
+                sourceStore.save(
+                        new Source(
+                                null,
+                                "Corpus",
+                                "folder",
+                                Map.of("directory", tempDir.toString()),
+                                true,
+                                "reece",
+                                3L));
+        var baseline = request(null, "new_version");
+        // Stubbed on the request's own steps: the sink has to see them, not an empty list.
+        doThrow(new IllegalArgumentException("requires a final AI ingestion step"))
+                .when(diskFolderSink)
+                .validatePipeline(any(), eq(baseline.steps()));
+        var unsupported =
+                new ProcessingFolderController.SaveProcessingFolderRequest(
+                        null,
+                        FOLDER_ID.toString(),
+                        null,
+                        true,
+                        baseline.steps(),
+                        Map.of(),
+                        List.of(destination.id()),
+                        List.of());
+        assertThatThrownBy(() -> controller.save(unsupported))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("AI ingestion step");
+        assertThat(policyStore.all()).isEmpty();
+    }
+
+    @Test
+    void aRoutedDestinationValidatesTheFoldersPipelineOutput() {
+        Source routed =
+                sourceStore.save(
+                        new Source(
+                                null,
+                                "Invoices",
+                                "folder",
+                                Map.of("directory", tempDir.toString()),
+                                true,
+                                "reece",
+                                3L));
+        var routes =
+                List.of(
+                        new RoutingRule(
+                                new Condition.MatchesAny(
+                                        new ConditionInput.DocumentField("document.extension"),
+                                        List.of("pdf")),
+                                routed.id()));
+        var baseline = request(null, "new_version");
+        var created =
+                controller
+                        .save(
+                                new ProcessingFolderController.SaveProcessingFolderRequest(
+                                        null,
+                                        FOLDER_ID.toString(),
+                                        null,
+                                        true,
+                                        baseline.steps(),
+                                        Map.of("categoryId", "routing"),
+                                        List.of(),
+                                        routes))
+                        .getBody();
+        assertThat(created.routingRules()).isEqualTo(routes);
+        verify(diskFolderSink, atLeastOnce())
+                .validatePipeline(routed.toOutputSpec(), baseline.steps());
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void aDisabledDestinationIsRefusedWhileThereIsStillACallerToTellAboutIt(boolean routeOnly) {
+        Source destination =
+                sourceStore.save(
+                        new Source(
+                                null,
+                                "Paused corpus",
+                                "folder",
+                                Map.of("directory", tempDir.toString()),
+                                false,
+                                "reece",
+                                3L));
+        var baseline = request(null, "new_version");
+        var paused =
+                new ProcessingFolderController.SaveProcessingFolderRequest(
+                        null,
+                        FOLDER_ID.toString(),
+                        null,
+                        true,
+                        baseline.steps(),
+                        Map.of(),
+                        routeOnly ? List.of() : List.of(destination.id()),
+                        routeOnly
+                                ? List.of(
+                                        new RoutingRule(
+                                                new Condition.MatchesAny(
+                                                        new ConditionInput.DocumentField(
+                                                                "document.extension"),
+                                                        List.of("pdf")),
+                                                destination.id()))
+                                : List.of());
+        assertThatThrownBy(() -> controller.save(paused))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("disabled");
+        assertThat(policyStore.all()).isEmpty();
+        verify(diskFolderSink, never()).validatePipeline(any(), any());
     }
 
     @Test
@@ -408,6 +523,60 @@ class ProcessingFolderControllerTest {
         assertThat(stored.output().options())
                 .containsEntry("folderId", FOLDER_ID.toString())
                 .doesNotContainValue(foreign);
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void aNullFinalStepIsRejectedBeforeCreatingTheFolderPair(boolean onDisk) {
+        var malformed =
+                new ProcessingFolderController.SaveProcessingFolderRequest(
+                        null,
+                        onDisk ? null : FOLDER_ID.toString(),
+                        onDisk ? tempDir.toString() : null,
+                        true,
+                        Stream.of((PipelineStep) null).toList(),
+                        Map.of());
+
+        assertThatThrownBy(() -> controller.save(malformed))
+                .isInstanceOfSatisfying(
+                        ResponseStatusException.class,
+                        error ->
+                                assertThat(error.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST))
+                .hasMessageContaining("Pipeline steps must not be null");
+        assertThat(policyStore.all()).isEmpty();
+        assertThat(sourceStore.all()).isEmpty();
+        verifyNoInteractions(policyRunner);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"exportChunksJsonl", "exportMarkdown"})
+    void corpusExportsPreserveOriginalsInStorageAndOnDisk(String exportFlag) {
+        var steps =
+                List.of(
+                        new PipelineStep(
+                                "/api/v1/docparse/ingest",
+                                Map.of("index", false, exportFlag, true),
+                                Map.of()));
+        var stored =
+                controller
+                        .save(
+                                new ProcessingFolderController.SaveProcessingFolderRequest(
+                                        null,
+                                        FOLDER_ID.toString(),
+                                        null,
+                                        true,
+                                        steps,
+                                        Map.of("mode", "new_version")))
+                        .getBody();
+        assertThat(stored.output()).containsEntry("mode", "new_file");
+
+        var disk =
+                controller
+                        .save(
+                                new ProcessingFolderController.SaveProcessingFolderRequest(
+                                        null, null, tempDir.toString(), true, steps, Map.of()))
+                        .getBody();
+        assertThat(disk.output()).containsEntry("replace", false);
     }
 
     @Test
@@ -683,7 +852,7 @@ class ProcessingFolderControllerTest {
                 .thenAnswer(invocation -> invocation.getArgument(0));
         var view = controller.save(diskRequest()).getBody();
         Files.writeString(tempDir.resolve("doc.pdf"), "processed");
-        Path originals = tempDir.resolve(".stirling").resolve("originals");
+        Path originals = tempDir.resolve(".stirling");
         Files.createDirectories(originals);
         Files.writeString(originals.resolve("doc.pdf"), "original");
 
@@ -692,11 +861,17 @@ class ProcessingFolderControllerTest {
                         view.id(), new ProcessingFolderController.RevertFileRequest("doc.pdf"));
 
         assertThat(Files.readString(tempDir.resolve("doc.pdf"))).isEqualTo("original");
-        assertThat(Files.exists(originals.resolve("doc.pdf"))).isFalse();
+        assertThat(Files.readString(originals.resolve("doc.pdf"))).isEqualTo("original");
         assertThat(restored.state()).isEqualTo("waiting");
+        assertThat(restored.hasOriginal()).isTrue();
         // Forgotten, not settled: the file reads as unprocessed until the folder resumes.
         verify(processedLedger).forget(eq(view.id()), anyString());
         assertThat(policyStore.get(view.id()).orElseThrow().enabled()).isFalse();
+        Files.writeString(tempDir.resolve("doc.pdf"), "edited after restore");
+        controller.revertFile(
+                view.id(), new ProcessingFolderController.RevertFileRequest("doc.pdf"));
+        assertThat(Files.readString(tempDir.resolve("doc.pdf"))).isEqualTo("original");
+        assertThat(Files.readString(originals.resolve("doc.pdf"))).isEqualTo("original");
     }
 
     @Test
@@ -717,13 +892,32 @@ class ProcessingFolderControllerTest {
                 .hasMessageContaining("no original");
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"tmp", "originals"})
+    void revertRestoresEscapedInternalNames(String name) throws Exception {
+        lenient()
+                .when(folderAccessGuard.requirePermitted(any(Path.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        var view = controller.save(diskRequest()).getBody();
+        Files.createDirectories(tempDir.resolve(".stirling/originals"));
+        Files.createDirectories(tempDir.resolve(".stirling/tmp"));
+        Path original = FolderOutputSink.originalPath(tempDir, name);
+        Files.writeString(original, "original");
+        Files.writeString(tempDir.resolve(name), "processed");
+
+        controller.revertFile(view.id(), new ProcessingFolderController.RevertFileRequest(name));
+
+        assertThat(Files.readString(tempDir.resolve(name))).isEqualTo("original");
+        assertThat(Files.readString(original)).isEqualTo("original");
+    }
+
     @Test
     void revertAllRestoresEveryArchivedOriginal() throws Exception {
         lenient()
                 .when(folderAccessGuard.requirePermitted(any(Path.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
         var view = controller.save(diskRequest()).getBody();
-        Path originals = tempDir.resolve(".stirling").resolve("originals");
+        Path originals = tempDir.resolve(".stirling");
         Files.createDirectories(originals);
         for (String name : List.of("doc1.pdf", "doc2.pdf")) {
             Files.writeString(tempDir.resolve(name), "processed");
@@ -736,7 +930,7 @@ class ProcessingFolderControllerTest {
         assertThat(outcome.skipped()).isZero();
         assertThat(Files.readString(tempDir.resolve("doc1.pdf"))).isEqualTo("original");
         assertThat(Files.readString(tempDir.resolve("doc2.pdf"))).isEqualTo("original");
-        assertThat(Files.exists(originals.resolve("doc1.pdf"))).isFalse();
+        assertThat(Files.readString(originals.resolve("doc1.pdf"))).isEqualTo("original");
         assertThat(policyStore.get(view.id()).orElseThrow().enabled()).isFalse();
         verify(policyRunner).cancelRuns(view.id());
         verify(policyRunner).awaitQuiesce(eq(view.id()), any());
@@ -745,33 +939,108 @@ class ProcessingFolderControllerTest {
     }
 
     @Test
-    void revertAllIgnoresNestedArchivesSoItRestoresOnlyTheFolderSOwnFiles() throws Exception {
+    void revertAllRestoresBothLayoutsWithoutRestoringStagingOrExtraHistory() throws Exception {
         lenient()
                 .when(folderAccessGuard.requirePermitted(any(Path.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
         var view = controller.save(diskRequest()).getBody();
-        Path originals = tempDir.resolve(".stirling").resolve("originals");
-        // The consumer half of the superseded layout: a same-name re-drop displaces the original
-        // it replaces one level down, and revert-all must leave it there. Restoring it as a
-        // sibling would leave the user a second "doc.pdf" their folder never held. The write half
-        // - that only the canonical name ever lands in this namespace - is pinned by
-        // FolderOutputSinkTest.aSupersededOriginalIsKeptOutOfTheRestoreNamespace.
-        Path superseded = originals.resolve("superseded");
+        Path archive = tempDir.resolve(".stirling");
+        Path legacy = archive.resolve("originals");
+        Path superseded = legacy.resolve("superseded");
+        Path staging = archive.resolve("tmp");
         Files.createDirectories(superseded);
+        Files.createDirectories(staging);
         Files.writeString(tempDir.resolve("doc.pdf"), "processed");
-        Files.writeString(originals.resolve("doc.pdf"), "the-original");
-        Files.writeString(superseded.resolve("doc.pdf"), "displaced-original");
+        Files.writeString(archive.resolve("doc.pdf"), "the-original");
+        Files.writeString(legacy.resolve("old.pdf"), "legacy-original");
+        Files.writeString(superseded.resolve("doc.pdf"), "extra-history");
+        Files.writeString(staging.resolve("output.pdf"), "partial-output");
 
         var outcome = controller.revertAllFiles(view.id());
 
-        assertThat(outcome.restored()).isEqualTo(1);
+        assertThat(outcome.restored()).isEqualTo(2);
         assertThat(Files.readString(tempDir.resolve("doc.pdf"))).isEqualTo("the-original");
+        assertThat(Files.readString(tempDir.resolve("old.pdf"))).isEqualTo("legacy-original");
         try (Stream<Path> entries = Files.list(tempDir)) {
             assertThat(entries.filter(Files::isRegularFile).map(f -> f.getFileName().toString()))
-                    .containsExactly("doc.pdf");
+                    .containsExactlyInAnyOrder("doc.pdf", "old.pdf");
         }
-        // Still preserved, just not restored over anything.
-        assertThat(Files.readString(superseded.resolve("doc.pdf"))).isEqualTo("displaced-original");
+        assertThat(Files.readString(superseded.resolve("doc.pdf"))).isEqualTo("extra-history");
+        assertThat(Files.readString(staging.resolve("output.pdf"))).isEqualTo("partial-output");
+    }
+
+    @Test
+    void anExistingNestedOriginalIsStillListedAndRestorable() throws Exception {
+        lenient()
+                .when(folderAccessGuard.requirePermitted(any(Path.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        var view = controller.save(diskRequest()).getBody();
+        Files.writeString(tempDir.resolve("doc.pdf"), "processed");
+        Path original = tempDir.resolve(".stirling/originals/doc.pdf");
+        Files.createDirectories(original.getParent());
+        Files.writeString(original, "original");
+
+        assertThat(controller.files(view.id()))
+                .singleElement()
+                .satisfies(file -> assertThat(file.hasOriginal()).isTrue());
+        controller.revertFile(
+                view.id(), new ProcessingFolderController.RevertFileRequest("doc.pdf"));
+
+        assertThat(Files.readString(tempDir.resolve("doc.pdf"))).isEqualTo("original");
+        assertThat(Files.readString(original)).isEqualTo("original");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"file", "legacyFile", "archive", "legacyDirectory"})
+    void linkedOriginalsAreNeitherListedNorRestored(String linkType) throws Exception {
+        lenient()
+                .when(folderAccessGuard.requirePermitted(any(Path.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        var view = controller.save(diskRequest()).getBody();
+        Path target = tempDir.resolve("doc.pdf");
+        Files.writeString(target, "processed");
+        Path privateDir = Files.createDirectory(tempDir.resolve("private"));
+        Path secret = Files.writeString(privateDir.resolve("doc.pdf"), "private contents");
+        Path archive = tempDir.resolve(".stirling");
+        Path link;
+        Path source;
+        if (linkType.equals("archive")) {
+            link = archive;
+            source = privateDir;
+        } else {
+            Files.createDirectory(archive);
+            if (linkType.equals("legacyDirectory")) {
+                link = archive.resolve("originals");
+                source = privateDir;
+            } else {
+                Path parent =
+                        linkType.equals("legacyFile")
+                                ? Files.createDirectory(archive.resolve("originals"))
+                                : archive;
+                link = parent.resolve("doc.pdf");
+                source = secret;
+            }
+        }
+        try {
+            Files.createSymbolicLink(link, source);
+        } catch (UnsupportedOperationException | FileSystemException e) {
+            assumeTrue(false, "Symbolic links are unavailable: " + e.getMessage());
+        }
+
+        assertThat(controller.files(view.id()))
+                .singleElement()
+                .satisfies(file -> assertThat(file.hasOriginal()).isFalse());
+        assertThat(FolderOutputSink.originalNames(tempDir)).isEmpty();
+        assertThatThrownBy(
+                        () ->
+                                controller.revertFile(
+                                        view.id(),
+                                        new ProcessingFolderController.RevertFileRequest(
+                                                "doc.pdf")))
+                .isInstanceOf(ResponseStatusException.class);
+        assertThat(controller.revertAllFiles(view.id()).restored()).isZero();
+        assertThat(Files.readString(target)).isEqualTo("processed");
+        assertThat(Files.readString(secret)).isEqualTo("private contents");
     }
 
     @Test
@@ -855,10 +1124,12 @@ class ProcessingFolderControllerTest {
 
     @Test
     void cancelStopsTheFoldersRuns() {
+        // Saving starts a background sweep on this mock; finish stubbing before it runs.
+        when(policyRunner.cancelRuns(anyString())).thenReturn(3);
         var view = controller.save(request(null, "new_version")).getBody();
-        when(policyRunner.cancelRuns(view.id())).thenReturn(3);
 
         assertThat(controller.cancelRuns(view.id()).cancelled()).isEqualTo(3);
+        verify(policyRunner).cancelRuns(view.id());
     }
 
     /** A stored file double with just what the listing reads. */

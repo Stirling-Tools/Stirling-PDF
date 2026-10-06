@@ -3,8 +3,7 @@ import { Modal } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Button, type ButtonAccent } from "@app/ui/Button";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { Z_INDEX_ONBOARDING_CARD } from "@app/styles/zIndex";
 import stirlingMark from "@app/assets/brand/modern-logo/logo512.png";
 import styles from "@app/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css";
@@ -91,27 +90,10 @@ export default function OnboardingSlideShell({
 }: OnboardingSlideShellProps) {
   const { t } = useTranslation();
   const showProgress = stepCount > 1;
-
-  // Back/icon buttons anchor the left; text actions cluster on the right.
-  // A back control can't do anything on the first slide, so hide it there.
-  const backButtons = stepIndex === 0 ? [] : buttons.filter((b) => b.back);
-  const actionButtons = buttons.filter((b) => !b.back);
-
-  const renderButton = (button: ShellButton) => (
-    <Button
-      key={button.key}
-      onClick={() => onAction(button.action)}
-      disabled={button.disabled}
-      variant={button.primary ? "primary" : "quiet"}
-      accent={button.accent ?? (button.primary ? "default" : "neutral")}
-    >
-      {button.label}
-    </Button>
-  );
-
-  const actions = (
-    <div className={styles.footerGroup}>{actionButtons.map(renderButton)}</div>
-  );
+  const stepLabel = t("onboarding.stepOf", "Step {{current}} of {{total}}", {
+    current: stepIndex + 1,
+    total: stepCount,
+  });
 
   return (
     // Composed rather than the plain <Modal>, because only Modal.Content lands
@@ -143,82 +125,19 @@ export default function OnboardingSlideShell({
       >
         <Modal.Body>
           <div className={styles.card}>
-            <header className={styles.header}>
-              <div className={styles.brand}>
-                <img
-                  src={stirlingMark}
-                  alt=""
-                  aria-hidden="true"
-                  className={styles.brandLogo}
-                />
-                <span className={styles.wordmark}>Stirling</span>
-              </div>
-              <div className={styles.headerRight}>
-                {showProgress && (
-                  <span className={styles.stepPill}>
-                    {t("onboarding.stepOf", "Step {{current}} of {{total}}", {
-                      current: stepIndex + 1,
-                      total: stepCount,
-                    })}
-                  </span>
-                )}
-                {(allowDismiss || headerControl === "forward") && (
-                  <ActionIcon
-                    onClick={onClose}
-                    variant="tertiary"
-                    accent="neutral"
-                    size="md"
-                    aria-label={
-                      headerControl === "forward"
-                        ? t("onboarding.buttons.continue", "Continue")
-                        : t("common.close", "Close")
-                    }
-                  >
-                    {/* Two literals, not a computed `icon`: the icon-set generator
-                        scans for `icon="…"`, so a dynamic one ships blank. */}
-                    {headerControl === "forward" ? (
-                      <LocalIcon
-                        icon="arrow-right-alt-rounded"
-                        width="1.1rem"
-                        height="1.1rem"
-                      />
-                    ) : (
-                      <LocalIcon
-                        icon="close-rounded"
-                        width="1.1rem"
-                        height="1.1rem"
-                      />
-                    )}
-                  </ActionIcon>
-                )}
-              </div>
-            </header>
+            <ShellHeader
+              stepLabel={showProgress ? stepLabel : null}
+              showClose={allowDismiss}
+              headerControl={headerControl}
+              onClose={onClose}
+            />
 
             {showProgress && (
-              <div
-                className={styles.progressTrack}
-                role="progressbar"
-                aria-valuenow={stepIndex + 1}
-                aria-valuemin={1}
-                aria-valuemax={stepCount}
-                aria-label={t(
-                  "onboarding.stepOf",
-                  "Step {{current}} of {{total}}",
-                  {
-                    current: stepIndex + 1,
-                    total: stepCount,
-                  },
-                )}
-              >
-                {Array.from({ length: stepCount }, (_, index) => (
-                  <span
-                    key={index}
-                    className={`${styles.progressSeg} ${
-                      index <= stepIndex ? styles.progressSegDone : ""
-                    }`}
-                  />
-                ))}
-              </div>
+              <StepProgress
+                stepIndex={stepIndex}
+                stepCount={stepCount}
+                label={stepLabel}
+              />
             )}
 
             <div className={styles.divider} />
@@ -243,33 +162,168 @@ export default function OnboardingSlideShell({
                 <style>{`.${styles.bodyNew} strong{color: var(--c-text); font-weight: 600;}`}</style>
               </div>
 
-              <div className={styles.footer}>
-                {backButtons.length === 0 ? (
-                  <div className={styles.footerEnd}>{actions}</div>
-                ) : (
-                  <div className={styles.footerBetween}>
-                    <div className={styles.footerGroup}>
-                      {backButtons.map((button) => (
-                        <ActionIcon
-                          key={button.key}
-                          onClick={() => onAction(button.action)}
-                          variant="tertiary"
-                          accent="neutral"
-                          disabled={button.disabled}
-                          aria-label={t("onboarding.buttons.back", "Back")}
-                        >
-                          <ChevronLeftIcon fontSize="small" />
-                        </ActionIcon>
-                      ))}
-                    </div>
-                    {actions}
-                  </div>
-                )}
-              </div>
+              <ShellFooter
+                buttons={buttons}
+                stepIndex={stepIndex}
+                onAction={onAction}
+              />
             </div>
           </div>
         </Modal.Body>
       </Modal.Content>
     </Modal.Root>
+  );
+}
+
+interface ShellHeaderProps {
+  stepLabel: string | null;
+  showClose: boolean;
+  headerControl: "close" | "forward";
+  onClose: () => void;
+}
+
+function ShellHeader({
+  stepLabel,
+  showClose,
+  headerControl,
+  onClose,
+}: ShellHeaderProps) {
+  return (
+    <header className={styles.header}>
+      <div className={styles.brand}>
+        <img
+          src={stirlingMark}
+          alt=""
+          aria-hidden="true"
+          className={styles.brandLogo}
+        />
+        <span className={styles.wordmark}>Stirling</span>
+      </div>
+      <div className={styles.headerRight}>
+        {stepLabel && <span className={styles.stepPill}>{stepLabel}</span>}
+        <HeaderControl
+          showClose={showClose}
+          headerControl={headerControl}
+          onClose={onClose}
+        />
+      </div>
+    </header>
+  );
+}
+
+function HeaderControl({
+  showClose,
+  headerControl,
+  onClose,
+}: Omit<ShellHeaderProps, "stepLabel">) {
+  const { t } = useTranslation();
+  const forward = headerControl === "forward";
+  if (!showClose && !forward) return null;
+  return (
+    <ActionIcon
+      onClick={onClose}
+      variant="tertiary"
+      accent="neutral"
+      size="md"
+      aria-label={
+        forward
+          ? t("onboarding.buttons.continue", "Continue")
+          : t("common.close", "Close")
+      }
+    >
+      <Icon name={forward ? "arrow-right" : "x"} size="1.1rem" />
+    </ActionIcon>
+  );
+}
+
+function StepProgress({
+  stepIndex,
+  stepCount,
+  label,
+}: {
+  stepIndex: number;
+  stepCount: number;
+  label: string;
+}) {
+  return (
+    <div
+      className={styles.progressTrack}
+      role="progressbar"
+      aria-valuenow={stepIndex + 1}
+      aria-valuemin={1}
+      aria-valuemax={stepCount}
+      aria-label={label}
+    >
+      {Array.from({ length: stepCount }, (_, index) => (
+        <span
+          key={index}
+          className={`${styles.progressSeg} ${
+            index <= stepIndex ? styles.progressSegDone : ""
+          }`}
+        />
+      ))}
+    </div>
+  );
+}
+
+function ShellFooter({
+  buttons,
+  stepIndex,
+  onAction,
+}: {
+  buttons: ShellButton[];
+  stepIndex: number;
+  onAction: (action: string) => void;
+}) {
+  const { t } = useTranslation();
+
+  // Back/icon buttons anchor the left; text actions cluster on the right.
+  // A back control can't do anything on the first slide, so hide it there.
+  const backButtons = stepIndex === 0 ? [] : buttons.filter((b) => b.back);
+  const actionButtons = buttons.filter((b) => !b.back);
+
+  const actions = (
+    <div className={styles.footerGroup}>
+      {actionButtons.map((button) => (
+        <Button
+          key={button.key}
+          onClick={() => onAction(button.action)}
+          disabled={button.disabled}
+          variant={button.primary ? "primary" : "quiet"}
+          accent={button.accent ?? (button.primary ? "default" : "neutral")}
+        >
+          {button.label}
+        </Button>
+      ))}
+    </div>
+  );
+
+  if (backButtons.length === 0) {
+    return (
+      <div className={styles.footer}>
+        <div className={styles.footerEnd}>{actions}</div>
+      </div>
+    );
+  }
+  return (
+    <div className={styles.footer}>
+      <div className={styles.footerBetween}>
+        <div className={styles.footerGroup}>
+          {backButtons.map((button) => (
+            <ActionIcon
+              key={button.key}
+              onClick={() => onAction(button.action)}
+              variant="tertiary"
+              accent="neutral"
+              disabled={button.disabled}
+              aria-label={t("onboarding.buttons.back", "Back")}
+            >
+              <Icon name="chevron-left" size={20} />
+            </ActionIcon>
+          ))}
+        </div>
+        {actions}
+      </div>
+    </div>
   );
 }

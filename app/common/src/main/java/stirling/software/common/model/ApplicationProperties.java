@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -85,6 +86,25 @@ public class ApplicationProperties {
     private InternalApi internalApi = new InternalApi();
     private Cluster cluster = new Cluster();
     private Policies policies = new Policies();
+
+    @PostConstruct
+    public void migrateSsoAutoLoginFromEnvironment() {
+        migrateSsoAutoLoginFromEnvironment(java.lang.System.getenv());
+    }
+
+    void migrateSsoAutoLoginFromEnvironment(Map<String, String> environment) {
+        for (String key :
+                List.of(
+                        "SECURITY_SSOAUTOLOGIN",
+                        "PREMIUM_PROFEATURES_SSOAUTOLOGIN",
+                        "ENTERPRISEEDITION_SSOAUTOLOGIN")) {
+            String value = environment.get(key);
+            if (value != null) {
+                security.setSsoAutoLogin(Boolean.parseBoolean(value));
+                return;
+            }
+        }
+    }
 
     @Bean
     public PropertySource<?> dynamicYamlPropertySource(ConfigurableEnvironment environment)
@@ -353,6 +373,10 @@ public class ApplicationProperties {
     @Data
     public static class AiEngine {
         private boolean enabled = false;
+
+        /** {@code SELF_HOSTED} calls {@link #url}; {@code CLOUD} runs AI on Stirling Cloud. */
+        private AiEngineMode mode = AiEngineMode.SELF_HOSTED;
+
         private String url = "http://localhost:5001";
         private int timeoutSeconds = 120;
 
@@ -383,6 +407,23 @@ public class ApplicationProperties {
 
         /** Per-capability on/off switches so an admin can disable individual AI tools. */
         private Features features = new Features();
+
+        /**
+         * Cloud mode only: whether Stirling Cloud may keep document text for later questions. AI
+         * tools send page text either way, so this controls retention, not what leaves the server.
+         */
+        private boolean cloudDocumentIndexing = false;
+
+        /**
+         * Stirling Cloud's API host; blank uses the account-link host, the only one the device
+         * credential is valid for. Not in settings.yml: set it via env or custom_settings.yml.
+         */
+        private String cloudBaseUrl = "";
+
+        public enum AiEngineMode {
+            SELF_HOSTED,
+            CLOUD
+        }
 
         @Data
         public static class Models {
@@ -935,6 +976,7 @@ public class ApplicationProperties {
     @Data
     public static class Security {
         private boolean enableLogin;
+        private boolean ssoAutoLogin;
         private InitialLogin initialLogin = new InitialLogin();
         private OAUTH2 oauth2 = new OAUTH2();
         private SAML2 saml2 = new SAML2();
@@ -1297,6 +1339,7 @@ public class ApplicationProperties {
         private boolean enableEasterEggs = true;
         private Datasource datasource;
         private boolean disableSanitize;
+        private boolean stirlingOfficeConversion;
         private int maxDPI = 500;
         private boolean enableUrlToPDF;
         private Html html = new Html();
@@ -1352,7 +1395,7 @@ public class ApplicationProperties {
 
     @Data
     public static class Storage {
-        private boolean enabled = false;
+        private boolean enabled = true;
         private String provider = "local";
         private Local local = new Local();
         private S3 s3 = new S3();
@@ -1454,7 +1497,7 @@ public class ApplicationProperties {
 
         @Data
         public static class Signing {
-            private boolean enabled = false;
+            private boolean enabled = true;
 
             // Signing user-picker scope: 'org' (default) = whole instance, anything else =
             // caller's team only (fail-closed). The saas profile pins 'team'.
@@ -1610,7 +1653,6 @@ public class ApplicationProperties {
 
     @Data
     public static class ToolRecommendations {
-        // Extra off-switch on top of system.enableAnalytics, which must also consent to tracking.
         private boolean enabled = true;
         // How long usage and workflow rollups are kept before the retention sweep removes them.
         private int retentionDays = 180;
@@ -1822,7 +1864,6 @@ public class ApplicationProperties {
 
         @Data
         public static class ProFeatures {
-            private boolean ssoAutoLogin;
             private boolean database;
             private CustomMetadata customMetadata = new CustomMetadata();
             private GoogleDrive googleDrive = new GoogleDrive();

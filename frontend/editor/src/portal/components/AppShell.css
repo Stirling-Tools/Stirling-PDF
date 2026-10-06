@@ -35,6 +35,12 @@
   animation: fadeInUp var(--motion-enter) both;
 }
 
+.portal-shell__view > .portal-connect-rail {
+  width: calc(100% - 3rem);
+  max-width: 75rem;
+  margin: 0.75rem auto 0;
+}
+
 /* Mobile topbar — hidden on desktop, where the sidebar is always visible.
    Height matches the sidebar's logo row so the brand sits at the same level. */
 .portal-shell__topbar {

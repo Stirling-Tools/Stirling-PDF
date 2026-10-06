@@ -240,10 +240,11 @@ class FailureKindTest {
 
         @Test
         void offersARetryToItsOwnerAndTheRunToWhoeverReviews() {
-            // No known fix, so no resolution; a retry is still worth offering for a one-off.
+            // No known fix, so the retry is the resolution: these are often one-offs. One offer
+            // wherever the document is; FileRunEventService says per row which side runs it.
             assertThat(FailureKind.UNKNOWN.getOfferedActions())
                     .containsExactly(
-                            offered(FailureActionId.OPEN_IN_TOOL, OWNER, SECONDARY, "openInTool"),
+                            offered(FailureActionId.OPEN_IN_TOOL, OWNER, RESOLUTION, "openInTool"),
                             offered(FailureActionId.VIEW_FILE, OWNER, SECONDARY, "viewFile"),
                             offered(
                                     FailureActionId.VIEW_IN_PROCESSOR,
@@ -459,12 +460,24 @@ class FailureKindTest {
                             FailureKind.INPUT_EMPTY,
                             FailureKind.INPUT_UNAVAILABLE,
                             FailureKind.TOOL_NOT_INSTALLED,
+                            FailureKind.SOURCE_UNREADABLE,
                             FailureKind.STEP_CANNOT_RENDER_PAGE,
                             FailureKind.STEP_TOOL_FAILED,
                             FailureKind.STEP_INTERRUPTED,
                             FailureKind.STEP_PAGE_TOO_LARGE,
-                            FailureKind.STEP_MISCONFIGURED,
-                            FailureKind.UNKNOWN);
+                            FailureKind.STEP_MISCONFIGURED);
+        }
+
+        @Test
+        void unknownsOnlyResolutionIsThePlainRetry() {
+            // The exception to the rule above: an unrecognised failure may well be a one-off.
+            // Other retry-first kinds offer it as an action, a guess rather than the fix.
+            assertThat(
+                            FailureKind.UNKNOWN.getOfferedActions().stream()
+                                    .filter(offer -> offer.slot() == RESOLUTION)
+                                    .map(FailureKind.OfferedAction::id)
+                                    .toList())
+                    .containsExactly(FailureActionId.OPEN_IN_TOOL);
         }
 
         @Test

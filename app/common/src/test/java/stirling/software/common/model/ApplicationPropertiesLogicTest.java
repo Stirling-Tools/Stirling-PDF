@@ -36,7 +36,7 @@ class ApplicationPropertiesLogicTest {
         // Self-host backward-compat: scope must default to "org" (saas profile pins "team").
         ApplicationProperties.Storage.Signing signing = new ApplicationProperties.Storage.Signing();
 
-        assertFalse(signing.isEnabled());
+        assertTrue(signing.isEnabled());
         assertEquals("org", signing.getUserListScope());
 
         signing.setUserListScope("team");
@@ -45,6 +45,17 @@ class ApplicationPropertiesLogicTest {
         // Reachable from the full tree as storage.signing.userListScope.
         assertEquals(
                 "org", new ApplicationProperties().getStorage().getSigning().getUserListScope());
+    }
+
+    @Test
+    void storageDefaultsEnableLocalStorageAndSigningWithoutSharingOrEncryption() {
+        ApplicationProperties.Storage storage = new ApplicationProperties().getStorage();
+
+        assertTrue(storage.isEnabled());
+        assertTrue(storage.getSigning().isEnabled());
+        assertEquals("local", storage.getProvider());
+        assertFalse(storage.getSharing().isEnabled());
+        assertFalse(storage.getEncryption().isEnabled());
     }
 
     @Test

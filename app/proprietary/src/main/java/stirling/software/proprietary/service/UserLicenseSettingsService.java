@@ -185,14 +185,7 @@ public class UserLicenseSettingsService {
         }
     }
 
-    /**
-     * Grandfathers existing OAuth users on first run. This is a one-time migration that marks all
-     * existing OAuth/SAML users as grandfathered, allowing them to keep OAuth access even without a
-     * paid license.
-     *
-     * <p>New users created after this migration will NOT be grandfathered and will require a paid
-     * license to use OAuth.
-     */
+    /** Marks existing users as grandfathered during the OAuth migration. */
     @Transactional
     public void grandfatherExistingOAuthUsers() {
         // Only grandfather users if this is a V1→V2 upgrade, not a fresh V2 install
@@ -214,9 +207,7 @@ public class UserLicenseSettingsService {
                 // We have OAuth users but none are grandfathered - this is first run after upgrade
                 int updated = userService.grandfatherAllOAuthUsers();
                 log.warn(
-                        "OAuth GRANDFATHERING: Marked {} existing OAuth/SAML users as grandfathered. "
-                                + "They will retain OAuth access even without a paid license. "
-                                + "New users will require a paid license for OAuth.",
+                        "OAuth GRANDFATHERING: Marked {} existing users as grandfathered.",
                         updated);
             }
 
@@ -437,41 +428,6 @@ public class UserLicenseSettingsService {
             log.info("Linked team user allowance is now {}", purchased);
         }
         return purchased;
-    }
-
-    /**
-     * Checks if a user is eligible to use OAuth/SAML authentication.
-     *
-     * <p>A user is eligible if:
-     *
-     * <ul>
-     *   <li>They are grandfathered for OAuth (existing user before policy change), OR
-     *   <li>The system has an ENTERPRISE license (SSO is enterprise-only)
-     * </ul>
-     *
-     * @param user The user to check
-     * @return true if the user can use OAuth/SAML
-     */
-    public boolean isOAuthEligible(User user) {
-        String username = (user != null) ? user.getUsername() : "<new user>";
-        log.info("OAuth eligibility check for user: {}", username);
-
-        // Check license first - if paying, they're eligible (no need to check grandfathering)
-        boolean hasPaid = hasPaidLicense();
-        if (hasPaid) {
-            log.debug("User {} eligible for OAuth via paid license", username);
-            return true;
-        }
-
-        // No license - check if grandfathered (fallback for V1 users)
-        if (user != null && user.isOauthGrandfathered()) {
-            log.info("User {} eligible for OAuth via grandfathering (no paid license)", username);
-            return true;
-        }
-
-        // Not grandfathered and no license
-        log.info("User {} NOT eligible for OAuth: no paid license and not grandfathered", username);
-        return false;
     }
 
     /**
