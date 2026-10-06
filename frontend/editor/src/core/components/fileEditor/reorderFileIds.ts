@@ -1,21 +1,17 @@
 import { FileId } from "@app/types/fileContext";
 
 /**
- * Reorders a list of file IDs when moving `sourceId` onto `targetId`.
+ * Swaps two file IDs in a list of file IDs.
  *
  * Rules:
- * - If `sourceId` is part of `selectedIds`, the entire selected group is moved together,
- *   preserving their current visual relative order in `currentIds`.
- * - If `sourceId` is not in `selectedIds`, only `sourceId` is moved.
- * - Dropping onto any member of the moving group is a no-op.
- * - Missing `sourceId` or `targetId` is a no-op.
- * - Returns original array reference if the order is unchanged.
+ * - Direct pairwise swap: swapping sourceId and targetId only affects those two files.
+ * - Dropping onto itself is a no-op and returns the original array reference.
+ * - Missing sourceId or targetId is a no-op and returns the original array reference.
  */
 export function reorderFileIds(
   currentIds: FileId[],
   sourceId: FileId,
   targetId: FileId,
-  selectedIds: readonly FileId[],
 ): FileId[] {
   const sourceIndex = currentIds.indexOf(sourceId);
   const targetIndex = currentIds.indexOf(targetId);
@@ -24,27 +20,9 @@ export function reorderFileIds(
     return currentIds;
   }
 
-  const selected = new Set(selectedIds);
-  const movingIds = selected.has(sourceId)
-    ? currentIds.filter((id) => selected.has(id))
-    : [sourceId];
+  const nextIds = [...currentIds];
+  nextIds[sourceIndex] = targetId;
+  nextIds[targetIndex] = sourceId;
 
-  const moving = new Set(movingIds);
-  if (moving.has(targetId)) {
-    return currentIds;
-  }
-
-  const remaining = currentIds.filter((id) => !moving.has(id));
-  const targetPosition = remaining.indexOf(targetId);
-  const insertPosition = targetPosition + (sourceIndex < targetIndex ? 1 : 0);
-
-  const nextIds = [
-    ...remaining.slice(0, insertPosition),
-    ...movingIds,
-    ...remaining.slice(insertPosition),
-  ];
-
-  return nextIds.every((id, index) => id === currentIds[index])
-    ? currentIds
-    : nextIds;
+  return nextIds;
 }

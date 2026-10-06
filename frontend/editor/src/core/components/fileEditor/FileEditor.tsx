@@ -1,5 +1,4 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
-import { flushSync } from "react-dom";
 import { Center, Box, LoadingOverlay } from "@mantine/core";
 import { Dropzone } from "@mantine/dropzone";
 import { useTranslation } from "react-i18next";
@@ -187,42 +186,19 @@ const FileEditor = ({
   }, [maxAllowed, selectedFileIds, setSelectedFiles]);
 
   const handleReorderFiles = useCallback(
-    (
-      sourceFileId: FileId,
-      targetFileId: FileId,
-      fileSelectionIds: FileId[],
-    ) => {
+    (sourceFileId: FileId, targetFileId: FileId) => {
       const currentIds = stubsRef.current.map((r) => r.id);
-      const nextOrder = reorderFileIds(
-        currentIds,
-        sourceFileId,
-        targetFileId,
-        fileSelectionIds,
-      );
+      const nextOrder = reorderFileIds(currentIds, sourceFileId, targetFileId);
 
       if (nextOrder === currentIds) {
         return;
       }
 
-      // flushSync commits the reorder inside the view transition so its snapshots capture both layouts.
-      const applyReorder = () => reorderFiles(nextOrder);
-      const docWithViewTransition = document as Document & {
-        startViewTransition?: (cb: () => void) => unknown;
-      };
-      if (typeof docWithViewTransition.startViewTransition === "function") {
-        docWithViewTransition.startViewTransition(() => {
-          flushSync(applyReorder);
-        });
-      } else {
-        applyReorder();
-      }
+      reorderFiles(nextOrder);
 
-      const isGroup =
-        fileSelectionIds.includes(sourceFileId) && fileSelectionIds.length > 1;
-      const moveCount = isGroup ? fileSelectionIds.length : 1;
       showStatus(
         t("fileEditor.filesReordered", {
-          count: moveCount,
+          count: 2,
           defaultValue_one: "File reordered",
           defaultValue_other: "{{count}} files reordered",
         }),
