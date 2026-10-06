@@ -117,7 +117,10 @@ jobs:
     if: |
       !cancelled() &&
       needs.files-changed.outputs.backend == 'true'
-    needs: [files-changed, gradle-cache-prime]
+    needs: [files-changed, gradle-cache-prime, files-hash]
+    with:
+      gradle-hash: ${{ needs.files-hash.outputs.gradle_files_hash }}
+      uv-hash: ${{ needs.files-hash.outputs.uv_files_hash }}
     permissions:
       actions: read
       contents: write

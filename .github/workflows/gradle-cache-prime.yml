@@ -40,14 +40,6 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Hash Gradle files
-        id: hash
-        env:
-          FILES_HASH: ${{ inputs.gradle-hash }}
-        shell: bash
-        run: |
-          echo "files_hash=$FILES_HASH" >> "$GITHUB_OUTPUT"
-
       - name: Use GNU tar on Windows
         if: runner.os == 'Windows'
         shell: pwsh
@@ -89,8 +81,8 @@ jobs:
           save-scope: shared
           token: ${{ github.token }}
           key: |
-            gradle-caches=${{ steps.hash.outputs.files_hash }}
-            gradle-wrapper=${{ steps.hash.outputs.files_hash  }}
+            gradle-caches=${{ inputs.gradle-hash }}
+            gradle-wrapper=${{ inputs.gradle-hash  }}
           allow-shared-restore: true
           strict: false
 

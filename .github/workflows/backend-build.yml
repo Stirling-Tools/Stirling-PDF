@@ -11,6 +11,17 @@ name: Backend build, format check, and coverage
 #                  never any runtime/integration testing)
 on:
   workflow_call:
+    inputs:
+      gradle-hash:
+        required: true
+        type: string
+      uv-hash:
+        required: true
+        type: string
+      java-version:
+        required: false
+        default: '25'
+        type: string
 
 permissions:
   contents: read
@@ -19,20 +30,7 @@ permissions:
   pull-requests: write
 
 env:
-  JAVA_VERSION: 25
-  GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-25
-  GRADLE_FILES_TO_HASH: |
-    gradle/wrapper/gradle-wrapper.properties
-    gradle/libs.versions.toml
-    buildSrc/**
-    settings.gradle
-    build.gradle
-    app/**/build.gradle
-    gradle/**/*.gradle
-  UV_FILES_TO_HASH: |
-    engine/.python-version
-    engine/pyproject.toml
-    engine/uv.lock
+  GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-${{ inputs.java-version }}
 
 jobs:
   build:
@@ -60,19 +58,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Hash Gradle files
-        id: hash
-        env:
-          GRADLE_FILES_HASH: ${{ hashFiles(env.GRADLE_FILES_TO_HASH) }}
-          UV_FILES_HASH: ${{ hashFiles(env.UV_FILES_TO_HASH) }}
-        shell: bash
-        run: |
-          GRADLE_HASH="$GRADLE_FILES_HASH"
-          UV_HASH="$UV_FILES_HASH"
-          echo "java_version=${{ env.JAVA_VERSION }}" >> "$GITHUB_OUTPUT"
-          echo "gradle_files_hash=$GRADLE_HASH" >> "$GITHUB_OUTPUT"
-          echo "uv_files_hash=$UV_HASH" >> "$GITHUB_OUTPUT"
-
       - name: Build multi-cache configuration
         id: cache-config
         shell: bash
@@ -82,9 +67,9 @@ jobs:
               echo 'multi_cache<<EOF'
               cat <<'CACHE'
             gradle-caches:
-              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
+              path: .cache/gradle-java-${{ inputs.java-version }}/caches
             gradle-wrapper:
-              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
+              path: .cache/gradle-java-${{ inputs.java-version }}/wrapper
             setup-uv-cache:
               path: .cache/setup-uv-cache
             uv-python-dir:
@@ -92,10 +77,10 @@ jobs:
           CACHE
               echo 'EOF'
               echo 'cache_key<<EOF'
-              echo 'gradle-caches=${{ steps.hash.outputs.gradle_files_hash }}'
-              echo 'gradle-wrapper=${{ steps.hash.outputs.gradle_files_hash }}'
-              echo 'setup-uv-cache=${{ steps.hash.outputs.uv_files_hash }}'
-              echo 'uv-python-dir=${{ steps.hash.outputs.uv_files_hash }}'
+              echo 'gradle-caches=${{ inputs.gradle-hash }}'
+              echo 'gradle-wrapper=${{ inputs.gradle-hash }}'
+              echo 'setup-uv-cache=${{ inputs.uv-hash }}'
+              echo 'uv-python-dir=${{ inputs.uv-hash }}'
               echo 'EOF'
             } >> "$GITHUB_OUTPUT"
           else
@@ -103,14 +88,14 @@ jobs:
               echo 'multi_cache<<EOF'
               cat <<'CACHE'
             gradle-caches:
-              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
+              path: .cache/gradle-java-${{ inputs.java-version }}/caches
             gradle-wrapper:
-              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
+              path: .cache/gradle-java-${{ inputs.java-version }}/wrapper
           CACHE
               echo 'EOF'
               echo 'cache_key<<EOF'
-              echo 'gradle-caches=${{ steps.hash.outputs.gradle_files_hash }}'
-              echo 'gradle-wrapper=${{ steps.hash.outputs.gradle_files_hash }}'
+              echo 'gradle-caches=${{ inputs.gradle-hash }}'
+              echo 'gradle-wrapper=${{ inputs.gradle-hash }}'
               echo 'EOF'
             } >> "$GITHUB_OUTPUT"
           fi
