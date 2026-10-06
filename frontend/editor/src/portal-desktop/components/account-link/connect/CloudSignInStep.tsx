@@ -9,7 +9,7 @@ import {
   Spinner,
   Stack,
 } from "@app/ui";
-import { oauthIconUrl } from "@app/auth/ui/oauthIcons";
+import { ProviderMark } from "@app/auth/ui/ProviderMark";
 import "@app/components/account-link/connect.css";
 import "@app/portal/components/account-link/connect/CloudSignInStep.css";
 
@@ -83,9 +83,8 @@ export function CloudSignInStep({
             fullWidth
             disabled={waiting}
             leftSection={
-              <img
-                src={oauthIconUrl(provider.icon)}
-                alt=""
+              <ProviderMark
+                file={provider.icon}
                 className="portal-cloud-sign-in__icon"
               />
             }

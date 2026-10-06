@@ -35,10 +35,7 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
     usePortalAccessState();
   const { isAdmin, isAnonymous, user, loading } = useAuth();
   const isOwner = isAdmin && !loading && user?.orgOwner === true;
-  // The same admin flag the rest of the nav is built from; the session's lags
-  // it while /me is in flight.
   const { config } = useAppConfig();
-  const navAdmin = config?.isAdmin ?? false;
   const rosterAvailable = useRosterAvailable();
 
   // A failed lookup still settles: the nav then shows only what needs no server.
@@ -70,7 +67,12 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
     }
     if (mode === "selfhosted") {
       return buildPortalSettingsSections(t, {
-        includeRoster: rosterAvailable && (navAdmin || portalAccess),
+        // Admin-only, as on web self-hosted: processor access alone does not open it.
+        includeRoster:
+          rosterAvailable &&
+          config?.enableLogin === true &&
+          isAdmin &&
+          !loading,
         includeApiKeys: portalAccess,
         includeEncryption: portalAccess && isAdmin,
         includeBilling: isOwner,
@@ -84,9 +86,10 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
     rosterAvailable,
     portalAccess,
     isAnonymous,
-    navAdmin,
+    config?.enableLogin,
     isAdmin,
     isOwner,
+    loading,
     t,
   ]);
 
@@ -102,6 +105,13 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
 
   const aliases = { ...base.aliases };
   if (portalSections.length > 0) Object.assign(aliases, PORTAL_SECTION_ALIASES);
+  const hasRoster = portalSections.some((group) =>
+    group.items.some((item) => item.key === "users"),
+  );
+  if (!hasRoster) {
+    delete aliases.people;
+    delete aliases.teams;
+  }
   const hasBilling = portalSections.some((group) =>
     group.items.some((item) => item.key === "billing"),
   );
