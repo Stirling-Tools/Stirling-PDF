@@ -8,7 +8,7 @@ import type { TFunction } from "i18next";
  * curated keyword.
  *
  * Component-free (translation subtrees only) so the always-mounted super
- * search can use it without pulling the lazy settings modal into the main
+ * search can use it without pulling the lazy settings page into the main
  * bundle.
  */
 

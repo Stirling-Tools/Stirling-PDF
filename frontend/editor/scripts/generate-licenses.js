@@ -248,6 +248,7 @@ function getLicenseUrl(licenseType) {
     "CC0-1.0": "https://creativecommons.org/publicdomain/zero/1.0/",
     Unlicense: "https://unlicense.org/",
     "MPL-2.0": "https://www.mozilla.org/en-US/MPL/2.0/",
+    "OFL-1.1": "https://openfontlicense.org/open-font-license-official-text/",
     WTFPL: "http://www.wtfpl.net/",
     Zlib: "https://opensource.org/licenses/Zlib",
     "Artistic-2.0": "https://opensource.org/licenses/Artistic-2.0",
@@ -383,6 +384,7 @@ function checkLicenseCompatibility(licenseSummary, licenseArray) {
     "Ruby",
     "MPL-2.0",
     "CC-BY-4.0",
+    "OFL-1.1",
     "SEE LICENSE IN https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/refs/heads/main/proprietary/LICENSE",
     "SEE LICENSE IN LICENSE https://github.com/PostHog/posthog-js/blob/main/LICENSE",
   ]);

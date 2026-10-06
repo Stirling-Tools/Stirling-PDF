@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Icon } from "@app/ui/Icon";
 import "@app/ui/SectionHeader.css";
 
 export interface SectionHeaderProps {
@@ -32,21 +33,12 @@ export function SectionHeader({
       <span className="sui-sectionhdr__title">{title}</span>
       {count != null && <span className="sui-sectionhdr__count">{count}</span>}
       {collapsible && (
-        <svg
-          className="sui-sectionhdr__chevron"
-          data-collapsed={!expanded}
-          viewBox="0 0 24 24"
-          width={14}
-          height={14}
-          fill="none"
-          stroke="currentColor"
+        <Icon
+          name="chevron-down"
+          size={14}
           strokeWidth={2}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden
-        >
-          <polyline points="6 9 12 15 18 9" />
-        </svg>
+          className="sui-sectionhdr__chevron"
+        />
       )}
     </>
   );

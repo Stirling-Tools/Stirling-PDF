@@ -84,13 +84,26 @@ test("entering manual redact mode keeps annotation work dirty", async ({
   const firstPage = await loadViewer(page);
   await highlightSomeText(page, firstPage);
 
-  // Back to the picker first: switching tools while still on Annotate would
-  // trip the unsaved-changes guard.
-  await page.getByRole("button", { name: "Back to all tools" }).first().click();
-  await page.waitForTimeout(700);
-  await page.getByRole("link", { name: "Redact" }).first().click();
-  await page.waitForTimeout(700);
-  await page.getByText("Manual", { exact: true }).first().click();
+  const redact = page
+    .getByRole("button", { name: "Redact", exact: true })
+    .first();
+  await redact.click();
+  const guard = page.getByRole("dialog", {
+    name: "Unsaved Changes",
+    exact: true,
+  });
+  await expect(guard).toBeVisible();
+  await guard
+    .getByRole("button", { name: "Keep Working", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Save Changes", exact: true }).first(),
+  ).toBeEnabled();
+  await redact.click();
+  await guard
+    .getByRole("button", { name: "Save & Leave", exact: true })
+    .click();
+  await expect(guard).toBeHidden();
 
   await expect
     .poll(() => viewerCursor(page), { timeout: 15_000 })
