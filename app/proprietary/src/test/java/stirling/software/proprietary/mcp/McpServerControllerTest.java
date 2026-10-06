@@ -25,6 +25,8 @@ import stirling.software.proprietary.mcp.tools.StirlingConvertTool;
 import stirling.software.proprietary.mcp.tools.StirlingMiscTool;
 import stirling.software.proprietary.mcp.tools.StirlingPagesTool;
 import stirling.software.proprietary.mcp.tools.StirlingSecurityTool;
+import stirling.software.proprietary.mcp.tools.StirlingSelectFileTool;
+import stirling.software.proprietary.mcp.tools.StirlingUploadTool;
 import stirling.software.proprietary.service.AiEngineClient;
 
 import tools.jackson.databind.JsonNode;
@@ -337,5 +339,30 @@ class McpServerControllerTest {
 
         props.getSystem().setFrontendUrl("https://example.com/app");
         assertEquals("https://example.com", widget.widgetDomain());
+    }
+
+    @Test
+    void toolsList_onlyToolsTheWidgetCallsAreWidgetAccessible() throws Exception {
+        ApplicationProperties props = new ApplicationProperties();
+        McpServerController withUpload =
+                new McpServerController(
+                        mapper,
+                        props,
+                        List.of(
+                                new StirlingUploadTool(mapper, null, null),
+                                new StirlingSelectFileTool(mapper)),
+                        new McpWidget(mapper, props));
+        JsonNode body = mapper.readTree("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}");
+
+        JsonNode tools =
+                mapper.valueToTree(withUpload.handle(body).getBody()).get("result").get("tools");
+
+        for (JsonNode t : tools) {
+            boolean accessible = t.path("_meta").path("openai/widgetAccessible").asBoolean(false);
+            assertEquals(
+                    "stirling_upload".equals(t.get("name").asText()),
+                    accessible,
+                    t.get("name").asText());
+        }
     }
 }

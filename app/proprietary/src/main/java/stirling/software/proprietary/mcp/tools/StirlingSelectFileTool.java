@@ -67,6 +67,12 @@ public class StirlingSelectFileTool implements McpTool {
 
     @Override
     public ObjectNode call(JsonNode arguments, McpCallContext context) {
+        if (!context.hasScope("mcp.tools.write")) {
+            return McpResponses.error(
+                    mapper,
+                    "Insufficient scope: uploading a file requires 'mcp.tools.write'. Reconnect"
+                            + " Stirling PDF with write access.");
+        }
         String purpose = McpToolSupport.textArg(arguments, "purpose");
         ObjectNode result =
                 McpResponses.text(

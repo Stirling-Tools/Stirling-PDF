@@ -19,7 +19,8 @@ import stirling.software.proprietary.workflow.model.WorkflowSession;
 public interface StoredFileRepository extends JpaRepository<StoredFile, Long> {
     Optional<StoredFile> findByIdAndOwner(Long id, User owner);
 
-    List<StoredFile> findTop100ByExpiresAtBefore(LocalDateTime cutoff);
+    List<StoredFile> findTop100ByExpiresAtBeforeAndIdGreaterThanOrderByIdAsc(
+            LocalDateTime cutoff, Long afterId);
 
     @Query(
             "SELECT DISTINCT f FROM StoredFile f "

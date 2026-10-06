@@ -51,6 +51,11 @@ public class StirlingUploadTool implements McpTool {
     }
 
     @Override
+    public boolean widgetCallable() {
+        return true;
+    }
+
+    @Override
     public List<String> fileParams() {
         return List.of(McpInputFiles.ATTACHMENT_ARG);
     }

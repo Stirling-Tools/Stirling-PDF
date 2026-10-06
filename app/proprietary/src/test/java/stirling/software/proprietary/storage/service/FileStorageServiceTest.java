@@ -709,28 +709,6 @@ class FileStorageServiceTest {
     }
 
     @Test
-    void purgeExpiredFiles_deletesThemAsTheirOwner() {
-        User owner = user(1L);
-        StoredFile expired = ownedFile(owner);
-        expired.setStorageKey("k");
-        when(storedFileRepository.findTop100ByExpiresAtBefore(any())).thenReturn(List.of(expired));
-        when(fileShareRepository.findShareLinks(expired)).thenReturn(List.of());
-
-        service.purgeExpiredFiles();
-
-        verify(storedFileRepository).delete(expired);
-    }
-
-    @Test
-    void purgeExpiredFiles_storageDisabled_doesNothing() {
-        when(storageProperties.isEnabled()).thenReturn(false);
-
-        service.purgeExpiredFiles();
-
-        verify(storedFileRepository, never()).findTop100ByExpiresAtBefore(any());
-    }
-
-    @Test
     void recordShareAccess_anonymousPublicDownload_isNotRecorded() {
         FileShare link = linkFor(ownedFile(user(1L)), true);
 

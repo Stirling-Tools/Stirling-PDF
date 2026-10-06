@@ -25,6 +25,11 @@ public interface McpTool {
         return false;
     }
 
+    /** True when the widget itself calls this tool (ChatGPT {@code openai/widgetAccessible}). */
+    default boolean widgetCallable() {
+        return false;
+    }
+
     /** Top-level arguments a chat app fills with attached files ({@code openai/fileParams}). */
     default List<String> fileParams() {
         return List.of();

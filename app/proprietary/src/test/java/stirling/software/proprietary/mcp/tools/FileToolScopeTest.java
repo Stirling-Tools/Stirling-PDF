@@ -51,4 +51,13 @@ class FileToolScopeTest {
         assertTrue(result.path("isError").asBoolean(false));
         assertTrue(text(result).toLowerCase().contains("scope"));
     }
+
+    @Test
+    void selectFile_withoutWriteScope_isRefused() {
+        ObjectNode result =
+                new StirlingSelectFileTool(mapper).call(mapper.createObjectNode(), noScopes());
+
+        assertTrue(result.path("isError").asBoolean(false));
+        assertTrue(text(result).contains("mcp.tools.write"));
+    }
 }

@@ -202,10 +202,11 @@ public class McpServerController {
         if (t.rendersWidget()) {
             meta.putObject("ui").put("resourceUri", McpWidget.URI);
             meta.put("openai/outputTemplate", McpWidget.URI);
-            // Lets the picker call stirling_upload from inside the widget.
-            meta.put("openai/widgetAccessible", true);
             meta.put("openai/toolInvocation/invoking", "Working on your file...");
             meta.put("openai/toolInvocation/invoked", "Done");
+        }
+        if (t.widgetCallable()) {
+            meta.put("openai/widgetAccessible", true);
         }
         if (!t.fileParams().isEmpty()) {
             ArrayNode params = meta.putArray("openai/fileParams");

@@ -14,11 +14,9 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -131,8 +129,8 @@ public class FileStorageService {
         return storeFile(owner, file, historyBundle, auditLog, null);
     }
 
-    // Hidden from listings and purged after ttl. Marked by expiry, not a new FilePurpose,
-    // because enum columns carry CHECK constraints that ddl-auto never widens.
+    // Hidden from listings, purged after ttl. An expiry rather than a new FilePurpose, as
+    // enum columns carry CHECK constraints that ddl-auto never widens.
     public StoredFile storeTemporaryFile(User owner, MultipartFile file, Duration ttl) {
         return storeFile(owner, file, null, null, LocalDateTime.now().plus(ttl));
     }
@@ -701,22 +699,6 @@ public class FileStorageService {
         return applicationProperties.getStorage().isEnabled()
                 && applicationProperties.getStorage().getSharing().isEnabled()
                 && isShareLinksEnabled();
-    }
-
-    /** Deletes expired temporary files together with their shares and blobs. */
-    @Scheduled(fixedDelay = 10, timeUnit = TimeUnit.MINUTES)
-    public void purgeExpiredFiles() {
-        if (!applicationProperties.getStorage().isEnabled()) {
-            return;
-        }
-        LocalDateTime now = LocalDateTime.now();
-        for (StoredFile file : storedFileRepository.findTop100ByExpiresAtBefore(now)) {
-            try {
-                deleteFile(file.getOwner(), file);
-            } catch (RuntimeException e) {
-                log.warn("Failed to purge expired stored file {}", file.getId(), e);
-            }
-        }
     }
 
     public void revokeShareLink(User owner, StoredFile file, String token) {
