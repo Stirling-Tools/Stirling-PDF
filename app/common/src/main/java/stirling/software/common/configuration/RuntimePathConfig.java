@@ -25,7 +25,7 @@ import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.UnoServerPool;
 
 @Slf4j
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @Getter
 public class RuntimePathConfig {
     private final ApplicationProperties properties;

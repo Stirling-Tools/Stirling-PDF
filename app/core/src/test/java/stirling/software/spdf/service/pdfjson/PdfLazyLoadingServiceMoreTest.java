@@ -27,6 +27,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import com.github.benmanes.caffeine.cache.Cache;
+
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.TaskManager;
 import stirling.software.spdf.model.json.PdfJsonDocumentMetadata;
@@ -70,7 +72,8 @@ class PdfLazyLoadingServiceMoreTest {
     private Map<String, Object> cache() throws Exception {
         Field f = PdfLazyLoadingService.class.getDeclaredField("documentCache");
         f.setAccessible(true);
-        return (Map<String, Object>) f.get(service);
+        Cache<String, Object> c = (Cache<String, Object>) f.get(service);
+        return c.asMap();
     }
 
     /** Reflectively builds a CachedPdfDocument and inserts it into the document cache. */

@@ -71,6 +71,7 @@ pdfbox-xmpbox = { module = "org.apache.pdfbox:xmpbox", version.ref = "pdfbox" }
 pdfbox-preflight = { module = "org.apache.pdfbox:preflight", version.ref = "pdfbox" }
 
 # Common utilities
+caffeine = { module = "com.github.ben-manes.caffeine:caffeine" }
 commons-io = { module = "commons-io:commons-io", version.ref = "commons-io" }
 commons-lang3 = { module = "org.apache.commons:commons-lang3", version.ref = "commons-lang3" }
 commons-net = { module = "commons-net:commons-net", version.ref = "commons-net" }

@@ -28,7 +28,7 @@ import stirling.software.common.model.ApplicationProperties;
 
 @Lazy
 @Slf4j
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @RequiredArgsConstructor
 public class AppConfig {
 

@@ -14,7 +14,7 @@ import lombok.RequiredArgsConstructor;
 
 import stirling.software.common.model.ApplicationProperties;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @RequiredArgsConstructor
 public class LocaleConfiguration implements WebMvcConfigurer {
 

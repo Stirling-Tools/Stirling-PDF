@@ -16,6 +16,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.github.benmanes.caffeine.cache.Cache;
+
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.TaskManager;
 import stirling.software.spdf.model.json.PdfJsonFont;
@@ -72,15 +74,14 @@ class PdfLazyLoadingServiceTest {
         // Access the documentCache via reflection to verify behavior
         Field cacheField = PdfLazyLoadingService.class.getDeclaredField("documentCache");
         cacheField.setAccessible(true);
-        @SuppressWarnings("unchecked")
-        Map<String, Object> cache = (Map<String, Object>) cacheField.get(service);
+        Cache<?, ?> cache = (Cache<?, ?>) cacheField.get(service);
 
         // Verify cache is initially empty
-        assertTrue(cache.isEmpty());
+        assertTrue(cache.asMap().isEmpty());
 
         // clearCachedDocument on nonexistent should not throw
         service.clearCachedDocument("job1");
-        assertTrue(cache.isEmpty());
+        assertTrue(cache.asMap().isEmpty());
     }
 
     @Test

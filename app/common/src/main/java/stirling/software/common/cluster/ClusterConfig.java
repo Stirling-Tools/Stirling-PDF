@@ -11,7 +11,7 @@ import stirling.software.common.model.ApplicationProperties.Cluster;
 
 /** Validates cluster config consistency. All guards are skipped when cluster.enabled=false. */
 @Slf4j
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class ClusterConfig {
 
     private static final String MISSING_URL_MESSAGE =

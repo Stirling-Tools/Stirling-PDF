@@ -17,7 +17,7 @@ import stirling.software.spdf.controller.web.UploadLimitService;
  * fileUploadLimit from settings.yml or environment variables (SYSTEMFILEUPLOADLIMIT or
  * SYSTEM_MAXFILESIZE).
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @Slf4j
 public class MultipartConfiguration {
 

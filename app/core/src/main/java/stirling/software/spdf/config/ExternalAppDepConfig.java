@@ -26,7 +26,7 @@ import stirling.software.common.util.RegexPatternUtils;
  * PATHs) - supports Windows+Unix in a single place - de-duplicates logic for version extraction &
  * command availability - keeps group <-> command mapping and feature formatting tidy & immutable
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @Slf4j
 public class ExternalAppDepConfig {
 

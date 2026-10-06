@@ -7,7 +7,7 @@ import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.config.MeterFilter;
 import io.micrometer.core.instrument.config.MeterFilterReply;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class MetricsConfig {
 
     @Bean

@@ -39,8 +39,6 @@ import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 
-import jakarta.annotation.PostConstruct;
-
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
@@ -99,8 +97,18 @@ public class CertificateValidationService {
         this.applicationProperties = applicationProperties;
     }
 
-    @PostConstruct
-    private void initializeTrustStore() throws Exception {
+    private synchronized void ensureTrustStoreInitialized() {
+        if (signingTrustAnchors != null) {
+            return;
+        }
+        try {
+            initializeTrustStore();
+        } catch (Exception e) {
+            log.error("Failed to initialize trust store: {}", e.getMessage(), e);
+        }
+    }
+
+    private synchronized void initializeTrustStore() throws Exception {
         signingTrustAnchors = KeyStore.getInstance(KeyStore.getDefaultType());
         signingTrustAnchors.load(null, null);
 
@@ -146,6 +154,7 @@ public class CertificateValidationService {
         if (customTrustAnchor != null) {
             anchors.add(new TrustAnchor(customTrustAnchor, null));
         } else {
+            ensureTrustStoreInitialized();
             Enumeration<String> aliases = signingTrustAnchors.aliases();
             while (aliases.hasMoreElements()) {
                 Certificate c = signingTrustAnchors.getCertificate(aliases.nextElement());
