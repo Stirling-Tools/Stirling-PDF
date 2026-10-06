@@ -1,7 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M5 3h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-4 4v-4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" />
-  <path d="M7.5 8h8.5" />
-  <path d="m14 6 2 2-2 2" />
-  <path d="M16.5 12.5H8" />
-  <path d="m10 10.5-2 2 2 2" />
+  <!-- The speech bubble is Lucide geometry (ISC). Full notice and the exact paths:
+       src/core/icons/LICENSE-lucide.txt, which must stay with this file. -->
+  <path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z" />
+  <path d="M7 9h10" />
+  <path d="m15 7 2 2-2 2" />
+  <path d="M17 13H7" />
+  <path d="m9 11-2 2 2 2" />
 </svg>
