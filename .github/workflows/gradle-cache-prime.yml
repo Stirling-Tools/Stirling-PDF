@@ -2,6 +2,14 @@ name: Prime Gradle Cache
 
 on:
   workflow_call:
+    inputs:
+      gradle-hash:
+        required: true
+        type: string
+      java-version:
+        required: false
+        default: '25'
+        type: string
   push:
     branches: ["main"]
 
@@ -9,16 +17,7 @@ permissions:
   contents: read
 
 env:
-  JAVA_VERSION: 25
-  GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-25
-  FILES_TO_HASH: |
-    gradle/wrapper/gradle-wrapper.properties
-    gradle/libs.versions.toml
-    buildSrc/**
-    settings.gradle
-    build.gradle
-    app/**/build.gradle
-    gradle/**/*.gradle
+  GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-${{ inputs.java-version }}
 
 jobs:
   gradle-cache-prime:
@@ -44,12 +43,10 @@ jobs:
       - name: Hash Gradle files
         id: hash
         env:
-          FILES_HASH: ${{ hashFiles(env.FILES_TO_HASH) }}
+          FILES_HASH: ${{ inputs.gradle-hash }}
         shell: bash
         run: |
-          HASH="$FILES_HASH"
-          echo "java_version=${{ env.JAVA_VERSION }}" >> "$GITHUB_OUTPUT"
-          echo "files_hash=$HASH" >> "$GITHUB_OUTPUT"
+          echo "files_hash=$FILES_HASH" >> "$GITHUB_OUTPUT"
 
       - name: Use GNU tar on Windows
         if: runner.os == 'Windows'
@@ -86,9 +83,9 @@ jobs:
           disable-download: true
           multi-cache: |
             gradle-caches:
-              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
+              path: .cache/gradle-java-${{ inputs.java-version }}/caches
             gradle-wrapper:
-              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
+              path: .cache/gradle-java-${{ inputs.java-version }}/wrapper
           save-scope: shared
           token: ${{ github.token }}
           key: |
@@ -118,12 +115,12 @@ jobs:
           echo "cache_hit_gradle_wrapper: $CACHE_HIT_GRADLE_WRAPPER"
           echo '${{ toJSON(fromJSON(steps.cache.outputs.cache-results)) }}'
 
-      - name: Set up JDK ${{ env.JAVA_VERSION }}
+      - name: Set up JDK ${{ inputs.java-version }}
         if: |
           steps.cache.outputs.cache-hit != 'true'
         uses: ./.github/actions/java
         with:
-          java-version: ${{ env.JAVA_VERSION }}
+          java-version: ${{ inputs.java-version }}
 
       - name: Resolve backend dependencies
         if: |

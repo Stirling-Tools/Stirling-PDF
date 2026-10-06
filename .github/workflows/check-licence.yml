@@ -4,54 +4,23 @@ name: License compatibility check
 # files change. Verifies all transitive dependencies use a permitted license.
 on:
   workflow_call:
+    inputs:
+      gradle-hash:
+        required: true
+        type: string
+      java-version:
+        required: false
+        default: '25'
+        type: string
 
 permissions:
   contents: read
 
 env:
-  JAVA_VERSION: 25
-  GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-25
-  GRADLE_FILES_TO_HASH: |
-    gradle/wrapper/gradle-wrapper.properties
-    gradle/libs.versions.toml
-    buildSrc/**
-    settings.gradle
-    build.gradle
-    app/**/build.gradle
-    gradle/**/*.gradle
+  GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-${{ inputs.java-version }}
 
 jobs:
-  hash_pr:
-    name: Hash files
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    permissions:
-      contents: read
-    outputs:
-      java_version: ${{ steps.hash.outputs.java_version }}
-      gradle_files_hash: ${{ steps.hash.outputs.gradle_files_hash}}
-    steps:
-      - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
-        with:
-          egress-policy: audit
-
-      - name: Check out repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Hash Gradle and Cargo files
-        id: hash
-        env:
-          GRADLE_HASH: ${{ hashFiles(env.GRADLE_FILES_TO_HASH) }}
-        shell: bash
-        run: |
-          echo "java_version=${{ env.JAVA_VERSION }}" >> "$GITHUB_OUTPUT"
-          echo "gradle_files_hash=$GRADLE_HASH" >> "$GITHUB_OUTPUT"
-
   check-licence:
-    needs: hash_pr
     permissions:
       contents: write
     environment:
@@ -109,13 +78,13 @@ jobs:
           manifest-path: .github/cache-data
           multi-cache: |
             gradle-caches:
-              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
+              path: .cache/gradle-java-${{ inputs.java-version }}/caches
             gradle-wrapper:
-              path: .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
+              path: .cache/gradle-java-${{ inputs.java-version }}/wrapper
           save-scope: shared
           key: |
-            gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
-            gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}
+            gradle-caches=${{ inputs.gradle-hash }}
+            gradle-wrapper=${{ inputs.gradle-hash }}
           token: ${{ github.token }}
           allow-shared-restore: true
           strict: false

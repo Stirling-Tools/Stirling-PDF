@@ -60,14 +60,58 @@ jobs:
         id: changes
         with:
           filters: .github/config/.files.yaml
+  files-hash:
+    name: Hash files
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    env:
+      HASH_FILES_GRADLE: |
+        gradle/wrapper/gradle-wrapper.properties
+        gradle/libs.versions.toml
+        buildSrc/**
+        settings.gradle
+        build.gradle
+        app/**/build.gradle
+        gradle/**/*.gradle
+      HASH_FILES_CARGO: |
+        frontend/editor/src-tauri
+        frontend/editor/src-tauri/Cargo.toml
+        frontend/editor/src-tauri/Cargo.lock
+      HASH_FILES_FRONTEND_DIST: |
+        frontend/editor/src
+      HASH_FILES_UV: |
+        engine/.python-version
+        engine/pyproject.toml
+        engine/uv.lock
+    outputs:
+      gradle_files_hash: ${{ steps.hash.outputs.gradle_files_hash }}
+      cargo_files_hash: ${{ steps.hash.outputs.cargo_files_hash }}
+      frontend_dist_files_hash: ${{ steps.hash.outputs.frontend_dist_files_hash }}
+      uv_files_hash: ${{ steps.hash.outputs.uv_files_hash }}
+    steps:
+      - name: Hash Gradle files
+        id: hash
+        env:
+          GRADLE_HASH_FILES: ${{ hashFiles(env.HASH_FILES_GRADLE) }}
+          CARGO_HASH_FILES: ${{ hashFiles(env.HASH_FILES_CARGO) }}
+          FRONTEND_DIST_HASH_FILES: ${{ hashFiles(env.HASH_FILES_FRONTEND_DIST) }}
+          UV_HASH_FILES: ${{ hashFiles(env.HASH_FILES_UV) }}
+        shell: bash
+        run: |
+          echo "gradle_files_hash=$GRADLE_HASH_FILES" >> "$GITHUB_OUTPUT"
+          echo "cargo_files_hash=$CARGO_HASH_FILES" >> "$GITHUB_OUTPUT"
+          echo "frontend_dist_files_hash=$FRONTEND_DIST_HASH_FILES" >> "$GITHUB_OUTPUT"
+          echo "uv_files_hash=$UV_HASH_FILES" >> "$GITHUB_OUTPUT"
 
   gradle-cache-prime:
     if: needs.files-changed.outputs.backend == 'true'
-    needs: [files-changed]
+    needs: [files-changed, files-hash]
     permissions:
       contents: write
     uses: ./.github/workflows/gradle-cache-prime.yml
     secrets: inherit
+    with:
+      gradle-hash: ${{ needs.files-hash.outputs.gradle_files_hash }}
 
   build:
     if: |
@@ -160,7 +204,9 @@ jobs:
 
   check-licence:
     if: needs.files-changed.outputs.build == 'true'
-    needs: [files-changed, gradle-cache-prime]
+    needs: [files-changed, gradle-cache-prime, files-hash]
+    with:
+      gradle-hash: ${{ needs.files-hash.outputs.gradle_files_hash }}
     permissions:
       contents: write
     uses: ./.github/workflows/check-licence.yml
