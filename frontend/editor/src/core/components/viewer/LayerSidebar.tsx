@@ -107,7 +107,9 @@ export function LayerSidebar({
         loadedKeyRef.current = null;
         setStatus("error");
         setLoadError(
-          err instanceof Error ? err.message : "Failed to read PDF layers",
+          err instanceof Error
+            ? err.message
+            : t("viewer.layers.readFailed", "Failed to read PDF layers"),
         );
       });
 
@@ -249,23 +251,9 @@ export function LayerSidebar({
               }}
             >
               {isExpanded ? (
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 12 12"
-                  fill="currentColor"
-                >
-                  <path d="M2 4l4 4 4-4z" />
-                </svg>
+                <Icon name="chevron-down" size={12} strokeWidth={2.5} />
               ) : (
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 12 12"
-                  fill="currentColor"
-                >
-                  <path d="M4 2l4 4-4 4z" />
-                </svg>
+                <Icon name="chevron-right" size={12} strokeWidth={2.5} />
               )}
             </span>
           ) : (
@@ -353,7 +341,7 @@ export function LayerSidebar({
       {status === "idle" && (
         <div className="sidebar-base__empty-state">
           <Text size="sm" c="dimmed" ta="center">
-            Open a PDF to view its layers.
+            {t("viewer.layers.noDocument", "Open a PDF to view its layers.")}
           </Text>
         </div>
       )}
@@ -368,7 +356,7 @@ export function LayerSidebar({
         >
           <Loader size="md" type="dots" />
           <Text size="sm" ta="center">
-            Loading layers...
+            {t("viewer.layers.loading", "Loading layers...")}
           </Text>
         </Stack>
       )}
@@ -376,7 +364,8 @@ export function LayerSidebar({
       {status === "error" && (
         <div className="sidebar-base__error">
           <Text size="sm" c="var(--color-red-dark)" ta="center">
-            {loadError ?? "Failed to load layers."}
+            {loadError ??
+              t("viewer.layers.loadFailed", "Failed to load layers.")}
           </Text>
         </div>
       )}
@@ -384,7 +373,7 @@ export function LayerSidebar({
       {status === "no-layers" && (
         <div className="sidebar-base__empty-state">
           <Text size="sm" c="dimmed" ta="center">
-            This document has no layers.
+            {t("viewer.layers.empty", "This document has no layers.")}
           </Text>
         </div>
       )}

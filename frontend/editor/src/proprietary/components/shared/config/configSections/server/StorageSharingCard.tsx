@@ -159,7 +159,7 @@ export function StorageSharingCard({
 
         <SettingsToggleRow
           label={t(
-            "admin.settings.storage.signing.enabled.label",
+            "admin.settings.storage.signing.enabled.title",
             "Enable Group Signing",
           )}
           info={t(
