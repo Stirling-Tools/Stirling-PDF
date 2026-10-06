@@ -209,16 +209,29 @@ public class StripeSubscriptionDao {
         return rate;
     }
 
-    private static final String SCHEDULED_END =
-            "SELECT s.cancel_at_period_end, s.cancel_at,"
-                    + " COALESCE(MIN(si.current_period_end), s.current_period_end) AS period_end"
-                    + " FROM stripe.subscriptions s"
-                    + " LEFT JOIN stripe.subscription_items si ON si.subscription = s.id"
-                    + "   AND COALESCE(si.deleted, false) = false"
-                    + " WHERE s.status IN ('active', 'trialing', 'past_due') AND ";
+    private static final String SCHEDULED_END_BY_SUBSCRIPTION =
+            """
+            SELECT s.cancel_at_period_end, s.cancel_at,
+                   COALESCE(MIN(si.current_period_end), s.current_period_end) AS period_end
+            FROM stripe.subscriptions s
+            LEFT JOIN stripe.subscription_items si ON si.subscription = s.id
+              AND COALESCE(si.deleted, false) = false
+            WHERE s.status IN ('active', 'trialing', 'past_due') AND s.id = ?
+            GROUP BY s.id, s.cancel_at_period_end, s.cancel_at, s.current_period_end
+            """;
 
-    private static final String SCHEDULED_END_GROUP =
-            " GROUP BY s.id, s.cancel_at_period_end, s.cancel_at, s.current_period_end";
+    private static final String SCHEDULED_END_BY_TEAM =
+            """
+            SELECT s.cancel_at_period_end, s.cancel_at,
+                   COALESCE(MIN(si.current_period_end), s.current_period_end) AS period_end
+            FROM stripe.subscriptions s
+            LEFT JOIN stripe.subscription_items si ON si.subscription = s.id
+              AND COALESCE(si.deleted, false) = false
+            WHERE s.status IN ('active', 'trialing', 'past_due')
+              AND s.id IN (SELECT subscription_id FROM team_capacity_subscriptions
+                           WHERE team_id = ? AND canceled = false)
+            GROUP BY s.id, s.cancel_at_period_end, s.cancel_at, s.current_period_end
+            """;
 
     /**
      * When the subscription stops, once a cancel is scheduled for it. Empty while it renews, and
@@ -229,23 +242,19 @@ public class StripeSubscriptionDao {
         if (subscriptionId == null || subscriptionId.isBlank()) {
             return Optional.empty();
         }
-        return scheduledEnd("s.id = ?" + SCHEDULED_END_GROUP, subscriptionId);
+        return scheduledEnd(SCHEDULED_END_BY_SUBSCRIPTION, subscriptionId);
     }
 
     /** The same, for the team's live Team subscription in {@code team_capacity_subscriptions}. */
     public Optional<Instant> findTeamScheduledEnd(long teamId) {
-        return scheduledEnd(
-                "s.id IN (SELECT subscription_id FROM team_capacity_subscriptions"
-                        + " WHERE team_id = ? AND canceled = false)"
-                        + SCHEDULED_END_GROUP,
-                teamId);
+        return scheduledEnd(SCHEDULED_END_BY_TEAM, teamId);
     }
 
-    private Optional<Instant> scheduledEnd(String where, Object arg) {
+    private Optional<Instant> scheduledEnd(String sql, Object arg) {
         try {
             return jdbcTemplate
                     .query(
-                            SCHEDULED_END + where,
+                            sql,
                             (rs, i) -> {
                                 long cancelAt = rs.getLong("cancel_at");
                                 if (!rs.wasNull()) return Instant.ofEpochSecond(cancelAt);
