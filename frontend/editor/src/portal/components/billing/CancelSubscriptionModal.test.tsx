@@ -135,7 +135,7 @@ describe("Cancel subscription", () => {
     fireEvent.click(button("Continue cancelling"));
     await screen.findByText(END);
     expect(
-      screen.getByText(/The free plan covers 5 users and you have 37/),
+      screen.getByText(/The other 32 can't sign in until you renew/),
     ).toBeInTheDocument();
     fireEvent.click(button("Cancel Team plan"));
     await screen.findByText(

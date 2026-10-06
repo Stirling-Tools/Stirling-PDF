@@ -53,6 +53,8 @@ interface UsersDirectoryProps {
   onDisableMfa: (member: Member) => void;
   onRemove: (member: Member) => void;
   onTransferOwnership?: (member: Member) => void;
+  /** Gives a member the team's allowance no longer covers a place. Absent where not enforced. */
+  onMakeActive?: (member: Member) => void;
   // Team actions, offered beside the selected team's tab.
   onRenameTeam: (team: Team) => void;
   onDeleteTeam: (team: Team) => void;
@@ -83,6 +85,7 @@ export function UsersDirectory({
   onDisableMfa,
   onRemove,
   onTransferOwnership,
+  onMakeActive,
   onRenameTeam,
   onDeleteTeam,
   showApprover = false,
@@ -182,7 +185,11 @@ export function UsersDirectory({
     [members],
   );
   const showStatus = useMemo(
-    () => members.some((m) => m.status === "suspended" || m.locked),
+    () =>
+      members.some(
+        (m) =>
+          m.status === "suspended" || m.status === "over_limit" || m.locked,
+      ),
     [members],
   );
 
@@ -209,6 +216,12 @@ export function UsersDirectory({
           ? t("users.action.removeTeam", "Remove from team")
           : t("users.action.remove", "Remove from org");
       const items: CellMenuItem[] = [];
+      if (onMakeActive && m.status === "over_limit") {
+        items.push({
+          label: t("users.action.makeActive", "Make active"),
+          onClick: () => onMakeActive(m),
+        });
+      }
       if (capabilities.resetPassword) {
         items.push({
           label: t("users.action.resetPw", "Reset password"),
@@ -309,6 +322,12 @@ export function UsersDirectory({
               out.push({
                 label: t("users.suspended", "Suspended"),
                 accent: "danger",
+              });
+            }
+            if (m.status === "over_limit") {
+              out.push({
+                label: t("users.overPlanLimit", "Over plan limit"),
+                accent: "warning",
               });
             }
             if (m.locked) {
@@ -444,6 +463,7 @@ export function UsersDirectory({
     onDisableMfa,
     onRemove,
     onTransferOwnership,
+    onMakeActive,
   ]);
 
   // Null on "All" and "No team", which are not teams to act on.

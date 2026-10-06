@@ -79,6 +79,7 @@ class SaasTeamControllerTest {
     @Mock private TeamInvitationRepository invitationRepository;
     @Mock private UserService userService;
     @Mock private TeamSecurityExpressions teamSecurityExpressions;
+    @Mock private stirling.software.saas.service.TeamMemberCapacityService memberCapacity;
 
     @org.mockito.Mock private stirling.software.proprietary.service.OrgOwnerService orgOwnerService;
 
@@ -711,6 +712,33 @@ class SaasTeamControllerTest {
         }
 
         @Test
+        @DisplayName("flags the members the team's allowance no longer covers")
+        void overPlanLimit_isFlaggedPerMember() {
+            Team team = team(10L, "Acme");
+            User bob = user(2L, "bob", "bob@x.com");
+            User cat = user(3L, "cat", "cat@x.com");
+            when(membershipRepository.findByTeamId(10L))
+                    .thenReturn(
+                            List.of(
+                                    membership(team, bob, TeamRole.MEMBER),
+                                    membership(team, cat, TeamRole.MEMBER)));
+            when(memberCapacity.disabledUserIds(10L)).thenReturn(java.util.Set.of(3L));
+
+            @SuppressWarnings("unchecked")
+            List<SaasTeamController.TeamMemberDTO> dtos =
+                    (List<SaasTeamController.TeamMemberDTO>)
+                            controller.getTeamMembers(10L).getBody();
+
+            assertThat(dtos)
+                    .extracting(
+                            SaasTeamController.TeamMemberDTO::getId,
+                            SaasTeamController.TeamMemberDTO::isOverPlanLimit)
+                    .containsExactly(
+                            org.assertj.core.groups.Tuple.tuple(2L, false),
+                            org.assertj.core.groups.Tuple.tuple(3L, true));
+        }
+
+        @Test
         @DisplayName("repository failure maps to 500")
         void repoFailure_isServerError() {
             when(membershipRepository.findByTeamId(10L)).thenThrow(new RuntimeException("db"));
@@ -719,6 +747,50 @@ class SaasTeamControllerTest {
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
             assertThat(body(response)).containsEntry("error", "Failed to fetch team members");
+        }
+    }
+
+    @Nested
+    @DisplayName("activateMember")
+    class ActivateMember {
+
+        private SaasTeamController.ActivateMemberRequest replacing(Long id) {
+            SaasTeamController.ActivateMemberRequest request =
+                    new SaasTeamController.ActivateMemberRequest();
+            request.setReplaceMemberId(id);
+            return request;
+        }
+
+        @Test
+        @DisplayName("a free place activates directly")
+        void freePlace_activates() {
+            when(memberCapacity.makeActive(10L, 3L, null))
+                    .thenReturn(
+                            stirling.software.saas.service.TeamMemberCapacityService
+                                    .MakeActiveResult.ACTIVATED);
+
+            assertThat(controller.activateMember(10L, 3L, null).getStatusCode())
+                    .isEqualTo(HttpStatus.OK);
+        }
+
+        @Test
+        @DisplayName("a full team asks who steps aside, and refuses an invalid choice")
+        void fullTeam_needsAValidReplacement() {
+            when(memberCapacity.makeActive(10L, 3L, null))
+                    .thenReturn(
+                            stirling.software.saas.service.TeamMemberCapacityService
+                                    .MakeActiveResult.NO_PLACE);
+            when(memberCapacity.makeActive(10L, 3L, 1L))
+                    .thenReturn(
+                            stirling.software.saas.service.TeamMemberCapacityService
+                                    .MakeActiveResult.REPLACE_INVALID);
+
+            ResponseEntity<?> full = controller.activateMember(10L, 3L, replacing(null));
+            assertThat(full.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+            assertThat(body(full)).containsEntry("error", "no_place");
+            ResponseEntity<?> invalid = controller.activateMember(10L, 3L, replacing(1L));
+            assertThat(invalid.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(body(invalid)).containsEntry("error", "replace_invalid");
         }
     }
 

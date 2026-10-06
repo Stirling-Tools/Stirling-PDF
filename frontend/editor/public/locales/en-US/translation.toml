@@ -6031,6 +6031,16 @@ header = "Markdown To PDF"
 tags = "markup,web-content,transformation,convert,md"
 title = "Markdown To PDF"
 
+[memberOverPlanLimit]
+body = "{{team}}'s plan doesn't cover your account right now. Ask a team leader to renew the plan or make your account active."
+bodyNoName = "Your team's plan doesn't cover your account right now. Ask a team leader to renew the plan or make your account active."
+kept = "Your files and settings are kept. Leaving the team takes you back to your own free workspace."
+leaders = "Team leaders"
+leave = "Leave team"
+leaveFailed = "Couldn't leave the team. Please try again."
+signOut = "Sign out"
+title = "Your account is disabled"
+
 [merge]
 goToFileEditor = "Go to file editor"
 submit = "Merge"
@@ -8088,7 +8098,7 @@ kept = "Files, pipelines and settings are kept."
 nothingChanges = "Nothing changes."
 prepaid = "Your {{credits}} prepaid credits stay yours to use."
 processor = "Processing beyond your free monthly credits stops."
-teamOver = "The free plan covers {{free}} users and you have {{users}}. You won't be able to add anyone until you're back under it."
+teamOver = "The free plan keeps {{free}} users active: leaders first, then the most recent sign-ins. The other {{over}} can't sign in until you renew. You can choose who stays from the Users page."
 teamWithin = "Your team moves to the free plan, which covers {{free}} users."
 untilThen = "Until then"
 
@@ -13112,6 +13122,7 @@ visits = "Visits"
 [users]
 lastActive = "Last active"
 locked = "Locked"
+overPlanLimit = "Over plan limit"
 ownerSetupRequired = "The organization owner has not completed first login. Complete setup or ask the server operator to recover ownership before transferring ownership."
 roleFor = "Role for {{name}}"
 rowActions = "Actions for {{name}}"
@@ -13126,6 +13137,7 @@ cancelInvite = "Cancel invitation"
 createFromDefault = "Create team from Default"
 deleteTeam = "Delete team"
 disableMfa = "Reset MFA"
+makeActive = "Make active"
 move = "Move to team"
 reinstate = "Reinstate"
 remove = "Remove from org"
@@ -13232,6 +13244,12 @@ invitee = "Invitee"
 description = "Something went wrong reaching the backend, or you don't have access. Try again."
 title = "Couldn't load members"
 
+[users.makeActive]
+cancel = "Cancel"
+confirm = "Swap places"
+subtitle = "Your plan has no free place. Choose who gives up theirs; they can't sign in until a place frees up."
+title = "Make {{name}} active"
+
 [users.moveTeam]
 apply = "Move"
 team = "Team"
@@ -13244,6 +13262,11 @@ name = "Team name"
 namePlaceholder = "e.g. Finance"
 nameRequired = "Team name is required"
 title = "New team"
+
+[users.overLimit]
+body = "Your team's plan no longer covers them, so they can't sign in. Renew the plan, or use Make active on a row to choose who has a place."
+renew = "Renew Team plan"
+title = "{{count}} users are disabled"
 
 [users.renameTeam]
 apply = "Rename"

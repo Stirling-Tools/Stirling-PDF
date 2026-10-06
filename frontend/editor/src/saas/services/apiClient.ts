@@ -8,6 +8,7 @@ import {
 } from "@app/services/paygErrorInterceptor";
 import { redirectToLogin } from "@app/auth/redirectToLogin";
 import { getBrowserId } from "@app/utils/browserIdentifier";
+import { reportMemberOverPlanLimit } from "@app/services/memberOverPlanLimit";
 
 // Helper: decode base64url JWT payload safely
 function decodeJwtPayload(token: string): Record<string, unknown> | null {
@@ -148,6 +149,9 @@ apiClient.interceptors.response.use(
     const paygKind = classifyPaygError(error);
     if (paygKind !== null) {
       handlePaygError(paygKind, error);
+      return Promise.reject(error);
+    }
+    if (reportMemberOverPlanLimit(status, error.response?.data)) {
       return Promise.reject(error);
     }
 

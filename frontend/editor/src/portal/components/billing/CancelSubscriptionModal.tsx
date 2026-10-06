@@ -590,10 +590,10 @@ export function CancelSubscriptionModal({
                     <li>
                       {t(
                         "portal.billing.cancel.facts.teamOver",
-                        "The free plan covers {{free}} users and you have {{users}}. You won't be able to add anyone until you're back under it.",
+                        "The free plan keeps {{free}} users active: leaders first, then the most recent sign-ins. The other {{over}} can't sign in until you renew. You can choose who stays from the Users page.",
                         {
                           free: wallet.freeUserAllowance,
-                          users: wallet.team.usersInUse,
+                          over: usersOver,
                         },
                       )}
                     </li>

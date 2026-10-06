@@ -330,7 +330,11 @@ class SupabaseSecurityConfigMoreTest {
 
             SecurityFilterChain result =
                     config(new ApplicationProperties())
-                            .saasSecurityFilterChain(http, jwtDecoder, deviceFilterProvider);
+                            .saasSecurityFilterChain(
+                                    http,
+                                    jwtDecoder,
+                                    deviceFilterProvider,
+                                    mock(org.springframework.beans.factory.ObjectProvider.class));
 
             assertThat(result).isSameAs(built);
         }

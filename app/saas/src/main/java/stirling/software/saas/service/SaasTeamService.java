@@ -51,6 +51,7 @@ public class SaasTeamService {
     private final SaasUserExtensionService saasUserExtensionService;
     private final LinkedInstanceRepository linkedInstanceRepository;
     private final stirling.software.proprietary.security.service.UserService userService;
+    private final TeamMemberCapacityService memberCapacity;
 
     public static final String DEFAULT_TEAM_NAME = "Default";
     public static final String INTERNAL_TEAM_NAME = "Internal";
@@ -517,6 +518,7 @@ public class SaasTeamService {
 
         // Atomically decrement team seats_used (prevents race condition)
         saasTeamExtensionsRepository.decrementSeatsUsed(teamId);
+        memberCapacity.refillAfterCommit(teamId);
 
         // Return the removed user to their durable home team (mints one only if they have none).
         returnUserToHome(userToRemove);
@@ -606,6 +608,7 @@ public class SaasTeamService {
 
         // Atomically decrement team seats_used (prevents race condition)
         saasTeamExtensionsRepository.decrementSeatsUsed(teamId);
+        memberCapacity.refillAfterCommit(teamId);
 
         // Return the user to their durable home team (mints one only if they have none).
         returnUserToHome(user);

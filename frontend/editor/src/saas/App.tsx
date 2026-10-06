@@ -23,6 +23,7 @@ import { AppFrame } from "@app/components/layout/AppFrame";
 import { NoAppChrome } from "@app/components/layout/NoAppChrome";
 import OnboardingBootstrap from "@app/components/OnboardingBootstrap";
 import SignupRequiredBootstrap from "@app/components/SignupRequiredBootstrap";
+import MemberOverPlanLimitBootstrap from "@app/components/MemberOverPlanLimitBootstrap";
 import UsageLimitModalHost from "@app/components/UsageLimitModalHost";
 import { RootGate } from "@app/routes/RootGate";
 
@@ -68,6 +69,7 @@ function NonAuthBootstraps() {
       <OnboardingBootstrap />
       <SignupRequiredBootstrap />
       <UsageLimitModalHost />
+      <MemberOverPlanLimitBootstrap />
     </>
   );
 }
