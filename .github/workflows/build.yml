@@ -70,6 +70,9 @@ jobs:
       frontend_dist_files_hash: ${{ steps.hash.outputs.frontend_dist_files_hash }}
       uv_files_hash: ${{ steps.hash.outputs.uv_files_hash }}
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
       - name: Hash Gradle files
         id: hash
         env:
