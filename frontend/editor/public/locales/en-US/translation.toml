@@ -13920,6 +13920,8 @@ image = "Image"
 text = "Text"
 
 [workbench]
+dropFailedSingle = "Your file couldn't be added"
+dropFailedSome = "{{failed}} of your files couldn't be added"
 dropOverlay = "Drop files to add them to the workbench"
 
 [workbench.sessionRestore]

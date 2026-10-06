@@ -12,7 +12,7 @@ import { Box, Loader, Center, Stack, Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
-import { useAllFiles } from "@app/contexts/FileContext";
+import { useAllFiles, useFileSelectors } from "@app/contexts/FileContext";
 import {
   useNavigationState,
   useNavigationActions,
@@ -75,6 +75,7 @@ export default function Workbench() {
   const hasFiles = activeFiles.length > 0;
   const { t } = useTranslation();
   const getDropzoneFiles = useDropzoneFiles();
+  const fileSelectors = useFileSelectors();
 
   // The whole canvas takes file drops, not just the content a view happens to
   // render, so a short grid or a scrolled page still has somewhere to drop.
@@ -113,19 +114,25 @@ export default function Workbench() {
     const dropped = await getDropzoneFiles(e);
     const files = dropped.filter((item) => item instanceof File);
     if (files.length === 0) return;
+    const openBefore = fileSelectors.getStirlingFileStubs().length;
     try {
       await addFiles(files);
     } catch (cause) {
+      // addFiles dispatches in chunks, so a mid-batch failure leaves the earlier
+      // files open. ZIP extraction can add more stubs than were dropped, hence the floor.
+      const added = fileSelectors.getStirlingFileStubs().length - openBefore;
+      const failed = Math.max(1, files.length - added);
       alert({
         alertType: "error",
-        title: t("filePicker.errorTitle", "Couldn't add files"),
-        body:
-          cause instanceof Error
-            ? cause.message
+        title:
+          files.length === 1
+            ? t("workbench.dropFailedSingle", "Your file couldn't be added")
             : t(
-                "filePicker.error",
-                "Could not add these files. Please try again.",
+                "workbench.dropFailedSome",
+                "{{failed}} of your files couldn't be added",
+                { failed },
               ),
+        body: cause instanceof Error ? cause.message : undefined,
         expandable: false,
         durationMs: 5000,
       });
