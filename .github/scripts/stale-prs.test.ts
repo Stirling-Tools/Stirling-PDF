@@ -230,9 +230,9 @@ describe("comments", () => {
     const body = warningComment(pr, reasons, NOW);
     assert.match(body, /@contributor/);
     assert.match(body, /merge conflicts with `main`\. Merging or rebasing/);
-    assert.match(body, /waiting on a response from you\. A reply, a new push/);
+    assert.match(body, /waiting on a response from you\. Please add a comment, a new push/);
     assert.match(body, /closed automatically/);
-    assert.match(body, /a maintainer can add the on-hold label/);
+    assert.match(body, /just add a comment so a maintainer can take a look/);
   });
 
   it("says how long a draft has been idle", () => {
@@ -246,7 +246,7 @@ describe("comments", () => {
   it("explains the close and how to reopen", () => {
     const body = closingComment(pr, reasons, NOW);
     assert.match(body, /closed automatically/);
-    assert.match(body, /reopen it/);
+    assert.match(body, /open a new PR/);
     assert.doesNotMatch(body, /keeps it open/);
   });
 
