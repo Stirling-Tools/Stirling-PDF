@@ -8,7 +8,8 @@ ARG BASE_VERSION=1.1.0@sha256:3bcc8e10d5319b7c0550cf41b96f6980e1552c974dc37aba46
 ARG BASE_IMAGE=stirlingtools/stirling-pdf-base:${BASE_VERSION}
 
 # Stage 1: Build the Java application and frontend
-FROM gradle:9.7.1-jdk25@sha256:e06837018d077ee7f1218e53499425ca7615702ad58856d980c154caa17eb093 AS app-build
+# Compile natively even for arm64; TARGETARCH below still picks the right JPDFium native.
+FROM --platform=$BUILDPLATFORM gradle:9.7.1-jdk25@sha256:e06837018d077ee7f1218e53499425ca7615702ad58856d980c154caa17eb093 AS app-build
 
 ARG TASK_VERSION=3.54.0
 ARG NODE_MAJOR_VERSION=24
@@ -54,7 +55,7 @@ COPY app/common/build.gradle                app/common/
 COPY app/proprietary/build.gradle           app/proprietary/
 
 # Use system gradle instead of gradlew to avoid SSL issues downloading gradle distribution on emulated arm64
-RUN --mount=type=cache,id=stirling-pdf-gradle-cache,target=/home/gradle/.gradle,sharing=locked \
+RUN --mount=type=cache,id=stirling-pdf-gradle-cache,target=/home/gradle/.gradle,sharing=shared \
     gradle dependencies --no-daemon || true
 
 COPY . .
@@ -63,8 +64,8 @@ COPY . .
 ARG BUILD_PORTAL=true
 # Bundle only the JPDFium native for this image's target arch.
 ARG TARGETARCH
-RUN --mount=type=cache,id=stirling-pdf-npm-cache,target=/root/.npm,sharing=locked \
-    --mount=type=cache,id=stirling-pdf-gradle-cache,target=/home/gradle/.gradle,sharing=locked \
+RUN --mount=type=cache,id=stirling-pdf-npm-cache,target=/root/.npm,sharing=shared \
+    --mount=type=cache,id=stirling-pdf-gradle-cache,target=/home/gradle/.gradle,sharing=shared \
     JPDFIUM_PLATFORM="$([ "$TARGETARCH" = arm64 ] && echo linux-arm64 || echo linux-x64)" && \
     DISABLE_ADDITIONAL_FEATURES=false \
     gradle clean build \
@@ -73,12 +74,15 @@ RUN --mount=type=cache,id=stirling-pdf-npm-cache,target=/root/.npm,sharing=locke
       -PbuildWithPortal=${BUILD_PORTAL} \
       -PjpdfiumPlatforms="$JPDFIUM_PLATFORM" \
       -x spotlessApply -x spotlessCheck -x test -x sonarqube \
-      --no-daemon
+      --no-daemon && \
+    mkdir -p /out && cp app/core/build/libs/*.jar /out/app.jar && cp build/libs/restart-helper.jar /out/ && \
+    cd / && rm -rf /app
 
 # Stage 2: Extract Spring Boot Layers
-FROM eclipse-temurin:25-jre-noble@sha256:b4c93a50fc67612798db73d68ca3b0ee4ebdd51736e59cca370e689b9797037e AS jar-extract
+FROM --platform=$BUILDPLATFORM eclipse-temurin:25-jre-noble@sha256:b4c93a50fc67612798db73d68ca3b0ee4ebdd51736e59cca370e689b9797037e AS jar-extract
+ARG TARGETARCH
 WORKDIR /tmp
-COPY --from=app-build /app/app/core/build/libs/*.jar app.jar
+COPY --from=app-build /out/app.jar app.jar
 RUN java -Djarmode=tools -jar app.jar extract --layers --destination /layers
 
 # Strip the bundled ONNX Runtime's natives down to the target Linux arch (~42MB jar -> ~8MB).
@@ -86,7 +90,7 @@ COPY scripts/slim-onnxruntime.sh /tmp/slim-onnxruntime.sh
 RUN apt-get update \
     && apt-get install -y --no-install-recommends zip \
     && rm -rf /var/lib/apt/lists/* \
-    && sh /tmp/slim-onnxruntime.sh /layers/dependencies
+    && sh /tmp/slim-onnxruntime.sh /layers/dependencies "$TARGETARCH"
 
 
 # Stage 2b: AI engine. Built at its final path so the venv resolves after the copy, on uv's
@@ -127,7 +131,7 @@ COPY --link --from=jar-extract --chown=1000:1000 /layers/snapshot-dependencies/ 
 COPY --link --from=jar-extract --chown=1000:1000 /layers/application/            /app/
 
 COPY --link --from=app-build --chown=1000:1000 \
-     /app/build/libs/restart-helper.jar /restart-helper.jar
+     /out/restart-helper.jar /restart-helper.jar
 COPY --link --chown=1000:1000 scripts/ /scripts/
 
 # init-without-ocr.sh starts the engine when this directory exists, so other images are unaffected.

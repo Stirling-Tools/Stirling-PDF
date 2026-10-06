@@ -4,7 +4,8 @@
 # Single JAR contains both frontend and backend with minimal dependencies
 
 # Stage 1: Build application with embedded frontend
-FROM gradle:9.7.1-jdk25@sha256:e06837018d077ee7f1218e53499425ca7615702ad58856d980c154caa17eb093 AS build
+# Compile natively even for arm64; TARGETARCH below still picks the right JPDFium native.
+FROM --platform=$BUILDPLATFORM gradle:9.7.1-jdk25@sha256:e06837018d077ee7f1218e53499425ca7615702ad58856d980c154caa17eb093 AS build
 
 # Install Node.js and npm for frontend build
 ARG TASK_VERSION=3.54.0
@@ -39,7 +40,7 @@ ENV JDK_JAVA_OPTIONS="--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNN
   --add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED \
   --add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED"
 
-RUN --mount=type=cache,id=stirling-pdf-gradle-cache,target=/home/gradle/.gradle,sharing=locked \
+RUN --mount=type=cache,id=stirling-pdf-gradle-cache,target=/home/gradle/.gradle,sharing=shared \
     ./gradlew dependencies --no-daemon || true
 
 # Copy entire project
@@ -50,8 +51,8 @@ COPY . .
 ARG BUILD_PORTAL=true
 # Bundle only the JPDFium native for this image's target arch.
 ARG TARGETARCH
-RUN --mount=type=cache,id=stirling-pdf-npm-cache,target=/root/.npm,sharing=locked \
-    --mount=type=cache,id=stirling-pdf-gradle-cache,target=/home/gradle/.gradle,sharing=locked \
+RUN --mount=type=cache,id=stirling-pdf-npm-cache,target=/root/.npm,sharing=shared \
+    --mount=type=cache,id=stirling-pdf-gradle-cache,target=/home/gradle/.gradle,sharing=shared \
     JPDFIUM_PLATFORM="$([ "$TARGETARCH" = arm64 ] && echo linux-arm64 || echo linux-x64)" && \
     DISABLE_ADDITIONAL_FEATURES=true \
     ./gradlew clean build \
@@ -59,7 +60,9 @@ RUN --mount=type=cache,id=stirling-pdf-npm-cache,target=/root/.npm,sharing=locke
       -PbuildWithPortal=${BUILD_PORTAL} \
       -PjpdfiumPlatforms="$JPDFIUM_PLATFORM" \
       -x spotlessApply -x spotlessCheck -x test -x sonarqube \
-      --no-daemon
+      --no-daemon && \
+    mkdir -p /out && cp app/core/build/libs/*.jar /out/app.jar && cp build/libs/restart-helper.jar /out/ && \
+    cd / && rm -rf /app
 
 # Stage 2: Runtime image
 # glibc base (not Alpine/musl): JPDFium's PDFium natives are glibc-linked.
@@ -127,9 +130,9 @@ COPY --chown=1000:1000 scripts/stirling-diagnostics.sh /scripts/stirling-diagnos
 
 # Copy built JARs from build stage
 COPY --from=build --chown=1000:1000 \
-     /app/app/core/build/libs/*.jar /app.jar
+     /out/app.jar /app.jar
 COPY --from=build --chown=1000:1000 \
-     /app/build/libs/restart-helper.jar /restart-helper.jar
+     /out/restart-helper.jar /restart-helper.jar
 
 RUN chmod +x /scripts/*.sh
 
