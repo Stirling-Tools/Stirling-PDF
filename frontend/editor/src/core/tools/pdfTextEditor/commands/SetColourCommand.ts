@@ -5,6 +5,10 @@ import type { RGBA } from "@app/tools/pdfTextEditor/types";
 import { PdfiumTextWriter } from "@app/tools/pdfTextEditor/pdfium/PdfiumTextWriter";
 import { collectMemberPtrs } from "@app/tools/pdfTextEditor/commands/editTextHelpers";
 import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
+import {
+  setScanOverride,
+  type ScanOverride,
+} from "@app/tools/pdfTextEditor/commands/scanTextEdit";
 
 export class SetColourCommand implements Command {
   readonly type = "set-colour";
@@ -14,6 +18,8 @@ export class SetColourCommand implements Command {
   private prevFill: RGBA | null;
   /** Each member object's OWN pre-apply fill. */
   private prevMemberFills: Array<{ ptr: number; fill: RGBA }> | null;
+  /** Set when the run was scanned text, recoloured by redrawing it. */
+  private scanPrev: ScanOverride | null = null;
 
   constructor(opts: { pageIndex: number; runId: string; nextFill: RGBA }) {
     this.pageIndex = opts.pageIndex;
@@ -27,6 +33,14 @@ export class SetColourCommand implements Command {
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
     if (!run) return;
+    const scanPrev = setScanOverride(doc, page, run, (o) => ({
+      ...o,
+      fill: { ...this.nextFill },
+    }));
+    if (scanPrev) {
+      this.scanPrev = scanPrev;
+      return;
+    }
     if (this.prevFill === null) {
       this.prevFill = { ...run.fill };
       const m = doc.module;
@@ -48,6 +62,14 @@ export class SetColourCommand implements Command {
   }
 
   revert(doc: EditorDocument): void {
+    if (this.scanPrev) {
+      const page = doc.page(this.pageIndex);
+      const run = page.findRun(this.runId);
+      const prev = this.scanPrev;
+      if (run) setScanOverride(doc, page, run, () => prev);
+      this.scanPrev = null;
+      return;
+    }
     if (this.prevFill === null) return;
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
@@ -90,7 +112,7 @@ export class SetColourCommand implements Command {
 }
 
 /** Read an object's current fill colour (0-255 RGBA), or null on failure. */
-function readObjFill(
+export function readObjFill(
   m: import("@embedpdf/pdfium").WrappedPdfiumModule,
   objPtr: number,
 ): RGBA | null {

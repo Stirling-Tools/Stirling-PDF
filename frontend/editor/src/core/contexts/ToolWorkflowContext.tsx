@@ -16,7 +16,6 @@ import {
   useToolManagement,
   type ToolAvailabilityMap,
 } from "@app/hooks/useToolManagement";
-import { PageEditorFunctions } from "@app/types/pageEditor";
 import { ToolRegistryEntry, ToolRegistry } from "@app/data/toolsTaxonomy";
 import {
   useNavigationActions,
@@ -80,7 +79,6 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   /** Register work that turns the current preview into a real file. Tool
    * selection runs it first, so a tool never acts on the wrong document. */
   registerPreviewImport: (importFile: (() => Promise<void>) | null) => void;
-  setPageEditorFunctions: (functions: PageEditorFunctions | null) => void;
   setSearchQuery: (query: string) => void;
 
   selectTool: (toolId: ToolId | null) => void;
@@ -157,7 +155,6 @@ export interface ToolWorkflowActionsValue {
   /** Register work that turns the current preview into a real file. Tool
    * selection runs it first, so a tool never acts on the wrong document. */
   registerPreviewImport: (importFile: (() => Promise<void>) | null) => void;
-  setPageEditorFunctions: (functions: PageEditorFunctions | null) => void;
   setSearchQuery: (query: string) => void;
   registerToolReset: (toolId: string, resetFunction: () => void) => void;
   resetTool: (toolId: string) => void;
@@ -259,13 +256,6 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   const registerPreviewImport = useCallback(
     (importFile: (() => Promise<void>) | null) => {
       previewImportRef.current = importFile;
-    },
-    [],
-  );
-
-  const setPageEditorFunctions = useCallback(
-    (functions: PageEditorFunctions | null) => {
-      dispatch({ type: "SET_PAGE_EDITOR_FUNCTIONS", payload: functions });
     },
     [],
   );
@@ -478,7 +468,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
         navigationState.selectedTool &&
         navigationState.selectedTool !== toolId
       ) {
-        actions.requestNavigation(() => handleToolSelect(toolId));
+        actions.requestNavigation(() => handleToolSelectRef.current(toolId));
         return;
       }
 
@@ -575,10 +565,12 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   );
 
   const handleBackToTools = useCallback(() => {
-    setLeftPanelView("toolPicker");
-    setReaderMode(false);
-    actions.setSelectedTool(null);
-  }, [setLeftPanelView, setReaderMode, actions.setSelectedTool]);
+    actions.requestNavigation(() => {
+      setLeftPanelView("toolPicker");
+      setReaderMode(false);
+      actions.setSelectedTool(null);
+    });
+  }, [setLeftPanelView, setReaderMode, actions]);
 
   const handleReaderToggle = useCallback(() => {
     setReaderMode(true);
@@ -682,7 +674,6 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       setToolPanelMode: stableSetToolPanelMode,
       setPreviewFile: stableSetPreviewFile,
       registerPreviewImport,
-      setPageEditorFunctions,
       setSearchQuery,
       registerToolReset,
       resetTool,
@@ -699,7 +690,6 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       stableSetReaderMode,
       stableSetToolPanelMode,
       stableSetPreviewFile,
-      setPageEditorFunctions,
       setSearchQuery,
       registerToolReset,
       resetTool,
@@ -739,7 +729,6 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       setToolPanelMode,
       setPreviewFile,
       registerPreviewImport,
-      setPageEditorFunctions,
       setSearchQuery,
       selectTool: actions.setSelectedTool,
       clearToolSelection: () => actions.setSelectedTool(null),
@@ -782,7 +771,6 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       setReaderMode,
       setToolPanelMode,
       setPreviewFile,
-      setPageEditorFunctions,
       setSearchQuery,
       actions.setSelectedTool,
       registerToolReset,
