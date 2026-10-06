@@ -1,0 +1,209 @@
+/* The add card is a stack of pages in the thumbnail grid. The front sheet is a
+   letterhead (logo, text lines, a plus); on hover or focus the back sheets fan
+   out, the plus fades, and the lines give way to the sources in the same band,
+   so nothing jumps. */
+
+/* Same footprint as FileEditorThumbnail: a 260px card whose page starts 36px
+   down (10px padding + the 26px toolchain bar), so the two line up. */
+.cell {
+  width: 260px;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 36px 10px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  user-select: none;
+}
+
+/* Fixed rather than an aspect-ratio: each thumbnail derives its own aspect from
+   its PDF, so there is no single page shape to copy. */
+.stack {
+  position: relative;
+  width: 240px;
+  max-width: 100%;
+  height: 284px;
+}
+
+.sheet {
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  border: 1px solid var(--c-border);
+  box-shadow: var(--shadow-md);
+  background: var(--c-surface);
+  overflow: hidden;
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.3, 1.2);
+}
+
+/* Halfway to sunken: dark enough to read as depth, light enough to stay paper. */
+.backSheet {
+  background: color-mix(in srgb, var(--c-surface) 55%, var(--c-surface-sunken));
+}
+
+.backLeft {
+  transform: rotate(-5deg) translateX(-8px);
+}
+
+.backRight {
+  transform: rotate(3deg) translateX(6px);
+}
+
+.frontSheet {
+  cursor: pointer;
+}
+
+.stack:hover .backLeft,
+.stack:focus-within .backLeft,
+:global([data-accept]) .backLeft {
+  transform: rotate(-9deg) translateX(-18px);
+}
+
+.stack:hover .backRight,
+.stack:focus-within .backRight,
+:global([data-accept]) .backRight {
+  transform: rotate(6deg) translateX(16px);
+}
+
+.stack:hover .frontSheet,
+.stack:focus-within .frontSheet,
+:global([data-accept]) .frontSheet {
+  transform: translateY(-4px);
+}
+
+.lines {
+  position: absolute;
+  top: 26px;
+  left: 22px;
+  right: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.lines > span {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--c-border-subtle);
+}
+
+.frontSheet .lines {
+  top: 74px;
+}
+
+.logo {
+  position: absolute;
+  top: 22px;
+  left: 22px;
+  pointer-events: none;
+}
+
+.plus {
+  position: absolute;
+  left: 50%;
+  bottom: 30px;
+  translate: -50% 0;
+  display: flex;
+  padding: 16px;
+  border-radius: 50%;
+  background: var(--c-surface-raised);
+  border: 1px solid var(--c-border);
+  color: var(--c-text-muted);
+  pointer-events: none;
+  transition:
+    opacity 0.15s ease,
+    transform 0.2s ease;
+}
+
+.sources {
+  position: absolute;
+  top: 62px;
+  left: 12px;
+  display: flex;
+  flex-direction: column;
+  width: 190px;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition:
+    max-height 0.25s ease,
+    opacity 0.15s ease;
+}
+
+.stack:hover .frontSheet .lines,
+.stack:focus-within .frontSheet .lines {
+  opacity: 0;
+}
+
+.stack:hover .plus,
+.stack:focus-within .plus {
+  opacity: 0;
+  transform: scale(0.85);
+}
+
+.stack:hover .sources,
+.stack:focus-within .sources {
+  max-height: 160px;
+  opacity: 1;
+}
+
+/* A drag has one target, the whole workbench, so the sources stay hidden. */
+:global([data-accept]) .sources {
+  max-height: 0;
+  opacity: 0;
+}
+
+.source {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: var(--c-text-muted);
+  font-size: 13px;
+  font-weight: 500;
+  text-align: start;
+  cursor: pointer;
+}
+
+.source:hover:not(:disabled) {
+  background: var(--c-hover);
+  color: var(--c-text);
+}
+
+.source:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.source:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: -2px;
+}
+
+.title {
+  margin-top: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--c-text);
+  text-align: center;
+}
+
+.hint {
+  font-size: 11px;
+  color: var(--c-text-muted);
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet,
+  .lines,
+  .plus,
+  .sources {
+    transition: none;
+  }
+}
