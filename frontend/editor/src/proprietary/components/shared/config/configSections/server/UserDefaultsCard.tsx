@@ -1,14 +1,16 @@
 import { useTranslation } from "react-i18next";
-import { Group, Stack, Paper, Text } from "@mantine/core";
+import { Stack, Paper } from "@mantine/core";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
+import { InfoTooltip } from "@app/ui/InfoTooltip";
 import { SettingsToggleRow } from "@app/components/shared/config/SettingsToggleRow";
 import PendingBadge from "@app/components/shared/config/PendingBadge";
+import "@app/components/shared/config/SettingsToggleRow.css";
 import type { UiDefaultsCardProps } from "@app/components/shared/config/configSections/server/serverCardProps";
 import type { ToolPanelMode } from "@app/constants/toolPanel";
 import type { StartupView } from "@app/services/preferencesService";
 
 /**
- * Starting values for two per-user preferences. Its own `ui` draft, kept apart
+ * Starting values for four per-user preferences. Its own `ui` draft, kept apart
  * from the System card's ui.* keys so each save still sends only what changed.
  */
 export function UserDefaultsCard({
@@ -26,6 +28,15 @@ export function UserDefaultsCard({
     settings.defaultStartupView === "automate"
       ? settings.defaultStartupView
       : "tools";
+
+  const toolPanelLabel = t(
+    "settings.general.defaultToolPickerMode",
+    "Default tool picker mode",
+  );
+  const startupViewLabel = t(
+    "settings.general.defaultStartupView",
+    "Default view on launch",
+  );
 
   return (
     <Paper withBorder p="md" radius="md">
@@ -72,84 +83,78 @@ export function UserDefaultsCard({
           disabled={!loginEnabled}
         />
 
-        <div>
-          <Text size="sm" fw={500} mb={4}>
-            <Group gap="xs">
-              <span>
-                {t(
-                  "admin.settings.general.defaultToolPickerMode.label",
-                  "Default tool picker mode",
-                )}
-              </span>
+        <div className="settings-toggle">
+          <div className="settings-toggle__row">
+            <span className="settings-toggle__label">
+              <span className="settings-toggle__title">{toolPanelLabel}</span>
               <PendingBadge show={isFieldPending("defaultToolPanelMode")} />
-            </Group>
-          </Text>
-          <Text size="xs" c="dimmed" mb="xs">
-            {t(
-              "admin.settings.general.defaultToolPickerMode.description",
-              "Choose whether the tool picker opens in fullscreen or sidebar by default",
-            )}
-          </Text>
-          <SegmentedControl<ToolPanelMode>
-            value={toolPanelModeValue}
-            onChange={(value) => {
-              if (!loginEnabled) return;
-              setSettings({ ...settings, defaultToolPanelMode: value });
-            }}
-            options={[
-              {
-                label: t("settings.general.mode.sidebar", "Sidebar"),
-                value: "sidebar",
-              },
-              {
-                label: t("settings.general.mode.fullscreen", "Fullscreen"),
-                value: "fullscreen",
-              },
-            ]}
-            disabled={!loginEnabled}
-          />
+              <InfoTooltip
+                label={t(
+                  "settings.general.defaultToolPickerModeDescription",
+                  "Choose whether the tool picker opens in fullscreen or sidebar by default",
+                )}
+              />
+            </span>
+            <SegmentedControl<ToolPanelMode>
+              className="settings-toggle__control"
+              ariaLabel={toolPanelLabel}
+              value={toolPanelModeValue}
+              onChange={(value) => {
+                if (!loginEnabled) return;
+                setSettings({ ...settings, defaultToolPanelMode: value });
+              }}
+              options={[
+                {
+                  label: t("settings.general.mode.sidebar", "Sidebar"),
+                  value: "sidebar",
+                },
+                {
+                  label: t("settings.general.mode.fullscreen", "Fullscreen"),
+                  value: "fullscreen",
+                },
+              ]}
+              disabled={!loginEnabled}
+            />
+          </div>
         </div>
 
-        <div>
-          <Text size="sm" fw={500} mb={4}>
-            <Group gap="xs">
-              <span>
-                {t(
-                  "admin.settings.general.defaultStartupView.label",
-                  "Default view on launch",
-                )}
-              </span>
+        <div className="settings-toggle">
+          <div className="settings-toggle__row">
+            <span className="settings-toggle__label">
+              <span className="settings-toggle__title">{startupViewLabel}</span>
               <PendingBadge show={isFieldPending("defaultStartupView")} />
-            </Group>
-          </Text>
-          <Text size="xs" c="dimmed" mb="xs">
-            {t(
-              "admin.settings.general.defaultStartupView.description",
-              "Choose which view is active when the app starts",
-            )}
-          </Text>
-          <SegmentedControl<StartupView>
-            value={startupViewValue}
-            onChange={(value) => {
-              if (!loginEnabled) return;
-              setSettings({ ...settings, defaultStartupView: value });
-            }}
-            options={[
-              {
-                label: t("settings.general.startupView.tools", "Tools"),
-                value: "tools",
-              },
-              {
-                label: t("settings.general.startupView.read", "Read"),
-                value: "read",
-              },
-              {
-                label: t("settings.general.startupView.automate", "Automate"),
-                value: "automate",
-              },
-            ]}
-            disabled={!loginEnabled}
-          />
+              <InfoTooltip
+                label={t(
+                  "settings.general.defaultStartupViewDescription",
+                  "Choose which view is active when the app starts",
+                )}
+              />
+            </span>
+            <SegmentedControl<StartupView>
+              className="settings-toggle__control"
+              ariaLabel={startupViewLabel}
+              value={startupViewValue}
+              onChange={(value) => {
+                if (!loginEnabled) return;
+                setSettings({ ...settings, defaultStartupView: value });
+              }}
+              options={[
+                {
+                  label: t("settings.general.startupView.tools", "Tools"),
+                  value: "tools",
+                },
+                {
+                  label: t("settings.general.startupView.read", "Read"),
+                  value: "read",
+                },
+                {
+                  label: t("settings.general.startupView.automate", "Automate"),
+                  value: "automate",
+                },
+              ]}
+              disabled={!loginEnabled}
+            />
+          </div>
         </div>
       </Stack>
     </Paper>

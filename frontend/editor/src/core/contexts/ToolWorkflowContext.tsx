@@ -41,6 +41,7 @@ import {
 } from "@app/contexts/toolWorkflow/toolWorkflowState";
 import type { ToolPanelMode } from "@app/constants/toolPanel";
 import { usePreferences } from "@app/contexts/PreferencesContext";
+import { preferencesService } from "@app/services/preferencesService";
 import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
 import { ToolFileEligibilityProvider } from "@app/contexts/ToolFileEligibilityContext";
 
@@ -392,9 +393,10 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     }
   }, [preferences.defaultToolPanelMode, state.toolPanelMode]);
 
-  // Apply default startup view preference on initial load.
-  // This runs once to navigate to the user's preferred tab (read/automate)
-  // instead of always starting on the tools tab.
+  // Apply the startup view once per launch. /app-config arrives after mount, so
+  // the hardcoded "tools" value must not count as that launch: a server default
+  // of "read" or "automate" would never show. A stored choice still wins, and
+  // is applied without waiting.
   const hasAppliedStartupView = React.useRef(false);
   // Set when the startup view picks the tool, so the URL sync knows this
   // selection came from a preference and must not be written to the address.
@@ -416,7 +418,19 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       hasAppliedStartupView.current = true;
       return;
     }
-    const startupView = preferences.defaultStartupView;
+    if (
+      !preferencesService.hasStoredPreference("defaultStartupView") &&
+      !preferencesService.hasServerDefaults()
+    ) {
+      return;
+    }
+    // The service, not this render's snapshot: defaults can be installed in the
+    // same commit, before PreferencesProvider re-renders with the merge.
+    const startupView = preferencesService.hasStoredPreference(
+      "defaultStartupView",
+    )
+      ? preferences.defaultStartupView
+      : preferencesService.getPreference("defaultStartupView");
     if (startupView === "read") {
       // Reading is a surface, not a tool: selecting the Read tool as well would
       // disagree with the reader's address, and the URL sync would close both.
@@ -433,12 +447,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     if (startupView === "tools") {
       hasAppliedStartupView.current = true;
     }
-  }, [
-    preferences.defaultStartupView,
-    actions,
-    setReaderMode,
-    setLeftPanelView,
-  ]);
+  }, [preferences, actions, setReaderMode, setLeftPanelView]);
 
   // Tool reset methods
   const registerToolReset = useCallback(

@@ -59,9 +59,34 @@ const STORAGE_KEY = "stirlingpdf_preferences";
 
 class PreferencesService {
   private serverDefaults: Partial<UserPreferences> = {};
+  // False until /app-config has been applied, so a launch can tell "not loaded
+  // yet" apart from "loaded, and the server's choice is the hardcoded one".
+  private serverDefaultsInstalled = false;
 
   setServerDefaults(defaults: Partial<UserPreferences>): void {
     this.serverDefaults = defaults;
+    this.serverDefaultsInstalled = true;
+  }
+
+  hasServerDefaults(): boolean {
+    return this.serverDefaultsInstalled;
+  }
+
+  clearServerDefaults(): void {
+    this.serverDefaults = {};
+    this.serverDefaultsInstalled = false;
+  }
+
+  // A missing key is not a choice: it falls through to the server default.
+  hasStoredPreference<K extends keyof UserPreferences>(key: K): boolean {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (!stored) return false;
+      const preferences = JSON.parse(stored) as Partial<UserPreferences>;
+      return key in preferences && preferences[key] !== undefined;
+    } catch {
+      return false;
+    }
   }
 
   getPreference<K extends keyof UserPreferences>(key: K): UserPreferences[K] {

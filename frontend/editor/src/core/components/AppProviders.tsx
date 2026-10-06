@@ -38,6 +38,7 @@ import { FormFillProvider } from "@app/tools/formFill/FormFillContext";
 import { FolderProvider } from "@app/contexts/FolderContext";
 import { WorkbenchSessionPersistence } from "@app/components/session/WorkbenchSessionPersistence";
 import { retireLegacyFolderWorker } from "@app/services/retireLegacyFolderWorker";
+import type { UserPreferences } from "@app/services/preferencesService";
 
 // Component to run app-level initialization (must be inside AppProviders for context access)
 function AppInitializer() {
@@ -91,11 +92,26 @@ function ServerDefaultsSync() {
 
   useEffect(() => {
     if (config) {
-      const serverDefaults = {
+      // Only known values. An absent or unexpected field must not clobber the
+      // hardcoded default via an explicit `undefined` in the merge.
+      const serverDefaults: Partial<UserPreferences> = {
         hideUnavailableTools: config.defaultHideUnavailableTools ?? false,
         hideUnavailableConversions:
           config.defaultHideUnavailableConversions ?? false,
       };
+      if (
+        config.defaultToolPanelMode === "sidebar" ||
+        config.defaultToolPanelMode === "fullscreen"
+      ) {
+        serverDefaults.defaultToolPanelMode = config.defaultToolPanelMode;
+      }
+      if (
+        config.defaultStartupView === "tools" ||
+        config.defaultStartupView === "read" ||
+        config.defaultStartupView === "automate"
+      ) {
+        serverDefaults.defaultStartupView = config.defaultStartupView;
+      }
       updateServerDefaults(serverDefaults);
     }
   }, [config, updateServerDefaults]);
