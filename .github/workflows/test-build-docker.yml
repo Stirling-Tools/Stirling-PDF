@@ -80,13 +80,6 @@ jobs:
         # arm64 is verified only when a Dockerfile changed and the base did
         # not (a PR-built base exists for amd64 only), as before.
         platform: ${{ fromJSON(inputs.dockerfiles-changed == 'true' && inputs.docker-base-changed != 'true' && '["linux/amd64", "linux/arm64/v8"]' || '["linux/amd64"]') }}
-        include:
-          - docker-rev: docker/embedded/Dockerfile
-            cache-scope: stirling-pdf-latest
-          - docker-rev: docker/embedded/Dockerfile.ultra-lite
-            cache-scope: stirling-pdf-ultra-lite
-          - docker-rev: docker/embedded/Dockerfile.fat
-            cache-scope: stirling-pdf-fat
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
@@ -147,10 +140,6 @@ jobs:
           context: .
           file: ./${{ matrix.docker-rev }}
           push: false
-          # Read the cache the main-branch publish writes, never write it
-          # back: exporting the build stage (mode=max) took ~5 minutes per
-          # image and PR entries were evicted before the next PR read them.
-          cache-from: type=gha,scope=${{ matrix.cache-scope }}
           platforms: ${{ matrix.platform }}
           provenance: true
           sbom: true

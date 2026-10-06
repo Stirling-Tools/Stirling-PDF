@@ -2,6 +2,7 @@
 # Pre-built tools: Calibre, Ghostscript, QPDF, ImageMagick, Python venv with AI/OCR packages
 # This image is reused by Dockerfile and Dockerfile.fat to avoid rebuilding tools on every app release
 
+# Per-platform cache ids stop one arch's build waiting on the other's apt lock.
 ARG TARGETPLATFORM
 
 # Stage 1: Build and strip Calibre
@@ -10,7 +11,7 @@ ARG TARGETPLATFORM
 ARG CALIBRE_VERSION=9.15.0
 ARG CALIBRE_STRIP_WEBENGINE=false
 
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+RUN --mount=type=cache,target=/var/cache/apt,id=apt-${TARGETPLATFORM:-local},sharing=locked \
     set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
@@ -278,7 +279,7 @@ FROM ubuntu:noble@sha256:008173c23f95b170204355c12626cb5a965d779a7e1283b09e9cffb
 ARG TARGETPLATFORM
 ARG GS_VERSION=10.08.0
 
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+RUN --mount=type=cache,target=/var/cache/apt,id=apt-${TARGETPLATFORM:-local},sharing=locked \
     --mount=type=cache,target=/tmp/gs-build,id=gs-build-${TARGETPLATFORM:-local} \
     apt-get update && apt-get install -y --no-install-recommends \
       build-essential curl ca-certificates libfontconfig1-dev && rm -rf /var/lib/apt/lists/* && \
@@ -303,7 +304,7 @@ ARG TARGETPLATFORM
 ARG QPDF_VERSION=12.4.2
 ARG IM_VERSION=7.1.2-32
 
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+RUN --mount=type=cache,target=/var/cache/apt,id=apt-${TARGETPLATFORM:-local},sharing=locked \
     --mount=type=cache,target=/tmp/pdf-tools-build,id=pdf-tools-${TARGETPLATFORM:-local} \
     apt-get update && apt-get install -y --no-install-recommends \
       build-essential cmake libssl-dev libjpeg-dev zlib1g-dev curl ca-certificates pkg-config \
@@ -347,12 +348,12 @@ FROM ubuntu:noble@sha256:008173c23f95b170204355c12626cb5a965d779a7e1283b09e9cffb
 ARG TARGETPLATFORM
 ARG UNOSERVER_VERSION=3.7
 
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+RUN --mount=type=cache,target=/var/cache/apt,id=apt-${TARGETPLATFORM:-local},sharing=locked \
     apt-get update && apt-get install -y --no-install-recommends \
       python3 python3-venv ca-certificates binutils && \
     rm -rf /var/lib/apt/lists/*
 
-RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
+RUN --mount=type=cache,target=/root/.cache/pip,id=pip-${TARGETPLATFORM:-local},sharing=locked \
     python3 -m venv /opt/venv --system-site-packages && \
     /opt/venv/bin/pip install --no-cache-dir --prefer-binary --only-binary=:all: \
       weasyprint pdf2image opencv-python-headless ocrmypdf \
@@ -368,8 +369,9 @@ RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
 
 
 FROM ubuntu:noble@sha256:008173c23f95b170204355c12626cb5a965d779a7e1283b09e9cffbb1bf33ca3 AS lo-sandbox-build
+ARG TARGETPLATFORM
 
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+RUN --mount=type=cache,target=/var/cache/apt,id=apt-${TARGETPLATFORM:-local},sharing=locked \
     apt-get update && apt-get install -y --no-install-recommends gcc libc6-dev && \
     rm -rf /var/lib/apt/lists/*
 
@@ -380,6 +382,7 @@ RUN gcc -O2 -Wall -Wextra -Werror -o /usr/local/bin/lo-sandbox /src/lo-sandbox.c
 
 # Final runtime image - the actual base image
 FROM eclipse-temurin:25-jre-noble@sha256:b4c93a50fc67612798db73d68ca3b0ee4ebdd51736e59cca370e689b9797037e AS runtime
+ARG TARGETPLATFORM
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -390,7 +393,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 ARG UNOSERVER_VERSION=3.7
 
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+RUN --mount=type=cache,target=/var/cache/apt,id=apt-${TARGETPLATFORM:-local},sharing=locked \
     set -eux; \
     apt-get update; \
     # Add LibreOffice Fresh PPA for latest version (26.2.x)
