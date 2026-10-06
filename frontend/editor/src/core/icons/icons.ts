@@ -104,6 +104,7 @@ import DraftingCompass from "lucide-static/icons/drafting-compass.svg?react";
 import Droplet from "lucide-static/icons/droplet.svg?react";
 import Ellipsis from "lucide-static/icons/ellipsis.svg?react";
 import EllipsisVertical from "lucide-static/icons/ellipsis-vertical.svg?react";
+import Eraser from "lucide-static/icons/eraser.svg?react";
 import ExternalLink from "lucide-static/icons/external-link.svg?react";
 import Eye from "lucide-static/icons/eye.svg?react";
 import EyeOff from "lucide-static/icons/eye-off.svg?react";
@@ -207,6 +208,8 @@ import Package from "lucide-static/icons/package.svg?react";
 import Package2 from "lucide-static/icons/package-2.svg?react";
 import PaintBucket from "lucide-static/icons/paint-bucket.svg?react";
 import Palette from "lucide-static/icons/palette.svg?react";
+import PanelLeft from "lucide-static/icons/panel-left.svg?react";
+import PanelRight from "lucide-static/icons/panel-right.svg?react";
 import Paperclip from "lucide-static/icons/paperclip.svg?react";
 import PartyPopper from "lucide-static/icons/party-popper.svg?react";
 import Pause from "lucide-static/icons/pause.svg?react";
@@ -301,6 +304,7 @@ import Terminal from "lucide-static/icons/terminal.svg?react";
 import TextAlignCenter from "lucide-static/icons/text-align-center.svg?react";
 import TextAlignEnd from "lucide-static/icons/text-align-end.svg?react";
 import TextAlignStart from "lucide-static/icons/text-align-start.svg?react";
+import TextWrap from "lucide-static/icons/text-wrap.svg?react";
 import ThumbsUp from "lucide-static/icons/thumbs-up.svg?react";
 import Ticket from "lucide-static/icons/ticket.svg?react";
 import Timeline from "lucide-static/icons/timeline.svg?react";
@@ -346,6 +350,11 @@ import Automate from "@app/icons/svg/stirling/automate.svg?react";
 import Cpu from "@app/icons/svg/stirling/cpu.svg?react";
 import Editor from "@app/icons/svg/stirling/editor.svg?react";
 import FileConvert from "@app/icons/svg/stirling/file-convert.svg?react";
+import FileDocArchive from "@app/icons/svg/stirling/file-doc-archive.svg?react";
+import FileDocCode from "@app/icons/svg/stirling/file-doc-code.svg?react";
+import FileDocImage from "@app/icons/svg/stirling/file-doc-image.svg?react";
+import FileDocSheet from "@app/icons/svg/stirling/file-doc-sheet.svg?react";
+import FileDocText from "@app/icons/svg/stirling/file-doc-text.svg?react";
 import FileHtml from "@app/icons/svg/stirling/file-html.svg?react";
 import FileLockOpen from "@app/icons/svg/stirling/file-lock-open.svg?react";
 import FormScan from "@app/icons/svg/stirling/form-scan.svg?react";
@@ -366,22 +375,33 @@ import ReplaceText from "@app/icons/svg/stirling/replace-text.svg?react";
 import SelectAll from "@app/icons/svg/stirling/select-all.svg?react";
 import Sftp from "@app/icons/svg/stirling/sftp.svg?react";
 import SinglePage from "@app/icons/svg/stirling/single-page.svg?react";
+import StirlingMark from "@app/icons/svg/stirling/stirling-mark.svg?react";
+import StirlingMarkThinking from "@app/icons/svg/stirling/stirling-mark-thinking.svg?react";
+import StirlingTile from "@app/icons/svg/stirling/stirling-tile.svg?react";
 import UsersPlus from "@app/icons/svg/stirling/users-plus.svg?react";
 import Watermark from "@app/icons/svg/stirling/watermark.svg?react";
 
+import Apple from "@app/icons/svg/third-party/apple.svg?react";
+import Authentik from "@app/icons/svg/third-party/authentik.svg?react";
 import Box from "@app/icons/svg/third-party/box.svg?react";
 import Clamav from "@app/icons/svg/third-party/clamav.svg?react";
 import Cloudmersive from "@app/icons/svg/third-party/cloudmersive.svg?react";
 import Cloudmersiveadvanced from "@app/icons/svg/third-party/cloudmersiveadvanced.svg?react";
+import Cloudron from "@app/icons/svg/third-party/cloudron.svg?react";
 import Confluence from "@app/icons/svg/third-party/confluence.svg?react";
 import Consigno from "@app/icons/svg/third-party/consigno.svg?react";
 import Discord from "@app/icons/svg/third-party/discord.svg?react";
 import Dropbox from "@app/icons/svg/third-party/dropbox.svg?react";
 import Elastic from "@app/icons/svg/third-party/elastic.svg?react";
+import Github from "@app/icons/svg/third-party/github.svg?react";
+import Google from "@app/icons/svg/third-party/google.svg?react";
 import Googlechat from "@app/icons/svg/third-party/googlechat.svg?react";
 import Googledrive from "@app/icons/svg/third-party/googledrive.svg?react";
 import Jira from "@app/icons/svg/third-party/jira.svg?react";
+import Keycloak from "@app/icons/svg/third-party/keycloak.svg?react";
+import Linux from "@app/icons/svg/third-party/linux.svg?react";
 import Mailgun from "@app/icons/svg/third-party/mailgun.svg?react";
+import Microsoft from "@app/icons/svg/third-party/microsoft.svg?react";
 import N8n from "@app/icons/svg/third-party/n8n.svg?react";
 import Nextcloud from "@app/icons/svg/third-party/nextcloud.svg?react";
 import Onedrive from "@app/icons/svg/third-party/onedrive.svg?react";
@@ -394,6 +414,7 @@ import Slack from "@app/icons/svg/third-party/slack.svg?react";
 import Splunk from "@app/icons/svg/third-party/splunk.svg?react";
 import Sumologic from "@app/icons/svg/third-party/sumologic.svg?react";
 import Teams from "@app/icons/svg/third-party/teams.svg?react";
+import Windows from "@app/icons/svg/third-party/windows.svg?react";
 import Zapier from "@app/icons/svg/third-party/zapier.svg?react";
 
 type IconComponent = ComponentType<SVGProps<SVGSVGElement>>;
@@ -511,6 +532,7 @@ export const ICONS = {
   droplet: { Component: Droplet, kind: "lucide" },
   ellipsis: { Component: Ellipsis, kind: "lucide" },
   "ellipsis-vertical": { Component: EllipsisVertical, kind: "lucide" },
+  eraser: { Component: Eraser, kind: "lucide" },
   "external-link": { Component: ExternalLink, kind: "lucide" },
   eye: { Component: Eye, kind: "lucide" },
   "eye-off": { Component: EyeOff, kind: "lucide" },
@@ -614,6 +636,8 @@ export const ICONS = {
   "package-2": { Component: Package2, kind: "lucide" },
   "paint-bucket": { Component: PaintBucket, kind: "lucide" },
   palette: { Component: Palette, kind: "lucide" },
+  "panel-left": { Component: PanelLeft, kind: "lucide" },
+  "panel-right": { Component: PanelRight, kind: "lucide" },
   paperclip: { Component: Paperclip, kind: "lucide" },
   "party-popper": { Component: PartyPopper, kind: "lucide" },
   pause: { Component: Pause, kind: "lucide" },
@@ -708,6 +732,7 @@ export const ICONS = {
   "text-align-center": { Component: TextAlignCenter, kind: "lucide" },
   "text-align-end": { Component: TextAlignEnd, kind: "lucide" },
   "text-align-start": { Component: TextAlignStart, kind: "lucide" },
+  "text-wrap": { Component: TextWrap, kind: "lucide" },
   "thumbs-up": { Component: ThumbsUp, kind: "lucide" },
   ticket: { Component: Ticket, kind: "lucide" },
   timeline: { Component: Timeline, kind: "lucide" },
@@ -752,6 +777,11 @@ export const ICONS = {
   cpu: { Component: Cpu, kind: "stirling" },
   editor: { Component: Editor, kind: "stirling" },
   "file-convert": { Component: FileConvert, kind: "stirling" },
+  "file-doc-archive": { Component: FileDocArchive, kind: "stirling" },
+  "file-doc-code": { Component: FileDocCode, kind: "stirling" },
+  "file-doc-image": { Component: FileDocImage, kind: "stirling" },
+  "file-doc-sheet": { Component: FileDocSheet, kind: "stirling" },
+  "file-doc-text": { Component: FileDocText, kind: "stirling" },
   "file-html": { Component: FileHtml, kind: "stirling" },
   "file-lock-open": { Component: FileLockOpen, kind: "stirling" },
   "file-pdf": { Component: FilePdf, kind: "stirling" },
@@ -772,21 +802,33 @@ export const ICONS = {
   "select-all": { Component: SelectAll, kind: "stirling" },
   sftp: { Component: Sftp, kind: "stirling" },
   "single-page": { Component: SinglePage, kind: "stirling" },
+  // Brand: they paint with their own fills and CSS classes, so <Icon> must not restroke them.
+  "stirling-mark": { Component: StirlingMark, kind: "brand" },
+  "stirling-mark-thinking": { Component: StirlingMarkThinking, kind: "brand" },
+  "stirling-tile": { Component: StirlingTile, kind: "brand" },
   "users-plus": { Component: UsersPlus, kind: "stirling" },
   watermark: { Component: Watermark, kind: "stirling" },
+  apple: { Component: Apple, kind: "brand" },
+  authentik: { Component: Authentik, kind: "brand" },
   box: { Component: Box, kind: "brand" },
   clamav: { Component: Clamav, kind: "brand" },
   cloudmersive: { Component: Cloudmersive, kind: "brand" },
   cloudmersiveadvanced: { Component: Cloudmersiveadvanced, kind: "brand" },
+  cloudron: { Component: Cloudron, kind: "brand" },
   confluence: { Component: Confluence, kind: "brand" },
   consigno: { Component: Consigno, kind: "brand" },
   discord: { Component: Discord, kind: "brand" },
   dropbox: { Component: Dropbox, kind: "brand" },
   elastic: { Component: Elastic, kind: "brand" },
+  github: { Component: Github, kind: "brand" },
+  google: { Component: Google, kind: "brand" },
   googlechat: { Component: Googlechat, kind: "brand" },
   googledrive: { Component: Googledrive, kind: "brand" },
   jira: { Component: Jira, kind: "brand" },
+  keycloak: { Component: Keycloak, kind: "brand" },
+  linux: { Component: Linux, kind: "brand" },
   mailgun: { Component: Mailgun, kind: "brand" },
+  microsoft: { Component: Microsoft, kind: "brand" },
   n8n: { Component: N8n, kind: "brand" },
   nextcloud: { Component: Nextcloud, kind: "brand" },
   onedrive: { Component: Onedrive, kind: "brand" },
@@ -799,6 +841,7 @@ export const ICONS = {
   splunk: { Component: Splunk, kind: "brand" },
   sumologic: { Component: Sumologic, kind: "brand" },
   teams: { Component: Teams, kind: "brand" },
+  windows: { Component: Windows, kind: "brand" },
   zapier: { Component: Zapier, kind: "brand" },
 } as const satisfies Record<string, IconEntry>;
 
