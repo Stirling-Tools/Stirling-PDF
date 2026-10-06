@@ -80,21 +80,32 @@ export function ThumbnailSidebar({
     let isCancelled = false;
 
     const generateThumbnails = async () => {
-      const queue = Array.from({ length: scrollState.totalPages }, (_, i) => i);
+      const pending = new Set(
+        Array.from({ length: scrollState.totalPages }, (_, i) => i),
+      );
 
       const getNextPageIndex = () => {
-        if (queue.length === 0) return null;
-        const current = currentPageRef.current;
-        let bestIdx = 0;
-        let bestDist = Math.abs(queue[0] - current);
-        for (let i = 1; i < queue.length; i++) {
-          const dist = Math.abs(queue[i] - current);
-          if (dist < bestDist) {
-            bestDist = dist;
-            bestIdx = i;
+        if (pending.size === 0) return null;
+        const current = Math.max(
+          0,
+          Math.min(scrollState.totalPages - 1, currentPageRef.current),
+        );
+
+        let left = current;
+        let right = current + 1;
+        while (left >= 0 || right < scrollState.totalPages) {
+          if (left >= 0 && pending.has(left)) {
+            pending.delete(left);
+            return left;
           }
+          if (right < scrollState.totalPages && pending.has(right)) {
+            pending.delete(right);
+            return right;
+          }
+          left--;
+          right++;
         }
-        return queue.splice(bestIdx, 1)[0];
+        return null;
       };
 
       const CONCURRENCY_LIMIT = 3;
