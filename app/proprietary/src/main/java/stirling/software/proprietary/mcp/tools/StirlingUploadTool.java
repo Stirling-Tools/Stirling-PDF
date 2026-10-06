@@ -19,10 +19,7 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
 
-/**
- * Stores a temporary file server-side and returns its fileId. Fed by chat attachments, the in-chat
- * file picker, or base64 from clients that can send it.
- */
+/** Stores a temporary file and returns its fileId. */
 @Component
 @ConditionalOnProperty(name = "mcp.enabled", havingValue = "true")
 public class StirlingUploadTool implements McpTool {

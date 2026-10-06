@@ -22,11 +22,7 @@ import stirling.software.proprietary.storage.model.ShareAccessRole;
 import stirling.software.proprietary.storage.model.StoredFile;
 import stirling.software.proprietary.storage.service.FileStorageService;
 
-/**
- * MCP files live in server storage as temporary {@link StoredFile}s: the stored file id is the MCP
- * {@code fileId}, storage deletes them after {@code mcp.resultTtlMinutes}, and downloads are public
- * share links that expire with the file.
- */
+/** MCP files are temporary stored files; downloads are public links that expire with them. */
 @Component
 @ConditionalOnProperty(name = "mcp.enabled", havingValue = "true")
 public class McpFiles {
@@ -36,6 +32,7 @@ public class McpFiles {
     private final FileStorageService storage;
     private final UserService userService;
     private final ApplicationProperties.Mcp mcp;
+    private final ApplicationProperties.System system;
 
     public McpFiles(
             FileStorageService storage,
@@ -44,6 +41,7 @@ public class McpFiles {
         this.storage = storage;
         this.userService = userService;
         this.mcp = applicationProperties.getMcp();
+        this.system = applicationProperties.getSystem();
     }
 
     /** A failure whose message is safe to hand back to the model. */
@@ -128,9 +126,9 @@ public class McpFiles {
     }
 
     private String baseUrl() {
-        String configured = mcp.getPublicBaseUrl();
-        if (configured != null && !configured.isBlank()) {
-            return stripSlash(configured);
+        String backendUrl = system.getBackendUrl();
+        if (backendUrl != null && !backendUrl.isBlank()) {
+            return stripSlash(backendUrl.trim());
         }
         String resourceId = mcp.getAuth().getResourceId();
         if (resourceId != null && resourceId.endsWith("/mcp")) {

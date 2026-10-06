@@ -17,10 +17,7 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
 
-/**
- * Returns a stored file's content inline as base64, for clients that cannot open a download link
- * (e.g. Claude Code).
- */
+/** Returns a stored file inline as base64, for clients that cannot open a link. */
 @Component
 @ConditionalOnProperty(name = "mcp.enabled", havingValue = "true")
 public class StirlingDownloadTool implements McpTool {

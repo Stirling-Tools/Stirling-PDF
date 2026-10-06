@@ -306,9 +306,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             contextPath + "/api/v1/auth/me",
             contextPath + "/api/v1/invite/validate",
             contextPath + "/api/v1/invite/accept",
-            contextPath + "/api/v1/ui-data/footer-info",
-            // ChatGPT app domain verification, answered by the MCP chain
-            contextPath + "/.well-known/openai-apps-challenge"
+            contextPath + "/api/v1/ui-data/footer-info"
         };
 
         for (String pattern : publicApiPatterns) {

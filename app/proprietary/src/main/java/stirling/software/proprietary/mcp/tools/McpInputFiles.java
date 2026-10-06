@@ -7,10 +7,7 @@ import stirling.software.proprietary.security.model.User;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.node.ObjectNode;
 
-/**
- * Resolves a tool's input file from {@code fileId}, a chat-app attachment ({@code inputFile}) or
- * inline base64 ({@code file}), in that order.
- */
+/** Resolves a tool's input from {@code fileId}, then {@code inputFile}, then base64. */
 final class McpInputFiles {
 
     /** ChatGPT sends each {@code openai/fileParams} field as {download_url, file_id, ...}. */

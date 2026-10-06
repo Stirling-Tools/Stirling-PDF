@@ -59,9 +59,6 @@ public class McpSecurityConfig {
 
     private static final String BASE_PATH = "/mcp";
 
-    // ChatGPT app domain verification; must answer without credentials.
-    private static final String OPENAI_CHALLENGE_PATH = "/.well-known/openai-apps-challenge";
-
     public McpSecurityConfig(
             ApplicationProperties applicationProperties,
             @Lazy UserService userService,
@@ -113,7 +110,7 @@ public class McpSecurityConfig {
      */
     private SecurityFilterChain apiKeyFilterChain(HttpSecurity http) throws Exception {
         applyCors(http);
-        http.securityMatcher(BASE_PATH, BASE_PATH + "/**", OPENAI_CHALLENGE_PATH)
+        http.securityMatcher(BASE_PATH, BASE_PATH + "/**")
                 // CSRF intentionally disabled: /mcp is a stateless JSON-RPC API authenticated by an
                 // out-of-band X-API-KEY header (or Authorization: Bearer <key>). No cookies, no
                 // session, no form submissions; a browser cannot trick a victim into sending the
@@ -121,12 +118,7 @@ public class McpSecurityConfig {
                 // generically; the SessionCreationPolicy.STATELESS below is the relevant guarantee.
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(
-                        a ->
-                                a.requestMatchers(HttpMethod.GET, OPENAI_CHALLENGE_PATH)
-                                        .permitAll()
-                                        .anyRequest()
-                                        .authenticated())
+                .authorizeHttpRequests(a -> a.anyRequest().authenticated())
                 .exceptionHandling(
                         e ->
                                 e.authenticationEntryPoint(
@@ -160,12 +152,7 @@ public class McpSecurityConfig {
         // segment before the resource path, so /mcp is discovered at {metadataPath}/mcp. Claim
         // the subpaths too; otherwise they fall through to another filter chain whose default
         // Spring Security metadata filter serves a document without authorization_servers.
-        http.securityMatcher(
-                        BASE_PATH,
-                        BASE_PATH + "/**",
-                        metadataPath,
-                        metadataPath + "/**",
-                        OPENAI_CHALLENGE_PATH)
+        http.securityMatcher(BASE_PATH, BASE_PATH + "/**", metadataPath, metadataPath + "/**")
                 // CSRF intentionally disabled: /mcp is a stateless JSON-RPC resource server
                 // authenticated by OAuth2 Bearer JWTs (Authorization header). No cookies, no
                 // session, no form submissions; CSRF requires browser-attached ambient credentials
@@ -177,10 +164,7 @@ public class McpSecurityConfig {
                 .authorizeHttpRequests(
                         a ->
                                 a.requestMatchers(
-                                                HttpMethod.GET,
-                                                metadataPath,
-                                                metadataPath + "/**",
-                                                OPENAI_CHALLENGE_PATH)
+                                                HttpMethod.GET, metadataPath, metadataPath + "/**")
                                         .permitAll()
                                         .anyRequest()
                                         .authenticated())

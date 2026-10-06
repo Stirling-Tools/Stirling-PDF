@@ -325,4 +325,17 @@ class McpServerControllerTest {
 
         assertEquals(-32002, error.get("code").asInt());
     }
+
+    @Test
+    void widgetDomain_isFrontendOriginThenBackendOrigin() {
+        ApplicationProperties props = new ApplicationProperties();
+        McpWidget widget = new McpWidget(mapper, props);
+        assertNull(widget.widgetDomain());
+
+        props.getSystem().setBackendUrl("https://api.example.com/");
+        assertEquals("https://api.example.com", widget.widgetDomain());
+
+        props.getSystem().setFrontendUrl("https://example.com/app");
+        assertEquals("https://example.com", widget.widgetDomain());
+    }
 }

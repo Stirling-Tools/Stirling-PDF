@@ -32,10 +32,7 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
 
-/**
- * Runs a JAVA_ENDPOINT operation: resolves the input file, dispatches to the Stirling endpoint over
- * the loopback via {@link InternalApiClient}, and stores the result as a temporary file.
- */
+/** Runs an operation over the loopback and stores the result as a temporary file. */
 @Slf4j
 @Component
 @ConditionalOnProperty(name = "mcp.enabled", havingValue = "true")

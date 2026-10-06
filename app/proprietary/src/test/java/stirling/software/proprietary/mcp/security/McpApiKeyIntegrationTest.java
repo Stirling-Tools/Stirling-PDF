@@ -19,7 +19,6 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
 import stirling.software.common.model.ApplicationProperties;
-import stirling.software.proprietary.mcp.McpDomainVerificationController;
 import stirling.software.proprietary.mcp.McpServerController;
 import stirling.software.proprietary.mcp.McpWidget;
 import stirling.software.proprietary.mcp.tools.DescribeOperationTool;
@@ -38,19 +37,6 @@ import stirling.software.proprietary.security.service.UserService;
         classes = McpApiKeyIntegrationTest.TestApp.class,
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class McpApiKeyIntegrationTest {
-
-    @Test
-    void openaiChallenge_servedAsBareTextWithoutCredentials() throws Exception {
-        HttpResponse<String> response =
-                http.send(
-                        HttpRequest.newBuilder()
-                                .uri(URI.create(base() + "/.well-known/openai-apps-challenge"))
-                                .GET()
-                                .build(),
-                        HttpResponse.BodyHandlers.ofString());
-        assertThat(response.statusCode()).isEqualTo(200);
-        assertThat(response.body()).isEqualTo("challenge-token-123");
-    }
 
     private static final String VALID_KEY = "stirling-test-key-abc123";
 
@@ -130,7 +116,6 @@ class McpApiKeyIntegrationTest {
         McpSecurityConfig.class,
         McpServerController.class,
         McpWidget.class,
-        McpDomainVerificationController.class,
         DescribeOperationTool.class,
         StirlingConvertTool.class,
         StirlingPagesTool.class,
@@ -145,7 +130,6 @@ class McpApiKeyIntegrationTest {
             ApplicationProperties props = new ApplicationProperties();
             props.getMcp().setEnabled(true);
             props.getMcp().getAuth().setMode("apikey");
-            props.getMcp().setOpenaiAppsChallenge("challenge-token-123");
             props.getAutomaticallyGenerated().setAppVersion("test");
             return props;
         }

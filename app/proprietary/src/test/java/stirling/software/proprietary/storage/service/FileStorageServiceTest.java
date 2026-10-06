@@ -612,9 +612,7 @@ class FileStorageServiceTest {
                                         .isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR));
     }
 
-    // -------------------------------------------------------------------------
     // Temporary files and public share links
-    // -------------------------------------------------------------------------
 
     private FileShare linkFor(StoredFile file, boolean publicAccess) {
         FileShare s = new FileShare();

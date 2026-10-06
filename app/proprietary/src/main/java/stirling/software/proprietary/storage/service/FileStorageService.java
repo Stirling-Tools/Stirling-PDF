@@ -131,10 +131,8 @@ public class FileStorageService {
         return storeFile(owner, file, historyBundle, auditLog, null);
     }
 
-    /**
-     * Stores a file hidden from listings that {@link #purgeExpiredFiles()} deletes once {@code ttl}
-     * passes. An expiry rather than a new purpose, as enum columns carry CHECK constraints.
-     */
+    // Hidden from listings and purged after ttl. Marked by expiry, not a new FilePurpose,
+    // because enum columns carry CHECK constraints that ddl-auto never widens.
     public StoredFile storeTemporaryFile(User owner, MultipartFile file, Duration ttl) {
         return storeFile(owner, file, null, null, LocalDateTime.now().plus(ttl));
     }

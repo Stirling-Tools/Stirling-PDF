@@ -17,10 +17,7 @@ import org.springframework.stereotype.Component;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.GeneralUtils;
 
-/**
- * Downloads a file a chat app attached to a tool call (ChatGPT {@code openai/fileParams}). Only
- * HTTPS URLs on {@code mcp.fileUrlAllowedHosts} that resolve to public addresses are fetched.
- */
+/** Fetches chat-app attachments, only from allowlisted HTTPS hosts on public addresses. */
 @Component
 @ConditionalOnProperty(name = "mcp.enabled", havingValue = "true")
 public class McpFileUrlFetcher {

@@ -14,10 +14,7 @@ import stirling.software.common.model.ApplicationProperties;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
 
-/**
- * The single MCP Apps view (file picker + result card) rendered inside Claude and ChatGPT. Served
- * as a {@code ui://} resource; tools link to it via {@code _meta.ui.resourceUri}.
- */
+/** MCP Apps view (file picker and result card) that Claude and ChatGPT render in the chat. */
 @Component
 @ConditionalOnProperty(name = "mcp.enabled", havingValue = "true")
 public class McpWidget {
@@ -83,10 +80,33 @@ public class McpWidget {
                         + " does not need to repeat the file details.");
         meta.put("openai/widgetPrefersBorder", true);
         // ui.domain is host-specific (Claude rejects a foreign one), so only ChatGPT's alias.
-        String domain = applicationProperties.getMcp().getChatgptWidgetDomain();
-        if (domain != null && !domain.isBlank()) {
+        String domain = widgetDomain();
+        if (domain != null) {
             meta.put("openai/widgetDomain", domain);
         }
         return meta;
+    }
+
+    /** Our own origin, which ChatGPT needs for apps with UI: the frontend, else the backend. */
+    String widgetDomain() {
+        ApplicationProperties.System system = applicationProperties.getSystem();
+        String origin = origin(system.getFrontendUrl());
+        return origin != null ? origin : origin(system.getBackendUrl());
+    }
+
+    private static String origin(String url) {
+        if (url == null || url.isBlank()) {
+            return null;
+        }
+        try {
+            java.net.URI uri = java.net.URI.create(url.trim());
+            if (uri.getScheme() == null || uri.getHost() == null) {
+                return null;
+            }
+            String port = uri.getPort() == -1 ? "" : ":" + uri.getPort();
+            return uri.getScheme() + "://" + uri.getHost() + port;
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 }

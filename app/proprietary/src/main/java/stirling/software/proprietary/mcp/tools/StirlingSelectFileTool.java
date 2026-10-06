@@ -11,10 +11,7 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
 
-/**
- * Shows the in-chat file picker. Hosts without a file-passing mechanism (Claude) get user files to
- * the server this way: the widget uploads straight to stirling_upload, never through the model.
- */
+/** In-chat file picker; the widget uploads to stirling_upload so bytes skip the model. */
 @Component
 @ConditionalOnProperty(name = "mcp.enabled", havingValue = "true")
 public class StirlingSelectFileTool implements McpTool {
