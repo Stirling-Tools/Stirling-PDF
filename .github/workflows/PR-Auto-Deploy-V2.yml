@@ -230,29 +230,23 @@ jobs:
           PROJECT_REF: ${{ secrets.SAAS_DB_PROJECT_REF }}
           API_BASE_OVERRIDE: ${{ vars.SAAS_API_BASE_URL }}
         run: |
-          # Set, this is the one value both halves use: the browser's portal reads and the backend's
+          # The one value both halves use: the browser's portal reads and the backend's
           # register/entitlement calls have to land on the same SaaS, and nothing checks that they
-          # do. Unset, only the backend gets a base, from its own compiled-in default.
-          API_BASE="${API_BASE_OVERRIDE:-https://stirling.com/app}"
-          echo "backend_base=${API_BASE}" >> "$GITHUB_OUTPUT"
+          # do. Unset falls back to production Stirling, which both halves also default to.
+          API_BASE="${API_BASE_OVERRIDE:-https://api2.stirling.com}"
+          echo "api_base=${API_BASE}" >> "$GITHUB_OUTPUT"
 
           if [ -z "${PROJECT_REF}" ]; then
-            echo "Not configured for this environment: the preview will build without a Stirling"
-            echo "account, and the connect dialog will say so. To wire one up, set on the"
-            echo "pr-preview environment the secrets SAAS_DB_PROJECT_REF and"
-            echo "SAAS_SUPABASE_PUBLISHABLE_KEY, both from the same Supabase project."
+            echo "No Supabase project configured: the preview keeps the image's built-in production"
+            echo "Stirling account. To use another, set on the pr-preview environment the secrets"
+            echo "SAAS_DB_PROJECT_REF and SAAS_SUPABASE_PUBLISHABLE_KEY, both from the same Supabase"
+            echo "project, and SAAS_API_BASE_URL to its API."
             echo "supabase_url=" >> "$GITHUB_OUTPUT"
-            echo "frontend_base=" >> "$GITHUB_OUTPUT"
           else
             # Only whether, not which: the ref is a secret here, so Actions masks it out of any
             # line it appears in, derived URL included.
             echo "Stirling account configured, at ${API_BASE}."
             echo "supabase_url=https://${PROJECT_REF}.supabase.co" >> "$GITHUB_OUTPUT"
-            # Deliberately the override and not API_BASE: the backend's default is a subpath URL
-            # nobody has confirmed answers /api/v1, and prod CORS does not list preview hostnames,
-            # so portal reads stay off until someone sets a base they have checked. Empty leaves the
-            # committed .env default alone, which is the clean "not configured" state.
-            echo "frontend_base=${API_BASE_OVERRIDE}" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Check if image exists
@@ -285,7 +279,7 @@ jobs:
             BUILD_PORTAL=${{ env.BUILD_PORTAL }}
             VITE_SUPABASE_URL=${{ steps.saas.outputs.supabase_url }}
             VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY=${{ secrets.SAAS_SUPABASE_PUBLISHABLE_KEY }}
-            VITE_SAAS_API_URL=${{ steps.saas.outputs.frontend_base }}
+            VITE_SAAS_API_URL=${{ steps.saas.outputs.api_base }}
           platforms: linux/amd64
 
       - name: Set up SSH
@@ -319,7 +313,7 @@ jobs:
               environment:
                 DISABLE_ADDITIONAL_FEATURES: "false"
                 STIRLING_BILLING_ACCOUNT_LINK_ENABLED: "true"
-                STIRLING_BILLING_ACCOUNT_LINK_SAAS_BASE_URL: "${{ steps.saas.outputs.backend_base }}"
+                STIRLING_BILLING_ACCOUNT_LINK_SAAS_BASE_URL: "${{ steps.saas.outputs.api_base }}"
                 # Off so preview traffic never accrues against a real wallet or trips its cap. The
                 # 402 gate is separate and stays on, so gating is still testable here.
                 STIRLING_BILLING_ACCOUNT_LINK_METERING_ENABLED: "false"

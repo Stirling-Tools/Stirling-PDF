@@ -423,6 +423,9 @@ public class EndpointConfiguration {
         addEndpointToGroup("Other", "remove-annotations");
         addEndpointToGroup("Other", "get-info-on-pdf");
         addEndpointToGroup("Other", "add-attachments");
+        addEndpointToGroup("Other", "batch-process-attachments");
+        addEndpointToGroup("Other", "list-attachments");
+        addEndpointToGroup("Other", "extract-single-attachment");
         addEndpointToGroup("Other", "replace-invert-pdf");
         addEndpointToGroup("Other", "edit-table-of-contents");
         addEndpointToGroup("Other", "text-editor-pdf");
@@ -542,6 +545,9 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "pdf-to-text");
         addEndpointToGroup("Java", "pdf-to-markdown");
         addEndpointToGroup("Java", "add-attachments");
+        addEndpointToGroup("Java", "batch-process-attachments");
+        addEndpointToGroup("Java", "list-attachments");
+        addEndpointToGroup("Java", "extract-single-attachment");
         addEndpointToGroup("Java", "compress-pdf");
         addEndpointToGroup("Java", "cbz-to-pdf");
         addEndpointToGroup("Java", "pdf-to-cbz");
@@ -607,6 +613,14 @@ public class EndpointConfiguration {
         // file-to-pdf has multiple implementations
         addEndpointAlternative("file-to-pdf", "LibreOffice");
         addEndpointAlternative("file-to-pdf", "Unoconvert");
+        // Stirling Office Convert, when enabled, keeps Office conversions working without
+        // LibreOffice
+        if (applicationProperties.getSystem().isStirlingOfficeConversion()) {
+            addEndpointAlternative("file-to-pdf", "Java");
+            addEndpointAlternative("pdf-to-word", "Java");
+            addEndpointAlternative("pdf-to-presentation", "Java");
+            addEndpointAlternative("pdf-to-rtf", "Java");
+        }
 
         // pdf-to-html and pdf-to-markdown can use either LibreOffice or Pdftohtml
         addEndpointAlternative("pdf-to-html", "LibreOffice");

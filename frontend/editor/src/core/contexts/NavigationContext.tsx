@@ -179,8 +179,8 @@ export const NavigationProvider: React.FC<{
         (state.workbench === "pageEditor" &&
           workbench !== "pageEditor" &&
           hasUnsavedChanges) ||
-        (state.workbench === "viewer" &&
-          workbench !== "viewer" &&
+        ((state.workbench === "viewer" || state.workbench === "signing") &&
+          workbench !== state.workbench &&
           hasUnsavedChanges) ||
         (state.workbench.startsWith("custom:") &&
           workbench !== state.workbench &&
@@ -249,8 +249,8 @@ export const NavigationProvider: React.FC<{
         (state.workbench === "pageEditor" &&
           workbench !== "pageEditor" &&
           hasUnsavedChanges) ||
-        (state.workbench === "viewer" &&
-          workbench !== "viewer" &&
+        ((state.workbench === "viewer" || state.workbench === "signing") &&
+          workbench !== state.workbench &&
           hasUnsavedChanges) ||
         (state.workbench.startsWith("custom:") &&
           workbench !== state.workbench &&

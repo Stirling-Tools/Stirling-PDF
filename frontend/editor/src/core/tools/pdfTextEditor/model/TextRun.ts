@@ -1,3 +1,4 @@
+import type { ScanEditState } from "@app/tools/pdfTextEditor/commands/scanTextEdit";
 import type {
   Affine,
   PageRect,
@@ -95,6 +96,8 @@ export class TextRun {
   // Pointer to the LATEST background cover-rect emitted on the page for this
   // run.
   coverRectPtr: number;
+  /** Word-level edit state once an invisible OCR run over a scan is edited. */
+  scanEdit: ScanEditState | null;
   /** Per-line sub-run snapshots for paragraph-aware partial edits. */
   paragraphLineSlots: ParagraphLineSlot[];
   // Which visual lines start at a break the WRAP put there rather than one the
@@ -153,6 +156,7 @@ export class TextRun {
     this.paragraphLineSlots = [];
     this.paragraphSoftStarts = [];
     this.coverRectPtr = 0;
+    this.scanEdit = null;
     this.locked = init.locked ?? false;
     this.wrapWidthPt = init.wrapWidthPt ?? null;
   }

@@ -18,12 +18,22 @@ import {
 import { mergeSettingsGroups } from "@app/components/settings/mergeSettingsGroups";
 import { useSaaSTeam } from "@app/contexts/SaaSTeamContext";
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
+import { BASE_SECTION_ALIASES } from "@app/data/settingsAliases";
+import type { NavKey } from "@app/components/shared/config/types";
 
 const ConnectedInstancesSection = lazy(
   () => import("@app/components/settings/ConnectedInstancesSection"),
 );
 
 export type { SettingsNav };
+
+// SaaS accounts live under Overview rather than as cards on Preferences.
+const SAAS_SECTION_ALIASES: Partial<Record<string, NavKey>> = {
+  ...BASE_SECTION_ALIASES,
+  backendThirdPartyLicenses: "legal",
+  frontendThirdPartyLicenses: "legal",
+  account: "overview",
+};
 
 /**
  * SaaS settings sections. The cloud nav is a plain factory rather than a hook,
@@ -137,7 +147,9 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
   return {
     sections,
     overlay,
-    aliases: portalAccess ? PORTAL_SECTION_ALIASES : undefined,
+    aliases: portalAccess
+      ? { ...SAAS_SECTION_ALIASES, ...PORTAL_SECTION_ALIASES }
+      : SAAS_SECTION_ALIASES,
     pending: !accessSettled || teamLoading,
   };
 }
