@@ -10,12 +10,19 @@ run-name: "Review on #${{ github.event.pull_request.number }}"
 on:
   pull_request_review:
     types: [submitted, dismissed]
+  # A reply to a review thread is not guaranteed a review event of its own.
+  pull_request_review_comment:
+    types: [created]
 
 permissions: {}
 
 jobs:
   relay:
     name: Relay review event
+    # Every inline comment raises this, but only the author's can move the turn.
+    if: >-
+      github.event_name != 'pull_request_review_comment' ||
+      github.event.comment.user.login == github.event.pull_request.user.login
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
@@ -23,9 +30,9 @@ jobs:
         with:
           egress-policy: audit
 
-      - name: Record the review
+      - name: Record the event
         env:
+          EVENT: ${{ github.event_name }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
-          REVIEW_ID: ${{ github.event.review.id }}
         run: |
-          echo "Review $REVIEW_ID on #$PR_NUMBER"
+          echo "$EVENT on #$PR_NUMBER"

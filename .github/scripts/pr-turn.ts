@@ -24,24 +24,38 @@ export interface TurnChange {
   add: boolean;
 }
 
-// Must match the run-name in pr-review-events.yml.
+// Must match the run-name and the events in pr-review-events.yml.
 const REVIEW_RUN_TITLE = /^Review on #(\d+)$/;
+const RELAYED_EVENTS = ["pull_request_review", "pull_request_review_comment"];
 
-const TURN_QUERY = `
-  query($owner: String!, $repo: String!, $number: Int!, $before: String) {
+// Reviews come from `reviews`, not the timeline: a reply to a review thread is a review
+// of its own, and the timeline leaves those out.
+const REVIEWS_QUERY = `
+  query($owner: String!, $repo: String!, $number: Int!) {
     repository(owner: $owner, name: $repo) {
       pullRequest(number: $number) {
         author { login }
         headRefOid
+        reviews(last: 100) {
+          nodes { __typename submittedAt state authorCanPushToRepository author { login __typename } commit { oid } }
+        }
+      }
+    }
+  }
+`;
+
+const TIMELINE_QUERY = `
+  query($owner: String!, $repo: String!, $number: Int!, $before: String) {
+    repository(owner: $owner, name: $repo) {
+      pullRequest(number: $number) {
         timelineItems(
           last: 100
           before: $before
-          itemTypes: [PULL_REQUEST_REVIEW, ISSUE_COMMENT, REVIEW_REQUESTED_EVENT, READY_FOR_REVIEW_EVENT, REVIEW_DISMISSED_EVENT, LABELED_EVENT, UNLABELED_EVENT]
+          itemTypes: [ISSUE_COMMENT, REVIEW_REQUESTED_EVENT, READY_FOR_REVIEW_EVENT, REVIEW_DISMISSED_EVENT, LABELED_EVENT, UNLABELED_EVENT]
         ) {
           pageInfo { hasPreviousPage startCursor }
           nodes {
             __typename
-            ... on PullRequestReview { submittedAt state authorCanPushToRepository author { login __typename } commit { oid } }
             ... on IssueComment { createdAt author { login } }
             ... on ReviewRequestedEvent { createdAt actor { login } }
             ... on ReadyForReviewEvent { createdAt actor { login } }
@@ -57,29 +71,35 @@ const TURN_QUERY = `
 
 type Login = { login: string } | null;
 
-/** One timeline item as TURN_QUERY returns it: must stay in sync with the query. */
-export type TurnItem =
-  | {
-      __typename: "PullRequestReview";
-      submittedAt: string | null;
-      state: string;
-      authorCanPushToRepository: boolean;
-      author: { login: string; __typename: string } | null;
-      commit: { oid: string } | null;
-    }
+/** One review as REVIEWS_QUERY returns it: must stay in sync with the query. */
+export interface ReviewNode {
+  __typename: "PullRequestReview";
+  submittedAt: string | null;
+  state: string;
+  authorCanPushToRepository: boolean;
+  author: { login: string; __typename: string } | null;
+  commit: { oid: string } | null;
+}
+
+/** One timeline item as TIMELINE_QUERY returns it: must stay in sync with the query. */
+export type TimelineItem =
   | { __typename: "IssueComment"; createdAt: string; author: Login }
   | { __typename: "ReviewRequestedEvent" | "ReadyForReviewEvent"; createdAt: string; actor: Login }
   | { __typename: "ReviewDismissedEvent"; createdAt: string; previousReviewState: string }
   | { __typename: "LabeledEvent" | "UnlabeledEvent"; createdAt: string; label: { name: string } };
 
-export interface TurnPage {
+export interface ReviewsPage {
+  repository: {
+    pullRequest: { author: Login; headRefOid: string; reviews: { nodes: ReviewNode[] } } | null;
+  };
+}
+
+export interface TimelinePage {
   repository: {
     pullRequest: {
-      author: Login;
-      headRefOid: string;
       timelineItems: {
         pageInfo: { hasPreviousPage: boolean; startCursor: string | null };
-        nodes: TurnItem[];
+        nodes: TimelineItem[];
       };
     } | null;
   };
@@ -87,17 +107,26 @@ export interface TurnPage {
 
 type Turn = "author" | "maintainers";
 
-function turnAfter(item: TurnItem, author: string | undefined, headOid: string): Turn | null {
-  const isAuthor = (actor: Login) => actor !== null && actor.login === author;
+interface TurnMove {
+  at: number;
+  turn: Turn;
+}
+
+const isBy = (actor: Login, author: string | undefined) => actor !== null && actor.login === author;
+
+function reviewTurn(review: ReviewNode, author: string | undefined, headOid: string): Turn | null {
+  if (isBy(review.author, author)) return "maintainers";
+  // Review bots can have push access, but only a person's verdict moves the turn.
+  if (review.author?.__typename === "Bot" || !review.authorCanPushToRepository) return null;
+  if (review.state === "APPROVED") return "maintainers";
+  // A push has no time to compare against, so one since the review shows as the review
+  // being of an older commit.
+  return review.state === "CHANGES_REQUESTED" && review.commit?.oid === headOid ? "author" : null;
+}
+
+function timelineTurn(item: TimelineItem, author: string | undefined): Turn | null {
+  const isAuthor = (actor: Login) => isBy(actor, author);
   switch (item.__typename) {
-    case "PullRequestReview":
-      if (isAuthor(item.author)) return "maintainers";
-      // Review bots can have push access, but only a person's verdict moves the turn.
-      if (item.author?.__typename === "Bot" || !item.authorCanPushToRepository) return null;
-      if (item.state === "APPROVED") return "maintainers";
-      // A push has no time to compare against, so one since the review shows as the
-      // review being of an older commit.
-      return item.state === "CHANGES_REQUESTED" && item.commit?.oid === headOid ? "author" : null;
     case "IssueComment":
       return isAuthor(item.author) ? "maintainers" : null;
     case "ReviewRequestedEvent":
@@ -112,33 +141,42 @@ function turnAfter(item: TurnItem, author: string | undefined, headOid: string):
   }
 }
 
-const itemTime = (item: TurnItem) => (item.__typename === "PullRequestReview" ? item.submittedAt : item.createdAt);
+const move = (at: string | null, turn: Turn | null): TurnMove[] => (at === null || turn === null ? [] : [{ at: Date.parse(at), turn }]);
+
+const latestMove = (moves: TurnMove[]) =>
+  moves.reduce<TurnMove | null>((latest, candidate) => (latest === null || candidate.at >= latest.at ? candidate : latest), null);
+
+// Pages run newest first, so the first page with a move holds the latest one.
+async function latestTimelineMove(github: GitHubClient, repo: Repo, number: number, author: string | undefined) {
+  let before: string | null = null;
+  do {
+    const page: TimelinePage = await github.graphql(TIMELINE_QUERY, { ...repo, number, before });
+    const items = page.repository.pullRequest?.timelineItems;
+    if (!items) return null;
+    const latest = latestMove(items.nodes.flatMap((item) => move(item.createdAt, timelineTurn(item, author))));
+    if (latest !== null) return latest;
+    before = items.pageInfo.hasPreviousPage ? items.pageInfo.startCursor : null;
+  } while (before !== null);
+  return null;
+}
 
 /**
  * Whether the PR is waiting on its author. Read from the PR's history rather than the
  * event at hand, so runs that overlap, arrive late or are re-run all agree.
  */
 export async function authorHasTurn(github: GitHubClient, { owner, repo }: Repo, number: number): Promise<boolean> {
-  let before: string | null = null;
-  do {
-    const page: TurnPage = await github.graphql(TURN_QUERY, { owner, repo, number, before });
-    const pr = page.repository.pullRequest;
-    if (pr === null) return false;
-    const moves = pr.timelineItems.nodes.flatMap((item) => {
-      const at = itemTime(item);
-      const turn = turnAfter(item, pr.author?.login, pr.headRefOid);
-      return at === null || turn === null ? [] : [{ at: Date.parse(at), turn }];
-    });
-    if (moves.length > 0) return moves.reduce((latest, move) => (move.at >= latest.at ? move : latest)).turn === "author";
-    const { hasPreviousPage, startCursor } = pr.timelineItems.pageInfo;
-    before = hasPreviousPage ? startCursor : null;
-  } while (before !== null);
-  return false;
+  const page = await github.graphql<ReviewsPage>(REVIEWS_QUERY, { owner, repo, number });
+  const pr = page.repository.pullRequest;
+  if (pr === null) return false;
+  const author = pr.author?.login;
+  const fromReviews = pr.reviews.nodes.flatMap((review) => move(review.submittedAt, reviewTurn(review, author, pr.headRefOid)));
+  const fromTimeline = await latestTimelineMove(github, { owner, repo }, number, author);
+  return latestMove(fromTimeline === null ? fromReviews : [...fromReviews, fromTimeline])?.turn === "author";
 }
 
 async function relayedPull(github: GitHubClient, repo: Repo, run: NonNullable<TurnPayload["workflow_run"]>) {
   const match = REVIEW_RUN_TITLE.exec(run.display_title);
-  if (run.event !== "pull_request_review" || !match) return null;
+  if (!RELAYED_EVENTS.includes(run.event) || !match) return null;
   const number = Number(match[1]);
   const pull = await github.rest.pulls.get({ ...repo, pull_number: number }).then(
     ({ data }): PullData | null => data,

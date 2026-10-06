@@ -2,7 +2,16 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import { type GitHubClient, LABELS } from "./github.ts";
-import { clearStaleTurnLabel, type TurnItem, turnChangeForEvent, type TurnPayload, updateTurnLabel } from "./pr-turn.ts";
+import {
+  clearStaleTurnLabel,
+  type ReviewNode,
+  type TimelineItem,
+  turnChangeForEvent,
+  type TurnPayload,
+  updateTurnLabel,
+} from "./pr-turn.ts";
+
+type TurnItem = ReviewNode | TimelineItem;
 
 const AUTHOR = "contributor";
 const HEAD = "head-sha";
@@ -22,12 +31,17 @@ function fakeGitHub(items: TurnItem[] = [], { labelled = false, alreadyRemoved =
   const calls: string[] = [];
   const reads = { pages: 0 };
   const github: GitHubClient = {
-    graphql: async <T>(_query: string, variables: Record<string, unknown>) => {
+    graphql: async <T>(query: string, variables: Record<string, unknown>) => {
       reads.pages += 1;
-      const end = typeof variables.before === "string" ? Number(variables.before) : items.length;
+      if (query.includes("reviews(last")) {
+        const reviews = { nodes: items.filter((item) => item.__typename === "PullRequestReview") };
+        return { repository: { pullRequest: { author: { login: AUTHOR }, headRefOid: HEAD, reviews } } } as T;
+      }
+      const timeline = items.filter((item) => item.__typename !== "PullRequestReview");
+      const end = typeof variables.before === "string" ? Number(variables.before) : timeline.length;
       const start = Math.max(0, end - pageSize);
-      const timelineItems = { pageInfo: { hasPreviousPage: start > 0, startCursor: String(start) }, nodes: items.slice(start, end) };
-      return { repository: { pullRequest: { author: { login: AUTHOR }, headRefOid: HEAD, timelineItems } } } as T;
+      const timelineItems = { pageInfo: { hasPreviousPage: start > 0, startCursor: String(start) }, nodes: timeline.slice(start, end) };
+      return { repository: { pullRequest: { timelineItems } } } as T;
     },
     rest: {
       issues: {
@@ -149,11 +163,18 @@ describe("turn change for a relayed review", () => {
     assert.equal(await changeFor(relayRun(), [review("APPROVED", "maintainer", true, 10), labelEvent("LabeledEvent", 1)], { labelled: true }), null);
   });
 
-  it("reads further back when the newest page moves nothing", async () => {
+  it("reads further back in the timeline when the newest page moves nothing", async () => {
     const noise = Array.from({ length: 5 }, (_, index) => comment("maintainer", 5 - index));
-    const { github, reads } = fakeGitHub([review("CHANGES_REQUESTED", "maintainer", true, 10), ...noise], { pageSize: 2 });
-    assert.deepEqual(await turnChangeForEvent(github, { repo, payload: relayRun() }), { number: 7, add: true });
-    assert.ok(reads.pages > 1);
+    const items = [review("CHANGES_REQUESTED", "maintainer", true, 10), comment(AUTHOR, 8), ...noise];
+    const { github, reads } = fakeGitHub(items, { pageSize: 2 });
+    assert.equal(await turnChangeForEvent(github, { repo, payload: relayRun() }), null);
+    assert.ok(reads.pages > 2);
+  });
+
+  it("hands the turn back when the author replies to a review thread", async () => {
+    const items = [review("CHANGES_REQUESTED", "maintainer", true, 10), labelEvent("LabeledEvent", 9), review("COMMENTED", AUTHOR, false, 1)];
+    const payload = relayRun({ event: "pull_request_review_comment" });
+    assert.deepEqual(await changeFor(payload, items, { labelled: true }), { number: 7, add: false });
   });
 
   it("ignores a run built from another PR, whatever its title says", async () => {

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import { BOT_LOGIN, type Core, type GitHubClient, LABELS } from "./github.ts";
-import type { TurnItem } from "./pr-turn.ts";
+import type { ReviewNode, TimelineItem } from "./pr-turn.ts";
 import triageStalePullRequests, {
   type Actor,
   closingComment,
@@ -308,6 +308,8 @@ function toNode(pr: PullRequest, pageSize: number, before: string | null): PullR
   };
 }
 
+type TurnItem = ReviewNode | TimelineItem;
+
 const STILL_WAITING: TurnItem[] = [{ __typename: "LabeledEvent", createdAt: daysAgo(40), label: { name: LABELS.waitingOnAuthor } }];
 
 interface FakeOptions {
@@ -348,9 +350,13 @@ function fakeGitHub(
       const nodes = prs.map((pr) => ({ number: pr.number }));
       return { repository: { pullRequests: { pageInfo: { hasNextPage: false, endCursor: null }, nodes } } };
     }
-    if (query.includes("headRefOid")) {
-      const timelineItems = { pageInfo: { hasPreviousPage: false, startCursor: null }, nodes: turnItems };
-      return { repository: { pullRequest: { author: { login: "contributor" }, headRefOid: "head-sha", timelineItems } } };
+    if (query.includes("reviews(last")) {
+      const reviews = { nodes: turnItems.filter((item) => item.__typename === "PullRequestReview") };
+      return { repository: { pullRequest: { author: { login: "contributor" }, headRefOid: "head-sha", reviews } } };
+    }
+    if (query.includes("REVIEW_DISMISSED_EVENT")) {
+      const nodes = turnItems.filter((item) => item.__typename !== "PullRequestReview");
+      return { repository: { pullRequest: { timelineItems: { pageInfo: { hasPreviousPage: false, startCursor: null }, nodes } } } };
     }
     if (variables.number === failFor) throw new Error("boom");
     reads.pages += 1;
