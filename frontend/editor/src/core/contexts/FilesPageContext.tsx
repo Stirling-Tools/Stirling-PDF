@@ -36,6 +36,7 @@ import {
 } from "@app/contexts/IndexedDBContext";
 import { useFileActions } from "@app/contexts/file/fileHooks";
 import { useDiskLinkReconcile } from "@app/hooks/useDiskLinkReconcile";
+import { useCoalescedCallback } from "@app/hooks/useCoalescedCallback";
 import { useFolders } from "@app/contexts/FolderContext";
 import { getFileOrigin } from "@app/components/filesPage/fileOrigin";
 import { useRoutedLibraryViewState } from "@app/components/filesPage/useRoutedLibraryViewState";
@@ -239,9 +240,15 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
     onOpenFilesDetached,
   ]);
 
+  useCoalescedCallback(refresh, indexedDBRevision);
+
+  // The hook cancels timers but cannot cancel a started run, so unmount has to
+  // invalidate it here or a late scan would publish into a gone tree.
   useEffect(() => {
-    void refresh();
-  }, [refresh, indexedDBRevision]);
+    return () => {
+      refreshGenRef.current++;
+    };
+  }, []);
 
   const fileMap = useMemo(() => {
     const map = new Map<FileId, StirlingFileStub>();

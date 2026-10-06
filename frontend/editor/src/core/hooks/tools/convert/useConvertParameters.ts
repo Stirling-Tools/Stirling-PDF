@@ -81,6 +81,8 @@ export interface ConvertParameters extends BaseParameters {
     targetDevice: string;
     outputFormat: string;
   };
+  /** Per-request engine pick; undefined follows the server setting. */
+  useStirlingOfficeConvert?: boolean;
   isSmartDetection: boolean;
   smartDetectionType: "mixed" | "images" | "web" | "none";
 }

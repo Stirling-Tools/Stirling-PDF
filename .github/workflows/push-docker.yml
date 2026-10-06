@@ -84,7 +84,7 @@ jobs:
 
       - name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
       - name: Install Task
         uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
@@ -147,7 +147,7 @@ jobs:
         id: build-push-latest
         # Empty-tag guard: build-push-action errors when asked to push with no tags.
         if: env.RUN_MAIN_APP == 'true' && steps.meta.outputs.tags != ''
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
@@ -194,7 +194,7 @@ jobs:
 
       - name: Build and push Unified Dockerfile (fat variant)
         id: build-push-fat
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         if: env.RUN_MAIN_APP == 'true' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/testMain' && steps.meta-fat.outputs.tags != ''
         with:
           builder: ${{ steps.buildx.outputs.name }}
@@ -238,7 +238,7 @@ jobs:
 
       - name: Build and push Unified Dockerfile (ultra-lite variant)
         id: build-push-lite
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         if: env.RUN_MAIN_APP == 'true' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/testMain' && steps.meta-lite.outputs.tags != ''
         with:
           builder: ${{ steps.buildx.outputs.name }}
@@ -371,7 +371,7 @@ jobs:
       - name: Build and push unoserver image
         id: build-push-unoserver
         if: env.RUN_UNOSERVER == 'true' && steps.unoserverDecision.outputs.mode != 'skip'
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
@@ -487,7 +487,7 @@ jobs:
       - name: Build and push engine image
         id: build-push-engine
         if: env.RUN_ENGINE == 'true' && steps.engineDecision.outputs.mode != 'skip'
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .

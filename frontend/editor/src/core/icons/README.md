@@ -5,7 +5,7 @@ Read this before adding, changing or styling any icon.
 ## TL;DR rules
 
 1. **Render every icon with `<Icon name="…" />`** from `@app/ui/Icon`. There is one icon component and one icon set.
-2. **Never write an `<svg>` in a `.ts`/`.tsx` file.** Icons are `.svg` files under `svg/stirling/` or `svg/third-party/`. Geometry computed at runtime (charts, overlays, previews) is the only exception and needs a `// icon-lint-disable -- <reason>` comment.
+2. **Never write an `<svg>` in a `.ts`/`.tsx` file.** Icons are `.svg` files under `svg/stirling/` or `svg/third-party/`. There are two exceptions, and each needs an `icon-lint-allow: <category> -- <reason>` comment above the `<svg`: `runtime-generated-svg` for geometry computed at runtime (rulers, rings, charts), and `storybook-fixture` for svg text that builds a story's fake image, allowed only in `.stories.tsx`. Nothing else can be silenced.
 3. **Size with the `size` prop, never `fontSize`.** The old icons were font glyphs; `<Icon>` sizes via `width`/`height`, so `style={{ fontSize }}` does nothing at all.
 4. **A name has to be in `icons.ts`.** Adding one is two lines: the `?react` import and the map entry. `IconName` comes from that map, so anything missing is a compile error.
 5. `task frontend:lint:icons` enforces 1–3 (see [Linter](#linter)).
@@ -58,7 +58,7 @@ For a prop that takes *either* a name or your own node, narrow with `isIconName(
 
 ## Linter
 
-`editor/scripts/lint/icon-lint.mts`, run by `task frontend:lint:icons` (part of `task frontend:lint`). Blocking: no inline `<svg>`, no retired icon library, `.svg` only in the icon dirs or `assets/`, every `<Icon name="…">` literal must resolve, and every icon svg must be on the `0 0 24 24` frame.
+`editor/scripts/lint/icon-lint.mts`, run by `task frontend:lint:icons` (part of `task frontend:lint`). Blocking: no inline `<svg>`, no `.svg?react` import outside `icons.ts` (an icon goes through the registry; a picture is an `<img>`), no retired icon library, `.svg` only in the icon dirs or `assets/`, every `<Icon name="…">` literal must resolve, and every icon svg must be on the `0 0 24 24` frame.
 
 `task frontend:lint:unused-icons` reports svgs in `svg/stirling/` that nothing renders, each of which is a drawing to keep on style for no reason. It deliberately over-counts references, because a false "unused" gets a live icon deleted.
 
