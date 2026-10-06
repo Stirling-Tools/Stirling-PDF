@@ -58,6 +58,7 @@ updates:
 
   - package-ecosystem: npm
     directories:
+      - /.github/scripts
       - /frontend
       - /testing/compose/mcp-client-check
     schedule:

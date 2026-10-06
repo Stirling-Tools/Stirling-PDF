@@ -4,7 +4,7 @@ Thank you for your interest in contributing to Stirling-PDF! There are many ways
 
 ## License
 
-By contributing to this project, you agree that your contributions will be licensed under the project [license](../LICENSE), which follows an open-core model. 
+By contributing to this project, you agree that your contributions will be licensed under the project [license](../LICENSE), which follows an open-core model.
 The codebase is a mix of MIT and source-available code, so your contribution is licensed according to the directory it is committed to.
 
 PRs are welcome in any directory by any user, just be aware of which license applies to the code you change.
@@ -43,6 +43,19 @@ Please make sure your Pull Request adheres to the following guidelines:
 - Commits should be clear, concise, and easy to understand.
 - References to the Issue number in the Pull Request and/or Commit message.
 - Every comment in the diff should say something the code does not. See [Code comments](../docs/developer/CODE_COMMENTS.md); `task comment-lint` checks the mechanical part.
+
+## Stale Pull Requests
+
+To keep the list of open Pull Requests manageable, PRs that appear abandoned will automatically be closed (after a warning).
+
+- When a maintainer requests changes, the Pull Request will be labelled `waiting-on-author`. The label will be removed when you push, comment, reply to the review, etc.
+- If a Pull Request that is ready for review has had the `waiting-on-author` or `has conflicts` label for 7 days, the PR will gain the `Stale PR` label.
+- If a draft Pull Request has had no activity for 30 days, it will get the `Stale PR` label.
+- If the problem is still there 7 days after the warning, the Pull Request will be automatically closed.
+
+A closed Pull Request is not rejected. If you pick it up again, please feel free to open a new Pull Request and address the problem.
+
+If you think a Pull Request is waiting on us rather than on you, say so in a comment.
 
 ## Translations
 
