@@ -19,8 +19,8 @@ function announceReturn(search: string): void {
 /**
  * Desktop opens Stripe in the system browser, so the app learns how it ended
  * from the deep link the web app's /desktop/return page opens. A user who
- * closes the browser instead never triggers it, so coming back to the window
- * after a handoff refreshes too. Listens from the first handoff onwards.
+ * closes the browser instead never triggers it, so the first return to the
+ * window after a handoff refreshes too. Listens from the first handoff onwards.
  */
 export function noteBillingHandoff(): void {
   handoffPending = true;
@@ -32,6 +32,8 @@ export function noteBillingHandoff(): void {
     announceReturn(new URL(event.payload).search);
   });
   void getCurrentWindow().onFocusChanged(({ payload: focused }) => {
-    if (focused && handoffPending) announceReturn("");
+    if (!focused || !handoffPending) return;
+    handoffPending = false;
+    announceReturn("");
   });
 }
