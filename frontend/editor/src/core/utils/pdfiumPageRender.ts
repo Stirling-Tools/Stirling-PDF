@@ -34,10 +34,24 @@ export interface RenderPdfiumPageOptions {
   /** When true (default), bake the page's own rotation into the bitmap.
    *  When false, render upright so callers can apply CSS rotation. */
   applyRotation?: boolean;
-  /** Output format; defaults to PNG. */
-  format?: "png" | "jpeg";
-  /** JPEG quality [0,1]; ignored for PNG. */
+  /** Output format; defaults to WebP with PNG fallback if unsupported. */
+  format?: "webp" | "jpeg" | "png";
+  /** Quality [0,1] for lossy formats (webp, jpeg); ignored for PNG. */
   quality?: number;
+}
+
+let webpSupported: boolean | null = null;
+function isWebpCanvasSupported(): boolean {
+  if (webpSupported !== null) return webpSupported;
+  try {
+    const c = document.createElement("canvas");
+    c.width = 1;
+    c.height = 1;
+    webpSupported = c.toDataURL("image/webp").startsWith("data:image/webp");
+  } catch {
+    webpSupported = false;
+  }
+  return webpSupported;
 }
 
 /**
@@ -51,7 +65,7 @@ export async function renderPdfiumPageDataUrl(
   scale: number,
   options: RenderPdfiumPageOptions = {},
 ): Promise<string | null> {
-  const { applyRotation = true, format = "png", quality } = options;
+  const { applyRotation = true, format = "webp", quality = 0.8 } = options;
   const m = await getPdfiumModule();
 
   const pagePtr = m.FPDF_LoadPage(docPtr, pageIndex);
@@ -111,9 +125,13 @@ export async function renderPdfiumPageDataUrl(
       const ctx = canvas.getContext("2d");
       if (!ctx) return null;
       ctx.putImageData(new ImageData(pixels, w, h), 0, 0);
-      return format === "jpeg"
-        ? canvas.toDataURL("image/jpeg", quality ?? 0.8)
-        : canvas.toDataURL();
+      if (format === "webp" && isWebpCanvasSupported()) {
+        return canvas.toDataURL("image/webp", quality);
+      }
+      if (format === "jpeg") {
+        return canvas.toDataURL("image/jpeg", quality);
+      }
+      return canvas.toDataURL("image/png");
     } finally {
       m.FPDFBitmap_Destroy(bitmapPtr);
     }

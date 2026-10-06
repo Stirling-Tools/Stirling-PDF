@@ -60,8 +60,9 @@ const IMAGE_HEADER_PROBE_LIMIT = 4 * 1024 * 1024;
 /** Window at each end of the file searched for an /Encrypt entry. */
 const ENCRYPT_PROBE_BYTES = 64 * 1024;
 
-/** Pages read between yields while collecting whole-document metadata. */
-const METADATA_YIELD_INTERVAL = 50;
+/** Pages read between yields while collecting whole-document metadata.
+ * Lower interval keeps frame budgets under 16ms on slower machines. */
+const METADATA_YIELD_INTERVAL = 8;
 
 /**
  * Fills rotation and dimensions for pages 1..pageCount-1. Each read is
