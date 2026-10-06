@@ -306,7 +306,7 @@ All language codes from `frontend/editor/public/locales/` (e.g., es-ES, de-DE, f
 
 #### Retranslating changed English text
 
-`auto_translate.py` only picks up keys that are missing. When an existing en-US string is reworded, other languages keep the old translation. `bulk_auto_translate.py --mode changed` finds those keys from git history and retranslates them:
+`auto_translate.py` picks up keys that are missing and keys still holding the English text, the copy the locale sync and feature PRs fill new keys with (`--missing-only` skips the latter). Keys listed in `scripts/ignore_translation.toml` are meant to stay English and are left alone. When an existing en-US string is reworded, other languages keep the old translation. `bulk_auto_translate.py --mode changed` finds those keys from git history and retranslates them:
 
 ```bash
 # See how many changed keys each language has (no API calls)

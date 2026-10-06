@@ -57,7 +57,7 @@ def load_ignored_keys(language_code):
     return set(data.get(language_code.replace("-", "_"), {}).get("ignore", []))
 
 
-def extract_untranslated(language_code, batch_size=500, include_existing=False, forced_keys=None, only_forced=False):
+def extract_untranslated(language_code, batch_size=500, include_existing=True, forced_keys=None, only_forced=False):
     """Extract untranslated entries and split into batches."""
     mode = "all untranslated (including existing)" if include_existing else "new (missing)"
     if forced_keys is not None:
@@ -106,7 +106,10 @@ def extract_untranslated(language_code, batch_size=500, include_existing=False, 
         elif only_forced:
             continue
         elif include_existing:
-            # Include missing keys, keys with English values, and [UNTRANSLATED] keys
+            # Include missing keys, keys with English values, and [UNTRANSLATED] keys.
+            # New keys usually reach a locale as an English copy (the locale sync and
+            # feature PRs fill every file), so a pass over missing keys alone leaves
+            # them in English for good.
             if (
                 key not in lang_flat
                 or (lang_flat.get(key) == value and key not in ignored)
@@ -331,10 +334,12 @@ Examples:
         help="Timeout per batch in seconds (default: 600 = 10 minutes)",
     )
     parser.add_argument(
-        "--include-existing",
+        "--missing-only",
         action="store_true",
-        help="Also retranslate existing keys that match English (default: only translate missing keys)",
+        help="Only translate keys absent from the language file (default: also keys still in English)",
     )
+    # Still accepted so existing commands parse; keys still in English are included by default.
+    parser.add_argument("--include-existing", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument(
         "--keys-file",
         help="JSON list of keys to retranslate even if already translated (e.g. from stale_translations.py)",
@@ -384,7 +389,7 @@ Examples:
     try:
         # Step 1: Extract and split
         batch_files = extract_untranslated(
-            args.language, args.batch_size, args.include_existing, forced_keys, args.only_keys
+            args.language, args.batch_size, not args.missing_only, forced_keys, args.only_keys
         )
         if batch_files is None:
             sys.exit(1)

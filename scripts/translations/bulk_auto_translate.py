@@ -129,8 +129,8 @@ def translate_language(
     if skip_verification:
         cmd.append("--skip-verification")
 
-    if include_existing:
-        cmd.append("--include-existing")
+    if not include_existing:
+        cmd.append("--missing-only")
 
     if keys_file:
         cmd.extend(["--keys-file", str(keys_file)])
@@ -204,7 +204,7 @@ Note: Requires OPENAI_API_KEY environment variable or --api-key argument.
         "--mode",
         choices=["missing", "changed", "all"],
         default="missing",
-        help="missing: keys absent from the language (default); changed: keys whose en-US text "
+        help="missing: keys absent from the language or still in English (default); changed: keys whose en-US text "
         "changed since they were translated, found via git history; all: both",
     )
     parser.add_argument(
@@ -252,10 +252,12 @@ Note: Requires OPENAI_API_KEY environment variable or --api-key argument.
         help="Skip final completion verification for each language",
     )
     parser.add_argument(
-        "--include-existing",
+        "--missing-only",
         action="store_true",
-        help="Also retranslate existing keys that match English (default: only translate missing keys)",
+        help="Only translate keys absent from each language file (default: also keys still in English)",
     )
+    # Still accepted so existing commands parse; keys still in English are included by default.
+    parser.add_argument("--include-existing", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument(
         "--dry-run",
         action="store_true",
@@ -368,7 +370,7 @@ Note: Requires OPENAI_API_KEY environment variable or --api-key argument.
                 args.batch_size,
                 args.timeout,
                 args.skip_verification,
-                args.include_existing,
+                not args.missing_only,
                 args.model,
                 keys_files.get(lang),
                 args.mode == "changed",
