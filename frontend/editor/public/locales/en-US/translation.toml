@@ -13550,7 +13550,8 @@ title = "New team"
 [users.overLimit]
 body = "Your team's plan no longer covers them, so they can't sign in. Renew the plan, or use Make active on a row to choose who has a place."
 renew = "Renew Team plan"
-title = "{{count}} users are disabled"
+title_one = "{{count}} user is disabled"
+title_other = "{{count}} users are disabled"
 
 [users.renameTeam]
 apply = "Rename"

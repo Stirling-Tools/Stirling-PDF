@@ -258,7 +258,7 @@ public class StripeSubscriptionDao {
                     .filter(Objects::nonNull)
                     .findFirst();
         } catch (DataAccessException e) {
-            log.warn("Scheduled subscription end unavailable: {}", e.getMessage());
+            log.warn("Scheduled subscription end unavailable for {}: {}", arg, e.getMessage());
             return Optional.empty();
         }
     }

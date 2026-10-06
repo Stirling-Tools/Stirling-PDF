@@ -427,6 +427,15 @@ public class SaasTeamController {
                             .body(Map.of("error", "not_disabled"));
             case REPLACE_INVALID ->
                     ResponseEntity.badRequest().body(Map.of("error", "replace_invalid"));
+            case UNAVAILABLE ->
+                    ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                            .body(
+                                    Map.of(
+                                            "error",
+                                            "unavailable",
+                                            "message",
+                                            "Couldn't change who has a place right now. Please try"
+                                                    + " again."));
         };
     }
 

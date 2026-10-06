@@ -792,6 +792,20 @@ class SaasTeamControllerTest {
             assertThat(invalid.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
             assertThat(body(invalid)).containsEntry("error", "replace_invalid");
         }
+
+        @Test
+        @DisplayName("a database that can't answer is a 503, not a bare 500")
+        void unavailable_isServiceUnavailable() {
+            when(memberCapacity.makeActive(10L, 3L, null))
+                    .thenReturn(
+                            stirling.software.saas.service.TeamMemberCapacityService
+                                    .MakeActiveResult.UNAVAILABLE);
+
+            ResponseEntity<?> response = controller.activateMember(10L, 3L, null);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+            assertThat(body(response)).containsEntry("error", "unavailable");
+        }
     }
 
     @Nested

@@ -1,7 +1,6 @@
 package stirling.software.saas.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -56,8 +55,14 @@ class TeamMemberCapacityServiceTest {
                 .thenReturn("surprise");
         assertThat(service.makeActive(42L, 7L, null)).isEqualTo(MakeActiveResult.NO_PLACE);
         assertThat(service.makeActive(42L, 7L, 3L)).isEqualTo(MakeActiveResult.ACTIVATED);
-        assertThatThrownBy(() -> service.makeActive(42L, 8L, 3L))
-                .isInstanceOf(IllegalStateException.class);
+        assertThat(service.makeActive(42L, 8L, 3L)).isEqualTo(MakeActiveResult.UNAVAILABLE);
+    }
+
+    @Test
+    void aMissingFunctionAnswersUnavailableRatherThanFailing() {
+        when(jdbc.queryForObject(anyString(), eq(String.class), eq(42L), eq(7L), isNull()))
+                .thenThrow(new DataAccessResourceFailureException("function does not exist"));
+        assertThat(service.makeActive(42L, 7L, null)).isEqualTo(MakeActiveResult.UNAVAILABLE);
     }
 
     @Test

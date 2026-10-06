@@ -33,7 +33,9 @@ public class TeamMemberCapacityService {
         ACTIVATED,
         NO_PLACE,
         NOT_DISABLED,
-        REPLACE_INVALID
+        REPLACE_INVALID,
+        /** The database could not answer: the migration is missing or the call failed. */
+        UNAVAILABLE
     }
 
     private final JdbcTemplate jdbcTemplate;
@@ -102,19 +104,32 @@ public class TeamMemberCapacityService {
      * Gives a disabled member a place, taking it from {@code replaceUserId} when the team is full.
      */
     public MakeActiveResult makeActive(long teamId, long userId, Long replaceUserId) {
-        String result =
-                jdbcTemplate.queryForObject(
-                        "SELECT stirling_pdf.make_team_member_active(?, ?, ?)",
-                        String.class,
-                        teamId,
-                        userId,
-                        replaceUserId);
+        String result;
+        try {
+            result =
+                    jdbcTemplate.queryForObject(
+                            "SELECT stirling_pdf.make_team_member_active(?, ?, ?)",
+                            String.class,
+                            teamId,
+                            userId,
+                            replaceUserId);
+        } catch (DataAccessException e) {
+            log.warn(
+                    "Could not make member {} active in team {}: {}",
+                    userId,
+                    teamId,
+                    e.getMessage());
+            return MakeActiveResult.UNAVAILABLE;
+        }
         return switch (result == null ? "" : result) {
             case "activated" -> MakeActiveResult.ACTIVATED;
             case "no_place" -> MakeActiveResult.NO_PLACE;
             case "not_disabled" -> MakeActiveResult.NOT_DISABLED;
             case "replace_invalid" -> MakeActiveResult.REPLACE_INVALID;
-            default -> throw new IllegalStateException("Unexpected make-active result: " + result);
+            default -> {
+                log.warn("Unexpected make-active result for team {}: {}", teamId, result);
+                yield MakeActiveResult.UNAVAILABLE;
+            }
         };
     }
 }
