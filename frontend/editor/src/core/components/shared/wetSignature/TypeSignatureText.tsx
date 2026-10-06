@@ -55,16 +55,23 @@ export const TypeSignatureText: React.FC<TypeSignatureTextProps> = ({
     ctx.font = `${fontSize}px ${fontFamily}`;
     const metrics = ctx.measureText(text);
     const textWidth = metrics.width;
-    const _textHeight = fontSize * 1.2; // Approximate height
 
     // Center text on canvas
     ctx.fillStyle = color;
     ctx.textBaseline = "middle";
     ctx.fillText(text, (canvas.width - textWidth) / 2, canvas.height / 2);
 
-    // Convert to base64
-    const dataUrl = canvas.toDataURL("image/png");
-    onSignatureChange(dataUrl);
+    // Export the ink bounds: the fixed preview canvas shrinks short names when placed on a PDF.
+    const exportCanvas = document.createElement("canvas");
+    exportCanvas.width = Math.max(1, Math.ceil(textWidth + fontSize));
+    exportCanvas.height = Math.max(1, Math.ceil(fontSize * 2));
+    const exportContext = exportCanvas.getContext("2d");
+    if (!exportContext) return;
+    exportContext.font = `${fontSize}px ${fontFamily}`;
+    exportContext.fillStyle = color;
+    exportContext.textBaseline = "middle";
+    exportContext.fillText(text, fontSize / 2, exportCanvas.height / 2);
+    onSignatureChange(exportCanvas.toDataURL("image/png"));
   }, [text, fontFamily, fontSize, color, onSignatureChange]);
 
   const fontOptions = [
@@ -74,7 +81,13 @@ export const TypeSignatureText: React.FC<TypeSignatureTextProps> = ({
     { value: "Georgia", label: "Georgia" },
     { value: "Verdana", label: "Verdana" },
     { value: "Comic Sans MS", label: "Comic Sans MS" },
-    { value: "Brush Script MT", label: "Brush Script MT (cursive)" },
+    {
+      value: "Brush Script MT",
+      label: t(
+        "certSign.collab.signRequest.fontBrushScript",
+        "Brush Script MT (cursive)",
+      ),
+    },
   ];
 
   return (

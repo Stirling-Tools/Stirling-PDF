@@ -8,7 +8,10 @@
 import { test, expect, type Page } from "@playwright/test";
 import path from "path";
 import { mockAppApis } from "@app/tests/helpers/api-stubs";
-import { suppressNativeFilePicker } from "@app/tests/helpers/ui-helpers";
+import {
+  suppressNativeFilePicker,
+  revealPickerTool,
+} from "@app/tests/helpers/ui-helpers";
 
 const FIXTURES_DIR = path.join(import.meta.dirname, "../test-fixtures");
 const SAMPLE_PDF = path.join(FIXTURES_DIR, "sample.pdf");
@@ -40,7 +43,8 @@ async function uploadFile(page: Page, filePath: string) {
 // After clicking, the URL changes to /convert and the settings appear.
 // ---------------------------------------------------------------------------
 async function navigateToConvert(page: Page) {
-  await page.locator('[data-tour="tool-button-convert"]').click();
+  const tile = await revealPickerTool(page, "convert");
+  await tile.click();
   await page.waitForSelector('[data-testid="convert-from-dropdown"]', {
     timeout: 5000,
   });

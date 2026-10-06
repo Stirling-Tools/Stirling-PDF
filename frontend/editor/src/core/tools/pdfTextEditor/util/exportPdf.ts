@@ -22,6 +22,8 @@ export async function exportToBlob(
     return { blob: pdfBlob(doc.openedBytes), filename: exportName(sourceName) };
   }
 
+  commitPendingFormRemovals(doc);
+
   // A signed document is appended to rather than rewritten, so the bytes the
   // signature covers are still there and still verify for their revision.
   const incremental = documentIsSigned(doc);
@@ -51,6 +53,27 @@ export async function exportToBlob(
   if (incremental) assertIncrementalAppend(bytes, doc.openedBytes);
 
   return { blob: pdfBlob(bytes), filename: exportName(sourceName) };
+}
+
+interface FormRemovalModule {
+  FPDFFormObj_RemoveObject?: (form: number, obj: number) => boolean;
+}
+
+/**
+ * Remove the form children that DeleteShapeCommand only hid. Done here, on the
+ * user's save, rather than in every serialize: other serializes (the charcode
+ * probe) must not make a delete permanent while it can still be undone.
+ */
+function commitPendingFormRemovals(doc: EditorDocument): void {
+  const m = doc.module as unknown as FormRemovalModule;
+  for (const page of doc.loadedPages()) {
+    if (page.pendingFormRemovals.size === 0) continue;
+    for (const [objPtr, formPtr] of page.pendingFormRemovals) {
+      m.FPDFFormObj_RemoveObject?.(formPtr, objPtr);
+    }
+    page.pendingFormRemovals.clear();
+    page.markNeedsGenerate();
+  }
 }
 
 function pdfBlob(bytes: Uint8Array): Blob {
