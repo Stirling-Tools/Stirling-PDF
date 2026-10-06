@@ -27,4 +27,5 @@ jobs:
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
           REVIEW_ID: ${{ github.event.review.id }}
-        run: echo "Review $REVIEW_ID on #$PR_NUMBER"
+        run: |
+          echo "Review $REVIEW_ID on #$PR_NUMBER"
