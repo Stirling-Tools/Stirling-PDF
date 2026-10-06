@@ -101,13 +101,12 @@ const SettingsPageInner: React.FC = () => {
     // `pending` matters as much as an empty list: the permission-gated sections
     // arrive a request later, so a deep link to one of them is not unknown yet.
     if (items.length === 0 || activeItem || pending) return;
-    const target =
-      (urlSection && aliases?.[urlSection]) ??
-      items.find((i) => !i.disabled)?.key ??
-      items[0].key;
-    // The hash rides along: an aliased bookmark addresses a control, and the
-    // control it names is still there under whatever absorbed its section.
-    navigate(`/settings/${target}${location.search}${location.hash}`, {
+    const alias = urlSection ? aliases?.[urlSection] : undefined;
+    const target = alias ?? items.find((i) => !i.disabled)?.key ?? items[0].key;
+    // An aliased link keeps its hash; without one it lands on the card that
+    // took the retired row's key as its id.
+    const hash = location.hash || (alias ? `#${urlSection}` : "");
+    navigate(`/settings/${target}${location.search}${hash}`, {
       replace: true,
     });
   }, [

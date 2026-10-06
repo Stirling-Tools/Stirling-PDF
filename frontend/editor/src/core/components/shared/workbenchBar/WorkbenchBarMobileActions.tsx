@@ -78,7 +78,7 @@ export default function WorkbenchBarMobileActions({
               disabled={actionsDisabled}
               onClick={() => void onClose()}
             >
-              {currentView === "fileEditor"
+              {currentView === "fileEditor" || currentView === "pageEditor"
                 ? t("workbenchBar.closeAll", "Close All")
                 : t("workbenchBar.closePdf", "Close PDF")}
             </Menu.Item>
