@@ -28,7 +28,9 @@ function useScrollParent(el: HTMLElement | null): HTMLElement | null {
   const [parent, setParent] = useState<HTMLElement | null>(null);
   useEffect(() => {
     setParent(
-      el?.closest<HTMLElement>(".files-page-list, .files-page-content") ?? null,
+      el?.closest<HTMLElement>(
+        ".files-page-list, .files-page-content, .file-editor-content",
+      ) ?? null,
     );
   }, [el]);
   return parent;

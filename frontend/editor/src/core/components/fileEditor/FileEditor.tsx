@@ -22,7 +22,12 @@ import { downloadFileWithPolicy as downloadFile } from "@app/services/exportWith
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
 import { useDropzoneFiles } from "@app/hooks/useDropzoneFiles";
+import {
+  useVirtualFileRows,
+  rowHeightPx,
+} from "@app/components/filesPage/useVirtualFileRows";
 import type { FileItemPolicyRef } from "@app/components/shared/PolicyBadges";
+import styles from "@app/components/fileEditor/FileEditor.module.css";
 
 const EMPTY_POLICIES: FileItemPolicyRef[] = [];
 
@@ -369,6 +374,15 @@ const FileEditor = ({
     [showStatus, showError, t],
   );
 
+  const totalItems =
+    activeStirlingFileStubs.length > 0 ? activeStirlingFileStubs.length + 1 : 0;
+
+  const { range, padTop, padBottom, setContainer } = useVirtualFileRows(
+    totalItems,
+    rowHeightPx(true),
+    true,
+  );
+
   return (
     <Dropzone
       onDrop={handleFileUpload}
@@ -384,7 +398,11 @@ const FileEditor = ({
       activateOnClick={false}
       activateOnDrag={true}
     >
-      <Box pos="relative" style={{ overflow: "auto" }}>
+      <Box
+        className="file-editor-content"
+        pos="relative"
+        style={{ overflow: "auto", height: "100%", width: "100%" }}
+      >
         <LoadingOverlay visible={state.ui.isProcessing} />
 
         <Box p="md">
@@ -394,6 +412,7 @@ const FileEditor = ({
             </Center>
           ) : (
             <div
+              ref={setContainer}
               style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(auto-fill, minmax(276px, 1fr))",
@@ -402,28 +421,48 @@ const FileEditor = ({
                 pointerEvents: "auto",
               }}
             >
-              {activeStirlingFileStubs.length > 0 && (
-                <AddFileCard key="add-file-card" />
+              {padTop > 0 && (
+                <div
+                  aria-hidden="true"
+                  className={styles.virtualPad}
+                  style={{ height: padTop }}
+                />
               )}
 
-              {activeStirlingFileStubs.map((record, index) => {
-                return (
-                  <FileEditorThumbnail
-                    key={record.id}
-                    file={record}
-                    index={index}
-                    totalFiles={activeStirlingFileStubs.length}
-                    onCloseFile={handleCloseFile}
-                    onViewFile={handleViewFile}
-                    onReorderFiles={handleReorderFiles}
-                    onDownloadFile={handleDownloadFile}
-                    onUnzipFile={handleUnzipFile}
-                    toolMode={toolMode}
-                    isSupported={isFileSupported(record.name)}
-                    policies={policyFileBadges.get(record.id) ?? EMPTY_POLICIES}
-                  />
-                );
-              })}
+              {/* Index 0 is AddFileCard when range covers it */}
+              {range.start === 0 && <AddFileCard key="add-file-card" />}
+
+              {activeStirlingFileStubs
+                .slice(Math.max(0, range.start - 1), Math.max(0, range.end - 1))
+                .map((record, sliceIdx) => {
+                  const index = Math.max(0, range.start - 1) + sliceIdx;
+                  return (
+                    <FileEditorThumbnail
+                      key={record.id}
+                      file={record}
+                      index={index}
+                      totalFiles={activeStirlingFileStubs.length}
+                      onCloseFile={handleCloseFile}
+                      onViewFile={handleViewFile}
+                      onReorderFiles={handleReorderFiles}
+                      onDownloadFile={handleDownloadFile}
+                      onUnzipFile={handleUnzipFile}
+                      toolMode={toolMode}
+                      isSupported={isFileSupported(record.name)}
+                      policies={
+                        policyFileBadges.get(record.id) ?? EMPTY_POLICIES
+                      }
+                    />
+                  );
+                })}
+
+              {padBottom > 0 && (
+                <div
+                  aria-hidden="true"
+                  className={styles.virtualPad}
+                  style={{ height: padBottom }}
+                />
+              )}
             </div>
           )}
         </Box>

@@ -396,3 +396,8 @@
   font-size: 0.875rem;
   opacity: 0.8;
 }
+
+.virtualPad {
+  grid-column: 1 / -1;
+  pointer-events: none;
+}
