@@ -35,7 +35,7 @@ export default function WorkbenchBarDesktopActions({
   const exportDisabled = actionsDisabled || policyEnforcing;
   const closeLabel =
     closeLabelOverride ??
-    (currentView === "fileEditor"
+    (currentView === "fileEditor" || currentView === "pageEditor"
       ? t("workbenchBar.closeAll", "Close All")
       : t("workbenchBar.closePdf", "Close PDF"));
 

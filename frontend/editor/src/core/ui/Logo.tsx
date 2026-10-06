@@ -1,7 +1,9 @@
 import type { CSSProperties } from "react";
-import markUrl from "@app/assets/brand/branding-logo/logo-mark.svg";
+import { Icon } from "@app/ui/Icon";
 import wordmarkLightUrl from "@app/assets/brand/branding-logo/wordmark-light.svg";
 import wordmarkDarkUrl from "@app/assets/brand/branding-logo/wordmark-dark.svg";
+// The mark takes its two fills from the brand mark's path classes.
+import "@app/components/shared/BrandMark.css";
 import "@app/ui/Logo.css";
 
 /** iconOnly = mark; textOnly = "Stirling" wordmark; iconAndText = both. */
@@ -60,12 +62,11 @@ export function Logo({
   return (
     <span className={cls} style={{ ...layoutStyle, ...style }}>
       {showIcon && (
-        <img
+        <Icon
+          name="stirling-mark"
           className="sui-logo__mark"
-          src={markUrl}
-          alt={showText ? "" : alt}
-          aria-hidden={showText ? true : undefined}
-          style={{ height: iconHeight }}
+          size={iconHeight}
+          title={showText ? undefined : alt}
         />
       )}
       {showText && (

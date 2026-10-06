@@ -10,7 +10,15 @@ import { ArrangePanel } from "@app/tools/pdfTextEditor/components/toolbar/Arrang
 
 export function ObjectGroup({ controller }: { controller: Controller }) {
   const { t } = useTranslation();
-  const { selectionAllLocked, onToggleLock, onDelete } = controller;
+  const {
+    selectionAllLocked,
+    onToggleLock,
+    onDelete,
+    hasRunSelection,
+    hasImageSelection,
+  } = controller;
+  // Lock and arrange act on text and images only; shapes can just be deleted.
+  const arrangeable = hasRunSelection || hasImageSelection;
 
   return (
     <>
@@ -31,6 +39,7 @@ export function ObjectGroup({ controller }: { controller: Controller }) {
           variant={selectionAllLocked ? "primary" : "tertiary"}
           accent={selectionAllLocked ? "default" : "neutral"}
           size="sm"
+          disabled={!arrangeable}
           onClick={onToggleLock}
           aria-label={
             selectionAllLocked
@@ -48,7 +57,12 @@ export function ObjectGroup({ controller }: { controller: Controller }) {
           }
         />
       </Tooltip>
-      <Tooltip label={t("pdfTextEditor.toolbar.deleteTooltip", "Delete (Del)")}>
+      <Tooltip
+        label={t(
+          "pdfTextEditor.toolbar.deleteTooltip",
+          "Delete (Del or Backspace)",
+        )}
+      >
         <Button
           variant="tertiary"
           accent="danger"
@@ -64,6 +78,7 @@ export function ObjectGroup({ controller }: { controller: Controller }) {
         <Popover.Target>
           <Button
             size="sm"
+            disabled={!arrangeable}
             variant="secondary"
             accent="neutral"
             leftSection={<Icon name="layers" size={20} />}

@@ -12,6 +12,7 @@ interface Props {
   store: EditorStore;
   controller: Controller;
   addTextArmed: boolean;
+  addTableArmed: boolean;
   findOpen: boolean;
 }
 
@@ -19,6 +20,7 @@ export function MobileActionBar({
   store,
   controller,
   addTextArmed,
+  addTableArmed,
   findOpen,
 }: Props) {
   const { t } = useTranslation();
@@ -27,13 +29,18 @@ export function MobileActionBar({
 
   return (
     <>
-      {addTextArmed && (
+      {(addTextArmed || addTableArmed) && (
         <div className="pdf-editor-mbar__hint" role="status">
           <span>
-            {t(
-              "pdfTextEditor.mobile.tapToPlace",
-              "Tap the page where the text should go",
-            )}
+            {addTableArmed
+              ? t(
+                  "pdfTextEditor.sidebar.clickPageToAddTable",
+                  "Click page to add a table",
+                )
+              : t(
+                  "pdfTextEditor.mobile.tapToPlace",
+                  "Tap the page where the text should go",
+                )}
           </span>
           <BarButton
             icon="x"
@@ -67,29 +74,33 @@ export function MobileActionBar({
               onClick={() => store.setMobileSheet("details")}
               data-testid="pdf-editor-mobile-details"
             />
-            <Popover shadow="md" position="top" withinPortal>
-              <Popover.Target>
+            {(controller.hasRunSelection || controller.hasImageSelection) && (
+              <>
+                <Popover shadow="md" position="top" withinPortal>
+                  <Popover.Target>
+                    <BarButton
+                      icon="layers"
+                      label={t("pdfTextEditor.toolbar.arrange", "Arrange")}
+                      data-testid="pdf-editor-arrange-menu"
+                    />
+                  </Popover.Target>
+                  <Popover.Dropdown>
+                    <ArrangePanel controller={controller} />
+                  </Popover.Dropdown>
+                </Popover>
                 <BarButton
-                  icon="layers"
-                  label={t("pdfTextEditor.toolbar.arrange", "Arrange")}
-                  data-testid="pdf-editor-arrange-menu"
+                  icon={controller.selectionAllLocked ? "lock" : "lock-open"}
+                  label={
+                    controller.selectionAllLocked
+                      ? t("pdfTextEditor.mobile.unlock", "Unlock")
+                      : t("pdfTextEditor.mobile.lock", "Lock")
+                  }
+                  pressed={controller.selectionAllLocked}
+                  onClick={controller.onToggleLock}
+                  data-testid="pdf-editor-toggle-lock"
                 />
-              </Popover.Target>
-              <Popover.Dropdown>
-                <ArrangePanel controller={controller} />
-              </Popover.Dropdown>
-            </Popover>
-            <BarButton
-              icon={controller.selectionAllLocked ? "lock" : "lock-open"}
-              label={
-                controller.selectionAllLocked
-                  ? t("pdfTextEditor.mobile.unlock", "Unlock")
-                  : t("pdfTextEditor.mobile.lock", "Lock")
-              }
-              pressed={controller.selectionAllLocked}
-              onClick={controller.onToggleLock}
-              data-testid="pdf-editor-toggle-lock"
-            />
+              </>
+            )}
             <BarButton
               icon="trash"
               label={t("pdfTextEditor.mobile.delete", "Delete")}
@@ -113,6 +124,15 @@ export function MobileActionBar({
               pressed={addTextArmed}
               onClick={() => store.setMode(addTextArmed ? "select" : "addText")}
               data-testid="pdf-editor-add-text"
+            />
+            <BarButton
+              icon="table"
+              label={t("pdfTextEditor.sidebar.table", "Table")}
+              pressed={addTableArmed}
+              onClick={() =>
+                store.setMode(addTableArmed ? "select" : "addTable")
+              }
+              data-testid="pdf-editor-add-table"
             />
             <BarButton
               icon="image-plus"

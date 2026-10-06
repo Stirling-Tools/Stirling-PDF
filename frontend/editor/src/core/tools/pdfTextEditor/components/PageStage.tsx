@@ -120,6 +120,12 @@ export function PageStage() {
       hasDocument={state.hasDocument}
       dirty={state.dirty}
       addTextArmed={state.mode === "addText"}
+      addTableArmed={state.mode === "addTable"}
+      onToggleAddTable={() =>
+        store.setMode(
+          store.getState().mode === "addTable" ? "select" : "addTable",
+        )
+      }
       onToggleAddText={() =>
         store.setMode(
           store.getState().mode === "addText" ? "select" : "addText",
@@ -333,12 +339,14 @@ export function PageStage() {
                   <PageView
                     key={page.pageIndex}
                     document={store.document}
+                    store={store}
                     page={page}
                     scale={state.renderScale || DEFAULT_SCALE}
                     widthMode={state.widthMode}
                     showRulers={state.showRulers}
                     selectedRunIds={selection.runIds}
                     selectedImageIds={selection.imageIds}
+                    selectedShapeIds={selection.shapeIds}
                     highlightedRunId={highlightedRunId}
                     {...handlers}
                     onFirstRendered={(pageIndex) => {
@@ -365,6 +373,7 @@ export function PageStage() {
           store={store}
           controller={controller}
           addTextArmed={state.mode === "addText"}
+          addTableArmed={state.mode === "addTable"}
           findOpen={state.findOpen}
         />
       )}

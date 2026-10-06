@@ -31,7 +31,7 @@
   transition: transform 0.2s ease;
 }
 
-.sui-collapsible__chevron[data-open="true"] {
+.sui-collapsible__head[aria-expanded="true"] .sui-collapsible__chevron {
   transform: rotate(0deg);
 }
 

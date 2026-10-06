@@ -74,15 +74,9 @@ updates:
         patterns:
           - "@mantine/*"
           - "postcss-preset-mantine"
-      mui:
-        patterns:
-          - "@mui/*"
       tauri-js:
         patterns:
           - "@tauri-apps/*"
-      emotion:
-        patterns:
-          - "@emotion/*"
       react:
         patterns:
           - "react"
@@ -113,10 +107,9 @@ updates:
           - "i18next"
           - "i18next-*"
           - "react-i18next"
-      iconify:
+      lucide:
         patterns:
-          - "@iconify/*"
-          - "@iconify-json/*"
+          - "lucide-static"
       stripe:
         patterns:
           - "@stripe/*"

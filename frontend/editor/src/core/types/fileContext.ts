@@ -391,6 +391,8 @@ export interface FileContextActions {
     options?: {
       insertAfterPageId?: string;
       selectFiles?: boolean;
+      /** Suppress the duplicate modal while retaining a policy hold on encrypted bytes. */
+      skipAutomaticPasswordPrompt?: boolean;
       skipUploadTracking?: boolean;
       /**
        * Produced in-app rather than uploaded, which stops the policy auto-run enforcing an upload

@@ -199,7 +199,10 @@ export default function LoginAgreementEditor({
       <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
         <Textarea
           label={t("admin.settings.legal.loginAgreement.editLabel", "Markdown")}
-          placeholder={"## Heading\n\nYour disclaimer text..."}
+          placeholder={t(
+            "admin.settings.legal.loginAgreement.editPlaceholder",
+            "## Heading\n\nYour disclaimer text...",
+          )}
           value={content}
           onChange={(event) => setContent(event.currentTarget.value)}
           autosize

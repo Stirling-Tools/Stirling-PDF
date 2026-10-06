@@ -31,7 +31,7 @@ declare -A language_fonts=(
     ["zh_TW"]="font-isas-misc"
     ["ja_JP"]="font-noto font-noto-thai font-noto-tibetan font-ipa font-sony-misc font-jis-misc"
     ["ru_RU"]="font-vollkorn font-misc-cyrillic font-mutt-misc font-screen-cyrillic font-winitzki-cyrillic font-cronyx-cyrillic"
-    ["sr_LATN_RS"]="font-vollkorn font-misc-cyrillic font-mutt-misc font-screen-cyrillic font-winitzki-cyrillic font-cronyx-cyrillic"
+    ["sr_Latn_RS"]="font-vollkorn font-misc-cyrillic font-mutt-misc font-screen-cyrillic font-winitzki-cyrillic font-cronyx-cyrillic"
     ["uk_UA"]="font-vollkorn font-misc-cyrillic font-mutt-misc font-screen-cyrillic font-winitzki-cyrillic font-cronyx-cyrillic"
     ["ko_KR"]="font-noto font-noto-thai font-noto-tibetan"
     ["el_GR"]="font-noto"
@@ -39,6 +39,9 @@ declare -A language_fonts=(
     ["bg_BG"]="font-vollkorn font-misc-cyrillic"
     ["GENERAL"]="font-terminus font-dejavu font-noto font-noto-cjk font-awesome font-noto-extra"
 )
+
+# Legacy casing, still accepted in LANGS
+language_fonts["sr_LATN_RS"]="${language_fonts["sr_Latn_RS"]}"
 
 # Install fonts for other languages which generally do not need special packages beyond 'font-noto'
 other_langs=("en_GB" "en_US" "de_DE" "fr_FR" "es_ES" "ca_CA" "it_IT" "pt_BR" "nl_NL" "sv_SE" "pl_PL" "ro_RO" "hu_HU" "tr_TR" "id_ID" "eu_ES")

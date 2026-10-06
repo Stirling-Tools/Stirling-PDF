@@ -79,6 +79,12 @@ export default function ViewerEditToolbar() {
             store.getState().mode === "addText" ? "select" : "addText",
           )
         }
+        addTableArmed={state.mode === "addTable"}
+        onToggleAddTable={() =>
+          store.setMode(
+            store.getState().mode === "addTable" ? "select" : "addTable",
+          )
+        }
         findOpen={state.findOpen}
         onToggleFind={() => store.setFindOpen(!store.getState().findOpen)}
         onShowHelp={() => store.setHelpOpen(true)}

@@ -2,6 +2,7 @@ import React, {
   Suspense,
   lazy,
   useCallback,
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -108,16 +109,59 @@ export default function WorkbenchBar({
     clearFilesPageReturnRoute();
     navigate(target);
   }, [returnRoute, navigate]);
-  const { buttons, actions, allButtonsDisabled } = useWorkbenchBar();
-  const {
-    pageEditorFunctions,
-    toolPanelMode,
-    leftPanelView,
-    customWorkbenchViews,
-  } = useToolWorkflow();
+  const { buttons, actions, allButtonsDisabled, viewFileActions } =
+    useWorkbenchBar();
+  const { toolPanelMode, leftPanelView, customWorkbenchViews } =
+    useToolWorkflow();
   const { selectedTool } = useNavigationState();
   const isCustomView = !isBaseWorkbench(currentView);
   const isViewer = currentView === "viewer";
+
+  // Which view's label is expanded, held back until the new view has mounted
+  const [openView, setOpenView] = useState(currentView);
+  useEffect(() => {
+    if (typeof window.requestIdleCallback === "function") {
+      const id = window.requestIdleCallback(() => setOpenView(currentView), {
+        timeout: 400,
+      });
+      return () => window.cancelIdleCallback?.(id);
+    }
+    const frame = requestAnimationFrame(() => setOpenView(currentView));
+    return () => cancelAnimationFrame(frame);
+  }, [currentView]);
+
+  // Publish each view label's natural width as --view-label-w so the open width
+  // animates to an exact length (see WorkbenchBar.css). A ResizeObserver keeps
+  // it current across font load, zoom and language change.
+  const labelSizeObserver = useMemo(
+    () =>
+      typeof ResizeObserver === "undefined"
+        ? null
+        : new ResizeObserver((entries) => {
+            for (const entry of entries) {
+              const span = entry.target;
+              if (span instanceof HTMLElement) {
+                span.parentElement?.style.setProperty(
+                  "--view-label-w",
+                  `${Math.ceil(span.getBoundingClientRect().width)}px`,
+                );
+              }
+            }
+          }),
+    [],
+  );
+  useEffect(() => () => labelSizeObserver?.disconnect(), [labelSizeObserver]);
+  const measureViewLabel = useCallback(
+    (span: HTMLSpanElement | null) => {
+      if (!span) return;
+      span.parentElement?.style.setProperty(
+        "--view-label-w",
+        `${Math.ceil(span.getBoundingClientRect().width)}px`,
+      );
+      labelSizeObserver?.observe(span);
+    },
+    [labelSizeObserver],
+  );
   const disableForFullscreen =
     toolPanelMode === "fullscreen" && leftPanelView === "toolPicker";
   const terminology = useFileActionTerminology();
@@ -162,19 +206,8 @@ export default function WorkbenchBar({
     enforcingRun?.currentStep != null && enforcingRun.stepCount
       ? Math.round((enforcingRun.currentStep / enforcingRun.stepCount) * 100)
       : undefined;
-  const pageEditorTotalPages = pageEditorFunctions?.totalPages ?? 0;
-  const pageEditorSelectedCount =
-    pageEditorFunctions?.selectedPageIds?.length ?? 0;
-
-  const totalItems = useMemo(() => {
-    if (currentView === "pageEditor") return pageEditorTotalPages;
-    return activeFiles.length;
-  }, [currentView, pageEditorTotalPages, activeFiles.length]);
-
-  const selectedCount = useMemo(() => {
-    if (currentView === "pageEditor") return pageEditorSelectedCount;
-    return selectedFileIds.length;
-  }, [currentView, pageEditorSelectedCount, selectedFileIds.length]);
+  const totalItems = activeFiles.length;
+  const selectedCount = selectedFileIds.length;
 
   // Registered into the bar's own row rather than the tool row below it. Already
   // sorted by order when registered.
@@ -243,18 +276,24 @@ export default function WorkbenchBar({
         return;
       }
 
-      if (currentView === "pageEditor") {
-        pageEditorFunctions?.onExportAll?.();
-        return;
-      }
-
-      const filesToExport =
-        selectedFiles.length > 0 ? selectedFiles : activeFiles;
-      const stubs = filesToExport.map((file) =>
-        isStirlingFile(file)
-          ? selectors.getStirlingFileStub(file.fileId)
-          : undefined,
-      );
+      const viewExport = await viewFileActions?.getExportFiles?.();
+      if (viewExport === null) return;
+      const filesToExport = viewExport
+        ? viewExport.map((entry) => entry.file)
+        : selectedFiles.length > 0
+          ? selectedFiles
+          : activeFiles;
+      const stubs = viewExport
+        ? viewExport.map((entry) =>
+            entry.fileId
+              ? selectors.getStirlingFileStub(entry.fileId)
+              : undefined,
+          )
+        : filesToExport.map((file) =>
+            isStirlingFile(file)
+              ? selectors.getStirlingFileStub(file.fileId)
+              : undefined,
+          );
 
       // Enforce all files in one batch so the toast shows progress across the
       // whole set (e.g. "report.pdf (2 of 5)") rather than N invisible solo runs.
@@ -304,8 +343,8 @@ export default function WorkbenchBar({
       currentView,
       selectedFiles,
       activeFiles,
-      pageEditorFunctions,
       viewerContext,
+      viewFileActions,
       selectors,
       fileActions,
     ],
@@ -329,7 +368,9 @@ export default function WorkbenchBar({
   }, [requestNavigation, handleBackToTools, setCurrentView]);
 
   const handleClose = useCallback(async () => {
-    if (currentView === "fileEditor") {
+    if (viewFileActions?.onClose) {
+      viewFileActions.onClose();
+    } else if (currentView === "fileEditor" || currentView === "pageEditor") {
       await fileActions.clearAllFiles();
     } else if (currentView === "viewer") {
       const file =
@@ -354,22 +395,18 @@ export default function WorkbenchBar({
       } else if (countBeforeRemove <= 1) {
         setCurrentView("fileEditor");
       }
-    } else if (currentView === "pageEditor") {
-      pageEditorFunctions?.closePdf?.();
     }
   }, [
     currentView,
+    viewFileActions,
     fileActions,
     activeFiles,
     activeFileId,
     setActiveFileId,
-    pageEditorFunctions,
     setCurrentView,
   ]);
 
   const downloadTooltip = useMemo(() => {
-    if (currentView === "pageEditor")
-      return t("workbenchBar.exportAll", "Export PDF");
     if (currentView === "viewer") return terminology.download;
     if (selectedCount > 0) return terminology.downloadSelected;
     return terminology.downloadAll;
@@ -466,20 +503,15 @@ export default function WorkbenchBar({
           },
         ]),
     {
+      value: "pageEditor",
+      label: t("workbenchBar.pageEditor", "Page Editor"),
+      icon: <Icon name="rows-3" size={20} />,
+    },
+    {
       value: "fileEditor",
       label: t("workbenchBar.activeFiles", "Active Files"),
       icon: <Icon name="folder" size={20} />,
     },
-    ...(selectedTool === "multiTool"
-      ? [
-          {
-            value: "pageEditor" as WorkbenchType,
-            label: t("workbenchBar.multiTool", "Multi-Tool"),
-            // The registry's multiTool glyph: one tool, one mark, wherever it is drawn.
-            icon: <Icon name="grid-2x2-plus" size="1rem" />,
-          },
-        ]
-      : []),
     ...customWorkbenchViews
       .filter((v) => v.data != null)
       .map((v) => ({
@@ -590,7 +622,13 @@ export default function WorkbenchBar({
               label: (
                 <>
                   {opt.icon}
-                  <span className="workbench-bar-view-label">{opt.label}</span>
+                  <span
+                    className={`workbench-bar-view-label${
+                      opt.value === openView ? " is-open" : ""
+                    }`}
+                  >
+                    <span ref={measureViewLabel}>{opt.label}</span>
+                  </span>
                 </>
               ),
             }))}

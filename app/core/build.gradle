@@ -46,6 +46,11 @@ dependencies {
     implementation "org.commonmark:commonmark:$commonmarkVersion" // https://mvnrepository.com/artifact/org.commonmark/commonmark
     implementation "org.commonmark:commonmark-ext-gfm-tables:$commonmarkVersion"
 
+    // Stirling Office Convert: PDF to Office, legacy .ppt output, and Office to PDF without LibreOffice.
+    implementation "com.stirling:stirling-office-convert:$officeConvertVersion"
+    implementation "com.stirling:stirling-office-convert-legacy:$officeConvertVersion"
+    implementation "com.stirling:stirling-office-convert-topdf:$officeConvertVersion"
+
     // General PDF dependencies
     implementation "org.apache.pdfbox:preflight:$pdfboxVersion"
     implementation "org.apache.pdfbox:xmpbox:$pdfboxVersion"
@@ -157,12 +162,10 @@ springBoot {
 // Frontend build tasks - only enabled with -PbuildWithFrontend=true
 def buildWithFrontend = project.hasProperty('buildWithFrontend') && project.property('buildWithFrontend') == 'true'
 def buildPrototypes = project.hasProperty('prototypesMode') && project.property('prototypesMode') == 'true'
-// The admin portal ships as a lazy route inside the editor bundle (see
-// proprietary/routes/adminRouteExtensions). -PbuildWithPortal=true includes that
-// chunk via VITE_INCLUDE_PORTAL on the editor build; the deploy GHA sets it when
-// the portal or AI layers change. Building the portal implies building the editor.
-def buildWithPortal = project.hasProperty('buildWithPortal') && project.property('buildWithPortal') == 'true'
-if (buildWithPortal) {
+// The processor ships in every editor build by default; -PbuildWithPortal=false leaves it out.
+// An explicit -PbuildWithPortal=true also forces the editor build.
+def buildWithPortal = project.findProperty('buildWithPortal')?.toString() != 'false'
+if (project.findProperty('buildWithPortal')?.toString() == 'true') {
     buildWithFrontend = true
 }
 // Workspace root holds package.json and node_modules (shared across editor /
@@ -240,13 +243,6 @@ tasks.register('npmInstall', Exec) {
             return true
         }
 
-        // if required devDependency is missing, reinstall
-        def iconifyPkg = new File(frontendDir, 'node_modules/@iconify-json/material-symbols/package.json')
-        if (!iconifyPkg.exists()) {
-            println "@iconify-json/material-symbols missing, will reinstall..."
-            return true
-        }
-
         def packageJson = new File(frontendDir, 'package.json')
         def packageLock = new File(frontendDir, 'package-lock.json')
         def isOutdated = nodeModules.lastModified() < packageJson.lastModified() ||
@@ -274,6 +270,8 @@ tasks.register('npmBuild', Exec) {
     inputs.dir(new File(frontendEditorDir, 'src'))
     inputs.dir(new File(frontendEditorDir, 'public'))
     inputs.file(new File(frontendDir, 'package.json'))
+    // Toggling the processor must rebuild the bundle, not reuse the cached dist.
+    inputs.property('includePortal', buildWithPortal)
     outputs.dir(frontendEditorDistDir)
 
     // Show live output

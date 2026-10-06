@@ -43,6 +43,7 @@ export default function ViewerEditLayer({
   return (
     <PageView
       embedded
+      store={store}
       document={doc}
       page={page}
       scale={width / page.width}
@@ -50,6 +51,7 @@ export default function ViewerEditLayer({
       showRulers={state.showRulers}
       selectedRunIds={selection.runIds}
       selectedImageIds={selection.imageIds}
+      selectedShapeIds={selection.shapeIds}
       highlightedRunId={highlightedRunId}
       {...handlers}
       onPagePointerDown={(e) => {

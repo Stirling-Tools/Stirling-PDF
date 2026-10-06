@@ -91,10 +91,10 @@ const GetPdfInfoReportView: React.FC<GetPdfInfoReportViewProps> = ({
       <div className="report-container">
         <Stack gap="md" align="center">
           <Badge color="gray" variant="light">
-            No Data
+            {t("getPdfInfo.noData", "No Data")}
           </Badge>
           <Text size="sm" c="dimmed">
-            Run the tool to generate the report.
+            {t("getPdfInfo.noResults", "Run the tool to generate a report.")}
           </Text>
         </Stack>
       </div>

@@ -15,6 +15,7 @@ import { EmbedPDF, useDocumentState } from "@embedpdf/core/react";
 import { usePdfiumEngine } from "@embedpdf/engines/react";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useSignaturePreviewHistory } from "@app/hooks/signing/useSignaturePreviewHistory";
 
 // Import the essential plugins
 import {
@@ -54,6 +55,11 @@ import {
   AnnotationPluginPackage,
 } from "@embedpdf/plugin-annotation/react";
 import type { AnnotationEvent } from "@embedpdf/plugin-annotation";
+import type { BoxedAnnotationRenderer } from "@embedpdf/plugin-annotation/react";
+import {
+  PdfAnnotationBorderStyle,
+  PdfAnnotationSubtype,
+} from "@embedpdf/models";
 import type { PdfAnnotationObject, Rect } from "@embedpdf/models";
 import { registerAnnotationTools } from "@app/components/viewer/annotationTools";
 import {
@@ -97,6 +103,11 @@ import { RedactionSelectionMenu } from "@app/components/viewer/RedactionSelectio
 import { AnnotationSelectionMenu } from "@app/components/viewer/AnnotationSelectionMenu";
 import { AnnotationMenuEvents } from "@app/components/viewer/AnnotationMenuEvents";
 import { DocumentSwapBridge } from "@app/components/viewer/DocumentSwapBridge";
+import {
+  DocumentRestoreBridge,
+  type DocumentRestoreEvent,
+  type DocumentRestoreRequest,
+} from "@app/components/viewer/DocumentRestoreBridge";
 import { AnnotationDeletedMenu } from "@app/components/viewer/AnnotationDeletedMenu";
 import { TextSelectionMenu } from "@app/components/viewer/TextSelectionMenu";
 import {
@@ -123,6 +134,7 @@ import { ButtonAppearanceOverlay } from "@app/tools/formFill/ButtonAppearanceOve
 import SignatureFieldOverlay from "@app/components/viewer/SignatureFieldOverlay";
 import { CommentsSidebar } from "@app/components/viewer/CommentsSidebar";
 import { CommentAuthorProvider } from "@app/contexts/CommentAuthorContext";
+import { useViewer } from "@app/contexts/ViewerContext";
 import { accountService } from "@app/services/accountService";
 
 // Read once: the choice picks which engine hook runs, so it must not change
@@ -167,6 +179,8 @@ interface LocalEmbedPDFProps {
   // ── Signature overlay (opt-in; all default off) ──────────────────────────
   /** Read-only / interactive signature preview overlays to render per page. */
   signaturePreviews?: SignaturePreview[];
+  /** Submitted marks rendered separately from editable previews and excluded from submission. */
+  readOnlySignaturePreviews?: SignaturePreview[];
   /** If true, previews are display-only (cannot be moved, resized, or deleted). */
   signaturePreviewsReadOnly?: boolean;
   /** When true (and not read-only), clicking a page places a new preview. */
@@ -184,11 +198,13 @@ interface LocalEmbedPDFProps {
   /** Fires from the layout pass that mounts a page, before it paints. */
   onPageLayout?: () => void;
   /** Fires when the swap bridge activates a replacement document. */
-  onDocumentSwapped?: () => void;
+  onDocumentSwapped?: (documentId: string) => void;
   /** Fires when the swap bridge fails to open or activate a replacement document. */
   onDocumentSwapFailed?: (error: unknown) => void;
   /** True while a view restore is in flight; gates the per-page layout hook. */
   restorePending?: boolean;
+  restoreRequest?: DocumentRestoreRequest | null;
+  onRestoreEvent?: (event: DocumentRestoreEvent) => void;
 }
 
 interface ViewerPageContainerProps {
@@ -208,6 +224,130 @@ function normalizePageRotation(rotation: number | null | undefined): number {
     typeof rotation === "number" && Number.isFinite(rotation) ? rotation : 0;
   return ((Math.round(value) % 4) + 4) % 4;
 }
+
+// LinkLayer owns link hit-testing, so this draws the underline or border and
+// nothing else: adding the built-in renderer's transparent rect back would
+// double every link's clickable overlay.
+function LinkStyling({
+  rect,
+  scale,
+  strokeColor = "#0000FF",
+  strokeWidth = 2,
+  strokeStyle = PdfAnnotationBorderStyle.UNDERLINE,
+  strokeDashArray,
+}: {
+  rect: Rect;
+  scale: number;
+  strokeColor?: string;
+  strokeWidth?: number;
+  strokeStyle?: PdfAnnotationBorderStyle;
+  strokeDashArray?: number[];
+}) {
+  const { width, height } = rect.size;
+  const svgWidth = width * scale;
+  const svgHeight = height * scale;
+  const dashArray =
+    strokeStyle === PdfAnnotationBorderStyle.DASHED
+      ? (strokeDashArray?.join(",") ?? `${strokeWidth * 3},${strokeWidth}`)
+      : undefined;
+  const isUnderline = strokeStyle === PdfAnnotationBorderStyle.UNDERLINE;
+  return (
+    // icon-lint-allow: runtime-generated-svg -- each link's box is measured from the annotation rect
+    <svg
+      style={{
+        position: "absolute",
+        width: svgWidth,
+        height: svgHeight,
+        pointerEvents: "none",
+        zIndex: 2,
+      }}
+      width={svgWidth}
+      height={svgHeight}
+      viewBox={`0 0 ${width} ${height}`}
+    >
+      {isUnderline ? (
+        <line
+          x1={1}
+          y1={height - 1}
+          x2={width - 1}
+          y2={height - 1}
+          stroke={strokeColor}
+          strokeWidth={strokeWidth}
+          strokeDasharray={dashArray}
+          style={{ pointerEvents: "none" }}
+        />
+      ) : (
+        <rect
+          x={strokeWidth / 2}
+          y={strokeWidth / 2}
+          width={Math.max(width - strokeWidth, 0)}
+          height={Math.max(height - strokeWidth, 0)}
+          fill="transparent"
+          stroke={strokeColor}
+          strokeWidth={strokeWidth}
+          strokeDasharray={dashArray}
+          style={{ pointerEvents: "none" }}
+        />
+      )}
+    </svg>
+  );
+}
+
+// Replaces the built-in link renderer, so every field it drops is a decision:
+// no selectOverride, because the default selects a threaded reply link itself
+// rather than its parent, and no renderLocked, because a locked link needs no
+// hit target of its own.
+const LINK_RENDERERS: BoxedAnnotationRenderer[] = [
+  {
+    id: "link",
+    matches: (annotation) => annotation.type === PdfAnnotationSubtype.LINK,
+    matchesPreview: (preview) => preview.type === PdfAnnotationSubtype.LINK,
+    render: ({ currentObject, scale }) => {
+      if (currentObject.type !== PdfAnnotationSubtype.LINK) return <></>;
+      const { rect, strokeColor, strokeWidth, strokeStyle, strokeDashArray } =
+        currentObject;
+      return (
+        <LinkStyling
+          rect={rect}
+          scale={scale}
+          strokeColor={strokeColor}
+          strokeWidth={strokeWidth}
+          strokeStyle={strokeStyle}
+          strokeDashArray={strokeDashArray}
+        />
+      );
+    },
+    renderPreview: ({ data, bounds, scale }) => {
+      // BoxedAnnotationRenderer erases the preview data type, so `data` arrives
+      // as unknown.
+      const { strokeWidth, strokeColor } = data as {
+        strokeWidth: number;
+        strokeColor: string;
+      };
+      return (
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            width: bounds.size.width * scale,
+            height: bounds.size.height * scale,
+            borderBottom: `${strokeWidth * scale}px solid ${strokeColor}`,
+            backgroundColor: "rgba(0, 0, 255, 0.05)",
+            boxSizing: "border-box",
+          }}
+        />
+      );
+    },
+    interactionDefaults: {
+      isDraggable: true,
+      isResizable: true,
+      isRotatable: false,
+    },
+    useAppearanceStream: false,
+    hideSelectionMenu: (annotation) => !!annotation.inReplyToId,
+  },
+];
 
 function ViewerPageContainer({
   documentId,
@@ -291,6 +431,7 @@ interface PageLayerOptions {
   onAnnotationMenuAnchor: (anchor: AnnotationMenuAnchor | null) => void;
   /** Null while the signature preview overlay is not mounted. */
   signatureOverlay: SignatureOverlayOptions | null;
+  readOnlySignaturePreviews?: SignaturePreview[];
 }
 
 /** Everything a page needs besides the geometry the Scroller supplies. */
@@ -433,6 +574,7 @@ function AnnotationEditingLayers({
       <AnnotationLayer
         documentId={documentId}
         pageIndex={pageIndex}
+        annotationRenderers={LINK_RENDERERS}
         selectionOutline={{ color: "#007ACC" }}
         selectionMenu={(props) => (
           <AnnotationSelectionMenu
@@ -476,7 +618,9 @@ function PageLayers({
   showBakedAnnotations,
   onAnnotationMenuAnchor,
   signatureOverlay,
+  readOnlySignaturePreviews,
 }: PageGeometry & PageLayerOptions) {
+  const { isAnnotationMode } = useViewer();
   return (
     <>
       <PageTiles
@@ -515,7 +659,22 @@ function PageLayers({
         onAnnotationMenuAnchor={onAnnotationMenuAnchor}
       />
       {/* LinkLayer: uses EmbedPDF annotation state for link rendering */}
-      <LinkLayer documentId={documentId} pageIndex={pageIndex} />
+      <LinkLayer
+        documentId={documentId}
+        pageIndex={pageIndex}
+        selectionActive={isAnnotationMode}
+      />
+      {readOnlySignaturePreviews && (
+        <SignaturePreviewLayer
+          pageIndex={pageIndex}
+          pageWidth={width}
+          pageHeight={height}
+          previews={readOnlySignaturePreviews}
+          readOnly
+          placementMode={false}
+          onChange={() => {}}
+        />
+      )}
       {/* Signature preview overlay (opt-in; off by default) */}
       {signatureOverlay && (
         <SignaturePreviewLayer
@@ -708,6 +867,7 @@ export function LocalEmbedPDF({
   isSignMode = false,
   pdfRenderMode = "normal",
   signaturePreviews,
+  readOnlySignaturePreviews,
   signaturePreviewsReadOnly = false,
   signaturePlacementMode = false,
   signaturePlacementData,
@@ -719,6 +879,8 @@ export function LocalEmbedPDF({
   onDocumentSwapped,
   onDocumentSwapFailed,
   restorePending = false,
+  restoreRequest = null,
+  onRestoreEvent,
 }: LocalEmbedPDFProps) {
   const { t } = useTranslation();
   const { config } = useAppConfig();
@@ -728,9 +890,15 @@ export function LocalEmbedPDF({
   >([]);
   const [commentAuthorName, setCommentAuthorName] = useState<string>("Guest");
 
-  const [localSignaturePreviews, setLocalSignaturePreviews] = useState<
-    SignaturePreview[]
-  >(signaturePreviews ?? []);
+  const {
+    previews: localSignaturePreviews,
+    change: handleSignaturePreviewsChange,
+    reset: resetSignaturePreviews,
+    undo: undoSignaturePreview,
+    redo: redoSignaturePreview,
+    canUndo: canUndoSignaturePreview,
+    canRedo: canRedoSignaturePreview,
+  } = useSignaturePreviewHistory(signaturePreviews);
 
   // Mount the overlay for controlled previews, placement mode, or once any
   // signature is placed — so leaving placement mode doesn't hide placements.
@@ -745,26 +913,21 @@ export function LocalEmbedPDF({
   // Keep internal state in sync when the caller supplies controlled previews.
   useEffect(() => {
     if (signaturePreviews !== undefined) {
-      setLocalSignaturePreviews(signaturePreviews);
+      resetSignaturePreviews(signaturePreviews);
     }
-  }, [signaturePreviews]);
+  }, [signaturePreviews, resetSignaturePreviews]);
 
-  const handleSignaturePreviewsChange = useCallback(
-    (next: SignaturePreview[]) => {
-      setLocalSignaturePreviews(next);
-      onSignaturePreviewsChange?.(next);
-    },
-    [onSignaturePreviewsChange],
-  );
+  useEffect(() => {
+    onSignaturePreviewsChange?.(localSignaturePreviews);
+  }, [localSignaturePreviews, onSignaturePreviewsChange]);
 
   useImperativeHandle(
     signatureOverlayApiRef,
     () => ({
       getSignaturePreviews: () => localSignaturePreviews,
       clearPreviews: () => {
-        setLocalSignaturePreviews([]);
+        resetSignaturePreviews([]);
         setSelectedSignatureId(null);
-        onSignaturePreviewsChange?.([]);
       },
       deleteSelected: () => {
         if (!selectedSignatureId) return;
@@ -772,12 +935,32 @@ export function LocalEmbedPDF({
           (p) => p.id !== selectedSignatureId,
         );
         setSelectedSignatureId(null);
-        setLocalSignaturePreviews(next);
-        onSignaturePreviewsChange?.(next);
+        handleSignaturePreviewsChange(next);
       },
-      hasSelected: () => selectedSignatureId !== null,
+      hasSelected: () =>
+        localSignaturePreviews.some(
+          (preview) => preview.id === selectedSignatureId,
+        ),
+      undo: () => {
+        if (!signaturePreviewsReadOnly) undoSignaturePreview();
+      },
+      redo: () => {
+        if (!signaturePreviewsReadOnly) redoSignaturePreview();
+      },
+      canUndo: () => !signaturePreviewsReadOnly && canUndoSignaturePreview,
+      canRedo: () => !signaturePreviewsReadOnly && canRedoSignaturePreview,
     }),
-    [localSignaturePreviews, selectedSignatureId, onSignaturePreviewsChange],
+    [
+      localSignaturePreviews,
+      selectedSignatureId,
+      resetSignaturePreviews,
+      handleSignaturePreviewsChange,
+      undoSignaturePreview,
+      redoSignaturePreview,
+      canUndoSignaturePreview,
+      canRedoSignaturePreview,
+      signaturePreviewsReadOnly,
+    ],
   );
 
   useEffect(() => {
@@ -943,12 +1126,15 @@ export function LocalEmbedPDF({
 
   const [swapAnnouncement, setSwapAnnouncement] = useState<string | null>(null);
 
-  const handleDocumentSwapped = useCallback(() => {
-    onDocumentSwapped?.();
-    setPendingDocument(null);
-    setSwapAnnouncement(t("viewer.documentUpdated", "Document updated"));
-    setTimeout(() => setSwapAnnouncement(null), 3000);
-  }, [onDocumentSwapped, t]);
+  const handleDocumentSwapped = useCallback(
+    (documentId: string) => {
+      onDocumentSwapped?.(documentId);
+      setPendingDocument(null);
+      setSwapAnnouncement(t("viewer.documentUpdated", "Document updated"));
+      setTimeout(() => setSwapAnnouncement(null), 3000);
+    },
+    [onDocumentSwapped, t],
+  );
   const handleDocumentSwapFailed = useCallback(
     (error: unknown) => {
       // The outgoing document stays active; the replacement never landed.
@@ -1107,7 +1293,7 @@ export function LocalEmbedPDF({
         <Stack align="center" gap="md">
           <div style={{ fontSize: "24px" }}>📄</div>
           <Text c="dimmed" size="sm">
-            No PDF provided
+            {t("viewer.noPdfProvided", "No PDF provided")}
           </Text>
         </Stack>
       </Center>
@@ -1273,6 +1459,7 @@ export function LocalEmbedPDF({
     enableRedaction,
     showBakedAnnotations,
     onAnnotationMenuAnchor: handleAnnotationMenuAnchor,
+    readOnlySignaturePreviews,
     signatureOverlay: signatureOverlayEnabled
       ? {
           previews: localSignaturePreviews,
@@ -1315,6 +1502,11 @@ export function LocalEmbedPDF({
             pending={pendingDocument}
             onSwapped={handleDocumentSwapped}
             onFailed={handleDocumentSwapFailed}
+          />
+          <DocumentRestoreBridge
+            request={restoreRequest}
+            restorePending={restorePending}
+            onEvent={onRestoreEvent}
           />
           <ZoomAPIBridge />
           <ScrollAPIBridge />
