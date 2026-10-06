@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Text } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
-import classes from "@app/components/pageEditor/bulkSelectionPanel/BulkSelectionPanel.module.css";
+import classes from "@app/components/shared/pageSelection/BulkSelectionPanel.module.css";
 import { parseSelectionWithDiagnostics } from "@app/utils/bulkselection/parseSelection";
 
 interface PageSelectionSyntaxHintProps {
