@@ -80,10 +80,7 @@ export function ThumbnailSidebar({
     let isCancelled = false;
 
     const generateThumbnails = async () => {
-      const queue = Array.from(
-        { length: scrollState.totalPages },
-        (_, i) => i,
-      );
+      const queue = Array.from({ length: scrollState.totalPages }, (_, i) => i);
 
       const getNextPageIndex = () => {
         if (queue.length === 0) return null;
@@ -241,7 +238,7 @@ export function ThumbnailSidebar({
                         alignItems: "center",
                         gap: "8px",
                         contentVisibility: "auto",
-                        containIntrinsicSize: "11.5rem 15rem",
+                        containIntrinsicSize: "auto 11.5rem auto 16.5rem",
                       }}
                       onMouseEnter={(e) => {
                         if (scrollState.currentPage !== pageIndex + 1) {
@@ -293,7 +290,7 @@ export function ThumbnailSidebar({
                           {t("viewer.thumbnails.failed", "Failed")}
                         </div>
                       ) : (
-<Skeleton
+                        <Skeleton
                           shape="rect"
                           width="11.5rem"
                           height="15rem"

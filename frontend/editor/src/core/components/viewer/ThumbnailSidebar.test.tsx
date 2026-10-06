@@ -80,9 +80,7 @@ describe("ThumbnailSidebar", () => {
     );
 
     await waitFor(() => {
-      expect(
-        screen.getByAltText("Page 1 thumbnail"),
-      ).toBeInTheDocument();
+      expect(screen.getByAltText("Page 1 thumbnail")).toBeInTheDocument();
     });
 
     // Simulate page scrolling
@@ -113,9 +111,7 @@ describe("ThumbnailSidebar", () => {
     );
 
     await waitFor(() => {
-      expect(
-        screen.getByAltText("Page 1 thumbnail"),
-      ).toBeInTheDocument();
+      expect(screen.getByAltText("Page 1 thumbnail")).toBeInTheDocument();
     });
 
     rerender(
