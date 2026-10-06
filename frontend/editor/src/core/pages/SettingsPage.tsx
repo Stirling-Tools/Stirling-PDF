@@ -29,6 +29,8 @@ import {
 } from "@app/contexts/UnsavedChangesContext";
 import { QuickNavHostBridge } from "@app/components/shared/quickNav/QuickNavHostBridge";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
+import { READER_PATH } from "@app/routes/readerRoute";
+import { usePreferences } from "@app/contexts/PreferencesContext";
 import { stripBasePath } from "@app/constants/app";
 import { takeSettingsOrigin } from "@app/utils/settingsNavigation";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
@@ -52,6 +54,17 @@ const SettingsPageInner: React.FC = () => {
   const isMobile = useIsMobile();
   const licenseAlert = useLicenseAlert();
   const { confirmIfDirty } = useUnsavedChanges();
+  const { preferences } = usePreferences();
+  const goToStartupView = () => {
+    const view = preferences.defaultStartupView;
+    navigate(
+      view === "read"
+        ? READER_PATH
+        : view === "automate"
+          ? "/automate"
+          : EDITOR_BASENAME,
+    );
+  };
   // The same bar as the editor and the processor, so search is one thing
   // everywhere; settings results deep-link straight back into this page.
   const searchScopes = useEditorSearchScopes();
@@ -88,13 +101,12 @@ const SettingsPageInner: React.FC = () => {
     // `pending` matters as much as an empty list: the permission-gated sections
     // arrive a request later, so a deep link to one of them is not unknown yet.
     if (items.length === 0 || activeItem || pending) return;
-    const target =
-      (urlSection && aliases?.[urlSection]) ??
-      items.find((i) => !i.disabled)?.key ??
-      items[0].key;
-    // The hash rides along: an aliased bookmark addresses a control, and the
-    // control it names is still there under whatever absorbed its section.
-    navigate(`/settings/${target}${location.search}${location.hash}`, {
+    const alias = urlSection ? aliases?.[urlSection] : undefined;
+    const target = alias ?? items.find((i) => !i.disabled)?.key ?? items[0].key;
+    // An aliased link keeps its hash; without one it lands on the card that
+    // took the retired row's key as its id.
+    const hash = location.hash || (alias ? `#${urlSection}` : "");
+    navigate(`/settings/${target}${location.search}${hash}`, {
       replace: true,
     });
   }, [
@@ -191,7 +203,10 @@ const SettingsPageInner: React.FC = () => {
 
   return (
     <div className="settings-page" data-tour="settings-modal">
-      <QuickNavHostBridge requestNavigation={requestNavigation} />
+      <QuickNavHostBridge
+        requestNavigation={requestNavigation}
+        onGoToStartupView={goToStartupView}
+      />
 
       <aside
         className={`settings-page__nav modal-nav ${isMobile ? "mobile" : ""}`}

@@ -3,6 +3,7 @@
  * policy cache directly; usePolicies would refire a backend reconcile on every mount.
  */
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { loadPolicies, onPoliciesChange } from "@app/services/policyStorage";
 import { loadPolicyCatalog } from "@app/services/policyCatalog";
 import { editorTriggerOf, type PolicyRunOn } from "@app/policies/runOn";
@@ -53,10 +54,14 @@ export function useEditorPipelines(): EditorPipelines {
   const [policies, setPolicies] = useState<PoliciesByKey>(loadPolicies);
   useEffect(() => onPoliciesChange(() => setPolicies(loadPolicies())), []);
   const runs = usePolicyRuns();
+  const { t } = useTranslation();
 
   return useMemo(() => {
     const categoryLabels = new Map(
-      loadPolicyCatalog().categories.map((c) => [c.id, c.label]),
+      loadPolicyCatalog().categories.map((c) => [
+        c.id,
+        t(`portal.policies.categories.${c.id}.label`, c.label),
+      ]),
     );
     const startOfDay = new Date().setHours(0, 0, 0, 0);
     const runsByPolicy = new Map<string, PolicyRunRecord[]>();
@@ -89,5 +94,5 @@ export function useEditorPipelines(): EditorPipelines {
       onExport,
       total: onImport.length + onExport.length,
     };
-  }, [policies, runs]);
+  }, [policies, runs, t]);
 }

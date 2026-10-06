@@ -31,6 +31,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.SPDF.model.api.PDFWithPageNums;
+import stirling.software.SPDF.service.OfficeConversionService;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -46,11 +47,14 @@ class ConvertPDFToExcelControllerMoreTest {
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private TempFileManager tempFileManager;
+    @Mock private OfficeConversionService officeConversionService;
 
     @InjectMocks private ConvertPDFToExcelController controller;
 
     @BeforeEach
     void setUp() throws Exception {
+        // These cover the legacy converters; Stirling Office Convert has its own tests.
+        lenient().when(officeConversionService.legacy(null)).thenReturn(true);
         lenient()
                 .when(tempFileManager.createManagedTempFile(anyString()))
                 .thenAnswer(
@@ -135,7 +139,7 @@ class ConvertPDFToExcelControllerMoreTest {
 
             when(pdfDocumentFactory.load(request)).thenReturn(blankPages(1));
 
-            ResponseEntity<Resource> response = controller.pdfToExcel(request);
+            ResponseEntity<Resource> response = controller.pdfToExcel(request, null);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
         }
@@ -149,7 +153,7 @@ class ConvertPDFToExcelControllerMoreTest {
 
             when(pdfDocumentFactory.load(request)).thenReturn(blankPages(3));
 
-            ResponseEntity<Resource> response = controller.pdfToExcel(request);
+            ResponseEntity<Resource> response = controller.pdfToExcel(request, null);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
         }
@@ -169,7 +173,7 @@ class ConvertPDFToExcelControllerMoreTest {
 
             when(pdfDocumentFactory.load(request)).thenReturn(borderedTableDoc());
 
-            ResponseEntity<Resource> response = controller.pdfToExcel(request);
+            ResponseEntity<Resource> response = controller.pdfToExcel(request, null);
 
             // Lattice detection depends on the Tabula build; accept either outcome but assert the
             // success path produced a real, non-empty xlsx body.
@@ -198,7 +202,7 @@ class ConvertPDFToExcelControllerMoreTest {
 
             when(pdfDocumentFactory.load(request)).thenThrow(new java.io.IOException("load boom"));
 
-            assertThatThrownBy(() -> controller.pdfToExcel(request))
+            assertThatThrownBy(() -> controller.pdfToExcel(request, null))
                     .isInstanceOf(java.io.IOException.class);
         }
     }

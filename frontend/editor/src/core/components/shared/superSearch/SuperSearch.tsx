@@ -283,8 +283,7 @@ export default function SuperSearch({
       if (!combo || e.code !== "KeyK") return;
       // Leave the shortcut alone while a modal owns the screen — focusing an
       // input underneath the overlay would strand keyboard focus. Modals that
-      // want to cede to the search (the settings modal does) close themselves
-      // and call openSuperSearch() instead.
+      // want to cede to the search close themselves and call openSuperSearch().
       const target = e.target as HTMLElement | null;
       if (target?.closest('[role="dialog"]')) return;
       e.preventDefault();
