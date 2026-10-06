@@ -1,18 +1,11 @@
-import {
-  useState,
-  useEffect,
-  useRef,
-  Suspense,
-  lazy,
-  type DragEvent,
-} from "react";
+import { useState, useEffect, useRef, Suspense, lazy } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
 import { Box, Loader, Center, Stack, Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
-import { useAllFiles, useFileSelectors } from "@app/contexts/FileContext";
+import { useAllFiles } from "@app/contexts/FileContext";
 import {
   useNavigationState,
   useNavigationActions,
@@ -20,12 +13,11 @@ import {
 import { isBaseWorkbench } from "@app/types/workbench";
 import { VIEWER_SUPPORTED_EXTENSIONS } from "@app/utils/fileUtils";
 import { useIsPhone } from "@app/hooks/useIsMobile";
-import { useDropzoneFiles } from "@app/hooks/useDropzoneFiles";
-import { alert } from "@app/components/toast";
 import styles from "@app/components/layout/Workbench.module.css";
 
 import WorkbenchBar from "@app/components/shared/WorkbenchBar";
 import { useWorkbenchTakeover } from "@app/components/layout/WorkbenchTakeover";
+import { useWorkbenchFileDrop } from "@app/components/layout/useWorkbenchFileDrop";
 import { useTitleBarStrip } from "@app/contexts/TitleBarStripContext";
 import WorkbenchFloatingSearch from "@app/components/shared/WorkbenchFloatingSearch";
 import LandingPage from "@app/components/shared/LandingPage";
@@ -74,8 +66,6 @@ export default function Workbench() {
   const { addFiles } = useFileHandler();
   const hasFiles = activeFiles.length > 0;
   const { t } = useTranslation();
-  const getDropzoneFiles = useDropzoneFiles();
-  const fileSelectors = useFileSelectors();
 
   // The whole canvas takes file drops, not just the content a view happens to
   // render, so a short grid or a scrolled page still has somewhere to drop.
@@ -86,58 +76,8 @@ export default function Workbench() {
     (currentView === "fileEditor" ||
       currentView === "viewer" ||
       currentView === "pageEditor");
-  // Page and file reorders are in-app drags with no "Files" type.
-  const isExternalFileDrag = (e: DragEvent<HTMLElement>) =>
-    acceptsFileDrops && e.dataTransfer.types.includes("Files");
-  // Every child the pointer crosses fires its own enter/leave pair, so a
-  // depth count, not the last event, says whether the drag is still inside.
-  const fileDragDepth = useRef(0);
-  const [isFileDragOver, setIsFileDragOver] = useState(false);
-  const handleFileDragEnter = (e: DragEvent<HTMLElement>) => {
-    if (!isExternalFileDrag(e)) return;
-    fileDragDepth.current += 1;
-    setIsFileDragOver(true);
-  };
-  const handleFileDragLeave = (e: DragEvent<HTMLElement>) => {
-    if (!isExternalFileDrag(e)) return;
-    fileDragDepth.current = Math.max(0, fileDragDepth.current - 1);
-    if (fileDragDepth.current === 0) setIsFileDragOver(false);
-  };
-  const handleFileDragOver = (e: DragEvent<HTMLElement>) => {
-    if (isExternalFileDrag(e)) e.preventDefault();
-  };
-  const handleFileDrop = async (e: DragEvent<HTMLElement>) => {
-    if (!isExternalFileDrag(e)) return;
-    e.preventDefault();
-    fileDragDepth.current = 0;
-    setIsFileDragOver(false);
-    const dropped = await getDropzoneFiles(e);
-    const files = dropped.filter((item) => item instanceof File);
-    if (files.length === 0) return;
-    const openBefore = fileSelectors.getStirlingFileStubs().length;
-    try {
-      await addFiles(files);
-    } catch (cause) {
-      // addFiles dispatches in chunks, so a mid-batch failure leaves the earlier
-      // files open. ZIP extraction can add more stubs than were dropped, hence the floor.
-      const added = fileSelectors.getStirlingFileStubs().length - openBefore;
-      const failed = Math.max(1, files.length - added);
-      alert({
-        alertType: "error",
-        title:
-          files.length === 1
-            ? t("workbench.dropFailedSingle", "Your file couldn't be added")
-            : t(
-                "workbench.dropFailedSome",
-                "{{failed}} of your files couldn't be added",
-                { failed },
-              ),
-        body: cause instanceof Error ? cause.message : undefined,
-        expandable: false,
-        durationMs: 5000,
-      });
-    }
-  };
+  const { isFileDragOver, dropHandlers } =
+    useWorkbenchFileDrop(acceptsFileDrops);
 
   // The viewer's tool row can be retracted to give the document more height.
   // State lives here (not in WorkbenchBar) so the reopen tab can hang below the
@@ -278,12 +218,9 @@ export default function Workbench() {
       className="flex-1 h-full min-w-0 relative flex flex-col"
       data-tour="workbench"
       style={{ backgroundColor: "var(--c-bg)", minWidth: 0, minHeight: 0 }}
-      onDragEnter={handleFileDragEnter}
-      onDragLeave={handleFileDragLeave}
-      onDragOver={handleFileDragOver}
-      onDrop={handleFileDrop}
+      {...dropHandlers}
     >
-      {isFileDragOver && acceptsFileDrops && (
+      {isFileDragOver && (
         <div className={styles.fileDropOverlay} aria-live="polite">
           <span className={styles.fileDropOverlayIcon}>
             <Icon name="file-up" size="2.5rem" />
