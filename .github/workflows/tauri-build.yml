@@ -231,24 +231,25 @@ jobs:
         shell: pwsh
         run: |
           Write-Host "Disk space before cleanup:"
-          Get-Volume -DriveLetter C | Select-Object DriveLetter, SizeRemaining, Size
+          Get-Volume -DriveLetter D,C |
+            Select-Object DriveLetter, SizeRemaining, Size
 
           $paths = @(
-            "$env:ProgramFiles\dotnet",
-            "${env:ProgramFiles(x86)}\Microsoft SDKs\Azure",
             "$env:LOCALAPPDATA\Android\Sdk",
-            "C:\Android\android-sdk"
+            "C:\Android\android-sdk",
+            "${env:ProgramFiles(x86)}\Microsoft SDKs\Azure"
           )
 
           foreach ($path in $paths) {
-            if (Test-Path $path) {
+            if (Test-Path -LiteralPath $path) {
               Write-Host "Removing $path"
-              Remove-Item -LiteralPath $path -Recurse -Force -ErrorAction Continue
+              Remove-Item -LiteralPath $path -Recurse -Force -ErrorAction SilentlyContinue
             }
           }
 
           Write-Host "Disk space after cleanup:"
-          Get-Volume -DriveLetter C | Select-Object DriveLetter, SizeRemaining, Size
+          Get-Volume -DriveLetter D,C |
+            Select-Object DriveLetter, SizeRemaining, Size
 
       - name: Free disk space on macOS
         if: runner.os == 'macOS'
