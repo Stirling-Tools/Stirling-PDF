@@ -6,6 +6,7 @@ import React, {
   useMemo,
   useRef,
 } from "react";
+import { Icon } from "@app/ui/Icon";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
@@ -22,71 +23,6 @@ import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { openExternalTab } from "@app/platform/openExternalTab";
 import { getExternalHref } from "@app/utils/externalUrl";
-
-// ---------------------------------------------------------------------------
-// Inline SVG icons (thin-stroke, modern)
-// ---------------------------------------------------------------------------
-
-const TrashIcon: React.FC<{ size?: number }> = ({ size = 13 }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 14 14"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      d="M3 4h8M5.5 4v-1a0.5 0 0 1 0.5-0.5h2a0.5 0 0 1 0.5 0.5v1M4.5 4l0.4 7a0.8 0 0 0 0.8 0.7h2.6a0.8 0 0 0 0.8-0.7l0.4-7"
-      stroke="currentColor"
-      strokeWidth="1.2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
-
-const ExternalLinkIcon: React.FC<{ size?: number }> = ({ size = 12 }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 12 12"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      d="M8.5 3.5l-3.5 3.5m3.5-3.5v2.5m0-2.5h-2.5M3.5 3.5h-0.5a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-0.5"
-      stroke="currentColor"
-      strokeWidth="1.2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
-
-const PageIcon: React.FC<{ size?: number }> = ({ size = 12 }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 12 12"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      d="M3 2.5h3l2 2v4.5a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1v-6.5a1 1 0 0 1 1-1z"
-      stroke="currentColor"
-      strokeWidth="1.2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M6 2.5v2h2"
-      stroke="currentColor"
-      strokeWidth="1.2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -224,7 +160,7 @@ const LinkToolbar: React.FC<LinkToolbarProps> = React.memo(
           aria-label={t("viewer.link.delete", "Delete link")}
           title={t("viewer.link.delete", "Delete link")}
         >
-          <TrashIcon />
+          <Icon name="trash" size={13} strokeWidth={1.5} />
         </ActionIcon>
         <span className="pdf-link-toolbar-sep" />
 
@@ -243,7 +179,11 @@ const LinkToolbar: React.FC<LinkToolbarProps> = React.memo(
           }
           title={label}
         >
-          {internal ? <PageIcon /> : <ExternalLinkIcon />}
+          {internal ? (
+            <Icon name="file" size={12} strokeWidth={1.5} />
+          ) : (
+            <Icon name="external-link" size={12} strokeWidth={1.5} />
+          )}
           <span className="pdf-link-toolbar-label">{label}</span>
         </Button>
       </div>
@@ -260,11 +200,15 @@ LinkToolbar.displayName = "LinkToolbar";
 interface LinkLayerProps {
   documentId: string;
   pageIndex: number;
+  /** While annotation editing is active, a click selects the link's
+   *  annotation instead of following it. */
+  selectionActive?: boolean;
 }
 
 export const LinkLayer: React.FC<LinkLayerProps> = ({
   documentId,
   pageIndex,
+  selectionActive = false,
 }) => {
   const { t } = useTranslation();
   const { provides: scroll } = useScroll(documentId);
@@ -539,6 +483,14 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                if (selectionActive) {
+                  if (scope) {
+                    scope.selectAnnotation(pageIndex, annotationLink.id);
+                  }
+                  setHoveredLinkId(null);
+                  setToolbarPlacement(null);
+                  return;
+                }
                 handleNavigate(annotationLink);
               }}
               onMouseDown={(e) => e.stopPropagation()}

@@ -1,6 +1,12 @@
 import { beforeEach, it, expect, vi } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
-import { useSettingsNav } from "@app/components/settings/useSettingsNav";
+import type { ReactElement } from "react";
+import {
+  useSettingsNav,
+  type SettingsNav,
+} from "@app/components/settings/useSettingsNav";
+import DesktopGeneralSection from "@app/components/shared/config/configSections/GeneralSection";
+import type { PreferencesSectionProps } from "@core/components/shared/config/configSections/preferences/PreferencesSection";
 
 const state = vi.hoisted(() => ({
   mode: "saas",
@@ -10,13 +16,33 @@ const state = vi.hoisted(() => ({
   loading: false,
   connectionFails: false,
   workspace: true,
+  loginEnabled: false,
+  admin: true,
 }));
+const ProprietaryPreferences = vi.hoisted(
+  () => (_props: { accountSlot?: string }) => null,
+);
 vi.mock("@proprietary/components/shared/config/configNavSections", () => ({
-  useConfigNavSections: () => [
+  useConfigNavSections: (
+    _isAdmin: boolean,
+    _runningEE: boolean,
+    loginEnabled: boolean,
+  ) => [
     {
       id: "preferences",
       title: "Preferences",
-      items: [{ key: "general", label: "Preferences", component: null }],
+      items: [
+        {
+          key: "general",
+          label: "Preferences",
+          // Stands in for proprietary's PreferencesSection and its account cards.
+          component: (
+            <ProprietaryPreferences
+              accountSlot={loginEnabled ? "account-cards" : undefined}
+            />
+          ),
+        },
+      ],
     },
     ...(state.workspace
       ? [
@@ -65,11 +91,13 @@ vi.mock("@app/services/authService", () => ({
   },
 }));
 vi.mock("@app/contexts/AppConfigContext", () => ({
-  useAppConfig: () => ({ config: { isAdmin: true } }),
+  useAppConfig: () => ({
+    config: { isAdmin: true, enableLogin: state.loginEnabled },
+  }),
 }));
 vi.mock("@app/auth/context", () => ({
   useAuth: () => ({
-    isAdmin: true,
+    isAdmin: state.admin,
     user: { orgOwner: state.owner },
     loading: state.loading,
   }),
@@ -96,6 +124,71 @@ beforeEach(() => {
   state.loading = false;
   state.connectionFails = false;
   state.workspace = true;
+  state.loginEnabled = false;
+  state.admin = true;
+});
+
+function preferencesPage(sections: SettingsNav["sections"]) {
+  const item = sections
+    .flatMap((group) => group.items)
+    .find((entry) => entry.key === "general");
+  return item?.component as ReactElement<PreferencesSectionProps>;
+}
+
+it("keeps proprietary's account cards on the desktop Preferences page when self-hosted", async () => {
+  state.mode = "selfhosted";
+  state.loginEnabled = true;
+  const { result } = renderHook(() => useSettingsNav(vi.fn()));
+  await waitFor(() => expect(result.current.pending).toBe(false));
+  const page = preferencesPage(result.current.sections);
+  expect(page.type).toBe(DesktopGeneralSection);
+  expect(page.props.accountSlot).toBe("account-cards");
+});
+
+it.each(["saas", "local"])(
+  "drops the self-hosted account cards in mode=%s",
+  async (mode) => {
+    state.mode = mode;
+    state.loginEnabled = true;
+    const { result } = renderHook(() => useSettingsNav(vi.fn()));
+    await waitFor(() => expect(result.current.pending).toBe(false));
+    const page = preferencesPage(result.current.sections);
+    expect(page.type).toBe(DesktopGeneralSection);
+    expect(page.props.accountSlot).toBeUndefined();
+  },
+);
+
+it.each([
+  ["local", true],
+  ["saas", true],
+  ["selfhosted", false],
+])("hides the server-setup banner in mode=%s: %s", async (mode, hidden) => {
+  state.mode = mode;
+  const { result } = renderHook(() => useSettingsNav(vi.fn()));
+  await waitFor(() => expect(result.current.pending).toBe(false));
+  expect(preferencesPage(result.current.sections).props.hideAdminBanner).toBe(
+    hidden,
+  );
+});
+
+it("drops the account cards while signed out", async () => {
+  state.mode = "selfhosted";
+  state.loginEnabled = true;
+  state.authenticated = false;
+  const { result } = renderHook(() => useSettingsNav(vi.fn()));
+  await waitFor(() => expect(result.current.pending).toBe(false));
+  const page = preferencesPage(result.current.sections);
+  expect(page.type).toBe(DesktopGeneralSection);
+  expect(page.props.accountSlot).toBeUndefined();
+});
+
+it("renders the desktop Preferences page in local mode without login", async () => {
+  state.mode = "local";
+  const { result } = renderHook(() => useSettingsNav(vi.fn()));
+  await waitFor(() => expect(result.current.pending).toBe(false));
+  const page = preferencesPage(result.current.sections);
+  expect(page.type).toBe(DesktopGeneralSection);
+  expect(page.props.accountSlot).toBeUndefined();
 });
 
 it("finishes loading without billing when the connection lookup fails", async () => {
@@ -228,3 +321,41 @@ it("does not offer billing to a local-mode owner", async () => {
       .some((item) => item.key === "billing"),
   ).toBe(false);
 });
+
+it.each([false, true])(
+  "retains the cloud Users entry in SaaS mode without a Spring admin role: owner=%s",
+  async (owner) => {
+    state.admin = false;
+    state.owner = owner;
+    state.loginEnabled = true;
+    state.roster = true;
+    state.workspace = false;
+    const { result } = renderHook(() => useSettingsNav(vi.fn()));
+    await waitFor(() => expect(result.current.pending).toBe(false));
+    const users = result.current.sections
+      .flatMap((section) => section.items)
+      .filter((item) => item.key === "users");
+    expect(users).toHaveLength(1);
+    // The cloud factory is mocked with a null component; the lazy Spring roster
+    // would have a React element, so this verifies which entry survives.
+    expect(users[0].component).toBeNull();
+  },
+);
+
+it.each(["selfhosted", "local"])(
+  "hides Users from a non-admin in mode=%s",
+  async (mode) => {
+    state.mode = mode;
+    state.admin = false;
+    state.loginEnabled = true;
+    state.roster = true;
+    state.workspace = false;
+    const { result } = renderHook(() => useSettingsNav(vi.fn()));
+    await waitFor(() => expect(result.current.pending).toBe(false));
+    expect(
+      result.current.sections
+        .flatMap((section) => section.items)
+        .some((item) => item.key === "users"),
+    ).toBe(false);
+  },
+);
