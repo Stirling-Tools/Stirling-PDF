@@ -1155,13 +1155,20 @@ public class FormUtils {
                                         matched = true;
                                     }
                                 } else {
-                                    java.util.Set<String> onValues = radioButton.getOnValues();
-                                    if (onValues != null && !onValues.isEmpty()) {
-                                        java.util.List<String> validOnValues =
-                                                new java.util.ArrayList<>();
-                                        for (String onValue : onValues) {
-                                            if (!"Off".equals(onValue)) {
-                                                validOnValues.add(onValue);
+                                    java.util.List<org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget> widgets = radioButton.getWidgets();
+                                    if (widgets != null && !widgets.isEmpty()) {
+                                        java.util.List<String> validOnValues = new java.util.ArrayList<>();
+                                        for (org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget widget : widgets) {
+                                            org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceDictionary ap = widget.getAppearance();
+                                            if (ap != null) {
+                                                org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceEntry normalAp = ap.getNormalAppearance();
+                                                if (normalAp != null && normalAp.isSubDictionary()) {
+                                                    for (org.apache.pdfbox.cos.COSName name : normalAp.getSubDictionary().keySet()) {
+                                                        if (!org.apache.pdfbox.cos.COSName.Off.equals(name)) {
+                                                            validOnValues.add(name.getName());
+                                                        }
+                                                    }
+                                                }
                                             }
                                         }
                                         if (index >= 0 && index < validOnValues.size()) {
