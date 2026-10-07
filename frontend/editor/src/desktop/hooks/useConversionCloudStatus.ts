@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { connectionModeService } from "@app/services/connectionModeService";
 import { endpointAvailabilityService } from "@app/services/endpointAvailabilityService";
 import { tauriBackendService } from "@app/services/tauriBackendService";
@@ -6,6 +6,7 @@ import { selfHostedServerMonitor } from "@app/services/selfHostedServerMonitor";
 import { EXTENSION_TO_ENDPOINT } from "@app/constants/convertConstants";
 import { getEndpointName } from "@app/utils/convertUtils";
 import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
+import { useMultipleEndpointsEnabled } from "@app/hooks/useEndpointConfig";
 
 /**
  * Comprehensive conversion status data
@@ -23,6 +24,35 @@ export interface ConversionStatus {
  */
 export function useConversionCloudStatus(): ConversionStatus {
   const localProcessingOnly = useLocalProcessingOnly();
+  const endpoints = useMemo(
+    () =>
+      localProcessingOnly
+        ? [
+            ...new Set(
+              Object.values(EXTENSION_TO_ENDPOINT).flatMap(Object.values),
+            ),
+          ]
+        : [],
+    [localProcessingOnly],
+  );
+  const { endpointStatus } = useMultipleEndpointsEnabled(endpoints);
+  // Share readiness-gated checks with the tool catalogue: early probes can cache
+  // disabled conversions while the bundled backend is still starting.
+  const localStatus = useMemo<ConversionStatus | null>(() => {
+    if (!localProcessingOnly) return null;
+    const availability: Record<string, boolean> = {};
+    const cloudStatus: Record<string, boolean> = {};
+    const localOnly: Record<string, boolean> = {};
+    for (const [from, targets] of Object.entries(EXTENSION_TO_ENDPOINT)) {
+      for (const [to, endpoint] of Object.entries(targets)) {
+        const key = `${from}-${to}`;
+        availability[key] = endpointStatus[endpoint] !== false;
+        cloudStatus[key] = false;
+        localOnly[key] = availability[key];
+      }
+    }
+    return { availability, cloudStatus, localOnly };
+  }, [endpointStatus, localProcessingOnly]);
   const [status, setStatus] = useState<ConversionStatus>({
     availability: Object.fromEntries(
       Object.entries(EXTENSION_TO_ENDPOINT).flatMap(([from, targets]) =>
@@ -34,15 +64,16 @@ export function useConversionCloudStatus(): ConversionStatus {
   });
 
   useEffect(() => {
+    if (localProcessingOnly) return;
     const checkConversions = async () => {
       const mode = await connectionModeService.getCurrentMode();
 
       // Self-hosted offline path: server is down but local backend is available.
       // Check each conversion against the local backend only (no cloud routing).
-      if (localProcessingOnly || mode === "selfhosted") {
+      if (mode === "selfhosted") {
         const { status } = selfHostedServerMonitor.getSnapshot();
         const localUrl = tauriBackendService.getBackendUrl();
-        if (localProcessingOnly || (status === "offline" && localUrl)) {
+        if (status === "offline" && localUrl) {
           const pairs: [string, string, string][] = [];
           for (const fromExt of Object.keys(EXTENSION_TO_ENDPOINT)) {
             for (const toExt of Object.keys(
@@ -187,5 +218,5 @@ export function useConversionCloudStatus(): ConversionStatus {
     };
   }, [localProcessingOnly]);
 
-  return status;
+  return localStatus ?? status;
 }

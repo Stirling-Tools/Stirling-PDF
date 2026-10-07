@@ -3,6 +3,7 @@ import { Center, Loader, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
 import { SetupWizard } from "@app/components/SetupWizard";
+import { useSuppressQuickNavRail } from "@app/contexts/QuickNavHostContext";
 import { authService } from "@app/services/authService";
 import {
   ConnectionConfig,
@@ -18,6 +19,13 @@ export function DesktopAccessGate({ children }: { children: ReactNode }) {
   const [checking, setChecking] = useState(true);
   const [revision, setRevision] = useState(0);
   const [authRevision, setAuthRevision] = useState(0);
+
+  // The outer rail survives workbench unmounts, including logout.
+  useSuppressQuickNavRail(
+    configError ||
+      !config ||
+      (config.require_sign_in && (checking || !allowed)),
+  );
 
   useEffect(
     () =>

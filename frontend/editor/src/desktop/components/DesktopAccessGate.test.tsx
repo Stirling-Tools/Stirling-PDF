@@ -1,8 +1,14 @@
 import { act, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
+import { MemoryRouter } from "react-router-dom";
 import type { AuthStatus } from "@app/services/authService";
 import { DesktopAccessGate } from "@app/components/DesktopAccessGate";
+import { QuickNavRailHost } from "@app/components/shared/quickNav/QuickNavRailHost";
+import {
+  QuickNavHostProvider,
+  useRegisterQuickNavView,
+} from "@app/contexts/QuickNavHostContext";
 
 const state = vi.hoisted(() => ({
   getConfig: vi.fn(),
@@ -46,6 +52,24 @@ vi.mock("@app/ui/Button", () => ({
 vi.mock("@app/components/SetupWizard", () => ({
   SetupWizard: () => <div>Required sign-in</div>,
 }));
+vi.mock("@app/hooks/useConnectedServer", () => ({
+  useConnectedServer: () => true,
+}));
+vi.mock("@app/hooks/useLocalProcessingOnly", () => ({
+  useLocalProcessingOnly: () => false,
+}));
+vi.mock("@app/ui/Icon", () => ({ Icon: () => null }));
+vi.mock("@app/components/shared/signing/SignMenu", () => ({
+  SignMenu: () => null,
+}));
+vi.mock("@app/components/shared/quickNav/QuickNavRailContainer", () => ({
+  QuickNavRailContainer: () => <nav aria-label="App navigation" />,
+}));
+
+function WorkbenchWithNavigation() {
+  useRegisterQuickNavView({}, {});
+  return <div>Workbench</div>;
+}
 
 beforeEach(() => {
   state.getConfig.mockReset().mockResolvedValue({
@@ -83,6 +107,43 @@ it("admits a verified session and removes access on logout", async () => {
   await screen.findByText("Required sign-in");
   expect(screen.queryByText("Workbench")).toBeNull();
 });
+
+it.each(["logout", "expiry"])(
+  "hides the outer sidebar on %s and restores it after sign-in",
+  async (reason) => {
+    state.validate.mockResolvedValue(true);
+    render(
+      <MemoryRouter>
+        <QuickNavHostProvider>
+          <QuickNavRailHost />
+          <DesktopAccessGate>
+            <WorkbenchWithNavigation />
+          </DesktopAccessGate>
+        </QuickNavHostProvider>
+      </MemoryRouter>,
+    );
+    await screen.findByRole("navigation", { name: "App navigation" });
+
+    state.validate.mockResolvedValue(false);
+    if (reason === "logout") {
+      act(() => state.onAuth("unauthenticated"));
+    } else {
+      state.expired.mockReturnValue(true);
+      act(() => window.dispatchEvent(new Event("focus")));
+    }
+    await screen.findByText("Required sign-in");
+    expect(screen.queryByText("Workbench")).toBeNull();
+    await waitFor(() => expect(screen.queryByRole("navigation")).toBeNull());
+
+    state.expired.mockReturnValue(false);
+    state.validate.mockResolvedValue(true);
+    act(() => state.onAuth("authenticated"));
+    await screen.findByText("Workbench");
+    expect(
+      await screen.findByRole("navigation", { name: "App navigation" }),
+    ).toBeInTheDocument();
+  },
+);
 
 it("does not let an in-flight validation reopen access after logout", async () => {
   let resolve: (value: boolean) => void = () => {};

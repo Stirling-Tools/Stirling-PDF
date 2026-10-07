@@ -49,7 +49,7 @@ To require sign-in to a particular self-hosted server:
 
 ## Document privacy
 
-`localProcessingOnly` keeps sign-in, account management and billing available. It applies to both SaaS and self-hosted connections: signing in does not permit documents to leave the device. The app offers only locally supported tools and conversion formats, with no cloud fallback when a dependency is unavailable or the bundled backend is starting.
+`localProcessingOnly` keeps sign-in, account management and billing available. It applies to both SaaS and self-hosted connections: signing in does not permit documents to leave the device. Local tools are shown immediately while the bundled backend starts. Once its capabilities are known, unsupported tools and conversion formats are removed automatically, regardless of the user's visibility preferences. There is no cloud fallback when a dependency is unavailable or the bundled backend is starting.
 
 The policy disables server storage (Stirling library), file sharing, shared signing, mobile document/signature transfer, AI chat/classification and server pipelines/processing folders. Timestamping is also unavailable because it sends a document digest to a timestamp authority. Ordinary local signing, local files and mounted local folders remain available. Cached server folders and files are hidden without deleting them; the library's local view is labelled **Local files**.
 

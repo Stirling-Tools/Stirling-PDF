@@ -12,6 +12,7 @@ import { selfHostedServerMonitor } from "@app/services/selfHostedServerMonitor";
 import { isBackendNotReadyError } from "@app/constants/backendErrors";
 import { connectionModeService } from "@app/services/connectionModeService";
 import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
+import { isOffDeviceEndpointName } from "@app/services/documentPrivacyService";
 import { qk } from "@app/query/keys";
 import { CONFIG_STALE_TIME } from "@app/query/staleTime";
 import {
@@ -42,18 +43,20 @@ const getBackendOnline = () => tauriBackendService.isOnline;
 const getOffline = () => isSelfHostedOffline();
 
 /**
- * When the desktop backend is reachable: either the bundled backend is healthy,
- * or the self-hosted server is offline but the local one answers. A query only
- * runs once this is true, and a change re-runs it — which is how a reconnect
- * swaps the offline local-check answer for the live remote one.
+ * Capability probes wait for the bundled backend under managed privacy. Other
+ * modes also allow self-hosted offline fallback; reconnects refresh that answer.
  */
-function useBackendReadiness() {
+function useBackendReadiness(localOnly: boolean) {
   const backendOnline = useSyncExternalStore(
     subscribeReadiness,
     getBackendOnline,
   );
   const offline = useSyncExternalStore(subscribeReadiness, getOffline);
-  return { ready: backendOnline || offline, backendOnline, offline };
+  return {
+    ready: backendOnline || (!localOnly && offline),
+    backendOnline,
+    offline,
+  };
 }
 
 const retryWhileStarting = (_count: number, error: unknown) =>
@@ -68,7 +71,7 @@ export function useEndpointEnabled(endpoint: string): {
 } {
   const queryClient = useQueryClient();
   const localOnly = useLocalProcessingOnly();
-  const { ready, backendOnline, offline } = useBackendReadiness();
+  const { ready, backendOnline, offline } = useBackendReadiness(localOnly);
   const queryKey = [...qk.endpointEnabled(endpoint), localOnly];
 
   const { data, refetch } = useQuery({
@@ -91,7 +94,9 @@ export function useEndpointEnabled(endpoint: string): {
   }, [readinessMark]);
 
   return {
-    enabled: endpoint ? (data ?? !localOnly) : null,
+    enabled: endpoint
+      ? (data ?? (!localOnly || !isOffDeviceEndpointName(endpoint)))
+      : null,
     loading: false,
     error: null,
     refetch: useCallback(async () => {
@@ -109,7 +114,7 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
 } {
   const queryClient = useQueryClient();
   const localOnly = useLocalProcessingOnly();
-  const { ready, backendOnline, offline } = useBackendReadiness();
+  const { ready, backendOnline, offline } = useBackendReadiness(localOnly);
   const wanted = endpoints ?? [];
   const key = wanted.join(",");
   // Keyed by the endpoint set, not shared across consumers. A constant key
@@ -149,7 +154,7 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
     for (const endpoint of key ? key.split(",") : []) {
       const detail =
         data?.[endpoint] ??
-        (localOnly
+        (localOnly && isOffDeviceEndpointName(endpoint)
           ? { enabled: false, reason: "NOT_SUPPORTED_LOCALLY" as const }
           : OPTIMISTIC);
       status[endpoint] = detail.enabled;
