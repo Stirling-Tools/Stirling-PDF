@@ -121,7 +121,13 @@
     return Promise.reject(new Error("This chat app cannot upload from here."));
   }
   function sendMessage(text) {
-    if (bridgeReady) return request("ui/message", { role: "user", content: [{ type: "text", text: text }] });
+    var block = { type: "text", text: text };
+    // The SDK schema wants an array, the spec prose a single block; try both.
+    if (bridgeReady) {
+      return request("ui/message", { role: "user", content: [block] }).catch(function () {
+        return request("ui/message", { role: "user", content: block });
+      });
+    }
     if (openai && openai.sendFollowUpMessage) return openai.sendFollowUpMessage({ prompt: text });
     return Promise.reject(new Error("unsupported"));
   }
