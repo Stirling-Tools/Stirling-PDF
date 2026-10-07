@@ -2,6 +2,7 @@
  * File actions - Unified file operations with single addFiles helper
  */
 
+import { getPdfAccess } from "@app/services/pdfPasswordStore";
 import {
   StirlingFileStub,
   FileContextAction,
@@ -159,7 +160,11 @@ export async function generateProcessedFileMetadata(
     // Use rotated thumbnail for file manager
     processedFile.thumbnailUrl = rotatedResult.thumbnail;
 
-    if (unrotatedResult.isEncrypted || rotatedResult.isEncrypted) {
+    if (
+      getPdfAccess(file)?.encrypted ||
+      unrotatedResult.isEncrypted ||
+      rotatedResult.isEncrypted
+    ) {
       processedFile.isEncrypted = true;
     }
 
@@ -539,7 +544,10 @@ export async function addFiles(
         let thumbnail: string | undefined;
 
         if (targetFile.type.startsWith("application/pdf")) {
-          if (fileStub.processedFile?.isEncrypted) {
+          if (
+            fileStub.processedFile?.isEncrypted &&
+            !getPdfAccess(targetFile)
+          ) {
             // Pre-dispatch detection already flagged this PDF as encrypted; PDF.js
             // can't produce thumbnails/metadata without the password, so re-parsing
             // here would just duplicate work. Metadata is refreshed after unlock.

@@ -9,6 +9,10 @@ import { useFileContext } from "@app/contexts/FileContext";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { ViewerContext } from "@app/contexts/ViewerContext";
 import { toolAcceptsFile } from "@app/utils/toolIOCompat";
+import {
+  prepareUnlockedFile,
+  protectUnlockedResults,
+} from "@app/services/pdfSessionUnlock";
 import { useToolState } from "@app/hooks/tools/shared/useToolState";
 import {
   useToolApiCalls,
@@ -326,7 +330,14 @@ export const useToolOperation = <TParams>(
         let unprocessedSourceIds: FileId[] = [];
 
         // Use original files directly (no PDF metadata injection - history stored in IndexedDB)
-        const filesForAPI = extractFiles(validFiles);
+        const filesForAPI: File[] = [];
+        for (const file of validFiles) {
+          filesForAPI.push(
+            config.toolType === ToolType.singleFile
+              ? file
+              : await prepareUnlockedFile(file, runtimeEndpoint),
+          );
+        }
 
         switch (config.toolType) {
           case ToolType.singleFile: {
@@ -456,6 +467,32 @@ export const useToolOperation = <TParams>(
               }
             }
             break;
+          }
+        }
+
+        if (config.toolType !== ToolType.singleFile) {
+          if (config.operationType === "extractPages") {
+            if (processedFiles.length !== validFiles.length)
+              throw new Error(
+                "Unable to match extracted pages to their protection source.",
+              );
+            const protectedFiles: File[] = [];
+            for (const [index, file] of processedFiles.entries()) {
+              protectedFiles.push(
+                ...(await protectUnlockedResults(
+                  [file],
+                  [validFiles[index]],
+                  runtimeEndpoint,
+                )),
+              );
+            }
+            processedFiles = protectedFiles;
+          } else {
+            processedFiles = await protectUnlockedResults(
+              processedFiles,
+              validFiles,
+              runtimeEndpoint,
+            );
           }
         }
 

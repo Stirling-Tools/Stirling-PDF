@@ -7,7 +7,13 @@ import {
   screen,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { FileContextProvider, useFileActions } from "@app/contexts/FileContext";
+import {
+  FileContextProvider,
+  useFileActions,
+  useFileSelectors,
+} from "@app/contexts/FileContext";
+import apiClient from "@app/services/apiClient";
+import { getPdfAccess } from "@app/services/pdfPasswordStore";
 import {
   createStirlingFile,
   type FileId,
@@ -20,6 +26,8 @@ import {
 
 const observed = vi.hoisted(() => ({ heldBeforeEffects: false }));
 const id = "editor-encrypted" as FileId;
+
+vi.mock("@app/services/apiClient", () => ({ default: { post: vi.fn() } }));
 
 vi.mock("@app/contexts/IndexedDBContext", () => ({
   useIndexedDB: () => null,
@@ -39,14 +47,36 @@ vi.mock("@app/components/shared/ZipWarningModal", () => ({
   default: () => null,
 }));
 vi.mock("@app/components/shared/EncryptedPdfUnlockModal", () => ({
-  default: ({ opened, onSkip }: { opened: boolean; onSkip: () => void }) =>
-    opened ? <button onClick={onSkip}>Skip unlock</button> : null,
+  default: ({
+    opened,
+    onSkip,
+    onUnlock,
+    onPasswordChange,
+  }: {
+    opened: boolean;
+    onSkip: () => void;
+    onUnlock: () => void;
+    onPasswordChange: (password: string) => void;
+  }) =>
+    opened ? (
+      <>
+        <button onClick={onSkip}>Skip unlock</button>
+        <input
+          aria-label="PDF password"
+          onChange={(event) => onPasswordChange(event.target.value)}
+        />
+        <button onClick={onUnlock}>Unlock</button>
+      </>
+    ) : null,
 }));
 vi.mock("@app/contexts/file/fileActions", async (importOriginal) => {
   const actual =
     await importOriginal<typeof import("@app/contexts/file/fileActions")>();
   return {
     ...actual,
+    generateProcessedFileMetadata: vi
+      .fn()
+      .mockResolvedValue({ pages: [], totalPages: 1 }),
     addFiles: vi.fn<typeof actual.addFiles>(
       async (options, _stateRef, filesRef, dispatch) => {
         const source = options.files?.[0];
@@ -90,6 +120,46 @@ afterEach(() => {
 });
 
 describe("encrypted bytes opened by another editor", () => {
+  it("unlocks the original in place without adding a password-removal version", async () => {
+    vi.mocked(apiClient.post).mockResolvedValueOnce({
+      data: {
+        encrypted: true,
+        signed: false,
+        ownerAuthenticated: true,
+        permissions: -4,
+        canModify: true,
+        canAssemble: true,
+        pageCount: 1,
+      },
+    });
+    const { result } = renderHook(
+      () => ({ ...useFileActions(), selectors: useFileSelectors() }),
+      { wrapper },
+    );
+    const original = new File(["encrypted original"], "locked.pdf");
+    await act(() => result.current.actions.addFiles([original]));
+    fireEvent.change(screen.getByLabelText("PDF password"), {
+      target: { value: " secret " },
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByText("Unlock"));
+    });
+    expect(result.current.selectors.getFile(id)).toBe(original);
+    expect(result.current.selectors.getStirlingFileStub(id)).toMatchObject({
+      id,
+      versionNumber: 1,
+      isLeaf: true,
+      processedFile: { isEncrypted: true },
+    });
+    expect(getPdfAccess(id)?.password).toBe(" secret ");
+    expect(isAwaitingUnlock(id)).toBe(false);
+    expect(vi.mocked(apiClient.post).mock.calls.at(-1)?.[0]).toBe(
+      "/api/v1/security/inspect-pdf-security",
+    );
+    await act(() => result.current.actions.removeFiles([id]));
+    expect(getPdfAccess(original)).toBeUndefined();
+  });
+
   it("holds policies before dispatch without opening a duplicate password modal", async () => {
     const { result } = renderHook(() => useFileActions(), { wrapper });
     await act(() =>

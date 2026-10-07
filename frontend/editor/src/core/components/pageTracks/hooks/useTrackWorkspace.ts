@@ -3,6 +3,7 @@ import { useFileState } from "@app/contexts/FileContext";
 import { FileId } from "@app/types/file";
 import { PageSize, TrackSource } from "@app/components/pageTracks/types";
 import { ProcessedFilePage } from "@app/types/fileContext";
+import { getPdfAccess } from "@app/services/pdfPasswordStore";
 import {
   changedTrackIds,
   initialTrackEditorState,
@@ -63,6 +64,11 @@ export function useTrackWorkspace(): TrackWorkspaceHook {
           continue;
         }
         anyPdf = true;
+
+        if (stub?.processedFile?.isEncrypted && !getPdfAccess(fileId)) {
+          pending.push(fileId);
+          continue;
+        }
 
         const pages = stub?.processedFile?.pages;
         if (!pages || pages.length === 0) {

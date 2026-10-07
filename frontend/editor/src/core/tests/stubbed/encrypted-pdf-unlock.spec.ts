@@ -26,29 +26,26 @@ import { suppressNativeFilePicker } from "@app/tests/helpers/ui-helpers";
 const FIXTURES_DIR = path.join(import.meta.dirname, "../test-fixtures");
 const ENCRYPTED_PDF = path.join(FIXTURES_DIR, "encrypted.pdf");
 
-const FAKE_UNLOCKED_PDF = Buffer.from(
-  "%PDF-1.4\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n" +
-    "2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n" +
-    "3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>\nendobj\n" +
-    "xref\n0 4\n0000000000 65535 f \n0000000009 00000 n \n0000000058 00000 n \n" +
-    "0000000115 00000 n \ntrailer\n<< /Size 4 /Root 1 0 R >>\nstartxref\n190\n%%EOF",
-);
-
-function mockRemovePasswordSuccess(page: Page) {
-  return page.route("**/api/v1/security/remove-password", (route) =>
+function mockUnlockSuccess(page: Page) {
+  return page.route("**/api/v1/security/inspect-pdf-security", (route) =>
     route.fulfill({
       status: 200,
-      contentType: "application/pdf",
-      headers: {
-        "Content-Disposition": 'attachment; filename="encrypted.pdf"',
-      },
-      body: FAKE_UNLOCKED_PDF,
+      contentType: "application/json",
+      body: JSON.stringify({
+        encrypted: true,
+        signed: false,
+        ownerAuthenticated: true,
+        permissions: -4,
+        canModify: true,
+        canAssemble: true,
+        pageCount: 1,
+      }),
     }),
   );
 }
 
-function mockRemovePasswordWrongPassword(page: Page) {
-  return page.route("**/api/v1/security/remove-password", (route) =>
+function mockUnlockWrongPassword(page: Page) {
+  return page.route("**/api/v1/security/inspect-pdf-security", (route) =>
     route.fulfill({
       status: 400,
       contentType: "application/problem+json",
@@ -71,7 +68,7 @@ async function uploadEncryptedFile(page: Page, filePath: string) {
   await page.locator('[data-testid="file-input"]').setInputFiles(filePath);
 }
 
-const MODAL_TITLE = "Remove password to continue";
+const MODAL_TITLE = "Unlock PDF";
 const PASSWORD_PLACEHOLDER = "Enter the PDF password";
 const UNLOCK_BUTTON_TEXT = "Unlock & Continue";
 
@@ -114,7 +111,9 @@ test.describe("Encrypted PDF Unlock Modal", () => {
   }) => {
     await uploadEncryptedFile(page, ENCRYPTED_PDF);
 
-    await expect(page.getByText(MODAL_TITLE)).toBeVisible({ timeout: 10000 });
+    await expect(
+      page.getByRole("heading", { name: MODAL_TITLE, exact: true }),
+    ).toBeVisible({ timeout: 10000 });
     await expect(page.getByPlaceholder(PASSWORD_PLACEHOLDER)).toBeVisible();
     await expect(
       page.getByRole("button", { name: UNLOCK_BUTTON_TEXT }),
@@ -124,27 +123,52 @@ test.describe("Encrypted PDF Unlock Modal", () => {
   test("successful unlock removes the modal and shows success alert", async ({
     page,
   }) => {
-    await mockRemovePasswordSuccess(page);
+    test.setTimeout(90_000);
+    const removalRequests: string[] = [];
+    page.on("request", (request) => {
+      if (request.url().includes("/security/remove-password"))
+        removalRequests.push(request.url());
+    });
+    await mockUnlockSuccess(page);
 
     await uploadEncryptedFile(page, ENCRYPTED_PDF);
-    await expect(page.getByText(MODAL_TITLE)).toBeVisible({ timeout: 10000 });
+    await expect(
+      page.getByRole("heading", { name: MODAL_TITLE, exact: true }),
+    ).toBeVisible({ timeout: 10000 });
 
     await fillPassword(page, "testpass123");
     await page.getByRole("button", { name: UNLOCK_BUTTON_TEXT }).click();
 
-    await expect(page.getByText(MODAL_TITLE)).toBeHidden({ timeout: 10000 });
     await expect(
-      page.getByText("Password removed", { exact: true }),
-    ).toBeVisible({ timeout: 5000 });
+      page.getByRole("heading", { name: MODAL_TITLE, exact: true }),
+    ).toBeHidden({ timeout: 10000 });
+    await expect(page.getByText("PDF unlocked", { exact: true })).toBeVisible({
+      timeout: 5000,
+    });
+    await expect(page.locator('[data-page-index="0"]').first()).toBeVisible({
+      timeout: 45000,
+    });
+    const renderedPage = page.locator('[data-page-index="0"] img').first();
+    await expect(renderedPage).toBeVisible({ timeout: 15000 });
+    await expect
+      .poll(() =>
+        renderedPage.evaluate(
+          (element: HTMLImageElement) => element.naturalWidth,
+        ),
+      )
+      .toBeGreaterThan(0);
+    expect(removalRequests).toEqual([]);
   });
 
   test("incorrect password keeps the modal open with an inline error", async ({
     page,
   }) => {
-    await mockRemovePasswordWrongPassword(page);
+    await mockUnlockWrongPassword(page);
 
     await uploadEncryptedFile(page, ENCRYPTED_PDF);
-    await expect(page.getByText(MODAL_TITLE)).toBeVisible({ timeout: 10000 });
+    await expect(
+      page.getByRole("heading", { name: MODAL_TITLE, exact: true }),
+    ).toBeVisible({ timeout: 10000 });
 
     await fillPassword(page, "wrongpassword");
     await page.getByRole("button", { name: UNLOCK_BUTTON_TEXT }).click();
@@ -152,27 +176,33 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     await expect(page.getByText("Incorrect password")).toBeVisible({
       timeout: 5000,
     });
-    await expect(page.getByText(MODAL_TITLE)).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: MODAL_TITLE, exact: true }),
+    ).toBeVisible();
   });
 
   test("pressing Enter in the password field triggers unlock", async ({
     page,
   }) => {
-    await mockRemovePasswordSuccess(page);
+    await mockUnlockSuccess(page);
 
     await uploadEncryptedFile(page, ENCRYPTED_PDF);
-    await expect(page.getByText(MODAL_TITLE)).toBeVisible({ timeout: 10000 });
+    await expect(
+      page.getByRole("heading", { name: MODAL_TITLE, exact: true }),
+    ).toBeVisible({ timeout: 10000 });
 
     await fillPassword(page, "testpass123");
     await page.getByPlaceholder(PASSWORD_PLACEHOLDER).press("Enter");
 
-    await expect(page.getByText(MODAL_TITLE)).toBeHidden({ timeout: 10000 });
+    await expect(
+      page.getByRole("heading", { name: MODAL_TITLE, exact: true }),
+    ).toBeHidden({ timeout: 10000 });
   });
 
   test("multi-file unlock-all closes the modal after one password entry", async ({
     page,
   }) => {
-    await mockRemovePasswordSuccess(page);
+    await mockUnlockSuccess(page);
 
     // `files-button`'s native picker is mocked globally; click it, then set
     // the files on the hidden input directly.
@@ -190,7 +220,9 @@ test.describe("Encrypted PDF Unlock Modal", () => {
       },
     ]);
 
-    await expect(page.getByText(MODAL_TITLE)).toBeVisible({ timeout: 15000 });
+    await expect(
+      page.getByRole("heading", { name: MODAL_TITLE, exact: true }),
+    ).toBeVisible({ timeout: 15000 });
     // The "Use for all" affordance only appears once BOTH files have been
     // detected as encrypted. PDF.js encryption probing runs per-file and
     // can lag the modal opening (which fires as soon as the first file
@@ -202,6 +234,8 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     await fillPassword(page, "testpass123");
     await unlockAllBtn.click();
 
-    await expect(page.getByText(MODAL_TITLE)).toBeHidden({ timeout: 15000 });
+    await expect(
+      page.getByRole("heading", { name: MODAL_TITLE, exact: true }),
+    ).toBeHidden({ timeout: 15000 });
   });
 });

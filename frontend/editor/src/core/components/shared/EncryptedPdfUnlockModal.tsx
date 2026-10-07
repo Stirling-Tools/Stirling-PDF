@@ -14,6 +14,8 @@ interface EncryptedPdfUnlockModalProps {
   remainingCount?: number;
   /** Confirm wording, where the caller's own reads better than the default. */
   confirmLabel?: string;
+  /** Session unlocking preserves the original; notification retries may instead remove protection. */
+  sessionUnlock?: boolean;
   onPasswordChange: (value: string) => void;
   onUnlock: () => void;
   /** Only needed alongside a non-zero {@link EncryptedPdfUnlockModalProps.remainingCount}. */
@@ -29,6 +31,7 @@ const EncryptedPdfUnlockModal = ({
   isProcessing,
   remainingCount = 0,
   confirmLabel,
+  sessionUnlock = false,
   onPasswordChange,
   onUnlock,
   onUnlockAll,
@@ -37,7 +40,7 @@ const EncryptedPdfUnlockModal = ({
   const { t } = useTranslation();
 
   const handleKeyDown: KeyboardEventHandler<HTMLInputElement> = (event) => {
-    if (event.key === "Enter" && !isProcessing && password.trim().length > 0) {
+    if (event.key === "Enter" && !isProcessing && password.length > 0) {
       onUnlock();
     }
   };
@@ -46,7 +49,11 @@ const EncryptedPdfUnlockModal = ({
     <Modal
       opened={opened}
       onClose={onSkip}
-      title={t("encryptedPdfUnlock.title", "Remove password to continue")}
+      title={
+        sessionUnlock
+          ? t("encryptedPdfUnlock.sessionTitle", "Unlock PDF")
+          : t("encryptedPdfUnlock.title", "Remove password to continue")
+      }
       centered
       size="md"
       closeOnClickOutside={!isProcessing}
@@ -58,10 +65,15 @@ const EncryptedPdfUnlockModal = ({
           {fileName}
         </Text>
         <Text c="dimmed" ta="center">
-          {t(
-            "encryptedPdfUnlock.description",
-            "This PDF is password protected. Enter the password so you can continue working with it.",
-          )}
+          {sessionUnlock
+            ? t(
+                "encryptedPdfUnlock.sessionDescription",
+                "Enter the password to unlock this PDF for the current session. The original stays protected. Supported tools retain protection on their PDF results; merged results use the first protected input's settings. Use Remove Password to create an unprotected copy.",
+              )
+            : t(
+                "encryptedPdfUnlock.description",
+                "This PDF is password protected. Enter the password so you can continue working with it.",
+              )}
         </Text>
 
         <Stack gap={4}>
@@ -99,7 +111,7 @@ const EncryptedPdfUnlockModal = ({
                 variant="secondary"
                 onClick={onUnlockAll}
                 loading={isProcessing}
-                disabled={password.trim().length === 0}
+                disabled={password.length === 0}
               >
                 {t("encryptedPdfUnlock.unlockAll", "Use for all ({{count}})", {
                   count: remainingCount + 1,
@@ -109,7 +121,7 @@ const EncryptedPdfUnlockModal = ({
             <Button
               onClick={onUnlock}
               loading={isProcessing}
-              disabled={password.trim().length === 0}
+              disabled={password.length === 0}
             >
               {confirmLabel ??
                 t("encryptedPdfUnlock.unlock", "Unlock & Continue")}
