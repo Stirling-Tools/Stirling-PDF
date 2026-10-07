@@ -22,6 +22,8 @@ interface EditorTopBarProps {
   controller: Controller;
   addTextArmed: boolean;
   onToggleAddText: () => void;
+  addTableArmed: boolean;
+  onToggleAddTable: () => void;
   findOpen: boolean;
   onToggleFind: () => void;
   onShowHelp: () => void;
@@ -33,6 +35,8 @@ export function EditorTopBar({
   controller,
   addTextArmed,
   onToggleAddText,
+  addTableArmed,
+  onToggleAddTable,
   findOpen,
   onToggleFind,
   onShowHelp,
@@ -50,6 +54,12 @@ export function EditorTopBar({
     ? t("pdfTextEditor.sidebar.clickPageToAddText", "Click page to add text")
     : t("pdfTextEditor.sidebar.addText", "Add text");
   const addImageLabel = t("pdfTextEditor.sidebar.addImage", "Add image");
+  const addTableLabel = addTableArmed
+    ? t(
+        "pdfTextEditor.sidebar.clickPageToAddTable",
+        "Click page to add a table",
+      )
+    : t("pdfTextEditor.sidebar.addTable", "Add table");
   const findLabel = t("pdfTextEditor.settings.find", "Find in document");
   const helpLabel = t("pdfTextEditor.help.ariaLabel", "Keyboard shortcuts");
 
@@ -138,6 +148,14 @@ export function EditorTopBar({
                   {addTextLabel}
                 </Menu.Item>
                 <Menu.Item
+                  leftSection={<Icon name="table" size={20} />}
+                  onClick={onToggleAddTable}
+                  data-testid="pdf-editor-add-table"
+                  aria-pressed={addTableArmed}
+                >
+                  {addTableLabel}
+                </Menu.Item>
+                <Menu.Item
                   leftSection={<Icon name="image" size={20} />}
                   onClick={() => session?.pickImage()}
                   disabled={!session}
@@ -187,6 +205,19 @@ export function EditorTopBar({
                     : t("pdfTextEditor.sidebar.addText", "Add text")}
                 </Button>
               </Tooltip>
+              <Tooltip label={addTableLabel}>
+                <Button
+                  size="sm"
+                  variant={addTableArmed ? "primary" : "tertiary"}
+                  accent={addTableArmed ? "default" : "neutral"}
+                  leftSection={<Icon name="table" size={20} />}
+                  onClick={onToggleAddTable}
+                  aria-label={addTableLabel}
+                  aria-pressed={addTableArmed}
+                  data-testid="pdf-editor-add-table"
+                  style={NO_SHRINK}
+                />
+              </Tooltip>
               <Tooltip label={t("pdfTextEditor.sidebar.addImage", "Add image")}>
                 <Button
                   size="sm"
@@ -198,7 +229,9 @@ export function EditorTopBar({
                   aria-label={t("pdfTextEditor.sidebar.addImage", "Add image")}
                   data-testid="pdf-editor-add-image"
                   style={NO_SHRINK}
-                />
+                >
+                  {t("pdfTextEditor.sidebar.image", "Image")}
+                </Button>
               </Tooltip>
               <Tooltip
                 label={t("pdfTextEditor.settings.findTooltip", {
@@ -227,6 +260,11 @@ export function EditorTopBar({
           {hasSelection && (
             <>
               <ToolbarSeparator />
+              {/* Ahead of the formatting group: the band scrolls sideways
+                  under macOS's hidden scrollbars, so anything past the edge
+                  is invisible rather than visibly clipped. */}
+              <ObjectGroup controller={controller} />
+              <ToolbarSeparator />
               {compact ? (
                 <Popover position="bottom-start" withinPortal shadow="md">
                   <Popover.Target>
@@ -252,8 +290,6 @@ export function EditorTopBar({
               ) : (
                 <FormatGroup controller={controller} />
               )}
-              <ToolbarSeparator />
-              <ObjectGroup controller={controller} />
             </>
           )}
         </div>

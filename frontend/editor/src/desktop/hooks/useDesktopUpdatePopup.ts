@@ -6,7 +6,6 @@ import {
   desktopUpdateService,
   type CanInstallResult,
 } from "@app/services/desktopUpdateService";
-import { connectionModeService } from "@app/services/connectionModeService";
 
 const SNOOZE_KEY = "stirling-pdf-updater:snoozedUntil";
 const STARTUP_DELAY_MS = 15_000;
@@ -24,9 +23,9 @@ const AUTO_FAILURE_KEY = "stirling-pdf-updater:autoFailedAt";
 const AUTO_FAILURE_BACKOFF_MS = 6 * 60 * 60 * 1000;
 
 /**
- * Desktop-only hook that checks for updates on startup and handles the
- * three update modes configured via the tauri store (or the MDM
- * provisioning file):
+ * Desktop-only hook that checks for updates on startup, in every connection
+ * mode (local, self-hosted and cloud), and handles the three update modes
+ * configured via the tauri store (or the MDM provisioning file):
  *
  * * `disabled` — no check is performed, no UI is shown, no network call.
  * * `auto`     — FULLY HEADLESS. We download + install + restart in the
@@ -73,10 +72,7 @@ export function useDesktopUpdatePopup() {
     hasChecked.current = true;
 
     const timer = setTimeout(async () => {
-      // In SaaS connection mode the cloud owns app versioning — the self-hosted
-      // update check + popup must never run (no external call, no modal).
-      if ((await connectionModeService.getCurrentMode()) === "saas") return;
-
+      // Runs in every connection mode: the desktop binary is local even when signed in to the cloud.
       let mode: Awaited<ReturnType<typeof desktopUpdateService.getUpdateMode>> =
         "prompt";
       try {
