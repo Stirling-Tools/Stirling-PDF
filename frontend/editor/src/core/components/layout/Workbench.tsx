@@ -69,9 +69,8 @@ export default function Workbench() {
 
   // The whole canvas takes file drops, not just the content a view happens to
   // render, so a short grid or a scrolled page still has somewhere to drop.
-  // Without files the landing page owns the drop.
+  // These views are also where the landing page shows when nothing is open.
   const acceptsFileDrops =
-    hasFiles &&
     !takeover &&
     (currentView === "fileEditor" ||
       currentView === "viewer" ||

@@ -43,8 +43,11 @@ export function useWorkbenchFileDrop(enabled: boolean) {
     });
   };
 
+  // WebKit (the macOS desktop webview) only keeps an element as the drop
+  // target if dragenter is cancelled too; Chromium settles for dragover.
   const onDragEnter = (e: DragEvent<HTMLElement>) => {
     if (!isExternalFileDrag(e)) return;
+    e.preventDefault();
     dragDepth.current += 1;
     setIsDragOver(true);
   };
@@ -54,7 +57,9 @@ export function useWorkbenchFileDrop(enabled: boolean) {
     if (dragDepth.current === 0) setIsDragOver(false);
   };
   const onDragOver = (e: DragEvent<HTMLElement>) => {
-    if (isExternalFileDrag(e)) e.preventDefault();
+    if (!isExternalFileDrag(e)) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "copy";
   };
   const onDrop = async (e: DragEvent<HTMLElement>) => {
     if (!isExternalFileDrag(e)) return;
