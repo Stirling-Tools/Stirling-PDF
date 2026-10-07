@@ -8,13 +8,13 @@ import {
 import { useTranslation } from "react-i18next";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Icon } from "@app/ui/Icon";
-import { BrandMark } from "@app/components/shared/BrandMark";
-import { StirlingLogoAnimated } from "@app/components/agents/StirlingLogoAnimated";
 import { ChatPanel } from "@app/components/chat/ChatPanel";
 import { useChat } from "@app/components/chat/ChatContext";
 import { useAiEngineEnabled } from "@app/hooks/useAiEngineEnabled";
 import { useChatAccess } from "@app/hooks/useChatAccess";
 import { useIsScrolled } from "@app/hooks/useIsScrolled";
+// Its header reuses the file sidebar's section header, so the two sections match.
+import "@app/components/shared/FileSidebar.css";
 import "@app/components/chat/SidebarChat.css";
 
 /**
@@ -130,43 +130,37 @@ function ChatDock() {
       onKeyDown={handleKeyDown}
     >
       <div
-        className="chat-dock__header"
+        className="file-sidebar-section-header"
         data-scrolled={(expanded && scrolled) || undefined}
       >
-        <span className="chat-dock__mark" aria-hidden="true">
-          {isLoading ? (
-            <StirlingLogoAnimated size={18} />
-          ) : (
-            <BrandMark height="18px" />
-          )}
+        <span className="chat-dock__label">
+          <span className="file-sidebar-section-label">{title}</span>
+          {isLoading && <span className="chat-dock__running" aria-hidden />}
           {hasUnviewedResult && (
-            <span className="chat-dock__tick">
+            <span className="chat-dock__tick" aria-hidden>
               <Icon name="check" size={9} strokeWidth={3} />
             </span>
           )}
         </span>
-        <span className="chat-dock__title">{title}</span>
         {expanded && (messages.length > 0 || isLoading) && (
           <ActionIcon
-            variant="tertiary"
-            shape="circle"
-            size="sm"
+            variant="quiet"
+            className="file-sidebar-section-btn"
             onClick={clearChat}
             aria-label={t("chat.header.clearChat", "Clear chat")}
             title={t("chat.header.clearChat", "Clear chat")}
           >
-            <Icon name="trash" size={15} />
+            <Icon name="trash" size="1rem" />
           </ActionIcon>
         )}
         <ActionIcon
-          variant="tertiary"
-          shape="circle"
-          size="sm"
+          variant="quiet"
+          className="file-sidebar-section-btn"
           onClick={handleToggle}
           aria-label={toggleLabel}
           title={toggleLabel}
         >
-          <Icon name={expanded ? "chevron-down" : "chevron-up"} size={16} />
+          <Icon name={expanded ? "chevron-down" : "chevron-up"} size="1rem" />
         </ActionIcon>
       </div>
 

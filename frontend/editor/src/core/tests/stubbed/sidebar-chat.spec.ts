@@ -109,7 +109,7 @@ test("rules the header once messages scroll beneath it", async ({ page }) => {
     }),
   );
   const dock = await openEditorWithAi(page);
-  const header = dock.locator(".chat-dock__header");
+  const header = dock.locator(".file-sidebar-section-header");
   await expect(header).not.toHaveAttribute("data-scrolled");
 
   const composer = dock.getByRole("textbox", { name: "Ask Stirling" });

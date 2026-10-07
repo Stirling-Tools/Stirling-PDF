@@ -6,7 +6,6 @@
   flex-direction: column;
   flex: 0 1 0;
   gap: 0.375rem;
-  padding-top: var(--nav-gutter);
   border-top: 1px solid var(--c-border-subtle);
   transition: flex-grow 280ms cubic-bezier(0.32, 0.72, 0, 1);
 }
@@ -23,40 +22,44 @@
   opacity: 0;
 }
 
-.chat-dock__header {
+/* Ruled above by the dock and below once messages scroll, so it pads evenly to
+   sit centred between the two, unlike the library header it otherwise matches. */
+.chat-dock > .file-sidebar-section-header {
+  padding-block: 0.25rem;
+}
+
+.chat-dock__label {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  flex-shrink: 0;
-  padding: 0.25rem 0.125rem 0.375rem 0.25rem;
-  /* Ruled only once messages scroll beneath it. */
-  border-bottom: 1px solid transparent;
-  transition: border-color 0.12s ease;
+  gap: 0.375rem;
+  flex: 1;
+  min-width: 0;
 }
 
-.chat-dock__header[data-scrolled] {
-  border-bottom-color: var(--c-border-subtle);
-}
-
-.chat-dock__mark {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+.chat-dock__running {
   flex-shrink: 0;
-  width: 1.75rem;
-  height: 1.75rem;
-  border: 1px solid color-mix(in srgb, var(--c-brand-mark) 22%, transparent);
+  width: 0.5rem;
+  height: 0.5rem;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--c-brand-mark) 10%, transparent);
-  color: var(--c-brand-mark);
+  background: var(--c-success);
+  animation: chat-dock-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes chat-dock-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 0.65;
+  }
 }
 
 .chat-dock__tick {
-  position: absolute;
-  top: -0.2rem;
-  right: -0.2rem;
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
   width: 0.8rem;
@@ -66,20 +69,13 @@
   color: var(--c-text-on-primary);
 }
 
-.chat-dock__title {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  color: var(--c-text);
-  font-size: 0.95rem;
-  font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .chat-dock,
   .chat-dock .chat-panel {
     transition: none;
+  }
+
+  .chat-dock__running {
+    animation: none;
   }
 }
