@@ -32,14 +32,13 @@ class ToolKeyRegistryTest {
     private static final Pattern QUOTED = Pattern.compile("\"([^\"]+)\"");
 
     /**
-     * Every file that defines ids. The core file's proprietary and prototype imports resolve to
-     * empty stubs; the build-specific overrides beside them are where those ids actually live.
+     * Every file that defines ids. The core file's proprietary import resolves to an empty stub;
+     * the proprietary override beside it is where those ids actually live.
      */
     private static final List<String> SOURCES =
             List.of(
                     "frontend/editor/src/core/types/toolId.ts",
-                    "frontend/editor/src/proprietary/types/proprietaryToolId.ts",
-                    "frontend/editor/src/prototypes/types/prototypeToolId.ts");
+                    "frontend/editor/src/proprietary/types/proprietaryToolId.ts");
 
     @Test
     @DisplayName("the registry lists exactly the tool ids the frontend can send")
