@@ -43,7 +43,6 @@ import { bookletImpositionOperationConfig } from "@app/hooks/tools/bookletImposi
 import { mergeOperationConfig } from "@app/hooks/tools/merge/useMergeOperation";
 import { editTableOfContentsOperationConfig } from "@app/hooks/tools/editTableOfContents/useEditTableOfContentsOperation";
 import { autoRenameOperationConfig } from "@app/hooks/tools/autoRename/useAutoRenameOperation";
-import { usePrototypeToolRegistry } from "@app/data/usePrototypeToolRegistry";
 import { flattenOperationConfig } from "@app/hooks/tools/flatten/useFlattenOperation";
 import { redactOperationConfig } from "@app/hooks/tools/redact/useRedactOperation";
 import { rotateOperationConfig } from "@app/hooks/tools/rotate/useRotateOperation";
@@ -78,16 +77,11 @@ export interface TranslatedToolCatalog {
 export function useTranslatedToolCatalog(): TranslatedToolCatalog {
   const { t } = useTranslation();
   const proprietaryTools = useProprietaryToolRegistry();
-  const prototypeTools = usePrototypeToolRegistry();
 
   return useMemo(() => {
     const allTools: ToolRegistry = {
       // Proprietary tools (if any)
       ...proprietaryTools,
-      // Prototype-only tools (empty in the main/core/proprietary/saas/desktop
-      // builds; the prototypes build overlay injects experimental tools here
-      // via src/prototypes/data/usePrototypeToolRegistry.tsx).
-      ...prototypeTools,
       // Recommended Tools in order
       pdfTextEditor: {
         icon: <Icon name="square-pen" size="1.5rem" />,
@@ -106,7 +100,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         automationSettings: null,
       },
       multiTool: {
-        icon: <Icon name="grid-2x2-plus" size="1.5rem" />,
+        icon: <Icon name="rows-3" size="1.5rem" />,
         name: t("home.multiTool.title", "Multi-Tool"),
         component: null,
         workbench: "pageEditor",
@@ -193,20 +187,6 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         ), // TODO:: not all settings shown, suggested next tools shown
         synonyms: getSynonyms(t, "sign"),
         supportsAutomate: false, //TODO make support Sign
-      },
-      sharedSign: {
-        icon: <Icon name="users-plus" size={"1.5rem"} />,
-        name: t("home.sharedSign.title", "Shared Signing"),
-        component: lazy(() => import("@app/tools/SharedSign")),
-        description: t(
-          "home.sharedSign.desc",
-          "Request signatures from others and track signing sessions",
-        ),
-        categoryId: ToolCategoryId.STANDARD_TOOLS,
-        subcategoryId: SubcategoryId.SIGNING,
-        automationSettings: null,
-        supportsAutomate: false,
-        synonyms: getSynonyms(t, "sharedSign"),
       },
       addText: {
         icon: <Icon name="type" size="1.5rem" />,
@@ -712,17 +692,22 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       },
       addAttachments: {
         icon: <Icon name="paperclip" size="1.5rem" />,
-        name: t("home.addAttachments.title", "Add Attachments"),
+        name: t("home.addAttachments.title", "Manage Attachments"),
         component: lazy(() => import("@app/tools/AddAttachments")),
         description: t(
           "home.addAttachments.desc",
-          "Add or remove embedded files (attachments) to/from a PDF",
+          "View, add, extract, rename, or delete embedded PDF attachments",
         ),
         categoryId: ToolCategoryId.STANDARD_TOOLS,
         subcategoryId: SubcategoryId.PAGE_FORMATTING,
         synonyms: getSynonyms(t, "addAttachments"),
         maxFiles: 1,
-        endpoints: ["add-attachments"],
+        endpoints: [
+          "add-attachments",
+          "batch-process-attachments",
+          "list-attachments",
+          "extract-single-attachment",
+        ],
         operationConfig: asRegistryConfig(addAttachmentsOperationConfig),
         automationSettings: lazySettings(
           () =>
@@ -899,7 +884,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       // Automation
 
       automate: {
-        icon: <Icon name="waypoints" size="1.5rem" />,
+        icon: <Icon name="automate" size="1.5rem" />,
         name: t("home.automate.title", "Automate"),
         component: lazy(() => import("@app/tools/Automate")),
         description: t(
@@ -1238,7 +1223,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "ocr"),
       },
       redact: {
-        icon: <Icon name="eye-off" size="1.5rem" />,
+        icon: <Icon name="redact" size="1.5rem" />,
         name: t("home.redact.title", "Redact"),
         component: lazy(() => import("@app/tools/Redact")),
         description: t(
@@ -1278,5 +1263,5 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       superTools,
       linkTools,
     };
-  }, [t, proprietaryTools, prototypeTools]); // Re-compute when translations, proprietary, or prototype tools change
+  }, [t, proprietaryTools]);
 }

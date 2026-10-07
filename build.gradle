@@ -23,10 +23,11 @@ import stirling.software.gradle.ModuleLicenseOverrideFilter
 ext {
     springBootVersion = "4.1.1"
     pdfboxVersion = "3.0.8"
+    officeConvertVersion = "0.2.2"
     imageioVersion = "3.15.2"
     lombokVersion = "1.18.46"
     bouncycastleVersion = "1.85"
-    springSecuritySamlVersion = "7.1.0"
+    springSecuritySamlVersion = "7.1.1"
     openSamlVersion = "5.2.1"
     commonmarkVersion = "0.30.0"
     googleJavaFormatVersion = "1.35.0"
@@ -121,7 +122,7 @@ springBoot {
 
 allprojects {
     group = 'stirling.software'
-    version = '3.0.2'
+    version = '3.1.0'
 
     configurations.configureEach {
         exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"

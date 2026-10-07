@@ -214,19 +214,19 @@ describe("OAuthButtons", () => {
       </TestWrapper>,
     );
 
-    // Each known provider renders an icon, and the icons are distinct. Icons
-    // are bundled assets (data URI / hashed URL), so assert distinctness rather
-    // than matching filenames.
-    const srcOf = (label: string) =>
-      screen.getByText(label).closest("button")?.querySelector("img")?.src;
-    const srcs = [
-      srcOf("Google"),
-      srcOf("GitHub"),
-      srcOf("Authentik"),
-      srcOf("Keycloak"),
+    // Each known provider renders its own registry mark: an svg, and a
+    // different one per provider rather than the shared fallback glyph.
+    const markOf = (label: string) =>
+      screen.getByText(label).closest("button")?.querySelector("svg")
+        ?.outerHTML;
+    const marks = [
+      markOf("Google"),
+      markOf("GitHub"),
+      markOf("Authentik"),
+      markOf("Keycloak"),
     ];
-    srcs.forEach((src) => expect(src).toBeTruthy());
-    expect(new Set(srcs).size).toBe(4);
+    marks.forEach((mark) => expect(mark).toBeTruthy());
+    expect(new Set(marks).size).toBe(4);
   });
 
   it("should handle mixed known and unknown providers", async () => {

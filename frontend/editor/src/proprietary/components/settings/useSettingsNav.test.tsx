@@ -2,17 +2,21 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
 
 const state = vi.hoisted(() => ({
+  admin: true,
+  login: true,
   owner: true,
   loading: false,
   portal: true,
   roster: true,
 }));
 vi.mock("@app/contexts/AppConfigContext", () => ({
-  useAppConfig: () => ({ config: { isAdmin: true } }),
+  useAppConfig: () => ({
+    config: { isAdmin: state.admin, enableLogin: state.login },
+  }),
 }));
 vi.mock("@app/auth/context", () => ({
   useAuth: () => ({
-    isAdmin: true,
+    isAdmin: state.admin,
     user: { orgOwner: state.owner },
     loading: state.loading,
   }),
@@ -51,6 +55,8 @@ import { useSettingsNav } from "@app/components/settings/useSettingsNav";
 
 describe("self-hosted owner settings", () => {
   beforeEach(() => {
+    state.admin = true;
+    state.login = true;
     state.owner = true;
     state.loading = false;
     state.portal = true;
@@ -123,7 +129,36 @@ describe("self-hosted owner settings", () => {
     expect(
       result.current.sections
         .flatMap((section) => section.items)
-        .some((item) => ["billing", "adminPlan", "plan"].includes(item.key)),
+        .some((item) =>
+          ["users", "billing", "adminPlan", "plan"].includes(item.key),
+        ),
     ).toBe(false);
+  });
+  it.each([false, true])(
+    "hides the roster for non-admins with processor access=%s",
+    (portal) => {
+      state.admin = false;
+      state.owner = false;
+      state.portal = portal;
+      const { result } = renderHook(() => useSettingsNav(vi.fn()));
+      const keys = result.current.sections.flatMap((section) =>
+        section.items.map((item) => item.key),
+      );
+      expect(keys).not.toContain("users");
+      expect(result.current.aliases?.people).toBeUndefined();
+      expect(result.current.aliases?.teams).toBeUndefined();
+      expect(keys).not.toContain("billing");
+      expect(keys).not.toContain("storage");
+    },
+  );
+
+  it("does not advertise the roster when login is disabled", () => {
+    state.login = false;
+    const { result } = renderHook(() => useSettingsNav(vi.fn()));
+    expect(
+      result.current.sections.flatMap((section) =>
+        section.items.map((item) => item.key),
+      ),
+    ).not.toContain("users");
   });
 });
