@@ -13,6 +13,10 @@ import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 
 const capability = vi.hoisted(() => ({ available: true }));
 const connected = vi.hoisted(() => ({ value: true }));
+const privacy = vi.hoisted(() => ({ localOnly: false }));
+vi.mock("@app/hooks/useLocalProcessingOnly", () => ({
+  useLocalProcessingOnly: () => privacy.localOnly,
+}));
 vi.mock("@app/hooks/useProcessingFolderCreation", () => ({
   get canCreateProcessingFolders() {
     return capability.available;
@@ -56,9 +60,24 @@ function setup(path: string, actions: QuickNavHostActions = {}) {
 }
 
 beforeEach(() => {
+  privacy.localOnly = false;
   capability.available = true;
   connected.value = true;
   consumeProcessingFolderCreationRequest();
+});
+
+it("hides off-device processing shortcuts under managed privacy", () => {
+  privacy.localOnly = true;
+  setup("/files");
+  expect(
+    screen.queryByRole("button", { name: "processingFolders.setup.title" }),
+  ).toBeNull();
+  expect(
+    screen.queryByRole("button", { name: "quickAccess.automate" }),
+  ).toBeNull();
+  expect(
+    screen.getByRole("button", { name: "fileSidebar.myFiles" }),
+  ).toBeInTheDocument();
 });
 
 it.each(["/settings/general", "/docs", "/processor"])(

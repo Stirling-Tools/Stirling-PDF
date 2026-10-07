@@ -48,14 +48,18 @@ const mockGet = apiClient.get as unknown as Mock;
 
 // --- connection mode ---
 let mode: "saas" | "selfhosted" | "local" = "saas";
+let localProcessingOnly = false;
 vi.mock("@app/services/connectionModeService", () => ({
   connectionModeService: {
+    getCachedLocalProcessingOnly: () => localProcessingOnly,
+    subscribeToModeChanges: () => () => {},
     getCurrentMode: () => Promise.resolve(mode),
     getCurrentConfig: () =>
       Promise.resolve({
         mode,
         server_config: null,
         lock_connection_mode: false,
+        local_processing_only: localProcessingOnly,
       }),
   },
 }));
@@ -127,12 +131,43 @@ function availability(map: Record<string, { enabled: boolean }>) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  localProcessingOnly = false;
   mode = "saas";
   backendStatus = "healthy";
   backendUrl = "http://127.0.0.1:8080";
   selfHostedStatus = "online";
   backendListeners.clear();
   selfHostedListeners.clear();
+});
+
+describe("managed document privacy", () => {
+  it("starts closed and never applies SaaS optimism to missing local tools", async () => {
+    localProcessingOnly = true;
+    mockLocalSupport.mockImplementation(
+      async (endpoint: string) => endpoint === "merge",
+    );
+    const { result } = renderHook(
+      () => useMultipleEndpointsEnabled(["merge", "ocr", "timestamp-pdf"]),
+      { wrapper: TestQueryProvider },
+    );
+    expect(result.current.endpointStatus.ocr).toBe(false);
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.endpointStatus).toEqual({
+      merge: true,
+      ocr: false,
+      "timestamp-pdf": false,
+    });
+    expect(mockGet).not.toHaveBeenCalled();
+  });
+  it("does not offer conversions while the local backend is starting", () => {
+    localProcessingOnly = true;
+    backendStatus = "starting";
+    const { result } = renderHook(() => useEndpointEnabled("pdf-to-word"), {
+      wrapper: TestQueryProvider,
+    });
+    expect(result.current.enabled).toBe(false);
+    expect(mockGet).not.toHaveBeenCalled();
+  });
 });
 
 afterEach(() => {

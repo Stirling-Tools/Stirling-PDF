@@ -5,6 +5,7 @@ import { tauriBackendService } from "@app/services/tauriBackendService";
 import { selfHostedServerMonitor } from "@app/services/selfHostedServerMonitor";
 import { EXTENSION_TO_ENDPOINT } from "@app/constants/convertConstants";
 import { getEndpointName } from "@app/utils/convertUtils";
+import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
 
 /**
  * Comprehensive conversion status data
@@ -21,8 +22,13 @@ export interface ConversionStatus {
  * @returns Object with availability, cloudStatus, and localOnly maps
  */
 export function useConversionCloudStatus(): ConversionStatus {
+  const localProcessingOnly = useLocalProcessingOnly();
   const [status, setStatus] = useState<ConversionStatus>({
-    availability: {},
+    availability: Object.fromEntries(
+      Object.entries(EXTENSION_TO_ENDPOINT).flatMap(([from, targets]) =>
+        Object.keys(targets).map((to) => [`${from}-${to}`, false]),
+      ),
+    ),
     cloudStatus: {},
     localOnly: {},
   });
@@ -33,10 +39,10 @@ export function useConversionCloudStatus(): ConversionStatus {
 
       // Self-hosted offline path: server is down but local backend is available.
       // Check each conversion against the local backend only (no cloud routing).
-      if (mode === "selfhosted") {
+      if (localProcessingOnly || mode === "selfhosted") {
         const { status } = selfHostedServerMonitor.getSnapshot();
         const localUrl = tauriBackendService.getBackendUrl();
-        if (status === "offline" && localUrl) {
+        if (localProcessingOnly || (status === "offline" && localUrl)) {
           const pairs: [string, string, string][] = [];
           for (const fromExt of Object.keys(EXTENSION_TO_ENDPOINT)) {
             for (const toExt of Object.keys(
@@ -179,7 +185,7 @@ export function useConversionCloudStatus(): ConversionStatus {
       unsubLocal();
       unsubServer();
     };
-  }, []);
+  }, [localProcessingOnly]);
 
   return status;
 }

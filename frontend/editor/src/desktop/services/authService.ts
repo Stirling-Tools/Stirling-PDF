@@ -50,6 +50,7 @@ export class AuthService {
   private authStatus: AuthStatus = "unauthenticated";
   private userInfo: UserInfo | null = null;
   private cachedToken: string | null = null;
+  private verifiedManagedSession: string | null = null;
   private lastTokenSaveTime: number = 0;
   private authListeners = new Set<
     (status: AuthStatus, userInfo: UserInfo | null) => void
@@ -157,6 +158,7 @@ export class AuthService {
    * Clear token from all storage locations
    */
   private async clearTokenEverywhere(): Promise<void> {
+    this.verifiedManagedSession = null;
     // Invalidate cache
     this.cachedToken = null;
 
@@ -330,6 +332,9 @@ export class AuthService {
     password: string,
     mfaCode?: string,
   ): Promise<UserInfo> {
+    if (serverUrl !== STIRLING_SAAS_URL) {
+      await connectionModeService.assertSelfHostedAllowed(serverUrl);
+    }
     try {
       // Validate SaaS configuration if connecting to SaaS
       if (serverUrl === STIRLING_SAAS_URL) {
@@ -624,6 +629,53 @@ export class AuthService {
   async isAuthenticated(): Promise<boolean> {
     const token = await this.getAuthToken();
     return token !== null;
+  }
+
+  /** Managed access requires a non-expired session verified by the selected auth server. */
+  async hasManagedSession(): Promise<boolean> {
+    const config = await connectionModeService.getCurrentConfig();
+    if (config.mode === "local" || (config.saas_only && config.mode !== "saas"))
+      return false;
+    const serverUrl =
+      config.mode === "saas" ? STIRLING_SAAS_URL : config.server_config?.url;
+    if (!serverUrl) return false;
+    let token = await this.getAuthToken();
+    if (!token) return false;
+    if (this.isTokenExpiringSoon(token)) {
+      const refreshed =
+        config.mode === "saas"
+          ? await this.refreshSupabaseToken(serverUrl)
+          : await this.refreshToken(serverUrl);
+      if (!refreshed) return false;
+      token = await this.getAuthToken();
+    }
+    if (!token || this.isTokenExpiringSoon(token, 0)) return false;
+    const sessionKey = `${config.mode}:${serverUrl}:${token}`;
+    if (this.verifiedManagedSession === sessionKey) return true;
+    try {
+      const response = await axios.get(
+        config.mode === "saas"
+          ? `${serverUrl}/auth/v1/user`
+          : `${serverUrl.replace(/\/+$/, "")}/api/v1/auth/me`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            ...(config.mode === "saas" ? { apikey: SUPABASE_KEY } : {}),
+          },
+          timeout: 15000,
+        },
+      );
+      const user = response.data?.user ?? response.data;
+      const authenticated =
+        config.mode === "saas"
+          ? !!user?.id && user.is_anonymous !== true
+          : !!user?.username && user.username !== "anonymousUser";
+      if (!authenticated || token !== (await this.getAuthToken())) return false;
+      this.verifiedManagedSession = sessionKey;
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   async getUserInfo(): Promise<UserInfo | null> {
@@ -1228,6 +1280,7 @@ export class AuthService {
     serverUrl: string,
     token: string,
   ): Promise<UserInfo> {
+    await connectionModeService.assertSelfHostedAllowed(serverUrl);
     const userInfo = await this.fetchSelfHostedUserInfo(serverUrl, token);
 
     await this.saveTokenEverywhere(token);

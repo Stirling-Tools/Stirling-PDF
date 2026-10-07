@@ -202,6 +202,7 @@ pub fn run() {
 
       if let Err(err) = apply_provisioning_if_present(&app.handle()) {
         add_log(format!("⚠️ Failed to apply provisioning file: {}", err));
+        return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, err).into());
       }
 
       // Start backend immediately, non-blocking

@@ -1,3 +1,4 @@
+import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
 import { Icon } from "@app/ui/Icon";
 import React, {
   useCallback,
@@ -139,6 +140,7 @@ export default function FileManagerView() {
           "Sign in to refresh from the server.",
         ));
   const uploadEnabled = appConfig?.storageEnabled === true;
+  const localProcessingOnly = useLocalProcessingOnly();
   const saveToServerDisabledReason: string | null =
     signInRequiredReason ??
     (uploadEnabled
@@ -1085,7 +1087,7 @@ export default function FileManagerView() {
         selectedCount={selectedFiles.length}
         onAddToWorkspace={() => handleAddToWorkspace(selectedFiles)}
         onSaveToServer={
-          localOnlySelectedStubs.length > 0
+          !localProcessingOnly && localOnlySelectedStubs.length > 0
             ? () => setSaveToServerTarget(localOnlySelectedStubs)
             : undefined
         }
@@ -1341,7 +1343,11 @@ export default function FileManagerView() {
                   }),
                 )
               }
-              onSaveToServer={(file) => setSaveToServerTarget([file])}
+              onSaveToServer={
+                localProcessingOnly
+                  ? undefined
+                  : (file) => setSaveToServerTarget([file])
+              }
               onVersionHistory={(file) => setVersionHistoryFile(file)}
               onDownloadFile={handleDownloadFile}
               onRenameFile={setRenameTarget}
@@ -1395,7 +1401,11 @@ export default function FileManagerView() {
             onAddToWorkspace={handleAddToWorkspace}
             onMove={promptMoveFiles}
             onRemove={handleRemoveFiles}
-            onSaveToServer={(files) => setSaveToServerTarget(files)}
+            onSaveToServer={
+              localProcessingOnly
+                ? undefined
+                : (files) => setSaveToServerTarget(files)
+            }
             saveToServerDisabledReason={saveToServerDisabledReason}
           />
         )}
@@ -1445,7 +1455,11 @@ export default function FileManagerView() {
               onAddToWorkspace={handleAddToWorkspace}
               onMove={promptMoveFiles}
               onRemove={handleRemoveFiles}
-              onSaveToServer={(files) => setSaveToServerTarget(files)}
+              onSaveToServer={
+                localProcessingOnly
+                  ? undefined
+                  : (files) => setSaveToServerTarget(files)
+              }
               saveToServerDisabledReason={saveToServerDisabledReason}
               compactVersions
               onOpenVersionHistory={() => {

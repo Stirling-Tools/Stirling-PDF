@@ -11,6 +11,7 @@ import { tauriBackendService } from "@app/services/tauriBackendService";
 import { selfHostedServerMonitor } from "@app/services/selfHostedServerMonitor";
 import { isBackendNotReadyError } from "@app/constants/backendErrors";
 import { connectionModeService } from "@app/services/connectionModeService";
+import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
 import { qk } from "@app/query/keys";
 import { CONFIG_STALE_TIME } from "@app/query/staleTime";
 import {
@@ -66,8 +67,9 @@ export function useEndpointEnabled(endpoint: string): {
   refetch: () => Promise<void>;
 } {
   const queryClient = useQueryClient();
+  const localOnly = useLocalProcessingOnly();
   const { ready, backendOnline, offline } = useBackendReadiness();
-  const queryKey = qk.endpointEnabled(endpoint);
+  const queryKey = [...qk.endpointEnabled(endpoint), localOnly];
 
   const { data, refetch } = useQuery({
     queryKey,
@@ -89,8 +91,7 @@ export function useEndpointEnabled(endpoint: string): {
   }, [readinessMark]);
 
   return {
-    enabled: endpoint ? (data ?? true) : null,
-    // Optimistic by design: the desktop endpoint check never blocks the UI.
+    enabled: endpoint ? (data ?? !localOnly) : null,
     loading: false,
     error: null,
     refetch: useCallback(async () => {
@@ -107,6 +108,7 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
   refetch: () => Promise<void>;
 } {
   const queryClient = useQueryClient();
+  const localOnly = useLocalProcessingOnly();
   const { ready, backendOnline, offline } = useBackendReadiness();
   const wanted = endpoints ?? [];
   const key = wanted.join(",");
@@ -116,7 +118,7 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
   // resolve only the endpoints they were handed. Consumers pass disjoint sets,
   // so a shared entry would leave the second consumer's endpoints unresolved
   // and reading as available. Prefix invalidation below still covers every set.
-  const queryKey = [...qk.endpointsAvailability(), key];
+  const queryKey = [...qk.endpointsAvailability(), key, localOnly];
 
   const { data, isPending, refetch } = useQuery({
     queryKey,
@@ -143,16 +145,18 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
   const projected = useMemo(() => {
     const status: Record<string, boolean> = {};
     const details: Record<string, EndpointAvailabilityDetails> = {};
-    if (!data) return { status, details };
+    if (!data && !localOnly) return { status, details };
     for (const endpoint of key ? key.split(",") : []) {
-      // Safe because the entry is per-set: a miss here means the server does
-      // not know the endpoint, which the old code also treated as available.
-      const detail = data[endpoint] ?? OPTIMISTIC;
+      const detail =
+        data?.[endpoint] ??
+        (localOnly
+          ? { enabled: false, reason: "NOT_SUPPORTED_LOCALLY" as const }
+          : OPTIMISTIC);
       status[endpoint] = detail.enabled;
       details[endpoint] = detail;
     }
     return { status, details };
-  }, [data, key]);
+  }, [data, key, localOnly]);
 
   return {
     endpointStatus: projected.status,
@@ -181,7 +185,11 @@ export function useEndpointConfig(): EndpointConfig {
     connectionModeService
       .getCurrentConfig()
       .then((config) => {
-        if (config.mode === "selfhosted" && config.server_config?.url) {
+        if (
+          !config.local_processing_only &&
+          config.mode === "selfhosted" &&
+          config.server_config?.url
+        ) {
           setBackendUrl(config.server_config.url);
         } else {
           // SaaS mode - use default from env vars (local backend)

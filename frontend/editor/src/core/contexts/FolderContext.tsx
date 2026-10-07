@@ -15,6 +15,7 @@
  * dialog Alert pattern.
  */
 
+import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
 import React, {
   createContext,
   useCallback,
@@ -286,6 +287,7 @@ function shouldStrandedReset(
 }
 
 export function FolderProvider({ children }: FolderProviderProps) {
+  const localOnly = useLocalProcessingOnly();
   const [storedFolders, setFolders] = useState<FolderRecord[]>([]);
   // Never persisted: a directory is its own record, so a listing rebuilds these.
   const [diskSubfolders, setDiskSubfolders] = useState<
@@ -302,10 +304,13 @@ export function FolderProvider({ children }: FolderProviderProps) {
         }
       }
     }
-    return synthesized.length
+    const combined = synthesized.length
       ? [...storedFolders, ...synthesized]
       : storedFolders;
-  }, [storedFolders, diskSubfolders]);
+    return localOnly
+      ? combined.filter((folder) => folderKind(folder) !== "server")
+      : combined;
+  }, [storedFolders, diskSubfolders, localOnly]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   // Start `false` so folder-mutation buttons are disabled until the first

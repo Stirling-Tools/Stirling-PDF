@@ -1,8 +1,4 @@
-use crate::state::connection_state::{
-    AppConnectionState,
-    ConnectionMode,
-    ServerConfig,
-};
+use crate::state::connection_state::{AppConnectionState, ConnectionMode, ServerConfig};
 use crate::utils::{add_log, app_data_dir, system_provisioning_dir};
 use serde::{Deserialize, Serialize};
 use std::fs;
@@ -15,6 +11,9 @@ const FIRST_LAUNCH_KEY: &str = "setup_completed";
 const CONNECTION_MODE_KEY: &str = "connection_mode";
 const SERVER_CONFIG_KEY: &str = "server_config";
 const LOCK_CONNECTION_KEY: &str = "lock_connection_mode";
+const REQUIRE_SIGN_IN_KEY: &str = "require_sign_in";
+const SAAS_ONLY_KEY: &str = "saas_only";
+const LOCAL_PROCESSING_ONLY_KEY: &str = "local_processing_only";
 const LOGIN_AGREEMENT_KEY: &str = "login_agreement_enabled";
 pub(crate) const UPDATE_MODE_KEY: &str = "update_mode";
 /// When `true` the update mode was written by a provisioning file and cannot
@@ -63,6 +62,9 @@ pub struct ConnectionConfig {
     pub mode: ConnectionMode,
     pub server_config: Option<ServerConfig>,
     pub lock_connection_mode: bool,
+    pub require_sign_in: bool,
+    pub saas_only: bool,
+    pub local_processing_only: bool,
 }
 
 #[tauri::command]
@@ -100,6 +102,18 @@ pub async fn get_connection_config(
         mode,
         server_config,
         lock_connection_mode,
+        require_sign_in: store
+            .get(REQUIRE_SIGN_IN_KEY)
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false),
+        saas_only: store
+            .get(SAAS_ONLY_KEY)
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false),
+        local_processing_only: store
+            .get(LOCAL_PROCESSING_ONLY_KEY)
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false),
     })
 }
 
@@ -116,6 +130,19 @@ pub async fn set_connection_mode(
     let store = app_handle
         .store(STORE_FILE)
         .map_err(|e| format!("Failed to access store: {}", e))?;
+
+    validate_managed_connection(
+        store
+            .get(REQUIRE_SIGN_IN_KEY)
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false),
+        store
+            .get(SAAS_ONLY_KEY)
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false),
+        &mode,
+        server_config.as_ref(),
+    )?;
 
     // If the store is already locked, protect connection_mode, server_config, and the lock
     // flag from being overwritten by any JS-side call.
@@ -183,6 +210,9 @@ pub async fn set_connection_mode(
 struct ProvisioningConfig {
     server_url: Option<String>,
     lock_connection_mode: Option<bool>,
+    require_sign_in: Option<bool>,
+    saas_only: Option<bool>,
+    local_processing_only: Option<bool>,
     login_agreement_enabled: Option<bool>,
     /// Optional headless-install update policy (`"prompt"`, `"auto"`, `"disabled"`).
     /// When omitted the existing stored mode is left unchanged.
@@ -191,11 +221,12 @@ struct ProvisioningConfig {
 
 fn provisioning_file_paths() -> Vec<PathBuf> {
     let mut paths = Vec::new();
-    paths.push(app_data_dir().join(PROVISIONING_FILE_NAME));
 
+    // Machine policy must take precedence over user-writable provisioning.
     if let Some(system_dir) = system_provisioning_dir() {
         paths.push(system_dir.join(PROVISIONING_FILE_NAME));
     }
+    paths.push(app_data_dir().join(PROVISIONING_FILE_NAME));
 
     paths
 }
@@ -219,9 +250,7 @@ pub(crate) fn provisioning_path_is_admin_owned(
 
 pub fn apply_provisioning_if_present(app_handle: &AppHandle) -> Result<(), String> {
     let provisioning_paths = provisioning_file_paths();
-    let provisioning_path = provisioning_paths
-        .into_iter()
-        .find(|path| path.exists());
+    let provisioning_path = provisioning_paths.into_iter().find(|path| path.exists());
 
     let provisioning_path = match provisioning_path {
         Some(path) => path,
@@ -238,12 +267,33 @@ pub fn apply_provisioning_if_present(app_handle: &AppHandle) -> Result<(), Strin
     let parsed: ProvisioningConfig = serde_json::from_str(&raw)
         .map_err(|e| format!("Failed to parse provisioning file: {}", e))?;
 
+    let store = app_handle
+        .store(STORE_FILE)
+        .map_err(|e| format!("Failed to access store: {}", e))?;
+    let saas_only = parsed.saas_only.unwrap_or_else(|| {
+        store
+            .get(SAAS_ONLY_KEY)
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false)
+    });
+    if saas_only
+        && parsed
+            .server_url
+            .as_ref()
+            .is_some_and(|url| !url.trim().is_empty())
+    {
+        return Err("saasOnly cannot be combined with a self-hosted serverUrl".to_string());
+    }
+
     // Login agreement can be provisioned independently of a server URL so it also applies to
     // local, no-login desktop installs. Persist it before the server-URL handling below, which
     // may early-return when no URL is present.
     if let Some(login_agreement_enabled) = parsed.login_agreement_enabled {
         if let Ok(store) = app_handle.store(STORE_FILE) {
-            store.set(LOGIN_AGREEMENT_KEY, serde_json::json!(login_agreement_enabled));
+            store.set(
+                LOGIN_AGREEMENT_KEY,
+                serde_json::json!(login_agreement_enabled),
+            );
             let _ = store.save();
         }
         add_log(format!(
@@ -263,6 +313,9 @@ pub fn apply_provisioning_if_present(app_handle: &AppHandle) -> Result<(), Strin
     if server_url.is_none()
         && parsed.update_mode.is_none()
         && parsed.login_agreement_enabled.is_none()
+        && parsed.require_sign_in.is_none()
+        && parsed.saas_only.is_none()
+        && parsed.local_processing_only.is_none()
     {
         add_log(
             "⚠️ Provisioning file has no actionable fields (serverUrl/updateMode/loginAgreement); skipping apply"
@@ -273,9 +326,25 @@ pub fn apply_provisioning_if_present(app_handle: &AppHandle) -> Result<(), Strin
 
     let lock_flag = parsed.lock_connection_mode.unwrap_or(false);
 
-    let store = app_handle
-        .store(STORE_FILE)
-        .map_err(|e| format!("Failed to access store: {}", e))?;
+    if let Some(required) = parsed.require_sign_in {
+        store.set(REQUIRE_SIGN_IN_KEY, serde_json::json!(required));
+    }
+    if let Some(only) = parsed.saas_only {
+        store.set(SAAS_ONLY_KEY, serde_json::json!(only));
+    }
+    if let Some(only) = parsed.local_processing_only {
+        store.set(LOCAL_PROCESSING_ONLY_KEY, serde_json::json!(only));
+    }
+    if saas_only {
+        let previous_mode = store
+            .get(CONNECTION_MODE_KEY)
+            .and_then(|value| serde_json::from_value::<ConnectionMode>(value).ok());
+        if previous_mode != Some(ConnectionMode::SaaS) {
+            store.delete(SERVER_CONFIG_KEY);
+        }
+        store.set(CONNECTION_MODE_KEY, serde_json::json!(ConnectionMode::SaaS));
+        store.set(LOCK_CONNECTION_KEY, serde_json::json!(false));
+    }
 
     // Apply server URL / connection settings only when a URL was supplied — a
     // provisioning file containing just `updateMode` should be allowed to configure
@@ -290,8 +359,7 @@ pub fn apply_provisioning_if_present(app_handle: &AppHandle) -> Result<(), Strin
         let cfg = ServerConfig { url };
         store.set(
             SERVER_CONFIG_KEY,
-            serde_json::to_value(&cfg)
-                .map_err(|e| format!("Failed to serialize config: {}", e))?,
+            serde_json::to_value(&cfg).map_err(|e| format!("Failed to serialize config: {}", e))?,
         );
 
         store.set(
@@ -319,10 +387,7 @@ pub fn apply_provisioning_if_present(app_handle: &AppHandle) -> Result<(), Strin
         // selector permanently (the file is deleted after apply, but the
         // lock flag persists in the store).
         let system_dir = system_provisioning_dir();
-        let locked = provisioning_path_is_admin_owned(
-            &provisioning_path,
-            system_dir.as_deref(),
-        );
+        let locked = provisioning_path_is_admin_owned(&provisioning_path, system_dir.as_deref());
         store.set(UPDATE_MODE_LOCKED_KEY, serde_json::json!(locked));
         add_log(format!(
             "🧩 Provisioning set update mode to {:?} (locked={})",
@@ -334,12 +399,18 @@ pub fn apply_provisioning_if_present(app_handle: &AppHandle) -> Result<(), Strin
         .save()
         .map_err(|e| format!("Failed to save store: {}", e))?;
 
-    if let (Some(cfg), Ok(mut conn_state)) =
-        (server_config.as_ref(), app_handle.state::<AppConnectionState>().0.lock())
-    {
-        conn_state.mode = ConnectionMode::SelfHosted;
-        conn_state.server_config = Some(cfg.clone());
-        conn_state.lock_connection_mode = lock_flag;
+    if let Ok(mut conn_state) = app_handle.state::<AppConnectionState>().0.lock() {
+        if saas_only {
+            conn_state.mode = ConnectionMode::SaaS;
+            conn_state.server_config = store
+                .get(SERVER_CONFIG_KEY)
+                .and_then(|value| serde_json::from_value(value).ok());
+            conn_state.lock_connection_mode = false;
+        } else if let Some(cfg) = server_config {
+            conn_state.mode = ConnectionMode::SelfHosted;
+            conn_state.server_config = Some(cfg);
+            conn_state.lock_connection_mode = lock_flag;
+        }
     }
 
     let user_app_data = app_data_dir();
@@ -355,6 +426,25 @@ pub fn apply_provisioning_if_present(app_handle: &AppHandle) -> Result<(), Strin
         add_log("ℹ️ Provisioning applied from system location; leaving file in place".to_string());
     }
 
+    Ok(())
+}
+
+fn validate_managed_connection(
+    require_sign_in: bool,
+    saas_only: bool,
+    mode: &ConnectionMode,
+    server_config: Option<&ServerConfig>,
+) -> Result<(), String> {
+    if saas_only && *mode == ConnectionMode::SelfHosted {
+        return Err("Your administrator requires Stirling Cloud sign-in".to_string());
+    }
+    // Legacy renderers represent local mode as SaaS without a server.
+    if require_sign_in
+        && (*mode == ConnectionMode::Local
+            || (*mode == ConnectionMode::SaaS && server_config.is_none()))
+    {
+        return Err("Your administrator requires sign-in before using this app".to_string());
+    }
     Ok(())
 }
 
@@ -423,10 +513,7 @@ pub async fn get_update_mode(app_handle: AppHandle) -> Result<UpdateModeInfo, St
 /// Refuses to overwrite a provisioned (locked) value so an MDM-managed
 /// deployment can't be subverted by a user clicking in Settings.
 #[tauri::command]
-pub async fn set_update_mode(
-    app_handle: AppHandle,
-    mode: UpdateMode,
-) -> Result<(), String> {
+pub async fn set_update_mode(app_handle: AppHandle, mode: UpdateMode) -> Result<(), String> {
     let store = app_handle
         .store(STORE_FILE)
         .map_err(|e| format!("Failed to access store: {}", e))?;
@@ -479,6 +566,67 @@ mod tests {
     use super::*;
     use std::path::PathBuf;
 
+    #[test]
+    fn managed_sign_in_rejects_both_local_representations() {
+        assert!(validate_managed_connection(true, false, &ConnectionMode::Local, None).is_err());
+        assert!(validate_managed_connection(true, false, &ConnectionMode::SaaS, None).is_err());
+        let server = ServerConfig {
+            url: "https://example.org".into(),
+        };
+        assert!(
+            validate_managed_connection(true, false, &ConnectionMode::SaaS, Some(&server)).is_ok()
+        );
+        assert!(validate_managed_connection(
+            true,
+            false,
+            &ConnectionMode::SelfHosted,
+            Some(&server)
+        )
+        .is_ok());
+    }
+
+    #[test]
+    fn saas_only_rejects_self_hosted_but_allows_optional_guest_access() {
+        let server = ServerConfig {
+            url: "https://example.org".into(),
+        };
+        assert!(validate_managed_connection(
+            false,
+            true,
+            &ConnectionMode::SelfHosted,
+            Some(&server)
+        )
+        .is_err());
+        assert!(validate_managed_connection(false, true, &ConnectionMode::Local, None).is_ok());
+        assert!(
+            validate_managed_connection(true, true, &ConnectionMode::SaaS, Some(&server)).is_ok()
+        );
+    }
+
+    #[test]
+    fn provisioning_accepts_sign_in_policy_without_a_server() {
+        let config: ProvisioningConfig =
+            serde_json::from_str(r#"{"requireSignIn":true,"saasOnly":true}"#).unwrap();
+        assert_eq!(config.require_sign_in, Some(true));
+        assert_eq!(config.saas_only, Some(true));
+        assert!(config.server_url.is_none());
+        let legacy: ProvisioningConfig = serde_json::from_str(
+            r#"{"serverUrl":"https://example.org","lockConnectionMode":true}"#,
+        )
+        .unwrap();
+        assert_eq!(legacy.lock_connection_mode, Some(true));
+        assert!(legacy.require_sign_in.is_none());
+        assert!(legacy.local_processing_only.is_none());
+        let privacy: ProvisioningConfig =
+            serde_json::from_str(r#"{"localProcessingOnly":true}"#).unwrap();
+        assert_eq!(privacy.local_processing_only, Some(true));
+        assert!(privacy.require_sign_in.is_none());
+        assert!(
+            serde_json::from_str::<ProvisioningConfig>(r#"{"localProcessingOnly":"true"}"#)
+                .is_err()
+        );
+    }
+
     // Windows-path tests are cfg-gated because `Path::starts_with` is
     // component-wise: on Linux, `"C:\\foo\\bar"` is a SINGLE path component
     // (since backslash is a literal character there, not a separator) so
@@ -507,9 +655,8 @@ mod tests {
         // A provisioning file in ProgramData\Stirling-PDF (or /Library, /etc)
         // requires admin/root rights to write — those locations are how MSI
         // and Intune deliver policy — so locking the UI here is correct.
-        let system_path = PathBuf::from(
-            "C:\\ProgramData\\Stirling-PDF\\stirling-provisioning.json",
-        );
+        let system_path =
+            PathBuf::from("C:\\ProgramData\\Stirling-PDF\\stirling-provisioning.json");
         let system_dir = PathBuf::from("C:\\ProgramData\\Stirling-PDF");
 
         assert!(provisioning_path_is_admin_owned(
@@ -541,11 +688,9 @@ mod tests {
 
     #[test]
     fn macos_library_provisioning_does_lock_ui() {
-        let system_path = PathBuf::from(
-            "/Library/Application Support/Stirling-PDF/stirling-provisioning.json",
-        );
-        let system_dir =
-            PathBuf::from("/Library/Application Support/Stirling-PDF");
+        let system_path =
+            PathBuf::from("/Library/Application Support/Stirling-PDF/stirling-provisioning.json");
+        let system_dir = PathBuf::from("/Library/Application Support/Stirling-PDF");
         assert!(provisioning_path_is_admin_owned(
             &system_path,
             Some(&system_dir),
@@ -557,8 +702,7 @@ mod tests {
         let user_path = PathBuf::from(
             "/Users/alice/Library/Application Support/Stirling-PDF/stirling-provisioning.json",
         );
-        let system_dir =
-            PathBuf::from("/Library/Application Support/Stirling-PDF");
+        let system_dir = PathBuf::from("/Library/Application Support/Stirling-PDF");
         assert!(!provisioning_path_is_admin_owned(
             &user_path,
             Some(&system_dir),
@@ -571,7 +715,8 @@ mod tests {
         // refuse to lock — the user-AppData file is the only thing we'd be
         // matching against, and that's the case we explicitly want to leave
         // unlocked.
-        let user_path = PathBuf::from("/home/alice/.config/Stirling-PDF/stirling-provisioning.json");
+        let user_path =
+            PathBuf::from("/home/alice/.config/Stirling-PDF/stirling-provisioning.json");
         assert!(!provisioning_path_is_admin_owned(&user_path, None));
     }
 }
