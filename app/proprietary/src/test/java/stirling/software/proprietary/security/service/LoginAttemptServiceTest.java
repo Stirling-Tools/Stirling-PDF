@@ -8,11 +8,12 @@ import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+
+import com.github.benmanes.caffeine.cache.Caffeine;
 
 import stirling.software.proprietary.security.model.AttemptCounter;
 
@@ -22,7 +23,7 @@ import stirling.software.proprietary.security.model.AttemptCounter;
  * signature. Private fields are set via reflection to keep existing production code unchanged.
  *
  * <p>Assumptions: - 'MAX_ATTEMPT' is a private int (possibly static final); we read it via
- * reflection (static-aware). - 'attemptsCache' is a ConcurrentHashMap<String, AttemptCounter>. -
+ * reflection (static-aware). - 'attemptsCache' is a Caffeine Cache<String, AttemptCounter>. -
  * 'isBlockedEnabled' is a boolean flag. - Behavior without clamping is intentional for now (can
  * return negative values).
  */
@@ -132,7 +133,7 @@ class LoginAttemptServiceTest {
         // Ensure blocking disabled
         setPrivateBoolean(svc, "isBlockedEnabled", false);
 
-        var attemptsCache = new ConcurrentHashMap<String, AttemptCounter>();
+        var attemptsCache = Caffeine.newBuilder().build();
         setPrivate(svc, "attemptsCache", attemptsCache);
 
         var method = svc.getClass().getMethod("getRemainingAttempts", String.class);
@@ -165,7 +166,7 @@ class LoginAttemptServiceTest {
     void getRemainingAttempts_shouldReturnMaxAttemptWhenNoEntry() throws Exception {
         Object svc = constructLoginAttemptService();
         setPrivateBoolean(svc, "isBlockedEnabled", true);
-        var attemptsCache = new ConcurrentHashMap<String, AttemptCounter>();
+        var attemptsCache = Caffeine.newBuilder().build();
         setPrivate(svc, "attemptsCache", attemptsCache);
 
         int maxAttempt = getPrivateInt(svc, "MAX_ATTEMPT"); // Reads current policy value
@@ -190,7 +191,7 @@ class LoginAttemptServiceTest {
         setPrivateBoolean(svc, "isBlockedEnabled", true);
 
         int maxAttempt = getPrivateInt(svc, "MAX_ATTEMPT");
-        var attemptsCache = new ConcurrentHashMap<String, AttemptCounter>();
+        var attemptsCache = Caffeine.newBuilder().build();
         setPrivate(svc, "attemptsCache", attemptsCache);
 
         // Prepare a counter with attemptCount = 1
@@ -218,7 +219,7 @@ class LoginAttemptServiceTest {
         setPrivateBoolean(svc, "isBlockedEnabled", true);
 
         int maxAttempt = getPrivateInt(svc, "MAX_ATTEMPT");
-        var attemptsCache = new ConcurrentHashMap<String, AttemptCounter>();
+        var attemptsCache = Caffeine.newBuilder().build();
         setPrivate(svc, "attemptsCache", attemptsCache);
 
         // Create counter with attemptCount = MAX_ATTEMPT + 5
@@ -244,7 +245,7 @@ class LoginAttemptServiceTest {
         Object svc = constructLoginAttemptService();
         setPrivateBoolean(svc, "isBlockedEnabled", true);
 
-        var attemptsCache = new ConcurrentHashMap<String, AttemptCounter>();
+        var attemptsCache = Caffeine.newBuilder().build();
         AttemptCounter counter = new AttemptCounter();
         Field ac = AttemptCounter.class.getDeclaredField("attemptCount");
         ac.setAccessible(true);
@@ -256,7 +257,7 @@ class LoginAttemptServiceTest {
         method.invoke(svc, "BlockedUser"); // case-insensitive
 
         assertFalse(
-                attemptsCache.containsKey("blockeduser"),
+                attemptsCache.asMap().containsKey("blockeduser"),
                 "resetAttempts should remove the user's entry from the cache");
     }
 
@@ -266,7 +267,7 @@ class LoginAttemptServiceTest {
         Object svc = constructLoginAttemptService();
         setPrivateBoolean(svc, "isBlockedEnabled", true);
 
-        var attemptsCache = new ConcurrentHashMap<String, AttemptCounter>();
+        var attemptsCache = Caffeine.newBuilder().build();
         attemptsCache.put("existing", new AttemptCounter());
         setPrivate(svc, "attemptsCache", attemptsCache);
 
@@ -274,7 +275,8 @@ class LoginAttemptServiceTest {
         method.invoke(svc, (Object) null);
         method.invoke(svc, "   ");
 
-        assertEquals(1, attemptsCache.size(), "Null or blank key should not modify the cache");
+        assertEquals(
+                1, attemptsCache.asMap().size(), "Null or blank key should not modify the cache");
     }
 
     @Test
@@ -306,7 +308,7 @@ class LoginAttemptServiceTest {
     void getAllBlockedUsers_shouldReturnEmptyWhenDisabled() throws Exception {
         Object svc = constructLoginAttemptService();
         setPrivateBoolean(svc, "isBlockedEnabled", false);
-        setPrivate(svc, "attemptsCache", new ConcurrentHashMap<String, AttemptCounter>());
+        setPrivate(svc, "attemptsCache", Caffeine.newBuilder().build());
 
         var method = svc.getClass().getMethod("getAllBlockedUsers");
         @SuppressWarnings("unchecked")
@@ -324,7 +326,7 @@ class LoginAttemptServiceTest {
         setPrivateBoolean(svc, "isBlockedEnabled", true);
         setPrivate(svc, "MAX_ATTEMPT", 3);
 
-        var attemptsCache = new ConcurrentHashMap<String, AttemptCounter>();
+        var attemptsCache = Caffeine.newBuilder().build();
         Field ac = AttemptCounter.class.getDeclaredField("attemptCount");
         ac.setAccessible(true);
 
@@ -362,7 +364,7 @@ class LoginAttemptServiceTest {
         setPrivateBoolean(svc, "isBlockedEnabled", true);
         setPrivate(svc, "MAX_ATTEMPT", 3);
 
-        var attemptsCache = new ConcurrentHashMap<String, AttemptCounter>();
+        var attemptsCache = Caffeine.newBuilder().build();
         Field ac = AttemptCounter.class.getDeclaredField("attemptCount");
         ac.setAccessible(true);
 

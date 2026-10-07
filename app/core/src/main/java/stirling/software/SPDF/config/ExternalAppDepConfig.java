@@ -298,20 +298,50 @@ public class ExternalAppDepConfig {
 
     private ProbeResult runAndWait(List<String> cmd, Duration timeout) {
         ProcessBuilder pb = new ProcessBuilder(cmd);
+        Process p = null;
+        // Drain both pipes before waiting. A probe that prints more than the pipe buffer while we
+        // sit in waitFor() blocks in write() forever, and the timeout then reports a working tool
+        // as unavailable, which silently disables its endpoints at boot.
+        Future<String> out = null;
+        Future<String> err = null;
+        ExecutorService drain = Executors.newVirtualThreadPerTaskExecutor();
         try {
-            Process p = pb.start();
+            p = pb.start();
+            InputStream stdout = p.getInputStream();
+            InputStream stderr = p.getErrorStream();
+            out = drain.submit(() -> readStream(stdout));
+            err = drain.submit(() -> readStream(stderr));
+
             boolean finished = p.waitFor(timeout.toMillis(), TimeUnit.MILLISECONDS);
             if (!finished) {
                 p.destroyForcibly();
                 return new ProbeResult(124, "", "timeout");
             }
-            String out = readStream(p.getInputStream());
-            String err = readStream(p.getErrorStream());
-            int ec = p.exitValue();
-            return new ProbeResult(ec, out, err);
+            return new ProbeResult(p.exitValue(), out.get(), err.get());
         } catch (IOException | InterruptedException e) {
             if (e instanceof InterruptedException) Thread.currentThread().interrupt();
             return new ProbeResult(127, "", String.valueOf(e.getMessage()));
+        } catch (ExecutionException e) {
+            return new ProbeResult(127, "", String.valueOf(e.getMessage()));
+        } finally {
+            drain.shutdownNow();
+            if (p != null) {
+                closeQuietly(p);
+            }
+        }
+    }
+
+    /** Releases the pipe file descriptors; a killed probe would otherwise hold them until GC. */
+    private static void closeQuietly(Process p) {
+        try {
+            p.getInputStream().close();
+        } catch (IOException ignored) {
+            // Nothing useful to do with a failure to close a dead process's pipe.
+        }
+        try {
+            p.getErrorStream().close();
+        } catch (IOException ignored) {
+            // As above.
         }
     }
 
