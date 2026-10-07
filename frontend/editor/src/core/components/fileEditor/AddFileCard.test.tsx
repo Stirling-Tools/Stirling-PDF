@@ -53,6 +53,12 @@ function renderCard(onFilesSelected = vi.fn()) {
   return onFilesSelected;
 }
 
+async function openMoreOptions() {
+  await userEvent.click(
+    screen.getByRole("button", { name: "More upload options" }),
+  );
+}
+
 describe("AddFileCard", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -61,45 +67,57 @@ describe("AddFileCard", () => {
     mocks.canCreateFolders = true;
   });
 
-  test("clicking the page opens the file library", async () => {
+  test("Add Files opens the file library", async () => {
     renderCard();
-    await userEvent.click(screen.getByTestId("add-file-card"));
+    await userEvent.click(screen.getByRole("button", { name: "Add Files" }));
     expect(mocks.openFilesModal).toHaveBeenCalledTimes(1);
     expect(mocks.openFilesFromDisk).not.toHaveBeenCalled();
   });
 
-  test("the computer source hands picked files to the workbench", async () => {
+  test("the computer upload hands picked files to the workbench", async () => {
     const picked = [new File(["%PDF"], "a.pdf")];
     mocks.openFilesFromDisk.mockResolvedValue(picked);
     const onFilesSelected = renderCard();
 
+    await openMoreOptions();
     await userEvent.click(
-      screen.getByRole("button", { name: "From computer" }),
+      await screen.findByRole("menuitem", { name: "Upload from computer" }),
     );
 
     await waitFor(() => expect(onFilesSelected).toHaveBeenCalledWith(picked));
     expect(mocks.openFilesModal).not.toHaveBeenCalled();
   });
 
-  test("the library source opens the file library once", async () => {
+  test("the menu trigger carries the menu's state", async () => {
     renderCard();
-    await userEvent.click(screen.getByRole("button", { name: "From library" }));
-    expect(mocks.openFilesModal).toHaveBeenCalledTimes(1);
+    await openMoreOptions();
+    expect(
+      screen
+        .getByRole("button", { name: "More upload options" })
+        .getAttribute("aria-expanded"),
+    ).toBe("true");
   });
 
-  test("the mobile source opens the mobile upload modal", async () => {
+  test("the mobile upload opens the mobile upload modal", async () => {
     renderCard();
-    await userEvent.click(screen.getByRole("button", { name: "From mobile" }));
+    await openMoreOptions();
+    await userEvent.click(
+      await screen.findByRole("menuitem", { name: "Upload from Mobile" }),
+    );
     expect(screen.getByText("mobile upload modal")).toBeTruthy();
   });
 
-  test("hides the mobile source when the scanner is off", () => {
+  test("leaves mobile upload out of the menu when the scanner is off", async () => {
     mocks.config = { enableMobileScanner: false };
     renderCard();
-    expect(screen.queryByRole("button", { name: "From mobile" })).toBeNull();
+    await openMoreOptions();
+    await screen.findByRole("menuitem", { name: "Upload from computer" });
+    expect(
+      screen.queryByRole("menuitem", { name: "Upload from Mobile" }),
+    ).toBeNull();
   });
 
-  test("hides the folder source in builds without processing", () => {
+  test("hides Process a folder in builds without processing", () => {
     mocks.canCreateFolders = false;
     renderCard();
     expect(
@@ -107,12 +125,20 @@ describe("AddFileCard", () => {
     ).toBeNull();
   });
 
-  test("disables the folder source when signed out", () => {
+  test("disables Process a folder when signed out", () => {
     mocks.signedIn = false;
     renderCard();
     const folder = screen.getByRole("button", {
       name: "processingFolders.setup.title",
     }) as HTMLButtonElement;
     expect(folder.disabled).toBe(true);
+  });
+
+  test("Process a folder opens the folder setup", async () => {
+    renderCard();
+    await userEvent.click(
+      screen.getByRole("button", { name: "processingFolders.setup.title" }),
+    );
+    expect(mocks.openFolderCreation).toHaveBeenCalledTimes(1);
   });
 });

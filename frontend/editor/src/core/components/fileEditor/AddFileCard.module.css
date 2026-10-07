@@ -1,7 +1,3 @@
-/* The add card is a stack of pages in the thumbnail grid. The front sheet is a
-   letterhead: logo, a centred prompt, and a plus in the corner. On hover or
-   focus the back sheets fan out and the prompt gives way to the sources. */
-
 /* Same footprint as FileEditorThumbnail: a 260px card whose page starts 36px
    down (10px padding + the 26px toolchain bar), so the two line up. */
 .cell {
@@ -17,159 +13,71 @@
 
 /* Fixed rather than an aspect-ratio: each thumbnail derives its own aspect from
    its PDF, so there is no single page shape to copy. */
-.stack {
+.card {
   position: relative;
   width: 240px;
   max-width: 100%;
   height: 284px;
-}
-
-.sheet {
-  position: absolute;
-  inset: 0;
-  border-radius: 12px;
-  border: 1px solid var(--c-border);
-  box-shadow: var(--shadow-md);
-  background: var(--c-surface);
-  overflow: hidden;
-  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.3, 1.2);
-}
-
-/* Halfway to sunken: dark enough to read as depth, light enough to stay paper. */
-.backSheet {
-  background: color-mix(in srgb, var(--c-surface) 55%, var(--c-surface-sunken));
-}
-
-.backLeft {
-  transform: rotate(-5deg) translateX(-8px);
-}
-
-.backRight {
-  transform: rotate(3deg) translateX(6px);
-}
-
-.frontSheet {
-  cursor: pointer;
-}
-
-.stack:hover .backLeft,
-.stack:focus-within .backLeft,
-:global([data-accept]) .backLeft {
-  transform: rotate(-9deg) translateX(-18px);
-}
-
-.stack:hover .backRight,
-.stack:focus-within .backRight,
-:global([data-accept]) .backRight {
-  transform: rotate(6deg) translateX(16px);
-}
-
-.stack:hover .frontSheet,
-.stack:focus-within .frontSheet,
-:global([data-accept]) .frontSheet {
-  transform: translateY(-4px);
-}
-
-.logo {
-  position: absolute;
-  top: 22px;
-  left: 22px;
-  pointer-events: none;
-}
-
-/* Signposts only: a click anywhere on the sheet opens the library, and the
-   sources take over on hover, so neither is a control. */
-.prompt {
-  position: absolute;
-  top: 50%;
-  left: 16px;
-  right: 16px;
-  translate: 0 -50%;
+  /* The extra bottom padding lifts the group a touch: centred exactly, the
+     solid buttons make it read as sitting low. */
+  padding: 0 20px 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  text-align: center;
-  pointer-events: none;
+  justify-content: center;
+  gap: 24px;
+  border-radius: 12px;
+  border: 1px solid var(--c-border-subtle);
+  background: var(--c-surface);
+  box-shadow: var(--shadow-md);
   transition:
-    opacity 0.15s ease,
-    transform 0.2s ease;
+    border-color 0.15s ease,
+    background 0.15s ease;
+  /* Secondary buttons fill with this; matching the card makes them read as
+     outlines in both themes, where light mode's raised white would not. */
+  --c-btn-secondary: var(--c-surface);
 }
 
-.plus {
+/* The surrounding Dropzone sets data-accept while files are dragged over it. */
+:global([data-accept]) .card {
+  border-color: var(--c-primary);
+  background: var(--c-primary-subtle);
+}
+
+.more {
   position: absolute;
-  right: 16px;
-  bottom: 16px;
+  top: 8px;
+  right: 8px;
+}
+
+.controls {
   display: flex;
-  padding: 9px;
-  border-radius: 50%;
-  background: var(--c-surface-raised);
-  border: 1px solid var(--c-border);
-  color: var(--c-text-muted);
-  pointer-events: none;
-  transition: opacity 0.15s ease;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
 }
 
-/* Centred in the space under the logo (it ends ~56px down), so the group
-   keeps clear of it whether three or four sources show. Hidden by opacity
-   alone so the buttons stay tabbable, which is what reveals them by keyboard. */
-.sources {
-  position: absolute;
-  top: calc(50% + 10px);
-  left: 20px;
-  right: 20px;
-  translate: 0 -50%;
+.actions {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(6px);
-  transition:
-    opacity 0.15s ease,
-    transform 0.2s ease;
+  width: 100%;
 }
 
-.stack:hover .prompt,
-.stack:focus-within .prompt {
-  opacity: 0;
-  transform: scale(0.95);
-}
-
-.stack:hover .plus,
-.stack:focus-within .plus {
-  opacity: 0;
-}
-
-.stack:hover .sources,
-.stack:focus-within .sources {
-  opacity: 1;
-  pointer-events: auto;
-  transform: none;
-}
-
-/* A drag has one target, the whole workbench, so the sources stay hidden. */
-:global([data-accept]) .sources {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--c-text);
+.buttonWrap {
+  display: flex;
+  flex-direction: column;
 }
 
 .hint {
-  margin-top: 2px;
   font-size: 12px;
-  color: var(--c-text-muted);
+  color: var(--c-text-subtle);
+  text-align: center;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .sheet,
-  .prompt,
-  .plus,
-  .sources {
+  .card {
     transition: none;
   }
 }

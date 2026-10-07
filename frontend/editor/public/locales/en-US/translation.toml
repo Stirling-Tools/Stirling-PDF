@@ -4614,10 +4614,9 @@ unpinnedFile = "Unpinned {{name}}"
 unzipping = "Unzipping {{name}}"
 
 [fileEditor.addCard]
-fromComputer = "From computer"
-fromLibrary = "From library"
-fromMobile = "From mobile"
-hint = "Click or drop to add more"
+dropHint = "or drop files anywhere"
+fromComputer = "Upload from computer"
+moreOptions = "More upload options"
 
 [fileEditor.unzip]
 error = "Error unzipping {{name}}"
