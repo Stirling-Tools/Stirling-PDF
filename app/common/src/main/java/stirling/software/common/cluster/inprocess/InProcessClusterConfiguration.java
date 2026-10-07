@@ -20,7 +20,7 @@ import stirling.software.common.model.ApplicationProperties;
  * cluster mode is off or {@code cluster.backplane=inprocess}.
  */
 @Slf4j
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnExpression(
         "!${cluster.enabled:false} ||"
                 + " '${cluster.backplane:inprocess}'.equalsIgnoreCase('inprocess')")

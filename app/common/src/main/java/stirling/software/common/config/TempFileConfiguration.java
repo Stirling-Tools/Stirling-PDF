@@ -19,7 +19,7 @@ import stirling.software.common.util.TempFileRegistry;
  * configures system properties.
  */
 @Slf4j
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @RequiredArgsConstructor
 public class TempFileConfiguration {
 
