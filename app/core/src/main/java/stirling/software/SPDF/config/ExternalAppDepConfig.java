@@ -333,15 +333,18 @@ public class ExternalAppDepConfig {
 
     /** Releases the pipe file descriptors; a killed probe would otherwise hold them until GC. */
     private static void closeQuietly(Process p) {
-        try {
-            p.getInputStream().close();
-        } catch (IOException ignored) {
-            // Nothing useful to do with a failure to close a dead process's pipe.
+        closeQuietly(p.getInputStream());
+        closeQuietly(p.getErrorStream());
+    }
+
+    private static void closeQuietly(InputStream in) {
+        if (in == null) {
+            return;
         }
         try {
-            p.getErrorStream().close();
+            in.close();
         } catch (IOException ignored) {
-            // As above.
+            // Nothing useful to do with a failure to close a dead process's pipe.
         }
     }
 
