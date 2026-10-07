@@ -555,7 +555,6 @@ export function ChatPanel({
           }}
         />
         <ActionIcon
-          shape="circle"
           size="md"
           className="chat-panel-input__send"
           onClick={() => handleSend()}

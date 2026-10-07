@@ -132,6 +132,11 @@
   align-self: flex-end;
 }
 
+/* Concentric with the composer's corner: its 1rem radius less the 0.375rem inset. */
+.chat-panel-input__send.mantine-ActionIcon-root {
+  --ai-radius: 0.625rem;
+}
+
 /* AI disclaimer. Two presentations share one base:
    - --banner: a soft grey card below the header on the welcome screen.
    - --inline: a compact line pinned above the composer once a chat is underway. */
