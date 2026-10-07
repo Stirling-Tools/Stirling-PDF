@@ -22,11 +22,11 @@ import {
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useGoogleDrivePicker } from "@app/hooks/useGoogleDrivePicker";
 import {
-  useNavigationState,
+  useNavigationWorkbench,
   useNavigationActions,
   useNavigationGuard,
 } from "@app/contexts/NavigationContext";
-import { useViewer } from "@app/contexts/ViewerContext";
+import { useViewerActiveFile } from "@app/contexts/ViewerContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import { openFilesFromDisk } from "@app/services/openFilesFromDisk";
 import { useAccountIdentity } from "@app/hooks/useAccountIdentity";
@@ -539,7 +539,7 @@ const FileSidebarRow = React.memo(function FileSidebarRow({
   onSaveToCloud,
   onVersionHistory,
 }: FileSidebarRowProps) {
-  const isInWorkbench = useFileSelector((s) => s.files.ids.includes(stub.id));
+  const isInWorkbench = useFileSelector((s) => Boolean(s.files.byId[stub.id]));
   const workbenchThumbnail = useFileSelector(
     (s) => s.files.byId[stub.id]?.thumbnailUrl,
   );
@@ -620,12 +620,12 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     );
     const { actions: fileActions } = useFileActions();
     const { actions: navActions } = useNavigationActions();
-    const { workbench: currentWorkbench } = useNavigationState();
+    const currentWorkbench = useNavigationWorkbench();
     const policyFileBadges = usePolicyFileBadges();
     // The page editor lays out every open file, so an added file belongs there.
     const staysOnAdd = currentWorkbench === "pageEditor";
     const { requestNavigation } = useNavigationGuard();
-    const { activeFileId, setActiveFileId } = useViewer();
+    const { activeFileId, setActiveFileId } = useViewerActiveFile();
     const { addFiles } = useFileHandler();
     const indexedDB = useIndexedDB();
 

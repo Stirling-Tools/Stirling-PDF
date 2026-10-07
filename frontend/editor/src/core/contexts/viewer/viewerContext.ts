@@ -169,6 +169,25 @@ export interface ViewerContextType {
   cyclePdfRenderMode: () => void;
 }
 
+export interface ViewerActiveFileType {
+  activeFileId: string | null;
+  setActiveFileId: (id: string | null) => void;
+}
+
+export const ViewerActiveFileContext = createContext<ViewerActiveFileType | null>(
+  null,
+);
+
+export const useViewerActiveFile = (): ViewerActiveFileType => {
+  const context = useContext(ViewerActiveFileContext);
+  if (!context) {
+    throw new Error(
+      "useViewerActiveFile must be used within a ViewerProvider",
+    );
+  }
+  return context;
+};
+
 // Shared outside the provider module so Fast Refresh cannot split mounted providers from their consumers.
 export const ViewerContext = createContext<ViewerContextType | null>(null);
 
