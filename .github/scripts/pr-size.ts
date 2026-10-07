@@ -2,17 +2,12 @@
 // the PR changes, and the daily triage runs it on every open PR, then closes one that
 // has been too-large for CLOSE_AFTER_WARNING_DAYS. An oversized PR fails the check, is
 // labelled too-large and gets one comment saying why, kept up to date as the PR changes;
-// the label's age is the warning's. Members, collaborators, bots, the logins in
-// .github/config/pr-size-allowlist.json and PRs labelled large-pr-approved are exempt.
-// This file owns too-large and no other label.
-
-import { readFile } from "node:fs/promises";
+// the label's age is the warning's. Members, collaborators, bots and PRs labelled
+// large-pr-approved are exempt. This file owns too-large and no other label.
 
 import { CLOSE_AFTER_WARNING_DAYS, type Core, type GitHubClient, type IssueRef, LABELS, type Repo, removeLabel } from "./github.ts";
 
 export const MAX_LINES = 1000;
-
-const ALLOWLIST = new URL("../config/pr-size-allowlist.json", import.meta.url);
 
 const TEAM_ASSOCIATIONS = ["OWNER", "MEMBER", "COLLABORATOR"];
 
@@ -60,15 +55,9 @@ export function authorExemption(pr: SizedPullRequest): string | null {
   return pr.user.type === "Bot" ? `${pr.user.login} is a bot` : null;
 }
 
-/** Why a maintainer has lifted the limit for this PR, or null. `allowlist` is lowercase logins. */
-export function approval(pr: SizedPullRequest, allowlist: string[]): string | null {
-  if (allowlist.includes(pr.user.login.toLowerCase())) return `${pr.user.login} is on the size allowlist`;
+/** Why a maintainer has lifted the limit for this PR, or null. */
+export function approval(pr: SizedPullRequest): string | null {
   return pr.labels.some((label) => label.name === LABELS.largePrApproved) ? `it is labelled \`${LABELS.largePrApproved}\`` : null;
-}
-
-export async function readAllowlist() {
-  const logins: string[] = JSON.parse(await readFile(ALLOWLIST, "utf8"));
-  return logins.map((login) => login.toLowerCase());
 }
 
 export function oversizedComment(login: string, lines: number) {
@@ -128,7 +117,7 @@ async function lift(github: GitHubClient, issue: IssueRef, reason: string) {
  * Checks one open PR against the limit, and when `live`, warns or lifts the warning to
  * match: comments, and adds or removes too-large. Changes nothing unless `live`.
  */
-export async function enforceSizeLimit(github: GitHubClient, repo: Repo, pr: SizedPullRequest, allowlist: string[], live: boolean): Promise<SizeVerdict> {
+export async function enforceSizeLimit(github: GitHubClient, repo: Repo, pr: SizedPullRequest, live: boolean): Promise<SizeVerdict> {
   const issue = { ...repo, issue_number: pr.number };
   const labelled = pr.labels.some((label) => label.name === LABELS.tooLarge);
   const exempt = authorExemption(pr);
@@ -138,7 +127,7 @@ export async function enforceSizeLimit(github: GitHubClient, repo: Repo, pr: Siz
   }
 
   const lines = await countLines(github, repo, pr);
-  const reason = approval(pr, allowlist) ?? (lines <= MAX_LINES ? `it now changes ${lines} lines` : null);
+  const reason = approval(pr) ?? (lines <= MAX_LINES ? `it now changes ${lines} lines` : null);
   if (reason === null) {
     if (live) await warn(github, issue, pr, lines, labelled);
     return {
@@ -156,13 +145,11 @@ export async function checkPullRequestSize({
   github,
   context,
   core,
-  allowlist,
   live,
 }: {
   github: GitHubClient;
   context: { repo: Repo; payload: { pull_request: SizedPullRequest } };
   core: Pick<Core, "info" | "setFailed">;
-  allowlist: string[];
   live: boolean;
 }) {
   const pr = context.payload.pull_request;
@@ -170,7 +157,7 @@ export async function checkPullRequestSize({
     core.info("The PR is closed.");
     return;
   }
-  const verdict = await enforceSizeLimit(github, context.repo, pr, allowlist, live);
+  const verdict = await enforceSizeLimit(github, context.repo, pr, live);
   if (verdict.held) core.setFailed(verdict.summary);
   else core.info(verdict.summary);
 }

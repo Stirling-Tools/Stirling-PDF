@@ -11,7 +11,7 @@ import {
   type Repo,
   removeLabel,
 } from "./github.ts";
-import { enforceSizeLimit, MAX_LINES, readAllowlist, type SizedPullRequest } from "./pr-size.ts";
+import { enforceSizeLimit, MAX_LINES, type SizedPullRequest } from "./pr-size.ts";
 import { clearStaleTurnLabel } from "./pr-turn.ts";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -586,7 +586,6 @@ export default async function triageStalePullRequests({
   const now = Date.now();
   const { repo } = context;
   const results: Result[] = [];
-  const allowlist = await readAllowlist();
   let failures = 0;
 
   for (const number of await fetchOpenPullNumbers(github, repo)) {
@@ -599,7 +598,7 @@ export default async function triageStalePullRequests({
         core.info(`#${number}: -${LABELS.waitingOnAuthor} (the turn had already moved on)`);
         pr = withLabel(pr, LABELS.waitingOnAuthor, false, now);
       }
-      const size = await enforceSizeLimit(github, repo, sizedPullRequest(pr), allowlist, live);
+      const size = await enforceSizeLimit(github, repo, sizedPullRequest(pr), live);
       if (size.held !== hasLabel(pr, LABELS.tooLarge)) {
         core.info(`#${number}: ${size.held ? "+" : "-"}${LABELS.tooLarge}`);
         pr = withLabel(pr, LABELS.tooLarge, size.held, now);
