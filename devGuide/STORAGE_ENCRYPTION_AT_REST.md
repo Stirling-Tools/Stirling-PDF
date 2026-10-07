@@ -1,7 +1,8 @@
 # Storage Encryption at Rest
 
-Encrypts files stored by Stirling (My Files, workflow files) so the bytes on disk, in the database,
-or in S3 are unreadable without the master key. Requires a Pro or Enterprise licence to enable.
+Encrypts files stored by Stirling (My Files, workflow files, inbound webhook deliveries awaiting
+processing) so the bytes on disk, in the database, or in S3 are unreadable without the master key.
+Requires a Pro or Enterprise licence to enable.
 
 > **Back up the master key.** Losing it makes every encrypted stored file permanently
 > unrecoverable. There is no recovery path by design — that is what makes the encryption
@@ -64,9 +65,11 @@ It must decode to exactly 32 bytes; anything else fails at startup rather than s
 downgrading the cipher. The startup log prints a fingerprint (a SHA-256 prefix, never the key) so
 you can verify a backup matches the live key.
 
-**Cluster mode** (`cluster.enabled=true`) requires the key to be set explicitly and identically on
-every node; the auto-generated file is refused, because a node-local key would make files written
-elsewhere unreadable.
+**Cluster mode** (`cluster.enabled=true`) and the **hosted `saas` profile** require the key to be
+set explicitly and identically on every node; the auto-generated file is refused, because a
+node-local key would make files written elsewhere unreadable, and a key generated into a container
+is lost with it. The `saas` profile also turns encryption on by default, so a hosted deployment
+without `STIRLING_FILE_ENCRYPTION_KEY` refuses to start rather than mint a key it cannot keep.
 
 ### Turning it off
 

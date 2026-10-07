@@ -24,7 +24,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.UserServiceInterface;
-import stirling.software.common.util.FileReadinessChecker;
 import stirling.software.proprietary.document.conditions.Condition;
 import stirling.software.proprietary.document.conditions.ConditionInput;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
@@ -40,7 +39,7 @@ import stirling.software.proprietary.policy.output.PolicyOutputSink;
 import stirling.software.proprietary.policy.store.InProcessPolicyStore;
 import stirling.software.proprietary.policy.store.PolicyStore;
 import stirling.software.proprietary.policy.trigger.PolicyTriggerManager;
-import stirling.software.proprietary.policy.webhook.WebhookSpool;
+import stirling.software.proprietary.policy.webhook.WebhookDeliveries;
 import stirling.software.proprietary.util.SecretMasker;
 
 /**
@@ -104,8 +103,7 @@ class SourceControllerTest {
                         properties,
                         List.of(folderInput),
                         List.of(vectorSink));
-        WebhookInputSource webhookInput =
-                new WebhookInputSource(new WebhookSpool(tempDir), mock(FileReadinessChecker.class));
+        WebhookInputSource webhookInput = new WebhookInputSource(mock(WebhookDeliveries.class));
         webhookController =
                 new SourceController(
                         sourceStore,

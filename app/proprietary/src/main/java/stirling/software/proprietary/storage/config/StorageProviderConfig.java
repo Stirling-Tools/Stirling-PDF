@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionOperations;
@@ -50,6 +52,7 @@ public class StorageProviderConfig {
     private final FileEncryptionKeyRepository fileEncryptionKeyRepository;
     private final LicenseKeyChecker licenseKeyChecker;
     private final AuditService auditService;
+    private final Environment environment;
 
     /**
      * The encryption state behind the always-installed decorator, shared with the admin API and
@@ -68,7 +71,7 @@ public class StorageProviderConfig {
             @Value("${cluster.enabled:false}") boolean clusterEnabled,
             PlatformTransactionManager transactionManager) {
         boolean writeEnabled = applicationProperties.getStorage().getEncryption().isEnabled();
-        if (writeEnabled) {
+        if (writeEnabled && !saasActive()) {
             licenseKeyChecker.requireProOrEnterprise("storage.encryption");
             warnIfAuditUnavailable();
         }
@@ -88,7 +91,7 @@ public class StorageProviderConfig {
                                         configuredFileEncryptionKey,
                                         previousFileEncryptionKey,
                                         fileEncryptionKeyVersion,
-                                        clusterEnabled,
+                                        clusterEnabled || saasActive(),
                                         listener,
                                         requiresNew),
                         fileEncryptionKeyRepository,
@@ -124,11 +127,12 @@ public class StorageProviderConfig {
             String configuredKey,
             String previousKey,
             int keyVersion,
-            boolean clusterEnabled,
+            boolean sharedKeyRequired,
             StorageEncryptionAuditListener listener,
             TransactionOperations keyCreationTx) {
         FileEncryptionMasterKey masterKey =
-                new FileEncryptionMasterKey(configuredKey, previousKey, keyVersion, clusterEnabled);
+                new FileEncryptionMasterKey(
+                        configuredKey, previousKey, keyVersion, sharedKeyRequired);
         FileEncryptionKeyService keyService =
                 new FileEncryptionKeyService(
                         fileEncryptionKeyRepository, masterKey, listener, keyCreationTx);
@@ -151,7 +155,9 @@ public class StorageProviderConfig {
                 encryptionState.isWriteEnabled()
                         || "s3".equalsIgnoreCase(providerName)
                         || "database".equalsIgnoreCase(providerName);
-        return paidStorage
+        // Hosted infrastructure is licensed as a whole and tenants are entitled through billing, so
+        // the per-install licence gate does not apply there (as ClusterLicenseGate).
+        return paidStorage && !saasActive()
                 ? new LicensedStorageProvider(
                         provider,
                         () -> {
@@ -159,6 +165,10 @@ public class StorageProviderConfig {
                             return tier == License.SERVER || tier == License.ENTERPRISE;
                         })
                 : provider;
+    }
+
+    private boolean saasActive() {
+        return environment.acceptsProfiles(Profiles.of("saas"));
     }
 
     private StorageProvider innerStorageProvider() {

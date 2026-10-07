@@ -197,6 +197,12 @@ public class JpaProcessedLedger implements ProcessedLedger {
     }
 
     @Override
+    public boolean inFlightAnywhere(String identity) {
+        return repository.existsByIdentityHashAndStatus(
+                IdentityHasher.identityHash(identity), ProcessedFileStatus.PROCESSING);
+    }
+
+    @Override
     public void markSeen(String policyId, Collection<String> identities) {
         if (identities.isEmpty()) {
             return;

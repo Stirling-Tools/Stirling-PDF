@@ -289,6 +289,17 @@ abstract class ProcessedLedgerContractTest {
     }
 
     @Test
+    void inFlightAnywhereSeesEveryPolicysClaims() {
+        assertFalse(ledger.inFlightAnywhere(FILE)); // no rows
+        assertTrue(ledger.claim(POLICY, FILE, GATE, null));
+        assertTrue(ledger.claim(OTHER_POLICY, FILE, GATE, null));
+        ledger.settle(POLICY, FILE, GATE, null, false);
+        assertTrue(ledger.inFlightAnywhere(FILE)); // the other policy is still reading it
+        ledger.settle(OTHER_POLICY, FILE, GATE, null, true);
+        assertFalse(ledger.inFlightAnywhere(FILE)); // parked and done are both settled
+    }
+
+    @Test
     void aFailedClaimVetoesDeletionConsensus() {
         assertTrue(ledger.claim(POLICY, FILE, GATE, null));
         assertTrue(ledger.claim(OTHER_POLICY, FILE, GATE, null));
