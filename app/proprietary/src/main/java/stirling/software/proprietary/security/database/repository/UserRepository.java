@@ -69,6 +69,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
                 u.id, u.username, u.username, t.name, true)
             FROM User u LEFT JOIN u.team t
             WHERE (u.enabled IS NULL OR u.enabled = true)
+                AND u.username IS NOT NULL
                 AND (u.authenticationType IS NULL OR LOWER(u.authenticationType) <> 'anonymous')
             ORDER BY u.username, u.id
             """)
@@ -81,6 +82,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
                 u.id, u.username, u.username, t.name, true)
             FROM User u JOIN u.team t
             WHERE t.id = :teamId AND (u.enabled IS NULL OR u.enabled = true)
+                AND u.username IS NOT NULL
                 AND (u.authenticationType IS NULL OR LOWER(u.authenticationType) <> 'anonymous')
             ORDER BY u.username, u.id
             """)

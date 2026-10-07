@@ -44,6 +44,9 @@ class SigningUserQueryDbTest {
         anonymous.setAuthenticationType(AuthenticationType.ANONYMOUS);
         user("other-team", true, beta);
         user("no-team", true, null);
+        user(null, null, alpha);
+        user(null, true, alpha).setAuthenticationType(AuthenticationType.WEB);
+        user(null, true, null);
         flushAndClear();
 
         List<UserSummaryDTO> members =
