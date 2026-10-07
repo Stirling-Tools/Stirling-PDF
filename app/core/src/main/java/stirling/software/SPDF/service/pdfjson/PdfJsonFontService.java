@@ -49,14 +49,14 @@ public class PdfJsonFontService {
             return;
         }
 
-        log.info("[FONT-DEBUG] CFF conversion enabled, checking tool availability...");
+        log.debug("[FONT-DEBUG] CFF conversion enabled, checking tool availability...");
         pythonCffConverterAvailable = isCommandAvailable(pythonCommand);
         if (!pythonCffConverterAvailable) {
             log.warn(
                     "[FONT-DEBUG] Python command '{}' not found; Python CFF conversion disabled",
                     pythonCommand);
         } else {
-            log.info("[FONT-DEBUG] Python command '{}' is available", pythonCommand);
+            log.debug("[FONT-DEBUG] Python command '{}' is available", pythonCommand);
         }
 
         fontForgeCffConverterAvailable = isCommandAvailable(fontforgeCommand);
@@ -65,10 +65,10 @@ public class PdfJsonFontService {
                     "[FONT-DEBUG] FontForge command '{}' not found; FontForge CFF conversion disabled",
                     fontforgeCommand);
         } else {
-            log.info("[FONT-DEBUG] FontForge command '{}' is available", fontforgeCommand);
+            log.debug("[FONT-DEBUG] FontForge command '{}' is available", fontforgeCommand);
         }
 
-        log.info("[FONT-DEBUG] Selected CFF converter method: {}", cffConverterMethod);
+        log.debug("[FONT-DEBUG] Selected CFF converter method: {}", cffConverterMethod);
     }
 
     private void loadConfiguration() {

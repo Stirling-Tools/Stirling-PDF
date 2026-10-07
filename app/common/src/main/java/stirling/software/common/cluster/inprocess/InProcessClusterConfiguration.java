@@ -29,7 +29,7 @@ public class InProcessClusterConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public ClusterBackplane clusterBackplane(ApplicationProperties applicationProperties) {
-        log.info("Cluster backplane: in-process (single node)");
+        log.debug("Cluster backplane: in-process (single node)");
         return new InProcessClusterBackplane(applicationProperties);
     }
 

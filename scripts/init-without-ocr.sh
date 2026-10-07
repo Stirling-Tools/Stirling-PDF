@@ -101,8 +101,8 @@ print_versions() {
   # ffmpeg disabled due to raised CVEs
   # command_exists ffmpeg && ffmpeg -version | head -n 1 | log
   command_exists pdfinfo && pdfinfo -v 2>&1 | head -n 1 | log
-  command_exists fontforge && fontforge --version 2>&1 | head -n 1 | log
-  command_exists unpaper && unpaper --version 2>&1 | head -n 1 | log
+  command_exists fontforge && fontforge --version 2>/dev/null | grep -m 1 '^fontforge ' | log
+  command_exists unpaper && unpaper --version 2>&1 | head -n 1 | sed 's/^/unpaper /' | log
   command_exists ebook-convert && ebook-convert --version 2>&1 | head -n 1 | log
   log "-----------------------"
   set -o pipefail
@@ -332,7 +332,7 @@ export_office_sandbox_policy() {
   export STIRLING_LO_SANDBOX="${STIRLING_LO_SANDBOX:-enforce}"
   export STIRLING_LO_ALLOW_RW="${STIRLING_LO_ALLOW_RW:-${rw}}"
   export STIRLING_LO_ALLOW_SOCK="${STIRLING_LO_ALLOW_SOCK:-/tmp}"
-  log "LibreOffice sandbox mode=${STIRLING_LO_SANDBOX} user=$([ "$OFFICE_USER_AVAILABLE" = true ] && echo "$OFFICE_USER" || echo "$RUNTIME_USER")"
+  OFFICE_SANDBOX_DESC="mode=${STIRLING_LO_SANDBOX} user=$([ "$OFFICE_USER_AVAILABLE" = true ] && echo "$OFFICE_USER" || echo "$RUNTIME_USER")"
   check_office_sandbox
 }
 
@@ -357,9 +357,10 @@ check_office_sandbox() {
   elif printf '%s' "$out" | grep -qE 'landlock unavailable|seccomp unavailable'; then
     log "WARNING: LibreOffice sandbox is only partially active on this kernel: ${out}. Set STIRLING_LO_SANDBOX=required to refuse to run LibreOffice unconfined."
   elif printf '%s' "$out" | grep -q 'scoping unavailable'; then
-    log "WARNING: LibreOffice sandbox active without signal and abstract-socket scoping on this kernel: ${out}. STIRLING_LO_SANDBOX=required needs Landlock ABI 6 (Linux 6.12+) and would refuse every conversion here."
+    # Normal on kernels before 6.12; only matters if STIRLING_LO_SANDBOX=required is wanted
+    log "LibreOffice sandbox active (${OFFICE_SANDBOX_DESC}, $(printf '%s' "$out" | grep -o 'landlock ABI [0-9]*, seccomp [a-z]*' || echo "$out"); signal/socket scoping needs Linux 6.12+)"
   else
-    log "LibreOffice sandbox active (${out})"
+    log "LibreOffice sandbox active (${OFFICE_SANDBOX_DESC}, ${out})"
   fi
 }
 
@@ -695,7 +696,6 @@ start_unoserver_demand_manager() {
   trap 'manager_cleanup; exit 0' TERM INT
   trap manager_cleanup EXIT
 
-  log "unoserver demand manager started (idle_timeout=${idle_timeout}s)"
 
   # Ensure demand file does not exist at startup
   rm -f "$UNO_DEMAND_FILE"
@@ -813,8 +813,6 @@ compute_dynamic_memory() {
     return
   fi
 
-  log "Detected container memory: ${mem_mb}MB"
-
   # NOTE: MaxRAMPercentage governs HEAP only. Total JVM footprint also includes:
   # - Metaspace (MaxMetaspaceSize)
   # - Code cache (~100-200MB)
@@ -844,7 +842,7 @@ compute_dynamic_memory() {
     DYNAMIC_MAX_METASPACE=768
   fi
 
-  log "Dynamic memory: InitialRAM=${DYNAMIC_INITIAL_RAM_PCT}%, MaxRAM=${DYNAMIC_MAX_RAM_PCT}%, MaxMeta=${DYNAMIC_MAX_METASPACE}m"
+  log "Container memory ${mem_mb}MB: InitialRAM=${DYNAMIC_INITIAL_RAM_PCT}%, MaxRAM=${DYNAMIC_MAX_RAM_PCT}%, MaxMeta=${DYNAMIC_MAX_METASPACE}m"
 }
 
 # ---------- Project Leyden AOT Cache (JEP 483 + 514 + 515) ----------
@@ -1101,7 +1099,6 @@ if [ -z "${JAVA_BASE_OPTS:-}" ]; then
   if [ -n "${_JVM_OPTS:-}" ]; then
     STRIPPED_JVM_OPTS=$(echo "$_JVM_OPTS" | sed -E 's/-XX:ConcGCThreads=[^ ]*//g')
     JAVA_BASE_OPTS="${STRIPPED_JVM_OPTS} -XX:ConcGCThreads=${CONC_GC_THREADS}"
-    log "Using _JVM_OPTS (ConcGCThreads=${CONC_GC_THREADS})"
   else
     log "JAVA_BASE_OPTS and _JVM_OPTS unset; applying fallback defaults."
     JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=generational -XX:ShenandoahGCHeuristics=adaptive -XX:ShenandoahUncommitDelay=1000 -XX:ShenandoahGuaranteedYoungGCInterval=10000 -XX:ShenandoahGuaranteedOldGCInterval=30000 -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+ExplicitGCInvokesConcurrent -XX:ConcGCThreads=${CONC_GC_THREADS} -XX:ReservedCodeCacheSize=96m -XX:CICompilerCount=2 -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true"
@@ -1202,8 +1199,8 @@ case "${JAVA_TOOL_OPTIONS}" in
   *java.awt.headless*) ;;
   *) export JAVA_TOOL_OPTIONS="-Djava.awt.headless=true ${JAVA_TOOL_OPTIONS}" ;;
 esac
-log "running with JAVA_TOOL_OPTIONS=${JAVA_TOOL_OPTIONS}"
-log "Running Stirling PDF with DISABLE_ADDITIONAL_FEATURES=${DISABLE_ADDITIONAL_FEATURES:-} and VERSION_TAG=${VERSION_TAG:-<unset>}"
+# The JVM echoes JAVA_TOOL_OPTIONS itself ("Picked up ..."), so only log what it cannot
+log "Running Stirling PDF ${VERSION_TAG:-<unset>}${DISABLE_ADDITIONAL_FEATURES:+ (DISABLE_ADDITIONAL_FEATURES=${DISABLE_ADDITIONAL_FEATURES})}"
 
 # ---------- UMASK ----------
 # Set default permissions mask.
@@ -1230,7 +1227,6 @@ if [ "$(id -u)" -eq 0 ]; then
   chown "${RUNTIME_USER}:${RGRP}" "${XDG_RUNTIME_DIR}" 2>/dev/null || true
 fi
 chmod 700 "${XDG_RUNTIME_DIR}" 2>/dev/null || true
-log "XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR}"
 
 # ---------- Optional ----------
 # Disable advanced HTML operations if required.
@@ -1261,7 +1257,6 @@ fi
 
 # ---------- Permissions ----------
 # Ensure required directories exist and set correct permissions.
-log "Setting permissions..."
 mkdir -p /tmp/stirling-pdf /tmp/stirling-pdf/heap_dumps /logs /configs /configs/heap_dumps /configs/cache /customFiles /pipeline /storage || true
 CHOWN_PATHS=("$HOME" "/logs" "/scripts" "/configs" "/customFiles" "/pipeline" "/storage" "/tmp/stirling-pdf" "/app.jar")
 [ -d /usr/share/fonts/truetype ] && CHOWN_PATHS+=("/usr/share/fonts/truetype")
@@ -1347,8 +1342,7 @@ if [ -n "$UNOSERVER_BIN" ] && [ -n "$UNOCONVERT_BIN" ]; then
     # Do NOT start unoserver or soffice yet.
     # The demand manager will start them lazily when a conversion request arrives
     # and stop them after an idle timeout to reclaim ~200-350 MB RSS.
-    log "unoserver on-demand mode enabled (UNO_IDLE_TIMEOUT_SECONDS=${UNO_IDLE_TIMEOUT_SECONDS:-120}s)"
-    log "unoserver + soffice will start on first conversion request"
+    log "unoserver on-demand: starts on first conversion, stops after ${UNO_IDLE_TIMEOUT_SECONDS:-120}s idle"
     start_unoserver_demand_manager &
     DEMAND_MANAGER_PID=$!
   else

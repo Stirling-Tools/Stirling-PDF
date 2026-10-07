@@ -36,7 +36,7 @@ public class MobileScannerService {
         this.tempDirectory =
                 Path.of(System.getProperty("java.io.tmpdir"), "stirling-mobile-scanner");
         Files.createDirectories(tempDirectory);
-        log.info("Mobile scanner temp directory: {}", tempDirectory);
+        log.debug("Mobile scanner temp directory: {}", tempDirectory);
     }
 
     /**
