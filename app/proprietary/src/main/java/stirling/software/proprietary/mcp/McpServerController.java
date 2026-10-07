@@ -43,15 +43,18 @@ public class McpServerController {
     private final ObjectMapper mapper;
     private final ApplicationProperties applicationProperties;
     private final Map<String, McpTool> toolsByName;
+    private final McpWidget widget;
     private final McpAnalytics analytics;
 
     public McpServerController(
             ObjectMapper mapper,
             ApplicationProperties applicationProperties,
             List<McpTool> tools,
+            McpWidget widget,
             McpAnalytics analytics) {
         this.mapper = mapper;
         this.applicationProperties = applicationProperties;
+        this.widget = widget;
         this.analytics = analytics;
         this.toolsByName = new HashMap<>();
         for (McpTool tool : tools) {
@@ -142,6 +145,10 @@ public class McpServerController {
                     JsonRpcResponse.success(request.id(), initializeResult(request.params()));
             case "tools/list" -> JsonRpcResponse.success(request.id(), toolsListResult());
             case "tools/call" -> handleToolsCall(request);
+            case "resources/list" -> JsonRpcResponse.success(request.id(), resourcesListResult());
+            case "resources/templates/list" ->
+                    JsonRpcResponse.success(request.id(), emptyList("resourceTemplates"));
+            case "resources/read" -> handleResourcesRead(request);
             case "prompts/list" -> JsonRpcResponse.success(request.id(), emptyList("prompts"));
             case "ping" -> JsonRpcResponse.success(request.id(), mapper.createObjectNode());
             case "notifications/initialized" ->
@@ -167,6 +174,12 @@ public class McpServerController {
         analytics.initialize(params, negotiated);
         ObjectNode caps = result.putObject("capabilities");
         caps.putObject("tools");
+        caps.putObject("resources");
+        // MCP Apps extension: tools render the ui:// widget in hosts that support it.
+        caps.putObject("extensions")
+                .putObject("io.modelcontextprotocol/ui")
+                .putArray("mimeTypes")
+                .add(McpWidget.MIME_TYPE);
         ObjectNode info = result.putObject("serverInfo");
         info.put("name", SERVER_NAME);
         info.put("title", "Stirling PDF");
@@ -184,16 +197,58 @@ public class McpServerController {
             entry.put("description", t.description());
             entry.set("inputSchema", t.inputSchema());
             entry.set("annotations", t.annotations().toJson(mapper, t.title()));
+            ObjectNode meta = toolMeta(t);
+            if (!meta.isEmpty()) {
+                entry.set("_meta", meta);
+            }
             tools.add(entry);
         }
         analytics.toolsList(List.copyOf(toolsByName.keySet()));
         return result;
     }
 
+    /** MCP Apps link plus the ChatGPT aliases and file-param hints. */
+    private ObjectNode toolMeta(McpTool t) {
+        ObjectNode meta = mapper.createObjectNode();
+        if (t.rendersWidget()) {
+            meta.putObject("ui").put("resourceUri", McpWidget.URI);
+            meta.put("openai/outputTemplate", McpWidget.URI);
+            meta.put("openai/toolInvocation/invoking", "Working on your file...");
+            meta.put("openai/toolInvocation/invoked", "Done");
+        }
+        if (t.widgetCallable()) {
+            meta.put("openai/widgetAccessible", true);
+        }
+        if (!t.fileParams().isEmpty()) {
+            ArrayNode params = meta.putArray("openai/fileParams");
+            t.fileParams().forEach(params::add);
+        }
+        return meta;
+    }
+
     private ObjectNode emptyList(String field) {
         ObjectNode result = mapper.createObjectNode();
         result.putArray(field);
         return result;
+    }
+
+    private ObjectNode resourcesListResult() {
+        ObjectNode result = mapper.createObjectNode();
+        result.putArray("resources").add(widget.listing());
+        return result;
+    }
+
+    private JsonRpcResponse handleResourcesRead(JsonRpcRequest request) {
+        JsonNode params = request.params();
+        String uri = params != null && params.hasNonNull("uri") ? params.get("uri").asText() : null;
+        if (!McpWidget.URI.equals(uri)) {
+            // -32002 is MCP's "resource not found".
+            return JsonRpcResponse.failure(
+                    request.id(), new JsonRpcError(-32002, "Resource not found: " + uri, null));
+        }
+        ObjectNode result = mapper.createObjectNode();
+        result.putArray("contents").add(widget.contents());
+        return JsonRpcResponse.success(request.id(), result);
     }
 
     private JsonRpcResponse handleToolsCall(JsonRpcRequest request) {
