@@ -29,6 +29,35 @@ smbj = "0.14.0"
 tink = "1.23.0"
 testcontainers = "1.21.4"
 onnxruntime = "1.26.0"
+java-security-toolkit = "1.2.3"
+owasp-html-sanitizer = "20260924.2"
+javaluator = "3.0.6"
+posthog = "1.2.0"
+metadata-extractor = "2.21.0"
+flexmark = "0.64.8"
+junrar = "8.0.0"
+jakarta-servlet = "6.1.0"
+snakeyaml-engine = "3.1.1"
+springdoc = "3.0.3"
+simple-java-mail = "9.3.5"
+jakarta-mail = "2.1.5"
+angus-mail = "2.0.5"
+tabula = "1.0.5"
+telegrambots = "6.9.7.1"
+zxing = "3.5.4"
+verapdf = "1.30.2"
+jaxb-api = "2.3.1"
+jaxb-impl = "2.3.9"
+jaxb-core = "4.0.9"
+jbig2-imageio = "3.0.5"
+opencsv = "5.12.0"
+poi = "5.5.1"
+pdfbox-graphics2d = "3.0.5"
+swagger-core = "2.2.53"
+postgresql = "42.7.13"
+saml-client = "5.0.0"
+xmlsec = "4.0.4"
+h2 = "2.3.232"
 
 [libraries]
 # Spring Boot BOM
@@ -115,3 +144,43 @@ jackson2-datatype-jsr310 = { module = "com.fasterxml.jackson.datatype:jackson-da
 stirling-office-convert = { module = "com.stirling:stirling-office-convert", version.ref = "office-convert" }
 stirling-office-convert-legacy = { module = "com.stirling:stirling-office-convert-legacy", version.ref = "office-convert" }
 stirling-office-convert-topdf = { module = "com.stirling:stirling-office-convert-topdf", version.ref = "office-convert" }
+# JavaMail / mail parsing
+simple-java-mail = { module = "org.simplejavamail:simple-java-mail", version.ref = "simple-java-mail" }
+simple-java-mail-outlook = { module = "org.simplejavamail:outlook-module", version.ref = "simple-java-mail" }
+jakarta-mail-api = { module = "jakarta.mail:jakarta.mail-api", version.ref = "jakarta-mail" }
+angus-mail = { module = "org.eclipse.angus:angus-mail", version.ref = "angus-mail" }
+
+# Security hardening
+java-security-toolkit = { module = "io.github.pixee:java-security-toolkit", version.ref = "java-security-toolkit" }
+owasp-html-sanitizer = { module = "com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer", version.ref = "owasp-html-sanitizer" }
+xmlsec = { module = "org.apache.santuario:xmlsec", version.ref = "xmlsec" }
+saml-client = { module = "com.coveo:saml-client", version.ref = "saml-client" }
+
+# Content parsing and conversion
+tabula = { module = "technology.tabula:tabula", version.ref = "tabula" }
+verapdf-validation-model = { module = "org.verapdf:validation-model", version.ref = "verapdf" }
+metadata-extractor = { module = "com.drewnoakes:metadata-extractor", version.ref = "metadata-extractor" }
+junrar = { module = "com.github.junrar:junrar", version.ref = "junrar" }
+flexmark-html2md-converter = { module = "com.vladsch.flexmark:flexmark-html2md-converter", version.ref = "flexmark" }
+javaluator = { module = "com.fathzer:javaluator", version.ref = "javaluator" }
+opencsv = { module = "com.opencsv:opencsv", version.ref = "opencsv" }
+poi-ooxml = { module = "org.apache.poi:poi-ooxml", version.ref = "poi" }
+jbig2-imageio = { module = "org.apache.pdfbox:jbig2-imageio", version.ref = "jbig2-imageio" }
+pdfbox-graphics2d = { module = "de.rototor.pdfbox:graphics2d", version.ref = "pdfbox-graphics2d" }
+postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
+posthog = { module = "com.posthog.java:posthog", version.ref = "posthog" }
+
+# JAXP / XML
+jakarta-servlet-api = { module = "jakarta.servlet:jakarta.servlet-api", version.ref = "jakarta-servlet" }
+snakeyaml-engine = { module = "org.snakeyaml:snakeyaml-engine", version.ref = "snakeyaml-engine" }
+# veraPDF still targets the javax.xml.bind namespace, not jakarta.
+jaxb-api = { module = "javax.xml.bind:jaxb-api", version.ref = "jaxb-api" }
+jaxb-impl = { module = "com.sun.xml.bind:jaxb-impl", version.ref = "jaxb-impl" }
+jaxb-core = { module = "com.sun.xml.bind:jaxb-core", version.ref = "jaxb-core" }
+
+# API docs and integrations
+springdoc-openapi = { module = "org.springdoc:springdoc-openapi-starter-webmvc-ui", version.ref = "springdoc" }
+swagger-core-jakarta = { module = "io.swagger.core.v3:swagger-core-jakarta", version.ref = "swagger-core" }
+telegrambots = { module = "org.telegram:telegrambots", version.ref = "telegrambots" }
+zxing-core = { module = "com.google.zxing:core", version.ref = "zxing" }
+h2 = { module = "com.h2database:h2", version.ref = "h2" }
