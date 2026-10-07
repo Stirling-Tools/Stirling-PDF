@@ -21,7 +21,6 @@ import { useTitleBarStrip } from "@app/contexts/TitleBarStripContext";
 import WorkbenchFloatingSearch from "@app/components/shared/WorkbenchFloatingSearch";
 import LandingPage from "@app/components/shared/LandingPage";
 import DismissAllErrorsButton from "@app/components/shared/DismissAllErrorsButton";
-import { ChatFAB } from "@app/components/chat/ChatFAB";
 import { NotificationBell } from "@app/components/notifications/NotificationBell";
 
 // Workbench panels are loaded on demand. Viewer pulls in pdfjs-dist and the
@@ -245,9 +244,6 @@ export default function Workbench() {
 
       {/* Dismiss All Errors Button */}
       <DismissAllErrorsButton />
-
-      {/* Floating AI chat button + panel */}
-      {currentView !== "myFiles" && currentView !== "signing" && <ChatFAB />}
 
       {/* Main content area */}
       <Box

@@ -3,14 +3,15 @@ import {
   useRef,
   useEffect,
   useState,
+  type FocusEvent,
   type KeyboardEvent,
   type ReactNode,
+  type Ref,
 } from "react";
 import { renderMarkdown } from "@app/components/viewer/nonpdf/MarkdownRenderer";
 import { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import {
-  Box,
   Collapse,
   Group,
   Paper,
@@ -33,10 +34,8 @@ import {
 import { formatRelativeTime } from "@app/utils/timeUtils";
 import { useTranslatedToolCatalog } from "@app/data/useTranslatedToolRegistry";
 import { StirlingLogoAnimated } from "@app/components/agents/StirlingLogoAnimated";
-import { BrandMark } from "@app/components/shared/BrandMark";
-import { Logo } from "@app/ui/Logo";
-import { PanelHeader } from "@app/ui/PanelHeader";
 import { ChatQuickActions } from "@app/components/chat/ChatQuickActions";
+import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import "@app/components/chat/ChatPanel.css";
 
 type TranslateFn = TFunction;
@@ -382,33 +381,39 @@ function ChatMessageBubble({
 }
 
 export interface ChatPanelProps {
-  /** Called when the user closes the chat to return to the tool list. */
-  onBack: () => void;
-  /** Accessible label for the close button. */
-  backLabel: string;
+  /** False keeps only the composer on screen; the conversation stays mounted but inert. */
+  expanded: boolean;
+  composerRef: Ref<HTMLTextAreaElement>;
+  onComposerFocus: (event: FocusEvent<HTMLTextAreaElement>) => void;
 }
 
-export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
+/** The conversation and its composer, laid out to sit under a header in a flex column. */
+export function ChatPanel({
+  expanded,
+  composerRef,
+  onComposerFocus,
+}: ChatPanelProps) {
   const { t } = useTranslation();
-  const { messages, isLoading, progressLog, sendMessage, clearChat } =
-    useChat();
+  const { messages, isLoading, progressLog, sendMessage } = useChat();
+  const { openFilesModal } = useFilesModalContext();
   const resolveToolName = useToolNameResolver();
   const resolveToolIcon = useToolIconResolver();
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
   // Tracks whether the user manually scrolled away from the bottom.
   // A ref (not state) so scroll events don't cause re-renders.
   const userScrolledUp = useRef(false);
 
-  // Jump to the bottom on first render so existing conversations open at the
-  // most recent message rather than the top.
+  // Open at the most recent message rather than wherever a collapsed, zero-height
+  // viewport left the scroll position.
   useEffect(() => {
+    if (!expanded) return;
+    userScrolledUp.current = false;
     requestAnimationFrame(() => {
       const el = scrollRef.current;
       if (el) el.scrollTop = el.scrollHeight;
     });
-  }, []);
+  }, [expanded]);
 
   // Attach a passive scroll listener to track whether the user has scrolled
   // away from the bottom (breaks auto-scroll) or returned to it (re-latches).
@@ -440,10 +445,6 @@ export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
     }
   }, [messages, progressLog]);
 
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
-
   const handleSend = (override?: string) => {
     const text = (override ?? input).trim();
     if (!text || isLoading) return;
@@ -465,103 +466,90 @@ export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
   );
 
   return (
-    <Box className="chat-panel chat-panel--embedded">
-      <PanelHeader
-        icon={<BrandMark height="26px" className="chat-panel__header-mark" />}
-        title={
-          <Logo
-            variant="textOnly"
-            textHeight="17px"
-            alt={t("agents.stirling_name", "Stirling")}
-          />
-        }
-        loading={isLoading}
-        className="chat-panel__header"
-        barClassName="chat-panel__agent-pill-vt"
-        menuLabel={t("chat.header.agentMenu", "Stirling agent options")}
-        menuItems={[
-          {
-            key: "clear-chat",
-            icon: <Icon name="trash" size={18} />,
-            label: t("chat.header.clearChat", "Clear chat"),
-            onClick: clearChat,
-            disabled: messages.length === 0 && !isLoading,
-          },
-        ]}
-        onClose={onBack}
-        closeLabel={backLabel}
-      />
-
-      {showQuickActions && (
-        <div className="chat-panel-disclaimer chat-panel-disclaimer--banner">
-          <Icon name="info" size={18} className="chat-panel-disclaimer__icon" />
-          <span>{disclaimerText}</span>
-        </div>
-      )}
-
-      <ScrollArea className="chat-panel-messages" viewportRef={scrollRef}>
-        <Stack
-          gap="sm"
-          px="md"
-          pt="sm"
-          className="chat-panel-messages__content"
-        >
-          {messages.map((msg) => (
-            <ChatMessageBubble
-              key={msg.id}
-              role={msg.role}
-              content={msg.content}
-              timestamp={msg.timestamp}
-              progressLog={msg.progressLog}
-              durationMs={msg.durationMs}
-              resolveToolName={resolveToolName}
-              resolveToolIcon={resolveToolIcon}
-              t={t}
+    <>
+      <div className="chat-panel" aria-hidden={!expanded} inert={!expanded}>
+        {showQuickActions && (
+          <div className="chat-panel-disclaimer chat-panel-disclaimer--banner">
+            <Icon
+              name="info"
+              size={18}
+              className="chat-panel-disclaimer__icon"
             />
-          ))}
-          {isLoading && (
-            <div className="chat-message chat-message-assistant">
-              <ProgressLogDisplay
-                progressLog={progressLog}
-                t={t}
+            <span>{disclaimerText}</span>
+          </div>
+        )}
+
+        <ScrollArea className="chat-panel-messages" viewportRef={scrollRef}>
+          <Stack
+            gap="sm"
+            px="xs"
+            pt="sm"
+            className="chat-panel-messages__content"
+          >
+            {messages.map((msg) => (
+              <ChatMessageBubble
+                key={msg.id}
+                role={msg.role}
+                content={msg.content}
+                timestamp={msg.timestamp}
+                progressLog={msg.progressLog}
+                durationMs={msg.durationMs}
                 resolveToolName={resolveToolName}
                 resolveToolIcon={resolveToolIcon}
+                t={t}
               />
-            </div>
-          )}
-        </Stack>
-      </ScrollArea>
+            ))}
+            {isLoading && (
+              <div className="chat-message chat-message-assistant">
+                <ProgressLogDisplay
+                  progressLog={progressLog}
+                  t={t}
+                  resolveToolName={resolveToolName}
+                  resolveToolIcon={resolveToolIcon}
+                />
+              </div>
+            )}
+          </Stack>
+        </ScrollArea>
 
-      {showQuickActions && (
-        <ChatQuickActions
-          heading={t("chat.quickActions.heading", "Get started")}
-          onAction={(text) => handleSend(text)}
-        />
-      )}
+        {showQuickActions && (
+          <ChatQuickActions
+            heading={t("chat.quickActions.heading", "Get started")}
+            onAction={(text) => handleSend(text)}
+          />
+        )}
 
-      {!showQuickActions && (
-        <div className="chat-panel-disclaimer chat-panel-disclaimer--inline">
-          <Icon name="info" size={13} className="chat-panel-disclaimer__icon" />
-          <span>{disclaimerText}</span>
-        </div>
-      )}
+        {!showQuickActions && (
+          <div className="chat-panel-disclaimer chat-panel-disclaimer--inline">
+            <Icon
+              name="info"
+              size={13}
+              className="chat-panel-disclaimer__icon"
+            />
+            <span>{disclaimerText}</span>
+          </div>
+        )}
+      </div>
 
       <div className="chat-panel-input">
         <ActionIcon
-          className="chat-panel-input__send"
-          size="sm"
-          onClick={() => handleSend()}
-          disabled={!input.trim() || isLoading}
-          aria-label={t("chat.input.send", "Send message")}
+          variant="secondary"
+          shape="circle"
+          size="md"
+          className="chat-panel-input__attach"
+          onClick={() => openFilesModal()}
+          aria-label={t("chat.dock.attach", "Add files")}
         >
-          <Icon name="arrow-up" size={16} />
+          <Icon name="paperclip" size={16} />
         </ActionIcon>
         <Textarea
-          ref={inputRef}
-          placeholder={t("chat.input.placeholder", "What do you want to do?")}
+          ref={composerRef}
+          placeholder={t("chat.dock.placeholder", "Ask Stirling")}
+          aria-label={t("chat.dock.placeholder", "Ask Stirling")}
           value={input}
           onChange={(e) => setInput(e.currentTarget.value)}
           onKeyDown={handleKeyDown}
+          onFocus={onComposerFocus}
           disabled={isLoading}
           autosize
           minRows={1}
@@ -572,7 +560,17 @@ export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
             input: "chat-panel-input__field",
           }}
         />
+        <ActionIcon
+          shape="circle"
+          size="md"
+          className="chat-panel-input__send"
+          onClick={() => handleSend()}
+          disabled={!input.trim() || isLoading}
+          aria-label={t("chat.input.send", "Send message")}
+        >
+          <Icon name="arrow-up" size={16} />
+        </ActionIcon>
       </div>
-    </Box>
+    </>
   );
 }

@@ -9,7 +9,7 @@ import { MantineProvider } from "@mantine/core";
 import { MemoryRouter, useLocation } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import SignupRequiredBootstrap from "@app/components/SignupRequiredBootstrap";
-import { ChatFAB } from "@app/components/chat/ChatFAB";
+import { SidebarChat } from "@app/components/chat/SidebarChat";
 import { useToolRunComplete } from "@app/hooks/useToolRunComplete";
 import { useProcessingFolderCreation } from "@app/hooks/useProcessingFolderCreation";
 import { QuickNavRailHost } from "@app/components/shared/quickNav/QuickNavRailHost";
@@ -30,7 +30,7 @@ vi.mock("@app/contexts/QuickNavHostContext", () => ({
 }));
 vi.mock("@app/ui/Icon", () => ({ Icon: () => null }));
 vi.mock("@app/components/chat/ChatContext", () => ({
-  useChat: () => ({ isLoading: false }),
+  useChat: () => ({ messages: [], isLoading: false, clearChat: () => {} }),
 }));
 vi.mock("@app/components/chat/ChatPanel", () => ({ ChatPanel: () => null }));
 vi.mock("@app/components/policies/ProcessingFolderSetupFlow", () => ({
@@ -88,7 +88,7 @@ function renderPrompt(withRail = false, withChat = false, withActions = false) {
       <MantineProvider>
         <SignupRequiredBootstrap />
         {withRail && <QuickNavRailHost />}
-        {withChat && <ChatFAB />}
+        {withChat && <SidebarChat />}
         {withActions && <GuestActions />}
         <Destination />
       </MantineProvider>
@@ -125,12 +125,10 @@ describe("guest signup prompt", () => {
 
   it("opens signup instead of the assistant for guests without navigating", async () => {
     renderPrompt(false, true);
-    const assistant = screen.getByRole("button", {
-      name: "Open Stirling AI assistant",
-    });
+    const assistant = screen.getByRole("button", { name: "Expand chat" });
     fireEvent.click(assistant);
     expect(await screen.findByRole("dialog")).toBeInTheDocument();
-    expect(assistant).toHaveAttribute("aria-expanded", "false");
+    expect(assistant).toHaveAccessibleName("Expand chat");
     expect(screen.getByTestId("destination")).toHaveTextContent(
       "/editor?tool=compress",
     );
@@ -139,11 +137,9 @@ describe("guest signup prompt", () => {
   it("opens the assistant without a signup prompt for registered users", () => {
     auth.isAnonymous = false;
     renderPrompt(false, true);
-    const assistant = screen.getByRole("button", {
-      name: "Open Stirling AI assistant",
-    });
+    const assistant = screen.getByRole("button", { name: "Expand chat" });
     fireEvent.click(assistant);
-    expect(assistant).toHaveAttribute("aria-expanded", "true");
+    expect(assistant).toHaveAccessibleName("Collapse chat");
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 

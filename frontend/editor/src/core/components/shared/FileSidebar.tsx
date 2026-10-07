@@ -50,6 +50,7 @@ import { DeleteFilesDialog } from "@app/components/filesPage/DeleteFilesDialog";
 import { RenameFileDialog } from "@app/components/shared/RenameFileDialog";
 import { duplicateStoredFile } from "@app/utils/duplicateFile";
 import { SidebarChecklistSlot } from "@app/components/shared/SidebarChecklistSlot";
+import { SidebarChat } from "@app/components/chat/SidebarChat";
 import {
   deleteServerFile,
   type DeleteScope,
@@ -1285,6 +1286,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           credits={credits}
           onOpenPlan={openPlan ?? undefined}
         />
+
+        {currentWorkbench !== "myFiles" && <SidebarChat />}
       </div>
     );
   },
