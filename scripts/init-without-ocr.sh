@@ -64,10 +64,20 @@ if [ "${STIRLING_USE_JEMALLOC:-true}" = "true" ]; then
     fi
   done
   if [ -n "$JEMALLOC_LIB" ]; then
-    export LD_PRELOAD="${JEMALLOC_LIB}${LD_PRELOAD:+:$LD_PRELOAD}"
     export MALLOC_CONF="${MALLOC_CONF:-background_thread:true,dirty_decay_ms:1000,muzzy_decay_ms:2000}"
+    # A preloaded jemalloc whose background thread exists cannot survive the process dropping
+    # privileges: jemalloc aborts inside setpriv. So the preload must reach only the final
+    # child, never the setpriv invocation that runs as root. When nothing drops privileges
+    # (already running as the runtime user) a plain export is correct and covers every child.
+    JEMALLOC_PRELOAD=(env "LD_PRELOAD=${JEMALLOC_LIB}${LD_PRELOAD:+:$LD_PRELOAD}")
+    if [ "$(id -u)" -ne 0 ]; then
+      export LD_PRELOAD="${JEMALLOC_LIB}${LD_PRELOAD:+:$LD_PRELOAD}"
+      JEMALLOC_PRELOAD=()
+    fi
     log "Configured jemalloc ($JEMALLOC_LIB) with MALLOC_CONF=${MALLOC_CONF}"
   fi
+else
+  JEMALLOC_PRELOAD=()
 fi
 
 # Python venv PATH + PYTHONPATH
@@ -276,7 +286,7 @@ run_as_runtime_user() {
     env HOME="$(getent passwd "$RUNTIME_USER" | cut -d: -f6)" \
         USER="$RUNTIME_USER" \
         LOGNAME="$RUNTIME_USER" \
-      setpriv --reuid="$RUNTIME_USER" --regid="$(id -gn "$RUNTIME_USER")" --init-groups -- "$@"
+      setpriv --reuid="$RUNTIME_USER" --regid="$(id -gn "$RUNTIME_USER")" --init-groups -- "${JEMALLOC_PRELOAD[@]}" "$@"
   else
     warn_switch_user_once
     "$@"
@@ -324,7 +334,7 @@ run_as_office_user() {
       TEMP="$OFFICE_TMP" \
       SAL_TMP="$OFFICE_TMP" \
       XDG_RUNTIME_DIR="$OFFICE_XDG" \
-    setpriv --reuid="$OFFICE_USER" --regid="$(id -gn "$OFFICE_USER")" --init-groups -- "$@"
+    setpriv --reuid="$OFFICE_USER" --regid="$(id -gn "$OFFICE_USER")" --init-groups -- "${JEMALLOC_PRELOAD[@]}" "$@"
 }
 
 # The sandbox grants /tmp as socket-only, so LibreOffice can bind its IPC pipes there but
@@ -1445,7 +1455,7 @@ elif [ -x "$STIRLING_ENGINE_HOME/.venv/bin/python" ]; then
         HOME="$(getent passwd "$RUNTIME_USER" | cut -d: -f6)" \
         USER="$RUNTIME_USER" \
         LOGNAME="$RUNTIME_USER" \
-      setpriv --reuid="$RUNTIME_USER" --regid="$(id -gn "$RUNTIME_USER")" --init-groups -- "${ENGINE_CMD[@]}" &
+      setpriv --reuid="$RUNTIME_USER" --regid="$(id -gn "$RUNTIME_USER")" --init-groups -- "${JEMALLOC_PRELOAD[@]}" "${ENGINE_CMD[@]}" &
   else
     env -u PYTHONPATH "${ENGINE_CMD[@]}" &
   fi
@@ -1460,7 +1470,7 @@ elif [ "$CURRENT_UID" -eq 0 ] && command_exists setpriv; then
   env HOME="$(getent passwd "$RUNTIME_USER" | cut -d: -f6)" \
       USER="$RUNTIME_USER" \
       LOGNAME="$RUNTIME_USER" \
-    setpriv --reuid="$RUNTIME_USER" --regid="$(id -gn "$RUNTIME_USER")" --init-groups -- "${JAVA_CMD[@]}" &
+    setpriv --reuid="$RUNTIME_USER" --regid="$(id -gn "$RUNTIME_USER")" --init-groups -- "${JEMALLOC_PRELOAD[@]}" "${JAVA_CMD[@]}" &
 else
   warn_switch_user_once
   "${JAVA_CMD[@]}" &
