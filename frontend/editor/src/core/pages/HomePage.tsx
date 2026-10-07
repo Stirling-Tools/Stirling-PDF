@@ -1,5 +1,6 @@
 import {
   forwardRef,
+  startTransition,
   useCallback,
   useEffect,
   useMemo,
@@ -27,8 +28,12 @@ import {
 import { isApplyingRestoredView } from "@app/services/workbenchSession";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useLocation, useNavigate } from "react-router-dom";
+
 import { Icon } from "@app/ui/Icon";
 import RightSidebar from "@app/components/tools/RightSidebar";
+import { ReaderRail } from "@app/components/viewer/readerRail/ReaderRail";
+import { ReaderSuperSearch } from "@app/components/viewer/readerRail/ReaderSuperSearch";
+import { useTitleBarStrip } from "@app/contexts/TitleBarStripContext";
 import Workbench from "@app/components/layout/Workbench";
 import FileSidebar from "@app/components/shared/FileSidebar";
 import FileManager from "@app/components/FileManager";
@@ -37,31 +42,37 @@ import {
   getDefaultWorkbenchForFileCount,
 } from "@app/utils/homePageNavigation";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
+import { READER_PATH } from "@app/routes/readerRoute";
 import { rememberSettingsOrigin } from "@app/utils/settingsNavigation";
 import { HomePageExtensions } from "@app/components/home/HomePageExtensions";
 import { PolicyAutoRunController } from "@app/components/policies/PolicyAutoRunController";
 import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
 import { QuickNavHostBridge } from "@app/components/shared/quickNav/QuickNavHostBridge";
 import type { QuickNavToolReasons } from "@app/contexts/QuickNavHostContext";
+import { useQuickNavHost } from "@app/contexts/QuickNavHostContext";
+import { SignMenu } from "@app/components/shared/signing/SignMenu";
+import { useOpenSigning } from "@app/hooks/signing/useOpenSigning";
+import { usePreferences } from "@app/contexts/PreferencesContext";
 import {
   getToolDisabledReason,
   getDisabledLabel,
 } from "@app/components/tools/fullscreen/shared";
-import { consumeReaderModeRequest } from "@app/utils/pendingReaderMode";
+import {
+  consumeReaderModeFromPreference,
+  consumeReaderModeRequest,
+} from "@app/utils/pendingReaderMode";
 import {
   FilesPageProvider,
   useFilesPage,
 } from "@app/contexts/FilesPageContext";
 import { useFolders } from "@app/contexts/FolderContext";
-import { folderKind } from "@app/types/folder";
-import { useServerFolderBlock } from "@app/hooks/useServerFolderBlock";
 import { useNewFolderFlow } from "@app/hooks/useNewFolderFlow";
 import { NewFolderButton } from "@app/components/filesPage/NewFolderButton";
 import MobileUploadModal from "@app/components/shared/MobileUploadModal";
 import { useLibraryRefresh } from "@app/hooks/useLibraryRefresh";
 import { useAuth } from "@app/auth/UseSession";
 import { canPickDirectory } from "@app/services/directoryPicker";
-import { useFileHandler } from "@app/hooks/useFileHandler";
+import { useLibraryUpload } from "@app/components/filesPage/useLibraryUpload";
 import { useProcessingFolderCreation } from "@app/hooks/useProcessingFolderCreation";
 import { consumeProcessingFolderCreationRequest } from "@app/utils/pendingProcessingFolderCreation";
 import type { FileSidebarProps } from "@app/components/shared/FileSidebar";
@@ -70,35 +81,33 @@ import { Button } from "@app/ui/Button";
 import "@app/components/layout/WorkspaceFrame.css";
 import "@app/pages/HomePage.css";
 
-const SIDEBAR_COLLAPSED_STORAGE_KEY = "stirling.fileSidebarCollapsed";
 const SWIPE_HINT_SEEN_STORAGE_KEY = "stirling.mobileSwipeHintSeen";
+
+/**
+ * The wings' slide is `--wings-ms` (dimensions.css). Read from the document so one
+ * value drives both, with the literal as the fallback for a test environment that
+ * loads no stylesheet, and a frame of headroom so the unmount never clips the
+ * last frame of the animation.
+ */
+const WINGS_FALLBACK_MS = 220;
+const WINGS_HEADROOM_MS = 60;
+
+function wingsDurationMs(): number {
+  if (typeof window === "undefined") return WINGS_FALLBACK_MS;
+  const token = window
+    .getComputedStyle(document.documentElement)
+    .getPropertyValue("--wings-ms")
+    .trim();
+  const parsed = Number.parseFloat(token);
+  if (!Number.isFinite(parsed) || parsed <= 0) return WINGS_FALLBACK_MS;
+  return token.endsWith("ms") ? parsed : parsed * 1000;
+}
 
 function readSwipeHintSeen(): boolean {
   try {
     return window.localStorage.getItem(SWIPE_HINT_SEEN_STORAGE_KEY) === "true";
   } catch {
     return true;
-  }
-}
-
-function readPersistedSidebarCollapsed(): boolean {
-  try {
-    return (
-      window.localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === "true"
-    );
-  } catch {
-    return false;
-  }
-}
-
-function writePersistedSidebarCollapsed(collapsed: boolean): void {
-  try {
-    window.localStorage.setItem(
-      SIDEBAR_COLLAPSED_STORAGE_KEY,
-      String(collapsed),
-    );
-  } catch {
-    // private mode / quota: silently no-op
   }
 }
 
@@ -126,6 +135,9 @@ export default function HomePage() {
 
   const navigate = useNavigate();
   const { config } = useAppConfig();
+  // When a title-bar strip owns Super Search, suppress the reader-mode float so
+  // only one SuperSearch instance is ever live.
+  const strip = useTitleBarStrip();
   const processingFolderCreation = useProcessingFolderCreation();
   const isMobile = useIsMobile();
   const isTouch = useIsTouch();
@@ -141,13 +153,6 @@ export default function HomePage() {
       processingFolderCreation.open();
     }
   }, [location.key, processingFolderCreation.open]);
-  // The user's preference, and the only thing that decides it: reading mode forces
-  // the sidebar shut without writing, so leaving reading restores this.
-  const [fileSidebarCollapsed, setFileSidebarCollapsed] = useState(
-    // Reader mode outlives this page (settings swaps it out and back), and it
-    // collapses the sidebar without persisting that, so it wins on mount too.
-    () => readerMode || readPersistedSidebarCollapsed(),
-  );
 
   // Settings is its own page; it restores the recorded origin on Back.
   const openSettings = useCallback(() => {
@@ -158,6 +163,9 @@ export default function HomePage() {
   const { activeFiles } = useFileContext();
   const navigationState = useNavigationState();
   const { requestNavigation } = useNavigationGuard();
+  const quickNavHost = useQuickNavHost();
+  const openSigning = useOpenSigning();
+  const [mobileSignOpen, setMobileSignOpen] = useState(false);
 
   // From the processor's Reader entry. Ref-guarded: one-shot, and StrictMode double-invokes.
   const consumedReaderRequest = useRef(false);
@@ -170,51 +178,58 @@ export default function HomePage() {
 
   const { searchInterfaceActions } = useViewer();
 
-  // Reading hides both search controls, so leave it first. e.code, for non-QWERTY layouts.
-  const focusSearchAfterRestore = useRef(false);
+  // Find in document lives in the rail, not the bar reading hides, so the
+  // shortcut opens it where the reader already is. e.code, for non-QWERTY
+  // layouts. Ctrl+K belongs to ReaderSuperSearch, which floats the global
+  // search over the page rather than leaving reading to reach it.
   useEffect(() => {
     if (!readerMode) return;
     const onKeyDown = (e: KeyboardEvent) => {
       const combo = (e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey;
-      if (!combo) return;
-      if (e.code !== "KeyK" && e.code !== "KeyF") return;
+      if (!combo || e.code !== "KeyF") return;
       // Same carve-out the search itself makes: a dialog owns the keyboard.
       if ((e.target as HTMLElement | null)?.closest?.('[role="dialog"]'))
         return;
       e.preventDefault();
-      setReaderMode(false);
-      if (e.code === "KeyK") {
-        focusSearchAfterRestore.current = true;
-        return;
-      }
-      // Visibility is state, so it can open before the bar it renders in exists.
       searchInterfaceActions.open();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [readerMode, setReaderMode, searchInterfaceActions]);
+  }, [readerMode, searchInterfaceActions]);
 
-  useEffect(() => {
-    if (readerMode || !focusSearchAfterRestore.current) return;
-    focusSearchAfterRestore.current = false;
-    requestAnimationFrame(() =>
-      window.dispatchEvent(new Event("superSearch:focus")),
-    );
-  }, [readerMode]);
-
-  // Clean slate: no tool, out of the file library and reading.
   const goToDefaultState = useCallback(() => {
+    if (navigationState.workbench === "signing") navigate(EDITOR_BASENAME);
     handleBackToTools();
     actions.setWorkbench(getDefaultWorkbenchForFileCount(activeFiles.length));
-  }, [handleBackToTools, actions, activeFiles.length]);
+  }, [
+    handleBackToTools,
+    actions,
+    activeFiles.length,
+    navigationState.workbench,
+    navigate,
+  ]);
 
-  // The library is a view like the viewer and the file editor: which view is on screen
-  // is state, the path says which folder you are in. Each side moves the other on a
-  // transition only: asserting either on every render lets the path re-impose
-  // "myFiles" a render after anything else has set a view.
+  const { preferences } = usePreferences();
+  const goToStartupView = useCallback(() => {
+    // The router transitions its updates; the tool reset must see the same destination.
+    startTransition(() => {
+      goToDefaultState();
+      if (preferences.defaultStartupView === "read") {
+        if (location.pathname !== READER_PATH) navigate(READER_PATH);
+        setReaderMode(true);
+      } else if (preferences.defaultStartupView === "automate")
+        handleToolSelect("automate");
+    });
+  }, [
+    goToDefaultState,
+    preferences.defaultStartupView,
+    location.pathname,
+    navigate,
+    setReaderMode,
+    handleToolSelect,
+  ]);
 
-  // Path moved, so the path is the cause: arrival, back/forward, or a deliberate
-  // navigate. Mount included, which is what seeds a deep link.
+  // Reconcile route and workspace only on transitions, or the old route can undo a view change.
   const derivedFromPath = actions.viewDerivedFromPathRef;
   useEffect(() => {
     if (derivedFromPath.current === location.pathname) return;
@@ -222,7 +237,12 @@ export default function HomePage() {
       if (navigationState.workbench !== "myFiles") {
         actions.setWorkbench("myFiles");
       }
-    } else if (navigationState.workbench === "myFiles") {
+    } else if (location.pathname === "/shared-sign") {
+      actions.setToolAndWorkbench(null, "signing");
+    } else if (
+      navigationState.workbench === "myFiles" ||
+      navigationState.workbench === "signing"
+    ) {
       // A restore is reopening a recorded view onto files still loading. Leave the
       // path unmarked so the correction runs once those files land.
       if (isApplyingRestoredView()) return;
@@ -241,21 +261,79 @@ export default function HomePage() {
     const onFilesPath = location.pathname.startsWith("/files");
     if (inLibrary && !onFilesPath) {
       navigate("/files");
-    } else if (!inLibrary && onFilesPath) {
+    } else if (!inLibrary && onFilesPath && !readerMode) {
+      // Reading also leaves the library, and its own effect names the path it
+      // leaves for. Both navigating puts the editor between the two in history,
+      // so Back out of reading would land somewhere the user never went.
       navigate(EDITOR_BASENAME);
     }
-  }, [navigationState.workbench, location.pathname, navigate]);
+  }, [navigationState.workbench, location.pathname, navigate, readerMode]);
 
-  // Imperative, so the toggle still works while reading. Never persisted: not a preference.
-  const prevReaderModeRef = useRef(readerMode);
+  // Path moved, so the path is the cause. The ref starts null so mount counts too:
+  // that is what makes a reload land back in reading, and what takes you out of it
+  // when the library moves the path to its own.
+  const readerDerivedFromPath = useRef<string | null>(null);
   useEffect(() => {
-    if (readerMode !== prevReaderModeRef.current) {
-      setFileSidebarCollapsed(
-        readerMode ? true : readPersistedSidebarCollapsed(),
-      );
-      prevReaderModeRef.current = readerMode;
+    if (readerDerivedFromPath.current === location.pathname) return;
+    const isMount = readerDerivedFromPath.current === null;
+    readerDerivedFromPath.current = location.pathname;
+    const onReadPath = location.pathname.startsWith(READER_PATH);
+    // The startup-view preference can open reading before this page mounts (the
+    // desktop shell holds the page back until its auth check settles). Reading is
+    // then the cause and the path follows it, rather than the path closing it.
+    if (
+      isMount &&
+      readerMode &&
+      !onReadPath &&
+      consumeReaderModeFromPreference()
+    ) {
+      navigate(READER_PATH, { replace: true });
+      return;
     }
+    if (onReadPath !== readerMode) setReaderMode(onReadPath);
+  }, [location.pathname, readerMode, setReaderMode, navigate]);
+
+  // The wings animate off their own edge, so the unmount waits out the leave rather
+  // than happening with it. The rails' stylesheets take them out of flow while it
+  // runs, so what is underneath is already in its reading position and nothing
+  // reflows twice.
+  const [wingsMounted, setWingsMounted] = useState(!readerMode);
+  const [wingsPhase, setWingsPhase] = useState<"leaving" | "returning" | null>(
+    null,
+  );
+  const readingRef = useRef(readerMode);
+  useEffect(() => {
+    if (readingRef.current === readerMode) return;
+    readingRef.current = readerMode;
+    const slide = wingsDurationMs() + WINGS_HEADROOM_MS;
+    if (readerMode) {
+      setWingsPhase("leaving");
+      const gone = window.setTimeout(() => {
+        setWingsPhase(null);
+        setWingsMounted(false);
+      }, slide);
+      return () => window.clearTimeout(gone);
+    }
+    setWingsMounted(true);
+    setWingsPhase("returning");
+    const settled = window.setTimeout(() => setWingsPhase(null), slide);
+    return () => window.clearTimeout(settled);
   }, [readerMode]);
+
+  // Reading moved, so the path follows. Pushed, not replaced, so Back leaves it.
+  const wasReadingRef = useRef(readerMode);
+  useEffect(() => {
+    if (readerMode === wasReadingRef.current) return;
+    wasReadingRef.current = readerMode;
+    const onReadPath = location.pathname.startsWith(READER_PATH);
+    if (readerMode && !onReadPath) {
+      navigate(READER_PATH, {
+        replace: consumeReaderModeFromPreference(),
+      });
+    } else if (!readerMode && onReadPath) {
+      navigate(EDITOR_BASENAME);
+    }
+  }, [readerMode, location.pathname, navigate]);
 
   const { setActiveFileIndex } = useViewer();
   const prevFileCountRef = useRef(activeFiles.length);
@@ -296,8 +374,11 @@ export default function HomePage() {
     isMobile,
   ]);
 
-  const hideToolPanel =
+  const isWorkspaceHub =
     navigationState.workbench === "myFiles" ||
+    navigationState.workbench === "signing";
+  const hideToolPanel =
+    isWorkspaceHub ||
     (customWorkbenchViews.find(
       (v) => v.workbenchId === navigationState.workbench,
     )?.hideToolPanel ??
@@ -305,10 +386,9 @@ export default function HomePage() {
 
   const brandAltText = t("home.mobile.brandAlt", "Stirling PDF logo");
 
-  // The tool picker's own helpers, so the wording can't drift.
   const quickNavToolReasons = useMemo(() => {
     const reasons: QuickNavToolReasons = {};
-    for (const id of ["automate", "sharedSign"] as const) {
+    for (const id of ["automate"] as const) {
       const tool = toolRegistry[id];
       if (!tool) continue;
       const disabledReason = getToolDisabledReason(
@@ -324,22 +404,27 @@ export default function HomePage() {
     return reasons;
   }, [toolRegistry, toolAvailability, config?.premiumEnabled, t]);
 
-  // The collapse is a preference, so it is written as one; every view reads it back.
-  const handleSidebarToggle = useCallback(() => {
-    setFileSidebarCollapsed((c) => {
-      const next = !c;
-      writePersistedSidebarCollapsed(next);
-      return next;
-    });
-  }, []);
-
   const openFromComputerRef = useRef<(() => void) | null>(null);
+  // Reading unmounts the sidebar that owns the picker, so a request made there
+  // is held until the sidebar is back to answer it.
+  const openFromComputerPending = useRef(false);
   const registerOpenFromComputer = useCallback((open: (() => void) | null) => {
     openFromComputerRef.current = open;
+    if (open && openFromComputerPending.current) {
+      openFromComputerPending.current = false;
+      open();
+    }
   }, []);
   const openFromComputer = useCallback(() => {
-    openFromComputerRef.current?.();
-  }, []);
+    if (openFromComputerRef.current) {
+      openFromComputerRef.current();
+      return;
+    }
+    // Opening a document from disk shows it, and reading is a view of one
+    // document, so the picker lands you on what you opened either way.
+    openFromComputerPending.current = true;
+    setReaderMode(false);
+  }, [setReaderMode]);
 
   const [showSwipeHint, setShowSwipeHint] = useState(
     () => !readSwipeHintSeen(),
@@ -374,7 +459,7 @@ export default function HomePage() {
   // Mobile's bottom bar sets no view of its own, so leaving the library is the path
   // moving; the reconciliation effect takes the view with it.
   const leaveMyFiles = useCallback(() => {
-    if (navigationState.workbench === "myFiles") navigate(EDITOR_BASENAME);
+    if (isWorkspaceHub) navigate(EDITOR_BASENAME);
   }, [navigationState.workbench, navigate]);
 
   useEffect(() => {
@@ -385,7 +470,6 @@ export default function HomePage() {
         const offset = activeMobileView === "tools" ? 0 : container.offsetWidth;
         container.scrollTo({ left: offset, behavior: "smooth" });
 
-        // Re-enable scroll listener after animation completes
         setTimeout(() => {
           isProgrammaticScroll.current = false;
         }, 500);
@@ -439,9 +523,16 @@ export default function HomePage() {
     };
   }, [isMobile, dismissSwipeHint]);
 
-  // Automatically switch to workbench when read mode or multiTool is activated in mobile
+  // Full-screen tools own the mobile viewport, so opening one selects the
+  // workbench slide. The text editor is included because it manages its own
+  // state instead of going through the startup-navigation heuristic.
   useEffect(() => {
-    if (isMobile && (readerMode || selectedToolKey === "multiTool")) {
+    if (
+      isMobile &&
+      (readerMode ||
+        selectedToolKey === "multiTool" ||
+        selectedToolKey === "pdfTextEditor")
+    ) {
       setActiveMobileView("workbench");
     }
   }, [isMobile, readerMode, selectedToolKey]);
@@ -457,7 +548,6 @@ export default function HomePage() {
   // When navigating back to tools view in mobile with a workbench-only tool, show tool picker
   useEffect(() => {
     if (isMobile && activeMobileView === "tools" && selectedTool) {
-      // Check if this is a workbench-only tool (has workbench but no component)
       if (selectedTool.workbench && !selectedTool.component) {
         setLeftPanelView("toolPicker");
       }
@@ -507,7 +597,104 @@ export default function HomePage() {
         : baseUrl,
   });
 
-  // Note: File selection limits are now handled directly by individual tools
+  const mobileNavigation = (
+    <div className="mobile-bottom-bar">
+      <SignMenu
+        opened={mobileSignOpen}
+        onClose={() => setMobileSignOpen(false)}
+        reasons={quickNavHost?.toolReasons ?? {}}
+        items={quickNavHost?.signingItems ?? []}
+        onOpenSigning={openSigning}
+        onSelect={(tool) => {
+          handleToolSelect(tool);
+          setActiveMobileView("tools");
+        }}
+      >
+        <Button
+          variant="tertiary"
+          className="mobile-bottom-button"
+          aria-label={
+            quickNavHost?.signingBadge
+              ? t(
+                  "signMenu.triggerUnreadCount",
+                  "Sign · {{count}} unread sessions",
+                  { count: quickNavHost.signingBadge },
+                )
+              : t("signMenu.title", "Sign")
+          }
+          onClick={() => setMobileSignOpen((open) => !open)}
+        >
+          <Icon name="pen-tool" size="1.5rem" />
+          {quickNavHost && quickNavHost.signingBadge > 0 && (
+            <span className="sign-menu__trigger-badge" aria-hidden>
+              {quickNavHost.signingBadge}
+            </span>
+          )}
+          <span className="mobile-bottom-button-label">
+            {t("signMenu.title", "Sign")}
+          </span>
+        </Button>
+      </SignMenu>
+      <Button
+        variant="tertiary"
+        className="mobile-bottom-button"
+        aria-label={t("quickAccess.allTools", "Tools")}
+        onClick={() => {
+          leaveMyFiles();
+          handleBackToTools();
+          if (isMobile) {
+            setActiveMobileView("tools");
+          }
+        }}
+      >
+        <Icon name="layout-grid" size={"1.5rem"} />
+        <span className="mobile-bottom-button-label">
+          {t("quickAccess.allTools", "Tools")}
+        </span>
+      </Button>
+      {toolAvailability["automate"]?.available !== false && (
+        <Button
+          variant="tertiary"
+          className="mobile-bottom-button"
+          aria-label={t("quickAccess.automate", "Automate")}
+          onClick={() => {
+            leaveMyFiles();
+            handleToolSelect("automate");
+            if (isMobile) {
+              setActiveMobileView("tools");
+            }
+          }}
+        >
+          <Icon name="waypoints" size="1.5rem" />
+          <span className="mobile-bottom-button-label">
+            {t("quickAccess.automate", "Automate")}
+          </span>
+        </Button>
+      )}
+      <Button
+        variant="tertiary"
+        className="mobile-bottom-button"
+        aria-label={t("home.mobile.openFiles", "Open files")}
+        onClick={() => navigate("/files")}
+      >
+        <Icon name="folder" size="1.5rem" />
+        <span className="mobile-bottom-button-label">
+          {t("quickAccess.files", "Files")}
+        </span>
+      </Button>
+      <Button
+        variant="tertiary"
+        className="mobile-bottom-button"
+        aria-label={t("quickAccess.config", "Config")}
+        onClick={openSettings}
+      >
+        <Icon name="settings" size="1.5rem" />
+        <span className="mobile-bottom-button-label">
+          {t("quickAccess.config", "Config")}
+        </span>
+      </Button>
+    </div>
+  );
 
   return (
     <div className="h-screen overflow-hidden">
@@ -520,6 +707,7 @@ export default function HomePage() {
         fileLibrary={navigationState.workbench === "myFiles"}
         onSetReaderMode={setReaderMode}
         onGoToDefaultState={goToDefaultState}
+        onGoToStartupView={goToStartupView}
         onSelectTool={handleToolSelect}
         activeTool={selectedToolKey}
         onShowFileLibrary={() => actions.setWorkbench("myFiles")}
@@ -530,15 +718,13 @@ export default function HomePage() {
         }
       />
       <FilesPageProvider>
-        {isMobile ? (
-          <div
-            className="mobile-layout"
-            data-files-mode={navigationState.workbench === "myFiles"}
-          >
+        {/* Keep signing in the same tree across breakpoints to preserve drafts and placed signatures. */}
+        {isMobile && navigationState.workbench !== "signing" ? (
+          <div className="mobile-layout" data-files-mode={isWorkspaceHub}>
             {/* The library brings its own tabs and folder path, so the
               tools/workspace toggle would only cost it vertical space. Every
               other view keeps the toggle. */}
-            {navigationState.workbench !== "myFiles" && (
+            {!isWorkspaceHub && (
               <div className="mobile-toggle">
                 <div className="mobile-brand">
                   <LogoIcon className="mobile-brand-icon" />
@@ -573,7 +759,7 @@ export default function HomePage() {
                 </div>
               </div>
             )}
-            {navigationState.workbench === "myFiles" ? (
+            {isWorkspaceHub ? (
               /* /files takes the whole viewport. Skipping the slider keeps
                 the FileManagerView from being trapped inside a 100vw
                 horizontal-scroll container (which truncated buttons and
@@ -624,92 +810,43 @@ export default function HomePage() {
                 )}
               </div>
             )}
-            <div className="mobile-bottom-bar">
-              <Button
-                variant="tertiary"
-                className="mobile-bottom-button"
-                aria-label={t("quickAccess.allTools", "Tools")}
-                onClick={() => {
-                  leaveMyFiles();
-                  handleBackToTools();
-                  if (isMobile) {
-                    setActiveMobileView("tools");
-                  }
-                }}
-              >
-                <Icon name="layout-grid" size={"1.5rem"} />
-                <span className="mobile-bottom-button-label">
-                  {t("quickAccess.allTools", "Tools")}
-                </span>
-              </Button>
-              {toolAvailability["automate"]?.available !== false && (
-                <Button
-                  variant="tertiary"
-                  className="mobile-bottom-button"
-                  aria-label={t("quickAccess.automate", "Automate")}
-                  onClick={() => {
-                    leaveMyFiles();
-                    handleToolSelect("automate");
-                    if (isMobile) {
-                      setActiveMobileView("tools");
-                    }
-                  }}
-                >
-                  <Icon name="workflow" size="1.5rem" />
-                  <span className="mobile-bottom-button-label">
-                    {t("quickAccess.automate", "Automate")}
-                  </span>
-                </Button>
-              )}
-              <Button
-                variant="tertiary"
-                className="mobile-bottom-button"
-                aria-label={t("home.mobile.openFiles", "Open files")}
-                onClick={() => navigate("/files")}
-              >
-                <Icon name="folder" size="1.5rem" />
-                <span className="mobile-bottom-button-label">
-                  {t("quickAccess.files", "Files")}
-                </span>
-              </Button>
-              <Button
-                variant="tertiary"
-                className="mobile-bottom-button"
-                aria-label={t("quickAccess.config", "Config")}
-                onClick={openSettings}
-              >
-                <Icon name="settings" size="1.5rem" />
-                <span className="mobile-bottom-button-label">
-                  {t("quickAccess.config", "Config")}
-                </span>
-              </Button>
-            </div>
-            <FileManager selectedTool={selectedTool} />
+            {mobileNavigation}
           </div>
         ) : (
           <Group
-            align="flex-start"
+            align={isMobile ? "stretch" : "flex-start"}
             gap={0}
+            wrap="nowrap"
             h="100%"
             className="flex-nowrap flex"
             bg="var(--c-bg)"
+            data-wings={wingsPhase ?? undefined}
+            style={{ flexDirection: isMobile ? "column" : "row" }}
           >
-            <div className="workspace-frame">
-              <MyFilesAwareFileSidebar
-                ref={quickAccessRef}
-                accountHoisted
-                active={navigationState.workbench === "myFiles"}
-                collapsed={fileSidebarCollapsed}
-                onToggleCollapse={handleSidebarToggle}
-                onOpenSettings={openSettings}
-                onRegisterOpenFromComputer={registerOpenFromComputer}
-              />
-            </div>
+            {/* Reading leaves the document and nothing beside it, so the wing goes
+                rather than shrinking to a rail. Everywhere else it is fixed open. */}
+            {wingsMounted && navigationState.workbench !== "signing" && (
+              <div className="workspace-frame">
+                <MyFilesAwareFileSidebar
+                  ref={quickAccessRef}
+                  accountHoisted
+                  active={navigationState.workbench === "myFiles"}
+                  onOpenSettings={openSettings}
+                  onRegisterOpenFromComputer={registerOpenFromComputer}
+                />
+              </div>
+            )}
             <Workbench />
-            {!hideToolPanel && <RightSidebar />}
-            <FileManager selectedTool={selectedTool} />
+            {isMobile && mobileNavigation}
+            {/* The reader's rail takes the slot the tool panel holds otherwise: the
+                panel's controls are the editor's, and reading wants the viewer's.
+                Both render together only while the panel is on its way out. */}
+            {wingsMounted && !hideToolPanel && <RightSidebar />}
+            {readerMode && <ReaderRail />}
+            {readerMode && !strip.enabled && <ReaderSuperSearch />}
           </Group>
         )}
+        <FileManager selectedTool={selectedTool} />
       </FilesPageProvider>
     </div>
   );
@@ -736,9 +873,13 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
     const { t } = useTranslation();
     const filesPage = useFilesPage();
     const folders = useFolders();
-    const { addFiles } = useFileHandler();
-    const { addLocalFolder, createFolderHere, createFolderHereBlockedReason } =
-      useNewFolderFlow();
+    const handleUpload = useLibraryUpload();
+    const {
+      addLocalFolder,
+      createFolderHere,
+      createFolderHereBlockedReason: newFolderDisabledReason,
+      serverFolderBlock,
+    } = useNewFolderFlow();
     const { refreshing, refresh: refreshLibrary } = useLibraryRefresh();
     const { isAnonymous } = useAuth();
     const { config: appConfig } = useAppConfig();
@@ -751,35 +892,6 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
     const signInRequired = isAnonymous
       ? t("filesPage.signInRequired", "Sign in to use cloud storage.")
       : null;
-
-    const handleUpload = useCallback(
-      async (files: File[]) => {
-        const added = await addFiles(files, { skipWorkspaceDispatch: true });
-        await filesPage.refresh();
-        // If the user is inside a cloud folder, place uploads there.
-        if (folders.currentFolderId !== null && added.length > 0) {
-          await filesPage.moveFilesTo(
-            added.map((f) => f.fileId),
-            folders.currentFolderId,
-          );
-        }
-      },
-      [addFiles, filesPage, folders.currentFolderId],
-    );
-
-    // Kind-aware: only a server folder's subfolder needs the server, and a mounted
-    // directory takes no subfolders from here at all.
-    const railCurrentFolder = folders.currentFolderId
-      ? folders.foldersById.get(folders.currentFolderId)
-      : undefined;
-    const railCurrentKind = railCurrentFolder
-      ? folderKind(railCurrentFolder)
-      : null;
-    const serverFolderBlock = useServerFolderBlock();
-    const newFolderDisabledReason =
-      railCurrentKind === "server"
-        ? serverFolderBlock
-        : createFolderHereBlockedReason;
 
     return (
       <>
@@ -796,13 +908,10 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
               disabled: newFolderDisabledReason !== null,
               disabledTooltip: newFolderDisabledReason ?? undefined,
               testId: "files-rail-new-folder",
-              // The same control the library's other surfaces use, so one row
-              // cannot offer less than another: where a folder can go decides
-              // its shape.
-              render: ({ collapsed }) => (
+              // Share folder availability rules with the library toolbar.
+              render: () => (
                 <NewFolderButton
                   trigger="row"
-                  collapsed={collapsed}
                   testId="files-rail-new-folder"
                   label={t("filesPage.newFolder", "New folder")}
                   disabledReason={newFolderDisabledReason}
@@ -821,7 +930,7 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
                   className={refreshing ? "file-sidebar-spin" : undefined}
                 />
               ),
-              label: t("filesPage.refresh", "Refresh from server"),
+              label: t("filesPage.refresh", "Refresh"),
               onClick: () => void refreshLibrary(),
               disabled: refreshing || signInRequired !== null,
               disabledTooltip: signInRequired ?? undefined,

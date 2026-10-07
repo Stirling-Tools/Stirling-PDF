@@ -82,10 +82,10 @@ describe("folder processing edits", () => {
       sortFolderPresets(configured).map((entry) => entry.category.id),
     ).toEqual([
       "compliance",
+      "ingestion",
       "security",
       "classification",
       "routing",
-      "ingestion",
       "retention",
     ]);
   });

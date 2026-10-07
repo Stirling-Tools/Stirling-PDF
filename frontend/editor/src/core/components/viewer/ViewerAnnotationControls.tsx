@@ -34,7 +34,7 @@ export default function ViewerAnnotationControls({
   disabled = false,
 }: ViewerAnnotationControlsProps) {
   const { t } = useTranslation();
-  const { setLeftPanelView, setSidebarsVisible } = useToolWorkflow();
+  const { setLeftPanelView } = useToolWorkflow();
 
   // Viewer context for PDF controls - safely handle when not available
   const viewerContext = React.useContext(ViewerContext);
@@ -55,11 +55,11 @@ export default function ViewerAnnotationControls({
 
   // Get redaction pending state and navigation guard
   const { isRedacting: _isRedacting } = useRedactionMode();
-  const { requestNavigation, setHasUnsavedChanges, hasUnsavedChanges } =
-    useNavigationGuard();
+  const { requestNavigation, setHasUnsavedChanges } = useNavigationGuard();
   const {
     setRedactionMode,
     activateRedact,
+    deactivateRedact,
     setRedactionConfig,
     setRedactionsApplied,
     redactionApiRef,
@@ -119,7 +119,14 @@ export default function ViewerAnnotationControls({
     setLeftPanelView("toolPicker");
     setRedactionMode(false);
     setActiveType(null);
-  }, [navActions, setLeftPanelView, setRedactionMode, setActiveType]);
+    deactivateRedact();
+  }, [
+    navActions,
+    setLeftPanelView,
+    setRedactionMode,
+    setActiveType,
+    deactivateRedact,
+  ]);
 
   // Handle redaction mode toggle
   const handleRedactionToggle = async () => {
@@ -139,7 +146,6 @@ export default function ViewerAnnotationControls({
 
         navActions.setToolAndWorkbench("redact", "viewer");
 
-        setSidebarsVisible(true);
         setLeftPanelView("toolContent");
 
         setRedactionMode(true);
@@ -160,12 +166,8 @@ export default function ViewerAnnotationControls({
   };
 
   const handleToggleAnnotationsVisibility = useCallback(() => {
-    if (!annotationsHidden && hasUnsavedChanges) {
-      requestNavigation(() => viewerContext?.toggleAnnotationsVisibility());
-    } else {
-      viewerContext?.toggleAnnotationsVisibility();
-    }
-  }, [annotationsHidden, hasUnsavedChanges, requestNavigation, viewerContext]);
+    viewerContext?.toggleAnnotationsVisibility();
+  }, [viewerContext]);
 
   // NOTE: This early return is placed AFTER all hooks to satisfy React's rules of hooks
   if (isSignMode) {

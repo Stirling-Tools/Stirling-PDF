@@ -68,6 +68,7 @@ export function useAutomateOperation() {
           bytes: file.size ?? 0,
         }));
         meterAutomationRun({
+          source: "AUTOMATE",
           automationName: automationConfig.name,
           operations: automationConfig.operations.map(
             (operation) => operation.operation,

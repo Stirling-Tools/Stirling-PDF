@@ -159,7 +159,7 @@ const StampPositionFormattingSettings = ({
             />
             <Slider
               value={parameters.fontSize}
-              onChange={(v) => onParameterChange("fontSize", v as number)}
+              onChange={(v) => onParameterChange("fontSize", v)}
               min={1}
               max={400}
               step={1}
@@ -190,7 +190,7 @@ const StampPositionFormattingSettings = ({
             />
             <Slider
               value={parameters.rotation}
-              onChange={(v) => onParameterChange("rotation", v as number)}
+              onChange={(v) => onParameterChange("rotation", v)}
               min={-180}
               max={180}
               step={1}
@@ -219,7 +219,7 @@ const StampPositionFormattingSettings = ({
             />
             <Slider
               value={parameters.opacity}
-              onChange={(v) => onParameterChange("opacity", v as number)}
+              onChange={(v) => onParameterChange("opacity", v)}
               min={0}
               max={100}
               step={1}

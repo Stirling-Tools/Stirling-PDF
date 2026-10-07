@@ -28,6 +28,9 @@ const IGNORED: RegExp[] = [
   // unavoidable. Default: keep this list empty.
 ];
 
+const WEBKIT_LOCALE_PRELOAD_WARNING =
+  /^The resource (https?:\/\/\S+\/locales\/[A-Za-z-]{2,12}\/translation\.toml) was preloaded using link preload but not used within a few seconds from the window's load event\. Please make sure it wasn't preloaded for nothing\.$/;
+
 function shouldIgnore(text: string): boolean {
   return IGNORED.some((re) => re.test(text));
 }
@@ -64,10 +67,41 @@ function formatEntries(entries: ConsoleEntry[]): string {
     .join("\n");
 }
 
-async function expectCleanConsole(entries: ConsoleEntry[]) {
+async function expectCleanConsole(
+  entries: ConsoleEntry[],
+  page: Page,
+  browserName: string,
+) {
+  let unexpected = entries;
+  if (browserName === "webkit") {
+    // WebKit can warn about an unused fetch preload despite successfully
+    // fetching the same translation (https://bugs.webkit.org/show_bug.cgi?id=236009).
+    // Require a completed fetch before accepting that browser warning.
+    const fetchedUrls = await page.evaluate(() =>
+      performance
+        .getEntriesByType("resource")
+        .filter(
+          (entry) =>
+            entry instanceof PerformanceResourceTiming &&
+            entry.initiatorType === "fetch" &&
+            entry.responseStart > 0 &&
+            entry.responseEnd > 0,
+        )
+        .map((entry) => entry.name),
+    );
+    unexpected = entries.filter((entry) => {
+      const url = WEBKIT_LOCALE_PRELOAD_WARNING.exec(entry.text)?.[1];
+      return !(
+        entry.type === "warn" &&
+        !entry.location &&
+        url &&
+        fetchedUrls.includes(url)
+      );
+    });
+  }
   expect(
-    entries,
-    `Page produced unexpected console output:\n${formatEntries(entries)}`,
+    unexpected,
+    `Page produced unexpected console output:\n${formatEntries(unexpected)}`,
   ).toEqual([]);
 }
 
@@ -94,8 +128,14 @@ test.use({ autoGoto: false });
 
 test.describe("Console hygiene: representative routes load cleanly", () => {
   for (const route of ROUTES) {
-    test(`${route.name} (${route.path})`, async ({ page }) => {
+    test(`${route.name} (${route.path})`, async ({ page, browserName }) => {
       const entries = attachListeners(page);
+      const scriptRequests: string[] = [];
+      page.on("request", (request) => {
+        if (request.resourceType() === "script") {
+          scriptRequests.push(request.url());
+        }
+      });
       await page.goto(route.path, { waitUntil: "domcontentloaded" });
       // Give async effects (i18n load, lazy chunks, posthog init) a beat to
       // surface anything they were going to log.
@@ -108,7 +148,18 @@ test.describe("Console hygiene: representative routes load cleanly", () => {
           // etc.) is a real problem and should fail the test.
           if (!(err instanceof errors.TimeoutError)) throw err;
         });
-      await expectCleanConsole(entries);
+      await expectCleanConsole(entries, page, browserName);
+      const entryUrls = await page
+        .locator('script[type="module"][src]')
+        .evaluateAll((scripts) =>
+          scripts.map((script) => (script as HTMLScriptElement).src),
+        );
+      for (const url of entryUrls) {
+        expect(
+          scriptRequests.filter((requestUrl) => requestUrl === url),
+          `Entry module was fetched again by a lazy import: ${url}`,
+        ).toHaveLength(1);
+      }
     });
   }
 });

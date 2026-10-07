@@ -83,7 +83,12 @@ public class ConnectRequestService {
             String callbackOrigin,
             boolean insecureTransport,
             ConnectRequest.Mode mode,
-            ConnectRequest.Status status) {}
+            ConnectRequest.Status status,
+            Long teamId) {
+        boolean isLinkedTeam(Long callerTeamId) {
+            return teamId != null && teamId.equals(callerTeamId);
+        }
+    }
 
     /** Where to send the browser once approved, plus the correlator the instance is expecting. */
     public record ApprovalTarget(String callbackUrl, String nonce) {}
@@ -185,23 +190,26 @@ public class ConnectRequestService {
     public Optional<ConnectView> lookup(String requestId) {
         return repo.findByRequestId(requestId)
                 .filter(r -> !r.isExpired(LocalDateTime.now()))
-                .map(
-                        r ->
-                                new ConnectView(
-                                        r.getRequestId(),
-                                        r.getName(),
-                                        r.getCallbackOrigin(),
-                                        !"https".equals(schemeOf(r.getCallbackOrigin())),
-                                        r.getMode(),
-                                        r.getStatus()));
+                .map(ConnectRequestService::viewOf);
+    }
+
+    private static ConnectView viewOf(ConnectRequest request) {
+        return new ConnectView(
+                request.getRequestId(),
+                request.getName(),
+                request.getCallbackOrigin(),
+                !"https".equals(schemeOf(request.getCallbackOrigin())),
+                request.getMode(),
+                request.getStatus(),
+                request.getTeamId());
     }
 
     /** Why an approval was refused, so the page can say something useful. */
     public enum ApproveRejection {
         /** Unknown, expired, or already settled. */
         UNAVAILABLE,
-        /** The approver's team is not the team this server already belongs to. */
-        WRONG_TEAM
+        /** The authenticated owner belongs to a different team from the linked server. */
+        WRONG_ACCOUNT
     }
 
     public record ApproveResult(ApprovalTarget target, ApproveRejection rejection) {
@@ -210,7 +218,10 @@ public class ConnectRequestService {
         }
     }
 
-    /** Binds a pending handshake to the approver's team and returns where to send them next. */
+    /**
+     * The caller must resolve the current team owner before approval. Renewal confirms the pinned
+     * team without rebinding the server or requiring its original linking user.
+     */
     @Transactional
     public ApproveResult approve(String requestId, Long teamId, Long userId) {
         Optional<ConnectRequest> found = repo.findByRequestIdForUpdate(requestId);
@@ -222,15 +233,9 @@ public class ConnectRequestService {
         if (request.isExpired(now) || request.getStatus() != ConnectRequest.Status.PENDING) {
             return new ApproveResult(null, ApproveRejection.UNAVAILABLE);
         }
-        Long pinned = request.getTeamId();
-        if (pinned != null && !pinned.equals(teamId)) {
-            log.warn(
-                    "Account-link connect: request {} approved by team {} but is pinned to team {};"
-                            + " refusing",
-                    requestId,
-                    teamId,
-                    pinned);
-            return new ApproveResult(null, ApproveRejection.WRONG_TEAM);
+        if (request.getMode() == ConnectRequest.Mode.REAUTH
+                && (userId == null || !viewOf(request).isLinkedTeam(teamId))) {
+            return new ApproveResult(null, ApproveRejection.WRONG_ACCOUNT);
         }
         request.setStatus(ConnectRequest.Status.APPROVED);
         request.setTeamId(teamId);
@@ -254,7 +259,10 @@ public class ConnectRequestService {
             return false;
         }
         ConnectRequest request = found.get();
-        if (request.getStatus() != ConnectRequest.Status.PENDING) {
+        // Renewal is dismissed locally; it must never cancel or change the existing link.
+        if (request.getMode() == ConnectRequest.Mode.REAUTH
+                || request.isExpired(LocalDateTime.now())
+                || request.getStatus() != ConnectRequest.Status.PENDING) {
             return false;
         }
         request.setStatus(ConnectRequest.Status.DENIED);

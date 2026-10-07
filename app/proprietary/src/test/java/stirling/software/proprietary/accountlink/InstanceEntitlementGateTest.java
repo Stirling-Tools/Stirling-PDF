@@ -32,6 +32,35 @@ class InstanceEntitlementGateTest {
     @Mock private LocalUsageService localUsageService;
     @Mock private FreeTierUsageService freeTierUsageService;
 
+    @Test
+    void includedAndPrepaidCreditsRemainUsableAtZeroMeteredCap() {
+        InstanceEntitlement e =
+                new InstanceEntitlement(
+                        true, 20, 0, 0L, EntitlementState.OK, null, null, null, null, 0, 10);
+        assertTrue(
+                InstanceEntitlementGate.decide(true, true, true, Optional.of(e), false, 19, 0)
+                        .allowed());
+        assertTrue(
+                InstanceEntitlementGate.decide(true, true, true, Optional.of(e), false, 29, 0)
+                        .allowed());
+        assertFalse(
+                InstanceEntitlementGate.decide(true, true, true, Optional.of(e), false, 30, 0)
+                        .allowed());
+    }
+
+    @Test
+    void prepaidCreditsDoNotRequireProcessorSubscription() {
+        InstanceEntitlement e =
+                new InstanceEntitlement(
+                        false, 0, 0, null, EntitlementState.OK, null, null, null, null, 0, 10);
+        assertTrue(
+                InstanceEntitlementGate.decide(true, true, true, Optional.of(e), false, 9, 0)
+                        .allowed());
+        assertFalse(
+                InstanceEntitlementGate.decide(true, true, true, Optional.of(e), false, 10, 0)
+                        .allowed());
+    }
+
     private static FreeTierUsageService.FreeTierBalance grant(long remaining) {
         LocalDateTime start = LocalDateTime.of(2026, 9, 1, 0, 0);
         return new FreeTierUsageService.FreeTierBalance(
@@ -266,7 +295,6 @@ class InstanceEntitlementGateTest {
                 props,
                 credentialStore,
                 entitlementCache,
-                syncStateRepository,
                 localUsageService,
                 freeTierUsageService,
                 licenseService);
@@ -281,46 +309,16 @@ class InstanceEntitlementGateTest {
     }
 
     @Test
-    void evaluate_meteringOff_unreachable_failsOpen_neverGraceBlocks() {
+    void cachedPaidEntitlementExpiresEvenWithMeteringDisabledAndRecovers() {
         when(credentialStore.isLinked()).thenReturn(true);
-        when(entitlementCache.current()).thenReturn(Optional.empty());
-
-        GateDecision d = gate(props(false, 3)).evaluate(true);
-
-        // Metering off → grace never applies, even if a sync is ancient.
-        assertTrue(d.allowed());
-        assertEquals(Reason.FAIL_OPEN, d.reason());
-    }
-
-    @Test
-    void evaluate_neverSynced_pastGraceSinceLink_blocks() {
-        when(credentialStore.isLinked()).thenReturn(true);
-        when(entitlementCache.current()).thenReturn(Optional.empty());
-        when(syncStateRepository.findById(AccountLinkSyncState.SINGLETON_ID))
-                .thenReturn(Optional.empty());
-        DeviceCredential cred = new DeviceCredential();
-        cred.setLinkedAt(LocalDateTime.now().minusDays(5));
-        when(credentialStore.get()).thenReturn(Optional.of(cred));
-
-        GateDecision d = gate(props(true, 3)).evaluate(true);
-
-        assertFalse(d.allowed());
-        assertEquals(Reason.GRACE_EXPIRED, d.reason());
-    }
-
-    @Test
-    void evaluate_recentSync_withinGrace_failsOpen() {
-        when(credentialStore.isLinked()).thenReturn(true);
-        when(entitlementCache.current()).thenReturn(Optional.empty());
-        AccountLinkSyncState state = new AccountLinkSyncState();
-        state.setLastSuccessAt(LocalDateTime.now().minusDays(1));
-        when(syncStateRepository.findById(AccountLinkSyncState.SINGLETON_ID))
-                .thenReturn(Optional.of(state));
-
-        GateDecision d = gate(props(true, 3)).evaluate(true);
-
-        assertTrue(d.allowed());
-        assertEquals(Reason.FAIL_OPEN, d.reason());
+        when(entitlementCache.current())
+                .thenReturn(
+                        Optional.of(
+                                new InstanceEntitlement(true, 0, 0, null, EntitlementState.OK)));
+        when(entitlementCache.isGraceExpired()).thenReturn(true, false);
+        InstanceEntitlementGate gate = gate(props(false, 3));
+        assertEquals(Reason.GRACE_EXPIRED, gate.evaluate(true).reason());
+        assertTrue(gate.evaluate(true).allowed());
     }
 
     @Test

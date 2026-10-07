@@ -21,6 +21,16 @@
   z-index: 50;
 }
 
+/* When the top row is portalled into a title-bar strip, only the tool row stays
+   inline. It sits directly under the strip (which carries its own bottom
+   hairline), so drop the tool row's own top hairline to avoid doubling. */
+.workbench-bar[data-portaled="true"] {
+  min-height: 0;
+}
+.workbench-bar[data-portaled="true"] .workbench-bar-center {
+  border-top: none;
+}
+
 /* ---- View switcher (left) ---- */
 /* Follows the view switcher, which claims order 1 in the bar's reflow. */
 .workbench-bar-lead {
@@ -91,12 +101,56 @@
   height: 16px;
 }
 
-.workbench-bar-view-label {
-  line-height: 1;
+.workbench-bar-views .mantine-SegmentedControl-control {
+  flex: 0 0 auto;
 }
 
-/* Segmented view switcher: size the icons to the pre-consolidation 16px
- * (centering + gap come from the shared SegmentedControl innerLabel). */
+.workbench-bar-views .mantine-SegmentedControl-innerLabel {
+  gap: 0;
+}
+
+/* Animate to the label's measured pixel width, not a `fr`/`auto`/`max-content`
+ * keyword: only a length transitions in every engine (grid-column and size
+ * keywords animate in Chromium but snap in WebKit/Firefox). JS keeps
+ * --view-label-w in sync with the text's natural width. */
+.workbench-bar-view-label {
+  display: flex;
+  align-items: center;
+  width: 0;
+  /* The icon gap is margin, not padding: under border-box, padding would eat
+     into --view-label-w and clip the last letter. */
+  margin-left: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition:
+    width 0.22s ease,
+    margin-left 0.22s ease,
+    opacity 0.16s ease;
+}
+
+.workbench-bar-view-label > span {
+  /* Never shrink below the text's natural width: the collapsed label is width 0,
+     and a shrunk flex item would both clip the label and mis-measure it. */
+  flex: none;
+  white-space: nowrap;
+  /* Roomy enough that overflow:hidden clips the text sideways without shaving
+     descenders (the g in "Page Editor") off the bottom. */
+  line-height: 1.4;
+}
+
+.workbench-bar-view-label.is-open {
+  width: var(--view-label-w, auto);
+  margin-left: 0.375rem;
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .workbench-bar-view-label {
+    transition: none;
+  }
+}
+
+/* Segmented view switcher: size the icons to the pre-consolidation 16px. */
 .workbench-bar-views .mantine-SegmentedControl-label svg {
   font-size: 16px;
   width: 16px;
@@ -115,12 +169,17 @@
   justify-content: center;
   height: 38px;
   transform: translateX(var(--workbench-bar-search-offset, 0px));
+  /* The slot spans the whole centre and is shifted by a transform, so its empty
+     flanks can sit over the view switcher or the globals cluster and swallow
+     their clicks. Only the pill itself takes pointer events. */
+  pointer-events: none;
 }
 
 .workbench-bar-search .super-search {
   flex: 0 1 24rem;
   width: min(100%, 24rem);
   max-width: 24rem;
+  pointer-events: auto;
 }
 
 .workbench-bar-search .super-search input {
@@ -252,6 +311,12 @@
   background: transparent !important;
 }
 
+/* Dark mode: the quick-nav rail's selected-pill white, a step below full text
+ * colour so hover still has somewhere brighter to go. */
+[data-mantine-color-scheme="dark"] .workbench-bar-action-icon {
+  color: color-mix(in srgb, var(--c-text) 80%, var(--c-surface)) !important;
+}
+
 .workbench-bar-action-icon svg,
 .workbench-bar-action-icon img {
   color: inherit !important;
@@ -259,6 +324,14 @@
 
 .workbench-bar-action-icon:hover {
   color: var(--c-text) !important;
+}
+
+/* The !important colour above overrides Mantine's disabled styling, so a
+ * disabled icon would otherwise look exactly like an enabled one. */
+.workbench-bar-action-icon:disabled,
+.workbench-bar-action-icon[data-disabled] {
+  color: var(--c-text-muted) !important;
+  opacity: 0.45;
 }
 
 .workbench-bar-action-icon[data-variant="filled"] {

@@ -44,6 +44,8 @@ type StubFixtures = {
   stubOptions: MockAppApiOptions;
   autoGoto: false | string;
   seedJwt: boolean;
+  /** The library's view. Set it where a test reads cards or rows by shape. */
+  filesViewMode: "grid" | "list" | null;
 };
 
 // Minimal JWT-shaped value — the proprietary auth client only checks for
@@ -58,8 +60,12 @@ export const test = base.extend<StubFixtures>({
   // the app instead of racing a redirect on every single test.
   autoGoto: ["/editor", { option: true }],
   seedJwt: [false, { option: true }],
+  filesViewMode: [null, { option: true }],
 
-  page: async ({ page, stubOptions, autoGoto, seedJwt }, use) => {
+  page: async (
+    { page, stubOptions, autoGoto, seedJwt, filesViewMode },
+    use,
+  ) => {
     suppressNativeFilePicker(page);
     await seedCookieConsent(page);
     await bypassOnboarding(page);
@@ -68,10 +74,20 @@ export const test = base.extend<StubFixtures>({
         localStorage.setItem("stirling_jwt", token);
       }, STUB_JWT);
     }
+    if (filesViewMode) {
+      await page.addInitScript((mode) => {
+        localStorage.setItem("stirling.filesPageViewMode", mode);
+      }, filesViewMode);
+    }
+    if (filesViewMode) {
+      await page.addInitScript((mode) => {
+        localStorage.setItem("stirling.filesPageViewMode", mode);
+      }, filesViewMode);
+    }
     await mockAppApis(page, stubOptions);
     if (autoGoto !== false) {
       // waitUntil: 'domcontentloaded' avoids hanging on third-party CDN
-      // resources (iconify, posthog, stripe) the stub doesn't mock — the
+      // resources (posthog, stripe) the stub doesn't mock — the
       // default 'load' event waits for ALL subresources, which can time out
       // on slow runners and is rarely what tests actually need.
       await page.goto(autoGoto, { waitUntil: "domcontentloaded" });

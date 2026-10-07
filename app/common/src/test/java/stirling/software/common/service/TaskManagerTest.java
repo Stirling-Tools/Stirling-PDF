@@ -285,9 +285,9 @@ class TaskManagerTest {
     }
 
     @Test
-    void testCleanupOldJobs_NoOpWhenBackplaneOwnsExpiry() {
-        // When the backplane reports it should NOT run local cleanup (e.g. a distributed
-        // backplane with its own TTL), the cleanup loop must leave local state untouched.
+    void testCleanupOldJobs_ReclaimsLocallyButSkipsSharedDeleteWhenBackplaneOwnsExpiry() {
+        // The backplane TTLs the shared row, so that delete is redundant, but skipping the whole
+        // sweep leaked this node's jobResults heap and every result file.
         when(clusterBackplane.shouldRunLocalCleanup()).thenReturn(false);
 
         // Seed an old completed job that would normally be removed.
@@ -305,10 +305,9 @@ class TaskManagerTest {
         // Act
         taskManager.cleanupOldJobs();
 
-        // Assert: nothing was removed locally, and no jobStore.delete was issued.
-        assertTrue(jobResultsMap.containsKey(oldJobId));
+        // Assert: local state was reclaimed, but the shared row was left to its TTL.
+        assertFalse(jobResultsMap.containsKey(oldJobId));
         verify(jobStore, never()).delete(anyString());
-        verify(fileStorage, never()).deleteFileAsSystem(anyString());
     }
 
     @Test

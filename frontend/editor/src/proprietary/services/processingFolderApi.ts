@@ -13,6 +13,7 @@ export const CLASSIFY_OPERATION = "/api/v1/ai/tools/classify-and-label";
 export interface ProcessingFolderStep {
   operation: string;
   parameters: Record<string, unknown>;
+  fileParameters?: Record<string, string>;
   assets?: Record<string, unknown>;
 }
 
@@ -101,21 +102,6 @@ export function classificationDefaults(
   };
 }
 
-export interface DownloadsSuggestion {
-  directory: string;
-  available: boolean;
-  pdfCount: number;
-  limit: number;
-}
-
-/** The server's Downloads path and PDF count — the browser cannot see machine paths. */
-export async function fetchDownloadsSuggestion(): Promise<DownloadsSuggestion> {
-  const res = await apiClient.get<DownloadsSuggestion>(
-    "/api/v1/processing-folders/downloads-suggestion",
-  );
-  return res.data;
-}
-
 /** One file a run produced. Downloadable by id from the general files endpoint. */
 export interface ProcessingRunOutput {
   fileId: string;
@@ -133,7 +119,7 @@ export interface ProcessingFolderRun {
   stepCount?: number;
 }
 
-/** Runs belonging to a processing folder, newest first — drives the progress display. */
+/** Newest runs first. Poll failures reject without global toasts. */
 export async function fetchProcessingFolderRuns(
   policyId: string,
 ): Promise<ProcessingFolderRun[]> {
@@ -141,7 +127,10 @@ export async function fetchProcessingFolderRuns(
   // against a backend that ignores the parameter.
   const res = await apiClient.get<
     (ProcessingFolderRun & { policyId?: string })[]
-  >("/api/v1/policies/runs", { params: { policyId } });
+  >("/api/v1/policies/runs", {
+    params: { policyId },
+    suppressErrorToast: true,
+  });
   return (res.data ?? []).filter((run) => run.policyId === policyId);
 }
 
@@ -191,9 +180,11 @@ export interface MountedFile {
   hasOriginal?: boolean;
 }
 
+/** Reads file progress for polling; failures reject without global toasts. */
 export async function fetchMountedFiles(id: string): Promise<MountedFile[]> {
   const res = await apiClient.get<MountedFile[]>(
     `/api/v1/processing-folders/${id}/files`,
+    { suppressErrorToast: true },
   );
   return res.data ?? [];
 }

@@ -1,16 +1,16 @@
 import { PlanTierGroup } from "@app/services/licenseService";
 
 export interface StripeCheckoutProps {
-  /** Supplying it skips the email step. */
-  initialEmail?: string;
   /**
-   * Put the period and capacity choices on one page instead of walking them separately. Independent
-   * of {@link initialEmail}: a buyer who still has to type an address gets the email page in front
-   * of the combined one rather than the long walk behind it. Ignored for tiers that do not sell capacity.
+   * Put the period and capacity choices on one page instead of walking them separately. Nothing
+   * precedes it: the buyer is never asked for an address, so the combined page is the first thing
+   * the flow opens on. Ignored for tiers that do not sell capacity.
    */
   combinedChoose?: boolean;
   /** Users the current plan covers, or null when there is none. Drives the add-capacity face. */
   currentLimit?: number | null;
+  /** Present only for a self-hosted server above its actual allowance. */
+  capacityNotice?: { users: number; limit: number };
   opened: boolean;
   onClose: () => void;
   planGroup: PlanTierGroup;
@@ -30,17 +30,11 @@ export interface StripeCheckoutProps {
 }
 
 export type CheckoutStage =
-  | "email"
   /**
    * Billing period and capacity on one page. The separate {@code plan-selection} and {@code
    * capacity} stages remain for the flows that still walk them one at a time.
    */
-  | "choose"
-  | "plan-selection"
-  | "capacity"
-  | "payment"
-  | "success"
-  | "error";
+  "choose" | "plan-selection" | "capacity" | "payment" | "success" | "error";
 
 export type CheckoutState = {
   currentStage: CheckoutStage;

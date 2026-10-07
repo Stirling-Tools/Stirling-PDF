@@ -251,6 +251,11 @@ export interface AutoSplitPdfRequest {
    */
   duplexMode?: boolean;
 }
+export interface BatchAttachmentRequest {
+  attachments?: File[];
+  convertToPdfA3b?: boolean;
+  opsJson?: string;
+}
 export interface BookletImpositionRequest {
   /**
    * Boolean for if you wish to add border around the pages
@@ -422,6 +427,10 @@ export interface CropPdfForm {
    */
   height?: number;
   /**
+   * Pages to crop (e.g. '1, 3, 5-8' or 'all'). Omit or leave blank for all pages.
+   */
+  pageNumbers?: string;
+  /**
    * Whether to remove text outside the crop area (keeps images)
    */
   removeDataOutsideCrop?: boolean;
@@ -536,6 +545,12 @@ export interface ExtractImageScansRequest {
    */
   tolerance?: number;
 }
+export interface ExtractSingleAttachmentRequest {
+  /**
+   * Name of the embedded attachment to extract
+   */
+  attachmentName: string;
+}
 export interface FileSizeRequest {
   /**
    * The comparison type, accepts Greater, Equal, Less than
@@ -562,7 +577,9 @@ export interface FormFormDetectionDetectRequest {
   confThreshold?: number;
 }
 export type GeneralExtractBookmarksRequest = Record<string, never>;
-export type GeneralFile = Record<string, never>;
+export interface GeneralFile {
+  useStirlingOfficeConvert?: boolean;
+}
 export type GeneralPdfToSinglePageRequest = Record<string, never>;
 export type GeneralRemoveImagePdfRequest = Record<string, never>;
 export interface HTMLToPdfRequest {
@@ -570,6 +587,36 @@ export interface HTMLToPdfRequest {
    * Zoom level for displaying the website. Default is '1'.
    */
   zoom?: number;
+}
+export interface IngestApiRequest {
+  /**
+   * Target chunk size in characters (64-32768)
+   */
+  chunkSize?: number;
+  /**
+   * Stable identifier for the ingested document; re-ingesting the same id replaces its chunks. Defaults to a content hash of the uploaded bytes.
+   */
+  documentId?: string;
+  /**
+   * Also return the chunks as a JSONL file (one chunk per line with page span and heading breadcrumb), ready for external embedding or indexing
+   */
+  exportChunksJsonl?: boolean;
+  /**
+   * Also return the parsed document as a markdown file, for delivery to external systems (vector DBs, training corpora)
+   */
+  exportMarkdown?: boolean;
+  /**
+   * Include the input PDF alongside the requested corpus files
+   */
+  includeOriginal?: boolean;
+  /**
+   * Index the document into the built-in knowledge base
+   */
+  index?: boolean;
+  /**
+   * Overlap between adjacent chunks in characters (0-4096)
+   */
+  overlap?: number;
 }
 export interface IntegrationExternalApiCallRequest {
   bodyMode?: string;
@@ -974,18 +1021,21 @@ export interface PdfToPresentationRequest {
    * The output Presentation format
    */
   outputFormat: "ppt" | "pptx" | "odp";
+  useStirlingOfficeConvert?: boolean;
 }
 export interface PdfToTextOrRTFRequest {
   /**
    * The output Text or RTF format
    */
   outputFormat: "rtf" | "txt";
+  useStirlingOfficeConvert?: boolean;
 }
 export interface PdfToWordRequest {
   /**
    * The output Word document format
    */
   outputFormat: "doc" | "docx" | "odt";
+  useStirlingOfficeConvert?: boolean;
 }
 export interface PdfVectorExportRequest {
   /**
@@ -1368,10 +1418,12 @@ export interface WorkflowCreationRequest {
   workflowType?: "SIGNING" | "REVIEW" | "APPROVAL";
 }
 export interface SecurityCertSignValidateCertificateRequest {
+  certFile?: File;
   certType: string;
   jksFile?: File;
   p12File?: File;
   password?: string;
+  privateKeyFile?: File;
 }
 export type SecurityGetInfoOnPdfRequest = Record<string, never>;
 export type SecurityRemoveCertSignRequest = Record<string, never>;
@@ -1550,6 +1602,7 @@ export type ToolEndpoint =
   | "/api/v1/convert/text-editor/pdf"
   | "/api/v1/convert/url/pdf"
   | "/api/v1/convert/vector/pdf"
+  | "/api/v1/docparse/ingest"
   | "/api/v1/filter/filter-contains-image"
   | "/api/v1/filter/filter-contains-text"
   | "/api/v1/filter/filter-file-size"
@@ -1588,6 +1641,7 @@ export type ToolEndpoint =
   | "/api/v1/misc/auto-rename"
   | "/api/v1/misc/auto-rotate-pdf"
   | "/api/v1/misc/auto-split-pdf"
+  | "/api/v1/misc/batch-process-attachments"
   | "/api/v1/misc/compress-pdf"
   | "/api/v1/misc/create-portfolio"
   | "/api/v1/misc/decompress-pdf"
@@ -1595,6 +1649,7 @@ export type ToolEndpoint =
   | "/api/v1/misc/extract-attachments"
   | "/api/v1/misc/extract-image-scans"
   | "/api/v1/misc/extract-images"
+  | "/api/v1/misc/extract-single-attachment"
   | "/api/v1/misc/flatten"
   | "/api/v1/misc/flatten-portfolio"
   | "/api/v1/misc/list-attachments"
@@ -1658,6 +1713,7 @@ export interface ToolApiParams {
   "/api/v1/convert/text-editor/pdf": GeneralFile;
   "/api/v1/convert/url/pdf": UrlToPdfRequest;
   "/api/v1/convert/vector/pdf": PdfVectorExportRequest;
+  "/api/v1/docparse/ingest": IngestApiRequest;
   "/api/v1/filter/filter-contains-image": PDFWithPageNums;
   "/api/v1/filter/filter-contains-text": ContainsTextRequest;
   "/api/v1/filter/filter-file-size": FileSizeRequest;
@@ -1696,6 +1752,7 @@ export interface ToolApiParams {
   "/api/v1/misc/auto-rename": ExtractHeaderRequest;
   "/api/v1/misc/auto-rotate-pdf": AutoRotatePdfRequest;
   "/api/v1/misc/auto-split-pdf": AutoSplitPdfRequest;
+  "/api/v1/misc/batch-process-attachments": BatchAttachmentRequest;
   "/api/v1/misc/compress-pdf": OptimizePdfRequest;
   "/api/v1/misc/create-portfolio": CreatePortfolioRequest;
   "/api/v1/misc/decompress-pdf": MiscDecompressPdfRequest;
@@ -1703,6 +1760,7 @@ export interface ToolApiParams {
   "/api/v1/misc/extract-attachments": ExtractAttachmentsRequest;
   "/api/v1/misc/extract-image-scans": ExtractImageScansRequest;
   "/api/v1/misc/extract-images": PDFExtractImagesRequest;
+  "/api/v1/misc/extract-single-attachment": ExtractSingleAttachmentRequest;
   "/api/v1/misc/flatten": FlattenRequest;
   "/api/v1/misc/flatten-portfolio": FlattenPortfolioRequest;
   "/api/v1/misc/list-attachments": ListAttachmentsRequest;
@@ -1767,6 +1825,7 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/convert/text-editor/pdf",
   "/api/v1/convert/url/pdf",
   "/api/v1/convert/vector/pdf",
+  "/api/v1/docparse/ingest",
   "/api/v1/filter/filter-contains-image",
   "/api/v1/filter/filter-contains-text",
   "/api/v1/filter/filter-file-size",
@@ -1805,6 +1864,7 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/misc/auto-rename",
   "/api/v1/misc/auto-rotate-pdf",
   "/api/v1/misc/auto-split-pdf",
+  "/api/v1/misc/batch-process-attachments",
   "/api/v1/misc/compress-pdf",
   "/api/v1/misc/create-portfolio",
   "/api/v1/misc/decompress-pdf",
@@ -1812,6 +1872,7 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/misc/extract-attachments",
   "/api/v1/misc/extract-image-scans",
   "/api/v1/misc/extract-images",
+  "/api/v1/misc/extract-single-attachment",
   "/api/v1/misc/flatten",
   "/api/v1/misc/flatten-portfolio",
   "/api/v1/misc/list-attachments",
@@ -1850,6 +1911,7 @@ export const TOOL_FILE_FIELDS = {
   "/api/v1/misc/add-attachments": ["attachments"],
   "/api/v1/misc/add-image": ["imageFile"],
   "/api/v1/misc/add-stamp": ["stampImage"],
+  "/api/v1/misc/batch-process-attachments": ["attachments"],
   "/api/v1/misc/create-portfolio": ["files"],
   "/api/v1/security/add-watermark": ["watermarkImage"],
   "/api/v1/security/cert-sign": [
@@ -1858,7 +1920,12 @@ export const TOOL_FILE_FIELDS = {
     "p12File",
     "jksFile",
   ],
-  "/api/v1/security/cert-sign/validate-certificate": ["p12File", "jksFile"],
+  "/api/v1/security/cert-sign/validate-certificate": [
+    "p12File",
+    "privateKeyFile",
+    "certFile",
+    "jksFile",
+  ],
   "/api/v1/security/validate-signature": ["certFile"],
 } as const satisfies Partial<Record<ToolEndpoint, readonly string[]>>;
 

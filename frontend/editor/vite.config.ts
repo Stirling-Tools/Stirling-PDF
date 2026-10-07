@@ -213,13 +213,7 @@ function subpathBareRedirectPlugin(subpath: string): PluginOption {
 // into the saas and desktop builds. It has no entry here and no vite tsconfig;
 // it is only typechecked standalone via editor/src/cloud/tsconfig.json
 // (task frontend:typecheck:cloud) to prove it carries no saas/desktop-only deps.
-const VALID_MODES = [
-  "core",
-  "proprietary",
-  "saas",
-  "desktop",
-  "prototypes",
-] as const;
+const VALID_MODES = ["core", "proprietary", "saas", "desktop"] as const;
 type BuildMode = (typeof VALID_MODES)[number];
 
 const TSCONFIG_MAP: Record<BuildMode, string> = {
@@ -227,7 +221,6 @@ const TSCONFIG_MAP: Record<BuildMode, string> = {
   proprietary: "./tsconfig.proprietary.vite.json",
   saas: "./tsconfig.saas.vite.json",
   desktop: "./tsconfig.desktop.vite.json",
-  prototypes: "./tsconfig.prototypes.vite.json",
 };
 
 export default defineConfig(async ({ mode, command }) => {
@@ -251,7 +244,7 @@ export default defineConfig(async ({ mode, command }) => {
   const flavor = (process.env.STIRLING_FLAVOR ?? "").toLowerCase();
   const flavorMode: BuildMode | null =
     flavor === "core" || flavor === "proprietary" || flavor === "saas"
-      ? (flavor as BuildMode)
+      ? flavor
       : null;
   const effectiveMode: BuildMode =
     explicitMode ??
@@ -380,13 +373,9 @@ export default defineConfig(async ({ mode, command }) => {
             dest: "pdfjs/standard_fonts",
           },
           {
-            // Brand assets live in core; the editor serves them by URL per
-            // variant, so copy each set to the /{variant}-logo path its
-            // manifests, index.html and useLogoAssets resolve against.
-            src: "src/core/assets/brand/classic-logo/*",
-            dest: "classic-logo",
-          },
-          {
+            // Brand assets live in core; the editor serves them by URL, so
+            // copy the set to the /modern-logo path its manifest, index.html
+            // and useLogoAssets resolve against.
             src: "src/core/assets/brand/modern-logo/*",
             dest: "modern-logo",
           },
@@ -427,21 +416,19 @@ export default defineConfig(async ({ mode, command }) => {
     },
     build: {
       target: "esnext",
+      modulePreload: {
+        // Lazy chunks can import the entry again. An upfront link lets Vite reuse
+        // its preload instead of fetching an already-running module in WebKit.
+        resolveDependencies: (filename, deps, { hostType }) =>
+          hostType === "html" ? [filename, ...deps] : deps,
+      },
       rollupOptions: {
         output: {
-          manualChunks(id) {
-            if (id.includes("material-symbols-icons.json"))
-              return "vendor-iconset";
+          manualChunks(id: string) {
             if (id.includes("node_modules")) {
               if (id.includes("pdfjs-dist")) return "vendor-pdfjs";
               if (id.includes("@embedpdf")) return "vendor-embedpdf";
-              if (
-                id.includes("react") ||
-                id.includes("@mantine") ||
-                id.includes("@emotion") ||
-                id.includes("@mui") ||
-                id.includes("@iconify")
-              ) {
+              if (id.includes("react") || id.includes("@mantine")) {
                 return "vendor-ui";
               }
               if (id.includes("@supabase")) return "vendor-supabase";

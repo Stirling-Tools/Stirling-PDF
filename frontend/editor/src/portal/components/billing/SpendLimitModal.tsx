@@ -1,20 +1,10 @@
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Modal } from "@app/ui";
-import type { Wallet } from "@portal/api/billing";
-import { SpendLimitCard } from "@portal/components/billing/SpendLimitCard";
-import { PrepaidCapacityCard } from "@portal/components/billing/PrepaidCapacityCard";
+import { Banner, Button, Modal } from "@app/ui";
+import { updateCap, type Wallet } from "@portal/api/billing";
+import { ProcessorSpendFields } from "@portal/components/billing/ProcessorSpendFields";
 
-/**
- * The spend limit, as a dialog opened from the Processor row's own door.
- *
- * <p>A dialog rather than a panel below the page because the row states the limit already: an
- * editor sitting under the enterprise band is both a second copy of that fact and a control a
- * long way from the thing it edits.
- *
- * <p>Prepaid capacity rides along because it is the other answer to the same question. A buyer
- * who came here to raise a ceiling is the buyer for whom paying up front is cheaper, and the
- * offer has nowhere else to live now that the page carries no cards.
- */
+/** Changes the existing ceiling without opening another checkout. */
 export function SpendLimitModal({
   open,
   onClose,
@@ -26,29 +16,82 @@ export function SpendLimitModal({
   onClose: () => void;
   wallet: Wallet;
   onWalletChange?: () => void;
-  /** Leader-only: opens the bundle checkout. Omit for members, who see no offer. */
   onBuyBundle?: () => void;
 }) {
   const { t } = useTranslation();
-  const title = t(
-    "portal.billing.spendLimitModal.title",
-    "Monthly spend limit",
+  const [draft, setDraft] = useState<number | null>(
+    wallet.noCap ? null : wallet.capUsd,
   );
-
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(false);
+  useEffect(() => {
+    if (open) {
+      setDraft(wallet.noCap ? null : wallet.capUsd);
+      setError(false);
+    }
+  }, [open, wallet.noCap, wallet.capUsd]);
+  async function save() {
+    setSaving(true);
+    setError(false);
+    try {
+      await updateCap(draft);
+      onWalletChange?.();
+      onClose();
+    } catch {
+      setError(true);
+    } finally {
+      setSaving(false);
+    }
+  }
   return (
-    <Modal open={open} onClose={onClose} width="md" ariaLabel={title}>
-      <div className="portal-billing__stack">
-        <SpendLimitCard
-          wallet={wallet}
-          onWalletChange={onWalletChange}
-          adjusting
-          // The card's own cancel and save both settle to "not adjusting", which is this
-          // dialog's close.
-          onAdjustingChange={(adjusting) => {
-            if (!adjusting) onClose();
-          }}
+    <Modal
+      open={open}
+      onClose={onClose}
+      width="md"
+      className="processor-checkout--simple processor-spend-modal"
+      title={t("portal.billing.simple.setLimit", "Set a spend limit")}
+      subtitle={t(
+        "portal.billing.simple.limitIntro",
+        "Cap what the Processor can bill each month.",
+      )}
+    >
+      <ProcessorSpendFields
+        value={draft}
+        onChange={setDraft}
+        currency={wallet.currency ?? "usd"}
+        rate={wallet.pricePerDocMinor}
+        disabled={saving}
+      />
+      <p className="portal-billing__checkout-finePrint">
+        {t(
+          "portal.billing.simple.billingNote",
+          "No standing fee. Credits bill monthly as used. Cancel any time in Usage & Billing.",
+        )}
+      </p>
+      {error && (
+        <Banner
+          tone="danger"
+          title={t(
+            "portal.billing.spendLimit.saveError",
+            "Couldn't save limit",
+          )}
         />
-        <PrepaidCapacityCard wallet={wallet} onBuy={onBuyBundle} />
+      )}
+      <div className="portal-billing__checkout-cap-actions">
+        {onBuyBundle ? (
+          <Button variant="secondary" onClick={onBuyBundle} disabled={saving}>
+            {t("portal.billing.spendLimit.buyCredits", "Buy credits")}
+          </Button>
+        ) : (
+          <span />
+        )}
+        <Button
+          onClick={save}
+          loading={saving}
+          disabled={draft !== null && (!Number.isFinite(draft) || draft <= 0)}
+        >
+          {t("portal.billing.spendLimit.save", "Save limit")}
+        </Button>
       </div>
     </Modal>
   );

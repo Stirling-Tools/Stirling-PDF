@@ -6,7 +6,6 @@ export interface AppConfig {
   appNameNavbar?: string;
   languages?: string[];
   defaultLocale?: string;
-  logoStyle?: "modern" | "classic";
   enableLogin?: boolean;
   showSettingsWhenNoLogin?: boolean;
   enableEmailInvites?: boolean;
@@ -15,6 +14,7 @@ export interface AppConfig {
   isAdmin?: boolean;
   shouldShowUpdate?: boolean;
   enableAlphaFunctionality?: boolean;
+  stirlingOfficeConversion?: boolean;
   enableAnalytics?: boolean | null;
   enablePosthog?: boolean | null;
   enableScarf?: boolean | null;

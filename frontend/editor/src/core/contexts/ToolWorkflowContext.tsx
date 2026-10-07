@@ -16,7 +16,6 @@ import {
   useToolManagement,
   type ToolAvailabilityMap,
 } from "@app/hooks/useToolManagement";
-import { PageEditorFunctions } from "@app/types/pageEditor";
 import { ToolRegistryEntry, ToolRegistry } from "@app/data/toolsTaxonomy";
 import {
   useNavigationActions,
@@ -33,6 +32,7 @@ import { stripBasePath } from "@app/constants/app";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import { filterToolRegistryByQuery } from "@app/utils/toolSearch";
 import { useToolHistory } from "@app/hooks/tools/useUserToolActivity";
+import { markReaderModeFromPreference } from "@app/utils/pendingReaderMode";
 import {
   ToolWorkflowState,
   createInitialState,
@@ -72,15 +72,13 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   toolAvailability: ToolAvailabilityMap;
 
   // UI Actions
-  setSidebarsVisible: (visible: boolean) => void;
-  setLeftPanelView: (view: "toolPicker" | "toolContent" | "hidden") => void;
+  setLeftPanelView: (view: "toolPicker" | "toolContent") => void;
   setReaderMode: (mode: boolean) => void;
   setToolPanelMode: (mode: ToolPanelMode) => void;
   setPreviewFile: (file: File | null) => void;
   /** Register work that turns the current preview into a real file. Tool
    * selection runs it first, so a tool never acts on the wrong document. */
   registerPreviewImport: (importFile: (() => Promise<void>) | null) => void;
-  setPageEditorFunctions: (functions: PageEditorFunctions | null) => void;
   setSearchQuery: (query: string) => void;
 
   selectTool: (toolId: ToolId | null) => void;
@@ -105,7 +103,6 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
     item: [ToolId, ToolRegistryEntry];
     matchedText?: string;
   }>; // Filtered by search
-  isPanelVisible: boolean;
 
   // Tool History
   favoriteTools: ToolId[];
@@ -151,15 +148,13 @@ export interface ToolWorkflowActionsValue {
   handleToolSelectForced: (toolId: ToolId) => void;
   handleBackToTools: () => void;
   handleReaderToggle: () => void;
-  setSidebarsVisible: (visible: boolean) => void;
-  setLeftPanelView: (view: "toolPicker" | "toolContent" | "hidden") => void;
+  setLeftPanelView: (view: "toolPicker" | "toolContent") => void;
   setReaderMode: (mode: boolean) => void;
   setToolPanelMode: (mode: ToolPanelMode) => void;
   setPreviewFile: (file: File | null) => void;
   /** Register work that turns the current preview into a real file. Tool
    * selection runs it first, so a tool never acts on the wrong document. */
   registerPreviewImport: (importFile: (() => Promise<void>) | null) => void;
-  setPageEditorFunctions: (functions: PageEditorFunctions | null) => void;
   setSearchQuery: (query: string) => void;
   registerToolReset: (toolId: string, resetFunction: () => void) => void;
   resetTool: (toolId: string) => void;
@@ -221,16 +216,9 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   const selectedTool = getSelectedTool(navigationState.selectedTool);
 
   // UI Action creators
-  const setSidebarsVisible = useCallback((visible: boolean) => {
-    dispatch({ type: "SET_SIDEBARS_VISIBLE", payload: visible });
+  const setLeftPanelView = useCallback((view: "toolPicker" | "toolContent") => {
+    dispatch({ type: "SET_LEFT_PANEL_VIEW", payload: view });
   }, []);
-
-  const setLeftPanelView = useCallback(
-    (view: "toolPicker" | "toolContent" | "hidden") => {
-      dispatch({ type: "SET_LEFT_PANEL_VIEW", payload: view });
-    },
-    [],
-  );
 
   const setReaderMode = useCallback(
     (mode: boolean) => {
@@ -268,13 +256,6 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   const registerPreviewImport = useCallback(
     (importFile: (() => Promise<void>) | null) => {
       previewImportRef.current = importFile;
-    },
-    [],
-  );
-
-  const setPageEditorFunctions = useCallback(
-    (functions: PageEditorFunctions | null) => {
-      dispatch({ type: "SET_PAGE_EDITOR_FUNCTIONS", payload: functions });
     },
     [],
   );
@@ -414,16 +395,24 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     // editor's home, never what a deep link to a tool shows. Without this, a
     // "Reader" preference rewrote every /<tool> link to /read.
     const path = stripBasePath(window.location.pathname);
-    if (path !== "/" && path !== EDITOR_BASENAME) {
+    // A reload is not a launch: it keeps whichever view the user had open.
+    const navigation = performance.getEntriesByType?.("navigation")[0] as
+      | PerformanceNavigationTiming
+      | undefined;
+    if (
+      navigation?.type === "reload" ||
+      (path !== "/" && path !== EDITOR_BASENAME)
+    ) {
       hasAppliedStartupView.current = true;
       return;
     }
     const startupView = preferences.defaultStartupView;
     if (startupView === "read") {
+      // Reading is a surface, not a tool: selecting the Read tool as well would
+      // disagree with the reader's address, and the URL sync would close both.
       hasAppliedStartupView.current = true;
-      startupSelectedToolRef.current = "read";
+      markReaderModeFromPreference();
       setReaderMode(true);
-      actions.setSelectedTool("read");
     } else if (startupView === "automate") {
       hasAppliedStartupView.current = true;
       startupSelectedToolRef.current = "automate";
@@ -438,29 +427,6 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     preferences.defaultStartupView,
     actions,
     setReaderMode,
-    setLeftPanelView,
-  ]);
-
-  // When in multi-tool, sync left panel visibility with workbench:
-  // hide the panel on pageEditor, show it when navigating to viewer/fileEditor.
-  const prevMultiToolWorkbenchRef = React.useRef<WorkbenchType | null>(null);
-  useEffect(() => {
-    const prev = prevMultiToolWorkbenchRef.current;
-    prevMultiToolWorkbenchRef.current = navigationState.workbench;
-
-    if (navigationState.selectedTool !== "multiTool") return;
-
-    if (navigationState.workbench === "pageEditor" && prev !== "pageEditor") {
-      setLeftPanelView("hidden");
-    } else if (
-      navigationState.workbench !== "pageEditor" &&
-      prev === "pageEditor"
-    ) {
-      setLeftPanelView("toolPicker");
-    }
-  }, [
-    navigationState.workbench,
-    navigationState.selectedTool,
     setLeftPanelView,
   ]);
 
@@ -502,7 +468,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
         navigationState.selectedTool &&
         navigationState.selectedTool !== toolId
       ) {
-        actions.requestNavigation(() => handleToolSelect(toolId));
+        actions.requestNavigation(() => handleToolSelectRef.current(toolId));
         return;
       }
 
@@ -532,7 +498,9 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       // Handle multiTool selection - enable page editor workbench
       if (toolId === "multiTool") {
         setReaderMode(false);
-        setLeftPanelView("hidden");
+        // The page editor is the tool, so the panel beside it stays on the picker:
+        // left on toolContent it would render this tool's header over no body.
+        setLeftPanelView("toolPicker");
         actions.setSelectedTool("multiTool");
         actions.setWorkbench(
           wasInCustomWorkbench ? getDefaultWorkbench() : "pageEditor",
@@ -597,10 +565,12 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   );
 
   const handleBackToTools = useCallback(() => {
-    setLeftPanelView("toolPicker");
-    setReaderMode(false);
-    actions.setSelectedTool(null);
-  }, [setLeftPanelView, setReaderMode, actions.setSelectedTool]);
+    actions.requestNavigation(() => {
+      setLeftPanelView("toolPicker");
+      setReaderMode(false);
+      actions.setSelectedTool(null);
+    });
+  }, [setLeftPanelView, setReaderMode, actions]);
 
   const handleReaderToggle = useCallback(() => {
     setReaderMode(true);
@@ -612,18 +582,17 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     return filterToolRegistryByQuery(toolRegistry, state.searchQuery);
   }, [toolRegistry, state.searchQuery]);
 
-  const isPanelVisible = useMemo(
-    () =>
-      state.sidebarsVisible &&
-      !state.readerMode &&
-      state.leftPanelView !== "hidden",
-    [state.sidebarsVisible, state.readerMode, state.leftPanelView],
-  );
+  // An address naming no tool clears the tool, not reading: the reader's own path
+  // decides that, and /reader names no tool either.
+  const clearToolFromAddress = useCallback(() => {
+    setLeftPanelView("toolPicker");
+    actions.setSelectedTool(null);
+  }, [setLeftPanelView, actions.setSelectedTool]);
 
   useNavigationUrlSync(
     navigationState.selectedTool,
     handleToolSelect,
-    handleBackToTools,
+    clearToolFromAddress,
     allTools,
     true,
     startupSelectedToolRef,
@@ -700,13 +669,11 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       handleToolSelectForced: stableHandleToolSelectForced,
       handleBackToTools: stableHandleBackToTools,
       handleReaderToggle: stableHandleReaderToggle,
-      setSidebarsVisible,
       setLeftPanelView,
       setReaderMode: stableSetReaderMode,
       setToolPanelMode: stableSetToolPanelMode,
       setPreviewFile: stableSetPreviewFile,
       registerPreviewImport,
-      setPageEditorFunctions,
       setSearchQuery,
       registerToolReset,
       resetTool,
@@ -719,12 +686,10 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       stableHandleToolSelectForced,
       stableHandleBackToTools,
       stableHandleReaderToggle,
-      setSidebarsVisible,
       setLeftPanelView,
       stableSetReaderMode,
       stableSetToolPanelMode,
       stableSetPreviewFile,
-      setPageEditorFunctions,
       setSearchQuery,
       registerToolReset,
       resetTool,
@@ -759,13 +724,11 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       getSelectedTool,
 
       // Actions
-      setSidebarsVisible,
       setLeftPanelView,
       setReaderMode,
       setToolPanelMode,
       setPreviewFile,
       registerPreviewImport,
-      setPageEditorFunctions,
       setSearchQuery,
       selectTool: actions.setSelectedTool,
       clearToolSelection: () => actions.setSelectedTool(null),
@@ -784,7 +747,6 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
 
       // Computed
       filteredTools,
-      isPanelVisible,
 
       // Tool History
       favoriteTools,
@@ -805,12 +767,10 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       toolRegistry,
       getSelectedTool,
       toolAvailability,
-      setSidebarsVisible,
       setLeftPanelView,
       setReaderMode,
       setToolPanelMode,
       setPreviewFile,
-      setPageEditorFunctions,
       setSearchQuery,
       actions.setSelectedTool,
       registerToolReset,
@@ -819,7 +779,6 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       handleBackToTools,
       handleReaderToggle,
       filteredTools,
-      isPanelVisible,
       favoriteTools,
       toggleFavorite,
       isFavorite,

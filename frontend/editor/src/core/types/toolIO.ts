@@ -90,7 +90,7 @@ export const TOOL_FORMAT_EXTENSIONS: Record<ToolFormat, readonly string[]> = {
   CSV: ["csv"],
   HTML: ["html", "htm", "xhtml"],
   XML: ["xml", "xsd", "xsl"],
-  JSON: ["json"],
+  JSON: ["json", "jsonl"],
   TEXT: ["txt", "text", "md", "markdown"],
   MARKDOWN: ["md", "markdown"],
   JAVASCRIPT: ["js", "jsx"],
@@ -192,11 +192,16 @@ export const TOOL_IO: ToolIOTable = {
       "emf",
       "gif",
       "ico",
+      "j2c",
+      "j2k",
       "jb2",
       "jbig2",
       "jp2",
+      "jpc",
       "jpeg",
+      "jpf",
       "jpg",
+      "jpx",
       "pbm",
       "pcx",
       "pgm",
@@ -362,6 +367,38 @@ export const TOOL_IO: ToolIOTable = {
     produces: "PDF",
     arity: "SISO",
   },
+  "/api/v1/docparse/ingest": {
+    accepts: ["PDF"],
+    produces: "PDF",
+    arity: "SIMO",
+    cases: [
+      {
+        when: [
+          { param: "includeOriginal", matches: ["false"], default: "true" },
+          { param: "exportMarkdown", matches: ["false"], default: "false" },
+        ],
+        produces: "JSON",
+        arity: "SIMO",
+      },
+      {
+        when: [
+          { param: "includeOriginal", matches: ["false"], default: "true" },
+          { param: "exportChunksJsonl", matches: ["false"], default: "false" },
+        ],
+        produces: "MARKDOWN",
+        arity: "SIMO",
+      },
+      {
+        when: [
+          { param: "includeOriginal", matches: ["false"], default: "true" },
+          { param: "exportMarkdown", matches: ["true"], default: "false" },
+          { param: "exportChunksJsonl", matches: ["true"], default: "false" },
+        ],
+        produces: "ANY",
+        arity: "SIMO",
+      },
+    ],
+  },
   "/api/v1/filter/filter-contains-image": {
     accepts: ["PDF"],
     produces: "PDF",
@@ -426,9 +463,22 @@ export const TOOL_IO: ToolIOTable = {
     arity: "SISO",
   },
   "/api/v1/general/merge-pdfs": {
-    accepts: ["PDF"],
+    accepts: ["PDF", "IMAGE"],
     produces: "PDF",
     arity: "MISO",
+    inputExtensions: [
+      "pdf",
+      "png",
+      "jpg",
+      "jpeg",
+      "gif",
+      "bmp",
+      "tif",
+      "tiff",
+      "webp",
+      "svg",
+      "psd",
+    ],
   },
   "/api/v1/general/multi-page-layout": {
     accepts: ["PDF"],
@@ -557,6 +607,11 @@ export const TOOL_IO: ToolIOTable = {
     produces: "PDF",
     arity: "SIMO",
   },
+  "/api/v1/misc/batch-process-attachments": {
+    accepts: ["PDF"],
+    produces: "PDF",
+    arity: "SISO",
+  },
   "/api/v1/misc/compress-pdf": {
     accepts: ["PDF"],
     produces: "PDF",
@@ -616,6 +671,11 @@ export const TOOL_IO: ToolIOTable = {
     accepts: ["PDF"],
     produces: "IMAGE",
     arity: "SIMO",
+  },
+  "/api/v1/misc/extract-single-attachment": {
+    accepts: ["PDF"],
+    produces: "ANY",
+    arity: "SISO",
   },
   "/api/v1/misc/flatten": { accepts: ["PDF"], produces: "PDF", arity: "SISO" },
   "/api/v1/misc/flatten-portfolio": {

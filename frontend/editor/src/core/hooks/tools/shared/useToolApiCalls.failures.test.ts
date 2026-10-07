@@ -42,6 +42,38 @@ beforeEach(() => {
 });
 
 describe("processFiles failure reporting", () => {
+  it("stops at a signup gate without labelling the files as failed", async () => {
+    const blocked = {
+      response: { status: 401, data: { error: "SIGNUP_REQUIRED" } },
+    };
+    post.mockRejectedValue(blocked);
+    await expect(run([file("a.pdf", "a"), file("b.pdf", "b")])).rejects.toBe(
+      blocked,
+    );
+    expect(post).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps successful batch outputs when a later input reaches the guest limit", async () => {
+    post.mockResolvedValueOnce({
+      data: new Blob(["ok"]),
+      status: 200,
+      headers: {},
+    });
+    post.mockRejectedValue({
+      response: { status: 401, data: { error: "SIGNUP_REQUIRED" } },
+    });
+    const result = await run([
+      file("a.pdf", "a"),
+      file("b.pdf", "b"),
+      file("c.pdf", "c"),
+    ]);
+    expect(result.outputFiles).toHaveLength(1);
+    expect(result.successSourceIds).toEqual(["a"]);
+    expect(result.failedInputs).toEqual([]);
+    expect(result.unprocessedSourceIds).toEqual(["b", "c"]);
+    expect(post).toHaveBeenCalledTimes(2);
+  });
+
   it("names the failed input and keeps its error while the rest succeed", async () => {
     expectConsole.error("[processFiles] Failed");
     const boom = new Error("corrupted");

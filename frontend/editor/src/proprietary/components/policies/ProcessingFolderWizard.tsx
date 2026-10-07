@@ -9,6 +9,7 @@ import {
   PolicyRoutingDestinations,
   type RoutingDestination,
 } from "@app/components/policies/PolicyRoutingDestinations";
+import { FolderPolicySetupConfig } from "@app/components/policies/FolderPolicySetupConfig";
 import { PolicySetupWizard } from "@app/components/policies/PolicySetupWizard";
 import {
   ProcessingFolderPicker,
@@ -174,6 +175,15 @@ export function ProcessingFolderWizard({
       onSubmit={submit}
       enforceControl={false}
       folderSetup
+      // Routing picks its own destinations in routingConfig; every other preset configures its
+      // output here, and its readiness check is what gates saving.
+      setupConfig={
+        entry.category.id === "routing"
+          ? undefined
+          : (config) => (
+              <FolderPolicySetupConfig {...config} folderName={selectedName} />
+            )
+      }
       routingConfig={(props) => (
         <>
           {destinationsError && (
@@ -258,7 +268,6 @@ export function ProcessingFolderWizard({
               </li>
             ))}
           </ol>
-          {loading && <p role="status">{t("loading", "Loading...")}</p>}
           {unsupportedSteps && (
             <Banner
               tone="warning"

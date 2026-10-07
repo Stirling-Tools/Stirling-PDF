@@ -393,10 +393,12 @@ class FormDetectionModelManagerTest {
 
     @Test
     void gatesTheToolWhileASwitchIsDownloading(@TempDir Path dir) throws Exception {
+        CountDownLatch downloadStarted = new CountDownLatch(1);
         CountDownLatch releaseDownload = new CountDownLatch(1);
         server.createContext(
                 "/switch.onnx",
                 ex -> {
+                    downloadStarted.countDown();
                     try {
                         releaseDownload.await();
                     } catch (InterruptedException ignored) {
@@ -418,6 +420,7 @@ class FormDetectionModelManagerTest {
         m.startInstall("test-model");
 
         try {
+            assertTrue(downloadStarted.await(5, TimeUnit.SECONDS), "download did not start");
             assertFalse(m.isReady(), "a download is not something the tool can serve from");
             Mockito.verify(ep).disableEndpoint("form-detection", DisableReason.DEPENDENCY);
         } finally {

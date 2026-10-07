@@ -55,6 +55,7 @@ html[data-app-theme="light"] {
      are: the ground does not change, so the ink must not either. */
   --c-text-on-light: var(--p-ink);
   --c-accent-on-light: var(--p-blue-700);
+  --c-document-bg: var(--p-white);
   /* Highlight/flash (search hits, compare jump-to) — same in both themes. */
   --c-highlight: var(--p-flash-yellow);
   /* Stirling brand red (auth CTAs) — a fixed brand colour, same in both themes. */
@@ -113,6 +114,12 @@ html[data-app-theme="light"] {
   /* Always-dark marketing/product hero strip (portal). Same in both themes. */
   --c-hero-dark: var(--p-zinc-950);
   --c-hero-dark-cta-text: var(--p-navy-700);
+
+  /* Always-dark floating PDF context/selection toolbars. Same in both themes. */
+  --c-floating-menu-bg: var(--p-c-181c24);
+  --c-floating-menu-text: var(--p-gray-250);
+  --c-floating-danger: var(--p-red-500);
+  --c-floating-danger-hover: var(--p-red-400);
 
   /* Neutral solid badge fill (grey pill). */
   --c-neutral-fill: var(--p-gray-500);

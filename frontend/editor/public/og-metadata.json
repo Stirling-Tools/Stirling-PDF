@@ -15,11 +15,6 @@
       "title": "Sign PDF - Stirling PDF",
       "description": "Adds signature to PDF by drawing, text or image"
     },
-    "sharedSign": {
-      "image": "/og_images/shared-sign.png",
-      "title": "Shared Signing - Stirling PDF",
-      "description": "Request signatures from others and track signing sessions"
-    },
     "addText": {
       "image": "/og_images/add-text.png",
       "title": "Add Text to PDF - Stirling PDF",
@@ -120,11 +115,6 @@
       "title": "Edit PDF Bookmarks - Stirling PDF",
       "description": "Add or edit bookmarks and table of contents in PDF documents"
     },
-    "scannerEffect": {
-      "image": "/og_images/scanner-effect.png",
-      "title": "Make a PDF Look Scanned - Stirling PDF",
-      "description": "Create a PDF that looks like it was scanned"
-    },
     "autoRename": {
       "image": "/og_images/auto-rename-pdf-file.png",
       "title": "Auto Rename PDF Files - Stirling PDF",
@@ -222,8 +212,8 @@
     },
     "addAttachments": {
       "image": "/og_images/add-attachments.png",
-      "title": "Add Attachments to PDF - Stirling PDF",
-      "description": "Add or remove embedded files (attachments) to/from a PDF"
+      "title": "Manage PDF Attachments - Stirling PDF",
+      "description": "View, add, extract, rename, or delete embedded PDF attachments"
     },
     "createPortfolio": {
       "image": "/og_images/home.png",
@@ -777,7 +767,6 @@
   "byPath": {
     "/cert-sign": "certSign",
     "/sign": "sign",
-    "/shared-sign": "sharedSign",
     "/add-text": "addText",
     "/add-password": "addPassword",
     "/remove-password": "removePassword",
@@ -798,7 +787,6 @@
     "/annotate": "annotate",
     "/scanner-image-split": "scannerImageSplit",
     "/edit-table-of-contents": "editTableOfContents",
-    "/scanner-effect": "scannerEffect",
     "/auto-rename": "autoRename",
     "/page-layout": "pageLayout",
     "/scale-pages": "scalePages",
@@ -868,7 +856,6 @@
     "/auto-split-pdf": "split",
     "/auto-size-split-pdf": "split",
     "/annotations": "annotate",
-    "/fake-scan": "scannerEffect",
     "/replace-color-pdf": "replaceColor",
     "/show-js": "showJS",
     "/pdf-organizer": "reorganizePages",
@@ -953,7 +940,6 @@
   },
   "canonicalByPath": {
     "/annotate": "/annotations",
-    "/scanner-effect": "/fake-scan",
     "/pdf-to-single-page": "/single-large-page",
     "/remove-cert-sign": "/remove-certificate-sign",
     "/unlock-p-d-f-forms": "/unlock-pdf-forms",
@@ -988,10 +974,6 @@
     "/split-pdf-by-chapters": "/split"
   },
   "navLinks": [
-    {
-      "path": "/add-attachments",
-      "label": "Add Attachments to PDF"
-    },
     {
       "path": "/add-image",
       "label": "Add Image to PDF"
@@ -1121,8 +1103,8 @@
       "label": "Image to PDF Converter"
     },
     {
-      "path": "/fake-scan",
-      "label": "Make a PDF Look Scanned"
+      "path": "/add-attachments",
+      "label": "Manage PDF Attachments"
     },
     {
       "path": "/markdown-to-pdf",
@@ -1263,10 +1245,6 @@
     {
       "path": "/sanitize",
       "label": "Sanitize PDF"
-    },
-    {
-      "path": "/shared-sign",
-      "label": "Shared Signing"
     },
     {
       "path": "/show-js",

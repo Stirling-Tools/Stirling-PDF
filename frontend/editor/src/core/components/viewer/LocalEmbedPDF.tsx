@@ -2,15 +2,18 @@ import React, {
   useCallback,
   useEffect,
   useImperativeHandle,
+  useLayoutEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
-import { createPluginRegistration } from "@embedpdf/core";
-import type { PluginRegistry } from "@embedpdf/core";
+import { createPluginRegistration, type PluginRegistry } from "@embedpdf/core";
+import type { InitialDocumentOptions } from "@embedpdf/plugin-document-manager";
 import { EmbedPDF, useDocumentState } from "@embedpdf/core/react";
 import { usePdfiumEngine } from "@embedpdf/engines/react";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useSignaturePreviewHistory } from "@app/hooks/signing/useSignaturePreviewHistory";
 
 // Import the essential plugins
 import {
@@ -49,12 +52,14 @@ import {
   AnnotationLayer,
   AnnotationPluginPackage,
 } from "@embedpdf/plugin-annotation/react";
-import type {
-  AnnotationTool,
-  AnnotationEvent,
-} from "@embedpdf/plugin-annotation";
-import { PdfAnnotationSubtype } from "@embedpdf/models";
+import type { AnnotationEvent } from "@embedpdf/plugin-annotation";
+import type { BoxedAnnotationRenderer } from "@embedpdf/plugin-annotation/react";
+import {
+  PdfAnnotationBorderStyle,
+  PdfAnnotationSubtype,
+} from "@embedpdf/models";
 import type { PdfAnnotationObject, Rect } from "@embedpdf/models";
+import { registerAnnotationTools } from "@app/components/viewer/annotationTools";
 import {
   RedactionPluginPackage,
   RedactionLayer,
@@ -75,11 +80,15 @@ import { HistoryAPIBridge } from "@app/components/viewer/HistoryAPIBridge";
 import type {
   SignatureAPI,
   AnnotationAPI,
+  AnnotationMenuAnchor,
   HistoryAPI,
   SignaturePreview,
   SignatureOverlayAPI,
 } from "@app/components/viewer/viewerTypes";
-import { SignaturePreviewLayer } from "@app/components/viewer/SignaturePreviewLayer";
+import {
+  SignaturePreviewLayer,
+  type SignaturePreviewLayerProps,
+} from "@app/components/viewer/SignaturePreviewLayer";
 import { ExportAPIBridge } from "@app/components/viewer/ExportAPIBridge";
 import { BookmarkAPIBridge } from "@app/components/viewer/BookmarkAPIBridge";
 import { AttachmentAPIBridge } from "@app/components/viewer/AttachmentAPIBridge";
@@ -90,6 +99,14 @@ import { LinkLayer } from "@app/components/viewer/LinkLayer";
 import { TextSelectionHandler } from "@app/components/viewer/TextSelectionHandler";
 import { RedactionSelectionMenu } from "@app/components/viewer/RedactionSelectionMenu";
 import { AnnotationSelectionMenu } from "@app/components/viewer/AnnotationSelectionMenu";
+import { AnnotationMenuEvents } from "@app/components/viewer/AnnotationMenuEvents";
+import { DocumentSwapBridge } from "@app/components/viewer/DocumentSwapBridge";
+import {
+  DocumentRestoreBridge,
+  type DocumentRestoreEvent,
+  type DocumentRestoreRequest,
+} from "@app/components/viewer/DocumentRestoreBridge";
+import { AnnotationDeletedMenu } from "@app/components/viewer/AnnotationDeletedMenu";
 import { TextSelectionMenu } from "@app/components/viewer/TextSelectionMenu";
 import {
   RedactionPendingTracker,
@@ -109,6 +126,7 @@ import { ButtonAppearanceOverlay } from "@app/tools/formFill/ButtonAppearanceOve
 import SignatureFieldOverlay from "@app/components/viewer/SignatureFieldOverlay";
 import { CommentsSidebar } from "@app/components/viewer/CommentsSidebar";
 import { CommentAuthorProvider } from "@app/contexts/CommentAuthorContext";
+import { useViewer } from "@app/contexts/ViewerContext";
 import { accountService } from "@app/services/accountService";
 
 interface LocalEmbedPDFProps {
@@ -139,6 +157,8 @@ interface LocalEmbedPDFProps {
   // ── Signature overlay (opt-in; all default off) ──────────────────────────
   /** Read-only / interactive signature preview overlays to render per page. */
   signaturePreviews?: SignaturePreview[];
+  /** Submitted marks rendered separately from editable previews and excluded from submission. */
+  readOnlySignaturePreviews?: SignaturePreview[];
   /** If true, previews are display-only (cannot be moved, resized, or deleted). */
   signaturePreviewsReadOnly?: boolean;
   /** When true (and not read-only), clicking a page places a new preview. */
@@ -151,6 +171,18 @@ interface LocalEmbedPDFProps {
   onSignaturePreviewsChange?: (previews: SignaturePreview[]) => void;
   /** Imperative handle for reading/clearing/deleting signature previews. */
   signatureOverlayApiRef?: React.RefObject<SignatureOverlayAPI | null>;
+  /** Veto for a swap the mounted document already shows; must be stable. */
+  shouldSkipBytes?: (stableKey: string) => boolean;
+  /** Fires from the layout pass that mounts a page, before it paints. */
+  onPageLayout?: () => void;
+  /** Fires when the swap bridge activates a replacement document. */
+  onDocumentSwapped?: (documentId: string) => void;
+  /** Fires when the swap bridge fails to open or activate a replacement document. */
+  onDocumentSwapFailed?: (error: unknown) => void;
+  /** True while a view restore is in flight; gates the per-page layout hook. */
+  restorePending?: boolean;
+  restoreRequest?: DocumentRestoreRequest | null;
+  onRestoreEvent?: (event: DocumentRestoreEvent) => void;
 }
 
 interface ViewerPageContainerProps {
@@ -159,6 +191,10 @@ interface ViewerPageContainerProps {
   width: number;
   height: number;
   children: React.ReactNode;
+  /** Runs in the same layout pass that mounts a page, before it paints. */
+  onPageLayout?: () => void;
+  /** Gates the layout callback so steady-state scrolling pays nothing. */
+  restorePending?: boolean;
 }
 
 function normalizePageRotation(rotation: number | null | undefined): number {
@@ -167,17 +203,148 @@ function normalizePageRotation(rotation: number | null | undefined): number {
   return ((Math.round(value) % 4) + 4) % 4;
 }
 
+// LinkLayer owns link hit-testing, so this draws the underline or border and
+// nothing else: adding the built-in renderer's transparent rect back would
+// double every link's clickable overlay.
+function LinkStyling({
+  rect,
+  scale,
+  strokeColor = "#0000FF",
+  strokeWidth = 2,
+  strokeStyle = PdfAnnotationBorderStyle.UNDERLINE,
+  strokeDashArray,
+}: {
+  rect: Rect;
+  scale: number;
+  strokeColor?: string;
+  strokeWidth?: number;
+  strokeStyle?: PdfAnnotationBorderStyle;
+  strokeDashArray?: number[];
+}) {
+  const { width, height } = rect.size;
+  const svgWidth = width * scale;
+  const svgHeight = height * scale;
+  const dashArray =
+    strokeStyle === PdfAnnotationBorderStyle.DASHED
+      ? (strokeDashArray?.join(",") ?? `${strokeWidth * 3},${strokeWidth}`)
+      : undefined;
+  const isUnderline = strokeStyle === PdfAnnotationBorderStyle.UNDERLINE;
+  return (
+    // icon-lint-allow: runtime-generated-svg -- each link's box is measured from the annotation rect
+    <svg
+      style={{
+        position: "absolute",
+        width: svgWidth,
+        height: svgHeight,
+        pointerEvents: "none",
+        zIndex: 2,
+      }}
+      width={svgWidth}
+      height={svgHeight}
+      viewBox={`0 0 ${width} ${height}`}
+    >
+      {isUnderline ? (
+        <line
+          x1={1}
+          y1={height - 1}
+          x2={width - 1}
+          y2={height - 1}
+          stroke={strokeColor}
+          strokeWidth={strokeWidth}
+          strokeDasharray={dashArray}
+          style={{ pointerEvents: "none" }}
+        />
+      ) : (
+        <rect
+          x={strokeWidth / 2}
+          y={strokeWidth / 2}
+          width={Math.max(width - strokeWidth, 0)}
+          height={Math.max(height - strokeWidth, 0)}
+          fill="transparent"
+          stroke={strokeColor}
+          strokeWidth={strokeWidth}
+          strokeDasharray={dashArray}
+          style={{ pointerEvents: "none" }}
+        />
+      )}
+    </svg>
+  );
+}
+
+// Replaces the built-in link renderer, so every field it drops is a decision:
+// no selectOverride, because the default selects a threaded reply link itself
+// rather than its parent, and no renderLocked, because a locked link needs no
+// hit target of its own.
+const LINK_RENDERERS: BoxedAnnotationRenderer[] = [
+  {
+    id: "link",
+    matches: (annotation) => annotation.type === PdfAnnotationSubtype.LINK,
+    matchesPreview: (preview) => preview.type === PdfAnnotationSubtype.LINK,
+    render: ({ currentObject, scale }) => {
+      if (currentObject.type !== PdfAnnotationSubtype.LINK) return <></>;
+      const { rect, strokeColor, strokeWidth, strokeStyle, strokeDashArray } =
+        currentObject;
+      return (
+        <LinkStyling
+          rect={rect}
+          scale={scale}
+          strokeColor={strokeColor}
+          strokeWidth={strokeWidth}
+          strokeStyle={strokeStyle}
+          strokeDashArray={strokeDashArray}
+        />
+      );
+    },
+    renderPreview: ({ data, bounds, scale }) => {
+      // BoxedAnnotationRenderer erases the preview data type, so `data` arrives
+      // as unknown.
+      const { strokeWidth, strokeColor } = data as {
+        strokeWidth: number;
+        strokeColor: string;
+      };
+      return (
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            width: bounds.size.width * scale,
+            height: bounds.size.height * scale,
+            borderBottom: `${strokeWidth * scale}px solid ${strokeColor}`,
+            backgroundColor: "rgba(0, 0, 255, 0.05)",
+            boxSizing: "border-box",
+          }}
+        />
+      );
+    },
+    interactionDefaults: {
+      isDraggable: true,
+      isResizable: true,
+      isRotatable: false,
+    },
+    useAppearanceStream: false,
+    hideSelectionMenu: (annotation) => !!annotation.inReplyToId,
+  },
+];
+
 function ViewerPageContainer({
   documentId,
   pageIndex,
   width,
   height,
   children,
+  onPageLayout,
+  restorePending = false,
 }: ViewerPageContainerProps) {
   const documentState = useDocumentState(documentId);
   const pageRotation = normalizePageRotation(
     documentState?.document?.pages?.[pageIndex]?.rotation,
   );
+
+  useLayoutEffect(() => {
+    if (!restorePending) return;
+    onPageLayout?.();
+  });
 
   return (
     <div
@@ -206,6 +373,445 @@ function ViewerPageContainer({
   );
 }
 
+type SignatureOverlayOptions = Omit<
+  SignaturePreviewLayerProps,
+  "pageIndex" | "pageWidth" | "pageHeight"
+>;
+
+type PdfRenderMode = NonNullable<LocalEmbedPDFProps["pdfRenderMode"]>;
+
+const PDF_RENDER_FILTERS: Record<PdfRenderMode, string | undefined> = {
+  normal: undefined,
+  dark: "invert(1) hue-rotate(180deg)",
+  sepia: "sepia(0.7) brightness(0.85)",
+};
+
+interface PageLayerProps {
+  documentId: string;
+  pageIndex: number;
+}
+
+interface PageGeometry extends PageLayerProps {
+  width: number;
+  height: number;
+}
+
+interface PageLayerOptions {
+  file?: File | Blob;
+  fileId?: string | null;
+  pdfRenderMode: PdfRenderMode;
+  enableFormFill: boolean;
+  formEditingActive: boolean;
+  enableAnnotations: boolean;
+  enableRedaction: boolean;
+  showBakedAnnotations: boolean;
+  onAnnotationMenuAnchor: (anchor: AnnotationMenuAnchor | null) => void;
+  /** Null while the signature preview overlay is not mounted. */
+  signatureOverlay: SignatureOverlayOptions | null;
+  readOnlySignaturePreviews?: SignaturePreview[];
+}
+
+/** Everything a page needs besides the geometry the Scroller supplies. */
+interface ViewerPageOptions extends PageLayerOptions {
+  onPageLayout?: () => void;
+  restorePending: boolean;
+}
+
+function PageTiles({
+  documentId,
+  pageIndex,
+  renderMode,
+}: PageLayerProps & { renderMode: PdfRenderMode }) {
+  return (
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        transition: "filter 0.25s ease",
+        filter: PDF_RENDER_FILTERS[renderMode],
+      }}
+    >
+      <TilingLayer documentId={documentId} pageIndex={pageIndex} />
+    </div>
+  );
+}
+
+function PageTextSelection({ documentId, pageIndex }: PageLayerProps) {
+  return (
+    <>
+      <div
+        className="pdf-selection-layer"
+        style={{
+          position: "absolute",
+          inset: 0,
+          pointerEvents: "none",
+        }}
+      >
+        <SelectionLayer
+          documentId={documentId}
+          pageIndex={pageIndex}
+          background="var(--pdf-selection-bg)"
+          selectionMenu={(props) => <TextSelectionMenu {...props} />}
+        />
+      </div>
+      <TextSelectionHandler documentId={documentId} pageIndex={pageIndex} />
+    </>
+  );
+}
+
+interface FormFieldLayersProps extends PageGeometry {
+  fileId?: string | null;
+}
+
+function FormFieldEditingOverlays({
+  active,
+  documentId,
+  pageIndex,
+  width,
+  height,
+  fileId,
+}: FormFieldLayersProps & { active: boolean }) {
+  if (!active) return null;
+  return (
+    <>
+      {/* Create-mode: drag to place new fields */}
+      <FormFieldCreationOverlay
+        documentId={documentId}
+        pageIndex={pageIndex}
+        pageWidth={width}
+        pageHeight={height}
+        fileId={fileId}
+      />
+      {/* Modify-mode: select / move / resize existing fields */}
+      <FormFieldEditOverlay
+        documentId={documentId}
+        pageIndex={pageIndex}
+        pageWidth={width}
+        pageHeight={height}
+        fileId={fileId}
+      />
+    </>
+  );
+}
+
+function FormFillLayers({
+  enabled,
+  editing,
+  file,
+  ...page
+}: FormFieldLayersProps & {
+  enabled: boolean;
+  editing: boolean;
+  file?: File | Blob;
+}) {
+  if (!enabled) return null;
+  return (
+    <>
+      {/* ButtonAppearanceOverlay: renders PDF-native button visuals as bitmaps */}
+      {file && (
+        <ButtonAppearanceOverlay
+          pageIndex={page.pageIndex}
+          pdfSource={file}
+          pageWidth={page.width}
+          pageHeight={page.height}
+        />
+      )}
+      {/* FormFieldOverlay for interactive form filling */}
+      <FormFieldOverlay
+        documentId={page.documentId}
+        pageIndex={page.pageIndex}
+        pageWidth={page.width}
+        pageHeight={page.height}
+        fileId={page.fileId}
+      />
+      <FormFieldEditingOverlays active={editing} {...page} />
+    </>
+  );
+}
+
+interface AnnotationEditingLayersProps extends PageLayerProps {
+  enableAnnotations: boolean;
+  enableRedaction: boolean;
+  showBakedAnnotations: boolean;
+  onAnnotationMenuAnchor: (anchor: AnnotationMenuAnchor | null) => void;
+}
+
+function AnnotationEditingLayers({
+  documentId,
+  pageIndex,
+  enableAnnotations,
+  enableRedaction,
+  showBakedAnnotations,
+  onAnnotationMenuAnchor,
+}: AnnotationEditingLayersProps) {
+  if (!enableAnnotations && !enableRedaction) return null;
+  return (
+    <>
+      {/* AnnotationLayer for annotation editing and annotation-based redactions */}
+      <AnnotationLayer
+        documentId={documentId}
+        pageIndex={pageIndex}
+        annotationRenderers={LINK_RENDERERS}
+        selectionOutline={{ color: "#007ACC" }}
+        selectionMenu={(props) => (
+          <AnnotationSelectionMenu
+            {...props}
+            onAnchor={onAnnotationMenuAnchor}
+          />
+        )}
+        style={
+          !showBakedAnnotations
+            ? {
+                opacity: 0,
+                pointerEvents: "none",
+              }
+            : undefined
+        }
+      />
+      {enableRedaction && (
+        <RedactionLayer
+          documentId={documentId}
+          pageIndex={pageIndex}
+          selectionMenu={(props) => <RedactionSelectionMenu {...props} />}
+        />
+      )}
+    </>
+  );
+}
+
+function PageLayers({
+  documentId,
+  pageIndex,
+  width,
+  height,
+  file,
+  fileId,
+  pdfRenderMode,
+  enableFormFill,
+  formEditingActive,
+  enableAnnotations,
+  enableRedaction,
+  showBakedAnnotations,
+  onAnnotationMenuAnchor,
+  signatureOverlay,
+  readOnlySignaturePreviews,
+}: PageGeometry & PageLayerOptions) {
+  const { isAnnotationMode } = useViewer();
+  return (
+    <>
+      <PageTiles
+        documentId={documentId}
+        pageIndex={pageIndex}
+        renderMode={pdfRenderMode}
+      />
+      <CustomSearchLayer documentId={documentId} pageIndex={pageIndex} />
+      <PageTextSelection documentId={documentId} pageIndex={pageIndex} />
+      <FormFillLayers
+        enabled={enableFormFill}
+        editing={formEditingActive}
+        file={file}
+        documentId={documentId}
+        pageIndex={pageIndex}
+        width={width}
+        height={height}
+        fileId={fileId}
+      />
+      {/* SignatureFieldOverlay: bitmaps of digital-signature appearances */}
+      {file && (
+        <SignatureFieldOverlay
+          documentId={documentId}
+          pageIndex={pageIndex}
+          pdfSource={file}
+          pageWidth={width}
+          pageHeight={height}
+        />
+      )}
+      <AnnotationEditingLayers
+        documentId={documentId}
+        pageIndex={pageIndex}
+        enableAnnotations={enableAnnotations}
+        enableRedaction={enableRedaction}
+        showBakedAnnotations={showBakedAnnotations}
+        onAnnotationMenuAnchor={onAnnotationMenuAnchor}
+      />
+      {/* LinkLayer: uses EmbedPDF annotation state for link rendering */}
+      <LinkLayer
+        documentId={documentId}
+        pageIndex={pageIndex}
+        selectionActive={isAnnotationMode}
+      />
+      {readOnlySignaturePreviews && (
+        <SignaturePreviewLayer
+          pageIndex={pageIndex}
+          pageWidth={width}
+          pageHeight={height}
+          previews={readOnlySignaturePreviews}
+          readOnly
+          placementMode={false}
+          onChange={() => {}}
+        />
+      )}
+      {/* Signature preview overlay (opt-in; off by default) */}
+      {signatureOverlay && (
+        <SignaturePreviewLayer
+          pageIndex={pageIndex}
+          pageWidth={width}
+          pageHeight={height}
+          {...signatureOverlay}
+        />
+      )}
+    </>
+  );
+}
+
+function ViewerPage({
+  onPageLayout,
+  restorePending,
+  ...layers
+}: PageGeometry & ViewerPageOptions) {
+  const { documentId, pageIndex } = layers;
+  return (
+    <Rotate documentId={documentId} pageIndex={pageIndex}>
+      <ViewerPagePointerProvider documentId={documentId} pageIndex={pageIndex}>
+        <ViewerPageContainer
+          documentId={documentId}
+          pageIndex={pageIndex}
+          width={layers.width}
+          height={layers.height}
+          onPageLayout={onPageLayout}
+          restorePending={restorePending}
+        >
+          <PageLayers {...layers} />
+        </ViewerPageContainer>
+      </ViewerPagePointerProvider>
+    </Rotate>
+  );
+}
+
+interface DocumentViewportProps {
+  documentId: string;
+  pageOptions: ViewerPageOptions;
+}
+
+function DocumentViewport({ documentId, pageOptions }: DocumentViewportProps) {
+  return (
+    <ViewerGlobalPointerProvider documentId={documentId}>
+      <Viewport
+        documentId={documentId}
+        style={{
+          backgroundColor: "var(--c-bg)",
+          height: "100%",
+          width: "100%",
+          maxHeight: "100%",
+          maxWidth: "100%",
+          overflow: "auto",
+          position: "relative",
+          flex: 1,
+          minHeight: 0,
+          minWidth: 0,
+          contain: "strict",
+        }}
+      >
+        <Scroller
+          documentId={documentId}
+          renderPage={({ width, height, pageIndex }) => (
+            <ViewerPage
+              key={`${documentId}-${pageIndex}`}
+              documentId={documentId}
+              pageIndex={pageIndex}
+              width={width}
+              height={height}
+              {...pageOptions}
+            />
+          )}
+        />
+      </Viewport>
+    </ViewerGlobalPointerProvider>
+  );
+}
+
+interface DocumentCommentsProps {
+  enabled: boolean;
+  documentId: string;
+  authorName: string;
+  visible: boolean;
+  rightOffset: string;
+}
+
+function DocumentComments({
+  enabled,
+  documentId,
+  authorName,
+  visible,
+  rightOffset,
+}: DocumentCommentsProps) {
+  if (!enabled) return null;
+  return (
+    <CommentAuthorProvider displayName={authorName}>
+      <CommentsSidebar
+        documentId={documentId}
+        visible={visible}
+        rightOffset={rightOffset}
+      />
+    </CommentAuthorProvider>
+  );
+}
+
+type EditingBridgesProps = Pick<
+  LocalEmbedPDFProps,
+  | "historyApiRef"
+  | "signatureApiRef"
+  | "annotationApiRef"
+  | "redactionTrackerRef"
+> & {
+  enableAnnotations: boolean;
+  enableRedaction: boolean;
+  isManualRedactionMode: boolean;
+  isSignMode: boolean;
+  getAnnotationAnchor: (annotationId: string) => AnnotationMenuAnchor | null;
+  onAnnotationDeleted: (anchor: AnnotationMenuAnchor) => void;
+  deletedAnnotationMenu: AnnotationMenuAnchor | null;
+  onDismissDeletedAnnotationMenu: () => void;
+};
+
+/** Bridges that exist only while annotations or redaction can edit the document. */
+function EditingBridges({
+  enableAnnotations,
+  enableRedaction,
+  isManualRedactionMode,
+  isSignMode,
+  historyApiRef,
+  signatureApiRef,
+  annotationApiRef,
+  redactionTrackerRef,
+  getAnnotationAnchor,
+  onAnnotationDeleted,
+  deletedAnnotationMenu,
+  onDismissDeletedAnnotationMenu,
+}: EditingBridgesProps) {
+  const redactionActive = enableRedaction || isManualRedactionMode;
+  if (!enableAnnotations && !redactionActive) return null;
+  return (
+    <>
+      <HistoryAPIBridge ref={historyApiRef} />
+      <AnnotationMenuEvents
+        getAnchor={getAnnotationAnchor}
+        onDeleted={onAnnotationDeleted}
+      />
+      <AnnotationDeletedMenu
+        anchor={deletedAnnotationMenu}
+        onDismiss={onDismissDeletedAnnotationMenu}
+      />
+      {/* Always render RedactionAPIBridge when in manual redaction mode so buttons can switch from annotation mode */}
+      {redactionActive && <RedactionAPIBridge />}
+      {/* Always render SignatureAPIBridge so annotation tools (draw) can be activated even when starting in redaction mode */}
+      <SignatureAPIBridge ref={signatureApiRef} isSignMode={isSignMode} />
+      {redactionActive && <RedactionPendingTracker ref={redactionTrackerRef} />}
+      {enableAnnotations && <AnnotationAPIBridge ref={annotationApiRef} />}
+    </>
+  );
+}
+
 export function LocalEmbedPDF({
   file,
   url,
@@ -227,12 +833,20 @@ export function LocalEmbedPDF({
   isSignMode = false,
   pdfRenderMode = "normal",
   signaturePreviews,
+  readOnlySignaturePreviews,
   signaturePreviewsReadOnly = false,
   signaturePlacementMode = false,
   signaturePlacementData,
   signaturePlacementType,
   onSignaturePreviewsChange,
   signatureOverlayApiRef,
+  shouldSkipBytes,
+  onPageLayout,
+  onDocumentSwapped,
+  onDocumentSwapFailed,
+  restorePending = false,
+  restoreRequest = null,
+  onRestoreEvent,
 }: LocalEmbedPDFProps) {
   const { t } = useTranslation();
   const { config } = useAppConfig();
@@ -242,9 +856,15 @@ export function LocalEmbedPDF({
   >([]);
   const [commentAuthorName, setCommentAuthorName] = useState<string>("Guest");
 
-  const [localSignaturePreviews, setLocalSignaturePreviews] = useState<
-    SignaturePreview[]
-  >(signaturePreviews ?? []);
+  const {
+    previews: localSignaturePreviews,
+    change: handleSignaturePreviewsChange,
+    reset: resetSignaturePreviews,
+    undo: undoSignaturePreview,
+    redo: redoSignaturePreview,
+    canUndo: canUndoSignaturePreview,
+    canRedo: canRedoSignaturePreview,
+  } = useSignaturePreviewHistory(signaturePreviews);
 
   // Mount the overlay for controlled previews, placement mode, or once any
   // signature is placed — so leaving placement mode doesn't hide placements.
@@ -259,26 +879,21 @@ export function LocalEmbedPDF({
   // Keep internal state in sync when the caller supplies controlled previews.
   useEffect(() => {
     if (signaturePreviews !== undefined) {
-      setLocalSignaturePreviews(signaturePreviews);
+      resetSignaturePreviews(signaturePreviews);
     }
-  }, [signaturePreviews]);
+  }, [signaturePreviews, resetSignaturePreviews]);
 
-  const handleSignaturePreviewsChange = useCallback(
-    (next: SignaturePreview[]) => {
-      setLocalSignaturePreviews(next);
-      onSignaturePreviewsChange?.(next);
-    },
-    [onSignaturePreviewsChange],
-  );
+  useEffect(() => {
+    onSignaturePreviewsChange?.(localSignaturePreviews);
+  }, [localSignaturePreviews, onSignaturePreviewsChange]);
 
   useImperativeHandle(
     signatureOverlayApiRef,
     () => ({
       getSignaturePreviews: () => localSignaturePreviews,
       clearPreviews: () => {
-        setLocalSignaturePreviews([]);
+        resetSignaturePreviews([]);
         setSelectedSignatureId(null);
-        onSignaturePreviewsChange?.([]);
       },
       deleteSelected: () => {
         if (!selectedSignatureId) return;
@@ -286,12 +901,32 @@ export function LocalEmbedPDF({
           (p) => p.id !== selectedSignatureId,
         );
         setSelectedSignatureId(null);
-        setLocalSignaturePreviews(next);
-        onSignaturePreviewsChange?.(next);
+        handleSignaturePreviewsChange(next);
       },
-      hasSelected: () => selectedSignatureId !== null,
+      hasSelected: () =>
+        localSignaturePreviews.some(
+          (preview) => preview.id === selectedSignatureId,
+        ),
+      undo: () => {
+        if (!signaturePreviewsReadOnly) undoSignaturePreview();
+      },
+      redo: () => {
+        if (!signaturePreviewsReadOnly) redoSignaturePreview();
+      },
+      canUndo: () => !signaturePreviewsReadOnly && canUndoSignaturePreview,
+      canRedo: () => !signaturePreviewsReadOnly && canRedoSignaturePreview,
     }),
-    [localSignaturePreviews, selectedSignatureId, onSignaturePreviewsChange],
+    [
+      localSignaturePreviews,
+      selectedSignatureId,
+      resetSignaturePreviews,
+      handleSignaturePreviewsChange,
+      undoSignaturePreview,
+      redoSignaturePreview,
+      canUndoSignaturePreview,
+      canRedoSignaturePreview,
+      signaturePreviewsReadOnly,
+    ],
   );
 
   useEffect(() => {
@@ -310,77 +945,197 @@ export function LocalEmbedPDF({
   // FileContext produces new File object references for the same file content.
   const fileStableKey =
     fileId ?? (file ? `${(file as File).name}-${file.size}` : null);
-  useEffect(() => {
-    if (url) {
-      setPdfUrl(url);
-      return;
-    }
-    if (file) {
-      const objectUrl = URL.createObjectURL(file);
-      setPdfUrl(objectUrl);
-      return () => URL.revokeObjectURL(objectUrl);
-    }
-    // When file is present, use the stable key to avoid blob URL churn from FileContext
-    // re-renders. When only url is provided, depend on url directly so changes are picked up.
-  }, [url, file ? fileStableKey : null]);
-
-  const [pdfBuffer, setPdfBuffer] = useState<ArrayBuffer | null>(null);
-
-  // Read file/url directly into an ArrayBuffer on the main thread so EmbedPDF's worker
-  // receives the document data via buffer rather than failing to fetch partitioned blob URLs.
-  useEffect(() => {
-    let cancelled = false;
-    setPdfBuffer(null);
-    if (file && typeof (file as Blob).arrayBuffer === "function") {
-      (file as Blob)
-        .arrayBuffer()
-        .then((buf) => {
-          if (!cancelled) setPdfBuffer(buf);
-        })
-        .catch((err) => {
-          console.error(
-            "[LocalEmbedPDF] Failed to read file arrayBuffer:",
-            err,
-          );
-        });
-      return () => {
-        cancelled = true;
-      };
-    }
-    if (url) {
-      fetch(url)
-        .then((r) => r.arrayBuffer())
-        .then((buf) => {
-          if (!cancelled) setPdfBuffer(buf);
-        })
-        .catch((err) => {
-          console.error(
-            "[LocalEmbedPDF] Failed to fetch url arrayBuffer:",
-            err,
-          );
-        });
-      return () => {
-        cancelled = true;
-      };
-    }
-    setPdfBuffer(null);
-  }, [file ? fileStableKey : null, url]);
 
   // Keyed by fileStableKey to avoid recomputing on every FileContext re-render.
   const exportFileName = useMemo(() => {
     if (fileName) return fileName;
-    if (file && "name" in file) return (file as File).name;
+    if (file && "name" in file) return file.name;
     if (url) return url.split("/").pop()?.split("?")[0] || "document.pdf";
     return "document.pdf";
   }, [fileStableKey, fileName, url]);
 
+  // The first document goes through the registry; replacements open in the
+  // background and activate once ready, so the viewer never blanks.
+  const [initialDocument, setInitialDocument] = useState<{
+    buffer: ArrayBuffer;
+    name: string;
+  } | null>(null);
+  const [pendingDocument, setPendingDocument] = useState<{
+    buffer: ArrayBuffer;
+    name: string;
+  } | null>(null);
+  const initialDocumentOpenedRef = useRef(false);
+  const openedContentKeyRef = useRef<string | null>(null);
+  // Anchors survive deselection per annotation id, so a delete that happens
+  // while no menu is open (keyboard, sidebar) still has somewhere to appear.
+  const annotationAnchorsByIdRef = useRef<Map<string, AnnotationMenuAnchor>>(
+    new Map(),
+  );
+  const [deletedAnnotationMenu, setDeletedAnnotationMenu] =
+    useState<AnnotationMenuAnchor | null>(null);
+  const handleAnnotationMenuAnchor = useCallback(
+    (anchor: AnnotationMenuAnchor | null) => {
+      if (anchor) {
+        annotationAnchorsByIdRef.current.set(anchor.annotationId, anchor);
+      }
+    },
+    [],
+  );
+  const getAnnotationAnchor = useCallback(
+    (annotationId: string) =>
+      // Only the anchor keyed by this annotation: falling back to the
+      // last-open menu would pin a deletion to another annotation's spot.
+      annotationAnchorsByIdRef.current.get(annotationId) ?? null,
+    [],
+  );
+  const handleAnnotationDeleted = useCallback(
+    (anchor: AnnotationMenuAnchor) => setDeletedAnnotationMenu(anchor),
+    [],
+  );
+  const dismissDeletedAnnotationMenu = useCallback(
+    () => setDeletedAnnotationMenu(null),
+    [],
+  );
+  // The published blob URL is revoked by its replacement or on unmount, never
+  // by the effect run that decided to skip a swap.
+  const publishedObjectUrlRef = useRef<string | null>(null);
+  const revokeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Reads bytes on the main thread for the worker, and lands bytes plus URL in
+  // one commit so the registry rebuilds once per replacement.
+  useEffect(() => {
+    if (fileStableKey && shouldSkipBytes?.(fileStableKey)) {
+      // The live document already shows this save; swapping the bytes would
+      // reopen it and lose the scroll position for no visual gain.
+      return;
+    }
+    let cancelled = false;
+    let objectUrl: string | null = null;
+    const openDocument = (
+      buffer: ArrayBuffer,
+      name: string,
+      contentKey: string | null,
+    ) => {
+      // A repeat run for the same content (a rename, a FileContext churn) must
+      // not reopen the document.
+      if (!contentKey || openedContentKeyRef.current === contentKey) return;
+      openedContentKeyRef.current = contentKey;
+      if (!initialDocumentOpenedRef.current) {
+        initialDocumentOpenedRef.current = true;
+        setInitialDocument({ buffer, name });
+        return;
+      }
+      setPendingDocument({ buffer, name });
+    };
+    const fail = (source: string) => (err: unknown) => {
+      console.error(
+        `[LocalEmbedPDF] Failed to read ${source} arrayBuffer:`,
+        err,
+      );
+    };
+    if (file && typeof file.arrayBuffer === "function") {
+      file
+        .arrayBuffer()
+        .then((buf) => {
+          if (cancelled) return;
+          objectUrl = URL.createObjectURL(file);
+          const previous = publishedObjectUrlRef.current;
+          publishedObjectUrlRef.current = objectUrl;
+          openDocument(buf, exportFileName, fileStableKey);
+          setPdfUrl(objectUrl);
+          if (previous && previous !== objectUrl) {
+            URL.revokeObjectURL(previous);
+          }
+        })
+        .catch(fail("file"));
+    } else if (url) {
+      setPdfUrl(url);
+      fetch(url)
+        .then((r) => r.arrayBuffer())
+        .then((buf) => {
+          if (!cancelled) openDocument(buf, exportFileName, url);
+        })
+        .catch(fail("url"));
+    } else {
+      initialDocumentOpenedRef.current = false;
+      openedContentKeyRef.current = null;
+      setInitialDocument(null);
+      setPendingDocument(null);
+      setPdfUrl(null);
+    }
+    return () => {
+      cancelled = true;
+      // Revokes only URLs that never reached state; the published one is
+      // replaced or revoked on real unmount below.
+      if (objectUrl && publishedObjectUrlRef.current !== objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [file ? fileStableKey : null, url, shouldSkipBytes, exportFileName]);
+
+  useEffect(() => {
+    // A pending revocation belongs to a previous mount of this effect; cancel
+    // it so React's strict-mode simulated unmount cannot revoke the live URL.
+    if (revokeTimerRef.current !== null) {
+      clearTimeout(revokeTimerRef.current);
+      revokeTimerRef.current = null;
+    }
+    return () => {
+      revokeTimerRef.current = setTimeout(() => {
+        revokeTimerRef.current = null;
+        const urlToRevoke = publishedObjectUrlRef.current;
+        publishedObjectUrlRef.current = null;
+        if (urlToRevoke) URL.revokeObjectURL(urlToRevoke);
+      }, 0);
+    };
+  }, []);
+
+  const [swapAnnouncement, setSwapAnnouncement] = useState<string | null>(null);
+
+  const handleDocumentSwapped = useCallback(
+    (documentId: string) => {
+      onDocumentSwapped?.(documentId);
+      setPendingDocument(null);
+      setSwapAnnouncement(t("viewer.documentUpdated", "Document updated"));
+      setTimeout(() => setSwapAnnouncement(null), 3000);
+    },
+    [onDocumentSwapped, t],
+  );
+  const handleDocumentSwapFailed = useCallback(
+    (error: unknown) => {
+      // The outgoing document stays active; the replacement never landed.
+      console.warn(
+        "[LocalEmbedPDF] Replacement document failed to open:",
+        error,
+      );
+      onDocumentSwapFailed?.(error);
+      setPendingDocument(null);
+    },
+    [onDocumentSwapFailed],
+  );
+
+  useEffect(() => {
+    // A replacement document has no relation to the deleted annotation.
+    setDeletedAnnotationMenu(null);
+    annotationAnchorsByIdRef.current.clear();
+  }, [fileStableKey]);
+
+  // The registry is built from the viewer's first source; later bytes arrive
+  // through DocumentSwapBridge, so no replacement may change that identity.
+  const urlDocumentSource = file ? null : pdfUrl;
+  const urlPluginsSource = useMemo(() => {
+    if (file || !urlDocumentSource) return null;
+    return { url: urlDocumentSource, name: exportFileName };
+  }, [!!file, urlDocumentSource, exportFileName]);
+
   // Create plugins configuration
   const plugins = useMemo(() => {
-    // When a File object is the source, we MUST wait for the buffer, the
-    // worker cannot fetch partitioned blob: URLs.  pdfUrl is still created
-    // (for thumbnails etc.) but plugins must not start until the buffer lands.
-    if (file && !pdfBuffer) return [];
-    if (!pdfBuffer && !pdfUrl) return [];
+    const initialSource = initialDocument ?? urlPluginsSource;
+    if (!initialSource) return [];
+    const initialDocuments: InitialDocumentOptions[] =
+      "buffer" in initialSource
+        ? [{ buffer: initialSource.buffer, name: initialSource.name }]
+        : [{ url: initialSource.url, name: initialSource.name }];
 
     // Calculate 3.5rem in pixels dynamically based on root font size
     const rootFontSize = parseFloat(
@@ -390,21 +1145,7 @@ export function LocalEmbedPDF({
 
     return [
       createPluginRegistration(DocumentManagerPluginPackage, {
-        initialDocuments: pdfBuffer
-          ? [
-              {
-                buffer: pdfBuffer,
-                name: exportFileName,
-              },
-            ]
-          : pdfUrl
-            ? [
-                {
-                  url: pdfUrl,
-                  name: exportFileName,
-                },
-              ]
-            : [],
+        initialDocuments,
       }),
       createPluginRegistration(ViewportPluginPackage, {
         viewportGap,
@@ -486,7 +1227,7 @@ export function LocalEmbedPDF({
 
       createPluginRegistration(PrintPluginPackage),
     ];
-  }, [!!file, pdfBuffer, pdfUrl, enableAnnotations, exportFileName]);
+  }, [initialDocument, urlPluginsSource, enableAnnotations]);
 
   const fontFallbackConfig = useMemo(() => getLocalFontFallbackConfig(), []);
 
@@ -515,7 +1256,7 @@ export function LocalEmbedPDF({
         <Stack align="center" gap="md">
           <div style={{ fontSize: "24px" }}>📄</div>
           <Text c="dimmed" size="sm">
-            No PDF provided
+            {t("viewer.noPdfProvided", "No PDF provided")}
           </Text>
         </Stack>
       </Center>
@@ -550,7 +1291,7 @@ export function LocalEmbedPDF({
   }
 
   const hasInput = Boolean(file || url);
-  const isInputReady = Boolean(pdfBuffer || (!file && pdfUrl));
+  const isInputReady = Boolean(initialDocument || (!file && pdfUrl));
 
   if (isLoading || !engine || (hasInput && !isInputReady)) {
     return (
@@ -596,10 +1337,112 @@ export function LocalEmbedPDF({
     );
   }
 
+  const handleInitialized = async (registry: PluginRegistry) => {
+    // v2.0: Use registry.getPlugin() to access plugin APIs
+    const annotationPlugin = registry.getPlugin("annotation");
+    if (!annotationPlugin || !annotationPlugin.provides) return;
+
+    const annotationApi = annotationPlugin.provides();
+    if (!annotationApi || !enableAnnotations) return;
+
+    registerAnnotationTools(annotationApi);
+
+    annotationApi.onAnnotationEvent((event: AnnotationEvent) => {
+      if (event.type === "create" && event.committed) {
+        setAnnotations((prev) => [
+          ...prev,
+          {
+            id: event.annotation.id,
+            pageIndex: event.pageIndex,
+            rect: event.annotation.rect,
+          },
+        ]);
+
+        // If the annotation doesn't have customData.toolId, patch it from the active tool.
+        // EmbedPDF doesn't always persist customData from setToolDefaults into created annotations.
+        const annotationId = event.annotation.id;
+        const existingCustomData = (
+          event.annotation as unknown as {
+            customData?: Record<string, unknown>;
+          }
+        ).customData;
+        if (annotationId && !existingCustomData?.toolId) {
+          const activeTool = (
+            annotationApi as unknown as {
+              getActiveTool?: () => { id: string } | null;
+            }
+          ).getActiveTool?.();
+          if (activeTool?.id && activeTool.id !== "select") {
+            (
+              annotationApi as unknown as {
+                updateAnnotation?: (
+                  page: number,
+                  id: string,
+                  patch: Record<string, unknown>,
+                ) => void;
+              }
+            ).updateAnnotation?.(event.pageIndex, annotationId, {
+              customData: {
+                ...(existingCustomData ?? {}),
+                toolId: activeTool.id,
+              },
+            });
+          }
+        }
+
+        // Auto-select the annotation after creation so the selection menu appears immediately,
+        // letting users discover the editing options before they click away.
+        if (annotationId) {
+          (
+            annotationApi as unknown as {
+              selectAnnotation?: (pageIndex: number, id: string) => void;
+            }
+          ).selectAnnotation?.(event.pageIndex, annotationId);
+        }
+
+        if (onSignatureAdded) {
+          onSignatureAdded(event.annotation);
+        }
+      } else if (event.type === "delete" && event.committed) {
+        setAnnotations((prev) =>
+          prev.filter((ann) => ann.id !== event.annotation.id),
+        );
+      }
+    });
+  };
+
+  const pageOptions: ViewerPageOptions = {
+    file,
+    fileId,
+    pdfRenderMode,
+    enableFormFill,
+    formEditingActive,
+    enableAnnotations,
+    enableRedaction,
+    showBakedAnnotations,
+    onAnnotationMenuAnchor: handleAnnotationMenuAnchor,
+    readOnlySignaturePreviews,
+    signatureOverlay: signatureOverlayEnabled
+      ? {
+          previews: localSignaturePreviews,
+          readOnly: signaturePreviewsReadOnly,
+          placementMode: signaturePlacementMode,
+          placementData: signaturePlacementData,
+          placementType: signaturePlacementType,
+          onChange: handleSignaturePreviewsChange,
+          selectedId: selectedSignatureId,
+          onSelect: setSelectedSignatureId,
+        }
+      : null,
+    onPageLayout,
+    restorePending,
+  };
+
   // Wrap your UI with the <EmbedPDF> provider
   return (
     <PrivateContent>
       <div
+        aria-busy={pendingDocument !== null}
         style={{
           height: "100%",
           width: "100%",
@@ -609,497 +1452,24 @@ export function LocalEmbedPDF({
           minWidth: 0,
         }}
       >
+        <span className="sr-only" aria-live="polite" aria-atomic="true">
+          {swapAnnouncement}
+        </span>
         <EmbedPDF
           engine={engine}
           plugins={plugins}
-          onInitialized={async (registry: PluginRegistry) => {
-            // v2.0: Use registry.getPlugin() to access plugin APIs
-            const annotationPlugin = registry.getPlugin("annotation");
-            if (!annotationPlugin || !annotationPlugin.provides) return;
-
-            const annotationApi = annotationPlugin.provides();
-            if (!annotationApi) return;
-
-            if (enableAnnotations) {
-              // LooseAnnotationTool bypasses strict Partial<T> defaults typing from the library —
-              // EmbedPDF accepts extra runtime properties (borderWidth, textColor, finishOnDoubleClick,
-              // etc.) that aren't reflected in the TypeScript model types.
-              type LooseAnnotationTool = {
-                id: string;
-                name: string;
-                interaction?: {
-                  exclusive: boolean;
-                  cursor: string;
-                  textSelection?: boolean;
-                  isRotatable?: boolean;
-                };
-                matchScore?: (annotation: PdfAnnotationObject) => number;
-                defaults?: Record<string, unknown>;
-                clickBehavior?: Record<string, unknown>;
-                behavior?: {
-                  deactivateToolAfterCreate?: boolean;
-                  selectAfterCreate?: boolean;
-                };
-              };
-              const ensureTool = (tool: LooseAnnotationTool) => {
-                const existing = annotationApi.getTool?.(tool.id);
-                if (!existing) {
-                  annotationApi.addTool(tool as unknown as AnnotationTool);
-                }
-              };
-
-              ensureTool({
-                id: "highlight",
-                name: "Highlight",
-                interaction: {
-                  exclusive: true,
-                  cursor: "text",
-                  textSelection: true,
-                },
-                matchScore: (annotation: PdfAnnotationObject) =>
-                  annotation.type === PdfAnnotationSubtype.HIGHLIGHT ? 10 : 0,
-                defaults: {
-                  type: PdfAnnotationSubtype.HIGHLIGHT,
-                  strokeColor: "#ffd54f",
-                  color: "#ffd54f",
-                  opacity: 0.6,
-                },
-                behavior: {
-                  deactivateToolAfterCreate: false,
-                  selectAfterCreate: true,
-                },
-              });
-
-              ensureTool({
-                id: "underline",
-                name: "Underline",
-                interaction: {
-                  exclusive: true,
-                  cursor: "text",
-                  textSelection: true,
-                },
-                matchScore: (annotation: PdfAnnotationObject) =>
-                  annotation.type === PdfAnnotationSubtype.UNDERLINE ? 10 : 0,
-                defaults: {
-                  type: PdfAnnotationSubtype.UNDERLINE,
-                  strokeColor: "#ffb300",
-                  color: "#ffb300",
-                  opacity: 1,
-                },
-                behavior: {
-                  deactivateToolAfterCreate: false,
-                  selectAfterCreate: true,
-                },
-              });
-
-              ensureTool({
-                id: "strikeout",
-                name: "Strikeout",
-                interaction: {
-                  exclusive: true,
-                  cursor: "text",
-                  textSelection: true,
-                },
-                matchScore: (annotation: PdfAnnotationObject) =>
-                  annotation.type === PdfAnnotationSubtype.STRIKEOUT ? 10 : 0,
-                defaults: {
-                  type: PdfAnnotationSubtype.STRIKEOUT,
-                  strokeColor: "#e53935",
-                  color: "#e53935",
-                  opacity: 1,
-                },
-                behavior: {
-                  deactivateToolAfterCreate: false,
-                  selectAfterCreate: true,
-                },
-              });
-
-              ensureTool({
-                id: "squiggly",
-                name: "Squiggly",
-                interaction: {
-                  exclusive: true,
-                  cursor: "text",
-                  textSelection: true,
-                },
-                matchScore: (annotation: PdfAnnotationObject) =>
-                  annotation.type === PdfAnnotationSubtype.SQUIGGLY ? 10 : 0,
-                defaults: {
-                  type: PdfAnnotationSubtype.SQUIGGLY,
-                  strokeColor: "#00acc1",
-                  color: "#00acc1",
-                  opacity: 1,
-                },
-                behavior: {
-                  deactivateToolAfterCreate: false,
-                  selectAfterCreate: true,
-                },
-              });
-
-              ensureTool({
-                id: "ink",
-                name: "Pen",
-                interaction: { exclusive: true, cursor: "crosshair" },
-                matchScore: (annotation: PdfAnnotationObject) =>
-                  annotation.type === PdfAnnotationSubtype.INK ? 10 : 0,
-                defaults: {
-                  type: PdfAnnotationSubtype.INK,
-                  strokeColor: "#1f2933",
-                  color: "#1f2933",
-                  opacity: 1,
-                  borderWidth: 2,
-                  lineWidth: 2,
-                  strokeWidth: 2,
-                },
-                behavior: {
-                  deactivateToolAfterCreate: false,
-                  selectAfterCreate: true,
-                },
-              });
-
-              ensureTool({
-                id: "inkHighlighter",
-                name: "Ink Highlighter",
-                interaction: { exclusive: true, cursor: "crosshair" },
-                matchScore: (annotation: PdfAnnotationObject) =>
-                  annotation.type === PdfAnnotationSubtype.INK &&
-                  (annotation.strokeColor === "#ffd54f" ||
-                    annotation.color === "#ffd54f")
-                    ? 8
-                    : 0,
-                defaults: {
-                  type: PdfAnnotationSubtype.INK,
-                  strokeColor: "#ffd54f",
-                  color: "#ffd54f",
-                  opacity: 0.5,
-                  borderWidth: 6,
-                  lineWidth: 6,
-                  strokeWidth: 6,
-                },
-                behavior: {
-                  deactivateToolAfterCreate: false,
-                  selectAfterCreate: true,
-                },
-              });
-
-              ensureTool({
-                id: "square",
-                name: "Square",
-                interaction: { exclusive: true, cursor: "crosshair" },
-                matchScore: (annotation: PdfAnnotationObject) =>
-                  annotation.type === PdfAnnotationSubtype.SQUARE ? 10 : 0,
-                defaults: {
-                  type: PdfAnnotationSubtype.SQUARE,
-                  color: "#0000ff", // fill color (blue)
-                  strokeColor: "#cf5b5b", // border color (reddish pink)
-                  opacity: 0.5,
-                  borderWidth: 1,
-                  strokeWidth: 1,
-                  lineWidth: 1,
-                },
-                clickBehavior: {
-                  enabled: true,
-                  defaultSize: { width: 120, height: 90 },
-                },
-                behavior: {
-                  deactivateToolAfterCreate: true,
-                  selectAfterCreate: true,
-                },
-              });
-
-              ensureTool({
-                id: "circle",
-                name: "Circle",
-                interaction: { exclusive: true, cursor: "crosshair" },
-                matchScore: (annotation: PdfAnnotationObject) =>
-                  annotation.type === PdfAnnotationSubtype.CIRCLE ? 10 : 0,
-                defaults: {
-                  type: PdfAnnotationSubtype.CIRCLE,
-                  color: "#0000ff", // fill color (blue)
-                  strokeColor: "#cf5b5b", // border color (reddish pink)
-                  opacity: 0.5,
-                  borderWidth: 1,
-                  strokeWidth: 1,
-                  lineWidth: 1,
-                },
-                clickBehavior: {
-                  enabled: true,
-                  defaultSize: { width: 100, height: 100 },
-                },
-                behavior: {
-                  deactivateToolAfterCreate: true,
-                  selectAfterCreate: true,
-                },
-              });
-
-              ensureTool({
-                id: "line",
-                name: "Line",
-                interaction: { exclusive: true, cursor: "crosshair" },
-                matchScore: (annotation: PdfAnnotationObject) =>
-                  annotation.type === PdfAnnotationSubtype.LINE ? 10 : 0,
-                defaults: {
-                  type: PdfAnnotationSubtype.LINE,
-                  color: "#1565c0",
-                  opacity: 1,
-                  borderWidth: 2,
-                  strokeWidth: 2,
-                  lineWidth: 2,
-                },
-                clickBehavior: {
-                  enabled: true,
-                  defaultLength: 120,
-                  defaultAngle: 0,
-                },
-                behavior: {
-                  deactivateToolAfterCreate: true,
-                  selectAfterCreate: true,
-                },
-              });
-
-              ensureTool({
-                id: "lineArrow",
-                name: "Arrow",
-                interaction: { exclusive: true, cursor: "crosshair" },
-                matchScore: (annotation: PdfAnnotationObject) => {
-                  if (annotation.type !== PdfAnnotationSubtype.LINE) return 0;
-                  // EmbedPDF stores endStyle/lineEndingStyles at runtime; library types use lineEndings
-                  const ann = annotation as PdfAnnotationObject & {
-                    endStyle?: string;
-                    lineEndingStyles?: { end?: string };
-                  };
-                  return ann.endStyle === "ClosedArrow" ||
-                    ann.lineEndingStyles?.end === "ClosedArrow"
-                    ? 9
-                    : 0;
-                },
-                defaults: {
-                  type: PdfAnnotationSubtype.LINE,
-                  color: "#1565c0",
-                  opacity: 1,
-                  borderWidth: 2,
-                  startStyle: "None",
-                  endStyle: "ClosedArrow",
-                  lineEndingStyles: { start: "None", end: "ClosedArrow" },
-                },
-                clickBehavior: {
-                  enabled: true,
-                  defaultLength: 120,
-                  defaultAngle: 0,
-                },
-                behavior: {
-                  deactivateToolAfterCreate: true,
-                  selectAfterCreate: true,
-                },
-              });
-
-              ensureTool({
-                id: "polyline",
-                name: "Polyline",
-                interaction: { exclusive: true, cursor: "crosshair" },
-                matchScore: (annotation: PdfAnnotationObject) =>
-                  annotation.type === PdfAnnotationSubtype.POLYLINE ? 10 : 0,
-                defaults: {
-                  type: PdfAnnotationSubtype.POLYLINE,
-                  color: "#1565c0",
-                  opacity: 1,
-                  borderWidth: 2,
-                },
-                clickBehavior: {
-                  enabled: true,
-                  finishOnDoubleClick: true,
-                },
-                behavior: {
-                  deactivateToolAfterCreate: true,
-                  selectAfterCreate: true,
-                },
-              });
-
-              ensureTool({
-                id: "polygon",
-                name: "Polygon",
-                interaction: { exclusive: true, cursor: "crosshair" },
-                matchScore: (annotation: PdfAnnotationObject) =>
-                  annotation.type === PdfAnnotationSubtype.POLYGON ? 10 : 0,
-                defaults: {
-                  type: PdfAnnotationSubtype.POLYGON,
-                  color: "#0000ff", // fill color (blue)
-                  strokeColor: "#cf5b5b", // border color (reddish pink)
-                  opacity: 0.5,
-                  borderWidth: 1,
-                },
-                clickBehavior: {
-                  enabled: true,
-                  finishOnDoubleClick: true,
-                  defaultSize: { width: 140, height: 100 },
-                },
-                behavior: {
-                  deactivateToolAfterCreate: true,
-                  selectAfterCreate: true,
-                },
-              });
-
-              ensureTool({
-                id: "text",
-                name: "Text",
-                interaction: {
-                  exclusive: true,
-                  cursor: "text",
-                  isRotatable: false,
-                },
-                matchScore: (annotation: PdfAnnotationObject) =>
-                  annotation.type === PdfAnnotationSubtype.FREETEXT ? 10 : 0,
-                defaults: {
-                  type: PdfAnnotationSubtype.FREETEXT,
-                  textColor: "#111111",
-                  fontSize: 14,
-                  fontFamily: "Helvetica",
-                  opacity: 1,
-                  interiorColor: "#fffef7",
-                  contents: "Text",
-                },
-                behavior: {
-                  deactivateToolAfterCreate: true,
-                  selectAfterCreate: true,
-                },
-              });
-
-              ensureTool({
-                id: "note",
-                name: "Note",
-                interaction: {
-                  exclusive: true,
-                  cursor: "pointer",
-                  isRotatable: false,
-                },
-                matchScore: (annotation: PdfAnnotationObject) =>
-                  annotation.type === PdfAnnotationSubtype.FREETEXT ? 8 : 0,
-                defaults: {
-                  type: PdfAnnotationSubtype.FREETEXT,
-                  textColor: "#1b1b1b",
-                  color: "#ffa000",
-                  interiorColor: "#fff8e1",
-                  opacity: 1,
-                  contents: "Note",
-                  fontSize: 12,
-                },
-                clickBehavior: {
-                  enabled: true,
-                  defaultSize: { width: 160, height: 100 },
-                },
-                behavior: {
-                  deactivateToolAfterCreate: true,
-                  selectAfterCreate: true,
-                },
-              });
-
-              ensureTool({
-                id: "stamp",
-                name: "Image Stamp",
-                interaction: { exclusive: false, cursor: "copy" },
-                matchScore: (annotation: PdfAnnotationObject) =>
-                  annotation.type === PdfAnnotationSubtype.STAMP ? 5 : 0,
-                defaults: {
-                  type: PdfAnnotationSubtype.STAMP,
-                },
-                behavior: {
-                  deactivateToolAfterCreate: true,
-                  selectAfterCreate: true,
-                },
-              });
-
-              ensureTool({
-                id: "signatureStamp",
-                name: "Digital Signature",
-                interaction: { exclusive: false, cursor: "copy" },
-                matchScore: () => 0,
-                defaults: {
-                  type: PdfAnnotationSubtype.STAMP,
-                },
-              });
-
-              ensureTool({
-                id: "signatureInk",
-                name: "Signature Draw",
-                interaction: { exclusive: true, cursor: "crosshair" },
-                matchScore: () => 0,
-                defaults: {
-                  type: PdfAnnotationSubtype.INK,
-                  strokeColor: "#000000",
-                  color: "#000000",
-                  opacity: 1.0,
-                  borderWidth: 2,
-                },
-              });
-
-              annotationApi.onAnnotationEvent((event: AnnotationEvent) => {
-                if (event.type === "create" && event.committed) {
-                  setAnnotations((prev) => [
-                    ...prev,
-                    {
-                      id: event.annotation.id,
-                      pageIndex: event.pageIndex,
-                      rect: event.annotation.rect,
-                    },
-                  ]);
-
-                  // If the annotation doesn't have customData.toolId, patch it from the active tool.
-                  // EmbedPDF doesn't always persist customData from setToolDefaults into created annotations.
-                  const annotationId = event.annotation.id;
-                  const existingCustomData = (
-                    event.annotation as unknown as {
-                      customData?: Record<string, unknown>;
-                    }
-                  ).customData;
-                  if (annotationId && !existingCustomData?.toolId) {
-                    const activeTool = (
-                      annotationApi as unknown as {
-                        getActiveTool?: () => { id: string } | null;
-                      }
-                    ).getActiveTool?.();
-                    if (activeTool?.id && activeTool.id !== "select") {
-                      (
-                        annotationApi as unknown as {
-                          updateAnnotation?: (
-                            page: number,
-                            id: string,
-                            patch: Record<string, unknown>,
-                          ) => void;
-                        }
-                      ).updateAnnotation?.(event.pageIndex, annotationId, {
-                        customData: {
-                          ...(existingCustomData ?? {}),
-                          toolId: activeTool.id,
-                        },
-                      });
-                    }
-                  }
-
-                  // Auto-select the annotation after creation so the selection menu appears immediately,
-                  // letting users discover the editing options before they click away.
-                  if (annotationId) {
-                    (
-                      annotationApi as unknown as {
-                        selectAnnotation?: (
-                          pageIndex: number,
-                          id: string,
-                        ) => void;
-                      }
-                    ).selectAnnotation?.(event.pageIndex, annotationId);
-                  }
-
-                  if (onSignatureAdded) {
-                    onSignatureAdded(event.annotation);
-                  }
-                } else if (event.type === "delete" && event.committed) {
-                  setAnnotations((prev) =>
-                    prev.filter((ann) => ann.id !== event.annotation.id),
-                  );
-                }
-              });
-            }
-          }}
+          onInitialized={handleInitialized}
         >
+          <DocumentSwapBridge
+            pending={pendingDocument}
+            onSwapped={handleDocumentSwapped}
+            onFailed={handleDocumentSwapFailed}
+          />
+          <DocumentRestoreBridge
+            request={restoreRequest}
+            restorePending={restorePending}
+            onEvent={onRestoreEvent}
+          />
           <ZoomAPIBridge />
           <ScrollAPIBridge />
           <SelectionAPIBridge />
@@ -1109,20 +1479,20 @@ export function LocalEmbedPDF({
           <SearchAPIBridge />
           <ThumbnailAPIBridge />
           <RotateAPIBridge />
-          {(enableAnnotations || enableRedaction || isManualRedactionMode) && (
-            <HistoryAPIBridge ref={historyApiRef} />
-          )}
-          {/* Always render RedactionAPIBridge when in manual redaction mode so buttons can switch from annotation mode */}
-          {(enableRedaction || isManualRedactionMode) && <RedactionAPIBridge />}
-          {/* Always render SignatureAPIBridge so annotation tools (draw) can be activated even when starting in redaction mode */}
-          {(enableAnnotations || enableRedaction || isManualRedactionMode) && (
-            <SignatureAPIBridge ref={signatureApiRef} isSignMode={isSignMode} />
-          )}
-          {(enableRedaction || isManualRedactionMode) && (
-            <RedactionPendingTracker ref={redactionTrackerRef} />
-          )}
-          {enableAnnotations && <AnnotationAPIBridge ref={annotationApiRef} />}
-
+          <EditingBridges
+            enableAnnotations={enableAnnotations}
+            enableRedaction={enableRedaction}
+            isManualRedactionMode={isManualRedactionMode}
+            isSignMode={isSignMode}
+            historyApiRef={historyApiRef}
+            signatureApiRef={signatureApiRef}
+            annotationApiRef={annotationApiRef}
+            redactionTrackerRef={redactionTrackerRef}
+            getAnnotationAnchor={getAnnotationAnchor}
+            onAnnotationDeleted={handleAnnotationDeleted}
+            deletedAnnotationMenu={deletedAnnotationMenu}
+            onDismissDeletedAnnotationMenu={dismissDeletedAnnotationMenu}
+          />
           <ExportAPIBridge />
           <BookmarkAPIBridge />
           <AttachmentAPIBridge />
@@ -1137,211 +1507,17 @@ export function LocalEmbedPDF({
           >
             {(documentId) => (
               <>
-                <ViewerGlobalPointerProvider documentId={documentId}>
-                  <Viewport
-                    documentId={documentId}
-                    style={{
-                      backgroundColor: "var(--c-bg)",
-                      height: "100%",
-                      width: "100%",
-                      maxHeight: "100%",
-                      maxWidth: "100%",
-                      overflow: "auto",
-                      position: "relative",
-                      flex: 1,
-                      minHeight: 0,
-                      minWidth: 0,
-                      contain: "strict",
-                    }}
-                  >
-                    <Scroller
-                      documentId={documentId}
-                      renderPage={({ width, height, pageIndex }) => {
-                        return (
-                          <Rotate
-                            key={`${documentId}-${pageIndex}`}
-                            documentId={documentId}
-                            pageIndex={pageIndex}
-                          >
-                            <ViewerPagePointerProvider
-                              documentId={documentId}
-                              pageIndex={pageIndex}
-                            >
-                              <ViewerPageContainer
-                                documentId={documentId}
-                                pageIndex={pageIndex}
-                                width={width}
-                                height={height}
-                              >
-                                <div
-                                  style={{
-                                    position: "absolute",
-                                    inset: 0,
-                                    transition: "filter 0.25s ease",
-                                    filter:
-                                      pdfRenderMode === "dark"
-                                        ? "invert(1) hue-rotate(180deg)"
-                                        : pdfRenderMode === "sepia"
-                                          ? "sepia(0.7) brightness(0.85)"
-                                          : undefined,
-                                  }}
-                                >
-                                  <TilingLayer
-                                    documentId={documentId}
-                                    pageIndex={pageIndex}
-                                  />
-                                </div>
-
-                                <CustomSearchLayer
-                                  documentId={documentId}
-                                  pageIndex={pageIndex}
-                                />
-
-                                <div
-                                  className="pdf-selection-layer"
-                                  style={{
-                                    position: "absolute",
-                                    inset: 0,
-                                    pointerEvents: "none",
-                                  }}
-                                >
-                                  <SelectionLayer
-                                    documentId={documentId}
-                                    pageIndex={pageIndex}
-                                    background="var(--pdf-selection-bg)"
-                                    selectionMenu={(props) => (
-                                      <TextSelectionMenu {...props} />
-                                    )}
-                                  />
-                                </div>
-                                <TextSelectionHandler
-                                  documentId={documentId}
-                                  pageIndex={pageIndex}
-                                />
-
-                                {/* ButtonAppearanceOverlay — renders PDF-native button visuals as bitmaps */}
-                                {enableFormFill && file && (
-                                  <ButtonAppearanceOverlay
-                                    pageIndex={pageIndex}
-                                    pdfSource={file}
-                                    pageWidth={width}
-                                    pageHeight={height}
-                                  />
-                                )}
-
-                                {/* FormFieldOverlay for interactive form filling */}
-                                {enableFormFill && (
-                                  <FormFieldOverlay
-                                    documentId={documentId}
-                                    pageIndex={pageIndex}
-                                    pageWidth={width}
-                                    pageHeight={height}
-                                    fileId={fileId}
-                                  />
-                                )}
-
-                                {/* Create-mode: drag to place new fields */}
-                                {enableFormFill && formEditingActive && (
-                                  <FormFieldCreationOverlay
-                                    documentId={documentId}
-                                    pageIndex={pageIndex}
-                                    pageWidth={width}
-                                    pageHeight={height}
-                                    fileId={fileId}
-                                  />
-                                )}
-
-                                {/* Modify-mode: select / move / resize existing fields */}
-                                {enableFormFill && formEditingActive && (
-                                  <FormFieldEditOverlay
-                                    documentId={documentId}
-                                    pageIndex={pageIndex}
-                                    pageWidth={width}
-                                    pageHeight={height}
-                                    fileId={fileId}
-                                  />
-                                )}
-
-                                {/* SignatureFieldOverlay — bitmaps of digital-signature appearances */}
-                                {file && (
-                                  <SignatureFieldOverlay
-                                    documentId={documentId}
-                                    pageIndex={pageIndex}
-                                    pdfSource={file}
-                                    pageWidth={width}
-                                    pageHeight={height}
-                                  />
-                                )}
-
-                                {/* AnnotationLayer for annotation editing and annotation-based redactions */}
-                                {(enableAnnotations || enableRedaction) && (
-                                  <AnnotationLayer
-                                    documentId={documentId}
-                                    pageIndex={pageIndex}
-                                    selectionOutline={{ color: "#007ACC" }}
-                                    selectionMenu={(props) => (
-                                      <AnnotationSelectionMenu {...props} />
-                                    )}
-                                    style={
-                                      !showBakedAnnotations
-                                        ? {
-                                            opacity: 0,
-                                            pointerEvents: "none",
-                                          }
-                                        : undefined
-                                    }
-                                  />
-                                )}
-
-                                {enableRedaction && (
-                                  <RedactionLayer
-                                    documentId={documentId}
-                                    pageIndex={pageIndex}
-                                    selectionMenu={(props) => (
-                                      <RedactionSelectionMenu {...props} />
-                                    )}
-                                  />
-                                )}
-
-                                {/* LinkLayer – uses EmbedPDF annotation state for link rendering */}
-                                <LinkLayer
-                                  documentId={documentId}
-                                  pageIndex={pageIndex}
-                                />
-
-                                {/* Signature preview overlay (opt-in; off by default) */}
-                                {signatureOverlayEnabled && (
-                                  <SignaturePreviewLayer
-                                    pageIndex={pageIndex}
-                                    pageWidth={width}
-                                    pageHeight={height}
-                                    previews={localSignaturePreviews}
-                                    readOnly={signaturePreviewsReadOnly}
-                                    placementMode={signaturePlacementMode}
-                                    placementData={signaturePlacementData}
-                                    placementType={signaturePlacementType}
-                                    onChange={handleSignaturePreviewsChange}
-                                    selectedId={selectedSignatureId}
-                                    onSelect={setSelectedSignatureId}
-                                  />
-                                )}
-                              </ViewerPageContainer>
-                            </ViewerPagePointerProvider>
-                          </Rotate>
-                        );
-                      }}
-                    />
-                  </Viewport>
-                </ViewerGlobalPointerProvider>
-                {enableAnnotations && (
-                  <CommentAuthorProvider displayName={commentAuthorName}>
-                    <CommentsSidebar
-                      documentId={documentId}
-                      visible={isCommentsSidebarVisible}
-                      rightOffset={commentsSidebarRightOffset}
-                    />
-                  </CommentAuthorProvider>
-                )}
+                <DocumentViewport
+                  documentId={documentId}
+                  pageOptions={pageOptions}
+                />
+                <DocumentComments
+                  enabled={enableAnnotations}
+                  documentId={documentId}
+                  authorName={commentAuthorName}
+                  visible={isCommentsSidebarVisible}
+                  rightOffset={commentsSidebarRightOffset}
+                />
               </>
             )}
           </DocumentReadyWrapper>

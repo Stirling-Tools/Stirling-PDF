@@ -8,12 +8,14 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.service.LicenseServiceInterface;
 import stirling.software.common.service.PdfaLevelAServiceInterface;
 
 @Service
@@ -53,6 +55,7 @@ public class EndpointConfiguration {
     private Map<String, DisableReason> groupDisableReasons = new ConcurrentHashMap<>();
     private Map<String, Set<String>> endpointAlternatives = new ConcurrentHashMap<>();
     private final boolean runningProOrHigher;
+    @Autowired @Lazy private LicenseServiceInterface licenseService;
     private final boolean pdfUaAvailable;
 
     public EndpointConfiguration(
@@ -129,6 +132,10 @@ public class EndpointConfiguration {
         if (endpoint.startsWith("/")) {
             endpoint = endpoint.substring(1);
         }
+        if (endpointGroups.getOrDefault("enterprise", Set.of()).contains(endpoint)
+                && !hasPaidPlan()) {
+            return false;
+        }
 
         // Rule 1: Explicit flag wins - if disabled via disableEndpoint(), stay disabled
         Boolean explicitStatus = endpointStatuses.get(endpoint);
@@ -188,6 +195,7 @@ public class EndpointConfiguration {
     }
 
     public boolean isGroupEnabled(String group) {
+        if ("enterprise".equals(group) && !hasPaidPlan()) return false;
         // Rule 1: If group is explicitly disabled, it stays disabled
         if (disabledGroups.contains(group)) {
             log.debug("isGroupEnabled('{}') -> false (explicitly disabled)", group);
@@ -415,6 +423,9 @@ public class EndpointConfiguration {
         addEndpointToGroup("Other", "remove-annotations");
         addEndpointToGroup("Other", "get-info-on-pdf");
         addEndpointToGroup("Other", "add-attachments");
+        addEndpointToGroup("Other", "batch-process-attachments");
+        addEndpointToGroup("Other", "list-attachments");
+        addEndpointToGroup("Other", "extract-single-attachment");
         addEndpointToGroup("Other", "replace-invert-pdf");
         addEndpointToGroup("Other", "edit-table-of-contents");
         addEndpointToGroup("Other", "text-editor-pdf");
@@ -442,6 +453,9 @@ public class EndpointConfiguration {
         addEndpointToGroup("Automation", "handleData");
         addEndpointToGroup("Automation", "automate"); // Alias for handleData (user-friendly name)
         addEndpointToGroup("Automation", "pipeline");
+
+        // Adding endpoints to "DocParse" group (ingestion: chunk + index + export)
+        addEndpointToGroup("DocParse", "ingest");
 
         // Adding endpoints to "DeveloperTools" group
         addEndpointToGroup("DeveloperTools", "show-javascript");
@@ -531,6 +545,9 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "pdf-to-text");
         addEndpointToGroup("Java", "pdf-to-markdown");
         addEndpointToGroup("Java", "add-attachments");
+        addEndpointToGroup("Java", "batch-process-attachments");
+        addEndpointToGroup("Java", "list-attachments");
+        addEndpointToGroup("Java", "extract-single-attachment");
         addEndpointToGroup("Java", "compress-pdf");
         addEndpointToGroup("Java", "cbz-to-pdf");
         addEndpointToGroup("Java", "pdf-to-cbz");
@@ -577,6 +594,7 @@ public class EndpointConfiguration {
 
         /* tesseract */
         addEndpointToGroup("tesseract", "ocr-pdf");
+        addEndpointToGroup("tesseract", "auto-rotate-pdf");
 
         /* OCRmyPDF */
         addEndpointToGroup("OCRmyPDF", "ocr-pdf");
@@ -595,6 +613,14 @@ public class EndpointConfiguration {
         // file-to-pdf has multiple implementations
         addEndpointAlternative("file-to-pdf", "LibreOffice");
         addEndpointAlternative("file-to-pdf", "Unoconvert");
+        // Stirling Office Convert, when enabled, keeps Office conversions working without
+        // LibreOffice
+        if (applicationProperties.getSystem().isStirlingOfficeConversion()) {
+            addEndpointAlternative("file-to-pdf", "Java");
+            addEndpointAlternative("pdf-to-word", "Java");
+            addEndpointAlternative("pdf-to-presentation", "Java");
+            addEndpointAlternative("pdf-to-rtf", "Java");
+        }
 
         // pdf-to-html and pdf-to-markdown can use either LibreOffice or Pdftohtml
         addEndpointAlternative("pdf-to-html", "LibreOffice");
@@ -642,9 +668,6 @@ public class EndpointConfiguration {
                 }
             }
         }
-        if (!runningProOrHigher) {
-            disableGroup("enterprise");
-        }
 
         if (!pdfUaAvailable) {
             disableEndpoint("pdf-to-ua");
@@ -668,6 +691,10 @@ public class EndpointConfiguration {
         return endpointGroups.values().stream()
                 .flatMap(Set::stream)
                 .collect(java.util.stream.Collectors.toSet());
+    }
+
+    private boolean hasPaidPlan() {
+        return licenseService == null ? runningProOrHigher : licenseService.isRunningProOrHigher();
     }
 
     private boolean isToolGroup(String group) {

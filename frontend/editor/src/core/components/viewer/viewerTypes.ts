@@ -23,6 +23,10 @@ export interface SignatureOverlayAPI {
   clearPreviews: () => void;
   deleteSelected: () => void;
   hasSelected: () => boolean;
+  undo: () => void;
+  redo: () => void;
+  canUndo: () => boolean;
+  canRedo: () => boolean;
 }
 
 export interface ClearDocumentAnnotationsResult {
@@ -46,6 +50,7 @@ export interface SignatureAPI {
   updateDrawSettings: (color: string, size: number) => void;
   deactivateTools: () => void;
   getPageAnnotations: (pageIndex: number) => Promise<unknown[]>;
+  selectAnnotation: (annotationId: string, pageIndex: number) => void;
   moveAnnotation?: (
     pageIndex: number,
     annotationId: string,
@@ -222,4 +227,12 @@ export interface AnnotationToolOptions {
     | "locked"
     | "toggleNoView"
   )[];
+}
+
+/** Screen anchor of the selection menu, retained by a delete so an undo menu can sit in its place. */
+export interface AnnotationMenuAnchor {
+  annotationId: string;
+  pageIndex: number;
+  top: number;
+  left: number;
 }

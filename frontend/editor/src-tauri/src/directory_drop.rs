@@ -1,4 +1,4 @@
-/// Resolves dropped DOM folders on Windows while leaving HTML drag-and-drop enabled.
+/// Resolves dropped DOM files and folders on Windows without intercepting HTML drag-and-drop.
 pub fn init() -> tauri::plugin::TauriPlugin<tauri::Wry> {
     tauri::plugin::Builder::new("directory-drop")
         .on_webview_ready(|_webview| {
@@ -55,6 +55,34 @@ mod windows {
         }
     }
 
+    fn file_paths(args: &ICoreWebView2WebMessageReceivedEventArgs) -> Vec<Option<String>> {
+        unsafe {
+            let Ok(args) = args.cast::<ICoreWebView2WebMessageReceivedEventArgs2>() else {
+                return Vec::new();
+            };
+            let Ok(objects) = args.AdditionalObjects() else {
+                return Vec::new();
+            };
+            let mut count = 0;
+            if objects.Count(&mut count).is_err() {
+                return Vec::new();
+            }
+            (0..count)
+                .map(|index| {
+                    let file = objects
+                        .GetValueAtIndex(index)
+                        .ok()?
+                        .cast::<ICoreWebView2File>()
+                        .ok()?;
+                    let mut path = PWSTR::null();
+                    file.Path(&mut path).ok()?;
+                    let path = take_pwstr(path);
+                    std::path::Path::new(&path).is_file().then_some(path)
+                })
+                .collect()
+        }
+    }
+
     pub(super) fn attach(webview: tauri::webview::PlatformWebview) -> webview2_core::Result<()> {
         // COM callbacks run on the WebView2 UI thread; the webview owns the registered handler.
         unsafe {
@@ -73,7 +101,11 @@ mod windows {
                     else {
                         return Ok(());
                     };
-                    if request.kind != "stirling-folder-drop" || request.request_id.len() > 64 {
+                    if !matches!(
+                        request.kind.as_str(),
+                        "stirling-folder-drop" | "stirling-file-drop"
+                    ) || request.request_id.len() > 64
+                    {
                         return Ok(());
                     }
                     let mut source = PWSTR::null();
@@ -88,11 +120,19 @@ mod windows {
                     if !allowed {
                         return Ok(());
                     }
-                    let response = serde_json::json!({
-                        "type": "stirling-folder-drop-result",
-                        "requestId": request.request_id,
-                        "path": directory_path(&args),
-                    });
+                    let response = if request.kind == "stirling-file-drop" {
+                        serde_json::json!({
+                            "type": "stirling-file-drop-result",
+                            "requestId": request.request_id,
+                            "paths": file_paths(&args),
+                        })
+                    } else {
+                        serde_json::json!({
+                            "type": "stirling-folder-drop-result",
+                            "requestId": request.request_id,
+                            "path": directory_path(&args),
+                        })
+                    };
                     sender.PostWebMessageAsJson(&HSTRING::from(response.to_string()))?;
                     Ok(())
                 })),

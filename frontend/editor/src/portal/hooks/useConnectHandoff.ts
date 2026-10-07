@@ -1,7 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
+import { HttpError } from "@app/portal/api/http";
+import { useLocation } from "react-router-dom";
 import { withBasePath } from "@app/constants/app";
-import { startConnect, startReauth } from "@portal/api/link";
+import { startConnect, startReauth } from "@app/portal/api/link";
+import { rememberConnect } from "@app/portal/auth/pendingConnect";
 
 interface ConnectHandoff {
   /** Stays true through a successful hand-off: the page is leaving, so nothing resolves. */
@@ -12,27 +16,57 @@ interface ConnectHandoff {
 
 export function useConnectHandoff(reauth: boolean): ConnectHandoff {
   const { t } = useTranslation();
+  const isOwner = useAccountLinkOwner();
+  const location = useLocation();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const mounted = useRef(false);
+  const inFlight = useRef(false);
 
   useEffect(() => {
+    mounted.current = true;
     // Back from Stirling can restore this page with its heap intact, leaving busy stuck on and the
     // dialog pinned to the ghost step. Being shown at all means we are not mid-navigation.
-    const shown = () => setBusy(false);
+    const shown = () => {
+      inFlight.current = false;
+      setBusy(false);
+    };
     window.addEventListener("pageshow", shown);
-    return () => window.removeEventListener("pageshow", shown);
+    return () => {
+      mounted.current = false;
+      window.removeEventListener("pageshow", shown);
+    };
   }, []);
 
   const begin = useCallback(() => {
+    if (!isOwner) {
+      setError(
+        t(
+          "portal.accountLink.ownerRequired",
+          "Only the org owner can link or unlink this server.",
+        ),
+      );
+      return;
+    }
+    if (inFlight.current) return;
+    inFlight.current = true;
     setBusy(true);
     setError(null);
     void (async () => {
       try {
+        const ownerId = localStorage.getItem("stirling.portalSaasOwner");
+        if (!ownerId) throw new Error("A local organization owner is required");
         // Stated, not inferred: only the frontend knows its own base path.
-        const callbackUrl = new URL(
+        const browserState = Array.from(
+          crypto.getRandomValues(new Uint8Array(32)),
+          (byte) => byte.toString(16).padStart(2, "0"),
+        ).join("");
+        const callback = new URL(
           withBasePath("/account-link/callback"),
           window.location.origin,
-        ).toString();
+        );
+        callback.searchParams.set("state", browserState);
+        const callbackUrl = callback.toString();
         const status = reauth
           ? await startReauth(callbackUrl)
           : await startConnect(
@@ -41,7 +75,25 @@ export function useConnectHandoff(reauth: boolean): ConnectHandoff {
                 .replace(/\/$/, ""),
               callbackUrl,
             );
+        if (!mounted.current) return;
+        if (status.phase === "CALLBACK_MISMATCH") {
+          setError(
+            t(
+              "portal.accountLink.modal.callbackMismatch",
+              "This server's configured frontend address does not match the address you opened. Open the server at its configured address, or update Frontend URL in General settings, then try again.",
+            ),
+          );
+          setBusy(false);
+          inFlight.current = false;
+          return;
+        }
         if (status.authorizeUrl) {
+          rememberConnect({
+            ownerId,
+            mode: reauth ? "reauth" : "link",
+            returnTo: `${location.pathname}${location.search}`,
+            browserState,
+          });
           window.location.assign(status.authorizeUrl);
           return;
         }
@@ -53,17 +105,40 @@ export function useConnectHandoff(reauth: boolean): ConnectHandoff {
           ),
         );
         setBusy(false);
-      } catch {
-        setError(
-          t(
-            "portal.accountLink.modal.startFailed",
-            "Could not reach Stirling to start the connection. Check this server's outbound network access, then try again.",
-          ),
-        );
+        inFlight.current = false;
+      } catch (error) {
+        if (!mounted.current) return;
+        if (error instanceof HttpError && error.status === 403) {
+          setError(
+            t(
+              "portal.accountLink.ownerRequired",
+              "Only the org owner can link or unlink this server.",
+            ),
+          );
+        } else if (
+          !reauth &&
+          error instanceof HttpError &&
+          error.status === 409
+        ) {
+          setError(
+            t(
+              "portal.accountLink.modal.transferPending",
+              "An ownership transfer is pending. Go to Settings → Users to finish or cancel it, then try linking again.",
+            ),
+          );
+        } else {
+          setError(
+            t(
+              "portal.accountLink.modal.startFailed",
+              "Could not reach Stirling to start the connection. Check this server's outbound network access, then try again.",
+            ),
+          );
+        }
         setBusy(false);
+        inFlight.current = false;
       }
     })();
-  }, [reauth, t]);
+  }, [reauth, t, location.pathname, location.search, isOwner]);
 
   return { busy, error, begin };
 }

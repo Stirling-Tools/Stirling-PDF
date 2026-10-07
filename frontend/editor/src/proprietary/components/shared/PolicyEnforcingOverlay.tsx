@@ -11,6 +11,7 @@ import {
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Icon } from "@app/ui/Icon";
 import { policyCategoryIcon } from "@app/components/policies/policyCategoryIcon";
+import { isEnforcedPolicy } from "@app/services/policyStorage";
 import { useTranslation } from "react-i18next";
 
 interface PolicyEnforcingOverlayProps {
@@ -98,7 +99,9 @@ export function PolicyEnforcingOverlay({
             )}
           </ThemeIcon>
           <Text fw={600} size="sm">
-            {t("policy.enforcingTitle", "Enforcing policy…")}
+            {isEnforcedPolicy(policyKey)
+              ? t("policy.enforcingPolicyTitle", "Enforcing policy...")
+              : t("policy.enforcingPipelineTitle", "Enforcing pipeline...")}
           </Text>
           {progress != null ? (
             <Progress

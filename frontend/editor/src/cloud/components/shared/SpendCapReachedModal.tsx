@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { Modal, Stack } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
-import TrendingUpIcon from "@mui/icons-material/TrendingUpOutlined";
+import { Icon } from "@app/ui/Icon";
 import AnimatedSlideBackground from "@app/components/onboarding/slides/AnimatedSlideBackground";
 import styles from "@app/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css";
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
@@ -113,7 +113,7 @@ export function SpendCapReachedModal({ onClose }: SpendCapReachedModalProps) {
           />
           <div className={styles.heroLogo}>
             <div className={styles.heroLogoCircle}>
-              <TrendingUpIcon sx={{ fontSize: 64, color: "#000000" }} />
+              <Icon name="trending-up" size={64} style={{ color: "#000000" }} />
             </div>
           </div>
         </div>

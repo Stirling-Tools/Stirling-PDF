@@ -13,17 +13,25 @@ export function ViewerInlineControls() {
   const { workbench } = useNavigationState();
   const viewer = useViewer();
 
-  const [zoomPercent, setZoomPercent] = useState(100);
+  const [zoomPercent, setZoomPercent] = useState(
+    () => viewer.getZoomState().zoomPercent || 100,
+  );
 
   useEffect(() => {
     const zoomState = viewer.getZoomState();
     setZoomPercent(zoomState.zoomPercent || 100);
 
     const unregister = viewer.registerImmediateZoomUpdate((pct) => {
+      // A carried zoom's fit pass is intermediate; its settled tick re-syncs.
+      if (viewer.zoomRestorePendingRef.current) return;
       setZoomPercent(pct);
     });
     return () => unregister?.();
-  }, [viewer.registerImmediateZoomUpdate]);
+  }, [
+    viewer.registerImmediateZoomUpdate,
+    viewer.zoomRestorePendingRef,
+    viewer.zoomRestoreSettledTick,
+  ]);
 
   if (workbench !== "viewer") return null;
 

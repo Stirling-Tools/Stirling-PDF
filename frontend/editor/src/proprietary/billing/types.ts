@@ -46,6 +46,17 @@ export interface TeamHolding {
   licensedUsers: number | null;
   /** Members occupying capacity right now — the capacity meter's numerator. */
   usersInUse: number;
+  fleet?: boolean;
+  breakdown?: {
+    cloudUsers: number;
+    excludedOwners: number;
+    deployments: {
+      deviceId: string;
+      name: string | null;
+      users: number | null;
+      reportedAt: string | null;
+    }[];
+  } | null;
 }
 
 /** The Processor holding: metered automation beyond the free grant. */
@@ -70,6 +81,9 @@ export interface Wallet {
   /** ISO yyyy-mm-dd. Stripe period when subscribed; calendar month when free. */
   billingPeriodStart: string;
   billingPeriodEnd: string;
+  /** Independent monthly included-credit term; absent on older servers. */
+  includedPeriodStart?: string | null;
+  includedPeriodEnd?: string | null;
   /** Free grant used this period (free teams) or documents processed this period (subscribed). */
   billableUsed: number;
   /** Document ceiling for the window; null when subscribed-uncapped. */

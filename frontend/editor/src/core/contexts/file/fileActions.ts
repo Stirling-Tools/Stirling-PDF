@@ -512,7 +512,7 @@ export async function addFiles(
         }
       }
 
-      Object.assign(fileStub, await sourceLinkForNewFile(quickKey));
+      Object.assign(fileStub, await sourceLinkForNewFile(file));
 
       // Store insertion position if provided
       if (options.insertAfterPageId !== undefined) {

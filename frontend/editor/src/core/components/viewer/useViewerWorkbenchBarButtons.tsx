@@ -110,7 +110,10 @@ export function useViewerWorkbenchBarButtons(
   const rotateLeftLabel = t("workbenchBar.rotateLeft", "Rotate Left");
   const rotateRightLabel = t("workbenchBar.rotateRight", "Rotate Right");
   const sidebarLabel = t("workbenchBar.toggleSidebar", "Toggle Sidebar");
-  const bookmarkLabel = t("workbenchBar.toggleBookmarks", "Toggle Bookmarks");
+  const bookmarkLabel = t(
+    "workbenchBar.toggleBookmarks",
+    "Bookmarks (Table of Contents)",
+  );
   const attachmentLabel = t(
     "workbenchBar.toggleAttachments",
     "Toggle Attachments",
@@ -306,7 +309,7 @@ export function useViewerWorkbenchBarButtons(
       },
       {
         id: "viewer-toggle-sidebar",
-        icon: <Icon name="list" size="1rem" />,
+        icon: <Icon name="rows-2" size="1rem" />,
         tooltip: sidebarLabel,
         ariaLabel: sidebarLabel,
         section: "top" as const,
