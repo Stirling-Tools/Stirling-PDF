@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stirling PDF</title>
+<style>
+  :root {
+    --bg: var(--color-background-primary, #ffffff);
+    --bg-2: var(--color-background-secondary, #f4f5f7);
+    --fg: var(--color-text-primary, #1a1d23);
+    --fg-2: var(--color-text-secondary, #5b6270);
+    --border: var(--color-border-primary, #dfe2e8);
+    --accent: #8e3131;
+    --danger: var(--color-text-danger, #c62828);
+    --radius: var(--border-radius-lg, 12px);
+    --font: var(--font-sans, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif);
+    color-scheme: light;
+  }
+  :root[data-theme="dark"] {
+    --bg: var(--color-background-primary, #1f2126);
+    --bg-2: var(--color-background-secondary, #2a2d33);
+    --fg: var(--color-text-primary, #eef0f3);
+    --fg-2: var(--color-text-secondary, #a5abb6);
+    --border: var(--color-border-primary, #3a3e46);
+    --accent: #d0605f;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: transparent; }
+  body { font: 14px/1.45 var(--font); color: var(--fg); padding: 12px; }
+  .card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+  .row { display: flex; align-items: center; gap: 12px; }
+  .icon { flex: none; width: 40px; height: 40px; border-radius: 10px; background: var(--bg-2); display: grid; place-items: center; color: var(--accent); }
+  .meta { min-width: 0; flex: 1; }
+  .name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sub { color: var(--fg-2); font-size: 12.5px; }
+  button { font: inherit; font-weight: 600; border-radius: 8px; padding: 8px 14px; cursor: pointer; border: 1px solid var(--border); background: var(--bg-2); color: var(--fg); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button:disabled { opacity: .6; cursor: default; }
+  .drop { border: 1.5px dashed var(--border); border-radius: var(--radius); padding: 22px 16px; text-align: center; background: var(--bg); transition: border-color .15s, background .15s; }
+  .drop.over { border-color: var(--accent); background: var(--bg-2); }
+  .drop p { margin: 6px 0 12px; color: var(--fg-2); }
+  .purpose { font-weight: 600; margin: 0 0 2px; }
+  .err { color: var(--danger); margin-top: 8px; font-size: 13px; }
+  .brand { display: flex; align-items: center; gap: 6px; color: var(--fg-2); font-size: 12px; margin-top: 10px; }
+  .spin { width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: s 0.8s linear infinite; }
+  @keyframes s { to { transform: rotate(360deg); } }
+  .hidden { display: none; }
+  input[type=file] { display: none; }
+</style>
+</head>
+<body>
+<div id="root"><div class="card row"><div class="spin"></div><span class="sub">Working on your file...</span></div></div>
+<input id="picker" type="file" accept=".pdf,image/*,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.odt,.ods,.odp,.rtf,.txt,.html,.md,.csv,.epub">
+<script>
+(function () {
+  "use strict";
+  var root = document.getElementById("root");
+  var picker = document.getElementById("picker");
+  var openai = window.openai;
+  var pending = {};
+  var nextId = 1;
+  var bridgeReady = false;
+  var toolArgs = {};
+
+  // MCP Apps (SEP-1865) JSON-RPC over postMessage to the host.
+  function request(method, params) {
+    return new Promise(function (resolve, reject) {
+      var id = nextId++;
+      pending[id] = { resolve: resolve, reject: reject };
+      window.parent.postMessage({ jsonrpc: "2.0", id: id, method: method, params: params || {} }, "*");
+      setTimeout(function () {
+        if (pending[id]) { delete pending[id]; reject(new Error("Host did not answer " + method)); }
+      }, method === "tools/call" ? 240000 : 15000);
+    });
+  }
+  function notify(method, params) {
+    window.parent.postMessage({ jsonrpc: "2.0", method: method, params: params || {} }, "*");
+  }
+
+  window.addEventListener("message", function (event) {
+    if (event.source !== window.parent) return;
+    var msg = event.data;
+    if (!msg || msg.jsonrpc !== "2.0") return;
+    if (msg.id != null && pending[msg.id] && !msg.method) {
+      var p = pending[msg.id];
+      delete pending[msg.id];
+      if (msg.error) p.reject(new Error(msg.error.message || "Host error"));
+      else p.resolve(msg.result);
+      return;
+    }
+    if (msg.method === "ui/notifications/tool-input") {
+      toolArgs = (msg.params && msg.params.arguments) || {};
+    } else if (msg.method === "ui/notifications/tool-result") {
+      render(msg.params);
+    } else if (msg.method === "ui/notifications/host-context-changed") {
+      applyContext(msg.params);
+    } else if (msg.method === "ui/resource-teardown" && msg.id != null) {
+      window.parent.postMessage({ jsonrpc: "2.0", id: msg.id, result: {} }, "*");
+    } else if (msg.id != null && msg.method) {
+      window.parent.postMessage({ jsonrpc: "2.0", id: msg.id, error: { code: -32601, message: "Method not found" } }, "*");
+    }
+  });
+
+  function applyContext(ctx) {
+    if (!ctx) return;
+    if (ctx.theme) document.documentElement.setAttribute("data-theme", ctx.theme);
+    var vars = ctx.styles && ctx.styles.variables;
+    if (vars) {
+      Object.keys(vars).forEach(function (k) {
+        if (vars[k] != null) document.documentElement.style.setProperty(k, vars[k]);
+      });
+    }
+  }
+
+  // Host actions, preferring the standard bridge and falling back to ChatGPT's window.openai.
+  function callTool(name, args) {
+    if (bridgeReady) return request("tools/call", { name: name, arguments: args });
+    if (openai && openai.callTool) return openai.callTool(name, args);
+    return Promise.reject(new Error("This chat app cannot upload from here."));
+  }
+  function sendMessage(text) {
+    var block = { type: "text", text: text };
+    // The SDK schema wants an array, the spec prose a single block; try both.
+    if (bridgeReady) {
+      return request("ui/message", { role: "user", content: [block] }).catch(function () {
+        return request("ui/message", { role: "user", content: block });
+      });
+    }
+    if (openai && openai.sendFollowUpMessage) return openai.sendFollowUpMessage({ prompt: text });
+    return Promise.reject(new Error("unsupported"));
+  }
+  function openLink(url) {
+    var fallback = function () { window.open(url, "_blank", "noopener"); };
+    if (bridgeReady) {
+      return request("ui/open-link", { url: url }).then(function (r) { if (r && r.isError) fallback(); }, fallback);
+    }
+    if (openai && openai.openExternal) return Promise.resolve(openai.openExternal({ href: url }));
+    fallback();
+    return Promise.resolve();
+  }
+
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  function fileIcon() {
+    var d = el("div", "icon");
+    d.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>';
+    return d;
+  }
+  function brand() {
+    return el("div", "brand", "Stirling PDF");
+  }
+  function size(n) {
+    if (!(n >= 0)) return "";
+    if (n < 1024) return n + " B";
+    if (n < 1048576) return (n / 1024).toFixed(1) + " KB";
+    return (n / 1048576).toFixed(1) + " MB";
+  }
+  function label(op) {
+    var words = String(op || "").replace(/-pdf$/, "").replace(/-/g, " ").replace(/\bpdf\b/gi, "PDF");
+    return words.replace(/^\w/, function (c) { return c.toUpperCase(); });
+  }
+
+  function render(result) {
+    if (!result) return;
+    var data = result.structuredContent;
+    root.textContent = "";
+    if (result.isError || !data) {
+      var text = (result.content || []).map(function (c) { return c.text || ""; }).join(" ").trim();
+      var card = el("div", "card");
+      card.appendChild(el("div", "name", "Something went wrong"));
+      card.appendChild(el("div", "err", text || "The tool did not return a result."));
+      root.appendChild(card);
+    } else if (data.kind === "picker") {
+      renderPicker(data);
+    } else if (data.kind === "file") {
+      renderFile(data);
+    }
+    resize();
+  }
+
+  function renderFile(data) {
+    var card = el("div", "card");
+    var row = el("div", "row");
+    row.appendChild(fileIcon());
+    var meta = el("div", "meta");
+    meta.appendChild(el("div", "name", data.fileName || "Result"));
+    var parts = [];
+    if (data.operation && data.operation !== "upload") parts.push(label(data.operation));
+    if (data.operation === "upload") parts.push("Uploaded");
+    if (data.size >= 0) parts.push(size(data.size));
+    meta.appendChild(el("div", "sub", parts.join(" · ")));
+    row.appendChild(meta);
+    if (data.downloadUrl) {
+      var btn = el("button", "primary", "Download");
+      btn.type = "button";
+      btn.addEventListener("click", function () { openLink(data.downloadUrl); });
+      row.appendChild(btn);
+    }
+    card.appendChild(row);
+    card.appendChild(brand());
+    root.appendChild(card);
+  }
+
+  function renderPicker(data) {
+    var purpose = data.purpose || toolArgs.purpose;
+    var drop = el("div", "drop");
+    if (purpose) drop.appendChild(el("div", "purpose", purpose));
+    drop.appendChild(el("p", null, "Drop a file here or choose one from your device."));
+    var btn = el("button", "primary", "Choose file");
+    btn.type = "button";
+    btn.addEventListener("click", function () { picker.click(); });
+    drop.appendChild(btn);
+    var status = el("div", "sub hidden");
+    var err = el("div", "err hidden");
+    drop.appendChild(status);
+    drop.appendChild(err);
+    root.appendChild(drop);
+    root.appendChild(brand());
+
+    function start(file) {
+      if (!file) return;
+      btn.disabled = true;
+      err.classList.add("hidden");
+      status.classList.remove("hidden");
+      status.textContent = "Uploading " + file.name + "...";
+      resize();
+      readBase64(file).then(function (b64) {
+        return callTool("stirling_upload", { file: b64, fileName: file.name });
+      }).then(function (res) {
+        var sc = res && res.structuredContent;
+        if (!sc || !sc.fileId || res.isError) {
+          var msg = res && res.content && res.content[0] && res.content[0].text;
+          throw new Error(msg || "Upload failed.");
+        }
+        status.textContent = "Uploaded " + file.name + " (" + size(sc.size) + ").";
+        var text = 'I’ve uploaded "' + file.name + '" to Stirling PDF (fileId: ' + sc.fileId + ").";
+        if (purpose) text += " " + purpose;
+        return sendMessage(text).catch(function () {
+          status.textContent = "Uploaded. Tell the assistant to continue with fileId " + sc.fileId + ".";
+        });
+      }).catch(function (e) {
+        btn.disabled = false;
+        status.classList.add("hidden");
+        err.textContent = e && e.message ? e.message : "Upload failed.";
+        err.classList.remove("hidden");
+      }).then(resize);
+    }
+    picker.onchange = function () { start(picker.files && picker.files[0]); picker.value = ""; };
+    drop.addEventListener("dragover", function (e) { e.preventDefault(); drop.classList.add("over"); });
+    drop.addEventListener("dragleave", function () { drop.classList.remove("over"); });
+    drop.addEventListener("drop", function (e) {
+      e.preventDefault();
+      drop.classList.remove("over");
+      start(e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]);
+    });
+  }
+
+  function readBase64(file) {
+    return new Promise(function (resolve, reject) {
+      var r = new FileReader();
+      r.onload = function () { var s = String(r.result); resolve(s.slice(s.indexOf(",") + 1)); };
+      r.onerror = function () { reject(new Error("Could not read the file.")); };
+      r.readAsDataURL(file);
+    });
+  }
+
+  function resize() {
+    var h = Math.ceil(document.documentElement.getBoundingClientRect().height);
+    if (bridgeReady) notify("ui/notifications/size-changed", { height: h });
+    if (openai && openai.notifyIntrinsicHeight) openai.notifyIntrinsicHeight(h);
+  }
+  if (window.ResizeObserver) new ResizeObserver(resize).observe(document.body);
+
+  // ChatGPT exposes the result as window.openai.toolOutput (structuredContent).
+  function renderFromOpenAI() {
+    if (!openai || !openai.toolOutput) return;
+    if (openai.toolInput) toolArgs = openai.toolInput;
+    applyContext({ theme: openai.theme });
+    render({ structuredContent: openai.toolOutput });
+  }
+  window.addEventListener("openai:set_globals", renderFromOpenAI);
+  renderFromOpenAI();
+
+  request("ui/initialize", {
+    appInfo: { name: "stirling-pdf", version: "1.0.0" },
+    appCapabilities: { availableDisplayModes: ["inline"] },
+    protocolVersion: "2026-01-26"
+  }).then(function (res) {
+    bridgeReady = true;
+    applyContext(res && res.hostContext);
+    notify("ui/notifications/initialized");
+    resize();
+  }, function () { /* No MCP Apps bridge: window.openai alone. */ });
+})();
+</script>
+</body>
+</html>

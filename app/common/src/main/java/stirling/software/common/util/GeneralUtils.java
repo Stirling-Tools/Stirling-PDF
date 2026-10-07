@@ -349,7 +349,7 @@ public class GeneralUtils {
      * @param host the hostname to resolve
      * @return {@code true} if the host should be considered unsafe
      */
-    private boolean isDisallowedNetworkLocation(String host) {
+    public boolean isDisallowedNetworkLocation(String host) {
         // Resolution is delegated to the JVM/OS resolver which already applies system
         // configured query limits and timeouts. We only need the resolved addresses here so
         // that we can enforce the MAX_DNS_ADDRESSES limit and perform the sensitive range
