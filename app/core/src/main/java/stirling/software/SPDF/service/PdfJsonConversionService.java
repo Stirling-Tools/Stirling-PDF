@@ -3637,6 +3637,9 @@ public class PdfJsonConversionService {
             documentCache.remove(entry.getKey(), removed);
             currentCacheBytes = Math.max(0L, currentCacheBytes - removed.getInMemorySize());
             removed.close();
+            // The Type3 font caches are keyed per job and are not part of the byte budget, so
+            // evicting the document without them frees nothing and leaks the fonts for good.
+            clearType3CacheEntriesForJob(entry.getKey());
             log.warn(
                     "Evicted cached PDF for jobId {} to enforce cache budget (budget={} bytes, current={} bytes)",
                     entry.getKey(),
