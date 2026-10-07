@@ -44,7 +44,7 @@ export function shallowEqual(a: unknown, b: unknown): boolean {
   );
 }
 
-function useFileStore(): FileStateStore {
+export function useFileStore(): FileStateStore {
   const store = useContext(FileStoreContext);
   if (!store) {
     throw new Error("File hooks must be used within a FileContextProvider");

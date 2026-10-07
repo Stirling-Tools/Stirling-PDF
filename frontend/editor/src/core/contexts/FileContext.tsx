@@ -872,6 +872,7 @@ export function FileContextProvider({
 
 // Export all hooks from the fileHooks module
 export {
+  useFileStore,
   useFileState,
   useFileActions,
   useFileSelector,
