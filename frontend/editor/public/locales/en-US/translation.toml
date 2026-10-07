@@ -3223,12 +3223,10 @@ placeholder = "Ask Stirling"
 title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Stirling agent options"
 clearChat = "Clear chat"
 
 [chat.input]
 disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
-placeholder = "What do you want to do?"
 send = "Send message"
 
 [chat.progress]
