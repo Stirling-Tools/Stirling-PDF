@@ -1142,7 +1142,41 @@ public class FormUtils {
                 }
                 case PDRadioButton radioButton -> {
                     if (value != null && !value.isBlank()) {
-                        radioButton.setValue(value);
+                        try {
+                            radioButton.setValue(value);
+                        } catch (IllegalArgumentException e) {
+                            boolean matched = false;
+                            try {
+                                int index = Integer.parseInt(value);
+                                java.util.List<String> exportValues = radioButton.getExportValues();
+                                if (exportValues != null && !exportValues.isEmpty()) {
+                                    if (index >= 0 && index < exportValues.size()) {
+                                        radioButton.setValue(exportValues.get(index));
+                                        matched = true;
+                                    }
+                                } else {
+                                    java.util.Set<String> onValues = radioButton.getOnValues();
+                                    if (onValues != null && !onValues.isEmpty()) {
+                                        java.util.List<String> validOnValues =
+                                                new java.util.ArrayList<>();
+                                        for (String onValue : onValues) {
+                                            if (!"Off".equals(onValue)) {
+                                                validOnValues.add(onValue);
+                                            }
+                                        }
+                                        if (index >= 0 && index < validOnValues.size()) {
+                                            radioButton.setValue(validOnValues.get(index));
+                                            matched = true;
+                                        }
+                                    }
+                                }
+                            } catch (NumberFormatException nfe) {
+                                // Ignore, not an index
+                            }
+                            if (!matched) {
+                                throw e;
+                            }
+                        }
                     }
                 }
                 case PDChoice choiceField -> applyChoiceValue(choiceField, value);
