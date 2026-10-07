@@ -2,6 +2,7 @@ import {
   useMemo,
   useRef,
   useEffect,
+  useLayoutEffect,
   useState,
   type FocusEvent,
   type KeyboardEvent,
@@ -299,6 +300,24 @@ function CompletedProgressLogDropdown({
   );
 }
 
+/**
+ * Narrows wrapped text to its longest line. Text that wraps keeps the full width
+ * on offer, so a shorter last line would leave a gap down the bubble's right side.
+ */
+function useShrinkWrap(content: string) {
+  const ref = useRef<HTMLParagraphElement>(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.width = "";
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    const { width } = range.getBoundingClientRect();
+    if (width > 0) el.style.width = `${Math.ceil(width)}px`;
+  }, [content]);
+  return ref;
+}
+
 function ChatMessageBubble({
   role,
   content,
@@ -319,6 +338,7 @@ function ChatMessageBubble({
   t: TranslateFn;
 }) {
   const [copied, setCopied] = useState(false);
+  const userTextRef = useShrinkWrap(content);
 
   function handleCopy() {
     void navigator.clipboard.writeText(content).then(() => {
@@ -349,8 +369,17 @@ function ChatMessageBubble({
     return (
       <div className="chat-message chat-message-user">
         <div className="chat-message-user__inner">
-          <Paper className="chat-bubble chat-bubble-user" p="xs" radius="md">
-            <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
+          <Paper
+            className="chat-bubble chat-bubble-user"
+            px="sm"
+            py="xs"
+            radius="md"
+          >
+            <Text
+              ref={userTextRef}
+              size="sm"
+              style={{ whiteSpace: "pre-wrap" }}
+            >
               {content}
             </Text>
           </Paper>
@@ -525,11 +554,6 @@ export function ChatPanel({
 
         {!showQuickActions && (
           <div className="chat-panel-disclaimer chat-panel-disclaimer--inline">
-            <Icon
-              name="info"
-              size={13}
-              className="chat-panel-disclaimer__icon"
-            />
             <span>{disclaimerText}</span>
           </div>
         )}
@@ -544,7 +568,6 @@ export function ChatPanel({
           onChange={(e) => setInput(e.currentTarget.value)}
           onKeyDown={handleKeyDown}
           onFocus={onComposerFocus}
-          disabled={isLoading}
           autosize
           minRows={1}
           maxRows={4}

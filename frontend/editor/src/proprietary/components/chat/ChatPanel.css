@@ -166,10 +166,11 @@
 
 /* Compact line above the composer once the conversation has started. */
 .chat-panel-disclaimer--inline {
-  justify-content: center;
-  padding: 0.25rem 0.5rem 0;
+  /* Inset to line up with the composer's text below. */
+  padding: 0.25rem 0.9375rem 0;
   font-size: 0.7rem;
   line-height: 1.3;
+  text-wrap: pretty;
 }
 
 /* Message layout */
@@ -301,7 +302,6 @@
 .chat-progress-live__label {
   flex: 1;
   min-width: 0;
-  text-align: center;
   font-size: 0.875rem;
   line-height: 1.35;
   background: linear-gradient(

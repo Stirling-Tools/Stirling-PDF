@@ -123,6 +123,41 @@ test("rules the header once messages scroll beneath it", async ({ page }) => {
   await expect(header).not.toHaveAttribute("data-scrolled");
 });
 
+test("accepts typing while the agent is thinking but holds the send", async ({
+  page,
+}) => {
+  let releaseReply = () => {};
+  const replyReleased = new Promise<void>((resolve) => {
+    releaseReply = resolve;
+  });
+  let requests = 0;
+  await page.route("**/api/v1/ai/orchestrate/stream", async (route: Route) => {
+    requests += 1;
+    await replyReleased;
+    await route.fulfill({
+      headers: { "content-type": "text/event-stream" },
+      body: `event: result\ndata: ${JSON.stringify({ outcome: "answer", answer: "Done." })}\n\n`,
+    });
+  });
+  const dock = await openEditorWithAi(page);
+  const composer = dock.getByRole("textbox", { name: "Ask Stirling" });
+  const send = dock.getByRole("button", { name: "Send message" });
+  await composer.click();
+  await composer.fill("First");
+  await composer.press("Enter");
+
+  await composer.fill("Second");
+  await expect(composer).toHaveValue("Second");
+  await expect(send).toBeDisabled();
+  await composer.press("Enter");
+  await expect(composer).toHaveValue("Second");
+
+  releaseReply();
+  await expect(dock.getByText("Done.")).toBeVisible();
+  await expect(send).toBeEnabled();
+  expect(requests).toBe(1);
+});
+
 test("stays open when expanded explicitly until it is collapsed", async ({
   page,
 }) => {
