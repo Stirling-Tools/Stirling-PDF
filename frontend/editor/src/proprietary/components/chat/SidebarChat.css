@@ -1,11 +1,11 @@
 /* A row of the file sidebar's column. It grows by flex-grow against the rows
    above, which transitions smoothly where a height to or from auto cannot; at
-   grow 0 its basis of 0 leaves it at its minimum, the header and composer. */
+   grow 0 its basis of 0 leaves it at its minimum, the composer alone. */
 .chat-dock {
   display: flex;
   flex-direction: column;
   flex: 0 1 0;
-  gap: 0.375rem;
+  gap: var(--nav-gutter);
   border-top: 1px solid var(--c-border-subtle);
   transition: flex-grow 280ms cubic-bezier(0.32, 0.72, 0, 1);
 }
@@ -24,58 +24,17 @@
 
 /* Ruled above by the dock and below once messages scroll, so it pads evenly to
    sit centred between the two, unlike the library header it otherwise matches. */
-.chat-dock > .file-sidebar-section-header {
+.chat-dock .chat-panel > .file-sidebar-section-header {
   padding-block: 0.25rem;
 }
 
-.chat-dock__label {
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
+.chat-dock__title {
   flex: 1;
-  min-width: 0;
-}
-
-.chat-dock__running {
-  flex-shrink: 0;
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 50%;
-  background: var(--c-success);
-  animation: chat-dock-pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes chat-dock-pulse {
-  0%,
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.35);
-    opacity: 0.65;
-  }
-}
-
-.chat-dock__tick {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  width: 0.8rem;
-  height: 0.8rem;
-  border-radius: 50%;
-  background: var(--c-success-solid);
-  color: var(--c-text-on-primary);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .chat-dock,
   .chat-dock .chat-panel {
     transition: none;
-  }
-
-  .chat-dock__running {
-    animation: none;
   }
 }

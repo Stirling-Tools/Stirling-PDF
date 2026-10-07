@@ -7,7 +7,6 @@ import {
   type FocusEvent,
   type KeyboardEvent,
   type ReactNode,
-  type Ref,
   type RefCallback,
 } from "react";
 import { useMergedRef } from "@mantine/hooks";
@@ -413,7 +412,8 @@ function ChatMessageBubble({
 export interface ChatPanelProps {
   /** False keeps only the composer on screen; the conversation stays mounted but inert. */
   expanded: boolean;
-  composerRef: Ref<HTMLTextAreaElement>;
+  /** Sits above the conversation and is hidden with it. */
+  header: ReactNode;
   /** Attached to the message list's scroller, for a header above it to track its scroll. */
   messagesRef: RefCallback<HTMLDivElement>;
   onComposerFocus: (event: FocusEvent<HTMLTextAreaElement>) => void;
@@ -422,7 +422,7 @@ export interface ChatPanelProps {
 /** The conversation and its composer, laid out to sit under a header in a flex column. */
 export function ChatPanel({
   expanded,
-  composerRef,
+  header,
   messagesRef,
   onComposerFocus,
 }: ChatPanelProps) {
@@ -501,6 +501,7 @@ export function ChatPanel({
   return (
     <>
       <div className="chat-panel" aria-hidden={!expanded} inert={!expanded}>
+        {header}
         {showQuickActions && (
           <div className="chat-panel-disclaimer chat-panel-disclaimer--banner">
             <Icon
@@ -561,7 +562,6 @@ export function ChatPanel({
 
       <div className="chat-panel-input">
         <Textarea
-          ref={composerRef}
           placeholder={t("chat.dock.placeholder", "Ask Stirling")}
           aria-label={t("chat.dock.placeholder", "Ask Stirling")}
           value={input}
@@ -579,7 +579,7 @@ export function ChatPanel({
         />
         <ActionIcon
           size="md"
-          className="chat-panel-input__send"
+          loading={isLoading}
           onClick={() => handleSend()}
           disabled={!input.trim() || isLoading}
           aria-label={t("chat.input.send", "Send message")}

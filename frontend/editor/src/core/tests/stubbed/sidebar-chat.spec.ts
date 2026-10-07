@@ -41,12 +41,15 @@ async function settledHeight(dock: Locator): Promise<number> {
   return current;
 }
 
-test("sits collapsed with only the header and composer", async ({ page }) => {
+test("sits collapsed as just the composer", async ({ page }) => {
   const dock = await openEditorWithAi(page);
   await expect(dock).toHaveAttribute("data-state", "collapsed");
   await expect(
     dock.getByRole("textbox", { name: "Ask Stirling" }),
   ).toBeVisible();
+  await expect(dock.getByRole("button", { name: "Collapse chat" })).toHaveCount(
+    0,
+  );
   // The collapsed conversation stays mounted but hidden from the a11y tree.
   await expect(
     dock.getByRole("button", { name: "Open from computer" }),
@@ -58,44 +61,27 @@ test("sits collapsed with only the header and composer", async ({ page }) => {
   ).toBeVisible();
 });
 
-test("grows when the composer is focused and shrinks once the user clicks away", async ({
+test("opens when the composer is focused and closes only from the chevron", async ({
   page,
 }) => {
   const dock = await openEditorWithAi(page);
   const collapsed = await settledHeight(dock);
 
   await dock.getByRole("textbox", { name: "Ask Stirling" }).click();
-  await expect(dock).toHaveAttribute("data-state", "focused");
+  await expect(dock).toHaveAttribute("data-state", "expanded");
   expect(await settledHeight(dock)).toBeGreaterThan(collapsed + 100);
 
   await page
     .locator('[data-tour="workbench"]')
     .click({ position: { x: 40, y: 200 } });
+  await expect(dock).toHaveAttribute("data-state", "expanded");
+
+  await dock.getByRole("button", { name: "Collapse chat" }).click();
   await expect(dock).toHaveAttribute("data-state", "collapsed");
   expect(await settledHeight(dock)).toBe(collapsed);
-});
 
-test("stays open after a message is sent from the focused dock", async ({
-  page,
-}) => {
-  await page.route("**/api/v1/ai/orchestrate/stream", (route: Route) =>
-    route.fulfill({
-      headers: { "content-type": "text/event-stream" },
-      body: `event: result\ndata: ${JSON.stringify({ outcome: "answer", answer: "Done." })}\n\n`,
-    }),
-  );
-  const dock = await openEditorWithAi(page);
-  const composer = dock.getByRole("textbox", { name: "Ask Stirling" });
-  await composer.click();
-  await composer.fill("Summarise this");
-  await composer.press("Enter");
-  await expect(dock).toHaveAttribute("data-state", "pinned");
-  await expect(dock.getByText("Done.")).toBeVisible();
-
-  await page
-    .locator('[data-tour="workbench"]')
-    .click({ position: { x: 40, y: 200 } });
-  await expect(dock).toHaveAttribute("data-state", "pinned");
+  await dock.getByRole("textbox", { name: "Ask Stirling" }).click();
+  await expect(dock).toHaveAttribute("data-state", "expanded");
 });
 
 test("rules the header once messages scroll beneath it", async ({ page }) => {
@@ -156,51 +142,6 @@ test("accepts typing while the agent is thinking but holds the send", async ({
   await expect(dock.getByText("Done.")).toBeVisible();
   await expect(send).toBeEnabled();
   expect(requests).toBe(1);
-});
-
-test("stays open when expanded explicitly until it is collapsed", async ({
-  page,
-}) => {
-  const dock = await openEditorWithAi(page);
-  const collapsed = await settledHeight(dock);
-
-  await dock.getByRole("button", { name: "Expand chat" }).click();
-  await expect(dock).toHaveAttribute("data-state", "pinned");
-  await expect(
-    dock.getByRole("textbox", { name: "Ask Stirling" }),
-  ).toBeFocused();
-
-  await page
-    .locator('[data-tour="workbench"]')
-    .click({ position: { x: 40, y: 200 } });
-  await expect(dock).toHaveAttribute("data-state", "pinned");
-
-  await dock.getByRole("button", { name: "Collapse chat" }).click();
-  await expect(dock).toHaveAttribute("data-state", "collapsed");
-  expect(await settledHeight(dock)).toBe(collapsed);
-});
-
-test("opens to the same height whether focused or expanded", async ({
-  page,
-}) => {
-  const dock = await openEditorWithAi(page);
-  await dock.getByRole("textbox", { name: "Ask Stirling" }).click();
-  const focused = await settledHeight(dock);
-
-  await dock.getByRole("button", { name: "Collapse chat" }).click();
-  await expect(dock).toHaveAttribute("data-state", "collapsed");
-
-  await dock.getByRole("button", { name: "Expand chat" }).click();
-  await expect(dock).toHaveAttribute("data-state", "pinned");
-  expect(await settledHeight(dock)).toBe(focused);
-});
-
-test("Escape collapses it", async ({ page }) => {
-  const dock = await openEditorWithAi(page);
-  await dock.getByRole("textbox", { name: "Ask Stirling" }).click();
-  await expect(dock).toHaveAttribute("data-state", "focused");
-  await page.keyboard.press("Escape");
-  await expect(dock).toHaveAttribute("data-state", "collapsed");
 });
 
 test("is absent when the AI engine is off", async ({ page }) => {

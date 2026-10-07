@@ -5,6 +5,7 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
+import type { FocusEvent } from "react";
 import { MantineProvider } from "@mantine/core";
 import { MemoryRouter, useLocation } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -32,7 +33,13 @@ vi.mock("@app/ui/Icon", () => ({ Icon: () => null }));
 vi.mock("@app/components/chat/ChatContext", () => ({
   useChat: () => ({ messages: [], isLoading: false, clearChat: () => {} }),
 }));
-vi.mock("@app/components/chat/ChatPanel", () => ({ ChatPanel: () => null }));
+vi.mock("@app/components/chat/ChatPanel", () => ({
+  ChatPanel: ({
+    onComposerFocus,
+  }: {
+    onComposerFocus: (event: FocusEvent<HTMLTextAreaElement>) => void;
+  }) => <textarea aria-label="Ask Stirling" onFocus={onComposerFocus} />,
+}));
 vi.mock("@app/components/policies/ProcessingFolderSetupFlow", () => ({
   ProcessingFolderSetupFlow: () => <div>Processing folder wizard</div>,
 }));
@@ -125,10 +132,13 @@ describe("guest signup prompt", () => {
 
   it("opens signup instead of the assistant for guests without navigating", async () => {
     renderPrompt(false, true);
-    const assistant = screen.getByRole("button", { name: "Expand chat" });
-    fireEvent.click(assistant);
+    const composer = screen.getByRole("textbox", { name: "Ask Stirling" });
+    act(() => composer.focus());
     expect(await screen.findByRole("dialog")).toBeInTheDocument();
-    expect(assistant).toHaveAccessibleName("Expand chat");
+    expect(composer).not.toHaveFocus();
+    expect(
+      screen.getByRole("region", { name: "Stirling Agent" }),
+    ).toHaveAttribute("data-state", "collapsed");
     expect(screen.getByTestId("destination")).toHaveTextContent(
       "/editor?tool=compress",
     );
@@ -137,9 +147,10 @@ describe("guest signup prompt", () => {
   it("opens the assistant without a signup prompt for registered users", () => {
     auth.isAnonymous = false;
     renderPrompt(false, true);
-    const assistant = screen.getByRole("button", { name: "Expand chat" });
-    fireEvent.click(assistant);
-    expect(assistant).toHaveAccessibleName("Collapse chat");
+    act(() => screen.getByRole("textbox", { name: "Ask Stirling" }).focus());
+    expect(
+      screen.getByRole("region", { name: "Stirling Agent" }),
+    ).toHaveAttribute("data-state", "expanded");
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
