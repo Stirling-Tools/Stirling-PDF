@@ -28,7 +28,7 @@ jobs:
       jar_sha256: ${{ steps.hashes.outputs.jar_sha256 }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
           egress-policy: audit
 
@@ -73,18 +73,19 @@ jobs:
           echo "jar_sha256=$JAR_SHA" >> "$GITHUB_OUTPUT"
 
   update-homebrew-and-scoop:
+    environment: package-publish
     needs: get-release-info
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
           egress-policy: audit
 
       - name: Checkout homebrew-stirling-pdf tap (also hosts Scoop bucket)
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: Stirling-Tools/homebrew-stirling-pdf
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}

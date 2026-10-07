@@ -9,8 +9,7 @@ import {
   TextInput,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
-import SearchIcon from "@mui/icons-material/Search";
+import { Icon } from "@app/ui/Icon";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 export interface DropdownItem {
@@ -109,7 +108,9 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
       );
       return selectedItem?.name || selectedValues[0];
     } else {
-      return `${selectedValues.length} selected`;
+      return t("dropdownList.selectedCount", "{{count}} selected", {
+        count: selectedValues.length,
+      });
     }
   };
 
@@ -135,7 +136,11 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
         zIndex={zIndex}
       >
         <Popover.Target>
+          {/* A real button: Popover.Target stamps aria-haspopup/aria-expanded on
+              its child, and those are only permitted on an actual control. */}
           <Box
+            component="button"
+            type="button"
             style={{
               border:
                 "light-dark(1px solid var(--mantine-color-gray-3), 1px solid var(--mantine-color-dark-4))",
@@ -143,6 +148,9 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
               padding: "8px 12px",
               backgroundColor:
                 "light-dark(var(--mantine-color-white), var(--mantine-color-dark-6))",
+              color: "inherit",
+              textAlign: "left",
+              width: "100%",
               opacity: disabled ? 0.6 : 1,
               cursor: disabled ? "not-allowed" : "pointer",
               minHeight: "36px",
@@ -154,9 +162,10 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
             <Text size="sm" style={{ flex: 1 }}>
               {getDisplayText()}
             </Text>
-            <UnfoldMoreIcon
+            <Icon
+              name="chevrons-up-down"
+              size={"1rem"}
               style={{
-                fontSize: "1rem",
                 color:
                   "light-dark(var(--mantine-color-gray-5), var(--mantine-color-dark-2))",
               }}
@@ -190,7 +199,7 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
                   placeholder={t("dropdownList.searchPlaceholder", "Search...")}
                   value={searchTerm}
                   onChange={handleSearchChange}
-                  leftSection={<SearchIcon style={{ fontSize: "1rem" }} />}
+                  leftSection={<Icon name="search" size={"1rem"} />}
                   size="sm"
                   style={{ width: "100%" }}
                 />

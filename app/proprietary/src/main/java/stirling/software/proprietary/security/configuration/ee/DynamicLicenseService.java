@@ -12,11 +12,8 @@ import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVeri
  * admins update the license key, the changes are immediately reflected in the UI and config
  * endpoints without requiring a restart.
  *
- * <p>Note: Some components (EnterpriseEndpointAspect, PremiumEndpointAspect, filters) still inject
- * cached beans at startup for performance. These will require a restart to reflect license changes.
- * This is acceptable because: 1. Most deployments add licenses during initial setup 2. License
- * changes in production typically warrant a restart anyway 3. UI reflects changes immediately
- * (banner disappears, license status updates)
+ * <p>Linked Team entitlement is evaluated on access, including unlink and revocation; installed
+ * licences retain their own validation lifecycle.
  */
 @Service
 @RequiredArgsConstructor
@@ -30,13 +27,18 @@ public class DynamicLicenseService implements LicenseServiceInterface {
      * @return Current license: NORMAL, SERVER, or ENTERPRISE
      */
     public License getCurrentLicense() {
-        return licenseKeyChecker.getPremiumLicenseEnabledResult();
+        return licenseKeyChecker.premiumTier();
     }
 
     @Override
     public boolean isRunningProOrHigher() {
         License license = getCurrentLicense();
         return license == License.SERVER || license == License.ENTERPRISE;
+    }
+
+    @Override
+    public boolean hasServerLicense() {
+        return licenseKeyChecker.getLicenseKeyResult() == License.SERVER;
     }
 
     @Override

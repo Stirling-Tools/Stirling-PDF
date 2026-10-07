@@ -55,7 +55,7 @@
 }
 
 .attachment-item:hover .attachment-item__download-icon {
-  color: var(--mantine-color-blue-6);
+  color: var(--c-accent-text);
   transform: scale(1.1);
 }
 
@@ -70,8 +70,9 @@
 
 .attachment-item__title {
   line-height: 1.35;
-  overflow-wrap: anywhere;
-  word-break: break-word;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: var(--c-text);
 }
 
@@ -99,4 +100,11 @@
     transition: none;
     animation: none;
   }
+}
+
+/* The portfolio member currently open in the viewer. */
+.attachment-item--current {
+  background: color-mix(in srgb, var(--c-accent-text) 10%, var(--c-bg-raised));
+  border-color: color-mix(in srgb, var(--c-accent-text) 35%, transparent);
+  box-shadow: inset 0.125rem 0 0 0 var(--c-accent-text);
 }

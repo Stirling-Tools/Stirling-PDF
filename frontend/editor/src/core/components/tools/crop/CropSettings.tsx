@@ -1,16 +1,8 @@
 import { useState, useEffect } from "react";
-import {
-  Stack,
-  Text,
-  Box,
-  Group,
-  Center,
-  Alert,
-  Checkbox,
-} from "@mantine/core";
+import { Stack, Text, Box, Group, Center, Checkbox } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import { Icon } from "@app/ui/Icon";
 import { CropParametersHook } from "@app/hooks/tools/crop/useCropParameters";
 import {
   useViewScopedFiles,
@@ -18,6 +10,7 @@ import {
 } from "@app/hooks/tools/shared/useViewScopedFiles";
 import CropAreaSelector from "@app/components/tools/crop/CropAreaSelector";
 import CropCoordinateInputs from "@app/components/tools/crop/CropCoordinateInputs";
+import CropPageSelection from "@app/components/tools/crop/CropPageSelection";
 import { DEFAULT_CROP_AREA } from "@app/constants/cropConstants";
 import { PAGE_SIZES } from "@app/constants/pageSizeConstants";
 import {
@@ -161,11 +154,16 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
     );
   }
 
-  const isCropValid = parameters.isCropAreaValid(pdfBounds);
   const isFullCrop = parameters.isFullPDFCrop(pdfBounds);
 
   return (
     <Stack gap="md" data-tour="crop-settings">
+      <CropPageSelection
+        value={parameters.parameters.pageNumbers}
+        onChange={(value) => parameters.updateParameter("pageNumbers", value)}
+        disabled={disabled}
+      />
+
       {/* Auto-Crop Checkbox */}
       <Checkbox
         label={t("crop.autoCrop", "Auto-crop whitespace")}
@@ -190,7 +188,7 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
               title={t("crop.reset", "Reset to full PDF")}
               aria-label={t("crop.reset", "Reset to full PDF")}
             >
-              <RestartAltIcon style={{ fontSize: "1rem" }} />
+              <Icon name="rotate-ccw" size={"1rem"} />
             </ActionIcon>
           </Group>
 
@@ -238,18 +236,6 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
           pdfBounds={pdfBounds}
           showAutomationInfo={false}
         />
-      )}
-
-      {/* Validation Alert - Only show when autoCrop is false */}
-      {!parameters.parameters.autoCrop && !isCropValid && (
-        <Alert color="red" variant="light">
-          <Text size="xs">
-            {t(
-              "crop.error.invalidArea",
-              "Crop area extends beyond PDF boundaries",
-            )}
-          </Text>
-        </Alert>
       )}
     </Stack>
   );

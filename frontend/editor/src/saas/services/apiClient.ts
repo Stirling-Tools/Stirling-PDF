@@ -3,9 +3,10 @@ import { supabase } from "@app/auth/supabase";
 import { handleHttpError } from "@app/services/httpErrorHandler";
 import {
   classifyPaygError,
+  normalizePaygError,
   handlePaygError,
 } from "@app/services/paygErrorInterceptor";
-import { withBasePath } from "@app/constants/app";
+import { redirectToLogin } from "@app/auth/redirectToLogin";
 import { getBrowserId } from "@app/utils/browserIdentifier";
 
 // Helper: decode base64url JWT payload safely
@@ -143,6 +144,7 @@ apiClient.interceptors.response.use(
     //   - The handleHttpError() generic toast at the bottom won't fire.
     // The error itself is still propagated to the caller so any
     // component-level catch can react if needed.
+    await normalizePaygError(error);
     const paygKind = classifyPaygError(error);
     if (paygKind !== null) {
       handlePaygError(paygKind, error);
@@ -173,7 +175,7 @@ apiClient.interceptors.response.use(
             // The session genuinely can't be recovered. Send protected requests
             // to login; public ones just fail quietly (no redirect).
             if (!isPublicEndpoint) {
-              window.location.href = withBasePath("/login");
+              redirectToLogin();
             }
 
             return Promise.reject(error);
@@ -194,10 +196,7 @@ apiClient.interceptors.response.use(
           console.debug(
             "[API Client] No session to refresh, 401 on protected endpoint",
           );
-          const loginPath = withBasePath("/login");
-          if (window.location.pathname !== loginPath) {
-            window.location.href = loginPath;
-          }
+          redirectToLogin();
           return Promise.reject(error);
         }
       } catch (refreshError) {

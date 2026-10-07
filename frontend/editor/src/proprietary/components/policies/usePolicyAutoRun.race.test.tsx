@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
+import type { ClassificationConfidence } from "@app/types/fileContext";
 
 /**
  * Mid-run race: classification is in flight (its labelled output is still
@@ -18,6 +19,7 @@ const mocks = vi.hoisted(() => ({
     sourceFileIds?: string[];
     derivedFromTool?: boolean;
     classificationLabels?: string[];
+    classificationConfidence?: ClassificationConfidence;
   }>,
   runStoredPolicy: vi.fn(),
   getPolicyRun: vi.fn(),
@@ -34,11 +36,6 @@ const mocks = vi.hoisted(() => ({
   bumpRevision: vi.fn(),
 }));
 
-// Classification chains server-side only when the AI engine is on (else it runs
-// client-side); this race is in the server import path, so force the engine on.
-vi.mock("@app/hooks/useAiEngineEnabled", () => ({
-  useAiEngineEnabled: () => true,
-}));
 vi.mock("@app/contexts/FileContext", () => ({
   useAllFiles: () => ({ fileStubs: mocks.workspace }),
   useFileManagement: () => ({
@@ -55,7 +52,8 @@ vi.mock("@app/hooks/usePolicies", () => ({
     policies: {
       classification: {
         configured: true,
-        status: "active",
+        runsOnEditor: true,
+        enabled: true,
         backendId: "backend-classification",
         runOn: "upload",
         order: 0,
@@ -91,6 +89,8 @@ import { usePolicyAutoRun } from "@app/components/policies/usePolicyAutoRun";
 import {
   usePolicyRuns,
   resetPolicyRuns,
+  recordRunStart,
+  updateRun,
 } from "@app/components/policies/policyRunStore";
 import type { PolicyRunRecord } from "@app/components/policies/policyRunStore";
 
@@ -114,7 +114,7 @@ beforeEach(() => {
   resetPolicyRuns();
   vi.clearAllMocks();
 
-  mocks.workspace = [{ id: "file-0" }];
+  mocks.workspace = [{ id: "file-0", classificationConfidence: "low" }];
 
   mocks.listPolicyRuns.mockResolvedValue([]);
   mocks.getStirlingFile.mockResolvedValue(
@@ -138,6 +138,26 @@ beforeEach(() => {
     currentStep: 1,
     stepCount: 1,
     error: null,
+    outputs: [{ fileId: "backend-out-0", fileName: "doc.pdf" }],
+  });
+
+  // Classification now dispatches its own AI run (see usePolicyLocalPasses); this suite exercises
+  // the auto-run engine's generic import/label-stamping path, so seed a completed classification run
+  // for it to pick up rather than driving a dispatch.
+  recordRunStart({
+    runId: "run-0",
+    policyKey: "classification",
+    fileId: "file-0",
+    fileName: "doc.pdf",
+    fileSize: 100,
+    target: "saas",
+    status: "PENDING",
+    outputs: [],
+    error: null,
+    startedAt: 0,
+  });
+  updateRun("run-0", {
+    status: "COMPLETED",
     outputs: [{ fileId: "backend-out-0", fileName: "doc.pdf" }],
   });
 });

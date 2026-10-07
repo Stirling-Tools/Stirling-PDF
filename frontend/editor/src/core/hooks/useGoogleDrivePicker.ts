@@ -1,8 +1,5 @@
-/**
- * React hook for Google Drive file picker
- */
-
 import { useState, useCallback, useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import {
   getGoogleDrivePickerService,
@@ -20,20 +17,21 @@ interface UseGoogleDrivePickerReturn {
   isEnabled: boolean;
   isLoading: boolean;
   error: string | null;
+  clearError: () => void;
   openPicker: (options?: UseGoogleDrivePickerOptions) => Promise<File[]>;
 }
 
-/**
- * Hook to use Google Drive file picker
- */
+/** Initializes Drive lazily; failed picks resolve to [] and set error until cleared or retried. */
 export function useGoogleDrivePicker(): UseGoogleDrivePickerReturn {
+  const { t } = useTranslation();
   const { config } = useAppConfig();
   const [isEnabled, setIsEnabled] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const clearError = useCallback(() => setError(null), []);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Memoize backend config to only track Google Drive specific properties
+  // Unrelated app settings must not invalidate Drive's config or picker callbacks.
   const googleDriveBackendConfig = useMemo(
     () => extractGoogleDriveBackendConfig(config),
     [
@@ -44,39 +42,41 @@ export function useGoogleDrivePicker(): UseGoogleDrivePickerReturn {
     ],
   );
 
-  // Check if Google Drive is configured and reset initialization if disabled
   useEffect(() => {
     const configured = isGoogleDriveConfigured(googleDriveBackendConfig);
     setIsEnabled(configured);
-    // Reset initialization state if Google Drive becomes disabled
     if (!configured) {
       setIsInitialized(false);
     }
   }, [googleDriveBackendConfig]);
 
-  /**
-   * Initialize the Google Drive service (lazy initialization)
-   */
   const initializeService = useCallback(async () => {
     if (isInitialized) return;
 
     const googleDriveConfig = getGoogleDriveConfig(googleDriveBackendConfig);
     if (!googleDriveConfig) {
-      throw new Error("Google Drive is not configured");
+      throw new Error(
+        t(
+          "provider.googledrive.errors.notConfigured",
+          "Google Drive is not configured",
+        ),
+      );
     }
 
     const service = getGoogleDrivePickerService();
     await service.initialize(googleDriveConfig);
     setIsInitialized(true);
-  }, [isInitialized, googleDriveBackendConfig]);
+  }, [isInitialized, googleDriveBackendConfig, t]);
 
-  /**
-   * Open the Google Drive picker
-   */
   const openPicker = useCallback(
     async (options: UseGoogleDrivePickerOptions = {}): Promise<File[]> => {
       if (!isEnabled) {
-        setError("Google Drive is not configured");
+        setError(
+          t(
+            "provider.googledrive.errors.notConfigured",
+            "Google Drive is not configured",
+          ),
+        );
         return [];
       }
 
@@ -84,10 +84,8 @@ export function useGoogleDrivePicker(): UseGoogleDrivePickerReturn {
         setIsLoading(true);
         setError(null);
 
-        // Initialize service if needed
         await initializeService();
 
-        // Open picker
         const service = getGoogleDrivePickerService();
         const files = await service.openPicker({
           multiple: options.multiple ?? true,
@@ -99,7 +97,10 @@ export function useGoogleDrivePicker(): UseGoogleDrivePickerReturn {
         const errorMessage =
           err instanceof Error
             ? err.message
-            : "Failed to open Google Drive picker";
+            : t(
+                "provider.googledrive.errors.pickerFailed",
+                "Failed to open Google Drive picker",
+              );
         setError(errorMessage);
         console.error("Google Drive picker error:", err);
         return [];
@@ -107,13 +108,14 @@ export function useGoogleDrivePicker(): UseGoogleDrivePickerReturn {
         setIsLoading(false);
       }
     },
-    [isEnabled, initializeService],
+    [isEnabled, initializeService, t],
   );
 
   return {
     isEnabled,
     isLoading,
     error,
+    clearError,
     openPicker,
   };
 }

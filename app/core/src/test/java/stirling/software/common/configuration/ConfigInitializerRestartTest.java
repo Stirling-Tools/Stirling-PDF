@@ -6,9 +6,13 @@ import static org.mockito.Mockito.mockStatic;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedStatic;
 
 import stirling.software.common.util.GeneralUtils;
@@ -18,13 +22,66 @@ import stirling.software.common.util.YamlHelper;
  * End-to-end check of the container-restart path. {@link ConfigInitializer#ensureConfigExists()} is
  * what runs on every startup, merging the on-disk settings.yml with the bundled
  * settings.yml.template. These tests exercise it against the real template on the classpath to
- * prove admin-saved proFeatures values survive a restart - the bug behind "the SSO auto-login
- * button resets every time the container resets".
+ * prove admin-saved settings survive a restart - the bug behind "the SSO auto-login button resets
+ * every time the container resets".
  */
 class ConfigInitializerRestartTest {
 
     private static String read(Path settings, String... keyPath) throws IOException {
         return String.valueOf(new YamlHelper(settings).getValueByExactKeyPath(keyPath));
+    }
+
+    @Test
+    void storageAndSigningDefaultOnAtFirstBoot(@TempDir Path tmp) throws Exception {
+        Path settings = tmp.resolve("settings.yml");
+        try (MockedStatic<InstallationPathConfig> paths =
+                mockStatic(InstallationPathConfig.class)) {
+            paths.when(InstallationPathConfig::getSettingsPath).thenReturn(settings.toString());
+            paths.when(InstallationPathConfig::getCustomSettingsPath)
+                    .thenReturn(tmp.resolve("custom_settings.yml").toString());
+
+            new ConfigInitializer().ensureConfigExists();
+
+            assertEquals("true", read(settings, "storage", "enabled"));
+            assertEquals("true", read(settings, "storage", "signing", "enabled"));
+            assertEquals("local", read(settings, "storage", "provider"));
+            assertEquals("false", read(settings, "storage", "sharing", "enabled"));
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+            value = {"-,-", "false,-", "-,false", "false,false", "true,false", "false,true"},
+            nullValues = "-")
+    void storageOptOutsSurviveUpgradeAndRestart(
+            String storageEnabled, String signingEnabled, @TempDir Path tmp) throws Exception {
+        Path settings = tmp.resolve("settings.yml");
+        // Startup replaces files shorter than 31 lines instead of merging their settings.
+        Files.writeString(
+                settings,
+                "# Existing installation\n".repeat(32)
+                        + "storage:\n  provider: local\n"
+                        + (storageEnabled == null ? "" : "  enabled: " + storageEnabled + "\n")
+                        + (signingEnabled == null
+                                ? ""
+                                : "  signing:\n    enabled: " + signingEnabled + "\n"));
+        try (MockedStatic<InstallationPathConfig> paths =
+                mockStatic(InstallationPathConfig.class)) {
+            paths.when(InstallationPathConfig::getSettingsPath).thenReturn(settings.toString());
+            paths.when(InstallationPathConfig::getCustomSettingsPath)
+                    .thenReturn(tmp.resolve("custom_settings.yml").toString());
+            ConfigInitializer initializer = new ConfigInitializer();
+
+            for (int restart = 0; restart < 2; restart++) {
+                initializer.ensureConfigExists();
+                assertEquals(
+                        storageEnabled == null ? "true" : storageEnabled,
+                        read(settings, "storage", "enabled"));
+                assertEquals(
+                        signingEnabled == null ? "true" : signingEnabled,
+                        read(settings, "storage", "signing", "enabled"));
+            }
+        }
     }
 
     @Test
@@ -41,19 +98,58 @@ class ConfigInitializerRestartTest {
 
             // First boot: settings.yml created from the bundled template (camelCase, default off).
             init.ensureConfigExists();
-            assertEquals("false", read(settings, "premium", "proFeatures", "ssoAutoLogin"));
+            assertEquals("false", read(settings, "security", "ssoAutoLogin"));
 
             // Admin enables SSO auto-login and edits custom metadata via the exact save path the
             // admin settings controller uses.
-            GeneralUtils.saveKeyToSettings("premium.proFeatures.ssoAutoLogin", true);
+            GeneralUtils.saveKeyToSettings("security.ssoAutoLogin", true);
             GeneralUtils.saveKeyToSettings("premium.proFeatures.customMetadata.author", "acme");
 
             // Container restart: ensureConfigExists merges the saved file with the template again.
             init.ensureConfigExists();
 
-            assertEquals("true", read(settings, "premium", "proFeatures", "ssoAutoLogin"));
+            assertEquals("true", read(settings, "security", "ssoAutoLogin"));
             assertEquals(
                     "acme", read(settings, "premium", "proFeatures", "customMetadata", "author"));
+        }
+    }
+
+    /**
+     * The admin UI only submits the fields it changed, so a nested block such as storage.sharing
+     * arrives as a partial map. Persisting it must not drop the siblings, otherwise the next
+     * restart resets them to the template defaults - the bug behind "enabling email sharing turns
+     * Enable Sharing back off after a restart".
+     */
+    @Test
+    void partialSharingSave_keepsSiblingsAcrossRestart(@TempDir Path tmp) throws Exception {
+        Path settings = tmp.resolve("settings.yml");
+        Path custom = tmp.resolve("custom_settings.yml");
+
+        try (MockedStatic<InstallationPathConfig> paths =
+                mockStatic(InstallationPathConfig.class)) {
+            paths.when(InstallationPathConfig::getSettingsPath).thenReturn(settings.toString());
+            paths.when(InstallationPathConfig::getCustomSettingsPath).thenReturn(custom.toString());
+
+            ConfigInitializer init = new ConfigInitializer();
+            init.ensureConfigExists();
+
+            // Admin turns on storage and sharing, then restarts.
+            GeneralUtils.saveKeyToSettings("storage.enabled", true);
+            GeneralUtils.saveKeyToSettings("storage.sharing.enabled", true);
+            init.ensureConfigExists();
+
+            // Admin now flips only "Enable Email Sharing", then restarts again. Both the leaf key
+            // the controller writes today and the whole-block map an older client may send have to
+            // leave the siblings alone.
+            GeneralUtils.saveKeyToSettings("storage.sharing.emailEnabled", true);
+            GeneralUtils.saveKeyToSettings("storage.sharing", Map.of("emailEnabled", true));
+            init.ensureConfigExists();
+
+            assertEquals("true", read(settings, "storage", "enabled"));
+            assertEquals("true", read(settings, "storage", "sharing", "enabled"));
+            assertEquals("true", read(settings, "storage", "sharing", "emailEnabled"));
+            assertEquals("true", read(settings, "storage", "sharing", "linkEnabled"));
+            assertEquals("3", read(settings, "storage", "sharing", "linkExpirationDays"));
         }
     }
 
@@ -76,7 +172,9 @@ class ConfigInitializerRestartTest {
             init.ensureConfigExists();
             String legacy =
                     Files.readString(settings)
-                            .replace("ssoAutoLogin: false", "SSOAutoLogin: true")
+                            .replace("\r\n", "\n")
+                            .replace("  ssoAutoLogin: false\n", "")
+                            .replace("  proFeatures:", "  proFeatures:\n    SSOAutoLogin: true")
                             .replace("customMetadata:", "CustomMetadata:");
             Files.writeString(settings, legacy);
 
@@ -84,10 +182,47 @@ class ConfigInitializerRestartTest {
             init.ensureConfigExists();
 
             // Value carried forward onto the new camelCase key; the legacy PascalCase key is gone.
-            assertEquals("true", read(settings, "premium", "proFeatures", "ssoAutoLogin"));
+            assertEquals("true", read(settings, "security", "ssoAutoLogin"));
             assertNull(
                     new YamlHelper(settings)
                             .getValueByExactKeyPath("premium", "proFeatures", "SSOAutoLogin"));
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"premium", "enterpriseEdition"})
+    void legacyAutoLoginMovesToSecurityAndSurvivesRestarts(String section, @TempDir Path tmp)
+            throws Exception {
+        Path settings = tmp.resolve("settings.yml");
+        Path custom = tmp.resolve("custom_settings.yml");
+        try (MockedStatic<InstallationPathConfig> paths =
+                mockStatic(InstallationPathConfig.class)) {
+            paths.when(InstallationPathConfig::getSettingsPath).thenReturn(settings.toString());
+            paths.when(InstallationPathConfig::getCustomSettingsPath).thenReturn(custom.toString());
+            ConfigInitializer init = new ConfigInitializer();
+            init.ensureConfigExists();
+            String legacy =
+                    Files.readString(settings)
+                            .replace("\r\n", "\n")
+                            .replace("  ssoAutoLogin: false\n", "");
+            legacy =
+                    section.equals("premium")
+                            ? legacy.replace(
+                                    "  proFeatures:", "  proFeatures:\n    ssoAutoLogin: true")
+                            : legacy + "\nenterpriseEdition:\n  SSOAutoLogin: true\n";
+            Files.writeString(settings, legacy);
+
+            init.ensureConfigExists();
+            assertEquals("true", read(settings, "security", "ssoAutoLogin"));
+            YamlHelper migrated = new YamlHelper(settings);
+            assertNull(migrated.getValueByExactKeyPath("premium", "proFeatures", "ssoAutoLogin"));
+            assertNull(migrated.getValueByExactKeyPath("enterpriseEdition", "SSOAutoLogin"));
+            init.ensureConfigExists();
+            assertEquals("true", read(settings, "security", "ssoAutoLogin"));
+            assertEquals(migrated.getAllKeys(), new YamlHelper(settings).getAllKeys());
+            GeneralUtils.saveKeyToSettings("security.ssoAutoLogin", false);
+            init.ensureConfigExists();
+            assertEquals("false", read(settings, "security", "ssoAutoLogin"));
         }
     }
 }

@@ -23,7 +23,11 @@ public final class AutomationRunContext {
     /** Header carrying the run id on internal sub-step dispatches. */
     public static final String RUN_ID_HEADER = "X-Stirling-Run-Id";
 
+    /** Header carrying the per-document id (run-scoped) on internal sub-step dispatches. */
+    public static final String DOCUMENT_ID_HEADER = "X-Stirling-Document-Id";
+
     private static final ThreadLocal<String> CURRENT = new ThreadLocal<>();
+    private static final ThreadLocal<String> CURRENT_DOCUMENT = new ThreadLocal<>();
 
     private AutomationRunContext() {}
 
@@ -46,6 +50,28 @@ public final class AutomationRunContext {
     /** The run id active on this thread, or {@code null} when not inside a run scope. */
     public static String current() {
         return CURRENT.get();
+    }
+
+    /**
+     * Opens a per-document scope on the current thread (nest inside a run scope, around one
+     * document's dispatch). Returns an {@link AutoCloseable} that restores the previous document
+     * id.
+     */
+    public static Scope openDocument(String documentId) {
+        String previous = CURRENT_DOCUMENT.get();
+        CURRENT_DOCUMENT.set(documentId);
+        return () -> {
+            if (previous == null) {
+                CURRENT_DOCUMENT.remove();
+            } else {
+                CURRENT_DOCUMENT.set(previous);
+            }
+        };
+    }
+
+    /** The document id active on this thread, or {@code null} when not inside a document scope. */
+    public static String currentDocument() {
+        return CURRENT_DOCUMENT.get();
     }
 
     /** AutoCloseable whose {@link #close()} declares no checked exception. */

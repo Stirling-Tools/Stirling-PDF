@@ -8,12 +8,13 @@ import {
   usePolicyRuns,
   type PolicyRunRecord,
 } from "@app/components/policies/policyRunStore";
-import { isClassificationCategory } from "@app/data/policyCategories";
+import { isClassificationPolicy } from "@app/data/classificationPolicy";
 import { PolicyEnforcementOverlay } from "@app/components/viewer/PolicyEnforcementOverlay";
 
 type SignatureOverlayPassThrough = Pick<
   EmbedPdfViewerProps,
   | "signaturePreviews"
+  | "readOnlySignaturePreviews"
   | "signaturePreviewsReadOnly"
   | "signaturePlacementMode"
   | "signaturePlacementData"
@@ -31,7 +32,8 @@ const Viewer = (props: ViewerProps & SignatureOverlayPassThrough) => {
         (r: PolicyRunRecord) =>
           r.fileId === activeFileId &&
           // Classification runs async and must never block the viewer.
-          !isClassificationCategory(r.categoryId) &&
+          !isClassificationPolicy(r.policyKey) &&
+          !r.externalOutput &&
           (POLICY_IN_FLIGHT_STATUSES.includes(r.status) || r.retrying === true),
       )
     : [];

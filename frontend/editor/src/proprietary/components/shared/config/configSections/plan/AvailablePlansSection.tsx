@@ -89,6 +89,7 @@ const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
         </div>
         {currency && onCurrencyChange && currencyOptions && (
           <Select
+            aria-label={t("plan.availablePlans.currency", "Billing currency")}
             value={currency}
             onChange={(value) => onCurrencyChange(value || "usd")}
             data={currencyOptions}

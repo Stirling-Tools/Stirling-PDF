@@ -1,63 +1,62 @@
 package stirling.software.proprietary.accountlink;
 
-import java.io.IOException;
 import java.util.Optional;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Linking orchestrator (self-hosted side of combined-billing "Mode A").
- *
- * <p>{@link #link} is the same-origin action the portal triggers: it relays the admin's Supabase
- * JWT to the SaaS register endpoint, then persists the returned device credential secure-at-rest.
- * The credential — not the JWT — authenticates all later unattended entitlement calls.
- */
+import stirling.software.proprietary.service.OrgOwnerService;
+
+/** Linking orchestrator (self-hosted side of combined billing). */
 @Slf4j
 @Service
 @Profile("!saas")
-@ConditionalOnProperty(name = "stirling.billing.account-link.enabled", havingValue = "true")
+@ConditionalOnProperty(
+        name = "stirling.billing.account-link.enabled",
+        havingValue = "true",
+        matchIfMissing = true)
 public class AccountLinkService {
 
     private final AccountLinkClient client;
     private final DeviceCredentialStore credentialStore;
     private final EntitlementCache entitlementCache;
+    private final OrgOwnerService owners;
 
     public AccountLinkService(
             AccountLinkClient client,
             DeviceCredentialStore credentialStore,
-            EntitlementCache entitlementCache) {
+            EntitlementCache entitlementCache,
+            OrgOwnerService owners) {
         this.client = client;
         this.credentialStore = credentialStore;
         this.entitlementCache = entitlementCache;
+        this.owners = owners;
     }
 
     /** Status of this instance's link, for the portal's "Account link" card. */
-    public record LinkStatus(boolean linked, String deviceId, Long teamId, String linkedAt) {}
-
-    /**
-     * Registers this instance with the SaaS team behind {@code supabaseJwt} and stores the
-     * credential.
-     *
-     * @throws IOException if the SaaS register call fails (surfaced to the admin as a link error).
-     */
-    public LinkStatus link(String supabaseJwt, String instanceName) throws IOException {
-        AccountLinkClient.RegisterResult result = client.register(supabaseJwt, instanceName);
-        credentialStore.save(result.deviceId(), result.deviceSecret(), result.teamId());
-        entitlementCache.invalidate();
-        log.info("Account-link: instance linked to team {}", result.teamId());
-        return status();
+    public record LinkStatus(
+            boolean linked,
+            String deviceId,
+            Long teamId,
+            String linkedAt,
+            EntitlementCache.ConnectionStatus connection) {
+        public LinkStatus(boolean linked, String deviceId, Long teamId, String linkedAt) {
+            this(linked, deviceId, teamId, linkedAt, null);
+        }
     }
 
     /**
      * Unlinks this instance — best-effort tells SaaS to revoke first (so the row gets {@code
-     * revoked_at} set), then clears locally regardless. If SaaS is unreachable the local clear
-     * still proceeds (admin's intent must win); the orphan row can be revoked from the portal.
+     * revoked_at} set), then clears locally regardless.
      */
+    @org.springframework.transaction.annotation.Transactional
     public void unlink() {
+        owners.requireCurrentOwner(SecurityContextHolder.getContext().getAuthentication());
+        credentialStore.assertNoHandover();
         credentialStore
                 .get()
                 .ifPresent(
@@ -76,17 +75,28 @@ public class AccountLinkService {
         log.info("Account-link: instance unlinked");
     }
 
+    /** Forces a cloud check for an administrator retrying a restored connection. */
+    public LinkStatus recheck() {
+        entitlementCache.invalidate();
+        return status();
+    }
+
+    /** Local only: unlike {@link #status()}, never refreshes entitlement from Stirling Cloud. */
+    public boolean isLinked() {
+        return credentialStore.isLinked();
+    }
+
     public LinkStatus status() {
         Optional<DeviceCredential> cred = credentialStore.get();
+        if (cred.isPresent()) entitlementCache.current();
         return cred.map(
                         c ->
                                 new LinkStatus(
                                         true,
                                         c.getDeviceId(),
                                         c.getTeamId(),
-                                        c.getLinkedAt() != null
-                                                ? c.getLinkedAt().toString()
-                                                : null))
+                                        c.getLinkedAt() != null ? c.getLinkedAt().toString() : null,
+                                        entitlementCache.connectionStatus()))
                 .orElseGet(() -> new LinkStatus(false, null, null, null));
     }
 }

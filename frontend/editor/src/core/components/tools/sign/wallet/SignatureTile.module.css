@@ -1,0 +1,168 @@
+.tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  min-width: 0;
+}
+
+.paper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 4.25rem;
+  padding: 0.375rem;
+  box-sizing: border-box;
+  background: white;
+  border: 1px solid var(--c-border-subtle);
+  border-radius: 0.625rem;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.paper:hover {
+  border-color: var(--c-border-strong);
+}
+
+.paper:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 2px;
+}
+
+.paper:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.paper[aria-pressed="true"] {
+  border: 2px solid var(--c-primary);
+  box-shadow: 0 0 0 3px var(--c-primary-subtle);
+}
+
+.newPaper {
+  background: var(--c-surface);
+  border: 1.5px dashed var(--c-border-strong);
+  color: var(--c-text-muted);
+}
+
+.newPaper:hover {
+  border-color: var(--c-primary);
+  color: var(--c-accent-text);
+}
+
+.image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.check {
+  position: absolute;
+  top: -0.4375rem;
+  right: -0.4375rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  box-sizing: border-box;
+  border-radius: 50%;
+  background: var(--c-primary);
+  color: var(--c-text-on-primary);
+  border: 2px solid var(--c-bg-raised);
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.paper[aria-pressed="true"] .check {
+  display: flex;
+}
+
+.badge {
+  position: absolute;
+  left: 0.375rem;
+  top: 0.375rem;
+  height: 1.125rem;
+  padding: 0 0.375rem;
+  border-radius: 999px;
+  background: var(--c-warning-solid);
+  color: white;
+  font-size: 0.65625rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+}
+
+.menu {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.tile:hover .menu,
+.tile:focus-within .menu,
+.menu[data-open] {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .menu {
+    opacity: 1;
+  }
+}
+
+.menuButton {
+  width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 0.375rem;
+  border: 1px solid var(--c-illustration-line);
+  background: white;
+  color: var(--c-text-on-light);
+  cursor: pointer;
+}
+
+.menuButton:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 1px;
+}
+
+.danger.danger,
+.danger.danger:hover:not(:disabled) {
+  color: var(--c-danger);
+}
+
+.label {
+  display: flex;
+  align-items: center;
+  gap: 0.3125rem;
+  min-width: 0;
+  padding: 0 0.125rem;
+  font-size: 0.78125rem;
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.tile:has(.paper[aria-pressed="true"]) .label {
+  color: var(--c-accent-text);
+}
+
+.labelText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.star {
+  display: flex;
+  flex-shrink: 0;
+  color: var(--c-warning);
+}

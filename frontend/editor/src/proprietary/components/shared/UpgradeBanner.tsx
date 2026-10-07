@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useLocation } from "react-router-dom";
 import { isAuthRoute } from "@core/constants/routes";
 import { useCheckout } from "@app/contexts/CheckoutContext";
-import { InfoBanner } from "@app/components/shared/InfoBanner";
+import { AppBanner } from "@app/components/shared/AppBanner";
 import {
   SERVER_LICENSE_REQUEST_EVENT,
   type ServerLicenseRequestPayload,
@@ -67,15 +67,9 @@ const UpgradeBanner: React.FC = () => {
       }
     };
 
-    window.addEventListener(
-      UPGRADE_BANNER_TEST_EVENT,
-      handleTestEvent as EventListener,
-    );
+    window.addEventListener(UPGRADE_BANNER_TEST_EVENT, handleTestEvent);
     return () => {
-      window.removeEventListener(
-        UPGRADE_BANNER_TEST_EVENT,
-        handleTestEvent as EventListener,
-      );
+      window.removeEventListener(UPGRADE_BANNER_TEST_EVENT, handleTestEvent);
     };
   }, [isDev]);
 
@@ -300,8 +294,8 @@ const UpgradeBanner: React.FC = () => {
         );
 
     return (
-      <InfoBanner
-        icon="warning-rounded"
+      <AppBanner
+        icon="triangle-alert"
         tone="warning"
         title={t(
           "upgradeBanner.attentionTitle",
@@ -309,16 +303,9 @@ const UpgradeBanner: React.FC = () => {
         )}
         message={attentionMessage}
         buttonText={buttonText}
-        buttonIcon="info-rounded"
+        buttonIcon="info"
         onButtonClick={buttonText ? handleSeeInfo : undefined}
         dismissible={false}
-        minHeight={60}
-        background="#FFF4E6"
-        borderColor="var(--mantine-color-orange-7)"
-        textColor="#9A3412"
-        iconColor="#EA580C"
-        buttonVariant="filled"
-        buttonColor="orange.7"
       />
     );
   };
@@ -341,26 +328,19 @@ const UpgradeBanner: React.FC = () => {
   return (
     <>
       {friendlyVisible && (
-        <InfoBanner
-          icon="stars-rounded"
-          title={t("upgradeBanner.title", "Upgrade to Server Plan")}
+        <AppBanner
+          icon="sparkles"
+          title={t("upgradeBanner.title", "Upgrade to the Team plan")}
           message={t(
             "upgradeBanner.message",
-            "Get the most out of Stirling PDF with unlimited users and advanced features.",
+            "Get the most out of Stirling PDF with 100 users, PDF text editing, and advanced features.",
           )}
           buttonText={t("upgradeBanner.upgradeButton", "Upgrade Now")}
-          buttonIcon="upgrade-rounded"
+          buttonIcon="circle-arrow-up"
           onButtonClick={handleUpgrade}
           onDismiss={handleFriendlyDismiss}
           show={friendlyVisible}
-          background="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
-          borderColor="transparent"
-          textColor="#fff"
-          iconColor="#fff"
-          closeIconColor="#fff"
-          buttonVariant="filled"
-          buttonColor="blue"
-          minHeight={48}
+          tone="promo"
           compact
         />
       )}

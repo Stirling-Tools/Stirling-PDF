@@ -1,4 +1,5 @@
 import { forwardRef, type InputHTMLAttributes, type ReactNode } from "react";
+import { Icon } from "@app/ui/Icon";
 import "@app/ui/Checkbox.css";
 
 export interface CheckboxProps extends Omit<
@@ -33,9 +34,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
         <input
           ref={(el) => {
             if (typeof ref === "function") ref(el);
-            else if (ref)
-              (ref as React.MutableRefObject<HTMLInputElement | null>).current =
-                el;
+            else if (ref) ref.current = el;
             if (el) el.indeterminate = !!indeterminate;
           }}
           type="checkbox"
@@ -44,19 +43,12 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
           {...rest}
         />
         <span className="sui-check__box" aria-hidden>
-          <svg
-            viewBox="0 0 16 16"
-            width="10"
-            height="10"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2.5}
-            strokeLinecap="round"
-            strokeLinejoin="round"
+          <Icon
+            name="check"
+            size={10}
+            strokeWidth={3}
             className="sui-check__tick"
-          >
-            <polyline points="3 8.5 7 12 13 4" />
-          </svg>
+          />
           <span className="sui-check__dash" />
         </span>
         {leadingIcon && (

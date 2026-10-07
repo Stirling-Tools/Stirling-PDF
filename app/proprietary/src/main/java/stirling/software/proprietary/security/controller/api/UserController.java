@@ -43,12 +43,15 @@ import stirling.software.proprietary.audit.Audited;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.AuthenticationType;
+import stirling.software.proprietary.security.model.LoginLandingView;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.model.api.user.UpdateLoginLandingView;
 import stirling.software.proprietary.security.model.api.user.UsernameAndPass;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.proprietary.security.service.EmailService;
 import stirling.software.proprietary.security.service.LoginAttemptService;
+import stirling.software.proprietary.security.service.LoginLandingService;
 import stirling.software.proprietary.security.service.SaveUserRequest;
 import stirling.software.proprietary.security.service.TeamMembershipService;
 import stirling.software.proprietary.security.service.TeamService;
@@ -71,6 +74,8 @@ public class UserController {
     private final UserLicenseSettingsService licenseSettingsService;
     private final LoginAttemptService loginAttemptService;
     private final TeamMembershipService teamMembershipService;
+    private final stirling.software.proprietary.service.OrgOwnerService orgOwnerService;
+    private final LoginLandingService loginLandingService;
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/register")
@@ -110,7 +115,10 @@ public class UserController {
                                                 + ", Available slots: "
                                                 + availableSlots));
             }
-            Team team = teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME).orElse(null);
+            Team team =
+                    teamRepository
+                            .findFirstByNameOrderByIdAsc(TeamService.DEFAULT_TEAM_NAME)
+                            .orElse(null);
             SaveUserRequest.Builder builder =
                     SaveUserRequest.builder()
                             .username(username)
@@ -162,7 +170,7 @@ public class UserController {
         return userMap;
     }
 
-    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @PreAuthorize("@principalPolicy.isHumanUser(authentication) && !hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/change-username")
     @Audited(type = AuditEventType.USER_PROFILE_UPDATE, level = AuditLevel.BASIC)
     public ResponseEntity<?> changeUsername(
@@ -222,7 +230,7 @@ public class UserController {
                         "Username changed successfully. Please log in again."));
     }
 
-    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @PreAuthorize("@principalPolicy.isHumanUser(authentication) && !hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/change-password-on-login")
     @Audited(type = AuditEventType.USER_PROFILE_UPDATE, level = AuditLevel.BASIC)
     public ResponseEntity<?> changePasswordOnLogin(
@@ -298,7 +306,7 @@ public class UserController {
                         "Password changed successfully. Please log in again."));
     }
 
-    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @PreAuthorize("@principalPolicy.isHumanUser(authentication) && !hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/change-password")
     @Audited(type = AuditEventType.USER_PROFILE_UPDATE, level = AuditLevel.BASIC)
     public ResponseEntity<?> changePassword(
@@ -333,7 +341,7 @@ public class UserController {
                         "Password changed successfully. Please log in again."));
     }
 
-    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @PreAuthorize("@principalPolicy.isHumanUser(authentication) && !hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/updateUserSettings")
     /**
      * Updates the user settings based on the provided JSON payload.
@@ -360,6 +368,24 @@ public class UserController {
         // Assuming you have a method in userService to update the settings for a user
         userService.updateUserSettings(principal.getName(), updates);
         return ResponseEntity.ok(Map.of("message", "Settings updated successfully"));
+    }
+
+    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @PostMapping("/login-landing-view")
+    public ResponseEntity<?> updateLoginLandingView(
+            @RequestBody UpdateLoginLandingView request, Principal principal)
+            throws SQLException, UnsupportedProviderException {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Not authenticated"));
+        }
+        Optional<LoginLandingView> view = LoginLandingView.parse(request.getLoginLandingView());
+        if (view.isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "loginLandingView must be one of: editor, processor"));
+        }
+        loginLandingService.setLandingView(principal.getName(), view.get());
+        return ResponseEntity.ok(Map.of("loginLandingView", view.get().value()));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -425,7 +451,9 @@ public class UserController {
         Long effectiveTeamId = teamId;
         if (effectiveTeamId == null) {
             Team defaultTeam =
-                    teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME).orElse(null);
+                    teamRepository
+                            .findFirstByNameOrderByIdAsc(TeamService.DEFAULT_TEAM_NAME)
+                            .orElse(null);
             if (defaultTeam != null) {
                 effectiveTeamId = defaultTeam.getId();
             }
@@ -534,7 +562,9 @@ public class UserController {
         Long effectiveTeamId = teamId;
         if (effectiveTeamId == null) {
             Team defaultTeam =
-                    teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME).orElse(null);
+                    teamRepository
+                            .findFirstByNameOrderByIdAsc(TeamService.DEFAULT_TEAM_NAME)
+                            .orElse(null);
             if (defaultTeam != null) {
                 effectiveTeamId = defaultTeam.getId();
             }
@@ -760,14 +790,14 @@ public class UserController {
             for (Object principal : principals) {
                 List<SessionInformation> sessionsInformation =
                         sessionRegistry.getAllSessions(principal, false);
-                if (principal instanceof UserDetails detailsUser) {
-                    userNameP = detailsUser.getUsername();
-                } else if (principal instanceof OAuth2User oAuth2User) {
-                    userNameP = oAuth2User.getName();
-                } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
-                    userNameP = saml2User.name();
-                } else if (principal instanceof String stringUser) {
-                    userNameP = stringUser;
+                switch (principal) {
+                    case null -> {}
+                    case UserDetails detailsUser -> userNameP = detailsUser.getUsername();
+                    case OAuth2User oAuth2User -> userNameP = oAuth2User.getName();
+                    case CustomSaml2AuthenticatedPrincipal saml2User ->
+                            userNameP = saml2User.name();
+                    case String stringUser -> userNameP = stringUser;
+                    default -> {}
                 }
                 if (userNameP.equalsIgnoreCase(username)) {
                     for (SessionInformation sessionInfo : sessionsInformation) {
@@ -789,6 +819,7 @@ public class UserController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
+    @org.springframework.transaction.annotation.Transactional
     @PostMapping("/admin/deleteUser/{username}")
     @Audited(type = AuditEventType.USER_PROFILE_UPDATE, level = AuditLevel.BASIC)
     public ResponseEntity<?> deleteUser(
@@ -804,18 +835,21 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", "Cannot delete your own account."));
         }
-        // Invalidate all sessions before deleting the user
-        List<SessionInformation> sessionsInformations =
-                sessionRegistry.getAllSessions(username, false);
-        for (SessionInformation sessionsInformation : sessionsInformations) {
-            sessionRegistry.expireSession(sessionsInformation.getSessionId());
-            sessionRegistry.removeSessionInformation(sessionsInformation.getSessionId());
-        }
         userService.deleteUser(username);
         return ResponseEntity.ok(Map.of("message", "User deleted successfully"));
     }
 
-    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/admin/transferOwnership")
+    public ResponseEntity<?> transferOwnership(
+            @RequestBody OwnershipTransfer request, Authentication authentication) {
+        orgOwnerService.transfer(request.userId(), authentication);
+        return ResponseEntity.ok(Map.of("message", "Organization ownership transferred."));
+    }
+
+    public record OwnershipTransfer(Long userId) {}
+
+    @PreAuthorize("@principalPolicy.isHumanUser(authentication) && !hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/get-api-key")
     public ResponseEntity<Map<String, String>> getApiKey(Principal principal) {
         if (principal == null) {
@@ -831,7 +865,7 @@ public class UserController {
         return ResponseEntity.ok(Map.of("apiKey", apiKey));
     }
 
-    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
+    @PreAuthorize("@principalPolicy.isHumanUser(authentication) && !hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/update-api-key")
     public ResponseEntity<Map<String, String>> updateApiKey(Principal principal) {
         if (principal == null) {
@@ -954,6 +988,7 @@ public class UserController {
         }
     }
 
+    @PreAuthorize("@principalPolicy.isHumanUser(authentication)")
     @PostMapping("/complete-initial-setup")
     public ResponseEntity<?> completeInitialSetup() {
         try {
@@ -982,6 +1017,7 @@ public class UserController {
     }
 
     // Lists enabled users for the signing picker; 'org' scope = instance-wide, else caller's team.
+    @PreAuthorize("@principalPolicy.isHumanUser(authentication)")
     @GetMapping("/users")
     public ResponseEntity<List<UserSummaryDTO>> listUsers(Principal principal) {
         if (principal == null) {

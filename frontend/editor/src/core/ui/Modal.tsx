@@ -1,7 +1,10 @@
-import { useEffect, useId, type ReactNode } from "react";
+import { useEffect, useId, useRef, type ReactNode } from "react";
+import { Icon } from "@app/ui/Icon";
 import { createPortal } from "react-dom";
 import { FocusTrap } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
+import { useIsOverflowing } from "@app/hooks/useIsOverflowing";
 import "@app/ui/Modal.css";
 
 export type ModalWidth = "sm" | "md" | "lg" | "xl";
@@ -12,6 +15,10 @@ export interface ModalProps {
   title?: ReactNode;
   subtitle?: ReactNode;
   footer?: ReactNode;
+  /** When set, a back arrow renders at the start of the header (e.g. to step back in a staged modal). */
+  onBack?: () => void;
+  /** Accessible label for the back arrow. */
+  backLabel?: string;
   /** sm=24rem, md=32rem, lg=48rem, xl=64rem. */
   width?: ModalWidth;
   disableBackdropClose?: boolean;
@@ -19,6 +26,7 @@ export interface ModalProps {
   /** Accessible name when no visible title is provided. */
   ariaLabel?: string;
   className?: string;
+  zIndex?: number;
   children?: ReactNode;
 }
 
@@ -29,14 +37,23 @@ export function Modal({
   title,
   subtitle,
   footer,
+  onBack,
+  backLabel,
   width = "md",
   disableBackdropClose = false,
   disableEscapeClose = false,
   ariaLabel,
   className,
+  zIndex,
   children,
 }: ModalProps) {
+  const { t } = useTranslation();
   const titleId = useId();
+  const bodyRef = useRef<HTMLDivElement>(null);
+  // A body that overflows must be reachable by keyboard to scroll; only its non-focusable
+  // content (header close + footer live outside it). tabindex lands only when it scrolls, so
+  // fitting modals gain no stray tab stop (axe scrollable-region-focusable).
+  const bodyScrolls = useIsOverflowing(bodyRef);
 
   useEffect(() => {
     if (!open || disableEscapeClose) return;
@@ -67,6 +84,7 @@ export function Modal({
   return createPortal(
     <div
       className="sui-modal__backdrop"
+      style={zIndex === undefined ? undefined : { zIndex }}
       onClick={onBackdropClick}
       role="presentation"
     >
@@ -82,8 +100,20 @@ export function Modal({
           aria-label={!hasTitle ? ariaLabel : undefined}
           tabIndex={-1}
         >
-          {(title || subtitle) && (
+          {(title || subtitle || onBack) && (
             <header className="sui-modal__header">
+              {onBack && (
+                <Button
+                  variant="tertiary"
+                  accent="neutral"
+                  size="sm"
+                  shape="circle"
+                  className="sui-modal__back"
+                  onClick={onBack}
+                  aria-label={backLabel ?? t("common.back", "Back")}
+                  leftSection={<Icon name="arrow-left" size={16} />}
+                />
+              )}
               <div className="sui-modal__header-text">
                 {title && (
                   <div id={titleId} className="sui-modal__title">
@@ -99,27 +129,18 @@ export function Modal({
                 shape="circle"
                 className="sui-modal__close"
                 onClick={onClose}
-                aria-label="Close"
-                leftSection={
-                  <svg
-                    viewBox="0 0 24 24"
-                    width="16"
-                    height="16"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={1.75}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden
-                  >
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                    <line x1="6" y1="6" x2="18" y2="18" />
-                  </svg>
-                }
+                aria-label={t("common.close", "Close")}
+                leftSection={<Icon name="x" size={16} />}
               />
             </header>
           )}
-          <div className="sui-modal__body">{children}</div>
+          <div
+            ref={bodyRef}
+            className="sui-modal__body"
+            tabIndex={bodyScrolls ? 0 : undefined}
+          >
+            {children}
+          </div>
           {footer && <footer className="sui-modal__footer">{footer}</footer>}
         </div>
       </FocusTrap>

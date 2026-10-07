@@ -1,5 +1,17 @@
 import "@testing-library/jest-dom";
 import { vi } from "vitest";
+import i18n from "i18next";
+
+// The shims `src/index.tsx` installs - see core/setupTests.ts.
+import "@app/utils/engineShims";
+
+// Modules outside React call i18n.t directly; no resources means the English defaults render.
+void i18n.init({
+  lng: "en-US",
+  resources: {},
+  initAsync: false,
+  interpolation: { escapeValue: false },
+});
 
 // Mirrors the editor's setup: jsdom lacks a handful of browser APIs that shared
 // components (Mantine FocusTrap, responsive helpers) touch on render.
@@ -47,7 +59,7 @@ global.IntersectionObserver = vi.fn().mockImplementation(() => ({
   observe: vi.fn(),
   unobserve: vi.fn(),
   disconnect: vi.fn(),
-})) as unknown as typeof IntersectionObserver;
+}));
 
 Object.defineProperty(window, "matchMedia", {
   writable: true,

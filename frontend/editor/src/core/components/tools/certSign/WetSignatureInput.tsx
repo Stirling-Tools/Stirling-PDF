@@ -238,9 +238,7 @@ const WetSignatureInput = ({
         <SegmentedControl
           value={signatureType}
           fullWidth
-          onChange={(value) =>
-            handleSignatureTypeChange(value as SignatureType)
-          }
+          onChange={(value) => handleSignatureTypeChange(value)}
           options={[
             { label: t("sign.type.canvas", "Draw"), value: "canvas", disabled },
             { label: t("sign.type.image", "Upload"), value: "image", disabled },
@@ -271,11 +269,11 @@ const WetSignatureInput = ({
               value="USER_CERT"
               label={t(
                 "certSign.collab.signRequest.usePersonalCert",
-                "Use My Personal Certificate",
+                "Stirling Sign · Personal",
               )}
               description={t(
                 "certSign.collab.signRequest.usePersonalCertDesc",
-                "Auto-generated for your account",
+                "Sign with the certificate created for your account.",
               )}
               disabled={disabled}
             />
@@ -283,11 +281,11 @@ const WetSignatureInput = ({
               value="SERVER"
               label={t(
                 "certSign.collab.signRequest.useServerCert",
-                "Use Organization Certificate",
+                "Stirling Sign · Organization",
               )}
               description={t(
                 "certSign.collab.signRequest.useServerCertDesc",
-                "Shared organization certificate",
+                "Sign with this server's shared organization certificate.",
               )}
               disabled={disabled}
             />
@@ -295,11 +293,11 @@ const WetSignatureInput = ({
               value="UPLOAD"
               label={t(
                 "certSign.collab.signRequest.uploadCert",
-                "Upload Custom Certificate",
+                "Upload a certificate",
               )}
               description={t(
                 "certSign.collab.signRequest.uploadCertDesc",
-                "Use your own PKCS12 certificate",
+                "Use your own PKCS12, PFX, PEM or JKS certificate.",
               )}
               disabled={disabled}
             />

@@ -298,7 +298,7 @@
   font-size: 1rem !important;
 }
 .paygf-explainer__icon--free {
-  color: var(--c-success);
+  color: var(--color-green-dark);
 }
 .paygf-explainer__icon--paid {
   color: var(--payg-accent);

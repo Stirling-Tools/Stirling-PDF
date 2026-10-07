@@ -1,110 +1,89 @@
-import { Stack, Text, List, Group, Badge } from "@mantine/core";
-import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import PendingIcon from "@mui/icons-material/Pending";
-import CancelIcon from "@mui/icons-material/Cancel";
-import DeleteIcon from "@mui/icons-material/Delete";
-import type { ParticipantInfo } from "@app/types/signingSession";
-import { getFileColor } from "@app/components/pageEditor/fileColors";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { Avatar } from "@app/ui/Avatar";
+import { Icon } from "@app/ui/Icon";
+import { StatusBadge } from "@app/ui/StatusBadge";
+import type {
+  ParticipantInfo,
+  SigningParticipantPreview,
+} from "@app/types/signingSession";
+import { getFileColor } from "@app/utils/fileColors";
+import "@app/components/shared/signing/signingDetail.css";
 
 interface ParticipantListPanelProps {
-  participants: ParticipantInfo[];
+  participants: (SigningParticipantPreview & { email?: string })[];
   finalized: boolean;
-  onRemove: (participantId: number) => void;
+  onRemove?: (participantId: number) => void;
+  disabled?: boolean;
 }
 
 export const ParticipantListPanel: React.FC<ParticipantListPanelProps> = ({
   participants,
   finalized,
   onRemove,
+  disabled = false,
 }) => {
   const { t } = useTranslation();
-
-  const getIcon = (status: string) => {
-    if (status === "SIGNED")
-      return <CheckCircleIcon sx={{ color: "green", fontSize: "1rem" }} />;
-    if (status === "DECLINED")
-      return <CancelIcon sx={{ color: "red", fontSize: "1rem" }} />;
-    return <PendingIcon sx={{ color: "orange", fontSize: "1rem" }} />;
+  const statusLabels: Record<ParticipantInfo["status"], string> = {
+    SIGNED: t("sharedSign.filterSigned", "Signed"),
+    DECLINED: t("certSign.declined", "Declined"),
+    VIEWED: t("certSign.viewed", "Viewed"),
+    NOTIFIED: t("signingDetail.notified", "Notified"),
+    PENDING: t("certSign.pending", "Pending"),
   };
-
-  const getColor = (status: string) => {
-    if (status === "SIGNED") return "green";
-    if (status === "DECLINED") return "red";
-    return "orange";
-  };
-
   return (
-    <Stack gap="md">
-      <Text size="md" fw={600}>
-        {t("certSign.collab.sessionDetail.participants", "Participants")}
-      </Text>
-
-      <List spacing={8} size="sm">
-        {participants.map((participant, participantIndex) => {
-          const isSigned = participant.status === "SIGNED";
-          const isDeclined = participant.status === "DECLINED";
-          const annotationColor = getFileColor(participantIndex);
-
-          return (
-            <List.Item key={participant.id} icon={getIcon(participant.status)}>
-              <Group justify="space-between" wrap="nowrap" gap={4}>
-                <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
-                  <Group gap={6} wrap="nowrap">
-                    <div
-                      style={{
-                        width: 10,
-                        height: 10,
-                        borderRadius: "50%",
-                        backgroundColor: annotationColor,
-                        flexShrink: 0,
-                      }}
-                    />
-                    <Text size="xs" truncate>
-                      {participant.name}
-                    </Text>
-                  </Group>
-                  {participant.email &&
-                    participant.email !== participant.name && (
-                      <Text size="xs" c="dimmed" truncate>
-                        @{participant.email}
-                      </Text>
-                    )}
-                  <Badge
-                    size="xs"
-                    color={getColor(participant.status)}
-                    variant="light"
-                  >
-                    {t(
-                      `certSign.collab.status.${participant.status.toLowerCase()}`,
-                      participant.status,
-                    )}
-                  </Badge>
-                </Stack>
-                {!finalized && !isSigned && !isDeclined && (
-                  <ActionIcon
-                    size="sm"
-                    variant="tertiary"
-                    accent="danger"
-                    onClick={() => onRemove(participant.id)}
-                    title={t(
-                      "certSign.collab.sessionDetail.removeParticipant",
-                      "Remove",
-                    )}
-                    aria-label={t(
-                      "certSign.collab.sessionDetail.removeParticipant",
-                      "Remove",
-                    )}
-                  >
-                    <DeleteIcon sx={{ fontSize: "1rem" }} />
-                  </ActionIcon>
-                )}
-              </Group>
-            </List.Item>
-          );
-        })}
-      </List>
-    </Stack>
+    <ul
+      className="signing-participants"
+      aria-label={t(
+        "certSign.collab.sessionDetail.participants",
+        "Participants",
+      )}
+    >
+      {participants.map((participant, participantIndex) => {
+        const isSigned = participant.status === "SIGNED";
+        const isDeclined = participant.status === "DECLINED";
+        const name = participant.name || participant.email || "";
+        return (
+          <li className="signing-participant" key={participant.id}>
+            <Avatar name={name} size="sm" tone="neutral" />
+            <div className="signing-participant__identity">
+              <strong>{name}</strong>
+              {participant.email && participant.email !== name && (
+                <span className="signing-participant__email">
+                  {participant.email}
+                </span>
+              )}
+              <StatusBadge
+                tone={isSigned ? "success" : isDeclined ? "danger" : "neutral"}
+                size="sm"
+              >
+                {statusLabels[participant.status]}
+              </StatusBadge>
+            </div>
+            {participant.wetSignatures?.length ? (
+              <span
+                className="signing-participant__color"
+                style={{ backgroundColor: getFileColor(participantIndex) }}
+                aria-hidden="true"
+              />
+            ) : null}
+            {onRemove && !finalized && !isSigned && !isDeclined && (
+              <ActionIcon
+                size="sm"
+                variant="tertiary"
+                accent="danger"
+                disabled={disabled}
+                onClick={() => onRemove(participant.id)}
+                aria-label={t("signingDetail.removePerson", "Remove {{name}}", {
+                  name,
+                })}
+              >
+                <Icon name="x" size={16} />
+              </ActionIcon>
+            )}
+          </li>
+        );
+      })}
+    </ul>
   );
 };

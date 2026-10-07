@@ -1,6 +1,18 @@
 import "@testing-library/jest-dom";
 import { vi } from "vitest";
+import i18n from "i18next";
 import { installFailOnConsole } from "@app/tests/failOnConsole";
+
+// The shims `src/index.tsx` installs - see core/setupTests.ts.
+import "@app/utils/engineShims";
+
+// Modules outside React call i18n.t directly; no resources means the English defaults render.
+void i18n.init({
+  lng: "en-US",
+  resources: {},
+  initAsync: false,
+  interpolation: { escapeValue: false },
+});
 
 installFailOnConsole();
 
@@ -127,7 +139,7 @@ Object.defineProperty(globalThis, "crypto", {
         }
         return array;
       }),
-  } as unknown as Crypto,
+  },
   writable: true,
   configurable: true,
 });

@@ -11,10 +11,14 @@ import java.security.cert.CertificateFactory;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
+import org.apache.pdfbox.pdmodel.PDDocument;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.openssl.PEMDecryptorProvider;
 import org.bouncycastle.openssl.PEMEncryptedKeyPair;
@@ -25,9 +29,13 @@ import org.bouncycastle.openssl.jcajce.JceOpenSSLPKCS8DecryptorProviderBuilder;
 import org.bouncycastle.openssl.jcajce.JcePEMDecryptorProviderBuilder;
 import org.bouncycastle.operator.InputDecryptorProvider;
 import org.bouncycastle.pkcs.PKCS8EncryptedPrivateKeyInfo;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -35,8 +43,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.LicenseServiceInterface;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.storage.crypto.StorageEncryptionErrors;
+import stirling.software.proprietary.storage.crypto.StorageKeyRevokedException;
 import stirling.software.proprietary.storage.model.FilePurpose;
 import stirling.software.proprietary.storage.model.ShareAccessRole;
 import stirling.software.proprietary.storage.model.StoredFile;
@@ -50,6 +62,9 @@ import stirling.software.proprietary.workflow.model.ParticipantStatus;
 import stirling.software.proprietary.workflow.model.WorkflowParticipant;
 import stirling.software.proprietary.workflow.model.WorkflowSession;
 import stirling.software.proprietary.workflow.model.WorkflowStatus;
+import stirling.software.proprietary.workflow.notification.SigningCompletionEvent;
+import stirling.software.proprietary.workflow.notification.SigningInvitationEvent;
+import stirling.software.proprietary.workflow.notification.SigningResponseEvent;
 import stirling.software.proprietary.workflow.repository.WorkflowParticipantRepository;
 import stirling.software.proprietary.workflow.repository.WorkflowSessionRepository;
 
@@ -79,6 +94,147 @@ public class WorkflowSessionService {
     private final ApplicationProperties applicationProperties;
     private final MetadataEncryptionService metadataEncryptionService;
     private final CertificateSubmissionValidator certificateSubmissionValidator;
+    private final LicenseServiceInterface licenseService;
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final ApplicationEventPublisher eventPublisher;
+
+    /**
+     * Personal account certificates require a paid entitlement; organization certificates do not.
+     */
+    public void ensureCertificateTypeAllowed(String certType) {
+        if ("USER_CERT".equalsIgnoreCase(certType) && !licenseService.isRunningProOrHigher()) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "Personal signing certificates require a Pro license");
+        }
+    }
+
+    /** Rejects incomplete uploaded certificates before a participant is marked as signed. */
+    public void ensureCertificateFilesPresent(
+            String certType,
+            MultipartFile p12File,
+            MultipartFile jksFile,
+            MultipartFile privateKeyFile,
+            MultipartFile certFile) {
+        boolean present =
+                switch (certType == null ? "" : certType.toUpperCase(Locale.ROOT)) {
+                    case "P12", "PKCS12", "PFX" -> p12File != null && !p12File.isEmpty();
+                    case "JKS" -> jksFile != null && !jksFile.isEmpty();
+                    case "PEM" ->
+                            privateKeyFile != null
+                                    && !privateKeyFile.isEmpty()
+                                    && certFile != null
+                                    && !certFile.isEmpty();
+                    case "SERVER", "USER_CERT" -> true;
+                    default -> false;
+                };
+        if (!present)
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Select a supported certificate type and provide its required files");
+    }
+
+    /** Checks visual marks against the original document before accepting a signing decision. */
+    public void validateWetSignatures(
+            WorkflowSession session, List<WetSignatureMetadata> signatures) {
+        if (signatures == null
+                || signatures.size() > WetSignatureMetadata.MAX_SIGNATURES_PER_PARTICIPANT) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Invalid number of wet signatures");
+        }
+        if (signatures.isEmpty()) return;
+        try {
+            for (WetSignatureMetadata signature : signatures) {
+                if (signature == null)
+                    throw new IllegalArgumentException("Wet signature is required");
+                signature.validate();
+            }
+            try (PDDocument document =
+                    pdfDocumentFactory.load(
+                            readBlob(session.getOriginalFile().getStorageKey()), true)) {
+                if (signatures.stream()
+                        .anyMatch(
+                                signature -> signature.getPage() >= document.getNumberOfPages())) {
+                    throw new IllegalArgumentException("Wet signature page does not exist");
+                }
+            }
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
+        } catch (IOException e) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Cannot read the signing document", e);
+        }
+    }
+
+    /** Locks a session for the remainder of the caller's transaction. */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public WorkflowSession lockSession(String sessionId) {
+        return workflowSessionRepository
+                .findBySessionIdForUpdate(sessionId)
+                .orElseThrow(
+                        () ->
+                                new ResponseStatusException(
+                                        HttpStatus.NOT_FOUND, "Workflow session not found"));
+    }
+
+    /** Locks an owner's session before checking whether it can still be changed. */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public WorkflowSession lockActiveSessionForOwner(String sessionId, User owner) {
+        WorkflowSession session = lockSession(sessionId);
+        if (!session.getOwner().equals(owner)) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "Not authorized to access this workflow session");
+        }
+        requireActiveSession(session);
+        return session;
+    }
+
+    /**
+     * Resolves a token under the same session lock used by authenticated signing and finalization.
+     */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public WorkflowParticipant lockParticipantByToken(String token) {
+        String sessionId =
+                workflowParticipantRepository
+                        .findSessionIdByShareToken(token)
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.FORBIDDEN, "Invalid participant token"));
+        lockSession(sessionId);
+        return workflowParticipantRepository
+                .findByShareToken(token)
+                .orElseThrow(
+                        () ->
+                                new ResponseStatusException(
+                                        HttpStatus.FORBIDDEN, "Invalid participant token"));
+    }
+
+    /** Requires an active session, unexpired editor access, and no previous signing decision. */
+    public void ensureParticipantCanRespond(WorkflowParticipant participant) {
+        requireActiveSession(participant.getWorkflowSession());
+        requireUnexpiredAccess(participant);
+        if (participant.getAccessRole() != ShareAccessRole.EDITOR) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "Participant does not have signing permission");
+        }
+        if (participant.hasCompleted()) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT, "Participant has already signed or declined");
+        }
+    }
+
+    private void requireActiveSession(WorkflowSession session) {
+        if (!session.isActive()) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT, "Workflow session is no longer active");
+        }
+    }
+
+    private void requireUnexpiredAccess(WorkflowParticipant participant) {
+        if (participant.isExpired()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Participant access expired");
+        }
+    }
 
     public void ensureSigningEnabled() {
         if (!applicationProperties.getStorage().isEnabled()
@@ -89,7 +245,7 @@ public class WorkflowSessionService {
 
     /**
      * Creates a new workflow session with participants. Stores the original file using
-     * StorageProvider.
+     * StorageProvider. Participants are emailed an invitation once the transaction commits.
      */
     public WorkflowSession createSession(
             User owner, MultipartFile file, WorkflowCreationRequest request) throws IOException {
@@ -107,7 +263,22 @@ public class WorkflowSessionService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Workflow type is required");
         }
 
-        // Store original file using StorageProvider
+        if ((request.getParticipantUserIds() == null || request.getParticipantUserIds().isEmpty())
+                && (request.getParticipantEmails() == null
+                        || request.getParticipantEmails().isEmpty())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "At least one participant is required");
+        }
+        try (PDDocument document = pdfDocumentFactory.load(file, true)) {
+            if (document.isEncrypted() || document.getNumberOfPages() == 0) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST, "Upload an unprotected PDF with at least one page");
+            }
+        } catch (IOException e) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "The document must be a readable, unprotected PDF", e);
+        }
+
         StoredFile originalFile = storeWorkflowFile(owner, file, FilePurpose.SIGNING_ORIGINAL);
 
         // Create workflow session
@@ -181,6 +352,12 @@ public class WorkflowSessionService {
     /** Adds participants to a workflow session. */
     private void addParticipantsToSession(
             WorkflowSession session, List<ParticipantRequest> participantRequests) {
+        Set<String> identities = new HashSet<>();
+        for (WorkflowParticipant existing : session.getParticipants()) {
+            identities.add(existing.getEmail().strip().toLowerCase(Locale.ROOT));
+        }
+        List<WorkflowParticipant> additions = new ArrayList<>();
+        List<WorkflowParticipant> invited = new ArrayList<>();
         for (ParticipantRequest request : participantRequests) {
             WorkflowParticipant participant = new WorkflowParticipant();
             participant.setShareToken(UUID.randomUUID().toString());
@@ -236,8 +413,8 @@ public class WorkflowSessionService {
                 participant.setUser(user);
                 participant.setEmail(user.getUsername()); // User entity uses username, not email
                 participant.setName(user.getUsername());
-            } else if (request.getEmail() != null) {
-                participant.setEmail(request.getEmail());
+            } else if (request.getEmail() != null && !request.getEmail().isBlank()) {
+                participant.setEmail(request.getEmail().strip());
                 participant.setName(
                         request.getName() != null ? request.getName() : request.getEmail());
             } else {
@@ -245,8 +422,24 @@ public class WorkflowSessionService {
                         HttpStatus.BAD_REQUEST, "Participant must have either userId or email");
             }
 
+            if (!identities.add(participant.getEmail().strip().toLowerCase(Locale.ROOT))) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST, "Each participant may only be added once");
+            }
+            additions.add(participant);
+            if (request.isSendNotification()) {
+                invited.add(participant);
+            }
+        }
+        for (WorkflowParticipant participant : additions) {
             session.addParticipant(participant);
-            participant = workflowParticipantRepository.save(participant);
+            workflowParticipantRepository.save(participant);
+        }
+        if (!invited.isEmpty()) {
+            eventPublisher.publishEvent(
+                    new SigningInvitationEvent(
+                            session.getSessionId(),
+                            invited.stream().map(WorkflowParticipant::getId).toList()));
         }
     }
 
@@ -255,6 +448,23 @@ public class WorkflowSessionService {
             throws IOException {
         // Store file content (storage provider generates the key)
         StoredObject storedObject = storageProvider.store(owner, file);
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCompletion(int status) {
+                            if (status == STATUS_ROLLED_BACK) {
+                                try {
+                                    storageProvider.delete(storedObject.getStorageKey());
+                                } catch (Exception e) {
+                                    log.error(
+                                            "Failed to remove rolled-back workflow file {}",
+                                            storedObject.getStorageKey());
+                                }
+                            }
+                        }
+                    });
+        }
 
         // Create StoredFile entity
         StoredFile storedFile = new StoredFile();
@@ -327,11 +537,14 @@ public class WorkflowSessionService {
         return workflowSessionRepository.findActiveSessionsByOwner(owner);
     }
 
-    /** Adds additional participants to an existing session. */
+    /**
+     * Adds additional participants to an existing session. Each one whose request has {@code
+     * sendNotification} set is emailed an invitation once the transaction commits.
+     */
     @Transactional
     public void addParticipants(
             String sessionId, List<ParticipantRequest> participants, User owner) {
-        WorkflowSession session = getSessionForOwner(sessionId, owner);
+        WorkflowSession session = lockActiveSessionForOwner(sessionId, owner);
 
         if (!session.isActive()) {
             throw new ResponseStatusException(
@@ -345,7 +558,7 @@ public class WorkflowSessionService {
     /** Removes a participant from a workflow session. */
     @Transactional
     public void removeParticipant(String sessionId, Long participantId, User owner) {
-        WorkflowSession session = getSessionForOwner(sessionId, owner);
+        WorkflowSession session = lockActiveSessionForOwner(sessionId, owner);
 
         WorkflowParticipant participant =
                 workflowParticipantRepository
@@ -418,9 +631,12 @@ public class WorkflowSessionService {
         workflowSessionRepository.save(session);
     }
 
-    /** Marks a workflow session as finalized. */
+    /**
+     * Marks a workflow session as finalized. Participants are emailed that it is complete once the
+     * transaction commits, so store the processed file first.
+     */
     public void finalizeSession(String sessionId, User owner) {
-        WorkflowSession session = getSessionForOwner(sessionId, owner);
+        WorkflowSession session = lockActiveSessionForOwner(sessionId, owner);
 
         if (session.isFinalized()) {
             throw new ResponseStatusException(
@@ -430,6 +646,7 @@ public class WorkflowSessionService {
         session.setFinalized(true);
         session.setStatus(WorkflowStatus.COMPLETED);
         workflowSessionRepository.save(session);
+        eventPublisher.publishEvent(new SigningCompletionEvent(sessionId));
 
         log.info("Finalized workflow session {}", sessionId);
     }
@@ -444,10 +661,54 @@ public class WorkflowSessionService {
                     HttpStatus.NOT_FOUND, "No processed file available for this session");
         }
 
-        String storageKey = session.getProcessedFile().getStorageKey();
-        org.springframework.core.io.Resource resource = storageProvider.load(storageKey);
-        return resource.getContentAsByteArray();
+        return readBlob(session.getProcessedFile().getStorageKey());
     }
+
+    /**
+     * Reads a stored blob, translating a revoked encryption key into 403 the same way {@code
+     * FileStorageService} does. Without this the callers' {@code IOException} handling would report
+     * an administrator's deliberate revocation as a server error.
+     */
+    private byte[] readBlob(String storageKey) throws IOException {
+        try {
+            return storageProvider.load(storageKey).getContentAsByteArray();
+        } catch (StorageKeyRevokedException e) {
+            log.warn("Access to workflow blob {} denied: {}", storageKey, e.getMessage());
+            throw StorageEncryptionErrors.revoked(e);
+        }
+    }
+
+    /**
+     * The document a share-token holder downloads: the signed PDF once the session is finalized, so
+     * the link in the completion email delivers it, otherwise the original. Resolves the token in
+     * its own transaction because the participant's session is lazy and open-in-view is off.
+     */
+    @Transactional(readOnly = true)
+    public ParticipantDocument getParticipantDocument(String shareToken) throws IOException {
+        WorkflowParticipant participant =
+                workflowParticipantRepository
+                        .findByShareToken(shareToken)
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.FORBIDDEN,
+                                                "Invalid or expired participant token"));
+        if (participant.isExpired()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Participant access expired");
+        }
+        WorkflowSession session = participant.getWorkflowSession();
+        boolean signed = session.isFinalized() && session.getProcessedFile() != null;
+        StoredFile file = signed ? session.getProcessedFile() : session.getOriginalFile();
+        if (file == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND, "Document not available for this session");
+        }
+        return new ParticipantDocument(
+                readBlob(file.getStorageKey()),
+                signed ? file.getOriginalFilename() : session.getDocumentName());
+    }
+
+    public record ParticipantDocument(byte[] content, String filename) {}
 
     /** Retrieves the original file data for a workflow session. */
     @Transactional(readOnly = true)
@@ -458,15 +719,17 @@ public class WorkflowSessionService {
                     HttpStatus.NOT_FOUND,
                     "Original file no longer available (session may be finalized)");
         }
-        String storageKey = session.getOriginalFile().getStorageKey();
-        org.springframework.core.io.Resource resource = storageProvider.load(storageKey);
-        return resource.getContentAsByteArray();
+        return readBlob(session.getOriginalFile().getStorageKey());
     }
 
     /** Deletes a workflow session and associated files. */
     @Transactional
     public void deleteSession(String sessionId, User owner) {
-        WorkflowSession session = getSessionForOwner(sessionId, owner);
+        WorkflowSession session = lockSession(sessionId);
+        if (!session.getOwner().equals(owner)) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "Not authorized to access this workflow session");
+        }
 
         if (session.isFinalized()) {
             throw new ResponseStatusException(
@@ -515,30 +778,6 @@ public class WorkflowSessionService {
         log.info("Deleted workflow session {}", sessionId);
     }
 
-    /**
-     * Deletes the original (presigned) file from storage after finalization. The original file is
-     * no longer needed once the signed document has been stored. Non-fatal: logs errors but does
-     * not fail finalization.
-     */
-    public void deleteOriginalFile(WorkflowSession session) {
-        if (session.getOriginalFile() == null) {
-            return;
-        }
-        try {
-            storageProvider.delete(session.getOriginalFile().getStorageKey());
-            StoredFile originalFile = session.getOriginalFile();
-            session.setOriginalFile(null);
-            workflowSessionRepository.save(session);
-            storedFileRepository.delete(originalFile);
-            log.info("Deleted original presigned file for session {}", session.getSessionId());
-        } catch (Exception e) {
-            log.error(
-                    "Failed to delete original file for session {}: {}",
-                    session.getSessionId(),
-                    e.getMessage());
-        }
-    }
-
     // ===== SIGN REQUEST METHODS (Participant View) =====
 
     /**
@@ -569,6 +808,13 @@ public class WorkflowSessionService {
                                             ? session.getDueDate().toString()
                                             : null);
                             dto.setMyStatus(p.getStatus());
+                            dto.setFinalized(session.isFinalized());
+                            dto.setAccessExpired(p.isExpired());
+                            dto.setClosed(
+                                    !session.isActive()
+                                            || dto.isAccessExpired()
+                                            || p.getStatus() == ParticipantStatus.DECLINED
+                                            || p.getAccessRole() != ShareAccessRole.EDITOR);
                             return dto;
                         })
                 .toList();
@@ -581,11 +827,18 @@ public class WorkflowSessionService {
      * @param user The participant user
      * @return Sign request detail
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public stirling.software.proprietary.workflow.dto.SignRequestDetailDTO getSignRequestDetail(
             String sessionId, User user) {
-        WorkflowSession session = getSession(sessionId);
+        WorkflowSession session = lockSession(sessionId);
         WorkflowParticipant participant = getParticipantForUser(session, user);
+        requireUnexpiredAccess(participant);
+        if (session.isActive()
+                && (participant.getStatus() == ParticipantStatus.PENDING
+                        || participant.getStatus() == ParticipantStatus.NOTIFIED)) {
+            participant.setStatus(ParticipantStatus.VIEWED);
+            workflowParticipantRepository.save(participant);
+        }
 
         stirling.software.proprietary.workflow.dto.SignRequestDetailDTO dto =
                 new stirling.software.proprietary.workflow.dto.SignRequestDetailDTO();
@@ -596,6 +849,14 @@ public class WorkflowSessionService {
         dto.setDueDate(session.getDueDate());
         dto.setCreatedAt(session.getCreatedAt().toString());
         dto.setMyStatus(participant.getStatus());
+        dto.setFinalized(session.isFinalized());
+        dto.setParticipants(
+                stirling.software.proprietary.workflow.util.WorkflowMapper
+                        .toSigningParticipantPreviews(session, objectMapper));
+        dto.setCanSign(
+                session.isActive()
+                        && !participant.hasCompleted()
+                        && participant.getAccessRole() == ShareAccessRole.EDITOR);
 
         // Load signature appearance settings from workflow metadata
         Map<String, Object> metadata = session.getWorkflowMetadata();
@@ -622,12 +883,6 @@ public class WorkflowSessionService {
             dto.setShowLogo(false);
         }
 
-        // Update status to VIEWED if it was NOTIFIED
-        if (participant.getStatus() == ParticipantStatus.NOTIFIED) {
-            participant.setStatus(ParticipantStatus.VIEWED);
-            workflowParticipantRepository.save(participant);
-        }
-
         return dto;
     }
 
@@ -644,7 +899,7 @@ public class WorkflowSessionService {
     @Transactional(readOnly = true)
     public byte[] getSignRequestDocument(String sessionId, User user) {
         WorkflowSession session = getSession(sessionId);
-        getParticipantForUser(session, user); // Verify participant access
+        requireUnexpiredAccess(getParticipantForUser(session, user));
 
         // After finalization, serve the signed document instead of the original
         StoredFile fileToServe =
@@ -658,9 +913,7 @@ public class WorkflowSessionService {
         }
 
         try {
-            org.springframework.core.io.Resource resource =
-                    storageProvider.load(fileToServe.getStorageKey());
-            return resource.getContentAsByteArray();
+            return readBlob(fileToServe.getStorageKey());
         } catch (IOException e) {
             log.error("Failed to retrieve document for session {}", sessionId, e);
             throw new ResponseStatusException(
@@ -669,7 +922,8 @@ public class WorkflowSessionService {
     }
 
     /**
-     * Sign a document in a workflow session.
+     * Sign a document in a workflow session. The owner is emailed the session's progress once the
+     * transaction commits.
      *
      * @param sessionId The session ID
      * @param user The participant user
@@ -679,18 +933,16 @@ public class WorkflowSessionService {
             String sessionId,
             User user,
             stirling.software.proprietary.workflow.dto.SignDocumentRequest request) {
-        WorkflowSession session = getSession(sessionId);
+        WorkflowSession session = lockSession(sessionId);
         WorkflowParticipant participant = getParticipantForUser(session, user);
-
-        if (participant.getStatus() == ParticipantStatus.SIGNED) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Document already signed by this user");
-        }
-
-        if (participant.getStatus() == ParticipantStatus.DECLINED) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Cannot sign after declining");
-        }
+        ensureParticipantCanRespond(participant);
+        ensureCertificateTypeAllowed(request.getCertType());
+        ensureCertificateFilesPresent(
+                request.getCertType(),
+                request.getP12File(),
+                request.getJksFile(),
+                request.getPrivateKeyFile(),
+                request.getCertFile());
 
         // Build metadata JSON containing certificate submission and wet signature data
         // Merge with existing metadata if present (preserves owner-configured appearance
@@ -796,15 +1048,16 @@ public class WorkflowSessionService {
 
         // 2. Parse wet signatures from JSON string if provided
         if (request.getWetSignaturesData() != null && !request.getWetSignaturesData().isBlank()) {
+            if (request.getWetSignaturesData().length() > 5 * 1024 * 1024) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST, "Wet signatures data exceeds maximum allowed size");
+            }
             try {
                 List<WetSignatureMetadata> wetSigs =
                         objectMapper.readValue(
                                 request.getWetSignaturesData(),
                                 new TypeReference<List<WetSignatureMetadata>>() {});
-                if (wetSigs.size() > WetSignatureMetadata.MAX_SIGNATURES_PER_PARTICIPANT) {
-                    throw new ResponseStatusException(
-                            HttpStatus.BAD_REQUEST, "Too many wet signatures submitted");
-                }
+                validateWetSignatures(session, wetSigs);
                 request.setWetSignatures(wetSigs);
                 log.info("Parsed {} wet signatures from wetSignaturesData", wetSigs.size());
             } catch (JacksonException e) {
@@ -854,6 +1107,7 @@ public class WorkflowSessionService {
         // 5. Update participant status
         participant.setStatus(ParticipantStatus.SIGNED);
         workflowParticipantRepository.save(participant);
+        eventPublisher.publishEvent(new SigningResponseEvent(participant.getId(), null));
 
         log.info(
                 "User {} signed document in session {} - certificate and signature data stored",
@@ -862,22 +1116,20 @@ public class WorkflowSessionService {
     }
 
     /**
-     * Decline a sign request.
+     * Decline a sign request. The owner is emailed the session's progress once the transaction
+     * commits.
      *
      * @param sessionId The session ID
      * @param user The participant user
      */
     public void declineSignRequest(String sessionId, User user) {
-        WorkflowSession session = getSession(sessionId);
+        WorkflowSession session = lockSession(sessionId);
         WorkflowParticipant participant = getParticipantForUser(session, user);
-
-        if (participant.getStatus() == ParticipantStatus.SIGNED) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Cannot decline after signing");
-        }
+        ensureParticipantCanRespond(participant);
 
         participant.setStatus(ParticipantStatus.DECLINED);
         workflowParticipantRepository.save(participant); // updatedAt is auto-updated
+        eventPublisher.publishEvent(new SigningResponseEvent(participant.getId(), null));
 
         log.info("User {} declined sign request for session {}", user.getUsername(), sessionId);
     }
@@ -905,7 +1157,7 @@ public class WorkflowSessionService {
      * Converts an uploaded PEM private key + certificate into a PKCS12 keystore (protected with the
      * supplied password) so finalization can sign via the standard PKCS12 path.
      */
-    private byte[] buildPkcs12FromPem(
+    public byte[] buildPkcs12FromPem(
             MultipartFile privateKeyFile, MultipartFile certFile, String password) {
         if (privateKeyFile == null
                 || privateKeyFile.isEmpty()
@@ -944,21 +1196,22 @@ public class WorkflowSessionService {
             Object pemObject = pemParser.readObject();
             JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
             PrivateKeyInfo keyInfo;
-            if (pemObject instanceof PKCS8EncryptedPrivateKeyInfo encrypted) {
-                InputDecryptorProvider decryptor =
-                        new JceOpenSSLPKCS8DecryptorProviderBuilder().build(password);
-                keyInfo = encrypted.decryptPrivateKeyInfo(decryptor);
-            } else if (pemObject instanceof PEMEncryptedKeyPair encryptedKeyPair) {
-                PEMDecryptorProvider decryptor =
-                        new JcePEMDecryptorProviderBuilder().build(password);
-                keyInfo = encryptedKeyPair.decryptKeyPair(decryptor).getPrivateKeyInfo();
-            } else if (pemObject instanceof PEMKeyPair keyPair) {
-                keyInfo = keyPair.getPrivateKeyInfo();
-            } else if (pemObject instanceof PrivateKeyInfo info) {
-                keyInfo = info;
-            } else {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST, "Unsupported PEM private key format");
+            switch (pemObject) {
+                case PKCS8EncryptedPrivateKeyInfo encrypted -> {
+                    InputDecryptorProvider decryptor =
+                            new JceOpenSSLPKCS8DecryptorProviderBuilder().build(password);
+                    keyInfo = encrypted.decryptPrivateKeyInfo(decryptor);
+                }
+                case PEMEncryptedKeyPair encryptedKeyPair -> {
+                    PEMDecryptorProvider decryptor =
+                            new JcePEMDecryptorProviderBuilder().build(password);
+                    keyInfo = encryptedKeyPair.decryptKeyPair(decryptor).getPrivateKeyInfo();
+                }
+                case PEMKeyPair keyPair -> keyInfo = keyPair.getPrivateKeyInfo();
+                case PrivateKeyInfo info -> keyInfo = info;
+                case null, default ->
+                        throw new ResponseStatusException(
+                                HttpStatus.BAD_REQUEST, "Unsupported PEM private key format");
             }
             return converter.getPrivateKey(keyInfo);
         }

@@ -7,7 +7,11 @@ import {
   useState,
 } from "react";
 import { useAnnotationCapability } from "@embedpdf/plugin-annotation/react";
-import { PdfAnnotationSubtype, uuidV4 } from "@embedpdf/models";
+import {
+  PdfAnnotationSubtype,
+  uuidV4,
+  type PdfAnnotationObject,
+} from "@embedpdf/models";
 import { useSignature } from "@app/contexts/SignatureContext";
 import type {
   SignatureAPI,
@@ -16,6 +20,19 @@ import type {
 import type { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
+import { usePlacedSignatureTracking } from "@app/components/viewer/hooks/usePlacedSignatureTracking";
+
+// The signature tools stash the source image on stamp annotations via custom fields
+type StampAnnotation = PdfAnnotationObject & {
+  imageSrc?: unknown;
+  imageData?: unknown;
+  appearance?: unknown;
+  stampData?: unknown;
+  contents?: unknown;
+  data?: unknown;
+  customData?: unknown;
+  asset?: unknown;
+};
 
 /**
  * Connects the PDF signature (stamp/ink) tools to the shared ViewerContext and SignatureContext.
@@ -54,7 +71,7 @@ const extractDataUrl = (
         if (result) return result;
       }
     } else {
-      for (const key of Object.keys(value as Record<string, unknown>)) {
+      for (const key of Object.keys(value)) {
         const result = extractDataUrl(
           (value as Record<string, unknown>)[key],
           depth + 1,
@@ -185,6 +202,8 @@ export const SignatureAPIBridge = forwardRef<
     isPlacementMode,
     placementPreviewSize,
     setSignaturesApplied,
+    setSignatureApiReady,
+    isApplyingSignatures,
   } = useSignature();
   const { getZoomState, registerImmediateZoomUpdate } = useViewer();
   const documentReady = useDocumentReady();
@@ -202,6 +221,13 @@ export const SignatureAPIBridge = forwardRef<
       unregister?.();
     };
   }, [getZoomState, registerImmediateZoomUpdate]);
+
+  // Runs after the imperative handle is attached, so callers can use it straight away.
+  const apiReady = Boolean(annotationApi && documentReady);
+  useEffect(() => {
+    setSignatureApiReady(apiReady);
+    return () => setSignatureApiReady(false);
+  }, [apiReady, setSignatureApiReady]);
 
   // When entering sign mode, deactivate any active annotation tool immediately.
   // Only signature-specific tools (signatureInk, stamp) should be usable.
@@ -307,6 +333,7 @@ export const SignatureAPIBridge = forwardRef<
       return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (isApplyingSignatures) return;
       // Skip delete/backspace while a text input/textarea is focused (e.g., editing textbox)
       const target = event.target as HTMLElement | null;
       const tag = target?.tagName?.toLowerCase();
@@ -319,7 +346,7 @@ export const SignatureAPIBridge = forwardRef<
         const selectedAnnotation = annotationApi.getSelectedAnnotation?.();
 
         if (selectedAnnotation) {
-          const annotation = selectedAnnotation as any;
+          const annotation = selectedAnnotation;
           const pageIndex = annotation.object?.pageIndex || 0;
           const id = annotation.object?.id;
 
@@ -332,22 +359,28 @@ export const SignatureAPIBridge = forwardRef<
             if (pageAnnotationsTask) {
               pageAnnotationsTask
                 .toPromise()
-                .then((pageAnnotations: any) => {
-                  const currentAnn = pageAnnotations?.find(
-                    (ann: any) => ann.id === id,
-                  );
-                  if (currentAnn && currentAnn.imageSrc) {
+                .then((pageAnnotations: PdfAnnotationObject[]) => {
+                  const currentAnn: StampAnnotation | undefined =
+                    pageAnnotations?.find(
+                      (ann: PdfAnnotationObject) => ann.id === id,
+                    );
+                  const imageSrc = currentAnn?.imageSrc;
+                  if (typeof imageSrc === "string") {
                     // Ensure the image data is stored in our persistent store
-                    storeImageData(id, currentAnn.imageSrc);
+                    storeImageData(id, imageSrc);
                   }
                 })
                 .catch(console.error);
             }
           }
 
-          // Use EmbedPDF's native deletion which should integrate with history
-          if ((annotationApi as any).deleteSelected) {
-            (annotationApi as any).deleteSelected();
+          // Use EmbedPDF's native deletion which should integrate with history.
+          // deleteSelected isn't on the typed capability.
+          const withDeleteSelected = annotationApi as {
+            deleteSelected?: () => void;
+          };
+          if (withDeleteSelected.deleteSelected) {
+            withDeleteSelected.deleteSelected();
           } else {
             // Fallback to direct deletion - less ideal for history
             if (id) {
@@ -360,7 +393,7 @@ export const SignatureAPIBridge = forwardRef<
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [annotationApi, storeImageData, isPlacementMode]);
+  }, [annotationApi, storeImageData, isPlacementMode, isApplyingSignatures]);
 
   useImperativeHandle(
     ref,
@@ -469,17 +502,19 @@ export const SignatureAPIBridge = forwardRef<
         if (pageAnnotationsTask) {
           pageAnnotationsTask
             .toPromise()
-            .then((pageAnnotations: any) => {
-              const annotation = pageAnnotations?.find(
-                (ann: any) => ann.id === annotationId,
-              );
+            .then((pageAnnotations: PdfAnnotationObject[]) => {
+              const annotation: StampAnnotation | undefined =
+                pageAnnotations?.find(
+                  (ann: PdfAnnotationObject) => ann.id === annotationId,
+                );
+              const imageSrc = annotation?.imageSrc;
               if (
                 annotation &&
                 annotation.type === PdfAnnotationSubtype.STAMP &&
-                annotation.imageSrc
+                typeof imageSrc === "string"
               ) {
                 // Store image data before deletion
-                storeImageData(annotationId, annotation.imageSrc);
+                storeImageData(annotationId, imageSrc);
               }
             })
             .catch(console.error);
@@ -489,12 +524,16 @@ export const SignatureAPIBridge = forwardRef<
         annotationApi.deleteAnnotation(pageIndex, annotationId);
       },
 
+      selectAnnotation: (annotationId: string, pageIndex: number) => {
+        annotationApi?.selectAnnotation(pageIndex, annotationId);
+      },
+
       deactivateTools: () => {
         if (!annotationApi) return;
         annotationApi.setActiveTool(null);
       },
 
-      getPageAnnotations: async (pageIndex: number): Promise<any[]> => {
+      getPageAnnotations: async (pageIndex: number): Promise<unknown[]> => {
         if (!annotationApi || !annotationApi.getPageAnnotations) {
           console.warn("getPageAnnotations not available");
           return [];
@@ -524,16 +563,27 @@ export const SignatureAPIBridge = forwardRef<
         newRect: AnnotationRect,
       ) => {
         if (!annotationApi) return;
-        // v2.7.0: move signature stamp to newRect without regenerating the AP stream,
-        // preserving the original appearance (image data stays intact).
-        (annotationApi as any).moveAnnotation?.(
-          pageIndex,
-          annotationId,
-          newRect,
-        );
+        // v2.7.0 moveAnnotation moves a stamp to a full rect (not just a
+        // Position) without regenerating the AP stream, keeping the image
+        // intact. The installed types still declare the older Position-only
+        // signature, so assert the rect overload the runtime actually accepts.
+        const rectMove = annotationApi as unknown as {
+          moveAnnotation?: (
+            pageIndex: number,
+            annotationId: string,
+            rect: AnnotationRect,
+          ) => void;
+        };
+        rectMove.moveAnnotation?.(pageIndex, annotationId, newRect);
       },
     }),
-    [annotationApi, signatureConfig, placementPreviewSize, applyStampDefaults],
+    [
+      annotationApi,
+      signatureConfig,
+      placementPreviewSize,
+      applyStampDefaults,
+      configureStampDefaults,
+    ],
   );
 
   useEffect(() => {
@@ -546,7 +596,7 @@ export const SignatureAPIBridge = forwardRef<
         return;
       }
 
-      const annotation: any = event.annotation;
+      const annotation = event.annotation as StampAnnotation;
       const annotationId: string | undefined = annotation?.id;
       if (!annotationId) {
         return;
@@ -577,6 +627,8 @@ export const SignatureAPIBridge = forwardRef<
       unsubscribe?.();
     };
   }, [annotationApi, storeImageData, setSignaturesApplied, documentReady]);
+
+  usePlacedSignatureTracking();
 
   useEffect(() => {
     if (!isPlacementMode || !documentReady) {

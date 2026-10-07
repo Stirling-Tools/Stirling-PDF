@@ -1,13 +1,10 @@
-import React from "react";
+import { isValidElement, type ComponentType } from "react";
 import { useTranslation } from "react-i18next";
-import HotkeysSection from "@app/components/shared/config/configSections/HotkeysSection";
-import GeneralSection from "@app/components/shared/config/configSections/GeneralSection";
-import HelpSection from "@app/components/shared/config/configSections/HelpSection";
-import LegalSection from "@app/components/shared/config/configSections/LegalSection";
-import {
-  BackendThirdPartyLicensesSection,
-  FrontendThirdPartyLicensesSection,
-} from "@app/components/shared/config/configSections/ThirdPartyLicensesSection";
+import type { TFunction } from "i18next";
+import PreferencesSection, {
+  type PreferencesSectionProps,
+} from "@app/components/shared/config/configSections/preferences/PreferencesSection";
+import AboutSection from "@app/components/shared/config/configSections/AboutSection";
 import type {
   ConfigNavItem,
   ConfigNavSection,
@@ -27,6 +24,63 @@ export interface ConfigColors {
   headerBorder: string;
 }
 
+/** Nav key of the Preferences page every flavor shares. */
+export const PREFERENCES_ITEM_KEY = "general";
+
+/**
+ * The Preferences group. A plain builder rather than a hook so the SaaS nav,
+ * which is assembled outside a component, renders the same page.
+ */
+export function createPreferencesNavSection(
+  t: TFunction<"translation", undefined>,
+  props: PreferencesSectionProps = {},
+): ConfigNavSection {
+  return {
+    id: "preferences",
+    title: t("settings.preferences.title", "Preferences"),
+    items: [
+      {
+        key: PREFERENCES_ITEM_KEY,
+        label: t("settings.general.title", "General"),
+        description: t(
+          "settings.preferences.description",
+          "How the editor looks and behaves for you, and your account.",
+        ),
+        icon: "sliders-horizontal",
+        component: <PreferencesSection {...props} />,
+      },
+    ],
+  };
+}
+
+/**
+ * Lays `extra` over the Preferences page's props so layers compose, not clobber.
+ * `Page` swaps in a wrapper for extras that need hooks; omitted, the page is kept.
+ */
+export function extendPreferences(
+  sections: ConfigNavSection[],
+  extra: PreferencesSectionProps,
+  Page?: ComponentType<PreferencesSectionProps>,
+): ConfigNavSection[] {
+  return sections.map((section) => ({
+    ...section,
+    items: section.items.map((item) => {
+      if (item.key !== PREFERENCES_ITEM_KEY) return item;
+      const current = isValidElement<PreferencesSectionProps>(item.component)
+        ? item.component
+        : null;
+      const Component =
+        Page ??
+        (current?.type as ComponentType<PreferencesSectionProps> | undefined) ??
+        PreferencesSection;
+      return {
+        ...item,
+        component: <Component {...current?.props} {...extra} />,
+      };
+    }),
+  }));
+}
+
 export const useConfigNavSections = (
   _isAdmin: boolean = false,
   _runningEE: boolean = false,
@@ -37,88 +91,24 @@ export const useConfigNavSections = (
   const { t } = useTranslation();
 
   const sections: ConfigNavSection[] = [
+    createPreferencesNavSection(t),
+    // Reference material: read once and rarely revisited, so it is one page
+    // rather than four rows you have to open in turn.
     {
-      title: t("settings.preferences.title", "Preferences"),
+      id: "about",
+      title: t("settings.about.title", "About"),
       items: [
         {
-          key: "general",
-          label: t("settings.general.title", "General"),
-          icon: "settings-rounded",
-          component: <GeneralSection />,
-        },
-        {
-          key: "hotkeys",
-          label: t("settings.hotkeys.title", "Keyboard Shortcuts"),
-          icon: "keyboard-rounded",
-          component: <HotkeysSection />,
-        },
-      ],
-    },
-    {
-      title: t("settings.help.title", "Help"),
-      items: [
-        {
-          key: "help",
-          label: t("settings.help.label", "Tours"),
-          icon: "help-rounded",
-          component: (
-            <HelpSection isAdmin={_isAdmin} onRequestClose={onRequestClose} />
+          key: "about",
+          label: t("settings.about.title", "About"),
+          description: t(
+            "settings.about.description",
+            "Tours, legal documents and the licences of everything bundled with this build.",
           ),
-        },
-      ],
-    },
-    {
-      title: t("settings.legal.title", "Legal"),
-      items: [
-        {
-          key: "legal",
-          label: t("settings.legal.label", "Legal"),
-          icon: "gavel-rounded",
-          component: <LegalSection />,
-        },
-        {
-          key: "backendThirdPartyLicenses",
-          label: t("settings.licenses.backendLabel", "Backend Licenses"),
-          icon: "article-rounded",
-          component: <BackendThirdPartyLicensesSection />,
-        },
-        {
-          key: "frontendThirdPartyLicenses",
-          label: t("settings.licenses.frontendLabel", "Frontend Licenses"),
-          icon: "code-rounded",
-          component: <FrontendThirdPartyLicensesSection />,
-        },
-      ],
-    },
-  ];
-
-  return sections;
-};
-
-// Deprecated: Use useConfigNavSections hook instead
-export const createConfigNavSections = (
-  _isAdmin: boolean = false,
-  _runningEE: boolean = false,
-  _loginEnabled: boolean = false,
-): ConfigNavSection[] => {
-  console.warn(
-    "createConfigNavSections is deprecated. Use useConfigNavSections hook instead for proper i18n support.",
-  );
-  const sections: ConfigNavSection[] = [
-    {
-      title: "Preferences",
-      items: [
-        {
-          key: "general",
-          label: "General",
-          icon: "settings-rounded",
-          component: <GeneralSection />,
-        },
-        {
-          key: "hotkeys",
-          label: "Keyboard Shortcuts",
-          icon: "keyboard-rounded",
-          component: <HotkeysSection />,
+          icon: "circle-question-mark",
+          component: (
+            <AboutSection isAdmin={_isAdmin} onRequestClose={onRequestClose} />
+          ),
         },
       ],
     },

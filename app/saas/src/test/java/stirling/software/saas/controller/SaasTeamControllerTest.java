@@ -80,6 +80,8 @@ class SaasTeamControllerTest {
     @Mock private UserService userService;
     @Mock private TeamSecurityExpressions teamSecurityExpressions;
 
+    @org.mockito.Mock private stirling.software.proprietary.service.OrgOwnerService orgOwnerService;
+
     @InjectMocks private SaasTeamController controller;
 
     private static final String CURRENT_USERNAME = "alice";
@@ -600,6 +602,7 @@ class SaasTeamControllerTest {
         void existingPersonalTeam_noMigration() {
             stubCurrentUser();
             Team personal = team(1L, "My Team");
+            currentUser.setTeam(personal);
             when(membershipRepository.findByUserId(currentUser.getId()))
                     .thenReturn(List.of(membership(personal, currentUser, TeamRole.LEADER)));
             when(saasTeamExtensionService.isPersonal(personal)).thenReturn(true);
@@ -612,6 +615,10 @@ class SaasTeamControllerTest {
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             verify(saasTeamService, never()).createPersonalTeam(any());
+            @SuppressWarnings("unchecked")
+            var dtos = (List<SaasTeamController.TeamDetailsDTO>) response.getBody();
+            assertThat(dtos.getFirst().getCurrent()).isTrue();
+            assertThat(dtos.getFirst().getCurrentUserId()).isEqualTo(currentUser.getId());
         }
 
         @Test
@@ -701,6 +708,42 @@ class SaasTeamControllerTest {
             assertThat(dtos.get(0).getId()).isEqualTo(2L);
             assertThat(dtos.get(0).getUsername()).isEqualTo("bob");
             assertThat(dtos.get(0).getRole()).isEqualTo("MEMBER");
+        }
+
+        @Test
+        @DisplayName("carries the Supabase id the browser needs to sign the avatar")
+        void exposesSupabaseId() {
+            Team team = team(10L, "Acme");
+            User bob = user(2L, "bob", "bob@x.com");
+            java.util.UUID bobSupabaseId = java.util.UUID.randomUUID();
+            bob.setSupabaseId(bobSupabaseId);
+            when(membershipRepository.findByTeamId(10L))
+                    .thenReturn(List.of(membership(team, bob, TeamRole.MEMBER)));
+
+            ResponseEntity<?> response = controller.getTeamMembers(10L);
+
+            @SuppressWarnings("unchecked")
+            List<SaasTeamController.TeamMemberDTO> dtos =
+                    (List<SaasTeamController.TeamMemberDTO>) response.getBody();
+            assertThat(dtos.get(0).getSupabaseId()).isEqualTo(bobSupabaseId.toString());
+        }
+
+        @Test
+        @DisplayName("a member with no Supabase identity reports a null id")
+        void memberWithoutSupabaseIdIsNull() {
+            Team team = team(10L, "Acme");
+            when(membershipRepository.findByTeamId(10L))
+                    .thenReturn(
+                            List.of(
+                                    membership(
+                                            team, user(2L, "bob", "bob@x.com"), TeamRole.MEMBER)));
+
+            ResponseEntity<?> response = controller.getTeamMembers(10L);
+
+            @SuppressWarnings("unchecked")
+            List<SaasTeamController.TeamMemberDTO> dtos =
+                    (List<SaasTeamController.TeamMemberDTO>) response.getBody();
+            assertThat(dtos.get(0).getSupabaseId()).isNull();
         }
 
         @Test

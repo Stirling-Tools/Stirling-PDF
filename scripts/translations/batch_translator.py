@@ -9,11 +9,11 @@ Automatically translates JSON batch files to target language while preserving:
 Note: Works with JSON batch files. Translation files can be TOML or JSON format.
 """
 
+import argparse
 import json
 import sys
-import argparse
-from pathlib import Path
 import time
+from pathlib import Path
 
 try:
     from openai import OpenAI
@@ -98,6 +98,14 @@ CRITICAL RULES - MUST FOLLOW EXACTLY:
    - Do not remove any part of the original meaning
    - Keep the same level of detail
 
+9. KEEPING ENGLISH IS ALLOWED WHEN IT IS CORRECT:
+   - If the English word or phrase is also what native {language_name} speakers naturally use in
+     software UIs (e.g. loanwords like "Email", "Logo", "OK", "Online", "Login", "Workflow",
+     brand or product names), return it unchanged
+   - Returning a value identical to the English input is a valid answer - never invent an
+     awkward translation just to make it different
+   - Only keep English when it is genuinely the correct {language_name} term; otherwise translate normally
+
 Return ONLY the translated JSON. No markdown, no explanations, just the JSON object."""
 
     def _record_usage(self, response) -> None:
@@ -117,9 +125,7 @@ Return ONLY the translated JSON. No markdown, no explanations, just the JSON obj
         cost_note = f", ~${cost:.4f}" if cost else ""
         print(f"  Tokens: {prompt_tokens:,} in / {completion_tokens:,} out{cost_note}")
 
-    def translate_batch(
-        self, batch_data: dict, target_language: str, language_code: str
-    ) -> dict:
+    def translate_batch(self, batch_data: dict, target_language: str, language_code: str) -> dict:
         """Translate a batch file using OpenAI API."""
         # Convert batch to compact JSON for API
         input_json = json.dumps(batch_data, ensure_ascii=False, separators=(",", ":"))
@@ -128,26 +134,32 @@ Return ONLY the translated JSON. No markdown, no explanations, just the JSON obj
         print(f"Input size: {len(input_json)} characters")
 
         try:
-            # GPT-5.x models only support the default temperature, so we omit it
-            response = self.client.chat.completions.create(
+            # GPT-5.x models only support the default temperature, so we omit it.
+            # Streamed so long replies (e.g. Tibetan) never hit the client's 600s read timeout
+            stream = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
                     {
                         "role": "system",
-                        "content": self.get_translation_prompt(
-                            target_language, language_code
-                        ),
+                        "content": self.get_translation_prompt(target_language, language_code),
                     },
                     {
                         "role": "user",
                         "content": f"Translate this JSON:\n\n{input_json}",
                     },
                 ],
+                stream=True,
+                stream_options={"include_usage": True},
             )
 
-            self._record_usage(response)
+            parts = []
+            for chunk in stream:
+                if chunk.choices and chunk.choices[0].delta.content:
+                    parts.append(chunk.choices[0].delta.content)
+                if chunk.usage:
+                    self._record_usage(chunk)
 
-            translated_text = response.choices[0].message.content.strip()
+            translated_text = "".join(parts).strip()
 
             # Remove markdown code blocks if present
             if translated_text.startswith("```"):
@@ -198,9 +210,7 @@ Return ONLY the translated JSON. No markdown, no explanations, just the JSON obj
             trans_placeholders = set(re.findall(placeholder_pattern, trans_value))
 
             if orig_placeholders != trans_placeholders:
-                issues.append(
-                    f"Placeholder mismatch in '{key}': {orig_placeholders} vs {trans_placeholders}"
-                )
+                issues.append(f"Placeholder mismatch in '{key}': {orig_placeholders} vs {trans_placeholders}")
 
         if issues:
             print("\n⚠ Validation warnings:")
@@ -276,12 +286,8 @@ Examples:
         """,
     )
 
-    parser.add_argument(
-        "input_files", nargs="+", help="Input batch JSON file(s) or pattern"
-    )
-    parser.add_argument(
-        "--api-key", help="OpenAI API key (or set OPENAI_API_KEY env var)"
-    )
+    parser.add_argument("input_files", nargs="+", help="Input batch JSON file(s) or pattern")
+    parser.add_argument("--api-key", help="OpenAI API key (or set OPENAI_API_KEY env var)")
     parser.add_argument(
         "--language",
         "-l",
@@ -298,9 +304,7 @@ Examples:
         default="_translated",
         help="Suffix for output files (default: _translated)",
     )
-    parser.add_argument(
-        "--skip-validation", action="store_true", help="Skip validation checks"
-    )
+    parser.add_argument("--skip-validation", action="store_true", help="Skip validation checks")
     parser.add_argument(
         "--delay",
         type=float,
@@ -315,9 +319,7 @@ Examples:
 
     api_key = args.api_key or os.environ.get("OPENAI_API_KEY")
     if not api_key:
-        print(
-            "Error: OpenAI API key required. Provide via --api-key or OPENAI_API_KEY environment variable"
-        )
+        print("Error: OpenAI API key required. Provide via --api-key or OPENAI_API_KEY environment variable")
         sys.exit(1)
 
     # Get language info
@@ -356,13 +358,11 @@ Examples:
 
         try:
             # Load input file
-            with open(input_file, "r", encoding="utf-8") as f:
+            with open(input_file, encoding="utf-8") as f:
                 batch_data = json.load(f)
 
             # Translate
-            translated_data = translator.translate_batch(
-                batch_data, language_name, language_code
-            )
+            translated_data = translator.translate_batch(batch_data, language_name, language_code)
 
             # Validate
             if not args.skip_validation:
@@ -396,10 +396,7 @@ Examples:
 
     # Cost summary
     print("-" * 60)
-    print(
-        f"Total tokens: {translator.total_prompt_tokens:,} in / "
-        f"{translator.total_completion_tokens:,} out"
-    )
+    print(f"Total tokens: {translator.total_prompt_tokens:,} in / {translator.total_completion_tokens:,} out")
     if translator.total_cost:
         print(f"Estimated cost ({args.model}): ${translator.total_cost:.4f}")
 

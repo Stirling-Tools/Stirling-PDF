@@ -41,7 +41,7 @@ describe("OAuthButtons", () => {
     expect(screen.getByText("Authentik")).toBeTruthy();
   });
 
-  it("should render unknown provider with capitalized label and generic icon", () => {
+  it("should render unknown provider with capitalized label and the neutral mark", () => {
     // Render the unknown provider alongside oidc so we can assert the unknown
     // one falls back to the same (generic OIDC) icon. Icons are bundled assets,
     // so we compare resolved srcs rather than filenames.
@@ -60,17 +60,12 @@ describe("OAuthButtons", () => {
     // Unknown provider should be capitalized
     expect(screen.getByText("Mycompany")).toBeTruthy();
 
-    // Unknown provider falls back to the generic OIDC icon
-    const mycompanyImg = screen
-      .getByText("Mycompany")
-      .closest("button")
-      ?.querySelector("img");
-    const oidcImg = screen
-      .getByText("OIDC")
-      .closest("button")
-      ?.querySelector("img");
-    expect(mycompanyImg?.src).toBeTruthy();
-    expect(mycompanyImg?.src).toBe(oidcImg?.src);
+    // An unknown provider and OIDC both fall back to the neutral glyph.
+    const markOf = (label: string) =>
+      screen.getByText(label).closest("button")?.querySelector("svg, img");
+    const mycompanyMark = markOf("Mycompany");
+    expect(mycompanyMark?.tagName.toLowerCase()).toBe("svg");
+    expect(markOf("OIDC")?.tagName.toLowerCase()).toBe("svg");
   });
 
   it('should call onProviderClick with actual provider ID (not "oidc")', async () => {
@@ -219,19 +214,19 @@ describe("OAuthButtons", () => {
       </TestWrapper>,
     );
 
-    // Each known provider renders an icon, and the icons are distinct. Icons
-    // are bundled assets (data URI / hashed URL), so assert distinctness rather
-    // than matching filenames.
-    const srcOf = (label: string) =>
-      screen.getByText(label).closest("button")?.querySelector("img")?.src;
-    const srcs = [
-      srcOf("Google"),
-      srcOf("GitHub"),
-      srcOf("Authentik"),
-      srcOf("Keycloak"),
+    // Each known provider renders its own registry mark: an svg, and a
+    // different one per provider rather than the shared fallback glyph.
+    const markOf = (label: string) =>
+      screen.getByText(label).closest("button")?.querySelector("svg")
+        ?.outerHTML;
+    const marks = [
+      markOf("Google"),
+      markOf("GitHub"),
+      markOf("Authentik"),
+      markOf("Keycloak"),
     ];
-    srcs.forEach((src) => expect(src).toBeTruthy());
-    expect(new Set(srcs).size).toBe(4);
+    marks.forEach((mark) => expect(mark).toBeTruthy());
+    expect(new Set(marks).size).toBe(4);
   });
 
   it("should handle mixed known and unknown providers", async () => {

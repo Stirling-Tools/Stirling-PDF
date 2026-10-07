@@ -46,6 +46,15 @@ export interface ConvertParameters extends BaseParameters {
     outputFormat: string;
     strict?: boolean;
   };
+  pdfUaOptions: {
+    profile: string;
+    language: string;
+    overrideLanguage: boolean;
+    title: string;
+    embedFonts: boolean;
+    /** Descriptions as `pageIndex:ordinal=text` lines, keyed as the backend hands them out. */
+    altText: string;
+  };
   pdfxOptions: {
     outputFormat: string;
   };
@@ -72,6 +81,8 @@ export interface ConvertParameters extends BaseParameters {
     targetDevice: string;
     outputFormat: string;
   };
+  /** Per-request engine pick; undefined follows the server setting. */
+  useStirlingOfficeConvert?: boolean;
   isSmartDetection: boolean;
   smartDetectionType: "mixed" | "images" | "web" | "none";
 }
@@ -107,6 +118,14 @@ export const defaultParameters: ConvertParameters = {
   pdfaOptions: {
     outputFormat: "pdfa-2b",
     strict: false,
+  },
+  pdfUaOptions: {
+    profile: "ua1",
+    language: "en-GB",
+    overrideLanguage: false,
+    title: "",
+    embedFonts: true,
+    altText: "",
   },
   pdfxOptions: {
     outputFormat: "pdfx",

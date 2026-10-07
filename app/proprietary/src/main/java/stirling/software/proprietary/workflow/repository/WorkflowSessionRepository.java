@@ -4,24 +4,31 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
+
+import jakarta.persistence.LockModeType;
 
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.workflow.model.WorkflowSession;
 import stirling.software.proprietary.workflow.model.WorkflowStatus;
 import stirling.software.proprietary.workflow.model.WorkflowType;
 
-@Repository
 public interface WorkflowSessionRepository extends JpaRepository<WorkflowSession, Long> {
 
     /** Find workflow session by unique session ID */
     Optional<WorkflowSession> findBySessionId(String sessionId);
 
-    /** Find workflow session by unique session ID with participants eagerly loaded */
+    /** Serializes session mutations until the caller's transaction completes. */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT ws FROM WorkflowSession ws WHERE ws.sessionId = :sessionId")
+    Optional<WorkflowSession> findBySessionIdForUpdate(@Param("sessionId") String sessionId);
+
+    /** Find workflow session by unique session ID with participants and owner eagerly loaded */
     @Query(
-            "SELECT ws FROM WorkflowSession ws LEFT JOIN FETCH ws.participants WHERE ws.sessionId = :sessionId")
+            "SELECT ws FROM WorkflowSession ws LEFT JOIN FETCH ws.participants LEFT JOIN FETCH"
+                    + " ws.owner WHERE ws.sessionId = :sessionId")
     Optional<WorkflowSession> findBySessionIdWithParticipants(@Param("sessionId") String sessionId);
 
     /** Find all workflow sessions owned by a specific user */

@@ -2,7 +2,7 @@ import { memo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import CloseIcon from "@mui/icons-material/Close";
+import { Icon } from "@app/ui/Icon";
 import { useInteractionManagerCapability } from "@embedpdf/plugin-interaction-manager/react";
 import {
   Z_INDEX_SIGNATURE_OVERLAY,
@@ -33,8 +33,8 @@ export interface SignaturePreviewLayerProps {
   placementData?: string;
   /** Signature type assigned to newly placed previews. */
   placementType?: "canvas" | "image" | "text";
-  /** Emits the full updated preview array (across all pages) whenever it changes. */
-  onChange: (previews: SignaturePreview[]) => void;
+  /** Transient drag updates must be followed by a committed update on release. */
+  onChange: (previews: SignaturePreview[], transient?: boolean) => void;
   /** Currently selected preview id (managed by the parent layer). */
   selectedId?: string | null;
   /** Notifies the parent when a preview is selected (used for deleteSelected/hasSelected). */
@@ -68,6 +68,7 @@ export const SignaturePreviewLayer = memo(function SignaturePreviewLayer({
 
   const pauseInteraction = () => interactionManager?.pause();
   const resumeInteraction = () => interactionManager?.resume();
+  const canPlace = !readOnly && placementMode && Boolean(placementData);
 
   const pagePreviews = previews.filter(
     (preview) => preview.pageIndex === pageIndex,
@@ -106,13 +107,13 @@ export const SignaturePreviewLayer = memo(function SignaturePreviewLayer({
       style={{
         position: "absolute",
         inset: 0,
-        cursor: !readOnly && placementMode ? "crosshair" : "default",
+        cursor: canPlace ? "crosshair" : "default",
         // Let clicks fall through to the page except in placement mode, where we
         // need to capture click-to-place. Individual previews opt back in below.
-        pointerEvents: !readOnly && placementMode ? "auto" : "none",
+        pointerEvents: canPlace ? "auto" : "none",
       }}
       onMouseMove={
-        !readOnly && placementMode && placementData
+        canPlace
           ? (e) => {
               const rect = e.currentTarget.getBoundingClientRect();
               setCursorPos({
@@ -123,7 +124,7 @@ export const SignaturePreviewLayer = memo(function SignaturePreviewLayer({
           : undefined
       }
       onMouseLeave={() => setCursorPos(null)}
-      onClick={!readOnly && placementMode ? handlePlaceClick : undefined}
+      onClick={canPlace ? handlePlaceClick : undefined}
     >
       {pagePreviews.map((preview) => {
         if (!preview.signatureData) return null;
@@ -182,7 +183,7 @@ export const SignaturePreviewLayer = memo(function SignaturePreviewLayer({
                   }}
                   aria-label={t("viewer.signature.delete", "Delete signature")}
                 >
-                  <CloseIcon style={{ fontSize: "0.8rem" }} />
+                  <Icon name="x" size={"0.8rem"} />
                 </ActionIcon>
               )}
 
@@ -209,6 +210,7 @@ export const SignaturePreviewLayer = memo(function SignaturePreviewLayer({
                         const startY = e.clientY;
                         const startLeft = preview.x;
                         const startTop = preview.y;
+                        let latest = previews;
 
                         const handlePointerMove = (moveEvent: PointerEvent) => {
                           isDraggingRef.current = true;
@@ -216,17 +218,16 @@ export const SignaturePreviewLayer = memo(function SignaturePreviewLayer({
                             (moveEvent.clientX - startX) / pageWidth;
                           const deltaY =
                             (moveEvent.clientY - startY) / pageHeight;
-                          onChange(
-                            previews.map((p) =>
-                              p.id === preview.id
-                                ? {
-                                    ...p,
-                                    x: startLeft + deltaX,
-                                    y: startTop + deltaY,
-                                  }
-                                : p,
-                            ),
+                          latest = previews.map((p) =>
+                            p.id === preview.id
+                              ? {
+                                  ...p,
+                                  x: startLeft + deltaX,
+                                  y: startTop + deltaY,
+                                }
+                              : p,
                           );
+                          onChange(latest, true);
                         };
 
                         const handlePointerUp = (upEvent: PointerEvent) => {
@@ -235,7 +236,16 @@ export const SignaturePreviewLayer = memo(function SignaturePreviewLayer({
                             handlePointerMove,
                           );
                           el.removeEventListener("pointerup", handlePointerUp);
+                          el.removeEventListener(
+                            "pointercancel",
+                            handlePointerUp,
+                          );
                           el.releasePointerCapture(upEvent.pointerId);
+                          onChange(
+                            upEvent.type === "pointercancel"
+                              ? previews
+                              : latest,
+                          );
                           resumeInteraction();
                           window.getSelection()?.removeAllRanges();
                           setTimeout(() => {
@@ -245,12 +255,13 @@ export const SignaturePreviewLayer = memo(function SignaturePreviewLayer({
 
                         el.addEventListener("pointermove", handlePointerMove);
                         el.addEventListener("pointerup", handlePointerUp);
+                        el.addEventListener("pointercancel", handlePointerUp);
                       }
                 }
               >
                 <img
                   src={preview.signatureData}
-                  alt="Signature preview"
+                  alt={t("viewer.signature.previewAlt", "Signature preview")}
                   style={{
                     width: "100%",
                     height: "100%",
@@ -300,6 +311,7 @@ export const SignaturePreviewLayer = memo(function SignaturePreviewLayer({
                         const startHeight = preview.height;
                         const startLeft = preview.x;
                         const startTop = preview.y;
+                        let latest = previews;
 
                         const handlePointerMove = (moveEvent: PointerEvent) => {
                           isDraggingRef.current = true;
@@ -338,19 +350,18 @@ export const SignaturePreviewLayer = memo(function SignaturePreviewLayer({
                           newX = Math.max(0, Math.min(newX, 1 - newWidth));
                           newY = Math.max(0, Math.min(newY, 1 - newHeight));
 
-                          onChange(
-                            previews.map((p) =>
-                              p.id === preview.id
-                                ? {
-                                    ...p,
-                                    x: newX,
-                                    y: newY,
-                                    width: newWidth,
-                                    height: newHeight,
-                                  }
-                                : p,
-                            ),
+                          latest = previews.map((p) =>
+                            p.id === preview.id
+                              ? {
+                                  ...p,
+                                  x: newX,
+                                  y: newY,
+                                  width: newWidth,
+                                  height: newHeight,
+                                }
+                              : p,
                           );
+                          onChange(latest, true);
                         };
 
                         const handlePointerUp = (upEvent: PointerEvent) => {
@@ -359,7 +370,16 @@ export const SignaturePreviewLayer = memo(function SignaturePreviewLayer({
                             handlePointerMove,
                           );
                           el.removeEventListener("pointerup", handlePointerUp);
+                          el.removeEventListener(
+                            "pointercancel",
+                            handlePointerUp,
+                          );
                           el.releasePointerCapture(upEvent.pointerId);
+                          onChange(
+                            upEvent.type === "pointercancel"
+                              ? previews
+                              : latest,
+                          );
                           resumeInteraction();
                           window.getSelection()?.removeAllRanges();
                           setTimeout(() => {
@@ -369,6 +389,7 @@ export const SignaturePreviewLayer = memo(function SignaturePreviewLayer({
 
                         el.addEventListener("pointermove", handlePointerMove);
                         el.addEventListener("pointerup", handlePointerUp);
+                        el.addEventListener("pointercancel", handlePointerUp);
                       }}
                     />
                   ))}
@@ -379,7 +400,7 @@ export const SignaturePreviewLayer = memo(function SignaturePreviewLayer({
       })}
 
       {/* Hover preview: ghost signature following cursor in placement mode */}
-      {!readOnly && placementMode && placementData && cursorPos && (
+      {canPlace && cursorPos && (
         <img
           src={placementData}
           alt=""

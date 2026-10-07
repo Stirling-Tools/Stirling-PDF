@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Stack, Alert } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import CoreGeneralSection from "@core/components/shared/config/configSections/GeneralSection";
+import PreferencesSection, {
+  type PreferencesSectionProps,
+} from "@core/components/shared/config/configSections/preferences/PreferencesSection";
 import { DefaultAppSettings } from "@app/components/shared/config/configSections/DefaultAppSettings";
 import { useDesktopInstall } from "@app/hooks/useDesktopInstall";
-import { useSaaSMode } from "@app/hooks/useSaaSMode";
 import {
   desktopUpdateService,
   type UpdateMode,
@@ -12,30 +13,26 @@ import {
 } from "@app/services/desktopUpdateService";
 
 /**
- * Desktop extension of GeneralSection.
- *
- * Adds default PDF editor settings, wires up the Tauri auto-updater install
- * flow, and exposes the user-facing update-mode control (prompt / auto /
- * disabled). When the mode is locked by a provisioning file the control is
- * still rendered but disabled, with a "Managed by administrator" hint, so
- * managed-deployment users can see what policy is in effect.
+ * Desktop Preferences page: the lower layers' props plus file defaults, the Tauri
+ * updater and the update-mode control (shown disabled when provisioning locks it).
  */
-const GeneralSection: React.FC = () => {
+const GeneralSection: React.FC<PreferencesSectionProps> = ({
+  editorDefaultsSlot,
+  hideUpdateSection = false,
+  ...props
+}) => {
   const { t } = useTranslation();
   const install = useDesktopInstall();
-  // In SaaS connection mode the cloud owns app versioning — hide the update
-  // section (which also stops the core auto-check from firing).
-  const isSaaSMode = useSaaSMode();
-  const [updateModeInfo, setUpdateModeInfo] = useState<UpdateModeInfo>({
-    mode: "prompt",
-    locked: false,
-  });
+  const [updateModeInfo, setUpdateModeInfo] = useState<UpdateModeInfo | null>(
+    null,
+  );
   const [updateModeError, setUpdateModeError] = useState<string | null>(null);
 
-  // Check for Tauri updater availability on mount
+  // Provisioning can prohibit update requests before Settings opens.
   useEffect(() => {
+    if (!updateModeInfo || updateModeInfo.mode === "disabled") return;
     void install.checkTauriUpdate();
-  }, [install.checkTauriUpdate]);
+  }, [install.checkTauriUpdate, updateModeInfo]);
 
   // Load the current update mode + lock status on mount. We intentionally
   // re-fetch on every mount so that a provisioning file dropped while the
@@ -81,7 +78,6 @@ const GeneralSection: React.FC = () => {
 
   return (
     <Stack gap="lg">
-      <DefaultAppSettings />
       {updateModeError && (
         <Alert
           color="red"
@@ -95,9 +91,18 @@ const GeneralSection: React.FC = () => {
           {updateModeError}
         </Alert>
       )}
-      <CoreGeneralSection
+      <PreferencesSection
+        {...props}
+        editorDefaultsSlot={
+          <>
+            {editorDefaultsSlot}
+            <DefaultAppSettings />
+          </>
+        }
+        // Mounting the card starts its summary request, so policy must be known first.
         hideUpdateSection={
-          isSaaSMode ||
+          hideUpdateSection ||
+          !updateModeInfo ||
           (updateModeInfo.mode === "disabled" && updateModeInfo.locked)
         }
         desktopInstall={{
@@ -108,11 +113,15 @@ const GeneralSection: React.FC = () => {
           canInstall: install.canInstall,
           actions: install.actions,
         }}
-        desktopUpdateMode={{
-          mode: updateModeInfo.mode,
-          locked: updateModeInfo.locked,
-          onChange: handleUpdateModeChange,
-        }}
+        desktopUpdateMode={
+          updateModeInfo
+            ? {
+                mode: updateModeInfo.mode,
+                locked: updateModeInfo.locked,
+                onChange: handleUpdateModeChange,
+              }
+            : undefined
+        }
       />
     </Stack>
   );

@@ -23,7 +23,8 @@ const SAMPLE_PDF = path.join(
 );
 
 async function openViewerWithSample(page: import("@playwright/test").Page) {
-  await page.goto("/read");
+  // Not /read: reading collapses the workbench bar these sidebars are toggled from.
+  await page.goto("/");
   await page.waitForLoadState("domcontentloaded");
   await page
     .locator('[data-testid="file-input"]')
@@ -68,7 +69,7 @@ test.describe("Viewer sidebar: Add attachment / Add bookmark buttons", () => {
     const initialUrl = page.url();
 
     await page
-      .getByRole("button", { name: /Toggle Bookmarks/i })
+      .getByRole("button", { name: /Bookmarks \(Table of Contents\)/i })
       .first()
       .click();
 
@@ -132,7 +133,7 @@ test.describe("Viewer sidebar: Add attachment / Add bookmark buttons", () => {
     const viewerUrl = page.url();
 
     await page
-      .getByRole("button", { name: /Toggle Bookmarks/i })
+      .getByRole("button", { name: /Bookmarks \(Table of Contents\)/i })
       .first()
       .click();
     await page.getByRole("button", { name: /^Add bookmark$/i }).click();
@@ -179,7 +180,7 @@ test.describe("Viewer sidebar: Add attachment / Add bookmark buttons", () => {
 
     // Bookmark sidebar
     await page
-      .getByRole("button", { name: /Toggle Bookmarks/i })
+      .getByRole("button", { name: /Bookmarks \(Table of Contents\)/i })
       .first()
       .click();
     await closeViaButton(/Close bookmarks sidebar/i);

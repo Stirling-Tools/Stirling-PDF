@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Modal, Stack, TextInput, Group } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
-import AddIcon from "@mui/icons-material/Add";
+import { Icon } from "@app/ui/Icon";
 import UserSelector from "@app/components/shared/UserSelector";
 
 interface AddParticipantsFlowProps {
@@ -83,7 +83,7 @@ export const AddParticipantsFlow: React.FC<AddParticipantsFlowProps> = ({
             onClick={handleSubmit}
             loading={submitting}
             disabled={selectedUserIds.length === 0}
-            leftSection={<AddIcon sx={{ fontSize: 16 }} />}
+            leftSection={<Icon name="plus" size={16} />}
           >
             {t(
               "certSign.collab.addParticipants.add",

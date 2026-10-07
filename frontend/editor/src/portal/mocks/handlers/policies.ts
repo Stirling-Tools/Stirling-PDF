@@ -20,22 +20,23 @@ import type { PolicyRunView, WirePolicy } from "@app/policies/types";
 let store: WirePolicy[] = seedPolicies();
 let runs: PolicyRunView[] = seedPolicyRuns();
 
-export function resetPoliciesStore(
-  seed?: WirePolicy[],
-  seedRuns?: PolicyRunView[],
-): void {
-  store = seed ? [...seed] : seedPolicies();
-  runs = seedRuns ? [...seedRuns] : seedPolicyRuns();
+/**
+ * The catalogue (suggested-policy) records, for the unified Pipelines overview to merge in - the
+ * real backend keeps a single store, so its overview already sees these; the mock's two stores must
+ * be joined here to match.
+ */
+export function getCataloguePolicies(): WirePolicy[] {
+  return store;
 }
 
 let idCounter = 0;
-function nextId(categoryId: string): string {
+function nextId(policyKey: string): string {
   idCounter += 1;
-  return `pol_${categoryId}_${Date.now().toString(36)}_${idCounter}`;
+  return `pol_${policyKey}_${Date.now().toString(36)}_${idCounter}`;
 }
 
-function categoryId(wire: WirePolicy): string {
-  return (wire.output?.options?.categoryId as string | undefined) ?? "";
+function policyKey(wire: WirePolicy): string {
+  return wire.output?.options?.categoryId ?? "";
 }
 
 export const policiesHandlers = [
@@ -61,10 +62,10 @@ export const policiesHandlers = [
   http.post("/api/v1/policies", async ({ request }) => {
     await delay(120);
     const incoming = (await request.json()) as WirePolicy;
-    const catId = categoryId(incoming);
+    const catId = policyKey(incoming);
     const existing = incoming.id
       ? store.find((p) => p.id === incoming.id)
-      : store.find((p) => categoryId(p) === catId);
+      : store.find((p) => policyKey(p) === catId);
     const id = existing?.id ?? nextId(catId);
     const saved: WirePolicy = {
       ...incoming,

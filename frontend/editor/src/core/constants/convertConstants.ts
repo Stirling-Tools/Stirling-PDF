@@ -31,6 +31,7 @@ export const CONVERSION_ENDPOINTS = {
   "pdf-html": "/api/v1/convert/pdf/html",
   "pdf-xml": "/api/v1/convert/pdf/xml",
   "pdf-pdfa": "/api/v1/convert/pdf/pdfa",
+  "pdf-pdfua": "/api/v1/convert/pdf/ua",
   "html-pdf": "/api/v1/convert/html/pdf",
   "markdown-pdf": "/api/v1/convert/markdown/pdf",
   "eml-pdf": "/api/v1/convert/eml/pdf",
@@ -58,6 +59,7 @@ export const ENDPOINT_NAMES = {
   "pdf-html": "pdf-to-html",
   "pdf-xml": "pdf-to-xml",
   "pdf-pdfa": "pdf-to-pdfa",
+  "pdf-pdfua": "pdf-to-ua",
   "html-pdf": "html-to-pdf",
   "markdown-pdf": "markdown-to-pdf",
   "eml-pdf": "eml-to-pdf",
@@ -84,6 +86,7 @@ export const ENDPOINT_I18N: Record<string, [string, string]> = {
   "pdf-to-html": ["PDFToHTML.header", "PDF → HTML"],
   "pdf-to-xml": ["PDFToXML.header", "PDF → XML"],
   "pdf-to-pdfa": ["pdfToPDFA.header", "PDF → PDF/A"],
+  "pdf-to-ua": ["pdfToPDFUA.header", "PDF → PDF/UA (accessible)"],
   "file-to-pdf": ["convert.fileToPdf", "Office/Document → PDF"],
   "cbr-to-pdf": ["convert.cbrToPdf", "CBR → PDF"],
   "cbz-to-pdf": ["convert.cbzToPdf", "CBZ → PDF"],
@@ -95,10 +98,35 @@ export const ENDPOINT_I18N: Record<string, [string, string]> = {
   "pdf-to-epub": ["convert.pdfToEpub", "PDF → EPUB"],
 };
 
+// Translation keys for the dropdown group names below; the English name is the default
+export const FORMAT_GROUP_LABEL_KEYS: Record<string, string> = {
+  "Multiple Files": "convert.formatGroups.multipleFiles",
+  Document: "convert.formatGroups.document",
+  Archive: "convert.formatGroups.archive",
+  Spreadsheet: "convert.formatGroups.spreadsheet",
+  Presentation: "convert.formatGroups.presentation",
+  Image: "convert.formatGroups.image",
+  Web: "convert.formatGroups.web",
+  Text: "convert.formatGroups.text",
+  Email: "convert.formatGroups.email",
+  eBook: "convert.formatGroups.ebook",
+  File: "convert.formatGroups.file",
+};
+
 // Grouped file extensions for dropdowns
 export const FROM_FORMAT_OPTIONS = [
-  { value: "any", label: "Any", group: "Multiple Files" },
-  { value: "image", label: "Images", group: "Multiple Files" },
+  {
+    value: "any",
+    label: "Any",
+    labelKey: "convert.formatOptions.any",
+    group: "Multiple Files",
+  },
+  {
+    value: "image",
+    label: "Images",
+    labelKey: "convert.formatOptions.images",
+    group: "Multiple Files",
+  },
   { value: "pdf", label: "PDF", group: "Document" },
   { value: "cbz", label: "CBZ", group: "Archive" },
   { value: "cbr", label: "CBR", group: "Archive" },
@@ -125,7 +153,12 @@ export const FROM_FORMAT_OPTIONS = [
   { value: "txt", label: "TXT", group: "Text" },
   { value: "rtf", label: "RTF", group: "Text" },
   { value: "eml", label: "EML", group: "Email" },
-  { value: "msg", label: "MSG (Outlook)", group: "Email" },
+  {
+    value: "msg",
+    label: "MSG (Outlook)",
+    labelKey: "convert.formatOptions.msgOutlook",
+    group: "Email",
+  },
   { value: "epub", label: "EPUB", group: "eBook" },
   { value: "mobi", label: "MOBI", group: "eBook" },
   { value: "azw3", label: "AZW3", group: "eBook" },
@@ -136,6 +169,7 @@ export const TO_FORMAT_OPTIONS = [
   { value: "pdf", label: "PDF", group: "Document" },
   { value: "pdfa", label: "PDF/A", group: "Document" },
   { value: "pdfx", label: "PDF/X", group: "Document" },
+  { value: "pdfua", label: "PDF/UA", group: "Document" },
   { value: "docx", label: "DOCX", group: "Document" },
   { value: "odt", label: "ODT", group: "Document" },
   { value: "cbz", label: "CBZ", group: "Archive" },
@@ -183,6 +217,7 @@ export const CONVERSION_MATRIX: Record<string, string[]> = {
     "xml",
     "pdfa",
     "pdfx",
+    "pdfua",
     "cbz",
     "cbr",
     "epub",
@@ -244,6 +279,7 @@ export const EXTENSION_TO_ENDPOINT: Record<string, Record<string, string>> = {
     xml: "pdf-to-xml",
     pdfa: "pdf-to-pdfa",
     pdfx: "pdf-to-pdfa", // PDF/X uses the same endpoint as PDF/A
+    pdfua: "pdf-to-ua",
     cbr: "pdf-to-cbr",
     cbz: "pdf-to-cbz",
     epub: "pdf-to-epub",

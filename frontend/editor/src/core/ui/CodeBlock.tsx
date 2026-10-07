@@ -64,13 +64,21 @@ export function CodeBlock({
             shape="pill"
             className="sui-code__copy"
             onClick={copy}
-            aria-label="Copy code"
+            aria-label={t("common.copyCode", "Copy code")}
           >
             {copied ? t("common.copied", "Copied!") : t("common.copy", "Copy")}
           </Button>
         )}
       </div>
-      <pre className="sui-code__pre" style={{ maxHeight }}>
+      {/* Focusable and named: long samples scroll, and a scrollable region needs
+          to be reachable by keyboard to be scrolled at all. */}
+      <pre
+        className="sui-code__pre"
+        style={{ maxHeight }}
+        tabIndex={0}
+        role="group"
+        aria-label={t("common.codeSample", "Code sample")}
+      >
         <code>{code}</code>
       </pre>
     </div>

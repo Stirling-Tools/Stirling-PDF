@@ -8,6 +8,7 @@ import {
   getPdfiumModule,
   openRawDocumentSafe,
   readEffectivePageBox,
+  readUtf16,
   saveRawDocument,
 } from "@app/services/pdfiumService";
 import { generateThumbnailWithMetadata } from "@app/utils/thumbnailUtils";
@@ -27,6 +28,38 @@ interface MinimalFileContextSelectors {
   getAllFileIds: () => FileId[];
   getStirlingFileStub: (id: FileId) => StirlingFileStub | undefined;
   getFile: (id: FileId) => StirlingFile | undefined;
+}
+
+/**
+ * The subset of EmbedPDF's annotation payload this flattener reads. EmbedPDF
+ * types `getPageAnnotations` as `any[]`; geometry and image fields vary by
+ * annotation source, so each accessor path is optional.
+ */
+interface AnnotationRect {
+  origin?: { x?: number; y?: number };
+  size?: { width?: number; height?: number };
+  x?: number;
+  y?: number;
+  left?: number;
+  top?: number;
+  width?: number;
+  height?: number;
+}
+
+interface SignatureAnnotation {
+  id: string;
+  rect?: AnnotationRect;
+  bounds?: AnnotationRect;
+  rectangle?: AnnotationRect;
+  position?: AnnotationRect;
+  imageSrc?: unknown;
+  imageData?: unknown;
+  appearance?: unknown;
+  stampData?: unknown;
+  contents?: unknown;
+  data?: unknown;
+  customData?: unknown;
+  asset?: unknown;
 }
 
 interface SignatureFlatteningOptions {
@@ -61,8 +94,10 @@ export async function flattenSignatures(
   } = options;
 
   try {
-    // Step 1: Extract all annotations from EmbedPDF before export
-    const allAnnotations: Array<{ pageIndex: number; annotations: any[] }> = [];
+    const allAnnotations: Array<{
+      pageIndex: number;
+      annotations: SignatureAnnotation[];
+    }> = [];
 
     if (signatureApiRef?.current) {
       const scrollState = getScrollState();
@@ -73,8 +108,14 @@ export async function flattenSignatures(
           const pageAnnotations =
             await signatureApiRef.current.getPageAnnotations(pageIndex);
           if (pageAnnotations && pageAnnotations.length > 0) {
-            const sessionAnnotations = pageAnnotations.filter((annotation) =>
-              Boolean(getAnnotationImageData(annotation, getImageData)),
+            const sessionAnnotations = pageAnnotations.filter(
+              (annotation): annotation is SignatureAnnotation =>
+                Boolean(
+                  getAnnotationImageData(
+                    annotation as SignatureAnnotation,
+                    getImageData,
+                  ),
+                ),
             );
 
             if (sessionAnnotations.length > 0) {
@@ -93,26 +134,7 @@ export async function flattenSignatures(
       }
     }
 
-    // Step 2: Delete ONLY session annotations from EmbedPDF before export
-    if (allAnnotations.length > 0 && signatureApiRef?.current) {
-      for (const pageData of allAnnotations) {
-        for (const annotation of pageData.annotations) {
-          try {
-            signatureApiRef.current.deleteAnnotation(
-              annotation.id,
-              pageData.pageIndex,
-            );
-          } catch (deleteError) {
-            console.warn(
-              `Failed to delete annotation ${annotation.id}:`,
-              deleteError,
-            );
-          }
-        }
-      }
-    }
-
-    // Step 3: Use EmbedPDF's saveAsCopy to get the original PDF
+    // Keep the live annotations intact until FileContext accepts the signed copy.
     if (!exportActions) {
       console.error("No export actions available");
       return null;
@@ -133,10 +155,7 @@ export async function flattenSignatures(
           const fileStub = selectors.getStirlingFileStub(allFileIds[fileIndex]);
           const fileObject = selectors.getFile(allFileIds[fileIndex]);
           if (fileStub && fileObject) {
-            currentFile = createStirlingFile(
-              fileObject,
-              allFileIds[fileIndex] as FileId,
-            );
+            currentFile = createStirlingFile(fileObject, allFileIds[fileIndex]);
           }
         }
       }
@@ -150,24 +169,15 @@ export async function flattenSignatures(
         type: "application/pdf",
       });
 
-      // Step 4: Add signatures as locked, printable PDFium stamp annotations.
-      // FPDFAnnot_AppendObject creates the annotation appearance without asking
-      // PDFium to regenerate the page's existing content. GenerateContent would
-      // corrupt some Type3/vector content, including the issue #7083 logo.
       if (allAnnotations.length > 0) {
-        try {
-          const resultBytes = await embedSignatureImages(
-            await signedFile.arrayBuffer(),
-            allAnnotations,
-            getImageData,
-          );
-          signedFile = new File([resultBytes as BlobPart], currentFile.name, {
-            type: "application/pdf",
-          });
-        } catch (renderError) {
-          console.error("Failed to embed signature images:", renderError);
-          console.warn("Signatures may only remain as annotations");
-        }
+        const resultBytes = await embedSignatureImages(
+          await signedFile.arrayBuffer(),
+          allAnnotations,
+          getImageData,
+        );
+        signedFile = new File([resultBytes], currentFile.name, {
+          type: "application/pdf",
+        });
       }
 
       const thumbnailResult = await generateThumbnailWithMetadata(signedFile);
@@ -209,7 +219,7 @@ export async function flattenSignatures(
 
 type SignatureAnnotationsByPage = Array<{
   pageIndex: number;
-  annotations: any[];
+  annotations: SignatureAnnotation[];
 }>;
 
 function extractImageDataUrl(
@@ -238,7 +248,7 @@ function extractImageDataUrl(
 }
 
 function getAnnotationImageData(
-  annotation: any,
+  annotation: SignatureAnnotation,
   getImageData: (id: string) => string | undefined,
 ): string | undefined {
   // EmbedPDF can replace fields such as imageData/appearance with an internal
@@ -279,31 +289,34 @@ export async function embedSignatureImages(
     const pageCount = m.FPDF_GetPageCount(docPtr);
 
     for (const { pageIndex, annotations } of annotationsByPage) {
-      if (pageIndex < 0 || pageIndex >= pageCount) continue;
+      if (pageIndex < 0 || pageIndex >= pageCount)
+        throw new Error("Signature page is unavailable");
 
       const pagePtr = m.FPDF_LoadPage(docPtr, pageIndex);
-      if (!pagePtr) continue;
+      if (!pagePtr) throw new Error("Could not load signature page");
 
       try {
         const pageBox = readEffectivePageBox(m, pagePtr);
         const cropHeight = pageBox.top - pageBox.bottom;
 
         for (const annotation of annotations) {
+          if (lockExportedSignature(m, pagePtr, annotation.id)) continue;
           const rect =
             annotation.rect ??
             annotation.bounds ??
             annotation.rectangle ??
             annotation.position;
-          if (!rect) continue;
+          if (!rect) throw new Error("Signature position is unavailable");
 
           const originalX = rect.origin?.x ?? rect.x ?? rect.left ?? 0;
           const originalY = rect.origin?.y ?? rect.y ?? rect.top ?? 0;
           const width = rect.size?.width ?? rect.width ?? 100;
           const height = rect.size?.height ?? rect.height ?? 50;
-          if (width <= 0 || height <= 0) continue;
+          if (width <= 0 || height <= 0)
+            throw new Error("Invalid signature size");
 
           let imageDataUrl = getAnnotationImageData(annotation, getImageData);
-          if (!imageDataUrl) continue;
+          if (!imageDataUrl) throw new Error("Signature image is unavailable");
 
           if (imageDataUrl.startsWith("data:image/svg+xml")) {
             const pngBytes = await rasteriseSvgToPng(
@@ -311,16 +324,17 @@ export async function embedSignatureImages(
               width * 2,
               height * 2,
             );
-            if (!pngBytes) continue;
+            if (!pngBytes) throw new Error("Could not render signature image");
             imageDataUrl = `data:image/png;base64,${uint8ArrayToBase64(pngBytes)}`;
           }
 
           const decodedImage = await imageDecoder(imageDataUrl);
-          if (!decodedImage) continue;
+          if (!decodedImage)
+            throw new Error("Could not decode signature image");
 
           const pdfX = pageBox.left + originalX;
           const pdfY = pageBox.bottom + cropHeight - originalY - height;
-          appendStampAnnotation(
+          const appended = appendStampAnnotation(
             m,
             docPtr,
             pagePtr,
@@ -330,6 +344,7 @@ export async function embedSignatureImages(
             width,
             height,
           );
+          if (!appended) throw new Error("Could not embed signature image");
         }
       } finally {
         m.FPDF_ClosePage(pagePtr);
@@ -346,6 +361,47 @@ const FPDF_ANNOT_STAMP = 13;
 const FPDF_ANNOT_FLAG_PRINT = 1 << 2;
 const FPDF_ANNOT_FLAG_READONLY = 1 << 6;
 const FPDF_ANNOT_FLAG_LOCKED = 1 << 7;
+
+function lockExportedSignature(
+  m: Awaited<ReturnType<typeof getPdfiumModule>>,
+  pagePtr: number,
+  annotationId: string,
+): boolean {
+  const count = m.FPDFPage_GetAnnotCount(pagePtr);
+  for (let index = 0; index < count; index++) {
+    const annotationPtr = m.FPDFPage_GetAnnot(pagePtr, index);
+    if (!annotationPtr) continue;
+    try {
+      if (m.FPDFAnnot_GetSubtype(annotationPtr) !== FPDF_ANNOT_STAMP) continue;
+      const length = m.FPDFAnnot_GetStringValue(annotationPtr, "NM", 0, 0);
+      if (length <= 2) continue;
+      const buffer = m.pdfium.wasmExports.malloc(length);
+      let name: string;
+      try {
+        m.FPDFAnnot_GetStringValue(annotationPtr, "NM", buffer, length);
+        name = readUtf16(m, buffer, length);
+      } finally {
+        m.pdfium.wasmExports.free(buffer);
+      }
+      if (name !== annotationId) continue;
+      // Lock the exported appearance in place; rebuilding it can lose rotation or duplicate it.
+      if (
+        !m.FPDFAnnot_SetFlags(
+          annotationPtr,
+          FPDF_ANNOT_FLAG_PRINT |
+            FPDF_ANNOT_FLAG_READONLY |
+            FPDF_ANNOT_FLAG_LOCKED,
+        )
+      ) {
+        throw new Error("Could not lock signature annotation");
+      }
+      return true;
+    } finally {
+      m.FPDFPage_CloseAnnot(annotationPtr);
+    }
+  }
+  return false;
+}
 
 function appendStampAnnotation(
   m: Awaited<ReturnType<typeof getPdfiumModule>>,

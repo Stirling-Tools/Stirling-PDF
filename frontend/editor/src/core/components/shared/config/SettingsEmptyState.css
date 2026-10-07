@@ -1,0 +1,30 @@
+.settings-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 2rem 1rem;
+  text-align: center;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-md, 8px);
+  background: var(--c-surface);
+}
+
+.settings-empty__icon {
+  color: var(--c-text-subtle);
+  opacity: 0.6;
+}
+
+.settings-empty__title {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--c-text-muted);
+}
+
+.settings-empty__body {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--c-text-subtle);
+  max-width: 32rem;
+}

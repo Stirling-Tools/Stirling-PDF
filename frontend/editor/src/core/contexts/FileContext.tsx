@@ -42,6 +42,7 @@ import { createFileSelectors } from "@app/contexts/file/fileSelectors";
 import {
   addFiles,
   addStirlingFileStubs,
+  reconcileOpenFilesAt,
   consumeFiles,
   undoConsumeFiles,
   createFileActions,
@@ -58,6 +59,7 @@ import {
   IndexedDBProvider,
   useIndexedDB,
 } from "@app/contexts/IndexedDBContext";
+import { onRecordUnreadable } from "@app/services/fileStorage";
 import { useZipConfirmation } from "@app/hooks/useZipConfirmation";
 import ZipWarningModal from "@app/components/shared/ZipWarningModal";
 import EncryptedPdfUnlockModal from "@app/components/shared/EncryptedPdfUnlockModal";
@@ -65,12 +67,16 @@ import { useTranslation } from "react-i18next";
 import { alert } from "@app/components/toast";
 import { buildRemovePasswordFormData } from "@app/hooks/tools/removePassword/buildRemovePasswordFormData";
 import type { RemovePasswordParameters } from "@app/hooks/tools/removePassword/useRemovePasswordParameters";
+import { useResolutionContinuation } from "@app/hooks/tools/shared/useResolutionContinuation";
 import apiClient from "@app/services/apiClient";
+import { reportFilesRemoved } from "@app/services/failureReporting";
+import {
+  addPendingUnlocks,
+  setPendingUnlocks,
+} from "@app/services/pendingUnlocks";
 import { processResponse } from "@app/utils/toolResponseProcessor";
 import { ToolOperation } from "@app/types/file";
 import { handlePasswordError } from "@app/utils/toolErrorHandler";
-
-const DEBUG = process.env.NODE_ENV === "development";
 
 // Inner provider component that has access to IndexedDB
 function FileContextInner({
@@ -112,6 +118,7 @@ function FileContextInner({
   }
   const lifecycleManager = lifecycleManagerRef.current;
   const { t } = useTranslation();
+  const continueResolutions = useResolutionContinuation();
 
   const [encryptedQueue, setEncryptedQueue] = useState<FileId[]>([]);
   const [activeEncryptedFileId, setActiveEncryptedFileId] =
@@ -120,6 +127,7 @@ function FileContextInner({
   const [unlockError, setUnlockError] = useState<string | null>(null);
   const [isUnlocking, setIsUnlocking] = useState(false);
   const dismissedEncryptedFilesRef = useRef<Set<FileId>>(new Set());
+  const deferredEncryptedFilesRef = useRef<Set<FileId>>(new Set());
   const observedFileIdsRef = useRef<Set<FileId>>(new Set());
 
   const enqueueEncryptedFiles = useCallback(
@@ -130,6 +138,7 @@ function FileContextInner({
         const next = [...prevQueue];
         for (const id of fileIds) {
           if (dismissedEncryptedFilesRef.current.has(id)) continue;
+          if (deferredEncryptedFilesRef.current.has(id)) continue;
           if (id === activeEncryptedFileId) continue;
           if (existing.has(id)) continue;
           existing.add(id);
@@ -181,10 +190,45 @@ function FileContextInner({
     }
   }, [activeEncryptedFileId, state.files.ids]);
 
+  // Published so an upload policy holds off until the user has answered the prompt: running now
+  // would fail on a document they are about to decrypt, and leave a row about a version that no
+  // longer exists once they have.
+  useEffect(() => {
+    const deferred = deferredEncryptedFilesRef.current;
+    for (const id of deferred) {
+      if (!state.files.byId[id]?.processedFile?.isEncrypted)
+        deferred.delete(id);
+    }
+    setPendingUnlocks([
+      ...(activeEncryptedFileId ? [activeEncryptedFileId] : []),
+      ...encryptedQueue,
+      ...deferred,
+    ]);
+  }, [activeEncryptedFileId, encryptedQueue, state.files.byId]);
+
+  // The store outlives this provider, and a hold nobody can answer would stall the file's policy
+  // for the rest of the session. Its own effect, so a change of prompt does not clear and re-set.
+  useEffect(() => () => setPendingUnlocks([]), []);
+
   useEffect(() => {
     setUnlockPassword("");
     setUnlockError(null);
   }, [activeEncryptedFileId]);
+
+  // Storage proved a file's bytes unreadable (WebKit losing a blob's backing
+  // store). Drop it: the viewer would otherwise spin on a document that can
+  // never load. The record stays, so a reload re-tests it.
+  useEffect(
+    () =>
+      onRecordUnreadable((fileId) => {
+        if (!stateRef.current.files.byId[fileId]) return;
+        console.error(
+          `[FileContext] dropping ${fileId} from the workbench: its stored bytes are unreadable`,
+        );
+        lifecycleManager.removeFiles([fileId], stateRef);
+      }),
+    [lifecycleManager],
+  );
 
   const handleUnlockSkip = useCallback(() => {
     if (activeEncryptedFileId) {
@@ -200,6 +244,7 @@ function FileContextInner({
     }
 
     dismissedEncryptedFilesRef.current.delete(fileId);
+    deferredEncryptedFilesRef.current.delete(fileId);
 
     setEncryptedQueue((prevQueue) => prevQueue.filter((id) => id !== fileId));
 
@@ -250,6 +295,17 @@ function FileContextInner({
         skipWorkspaceDispatch?: boolean;
         skipUploadTracking?: boolean;
         derivedFromTool?: boolean;
+        /** Folder every added file is born into (see AddFileOptions). */
+        folderId?: string;
+        /** Classification computed outside the policy system (see AddFileOptions). */
+        presetClassification?: {
+          labels: string[];
+          confidence: StirlingFileStub["classificationConfidence"];
+        };
+        /** Bytes and stub only, no thumbnail parse (see AddFileOptions). */
+        skipMetadataHydration?: boolean;
+        /** An editor owns the prompt; encrypted library bytes still hold policies. */
+        skipAutomaticPasswordPrompt?: boolean;
       },
     ): Promise<StirlingFile[]> => {
       const stirlingFiles = await addFiles(
@@ -264,7 +320,22 @@ function FileContextInner({
         },
         stateRef,
         filesRef,
-        dispatch,
+        (action) => {
+          if (
+            options?.skipAutomaticPasswordPrompt &&
+            action.type === "ADD_FILES"
+          ) {
+            const encrypted = action.payload.stirlingFileStubs.filter(
+              (stub) => stub.processedFile?.isEncrypted,
+            );
+            for (const stub of encrypted) {
+              deferredEncryptedFilesRef.current.add(stub.id);
+            }
+            // Policies can observe the new records before this provider's effects run.
+            addPendingUnlocks(encrypted.map((stub) => stub.id));
+          }
+          dispatch(action);
+        },
         lifecycleManager,
         enablePersistence,
       );
@@ -346,6 +417,12 @@ function FileContextInner({
 
       return result;
     },
+    [],
+  );
+
+  const reconcileOpenFilesAction = useCallback(
+    (locations: string[]) =>
+      reconcileOpenFilesAt(locations, stateRef, filesRef, lifecycleManager),
     [],
   );
 
@@ -431,8 +508,17 @@ function FileContextInner({
       );
 
       await consumeFilesWrapper([fileId], [stirlingUnlockedFile], [childStub]);
+
+      // The modal is the remove-password tool by another door, so it resolves the same.
+      continueResolutions({
+        operation: "removePassword",
+        inputFileIds: [fileId],
+        outputs: [
+          { file: unlockedFile, fileId: childStub.id, sourceFileId: fileId },
+        ],
+      });
     },
-    [consumeFilesWrapper, t],
+    [consumeFilesWrapper, continueResolutions, t],
   );
 
   const handleUnlockSubmit = useCallback(async () => {
@@ -590,9 +676,16 @@ function FileContextInner({
       addFiles: addRawFiles,
       addFilesWithOptions,
       addStirlingFileStubs: addStirlingFileStubsAction,
+      reconcileOpenFiles: reconcileOpenFilesAction,
       removeFiles: async (fileIds: FileId[], deleteFromStorage?: boolean) => {
         // Remove from memory and cleanup resources
         lifecycleManager.removeFiles(fileIds, stateRef);
+
+        // Only a real delete closes a failure: most callers pass false and mean "take it out of the
+        // workbench", leaving the document, and its failures, very much alive.
+        if (deleteFromStorage !== false) {
+          void reportFilesRemoved(fileIds);
+        }
 
         // Remove from IndexedDB if enabled
         if (indexedDB && enablePersistence && deleteFromStorage !== false) {
@@ -650,6 +743,7 @@ function FileContextInner({
       baseActions,
       addRawFiles,
       addStirlingFileStubsAction,
+      reconcileOpenFilesAction,
       lifecycleManager,
       setHasUnsavedChanges,
       consumeFilesWrapper,
@@ -707,12 +801,15 @@ function FileContextInner({
   //   loadFromPersistence();
   // }, [enablePersistence, indexedDB]);
 
-  // Cleanup on unmount
+  const mountedRef = useRef(false);
   useEffect(() => {
+    mountedRef.current = true;
     return () => {
-      if (DEBUG)
-        console.log("FileContext unmounting - cleaning up all resources");
-      lifecycleManager.destroy();
+      mountedRef.current = false;
+      // StrictMode can replay effects after files hydrate; only an actual unmount owns cleanup.
+      queueMicrotask(() => {
+        if (!mountedRef.current) lifecycleManager.destroy();
+      });
     };
   }, [lifecycleManager]);
 

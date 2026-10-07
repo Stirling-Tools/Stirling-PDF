@@ -36,7 +36,7 @@ i18n
     debug: process.env.NODE_ENV === "development",
 
     // Ensure synchronous loading to prevent timing issues
-    initImmediate: false,
+    initAsync: false,
 
     interpolation: {
       escapeValue: false, // React already escapes values
@@ -58,8 +58,8 @@ i18n
       caches: [], // Don't cache auto-detected language - only cache when user manually selects
       convertDetectedLanguage: (lng: string) => {
         // Map bare en to en-US
-        if (lng === "en") return "en-US";
-        return lng;
+        const normalized = normalizeLanguageCode(lng);
+        return normalized === "en" ? "en-US" : normalized;
       },
     },
 
@@ -102,7 +102,7 @@ function getCurrentSourcePriority(): LanguageSource {
   const sourceStr = localStorage.getItem(I18N_STORAGE_KEYS.LANGUAGE_SOURCE);
   const sourceNum = sourceStr ? parseInt(sourceStr, 10) : null;
   return sourceNum !== null && !isNaN(sourceNum)
-    ? (sourceNum as LanguageSource)
+    ? sourceNum
     : LanguageSource.Fallback;
 }
 
@@ -119,7 +119,12 @@ function setLanguageWithPriority(
 
   // Only apply if new source has higher priority
   if (newPriority >= currentPriority) {
-    i18n.changeLanguage(language);
+    if (
+      normalizeLanguageCode(i18n.language || "") !==
+      normalizeLanguageCode(language)
+    ) {
+      i18n.changeLanguage(language);
+    }
     localStorage.setItem(I18N_STORAGE_KEYS.LANGUAGE, language);
     localStorage.setItem(I18N_STORAGE_KEYS.LANGUAGE_SOURCE, String(source));
     return true;
@@ -205,5 +210,9 @@ function applyDefaultLocale(defaultLocale: string) {
   // Apply server default (respects user choice if already set)
   setLanguageWithPriority(defaultLocale, LanguageSource.ServerDefault);
 }
+
+// Non-React modules off the hydration path (diskFileSync's toasts) read the
+// translator from globalThis; the ESM build does not register itself.
+(globalThis as Record<string, unknown>).i18next = i18n;
 
 export default i18n;

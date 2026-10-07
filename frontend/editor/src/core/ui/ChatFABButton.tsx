@@ -1,4 +1,6 @@
 import type { ButtonHTMLAttributes } from "react";
+import { Icon } from "@app/ui/Icon";
+import { useTranslation } from "react-i18next";
 import { BrandMark } from "@app/components/shared/BrandMark";
 import "@app/ui/ChatFABButton.css";
 
@@ -15,6 +17,7 @@ export function ChatFABButton({
   className,
   ...rest
 }: ChatFABButtonProps) {
+  const { t } = useTranslation();
   const classes = [
     "chat-fab-btn",
     loading ? "chat-fab-btn--loading" : "",
@@ -25,7 +28,12 @@ export function ChatFABButton({
     .join(" ");
 
   return (
-    <button type="button" className={classes} {...rest}>
+    <button
+      type="button"
+      className={classes}
+      aria-label={t("portal.assistant.open", "Open assistant")}
+      {...rest}
+    >
       {/* Decorative: the button itself carries the accessible name. */}
       <span aria-hidden="true" style={{ display: "inline-flex" }}>
         <BrandMark height="1.875rem" />
@@ -35,21 +43,12 @@ export function ChatFABButton({
       )}
       {showTick && (
         <span className="chat-fab-btn__tick" aria-hidden="true">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width={10}
-            height={10}
-            viewBox="0 0 10 10"
-            fill="none"
-          >
-            <path
-              d="M2 5l2 2 4-4"
-              stroke="#fff"
-              strokeWidth={1.6}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <Icon
+            name="check"
+            size={10}
+            strokeWidth={2.5}
+            style={{ color: "white" }}
+          />
         </span>
       )}
     </button>

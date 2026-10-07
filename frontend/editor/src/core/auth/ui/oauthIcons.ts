@@ -1,35 +1,25 @@
 /**
- * Bundled OAuth provider icons: the single source for provider brand SVGs.
- *
- * Importing them as modules (rather than referencing /Login/*.svg under a
- * build-time BASE_PATH) lets every consumer (the shared OAuthButtons, the
- * editor's saas/desktop login buttons, and the config provider list) share one
- * copy that works in both the editor and the portal bundles.
+ * Sign-in provider marks, keyed by the icon filename a provider config names
+ * (e.g. "google.svg"). The marks themselves are brand icons in the registry,
+ * so every consumer renders them through <Icon> and they work in both the
+ * editor and the portal bundles.
  */
-import googleIcon from "@app/assets/login/google.svg";
-import githubIcon from "@app/assets/login/github.svg";
-import appleIcon from "@app/assets/login/apple.svg";
-import microsoftIcon from "@app/assets/login/microsoft.svg";
-import keycloakIcon from "@app/assets/login/keycloak.svg";
-import cloudronIcon from "@app/assets/login/cloudron.svg";
-import authentikIcon from "@app/assets/login/authentik.svg";
-import oidcIcon from "@app/assets/login/oidc.svg";
+import type { IconName } from "@app/ui/Icon";
 
-/** Generic fallback icon (filename) for unknown providers. */
+/** Filename used for a provider with no bundled artwork. */
 export const GENERIC_PROVIDER_ICON = "oidc.svg";
 
-const ICON_BY_FILE: Record<string, string> = {
-  "google.svg": googleIcon,
-  "github.svg": githubIcon,
-  "apple.svg": appleIcon,
-  "microsoft.svg": microsoftIcon,
-  "keycloak.svg": keycloakIcon,
-  "cloudron.svg": cloudronIcon,
-  "authentik.svg": authentikIcon,
-  "oidc.svg": oidcIcon,
+const ICON_BY_FILE: Record<string, IconName> = {
+  "google.svg": "google",
+  "github.svg": "github",
+  "apple.svg": "apple",
+  "microsoft.svg": "microsoft",
+  "keycloak.svg": "keycloak",
+  "cloudron.svg": "cloudron",
+  "authentik.svg": "authentik",
 };
 
-/** Resolve a provider icon filename (e.g. "google.svg") to its bundled URL. */
-export function oauthIconUrl(file: string): string {
-  return ICON_BY_FILE[file] ?? ICON_BY_FILE[GENERIC_PROVIDER_ICON];
+/** The registry mark for a provider icon filename, or null when none is bundled. */
+export function oauthIconName(file: string): IconName | null {
+  return Object.hasOwn(ICON_BY_FILE, file) ? ICON_BY_FILE[file] : null;
 }

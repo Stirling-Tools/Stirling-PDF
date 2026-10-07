@@ -5,6 +5,7 @@ import { useAuth } from "@app/auth/UseSession";
 import { useTranslation } from "@app/hooks/useTranslation";
 import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
 import { getBaseUrl, withBasePath } from "@app/constants/app";
+import { rememberPendingDestination } from "@app/services/pendingDestination";
 import AuthLayout from "@app/routes/authShared/AuthLayout";
 import "@app/auth/ui/auth.css";
 import "@app/routes/authShared/saas-auth.css";
@@ -36,11 +37,27 @@ export default function Signup() {
   const [agree, setAgree] = useState(true);
   const [fieldErrors, setFieldErrors] = useState<SignupFieldErrors>({});
 
+  // Stashed rather than threaded onward: Supabase builds the confirmation link and
+  // it cannot carry a `next`.
+  useEffect(() => {
+    try {
+      rememberPendingDestination(
+        new URL(window.location.href).searchParams.get("next"),
+      );
+    } catch (_) {
+      // Unparseable URL; the visitor just lands on the default.
+    }
+  }, []);
+
   // Check if we were redirected here with an auto-auth error
   useEffect(() => {
     const state = location.state as { autoAuthError?: string } | null;
     if (state?.autoAuthError) {
-      setError(`Unable to access tool: ${state.autoAuthError}`);
+      setError(
+        t("signup.unableToAccessTool", "Unable to access tool: {{error}}", {
+          error: state.autoAuthError,
+        }),
+      );
     }
   }, [location.state]);
 
@@ -86,7 +103,12 @@ export default function Signup() {
     } catch (err) {
       console.error("[Signup] Anonymous sign-in unexpected error:", err);
       setError(
-        `Unexpected error: ${err instanceof Error ? err.message : "Unknown error"}`,
+        t("signup.unexpectedError", "Unexpected error: {{message}}", {
+          message:
+            err instanceof Error
+              ? err.message
+              : t("signup.unknownError", "Unknown error"),
+        }),
       );
     } finally {
       setIsSigningUp(false);
@@ -95,17 +117,16 @@ export default function Signup() {
 
   const baseUrl = getBaseUrl();
 
-  // Set document meta
   useDocumentMeta({
     title: `${t("signup.title", "Create an account")} - Stirling PDF`,
     description: t(
       "app.description",
-      "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "A free, private PDF editor you can run on any infrastructure.",
     ),
     ogTitle: `${t("signup.title", "Create an account")} - Stirling PDF`,
     ogDescription: t(
       "app.description",
-      "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "A free, private PDF editor you can run on any infrastructure.",
     ),
     ogImage: `${baseUrl}/og_images/saas/app.png`,
     ogUrl: `${window.location.origin}${window.location.pathname}`,
@@ -155,7 +176,9 @@ export default function Signup() {
       setError(
         err instanceof Error
           ? err.message
-          : t("signup.unexpectedError", { message: "Unknown error" }),
+          : t("signup.unexpectedError", "Unexpected error: {{message}}", {
+              message: t("signup.unknownError", "Unknown error"),
+            }),
       );
     } finally {
       setIsSigningUp(false);
@@ -173,7 +196,9 @@ export default function Signup() {
       setError(
         err instanceof Error
           ? err.message
-          : t("signup.unexpectedError", { message: "Unknown error" }),
+          : t("signup.unexpectedError", "Unexpected error: {{message}}", {
+              message: t("signup.unknownError", "Unknown error"),
+            }),
       );
     } finally {
       setIsSigningUp(false);
@@ -243,7 +268,7 @@ export default function Signup() {
             border: "none",
             cursor: "pointer",
             fontSize: "0.875rem",
-            color: "var(--c-primary)",
+            color: "var(--c-accent-text)",
           }}
         >
           {t("signup.alreadyHaveAccount", "I already have an account")}

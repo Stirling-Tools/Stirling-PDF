@@ -1,4 +1,5 @@
 import type { HTMLAttributes, ReactNode } from "react";
+import "@app/ui/Surface.css";
 import "@app/ui/Card.css";
 
 /** Subset of the shared accent dial that has a styled strip (see Card.css). */
@@ -18,7 +19,7 @@ export interface CardProps extends HTMLAttributes<HTMLDivElement> {
    * (e.g. a list with row dividers).
    */
   padding?: "none" | "tight" | "default" | "loose";
-  /** Use the lifted surface treatment (taller shadow, hover affordance). */
+  /** Adds the clickable affordance (pointer cursor, hover lift). */
   interactive?: boolean;
   children?: ReactNode;
 }
@@ -40,6 +41,7 @@ export function Card({
     <div
       {...rest}
       className={[
+        "sui-surface",
         "sui-card",
         `sui-card--pad-${padding}`,
         accent ? `sui-card--accent-${accent}` : "",

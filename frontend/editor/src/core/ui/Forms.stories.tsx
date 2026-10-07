@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Icon } from "@app/ui/Icon";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { FormField } from "@app/ui/FormField";
 import { Input } from "@app/ui/Input";
@@ -9,23 +10,8 @@ import { Slider } from "@app/ui/Slider";
 import { Stack } from "@app/ui/Stack";
 import { Inline } from "@app/ui/Inline";
 
-// Inline icon to avoid a cross-layer import; shared/ must not depend on portal/.
 function SearchIcon({ size = 14 }: { size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.75}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="11" cy="11" r="7" />
-      <line x1="21" y1="21" x2="16.65" y2="16.65" />
-    </svg>
-  );
+  return <Icon name="search" size={size} />;
 }
 
 const meta: Meta = {
@@ -182,6 +168,7 @@ export const Slider_Confidence: Story = {
             step={0.01}
             onChange={setV}
             formatValue={(x) => x.toFixed(2)}
+            aria-label="Minimum confidence"
           />
         </FormField>
       );
@@ -203,6 +190,7 @@ export const Slider_Retention: Story = {
             step={1}
             onChange={setDays}
             formatValue={(d) => `${d} days`}
+            aria-label="Retain artifacts for"
           />
         </FormField>
       );
@@ -262,6 +250,7 @@ export const FullForm: Story = {
               step={0.01}
               onChange={setConf}
               formatValue={(v) => v.toFixed(2)}
+              aria-label="Confidence gate"
             />
           </FormField>
           <FormField label="Alerts">

@@ -1,10 +1,17 @@
-import type { WorkbenchType } from "@app/types/workbench";
+import { getDefaultWorkbench, type WorkbenchType } from "@app/types/workbench";
 
 export type StartupWorkbench = "viewer" | "fileEditor";
 
 export interface StartupNavigationAction {
   workbench: StartupWorkbench;
   activeFileIndex?: number;
+}
+
+/** Several files means the file editor; one or none the viewer. */
+export function getDefaultWorkbenchForFileCount(
+  fileCount: number,
+): WorkbenchType {
+  return fileCount > 1 ? "fileEditor" : getDefaultWorkbench();
 }
 
 export function getStartupNavigationAction(
@@ -21,7 +28,7 @@ export function getStartupNavigationAction(
 
   // The user is browsing their file library - don't auto-switch them out of
   // the file manager just because a new upload landed.
-  if (currentWorkbench === "myFiles") {
+  if (currentWorkbench === "myFiles" || currentWorkbench === "signing") {
     return null;
   }
 

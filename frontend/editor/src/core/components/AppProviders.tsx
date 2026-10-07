@@ -26,11 +26,8 @@ import { SigningOverlayProvider } from "@app/contexts/SigningOverlayContext";
 import { AnnotationProvider } from "@app/contexts/AnnotationContext";
 import { TourOrchestrationProvider } from "@app/contexts/TourOrchestrationContext";
 import { AdminTourOrchestrationProvider } from "@app/contexts/AdminTourOrchestrationContext";
-import { PageEditorProvider } from "@app/contexts/PageEditorContext";
 import { BannerProvider } from "@app/contexts/BannerContext";
 import ErrorBoundary from "@app/components/shared/ErrorBoundary";
-import { usePosthogTracking } from "@app/hooks/usePosthogTracking";
-import { useScarfTracking } from "@app/hooks/useScarfTracking";
 import { useAppInitialization } from "@app/hooks/useAppInitialization";
 import { useLogoAssets } from "@app/hooks/useLogoAssets";
 import { useManifestUrl } from "@app/hooks/useManifestUrl";
@@ -38,23 +35,16 @@ import AppConfigLoader from "@app/components/shared/AppConfigLoader";
 import { UpdateStartupPopup } from "@app/components/shared/UpdateStartupPopup";
 import { RedactionProvider } from "@app/contexts/RedactionContext";
 import { FormFillProvider } from "@app/tools/formFill/FormFillContext";
-import { FolderFileContextProvider } from "@app/contexts/FolderFileContext";
 import { FolderProvider } from "@app/contexts/FolderContext";
-
-// Component to initialize scarf tracking (must be inside AppConfigProvider)
-function ScarfTrackingInitializer() {
-  useScarfTracking();
-  return null;
-}
-
-function PosthogTrackingInitializer() {
-  usePosthogTracking();
-  return null;
-}
+import { WorkbenchSessionPersistence } from "@app/components/session/WorkbenchSessionPersistence";
+import { retireLegacyFolderWorker } from "@app/services/retireLegacyFolderWorker";
 
 // Component to run app-level initialization (must be inside AppProviders for context access)
 function AppInitializer() {
   useAppInitialization();
+  useEffect(() => {
+    void retireLegacyFolderWorker();
+  }, []);
   return null;
 }
 
@@ -134,8 +124,6 @@ export function AppProviders({
                 retryOptions={appConfigRetryOptions}
                 {...appConfigProviderProps}
               >
-                <PosthogTrackingInitializer />
-                <ScarfTrackingInitializer />
                 <AppConfigLoader />
                 <ServerDefaultsSync />
                 {/* Auto-popup on startup when a newer Stirling-PDF release is available.
@@ -155,27 +143,24 @@ export function AppProviders({
                             <HotkeyProvider>
                               <SidebarProvider>
                                 <ViewerProvider>
-                                  <PageEditorProvider>
-                                    <SignatureProvider>
-                                      <SigningOverlayProvider>
-                                        <RedactionProvider>
-                                          <FormFillProvider>
-                                            <AnnotationProvider>
-                                              <WorkbenchBarProvider>
-                                                <TourOrchestrationProvider>
-                                                  <AdminTourOrchestrationProvider>
-                                                    <FolderFileContextProvider>
-                                                      {children}
-                                                    </FolderFileContextProvider>
-                                                  </AdminTourOrchestrationProvider>
-                                                </TourOrchestrationProvider>
-                                              </WorkbenchBarProvider>
-                                            </AnnotationProvider>
-                                          </FormFillProvider>
-                                        </RedactionProvider>
-                                      </SigningOverlayProvider>
-                                    </SignatureProvider>
-                                  </PageEditorProvider>
+                                  <SignatureProvider>
+                                    <SigningOverlayProvider>
+                                      <RedactionProvider>
+                                        <FormFillProvider>
+                                          <AnnotationProvider>
+                                            <WorkbenchBarProvider>
+                                              <TourOrchestrationProvider>
+                                                <AdminTourOrchestrationProvider>
+                                                  <WorkbenchSessionPersistence />
+                                                  {children}
+                                                </AdminTourOrchestrationProvider>
+                                              </TourOrchestrationProvider>
+                                            </WorkbenchBarProvider>
+                                          </AnnotationProvider>
+                                        </FormFillProvider>
+                                      </RedactionProvider>
+                                    </SigningOverlayProvider>
+                                  </SignatureProvider>
                                 </ViewerProvider>
                               </SidebarProvider>
                             </HotkeyProvider>

@@ -1,18 +1,16 @@
 import { useMemo } from "react";
 import { Stack, Text, Group, Divider, useMantineTheme } from "@mantine/core";
 import { Button } from "@app/ui/Button";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { useMultipleEndpointsEnabled } from "@app/hooks/useEndpointConfig";
 import {
   isImageFormat,
   isWebFormat,
   getAvailableToExtensions as defaultGetAvailableToExtensions,
+  usesOfficeEngine,
 } from "@app/utils/convertUtils";
 import { getConversionEndpoints } from "@app/data/toolsTaxonomy";
-import { useFileSelection } from "@app/contexts/FileContext";
-import { useFileSelector, useFileSelectors } from "@app/contexts/FileContext";
-import { detectFileExtension } from "@app/utils/fileUtils";
 import { usePreferences } from "@app/contexts/PreferencesContext";
 import { useConversionCloudStatus } from "@app/hooks/useConversionCloudStatus";
 import GroupedFormatDropdown from "@app/components/tools/convert/GroupedFormatDropdown";
@@ -23,12 +21,14 @@ import ConvertFromEmailSettings from "@app/components/tools/convert/ConvertFromE
 import ConvertFromCbzSettings from "@app/components/tools/convert/ConvertFromCbzSettings";
 import ConvertToCbzSettings from "@app/components/tools/convert/ConvertToCbzSettings";
 import ConvertToPdfaSettings from "@app/components/tools/convert/ConvertToPdfaSettings";
+import ConvertToPdfUaSettings from "@app/components/tools/convert/ConvertToPdfUaSettings";
 import ConvertToPdfxSettings from "@app/components/tools/convert/ConvertToPdfxSettings";
 import ConvertFromCbrSettings from "@app/components/tools/convert/ConvertFromCbrSettings";
 import ConvertToCbrSettings from "@app/components/tools/convert/ConvertToCbrSettings";
 import ConvertFromEbookSettings from "@app/components/tools/convert/ConvertFromEbookSettings";
 import ConvertFromSvgSettings from "@app/components/tools/convert/ConvertFromSvgSettings";
 import ConvertToEpubSettings from "@app/components/tools/convert/ConvertToEpubSettings";
+import ConvertOfficeEngineSettings from "@app/components/tools/convert/ConvertOfficeEngineSettings";
 import { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
 import {
   FROM_FORMAT_OPTIONS,
@@ -49,6 +49,12 @@ interface ConvertSettingsProps {
     fromExtension: string,
   ) => Array<{ value: string; label: string; group: string }>;
   selectedFiles?: StirlingFile[];
+  /**
+   * Called with the newly chosen source format. The editor uses this to select the loaded files
+   * that match; surfaces without loaded files (automation, pipeline builder) simply omit it. Keeping
+   * the file-selection side effect out of here is what lets this component render outside FileContext.
+   */
+  onSourceFormatSelected?: (fromExtension: string) => void;
   disabled?: boolean;
 }
 
@@ -57,13 +63,11 @@ const ConvertSettings = ({
   onParameterChange,
   getAvailableToExtensions = defaultGetAvailableToExtensions,
   selectedFiles = [],
+  onSourceFormatSelected,
   disabled = false,
 }: ConvertSettingsProps) => {
   const { t } = useTranslation();
   const theme = useMantineTheme();
-  const { setSelectedFiles } = useFileSelection();
-  const selectors = useFileSelectors();
-  const activeFiles = useFileSelector((s) => s.files.ids);
   const { preferences } = usePreferences();
 
   const allEndpoints = useMemo(() => {
@@ -234,39 +238,12 @@ const ConvertSettings = ({
     onParameterChange("toExtension", autoTarget);
   };
 
-  const filterFilesByExtension = (extension: string) => {
-    const files = activeFiles
-      .map((fileId) => selectors.getFile(fileId))
-      .filter(Boolean) as StirlingFile[];
-    return files.filter((file) => {
-      const fileExtension = detectFileExtension(file.name);
-
-      if (extension === "any") {
-        return true;
-      } else if (extension === "image") {
-        return isImageFormat(fileExtension);
-      } else {
-        return fileExtension === extension;
-      }
-    });
-  };
-
-  const updateFileSelection = (files: StirlingFile[]) => {
-    const fileIds = files.map((file) => file.fileId);
-    setSelectedFiles(fileIds);
-  };
-
   const handleFromExtensionChange = (value: string) => {
     onParameterChange("fromExtension", value);
     setAutoTargetExtension(value);
     resetParametersToDefaults();
-
-    if (activeFiles.length > 0) {
-      const matchingFiles = filterFilesByExtension(value);
-      updateFileSelection(matchingFiles);
-    } else {
-      updateFileSelection([]);
-    }
+    // Editor-only: let the host select the loaded files matching this source format.
+    onSourceFormatSelected?.(value);
   };
 
   const handleToExtensionChange = (value: string) => {
@@ -351,11 +328,10 @@ const ConvertSettings = ({
                   "Select a source format first",
                 )}
               </Text>
-              <KeyboardArrowDownIcon
-                style={{
-                  fontSize: "1rem",
-                  color: "var(--select-placeholder-text)",
-                }}
+              <Icon
+                name="chevron-down"
+                size={"1rem"}
+                style={{ color: "var(--select-placeholder-text)" }}
               />
             </Group>
           </Button>
@@ -482,6 +458,20 @@ const ConvertSettings = ({
           </>
         )}
 
+      {/* PDF to PDF/UA options */}
+      {parameters.fromExtension === "pdf" &&
+        parameters.toExtension === "pdfua" && (
+          <>
+            <Divider />
+            <ConvertToPdfUaSettings
+              parameters={parameters}
+              onParameterChange={onParameterChange}
+              selectedFiles={selectedFiles}
+              disabled={disabled}
+            />
+          </>
+        )}
+
       {/* PDF to PDF/X options */}
       {parameters.fromExtension === "pdf" &&
         parameters.toExtension === "pdfx" && (
@@ -534,6 +524,18 @@ const ConvertSettings = ({
             />
           </>
         )}
+
+      {/* Stirling Office Convert or LibreOffice */}
+      {usesOfficeEngine(parameters.fromExtension, parameters.toExtension) && (
+        <>
+          <Divider />
+          <ConvertOfficeEngineSettings
+            parameters={parameters}
+            onParameterChange={onParameterChange}
+            disabled={disabled}
+          />
+        </>
+      )}
 
       {/* PDF to EPUB/AZW3 options */}
       {parameters.fromExtension === "pdf" &&

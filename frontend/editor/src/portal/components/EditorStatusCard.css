@@ -3,10 +3,6 @@
 /* ──────────────────────────────────────────────────────────────────────── */
 
 .portal-editor-hero {
-  border-radius: var(--radius-xl);
-  border: 1px solid var(--c-border);
-  background: var(--c-surface);
-  box-shadow: var(--shadow-sm);
   overflow: hidden;
 }
 
