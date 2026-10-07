@@ -1,7 +1,7 @@
 name: PR size limit
 
 # Fails PRs from outside the team that change more than MAX_LINES lines. The rules live
-# in .github/scripts/pr-size.ts; exempt logins in .github/config/pr-size-allowlist.json.
+# in .github/scripts/pr-size.ts.
 # Comments and labels too-large only when STALE_PR_BOT_LIVE is "true": the comment
 # promises the close that stale-prs.yml only makes then.
 # pull_request_target so a first-time contributor's PR is checked without approval; it
@@ -34,13 +34,11 @@ jobs:
         with:
           egress-policy: audit
 
-      - name: Check out the scripts and allowlist
+      - name: Check out the scripts
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
-          sparse-checkout: |
-            .github/scripts
-            .github/config
+          sparse-checkout: .github/scripts
 
       - name: Check the PR size
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -49,5 +47,5 @@ jobs:
         with:
           github-token: ${{ github.token }}
           script: |
-            const { checkPullRequestSize, readAllowlist } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/pr-size.ts`);
-            await checkPullRequestSize({ github, context, core, allowlist: await readAllowlist(), live: process.env.LIVE === "true" });
+            const { checkPullRequestSize } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/pr-size.ts`);
+            await checkPullRequestSize({ github, context, core, live: process.env.LIVE === "true" });

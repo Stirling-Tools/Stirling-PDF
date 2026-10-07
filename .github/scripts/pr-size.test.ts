@@ -11,7 +11,6 @@ import {
   liftedComment,
   MAX_LINES,
   oversizedComment,
-  readAllowlist,
   type SizedPullRequest,
 } from "./pr-size.ts";
 
@@ -82,12 +81,12 @@ function fakeGitHub(files: ChangedFile[], comments: Comment[]) {
 async function check(
   pr: SizedPullRequest,
   files: ChangedFile[] = [],
-  { allowlist = [] as string[], comments = [] as Comment[], live = true } = {},
+  { comments = [] as Comment[], live = true } = {},
 ) {
   const { github, calls, pages } = fakeGitHub(files, comments);
   const failures: string[] = [];
   const core = { info: () => {}, setFailed: (message: string) => failures.push(message) };
-  await checkPullRequestSize({ github, context: { repo, payload: { pull_request: pr } }, core, allowlist, live });
+  await checkPullRequestSize({ github, context: { repo, payload: { pull_request: pr } }, core, live });
   return { failures, calls, pages, comments };
 }
 
@@ -119,15 +118,14 @@ describe("exemptions", () => {
     assert.notEqual(authorExemption(pullRequest({ user: { login: "dependabot[bot]", type: "Bot" } })), null);
   });
 
-  it("lifts the limit for the allowlist and approved PRs", () => {
-    assert.notEqual(approval(pullRequest({ user: { login: "Contributor", type: "User" } }), ["contributor"]), null);
-    assert.notEqual(approval(pullRequest({ labels: [{ name: "large-pr-approved" }] }), []), null);
+  it("lifts the limit for approved PRs", () => {
+    assert.notEqual(approval(pullRequest({ labels: [{ name: "large-pr-approved" }] })), null);
   });
 
   it("holds everyone else to the limit", () => {
     for (const association of ["CONTRIBUTOR", "FIRST_TIME_CONTRIBUTOR", "FIRST_TIMER", "NONE"]) {
       const pr = pullRequest({ author_association: association, labels: [{ name: "bug" }] });
-      assert.deepEqual([authorExemption(pr), approval(pr, ["someone-else"])], [null, null]);
+      assert.deepEqual([authorExemption(pr), approval(pr)], [null, null]);
     }
   });
 });
@@ -211,11 +209,5 @@ describe("check PR size", () => {
       const { failures, calls, pages } = await check(pr, codeFiles(50000));
       assert.deepEqual([failures, calls, pages], [[], [], []]);
     }
-  });
-});
-
-describe("allowlist", () => {
-  it("is a list of logins, lowercased for comparison", async () => {
-    for (const login of await readAllowlist()) assert.match(login, /^[a-z0-9-]+$/);
   });
 });
