@@ -11,6 +11,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.FileStorage;
 import stirling.software.proprietary.mcp.McpCallContext;
 import stirling.software.proprietary.mcp.McpTool;
+import stirling.software.proprietary.mcp.McpToolAnnotations;
 
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -40,6 +41,16 @@ public class StirlingDownloadTool implements McpTool {
     @Override
     public String name() {
         return "stirling_download";
+    }
+
+    @Override
+    public String title() {
+        return "Download a result file";
+    }
+
+    @Override
+    public McpToolAnnotations annotations() {
+        return McpToolAnnotations.READ_ONLY;
     }
 
     @Override
