@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
-import { useIsMobile } from "@app/hooks/useIsMobile";
+import { useIsPhone } from "@app/hooks/useIsMobile";
 import { useProcessingFolderCreation } from "@app/hooks/useProcessingFolderCreation";
 import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
 import MobileUploadModal from "@app/components/shared/MobileUploadModal";
@@ -42,18 +42,6 @@ function Source({ icon, label, disabled, onSelect }: SourceProps) {
   );
 }
 
-function SheetLines() {
-  return (
-    <span className={styles.lines} aria-hidden>
-      <span style={{ width: "55%" }} />
-      <span style={{ width: "90%" }} />
-      <span style={{ width: "80%" }} />
-      <span style={{ width: "86%" }} />
-      <span style={{ width: "40%" }} />
-    </span>
-  );
-}
-
 /**
  * The workbench's standing "add files" slot: a page stack in the thumbnail grid.
  * Clicking the page opens the file library; hovering or focusing it
@@ -65,7 +53,7 @@ const AddFileCard = ({ onFilesSelected }: AddFileCardProps) => {
   const terminology = useFileActionTerminology();
   const { openFilesModal } = useFilesModalContext();
   const { config } = useAppConfig();
-  const isMobile = useIsMobile();
+  const isPhone = useIsPhone();
   const folderCreation = useProcessingFolderCreation();
   const signedIn = usePoliciesEnabled();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -90,14 +78,10 @@ const AddFileCard = ({ onFilesSelected }: AddFileCardProps) => {
       <div className={styles.stack}>
         <span
           className={`${styles.sheet} ${styles.backSheet} ${styles.backLeft}`}
-        >
-          <SheetLines />
-        </span>
+        />
         <span
           className={`${styles.sheet} ${styles.backSheet} ${styles.backRight}`}
-        >
-          <SheetLines />
-        </span>
+        />
         {/* Pointer shortcut only: keyboard users reach the library through its
             source button, so the sheet itself is not a control. */}
         <div
@@ -105,7 +89,6 @@ const AddFileCard = ({ onFilesSelected }: AddFileCardProps) => {
           data-testid="add-file-card"
           onClick={() => openFilesModal()}
         >
-          <SheetLines />
           <span className={styles.logo} aria-hidden>
             <Logo
               variant="iconAndText"
@@ -113,8 +96,14 @@ const AddFileCard = ({ onFilesSelected }: AddFileCardProps) => {
               textHeight="1.05rem"
             />
           </span>
+          <div className={styles.prompt}>
+            <div className={styles.title}>{terminology.addFiles}</div>
+            <div className={styles.hint}>
+              {t("fileEditor.addCard.hint", "Click or drop to add more")}
+            </div>
+          </div>
           <span className={styles.plus} aria-hidden>
-            <Icon name="plus" size="1.75rem" />
+            <Icon name="plus" size="1.1rem" />
           </span>
           <div
             className={styles.sources}
@@ -131,7 +120,7 @@ const AddFileCard = ({ onFilesSelected }: AddFileCardProps) => {
               label={t("fileEditor.addCard.fromLibrary", "From library")}
               onSelect={() => openFilesModal()}
             />
-            {config?.enableMobileScanner && !isMobile && (
+            {config?.enableMobileScanner && !isPhone && (
               <Source
                 icon="qr-code"
                 label={t("fileEditor.addCard.fromMobile", "From mobile")}
@@ -161,10 +150,6 @@ const AddFileCard = ({ onFilesSelected }: AddFileCardProps) => {
             )}
           </div>
         </div>
-      </div>
-      <div className={styles.title}>{terminology.addFiles}</div>
-      <div className={styles.hint}>
-        {t("fileEditor.addCard.hint", "Click or drop to add more")}
       </div>
 
       <input

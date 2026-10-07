@@ -1,7 +1,6 @@
 /* The add card is a stack of pages in the thumbnail grid. The front sheet is a
-   letterhead (logo, text lines, a plus); on hover or focus the back sheets fan
-   out, the plus fades, and the lines give way to the sources in the same band,
-   so nothing jumps. */
+   letterhead: logo, a centred prompt, and a plus in the corner. On hover or
+   focus the back sheets fan out and the prompt gives way to the sources. */
 
 /* Same footprint as FileEditorThumbnail: a 260px card whose page starts 36px
    down (10px padding + the 26px toolchain bar), so the two line up. */
@@ -71,28 +70,6 @@
   transform: translateY(-4px);
 }
 
-.lines {
-  position: absolute;
-  top: 26px;
-  left: 22px;
-  right: 22px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  pointer-events: none;
-  transition: opacity 0.15s ease;
-}
-
-.lines > span {
-  height: 6px;
-  border-radius: 3px;
-  background: var(--c-border-subtle);
-}
-
-.frontSheet .lines {
-  top: 74px;
-}
-
 .logo {
   position: absolute;
   top: 22px;
@@ -100,21 +77,36 @@
   pointer-events: none;
 }
 
+/* Signposts only: a click anywhere on the sheet opens the library, and the
+   sources take over on hover, so neither is a control. */
+.prompt {
+  position: absolute;
+  top: 50%;
+  left: 16px;
+  right: 16px;
+  translate: 0 -50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  pointer-events: none;
+  transition:
+    opacity 0.15s ease,
+    transform 0.2s ease;
+}
+
 .plus {
   position: absolute;
-  left: 50%;
-  bottom: 30px;
-  translate: -50% 0;
+  right: 16px;
+  bottom: 16px;
   display: flex;
-  padding: 16px;
+  padding: 9px;
   border-radius: 50%;
   background: var(--c-surface-raised);
   border: 1px solid var(--c-border);
   color: var(--c-text-muted);
   pointer-events: none;
-  transition:
-    opacity 0.15s ease,
-    transform 0.2s ease;
+  transition: opacity 0.15s ease;
 }
 
 .sources {
@@ -132,15 +124,15 @@
     opacity 0.15s ease;
 }
 
-.stack:hover .frontSheet .lines,
-.stack:focus-within .frontSheet .lines {
+.stack:hover .prompt,
+.stack:focus-within .prompt {
   opacity: 0;
+  transform: scale(0.95);
 }
 
 .stack:hover .plus,
 .stack:focus-within .plus {
   opacity: 0;
-  transform: scale(0.85);
 }
 
 .stack:hover .sources,
@@ -186,22 +178,20 @@
 }
 
 .title {
-  margin-top: 10px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--c-text);
-  text-align: center;
 }
 
 .hint {
-  font-size: 11px;
+  margin-top: 2px;
+  font-size: 12px;
   color: var(--c-text-muted);
-  text-align: center;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .sheet,
-  .lines,
+  .prompt,
   .plus,
   .sources {
     transition: none;

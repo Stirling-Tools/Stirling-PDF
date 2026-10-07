@@ -25,7 +25,7 @@ vi.mock("@app/contexts/FilesModalContext", () => ({
 vi.mock("@app/contexts/AppConfigContext", () => ({
   useAppConfig: () => ({ config: mocks.config }),
 }));
-vi.mock("@app/hooks/useIsMobile", () => ({ useIsMobile: () => false }));
+vi.mock("@app/hooks/useIsMobile", () => ({ useIsPhone: () => false }));
 vi.mock("@app/hooks/useProcessingFolderCreation", () => ({
   useProcessingFolderCreation: () => ({
     open: mocks.canCreateFolders ? mocks.openFolderCreation : undefined,
