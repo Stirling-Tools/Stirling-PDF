@@ -181,6 +181,75 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     ).toBeVisible();
   });
 
+  for (const legacy of [false, true]) {
+    test(`cached protected previews stay hidden after reload${legacy ? " for legacy records" : ""}`, async ({
+      page,
+    }) => {
+      await uploadEncryptedFile(page, ENCRYPTED_PDF);
+      await expect(
+        page.getByRole("heading", { name: MODAL_TITLE, exact: true }),
+      ).toBeVisible();
+      await expect(page.locator('[data-page-index="0"]')).toHaveCount(0);
+      await expect(
+        page.getByRole("button", { name: "Skip for now" }),
+      ).toHaveCount(0);
+      await page.getByRole("button", { name: "Cancel opening" }).click();
+      await expect(
+        page.getByRole("heading", { name: MODAL_TITLE, exact: true }),
+      ).toBeHidden();
+      await expect
+        .poll(() =>
+          page.evaluate(async (legacyRecord) => {
+            const db = await new Promise<IDBDatabase>((resolve, reject) => {
+              const request = indexedDB.open("stirling-pdf-files");
+              request.onsuccess = () => resolve(request.result);
+              request.onerror = () => reject(request.error);
+            });
+            const found = await new Promise<boolean>((resolve, reject) => {
+              const transaction = db.transaction("files", "readwrite");
+              const store = transaction.objectStore("files");
+              let saved = false;
+              const request = store.getAll();
+              request.onsuccess = () => {
+                for (const record of request.result) {
+                  if (record.name !== "encrypted.pdf") continue;
+                  record.thumbnail =
+                    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==";
+                  record.thumbnailStoredAt = Date.now();
+                  if (legacyRecord) delete record.isEncrypted;
+                  else record.isEncrypted = true;
+                  store.put(record);
+                  saved = true;
+                }
+              };
+              transaction.oncomplete = () => resolve(saved);
+              transaction.onerror = () => reject(transaction.error);
+            });
+            db.close();
+            return found;
+          }, legacy),
+        )
+        .toBe(true);
+      await page.goto("/files");
+      await page.getByRole("button", { name: "Recents", exact: true }).click();
+      await page
+        .locator('.files-page-view-toggle-icon[title="Grid view"]')
+        .click();
+      const card = page.locator('.files-page-card[aria-label="encrypted.pdf"]');
+      await expect(card).toBeVisible();
+      await expect(card.locator("img")).toHaveCount(0);
+      await card.dblclick();
+      await expect(
+        page.getByRole("heading", { name: MODAL_TITLE, exact: true }),
+      ).toBeVisible();
+      await expect(page.locator('[data-page-index="0"]')).toHaveCount(0);
+      await page.getByRole("button", { name: "Cancel opening" }).click();
+      await expect(
+        page.getByRole("heading", { name: MODAL_TITLE, exact: true }),
+      ).toBeHidden();
+    });
+  }
+
   test("pressing Enter in the password field triggers unlock", async ({
     page,
   }) => {

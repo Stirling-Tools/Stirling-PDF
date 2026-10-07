@@ -1,6 +1,12 @@
 import { createContext, type ReactNode } from "react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import { render, renderHook, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  render,
+  renderHook,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MantineProvider } from "@mantine/core";
 import Compress from "@app/tools/Compress";
@@ -25,6 +31,10 @@ import { FileItem } from "@app/components/shared/FileSidebarFileItem";
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 import { useCompressOperation } from "@app/hooks/tools/compress/useCompressOperation";
 import { defaultParameters as compressParameters } from "@app/hooks/tools/compress/useCompressParameters";
+import {
+  rememberPdfAccess,
+  clearPdfAccess,
+} from "@app/services/pdfPasswordStore";
 
 const workspace = {
   files: [] as StirlingFile[],
@@ -186,6 +196,32 @@ beforeEach(() => {
 });
 
 describe("tool file selection", () => {
+  test("explains why an unlocked protected PDF is excluded", async () => {
+    workspace.fileStubs[0].processedFile = { pages: [], isEncrypted: true };
+    rememberPdfAccess(workspace.files[0], {
+      password: "secret",
+      encrypted: true,
+      signed: false,
+      ownerAuthenticated: true,
+      permissions: -4,
+      canModify: true,
+      canAssemble: true,
+      pageCount: 1,
+    });
+    try {
+      render(
+        <MantineProvider>
+          <EmptyFileSelectionTool filesVisible />
+        </MantineProvider>,
+      );
+      expect(await screen.findByText("Unlocked for viewing")).toBeVisible();
+      expect(
+        screen.getByText(/report.pdf: This tool does not yet support/),
+      ).toHaveTextContent("Use Remove Password to create an unprotected copy");
+    } finally {
+      act(() => clearPdfAccess());
+    }
+  });
   test("eligible selections keep their identity until file objects or order change", () => {
     const secondPdf = createTestStirlingFile(
       "second.pdf",

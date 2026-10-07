@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import type { FileId } from "@app/types/file";
-import { useFileManagement } from "@app/contexts/FileContext";
+import { useFileManagement, useFileSelectors } from "@app/contexts/FileContext";
 import { useIndexedDB } from "@app/contexts/IndexedDBContext";
 import { generateThumbnailForFile } from "@app/utils/thumbnailUtils";
 import { readDiskFile } from "@app/services/localFolderContents";
+import { usePdfAccess } from "@app/hooks/usePdfAccess";
+import { getPdfAccess } from "@app/services/pdfPasswordStore";
 
 const THUMBNAIL_SIZE_LIMIT = 100 * 1024 * 1024; // 100MB
 
@@ -67,47 +69,79 @@ export function useLazyThumbnail(
   fileId: FileId,
   size: number,
   thumbnailUrl?: string,
+  isEncrypted = false,
 ): string | undefined {
-  const [thumb, setThumb] = useState<string | undefined>(thumbnailUrl);
-  const attempted = useRef(false);
+  const access = usePdfAccess(fileId);
+  const locked = isEncrypted && !access;
+  const [generated, setGenerated] = useState<{
+    fileId: FileId;
+    thumbnail: string;
+  }>();
   const indexedDB = useIndexedDB();
   const { updateStirlingFileStub } = useFileManagement();
+  const selectors = useFileSelectors();
+  const attempted = useRef<FileId | undefined>(undefined);
 
   useEffect(() => {
-    if (thumbnailUrl) setThumb(thumbnailUrl);
-  }, [thumbnailUrl]);
-
-  useEffect(() => {
-    if (thumbnailUrl || attempted.current || size >= THUMBNAIL_SIZE_LIMIT)
+    if (locked) {
+      attempted.current = undefined;
       return;
-    attempted.current = true;
+    }
+    if (
+      thumbnailUrl ||
+      size >= THUMBNAIL_SIZE_LIMIT ||
+      attempted.current === fileId
+    )
+      return;
+    attempted.current = fileId;
     let cancelled = false;
+    let completed = false;
 
     scheduleLazyThumb(async () => {
       // Row unmounted (or a hydration delivered the thumbnail) while this sat
       // in the queue — skip the expensive byte load entirely.
       if (cancelled) return;
       try {
-        const file = await indexedDB.loadFile(fileId);
+        const file =
+          selectors.getFile(fileId) ?? (await indexedDB.loadFile(fileId));
         if (!file || cancelled) return;
         const thumbnail = await generateThumbnailForFile(file);
-        if (!thumbnail) return;
-        if (!cancelled) setThumb(thumbnail);
-        void indexedDB.updateThumbnail(fileId, thumbnail);
+        if (!thumbnail || cancelled) return;
+        setGenerated({ fileId, thumbnail });
+        void indexedDB.updateThumbnail(
+          fileId,
+          thumbnail,
+          getPdfAccess(file)?.encrypted ?? false,
+        );
         queueStubThumbUpdate(fileId, thumbnail, (id, url) =>
           updateStirlingFileStub(id, { thumbnailUrl: url }),
         );
       } catch {
         // non-critical
+      } finally {
+        if (!cancelled) completed = true;
       }
     });
 
     return () => {
       cancelled = true;
+      if (!completed && attempted.current === fileId)
+        attempted.current = undefined;
     };
-  }, [fileId, size, thumbnailUrl, indexedDB, updateStirlingFileStub]);
+  }, [
+    fileId,
+    size,
+    thumbnailUrl,
+    locked,
+    indexedDB,
+    updateStirlingFileStub,
+    selectors,
+  ]);
 
-  return thumb;
+  return locked
+    ? undefined
+    : (thumbnailUrl ??
+        (generated?.fileId === fileId ? generated.thumbnail : undefined));
 }
 
 // Keyed by path + mtime + size: an unchanged file never renders twice, an edited one does.

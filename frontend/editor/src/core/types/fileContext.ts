@@ -185,8 +185,12 @@ export function documentBytesReplaced(
   return previous.id === current.id && previous.key !== current.key;
 }
 
-// Create a StirlingFile from a regular File object
-export function createStirlingFile(file: File, id?: FileId): StirlingFile {
+/** Storage reads opt out of rebinding: reading a copy must not revoke access to the active bytes. */
+export function createStirlingFile(
+  file: File,
+  id?: FileId,
+  options?: { bindSessionAccess?: boolean },
+): StirlingFile {
   // If the file already has Stirling metadata and we aren't trying to override it,
   // return as–is. When a new id is requested we clone the File so we can embed
   // the fresh identifier without mutating the original object.
@@ -222,7 +226,7 @@ export function createStirlingFile(file: File, id?: FileId): StirlingFile {
     configurable: false,
   });
 
-  bindPdfAccess(file, fileId);
+  if (options?.bindSessionAccess !== false) bindPdfAccess(file, fileId);
   return file as StirlingFile;
 }
 
@@ -399,8 +403,6 @@ export interface FileContextActions {
     options?: {
       insertAfterPageId?: string;
       selectFiles?: boolean;
-      /** Suppress the duplicate modal while retaining a policy hold on encrypted bytes. */
-      skipAutomaticPasswordPrompt?: boolean;
       skipUploadTracking?: boolean;
       /**
        * Produced in-app rather than uploaded, which stops the policy auto-run enforcing an upload

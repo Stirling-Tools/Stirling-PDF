@@ -48,7 +48,9 @@ const EncryptedPdfUnlockModal = ({
   return (
     <Modal
       opened={opened}
-      onClose={onSkip}
+      onClose={() => {
+        if (!isProcessing) onSkip();
+      }}
       title={
         sessionUnlock
           ? t("encryptedPdfUnlock.sessionTitle", "Unlock PDF")
@@ -68,7 +70,7 @@ const EncryptedPdfUnlockModal = ({
           {sessionUnlock
             ? t(
                 "encryptedPdfUnlock.sessionDescription",
-                "Enter the password to unlock this PDF for the current session. The original stays protected. Supported tools retain protection on their PDF results; merged results use the first protected input's settings. Use Remove Password to create an unprotected copy.",
+                "Unlock this PDF to add it to Active Files and use the viewer or page editor. Access lasts for this session; the original stays password protected. Cancel leaves the saved copy in your library.",
               )
             : t(
                 "encryptedPdfUnlock.description",
@@ -103,7 +105,9 @@ const EncryptedPdfUnlockModal = ({
             onClick={onSkip}
             disabled={isProcessing}
           >
-            {t("encryptedPdfUnlock.skip", "Skip for now")}
+            {sessionUnlock
+              ? t("encryptedPdfUnlock.cancelOpen", "Cancel opening")
+              : t("encryptedPdfUnlock.skip", "Skip for now")}
           </Button>
           <Group gap="xs">
             {remainingCount > 0 && onUnlockAll && (

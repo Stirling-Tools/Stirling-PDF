@@ -5,6 +5,7 @@ import {
   fireEvent,
   renderHook,
   screen,
+  waitFor,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -24,7 +25,10 @@ import {
   setPendingUnlocks,
 } from "@app/services/pendingUnlocks";
 
-const observed = vi.hoisted(() => ({ heldBeforeEffects: false }));
+const observed = vi.hoisted(() => ({
+  heldBeforeEffects: false,
+  afterDispatch: undefined as (() => Promise<void>) | undefined,
+}));
 const id = "editor-encrypted" as FileId;
 
 vi.mock("@app/services/apiClient", () => ({ default: { post: vi.fn() } }));
@@ -60,7 +64,7 @@ vi.mock("@app/components/shared/EncryptedPdfUnlockModal", () => ({
   }) =>
     opened ? (
       <>
-        <button onClick={onSkip}>Skip unlock</button>
+        <button onClick={onSkip}>Cancel opening</button>
         <input
           aria-label="PDF password"
           onChange={(event) => onPasswordChange(event.target.value)}
@@ -96,6 +100,7 @@ vi.mock("@app/contexts/file/fileActions", async (importOriginal) => {
         filesRef.current.set(id, file);
         dispatch({ type: "ADD_FILES", payload: { stirlingFileStubs: [stub] } });
         observed.heldBeforeEffects = isAwaitingUnlock(id);
+        await observed.afterDispatch?.();
         return [file];
       },
     ),
@@ -112,6 +117,7 @@ function wrapper({ children }: { children: ReactNode }) {
 
 beforeEach(() => {
   observed.heldBeforeEffects = false;
+  observed.afterDispatch = undefined;
   setPendingUnlocks([]);
 });
 afterEach(() => {
@@ -120,6 +126,32 @@ afterEach(() => {
 });
 
 describe("encrypted bytes opened by another editor", () => {
+  it("cancelling while persistence finishes does not return a file to the caller", async () => {
+    let finishWrite!: () => void;
+    observed.afterDispatch = () =>
+      new Promise<void>((resolve) => {
+        finishWrite = resolve;
+      });
+    const { result } = renderHook(
+      () => ({ ...useFileActions(), selectors: useFileSelectors() }),
+      { wrapper },
+    );
+    let loading!: ReturnType<typeof result.current.actions.addFiles>;
+    await act(async () => {
+      loading = result.current.actions.addFiles([
+        new File(["encrypted"], "locked.pdf"),
+      ]);
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByText("Cancel opening"));
+    });
+    await act(async () => {
+      finishWrite();
+      await loading;
+    });
+    await expect(loading).resolves.toEqual([]);
+    expect(result.current.selectors.getAllFileIds()).toEqual([]);
+  });
   it("unlocks the original in place without adding a password-removal version", async () => {
     vi.mocked(apiClient.post).mockResolvedValueOnce({
       data: {
@@ -137,13 +169,20 @@ describe("encrypted bytes opened by another editor", () => {
       { wrapper },
     );
     const original = new File(["encrypted original"], "locked.pdf");
-    await act(() => result.current.actions.addFiles([original]));
+    let loading!: ReturnType<typeof result.current.actions.addFiles>;
+    await act(async () => {
+      loading = result.current.actions.addFiles([original]);
+    });
+    expect(result.current.selectors.getAllFileIds()).toEqual([]);
+    expect(result.current.selectors.getFile(id)).toBeUndefined();
+    expect(result.current.selectors.getFiles([id])).toEqual([]);
     fireEvent.change(screen.getByLabelText("PDF password"), {
       target: { value: " secret " },
     });
     await act(async () => {
       fireEvent.click(screen.getByText("Unlock"));
     });
+    await expect(loading).resolves.toEqual([original]);
     expect(result.current.selectors.getFile(id)).toBe(original);
     expect(result.current.selectors.getStirlingFileStub(id)).toMatchObject({
       id,
@@ -160,49 +199,71 @@ describe("encrypted bytes opened by another editor", () => {
     expect(getPdfAccess(original)).toBeUndefined();
   });
 
-  it("holds policies before dispatch without opening a duplicate password modal", async () => {
-    const { result } = renderHook(() => useFileActions(), { wrapper });
-    await act(() =>
-      result.current.actions.addFiles([new File(["encrypted"], "locked.pdf")], {
-        selectFiles: false,
-        skipAutomaticPasswordPrompt: true,
-      }),
+  it("cancel keeps protected bytes out of context and settles the loading action", async () => {
+    const { result } = renderHook(
+      () => ({ ...useFileActions(), selectors: useFileSelectors() }),
+      { wrapper },
     );
+    let loading!: ReturnType<typeof result.current.actions.addFiles>;
+    await act(async () => {
+      loading = result.current.actions.addFiles([
+        new File(["encrypted"], "locked.pdf"),
+      ]);
+    });
     expect(observed.heldBeforeEffects).toBe(true);
     expect(isAwaitingUnlock(id)).toBe(true);
-    expect(screen.queryByText("Skip unlock")).toBeNull();
-
-    act(() => result.current.actions.openEncryptedUnlockPrompt(id));
-    expect(screen.getByText("Skip unlock")).toBeVisible();
-    expect(isAwaitingUnlock(id)).toBe(true);
-    fireEvent.click(screen.getByText("Skip unlock"));
+    expect(screen.getByText("Cancel opening")).toBeVisible();
+    await act(async () => {
+      fireEvent.click(screen.getByText("Cancel opening"));
+    });
+    await expect(loading).resolves.toEqual([]);
+    expect(result.current.selectors.getAllFileIds()).toEqual([]);
+    expect(result.current.selectors.getFile(id)).toBeUndefined();
     expect(isAwaitingUnlock(id)).toBe(false);
   });
 
-  it.each(["decrypt", "remove"])(
-    "releases the hold after %s",
-    async (action) => {
-      const { result } = renderHook(() => useFileActions(), { wrapper });
-      await act(() =>
-        result.current.actions.addFiles(
-          [new File(["encrypted"], "locked.pdf")],
-          {
-            selectFiles: false,
-            skipAutomaticPasswordPrompt: true,
-          },
-        ),
-      );
-      expect(isAwaitingUnlock(id)).toBe(true);
-      await act(async () => {
-        if (action === "decrypt") {
-          result.current.actions.updateStirlingFileStub(id, {
-            processedFile: { pages: [], isEncrypted: false },
-          });
-        } else {
-          await result.current.actions.clearAllFiles();
-        }
-      });
-      expect(isAwaitingUnlock(id)).toBe(false);
-    },
-  );
+  it("clearing the workspace cancels pending admissions", async () => {
+    const { result } = renderHook(() => useFileActions(), { wrapper });
+    let loading!: ReturnType<typeof result.current.actions.addFiles>;
+    await act(async () => {
+      loading = result.current.actions.addFiles([
+        new File(["encrypted"], "locked.pdf"),
+      ]);
+    });
+    expect(isAwaitingUnlock(id)).toBe(true);
+    await act(async () => {
+      await result.current.actions.clearAllFiles();
+    });
+    expect(isAwaitingUnlock(id)).toBe(false);
+    await expect(loading).resolves.toEqual([]);
+  });
+
+  it("a rejected password leaves the file pending until cancelled", async () => {
+    vi.mocked(apiClient.post).mockRejectedValueOnce(new Error("bad password"));
+    const { result } = renderHook(
+      () => ({ ...useFileActions(), selectors: useFileSelectors() }),
+      { wrapper },
+    );
+    let loading!: ReturnType<typeof result.current.actions.addFiles>;
+    await act(async () => {
+      loading = result.current.actions.addFiles([
+        new File(["encrypted"], "locked.pdf"),
+      ]);
+    });
+    fireEvent.change(screen.getByLabelText("PDF password"), {
+      target: { value: "wrong" },
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByText("Unlock"));
+    });
+    await waitFor(() =>
+      expect(screen.getByText("Cancel opening")).toBeVisible(),
+    );
+    expect(result.current.selectors.getAllFileIds()).toEqual([]);
+    expect(getPdfAccess(id)).toBeUndefined();
+    await act(async () => {
+      fireEvent.click(screen.getByText("Cancel opening"));
+    });
+    await expect(loading).resolves.toEqual([]);
+  });
 });

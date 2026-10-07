@@ -7,6 +7,9 @@ import {
 } from "@app/contexts/FilesModalContext";
 import {
   createNewStirlingFileStub,
+  createStirlingFile,
+  type FileId,
+  type StirlingFile,
   type StirlingFileStub,
 } from "@app/types/fileContext";
 
@@ -59,10 +62,34 @@ vi.mock("@app/services/apiClient", () => ({ default: { get: state.apiGet } }));
 
 beforeEach(() => {
   vi.clearAllMocks();
+  state.addFiles.mockImplementation(async (files: File[]) =>
+    files.map((file) => createStirlingFile(file, "uploaded" as FileId)),
+  );
+  state.addStirlingFileStubs.mockImplementation(
+    async (stubs: StirlingFileStub[]) =>
+      stubs.map((stub) =>
+        createStirlingFile(new File(["stored"], stub.name), stub.id),
+      ),
+  );
   state.workbench = "fileEditor";
 });
 
 describe("file picker caller contract", () => {
+  it("cancelled unlocks neither select a file nor navigate away", async () => {
+    state.addFiles.mockResolvedValueOnce([]);
+    state.addStirlingFileStubs.mockResolvedValueOnce([]);
+    const { result } = renderHook(useFilesModalContext, {
+      wrapper: FilesModalProvider,
+    });
+    await act(() =>
+      result.current.onRecentFileSelect(
+        [createNewStirlingFileStub(new File(["locked"], "Stored.pdf"))],
+        [new File(["locked"], "Upload.pdf")],
+      ),
+    );
+    expect(state.setSelectedFiles).toHaveBeenCalledWith(["already-open"]);
+    expect(state.setWorkbench).not.toHaveBeenCalled();
+  });
   it("clears a caller's format and count restrictions when the next picker opens", () => {
     const { result } = renderHook(useFilesModalContext, {
       wrapper: FilesModalProvider,
@@ -307,8 +334,8 @@ describe("file picker caller contract", () => {
   it("does not close a reopened picker when a previous import finishes", async () => {
     let finishImport!: () => void;
     state.addFiles.mockReturnValueOnce(
-      new Promise<void>((resolve) => {
-        finishImport = resolve;
+      new Promise<StirlingFile[]>((resolve) => {
+        finishImport = () => resolve([]);
       }),
     );
     const { result } = renderHook(useFilesModalContext, {
@@ -336,8 +363,8 @@ describe("file picker caller contract", () => {
   it("closes a direct upload immediately and leaves a subsequently opened picker alone", async () => {
     let finishImport!: () => void;
     state.addFiles.mockReturnValueOnce(
-      new Promise<void>((resolve) => {
-        finishImport = resolve;
+      new Promise<StirlingFile[]>((resolve) => {
+        finishImport = () => resolve([]);
       }),
     );
     const { result } = renderHook(useFilesModalContext, {

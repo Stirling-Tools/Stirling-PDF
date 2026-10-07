@@ -1101,11 +1101,10 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       );
       const isActive = isViewedInViewer;
       const isEncryptedFile = stub.processedFile?.isEncrypted === true;
-      const thumbnailUrl = isEncryptedFile
-        ? undefined
-        : (workbenchFileId
-            ? state.files.byId[workbenchFileId]?.thumbnailUrl
-            : undefined) || stub.thumbnailUrl;
+      const thumbnailUrl =
+        (workbenchFileId
+          ? state.files.byId[workbenchFileId]?.thumbnailUrl
+          : undefined) || stub.thumbnailUrl;
       const fileOrigin = getFileOrigin(stub);
       const dataUnavailable =
         stub.dataUnavailable === true || lostFileIds.has(stub.id);
@@ -1131,6 +1130,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           isActive={isActive}
           isViewedInViewer={isViewedInViewer}
           thumbnailUrl={thumbnailUrl}
+          isEncrypted={isEncryptedFile}
           onClick={handleFileClick}
           onEyeClick={handleEyeClick}
           dataUnavailable={dataUnavailable}
