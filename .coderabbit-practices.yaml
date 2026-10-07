@@ -1,0 +1,305 @@
+version: 1
+
+applicability: |
+  Apply these guidelines repository-wide to changed code and relevant callers.
+  Language rules follow the language; capability rules follow behavior and usage.
+  Directory names do not limit security, persistence, PDF, JPDFium, React,
+  WASM, ownership, or performance rules.
+  Read AGENTS.md and relevant local project instructions.
+  Use the actual toolchain, dependency graph, pinned APIs, and build flavor.
+  Java 25 and Spring Boot 4.1.1 are the intended baseline; verify the build.
+
+review_method: |
+  Trace untrusted data from origin to final sink.
+  Trace resources from creation through borrowing and transfer to release.
+  Trace async work through cancellation, completion, and output publication.
+  Explain the trigger, mechanism, impact, minimal correction, and focused test.
+  Separate confirmed defects from uncertain risks and optional suggestions.
+  Do not invent APIs, CVEs, benchmark results, or successful verification.
+  Avoid unrelated rewrites and mechanical modernization.
+
+style: |
+  Prefer cohesive implementations, domain types, precise names, and local style.
+  Avoid redundant wrappers, duplicated helpers, speculative abstractions,
+  boolean mode parameters, vague names, and catch-all fallback chains.
+  Comments explain contracts, units, ownership, hazards, or rationale.
+  Do not add comments narrating obvious implementation.
+  Use normal Java imports; flag unnecessary fully qualified names.
+  Allow FQNs for genuine ambiguity, generated code, or a concrete requirement.
+  Follow repository formatting and tracked-follow-up conventions.
+
+java_25: |
+  Apply to all Java, including tests, adapters, and build tooling.
+  Prefer records for suitable immutable value carriers, not mechanically for
+  entities, services, proxy targets, mutable state, or exceptions.
+  Use sealed types for genuinely closed domains and exhaustive switches where
+  omitted variants would violate a contract.
+  Prefer standard APIs before adding helpers or dependencies.
+  Do not assert that streams or loops are inherently faster.
+  Avoid broad catches without a specific recovery or translation policy.
+  Preserve causes and useful suppressed exceptions without exposing secrets.
+  Preserve interruption unless deliberately translating cancellation.
+  Do not turn partial failure or cancellation into successful output.
+
+  ScopedValue is final in Java 25 and suits immutable dynamically scoped context.
+  It is not mutable request storage, a cache, or a service locator.
+  Structured concurrency and StableValue are preview in Java 25.
+  Verify compile, test, packaging, and launch preview settings before using them.
+  Virtual threads do not replace finite-resource admission control.
+  Do not report every synchronized block as virtual-thread pinning on Java 25.
+  Inspect actual blocking, locking, native calls, and cancellation semantics.
+
+java_regex: |
+  Fixed repeated regexes use descriptive private static final Pattern fields.
+  A String constant containing regex text is not a compiled reusable Pattern.
+  Flag repeated Pattern.compile, Pattern.matches, String.matches, replaceAll,
+  and replaceFirst with invariant expressions.
+  Share Pattern instances, not mutable Matcher instances.
+  Keep Matchers local; do not retain document input through singleton or
+  ThreadLocal Matchers.
+  Compile dynamic expressions once per appropriate operation/configuration
+  lifetime; do not introduce unbounded caches of attacker-controlled patterns.
+  Prefer literal String operations when regex semantics are unnecessary.
+  Preserve flags, matches versus find, groups, replacement escaping, Unicode,
+  split limits, and trailing-empty behavior.
+  Do not mechanically replace simple split delimiters without checking fast paths.
+  Precompilation does not prevent catastrophic backtracking; inspect hostile
+  inputs, expression complexity, and input bounds.
+
+spring: |
+  Apply wherever Spring-managed code is used, not just controller/service paths.
+  Prefer constructor injection and preserve established constructor conventions.
+  Do not retain request, tenant, user, job, or document state in singleton fields.
+  Check callbacks capturing request-scoped dependencies.
+  Use proxyBeanMethods=false only when bean-method interception is unnecessary.
+  Inject dependencies instead of directly invoking sibling bean factory methods.
+  Check actual proxy invocation, self-invocation, visibility, async boundaries,
+  transaction scope, and configured checked-exception rollback behavior.
+  Do not hold transactions across long PDF, OCR, browser, or external-tool work.
+  Trace lazy beans through eager consumers and startup hooks.
+  Lazy initialization delays cost; it does not unload classes after use.
+  AOT changes require tested build-time bean graphs, resources, reflection
+  metadata, native packaging, and runtime configuration compatibility.
+
+hibernate: |
+  Apply to entities, queries, services, mappers, serializers, caches, and jobs.
+  Do not share EntityManager or managed entities across concurrent tasks.
+  Do not expose managed entities or lazy proxies as API response models.
+  Inspect loops, serializers, mappings, and streams for hidden N+1 queries.
+  Prefer explicit fetch plans, projections, DTOs, or suitable entity graphs.
+  Do not globally switch associations to EAGER as an N+1 workaround.
+  Avoid collection fetch joins with offset pagination without a safe strategy.
+  Require stable ordering and bounded server-side result sizes.
+  Inspect persistence-context growth in imports, exports, migrations, and batches.
+  Keep lazy access and database streams inside valid transaction lifetimes.
+  Review cascade/orphan-removal behavior against actual aggregate ownership.
+  Avoid equality/hashCode that traverses associations or uses unstable identity.
+  Check optimistic locking, uniqueness constraints, retries, and lost updates.
+  Parameterize values; validate dynamic identifiers and sort expressions.
+  Include tenant and authorization scope in queries and relevant cache keys.
+  Redundant Repository annotations are cleanup, not a correctness blocker.
+
+serialization: |
+  Verify managed Jackson versions and actual APIs before recommending imports.
+  Do not blindly remove compatibility libraries another dependency requires.
+  Reuse configured mappers; do not construct one per request or mutate shared
+  mapper configuration after concurrent use starts.
+  Inspect parser limits, polymorphic type handling, entity traversal, duplicate
+  representations, oversized results, and error/secret disclosure.
+
+resource_ownership: |
+  Every resource needs an owner and release or transfer protocol.
+  Close operation-owned resources deterministically; do not close borrowed inputs.
+  Check partial initialization, exceptions, cancellation, timeout, disconnect,
+  shutdown, and callbacks still using the resource.
+  Cleaners or GC are not correctness-critical release mechanisms.
+  Do not close cached resources while active borrowers can use them.
+  Bound caches, pools, queues, retries, diagnostic capture, and retained capacity.
+  Oversized exceptional buffers need an explicit retirement policy.
+
+java_performance: |
+  Preserve CustomPDFDocumentFactory and established PDF loading/storage policy.
+  Do not bypass password, metadata, scratch-storage, or ownership behavior.
+  Inspect random-access requirements before replacing files with streams or arrays.
+  Count complete PDF/image/archive/output copies and encoding passes.
+  Prefer supported streaming writers and bounded owned buffers.
+  Pre-size only from trustworthy bounded sizes.
+  Avoid repeated scans, duplicate parsing, and multiplicative work.
+  Do not add parallelStream without capacity, ordering, ownership, and cancellation.
+  Preserve required native serialization; shorten unrelated critical-section work.
+  Consider contention and failure when doing expensive work inside map callbacks.
+  Parameterized logging does not prevent expensive argument evaluation.
+  Avoid normal-path per-page/per-pixel logging and document-content disclosure.
+
+react: |
+  Apply to components, hooks, providers, selectors, subscriptions, and services.
+  Preserve existing routing, query, state, styling, and platform conventions.
+  Use local state for local concerns and explicit async states.
+  Derive ordinary values rather than maintaining redundant effect-synchronized state.
+  Keep reducers pure and state immutable.
+  Use stable identity keys for stateful/reorderable lists.
+  Effects require matching cleanup and correct dependencies.
+  Test setup-cleanup-setup and stale asynchronous completion.
+  Cancel through the existing transport/query mechanism.
+  Prevent old file/job results from overwriting newer state.
+  Preserve accessibility, focus, labels, keyboard use, errors, and cancellation UI.
+  Do not render untrusted document-derived HTML without an audited sanitizer.
+
+react_performance: |
+  Prefer the narrowest existing file/property subscription.
+  Inspect provider updates causing unrelated rows, viewers, or tools to rerender.
+  React.memo does not stop updates from a changing consumed context.
+  Preserve normalized FileContext IDs and structural sharing.
+  Do not duplicate Files, Blobs, buffers, PDF objects, canvases, or metadata graphs
+  in global stores when IDs/selectors suffice.
+  Unchanged useSyncExternalStore snapshots must preserve identity.
+  Do not mutate previously returned snapshots or create new objects every read.
+  Keep subscriptions stable and unsubscribe correctly.
+  Inspect repeated sorting/filtering/grouping/parsing and nested searches in render.
+  Do not mutate shared arrays with sort/reverse.
+  Avoid nested component definitions and changing keys that remount owned resources.
+  Memoization needs a meaningful consumer or computation; avoid retaining huge inputs.
+  useMemo is not a resource-lifetime guarantee.
+  Inspect actual React Compiler configuration before demanding manual memoization.
+  Deferred rendering is not request debouncing or cancellation.
+  Transitions do not move synchronous PDF/WASM processing off the main thread.
+  Coalesce high-frequency progress/resize/pointer updates and preserve final state.
+  Preserve existing TanStack virtualization; bound actual decoding/rendering too.
+  Bound overscan, prefetch, queued previews, decoded pixels, and canvas count.
+  Include document revision, page, scale, rotation, and options in render cache keys.
+  Use byte/pixel budgets for variable-sized preview caches.
+  Avoid URL churn from unstable wrappers and revoke URLs after their final consumer.
+  Reuse the query client; do not create one during render.
+  Query keys and sensitive-cache cleanup must respect identity and authorization.
+  Stop obsolete polling and bound retries; retries of mutations need idempotency.
+  Load heavyweight editors/engines on established feature boundaries.
+  Audit PDF.js tasks, ImageBitmap, canvases, workers, object URLs, timers, and listeners.
+  Removing a component or DOM node does not prove all its resources were released.
+
+wasm: |
+  Apply to every WASM runtime, wrapper, worker, queue, buffer, and engine caller.
+  Preserve wasmPrecompiler and established engine-loading seams.
+  Reuse compiled modules where appropriate; instances and memory are mutable owners.
+  Deduplicate initialization and permit controlled retry after failure.
+  Script loading is not necessarily runtime readiness.
+  Preserve base paths, offline/desktop behavior, CSP, MIME, and worker asset loading.
+
+  Pair malloc with the correct allocator free and engine handles with destructors.
+  Use finally or equivalent owned-resource cleanup, including partial initialization.
+  Distinguish borrowed handles from owned handles and ownership transfer from copies.
+  Never double-destroy transferred bitmaps/images/annotations.
+  Check null handles, allocation failures, native counts, bounds, and output lengths.
+  Pointers belong to one runtime and lifetime; invalidate them on runtime recycling.
+
+  Reacquire current heap views after calls that can allocate/grow memory.
+  Do not retain HEAPU8, DataView, subarray, or ImageData across unsafe calls or awaits.
+  subarray is borrowed storage, not independent output.
+  Copy output that must survive free, reuse, growth, or runtime destruction.
+  Preserve proven safe synchronous zero-copy use; do not demand needless copies.
+  Growth affects JS views, not automatically every numeric native allocation offset.
+  Shared-memory behavior differs and requires explicit synchronization.
+
+  Verify actual pixel order, alpha, stride, and padding; do not assume RGBA/BGRA.
+  Validate dimensions, stride, pointer, and total bounds before allocation/copying.
+  Prefer bulk TypedArray transfers over per-pixel JS/WASM FFI calls.
+  Bound total source, native bitmap, copied pixels, canvas, and encoded-output memory.
+
+  Preserve pdfiumScanQueue serialization for the shared main-thread runtime.
+  Avoid overlapping full-document copies through unbounded Promise.all.
+  Queue lightweight descriptions; acquire heavy inputs only after admission.
+  Remove cancelled queued jobs and settle callers.
+  AbortSignal does not interrupt arbitrary synchronous WASM exports.
+  Use supported progressive cancellation or isolated-worker strategies.
+  Workers can multiply runtimes and total memory; do not claim automatic savings.
+
+  Transfer separately owned ArrayBuffers only when the sender relinquishes ownership.
+  The sender cannot reuse a transferred/detached buffer.
+  Check subarray offsets: transferring its buffer transfers the entire allocation.
+  Do not transfer the active WASM linear-memory buffer.
+  Avoid repeated structured-clone and JS-to-WASM copies across worker hops.
+  Forced worker termination does not run its JavaScript finally cleanup.
+  Settle pending calls and clear parent-side ownership on crashes/termination.
+
+  free permits allocator reuse; it does not shrink ordinary linear-memory byteLength.
+  Separate live allocations, allocator reuse, JS retention, and high-water capacity.
+  Disposable runtimes need drained jobs, invalidated handles, independent outputs,
+  and explicit restart policy.
+  Dropping one instance reference does not guarantee immediate RSS reclamation.
+  Test repeated small/large open-render-close cycles, growth, cancellation,
+  initialization failure, worker crash, stale results, and output independence.
+
+pdf_integrity: |
+  Apply to backend and frontend PDF processing, including WASM.
+  State what the operation preserves and deliberately changes.
+  Preserve untouched text, vectors, fonts, forms, annotations, and resources.
+  Do not regenerate page content for a visual overlay without preservation evidence.
+  Account for CropBox, MediaBox, rotation, user units, scale, and coordinate origin.
+  Test rotated pages and non-zero box offsets when placement changes.
+  Distinguish visual signature stamps from cryptographic signatures.
+  Report deliberate cryptographic-signature invalidation.
+  Verify redaction by content removal, not merely rendered appearance.
+  Inspect hidden text/OCR, metadata, attachments, forms, annotations, and actions.
+  Match incremental-update/full-rewrite behavior to the removal contract.
+  Define sanitization scope; do not claim absolute safety without a threat model.
+
+jpdfium: |
+  Apply to every JPDFium, PDFium, FFM, and adapter caller, regardless of module.
+  Follow pinned ownership contracts; not every wrapper owns its exposed handle.
+  Keep borrowed pages, text handles, bitmaps, callbacks, and objects within parent lifetime.
+  Prevent stale handles after mutation, replacement, close, and ownership transfer.
+  Preserve runtime serialization and documented thread-safety constraints.
+  Do not close arenas while native work or callbacks can access memory.
+  Keep upcall stubs/state alive for the complete native callback lifetime.
+  Handle callback failures within the supported FFM boundary.
+  Verify ABI, alignment, signedness, pointer/size_t width, and bounds.
+  Prefer existing integration seams and streaming-save APIs over raw FFM and full copies.
+  Replacing PDFBox requires semantic/corpus verification, not only speed claims.
+  Verify packaged natives and relevant behavior on shipped x64/arm64 architectures.
+
+security: |
+  Apply wherever untrusted input reaches network, files, interpreters, storage, or output.
+  Authorize the operation/resource, not merely its UI.
+  Check ownership and tenant scope for files, jobs, outputs, pipelines, and caches.
+  Encode document-derived strings for the actual HTML, URL, CSV, or other sink.
+  Do not log tokens, credentials, document content, or sensitive commands.
+  Inspect diagnostics and downloads for secret disclosure.
+
+  Resolve paths before component-based containment checks; do not use string prefixes.
+  Inspect symlinks, TOCTOU, absolute paths, separators, and archive entries.
+  Bound extraction bytes, entries, depth, and expansion.
+  Isolate operations and publish validated completed output atomically.
+
+  Use SsrfProtectionService or extend its central policy rather than duplicate checks.
+  Review redirects, embedded resources, DNS/connect boundaries, mapped IPv6,
+  encoded/trailing-dot hosts, local files, and renderer egress.
+  Preserve configured protection-level semantics and intentional scoped exceptions.
+  Inspect XML external entities and browser/office/image/PDF subresource fetching.
+
+  ProcessBuilder argument lists still permit tool-option injection; validate arguments.
+  Use an end-of-options marker where supported.
+  Control working directory, environment, output draining, timeout, and descendants.
+  Do not publish partial or failed subprocess output.
+
+tests_and_evidence: |
+  Assert contract behavior, not just non-null, construction, mocks, or file existence.
+  Use deterministic synchronization and close test resources.
+  Verify semantic PDF output, cancellation, failure cleanup, and trust-boundary regressions.
+  Require fixtures relevant to the changed invariant, not every fixture for every change.
+  Separate cold startup, first use, steady load, peak memory, and recovered idle.
+  Include native allocations and subprocesses where relevant.
+  Do not equate NMT, committed heap, RSS, live objects, or container memory.
+  AnonHugePages is not automatically wasted memory.
+  Preserve established compact Shenandoah unless regression evidence supports a change.
+  Remeasure winners without profiling instrumentation.
+  Report workload, baseline, architecture, repeated results, correctness, and trade-offs.
+
+build_and_deployment: |
+  Preserve Java toolchains, managed dependencies, preview/native-access flags,
+  Task quality gates, reproducibility, signal delivery, and user arguments.
+  Review dependency updates for security and behavioral compatibility.
+  Do not silently skip tests, formatting, typecheck, lint, or architecture smoke tests.
+  Preserve standard/fat/ultra-lite/backend/embedded/desktop/native packaging behavior.
+  Do not bundle irrelevant native architectures or assume unsupported targets work.
+  Prefer non-root execution and bounded writable temporary/cache locations.
+  Avoid production build tools, caches, credentials, and unnecessary debug tooling.
+  jlink/distroless and allocator/THP changes are not guaranteed runtime-RSS savings.

@@ -1,0 +1,121 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+
+language: en-US
+early_access: false
+
+tone_instructions: >-
+  Be direct, concise, and evidence-driven. Explain the concrete trigger,
+  failure mechanism, impact, and smallest safe correction. Distinguish
+  confirmed defects from risks and optional improvements. Avoid invented
+  APIs, unsupported performance claims, repetitive findings, and cosmetic churn.
+
+knowledge_base:
+  code_guidelines:
+    enabled: true
+    filePatterns:
+      - files: ".coderabbit-practices.yaml"
+        applyTo: "**/*"
+
+reviews:
+  profile: assertive
+  request_changes_workflow: false
+  allow_author_approval: false
+  high_level_summary: true
+  high_level_summary_instructions: >-
+    Describe behavior changes, affected deployment flavors, security and PDF
+    integrity implications, resource-lifetime changes, and verification.
+    Clearly distinguish checks executed from checks proposed. Never claim
+    tests, benchmarks, scans, or external verification ran without results.
+  collapse_walkthrough: true
+  changed_files_summary: true
+  review_status: true
+  sequence_diagrams: false
+  poem: false
+
+  auto_review:
+    enabled: true
+    auto_incremental_review: true
+    drafts: false
+
+  path_filters:
+    - "!**/.gradle/**"
+    - "!**/build/**"
+    - "!**/coverage/**"
+
+  path_instructions:
+    - path: "app/common/**"
+      instructions: |
+        Preserve the shared OSS boundary and extension contracts.
+        Do not introduce dependencies on proprietary or SaaS implementations.
+        Inspect caller-owned versus operation-owned document and stream lifetimes.
+        Global Java, Spring, security, persistence, PDF, and JPDFium rules
+        still apply wherever relevant.
+
+    - path: "app/core/**"
+      instructions: |
+        Preserve intended OSS and optional-feature behavior.
+        Inspect dependencies, conditional beans, startup work, and native loading
+        for accidental coupling to proprietary, SaaS, office, or OCR capabilities.
+
+    - path: "app/proprietary/**"
+      instructions: |
+        Preserve common/core extension seams and proprietary feature boundaries.
+        Shared defects must be fixed in their actual shared implementation,
+        not hidden by a proprietary-only workaround.
+
+    - path: "app/saas/**"
+      instructions: |
+        Inspect tenant identity, atomic quota enforcement, metering, billing,
+        retries, workflow lineage, split/merge outputs, supporting files,
+        desktop-to-SaaS routing, and failed-operation charging semantics.
+
+    - path: "frontend/editor/src/**/*.{ts,tsx,js,jsx}"
+      instructions: |
+        Preserve @app override seams and core/proprietary/cloud/SaaS/desktop
+        layering. Direct lower-layer imports require an intentional override.
+        Application document workflows use FileContext and established tool hooks.
+        Low-level implementations may manipulate File, Blob, workers, or PDF
+        primitives when ownership and cleanup are explicit.
+
+    - path: "frontend/editor/src/cloud/**/*.{ts,tsx,js,jsx}"
+      instructions: |
+        Preserve the shared SaaS/desktop layer. Use established platform seams
+        instead of coupling shared code directly to Supabase, Tauri, browser
+        storage, platform transport, or deployment environment variables.
+
+    - path: "engine/**/*.py"
+      instructions: |
+        Preserve the typed reasoning-service boundary and thin routing.
+        Avoid duplicating backend durable state or document execution.
+        Review provider requests, streaming, cancellation, secrets, SSRF,
+        context-window limits, and deterministic versus model-derived facts.
+
+  pre_merge_checks:
+    docstrings:
+      mode: off
+    custom_checks:
+      - name: Changed invariants and regression coverage
+        mode: warning
+        instructions: |
+          Identify the changed contract and focused regression coverage.
+          PDF mutation, native ownership, security, persistence concurrency,
+          and async lifecycle changes need meaningful behavior assertions,
+          not only construction, mock interactions, or output-file existence.
+
+      - name: Performance and memory evidence
+        mode: warning
+        instructions: |
+          Performance claims require workload, baseline, changed condition,
+          metric, repeatability, correctness verification, and trade-offs.
+          Distinguish an expected benefit from a measured result.
+
+  finishing_touches:
+    docstrings:
+      enabled: false
+    unit_tests:
+      enabled: false
+    autofix:
+      enabled: false
+
+chat:
+  auto_reply: true
