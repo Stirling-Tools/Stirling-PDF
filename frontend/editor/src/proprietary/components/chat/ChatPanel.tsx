@@ -578,7 +578,7 @@ export function ChatPanel({
           }}
         />
         <ActionIcon
-          size="md"
+          size="sm"
           loading={isLoading}
           onClick={() => handleSend()}
           disabled={!input.trim() || isLoading}
