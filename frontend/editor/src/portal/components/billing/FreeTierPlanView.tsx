@@ -152,6 +152,7 @@ export function FreeTierPlanView({
       pdfsProcessed={fleetStats?.pdfsProcessed ?? null}
       onAddCapacity={onLink}
       onActivateProcessor={onLink}
+      onEnterpriseQuote={isAdmin ? () => openLinkModal("link") : undefined}
       notices={
         <>
           <Banner
