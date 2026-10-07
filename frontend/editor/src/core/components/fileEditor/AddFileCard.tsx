@@ -9,6 +9,7 @@ import { useProcessingFolderCreation } from "@app/hooks/useProcessingFolderCreat
 import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
 import MobileUploadModal from "@app/components/shared/MobileUploadModal";
 import { openFilesFromDisk } from "@app/services/openFilesFromDisk";
+import { Button, type ButtonVariant } from "@app/ui/Button";
 import { Icon, type IconName } from "@app/ui/Icon";
 import { Logo } from "@app/ui/Logo";
 import styles from "@app/components/fileEditor/AddFileCard.module.css";
@@ -21,24 +22,25 @@ interface AddFileCardProps {
 interface SourceProps {
   icon: IconName;
   label: string;
+  variant: ButtonVariant;
   disabled?: boolean;
   onSelect: () => void;
 }
 
-function Source({ icon, label, disabled, onSelect }: SourceProps) {
+function Source({ icon, label, variant, disabled, onSelect }: SourceProps) {
   return (
-    <button
-      type="button"
-      className={styles.source}
+    <Button
+      variant={variant}
+      fullWidth
       disabled={disabled}
+      leftSection={<Icon name={icon} size="1rem" />}
       onClick={(event) => {
         event.stopPropagation();
         onSelect();
       }}
     >
-      <Icon name={icon} size="0.95rem" />
       {label}
-    </button>
+    </Button>
   );
 }
 
@@ -112,17 +114,20 @@ const AddFileCard = ({ onFilesSelected }: AddFileCardProps) => {
           >
             <Source
               icon="upload"
+              variant="primary"
               label={t("fileEditor.addCard.fromComputer", "From computer")}
               onSelect={() => void openComputerFiles()}
             />
             <Source
               icon="library"
+              variant="primary"
               label={t("fileEditor.addCard.fromLibrary", "From library")}
               onSelect={() => openFilesModal()}
             />
             {config?.enableMobileScanner && !isPhone && (
               <Source
                 icon="qr-code"
+                variant="secondary"
                 label={t("fileEditor.addCard.fromMobile", "From mobile")}
                 onSelect={() => setMobileUploadOpen(true)}
               />
@@ -141,6 +146,7 @@ const AddFileCard = ({ onFilesSelected }: AddFileCardProps) => {
                 <span style={{ display: "flex", flexDirection: "column" }}>
                   <Source
                     icon="folder-plus"
+                    variant="secondary"
                     label={t("processingFolders.setup.title")}
                     disabled={!signedIn}
                     onSelect={() => folderCreation.open?.()}

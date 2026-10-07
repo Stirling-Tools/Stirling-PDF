@@ -111,11 +111,12 @@
 
 .sources {
   position: absolute;
-  top: 62px;
-  left: 12px;
+  top: 64px;
+  left: 16px;
+  right: 16px;
   display: flex;
   flex-direction: column;
-  width: 190px;
+  gap: 8px;
   max-height: 0;
   opacity: 0;
   overflow: hidden;
@@ -137,7 +138,7 @@
 
 .stack:hover .sources,
 .stack:focus-within .sources {
-  max-height: 160px;
+  max-height: 200px;
   opacity: 1;
 }
 
@@ -145,36 +146,6 @@
 :global([data-accept]) .sources {
   max-height: 0;
   opacity: 0;
-}
-
-.source {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 7px 10px;
-  border: none;
-  border-radius: 8px;
-  background: none;
-  color: var(--c-text-muted);
-  font-size: 13px;
-  font-weight: 500;
-  text-align: start;
-  cursor: pointer;
-}
-
-.source:hover:not(:disabled) {
-  background: var(--c-hover);
-  color: var(--c-text);
-}
-
-.source:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.source:focus-visible {
-  outline: 2px solid var(--c-primary);
-  outline-offset: -2px;
 }
 
 .title {
