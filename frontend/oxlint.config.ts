@@ -7,6 +7,8 @@ import { defineConfig, type OxlintGlobals } from "oxlint";
 const APP_SOURCE = "editor/src/**/*.{js,mjs,jsx,ts,tsx}";
 const DESKTOP_SOURCE = "editor/src/desktop/**/*.{js,mjs,jsx,ts,tsx}";
 const CLOUD_SOURCE = "editor/src/cloud/**/*.{js,mjs,jsx,ts,tsx}";
+// mobile/ is a Tauri leaf like desktop/, so it shares the desktop import scope.
+const MOBILE_SOURCE = "editor/src/mobile/**/*.{js,mjs,jsx,ts,tsx}";
 
 // Shared import-ban building blocks -----------------------------------------
 
@@ -256,7 +258,7 @@ export default defineConfig({
       // Editor app source (excluding desktop): ban relative/src imports, ban
       // Tauri (desktop-only), and the shared-DS Mantine import ban.
       files: [APP_SOURCE],
-      excludeFiles: [DESKTOP_SOURCE],
+      excludeFiles: [DESKTOP_SOURCE, MOBILE_SOURCE],
       rules: {
         "no-restricted-imports": [
           "error",
@@ -270,7 +272,7 @@ export default defineConfig({
     {
       // Desktop source: same DS import ban, but Tauri is allowed here (this is
       // the only layer that may reach @tauri-apps/* directly).
-      files: [DESKTOP_SOURCE],
+      files: [DESKTOP_SOURCE, MOBILE_SOURCE],
       rules: {
         "no-restricted-imports": [
           "error",
@@ -357,7 +359,7 @@ export default defineConfig({
         "editor/src/core/components/filesPage/FileManagerView.tsx",
         "editor/src/core/pages/HomePage.tsx",
       ],
-      excludeFiles: [DESKTOP_SOURCE, CLOUD_SOURCE],
+      excludeFiles: [DESKTOP_SOURCE, MOBILE_SOURCE, CLOUD_SOURCE],
       rules: {
         "no-restricted-imports": [
           "error",
@@ -374,6 +376,8 @@ export default defineConfig({
       files: [
         "editor/src/desktop/**/*.test.{js,mjs,jsx,ts,tsx}",
         "editor/src/desktop/**/*.stories.{js,mjs,jsx,ts,tsx}",
+        "editor/src/mobile/**/*.test.{js,mjs,jsx,ts,tsx}",
+        "editor/src/mobile/**/*.stories.{js,mjs,jsx,ts,tsx}",
       ],
       rules: {
         "no-restricted-imports": [

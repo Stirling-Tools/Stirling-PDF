@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
 use tauri::{AppHandle, Runtime};
 use tauri_plugin_store::StoreExt;
+use tauri_plugin_opener::OpenerExt;
 use tiny_http::{Response, Server};
 use sha2::{Sha256, Digest};
 use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
@@ -645,7 +646,7 @@ fn generate_code_challenge(code_verifier: &str) -> String {
 /// Implements PKCE (Proof Key for Code Exchange) for secure OAuth flow
 #[tauri::command]
 pub async fn start_oauth_login(
-    _app_handle: AppHandle,
+    app_handle: AppHandle,
     provider: String,
     auth_server_url: String,
     supabase_key: String,
@@ -693,7 +694,10 @@ pub async fn start_oauth_login(
     log::info!("========================================");
 
     // Open system browser
-    if let Err(e) = tauri_plugin_opener::open_url(&oauth_url, None::<&str>) {
+    // Go through the app handle rather than the free `open_url` function: the
+    // free function shells out to the desktop `open` command, which does not
+    // exist on iOS/Android, while the handle API uses the platform opener.
+    if let Err(e) = app_handle.opener().open_url(&oauth_url, None::<&str>) {
         log::error!("Failed to open browser: {}", e);
         return Err(format!("Failed to open browser: {}", e));
     }

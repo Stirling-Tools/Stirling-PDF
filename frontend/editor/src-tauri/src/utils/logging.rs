@@ -1,4 +1,4 @@
-use std::sync::Mutex;
+use std::sync::{Mutex, OnceLock};
 use std::collections::VecDeque;
 use std::fs::OpenOptions;
 use std::io::Write;
@@ -7,9 +7,20 @@ use std::path::PathBuf;
 // Store backend logs globally
 static BACKEND_LOGS: Mutex<VecDeque<String>> = Mutex::new(VecDeque::new());
 
+// Mobile sandboxes only allow writes inside app storage, which is known once
+// Tauri has started; entries logged before then stay in memory only.
+static APP_LOG_DIR: OnceLock<PathBuf> = OnceLock::new();
+
+#[cfg(mobile)]
+pub fn set_log_directory(dir: PathBuf) {
+    let _ = APP_LOG_DIR.set(dir);
+}
+
 // Get platform-specific log directory
 fn get_log_directory() -> PathBuf {
-    if cfg!(target_os = "macos") {
+    if let Some(dir) = APP_LOG_DIR.get() {
+        dir.clone()
+    } else if cfg!(target_os = "macos") {
         // macOS: ~/Library/Logs/Stirling-PDF
         let home = std::env::var("HOME").unwrap_or_else(|_| "/tmp".to_string());
         PathBuf::from(home).join("Library").join("Logs").join("Stirling-PDF")

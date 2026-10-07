@@ -31,6 +31,7 @@
 !/editor/.env
 !/editor/.env.proprietary
 !/editor/.env.desktop
+!/editor/.env.mobile
 !/editor/.env.saas
 
 npm-debug.log*
