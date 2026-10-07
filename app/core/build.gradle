@@ -22,7 +22,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-jetty'
     implementation 'org.eclipse.jetty.http2:jetty-http2-server'
     implementation 'org.eclipse.jetty:jetty-alpn-java-server'
-    implementation ('org.telegram:telegrambots:6.9.7.1') {
+    implementation (libs.telegrambots) {
         // Grizzly server + Jersey JAX-RS stack: only used for webhook mode;
         // Stirling-PDF uses long-polling mode so these are dead weight (~3 MB)
         exclude group: 'org.glassfish.jersey.inject'
@@ -42,7 +42,7 @@ dependencies {
     implementation libs.bouncycastle.bcprov
     implementation libs.bouncycastle.bcpkix
     implementation 'io.micrometer:micrometer-core'
-    implementation 'com.google.zxing:core:3.5.4'
+    implementation libs.zxing.core
     implementation libs.commonmark // https://mvnrepository.com/artifact/org.commonmark/commonmark
     implementation libs.commonmark.ext.gfm.tables
 
@@ -55,26 +55,26 @@ dependencies {
     implementation libs.pdfbox.preflight
     implementation libs.pdfbox.xmpbox
 
-    implementation 'org.verapdf:validation-model:1.30.2'
-    // CVE-2025-66453: Explicit rhino 1.7.15 to override verapdf's 1.7.13
-    implementation libs.rhino
+    implementation libs.verapdf.validation.model
 
-    // veraPDF still uses javax.xml.bind, not the new jakarta namespace
-    implementation 'javax.xml.bind:jaxb-api:2.3.1'
-    implementation 'com.sun.xml.bind:jaxb-impl:2.3.9'
-    implementation 'com.sun.xml.bind:jaxb-core:4.0.9'
-
-    // CVE-2022-25647: Explicit gson to prevent unsafe deserialization (tabula would pull 2.8.7)
+    // CVE-2022-25647: tabula pulls an old gson with unsafe deserialization. The central
+    // resolutionStrategy.force is not enough on its own - a module only pulled transitively
+    // gets the Spring Boot BOM's version instead - so this declaration is what holds the pin.
     implementation libs.gson
-    implementation 'org.apache.pdfbox:jbig2-imageio:3.0.5'
+    // veraPDF still uses javax.xml.bind, not the new jakarta namespace
+    implementation libs.jaxb.api
+    implementation libs.jaxb.impl
+    implementation libs.jaxb.core
+
+    implementation libs.jbig2.imageio
     // OpenCSV: Stirling-PDF only uses CSVWriter, not the opencsv-bean module.
     // Exclude commons-beanutils + commons-collections.
-    implementation('com.opencsv:opencsv:5.12.0') {
+    implementation(libs.opencsv) {
         exclude group: 'commons-beanutils', module: 'commons-beanutils'
         exclude group: 'commons-collections', module: 'commons-collections'
     }
     // POI: only XSSF (modern Excel) is used, not HSSF/FormulaEvaluator which need commons-math3.
-    implementation('org.apache.poi:poi-ooxml:5.5.1') {
+    implementation(libs.poi.ooxml) {
         exclude group: 'org.apache.commons', module: 'commons-math3'
     }
 
@@ -85,7 +85,7 @@ dependencies {
     runtimeOnly libs.batik.transcoder
 
     // PDFBox Graphics2D bridge for Batik SVG to PDF conversion
-    implementation 'de.rototor.pdfbox:graphics2d:3.0.5'
+    implementation libs.pdfbox.graphics2d
 
     // TwelveMonkeys
     runtimeOnly libs.imageio.batik
@@ -93,17 +93,7 @@ dependencies {
     runtimeOnly libs.imageio.jpeg
     runtimeOnly libs.imageio.tiff
     runtimeOnly libs.imageio.webp
-    // runtimeOnly "com.twelvemonkeys.imageio:imageio-hdr:$imageioVersion"
-    // runtimeOnly "com.twelvemonkeys.imageio:imageio-icns:$imageioVersion"
-    // runtimeOnly "com.twelvemonkeys.imageio:imageio-iff:$imageioVersion"
-    // runtimeOnly "com.twelvemonkeys.imageio:imageio-pcx:$imageioVersion@
-    // runtimeOnly "com.twelvemonkeys.imageio:imageio-pict:$imageioVersion"
-    // runtimeOnly "com.twelvemonkeys.imageio:imageio-pnm:$imageioVersion"
     runtimeOnly libs.imageio.psd
-    // runtimeOnly "com.twelvemonkeys.imageio:imageio-sgi:$imageioVersion"
-    // runtimeOnly "com.twelvemonkeys.imageio:imageio-tga:$imageioVersion"
-    // runtimeOnly "com.twelvemonkeys.imageio:imageio-thumbsdb:$imageioVersion"
-    // runtimeOnly "com.twelvemonkeys.imageio:imageio-xwd:$imageioVersion"
 
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
 }

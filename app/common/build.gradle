@@ -6,36 +6,36 @@ dependencies {
     // Security-hardening utilities (zip-slip, SSRF, filename sanitization, command injection).
     // Declared as api here so core + proprietary (which depend on common) get it transitively,
     // keeping it off modules that don't need it (e.g. saas).
-    api 'io.github.pixee:java-security-toolkit:1.2.3'
+    api libs.java.security.toolkit
     api libs.guava
     api 'org.springframework.boot:spring-boot-starter-webmvc'
     api 'org.springframework.boot:spring-boot-starter-aspectj'
-    api 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20260924.2'
-    api 'com.fathzer:javaluator:3.0.6'
-    api 'com.posthog.java:posthog:1.2.0'
+    api libs.owasp.html.sanitizer
+    api libs.javaluator
+    api libs.posthog
     api libs.commons.lang3
-    api 'com.drewnoakes:metadata-extractor:2.21.0' // Image metadata extractor
-    api 'com.vladsch.flexmark:flexmark-html2md-converter:0.64.8'
+    api libs.metadata.extractor // Image metadata extractor
+    api libs.flexmark.html2md.converter
     api libs.pdfbox
     api libs.pdfbox.io
     api libs.pdfbox.xmpbox
     api libs.pdfbox.preflight
-    api 'com.github.junrar:junrar:8.0.0' // RAR archive support for CBR files
-    api 'jakarta.servlet:jakarta.servlet-api:6.1.0'
-    api 'org.snakeyaml:snakeyaml-engine:3.1.1'
-    api "org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3"
+    api libs.junrar // RAR archive support for CBR files
+    api libs.jakarta.servlet.api
+    api libs.snakeyaml.engine
+    api libs.springdoc.openapi
     // Simple Java Mail for EML/MSG parsing (replaces direct Angus Mail usage)
-    api 'org.simplejavamail:simple-java-mail:9.3.5'
+    api libs.simple.java.mail
     // MSG file support; exclude commons-math3 (only HSSF/formula needs it, MSG parsing doesn't)
-    api('org.simplejavamail:outlook-module:9.3.5') {
+    api(libs.simple.java.mail.outlook) {
         exclude group: 'org.apache.commons', module: 'commons-math3'
     }
-    api 'jakarta.mail:jakarta.mail-api:2.1.5'
-    runtimeOnly 'org.eclipse.angus:angus-mail:2.0.5'
+    api libs.jakarta.mail.api
+    runtimeOnly libs.angus.mail
 
     // Tabula table extraction — used by the shared PDF parser and directly by downstream modules.
     // api-scoped so downstream modules (core, proprietary) retain it on their compile classpath.
-    api ('technology.tabula:tabula:1.0.5') {
+    api (libs.tabula) {
         exclude group: 'org.slf4j', module: 'slf4j-simple'
         exclude group: 'org.bouncycastle', module: 'bcprov-jdk15on'
         exclude group: 'com.google.code.gson', module: 'gson'

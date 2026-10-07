@@ -32,7 +32,7 @@ dependencies {
     // Supplies GenericObjectPoolConfig for the Lettuce pool, which today backs only the single
     // shared native connection; headroom for a future dedicated-connection path.
     implementation 'org.apache.commons:commons-pool2'
-    api 'io.swagger.core.v3:swagger-core-jakarta:2.2.53'
+    api libs.swagger.core.jakarta
     implementation libs.bucket4j.core
     // Lettuce-backed Bucket4j ProxyManager used by ValkeyRateLimitStore for cluster-wide
     // token-bucket rate limiting (parity with in-process Bucket4j semantics; no fixed-window
@@ -43,13 +43,16 @@ dependencies {
     implementation libs.bouncycastle.bcprov
 
     // PDF/UA tagging and its validation oracle.
-    implementation 'org.verapdf:validation-model:1.30.2'
-    // CVE-2025-66453: Explicit rhino 1.7.15 to override verapdf's 1.7.13
-    implementation libs.rhino
+    implementation libs.verapdf.validation.model
+
+    // CVE-2022-25647: tabula pulls an old gson with unsafe deserialization. The central
+    // resolutionStrategy.force is not enough on its own - a module only pulled transitively
+    // gets the Spring Boot BOM's version instead - so this declaration is what holds the pin.
+    implementation libs.gson
     // veraPDF still uses javax.xml.bind, not the new jakarta namespace
-    implementation 'javax.xml.bind:jaxb-api:2.3.1'
-    runtimeOnly 'com.sun.xml.bind:jaxb-impl:2.3.9'
-    runtimeOnly 'com.sun.xml.bind:jaxb-core:4.0.9'
+    implementation libs.jaxb.api
+    runtimeOnly libs.jaxb.impl
+    runtimeOnly libs.jaxb.core
 
     implementation libs.gson
 
@@ -80,9 +83,9 @@ dependencies {
     api libs.jwt.api
     runtimeOnly libs.jwt.impl
     runtimeOnly libs.jwt.jackson
-    runtimeOnly 'com.h2database:h2:2.3.232' // Don't upgrade h2database - file format incompatible with 2.4.x, would break existing user databases
-    runtimeOnly 'org.postgresql:postgresql:42.7.13'
-    implementation('com.coveo:saml-client:5.0.0') {
+    runtimeOnly libs.h2 // Don't upgrade h2database - file format incompatible with 2.4.x, would break existing user databases
+    runtimeOnly libs.postgresql
+    implementation(libs.saml.client) {
         exclude group: 'org.opensaml', module: 'opensaml-core'
     }
 
