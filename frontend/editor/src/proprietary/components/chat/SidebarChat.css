@@ -6,6 +6,8 @@
   flex-direction: column;
   flex: 0 1 0;
   gap: 0.375rem;
+  padding-top: var(--nav-gutter);
+  border-top: 1px solid var(--c-border-subtle);
   transition: flex-grow 280ms cubic-bezier(0.32, 0.72, 0, 1);
 }
 
@@ -54,7 +56,7 @@
   height: 0.8rem;
   border-radius: 50%;
   background: var(--c-success);
-  color: var(--p-white);
+  color: var(--c-text-on-success);
 }
 
 .chat-dock__title {
