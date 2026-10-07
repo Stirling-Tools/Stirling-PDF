@@ -1,3 +1,4 @@
+import { profileIdentity } from "@app/services/profileIdentity";
 import {
   createContext,
   useContext,
@@ -213,7 +214,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       let pictureUrl: string | null;
       try {
         const PROFILE_BUCKET = "profile-pictures";
-        const profilePath = `${currentSession.user.id}/avatar`;
+        const profilePath = `${await profileIdentity(currentSession.user.id)}/avatar`;
 
         console.debug(
           "[Auth Debug] Fetching profile picture for user:",

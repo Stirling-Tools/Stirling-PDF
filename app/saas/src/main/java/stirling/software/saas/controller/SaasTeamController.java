@@ -52,6 +52,9 @@ public class SaasTeamController {
     private final UserService userService;
     private final TeamSecurityExpressions teamSecurityExpressions;
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private stirling.software.saas.sso.CompanySsoPolicy companySsoPolicy;
+
     // ========== NEW TEAM INVITATION ENDPOINTS ==========
 
     /** Invite user to team (team leader only) */
@@ -517,17 +520,21 @@ public class SaasTeamController {
     private TeamDetailsDTO toTeamDetailsDTO(Team team, boolean isLeader) {
         long memberCount = membershipRepository.countByTeamId(team.getId());
         int maxSeats = saasTeamExtensionService.getMaxSeats(team);
-        return new TeamDetailsDTO(
-                team.getId(),
-                team.getName(),
-                saasTeamExtensionService.getTeamType(team),
-                saasTeamExtensionService.isPersonal(team),
-                (int) memberCount,
-                // seatCount and maxSeats now share the same backing field on the extension.
-                maxSeats,
-                saasTeamExtensionService.getSeatsUsed(team),
-                maxSeats,
-                isLeader);
+        TeamDetailsDTO result =
+                new TeamDetailsDTO(
+                        team.getId(),
+                        team.getName(),
+                        saasTeamExtensionService.getTeamType(team),
+                        saasTeamExtensionService.isPersonal(team),
+                        (int) memberCount,
+                        // seatCount and maxSeats now share the same backing field on the extension.
+                        maxSeats,
+                        saasTeamExtensionService.getSeatsUsed(team),
+                        maxSeats,
+                        isLeader);
+        result.setCompanySsoRequired(
+                companySsoPolicy != null && companySsoPolicy.isManaged(team.getId()));
+        return result;
     }
 
     private InvitationDTO toInvitationDTO(TeamInvitation invitation) {
@@ -574,6 +581,7 @@ public class SaasTeamController {
         private final Boolean isLeader;
         private Boolean current;
         private Long currentUserId;
+        private boolean companySsoRequired;
     }
 
     @Data
@@ -711,6 +719,8 @@ public class SaasTeamController {
                             seatsUsed,
                             "availableSeats",
                             maxSeats - seatsUsed,
+                            "companySsoRequired",
+                            companySsoPolicy != null && companySsoPolicy.isManaged(teamId),
                             "isLeader",
                             isLeader,
                             "members",

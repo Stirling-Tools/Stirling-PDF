@@ -4,6 +4,7 @@
  */
 
 import { supabase } from "@app/auth/supabase";
+import { profileIdentity } from "@app/services/profileIdentity";
 import type { User } from "@supabase/supabase-js";
 
 const PROFILE_BUCKET = "profile-pictures";
@@ -150,7 +151,7 @@ export async function uploadAvatarToStorage(
   blob: Blob,
 ): Promise<void> {
   try {
-    const profilePath = `${userId}/avatar`;
+    const profilePath = `${await profileIdentity(userId)}/avatar`;
 
     console.debug("[Avatar Sync] Uploading avatar to storage:", profilePath);
 
@@ -186,7 +187,7 @@ export async function getProfilePictureMetadata(
     const { data, error } = await supabase
       .from("profile_picture_metadata")
       .select("*")
-      .eq("user_id", userId)
+      .eq("user_id", await profileIdentity(userId))
       .maybeSingle();
 
     if (error) {
@@ -228,7 +229,7 @@ export async function updateProfilePictureMetadata(
   try {
     const { error } = await supabase.from("profile_picture_metadata").upsert(
       {
-        user_id: userId,
+        user_id: await profileIdentity(userId),
         ...data,
       },
       {
