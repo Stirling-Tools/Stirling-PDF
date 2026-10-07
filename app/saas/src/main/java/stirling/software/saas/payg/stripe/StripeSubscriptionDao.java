@@ -209,20 +209,30 @@ public class StripeSubscriptionDao {
         return rate;
     }
 
-    private static final String SCHEDULED_END_BY_SUBSCRIPTION =
+    /**
+     * One live subscription as the Stripe mirror holds it.
+     *
+     * @param endsAt when it stops once a cancel is scheduled; null while it renews
+     * @param periodEnd the end of the paid period: the renewal date, or the stop date once
+     *     cancelled
+     */
+    public record SubscriptionState(
+            String id, String status, boolean cancelling, Instant endsAt, Instant periodEnd) {}
+
+    private static final String STATE_BY_SUBSCRIPTION =
             """
-            SELECT s.cancel_at_period_end, s.cancel_at,
+            SELECT s.id, s.status, s.cancel_at_period_end, s.cancel_at,
                    COALESCE(MIN(si.current_period_end), s.current_period_end) AS period_end
             FROM stripe.subscriptions s
             LEFT JOIN stripe.subscription_items si ON si.subscription = s.id
               AND COALESCE(si.deleted, false) = false
             WHERE s.status IN ('active', 'trialing', 'past_due') AND s.id = ?
-            GROUP BY s.id, s.cancel_at_period_end, s.cancel_at, s.current_period_end
+            GROUP BY s.id, s.status, s.cancel_at_period_end, s.cancel_at, s.current_period_end
             """;
 
-    private static final String SCHEDULED_END_BY_TEAM =
+    private static final String STATE_BY_TEAM =
             """
-            SELECT s.cancel_at_period_end, s.cancel_at,
+            SELECT s.id, s.status, s.cancel_at_period_end, s.cancel_at,
                    COALESCE(MIN(si.current_period_end), s.current_period_end) AS period_end
             FROM stripe.subscriptions s
             LEFT JOIN stripe.subscription_items si ON si.subscription = s.id
@@ -230,44 +240,64 @@ public class StripeSubscriptionDao {
             WHERE s.status IN ('active', 'trialing', 'past_due')
               AND s.id IN (SELECT subscription_id FROM team_capacity_subscriptions
                            WHERE team_id = ? AND canceled = false)
-            GROUP BY s.id, s.cancel_at_period_end, s.cancel_at, s.current_period_end
+            GROUP BY s.id, s.status, s.cancel_at_period_end, s.cancel_at, s.current_period_end
             """;
 
     /**
-     * When the subscription stops, once a cancel is scheduled for it. Empty while it renews, and
-     * when the mirror has not synced it. Since API 2025-03-31 the period end lives on the item, so
-     * the item's value wins over the subscription's legacy column.
+     * A live subscription's state; empty when it has ended or the mirror has not synced it. Since
+     * API 2025-03-31 the period end lives on the item, so the item's value wins over the
+     * subscription's legacy column.
      */
-    public Optional<Instant> findScheduledEnd(String subscriptionId) {
+    public Optional<SubscriptionState> findState(String subscriptionId) {
         if (subscriptionId == null || subscriptionId.isBlank()) {
             return Optional.empty();
         }
-        return scheduledEnd(SCHEDULED_END_BY_SUBSCRIPTION, subscriptionId);
+        return state(STATE_BY_SUBSCRIPTION, subscriptionId);
     }
 
-    /** The same, for the team's live Team subscription in {@code team_capacity_subscriptions}. */
+    /** The team's live Team subscription, from {@code team_capacity_subscriptions}. */
+    public Optional<SubscriptionState> findTeamState(long teamId) {
+        return state(STATE_BY_TEAM, teamId);
+    }
+
+    /** When the subscription stops, once a cancel is scheduled for it. */
+    public Optional<Instant> findScheduledEnd(String subscriptionId) {
+        return findState(subscriptionId).map(SubscriptionState::endsAt);
+    }
+
+    /** The same, for the team's live Team subscription. */
     public Optional<Instant> findTeamScheduledEnd(long teamId) {
-        return scheduledEnd(SCHEDULED_END_BY_TEAM, teamId);
+        return findTeamState(teamId).map(SubscriptionState::endsAt);
     }
 
-    private Optional<Instant> scheduledEnd(String sql, Object arg) {
+    private Optional<SubscriptionState> state(String sql, Object arg) {
         try {
             return jdbcTemplate
                     .query(
                             sql,
                             (rs, i) -> {
-                                long cancelAt = rs.getLong("cancel_at");
-                                if (!rs.wasNull()) return Instant.ofEpochSecond(cancelAt);
-                                if (!rs.getBoolean("cancel_at_period_end")) return null;
-                                long periodEnd = rs.getLong("period_end");
-                                return rs.wasNull() ? null : Instant.ofEpochSecond(periodEnd);
+                                long periodEndEpoch = rs.getLong("period_end");
+                                Instant periodEnd =
+                                        rs.wasNull() ? null : Instant.ofEpochSecond(periodEndEpoch);
+                                long cancelAtEpoch = rs.getLong("cancel_at");
+                                Instant cancelAt =
+                                        rs.wasNull() ? null : Instant.ofEpochSecond(cancelAtEpoch);
+                                boolean cancelling =
+                                        cancelAt != null || rs.getBoolean("cancel_at_period_end");
+                                return new SubscriptionState(
+                                        rs.getString("id"),
+                                        rs.getString("status"),
+                                        cancelling,
+                                        cancelling
+                                                ? (cancelAt != null ? cancelAt : periodEnd)
+                                                : null,
+                                        periodEnd);
                             },
                             arg)
                     .stream()
-                    .filter(Objects::nonNull)
                     .findFirst();
         } catch (DataAccessException e) {
-            log.warn("Scheduled subscription end unavailable for {}: {}", arg, e.getMessage());
+            log.warn("Subscription state unavailable for {}: {}", arg, e.getMessage());
             return Optional.empty();
         }
     }

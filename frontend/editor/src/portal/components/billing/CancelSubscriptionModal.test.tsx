@@ -10,25 +10,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CancelSubscriptionModal } from "@portal/components/billing/CancelSubscriptionModal";
 import { subscribedWallet } from "@app/billing/walletFixtures";
 import { formatPeriodDate, type Wallet } from "@app/billing";
+import { HttpError } from "@portal/api/http";
 
-const api = vi.hoisted(() => {
-  class StripeFunctionError extends Error {
-    constructor(
-      message: string,
-      public readonly code?: string,
-    ) {
-      super(message);
-    }
-  }
-  return {
-    StripeFunctionError,
-    fetchSubscriptionStates: vi.fn(),
-    cancelSubscription: vi.fn(),
-    resumeSubscription: vi.fn(),
-    contactBeforeCancelling: vi.fn(),
-  };
-});
-vi.mock("@portal/billing/stripe", () => api);
+const api = vi.hoisted(() => ({
+  fetchSubscriptionStates: vi.fn(),
+  cancelSubscription: vi.fn(),
+  resumeSubscription: vi.fn(),
+  contactBeforeCancelling: vi.fn(),
+}));
+vi.mock("@portal/api/billing", () => api);
 const trackCancellation = vi.hoisted(() => vi.fn());
 vi.mock("@app/services/analytics", () => ({ trackCancellation }));
 vi.mock("@portal/components/procurement/CalendlyInline", () => ({
@@ -199,7 +189,7 @@ describe("Cancel subscription", () => {
 
   it("says so when today's messages are used up", async () => {
     api.contactBeforeCancelling.mockRejectedValue(
-      new api.StripeFunctionError("limit", "contact_limit"),
+      new HttpError(429, "Too Many Requests", { error: "contact_limit" }),
     );
     await open(teamOnly);
     fireEvent.click(radio("Something isn't working"));

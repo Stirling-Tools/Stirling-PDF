@@ -22,8 +22,6 @@ vi.mock("@app/auth/supabase/supabaseClient", () => ({
 import {
   acceptBundleStripeQuote,
   cancelBundleQuote,
-  cancelSubscription,
-  contactBeforeCancelling,
   createBundleStripeQuote,
   createCheckoutSession,
   createPortalSession,
@@ -32,7 +30,6 @@ import {
   fetchCheckoutPricing,
   finalizeBundleInvoice,
   getLatestBundleQuote,
-  resumeSubscription,
   StripeFunctionError,
   upsertBundleQuote,
 } from "@app/portal/billing/stripe";
@@ -603,76 +600,5 @@ describe("checkout pricing preview", () => {
     await expect(fetchCheckoutPricing(42, "processor")).rejects.toThrow(
       "Couldn't load checkout pricing",
     );
-  });
-});
-
-describe("subscription-cancellation", () => {
-  const row = {
-    product: "team",
-    subscription_id: "sub_team",
-    status: "active",
-    cancel_at_period_end: true,
-    ends_at: "2026-11-14T00:00:00.000Z",
-    period_end: "2026-11-14T00:00:00.000Z",
-    interval: "month",
-    quantity: 1,
-  };
-
-  it("cancels with the reason and maps the answer", async () => {
-    invoke.mockResolvedValue({ data: { subscriptions: [row] }, error: null });
-    const states = await cancelSubscription({
-      product: "team",
-      reason: "switched_service",
-      competitor: "Acrobat",
-    });
-    expect(invoke.mock.calls[0][0]).toBe("subscription-cancellation");
-    expect(invoke.mock.calls[0][1].body).toEqual({
-      action: "cancel",
-      product: "team",
-      reason: "switched_service",
-      competitor: "Acrobat",
-    });
-    expect(states).toEqual([
-      {
-        product: "team",
-        subscriptionId: "sub_team",
-        status: "active",
-        cancelling: true,
-        endsAt: "2026-11-14T00:00:00.000Z",
-        periodEnd: "2026-11-14T00:00:00.000Z",
-        interval: "month",
-        quantity: 1,
-      },
-    ]);
-  });
-
-  it("resumes every scheduled cancel", async () => {
-    invoke.mockResolvedValue({
-      data: {
-        subscriptions: [{ ...row, cancel_at_period_end: false, ends_at: null }],
-      },
-      error: null,
-    });
-    const [state] = await resumeSubscription("both");
-    expect(invoke.mock.calls[0][1].body).toEqual({
-      action: "resume",
-      product: "both",
-    });
-    expect(state.cancelling).toBe(false);
-  });
-
-  it("surfaces the daily contact limit as its own code", async () => {
-    invoke.mockResolvedValue({
-      data: null,
-      error: {
-        message: "Edge Function returned a non-2xx status code",
-        context: new Response(JSON.stringify({ error: "contact_limit" }), {
-          status: 429,
-        }),
-      },
-    });
-    await expect(
-      contactBeforeCancelling({ product: "team", reason: null, message: "hi" }),
-    ).rejects.toMatchObject({ code: "contact_limit" });
   });
 });

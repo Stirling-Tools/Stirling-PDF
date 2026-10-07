@@ -26,10 +26,7 @@ import { formatPeriodDate } from "@app/billing";
 
 const fetchCheckoutPricing = vi.hoisted(() => vi.fn());
 const resumeSubscription = vi.hoisted(() => vi.fn());
-vi.mock("@app/portal/billing/stripe", () => ({
-  fetchCheckoutPricing,
-  resumeSubscription,
-}));
+vi.mock("@app/portal/billing/stripe", () => ({ fetchCheckoutPricing }));
 vi.mock("@app/portal/components/billing/CancelSubscriptionModal", () => ({
   CancelSubscriptionModal: ({ open }: { open: boolean }) =>
     open ? <div role="dialog">Cancel dialog</div> : null,
@@ -147,6 +144,7 @@ vi.mock("@app/portal/api/billing", () => ({
   fetchPaymentMethod: () => Promise.resolve(null),
   fetchBillingDetails: () => Promise.resolve(null),
   fetchInvoices: () => Promise.resolve([]),
+  resumeSubscription: (product: string) => resumeSubscription(product),
 }));
 const fetchLocalUsage = vi.fn().mockResolvedValue(null);
 vi.mock("@app/portal/api/link", () => ({

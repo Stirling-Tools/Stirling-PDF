@@ -1,9 +1,5 @@
 import { TeamSubscriptionChange } from "@app/billing/TeamSubscriptionChange";
-import {
-  fetchCheckoutPricing,
-  resumeSubscription,
-  type SubscriptionState,
-} from "@app/portal/billing/stripe";
+import { fetchCheckoutPricing } from "@app/portal/billing/stripe";
 import type { ServerPlan } from "@app/billing/serverPlan";
 import { fleetUsersInUse } from "@app/billing/fleetSeats";
 import {
@@ -28,6 +24,8 @@ import { ProcurementFlow } from "@app/portal/components/procurement/ProcurementF
 import {
   fetchWallet,
   refreshWalletCache,
+  resumeSubscription,
+  type SubscriptionState,
   type Wallet,
 } from "@app/portal/api/billing";
 import { fetchLocalUsage, triggerLocalSync } from "@app/portal/api/link";

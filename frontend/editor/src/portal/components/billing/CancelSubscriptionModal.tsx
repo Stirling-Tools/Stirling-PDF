@@ -3,18 +3,18 @@ import { useTranslation } from "react-i18next";
 import { Banner, Button, FormField, Input, RadioGroup } from "@app/ui";
 import { formatPeriodDate } from "@app/billing";
 import { trackCancellation } from "@app/services/analytics";
-import type { Wallet } from "@portal/api/billing";
 import {
   cancelSubscription,
   contactBeforeCancelling,
   fetchSubscriptionStates,
   resumeSubscription,
-  StripeFunctionError,
   type CancelProduct,
   type CancelReason,
   type CancelScope,
   type SubscriptionState,
-} from "@portal/billing/stripe";
+  type Wallet,
+} from "@portal/api/billing";
+import { HttpError } from "@portal/api/http";
 import { FlowModal } from "@portal/components/shared/FlowModal";
 import { StepModalHeader } from "@portal/components/shared/StepModalHeader";
 import { CalendlyInline } from "@portal/components/procurement/CalendlyInline";
@@ -294,7 +294,7 @@ export function CancelSubscriptionModal({
       setStep("sent");
     } catch (e) {
       setError(
-        e instanceof StripeFunctionError && e.code === "contact_limit"
+        e instanceof HttpError && e.status === 429
           ? t(
               "portal.billing.cancel.error.contactLimit",
               "You've already sent us three messages today. We'll be in touch.",

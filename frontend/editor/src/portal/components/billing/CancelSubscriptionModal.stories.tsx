@@ -6,18 +6,16 @@ import "@portal/components/billing/billing.css";
 
 const state = (product: "team" | "processor", cancelling: boolean) => ({
   product,
-  subscription_id: `sub_${product}`,
+  subscriptionId: `sub_${product}`,
   status: "active",
-  cancel_at_period_end: cancelling,
-  ends_at: cancelling ? "2026-11-14T00:00:00.000Z" : null,
-  period_end: "2026-11-14T00:00:00.000Z",
-  interval: "month",
-  quantity: 1,
+  cancelling,
+  endsAt: cancelling ? "2026-11-14T00:00:00.000Z" : null,
+  periodEnd: "2026-11-14T00:00:00.000Z",
 });
 
 /**
- * The in-app cancel flow: reason, one "before you go" step, confirm. The mock edge function answers
- * every action, so the whole flow can be clicked through, including the message to support.
+ * The in-app cancel flow: reason, one "before you go" step, confirm. The mocked endpoints answer
+ * every action, so the whole flow can be clicked through, including the message to the team.
  */
 const meta: Meta<typeof CancelSubscriptionModal> = {
   title: "Portal/Billing/CancelSubscriptionModal",
@@ -38,20 +36,23 @@ const meta: Meta<typeof CancelSubscriptionModal> = {
     layout: "fullscreen",
     msw: {
       handlers: [
-        http.post(
-          "http://saas.mock/functions/v1/subscription-cancellation",
-          async ({ request }) => {
-            const body = (await request.json()) as { action: string };
-            if (body.action === "contact")
-              return HttpResponse.json({ sent: true });
-            const cancelling = body.action === "cancel";
-            return HttpResponse.json({
-              subscriptions: [
-                state("team", cancelling),
-                state("processor", false),
-              ],
-            });
-          },
+        http.get("http://saas.mock/api/v1/payg/subscriptions", () =>
+          HttpResponse.json({
+            subscriptions: [state("team", false), state("processor", false)],
+          }),
+        ),
+        http.post("http://saas.mock/api/v1/payg/subscriptions/cancel", () =>
+          HttpResponse.json({
+            subscriptions: [state("team", true), state("processor", false)],
+          }),
+        ),
+        http.post("http://saas.mock/api/v1/payg/subscriptions/resume", () =>
+          HttpResponse.json({
+            subscriptions: [state("team", false), state("processor", false)],
+          }),
+        ),
+        http.post("http://saas.mock/api/v1/payg/subscriptions/contact", () =>
+          HttpResponse.json({ sent: true }),
         ),
       ],
     },
