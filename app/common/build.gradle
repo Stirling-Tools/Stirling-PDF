@@ -7,19 +7,19 @@ dependencies {
     // Declared as api here so core + proprietary (which depend on common) get it transitively,
     // keeping it off modules that don't need it (e.g. saas).
     api 'io.github.pixee:java-security-toolkit:1.2.3'
-    api "com.google.guava:guava:${guavaVersion}"
+    api libs.guava
     api 'org.springframework.boot:spring-boot-starter-webmvc'
     api 'org.springframework.boot:spring-boot-starter-aspectj'
     api 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20260924.2'
     api 'com.fathzer:javaluator:3.0.6'
     api 'com.posthog.java:posthog:1.2.0'
-    api "org.apache.commons:commons-lang3:${commonsLang3}"
+    api libs.commons.lang3
     api 'com.drewnoakes:metadata-extractor:2.21.0' // Image metadata extractor
     api 'com.vladsch.flexmark:flexmark-html2md-converter:0.64.8'
-    api "org.apache.pdfbox:pdfbox:$pdfboxVersion"
-    api "org.apache.pdfbox:pdfbox-io:$pdfboxVersion"
-    api "org.apache.pdfbox:xmpbox:$pdfboxVersion"
-    api "org.apache.pdfbox:preflight:$pdfboxVersion"
+    api libs.pdfbox
+    api libs.pdfbox.io
+    api libs.pdfbox.xmpbox
+    api libs.pdfbox.preflight
     api 'com.github.junrar:junrar:8.0.0' // RAR archive support for CBR files
     api 'jakarta.servlet:jakarta.servlet-api:6.1.0'
     api 'org.snakeyaml:snakeyaml-engine:3.1.1'
@@ -41,7 +41,7 @@ dependencies {
         exclude group: 'com.google.code.gson', module: 'gson'
     }
 
-    api "com.stirling:jpdfium:${jpdfiumVersion}"
+    api libs.jpdfium
 
     // -PjpdfiumPlatforms=auto|all|none|<csv of linux-x64,linux-arm64,linux-musl-x64,linux-musl-arm64,darwin-x64,darwin-arm64,windows-x64> (windows-arm64 natives not published yet)
     def jpdfiumPlatformsProp = (project.findProperty('jpdfiumPlatforms') ?: 'auto').toString().trim()
@@ -80,12 +80,12 @@ dependencies {
     }
     logger.lifecycle("JPDFium native platforms: ${jpdfiumPlatforms ? jpdfiumPlatforms.join(', ') : 'none'}")
     jpdfiumPlatforms.each { platform ->
-        runtimeOnly "com.stirling:jpdfium-natives-${platform}:${jpdfiumVersion}"
+        runtimeOnly "com.stirling:jpdfium-natives-${platform}:${libs.versions.jpdfium.get()}"
     }
 
     // Bucket4j (local in-process token bucket for RateLimitStore default impl)
-    implementation "com.bucket4j:bucket4j_jdk17-core:${bucket4jVersion}"
+    implementation libs.bucket4j.core
 
     // ArchUnit: enforces module dependency direction (see ArchitectureTest)
-    testImplementation "com.tngtech.archunit:archunit-junit5:${archunitVersion}"
+    testImplementation libs.archunit.junit5
 }
