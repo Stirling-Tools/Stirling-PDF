@@ -109,20 +109,24 @@
   transition: opacity 0.15s ease;
 }
 
+/* Centred in the space under the logo (it ends ~56px down), so the group
+   keeps clear of it whether three or four sources show. Hidden by opacity
+   alone so the buttons stay tabbable, which is what reveals them by keyboard. */
 .sources {
   position: absolute;
-  top: 64px;
-  left: 16px;
-  right: 16px;
+  top: calc(50% + 10px);
+  left: 20px;
+  right: 20px;
+  translate: 0 -50%;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-height: 0;
   opacity: 0;
-  overflow: hidden;
+  pointer-events: none;
+  transform: translateY(6px);
   transition:
-    max-height 0.25s ease,
-    opacity 0.15s ease;
+    opacity 0.15s ease,
+    transform 0.2s ease;
 }
 
 .stack:hover .prompt,
@@ -138,14 +142,15 @@
 
 .stack:hover .sources,
 .stack:focus-within .sources {
-  max-height: 200px;
   opacity: 1;
+  pointer-events: auto;
+  transform: none;
 }
 
 /* A drag has one target, the whole workbench, so the sources stay hidden. */
 :global([data-accept]) .sources {
-  max-height: 0;
   opacity: 0;
+  pointer-events: none;
 }
 
 .title {
