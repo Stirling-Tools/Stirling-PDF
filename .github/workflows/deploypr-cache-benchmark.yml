@@ -15,11 +15,16 @@ jobs:
       fail-fast: false
       matrix:
         mode: [nocache, read, readwrite]
-        attempt: [1, 2]
+        change: [src, gradle]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      - name: Simulate a PR change
+        run: |
+          if [ "${{ matrix.change }}" = gradle ]; then f=app/core/build.gradle; else f=app/core/src/main/java/stirling/software/SPDF/SPDFApplication.java; fi
+          echo "// bench ${{ github.run_id }}" >> "$f"
 
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
@@ -29,9 +34,10 @@ jobs:
           context: .
           file: ./docker/embedded/Dockerfile
           push: false
+          load: true
           no-cache: ${{ matrix.mode == 'nocache' }}
           cache-from: ${{ matrix.mode != 'nocache' && 'type=gha,scope=stirling-pdf-latest' || '' }}
-          cache-to: ${{ matrix.mode == 'readwrite' && format('type=gha,mode=max,scope=deploypr-bench-{0},ignore-error=true', matrix.attempt) || '' }}
+          cache-to: ${{ matrix.mode == 'readwrite' && format('type=gha,mode=max,scope=deploypr-bench-{0},ignore-error=true', matrix.change) || '' }}
           build-args: |
             VERSION_TAG=alpha
           platforms: linux/amd64
