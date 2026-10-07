@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -30,10 +31,10 @@ public interface FileRunEventRepository extends JpaRepository<FileRunEventEntity
                     + " and (:kindId is null or e.kindId = :kindId)"
                     + " and (:actor is null or e.actor = :actor) order by e.lastSeenAt desc")
     List<FileRunEventEntity> findByTeamAndStatusIn(
-            @Param("teamId") Long teamId,
+            @Param("teamId") @Nullable Long teamId,
             @Param("statuses") List<FileRunEventStatus> statuses,
-            @Param("kindId") String kindId,
-            @Param("actor") String actor,
+            @Param("kindId") @Nullable String kindId,
+            @Param("actor") @Nullable String actor,
             Pageable pageable);
 
     /** As {@link #findByTeamAndStatusIn} but for exactly one status, for the surface's filters. */
@@ -43,10 +44,10 @@ public interface FileRunEventRepository extends JpaRepository<FileRunEventEntity
                     + " and (:kindId is null or e.kindId = :kindId)"
                     + " and (:actor is null or e.actor = :actor) order by e.lastSeenAt desc")
     List<FileRunEventEntity> findByTeamAndStatus(
-            @Param("teamId") Long teamId,
+            @Param("teamId") @Nullable Long teamId,
             @Param("status") FileRunEventStatus status,
-            @Param("kindId") String kindId,
-            @Param("actor") String actor,
+            @Param("kindId") @Nullable String kindId,
+            @Param("actor") @Nullable String actor,
             Pageable pageable);
 
     /**
@@ -61,7 +62,10 @@ public interface FileRunEventRepository extends JpaRepository<FileRunEventEntity
             "update FileRunEventEntity e set e.occurrences = e.occurrences + 1,"
                     + " e.lastSeenAt = :now, e.detail = coalesce(:detail, e.detail)"
                     + " where e.id = :id")
-    int fold(@Param("id") String id, @Param("now") Instant now, @Param("detail") String detail);
+    int fold(
+            @Param("id") String id,
+            @Param("now") Instant now,
+            @Param("detail") @Nullable String detail);
 
     /**
      * A recurrence reopens {@code RESOLVED} (the fix did not hold) and {@code FILE_REMOVED} (the
@@ -89,9 +93,9 @@ public interface FileRunEventRepository extends JpaRepository<FileRunEventEntity
                     + " null) or e.teamId = :teamId) and e.status in :allowedFrom")
     int applyStatusIf(
             @Param("id") String id,
-            @Param("teamId") Long teamId,
+            @Param("teamId") @Nullable Long teamId,
             @Param("target") FileRunEventStatus target,
-            @Param("actor") String actor,
+            @Param("actor") @Nullable String actor,
             @Param("now") Instant now,
             @Param("allowedFrom") Collection<FileRunEventStatus> allowedFrom);
 
@@ -112,8 +116,8 @@ public interface FileRunEventRepository extends JpaRepository<FileRunEventEntity
                     + " ((:actor is null and e.actor is null) or e.actor = :actor) and e.fileId in"
                     + " :fileIds and e.status in :allowedFrom")
     int markFilesRemoved(
-            @Param("teamId") Long teamId,
-            @Param("actor") String actor,
+            @Param("teamId") @Nullable Long teamId,
+            @Param("actor") @Nullable String actor,
             @Param("fileIds") Collection<String> fileIds,
             @Param("now") Instant now,
             @Param("allowedFrom") Collection<FileRunEventStatus> allowedFrom);
@@ -126,12 +130,14 @@ public interface FileRunEventRepository extends JpaRepository<FileRunEventEntity
             "select e from FileRunEventEntity e where ((:teamId is null and e.teamId is null) or"
                     + " e.teamId = :teamId) and e.dedupKey = :dedupKey order by e.lastSeenAt desc")
     List<FileRunEventEntity> findByTeamAndDedupKey(
-            @Param("teamId") Long teamId, @Param("dedupKey") String dedupKey, Pageable pageable);
+            @Param("teamId") @Nullable Long teamId,
+            @Param("dedupKey") String dedupKey,
+            Pageable pageable);
 
     /** One row by id, but only if it belongs to {@code teamId}. */
     @Query(
             "select e from FileRunEventEntity e where e.id = :id and ((:teamId is null and e.teamId"
                     + " is null) or e.teamId = :teamId)")
     Optional<FileRunEventEntity> findByIdAndTeam(
-            @Param("id") String id, @Param("teamId") Long teamId);
+            @Param("id") String id, @Param("teamId") @Nullable Long teamId);
 }
