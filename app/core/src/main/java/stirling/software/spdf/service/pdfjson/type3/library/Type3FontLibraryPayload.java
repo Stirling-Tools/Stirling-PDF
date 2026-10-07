@@ -63,11 +63,19 @@ public class Type3FontLibraryPayload {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Type3FontLibraryPayload that = (Type3FontLibraryPayload) o;
-        return Objects.equals(getBase64(), that.getBase64()) && Objects.equals(format, that.format);
+        // Identity only: resolving the base64 reads and encodes the whole font file, so it must
+        // never run from equality. Two payloads naming the same source are the same payload.
+        return Objects.equals(directBase64, that.directBase64)
+                && Objects.equals(describe(resource), describe(that.resource))
+                && Objects.equals(format, that.format);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getBase64(), format);
+        return Objects.hash(directBase64, describe(resource), format);
+    }
+
+    private static String describe(Resource resource) {
+        return resource == null ? null : resource.getDescription();
     }
 }
