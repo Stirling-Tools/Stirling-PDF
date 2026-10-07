@@ -62,7 +62,7 @@ public class CertificateValidationService {
     }
 
     // Separate trust stores: signing vs TLS
-    private KeyStore signingTrustAnchors; // AATL/EUTL + server cert for PDF signing
+    private volatile KeyStore signingTrustAnchors; // AATL/EUTL + server cert for PDF signing
     private final ServerCertificateServiceInterface serverCertificateService;
     private final ApplicationProperties applicationProperties;
 
@@ -155,6 +155,9 @@ public class CertificateValidationService {
             anchors.add(new TrustAnchor(customTrustAnchor, null));
         } else {
             ensureTrustStoreInitialized();
+            if (signingTrustAnchors == null) {
+                throw new CertPathBuilderException("No trust anchors available");
+            }
             Enumeration<String> aliases = signingTrustAnchors.aliases();
             while (aliases.hasMoreElements()) {
                 Certificate c = signingTrustAnchors.getCertificate(aliases.nextElement());
