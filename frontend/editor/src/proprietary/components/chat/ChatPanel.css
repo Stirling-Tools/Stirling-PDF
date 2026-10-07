@@ -165,7 +165,7 @@
   align-items: center;
   gap: 0.375rem;
   flex-shrink: 0;
-  padding: 0.375rem;
+  padding: 0.375rem 0.375rem 0.375rem 0.75rem;
   border: 1px solid var(--c-border-subtle);
   border-radius: 1rem;
   background: var(--c-input-bg);
@@ -197,7 +197,6 @@
   min-width: 0;
 }
 
-.chat-panel-input__attach,
 .chat-panel-input__send {
   flex-shrink: 0;
   align-self: flex-end;

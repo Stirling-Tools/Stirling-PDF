@@ -7,7 +7,9 @@ import {
   type KeyboardEvent,
   type ReactNode,
   type Ref,
+  type RefCallback,
 } from "react";
+import { useMergedRef } from "@mantine/hooks";
 import { renderMarkdown } from "@app/components/viewer/nonpdf/MarkdownRenderer";
 import { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
@@ -35,7 +37,6 @@ import { formatRelativeTime } from "@app/utils/timeUtils";
 import { useTranslatedToolCatalog } from "@app/data/useTranslatedToolRegistry";
 import { StirlingLogoAnimated } from "@app/components/agents/StirlingLogoAnimated";
 import { ChatQuickActions } from "@app/components/chat/ChatQuickActions";
-import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import "@app/components/chat/ChatPanel.css";
 
 type TranslateFn = TFunction;
@@ -384,6 +385,8 @@ export interface ChatPanelProps {
   /** False keeps only the composer on screen; the conversation stays mounted but inert. */
   expanded: boolean;
   composerRef: Ref<HTMLTextAreaElement>;
+  /** Attached to the message list's scroller, for a header above it to track its scroll. */
+  messagesRef: RefCallback<HTMLDivElement>;
   onComposerFocus: (event: FocusEvent<HTMLTextAreaElement>) => void;
 }
 
@@ -391,15 +394,16 @@ export interface ChatPanelProps {
 export function ChatPanel({
   expanded,
   composerRef,
+  messagesRef,
   onComposerFocus,
 }: ChatPanelProps) {
   const { t } = useTranslation();
   const { messages, isLoading, progressLog, sendMessage } = useChat();
-  const { openFilesModal } = useFilesModalContext();
   const resolveToolName = useToolNameResolver();
   const resolveToolIcon = useToolIconResolver();
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const viewportRef = useMergedRef(scrollRef, messagesRef);
   // Tracks whether the user manually scrolled away from the bottom.
   // A ref (not state) so scroll events don't cause re-renders.
   const userScrolledUp = useRef(false);
@@ -479,7 +483,7 @@ export function ChatPanel({
           </div>
         )}
 
-        <ScrollArea className="chat-panel-messages" viewportRef={scrollRef}>
+        <ScrollArea className="chat-panel-messages" viewportRef={viewportRef}>
           <Stack
             gap="sm"
             px="xs"
@@ -532,16 +536,6 @@ export function ChatPanel({
       </div>
 
       <div className="chat-panel-input">
-        <ActionIcon
-          variant="secondary"
-          shape="circle"
-          size="md"
-          className="chat-panel-input__attach"
-          onClick={() => openFilesModal()}
-          aria-label={t("chat.dock.attach", "Add files")}
-        >
-          <Icon name="paperclip" size={16} />
-        </ActionIcon>
         <Textarea
           ref={composerRef}
           placeholder={t("chat.dock.placeholder", "Ask Stirling")}

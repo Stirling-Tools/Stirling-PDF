@@ -3217,7 +3217,6 @@ text = "To make these permissions unchangeable, use the Add Password tool to set
 copy = "Copy message"
 
 [chat.dock]
-attach = "Add files"
 collapse = "Collapse chat"
 expand = "Expand chat"
 placeholder = "Ask Stirling"

@@ -14,6 +14,7 @@ import { ChatPanel } from "@app/components/chat/ChatPanel";
 import { useChat } from "@app/components/chat/ChatContext";
 import { useAiEngineEnabled } from "@app/hooks/useAiEngineEnabled";
 import { useChatAccess } from "@app/hooks/useChatAccess";
+import { useIsScrolled } from "@app/hooks/useIsScrolled";
 import "@app/components/chat/SidebarChat.css";
 
 /**
@@ -41,6 +42,7 @@ function ChatDock() {
   const [hasUnviewedResult, setHasUnviewedResult] = useState(false);
   const dockRef = useRef<HTMLElement>(null);
   const composerRef = useRef<HTMLTextAreaElement>(null);
+  const { scrolled, scrollRef: messagesRef } = useIsScrolled();
   const expanded = state !== "collapsed";
 
   // A run that finishes while the dock is collapsed leaves a tick on the mark.
@@ -127,7 +129,10 @@ function ChatDock() {
       aria-label={title}
       onKeyDown={handleKeyDown}
     >
-      <div className="chat-dock__header">
+      <div
+        className="chat-dock__header"
+        data-scrolled={(expanded && scrolled) || undefined}
+      >
         <span className="chat-dock__mark" aria-hidden="true">
           {isLoading ? (
             <StirlingLogoAnimated size={18} />
@@ -168,6 +173,7 @@ function ChatDock() {
       <ChatPanel
         expanded={expanded}
         composerRef={composerRef}
+        messagesRef={messagesRef}
         onComposerFocus={handleComposerFocus}
       />
     </section>

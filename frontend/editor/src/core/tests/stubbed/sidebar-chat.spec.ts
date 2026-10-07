@@ -47,7 +47,6 @@ test("sits collapsed with only the header and composer", async ({ page }) => {
   await expect(
     dock.getByRole("textbox", { name: "Ask Stirling" }),
   ).toBeVisible();
-  await expect(dock.getByRole("button", { name: "Add files" })).toBeVisible();
   // The collapsed conversation stays mounted but hidden from the a11y tree.
   await expect(
     dock.getByRole("button", { name: "Open from computer" }),
@@ -97,6 +96,31 @@ test("stays open after a message is sent from the focused dock", async ({
     .locator('[data-tour="workbench"]')
     .click({ position: { x: 40, y: 200 } });
   await expect(dock).toHaveAttribute("data-state", "pinned");
+});
+
+test("rules the header once messages scroll beneath it", async ({ page }) => {
+  const answer = Array.from({ length: 40 }, (_, i) => `Line ${i + 1}`).join(
+    "\n\n",
+  );
+  await page.route("**/api/v1/ai/orchestrate/stream", (route: Route) =>
+    route.fulfill({
+      headers: { "content-type": "text/event-stream" },
+      body: `event: result\ndata: ${JSON.stringify({ outcome: "answer", answer })}\n\n`,
+    }),
+  );
+  const dock = await openEditorWithAi(page);
+  const header = dock.locator(".chat-dock__header");
+  await expect(header).not.toHaveAttribute("data-scrolled");
+
+  const composer = dock.getByRole("textbox", { name: "Ask Stirling" });
+  await composer.click();
+  await composer.fill("List forty lines");
+  await composer.press("Enter");
+  await expect(dock.getByText("Line 40")).toBeVisible();
+  await expect(header).toHaveAttribute("data-scrolled");
+
+  await dock.getByRole("button", { name: "Collapse chat" }).click();
+  await expect(header).not.toHaveAttribute("data-scrolled");
 });
 
 test("stays open when expanded explicitly until it is collapsed", async ({
