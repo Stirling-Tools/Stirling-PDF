@@ -3,11 +3,7 @@
 language: en-US
 early_access: false
 
-tone_instructions: >-
-  Be direct, concise, and evidence-driven. Explain the concrete trigger,
-  failure mechanism, impact, and smallest safe correction. Distinguish
-  confirmed defects from risks and optional improvements. Avoid invented
-  APIs, unsupported performance claims, repetitive findings, and cosmetic churn.
+tone_instructions: "Be concise, direct, and evidence-driven. Explain the trigger, impact, and smallest safe fix. Distinguish defects from suggestions. Avoid invented APIs, unsupported claims, repetition, and cosmetic churn."
 
 knowledge_base:
   code_guidelines:
