@@ -13,7 +13,7 @@ import stirling.software.common.cluster.FileStore;
  * cluster.artifactStore=local} (the default; {@code matchIfMissing=true}). The S3 artifact-store
  * supplies its own bean when {@code cluster.artifactStore=s3}.
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(
         prefix = "cluster",
         name = "artifactStore",

@@ -4,6 +4,7 @@ pdfbox = "3.0.8"
 imageio = "3.15.2"
 lombok = "1.18.46"
 office-convert = "0.2.2"
+jspecify = "1.0.1"
 bouncycastle = "1.85"
 spring-security-saml = "7.1.1"
 open-saml = "5.2.1"
@@ -71,6 +72,7 @@ pdfbox-xmpbox = { module = "org.apache.pdfbox:xmpbox", version.ref = "pdfbox" }
 pdfbox-preflight = { module = "org.apache.pdfbox:preflight", version.ref = "pdfbox" }
 
 # Common utilities
+caffeine = { module = "com.github.ben-manes.caffeine:caffeine" }
 commons-io = { module = "commons-io:commons-io", version.ref = "commons-io" }
 commons-lang3 = { module = "org.apache.commons:commons-lang3", version.ref = "commons-lang3" }
 commons-net = { module = "commons-net:commons-net", version.ref = "commons-net" }
@@ -109,6 +111,7 @@ jwt-jackson = { module = "io.jsonwebtoken:jjwt-jackson", version.ref = "jwt" }
 logback-core = { module = "ch.qos.logback:logback-core", version.ref = "logback" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
+jspecify = { module = "org.jspecify:jspecify", version.ref = "jspecify" }
 bucket4j-core = { module = "com.bucket4j:bucket4j_jdk17-core", version.ref = "bucket4j" }
 bucket4j-lettuce = { module = "com.bucket4j:bucket4j_jdk17-lettuce", version.ref = "bucket4j" }
 

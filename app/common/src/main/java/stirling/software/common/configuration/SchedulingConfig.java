@@ -10,7 +10,7 @@ import org.springframework.scheduling.concurrent.SimpleAsyncTaskScheduler;
  * long-running scheduled tasks (e.g. cleanup, license checks, file monitoring) never block each
  * other — each runs on its own lightweight virtual thread.
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class SchedulingConfig {
 
     @Bean

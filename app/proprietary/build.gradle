@@ -27,7 +27,6 @@ dependencies {
     api 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
     api 'org.springframework.boot:spring-boot-starter-mail'
     api 'org.springframework.boot:spring-boot-starter-cache'
-    api 'com.github.ben-manes.caffeine:caffeine'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     // Supplies GenericObjectPoolConfig for the Lettuce pool, which today backs only the single
     // shared native connection; headroom for a future dedicated-connection path.
@@ -54,7 +53,6 @@ dependencies {
     runtimeOnly libs.jaxb.impl
     runtimeOnly libs.jaxb.core
 
-    implementation libs.gson
 
     // ONNX Runtime (Java) runs Auto Form Detection. The ~42MB multi-platform native is bundled
     // only with -PbundleOnnxRuntime=true (Docker); without it the tool reports unavailable.

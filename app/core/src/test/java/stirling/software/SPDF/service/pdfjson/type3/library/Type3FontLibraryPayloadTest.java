@@ -14,7 +14,7 @@ class Type3FontLibraryPayloadTest {
 
     @Test
     void hasPayload_nullBase64_returnsFalse() {
-        Type3FontLibraryPayload payload = new Type3FontLibraryPayload(null, "ttf");
+        Type3FontLibraryPayload payload = new Type3FontLibraryPayload((String) null, "ttf");
         assertFalse(payload.hasPayload());
     }
 
