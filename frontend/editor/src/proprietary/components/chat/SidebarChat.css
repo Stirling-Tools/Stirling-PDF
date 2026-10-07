@@ -55,8 +55,8 @@
   width: 0.8rem;
   height: 0.8rem;
   border-radius: 50%;
-  background: var(--c-success);
-  color: var(--c-text-on-success);
+  background: var(--c-success-solid);
+  color: var(--c-text-on-primary);
 }
 
 .chat-dock__title {
