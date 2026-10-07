@@ -3259,9 +3259,7 @@ convertMany = "Convert these documents to PDF"
 convertOne = "Convert this document to PDF"
 heading = "Get started"
 mergeMany = "Merge these {{count}} documents into 1"
-moreFiles = "+{{count}} more"
 openFromComputer = "Open from computer"
-removeFile = "Remove {{name}}"
 splitOne = "Split this document"
 
 [chat.responses]
