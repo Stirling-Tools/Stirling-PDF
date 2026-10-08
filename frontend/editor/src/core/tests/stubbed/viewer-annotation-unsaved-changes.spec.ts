@@ -77,7 +77,7 @@ test("undoing the only annotation disarms the unsaved-changes warning", async ({
   await expect(page.getByText("Unsaved changes").first()).not.toBeVisible();
 });
 
-test("entering manual redact mode keeps annotation work dirty", async ({
+test("entering manual redact mode saves annotation work instead of dropping it", async ({
   page,
 }) => {
   test.setTimeout(120_000);
@@ -109,13 +109,13 @@ test("entering manual redact mode keeps annotation work dirty", async ({
     .poll(() => viewerCursor(page), { timeout: 15_000 })
     .toBe("crosshair");
 
-  // The redaction panel no longer carries a separate save; annotation work
-  // stays dirty and must still trip the guard instead of being dropped.
+  // The redaction panel no longer carries a separate save, and the guard's
+  // "Save & Leave" persists the annotation work, so nothing stays unsaved.
   await expect(page.getByRole("button", { name: "Save Changes" })).toHaveCount(
     0,
   );
   await switchToFormEditor(page);
-  await expect(page.getByText("Unsaved changes").first()).toBeVisible({
+  await expect(page.getByText("Unsaved changes").first()).not.toBeVisible({
     timeout: 5_000,
   });
 });
