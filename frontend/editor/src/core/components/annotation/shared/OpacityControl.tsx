@@ -3,10 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { Icon } from "@app/ui/Icon";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
-import {
-  nearestOpacityPreset,
-  OPACITY_PRESETS,
-} from "@app/components/annotation/shared/opacityPresets";
+import { OPACITY_PRESETS } from "@app/components/annotation/shared/opacityPresets";
 
 interface OpacityControlProps {
   value: number; // 0-100
@@ -22,6 +19,12 @@ export function OpacityControl({
   const { t } = useTranslation();
   const [opened, setOpened] = useState(false);
   const label = t("annotation.opacity", "Opacity");
+  // Highlight a preset only when the value is exactly one. Showing the nearest
+  // as selected would make clicking that preset a no-op, because Mantine treats
+  // a checked radio as unchanged and never calls back.
+  const selectedPreset = OPACITY_PRESETS.some((preset) => preset === value)
+    ? String(value)
+    : "";
 
   return (
     <Popover opened={opened} onChange={setOpened} position="top" withArrow>
@@ -53,7 +56,7 @@ export function OpacityControl({
             ariaLabel={label}
             size="xs"
             fullWidth
-            value={String(nearestOpacityPreset(value))}
+            value={selectedPreset}
             onChange={(next) => onChange(Number(next))}
             options={OPACITY_PRESETS.map((preset) => ({
               value: String(preset),

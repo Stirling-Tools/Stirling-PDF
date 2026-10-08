@@ -2,6 +2,10 @@ import { describe, expect, test, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import ManualRedactionControls from "@app/components/tools/redact/ManualRedactionControls";
+import { alert } from "@app/components/toast";
+import { expectConsole } from "@app/tests/failOnConsole";
+
+vi.mock("@app/components/toast", () => ({ alert: vi.fn() }));
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -166,5 +170,19 @@ describe("ManualRedactionControls save action", () => {
     // loading state, so isApplying has to clear again.
     await waitFor(() => expect(applyChanges).toHaveBeenCalledTimes(1));
     expect(screen.getByRole("button", { name: "Save Changes" })).toBeEnabled();
+  });
+
+  // A failed commit never reaches the viewer's save reporting, so without a
+  // message here the button would just stop with the marks still pending.
+  test("reports a failed commit instead of silently stopping", async () => {
+    commitAllPending.mockRejectedValueOnce(new Error("commit failed"));
+    redaction.pendingCount = 1;
+    expectConsole.error(/Failed to commit pending redactions/);
+    renderPanel();
+
+    fireEvent.click(applyButton()!);
+
+    await waitFor(() => expect(vi.mocked(alert)).toHaveBeenCalledTimes(1));
+    expect(applyChanges).not.toHaveBeenCalled();
   });
 });

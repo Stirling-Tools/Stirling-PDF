@@ -6,6 +6,7 @@ import { useRedaction, useRedactionMode } from "@app/contexts/RedactionContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useSignature } from "@app/contexts/SignatureContext";
 import { useNavigationGuard } from "@app/contexts/NavigationContext";
+import { alert } from "@app/components/toast";
 
 interface ManualRedactionControlsProps {
   disabled?: boolean;
@@ -119,14 +120,33 @@ export default function ManualRedactionControls({
     if (!applyChanges) return;
     setIsApplying(true);
     try {
-      await commitAllPending();
+      try {
+        await commitAllPending();
+      } catch (error) {
+        // The viewer reports failures from applyChanges but not from the commit,
+        // so a commit failure has to speak up here or the button just stops with
+        // nothing on screen and the marks stay pending.
+        console.error("Failed to commit pending redactions:", error);
+        alert({
+          title: t(
+            "viewer.redaction.commitErrorTitle",
+            "Could not apply redactions",
+          ),
+          body: t(
+            "viewer.redaction.commitErrorBody",
+            "The pending redactions could not be applied. Try again.",
+          ),
+          alertType: "error",
+        });
+        return;
+      }
       await applyChanges();
     } catch {
       // Viewer reports save failure to user.
     } finally {
       setIsApplying(false);
     }
-  }, [applyChanges, commitAllPending]);
+  }, [applyChanges, commitAllPending, t]);
 
   // pendingCount drops to zero the moment the commit lands, so gating on it
   // alone would unmount this button before a failed export could be retried.

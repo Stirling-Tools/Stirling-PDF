@@ -1000,8 +1000,7 @@ const EmbedPdfViewerContent = ({
     if (
       annotationUiOpenedRef.current ||
       previewFile ||
-      selectedTool === "annotate" ||
-      selectedTool === "sign" ||
+      isInAnnotationTool ||
       isManualRedactMode ||
       isRedactionMode
     ) {
