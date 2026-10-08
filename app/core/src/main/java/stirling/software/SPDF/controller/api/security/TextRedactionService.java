@@ -66,8 +66,8 @@ class TextRedactionService {
             log.debug("Multi-pattern scan: {} match(es) across {} page(s)", total, result.size());
             return result;
         } catch (Exception e) {
-            // Fail closed: an empty map reads as "no matches", which would silently skip
-            // redaction. Callers convert this into their fallback or error path instead.
+            // Fail closed: an empty map reads as "no matches" and would skip redaction.
+            // Callers convert this into their fallback or error path instead.
             log.error("Multi-pattern text search failed: {}", e.getMessage());
             throw new IllegalStateException("Multi-pattern text search failed", e);
         }

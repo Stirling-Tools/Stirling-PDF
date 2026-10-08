@@ -28,11 +28,12 @@ public class LoginAttemptService {
     private final ApplicationProperties applicationProperties;
 
     /**
-     * Ceiling on tracked usernames. Entries expire on their own after the reset window, and this
-     * bounds the set within it: the keys come straight from the login form, so without a cap a
-     * spray of distinct usernames grows the map for as long as the window lasts.
+     * Ceiling on tracked usernames: keys come straight from the login form, so without a cap a
+     * spray of distinct usernames grows the map for the whole reset window.
      */
     private static final int MAX_TRACKED_USERS = 10_000;
+
+    private static final int MAX_BLOCKED_USERS = 100_000;
 
     private int MAX_ATTEMPT;
 
@@ -41,16 +42,16 @@ public class LoginAttemptService {
     private Cache<String, AttemptCounter> attemptsCache;
 
     /**
-     * Usernames currently locked out. A spray of distinct usernames can size-evict entries from
-     * {@code attemptsCache} and silently lift a victim's lockout; the lockout itself lives here so
-     * clearing it costs {@code MAX_ATTEMPT} real failures per sprayed username instead of one cache
-     * insertion. Same size bound and window as the counting cache.
+     * Lockout record that survives eviction of the counting cache: a username spray can drop a
+     * victim's counter, so the lockout lives here too, where clearing it costs {@code MAX_ATTEMPT}
+     * failures per sprayed username. Sized 10x the counting cache, so overflowing it takes an order
+     * of magnitude more request volume; values are one Boolean each.
      *
-     * <p>Initialized without expiry so the field is never null; {@link #init()} rebuilds it with
-     * the configured window.
+     * <p>Built without expiry so the field is never null; {@link #init()} rebuilds it with the
+     * configured window.
      */
     private Cache<String, Boolean> blockedCache =
-            Caffeine.newBuilder().maximumSize(MAX_TRACKED_USERS).build();
+            Caffeine.newBuilder().maximumSize(MAX_BLOCKED_USERS).build();
 
     private boolean isBlockedEnabled = true;
 
@@ -76,7 +77,7 @@ public class LoginAttemptService {
                         .build();
         blockedCache =
                 Caffeine.newBuilder()
-                        .maximumSize(MAX_TRACKED_USERS)
+                        .maximumSize(MAX_BLOCKED_USERS)
                         .expireAfterWrite(Duration.ofMillis(ATTEMPT_INCREMENT_TIME))
                         .build();
     }
@@ -109,9 +110,11 @@ public class LoginAttemptService {
             // this the entry expires on the first failure's clock and lockout lapses early.
             attemptsCache.put(normalizedKey, attemptCounter);
         }
-        if (attemptCounter.getAttemptCount() >= MAX_ATTEMPT) {
-            // Record the lockout separately and refresh it on every further failure: the counting
-            // entry above can be size-evicted by a username spray, which must not lift this.
+        if (attemptCounter.getAttemptCount() >= MAX_ATTEMPT
+                || blockedCache.getIfPresent(normalizedKey) != null) {
+            // Refresh the lockout on every further failure: the counting entry can be
+            // evicted and recreated by a spray, which must neither lift the lockout nor let it
+            // lapse on its old clock.
             blockedCache.put(normalizedKey, Boolean.TRUE);
         }
     }
@@ -163,11 +166,12 @@ public class LoginAttemptService {
             return Integer.MAX_VALUE;
         }
         String normalizedKey = key.toLowerCase(Locale.ROOT);
+        if (blockedCache.getIfPresent(normalizedKey) != null) {
+            return 0;
+        }
         AttemptCounter attemptCounter = attemptsCache.getIfPresent(normalizedKey);
         if (attemptCounter == null) {
-            // The counting entry may have been evicted while the lockout survives in the blocked
-            // set; that still means no attempts remain.
-            return blockedCache.getIfPresent(normalizedKey) != null ? 0 : MAX_ATTEMPT;
+            return MAX_ATTEMPT;
         }
         return MAX_ATTEMPT - attemptCounter.getAttemptCount();
     }

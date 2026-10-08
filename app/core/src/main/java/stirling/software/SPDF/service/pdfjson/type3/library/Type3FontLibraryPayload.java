@@ -74,7 +74,7 @@ public class Type3FontLibraryPayload {
         if (o == null || getClass() != o.getClass()) return false;
         Type3FontLibraryPayload that = (Type3FontLibraryPayload) o;
         // Identity only: resolving the base64 reads and encodes the whole font file, so it must
-        // never run from equality. Two payloads naming the same source are the same payload.
+        // never run from equality.
         return Objects.equals(directBase64, that.directBase64)
                 && Objects.equals(describe(resource), describe(that.resource))
                 && Objects.equals(format, that.format);

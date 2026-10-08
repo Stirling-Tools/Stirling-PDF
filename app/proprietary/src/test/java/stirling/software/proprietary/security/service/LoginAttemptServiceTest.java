@@ -389,7 +389,7 @@ class LoginAttemptServiceTest {
         setPrivate(svc, "MAX_ATTEMPT", 3);
         setPrivate(svc, "ATTEMPT_INCREMENT_TIME", 3_600_000L);
 
-        // Tiny counting cache so the spray is guaranteed to evict the victim's counter.
+        // Tiny counting cache, so the spray evicts the victim's counter.
         var attemptsCache = Caffeine.newBuilder().maximumSize(2).build();
         var blockedCache = Caffeine.newBuilder().maximumSize(10).build();
         setPrivate(svc, "attemptsCache", attemptsCache);
@@ -424,5 +424,17 @@ class LoginAttemptServiceTest {
         @SuppressWarnings("unchecked")
         List<String> blocked = (List<String>) getAllBlockedUsers.invoke(svc);
         assertTrue(blocked.contains("victim"), "Evicted-but-blocked user stays listed");
+
+        // A further failure recreates the counting entry from zero; the surviving lockout must
+        // absorb it instead of reporting fresh attempts or lapsing on its old clock.
+        loginFailed.invoke(svc, "victim");
+        assertNotNull(
+                attemptsCache.getIfPresent("victim"),
+                "Precondition: the next failure recreated the counting entry");
+        assertEquals(true, isBlocked.invoke(svc, "victim"), "Lockout survives counter recreation");
+        assertEquals(
+                0,
+                (Integer) getRemainingAttempts.invoke(svc, "victim"),
+                "Recreated counter must not report attempts remaining for a blocked user");
     }
 }

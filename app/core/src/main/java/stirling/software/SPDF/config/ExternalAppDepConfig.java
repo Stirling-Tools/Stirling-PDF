@@ -305,7 +305,7 @@ public class ExternalAppDepConfig {
         Process p = null;
         // Drain both pipes before waiting. A probe that prints more than the pipe buffer while we
         // sit in waitFor() blocks in write() forever, and the timeout then reports a working tool
-        // as unavailable, which silently disables its endpoints at boot.
+        // as unavailable, disabling its endpoints at boot.
         Future<String> out = null;
         Future<String> err = null;
         ExecutorService drain = Executors.newVirtualThreadPerTaskExecutor();
@@ -361,7 +361,7 @@ public class ExternalAppDepConfig {
         try {
             in.close();
         } catch (IOException ignored) {
-            // Nothing useful to do with a failure to close a dead process's pipe.
+            // The process is dead, so a close failure here is harmless.
         }
     }
 

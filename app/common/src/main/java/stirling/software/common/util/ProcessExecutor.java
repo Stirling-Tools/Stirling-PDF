@@ -832,7 +832,7 @@ public class ProcessExecutor {
 
         void append(String line) {
             totalLines++;
-            // Budget exhausted: keep draining and counting, retain nothing more.
+            // Past the budget, keep counting lines but retain nothing more.
             if (retainedChars >= MAX_CHARS) {
                 return;
             }
