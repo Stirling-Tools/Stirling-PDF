@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +22,8 @@ import stirling.software.proprietary.storage.repository.StoredFileRepository;
 @RequiredArgsConstructor
 public class StorageExpiryPurger {
 
+    private static final Pageable BATCH = PageRequest.of(0, 100);
+
     private final StoredFileRepository storedFileRepository;
     private final FileStorageService fileStorageService;
     private final ApplicationProperties applicationProperties;
@@ -34,9 +38,7 @@ public class StorageExpiryPurger {
         long afterId = 0;
         List<StoredFile> batch;
         do {
-            batch =
-                    storedFileRepository.findTop100ByExpiresAtBeforeAndIdGreaterThanOrderByIdAsc(
-                            now, afterId);
+            batch = storedFileRepository.findExpiredAfterId(now, afterId, BATCH);
             for (StoredFile file : batch) {
                 afterId = file.getId();
                 try {
