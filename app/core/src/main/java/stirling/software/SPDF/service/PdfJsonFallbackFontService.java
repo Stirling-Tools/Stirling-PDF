@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -17,6 +16,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
+
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -325,7 +327,9 @@ public class PdfJsonFallbackFontService {
 
     private String fallbackFontLocation;
 
-    private final Map<String, byte[]> fallbackFontCache = new ConcurrentHashMap<>();
+    private static final int MAX_FALLBACK_FONTS = 32;
+    private final Cache<String, byte[]> fallbackFontCache =
+            Caffeine.newBuilder().maximumSize(MAX_FALLBACK_FONTS).build();
 
     @jakarta.annotation.PostConstruct
     private void loadConfig() {
@@ -619,7 +623,7 @@ public class PdfJsonFallbackFontService {
         if (spec == null) {
             throw new IOException("No fallback font specification for " + fallbackId);
         }
-        byte[] cached = fallbackFontCache.get(fallbackId);
+        byte[] cached = fallbackFontCache.getIfPresent(fallbackId);
         if (cached != null) {
             return cached;
         }

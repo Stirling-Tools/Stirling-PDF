@@ -9,6 +9,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
@@ -31,6 +32,18 @@ import stirling.software.SPDF.model.PDFText;
 final class MultiPatternTextFinder extends PDFTextStripper {
 
     private static final long REGEX_MATCH_TIMEOUT_SECONDS = 30;
+
+    /**
+     * Matcher.find() ignores interruption, so a cancelled evaluation keeps burning a thread until
+     * the regex returns. Without a cap, a burst of expensive patterns piles up unbounded spinning
+     * threads, which is why submissions are limited rather than merely timed out. Virtual threads
+     * are daemons, so the executor needs no shutdown hook for JVM exit.
+     */
+    private static final int MAX_CONCURRENT_REGEX_EVALUATIONS =
+            Math.max(2, Runtime.getRuntime().availableProcessors());
+
+    private static final Semaphore REGEX_SLOTS = new Semaphore(MAX_CONCURRENT_REGEX_EVALUATIONS);
+
     private static final ExecutorService REGEX_EXECUTOR =
             Executors.newVirtualThreadPerTaskExecutor();
 
@@ -101,6 +114,27 @@ final class MultiPatternTextFinder extends PDFTextStripper {
      * indefinitely; per-match timeout so fast legitimate scans are unaffected.
      */
     private static boolean safeFind(Matcher matcher) throws IOException {
+        boolean acquired;
+        try {
+            acquired = REGEX_SLOTS.tryAcquire(REGEX_MATCH_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Regex match interrupted while queueing", e);
+        }
+        if (!acquired) {
+            throw new IOException(
+                    "Too many concurrent regex evaluations in flight (limit "
+                            + MAX_CONCURRENT_REGEX_EVALUATIONS
+                            + ")");
+        }
+        try {
+            return runBounded(matcher);
+        } finally {
+            REGEX_SLOTS.release();
+        }
+    }
+
+    private static boolean runBounded(Matcher matcher) throws IOException {
         Future<Boolean> future =
                 REGEX_EXECUTOR.submit((java.util.concurrent.Callable<Boolean>) matcher::find);
         try {

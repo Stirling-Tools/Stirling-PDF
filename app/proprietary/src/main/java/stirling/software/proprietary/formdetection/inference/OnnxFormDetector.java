@@ -42,6 +42,7 @@ public class OnnxFormDetector implements UnloadableModel {
             new Semaphore(Math.max(1, Runtime.getRuntime().availableProcessors() / 2));
 
     private volatile OrtSession session;
+    private volatile OrtSession.SessionOptions sessionOptions;
     private volatile String loadedModelId;
     private volatile String inputName;
 
@@ -136,14 +137,23 @@ public class OnnxFormDetector implements UnloadableModel {
             try {
                 OrtEnvironment env = OrtEnvironment.getEnvironment();
                 OrtSession.SessionOptions opts = new OrtSession.SessionOptions();
+                boolean retained = false;
                 try {
-                    opts.setIntraOpNumThreads(
-                            Math.max(1, Runtime.getRuntime().availableProcessors() / 2));
-                } catch (OrtException ignored) {
-                    // best-effort tuning
+                    try {
+                        opts.setIntraOpNumThreads(
+                                Math.max(1, Runtime.getRuntime().availableProcessors() / 2));
+                    } catch (OrtException ignored) {
+                        // best-effort tuning
+                    }
+                    closeSession();
+                    session = env.createSession(file.toString(), opts);
+                    sessionOptions = opts;
+                    retained = true;
+                } finally {
+                    if (!retained) {
+                        opts.close();
+                    }
                 }
-                closeSession();
-                session = env.createSession(file.toString(), opts);
                 inputName = session.getInputNames().iterator().next();
                 loadedModelId = activeId;
                 log.info("Loaded ONNX session for Auto Form Detection model '{}'", activeId);
@@ -169,8 +179,18 @@ public class OnnxFormDetector implements UnloadableModel {
                 session.close();
             } catch (Exception _) {
                 // already closing
+            } finally {
+                session = null;
             }
-            session = null;
+        }
+        if (sessionOptions != null) {
+            try {
+                sessionOptions.close();
+            } catch (Exception _) {
+                // already closing
+            } finally {
+                sessionOptions = null;
+            }
         }
     }
 }

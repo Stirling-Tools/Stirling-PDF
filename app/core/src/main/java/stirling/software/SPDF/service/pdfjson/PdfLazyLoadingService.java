@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -18,6 +17,9 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -55,7 +57,16 @@ public class PdfLazyLoadingService {
     private final PdfJsonImageService imageService;
 
     /** Cache for storing PDDocuments for lazy page loading. Key is jobId. */
-    private final Map<String, CachedPdfDocument> documentCache = new ConcurrentHashMap<>();
+    private static final int MAX_CACHED_DOCUMENTS = 64;
+
+    private static final long CACHE_EXPIRE_MINUTES = 30L;
+
+    /** Cache for storing PDDocuments for lazy page loading. Key is jobId. */
+    private final Cache<String, CachedPdfDocument> documentCache =
+            Caffeine.newBuilder()
+                    .maximumSize(MAX_CACHED_DOCUMENTS)
+                    .expireAfterWrite(CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES)
+                    .build();
 
     /**
      * Stores PDF file bytes for lazy page loading. Each page is extracted on-demand by re-loading
@@ -154,9 +165,6 @@ public class PdfLazyLoadingService {
                         "Cached PDF bytes ({} bytes) for lazy loading, jobId: {}",
                         pdfBytes.length,
                         jobId);
-
-                // Schedule cleanup after 30 minutes
-                scheduleDocumentCleanup(jobId);
             }
 
             progress.accept(
@@ -191,7 +199,7 @@ public class PdfLazyLoadingService {
                     extractAnnotations,
             OutputStream out)
             throws IOException {
-        CachedPdfDocument cached = documentCache.get(jobId);
+        CachedPdfDocument cached = documentCache.getIfPresent(jobId);
         if (cached == null) {
             throw new IllegalArgumentException("No cached document found for jobId: " + jobId);
         }
@@ -247,28 +255,13 @@ public class PdfLazyLoadingService {
 
     /** Clears a cached document. */
     public void clearCachedDocument(String jobId) {
-        CachedPdfDocument cached = documentCache.remove(jobId);
+        CachedPdfDocument cached = documentCache.asMap().remove(jobId);
         if (cached != null) {
             log.info(
                     "Removed cached PDF bytes ({} bytes) for jobId: {}",
                     cached.getPdfBytes().length,
                     jobId);
         }
-    }
-
-    /** Schedules automatic cleanup of cached documents after 30 minutes. */
-    private void scheduleDocumentCleanup(String jobId) {
-        Thread.ofVirtual()
-                .start(
-                        () -> {
-                            try {
-                                Thread.sleep(TimeUnit.MINUTES.toMillis(30));
-                                clearCachedDocument(jobId);
-                                log.info("Auto-cleaned cached document for jobId: {}", jobId);
-                            } catch (InterruptedException e) {
-                                Thread.currentThread().interrupt();
-                            }
-                        });
     }
 
     /**

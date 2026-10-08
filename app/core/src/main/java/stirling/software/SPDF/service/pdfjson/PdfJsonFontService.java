@@ -1,9 +1,14 @@
 package stirling.software.SPDF.service.pdfjson;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.Base64;
 import java.util.Locale;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.stereotype.Service;
 
@@ -22,6 +27,8 @@ import stirling.software.common.util.TempFileManager;
 @Service
 @RequiredArgsConstructor
 public class PdfJsonFontService {
+
+    private static final long PROBE_TIMEOUT_SECONDS = 5;
 
     private final TempFileManager tempFileManager;
     private final stirling.software.common.model.ApplicationProperties applicationProperties;
@@ -336,8 +343,27 @@ public class PdfJsonFontService {
                 processBuilder.command("which", command);
             }
             Process process = processBuilder.start();
-            int exitCode = process.waitFor();
-            return exitCode == 0;
+            // `which` normally writes one short line, but drain both pipes and bound the wait: an
+            // unbounded waitFor() on a hung PATH entry blocks startup for the life of the JVM.
+            ExecutorService drain = Executors.newVirtualThreadPerTaskExecutor();
+            try (InputStream stdout = process.getInputStream();
+                    InputStream stderr = process.getErrorStream()) {
+                Future<String> out = drain.submit(() -> new String(stdout.readAllBytes()));
+                Future<String> err = drain.submit(() -> new String(stderr.readAllBytes()));
+                boolean finished = process.waitFor(PROBE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+                if (!finished) {
+                    process.destroyForcibly();
+                    return false;
+                }
+                out.get();
+                err.get();
+                return process.exitValue() == 0;
+            } finally {
+                drain.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
         } catch (Exception e) {
             log.debug("Error checking for command {}: {}", command, e.getMessage());
             return false;

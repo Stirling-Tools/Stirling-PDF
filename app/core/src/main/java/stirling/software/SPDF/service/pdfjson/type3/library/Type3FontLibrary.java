@@ -201,10 +201,7 @@ public class Type3FontLibrary {
         if (payload == null) {
             return null;
         }
-        String base64;
         if (payload.base64 != null && !payload.base64.isBlank()) {
-            // Validate the base64 string without wasteful full decode
-            // Only decode a small prefix to verify encoding is valid
             try {
                 byte[] probe =
                         Base64.getDecoder()
@@ -218,18 +215,16 @@ public class Type3FontLibrary {
                 log.warn("[TYPE3] Invalid base64 payload in Type3 library: {}", ex.getMessage());
                 return null;
             }
-            // Keep the original base64 string directly — avoids 3x memory pressure
-            base64 = payload.base64;
+            return new Type3FontLibraryPayload(payload.base64, normalizeFormat(payload.format));
         } else if (payload.resource != null && !payload.resource.isBlank()) {
-            byte[] data = loadResourceBytes(payload.resource);
-            if (data == null || data.length == 0) {
-                return null;
+            String resolved = resolveLocation(payload.resource);
+            Resource res = resourceLoader.getResource(resolved);
+            if (!res.exists()) {
+                throw new IOException("Resource not found: " + resolved);
             }
-            base64 = Base64.getEncoder().encodeToString(data);
-        } else {
-            return null;
+            return new Type3FontLibraryPayload(res, normalizeFormat(payload.format));
         }
-        return new Type3FontLibraryPayload(base64, normalizeFormat(payload.format));
+        return null;
     }
 
     private byte[] loadResourceBytes(String location) throws IOException {
