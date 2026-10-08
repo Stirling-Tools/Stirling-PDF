@@ -65,8 +65,11 @@ export function TrackPageViewModal({
       setFailed(true);
       return;
     }
-    // The tile already shows an image page at full resolution.
-    if (isPageImage(file)) return;
+    if (isPageImage(file)) {
+      const url = URL.createObjectURL(file);
+      setHiRes(url);
+      return () => URL.revokeObjectURL(url);
+    }
     void (async () => {
       try {
         const buffer = await file.arrayBuffer();
