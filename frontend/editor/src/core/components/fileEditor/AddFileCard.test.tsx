@@ -46,7 +46,9 @@ vi.mock("@app/ui/Logo", () => ({ Logo: () => null }));
 
 function renderCard(onFilesSelected = vi.fn()) {
   render(
-    <MantineProvider>
+    // Test env drops Mantine's transitions and portals, so the menu opens
+    // synchronously instead of racing the timeout under a loaded CI run.
+    <MantineProvider env="test">
       <AddFileCard onFilesSelected={onFilesSelected} />
     </MantineProvider>,
   );
