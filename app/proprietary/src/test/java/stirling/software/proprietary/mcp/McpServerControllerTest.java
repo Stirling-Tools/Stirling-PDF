@@ -250,7 +250,8 @@ class McpServerControllerTest {
             assertTrue(name.length() <= 64, name);
             assertTrue(tool.hasNonNull("title"), name + " title");
             JsonNode a = tool.get("annotations");
-            for (String hint : List.of("readOnlyHint", "destructiveHint", "openWorldHint")) {
+            for (String hint :
+                    List.of("readOnlyHint", "destructiveHint", "idempotentHint", "openWorldHint")) {
                 assertTrue(a.get(hint).isBoolean(), name + " " + hint);
             }
         }
@@ -363,6 +364,23 @@ class McpServerControllerTest {
                     "stirling_upload".equals(t.get("name").asText()),
                     accessible,
                     t.get("name").asText());
+        }
+    }
+
+    @Test
+    void toolsList_onlyToolsThatReachOutsideServicesAreOpenWorld() throws Exception {
+        JsonNode body = mapper.readTree("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}");
+
+        JsonNode tools =
+                mapper.valueToTree(controller.handle(body).getBody()).get("result").get("tools");
+
+        Set<String> openWorld = Set.of("stirling_convert", "stirling_security");
+        for (JsonNode tool : tools) {
+            String name = tool.get("name").asText();
+            assertEquals(
+                    openWorld.contains(name),
+                    tool.get("annotations").get("openWorldHint").asBoolean(),
+                    name);
         }
     }
 }
