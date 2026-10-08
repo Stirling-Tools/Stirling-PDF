@@ -19,8 +19,13 @@ import stirling.software.proprietary.workflow.model.WorkflowSession;
 public interface StoredFileRepository extends JpaRepository<StoredFile, Long> {
     Optional<StoredFile> findByIdAndOwner(Long id, User owner);
 
-    List<StoredFile> findTop100ByExpiresAtBeforeAndIdGreaterThanOrderByIdAsc(
-            LocalDateTime cutoff, Long afterId);
+    /** Files that expired before {@code cutoff}, in id order after {@code afterId}. */
+    @Query(
+            "SELECT f FROM StoredFile f "
+                    + "WHERE f.expiresAt < :cutoff AND f.id > :afterId "
+                    + "ORDER BY f.id")
+    List<StoredFile> findExpiredAfterId(
+            @Param("cutoff") LocalDateTime cutoff, @Param("afterId") Long afterId, Pageable page);
 
     @Query(
             "SELECT DISTINCT f FROM StoredFile f "

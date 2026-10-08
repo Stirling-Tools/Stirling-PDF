@@ -38,12 +38,9 @@ class StorageExpiryPurgerTest {
         User owner = new User();
         StoredFile stuck = file(1, owner);
         StoredFile next = file(2, owner);
-        when(repo.findTop100ByExpiresAtBeforeAndIdGreaterThanOrderByIdAsc(any(), eq(0L)))
-                .thenReturn(List.of(stuck));
-        when(repo.findTop100ByExpiresAtBeforeAndIdGreaterThanOrderByIdAsc(any(), eq(1L)))
-                .thenReturn(List.of(next));
-        when(repo.findTop100ByExpiresAtBeforeAndIdGreaterThanOrderByIdAsc(any(), eq(2L)))
-                .thenReturn(List.of());
+        when(repo.findExpiredAfterId(any(), eq(0L), any())).thenReturn(List.of(stuck));
+        when(repo.findExpiredAfterId(any(), eq(1L), any())).thenReturn(List.of(next));
+        when(repo.findExpiredAfterId(any(), eq(2L), any())).thenReturn(List.of());
         doThrow(new IllegalStateException("blob gone")).when(service).deleteFile(owner, stuck);
 
         purger.purgeExpiredFiles();
@@ -57,7 +54,6 @@ class StorageExpiryPurgerTest {
 
         purger.purgeExpiredFiles();
 
-        verify(repo, never())
-                .findTop100ByExpiresAtBeforeAndIdGreaterThanOrderByIdAsc(any(), anyLong());
+        verify(repo, never()).findExpiredAfterId(any(), anyLong(), any());
     }
 }
