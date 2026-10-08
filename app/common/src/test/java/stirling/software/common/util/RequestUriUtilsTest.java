@@ -270,6 +270,17 @@ class RequestUriUtilsTest {
     }
 
     @Test
+    void testIsShareLinkDownload_onlyTheTokenDownloadPath() {
+        String link = "/api/v1/storage/share-links/00dcac3a-fc7a-4989-9c4f-97745484d62f";
+        assertTrue(RequestUriUtils.isShareLinkDownload(link, ""));
+        assertTrue(RequestUriUtils.isShareLinkDownload("/app" + link, "/app"));
+        assertFalse(RequestUriUtils.isShareLinkDownload(link + "/metadata", ""));
+        assertFalse(
+                RequestUriUtils.isShareLinkDownload(
+                        "/share/00dcac3a-fc7a-4989-9c4f-97745484d62f", ""));
+    }
+
+    @Test
     void testIsPublicAuthEndpoint_shareApiStillProtected() {
         // Share-link data APIs must NOT be public - they enforce auth + access checks
         assertFalse(RequestUriUtils.isPublicAuthEndpoint("/api/v1/storage/share-links/abc123", ""));

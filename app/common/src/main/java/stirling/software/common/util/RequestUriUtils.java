@@ -223,6 +223,11 @@ public class RequestUriUtils {
                 || INVITE_LINK_PATTERN.matcher(trimmedUri).matches();
     }
 
+    /** Share-link download, which serves public links anonymously and private ones signed in. */
+    public static boolean isShareLinkDownload(String requestURI, String contextPath) {
+        return SHARE_LINK_API_PATTERN.matcher(stripContextPath(contextPath, requestURI)).matches();
+    }
+
     private static String stripContextPath(String contextPath, String requestURI) {
         if (contextPath != null && !contextPath.isBlank() && requestURI.startsWith(contextPath)) {
             return requestURI.substring(contextPath.length());
