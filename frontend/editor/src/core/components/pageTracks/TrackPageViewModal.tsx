@@ -12,7 +12,7 @@ import {
   isSourcePage,
   sourcePageKey,
 } from "@app/components/pageTracks/types";
-import { isPageImageName } from "@app/components/pageTracks/trackFileKind";
+import { isPageImage } from "@app/components/pageTracks/trackFileKind";
 import { BlankPagePreview } from "@app/components/pageTracks/BlankPagePreview";
 import { TrackThumbnailStore } from "@app/components/pageTracks/hooks/useTrackThumbnails";
 import styles from "@app/components/pageTracks/PageTracks.module.css";
@@ -66,7 +66,7 @@ export function TrackPageViewModal({
       return;
     }
     // The tile already shows an image page at full resolution.
-    if (isPageImageName(file.name)) return;
+    if (isPageImage(file)) return;
     void (async () => {
       try {
         const buffer = await file.arrayBuffer();

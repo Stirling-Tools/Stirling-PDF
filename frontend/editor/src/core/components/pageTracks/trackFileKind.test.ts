@@ -1,21 +1,23 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  isPageImageName,
-  isPdfName,
+  isPageImage,
   opensAsTrack,
   toPdfName,
 } from "@app/components/pageTracks/trackFileKind";
 
+const file = (name: string, type = "") => ({ name, type });
+
 describe("trackFileKind", () => {
   it("opens PDFs and browser-decodable images as tracks", () => {
-    expect(isPdfName("report.PDF")).toBe(true);
-    expect(isPageImageName("photo.JPG")).toBe(true);
-    expect(isPageImageName("scan.webp")).toBe(true);
-    expect(opensAsTrack("scan.tiff")).toBe(false);
-    expect(opensAsTrack("notes.docx")).toBe(false);
-    expect(opensAsTrack("png")).toBe(false);
-    expect(opensAsTrack(undefined)).toBe(false);
+    expect(opensAsTrack(file("report.PDF"))).toBe(true);
+    expect(opensAsTrack(file("download", "application/pdf"))).toBe(true);
+    expect(isPageImage(file("photo.JPEG"))).toBe(true);
+    expect(isPageImage(file("scan.webp"))).toBe(true);
+    expect(opensAsTrack(file("scan.tiff"))).toBe(false);
+    expect(opensAsTrack(file("logo.svg"))).toBe(false);
+    expect(opensAsTrack(file("notes.docx"))).toBe(false);
+    expect(opensAsTrack(file("png"))).toBe(false);
   });
 
   it("names a saved track as a PDF", () => {

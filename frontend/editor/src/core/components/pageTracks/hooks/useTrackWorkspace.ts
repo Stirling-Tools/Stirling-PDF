@@ -3,10 +3,8 @@ import { useFileState } from "@app/contexts/FileContext";
 import { FileId } from "@app/types/file";
 import { PageSize, TrackSource } from "@app/components/pageTracks/types";
 import { ProcessedFilePage } from "@app/types/fileContext";
-import {
-  isPageImageName,
-  isPdfName,
-} from "@app/components/pageTracks/trackFileKind";
+import { isPdfFile } from "@app/utils/fileUtils";
+import { isPageImage } from "@app/components/pageTracks/trackFileKind";
 import {
   changedTrackIds,
   initialTrackEditorState,
@@ -57,14 +55,18 @@ export function useTrackWorkspace(): TrackWorkspaceHook {
 
       for (const fileId of fileState.files.ids) {
         const stub = fileState.files.byId[fileId];
-        const contentKey = `${stub?.size ?? 0}:${stub?.lastModified ?? 0}`;
+        if (!stub) {
+          unsupported.push(fileId);
+          continue;
+        }
+        const contentKey = `${stub.size}:${stub.lastModified}`;
         // An image has no metadata to wait for: it is one unrotated page whose
         // size is only known once decoded, which happens on save.
-        if (isPageImageName(stub?.name)) {
+        if (isPageImage(stub)) {
           anyEditable = true;
           resolved.push({
             fileId,
-            name: stub?.name ?? fileId,
+            name: stub.name,
             pageCount: 1,
             rotations: [0],
             sizes: [{ width: 0, height: 0 }],
@@ -74,13 +76,13 @@ export function useTrackWorkspace(): TrackWorkspaceHook {
         }
         // Other open files show as disabled tracks so they are visible but
         // clearly not editable here.
-        if (!isPdfName(stub?.name)) {
+        if (!isPdfFile(stub)) {
           unsupported.push(fileId);
           continue;
         }
         anyEditable = true;
 
-        const pages = stub?.processedFile?.pages;
+        const pages = stub.processedFile?.pages;
         if (!pages || pages.length === 0) {
           pending.push(fileId);
           continue;
@@ -88,7 +90,7 @@ export function useTrackWorkspace(): TrackWorkspaceHook {
 
         resolved.push({
           fileId,
-          name: stub?.name ?? fileId,
+          name: stub.name,
           pageCount: pages.length,
           rotations: pages.map((page) => page.rotation ?? 0),
           sizes: pages.map(unrotatedSize),

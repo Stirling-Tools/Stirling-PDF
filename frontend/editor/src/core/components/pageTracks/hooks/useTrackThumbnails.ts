@@ -13,7 +13,7 @@ import {
   isSourcePage,
   sourcePageKey,
 } from "@app/components/pageTracks/types";
-import { isPageImageName } from "@app/components/pageTracks/trackFileKind";
+import { isPageImage } from "@app/components/pageTracks/trackFileKind";
 
 /** Pre-load a screen's worth either side so sideways scrolling stays smooth. */
 const ROOT_MARGIN = "300px";
@@ -80,7 +80,7 @@ export function useTrackThumbnails(): TrackThumbnailStore {
       if (!file) continue;
 
       // An image page is the image itself: the tile scales it down in CSS.
-      if (isPageImageName(file.name)) {
+      if (isPageImage(file)) {
         const url = URL.createObjectURL(file);
         imageUrlsRef.current.push(url);
         resolvedRef.current.set(key, url);

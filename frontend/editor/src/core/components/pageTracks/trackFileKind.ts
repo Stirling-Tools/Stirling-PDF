@@ -1,39 +1,32 @@
+import type { StirlingFileStub } from "@app/types/fileContext";
+import type { ToolFormatExtension } from "@app/types/toolIO";
 import { convertImageToPdf } from "@app/utils/imageToPdfUtils";
+import {
+  detectFileExtension,
+  isPdfFile,
+  splitFileName,
+} from "@app/utils/fileUtils";
+
+type FileLike = Pick<StirlingFileStub, "name" | "type">;
 
 /**
- * Image formats the browser can decode, so a one-page track can draw and embed
- * them without the backend. TIFF is left out: only Safari decodes it.
+ * The IMAGE formats the browser can decode, so a one-page track can draw and
+ * embed them without the backend.
  */
-const PAGE_IMAGE_EXTENSIONS = new Set([
-  "png",
-  "jpg",
-  "jpeg",
-  "gif",
-  "bmp",
-  "webp",
-]);
-
-const extensionOf = (name: string | undefined): string => {
-  const dot = name?.lastIndexOf(".") ?? -1;
-  return dot > 0 && name ? name.slice(dot + 1).toLowerCase() : "";
-};
-
-export const isPdfName = (name: string | undefined): boolean =>
-  extensionOf(name) === "pdf";
+const BROWSER_DECODABLE_EXTENSIONS: ReadonlySet<string> = new Set<
+  ToolFormatExtension<"IMAGE">
+>(["png", "jpg", "gif", "bmp", "webp"]);
 
 /** An image the page editor shows as a track holding one page: the image. */
-export const isPageImageName = (name: string | undefined): boolean =>
-  PAGE_IMAGE_EXTENSIONS.has(extensionOf(name));
+export const isPageImage = (file: FileLike): boolean =>
+  BROWSER_DECODABLE_EXTENSIONS.has(detectFileExtension(file.name));
 
-export const opensAsTrack = (name: string | undefined): boolean =>
-  isPdfName(name) || isPageImageName(name);
+export const opensAsTrack = (file: FileLike): boolean =>
+  isPdfFile(file) || isPageImage(file);
 
 /** Everything a track is saved as is a PDF, whatever the file was before. */
-export function toPdfName(name: string): string {
-  if (isPdfName(name)) return name;
-  const dot = name.lastIndexOf(".");
-  return `${dot > 0 ? name.slice(0, dot) : name}.pdf`;
-}
+export const toPdfName = (name: string): string =>
+  `${splitFileName(name)[0]}.pdf`;
 
 /**
  * The file as a PDF the export service can copy pages from. An image becomes a
@@ -41,7 +34,7 @@ export function toPdfName(name: string): string {
  * resolution rather than being fitted to a paper size.
  */
 export async function asPdfSource(file: File): Promise<File> {
-  return isPageImageName(file.name)
+  return isPageImage(file)
     ? convertImageToPdf(file, { pageFormat: "keep" })
     : file;
 }

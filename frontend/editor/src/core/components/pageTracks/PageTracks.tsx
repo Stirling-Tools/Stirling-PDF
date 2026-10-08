@@ -230,9 +230,10 @@ export default function PageTracks() {
   // tall as it needs, with the rows virtualised against the outer scroller.
   const [wrap, setWrap] = useState<boolean>(
     () =>
-      fileState.files.ids.filter((id) =>
-        opensAsTrack(fileState.files.byId[id]?.name),
-      ).length === 1,
+      fileState.files.ids.filter((id) => {
+        const stub = fileState.files.byId[id];
+        return stub != null && opensAsTrack(stub);
+      }).length === 1,
   );
   const toggleWrap = useCallback(() => setWrap((prev) => !prev), []);
 
