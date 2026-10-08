@@ -30,6 +30,8 @@ import org.springframework.mock.web.MockMultipartHttpServletRequest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.method.HandlerMethod;
 
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
@@ -46,6 +48,7 @@ import stirling.software.proprietary.accountlink.InstanceEntitlement;
 import stirling.software.proprietary.accountlink.InstanceEntitlementGate;
 import stirling.software.proprietary.accountlink.InstanceEntitlementInterceptor;
 import stirling.software.proprietary.accountlink.UsageMeterService;
+import stirling.software.proprietary.billing.AiCallRecord;
 import stirling.software.proprietary.billing.UnitCalcPolicy;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
@@ -342,6 +345,13 @@ class PaygBillingParityTest {
         }
         MockHttpServletResponse resp = new MockHttpServletResponse();
         interceptor.preHandle(req, resp, handler(op.handler()));
+        // The self-hosted meter bills AI only after an engine call, so record one like a real op.
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(req));
+        try {
+            AiCallRecord.record(AiCallRecord.Where.LOCAL);
+        } finally {
+            RequestContextHolder.resetRequestAttributes();
+        }
         interceptor.afterCompletion(req, resp, handler(op.handler()), null);
 
         if ("BYPASSED".equals(op.expected())) {

@@ -147,6 +147,16 @@
   padding: 0.375rem 0.625rem;
 }
 
+.sui-datatable--comfortable .sui-datatable__toolbar {
+  padding: 1rem 1.125rem;
+}
+.sui-datatable--comfortable .sui-datatable__th {
+  padding: 0.75rem 1.125rem;
+}
+.sui-datatable--comfortable .sui-datatable__td {
+  padding: 0.875rem 1.125rem;
+}
+
 /* Interactive rows */
 .sui-datatable__row--interactive {
   cursor: pointer;
@@ -345,6 +355,22 @@
   min-width: 2.5rem;
 }
 
+.sui-dtc__status-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 12rem;
+}
+.sui-dtc__status-progress-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.sui-dtc__status-progress .sui-dtc__progress-pct {
+  font-size: 0.6875rem;
+}
+
 .sui-dtc__links {
   display: flex;
   align-items: center;
@@ -379,4 +405,13 @@
 
 .sui-dtc__select {
   min-width: 13rem;
+}
+
+.sui-dtc__unread {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--c-accent-fg);
 }

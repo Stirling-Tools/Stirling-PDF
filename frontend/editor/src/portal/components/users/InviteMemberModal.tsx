@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button, Checkbox, FormField, Input, Modal, Select } from "@app/ui";
 import {
@@ -33,9 +33,11 @@ interface InviteMemberModalProps {
   manageGrants?: boolean;
   /** Non-blocking notice back to the parent (e.g. a deferred Processor grant). */
   onNotice?: (message: string) => void;
-  /** Force the initial mode (mainly for Storybook). Defaults to "direct" when account
-   * creation is available, else "email". */
+  /** Requested method, used only if the server supports it. Otherwise the search text
+   * and available methods determine the initial selection. */
   initialMode?: "email" | "direct";
+  /** Unvalidated search text, editable in either invitation method. */
+  initialValue?: string;
 }
 
 type InviteRole = "member" | "admin";
@@ -48,6 +50,21 @@ const ROLE_SELECT_OPTIONS: { value: InviteRole; labelKey: string }[] = [
 ];
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const USERNAME_RE =
+  /^[a-zA-Z0-9](?!.*[-@._+]{2,})[a-zA-Z0-9@._+-]{1,48}[a-zA-Z0-9]$/;
+const RESERVED_USERNAMES = new Set(["all_users", "anonymoususer"]);
+
+interface TouchedFields {
+  email: boolean;
+  username: boolean;
+  password: boolean;
+}
+
+const UNTOUCHED_FIELDS: TouchedFields = {
+  email: false,
+  username: false,
+  password: false,
+};
 
 export function InviteMemberModal({
   open,
@@ -63,6 +80,7 @@ export function InviteMemberModal({
   manageGrants = false,
   onNotice,
   initialMode,
+  initialValue = "",
 }: InviteMemberModalProps) {
   const { t } = useTranslation();
   const { tier } = useTier();
@@ -76,7 +94,8 @@ export function InviteMemberModal({
   const [role, setRole] = useState<InviteRole>("member");
   const [teamId, setTeamId] = useState<string>("");
   const [processor, setProcessor] = useState(false);
-  const [touched, setTouched] = useState(false);
+  const [touched, setTouched] = useState<TouchedFields>(UNTOUCHED_FIELDS);
+  const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -84,7 +103,12 @@ export function InviteMemberModal({
   // SaaS offers email; self-hosted also offers email once SMTP + invites are configured.
   const directAvailable = canDirectCreate;
   const emailAvailable = canEmailInvite;
-  const preferredMode: Mode = directAvailable ? "direct" : "email";
+  const preferredMode: Mode =
+    emailAvailable && EMAIL_RE.test(initialValue.trim())
+      ? "email"
+      : directAvailable
+        ? "direct"
+        : "email";
 
   useEffect(() => {
     if (!open) return;
@@ -144,33 +168,61 @@ export function InviteMemberModal({
       : []),
   ];
 
-  const emailValid = EMAIL_RE.test(email.trim());
-  const usernameValid = username.trim().length >= 3;
+  const trimmedEmail = email.trim();
+  const trimmedUsername = username.trim();
+  const emailValid = EMAIL_RE.test(trimmedEmail);
+  const usernameValid =
+    (USERNAME_RE.test(trimmedUsername) ||
+      (trimmedUsername.length <= 320 && EMAIL_RE.test(trimmedUsername))) &&
+    !RESERVED_USERNAMES.has(trimmedUsername.toLowerCase());
   const needsPassword = mode === "direct" && authType === "WEB";
-  const passwordValid = !needsPassword || password.length >= 8;
-
-  const error =
-    (touched && mode === "email" && !emailValid
+  const passwordValid = !needsPassword || password.length >= 6;
+  const emailError =
+    mode === "email" && (submitted || touched.email) && !emailValid
       ? t("users.invite.emailError", "Enter a valid email address")
-      : undefined) ??
-    (touched && mode === "direct" && !usernameValid
+      : undefined;
+  const usernameError =
+    mode === "direct" && (submitted || touched.username) && !usernameValid
       ? t(
           "users.invite.usernameError",
-          "Username must be at least 3 characters",
+          "Enter a valid username (3-50 characters) or email address",
         )
-      : undefined) ??
-    (touched && mode === "direct" && !passwordValid
+      : undefined;
+  const passwordError =
+    needsPassword && (submitted || touched.password) && !passwordValid
       ? t(
           "users.invite.passwordError",
-          "Password must be at least 8 characters",
+          "Password must be at least 6 characters",
         )
-      : undefined) ??
-    submitError ??
-    undefined;
+      : undefined;
+
+  function touch(field: keyof TouchedFields) {
+    setTouched((current) => ({ ...current, [field]: true }));
+  }
+
+  const resetTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    if (resetTimerRef.current !== null)
+      window.clearTimeout(resetTimerRef.current);
+    setEmail(initialValue);
+    setUsername(initialValue);
+  }, [open, initialValue]);
+
+  useEffect(() => {
+    return () => {
+      if (resetTimerRef.current !== null) {
+        window.clearTimeout(resetTimerRef.current);
+      }
+    };
+  }, []);
 
   function close() {
     onClose();
-    setTimeout(() => {
+    // The form resets after the close animation; if the modal unmounts first,
+    // the timer must not outlive it.
+    resetTimerRef.current = window.setTimeout(() => {
       setEmail("");
       setUsername("");
       setPassword("");
@@ -179,7 +231,8 @@ export function InviteMemberModal({
       setForceMFA(false);
       setRole("member");
       setProcessor(false);
-      setTouched(false);
+      setTouched(UNTOUCHED_FIELDS);
+      setSubmitted(false);
       setSubmitError(null);
     }, 200);
   }
@@ -203,7 +256,7 @@ export function InviteMemberModal({
   }
 
   async function submit() {
-    setTouched(true);
+    setSubmitted(true);
     setSubmitError(null);
     if (sending) return;
     const teamNum = teamId ? Number(teamId) : undefined;
@@ -233,8 +286,8 @@ export function InviteMemberModal({
           role,
           teamId: teamNum,
           authType,
-          forceChange,
-          forceMFA,
+          forceChange: authType === "WEB" && forceChange,
+          forceMFA: authType === "WEB" && forceMFA,
         });
         if (processor)
           processorApplied = await grantProcessor(
@@ -309,7 +362,11 @@ export function InviteMemberModal({
                 },
               ]}
               value={mode}
-              onChange={(value) => setMode((value ?? "email") as Mode)}
+              onChange={(value) => {
+                setMode((value ?? "email") as Mode);
+                setSubmitted(false);
+                setSubmitError(null);
+              }}
             />
           </FormField>
         )}
@@ -317,7 +374,7 @@ export function InviteMemberModal({
         {mode === "email" ? (
           <FormField
             label={t("users.invite.email", "Email address")}
-            error={error}
+            error={emailError}
             required
           >
             <Input
@@ -327,24 +384,24 @@ export function InviteMemberModal({
                 "name@company.com",
               )}
               value={email}
-              invalid={!!error}
+              invalid={!!emailError}
               onChange={(e) => setEmail(e.target.value)}
-              onBlur={() => setTouched(true)}
+              onBlur={() => touch("email")}
             />
           </FormField>
         ) : (
           <>
             <FormField
               label={t("users.invite.username", "Username")}
-              error={error}
+              error={usernameError}
               required
             >
               <Input
                 placeholder={t("users.invite.usernamePlaceholder", "jsmith")}
                 value={username}
-                invalid={!!error}
+                invalid={!!usernameError}
                 onChange={(e) => setUsername(e.target.value)}
-                onBlur={() => setTouched(true)}
+                onBlur={() => touch("username")}
               />
             </FormField>
             {authTypeOptions.length > 1 && (
@@ -361,12 +418,15 @@ export function InviteMemberModal({
             {authType === "WEB" && (
               <FormField
                 label={t("users.invite.password", "Password")}
+                error={passwordError}
                 required
               >
                 <Input
                   type="password"
                   value={password}
+                  invalid={!!passwordError}
                   onChange={(e) => setPassword(e.target.value)}
+                  onBlur={() => touch("password")}
                 />
               </FormField>
             )}
@@ -395,23 +455,26 @@ export function InviteMemberModal({
 
         {mode === "direct" && (
           <div className="portal-users__invite-access">
-            <Checkbox
-              checked={forceChange}
-              onChange={(e) => setForceChange(e.target.checked)}
-              label={t(
-                "users.invite.forceChange",
-                "Require a password change on first login",
-              )}
-              disabled={authType !== "WEB"}
-            />
-            <Checkbox
-              checked={forceMFA}
-              onChange={(e) => setForceMFA(e.target.checked)}
-              label={t(
-                "users.invite.forceMfa",
-                "Require MFA setup on first login",
-              )}
-            />
+            {authType === "WEB" && (
+              <Checkbox
+                checked={forceChange}
+                onChange={(e) => setForceChange(e.target.checked)}
+                label={t(
+                  "users.invite.forceChange",
+                  "Require a password change on first login",
+                )}
+              />
+            )}
+            {authType === "WEB" && (
+              <Checkbox
+                checked={forceMFA}
+                onChange={(e) => setForceMFA(e.target.checked)}
+                label={t(
+                  "users.invite.forceMfa",
+                  "Require MFA setup on first login",
+                )}
+              />
+            )}
           </div>
         )}
 
@@ -440,6 +503,11 @@ export function InviteMemberModal({
             />
           )}
         </div>
+        {submitError && (
+          <p className="portal-users__error" role="alert">
+            {submitError}
+          </p>
+        )}
       </div>
     </Modal>
   );

@@ -21,7 +21,12 @@ vi.mock("@app/components/shared/config/configSections/Overview", () => ({
   default: () => null,
 }));
 vi.mock("@app/components/shared/config/saasConfigNavSections", () => ({
-  createSaasConfigNavSections: () => [],
+  createSaasConfigNavSections: () => [
+    {
+      title: "Legal",
+      items: [{ key: "legal", label: "Legal", icon: "gavel", component: null }],
+    },
+  ],
 }));
 vi.mock("@app/components/settings/portalSettingsNav", () => ({
   buildPortalSettingsSections: () => [
@@ -39,7 +44,7 @@ vi.mock("@app/components/settings/portalSettingsNav", () => ({
     },
   ],
   PORTAL_SECTION_ALIASES: {},
-  PORTAL_SUPERSEDED_SECTION_KEYS: [],
+  portalSupersededSectionKeys: () => [],
 }));
 
 import { useSettingsNav } from "@app/components/settings/useSettingsNav";
@@ -61,6 +66,36 @@ describe("Connected instances settings navigation", () => {
           .flatMap((section) => section.items)
           .filter((item) => item.key === "account-link"),
       ).toHaveLength(1);
+    },
+  );
+
+  it.each([false, true])(
+    "sends retired Preferences rows to their new home with Processor access = %s",
+    (portalAccess) => {
+      state.portalAccess = portalAccess;
+      const { result } = renderHook(() => useSettingsNav(vi.fn()));
+      expect(result.current.aliases?.hotkeys).toBe("general");
+      expect(result.current.aliases?.account).toBe("overview");
+    },
+  );
+
+  it.each([false, true])(
+    "routes retired license links to the Legal page with Processor access = %s",
+    (portalAccess) => {
+      state.portalAccess = portalAccess;
+      const { result } = renderHook(() => useSettingsNav(vi.fn()));
+      const availableKeys = result.current.sections.flatMap((section) =>
+        section.items.map((item) => item.key),
+      );
+
+      for (const retiredKey of [
+        "backendThirdPartyLicenses",
+        "frontendThirdPartyLicenses",
+      ]) {
+        const target = result.current.aliases?.[retiredKey];
+        expect(target).toBe("legal");
+        expect(availableKeys).toContain(target);
+      }
     },
   );
 
