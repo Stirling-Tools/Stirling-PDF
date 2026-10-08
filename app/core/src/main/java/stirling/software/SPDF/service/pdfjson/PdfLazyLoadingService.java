@@ -56,15 +56,22 @@ public class PdfLazyLoadingService {
     private final PdfJsonMetadataService metadataService;
     private final PdfJsonImageService imageService;
 
-    /** Cache for storing PDDocuments for lazy page loading. Key is jobId. */
-    private static final int MAX_CACHED_DOCUMENTS = 64;
-
+    /** Idle expiry for a cached document, in minutes. */
     private static final long CACHE_EXPIRE_MINUTES = 30L;
+
+    /**
+     * Byte budget for cached PDF bytes. Entries are weighed by {@code pdfBytes.length}, so a few
+     * large PDFs evict sooner than many small ones instead of all counting alike.
+     */
+    private static final long MAX_CACHED_BYTES = 512L * 1024 * 1024;
 
     /** Cache for storing PDDocuments for lazy page loading. Key is jobId. */
     private final Cache<String, CachedPdfDocument> documentCache =
             Caffeine.newBuilder()
-                    .maximumSize(MAX_CACHED_DOCUMENTS)
+                    .maximumWeight(MAX_CACHED_BYTES)
+                    .weigher(
+                            (String jobId, CachedPdfDocument doc) ->
+                                    doc.getPdfBytes() == null ? 0 : doc.getPdfBytes().length)
                     .expireAfterWrite(CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES)
                     .build();
 

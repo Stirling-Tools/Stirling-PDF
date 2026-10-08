@@ -819,16 +819,22 @@ public class ProcessExecutor {
 
         private static final int MAX_LINES = 2_000;
         private static final int HEAD_LINES = MAX_LINES / 2;
+        // Total retained characters across head and tail. The line cap alone still allows
+        // MAX_LINES × per-line bytes; this budget caps the retained heap per stream.
+        private static final int MAX_CHARS = 1_000_000;
         private static final String ELISION = "\n... [%d lines omitted] ...\n";
 
         private final Deque<String> head = new ArrayDeque<>(HEAD_LINES);
         private final Deque<String> tail = new ArrayDeque<>(HEAD_LINES);
         private long totalLines;
-        private long totalChars;
+        private long retainedChars;
 
         void append(String line) {
             totalLines++;
-            totalChars += line.length();
+            // Budget exhausted: keep draining and counting, retain nothing more.
+            if (retainedChars >= MAX_CHARS) {
+                return;
+            }
             if (head.size() < HEAD_LINES) {
                 head.addLast(line);
             } else if (totalLines <= MAX_LINES) {
@@ -837,6 +843,7 @@ public class ProcessExecutor {
                 tail.addLast(line);
                 tail.removeFirst();
             }
+            retainedChars += line.length();
         }
 
         boolean isEmpty() {
@@ -847,7 +854,8 @@ public class ProcessExecutor {
             if (totalLines == 0) {
                 return "";
             }
-            StringBuilder text = new StringBuilder((int) Math.min(totalChars, 8_000_000) + 64);
+            StringBuilder text =
+                    new StringBuilder((int) Math.min(retainedChars + 64, MAX_CHARS + 128));
             for (String line : head) {
                 text.append(line).append('\n');
             }

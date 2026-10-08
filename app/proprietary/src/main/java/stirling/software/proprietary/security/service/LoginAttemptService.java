@@ -54,12 +54,7 @@ public class LoginAttemptService {
         attemptsCache =
                 Caffeine.newBuilder()
                         .maximumSize(MAX_TRACKED_USERS)
-                        .expireAfterWrite(
-                                Duration.ofMillis(
-                                        applicationProperties
-                                                        .getSecurity()
-                                                        .getLoginResetTimeMinutes()
-                                                * 60_000L))
+                        .expireAfterWrite(Duration.ofMillis(ATTEMPT_INCREMENT_TIME))
                         .build();
     }
 

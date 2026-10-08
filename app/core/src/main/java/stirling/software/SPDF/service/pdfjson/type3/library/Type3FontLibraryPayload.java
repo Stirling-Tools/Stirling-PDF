@@ -7,6 +7,9 @@ import java.util.Objects;
 
 import org.springframework.core.io.Resource;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class Type3FontLibraryPayload {
     private final String directBase64;
     private final Resource resource;
@@ -37,8 +40,15 @@ public class Type3FontLibraryPayload {
                 if (cachedBase64 == null) {
                     try (InputStream is = resource.getInputStream()) {
                         byte[] bytes = is.readAllBytes();
+                        if (bytes.length == 0) {
+                            return null;
+                        }
                         cachedBase64 = Base64.getEncoder().encodeToString(bytes);
                     } catch (IOException e) {
+                        log.warn(
+                                "[TYPE3] Failed to read Type3 payload {}: {}",
+                                resource.getDescription(),
+                                e.getMessage());
                         return null;
                     }
                 }

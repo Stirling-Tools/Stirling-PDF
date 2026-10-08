@@ -327,7 +327,9 @@ public class PdfJsonFallbackFontService {
 
     private String fallbackFontLocation;
 
-    private static final int MAX_FALLBACK_FONTS = 32;
+    // Full style rotation touches every built-in (37 entries including the custom id), so the
+    // bound must clear that with headroom or CJK fonts get evicted and re-read from disk.
+    private static final int MAX_FALLBACK_FONTS = 48;
     private final Cache<String, byte[]> fallbackFontCache =
             Caffeine.newBuilder().maximumSize(MAX_FALLBACK_FONTS).build();
 

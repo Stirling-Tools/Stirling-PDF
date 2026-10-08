@@ -127,16 +127,29 @@ final class MultiPatternTextFinder extends PDFTextStripper {
                             + MAX_CONCURRENT_REGEX_EVALUATIONS
                             + ")");
         }
-        try {
-            return runBounded(matcher);
-        } finally {
-            REGEX_SLOTS.release();
-        }
+        // The slot is released by the worker task, not here: Matcher.find() ignores
+        // interruption, so a timed-out caller returning early must not hand the slot to the next
+        // waiter while the cancelled evaluation is still spinning.
+        return runBounded(matcher);
     }
 
     private static boolean runBounded(Matcher matcher) throws IOException {
-        Future<Boolean> future =
-                REGEX_EXECUTOR.submit((java.util.concurrent.Callable<Boolean>) matcher::find);
+        Future<Boolean> future;
+        try {
+            future =
+                    REGEX_EXECUTOR.submit(
+                            (java.util.concurrent.Callable<Boolean>)
+                                    () -> {
+                                        try {
+                                            return matcher.find();
+                                        } finally {
+                                            REGEX_SLOTS.release();
+                                        }
+                                    });
+        } catch (RuntimeException | Error e) {
+            REGEX_SLOTS.release();
+            throw e;
+        }
         try {
             return future.get(REGEX_MATCH_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         } catch (TimeoutException e) {

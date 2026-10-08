@@ -2,6 +2,7 @@ package stirling.software.SPDF.service.pdfjson;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Base64;
 import java.util.Locale;
@@ -9,6 +10,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.springframework.stereotype.Service;
 
@@ -29,6 +31,8 @@ import stirling.software.common.util.TempFileManager;
 public class PdfJsonFontService {
 
     private static final long PROBE_TIMEOUT_SECONDS = 5;
+    // Upper bound on retained `which` output. The exit code is the only signal consumed.
+    private static final int MAX_PROBE_BYTES = 65_536;
 
     private final TempFileManager tempFileManager;
     private final stirling.software.common.model.ApplicationProperties applicationProperties;
@@ -345,18 +349,40 @@ public class PdfJsonFontService {
             Process process = processBuilder.start();
             // `which` normally writes one short line, but drain both pipes and bound the wait: an
             // unbounded waitFor() on a hung PATH entry blocks startup for the life of the JVM.
+            // Only the leading bytes are retained; the exit code is all this probe consumes.
             ExecutorService drain = Executors.newVirtualThreadPerTaskExecutor();
             try (InputStream stdout = process.getInputStream();
                     InputStream stderr = process.getErrorStream()) {
-                Future<String> out = drain.submit(() -> new String(stdout.readAllBytes()));
-                Future<String> err = drain.submit(() -> new String(stderr.readAllBytes()));
+                Future<String> out =
+                        drain.submit(
+                                () ->
+                                        new String(
+                                                stdout.readNBytes(MAX_PROBE_BYTES),
+                                                StandardCharsets.UTF_8));
+                Future<String> err =
+                        drain.submit(
+                                () ->
+                                        new String(
+                                                stderr.readNBytes(MAX_PROBE_BYTES),
+                                                StandardCharsets.UTF_8));
+                long deadlineNanos =
+                        System.nanoTime() + TimeUnit.SECONDS.toNanos(PROBE_TIMEOUT_SECONDS);
                 boolean finished = process.waitFor(PROBE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
                 if (!finished) {
                     process.destroyForcibly();
                     return false;
                 }
-                out.get();
-                err.get();
+                // The process exited, but a lingering child can keep a pipe open and stall an
+                // untimed get() past the deadline. Join on whatever time is left instead.
+                try {
+                    long remainingNanos = deadlineNanos - System.nanoTime();
+                    out.get(Math.max(remainingNanos, 0), TimeUnit.NANOSECONDS);
+                    remainingNanos = deadlineNanos - System.nanoTime();
+                    err.get(Math.max(remainingNanos, 0), TimeUnit.NANOSECONDS);
+                } catch (TimeoutException e) {
+                    process.destroyForcibly();
+                    return false;
+                }
                 return process.exitValue() == 0;
             } finally {
                 drain.shutdownNow();

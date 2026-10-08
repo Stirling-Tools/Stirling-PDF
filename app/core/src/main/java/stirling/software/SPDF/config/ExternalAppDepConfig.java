@@ -296,6 +296,10 @@ public class ExternalAppDepConfig {
         }
     }
 
+    // Version probes only need the first line; cap retained output so a chatty --version
+    // cannot grow the heap. Readers keep draining past the cap so the future still completes.
+    private static final int MAX_PROBE_CHARS = 65_536;
+
     private ProbeResult runAndWait(List<String> cmd, Duration timeout) {
         ProcessBuilder pb = new ProcessBuilder(cmd);
         Process p = null;
@@ -312,12 +316,25 @@ public class ExternalAppDepConfig {
             out = drain.submit(() -> readStream(stdout));
             err = drain.submit(() -> readStream(stderr));
 
+            long deadlineNanos = System.nanoTime() + timeout.toNanos();
             boolean finished = p.waitFor(timeout.toMillis(), TimeUnit.MILLISECONDS);
             if (!finished) {
                 p.destroyForcibly();
                 return new ProbeResult(124, "", "timeout");
             }
-            return new ProbeResult(p.exitValue(), out.get(), err.get());
+            // waitFor() returning is not enough: a --version wrapper can exit while a background
+            // child keeps a pipe open, stalling get() past the deadline. Join the readers on
+            // whatever is left of it and kill the tree on overrun.
+            try {
+                long remainingNanos = deadlineNanos - System.nanoTime();
+                String stdoutText = out.get(Math.max(remainingNanos, 0), TimeUnit.NANOSECONDS);
+                remainingNanos = deadlineNanos - System.nanoTime();
+                String stderrText = err.get(Math.max(remainingNanos, 0), TimeUnit.NANOSECONDS);
+                return new ProbeResult(p.exitValue(), stdoutText, stderrText);
+            } catch (TimeoutException e) {
+                p.destroyForcibly();
+                return new ProbeResult(124, "", "timeout reading probe output");
+            }
         } catch (IOException | InterruptedException e) {
             if (e instanceof InterruptedException) Thread.currentThread().interrupt();
             return new ProbeResult(127, "", String.valueOf(e.getMessage()));
@@ -354,6 +371,9 @@ public class ExternalAppDepConfig {
                 new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
             String line;
             while ((line = br.readLine()) != null) {
+                if (sb.length() >= MAX_PROBE_CHARS) {
+                    continue;
+                }
                 if (!sb.isEmpty()) sb.append('\n');
                 sb.append(line);
             }
