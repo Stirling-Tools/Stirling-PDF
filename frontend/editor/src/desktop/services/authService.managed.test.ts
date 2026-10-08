@@ -103,15 +103,34 @@ it("revalidates when the connection mode changes even at the same URL", async ()
   expect(await service.hasManagedSession()).toBe(false);
 });
 
-it("retains an unexpired verified session when refreshing fails temporarily", async () => {
+it.each([undefined, 408, 429, 503])(
+  "retains an unexpired verified session after a transient refresh failure (%s)",
+  async (status) => {
+    const service = new AuthService();
+    expect(await service.hasManagedSession()).toBe(true);
+    state.post.mockRejectedValue(
+      Object.assign(new AxiosError("Temporarily unavailable"), {
+        response: status ? { status } : undefined,
+      }),
+    );
+    expect(
+      await service.refreshSupabaseToken("https://cloud.example.org"),
+    ).toBe(false);
+    expect(await service.hasManagedSession()).toBe(true);
+    expect(state.invoke).not.toHaveBeenCalledWith("clear_auth_token");
+  },
+);
+
+it("revokes an expired session even when refresh is rate limited", async () => {
+  state.invoke.mockResolvedValue(token(-60));
   const service = new AuthService();
-  expect(await service.hasManagedSession()).toBe(true);
-  state.post.mockRejectedValue(new AxiosError("Offline", "ERR_NETWORK"));
-  expect(await service.refreshSupabaseToken("https://cloud.example.org")).toBe(
-    false,
+  state.post.mockRejectedValue(
+    Object.assign(new AxiosError("Rate limited"), {
+      response: { status: 429 },
+    }),
   );
-  expect(await service.hasManagedSession()).toBe(true);
-  expect(state.invoke).not.toHaveBeenCalledWith("clear_auth_token");
+  expect(await service.hasManagedSession()).toBe(false);
+  expect(state.invoke).toHaveBeenCalledWith("clear_auth_token");
 });
 
 it("does not refresh or revoke a verified token before its actual expiry", async () => {

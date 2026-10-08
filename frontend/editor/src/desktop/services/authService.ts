@@ -720,7 +720,10 @@ export class AuthService {
     const token = await this.getAuthToken();
     if (
       axios.isAxiosError(error) &&
-      (!error.response || error.response.status >= 500) &&
+      (!error.response ||
+        error.response.status >= 500 ||
+        error.response.status === 408 ||
+        error.response.status === 429) &&
       token &&
       !this.isTokenExpiringSoon(token, 0)
     ) {
