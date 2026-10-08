@@ -6807,6 +6807,7 @@ title = "Couldn't save changes"
 close = "Close file"
 collapse = "Collapse"
 expand = "Expand"
+rename = "Rename file"
 
 [pageTracks.wrap]
 label = "Wrap pages"

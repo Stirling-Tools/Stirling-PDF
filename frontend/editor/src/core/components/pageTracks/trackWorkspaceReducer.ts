@@ -75,6 +75,9 @@ export type TrackEditorAction =
   /** Swaps a page with its neighbour in the same track. */
   | { type: "shiftPage"; pageId: string; by: -1 | 1 }
   | { type: "dropTracks"; fileIds: FileId[] }
+  /** Renames a track everywhere it appears, history included: a name is not a
+   *  page edit, so undo must not bring the old one back. */
+  | { type: "renameTrack"; fileId: FileId; name: string }
   /** Drops the just-saved split tracks and records the order their new files
    *  should take, so sync slots each one back where its track sat. */
   | {
@@ -572,6 +575,27 @@ export function trackEditorReducer(
         ...state,
         present: { order: nextOrder, tracks: state.present.tracks },
         baseline: { order: nextOrder, tracks: state.baseline.tracks },
+      };
+    }
+
+    case "renameTrack": {
+      const { fileId, name } = action;
+      const track = state.present.tracks[fileId];
+      if (!track || track.name === name) return state;
+      const rename = (workspace: TrackWorkspace): TrackWorkspace => {
+        const target = workspace.tracks[fileId];
+        if (!target || target.name === name) return workspace;
+        return {
+          ...workspace,
+          tracks: { ...workspace.tracks, [fileId]: { ...target, name } },
+        };
+      };
+      return {
+        ...state,
+        present: rename(state.present),
+        baseline: rename(state.baseline),
+        past: state.past.map(rename),
+        future: state.future.map(rename),
       };
     }
 

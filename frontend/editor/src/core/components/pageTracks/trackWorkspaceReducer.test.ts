@@ -640,3 +640,41 @@ describe("trackEditorReducer history", () => {
     expect(trackSignature(pagesOf(state, A))).toEqual(original);
   });
 });
+
+describe("trackEditorReducer renameTrack", () => {
+  it("renames without dirtying the track or leaving the old name in history", () => {
+    const rotated = trackEditorReducer(twoTracks(), {
+      type: "rotate",
+      pageIds: [pagesOf(twoTracks(), A)[0].id],
+      delta: 90,
+    });
+    const renamed = trackEditorReducer(rotated, {
+      type: "renameTrack",
+      fileId: A,
+      name: "renamed.pdf",
+    });
+    expect(renamed.present.tracks[A].name).toBe("renamed.pdf");
+    expect(changedTrackIds(renamed)).toEqual(changedTrackIds(rotated));
+
+    const undone = trackEditorReducer(renamed, { type: "undo" });
+    expect(undone.present.tracks[A].name).toBe("renamed.pdf");
+  });
+
+  it("is a no-op for an unknown track or an unchanged name", () => {
+    const state = twoTracks();
+    expect(
+      trackEditorReducer(state, {
+        type: "renameTrack",
+        fileId: "missing" as FileId,
+        name: "x.pdf",
+      }),
+    ).toBe(state);
+    expect(
+      trackEditorReducer(state, {
+        type: "renameTrack",
+        fileId: A,
+        name: `${A}.pdf`,
+      }),
+    ).toBe(state);
+  });
+});

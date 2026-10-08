@@ -54,6 +54,8 @@ import { totalPageCount } from "@app/components/pageTracks/types";
 import { opensAsTrack } from "@app/components/pageTracks/trackFileKind";
 import TrackRow, { DropHint } from "@app/components/pageTracks/TrackRow";
 import { DisabledFileTrack } from "@app/components/pageTracks/DisabledFileTrack";
+import { RenameFileDialog } from "@app/components/shared/RenameFileDialog";
+import { renameStoredFile } from "@app/services/renameStoredFile";
 import styles from "@app/components/pageTracks/PageTracks.module.css";
 
 const PAGE_PREFIX = "page:";
@@ -862,6 +864,42 @@ export default function PageTracks() {
     void fileActions.removeFiles([closeOnceSaved], false);
   }, [closeOnceSaved, fileActions, fileState.files.byId]);
 
+  // An open file's name lives in storage, so renaming it is immediate, like
+  // the file sidebar; a split has no file until saved, so only its track holds
+  // the name it will be saved under.
+  const [renameTrackId, setRenameTrackId] = useState<FileId | null>(null);
+  const renameTarget = renameTrackId ? workspace.tracks[renameTrackId] : null;
+  const confirmRename = useCallback(
+    async (name: string) => {
+      if (!renameTarget) return;
+      if (!renameTarget.isNew) {
+        const stub = fileSelectors.getStirlingFileStub(renameTarget.fileId);
+        const saved = stub
+          ? await renameStoredFile(
+              stub,
+              name,
+              fileActions.updateStirlingFileStub,
+            )
+          : false;
+        if (!saved) {
+          throw new Error(
+            t("fileSidebar.rename.error", "Could not rename the file."),
+          );
+        }
+      }
+      dispatch({ type: "renameTrack", fileId: renameTarget.fileId, name });
+    },
+    [renameTarget, fileSelectors, fileActions, dispatch, t],
+  );
+  const renameDialog = (
+    <RenameFileDialog
+      opened={renameTarget != null}
+      fileName={renameTarget?.name ?? ""}
+      onClose={() => setRenameTrackId(null)}
+      onSubmit={confirmRename}
+    />
+  );
+
   useWorkbenchViewFileActions(
     useMemo(
       () => ({ getExportFiles, onClose: () => setCloseRequest("all") }),
@@ -968,6 +1006,7 @@ export default function PageTracks() {
         onSelectTrack={selection.selectTrack}
         onSelectNumbers={selectNumbersInTrack}
         onOpenInViewer={openInViewer}
+        onRename={setRenameTrackId}
         onClearSelection={clearSelection}
         onSplit={splitTrack}
         onInsertBlank={insertBlank}
@@ -1001,6 +1040,7 @@ export default function PageTracks() {
   return (
     <div className={styles.root} data-testid="page-tracks">
       {closeConfirmModal}
+      {renameDialog}
       <LoadingOverlay
         visible={saving}
         loaderProps={{

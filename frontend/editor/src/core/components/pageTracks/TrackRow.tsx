@@ -129,6 +129,7 @@ export interface TrackRowProps {
   /** Selects these 1-based pages of the track, replacing its selection. */
   onSelectNumbers: (fileId: FileId, pageNumbers: number[]) => void;
   onOpenInViewer: (fileId: FileId) => void;
+  onRename: (fileId: FileId) => void;
   /** Called when the click landed on empty lane surface, not on a page. */
   onClearSelection: () => void;
   /** Split this track so `startPageId` begins a new track. */
@@ -161,6 +162,7 @@ function TrackRowImpl({
   onSelectTrack,
   onSelectNumbers,
   onOpenInViewer,
+  onRename,
   onClearSelection,
   onSplit,
   onInsertBlank,
@@ -379,6 +381,7 @@ function TrackRowImpl({
   const collapseLabel = collapsed
     ? t("pageTracks.track.expand", "Expand")
     : t("pageTracks.track.collapse", "Collapse");
+  const renameLabel = t("pageTracks.track.rename", "Rename file");
 
   const handleViewPage = useCallback((pageId: string) => {
     setViewPageId(pageId);
@@ -426,6 +429,17 @@ function TrackRowImpl({
         <span className={styles.trackName}>
           <PrivateContent>{truncateCenter(name, 40)}</PrivateContent>
         </span>
+        <Tooltip position="bottom" content={renameLabel}>
+          <ActionIcon
+            className={styles.trackLeadAction}
+            variant="quiet"
+            size="sm"
+            aria-label={renameLabel}
+            onClick={() => onRename(track.fileId)}
+          >
+            <Icon name="pencil" size="1rem" />
+          </ActionIcon>
+        </Tooltip>
         <span className={styles.trackMeta}>
           {[
             versionNumber != null && versionNumber > 1
