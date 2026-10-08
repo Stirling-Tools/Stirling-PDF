@@ -108,8 +108,8 @@ class ResourceMonitorMoreTest {
         }
 
         @Test
-        @DisplayName("invalid CPU samples use the safe default")
-        void invalidCpuSamplesUseSafeDefault() {
+        @DisplayName("invalid CPU samples stay unavailable and leave status to memory")
+        void invalidCpuSamplesStayUnavailable() {
             when(osMXBean.getCpuLoad()).thenReturn(Double.NaN);
             when(osMXBean.getSystemLoadAverage()).thenReturn(Double.POSITIVE_INFINITY);
             when(osMXBean.getAvailableProcessors()).thenReturn(4);
@@ -117,8 +117,15 @@ class ResourceMonitorMoreTest {
 
             ReflectionTestUtils.invokeMethod(resourceMonitor, "updateResourceMetrics");
 
-            assertThat(latestMetrics.get().getCpuUsage()).isEqualTo(0.5);
+            assertThat(latestMetrics.get().getCpuUsage()).isNaN();
             assertThat(currentStatus.get()).isEqualTo(ResourceStatus.OK);
+
+            long maxMemory = Runtime.getRuntime().maxMemory();
+            stubMemory((long) (maxMemory * 0.95), 0L);
+            ReflectionTestUtils.invokeMethod(resourceMonitor, "updateResourceMetrics");
+
+            assertThat(latestMetrics.get().getCpuUsage()).isNaN();
+            assertThat(currentStatus.get()).isEqualTo(ResourceStatus.CRITICAL);
         }
 
         @ParameterizedTest

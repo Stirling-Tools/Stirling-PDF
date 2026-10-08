@@ -28,8 +28,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ResourceMonitor {
 
-    private static final double DEFAULT_CPU_USAGE = 0.5;
-
     @Value("${stirling.resource.memory.critical-threshold:0.9}")
     private double memoryCriticalThreshold = 0.9; // 90% usage is critical
 
@@ -137,6 +135,10 @@ public class ResourceMonitor {
     private void updateResourceMetrics() {
         try {
             double cpuUsage = getCpuUsage();
+            boolean cpuAvailable = isAvailableCpuSample(cpuUsage);
+            if (!cpuAvailable) {
+                log.trace("Could not retrieve CPU usage");
+            }
 
             // Get memory usage
             long heapUsed = memoryMXBean.getHeapMemoryUsage().getUsed();
@@ -162,9 +164,11 @@ public class ResourceMonitor {
 
             // Determine system status
             ResourceStatus newStatus;
-            if (cpuUsage > cpuCriticalThreshold || memoryUsage > memoryCriticalThreshold) {
+            if (memoryUsage > memoryCriticalThreshold
+                    || (cpuAvailable && cpuUsage > cpuCriticalThreshold)) {
                 newStatus = ResourceStatus.CRITICAL;
-            } else if (cpuUsage > cpuHighThreshold || memoryUsage > memoryHighThreshold) {
+            } else if (memoryUsage > memoryHighThreshold
+                    || (cpuAvailable && cpuUsage > cpuHighThreshold)) {
                 newStatus = ResourceStatus.WARNING;
             } else {
                 newStatus = ResourceStatus.OK;
@@ -175,8 +179,10 @@ public class ResourceMonitor {
             if (oldStatus != newStatus) {
                 log.info("System resource status changed from {} to {}", oldStatus, newStatus);
                 log.info(
-                        "Current metrics - CPU: {}%, Memory: {}%, Free Memory: {} MB",
-                        String.format(Locale.ROOT, "%.1f", cpuUsage * 100),
+                        "Current metrics - CPU: {}, Memory: {}%, Free Memory: {} MB",
+                        cpuAvailable
+                                ? String.format(Locale.ROOT, "%.1f%%", cpuUsage * 100)
+                                : "unavailable",
                         String.format(Locale.ROOT, "%.1f", memoryUsage * 100),
                         freeMemory / (1024 * 1024));
             }
@@ -199,8 +205,7 @@ public class ResourceMonitor {
             return Math.min(loadAverage / availableProcessors, 1.0);
         }
 
-        log.trace("Could not get CPU load, assuming moderate load ({})", DEFAULT_CPU_USAGE);
-        return DEFAULT_CPU_USAGE;
+        return Double.NaN;
     }
 
     private static boolean isAvailableCpuSample(double cpuSample) {
