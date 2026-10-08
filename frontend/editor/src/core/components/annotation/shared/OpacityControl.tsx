@@ -11,6 +11,11 @@ interface OpacityControlProps {
   disabled?: boolean;
 }
 
+const OPACITY_OPTIONS = OPACITY_PRESETS.map((preset) => ({
+  value: String(preset),
+  label: `${preset}%`,
+}));
+
 export function OpacityControl({
   value,
   onChange,
@@ -58,10 +63,7 @@ export function OpacityControl({
             fullWidth
             value={selectedPreset}
             onChange={(next) => onChange(Number(next))}
-            options={OPACITY_PRESETS.map((preset) => ({
-              value: String(preset),
-              label: `${preset}%`,
-            }))}
+            options={OPACITY_OPTIONS}
           />
         </Stack>
       </Popover.Dropdown>

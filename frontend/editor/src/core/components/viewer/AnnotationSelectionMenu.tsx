@@ -72,12 +72,14 @@ function AnnotationSelectionMenuInner({
   // stale after updateAnnotation() is called while the annotation is selected.
   // Also checks non-empty contents: customData.isComment is not persisted to PDF, but
   // contents is a standard PDF field and survives save/reload.
+  const annotationId = (annotation?.object as AnnotationObject | undefined)?.id;
+
   const isInSidebar = useMemo(() => {
-    const annId = (annotation?.object as AnnotationObject | undefined)?.id;
-    if (!annId) return false;
+    // Scans every annotation, so skip it entirely while no menu is open.
+    if (!selected || !annotationId) return false;
     for (const tracked of Object.values(state.byUid)) {
       const obj = tracked.object;
-      if (obj.id !== annId) continue;
+      if (obj.id !== annotationId) continue;
       const { type } = obj;
       // TEXT and CARET are standalone comment annotations — they use CommentButton,
       // not AttachCommentButton, so isInSidebar is irrelevant for them.
@@ -100,7 +102,7 @@ function AnnotationSelectionMenuInner({
       return isExplicit || hasContents;
     }
     return false;
-  }, [state, annotation?.object]);
+  }, [selected, state, annotationId]);
 
   // Auto-open the comments sidebar when a comment annotation is selected
   useEffect(() => {
@@ -177,17 +179,19 @@ function AnnotationSelectionMenuInner({
   // MutationObserver on its style attribute is the only signal; positioning itself
   // is shared with the other viewer menus.
   useEffect(() => {
-    if (!selected || !annotation || !wrapperRef.current) {
+    if (!selected || !annotationId || !wrapperRef.current) {
       onAnchor?.(null);
       return;
     }
+    // Keyed on the annotation id so a store-driven identity change while the menu
+    // is open does not tear down and rebuild the observer.
     const observer = new MutationObserver(() => measure());
     observer.observe(wrapperRef.current, {
       attributes: true,
       attributeFilter: ["style"],
     });
     return () => observer.disconnect();
-  }, [selected, annotation, onAnchor, measure]);
+  }, [selected, annotationId, onAnchor, measure]);
 
   if (!selected || !annotation) return null;
 
