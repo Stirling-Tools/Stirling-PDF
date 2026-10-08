@@ -28,6 +28,11 @@ describe("getFontBaseUrl", () => {
     expect(getFontBaseUrl()).toBe("http://127.0.0.1:49152/fonts");
   });
 
+  it("resolves a slashless API base under the origin", () => {
+    mockedApiBase.mockReturnValue("api");
+    expect(getFontBaseUrl()).toBe(`${window.location.origin}/api/fonts`);
+  });
+
   it("falls back to the app root when the API base is unset", () => {
     // import.meta.env.VITE_API_BASE_URL is undefined in Storybook and bare builds.
     mockedApiBase.mockReturnValue(undefined as unknown as string);

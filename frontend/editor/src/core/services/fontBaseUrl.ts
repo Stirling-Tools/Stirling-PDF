@@ -16,8 +16,14 @@ export function getFontBaseUrl(): string {
   if (/^https?:\/\//i.test(apiBase)) {
     return `${apiBase}/fonts`;
   }
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
-  return `${origin}${apiBase}/fonts`;
+  if (typeof window === "undefined") {
+    // No origin to resolve against; a root-relative path is still usable.
+    return `${apiBase.startsWith("/") ? apiBase : `/${apiBase}`}/fonts`;
+  }
+  // Resolve against the origin so a slashless base ("api") stays a path under
+  // the host instead of gluing onto the hostname ("https://hostapi").
+  const resolved = new URL(apiBase, `${window.location.origin}/`);
+  return `${resolved.origin}${resolved.pathname.replace(/\/$/, "")}/fonts`;
 }
 
 /**

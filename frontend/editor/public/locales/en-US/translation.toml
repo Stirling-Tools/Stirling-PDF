@@ -8003,8 +8003,8 @@ before = "Set"
 title = "Stirling connection not configured"
 
 [portal.accountLink.notice]
-openFailed = "Could not open your browser. Open Usage & billing on your connected server to link an account."
 loadFailed = "The account linking dialog could not be loaded."
+openFailed = "Could not open your browser. Open Usage & billing on your connected server to link an account."
 
 [portal.accountLink.panel]
 instancesSub = "Self-hosted servers connected to the same team."

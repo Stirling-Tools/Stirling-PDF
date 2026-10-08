@@ -32,7 +32,7 @@ describe("useLocalPdfiumEngine", () => {
   });
 
   test("creates the worker engine from the wasm url without gating on the precompiled module", async () => {
-    const engine = { closeAllDocuments: vi.fn(), destroy: vi.fn() };
+    const engine = engineWith((ok) => ok());
     mockCreatePdfiumEngine.mockReturnValue(engine);
 
     const { useLocalPdfiumEngine } =
@@ -124,7 +124,7 @@ describe("useLocalPdfiumEngine", () => {
     mockCreatePdfiumEngine.mockImplementationOnce(() => {
       throw new Error("engine failed");
     });
-    const recovered = { closeAllDocuments: vi.fn(), destroy: vi.fn() };
+    const recovered = engineWith((ok) => ok());
     mockCreatePdfiumEngine.mockReturnValueOnce(recovered);
 
     const { useLocalPdfiumEngine } =

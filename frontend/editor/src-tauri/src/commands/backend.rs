@@ -138,14 +138,29 @@ fn find_stirling_jar(resource_dir: &PathBuf) -> Result<PathBuf, String> {
     Ok(jar_path)
 }
 
-/// One component of a prerelease suffix: a run of digits compared numerically,
-/// or a run of letters compared as text. Numeric components sort below text on
-/// ties, which keeps a bare `rc` below `rc1`, and makes `rc10` sort above `rc2`
-/// where a plain string compare would rank them backwards.
+/// One component of a prerelease suffix. Recognized stages sort by maturity
+/// (snapshot < alpha < beta < milestone < rc) rather than alphabetically, so a
+/// development `SNAPSHOT` cannot outrank a release candidate. Unrecognized words
+/// stay text, and a bare stage sorts below the same stage with a number (`rc` <
+/// `rc1`) because a shorter token list precedes its own extension.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 enum PrereleaseToken {
+    Stage(u8),
     Numeric(u64),
     Text(String),
+}
+
+/// Maturity rank for a known prerelease stage, or `None` to keep the word as
+/// text. Rankings ascend toward the release candidate so a validated build wins.
+fn stage_rank(word: &str) -> Option<u8> {
+    Some(match word {
+        "snapshot" | "dev" => 0,
+        "alpha" => 1,
+        "beta" => 2,
+        "milestone" => 3,
+        "rc" => 4,
+        _ => return None,
+    })
 }
 
 /// Split a prerelease suffix into ordered tokens, dropping separators so
@@ -176,7 +191,10 @@ fn prerelease_tokens(suffix: &str) -> Vec<PrereleaseToken> {
                     break;
                 }
             }
-            tokens.push(PrereleaseToken::Text(text));
+            match stage_rank(&text) {
+                Some(rank) => tokens.push(PrereleaseToken::Stage(rank)),
+                None => tokens.push(PrereleaseToken::Text(text)),
+            }
         } else {
             chars.next();
         }
@@ -187,8 +205,8 @@ fn prerelease_tokens(suffix: &str) -> Vec<PrereleaseToken> {
 /// Ordering key for `stirling-pdf-<version>.jar`: the numeric release components,
 /// whether the version is a final release (1 for final release, 0 for prerelease),
 /// and the prerelease identifiers. Anything unparseable counts as zero so comparison never
-/// panics, while final releases sort above prereleases and newer prereleases (e.g. rc10 vs rc2)
-/// sort appropriately.
+/// panics, while final releases sort above prereleases, and prereleases order by stage
+/// maturity (snapshot < alpha < beta < milestone < rc) then by stage number (rc2 < rc10).
 fn version_key(name: &str) -> (Vec<u64>, u8, Vec<PrereleaseToken>) {
     let lower = name.to_ascii_lowercase();
     let version = lower
@@ -609,7 +627,7 @@ pub fn cleanup_backend() {
 
 #[cfg(test)]
 mod tests {
-    use super::version_key;
+    use super::{find_stirling_jar, version_key};
 
     #[test]
     fn version_key_orders_numerically_not_lexically() {
@@ -633,9 +651,13 @@ mod tests {
 
     #[test]
     fn version_key_ranks_prereleases_below_the_release() {
-        assert!(version_key("stirling-pdf-3.0.0-SNAPSHOT.jar") < version_key("stirling-pdf-3.0.0.jar"));
+        assert!(
+            version_key("stirling-pdf-3.0.0-SNAPSHOT.jar") < version_key("stirling-pdf-3.0.0.jar")
+        );
         assert!(version_key("stirling-pdf-3.0.0-rc1.jar") < version_key("stirling-pdf-3.0.0.jar"));
-        assert!(version_key("stirling-pdf-3.0.0-rc1.jar") < version_key("stirling-pdf-3.0.0-rc2.jar"));
+        assert!(
+            version_key("stirling-pdf-3.0.0-rc1.jar") < version_key("stirling-pdf-3.0.0-rc2.jar")
+        );
 
         let mut names = [
             "stirling-pdf-3.0.0-rc1.jar",
@@ -699,5 +721,50 @@ mod tests {
             names,
             ["vendor-stirling-pdf-3.10.0.jar", "stirling-pdf-3.9.0.jar"]
         );
+    }
+
+    #[test]
+    fn version_key_ranks_snapshot_below_release_candidates() {
+        // A development SNAPSHOT must never outrank a validated release candidate.
+        assert!(
+            version_key("stirling-pdf-3.0.0-SNAPSHOT.jar")
+                < version_key("stirling-pdf-3.0.0-rc1.jar")
+        );
+        assert!(
+            version_key("stirling-pdf-3.0.0-alpha1.jar")
+                < version_key("stirling-pdf-3.0.0-beta1.jar")
+        );
+        assert!(
+            version_key("stirling-pdf-3.0.0-beta1.jar") < version_key("stirling-pdf-3.0.0-rc1.jar")
+        );
+
+        let mut names = [
+            "stirling-pdf-3.0.0-SNAPSHOT.jar",
+            "stirling-pdf-3.0.0-rc1.jar",
+            "stirling-pdf-3.0.0.jar",
+        ];
+        names.sort_by_key(|name| std::cmp::Reverse(version_key(name)));
+        assert_eq!(
+            names,
+            [
+                "stirling-pdf-3.0.0.jar",
+                "stirling-pdf-3.0.0-rc1.jar",
+                "stirling-pdf-3.0.0-SNAPSHOT.jar",
+            ]
+        );
+    }
+
+    #[test]
+    fn find_stirling_jar_prefers_release_candidate_over_snapshot() {
+        let dir = std::env::temp_dir().join(format!("stirling-jar-select-{}", std::process::id()));
+        let libs = dir.join("libs");
+        std::fs::create_dir_all(&libs).unwrap();
+        std::fs::write(libs.join("stirling-pdf-3.0.0-SNAPSHOT.jar"), b"").unwrap();
+        std::fs::write(libs.join("stirling-pdf-3.0.0-rc1.jar"), b"").unwrap();
+
+        let selected = find_stirling_jar(&dir).unwrap();
+
+        assert_eq!(selected.file_name().unwrap(), "stirling-pdf-3.0.0-rc1.jar");
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }
