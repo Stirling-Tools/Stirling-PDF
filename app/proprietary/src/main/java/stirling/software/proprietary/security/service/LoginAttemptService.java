@@ -1,6 +1,7 @@
 package stirling.software.proprietary.security.service;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -39,6 +40,18 @@ public class LoginAttemptService {
 
     private Cache<String, AttemptCounter> attemptsCache;
 
+    /**
+     * Usernames currently locked out. A spray of distinct usernames can size-evict entries from
+     * {@code attemptsCache} and silently lift a victim's lockout; the lockout itself lives here so
+     * clearing it costs {@code MAX_ATTEMPT} real failures per sprayed username instead of one cache
+     * insertion. Same size bound and window as the counting cache.
+     *
+     * <p>Initialized without expiry so the field is never null; {@link #init()} rebuilds it with
+     * the configured window.
+     */
+    private Cache<String, Boolean> blockedCache =
+            Caffeine.newBuilder().maximumSize(MAX_TRACKED_USERS).build();
+
     private boolean isBlockedEnabled = true;
 
     @PostConstruct
@@ -61,6 +74,11 @@ public class LoginAttemptService {
                         .maximumSize(MAX_TRACKED_USERS)
                         .expireAfterWrite(Duration.ofMillis(ATTEMPT_INCREMENT_TIME))
                         .build();
+        blockedCache =
+                Caffeine.newBuilder()
+                        .maximumSize(MAX_TRACKED_USERS)
+                        .expireAfterWrite(Duration.ofMillis(ATTEMPT_INCREMENT_TIME))
+                        .build();
     }
 
     public void loginSucceeded(String key) {
@@ -69,6 +87,7 @@ public class LoginAttemptService {
         }
         String normalizedKey = key.toLowerCase(Locale.ROOT);
         attemptsCache.invalidate(normalizedKey);
+        blockedCache.invalidate(normalizedKey);
     }
 
     public void loginFailed(String key) {
@@ -83,11 +102,17 @@ public class LoginAttemptService {
         } else {
             if (attemptCounter.shouldReset(ATTEMPT_INCREMENT_TIME)) {
                 attemptCounter.reset();
+                blockedCache.invalidate(normalizedKey);
             }
             attemptCounter.increment();
             // Mutating the counter does not refresh the cache write time, so re-insert: without
             // this the entry expires on the first failure's clock and lockout lapses early.
             attemptsCache.put(normalizedKey, attemptCounter);
+        }
+        if (attemptCounter.getAttemptCount() >= MAX_ATTEMPT) {
+            // Record the lockout separately and refresh it on every further failure: the counting
+            // entry above can be size-evicted by a username spray, which must not lift this.
+            blockedCache.put(normalizedKey, Boolean.TRUE);
         }
     }
 
@@ -96,6 +121,9 @@ public class LoginAttemptService {
             return false;
         }
         String normalizedKey = key.toLowerCase(Locale.ROOT);
+        if (blockedCache.getIfPresent(normalizedKey) != null) {
+            return true;
+        }
         AttemptCounter attemptCounter = attemptsCache.getIfPresent(normalizedKey);
         if (attemptCounter == null) {
             return false;
@@ -109,6 +137,7 @@ public class LoginAttemptService {
         }
         String normalizedKey = key.toLowerCase(Locale.ROOT);
         attemptsCache.invalidate(normalizedKey);
+        blockedCache.invalidate(normalizedKey);
     }
 
     public boolean isBlockingEnabled() {
@@ -119,10 +148,13 @@ public class LoginAttemptService {
         if (!isBlockedEnabled) {
             return List.of();
         }
-        return attemptsCache.asMap().entrySet().stream()
+        List<String> blocked = new ArrayList<>(blockedCache.asMap().keySet());
+        attemptsCache.asMap().entrySet().stream()
                 .filter(entry -> entry.getValue().getAttemptCount() >= MAX_ATTEMPT)
                 .map(Map.Entry::getKey)
-                .toList();
+                .filter(key -> !blocked.contains(key))
+                .forEach(blocked::add);
+        return blocked;
     }
 
     public int getRemainingAttempts(String key) {
@@ -133,7 +165,9 @@ public class LoginAttemptService {
         String normalizedKey = key.toLowerCase(Locale.ROOT);
         AttemptCounter attemptCounter = attemptsCache.getIfPresent(normalizedKey);
         if (attemptCounter == null) {
-            return MAX_ATTEMPT;
+            // The counting entry may have been evicted while the lockout survives in the blocked
+            // set; that still means no attempts remain.
+            return blockedCache.getIfPresent(normalizedKey) != null ? 0 : MAX_ATTEMPT;
         }
         return MAX_ATTEMPT - attemptCounter.getAttemptCount();
     }

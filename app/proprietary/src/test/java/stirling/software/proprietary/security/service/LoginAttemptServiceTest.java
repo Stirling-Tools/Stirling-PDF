@@ -380,4 +380,49 @@ class LoginAttemptServiceTest {
 
         assertTrue(result.isEmpty(), "Should return empty list when no users exceed MAX_ATTEMPT");
     }
+
+    @Test
+    @DisplayName("lockout survives a distinct-username spray that evicts the counting entry")
+    void isBlocked_shouldSurviveUsernameSprayEviction() throws Exception {
+        Object svc = constructLoginAttemptService();
+        setPrivateBoolean(svc, "isBlockedEnabled", true);
+        setPrivate(svc, "MAX_ATTEMPT", 3);
+        setPrivate(svc, "ATTEMPT_INCREMENT_TIME", 3_600_000L);
+
+        // Tiny counting cache so the spray is guaranteed to evict the victim's counter.
+        var attemptsCache = Caffeine.newBuilder().maximumSize(2).build();
+        var blockedCache = Caffeine.newBuilder().maximumSize(10).build();
+        setPrivate(svc, "attemptsCache", attemptsCache);
+        setPrivate(svc, "blockedCache", blockedCache);
+
+        var loginFailed = svc.getClass().getMethod("loginFailed", String.class);
+        var isBlocked = svc.getClass().getMethod("isBlocked", String.class);
+        var getRemainingAttempts = svc.getClass().getMethod("getRemainingAttempts", String.class);
+        var getAllBlockedUsers = svc.getClass().getMethod("getAllBlockedUsers");
+
+        for (int i = 0; i < 5; i++) {
+            loginFailed.invoke(svc, "victim");
+        }
+        assertEquals(true, isBlocked.invoke(svc, "victim"), "Victim should be blocked");
+
+        for (int i = 0; i < 50; i++) {
+            loginFailed.invoke(svc, "spray-" + i);
+        }
+        attemptsCache.cleanUp();
+
+        assertNull(
+                attemptsCache.getIfPresent("victim"),
+                "Precondition: the spray evicted the victim's counting entry");
+        assertEquals(
+                true,
+                isBlocked.invoke(svc, "victim"),
+                "Lockout must survive eviction of the counting entry");
+        assertEquals(
+                0,
+                (Integer) getRemainingAttempts.invoke(svc, "victim"),
+                "Evicted-but-blocked user has no attempts remaining");
+        @SuppressWarnings("unchecked")
+        List<String> blocked = (List<String>) getAllBlockedUsers.invoke(svc);
+        assertTrue(blocked.contains("victim"), "Evicted-but-blocked user stays listed");
+    }
 }
