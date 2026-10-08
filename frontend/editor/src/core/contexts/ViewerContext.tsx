@@ -56,8 +56,8 @@ import type { SpreadMode } from "@embedpdf/plugin-spread/react";
 /**
  * SpreadMode.None as a literal. This context sits at the app root, and a runtime
  * import of any embedpdf module loads the whole viewer engine chunk, so
- * importing the enum put all of it on the initial load. `satisfies` keeps the
- * literal checked against the library's own values.
+ * importing the enum would put all of it on the initial load. `satisfies` keeps
+ * the literal checked against the library's own values.
  */
 const SPREAD_NONE = "none" satisfies `${SpreadMode}` as SpreadMode;
 

@@ -42,8 +42,8 @@ const COMPRESSION_EXCLUDE_REGEX = new RegExp(
 const EXCLUDED_EXTENSION_SET = new Set(COMPRESSION_EXCLUDED_EXTENSIONS);
 
 // Cloudflare's extension-based cache list omits .mjs, so pdf.js's hashed worker
-// assets bypassed its edge cache. Renaming at emission also lets Rollup rewrite
-// the `new URL(..., import.meta.url)` references itself; worker sub-builds need
+// assets would bypass its edge cache. Renaming at emission also lets Rollup
+// rewrite the `new URL(..., import.meta.url)` references; worker sub-builds need
 // the same option because they do not inherit the main build's output options.
 const mjsToJsAssetFileNames = (assetInfo: PreRenderedAsset) =>
   assetInfo.names.some((name) => name.endsWith(".mjs"))
@@ -51,10 +51,10 @@ const mjsToJsAssetFileNames = (assetInfo: PreRenderedAsset) =>
     : "assets/[name]-[hash][extname]";
 
 // A variant only earns its place when it is meaningfully smaller than the source
-// it shadows; the encoders happily emit a sidecar larger than a small or
-// already-compressed file. The bundler plugin likewise drops variants that do
-// not shrink the source (skipIfLargerOrEqual), and this walk treats its output as
-// fresh, so the two passes never disagree about a file in practice.
+// it shadows; the encoders happily emit a sidecar larger than a small or already
+// compressed file. The bundler pass drops non-shrinking variants too
+// (skipIfLargerOrEqual) and this walk treats its output as fresh, so the two
+// passes agree in practice.
 const MIN_COMPRESSION_RATIO = 0.98;
 
 /** True when `sibling` exists and is at least as new as the source. */
@@ -89,7 +89,7 @@ async function writeVariantIfSmaller(
   }
 }
 
-/** Runs both encoders at once and refuses paths outside the build output. */
+/** Compresses one file under `distDir`; paths outside it are ignored. */
 async function compressFile(file: string, distDir: string): Promise<void> {
   const resolved = path.resolve(file);
   if (!resolved.startsWith(`${path.resolve(distDir)}${path.sep}`)) return;
@@ -100,11 +100,9 @@ async function compressFile(file: string, distDir: string): Promise<void> {
   const gzPath = `${resolved}.gz`;
   const brPath = `${resolved}.br`;
 
-  // Already compressed by the bundler pass. Compare modification times: the walk
-  // runs over an existing dist, so a stale sibling from an earlier build has to
-  // be replaced rather than trusted. The two encodings are checked
-  // independently: a fresh .br next to a missing or stale .gz is not a complete
-  // pair.
+  // The bundler pass wrote some siblings; the walk runs over an existing dist,
+  // so a stale one has to be replaced rather than trusted. Each encoding is
+  // checked independently: a fresh .br next to a stale .gz is not a pair.
   const source = await fs.stat(resolved);
   const [gzFresh, brFresh] = await Promise.all([
     isFresh(gzPath, source.mtimeMs),
@@ -137,9 +135,8 @@ async function compressFile(file: string, distDir: string): Promise<void> {
   ]);
 }
 
-// Bounds the zlib queue by the batch instead of letting the whole dist queue
-// at once: 16 files per batch with both encoders in flight, so up to 32 jobs
-// share the 16-thread libuv pool set by the build entrypoints.
+// Batching bounds the zlib queue: 16 files with both encoders in flight is up
+// to 32 jobs against the 16-thread libuv pool set by the build entrypoints.
 const COMPRESSION_BATCH_FILES = 16;
 
 async function compressFiles(files: string[], distDir: string): Promise<void> {
@@ -157,10 +154,9 @@ type ManualChunkMeta = Parameters<Rollup.GetManualChunk>[1];
 const startupModulesByOutput = new WeakMap<ManualChunkMeta, Set<string>>();
 
 /**
- * The modules the entry imports statically. They load before first render in
- * whichever chunk they sit, so a chunk every page loads should hold only these.
- * Rollup hands manualChunks the module graph once per output, so the walk runs
- * once per build.
+ * The modules the entry imports statically: these load before first render, so
+ * a chunk every page loads should hold only them. Memoized per output because
+ * Rollup hands manualChunks the module graph once per output.
  */
 function startupModules(meta: ManualChunkMeta): Set<string> {
   let modules = startupModulesByOutput.get(meta);
@@ -195,7 +191,6 @@ function packageNameOf(id: string): string | null {
   return first.startsWith("@") ? `${first}/${second ?? ""}` : first;
 }
 
-/** True for the package itself and anything under its scope. */
 function inScope(pkg: string, scope: string): boolean {
   return pkg === scope || pkg.startsWith(`${scope}/`);
 }
@@ -436,11 +431,10 @@ function prerenderOgPlugin(options: {
         }
       };
       await walkHtml(distDir);
-      // The HTML, sitemap and robots.txt written above skip the walk in the
-      // other plugin, so they are compressed here; desktop output is embedded
-      // in the Tauri binary, which compresses it itself. These siblings only
-      // serve static hosts: Jetty gzips the Spring responses that
-      // ReactRoutingController returns in memory, so it never reads them.
+      // The HTML, sitemap and robots.txt written above skip the other plugin's
+      // walk, so they are compressed here (desktop is embedded and compressed by
+      // Tauri). The siblings only serve static hosts: Jetty gzips the Spring
+      // responses in memory, so it never reads them.
       if (precompress) {
         await compressFiles(lateFiles, distDir);
       }
@@ -735,7 +729,7 @@ export default defineConfig(async ({ mode, command }) => {
             // An asset URL import compiles to a single string. Filed by package
             // name it joins that package's vendor chunk, and its importer then
             // loads the whole chunk: the startup WASM warm-up imports pdfium's
-            // URL, which put all of embedpdf on the initial load.
+            // URL, which would pull all of embedpdf into the initial load.
             if (id.includes("?url")) return undefined;
             // Left to Rollup, this lands in the first dynamic-importing vendor
             // chunk and the entry then statically imports that whole chunk.
@@ -766,11 +760,10 @@ export default defineConfig(async ({ mode, command }) => {
             // vendor-ui.
             if (pkg === "@mui/icons-material") return "vendor-mui-icons";
             if (pkg === "@iconify/react") return "vendor-iconify";
-            // These packages are mutually circular; splitting them breaks
-            // module init order at runtime. Every page loads vendor-ui, and by
-            // package name it also took libraries only some screens use, such
-            // as the markdown renderer and the date pickers. Those go with the
-            // screens that import them.
+            // These packages are mutually circular: splitting them breaks
+            // module init order at runtime. Only startup modules land in
+            // vendor-ui; libraries only some screens use (the markdown
+            // renderer, the date pickers) go with the screens that import them.
             if (
               pkg.includes("react") ||
               pkg === "scheduler" ||

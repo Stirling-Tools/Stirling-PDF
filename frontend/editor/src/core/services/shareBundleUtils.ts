@@ -94,16 +94,14 @@ export function resolveShareBundleOrder(manifest: ShareBundleManifest): {
   return { rootOrder, sortedEntries };
 }
 
-// JSZip loads on demand: share bundles are built or read only when a user
-// shares or opens one, and the module is ~140 KB.
+// JSZip is ~140 KB and only needed to build or read a share bundle.
 let jsZipPromise: Promise<typeof JSZipClass> | null = null;
 
 function loadJSZip(): Promise<typeof JSZipClass> {
   jsZipPromise ??= import("jszip")
     .then((mod) => mod.default)
     .catch((cause) => {
-      // Reset so a failed chunk load can be retried rather than staying broken
-      // for the rest of the session.
+      // Reset so a later caller can retry a failed load.
       jsZipPromise = null;
       throw cause;
     });

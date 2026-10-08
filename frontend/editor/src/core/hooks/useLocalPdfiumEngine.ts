@@ -68,7 +68,7 @@ export function useLocalPdfiumEngine({
           await import("@embedpdf/engines/pdfium-worker-engine");
         // The worker engine resolves pdfium from wasmUrl itself, so the
         // precompiled module (a main-thread optimization) must not gate
-        // creation — awaiting it here only delayed the engine.
+        // creation; awaiting it here would only delay the engine.
         const pdfEngine = createPdfiumEngine(wasmUrl, {
           logger,
           encoderPoolSize,

@@ -1,8 +1,7 @@
 const DEV = process.env.NODE_ENV === "development";
 
-// posthog-js is ~230 KB most sessions never send with. usePosthogTracking owns
-// loading and configuring it; capture only uses the client that hook publishes,
-// so nothing downloads the module while analytics is off.
+// usePosthogTracking owns loading and configuring posthog-js; capture only uses
+// the client that hook publishes, so nothing downloads while analytics is off.
 type Posthog = typeof import("posthog-js").default;
 
 let activePosthog: Posthog | null = null;

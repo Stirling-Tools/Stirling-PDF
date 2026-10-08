@@ -27,16 +27,16 @@ import { withBasePath } from "@app/constants/app";
 import { Z_INDEX_SIGN_IN_MODAL } from "@app/styles/zIndex";
 
 // The markdown renderer (react-markdown + remark-gfm + micromark, ~120 KB gz)
-// is only needed when an administrator actually configured a disclaimer, so it
-// stays out of the startup graph and loads with the modal body.
+// is only needed when an administrator set a disclaimer, so the modal body
+// loads it as its own chunk.
 const LoginAgreementBody = lazy(
   () => import("@app/components/shared/LoginAgreementBody"),
 );
 
 /**
- * Catches a failed login-agreement chunk so the modal can offer a retry.
- * Without it the rejection surfaces at the nearest ancestor boundary — outside
- * this modal — leaving the mandatory agreement impossible to pass.
+ * Catches a failed login-agreement chunk so the modal can offer a retry. Without
+ * it the rejection surfaces at the nearest ancestor boundary, outside this
+ * modal, leaving the mandatory agreement impossible to pass.
  */
 class BodyBoundary extends Component<
   { children: ReactNode; onError: () => void },

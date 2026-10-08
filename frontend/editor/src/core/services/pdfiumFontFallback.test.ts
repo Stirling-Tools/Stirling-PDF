@@ -37,7 +37,7 @@ describe("pdfiumFontFallback", () => {
       Number.isNaN(Number(key)),
     ) as (keyof typeof FontCharset)[];
 
-    expect(config.baseUrl.length).toBeGreaterThan(0);
+    expect(config.baseUrl).toBeTruthy();
     expect(config.defaultFont).toBeTruthy();
 
     for (const name of charsets) {

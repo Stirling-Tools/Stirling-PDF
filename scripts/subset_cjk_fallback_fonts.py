@@ -30,9 +30,7 @@ from pathlib import Path
 from fontTools import subset
 from fontTools.ttLib import TTFont
 
-FONT_DIR = (
-    Path(__file__).resolve().parent.parent / "app/core/src/main/resources/static/fonts"
-)
+FONT_DIR = Path(__file__).resolve().parent.parent / "app/core/src/main/resources/static/fonts"
 
 CJK_COVERAGE: dict[str, str] = {
     "NotoSansSC-Regular.ttf": "cp936",
@@ -120,18 +118,12 @@ def main() -> int:
         target = wanted & present
         gaps = len(wanted - present)
         if gaps:
-            print(
-                f"{name}: no glyph for {gaps} of {len(wanted)} {codec} characters,"
-                " keeping the rest"
-            )
+            print(f"{name}: no glyph for {gaps} of {len(wanted)} {codec} characters, keeping the rest")
 
         before = path.stat().st_size
         total_before += before
         if args.dry_run:
-            print(
-                f"{name}: {codec} covers {len(wanted)} characters,"
-                f" subsetting to {len(target)}"
-            )
+            print(f"{name}: {codec} covers {len(wanted)} characters, subsetting to {len(target)}")
             continue
 
         subset_font(path, "".join(chr(codepoint) for codepoint in sorted(target)))
@@ -141,17 +133,11 @@ def main() -> int:
         lost = target - font_codepoints(path)
         if lost:
             parser.error(f"{name} lost {len(lost)} characters after subsetting")
-        print(
-            f"{name}: {len(target)} characters,"
-            f" {before // 1024} KB to {after // 1024} KB"
-        )
+        print(f"{name}: {len(target)} characters, {before // 1024} KB to {after // 1024} KB")
 
     if not args.dry_run:
         saved = total_before - total_after
-        print(
-            f"total: {total_before // 1024} KB to {total_after // 1024} KB,"
-            f" saved {saved // 1024} KB"
-        )
+        print(f"total: {total_before // 1024} KB to {total_after // 1024} KB, saved {saved // 1024} KB")
     return 0
 
 

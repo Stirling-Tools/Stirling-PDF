@@ -1,8 +1,8 @@
 /** Account-owned Team checkout and the separate installed Enterprise licence checkout. */
 import { getAccessToken } from "@app/auth/session";
 
-// Loaded on demand: a static import puts the Supabase SDK on the startup path
-// of every build, including installs that never reach checkout.
+// Avoid a static import: it would pull the Supabase SDK onto the startup path of
+// every build, including installs that never reach checkout.
 const loadSupabaseClient = () => import("@app/services/supabaseClient");
 
 /**

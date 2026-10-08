@@ -17,16 +17,14 @@ const getData = (zipEntry: JSZipObject): CompressedObject | undefined => {
   return (zipEntry as JSZipObject & { _data: CompressedObject })._data;
 };
 
-// JSZip is ~140 KB and the editor only touches zips when the user opens one,
-// so the module loads on first use instead of riding the startup chunk.
+// JSZip is ~140 KB and only needed when the user opens a zip.
 let jsZipPromise: Promise<typeof JSZipClass> | null = null;
 
 function loadJSZip(): Promise<typeof JSZipClass> {
   jsZipPromise ??= import("jszip")
     .then((mod) => mod.default)
     .catch((cause) => {
-      // Reset so a failed chunk load can be retried rather than staying broken
-      // for the rest of the session.
+      // Reset so a later caller can retry a failed load.
       jsZipPromise = null;
       throw cause;
     });

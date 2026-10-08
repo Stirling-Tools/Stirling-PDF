@@ -2,9 +2,9 @@ import React, { Component, Suspense, lazy, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
 
-// react-markdown + remark-gfm + micromark are ~120 KB gz and only render when
-// a markdown document is open (viewer) or a chat message arrives, so the heavy
-// module lives in its own chunk and callers keep the synchronous signature.
+// react-markdown + remark-gfm + micromark are ~120 KB gz and only needed when a
+// markdown document is open (viewer) or a chat message arrives, so the heavy
+// module is its own chunk while callers keep the synchronous signature.
 const loadMarkdownRendererImpl = () =>
   import("@app/components/viewer/nonpdf/MarkdownRendererImpl");
 

@@ -4,10 +4,10 @@
  * Prevents infinite worker creation by managing PDF.js workers globally
  * and ensuring proper cleanup when operations complete.
  *
- * The pdf.js module itself loads on first use, not on import: the editor's
- * startup graph reaches this module (upload classification, tool previews),
- * and pdf.js is a 450 KB chunk most sessions never need. Type-only import so
- * the bundler keeps the runtime edge dynamic.
+ * pdf.js is a 450 KB chunk most sessions never need, so it loads on first use
+ * even though the editor's startup graph reaches this module (upload
+ * classification, tool previews). The type-only import keeps the runtime edge
+ * dynamic.
  */
 
 import type { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api";
@@ -49,9 +49,6 @@ class PDFWorkerManager {
     return PDFWorkerManager.instance;
   }
 
-  /**
-   * Load pdf.js and point it at the bundled worker on first use.
-   */
   private ensureWorker(): Promise<void> {
     this.workerReady ??= loadPdfJs()
       .then(({ GlobalWorkerOptions }) => {

@@ -6,8 +6,8 @@ import type {
 } from "@app/constants/planConstants";
 import type { LicenseInfo, PlanFeature } from "@app/types/license";
 
-// Loaded on demand: a static import puts the Supabase SDK on the startup path
-// of every build, including installs that never reach billing.
+// Avoid a static import: it would pull the Supabase SDK onto the startup path of
+// every build, including installs that never reach billing.
 const loadSupabaseClient = () => import("@app/services/supabaseClient");
 
 export interface PlanTier {

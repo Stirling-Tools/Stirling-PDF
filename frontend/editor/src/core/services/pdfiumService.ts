@@ -87,8 +87,8 @@ async function initPdfiumModule(): Promise<WrappedPdfiumModule> {
 
   const overrides: PdfiumModuleOverrides = { locateFile: () => wasmUrl() };
   // The glue is imported here, not at the top: this service is reached from
-  // app-root contexts, and a static import put the whole embedpdf chunk on the
-  // initial load. It downloads alongside the WASM rather than after it.
+  // app-root contexts, and a static import would put the whole embedpdf chunk on
+  // the initial load. It downloads alongside the WASM rather than after it.
   const [precompiled, { init }] = await Promise.all([
     pdfiumWasmModulePromise,
     import("@embedpdf/pdfium"),

@@ -27,7 +27,7 @@ export type {
   PortalSession,
 } from "@cloud/services/billing";
 
-// Loaded on demand: a static import puts the Supabase SDK on the startup path
+// Avoid a static import: it would pull the Supabase SDK onto the startup path
 // even for users who never open a billing flow.
 const loadSupabase = async () => (await import("@app/auth/supabase")).supabase;
 

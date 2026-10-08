@@ -507,9 +507,9 @@ class SpringAuthClient {
    */
   async signOut(): Promise<{ error: AuthError | null }> {
     try {
-      // Imported on demand: a static import here puts the Supabase SDK on the
-      // startup path of every build, including installs that never use it. A
-      // failed load must not skip the local cleanup below.
+      // Avoid a static import: it would put the Supabase SDK on the startup path
+      // even for installs that never use it. The inner catch keeps a failed load
+      // from skipping the local cleanup below.
       try {
         const { clearSupabaseSession } =
           await import("@app/auth/supabase/supabaseClient");

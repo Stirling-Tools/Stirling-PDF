@@ -2,9 +2,8 @@ import { useEffect } from "react";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { setActivePosthog } from "@app/services/analytics";
 
-// posthog-js is ~230 KB and only matters when analytics is on, so it loads on
-// demand instead of riding the startup chunk. This hook owns that load and
-// publishes the client to analytics.ts; capture never loads the module itself.
+// posthog-js is ~230 KB and only needed when analytics is on. This hook owns the
+// load and publishes the client to analytics.ts, so capture never loads it.
 type Posthog = typeof import("posthog-js").default;
 
 let posthogPromise: Promise<Posthog> | null = null;

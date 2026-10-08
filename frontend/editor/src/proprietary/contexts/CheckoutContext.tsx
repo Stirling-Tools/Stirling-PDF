@@ -351,8 +351,8 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
       try {
         setIsLoading(true);
 
-        // Loaded on demand: a static import puts the Supabase SDK on the
-        // startup path of every build, including installs that never reach it.
+        // Avoid a static import: it would pull the Supabase SDK onto the startup
+        // path of every build, including installs that never reach checkout.
         const { isSupabaseConfigured } =
           await import("@app/services/supabaseClient");
         if (!isSupabaseConfigured) {
