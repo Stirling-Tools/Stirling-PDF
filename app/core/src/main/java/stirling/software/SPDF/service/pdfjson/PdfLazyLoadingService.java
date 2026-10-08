@@ -72,7 +72,9 @@ public class PdfLazyLoadingService {
                     .weigher(
                             (String jobId, CachedPdfDocument doc) ->
                                     doc.getPdfBytes() == null ? 0 : doc.getPdfBytes().length)
-                    .expireAfterWrite(CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES)
+                    // Idle expiry: reads via getIfPresent reset the clock, so a session paging
+                    // through a document keeps its entry instead of losing it mid-session.
+                    .expireAfterAccess(CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES)
                     .build();
 
     /**

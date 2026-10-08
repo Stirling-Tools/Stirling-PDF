@@ -51,6 +51,11 @@ public class LoginAttemptService {
         ATTEMPT_INCREMENT_TIME =
                 TimeUnit.MINUTES.toMillis(
                         applicationProperties.getSecurity().getLoginResetTimeMinutes());
+        if (isBlockedEnabled && ATTEMPT_INCREMENT_TIME <= 0) {
+            throw new IllegalStateException(
+                    "Login attempt tracking is enabled but loginResetTimeMinutes is not positive;"
+                            + " a zero window would expire every entry on write and disable lockout.");
+        }
         attemptsCache =
                 Caffeine.newBuilder()
                         .maximumSize(MAX_TRACKED_USERS)
@@ -80,6 +85,9 @@ public class LoginAttemptService {
                 attemptCounter.reset();
             }
             attemptCounter.increment();
+            // Mutating the counter does not refresh the cache write time, so re-insert: without
+            // this the entry expires on the first failure's clock and lockout lapses early.
+            attemptsCache.put(normalizedKey, attemptCounter);
         }
     }
 

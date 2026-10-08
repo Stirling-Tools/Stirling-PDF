@@ -820,7 +820,8 @@ public class ProcessExecutor {
         private static final int MAX_LINES = 2_000;
         private static final int HEAD_LINES = MAX_LINES / 2;
         // Total retained characters across head and tail. The line cap alone still allows
-        // MAX_LINES × per-line bytes; this budget caps the retained heap per stream.
+        // MAX_LINES × per-line bytes; this budget caps the retained heap per stream. Worst case
+        // is the budget plus one over-long line, since the gate is checked before retaining.
         private static final int MAX_CHARS = 1_000_000;
         private static final String ELISION = "\n... [%d lines omitted] ...\n";
 
@@ -841,7 +842,9 @@ public class ProcessExecutor {
                 tail.addLast(line);
             } else {
                 tail.addLast(line);
-                tail.removeFirst();
+                // The evicted line stops being retained, so stop counting it. Without this the
+                // budget trips early and the newest output is the first thing dropped.
+                retainedChars -= tail.removeFirst().length();
             }
             retainedChars += line.length();
         }
