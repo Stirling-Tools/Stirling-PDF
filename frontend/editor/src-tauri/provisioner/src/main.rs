@@ -13,7 +13,7 @@ struct ProvisioningConfig<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
     require_sign_in: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    saas_only: Option<bool>,
+    cloud_only: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     local_processing_only: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -65,7 +65,7 @@ fn main() -> Result<(), String> {
     let mut url: Option<String> = None;
     let mut lock_value: Option<String> = None;
     let mut require_sign_in_arg: Option<String> = None;
-    let mut saas_only_arg: Option<String> = None;
+    let mut cloud_only_arg: Option<String> = None;
     let mut local_processing_only_arg: Option<String> = None;
     let mut login_agreement_value: Option<String> = None;
     let mut update_mode_arg: Option<String> = None;
@@ -95,8 +95,8 @@ fn main() -> Result<(), String> {
                 require_sign_in_arg =
                     Some(args.next().ok_or("--require-sign-in requires a value")?);
             }
-            "--saas-only" => {
-                saas_only_arg = Some(args.next().ok_or("--saas-only requires a value")?);
+            "--cloud-only" | "--saas-only" => {
+                cloud_only_arg = Some(args.next().ok_or("--cloud-only requires a value")?);
             }
             "--local-processing-only" => {
                 local_processing_only_arg = Some(
@@ -144,7 +144,7 @@ fn main() -> Result<(), String> {
         .flatten();
 
     let require_sign_in = parse_policy_bool(require_sign_in_arg.as_deref())?;
-    let saas_only = parse_policy_bool(saas_only_arg.as_deref())?;
+    let cloud_only = parse_policy_bool(cloud_only_arg.as_deref())?;
     let local_processing_only = parse_policy_bool(local_processing_only_arg.as_deref())?;
 
     // Nothing to write — avoid clobbering an existing provisioning file when the
@@ -154,7 +154,7 @@ fn main() -> Result<(), String> {
         && login_agreement.is_none()
         && update_mode.is_none()
         && require_sign_in.is_none()
-        && saas_only.is_none()
+        && cloud_only.is_none()
         && local_processing_only.is_none()
     {
         return Ok(());
@@ -175,7 +175,7 @@ fn main() -> Result<(), String> {
         server_url: url.as_deref(),
         lock_connection_mode: lock,
         require_sign_in,
-        saas_only,
+        cloud_only,
         local_processing_only,
         login_agreement_enabled: login_agreement,
         update_mode,
@@ -188,15 +188,23 @@ fn main() -> Result<(), String> {
     } else {
         serde_json::Map::new()
     };
+    if let Some(legacy) = merged.remove("saasOnly") {
+        if merged.contains_key("cloudOnly") {
+            return Err(
+                "Use only cloudOnly in provisioning data, not both policy names".to_string(),
+            );
+        }
+        merged.insert("cloudOnly".to_string(), legacy);
+    }
     let serde_json::Value::Object(updates) =
         serde_json::to_value(&config).map_err(|e| e.to_string())?
     else {
         return Err("Provisioning data must be an object".to_string());
     };
     merged.extend(updates);
-    if merged.get("saasOnly").and_then(|v| v.as_bool()) == Some(true) {
+    if merged.get("cloudOnly").and_then(|v| v.as_bool()) == Some(true) {
         if url.is_some() {
-            return Err("saasOnly cannot be combined with a self-hosted serverUrl".to_string());
+            return Err("cloudOnly cannot be combined with a self-hosted serverUrl".to_string());
         }
         merged.remove("serverUrl");
         merged.remove("lockConnectionMode");
@@ -236,14 +244,14 @@ mod tests {
             server_url: None,
             lock_connection_mode: None,
             require_sign_in: Some(true),
-            saas_only: Some(true),
+            cloud_only: Some(true),
             local_processing_only: Some(true),
             login_agreement_enabled: None,
             update_mode: None,
         };
         assert_eq!(
             serde_json::to_value(config).unwrap(),
-            serde_json::json!({"requireSignIn": true, "saasOnly": true, "localProcessingOnly": true})
+            serde_json::json!({"requireSignIn": true, "cloudOnly": true, "localProcessingOnly": true})
         );
     }
 }

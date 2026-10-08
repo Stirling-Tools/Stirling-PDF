@@ -81,7 +81,7 @@ beforeEach(() => {
   state.getConfig.mockReset().mockResolvedValue({
     mode: "saas",
     require_sign_in: true,
-    saas_only: true,
+    cloud_only: true,
   });
   state.validate.mockReset().mockResolvedValue(false);
   state.expired.mockReset().mockReturnValue(false);

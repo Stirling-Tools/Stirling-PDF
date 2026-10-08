@@ -76,13 +76,13 @@
     <CustomAction
       Id="SetWriteProvisioningFilePerUser"
       Property="WriteProvisioningFilePerUser"
-      Value="--output &quot;[AppDataFolder]Stirling-PDF\stirling-provisioning.json&quot; --url &quot;[STIRLING_SERVER_URL]&quot; --lock &quot;[STIRLING_LOCK_CONNECTION]&quot; --require-sign-in &quot;[STIRLING_REQUIRE_SIGN_IN]&quot; --saas-only &quot;[STIRLING_CLOUD_ONLY]&quot; --local-processing-only &quot;[STIRLING_LOCAL_PROCESSING_ONLY]&quot; --login-agreement &quot;[STIRLING_LOGIN_AGREEMENT]&quot; --update-mode &quot;[STIRLING_UPDATE_MODE]&quot;"
+      Value="--output &quot;[AppDataFolder]Stirling-PDF\stirling-provisioning.json&quot; --url &quot;[STIRLING_SERVER_URL]&quot; --lock &quot;[STIRLING_LOCK_CONNECTION]&quot; --require-sign-in &quot;[STIRLING_REQUIRE_SIGN_IN]&quot; --cloud-only &quot;[STIRLING_CLOUD_ONLY]&quot; --local-processing-only &quot;[STIRLING_LOCAL_PROCESSING_ONLY]&quot; --login-agreement &quot;[STIRLING_LOGIN_AGREEMENT]&quot; --update-mode &quot;[STIRLING_UPDATE_MODE]&quot;"
     />
 
     <CustomAction
       Id="SetWriteProvisioningFileAllUsers"
       Property="WriteProvisioningFileAllUsers"
-      Value="--output &quot;[CommonAppDataFolder]Stirling-PDF\stirling-provisioning.json&quot; --url &quot;[STIRLING_SERVER_URL]&quot; --lock &quot;[STIRLING_LOCK_CONNECTION]&quot; --require-sign-in &quot;[STIRLING_REQUIRE_SIGN_IN]&quot; --saas-only &quot;[STIRLING_CLOUD_ONLY]&quot; --local-processing-only &quot;[STIRLING_LOCAL_PROCESSING_ONLY]&quot; --login-agreement &quot;[STIRLING_LOGIN_AGREEMENT]&quot; --update-mode &quot;[STIRLING_UPDATE_MODE]&quot;"
+      Value="--output &quot;[CommonAppDataFolder]Stirling-PDF\stirling-provisioning.json&quot; --url &quot;[STIRLING_SERVER_URL]&quot; --lock &quot;[STIRLING_LOCK_CONNECTION]&quot; --require-sign-in &quot;[STIRLING_REQUIRE_SIGN_IN]&quot; --cloud-only &quot;[STIRLING_CLOUD_ONLY]&quot; --local-processing-only &quot;[STIRLING_LOCAL_PROCESSING_ONLY]&quot; --login-agreement &quot;[STIRLING_LOGIN_AGREEMENT]&quot; --update-mode &quot;[STIRLING_UPDATE_MODE]&quot;"
     />
 
     <InstallExecuteSequence>

@@ -50,7 +50,7 @@ beforeEach(() => {
   state.getConfig.mockResolvedValue({
     mode: "saas",
     require_sign_in: true,
-    saas_only: true,
+    cloud_only: true,
   });
   state.invoke.mockResolvedValue(token(3600));
   state.get.mockResolvedValue({ data: { id: "user-id", is_anonymous: false } });
@@ -199,7 +199,7 @@ it("requires successful refresh before admitting an expired token", async () => 
 it("does not validate a prohibited connection mode", async () => {
   state.getConfig.mockResolvedValue({
     mode: "selfhosted",
-    saas_only: true,
+    cloud_only: true,
     server_config: { url: "https://self.example.org" },
   });
   expect(await new AuthService().hasManagedSession()).toBe(false);

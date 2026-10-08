@@ -13,7 +13,7 @@ const CONNECTION_MODE_KEY: &str = "connection_mode";
 const SERVER_CONFIG_KEY: &str = "server_config";
 const LOCK_CONNECTION_KEY: &str = "lock_connection_mode";
 const REQUIRE_SIGN_IN_KEY: &str = "require_sign_in";
-const SAAS_ONLY_KEY: &str = "saas_only";
+const CLOUD_ONLY_KEY: &str = "cloud_only";
 const LOCAL_PROCESSING_ONLY_KEY: &str = "local_processing_only";
 const LOGIN_AGREEMENT_KEY: &str = "login_agreement_enabled";
 pub(crate) const UPDATE_MODE_KEY: &str = "update_mode";
@@ -64,7 +64,7 @@ pub struct ConnectionConfig {
     pub server_config: Option<ServerConfig>,
     pub lock_connection_mode: bool,
     pub require_sign_in: bool,
-    pub saas_only: bool,
+    pub cloud_only: bool,
     pub local_processing_only: bool,
 }
 
@@ -107,8 +107,9 @@ pub async fn get_connection_config(
             .get(REQUIRE_SIGN_IN_KEY)
             .and_then(|v| v.as_bool())
             .unwrap_or(false),
-        saas_only: store
-            .get(SAAS_ONLY_KEY)
+        cloud_only: store
+            .get(CLOUD_ONLY_KEY)
+            .or_else(|| store.get("saas_only"))
             .and_then(|v| v.as_bool())
             .unwrap_or(false),
         local_processing_only: store
@@ -138,7 +139,8 @@ pub async fn set_connection_mode(
             .and_then(|v| v.as_bool())
             .unwrap_or(false),
         store
-            .get(SAAS_ONLY_KEY)
+            .get(CLOUD_ONLY_KEY)
+            .or_else(|| store.get("saas_only"))
             .and_then(|v| v.as_bool())
             .unwrap_or(false),
         &mode,
@@ -212,7 +214,8 @@ struct ProvisioningConfig {
     server_url: Option<String>,
     lock_connection_mode: Option<bool>,
     require_sign_in: Option<bool>,
-    saas_only: Option<bool>,
+    #[serde(alias = "saasOnly")]
+    cloud_only: Option<bool>,
     local_processing_only: Option<bool>,
     login_agreement_enabled: Option<bool>,
     /// Optional headless-install update policy (`"prompt"`, `"auto"`, `"disabled"`).
@@ -257,7 +260,7 @@ enum ProvisioningLoad {
 fn load_provisioning(
     path: &std::path::Path,
     system_dir: Option<&std::path::Path>,
-    stored_saas_only: bool,
+    stored_cloud_only: bool,
 ) -> Result<ProvisioningLoad, String> {
     let parsed = fs::read_to_string(path)
         .map_err(|err| format!("Failed to read provisioning file: {err}"))
@@ -266,13 +269,13 @@ fn load_provisioning(
                 .map_err(|err| format!("Failed to parse provisioning file: {err}"))
         })
         .and_then(|config| {
-            if config.saas_only.unwrap_or(stored_saas_only)
+            if config.cloud_only.unwrap_or(stored_cloud_only)
                 && config
                     .server_url
                     .as_ref()
                     .is_some_and(|url| !url.trim().is_empty())
             {
-                Err("saasOnly cannot be combined with a self-hosted serverUrl".to_string())
+                Err("cloudOnly cannot be combined with a self-hosted serverUrl".to_string())
             } else {
                 Ok(config)
             }
@@ -320,14 +323,15 @@ pub fn apply_provisioning_if_present(app_handle: &AppHandle) -> Result<(), Strin
     let store = app_handle
         .store(STORE_FILE)
         .map_err(|e| format!("Failed to access store: {}", e))?;
-    let stored_saas_only = store
-        .get(SAAS_ONLY_KEY)
+    let stored_cloud_only = store
+        .get(CLOUD_ONLY_KEY)
+        .or_else(|| store.get("saas_only"))
         .and_then(|v| v.as_bool())
         .unwrap_or(false);
     let parsed = match load_provisioning(
         &provisioning_path,
         system_provisioning_dir().as_deref(),
-        stored_saas_only,
+        stored_cloud_only,
     )? {
         ProvisioningLoad::Ready(config) => config,
         ProvisioningLoad::Quarantined { backup, reason } => {
@@ -345,7 +349,7 @@ pub fn apply_provisioning_if_present(app_handle: &AppHandle) -> Result<(), Strin
             return Ok(());
         }
     };
-    let saas_only = parsed.saas_only.unwrap_or(stored_saas_only);
+    let cloud_only = parsed.cloud_only.unwrap_or(stored_cloud_only);
 
     // Login agreement can be provisioned independently of a server URL so it also applies to
     // local, no-login desktop installs. Persist it before the server-URL handling below, which
@@ -376,7 +380,7 @@ pub fn apply_provisioning_if_present(app_handle: &AppHandle) -> Result<(), Strin
         && parsed.update_mode.is_none()
         && parsed.login_agreement_enabled.is_none()
         && parsed.require_sign_in.is_none()
-        && parsed.saas_only.is_none()
+        && parsed.cloud_only.is_none()
         && parsed.local_processing_only.is_none()
     {
         add_log(
@@ -391,13 +395,14 @@ pub fn apply_provisioning_if_present(app_handle: &AppHandle) -> Result<(), Strin
     if let Some(required) = parsed.require_sign_in {
         store.set(REQUIRE_SIGN_IN_KEY, serde_json::json!(required));
     }
-    if let Some(only) = parsed.saas_only {
-        store.set(SAAS_ONLY_KEY, serde_json::json!(only));
+    if let Some(only) = parsed.cloud_only {
+        store.set(CLOUD_ONLY_KEY, serde_json::json!(only));
+        store.delete("saas_only");
     }
     if let Some(only) = parsed.local_processing_only {
         store.set(LOCAL_PROCESSING_ONLY_KEY, serde_json::json!(only));
     }
-    if saas_only {
+    if cloud_only {
         let previous_mode = store
             .get(CONNECTION_MODE_KEY)
             .and_then(|value| serde_json::from_value::<ConnectionMode>(value).ok());
@@ -462,7 +467,7 @@ pub fn apply_provisioning_if_present(app_handle: &AppHandle) -> Result<(), Strin
         .map_err(|e| format!("Failed to save store: {}", e))?;
 
     if let Ok(mut conn_state) = app_handle.state::<AppConnectionState>().0.lock() {
-        if saas_only {
+        if cloud_only {
             conn_state.mode = ConnectionMode::SaaS;
             conn_state.server_config = store
                 .get(SERVER_CONFIG_KEY)
@@ -493,11 +498,11 @@ pub fn apply_provisioning_if_present(app_handle: &AppHandle) -> Result<(), Strin
 
 fn validate_managed_connection(
     require_sign_in: bool,
-    saas_only: bool,
+    cloud_only: bool,
     mode: &ConnectionMode,
     server_config: Option<&ServerConfig>,
 ) -> Result<(), String> {
-    if saas_only && *mode == ConnectionMode::SelfHosted {
+    if cloud_only && *mode == ConnectionMode::SelfHosted {
         return Err("Your administrator requires Stirling Cloud sign-in".to_string());
     }
     // Legacy renderers represent local mode as SaaS without a server.
@@ -634,7 +639,9 @@ mod tests {
         let path = dir.path().join(PROVISIONING_FILE_NAME);
         for input in [
             "{broken",
+            r#"{"cloudOnly":true,"serverUrl":"https://example.org"}"#,
             r#"{"saasOnly":true,"serverUrl":"https://example.org"}"#,
+            r#"{"cloudOnly":false,"saasOnly":true}"#,
         ] {
             fs::write(&path, input).unwrap();
             let ProvisioningLoad::Quarantined { backup, .. } =
@@ -653,7 +660,9 @@ mod tests {
         let path = dir.path().join(PROVISIONING_FILE_NAME);
         for input in [
             "{broken",
+            r#"{"cloudOnly":true,"serverUrl":"https://example.org"}"#,
             r#"{"saasOnly":true,"serverUrl":"https://example.org"}"#,
+            r#"{"cloudOnly":false,"saasOnly":true}"#,
         ] {
             fs::write(&path, input).unwrap();
             assert!(load_provisioning(&path, Some(dir.path()), false).is_err());
@@ -702,7 +711,7 @@ mod tests {
     }
 
     #[test]
-    fn saas_only_rejects_self_hosted_but_allows_optional_guest_access() {
+    fn cloud_only_rejects_self_hosted_but_allows_optional_guest_access() {
         let server = ServerConfig {
             url: "https://example.org".into(),
         };
@@ -722,9 +731,9 @@ mod tests {
     #[test]
     fn provisioning_accepts_sign_in_policy_without_a_server() {
         let config: ProvisioningConfig =
-            serde_json::from_str(r#"{"requireSignIn":true,"saasOnly":true}"#).unwrap();
+            serde_json::from_str(r#"{"requireSignIn":true,"cloudOnly":true}"#).unwrap();
         assert_eq!(config.require_sign_in, Some(true));
-        assert_eq!(config.saas_only, Some(true));
+        assert_eq!(config.cloud_only, Some(true));
         assert!(config.server_url.is_none());
         let legacy: ProvisioningConfig = serde_json::from_str(
             r#"{"serverUrl":"https://example.org","lockConnectionMode":true}"#,
@@ -741,6 +750,30 @@ mod tests {
             serde_json::from_str::<ProvisioningConfig>(r#"{"localProcessingOnly":"true"}"#)
                 .is_err()
         );
+    }
+
+    #[test]
+    fn legacy_cloud_policy_keeps_its_value() {
+        for enabled in [false, true] {
+            let config: ProvisioningConfig =
+                serde_json::from_value(serde_json::json!({"saasOnly": enabled})).unwrap();
+            assert_eq!(config.cloud_only, Some(enabled));
+        }
+    }
+
+    #[test]
+    fn renderer_config_uses_cloud_policy_name() {
+        let config = ConnectionConfig {
+            mode: ConnectionMode::SaaS,
+            server_config: None,
+            lock_connection_mode: false,
+            require_sign_in: true,
+            cloud_only: true,
+            local_processing_only: false,
+        };
+        let value = serde_json::to_value(config).unwrap();
+        assert_eq!(value["cloud_only"], true);
+        assert!(value.get("saas_only").is_none());
     }
 
     // Windows-path tests are cfg-gated because `Path::starts_with` is

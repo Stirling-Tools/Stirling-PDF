@@ -74,18 +74,18 @@ vi.mock("@app/components/shared/DisabledButtonWithTooltip", () => ({
 beforeEach(() => getConfig.mockReset());
 
 it.each([
-  { required: true, saasOnly: true, skip: false, selfHosted: false },
-  { required: true, saasOnly: false, skip: false, selfHosted: true },
-  { required: false, saasOnly: true, skip: true, selfHosted: false },
-  { required: false, saasOnly: false, skip: true, selfHosted: true },
+  { required: true, cloudOnly: true, skip: false, selfHosted: false },
+  { required: true, cloudOnly: false, skip: false, selfHosted: true },
+  { required: false, cloudOnly: true, skip: true, selfHosted: false },
+  { required: false, cloudOnly: false, skip: true, selfHosted: true },
 ])(
   "applies independent sign-in policies: %j",
-  async ({ required, saasOnly, skip, selfHosted }) => {
+  async ({ required, cloudOnly, skip, selfHosted }) => {
     getConfig.mockResolvedValue({
       mode: "saas",
       lock_connection_mode: false,
       require_sign_in: required,
-      saas_only: saasOnly,
+      cloud_only: cloudOnly,
     });
     render(<SetupWizard onComplete={() => {}} onClose={() => {}} />);
     await screen.findByText("Cloud sign-in");
@@ -108,7 +108,7 @@ it("offers policy retries without showing unrestricted sign-in choices", async (
   getConfig.mockResolvedValue({
     mode: "saas",
     require_sign_in: true,
-    saas_only: true,
+    cloud_only: true,
   });
   fireEvent.click(screen.getByRole("button", { name: "common.retry" }));
   await screen.findByText("Cloud sign-in");

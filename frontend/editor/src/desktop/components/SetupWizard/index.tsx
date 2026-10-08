@@ -54,7 +54,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
   const [selfHostedMfaRequired, setSelfHostedMfaRequired] = useState(false);
   const [lockConnectionMode, setLockConnectionMode] = useState(false);
   const [requireSignIn, setRequireSignIn] = useState(false);
-  const [saasOnly, setSaasOnly] = useState(false);
+  const [cloudOnly, setCloudOnly] = useState(false);
   const [policyLoaded, setPolicyLoaded] = useState(false);
   const [policyError, setPolicyError] = useState(false);
   const [lockedServerUnreachable, setLockedServerUnreachable] = useState(false);
@@ -135,7 +135,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
   };
 
   const handleSelfHostedClick = () => {
-    if (lockConnectionMode || saasOnly) {
+    if (lockConnectionMode || cloudOnly) {
       return;
     }
     setError(null);
@@ -377,7 +377,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
       return;
     }
     setRequireSignIn(currentConfig.require_sign_in ?? false);
-    setSaasOnly(currentConfig.saas_only ?? false);
+    setCloudOnly(currentConfig.cloud_only ?? false);
     setPolicyLoaded(true);
     if (!currentConfig.lock_connection_mode) return;
     const serverUrl = currentConfig.server_config?.url;
@@ -476,7 +476,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
           serverUrl={serverConfig?.url || STIRLING_SAAS_URL}
           onLogin={handleSaaSLogin}
           onOAuthSuccess={handleSaaSLoginOAuth}
-          onSelfHostedClick={saasOnly ? undefined : handleSelfHostedClick}
+          onSelfHostedClick={cloudOnly ? undefined : handleSelfHostedClick}
           onSwitchToSignup={handleSwitchToSignup}
           onSkipSignIn={requireSignIn ? undefined : handleLocalMode}
           onClose={requireSignIn ? undefined : onClose}
@@ -495,7 +495,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
       )}
 
       {!lockConnectionMode &&
-        !saasOnly &&
+        !cloudOnly &&
         activeStep === SetupStep.ServerSelection && (
           <ServerSelectionScreen
             onSelect={handleServerSelection}

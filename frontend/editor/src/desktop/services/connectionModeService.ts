@@ -25,7 +25,7 @@ export interface ConnectionConfig {
   /** Absent in older native configurations; defaults to false. */
   require_sign_in?: boolean;
   /** Restricts account connections to Stirling Cloud, independently of guest access. */
-  saas_only?: boolean;
+  cloud_only?: boolean;
   /** Keeps documents on this device while allowing account and billing requests. */
   local_processing_only?: boolean;
 }
@@ -303,7 +303,7 @@ export class ConnectionModeService {
   /** Rejects disallowed servers before credentials or deep-link tokens are accepted. */
   async assertSelfHostedAllowed(serverUrl: string): Promise<void> {
     const config = await this.getCurrentConfig();
-    if (config.saas_only) {
+    if (config.cloud_only) {
       throw new Error("Your administrator requires Stirling Cloud sign-in");
     }
     if (

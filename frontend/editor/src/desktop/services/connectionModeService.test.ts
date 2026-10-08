@@ -27,7 +27,7 @@ describe("managed connections", () => {
       server_config: null,
       lock_connection_mode: false,
       require_sign_in: true,
-      saas_only: true,
+      cloud_only: true,
     });
     const service = new ConnectionModeService();
     expect(await service.getCurrentMode()).toBe("saas");
@@ -44,7 +44,7 @@ describe("managed connections", () => {
       mode: "saas",
       server_config: null,
       lock_connection_mode: false,
-      saas_only: true,
+      cloud_only: true,
     });
     const service = new ConnectionModeService();
     await expect(
@@ -59,26 +59,26 @@ describe("managed connections", () => {
       server_config: null,
       lock_connection_mode: false,
       require_sign_in: true,
-      saas_only: true,
+      cloud_only: true,
       local_processing_only: true,
     });
     const service = new ConnectionModeService();
     await service.switchToSaaS("https://cloud.example.org");
     expect(await service.getCurrentConfig()).toMatchObject({
       require_sign_in: true,
-      saas_only: true,
+      cloud_only: true,
       local_processing_only: true,
       mode: "saas",
     });
     await expect(service.switchToLocal()).rejects.toThrow("requires sign-in");
   });
 
-  it("allows guest use when only SaaS-only is set", async () => {
+  it("allows guest use when only Cloud-only is set", async () => {
     invoke.mockResolvedValue({
       mode: "saas",
       server_config: null,
       lock_connection_mode: false,
-      saas_only: true,
+      cloud_only: true,
     });
     const service = new ConnectionModeService();
     await service.switchToLocal();

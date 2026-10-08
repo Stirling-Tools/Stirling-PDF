@@ -639,7 +639,10 @@ export class AuthService {
   /** Managed access requires an unexpired session verified by the selected server, including its authenticated refresh responses. */
   async hasManagedSession(): Promise<boolean> {
     const config = await connectionModeService.getCurrentConfig();
-    if (config.mode === "local" || (config.saas_only && config.mode !== "saas"))
+    if (
+      config.mode === "local" ||
+      (config.cloud_only && config.mode !== "saas")
+    )
       return false;
     const serverUrl =
       config.mode === "saas" ? STIRLING_SAAS_URL : config.server_config?.url;
