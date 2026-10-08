@@ -37,6 +37,22 @@ public class LoginAttemptService {
 
     private static final int MAX_BLOCKED_USERS = 100_000;
 
+    /**
+     * Stripes serializing updates and resets for the same username. A failed login
+     * read-modify-writes its counter, so without this a failure racing a successful login can
+     * reinsert the cleared counter and relock the account. Reads stay lock-free; a stale read only
+     * delays a lockout decision by one request.
+     */
+    private static final int KEY_LOCK_STRIPES = 64;
+
+    private final Object[] keyLocks = new Object[KEY_LOCK_STRIPES];
+
+    {
+        for (int i = 0; i < keyLocks.length; i++) {
+            keyLocks[i] = new Object();
+        }
+    }
+
     private int MAX_ATTEMPT;
 
     private long ATTEMPT_INCREMENT_TIME;
@@ -84,13 +100,19 @@ public class LoginAttemptService {
                         .build();
     }
 
+    private Object lockFor(String normalizedKey) {
+        return keyLocks[(normalizedKey.hashCode() & 0x7fffffff) % keyLocks.length];
+    }
+
     public void loginSucceeded(String key) {
         if (!isBlockedEnabled || key == null || key.trim().isEmpty()) {
             return;
         }
         String normalizedKey = key.toLowerCase(Locale.ROOT);
-        attemptsCache.invalidate(normalizedKey);
-        blockedCache.invalidate(normalizedKey);
+        synchronized (lockFor(normalizedKey)) {
+            attemptsCache.invalidate(normalizedKey);
+            blockedCache.invalidate(normalizedKey);
+        }
     }
 
     public void loginFailed(String key) {
@@ -98,26 +120,29 @@ public class LoginAttemptService {
             return;
         }
         String normalizedKey = key.toLowerCase(Locale.ROOT);
-        AttemptCounter attemptCounter = attemptsCache.getIfPresent(normalizedKey);
-        if (attemptCounter == null) {
-            attemptCounter = new AttemptCounter();
-            attemptsCache.put(normalizedKey, attemptCounter);
-        } else {
-            if (attemptCounter.shouldReset(ATTEMPT_INCREMENT_TIME)) {
-                attemptCounter.reset();
-                blockedCache.invalidate(normalizedKey);
+        synchronized (lockFor(normalizedKey)) {
+            AttemptCounter attemptCounter = attemptsCache.getIfPresent(normalizedKey);
+            if (attemptCounter == null) {
+                attemptCounter = new AttemptCounter();
+                attemptsCache.put(normalizedKey, attemptCounter);
+            } else {
+                if (attemptCounter.shouldReset(ATTEMPT_INCREMENT_TIME)) {
+                    attemptCounter.reset();
+                    blockedCache.invalidate(normalizedKey);
+                }
+                attemptCounter.increment();
+                // Mutating the counter does not refresh the cache write time, so re-insert:
+                // without this the entry expires on the first failure's clock and lockout lapses
+                // early.
+                attemptsCache.put(normalizedKey, attemptCounter);
             }
-            attemptCounter.increment();
-            // Mutating the counter does not refresh the cache write time, so re-insert: without
-            // this the entry expires on the first failure's clock and lockout lapses early.
-            attemptsCache.put(normalizedKey, attemptCounter);
-        }
-        if (attemptCounter.getAttemptCount() >= MAX_ATTEMPT
-                || blockedCache.getIfPresent(normalizedKey) != null) {
-            // Refresh the lockout on every further failure: the counting entry can be
-            // evicted and recreated by a spray, which must neither lift the lockout nor let it
-            // lapse on its old clock.
-            blockedCache.put(normalizedKey, Boolean.TRUE);
+            if (attemptCounter.getAttemptCount() >= MAX_ATTEMPT
+                    || blockedCache.getIfPresent(normalizedKey) != null) {
+                // Refresh the lockout on every further failure: the counting entry can be
+                // evicted and recreated by a spray, which must neither lift the lockout nor let
+                // it lapse on its old clock.
+                blockedCache.put(normalizedKey, Boolean.TRUE);
+            }
         }
     }
 
@@ -141,8 +166,10 @@ public class LoginAttemptService {
             return;
         }
         String normalizedKey = key.toLowerCase(Locale.ROOT);
-        attemptsCache.invalidate(normalizedKey);
-        blockedCache.invalidate(normalizedKey);
+        synchronized (lockFor(normalizedKey)) {
+            attemptsCache.invalidate(normalizedKey);
+            blockedCache.invalidate(normalizedKey);
+        }
     }
 
     public boolean isBlockingEnabled() {

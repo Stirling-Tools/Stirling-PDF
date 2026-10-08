@@ -16,7 +16,8 @@ class MetricsConfigTest {
         registry.config()
                 .meterFilter(config.meterFilter())
                 .meterFilter(config.httpRequestsSessionCardinalityCap())
-                .meterFilter(config.httpRequestsUriCardinalityCap());
+                .meterFilter(config.httpRequestsUriCardinalityCap())
+                .meterFilter(config.httpRequestsCombinationCardinalityCap());
         return registry;
     }
 
@@ -75,6 +76,22 @@ class MetricsConfigTest {
                                 .counter()
                                 .count())
                 .isEqualTo(1.0);
+    }
+
+    @Test
+    @DisplayName("session-uri combinations are capped when both tags vary together")
+    void sessionUriCombinationsAreCapped() {
+        SimpleMeterRegistry registry = registryConfigured();
+
+        // 200 x 200 stays under each per-tag ceiling but exceeds the combination ceiling.
+        for (int s = 0; s < 200; s++) {
+            for (int u = 0; u < 200; u++) {
+                count(registry, "/api/v1/general/rotate-pdf/job-" + u, "session-" + s).increment();
+            }
+        }
+
+        assertThat(registry.find(MetricsConfig.HTTP_REQUESTS).counters())
+                .hasSize(MetricsConfig.MAX_SESSION_URI_COMBINATIONS);
     }
 
     @Test

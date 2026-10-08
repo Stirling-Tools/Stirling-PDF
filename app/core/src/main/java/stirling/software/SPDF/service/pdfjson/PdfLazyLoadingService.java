@@ -135,6 +135,18 @@ public class PdfLazyLoadingService {
         // Read PDF bytes once for processing and caching
         byte[] pdfBytes = file.getBytes();
 
+        // Caffeine drops entries heavier than maximumWeight without notice, so an oversized PDF
+        // would report successful lazy loading here and fail every page request after. Reject
+        // upfront instead; the PdfJsonConversionService path spills such documents to disk.
+        if (pdfBytes.length > MAX_CACHED_BYTES) {
+            throw new IOException(
+                    "PDF ("
+                            + pdfBytes.length
+                            + " bytes) exceeds the lazy-loading memory budget ("
+                            + MAX_CACHED_BYTES
+                            + " bytes)");
+        }
+
         try (PDDocument document = pdfDocumentFactory.load(pdfBytes, true)) {
             int totalPages = document.getNumberOfPages();
 

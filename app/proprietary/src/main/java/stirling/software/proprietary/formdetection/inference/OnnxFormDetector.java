@@ -139,22 +139,30 @@ public class OnnxFormDetector implements UnloadableModel {
                 OrtSession.SessionOptions opts = new OrtSession.SessionOptions();
                 boolean retained = false;
                 try {
-                    try {
-                        opts.setIntraOpNumThreads(
-                                Math.max(1, Runtime.getRuntime().availableProcessors() / 2));
-                    } catch (OrtException ignored) {
-                        // best-effort tuning
-                    }
-                    closeSession();
-                    session = env.createSession(file.toString(), opts);
+                    opts.setIntraOpNumThreads(
+                            Math.max(1, Runtime.getRuntime().availableProcessors() / 2));
+                } catch (OrtException ignored) {
+                    // best-effort tuning
+                }
+                closeSession();
+                OrtSession created = env.createSession(file.toString(), opts);
+                try {
+                    // Ownership transfers only after setup fully succeeds: a failure here must
+                    // close the new session, not leave it open behind the old fields.
+                    String name = created.getInputNames().iterator().next();
+                    session = created;
                     sessionOptions = opts;
+                    inputName = name;
                     retained = true;
                 } finally {
                     if (!retained) {
-                        opts.close();
+                        try {
+                            created.close();
+                        } finally {
+                            opts.close();
+                        }
                     }
                 }
-                inputName = session.getInputNames().iterator().next();
                 loadedModelId = activeId;
                 log.info("Loaded ONNX session for Auto Form Detection model '{}'", activeId);
             } catch (OrtException | RuntimeException | LinkageError e) {

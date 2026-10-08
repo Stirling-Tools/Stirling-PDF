@@ -12,6 +12,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -127,39 +128,58 @@ final class MultiPatternTextFinder extends PDFTextStripper {
                             + MAX_CONCURRENT_REGEX_EVALUATIONS
                             + ")");
         }
-        // The slot is released by the worker task, not here: Matcher.find() ignores
-        // interruption, so a timed-out caller returning early must not hand the slot to the next
-        // waiter while the cancelled evaluation is still spinning.
-        return runBounded(matcher);
+        // The slot is released exactly once, either by the worker task or by the cancellation
+        // path below: Matcher.find() ignores interruption, so a timed-out caller must not hand the
+        // slot on while the cancelled evaluation is still spinning, but a worker that never started
+        // releases nothing on its own. The started flag keeps that backpressure: the caller
+        // releases only when the worker never ran. A start racing the cancel can still free the
+        // slot under a spinning orphan; releaseOnce keeps that to a single release.
+        AtomicBoolean started = new AtomicBoolean(false);
+        AtomicBoolean released = new AtomicBoolean(false);
+        Runnable releaseOnce =
+                () -> {
+                    if (released.compareAndSet(false, true)) {
+                        REGEX_SLOTS.release();
+                    }
+                };
+        return runBounded(matcher, started, releaseOnce);
     }
 
-    private static boolean runBounded(Matcher matcher) throws IOException {
+    private static boolean runBounded(Matcher matcher, AtomicBoolean started, Runnable releaseOnce)
+            throws IOException {
         Future<Boolean> future;
         try {
             future =
                     REGEX_EXECUTOR.submit(
                             (java.util.concurrent.Callable<Boolean>)
                                     () -> {
+                                        started.set(true);
                                         try {
                                             return matcher.find();
                                         } finally {
-                                            REGEX_SLOTS.release();
+                                            releaseOnce.run();
                                         }
                                     });
         } catch (RuntimeException | Error e) {
-            REGEX_SLOTS.release();
+            releaseOnce.run();
             throw e;
         }
         try {
             return future.get(REGEX_MATCH_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         } catch (TimeoutException e) {
             future.cancel(true);
+            if (!started.get()) {
+                releaseOnce.run();
+            }
             throw new IOException(
                     "Regex match timed out after "
                             + REGEX_MATCH_TIMEOUT_SECONDS
                             + "s — pattern may cause catastrophic backtracking");
         } catch (InterruptedException e) {
             future.cancel(true);
+            if (!started.get()) {
+                releaseOnce.run();
+            }
             Thread.currentThread().interrupt();
             throw new IOException("Regex match interrupted", e);
         } catch (ExecutionException e) {

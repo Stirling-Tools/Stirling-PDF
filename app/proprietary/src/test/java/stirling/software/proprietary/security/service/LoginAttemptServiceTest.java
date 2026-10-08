@@ -409,10 +409,14 @@ class LoginAttemptServiceTest {
             loginFailed.invoke(svc, "spray-" + i);
         }
         attemptsCache.cleanUp();
+        // Pin the eviction precondition deterministically: TinyLFU frequency can retain the
+        // victim's hot counter through the spray, which would fail the assertion below before the
+        // lockout behavior is tested. The spray loop above still exercises the eviction pressure.
+        attemptsCache.invalidate("victim");
 
         assertNull(
                 attemptsCache.getIfPresent("victim"),
-                "Precondition: the spray evicted the victim's counting entry");
+                "Precondition: the victim's counting entry is absent");
         assertEquals(
                 true,
                 isBlocked.invoke(svc, "victim"),

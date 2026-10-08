@@ -2,6 +2,7 @@ package stirling.software.SPDF.service.pdfjson;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Base64;
@@ -349,22 +350,13 @@ public class PdfJsonFontService {
             Process process = processBuilder.start();
             // `which` normally writes one short line, but drain both pipes and bound the wait: an
             // unbounded waitFor() on a hung PATH entry blocks startup for the life of the JVM.
-            // Only the leading bytes are retained; the exit code is all this probe consumes.
+            // Only the leading bytes are retained; the exit code is all this probe consumes. The
+            // rest is drained and discarded so a chatty probe cannot fill a pipe and stall.
             ExecutorService drain = Executors.newVirtualThreadPerTaskExecutor();
             try (InputStream stdout = process.getInputStream();
                     InputStream stderr = process.getErrorStream()) {
-                Future<String> out =
-                        drain.submit(
-                                () ->
-                                        new String(
-                                                stdout.readNBytes(MAX_PROBE_BYTES),
-                                                StandardCharsets.UTF_8));
-                Future<String> err =
-                        drain.submit(
-                                () ->
-                                        new String(
-                                                stderr.readNBytes(MAX_PROBE_BYTES),
-                                                StandardCharsets.UTF_8));
+                Future<String> out = drain.submit(() -> readHead(stdout));
+                Future<String> err = drain.submit(() -> readHead(stderr));
                 long deadlineNanos =
                         System.nanoTime() + TimeUnit.SECONDS.toNanos(PROBE_TIMEOUT_SECONDS);
                 boolean finished = process.waitFor(PROBE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -394,6 +386,12 @@ public class PdfJsonFontService {
             log.debug("Error checking for command {}: {}", command, e.getMessage());
             return false;
         }
+    }
+
+    private static String readHead(InputStream in) throws IOException {
+        byte[] head = in.readNBytes(MAX_PROBE_BYTES);
+        in.transferTo(OutputStream.nullOutputStream());
+        return new String(head, StandardCharsets.UTF_8);
     }
 
     private String[] buildPythonCommand(String input, String output, String toUnicode) {

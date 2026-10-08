@@ -100,15 +100,29 @@ public class Type3LibraryStrategy implements Type3ConversionStrategy {
                         entry.getLabel(),
                         match.getMatchType() != null ? match.getMatchType() : "alias");
 
+        // Resolve before reporting success: an admitted payload can still read as empty, and
+        // SUCCESS with no program is a lie the caller cannot detect.
+        String program = toBase64(entry.getProgram());
+        String webProgram = toBase64(entry.getWebProgram());
+        String pdfProgram = toBase64(entry.getPdfProgram());
+        if (program == null && webProgram == null && pdfProgram == null) {
+            return PdfJsonFontConversionCandidate.builder()
+                    .strategyId(getId())
+                    .strategyLabel(getLabel())
+                    .status(PdfJsonFontConversionStatus.FAILURE)
+                    .message("Library entry payloads empty or unreadable")
+                    .build();
+        }
+
         return PdfJsonFontConversionCandidate.builder()
                 .strategyId(getId())
                 .strategyLabel(getLabel())
                 .status(PdfJsonFontConversionStatus.SUCCESS)
-                .program(toBase64(entry.getProgram()))
+                .program(program)
                 .programFormat(toFormat(entry.getProgram()))
-                .webProgram(toBase64(entry.getWebProgram()))
+                .webProgram(webProgram)
                 .webProgramFormat(toFormat(entry.getWebProgram()))
-                .pdfProgram(toBase64(entry.getPdfProgram()))
+                .pdfProgram(pdfProgram)
                 .pdfProgramFormat(toFormat(entry.getPdfProgram()))
                 .glyphCoverage(
                         entry.getGlyphCoverage() != null
