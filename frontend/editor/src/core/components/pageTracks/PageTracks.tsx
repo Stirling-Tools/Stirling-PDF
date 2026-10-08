@@ -54,6 +54,7 @@ import { useTrackWorkspace } from "@app/components/pageTracks/hooks/useTrackWork
 import { useTrackSelection } from "@app/components/pageTracks/hooks/useTrackSelection";
 import { useTrackThumbnails } from "@app/components/pageTracks/hooks/useTrackThumbnails";
 import { useTrackSave } from "@app/components/pageTracks/hooks/useTrackSave";
+import { usePageTracksShortcuts } from "@app/components/pageTracks/hooks/usePageTracksShortcuts";
 import { usePageTracksWorkbenchBarButtons } from "@app/components/pageTracks/hooks/usePageTracksWorkbenchBarButtons";
 import { totalPageCount } from "@app/components/pageTracks/types";
 import TrackRow, { DropHint } from "@app/components/pageTracks/TrackRow";
@@ -348,6 +349,7 @@ export default function PageTracks() {
     [selection.selectedIds],
   );
   const { setSelection, selectedIds } = selection;
+  usePageTracksShortcuts({ selectedIds, dispatch });
   const selectNumbersEverywhere = useCallback(
     (pageNumbers: number[]) => {
       const wanted = new Set(pageNumbers);
