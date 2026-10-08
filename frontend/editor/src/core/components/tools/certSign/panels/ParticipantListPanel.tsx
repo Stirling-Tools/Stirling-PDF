@@ -7,7 +7,7 @@ import type {
   ParticipantInfo,
   SigningParticipantPreview,
 } from "@app/types/signingSession";
-import { getFileColor } from "@app/components/pageEditor/fileColors";
+import { getFileColor } from "@app/utils/fileColors";
 import "@app/components/shared/signing/signingDetail.css";
 
 interface ParticipantListPanelProps {

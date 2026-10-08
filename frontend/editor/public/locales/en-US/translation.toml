@@ -3219,16 +3219,12 @@ text = "To make these permissions unchangeable, use the Add Password tool to set
 [chat.actions]
 copy = "Copy message"
 
-[chat.emptyState]
-text = "Ask a question about your documents or get help with PDF tools."
-
 [chat.fab]
 close = "Close chat"
 open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Stirling agent options"
-assistant = "AI Assistant"
 clearChat = "Clear chat"
 
 [chat.input]
@@ -3278,11 +3274,6 @@ not_found = "I couldn't find the requested information."
 processing = "Processing ({{outcome}})..."
 unsupported_capability = "Unsupported capability: {{capability}}"
 usage_limit_reached = "You've reached your usage limit. Check your plan options to keep going."
-
-[chat.toolsUsed]
-summary_one = "Ran 1 tool"
-summary_other = "Ran {{count}} tools"
-unknownTool = "Unknown tool"
 
 [classification.families]
 correspondence = "Correspondence"
@@ -4597,7 +4588,6 @@ viewInViewer = "View in Viewer"
 closeFile = "Close file"
 
 [fileEditor]
-addFiles = "Add Files"
 closedFile = "Closed {{name}}"
 couldNotSave = "Could not save {{name}}"
 filesAdded_one = "Added {{count}} file"
@@ -4613,6 +4603,11 @@ savedAndClosed = "Saved and closed {{name}}"
 saveFailed = "Save failed"
 unpinnedFile = "Unpinned {{name}}"
 unzipping = "Unzipping {{name}}"
+
+[fileEditor.addCard]
+dropHint = "or drop files anywhere"
+fromComputer = "Upload from computer"
+moreOptions = "More upload options"
 
 [fileEditor.unzip]
 error = "Error unzipping {{name}}"
@@ -5733,11 +5728,6 @@ desc = "Merge multiple pages of a PDF document into a single page"
 tags = "layout,arrange,combine,N-up,2-up,4-up,multiple per page,pages per sheet,layout pages,tile,grid layout,multi-page layout,combine on page,handout"
 title = "Multi-Page Layout"
 
-[home.pdfCommentAgent]
-desc = "Ask AI to annotate a PDF with sticky-note comments based on your prompt"
-tags = "AI,agent,comment,annotate,sticky note,review,feedback,notes"
-title = "Add AI comments"
-
 [home.pdfOrganiser]
 tags = "organize,rearrange,reorder,arrange pages,sort,move pages,delete pages,remove pages,page management,page organizer,resequence"
 title = "Organize"
@@ -6215,7 +6205,7 @@ title = "Authentication Successful"
 [oauthConsent]
 approve = "Allow access"
 approving = "Allowing..."
-decisionFailed = "Could not submit your decision. Please try again."
+decisionFailed = "Could not complete this authorization. It may already have been used or expired - start the connection again from your app."
 deny = "Deny"
 denying = "Denying..."
 loadFailed = "This authorization request is invalid or has expired. Close this tab and try connecting again from the app."
@@ -6595,63 +6585,6 @@ yourCloudAccess = "You'll become a team member and lose owner access."
 deselectAll = "None"
 selectAll = "Check All"
 
-[pageEditor]
-dragPreviewAlt = "Dragging"
-filePosition = "Position {{position}}"
-pageLabel = "Page {{page}}"
-title = "Page Editor"
-
-[pageEditor.actions]
-deletePage = "Delete Page"
-insertFileAfter = "Insert File After"
-moveLeft = "Move Left"
-moveRight = "Move Right"
-rotateLeft = "Rotate Left"
-rotateRight = "Rotate Right"
-splitAfter = "Split After"
-
-[pageEditor.commands]
-addSplitAt = "Add split at position {{position}}"
-addSplits_one = "Add {{count}} split"
-addSplits_other = "Add {{count}} splits"
-deletePages_one = "Delete {{count}} page"
-deletePages_other = "Delete {{count}} pages"
-insertFiles_one = "Insert {{count}} file after page {{page}}"
-insertFiles_other = "Insert {{count}} files after page {{page}}"
-insertPageBreaks_one = "Insert {{count}} page break"
-insertPageBreaks_other = "Insert {{count}} page breaks"
-insertPageBreaksAll = "Insert page breaks after all pages"
-removeAllSplits = "Remove all splits"
-removeSplitAt = "Remove split at position {{position}}"
-removeSplits_one = "Remove {{count}} split"
-removeSplits_other = "Remove {{count}} splits"
-reorderPages = "Reorder pages"
-rotatePageLeft = "Rotate page left"
-rotatePageRight = "Rotate page right"
-rotatePagesLeft_one = "Rotate {{count}} page left"
-rotatePagesLeft_other = "Rotate {{count}} pages left"
-rotatePagesRight_one = "Rotate {{count}} page right"
-rotatePagesRight_other = "Rotate {{count}} pages right"
-splitAllPages = "Split all pages"
-toggleSplits_one = "Toggle {{count}} split position"
-toggleSplits_other = "Toggle {{count}} split positions"
-
-[pageEditor.emptyState]
-body = "Add files to start editing pages"
-title = "No PDF files loaded"
-
-[pageEditor.fileDropdown]
-addFile = "Add File"
-selectedCount = "{{selected}}/{{total}} files selected"
-untitled = "Untitled"
-
-[pageEditor.toolbar]
-delete = "Delete Selected"
-redo = "Redo"
-rotateLeft = "Rotate Selected Left"
-rotateRight = "Rotate Selected Right"
-undo = "Undo"
-
 [pageExtracter]
 title = "Extract Pages"
 
@@ -6815,6 +6748,68 @@ title = "Page Ranges"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → selects all pages"
 title = "Special Keywords"
+
+[pageTracks]
+blankPage = "Blank page"
+deleteSelected = "Delete selected pages"
+dragging_one = "{{count}} page"
+dragging_other = "{{count}} pages"
+edited = "edited"
+emptyTrack = "No pages left. Drag pages here, or save to close this file."
+insertBlank = "Insert blank page"
+insertBlankAfterSelected = "Insert blank pages after selected pages"
+moveLeft = "Move left"
+moveRight = "Move right"
+nextPage = "Next page"
+page = "Page {{number}}"
+pageCount_one = "{{count}} page"
+pageCount_other = "{{count}} pages"
+pagePosition = "Page {{number}} of {{total}}"
+prevPage = "Previous page"
+readingPages = "Reading pages..."
+redo = "Redo"
+rotateLeft = "Rotate left"
+rotateRight = "Rotate right"
+rotateSelectedLeft = "Rotate selected pages left"
+rotateSelectedRight = "Rotate selected pages right"
+saveChanges = "Save changes to all files"
+saving = "Saving..."
+savingProgress = "Saving {{done}} of {{total}}"
+selectPage = "Select page {{number}}"
+splitAfterSelected = "Split after selected pages"
+splitHere = "Split here"
+undo = "Undo"
+viewError = "Couldn't render this page"
+viewPage = "View page"
+zoomIn = "Zoom in"
+zoomOut = "Zoom out"
+
+[pageTracks.close]
+message = "Are you sure you want to close all files?"
+unsaved = "These files have unsaved changes."
+
+[pageTracks.delete]
+page = "Delete page"
+
+[pageTracks.empty]
+body = "Add PDFs to expand them into editable page tracks"
+title = "No PDF files loaded"
+
+[pageTracks.exportFailed]
+body = "The edited files couldn't be prepared. Try again."
+title = "Couldn't download"
+
+[pageTracks.saveFailed]
+body = "Your edits haven't been lost. Try saving again."
+title = "Couldn't save changes"
+
+[pageTracks.track]
+close = "Close file"
+collapse = "Collapse"
+expand = "Expand"
+
+[pageTracks.wrap]
+label = "Wrap pages"
 
 [payg.activity]
 docs = "docs"
@@ -7145,24 +7140,6 @@ totalSeats_other = "Total ({{count}} seats)"
 
 [payment.upgradeTeam]
 title = "Upgrade to Team"
-
-[pdfCommentAgent]
-submit = "Generate comments"
-
-[pdfCommentAgent.error]
-emptyPrompt = "Please describe what the AI should comment on"
-failed = "Failed to generate comments"
-tooLong = "Prompt is too long (maximum {{max}} characters)"
-
-[pdfCommentAgent.prompt]
-label = "What should the AI comment on?"
-placeholder = "e.g. Flag any ambiguous dates and suggest clarifications"
-
-[pdfCommentAgent.results]
-title = "Commented PDF"
-
-[pdfCommentAgent.settings]
-title = "Comment instructions"
 
 [pdfOrganiser]
 placeholder = "(e.g. 1,3,2 or 4-8,2,10-12 or 2n-1)"
@@ -13927,16 +13904,13 @@ annotations = "Annotations"
 applyRedactionsFirst = "Apply redactions first"
 closeAll = "Close All Files"
 closePdf = "Close PDF"
-deleteSelected = "Delete Selected Pages"
 deselectAll = "Deselect All"
 downloadAll = "Download All"
 exitRedaction = "Exit Redaction Mode"
-exportAll = "Export PDF"
-exportSelected = "Export Selected Pages"
 formFill = "Form Editor"
 hideToolbar = "Hide toolbar"
 moreActions = "More actions"
-multiTool = "Multi-Tool"
+pageEditor = "Page Editor"
 panMode = "Pan Mode"
 print = "Print PDF"
 readAloud = "Read Aloud"
@@ -13950,7 +13924,6 @@ rulerSettings = "Scale Settings"
 save = "Save"
 saveAll = "Save All"
 saveAs = "Save As"
-saveChanges = "Save Changes"
 search = "Search PDF"
 selectAll = "Select All"
 selectByNumber = "Select by Page Numbers"
