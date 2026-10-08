@@ -138,12 +138,58 @@ fn find_stirling_jar(resource_dir: &PathBuf) -> Result<PathBuf, String> {
     Ok(jar_path)
 }
 
+/// One component of a prerelease suffix: a run of digits compared numerically,
+/// or a run of letters compared as text. Numeric components sort below text on
+/// ties, which keeps a bare `rc` below `rc1`, and makes `rc10` sort above `rc2`
+/// where a plain string compare would rank them backwards.
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+enum PrereleaseToken {
+    Numeric(u64),
+    Text(String),
+}
+
+/// Split a prerelease suffix into ordered tokens, dropping separators so
+/// `rc.10` and `rc10` compare the same.
+fn prerelease_tokens(suffix: &str) -> Vec<PrereleaseToken> {
+    let mut tokens = Vec::new();
+    let mut chars = suffix.chars().peekable();
+    while let Some(&current) = chars.peek() {
+        if current.is_ascii_digit() {
+            let mut value: u64 = 0;
+            while let Some(&digit) = chars.peek() {
+                match digit.to_digit(10) {
+                    Some(d) => {
+                        value = value.saturating_mul(10).saturating_add(u64::from(d));
+                        chars.next();
+                    }
+                    None => break,
+                }
+            }
+            tokens.push(PrereleaseToken::Numeric(value));
+        } else if current.is_ascii_alphabetic() {
+            let mut text = String::new();
+            while let Some(&letter) = chars.peek() {
+                if letter.is_ascii_alphabetic() {
+                    text.push(letter.to_ascii_lowercase());
+                    chars.next();
+                } else {
+                    break;
+                }
+            }
+            tokens.push(PrereleaseToken::Text(text));
+        } else {
+            chars.next();
+        }
+    }
+    tokens
+}
+
 /// Ordering key for `stirling-pdf-<version>.jar`: the numeric release components,
 /// whether the version is a final release (1 for final release, 0 for prerelease),
-/// and the prerelease suffix. Anything unparseable counts as zero so comparison never
-/// panics, while final releases sort above prereleases and newer prereleases (e.g. rc2 vs rc1)
+/// and the prerelease identifiers. Anything unparseable counts as zero so comparison never
+/// panics, while final releases sort above prereleases and newer prereleases (e.g. rc10 vs rc2)
 /// sort appropriately.
-fn version_key(name: &str) -> (Vec<u64>, u8, String) {
+fn version_key(name: &str) -> (Vec<u64>, u8, Vec<PrereleaseToken>) {
     let lower = name.to_ascii_lowercase();
     let version = lower
         .strip_prefix("stirling-pdf-")
@@ -159,7 +205,7 @@ fn version_key(name: &str) -> (Vec<u64>, u8, String) {
             .map(|part| part.parse::<u64>().unwrap_or(0))
             .collect(),
         if suffix.is_empty() { 1 } else { 0 },
-        suffix.to_string(),
+        prerelease_tokens(suffix),
     )
 }
 
@@ -609,8 +655,32 @@ mod tests {
     }
 
     #[test]
+    fn version_key_orders_prerelease_numbers_numerically() {
+        assert!(
+            version_key("stirling-pdf-3.0.0-rc2.jar") < version_key("stirling-pdf-3.0.0-rc10.jar")
+        );
+
+        let mut names = [
+            "stirling-pdf-3.0.0-rc10.jar",
+            "stirling-pdf-3.0.0-rc2.jar",
+            "stirling-pdf-3.0.0-rc1.jar",
+        ];
+        names.sort_by_key(|name| std::cmp::Reverse(version_key(name)));
+        assert_eq!(
+            names,
+            [
+                "stirling-pdf-3.0.0-rc10.jar",
+                "stirling-pdf-3.0.0-rc2.jar",
+                "stirling-pdf-3.0.0-rc1.jar",
+            ]
+        );
+    }
+
+    #[test]
     fn version_key_tolerates_non_numeric_versions() {
-        assert_eq!(version_key("not-a-version.jar"), (vec![0], 0, "a-version.jar".to_string()));
+        let key = version_key("not-a-version.jar");
+        assert_eq!(key.0, vec![0]);
+        assert_eq!(key.1, 0);
         assert_eq!(version_key("stirling-pdf-3.0.0.jar").1, 1);
     }
 }

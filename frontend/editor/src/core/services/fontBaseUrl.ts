@@ -19,3 +19,12 @@ export function getFontBaseUrl(): string {
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   return `${origin}${apiBase}/fonts`;
 }
+
+/**
+ * Subscribe to font-base-URL changes. The web app knows its base at module
+ * load, so there is nothing to watch; the desktop shadow fires when the bundled
+ * backend's port is discovered and the base stops being empty.
+ */
+export function subscribeToFontBaseUrl(_onChange: () => void): () => void {
+  return () => {};
+}

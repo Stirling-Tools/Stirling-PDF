@@ -56,12 +56,17 @@ async function compressFile(file: string, distDir: string): Promise<void> {
 
   const ext = path.extname(resolved).toLowerCase();
   if (EXCLUDED_EXTENSION_SET.has(ext)) return;
-  // Already compressed by the bundler pass.
+  // Already compressed by the bundler pass. Compare modification times: the walk
+  // runs over an existing dist, so a stale sibling from an earlier build has to
+  // be replaced rather than trusted.
   try {
-    await fs.access(`${resolved}.br`);
-    return;
+    const [source, sibling] = await Promise.all([
+      fs.stat(resolved),
+      fs.stat(`${resolved}.br`),
+    ]);
+    if (sibling.mtimeMs >= source.mtimeMs) return;
   } catch {
-    // Not compressed yet.
+    // No sibling yet.
   }
   const content = await fs.readFile(resolved);
   if (content.length < 1024) return;

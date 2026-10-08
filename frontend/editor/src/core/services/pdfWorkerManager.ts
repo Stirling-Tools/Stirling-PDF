@@ -82,11 +82,6 @@ class PDFWorkerManager {
       await this.waitForAvailableWorker(options.signal);
     }
 
-    const [{ getDocument }] = await Promise.all([
-      loadPdfJs(),
-      this.ensureWorker(),
-    ]);
-
     // Normalize input data to PDF.js format
     let pdfData: string | { data: ArrayBuffer | Uint8Array };
     if (data instanceof ArrayBuffer || data instanceof Uint8Array) {
@@ -99,43 +94,62 @@ class PDFWorkerManager {
       pdfData = data; // Pass through as-is
     }
 
-    const loadingTask = getDocument(
-      typeof pdfData === "string"
-        ? {
-            url: pdfData,
-            disableAutoFetch: options.disableAutoFetch ?? true,
-            disableStream: options.disableStream ?? true,
-            stopAtErrors: options.stopAtErrors ?? false,
-            verbosity: options.verbosity ?? 0,
-            // Suppress warnings about unimplemented widget types and other non-critical issues
-            isEvalSupported: false,
-          }
-        : {
-            ...pdfData,
-            disableAutoFetch: options.disableAutoFetch ?? true,
-            disableStream: options.disableStream ?? true,
-            stopAtErrors: options.stopAtErrors ?? false,
-            verbosity: options.verbosity ?? 0,
-            // Suppress warnings about unimplemented widget types and other non-critical issues
-            isEvalSupported: false,
-          },
-    );
-
+    // The deadline covers the first-use pdf.js import as well as the open: a cold
+    // module load that stalls must not leave the caller waiting past it. When it
+    // fires during the import, no loading task is created.
     const openTimeoutMs = options.openTimeoutMs;
     let timer: ReturnType<typeof setTimeout> | null = null;
+    let timedOut = false;
+    const deadline =
+      openTimeoutMs === undefined
+        ? null
+        : new Promise<never>((_, reject) => {
+            timer = setTimeout(() => {
+              timedOut = true;
+              reject(new PdfOpenTimeout(openTimeoutMs));
+            }, openTimeoutMs);
+          });
+
+    let loadingTask: ReturnType<PdfJsModule["getDocument"]> | null = null;
     try {
+      const prepare = (async () => {
+        const [{ getDocument }] = await Promise.all([
+          loadPdfJs(),
+          this.ensureWorker(),
+        ]);
+        if (timedOut && openTimeoutMs !== undefined) {
+          throw new PdfOpenTimeout(openTimeoutMs);
+        }
+        return getDocument(
+          typeof pdfData === "string"
+            ? {
+                url: pdfData,
+                disableAutoFetch: options.disableAutoFetch ?? true,
+                disableStream: options.disableStream ?? true,
+                stopAtErrors: options.stopAtErrors ?? false,
+                verbosity: options.verbosity ?? 0,
+                // Suppress warnings about unimplemented widget types and other non-critical issues
+                isEvalSupported: false,
+              }
+            : {
+                ...pdfData,
+                disableAutoFetch: options.disableAutoFetch ?? true,
+                disableStream: options.disableStream ?? true,
+                stopAtErrors: options.stopAtErrors ?? false,
+                verbosity: options.verbosity ?? 0,
+                // Suppress warnings about unimplemented widget types and other non-critical issues
+                isEvalSupported: false,
+              },
+        );
+      })();
+      loadingTask = await (deadline
+        ? Promise.race([prepare, deadline])
+        : prepare);
+
       const opened =
-        openTimeoutMs === undefined
+        deadline === null
           ? loadingTask.promise
-          : Promise.race([
-              loadingTask.promise,
-              new Promise<never>((_, reject) => {
-                timer = setTimeout(
-                  () => reject(new PdfOpenTimeout(openTimeoutMs)),
-                  openTimeoutMs,
-                );
-              }),
-            ]);
+          : Promise.race([loadingTask.promise, deadline]);
       const pdf = await opened;
       this.activeDocuments.add(pdf);
       this.workerCount++;

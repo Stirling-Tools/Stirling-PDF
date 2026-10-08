@@ -71,7 +71,7 @@ describe("usePdfEngineWarmUp", () => {
     expect(mockStartEagerWasmCompilation).toHaveBeenCalledTimes(1);
   });
 
-  test("schedules idle warmup and fires after timeout when no files exist", async () => {
+  test("waits the fallback delay before warming up when no files exist", async () => {
     const store = createMockStore([]);
     const { usePdfEngineWarmUp } =
       await import("@app/hooks/usePdfEngineWarmUp");
@@ -87,7 +87,12 @@ describe("usePdfEngineWarmUp", () => {
     expect(mockStartEagerWasmCompilation).not.toHaveBeenCalled();
 
     act(() => {
-      vi.advanceTimersByTime(1500);
+      vi.advanceTimersByTime(9999);
+    });
+    expect(mockStartEagerWasmCompilation).not.toHaveBeenCalled();
+
+    act(() => {
+      vi.advanceTimersByTime(1);
     });
 
     expect(mockStartEagerWasmCompilation).toHaveBeenCalledTimes(1);
@@ -112,6 +117,12 @@ describe("usePdfEngineWarmUp", () => {
       window.dispatchEvent(new Event("pointerdown"));
     });
 
+    expect(mockStartEagerWasmCompilation).toHaveBeenCalledTimes(1);
+
+    // The fallback timer is cancelled, so the later deadline does not warm twice.
+    act(() => {
+      vi.advanceTimersByTime(20000);
+    });
     expect(mockStartEagerWasmCompilation).toHaveBeenCalledTimes(1);
   });
 

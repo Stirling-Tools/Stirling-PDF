@@ -3,9 +3,17 @@ import { FileStoreContext } from "@app/contexts/file/contexts";
 import { startEagerWasmCompilation } from "@app/services/wasmPrecompiler";
 
 /**
+ * Automatic warm-up delay. Long enough that the download and compile never
+ * compete with the entry resources on load; the file and input triggers below
+ * still start it immediately when a document is actually in play.
+ */
+const AUTOMATIC_WARM_UP_DELAY_MS = 10_000;
+
+/**
  * Starts the PDFium WASM download and compile once the editor is open. Warmed
- * on idle (or immediately when documents are already present), on the first
- * pointer use, drag, or file-picker focus so callers do not wait for the asset.
+ * immediately when documents are already present or on the first pointer use,
+ * drag, or file-picker focus, otherwise after {@link AUTOMATIC_WARM_UP_DELAY_MS}
+ * so callers do not wait for the asset.
  */
 export function usePdfEngineWarmUp(): void {
   const store = useContext(FileStoreContext);
@@ -25,32 +33,10 @@ export function usePdfEngineWarmUp(): void {
         })
       : undefined;
 
-    let isIdle = false;
-    let timerId: number | undefined;
-
-    if (typeof window.requestIdleCallback === "function") {
-      isIdle = true;
-      timerId = window.requestIdleCallback(warmUp, { timeout: 1500 });
-    } else {
-      timerId = window.setTimeout(warmUp, 1000);
-    }
-
-    const cancelTimer = () => {
-      if (timerId === undefined) return;
-      try {
-        if (isIdle && typeof window.cancelIdleCallback === "function") {
-          window.cancelIdleCallback(timerId);
-        } else {
-          window.clearTimeout(timerId);
-        }
-      } catch {
-        // Fallback for timer shims or mock environments.
-      }
-      timerId = undefined;
-    };
+    const timerId = window.setTimeout(warmUp, AUTOMATIC_WARM_UP_DELAY_MS);
 
     const warmUpEarly = () => {
-      cancelTimer();
+      window.clearTimeout(timerId);
       warmUp();
     };
 
@@ -70,7 +56,7 @@ export function usePdfEngineWarmUp(): void {
 
     return () => {
       unsubscribe?.();
-      cancelTimer();
+      window.clearTimeout(timerId);
       window.removeEventListener("dragenter", warmUpEarly);
       window.removeEventListener("pointerdown", warmUpEarly);
       window.removeEventListener("focusin", onFocusIn);
