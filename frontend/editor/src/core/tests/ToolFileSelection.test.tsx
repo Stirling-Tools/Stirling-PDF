@@ -214,10 +214,22 @@ describe("tool file selection", () => {
           <EmptyFileSelectionTool filesVisible />
         </MantineProvider>,
       );
-      expect(await screen.findByText("Unlocked for viewing")).toBeVisible();
       expect(
-        screen.getByText(/report.pdf: This tool does not yet support/),
-      ).toHaveTextContent("Use Remove Password to create an unprotected copy");
+        await screen.findByText("Not supported by this tool"),
+      ).toBeVisible();
+      expect(screen.getByRole("listitem")).toHaveTextContent("report.pdf");
+      expect(
+        screen.getByText("Use Remove Password to continue."),
+      ).toBeVisible();
+      expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+      act(() =>
+        screen
+          .getByRole("button", { name: "Why report.pdf is unavailable" })
+          .focus(),
+      );
+      expect(await screen.findByRole("tooltip")).toHaveTextContent(
+        "Use Remove Password to create an unprotected copy first.",
+      );
     } finally {
       act(() => clearPdfAccess());
     }

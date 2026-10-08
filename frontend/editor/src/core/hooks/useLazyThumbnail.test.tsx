@@ -63,23 +63,15 @@ describe("protected cached thumbnails", () => {
   });
 
   it("does not reuse the old row's preview when a different protected version replaces it", () => {
+    const initialProps: {
+      fileId: FileId;
+      encrypted: boolean;
+      url: string | undefined;
+    } = { fileId: id, encrypted: false, url: thumbnail };
     const { result, rerender } = renderHook(
-      ({
-        fileId,
-        encrypted,
-        url,
-      }: {
-        fileId: FileId;
-        encrypted: boolean;
-        url: string | undefined;
-      }) => useLazyThumbnail(fileId, 42, url, encrypted),
-      {
-        initialProps: {
-          fileId: id,
-          encrypted: false,
-          url: thumbnail,
-        },
-      },
+      ({ fileId, encrypted, url }) =>
+        useLazyThumbnail(fileId, 42, url, encrypted),
+      { initialProps },
     );
     expect(result.current).toBe(thumbnail);
     rerender({

@@ -125,7 +125,10 @@ test.describe("Compare tool slot selection", () => {
     );
 
     // Compare button should be enabled now that both slots are set.
-    const compareButton = page.getByRole("button", { name: "Compare" });
+    const compareButton = page.getByRole("button", {
+      name: "Compare",
+      exact: true,
+    });
     await expect(compareButton).toBeEnabled();
   });
 
@@ -192,7 +195,10 @@ test.describe("Compare tool slot selection", () => {
       "compare_sample_b.pdf",
     );
 
-    const compareButton = page.getByRole("button", { name: "Compare" });
+    const compareButton = page.getByRole("button", {
+      name: "Compare",
+      exact: true,
+    });
     await expect(compareButton).toBeEnabled();
   });
 

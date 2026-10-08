@@ -34,6 +34,19 @@ test.describe("PDF text editor - encrypted PDF password prompt", () => {
     page,
   }) => {
     test.setTimeout(90_000);
+    await page.route("**/api/v1/security/inspect-pdf-security", (route) =>
+      route.fulfill({
+        json: {
+          encrypted: true,
+          signed: false,
+          ownerAuthenticated: true,
+          permissions: -4,
+          canModify: true,
+          canAssemble: true,
+          pageCount: 1,
+        },
+      }),
+    );
     await gotoEditor(page);
     await upload(page, ENCRYPTED);
 

@@ -1,20 +1,6 @@
 /**
- * End-to-End Tests for Encrypted PDF Password Prompting
- *
- * Tests the EncryptedPdfUnlockModal flow when uploading password-protected PDFs.
- * All backend API calls are mocked via page.route() - no real backend required.
- *
- * Coverage trimmed to 5 high-value cases:
- *   1. Modal renders with the expected title/inputs/buttons.
- *   2. Successful unlock removes the modal and shows the success toast.
- *   3. Wrong password keeps the modal open with an inline error.
- *   4. Pressing Enter in the password field triggers unlock.
- *   5. Multiple encrypted files surface the "Use for all" affordance and
- *      unlocking via that path resolves the modal.
- *
- * Removed previously: input-disabled-when-empty, input-enabled-after-fill,
- * skip-button-closes, normal-PDF-doesn't-prompt, single-file-hides-use-for-all,
- * unlock-all-wrong-password - all transitively covered or low-value.
+ * Backend-free coverage for session unlocks and cached preview privacy.
+ * Security inspection is stubbed; EmbedPDF renders the actual encrypted fixture.
  */
 
 import { test, expect, type Page } from "@playwright/test";
@@ -118,6 +104,20 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     await expect(
       page.getByRole("button", { name: UNLOCK_BUTTON_TEXT }),
     ).toBeVisible();
+    await expect(
+      page.getByText("Unlock for this session. The original stays protected."),
+    ).toBeVisible();
+    const details = page.getByRole("button", {
+      name: "About session unlocking",
+    });
+    await page.getByPlaceholder(PASSWORD_PLACEHOLDER).focus();
+    await page.getByPlaceholder(PASSWORD_PLACEHOLDER).press("Shift+Tab");
+    await expect(details).toBeFocused();
+    await expect(page.getByRole("tooltip")).toContainText(
+      "Cancel keeps the saved copy in your library.",
+    );
+    await page.getByPlaceholder(PASSWORD_PLACEHOLDER).focus();
+    await expect(page.getByRole("tooltip")).toBeHidden();
   });
 
   test("successful unlock removes the modal and shows success alert", async ({
@@ -179,6 +179,38 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     await expect(
       page.getByRole("heading", { name: MODAL_TITLE, exact: true }),
     ).toBeVisible();
+  });
+
+  test("unsupported tools show the protected file with details in a tooltip", async ({
+    page,
+  }) => {
+    await page.route("**/api/v1/ui-data/ocr-pdf", (route) =>
+      route.fulfill({ json: { languages: ["eng"] } }),
+    );
+    await page.goto("/ocr");
+    await mockUnlockSuccess(page);
+    await uploadEncryptedFile(page, ENCRYPTED_PDF);
+    await fillPassword(page, "testpass123");
+    await page.getByRole("button", { name: UNLOCK_BUTTON_TEXT }).click();
+    await expect(
+      page.getByRole("heading", { name: MODAL_TITLE, exact: true }),
+    ).toBeHidden();
+    const notice = page
+      .getByText("Not supported by this tool", { exact: true })
+      .locator("..");
+    await expect(notice.getByRole("listitem")).toHaveText("encrypted.pdf");
+    await expect(
+      notice.getByText("Use Remove Password to continue."),
+    ).toBeVisible();
+    await notice
+      .getByRole("button", { name: "Why encrypted.pdf is unavailable" })
+      .hover();
+    const details = page.getByRole("tooltip").filter({
+      hasText: "this tool cannot preserve its password protection",
+    });
+    await expect(details).toBeVisible();
+    await notice.getByText("Not supported by this tool").click();
+    await expect(details).toBeHidden();
   });
 
   for (const legacy of [false, true]) {
