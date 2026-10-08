@@ -17,7 +17,12 @@ type PdfJsModule = typeof import("pdfjs-dist/legacy/build/pdf.mjs");
 let pdfJsPromise: Promise<PdfJsModule> | null = null;
 
 function loadPdfJs(): Promise<PdfJsModule> {
-  pdfJsPromise ??= import("pdfjs-dist/legacy/build/pdf.mjs");
+  pdfJsPromise ??= import("pdfjs-dist/legacy/build/pdf.mjs").catch((cause) => {
+    // Drop the rejected promise so a later caller retries the chunk load
+    // instead of inheriting a cache that can never resolve.
+    pdfJsPromise = null;
+    throw cause;
+  });
   return pdfJsPromise;
 }
 
@@ -48,13 +53,19 @@ class PDFWorkerManager {
    * Load pdf.js and point it at the bundled worker on first use.
    */
   private ensureWorker(): Promise<void> {
-    this.workerReady ??= loadPdfJs().then(({ GlobalWorkerOptions }) => {
-      GlobalWorkerOptions.workerSrc = new URL(
-        "pdfjs-dist/legacy/build/pdf.worker.min.mjs",
-        import.meta.url,
-      ).toString();
-      (GlobalWorkerOptions as { docBaseUrl?: string }).docBaseUrl = undefined;
-    });
+    this.workerReady ??= loadPdfJs()
+      .then(({ GlobalWorkerOptions }) => {
+        GlobalWorkerOptions.workerSrc = new URL(
+          "pdfjs-dist/legacy/build/pdf.worker.min.mjs",
+          import.meta.url,
+        ).toString();
+        (GlobalWorkerOptions as { docBaseUrl?: string }).docBaseUrl = undefined;
+      })
+      .catch((cause) => {
+        // Same as loadPdfJs: a failed setup must be retryable on the next open.
+        this.workerReady = null;
+        throw cause;
+      });
     return this.workerReady;
   }
 

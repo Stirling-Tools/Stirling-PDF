@@ -22,7 +22,14 @@ const getData = (zipEntry: JSZipObject): CompressedObject | undefined => {
 let jsZipPromise: Promise<typeof JSZipClass> | null = null;
 
 function loadJSZip(): Promise<typeof JSZipClass> {
-  jsZipPromise ??= import("jszip").then((mod) => mod.default);
+  jsZipPromise ??= import("jszip")
+    .then((mod) => mod.default)
+    .catch((cause) => {
+      // Reset so a failed chunk load can be retried rather than staying broken
+      // for the rest of the session.
+      jsZipPromise = null;
+      throw cause;
+    });
   return jsZipPromise;
 }
 

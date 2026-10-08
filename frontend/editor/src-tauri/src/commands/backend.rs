@@ -192,7 +192,8 @@ fn prerelease_tokens(suffix: &str) -> Vec<PrereleaseToken> {
 fn version_key(name: &str) -> (Vec<u64>, u8, Vec<PrereleaseToken>) {
     let lower = name.to_ascii_lowercase();
     let version = lower
-        .strip_prefix("stirling-pdf-")
+        .split_once("stirling-pdf-")
+        .map(|(_, rest)| rest)
         .and_then(|rest| rest.strip_suffix(".jar"))
         .unwrap_or(&lower);
     let (release, suffix) = match version.split_once(['-', '_']) {
@@ -682,5 +683,21 @@ mod tests {
         assert_eq!(key.0, vec![0]);
         assert_eq!(key.1, 0);
         assert_eq!(version_key("stirling-pdf-3.0.0.jar").1, 1);
+    }
+
+    #[test]
+    fn version_key_parses_the_token_anywhere_in_the_name() {
+        // find_stirling_jar accepts any name containing "stirling-pdf", so a
+        // prefixed build must still yield a real version rather than 0.
+        assert!(
+            version_key("stirling-pdf-3.9.0.jar") < version_key("vendor-stirling-pdf-3.10.0.jar")
+        );
+
+        let mut names = ["vendor-stirling-pdf-3.10.0.jar", "stirling-pdf-3.9.0.jar"];
+        names.sort_by_key(|name| std::cmp::Reverse(version_key(name)));
+        assert_eq!(
+            names,
+            ["vendor-stirling-pdf-3.10.0.jar", "stirling-pdf-3.9.0.jar"]
+        );
     }
 }
