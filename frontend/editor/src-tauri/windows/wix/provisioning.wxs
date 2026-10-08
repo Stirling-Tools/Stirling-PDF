@@ -4,7 +4,7 @@
     <Property Id="STIRLING_SERVER_URL" Secure="yes" />
     <Property Id="STIRLING_LOCK_CONNECTION" Secure="yes" />
     <Property Id="STIRLING_REQUIRE_SIGN_IN" Secure="yes" />
-    <Property Id="STIRLING_SAAS_ONLY" Secure="yes" />
+    <Property Id="STIRLING_CLOUD_ONLY" Secure="yes" />
     <Property Id="STIRLING_LOCAL_PROCESSING_ONLY" Secure="yes" />
     <!-- STIRLING_LOGIN_AGREEMENT — "1"/"true" enables the login agreement popup on this install. -->
     <Property Id="STIRLING_LOGIN_AGREEMENT" Secure="yes" />
@@ -76,20 +76,20 @@
     <CustomAction
       Id="SetWriteProvisioningFilePerUser"
       Property="WriteProvisioningFilePerUser"
-      Value="--output &quot;[AppDataFolder]Stirling-PDF\stirling-provisioning.json&quot; --url &quot;[STIRLING_SERVER_URL]&quot; --lock &quot;[STIRLING_LOCK_CONNECTION]&quot; --require-sign-in &quot;[STIRLING_REQUIRE_SIGN_IN]&quot; --saas-only &quot;[STIRLING_SAAS_ONLY]&quot; --local-processing-only &quot;[STIRLING_LOCAL_PROCESSING_ONLY]&quot; --login-agreement &quot;[STIRLING_LOGIN_AGREEMENT]&quot; --update-mode &quot;[STIRLING_UPDATE_MODE]&quot;"
+      Value="--output &quot;[AppDataFolder]Stirling-PDF\stirling-provisioning.json&quot; --url &quot;[STIRLING_SERVER_URL]&quot; --lock &quot;[STIRLING_LOCK_CONNECTION]&quot; --require-sign-in &quot;[STIRLING_REQUIRE_SIGN_IN]&quot; --saas-only &quot;[STIRLING_CLOUD_ONLY]&quot; --local-processing-only &quot;[STIRLING_LOCAL_PROCESSING_ONLY]&quot; --login-agreement &quot;[STIRLING_LOGIN_AGREEMENT]&quot; --update-mode &quot;[STIRLING_UPDATE_MODE]&quot;"
     />
 
     <CustomAction
       Id="SetWriteProvisioningFileAllUsers"
       Property="WriteProvisioningFileAllUsers"
-      Value="--output &quot;[CommonAppDataFolder]Stirling-PDF\stirling-provisioning.json&quot; --url &quot;[STIRLING_SERVER_URL]&quot; --lock &quot;[STIRLING_LOCK_CONNECTION]&quot; --require-sign-in &quot;[STIRLING_REQUIRE_SIGN_IN]&quot; --saas-only &quot;[STIRLING_SAAS_ONLY]&quot; --local-processing-only &quot;[STIRLING_LOCAL_PROCESSING_ONLY]&quot; --login-agreement &quot;[STIRLING_LOGIN_AGREEMENT]&quot; --update-mode &quot;[STIRLING_UPDATE_MODE]&quot;"
+      Value="--output &quot;[CommonAppDataFolder]Stirling-PDF\stirling-provisioning.json&quot; --url &quot;[STIRLING_SERVER_URL]&quot; --lock &quot;[STIRLING_LOCK_CONNECTION]&quot; --require-sign-in &quot;[STIRLING_REQUIRE_SIGN_IN]&quot; --saas-only &quot;[STIRLING_CLOUD_ONLY]&quot; --local-processing-only &quot;[STIRLING_LOCAL_PROCESSING_ONLY]&quot; --login-agreement &quot;[STIRLING_LOGIN_AGREEMENT]&quot; --update-mode &quot;[STIRLING_UPDATE_MODE]&quot;"
     />
 
     <InstallExecuteSequence>
-      <Custom Action="SetWriteProvisioningFilePerUser" After="InstallFiles">(STIRLING_SERVER_URL &lt;&gt; &quot;&quot; OR STIRLING_LOGIN_AGREEMENT &lt;&gt; &quot;&quot; OR STIRLING_UPDATE_MODE &lt;&gt; &quot;&quot; OR STIRLING_REQUIRE_SIGN_IN &lt;&gt; &quot;&quot; OR STIRLING_SAAS_ONLY &lt;&gt; &quot;&quot; OR STIRLING_LOCAL_PROCESSING_ONLY &lt;&gt; &quot;&quot;) AND (NOT ALLUSERS OR ALLUSERS=0)</Custom>
-      <Custom Action="WriteProvisioningFilePerUser" After="SetWriteProvisioningFilePerUser">(STIRLING_SERVER_URL &lt;&gt; &quot;&quot; OR STIRLING_LOGIN_AGREEMENT &lt;&gt; &quot;&quot; OR STIRLING_UPDATE_MODE &lt;&gt; &quot;&quot; OR STIRLING_REQUIRE_SIGN_IN &lt;&gt; &quot;&quot; OR STIRLING_SAAS_ONLY &lt;&gt; &quot;&quot; OR STIRLING_LOCAL_PROCESSING_ONLY &lt;&gt; &quot;&quot;) AND (NOT ALLUSERS OR ALLUSERS=0)</Custom>
-      <Custom Action="SetWriteProvisioningFileAllUsers" After="InstallFiles">(STIRLING_SERVER_URL &lt;&gt; &quot;&quot; OR STIRLING_LOGIN_AGREEMENT &lt;&gt; &quot;&quot; OR STIRLING_UPDATE_MODE &lt;&gt; &quot;&quot; OR STIRLING_REQUIRE_SIGN_IN &lt;&gt; &quot;&quot; OR STIRLING_SAAS_ONLY &lt;&gt; &quot;&quot; OR STIRLING_LOCAL_PROCESSING_ONLY &lt;&gt; &quot;&quot;) AND (ALLUSERS=1 OR ALLUSERS=2)</Custom>
-      <Custom Action="WriteProvisioningFileAllUsers" After="SetWriteProvisioningFileAllUsers">(STIRLING_SERVER_URL &lt;&gt; &quot;&quot; OR STIRLING_LOGIN_AGREEMENT &lt;&gt; &quot;&quot; OR STIRLING_UPDATE_MODE &lt;&gt; &quot;&quot; OR STIRLING_REQUIRE_SIGN_IN &lt;&gt; &quot;&quot; OR STIRLING_SAAS_ONLY &lt;&gt; &quot;&quot; OR STIRLING_LOCAL_PROCESSING_ONLY &lt;&gt; &quot;&quot;) AND (ALLUSERS=1 OR ALLUSERS=2)</Custom>
+      <Custom Action="SetWriteProvisioningFilePerUser" After="InstallFiles">(STIRLING_SERVER_URL &lt;&gt; &quot;&quot; OR STIRLING_LOGIN_AGREEMENT &lt;&gt; &quot;&quot; OR STIRLING_UPDATE_MODE &lt;&gt; &quot;&quot; OR STIRLING_REQUIRE_SIGN_IN &lt;&gt; &quot;&quot; OR STIRLING_CLOUD_ONLY &lt;&gt; &quot;&quot; OR STIRLING_LOCAL_PROCESSING_ONLY &lt;&gt; &quot;&quot;) AND (NOT ALLUSERS OR ALLUSERS=0)</Custom>
+      <Custom Action="WriteProvisioningFilePerUser" After="SetWriteProvisioningFilePerUser">(STIRLING_SERVER_URL &lt;&gt; &quot;&quot; OR STIRLING_LOGIN_AGREEMENT &lt;&gt; &quot;&quot; OR STIRLING_UPDATE_MODE &lt;&gt; &quot;&quot; OR STIRLING_REQUIRE_SIGN_IN &lt;&gt; &quot;&quot; OR STIRLING_CLOUD_ONLY &lt;&gt; &quot;&quot; OR STIRLING_LOCAL_PROCESSING_ONLY &lt;&gt; &quot;&quot;) AND (NOT ALLUSERS OR ALLUSERS=0)</Custom>
+      <Custom Action="SetWriteProvisioningFileAllUsers" After="InstallFiles">(STIRLING_SERVER_URL &lt;&gt; &quot;&quot; OR STIRLING_LOGIN_AGREEMENT &lt;&gt; &quot;&quot; OR STIRLING_UPDATE_MODE &lt;&gt; &quot;&quot; OR STIRLING_REQUIRE_SIGN_IN &lt;&gt; &quot;&quot; OR STIRLING_CLOUD_ONLY &lt;&gt; &quot;&quot; OR STIRLING_LOCAL_PROCESSING_ONLY &lt;&gt; &quot;&quot;) AND (ALLUSERS=1 OR ALLUSERS=2)</Custom>
+      <Custom Action="WriteProvisioningFileAllUsers" After="SetWriteProvisioningFileAllUsers">(STIRLING_SERVER_URL &lt;&gt; &quot;&quot; OR STIRLING_LOGIN_AGREEMENT &lt;&gt; &quot;&quot; OR STIRLING_UPDATE_MODE &lt;&gt; &quot;&quot; OR STIRLING_REQUIRE_SIGN_IN &lt;&gt; &quot;&quot; OR STIRLING_CLOUD_ONLY &lt;&gt; &quot;&quot; OR STIRLING_LOCAL_PROCESSING_ONLY &lt;&gt; &quot;&quot;) AND (ALLUSERS=1 OR ALLUSERS=2)</Custom>
     </InstallExecuteSequence>
   </Fragment>
 </Wix>
