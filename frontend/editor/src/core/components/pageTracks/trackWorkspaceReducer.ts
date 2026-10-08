@@ -72,6 +72,7 @@ export type TrackEditorAction =
     }
   /** A blank page after each of these, sized and turned like it. */
   | { type: "insertBlankAfter"; pageIds: string[] }
+  | { type: "duplicate"; pageIds: string[] }
   /** Swaps a page with its neighbour in the same track. */
   | { type: "shiftPage"; pageId: string; by: -1 | 1 }
   | { type: "dropTracks"; fileIds: FileId[] }
@@ -653,6 +654,19 @@ export function trackEditorReducer(
         if (!pages.some((p) => after.has(p.id))) return pages;
         return pages.flatMap((p) =>
           after.has(p.id) ? [p, blankPageLike(p, `tp-${seq++}`)] : [p],
+        );
+      });
+      if (next === state.present) return state;
+      return { ...withEdit(state, next), seq };
+    }
+
+    case "duplicate": {
+      const duplicated = new Set(action.pageIds);
+      let seq = state.seq;
+      const next = mapTracks(state.present, (pages) => {
+        if (!pages.some((p) => duplicated.has(p.id))) return pages;
+        return pages.flatMap((p) =>
+          duplicated.has(p.id) ? [p, { ...p, id: `tp-${seq++}` }] : [p],
         );
       });
       if (next === state.present) return state;

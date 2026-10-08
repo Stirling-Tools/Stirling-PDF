@@ -424,6 +424,15 @@ export default function PageTracks() {
     [dispatch, selection.selectedIds],
   );
 
+  const duplicateSelection = useCallback(
+    () =>
+      dispatch({
+        type: "duplicate",
+        pageIds: Array.from(selection.selectedIds),
+      }),
+    [dispatch, selection.selectedIds],
+  );
+
   const splitAfterSelection = useCallback(
     () =>
       dispatch({
@@ -990,6 +999,7 @@ export default function PageTracks() {
     onDelete: deleteSelection,
     onInsertBlankAfter: insertBlankAfterSelection,
     onSplitAfter: splitAfterSelection,
+    onDuplicate: duplicateSelection,
     downloadingSelection,
     onDownloadSelected: downloadSelectionNow,
     onUndo: undo,

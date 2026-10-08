@@ -41,6 +41,7 @@ export interface PageTracksBarParams {
   onDelete: () => void;
   onInsertBlankAfter: () => void;
   onSplitAfter: () => void;
+  onDuplicate: () => void;
   downloadingSelection: boolean;
   /** Downloads the selected pages without saving the edits. */
   onDownloadSelected: (layout: SelectedPagesLayout) => void;
@@ -69,6 +70,7 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
     onDelete,
     onInsertBlankAfter,
     onSplitAfter,
+    onDuplicate,
     downloadingSelection,
     onDownloadSelected,
     onUndo,
@@ -95,6 +97,7 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
       "Rotate selected pages right",
     ),
     deleteSelected: t("pageTracks.deleteSelected", "Delete selected pages"),
+    duplicate: t("pageTracks.duplicateSelected", "Duplicate selected pages"),
     downloadSelected: terminology.downloadSelectedPages,
     downloadEachPage: terminology.downloadEachPage,
     downloadAsOneFile: terminology.downloadAsOneFile,
@@ -226,6 +229,17 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
         onClick: onSplitAfter,
       },
       {
+        id: "tracks-duplicate-selected",
+        icon: <Icon name="copy-plus" size="1.25rem" />,
+        tooltip: labels.duplicate,
+        ariaLabel: labels.duplicate,
+        section: "middle" as const,
+        order: 28,
+        disabled: !hasSelection,
+        visible: hasPages,
+        onClick: onDuplicate,
+      },
+      {
         id: "tracks-delete-selected",
         icon: <Icon name="trash" size="1.5rem" />,
         tooltip: labels.deleteSelected,
@@ -323,6 +337,7 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
       labels.rotateLeft,
       labels.rotateRight,
       labels.deleteSelected,
+      labels.duplicate,
       labels.downloadSelected,
       labels.downloadEachPage,
       labels.downloadAsOneFile,
@@ -351,6 +366,7 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
       onDelete,
       onInsertBlankAfter,
       onSplitAfter,
+      onDuplicate,
       downloadingSelection,
       onDownloadSelected,
       onUndo,
