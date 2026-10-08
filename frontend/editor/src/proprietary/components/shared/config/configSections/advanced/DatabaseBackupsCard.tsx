@@ -194,6 +194,8 @@ function BackupsTable({
         key: "created",
         header: t("admin.settings.database.created", "Created"),
         get: (b) => b.formattedCreationDate || b.creationDate,
+        sortBy: (b) =>
+          b.creationDate ? new Date(b.creationDate).getTime() : undefined,
         placeholder: "-",
         sortable: true,
       }),
@@ -201,6 +203,7 @@ function BackupsTable({
         key: "size",
         header: t("admin.settings.database.size", "Size"),
         get: (b) => b.formattedFileSize,
+        sortBy: (b) => b.fileSize,
         placeholder: "-",
         sortable: true,
       }),

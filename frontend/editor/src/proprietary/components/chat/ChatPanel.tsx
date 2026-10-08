@@ -435,8 +435,8 @@ export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
     return () => el.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Scroll to the bottom when messages arrive or live progress steps update,
-  // unless the user has scrolled up (they're reading history).
+  // Follow new output unless the user scrolled up. Total size is a dep so
+  // measuring a growing bubble re-pins to the bottom.
   // Scrolling back to the bottom resets the ref, so the next update re-latches.
   //
   // RAF defers the scroll until after the browser has laid out the new nodes,
@@ -450,7 +450,10 @@ export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
         if (el) el.scrollTop = el.scrollHeight;
       });
     }
-  }, [messages, progressLog]);
+    // getTotalSize changes as bubbles are measured, which re-renders this
+    // component and re-fires the effect to pin the viewport while a long
+    // message streams in.
+  }, [messages, progressLog, messageVirtualizer.getTotalSize()]);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -554,16 +557,23 @@ export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
             );
           })}
         </div>
-          {isLoading && (
-            <div className="chat-message chat-message-assistant">
-              <ProgressLogDisplay
-                progressLog={progressLog}
-                t={t}
-                resolveToolName={resolveToolName}
-                resolveToolIcon={resolveToolIcon}
-              />
-            </div>
-          )}
+        {isLoading && (
+          <div
+            className="chat-message chat-message-assistant"
+            style={{
+              marginTop: "var(--mantine-spacing-sm)",
+              paddingLeft: "var(--mantine-spacing-md)",
+              paddingRight: "var(--mantine-spacing-md)",
+            }}
+          >
+            <ProgressLogDisplay
+              progressLog={progressLog}
+              t={t}
+              resolveToolName={resolveToolName}
+              resolveToolIcon={resolveToolIcon}
+            />
+          </div>
+        )}
       </ScrollArea>
 
       {showQuickActions && (
