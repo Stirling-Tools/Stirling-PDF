@@ -4,6 +4,10 @@ import { FileId } from "@app/types/file";
 import { PageSize, TrackSource } from "@app/components/pageTracks/types";
 import { ProcessedFilePage } from "@app/types/fileContext";
 import {
+  isPageImageName,
+  isPdfName,
+} from "@app/components/pageTracks/trackFileKind";
+import {
   changedTrackIds,
   initialTrackEditorState,
   TrackEditorAction,
@@ -16,10 +20,10 @@ export interface TrackWorkspaceHook {
   dispatch: (action: TrackEditorAction) => void;
   /** PDFs that are open but whose page metadata hasn't been read yet. */
   pendingFileIds: FileId[];
-  /** Open files the page editor can't edit (not PDFs); shown as disabled tracks. */
+  /** Open files the page editor can't edit (neither PDFs nor images); shown as disabled tracks. */
   unsupportedFileIds: FileId[];
-  /** True when any open file is a PDF (drives the empty state). */
-  hasPdfFiles: boolean;
+  /** True when any open file can be expanded into a track (drives the empty state). */
+  hasEditableFiles: boolean;
   changedFileIds: FileId[];
   isDirty: boolean;
   canUndo: boolean;
@@ -34,9 +38,6 @@ function unrotatedSize(page: ProcessedFilePage): PageSize {
   return quarterTurn ? { width: height, height: width } : { width, height };
 }
 
-const isPdf = (name: string | undefined): boolean =>
-  name?.toLowerCase().endsWith(".pdf") ?? false;
-
 export function useTrackWorkspace(): TrackWorkspaceHook {
   const { state: fileState } = useFileState();
   const [state, dispatch] = useReducer(
@@ -47,22 +48,37 @@ export function useTrackWorkspace(): TrackWorkspaceHook {
   // Only files whose page metadata has been hydrated can be expanded into a
   // track: the per-page /Rotate baseline comes from it, and assuming 0 would
   // silently un-rotate pre-rotated pages on save.
-  const { sources, pendingFileIds, unsupportedFileIds, hasPdfFiles } =
+  const { sources, pendingFileIds, unsupportedFileIds, hasEditableFiles } =
     useMemo(() => {
       const resolved: TrackSource[] = [];
       const pending: FileId[] = [];
       const unsupported: FileId[] = [];
-      let anyPdf = false;
+      let anyEditable = false;
 
       for (const fileId of fileState.files.ids) {
         const stub = fileState.files.byId[fileId];
-        // The page editor works on PDF pages; other open files show as disabled
-        // tracks so they are visible but clearly not editable here.
-        if (!isPdf(stub?.name)) {
+        const contentKey = `${stub?.size ?? 0}:${stub?.lastModified ?? 0}`;
+        // An image has no metadata to wait for: it is one unrotated page whose
+        // size is only known once decoded, which happens on save.
+        if (isPageImageName(stub?.name)) {
+          anyEditable = true;
+          resolved.push({
+            fileId,
+            name: stub?.name ?? fileId,
+            pageCount: 1,
+            rotations: [0],
+            sizes: [{ width: 0, height: 0 }],
+            contentKey,
+          });
+          continue;
+        }
+        // Other open files show as disabled tracks so they are visible but
+        // clearly not editable here.
+        if (!isPdfName(stub?.name)) {
           unsupported.push(fileId);
           continue;
         }
-        anyPdf = true;
+        anyEditable = true;
 
         const pages = stub?.processedFile?.pages;
         if (!pages || pages.length === 0) {
@@ -76,7 +92,7 @@ export function useTrackWorkspace(): TrackWorkspaceHook {
           pageCount: pages.length,
           rotations: pages.map((page) => page.rotation ?? 0),
           sizes: pages.map(unrotatedSize),
-          contentKey: `${stub?.size ?? 0}:${stub?.lastModified ?? 0}`,
+          contentKey,
         });
       }
 
@@ -84,7 +100,7 @@ export function useTrackWorkspace(): TrackWorkspaceHook {
         sources: resolved,
         pendingFileIds: pending,
         unsupportedFileIds: unsupported,
-        hasPdfFiles: anyPdf,
+        hasEditableFiles: anyEditable,
       };
     }, [fileState.files]);
 
@@ -104,7 +120,7 @@ export function useTrackWorkspace(): TrackWorkspaceHook {
     dispatch: stableDispatch,
     pendingFileIds,
     unsupportedFileIds,
-    hasPdfFiles,
+    hasEditableFiles,
     changedFileIds,
     isDirty: changedFileIds.length > 0,
     canUndo: state.past.length > 0,

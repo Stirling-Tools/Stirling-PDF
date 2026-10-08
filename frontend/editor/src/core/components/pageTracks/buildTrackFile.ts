@@ -4,6 +4,10 @@ import { PDFDocument, PDFPage } from "@app/types/pageEditor";
 import { pdfExportService } from "@app/services/pdfExportService";
 import { policySourceIds } from "@app/services/policyFileGuard";
 import {
+  asPdfSource,
+  toPdfName,
+} from "@app/components/pageTracks/trackFileKind";
+import {
   Track,
   TrackPage,
   TrackWorkspace,
@@ -58,7 +62,8 @@ function toExportDocument(
  * Renders a track's pages, as the editor shows them, into a PDF. A split has no
  * file of its own, so it is named after its track and parented to the file its
  * first source page came from, else the file it was cut from. Null when there
- * are no pages or that file has closed.
+ * are no pages or that file has closed. The output is always a PDF, so a track
+ * that was an image is renamed to match.
  */
 export async function buildTrackFile(
   track: Track,
@@ -73,13 +78,14 @@ export async function buildTrackFile(
   const parentStub = lookup.getStub(anchorFileId);
   const ownFile = lookup.getFile(anchorFileId);
   if (!parentStub || !ownFile) return null;
-  const name = track.isNew ? track.name : parentStub.name;
+  const name = toPdfName(track.isNew ? track.name : parentStub.name);
 
   const sourceFiles = new Map<string, File>();
   for (const page of sourcePages) {
     if (sourceFiles.has(page.sourceFileId)) continue;
     const sourceFile = lookup.getFile(page.sourceFileId);
-    if (sourceFile) sourceFiles.set(page.sourceFileId, sourceFile);
+    if (sourceFile)
+      sourceFiles.set(page.sourceFileId, await asPdfSource(sourceFile));
   }
 
   const { blob } = await pdfExportService.exportPDFMultiFile(

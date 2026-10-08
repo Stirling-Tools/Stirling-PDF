@@ -51,6 +51,7 @@ import { useTrackThumbnails } from "@app/components/pageTracks/hooks/useTrackThu
 import { useTrackSave } from "@app/components/pageTracks/hooks/useTrackSave";
 import { usePageTracksWorkbenchBarButtons } from "@app/components/pageTracks/hooks/usePageTracksWorkbenchBarButtons";
 import { totalPageCount } from "@app/components/pageTracks/types";
+import { opensAsTrack } from "@app/components/pageTracks/trackFileKind";
 import TrackRow, { DropHint } from "@app/components/pageTracks/TrackRow";
 import { DisabledFileTrack } from "@app/components/pageTracks/DisabledFileTrack";
 import styles from "@app/components/pageTracks/PageTracks.module.css";
@@ -59,9 +60,6 @@ const PAGE_PREFIX = "page:";
 const TRACK_PREFIX = "track:";
 const ZONE_PREFIX = "zone:";
 const HANDLE_PREFIX = "trackhandle:";
-
-const isPdfName = (name: string | undefined): boolean =>
-  name?.toLowerCase().endsWith(".pdf") ?? false;
 
 const ZOOM_MIN = 0.5;
 const ZOOM_MAX = 3.0;
@@ -144,7 +142,7 @@ export default function PageTracks() {
     dispatch,
     pendingFileIds,
     unsupportedFileIds,
-    hasPdfFiles,
+    hasEditableFiles,
     changedFileIds,
     isDirty,
     canUndo,
@@ -233,7 +231,7 @@ export default function PageTracks() {
   const [wrap, setWrap] = useState<boolean>(
     () =>
       fileState.files.ids.filter((id) =>
-        isPdfName(fileState.files.byId[id]?.name),
+        opensAsTrack(fileState.files.byId[id]?.name),
       ).length === 1,
   );
   const toggleWrap = useCallback(() => setWrap((prev) => !prev), []);
@@ -483,8 +481,8 @@ export default function PageTracks() {
     return map;
   }, [workspace]);
 
-  // The rows to render, in open-file order: each PDF file's track (followed by
-  // any splits made from it), each loading PDF, and each non-PDF as a disabled
+  // The rows to render, in open-file order: each PDF or image's track (followed
+  // by any splits made from it), each loading PDF, and any other file as a disabled
   // track. One sequence shared by the view and the track-reorder drag.
   const displayRows = useMemo(() => {
     const splitsByParent = new Map<FileId, FileId[]>();
@@ -980,7 +978,7 @@ export default function PageTracks() {
     );
   };
 
-  if (!hasPdfFiles && unsupportedFileIds.length === 0) {
+  if (!hasEditableFiles && unsupportedFileIds.length === 0) {
     return (
       <Center h="100%">
         {closeConfirmModal}
