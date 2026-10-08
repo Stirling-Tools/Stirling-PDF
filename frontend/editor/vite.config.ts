@@ -278,6 +278,8 @@ function prerenderOgPlugin(options: {
         await fs.writeFile(sitemapPath, sitemap);
         lateFiles.push(sitemapPath);
         // Point robots.txt at the sitemap (best-effort; robots.txt may be absent).
+        // Static hosts only: packaged builds exclude dist/robots.txt and serve it
+        // from RobotsController, gated on system.googlevisibility.
         const robotsPath = path.join(distDir, "robots.txt");
         try {
           let robots = await fs.readFile(robotsPath, "utf8");
@@ -319,7 +321,9 @@ function prerenderOgPlugin(options: {
       await walkHtml(distDir);
       // The HTML, sitemap and robots.txt written above skip the walk in the
       // other plugin, so they are compressed here; desktop output is embedded
-      // in the Tauri binary, which compresses it itself.
+      // in the Tauri binary, which compresses it itself. These siblings only
+      // serve static hosts: Jetty gzips the Spring responses that
+      // ReactRoutingController returns in memory, so it never reads them.
       if (precompress) {
         await compressFiles(lateFiles, distDir);
       }

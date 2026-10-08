@@ -3,17 +3,10 @@ import { FileStoreContext } from "@app/contexts/file/contexts";
 import { startEagerWasmCompilation } from "@app/services/wasmPrecompiler";
 
 /**
- * Automatic warm-up delay. Long enough that the download and compile never
- * compete with the entry resources on load; the file and input triggers below
- * still start it immediately when a document is actually in play.
- */
-const AUTOMATIC_WARM_UP_DELAY_MS = 10_000;
-
-/**
- * Starts the PDFium WASM download and compile once the editor is open. Warmed
- * immediately when documents are already present or on the first pointer use,
- * drag, or file-picker focus, otherwise after {@link AUTOMATIC_WARM_UP_DELAY_MS}
- * so callers do not wait for the asset.
+ * Starts the PDFium WASM download and compile only once a document is actually
+ * in play: documents already open, a document added, an OS file drag, or the
+ * file picker taking focus. A page the user merely visits fetches nothing, so
+ * the engine cost lands only on sessions that will open a PDF.
  */
 export function usePdfEngineWarmUp(): void {
   const store = useContext(FileStoreContext);
@@ -25,40 +18,46 @@ export function usePdfEngineWarmUp(): void {
       return;
     }
 
+    let warmed = false;
+    const warmUpOnce = () => {
+      if (warmed) {
+        return;
+      }
+      warmed = true;
+      warmUp();
+    };
+
     const unsubscribe = store
       ? store.subscribe(() => {
           if (store.getState().files.ids.length > 0) {
-            warmUp();
+            warmUpOnce();
           }
         })
       : undefined;
 
-    const timerId = window.setTimeout(warmUp, AUTOMATIC_WARM_UP_DELAY_MS);
-
-    const warmUpEarly = () => {
-      window.clearTimeout(timerId);
-      warmUp();
+    const onDragEnter = (event: DragEvent) => {
+      // Internal reorder/drop targets also emit dragenter; only an OS file drag
+      // should pull the engine down.
+      if (event.dataTransfer?.types.includes("Files")) {
+        warmUpOnce();
+      }
     };
-
-    window.addEventListener("dragenter", warmUpEarly, {
-      once: true,
-      passive: true,
-    });
-    window.addEventListener("pointerdown", warmUpEarly, {
-      once: true,
-      passive: true,
-    });
+    const onPointerDown = () => warmUpOnce();
     const onFocusIn = (event: FocusEvent) => {
       const target = event.target as Element | null;
-      if (target?.matches?.('input[type="file"]')) warmUpEarly();
+      if (target?.matches?.('input[type="file"]')) {
+        warmUpOnce();
+      }
     };
+
+    window.addEventListener("dragenter", onDragEnter, { passive: true });
+    window.addEventListener("pointerdown", onPointerDown, { passive: true });
     window.addEventListener("focusin", onFocusIn);
 
     return () => {
       unsubscribe?.();
-      window.clearTimeout(timerId);
-      window.removeEventListener("dragenter", warmUpEarly);
-      window.removeEventListener("pointerdown", warmUpEarly);
+      window.removeEventListener("dragenter", onDragEnter);
+      window.removeEventListener("pointerdown", onPointerDown);
       window.removeEventListener("focusin", onFocusIn);
     };
   }, [store]);

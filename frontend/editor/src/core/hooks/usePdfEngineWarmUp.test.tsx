@@ -71,7 +71,7 @@ describe("usePdfEngineWarmUp", () => {
     expect(mockStartEagerWasmCompilation).toHaveBeenCalledTimes(1);
   });
 
-  test("waits the fallback delay before warming up when no files exist", async () => {
+  test("fetches nothing when the page is only visited", async () => {
     const store = createMockStore([]);
     const { usePdfEngineWarmUp } =
       await import("@app/hooks/usePdfEngineWarmUp");
@@ -84,18 +84,11 @@ describe("usePdfEngineWarmUp", () => {
 
     renderHook(() => usePdfEngineWarmUp(), { wrapper });
 
-    expect(mockStartEagerWasmCompilation).not.toHaveBeenCalled();
-
     act(() => {
-      vi.advanceTimersByTime(9999);
-    });
-    expect(mockStartEagerWasmCompilation).not.toHaveBeenCalled();
-
-    act(() => {
-      vi.advanceTimersByTime(1);
+      vi.advanceTimersByTime(60_000);
     });
 
-    expect(mockStartEagerWasmCompilation).toHaveBeenCalledTimes(1);
+    expect(mockStartEagerWasmCompilation).not.toHaveBeenCalled();
   });
 
   test("triggers early on pointerdown", async () => {
@@ -119,9 +112,10 @@ describe("usePdfEngineWarmUp", () => {
 
     expect(mockStartEagerWasmCompilation).toHaveBeenCalledTimes(1);
 
-    // The fallback timer is cancelled, so the later deadline does not warm twice.
+    // A second pointer use must not warm the engine again.
     act(() => {
       vi.advanceTimersByTime(20000);
+      window.dispatchEvent(new Event("pointerdown"));
     });
     expect(mockStartEagerWasmCompilation).toHaveBeenCalledTimes(1);
   });
@@ -146,5 +140,59 @@ describe("usePdfEngineWarmUp", () => {
     });
 
     expect(mockStartEagerWasmCompilation).toHaveBeenCalledTimes(1);
+  });
+
+  test("warms up only for an OS file drag, not an internal drag", async () => {
+    const store = createMockStore([]);
+    const { usePdfEngineWarmUp } =
+      await import("@app/hooks/usePdfEngineWarmUp");
+
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <FileStoreContext.Provider value={store}>
+        {children}
+      </FileStoreContext.Provider>
+    );
+
+    renderHook(() => usePdfEngineWarmUp(), { wrapper });
+
+    act(() => {
+      window.dispatchEvent(new Event("dragenter"));
+    });
+    expect(mockStartEagerWasmCompilation).not.toHaveBeenCalled();
+
+    act(() => {
+      const fileDrag = new Event("dragenter") as Event & {
+        dataTransfer?: { types: string[] };
+      };
+      fileDrag.dataTransfer = { types: ["Files"] };
+      window.dispatchEvent(fileDrag);
+    });
+    expect(mockStartEagerWasmCompilation).toHaveBeenCalledTimes(1);
+  });
+
+  test("warms up when the file picker takes focus", async () => {
+    const store = createMockStore([]);
+    const { usePdfEngineWarmUp } =
+      await import("@app/hooks/usePdfEngineWarmUp");
+
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <FileStoreContext.Provider value={store}>
+        {children}
+      </FileStoreContext.Provider>
+    );
+
+    renderHook(() => usePdfEngineWarmUp(), { wrapper });
+
+    const input = document.createElement("input");
+    input.type = "file";
+    document.body.appendChild(input);
+
+    act(() => {
+      input.dispatchEvent(new Event("focusin", { bubbles: true }));
+    });
+
+    expect(mockStartEagerWasmCompilation).toHaveBeenCalledTimes(1);
+
+    input.remove();
   });
 });
