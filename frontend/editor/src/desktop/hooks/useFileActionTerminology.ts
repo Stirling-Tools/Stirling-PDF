@@ -21,6 +21,10 @@ export function useFileActionTerminology() {
     download: t("save", "Save"),
     downloadAll: t("workbenchBar.saveAll", "Save All"),
     downloadSelected: t("fileManager.saveSelected", "Save Selected"),
+    downloadSelectedPages: t(
+      "pageTracks.saveSelectedPages",
+      "Save selected pages",
+    ),
     downloadUnavailable: t("saveUnavailable", "Save unavailable for this item"),
     noFilesInStorage: t(
       "fileUpload.noFilesInStorageOpen",

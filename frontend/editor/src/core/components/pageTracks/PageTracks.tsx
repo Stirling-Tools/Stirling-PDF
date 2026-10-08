@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { Center, Loader, LoadingOverlay, Stack, Text } from "@mantine/core";
 import {
   CollisionDetection,
@@ -36,12 +37,15 @@ import { WorkbenchExportFile } from "@app/types/workbenchBar";
 import { useWorkbenchViewFileActions } from "@app/hooks/useWorkbenchViewFileActions";
 import { CloseFilesConfirmModal } from "@app/components/shared/CloseFilesConfirmModal";
 import { alert } from "@app/components/toast";
+import { downloadFileWithPolicy } from "@app/services/exportWithPolicy";
 import {
   PolicyBlockedError,
   assertFilesNotBlocked,
 } from "@app/services/policyFileGuard";
 import {
+  buildSelectedPagesFiles,
   buildTrackFile,
+  policyIdsForPages,
   policyIdsForTracks,
 } from "@app/components/pageTracks/buildTrackFile";
 import { tracksEntangledWith } from "@app/components/pageTracks/trackWorkspaceReducer";
@@ -113,6 +117,26 @@ const sameHint = (a: DropHint | null, b: DropHint | null): boolean =>
  * the drag delta. Using this rather than a live pointermove listener keeps the
  * side-of-tile decision consistent with the reported collision.
  */
+function alertExportFailure(error: unknown, t: TFunction) {
+  if (error instanceof PolicyBlockedError) {
+    alert({
+      alertType: "warning",
+      title: t("policy.recoveryTitle"),
+      body: t("policy.recoveryBody"),
+    });
+    return;
+  }
+  console.error("[PageTracks] export failed", error);
+  alert({
+    alertType: "error",
+    title: t("pageTracks.exportFailed.title", "Couldn't download"),
+    body: t(
+      "pageTracks.exportFailed.body",
+      "The edited files couldn't be prepared. Try again.",
+    ),
+  });
+}
+
 function pointerYOf(event: DragMoveEvent | DragEndEvent): number {
   const activator = event.activatorEvent;
   const originY =
@@ -793,26 +817,44 @@ export default function PageTracks() {
       }
       return files;
     } catch (error) {
-      if (error instanceof PolicyBlockedError) {
-        alert({
-          alertType: "warning",
-          title: t("policy.recoveryTitle"),
-          body: t("policy.recoveryBody"),
-        });
-      } else {
-        console.error("[PageTracks] export failed", error);
-        alert({
-          alertType: "error",
-          title: t("pageTracks.exportFailed.title", "Couldn't download"),
-          body: t(
-            "pageTracks.exportFailed.body",
-            "The edited files couldn't be prepared. Try again.",
-          ),
-        });
-      }
+      alertExportFailure(error, t);
       return null;
     }
   }, [changedSet, fileSelectors, t, workspace]);
+
+  const [downloadingSelection, setDownloadingSelection] = useState(false);
+  const downloadSelection = useCallback(async () => {
+    const lookup = {
+      getStub: fileSelectors.getStirlingFileStub,
+      getFile: fileSelectors.getFile,
+    };
+    setDownloadingSelection(true);
+    try {
+      const policyIds = policyIdsForPages(
+        workspace,
+        selection.selectedIds,
+        lookup.getStub,
+      );
+      assertFilesNotBlocked(policyIds);
+      const built = await buildSelectedPagesFiles(
+        workspace,
+        selection.selectedIds,
+        lookup,
+      );
+      // A policy can fail while the files are being built.
+      assertFilesNotBlocked(policyIds);
+      for (const { file } of built) {
+        await downloadFileWithPolicy({ data: file, filename: file.name });
+      }
+    } catch (error) {
+      alertExportFailure(error, t);
+    } finally {
+      setDownloadingSelection(false);
+    }
+  }, [fileSelectors, selection.selectedIds, t, workspace]);
+  const downloadSelectionNow = useCallback(() => {
+    void downloadSelection();
+  }, [downloadSelection]);
 
   // Closing a file drops every page sourced from it, including ones moved into
   // other tracks, so its pending edits are those of every track entangled with it.
@@ -940,6 +982,8 @@ export default function PageTracks() {
     onDelete: deleteSelection,
     onInsertBlankAfter: insertBlankAfterSelection,
     onSplitAfter: splitAfterSelection,
+    downloadingSelection,
+    onDownloadSelected: downloadSelectionNow,
     onUndo: undo,
     onRedo: redo,
     onSave: saveNow,

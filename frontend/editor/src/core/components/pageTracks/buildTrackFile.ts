@@ -7,6 +7,7 @@ import {
   Track,
   TrackPage,
   TrackWorkspace,
+  allPages,
   isSourcePage,
 } from "@app/components/pageTracks/types";
 
@@ -109,8 +110,64 @@ export function policyIdsForTracks(
       .filter(isSourcePage)
       .forEach((page) => fileIds.add(page.sourceFileId));
   }
+  return policyIdsForFiles(fileIds, getStub);
+}
+
+/** Every file whose bytes the selected pages copy, including consumed ancestors. */
+export function policyIdsForPages(
+  workspace: TrackWorkspace,
+  pageIds: ReadonlySet<string>,
+  getStub: TrackFileLookup["getStub"],
+): string[] {
+  const fileIds = new Set<FileId>();
+  for (const page of allPages(workspace)) {
+    if (pageIds.has(page.id) && isSourcePage(page)) {
+      fileIds.add(page.sourceFileId);
+    }
+  }
+  return policyIdsForFiles(fileIds, getStub);
+}
+
+function policyIdsForFiles(
+  fileIds: Set<FileId>,
+  getStub: TrackFileLookup["getStub"],
+): string[] {
   return [...fileIds].flatMap((id) => {
     const stub = getStub(id);
     return stub ? policySourceIds(stub) : [id];
   });
+}
+
+/**
+ * Renders the selected pages of each track, as the editor shows them, into one
+ * PDF per track that has any, in workspace order. Each is named after its
+ * track. Nothing is saved. Tracks whose file has closed are skipped.
+ */
+export async function buildSelectedPagesFiles(
+  workspace: TrackWorkspace,
+  selectedIds: ReadonlySet<string>,
+  lookup: TrackFileLookup,
+): Promise<BuiltTrackFile[]> {
+  const built: BuiltTrackFile[] = [];
+  for (const trackId of workspace.order) {
+    const track = workspace.tracks[trackId];
+    if (!track) continue;
+    const pages = track.pages.filter((page) => selectedIds.has(page.id));
+    if (pages.length === 0) continue;
+    const baseName = track.name.replace(/\.pdf$/i, "");
+    // Built as a split so it is named after the track rather than its file,
+    // and blank pages alone still have a file to parent to.
+    const output = await buildTrackFile(
+      {
+        fileId: trackId,
+        name: `${baseName} (selected pages).pdf`,
+        isNew: true,
+        splitFromFileId: track.isNew ? track.splitFromFileId : track.fileId,
+        pages,
+      },
+      lookup,
+    );
+    if (output) built.push(output);
+  }
+  return built;
 }
