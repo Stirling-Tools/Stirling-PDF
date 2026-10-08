@@ -11,14 +11,35 @@ interface LocalPdfiumEngineOptions {
 }
 
 /**
- * Destroy an engine once its documents are closed. `wait` runs only one of its
- * two callbacks, so destroy has to be registered on both — a failed close would
+ * Destroy an engine once its documents are closed. Teardown has to be
+ * unconditional: `closeAllDocuments` may be absent, return nothing, or throw,
+ * and `wait` runs only one of its two callbacks, so a failed close would
  * otherwise leave the worker running for the lifetime of the app.
  */
 function destroyEngine(engine: PdfEngine<Blob> | null): void {
   if (!engine) return;
-  const destroy = () => engine.destroy?.();
-  engine.closeAllDocuments?.()?.wait(destroy, destroy);
+
+  let destroyed = false;
+  const destroy = () => {
+    if (destroyed) return;
+    destroyed = true;
+    try {
+      engine.destroy?.();
+    } catch {
+      // Nothing left to release once destroy itself fails.
+    }
+  };
+
+  try {
+    const closing = engine.closeAllDocuments?.();
+    if (closing?.wait) {
+      closing.wait(destroy, destroy);
+    } else {
+      destroy();
+    }
+  } catch {
+    destroy();
+  }
 }
 
 export function useLocalPdfiumEngine({

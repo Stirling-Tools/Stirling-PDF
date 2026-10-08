@@ -94,6 +94,84 @@ describe("useLocalPdfiumEngine", () => {
     expect(engine.destroy).toHaveBeenCalledTimes(1);
   });
 
+  test("destroys the engine when closeAllDocuments is absent or returns nothing", async () => {
+    const absent = { destroy: vi.fn() };
+    const noTask = { closeAllDocuments: () => undefined, destroy: vi.fn() };
+    mockCreatePdfiumEngine
+      .mockReturnValueOnce(absent)
+      .mockReturnValueOnce(noTask);
+
+    const { useLocalPdfiumEngine } =
+      await import("@app/hooks/useLocalPdfiumEngine");
+
+    const first = renderHook(() => useLocalPdfiumEngine({ wasmUrl: WASM_URL }));
+    await waitFor(() => {
+      expect(mockCreatePdfiumEngine).toHaveBeenCalledTimes(1);
+    });
+    first.unmount();
+    expect(absent.destroy).toHaveBeenCalledTimes(1);
+
+    const second = renderHook(() =>
+      useLocalPdfiumEngine({ wasmUrl: WASM_URL }),
+    );
+    await waitFor(() => {
+      expect(mockCreatePdfiumEngine).toHaveBeenCalledTimes(2);
+    });
+    second.unmount();
+    expect(noTask.destroy).toHaveBeenCalledTimes(1);
+  });
+
+  test("destroys the engine when closing its documents throws", async () => {
+    const engine = {
+      closeAllDocuments: () => {
+        throw new Error("close failed");
+      },
+      destroy: vi.fn(),
+    };
+    mockCreatePdfiumEngine.mockReturnValue(engine);
+
+    const { useLocalPdfiumEngine } =
+      await import("@app/hooks/useLocalPdfiumEngine");
+
+    const { unmount } = renderHook(() =>
+      useLocalPdfiumEngine({ wasmUrl: WASM_URL }),
+    );
+    await waitFor(() => {
+      expect(mockCreatePdfiumEngine).toHaveBeenCalledTimes(1);
+    });
+
+    unmount();
+
+    expect(engine.destroy).toHaveBeenCalledTimes(1);
+  });
+
+  test("destroys the engine exactly once when both close callbacks run", async () => {
+    const engine = {
+      closeAllDocuments: () => ({
+        wait: (ok: () => void) => {
+          ok();
+          ok();
+        },
+      }),
+      destroy: vi.fn(),
+    };
+    mockCreatePdfiumEngine.mockReturnValue(engine);
+
+    const { useLocalPdfiumEngine } =
+      await import("@app/hooks/useLocalPdfiumEngine");
+
+    const { unmount } = renderHook(() =>
+      useLocalPdfiumEngine({ wasmUrl: WASM_URL }),
+    );
+    await waitFor(() => {
+      expect(mockCreatePdfiumEngine).toHaveBeenCalledTimes(1);
+    });
+
+    unmount();
+
+    expect(engine.destroy).toHaveBeenCalledTimes(1);
+  });
+
   test("destroys the previous engine when the wasm url changes", async () => {
     const first = engineWith((ok) => ok());
     const second = engineWith((ok) => ok());

@@ -41,6 +41,13 @@ public class WebMvcConfig implements WebMvcConfigurer {
     private static final CacheControl NO_CACHE = CacheControl.noCache();
     private static final CacheControl IMMUTABLE_ONE_YEAR =
             CacheControl.maxAge(365, TimeUnit.DAYS).cachePublic().immutable();
+    // For resources whose names are stable across releases (no content hash):
+    // a day of freshness so repeat opens are a cheap conditional request, plus
+    // stale-while-revalidate so a shared cache can still answer instantly.
+    private static final CacheControl STABLE_ONE_DAY =
+            CacheControl.maxAge(Duration.ofDays(1))
+                    .cachePublic()
+                    .staleWhileRevalidate(Duration.ofDays(7));
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
@@ -72,14 +79,18 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .resourceChain(true)
                 .addResolver(new PreferredEncodingResourceResolver());
 
-        // 3. Media and fonts (immutable)
+        // 3. Media and fonts (stable names, revalidated)
+        // The fallback faces ship inside the JAR under names that never change,
+        // so a one-year immutable policy would strand a browser on one release's
+        // bytes. A day of freshness plus SWR keeps repeat opens cheap without
+        // pinning an update.
         registry.addResourceHandler("/images/**", "/fonts/**")
                 .addResourceLocations(
                         staticPath + "images/",
                         "classpath:/static/images/",
                         staticPath + "fonts/",
                         "classpath:/static/fonts/")
-                .setCacheControl(IMMUTABLE_ONE_YEAR)
+                .setCacheControl(STABLE_ONE_DAY)
                 .resourceChain(true)
                 .addResolver(new PreferredEncodingResourceResolver());
 
@@ -128,10 +139,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "classpath:/static/icons/",
                         staticPath + "modern-logo/",
                         "classpath:/static/modern-logo/")
-                .setCacheControl(
-                        CacheControl.maxAge(Duration.ofDays(1))
-                                .cachePublic()
-                                .staleWhileRevalidate(Duration.ofDays(7)))
+                .setCacheControl(STABLE_ONE_DAY)
                 .resourceChain(true)
                 .addResolver(new PreferredEncodingResourceResolver());
 
@@ -153,6 +161,12 @@ public class WebMvcConfig implements WebMvcConfigurer {
      * Quality factors do not reorder, matching the upstream behavior. The one exception is an
      * explicit refusal (q=0, RFC 9110 section 12.5.3): a client that forbids a coding must get the
      * next acceptable variant, never the forbidden bytes.
+     *
+     * <p>Hazard: the resource chain caches resolved resources under the accepted coding set and,
+     * like this resolver, ignores quality values, so a refusal is honored on the first resolve of
+     * that set and can be missed on a later request whose header reduces to the same set. Real
+     * browsers only ever list brotli and gzip as acceptable, so this needs a hand-crafted request
+     * to trigger.
      */
     static final class PreferredEncodingResourceResolver implements ResourceResolver {
 

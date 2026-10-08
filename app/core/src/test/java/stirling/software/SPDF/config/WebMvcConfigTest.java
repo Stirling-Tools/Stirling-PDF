@@ -132,8 +132,8 @@ class WebMvcConfigTest {
         }
 
         @Test
-        @DisplayName("serves fonts as immutable for a year so fallback faces cache")
-        void fontsAreImmutable() {
+        @DisplayName("revalidates fonts rather than pinning them immutably for a year")
+        void fontsAreRevalidated() {
             ResourceHandlerRegistry registry = mock(ResourceHandlerRegistry.class);
             ResourceHandlerRegistration sw =
                     mock(ResourceHandlerRegistration.class, RETURNS_DEEP_STUBS);
@@ -156,9 +156,10 @@ class WebMvcConfigTest {
 
             config.addResourceHandlers(registry);
 
-            // Third registration is the media/fonts group; its cache tier is what
-            // keeps a 17 MB CJK fallback face from being re-fetched on every
-            // viewer open.
+            // Third registration is the media/fonts group. The names never change
+            // across releases, so the tier has to allow revalidation; repeating a
+            // 17 MB CJK face is still cheap because an unchanged file answers the
+            // conditional request with 304.
             ArgumentCaptor<String[]> patterns = ArgumentCaptor.forClass(String[].class);
             verify(registry, times(5)).addResourceHandler(patterns.capture());
             assertThat(patterns.getAllValues().get(2)).contains("/fonts/**");
@@ -166,7 +167,7 @@ class WebMvcConfigTest {
             ArgumentCaptor<CacheControl> caches = ArgumentCaptor.forClass(CacheControl.class);
             verify(media).setCacheControl(caches.capture());
             String header = caches.getValue().getHeaderValue();
-            assertThat(header).contains("max-age=31536000").contains("immutable");
+            assertThat(header).contains("max-age=86400").doesNotContain("immutable");
         }
     }
 

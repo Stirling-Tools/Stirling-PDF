@@ -1,5 +1,6 @@
 import react from "@vitejs/plugin-react-swc";
 import { compression, defineAlgorithm } from "vite-plugin-compression2";
+import { randomUUID } from "node:crypto";
 import fs from "node:fs/promises";
 import path, { resolve } from "node:path";
 import { constants, brotliCompress, gzip } from "node:zlib";
@@ -49,6 +50,45 @@ const mjsToJsAssetFileNames = (assetInfo: PreRenderedAsset) =>
     ? "assets/[name]-[hash].js"
     : "assets/[name]-[hash][extname]";
 
+// A variant only earns its place when it is meaningfully smaller than the source
+// it shadows; the encoders happily emit a sidecar larger than a small or
+// already-compressed file. The bundler plugin likewise drops variants that do
+// not shrink the source (skipIfLargerOrEqual), and this walk treats its output as
+// fresh, so the two passes never disagree about a file in practice.
+const MIN_COMPRESSION_RATIO = 0.98;
+
+/** True when `sibling` exists and is at least as new as the source. */
+async function isFresh(
+  sibling: string,
+  sourceMtimeMs: number,
+): Promise<boolean> {
+  try {
+    return (await fs.stat(sibling)).mtimeMs >= sourceMtimeMs;
+  } catch {
+    return false;
+  }
+}
+
+/** Writes through a same-directory temp file so a reader never sees a partial sidecar. */
+async function writeVariant(target: string, bytes: Uint8Array): Promise<void> {
+  const temp = `${target}.${process.pid}.${randomUUID()}.tmp`;
+  await fs.writeFile(temp, bytes);
+  await fs.rename(temp, target);
+}
+
+async function writeVariantIfSmaller(
+  target: string,
+  encoded: Uint8Array,
+  sourceLength: number,
+): Promise<void> {
+  if (encoded.length < sourceLength * MIN_COMPRESSION_RATIO) {
+    await writeVariant(target, encoded);
+  } else {
+    // Never leave a variant that shadows the source without a real saving.
+    await fs.rm(target, { force: true });
+  }
+}
+
 /** Runs both encoders at once and refuses paths outside the build output. */
 async function compressFile(file: string, distDir: string): Promise<void> {
   const resolved = path.resolve(file);
@@ -56,21 +96,33 @@ async function compressFile(file: string, distDir: string): Promise<void> {
 
   const ext = path.extname(resolved).toLowerCase();
   if (EXCLUDED_EXTENSION_SET.has(ext)) return;
+
+  const gzPath = `${resolved}.gz`;
+  const brPath = `${resolved}.br`;
+
   // Already compressed by the bundler pass. Compare modification times: the walk
   // runs over an existing dist, so a stale sibling from an earlier build has to
-  // be replaced rather than trusted.
-  try {
-    const [source, sibling] = await Promise.all([
-      fs.stat(resolved),
-      fs.stat(`${resolved}.br`),
-    ]);
-    if (sibling.mtimeMs >= source.mtimeMs) return;
-  } catch {
-    // No sibling yet.
-  }
-  const content = await fs.readFile(resolved);
-  if (content.length < 1024) return;
+  // be replaced rather than trusted. The two encodings are checked
+  // independently: a fresh .br next to a missing or stale .gz is not a complete
+  // pair.
+  const source = await fs.stat(resolved);
+  const [gzFresh, brFresh] = await Promise.all([
+    isFresh(gzPath, source.mtimeMs),
+    isFresh(brPath, source.mtimeMs),
+  ]);
+  if (gzFresh && brFresh) return;
 
+  // A source that shrank below the threshold must not keep serving the variants
+  // left over from when it was larger.
+  if (source.size < 1024) {
+    await Promise.all([
+      fs.rm(gzPath, { force: true }),
+      fs.rm(brPath, { force: true }),
+    ]);
+    return;
+  }
+
+  const content = await fs.readFile(resolved);
   const [gzipped, brotlied] = await Promise.all([
     gzipPromise(content, { level: 9 }),
     brotliPromise(content, {
@@ -80,8 +132,8 @@ async function compressFile(file: string, distDir: string): Promise<void> {
     }),
   ]);
   await Promise.all([
-    fs.writeFile(`${resolved}.gz`, gzipped),
-    fs.writeFile(`${resolved}.br`, brotlied),
+    writeVariantIfSmaller(gzPath, gzipped, content.length),
+    writeVariantIfSmaller(brPath, brotlied, content.length),
   ]);
 }
 
@@ -124,6 +176,71 @@ function startupModules(meta: ManualChunkMeta): Set<string> {
   }
   startupModulesByOutput.set(meta, modules);
   return modules;
+}
+
+/**
+ * The npm package a normalized module id belongs to, or null for app code. Ids
+ * are absolute paths, often through a pnpm store, so the package is the segment
+ * after the last node_modules. Matching on that segment, rather than a raw path
+ * substring, keeps a directory that merely looks like a package from steering
+ * the split.
+ */
+function packageNameOf(id: string): string | null {
+  const marker = "node_modules/";
+  const index = id.lastIndexOf(marker);
+  // Reject a match inside a longer directory name such as "my-node_modules".
+  if (index === -1 || (index > 0 && id[index - 1] !== "/")) return null;
+  const [first, second] = id.slice(index + marker.length).split("/");
+  if (!first) return null;
+  return first.startsWith("@") ? `${first}/${second ?? ""}` : first;
+}
+
+/** True for the package itself and anything under its scope. */
+function inScope(pkg: string, scope: string): boolean {
+  return pkg === scope || pkg.startsWith(`${scope}/`);
+}
+
+// react-markdown and its remark/micromark/mdast/hast closure is heavy and only
+// needed when a disclaimer, document or chat message renders. Matching on the
+// package name keeps an app file named like one of these out of the chunk.
+const MARKDOWN_PACKAGE_PREFIXES = [
+  "remark-",
+  "rehype-",
+  "micromark",
+  "mdast-",
+  "hast-",
+  "unist-",
+  "estree-util-",
+  "style-to-",
+  "character-entities",
+  "vfile",
+] as const;
+const MARKDOWN_PACKAGES = new Set([
+  "react-markdown",
+  "unified",
+  "parse-entities",
+  "decode-named-character-reference",
+  "markdown-table",
+  "devlop",
+  "longest-streak",
+  "ccount",
+  "zwitch",
+  "trough",
+  "bail",
+  "is-plain-obj",
+  "property-information",
+  "space-separated-tokens",
+  "comma-separated-tokens",
+  "trim-lines",
+  "html-url-attributes",
+  "@ungap/structured-clone",
+]);
+
+function isMarkdownPackage(pkg: string): boolean {
+  return (
+    MARKDOWN_PACKAGES.has(pkg) ||
+    MARKDOWN_PACKAGE_PREFIXES.some((prefix) => pkg.startsWith(prefix))
+  );
 }
 
 function compressStaticCopyPlugin(): PluginOption {
@@ -623,93 +740,62 @@ export default defineConfig(async ({ mode, command }) => {
             // Left to Rollup, this lands in the first dynamic-importing vendor
             // chunk and the entry then statically imports that whole chunk.
             if (id.includes("vite/preload-helper")) return "vendor-preload";
-            if (id.includes("node_modules")) {
-              if (id.includes("pdfjs-dist")) return "vendor-pdfjs";
-              // Only the lazily opened viewer needs the engine and the plugins;
-              // the startup graph needs just the pdfium glue and the shared
-              // enums, so they get their own chunks.
-              if (id.includes("@embedpdf/engines")) return "vendor-embedpdf";
-              if (id.includes("@embedpdf/pdfium")) return "vendor-pdfium";
-              if (
-                id.includes("@embedpdf/core") ||
-                id.includes("@embedpdf/models") ||
-                id.includes("@embedpdf/utils") ||
-                id.includes("@embedpdf/plugin-spread")
-              ) {
-                return "vendor-embedpdf-core";
-              }
-              if (id.includes("@embedpdf")) return "vendor-embedpdf";
-              // The markdown pipeline (react-markdown + remark-gfm + micromark
-              // + mdast/hast) is heavy and the editor only needs it when a
-              // disclaimer, markdown document or chat message renders. Without
-              // its own chunk the portal's static import drags it into
-              // vendor-ui, which the editor preloads.
-              if (
-                id.includes("react-markdown") ||
-                id.includes("remark-") ||
-                id.includes("rehype-") ||
-                id.includes("micromark") ||
-                id.includes("mdast-") ||
-                id.includes("hast-") ||
-                id.includes("unist-") ||
-                id.includes("vfile") ||
-                id.includes("unified") ||
-                id.includes("parse-entities") ||
-                id.includes("character-entities") ||
-                id.includes("decode-named-character-reference") ||
-                id.includes("property-information") ||
-                id.includes("space-separated-tokens") ||
-                id.includes("comma-separated-tokens") ||
-                id.includes("trim-lines") ||
-                id.includes("html-url-attributes") ||
-                id.includes("style-to-") ||
-                id.includes("estree-util-") ||
-                id.includes("markdown-table") ||
-                id.includes("@ungap/structured-clone") ||
-                id.includes("devlop") ||
-                id.includes("longest-streak") ||
-                id.includes("ccount") ||
-                id.includes("zwitch") ||
-                id.includes("trough") ||
-                id.includes("bail") ||
-                id.includes("is-plain-obj")
-              ) {
-                return "vendor-markdown";
-              }
-              // Splitting these out keeps icon changes from invalidating all of
-              // vendor-ui.
-              if (id.includes("@mui/icons-material")) return "vendor-mui-icons";
-              if (id.includes("@iconify/react")) return "vendor-iconify";
-              // These packages are mutually circular; splitting them breaks
-              // module init order at runtime. Every page loads vendor-ui, and by
-              // package name it also took libraries only some screens use, such
-              // as the markdown renderer and the date pickers. Those go with the
-              // screens that import them.
-              if (
-                id.includes("react") ||
-                id.includes("scheduler") ||
-                id.includes("@mantine") ||
-                id.includes("@mui") ||
-                id.includes("@emotion") ||
-                id.includes("@iconify")
-              ) {
-                return startupModules(meta).has(id) ? "vendor-ui" : undefined;
-              }
-              if (id.includes("@supabase")) return "vendor-supabase";
-              if (id.includes("posthog-js") || id.includes("@posthog"))
-                return "vendor-posthog";
-              if (id.includes("@cantoo/pdf-lib") || id.includes("pdf-lib"))
-                return "vendor-pdflib";
-              if (
-                id.includes("recharts") ||
-                id.includes("d3") ||
-                id.includes("decimal.js")
-              )
-                return "vendor-charts";
-              if (id.includes("jszip") || id.includes("pako"))
-                return "vendor-zip";
-              if (id.includes("i18next")) return "vendor-i18n";
+
+            const pkg = packageNameOf(id);
+            if (!pkg) return undefined;
+
+            if (pkg === "pdfjs-dist") return "vendor-pdfjs";
+            // Only the lazily opened viewer needs the engine and the plugins;
+            // the startup graph needs just the pdfium glue and the shared
+            // enums, so they get their own chunks.
+            if (pkg === "@embedpdf/engines") return "vendor-embedpdf";
+            if (pkg === "@embedpdf/pdfium") return "vendor-pdfium";
+            if (
+              pkg === "@embedpdf/core" ||
+              pkg === "@embedpdf/models" ||
+              pkg === "@embedpdf/utils" ||
+              pkg === "@embedpdf/plugin-spread"
+            ) {
+              return "vendor-embedpdf-core";
             }
+            if (inScope(pkg, "@embedpdf")) return "vendor-embedpdf";
+            // Without its own chunk the portal's static import drags the
+            // markdown pipeline into vendor-ui, which the editor preloads.
+            if (isMarkdownPackage(pkg)) return "vendor-markdown";
+            // Splitting these out keeps icon changes from invalidating all of
+            // vendor-ui.
+            if (pkg === "@mui/icons-material") return "vendor-mui-icons";
+            if (pkg === "@iconify/react") return "vendor-iconify";
+            // These packages are mutually circular; splitting them breaks
+            // module init order at runtime. Every page loads vendor-ui, and by
+            // package name it also took libraries only some screens use, such
+            // as the markdown renderer and the date pickers. Those go with the
+            // screens that import them.
+            if (
+              pkg.includes("react") ||
+              pkg === "scheduler" ||
+              inScope(pkg, "@mantine") ||
+              inScope(pkg, "@mui") ||
+              inScope(pkg, "@emotion") ||
+              inScope(pkg, "@iconify")
+            ) {
+              return startupModules(meta).has(id) ? "vendor-ui" : undefined;
+            }
+            if (inScope(pkg, "@supabase")) return "vendor-supabase";
+            if (pkg === "posthog-js" || inScope(pkg, "@posthog"))
+              return "vendor-posthog";
+            if (pkg === "@cantoo/pdf-lib" || pkg === "pdf-lib")
+              return "vendor-pdflib";
+            if (
+              pkg === "recharts" ||
+              pkg === "d3" ||
+              pkg.startsWith("d3-") ||
+              pkg === "decimal.js"
+            ) {
+              return "vendor-charts";
+            }
+            if (pkg === "jszip" || pkg === "pako") return "vendor-zip";
+            if (pkg.includes("i18next")) return "vendor-i18n";
           },
         },
       },

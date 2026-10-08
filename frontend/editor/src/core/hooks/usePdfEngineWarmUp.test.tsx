@@ -91,7 +91,7 @@ describe("usePdfEngineWarmUp", () => {
     expect(mockStartEagerWasmCompilation).not.toHaveBeenCalled();
   });
 
-  test("triggers early on pointerdown", async () => {
+  test("does not warm up for pointer input outside the file picker", async () => {
     const store = createMockStore([]);
     const { usePdfEngineWarmUp } =
       await import("@app/hooks/usePdfEngineWarmUp");
@@ -104,20 +104,45 @@ describe("usePdfEngineWarmUp", () => {
 
     renderHook(() => usePdfEngineWarmUp(), { wrapper });
 
+    act(() => {
+      window.dispatchEvent(new Event("pointerdown"));
+      window.dispatchEvent(new Event("click"));
+    });
+
     expect(mockStartEagerWasmCompilation).not.toHaveBeenCalled();
+  });
+
+  test("warms up when the file picker is opened", async () => {
+    const store = createMockStore([]);
+    const { usePdfEngineWarmUp } =
+      await import("@app/hooks/usePdfEngineWarmUp");
+
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <FileStoreContext.Provider value={store}>
+        {children}
+      </FileStoreContext.Provider>
+    );
+
+    renderHook(() => usePdfEngineWarmUp(), { wrapper });
+
+    const input = document.createElement("input");
+    input.type = "file";
+    input.style.display = "none";
+    document.body.appendChild(input);
 
     act(() => {
-      window.dispatchEvent(new Event("pointerdown"));
+      input.dispatchEvent(new Event("click", { bubbles: true }));
     });
 
     expect(mockStartEagerWasmCompilation).toHaveBeenCalledTimes(1);
 
-    // A second pointer use must not warm the engine again.
+    // A second open must not warm the engine again.
     act(() => {
-      vi.advanceTimersByTime(20000);
-      window.dispatchEvent(new Event("pointerdown"));
+      input.dispatchEvent(new Event("click", { bubbles: true }));
     });
     expect(mockStartEagerWasmCompilation).toHaveBeenCalledTimes(1);
+
+    input.remove();
   });
 
   test("triggers early when file is added to store", async () => {

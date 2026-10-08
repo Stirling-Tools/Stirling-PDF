@@ -2,6 +2,15 @@ import { getFontBaseUrl } from "@app/services/fontBaseUrl";
 import type { FontFallbackConfig } from "@embedpdf/engines";
 import { FontCharset } from "@embedpdf/models";
 
+/**
+ * Fonts the engine substitutes for characters missing from a document.
+ *
+ * Must always return the object: the EmbedPDF engine selects its jsDelivr
+ * defaults when `fontFallback` is omitted, and disables fallback entirely when
+ * it is `null`. Keeping the files here and the base on our own `/fonts` route
+ * is what keeps that CDN out of the render path. Charsets without a face
+ * (SYMBOL) resolve to `defaultFont`.
+ */
 export function getLocalFontFallbackConfig(): FontFallbackConfig {
   return {
     baseUrl: getFontBaseUrl(),

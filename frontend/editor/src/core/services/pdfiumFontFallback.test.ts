@@ -28,4 +28,27 @@ describe("pdfiumFontFallback", () => {
       expect(String(fontVal)).not.toContain("jsdelivr");
     }
   });
+
+  it("maps every charset with a face and leaves the rest to the default", () => {
+    const config = getLocalFontFallbackConfig();
+
+    // A numeric enum also exposes reverse mappings, so keep the names only.
+    const charsets = Object.keys(FontCharset).filter((key) =>
+      Number.isNaN(Number(key)),
+    ) as (keyof typeof FontCharset)[];
+
+    expect(config.baseUrl.length).toBeGreaterThan(0);
+    expect(config.defaultFont).toBeTruthy();
+
+    for (const name of charsets) {
+      // Noto has no symbol face, so that charset must resolve via defaultFont.
+      if (name === "SYMBOL") {
+        expect(config.fonts[FontCharset[name]]).toBeUndefined();
+        continue;
+      }
+      expect(String(config.fonts[FontCharset[name]])).toMatch(
+        /^NotoSans[A-Za-z-]*\.ttf$/,
+      );
+    }
+  });
 });

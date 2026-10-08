@@ -5,8 +5,8 @@ import { startEagerWasmCompilation } from "@app/services/wasmPrecompiler";
 /**
  * Starts the PDFium WASM download and compile only once a document is actually
  * in play: documents already open, a document added, an OS file drag, or the
- * file picker taking focus. A page the user merely visits fetches nothing, so
- * the engine cost lands only on sessions that will open a PDF.
+ * file picker opening. A page the user merely visits fetches nothing, so the
+ * engine cost lands only on sessions that will open a PDF.
  */
 export function usePdfEngineWarmUp(): void {
   const store = useContext(FileStoreContext);
@@ -42,8 +42,10 @@ export function usePdfEngineWarmUp(): void {
         warmUpOnce();
       }
     };
-    const onPointerDown = () => warmUpOnce();
-    const onFocusIn = (event: FocusEvent) => {
+    // The picker is a hidden input opened with a programmatic click, which no
+    // longer focuses it, so match on click as well as keyboard focus. Both are
+    // scoped to the file input: a pointerdown anywhere else must not warm.
+    const onFilePickerIntent = (event: Event) => {
       const target = event.target as Element | null;
       if (target?.matches?.('input[type="file"]')) {
         warmUpOnce();
@@ -51,14 +53,14 @@ export function usePdfEngineWarmUp(): void {
     };
 
     window.addEventListener("dragenter", onDragEnter, { passive: true });
-    window.addEventListener("pointerdown", onPointerDown, { passive: true });
-    window.addEventListener("focusin", onFocusIn);
+    window.addEventListener("click", onFilePickerIntent, { passive: true });
+    window.addEventListener("focusin", onFilePickerIntent);
 
     return () => {
       unsubscribe?.();
       window.removeEventListener("dragenter", onDragEnter);
-      window.removeEventListener("pointerdown", onPointerDown);
-      window.removeEventListener("focusin", onFocusIn);
+      window.removeEventListener("click", onFilePickerIntent);
+      window.removeEventListener("focusin", onFilePickerIntent);
     };
   }, [store]);
 }
