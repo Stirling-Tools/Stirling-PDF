@@ -92,21 +92,22 @@ describe("buildSelectedPagesFiles", () => {
     exportPDFMultiFile.mockResolvedValue({ blob: new Blob(["%PDF"]) });
   });
 
-  it("writes one file per track in workspace order, with the edits", async () => {
+  it("writes one file per page in workspace order, named by track and position", async () => {
     const built = await buildSelectedPagesFiles(
       workspace,
-      new Set(["a2", "blank-b", "b1"]),
+      new Set(["a2", "a3", "b1"]),
+      "eachPage",
       lookup,
     );
 
     expect(built.map(({ file }) => file.name)).toEqual([
-      "b (selected pages).pdf",
-      "a (selected pages).pdf",
+      "b (page 1).pdf",
+      "b (page 3).pdf",
+      "a (page 2).pdf",
     ]);
-    expect(built.map(({ parentStub }) => parentStub.id)).toEqual([B, A]);
-    expect(exportedPageIds(0)).toEqual(["b1", "blank-b"]);
-    expect(exportedPageIds(1)).toEqual(["a2"]);
-    const [page] = (exportPDFMultiFile.mock.calls[1][0] as PDFDocument).pages;
+    expect(built.map(({ parentStub }) => parentStub.id)).toEqual([B, A, A]);
+    expect([0, 1, 2].map(exportedPageIds)).toEqual([["b1"], ["a3"], ["a2"]]);
+    const [page] = (exportPDFMultiFile.mock.calls[2][0] as PDFDocument).pages;
     expect(page).toMatchObject({
       originalFileId: A,
       originalPageNumber: 2,
@@ -114,28 +115,18 @@ describe("buildSelectedPagesFiles", () => {
     });
   });
 
-  it("keeps two pages of one track in one file", async () => {
+  it("merges pages from every track into one file named after the first", async () => {
     const built = await buildSelectedPagesFiles(
       workspace,
-      new Set(["a1", "a2"]),
-      lookup,
-    );
-
-    expect(built).toHaveLength(1);
-    expect(exportedPageIds(0)).toEqual(["a1", "a2"]);
-  });
-
-  it("groups a page moved into another track with that track", async () => {
-    const built = await buildSelectedPagesFiles(
-      workspace,
-      new Set(["b1", "a3"]),
+      new Set(["a2", "blank-b", "b1"]),
+      "oneFile",
       lookup,
     );
 
     expect(built.map(({ file }) => file.name)).toEqual([
       "b (selected pages).pdf",
     ]);
-    expect(exportedPageIds(0)).toEqual(["b1", "a3"]);
+    expect(exportedPageIds(0)).toEqual(["b1", "blank-b", "a2"]);
     const sourceFiles = exportPDFMultiFile.mock.calls[0][1] as Map<
       string,
       File
@@ -143,22 +134,26 @@ describe("buildSelectedPagesFiles", () => {
     expect([...sourceFiles.keys()].sort()).toEqual([A, B]);
   });
 
-  it("parents a blank-only selection in a split to the file it was cut from", async () => {
+  it("parents a blank page in a split to the file it was cut from", async () => {
     const built = await buildSelectedPagesFiles(
       workspace,
       new Set(["blank-split"]),
+      "eachPage",
       lookup,
     );
 
-    expect(built.map(({ file }) => file.name)).toEqual([
-      "a (2) (selected pages).pdf",
-    ]);
+    expect(built.map(({ file }) => file.name)).toEqual(["a (2) (page 1).pdf"]);
     expect(built[0]?.parentStub.id).toBe(A);
   });
 
   it("writes nothing when no selected page is still open", async () => {
     expect(
-      await buildSelectedPagesFiles(workspace, new Set(["gone"]), lookup),
+      await buildSelectedPagesFiles(
+        workspace,
+        new Set(["gone"]),
+        "oneFile",
+        lookup,
+      ),
     ).toEqual([]);
     expect(exportPDFMultiFile).not.toHaveBeenCalled();
   });

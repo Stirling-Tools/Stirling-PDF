@@ -25,6 +25,11 @@ export function useFileActionTerminology() {
       "pageTracks.saveSelectedPages",
       "Save selected pages",
     ),
+    downloadEachPage: t(
+      "pageTracks.saveEachPage",
+      "Save each page individually",
+    ),
+    downloadAsOneFile: t("pageTracks.saveAsOneFile", "Save as one file"),
     downloadUnavailable: t("saveUnavailable", "Save unavailable for this item"),
     noFilesInStorage: t(
       "fileUpload.noFilesInStorageOpen",

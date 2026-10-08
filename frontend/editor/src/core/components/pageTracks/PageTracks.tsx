@@ -43,6 +43,7 @@ import {
   assertFilesNotBlocked,
 } from "@app/services/policyFileGuard";
 import {
+  SelectedPagesLayout,
   buildSelectedPagesFiles,
   buildTrackFile,
   policyIdsForPages,
@@ -823,38 +824,45 @@ export default function PageTracks() {
   }, [changedSet, fileSelectors, t, workspace]);
 
   const [downloadingSelection, setDownloadingSelection] = useState(false);
-  const downloadSelection = useCallback(async () => {
-    const lookup = {
-      getStub: fileSelectors.getStirlingFileStub,
-      getFile: fileSelectors.getFile,
-    };
-    setDownloadingSelection(true);
-    try {
-      const policyIds = policyIdsForPages(
-        workspace,
-        selection.selectedIds,
-        lookup.getStub,
-      );
-      assertFilesNotBlocked(policyIds);
-      const built = await buildSelectedPagesFiles(
-        workspace,
-        selection.selectedIds,
-        lookup,
-      );
-      // A policy can fail while the files are being built.
-      assertFilesNotBlocked(policyIds);
-      for (const { file } of built) {
-        await downloadFileWithPolicy({ data: file, filename: file.name });
+  const downloadSelection = useCallback(
+    async (layout: SelectedPagesLayout) => {
+      const lookup = {
+        getStub: fileSelectors.getStirlingFileStub,
+        getFile: fileSelectors.getFile,
+      };
+      setDownloadingSelection(true);
+      try {
+        const policyIds = policyIdsForPages(
+          workspace,
+          selection.selectedIds,
+          lookup.getStub,
+        );
+        assertFilesNotBlocked(policyIds);
+        const built = await buildSelectedPagesFiles(
+          workspace,
+          selection.selectedIds,
+          layout,
+          lookup,
+        );
+        // A policy can fail while the files are being built.
+        assertFilesNotBlocked(policyIds);
+        for (const { file } of built) {
+          await downloadFileWithPolicy({ data: file, filename: file.name });
+        }
+      } catch (error) {
+        alertExportFailure(error, t);
+      } finally {
+        setDownloadingSelection(false);
       }
-    } catch (error) {
-      alertExportFailure(error, t);
-    } finally {
-      setDownloadingSelection(false);
-    }
-  }, [fileSelectors, selection.selectedIds, t, workspace]);
-  const downloadSelectionNow = useCallback(() => {
-    void downloadSelection();
-  }, [downloadSelection]);
+    },
+    [fileSelectors, selection.selectedIds, t, workspace],
+  );
+  const downloadSelectionNow = useCallback(
+    (layout: SelectedPagesLayout) => {
+      void downloadSelection(layout);
+    },
+    [downloadSelection],
+  );
 
   // Closing a file drops every page sourced from it, including ones moved into
   // other tracks, so its pending edits are those of every track entangled with it.

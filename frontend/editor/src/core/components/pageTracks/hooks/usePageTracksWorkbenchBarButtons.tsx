@@ -10,6 +10,8 @@ import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import styles from "@app/components/pageTracks/PageTracks.module.css";
+import { SelectedPagesLayout } from "@app/components/pageTracks/buildTrackFile";
+import { DownloadSelectedPagesMenu } from "@app/components/pageTracks/DownloadSelectedPagesMenu";
 import {
   SelectByNumberPopover,
   SelectByNumberPopoverProps,
@@ -40,8 +42,8 @@ export interface PageTracksBarParams {
   onInsertBlankAfter: () => void;
   onSplitAfter: () => void;
   downloadingSelection: boolean;
-  /** Downloads the selected pages as one PDF per track, without saving the edits. */
-  onDownloadSelected: () => void;
+  /** Downloads the selected pages without saving the edits. */
+  onDownloadSelected: (layout: SelectedPagesLayout) => void;
   onUndo: () => void;
   onRedo: () => void;
   onSave: () => void;
@@ -94,6 +96,8 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
     ),
     deleteSelected: t("pageTracks.deleteSelected", "Delete selected pages"),
     downloadSelected: terminology.downloadSelectedPages,
+    downloadEachPage: terminology.downloadEachPage,
+    downloadAsOneFile: terminology.downloadAsOneFile,
     insertBlankAfter: t(
       "pageTracks.insertBlankAfterSelected",
       "Insert blank pages after selected pages",
@@ -109,6 +113,7 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
 
   const hasPages = totalPages > 0;
   const hasSelection = selectedCount > 0;
+  const multipleSelected = selectedCount > 1;
   const allSelected = hasPages && selectedCount === totalPages;
   const selectAllLabel = allSelected ? labels.deselectAll : labels.selectAll;
 
@@ -240,7 +245,21 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
         order: 40,
         disabled: !hasSelection || downloadingSelection,
         visible: hasPages,
-        onClick: onDownloadSelected,
+        // One page has only one way to go out, so it skips the menu.
+        onClick: () => onDownloadSelected("eachPage"),
+        // A custom render bypasses the bar's click action and tooltip wrapper.
+        render: multipleSelected
+          ? ({ disabled }) => (
+              <DownloadSelectedPagesMenu
+                label={labels.downloadSelected}
+                eachPageLabel={labels.downloadEachPage}
+                oneFileLabel={labels.downloadAsOneFile}
+                iconName={fileActionIcons.download}
+                disabled={disabled}
+                onDownload={onDownloadSelected}
+              />
+            )
+          : undefined,
       },
       {
         id: "tracks-undo",
@@ -305,6 +324,9 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
       labels.rotateRight,
       labels.deleteSelected,
       labels.downloadSelected,
+      labels.downloadEachPage,
+      labels.downloadAsOneFile,
+      multipleSelected,
       fileActionIcons.download,
       labels.insertBlankAfter,
       labels.splitAfter,

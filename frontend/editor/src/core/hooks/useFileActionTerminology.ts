@@ -25,6 +25,14 @@ export function useFileActionTerminology() {
       "pageTracks.downloadSelectedPages",
       "Download selected pages",
     ),
+    downloadEachPage: t(
+      "pageTracks.downloadEachPage",
+      "Download each page individually",
+    ),
+    downloadAsOneFile: t(
+      "pageTracks.downloadAsOneFile",
+      "Download as one file",
+    ),
     downloadUnavailable: t(
       "downloadUnavailable",
       "Download unavailable for this item",
