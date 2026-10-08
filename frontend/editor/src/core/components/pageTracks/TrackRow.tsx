@@ -13,8 +13,7 @@ import { Icon } from "@app/ui/Icon";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { SelectByNumberPopover } from "@app/components/pageTracks/SelectByNumberPopover";
-import { PrivateContent } from "@app/components/shared/PrivateContent";
-import { truncateCenter } from "@app/utils/textUtils";
+import { TrackNameField } from "@app/components/pageTracks/TrackNameField";
 import { FileId } from "@app/types/file";
 import { Track } from "@app/components/pageTracks/types";
 import { TrackThumbnailStore } from "@app/components/pageTracks/hooks/useTrackThumbnails";
@@ -129,7 +128,8 @@ export interface TrackRowProps {
   /** Selects these 1-based pages of the track, replacing its selection. */
   onSelectNumbers: (fileId: FileId, pageNumbers: number[]) => void;
   onOpenInViewer: (fileId: FileId) => void;
-  onRename: (fileId: FileId) => void;
+  /** Rejects with a user-facing message when the rename fails. */
+  onRename: (track: Track, name: string) => Promise<void>;
   /** Called when the click landed on empty lane surface, not on a page. */
   onClearSelection: () => void;
   /** Split this track so `startPageId` begins a new track. */
@@ -381,7 +381,6 @@ function TrackRowImpl({
   const collapseLabel = collapsed
     ? t("pageTracks.track.expand", "Expand")
     : t("pageTracks.track.collapse", "Collapse");
-  const renameLabel = t("pageTracks.track.rename", "Rename file");
 
   const handleViewPage = useCallback((pageId: string) => {
     setViewPageId(pageId);
@@ -426,20 +425,10 @@ function TrackRowImpl({
             )}
           </ActionIcon>
         </Tooltip>
-        <span className={styles.trackName}>
-          <PrivateContent>{truncateCenter(name, 40)}</PrivateContent>
-        </span>
-        <Tooltip position="bottom" content={renameLabel}>
-          <ActionIcon
-            className={styles.trackLeadAction}
-            variant="quiet"
-            size="sm"
-            aria-label={renameLabel}
-            onClick={() => onRename(track.fileId)}
-          >
-            <Icon name="pencil" size="1rem" />
-          </ActionIcon>
-        </Tooltip>
+        <TrackNameField
+          name={name}
+          onRename={(nextName) => onRename(track, nextName)}
+        />
         <span className={styles.trackMeta}>
           {[
             versionNumber != null && versionNumber > 1

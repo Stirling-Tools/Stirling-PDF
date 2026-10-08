@@ -50,11 +50,10 @@ import { useTrackSelection } from "@app/components/pageTracks/hooks/useTrackSele
 import { useTrackThumbnails } from "@app/components/pageTracks/hooks/useTrackThumbnails";
 import { useTrackSave } from "@app/components/pageTracks/hooks/useTrackSave";
 import { usePageTracksWorkbenchBarButtons } from "@app/components/pageTracks/hooks/usePageTracksWorkbenchBarButtons";
-import { totalPageCount } from "@app/components/pageTracks/types";
+import { Track, totalPageCount } from "@app/components/pageTracks/types";
 import { opensAsTrack } from "@app/components/pageTracks/trackFileKind";
 import TrackRow, { DropHint } from "@app/components/pageTracks/TrackRow";
 import { DisabledFileTrack } from "@app/components/pageTracks/DisabledFileTrack";
-import { RenameFileDialog } from "@app/components/shared/RenameFileDialog";
 import { renameStoredFile } from "@app/services/renameStoredFile";
 import styles from "@app/components/pageTracks/PageTracks.module.css";
 
@@ -867,13 +866,10 @@ export default function PageTracks() {
   // An open file's name lives in storage, so renaming it is immediate, like
   // the file sidebar; a split has no file until saved, so only its track holds
   // the name it will be saved under.
-  const [renameTrackId, setRenameTrackId] = useState<FileId | null>(null);
-  const renameTarget = renameTrackId ? workspace.tracks[renameTrackId] : null;
-  const confirmRename = useCallback(
-    async (name: string) => {
-      if (!renameTarget) return;
-      if (!renameTarget.isNew) {
-        const stub = fileSelectors.getStirlingFileStub(renameTarget.fileId);
+  const renameTrack = useCallback(
+    async (track: Track, name: string) => {
+      if (!track.isNew) {
+        const stub = fileSelectors.getStirlingFileStub(track.fileId);
         const saved = stub
           ? await renameStoredFile(
               stub,
@@ -887,17 +883,9 @@ export default function PageTracks() {
           );
         }
       }
-      dispatch({ type: "renameTrack", fileId: renameTarget.fileId, name });
+      dispatch({ type: "renameTrack", fileId: track.fileId, name });
     },
-    [renameTarget, fileSelectors, fileActions, dispatch, t],
-  );
-  const renameDialog = (
-    <RenameFileDialog
-      opened={renameTarget != null}
-      fileName={renameTarget?.name ?? ""}
-      onClose={() => setRenameTrackId(null)}
-      onSubmit={confirmRename}
-    />
+    [fileSelectors, fileActions, dispatch, t],
   );
 
   useWorkbenchViewFileActions(
@@ -1006,7 +994,7 @@ export default function PageTracks() {
         onSelectTrack={selection.selectTrack}
         onSelectNumbers={selectNumbersInTrack}
         onOpenInViewer={openInViewer}
-        onRename={setRenameTrackId}
+        onRename={renameTrack}
         onClearSelection={clearSelection}
         onSplit={splitTrack}
         onInsertBlank={insertBlank}
@@ -1040,7 +1028,6 @@ export default function PageTracks() {
   return (
     <div className={styles.root} data-testid="page-tracks">
       {closeConfirmModal}
-      {renameDialog}
       <LoadingOverlay
         visible={saving}
         loaderProps={{
