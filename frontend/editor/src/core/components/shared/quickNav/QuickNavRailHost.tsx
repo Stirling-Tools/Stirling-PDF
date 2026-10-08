@@ -112,7 +112,7 @@ export function QuickNavRailHost() {
   const editor: QuickNavEntry = {
     id: "editor",
     label: t("quickNav.editor", "Editor"),
-    icon: <Icon name="pencil" size={SIZE} filled={inEditor} />,
+    icon: <Icon name="pencil" size={SIZE} />,
     // The library and reading are places of their own, not the editor with a
     // different centre.
     current:
@@ -137,7 +137,7 @@ export function QuickNavRailHost() {
   const processor: QuickNavEntry = {
     id: "processor",
     label: t("quickNav.processor", "Processor"),
-    icon: <Icon name="cpu" size={SIZE} filled={inPortal} />,
+    icon: <Icon name="cpu" size={SIZE} />,
     current: inPortal,
     disabled: noProcessorAccess,
     reason: noProcessorAccess

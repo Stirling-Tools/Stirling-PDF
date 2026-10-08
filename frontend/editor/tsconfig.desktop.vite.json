@@ -32,7 +32,6 @@
     "src/cloud/**/*.test.ts*",
     "src/cloud/**/*.spec.ts*",
     "src/saas",
-    "src/prototypes",
     "src/portal-saas",
     "src/portal-cloud/**/*.test.ts*",
     "src/portal/**/*.test.ts*",

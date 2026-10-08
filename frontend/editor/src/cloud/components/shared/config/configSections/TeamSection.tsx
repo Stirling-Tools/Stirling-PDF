@@ -8,6 +8,7 @@ import {
   Table,
   Badge,
   Menu,
+  Avatar,
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
@@ -25,6 +26,7 @@ import {
   type CloudOwnershipStatus,
 } from "@app/components/shared/ownership/OwnershipTransferModal";
 import apiClient from "@app/services/apiClient";
+import { useTeamAvatarUrls } from "@app/hooks/useTeamAvatarUrls";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -377,16 +379,27 @@ function MemberActionsMenu({
 
 interface TeamMemberRowProps extends MemberActionsMenuProps {
   showActions: boolean;
+  /** Signed avatar URL; absent members fall back to their initial. */
+  avatarUrl?: string;
 }
 
-function TeamMemberRow({ showActions, ...actions }: TeamMemberRowProps) {
+function TeamMemberRow({
+  showActions,
+  avatarUrl,
+  ...actions
+}: TeamMemberRowProps) {
   const { member } = actions;
   return (
     <Table.Tr>
       <Table.Td>
-        <Text size="sm" fw={500}>
-          {member.username}
-        </Text>
+        <Group gap="xs" wrap="nowrap">
+          <Avatar size={28} radius="xl" src={avatarUrl} alt="" color="blue">
+            {member.username.charAt(0).toUpperCase()}
+          </Avatar>
+          <Text size="sm" fw={500}>
+            {member.username}
+          </Text>
+        </Group>
       </Table.Td>
       <Table.Td>
         <Text size="sm" c="dimmed">
@@ -468,6 +481,7 @@ function TeamMemberRows({
   onCancelInvitation,
 }: TeamMembersTableProps) {
   const { t } = useTranslation();
+  const avatarUrls = useTeamAvatarUrls(members);
   if (members.length === 0 && invitations.length === 0) {
     return (
       <Table.Tr>
@@ -485,6 +499,9 @@ function TeamMemberRows({
         <TeamMemberRow
           key={`member-${member.id}`}
           member={member}
+          avatarUrl={
+            member.supabaseId ? avatarUrls[member.supabaseId] : undefined
+          }
           showActions={showActions}
           onMakeOwner={() => onMakeOwner(member)}
           onRemove={() => onRemove(member)}

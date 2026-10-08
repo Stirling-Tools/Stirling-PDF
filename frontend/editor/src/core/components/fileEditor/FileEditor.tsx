@@ -390,7 +390,9 @@ const FileEditor = ({
         <Box p="md">
           {activeStirlingFileStubs.length === 0 ? (
             <Center h="60vh">
-              <AddFileCard />
+              <AddFileCard
+                onFilesSelected={(files) => void handleFileUpload(files)}
+              />
             </Center>
           ) : (
             <div
@@ -403,7 +405,10 @@ const FileEditor = ({
               }}
             >
               {activeStirlingFileStubs.length > 0 && (
-                <AddFileCard key="add-file-card" />
+                <AddFileCard
+                  key="add-file-card"
+                  onFilesSelected={(files) => void handleFileUpload(files)}
+                />
               )}
 
               {activeStirlingFileStubs.map((record, index) => {

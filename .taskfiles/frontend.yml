@@ -187,13 +187,6 @@ tasks:
       - task: dev:_run
         vars: { MODE: desktop, PORT: '{{.PORT}}', BACKEND_URL: '{{.BACKEND_URL}}', OPEN: '{{.OPEN}}' }
 
-  dev:prototypes:
-    desc: "Start frontend dev server in prototypes mode"
-    deps: [prepare]
-    cmds:
-      - task: dev:_run
-        vars: { MODE: prototypes, PORT: '{{.PORT}}', BACKEND_URL: '{{.BACKEND_URL}}', OPEN: '{{.OPEN}}' }
-
   # ============================================================
   # Build
   # ============================================================
@@ -241,12 +234,6 @@ tasks:
         vars: { MODE: desktop }
     cmds:
       - npx vite build editor --mode desktop --outDir dist-desktop
-
-  build:prototypes:
-    desc: "Build for prototypes mode"
-    deps: [prepare]
-    cmds:
-      - npx vite build editor --mode prototypes
 
 
   storybook:
@@ -471,13 +458,6 @@ tasks:
       - task: typecheck:_run
         vars: { PROJECT: editor/scripts/tsconfig.json }
 
-  typecheck:prototypes:
-    desc: "Typecheck prototypes build variant"
-    deps: [prepare]
-    cmds:
-      - task: typecheck:_run
-        vars: { PROJECT: editor/src/prototypes/tsconfig.json }
-
   typecheck:portal:
     desc: "Typecheck developer portal build variant"
     deps: [install]
@@ -501,7 +481,6 @@ tasks:
       - task: typecheck:desktop
       - task: typecheck:cloud
       - task: typecheck:scripts
-      - task: typecheck:prototypes
       - task: typecheck:portal
       - task: typecheck:storybook
 
