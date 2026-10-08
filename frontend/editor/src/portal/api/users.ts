@@ -38,6 +38,8 @@ export interface Member {
   lastActive: string;
   /** Optional avatar image; falls back to initials when absent. */
   avatarUrl?: string;
+  /** Also the member's avatar storage path prefix. */
+  supabaseId?: string | null;
   /** Backend linkage for row actions (absent on pure fixtures). */
   username?: string;
   teamId?: number;
@@ -229,6 +231,7 @@ interface AdminUserSummaryDto {
   isFirstLogin?: boolean;
   team?: { id: number; name: string };
   authenticationType?: string;
+  supabaseId?: string | null;
   /** Authoritative server-side portal access (honors the configured default policy). */
   portalAccess?: boolean;
 }
@@ -308,6 +311,7 @@ export async function fetchUsers(tier: Tier): Promise<UsersResponse> {
     locked: locked.has(u.username),
     mfaEnabled: data.userSettings?.[u.username]?.mfaEnabled === "true",
     authType: u.authenticationType,
+    supabaseId: u.supabaseId,
     authority: u.rolesAsString,
   }));
   const seatLimit = normalizeSeatLimit(data.maxAllowedUsers);

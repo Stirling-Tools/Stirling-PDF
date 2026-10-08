@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.context.annotation.Profile;
@@ -314,12 +315,7 @@ public class SaasTeamController {
     public ResponseEntity<?> getTeamMembers(@PathVariable Long teamId) {
         try {
             List<TeamMembership> memberships = membershipRepository.findByTeamId(teamId);
-            Set<Long> overLimit = memberCapacity.disabledUserIds(teamId);
-            List<TeamMemberDTO> dtos =
-                    memberships.stream()
-                            .map(m -> toTeamMemberDTO(m, overLimit))
-                            .collect(Collectors.toList());
-            return ResponseEntity.ok(dtos);
+            return ResponseEntity.ok(toTeamMemberDTOs(teamId, memberships));
         } catch (Exception e) {
             log.error("Error fetching team members", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -538,14 +534,23 @@ public class SaasTeamController {
                 .orElseThrow(() -> new SecurityException("User not found: " + username));
     }
 
+    private List<TeamMemberDTO> toTeamMemberDTOs(Long teamId, List<TeamMembership> memberships) {
+        Set<Long> overLimit = memberCapacity.disabledUserIds(teamId);
+        return memberships.stream()
+                .map(m -> toTeamMemberDTO(m, overLimit))
+                .collect(Collectors.toList());
+    }
+
     private TeamMemberDTO toTeamMemberDTO(TeamMembership membership, Set<Long> overLimit) {
         User user = membership.getUser();
+        UUID supabaseId = user.getSupabaseId();
         return new TeamMemberDTO(
                 user.getId(),
                 user.getUsername(),
                 user.getEmail(),
                 membership.getRole().name(),
                 membership.getAcceptedAt(),
+                supabaseId == null ? null : supabaseId.toString(),
                 overLimit.contains(user.getId()));
     }
 
@@ -591,6 +596,9 @@ public class SaasTeamController {
         private final String email;
         private final String role;
         private final LocalDateTime joinedAt;
+
+        /** Also the member's avatar storage path prefix. Null without a Supabase identity. */
+        private final String supabaseId;
 
         /** The team's user allowance no longer covers this member, so they cannot sign in. */
         private final boolean overPlanLimit;
@@ -722,11 +730,7 @@ public class SaasTeamController {
                             .orElseThrow(() -> new IllegalArgumentException("Team not found"));
 
             List<TeamMembership> memberships = membershipRepository.findByTeamId(teamId);
-            Set<Long> overLimit = memberCapacity.disabledUserIds(teamId);
-            List<TeamMemberDTO> members =
-                    memberships.stream()
-                            .map(m -> toTeamMemberDTO(m, overLimit))
-                            .collect(Collectors.toList());
+            List<TeamMemberDTO> members = toTeamMemberDTOs(teamId, memberships);
 
             // Check if current user is team leader
             User currentUser = getCurrentUser();
