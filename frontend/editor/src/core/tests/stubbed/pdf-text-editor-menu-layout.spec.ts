@@ -85,9 +85,10 @@ test.describe("PDF text editor - inspector layout", () => {
     ).toHaveCount(1);
 
     await arrange.click();
-    // Sub-section labels make the grouping explicit.
-    await expect(page.getByText("Align · needs 2+ objects")).toBeVisible();
-    await expect(page.getByText("Distribute · needs 3+ objects")).toBeVisible();
+    // A gated row says what it needs, beside its label.
+    const panel = page.getByTestId("pdf-editor-arrange-panel");
+    await expect(panel.getByText("Select 2 or more objects")).toBeVisible();
+    await expect(panel.getByText("Select 3 or more objects")).toBeVisible();
     // Z-order works on a single object; align/distribute are disabled.
     await expect(page.getByTestId("pdf-editor-z-to-front")).toBeEnabled();
     await expect(page.getByTestId("pdf-editor-align-left")).toBeDisabled();

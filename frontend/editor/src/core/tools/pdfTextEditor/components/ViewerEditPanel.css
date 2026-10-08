@@ -1,0 +1,159 @@
+/* Edit history as a timeline: a node per step on a rail, the current point
+   filled, steps past it faded until restored over or returned to. */
+.pdf-edit-history {
+  --node: 22px;
+  display: flex;
+  flex-direction: column;
+  max-height: 320px;
+  overflow-y: auto;
+  margin-inline: -6px;
+  padding: 2px 0;
+}
+
+.pdf-edit-history__row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-right: 6px;
+  border-radius: var(--mantine-radius-md);
+  transition: background-color 0.12s ease;
+}
+
+/* The step itself: everything but the inline Restore. */
+.pdf-edit-history__hit {
+  display: grid;
+  grid-template-columns: var(--node) 1fr;
+  align-items: start;
+  column-gap: 10px;
+  flex: 1;
+  min-width: 0;
+  padding: 6px;
+  border: none;
+  border-radius: inherit;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.pdf-edit-history__hit:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: -2px;
+}
+
+.pdf-edit-history__restore {
+  flex: 0 0 auto;
+}
+
+/* The rail: from this node down to the next. */
+.pdf-edit-history__row::before {
+  content: "";
+  position: absolute;
+  left: calc(6px + var(--node) / 2 - 1px);
+  top: calc(6px + var(--node));
+  bottom: -6px;
+  width: 2px;
+  background: var(--c-border-subtle);
+  /* Overlaps the next row; it must never take that row's clicks. */
+  pointer-events: none;
+}
+
+.pdf-edit-history__row[data-last="true"]::before {
+  display: none;
+}
+
+/* Past the current point the rail turns dashed: steps that are not applied. */
+.pdf-edit-history__row[data-current="true"]::before,
+.pdf-edit-history__row[data-undone="true"]::before {
+  background: repeating-linear-gradient(
+    to bottom,
+    var(--c-border-subtle) 0 3px,
+    transparent 3px 6px
+  );
+}
+
+.pdf-edit-history__row:hover {
+  background: var(--c-hover);
+}
+
+.pdf-edit-history__node {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--node);
+  height: var(--node);
+  border-radius: 50%;
+  background: var(--c-surface-sunken);
+  border: 1px solid var(--c-border-subtle);
+  color: var(--c-text-muted);
+}
+
+.pdf-edit-history__row[data-current="true"] .pdf-edit-history__node {
+  background: var(--c-primary);
+  border-color: var(--c-primary);
+  color: var(--c-text-on-primary);
+  box-shadow: 0 0 0 3px var(--c-primary-subtle);
+}
+
+.pdf-edit-history__row[data-undone="true"] .pdf-edit-history__node {
+  background: transparent;
+  border-style: dashed;
+}
+
+.pdf-edit-history__row[data-undone="true"] .pdf-edit-history__text {
+  opacity: 0.55;
+}
+
+.pdf-edit-history__text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  padding-top: 1px;
+}
+
+.pdf-edit-history__label {
+  font-size: var(--mantine-font-size-sm);
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pdf-edit-history__row[data-current="true"] .pdf-edit-history__label {
+  font-weight: 600;
+}
+
+.pdf-edit-history__meta {
+  font-size: var(--mantine-font-size-xs);
+  color: var(--c-text-muted);
+}
+
+/* Text colours in use: a swatch per colour, each opening a recolour picker. */
+.pdf-edit-panel__swatch-wrap {
+  display: inline-flex;
+}
+
+.pdf-edit-panel__swatch {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--c-border-subtle);
+  box-shadow: inset 0 0 0 2px var(--c-surface);
+  cursor: pointer;
+  transition: transform 0.12s ease;
+}
+
+.pdf-edit-panel__swatch:hover {
+  transform: scale(1.1);
+}
+
+.pdf-edit-panel__swatch:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 2px;
+}

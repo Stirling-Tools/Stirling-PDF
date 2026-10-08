@@ -66,11 +66,28 @@ export default function Workbench() {
   const hasFiles = activeFiles.length > 0;
   const { t } = useTranslation();
 
-  // The viewer's tool row can be retracted to give the document more height.
-  // State lives here (not in WorkbenchBar) so the reopen tab can hang below the
-  // bar, outside the bar's overflow-clipped wrapper. Scoped to the viewer.
+  // The viewer's tool row folds away while reading or text editing, for the
+  // document's height. State lives here (not in WorkbenchBar) so the reopen
+  // tab can hang below the bar, outside its overflow-clipped wrapper.
   const [viewerToolbarCollapsed, setViewerToolbarCollapsed] = useState(false);
-  const showReopenTab = currentView === "viewer" && viewerToolbarCollapsed;
+  const textEditing =
+    currentView === "viewer" && selectedToolId === "pdfTextEditor";
+  // Editing text has its own strip, which carries the way back out, so the tool
+  // row folds away to give the page the height and returns as it was after.
+  const collapsedBeforeEditRef = useRef<boolean | null>(null);
+  useEffect(() => {
+    if (textEditing) {
+      setViewerToolbarCollapsed((collapsed) => {
+        collapsedBeforeEditRef.current ??= collapsed;
+        return true;
+      });
+    } else if (collapsedBeforeEditRef.current !== null) {
+      setViewerToolbarCollapsed(collapsedBeforeEditRef.current);
+      collapsedBeforeEditRef.current = null;
+    }
+  }, [textEditing]);
+  const showReopenTab =
+    currentView === "viewer" && viewerToolbarCollapsed && !textEditing;
 
   // The WorkbenchBar carries file-scoped actions, so it only shows once a file
   // is open or a custom view supplies content; otherwise the search floats.
@@ -222,7 +239,6 @@ export default function Workbench() {
                 setCurrentView={setCurrentView}
                 hasFiles={hasFiles}
                 viewerToolbarCollapsed={viewerToolbarCollapsed}
-                onCollapseViewerToolbar={setViewerToolbarCollapsed}
               />
             </div>
           </div>

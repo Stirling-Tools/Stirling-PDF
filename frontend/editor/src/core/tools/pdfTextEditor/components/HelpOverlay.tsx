@@ -85,6 +85,23 @@ export function HelpOverlay({ opened, onClose }: HelpOverlayProps) {
           ),
         },
         {
+          bindings: [mod("BracketRight"), mod("BracketLeft")],
+          description: t(
+            "pdfTextEditor.help.editing.restackDesc",
+            "Bring forward / Send backward",
+          ),
+        },
+        {
+          bindings: [
+            mod("BracketRight", { shift: true }),
+            mod("BracketLeft", { shift: true }),
+          ],
+          description: t(
+            "pdfTextEditor.help.editing.restackEndDesc",
+            "Bring to front / Send to back",
+          ),
+        },
+        {
           bindings: [mod("KeyZ"), mod("KeyY")],
           description: t(
             "pdfTextEditor.help.editing.undoRedoDesc",

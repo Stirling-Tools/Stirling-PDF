@@ -146,7 +146,8 @@ export function ImageHandle({
           selected || dragging ? "rgba(44,123,229,0.08)" : "transparent",
         cursor: locked ? "default" : "move",
         // No explicit zIndex - text overlays paint on top via DOM order.
-        pointerEvents: "auto",
+        // Locked: inert, leaving its LockBadge zone the only target.
+        pointerEvents: locked ? "none" : "auto",
       }}
       onPointerDown={(e: React.PointerEvent) => {
         // Locked images are inert - the press belongs to the stage.

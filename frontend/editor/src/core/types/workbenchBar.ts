@@ -3,10 +3,11 @@ import type { FileId } from "@app/types/file";
 
 /** "bar-lead" follows the view switcher, for content naming what the view is showing;
  *  "bar" renders among the bar's own actions on the right; top/middle/bottom are lanes
- *  of the retractable tool row beneath it. */
+ *  of the tool row beneath it, and "row-end" is pinned to that row's right edge. */
 export type WorkbenchBarSection =
   | "bar-lead"
   | "bar"
+  | "row-end"
   | "top"
   | "middle"
   | "bottom"

@@ -1,0 +1,81 @@
+/* Covers a locked item's box: hovering it reveals the unlock badge. */
+.pdf-editor-lock-zone {
+  position: absolute;
+  z-index: 30;
+  pointer-events: auto;
+  cursor: default;
+  border-radius: 2px;
+  outline: 1px solid transparent;
+  transition: outline-color 0.12s ease;
+}
+
+.pdf-editor-lock-zone:hover,
+.pdf-editor-lock-zone:focus-within {
+  outline-color: var(--c-border);
+}
+
+/* On the box's top-right corner, half outside it, so it reads as a tag on
+   the item rather than part of its content. Hidden until the box is hovered. */
+.pdf-editor-lock-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform: translate(50%, -50%) scale(0.85);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--c-border-subtle);
+  background: var(--c-surface);
+  color: var(--c-text-muted);
+  box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.18));
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.12s ease,
+    transform 0.12s ease,
+    background-color 0.12s ease,
+    color 0.12s ease;
+}
+
+.pdf-editor-lock-zone:hover .pdf-editor-lock-badge,
+.pdf-editor-lock-badge:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(50%, -50%) scale(1);
+}
+
+.pdf-editor-lock-badge:hover,
+.pdf-editor-lock-badge:focus-visible {
+  background: var(--c-primary);
+  border-color: var(--c-primary);
+  color: var(--c-text-on-primary);
+}
+
+.pdf-editor-lock-badge:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 2px;
+}
+
+/* The icon previews the action: closed at rest, open under the pointer. */
+.pdf-editor-lock-badge__open,
+.pdf-editor-lock-badge:hover .pdf-editor-lock-badge__locked,
+.pdf-editor-lock-badge:focus-visible .pdf-editor-lock-badge__locked {
+  display: none;
+}
+
+.pdf-editor-lock-badge:hover .pdf-editor-lock-badge__open,
+.pdf-editor-lock-badge:focus-visible .pdf-editor-lock-badge__open {
+  display: inline-block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pdf-editor-lock-zone,
+  .pdf-editor-lock-badge {
+    transition: none;
+  }
+}

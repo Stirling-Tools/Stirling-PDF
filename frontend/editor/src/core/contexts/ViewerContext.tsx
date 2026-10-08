@@ -299,6 +299,11 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     });
   }, []);
 
+  const setPdfRenderMode = useCallback((mode: PdfRenderMode) => {
+    preferencesService.setPreference("pdfRenderMode", mode);
+    setPdfRenderModeState(mode);
+  }, []);
+
   // State getters - read from bridge refs
   const getScrollState = useCallback((): ScrollState => {
     return (
@@ -560,6 +565,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
       // PDF page rendering mode
       pdfRenderMode,
       cyclePdfRenderMode,
+      setPdfRenderMode,
     }),
     [
       isThumbnailSidebarVisible,
@@ -620,6 +626,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
       setApplyChanges,
       pdfRenderMode,
       cyclePdfRenderMode,
+      setPdfRenderMode,
     ],
   );
 

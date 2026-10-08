@@ -34,30 +34,22 @@ export function PdfViewerToolbar({
   const {
     getScrollState,
     getZoomState,
-    getSpreadState,
     scrollActions,
     zoomActions,
-    spreadActions,
+    rotationActions,
     zoomRestorePendingRef,
     zoomRestoreSettledTick,
     registerImmediateZoomUpdate,
     registerImmediateScrollUpdate,
-    registerImmediateSpreadUpdate,
-    pdfRenderMode,
-    cyclePdfRenderMode,
   } = useViewer();
 
   const scrollState = getScrollState();
   const zoomState = getZoomState();
-  const spreadState = getSpreadState();
   const [pageInput, setPageInput] = useState(
     scrollState.currentPage || currentPage,
   );
   const [displayZoomPercent, setDisplayZoomPercent] = useState(
     () => zoomState.zoomPercent || 100,
-  );
-  const [isDualPageActive, setIsDualPageActive] = useState(
-    spreadState.isDualPage,
   );
 
   // Register for immediate scroll updates and sync with actual scroll state
@@ -93,16 +85,6 @@ export function PdfViewerToolbar({
     zoomRestoreSettledTick,
   ]);
 
-  useEffect(() => {
-    const unregister = registerImmediateSpreadUpdate((_mode, isDual) => {
-      setIsDualPageActive(isDual);
-    });
-    setIsDualPageActive(spreadState.isDualPage);
-    return () => {
-      unregister?.();
-    };
-  }, [registerImmediateSpreadUpdate, spreadState.isDualPage]);
-
   const handleZoomOut = () => {
     zoomActions.zoomOut();
   };
@@ -117,10 +99,6 @@ export function PdfViewerToolbar({
       onPageChange(page);
     }
     setPageInput(page);
-  };
-
-  const handleDualPageToggle = () => {
-    spreadActions.toggleSpreadMode();
   };
 
   const handleFirstPage = () => {
@@ -265,69 +243,42 @@ export function PdfViewerToolbar({
         <div className="pdf-viewer-toolbar__divider pdf-viewer-toolbar-wide-only" />
       )}
 
-      {/* Dual Page Toggle */}
+      {/* Rotate the view, beside the page controls it belongs with. */}
       {!isPhone && (
         <Tooltip
-          content={
-            isDualPageActive
-              ? t("viewer.singlePageView", "Single Page View")
-              : t("viewer.dualPageView", "Dual Page View")
-          }
+          content={t("viewer.rotateLeft", "Rotate left")}
           position="top"
           arrow
         >
           <ActionIcon
-            variant={isDualPageActive ? "primary" : "tertiary"}
+            variant="tertiary"
             size={buttonSize}
             className="pdf-viewer-toolbar-wide-only"
-            onClick={handleDualPageToggle}
-            disabled={scrollState.totalPages <= 1}
+            onClick={() => rotationActions.rotateBackward()}
             style={{ minWidth: buttonMinWidth }}
-            aria-label={
-              isDualPageActive
-                ? t("viewer.singlePageView", "Single Page View")
-                : t("viewer.dualPageView", "Dual Page View")
-            }
+            aria-label={t("viewer.rotateLeft", "Rotate left")}
+            data-testid="viewer-rotate-left"
           >
-            {isDualPageActive ? (
-              <Icon name="file-text" size={18} />
-            ) : (
-              <Icon name="columns-2" size={18} />
-            )}
+            <Icon name="rotate-ccw" size={18} />
           </ActionIcon>
         </Tooltip>
       )}
-
-      {/* PDF Render Mode Toggle */}
       {!isPhone && (
         <Tooltip
-          content={
-            pdfRenderMode === "normal"
-              ? t("viewer.enableDarkFilter", "Enable Dark Filter")
-              : pdfRenderMode === "dark"
-                ? t("viewer.enableSepiaFilter", "Enable Sepia Filter")
-                : t("viewer.disableColorFilter", "Disable Color Filter")
-          }
+          content={t("viewer.rotateRight", "Rotate right")}
           position="top"
           arrow
         >
           <ActionIcon
-            variant={pdfRenderMode !== "normal" ? "primary" : "tertiary"}
+            variant="tertiary"
             size={buttonSize}
             className="pdf-viewer-toolbar-wide-only"
-            onClick={cyclePdfRenderMode}
+            onClick={() => rotationActions.rotateForward()}
             style={{ minWidth: buttonMinWidth }}
-            aria-label={
-              pdfRenderMode === "normal"
-                ? t("viewer.enableDarkFilter", "Enable Dark Filter")
-                : pdfRenderMode === "dark"
-                  ? t("viewer.enableSepiaFilter", "Enable Sepia Filter")
-                  : t("viewer.disableColorFilter", "Disable Color Filter")
-            }
+            aria-label={t("viewer.rotateRight", "Rotate right")}
+            data-testid="viewer-rotate-right"
           >
-            {pdfRenderMode === "normal" && <Icon name="moon" size={18} />}
-            {pdfRenderMode === "dark" && <Icon name="sunset" size={18} />}
-            {pdfRenderMode === "sepia" && <Icon name="sun" size={18} />}
+            <Icon name="rotate-cw" size={18} />
           </ActionIcon>
         </Tooltip>
       )}
@@ -432,39 +383,18 @@ export function PdfViewerToolbar({
             </Menu.Item>
 
             <Menu.Divider />
-            <Menu.Label>{t("viewer.view", "View")}</Menu.Label>
+            <Menu.Label>{t("viewer.rotate", "Rotate")}</Menu.Label>
             <Menu.Item
-              leftSection={
-                isDualPageActive ? (
-                  <Icon name="file-text" size={18} />
-                ) : (
-                  <Icon name="columns-2" size={18} />
-                )
-              }
-              disabled={scrollState.totalPages <= 1}
-              onClick={handleDualPageToggle}
+              leftSection={<Icon name="rotate-ccw" size={18} />}
+              onClick={() => rotationActions.rotateBackward()}
             >
-              {isDualPageActive
-                ? t("viewer.singlePageView", "Single Page View")
-                : t("viewer.dualPageView", "Dual Page View")}
+              {t("viewer.rotateLeft", "Rotate left")}
             </Menu.Item>
             <Menu.Item
-              leftSection={
-                pdfRenderMode === "normal" ? (
-                  <Icon name="moon" size={18} />
-                ) : pdfRenderMode === "dark" ? (
-                  <Icon name="sunset" size={18} />
-                ) : (
-                  <Icon name="sun" size={18} />
-                )
-              }
-              onClick={cyclePdfRenderMode}
+              leftSection={<Icon name="rotate-cw" size={18} />}
+              onClick={() => rotationActions.rotateForward()}
             >
-              {pdfRenderMode === "normal"
-                ? t("viewer.enableDarkFilter", "Enable Dark Filter")
-                : pdfRenderMode === "dark"
-                  ? t("viewer.enableSepiaFilter", "Enable Sepia Filter")
-                  : t("viewer.disableColorFilter", "Disable Color Filter")}
+              {t("viewer.rotateRight", "Rotate right")}
             </Menu.Item>
           </Menu.Dropdown>
         </Menu>

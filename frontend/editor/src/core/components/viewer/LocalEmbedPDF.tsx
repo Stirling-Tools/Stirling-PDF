@@ -1,4 +1,6 @@
 import React, {
+  Suspense,
+  lazy,
   useCallback,
   useEffect,
   useImperativeHandle,
@@ -118,8 +120,14 @@ import { DocumentReadyWrapper } from "@app/components/viewer/DocumentReadyWrappe
 import ToolLoadingFallback from "@app/components/tools/ToolLoadingFallback";
 import { getLocalFontFallbackConfig } from "@app/services/pdfiumFontFallback";
 import { pdfiumWasmUrl } from "@app/services/wasmPrecompiler";
+import {
+  SharedDocumentRegistration,
+  sharedEngineEnabled,
+  useSharedPdfiumEngine,
+} from "@app/services/sharedPdfiumEngine";
 import { FormFieldOverlay } from "@app/tools/formFill/FormFieldOverlay";
 import { FormCreationInteractionLock } from "@app/tools/formFill/FormCreationInteractionLock";
+import { TextEditInteractionLock } from "@app/components/viewer/TextEditInteractionLock";
 import { FormFieldCreationOverlay } from "@app/tools/formFill/FormFieldCreationOverlay";
 import { FormFieldEditOverlay } from "@app/tools/formFill/FormFieldEditOverlay";
 import { ButtonAppearanceOverlay } from "@app/tools/formFill/ButtonAppearanceOverlay";
@@ -128,6 +136,15 @@ import { CommentsSidebar } from "@app/components/viewer/CommentsSidebar";
 import { CommentAuthorProvider } from "@app/contexts/CommentAuthorContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { accountService } from "@app/services/accountService";
+
+// Read once: the choice picks which engine hook runs, so it must not change
+// across renders.
+const USE_SHARED_ENGINE = sharedEngineEnabled();
+
+// The editor bundle only loads once text editing is switched on.
+const ViewerEditLayer = lazy(
+  () => import("@app/tools/pdfTextEditor/components/ViewerEditLayer"),
+);
 
 interface LocalEmbedPDFProps {
   file?: File | Blob;
@@ -138,6 +155,11 @@ interface LocalEmbedPDFProps {
   enableFormFill?: boolean;
   /** Structural create/modify overlays only mount while the Form tool owns the viewer. */
   formEditingActive?: boolean;
+  /**
+   * Workbench id of the file being text-edited, or null. While set, editable
+   * overlays sit on the pages and the viewer's own pointer input is paused.
+   */
+  textEditFileId?: string | null;
   isManualRedactionMode?: boolean;
   showBakedAnnotations?: boolean;
   onSignatureAdded?: (annotation: PdfAnnotationObject) => void;
@@ -402,6 +424,7 @@ interface PageLayerOptions {
   pdfRenderMode: PdfRenderMode;
   enableFormFill: boolean;
   formEditingActive: boolean;
+  textEditFileId: string | null;
   enableAnnotations: boolean;
   enableRedaction: boolean;
   showBakedAnnotations: boolean;
@@ -589,6 +612,7 @@ function PageLayers({
   pdfRenderMode,
   enableFormFill,
   formEditingActive,
+  textEditFileId,
   enableAnnotations,
   enableRedaction,
   showBakedAnnotations,
@@ -659,6 +683,15 @@ function PageLayers({
           pageHeight={height}
           {...signatureOverlay}
         />
+      )}
+      {textEditFileId && (
+        <Suspense fallback={null}>
+          <ViewerEditLayer
+            fileId={textEditFileId}
+            pageIndex={pageIndex}
+            width={width}
+          />
+        </Suspense>
       )}
     </>
   );
@@ -820,6 +853,7 @@ export function LocalEmbedPDF({
   enableRedaction = false,
   enableFormFill = false,
   formEditingActive = false,
+  textEditFileId = null,
   isManualRedactionMode = false,
   showBakedAnnotations = true,
   onSignatureAdded,
@@ -1231,10 +1265,13 @@ export function LocalEmbedPDF({
 
   const fontFallbackConfig = useMemo(() => getLocalFontFallbackConfig(), []);
 
-  const { engine, isLoading, error } = usePdfiumEngine({
-    wasmUrl: pdfiumWasmUrl,
-    fontFallback: fontFallbackConfig,
-  });
+  // oxlint-disable-next-line react-hooks/rules-of-hooks -- module constant
+  const { engine, isLoading, error } = USE_SHARED_ENGINE
+    ? useSharedPdfiumEngine(true, fontFallbackConfig)
+    : usePdfiumEngine({
+        wasmUrl: pdfiumWasmUrl,
+        fontFallback: fontFallbackConfig,
+      });
 
   const [engineTimeout, setEngineTimeout] = useState(false);
   useEffect(() => {
@@ -1417,6 +1454,7 @@ export function LocalEmbedPDF({
     pdfRenderMode,
     enableFormFill,
     formEditingActive,
+    textEditFileId,
     enableAnnotations,
     enableRedaction,
     showBakedAnnotations,
@@ -1474,6 +1512,7 @@ export function LocalEmbedPDF({
           <ScrollAPIBridge />
           <SelectionAPIBridge />
           <FormCreationInteractionLock />
+          <TextEditInteractionLock active={textEditFileId != null} />
           <PanAPIBridge />
           <SpreadAPIBridge />
           <SearchAPIBridge />
@@ -1507,6 +1546,12 @@ export function LocalEmbedPDF({
           >
             {(documentId) => (
               <>
+                {USE_SHARED_ENGINE && (
+                  <SharedDocumentRegistration
+                    documentId={documentId}
+                    fileId={(file as { fileId?: string } | undefined)?.fileId}
+                  />
+                )}
                 <DocumentViewport
                   documentId={documentId}
                   pageOptions={pageOptions}

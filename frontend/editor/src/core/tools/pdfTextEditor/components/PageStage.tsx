@@ -10,7 +10,7 @@ import {
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useEditorStore } from "@app/tools/pdfTextEditor/hooks/useEditorStore";
-import { ensurePageRead } from "@app/tools/pdfTextEditor/hooks/useDocumentLoader";
+import { usePageViewHandlers } from "@app/tools/pdfTextEditor/hooks/usePageViewHandlers";
 import { EditorTopBar } from "@app/tools/pdfTextEditor/components/EditorTopBar";
 import { MobileEditorTopBar } from "@app/tools/pdfTextEditor/components/MobileEditorTopBar";
 import { MobileActionBar } from "@app/tools/pdfTextEditor/components/MobileActionBar";
@@ -19,17 +19,11 @@ import { Button } from "@app/ui/Button";
 import { Icon } from "@app/ui/Icon";
 import { fitToWidthScale } from "@app/tools/pdfTextEditor/util/fitToWidth";
 import { FindBar } from "@app/tools/pdfTextEditor/components/FindBar";
+import "@app/tools/pdfTextEditor/components/FindBar.css";
 import { useToolbarController } from "@app/tools/pdfTextEditor/hooks/useToolbarController";
 import { ZoomPill } from "@app/tools/pdfTextEditor/components/ZoomPill";
 import { MarqueeSelector } from "@app/tools/pdfTextEditor/components/MarqueeSelector";
 import { PageView } from "@app/tools/pdfTextEditor/components/PageView";
-import { EditTextCommand } from "@app/tools/pdfTextEditor/commands/EditTextCommand";
-import { ReflowWrapCommand } from "@app/tools/pdfTextEditor/commands/ReflowWrapCommand";
-import { MoveShapeCommand } from "@app/tools/pdfTextEditor/commands/MoveShapeCommand";
-import { InsertTextCommand } from "@app/tools/pdfTextEditor/commands/InsertTextCommand";
-import { InsertTableCommand } from "@app/tools/pdfTextEditor/commands/InsertTableCommand";
-import { MoveTextRunCommand } from "@app/tools/pdfTextEditor/commands/MoveTextRunCommand";
-import { SetImageTransformCommand } from "@app/tools/pdfTextEditor/commands/SetImageTransformCommand";
 import type { SelectionState } from "@app/tools/pdfTextEditor/types";
 
 const DEFAULT_SCALE = 1.5;
@@ -81,6 +75,7 @@ export function PageStage() {
   // inspector derives from the same controller, so both surfaces read one
   // source of truth.
   const controller = useToolbarController(store, state, selection);
+  const handlers = usePageViewHandlers(store);
 
   const lastFitRef = useRef<{
     doc: object;
@@ -200,11 +195,13 @@ export function PageStage() {
     <Stack gap={0} h="100%" style={{ overflow: "hidden" }}>
       {topBar}
       {state.findOpen && state.hasDocument && (
-        <FindBar
-          store={store}
-          pages={state.pages}
-          onClose={() => store.setFindOpen(false)}
-        />
+        <div className="pdf-editor-findbar">
+          <FindBar
+            store={store}
+            pages={state.pages}
+            onClose={() => store.setFindOpen(false)}
+          />
+        </div>
       )}
       <Box
         pos="relative"
@@ -351,94 +348,7 @@ export function PageStage() {
                     selectedImageIds={selection.imageIds}
                     selectedShapeIds={selection.shapeIds}
                     highlightedRunId={highlightedRunId}
-                    onSelectRun={(runId, shiftKey) => {
-                      if (shiftKey) store.selection.toggle(runId);
-                      else store.selection.selectOne(runId);
-                    }}
-                    onSelectImage={(imageId) =>
-                      store.selection.selectImage(imageId)
-                    }
-                    onSelectShape={(shapeId, extend) => {
-                      if (extend) store.selection.toggleShape(shapeId);
-                      else store.selection.selectShape(shapeId);
-                    }}
-                    onMoveShape={(pageIndex, shapeId, dx, dy) => {
-                      store.dispatch(
-                        new MoveShapeCommand({ pageIndex, shapeId, dx, dy }),
-                      );
-                      store.selection.selectShape(shapeId);
-                    }}
-                    onEditRun={(pageIndex, runId, nextText) => {
-                      // contentEditable can fire several input events per
-                      // keystroke burst.
-                      const current = store.document
-                        ?.page(pageIndex)
-                        .findRun(runId);
-                      if (current && current.text === nextText) return;
-                      store.dispatch(
-                        new EditTextCommand({ pageIndex, runId, nextText }),
-                      );
-                    }}
-                    onMoveRun={(pageIndex, runId, dx, dy) => {
-                      store.dispatch(
-                        new MoveTextRunCommand({ pageIndex, runId, dx, dy }),
-                      );
-                    }}
-                    onWrapRun={(pageIndex, runId, maxWidthPt) => {
-                      store.dispatch(
-                        new ReflowWrapCommand({ pageIndex, runId, maxWidthPt }),
-                      );
-                    }}
-                    onResizeRun={(pageIndex, runId, widthPt) => {
-                      store.dispatch(
-                        new ReflowWrapCommand({
-                          pageIndex,
-                          runId,
-                          maxWidthPt: widthPt,
-                          explicit: true,
-                        }),
-                      );
-                    }}
-                    onPageClick={(pageIndex, pageX, pageY) => {
-                      if (state.mode === "addTable") {
-                        const cmd = new InsertTableCommand({
-                          pageIndex,
-                          x: pageX,
-                          y: pageY,
-                          width: 360,
-                          height: 24 * 3,
-                          rows: 3,
-                          cols: 3,
-                        });
-                        store.dispatch(cmd);
-                        store.setMode("select");
-                        return;
-                      }
-                      if (state.mode !== "addText") return;
-                      const cmd = new InsertTextCommand({
-                        pageIndex,
-                        x: pageX,
-                        y: pageY,
-                        text: "New text",
-                      });
-                      store.dispatch(cmd);
-                      if (cmd.insertedRunId) {
-                        store.selection.selectOne(cmd.insertedRunId);
-                      }
-                      store.setMode("select");
-                    }}
-                    onTransformImage={(pageIndex, imageId, nextBounds) => {
-                      store.dispatch(
-                        new SetImageTransformCommand({
-                          pageIndex,
-                          imageId,
-                          nextBounds,
-                        }),
-                      );
-                    }}
-                    onFirstVisible={(pageIndex) =>
-                      ensurePageRead(store, pageIndex)
-                    }
+                    {...handlers}
                     onFirstRendered={(pageIndex) => {
                       if (pageIndex === 0) store.markFirstPageRendered();
                     }}

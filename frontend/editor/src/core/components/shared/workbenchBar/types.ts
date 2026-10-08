@@ -20,4 +20,6 @@ export interface WorkbenchBarActionsProps {
   onPrint: () => void;
   onExport: (forceNewFile?: boolean) => void;
   onClose: () => void;
+  /** Replaces the close action's label, when closing means something else. */
+  closeLabel?: string;
 }

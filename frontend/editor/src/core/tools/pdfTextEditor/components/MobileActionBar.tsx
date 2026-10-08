@@ -1,8 +1,8 @@
 import { forwardRef, type ComponentPropsWithoutRef } from "react";
-import { Menu } from "@mantine/core";
+import { Popover } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Icon, type IconName } from "@app/ui/Icon";
-import { ArrangeMenuItems } from "@app/tools/pdfTextEditor/components/toolbar/ObjectGroup";
+import { ArrangePanel } from "@app/tools/pdfTextEditor/components/toolbar/ArrangePanel";
 import type { Controller } from "@app/tools/pdfTextEditor/components/toolbar/toolbarShared";
 import type { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
 import { useEditorSession } from "@app/tools/pdfTextEditor/store/EditorSession";
@@ -76,18 +76,18 @@ export function MobileActionBar({
             />
             {(controller.hasRunSelection || controller.hasImageSelection) && (
               <>
-                <Menu shadow="md" position="top" withinPortal closeOnItemClick>
-                  <Menu.Target>
+                <Popover shadow="md" position="top" withinPortal>
+                  <Popover.Target>
                     <BarButton
                       icon="layers"
                       label={t("pdfTextEditor.toolbar.arrange", "Arrange")}
                       data-testid="pdf-editor-arrange-menu"
                     />
-                  </Menu.Target>
-                  <Menu.Dropdown>
-                    <ArrangeMenuItems controller={controller} />
-                  </Menu.Dropdown>
-                </Menu>
+                  </Popover.Target>
+                  <Popover.Dropdown>
+                    <ArrangePanel controller={controller} />
+                  </Popover.Dropdown>
+                </Popover>
                 <BarButton
                   icon={controller.selectionAllLocked ? "lock" : "lock-open"}
                   label={

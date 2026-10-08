@@ -270,14 +270,14 @@
   background: var(--c-hover);
 }
 
-/* Pinned to the right edge of the tool row. */
-.workbench-bar-toolbar-handle-retract {
+/* Controls pinned to the right edge of the tool row. */
+.workbench-bar-row-end {
   position: absolute;
   right: 6px;
   top: 50%;
   transform: translateY(-50%);
-  width: 28px;
-  height: 28px;
+  display: flex;
+  align-items: center;
 }
 
 /* ---- Right: global buttons (print / download / save / close), row 1 ---- */

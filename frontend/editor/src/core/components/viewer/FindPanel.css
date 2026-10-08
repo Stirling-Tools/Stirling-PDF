@@ -1,0 +1,95 @@
+/* The look shared by the viewer's Search PDF and the text editor's Find and
+   replace: a titled panel whose query field carries its own match count,
+   with result navigation beside it. */
+.find-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 22rem;
+  max-width: calc(100vw - 32px);
+}
+
+.find-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.find-panel__title {
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.find-panel__row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.find-panel__row > .mantine-InputWrapper-root,
+.find-panel__row > .mantine-Input-wrapper {
+  flex: 1;
+  min-width: 0;
+}
+
+.find-panel__row--end {
+  justify-content: flex-end;
+}
+
+.find-panel__count {
+  padding-right: 8px;
+  font-size: var(--mantine-font-size-xs);
+  color: var(--c-text-muted);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.find-panel__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.find-panel__option {
+  padding: 3px 10px;
+  border: 1px solid var(--c-border-subtle);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--c-text-muted);
+  font: inherit;
+  font-size: var(--mantine-font-size-xs);
+  cursor: pointer;
+  transition:
+    background-color 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease;
+}
+
+.find-panel__option:hover {
+  background: var(--c-hover);
+  color: var(--c-text);
+}
+
+.find-panel__option[aria-pressed="true"] {
+  border-color: var(--c-primary);
+  background: var(--c-primary-subtle);
+  color: var(--c-primary);
+}
+
+.find-panel__option:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 2px;
+}
+
+.find-panel__divider {
+  height: 1px;
+  background: var(--c-border-subtle);
+}
+
+.find-panel__status {
+  margin-right: auto;
+  font-size: var(--mantine-font-size-xs);
+  color: var(--c-text-muted);
+}

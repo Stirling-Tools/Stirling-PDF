@@ -28,14 +28,16 @@ export default function WorkbenchBarDesktopActions({
   onPrint,
   onExport,
   onClose,
+  closeLabel: closeLabelOverride,
   enforcingProgress,
 }: WorkbenchBarDesktopActionsProps) {
   const { t } = useTranslation();
   const exportDisabled = actionsDisabled || policyEnforcing;
   const closeLabel =
-    currentView === "fileEditor" || currentView === "pageEditor"
+    closeLabelOverride ??
+    (currentView === "fileEditor" || currentView === "pageEditor"
       ? t("workbenchBar.closeAll", "Close All")
-      : t("workbenchBar.closePdf", "Close PDF");
+      : t("workbenchBar.closePdf", "Close PDF"));
 
   // Policy enforcement replaces the plain label with a "why is this blocked" card.
   const tooltipFor = (label: string): React.ReactNode =>

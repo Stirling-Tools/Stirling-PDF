@@ -52,6 +52,8 @@ export function useAutoLoadFile(
   hold: boolean,
   /** The editor's live state, so "is a document open" is asked, not remembered. */
   editor: EditorLoadState,
+  /** Editing on the viewer's pages: edit what the viewer shows, nothing else. */
+  followViewer = false,
 ): AutoLoad {
   const navigationState = useNavigationState();
   const { selectedFiles } = useFileSelection();
@@ -59,6 +61,14 @@ export function useAutoLoadFile(
   const { activeFileId } = useViewer();
 
   const autoLoadFile = useMemo(() => {
+    if (followViewer) {
+      // The viewer shows the first file until one is picked.
+      return (
+        allFiles.find((f) => (f as WorkbenchFile).fileId === activeFileId) ??
+        allFiles[0] ??
+        null
+      );
+    }
     // Prefer the open document while it is still selected so a reordering
     // selection cannot nudge the editor onto a different file.
     if (currentFileId) {
@@ -76,7 +86,7 @@ export function useAutoLoadFile(
     }
     if (allFiles.length === 1) return allFiles[0];
     return null;
-  }, [selectedFiles, activeFileId, allFiles, currentFileId]);
+  }, [selectedFiles, activeFileId, allFiles, currentFileId, followViewer]);
 
   // The open document left the workbench, so the editor is free to pick again.
   const documentGone =
@@ -114,8 +124,9 @@ export function useAutoLoadFile(
         (f) => (f as WorkbenchFile).fileId === currentFileId,
       );
       // Nothing to recover to: the file left the workbench, so fall through
-      // and pick a candidate the normal way.
-      if (same) {
+      // and pick a candidate the normal way. Following the viewer, the file
+      // on screen wins over the one last edited.
+      if (same && (!followViewer || same === autoLoadFile)) {
         if (editor.error && lastKeyRef.current === fileKey(same)) return;
         adopt(same);
         void load(same);
@@ -139,6 +150,7 @@ export function useAutoLoadFile(
     allFiles,
     currentFileId,
     load,
+    followViewer,
   ]);
 
   return useMemo(() => ({ openFile, adopt }), [openFile, adopt]);

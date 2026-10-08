@@ -1,10 +1,10 @@
 import { useRef } from "react";
 import { Popover } from "@mantine/core";
-import { Icon } from "@app/ui/Icon";
-import { Tooltip, type TooltipProps } from "@app/components/shared/Tooltip";
+import { useTranslation } from "react-i18next";
+import { type TooltipProps } from "@app/components/shared/Tooltip";
+import { BarButton } from "@app/components/viewer/ViewerBarControls";
 import { ScaleSettingsPanel } from "@app/components/viewer/ScaleSettingsPanel";
 import type { MeasureScale } from "@app/utils/measurementTypes";
-import { ActionIcon } from "@app/ui/ActionIcon";
 
 interface RulerScaleSettingsButtonProps {
   disabled?: boolean;
@@ -29,6 +29,7 @@ export function RulerScaleSettingsButton({
   onCancelCalibration,
   isCalibrationActive,
 }: RulerScaleSettingsButtonProps) {
+  const { t } = useTranslation();
   const scalePopoverRef = useRef<HTMLButtonElement>(null);
 
   return (
@@ -40,25 +41,26 @@ export function RulerScaleSettingsButton({
       withinPortal
     >
       <Popover.Target>
-        <div style={{ display: "inline-flex" }}>
-          <Tooltip
-            content={label}
-            position={tooltipPosition}
-            offset={12}
-            arrow
-            portalTarget={document.body}
-          >
-            <ActionIcon
-              ref={scalePopoverRef}
-              variant="primary"
-              className="workbench-bar-action-icon"
-              disabled={disabled}
-              aria-label={label}
-            >
-              <Icon name="settings" size={"1rem"} />
-            </ActionIcon>
-          </Tooltip>
-        </div>
+        <BarButton
+          ref={scalePopoverRef}
+          icon="ruler"
+          label={label}
+          hint={t(
+            "workbenchBar.rulerScaleHint",
+            "Set what distances on the page equal in real life, so the ruler measures in metres, feet and so on",
+          )}
+          disabled={disabled}
+          trailing={
+            <span className="viewer-bar-scale-value">
+              {currentScale
+                ? currentScale.ratio
+                  ? `1:${currentScale.ratio}`
+                  : currentScale.unit
+                : t("workbenchBar.rulerScaleUnset", "Not set")}
+            </span>
+          }
+          testId="viewer-ruler-scale"
+        />
       </Popover.Target>
       <Popover.Dropdown>
         <ScaleSettingsPanel
