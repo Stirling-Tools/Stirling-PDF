@@ -256,7 +256,7 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
         tooltip: labels.downloadSelected,
         ariaLabel: labels.downloadSelected,
         section: "middle" as const,
-        order: 40,
+        order: 29,
         disabled: !hasSelection || downloadingSelection,
         visible: hasPages,
         // One page has only one way to go out, so it skips the menu.
