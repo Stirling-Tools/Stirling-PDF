@@ -3228,7 +3228,6 @@ open = "Stirling yapay zekâ asistanını aç"
 
 [chat.header]
 agentMenu = "Stirling ajan seçenekleri"
-assistant = "Yapay Zekâ Asistanı"
 clearChat = "Sohbeti temizle"
 
 [chat.input]
