@@ -4588,7 +4588,6 @@ viewInViewer = "View in Viewer"
 closeFile = "Close file"
 
 [fileEditor]
-addFiles = "Add Files"
 closedFile = "Closed {{name}}"
 couldNotSave = "Could not save {{name}}"
 filesAdded_one = "Added {{count}} file"
@@ -4604,6 +4603,11 @@ savedAndClosed = "Saved and closed {{name}}"
 saveFailed = "Save failed"
 unpinnedFile = "Unpinned {{name}}"
 unzipping = "Unzipping {{name}}"
+
+[fileEditor.addCard]
+dropHint = "or drop files anywhere"
+fromComputer = "Upload from computer"
+moreOptions = "More upload options"
 
 [fileEditor.unzip]
 error = "Error unzipping {{name}}"
