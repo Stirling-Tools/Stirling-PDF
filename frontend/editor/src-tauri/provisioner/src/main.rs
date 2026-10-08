@@ -184,7 +184,12 @@ fn main() -> Result<(), String> {
     let mut merged = if output.exists() {
         let raw = fs::read_to_string(&output).map_err(|e| e.to_string())?;
         serde_json::from_str::<serde_json::Map<String, serde_json::Value>>(&raw)
-            .map_err(|e| format!("Failed to read existing provisioning data: {}", e))?
+            .map_err(|e| {
+                format!(
+                    "Cannot merge existing provisioning file {}: {e}. Back up this file and replace it with the complete intended policy, then retry the installation. Existing policy data has not been changed.",
+                    output.display()
+                )
+            })?
     } else {
         serde_json::Map::new()
     };

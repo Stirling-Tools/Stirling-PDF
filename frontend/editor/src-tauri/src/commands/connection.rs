@@ -283,7 +283,9 @@ fn load_provisioning(
 
     match parsed {
         Ok(config) => Ok(ProvisioningLoad::Ready(config)),
-        Err(reason) if provisioning_path_is_admin_owned(path, system_dir) => Err(reason),
+        Err(reason) if provisioning_path_is_admin_owned(path, system_dir) => {
+            Err(format!("{}: {reason}", path.display()))
+        }
         Err(reason) => {
             let parent = path
                 .parent()
@@ -320,9 +322,12 @@ pub fn apply_provisioning_if_present(app_handle: &AppHandle) -> Result<(), Strin
         provisioning_path.display()
     ));
 
-    let store = app_handle
-        .store(STORE_FILE)
-        .map_err(|e| format!("Failed to access store: {}", e))?;
+    let store = app_handle.store(STORE_FILE).map_err(|e| {
+        format!(
+            "Failed to access {STORE_FILE} while applying {}: {e}",
+            provisioning_path.display()
+        )
+    })?;
     let stored_cloud_only = store
         .get(CLOUD_ONLY_KEY)
         .or_else(|| store.get("saas_only"))
@@ -462,9 +467,12 @@ pub fn apply_provisioning_if_present(app_handle: &AppHandle) -> Result<(), Strin
         ));
     }
 
-    store
-        .save()
-        .map_err(|e| format!("Failed to save store: {}", e))?;
+    store.save().map_err(|e| {
+        format!(
+            "Failed to save {STORE_FILE} while applying {}: {e}",
+            provisioning_path.display()
+        )
+    })?;
 
     if let Ok(mut conn_state) = app_handle.state::<AppConnectionState>().0.lock() {
         if cloud_only {
@@ -665,7 +673,10 @@ mod tests {
             r#"{"cloudOnly":false,"saasOnly":true}"#,
         ] {
             fs::write(&path, input).unwrap();
-            assert!(load_provisioning(&path, Some(dir.path()), false).is_err());
+            let Err(message) = load_provisioning(&path, Some(dir.path()), false) else {
+                panic!("invalid machine provisioning must block startup");
+            };
+            assert!(message.contains(&path.display().to_string()));
             assert_eq!(fs::read_to_string(&path).unwrap(), input);
         }
     }
