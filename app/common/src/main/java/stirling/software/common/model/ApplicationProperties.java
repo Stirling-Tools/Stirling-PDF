@@ -1508,10 +1508,6 @@ public class ApplicationProperties {
         @Data
         public static class Signing {
             private boolean enabled = true;
-
-            // Signing user-picker scope: 'org' (default) = whole instance, anything else =
-            // caller's team only (fail-closed). The saas profile pins 'team'.
-            private String userListScope = "org";
         }
     }
 

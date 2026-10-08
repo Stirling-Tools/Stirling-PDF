@@ -232,14 +232,12 @@ import Power from "lucide-static/icons/power.svg?react";
 import Presentation from "lucide-static/icons/presentation.svg?react";
 import Printer from "lucide-static/icons/printer.svg?react";
 import Puzzle from "lucide-static/icons/puzzle.svg?react";
-import QrCode from "lucide-static/icons/qr-code.svg?react";
 import Receipt from "lucide-static/icons/receipt.svg?react";
 import ReceiptText from "lucide-static/icons/receipt-text.svg?react";
 import Recycle from "lucide-static/icons/recycle.svg?react";
 import Redo2 from "lucide-static/icons/redo-2.svg?react";
 import RefreshCw from "lucide-static/icons/refresh-cw.svg?react";
 import RefreshCwOff from "lucide-static/icons/refresh-cw-off.svg?react";
-import Replace from "lucide-static/icons/replace.svg?react";
 import Rocket from "lucide-static/icons/rocket.svg?react";
 import RotateCcw from "lucide-static/icons/rotate-ccw.svg?react";
 import RotateCcwClock from "lucide-static/icons/rotate-ccw-clock.svg?react";
@@ -337,7 +335,6 @@ import Volume2 from "lucide-static/icons/volume-2.svg?react";
 import Wallet from "lucide-static/icons/wallet.svg?react";
 import WalletCards from "lucide-static/icons/wallet-cards.svg?react";
 import Warehouse from "lucide-static/icons/warehouse.svg?react";
-import Waypoints from "lucide-static/icons/waypoints.svg?react";
 import WholeWord from "lucide-static/icons/whole-word.svg?react";
 import Workflow from "lucide-static/icons/workflow.svg?react";
 import Webhook from "lucide-static/icons/webhook.svg?react";
@@ -349,6 +346,7 @@ import ZoomOut from "lucide-static/icons/zoom-out.svg?react";
 
 import AnnotationOff from "@app/icons/svg/stirling/annotation-off.svg?react";
 import Api from "@app/icons/svg/stirling/api.svg?react";
+import Automate from "@app/icons/svg/stirling/automate.svg?react";
 import Cpu from "@app/icons/svg/stirling/cpu.svg?react";
 import Editor from "@app/icons/svg/stirling/editor.svg?react";
 import FileConvert from "@app/icons/svg/stirling/file-convert.svg?react";
@@ -369,8 +367,11 @@ import MoveItemDown from "@app/icons/svg/stirling/move-item-down.svg?react";
 import OverlayPages from "@app/icons/svg/stirling/overlay-pages.svg?react";
 import Password from "@app/icons/svg/stirling/password.svg?react";
 import Polyline from "@app/icons/svg/stirling/polyline.svg?react";
+import QrCode from "@app/icons/svg/stirling/qr-code.svg?react";
+import Redact from "@app/icons/svg/stirling/redact.svg?react";
 import RadioChecked from "@app/icons/svg/stirling/radio-checked.svg?react";
 import RemoveSelection from "@app/icons/svg/stirling/remove-selection.svg?react";
+import ReplaceText from "@app/icons/svg/stirling/replace-text.svg?react";
 import SelectAll from "@app/icons/svg/stirling/select-all.svg?react";
 import Sftp from "@app/icons/svg/stirling/sftp.svg?react";
 import SinglePage from "@app/icons/svg/stirling/single-page.svg?react";
@@ -659,14 +660,12 @@ export const ICONS = {
   presentation: { Component: Presentation, kind: "lucide" },
   printer: { Component: Printer, kind: "lucide" },
   puzzle: { Component: Puzzle, kind: "lucide" },
-  "qr-code": { Component: QrCode, kind: "lucide" },
   receipt: { Component: Receipt, kind: "lucide" },
   "receipt-text": { Component: ReceiptText, kind: "lucide" },
   recycle: { Component: Recycle, kind: "lucide" },
   "redo-2": { Component: Redo2, kind: "lucide" },
   "refresh-cw": { Component: RefreshCw, kind: "lucide" },
   "refresh-cw-off": { Component: RefreshCwOff, kind: "lucide" },
-  replace: { Component: Replace, kind: "lucide" },
   rocket: { Component: Rocket, kind: "lucide" },
   "rotate-ccw": { Component: RotateCcw, kind: "lucide" },
   "rotate-ccw-clock": { Component: RotateCcwClock, kind: "lucide" },
@@ -764,7 +763,6 @@ export const ICONS = {
   wallet: { Component: Wallet, kind: "lucide" },
   "wallet-cards": { Component: WalletCards, kind: "lucide" },
   warehouse: { Component: Warehouse, kind: "lucide" },
-  waypoints: { Component: Waypoints, kind: "lucide" },
   "whole-word": { Component: WholeWord, kind: "lucide" },
   workflow: { Component: Workflow, kind: "lucide" },
   webhook: { Component: Webhook, kind: "lucide" },
@@ -775,6 +773,7 @@ export const ICONS = {
   "zoom-out": { Component: ZoomOut, kind: "lucide" },
   "annotation-off": { Component: AnnotationOff, kind: "stirling" },
   api: { Component: Api, kind: "stirling" },
+  automate: { Component: Automate, kind: "stirling" },
   cpu: { Component: Cpu, kind: "stirling" },
   editor: { Component: Editor, kind: "stirling" },
   "file-convert": { Component: FileConvert, kind: "stirling" },
@@ -795,8 +794,11 @@ export const ICONS = {
   "overlay-pages": { Component: OverlayPages, kind: "stirling" },
   password: { Component: Password, kind: "stirling" },
   polyline: { Component: Polyline, kind: "stirling" },
+  "qr-code": { Component: QrCode, kind: "stirling" },
+  redact: { Component: Redact, kind: "stirling" },
   "radio-checked": { Component: RadioChecked, kind: "stirling" },
   "remove-selection": { Component: RemoveSelection, kind: "stirling" },
+  "replace-text": { Component: ReplaceText, kind: "stirling" },
   "select-all": { Component: SelectAll, kind: "stirling" },
   sftp: { Component: Sftp, kind: "stirling" },
   "single-page": { Component: SinglePage, kind: "stirling" },
