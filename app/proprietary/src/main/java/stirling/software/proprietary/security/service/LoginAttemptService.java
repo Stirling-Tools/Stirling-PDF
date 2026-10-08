@@ -2,9 +2,11 @@ package stirling.software.proprietary.security.service;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.stereotype.Service;
@@ -151,13 +153,12 @@ public class LoginAttemptService {
         if (!isBlockedEnabled) {
             return List.of();
         }
-        List<String> blocked = new ArrayList<>(blockedCache.asMap().keySet());
+        Set<String> blocked = new LinkedHashSet<>(blockedCache.asMap().keySet());
         attemptsCache.asMap().entrySet().stream()
                 .filter(entry -> entry.getValue().getAttemptCount() >= MAX_ATTEMPT)
                 .map(Map.Entry::getKey)
-                .filter(key -> !blocked.contains(key))
                 .forEach(blocked::add);
-        return blocked;
+        return new ArrayList<>(blocked);
     }
 
     public int getRemainingAttempts(String key) {
