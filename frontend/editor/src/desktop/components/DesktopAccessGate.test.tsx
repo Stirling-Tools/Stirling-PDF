@@ -1,4 +1,10 @@
-import { act, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
 import { MemoryRouter } from "react-router-dom";
@@ -204,3 +210,43 @@ it("does not grant access when policy loading fails", async () => {
   await screen.findByText("setup.error.policyUnavailable");
   expect(screen.queryByText("Workbench")).toBeNull();
 });
+
+it("notifies the parent when a failed policy load succeeds on retry", async () => {
+  state.getConfig.mockRejectedValue(new Error("Unreadable policy"));
+  const onConfigLoaded = vi.fn();
+  render(
+    <DesktopAccessGate onConfigLoaded={onConfigLoaded}>
+      Workbench
+    </DesktopAccessGate>,
+  );
+  await screen.findByText("setup.error.policyUnavailable");
+  expect(onConfigLoaded).not.toHaveBeenCalled();
+  const config = { mode: "saas", require_sign_in: true };
+  state.getConfig.mockResolvedValue(config);
+  fireEvent.click(screen.getByRole("button", { name: "common.retry" }));
+  await screen.findByText("Required sign-in");
+  expect(onConfigLoaded).toHaveBeenCalledWith(config);
+  expect(screen.queryByText("Workbench")).toBeNull();
+});
+
+it.each([false, undefined])(
+  "shows navigation for unmanaged configs with require_sign_in=%s",
+  async (required) => {
+    state.getConfig.mockResolvedValue({
+      mode: "local",
+      require_sign_in: required,
+    });
+    render(
+      <MemoryRouter>
+        <QuickNavHostProvider>
+          <QuickNavRailHost />
+          <DesktopAccessGate>
+            <WorkbenchWithNavigation />
+          </DesktopAccessGate>
+        </QuickNavHostProvider>
+      </MemoryRouter>,
+    );
+    await screen.findByRole("navigation", { name: "App navigation" });
+    expect(state.validate).not.toHaveBeenCalled();
+  },
+);

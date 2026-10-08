@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
 use tauri::{AppHandle, Manager, State};
+use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
 use tauri_plugin_store::StoreExt;
 
 const STORE_FILE: &str = "connection.json";
@@ -248,6 +249,60 @@ pub(crate) fn provisioning_path_is_admin_owned(
     }
 }
 
+enum ProvisioningLoad {
+    Ready(ProvisioningConfig),
+    Quarantined { backup: PathBuf, reason: String },
+}
+
+fn load_provisioning(
+    path: &std::path::Path,
+    system_dir: Option<&std::path::Path>,
+    stored_saas_only: bool,
+) -> Result<ProvisioningLoad, String> {
+    let parsed = fs::read_to_string(path)
+        .map_err(|err| format!("Failed to read provisioning file: {err}"))
+        .and_then(|raw| {
+            serde_json::from_str::<ProvisioningConfig>(&raw)
+                .map_err(|err| format!("Failed to parse provisioning file: {err}"))
+        })
+        .and_then(|config| {
+            if config.saas_only.unwrap_or(stored_saas_only)
+                && config
+                    .server_url
+                    .as_ref()
+                    .is_some_and(|url| !url.trim().is_empty())
+            {
+                Err("saasOnly cannot be combined with a self-hosted serverUrl".to_string())
+            } else {
+                Ok(config)
+            }
+        });
+
+    match parsed {
+        Ok(config) => Ok(ProvisioningLoad::Ready(config)),
+        Err(reason) if provisioning_path_is_admin_owned(path, system_dir) => Err(reason),
+        Err(reason) => {
+            let parent = path
+                .parent()
+                .ok_or("Provisioning file has no parent directory")?;
+            let backup = tempfile::Builder::new()
+                .prefix("stirling-provisioning.invalid-")
+                .suffix(".json")
+                .tempfile_in(parent)
+                .map_err(|err| format!("{reason}; failed to create recovery copy: {err}"))?;
+            fs::copy(path, backup.path())
+                .map_err(|err| format!("{reason}; failed to back up provisioning: {err}"))?;
+            let (_, backup) = backup
+                .keep()
+                .map_err(|err| format!("{reason}; failed to retain recovery copy: {err}"))?;
+            fs::remove_file(path)
+                .map_err(|err| format!("{reason}; failed to quarantine provisioning: {err}"))?;
+            Ok(ProvisioningLoad::Quarantined { backup, reason })
+        }
+    }
+}
+
+/// Reapplies machine policy before startup. Invalid per-user input is backed up before any settings change; machine or persistence errors abort startup.
 pub fn apply_provisioning_if_present(app_handle: &AppHandle) -> Result<(), String> {
     let provisioning_paths = provisioning_file_paths();
     let provisioning_path = provisioning_paths.into_iter().find(|path| path.exists());
@@ -262,28 +317,35 @@ pub fn apply_provisioning_if_present(app_handle: &AppHandle) -> Result<(), Strin
         provisioning_path.display()
     ));
 
-    let raw = fs::read_to_string(&provisioning_path)
-        .map_err(|e| format!("Failed to read provisioning file: {}", e))?;
-    let parsed: ProvisioningConfig = serde_json::from_str(&raw)
-        .map_err(|e| format!("Failed to parse provisioning file: {}", e))?;
-
     let store = app_handle
         .store(STORE_FILE)
         .map_err(|e| format!("Failed to access store: {}", e))?;
-    let saas_only = parsed.saas_only.unwrap_or_else(|| {
-        store
-            .get(SAAS_ONLY_KEY)
-            .and_then(|v| v.as_bool())
-            .unwrap_or(false)
-    });
-    if saas_only
-        && parsed
-            .server_url
-            .as_ref()
-            .is_some_and(|url| !url.trim().is_empty())
-    {
-        return Err("saasOnly cannot be combined with a self-hosted serverUrl".to_string());
-    }
+    let stored_saas_only = store
+        .get(SAAS_ONLY_KEY)
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
+    let parsed = match load_provisioning(
+        &provisioning_path,
+        system_provisioning_dir().as_deref(),
+        stored_saas_only,
+    )? {
+        ProvisioningLoad::Ready(config) => config,
+        ProvisioningLoad::Quarantined { backup, reason } => {
+            let message = format!(
+                "Your per-user provisioning file could not be applied. Existing settings have been kept.\n\n{reason}\n\nA recovery copy is saved at:\n{}\n\nCorrect that copy and save it as:\n{}\nThen restart Stirling PDF to apply it.",
+                backup.display(), provisioning_path.display()
+            );
+            add_log(message.clone());
+            app_handle
+                .dialog()
+                .message(message)
+                .title("Stirling PDF provisioning")
+                .kind(MessageDialogKind::Warning)
+                .show(|_| {});
+            return Ok(());
+        }
+    };
+    let saas_only = parsed.saas_only.unwrap_or(stored_saas_only);
 
     // Login agreement can be provisioned independently of a server URL so it also applies to
     // local, no-login desktop installs. Persist it before the server-URL handling below, which
@@ -565,6 +627,60 @@ pub async fn reset_setup_completion(app_handle: AppHandle) -> Result<(), String>
 mod tests {
     use super::*;
     use std::path::PathBuf;
+
+    #[test]
+    fn invalid_user_provisioning_is_preserved_for_recovery() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join(PROVISIONING_FILE_NAME);
+        for input in [
+            "{broken",
+            r#"{"saasOnly":true,"serverUrl":"https://example.org"}"#,
+        ] {
+            fs::write(&path, input).unwrap();
+            let ProvisioningLoad::Quarantined { backup, .. } =
+                load_provisioning(&path, None, false).unwrap()
+            else {
+                panic!("invalid per-user input must be quarantined");
+            };
+            assert_eq!(fs::read_to_string(backup).unwrap(), input);
+            assert!(!path.exists());
+        }
+    }
+
+    #[test]
+    fn invalid_machine_provisioning_fails_closed_without_moving_the_file() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join(PROVISIONING_FILE_NAME);
+        for input in [
+            "{broken",
+            r#"{"saasOnly":true,"serverUrl":"https://example.org"}"#,
+        ] {
+            fs::write(&path, input).unwrap();
+            assert!(load_provisioning(&path, Some(dir.path()), false).is_err());
+            assert_eq!(fs::read_to_string(&path).unwrap(), input);
+        }
+    }
+
+    #[test]
+    fn valid_provisioning_remains_available_for_application() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join(PROVISIONING_FILE_NAME);
+        fs::write(&path, r#"{"requireSignIn":true}"#).unwrap();
+        let ProvisioningLoad::Ready(config) = load_provisioning(&path, None, false).unwrap() else {
+            panic!("valid provisioning must be applied");
+        };
+        assert_eq!(config.require_sign_in, Some(true));
+        assert!(path.exists());
+    }
+
+    #[test]
+    fn unrecoverable_user_provisioning_fails_closed() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join(PROVISIONING_FILE_NAME);
+        fs::create_dir(&path).unwrap();
+        assert!(load_provisioning(&path, None, false).is_err());
+        assert!(path.exists());
+    }
 
     #[test]
     fn managed_sign_in_rejects_both_local_representations() {

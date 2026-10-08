@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { AppProviders as ProprietaryAppProviders } from "@proprietary/components/AppProviders";
 import { DesktopConfigSync } from "@app/components/DesktopConfigSync";
 import { DesktopQueryCacheReset } from "@app/components/DesktopQueryCacheReset";
@@ -20,6 +20,7 @@ import { DESKTOP_DEFAULT_APP_CONFIG } from "@app/config/defaultAppConfig";
 import {
   connectionModeService,
   JWT_EXPIRED_PROMPTED_KEY,
+  type ConnectionConfig,
 } from "@app/services/connectionModeService";
 import { STIRLING_SAAS_URL } from "@app/constants/connection";
 import { tauriBackendService } from "@app/services/tauriBackendService";
@@ -73,6 +74,13 @@ export function AppProviders({ children }: { children: ReactNode }) {
   // tree - that resets DesktopOnboardingModal mid-flow and re-shows the welcome slide.
   const lastAppliedMode = useRef<"saas" | "selfhosted" | "local" | null>(null);
 
+  const initializeConnectionMode = useCallback((config: ConnectionConfig) => {
+    if (hasLoadedInitialMode.current) return;
+    setConnectionMode(config.mode);
+    lastAppliedMode.current = config.mode;
+    hasLoadedInitialMode.current = true;
+  }, []);
+
   // Files dropped outside a dropzone must never navigate the webview to the
   // file (Linux WebKit renders the PDF fullscreen and orphans the app UI).
   // Dropzone-level handlers run before these window-level listeners, so
@@ -90,12 +98,8 @@ export function AppProviders({ children }: { children: ReactNode }) {
   // Load connection mode on mount and subscribe to future changes
   useEffect(() => {
     void connectionModeService
-      .getCurrentMode()
-      .then((mode) => {
-        setConnectionMode(mode);
-        lastAppliedMode.current = mode;
-        hasLoadedInitialMode.current = true;
-      })
+      .getCurrentConfig()
+      .then(initializeConnectionMode)
       .catch(() => setAuthChecked(true));
 
     const unsub = connectionModeService.subscribeToModeChanges((config) => {
@@ -118,9 +122,10 @@ export function AppProviders({ children }: { children: ReactNode }) {
       ) {
         setAppKey((k) => k + 1);
       }
+      hasLoadedInitialMode.current = true;
     });
     return unsub;
-  }, []);
+  }, [initializeConnectionMode]);
 
   useEffect(() => {
     // Wait until connection mode is loaded before checking auth
@@ -379,7 +384,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
         }}
       >
         <DesktopQueryCacheReset />
-        <DesktopAccessGate>
+        <DesktopAccessGate onConfigLoaded={initializeConnectionMode}>
           <SaaSTeamProvider key={appKey}>
             <DesktopConfigSync />
             <DesktopBannerInitializer />

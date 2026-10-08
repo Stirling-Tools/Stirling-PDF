@@ -1,10 +1,12 @@
 import { beforeEach, expect, it, vi } from "vitest";
 import { AuthService } from "@app/services/authService";
+import { AxiosError } from "axios";
 
 const state = vi.hoisted(() => ({
   invoke: vi.fn(),
   getConfig: vi.fn(),
   get: vi.fn(),
+  post: vi.fn(),
   allowSelfHosted: vi.fn(),
 }));
 vi.mock("@tauri-apps/api/core", () => ({
@@ -22,20 +24,28 @@ vi.mock("@app/services/connectionModeService", () => ({
 vi.mock("@app/services/tauriBackendService", () => ({
   tauriBackendService: {},
 }));
-vi.mock("@app/services/tauriHttpClient", () => ({ default: {} }));
+vi.mock("@app/services/tauriHttpClient", () => ({
+  default: { post: state.post },
+}));
 vi.mock("@app/constants/connection", () => ({
   STIRLING_SAAS_URL: "https://cloud.example.org",
   SUPABASE_KEY: "public-key",
   DESKTOP_DEEP_LINK_CALLBACK: "stirlingpdf://auth",
 }));
-vi.mock("axios", () => ({ default: { get: state.get } }));
+vi.mock("axios", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("axios")>();
+  return {
+    ...actual,
+    default: { ...actual.default, get: state.get, post: state.post },
+  };
+});
 
 function token(expiresIn: number) {
   return `header.${btoa(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + expiresIn }))}.signature`;
 }
 
 beforeEach(() => {
-  vi.clearAllMocks();
+  vi.resetAllMocks();
   localStorage.clear();
   state.getConfig.mockResolvedValue({
     mode: "saas",
@@ -44,6 +54,93 @@ beforeEach(() => {
   });
   state.invoke.mockResolvedValue(token(3600));
   state.get.mockResolvedValue({ data: { id: "user-id", is_anonymous: false } });
+});
+
+it.each(["saas", "selfhosted"])(
+  "retains verified %s access after refresh even if account validation goes offline",
+  async (mode) => {
+    const serverUrl =
+      mode === "saas"
+        ? "https://cloud.example.org"
+        : "https://self.example.org";
+    state.getConfig.mockResolvedValue({
+      mode,
+      server_config: { url: serverUrl },
+    });
+    state.get.mockResolvedValue({ data: { id: "user-id", username: "user" } });
+    const service = new AuthService();
+    expect(await service.hasManagedSession()).toBe(true);
+    const refreshed = token(7200);
+    state.post.mockResolvedValue({ data: { access_token: refreshed } });
+    state.get.mockRejectedValue(new AxiosError("Offline", "ERR_NETWORK"));
+    expect(
+      await (mode === "saas"
+        ? service.refreshSupabaseToken(serverUrl)
+        : service.refreshToken(serverUrl)),
+    ).toBe(true);
+    expect(await service.hasManagedSession()).toBe(true);
+    expect(state.get).toHaveBeenCalledTimes(1);
+  },
+);
+
+it("does not extend verification to a refresh from another server", async () => {
+  const service = new AuthService();
+  expect(await service.hasManagedSession()).toBe(true);
+  state.post.mockResolvedValue({ data: { access_token: token(7200) } });
+  await service.refreshToken("https://other.example.org");
+  state.get.mockRejectedValue(new AxiosError("Offline", "ERR_NETWORK"));
+  expect(await service.hasManagedSession()).toBe(false);
+});
+
+it("revalidates when the connection mode changes even at the same URL", async () => {
+  const service = new AuthService();
+  expect(await service.hasManagedSession()).toBe(true);
+  state.getConfig.mockResolvedValue({
+    mode: "selfhosted",
+    server_config: { url: "https://cloud.example.org" },
+  });
+  state.get.mockRejectedValue(new AxiosError("Offline", "ERR_NETWORK"));
+  expect(await service.hasManagedSession()).toBe(false);
+});
+
+it("retains an unexpired verified session when refreshing fails temporarily", async () => {
+  const service = new AuthService();
+  expect(await service.hasManagedSession()).toBe(true);
+  state.post.mockRejectedValue(new AxiosError("Offline", "ERR_NETWORK"));
+  expect(await service.refreshSupabaseToken("https://cloud.example.org")).toBe(
+    false,
+  );
+  expect(await service.hasManagedSession()).toBe(true);
+  expect(state.invoke).not.toHaveBeenCalledWith("clear_auth_token");
+});
+
+it("does not refresh or revoke a verified token before its actual expiry", async () => {
+  state.invoke.mockResolvedValue(token(20));
+  const service = new AuthService();
+  const refresh = vi.spyOn(service, "refreshSupabaseToken");
+  expect(await service.hasManagedSession()).toBe(true);
+  state.get.mockRejectedValue(new AxiosError("Offline", "ERR_NETWORK"));
+  expect(await service.hasManagedSession()).toBe(true);
+  expect(refresh).not.toHaveBeenCalled();
+});
+
+it("revokes verification after an explicit refresh rejection", async () => {
+  const service = new AuthService();
+  expect(await service.hasManagedSession()).toBe(true);
+  state.post.mockRejectedValue(
+    Object.assign(new AxiosError("Unauthorized"), {
+      response: { status: 401 },
+    }),
+  );
+  await service.refreshSupabaseToken("https://cloud.example.org");
+  expect(state.invoke).toHaveBeenCalledWith("clear_auth_token");
+  state.get.mockRejectedValue(new AxiosError("Offline", "ERR_NETWORK"));
+  expect(await service.hasManagedSession()).toBe(false);
+});
+
+it("does not admit an unverified session during a network failure", async () => {
+  state.get.mockRejectedValue(new AxiosError("Offline", "ERR_NETWORK"));
+  expect(await new AuthService().hasManagedSession()).toBe(false);
 });
 
 it("verifies a stored session against Cloud before admitting it", async () => {

@@ -1,4 +1,5 @@
 import { MultiSelect, Select } from "@mantine/core";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
 import { Icon } from "@app/ui/Icon";
@@ -49,6 +50,14 @@ export function LibraryToolbar({
 }: Props) {
   const { t } = useTranslation();
   const localOnly = useLocalProcessingOnly();
+  useEffect(() => {
+    if (
+      localOnly &&
+      (originFilter === "cloud" || originFilter === "shared-with-me")
+    ) {
+      setOriginFilter("all");
+    }
+  }, [localOnly, originFilter, setOriginFilter]);
   return (
     <>
       {!hideFilters &&

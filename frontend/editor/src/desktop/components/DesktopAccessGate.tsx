@@ -11,7 +11,14 @@ import {
 } from "@app/services/connectionModeService";
 
 /** Withholds the workbench and background file handlers until managed sign-in succeeds. */
-export function DesktopAccessGate({ children }: { children: ReactNode }) {
+export function DesktopAccessGate({
+  children,
+  onConfigLoaded,
+}: {
+  children: ReactNode;
+  /** Reinitializes the parent after a failed startup config read is retried. */
+  onConfigLoaded?: (config: ConnectionConfig) => void;
+}) {
   const { t } = useTranslation();
   const [config, setConfig] = useState<ConnectionConfig | null>(null);
   const [configError, setConfigError] = useState(false);
@@ -24,7 +31,7 @@ export function DesktopAccessGate({ children }: { children: ReactNode }) {
   useSuppressQuickNavRail(
     configError ||
       !config ||
-      (config.require_sign_in && (checking || !allowed)),
+      (config.require_sign_in === true && (checking || !allowed)),
   );
 
   useEffect(
@@ -44,6 +51,7 @@ export function DesktopAccessGate({ children }: { children: ReactNode }) {
         if (!cancelled) {
           setConfig(value);
           setConfigError(false);
+          onConfigLoaded?.(value);
         }
       })
       .catch(() => {
@@ -59,7 +67,7 @@ export function DesktopAccessGate({ children }: { children: ReactNode }) {
       cancelled = true;
       unsubscribe();
     };
-  }, [revision]);
+  }, [revision, onConfigLoaded]);
 
   useEffect(() => {
     if (!config?.require_sign_in) return;

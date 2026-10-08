@@ -28,9 +28,11 @@ Alternatively, deploy this file as an administrator to `%ProgramData%\Stirling-P
 }
 ```
 
-Keep that file writable only by administrators/system and readable by app users. It is retained and reapplied at every launch, including for existing profiles. Machine provisioning takes precedence over a file in the user's app-data directory. Restart the app after changing the policy.
+Keep that file writable only by administrators/system and readable by app users. It is retained and reapplied at every launch, including for existing profiles. While it exists, the per-user provisioning file is ignored and is not consumed; that pending file can apply if the machine file is later removed. Restart the app after changing the policy.
 
 The same JSON works at `/Library/Application Support/Stirling-PDF/stirling-provisioning.json` on macOS and `/etc/stirling-pdf/stirling-provisioning.json` on Linux. Per-user provisioning remains available for initial configuration, but its file is consumed after application and is not a durable machine policy.
+
+Invalid per-user provisioning is saved beside the original as `stirling-provisioning.invalid-*.json` before any settings change. A warning shows the recovery path and explains how to correct and reapply it; the app continues with existing settings. Invalid machine policy, a failed recovery backup, or a settings-store failure still prevents startup.
 
 ## Existing self-hosted deployments
 
@@ -45,7 +47,7 @@ To require sign-in to a particular self-hosted server:
 }
 ```
 
-`lockConnectionMode` retains its existing meaning: lock the configured server while allowing local fallback unless `requireSignIn` is also enabled. A JSON file combining `saasOnly: true` with a nonempty `serverUrl` is invalid and prevents startup. When the MSI sets SaaS-only, the provisioner removes any previous self-hosted URL and lock from its output.
+`lockConnectionMode` retains its existing meaning: lock the configured server while allowing local fallback unless `requireSignIn` is also enabled. A JSON file combining `saasOnly: true` with a nonempty `serverUrl` is invalid; machine provisioning with this conflict prevents startup. When the MSI sets SaaS-only, the provisioner removes any previous self-hosted URL and lock from its output.
 
 ## Document privacy
 
@@ -59,7 +61,7 @@ This is an application policy, not an operating-system firewall or DLP boundary.
 
 ## Session and policy lifecycle
 
-Managed access validates the account with the selected authentication server at launch and when the token changes. A token left over from a different server, an anonymous Cloud session, or an expired token that cannot refresh does not grant access. A verified, unexpired session can continue using local tools while offline; starting a new app session requires the authentication server to be reachable. This policy does not disable local processing for signed-in users.
+Managed access validates the account with the selected authentication server at launch and when the token changes. A successful authenticated refresh of a verified session retains its verification. A token left over from a different server, an anonymous Cloud session, or an expired token that cannot refresh does not grant access. A verified, unexpired session can continue using local tools while offline; temporary refresh failures retain access until token expiry, while authentication rejection revokes it. Starting a new app session requires the authentication server to be reachable. This policy does not disable local processing for signed-in users.
 
 Logout and session expiry return to the required sign-in screen. Previously completed onboarding and a saved local-mode preference cannot bypass the requirement. Policy read errors do not fall back to guest access.
 

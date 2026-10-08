@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
 import { SetupWizard } from "@app/components/SetupWizard";
@@ -7,31 +7,53 @@ const { getConfig } = vi.hoisted(() => ({ getConfig: vi.fn() }));
 vi.mock("@app/services/connectionModeService", () => ({
   connectionModeService: { getCurrentConfig: getConfig },
 }));
-vi.mock("@app/services/authService", () => ({ authService: {} }));
+vi.mock("@app/services/authService", () => ({
+  authService: {},
+  AuthServiceError: class extends Error {},
+}));
 vi.mock("@app/services/tauriBackendService", () => ({
   tauriBackendService: {},
 }));
 vi.mock("@tauri-apps/api/event", () => ({ listen: async () => () => {} }));
-vi.mock("@mantine/core", () => ({
-  Center: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  Loader: () => <div>Loading</div>,
+vi.mock("@mantine/core", () => {
+  const Container = ({ children }: { children: ReactNode }) => (
+    <div>{children}</div>
+  );
+  return {
+    Center: Container,
+    Stack: Container,
+    Text: Container,
+    Alert: Container,
+    Loader: () => <div>Loading</div>,
+  };
+});
+vi.mock("@app/ui/Button", () => ({
+  Button: ({
+    children,
+    onClick,
+  }: {
+    children: ReactNode;
+    onClick: () => void;
+  }) => <button onClick={onClick}>{children}</button>,
 }));
 vi.mock("@app/components/SetupWizard/DesktopAuthLayout", () => ({
-  DesktopAuthLayout: ({ children }: { children: ReactNode }) => children,
+  DesktopAuthLayout: ({ children }: { children: ReactNode }) => (
+    <div>{children}</div>
+  ),
 }));
 vi.mock("@app/components/SetupWizard/SaaSLoginScreen", () => ({
   SaaSLoginScreen: ({
-    onSelfHostedClick,
     onSkipSignIn,
+    onSelfHostedClick,
     onClose,
   }: {
-    onSelfHostedClick?: () => void;
     onSkipSignIn?: () => void;
+    onSelfHostedClick?: () => void;
     onClose?: () => void;
   }) => (
     <div>
-      Cloud sign-in{onSelfHostedClick && <button>Self-hosted</button>}
-      {onSkipSignIn && <button>Skip</button>}
+      Cloud sign-in{onSkipSignIn && <button>Skip</button>}
+      {onSelfHostedClick && <button>Self-hosted</button>}
       {onClose && <button>Close</button>}
     </div>
   ),
@@ -48,7 +70,6 @@ vi.mock("@app/components/SetupWizard/SelfHostedLoginScreen", () => ({
 vi.mock("@app/components/shared/DisabledButtonWithTooltip", () => ({
   DisabledButtonWithTooltip: () => null,
 }));
-vi.mock("@app/ui/Button", () => ({ Button: () => null }));
 
 beforeEach(() => getConfig.mockReset());
 
@@ -75,3 +96,23 @@ it.each([
     expect(!!screen.queryByRole("button", { name: "Close" })).toBe(!required);
   },
 );
+
+it("offers policy retries without showing unrestricted sign-in choices", async () => {
+  getConfig.mockRejectedValue(new Error("Store unavailable"));
+  const onComplete = vi.fn();
+  render(<SetupWizard onComplete={onComplete} />);
+  await screen.findByText("setup.error.policyUnavailable");
+  expect(screen.queryByText("Cloud sign-in")).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "common.retry" }));
+  await screen.findByText("setup.error.policyUnavailable");
+  getConfig.mockResolvedValue({
+    mode: "saas",
+    require_sign_in: true,
+    saas_only: true,
+  });
+  fireEvent.click(screen.getByRole("button", { name: "common.retry" }));
+  await screen.findByText("Cloud sign-in");
+  expect(screen.queryByRole("button", { name: "Skip" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Self-hosted" })).toBeNull();
+  expect(onComplete).not.toHaveBeenCalled();
+});

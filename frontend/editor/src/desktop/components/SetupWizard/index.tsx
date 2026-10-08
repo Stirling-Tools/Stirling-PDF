@@ -56,6 +56,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
   const [requireSignIn, setRequireSignIn] = useState(false);
   const [saasOnly, setSaasOnly] = useState(false);
   const [policyLoaded, setPolicyLoaded] = useState(false);
+  const [policyError, setPolicyError] = useState(false);
   const [lockedServerUnreachable, setLockedServerUnreachable] = useState(false);
   const [lockedServerChecking, setLockedServerChecking] = useState(false);
 
@@ -367,7 +368,14 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
   };
 
   const loadLockedConfig = useCallback(async () => {
-    const currentConfig = await connectionModeService.getCurrentConfig();
+    setPolicyError(false);
+    const currentConfig = await connectionModeService
+      .getCurrentConfig()
+      .catch(() => null);
+    if (!currentConfig) {
+      setPolicyError(true);
+      return;
+    }
     setRequireSignIn(currentConfig.require_sign_in ?? false);
     setSaasOnly(currentConfig.saas_only ?? false);
     setPolicyLoaded(true);
@@ -435,6 +443,23 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
   useEffect(() => {
     void loadLockedConfig();
   }, [loadLockedConfig]);
+
+  if (policyError)
+    return (
+      <Center py="xl">
+        <Stack>
+          <Text>
+            {t(
+              "setup.error.policyUnavailable",
+              "Unable to load your organisation's sign-in settings.",
+            )}
+          </Text>
+          <Button onClick={() => void loadLockedConfig()}>
+            {t("common.retry", "Retry")}
+          </Button>
+        </Stack>
+      </Center>
+    );
 
   if (!policyLoaded)
     return (
