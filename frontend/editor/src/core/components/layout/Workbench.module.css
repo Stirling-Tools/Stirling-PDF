@@ -87,8 +87,7 @@
   gap: 1rem;
   border: 2px dashed var(--c-border-strong);
   border-radius: 1rem;
-  /* Translucent so the workbench stays visible. Must stay in sync with
-     .file-sidebar-drop-overlay (FileSidebar.css). */
+  /* Translucent so the workbench stays visible. */
   background: color-mix(in srgb, var(--c-surface) 85%, transparent);
   backdrop-filter: blur(2px);
   color: var(--c-text);

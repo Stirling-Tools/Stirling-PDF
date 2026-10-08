@@ -116,40 +116,6 @@
 /* The footer is the shared <NavFooter>: it brings its own boxes and padding,
    so this class only positions it in the column. */
 
-/* ---- Native file drag-and-drop ---- */
-.file-sidebar[data-file-drag-over] {
-  outline: 2px dashed var(--c-border-strong);
-  outline-offset: -4px;
-}
-
-.file-sidebar-drop-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 20;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px;
-  text-align: center;
-  pointer-events: none;
-  /* Must stay in sync with the workbench drop overlay (Workbench.module.css). */
-  background: color-mix(in srgb, var(--c-surface) 85%, transparent);
-  backdrop-filter: blur(2px);
-}
-
-.file-sidebar-drop-overlay-icon {
-  color: var(--c-text-muted) !important;
-  font-size: 28px !important;
-}
-
-.file-sidebar-drop-overlay-text {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--c-text);
-}
-
 /* ---- Scrollable content ---- */
 /* This is a flex column - action rows are fixed, only the file list scrolls */
 .file-sidebar-scroll {

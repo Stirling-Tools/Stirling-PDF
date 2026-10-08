@@ -17,7 +17,10 @@ import styles from "@app/components/layout/Workbench.module.css";
 
 import WorkbenchBar from "@app/components/shared/WorkbenchBar";
 import { useWorkbenchTakeover } from "@app/components/layout/WorkbenchTakeover";
-import { useWorkbenchFileDrop } from "@app/components/layout/useWorkbenchFileDrop";
+import {
+  useIsWorkbenchFileDragOver,
+  useWorkbenchFileDrop,
+} from "@app/components/layout/useWorkbenchFileDrop";
 import { useTitleBarStrip } from "@app/contexts/TitleBarStripContext";
 import WorkbenchFloatingSearch from "@app/components/shared/WorkbenchFloatingSearch";
 import LandingPage from "@app/components/shared/LandingPage";
@@ -67,16 +70,13 @@ export default function Workbench() {
   const hasFiles = activeFiles.length > 0;
   const { t } = useTranslation();
 
-  // The whole canvas takes file drops, not just the content a view happens to
-  // render, so a short grid or a scrolled page still has somewhere to drop.
-  // These views are also where the landing page shows when nothing is open.
-  const acceptsFileDrops =
-    !takeover &&
-    (currentView === "fileEditor" ||
-      currentView === "viewer" ||
-      currentView === "pageEditor");
-  const { isFileDragOver, dropHandlers } =
-    useWorkbenchFileDrop(acceptsFileDrops);
+  // Every view takes file drops on the whole canvas, not just the content it
+  // happens to render. Views that do something of their own with a dropped file
+  // (the file library, the PDF text editor) stop the events reaching here.
+  // The file sidebar shares this drop target and its overlay.
+  const acceptsFileDrops = !takeover;
+  const dropHandlers = useWorkbenchFileDrop(acceptsFileDrops);
+  const isFileDragOver = useIsWorkbenchFileDragOver() && acceptsFileDrops;
 
   // The viewer's tool row can be retracted to give the document more height.
   // State lives here (not in WorkbenchBar) so the reopen tab can hang below the

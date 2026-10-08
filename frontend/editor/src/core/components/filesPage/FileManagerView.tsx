@@ -734,8 +734,15 @@ export default function FileManagerView() {
     const node = dropZoneRef.current;
     if (!node) return;
     let counter = 0;
-    const isExternalFileDrag = (e: DragEvent) =>
-      Array.from(e.dataTransfer?.types ?? []).includes("Files");
+    // Stops each event so the workbench's own drop target, which wraps this
+    // view, doesn't add the same files again outside the current folder.
+    const isExternalFileDrag = (e: DragEvent) => {
+      const external = Array.from(e.dataTransfer?.types ?? []).includes(
+        "Files",
+      );
+      if (external) e.stopPropagation();
+      return external;
+    };
 
     const onEnter = (e: DragEvent) => {
       if (!isExternalFileDrag(e)) return;
@@ -747,7 +754,8 @@ export default function FileManagerView() {
       if (!isExternalFileDrag(e)) return;
       e.preventDefault();
     };
-    const onLeave = () => {
+    const onLeave = (e: DragEvent) => {
+      if (!isExternalFileDrag(e)) return;
       counter -= 1;
       if (counter <= 0) {
         counter = 0;

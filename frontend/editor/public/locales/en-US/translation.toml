@@ -4726,7 +4726,6 @@ dataLostBody = "This browser lost this file's contents. Upload it again to keep 
 dataLostTitle = "File data is unavailable"
 downloadFailed = "Download failed"
 dropHint = "Open files to get started"
-dropToAdd = "Drop files to add"
 duplicateFailed = "Could not duplicate file"
 expand = "Expand sidebar"
 googleDrive = "Google Drive"
