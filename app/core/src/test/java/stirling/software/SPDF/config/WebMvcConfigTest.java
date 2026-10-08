@@ -292,6 +292,27 @@ class WebMvcConfigTest {
             assertThat(resolve("identity")).isNull();
         }
 
+        @Test
+        @DisplayName("honors an explicit brotli refusal and serves gzip")
+        void honorsExplicitBrotliRefusal() throws IOException {
+            writeVariants();
+            assertThat(resolve("br;q=0, gzip")).isEqualTo("gzip");
+        }
+
+        @Test
+        @DisplayName("serves the unencoded resource when the only listed coding is refused")
+        void servesPlainWhenOnlyListedCodingRefused() throws IOException {
+            writeVariants();
+            assertThat(resolve("br;q=0")).isNull();
+        }
+
+        @Test
+        @DisplayName("treats an unparseable quality value as listed")
+        void treatsInvalidQualityAsListed() throws IOException {
+            writeVariants();
+            assertThat(resolve("br;q=nope, gzip, br")).isEqualTo("br");
+        }
+
         private void writeVariants() throws IOException {
             Files.writeString(tempDir.resolve("app.js.br"), "br");
             Files.writeString(tempDir.resolve("app.js.gz"), "gz");

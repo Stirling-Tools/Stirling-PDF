@@ -150,7 +150,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
      * sent, and browsers list gzip before br, so the brotli siblings were never selected (Spring
      * Framework #37210). This applies the preference upstream is adopting in #37213 by asking a
      * single-coding resolver per coding; remove it when the pinned Spring version carries the fix.
-     * Quality factors are ignored, matching the upstream behavior.
+     * Quality factors do not reorder, matching the upstream behavior. The one exception is an
+     * explicit refusal (q=0, RFC 9110 section 12.5.3): a client that forbids a coding must get the
+     * next acceptable variant, never the forbidden bytes.
      */
     static final class PreferredEncodingResourceResolver implements ResourceResolver {
 
@@ -207,7 +209,25 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 return false;
             }
             for (String token : header.toLowerCase(Locale.ROOT).split(",")) {
-                if (token.split(";", 2)[0].trim().equals(coding)) {
+                String[] parts = token.split(";");
+                if (!parts[0].trim().equals(coding)) {
+                    continue;
+                }
+                // "br;q=0" lists the coding only to forbid it. A missing or
+                // unparseable qvalue keeps the historic lenient behavior.
+                boolean refused = false;
+                for (int i = 1; i < parts.length; i++) {
+                    String param = parts[i].trim();
+                    if (param.startsWith("q=")) {
+                        try {
+                            refused = Double.parseDouble(param.substring(2).trim()) == 0;
+                        } catch (NumberFormatException e) {
+                            // Invalid qvalue is not a refusal; stay lenient.
+                        }
+                        break;
+                    }
+                }
+                if (!refused) {
                     return true;
                 }
             }
