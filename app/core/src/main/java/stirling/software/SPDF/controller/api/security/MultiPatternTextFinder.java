@@ -132,20 +132,26 @@ final class MultiPatternTextFinder extends PDFTextStripper {
         // path below: Matcher.find() ignores interruption, so a timed-out caller must not hand the
         // slot on while the cancelled evaluation is still spinning, but a worker that never started
         // releases nothing on its own. The started flag keeps that backpressure: the caller
-        // releases only when the worker never ran. A start racing the cancel can still free the
-        // slot under a spinning orphan; releaseOnce keeps that to a single release.
+        // releases only when the worker never ran. A start racing the cancel is stopped by the
+        // cancel flag before find() runs, shrinking the orphan-with-freed-slot race to the
+        // check-then-find gap; releaseOnce still guards the release itself.
         AtomicBoolean started = new AtomicBoolean(false);
         AtomicBoolean released = new AtomicBoolean(false);
+        AtomicBoolean cancelRequested = new AtomicBoolean(false);
         Runnable releaseOnce =
                 () -> {
                     if (released.compareAndSet(false, true)) {
                         REGEX_SLOTS.release();
                     }
                 };
-        return runBounded(matcher, started, releaseOnce);
+        return runBounded(matcher, started, releaseOnce, cancelRequested);
     }
 
-    private static boolean runBounded(Matcher matcher, AtomicBoolean started, Runnable releaseOnce)
+    private static boolean runBounded(
+            Matcher matcher,
+            AtomicBoolean started,
+            Runnable releaseOnce,
+            AtomicBoolean cancelRequested)
             throws IOException {
         Future<Boolean> future;
         try {
@@ -155,6 +161,11 @@ final class MultiPatternTextFinder extends PDFTextStripper {
                                     () -> {
                                         started.set(true);
                                         try {
+                                            // A cancel that raced the start already released the
+                                            // slot below: do not run, just release once.
+                                            if (cancelRequested.get()) {
+                                                return false;
+                                            }
                                             return matcher.find();
                                         } finally {
                                             releaseOnce.run();
@@ -167,6 +178,7 @@ final class MultiPatternTextFinder extends PDFTextStripper {
         try {
             return future.get(REGEX_MATCH_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         } catch (TimeoutException e) {
+            cancelRequested.set(true);
             future.cancel(true);
             if (!started.get()) {
                 releaseOnce.run();
@@ -176,6 +188,7 @@ final class MultiPatternTextFinder extends PDFTextStripper {
                             + REGEX_MATCH_TIMEOUT_SECONDS
                             + "s — pattern may cause catastrophic backtracking");
         } catch (InterruptedException e) {
+            cancelRequested.set(true);
             future.cancel(true);
             if (!started.get()) {
                 releaseOnce.run();

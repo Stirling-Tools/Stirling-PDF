@@ -5,6 +5,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.config.MeterFilter;
@@ -27,7 +28,10 @@ public class MetricsConfig {
     // at most this many short keys are retained.
     static final int MAX_SESSION_URI_COMBINATIONS = 10_000;
 
+    // Denied-by-per-tag meters must not consume combination slots, so the per-tag ceilings run
+    // first and the combination ceiling last. Order across all four keeps it deterministic.
     @Bean
+    @Order(0)
     public MeterFilter meterFilter() {
         return new MeterFilter() {
             @Override
@@ -41,18 +45,21 @@ public class MetricsConfig {
     }
 
     @Bean
+    @Order(1)
     public MeterFilter httpRequestsSessionCardinalityCap() {
         return MeterFilter.maximumAllowableTags(
                 HTTP_REQUESTS, "session", MAX_SESSION_TAG_VALUES, MeterFilter.deny());
     }
 
     @Bean
+    @Order(2)
     public MeterFilter httpRequestsUriCardinalityCap() {
         return MeterFilter.maximumAllowableTags(
                 HTTP_REQUESTS, "uri", MAX_URI_TAG_VALUES, MeterFilter.deny());
     }
 
     @Bean
+    @Order(3)
     public MeterFilter httpRequestsCombinationCardinalityCap() {
         Set<String> admitted = ConcurrentHashMap.newKeySet();
         return new MeterFilter() {

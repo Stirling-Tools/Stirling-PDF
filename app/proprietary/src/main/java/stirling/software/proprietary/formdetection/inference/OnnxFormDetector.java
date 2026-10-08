@@ -138,15 +138,16 @@ public class OnnxFormDetector implements UnloadableModel {
                 OrtEnvironment env = OrtEnvironment.getEnvironment();
                 OrtSession.SessionOptions opts = new OrtSession.SessionOptions();
                 boolean retained = false;
+                OrtSession created = null;
                 try {
-                    opts.setIntraOpNumThreads(
-                            Math.max(1, Runtime.getRuntime().availableProcessors() / 2));
-                } catch (OrtException ignored) {
-                    // best-effort tuning
-                }
-                closeSession();
-                OrtSession created = env.createSession(file.toString(), opts);
-                try {
+                    try {
+                        opts.setIntraOpNumThreads(
+                                Math.max(1, Runtime.getRuntime().availableProcessors() / 2));
+                    } catch (OrtException ignored) {
+                        // best-effort tuning
+                    }
+                    closeSession();
+                    created = env.createSession(file.toString(), opts);
                     // Ownership transfers only after setup fully succeeds: a failure here must
                     // close the new session, not leave it open behind the old fields.
                     String name = created.getInputNames().iterator().next();
@@ -157,7 +158,9 @@ public class OnnxFormDetector implements UnloadableModel {
                 } finally {
                     if (!retained) {
                         try {
-                            created.close();
+                            if (created != null) {
+                                created.close();
+                            }
                         } finally {
                             opts.close();
                         }
