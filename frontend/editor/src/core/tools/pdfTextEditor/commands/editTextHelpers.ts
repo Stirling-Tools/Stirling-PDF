@@ -1038,7 +1038,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
       const ptrs: number[] = [];
       let cursor = opts.x;
       for (const pc of perChar) {
-        const ptr = m2.FPDFPageObj_CreateTextObj!(
+        const ptr = m2.FPDFPageObj_CreateTextObj(
           opts.doc.docPtr,
           pc.font,
           size,
@@ -1297,6 +1297,46 @@ export function measureObjRightEdgePt(
   try {
     if (!m.FPDFPageObj_GetBounds(objPtr, l, b, r, t)) return 0;
     return m.pdfium.getValue(r, "float");
+  } finally {
+    m.pdfium.wasmExports.free(l);
+    m.pdfium.wasmExports.free(b);
+    m.pdfium.wasmExports.free(r);
+    m.pdfium.wasmExports.free(t);
+  }
+}
+
+/**
+ * Full page-space box of an object, or null when it cannot be measured.
+ *
+ * A freshly emitted text object knows its baseline but not its ink extent, and
+ * every run READ from the page stores the ink bottom - so a run whose box was
+ * estimated instead of measured draws in the wrong place until something
+ * recaptures it.
+ */
+export function measureObjBoxPt(
+  m: WrappedPdfiumModule,
+  objPtr: number,
+): { x: number; y: number; width: number; height: number } | null {
+  const l = m.pdfium.wasmExports.malloc(4);
+  const b = m.pdfium.wasmExports.malloc(4);
+  const r = m.pdfium.wasmExports.malloc(4);
+  const t = m.pdfium.wasmExports.malloc(4);
+  try {
+    if (!m.FPDFPageObj_GetBounds(objPtr, l, b, r, t)) return null;
+    const left = m.pdfium.getValue(l, "float");
+    const bottom = m.pdfium.getValue(b, "float");
+    const right = m.pdfium.getValue(r, "float");
+    const top = m.pdfium.getValue(t, "float");
+    if (![left, bottom, right, top].every(Number.isFinite)) return null;
+    return {
+      x: Math.min(left, right),
+      y: Math.min(bottom, top),
+      width: Math.abs(right - left),
+      height: Math.abs(top - bottom),
+    };
+  } catch {
+    // Measuring is never worth failing the mutation that asked for it.
+    return null;
   } finally {
     m.pdfium.wasmExports.free(l);
     m.pdfium.wasmExports.free(b);

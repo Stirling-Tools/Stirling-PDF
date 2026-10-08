@@ -102,8 +102,8 @@ export async function uploadHistoryChains(
       leafStubs.push(finalStub);
     }
     for (const stub of chain) {
-      if (!seenIds.has(stub.id as FileId)) {
-        seenIds.add(stub.id as FileId);
+      if (!seenIds.has(stub.id)) {
+        seenIds.add(stub.id);
         combinedChain.push(stub);
       }
     }

@@ -167,17 +167,6 @@ export const AllTopBars: StoryObj = {
         />
       </Row>
 
-      <Row caption="Set as default app · DefaultAppBanner (desktop)">
-        <AppBanner
-          icon="file-text"
-          message="Make Stirling PDF your default application for opening PDF files."
-          buttonText="Set Default"
-          onButtonClick={() => {}}
-          secondaryButtonText="Don't remind me again"
-          onSecondaryButtonClick={() => {}}
-        />
-      </Row>
-
       <Row caption="Danger tone (available, no caller yet)">
         <AppBanner
           tone="danger"

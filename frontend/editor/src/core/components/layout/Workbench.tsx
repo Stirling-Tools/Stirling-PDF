@@ -12,7 +12,6 @@ import {
 } from "@app/contexts/NavigationContext";
 import { isBaseWorkbench } from "@app/types/workbench";
 import { VIEWER_SUPPORTED_EXTENSIONS } from "@app/utils/fileUtils";
-import { useSigningOverlay } from "@app/contexts/SigningOverlayContext";
 import { useIsPhone } from "@app/hooks/useIsMobile";
 import styles from "@app/components/layout/Workbench.module.css";
 
@@ -26,13 +25,13 @@ import { ChatFAB } from "@app/components/chat/ChatFAB";
 import { NotificationBell } from "@app/components/notifications/NotificationBell";
 
 // Workbench panels are loaded on demand. Viewer pulls in pdfjs-dist and the
-// full @embedpdf plugin set; FileEditor/PageEditor are only needed once a file
+// full @embedpdf plugin set; FileEditor/PageTracks are only needed once a file
 // is open. Lazy-loading keeps all of that out of the initial bundle.
-const FileEditor = lazy(() => import("@app/components/fileEditor/FileEditor"));
-const PageEditor = lazy(() => import("@app/components/pageEditor/PageEditor"));
-const PageEditorControls = lazy(
-  () => import("@app/components/pageEditor/PageEditorControls"),
+const SigningWorkspace = lazy(
+  () => import("@app/components/shared/signing/SigningWorkspace"),
 );
+const FileEditor = lazy(() => import("@app/components/fileEditor/FileEditor"));
+const PageTracks = lazy(() => import("@app/components/pageTracks/PageTracks"));
 const Viewer = lazy(() => import("@app/components/viewer/Viewer"));
 const FileManagerView = lazy(
   () => import("@app/components/filesPage/FileManagerView"),
@@ -50,17 +49,10 @@ export default function Workbench() {
   const { workbench: currentView } = useNavigationState();
   const { actions: navActions } = useNavigationActions();
   const setCurrentView = navActions.setWorkbench;
-  const {
-    previewFile,
-    pageEditorFunctions,
-    setPreviewFile,
-    setPageEditorFunctions,
-    customWorkbenchViews,
-    readerMode,
-  } = useToolWorkflow();
+  const { previewFile, setPreviewFile, customWorkbenchViews, readerMode } =
+    useToolWorkflow();
 
   const { handleToolSelect } = useToolWorkflow();
-  const { overlay: signingOverlay } = useSigningOverlay();
   // Below this width the rail, and the bell it carries, is gone.
   const isPhone = useIsPhone();
 
@@ -85,15 +77,15 @@ export default function Workbench() {
   const activeCustomView = customWorkbenchViews.find(
     (v) => v.workbenchId === currentView,
   );
-  const topControlsAvailable = !activeCustomView?.hideTopControls;
+  const topControlsAvailable =
+    currentView !== "signing" && !activeCustomView?.hideTopControls;
   const hasWorkbenchContent =
     hasFiles ||
     fileIds.length > 0 ||
     !isBaseWorkbench(currentView) ||
     // The library browses stored files, so it has content of its own with none open.
     currentView === "myFiles" ||
-    // Shared signing drives the viewer from the sidebar with no file in context.
-    (currentView === "viewer" && !!signingOverlay?.file);
+    currentView === "signing";
   // Reading hides the bar; the rail's Reader entry is the way back. A takeover hides
   // the switcher and search too: both navigate away from a flow that must finish.
   const showWorkbenchBar =
@@ -149,27 +141,12 @@ export default function Workbench() {
       }
     }
 
+    if (currentView === "signing") return <SigningWorkspace />;
+
     // The file-library workbench is available regardless of whether files are
     // currently loaded into the workbench - it lives on top of the IDB store.
     if (currentView === "myFiles") {
       return <FileManagerView />;
-    }
-
-    // Shared Signing drives the main viewer from the sidebar (document + overlays
-    // via context), ahead of the empty-state landing page.
-    if (currentView === "viewer" && signingOverlay?.file) {
-      return (
-        <Viewer
-          previewFile={signingOverlay.file}
-          signaturePreviews={signingOverlay.signaturePreviews}
-          signaturePreviewsReadOnly={signingOverlay.signaturePreviewsReadOnly}
-          signaturePlacementMode={signingOverlay.signaturePlacementMode}
-          signaturePlacementData={signingOverlay.signaturePlacementData}
-          signaturePlacementType={signingOverlay.signaturePlacementType}
-          onSignaturePreviewsChange={signingOverlay.onSignaturePreviewsChange}
-          signatureOverlayApiRef={signingOverlay.signatureOverlayApiRef}
-        />
-      );
     }
 
     if (activeFiles.length === 0) {
@@ -216,43 +193,7 @@ export default function Workbench() {
         );
 
       case "pageEditor":
-        return (
-          <div style={{ position: "relative", flex: "1 1 0", height: 0 }}>
-            <PageEditor onFunctionsReady={setPageEditorFunctions} />
-            {pageEditorFunctions && (
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  zIndex: 100,
-                }}
-              >
-                <PageEditorControls
-                  onClosePdf={pageEditorFunctions.closePdf}
-                  onUndo={pageEditorFunctions.handleUndo}
-                  onRedo={pageEditorFunctions.handleRedo}
-                  canUndo={pageEditorFunctions.canUndo}
-                  canRedo={pageEditorFunctions.canRedo}
-                  onRotate={pageEditorFunctions.handleRotate}
-                  onDelete={pageEditorFunctions.handleDelete}
-                  onSplit={pageEditorFunctions.handleSplit}
-                  onSplitAll={pageEditorFunctions.handleSplitAll}
-                  onPageBreak={pageEditorFunctions.handlePageBreak}
-                  onPageBreakAll={pageEditorFunctions.handlePageBreakAll}
-                  onExportAll={pageEditorFunctions.onExportAll}
-                  exportLoading={pageEditorFunctions.exportLoading}
-                  selectionMode={pageEditorFunctions.selectionMode}
-                  selectedPageIds={pageEditorFunctions.selectedPageIds}
-                  displayDocument={pageEditorFunctions.displayDocument}
-                  splitPositions={pageEditorFunctions.splitPositions}
-                  totalPages={pageEditorFunctions.totalPages}
-                />
-              </div>
-            )}
-          </div>
-        );
+        return <PageTracks />;
 
       default:
         return null;
@@ -263,7 +204,7 @@ export default function Workbench() {
     <Box
       className="flex-1 h-full min-w-0 relative flex flex-col"
       data-tour="workbench"
-      style={{ backgroundColor: "var(--c-bg)", minWidth: 0 }}
+      style={{ backgroundColor: "var(--c-bg)", minWidth: 0, minHeight: 0 }}
     >
       {/* Phone only: above that the rail carries the bell, and here no bar does. */}
       {isPhone && !showWorkbenchBar && topControlsAvailable && (
@@ -306,7 +247,7 @@ export default function Workbench() {
       <DismissAllErrorsButton />
 
       {/* Floating AI chat button + panel */}
-      {currentView !== "myFiles" && <ChatFAB />}
+      {currentView !== "myFiles" && currentView !== "signing" && <ChatFAB />}
 
       {/* Main content area */}
       <Box

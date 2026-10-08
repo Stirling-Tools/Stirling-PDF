@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { WithOrgOwner } from "@portal/test/WithOrgOwner";
 import { http, HttpResponse } from "msw";
 import { AccountLinkProvider } from "@portal/contexts/AccountLinkContext";
 import { AccountLinkPanel } from "@portal/components/account-link/AccountLinkPanel";
@@ -12,6 +13,7 @@ const meta: Meta<typeof AccountLinkPanel> = {
   component: AccountLinkPanel,
   parameters: { layout: "padded" },
   decorators: [
+    WithOrgOwner,
     (Story) => (
       <AccountLinkProvider>
         <Story />

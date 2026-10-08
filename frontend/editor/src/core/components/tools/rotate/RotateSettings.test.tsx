@@ -21,7 +21,10 @@ vi.mock("@app/contexts/NavigationContext", () => ({
 vi.mock("@app/contexts/FileContext", () => ({ useAllFiles: () => files }));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
-    t: (_key: string, fallback?: string) => fallback ?? _key,
+    t: (_key: string, fallback?: string, values?: Record<string, unknown>) =>
+      (fallback ?? _key).replace(/{{(\w+)}}/g, (_, name: string) =>
+        String(values?.[name] ?? ""),
+      ),
   }),
 }));
 

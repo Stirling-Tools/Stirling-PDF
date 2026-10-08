@@ -1,14 +1,14 @@
 # Stirling-PDF - Full version (embedded frontend)
 # Uses pre-built base image for fast builds
 
-ARG BASE_VERSION=1.0.6@sha256:003c1056474d4f9b8c38d3c8b72c78a7ac51b45e12500f831739a4cbf8803987
+ARG BASE_VERSION=1.1.0@sha256:3bcc8e10d5319b7c0550cf41b96f6980e1552c974dc37aba462b74fa17c4b5e4
 ARG BASE_IMAGE=stirlingtools/stirling-pdf-base:${BASE_VERSION}
 
 # Stage 1: Build the Java application and frontend
-FROM gradle:9.7.1-jdk25@sha256:eec96c1a66c66235f8d58d4fdb3ee3b9c52852d895001cc3183388fbf421ff42 AS app-build
+FROM gradle:9.7.1-jdk25@sha256:e06837018d077ee7f1218e53499425ca7615702ad58856d980c154caa17eb093 AS app-build
 
-ARG TASK_VERSION=3.52.0
-ARG NODE_MAJOR_VERSION=22
+ARG TASK_VERSION=3.54.0
+ARG NODE_MAJOR_VERSION=24
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl ca-certificates \
     && update-ca-certificates \
@@ -55,36 +55,35 @@ RUN gradle dependencies --no-daemon || true
 
 COPY . .
 
-ARG PROTOTYPES_BUILD=false
 ARG STIRLING_FLAVOR=proprietary
 ENV STIRLING_FLAVOR=${STIRLING_FLAVOR}
-# Embed the admin portal app at /portal. Set true by the deploy workflow when the
-# portal or AI layers change; defaults false so normal builds skip the extra app.
-ARG BUILD_PORTAL=false
+# Include the processor (admin portal) in the bundled editor; false leaves it out.
+ARG BUILD_PORTAL=true
 
 # Which Stirling account the portal connects to. Build-time because Vite inlines VITE_* into the
-# bundle; there is no runtime override. Empty leaves the committed .env.proprietary defaults, which
-# is what an ordinary image wants: no Stirling account and no connect flow. The publishable key is
-# client-side by design, not a secret. Pass the URL and the key from the same Supabase project or
-# the browser accepts the pair and Supabase rejects it, which surfaces later as "session expired".
+# bundle; there is no runtime override. Empty keeps the committed frontend .env defaults, which are
+# production Stirling, so a stock image links with no build args. Overriding VITE_SAAS_API_URL
+# also means setting STIRLING_BILLING_ACCOUNT_LINK_SAAS_BASE_URL on the container, or the browser
+# and the server link against different SaaS. The publishable key is client-side by design, not a
+# secret. Pass the URL and the key from the same Supabase project or the browser accepts the pair
+# and Supabase rejects it, which surfaces later as "session expired".
 ARG VITE_SUPABASE_URL=""
 ARG VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY=""
 ARG VITE_SAAS_API_URL=""
 
 # Bundle only the JPDFium native for this image's target arch.
 ARG TARGETARCH
-# Exported only when non-empty: Vite reads process.env ahead of the .env files, so exporting an
-# empty value would blank the committed default rather than fall back to it.
+# Every ARG reaches RUN as an environment variable, empty ones included, and Vite lets any VITE_*
+# in process.env beat the .env files. Unset the empty ones or they blank the committed defaults.
 RUN JPDFIUM_PLATFORM="$([ "$TARGETARCH" = arm64 ] && echo linux-arm64 || echo linux-x64)" && \
-    if [ -n "${VITE_SUPABASE_URL}" ]; then export VITE_SUPABASE_URL="${VITE_SUPABASE_URL}"; fi; \
-    if [ -n "${VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY}" ]; then export VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY="${VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY}"; fi; \
-    if [ -n "${VITE_SAAS_API_URL}" ]; then export VITE_SAAS_API_URL="${VITE_SAAS_API_URL}"; fi; \
+    if [ -z "${VITE_SUPABASE_URL}" ]; then unset VITE_SUPABASE_URL; fi; \
+    if [ -z "${VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY}" ]; then unset VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY; fi; \
+    if [ -z "${VITE_SAAS_API_URL}" ]; then unset VITE_SAAS_API_URL; fi; \
     STIRLING_FLAVOR=${STIRLING_FLAVOR} \
     gradle clean build \
       -PbuildWithFrontend=true \
       -PbuildWithPortal=${BUILD_PORTAL} \
       -PjpdfiumPlatforms="$JPDFIUM_PLATFORM" \
-      -PprototypesMode=${PROTOTYPES_BUILD} \
       -PbundleOnnxRuntime=true \
       -x spotlessApply -x spotlessCheck -x test -x sonarqube \
       --no-daemon
@@ -148,7 +147,7 @@ RUN echo "${VERSION_TAG:-dev}" > /etc/stirling_version
 ENV VERSION_TAG=$VERSION_TAG \
     FORMDETECTION_PREINSTALLEDMODELDIR="/opt/stirling/preinstalled-models" \
     STIRLING_AOT_ENABLE="false" \
-    _JVM_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1PeriodicGCInterval=10000 -XX:G1PeriodicGCSystemLoadThreshold=0.0 -XX:+G1PeriodicGCInvokesConcurrent -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+ExplicitGCInvokesConcurrent -XX:ReservedCodeCacheSize=96m -Xss256k -XX:CICompilerCount=2 -Djdk.virtualThreadScheduler.maxPoolSize=4 -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true" \
+    _JVM_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/configs/heap_dumps -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1PeriodicGCInterval=10000 -XX:G1PeriodicGCSystemLoadThreshold=0.0 -XX:+G1PeriodicGCInvokesConcurrent -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+ExplicitGCInvokesConcurrent -XX:ReservedCodeCacheSize=96m -XX:CICompilerCount=2 -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true" \
     JAVA_CUSTOM_OPTS="" \
     HOME=/home/stirlingpdfuser \
     PUID=1000 \

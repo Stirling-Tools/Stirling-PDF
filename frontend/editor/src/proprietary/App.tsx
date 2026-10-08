@@ -49,6 +49,39 @@ function ParticipantViewPage() {
   return <ParticipantView token={token} />;
 }
 
+function MainRoutes() {
+  return (
+    <Routes>
+      {/* Not the app: no rail over any of these, ever. */}
+      <Route element={<NoAppChrome />}>
+        <Route path="/login" element={<Login />} />
+        {/* Self-hosted has no signup: old links land on login. */}
+        <Route path="/signup" element={<Navigate to="/login" replace />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/invite/:token" element={<InviteAccept />} />
+        <Route path="/share/:token" element={<ShareLinkPage />} />
+      </Route>
+      {/* The editor and its tool routes - Landing handles auth logic */}
+      <Route path="/*" element={<Landing />} />
+    </Routes>
+  );
+}
+
+// All other routes need AppProviders for backend integration. RootGate routes
+// "/" by role before any of it mounts.
+function MainApp() {
+  return (
+    <RootGate>
+      <AppProviders>
+        <AppLayout>
+          <MainRoutes />
+          <Onboarding />
+        </AppLayout>
+      </AppProviders>
+    </RootGate>
+  );
+}
+
 export default function App() {
   return (
     <Suspense fallback={<LoadingFallback />}>
@@ -87,46 +120,7 @@ export default function App() {
         <Route element={<AppFrame />}>
           {/* The portal: its own shell, before the catch-all. An empty stub in core. */}
           {getAdminRouteExtensions()}
-
-          {/* All other routes need AppProviders for backend integration. RootGate
-              routes "/" by role before any of it mounts. */}
-          <Route
-            path="*"
-            element={
-              <RootGate>
-                <AppProviders>
-                  <AppLayout>
-                    <Routes>
-                      {/* Not the app: no rail over any of these, ever. */}
-                      <Route element={<NoAppChrome />}>
-                        <Route path="/login" element={<Login />} />
-                        {/* Self-hosted has no signup: old links land on login. */}
-                        <Route
-                          path="/signup"
-                          element={<Navigate to="/login" replace />}
-                        />
-                        <Route
-                          path="/auth/callback"
-                          element={<AuthCallback />}
-                        />
-                        <Route
-                          path="/invite/:token"
-                          element={<InviteAccept />}
-                        />
-                        <Route
-                          path="/share/:token"
-                          element={<ShareLinkPage />}
-                        />
-                      </Route>
-                      {/* The editor and its tool routes - Landing handles auth logic */}
-                      <Route path="/*" element={<Landing />} />
-                    </Routes>
-                    <Onboarding />
-                  </AppLayout>
-                </AppProviders>
-              </RootGate>
-            }
-          />
+          <Route path="*" element={<MainApp />} />
         </Route>
       </Routes>
     </Suspense>
