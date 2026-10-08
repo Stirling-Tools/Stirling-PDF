@@ -27,6 +27,7 @@ import type {
 import { useViewer } from "@app/contexts/ViewerContext";
 import { LocalEmbedPDF } from "@app/components/viewer/LocalEmbedPDF";
 import { PdfViewerToolbar } from "@app/components/viewer/PdfViewerToolbar";
+import { usePageLabels } from "@app/components/viewer/hooks/usePageLabels";
 import { ThumbnailSidebar } from "@app/components/viewer/ThumbnailSidebar";
 import { BookmarkSidebar } from "@app/components/viewer/BookmarkSidebar";
 import { AttachmentSidebar } from "@app/components/viewer/AttachmentSidebar";
@@ -700,6 +701,7 @@ const EmbedPdfViewerContent = ({
     return undefined;
   }, [currentFile, effectiveFile, previewFile]);
 
+  const pageLabels = usePageLabels(effectiveFile?.file, bookmarkCacheKey);
   // Generate cache keys for all active files to enable preloading
   const allBookmarkCacheKeys = React.useMemo(() => {
     if (previewFile) {
@@ -1931,6 +1933,7 @@ const EmbedPdfViewerContent = ({
             <PdfViewerToolbar
               currentPage={scrollState.currentPage}
               totalPages={scrollState.totalPages}
+              pageLabels={pageLabels}
             />
           </div>
         </div>

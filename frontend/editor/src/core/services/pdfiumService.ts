@@ -1467,6 +1467,40 @@ export async function getMetadata(
   }
 }
 
+/**
+ * Page labels from the document's `/PageLabels` number tree, one entry per page
+ * in reading order (e.g. front matter "i","ii" then content "1","2").
+ */
+export async function getPageLabels(
+  data: ArrayBuffer | Uint8Array,
+  password?: string,
+): Promise<string[] | null> {
+  const m = await getPdfiumModule();
+  const docPtr = await openRawDocumentSafe(data, password);
+  try {
+    const pageCount = m.FPDF_GetPageCount(docPtr);
+    if (pageCount <= 0) return null;
+    const labels: string[] = [];
+    let hasLabel = false;
+    for (let i = 0; i < pageCount; i++) {
+      // Empty request returns the byte length including the NUL terminator.
+      const len = m.FPDF_GetPageLabel(docPtr, i, 0, 0);
+      if (len > 2) {
+        const buf = m.pdfium.wasmExports.malloc(len);
+        m.FPDF_GetPageLabel(docPtr, i, buf, len);
+        labels.push(readUtf16(m, buf, len));
+        m.pdfium.wasmExports.free(buf);
+        hasLabel = true;
+      } else {
+        labels.push("");
+      }
+    }
+    return hasLabel ? labels : null;
+  } finally {
+    closeDocAndFreeBuffer(m, docPtr);
+  }
+}
+
 export interface PdfiumSignatureFieldRect {
   pageIndex: number;
   x: number;

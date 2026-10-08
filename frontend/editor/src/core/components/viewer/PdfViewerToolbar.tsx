@@ -1,5 +1,12 @@
 import { useState, useEffect } from "react";
-import { Paper, Group, Menu, NumberInput, Slider } from "@mantine/core";
+import {
+  Paper,
+  Group,
+  Menu,
+  NumberInput,
+  Slider,
+  TextInput,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useIsPhone } from "@app/hooks/useIsMobile";
@@ -19,12 +26,15 @@ interface PdfViewerToolbarProps {
   currentPage?: number;
   totalPages?: number;
   onPageChange?: (page: number) => void;
+  /** Per-page labels from `/PageLabels`, index-aligned with the page order. */
+  pageLabels?: string[] | null;
 }
 
 export function PdfViewerToolbar({
   currentPage = 1,
   totalPages: _totalPages = 1,
   onPageChange,
+  pageLabels = null,
 }: PdfViewerToolbarProps) {
   const { t } = useTranslation();
   const isPhone = useIsPhone();
@@ -59,6 +69,27 @@ export function PdfViewerToolbar({
   const [isDualPageActive, setIsDualPageActive] = useState(
     spreadState.isDualPage,
   );
+
+  const hasPageLabels = !!pageLabels?.some((label) => label.length > 0);
+  // Mirrors the visible page as a label ("iv") when the document defines them,
+  // otherwise as a plain index. Kept separate from `pageInput` because a label
+  // is not a number and must survive intermediate (non-numeric) typing.
+  const [labelInput, setLabelInput] = useState("");
+
+  const currentPageLabel = hasPageLabels
+    ? (pageLabels?.[scrollState.currentPage - 1] ??
+      String(scrollState.currentPage))
+    : "";
+  const totalLabel = hasPageLabels
+    ? (pageLabels?.[scrollState.totalPages - 1] ??
+      String(scrollState.totalPages))
+    : String(scrollState.totalPages);
+
+  useEffect(() => {
+    if (hasPageLabels) {
+      setLabelInput(currentPageLabel);
+    }
+  }, [hasPageLabels, currentPageLabel]);
 
   // Register for immediate scroll updates and sync with actual scroll state
   useEffect(() => {
@@ -117,6 +148,38 @@ export function PdfViewerToolbar({
       onPageChange(page);
     }
     setPageInput(page);
+    // Show the destination label right away: the scroll plugin only mirrors a
+    // programmatic jump into its scroll state once the smooth scroll settles,
+    // so reading the label back from there would leave the field stale.
+    if (hasPageLabels) {
+      setLabelInput(pageLabels?.[page - 1] ?? String(page));
+    }
+  };
+
+  // Accepts either a label ("iv") or a plain page index, matching what the
+  // field shows; anything else reverts to the current page.
+  const handleLabelNavigation = (raw: string) => {
+    const value = raw.trim();
+    const lower = value.toLowerCase();
+    const byLabel =
+      value && pageLabels
+        ? pageLabels.findIndex((label) => label.toLowerCase() === lower)
+        : -1;
+    if (byLabel >= 0) {
+      handlePageNavigation(byLabel + 1);
+      return;
+    }
+    const page = Number(value);
+    if (
+      value.length > 0 &&
+      !isNaN(page) &&
+      page >= 1 &&
+      page <= scrollState.totalPages
+    ) {
+      handlePageNavigation(page);
+      return;
+    }
+    setLabelInput(currentPageLabel);
   };
 
   const handleDualPageToggle = () => {
@@ -148,6 +211,10 @@ export function PdfViewerToolbar({
   const inputWidth = Math.max(
     MIN_INPUT_WIDTH_PX,
     BASE_INPUT_WIDTH_PX + totalPagesDigits * PX_PER_DIGIT,
+  );
+  const labelInputWidth = Math.max(
+    MIN_INPUT_WIDTH_PX,
+    BASE_INPUT_WIDTH_PX + Math.max(1, labelInput.length) * PX_PER_DIGIT,
   );
 
   return (
@@ -195,31 +262,63 @@ export function PdfViewerToolbar({
       </ActionIcon>
 
       {/* Page Input */}
-      <NumberInput
-        value={pageInput}
-        onChange={(value) => {
-          const page = Number(value);
-          setPageInput(page);
-          if (!isNaN(page) && page >= 1 && page <= scrollState.totalPages) {
-            handlePageNavigation(page);
-          }
-        }}
-        min={1}
-        max={scrollState.totalPages}
-        hideControls
-        size="xs"
-        styles={{
-          input: {
-            width: inputWidth,
-            textAlign: "center",
-            fontWeight: 500,
-            fontSize: 13,
-            paddingLeft: 4,
-            paddingRight: 4,
-            boxSizing: "border-box",
-          },
-        }}
-      />
+      {hasPageLabels ? (
+        <TextInput
+          value={labelInput}
+          onChange={(event) => setLabelInput(event.currentTarget.value)}
+          onBlur={(event) => handleLabelNavigation(event.currentTarget.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              handleLabelNavigation(event.currentTarget.value);
+              event.currentTarget.blur();
+            }
+          }}
+          size="xs"
+          title={t("viewer.thumbnails.pageNumber", "Page {{page}}", {
+            page: labelInput || currentPageLabel,
+          })}
+          aria-label={t("viewer.thumbnails.pageNumber", "Page {{page}}", {
+            page: labelInput || currentPageLabel,
+          })}
+          styles={{
+            input: {
+              width: labelInputWidth,
+              textAlign: "center",
+              fontWeight: 500,
+              fontSize: 13,
+              paddingLeft: 4,
+              paddingRight: 4,
+              boxSizing: "border-box",
+            },
+          }}
+        />
+      ) : (
+        <NumberInput
+          value={pageInput}
+          onChange={(value) => {
+            const page = Number(value);
+            setPageInput(page);
+            if (!isNaN(page) && page >= 1 && page <= scrollState.totalPages) {
+              handlePageNavigation(page);
+            }
+          }}
+          min={1}
+          max={scrollState.totalPages}
+          hideControls
+          size="xs"
+          styles={{
+            input: {
+              width: inputWidth,
+              textAlign: "center",
+              fontWeight: 500,
+              fontSize: 13,
+              paddingLeft: 4,
+              paddingRight: 4,
+              boxSizing: "border-box",
+            },
+          }}
+        />
+      )}
 
       <span
         style={{
@@ -228,7 +327,7 @@ export function PdfViewerToolbar({
           color: "var(--c-text-subtle)",
         }}
       >
-        / {scrollState.totalPages}
+        / {totalLabel}
       </span>
 
       {/* Next Page Button */}
