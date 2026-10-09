@@ -14,10 +14,15 @@ const cache = new Map<string, string[] | null>();
  *
  * `documentKey` must identify the bytes rather than the workbench record: a
  * disk reload under an unchanged file id has to invalidate the cached labels.
+ *
+ * `enabled` defers the first read until the viewer has opened the document.
+ * Reading labels copies the whole file into PDFium's wasm heap, so racing it
+ * against the viewer's own read of the same bytes delays the initial paint.
  */
 export function usePageLabels(
   file: File | Blob | null | undefined,
   documentKey: string | undefined,
+  enabled = true,
 ): string[] | null {
   const [labels, setLabels] = useState<string[] | null>(() =>
     documentKey ? (cache.get(documentKey) ?? null) : null,
@@ -33,6 +38,7 @@ export function usePageLabels(
       setLabels(cached);
       return;
     }
+    if (!enabled) return;
     setLabels(null);
     let cancelled = false;
     void (async () => {
@@ -53,7 +59,7 @@ export function usePageLabels(
     return () => {
       cancelled = true;
     };
-  }, [file, documentKey]);
+  }, [file, documentKey, enabled]);
 
   return labels;
 }

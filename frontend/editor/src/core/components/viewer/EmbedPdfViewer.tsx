@@ -163,6 +163,7 @@ const EmbedPdfViewerContent = ({
     getSpreadState,
     getZoomState,
     registerImmediateZoomUpdate,
+    registerImmediateScrollUpdate,
     getRotationState,
     zoomRestorePendingRef,
     notifyZoomRestoreSettled,
@@ -182,6 +183,14 @@ const EmbedPdfViewerContent = ({
 
   const scrollState = getScrollState();
   const rotationState = getRotationState();
+
+  // The scroll bridge only reports once the document is open, so this doubles as
+  // the "safe to scan" signal that keeps the label read off the open path.
+  const [viewerDocumentReady, setViewerDocumentReady] = useState(false);
+  useEffect(
+    () => registerImmediateScrollUpdate(() => setViewerDocumentReady(true)),
+    [registerImmediateScrollUpdate],
+  );
 
   // Track initial rotation to detect changes
   const initialRotationRef = useRef<number | null>(null);
@@ -714,7 +723,11 @@ const EmbedPdfViewerContent = ({
     return undefined;
   }, [currentFile, effectiveFile, previewFile]);
 
-  const pageLabels = usePageLabels(effectiveFile?.file, bookmarkCacheKey);
+  const pageLabels = usePageLabels(
+    effectiveFile?.file,
+    bookmarkCacheKey,
+    viewerDocumentReady,
+  );
   // Generate cache keys for all active files to enable preloading
   const allBookmarkCacheKeys = React.useMemo(() => {
     if (previewFile) {
