@@ -30,17 +30,22 @@ type Step =
   | "sent";
 
 /** Reasons where a save attempt would only be in the way: the decision is already made. */
-const SKIPS_OFFER: CancelReason[] = ["switched_service", "temporary"];
+const SKIPS_OFFER: CancelReason[] = ["switched_service"];
 /** Reasons where writing to us beats a call: we need the details in words. */
 const MESSAGE_FIRST: CancelReason[] = ["missing_features", "not_working"];
+const SUPPORT_EMAIL = "support@stirlingpdf.com";
 
 /**
- * The in-app cancel flow: a required reason, at most one "before you go" step, then a confirm that
+ * The in-app cancel flow: an optional reason, at most one "before you go" step, then a confirm that
  * says what ends and when. Cancelling only schedules the end of the paid period; nothing stops
  * early and resuming is one click until then.
  *
+ * <p>The reason stays optional and the offer step says cancelling is still one step away: several
+ * US states and the UK forbid making a reason or a retention offer a condition of cancelling.
+ *
  * <p>Talking to us first never changes the plan. The call books through Calendly and the message
- * goes to the support inbox and Slack.
+ * goes to the churn Slack channel. If Stripe cannot be reached, the error offers an email support
+ * acts on, so a failed cancel never leaves the customer without a way out.
  */
 export function CancelSubscriptionModal({
   open,
@@ -80,6 +85,7 @@ export function CancelSubscriptionModal({
   const [states, setStates] = useState<SubscriptionState[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [cancelFailed, setCancelFailed] = useState(false);
   const finished = useRef(false);
 
   useEffect(() => {
@@ -92,6 +98,7 @@ export function CancelSubscriptionModal({
     setOfferShown(null);
     setMessage("");
     setError(null);
+    setCancelFailed(false);
     finished.current = false;
     trackCancellation("cancel_flow_opened", { products: renewing.join(",") });
     let cancelled = false;
@@ -155,14 +162,7 @@ export function CancelSubscriptionModal({
       value: "not_working",
       label: t(
         "portal.billing.cancel.reason.notWorking",
-        "Something isn't working",
-      ),
-    },
-    {
-      value: "too_complex",
-      label: t(
-        "portal.billing.cancel.reason.tooComplex",
-        "It's too hard to set up or use",
+        "It isn't working well for us",
       ),
     },
     {
@@ -170,20 +170,6 @@ export function CancelSubscriptionModal({
       label: t(
         "portal.billing.cancel.reason.switching",
         "We're switching to another tool",
-      ),
-    },
-    {
-      value: "temporary",
-      label: t(
-        "portal.billing.cancel.reason.temporary",
-        "We only needed it for a project",
-      ),
-    },
-    {
-      value: "support",
-      label: t(
-        "portal.billing.cancel.reason.support",
-        "Support didn't solve our problem",
       ),
     },
     {
@@ -197,10 +183,7 @@ export function CancelSubscriptionModal({
     Boolean(onLowerSpendLimit) &&
     products.includes("processor") &&
     (reason === "too_expensive" || reason === "unused");
-  const canContinue =
-    scope != null &&
-    reason != null &&
-    (reason !== "other" || detail.trim().length > 0);
+  const canContinue = scope != null;
 
   function close() {
     if (!finished.current && step !== "done" && step !== "sent") {
@@ -210,10 +193,13 @@ export function CancelSubscriptionModal({
   }
 
   function next() {
-    if (!canContinue || !reason) return;
-    trackCancellation("cancel_reason_selected", { reason, scope });
+    if (!canContinue) return;
+    trackCancellation("cancel_reason_selected", {
+      reason: reason ?? "none",
+      scope,
+    });
     setError(null);
-    setStep(SKIPS_OFFER.includes(reason) ? "confirm" : "offer");
+    setStep(reason && SKIPS_OFFER.includes(reason) ? "confirm" : "offer");
   }
 
   function takeOffer(offer: "call" | "message" | "spend_limit") {
@@ -230,28 +216,33 @@ export function CancelSubscriptionModal({
   }
 
   async function confirm() {
-    if (!scope || !reason) return;
+    if (!scope) return;
     setBusy(true);
     setError(null);
+    setCancelFailed(false);
     try {
       const next = await cancelSubscription({
         product: scope,
-        reason,
+        reason: reason ?? undefined,
         detail: detail.trim() || undefined,
         competitor: competitor.trim() || undefined,
         offerShown: offerShown ?? undefined,
       });
       setStates(next);
-      trackCancellation("cancel_confirmed", { reason, scope });
+      trackCancellation("cancel_confirmed", {
+        reason: reason ?? "none",
+        scope,
+      });
       setStep("done");
       onChanged(next);
     } catch {
       setError(
         t(
           "portal.billing.cancel.error.cancel",
-          "We couldn't cancel just now. Nothing has changed. Please try again.",
+          "We couldn't cancel just now. Nothing has changed yet.",
         ),
       );
+      setCancelFailed(true);
     } finally {
       setBusy(false);
     }
@@ -403,6 +394,18 @@ export function CancelSubscriptionModal({
       </>
     );
 
+  const cancelMailto = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(
+    t("portal.billing.cancel.error.mailSubject", "Please cancel my {{name}}", {
+      name: scopeName,
+    }),
+  )}&body=${encodeURIComponent(
+    t(
+      "portal.billing.cancel.error.mailBody",
+      "Please cancel my {{name}} at the end of the current billing period. The in-app cancel didn't work.",
+      { name: scopeName },
+    ),
+  )}`;
+
   const usersOver = Math.max(
     0,
     wallet.team.usersInUse - wallet.freeUserAllowance,
@@ -461,7 +464,7 @@ export function CancelSubscriptionModal({
             <legend className="portal-cancel__legend">
               {t(
                 "portal.billing.cancel.reason.label",
-                "Why are you cancelling?",
+                "Why are you cancelling? (optional)",
               )}
             </legend>
             <RadioGroup
@@ -476,7 +479,7 @@ export function CancelSubscriptionModal({
             <FormField
               label={t(
                 "portal.billing.cancel.competitor",
-                "Which tool are you moving to?",
+                "Which tool are you moving to? (optional)",
               )}
             >
               <Input
@@ -489,9 +492,8 @@ export function CancelSubscriptionModal({
           <FormField
             label={t(
               "portal.billing.cancel.detail",
-              "What would have made you stay?",
+              "What would have made you stay? (optional)",
             )}
-            required={reason === "other"}
           >
             <textarea
               className="portal-cancel__textarea"
@@ -506,6 +508,12 @@ export function CancelSubscriptionModal({
 
       {step === "offer" && (
         <>
+          <p className="portal-cancel__muted">
+            {t(
+              "portal.billing.cancel.offer.stillCancel",
+              "You can still cancel on the next step.",
+            )}
+          </p>
           <section className="portal-cancel__card">
             <h3 className="portal-cancel__card-title">
               {t("portal.billing.cancel.offer.talkTitle", "Talk to us first")}
@@ -659,7 +667,7 @@ export function CancelSubscriptionModal({
             {t(
               "portal.billing.cancel.done.ends",
               "Your {{name}} ends on {{date}}. Everything keeps working until then.",
-              { name: scopeName, date: endDate },
+              { name: scopeName, date: endDate, count: products.length },
             )}
           </p>
           {email && (
@@ -735,7 +743,23 @@ export function CancelSubscriptionModal({
         </div>
       )}
 
-      {error && <Banner tone="danger" title={error} />}
+      {error && (
+        <Banner
+          tone="danger"
+          title={error}
+          description={
+            cancelFailed ? (
+              <>
+                {t(
+                  "portal.billing.cancel.error.cancelFallback",
+                  "Try again, or email us and we'll cancel it for you:",
+                )}{" "}
+                <a href={cancelMailto}>{SUPPORT_EMAIL}</a>
+              </>
+            ) : undefined
+          }
+        />
+      )}
     </FlowModal>
   );
 }

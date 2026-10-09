@@ -8072,11 +8072,11 @@ title = "Prepay a year"
 
 [portal.billing.cancel]
 back = "Back"
-competitor = "Which tool are you moving to?"
+competitor = "Which tool are you moving to? (optional)"
 confirm = "Cancel {{name}}"
 continue = "Continue"
 continueCancelling = "Continue cancelling"
-detail = "What would have made you stay?"
+detail = "What would have made you stay? (optional)"
 finish = "Done"
 keep = "Keep my plan"
 resume = "Resume {{name}}"
@@ -8084,12 +8084,16 @@ stepLabel = "Step {{step}} of 3"
 
 [portal.billing.cancel.done]
 emailed = "We sent a confirmation to {{email}}. You can resume any time before the end date."
-ends = "Your {{name}} ends on {{date}}. Everything keeps working until then."
+ends_one = "Your {{name}} ends on {{date}}. Everything keeps working until then."
+ends_other = "Your {{name}} end on {{date}}. Everything keeps working until then."
 
 [portal.billing.cancel.error]
-cancel = "We couldn't cancel just now. Nothing has changed. Please try again."
+cancel = "We couldn't cancel just now. Nothing has changed yet."
+cancelFallback = "Try again, or email us and we'll cancel it for you:"
 contact = "Your message didn't send. Please try again, or email support@stirlingpdf.com."
 contactLimit = "You've already sent us three messages today. We'll be in touch."
+mailBody = "Please cancel my {{name}} at the end of the current billing period. The in-app cancel didn't work."
+mailSubject = "Please cancel my {{name}}"
 resume = "We couldn't resume just now. Please try again from Usage & Billing."
 
 [portal.billing.cancel.facts]
@@ -8118,6 +8122,7 @@ limitAction = "Set a limit"
 limitBody = "The Processor has no standing fee. With a low limit you only pay for what runs."
 limitTitle = "Lower your spend limit"
 message = "Send a message"
+stillCancel = "You can still cancel on the next step."
 talkBody = "A person on our team reads every message. If something is wrong, we would like the chance to fix it."
 talkTitle = "Talk to us first"
 
@@ -8127,14 +8132,11 @@ processor = "Processor"
 team = "Team plan"
 
 [portal.billing.cancel.reason]
-label = "Why are you cancelling?"
+label = "Why are you cancelling? (optional)"
 missingFeatures = "It's missing something we need"
-notWorking = "Something isn't working"
+notWorking = "It isn't working well for us"
 other = "Something else"
-support = "Support didn't solve our problem"
 switching = "We're switching to another tool"
-temporary = "We only needed it for a project"
-tooComplex = "It's too hard to set up or use"
 tooExpensive = "It costs too much"
 unused = "We don't use it enough"
 

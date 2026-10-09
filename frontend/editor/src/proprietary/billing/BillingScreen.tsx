@@ -503,16 +503,16 @@ export function BillingScreen({
                           </Button>
                         )}
                         {stillRenewing && onCancelSubscription && (
-                          <button
-                            type="button"
-                            className="billing-plan-end__cancel"
+                          <Button
+                            size="sm"
+                            variant="secondary"
                             onClick={onCancelSubscription}
                           >
                             {t(
                               "portal.billing.ends.cancel",
                               "Cancel subscription",
                             )}
-                          </button>
+                          </Button>
                         )}
                       </span>
                     </div>

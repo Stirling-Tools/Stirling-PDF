@@ -123,10 +123,7 @@ export type CancelReason =
   | "unused"
   | "missing_features"
   | "not_working"
-  | "too_complex"
   | "switched_service"
-  | "temporary"
-  | "support"
   | "other";
 
 /** One live Team or Processor subscription. */
@@ -154,7 +151,7 @@ export async function fetchSubscriptionStates(): Promise<SubscriptionState[]> {
 
 export async function cancelSubscription(req: {
   product: CancelScope;
-  reason: CancelReason;
+  reason?: CancelReason;
   detail?: string;
   competitor?: string;
   offerShown?: string;

@@ -60,6 +60,7 @@ class CancellationEdgeClientTest {
                         .change(
                                 "cancel",
                                 "cus_team",
+                                "Acme",
                                 List.of(new Target("team", "sub_team")),
                                 CancelReason.NOT_WORKING,
                                 "Exports fail",
@@ -71,9 +72,10 @@ class CancellationEdgeClientTest {
         assertThat(body)
                 .containsEntry("action", "cancel")
                 .containsEntry("customer", "cus_team")
+                .containsEntry("team_name", "Acme")
                 .containsEntry("feedback", "low_quality")
                 .containsEntry("reason", "not_working")
-                .containsEntry("reason_label", "Something isn't working")
+                .containsEntry("reason_label", "It isn't working well for us")
                 .containsEntry("comment", "Exports fail")
                 .containsEntry("notify_email", "alex@acme.example");
         assertThat(results).hasSize(1);
@@ -86,7 +88,14 @@ class CancellationEdgeClientTest {
         assertThatThrownBy(
                         () ->
                                 client(false)
-                                        .change("cancel", "cus_team", List.of(), null, null, null))
+                                        .change(
+                                                "cancel",
+                                                "cus_team",
+                                                null,
+                                                List.of(),
+                                                null,
+                                                null,
+                                                null))
                 .extracting(e -> ((CancellationException) e).status())
                 .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
         verifyNoInteractions(rest);
@@ -99,6 +108,7 @@ class CancellationEdgeClientTest {
                                         .change(
                                                 "resume",
                                                 "cus_team",
+                                                null,
                                                 List.of(new Target("team", "sub_team")),
                                                 null,
                                                 null,

@@ -169,7 +169,7 @@
   border-top: 1px solid var(--c-border-subtle);
 }
 
-/* Quiet on purpose: cancelling is always reachable from here, never promoted. */
+/* A real button, not a quiet link: several US states require cancelling to be prominent. */
 .billing-plan-end {
   display: flex;
   flex-wrap: wrap;
@@ -191,23 +191,6 @@
   align-items: center;
   gap: 0.875rem;
   margin-left: auto;
-}
-
-.billing-plan-end__cancel {
-  min-height: 2.75rem;
-  padding: 0;
-  font: inherit;
-  font-size: 0.8125rem;
-  color: var(--c-text-muted);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  cursor: pointer;
-  background: none;
-  border: none;
-}
-
-.billing-plan-end__cancel:hover {
-  color: var(--c-text);
 }
 
 .billing-meter {

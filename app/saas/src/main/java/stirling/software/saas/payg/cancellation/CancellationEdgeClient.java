@@ -48,6 +48,7 @@ public class CancellationEdgeClient {
     public List<Result> change(
             String action,
             String customerId,
+            String teamName,
             List<Target> targets,
             CancelReason reason,
             String comment,
@@ -59,6 +60,7 @@ public class CancellationEdgeClient {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("action", action);
         body.put("customer", customerId);
+        if (teamName != null) body.put("team_name", teamName);
         body.put(
                 "subscriptions",
                 targets.stream()

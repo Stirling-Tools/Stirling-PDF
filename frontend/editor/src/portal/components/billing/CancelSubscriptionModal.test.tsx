@@ -97,24 +97,49 @@ describe("Cancel subscription", () => {
     api.contactBeforeCancelling.mockResolvedValue(undefined);
   });
 
-  it("won't continue until the product and a reason are chosen", async () => {
+  it("needs only the product: the reason is optional", async () => {
     await open(both);
-    expect(button("Continue")).toBeDisabled();
-    fireEvent.click(radio("It costs too much"));
     expect(button("Continue")).toBeDisabled();
     fireEvent.click(radio("Team plan"));
     expect(button("Continue")).toBeEnabled();
   });
 
-  it("needs words when the reason is 'Something else'", async () => {
+  it("cancels without a reason, saying cancelling is still one step away", async () => {
     await open(teamOnly);
-    fireEvent.click(radio("Something else"));
-    expect(button("Continue")).toBeDisabled();
-    fireEvent.change(
-      screen.getByRole("textbox", { name: "What would have made you stay?" }),
-      { target: { value: "Budget freeze" } },
+    fireEvent.click(button("Continue"));
+    expect(
+      screen.getByText("You can still cancel on the next step."),
+    ).toBeInTheDocument();
+    fireEvent.click(button("Continue cancelling"));
+    fireEvent.click(button("Cancel Team plan"));
+    await waitFor(() =>
+      expect(api.cancelSubscription).toHaveBeenCalledWith(
+        expect.objectContaining({ product: "team", reason: undefined }),
+      ),
     );
-    expect(button("Continue")).toBeEnabled();
+  });
+
+  it("offers an email support acts on when the cancel fails", async () => {
+    api.cancelSubscription.mockRejectedValue(
+      new HttpError(502, "Bad Gateway", { error: "stripe_unavailable" }),
+    );
+    await open(teamOnly);
+    fireEvent.click(radio("We're switching to another tool"));
+    fireEvent.click(button("Continue"));
+    fireEvent.click(button("Cancel Team plan"));
+    expect(
+      await screen.findByText(
+        "We couldn't cancel just now. Nothing has changed yet.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "support@stirlingpdf.com" }),
+    ).toHaveAttribute(
+      "href",
+      expect.stringMatching(
+        /^mailto:support@stirlingpdf\.com\?subject=Please%20cancel%20my%20Team%20plan&body=/,
+      ),
+    );
   });
 
   it("offers a conversation once, then cancels at the end of the period", async () => {
@@ -151,7 +176,9 @@ describe("Cancel subscription", () => {
     await open(teamOnly);
     fireEvent.click(radio("We're switching to another tool"));
     fireEvent.change(
-      screen.getByRole("textbox", { name: "Which tool are you moving to?" }),
+      screen.getByRole("textbox", {
+        name: "Which tool are you moving to? (optional)",
+      }),
       { target: { value: "Acrobat" } },
     );
     fireEvent.click(button("Continue"));
@@ -192,7 +219,7 @@ describe("Cancel subscription", () => {
       new HttpError(429, "Too Many Requests", { error: "contact_limit" }),
     );
     await open(teamOnly);
-    fireEvent.click(radio("Something isn't working"));
+    fireEvent.click(radio("It isn't working well for us"));
     fireEvent.click(button("Continue"));
     fireEvent.click(button("Send a message"));
     fireEvent.change(

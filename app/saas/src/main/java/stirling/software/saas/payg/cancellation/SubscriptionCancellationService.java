@@ -78,10 +78,8 @@ public class SubscriptionCancellationService {
     }
 
     public List<SubscriptionView> cancel(long teamId, User actor, CancelRequest req) {
-        CancelReason reason =
-                CancelReason.fromCode(req.reason()).orElseThrow(() -> bad("reason_required"));
+        CancelReason reason = reason(req.reason());
         String detail = text(req.detail(), 2000);
-        if (reason == CancelReason.OTHER && detail == null) throw bad("detail_required");
         String competitor = text(req.competitor(), 200);
         String offerShown = text(req.offerShown(), 64);
         String comment =
@@ -90,16 +88,27 @@ public class SubscriptionCancellationService {
                         .collect(Collectors.joining("\n"));
         Map<String, SubscriptionState> live = live(teamId);
         List<CancellationEdgeClient.Target> targets = targets(scope(req.product()), live);
-        List<CancellationEdgeClient.Result> results =
-                edge.change(
-                        "cancel",
-                        customer(teamId),
-                        targets,
-                        reason,
-                        comment.isEmpty()
-                                ? null
-                                : comment.substring(0, Math.min(500, comment.length())),
-                        actor.getEmail());
+        String customer = customer(teamId);
+        String team = teamName(teamId);
+        List<CancellationEdgeClient.Result> results;
+        try {
+            results =
+                    edge.change(
+                            "cancel",
+                            customer,
+                            team,
+                            targets,
+                            reason,
+                            comment.isEmpty()
+                                    ? null
+                                    : comment.substring(0, Math.min(500, comment.length())),
+                            actor.getEmail());
+        } catch (CancellationException e) {
+            if (e.status().is5xxServerError()) {
+                reportFailedCancel(teamId, team, actor, req.product(), reason, e.code());
+            }
+            throw e;
+        }
         for (CancellationEdgeClient.Result r : results) {
             if (r.changed()) {
                 record(
@@ -124,6 +133,7 @@ public class SubscriptionCancellationService {
                 edge.change(
                         "resume",
                         customer(teamId),
+                        teamName(teamId),
                         targets(scope(product), live),
                         null,
                         null,
@@ -167,7 +177,7 @@ public class SubscriptionCancellationService {
         }
 
         Map<String, SubscriptionState> live = live(teamId);
-        String team = teamRepository.findById(teamId).map(Team::getName).orElse("Team " + teamId);
+        String team = teamName(teamId);
         String quoted =
                 ChurnAlertPoster.escape(message)
                         .lines()
@@ -179,7 +189,7 @@ public class SubscriptionCancellationService {
                         + " (team "
                         + teamId
                         + ") wants to talk before cancelling their "
-                        + (TEAM.equals(product) ? "Team plan" : "Processor")
+                        + productLabel(product)
                         + ".\nPlan: "
                         + plan(teamId, live)
                         + "\nReason: "
@@ -204,6 +214,47 @@ public class SubscriptionCancellationService {
                 null,
                 null,
                 null);
+    }
+
+    /**
+     * The dialog tells the leader to try again or email us, and this makes sure the team sees it
+     * too, so a cancel that never reached Stripe is still honoured.
+     */
+    private void reportFailedCancel(
+            long teamId,
+            String team,
+            User actor,
+            String product,
+            CancelReason reason,
+            String code) {
+        alerts.post(
+                "*Cancel failed:* "
+                        + ChurnAlertPoster.escape(team)
+                        + " (team "
+                        + teamId
+                        + ") tried to cancel their "
+                        + productLabel(product)
+                        + " and Stripe could not be reached ("
+                        + code
+                        + "). Cancel it by hand at the end of the period and let "
+                        + ChurnAlertPoster.escape(actor.getEmail())
+                        + " know.\nReason: "
+                        + (reason == null ? "Not given" : reason.label()));
+    }
+
+    private static CancelReason reason(String code) {
+        if (code == null || code.isBlank()) return null;
+        return CancelReason.fromCode(code).orElseThrow(() -> bad("reason_invalid"));
+    }
+
+    private String teamName(long teamId) {
+        return teamRepository.findById(teamId).map(Team::getName).orElse("Team " + teamId);
+    }
+
+    private static String productLabel(String product) {
+        if (TEAM.equals(product)) return "Team plan";
+        if (PROCESSOR.equals(product)) return "Processor";
+        return "Team plan and Processor";
     }
 
     /** The team's live subscriptions by product, Team first. */

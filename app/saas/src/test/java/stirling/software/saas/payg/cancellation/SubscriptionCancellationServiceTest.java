@@ -113,7 +113,14 @@ class SubscriptionCancellationServiceTest {
     @Test
     @SuppressWarnings("unchecked")
     void cancellingSendsTheReasonAndLogsOnlyWhatChanged() {
-        when(edge.change(eq("cancel"), eq("cus_team"), anyList(), any(), anyString(), anyString()))
+        when(edge.change(
+                        eq("cancel"),
+                        eq("cus_team"),
+                        eq("Acme"),
+                        anyList(),
+                        any(),
+                        anyString(),
+                        anyString()))
                 .thenReturn(
                         List.of(
                                 new Result(
@@ -137,6 +144,7 @@ class SubscriptionCancellationServiceTest {
                 .change(
                         eq("cancel"),
                         eq("cus_team"),
+                        eq("Acme"),
                         targets.capture(),
                         eq(CancelReason.SWITCHED_SERVICE),
                         eq("Switching to: Acrobat\nBundled"),
@@ -156,24 +164,69 @@ class SubscriptionCancellationServiceTest {
     }
 
     @Test
-    void aCancelNeedsAReasonAndOtherNeedsWords() {
+    void theReasonIsOptional() {
+        when(edge.change(
+                        eq("cancel"),
+                        eq("cus_team"),
+                        eq("Acme"),
+                        anyList(),
+                        isNull(),
+                        isNull(),
+                        anyString()))
+                .thenReturn(
+                        List.of(
+                                new Result(
+                                        "team",
+                                        "sub_team",
+                                        "active",
+                                        true,
+                                        END.toString(),
+                                        END.toString(),
+                                        true)));
+
+        service.cancel(42, leader, new CancelRequest("team", null, " ", null, null));
+
+        assertThat(events())
+                .extracting(e -> e.get("ACTION") + ":" + e.get("REASON"))
+                .containsExactly("cancelled:null");
+    }
+
+    @Test
+    void anUnknownReasonIsRefused() {
         assertThatThrownBy(
                         () ->
                                 service.cancel(
                                         42,
                                         leader,
-                                        new CancelRequest("team", null, null, null, null)))
+                                        new CancelRequest("team", "temporary", null, null, null)))
                 .extracting(e -> ((CancellationException) e).code())
-                .isEqualTo("reason_required");
-        assertThatThrownBy(
-                        () ->
-                                service.cancel(
-                                        42,
-                                        leader,
-                                        new CancelRequest("team", "other", " ", null, null)))
-                .extracting(e -> ((CancellationException) e).code())
-                .isEqualTo("detail_required");
+                .isEqualTo("reason_invalid");
         verifyNoInteractions(edge);
+    }
+
+    @Test
+    void aCancelThatNeverReachedStripeIsReportedToTheTeam() {
+        when(edge.change(any(), any(), any(), anyList(), any(), any(), any()))
+                .thenThrow(new CancellationException(HttpStatus.BAD_GATEWAY, "stripe_unavailable"));
+
+        assertThatThrownBy(
+                        () ->
+                                service.cancel(
+                                        42,
+                                        leader,
+                                        new CancelRequest(
+                                                "both", "too_expensive", null, null, null)))
+                .extracting(e -> ((CancellationException) e).code())
+                .isEqualTo("stripe_unavailable");
+
+        ArgumentCaptor<String> text = ArgumentCaptor.forClass(String.class);
+        verify(alerts).post(text.capture());
+        assertThat(text.getValue())
+                .contains("*Cancel failed:* Acme (team 42)")
+                .contains("cancel their Team plan and Processor")
+                .contains("alex@acme.example")
+                .contains("Reason: It costs too much");
+        assertThat(events()).isEmpty();
     }
 
     @Test
@@ -191,7 +244,14 @@ class SubscriptionCancellationServiceTest {
 
     @Test
     void resumeWithdrawsEveryScheduledCancelAndLogsIt() {
-        when(edge.change(eq("resume"), eq("cus_team"), anyList(), isNull(), isNull(), anyString()))
+        when(edge.change(
+                        eq("resume"),
+                        eq("cus_team"),
+                        eq("Acme"),
+                        anyList(),
+                        isNull(),
+                        isNull(),
+                        anyString()))
                 .thenReturn(
                         List.of(
                                 new Result(
@@ -249,6 +309,6 @@ class SubscriptionCancellationServiceTest {
                 .extracting(e -> ((CancellationException) e).code())
                 .isEqualTo("message_not_delivered");
         assertThat(events()).isEmpty();
-        verify(edge, never()).change(any(), any(), any(), any(), any(), any());
+        verify(edge, never()).change(any(), any(), any(), any(), any(), any(), any());
     }
 }

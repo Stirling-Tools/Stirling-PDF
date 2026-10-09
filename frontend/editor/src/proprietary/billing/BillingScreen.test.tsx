@@ -346,17 +346,23 @@ describe("subscription end", () => {
     processor: { active: true },
   };
 
-  it("offers a quiet cancel door only to a host that passes one", () => {
+  it("offers a cancel button only to a host that passes one", () => {
     const onCancel = vi.fn();
-    const { rerender } = render(<BillingScreen wallet={teamAndProcessor} />);
+    const { rerender } = render(
+      <MantineProvider>
+        <BillingScreen wallet={teamAndProcessor} />
+      </MantineProvider>,
+    );
     expect(
       screen.queryByRole("button", { name: "Cancel subscription" }),
     ).not.toBeInTheDocument();
     rerender(
-      <BillingScreen
-        wallet={teamAndProcessor}
-        onCancelSubscription={onCancel}
-      />,
+      <MantineProvider>
+        <BillingScreen
+          wallet={teamAndProcessor}
+          onCancelSubscription={onCancel}
+        />
+      </MantineProvider>,
     );
     fireEvent.click(
       screen.getByRole("button", { name: "Cancel subscription" }),
