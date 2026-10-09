@@ -1,6 +1,5 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { Center, Box, LoadingOverlay } from "@mantine/core";
-import { Dropzone } from "@mantine/dropzone";
 import { useTranslation } from "react-i18next";
 import {
   useFileSelection,
@@ -21,7 +20,6 @@ import { alert } from "@app/components/toast";
 import { downloadFileWithPolicy as downloadFile } from "@app/services/exportWithPolicy";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
-import { useDropzoneFiles } from "@app/hooks/useDropzoneFiles";
 import {
   useVirtualFileRows,
   rowHeightPx,
@@ -93,7 +91,6 @@ const FileEditor = ({
   const { setActiveFileIndex, setActiveFileId } = useViewer();
 
   const [_status, _setStatus] = useState<string | null>(null);
-  const [_error, _setError] = useState<string | null>(null);
 
   const showStatus = useCallback(
     (
@@ -128,13 +125,10 @@ const FileEditor = ({
     [selectedTool?.maxFiles, toolMode],
   );
 
-  const getDropzoneFiles = useDropzoneFiles();
   const [showFilePickerModal, setShowFilePickerModal] = useState(false);
 
   const handleFileUpload = useCallback(
     async (uploadedFiles: File[]) => {
-      _setError(null);
-
       try {
         if (uploadedFiles.length > 0) {
           await addFiles(uploadedFiles, { selectFiles: true });
@@ -147,15 +141,15 @@ const FileEditor = ({
               setSelectedFiles(limited);
             }
           }
-          showStatus(
-            t("fileEditor.filesAdded", {
-              count: uploadedFiles.length,
-              defaultValue_one: "Added {{count}} file",
-              defaultValue_other: "Added {{count}} files",
-            }),
-            "success",
-          );
         }
+        showStatus(
+          t("fileEditor.filesAdded", {
+            count: uploadedFiles.length,
+            defaultValue_one: "Added {{count}} file",
+            defaultValue_other: "Added {{count}} files",
+          }),
+          "success",
+        );
       } catch (err) {
         const errorMessage =
           err instanceof Error
@@ -370,107 +364,90 @@ const FileEditor = ({
   const effectiveEnd = !isVirtualActive && totalItems > 13 ? 13 : range.end;
 
   return (
-    <Dropzone
-      onDrop={handleFileUpload}
-      useFsAccessApi={false}
-      getFilesFromEvent={getDropzoneFiles}
-      multiple={true}
-      maxSize={2 * 1024 * 1024 * 1024}
-      style={{
-        border: "none",
-        borderRadius: 0,
-        backgroundColor: "transparent",
-      }}
-      activateOnClick={false}
-      activateOnDrag={true}
+    <Box
+      className="file-editor-content"
+      pos="relative"
+      style={{ overflow: "auto", height: "100%", width: "100%" }}
     >
-      <Box
-        className="file-editor-content"
-        pos="relative"
-        style={{ overflow: "auto", height: "100%", width: "100%" }}
-      >
-        <LoadingOverlay visible={state.ui.isProcessing} />
+      <LoadingOverlay visible={state.ui.isProcessing} />
 
-        <Box p="md">
-          {activeStirlingFileStubs.length === 0 ? (
-            <Center h="60vh">
+      <Box p="md">
+        {activeStirlingFileStubs.length === 0 ? (
+          <Center h="60vh">
+            <AddFileCard
+              onFilesSelected={(files) => void handleFileUpload(files)}
+            />
+          </Center>
+        ) : (
+          <div
+            ref={setContainer}
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(276px, 1fr))",
+              rowGap: "1.5rem",
+              padding: "1rem",
+              pointerEvents: "auto",
+            }}
+          >
+            {padTop > 0 && (
+              <div
+                aria-hidden="true"
+                className={styles.virtualPad}
+                style={{ height: padTop }}
+              />
+            )}
+
+            {/* Index 0 is AddFileCard when range covers it */}
+            {range.start === 0 && (
               <AddFileCard
+                key="add-file-card"
                 onFilesSelected={(files) => void handleFileUpload(files)}
               />
-            </Center>
-          ) : (
-            <div
-              ref={setContainer}
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(276px, 1fr))",
-                rowGap: "1.5rem",
-                padding: "1rem",
-                pointerEvents: "auto",
-              }}
-            >
-              {padTop > 0 && (
-                <div
-                  aria-hidden="true"
-                  className={styles.virtualPad}
-                  style={{ height: padTop }}
-                />
-              )}
+            )}
 
-              {/* Index 0 is AddFileCard when range covers it */}
-              {range.start === 0 && (
-                <AddFileCard
-                  key="add-file-card"
-                  onFilesSelected={(files) => void handleFileUpload(files)}
-                />
-              )}
+            {activeStirlingFileStubs
+              .slice(
+                Math.max(0, range.start - 1),
+                Math.max(0, effectiveEnd - 1),
+              )
+              .map((record, sliceIdx) => {
+                const index = Math.max(0, range.start - 1) + sliceIdx;
+                return (
+                  <FileEditorThumbnail
+                    key={record.id}
+                    file={record}
+                    index={index}
+                    totalFiles={activeStirlingFileStubs.length}
+                    onCloseFile={handleCloseFile}
+                    onViewFile={handleViewFile}
+                    onReorderFiles={handleReorderFiles}
+                    onDownloadFile={handleDownloadFile}
+                    onUnzipFile={handleUnzipFile}
+                    toolMode={toolMode}
+                    isSupported={isFileSupported(record.name)}
+                    policies={policyFileBadges.get(record.id) ?? EMPTY_POLICIES}
+                  />
+                );
+              })}
 
-              {activeStirlingFileStubs
-                .slice(
-                  Math.max(0, range.start - 1),
-                  Math.max(0, effectiveEnd - 1),
-                )
-                .map((record, sliceIdx) => {
-                  const index = Math.max(0, range.start - 1) + sliceIdx;
-                  return (
-                    <FileEditorThumbnail
-                      key={record.id}
-                      file={record}
-                      index={index}
-                      totalFiles={activeStirlingFileStubs.length}
-                      onCloseFile={handleCloseFile}
-                      onViewFile={handleViewFile}
-                      onReorderFiles={handleReorderFiles}
-                      onDownloadFile={handleDownloadFile}
-                      onUnzipFile={handleUnzipFile}
-                      toolMode={toolMode}
-                      isSupported={isFileSupported(record.name)}
-                      policies={
-                        policyFileBadges.get(record.id) ?? EMPTY_POLICIES
-                      }
-                    />
-                  );
-                })}
-
-              {padBottom > 0 && (
-                <div
-                  aria-hidden="true"
-                  className={styles.virtualPad}
-                  style={{ height: padBottom }}
-                />
-              )}
-            </div>
-          )}
-        </Box>
-
-        <FilePickerModal
-          opened={showFilePickerModal}
-          onClose={() => setShowFilePickerModal(false)}
-          storedFiles={[]} // FileEditor doesn't have access to stored files, needs to be passed from parent
-          onSelectFiles={handleLoadFromStorage}
-        />
+            {padBottom > 0 && (
+              <div
+                aria-hidden="true"
+                className={styles.virtualPad}
+                style={{ height: padBottom }}
+              />
+            )}
+          </div>
+        )}
       </Box>
-    </Dropzone>
+
+      <FilePickerModal
+        opened={showFilePickerModal}
+        onClose={() => setShowFilePickerModal(false)}
+        storedFiles={[]} // FileEditor doesn't have access to stored files, needs to be passed from parent
+        onSelectFiles={handleLoadFromStorage}
+      />
+    </Box>
   );
 };
 
