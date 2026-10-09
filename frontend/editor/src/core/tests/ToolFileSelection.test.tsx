@@ -49,6 +49,7 @@ const selectors = {
 const loadRecentFiles = vi.fn().mockResolvedValue([]);
 const onFileClick = vi.fn();
 const onPreviewRender = vi.fn();
+const handleToolSelect = vi.fn();
 
 const pdfWorker = vi.hoisted(() => ({
   createDocument: vi.fn(),
@@ -106,6 +107,9 @@ vi.mock("@app/contexts/ViewerContext", () => ({
 vi.mock("@app/contexts/NavigationContext", () => ({
   useNavigationState: () => navigation,
   useNavigationActions: () => ({ actions: {} }),
+}));
+vi.mock("@app/contexts/ToolWorkflowContext", () => ({
+  useToolWorkflowActions: () => ({ handleToolSelect }),
 }));
 vi.mock("@app/contexts/PreferencesContext", () => ({
   usePreferences: () => ({ preferences: {} }),
@@ -229,6 +233,16 @@ describe("tool file selection", () => {
       expect(await screen.findByRole("tooltip")).toHaveTextContent(
         "Use Remove Password to create an unprotected copy first.",
       );
+      const removePassword = screen.getByRole("button", {
+        name: "Remove Password",
+      });
+      act(() => removePassword.focus());
+      const help = await screen.findByText(
+        "Open Remove Password to create an unprotected copy.",
+      );
+      await waitFor(() => expect(help).toBeVisible());
+      await userEvent.click(removePassword);
+      expect(handleToolSelect).toHaveBeenCalledWith("removePassword");
     } finally {
       act(() => clearPdfAccess());
     }

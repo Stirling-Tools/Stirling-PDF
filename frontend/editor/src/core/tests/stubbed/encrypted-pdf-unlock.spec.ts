@@ -97,9 +97,9 @@ test.describe("Encrypted PDF Unlock Modal", () => {
   }) => {
     await uploadEncryptedFile(page, ENCRYPTED_PDF);
 
-    await expect(
-      page.getByRole("heading", { name: MODAL_TITLE }),
-    ).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole("heading", { name: MODAL_TITLE })).toBeVisible({
+      timeout: 10000,
+    });
     await expect(page.getByPlaceholder(PASSWORD_PLACEHOLDER)).toBeVisible();
     await expect(
       page.getByRole("button", { name: UNLOCK_BUTTON_TEXT }),
@@ -211,6 +211,21 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     await expect(details).toBeVisible();
     await notice.getByText("encrypted.pdf", { exact: true }).click();
     await expect(details).toBeHidden();
+    const removePassword = notice
+      .getByRole("listitem")
+      .getByRole("button", { name: "Remove Password" });
+    await removePassword.hover();
+    await expect(
+      page.getByRole("tooltip").filter({
+        hasText: "Open Remove Password to create an unprotected copy.",
+      }),
+    ).toBeVisible();
+    await removePassword.click();
+    await expect(page).toHaveURL(/\/remove-password$/);
+    await expect(page.getByTestId("tool-file-list")).toContainText(
+      "encrypted.pdf",
+    );
+    await expect(page.getByPlaceholder("Enter current password")).toBeVisible();
   });
 
   for (const legacy of [false, true]) {
