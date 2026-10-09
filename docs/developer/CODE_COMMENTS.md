@@ -183,7 +183,7 @@ Findings are scoped to comment text that is new, not to lines git calls new, so
 reindenting or moving code does not resurface comments you did not write.
 
 The rules are the `RULES` object in
-[`scripts/lint/comment-rules.mjs`](../scripts/lint/comment-rules.mjs); the exact
+[`scripts/lint/comment-rules.mjs`](../../scripts/lint/comment-rules.mjs); the exact
 condition for each is the predicate of the same name in that file, with the
 readings it deliberately excludes beside it.
 
