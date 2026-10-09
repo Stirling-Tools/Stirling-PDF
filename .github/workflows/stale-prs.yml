@@ -22,6 +22,7 @@ on:
       - ".github/scripts/package-lock.json"
       - ".github/scripts/tsconfig.json"
       - ".github/workflows/pr-conflict-labeler.yml"
+      - ".github/workflows/pr-size-limit.yml"
 
 permissions:
   contents: read

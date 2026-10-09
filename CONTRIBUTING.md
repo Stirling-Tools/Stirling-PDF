@@ -44,6 +44,15 @@ Please make sure your Pull Request adheres to the following guidelines:
 - References to the Issue number in the Pull Request and/or Commit message.
 - Every comment in the diff should say something the code does not. See [Code comments](devGuide/CODE_COMMENTS.md); `task comment-lint` checks the mechanical part.
 
+## Pull Request Size
+
+To keep reviews manageable, Pull Requests from contributors outside the team are limited to 1000 changed lines (lines added plus lines removed). Translation files and lockfiles don't count towards the limit.
+
+- A Pull Request over the limit fails the "Check PR size" check, and will gain the `too-large` label.
+- Please split large changes into smaller Pull Requests that can each be reviewed on their own.
+- If you think a change can't be split, add a comment explaining why so a maintainer can take a look.
+- If the Pull Request is still over the limit 7 days after gaining the `too-large` label, it will be automatically closed.
+
 ## Stale Pull Requests
 
 To keep the list of open Pull Requests manageable, PRs that appear abandoned will automatically be closed (after a warning).

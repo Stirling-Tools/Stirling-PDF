@@ -1,0 +1,51 @@
+name: PR size limit
+
+# Fails PRs from outside the team that change more than MAX_LINES lines. The rules live
+# in .github/scripts/pr-size.ts.
+# Comments and labels too-large only when STALE_PR_BOT_LIVE is "true": the comment
+# promises the close that stale-prs.yml only makes then.
+# pull_request_target so a first-time contributor's PR is checked without approval; it
+# reads the diff through the API and never checks out the PR's code.
+
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize, ready_for_review, labeled, unlabeled]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-size-limit-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Check PR size
+    # No filtering by label: a skipped run on the same commit would pass a required check.
+    if: vars.CI_PROFILE != 'lite'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # actions/checkout
+      issues: write # label the PR
+      pull-requests: write # list the PR's files, comment on and label it
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - name: Check out the scripts
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/scripts
+
+      - name: Check the PR size
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          LIVE: ${{ vars.STALE_PR_BOT_LIVE == 'true' }}
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const { checkPullRequestSize } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/pr-size.ts`);
+            await checkPullRequestSize({ github, context, core, live: process.env.LIVE === "true" });

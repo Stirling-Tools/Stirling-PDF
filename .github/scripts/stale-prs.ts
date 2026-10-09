@@ -2,6 +2,7 @@
 
 import {
   BOT_LOGIN,
+  CLOSE_AFTER_WARNING_DAYS,
   type Core,
   type GitHubClient,
   type IssueRef,
@@ -10,11 +11,12 @@ import {
   type Repo,
   removeLabel,
 } from "./github.ts";
+import { enforceSizeLimit, MAX_LINES, type SizedPullRequest } from "./pr-size.ts";
 import { clearStaleTurnLabel } from "./pr-turn.ts";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-export type Reason = "conflicts" | "waitingOnAuthor" | "idleDraft";
+export type Reason = "conflicts" | "waitingOnAuthor" | "idleDraft" | "tooLarge";
 
 const TURN_LABELS: { label: string; reason: Reason }[] = [
   { label: LABELS.conflicts, reason: "conflicts" },
@@ -23,7 +25,6 @@ const TURN_LABELS: { label: string; reason: Reason }[] = [
 
 export const TURN_DAYS = 7;
 export const IDLE_DRAFT_DAYS = 30;
-export const CLOSE_AFTER_WARNING_DAYS = 7;
 
 // GitHub asks for at least a second between writes to stay under its secondary rate limit.
 const WRITE_INTERVAL_MS = 1000;
@@ -74,6 +75,9 @@ const PULL_REQUEST_QUERY = `
         isDraft
         createdAt
         baseRefName
+        additions
+        deletions
+        authorAssociation
         author { login __typename }
         labels(first: 100) { nodes { name } }
         commits(last: 1) { nodes { commit { committedDate } } }
@@ -128,6 +132,9 @@ export interface PullRequestNode {
   isDraft: boolean;
   createdAt: string;
   baseRefName: string;
+  additions: number;
+  deletions: number;
+  authorAssociation: string;
   author: Actor | null;
   labels: { nodes: { name: string }[] };
   commits: { nodes: { commit: { committedDate: string } }[] };
@@ -141,6 +148,9 @@ export interface PullRequest {
   url: string;
   isDraft: boolean;
   baseRefName: string;
+  additions: number;
+  deletions: number;
+  authorAssociation: string;
   author: Actor | null;
   labels: string[];
   timeline: TimelineEvent[];
@@ -269,17 +279,24 @@ function decideDraft(pr: PullRequest, now: number, warnedAt: number | null): Dec
  * - "resume": a close stopped after its comment; close the PR without commenting again.
  * - "clear": warned, but something has changed since; remove the label.
  *
- * Conflicts still need confirming with GitHub before acting; see confirmConflicts.
+ * A too-large PR was warned when the label went on, by pr-size.ts's comment, so it is
+ * "pending" until CLOSE_AFTER_WARNING_DAYS later and then "close". Conflicts still need
+ * confirming with GitHub before acting; see confirmConflicts.
  */
 export function decide(pr: PullRequest, now: number): Decision {
   const stale = hasLabel(pr, LABELS.stale);
   if (pr.author?.__typename === "Bot" || hasLabel(pr, LABELS.onHold)) return stale ? CLEAR : NONE;
   const warnedAt = warningTime(pr);
-  if (warnedAt !== null && closeInterrupted(pr, warnedAt)) return { action: "resume", reasons: [] };
+  const sizeWarnedAt = hasLabel(pr, LABELS.tooLarge) ? (latestEvent(pr, labelled(LABELS.tooLarge)) ?? now) : null;
+  const warnings = [warnedAt, sizeWarnedAt].filter((at) => at !== null);
+  if (warnings.length > 0 && closeInterrupted(pr, Math.min(...warnings))) return { action: "resume", reasons: [] };
+  const size = sizeWarnedAt === null ? null : closeOrPending(now, sizeWarnedAt, ["tooLarge"]);
+  if (size?.action === "close") return size;
   const decision = pr.isDraft ? decideDraft(pr, now, warnedAt) : decideReady(pr, now, warnedAt);
   // A Stale PR label someone else added warned nobody: replace it with a warning when one
   // is due, and drop it otherwise.
-  return stale && warnedAt === null && decision.action === "none" ? CLEAR : decision;
+  const settled = stale && warnedAt === null && decision.action === "none" ? CLEAR : decision;
+  return settled.action === "none" && size !== null ? size : settled;
 }
 
 function problem(reason: Reason, pr: PullRequest, now: number): string {
@@ -290,6 +307,8 @@ function problem(reason: Reason, pr: PullRequest, now: number): string {
       return "A maintainer is waiting on a response from you.";
     case "idleDraft":
       return `It has been a draft with no activity for ${days(now - time(pr.lastActivityAt))} days.`;
+    case "tooLarge":
+      return `It changes more than ${MAX_LINES} lines, the limit for contributors outside the team.`;
   }
 }
 
@@ -301,10 +320,22 @@ function remedy(reason: Reason, pr: PullRequest): string {
       return "Please add a comment, a new push or re-request review.";
     case "idleDraft":
       return "Any activity keeps it open, such as a push, a comment or marking it ready for review.";
+    case "tooLarge":
+      return "Please split it into smaller PRs.";
   }
 }
 
 const authorLogin = (pr: PullRequest) => pr.author?.login ?? "ghost";
+
+const sizedPullRequest = (pr: PullRequest): SizedPullRequest => ({
+  number: pr.number,
+  state: "open",
+  additions: pr.additions,
+  deletions: pr.deletions,
+  author_association: pr.authorAssociation,
+  user: { login: authorLogin(pr), type: pr.author?.__typename === "Bot" ? "Bot" : "User" },
+  labels: pr.labels.map((name) => ({ name })),
+});
 
 export function warningComment(pr: PullRequest, reasons: Reason[], now: number) {
   return [
@@ -395,6 +426,9 @@ async function fetchPullRequest(github: GitHubClient, repo: Repo, number: number
     url: node.url,
     isDraft: node.isDraft,
     baseRefName: node.baseRefName,
+    additions: node.additions,
+    deletions: node.deletions,
+    authorAssociation: node.authorAssociation,
     author: node.author,
     labels: node.labels.nodes.map((label) => label.name),
     timeline,
@@ -431,15 +465,16 @@ async function confirmConflicts(
   return decision.action === "close" ? { action: "pending", reasons: decision.reasons } : NONE;
 }
 
-// Applies a label removal to the PR as read, so the decision sees it even in a dry run.
-function withoutLabel(pr: PullRequest, name: string, now: number): PullRequest {
-  const removed: TimelineEvent = {
-    __typename: "UnlabeledEvent",
+// Applies a label change to the PR as read, so the decision sees it even in a dry run.
+function withLabel(pr: PullRequest, name: string, present: boolean, now: number): PullRequest {
+  const change: TimelineEvent = {
+    __typename: present ? "LabeledEvent" : "UnlabeledEvent",
     createdAt: new Date(now).toISOString(),
     label: { name },
     actor: { login: BOT_LOGIN, __typename: "Bot" },
   };
-  return { ...pr, labels: pr.labels.filter((label) => label !== name), timeline: [...pr.timeline, removed] };
+  const others = pr.labels.filter((label) => label !== name);
+  return { ...pr, labels: present ? [...others, name] : others, timeline: [...pr.timeline, change] };
 }
 
 async function paced(intervalMs: number, writes: (() => Promise<unknown>)[]) {
@@ -536,9 +571,9 @@ export interface TriageInputs {
 }
 
 /**
- * Triages every open PR and writes a job summary. A PR that cannot be read or updated
- * is logged and skipped, and the job is failed at the end. Throws if the open PRs
- * cannot be listed.
+ * Triages every open PR, holding each to the size limit first, and writes a job summary.
+ * A PR that cannot be read or updated is logged and skipped, and the job is failed at
+ * the end. Throws if the open PRs cannot be listed.
  */
 export default async function triageStalePullRequests({
   github,
@@ -561,7 +596,12 @@ export default async function triageStalePullRequests({
       if (pr === null) continue;
       if (!pr.isDraft && hasLabel(pr, LABELS.waitingOnAuthor) && (await clearStaleTurnLabel(github, issue, live))) {
         core.info(`#${number}: -${LABELS.waitingOnAuthor} (the turn had already moved on)`);
-        pr = withoutLabel(pr, LABELS.waitingOnAuthor, now);
+        pr = withLabel(pr, LABELS.waitingOnAuthor, false, now);
+      }
+      const size = await enforceSizeLimit(github, repo, sizedPullRequest(pr), live);
+      if (size.held !== hasLabel(pr, LABELS.tooLarge)) {
+        core.info(`#${number}: ${size.held ? "+" : "-"}${LABELS.tooLarge}`);
+        pr = withLabel(pr, LABELS.tooLarge, size.held, now);
       }
       const decision = await confirmConflicts(github, repo, pr, decide(pr, now), mergeabilityRetryMs);
       result = { pr, decision, failed: false };
