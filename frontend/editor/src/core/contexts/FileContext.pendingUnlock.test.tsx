@@ -15,6 +15,7 @@ import {
 } from "@app/contexts/FileContext";
 import apiClient from "@app/services/apiClient";
 import { getPdfAccess } from "@app/services/pdfPasswordStore";
+import { fileStorage } from "@app/services/fileStorage";
 import {
   createStirlingFile,
   type FileId,
@@ -55,11 +56,13 @@ vi.mock("@app/components/shared/EncryptedPdfUnlockModal", () => ({
     opened,
     onSkip,
     onUnlock,
+    onRemovePassword,
     onPasswordChange,
   }: {
     opened: boolean;
     onSkip: () => void;
     onUnlock: () => void;
+    onRemovePassword: () => void;
     onPasswordChange: (password: string) => void;
   }) =>
     opened ? (
@@ -70,6 +73,7 @@ vi.mock("@app/components/shared/EncryptedPdfUnlockModal", () => ({
           onChange={(event) => onPasswordChange(event.target.value)}
         />
         <button onClick={onUnlock}>Unlock</button>
+        <button onClick={onRemovePassword}>Remove Password</button>
       </>
     ) : null,
 }));
@@ -126,6 +130,88 @@ afterEach(() => {
 });
 
 describe("encrypted bytes opened by another editor", () => {
+  it("returns an unprotected copy to the opening editor and preserves the original", async () => {
+    const persist = vi
+      .spyOn(fileStorage, "persistVersionedOutputs")
+      .mockResolvedValue();
+    vi.mocked(apiClient.post).mockResolvedValueOnce({
+      data: new Blob(["unprotected output"]),
+    });
+    const { result } = renderHook(
+      () => ({ ...useFileActions(), selectors: useFileSelectors() }),
+      { wrapper },
+    );
+    const original = new File(["encrypted original"], "locked.pdf");
+    let loading!: ReturnType<typeof result.current.actions.addFiles>;
+    await act(async () => {
+      loading = result.current.actions.addFiles([original]);
+    });
+    fireEvent.change(screen.getByLabelText("PDF password"), {
+      target: { value: "secret" },
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByText("Remove Password"));
+    });
+    const [copy] = await loading;
+    expect(copy.name).toBe("locked_unprotected.pdf");
+    expect(copy.fileId).not.toBe(id);
+    expect(result.current.selectors.getAllFileIds()).toEqual([copy.fileId]);
+    expect(
+      result.current.selectors.getStirlingFileStub(copy.fileId),
+    ).toMatchObject({
+      parentFileId: id,
+      versionNumber: 2,
+      toolHistory: [{ toolId: "removePassword" }],
+    });
+    expect(persist).toHaveBeenCalledWith(
+      [id],
+      [copy],
+      [expect.objectContaining({ parentFileId: id })],
+    );
+    expect(original.name).toBe("locked.pdf");
+    expect(original.size).toBe("encrypted original".length);
+    expect(getPdfAccess(copy)).toBeUndefined();
+    expect(getPdfAccess(original)).toBeUndefined();
+    expect(isAwaitingUnlock(id)).toBe(false);
+    const [endpoint, form] = vi.mocked(apiClient.post).mock.calls.at(-1)!;
+    expect(endpoint).toBe("/api/v1/security/remove-password");
+    expect((form as FormData).get("password")).toBe("secret");
+    persist.mockRestore();
+  });
+
+  it("keeps a failed password removal pending without creating an output", async () => {
+    const persist = vi
+      .spyOn(fileStorage, "persistVersionedOutputs")
+      .mockResolvedValue();
+    vi.mocked(apiClient.post).mockRejectedValueOnce(
+      new Error("Incorrect password"),
+    );
+    const { result } = renderHook(
+      () => ({ ...useFileActions(), selectors: useFileSelectors() }),
+      { wrapper },
+    );
+    let loading!: ReturnType<typeof result.current.actions.addFiles>;
+    await act(async () => {
+      loading = result.current.actions.addFiles([
+        new File(["encrypted"], "locked.pdf"),
+      ]);
+    });
+    fireEvent.change(screen.getByLabelText("PDF password"), {
+      target: { value: "wrong" },
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByText("Remove Password"));
+    });
+    expect(result.current.selectors.getAllFileIds()).toEqual([]);
+    expect(isAwaitingUnlock(id)).toBe(true);
+    expect(persist).not.toHaveBeenCalled();
+    await act(async () => {
+      fireEvent.click(screen.getByText("Cancel opening"));
+    });
+    await expect(loading).resolves.toEqual([]);
+    persist.mockRestore();
+  });
+
   it("cancelling while persistence finishes does not return a file to the caller", async () => {
     let finishWrite!: () => void;
     observed.afterDispatch = () =>

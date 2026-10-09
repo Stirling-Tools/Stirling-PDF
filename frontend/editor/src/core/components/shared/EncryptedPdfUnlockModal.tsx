@@ -5,6 +5,7 @@ import {
   PasswordInput,
   Group,
   Tooltip,
+  Menu,
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
@@ -28,6 +29,8 @@ interface EncryptedPdfUnlockModalProps {
   testIdPrefix?: string;
   onPasswordChange: (value: string) => void;
   onUnlock: () => void;
+  /** Creates an unprotected copy using the entered password, without changing the original. */
+  onRemovePassword?: () => void;
   /** Only needed alongside a non-zero {@link EncryptedPdfUnlockModalProps.remainingCount}. */
   onUnlockAll?: () => void;
   onSkip: () => void;
@@ -45,6 +48,7 @@ const EncryptedPdfUnlockModal = ({
   testIdPrefix,
   onPasswordChange,
   onUnlock,
+  onRemovePassword,
   onUnlockAll,
   onSkip,
 }: EncryptedPdfUnlockModalProps) => {
@@ -74,7 +78,7 @@ const EncryptedPdfUnlockModal = ({
             <Tooltip
               label={t(
                 "encryptedPdfUnlock.sessionDetails",
-                "Access ends when you close the file or leave the session. Supported tools keep PDF results protected; merged PDFs use the first protected file's settings. Cancel keeps the saved copy in your library. Use Remove Password to create an unprotected copy.",
+                "Access ends when you close the file or leave the session. Supported tools keep PDF results protected; merged PDFs use the first protected file's settings. Closing this dialog keeps the saved copy in your library. Use Remove Password to create an unprotected copy.",
               )}
               multiline
               w={280}
@@ -103,6 +107,9 @@ const EncryptedPdfUnlockModal = ({
       radius="md"
       styles={{ body: { paddingTop: "var(--mantine-spacing-md)" } }}
       withCloseButton={!isProcessing}
+      closeButtonProps={{
+        "aria-label": t("close", "Close"),
+      }}
       data-testid={testIdPrefix ? `${testIdPrefix}-modal` : undefined}
       closeOnClickOutside={!isProcessing}
       closeOnEscape={!isProcessing}
@@ -156,17 +163,17 @@ const EncryptedPdfUnlockModal = ({
         />
 
         <Group justify="flex-end" gap="sm">
-          <Button
-            variant="secondary"
-            accent="neutral"
-            onClick={onSkip}
-            disabled={isProcessing}
-            data-testid={testIdPrefix ? `${testIdPrefix}-cancel` : undefined}
-          >
-            {sessionUnlock
-              ? t("encryptedPdfUnlock.cancelOpen", "Cancel opening")
-              : t("encryptedPdfUnlock.skip", "Skip for now")}
-          </Button>
+          {!sessionUnlock && (
+            <Button
+              variant="secondary"
+              accent="neutral"
+              onClick={onSkip}
+              disabled={isProcessing}
+              data-testid={testIdPrefix ? `${testIdPrefix}-cancel` : undefined}
+            >
+              {t("encryptedPdfUnlock.skip", "Skip for now")}
+            </Button>
+          )}
           <Group gap="xs">
             {remainingCount > 0 && onUnlockAll && (
               <Button
@@ -180,15 +187,56 @@ const EncryptedPdfUnlockModal = ({
                 })}
               </Button>
             )}
-            <Button
-              onClick={onUnlock}
-              loading={isProcessing}
-              disabled={password.length === 0}
-              data-testid={testIdPrefix ? `${testIdPrefix}-submit` : undefined}
-            >
-              {confirmLabel ??
-                t("encryptedPdfUnlock.unlock", "Unlock & Continue")}
-            </Button>
+            <Button.Group>
+              <Button
+                onClick={onUnlock}
+                loading={isProcessing}
+                disabled={password.length === 0}
+                data-testid={
+                  testIdPrefix ? `${testIdPrefix}-submit` : undefined
+                }
+              >
+                {confirmLabel ?? t("encryptedPdfUnlock.unlock", "Unlock")}
+              </Button>
+              {sessionUnlock && onRemovePassword && (
+                <Menu
+                  position="bottom-end"
+                  withinPortal
+                  zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE + 1}
+                >
+                  <Menu.Target>
+                    <Button
+                      disabled={isProcessing}
+                      px="xs"
+                      aria-label={t(
+                        "encryptedPdfUnlock.moreOptions",
+                        "More options",
+                      )}
+                      style={{ borderInlineStartColor: "var(--c-border)" }}
+                    >
+                      <Icon name="chevron-down" size={16} />
+                    </Button>
+                  </Menu.Target>
+                  <Menu.Dropdown>
+                    <Menu.Item
+                      leftSection={<Icon name="lock-open" size={16} />}
+                      disabled={isProcessing || password.length === 0}
+                      onClick={onRemovePassword}
+                    >
+                      <Text size="sm">
+                        {t("removePassword.submit", "Remove Password")}
+                      </Text>
+                      <Text size="xs" c="dimmed">
+                        {t(
+                          "encryptedPdfUnlock.createCopy",
+                          "Create an unprotected copy",
+                        )}
+                      </Text>
+                    </Menu.Item>
+                  </Menu.Dropdown>
+                </Menu>
+              )}
+            </Button.Group>
           </Group>
         </Group>
       </Stack>

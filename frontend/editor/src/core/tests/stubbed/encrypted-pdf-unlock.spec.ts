@@ -6,6 +6,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import path from "path";
 import fs from "fs";
+import { createHash } from "node:crypto";
 import { mockAppApis } from "@app/tests/helpers/api-stubs";
 import { suppressNativeFilePicker } from "@app/tests/helpers/ui-helpers";
 
@@ -56,7 +57,7 @@ async function uploadEncryptedFile(page: Page, filePath: string) {
 
 const MODAL_TITLE = /^Unlock PDF/;
 const PASSWORD_PLACEHOLDER = "Enter the PDF password";
-const UNLOCK_BUTTON_TEXT = "Unlock & Continue";
+const UNLOCK_BUTTON_TEXT = /^Unlock$/;
 
 /**
  * Fill the password field and wait until the modal has registered it: the
@@ -102,6 +103,12 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     });
     await expect(page.getByPlaceholder(PASSWORD_PLACEHOLDER)).toBeVisible();
     await expect(
+      page.getByRole("button", { name: "Cancel opening" }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: "More options", exact: true }),
+    ).toBeVisible();
+    await expect(
       page.getByRole("button", { name: UNLOCK_BUTTON_TEXT }),
     ).toBeVisible();
     await expect(
@@ -118,10 +125,98 @@ test.describe("Encrypted PDF Unlock Modal", () => {
       hasText: "Access ends when you close the file",
     });
     await expect(sessionDetails).toContainText(
-      "Cancel keeps the saved copy in your library.",
+      "Closing this dialog keeps the saved copy in your library.",
     );
     await page.getByPlaceholder(PASSWORD_PLACEHOLDER).focus();
     await expect(sessionDetails).toBeHidden();
+  });
+
+  test("Remove Password creates a usable copy and retains the protected source", async ({
+    page,
+  }) => {
+    const sample = fs.readFileSync(path.join(FIXTURES_DIR, "sample.pdf"));
+    let removals = 0;
+    await page.route("**/api/v1/security/remove-password", (route) => {
+      removals++;
+      return route.fulfill({ contentType: "application/pdf", body: sample });
+    });
+    await uploadEncryptedFile(page, ENCRYPTED_PDF);
+    const dialog = page.getByRole("dialog");
+    await dialog
+      .getByRole("button", { name: "More options", exact: true })
+      .click();
+    await expect(
+      page.getByRole("menuitem", { name: /Remove Password/ }),
+    ).toBeDisabled();
+    await page.keyboard.press("Escape");
+    await expect(dialog).toBeVisible();
+    await fillPassword(page, "testpass123");
+    await dialog
+      .getByRole("button", { name: "More options", exact: true })
+      .click();
+    await page.getByRole("menuitem", { name: /Remove Password/ }).click();
+    await expect(dialog).toBeHidden();
+    await expect(
+      page.getByText("Unprotected copy created", { exact: true }),
+    ).toBeVisible();
+    await expect(page.locator('[data-page-index="0"] img').first()).toBeVisible(
+      { timeout: 30_000 },
+    );
+    expect(removals).toBe(1);
+    const stored = await page.evaluate(async () => {
+      const db = await new Promise<IDBDatabase>((resolve, reject) => {
+        const request = indexedDB.open("stirling-pdf-files");
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+      const records = await new Promise<
+        Array<{
+          name: string;
+          isEncrypted: boolean;
+          data: Blob | ArrayBuffer;
+        }>
+      >((resolve, reject) => {
+        const request = db
+          .transaction("files", "readonly")
+          .objectStore("files")
+          .getAll();
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+      db.close();
+      return Promise.all(
+        records.map(async (record) => {
+          const bytes =
+            record.data instanceof Blob
+              ? await record.data.arrayBuffer()
+              : record.data;
+          const digest = await crypto.subtle.digest("SHA-256", bytes);
+          return {
+            name: record.name,
+            encrypted: record.isEncrypted,
+            hash: Array.from(new Uint8Array(digest), (byte) =>
+              byte.toString(16).padStart(2, "0"),
+            ).join(""),
+          };
+        }),
+      );
+    });
+    expect(stored).toEqual(
+      expect.arrayContaining([
+        {
+          name: "encrypted.pdf",
+          encrypted: true,
+          hash: createHash("sha256")
+            .update(fs.readFileSync(ENCRYPTED_PDF))
+            .digest("hex"),
+        },
+        {
+          name: "encrypted_unprotected.pdf",
+          encrypted: false,
+          hash: createHash("sha256").update(sample).digest("hex"),
+        },
+      ]),
+    );
   });
 
   test("successful unlock removes the modal and shows success alert", async ({
@@ -240,7 +335,10 @@ test.describe("Encrypted PDF Unlock Modal", () => {
       await expect(
         page.getByRole("button", { name: "Skip for now" }),
       ).toHaveCount(0);
-      await page.getByRole("button", { name: "Cancel opening" }).click();
+      await page
+        .getByRole("dialog")
+        .getByRole("button", { name: "Close", exact: true })
+        .click();
       await expect(
         page.getByRole("heading", { name: MODAL_TITLE, exact: true }),
       ).toBeHidden();
@@ -290,7 +388,10 @@ test.describe("Encrypted PDF Unlock Modal", () => {
         page.getByRole("heading", { name: MODAL_TITLE, exact: true }),
       ).toBeVisible();
       await expect(page.locator('[data-page-index="0"]')).toHaveCount(0);
-      await page.getByRole("button", { name: "Cancel opening" }).click();
+      await page
+        .getByRole("dialog")
+        .getByRole("button", { name: "Close", exact: true })
+        .click();
       await expect(
         page.getByRole("heading", { name: MODAL_TITLE, exact: true }),
       ).toBeHidden();

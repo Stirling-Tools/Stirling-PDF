@@ -54,7 +54,7 @@ test.describe("PDF text editor - encrypted PDF password prompt", () => {
     await page
       .getByPlaceholder("Enter the PDF password")
       .fill(ENCRYPTED_PASSWORD);
-    await page.getByRole("button", { name: "Unlock & Continue" }).click();
+    await page.getByRole("button", { name: "Unlock", exact: true }).click();
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await page
       .getByRole("link", { name: "PDF Text Editor", exact: true })
