@@ -37,7 +37,7 @@ public class McpServerController {
 
     private static final String PREFERRED_PROTOCOL_VERSION = "2025-06-18";
     private static final Set<String> SUPPORTED_PROTOCOL_VERSIONS =
-            Set.of("2025-06-18", "2025-03-26", "2024-11-05");
+            Set.of("2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05");
     private static final String SERVER_NAME = "stirling-pdf-mcp";
 
     private final ObjectMapper mapper;
@@ -131,6 +131,7 @@ public class McpServerController {
                     JsonRpcResponse.success(request.id(), initializeResult(request.params()));
             case "tools/list" -> JsonRpcResponse.success(request.id(), toolsListResult());
             case "tools/call" -> handleToolsCall(request);
+            case "prompts/list" -> JsonRpcResponse.success(request.id(), emptyList("prompts"));
             case "ping" -> JsonRpcResponse.success(request.id(), mapper.createObjectNode());
             case "notifications/initialized" ->
                     JsonRpcResponse.success(request.id(), mapper.createObjectNode());
@@ -156,6 +157,7 @@ public class McpServerController {
         caps.putObject("tools");
         ObjectNode info = result.putObject("serverInfo");
         info.put("name", SERVER_NAME);
+        info.put("title", "Stirling PDF");
         info.put("version", applicationProperties.getAutomaticallyGenerated().getAppVersion());
         return result;
     }
@@ -166,10 +168,18 @@ public class McpServerController {
         for (McpTool t : toolsByName.values()) {
             ObjectNode entry = mapper.createObjectNode();
             entry.put("name", t.name());
+            entry.put("title", t.title());
             entry.put("description", t.description());
             entry.set("inputSchema", t.inputSchema());
+            entry.set("annotations", t.annotations().toJson(mapper, t.title()));
             tools.add(entry);
         }
+        return result;
+    }
+
+    private ObjectNode emptyList(String field) {
+        ObjectNode result = mapper.createObjectNode();
+        result.putArray(field);
         return result;
     }
 

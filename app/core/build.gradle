@@ -161,7 +161,6 @@ springBoot {
 
 // Frontend build tasks - only enabled with -PbuildWithFrontend=true
 def buildWithFrontend = project.hasProperty('buildWithFrontend') && project.property('buildWithFrontend') == 'true'
-def buildPrototypes = project.hasProperty('prototypesMode') && project.property('prototypesMode') == 'true'
 // The processor ships in every editor build by default; -PbuildWithPortal=false leaves it out.
 // An explicit -PbuildWithPortal=true also forces the editor build.
 def buildWithPortal = project.findProperty('buildWithPortal')?.toString() != 'false'
@@ -172,12 +171,10 @@ if (project.findProperty('buildWithPortal')?.toString() == 'true') {
 // future portal). Editor-specific paths (src, public, dist, tauri) live one
 // level deeper under frontend/editor/.
 
-// Vite mode: -PprototypesMode > -PfrontendMode > enableSaas > disableAdditional > proprietary.
+// Vite mode: -PfrontendMode > enableSaas > disableAdditional > proprietary.
 def frontendModeOverride = project.findProperty('frontendMode')?.toString()?.toLowerCase()
 def frontendMode
-if (buildPrototypes) {
-    frontendMode = 'prototypes'
-} else if (frontendModeOverride) {
+if (frontendModeOverride) {
     frontendMode = frontendModeOverride
 } else if (gradle.ext.enableSaas) {
     frontendMode = 'saas'

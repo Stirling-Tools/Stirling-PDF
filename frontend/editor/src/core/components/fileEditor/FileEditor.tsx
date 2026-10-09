@@ -47,7 +47,7 @@ const FileEditor = ({
   );
 
   const { state, selectors } = useFileState();
-  const { removeFiles, reorderFiles } = useFileManagement();
+  const { addFiles, removeFiles, reorderFiles } = useFileManagement();
   const { actions: fileActions } = useFileActions();
   const { selectedFileIds, setSelectedFiles } = useFileSelection();
 
@@ -102,6 +102,46 @@ const FileEditor = ({
   }, [selectedTool?.maxFiles, toolMode]);
 
   const [showFilePickerModal, setShowFilePickerModal] = useState(false);
+
+  const handleFileUpload = useCallback(
+    async (uploadedFiles: File[]) => {
+      try {
+        await addFiles(uploadedFiles, { selectFiles: true });
+        if (Number.isFinite(maxAllowed)) {
+          const nowSelectedIds = selectors
+            .getSelectedStirlingFileStubs()
+            .map((r) => r.id);
+          if (nowSelectedIds.length > maxAllowed) {
+            setSelectedFiles(nowSelectedIds.slice(-maxAllowed));
+          }
+        }
+        showStatus(
+          t("fileEditor.filesAdded", {
+            count: uploadedFiles.length,
+            defaultValue_one: "Added {{count}} file",
+            defaultValue_other: "Added {{count}} files",
+          }),
+          "success",
+        );
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error
+            ? err.message
+            : t("fileEditor.processFilesFailed", "Failed to process files");
+        showError(errorMessage);
+        console.error("File processing error:", err);
+      }
+    },
+    [
+      addFiles,
+      showStatus,
+      showError,
+      selectors,
+      maxAllowed,
+      setSelectedFiles,
+      t,
+    ],
+  );
 
   useEffect(() => {
     if (Number.isFinite(maxAllowed) && selectedFileIds.length > maxAllowed) {
@@ -328,7 +368,9 @@ const FileEditor = ({
       <Box p="md">
         {activeStirlingFileStubs.length === 0 ? (
           <Center h="60vh">
-            <AddFileCard />
+            <AddFileCard
+              onFilesSelected={(files) => void handleFileUpload(files)}
+            />
           </Center>
         ) : (
           <div
@@ -341,7 +383,10 @@ const FileEditor = ({
             }}
           >
             {activeStirlingFileStubs.length > 0 && (
-              <AddFileCard key="add-file-card" />
+              <AddFileCard
+                key="add-file-card"
+                onFilesSelected={(files) => void handleFileUpload(files)}
+              />
             )}
 
             {activeStirlingFileStubs.map((record, index) => {
