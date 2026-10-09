@@ -124,12 +124,17 @@ test.describe("PDF text editor - phone layout", () => {
     await page.getByTestId("pdf-editor-mobile-style").tap();
     await expect(page.getByTestId("pdf-editor-font-size")).toBeVisible();
     await page.locator(".mantine-Drawer-close:visible").first().click();
+    // A sheet still sliding out swallows taps meant for the action bar.
+    await expect(page.getByTestId("pdf-editor-font-size")).toBeHidden();
 
     await page.getByTestId("pdf-editor-mobile-details").tap();
     await expect(
       page.getByTestId("pdf-editor-selection-inspector"),
     ).toBeVisible();
     await page.locator(".mantine-Drawer-close:visible").first().click();
+    await expect(
+      page.getByTestId("pdf-editor-selection-inspector"),
+    ).toBeHidden();
 
     await page.getByTestId("pdf-editor-mobile-done").tap();
     await expect(bar).toHaveAttribute("data-context", "idle");
