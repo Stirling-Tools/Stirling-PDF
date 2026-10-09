@@ -14,13 +14,14 @@ type ExtractionStatus = "idle" | "loading" | "loaded" | "error";
 /**
  * Prefills restrictions for one FileContext document. Pass no file for a batch.
  * Disable while processing or reviewing results to preserve the operation state.
+ * Failed reads keep manual settings until another file is selected.
  */
 export function usePermissionExtraction(
   file: File | undefined,
   setParameters: ChangePermissionsParametersHook["setParameters"],
   enabled: boolean,
 ) {
-  const loadedFile = useRef<File | undefined>(undefined);
+  const initializedFile = useRef<File | undefined>(undefined);
   const [state, setState] = useState<{
     file: File | undefined;
     status: ExtractionStatus;
@@ -28,9 +29,9 @@ export function usePermissionExtraction(
 
   useEffect(() => {
     if (!enabled) return;
-    if (file && loadedFile.current === file) return;
+    if (file && initializedFile.current === file) return;
 
-    loadedFile.current = undefined;
+    initializedFile.current = undefined;
     setParameters(defaultParameters);
     if (!file) {
       setState({ file, status: "idle" });
@@ -71,10 +72,13 @@ export function usePermissionExtraction(
           preventPrinting: prevented(PermissionFlag.PRINT),
           preventPrintingFaithful: prevented(PermissionFlag.PRINT_HIGH_QUALITY),
         });
-        loadedFile.current = file;
+        initializedFile.current = file;
         setState({ file, status: "loaded" });
       } catch {
-        if (!signal.cancelled) setState({ file, status: "error" });
+        if (!signal.cancelled) {
+          initializedFile.current = file;
+          setState({ file, status: "error" });
+        }
       } finally {
         if (document) await pdfWorkerManager.destroyDocument(document);
         URL.revokeObjectURL(url);

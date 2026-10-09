@@ -9,8 +9,11 @@ interface ChangePermissionsSettingsProps {
     value: ChangePermissionsParameters[K],
   ) => void;
   disabled?: boolean;
+  /** A single PDF is being inspected; block edits until its settings are available. */
   isLoading?: boolean;
+  /** Extraction failed for the selected PDF; manual settings remain usable. */
   hasReadError?: boolean;
+  /** Batch selection skips detection and applies these settings to every selected file. */
   multipleFiles?: boolean;
 }
 

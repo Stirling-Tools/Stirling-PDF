@@ -264,18 +264,24 @@ class PasswordControllerTest {
 
         @ParameterizedTest
         @CsvSource({
-            "40, owner, user, user",
-            "40, owner, user, owner",
-            "128, owner, user, user",
-            "128, owner, user, owner",
-            "256, owner, user, user",
-            "256, owner, user, owner",
-            "256, '', user, user",
-            "256, owner, '', ''",
-            "256, '', '', ''"
+            "40, owner, user, user, false",
+            "40, owner, user, owner, false",
+            "128, owner, user, user, false",
+            "128, owner, user, owner, false",
+            "256, owner, user, user, false",
+            "256, owner, user, owner, false",
+            "256, '', user, user, false",
+            "256, owner, '', '', false",
+            "256, '', '', '', false",
+            "40, owner, user, user, true",
+            "256, owner, user, user, true"
         })
-        void preservesStoredPermissionsWithoutRequiringAPassword(
-                int keyLength, String ownerPassword, String userPassword, String unlockPassword)
+        void preservesStoredAndEffectivePermissionsWithoutRequiringAPassword(
+                int keyLength,
+                String ownerPassword,
+                String userPassword,
+                String unlockPassword,
+                boolean allRestrictions)
                 throws Exception {
             AddPasswordRequest addRequest = new AddPasswordRequest();
             addRequest.setFileInput(pdfFile(simplePdfBytes));
@@ -283,13 +289,13 @@ class PasswordControllerTest {
             addRequest.setPassword(userPassword);
             addRequest.setKeyLength(keyLength);
             addRequest.setPreventAssembly(true);
-            addRequest.setPreventExtractContent(false);
+            addRequest.setPreventExtractContent(allRestrictions);
             addRequest.setPreventExtractForAccessibility(true);
-            addRequest.setPreventFillInForm(false);
+            addRequest.setPreventFillInForm(allRestrictions);
             addRequest.setPreventModify(true);
-            addRequest.setPreventModifyAnnotations(false);
+            addRequest.setPreventModifyAnnotations(allRestrictions);
             addRequest.setPreventPrinting(true);
-            addRequest.setPreventPrintingFaithful(false);
+            addRequest.setPreventPrintingFaithful(allRestrictions);
 
             byte[] protectedBytes = drainBody(controller.addPassword(addRequest));
             int expectedPermissions;
@@ -298,8 +304,8 @@ class PasswordControllerTest {
             }
 
             byte[] unlockedBytes = removePassword(protectedBytes, unlockPassword);
-            assertStoredPermissions(unlockedBytes, expectedPermissions);
-            assertStoredPermissions(removePassword(unlockedBytes, ""), expectedPermissions);
+            assertPermissions(unlockedBytes, expectedPermissions);
+            assertPermissions(removePassword(unlockedBytes, ""), expectedPermissions);
         }
 
         @ParameterizedTest
@@ -333,11 +339,15 @@ class PasswordControllerTest {
                     "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, bytes);
         }
 
-        private void assertStoredPermissions(byte[] bytes, int expectedPermissions)
-                throws IOException {
+        private void assertPermissions(byte[] bytes, int expectedPermissions) throws IOException {
             try (PDDocument document = Loader.loadPDF(bytes)) {
                 assertNotNull(document.getEncryption());
                 assertEquals(expectedPermissions, document.getEncryption().getPermissions());
+                assertFalse(document.getCurrentAccessPermission().isOwnerPermission());
+                assertEquals(
+                        expectedPermissions,
+                        document.getCurrentAccessPermission().getPermissionBytes());
+                assertEquals(256, document.getEncryption().getLength());
                 assertEquals(1, document.getNumberOfPages());
                 assertEquals(
                         "Permission round trip", new PDFTextStripper().getText(document).trim());

@@ -187,7 +187,7 @@ describe("usePermissionExtraction", () => {
   });
 
   test.each(["open", "read"])(
-    "reports %s failures and releases resources",
+    "preserves manual settings after %s failures when detection resumes",
     async (stage) => {
       const document = {
         getPermissions: vi.fn().mockRejectedValue(new Error("Unreadable PDF")),
@@ -195,13 +195,30 @@ describe("usePermissionExtraction", () => {
       if (stage === "open")
         createDocument.mockRejectedValueOnce(new Error("Password required"));
       else createDocument.mockResolvedValueOnce(document);
-      const { result } = renderExtraction(new File([], "broken.pdf"));
+      const file = new File([], "broken.pdf");
+      const { result, rerender } = renderExtraction(file);
       await waitFor(() => expect(result.current.hasError).toBe(true));
 
       expect(result.current.isLoading).toBe(false);
       expect(URL.revokeObjectURL).toHaveBeenCalledWith("mocked-url");
       if (stage === "read")
         expect(destroyDocument).toHaveBeenCalledWith(document);
+
+      act(() => result.current.updateParameter("preventPrinting", true));
+      rerender({ file, enabled: false });
+      rerender({ file, enabled: true });
+
+      expect(result.current.parameters.preventPrinting).toBe(true);
+      expect(result.current.hasError).toBe(true);
+      expect(result.current.isLoading).toBe(false);
+      expect(createDocument).toHaveBeenCalledTimes(1);
+
+      mockPermissions([]);
+      rerender({ file: new File([], "readable.pdf"), enabled: true });
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      expect(result.current.hasError).toBe(false);
+      expect(result.current.parameters.preventModify).toBe(true);
+      expect(createDocument).toHaveBeenCalledTimes(2);
     },
   );
 
