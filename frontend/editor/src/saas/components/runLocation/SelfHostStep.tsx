@@ -5,6 +5,7 @@ import { CodeBlock } from "@app/ui/CodeBlock";
 import { Icon } from "@app/ui/Icon";
 import { Select } from "@app/ui/Select";
 import {
+  DOCKER_COMPOSE_FILE,
   dockerRunCommand,
   HELM_INSTALL_COMMAND,
   JAR_RUN_COMMAND,
@@ -14,15 +15,23 @@ import {
 import { RunLocationStepLayout } from "@app/components/runLocation/RunLocationStepLayout";
 import styles from "@app/components/runLocation/RunLocation.module.css";
 
-type SelfHostMethod = keyof typeof SELF_HOST_GUIDES;
+type SelfHostMethod = "docker" | "compose" | "kubernetes" | "manual";
 
 const COMMANDS: Record<SelfHostMethod, string> = {
   docker: dockerRunCommand(),
+  compose: DOCKER_COMPOSE_FILE,
   kubernetes: HELM_INSTALL_COMMAND,
   manual: `curl -LO ${SERVER_JAR_URL}\n${JAR_RUN_COMMAND}`,
 };
 
-const METHODS: SelfHostMethod[] = ["docker", "kubernetes", "manual"];
+const GUIDES: Record<SelfHostMethod, string> = {
+  docker: SELF_HOST_GUIDES.docker,
+  compose: SELF_HOST_GUIDES.docker,
+  kubernetes: SELF_HOST_GUIDES.kubernetes,
+  manual: SELF_HOST_GUIDES.manual,
+};
+
+const METHODS: SelfHostMethod[] = ["docker", "compose", "kubernetes", "manual"];
 
 // The command box is sized for the longest command, so switching method never
 // resizes the card.
@@ -89,7 +98,11 @@ export function SelfHostStep({ onBack }: SelfHostStepProps) {
         className={styles.command}
         style={{ "--command-lines": COMMAND_LINES } as CSSProperties}
       >
-        <CodeBlock code={COMMANDS[method]} lang="bash" copyable={false} />
+        <CodeBlock
+          code={COMMANDS[method]}
+          lang={method === "compose" ? "plain" : "bash"}
+          copyable={false}
+        />
       </div>
       <Button
         variant="primary"
@@ -100,7 +113,9 @@ export function SelfHostStep({ onBack }: SelfHostStepProps) {
       >
         {copied
           ? t("runLocation.server.copied", "Copied")
-          : t("runLocation.server.copy", "Copy command")}
+          : method === "compose"
+            ? t("runLocation.server.copyCompose", "Copy compose file")
+            : t("runLocation.server.copy", "Copy command")}
       </Button>
       <div className={styles.note}>
         <Icon name="info" size={16} className={styles.noteIcon} />
@@ -117,7 +132,7 @@ export function SelfHostStep({ onBack }: SelfHostStepProps) {
           </p>
           <a
             className={styles.noteLink}
-            href={SELF_HOST_GUIDES[method]}
+            href={GUIDES[method]}
             target="_blank"
             rel="noopener noreferrer"
           >

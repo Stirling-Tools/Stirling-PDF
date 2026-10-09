@@ -11578,6 +11578,7 @@ windowsX64 = "Windows · x64"
 [runLocation.server]
 copied = "Copied"
 copy = "Copy command"
+copyCompose = "Copy compose file"
 guide = "{{method}} install guide"
 methodLabel = "Run it with"
 note = "Then open <url/> to finish setup."
@@ -11585,6 +11586,7 @@ subtitle = "Run this on your server, then open it in a browser."
 title = "Set up your server"
 
 [runLocation.server.method]
+compose = "Docker Compose"
 docker = "Docker"
 kubernetes = "Kubernetes"
 manual = "Java (JAR)"
