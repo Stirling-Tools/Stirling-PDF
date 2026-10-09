@@ -1939,9 +1939,6 @@ wrapUp = "That's the admin tour! You've seen the enterprise features that make S
 admin = "Admin"
 title = "User Control Settings"
 
-[agents]
-stirling_name = "Stirling"
-
 [alphabetOptions]
 arabic = "Arabic"
 chinese = "Chinese (Simplified)"
@@ -3219,17 +3216,16 @@ text = "To make these permissions unchangeable, use the Add Password tool to set
 [chat.actions]
 copy = "Copy message"
 
-[chat.fab]
-close = "Close chat"
-open = "Open Stirling AI assistant"
+[chat.dock]
+collapse = "Collapse chat"
+placeholder = "Ask Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Stirling agent options"
 clearChat = "Clear chat"
 
 [chat.input]
 disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
-placeholder = "What do you want to do?"
 send = "Send message"
 
 [chat.progress]
@@ -3260,9 +3256,7 @@ convertMany = "Convert these documents to PDF"
 convertOne = "Convert this document to PDF"
 heading = "Get started"
 mergeMany = "Merge these {{count}} documents into 1"
-moreFiles = "+{{count}} more"
 openFromComputer = "Open from computer"
-removeFile = "Remove {{name}}"
 splitOne = "Split this document"
 
 [chat.responses]
