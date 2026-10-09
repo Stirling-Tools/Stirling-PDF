@@ -12,7 +12,8 @@ import {
 type ExtractionStatus = "idle" | "loading" | "loaded" | "error";
 
 /**
- * Prefills restrictions for one FileContext document. Pass no file for a batch.
+ * Prefills restrictions for one FileContext document.
+ * Pass no file for a batch to preserve the current settings without inspecting PDFs.
  * Disable while processing or reviewing results to preserve the operation state.
  * Failed reads keep manual settings until another file is selected.
  */
@@ -32,12 +33,12 @@ export function usePermissionExtraction(
     if (file && initializedFile.current === file) return;
 
     initializedFile.current = undefined;
-    setParameters(defaultParameters);
     if (!file) {
       setState({ file, status: "idle" });
       return;
     }
 
+    setParameters(defaultParameters);
     setState({ file, status: "loading" });
     const signal = { cancelled: false };
     const url = URL.createObjectURL(file);

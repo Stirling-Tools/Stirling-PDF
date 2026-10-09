@@ -112,23 +112,47 @@ describe("usePermissionExtraction", () => {
     expect(createDocument).toHaveBeenCalledTimes(2);
   });
 
-  test("does not inspect a batch or empty selection and clears single-document values", async () => {
+  test("preserves batch settings and refreshes when returning to one PDF", async () => {
     const { result, rerender } = renderExtraction(undefined);
     expect(createDocument).not.toHaveBeenCalled();
     expect(result.current.isLoading).toBe(false);
 
-    mockPermissions([]);
-    rerender({ file: new File([], "single.pdf"), enabled: true });
+    const file = new File([], "single.pdf");
+    mockPermissions(
+      Object.values(PermissionFlag).filter(
+        (flag) => flag !== PermissionFlag.PRINT,
+      ),
+    );
+    rerender({ file, enabled: true });
     await waitFor(() =>
       expect(result.current.parameters.preventPrinting).toBe(true),
     );
 
+    act(() => result.current.updateParameter("preventModify", true));
+    const batchParameters = {
+      ...defaultParameters,
+      preventPrinting: true,
+      preventModify: true,
+    };
     rerender({ file: undefined, enabled: true });
-    expect(result.current.parameters).toEqual(defaultParameters);
-    act(() => result.current.updateParameter("preventPrinting", true));
+    expect(result.current.parameters).toEqual(batchParameters);
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.hasError).toBe(false);
+
+    act(() => result.current.updateParameter("preventExtractContent", true));
+    rerender({ file: undefined, enabled: false });
     rerender({ file: undefined, enabled: true });
-    expect(result.current.parameters.preventPrinting).toBe(true);
+    expect(result.current.parameters).toEqual({
+      ...batchParameters,
+      preventExtractContent: true,
+    });
     expect(createDocument).toHaveBeenCalledTimes(1);
+
+    mockPermissions(null);
+    rerender({ file, enabled: true });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.parameters).toEqual(defaultParameters);
+    expect(createDocument).toHaveBeenCalledTimes(2);
   });
 
   test("ignores late permissions from a previous selection", async () => {

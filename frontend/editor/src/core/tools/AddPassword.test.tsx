@@ -148,6 +148,42 @@ describe("Add Password permission detection", () => {
     );
   });
 
+  test("applies existing manual restrictions after expanding a single selection to a batch", async () => {
+    createDocument.mockResolvedValueOnce({ getPermissions: async () => null });
+    const { rerender } = render(<AddPassword />);
+    await waitFor(() => expect(permissionSettings().isLoading).toBe(false));
+    act(() => {
+      permissionSettings().onParameterChange("preventPrinting", true);
+      permissionSettings().onParameterChange("preventModify", true);
+    });
+
+    selection.files = [
+      ...selection.files,
+      createStirlingFile(new File([], "second.pdf")),
+    ];
+    rerender(<AddPassword />);
+    expect(permissionSettings().multipleFiles).toBe(true);
+    expect(currentFlow().executeButton?.disabled).toBe(false);
+
+    operation.isLoading = true;
+    rerender(<AddPassword />);
+    operation.isLoading = false;
+    rerender(<AddPassword />);
+    await act(async () => currentFlow().executeButton?.onClick());
+
+    expect(operation.executeOperation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        permissions: {
+          ...defaultParameters,
+          preventPrinting: true,
+          preventModify: true,
+        },
+      }),
+      selection.files,
+    );
+    expect(createDocument).toHaveBeenCalledTimes(1);
+  });
+
   test("does not read encrypted outputs or reset results during processing and review", async () => {
     createDocument.mockResolvedValueOnce({ getPermissions: async () => null });
     const { rerender } = render(<AddPassword />);
