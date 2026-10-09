@@ -165,7 +165,7 @@ const TOOL_ICON_MAP: Record<string, IconName> = {
   stamp: "image-plus",
   textComment: "message-square",
   insertText: "message-square-plus",
-  replaceText: "replace",
+  replaceText: "replace-text",
 };
 
 // Type-based fallback icon when no toolId is present

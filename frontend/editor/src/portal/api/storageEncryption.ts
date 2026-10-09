@@ -9,11 +9,11 @@ import { apiClient, HttpError } from "@portal/api/http";
 const BASE = "/api/v1/admin/storage-encryption";
 
 /**
- * Runbook sections the panel links to. These point at the devGuide until the
- * encryption-at-rest pages are published on docs.stirlingpdf.com.
+ * Runbook sections the panel links to. These point at the in-repo runbook until
+ * the encryption-at-rest pages are published on docs.stirlingpdf.com.
  */
 const RUNBOOK =
-  "https://github.com/Stirling-Tools/Stirling-PDF/blob/main/devGuide/STORAGE_ENCRYPTION_AT_REST.md";
+  "https://github.com/Stirling-Tools/Stirling-PDF/blob/main/docs/developer/STORAGE_ENCRYPTION_AT_REST.md";
 const section = (anchor: string) => `${RUNBOOK}#${anchor}`;
 export const RUNBOOK_BACKUP = section("backing-up-the-master-key");
 export const RUNBOOK_ROTATION = section("rotating-the-master-key");

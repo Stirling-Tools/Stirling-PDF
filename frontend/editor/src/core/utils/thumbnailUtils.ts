@@ -422,13 +422,16 @@ function readJpegDimensions(
   return null;
 }
 
-/** Resize a known source into a thumbnail-sized box, longest side first. */
-function thumbnailResizeOptions(source: { width: number; height: number }): {
+/** Resize a known source to fit a `maxSize` box, longest side first, never
+ *  enlarging it. */
+function thumbnailResizeOptions(
+  source: { width: number; height: number },
+  maxSize: number,
+): {
   resizeWidth: number;
   resizeHeight: number;
 } {
-  const scale =
-    IMAGE_THUMBNAIL_MAX_SIZE / Math.max(source.width, source.height);
+  const scale = Math.min(1, maxSize / Math.max(source.width, source.height));
   return {
     resizeWidth: Math.max(1, Math.round(source.width * scale)),
     resizeHeight: Math.max(1, Math.round(source.height * scale)),
@@ -482,6 +485,31 @@ async function encodeThumbnailJpeg(bitmap: ImageBitmap): Promise<string> {
 }
 
 /**
+ * A JPEG data URL of the image with its longest side at most `maxSize` pixels,
+ * decoded at that size rather than at full resolution. Throws when the header
+ * gives no dimensions or the browser cannot decode the image.
+ */
+export async function generateImageThumbnail(
+  file: File,
+  maxSize: number,
+): Promise<string> {
+  const source = await readImageDimensions(file);
+  // Without a header ratio a width-only request would let an extreme portrait
+  // ask for a maxSize x tens-of-millions bitmap.
+  if (!source) throw new Error("image dimensions unavailable");
+  const bitmap = await createImageBitmap(file, {
+    ...thumbnailResizeOptions(source, maxSize),
+    resizeQuality: "high",
+    imageOrientation: "from-image",
+  });
+  try {
+    return await encodeThumbnailJpeg(bitmap);
+  } finally {
+    bitmap.close();
+  }
+}
+
+/**
  * Generate thumbnail for any file type - always returns a thumbnail (placeholder if needed)
  */
 export async function generateThumbnailForFile(file: File): Promise<string> {
@@ -497,21 +525,7 @@ export async function generateThumbnailForFile(file: File): Promise<string> {
   // without intrinsic size, exotic codecs) falls back to the data URL.
   if (file.type.startsWith("image/")) {
     try {
-      const source = await readImageDimensions(file);
-      // Without a header ratio a width-only request would let an extreme
-      // portrait ask for a 320 x tens-of-millions bitmap, so unknown sizes take
-      // the data URL path below instead of decoding.
-      if (!source) throw new Error("image dimensions unavailable");
-      const bitmap = await createImageBitmap(file, {
-        ...thumbnailResizeOptions(source),
-        resizeQuality: "high",
-        imageOrientation: "from-image",
-      });
-      try {
-        return await encodeThumbnailJpeg(bitmap);
-      } finally {
-        bitmap.close();
-      }
+      return await generateImageThumbnail(file, IMAGE_THUMBNAIL_MAX_SIZE);
     } catch {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();

@@ -17,6 +17,10 @@ import styles from "@app/components/layout/Workbench.module.css";
 
 import WorkbenchBar from "@app/components/shared/WorkbenchBar";
 import { useWorkbenchTakeover } from "@app/components/layout/WorkbenchTakeover";
+import {
+  useIsWorkbenchFileDragOver,
+  useWorkbenchFileDrop,
+} from "@app/components/layout/useWorkbenchFileDrop";
 import { useTitleBarStrip } from "@app/contexts/TitleBarStripContext";
 import WorkbenchFloatingSearch from "@app/components/shared/WorkbenchFloatingSearch";
 import LandingPage from "@app/components/shared/LandingPage";
@@ -65,6 +69,14 @@ export default function Workbench() {
   const { addFiles } = useFileHandler();
   const hasFiles = activeFiles.length > 0;
   const { t } = useTranslation();
+
+  // Every view takes file drops on the whole canvas, not just the content it
+  // happens to render. Views that do something of their own with a dropped file
+  // (the file library, the PDF text editor) stop the events reaching here.
+  // The file sidebar shares this drop target and its overlay.
+  const acceptsFileDrops = !takeover;
+  const dropHandlers = useWorkbenchFileDrop(acceptsFileDrops);
+  const isFileDragOver = useIsWorkbenchFileDragOver() && acceptsFileDrops;
 
   // The viewer's tool row can be retracted to give the document more height.
   // State lives here (not in WorkbenchBar) so the reopen tab can hang below the
@@ -205,7 +217,19 @@ export default function Workbench() {
       className="flex-1 h-full min-w-0 relative flex flex-col"
       data-tour="workbench"
       style={{ backgroundColor: "var(--c-bg)", minWidth: 0, minHeight: 0 }}
+      {...dropHandlers}
     >
+      {isFileDragOver && (
+        <div className={styles.fileDropOverlay} aria-live="polite">
+          <span className={styles.fileDropOverlayIcon}>
+            <Icon name="file-up" size="2.5rem" />
+          </span>
+          {t(
+            "workbench.dropOverlay",
+            "Drop files to add them to the workbench",
+          )}
+        </div>
+      )}
       {/* Phone only: above that the rail carries the bell, and here no bar does. */}
       {isPhone && !showWorkbenchBar && topControlsAvailable && (
         <div style={{ position: "absolute", top: 12, right: 12, zIndex: 20 }}>
