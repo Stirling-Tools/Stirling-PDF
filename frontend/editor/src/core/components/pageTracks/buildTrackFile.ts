@@ -11,6 +11,7 @@ import {
   Track,
   TrackPage,
   TrackWorkspace,
+  allPages,
   isSourcePage,
 } from "@app/components/pageTracks/types";
 
@@ -115,8 +116,114 @@ export function policyIdsForTracks(
       .filter(isSourcePage)
       .forEach((page) => fileIds.add(page.sourceFileId));
   }
+  return policyIdsForFiles(fileIds, getStub);
+}
+
+/** Every file whose bytes the selected pages copy, including consumed ancestors. */
+export function policyIdsForPages(
+  workspace: TrackWorkspace,
+  pageIds: ReadonlySet<string>,
+  getStub: TrackFileLookup["getStub"],
+): string[] {
+  const fileIds = new Set<FileId>();
+  for (const page of allPages(workspace)) {
+    if (pageIds.has(page.id) && isSourcePage(page)) {
+      fileIds.add(page.sourceFileId);
+    }
+  }
+  return policyIdsForFiles(fileIds, getStub);
+}
+
+function policyIdsForFiles(
+  fileIds: Set<FileId>,
+  getStub: TrackFileLookup["getStub"],
+): string[] {
   return [...fileIds].flatMap((id) => {
     const stub = getStub(id);
     return stub ? policySourceIds(stub) : [id];
   });
+}
+
+/** How a download of the selected pages is split into files. */
+export type SelectedPagesLayout = "eachPage" | "oneFile";
+
+interface SelectedPage {
+  track: Track;
+  page: TrackPage;
+  /** 1-based position in its track, as the editor numbers it. */
+  pageNumber: number;
+}
+
+function selectedPagesInOrder(
+  workspace: TrackWorkspace,
+  selectedIds: ReadonlySet<string>,
+): SelectedPage[] {
+  return workspace.order.flatMap((trackId) => {
+    const track = workspace.tracks[trackId];
+    if (!track) return [];
+    return track.pages.flatMap((page, index) =>
+      selectedIds.has(page.id) ? [{ track, page, pageNumber: index + 1 }] : [],
+    );
+  });
+}
+
+const baseName = (track: Track): string => track.name.replace(/\.pdf$/i, "");
+
+/** Built as a split so it takes `name`, and blank pages alone still have the
+ *  file of the track they sit in to parent to. */
+function buildPagesFile(
+  pages: TrackPage[],
+  name: string,
+  track: Track,
+  lookup: TrackFileLookup,
+): Promise<BuiltTrackFile | null> {
+  return buildTrackFile(
+    {
+      fileId: track.fileId,
+      name,
+      isNew: true,
+      splitFromFileId: track.isNew ? track.splitFromFileId : track.fileId,
+      pages,
+    },
+    lookup,
+  );
+}
+
+/**
+ * Renders the selected pages, as the editor shows them and in workspace order,
+ * without saving anything: one PDF per page named after its track and page
+ * number, or one PDF of them all named after the first page's track. Pages
+ * whose file has closed are skipped.
+ */
+export async function buildSelectedPagesFiles(
+  workspace: TrackWorkspace,
+  selectedIds: ReadonlySet<string>,
+  layout: SelectedPagesLayout,
+  lookup: TrackFileLookup,
+): Promise<BuiltTrackFile[]> {
+  const selected = selectedPagesInOrder(workspace, selectedIds);
+  const first = selected[0];
+  if (!first) return [];
+
+  if (layout === "oneFile") {
+    const output = await buildPagesFile(
+      selected.map(({ page }) => page),
+      `${baseName(first.track)} (selected pages).pdf`,
+      first.track,
+      lookup,
+    );
+    return output ? [output] : [];
+  }
+
+  const built: BuiltTrackFile[] = [];
+  for (const { track, page, pageNumber } of selected) {
+    const output = await buildPagesFile(
+      [page],
+      `${baseName(track)} (page ${pageNumber}).pdf`,
+      track,
+      lookup,
+    );
+    if (output) built.push(output);
+  }
+  return built;
 }
