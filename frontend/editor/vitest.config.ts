@@ -28,6 +28,8 @@ const TEST_DEFAULTS = {
   deps: {
     optimizer: { web: { enabled: true, include: MANTINE_PACKAGES } },
   },
+  // All our tests are designed to run in the browser
+  testTransformMode: { web: ["**/*"] },
   onConsoleLog(_log: string, type: "stdout" | "stderr") {
     if (type === "stdout" && !process.env.VITEST_CONSOLE) return false;
   },
