@@ -678,6 +678,14 @@ const EmbedPdfViewerContent = ({
       : false,
   );
 
+  // Reuse the sidebar's already-generated page-1 thumbnail as a poster: a second
+  // pdfium render would cost a frame on the very path this is meant to smooth.
+  const viewerPosterUrl = useFileSelector((s) =>
+    currentFile && isStirlingFile(currentFile)
+      ? s.files.byId[currentFile.fileId]?.thumbnailUrl
+      : undefined,
+  );
+
   const bookmarkCacheKey = React.useMemo(() => {
     if (currentFile && isStirlingFile(currentFile)) {
       return documentCacheKey(currentFile);
@@ -1861,6 +1869,7 @@ const EmbedPdfViewerContent = ({
                 redactionTrackerRef as React.RefObject<RedactionPendingTrackerAPI>
               }
               fileId={currentFileId}
+              posterUrl={viewerPosterUrl}
               isCommentsSidebarVisible={isCommentsSidebarVisible}
               commentsSidebarRightOffset={`${(isThumbnailSidebarVisible ? sidebarWidthRem : 0) + (isBookmarkSidebarVisible ? sidebarWidthRem : 0) + (isAttachmentSidebarVisible ? sidebarWidthRem : 0) + (isLayerSidebarVisible ? sidebarWidthRem : 0)}rem`}
               onSignatureAdded={() => {
