@@ -17,6 +17,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const LABELS = ["i", "ii", "iii", "1", "2", "3"];
 
+/** Regenerates the committed `page-labels-sample.pdf` in place. */
 async function main() {
   const doc = await PDFDocument.create();
   const font = await doc.embedFont(StandardFonts.Helvetica);

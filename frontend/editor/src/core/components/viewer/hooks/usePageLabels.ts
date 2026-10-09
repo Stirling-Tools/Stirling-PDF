@@ -45,8 +45,8 @@ export function usePageLabels(
         cache.set(documentKey, result);
         if (!cancelled) setLabels(result);
       } catch {
-        // Labels are presentation only: a read failure keeps plain numbers.
-        cache.set(documentKey, null);
+        // A transient read failure keeps plain numbers and is deliberately not
+        // cached, so the next mount retries instead of staying unlabelled.
         if (!cancelled) setLabels(null);
       }
     })();

@@ -93,6 +93,20 @@ export interface EmbedPdfViewerProps {
 const documentCacheKey = (file: StirlingFile): string =>
   `${file.fileId}|${file.quickKey}`;
 
+// An attachment switch hands the viewer a brand-new File, so a name/size/mtime
+// key can collide and reuse the previous preview's labels and outline. Identity
+// gives each preview object its own cache entry for as long as it is held.
+const previewFileCacheKeys = new WeakMap<File, string>();
+let nextPreviewFileCacheKey = 0;
+const previewFileCacheKey = (file: File): string => {
+  let key = previewFileCacheKeys.get(file);
+  if (!key) {
+    key = String(++nextPreviewFileCacheKey);
+    previewFileCacheKeys.set(file, key);
+  }
+  return key;
+};
+
 // Guards only; a restore completes on plugin events. A missed event costs a
 // wrong-scale frame after the hide cap, not a blank viewer until the other.
 const RESTORE_SETTLE_CAP_MS = 15_000;
@@ -685,8 +699,7 @@ const EmbedPdfViewerContent = ({
     }
 
     if (previewFile) {
-      const uniquePreviewId = `${previewFile.name}-${previewFile.size}-${previewFile.lastModified ?? "na"}`;
-      return `preview-${uniquePreviewId}`;
+      return `preview-${previewFileCacheKey(previewFile)}`;
     }
 
     if (effectiveFile?.url) {

@@ -14,6 +14,8 @@ const pdfium = vi.hoisted(() => {
     nextDocPtr: 1000,
     nextDataPtr: 5000,
   };
+  /** Writes UTF-16LE text plus a NUL pair into the fake heap; returns the byte
+   *  length written. */
   const writeUtf16 = (ptr: number, text: string) => {
     const encoded = new Uint8Array((text.length + 1) * 2);
     for (let i = 0; i < text.length; i++) {
@@ -24,6 +26,7 @@ const pdfium = vi.hoisted(() => {
     state.heap.set(encoded, ptr);
     return encoded.length;
   };
+  /** Fresh module whose label stub mirrors the real two-call contract. */
   const makeModule = () => {
     state.freeCalls = [];
     return {

@@ -268,8 +268,10 @@ export function PdfViewerToolbar({
           onChange={(event) => setLabelInput(event.currentTarget.value)}
           onBlur={(event) => handleLabelNavigation(event.currentTarget.value)}
           onKeyDown={(event) => {
-            if (event.key === "Enter") {
-              handleLabelNavigation(event.currentTarget.value);
+            // Blur commits through onBlur; navigating here as well would run the
+            // jump twice. Skip while composing so an IME candidate is not taken
+            // as the page text.
+            if (event.key === "Enter" && !event.nativeEvent.isComposing) {
               event.currentTarget.blur();
             }
           }}

@@ -8,6 +8,8 @@ const LABELLED_PDF = path.join(
   "../test-fixtures/page-labels-sample.pdf",
 );
 
+/** Loads the fixture into the editor and returns the toolbar's page field once
+ *  the first page has rendered. */
 async function loadViewer(page: import("@playwright/test").Page) {
   await page.goto("/editor");
   await page.locator('input[type="file"]').first().setInputFiles(LABELLED_PDF);
@@ -17,7 +19,8 @@ async function loadViewer(page: import("@playwright/test").Page) {
   return page.locator(".pdf-viewer-toolbar input").first();
 }
 
-// The page nearest the top of the viewport, which is what scrolling targets.
+/** Index of the page sitting at the viewport top — the page a scroll targets —
+ *  or -1 when none qualifies. */
 async function topPageIndex(page: import("@playwright/test").Page) {
   return page.locator("[data-page-index]").evaluateAll(
     (elements) =>
