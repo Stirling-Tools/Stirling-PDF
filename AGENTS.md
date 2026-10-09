@@ -465,16 +465,7 @@ The frontend is organized with a clear separation of concerns:
 - **Manual Testing**: No unit tests currently - relies on UI and API testing
 
 #### No fixed waits in tests
-Fixed sleeps are the main source of flaky tests here. A sleep is a guess about timing: too short on a loaded CI runner (WebKit especially) and the test flakes, too long and the suite crawls.
-- **Never wait with a sleep**: no `page.waitForTimeout(...)`, `setTimeout`-based delays, `Thread.sleep` or `time.sleep` to let the app catch up. This applies to Playwright, vitest, JUnit and pytest alike.
-- **Wait for the condition the next step needs instead**:
-  - Playwright: web-first assertions (`await expect(locator).toBeVisible()`, `.toHaveCount(0)`, `.toHaveAttribute(...)`), `await expect.poll(() => readStoreState()).toBe(x)`, `page.waitForFunction(...)`, `page.waitForEvent("download")`, `page.waitForResponse(...)`. These retry until they pass.
-  - Pixel comparisons: wait for the bitmap to change from its previous state and then hold still, not for a fixed delay.
-  - vitest: `await vi.waitFor(...)` or Testing Library `findBy*`; Java: Awaitility; Python: poll with a deadline.
-- **Time-based behaviour** (debounce, history coalescing, retry backoff): drive the clock with fake timers (`vi.useFakeTimers()`, Playwright `page.clock`) rather than sleeping past it.
-- **No signal to wait on?** Add one to the app (a store flag, a `data-*` attribute, an event) rather than sleeping.
-- **Timeouts are ceilings, not delays.** Raising the `timeout` on a condition wait is fine; it costs nothing when the condition is met early.
-- When fixing a flaky test, replace the sleeps in it with condition waits rather than lengthening them.
+Never sleep in tests (`page.waitForTimeout`, `Thread.sleep`, etc.) - it causes flakes. Wait for the actual condition instead (`expect(...)`, `expect.poll`, `waitForFunction`, `vi.waitFor`), or use fake timers for time-based behaviour.
 
 ## Development Workflow
 
