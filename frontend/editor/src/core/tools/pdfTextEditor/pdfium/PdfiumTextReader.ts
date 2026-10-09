@@ -827,8 +827,8 @@ function readStroke(
   const getColor = mod.FPDFPageObj_GetStrokeColor;
   const getWidth = mod.FPDFPageObj_GetStrokeWidth;
   if (!getColor) return { stroke: null, strokeWidth: 0 };
-  const buf = scratchPtr(m, SCRATCH.readerStroke, 20);
   try {
+    const buf = scratchPtr(m, SCRATCH.readerStroke, 20);
     if (!getColor(objPtr, buf, buf + 4, buf + 8, buf + 12)) {
       return { stroke: null, strokeWidth: 0 };
     }
