@@ -164,6 +164,16 @@ describe("Convert Tool Integration Tests", () => {
       "encrypted",
       "application/pdf",
     );
+    rememberPdfAccess(locked, {
+      password: "test",
+      encrypted: true,
+      signed: false,
+      ownerAuthenticated: true,
+      permissions: -4,
+      canModify: true,
+      canAssemble: true,
+      pageCount: 1,
+    });
     const files = [locked, pdf];
     const customProcessor = vi.fn().mockResolvedValue({ files: [pdf] });
     const { result } = renderHook(
@@ -247,6 +257,16 @@ describe("Convert Tool Integration Tests", () => {
       "encrypted",
       "application/pdf",
     );
+    rememberPdfAccess(locked, {
+      password: "test",
+      encrypted: true,
+      signed: false,
+      ownerAuthenticated: true,
+      permissions: -4,
+      canModify: true,
+      canAssemble: true,
+      pageCount: 1,
+    });
     const files = [image, locked, pdf, svg];
     await act(async () => {
       result.current.context.dispatch({
@@ -1352,3 +1372,4 @@ describe("Convert Tool Integration Tests", () => {
  *    - Test graceful degradation when endpoints are disabled
  *    - Test dynamic endpoint configuration updates
  */
+import { rememberPdfAccess } from "@app/services/pdfPasswordStore";

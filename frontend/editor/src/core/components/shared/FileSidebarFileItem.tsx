@@ -119,6 +119,7 @@ export interface FileItemProps {
   isViewedInViewer: boolean;
   isToolSkipped?: boolean;
   thumbnailUrl?: string;
+  isEncrypted?: boolean;
   onClick: (fileId: FileId) => void;
   onEyeClick: (fileId: FileId, e: React.MouseEvent) => void;
   /** Policies that have run on this file — rendered as small shield badges. */
@@ -204,6 +205,7 @@ export const FileItem = React.memo(function FileItem({
   isToolSkipped = false,
   dataUnavailable,
   thumbnailUrl,
+  isEncrypted,
   onClick,
   onEyeClick,
   policies = [],
@@ -274,6 +276,7 @@ export const FileItem = React.memo(function FileItem({
     fileId,
     size ?? 0,
     useRasterThumb ? thumbnailUrl : undefined,
+    isEncrypted,
   );
 
   const itemRef = useRef<HTMLDivElement>(null);

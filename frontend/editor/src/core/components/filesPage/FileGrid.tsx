@@ -1246,6 +1246,7 @@ const FileCard = React.memo(function FileCard({
     file.id,
     file.size,
     file.thumbnailUrl,
+    file.processedFile?.isEncrypted,
   );
 
   const kebabRef = useRef<HTMLButtonElement>(null);
@@ -1901,6 +1902,7 @@ const FileRow = React.memo(function FileRow({
     file.id,
     file.size,
     file.thumbnailUrl,
+    file.processedFile?.isEncrypted,
   );
   const compactDate = useMemo(() => formatCompactDate(date), [date]);
   const longPress = useLongPress(() => {

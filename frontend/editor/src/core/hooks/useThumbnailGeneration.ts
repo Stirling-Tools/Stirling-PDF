@@ -4,7 +4,7 @@ import {
   type ThumbnailResult,
 } from "@app/services/thumbnailGenerationService";
 import { getDocumentBytes } from "@app/services/documentBytesCache";
-import { createQuickKey } from "@app/types/fileContext";
+import { createQuickKey, isStirlingFile } from "@app/types/fileContext";
 import { FileId } from "@app/types/file";
 
 // Request queue to handle concurrent thumbnail requests
@@ -79,7 +79,9 @@ async function processRequestQueue() {
           const arrayBuffer = await getDocumentBytes(file);
 
           // Use quickKey for PDF document caching (same metadata, consistent format)
-          const fileId = createQuickKey(file) as FileId;
+          const fileId = isStirlingFile(file)
+            ? file.fileId
+            : (createQuickKey(file) as FileId);
 
           const results = await thumbnailGenerationService.generateThumbnails(
             fileId,

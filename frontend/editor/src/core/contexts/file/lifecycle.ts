@@ -5,6 +5,7 @@
 import { FileId } from "@app/types/file";
 import { releaseSharedDocumentWhenIdle } from "@app/services/pdfiumService";
 import { releaseDocumentBytes } from "@app/services/documentBytesCache";
+import { forgetPdfAccess } from "@app/services/pdfPasswordStore";
 import {
   FileContextAction,
   FileContextState,
@@ -72,6 +73,7 @@ export class FileLifecycleManager {
    * Clean up all files and resources
    */
   cleanupAllFiles = (): void => {
+    forgetPdfAccess([...this.filesRef.current.keys()]);
     // Revoke all blob URLs
     this.blobUrls.forEach((url) => {
       try {
@@ -158,6 +160,7 @@ export class FileLifecycleManager {
     fileId: FileId,
     stateRef?: React.RefObject<FileContextState>,
   ): void => {
+    forgetPdfAccess([fileId]);
     const file = this.filesRef.current.get(fileId);
     this.filesRef.current.delete(fileId);
 

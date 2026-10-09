@@ -7,6 +7,7 @@ import {
 } from "@app/services/pdfiumService";
 import type { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
 import type { PageSnapshot } from "@app/tools/pdfTextEditor/types";
+import { getPdfAccess } from "@app/services/pdfPasswordStore";
 
 const EAGER_PAGE_LIMIT = 5;
 
@@ -18,6 +19,7 @@ const yieldToBrowser = () =>
 export function useDocumentLoader(store: EditorStore) {
   return useCallback(
     async (file: File, password?: string): Promise<void> => {
+      const documentPassword = password ?? getPdfAccess(file)?.password;
       // Each load claims a token.
       const token = store.beginLoad();
       store.setLoading(true);
@@ -36,7 +38,7 @@ export function useDocumentLoader(store: EditorStore) {
           total: 0,
         });
         await yieldToBrowser();
-        const doc = await EditorDocument.open(bytes, password);
+        const doc = await EditorDocument.open(bytes, documentPassword);
         if (!store.isCurrentLoad(token)) {
           // A newer load superseded us before we installed our doc - free
           // it ourselves (setDocument never took ownership).
@@ -106,7 +108,7 @@ export function useDocumentLoader(store: EditorStore) {
             err instanceof PdfiumOpenError &&
             err.code === FPDF_ERR_PASSWORD
           ) {
-            store.setPasswordRequired(file, password !== undefined);
+            store.setPasswordRequired(file, documentPassword !== undefined);
           } else {
             store.setError(err instanceof Error ? err.message : String(err));
           }

@@ -6,13 +6,13 @@ import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady"
 /**
  * Component that runs inside EmbedPDF context and provides export functionality
  */
-export function ExportAPIBridge() {
+export function ExportAPIBridge({ disabled = false }: { disabled?: boolean }) {
   const { provides: exportApi } = useExportCapability();
   const { registerBridge } = useViewer();
   const documentReady = useDocumentReady();
 
   useEffect(() => {
-    if (exportApi && documentReady) {
+    if (exportApi && documentReady && !disabled) {
       // Register this bridge with ViewerContext
       registerBridge("export", {
         state: {
@@ -25,7 +25,7 @@ export function ExportAPIBridge() {
     return () => {
       registerBridge("export", null);
     };
-  }, [exportApi, documentReady, registerBridge]);
+  }, [exportApi, documentReady, registerBridge, disabled]);
 
   return null;
 }

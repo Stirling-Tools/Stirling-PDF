@@ -1,6 +1,12 @@
 import { createContext, type ReactNode } from "react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import { render, renderHook, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  render,
+  renderHook,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MantineProvider } from "@mantine/core";
 import Compress from "@app/tools/Compress";
@@ -25,6 +31,10 @@ import { FileItem } from "@app/components/shared/FileSidebarFileItem";
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 import { useCompressOperation } from "@app/hooks/tools/compress/useCompressOperation";
 import { defaultParameters as compressParameters } from "@app/hooks/tools/compress/useCompressParameters";
+import {
+  rememberPdfAccess,
+  clearPdfAccess,
+} from "@app/services/pdfPasswordStore";
 
 const workspace = {
   files: [] as StirlingFile[],
@@ -39,6 +49,7 @@ const selectors = {
 const loadRecentFiles = vi.fn().mockResolvedValue([]);
 const onFileClick = vi.fn();
 const onPreviewRender = vi.fn();
+const handleToolSelect = vi.fn();
 
 const pdfWorker = vi.hoisted(() => ({
   createDocument: vi.fn(),
@@ -96,6 +107,9 @@ vi.mock("@app/contexts/ViewerContext", () => ({
 vi.mock("@app/contexts/NavigationContext", () => ({
   useNavigationState: () => navigation,
   useNavigationActions: () => ({ actions: {} }),
+}));
+vi.mock("@app/contexts/ToolWorkflowContext", () => ({
+  useToolWorkflowActions: () => ({ handleToolSelect }),
 }));
 vi.mock("@app/contexts/PreferencesContext", () => ({
   usePreferences: () => ({ preferences: {} }),
@@ -186,6 +200,53 @@ beforeEach(() => {
 });
 
 describe("tool file selection", () => {
+  test("explains why an unlocked protected PDF is excluded", async () => {
+    workspace.fileStubs[0].processedFile = { pages: [], isEncrypted: true };
+    rememberPdfAccess(workspace.files[0], {
+      password: "secret",
+      encrypted: true,
+      signed: false,
+      ownerAuthenticated: true,
+      permissions: -4,
+      canModify: true,
+      canAssemble: true,
+      pageCount: 1,
+    });
+    try {
+      render(
+        <MantineProvider>
+          <EmptyFileSelectionTool filesVisible />
+        </MantineProvider>,
+      );
+      const fileList = await screen.findByTestId("tool-file-list");
+      expect(fileList).toContainElement(screen.getByRole("listitem"));
+      expect(screen.getByRole("listitem")).toHaveTextContent("report.pdf");
+      expect(
+        screen.queryByText(/Add files to the workbench/),
+      ).not.toBeInTheDocument();
+      expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+      act(() =>
+        screen
+          .getByRole("button", { name: "Why report.pdf is unavailable" })
+          .focus(),
+      );
+      expect(await screen.findByRole("tooltip")).toHaveTextContent(
+        "Use Remove Password to create an unprotected copy first.",
+      );
+      const removePassword = screen.getByRole("button", {
+        name: "Remove Password",
+      });
+      act(() => removePassword.focus());
+      const help = await screen.findByText(
+        "Open Remove Password to create an unprotected copy.",
+      );
+      await waitFor(() => expect(help).toBeVisible());
+      await userEvent.click(removePassword);
+      expect(handleToolSelect).toHaveBeenCalledWith("removePassword");
+    } finally {
+      act(() => clearPdfAccess());
+    }
+  });
   test("eligible selections keep their identity until file objects or order change", () => {
     const secondPdf = createTestStirlingFile(
       "second.pdf",

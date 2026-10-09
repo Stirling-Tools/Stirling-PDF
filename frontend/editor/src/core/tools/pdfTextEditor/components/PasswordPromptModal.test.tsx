@@ -18,7 +18,7 @@ describe("password retry dismissal", () => {
       </MantineProvider>
     );
     const { rerender } = render(modal(true));
-    expect(screen.getByTestId("pdf-editor-password-cancel")).toBeDisabled();
+    expect(screen.queryByTestId("pdf-editor-password-cancel")).toBeNull();
     expect(document.querySelector(".mantine-Modal-close")).toBeNull();
     fireEvent.keyDown(document.body, { key: "Escape" });
     const overlay = document.querySelector(".mantine-Modal-overlay");
@@ -27,8 +27,8 @@ describe("password retry dismissal", () => {
     expect(onCancel).not.toHaveBeenCalled();
 
     rerender(modal(false));
-    expect(screen.getByTestId("pdf-editor-password-cancel")).toBeEnabled();
-    fireEvent.click(document.querySelector(".mantine-Modal-close")!);
+    expect(screen.getByRole("button", { name: /^close$/i })).toBeEnabled();
+    fireEvent.click(screen.getByRole("button", { name: /^close$/i }));
     expect(onCancel).toHaveBeenCalledTimes(1);
     fireEvent.keyDown(document.body, { key: "Escape" });
     expect(onCancel).toHaveBeenCalledTimes(2);

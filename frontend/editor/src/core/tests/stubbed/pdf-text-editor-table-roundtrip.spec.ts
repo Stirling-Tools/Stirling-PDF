@@ -1,4 +1,6 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
+import type { Page } from "@playwright/test";
+import { mockAppApis } from "@app/tests/helpers/api-stubs";
 import type { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
 import { readFileSync } from "node:fs";
 import path from "node:path";
@@ -13,6 +15,34 @@ const corpus: string[] = process.env.PDF_TABLE_CORPUS
   : [];
 
 test.use({ autoGoto: false });
+
+async function waitForFirstPage(page: Page): Promise<void> {
+  await page.waitForFunction(
+    () => {
+      const store = (window as unknown as { __editor_store?: EditorStore })
+        .__editor_store;
+      return store?.getState().firstPageRendered && !store.getState().loading;
+    },
+    undefined,
+    { timeout: 30_000 },
+  );
+}
+
+async function reopenExport(
+  page: Page,
+  saved: string,
+  errors?: string[],
+): Promise<Page> {
+  // A fresh tab isolates exported bytes from the original editor and avoids
+  // WebKit's page-teardown errors from interrupted thumbnail blob reads.
+  const reopened = await page.context().newPage();
+  if (errors) reopened.on("pageerror", (error) => errors.push(error.message));
+  await mockAppApis(reopened);
+  await reopened.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
+  await reopened.getByTestId("pdf-editor-file-input").setInputFiles(saved);
+  await waitForFirstPage(reopened);
+  return reopened;
+}
 
 function readMergedTable() {
   const store = (window as unknown as { __editor_store: EditorStore })
@@ -71,11 +101,7 @@ test("merged cells retain their borders after a structural edit and export", asy
         "../test-fixtures/merged-table-sample.pdf",
       ),
     );
-  await page.waitForFunction(() => {
-    const store = (window as unknown as { __editor_store: EditorStore })
-      .__editor_store;
-    return store.getState().firstPageRendered && !store.getState().loading;
-  });
+  await waitForFirstPage(page);
   await page
     .locator('[data-testid^="pdf-editor-recognized-table-edit-"]')
     .first()
@@ -121,18 +147,12 @@ test("merged cells retain their borders after a structural edit and export", asy
     path: saved,
     contentType: "application/pdf",
   });
-  await page.reload({ waitUntil: "domcontentloaded" });
-  await page.getByTestId("pdf-editor-file-input").setInputFiles(saved);
-  await page.waitForFunction(() => {
-    const store = (window as unknown as { __editor_store: EditorStore })
-      .__editor_store;
-    return store.getState().firstPageRendered && !store.getState().loading;
-  });
-  await page
+  const reopenedPage = await reopenExport(page, saved);
+  await reopenedPage
     .locator('[data-testid^="pdf-editor-recognized-table-edit-"]')
     .first()
     .click();
-  const reopened = await page.evaluate(readMergedTable);
+  const reopened = await reopenedPage.evaluate(readMergedTable);
   expect({ rows: reopened.rows, cols: reopened.cols }).toEqual({
     rows: 8,
     cols: 5,
@@ -147,7 +167,7 @@ test("merged cells retain their borders after a structural edit and export", asy
   ).toEqual(expectedSpans);
   for (const span of reopened.spans)
     expectNoRulesInside(span.rect, reopened.rules);
-  await page.screenshot({
+  await reopenedPage.screenshot({
     path: testInfo.outputPath("merged-reopened.png"),
     fullPage: true,
   });
@@ -166,11 +186,7 @@ for (const file of [fixture, ...corpus]) {
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
-    await page.waitForFunction(() => {
-      const store = (window as unknown as { __editor_store: EditorStore })
-        .__editor_store;
-      return store.getState().firstPageRendered && !store.getState().loading;
-    });
+    await waitForFirstPage(page);
     const contentBefore = await page.evaluate(() => {
       const store = (window as unknown as { __editor_store: EditorStore })
         .__editor_store;
@@ -247,17 +263,8 @@ for (const file of [fixture, ...corpus]) {
       path: saved,
       contentType: "application/pdf",
     });
-    await page.reload({ waitUntil: "domcontentloaded" });
-    await page.getByTestId("pdf-editor-file-input").setInputFiles(saved);
-    await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
-      timeout: 30_000,
-    });
-    await page.waitForFunction(() => {
-      const store = (window as unknown as { __editor_store: EditorStore })
-        .__editor_store;
-      return store.getState().firstPageRendered && !store.getState().loading;
-    });
-    const contentAfter = await page.evaluate(() => {
+    const reopenedPage = await reopenExport(page, saved, errors);
+    const contentAfter = await reopenedPage.evaluate(() => {
       const store = (window as unknown as { __editor_store: EditorStore })
         .__editor_store;
       return store.getState().pages.map((p) => ({
@@ -272,8 +279,8 @@ for (const file of [fixture, ...corpus]) {
       }));
     });
     expect(contentAfter).toEqual(contentBefore);
-    await expect(page.getByTestId("pdf-editor-error")).toHaveCount(0);
-    await page.screenshot({
+    await expect(reopenedPage.getByTestId("pdf-editor-error")).toHaveCount(0);
+    await reopenedPage.screenshot({
       path: testInfo.outputPath("reopened.png"),
       fullPage: true,
     });

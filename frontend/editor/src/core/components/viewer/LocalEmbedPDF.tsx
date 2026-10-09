@@ -101,6 +101,9 @@ import { RedactionSelectionMenu } from "@app/components/viewer/RedactionSelectio
 import { AnnotationSelectionMenu } from "@app/components/viewer/AnnotationSelectionMenu";
 import { AnnotationMenuEvents } from "@app/components/viewer/AnnotationMenuEvents";
 import { DocumentSwapBridge } from "@app/components/viewer/DocumentSwapBridge";
+import { PdfPasswordBridge } from "@app/components/viewer/PdfPasswordBridge";
+import { isStirlingFile } from "@app/types/fileContext";
+import { usePdfAccess } from "@app/hooks/usePdfAccess";
 import {
   DocumentRestoreBridge,
   type DocumentRestoreEvent,
@@ -850,6 +853,7 @@ export function LocalEmbedPDF({
 }: LocalEmbedPDFProps) {
   const { t } = useTranslation();
   const { config } = useAppConfig();
+  const pdfAccess = usePdfAccess(file ?? fileId);
   const [pdfUrl, setPdfUrl] = useState<string | null>(() => url ?? null);
   const [, setAnnotations] = useState<
     Array<{ id: string; pageIndex: number; rect: Rect }>
@@ -959,10 +963,12 @@ export function LocalEmbedPDF({
   const [initialDocument, setInitialDocument] = useState<{
     buffer: ArrayBuffer;
     name: string;
+    password?: string;
   } | null>(null);
   const [pendingDocument, setPendingDocument] = useState<{
     buffer: ArrayBuffer;
     name: string;
+    password?: string;
   } | null>(null);
   const initialDocumentOpenedRef = useRef(false);
   const openedContentKeyRef = useRef<string | null>(null);
@@ -1022,10 +1028,10 @@ export function LocalEmbedPDF({
       openedContentKeyRef.current = contentKey;
       if (!initialDocumentOpenedRef.current) {
         initialDocumentOpenedRef.current = true;
-        setInitialDocument({ buffer, name });
+        setInitialDocument({ buffer, name, password: pdfAccess?.password });
         return;
       }
-      setPendingDocument({ buffer, name });
+      setPendingDocument({ buffer, name, password: pdfAccess?.password });
     };
     const fail = (source: string) => (err: unknown) => {
       console.error(
@@ -1134,7 +1140,13 @@ export function LocalEmbedPDF({
     if (!initialSource) return [];
     const initialDocuments: InitialDocumentOptions[] =
       "buffer" in initialSource
-        ? [{ buffer: initialSource.buffer, name: initialSource.name }]
+        ? [
+            {
+              buffer: initialSource.buffer,
+              name: initialSource.name,
+              password: initialSource.password,
+            },
+          ]
         : [{ url: initialSource.url, name: initialSource.name }];
 
     // Calculate 3.5rem in pixels dynamically based on root font size
@@ -1493,11 +1505,19 @@ export function LocalEmbedPDF({
             deletedAnnotationMenu={deletedAnnotationMenu}
             onDismissDeletedAnnotationMenu={dismissDeletedAnnotationMenu}
           />
-          <ExportAPIBridge />
+          <PdfPasswordBridge
+            fileId={file && isStirlingFile(file) ? file.fileId : undefined}
+            password={pdfAccess?.password}
+          />
+          <ExportAPIBridge disabled={pdfAccess?.encrypted} />
           <BookmarkAPIBridge />
           <AttachmentAPIBridge />
           <PrintAPIBridge file={file} url={pdfUrl} fileName={fileName} />
-          <DocumentPermissionsAPIBridge />
+          <DocumentPermissionsAPIBridge
+            isEncrypted={pdfAccess?.encrypted}
+            isOwnerUnlocked={pdfAccess?.ownerAuthenticated}
+            permissions={pdfAccess?.permissions}
+          />
           <DocumentReadyWrapper
             fallback={
               <Center style={{ height: "100%", width: "100%" }}>

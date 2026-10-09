@@ -26,6 +26,7 @@ import type {
 } from "@app/components/viewer/DocumentRestoreBridge";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { LocalEmbedPDF } from "@app/components/viewer/LocalEmbedPDF";
+import { usePdfAccess } from "@app/hooks/usePdfAccess";
 import { PdfViewerToolbar } from "@app/components/viewer/PdfViewerToolbar";
 import { ThumbnailSidebar } from "@app/components/viewer/ThumbnailSidebar";
 import { BookmarkSidebar } from "@app/components/viewer/BookmarkSidebar";
@@ -677,6 +678,8 @@ const EmbedPdfViewerContent = ({
       ? s.files.byId[currentFile.fileId]?.processedFile?.isEncrypted === true
       : false,
   );
+  const pdfAccess = usePdfAccess(previewFile ?? currentFile);
+  const isCurrentFileLocked = isCurrentFileEncrypted && !pdfAccess;
 
   const bookmarkCacheKey = React.useMemo(() => {
     if (currentFile && isStirlingFile(currentFile)) {
@@ -1790,7 +1793,7 @@ const EmbedPdfViewerContent = ({
             )}
           </Text>
         </Center>
-      ) : isCurrentFileEncrypted ? (
+      ) : isCurrentFileLocked ? (
         <Center style={{ flex: 1 }}>
           <Stack align="center" gap="md">
             <Icon name="lock" size={48} style={{ opacity: 0.5 }} />
@@ -1847,11 +1850,13 @@ const EmbedPdfViewerContent = ({
                       ? effectiveFile.file.name
                       : undefined
               }
-              enableAnnotations={shouldEnableAnnotations}
+              enableAnnotations={
+                shouldEnableAnnotations && !pdfAccess?.encrypted
+              }
               isSignMode={selectedTool === "sign"}
               showBakedAnnotations={isAnnotationsVisible}
-              enableRedaction={shouldEnableRedaction}
-              enableFormFill={shouldEnableFormFill}
+              enableRedaction={shouldEnableRedaction && !pdfAccess?.encrypted}
+              enableFormFill={shouldEnableFormFill && !pdfAccess?.encrypted}
               formEditingActive={isFormFillToolActive}
               isManualRedactionMode={isManualRedactMode}
               signatureApiRef={signatureApiRef}

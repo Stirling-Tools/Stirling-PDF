@@ -28,6 +28,7 @@ export interface EditorLoadState {
   hasDocument: boolean;
   loading: boolean;
   error: string | null;
+  passwordPrompt?: { fileName: string; retry: boolean } | null;
 }
 
 /**
@@ -101,8 +102,8 @@ export function useAutoLoadFile(
     if (navigationState.selectedTool !== "pdfTextEditor") return;
     // A document is open: leave it, and the user's unsaved edits, alone.
     if (editor.hasDocument && !documentGone) return;
-    // An open is already in flight; landing it is what clears hasDocument.
-    if (editor.loading) return;
+    // Restarting a pending open would reset its password prompt.
+    if (editor.loading || editor.passwordPrompt) return;
 
     // Recovery: the store dropped a document this hook had already opened.
     // Re-open THAT file, and do it quietly - no pin, no filename change. The
@@ -132,6 +133,7 @@ export function useAutoLoadFile(
     editor.error,
     editor.hasDocument,
     editor.loading,
+    editor.passwordPrompt,
     hold,
     navigationState.selectedTool,
     openFile,

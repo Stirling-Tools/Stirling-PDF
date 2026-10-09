@@ -2,6 +2,7 @@
  * File actions - Unified file operations with single addFiles helper
  */
 
+import { bindPdfAccess, getPdfAccess } from "@app/services/pdfPasswordStore";
 import {
   StirlingFileStub,
   FileContextAction,
@@ -159,9 +160,11 @@ export async function generateProcessedFileMetadata(
     // Use rotated thumbnail for file manager
     processedFile.thumbnailUrl = rotatedResult.thumbnail;
 
-    if (unrotatedResult.isEncrypted || rotatedResult.isEncrypted) {
-      processedFile.isEncrypted = true;
-    }
+    processedFile.isEncrypted = Boolean(
+      getPdfAccess(file)?.encrypted ||
+      unrotatedResult.isEncrypted ||
+      rotatedResult.isEncrypted,
+    );
 
     return processedFile;
   } catch (error) {
@@ -495,12 +498,12 @@ export async function addFiles(
 
       // Early encryption detection for PDFs — set the flag before dispatch so the
       // viewer gate and modal queue pick it up immediately instead of after hydration
-      if (file.type === "application/pdf") {
+      if (file.type === "application/pdf" || /\.pdf$/i.test(file.name)) {
         try {
-          if (await FileAnalyzer.isPDFUserPasswordProtected(file)) {
-            fileStub.processedFile = fileStub.processedFile || { pages: [] };
-            fileStub.processedFile.isEncrypted = true;
-          }
+          fileStub.processedFile = {
+            pages: [],
+            isEncrypted: await FileAnalyzer.isPDFUserPasswordProtected(file),
+          };
         } catch (error) {
           // Never block upload on analysis failure — but log so it's debuggable
           // if an unencrypted file later appears to "hang" during processing.
@@ -539,7 +542,10 @@ export async function addFiles(
         let thumbnail: string | undefined;
 
         if (targetFile.type.startsWith("application/pdf")) {
-          if (fileStub.processedFile?.isEncrypted) {
+          if (
+            fileStub.processedFile?.isEncrypted &&
+            !getPdfAccess(targetFile)
+          ) {
             // Pre-dispatch detection already flagged this PDF as encrypted; PDF.js
             // can't produce thumbnails/metadata without the password, so re-parsing
             // here would just duplicate work. Metadata is refreshed after unlock.
@@ -921,7 +927,7 @@ export async function addStirlingFileStubs(
       });
     }
 
-    const loadedFiles: StirlingFile[] = [];
+    const loads: Promise<StirlingFile | undefined>[] = [];
     let firstFileDispatched = false;
 
     // Process and dispatch files one by one for progressive UI updates
@@ -930,6 +936,9 @@ export async function addStirlingFileStubs(
       // name|size|lastModified (and therefore quickKey), so quickKey dedup
       // here would silently drop a legitimately different file.
       if (stateRef.current.files.byId[stub.id]) {
+        const existing = filesRef.current.get(stub.id);
+        if (existing)
+          loads.push(Promise.resolve(createStirlingFile(existing, stub.id)));
         if (DEBUG)
           console.log(
             `📄 Skipping already-loaded StirlingFileStub: ${stub.name}`,
@@ -944,9 +953,6 @@ export async function addStirlingFileStubs(
       if (options.insertAfterPageId !== undefined) {
         record.insertAfterPageId = options.insertAfterPageId;
       }
-
-      // Dispatch each file immediately as we process it (progressive loading)
-      dispatch({ type: "ADD_FILES", payload: { stirlingFileStubs: [record] } });
 
       // Clear loading indicator after first file appears
       if (!firstFileDispatched) {
@@ -965,71 +971,93 @@ export async function addStirlingFileStubs(
 
       // Load and publish the File, ahead of any parsing. NOT queued: whether a
       // file opens at all must not wait on other files' parses.
-      void (async () => {
-        // A storage read that never settles renders as a file that silently won't
-        // open. Name it in the console rather than leaving the user guessing.
-        const stall = setTimeout(
-          () =>
-            console.error(
-              `[Hydration] ${stub.name} (${fileId}) has been loading for ${STALLED_LOAD_MS / 1000}s - the IndexedDB read has not settled`,
-            ),
-          STALLED_LOAD_MS,
-        );
-        // A record can be a cache of something outside the app, so settle it
-        // BEFORE serving it, or an edit made out there stays invisible and a
-        // file deleted out there still opens.
-        const port = reconcilePort(stateRef, filesRef, lifecycleManager);
-        const decision = await reconcileBeforeOpen(stub, port);
-        if (decision.drop) {
-          lifecycleManager.removeFiles([fileId], stateRef);
-          clearTimeout(stall);
-          return;
-        }
-        // Bytes the reconciler holds win over the stored copy.
-        const stirlingFile = await (
-          decision.file
-            ? Promise.resolve(createStirlingFile(decision.file, fileId))
-            : fileStorage.getStirlingFile(fileId)
-        ).finally(() => clearTimeout(stall));
-        if (!stirlingFile) {
-          // A row with no bytes renders empty and its clicks look dead, so take it
-          // back out. Storage keeps the record; fileStorage has said why.
-          console.error(
-            `[Hydration] No readable data for ${stub.name} (${fileId}); removing it from the workbench`,
+      loads.push(
+        (async () => {
+          // A storage read that never settles renders as a file that silently won't
+          // open. Name it in the console rather than leaving the user guessing.
+          const stall = setTimeout(
+            () =>
+              console.error(
+                `[Hydration] ${stub.name} (${fileId}) has been loading for ${STALLED_LOAD_MS / 1000}s - the IndexedDB read has not settled`,
+              ),
+            STALLED_LOAD_MS,
           );
-          lifecycleManager.removeFiles([fileId], stateRef);
-          return;
-        }
+          // A record can be a cache of something outside the app, so settle it
+          // BEFORE serving it, or an edit made out there stays invisible and a
+          // file deleted out there still opens.
+          const port = reconcilePort(stateRef, filesRef, lifecycleManager);
+          const decision = await reconcileBeforeOpen(stub, port);
+          if (decision.drop) {
+            lifecycleManager.removeFiles([fileId], stateRef);
+            clearTimeout(stall);
+            return;
+          }
+          // Bytes the reconciler holds win over the stored copy.
+          const stirlingFile = await (
+            decision.file
+              ? Promise.resolve(createStirlingFile(decision.file, fileId))
+              : fileStorage.getStirlingFile(fileId)
+          ).finally(() => clearTimeout(stall));
+          if (!stirlingFile) {
+            // A row with no bytes renders empty and its clicks look dead, so take it
+            // back out. Storage keeps the record; fileStorage has said why.
+            console.error(
+              `[Hydration] No readable data for ${stub.name} (${fileId}); removing it from the workbench`,
+            );
+            lifecycleManager.removeFiles([fileId], stateRef);
+            return;
+          }
 
-        filesRef.current.set(fileId, stirlingFile);
+          filesRef.current.set(fileId, stirlingFile);
+          bindPdfAccess(stirlingFile, fileId);
+          Object.assign(record, decision.updates);
+          if (
+            (stirlingFile.type === "application/pdf" ||
+              /\.pdf$/i.test(stirlingFile.name)) &&
+            (decision.contentReplaced ||
+              record.processedFile?.isEncrypted === undefined)
+          ) {
+            record.processedFile = {
+              pages: [],
+              isEncrypted:
+                await FileAnalyzer.isPDFUserPasswordProtected(stirlingFile),
+            };
+          }
+          dispatch({
+            type: "ADD_FILES",
+            payload: { stirlingFileStubs: [record] },
+          });
 
-        // Workbench selectors only see the file once something dispatches, and
-        // updateStirlingFileStub drops updates for a file not yet in filesRef,
-        // so this must follow the write above - and must happen even when the
-        // reconciler had nothing to say, or the bytes never become visible.
-        lifecycleManager.updateStirlingFileStub(
-          fileId,
-          decision.updates ?? {},
-          stateRef,
-        );
-        decision.afterPublish?.();
+          // Admission can defer the state record; source-link persistence still belongs to these loaded bytes.
+          lifecycleManager.updateStirlingFileStub(
+            fileId,
+            decision.updates ?? {},
+          );
 
-        const needsProcessing =
-          // Bytes just changed underneath us, so whatever was cached is stale.
-          decision.contentReplaced === true ||
-          !stub.processedFile ||
-          !stub.processedFile.pages ||
-          stub.processedFile.pages.length === 0 ||
-          stub.processedFile.totalPages !== stub.processedFile.pages.length;
-        if (needsProcessing) {
-          scheduleMetadataFor(stirlingFile);
-        }
-      })().catch((error) =>
-        console.error(`[Hydration] Failed to load ${fileId}:`, error),
+          decision.afterPublish?.();
+
+          const needsProcessing =
+            // Bytes just changed underneath us, so whatever was cached is stale.
+            decision.contentReplaced === true ||
+            !stub.processedFile ||
+            !stub.processedFile.pages ||
+            stub.processedFile.pages.length === 0 ||
+            stub.processedFile.totalPages !== stub.processedFile.pages.length;
+          if (needsProcessing) {
+            scheduleMetadataFor(stirlingFile);
+          }
+          return stirlingFile;
+        })().catch((error) => {
+          console.error(`[Hydration] Failed to load ${fileId}:`, error);
+          return undefined;
+        }),
       );
     }
 
-    return loadedFiles;
+    const loadedFiles = await Promise.all(loads);
+    return loadedFiles.filter(
+      (file): file is StirlingFile => file !== undefined,
+    );
   } finally {
     addFilesMutex.unlock();
   }

@@ -6,6 +6,7 @@ import { getFileTypeIcon } from "@app/components/shared/filePreview/getFileTypeI
 import { StirlingFileStub } from "@app/types/fileContext";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import { detectFileExtension } from "@app/utils/fileUtils";
+import { usePdfAccess } from "@app/hooks/usePdfAccess";
 
 export interface DocumentThumbnailProps {
   file: File | StirlingFileStub | null;
@@ -33,6 +34,13 @@ const DocumentThumbnail: React.FC<DocumentThumbnailProps> = ({
   children,
 }) => {
   const { t } = useTranslation();
+  const access = usePdfAccess(file instanceof Blob ? file : file?.id);
+  const locked =
+    !access &&
+    (isEncrypted ||
+      Boolean(
+        file && "processedFile" in file && file.processedFile?.isEncrypted,
+      ));
   if (!file) return null;
 
   const containerStyle: React.CSSProperties = {
@@ -47,7 +55,7 @@ const DocumentThumbnail: React.FC<DocumentThumbnailProps> = ({
     ...style,
   };
 
-  if (thumbnail && !isEncrypted) {
+  if (thumbnail && !locked) {
     return (
       <Box style={containerStyle} onClick={onClick}>
         <PrivateContent>
@@ -79,7 +87,7 @@ const DocumentThumbnail: React.FC<DocumentThumbnailProps> = ({
     );
   }
 
-  if (isEncrypted) {
+  if (locked) {
     return (
       <Box style={containerStyle} onClick={onClick}>
         <div
