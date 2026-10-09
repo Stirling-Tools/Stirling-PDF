@@ -464,6 +464,9 @@ The frontend is organized with a clear separation of concerns:
 - **Docker Testing**: `test.sh` validates all Docker variants
 - **Manual Testing**: No unit tests currently - relies on UI and API testing
 
+#### No fixed waits in tests
+Never sleep in tests (`page.waitForTimeout`, `Thread.sleep`, etc.) - it causes flakes. Wait for the actual condition instead (`expect(...)`, `expect.poll`, `waitForFunction`, `vi.waitFor`), or use fake timers for time-based behaviour.
+
 ## Development Workflow
 
 1. **Local Development** (using Taskfile):
