@@ -8,7 +8,10 @@ import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
 import { downloadFile } from "@app/services/downloadService";
 import { unlockPdfForSession } from "@app/services/pdfSessionUnlock";
-import { rememberPdfAccess } from "@app/services/pdfPasswordStore";
+import {
+  getPdfAccess,
+  rememberPdfAccess,
+} from "@app/services/pdfPasswordStore";
 import { useFileContext, useFileSelection } from "@app/contexts/FileContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
@@ -173,6 +176,15 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       assertFilesNotBlocked(policyIds);
       setApplying(true);
       try {
+        const sourceAccess = getPdfAccess(sourceId);
+        if (toolId === "pdfTextEditor" && sourceAccess?.encrypted) {
+          // The saved bytes must authenticate before inheriting session access.
+          const access = await unlockPdfForSession(
+            edited,
+            sourceAccess.password,
+          );
+          if (access.encrypted) rememberPdfAccess(edited, access);
+        }
         if (sourceId && parentStub) {
           const { stirlingFiles, stubs } = await createStirlingFilesAndStubs(
             [edited],

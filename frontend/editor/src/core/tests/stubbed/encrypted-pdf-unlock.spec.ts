@@ -105,7 +105,7 @@ test.describe("Encrypted PDF Unlock Modal", () => {
       page.getByRole("button", { name: UNLOCK_BUTTON_TEXT }),
     ).toBeVisible();
     await expect(
-      page.getByText("Unlock for this session. The original stays protected."),
+      page.getByText("Unlock for this session.", { exact: true }),
     ).toBeVisible();
     const details = page.getByRole("button", {
       name: "About session unlocking",
@@ -113,11 +113,14 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     await page.getByPlaceholder(PASSWORD_PLACEHOLDER).focus();
     await page.getByPlaceholder(PASSWORD_PLACEHOLDER).press("Shift+Tab");
     await expect(details).toBeFocused();
-    await expect(page.getByRole("tooltip")).toContainText(
+    const sessionDetails = page.getByRole("tooltip").filter({
+      hasText: "Access ends when you close the file",
+    });
+    await expect(sessionDetails).toContainText(
       "Cancel keeps the saved copy in your library.",
     );
     await page.getByPlaceholder(PASSWORD_PLACEHOLDER).focus();
-    await expect(page.getByRole("tooltip")).toBeHidden();
+    await expect(sessionDetails).toBeHidden();
   });
 
   test("successful unlock removes the modal and shows success alert", async ({
@@ -195,13 +198,9 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     await expect(
       page.getByRole("heading", { name: MODAL_TITLE, exact: true }),
     ).toBeHidden();
-    const notice = page
-      .getByText("Not supported by this tool", { exact: true })
-      .locator("..");
+    const notice = page.getByTestId("tool-file-list");
     await expect(notice.getByRole("listitem")).toHaveText("encrypted.pdf");
-    await expect(
-      notice.getByText("Use Remove Password to continue."),
-    ).toBeVisible();
+    await expect(notice.getByText(/Add files to the workbench/)).toHaveCount(0);
     await notice
       .getByRole("button", { name: "Why encrypted.pdf is unavailable" })
       .hover();
@@ -209,7 +208,7 @@ test.describe("Encrypted PDF Unlock Modal", () => {
       hasText: "this tool cannot preserve its password protection",
     });
     await expect(details).toBeVisible();
-    await notice.getByText("Not supported by this tool").click();
+    await notice.getByText("encrypted.pdf", { exact: true }).click();
     await expect(details).toBeHidden();
   });
 

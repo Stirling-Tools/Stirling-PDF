@@ -214,13 +214,12 @@ describe("tool file selection", () => {
           <EmptyFileSelectionTool filesVisible />
         </MantineProvider>,
       );
-      expect(
-        await screen.findByText("Not supported by this tool"),
-      ).toBeVisible();
+      const fileList = await screen.findByTestId("tool-file-list");
+      expect(fileList).toContainElement(screen.getByRole("listitem"));
       expect(screen.getByRole("listitem")).toHaveTextContent("report.pdf");
       expect(
-        screen.getByText("Use Remove Password to continue."),
-      ).toBeVisible();
+        screen.queryByText(/Add files to the workbench/),
+      ).not.toBeInTheDocument();
       expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
       act(() =>
         screen

@@ -30,6 +30,71 @@ async function upload(page: Page, file: string): Promise<void> {
 }
 
 test.describe("PDF text editor - encrypted PDF password prompt", () => {
+  test("reuses the session unlock when opening and saving a workbench PDF", async ({
+    page,
+  }) => {
+    await page.route("**/encode-charcodes", (route) => route.abort());
+    let inspections = 0;
+    await page.route("**/api/v1/security/inspect-pdf-security", (route) => {
+      inspections++;
+      return route.fulfill({
+        json: {
+          encrypted: true,
+          signed: false,
+          ownerAuthenticated: true,
+          permissions: -4,
+          canModify: true,
+          canAssemble: true,
+          pageCount: 1,
+        },
+      });
+    });
+    await page.goto("/editor");
+    await page.locator('[data-testid="file-input"]').setInputFiles(ENCRYPTED);
+    await page
+      .getByPlaceholder("Enter the PDF password")
+      .fill(ENCRYPTED_PASSWORD);
+    await page.getByRole("button", { name: "Unlock & Continue" }).click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await page
+      .getByRole("link", { name: "PDF Text Editor", exact: true })
+      .first()
+      .click();
+    await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
+    await expect(page.getByTestId("pdf-editor-password-modal")).toBeHidden();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    expect(inspections).toBe(1);
+
+    await page.evaluate(() => {
+      const run = document.querySelector<HTMLElement>(
+        '[data-testid^="pdf-editor-run-"]',
+      );
+      if (!run) throw new Error("Expected an editable text run");
+      run.focus();
+      const range = document.createRange();
+      range.selectNodeContents(run);
+      range.collapse(false);
+      const selection = window.getSelection()!;
+      selection.removeAllRanges();
+      selection.addRange(range);
+      document.execCommand("insertText", false, " Test");
+    });
+    await expect(page.getByTestId("pdf-editor-dirty-dot")).toBeVisible();
+    await page.getByTestId("pdf-editor-download").click();
+    await expect(page.getByTestId("pdf-editor-save-risk-modal")).toContainText(
+      /encryption/i,
+    );
+    const downloadPromise = page.waitForEvent("download");
+    await page.getByTestId("pdf-editor-save-risk-confirm").click();
+    const download = await downloadPromise;
+    expect(download.suggestedFilename()).toBe("encrypted_edited.pdf");
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(page.getByTestId("pdf-editor-dirty-dot")).toBeHidden();
+    expect(inspections).toBe(2);
+  });
+
   test("wrong password re-prompts, correct password opens the document", async ({
     page,
   }) => {

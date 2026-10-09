@@ -15,7 +15,6 @@ import type { TooltipTip } from "@app/types/tips";
 import type { ExecuteDisabledReason } from "@app/hooks/tools/shared/toolOperationTypes";
 import classes from "@app/components/tools/shared/createToolFlow.module.css";
 import { ToolFileEligibility } from "@app/contexts/ToolFileEligibilityContext";
-import { ProtectedPdfToolNotice } from "@app/components/tools/shared/ProtectedPdfToolNotice";
 
 export interface FilesStepConfig {
   selectedFiles: StirlingFile[];
@@ -123,10 +122,8 @@ export function createToolFlow<TParams = unknown>(
             isCollapsed: config.files.isCollapsed,
             minFiles: config.files.minFiles,
             onCollapsedClick: config.files.onCollapsedClick,
+            showUnavailableFiles: !config.review.isVisible,
           })}
-        {config.files.isVisible !== false && !config.review.isVisible && (
-          <ProtectedPdfToolNotice eligibleFiles={config.files.selectedFiles} />
-        )}
 
         {/* Middle Steps */}
         {config.steps.map((stepConfig) =>
