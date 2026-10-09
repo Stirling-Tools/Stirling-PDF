@@ -50,8 +50,9 @@ public class PasswordController {
     @Operation(
             summary = "Remove password from a PDF file",
             description =
-                    "This endpoint removes the password from a protected PDF file. Users need to"
-                            + " provide the existing password.")
+                    "This endpoint removes the password from a protected PDF file while preserving"
+                            + " its document permissions. Users need to provide the existing"
+                            + " password.")
     public ResponseEntity<Resource> removePassword(@ModelAttribute PDFPasswordRequest request)
             throws IOException {
         MultipartFile fileInput = request.getFileInput();
@@ -59,6 +60,17 @@ public class PasswordController {
 
         try (PDDocument document = pdfDocumentFactory.load(fileInput, password)) {
             document.setAllSecurityToBeRemoved(true);
+            if (document.isEncrypted()) {
+                // Owner-password access reports all permissions, so read the stored flags.
+                AccessPermission permissions =
+                        new AccessPermission(document.getEncryption().getPermissions());
+                if (!permissions.isOwnerPermission()) {
+                    // PDF permission flags require an encryption dictionary, even without
+                    // passwords.
+                    document.setAllSecurityToBeRemoved(false);
+                    document.protect(new StandardProtectionPolicy("", "", permissions));
+                }
+            }
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
                     GeneralUtils.generateFilename(

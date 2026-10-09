@@ -15,13 +15,20 @@ import java.nio.file.Files;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
 import org.apache.pdfbox.pdmodel.encryption.StandardProtectionPolicy;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -38,6 +45,7 @@ import org.springframework.web.multipart.MultipartFile;
 import stirling.software.SPDF.model.api.security.AddPasswordRequest;
 import stirling.software.SPDF.model.api.security.PDFPasswordRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.PdfMetadataService;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
@@ -79,7 +87,15 @@ class PasswordControllerTest {
                             return tf;
                         });
         try (PDDocument doc = new PDDocument()) {
-            doc.addPage(new PDPage());
+            PDPage page = new PDPage();
+            doc.addPage(page);
+            try (PDPageContentStream content = new PDPageContentStream(doc, page)) {
+                content.beginText();
+                content.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
+                content.newLineAtOffset(50, 700);
+                content.showText("Permission round trip");
+                content.endText();
+            }
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             doc.save(baos);
             simplePdfBytes = baos.toByteArray();
@@ -229,6 +245,103 @@ class PasswordControllerTest {
 
             ResponseEntity<Resource> response = passwordController.removePassword(request);
             assertNotNull(response.getBody());
+        }
+    }
+
+    @Nested
+    @DisplayName("Permission preservation after password removal")
+    class PermissionPreservationTests {
+
+        private PasswordController controller;
+
+        @BeforeEach
+        void useRealPdfLoader() {
+            controller =
+                    new PasswordController(
+                            new CustomPDFDocumentFactory(mock(PdfMetadataService.class)),
+                            tempFileManager);
+        }
+
+        @ParameterizedTest
+        @CsvSource({
+            "40, owner, user, user",
+            "40, owner, user, owner",
+            "128, owner, user, user",
+            "128, owner, user, owner",
+            "256, owner, user, user",
+            "256, owner, user, owner",
+            "256, '', user, user",
+            "256, owner, '', ''",
+            "256, '', '', ''"
+        })
+        void preservesStoredPermissionsWithoutRequiringAPassword(
+                int keyLength, String ownerPassword, String userPassword, String unlockPassword)
+                throws Exception {
+            AddPasswordRequest addRequest = new AddPasswordRequest();
+            addRequest.setFileInput(pdfFile(simplePdfBytes));
+            addRequest.setOwnerPassword(ownerPassword);
+            addRequest.setPassword(userPassword);
+            addRequest.setKeyLength(keyLength);
+            addRequest.setPreventAssembly(true);
+            addRequest.setPreventExtractContent(false);
+            addRequest.setPreventExtractForAccessibility(true);
+            addRequest.setPreventFillInForm(false);
+            addRequest.setPreventModify(true);
+            addRequest.setPreventModifyAnnotations(false);
+            addRequest.setPreventPrinting(true);
+            addRequest.setPreventPrintingFaithful(false);
+
+            byte[] protectedBytes = drainBody(controller.addPassword(addRequest));
+            int expectedPermissions;
+            try (PDDocument document = Loader.loadPDF(protectedBytes, unlockPassword)) {
+                expectedPermissions = document.getEncryption().getPermissions();
+            }
+
+            byte[] unlockedBytes = removePassword(protectedBytes, unlockPassword);
+            assertStoredPermissions(unlockedBytes, expectedPermissions);
+            assertStoredPermissions(removePassword(unlockedBytes, ""), expectedPermissions);
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"user123", "owner123"})
+        void removesEncryptionWhenNoRestrictionsExist(String password) throws Exception {
+            byte[] protectedBytes = createPasswordProtectedPdf("owner123", "user123");
+
+            try (PDDocument document = Loader.loadPDF(removePassword(protectedBytes, password))) {
+                assertFalse(document.isEncrypted());
+                assertEquals(1, document.getNumberOfPages());
+            }
+        }
+
+        @Test
+        void leavesUnencryptedDocumentsUnencrypted() throws Exception {
+            try (PDDocument document = Loader.loadPDF(removePassword(simplePdfBytes, ""))) {
+                assertFalse(document.isEncrypted());
+                assertEquals(1, document.getNumberOfPages());
+            }
+        }
+
+        private byte[] removePassword(byte[] pdfBytes, String password) throws IOException {
+            PDFPasswordRequest request = new PDFPasswordRequest();
+            request.setFileInput(pdfFile(pdfBytes));
+            request.setPassword(password);
+            return drainBody(controller.removePassword(request));
+        }
+
+        private MockMultipartFile pdfFile(byte[] bytes) {
+            return new MockMultipartFile(
+                    "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, bytes);
+        }
+
+        private void assertStoredPermissions(byte[] bytes, int expectedPermissions)
+                throws IOException {
+            try (PDDocument document = Loader.loadPDF(bytes)) {
+                assertNotNull(document.getEncryption());
+                assertEquals(expectedPermissions, document.getEncryption().getPermissions());
+                assertEquals(1, document.getNumberOfPages());
+                assertEquals(
+                        "Permission round trip", new PDFTextStripper().getText(document).trim());
+            }
         }
     }
 
