@@ -54,6 +54,7 @@ import stirling.software.proprietary.security.service.ApiKeyAuthenticationServic
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.saas.accountlink.DeviceCredentialAuthenticationFilter;
+import stirling.software.saas.controller.OpenAiAppsChallengeController;
 import stirling.software.saas.service.SaasTeamService;
 import stirling.software.saas.service.SupabaseUserService;
 
@@ -109,7 +110,10 @@ public class SupabaseSecurityConfig {
                         auth ->
                                 auth.requestMatchers(HttpMethod.OPTIONS, "/**")
                                         .permitAll()
-                                        .requestMatchers("/actuator/health", "/api/v1/config/**")
+                                        .requestMatchers(
+                                                "/actuator/health",
+                                                "/api/v1/config/**",
+                                                OpenAiAppsChallengeController.PATH)
                                         .permitAll()
                                         // Account-link connect handshake: an instance calls these
                                         // before it holds any credential, so there is nothing to
