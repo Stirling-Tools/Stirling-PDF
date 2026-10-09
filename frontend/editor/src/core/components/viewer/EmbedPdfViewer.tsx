@@ -723,6 +723,12 @@ const EmbedPdfViewerContent = ({
     return undefined;
   }, [currentFile, effectiveFile, previewFile]);
 
+  // The readiness latch belongs to one document; a replacement file has to earn
+  // it again, or the label scan would race the new document's open.
+  useEffect(() => {
+    setViewerDocumentReady(false);
+  }, [bookmarkCacheKey]);
+
   const pageLabels = usePageLabels(
     effectiveFile?.file,
     bookmarkCacheKey,
