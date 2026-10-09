@@ -174,16 +174,13 @@ export interface ViewerActiveFileType {
   setActiveFileId: (id: string | null) => void;
 }
 
-export const ViewerActiveFileContext = createContext<ViewerActiveFileType | null>(
-  null,
-);
+export const ViewerActiveFileContext =
+  createContext<ViewerActiveFileType | null>(null);
 
 export const useViewerActiveFile = (): ViewerActiveFileType => {
   const context = useContext(ViewerActiveFileContext);
   if (!context) {
-    throw new Error(
-      "useViewerActiveFile must be used within a ViewerProvider",
-    );
+    throw new Error("useViewerActiveFile must be used within a ViewerProvider");
   }
   return context;
 };

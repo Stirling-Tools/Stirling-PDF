@@ -181,79 +181,76 @@ export const NavigationProvider: React.FC<{
   stateRef.current = state;
 
   // Memoize individual callbacks
-  const setWorkbench = useCallback(
-    (workbench: WorkbenchType) => {
-      const currentState = stateRef.current;
-      // Check for unsaved changes using registered checker or state
-      const hasUnsavedChanges =
-        unsavedChangesCheckerRef.current?.() || currentState.hasUnsavedChanges;
-      console.log("[NavigationContext] setWorkbench:", {
-        from: currentState.workbench,
-        to: workbench,
-        hasChecker: !!unsavedChangesCheckerRef.current,
-        hasUnsavedChanges,
-      });
+  const setWorkbench = useCallback((workbench: WorkbenchType) => {
+    const currentState = stateRef.current;
+    // Check for unsaved changes using registered checker or state
+    const hasUnsavedChanges =
+      unsavedChangesCheckerRef.current?.() || currentState.hasUnsavedChanges;
+    console.log("[NavigationContext] setWorkbench:", {
+      from: currentState.workbench,
+      to: workbench,
+      hasChecker: !!unsavedChangesCheckerRef.current,
+      hasUnsavedChanges,
+    });
 
-      // If we're leaving pageEditor, viewer, or custom workbench and have unsaved changes, request navigation
-      const leavingWorkbenchWithChanges =
-        (currentState.workbench === "pageEditor" &&
-          workbench !== "pageEditor" &&
-          hasUnsavedChanges) ||
-        ((currentState.workbench === "viewer" ||
-          currentState.workbench === "signing") &&
-          workbench !== currentState.workbench &&
-          hasUnsavedChanges) ||
-        (currentState.workbench.startsWith("custom:") &&
-          workbench !== currentState.workbench &&
-          hasUnsavedChanges);
+    // If we're leaving pageEditor, viewer, or custom workbench and have unsaved changes, request navigation
+    const leavingWorkbenchWithChanges =
+      (currentState.workbench === "pageEditor" &&
+        workbench !== "pageEditor" &&
+        hasUnsavedChanges) ||
+      ((currentState.workbench === "viewer" ||
+        currentState.workbench === "signing") &&
+        workbench !== currentState.workbench &&
+        hasUnsavedChanges) ||
+      (currentState.workbench.startsWith("custom:") &&
+        workbench !== currentState.workbench &&
+        hasUnsavedChanges);
 
-      if (currentState.workbench === workbench && !leavingWorkbenchWithChanges) {
-        return;
-      }
+    if (currentState.workbench === workbench && !leavingWorkbenchWithChanges) {
+      return;
+    }
 
-      if (leavingWorkbenchWithChanges) {
-        // Update state to reflect unsaved changes so modal knows
-        if (!currentState.hasUnsavedChanges) {
-          dispatch({
-            type: "SET_UNSAVED_CHANGES",
-            payload: { hasChanges: true },
-          });
-        }
-        const performWorkbenchChange = () => {
-          // When leaving a custom workbench, clear the selected tool
-          console.log("[NavigationContext] performWorkbenchChange executing", {
-            from: currentState.workbench,
-            to: workbench,
-            isCustom: currentState.workbench.startsWith("custom:"),
-          });
-          if (currentState.workbench.startsWith("custom:")) {
-            console.log(
-              "[NavigationContext] Clearing tool and changing workbench to:",
-              workbench,
-            );
-            dispatch({
-              type: "SET_TOOL_AND_WORKBENCH",
-              payload: { toolId: null, workbench },
-            });
-          } else {
-            console.log(
-              "[NavigationContext] Just changing workbench to:",
-              workbench,
-            );
-            dispatch({ type: "SET_WORKBENCH", payload: { workbench } });
-          }
-        };
+    if (leavingWorkbenchWithChanges) {
+      // Update state to reflect unsaved changes so modal knows
+      if (!currentState.hasUnsavedChanges) {
         dispatch({
-          type: "SET_PENDING_NAVIGATION",
-          payload: { navigationFn: performWorkbenchChange },
+          type: "SET_UNSAVED_CHANGES",
+          payload: { hasChanges: true },
         });
-        dispatch({ type: "SHOW_NAVIGATION_WARNING", payload: { show: true } });
-      } else {
-        dispatch({ type: "SET_WORKBENCH", payload: { workbench } });
       }
-    },
-    [],
-  );
+      const performWorkbenchChange = () => {
+        // When leaving a custom workbench, clear the selected tool
+        console.log("[NavigationContext] performWorkbenchChange executing", {
+          from: currentState.workbench,
+          to: workbench,
+          isCustom: currentState.workbench.startsWith("custom:"),
+        });
+        if (currentState.workbench.startsWith("custom:")) {
+          console.log(
+            "[NavigationContext] Clearing tool and changing workbench to:",
+            workbench,
+          );
+          dispatch({
+            type: "SET_TOOL_AND_WORKBENCH",
+            payload: { toolId: null, workbench },
+          });
+        } else {
+          console.log(
+            "[NavigationContext] Just changing workbench to:",
+            workbench,
+          );
+          dispatch({ type: "SET_WORKBENCH", payload: { workbench } });
+        }
+      };
+      dispatch({
+        type: "SET_PENDING_NAVIGATION",
+        payload: { navigationFn: performWorkbenchChange },
+      });
+      dispatch({ type: "SHOW_NAVIGATION_WARNING", payload: { show: true } });
+    } else {
+      dispatch({ type: "SET_WORKBENCH", payload: { workbench } });
+    }
+  }, []);
 
   const restoreWorkbench = useCallback((workbench: WorkbenchType) => {
     dispatch({ type: "SET_WORKBENCH", payload: { workbench } });
@@ -358,7 +355,8 @@ export const NavigationProvider: React.FC<{
 
   const requestNavigation = useCallback((navigationFn: () => void) => {
     const hasUnsavedChanges =
-      unsavedChangesCheckerRef.current?.() || stateRef.current.hasUnsavedChanges;
+      unsavedChangesCheckerRef.current?.() ||
+      stateRef.current.hasUnsavedChanges;
     if (!hasUnsavedChanges) {
       navigationFn();
       return;
