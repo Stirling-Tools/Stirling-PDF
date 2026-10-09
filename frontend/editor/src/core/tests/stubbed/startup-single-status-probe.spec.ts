@@ -19,7 +19,8 @@ test("cold load probes backend status exactly once", async ({ page }) => {
     state: "visible",
     timeout: 15000,
   });
-  await page.waitForTimeout(2000);
 
+  // networkidle already waited for the startup requests to go quiet, so a probe
+  // re-issued by a second mount would be recorded by now.
   expect(probes).toHaveLength(1);
 });

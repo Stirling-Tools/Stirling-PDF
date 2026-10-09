@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { BASE_PATH } from "@app/constants/app";
 
 type BackendStatus = "up" | "starting" | "down";
@@ -88,18 +88,29 @@ export function useBackendProbe() {
     loading: true,
   });
 
+  // Probes can overlap (mount racing a manual retry, or two manual retries);
+  // only the newest call may apply its result, or a slow earlier response
+  // overwrites the fresh one with a stale status.
+  const requestSeq = useRef(0);
+
   const probe = useCallback(async () => {
     sharedProbeAt = Date.now();
     sharedProbe = requestBackendState();
+    const seq = ++requestSeq.current;
     const next = await sharedProbe;
-    setState(next);
+    if (seq === requestSeq.current) {
+      setState(next);
+    }
     return next;
   }, []);
 
   useEffect(() => {
     let active = true;
+    const seq = requestSeq.current;
     void probeShared().then((next) => {
-      if (active) setState(next);
+      if (active && seq === requestSeq.current) {
+        setState(next);
+      }
     });
     return () => {
       active = false;
