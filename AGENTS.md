@@ -510,7 +510,7 @@ The frontend is organized with a clear separation of concerns:
 - **Tool Development**: New tools should follow `useToolOperation` hook pattern (see `useCompressOperation.ts`)
 - **Performance Target**: Must handle PDFs up to 100GB+ without browser crashes
 - **Preview System**: Tools can preview results without polluting main file context (see Split tool implementation)
-- **Adding Tools**: See `ADDING_TOOLS.md` for complete guide to creating new PDF tools
+- **Adding Tools**: See `devGuide/ADDING_TOOLS.md` for complete guide to creating new PDF tools
 
 ## Communication Style
 - Be direct and to the point

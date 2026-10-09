@@ -82,5 +82,5 @@ For technical guides, setup instructions, and development resources:
 - And more in the [devGuide folder](devGuide/)
 
 For configuration and usage guides, see:
-- [Database Guide](DATABASE.md) - Database setup and configuration
-- [OCR Guide](HowToUseOCR.md) - OCR setup and configuration
+- [Database Guide](devGuide/DATABASE.md) - Database setup and configuration
+- [OCR Guide](devGuide/HowToUseOCR.md) - OCR setup and configuration
