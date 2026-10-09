@@ -18,6 +18,9 @@ vi.mock("@app/services/authService", () => ({
 // literals (not SAAS_URL/LOCAL_URL) to avoid a TDZ ReferenceError.
 vi.mock("@app/services/connectionModeService", () => ({
   connectionModeService: {
+    getCurrentConfig: vi
+      .fn()
+      .mockResolvedValue({ local_processing_only: false }),
     getCurrentMode: vi.fn().mockResolvedValue("saas"),
     getServerConfig: vi
       .fn()
@@ -50,8 +53,15 @@ import { operationRouter } from "@app/services/operationRouter";
 import { connectionModeService } from "@app/services/connectionModeService";
 import { authService } from "@app/services/authService";
 import { selfHostedServerMonitor } from "@app/services/selfHostedServerMonitor";
+import { endpointAvailabilityService } from "@app/services/endpointAvailabilityService";
 
 beforeEach(() => {
+  vi.mocked(connectionModeService.getCurrentConfig).mockResolvedValue({
+    mode: "saas",
+    server_config: null,
+    lock_connection_mode: false,
+    local_processing_only: false,
+  });
   vi.mocked(connectionModeService.getCurrentMode).mockResolvedValue("saas");
   vi.mocked(authService.isAuthenticated).mockResolvedValue(true);
 });
@@ -98,6 +108,63 @@ describe("server-owned automation", () => {
     await expect(
       operationRouter.getBaseUrl("/api/v1/policies/run"),
     ).rejects.toThrow("Sign in");
+  });
+});
+
+describe("managed local document processing", () => {
+  beforeEach(() => {
+    vi.mocked(connectionModeService.getCurrentConfig).mockResolvedValue({
+      mode: "saas",
+      server_config: null,
+      lock_connection_mode: false,
+      local_processing_only: true,
+    });
+    vi.mocked(
+      endpointAvailabilityService.isEndpointSupportedLocally,
+    ).mockResolvedValue(true);
+    vi.mocked(
+      endpointAvailabilityService.isEndpointSupportedOnSaaS,
+    ).mockClear();
+  });
+  test.each(["saas", "selfhosted", "local"] as const)(
+    "processes supported tools locally in %s mode",
+    async (mode) => {
+      vi.mocked(connectionModeService.getCurrentMode).mockResolvedValue(mode);
+      await expect(
+        operationRouter.getBaseUrl("/api/v1/misc/compress-pdf"),
+      ).resolves.toBe("http://localhost:62994");
+      expect(
+        endpointAvailabilityService.isEndpointSupportedOnSaaS,
+      ).not.toHaveBeenCalled();
+    },
+  );
+  test("does not fall back to SaaS when a tool is missing locally", async () => {
+    vi.mocked(
+      endpointAvailabilityService.isEndpointSupportedLocally,
+    ).mockResolvedValue(false);
+    await expect(
+      operationRouter.getBaseUrl("/api/v1/misc/ocr-pdf"),
+    ).rejects.toThrow("stay on this device");
+    expect(
+      endpointAvailabilityService.isEndpointSupportedOnSaaS,
+    ).not.toHaveBeenCalled();
+    await expect(
+      operationRouter.willRouteToSaaS("/api/v1/misc/ocr-pdf"),
+    ).resolves.toBe(false);
+    await expect(
+      operationRouter.shouldSkipBackendReadyCheck("/api/v1/misc/ocr-pdf"),
+    ).resolves.toBe(false);
+  });
+  test("blocks raw AI/automation destinations while allowing billing", async () => {
+    await expect(operationRouter.getConnectedServerBaseUrl()).rejects.toThrow(
+      "stay on this device",
+    );
+    await expect(
+      operationRouter.getBaseUrl("/api/v1/storage/files"),
+    ).rejects.toThrow("stay on this device");
+    await expect(
+      operationRouter.getBaseUrl("/api/v1/payg/wallet"),
+    ).resolves.toBe(SAAS_URL);
   });
 });
 
