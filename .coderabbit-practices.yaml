@@ -3,11 +3,22 @@ version: 1
 applicability: |
   Apply these guidelines repository-wide to changed code and relevant callers.
   Language rules follow the language; capability rules follow behavior and usage.
-  Directory names do not limit security, persistence, PDF, JPDFium, React,
-  WASM, ownership, or performance rules.
-  Read AGENTS.md and relevant local project instructions.
-  Use the actual toolchain, dependency graph, pinned APIs, and build flavor.
+  Directory names do not limit security, persistence, PDF, JPDFium, React, WASM,
+  ownership, performance, or i18n rules.
   Java 25 and Spring Boot 4.1.1 are the intended baseline; verify the build.
+  Read AGENTS.md and the sources_of_truth list before judging a change.
+  Use the actual toolchain, dependency graph, pinned APIs, and build flavor.
+
+sources_of_truth: |
+  AGENTS.md is the repository contract: Taskfile commands, comment rules, frontend
+  layering, FileContext, tool hooks, translations, and stack pinning.
+  devGuide/CODE_COMMENTS.md is the authority for comments; task comment-lint
+  enforces its mechanical half on added lines inside task pre-commit.
+  devGuide/EXCEPTION_HANDLING_GUIDE.md is the authority for error handling and for
+  user-facing message keys stored in messages_*.properties.
+  devGuide/STORAGE_ENCRYPTION_AT_REST.md defines the at-rest encryption contract.
+  frontend/editor/DeveloperGuide.md explains the frontend layering and override
+  architecture. When a rule here and a source disagree, the source wins.
 
 review_method: |
   Trace untrusted data from origin to final sink.
@@ -17,23 +28,43 @@ review_method: |
   Separate confirmed defects from uncertain risks and optional suggestions.
   Do not invent APIs, CVEs, benchmark results, or successful verification.
   Avoid unrelated rewrites and mechanical modernization.
+  Fix a shared defect in the layer that owns it, not in a leaf workaround.
 
 style: |
   Prefer cohesive implementations, domain types, precise names, and local style.
-  Avoid redundant wrappers, duplicated helpers, speculative abstractions,
-  boolean mode parameters, vague names, and catch-all fallback chains.
-  Comments explain contracts, units, ownership, hazards, or rationale.
-  Do not add comments narrating obvious implementation.
-  Use normal Java imports; flag unnecessary fully qualified names.
-  Allow FQNs for genuine ambiguity, generated code, or a concrete requirement.
-  Follow repository formatting and tracked-follow-up conventions.
+  Avoid redundant wrappers, duplicated helpers, speculative abstractions, boolean
+  mode parameters, vague names, and catch-all fallback chains.
+  Comments must follow devGuide/CODE_COMMENTS.md. A comment earns its place only as
+  a contract, a why, a hazard, or a map, and must say something the code cannot.
+  Put contract docs on the reachable surface: types, exported hooks, layer seams.
+  Never narrate the next line, banner a section, or leave commented-out code.
+  Plain ASCII prose, no em dashes. A TODO needs an issue: "TODO(#1234): ...".
+  Use normal Java imports; flag unnecessary fully qualified names. Allow FQNs for
+  genuine ambiguity, generated code, or a concrete requirement.
+  Follow repository formatting: task backend:format (Google Java Format via
+  Spotless), task frontend:format (oxfmt), task engine:fix (ruff).
+
+stack_pinning: |
+  Spring Boot 4.1.1, Jackson 3, and JDK 25 are post-2024 releases. Most training
+  data and most snippets online are Spring Boot 2/3 and Jackson 2, and they will
+  not compile or will behave differently here.
+  Jackson 3 lives under tools.jackson.*; com.fasterxml.jackson.* is the removed
+  Jackson 2 namespace. Do not "fix" an import back to com.fasterxml.
+  Spring Boot 4 moves packages under org.springframework.boot; verify the package
+  in a sibling module before suggesting an import.
+  Do not silently downgrade a Spring Boot 4 or Jackson 3 pattern to the older
+  equivalent. Surface the mismatch instead of guessing.
+  When an API is uncertain, check the resolved JAR under
+  ~/.gradle/caches/modules-2/ or an existing module that already uses it.
+  Treat JDK 25 preview features the same way: verify the preview and
+  native-access flags in the Gradle build before relying on one.
 
 java_25: |
   Apply to all Java, including tests, adapters, and build tooling.
   Prefer records for suitable immutable value carriers, not mechanically for
   entities, services, proxy targets, mutable state, or exceptions.
-  Use sealed types for genuinely closed domains and exhaustive switches where
-  omitted variants would violate a contract.
+  Use sealed types for genuinely closed domains and exhaustive switches where an
+  omitted variant would violate a contract.
   Prefer standard APIs before adding helpers or dependencies.
   Do not assert that streams or loops are inherently faster.
   Avoid broad catches without a specific recovery or translation policy.
@@ -45,19 +76,22 @@ java_25: |
   It is not mutable request storage, a cache, or a service locator.
   Structured concurrency and StableValue are preview in Java 25.
   Verify compile, test, packaging, and launch preview settings before using them.
-  Virtual threads do not replace finite-resource admission control.
-  Do not report every synchronized block as virtual-thread pinning on Java 25.
-  Inspect actual blocking, locking, native calls, and cancellation semantics.
+
+  Virtual threads do not replace finite-resource admission control, and Java 25
+  does not pin on every synchronized block. A past freeze came from the virtual
+  thread cap (#8176). Inspect actual blocking, locking, native calls, timeouts,
+  and cancellation instead of demanding a switch to platform threads or flagging
+  every synchronized block as pinning.
 
 java_regex: |
   Fixed repeated regexes use descriptive private static final Pattern fields.
   A String constant containing regex text is not a compiled reusable Pattern.
-  Flag repeated Pattern.compile, Pattern.matches, String.matches, replaceAll,
-  and replaceFirst with invariant expressions.
+  Flag repeated Pattern.compile, Pattern.matches, String.matches, replaceAll, and
+  replaceFirst with invariant expressions.
   Share Pattern instances, not mutable Matcher instances.
   Keep Matchers local; do not retain document input through singleton or
   ThreadLocal Matchers.
-  Compile dynamic expressions once per appropriate operation/configuration
+  Compile dynamic expressions once per appropriate operation or configuration
   lifetime; do not introduce unbounded caches of attacker-controlled patterns.
   Prefer literal String operations when regex semantics are unnecessary.
   Preserve flags, matches versus find, groups, replacement escaping, Unicode,
@@ -81,6 +115,12 @@ spring: |
   AOT changes require tested build-time bean graphs, resources, reflection
   metadata, native packaging, and runtime configuration compatibility.
 
+  Preserve the intended OSS and optional-feature boundaries. When
+  DOCKER_ENABLE_SECURITY=false the security classes are excluded from the build,
+  so shared modules must not take an unconditional compile dependency on them.
+  Inspect conditional beans, startup work, and native loading for accidental
+  coupling to proprietary, SaaS, office, or OCR capabilities.
+
 hibernate: |
   Apply to entities, queries, services, mappers, serializers, caches, and jobs.
   Do not share EntityManager or managed entities across concurrent tasks.
@@ -100,15 +140,17 @@ hibernate: |
   Redundant Repository annotations are cleanup, not a correctness blocker.
 
 serialization: |
-  Verify managed Jackson versions and actual APIs before recommending imports.
-  Do not blindly remove compatibility libraries another dependency requires.
+  This repository uses Jackson 3 (tools.jackson.*). Verify managed Jackson APIs
+  before recommending imports or builder methods; do not reintroduce Jackson 2
+  (com.fasterxml.jackson.*) or blindly remove compatibility libraries another
+  dependency requires.
   Reuse configured mappers; do not construct one per request or mutate shared
   mapper configuration after concurrent use starts.
   Inspect parser limits, polymorphic type handling, entity traversal, duplicate
   representations, oversized results, and error/secret disclosure.
 
 resource_ownership: |
-  Every resource needs an owner and release or transfer protocol.
+  Every resource needs an owner and a release or transfer protocol.
   Close operation-owned resources deterministically; do not close borrowed inputs.
   Check partial initialization, exceptions, cancellation, timeout, disconnect,
   shutdown, and callbacks still using the resource.
@@ -116,10 +158,13 @@ resource_ownership: |
   Do not close cached resources while active borrowers can use them.
   Bound caches, pools, queues, retries, diagnostic capture, and retained capacity.
   Oversized exceptional buffers need an explicit retirement policy.
+  Preserve processing originals under .stirling with orphan cleanup (#8165), and
+  keep desktop disk results in place (#8125).
 
 java_performance: |
-  Preserve CustomPDFDocumentFactory and established PDF loading/storage policy.
-  Do not bypass password, metadata, scratch-storage, or ownership behavior.
+  Preserve CustomPDFDocumentFactory (app/common/.../service/CustomPDFDocumentFactory.java)
+  and the established PDF loading and storage policy. Do not bypass password,
+  metadata, scratch-storage, or ownership behavior.
   Inspect random-access requirements before replacing files with streams or arrays.
   Count complete PDF/image/archive/output copies and encoding passes.
   Prefer supported streaming writers and bounded owned buffers.
@@ -176,9 +221,65 @@ react_performance: |
   Audit PDF.js tasks, ImageBitmap, canvases, workers, object URLs, timers, and listeners.
   Removing a component or DOM node does not prove all its resources were released.
 
+frontend_layering: |
+  frontend/editor resolves @app/*, and it is the only alias normal code may use.
+  Do not import @core/* or @proprietary/* outside an intentional override of a
+  lower layer; a direct lower-layer import in shared code defeats the cascade.
+  Resolution per flavor: core -> core; proprietary -> proprietary -> core;
+  saas -> saas -> cloud -> proprietary -> core; desktop -> desktop -> cloud ->
+  proprietary -> core; cloud -> cloud -> proprietary -> core.
+  frontend/editor/src/cloud/ is shared by saas and desktop and must not import
+  @supabase/*, @tauri-apps/*, raw fetch, window.location, localStorage,
+  sessionStorage, or import.meta.env.VITE_* (the linter enforces this). Reach
+  platform specifics through the @app/* seams such as services/apiClient,
+  auth/session, auth/supabase, platform/openExternal, services/billing, and
+  hooks/useSaaSMode.
+  Move shared behavior into cloud/ and override it by shadowing the same @app/*
+  path in a leaf; do not copy it.
+  Prefer the build-time stub/shadow pattern over runtime isTauri() checks.
+  Declare every VITE_* in the committed env file for its layer
+  (frontend/editor/.env and mode siblings); never add an inline "|| fallback",
+  put defaults in the env files.
+  Resolve URLs against the configured base (RUN_SUBPATH / BASE_PATH), never the
+  origin or the current route.
+
+file_context: |
+  All document operations go through FileContext
+  (frontend/editor/src/core/contexts/FileContext.tsx); do not bypass it with
+  direct File/Blob handling from tool code.
+  FileContext owns PDF.js documents, blob URLs, and workers. Every acquired
+  resource needs an explicit release on unmount, replacement, error, and
+  cancellation, or the browser leaks; the editor targets PDFs up to 100GB+.
+  Tool results preview through the preview system without polluting the main file
+  context; do not add a document to the store just to show a preview.
+  The PDF.js document and blob URL cleanup is intentional. Flagging it as dead
+  code, or removing it, is a defect.
+
+tool_development: |
+  New tools follow useToolOperation
+  (frontend/editor/src/core/hooks/tools/shared/useToolOperation.ts) and pick one of
+  three patterns: single-file (multiFileEndpoint: false), multi-file batch
+  (multiFileEndpoint: true), or complex (customProcessor).
+  Reuse the supporting hooks (useToolState, useToolApiCalls, useToolResources) and
+  utilities (toolErrorHandler, toolResponseProcessor, toolOperationTracker) instead
+  of re-implementing progress, error i18n, or response handling.
+  Do not add an operation timeout that can truncate a large document.
+
+i18n_and_locales: |
+  Update translations only in en-US
+  (frontend/editor/public/locales/en-US/translation.toml). Every other locale,
+  including en-GB, is synced separately; hand-editing another locale is a defect.
+  Run task pre-commit:fix after touching a translation file.
+  Never hardcode user-facing English in a component; route it through t().
+  Keep interpolation placeholders intact; do not rename or reorder them.
+  Backend user messages live in messages_*.properties keyed from code, not in
+  string literals.
+  Format money and numbers with the en-US locale explicitly rather than the host
+  default. A past regression rendered hyphenated locale tags as blank (#7687).
+
 wasm: |
   Apply to every WASM runtime, wrapper, worker, queue, buffer, and engine caller.
-  Preserve wasmPrecompiler and established engine-loading seams.
+  Preserve wasmPrecompiler and the established engine-loading seams.
   Reuse compiled modules where appropriate; instances and memory are mutable owners.
   Deduplicate initialization and permit controlled retry after failure.
   Script loading is not necessarily runtime readiness.
@@ -241,6 +342,8 @@ pdf_integrity: |
   Inspect hidden text/OCR, metadata, attachments, forms, annotations, and actions.
   Match incremental-update/full-rewrite behavior to the removal contract.
   Define sanitization scope; do not claim absolute safety without a threat model.
+  When you move, copy, or reuse page nodes, prove object independence; a past
+  rearrange-pages change shipped duplicate shared page nodes (#6851).
 
 jpdfium: |
   Apply to every JPDFium, PDFium, FFM, and adapter caller, regardless of module.
@@ -255,21 +358,25 @@ jpdfium: |
   Prefer existing integration seams and streaming-save APIs over raw FFM and full copies.
   Replacing PDFBox requires semantic/corpus verification, not only speed claims.
   Verify packaged natives and relevant behavior on shipped x64/arm64 architectures.
+  Shut the backend down gracefully and reclaim extraction directories (#8202).
 
 security: |
   Apply wherever untrusted input reaches network, files, interpreters, storage, or output.
-  Authorize the operation/resource, not merely its UI.
+  Authorize the operation and resource, not merely its UI.
   Check ownership and tenant scope for files, jobs, outputs, pipelines, and caches.
   Encode document-derived strings for the actual HTML, URL, CSV, or other sink.
   Do not log tokens, credentials, document content, or sensitive commands.
   Inspect diagnostics and downloads for secret disclosure.
+  Keep new security code inside the DOCKER_ENABLE_SECURITY compile boundary; do
+  not make a shared module depend unconditionally on a security-only class.
 
   Resolve paths before component-based containment checks; do not use string prefixes.
   Inspect symlinks, TOCTOU, absolute paths, separators, and archive entries.
   Bound extraction bytes, entries, depth, and expansion.
   Isolate operations and publish validated completed output atomically.
 
-  Use SsrfProtectionService or extend its central policy rather than duplicate checks.
+  Use SsrfProtectionService (app/common/.../service/SsrfProtectionService.java) or
+  extend its central policy rather than duplicating checks.
   Review redirects, embedded resources, DNS/connect boundaries, mapped IPv6,
   encoded/trailing-dot hosts, local files, and renderer egress.
   Preserve configured protection-level semantics and intentional scoped exceptions.
@@ -292,14 +399,66 @@ tests_and_evidence: |
   Preserve established compact Shenandoah unless regression evidence supports a change.
   Remeasure winners without profiling instrumentation.
   Report workload, baseline, architecture, repeated results, correctness, and trade-offs.
+  Never add a sleep to make an e2e test pass; several failures were real
+  synchronization bugs (#8289, #8161, #8080, #8132). Wait on real state.
 
 build_and_deployment: |
+  The Taskfile is the command surface. task check runs lint, typecheck, and tests;
+  use task backend:check, task frontend:check:all, and task engine:check for the
+  area you touch. Do not silently skip tests, formatting, typecheck, or lint.
   Preserve Java toolchains, managed dependencies, preview/native-access flags,
   Task quality gates, reproducibility, signal delivery, and user arguments.
   Review dependency updates for security and behavioral compatibility.
-  Do not silently skip tests, formatting, typecheck, lint, or architecture smoke tests.
   Preserve standard/fat/ultra-lite/backend/embedded/desktop/native packaging behavior.
   Do not bundle irrelevant native architectures or assume unsupported targets work.
   Prefer non-root execution and bounded writable temporary/cache locations.
   Avoid production build tools, caches, credentials, and unnecessary debug tooling.
   jlink/distroless and allocator/THP changes are not guaranteed runtime-RSS savings.
+
+historic_regressions: |
+  These classes have shipped to users before. Treat a change that can reintroduce
+  one as a defect, and ask for the focused test that would have caught it.
+
+  Resource leaks in the long-lived SPA: PDF viewer and preview documents, workers,
+  blob URLs, IndexedDB handles, timers, and listeners that survive unmount (#7281).
+  Backend executor, task, regex, and stream leaks (#7284), and endpoint set
+  concurrency with in-memory growth (#7505). Cleanup must run on success, failure,
+  cancellation, and replacement.
+
+  Thread parking and unbounded waits: a virtual-thread cap froze the server (#8176);
+  a wedged SMTP relay parked a thread until timeouts were bounded (#7879); an S3
+  upload stream had to be reopened on each retry (#8292). Bound timeouts, queues,
+  retries, and pool sizes; never block a shared thread on an unbounded external
+  call.
+
+  Stale state after replacement: the viewer restored state from a replaced document
+  (#8130); reload state was driven by timers instead of plugin events (#8285);
+  desktop session restoration started on the wrong views (#8309). Prefer
+  event/identity-driven state and cancel stale async completion so an old job cannot
+  overwrite newer state.
+
+  Shared-node corruption in PDF mutation: rearrange-pages produced duplicate page
+  nodes with shared objects (#6851). When you move, copy, or reuse pages, prove
+  object independence and the preservation contract, not just visual equality.
+
+  Duplicate eager work at startup: the entry preloaded the same chunk twice in
+  WebKit (#8050). Keep startup free of optional work and verify the emitted module
+  graph, not the source import graph.
+
+  Timing-based flakiness: several e2e failures were real synchronization bugs
+  (#8289, #8161, #8080, #8132). Use deterministic waits on real state; never add a
+  sleep to make a test pass.
+
+  i18n drift: hardcoded strings (#6566, #6993), missing keys (#8339), broken
+  interpolation placeholders (#6814), and locale paths (#6483, #7525). Any new
+  user-visible text needs its en-US key in the same change.
+
+  Base-path and subpath regressions: redirects, cookie consent, the manifest, the
+  mobile-scanner QR URL, AI chat fetch, and pdfjs worker assets each shipped a
+  doubled or dropped base path. Resolve URLs against the configured base
+  (RUN_SUBPATH / BASE_PATH), not the origin or the current route.
+
+  Lifecycle for desktop and processing files: processing-folder files must stay
+  locked until completion (#8120) and originals preserved with orphan cleanup
+  (#8165); desktop disk results must stay in place (#8125). Do not relocate or
+  delete user files to simplify a flow.
