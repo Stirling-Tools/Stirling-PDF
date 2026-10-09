@@ -262,6 +262,19 @@ class AddWatermarkParams(ApiModel):
     width_spacer: int = Field(50, description="The width spacer between watermark elements", ge=0)
 
 
+class AdjustContrastParams(ApiModel):
+    """
+    Rasterises every page and adjusts its contrast, brightness, saturation and red/green/blue levels. Each value is a percentage from 0 to 200, where 100 leaves the page unchanged. The output is image-only, so text is no longer selectable. Input:PDF Output:PDF Type:SISO
+    """
+
+    blue: int = Field(100, description="Blue channel level in percent (100 = unchanged)", ge=0, le=200)
+    brightness: int = Field(100, description="Brightness in percent (100 = unchanged)", ge=0, le=200)
+    contrast: int = Field(100, description="Contrast in percent (100 = unchanged)", ge=0, le=200)
+    green: int = Field(100, description="Green channel level in percent (100 = unchanged)", ge=0, le=200)
+    red: int = Field(100, description="Red channel level in percent (100 = unchanged)", ge=0, le=200)
+    saturation: int = Field(100, description="Saturation in percent (100 = unchanged)", ge=0, le=200)
+
+
 class AutoRedactParams(ApiModel):
     """
     This endpoint automatically redacts text from a PDF file based on specified patterns. Users can provide text patterns to redact, with options for regex and whole word matching. Input:PDF Output:PDF Type:SISO
@@ -1872,6 +1885,7 @@ class Model(
         | AddCommentsParams
         | AddPageNumbersParams
         | AddStampParams
+        | AdjustContrastParams
         | AutoRenameParams
         | AutoRotatePdfParams
         | AutoSplitPdfParams
@@ -1953,6 +1967,7 @@ class Model(
         | AddCommentsParams
         | AddPageNumbersParams
         | AddStampParams
+        | AdjustContrastParams
         | AutoRenameParams
         | AutoRotatePdfParams
         | AutoSplitPdfParams
@@ -2035,6 +2050,7 @@ type ParamToolModel = (
     | AddCommentsParams
     | AddPageNumbersParams
     | AddStampParams
+    | AdjustContrastParams
     | AutoRenameParams
     | AutoRotatePdfParams
     | AutoSplitPdfParams
@@ -2118,6 +2134,7 @@ class ToolEndpoint(StrEnum):
     ADD_COMMENTS = "/api/v1/misc/add-comments"
     ADD_PAGE_NUMBERS = "/api/v1/misc/add-page-numbers"
     ADD_STAMP = "/api/v1/misc/add-stamp"
+    ADJUST_CONTRAST = "/api/v1/misc/adjust-contrast"
     AUTO_RENAME = "/api/v1/misc/auto-rename"
     AUTO_ROTATE_PDF = "/api/v1/misc/auto-rotate-pdf"
     AUTO_SPLIT_PDF = "/api/v1/misc/auto-split-pdf"
@@ -2199,6 +2216,7 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.ADD_COMMENTS: AddCommentsParams,
     ToolEndpoint.ADD_PAGE_NUMBERS: AddPageNumbersParams,
     ToolEndpoint.ADD_STAMP: AddStampParams,
+    ToolEndpoint.ADJUST_CONTRAST: AdjustContrastParams,
     ToolEndpoint.AUTO_RENAME: AutoRenameParams,
     ToolEndpoint.AUTO_ROTATE_PDF: AutoRotatePdfParams,
     ToolEndpoint.AUTO_SPLIT_PDF: AutoSplitPdfParams,

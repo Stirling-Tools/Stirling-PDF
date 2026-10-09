@@ -207,6 +207,32 @@ export interface AddWatermarkRequest {
    */
   widthSpacer?: number;
 }
+export interface AdjustContrastRequest {
+  /**
+   * Blue channel level in percent (100 = unchanged)
+   */
+  blue?: number;
+  /**
+   * Brightness in percent (100 = unchanged)
+   */
+  brightness?: number;
+  /**
+   * Contrast in percent (100 = unchanged)
+   */
+  contrast?: number;
+  /**
+   * Green channel level in percent (100 = unchanged)
+   */
+  green?: number;
+  /**
+   * Red channel level in percent (100 = unchanged)
+   */
+  red?: number;
+  /**
+   * Saturation in percent (100 = unchanged)
+   */
+  saturation?: number;
+}
 export interface AiToolsClassifyAndLabelRequest {
   reclassify?: boolean;
 }
@@ -1638,6 +1664,7 @@ export type ToolEndpoint =
   | "/api/v1/misc/add-image"
   | "/api/v1/misc/add-page-numbers"
   | "/api/v1/misc/add-stamp"
+  | "/api/v1/misc/adjust-contrast"
   | "/api/v1/misc/auto-rename"
   | "/api/v1/misc/auto-rotate-pdf"
   | "/api/v1/misc/auto-split-pdf"
@@ -1749,6 +1776,7 @@ export interface ToolApiParams {
   "/api/v1/misc/add-image": OverlayImageRequest;
   "/api/v1/misc/add-page-numbers": AddPageNumbersRequest;
   "/api/v1/misc/add-stamp": AddStampRequest;
+  "/api/v1/misc/adjust-contrast": AdjustContrastRequest;
   "/api/v1/misc/auto-rename": ExtractHeaderRequest;
   "/api/v1/misc/auto-rotate-pdf": AutoRotatePdfRequest;
   "/api/v1/misc/auto-split-pdf": AutoSplitPdfRequest;
@@ -1861,6 +1889,7 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/misc/add-image",
   "/api/v1/misc/add-page-numbers",
   "/api/v1/misc/add-stamp",
+  "/api/v1/misc/adjust-contrast",
   "/api/v1/misc/auto-rename",
   "/api/v1/misc/auto-rotate-pdf",
   "/api/v1/misc/auto-split-pdf",

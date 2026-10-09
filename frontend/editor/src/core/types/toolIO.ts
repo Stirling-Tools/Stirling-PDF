@@ -585,6 +585,11 @@ export const TOOL_IO: ToolIOTable = {
     produces: "PDF",
     arity: "SISO",
   },
+  "/api/v1/misc/adjust-contrast": {
+    accepts: ["PDF"],
+    produces: "PDF",
+    arity: "SISO",
+  },
   "/api/v1/misc/auto-rename": {
     accepts: ["PDF"],
     produces: "PDF",
