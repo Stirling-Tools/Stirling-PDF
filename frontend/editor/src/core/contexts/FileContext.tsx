@@ -437,7 +437,7 @@ function FileContextInner({
       outputStirlingFileStubs: StirlingFileStub[],
       options?: { silent?: boolean },
     ): Promise<FileId[]> => {
-      return consumeFiles(
+      const outputIds = await consumeFiles(
         inputFileIds,
         outputStirlingFiles,
         outputStirlingFileStubs,
@@ -445,8 +445,13 @@ function FileContextInner({
         dispatch,
         options,
       );
+      // consumeFiles writes the new versions to IndexedDB behind the store's back,
+      // so bump the revision or revision-driven views (the file sidebar) keep
+      // showing the superseded stub.
+      if (outputIds.length > 0) indexedDB?.bumpRevision?.();
+      return outputIds;
     },
-    [],
+    [indexedDB],
   );
 
   const runAutomaticPasswordRemoval = useCallback(
