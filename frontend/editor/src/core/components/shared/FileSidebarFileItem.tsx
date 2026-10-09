@@ -52,16 +52,22 @@ export function getDateGroup(lastModified: number | undefined): DateGroup {
 }
 
 const fileDateCache = new Map<number, string>();
+let cachedDayStart = -1;
 const MAX_DATE_CACHE = 1000;
 
 export function formatFileDate(lastModifiedTs: number): string {
   if (!lastModifiedTs) return "";
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  // Labels are relative to the current day, so drop stale entries at midnight.
+  if (today.getTime() !== cachedDayStart) {
+    fileDateCache.clear();
+    cachedDayStart = today.getTime();
+  }
   const cached = fileDateCache.get(lastModifiedTs);
   if (cached !== undefined) return cached;
 
   const lastModified = new Date(lastModifiedTs);
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
   const fileDay = new Date(

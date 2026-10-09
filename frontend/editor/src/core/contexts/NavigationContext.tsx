@@ -3,6 +3,7 @@ import React, {
   useContext,
   useReducer,
   useCallback,
+  useLayoutEffect,
   useMemo,
   useRef,
 } from "react";
@@ -178,7 +179,11 @@ export const NavigationProvider: React.FC<{
   );
 
   const stateRef = useRef(state);
-  stateRef.current = state;
+  // Commit-safe: assigning during render leaks abandoned concurrent renders
+  // into the stable callbacks below.
+  useLayoutEffect(() => {
+    stateRef.current = state;
+  }, [state]);
 
   // Memoize individual callbacks
   const setWorkbench = useCallback((workbench: WorkbenchType) => {
