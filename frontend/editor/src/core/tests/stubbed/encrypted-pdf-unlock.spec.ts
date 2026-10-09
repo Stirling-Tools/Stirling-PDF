@@ -54,7 +54,7 @@ async function uploadEncryptedFile(page: Page, filePath: string) {
   await page.locator('[data-testid="file-input"]').setInputFiles(filePath);
 }
 
-const MODAL_TITLE = "Unlock PDF";
+const MODAL_TITLE = /^Unlock PDF/;
 const PASSWORD_PLACEHOLDER = "Enter the PDF password";
 const UNLOCK_BUTTON_TEXT = "Unlock & Continue";
 
@@ -98,7 +98,7 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     await uploadEncryptedFile(page, ENCRYPTED_PDF);
 
     await expect(
-      page.getByRole("heading", { name: MODAL_TITLE, exact: true }),
+      page.getByRole("heading", { name: MODAL_TITLE }),
     ).toBeVisible({ timeout: 10000 });
     await expect(page.getByPlaceholder(PASSWORD_PLACEHOLDER)).toBeVisible();
     await expect(
@@ -106,12 +106,13 @@ test.describe("Encrypted PDF Unlock Modal", () => {
     ).toBeVisible();
     await expect(
       page.getByText("Unlock for this session.", { exact: true }),
-    ).toBeVisible();
-    const details = page.getByRole("button", {
+    ).toHaveCount(0);
+    const details = page.getByRole("heading").getByRole("button", {
       name: "About session unlocking",
     });
     await page.getByPlaceholder(PASSWORD_PLACEHOLDER).focus();
-    await page.getByPlaceholder(PASSWORD_PLACEHOLDER).press("Shift+Tab");
+    await page.keyboard.press("Shift+Tab");
+    await page.keyboard.press("Shift+Tab");
     await expect(details).toBeFocused();
     const sessionDetails = page.getByRole("tooltip").filter({
       hasText: "Access ends when you close the file",

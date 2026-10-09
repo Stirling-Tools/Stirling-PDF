@@ -4493,7 +4493,6 @@ restrictedOperation = "This PDF restricts this operation. Reopen it with the own
 sessionDetails = "Access ends when you close the file or leave the session. Supported tools keep PDF results protected; merged PDFs use the first protected file's settings. Cancel keeps the saved copy in your library. Use Remove Password to create an unprotected copy."
 sessionDetailsLabel = "About session unlocking"
 sessionFailed = "Unable to unlock this PDF. Please try again."
-sessionHint = "Unlock for this session."
 sessionSuccessBody = "Unlocked for this session. Password protection is retained."
 sessionSuccessBodyWithName = "Unlocked {{fileName}} for this session. Password protection is retained."
 sessionSuccessTitle = "PDF unlocked"

@@ -64,48 +64,12 @@ const EncryptedPdfUnlockModal = ({
         if (!isProcessing) onSkip();
       }}
       title={
-        sessionUnlock
-          ? t("encryptedPdfUnlock.sessionTitle", "Unlock PDF")
-          : t("encryptedPdfUnlock.title", "Remove password to continue")
-      }
-      centered
-      size="sm"
-      padding="lg"
-      radius="md"
-      withCloseButton={!isProcessing}
-      data-testid={testIdPrefix ? `${testIdPrefix}-modal` : undefined}
-      closeOnClickOutside={!isProcessing}
-      closeOnEscape={!isProcessing}
-      zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE}
-    >
-      <Stack gap="lg">
-        <Group
-          gap="sm"
-          wrap="nowrap"
-          p="md"
-          style={{
-            background: "var(--c-surface-raised)",
-            borderRadius: "var(--mantine-radius-md)",
-          }}
-        >
-          <Icon
-            name="lock"
-            size={24}
-            style={{ color: "var(--c-text-muted)", flexShrink: 0 }}
-          />
-          <Text size="sm" fw={500} style={{ overflowWrap: "anywhere" }}>
-            {fileName}
-          </Text>
-        </Group>
-        <Group gap={4} wrap="nowrap" align="flex-start">
-          <Text size="sm" c="dimmed" style={{ flex: 1 }}>
+        <Group component="span" gap={6} wrap="nowrap">
+          <span>
             {sessionUnlock
-              ? t("encryptedPdfUnlock.sessionHint", "Unlock for this session.")
-              : t(
-                  "encryptedPdfUnlock.passwordHint",
-                  "Enter the PDF password to continue.",
-                )}
-          </Text>
+              ? t("encryptedPdfUnlock.sessionTitle", "Unlock PDF")
+              : t("encryptedPdfUnlock.title", "Remove password to continue")}
+          </span>
           {sessionUnlock && (
             <Tooltip
               label={t(
@@ -132,6 +96,45 @@ const EncryptedPdfUnlockModal = ({
             </Tooltip>
           )}
         </Group>
+      }
+      centered
+      size="sm"
+      padding="md"
+      radius="md"
+      styles={{ body: { paddingTop: "var(--mantine-spacing-md)" } }}
+      withCloseButton={!isProcessing}
+      data-testid={testIdPrefix ? `${testIdPrefix}-modal` : undefined}
+      closeOnClickOutside={!isProcessing}
+      closeOnEscape={!isProcessing}
+      zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE}
+    >
+      <Stack gap="md">
+        <Group
+          gap="sm"
+          wrap="nowrap"
+          p="sm"
+          style={{
+            background: "var(--c-surface-raised)",
+            borderRadius: "var(--mantine-radius-md)",
+          }}
+        >
+          <Icon
+            name="lock"
+            size={20}
+            style={{ color: "var(--c-text-muted)", flexShrink: 0 }}
+          />
+          <Text size="sm" fw={500} style={{ overflowWrap: "anywhere" }}>
+            {fileName}
+          </Text>
+        </Group>
+        {!sessionUnlock && (
+          <Text size="sm" c="dimmed">
+            {t(
+              "encryptedPdfUnlock.passwordHint",
+              "Enter the PDF password to continue.",
+            )}
+          </Text>
+        )}
 
         <PasswordInput
           label={t("encryptedPdfUnlock.password.label", "PDF password")}
