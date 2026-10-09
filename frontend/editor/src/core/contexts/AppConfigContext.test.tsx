@@ -234,6 +234,28 @@ describe("AppConfigContext", () => {
     expect(apiClient.get).toHaveBeenCalledTimes(2);
   });
 
+  it("asks the source it is given, for the first load and a refetch alike", async () => {
+    const remote = { enableLogin: true, appNameNavbar: "Connected server" };
+    const fetchConfig = vi.fn().mockResolvedValue(remote);
+    const { result } = renderHook(() => useAppConfig(), {
+      wrapper: ({ children }: { children: ReactNode }) => (
+        <TestQueryProvider>
+          <AppConfigProvider fetchConfig={fetchConfig}>
+            {children}
+          </AppConfigProvider>
+        </TestQueryProvider>
+      ),
+    });
+
+    await waitFor(() => expect(result.current.config).toEqual(remote));
+    await act(async () => {
+      await result.current.refetch();
+    });
+
+    expect(fetchConfig).toHaveBeenCalledTimes(2);
+    expect(apiClient.get).not.toHaveBeenCalled();
+  });
+
   it("should not fetch twice without force flag", async () => {
     const mockConfig = {
       enableLogin: false,

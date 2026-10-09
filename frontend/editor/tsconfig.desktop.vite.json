@@ -13,9 +13,12 @@
         "./src/cloud/portal/*",
         "./src/proprietary/portal/*",
         "./src/core/portal/*",
+        "./src/portal-desktop/*",
         "./src/portal/*"
       ],
-      "@portal/*": ["./src/portal/*"],
+      "@portal/*": ["./src/portal-desktop/*", "./src/portal/*"],
+      "@portal-proprietary/*": ["./src/portal/*"],
+      "@portal-cloud/*": ["./src/portal-cloud/*"],
       "@cloud/*": ["./src/cloud/*"],
       "@proprietary/*": ["./src/proprietary/*"],
       "@core/*": ["./src/core/*"]
@@ -30,6 +33,7 @@
     "src/cloud/**/*.spec.ts*",
     "src/saas",
     "src/portal-saas",
+    "src/portal-cloud/**/*.test.ts*",
     "src/portal/**/*.test.ts*",
     "src/portal/**/*.spec.ts*"
   ]

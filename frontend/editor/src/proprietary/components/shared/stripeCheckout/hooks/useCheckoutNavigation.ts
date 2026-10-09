@@ -32,6 +32,7 @@ export const useCheckoutNavigation = (
           ...prev,
           currentStage: previousStage,
           clientSecret: undefined,
+          hostedUrl: undefined,
           loading: false,
         }));
       } else {

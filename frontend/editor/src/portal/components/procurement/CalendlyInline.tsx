@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Spinner } from "@app/ui";
 import { loadScript } from "@app/utils/scriptLoader";
+import { handleExternalLinkClick } from "@app/platform/externalLinkClick";
 
 /**
  * Inline Calendly scheduler. Lazily loads Calendly's widget.js (only once the embed mounts, i.e. when
@@ -126,7 +127,12 @@ export function CalendlyInline({
     return (
       <p className="portal-sidemodal__text">
         {t("portal.procurement.schedule.fallback")}{" "}
-        <a href={url} target="_blank" rel="noopener noreferrer">
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(event) => handleExternalLinkClick(url, event)}
+        >
           {t("portal.procurement.schedule.fallbackLink")}
         </a>
       </p>

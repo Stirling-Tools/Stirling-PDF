@@ -26,6 +26,11 @@ vi.mock("@app/utils/protocolDetection", () => ({
 vi.mock("@app/services/serverPlanCheckout", () => ({
   createServerPlanCheckoutSession: vi.fn(),
 }));
+const platform = vi.hoisted(() => ({ embeds: true }));
+vi.mock("@app/platform/stripeNavigation", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@app/platform/stripeNavigation")>()),
+  stripeCheckoutEmbeds: () => platform.embeds,
+}));
 
 import { useCheckoutSession } from "@app/components/shared/stripeCheckout/hooks/useCheckoutSession";
 import { pollTeamCheckout } from "@app/utils/licenseCheckoutUtils";
@@ -75,6 +80,7 @@ function mount(
 beforeEach(() => {
   getLicenseInfo.mockReset().mockResolvedValue({ licenseType: "NORMAL" });
   getInstallationId.mockReset();
+  platform.embeds = true;
 });
 
 describe("useCheckoutSession", () => {
@@ -115,6 +121,18 @@ describe("useCheckoutSession", () => {
       uiMode: "embedded",
     });
     expect(request.successUrl).toContain("payment_status=success");
+  });
+
+  it("asks for hosted checkout where the platform cannot embed it", async () => {
+    platform.embeds = false;
+    const createSession = vi
+      .fn()
+      .mockResolvedValue({ clientSecret: null, url: null, sessionId: "s" });
+    const { hook } = mount(createSession);
+
+    await hook.result.current.createCheckoutSession();
+
+    expect(createSession.mock.calls[0][0].uiMode).toBe("hosted");
   });
 
   it("carries a premium licence key through as upgrade metadata", async () => {

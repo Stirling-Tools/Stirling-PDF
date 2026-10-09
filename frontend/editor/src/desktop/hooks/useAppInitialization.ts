@@ -6,6 +6,9 @@ import { useFileManagement } from "@app/contexts/file/fileHooks";
 import { pendingFilePathMappings } from "@app/services/pendingFilePathMappings";
 import { captureDroppedFilePaths } from "@app/services/fileImportPaths";
 import { endLoadingLaunchFiles } from "@app/services/launchFiles";
+import { stripBasePath, withBasePath } from "@app/constants/app";
+import { EDITOR_BASENAME } from "@app/routes/editorBasename";
+import { isPortalPath } from "@app/routes/portalBasename";
 
 /**
  * App initialization hook
@@ -76,6 +79,12 @@ export function useAppInitialization(): void {
 
         if (loadedFiles.length > 0) {
           await addFiles(loadedFiles, { selectFiles: true });
+          // Opened from the OS while on a Processor page: they land in the editor, so go there.
+          // Not the router's navigate: this runs in the providers, above any route.
+          if (isPortalPath(stripBasePath(window.location.pathname))) {
+            window.history.pushState({}, "", withBasePath(EDITOR_BASENAME));
+            window.dispatchEvent(new PopStateEvent("popstate"));
+          }
 
           console.log(
             `[Desktop] ${loadedFiles.length} opened file(s) added to FileContext`,

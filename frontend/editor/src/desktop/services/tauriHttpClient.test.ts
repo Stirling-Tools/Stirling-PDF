@@ -9,6 +9,7 @@ const { fetchMock } = vi.hoisted(() => ({ fetchMock: vi.fn() }));
 vi.mock("@tauri-apps/plugin-http", () => ({ fetch: fetchMock }));
 
 import { create } from "@app/services/tauriHttpClient";
+import { allowConsole } from "@app/tests/failOnConsole";
 
 function okJson() {
   return {
@@ -139,5 +140,56 @@ describe("tauriHttpClient — Content-Type handling", () => {
       ([k]) => k.toLowerCase() === "content-type",
     )?.[1];
     expect(ct).toBe("application/json");
+  });
+});
+
+describe("tauriHttpClient — rejection chain", () => {
+  function status(code: number) {
+    return {
+      ok: code < 400,
+      status: code,
+      statusText: "",
+      headers: new Headers({ "content-type": "application/json" }),
+      text: async () => (code < 400 ? '{"ok":true}' : "{}"),
+    };
+  }
+
+  beforeEach(() => {
+    fetchMock.mockReset();
+    allowConsole.error(/\[TauriHttpClient\]/);
+  });
+
+  test("a handler that recovers the request resolves with its response", async () => {
+    fetchMock
+      .mockResolvedValueOnce(status(401))
+      .mockResolvedValueOnce(status(200));
+    const client = create({ baseURL: "https://server.test" });
+    const later = vi.fn((error: unknown) => Promise.reject(error));
+    client.interceptors.response.use(
+      (response) => response,
+      () => client.get("/api/v1/thing"),
+    );
+    client.interceptors.response.use((response) => response, later);
+
+    const response = await client.get<{ ok: boolean }>("/api/v1/thing");
+
+    expect(response.status).toBe(200);
+    expect(response.data).toEqual({ ok: true });
+    expect(later).not.toHaveBeenCalled();
+  });
+
+  test("a chain that keeps rejecting runs each handler once and rejects", async () => {
+    fetchMock.mockResolvedValue(status(401));
+    const client = create({ baseURL: "https://server.test" });
+    const first = vi.fn((error: unknown) => Promise.reject(error));
+    const second = vi.fn((error: unknown) => Promise.reject(error));
+    client.interceptors.response.use((response) => response, first);
+    client.interceptors.response.use((response) => response, second);
+
+    await expect(client.get("/api/v1/thing")).rejects.toMatchObject({
+      response: { status: 401 },
+    });
+    expect(first).toHaveBeenCalledTimes(1);
+    expect(second).toHaveBeenCalledTimes(1);
   });
 });

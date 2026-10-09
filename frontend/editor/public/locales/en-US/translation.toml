@@ -4319,12 +4319,6 @@ maximize = "Maximize"
 minimize = "Minimize"
 restore = "Restore"
 
-[desktopBilling]
-description = "Manage usage and billing in your browser. Sign in with the same Stirling account you use here."
-open = "Open Usage & Billing in browser"
-openFailed = "Could not open Usage & Billing. Check your connection and try again."
-selfHostedDescription = "Manage usage and billing on your connected server in your browser. Sign in with your server owner account."
-
 [desktopFileLink]
 saveAs = "Save as…"
 useDiskVersion = "Use disk version"
@@ -4354,6 +4348,11 @@ title = "Updated from disk"
 [desktopFileLink.tooLarge]
 body = "\"{{name}}\" changed on disk. It is large enough that reloading it will take a while, so the version here has been left alone."
 title = "File changed on disk"
+
+[desktopReturn]
+body = "You can close this tab once Stirling PDF opens."
+open = "Open Stirling PDF"
+title = "Returning to Stirling PDF"
 
 [desktopUpdate]
 downloading = "Downloading update..."
@@ -7038,6 +7037,10 @@ thisPeriod = "This billing period"
 
 [payment]
 billingPeriod = "Billing period"
+browserCheckout = "Checkout is open in your browser. Come back here once you have paid."
+browserCheckoutDone = "I've paid"
+browserCheckoutReopen = "Open checkout again"
+browserOpenFailed = "Couldn't open your browser. Try again."
 cancelTeamChange = "Keep current plan"
 canCloseWindow = "You can now close this window."
 createSessionFailed = "Failed to create checkout session"
@@ -7934,6 +7937,17 @@ retry = "Check connection"
 revokedBody = "Stirling Cloud rejected this account connection. Reconnect the account in Settings to restore eligible cloud-backed features."
 revokedTitle = "Account connection revoked"
 
+[portal.accountLink.desktopSignIn]
+browser = "Finish signing in in your browser, then come back here."
+connectLede = "Sign in with the Stirling account to connect this server to. Only a team owner can connect a server."
+credentials = "Incorrect email or password."
+email = "Email"
+failed = "Could not sign in to Stirling. Try again."
+password = "Password"
+reauthLede = "Sign in with the Stirling account this server is connected to."
+submit = "Sign in"
+timeout = "Sign-in timed out. Try again."
+
 [portal.accountLink.failure]
 automatic = "Pipeline “{{pipeline}}” stopped during an automatic run because this server is out of credits."
 export = "Pipeline “{{pipeline}}” stopped before download because this server is out of credits."
@@ -8071,6 +8085,11 @@ title = "Add a payment method"
 body = "Your payment succeeded, but activation is taking a little longer than usual. It'll switch on automatically - close this and it'll appear here shortly."
 close = "Close"
 title = "Almost there"
+
+[portal.billing.checkout.browser]
+body = "Checkout is open in your browser. Come back here once you have paid."
+done = "I've paid"
+reopen = "Open checkout again"
 
 [portal.billing.checkout.cap]
 amountAria = "Monthly spend limit"
@@ -11819,6 +11838,7 @@ sidebar = "Sidebar"
 
 [settings.general.startupView]
 automate = "Automate"
+processor = "Processor"
 read = "Reader"
 tools = "Tools"
 

@@ -5,11 +5,26 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
  * already-subscribed-redirect vs neither-secret-nor-url mapping, the mock flag,
  * unconfigured Supabase, and the portal-session path.
  */
-const { getClient, invoke, rpc } = vi.hoisted(() => ({
-  getClient: vi.fn(),
-  invoke: vi.fn(),
-  rpc: vi.fn(),
-}));
+const { getClient, invoke, rpc, rpcHeader, rpcBuilder } = vi.hoisted(() => {
+  const rpc = vi.fn();
+  const rpcHeader = vi.fn();
+  return {
+    getClient: vi.fn(),
+    invoke: vi.fn(),
+    rpc,
+    rpcHeader,
+    // supabase.rpc returns a builder; the client sets the bearer on it before awaiting.
+    rpcBuilder: (fn: string, args: unknown) => {
+      const result: unknown = rpc(fn, args);
+      return {
+        setHeader: (name: string, value: string) => {
+          rpcHeader(name, value);
+          return result;
+        },
+      };
+    },
+  };
+});
 
 vi.mock("@app/portal/auth/saasSupabase", () => ({
   ensureSaasSupabase: vi.fn(),
@@ -40,9 +55,10 @@ const req = { teamId: 1, successUrl: "s", cancelUrl: "c" } as const;
 beforeEach(() => {
   invoke.mockReset();
   rpc.mockReset();
+  rpcHeader.mockReset();
   getClient.mockReset().mockReturnValue({
     functions: { invoke },
-    rpc,
+    rpc: rpcBuilder,
     auth: {
       getSession: async () => ({
         data: { session: { access_token: "billing-token" } },
@@ -300,7 +316,7 @@ it("renews once when reading a saved quote returns 401", async () => {
     .fn()
     .mockResolvedValue({ data: { session: { access_token: "renewed" } } });
   getClient.mockReturnValue({
-    rpc,
+    rpc: rpcBuilder,
     auth: {
       getSession: vi
         .fn()
@@ -318,6 +334,10 @@ it("renews once when reading a saved quote returns 401", async () => {
   await expect(getLatestBundleQuote(1)).resolves.toBeNull();
   expect(refreshSession).toHaveBeenCalledOnce();
   expect(rpc).toHaveBeenCalledTimes(2);
+  expect(rpcHeader.mock.calls).toEqual([
+    ["Authorization", "Bearer old"],
+    ["Authorization", "Bearer renewed"],
+  ]);
 });
 
 describe("finalizeBundleInvoice", () => {

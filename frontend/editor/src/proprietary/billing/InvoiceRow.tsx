@@ -1,4 +1,5 @@
 import { StatusBadge, type StatusTone } from "@app/ui";
+import { handleExternalLinkClick } from "@app/platform/externalLinkClick";
 
 export type InvoiceRowState = "paid" | "current" | "failed" | "other";
 
@@ -50,6 +51,7 @@ export function InvoiceRow({
           href={href}
           target="_blank"
           rel="noreferrer noopener"
+          onClick={(event) => handleExternalLinkClick(href, event)}
         >
           {viewLabel}
         </a>

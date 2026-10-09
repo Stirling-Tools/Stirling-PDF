@@ -18,7 +18,7 @@ export interface NavGroup {
 }
 
 // Sidebar nav groups. This is a flavor seam: the SaaS build shadows this file to
-// drop sections not yet shipped there (see src/portal-saas/components/sidebarGroups).
+// drop sections not yet shipped there (see src/portal-cloud/components/sidebarGroups).
 
 // The processor's own workflow: home, the pipeline it feeds, and what it connects out to.
 // Policies were folded into Pipelines (a policy is a pipeline the org requires), so there's no

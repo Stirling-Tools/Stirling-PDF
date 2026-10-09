@@ -130,19 +130,21 @@ export function QuickNavRailHost() {
     },
   };
 
+  // Without a connected server (desktop's local mode) signing in is the way in, not an admin.
+  const signInForProcessor = host?.isAnonymous || !connectedServer;
+  const noProcessorAccess =
+    HAS_PORTAL && !inPortal && !host?.portalAccess && !signInForProcessor;
   const processor: QuickNavEntry = {
     id: "processor",
     label: t("quickNav.processor", "Processor"),
     icon: <Icon name="cpu" size={SIZE} />,
     current: inPortal,
-    disabled:
-      HAS_PORTAL && !inPortal && !host?.portalAccess && !host?.isAnonymous,
-    reason:
-      HAS_PORTAL && !inPortal && !host?.portalAccess && !host?.isAnonymous
-        ? t("quickNav.noProcessorAccess", "Ask an admin for processor access")
-        : undefined,
+    disabled: noProcessorAccess,
+    reason: noProcessorAccess
+      ? t("quickNav.noProcessorAccess", "Ask an admin for processor access")
+      : undefined,
     onClick: () => {
-      if (host?.isAnonymous) {
+      if (signInForProcessor) {
         requestProcessorSignup();
         return;
       }

@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
 import { HttpError } from "@app/portal/api/http";
@@ -7,11 +13,13 @@ import { withBasePath } from "@app/constants/app";
 import { startConnect, startReauth } from "@app/portal/api/link";
 import { rememberConnect } from "@app/portal/auth/pendingConnect";
 
-interface ConnectHandoff {
+export interface ConnectHandoff {
   /** Stays true through a successful hand-off: the page is leaving, so nothing resolves. */
   busy: boolean;
   error: string | null;
   begin: () => void;
+  /** What the hand-off step shows while busy, for a hand-off that stays on this page. */
+  body?: ReactNode;
 }
 
 export function useConnectHandoff(reauth: boolean): ConnectHandoff {

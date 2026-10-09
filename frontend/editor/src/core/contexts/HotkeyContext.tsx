@@ -17,6 +17,8 @@ import {
   serializeBindings,
 } from "@app/utils/hotkeys";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import { stripBasePath } from "@app/constants/app";
+import { isPortalPath } from "@app/routes/portalBasename";
 import { ToolId } from "@app/types/toolId";
 import { ToolCategoryId, ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 
@@ -199,6 +201,8 @@ export const HotkeyProvider: React.FC<{ children: React.ReactNode }> = ({
     const handler = (event: KeyboardEvent) => {
       if (event.repeat) return;
       if (shouldIgnoreTarget(event.target)) return;
+      // Desktop keeps the editor mounted under the Processor; a tool key there would leave it.
+      if (isPortalPath(stripBasePath(window.location.pathname))) return;
 
       const entries = Object.entries(resolved) as [ToolId, HotkeyBinding][];
       for (const [toolId, binding] of entries) {

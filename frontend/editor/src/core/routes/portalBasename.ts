@@ -2,9 +2,14 @@
  * Base path where the admin portal route-set mounts inside the editor app
  * (see adminRouteExtensions). Lives in core so any layer can reference the
  * mount point without importing portal code — build flavors that ship no
- * portal (core, desktop) must never resolve @portal.
+ * portal (core) must never resolve @portal.
  */
 export const PORTAL_BASENAME = "/processor";
+
+/** Whether a path, base path already stripped, is a Processor page. */
+export function isPortalPath(path: string): boolean {
+  return path === PORTAL_BASENAME || path.startsWith(`${PORTAL_BASENAME}/`);
+}
 
 /** Here because whoever links to the review screen and whoever renders it are in different layers. */
 export const PORTAL_REVIEW_PATH = "/review";

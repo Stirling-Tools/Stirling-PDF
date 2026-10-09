@@ -9,13 +9,19 @@ function isServerMode(mode: ConnectionMode | null): boolean {
   return mode === "saas" || mode === "selfhosted";
 }
 
-/** Whether the app is signed in to Stirling Cloud or a self-hosted server. Starts false: this
- *  gates surfaces that fetch on mount, and the bundled backend 404s every one of those calls. */
-export function useConnectedServer(): boolean {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isServer, setIsServer] = useState(() =>
-    isServerMode(connectionModeService.getCachedMode()),
-  );
+export interface ConnectedServerState {
+  connected: boolean;
+  /** False until both the session and the mode have been read once. */
+  settled: boolean;
+}
+
+/** {@link useConnectedServer}, plus whether the answer is known yet: false at first means "not yet". */
+export function useConnectedServerState(): ConnectedServerState {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [isServer, setIsServer] = useState<boolean | null>(() => {
+    const cached = connectionModeService.getCachedMode();
+    return cached === null ? null : isServerMode(cached);
+  });
 
   useEffect(
     () =>
@@ -35,9 +41,15 @@ export function useConnectedServer(): boolean {
 
   useEffect(() => {
     let current = true;
-    void connectionModeService.getCurrentMode().then((mode) => {
-      if (current) setIsServer(isServerMode(mode));
-    });
+    void connectionModeService.getCurrentMode().then(
+      (mode) => {
+        if (current) setIsServer(isServerMode(mode));
+      },
+      // An unreadable config keeps the cached answer, else none; a mode change still updates it.
+      () => {
+        if (current) setIsServer((known) => known ?? false);
+      },
+    );
     const unsubscribe = connectionModeService.subscribeToModeChanges(
       (config) => {
         current = false;
@@ -50,5 +62,14 @@ export function useConnectedServer(): boolean {
     };
   }, []);
 
-  return isAuthenticated && isServer;
+  return {
+    connected: isAuthenticated === true && isServer === true,
+    settled: isAuthenticated !== null && isServer !== null,
+  };
+}
+
+/** Whether the app is signed in to Stirling Cloud or a self-hosted server. Starts false: this
+ *  gates surfaces that fetch on mount, and the bundled backend 404s every one of those calls. */
+export function useConnectedServer(): boolean {
+  return useConnectedServerState().connected;
 }

@@ -44,7 +44,9 @@ import {
   type BundleQuote,
   type BundleStripeQuote,
 } from "@app/portal/billing/stripe";
+import { openStripePage } from "@app/platform/stripeNavigation";
 import "@app/portal/theme/surface.css";
+import { downloadFile } from "@app/services/downloadService";
 
 const DEFAULT_POOL_CREDITS = 1_200_000;
 const DEFAULT_USERS = 25;
@@ -187,16 +189,12 @@ function clearCalcSettings(teamId: number): void {
 }
 
 /**
- * Open a URL in a new tab, falling back to same-tab navigation. A popup blocker can null the
- * {@code window.open} even from a click, and reliably does when the open follows an await (as the
- * invoice-PDF download does) — the fallback guarantees the buyer still reaches the invoice / PDF.
- * Returns true if a new tab opened, false if it fell back to navigating this tab away.
+ * Open a Stripe page beside this one. A popup blocker can null the new tab even from a click, and
+ * reliably does when the open follows an await (as the invoice-PDF download does), so the seam falls
+ * back to navigating this tab. Returns false when it did.
  */
 function openUrl(url: string): boolean {
-  const win = window.open(url, "_blank", "noopener,noreferrer");
-  if (win) return true;
-  window.location.assign(url);
-  return false;
+  return openStripePage(url, "tab");
 }
 
 interface Props {
@@ -748,14 +746,10 @@ export function BundleCheckoutModal({
       const ensured = await ensureStripeQuote();
       if (!ensured) return;
       const blob = await fetchBundleQuotePdf(ensured.quoteId);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${ensured.stripeQuote.stripeQuoteNumber ?? "stirling-quote"}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
+      await downloadFile({
+        data: blob,
+        filename: `${ensured.stripeQuote.stripeQuoteNumber ?? "stirling-quote"}.pdf`,
+      });
     } catch (e) {
       if (e instanceof StripeFunctionError && e.code === "unconfigured") return;
       setActionError(e instanceof Error ? e.message : String(e));

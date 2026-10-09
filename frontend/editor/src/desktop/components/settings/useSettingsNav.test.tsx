@@ -79,6 +79,7 @@ vi.mock("@app/services/connectionModeService", () => ({
         throw new Error("Connection config unavailable");
       return state.mode;
     },
+    getCachedMode: () => (state.connectionFails ? null : state.mode),
     subscribeToModeChanges: () => () => {},
   },
 }));
@@ -114,7 +115,6 @@ vi.mock("react-i18next", async (importOriginal) => ({
     t: (key: string, fallback?: string) => fallback ?? key,
   }),
 }));
-vi.mock("@app/platform/openExternal", () => ({ openExternal: vi.fn() }));
 
 beforeEach(() => {
   state.mode = "saas";
@@ -234,7 +234,10 @@ it("creates a Workspace group when the self-hosted owner has none", async () => 
     (group) => group.id === "workspace",
   );
   expect(workspaces).toHaveLength(1);
-  expect(workspaces[0].items.map((item) => item.key)).toEqual(["billing"]);
+  expect(workspaces[0].items.map((item) => item.key)).toEqual([
+    "billing",
+    "account-link",
+  ]);
 });
 
 it("waits for the connection before resolving an old billing bookmark", async () => {
@@ -245,7 +248,7 @@ it("waits for the connection before resolving an old billing bookmark", async ()
 });
 
 it.each([false, true])(
-  "routes old Plan links to web billing with roster=%s",
+  "routes old Plan links to Usage & Billing with roster=%s",
   async (roster) => {
     state.roster = roster;
     const { result } = renderHook(() => useSettingsNav(vi.fn()));

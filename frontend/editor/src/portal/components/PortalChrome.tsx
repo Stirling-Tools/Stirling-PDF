@@ -1,6 +1,6 @@
 import { AccountConnectionRefresh } from "@app/portal/components/account-link/AccountConnectionNotice";
 import { useLocation } from "react-router-dom";
-import { AppConfigProvider } from "@app/contexts/AppConfigContext";
+import { PortalAppConfigProvider } from "@portal/contexts/PortalAppConfigProvider";
 import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
 import { ErrorBoundary } from "@app/portal/components/ErrorBoundary";
 import { AppShell } from "@app/portal/components/AppShell";
@@ -31,7 +31,7 @@ export function PortalChrome() {
   return (
     // One app-config instance for every portal consumer (the search gates, the
     // sidebar) so they can't fetch twice or disagree.
-    <AppConfigProvider bootstrapMode="non-blocking">
+    <PortalAppConfigProvider bootstrapMode="non-blocking">
       {/* The pipeline builder reads the tool registry to list and configure operations. */}
       <ToolRegistryProvider>
         <AccountConnectionRefresh />
@@ -39,6 +39,6 @@ export function PortalChrome() {
           <RoutedContent />
         </AppShell>
       </ToolRegistryProvider>
-    </AppConfigProvider>
+    </PortalAppConfigProvider>
   );
 }

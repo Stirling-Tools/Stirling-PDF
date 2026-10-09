@@ -126,6 +126,7 @@ import {
   type WorkingInput,
 } from "@portal/components/pipelines/PipelineInputTrigger";
 import "@portal/views/PipelineBuilder.css";
+import { downloadFile } from "@app/services/downloadService";
 
 const TERMINAL_STATUSES = new Set(["COMPLETED", "FAILED", "CANCELLED"]);
 const POLL_INTERVAL_MS = 1500;
@@ -1039,14 +1040,10 @@ export function PipelineBuilder() {
   async function downloadOutput(output: RunOutputFile) {
     try {
       const blob = await fetchRunOutput(output.fileId);
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = output.fileName ?? output.fileId;
-      link.click();
-      // Revoke on the next tick: some browsers have not yet begun reading the
-      // blob when click() returns, and revoking now would cancel the download.
-      setTimeout(() => URL.revokeObjectURL(url), 0);
+      await downloadFile({
+        data: blob,
+        filename: output.fileName ?? output.fileId,
+      });
     } catch (e) {
       if (mounted.current)
         setRunResult({ tone: "danger", text: errorMessage(e) });

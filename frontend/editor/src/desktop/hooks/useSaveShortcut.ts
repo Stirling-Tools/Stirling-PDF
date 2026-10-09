@@ -7,6 +7,8 @@ import {
 // Save through the export gateway so a "run on export" policy enforces before
 // the file is written out (no-op when no such policy is active).
 import { downloadFileWithPolicy as downloadFile } from "@app/services/exportWithPolicy";
+import { stripBasePath } from "@app/constants/app";
+import { isPortalPath } from "@app/routes/portalBasename";
 
 /**
  * Desktop-only keyboard shortcut: Ctrl/Cmd+S to save selected files
@@ -20,7 +22,9 @@ export function useSaveShortcut() {
 
   useEffect(() => {
     const handleKeyDown = async (event: KeyboardEvent) => {
-      // Check for Ctrl+S (Windows/Linux) or Cmd+S (Mac)
+      // Check for Ctrl+S (Windows/Linux) or Cmd+S (Mac). Not on Processor pages,
+      // where the editor's files are out of sight.
+      if (isPortalPath(stripBasePath(window.location.pathname))) return;
       if ((event.ctrlKey || event.metaKey) && event.key === "s") {
         event.preventDefault();
 

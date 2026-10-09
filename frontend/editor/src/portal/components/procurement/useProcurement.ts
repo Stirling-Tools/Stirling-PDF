@@ -21,6 +21,7 @@ import {
   type QuoteResult,
   type TrialSetupDetails,
 } from "@app/portal/api/procurement";
+import { downloadFile } from "@app/services/downloadService";
 
 export type ProcurementExtra =
   | null
@@ -233,16 +234,11 @@ export function useProcurement(): ProcurementController {
     setDownloading(true);
     try {
       const blob = await fetchQuotePdf(latest.quoteId);
-      // A same-gesture <a download> click is reliable; window.open after an await is often
-      // popup-blocked (which is what made this take "a few goes").
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${latest.quoteNumber || "quote"}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      // A download, not window.open: an open after an await is often popup-blocked.
+      await downloadFile({
+        data: blob,
+        filename: `${latest.quoteNumber || "quote"}.pdf`,
+      });
     } catch (e) {
       console.error("[procurement] quote PDF download failed", e);
       reportError(e, t("portal.procurement.milestone.downloadError"));
@@ -256,14 +252,7 @@ export function useProcurement(): ProcurementController {
     try {
       const cert = await fetchLicenseFile();
       const blob = new Blob([cert], { type: "text/plain" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "stirling-enterprise.lic";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      await downloadFile({ data: blob, filename: "stirling-enterprise.lic" });
     } catch (e) {
       console.error("[procurement] offline licence download failed", e);
       reportError(e, t("portal.procurement.license.downloadError"));
@@ -276,14 +265,10 @@ export function useProcurement(): ProcurementController {
     setDownloadingAgreement(true);
     try {
       const blob = await fetchSignedAgreementPdf();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "stirling-enterprise-agreement.pdf";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      await downloadFile({
+        data: blob,
+        filename: "stirling-enterprise-agreement.pdf",
+      });
     } catch (e) {
       console.error("[procurement] signed agreement download failed", e);
       reportError(e, t("portal.procurement.agreement.downloadError"));

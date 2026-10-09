@@ -28,6 +28,7 @@ import { RootGate } from "@app/routes/RootGate";
 
 const MobileScannerPage = lazy(() => import("@app/pages/MobileScannerPage"));
 const MobileSignPage = lazy(() => import("@app/pages/MobileSignPage"));
+const DesktopReturnPage = lazy(() => import("@app/pages/DesktopReturnPage"));
 
 // Import global styles
 import "@app/styles/tailwind.css";
@@ -139,6 +140,17 @@ export default function App() {
           element={
             <PublicRouteProviders>
               <MobileSignPage />
+            </PublicRouteProviders>
+          }
+        />
+
+        {/* Stripe's return for desktop purchases, which run in the system
+            browser. Public: the browser may hold no Stirling session at all. */}
+        <Route
+          path="/desktop/return"
+          element={
+            <PublicRouteProviders>
+              <DesktopReturnPage />
             </PublicRouteProviders>
           }
         />

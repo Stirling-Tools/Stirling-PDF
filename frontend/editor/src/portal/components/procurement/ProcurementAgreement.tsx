@@ -14,6 +14,7 @@ import { StepModalHeader } from "@portal/components/shared/StepModalHeader";
 import { useAsync } from "@portal/hooks/useAsync";
 import "@portal/theme/surface.css";
 import "@portal/views/Procurement.css";
+import { downloadFile } from "@app/services/downloadService";
 
 /**
  * The agreement (security) step: the buyer reviews the full Stirling Enterprise Agreement — Master
@@ -62,14 +63,10 @@ export function ProcurementAgreement({
     setDownloadError(false);
     try {
       const blob = await fetchAgreementPdf();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "stirling-enterprise-agreement.pdf";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      await downloadFile({
+        data: blob,
+        filename: "stirling-enterprise-agreement.pdf",
+      });
     } catch {
       // Surface the failure — the PDF is rendered server-side, so a failure here means the
       // render service is unavailable rather than something the buyer can retry around.
