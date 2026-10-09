@@ -394,7 +394,9 @@ const FileEditor = ({
         <Box p="md">
           {activeStirlingFileStubs.length === 0 ? (
             <Center h="60vh">
-              <AddFileCard />
+              <AddFileCard
+                onFilesSelected={(files) => void handleFileUpload(files)}
+              />
             </Center>
           ) : (
             <div
@@ -416,7 +418,12 @@ const FileEditor = ({
               )}
 
               {/* Index 0 is AddFileCard when range covers it */}
-              {range.start === 0 && <AddFileCard key="add-file-card" />}
+              {range.start === 0 && (
+                <AddFileCard
+                  key="add-file-card"
+                  onFilesSelected={(files) => void handleFileUpload(files)}
+                />
+              )}
 
               {activeStirlingFileStubs
                 .slice(

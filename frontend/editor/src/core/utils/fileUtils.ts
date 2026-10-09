@@ -136,9 +136,10 @@ export function getFileFormats(
   if (file.processedFile?.isEncrypted) return ["PDF_ENCRYPTED"];
   if (isPdfFile(file)) return ["PDF"];
   const extension = detectFileExtension(file.name);
-  return TOOL_FORMATS.filter((format) =>
-    TOOL_FORMAT_EXTENSIONS[format].includes(extension),
-  );
+  return TOOL_FORMATS.filter((format) => {
+    const extensions: readonly string[] = TOOL_FORMAT_EXTENSIONS[format];
+    return extensions.includes(extension);
+  });
 }
 
 export type NonPdfFileType =
