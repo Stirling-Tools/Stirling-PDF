@@ -553,6 +553,41 @@ describe("trackEditorReducer insertBlank", () => {
     expect(ids(state, B)).toEqual([`${B}:1`, `${B}:2`]);
   });
 
+  it("puts a copy after each given page, across tracks, as one undo step", () => {
+    let state = twoTracks();
+    const [a1, a2] = pagesOf(state, A);
+    const [b1] = pagesOf(state, B);
+    state = trackEditorReducer(state, {
+      type: "insertBlankAfter",
+      pageIds: [a1.id],
+    });
+    const blank = pagesOf(state, A)[1];
+    state = trackEditorReducer(state, {
+      type: "duplicate",
+      pageIds: [a2.id, blank.id, b1.id],
+    });
+
+    expect(ids(state, A)).toEqual([
+      `${A}:1`,
+      "blank",
+      "blank",
+      `${A}:2`,
+      `${A}:2`,
+      `${A}:3`,
+    ]);
+    expect(ids(state, B)).toEqual([`${B}:1`, `${B}:1`, `${B}:2`]);
+    expect(pagesOf(state, A)[4]).toMatchObject({ rotation: 90 });
+    const allIds = [...pagesOf(state, A), ...pagesOf(state, B)].map(
+      (p) => p.id,
+    );
+    expect(new Set(allIds).size).toBe(allIds.length);
+    expect(changedTrackIds(state)).toEqual([A, B]);
+
+    state = trackEditorReducer(state, { type: "undo" });
+    expect(ids(state, A)).toEqual([`${A}:1`, "blank", `${A}:2`, `${A}:3`]);
+    expect(ids(state, B)).toEqual([`${B}:1`, `${B}:2`]);
+  });
+
   it("survives its neighbour's file closing", () => {
     let state = twoTracks();
     const b1 = pagesOf(state, B)[0];
@@ -639,5 +674,43 @@ describe("trackEditorReducer history", () => {
     });
     state = trackEditorReducer(state, { type: "reset" });
     expect(trackSignature(pagesOf(state, A))).toEqual(original);
+  });
+});
+
+describe("trackEditorReducer renameTrack", () => {
+  it("renames without dirtying the track or leaving the old name in history", () => {
+    const rotated = trackEditorReducer(twoTracks(), {
+      type: "rotate",
+      pageIds: [pagesOf(twoTracks(), A)[0].id],
+      delta: 90,
+    });
+    const renamed = trackEditorReducer(rotated, {
+      type: "renameTrack",
+      fileId: A,
+      name: "renamed.pdf",
+    });
+    expect(renamed.present.tracks[A].name).toBe("renamed.pdf");
+    expect(changedTrackIds(renamed)).toEqual(changedTrackIds(rotated));
+
+    const undone = trackEditorReducer(renamed, { type: "undo" });
+    expect(undone.present.tracks[A].name).toBe("renamed.pdf");
+  });
+
+  it("is a no-op for an unknown track or an unchanged name", () => {
+    const state = twoTracks();
+    expect(
+      trackEditorReducer(state, {
+        type: "renameTrack",
+        fileId: "missing" as FileId,
+        name: "x.pdf",
+      }),
+    ).toBe(state);
+    expect(
+      trackEditorReducer(state, {
+        type: "renameTrack",
+        fileId: A,
+        name: `${A}.pdf`,
+      }),
+    ).toBe(state);
   });
 });

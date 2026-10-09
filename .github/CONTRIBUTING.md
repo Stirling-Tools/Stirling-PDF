@@ -4,7 +4,7 @@ Thank you for your interest in contributing to Stirling-PDF! There are many ways
 
 ## License
 
-By contributing to this project, you agree that your contributions will be licensed under the project [license](LICENSE), which follows an open-core model.
+By contributing to this project, you agree that your contributions will be licensed under the project [license](../LICENSE), which follows an open-core model.
 The codebase is a mix of MIT and source-available code, so your contribution is licensed according to the directory it is committed to.
 
 PRs are welcome in any directory by any user, just be aware of which license applies to the code you change.
@@ -42,7 +42,7 @@ Please make sure your Pull Request adheres to the following guidelines:
 - Keep commits atomic. One commit should contain one change. If you want to make multiple changes, submit multiple Pull Requests.
 - Commits should be clear, concise, and easy to understand.
 - References to the Issue number in the Pull Request and/or Commit message.
-- Every comment in the diff should say something the code does not. See [Code comments](devGuide/CODE_COMMENTS.md); `task comment-lint` checks the mechanical part.
+- Every comment in the diff should say something the code does not. See [Code comments](../docs/developer/CODE_COMMENTS.md); `task comment-lint` checks the mechanical part.
 
 ## Stale Pull Requests
 
@@ -59,7 +59,7 @@ If you think a Pull Request is waiting on us rather than on you, say so in a com
 
 ## Translations
 
-If you would like to add or modify a translation, please see [How to add new languages to Stirling-PDF](devGuide/HowToAddNewLanguage.md). Also, please create a Pull Request so others can use it!
+If you would like to add or modify a translation, please see [How to add new languages to Stirling-PDF](../docs/developer/HowToAddNewLanguage.md). Also, please create a Pull Request so others can use it!
 
 ## Docs
 
@@ -75,12 +75,12 @@ If, at any point in time, you have a question, please feel free to ask in the sa
 
 For technical guides, setup instructions, and development resources:
 
-- [Developer Guide](DeveloperGuide.md) - Main setup and architecture guide
-- [Taskfile.yml](Taskfile.yml) - Unified task runner for all build/dev/test/lint commands
-- [Exception Handling Guide](devGuide/EXCEPTION_HANDLING_GUIDE.md) - Error handling patterns and i18n
-- [Translation Guide](devGuide/HowToAddNewLanguage.md) - Adding new languages
-- And more in the [devGuide folder](devGuide/)
+- [Developer Guide](../docs/developer/DeveloperGuide.md) - Main setup and architecture guide
+- [Taskfile.yml](../Taskfile.yml) - Unified task runner for all build/dev/test/lint commands
+- [Exception Handling Guide](../docs/developer/EXCEPTION_HANDLING_GUIDE.md) - Error handling patterns and i18n
+- [Translation Guide](../docs/developer/HowToAddNewLanguage.md) - Adding new languages
+- And more in the [devGuide folder](../docs/developer/)
 
 For configuration and usage guides, see:
-- [Database Guide](DATABASE.md) - Database setup and configuration
-- [OCR Guide](HowToUseOCR.md) - OCR setup and configuration
+- [Database Guide](../docs/developer/DATABASE.md) - Database setup and configuration
+- [OCR Guide](../docs/developer/HowToUseOCR.md) - OCR setup and configuration

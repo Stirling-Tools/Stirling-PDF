@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
 import { Dropdown, type DropdownTriggerProps } from "@app/ui/Dropdown";
 import type { QuickNavToolReasons } from "@app/contexts/QuickNavHostContext";
 import type { ToolId } from "@app/types/toolId";
@@ -30,6 +31,7 @@ export function SignMenu({
   items,
 }: SignMenuProps) {
   const { t } = useTranslation();
+  const localOnly = useLocalProcessingOnly();
   const sessions = useSignMenuSessions(items, opened);
   const openSigning = (intent: SigningIntent) => {
     onClose();
@@ -58,11 +60,13 @@ export function SignMenu({
         placement="side"
       >
         <SignMenuPersonalSection reasons={reasons} onSelectTool={selectTool} />
-        <SignMenuSessionsSection
-          sessions={sessions}
-          unavailableReason={reasons.sharedSign}
-          onOpenSigning={openSigning}
-        />
+        {!localOnly && (
+          <SignMenuSessionsSection
+            sessions={sessions}
+            unavailableReason={reasons.sharedSign}
+            onOpenSigning={openSigning}
+          />
+        )}
       </Dropdown.Menu>
     </Dropdown.Root>
   );
