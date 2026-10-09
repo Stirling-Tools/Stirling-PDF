@@ -37,6 +37,14 @@ function mockPermissions(permissions: number[] | null) {
   return document;
 }
 
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((resolvePromise) => {
+    resolve = resolvePromise;
+  });
+  return { promise, resolve };
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
   createDocument.mockReset();
@@ -124,7 +132,7 @@ describe("usePermissionExtraction", () => {
   });
 
   test("ignores late permissions from a previous selection", async () => {
-    const stale = Promise.withResolvers<number[]>();
+    const stale = deferred<number[]>();
     const oldDocument = {
       getPermissions: vi.fn().mockReturnValue(stale.promise),
     };
@@ -148,7 +156,7 @@ describe("usePermissionExtraction", () => {
     const { result, rerender } = renderExtraction(first);
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-    const pending = Promise.withResolvers<{
+    const pending = deferred<{
       getPermissions: () => Promise<null>;
     }>();
     createDocument.mockReturnValueOnce(pending.promise);
@@ -167,7 +175,7 @@ describe("usePermissionExtraction", () => {
 
   test("releases documents that finish opening after unmount", async () => {
     const document = { getPermissions: vi.fn() };
-    const pending = Promise.withResolvers<typeof document>();
+    const pending = deferred<typeof document>();
     createDocument.mockReturnValueOnce(pending.promise);
     const { unmount } = renderExtraction(new File([], "pending.pdf"));
     unmount();

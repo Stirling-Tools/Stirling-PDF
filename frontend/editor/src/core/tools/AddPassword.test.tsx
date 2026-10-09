@@ -80,9 +80,12 @@ beforeEach(() => {
 
 describe("Add Password permission detection", () => {
   test("loads existing restrictions before encryption and preserves password settings", async () => {
-    const pending = Promise.withResolvers<number[]>();
+    let resolvePermissions!: (permissions: number[]) => void;
+    const pending = new Promise<number[]>((resolve) => {
+      resolvePermissions = resolve;
+    });
     createDocument.mockResolvedValueOnce({
-      getPermissions: () => pending.promise,
+      getPermissions: () => pending,
     });
     render(<AddPassword />);
 
@@ -95,7 +98,7 @@ describe("Add Password permission detection", () => {
     });
 
     await act(async () =>
-      pending.resolve(
+      resolvePermissions(
         Object.values(PermissionFlag).filter(
           (flag) => flag !== PermissionFlag.PRINT,
         ),
