@@ -79,7 +79,7 @@ For technical guides, setup instructions, and development resources:
 - [Taskfile.yml](../Taskfile.yml) - Unified task runner for all build/dev/test/lint commands
 - [Exception Handling Guide](../docs/developer/EXCEPTION_HANDLING_GUIDE.md) - Error handling patterns and i18n
 - [Translation Guide](../docs/developer/HowToAddNewLanguage.md) - Adding new languages
-- And more in the [devGuide folder](../docs/developer/)
+- And more in the [docs/developer folder](../docs/developer/)
 
 For configuration and usage guides, see:
 - [Database Guide](../docs/developer/DATABASE.md) - Database setup and configuration

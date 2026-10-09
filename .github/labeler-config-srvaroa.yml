@@ -151,7 +151,7 @@ labels:
       - '.editorconfig'
       - '.pre-commit-config'
       - '.github/workflows/pre_commit.yml'
-      - 'devGuide/.*'
+      - 'docs/developer/.*'
       - 'devTools/.*'
 
   - label: 'Test'
