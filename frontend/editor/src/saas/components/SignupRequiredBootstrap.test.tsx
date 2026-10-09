@@ -38,7 +38,7 @@ vi.mock("@app/components/chat/ChatPanel", () => ({
     onComposerFocus,
   }: {
     onComposerFocus: (event: FocusEvent<HTMLTextAreaElement>) => void;
-  }) => <textarea aria-label="Ask Stirling" onFocus={onComposerFocus} />,
+  }) => <textarea aria-label="Ask Stirling Agent" onFocus={onComposerFocus} />,
 }));
 vi.mock("@app/components/policies/ProcessingFolderSetupFlow", () => ({
   ProcessingFolderSetupFlow: () => <div>Processing folder wizard</div>,
@@ -132,7 +132,9 @@ describe("guest signup prompt", () => {
 
   it("opens signup instead of the assistant for guests without navigating", async () => {
     renderPrompt(false, true);
-    const composer = screen.getByRole("textbox", { name: "Ask Stirling" });
+    const composer = screen.getByRole("textbox", {
+      name: "Ask Stirling Agent",
+    });
     act(() => composer.focus());
     expect(await screen.findByRole("dialog")).toBeInTheDocument();
     expect(composer).not.toHaveFocus();
@@ -147,7 +149,9 @@ describe("guest signup prompt", () => {
   it("opens the assistant without a signup prompt for registered users", () => {
     auth.isAnonymous = false;
     renderPrompt(false, true);
-    act(() => screen.getByRole("textbox", { name: "Ask Stirling" }).focus());
+    act(() =>
+      screen.getByRole("textbox", { name: "Ask Stirling Agent" }).focus(),
+    );
     expect(
       screen.getByRole("region", { name: "Stirling Agent" }),
     ).toHaveAttribute("data-state", "expanded");

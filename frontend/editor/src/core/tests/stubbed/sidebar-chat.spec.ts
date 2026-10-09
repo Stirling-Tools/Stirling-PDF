@@ -45,7 +45,7 @@ test("sits collapsed as just the composer", async ({ page }) => {
   const dock = await openEditorWithAi(page);
   await expect(dock).toHaveAttribute("data-state", "collapsed");
   await expect(
-    dock.getByRole("textbox", { name: "Ask Stirling" }),
+    dock.getByRole("textbox", { name: "Ask Stirling Agent" }),
   ).toBeVisible();
   await expect(dock.getByRole("button", { name: "Collapse chat" })).toHaveCount(
     0,
@@ -55,7 +55,7 @@ test("sits collapsed as just the composer", async ({ page }) => {
     dock.getByRole("button", { name: "Open from computer" }),
   ).toHaveCount(0);
 
-  await dock.getByRole("textbox", { name: "Ask Stirling" }).click();
+  await dock.getByRole("textbox", { name: "Ask Stirling Agent" }).click();
   await expect(
     dock.getByRole("button", { name: "Open from computer" }),
   ).toBeVisible();
@@ -67,7 +67,7 @@ test("opens when the composer is focused and closes only from the chevron", asyn
   const dock = await openEditorWithAi(page);
   const collapsed = await settledHeight(dock);
 
-  await dock.getByRole("textbox", { name: "Ask Stirling" }).click();
+  await dock.getByRole("textbox", { name: "Ask Stirling Agent" }).click();
   await expect(dock).toHaveAttribute("data-state", "expanded");
   expect(await settledHeight(dock)).toBeGreaterThan(collapsed + 100);
 
@@ -80,7 +80,7 @@ test("opens when the composer is focused and closes only from the chevron", asyn
   await expect(dock).toHaveAttribute("data-state", "collapsed");
   expect(await settledHeight(dock)).toBe(collapsed);
 
-  await dock.getByRole("textbox", { name: "Ask Stirling" }).click();
+  await dock.getByRole("textbox", { name: "Ask Stirling Agent" }).click();
   await expect(dock).toHaveAttribute("data-state", "expanded");
 });
 
@@ -98,7 +98,7 @@ test("rules the header once messages scroll beneath it", async ({ page }) => {
   const header = dock.locator(".file-sidebar-section-header");
   await expect(header).not.toHaveAttribute("data-scrolled");
 
-  const composer = dock.getByRole("textbox", { name: "Ask Stirling" });
+  const composer = dock.getByRole("textbox", { name: "Ask Stirling Agent" });
   await composer.click();
   await composer.fill("List forty lines");
   await composer.press("Enter");
@@ -126,7 +126,7 @@ test("accepts typing while the agent is thinking but holds the send", async ({
     });
   });
   const dock = await openEditorWithAi(page);
-  const composer = dock.getByRole("textbox", { name: "Ask Stirling" });
+  const composer = dock.getByRole("textbox", { name: "Ask Stirling Agent" });
   const send = dock.getByRole("button", { name: "Send message" });
   await composer.click();
   await composer.fill("First");

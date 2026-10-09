@@ -3218,7 +3218,7 @@ copy = "Copy message"
 
 [chat.dock]
 collapse = "Collapse chat"
-placeholder = "Ask Stirling"
+placeholder = "Ask Stirling Agent"
 title = "Stirling Agent"
 
 [chat.header]
