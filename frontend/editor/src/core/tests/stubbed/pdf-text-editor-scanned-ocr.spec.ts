@@ -2,6 +2,7 @@ import { test, expect } from "@app/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import path from "path";
 import { readFile } from "node:fs/promises";
+import { waitForEditorReady } from "@app/tests/stubbed/editorReady";
 import {
   downloadBytes,
   saveAndDownload,
@@ -111,27 +112,40 @@ async function inkRight(page: Page, name: string, box: Box): Promise<number> {
   );
 }
 
-// Wait until the page bitmap stops changing between two polls.
-async function settle(page: Page): Promise<void> {
+// A cheap hash of the page bitmap; "" until the canvas has painted.
+async function bitmapSig(page: Page): Promise<string> {
+  return page.evaluate((tid) => {
+    const c = Array.from(
+      document.querySelectorAll<HTMLCanvasElement>(
+        `[data-testid="${tid}"] canvas`,
+      ),
+    ).find((x) => x.width > 0 && x.height > 0);
+    if (!c) return "";
+    const d = c.getContext("2d")!.getImageData(0, 0, c.width, c.height).data;
+    let h = 0;
+    for (let k = 0; k < d.length; k += 16) h = (h * 31 + d[k]) | 0;
+    return `${c.width}x${c.height}:${h}`;
+  }, PAGE_TESTID);
+}
+
+// Wait until the bitmap differs from `from` (when given), then holds still.
+async function settle(page: Page, from?: string): Promise<void> {
   let prev = "";
-  for (let i = 0; i < 60; i++) {
-    const sig = await page.evaluate((tid) => {
-      const c = Array.from(
-        document.querySelectorAll<HTMLCanvasElement>(
-          `[data-testid="${tid}"] canvas`,
-        ),
-      ).find((x) => x.width > 0 && x.height > 0);
-      if (!c) return "";
-      const d = c.getContext("2d")!.getImageData(0, 0, c.width, c.height).data;
-      let h = 0;
-      for (let k = 0; k < d.length; k += 16) h = (h * 31 + d[k]) | 0;
-      return `${c.width}x${c.height}:${h}`;
-    }, PAGE_TESTID);
-    if (sig && sig === prev) return;
-    prev = sig;
-    await page.waitForTimeout(400);
-  }
-  throw new Error("page bitmap never settled");
+  await expect
+    .poll(
+      async () => {
+        const sig = await bitmapSig(page);
+        const stable = !!sig && sig !== from && sig === prev;
+        prev = sig;
+        return stable;
+      },
+      {
+        message: "page bitmap never settled",
+        timeout: 30_000,
+        intervals: [400],
+      },
+    )
+    .toBe(true);
 }
 
 async function runs(page: Page): Promise<RunState[]> {
@@ -141,7 +155,8 @@ async function runs(page: Page): Promise<RunState[]> {
         __editor_store: { state: { pages: { runs: RunState[] }[] } };
       }
     ).__editor_store;
-    return s.state.pages[0].runs.map((r) => ({
+    // Empty while a reload swaps the document in.
+    return (s.state.pages[0]?.runs ?? []).map((r) => ({
       id: r.id,
       text: r.text,
       renderMode: r.renderMode ?? 0,
@@ -158,7 +173,7 @@ async function open(page: Page, file: string | Buffer): Promise<void> {
         : { name: "reopened.pdf", mimeType: "application/pdf", buffer: file },
     );
   await expect(page.getByTestId(PAGE_TESTID)).toBeVisible({ timeout: 60_000 });
-  await page.waitForTimeout(800);
+  await waitForEditorReady(page, 60_000);
   await settle(page);
 }
 
@@ -189,6 +204,7 @@ async function lineBox(page: Page, runId: string): Promise<Box> {
 }
 
 async function replaceRunText(page: Page, runId: string, text: string) {
+  const from = await bitmapSig(page);
   await page.evaluate(
     ({ id, t }) => {
       const el = document.querySelector<HTMLElement>(
@@ -205,8 +221,7 @@ async function replaceRunText(page: Page, runId: string, text: string) {
     },
     { id: runId, t: text },
   );
-  await page.waitForTimeout(800);
-  await settle(page);
+  await settle(page, from);
 }
 
 for (const fixture of ["scanned-ocr-hocr.pdf", "scanned-ocr-sandwich.pdf"]) {
@@ -260,9 +275,9 @@ for (const fixture of ["scanned-ocr-hocr.pdf", "scanned-ocr-sandwich.pdf"]) {
         "the edit disturbed the lines below it",
       ).toBe(0);
 
+      const editedSig = await bitmapSig(page);
       await page.getByTestId("pdf-editor-undo").click();
-      await page.waitForTimeout(800);
-      await settle(page);
+      await settle(page, editedSig);
       await snap(page, "undone");
       const undone = (await runs(page)).find((r) => r.id === target!.id)!;
       expect(undone.text).toBe("Customer: Jane Example");
@@ -284,6 +299,7 @@ for (const fixture of ["scanned-ocr-hocr.pdf", "scanned-ocr-sandwich.pdf"]) {
       await snap(page, "loaded");
 
       // Keystrokes coalesce into several commands; only the first sees Tr 3.
+      const loadedSig = await bitmapSig(page);
       await page.getByTestId(`pdf-editor-run-${target.id}`).click();
       await page.keyboard.press("End");
       await page.keyboard.type(" PAID", { delay: 60 });
@@ -292,8 +308,7 @@ for (const fixture of ["scanned-ocr-hocr.pdf", "scanned-ocr-sandwich.pdf"]) {
           .querySelector<HTMLElement>(`[data-testid="pdf-editor-run-${id}"]`)
           ?.blur();
       }, target.id);
-      await page.waitForTimeout(800);
-      await settle(page);
+      await settle(page, loadedSig);
       await snap(page, "edited");
       const edited = (await runs(page)).find((r) => r.id === target.id)!;
       expect(edited.text).toMatch(/EUR PAID$/);
@@ -529,10 +544,10 @@ test("Enter in a scanned block moves later text down a line, Backspace rejoins i
   const addr = (await runs(page)).find((r) => r.text.startsWith("12-4"))!;
   await snap(page, "loaded");
 
+  const loadedSig = await bitmapSig(page);
   await caretAfter(page, addr.id, "ROAD,");
   await page.keyboard.press("Enter");
-  await page.waitForTimeout(800);
-  await settle(page);
+  await settle(page, loadedSig);
   await snap(page, "split");
   const split = (await runs(page)).find((r) => r.id === addr.id)!;
   expect(split.text.split("\n")).toHaveLength(3);
@@ -557,9 +572,9 @@ test("Enter in a scanned block moves later text down a line, Backspace rejoins i
     "nothing was pushed down into the next row",
   ).toBeGreaterThan(50);
 
+  const splitSig = await bitmapSig(page);
   await page.keyboard.press("Backspace");
-  await page.waitForTimeout(800);
-  await settle(page);
+  await settle(page, splitSig);
   await snap(page, "joined");
   expect((await runs(page)).find((r) => r.id === addr.id)!.text).toBe(
     addr.text,
@@ -592,9 +607,9 @@ test("deleting a scanned line hides it, and undo brings the scan back", async ({
   await page.evaluate(() =>
     (document.activeElement as HTMLElement | null)?.blur(),
   );
+  const loadedSig = await bitmapSig(page);
   await page.keyboard.press("Delete");
-  await page.waitForTimeout(800);
-  await settle(page);
+  await settle(page, loadedSig);
   await snap(page, "deleted");
   expect(await runs(page)).toHaveLength(all.length - 1);
   expect(
@@ -608,9 +623,9 @@ test("deleting a scanned line hides it, and undo brings the scan back", async ({
     "the deleted line still shows on the scan",
   ).toBeGreaterThan(200);
 
+  const deletedSig = await bitmapSig(page);
   await page.getByTestId("pdf-editor-undo").click();
-  await page.waitForTimeout(800);
-  await settle(page);
+  await settle(page, deletedSig);
   await snap(page, "undone");
   expect(await runs(page)).toHaveLength(all.length);
   expect(await diff(page, "loaded", "undone")).toBeLessThan(20);
@@ -628,12 +643,12 @@ test("dragging a scanned block moves its text off the scan", async ({
   const box = (await page
     .getByTestId(`pdf-editor-run-${north.id}`)
     .boundingBox())!;
+  const loadedSig = await bitmapSig(page);
   await page.mouse.move(box.x + box.width / 2, box.y + 2);
   await page.mouse.down();
   await page.mouse.move(box.x + box.width / 2 + 120, box.y + 2, { steps: 8 });
   await page.mouse.up();
-  await page.waitForTimeout(800);
-  await settle(page);
+  await settle(page, loadedSig);
   await snap(page, "moved");
   const before = await ptBox(page, FORM, 40, 51, 160, 59);
   expect(

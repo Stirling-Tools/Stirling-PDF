@@ -1,3 +1,4 @@
+import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
 import { Icon } from "@app/ui/Icon";
 import React, {
   useCallback,
@@ -83,7 +84,7 @@ import { VersionHistoryModal } from "@app/components/filesPage/VersionHistoryMod
 import { RenameFileDialog } from "@app/components/shared/RenameFileDialog";
 import { duplicateStoredFile } from "@app/utils/duplicateFile";
 import { downloadFileFromStorage } from "@app/utils/downloadUtils";
-import { fileStorage } from "@app/services/fileStorage";
+import { renameStoredFile } from "@app/services/renameStoredFile";
 import { materializeServerStubs } from "@app/services/fileSyncService";
 import {
   FILES_PAGE_DRAG_TYPE,
@@ -139,6 +140,7 @@ export default function FileManagerView() {
           "Sign in to refresh from the server.",
         ));
   const uploadEnabled = appConfig?.storageEnabled === true;
+  const localProcessingOnly = useLocalProcessingOnly();
   const saveToServerDisabledReason: string | null =
     signInRequiredReason ??
     (uploadEnabled
@@ -734,8 +736,15 @@ export default function FileManagerView() {
     const node = dropZoneRef.current;
     if (!node) return;
     let counter = 0;
-    const isExternalFileDrag = (e: DragEvent) =>
-      Array.from(e.dataTransfer?.types ?? []).includes("Files");
+    // Stops each event so the workbench's own drop target, which wraps this
+    // view, doesn't add the same files again outside the current folder.
+    const isExternalFileDrag = (e: DragEvent) => {
+      const external = Array.from(e.dataTransfer?.types ?? []).includes(
+        "Files",
+      );
+      if (external) e.stopPropagation();
+      return external;
+    };
 
     const onEnter = (e: DragEvent) => {
       if (!isExternalFileDrag(e)) return;
@@ -747,7 +756,8 @@ export default function FileManagerView() {
       if (!isExternalFileDrag(e)) return;
       e.preventDefault();
     };
-    const onLeave = () => {
+    const onLeave = (e: DragEvent) => {
+      if (!isExternalFileDrag(e)) return;
       counter -= 1;
       if (counter <= 0) {
         counter = 0;
@@ -945,19 +955,16 @@ export default function FileManagerView() {
       if (!file) return;
       const local = await localCopyOf(file);
       if (!local) return;
-      // quickKey is name|size|lastModified; a stale one would make a re-upload
-      // of the original look like a duplicate of the renamed file.
-      const quickKey = `${name}|${local.size}|${local.lastModified}`;
-      const saved = await fileStorage.updateFileMetadata(local.id, {
+      const saved = await renameStoredFile(
+        local,
         name,
-        quickKey,
-      });
+        fileActions.updateStirlingFileStub,
+      );
       if (!saved) {
         throw new Error(
           t("fileSidebar.rename.error", "Could not rename the file."),
         );
       }
-      fileActions.updateStirlingFileStub(local.id, { name, quickKey });
       setRenameTarget(null);
       await refresh();
     },
@@ -1085,7 +1092,7 @@ export default function FileManagerView() {
         selectedCount={selectedFiles.length}
         onAddToWorkspace={() => handleAddToWorkspace(selectedFiles)}
         onSaveToServer={
-          localOnlySelectedStubs.length > 0
+          !localProcessingOnly && localOnlySelectedStubs.length > 0
             ? () => setSaveToServerTarget(localOnlySelectedStubs)
             : undefined
         }
@@ -1341,7 +1348,11 @@ export default function FileManagerView() {
                   }),
                 )
               }
-              onSaveToServer={(file) => setSaveToServerTarget([file])}
+              onSaveToServer={
+                localProcessingOnly
+                  ? undefined
+                  : (file) => setSaveToServerTarget([file])
+              }
               onVersionHistory={(file) => setVersionHistoryFile(file)}
               onDownloadFile={handleDownloadFile}
               onRenameFile={setRenameTarget}
@@ -1395,7 +1406,11 @@ export default function FileManagerView() {
             onAddToWorkspace={handleAddToWorkspace}
             onMove={promptMoveFiles}
             onRemove={handleRemoveFiles}
-            onSaveToServer={(files) => setSaveToServerTarget(files)}
+            onSaveToServer={
+              localProcessingOnly
+                ? undefined
+                : (files) => setSaveToServerTarget(files)
+            }
             saveToServerDisabledReason={saveToServerDisabledReason}
           />
         )}
@@ -1445,7 +1460,11 @@ export default function FileManagerView() {
               onAddToWorkspace={handleAddToWorkspace}
               onMove={promptMoveFiles}
               onRemove={handleRemoveFiles}
-              onSaveToServer={(files) => setSaveToServerTarget(files)}
+              onSaveToServer={
+                localProcessingOnly
+                  ? undefined
+                  : (files) => setSaveToServerTarget(files)
+              }
               saveToServerDisabledReason={saveToServerDisabledReason}
               compactVersions
               onOpenVersionHistory={() => {
