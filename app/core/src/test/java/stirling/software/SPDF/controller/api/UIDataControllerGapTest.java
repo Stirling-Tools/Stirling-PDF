@@ -263,6 +263,41 @@ class UIDataControllerGapTest {
         }
 
         @Test
+        @DisplayName("ignores .json.example files and keeps admin-added ones")
+        void ignoresExampleFiles(@TempDir Path dir) throws Exception {
+            Files.writeString(
+                    dir.resolve("OCR images.json.example"),
+                    "{\"name\":\"OCR images\"}",
+                    StandardCharsets.UTF_8);
+            Files.writeString(
+                    dir.resolve("custom.json"), "{\"name\":\"Custom\"}", StandardCharsets.UTF_8);
+            when(runtimePathConfig.getPipelineDefaultWebUiConfigs()).thenReturn(dir.toString());
+
+            UIDataController.PipelineData body =
+                    controller(userService).getPipelineData().getBody();
+
+            assertNotNull(body);
+            assertEquals(1, body.getPipelineConfigsWithNames().size());
+            assertEquals("Custom", body.getPipelineConfigsWithNames().get(0).get("name"));
+        }
+
+        @Test
+        @DisplayName("skips an invalid json file without dropping the valid ones")
+        void skipsInvalidJson(@TempDir Path dir) throws Exception {
+            Files.writeString(dir.resolve("broken.json"), "{not json", StandardCharsets.UTF_8);
+            Files.writeString(
+                    dir.resolve("good.json"), "{\"name\":\"Good\"}", StandardCharsets.UTF_8);
+            when(runtimePathConfig.getPipelineDefaultWebUiConfigs()).thenReturn(dir.toString());
+
+            UIDataController.PipelineData body =
+                    controller(userService).getPipelineData().getBody();
+
+            assertNotNull(body);
+            assertEquals(1, body.getPipelineConfigs().size());
+            assertEquals("Good", body.getPipelineConfigsWithNames().get(0).get("name"));
+        }
+
+        @Test
         @DisplayName("returns the placeholder when the directory exists but holds no json")
         void emptyDirectoryYieldsPlaceholder(@TempDir Path dir) {
             when(runtimePathConfig.getPipelineDefaultWebUiConfigs()).thenReturn(dir.toString());
