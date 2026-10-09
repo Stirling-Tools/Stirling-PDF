@@ -194,11 +194,13 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
     checkoutState.setState,
   ]);
 
-  // Trigger checkout session creation when entering payment stage
+  // Trigger checkout session creation when entering payment stage. A checkout already
+  // open in the browser (desktop) has no client secret and must not be minted again.
   useEffect(() => {
     if (
       checkoutState.state.currentStage === "payment" &&
       !checkoutState.state.clientSecret &&
+      !checkoutState.state.hostedUrl &&
       !checkoutState.state.loading
     ) {
       session.createCheckoutSession();
@@ -206,6 +208,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
   }, [
     checkoutState.state.currentStage,
     checkoutState.state.clientSecret,
+    checkoutState.state.hostedUrl,
     checkoutState.state.loading,
     session,
   ]);

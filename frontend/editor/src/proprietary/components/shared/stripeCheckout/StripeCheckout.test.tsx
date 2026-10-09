@@ -40,8 +40,12 @@ vi.mock(
 vi.mock(
   "@app/components/shared/stripeCheckout/hooks/useCheckoutSession",
   () => ({
-    useCheckoutSession: () => ({
-      createCheckoutSession: service.createCheckoutSession,
+    useCheckoutSession: (
+      _plan: unknown,
+      _state: unknown,
+      setState: unknown,
+    ) => ({
+      createCheckoutSession: () => service.createCheckoutSession(setState),
     }),
   }),
 );
@@ -226,4 +230,40 @@ it("starts at held capacity and lets payment return to those choices", async () 
   expect(
     await screen.findByText("Capacity: 3 blocks; current: 300"),
   ).toBeInTheDocument();
+});
+
+it("mints one session when checkout opens in the browser instead of in the page", async () => {
+  service.getLicenseInfo.mockResolvedValue({ licenseType: "NORMAL" });
+  service.createCheckoutSession
+    .mockReset()
+    .mockImplementation(
+      (setState: (update: (prev: object) => object) => void) =>
+        // What desktop's hosted checkout leaves behind: a browser URL and no client secret.
+        setState((prev) => ({
+          ...prev,
+          hostedUrl: "https://checkout.stripe.com/c/pay/cs_test_1",
+          loading: false,
+        })),
+    );
+  render(
+    <StripeCheckout
+      opened
+      onClose={() => {}}
+      planGroup={{ ...planGroup, tier: "enterprise" }}
+      combinedChoose
+    />,
+  );
+
+  fireEvent.click(await screen.findByRole("button", { name: "Monthly" }));
+  expect(await screen.findByText("Payment details")).toBeInTheDocument();
+  await new Promise((resolve) => setTimeout(resolve, 50));
+
+  expect(service.createCheckoutSession).toHaveBeenCalledTimes(1);
+
+  // A changed choice is a different purchase, so coming back to payment mints a fresh one.
+  fireEvent.click(screen.getByRole("button", { name: "common.back" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Monthly" }));
+  expect(await screen.findByText("Payment details")).toBeInTheDocument();
+  await new Promise((resolve) => setTimeout(resolve, 50));
+  expect(service.createCheckoutSession).toHaveBeenCalledTimes(2);
 });
