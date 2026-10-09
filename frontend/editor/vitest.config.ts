@@ -1,8 +1,19 @@
+import { readFileSync } from "node:fs";
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react-swc";
 import tsconfigPaths from "vite-tsconfig-paths";
 // oxlint-disable-next-line no-restricted-imports -- config runs in node, before the aliases exist
 import { iconSvgr } from "./scripts/icons/svgrOptions.mts";
+
+const frontendPackage: { dependencies: Record<string, string> } = JSON.parse(
+  readFileSync(new URL("../package.json", import.meta.url), "utf8"),
+);
+
+// Every @mantine/* package, so they share one pre-bundled core: one left
+// unbundled imports its own copy and cannot see the bundled MantineProvider.
+const MANTINE_PACKAGES = Object.keys(frontendPackage.dependencies).filter(
+  (name) => name.startsWith("@mantine/"),
+);
 
 // Projects do NOT inherit the root test options, so every project silently ran
 // at vitest's 5s default and printed all app stdout. Spread these into each one.
@@ -12,6 +23,11 @@ const TEST_DEFAULTS = {
   // Threads spawn faster for local speed; CI keeps forks so a cross-file global
   // leak can't bleed between files in a shared process.
   pool: process.env.CI ? "forks" : "threads",
+  // Mantine is hundreds of small ESM files that every component test re-imports;
+  // pre-bundled it is one module (~250ms -> ~25ms of collect per file).
+  deps: {
+    optimizer: { web: { enabled: true, include: MANTINE_PACKAGES } },
+  },
   onConsoleLog(_log: string, type: "stdout" | "stderr") {
     if (type === "stdout" && !process.env.VITEST_CONSOLE) return false;
   },
