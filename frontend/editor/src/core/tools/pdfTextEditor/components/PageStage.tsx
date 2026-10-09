@@ -210,18 +210,23 @@ export function PageStage() {
         pos="relative"
         ref={stageRootRef}
         style={{ flex: 1, minHeight: 0 }}
+        // Each handler stops the event: the workbench wraps this stage and would
+        // otherwise also add the dropped file to the workspace.
         onDragEnter={(e) => {
+          e.stopPropagation();
           if (Array.from(e.dataTransfer?.types ?? []).includes("Files")) {
             dragCountRef.current += 1;
             setDraggingFile(true);
           }
         }}
         onDragOver={(e) => {
+          e.stopPropagation();
           if (Array.from(e.dataTransfer?.types ?? []).includes("Files")) {
             e.preventDefault();
           }
         }}
-        onDragLeave={() => {
+        onDragLeave={(e) => {
+          e.stopPropagation();
           dragCountRef.current = Math.max(0, dragCountRef.current - 1);
           if (dragCountRef.current === 0) setDraggingFile(false);
         }}
@@ -229,6 +234,7 @@ export function PageStage() {
           // ALWAYS claim the drop: without preventDefault the browser navigates
           // the tab to the dropped file, discarding the editor.
           e.preventDefault();
+          e.stopPropagation();
           dragCountRef.current = 0;
           setDraggingFile(false);
           const files = e.dataTransfer?.files;

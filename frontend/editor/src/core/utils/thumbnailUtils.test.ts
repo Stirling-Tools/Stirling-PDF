@@ -281,6 +281,18 @@ describe("generateThumbnailForFile — images", () => {
     expect(calls[0].resizeHeight).toBe(320);
   });
 
+  it("fits a requested box without enlarging a smaller image", async () => {
+    const { generateImageThumbnail } =
+      await import("@app/utils/thumbnailUtils");
+    const { calls } = stubBitmapPipeline();
+    await generateImageThumbnail(fileWithHeader(pngHeader(4000, 3000)), 1024);
+    await generateImageThumbnail(fileWithHeader(pngHeader(200, 100)), 1024);
+    expect(calls.map((call) => [call.resizeWidth, call.resizeHeight])).toEqual([
+      [1024, 768],
+      [200, 100],
+    ]);
+  });
+
   it("reads JPEG dimensions from the start-of-frame marker", async () => {
     const { generateThumbnailForFile } =
       await import("@app/utils/thumbnailUtils");

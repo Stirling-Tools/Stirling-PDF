@@ -38,8 +38,7 @@
   --c-btn-secondary: var(--c-surface);
 }
 
-/* The surrounding Dropzone sets data-accept while files are dragged over it. */
-:global([data-accept]) .card {
+.card[data-drag-over] {
   border-color: var(--c-primary);
   background: var(--c-primary-subtle);
 }
