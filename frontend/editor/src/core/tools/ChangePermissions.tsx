@@ -1,5 +1,4 @@
 import { useTranslation } from "react-i18next";
-import { Stack, Text } from "@mantine/core";
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 import ChangePermissionsSettings from "@app/components/tools/changePermissions/ChangePermissionsSettings";
 import { useChangePermissionsParameters } from "@app/hooks/tools/changePermissions/useChangePermissionsParameters";
@@ -41,38 +40,14 @@ const ChangePermissions = (props: BaseToolProps) => {
           : undefined,
         tooltip: changePermissionsTips,
         content: (
-          <Stack gap="sm">
-            {base.selectedFiles.length > 1 && (
-              <Text size="sm">
-                {t(
-                  "changePermissions.multipleFiles",
-                  "Select a single PDF to automatically load its current permissions. These settings will apply to all selected PDFs.",
-                )}
-              </Text>
-            )}
-            {permissions.isLoading && (
-              <Text size="sm" role="status">
-                {t("changePermissions.loading", "Loading current permissions…")}
-              </Text>
-            )}
-            {permissions.hasError && (
-              <Text size="sm" role="alert">
-                {t(
-                  "changePermissions.error.readFailed",
-                  "Could not read this PDF's current permissions. Set the restrictions manually before applying changes.",
-                )}
-              </Text>
-            )}
-            <ChangePermissionsSettings
-              parameters={base.params.parameters}
-              onParameterChange={base.params.updateParameter}
-              disabled={
-                base.endpointLoading ||
-                permissions.isLoading ||
-                base.operation.isLoading
-              }
-            />
-          </Stack>
+          <ChangePermissionsSettings
+            parameters={base.params.parameters}
+            onParameterChange={base.params.updateParameter}
+            disabled={base.endpointLoading || base.operation.isLoading}
+            isLoading={permissions.isLoading}
+            hasReadError={permissions.hasError}
+            multipleFiles={base.selectedFiles.length > 1}
+          />
         ),
       },
     ],
