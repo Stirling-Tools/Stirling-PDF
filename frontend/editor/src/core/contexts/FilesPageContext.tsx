@@ -1,3 +1,4 @@
+import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
 import React, {
   createContext,
   useCallback,
@@ -185,7 +186,15 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
   // Refs keep workspace changes from restarting library refreshes.
   const { openFileIdsRef, onOpenFilesDetached } = useDiskLinkReconcile();
 
-  const [allFiles, setAllFiles] = useState<StirlingFileStub[]>([]);
+  const localOnly = useLocalProcessingOnly();
+  const [storedFiles, setAllFiles] = useState<StirlingFileStub[]>([]);
+  const allFiles = useMemo(
+    () =>
+      localOnly
+        ? storedFiles.filter((file) => getFileOrigin(file) === "local")
+        : storedFiles,
+    [storedFiles, localOnly],
+  );
   const [loading, setLoading] = useState(true);
   // Only the newest refresh may publish results or clear loading.
   const refreshGenRef = useRef(0);
