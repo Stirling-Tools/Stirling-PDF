@@ -4590,15 +4590,12 @@ closeFile = "Close file"
 [fileEditor]
 closedFile = "Closed {{name}}"
 couldNotSave = "Could not save {{name}}"
-filesAdded_one = "Added {{count}} file"
-filesAdded_other = "Added {{count}} files"
 filesReordered_one = "File reordered"
 filesReordered_other = "{{count}} files reordered"
 loadedFromStorage_one = "Loaded {{count}} file from storage"
 loadedFromStorage_other = "Loaded {{count}} files from storage"
 loadFromStorageFailed = "Failed to load some files from storage"
 pinnedFile = "Pinned {{name}}"
-processFilesFailed = "Failed to process files"
 savedAndClosed = "Saved and closed {{name}}"
 saveFailed = "Save failed"
 unpinnedFile = "Unpinned {{name}}"
@@ -4724,7 +4721,6 @@ dataLostBody = "This browser lost this file's contents. Upload it again to keep 
 dataLostTitle = "File data is unavailable"
 downloadFailed = "Download failed"
 dropHint = "Open files to get started"
-dropToAdd = "Drop files to add"
 duplicateFailed = "Could not duplicate file"
 expand = "Expand sidebar"
 googleDrive = "Google Drive"
@@ -13900,6 +13896,11 @@ title = "Watermark Text"
 [watermark.watermarkType]
 image = "Image"
 text = "Text"
+
+[workbench]
+dropFailedSingle = "Your file couldn't be added"
+dropFailedSome = "{{failed}} of your files couldn't be added"
+dropOverlay = "Drop files to add them to the workbench"
 
 [workbench.sessionRestore]
 none = "Your previous files are no longer stored on this device."

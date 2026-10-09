@@ -67,6 +67,7 @@ import { FolderTreeSidebar } from "@app/components/filesPage/FolderTreeSidebar";
 import { useFilesPage } from "@app/contexts/FilesPageContext";
 import type { FolderId, FolderRecord } from "@app/types/folder";
 import { useToolEligibleFileIds } from "@app/contexts/ToolFileEligibilityContext";
+import { useWorkbenchFileDrop } from "@app/components/layout/useWorkbenchFileDrop";
 import "@app/components/shared/FileSidebar.css";
 
 // Shared with the processor sidebar via tokens, so the two cannot drift.
@@ -193,19 +194,6 @@ function SidebarActionRow({ action }: { action: SidebarAction }) {
         </span>
       </div>
     </Tooltip>
-  );
-}
-
-function FileDropOverlay({ show }: { show: boolean }) {
-  const { t } = useTranslation();
-  if (!show) return null;
-  return (
-    <div className="file-sidebar-drop-overlay" aria-hidden="true">
-      <Icon name="file-up" className="file-sidebar-drop-overlay-icon" />
-      <span className="file-sidebar-drop-overlay-text">
-        {t("fileSidebar.dropToAdd", "Drop files to add")}
-      </span>
-    </div>
   );
 }
 
@@ -1048,48 +1036,9 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       return () => onRegisterOpenFromComputer(null);
     }, [onRegisterOpenFromComputer, openNativeFilePicker]);
 
-    // Internal folder drags have their own payloads and must bypass file ingestion.
-    const [isFileDragOver, setIsFileDragOver] = useState(false);
-    const dragDepth = useRef(0);
-
-    const isNativeFileDrag = (e: React.DragEvent) =>
-      Array.from(e.dataTransfer.types).includes("Files");
-
-    const handleDragEnter = useCallback((e: React.DragEvent) => {
-      if (!isNativeFileDrag(e)) return;
-      e.preventDefault();
-      dragDepth.current += 1;
-      setIsFileDragOver(true);
-    }, []);
-
-    const handleDragOver = useCallback((e: React.DragEvent) => {
-      if (!isNativeFileDrag(e)) return;
-      // Required so the browser fires `drop` rather than opening the file.
-      e.preventDefault();
-      e.dataTransfer.dropEffect = "copy";
-    }, []);
-
-    const handleDragLeave = useCallback((e: React.DragEvent) => {
-      if (!isNativeFileDrag(e)) return;
-      // dragenter/leave fire per child element; the counter keeps the overlay
-      // stable until the cursor genuinely leaves the sidebar.
-      dragDepth.current -= 1;
-      if (dragDepth.current <= 0) {
-        dragDepth.current = 0;
-        setIsFileDragOver(false);
-      }
-    }, []);
-
-    const handleDrop = useCallback(
-      async (e: React.DragEvent) => {
-        if (!isNativeFileDrag(e)) return;
-        e.preventDefault();
-        dragDepth.current = 0;
-        setIsFileDragOver(false);
-        await ingestFiles(Array.from(e.dataTransfer.files ?? []));
-      },
-      [ingestFiles],
-    );
+    // Drops here go through the workbench's target, whose overlay covers the
+    // workbench rather than this sidebar.
+    const dropHandlers = useWorkbenchFileDrop(true);
 
     const eligibleFileIds = useToolEligibleFileIds();
 
@@ -1194,13 +1143,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         }}
         data-sidebar="file-sidebar"
         data-tour="quick-access-bar"
-        data-file-drag-over={isFileDragOver || undefined}
-        onDragEnter={handleDragEnter}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
+        {...dropHandlers}
       >
-        <FileDropOverlay show={isFileDragOver} />
         <div className="file-sidebar-inner">
           <SidebarHeader />
 

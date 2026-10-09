@@ -7,6 +7,7 @@ import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import { useIsPhone } from "@app/hooks/useIsMobile";
 import { useProcessingFolderCreation } from "@app/hooks/useProcessingFolderCreation";
 import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
+import { useIsWorkbenchFileDragOver } from "@app/components/layout/useWorkbenchFileDrop";
 import MobileUploadModal from "@app/components/shared/MobileUploadModal";
 import { openFilesFromDisk } from "@app/services/openFilesFromDisk";
 import { ActionIcon } from "@app/ui/ActionIcon";
@@ -23,8 +24,8 @@ interface AddFileCardProps {
 /**
  * The workbench's standing "add files" slot in the thumbnail grid. Add Files
  * opens the file library; the overflow menu holds the direct computer and
- * mobile uploads. Drops are handled by the surrounding workbench Dropzone,
- * whose drag state this card reflects.
+ * mobile uploads. Drops are handled by the workbench, whose drag state this
+ * card reflects.
  */
 const AddFileCard = ({ onFilesSelected }: AddFileCardProps) => {
   const { t } = useTranslation();
@@ -34,6 +35,7 @@ const AddFileCard = ({ onFilesSelected }: AddFileCardProps) => {
   const isPhone = useIsPhone();
   const folderCreation = useProcessingFolderCreation();
   const signedIn = usePoliciesEnabled();
+  const isFileDragOver = useIsWorkbenchFileDragOver();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [mobileUploadOpen, setMobileUploadOpen] = useState(false);
   const moreOptionsLabel = t(
@@ -57,7 +59,11 @@ const AddFileCard = ({ onFilesSelected }: AddFileCardProps) => {
 
   return (
     <div className={styles.cell}>
-      <div className={styles.card} data-testid="add-file-card">
+      <div
+        className={styles.card}
+        data-testid="add-file-card"
+        data-drag-over={isFileDragOver || undefined}
+      >
         <div className={styles.more}>
           <Menu position="bottom-end" withinPortal>
             {/* Tooltip outside the target: inside it, Mantine forwards the
