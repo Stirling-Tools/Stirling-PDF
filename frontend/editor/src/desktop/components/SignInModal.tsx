@@ -37,7 +37,7 @@ export function SignInModal() {
     >
       <SetupWizard
         noLayout
-        onClose={() => setOpened(false)}
+        onClose={locked ? undefined : () => setOpened(false)}
         onComplete={() => {
           setOpened(false);
           // No reload needed — AppProviders remounts the SaaS provider tree via

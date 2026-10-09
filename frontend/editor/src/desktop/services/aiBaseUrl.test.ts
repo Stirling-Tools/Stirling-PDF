@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@app/services/connectionModeService", () => ({
   connectionModeService: {
+    getCurrentConfig: async () => ({ local_processing_only: false }),
     getCurrentMode: async () => mocks.mode,
     getServerConfig: async () => mocks.serverConfig,
   },

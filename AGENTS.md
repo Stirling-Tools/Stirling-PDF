@@ -56,7 +56,7 @@ A TODO needs an issue, not an owner: `// TODO(#1234): re-enable the gate once ac
 
 A comment block over ~12 lines outside a file or type header usually means the code needs restructuring, or that the prose is product documentation and belongs in the docs repo.
 
-`task comment-lint` checks the mechanical part of this on the lines you add, and runs inside `task pre-commit`. Reasoning, worked examples and the linter's own rules: @devGuide/CODE_COMMENTS.md
+`task comment-lint` checks the mechanical part of this on the lines you add, and runs inside `task pre-commit`. Reasoning, worked examples and the linter's own rules: @docs/developer/CODE_COMMENTS.md
 
 ## Common Development Commands
 
@@ -426,7 +426,7 @@ The frontend is organized with a clear separation of concerns:
   - **`core/components/`**: React components organized by feature
     - `core/components/tools/`: Individual PDF tool implementations
     - `core/components/viewer/`: PDF viewer components
-    - `core/components/pageEditor/`: Page manipulation UI
+    - `core/components/pageTracks/`: Page editor (every open PDF as a track of pages)
     - `core/components/tooltips/`: Help tooltips for tools
     - `core/components/shared/`: Reusable UI components
   - **`core/contexts/`**: React Context providers
@@ -510,7 +510,7 @@ The frontend is organized with a clear separation of concerns:
 - **Tool Development**: New tools should follow `useToolOperation` hook pattern (see `useCompressOperation.ts`)
 - **Performance Target**: Must handle PDFs up to 100GB+ without browser crashes
 - **Preview System**: Tools can preview results without polluting main file context (see Split tool implementation)
-- **Adding Tools**: See `ADDING_TOOLS.md` for complete guide to creating new PDF tools
+- **Adding Tools**: See `docs/developer/ADDING_TOOLS.md` for complete guide to creating new PDF tools
 
 ## Communication Style
 - Be direct and to the point

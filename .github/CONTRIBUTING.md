@@ -1,0 +1,86 @@
+# Contributing to Stirling-PDF
+
+Thank you for your interest in contributing to Stirling-PDF! There are many ways to contribute other than writing code. For example, reporting bugs, creating suggestions, and adding or modifying translations.
+
+## License
+
+By contributing to this project, you agree that your contributions will be licensed under the project [license](../LICENSE), which follows an open-core model.
+The codebase is a mix of MIT and source-available code, so your contribution is licensed according to the directory it is committed to.
+
+PRs are welcome in any directory by any user, just be aware of which license applies to the code you change.
+
+## Issue Guidelines
+
+Issues can be used to report bugs, request features, or ask questions. If you have a question, you could also ask us in our [Discord](https://discord.gg/FJUSXUSYec).
+
+Before opening an issue, please check to make sure someone hasn't already opened an issue about it.
+
+## Pull Requests
+
+Before you start working on an issue, please comment on (or create) the issue and wait for it to be assigned to you. If someone has already been assigned but didn't have the time to work on it lately, please communicate with them and ask if they're still working on it. This is to avoid multiple people working on the same issue.
+
+Once you have been assigned an issue, you can start working on it. When you are ready to submit your changes, open a pull request.
+For a detailed pull request tutorial, see [this guide](https://www.digitalocean.com/community/tutorials/how-to-create-a-pull-request-on-github).
+
+## Development Quick Start
+
+This project uses [Task](https://taskfile.dev/) as a unified command runner. After cloning:
+
+1. Install the `task` CLI: https://taskfile.dev/installation/
+2. Run `task install` to install all dependencies
+3. Run `task dev` to start backend + frontend or `task desktop:dev` to start the desktop application
+4. Run `task check` before submitting a PR
+
+Run `task --list` to see all available commands.
+
+## Pull Request Guidelines
+
+Please make sure your Pull Request adheres to the following guidelines:
+
+- Use the PR template provided.
+- Keep your Pull Request title succinct, detailed, and to the point.
+- Keep commits atomic. One commit should contain one change. If you want to make multiple changes, submit multiple Pull Requests.
+- Commits should be clear, concise, and easy to understand.
+- References to the Issue number in the Pull Request and/or Commit message.
+- Every comment in the diff should say something the code does not. See [Code comments](../docs/developer/CODE_COMMENTS.md); `task comment-lint` checks the mechanical part.
+
+## Stale Pull Requests
+
+To keep the list of open Pull Requests manageable, PRs that appear abandoned will automatically be closed (after a warning).
+
+- When a maintainer requests changes, the Pull Request will be labelled `waiting-on-author`. The label will be removed when you push, comment, reply to the review, etc.
+- If a Pull Request that is ready for review has had the `waiting-on-author` or `has conflicts` label for 7 days, the PR will gain the `Stale PR` label.
+- If a draft Pull Request has had no activity for 30 days, it will get the `Stale PR` label.
+- If the problem is still there 7 days after the warning, the Pull Request will be automatically closed.
+
+A closed Pull Request is not rejected. If you pick it up again, please feel free to open a new Pull Request and address the problem.
+
+If you think a Pull Request is waiting on us rather than on you, say so in a comment.
+
+## Translations
+
+If you would like to add or modify a translation, please see [How to add new languages to Stirling-PDF](../docs/developer/HowToAddNewLanguage.md). Also, please create a Pull Request so others can use it!
+
+## Docs
+
+Documentation for Stirling-PDF is handled in a separate repository. Please see [Docs repository](https://github.com/Stirling-Tools/Stirling-Tools.github.io) or use the "edit this page"-button at the bottom of each page at [https://docs.stirlingpdf.com/](https://docs.stirlingpdf.com/).
+
+## Fixing Bugs or Adding a New Feature
+
+First, make sure you've read the section [Pull Requests](#pull-requests).
+
+If, at any point in time, you have a question, please feel free to ask in the same issue thread or in our [Discord](https://discord.gg/FJUSXUSYec).
+
+## Developer Documentation
+
+For technical guides, setup instructions, and development resources:
+
+- [Developer Guide](../docs/developer/DeveloperGuide.md) - Main setup and architecture guide
+- [Taskfile.yml](../Taskfile.yml) - Unified task runner for all build/dev/test/lint commands
+- [Exception Handling Guide](../docs/developer/EXCEPTION_HANDLING_GUIDE.md) - Error handling patterns and i18n
+- [Translation Guide](../docs/developer/HowToAddNewLanguage.md) - Adding new languages
+- And more in the [devGuide folder](../docs/developer/)
+
+For configuration and usage guides, see:
+- [Database Guide](../docs/developer/DATABASE.md) - Database setup and configuration
+- [OCR Guide](../docs/developer/HowToUseOCR.md) - OCR setup and configuration

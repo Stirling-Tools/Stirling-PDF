@@ -12,6 +12,7 @@ interface Props {
   store: EditorStore;
   controller: Controller;
   addTextArmed: boolean;
+  addTableArmed: boolean;
   findOpen: boolean;
 }
 
@@ -19,6 +20,7 @@ export function MobileActionBar({
   store,
   controller,
   addTextArmed,
+  addTableArmed,
   findOpen,
 }: Props) {
   const { t } = useTranslation();
@@ -27,13 +29,18 @@ export function MobileActionBar({
 
   return (
     <>
-      {addTextArmed && (
+      {(addTextArmed || addTableArmed) && (
         <div className="pdf-editor-mbar__hint" role="status">
           <span>
-            {t(
-              "pdfTextEditor.mobile.tapToPlace",
-              "Tap the page where the text should go",
-            )}
+            {addTableArmed
+              ? t(
+                  "pdfTextEditor.sidebar.clickPageToAddTable",
+                  "Click page to add a table",
+                )
+              : t(
+                  "pdfTextEditor.mobile.tapToPlace",
+                  "Tap the page where the text should go",
+                )}
           </span>
           <BarButton
             icon="x"
@@ -117,6 +124,15 @@ export function MobileActionBar({
               pressed={addTextArmed}
               onClick={() => store.setMode(addTextArmed ? "select" : "addText")}
               data-testid="pdf-editor-add-text"
+            />
+            <BarButton
+              icon="table"
+              label={t("pdfTextEditor.sidebar.table", "Table")}
+              pressed={addTableArmed}
+              onClick={() =>
+                store.setMode(addTableArmed ? "select" : "addTable")
+              }
+              data-testid="pdf-editor-add-table"
             />
             <BarButton
               icon="image-plus"

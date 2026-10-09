@@ -101,8 +101,15 @@ jobs:
             }
 
             async function labelPullRequest(pull) {
+              // Unknown is not resolved: stale-prs.ts reads a removal as the conflict fixed.
+              if (pull.mergeable === null) {
+                core.info(`PR #${pull.number}: mergeability still unknown; leaving the label as it is.`);
+                return;
+              }
+
               const existingLabels = pull.labels.map((label) => label.name);
               const hasConflictLabel = existingLabels.includes(conflictLabel);
+              // Must match `conflicting` in .github/scripts/stale-prs.ts.
               const hasConflicts = pull.mergeable === false && pull.mergeable_state === 'dirty';
 
               if (hasConflicts && !hasConflictLabel) {

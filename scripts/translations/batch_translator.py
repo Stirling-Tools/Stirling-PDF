@@ -98,6 +98,14 @@ CRITICAL RULES - MUST FOLLOW EXACTLY:
    - Do not remove any part of the original meaning
    - Keep the same level of detail
 
+9. KEEPING ENGLISH IS ALLOWED WHEN IT IS CORRECT:
+   - If the English word or phrase is also what native {language_name} speakers naturally use in
+     software UIs (e.g. loanwords like "Email", "Logo", "OK", "Online", "Login", "Workflow",
+     brand or product names), return it unchanged
+   - Returning a value identical to the English input is a valid answer - never invent an
+     awkward translation just to make it different
+   - Only keep English when it is genuinely the correct {language_name} term; otherwise translate normally
+
 Return ONLY the translated JSON. No markdown, no explanations, just the JSON object."""
 
     def _record_usage(self, response) -> None:
@@ -126,8 +134,9 @@ Return ONLY the translated JSON. No markdown, no explanations, just the JSON obj
         print(f"Input size: {len(input_json)} characters")
 
         try:
-            # GPT-5.x models only support the default temperature, so we omit it
-            response = self.client.chat.completions.create(
+            # GPT-5.x models only support the default temperature, so we omit it.
+            # Streamed so long replies (e.g. Tibetan) never hit the client's 600s read timeout
+            stream = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
                     {
@@ -139,11 +148,18 @@ Return ONLY the translated JSON. No markdown, no explanations, just the JSON obj
                         "content": f"Translate this JSON:\n\n{input_json}",
                     },
                 ],
+                stream=True,
+                stream_options={"include_usage": True},
             )
 
-            self._record_usage(response)
+            parts = []
+            for chunk in stream:
+                if chunk.choices and chunk.choices[0].delta.content:
+                    parts.append(chunk.choices[0].delta.content)
+                if chunk.usage:
+                    self._record_usage(chunk)
 
-            translated_text = response.choices[0].message.content.strip()
+            translated_text = "".join(parts).strip()
 
             # Remove markdown code blocks if present
             if translated_text.startswith("```"):
