@@ -83,7 +83,7 @@ import { VersionHistoryModal } from "@app/components/filesPage/VersionHistoryMod
 import { RenameFileDialog } from "@app/components/shared/RenameFileDialog";
 import { duplicateStoredFile } from "@app/utils/duplicateFile";
 import { downloadFileFromStorage } from "@app/utils/downloadUtils";
-import { fileStorage } from "@app/services/fileStorage";
+import { renameStoredFile } from "@app/services/renameStoredFile";
 import { materializeServerStubs } from "@app/services/fileSyncService";
 import {
   FILES_PAGE_DRAG_TYPE,
@@ -953,19 +953,16 @@ export default function FileManagerView() {
       if (!file) return;
       const local = await localCopyOf(file);
       if (!local) return;
-      // quickKey is name|size|lastModified; a stale one would make a re-upload
-      // of the original look like a duplicate of the renamed file.
-      const quickKey = `${name}|${local.size}|${local.lastModified}`;
-      const saved = await fileStorage.updateFileMetadata(local.id, {
+      const saved = await renameStoredFile(
+        local,
         name,
-        quickKey,
-      });
+        fileActions.updateStirlingFileStub,
+      );
       if (!saved) {
         throw new Error(
           t("fileSidebar.rename.error", "Could not rename the file."),
         );
       }
-      fileActions.updateStirlingFileStub(local.id, { name, quickKey });
       setRenameTarget(null);
       await refresh();
     },
