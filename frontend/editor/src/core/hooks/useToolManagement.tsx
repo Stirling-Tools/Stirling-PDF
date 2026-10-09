@@ -7,7 +7,10 @@ import {
   type ToolRegistryEntry,
   type ToolRegistry,
 } from "@app/data/toolsTaxonomy";
-import { useMultipleEndpointsEnabled } from "@app/hooks/useEndpointConfig";
+import {
+  useEndpointEnabled,
+  useMultipleEndpointsEnabled,
+} from "@app/hooks/useEndpointConfig";
 import { useSelfHostedToolAvailability } from "@app/hooks/useSelfHostedToolAvailability";
 import { useSaaSMode } from "@app/hooks/useSaaSMode";
 import { FileId } from "@app/types/file";
@@ -43,6 +46,13 @@ export const useToolManagement = (): ToolManagementResult => {
   const baseRegistry = allTools;
   const { preferences } = usePreferences();
   const isSaaSMode = useSaaSMode();
+  const {
+    enabled: urlToPdfEnabled,
+    loading: urlToPdfLoading,
+    error: urlToPdfError,
+  } = useEndpointEnabled("url-to-pdf");
+  const showUrlToPdf =
+    urlToPdfEnabled === true && !urlToPdfLoading && !urlToPdfError;
 
   const allEndpoints = useMemo(
     () => getAllEndpoints(baseRegistry),
@@ -79,6 +89,7 @@ export const useToolManagement = (): ToolManagementResult => {
       // (health check never resolves), so checking it first would wrongly
       // keep all tools enabled.
       if (selfHostedOfflineIds.has(toolKey)) return false;
+      if (toolKey === "urlToPdf") return showUrlToPdf;
 
       // Keep tools enabled while endpoint status is loading (optimistic UX)
       if (endpointsLoading) return true;
@@ -103,6 +114,7 @@ export const useToolManagement = (): ToolManagementResult => {
       baseRegistry,
       isSaaSMode,
       selfHostedOfflineIds,
+      showUrlToPdf,
     ],
   );
 
@@ -144,6 +156,9 @@ export const useToolManagement = (): ToolManagementResult => {
     }
     const availability: ToolAvailabilityMap = {};
     (Object.keys(baseRegistry) as ToolId[]).forEach((toolKey) => {
+      // Let URL navigation select the pending tool; its screen and menu entry
+      // remain hidden until the explicit check succeeds.
+      if (toolKey === "urlToPdf" && urlToPdfLoading) return;
       const available = isToolAvailable(toolKey);
       availability[toolKey] = available
         ? { available: true }
@@ -156,6 +171,7 @@ export const useToolManagement = (): ToolManagementResult => {
     endpointsLoading,
     isToolAvailable,
     selfHostedOfflineIds,
+    urlToPdfLoading,
   ]);
 
   const toolRegistry: Partial<ToolRegistry> = useMemo(() => {
@@ -163,6 +179,8 @@ export const useToolManagement = (): ToolManagementResult => {
     (Object.keys(baseRegistry) as ToolId[]).forEach((toolKey) => {
       const baseTool = baseRegistry[toolKey];
       if (!baseTool) return;
+      // This opt-in tool must stay hidden even when unavailable tools are shown.
+      if (toolKey === "urlToPdf" && !showUrlToPdf) return;
       const availabilityInfo = toolAvailability[toolKey];
       const isAvailable = availabilityInfo
         ? availabilityInfo.available !== false
@@ -176,7 +194,12 @@ export const useToolManagement = (): ToolManagementResult => {
       availableToolRegistry[toolKey] = baseTool;
     });
     return availableToolRegistry;
-  }, [baseRegistry, preferences.hideUnavailableTools, toolAvailability]);
+  }, [
+    baseRegistry,
+    preferences.hideUnavailableTools,
+    toolAvailability,
+    showUrlToPdf,
+  ]);
 
   const getSelectedTool = useCallback(
     (toolKey: ToolId | null): ToolRegistryEntry | null => {

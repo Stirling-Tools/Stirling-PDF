@@ -17,6 +17,7 @@ export const URL_TO_TOOL_MAP: Record<string, ToolId> = {
 
   // Convert tool and all its variants
   "/convert": "convert",
+  "/url-to-pdf": "urlToPdf",
   "/convert-pdf": "convert",
   "/file-to-pdf": "convert",
   "/eml-to-pdf": "convert",

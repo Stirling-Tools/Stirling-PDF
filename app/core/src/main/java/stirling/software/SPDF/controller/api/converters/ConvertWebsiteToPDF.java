@@ -18,10 +18,9 @@ import java.util.regex.Pattern;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -72,57 +71,37 @@ public class ConvertWebsiteToPDF {
     public ResponseEntity<?> urlToPdf(@ModelAttribute UrlToPdfRequest request)
             throws IOException, InterruptedException {
         String URL = request.getUrlInput();
-        UriComponentsBuilder uriComponentsBuilder =
-                ServletUriComponentsBuilder.fromCurrentContextPath().path("/url-to-pdf");
-        URI location = null;
-        HttpStatus status = HttpStatus.SEE_OTHER;
-
         if (!applicationProperties.getSystem().isEnableUrlToPDF()) {
-            location =
-                    uriComponentsBuilder
-                            .queryParam("error", "error.endpointDisabled")
-                            .build()
-                            .toUri();
-        } else {
-            // Validate the URL format (relaxed: only invalid if BOTH checks fail)
-            boolean patternValid =
-                    RegexPatternUtils.getInstance().getHttpUrlPattern().matcher(URL).matches();
-            boolean generalValid = GeneralUtils.isValidURL(URL);
-            if (!patternValid && !generalValid) {
-                location =
-                        uriComponentsBuilder
-                                .queryParam("error", "error.invalidUrlFormat")
-                                .build()
-                                .toUri();
-            } else if (!GeneralUtils.isURLReachable(URL)) {
-                // validate the URL is reachable
-                location =
-                        uriComponentsBuilder
-                                .queryParam("error", "error.urlNotReachable")
-                                .build()
-                                .toUri();
-            }
+            return errorResponse(HttpStatus.FORBIDDEN, "URL to PDF is disabled on this server.");
         }
-
-        if (location != null) {
-            log.info("Redirecting to: {}", location.toString());
-            return ResponseEntity.status(status).location(location).build();
+        if (URL == null || URL.isBlank()) {
+            return errorResponse(HttpStatus.BAD_REQUEST, "Enter a valid HTTP or HTTPS URL.");
+        }
+        URL = URL.trim();
+        boolean patternValid =
+                RegexPatternUtils.getInstance().getHttpUrlPattern().matcher(URL).matches();
+        boolean generalValid = GeneralUtils.isValidURL(URL);
+        if (!patternValid && !generalValid) {
+            return errorResponse(HttpStatus.BAD_REQUEST, "Enter a valid HTTP or HTTPS URL.");
+        }
+        if (!GeneralUtils.isURLReachable(URL)) {
+            return errorResponse(
+                    HttpStatus.BAD_REQUEST, "The URL is not allowed or could not be reached.");
         }
 
         Path tempOutputFile = null;
         Path tempHtmlInput = null;
         try {
             // Download the remote content first to ensure we don't allow dangerous schemes
-            String htmlContent = fetchRemoteHtml(URL);
+            RemoteHtml remoteHtml = fetchRemoteHtml(URL);
+            String htmlContent = remoteHtml.content();
+            URL = remoteHtml.url();
 
             if (containsDisallowedUriScheme(htmlContent)) {
-                URI rejectionLocation =
-                        uriComponentsBuilder
-                                .queryParam("error", "error.disallowedUrlContent")
-                                .build()
-                                .toUri();
                 log.warn("Rejected URL to PDF conversion due to disallowed content references");
-                return ResponseEntity.status(status).location(rejectionLocation).build();
+                return errorResponse(
+                        HttpStatus.BAD_REQUEST,
+                        "The web page contains disallowed local file references.");
             }
 
             tempHtmlInput = Files.createTempFile("url_input_", ".html");
@@ -172,32 +151,71 @@ public class ConvertWebsiteToPDF {
         }
     }
 
-    private String fetchRemoteHtml(String url) throws IOException, InterruptedException {
+    private static ResponseEntity<ProblemDetail> errorResponse(HttpStatus status, String message) {
+        return ResponseEntity.status(status)
+                .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .body(ProblemDetail.forStatusAndDetail(status, message));
+    }
+
+    private record RemoteHtml(String content, String url) {}
+
+    private RemoteHtml fetchRemoteHtml(String url) throws IOException, InterruptedException {
         HttpClient client =
                 HttpClient.newBuilder()
                         .followRedirects(HttpClient.Redirect.NEVER)
                         .connectTimeout(Duration.ofSeconds(10))
                         .build();
 
-        HttpRequest request =
-                HttpRequest.newBuilder(URI.create(url))
-                        .timeout(Duration.ofSeconds(20))
-                        .GET()
-                        .header("User-Agent", "Stirling-PDF/URL-to-PDF")
-                        .build();
+        URI currentUri = URI.create(url);
+        for (int redirects = 0; redirects <= 5; redirects++) {
+            HttpRequest request =
+                    HttpRequest.newBuilder(currentUri)
+                            .timeout(Duration.ofSeconds(20))
+                            .GET()
+                            .header("User-Agent", "Stirling-PDF/URL-to-PDF")
+                            .build();
 
-        HttpResponse<String> response =
-                client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+            HttpResponse<String> response =
+                    client.send(
+                            request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
-        if (response.statusCode() >= 300 || response.body() == null) {
-            throw ExceptionUtils.createIOException(
-                    "error.httpRequestFailed",
-                    "Failed to retrieve remote HTML. Status: {0}",
-                    null,
-                    response.statusCode());
+            int statusCode = response.statusCode();
+            if (statusCode == 301
+                    || statusCode == 302
+                    || statusCode == 303
+                    || statusCode == 307
+                    || statusCode == 308) {
+                String location = response.headers().firstValue("Location").orElse(null);
+                if (location == null || redirects == 5) {
+                    throw new IOException(
+                            "Remote HTML redirect is missing a location or exceeds the redirect limit");
+                }
+                URI nextUri;
+                try {
+                    nextUri = currentUri.resolve(location);
+                } catch (IllegalArgumentException ex) {
+                    throw new IOException("Invalid remote HTML redirect location", ex);
+                }
+                // Revalidate every destination before following a redirect.
+                if (!GeneralUtils.isURLReachable(nextUri.toString())) {
+                    throw new IOException(
+                            "Remote HTML redirect destination is not allowed or reachable");
+                }
+                currentUri = nextUri;
+                continue;
+            }
+
+            if (response.statusCode() >= 300 || response.body() == null) {
+                throw ExceptionUtils.createIOException(
+                        "error.httpRequestFailed",
+                        "Failed to retrieve remote HTML. Status: {0}",
+                        null,
+                        response.statusCode());
+            }
+
+            return new RemoteHtml(response.body(), currentUri.toString());
         }
-
-        return response.body();
+        throw new IOException("Remote HTML redirect limit exceeded");
     }
 
     private boolean containsDisallowedUriScheme(String htmlContent) {
