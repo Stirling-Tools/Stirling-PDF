@@ -990,12 +990,14 @@ jobs:
           strict: false
           exclude: |
             frontend/editor/src-tauri/target/debug/.fingerprint/**
-            frontend/editor/src-tauri/target/debug/deps/match_token*
-            frontend/editor/src-tauri/target/debug/deps/refresh_token_fallback*
+            frontend/editor/src-tauri/target/debug/deps/**
+            frontend/editor/src-tauri/target/debug/examples/**
+            frontend/editor/src-tauri/target/debug/incremental/**
             frontend/editor/src-tauri/target/debug/libs/**
             frontend/editor/src-tauri/target/release/.fingerprint/**
-            frontend/editor/src-tauri/target/release/deps/match_token*
-            frontend/editor/src-tauri/target/release/deps/refresh_token_fallback*
+            frontend/editor/src-tauri/target/release/deps/**
+            frontend/editor/src-tauri/target/release/examples/**
+            frontend/editor/src-tauri/target/release/incremental/**
             frontend/editor/src-tauri/target/release/libs/**
 
       - name: Setup Rust
