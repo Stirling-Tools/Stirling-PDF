@@ -770,7 +770,9 @@
   font-weight: 500;
   letter-spacing: 0.01em;
   cursor: pointer;
-  transition: all 0.12s ease;
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease;
   white-space: nowrap;
   line-height: 1.25;
   border-radius: 9999px;
