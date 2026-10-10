@@ -6256,6 +6256,7 @@ engineUnavailable = "No OCR engine is offered for this platform"
 failed = "Something went wrong"
 installEngine = "Install OCR ({{size}})"
 languages = "Languages"
+oldLanguage = "{{name}} (old)"
 restartRequired = "Restart Stirling-PDF to finish enabling OCR."
 title = "OCR setup"
 

@@ -9,6 +9,7 @@ import { Alert, Checkbox, Loader, ScrollArea, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
 import { getOcrDisplayName } from "@app/utils/languageMapping";
+import { ocrLanguageName } from "@app/utils/ocrLanguageName";
 import {
   changeOcrLanguages,
   formatBytes,
@@ -41,7 +42,7 @@ const OcrRuntimePanel: React.FC<OcrRuntimePanelProps> = ({
   active = true,
   onLanguagesChanged,
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [status, setStatus] = useState<OcrRuntimeStatus | null>(null);
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -78,10 +79,14 @@ const OcrRuntimePanel: React.FC<OcrRuntimePanelProps> = ({
       .map(([code, artifact]) => ({
         code,
         size: artifact.size,
-        label: artifact.name || getOcrDisplayName(code) || code,
+        label:
+          ocrLanguageName(code, i18n.language, (name) =>
+            t("ocr.runtime.oldLanguage", "{{name}} (old)", { name }),
+          ) ??
+          (artifact.name || getOcrDisplayName(code)),
       }))
-      .sort((a, b) => a.label.localeCompare(b.label));
-  }, [status]);
+      .sort((a, b) => a.label.localeCompare(b.label, i18n.language));
+  }, [status, i18n.language, t]);
 
   const installed = useMemo(
     () => new Set(status?.installedLanguages ?? []),

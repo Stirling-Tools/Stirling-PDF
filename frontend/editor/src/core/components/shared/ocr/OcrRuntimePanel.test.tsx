@@ -14,6 +14,7 @@ vi.mock("@app/services/ocrRuntimeService", async (importOriginal) => ({
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (_key: string, fallback: string) => fallback,
+    i18n: { language: "en-US" },
   }),
 }));
 
