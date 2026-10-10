@@ -1,8 +1,9 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Stack, Text, Divider } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { Icon } from "@app/ui/Icon";
+import { StatusBadge } from "@app/ui/StatusBadge";
+import { SigningSessionHeader } from "@app/components/shared/signing/SigningSessionHeader";
 import { alert } from "@app/components/toast";
 import type {
   SignatureOverlayAPI,
@@ -15,15 +16,25 @@ import SignControlsPanel from "@app/components/tools/certSign/panels/SignControl
 import { CertificateConfigModal } from "@app/components/tools/certSign/modals/CertificateConfigModal";
 import type { CertificateSubmitData } from "@app/components/tools/certSign/modals/CertificateConfigModal";
 import type { SigningRequestData } from "@app/hooks/signing/useSigningSessionController";
+import { getSubmittedSignaturePreviews } from "@app/utils/signingPreviews";
+import { ParticipantListPanel } from "@app/components/tools/certSign/panels/ParticipantListPanel";
 
 interface SignRequestPanelProps {
   data: SigningRequestData;
 }
 
-/** Sidebar controls for a sign request: drives viewer placement via the overlay context and reads placed signatures via the overlay API ref. */
+/** Controls for a sign request: drives viewer placement via the overlay context and reads placed signatures via the overlay API ref. */
 const SignRequestPanel = ({ data }: SignRequestPanelProps) => {
   const { t } = useTranslation();
-  const { signRequest, pdfFile, onSign, onDecline, onBack, canSign } = data;
+  const {
+    signRequest,
+    pdfFile,
+    onSign,
+    onDecline,
+    onRefresh,
+    onBack,
+    canSign,
+  } = data;
   const { actions: fileActions } = useFileActions();
   const { setOverlay } = useSigningOverlay();
 
@@ -42,13 +53,41 @@ const SignRequestPanel = ({ data }: SignRequestPanelProps) => {
       : null,
   );
   const [previewCount, setPreviewCount] = useState(0);
-  const [placementMode, setPlacementMode] = useState(true);
+  const [placementMode, setPlacementMode] = useState(false);
   const [hasSelectedAnnotation, setHasSelectedAnnotation] = useState(false);
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
   const [certificateModalOpen, setCertificateModalOpen] = useState(false);
   const [signing, setSigning] = useState(false);
   const [declining, setDeclining] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const submittedPreviews = useMemo(
+    () => getSubmittedSignaturePreviews(signRequest),
+    [signRequest],
+  );
+
+  useEffect(() => {
+    if (signRequest.finalized || signing || declining) return;
+    const timer = setInterval(() => {
+      void onRefresh();
+    }, 30000);
+    return () => clearInterval(timer);
+  }, [signRequest.finalized, signing, declining, onRefresh]);
+
+  const refreshPreview = async () => {
+    setRefreshing(true);
+    try {
+      await onRefresh();
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const signControlsVisible = canSign && signatureConfig !== null;
+
+  useEffect(() => {
+    if (!canSign) overlayApiRef.current?.clearPreviews();
+  }, [canSign]);
 
   const handlePreviewsChange = useCallback((previews: SignaturePreview[]) => {
     setPreviewCount(previews.length);
@@ -61,6 +100,8 @@ const SignRequestPanel = ({ data }: SignRequestPanelProps) => {
   useEffect(() => {
     setOverlay({
       file: pdfFile,
+      readOnlySignaturePreviews: submittedPreviews,
+      signaturePreviewsReadOnly: !canSign,
       signaturePlacementMode: signControlsVisible ? placementMode : false,
       signaturePlacementData: signControlsVisible ? placementData : undefined,
       signaturePlacementType: signControlsVisible ? placementType : undefined,
@@ -69,6 +110,8 @@ const SignRequestPanel = ({ data }: SignRequestPanelProps) => {
     });
   }, [
     pdfFile,
+    submittedPreviews,
+    canSign,
     signControlsVisible,
     placementMode,
     placementData,
@@ -77,36 +120,33 @@ const SignRequestPanel = ({ data }: SignRequestPanelProps) => {
     setOverlay,
   ]);
 
-  // Clear the shared viewer overlay when leaving the sign request.
+  // Owner navigation may install its preview before this panel unmounts.
   useEffect(() => {
-    return () => setOverlay(null);
+    return () =>
+      setOverlay((current) =>
+        current?.signatureOverlayApiRef === overlayApiRef ? null : current,
+      );
   }, [setOverlay]);
 
-  // Poll for a selected placement (drives the delete control).
+  // The viewer owns placement state; the panel reads its current selection and history.
   useEffect(() => {
     if (!signControlsVisible) {
       setHasSelectedAnnotation(false);
+      setCanUndo(false);
+      setCanRedo(false);
       return;
     }
-    const check = () =>
+    const check = () => {
       setHasSelectedAnnotation(Boolean(overlayApiRef.current?.hasSelected?.()));
+      setCanUndo(Boolean(overlayApiRef.current?.canUndo()));
+      setCanRedo(Boolean(overlayApiRef.current?.canRedo()));
+    };
     check();
     const id = setInterval(check, 350);
     return () => clearInterval(id);
   }, [signControlsVisible]);
 
   const handleOpenCertificateModal = () => {
-    if (previewCount === 0) {
-      alert({
-        alertType: "error",
-        title: t("common.error"),
-        body: t(
-          "certSign.collab.signRequest.noSignatures",
-          "Please place at least one signature on the PDF",
-        ),
-      });
-      return;
-    }
     setCertificateModalOpen(true);
   };
 
@@ -230,9 +270,8 @@ const SignRequestPanel = ({ data }: SignRequestPanelProps) => {
       }
 
       await onSign(formData);
+      overlayApiRef.current?.clearPreviews();
       setCertificateModalOpen(false);
-    } catch (error) {
-      console.error("Failed to sign document:", error);
     } finally {
       setSigning(false);
     }
@@ -261,6 +300,7 @@ const SignRequestPanel = ({ data }: SignRequestPanelProps) => {
       durationMs: 2500,
     });
     onBack();
+    data.onOpenFiles?.();
   };
 
   const handleDeleteSelected = () => {
@@ -268,75 +308,173 @@ const SignRequestPanel = ({ data }: SignRequestPanelProps) => {
   };
 
   return (
-    <Stack gap="md" p="md">
-      <Button
-        leftSection={<Icon name="arrow-left" size={20} />}
-        variant="tertiary"
-        size="sm"
-        onClick={onBack}
-        justify="start"
-        style={{ alignSelf: "flex-start" }}
-      >
-        {t("certSign.collab.signRequest.backToList", "Back to Sign Requests")}
-      </Button>
-
-      <Stack gap={2}>
-        <Text size="sm" fw={600} truncate>
-          {signRequest.documentName}
-        </Text>
-        <Text size="xs" c="dimmed">
-          {t("certSign.collab.signRequest.from", "From")}:{" "}
-          {signRequest.ownerUsername} •{" "}
-          {new Date(signRequest.createdAt).toLocaleDateString()}
-        </Text>
-      </Stack>
-
-      <Divider />
-
-      {canSign && signControlsVisible && (
-        <>
+    <div className="signing-detail">
+      <div className="signing-detail__body">
+        <SigningSessionHeader
+          documentName={signRequest.documentName}
+          owner={signRequest.ownerUsername}
+          createdAt={signRequest.createdAt}
+          dueDate={signRequest.dueDate}
+          message={signRequest.message}
+          status={
+            <StatusBadge
+              tone={
+                signRequest.finalized || signRequest.myStatus === "SIGNED"
+                  ? "success"
+                  : signRequest.myStatus === "DECLINED"
+                    ? "neutral"
+                    : "info"
+              }
+            >
+              {signRequest.finalized
+                ? t("certSign.collab.sessionList.finalized", "Finalized")
+                : signRequest.myStatus === "SIGNED"
+                  ? t("signMenu.submitted", "Submitted · awaiting finalization")
+                  : signRequest.myStatus === "DECLINED"
+                    ? t("certSign.declined", "Declined")
+                    : t("signingDetail.requestTitle", "Signature request")}
+            </StatusBadge>
+          }
+        />
+        {!signRequest.finalized && (
+          <p className="signing-detail__hint">
+            {t(
+              "signingDetail.inProgressPreview",
+              "In-progress preview with submitted signatures. The owner has not finalized this document yet.",
+            )}
+          </p>
+        )}
+        {!canSign && (
+          <div className="signing-detail__summary" role="status">
+            <Icon
+              name={
+                signRequest.finalized || signRequest.myStatus === "SIGNED"
+                  ? "circle-check"
+                  : "info"
+              }
+              size={24}
+            />
+            <h3>
+              {signRequest.finalized
+                ? t("signingDetail.finalDocument", "Signed document")
+                : signRequest.myStatus === "SIGNED"
+                  ? t(
+                      "signingDetail.signatureSubmitted",
+                      "Your signature is submitted",
+                    )
+                  : t("signingDetail.requestClosed", "This request is closed")}
+            </h3>
+            <p>
+              {signRequest.finalized
+                ? t(
+                    "certSign.collab.signRequest.closed",
+                    "This session is finalized. You can view the final document, but no further signatures or declines are accepted.",
+                  )
+                : signRequest.myStatus === "SIGNED"
+                  ? data.onManageSession
+                    ? t(
+                        "signingDetail.ownerNext",
+                        "Return to your session to review everyone's signatures and finalize the document when you are ready.",
+                      )
+                    : t(
+                        "signingDetail.awaitingOwner",
+                        "The owner will finalize the document once they are ready.",
+                      )
+                  : t(
+                      "signingDetail.viewOnly",
+                      "You can still review the document here.",
+                    )}
+            </p>
+          </div>
+        )}
+        {signRequest.participants && (
+          <ParticipantListPanel
+            participants={signRequest.participants}
+            finalized={Boolean(signRequest.finalized)}
+          />
+        )}
+        {signControlsVisible && (
           <SignControlsPanel
             placementMode={placementMode}
             onPlacementModeChange={setPlacementMode}
             onSignatureSelected={setSignatureConfig}
-            onComplete={handleOpenCertificateModal}
-            canComplete={previewCount > 0}
             signatureConfig={signatureConfig}
             hasSelectedAnnotation={hasSelectedAnnotation}
             onDeleteSelected={handleDeleteSelected}
+            canUndo={canUndo}
+            canRedo={canRedo}
+            onUndo={() => overlayApiRef.current?.undo()}
+            onRedo={() => overlayApiRef.current?.redo()}
           />
-          <Divider />
-        </>
-      )}
-
-      <Button
-        variant="tertiary"
-        leftSection={<Icon name="folder-open" size={20} />}
-        onClick={handleAddToActiveFiles}
-        fullWidth
-        style={{
-          backgroundColor: "var(--c-surface-raised)",
-          color: "var(--c-accent-text)",
-          border: "1px solid var(--c-border)",
-        }}
-      >
-        {t("certSign.collab.signRequest.addToFiles", "Add to Active Files")}
-      </Button>
-
-      {signRequest.myStatus !== "SIGNED" &&
-        signRequest.myStatus !== "DECLINED" && (
+        )}
+      </div>
+      <footer className="signing-detail__footer">
+        {data.onManageSession && (
           <Button
-            variant="tertiary"
-            accent="danger"
-            leftSection={<Icon name="circle-x" size={20} />}
-            onClick={handleDecline}
-            loading={declining}
-            fullWidth
+            variant="secondary"
+            onClick={data.onManageSession}
+            disabled={signing || declining}
           >
-            {t("certSign.collab.signRequest.decline", "Decline Request")}
+            {t("signingDetail.manageSession", "Manage signing session")}
           </Button>
         )}
-
+        {!signRequest.finalized && (
+          <Button
+            variant="secondary"
+            onClick={refreshPreview}
+            loading={refreshing}
+            disabled={signing || declining}
+          >
+            {t("signingDetail.refreshPreview", "Refresh preview")}
+          </Button>
+        )}
+        {canSign && (
+          <>
+            <h3>{t("signingDetail.readyToSign", "Ready to sign?")}</h3>
+            <p className="signing-detail__hint">
+              {t(
+                "signingDetail.certificateNext",
+                "Choose your certificate in the next step.",
+              )}
+            </p>
+            <Button
+              leftSection={<Icon name="check" size={18} />}
+              onClick={handleOpenCertificateModal}
+              disabled={declining || signing}
+              fullWidth
+            >
+              {t(
+                "certSign.collab.signRequest.completeAndSign",
+                "Complete & Sign",
+              )}
+            </Button>
+          </>
+        )}
+        <div className="signing-detail__secondary">
+          <Button
+            variant="tertiary"
+            leftSection={<Icon name="folder-open" size={16} />}
+            onClick={handleAddToActiveFiles}
+            size="sm"
+            disabled={declining || signing}
+          >
+            {t("certSign.collab.signRequest.addToFiles", "Add to Active Files")}
+          </Button>
+          {canSign && (
+            <Button
+              variant="tertiary"
+              accent="danger"
+              leftSection={<Icon name="circle-x" size={16} />}
+              onClick={handleDecline}
+              loading={declining}
+              size="sm"
+              disabled={signing}
+            >
+              {t("certSign.collab.signRequest.decline", "Decline Request")}
+            </Button>
+          )}
+        </div>
+      </footer>
       {canSign && (
         <CertificateConfigModal
           opened={certificateModalOpen}
@@ -348,7 +486,7 @@ const SignRequestPanel = ({ data }: SignRequestPanelProps) => {
           defaultLocation={signRequest.location || ""}
         />
       )}
-    </Stack>
+    </div>
   );
 };
 

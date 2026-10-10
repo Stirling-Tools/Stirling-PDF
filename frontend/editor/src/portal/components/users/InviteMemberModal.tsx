@@ -33,9 +33,11 @@ interface InviteMemberModalProps {
   manageGrants?: boolean;
   /** Non-blocking notice back to the parent (e.g. a deferred Processor grant). */
   onNotice?: (message: string) => void;
-  /** Force the initial mode (mainly for Storybook). Defaults to "direct" when account
-   * creation is available, else "email". */
+  /** Requested method, used only if the server supports it. Otherwise the search text
+   * and available methods determine the initial selection. */
   initialMode?: "email" | "direct";
+  /** Unvalidated search text, editable in either invitation method. */
+  initialValue?: string;
 }
 
 type InviteRole = "member" | "admin";
@@ -78,6 +80,7 @@ export function InviteMemberModal({
   manageGrants = false,
   onNotice,
   initialMode,
+  initialValue = "",
 }: InviteMemberModalProps) {
   const { t } = useTranslation();
   const { tier } = useTier();
@@ -100,7 +103,12 @@ export function InviteMemberModal({
   // SaaS offers email; self-hosted also offers email once SMTP + invites are configured.
   const directAvailable = canDirectCreate;
   const emailAvailable = canEmailInvite;
-  const preferredMode: Mode = directAvailable ? "direct" : "email";
+  const preferredMode: Mode =
+    emailAvailable && EMAIL_RE.test(initialValue.trim())
+      ? "email"
+      : directAvailable
+        ? "direct"
+        : "email";
 
   useEffect(() => {
     if (!open) return;
@@ -193,6 +201,14 @@ export function InviteMemberModal({
   }
 
   const resetTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    if (resetTimerRef.current !== null)
+      window.clearTimeout(resetTimerRef.current);
+    setEmail(initialValue);
+    setUsername(initialValue);
+  }, [open, initialValue]);
 
   useEffect(() => {
     return () => {

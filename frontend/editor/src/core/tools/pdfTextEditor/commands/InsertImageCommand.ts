@@ -12,6 +12,7 @@ import {
   embedBitmapImageOnPage,
   embedJpegImageOnPage,
 } from "@app/utils/pdfiumBitmapUtils";
+import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
 
 // Insert a decoded raster image onto a page at the given lower-left coordinate,
 // scaled to `(width, height)` PDF points.
@@ -185,19 +186,15 @@ export class InsertImageCommand implements Command {
 /** Read an object's current matrix so the model stays in lock-step with PDFium. */
 function readMatrix(m: WrappedPdfiumModule, objPtr: number): Affine {
   // FS_MATRIX: { a, b, c, d, e, f } as floats.
-  const buf = m.pdfium.wasmExports.malloc(6 * 4);
-  try {
-    const ok = m.FPDFPageObj_GetMatrix(objPtr, buf);
-    if (!ok) return { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
-    return {
-      a: m.pdfium.getValue(buf, "float"),
-      b: m.pdfium.getValue(buf + 4, "float"),
-      c: m.pdfium.getValue(buf + 8, "float"),
-      d: m.pdfium.getValue(buf + 12, "float"),
-      e: m.pdfium.getValue(buf + 16, "float"),
-      f: m.pdfium.getValue(buf + 20, "float"),
-    };
-  } finally {
-    m.pdfium.wasmExports.free(buf);
-  }
+  const buf = scratchPtr(m, SCRATCH.imageMatrix, 6 * 4);
+  const ok = m.FPDFPageObj_GetMatrix(objPtr, buf);
+  if (!ok) return { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
+  return {
+    a: m.pdfium.getValue(buf, "float"),
+    b: m.pdfium.getValue(buf + 4, "float"),
+    c: m.pdfium.getValue(buf + 8, "float"),
+    d: m.pdfium.getValue(buf + 12, "float"),
+    e: m.pdfium.getValue(buf + 16, "float"),
+    f: m.pdfium.getValue(buf + 20, "float"),
+  };
 }

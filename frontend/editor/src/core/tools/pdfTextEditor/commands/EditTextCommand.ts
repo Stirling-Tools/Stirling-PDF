@@ -1,7 +1,11 @@
+import i18n from "i18next";
 import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
 import { PdfiumTextWriter } from "@app/tools/pdfTextEditor/pdfium/PdfiumTextWriter";
-import { sampleBackground } from "@app/tools/pdfTextEditor/pdfium/BackgroundSampler";
+import {
+  sampleBackground,
+  measureScanInk,
+} from "@app/tools/pdfTextEditor/pdfium/BackgroundSampler";
 import {
   charcodesResolveFully,
   collectContainersByPtr,
@@ -38,6 +42,12 @@ import type {
   TextRun,
 } from "@app/tools/pdfTextEditor/model/TextRun";
 import { transformObject } from "@app/tools/pdfTextEditor/util/objectTransform";
+import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
+import {
+  captureScanEdit,
+  isScanRun,
+  renderScanEdit,
+} from "@app/tools/pdfTextEditor/commands/scanTextEdit";
 
 interface RevertLine {
   text: string;
@@ -86,6 +96,22 @@ function planIsPureInsert(plan: PartialEditPlan): boolean {
   );
 }
 
+const RENDER_MODE_INVISIBLE = 3;
+const BLACK = { r: 0, g: 0, b: 0, a: 255 };
+// Cap height as a share of the em, near enough for the fallback faces.
+const CAP_HEIGHT_EM = 0.72;
+
+// OCR font sizes are a guess stretched by Tz; the scan's cap height is not.
+function scanFontSize(
+  ink: { y: number; height: number } | null,
+  baseline: number,
+  fallback: number,
+): number {
+  if (!ink) return fallback;
+  const size = (ink.y + ink.height - baseline) / CAP_HEIGHT_EM;
+  return size > 2 && size < ink.height * 3 ? size : fallback;
+}
+
 /** Edit a text run. */
 export class EditTextCommand implements Command {
   readonly type = "edit-text";
@@ -105,7 +131,11 @@ export class EditTextCommand implements Command {
    */
   private prevFontPtr = 0;
   private coverRectPtr = 0;
+  // Ink of an invisible OCR run this edit made visible, restored on revert.
+  private scanSource: { fill: TextRun["fill"]; fontSize: number } | null = null;
   private createdPtrs: number[] = [];
+  /** Set when apply went through the word-level scanned-OCR path. */
+  private scanEdited = false;
   private newTextPtr = 0;
   private revertLines: RevertLine[] = [];
   /** Rotation of the run when apply() snapshotted it; re-applied on revert. */
@@ -149,7 +179,19 @@ export class EditTextCommand implements Command {
     // one keystroke burst, re-dispatching the SAME final text.
     if (this.prevText === this.nextText) return;
 
+    if (this.scanEdited || isScanRun(run)) {
+      run.scanEdit ??= captureScanEdit(doc.module, run);
+      if (run.scanEdit) {
+        this.scanEdited = true;
+        renderScanEdit(doc, page, run, run.scanEdit, this.nextText);
+        return;
+      }
+    }
+
     const alreadyBase14 = /^base14:/.test(run.fontId);
+    // Invisible OCR text over a scan: rewrite the whole run visibly so the
+    // scanned ink can be covered, never patch its hidden objects in place.
+    const scanText = run.renderMode === RENDER_MODE_INVISIBLE;
     // A run rotated within the page can't use the surgical partial/paragraph
     // paths - those assume horizontal layout.
     const isRotated = !!rotationFromMatrix(run.matrix);
@@ -160,7 +202,8 @@ export class EditTextCommand implements Command {
       this.partialPlan === null &&
       this.paragraphPlan === null &&
       run.paragraphLineSlots.length > 1 &&
-      !isRotated
+      !isRotated &&
+      !scanText
     ) {
       const paraPlan = planParagraphEdit(
         run,
@@ -211,7 +254,8 @@ export class EditTextCommand implements Command {
       this.prevText !== null &&
       this.prevText.length > 0 &&
       run.paragraphLineSlots.length >= 1 &&
-      !isRotated
+      !isRotated &&
+      !scanText
     ) {
       const prevLines = this.prevText.split(/\r?\n/);
       const nextLines = this.nextText.split(/\r?\n/);
@@ -246,7 +290,8 @@ export class EditTextCommand implements Command {
       run.mergedFromPtrs.length > 0 &&
       run.paragraphLineSlots.length < 2 &&
       !/\r?\n/.test(this.nextText) &&
-      !isRotated
+      !isRotated &&
+      !scanText
     ) {
       const partial = planPartialEdit(run, this.prevText ?? "", this.nextText);
       // An in-place "modify" op that re-SetTexts whitespace paints „ on an
@@ -290,6 +335,7 @@ export class EditTextCommand implements Command {
       /\r?\n/.test(this.nextText) ||
       /\s\s/.test(this.nextText);
     const needsOverlay =
+      scanText ||
       needsMultiObjectEmit ||
       (!this.overlaid &&
         !alreadyBase14 &&
@@ -322,6 +368,15 @@ export class EditTextCommand implements Command {
     const m = doc.module;
 
     const bg = sampleBackground(m, page, run.bounds);
+    // Measure the scanned glyphs before anything covers them.
+    const scanInk = scanText
+      ? (measureScanInk(m, page, {
+          x0: run.bounds.x,
+          x1: run.bounds.x + run.bounds.width,
+          bottom: run.bounds.y,
+          top: run.bounds.y + run.bounds.height,
+        }) ?? { fill: BLACK, rect: run.bounds, baseline: null })
+      : null;
     // \r/\n are split into separate output lines, so they must NOT gate font
     // reuse.
     const safeChars = everyCharIn(
@@ -352,10 +407,11 @@ export class EditTextCommand implements Command {
       run.mergedFromTexts.length === borrowPtrs.length
         ? run.mergedFromTexts
         : borrowPtrs.map(() => run.text);
-    const originalFontPtr = canReuseFont
-      ? bestFontPtrForText(m, borrowPtrs, borrowTexts, this.nextText) ||
-        (run.pdfiumObjPtr ? safeGetFont(m, run.pdfiumObjPtr) : 0)
-      : 0;
+    const originalFontPtr =
+      canReuseFont && !scanText
+        ? bestFontPtrForText(m, borrowPtrs, borrowTexts, this.nextText) ||
+          (run.pdfiumObjPtr ? safeGetFont(m, run.pdfiumObjPtr) : 0)
+        : 0;
 
     this.revertLines = snapshotRevertLines(run, this.prevText ?? "");
     this.revertRotation = rotationFromMatrix(run.matrix) ?? null;
@@ -392,6 +448,24 @@ export class EditTextCommand implements Command {
         this.createdPtrs.push(this.coverRectPtr);
         run.coverRectPtr = this.coverRectPtr;
       }
+    }
+    if (scanInk) {
+      const coverRect = scanInk.rect;
+      const paper = sampleBackground(m, page, coverRect);
+      // Kept off run.coverRectPtr so later edits of this run never lift it.
+      const scanCover = emitFillRect(
+        m,
+        page,
+        coverRect,
+        paper.confident ? paper.fill : bg.fill,
+        // The box is measured ink already; wide padding clips the next line.
+        0.5,
+      );
+      if (scanCover) this.createdPtrs.push(scanCover);
+      this.scanSource = { fill: run.fill, fontSize: run.fontSize };
+      run.fill = scanInk.fill;
+      run.renderMode = 0;
+      run.fontSize = scanFontSize(scanInk.rect, run.matrix.f, run.fontSize);
     }
 
     const outputLines = this.nextText.split(/\r?\n/);
@@ -548,6 +622,10 @@ export class EditTextCommand implements Command {
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
     if (!run || this.prevText === null) return;
+    if (this.scanEdited && run.scanEdit) {
+      renderScanEdit(doc, page, run, run.scanEdit, this.prevText);
+      return;
+    }
     this.assertSingleRevertPath();
     const m = doc.module;
 
@@ -754,6 +832,12 @@ export class EditTextCommand implements Command {
     this.coverRectPtr = 0;
     this.newTextPtr = 0;
     this.createdPtrs = [];
+    if (this.scanSource) {
+      run.fill = this.scanSource.fill;
+      run.fontSize = this.scanSource.fontSize;
+      run.renderMode = RENDER_MODE_INVISIBLE;
+      this.scanSource = null;
+    }
 
     // Everything else the run still owns goes too, because the re-emit below
     // rebuilds the run whole.
@@ -1208,7 +1292,9 @@ export class EditTextCommand implements Command {
   }
 
   describe(): string {
-    return `Type into ${this.runId}`;
+    return i18n.t("pdfTextEditor.commands.typeInto", "Type into {{run}}", {
+      run: this.runId,
+    });
   }
 
   /** Consecutive typing on the SAME run coalesces into one undo step. */
@@ -1411,24 +1497,14 @@ function boundsFromPtr(
   ptr: number,
   fallbackX: number,
 ): { x: number; right: number } {
-  const l = m.pdfium.wasmExports.malloc(4);
-  const b = m.pdfium.wasmExports.malloc(4);
-  const r = m.pdfium.wasmExports.malloc(4);
-  const t = m.pdfium.wasmExports.malloc(4);
-  try {
-    if (!m.FPDFPageObj_GetBounds(ptr, l, b, r, t)) {
-      return { x: fallbackX, right: fallbackX };
-    }
-    return {
-      x: m.pdfium.getValue(l, "float"),
-      right: m.pdfium.getValue(r, "float"),
-    };
-  } finally {
-    m.pdfium.wasmExports.free(l);
-    m.pdfium.wasmExports.free(b);
-    m.pdfium.wasmExports.free(r);
-    m.pdfium.wasmExports.free(t);
+  const buf = scratchPtr(m, SCRATCH.editBbox, 16);
+  if (!m.FPDFPageObj_GetBounds(ptr, buf, buf + 4, buf + 8, buf + 12)) {
+    return { x: fallbackX, right: fallbackX };
   }
+  return {
+    x: m.pdfium.getValue(buf, "float"),
+    right: m.pdfium.getValue(buf + 8, "float"),
+  };
 }
 
 function keptLeadingBaselines(

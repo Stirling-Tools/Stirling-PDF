@@ -1,4 +1,5 @@
 import { invoke, isTauri } from "@tauri-apps/api/core";
+import i18n from "i18next";
 import { fetch } from "@tauri-apps/plugin-http";
 import { endpointAvailabilityService } from "@app/services/endpointAvailabilityService";
 import { selfHostedServerMonitor } from "@app/services/selfHostedServerMonitor";
@@ -21,6 +22,12 @@ export interface ConnectionConfig {
   mode: ConnectionMode;
   server_config: ServerConfig | null;
   lock_connection_mode: boolean;
+  /** Absent in older native configurations; defaults to false. */
+  require_sign_in?: boolean;
+  /** Restricts account connections to Stirling Cloud, independently of guest access. */
+  cloud_only?: boolean;
+  /** Keeps documents on this device while allowing account and billing requests. */
+  local_processing_only?: boolean;
 }
 
 export interface DiagnosticResult {
@@ -76,6 +83,13 @@ export class ConnectionModeService {
     return this.currentConfig?.mode ?? null;
   }
 
+  /** Undefined until provisioning has loaded; consumers must fail closed. */
+  getCachedLocalProcessingOnly(): boolean | undefined {
+    return this.currentConfig
+      ? Boolean(this.currentConfig.local_processing_only)
+      : undefined;
+  }
+
   /** The server already in memory, or null before the first load. Synchronous so
    *  callers that build a URL inline (raw fetch, template string) can reach it. */
   getCachedServerConfig(): ServerConfig | null {
@@ -108,7 +122,10 @@ export class ConnectionModeService {
 
       const localFlag = localStorage.getItem(LOCAL_MODE_STORAGE_KEY);
 
-      if (localFlag === "true") {
+      if (config.require_sign_in) {
+        localStorage.removeItem(LOCAL_MODE_STORAGE_KEY);
+        if (config.mode === "local") config.mode = "saas";
+      } else if (localFlag === "true") {
         // User previously chose local-only mode (signed out or explicitly went offline).
         // Applies to both 'saas' and 'selfhosted' store modes — the Rust guard on locked
         // deployments can't change 'selfhosted' to 'saas' in the store, so we check the
@@ -134,19 +151,14 @@ export class ConnectionModeService {
       this.configLoadedOnce = true;
     } catch (error) {
       console.error("Failed to load connection config:", error);
-      // Default to local mode on error — safer than showing SaaS UI for a
-      // desktop app whose bundled backend is always available.
-      this.currentConfig = {
-        mode: "local",
-        server_config: null,
-        lock_connection_mode: false,
-      };
-      this.configLoadedOnce = true;
+      // An unreadable policy must not grant guest access on a managed install.
+      throw error;
     }
   }
 
   async switchToSaaS(saasServerUrl: string): Promise<void> {
-    if (this.currentConfig?.lock_connection_mode) {
+    const currentConfig = await this.getCurrentConfig();
+    if (currentConfig.lock_connection_mode && currentConfig.mode !== "saas") {
       throw new Error("Connection mode is locked by provisioning");
     }
 
@@ -165,6 +177,7 @@ export class ConnectionModeService {
     });
 
     this.currentConfig = {
+      ...currentConfig,
       mode: "saas",
       server_config: serverConfig,
       lock_connection_mode: this.currentConfig?.lock_connection_mode ?? false,
@@ -202,17 +215,22 @@ export class ConnectionModeService {
   }
 
   async switchToLocal(): Promise<void> {
+    const currentConfig = await this.getCurrentConfig();
+    if (currentConfig.require_sign_in) {
+      throw new Error(
+        "Your administrator requires sign-in before using this app",
+      );
+    }
     console.log("Switching to local-only mode");
 
     // Persist local mode preference via localStorage so no Rust enum change is needed.
     // The Rust store records this as 'saas' (same bundled-backend behaviour); we overlay
     // the 'local' distinction purely on the TypeScript side.
-    localStorage.setItem(LOCAL_MODE_STORAGE_KEY, "true");
-
     await invoke("set_connection_mode", {
       mode: "saas",
       serverConfig: null,
     });
+    localStorage.setItem(LOCAL_MODE_STORAGE_KEY, "true");
 
     // For locked deployments, preserve server_config so the sign-in form can still
     // show the correct server URL if the user wants to sign in later.
@@ -222,6 +240,7 @@ export class ConnectionModeService {
       : null;
 
     this.currentConfig = {
+      ...currentConfig,
       mode: "local",
       server_config: preservedServerConfig,
       lock_connection_mode: isLocked,
@@ -234,6 +253,7 @@ export class ConnectionModeService {
   }
 
   async switchToSelfHosted(serverConfig: ServerConfig): Promise<void> {
+    await this.assertSelfHostedAllowed(serverConfig.url);
     // Clear local-only flag and expiry-prompted flag when signing in
     localStorage.removeItem(LOCAL_MODE_STORAGE_KEY);
     localStorage.removeItem(JWT_EXPIRED_PROMPTED_KEY);
@@ -248,6 +268,7 @@ export class ConnectionModeService {
     });
 
     this.currentConfig = {
+      ...this.currentConfig,
       mode: "selfhosted",
       server_config: serverConfig,
       lock_connection_mode: this.currentConfig?.lock_connection_mode ?? false,
@@ -277,6 +298,22 @@ export class ConnectionModeService {
     }
 
     console.log("Switched to self-hosted mode successfully");
+  }
+
+  /** Rejects disallowed servers before credentials or deep-link tokens are accepted. */
+  async assertSelfHostedAllowed(serverUrl: string): Promise<void> {
+    const config = await this.getCurrentConfig();
+    if (config.cloud_only) {
+      throw new Error("Your administrator requires Stirling Cloud sign-in");
+    }
+    if (
+      config.lock_connection_mode &&
+      (config.mode === "saas" ||
+        config.server_config?.url.replace(/\/+$/, "") !==
+          serverUrl.replace(/\/+$/, ""))
+    ) {
+      throw new Error("Connection mode is locked by provisioning");
+    }
   }
 
   /**
@@ -358,7 +395,10 @@ export class ConnectionModeService {
       if (stage2Result.success) {
         return {
           success: false,
-          error: "Server is only accessible via HTTPS, not HTTP.",
+          error: i18n.t(
+            "setup.server.error.httpsOnly",
+            "Server is only accessible via HTTPS, not HTTP.",
+          ),
           errorCode: "HTTP_NOT_AVAILABLE",
           diagnostics,
         };
@@ -454,7 +494,10 @@ export class ConnectionModeService {
         console.log(`[ConnectionModeService] ⚠️ HTTP works but HTTPS doesn't`);
         return {
           success: false,
-          error: "Server is only accessible via HTTP (not HTTPS).",
+          error: i18n.t(
+            "setup.server.error.httpOnly",
+            "Server is only accessible via HTTP (not HTTPS).",
+          ),
           errorCode: "HTTPS_NOT_AVAILABLE",
           diagnostics,
         };
@@ -509,8 +552,10 @@ export class ConnectionModeService {
       );
       return {
         success: false,
-        error:
+        error: i18n.t(
+          "setup.server.error.networkBlocked",
           "No internet connectivity detected. All network requests are failing.",
+        ),
         errorCode: "NETWORK_BLOCKED",
         diagnostics,
       };
@@ -544,7 +589,11 @@ export class ConnectionModeService {
       );
       return {
         success: false,
-        error: `Cannot resolve hostname: ${urlObj.hostname}`,
+        error: i18n.t(
+          "setup.server.error.dnsFailed",
+          "Cannot resolve hostname: {{hostname}}",
+          { hostname: urlObj.hostname },
+        ),
         errorCode: "DNS_RESOLUTION_FAILED",
         diagnostics,
       };
@@ -561,7 +610,10 @@ export class ConnectionModeService {
       );
       return {
         success: false,
-        error: "Server responds to HEAD requests but not GET requests.",
+        error: i18n.t(
+          "setup.server.error.methodMismatch",
+          "Server responds to HEAD requests but not GET requests.",
+        ),
         errorCode: "METHOD_MISMATCH",
         diagnostics,
       };
@@ -580,8 +632,10 @@ export class ConnectionModeService {
       );
       return {
         success: false,
-        error:
+        error: i18n.t(
+          "setup.server.error.userAgentBlocked",
           "Server blocks Tauri/desktop app User-Agent but allows browser User-Agent.",
+        ),
         errorCode: "USER_AGENT_BLOCKED",
         diagnostics,
       };
@@ -650,8 +704,10 @@ export class ConnectionModeService {
 
     return {
       success: false,
-      error:
+      error: i18n.t(
+        "setup.server.error.serverUnreachable",
         "Cannot connect to server. Internet works but this specific server is unreachable.",
+      ),
       errorCode: "SERVER_UNREACHABLE",
       diagnostics,
     };

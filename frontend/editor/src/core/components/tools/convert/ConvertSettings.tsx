@@ -8,10 +8,12 @@ import {
   isImageFormat,
   isWebFormat,
   getAvailableToExtensions as defaultGetAvailableToExtensions,
+  usesOfficeEngine,
 } from "@app/utils/convertUtils";
 import { getConversionEndpoints } from "@app/data/toolsTaxonomy";
 import { usePreferences } from "@app/contexts/PreferencesContext";
 import { useConversionCloudStatus } from "@app/hooks/useConversionCloudStatus";
+import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
 import GroupedFormatDropdown from "@app/components/tools/convert/GroupedFormatDropdown";
 import ConvertToImageSettings from "@app/components/tools/convert/ConvertToImageSettings";
 import ConvertFromImageSettings from "@app/components/tools/convert/ConvertFromImageSettings";
@@ -27,6 +29,7 @@ import ConvertToCbrSettings from "@app/components/tools/convert/ConvertToCbrSett
 import ConvertFromEbookSettings from "@app/components/tools/convert/ConvertFromEbookSettings";
 import ConvertFromSvgSettings from "@app/components/tools/convert/ConvertFromSvgSettings";
 import ConvertToEpubSettings from "@app/components/tools/convert/ConvertToEpubSettings";
+import ConvertOfficeEngineSettings from "@app/components/tools/convert/ConvertOfficeEngineSettings";
 import { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
 import {
   FROM_FORMAT_OPTIONS,
@@ -67,6 +70,9 @@ const ConvertSettings = ({
   const { t } = useTranslation();
   const theme = useMantineTheme();
   const { preferences } = usePreferences();
+  const localProcessingOnly = useLocalProcessingOnly();
+  const hideUnavailableConversions =
+    localProcessingOnly || preferences.hideUnavailableConversions;
 
   const allEndpoints = useMemo(() => {
     const endpoints = getConversionEndpoints(EXTENSION_TO_ENDPOINT);
@@ -114,9 +120,8 @@ const ConvertSettings = ({
       };
     });
 
-    // Filter out unavailable source formats if preference is enabled
     let filteredOptions = baseOptions;
-    if (preferences.hideUnavailableConversions) {
+    if (hideUnavailableConversions) {
       filteredOptions = baseOptions.filter((opt) => opt.enabled !== false);
     }
 
@@ -141,7 +146,7 @@ const ConvertSettings = ({
   }, [
     parameters.fromExtension,
     endpointStatus,
-    preferences.hideUnavailableConversions,
+    hideUnavailableConversions,
     conversionStatus,
   ]);
 
@@ -167,8 +172,7 @@ const ConvertSettings = ({
       };
     });
 
-    // Filter out unavailable conversions if preference is enabled
-    if (preferences.hideUnavailableConversions) {
+    if (hideUnavailableConversions) {
       return enhanced.filter((opt) => opt.enabled !== false);
     }
 
@@ -176,7 +180,7 @@ const ConvertSettings = ({
   }, [
     parameters.fromExtension,
     endpointStatus,
-    preferences.hideUnavailableConversions,
+    hideUnavailableConversions,
     conversionStatus,
   ]);
 
@@ -522,6 +526,18 @@ const ConvertSettings = ({
             />
           </>
         )}
+
+      {/* Stirling Office Convert or LibreOffice */}
+      {usesOfficeEngine(parameters.fromExtension, parameters.toExtension) && (
+        <>
+          <Divider />
+          <ConvertOfficeEngineSettings
+            parameters={parameters}
+            onParameterChange={onParameterChange}
+            disabled={disabled}
+          />
+        </>
+      )}
 
       {/* PDF to EPUB/AZW3 options */}
       {parameters.fromExtension === "pdf" &&

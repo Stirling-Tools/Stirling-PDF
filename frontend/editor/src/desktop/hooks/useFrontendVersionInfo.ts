@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
 import { getVersion } from "@tauri-apps/api/app";
 import type { FrontendVersionInfo } from "@core/hooks/useFrontendVersionInfo";
+import { useSaaSMode } from "@app/hooks/useSaaSMode";
 
 export function useFrontendVersionInfo(
   backendVersion: string | undefined,
 ): FrontendVersionInfo {
+  const isSaaSMode = useSaaSMode();
+  const visibleBackendVersion = isSaaSMode ? undefined : backendVersion;
   const [appVersion, setAppVersion] = useState<string | null>(null);
   const [mismatchVersion, setMismatchVersion] = useState(false);
 
@@ -30,15 +33,15 @@ export function useFrontendVersionInfo(
   }, []);
 
   useEffect(() => {
-    if (!appVersion || !backendVersion) {
+    if (!appVersion || !visibleBackendVersion) {
       setMismatchVersion(false);
       return;
     }
-    if (appVersion !== backendVersion) {
+    if (appVersion !== visibleBackendVersion) {
       console.warn(
         "[useFrontendVersionInfo] Mismatch between frontend version and AppConfig version:",
         {
-          backendVersion,
+          backendVersion: visibleBackendVersion,
           frontendVersion: appVersion,
         },
       );
@@ -46,7 +49,11 @@ export function useFrontendVersionInfo(
     } else {
       setMismatchVersion(false);
     }
-  }, [appVersion, backendVersion]);
+  }, [appVersion, visibleBackendVersion]);
 
-  return { appVersion, mismatchVersion };
+  return {
+    appVersion,
+    backendVersion: visibleBackendVersion,
+    mismatchVersion: Boolean(visibleBackendVersion) && mismatchVersion,
+  };
 }

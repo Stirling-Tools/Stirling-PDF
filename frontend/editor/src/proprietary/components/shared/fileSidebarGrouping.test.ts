@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect } from "vitest";
 import { buildLabelGroups } from "@app/components/shared/fileSidebarGroupingLogic";
 import type { SidebarCategory } from "@app/services/fileSidebarCategories";

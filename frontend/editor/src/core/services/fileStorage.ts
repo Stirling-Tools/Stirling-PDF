@@ -19,6 +19,7 @@ import {
 import { alert } from "@app/components/toast";
 import { readBlobSlice } from "@app/utils/blobSlice";
 import { detachedFile, markStoredBlob } from "@app/utils/storedBlob";
+import i18n from "i18next";
 
 /**
  * Storage record - single source of truth
@@ -104,6 +105,20 @@ function isBlobValueRejection(error: unknown): boolean {
   return name === "UnknownError" || name === "DataCloneError";
 }
 
+/** A write that never settled. WebKit can stall a Blob put instead of refusing it,
+ *  and the upload awaits the write, so the file never opens. */
+class StalledWriteError extends Error {
+  override name = "StalledWriteError";
+}
+
+// Size-scaled so a legitimately slow write of a very large file is not cut off.
+const WRITE_STALL_BASE_MS = 5000;
+const WRITE_STALL_BYTES_PER_MS = 10_000;
+
+function writeStallDeadlineMs(size: number): number {
+  return WRITE_STALL_BASE_MS + Math.ceil(size / WRITE_STALL_BYTES_PER_MS);
+}
+
 /** This engine loses Blob values, remembered per browser: session-scoped, each
  *  reload re-decides optimistically and writes more files it will lose. */
 const BLOB_VALUES_UNSUPPORTED_KEY = "stirling.indexeddb.blobValuesUnsupported";
@@ -140,6 +155,20 @@ export function maintenanceMayRewrite(
   blobValuesSupported: boolean,
 ): boolean {
   return !(record.data instanceof Blob) || blobValuesSupported;
+}
+
+/**
+ * True when a still-fresh thumbnail is past half its TTL and should be re-dated
+ * so an active library does not expire it. Listings rewrite only the records
+ * that cross the halfway mark, instead of every thumbnailed record per scan.
+ */
+export function shouldBumpThumbnailTtl(
+  record: Pick<StoredStirlingFileRecord, "thumbnail" | "thumbnailStoredAt">,
+  now: number = Date.now(),
+): boolean {
+  if (!record.thumbnail || !record.thumbnailStoredAt) return false;
+  const age = now - record.thumbnailStoredAt;
+  return age >= THUMBNAIL_TTL_MS / 2 && age < THUMBNAIL_TTL_MS;
 }
 
 /** WebKit loses backing stores for blobs it accepted, and only a real read shows
@@ -313,6 +342,8 @@ class FileStorageService {
   /** Whether a stored blob's bytes have come back yet. Until they have, each
    *  store proves it: accepting the write is no evidence the bytes survived. */
   private blobReadbackVerified = false;
+  /** Whether a Blob write has committed. Until one has, a stalled one is a refusal. */
+  private blobWriteVerified = false;
   /** Ids whose TTL write failed. Without this the swallowed failure repeats a
    *  whole-file rewrite on every listing. Session-scoped on purpose. */
   private readonly unwritableRecords = new Set<FileId>();
@@ -455,18 +486,26 @@ class FileStorageService {
       classificationLocked: stub.classificationLocked,
     };
 
+    const deadline = writeStallDeadlineMs(stirlingFile.size);
     try {
-      await this.addFileRecord(db, record);
+      const unproven = record.data instanceof Blob && !this.blobWriteVerified;
+      await this.addFileRecord(db, record, unproven ? deadline : undefined);
     } catch (error) {
-      // Recoverable: re-add as a copy, and stop offering blobs this session.
-      // Anything else is the caller's to report.
-      if (!(record.data instanceof Blob) || !this.noteBlobRefusal(error)) {
+      // Recoverable: re-add as a copy. A refusal also stops offering blobs; a stall
+      // may only be queueing, so it proves nothing about the engine.
+      const stalled = error instanceof StalledWriteError;
+      if (
+        !(record.data instanceof Blob) ||
+        (!stalled && !this.noteBlobRefusal(error))
+      ) {
         throw error;
       }
       record.data = await copyBlobBytes(record.data);
-      await this.addFileRecord(db, record);
+      // A stall can leave the store wedged; never let the copy hold the upload.
+      await this.addFileRecord(db, record, deadline);
       return;
     }
+    if (record.data instanceof Blob) this.blobWriteVerified = true;
 
     // Committed is not retrievable. Prove the round-trip while the source File is
     // still in hand; after a reload there is nothing left to repair from.
@@ -639,10 +678,12 @@ class FileStorageService {
     );
     alert({
       alertType: "warning",
-      title: "File data is unavailable",
-      body:
-        `"${record.name}" is saved in this browser but its contents can no longer be read. ` +
-        "Upload the file again to keep working on it.",
+      title: i18n.t("fileStorage.unreadable.title", "File data is unavailable"),
+      body: i18n.t(
+        "fileStorage.unreadable.body",
+        '"{{name}}" is saved in this browser but its contents can no longer be read. Upload the file again to keep working on it.',
+        { name: record.name },
+      ),
       expandable: false,
       durationMs: 8000,
     });
@@ -740,12 +781,19 @@ class FileStorageService {
     });
   }
 
-  /** Single `add` of a file record. Rejects with the underlying IDB error. */
+  /** Single `add` of a file record. Rejects with the underlying IDB error, or with
+   *  {@link StalledWriteError} (aborting the write) if it outlives `deadlineMs`. */
   private addFileRecord(
     db: IDBDatabase,
     record: StoredStirlingFileRecord,
+    deadlineMs?: number,
   ): Promise<void> {
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const settle = (finish: () => void) => {
+        clearTimeout(timer);
+        finish();
+      };
       try {
         // Verify store exists before creating transaction
         if (!db.objectStoreNames.contains(this.storeName)) {
@@ -755,15 +803,28 @@ class FileStorageService {
         }
 
         const transaction = db.transaction([this.storeName], "readwrite");
-        settleOnAbort(transaction, reject);
+        settleOnAbort(transaction, (reason) => settle(() => reject(reason)));
         const store = transaction.objectStore(this.storeName);
 
         const request = store.add(record);
 
-        request.onerror = () => reject(request.error);
-        request.onsuccess = () => resolve();
+        request.onerror = () => settle(() => reject(request.error));
+        // On commit: request success does not mean the record survived.
+        transaction.oncomplete = () => settle(resolve);
+        if (deadlineMs !== undefined) {
+          timer = setTimeout(() => {
+            reject(
+              new StalledWriteError(`write unsettled after ${deadlineMs}ms`),
+            );
+            try {
+              transaction.abort();
+            } catch {
+              // Already finished: nothing left to release.
+            }
+          }, deadlineMs);
+        }
       } catch (error) {
-        reject(error);
+        settle(() => reject(error));
       }
     });
   }
@@ -941,8 +1002,8 @@ class FileStorageService {
               record.thumbnail &&
               maintenanceMayRewrite(record, this.blobValuesSupported)
             ) {
-              if (fresh) tobump.push(record.id);
-              else toexpire.push(record.id);
+              if (shouldBumpThumbnailTtl(record)) tobump.push(record.id);
+              else if (!fresh) toexpire.push(record.id);
             }
             this.reportIfUnreadable(record);
             stubs.push({
@@ -1049,8 +1110,8 @@ class FileStorageService {
               record.thumbnail &&
               maintenanceMayRewrite(record, this.blobValuesSupported)
             ) {
-              if (fresh) tobump.push(record.id);
-              else toexpire.push(record.id);
+              if (shouldBumpThumbnailTtl(record)) tobump.push(record.id);
+              else if (!fresh) toexpire.push(record.id);
             }
             this.reportIfUnreadable(record);
             leafStubs.push({
@@ -1175,9 +1236,7 @@ class FileStorageService {
         );
 
       for (const folderId of folderIds) {
-        const cursorRequest = index.openCursor(
-          IDBKeyRange.only(folderId as string),
-        );
+        const cursorRequest = index.openCursor(IDBKeyRange.only(folderId));
         cursorRequest.onerror = () => reject(cursorRequest.error);
         cursorRequest.onsuccess = (event) => {
           const cursor = (event.target as IDBRequest)
@@ -1213,11 +1272,11 @@ class FileStorageService {
     // share a lineage, so one leaf's delete must not strip another's history.
     const keep = new Set<string>();
     for (const stub of stubs) {
-      if (doomed.has(stub.id as string)) continue;
+      if (doomed.has(stub.id)) continue;
       let cursor = stub.parentFileId as string | undefined;
       while (cursor && !keep.has(cursor)) {
         keep.add(cursor);
-        cursor = byId.get(cursor)?.parentFileId as string | undefined;
+        cursor = byId.get(cursor)?.parentFileId;
       }
     }
 
@@ -1229,7 +1288,7 @@ class FileStorageService {
           doomed.add(cursor);
           orphans.push(cursor as FileId);
         }
-        cursor = byId.get(cursor)?.parentFileId as string | undefined;
+        cursor = byId.get(cursor)?.parentFileId;
       }
     }
     return orphans;

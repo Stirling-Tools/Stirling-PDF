@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { flushSync } from "react-dom";
 import { Center, Box, LoadingOverlay } from "@mantine/core";
-import { Dropzone } from "@mantine/dropzone";
+import { useTranslation } from "react-i18next";
 import {
   useFileSelection,
   useFileState,
@@ -20,7 +20,6 @@ import { alert } from "@app/components/toast";
 import { downloadFileWithPolicy as downloadFile } from "@app/services/exportWithPolicy";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
-import { useDropzoneFiles } from "@app/hooks/useDropzoneFiles";
 import type { FileItemPolicyRef } from "@app/components/shared/PolicyBadges";
 
 const EMPTY_POLICIES: FileItemPolicyRef[] = [];
@@ -36,6 +35,7 @@ const FileEditor = ({
   toolMode = false,
   supportedExtensions = ["pdf"],
 }: FileEditorProps) => {
+  const { t } = useTranslation();
   const policyFileBadges = usePolicyFileBadges();
 
   const isFileSupported = useCallback(
@@ -67,7 +67,6 @@ const FileEditor = ({
   const { setActiveFileIndex, setActiveFileId } = useViewer();
 
   const [_status, _setStatus] = useState<string | null>(null);
-  const [_error, _setError] = useState<string | null>(null);
 
   const showStatus = useCallback(
     (
@@ -83,14 +82,17 @@ const FileEditor = ({
     },
     [],
   );
-  const showError = useCallback((message: string) => {
-    alert({
-      alertType: "error",
-      title: "Error",
-      body: message,
-      expandable: true,
-    });
-  }, []);
+  const showError = useCallback(
+    (message: string) => {
+      alert({
+        alertType: "error",
+        title: t("common.error", "Error"),
+        body: message,
+        expandable: true,
+      });
+    },
+    [t],
+  );
 
   const { selectedTool } = useToolWorkflow();
 
@@ -99,34 +101,46 @@ const FileEditor = ({
     return !toolMode || rawMax == null || rawMax < 0 ? Infinity : rawMax;
   }, [selectedTool?.maxFiles, toolMode]);
 
-  const getDropzoneFiles = useDropzoneFiles();
   const [showFilePickerModal, setShowFilePickerModal] = useState(false);
 
   const handleFileUpload = useCallback(
     async (uploadedFiles: File[]) => {
-      _setError(null);
-
       try {
-        if (uploadedFiles.length > 0) {
-          await addFiles(uploadedFiles, { selectFiles: true });
-          if (Number.isFinite(maxAllowed)) {
-            const nowSelectedIds = selectors
-              .getSelectedStirlingFileStubs()
-              .map((r) => r.id);
-            if (nowSelectedIds.length > maxAllowed) {
-              setSelectedFiles(nowSelectedIds.slice(-maxAllowed));
-            }
+        await addFiles(uploadedFiles, { selectFiles: true });
+        if (Number.isFinite(maxAllowed)) {
+          const nowSelectedIds = selectors
+            .getSelectedStirlingFileStubs()
+            .map((r) => r.id);
+          if (nowSelectedIds.length > maxAllowed) {
+            setSelectedFiles(nowSelectedIds.slice(-maxAllowed));
           }
-          showStatus(`Added ${uploadedFiles.length} file(s)`, "success");
         }
+        showStatus(
+          t("fileEditor.filesAdded", {
+            count: uploadedFiles.length,
+            defaultValue_one: "Added {{count}} file",
+            defaultValue_other: "Added {{count}} files",
+          }),
+          "success",
+        );
       } catch (err) {
         const errorMessage =
-          err instanceof Error ? err.message : "Failed to process files";
+          err instanceof Error
+            ? err.message
+            : t("fileEditor.processFilesFailed", "Failed to process files");
         showError(errorMessage);
         console.error("File processing error:", err);
       }
     },
-    [addFiles, showStatus, showError, selectors, maxAllowed, setSelectedFiles],
+    [
+      addFiles,
+      showStatus,
+      showError,
+      selectors,
+      maxAllowed,
+      setSelectedFiles,
+      t,
+    ],
   );
 
   useEffect(() => {
@@ -189,9 +203,15 @@ const FileEditor = ({
       }
 
       const moveCount = filesToMove.length;
-      showStatus(`${moveCount > 1 ? `${moveCount} files` : "File"} reordered`);
+      showStatus(
+        t("fileEditor.filesReordered", {
+          count: moveCount,
+          defaultValue_one: "File reordered",
+          defaultValue_other: "{{count}} files reordered",
+        }),
+      );
     },
-    [reorderFiles, showStatus],
+    [reorderFiles, showStatus, t],
   );
 
   const handleCloseFile = useCallback(
@@ -266,14 +286,23 @@ const FileEditor = ({
 
             alert({
               alertType: "success",
-              title: `Extracted ${result.extractedStubs.length} file(s) from ${file.name}`,
+              title: t("fileEditor.unzip.extracted", {
+                count: result.extractedStubs.length,
+                name: file.name,
+                defaultValue_one: "Extracted {{count}} file from {{name}}",
+                defaultValue_other: "Extracted {{count}} files from {{name}}",
+              }),
               expandable: false,
               durationMs: 3500,
             });
           } else {
             alert({
               alertType: "error",
-              title: `Failed to extract files from ${file.name}`,
+              title: t(
+                "fileEditor.unzip.failed",
+                "Failed to extract files from {{name}}",
+                { name: file.name },
+              ),
               body: result.errors.join("\n"),
               expandable: true,
               durationMs: 3500,
@@ -283,14 +312,16 @@ const FileEditor = ({
           console.error("Failed to unzip file:", error);
           alert({
             alertType: "error",
-            title: `Error unzipping ${file.name}`,
+            title: t("fileEditor.unzip.error", "Error unzipping {{name}}", {
+              name: file.name,
+            }),
             expandable: false,
             durationMs: 3500,
           });
         }
       }
     },
-    [selectors, fileActions, removeFiles],
+    [selectors, fileActions, removeFiles, t],
   );
 
   const handleViewFile = useCallback(
@@ -305,84 +336,88 @@ const FileEditor = ({
     [setActiveFileId, setActiveFileIndex, navActions.setWorkbench],
   );
 
-  const handleLoadFromStorage = useCallback(async (selectedFiles: File[]) => {
-    if (selectedFiles.length === 0) return;
+  const handleLoadFromStorage = useCallback(
+    async (selectedFiles: File[]) => {
+      if (selectedFiles.length === 0) return;
 
-    try {
-      showStatus(`Loaded ${selectedFiles.length} files from storage`);
-    } catch (err) {
-      console.error("Error loading files from storage:", err);
-      showError("Failed to load some files from storage");
-    }
-  }, []);
+      try {
+        showStatus(
+          t("fileEditor.loadedFromStorage", {
+            count: selectedFiles.length,
+            defaultValue_one: "Loaded {{count}} file from storage",
+            defaultValue_other: "Loaded {{count}} files from storage",
+          }),
+        );
+      } catch (err) {
+        console.error("Error loading files from storage:", err);
+        showError(
+          t(
+            "fileEditor.loadFromStorageFailed",
+            "Failed to load some files from storage",
+          ),
+        );
+      }
+    },
+    [showStatus, showError, t],
+  );
 
   return (
-    <Dropzone
-      onDrop={handleFileUpload}
-      useFsAccessApi={false}
-      getFilesFromEvent={getDropzoneFiles}
-      multiple={true}
-      maxSize={2 * 1024 * 1024 * 1024}
-      style={{
-        border: "none",
-        borderRadius: 0,
-        backgroundColor: "transparent",
-      }}
-      activateOnClick={false}
-      activateOnDrag={true}
-    >
-      <Box pos="relative" style={{ overflow: "auto" }}>
-        <LoadingOverlay visible={state.ui.isProcessing} />
+    <Box pos="relative" style={{ overflow: "auto" }}>
+      <LoadingOverlay visible={state.ui.isProcessing} />
 
-        <Box p="md">
-          {activeStirlingFileStubs.length === 0 ? (
-            <Center h="60vh">
-              <AddFileCard />
-            </Center>
-          ) : (
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(276px, 1fr))",
-                rowGap: "1.5rem",
-                padding: "1rem",
-                pointerEvents: "auto",
-              }}
-            >
-              {activeStirlingFileStubs.length > 0 && (
-                <AddFileCard key="add-file-card" />
-              )}
+      <Box p="md">
+        {activeStirlingFileStubs.length === 0 ? (
+          <Center h="60vh">
+            <AddFileCard
+              onFilesSelected={(files) => void handleFileUpload(files)}
+            />
+          </Center>
+        ) : (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(276px, 1fr))",
+              rowGap: "1.5rem",
+              padding: "1rem",
+              pointerEvents: "auto",
+            }}
+          >
+            {activeStirlingFileStubs.length > 0 && (
+              <AddFileCard
+                key="add-file-card"
+                onFilesSelected={(files) => void handleFileUpload(files)}
+              />
+            )}
 
-              {activeStirlingFileStubs.map((record, index) => {
-                return (
-                  <FileEditorThumbnail
-                    key={record.id}
-                    file={record}
-                    index={index}
-                    totalFiles={activeStirlingFileStubs.length}
-                    onCloseFile={handleCloseFile}
-                    onViewFile={handleViewFile}
-                    onReorderFiles={handleReorderFiles}
-                    onDownloadFile={handleDownloadFile}
-                    onUnzipFile={handleUnzipFile}
-                    toolMode={toolMode}
-                    isSupported={isFileSupported(record.name)}
-                    policies={policyFileBadges.get(record.id) ?? EMPTY_POLICIES}
-                  />
-                );
-              })}
-            </div>
-          )}
-        </Box>
-
-        <FilePickerModal
-          opened={showFilePickerModal}
-          onClose={() => setShowFilePickerModal(false)}
-          storedFiles={[]} // FileEditor doesn't have access to stored files, needs to be passed from parent
-          onSelectFiles={handleLoadFromStorage}
-        />
+            {activeStirlingFileStubs.map((record, index) => {
+              return (
+                <FileEditorThumbnail
+                  key={record.id}
+                  file={record}
+                  index={index}
+                  totalFiles={activeStirlingFileStubs.length}
+                  onCloseFile={handleCloseFile}
+                  onViewFile={handleViewFile}
+                  onReorderFiles={handleReorderFiles}
+                  onDownloadFile={handleDownloadFile}
+                  onUnzipFile={handleUnzipFile}
+                  toolMode={toolMode}
+                  isSupported={isFileSupported(record.name)}
+                  policies={policyFileBadges.get(record.id) ?? EMPTY_POLICIES}
+                />
+              );
+            })}
+          </div>
+        )}
       </Box>
-    </Dropzone>
+
+      <FilePickerModal
+        opened={showFilePickerModal}
+        onClose={() => setShowFilePickerModal(false)}
+        storedFiles={[]} // FileEditor doesn't have access to stored files, needs to be passed from parent
+        onSelectFiles={handleLoadFromStorage}
+      />
+    </Box>
   );
 };
 

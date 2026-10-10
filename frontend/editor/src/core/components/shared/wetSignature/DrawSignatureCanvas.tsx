@@ -45,8 +45,8 @@ export const DrawSignatureCanvas: React.FC<DrawSignatureCanvasProps> = ({
     const canvas = canvasRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const x = ((e.clientX - rect.left) * canvas.width) / rect.width;
+    const y = ((e.clientY - rect.top) * canvas.height) / rect.height;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
@@ -59,8 +59,8 @@ export const DrawSignatureCanvas: React.FC<DrawSignatureCanvasProps> = ({
     const canvas = canvasRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const x = ((e.clientX - rect.left) * canvas.width) / rect.width;
+    const y = ((e.clientY - rect.top) * canvas.height) / rect.height;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
