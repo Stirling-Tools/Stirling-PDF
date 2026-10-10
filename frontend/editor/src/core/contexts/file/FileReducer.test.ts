@@ -340,3 +340,133 @@ describe("fileContextReducer — REMOVE_FILES", () => {
     expect(next.ui.selectedFileIds).toEqual([]);
   });
 });
+
+describe("fileContextReducer — EVICT_STUB_THUMBNAILS", () => {
+  const THUMB = `data:image/png;base64,${"a".repeat(8)}`;
+
+  it("strips data-URL thumbnails but preserves the rest of the processing result", () => {
+    const state = stateWith([
+      stub("a", {
+        thumbnailUrl: THUMB,
+        processedFile: {
+          totalPages: 7,
+          lastProcessed: 42,
+          thumbnailUrl: THUMB,
+          pages: [
+            {
+              pageNumber: 1,
+              thumbnail: THUMB,
+              rotation: 0,
+              splitBefore: false,
+            },
+            { pageNumber: 2, rotation: 90, splitBefore: false },
+          ],
+        },
+      }),
+    ]);
+    const next = fileContextReducer(state, {
+      type: "EVICT_STUB_THUMBNAILS",
+      payload: { ids: ["a" as FileId] },
+    });
+    const record = next.files.byId["a" as FileId];
+    expect(record.thumbnailUrl).toBeUndefined();
+    expect(record.processedFile?.thumbnailUrl).toBeUndefined();
+    expect(record.processedFile?.pages[0].thumbnail).toBeUndefined();
+    // Fields the eviction never touches survive, so it cannot clobber a newer
+    // processing result the way a stale stub snapshot did.
+    expect(record.processedFile?.totalPages).toBe(7);
+    expect(record.processedFile?.lastProcessed).toBe(42);
+    expect(record.processedFile?.pages[1].rotation).toBe(90);
+  });
+
+  it("is a no-op when none of the ids are in state", () => {
+    const state = stateWith([stub("a")]);
+    const next = fileContextReducer(state, {
+      type: "EVICT_STUB_THUMBNAILS",
+      payload: { ids: ["gone" as FileId] },
+    });
+    expect(next).toBe(state);
+  });
+
+  it("preserves a blob-URL stub thumbnail while clearing data URLs", () => {
+    const state = stateWith([
+      stub("a", {
+        thumbnailUrl: "blob:stirling-thumb",
+        processedFile: {
+          totalPages: 1,
+          lastProcessed: 0,
+          thumbnailUrl: THUMB,
+          pages: [
+            {
+              pageNumber: 1,
+              thumbnail: THUMB,
+              rotation: 0,
+              splitBefore: false,
+            },
+          ],
+        },
+      }),
+    ]);
+    const next = fileContextReducer(state, {
+      type: "EVICT_STUB_THUMBNAILS",
+      payload: { ids: ["a" as FileId] },
+    });
+    const record = next.files.byId["a" as FileId];
+    // The blob URL survives so lifecycle.ts can still revoke the resource.
+    expect(record.thumbnailUrl).toBe("blob:stirling-thumb");
+    expect(record.processedFile?.thumbnailUrl).toBeUndefined();
+    expect(record.processedFile?.pages[0].thumbnail).toBeUndefined();
+  });
+});
+
+describe("fileContextReducer — thumbnail budget on insertion", () => {
+  // Nested-only ~1.5MB thumbnails: 45 sit at ~67.5MB, just over the 64MiB cap.
+  const heavy = (id: string): StirlingFileStub =>
+    stub(id, {
+      thumbnailUrl: undefined,
+      processedFile: {
+        totalPages: 1,
+        lastProcessed: 0,
+        thumbnailUrl: `data:image/png;base64,${"a".repeat(1_500_000)}`,
+        pages: [],
+      },
+    });
+
+  it("ADD_FILES evicts the oldest data-URL thumbnails back under budget", () => {
+    const state = stateWith(
+      Array.from({ length: 45 }, (_, i) => heavy(`f${i}`)),
+    );
+    const next = fileContextReducer(state, {
+      type: "ADD_FILES",
+      payload: { stirlingFileStubs: [heavy("new")] },
+    });
+    expect(
+      next.files.byId["f0" as FileId].processedFile?.thumbnailUrl,
+    ).toBeUndefined();
+    // The just-added stub outlives the eviction, so insertion does not strip it.
+    expect(
+      next.files.byId["new" as FileId].processedFile?.thumbnailUrl,
+    ).toBeDefined();
+  });
+
+  it("CONSUME_FILES evicts the oldest data-URL thumbnails back under budget", () => {
+    const state = stateWith([
+      ...Array.from({ length: 44 }, (_, i) => heavy(`f${i}`)),
+      heavy("input"),
+    ]);
+    const next = fileContextReducer(state, {
+      type: "CONSUME_FILES",
+      payload: {
+        inputFileIds: ["input" as FileId],
+        outputStirlingFileStubs: [heavy("out")],
+        silent: false,
+      },
+    });
+    expect(
+      next.files.byId["f0" as FileId].processedFile?.thumbnailUrl,
+    ).toBeUndefined();
+    expect(
+      next.files.byId["out" as FileId].processedFile?.thumbnailUrl,
+    ).toBeDefined();
+  });
+});

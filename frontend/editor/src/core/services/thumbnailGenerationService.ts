@@ -41,7 +41,8 @@ export class ThumbnailGenerationService {
     FileId | string /* FIX ME: Page ID */,
     CachedThumbnail
   >();
-  private maxCacheSizeBytes = 1024 * 1024 * 1024; // 1GB cache limit
+  private maxCacheSizeBytes = 128 * 1024 * 1024; // 128MB: bounds retained base64 across large docs
+  private maxCacheEntries = 100; // roughly the viewport plus prefetch window
   private currentCacheSize = 0;
 
   // PDF document cache to reuse PDF instances and avoid creating multiple workers
@@ -232,7 +233,10 @@ export class ThumbnailGenerationService {
   getThumbnailFromCache(pageId: string): string | null {
     const cached = this.thumbnailCache.get(pageId);
     if (cached) {
-      cached.lastUsed = Date.now();
+      // Refresh recency in one step: Map iterates in insertion order, so
+      // re-inserting makes this entry newest and the first key oldest.
+      this.thumbnailCache.delete(pageId);
+      this.thumbnailCache.set(pageId, { ...cached, lastUsed: Date.now() });
       return cached.thumbnail;
     }
     return null;
@@ -241,9 +245,22 @@ export class ThumbnailGenerationService {
   addThumbnailToCache(pageId: string, thumbnail: string): void {
     const sizeBytes = thumbnail.length * 2; // Rough estimate for base64 string
 
+    const existing = this.thumbnailCache.get(pageId);
+    if (existing) {
+      this.currentCacheSize -= existing.sizeBytes;
+      this.thumbnailCache.delete(pageId);
+    }
+
+    // A single thumbnail over the byte limit would evict the whole cache and
+    // still not fit. The caller already holds the rendered string; skip it.
+    if (sizeBytes > this.maxCacheSizeBytes) {
+      return;
+    }
+
     // Enforce cache size limits
     while (
-      this.currentCacheSize + sizeBytes > this.maxCacheSizeBytes &&
+      (this.currentCacheSize + sizeBytes > this.maxCacheSizeBytes ||
+        this.thumbnailCache.size >= this.maxCacheEntries) &&
       this.thumbnailCache.size > 0
     ) {
       this.evictLeastRecentlyUsed();
@@ -259,19 +276,14 @@ export class ThumbnailGenerationService {
   }
 
   private evictLeastRecentlyUsed(): void {
-    let oldestEntry: [string, CachedThumbnail] | null = null;
-    let oldestTime = Date.now();
-
-    for (const [key, value] of this.thumbnailCache.entries()) {
-      if (value.lastUsed < oldestTime) {
-        oldestTime = value.lastUsed;
-        oldestEntry = [key, value];
+    // First key is the oldest: getThumbnailFromCache re-inserts on every hit.
+    const oldestKey = this.thumbnailCache.keys().next();
+    if (!oldestKey.done) {
+      const oldest = this.thumbnailCache.get(oldestKey.value);
+      this.thumbnailCache.delete(oldestKey.value);
+      if (oldest) {
+        this.currentCacheSize -= oldest.sizeBytes;
       }
-    }
-
-    if (oldestEntry) {
-      this.thumbnailCache.delete(oldestEntry[0]);
-      this.currentCacheSize -= oldestEntry[1].sizeBytes;
     }
   }
 

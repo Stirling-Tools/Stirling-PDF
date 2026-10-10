@@ -343,6 +343,7 @@ export type FileContextAction =
       type: "UPDATE_FILE_RECORD";
       payload: { id: FileId; updates: Partial<StirlingFileStub> };
     }
+  | { type: "EVICT_STUB_THUMBNAILS"; payload: { ids: FileId[] } }
   | { type: "REORDER_FILES"; payload: { orderedFileIds: FileId[] } }
 
   // Pinned files actions

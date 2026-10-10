@@ -17,6 +17,10 @@ import {
   noteFileSaved,
   persistedSourceFields,
 } from "@app/contexts/file/storedFileReconciler";
+import { selectThumbnailEvictionIds } from "@app/contexts/file/stubThumbnailBudget";
+
+// Kept exported here for callers and tests that reach for it via the lifecycle.
+export { selectThumbnailEvictionIds } from "@app/contexts/file/stubThumbnailBudget";
 
 const DEBUG = process.env.NODE_ENV === "development";
 
@@ -233,6 +237,43 @@ export class FileLifecycleManager {
       type: "UPDATE_FILE_RECORD",
       payload: { id: fileId, updates },
     });
+
+    // Thumbnail hydration is the only payload that grows without bound, so it
+    // is the only one that pays for a budget check. Stripped stubs refill on
+    // demand; the triggering file is exempt to avoid a strip/refill ping-pong.
+    if (
+      stateRef?.current &&
+      (updates.thumbnailUrl !== undefined ||
+        updates.processedFile !== undefined)
+    ) {
+      // The dispatch above has not landed in stateRef yet, so select against
+      // the state with this update applied: otherwise the update that crosses
+      // the budget evicts nothing until the next hydration runs.
+      const current = stateRef.current;
+      const pendingStub = current.files.byId[fileId];
+      const withPending: FileContextState = {
+        ...current,
+        files: {
+          ...current.files,
+          byId: {
+            ...current.files.byId,
+            ...(pendingStub
+              ? { [fileId]: { ...pendingStub, ...updates } }
+              : {}),
+          },
+        },
+      };
+      const evictIds = selectThumbnailEvictionIds(withPending, fileId);
+      if (evictIds.length > 0) {
+        // Clear thumbnails inside the reducer: withPending lags an update queued
+        // for any other file, and re-merging a captured processedFile over it
+        // would clobber the newer processing result.
+        this.dispatch({
+          type: "EVICT_STUB_THUMBNAILS",
+          payload: { ids: evictIds },
+        });
+      }
+    }
 
     // Fire-and-forget: the dispatch above is what the UI reads, and a storage
     // hiccup must not stall it. Worst case the link reverts to its stored value.
