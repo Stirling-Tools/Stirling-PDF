@@ -77,6 +77,7 @@ import { RotateAPIBridge } from "@app/components/viewer/RotateAPIBridge";
 import { SignatureAPIBridge } from "@app/components/viewer/SignatureAPIBridge";
 import { AnnotationAPIBridge } from "@app/components/viewer/AnnotationAPIBridge";
 import { HistoryAPIBridge } from "@app/components/viewer/HistoryAPIBridge";
+import { getDocumentBytes } from "@app/services/documentBytesCache";
 import type {
   SignatureAPI,
   AnnotationAPI,
@@ -1034,8 +1035,10 @@ export function LocalEmbedPDF({
       );
     };
     if (file && typeof file.arrayBuffer === "function") {
-      file
-        .arrayBuffer()
+      // Shared with the other byte consumers through the document bytes
+      // cache: a fresh arrayBuffer() per mount would keep a second copy of
+      // the whole document resident next to the cached one.
+      getDocumentBytes(file)
         .then((buf) => {
           if (cancelled) return;
           objectUrl = URL.createObjectURL(file);
