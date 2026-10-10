@@ -677,8 +677,11 @@ tasks.named("test") {
 processResources.dependsOn(writeVersion)
 
 tasks.register('printVersion') {
+    // Resolved up front because the configuration cache rejects project access
+    // from a task action.
+    def versionString = project.version
     doLast {
-        println project.version
+        println versionString
     }
 }
 
