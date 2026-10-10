@@ -200,6 +200,33 @@ describe("FormFillContext XFA handling", () => {
     expect(hook.current.xfaMode).toBe("sync");
   });
 
+  it("resets the mode and the notice for another document the size of the saved version", async () => {
+    expectConsole.warn(/\[FormFill\] XFA sync failed/);
+    syncXfaForm.mockRejectedValue(new Error("404"));
+    const hook = await openForm([field("a")]);
+    act(() => hook.current.setXfaMode("strip"));
+    let saved: Blob | undefined;
+    await act(async () => {
+      saved = await hook.current.submitForm(source());
+    });
+    expect(hook.current.xfaSyncFailed).toBe(true);
+
+    const sameSize = new Blob(["x".repeat(saved!.size)], {
+      type: "application/pdf",
+    });
+    // jsdom's Blob has no arrayBuffer, and the setup's stand-in answers the same bytes for all.
+    vi.spyOn(saved!, "arrayBuffer").mockResolvedValue(new ArrayBuffer(16));
+    vi.spyOn(sameSize, "arrayBuffer").mockResolvedValue(
+      new Uint8Array(16).fill(1).buffer,
+    );
+    await act(async () => {
+      await hook.current.fetchFields(sameSize, "file-B");
+    });
+
+    expect(hook.current.xfaMode).toBe("sync");
+    expect(hook.current.xfaSyncFailed).toBe(false);
+  });
+
   it("keeps the chosen mode across the reload that follows a structural commit", async () => {
     const committed = new Blob(["%PDF-1.7 with the committed fields"]);
     applyFieldEdits.mockResolvedValue({

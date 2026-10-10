@@ -58,6 +58,22 @@ import {
 /** Marks a skip report as belonging to whichever document the commit just produced. */
 const PENDING_SKIP_REPORT = "__pending__";
 
+/**
+ * Whether two blobs hold the same bytes. Each is read whole rather than sliced: Chromium kills the
+ * page when a Blob is built over one read back from IndexedDB, and slicing builds one.
+ */
+async function sameBytes(a: Blob, b: Blob): Promise<boolean> {
+  if (a === b) return true;
+  if (a.size !== b.size) return false;
+  const [left, right] = await Promise.all([a.arrayBuffer(), b.arrayBuffer()]);
+  const x = new Uint8Array(left);
+  const y = new Uint8Array(right);
+  for (let i = 0; i < x.length; i++) {
+    if (x[i] !== y[i]) return false;
+  }
+  return true;
+}
+
 /** A field queued for creation, with a client-side id for list keys. */
 export interface PendingField extends NewFieldDefinition {
   id: string;
@@ -481,11 +497,15 @@ export function FormFillProvider({
   xfaModeRef.current = xfaMode;
   const [xfaSyncFailed, setXfaSyncFailed] = useState(false);
   const clearXfaSyncFailed = useCallback(() => setXfaSyncFailed(false), []);
+  const resetXfaChoice = useCallback(() => {
+    setXfaMode("sync");
+    setXfaSyncFailed(false);
+  }, []);
   /**
-   * Size of the PDF the last save or commit produced. The viewer reloads it under a new file id,
-   * so its size is what tells the saved version of this document from a different document.
+   * The PDF the last save or commit produced. The viewer reloads it under a new file id, so its
+   * bytes are what tell the saved version of this document from a different document.
    */
-  const savedOutputSizeRef = useRef<number | null>(null);
+  const savedOutputRef = useRef<Blob | null>(null);
 
   const [skippedEdits, setSkippedEdits] = useState<SkippedFieldEdit[]>([]);
   const [skippedTotal, setSkippedTotal] = useState(0);
@@ -506,8 +526,9 @@ export function FormFillProvider({
   const pendingCounterRef = useRef(0);
 
   // Fields the last commit's response carried, adopted by the next fetch instead of uploading
-  // the document again to ask. Size-checked so a different document cannot pick them up.
-  const bundledFieldsRef = useRef<{ fields: FormField[]; size: number } | null>(
+  // the document again to ask. Kept with the PDF they describe, so that only a reload of that
+  // PDF picks them up.
+  const bundledFieldsRef = useRef<{ fields: FormField[]; output: Blob } | null>(
     null,
   );
 
@@ -573,13 +594,13 @@ export function FormFillProvider({
       retainedValuesRef.current = null;
 
       // A different document starts from the safe default; the version a save just produced keeps
-      // the user's choice, and the notice if its sync failed.
-      const savedVersion = savedOutputSizeRef.current === file.size;
-      savedOutputSizeRef.current = null;
-      if (!sameDocument && !savedVersion) {
-        setXfaMode("sync");
-        setXfaSyncFailed(false);
-      }
+      // the user's choice, and the notice if its sync failed. A size match only makes the file a
+      // candidate: another PDF can be the same size, so its bytes are compared once fetching.
+      const savedOutput = savedOutputRef.current;
+      savedOutputRef.current = null;
+      const savedCandidate =
+        savedOutput?.size === file.size ? savedOutput : null;
+      if (!sameDocument && !savedCandidate) resetXfaChoice();
 
       lastKnownFileIdRef.current = fileId ?? null;
       // Immediately clear previous state so FormFieldOverlay's stale-file guards
@@ -592,12 +613,18 @@ export function FormFillProvider({
       // switch and file load, which must not wipe in-progress edits.
       dispatch({ type: "FETCH_START" });
       try {
+        const savedVersion =
+          savedCandidate !== null && (await sameBytes(savedCandidate, file));
+        if (fetchVersionRef.current !== version) return;
+        if (!sameDocument && savedCandidate && !savedVersion) resetXfaChoice();
+
         // Only pdfbox mode can use them: the bundle is PDFBox's own view of the document.
         const bundled = bundledFieldsRef.current;
         bundledFieldsRef.current = null;
         const usable =
           bundled &&
-          bundled.size === file.size &&
+          savedVersion &&
+          bundled.output === savedCandidate &&
           providerModeRef.current === "pdfbox";
         let fields = usable
           ? bundled.fields
@@ -656,7 +683,7 @@ export function FormFillProvider({
         dispatch({ type: "FETCH_ERROR", error: msg });
       }
     },
-    [valuesStore, clearEditingState],
+    [valuesStore, clearEditingState, resetXfaChoice],
   );
 
   const validateFieldDebounced = useDebouncedCallback((fieldName: string) => {
@@ -753,7 +780,7 @@ export function FormFillProvider({
       if (providerModeRef.current !== "pdfbox") {
         blob = await syncClientSave(file, blob, flatten);
       }
-      savedOutputSizeRef.current = blob.size;
+      savedOutputRef.current = blob;
       dispatch({ type: "MARK_CLEAN" });
       return blob;
     },
@@ -813,10 +840,9 @@ export function FormFillProvider({
     valuesStore.reset({});
     dispatch({ type: "RESET" });
     clearEditingState();
-    savedOutputSizeRef.current = null;
-    setXfaMode("sync");
-    setXfaSyncFailed(false);
-  }, [valuesStore, clearEditingState]);
+    savedOutputRef.current = null;
+    resetXfaChoice();
+  }, [valuesStore, clearEditingState, resetXfaChoice]);
 
   // --- Mode switching ---
   const setMode = useCallback(
@@ -903,9 +929,9 @@ export function FormFillProvider({
         { add: definitions },
         xfaModeRef.current,
       );
-      savedOutputSizeRef.current = result.blob.size;
+      savedOutputRef.current = result.blob;
       bundledFieldsRef.current = result.fields
-        ? { fields: result.fields, size: result.blob.size }
+        ? { fields: result.fields, output: result.blob }
         : null;
       setSkippedEdits(result.skipped);
       setSkippedTotal(result.skippedTotal);
@@ -967,9 +993,9 @@ export function FormFillProvider({
         { modify: updates, delete: deletedFieldNames },
         xfaModeRef.current,
       );
-      savedOutputSizeRef.current = result.blob.size;
+      savedOutputRef.current = result.blob;
       bundledFieldsRef.current = result.fields
-        ? { fields: result.fields, size: result.blob.size }
+        ? { fields: result.fields, output: result.blob }
         : null;
       setSkippedEdits(result.skipped);
       setSkippedTotal(result.skippedTotal);
