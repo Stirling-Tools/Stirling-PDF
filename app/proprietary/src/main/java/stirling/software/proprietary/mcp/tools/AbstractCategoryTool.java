@@ -42,6 +42,16 @@ abstract class AbstractCategoryTool implements McpTool {
         return McpToolAnnotations.PRODUCES_FILE;
     }
 
+    @Override
+    public boolean rendersWidget() {
+        return true;
+    }
+
+    @Override
+    public List<String> fileParams() {
+        return List.of(McpInputFiles.ATTACHMENT_ARG);
+    }
+
     protected List<OperationMeta> enabledOperations() {
         McpToolCatalog catalog = catalogProvider.getIfAvailable();
         if (catalog == null) {
@@ -82,9 +92,8 @@ abstract class AbstractCategoryTool implements McpTool {
         McpToolSupport.stringProperty(
                 props,
                 "file",
-                "Base64-encoded file content to process. The recommended way to provide a file for"
-                        + " most uses. Bounded by the MCP request size limit; for very large files"
-                        + " use 'fileId' instead.");
+                "Base64-encoded file content. Use for small files when no attachment or fileId is"
+                        + " available; bounded by the MCP request size limit.");
         McpToolSupport.stringProperty(
                 props,
                 "fileName",
@@ -93,9 +102,9 @@ abstract class AbstractCategoryTool implements McpTool {
         McpToolSupport.stringProperty(
                 props,
                 "fileId",
-                "Reference to a file already stored via stirling_upload. Recommended only for large"
-                        + " files or multi-step workflows; most users should pass the file inline"
-                        + " via 'file' instead.");
+                "Id of a file already on the server: an earlier result, or one the user uploaded."
+                        + " Preferred for multi-step workflows.");
+        McpInputFiles.attachmentProperty(props);
 
         ArrayNode required = schema.putArray("required");
         required.add("operation");
@@ -128,7 +137,7 @@ abstract class AbstractCategoryTool implements McpTool {
         if (executor == null) {
             return McpResponses.error(mapper, "MCP execution is not available.");
         }
-        return executor.execute(meta, arguments);
+        return executor.execute(meta, arguments, context);
     }
 
     /**

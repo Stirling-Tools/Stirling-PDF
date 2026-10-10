@@ -572,8 +572,18 @@ public class ApplicationProperties {
         /** Max MCP request body size in bytes; inline file uploads ride in the JSON-RPC body. */
         private long maxRequestBytes = 10L * 1024 * 1024;
 
-        /** Results up to this size return inline as base64; larger ones return a fileId only. */
+        /** Largest file {@code stirling_download} returns inline as base64. */
         private long maxInlineResponseBytes = 10L * 1024 * 1024;
+
+        /** How long tool results stay downloadable before storage deletes them. */
+        private int resultTtlMinutes = 60;
+
+        /** Hosts (suffix match, HTTPS) chat apps may pass attachment URLs from. Empty = off. */
+        private List<String> fileUrlAllowedHosts =
+                new ArrayList<>(List.of("oaiusercontent.com", "openai.com", "chatgpt.com"));
+
+        /** Max size of a file fetched from a chat app's download URL. */
+        private long maxFileUrlBytes = 100L * 1024 * 1024;
 
         private Auth auth = new Auth();
 
