@@ -114,7 +114,6 @@ const MAX_ZOOM = 5;
 // One click is a proportional step, matching how a pinch/wheel gesture scales,
 // rather than the plugin's fixed +0.1 absolute step (which crawls when zoomed in).
 const ZOOM_STEP_FACTOR = 1.25;
-const ZOOM_ANIM_MS = 160;
 
 const clampZoom = (value: number): number =>
   Math.min(Math.max(value, MIN_ZOOM), MAX_ZOOM);
@@ -196,61 +195,25 @@ export function createViewerActions({
     },
   };
 
-  // Drive one zoom animation at a time. A second click retargets from the value
-  // the previous frame reached, so rapid clicks keep accelerating instead of
-  // snapping back to a bridge level that has not caught up yet.
-  let zoomAnimFrame: number | null = null;
-  let zoomAnimValue: number | null = null;
-
-  const liveZoom = (): number => {
-    if (zoomAnimValue !== null) return zoomAnimValue;
-    const current = getZoomState().currentZoom;
-    return Number.isFinite(current) && current > 0 ? current : 1;
-  };
-
-  const animateZoomTo = (target: number) => {
+  // A button step is a single commit. Animating it would re-request zoom on
+  // every frame and re-render the whole tile layer each time, which blanks the
+  // page mid-gesture; one commit matches how the wheel/pinch gesture lands.
+  const stepZoom = (direction: "in" | "out"): void => {
     const api = registry.current.zoom?.api;
     if (!api?.requestZoom) return;
-    const start = liveZoom();
-    const end = clampZoom(target);
-    if (Math.abs(end - start) < 0.001) return;
-    if (zoomAnimFrame !== null) {
-      cancelAnimationFrame(zoomAnimFrame);
-      zoomAnimFrame = null;
-    }
-    const reduceMotion =
-      typeof window !== "undefined" &&
-      !!window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
-    if (reduceMotion) {
-      zoomAnimValue = null;
-      api.requestZoom(end);
-      return;
-    }
-    const startedAt = performance.now();
-    const tick = (now: number) => {
-      const progress = Math.min(1, (now - startedAt) / ZOOM_ANIM_MS);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      const value = start + (end - start) * eased;
-      zoomAnimValue = value;
-      // requestZoom with no explicit centre anchors on the viewport middle, so
-      // the animation grows from what the user is looking at.
-      api.requestZoom(value);
-      if (progress < 1) {
-        zoomAnimFrame = requestAnimationFrame(tick);
-      } else {
-        zoomAnimValue = null;
-        zoomAnimFrame = null;
-      }
-    };
-    zoomAnimFrame = requestAnimationFrame(tick);
+    const current = getZoomState().currentZoom;
+    const base = Number.isFinite(current) && current > 0 ? current : 1;
+    const target =
+      direction === "in" ? base * ZOOM_STEP_FACTOR : base / ZOOM_STEP_FACTOR;
+    api.requestZoom(clampZoom(target));
   };
 
   const zoomActions: ZoomActions = {
     zoomIn: () => {
-      animateZoomTo(liveZoom() * ZOOM_STEP_FACTOR);
+      stepZoom("in");
     },
     zoomOut: () => {
-      animateZoomTo(liveZoom() / ZOOM_STEP_FACTOR);
+      stepZoom("out");
     },
     toggleMarqueeZoom: () => {
       const api = registry.current.zoom?.api;
