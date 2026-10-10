@@ -227,6 +227,20 @@ describe("FormFillContext XFA handling", () => {
     expect(hook.current.xfaSyncFailed).toBe(false);
   });
 
+  it("keeps PDFium's output when the XFA check cannot run", async () => {
+    readFormType.mockResolvedValue(null);
+    const hook = await openForm([field("a")]);
+
+    let saved: Blob | undefined;
+    await act(async () => {
+      saved = await hook.current.submitForm(source());
+    });
+
+    expect(saved).toBe(filled);
+    expect(syncXfaForm).not.toHaveBeenCalled();
+    expect(hook.current.xfaSyncFailed).toBe(false);
+  });
+
   it("keeps the chosen mode across the reload that follows a structural commit", async () => {
     const committed = new Blob(["%PDF-1.7 with the committed fields"]);
     applyFieldEdits.mockResolvedValue({

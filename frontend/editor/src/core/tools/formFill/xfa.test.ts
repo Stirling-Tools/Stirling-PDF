@@ -16,8 +16,9 @@ describe("classifyXfa", () => {
     [2, 3, "dynamic"],
     [3, 0, "dynamic"],
     [3, 3, "hybrid"],
+    [null, 3, "unknown"],
   ] as const)(
-    "reads form type %i with %i fields as %s",
+    "reads form type %s with %i fields as %s",
     (type, fields, kind) => {
       expect(classifyXfa(type, fields)).toBe(kind);
     },
@@ -38,15 +39,23 @@ describe("readFormType", () => {
     expect(readRawFormType).toHaveBeenCalledTimes(1);
   });
 
-  it("answers 0 when PDFium cannot open the document", async () => {
+  it("answers null when PDFium cannot open the document", async () => {
     readRawFormType.mockRejectedValue(new Error("not a PDF"));
 
-    expect(await readFormType(pdf())).toBe(0);
+    expect(await readFormType(pdf())).toBeNull();
   });
 
-  it("answers 0 when the PDFium build cannot read the form type", async () => {
+  it("answers null when the PDFium build cannot read the form type", async () => {
     readRawFormType.mockResolvedValue(null);
 
-    expect(await readFormType(pdf())).toBe(0);
+    expect(await readFormType(pdf())).toBeNull();
+  });
+
+  it("asks again after a check that could not run", async () => {
+    readRawFormType.mockResolvedValueOnce(null).mockResolvedValueOnce(3);
+    const file = pdf();
+
+    expect(await readFormType(file)).toBeNull();
+    expect(await readFormType(file)).toBe(3);
   });
 });

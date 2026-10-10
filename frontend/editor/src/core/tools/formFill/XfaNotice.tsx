@@ -37,6 +37,22 @@ export function XfaNotice({ file, variant, scope = "values" }: XfaNoticeProps) {
 
   if (kind === "none") return null;
 
+  if (kind === "unknown") {
+    return (
+      <div data-testid="xfa-notice-unknown">
+        <Banner
+          tone="warning"
+          icon={<Icon name="triangle-alert" size={16} />}
+          title={t("formFill.xfa.unknownTitle", "XFA check unavailable")}
+          description={t(
+            "formFill.xfa.unknownDescription",
+            "Stirling PDF could not check this PDF for XFA data. If Adobe LiveCycle made it, Acrobat may go on showing the values it had before this save.",
+          )}
+        />
+      </div>
+    );
+  }
+
   if (kind === "dynamic") {
     return (
       <div data-testid="xfa-notice-dynamic">

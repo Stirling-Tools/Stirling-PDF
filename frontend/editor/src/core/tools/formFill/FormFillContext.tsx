@@ -741,6 +741,8 @@ export function FormFillProvider({
       const mode = xfaModeRef.current;
       if (mode === "none") return filled;
       const formType = await readFormType(source);
+      // Unknown is left alone too: the sync rejects a PDF without XFA, so guessing would report
+      // a failed save for every plain PDF the check could not read.
       if (classifyXfa(formType, fieldsRef.current.length) !== "hybrid") {
         return filled;
       }
