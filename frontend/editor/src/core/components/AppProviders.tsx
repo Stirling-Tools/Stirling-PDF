@@ -37,6 +37,7 @@ import { FormFillProvider } from "@app/tools/formFill/FormFillContext";
 import { FolderProvider } from "@app/contexts/FolderContext";
 import { WorkbenchSessionPersistence } from "@app/components/session/WorkbenchSessionPersistence";
 import { retireLegacyFolderWorker } from "@app/services/retireLegacyFolderWorker";
+import type { UserPreferences } from "@app/services/preferencesService";
 
 // Component to run app-level initialization (must be inside AppProviders for context access)
 function AppInitializer() {
@@ -85,19 +86,37 @@ export interface AppProvidersProps {
 
 // Component to sync server defaults to preferences when AppConfig loads
 function ServerDefaultsSync() {
-  const { config } = useAppConfig();
+  const { config, configFromServer } = useAppConfig();
   const { updateServerDefaults } = usePreferences();
 
   useEffect(() => {
-    if (config) {
-      const serverDefaults = {
+    // A stand-in (401 default, auth-page fallback, desktop startup config)
+    // must not count as the server's answer. Installing it marks defaults as
+    // loaded and the launch then locks in "tools".
+    if (config && configFromServer) {
+      // Only known values. An absent or unexpected field must not clobber the
+      // hardcoded default via an explicit `undefined` in the merge.
+      const serverDefaults: Partial<UserPreferences> = {
         hideUnavailableTools: config.defaultHideUnavailableTools ?? false,
         hideUnavailableConversions:
           config.defaultHideUnavailableConversions ?? false,
       };
+      if (
+        config.defaultToolPanelMode === "sidebar" ||
+        config.defaultToolPanelMode === "fullscreen"
+      ) {
+        serverDefaults.defaultToolPanelMode = config.defaultToolPanelMode;
+      }
+      if (
+        config.defaultStartupView === "tools" ||
+        config.defaultStartupView === "read" ||
+        config.defaultStartupView === "automate"
+      ) {
+        serverDefaults.defaultStartupView = config.defaultStartupView;
+      }
       updateServerDefaults(serverDefaults);
     }
-  }, [config, updateServerDefaults]);
+  }, [config, configFromServer, updateServerDefaults]);
 
   return null;
 }

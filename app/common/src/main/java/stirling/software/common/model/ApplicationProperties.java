@@ -1621,12 +1621,33 @@ public class ApplicationProperties {
     public static class Ui {
         private String appNameNavbar;
         private List<String> languages;
+        // Options: "sidebar" (default) or "fullscreen"
+        private String defaultToolPanelMode = "sidebar";
+        // Options: "tools" (default), "read", or "automate"
+        private String defaultStartupView = "tools";
         private boolean defaultHideUnavailableTools = false;
         private boolean defaultHideUnavailableConversions = false;
         private HideDisabledTools hideDisabledTools = new HideDisabledTools();
 
         public String getAppNameNavbar() {
             return appNameNavbar != null && !appNameNavbar.trim().isEmpty() ? appNameNavbar : null;
+        }
+
+        public String getDefaultToolPanelMode() {
+            if ("fullscreen".equalsIgnoreCase(defaultToolPanelMode)) {
+                return "fullscreen";
+            }
+            return "sidebar";
+        }
+
+        public String getDefaultStartupView() {
+            if ("read".equalsIgnoreCase(defaultStartupView)) {
+                return "read";
+            }
+            if ("automate".equalsIgnoreCase(defaultStartupView)) {
+                return "automate";
+            }
+            return "tools";
         }
 
         @Data
