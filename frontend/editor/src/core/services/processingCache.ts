@@ -100,14 +100,14 @@ export class ProcessingCache {
   }
 
   private calculateSize(data: ProcessedFile): number {
-    // Rough size estimation
+    // Measure actual bytes: base64 thumbnails are ASCII, so one char is one
+    // byte. A fixed per-page estimate undercounts full-page PNGs by ~30x and
+    // the byte cap never binds.
     let size = 0;
 
-    // Estimate size of thumbnails (main memory consumer)
     data.pages.forEach((page) => {
       if (page.thumbnail) {
-        // Base64 thumbnail is roughly 50KB each
-        size += 50 * 1024;
+        size += page.thumbnail.length;
       }
     });
 
