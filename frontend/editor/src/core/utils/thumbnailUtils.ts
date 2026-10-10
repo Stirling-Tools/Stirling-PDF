@@ -274,9 +274,7 @@ async function readImageDimensions(
 ): Promise<{ width: number; height: number } | null> {
   let bytes: Uint8Array;
   try {
-    bytes = new Uint8Array(
-      await file.slice(0, IMAGE_HEADER_PROBE_BYTES).arrayBuffer(),
-    );
+    bytes = await readBlobSlice(file, 0, IMAGE_HEADER_PROBE_BYTES);
   } catch {
     return null;
   }
@@ -358,9 +356,7 @@ async function readImageDimensions(
     const limit = Math.min(file.size, IMAGE_HEADER_PROBE_LIMIT);
     for (let end = bytes.length; ; end = Math.min(end * 2, limit)) {
       const window =
-        end === bytes.length
-          ? bytes
-          : new Uint8Array(await file.slice(0, end).arrayBuffer());
+        end === bytes.length ? bytes : await readBlobSlice(file, 0, end);
       const dimensions = readJpegDimensions(
         window,
         new DataView(window.buffer, window.byteOffset, window.byteLength),
