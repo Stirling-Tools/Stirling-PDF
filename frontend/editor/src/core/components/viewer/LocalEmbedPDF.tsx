@@ -147,6 +147,8 @@ interface LocalEmbedPDFProps {
   redactionTrackerRef?: React.RefObject<RedactionPendingTrackerAPI>;
   /** File identity passed through to FormFieldOverlay for stale-field guards */
   fileId?: string | null;
+  /** Page-1 image shown while the engine opens, so the viewer never renders empty. */
+  posterUrl?: string;
   /** Comments sidebar visibility and offset (from EmbedPdfViewer) */
   isCommentsSidebarVisible?: boolean;
   commentsSidebarRightOffset?: string;
@@ -828,6 +830,7 @@ export function LocalEmbedPDF({
   historyApiRef,
   redactionTrackerRef,
   fileId,
+  posterUrl,
   isCommentsSidebarVisible = false,
   commentsSidebarRightOffset = "0rem",
   isSignMode = false,
@@ -1316,8 +1319,24 @@ export function LocalEmbedPDF({
 
   if (isLoading || !engine || (hasInput && !isInputReady)) {
     return (
-      <Center h="100%" w="100%">
-        <Stack align="center" gap="md">
+      <Center h="100%" w="100%" style={{ position: "relative" }}>
+        {posterUrl && (
+          <img
+            data-testid="viewer-loading-poster"
+            src={posterUrl}
+            alt=""
+            aria-hidden
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "contain",
+              background: "var(--mantine-color-body)",
+            }}
+          />
+        )}
+        <Stack align="center" gap="md" style={{ position: "relative" }}>
           <Loader size="lg" />
           <Text c="dimmed" size="sm">
             {t("viewer.loadingEngine", "Loading PDF Engine...")}
@@ -1502,8 +1521,26 @@ export function LocalEmbedPDF({
           <DocumentPermissionsAPIBridge />
           <DocumentReadyWrapper
             fallback={
-              <Center style={{ height: "100%", width: "100%" }}>
+              <Center
+                style={{ height: "100%", width: "100%", position: "relative" }}
+              >
                 <ToolLoadingFallback />
+                {posterUrl && (
+                  <img
+                    data-testid="viewer-loading-poster"
+                    src={posterUrl}
+                    alt=""
+                    aria-hidden
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "contain",
+                      background: "var(--mantine-color-body)",
+                    }}
+                  />
+                )}
               </Center>
             }
           >
