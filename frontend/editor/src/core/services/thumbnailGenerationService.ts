@@ -251,6 +251,12 @@ export class ThumbnailGenerationService {
       this.thumbnailCache.delete(pageId);
     }
 
+    // A single thumbnail over the byte limit would evict the whole cache and
+    // still not fit. The caller already holds the rendered string; skip it.
+    if (sizeBytes > this.maxCacheSizeBytes) {
+      return;
+    }
+
     // Enforce cache size limits
     while (
       (this.currentCacheSize + sizeBytes > this.maxCacheSizeBytes ||

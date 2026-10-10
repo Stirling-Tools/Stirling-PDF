@@ -83,4 +83,24 @@ describe("selectThumbnailEvictionIds", () => {
     );
     expect(selectThumbnailEvictionIds(s)).toEqual([]);
   });
+
+  it("counts the nested processedFile thumbnailUrl", () => {
+    // Only the nested thumbnailUrl is heavy: 1.5MB x45 = ~67MB > 64MB cap.
+    const ids = Array.from({ length: 45 }, (_, i) => fid(`g${i}`));
+    const s = state([]);
+    for (const id of ids) {
+      (s.files.byId as Record<string, StirlingFileStub>)[id] = {
+        id,
+        thumbnailUrl: undefined,
+        processedFile: {
+          totalPages: 1,
+          pages: [{ pageNumber: 1, rotation: 0, splitBefore: false }],
+          thumbnailUrl: THUMB(1_500_000),
+          lastProcessed: 0,
+        },
+      } as StirlingFileStub;
+    }
+    s.files.ids = ids;
+    expect(selectThumbnailEvictionIds(s).length).toBeGreaterThan(0);
+  });
 });

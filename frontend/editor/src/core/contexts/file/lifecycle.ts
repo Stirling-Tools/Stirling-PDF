@@ -34,7 +34,13 @@ function stubThumbnailBytes(stub: StirlingFileStub): number {
   if (isHeavyThumbnail(stub.thumbnailUrl)) {
     bytes += stub.thumbnailUrl!.length;
   }
-  const pages = stub.processedFile?.pages;
+  const processedFile = stub.processedFile;
+  // The nested thumbnailUrl is a second full-page data URL (rotated variant),
+  // distinct from the stub-level one and the per-page thumbs below.
+  if (isHeavyThumbnail(processedFile?.thumbnailUrl)) {
+    bytes += processedFile!.thumbnailUrl!.length;
+  }
+  const pages = processedFile?.pages;
   if (pages) {
     for (const page of pages) {
       if (isHeavyThumbnail(page.thumbnail)) {
@@ -305,11 +311,25 @@ export class FileLifecycleManager {
       (updates.thumbnailUrl !== undefined ||
         updates.processedFile !== undefined)
     ) {
-      for (const evictId of selectThumbnailEvictionIds(
-        stateRef.current,
-        fileId,
-      )) {
-        const stub = stateRef.current.files.byId[evictId];
+      // The dispatch above has not landed in stateRef yet, so select against
+      // the state with this update applied: otherwise the update that crosses
+      // the budget evicts nothing until the next hydration runs.
+      const current = stateRef.current;
+      const pendingStub = current.files.byId[fileId];
+      const withPending: FileContextState = {
+        ...current,
+        files: {
+          ...current.files,
+          byId: {
+            ...current.files.byId,
+            ...(pendingStub
+              ? { [fileId]: { ...pendingStub, ...updates } }
+              : {}),
+          },
+        },
+      };
+      for (const evictId of selectThumbnailEvictionIds(withPending, fileId)) {
+        const stub = withPending.files.byId[evictId];
         const processedFile = stub.processedFile;
         this.dispatch({
           type: "UPDATE_FILE_RECORD",
@@ -321,6 +341,7 @@ export class FileLifecycleManager {
                 ? {
                     processedFile: {
                       ...processedFile,
+                      thumbnailUrl: undefined,
                       pages: processedFile.pages.map((page) =>
                         isHeavyThumbnail(page.thumbnail)
                           ? { ...page, thumbnail: undefined }

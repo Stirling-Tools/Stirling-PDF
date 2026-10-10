@@ -36,4 +36,14 @@ describe("thumbnail cache bounds", () => {
     expect(service.getThumbnailFromCache("page-0")).not.toBeNull();
     expect(service.getThumbnailFromCache("page-1")).toBeNull();
   });
+
+  it("skips a single thumbnail larger than the byte limit", () => {
+    const service = makeService();
+    service.addThumbnailToCache("page-keep", "data:image/png;base64,aaa");
+    // length * 2 must exceed 128MiB: one entry must not flush the cache.
+    service.addThumbnailToCache("page-huge", `data:,${"a".repeat(68_000_000)}`);
+    expect(service.getThumbnailFromCache("page-huge")).toBeNull();
+    expect(service.getThumbnailFromCache("page-keep")).not.toBeNull();
+    expect(service.getCacheStats().size).toBe(1);
+  });
 });
