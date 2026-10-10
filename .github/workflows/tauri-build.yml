@@ -312,6 +312,29 @@ jobs:
           echo "$(brew --prefix gnu-tar)/libexec/gnubin" >> "$GITHUB_PATH"
           tar --version
 
+      - name: Use runner temp directory for cache archives
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $temp = $env:RUNNER_TEMP
+
+          if (-not $temp -or -not (Test-Path -LiteralPath $temp)) {
+            throw "RUNNER_TEMP is not available: $temp"
+          }
+
+          Write-Host "Using temporary directory: $temp"
+
+          "TEMP=$temp" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "TMP=$temp" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+          $env:TEMP = $temp
+          $env:TMP = $temp
+
+          Get-Volume |
+            Where-Object { $_.DriveLetter -in @('C', 'D') } |
+            Sort-Object DriveLetter |
+            Select-Object DriveLetter, SizeRemaining, Size
+
       - name: Restore cache artifact
         id: cache
         uses: Ludy87/cache-the-planet/multi-cache@86a25184d1eb86c9481908e2582a0eed7e1f3e84
@@ -946,6 +969,29 @@ jobs:
           brew install gnu-tar
           echo "$(brew --prefix gnu-tar)/libexec/gnubin" >> "$GITHUB_PATH"
           tar --version
+
+      - name: Use runner temp directory for cache archives
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $temp = $env:RUNNER_TEMP
+
+          if (-not $temp -or -not (Test-Path -LiteralPath $temp)) {
+            throw "RUNNER_TEMP is not available: $temp"
+          }
+
+          Write-Host "Using temporary directory: $temp"
+
+          "TEMP=$temp" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "TMP=$temp" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+          $env:TEMP = $temp
+          $env:TMP = $temp
+
+          Get-Volume |
+            Where-Object { $_.DriveLetter -in @('C', 'D') } |
+            Sort-Object DriveLetter |
+            Select-Object DriveLetter, SizeRemaining, Size
 
       - name: Restore cache artifact
         id: cache
