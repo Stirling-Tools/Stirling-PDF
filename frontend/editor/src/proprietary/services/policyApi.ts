@@ -41,7 +41,9 @@ export async function runStoredPolicy(
   source: AccountLinkBlockSource = "foreground",
 ): Promise<string> {
   const form = new FormData();
-  for (const file of files) form.append("fileInput", uploadableFile(file));
+  for (const file of files) {
+    form.append("fileInput", await uploadableFile(file));
+  }
   if (fileId) form.append("fileId", fileId);
   // Don't set Content-Type: the HTTP client must generate multipart/form-data
   // WITH its boundary from the FormData body. A manual boundary-less header makes
