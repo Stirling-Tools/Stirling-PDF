@@ -98,6 +98,30 @@ describe("useAppInitialization", () => {
     expect(setSelectedFiles).toHaveBeenCalledWith(["stored"]);
   });
 
+  it("lets a batch finish before the next one looks for stored copies", async () => {
+    let finishFirst = () => {};
+    storedCopiesForNewFiles.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finishFirst = () => resolve(new Map());
+        }),
+    );
+    const { rerender } = renderHook(() => useAppInitialization());
+    await waitFor(() =>
+      expect(storedCopiesForNewFiles).toHaveBeenCalledTimes(1),
+    );
+
+    // A second open from Explorer while the first is still being looked up.
+    rerender();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(storedCopiesForNewFiles).toHaveBeenCalledTimes(1);
+
+    finishFirst();
+    await waitFor(() =>
+      expect(storedCopiesForNewFiles).toHaveBeenCalledTimes(2),
+    );
+  });
+
   it("adds what it opened to the selection, once", async () => {
     selectedStubs.mockReturnValue([stub("earlier"), stub("new")]);
 

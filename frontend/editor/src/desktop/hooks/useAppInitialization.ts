@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useOpenedFile } from "@app/hooks/useOpenedFile";
 import { fileOpenService } from "@app/services/fileOpenService";
@@ -39,6 +39,10 @@ export function useAppInitialization(): void {
     loading: openedFileLoading,
     consumeOpenedFilePaths,
   } = useOpenedFile();
+
+  // One batch at a time: the stored-copy lookup is what dedupes a file from
+  // disk, and a batch still being stored is invisible to the next one's lookup.
+  const batchQueueRef = useRef<Promise<void>>(Promise.resolve());
 
   // Load opened files and add directly to FileContext
   useEffect(() => {
@@ -124,7 +128,7 @@ export function useAppInitialization(): void {
       }
     };
 
-    loadOpenedFiles();
+    batchQueueRef.current = batchQueueRef.current.then(loadOpenedFiles);
   }, [
     openedFilePaths,
     openedFileLoading,
