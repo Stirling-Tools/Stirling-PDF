@@ -313,7 +313,7 @@ jobs:
 
       - name: Restore cache artifact
         id: cache
-        uses: Ludy87/cache-the-planet/multi-cache@508760e654a7fbcb16767aef50c60a769b12b1ce
+        uses: Ludy87/cache-the-planet/multi-cache@7fc8ba203a058c34f861198019d9d9972ef1abd4
         with:
           cleanup-path-after-save: true
           version: 5
@@ -946,7 +946,7 @@ jobs:
 
       - name: Restore cache artifact
         id: cache
-        uses: Ludy87/cache-the-planet/multi-cache@508760e654a7fbcb16767aef50c60a769b12b1ce
+        uses: Ludy87/cache-the-planet/multi-cache@7fc8ba203a058c34f861198019d9d9972ef1abd4
         with:
           cleanup-path-after-save: true
           version: 5
