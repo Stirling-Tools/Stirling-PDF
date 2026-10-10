@@ -639,18 +639,22 @@ class FileStorageService {
    * Rewrite one still-readable legacy blob record as an ArrayBuffer copy. Reads
    * the FULL bytes (the audit only proved the first one) and goes through
    * {@link updateRecord}'s read-modify-write so a concurrent metadata update
-   * isn't clobbered by a stale snapshot.
+   * isn't clobbered by a stale snapshot. Bytes stored during the read are newer
+   * than the copy, so the rescue then gives way.
    */
   private async rescueBlobRecord(fileId: FileId): Promise<void> {
     try {
       const db = await this.getDatabase();
       const record = await this.readRecord(db, fileId);
       if (!(record?.data instanceof Blob)) return;
-      const data = record.data;
+      const { data, bodyRevision: revision } = record;
       const bytes = await withProbeDeadline(() => data.arrayBuffer());
       if (bytes === PROBE_UNANSWERED || !(bytes instanceof ArrayBuffer)) return;
-      replaceBody(record, bytes);
-      await this.putRecord(db, record);
+      const rescued = await this.updateRecord(fileId, (stored) => {
+        if (stored.bodyRevision !== revision) return false;
+        replaceBody(stored, bytes);
+      });
+      if (!rescued) return;
       console.info(
         `[fileStorage] rescued "${record.name}" (${fileId}) to an in-memory copy before this browser could lose its blob`,
       );
