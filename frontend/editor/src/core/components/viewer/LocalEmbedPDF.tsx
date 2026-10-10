@@ -717,7 +717,7 @@ function DocumentViewport({ documentId, pageOptions }: DocumentViewportProps) {
           contain: "strict",
         }}
       >
-        <WheelDeltaNormalizer />
+        <WheelDeltaNormalizer documentId={documentId} />
         <ZoomGestureWrapper documentId={documentId}>
           <Scroller
             documentId={documentId}
@@ -738,8 +738,8 @@ function DocumentViewport({ documentId, pageOptions }: DocumentViewportProps) {
   );
 }
 
-function WheelDeltaNormalizer() {
-  useWheelDeltaNormalizer();
+function WheelDeltaNormalizer({ documentId }: { documentId: string }) {
+  useWheelDeltaNormalizer(documentId);
   return null;
 }
 
