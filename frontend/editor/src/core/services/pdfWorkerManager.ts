@@ -179,7 +179,9 @@ class PDFWorkerManager {
   }
 
   /**
-   * Properly destroy a PDF document and clean up resources
+   * Properly destroy a PDF document and clean up resources.
+   * Returns a promise so sequential open-close-open flows can await teardown
+   * before creating the next document.
    */
   async destroyDocument(pdf: PDFDocumentProxy): Promise<void> {
     if (!this.activeDocuments.has(pdf) || this.destroyingDocuments.has(pdf)) {
@@ -249,7 +251,7 @@ class PDFWorkerManager {
     // Force destroy all documents
     this.activeDocuments.forEach((pdf) => {
       try {
-        void pdf.destroy();
+        void Promise.resolve(pdf.destroy()).catch(() => {});
       } catch {
         // Ignore errors
       }
