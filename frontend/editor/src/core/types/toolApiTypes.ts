@@ -1257,6 +1257,12 @@ export interface RemoveBlankPagesRequest {
    */
   whitePercent?: number;
 }
+export interface RemoveCertSignRequest {
+  /**
+   * Also remove the visible appearance of certificate signature fields. Does not remove signatures embedded in page content or scanned images.
+   */
+  removeVisibleSignature?: boolean;
+}
 export interface RenameAttachmentRequest {
   /**
    * The current name of the attachment to rename
@@ -1426,7 +1432,6 @@ export interface SecurityCertSignValidateCertificateRequest {
   privateKeyFile?: File;
 }
 export type SecurityGetInfoOnPdfRequest = Record<string, never>;
-export type SecurityRemoveCertSignRequest = Record<string, never>;
 export type SecurityValidateComplianceRequest = Record<string, never>;
 export interface SignPDFWithCertRequest {
   /**
@@ -1784,7 +1789,7 @@ export interface ToolApiParams {
   "/api/v1/security/get-info-on-pdf": SecurityGetInfoOnPdfRequest;
   "/api/v1/security/redact": ManualRedactPdfRequest;
   "/api/v1/security/redact-execute": RedactExecuteRequest;
-  "/api/v1/security/remove-cert-sign": SecurityRemoveCertSignRequest;
+  "/api/v1/security/remove-cert-sign": RemoveCertSignRequest;
   "/api/v1/security/remove-password": PDFPasswordRequest;
   "/api/v1/security/sanitize-pdf": SanitizePdfRequest;
   "/api/v1/security/timestamp-pdf": TimestampPdfRequest;
