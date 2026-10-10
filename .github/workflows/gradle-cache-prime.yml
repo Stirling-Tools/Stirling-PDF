@@ -64,7 +64,7 @@ jobs:
 
       - name: Restore Gradle cache github-artifact
         id: cache
-        uses: Ludy87/cache-the-planet/multi-cache@26dcae497b500a85f0ac2383ff6ad36d3d2c1754
+        uses: Ludy87/cache-the-planet/multi-cache@86a25184d1eb86c9481908e2582a0eed7e1f3e84
         with:
           cleanup-path-after-save: true
           version: 6

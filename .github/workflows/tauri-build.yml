@@ -60,6 +60,7 @@ permissions:
   pull-requests: write
 
 env:
+  CACHE_MAX_TAR_BYTES: 17179869184
   JAVA_VERSION: 25
   GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-25
   GRADLE_FILES_TO_HASH: |
@@ -313,7 +314,7 @@ jobs:
 
       - name: Restore cache artifact
         id: cache
-        uses: Ludy87/cache-the-planet/multi-cache@26dcae497b500a85f0ac2383ff6ad36d3d2c1754
+        uses: Ludy87/cache-the-planet/multi-cache@86a25184d1eb86c9481908e2582a0eed7e1f3e84
         with:
           cleanup-path-after-save: true
           version: 6
@@ -948,7 +949,7 @@ jobs:
 
       - name: Restore cache artifact
         id: cache
-        uses: Ludy87/cache-the-planet/multi-cache@26dcae497b500a85f0ac2383ff6ad36d3d2c1754
+        uses: Ludy87/cache-the-planet/multi-cache@86a25184d1eb86c9481908e2582a0eed7e1f3e84
         with:
           cleanup-path-after-save: true
           version: 6
