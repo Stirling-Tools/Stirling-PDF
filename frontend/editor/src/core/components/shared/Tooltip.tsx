@@ -28,6 +28,7 @@ interface ForwardedHandlers {
   onClick?: React.MouseEventHandler;
   onFocus?: React.FocusEventHandler;
   onBlur?: React.FocusEventHandler;
+  onKeyDown?: React.KeyboardEventHandler;
 }
 
 export interface TooltipProps {
@@ -347,10 +348,10 @@ export const Tooltip: React.FC<TooltipProps> = ({
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (manualCloseOnly) return;
-      if (e.key === "Escape") setOpen(false);
+      if (!manualCloseOnly && e.key === "Escape") setOpen(false);
+      (children.props as ForwardedHandlers).onKeyDown?.(e);
     },
-    [setOpen, manualCloseOnly],
+    [setOpen, manualCloseOnly, children.props],
   );
 
   // Keep open while pointer is over the tooltip; close when leaving it (if not pinned)

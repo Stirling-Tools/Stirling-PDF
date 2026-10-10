@@ -14,7 +14,7 @@ interface SaaSLoginScreenProps {
   serverUrl: string;
   onLogin: (username: string, password: string) => Promise<void>;
   onOAuthSuccess: (userInfo: UserInfo) => Promise<void>;
-  onSelfHostedClick: () => void;
+  onSelfHostedClick?: () => void;
   onSwitchToSignup: () => void;
   onSkipSignIn?: () => void;
   onClose?: () => void;
@@ -121,7 +121,9 @@ export const SaaSLoginScreen: React.FC<SaaSLoginScreenProps> = ({
         </Button>
       </div>
 
-      <SelfHostedLink onClick={onSelfHostedClick} disabled={loading} />
+      {onSelfHostedClick && (
+        <SelfHostedLink onClick={onSelfHostedClick} disabled={loading} />
+      )}
 
       {onSkipSignIn && (
         <div

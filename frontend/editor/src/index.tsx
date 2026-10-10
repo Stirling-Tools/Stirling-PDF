@@ -19,8 +19,6 @@ import "@app/i18n"; // Initialize i18next
 import { BASE_PATH } from "@app/constants/app";
 import { applyDevWorktreeLabel } from "@app/utils/applyDevWorktreeLabel";
 
-import { startEagerWasmCompilation } from "@app/services/wasmPrecompiler";
-
 applyDevWorktreeLabel();
 
 if (typeof window !== "undefined") {
@@ -38,17 +36,7 @@ if (typeof window !== "undefined") {
     },
     { passive: false, capture: true },
   );
-
-  const scheduleCompilation = () =>
-    requestIdleCallback(() => startEagerWasmCompilation(), { timeout: 2000 });
-
-  if (document.readyState === "complete") {
-    scheduleCompilation();
-  } else {
-    window.addEventListener("load", scheduleCompilation);
-  }
 }
-
 const container = document.getElementById("root");
 if (!container) {
   throw new Error("Root container missing in index.html");

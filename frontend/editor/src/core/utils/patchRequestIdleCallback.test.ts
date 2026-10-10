@@ -58,8 +58,8 @@ describe("patchRequestIdleCallback", () => {
     expect(task).toHaveBeenCalledTimes(1);
   });
 
-  // `src/index.tsx` asks for 2000ms so the pdfium WASM compile doesn't land on
-  // top of the app's first renders.
+  // `src/proprietary/utils/scheduleIdle.ts` asks for 2000ms so the policy
+  // passes yield to the app's first renders.
   it("does not run background work earlier than the caller allowed for", () => {
     delete globals.requestIdleCallback;
     patchRequestIdleCallback();

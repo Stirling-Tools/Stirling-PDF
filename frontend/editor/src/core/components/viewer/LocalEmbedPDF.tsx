@@ -10,7 +10,7 @@ import React, {
 import { createPluginRegistration, type PluginRegistry } from "@embedpdf/core";
 import type { InitialDocumentOptions } from "@embedpdf/plugin-document-manager";
 import { EmbedPDF, useDocumentState } from "@embedpdf/core/react";
-import { usePdfiumEngine } from "@embedpdf/engines/react";
+import { useLocalPdfiumEngine } from "@app/hooks/useLocalPdfiumEngine";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useSignaturePreviewHistory } from "@app/hooks/signing/useSignaturePreviewHistory";
@@ -120,7 +120,7 @@ import { RedactionAPIBridge } from "@app/components/viewer/RedactionAPIBridge";
 import { DocumentPermissionsAPIBridge } from "@app/components/viewer/DocumentPermissionsAPIBridge";
 import { DocumentReadyWrapper } from "@app/components/viewer/DocumentReadyWrapper";
 import ToolLoadingFallback from "@app/components/tools/ToolLoadingFallback";
-import { getLocalFontFallbackConfig } from "@app/services/pdfiumFontFallback";
+import { useFontFallbackConfig } from "@app/hooks/useFontFallbackConfig";
 import { pdfiumWasmUrl } from "@app/services/wasmPrecompiler";
 import { FormFieldOverlay } from "@app/tools/formFill/FormFieldOverlay";
 import { FormCreationInteractionLock } from "@app/tools/formFill/FormCreationInteractionLock";
@@ -1235,9 +1235,9 @@ export function LocalEmbedPDF({
     ];
   }, [initialDocument, urlPluginsSource, enableAnnotations]);
 
-  const fontFallbackConfig = useMemo(() => getLocalFontFallbackConfig(), []);
+  const fontFallbackConfig = useFontFallbackConfig();
 
-  const { engine, isLoading, error } = usePdfiumEngine({
+  const { engine, isLoading, error } = useLocalPdfiumEngine({
     wasmUrl: pdfiumWasmUrl,
     fontFallback: fontFallbackConfig,
   });
@@ -1299,6 +1299,27 @@ export function LocalEmbedPDF({
   const hasInput = Boolean(file || url);
   const isInputReady = Boolean(initialDocument || (!file && pdfUrl));
 
+  // Checked before the loading screen: a rejected engine import leaves `engine`
+  // null, so the loader would otherwise hide the error forever.
+  if (error) {
+    return (
+      <Center h="100%" w="100%">
+        <Stack align="center" gap="md">
+          <div style={{ fontSize: "24px" }}>⚠️</div>
+          <Text c="red" size="sm">
+            {t(
+              "viewer.engineLoadError",
+              "Failed to initialize PDF viewer engine",
+            )}
+          </Text>
+          <Text c="dimmed" size="xs">
+            {error.message}
+          </Text>
+        </Stack>
+      </Center>
+    );
+  }
+
   if (isLoading || !engine || (hasInput && !isInputReady)) {
     return (
       <Center h="100%" w="100%">
@@ -1319,25 +1340,6 @@ export function LocalEmbedPDF({
               )}
             </Text>
           )}
-        </Stack>
-      </Center>
-    );
-  }
-
-  if (error) {
-    return (
-      <Center h="100%" w="100%">
-        <Stack align="center" gap="md">
-          <div style={{ fontSize: "24px" }}>⚠️</div>
-          <Text c="red" size="sm">
-            {t(
-              "viewer.engineLoadError",
-              "Failed to initialize PDF viewer engine",
-            )}
-          </Text>
-          <Text c="dimmed" size="xs">
-            {error.message}
-          </Text>
         </Stack>
       </Center>
     );

@@ -40,6 +40,7 @@ vi.mock("@app/services/authService", () => ({
 }));
 vi.mock("@app/services/connectionModeService", () => ({
   connectionModeService: {
+    getCurrentConfig: async () => ({ local_processing_only: false }),
     getCurrentMode: vi.fn(),
     subscribeToModeChanges: vi.fn(() => () => {}),
   },
