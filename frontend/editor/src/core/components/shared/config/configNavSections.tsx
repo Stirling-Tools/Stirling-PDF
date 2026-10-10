@@ -5,6 +5,7 @@ import PreferencesSection, {
   type PreferencesSectionProps,
 } from "@app/components/shared/config/configSections/preferences/PreferencesSection";
 import AboutSection from "@app/components/shared/config/configSections/AboutSection";
+import OcrSection from "@app/components/shared/config/configSections/OcrSection";
 import type {
   ConfigNavItem,
   ConfigNavSection,
@@ -90,8 +91,20 @@ export const useConfigNavSections = (
 ): ConfigNavSection[] => {
   const { t } = useTranslation();
 
+  const preferences = createPreferencesNavSection(t);
   const sections: ConfigNavSection[] = [
-    createPreferencesNavSection(t),
+    {
+      ...preferences,
+      items: [
+        ...preferences.items,
+        {
+          key: "ocr",
+          label: t("settings.ocr.title", "Text recognition"),
+          icon: "scan-text",
+          component: <OcrSection />,
+        },
+      ],
+    },
     // Reference material: read once and rarely revisited, so it is one page
     // rather than four rows you have to open in turn.
     {

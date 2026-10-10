@@ -10,6 +10,7 @@ import apiClient from "@app/services/apiClient";
 import DropdownListWithFooter, {
   DropdownItem,
 } from "@app/components/shared/DropdownListWithFooter";
+import OcrRuntimeManager from "@app/components/tools/ocr/OcrRuntimeManager";
 
 export interface LanguageOption {
   value: string;
@@ -42,14 +43,22 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
   );
   const [isLoadingLanguages, setIsLoadingLanguages] = useState(true);
   const [hasAutoFilled, setHasAutoFilled] = useState(false);
+  const [managerOpen, setManagerOpen] = useState(false);
+  // Bumped after the installed set changes, to re-run the fetch below.
+  const [installedRevision, setInstalledRevision] = useState(0);
 
   useEffect(() => {
+    // Each change below starts another fetch while an earlier one may still be
+    // out, and a list that comes back late must not replace a newer one.
+    let superseded = false;
+
     // Fetch available languages from backend
     const fetchLanguages = async () => {
       try {
         const { data } = await apiClient.get<{ languages: string[] }>(
           languagesEndpoint,
         );
+        if (superseded) return;
 
         const displayNames =
           typeof Intl.DisplayNames !== "undefined"
@@ -86,6 +95,7 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
 
         setAvailableLanguages(languageOptions);
       } catch (error) {
+        if (superseded) return;
         console.error("[LanguagePicker] Fetch failed with error:", error);
         console.error("[LanguagePicker] Error details:", {
           name: error instanceof Error ? error.name : "Unknown",
@@ -93,12 +103,15 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
           stack: error instanceof Error ? error.stack : undefined,
         });
       } finally {
-        setIsLoadingLanguages(false);
+        if (!superseded) setIsLoadingLanguages(false);
       }
     };
 
     fetchLanguages();
-  }, [languagesEndpoint, i18n.language, t]);
+    return () => {
+      superseded = true;
+    };
+  }, [languagesEndpoint, i18n.language, t, installedRevision]);
 
   // Auto-fill OCR language based on browser language when languages are loaded
   useEffect(() => {
@@ -147,6 +160,9 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
     );
   }
 
+  // The footer used to send people to a documentation page and leave them to
+  // copy .traineddata files by hand - the complaint in #6534. It now opens the
+  // installer instead, which is the thing they were actually looking for.
   const footer = (
     <>
       <div className="flex flex-col items-center gap-1 text-center">
@@ -164,32 +180,34 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
             textDecoration: "underline",
             textAlign: "center",
           }}
-          onClick={() =>
-            window.open(
-              "https://docs.stirlingpdf.com/Configuration/OCR",
-              "_blank",
-            )
-          }
+          onClick={() => setManagerOpen(true)}
         >
-          {t("ocr.languagePicker.viewSetupGuide", "View setup guide →")}
+          {t("ocr.languagePicker.manageLanguages", "Add languages →")}
         </Text>
       </div>
     </>
   );
 
   return (
-    <DropdownListWithFooter
-      value={value}
-      onChange={(newValue) => onChange(newValue as string[])}
-      items={availableLanguages}
-      placeholder={resolvedPlaceholder}
-      disabled={disabled}
-      label={label}
-      footer={footer}
-      multiSelect={true}
-      maxHeight={300}
-      searchable={true}
-    />
+    <>
+      <DropdownListWithFooter
+        value={value}
+        onChange={(newValue) => onChange(newValue as string[])}
+        items={availableLanguages}
+        placeholder={resolvedPlaceholder}
+        disabled={disabled}
+        label={label}
+        footer={footer}
+        multiSelect={true}
+        maxHeight={300}
+        searchable={true}
+      />
+      <OcrRuntimeManager
+        opened={managerOpen}
+        onClose={() => setManagerOpen(false)}
+        onLanguagesChanged={() => setInstalledRevision((n) => n + 1)}
+      />
+    </>
   );
 };
 

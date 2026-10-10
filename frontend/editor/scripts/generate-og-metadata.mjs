@@ -395,6 +395,7 @@ const NAV_KEY_LABELS = {
   adminAiModels: "Admin AI Models",
   adminAiDocuments: "Admin AI Documents",
   adminAiLimits: "Admin AI Limits",
+  ocr: "OCR",
   payg: "Pay As You Go",
 };
 for (const key of navKeys)
