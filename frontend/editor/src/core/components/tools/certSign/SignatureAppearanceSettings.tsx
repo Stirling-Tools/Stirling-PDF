@@ -38,6 +38,7 @@ import {
   SIGNATURE_PLACEMENT_CANCEL_EVENT,
   SIGNATURE_PLACEMENT_DONE_EVENT,
   SIGNATURE_PLACEMENT_START_EVENT,
+  showSignaturePlacement,
   type SignaturePlacementResult,
 } from "@app/constants/signaturePlacementEvents";
 
@@ -138,6 +139,18 @@ const SignatureAppearanceSettings = ({
   // Leaving the panel mid-drag would strand the viewer in placement mode with no way
   // back, since the button that cancels it has gone.
   useEffect(() => cancelPlacement, [cancelPlacement]);
+
+  // The box stays on the page while the appearance is set up, so the options can be
+  // judged against the space they fill. Signing collapses this panel, which takes it away.
+  const { showSignature, signatureArea, pageNumber } = parameters;
+  useEffect(() => {
+    showSignaturePlacement(
+      showSignature && signatureArea
+        ? { pageNumber, area: signatureArea }
+        : null,
+    );
+  }, [showSignature, signatureArea, pageNumber]);
+  useEffect(() => () => showSignaturePlacement(null), []);
 
   // The request sends the marks only with a box, so the panel shows them only then.
   const repeatsOnEveryPage =

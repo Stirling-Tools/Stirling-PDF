@@ -23,3 +23,28 @@ export interface SignaturePlacementResult {
   /** The box in PDF points, origin bottom-left - what the endpoint takes. */
   area: Rectangle;
 }
+
+/** Tool -> viewer: the box the signature will fill, or null when there is none to show. */
+export const SIGNATURE_PLACEMENT_SHOW_EVENT = "certSign:showPlacement";
+
+let shownPlacement: SignaturePlacementResult | null = null;
+
+/**
+ * Shows `placement` on the viewer until it is replaced, or hidden with null. Kept as well as
+ * announced, because the viewer mounts a page's overlay only once that page scrolls into view.
+ */
+export function showSignaturePlacement(
+  placement: SignaturePlacementResult | null,
+): void {
+  shownPlacement = placement;
+  window.dispatchEvent(
+    new CustomEvent<SignaturePlacementResult | null>(
+      SIGNATURE_PLACEMENT_SHOW_EVENT,
+      { detail: placement },
+    ),
+  );
+}
+
+export function currentSignaturePlacement(): SignaturePlacementResult | null {
+  return shownPlacement;
+}

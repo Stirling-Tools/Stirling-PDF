@@ -3,7 +3,9 @@ import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
 import {
   SIGNATURE_PLACEMENT_CANCEL_EVENT,
   SIGNATURE_PLACEMENT_DONE_EVENT,
+  SIGNATURE_PLACEMENT_SHOW_EVENT,
   SIGNATURE_PLACEMENT_START_EVENT,
+  currentSignaturePlacement,
   type SignaturePlacementResult,
 } from "@app/constants/signaturePlacementEvents";
 
@@ -31,6 +33,13 @@ const MIN_BOX_PX = 8;
 /** Movement below this still counts as a click, so a shaky hand does not lose the corner. */
 const DRAG_THRESHOLD_PX = 4;
 
+const BOX_STYLE: React.CSSProperties = {
+  position: "absolute",
+  border: "2px solid var(--mantine-color-blue-6, #228be6)",
+  backgroundColor: "rgba(34, 139, 230, 0.15)",
+  pointerEvents: "none",
+};
+
 /**
  * Lets the user drag a signature box directly on the page, the way Acrobat does.
  *
@@ -43,6 +52,9 @@ const DRAG_THRESHOLD_PX = 4;
  *
  * The box is reported in PDF points with the origin bottom-left, which is what the
  * cert-sign endpoint takes, so nothing downstream has to convert again.
+ *
+ * Outside placement mode it still draws the box the tool is set to sign into, so the
+ * appearance options can be judged against the space they will fill.
  */
 export const SignatureBoxDragOverlay: React.FC<
   SignatureBoxDragOverlayProps
@@ -52,10 +64,30 @@ export const SignatureBoxDragOverlay: React.FC<
   /** First corner of a two-click placement, once the user has clicked it. */
   const [anchor, setAnchor] = useState<{ x: number; y: number } | null>(null);
   const [hover, setHover] = useState<{ x: number; y: number } | null>(null);
+  const [shown, setShown] = useState(currentSignaturePlacement);
+  const [shownPageSize, setShownPageSize] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   // Page size in PDF points. Read lazily: pages are only measured once placement
-  // starts, so viewing a document costs nothing.
+  // starts or a box is shown on them, so viewing a document costs nothing.
   const pageSizeRef = useRef<{ width: number; height: number } | null>(null);
+
+  useEffect(() => {
+    pageSizeRef.current = null;
+    setShownPageSize(null);
+  }, [pdfSource, pageIndex]);
+
+  useEffect(() => {
+    const onShow = (event: Event) =>
+      setShown(
+        (event as CustomEvent<SignaturePlacementResult | null>).detail ?? null,
+      );
+    window.addEventListener(SIGNATURE_PLACEMENT_SHOW_EVENT, onShow);
+    return () =>
+      window.removeEventListener(SIGNATURE_PLACEMENT_SHOW_EVENT, onShow);
+  }, []);
 
   useEffect(() => {
     const start = () => setIsActive(true);
@@ -110,6 +142,19 @@ export const SignatureBoxDragOverlay: React.FC<
   useEffect(() => {
     if (isActive) void readPageSize();
   }, [isActive, readPageSize]);
+
+  const shownArea = shown?.pageNumber === pageIndex + 1 ? shown.area : null;
+
+  useEffect(() => {
+    if (!shownArea) return;
+    let current = true;
+    void readPageSize().then((size) => {
+      if (current) setShownPageSize(size);
+    });
+    return () => {
+      current = false;
+    };
+  }, [shownArea, readPageSize]);
 
   const pointIn = (event: React.MouseEvent | MouseEvent) => {
     const rect = containerRef.current?.getBoundingClientRect();
@@ -229,7 +274,38 @@ export const SignatureBoxDragOverlay: React.FC<
     );
   };
 
-  if (!isActive) return null;
+  // PDF points with the origin bottom-left, back to this page's CSS pixels.
+  const placedBox =
+    shownArea && shownPageSize
+      ? {
+          left: (shownArea.x / shownPageSize.width) * pageWidth,
+          top:
+            ((shownPageSize.height - shownArea.y - shownArea.height) /
+              shownPageSize.height) *
+            pageHeight,
+          width: (shownArea.width / shownPageSize.width) * pageWidth,
+          height: (shownArea.height / shownPageSize.height) * pageHeight,
+        }
+      : null;
+  const placed = placedBox && (
+    <div style={{ ...BOX_STYLE, ...placedBox }} data-signature-placed-box />
+  );
+
+  if (!isActive) {
+    return placed ? (
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          zIndex: 12,
+          pointerEvents: "none",
+        }}
+        data-signature-placed-page={pageIndex}
+      >
+        {placed}
+      </div>
+    ) : null;
+  }
 
   // While dragging the box follows the pointer; after the first of two clicks it
   // follows the hover position, so both gestures preview the same way.
@@ -273,19 +349,9 @@ export const SignatureBoxDragOverlay: React.FC<
       }}
       data-signature-drag-page={pageIndex}
     >
+      {!box && placed}
       {box && (box.width > 0 || box.height > 0) && (
-        <div
-          style={{
-            position: "absolute",
-            left: box.left,
-            top: box.top,
-            width: box.width,
-            height: box.height,
-            border: "2px solid var(--mantine-color-blue-6, #228be6)",
-            backgroundColor: "rgba(34, 139, 230, 0.15)",
-            pointerEvents: "none",
-          }}
-        />
+        <div style={{ ...BOX_STYLE, ...box }} />
       )}
 
       {/* The first corner stays visible so it is obvious a second click is expected. */}
