@@ -363,8 +363,6 @@ jobs:
               path: .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
             gradle-wrapper:
               path: .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
-            tauri-target:
-              path: frontend/editor/src-tauri/target
           # save-scope: shared
           key: |
             gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
@@ -375,17 +373,11 @@ jobs:
             npm-cache=${{ hashFiles('frontend/package-lock.json') }}
             frontend-dist=${{ needs.hash_pr.outputs.frontend_dist_files_hash }}
             frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
-            tauri-target=${{ needs.hash_pr.outputs.frontend_tauri_files_hash }}
           token: ${{ github.token }}
           # allow-shared-restore: true
           strict: false
           exclude: |
-            frontend/editor/src-tauri/target/debug/**
-          #   frontend/editor/src-tauri/target/release/.fingerprint/**
-          #   frontend/editor/src-tauri/target/release/deps/**
-          #   frontend/editor/src-tauri/target/release/examples/**
-          #   frontend/editor/src-tauri/target/release/incremental/**
-          #   frontend/editor/src-tauri/target/release/libs/**
+            frontend/editor/coverage/**
 
       - name: Read frontend build cache status
         id: frontend-cache
@@ -1031,8 +1023,6 @@ jobs:
               path: .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
             gradle-wrapper:
               path: .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
-            tauri-target:
-              path: frontend/editor/src-tauri/target
           # save-scope: shared
           key: |
             gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
@@ -1043,17 +1033,11 @@ jobs:
             npm-cache=${{ hashFiles('frontend/package-lock.json') }}
             frontend-dist=${{ needs.hash_pr.outputs.frontend_dist_files_hash }}
             frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
-            tauri-target=${{ needs.hash_pr.outputs.frontend_tauri_files_hash }}
           token: ${{ github.token }}
           # allow-shared-restore: true
           strict: false
           exclude: |
-            frontend/editor/src-tauri/target/debug/**
-          #   frontend/editor/src-tauri/target/release/.fingerprint/**
-          #   frontend/editor/src-tauri/target/release/deps/**
-          #   frontend/editor/src-tauri/target/release/examples/**
-          #   frontend/editor/src-tauri/target/release/incremental/**
-          #   frontend/editor/src-tauri/target/release/libs/**
+            frontend/editor/coverage/**
 
       - name: Read frontend build cache status
         id: frontend-cache
