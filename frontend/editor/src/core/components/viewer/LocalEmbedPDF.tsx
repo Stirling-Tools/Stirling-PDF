@@ -11,6 +11,7 @@ import { createPluginRegistration, type PluginRegistry } from "@embedpdf/core";
 import type { InitialDocumentOptions } from "@embedpdf/plugin-document-manager";
 import { EmbedPDF, useDocumentState } from "@embedpdf/core/react";
 import { useLocalPdfiumEngine } from "@app/hooks/useLocalPdfiumEngine";
+import { useWheelDeltaNormalizer } from "@app/hooks/useWheelDeltaNormalizer";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useSignaturePreviewHistory } from "@app/hooks/signing/useSignaturePreviewHistory";
@@ -23,7 +24,11 @@ import {
 import { Scroller, ScrollPluginPackage } from "@embedpdf/plugin-scroll/react";
 import { DocumentManagerPluginPackage } from "@embedpdf/plugin-document-manager/react";
 import { RenderPluginPackage } from "@embedpdf/plugin-render/react";
-import { ZoomPluginPackage, ZoomMode } from "@embedpdf/plugin-zoom/react";
+import {
+  ZoomPluginPackage,
+  ZoomMode,
+  ZoomGestureWrapper,
+} from "@embedpdf/plugin-zoom/react";
 import { InteractionManagerPluginPackage } from "@embedpdf/plugin-interaction-manager/react";
 import {
   SelectionLayer,
@@ -712,22 +717,30 @@ function DocumentViewport({ documentId, pageOptions }: DocumentViewportProps) {
           contain: "strict",
         }}
       >
-        <Scroller
-          documentId={documentId}
-          renderPage={({ width, height, pageIndex }) => (
-            <ViewerPage
-              key={`${documentId}-${pageIndex}`}
-              documentId={documentId}
-              pageIndex={pageIndex}
-              width={width}
-              height={height}
-              {...pageOptions}
-            />
-          )}
-        />
+        <WheelDeltaNormalizer documentId={documentId} />
+        <ZoomGestureWrapper documentId={documentId}>
+          <Scroller
+            documentId={documentId}
+            renderPage={({ width, height, pageIndex }) => (
+              <ViewerPage
+                key={`${documentId}-${pageIndex}`}
+                documentId={documentId}
+                pageIndex={pageIndex}
+                width={width}
+                height={height}
+                {...pageOptions}
+              />
+            )}
+          />
+        </ZoomGestureWrapper>
       </Viewport>
     </ViewerGlobalPointerProvider>
   );
+}
+
+function WheelDeltaNormalizer({ documentId }: { documentId: string }) {
+  useWheelDeltaNormalizer(documentId);
+  return null;
 }
 
 interface DocumentCommentsProps {
