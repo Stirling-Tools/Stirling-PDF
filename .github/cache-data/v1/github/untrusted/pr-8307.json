@@ -9835,10 +9835,39 @@
       "artifact_id": 11672637602,
       "artifact_name": "cache-untrusted-pr-8307-frontend-dist-macos-arm64-fee5c68f5330097f04a17b1adc52cde9146a2cb660d0575cec5535249f661882-v6--6826571f3edc60e9362b1f486c81fccb3573bfea31f235e62-part-000000",
       "workflow_run_id": 38057968689
+    },
+    "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/setup-uv-cache/linux-x64/c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17/v6": {
+      "object": "sha256:7b018b7b72cff3a2246e7e6e2f88a53a6e972a6e72a61d0cb9920e21dc3aad40",
+      "storage": "github-artifact",
+      "updated_at": "2026-10-10T14:57:35.297Z",
+      "source": "Stirling-Tools/Stirling-PDF",
+      "created_by": "Ludy87",
+      "size": 44024885,
+      "parts": [
+        {
+          "index": 0,
+          "object": "sha256:64751afd828017fae43e0ae6f7ce0770f775238f1b5d053c4d32aac207e2a942",
+          "size": 25165824,
+          "artifact_id": 11673825672,
+          "artifact_name": "cache-untrusted-pr-8307-setup-uv-cache-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--7b018b7b72cff3a2246e7e6e2f88a53a6e972a6e72a61d0cb9-part-000000",
+          "workflow_run_id": 38061032870
+        },
+        {
+          "index": 1,
+          "object": "sha256:4bb53ae261f9d7e44e3182937b492517560651cb01da7eb4eac17810060f69fa",
+          "size": 18859061,
+          "artifact_id": 11673416319,
+          "artifact_name": "cache-untrusted-pr-8307-setup-uv-cache-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--7b018b7b72cff3a2246e7e6e2f88a53a6e972a6e72a61d0cb9-part-000001",
+          "workflow_run_id": 38061032870
+        }
+      ],
+      "artifact_id": 11673825672,
+      "artifact_name": "cache-untrusted-pr-8307-setup-uv-cache-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--7b018b7b72cff3a2246e7e6e2f88a53a6e972a6e72a61d0cb9-part-000000",
+      "workflow_run_id": 38061032870
     }
   },
   "monitoring": {
     "window_started_at": "2026-10-10T13:57:50.594Z",
-    "writes": 15
+    "writes": 16
   }
 }
