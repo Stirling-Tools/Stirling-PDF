@@ -9,6 +9,7 @@ import {
   isUsable,
   matches,
   rank,
+  subjectDetails,
   validityOf,
 } from "@app/utils/certSign/hardwareCertificateDisplay";
 
@@ -109,5 +110,29 @@ describe("searching the list", () => {
   it("shows everything when nothing has been typed", () => {
     expect(matches(cert(), "")).toBe(true);
     expect(matches(cert(), "   ")).toBe(true);
+  });
+});
+
+describe("the subject line under the name", () => {
+  it("leaves out the common name, which is already the title", () => {
+    expect(subjectDetails(cert())).toBe("Acme · ES");
+  });
+
+  it("decodes attributes Java writes as hex, such as the organization identifier", () => {
+    // RFC 2253 as Java writes it for a Spanish representative certificate:
+    // 2.5.4.97 has no keyword there, so its UTF8String comes out as DER hex.
+    const subject =
+      "2.5.4.97=#0c0f56415445532d423132333435363738,CN=JUAN GARCIA (R: B12345678)," +
+      "SERIALNUMBER=IDCES-12345678Z,GIVENNAME=JUAN,SURNAME=GARCIA,O=EMPRESA SL,C=ES";
+
+    expect(subjectDetails(cert({ subject }))).toBe(
+      "VATES-B12345678 · IDCES-12345678Z · JUAN · GARCIA · EMPRESA SL · ES",
+    );
+  });
+
+  it("keeps an escaped comma inside its value", () => {
+    expect(
+      subjectDetails(cert({ subject: "CN=Doe\\, Jane,O=Acme\\, S.L.,C=ES" })),
+    ).toBe("Acme, S.L. · ES");
   });
 });

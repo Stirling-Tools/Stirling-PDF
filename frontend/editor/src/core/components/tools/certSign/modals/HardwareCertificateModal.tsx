@@ -15,6 +15,7 @@ import { HardwareCertificateInfo } from "@app/services/hardwareSigningService";
 import {
   byUsefulness,
   displayName,
+  subjectDetails,
   distinctIssuer,
   expiryDate,
   isUsable,
@@ -77,7 +78,7 @@ const HardwareCertificateModal = ({
         cert.alias === selectedAlias
           ? t("certSign.hardware.current", "(in use)")
           : null,
-      note: (cert) => cert.subject,
+      note: subjectDetails,
       sortable: true,
     }),
     column.text<HardwareCertificateInfo>({
