@@ -8,6 +8,7 @@ import {
   FileContextAction,
   StirlingFileStub,
 } from "@app/types/fileContext";
+import { clearStubThumbnails } from "@app/contexts/file/stubThumbnailBudget";
 
 // Initial state
 export const initialFileContextState: FileContextState = {
@@ -238,6 +239,20 @@ export function fileContextReducer(
           },
         },
       };
+    }
+
+    case "EVICT_STUB_THUMBNAILS": {
+      const { ids } = action.payload;
+      const byId = { ...state.files.byId };
+      let changed = false;
+      for (const id of ids) {
+        const record = byId[id];
+        if (!record) continue;
+        byId[id] = clearStubThumbnails(record);
+        changed = true;
+      }
+      if (!changed) return state;
+      return { ...state, files: { ...state.files, byId } };
     }
 
     case "REORDER_FILES": {

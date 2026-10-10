@@ -17,77 +17,12 @@ import {
   noteFileSaved,
   persistedSourceFields,
 } from "@app/contexts/file/storedFileReconciler";
+import { selectThumbnailEvictionIds } from "@app/contexts/file/stubThumbnailBudget";
+
+// Kept exported here for callers and tests that reach for it via the lifecycle.
+export { selectThumbnailEvictionIds } from "@app/contexts/file/stubThumbnailBudget";
 
 const DEBUG = process.env.NODE_ENV === "development";
-
-// Long tool sessions accumulate one stub per file and variant, each carrying
-// full-page data-URL thumbnails (~1.5MB each, rotated + unrotated). The display
-// chain refills a stripped thumbnailUrl on demand from IndexedDB bytes, so
-// cold stubs can drop theirs once the session holds this much.
-const MAX_RETAINED_STUB_THUMBNAIL_BYTES = 64 * 1024 * 1024;
-
-const isHeavyThumbnail = (value: string | undefined): boolean =>
-  !!value && value.startsWith("data:");
-
-function stubThumbnailBytes(stub: StirlingFileStub): number {
-  let bytes = 0;
-  if (isHeavyThumbnail(stub.thumbnailUrl)) {
-    bytes += stub.thumbnailUrl!.length;
-  }
-  const processedFile = stub.processedFile;
-  // The nested thumbnailUrl is a second full-page data URL (rotated variant),
-  // distinct from the stub-level one and the per-page thumbs below.
-  if (isHeavyThumbnail(processedFile?.thumbnailUrl)) {
-    bytes += processedFile!.thumbnailUrl!.length;
-  }
-  const pages = processedFile?.pages;
-  if (pages) {
-    for (const page of pages) {
-      if (isHeavyThumbnail(page.thumbnail)) {
-        bytes += page.thumbnail!.length;
-      }
-    }
-  }
-  return bytes;
-}
-
-/**
- * Oldest-first ids whose data-URL thumbnails must go to fit the byte budget.
- * Pinned, selected and just-hydrated files are never candidates: stripping the
- * file that triggered enforcement would ping-pong with its on-demand refill.
- */
-export function selectThumbnailEvictionIds(
-  state: FileContextState,
-  exemptId?: FileId,
-  capBytes: number = MAX_RETAINED_STUB_THUMBNAIL_BYTES,
-): FileId[] {
-  let total = 0;
-  for (const id of state.files.ids) {
-    total += stubThumbnailBytes(state.files.byId[id]);
-  }
-  if (total <= capBytes) {
-    return [];
-  }
-  const evict: FileId[] = [];
-  for (const id of state.files.ids) {
-    if (total <= capBytes) {
-      break;
-    }
-    if (
-      id === exemptId ||
-      state.pinnedFiles.has(id) ||
-      state.ui.selectedFileIds.includes(id)
-    ) {
-      continue;
-    }
-    const freed = stubThumbnailBytes(state.files.byId[id]);
-    if (freed > 0) {
-      evict.push(id);
-      total -= freed;
-    }
-  }
-  return evict;
-}
 
 /**
  * Resource tracking and cleanup utilities
@@ -328,30 +263,14 @@ export class FileLifecycleManager {
           },
         },
       };
-      for (const evictId of selectThumbnailEvictionIds(withPending, fileId)) {
-        const stub = withPending.files.byId[evictId];
-        const processedFile = stub.processedFile;
+      const evictIds = selectThumbnailEvictionIds(withPending, fileId);
+      if (evictIds.length > 0) {
+        // Clear thumbnails inside the reducer: withPending lags an update queued
+        // for any other file, and re-merging a captured processedFile over it
+        // would clobber the newer processing result.
         this.dispatch({
-          type: "UPDATE_FILE_RECORD",
-          payload: {
-            id: evictId,
-            updates: {
-              thumbnailUrl: undefined,
-              ...(processedFile
-                ? {
-                    processedFile: {
-                      ...processedFile,
-                      thumbnailUrl: undefined,
-                      pages: processedFile.pages.map((page) =>
-                        isHeavyThumbnail(page.thumbnail)
-                          ? { ...page, thumbnail: undefined }
-                          : page,
-                      ),
-                    },
-                  }
-                : {}),
-            },
-          },
+          type: "EVICT_STUB_THUMBNAILS",
+          payload: { ids: evictIds },
         });
       }
     }

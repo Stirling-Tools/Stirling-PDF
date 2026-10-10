@@ -340,3 +340,51 @@ describe("fileContextReducer — REMOVE_FILES", () => {
     expect(next.ui.selectedFileIds).toEqual([]);
   });
 });
+
+describe("fileContextReducer — EVICT_STUB_THUMBNAILS", () => {
+  const THUMB = `data:image/png;base64,${"a".repeat(8)}`;
+
+  it("strips data-URL thumbnails but preserves the rest of the processing result", () => {
+    const state = stateWith([
+      stub("a", {
+        thumbnailUrl: THUMB,
+        processedFile: {
+          totalPages: 7,
+          lastProcessed: 42,
+          thumbnailUrl: THUMB,
+          pages: [
+            {
+              pageNumber: 1,
+              thumbnail: THUMB,
+              rotation: 0,
+              splitBefore: false,
+            },
+            { pageNumber: 2, rotation: 90, splitBefore: false },
+          ],
+        },
+      }),
+    ]);
+    const next = fileContextReducer(state, {
+      type: "EVICT_STUB_THUMBNAILS",
+      payload: { ids: ["a" as FileId] },
+    });
+    const record = next.files.byId["a" as FileId];
+    expect(record.thumbnailUrl).toBeUndefined();
+    expect(record.processedFile?.thumbnailUrl).toBeUndefined();
+    expect(record.processedFile?.pages[0].thumbnail).toBeUndefined();
+    // Fields the eviction never touches survive, so it cannot clobber a newer
+    // processing result the way a stale stub snapshot did.
+    expect(record.processedFile?.totalPages).toBe(7);
+    expect(record.processedFile?.lastProcessed).toBe(42);
+    expect(record.processedFile?.pages[1].rotation).toBe(90);
+  });
+
+  it("is a no-op when none of the ids are in state", () => {
+    const state = stateWith([stub("a")]);
+    const next = fileContextReducer(state, {
+      type: "EVICT_STUB_THUMBNAILS",
+      payload: { ids: ["gone" as FileId] },
+    });
+    expect(next).toBe(state);
+  });
+});
