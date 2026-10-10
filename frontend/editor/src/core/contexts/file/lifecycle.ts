@@ -3,11 +3,14 @@
  */
 
 import { FileId } from "@app/types/file";
+import { releaseSharedDocumentWhenIdle } from "@app/services/pdfiumService";
+import { releaseDocumentBytes } from "@app/services/documentBytesCache";
 import {
   FileContextAction,
   FileContextState,
   StirlingFileStub,
   ProcessedFilePage,
+  createStirlingFile,
 } from "@app/types/fileContext";
 import {
   forgetFile,
@@ -26,7 +29,7 @@ export class FileLifecycleManager {
   private fileGenerations = new Map<string, number>(); // Generation tokens to prevent stale cleanup
 
   constructor(
-    private filesRef: React.MutableRefObject<Map<FileId, File>>,
+    private filesRef: React.RefObject<Map<FileId, File>>,
     private dispatch: React.Dispatch<FileContextAction>,
   ) {}
 
@@ -55,7 +58,7 @@ export class FileLifecycleManager {
    */
   cleanupFile = (
     fileId: FileId,
-    stateRef?: React.MutableRefObject<FileContextState>,
+    stateRef?: React.RefObject<FileContextState>,
   ): void => {
     forgetFile(fileId);
     // Use comprehensive cleanup (same as removeFiles)
@@ -84,6 +87,9 @@ export class FileLifecycleManager {
     this.cleanupTimers.clear();
     this.fileGenerations.clear();
 
+    // No file survives teardown, so neither should its shared document.
+    releaseSharedDocumentWhenIdle();
+
     // Clear files ref
     this.filesRef.current.clear();
   };
@@ -94,7 +100,7 @@ export class FileLifecycleManager {
   scheduleCleanup = (
     fileId: FileId,
     delay: number = 30000,
-    stateRef?: React.MutableRefObject<FileContextState>,
+    stateRef?: React.RefObject<FileContextState>,
   ): void => {
     // Cancel existing timer
     const existingTimer = this.cleanupTimers.get(fileId);
@@ -133,7 +139,7 @@ export class FileLifecycleManager {
    */
   removeFiles = (
     fileIds: FileId[],
-    stateRef?: React.MutableRefObject<FileContextState>,
+    stateRef?: React.RefObject<FileContextState>,
   ): void => {
     fileIds.forEach((fileId) => {
       forgetFile(fileId);
@@ -150,9 +156,9 @@ export class FileLifecycleManager {
    */
   private cleanupAllResourcesForFile = (
     fileId: FileId,
-    stateRef?: React.MutableRefObject<FileContextState>,
+    stateRef?: React.RefObject<FileContextState>,
   ): void => {
-    // Remove from files ref
+    const file = this.filesRef.current.get(fileId);
     this.filesRef.current.delete(fileId);
 
     // Cancel cleanup timer and generation
@@ -162,6 +168,12 @@ export class FileLifecycleManager {
       this.cleanupTimers.delete(fileId);
     }
     this.fileGenerations.delete(fileId);
+
+    // A scan queued before this removal can still open the document, so the
+    // release runs behind the queue. The byte cache entry is keyed by the file
+    // and cannot be reused once it leaves the workbench.
+    releaseSharedDocumentWhenIdle();
+    if (file) releaseDocumentBytes(file);
 
     // Clean up blob URLs from file record if we have access to state
     if (stateRef) {
@@ -188,7 +200,7 @@ export class FileLifecycleManager {
   updateStirlingFileStub = (
     fileId: FileId,
     updates: Partial<StirlingFileStub>,
-    stateRef?: React.MutableRefObject<FileContextState>,
+    stateRef?: React.RefObject<FileContextState>,
   ): void => {
     // Guard against updating removed files (race condition protection)
     if (!this.filesRef.current.has(fileId)) {
@@ -204,6 +216,17 @@ export class FileLifecycleManager {
       if (DEBUG)
         console.warn(`🗂️ Attempted to update removed file (state): ${fileId}`);
       return;
+    }
+
+    // Tools name their output after the held File, not the stub, so a rename
+    // must replace it or the next tool run brings the old name back.
+    const held = this.filesRef.current.get(fileId);
+    if (held && updates.name !== undefined && updates.name !== held.name) {
+      const renamed = new File([held], updates.name, {
+        type: held.type,
+        lastModified: held.lastModified,
+      });
+      this.filesRef.current.set(fileId, createStirlingFile(renamed, fileId));
     }
 
     this.dispatch({

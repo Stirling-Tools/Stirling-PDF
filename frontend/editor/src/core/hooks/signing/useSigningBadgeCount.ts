@@ -1,21 +1,24 @@
-import { useSyncExternalStore } from "react";
+import { useMemo } from "react";
+import {
+  collectSigningItems,
+  type SigningMenuItem,
+} from "@app/utils/signingItems";
 import { useAuth } from "@app/auth/UseSession";
 import { useGroupSigningState } from "@app/hooks/useGroupSigningEnabled";
 import { useSigningSessions } from "@app/hooks/signing/useSigningSessions";
-import {
-  getLastSeenSignedCount,
-  getSigningSeenVersion,
-  subscribeSigningSeen,
-} from "@app/services/signingSeenStore";
+import { useSigningActivity } from "@app/hooks/signing/useSigningActivity";
 
 /**
- * Count that drives the Shared Signing badge: sign requests awaiting the user's
- * signature, plus the user's own sessions that gained new signatures since they
- * last opened them. 0 when group signing is disabled. Polls in the background
+ * Counts unread invitations, participant decisions and completed documents.
+ * Zero when group signing is disabled. Polls in the background
  * while enabled. Unsettled while auth, config or sessions load, or the session
  * lookup fails; consumers may retain their previous count until it settles.
  */
-export function useSigningBadgeState(): { count: number; settled: boolean } {
+export function useSigningBadgeState(): {
+  count: number;
+  settled: boolean;
+  items: SigningMenuItem[];
+} {
   const { loading: authLoading } = useAuth();
   const { enabled, settled: availabilitySettled } = useGroupSigningState();
   const { signRequests, mySessions, settled } = useSigningSessions({
@@ -23,26 +26,15 @@ export function useSigningBadgeState(): { count: number; settled: boolean } {
     autoRefreshInterval: enabled ? 60000 : 0,
   });
 
-  // Re-read the per-session "seen" markers whenever they change.
-  useSyncExternalStore(
-    subscribeSigningSeen,
-    getSigningSeenVersion,
-    getSigningSeenVersion,
+  const sessions = useMemo(
+    () => (enabled ? collectSigningItems(signRequests, mySessions) : []),
+    [enabled, signRequests, mySessions],
   );
-
-  const incoming = signRequests.filter(
-    (request) =>
-      request.myStatus !== "SIGNED" && request.myStatus !== "DECLINED",
-  ).length;
-
-  const ownerUpdates = mySessions.filter(
-    (session) =>
-      !session.finalized &&
-      session.signedCount > getLastSeenSignedCount(session.sessionId),
-  ).length;
+  const items = useSigningActivity(sessions);
 
   return {
-    count: enabled ? incoming + ownerUpdates : 0,
+    items,
+    count: items.filter((item) => item.unread).length,
     settled: !authLoading && availabilitySettled && (!enabled || settled),
   };
 }

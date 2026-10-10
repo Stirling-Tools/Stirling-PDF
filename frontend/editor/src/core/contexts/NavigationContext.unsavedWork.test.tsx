@@ -70,4 +70,16 @@ describe("the dirty state the disk reconciliation reads", () => {
     view.unmount();
     expect(hasUnsavedWork()).toBe(false);
   });
+
+  it("guards leaving the signing workspace and keeps it open when cancelled", () => {
+    renderEditor();
+    act(() => editor.setWorkbench("signing"));
+    act(() => editor.setHasUnsavedChanges(true));
+    act(() => editor.setWorkbench("myFiles"));
+    expect(editor.workbench).toBe("signing");
+    expect(editor.pendingNavigation).toEqual(expect.any(Function));
+    act(() => editor.cancelNavigation());
+    expect(editor.workbench).toBe("signing");
+    expect(editor.pendingNavigation).toBeNull();
+  });
 });

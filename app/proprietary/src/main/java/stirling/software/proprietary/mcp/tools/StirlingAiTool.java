@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.mcp.McpCallContext;
 import stirling.software.proprietary.mcp.McpTool;
+import stirling.software.proprietary.mcp.McpToolAnnotations;
 import stirling.software.proprietary.mcp.catalog.McpToolCatalog;
 import stirling.software.proprietary.mcp.catalog.OperationCategory;
 import stirling.software.proprietary.mcp.catalog.OperationMeta;
@@ -46,6 +47,16 @@ public class StirlingAiTool implements McpTool {
     @Override
     public String name() {
         return "stirling_ai";
+    }
+
+    @Override
+    public String title() {
+        return "Stirling AI";
+    }
+
+    @Override
+    public McpToolAnnotations annotations() {
+        return McpToolAnnotations.PRODUCES_FILE;
     }
 
     @Override

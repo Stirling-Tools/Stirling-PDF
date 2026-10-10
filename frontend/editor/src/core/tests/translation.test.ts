@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, test, expect } from "vitest";
 import fs from "fs";
 import path from "path";

@@ -1,5 +1,8 @@
 import { renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+vi.mock("@app/hooks/useLocalProcessingOnly", () => ({
+  useLocalProcessingOnly: () => false,
+}));
 
 const { useConnectedServerMock } = vi.hoisted(() => ({
   useConnectedServerMock: vi.fn(),

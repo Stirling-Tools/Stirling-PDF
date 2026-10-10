@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest";
 import { policyAcceptsFile } from "@app/services/policyInput";
 import type { PolicyState } from "@app/types/policies";

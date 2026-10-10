@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it, vi } from "vitest";
 import { PdfiumSave } from "@app/tools/pdfTextEditor/pdfium/PdfiumSave";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
