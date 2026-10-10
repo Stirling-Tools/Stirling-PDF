@@ -55,7 +55,9 @@ keepWorking = "Fortsæt med at arbejde"
 loading = "Laster..."
 loginAgreementAccept = "Accepter"
 loginAgreementDecline = "Afvis"
+loginAgreementLoadFailed = "The login agreement could not be loaded."
 loginAgreementProvider = "Denne meddelelse er leveret af din administrator, ikke af Stirling PDF Inc."
+loginAgreementRetry = "Retry"
 loginAgreementTitle = "Login-aftale"
 logOut = "Log ud"
 marginTooltip = "Afstand mellem sidetallet og sidens kant."
@@ -1939,9 +1941,6 @@ wrapUp = "Det var admin-rundvisningen! Du har set enterprise-funktionerne, der g
 admin = "Administrer"
 title = "Brugerkontrolindstillinger"
 
-[agents]
-stirling_name = "Stirling"
-
 [alphabetOptions]
 arabic = "Arabisk"
 chinese = "Kinesisk (forenklet)"
@@ -3219,21 +3218,16 @@ text = "For at gøre disse tilladelser uændrerlige skal du bruge værktøjet Ti
 [chat.actions]
 copy = "Kopiér besked"
 
-[chat.emptyState]
-text = "Stil et spørgsmål om dine dokumenter, eller få hjælp med PDF-værktøjer."
-
-[chat.fab]
-close = "Luk chat"
-open = "Åbn Stirling AI-assistent"
+[chat.dock]
+collapse = "Collapse chat"
+placeholder = "Ask Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Stirling-agentindstillinger"
-assistant = "AI-assistent"
 clearChat = "Ryd chat"
 
 [chat.input]
 disclaimer = "AI kan lave fejl. Sørg for at verificere outputtet, før du deler det."
-placeholder = "Hvad vil du gøre?"
 send = "Send besked"
 
 [chat.progress]
@@ -3264,9 +3258,7 @@ convertMany = "Konvertér disse dokumenter til PDF"
 convertOne = "Konvertér dette dokument til PDF"
 heading = "Kom i gang"
 mergeMany = "Flet disse {{count}} dokumenter til 1"
-moreFiles = "+{{count}} mere"
 openFromComputer = "Åbn fra computer"
-removeFile = "Fjern {{name}}"
 splitOne = "Opdel dette dokument"
 
 [chat.responses]
@@ -3278,11 +3270,6 @@ not_found = "Jeg kunne ikke finde de ønskede oplysninger."
 processing = "Behandler ({{outcome}})..."
 unsupported_capability = "Ikke-understøttet funktion: {{capability}}"
 usage_limit_reached = "Du har nået din brugsgrænse. Tjek dine planmuligheder for at fortsætte."
-
-[chat.toolsUsed]
-summary_one = "Kørte 1 værktøj"
-summary_other = "Kørte {{count}} værktøjer"
-unknownTool = "Ukendt værktøj"
 
 [classification.families]
 correspondence = "Korrespondance"
@@ -4364,6 +4351,10 @@ title = "Opdateret fra disk"
 body = "\"{{name}}\" blev ændret på disken. Den er stor nok til, at genindlæsning vil tage et stykke tid, så versionen her er ikke blevet ændret."
 title = "Fil ændret på disken"
 
+[desktopPrivacy]
+blocked = "Your administrator requires documents to stay on this device. This feature is unavailable."
+localFiles = "Local files"
+
 [desktopUpdate]
 downloading = "Downloader opdatering..."
 installing = "Installerer opdatering..."
@@ -4597,22 +4588,23 @@ viewInViewer = "Vis i fremviser"
 closeFile = "Luk fil"
 
 [fileEditor]
-addFiles = "Tilføj filer"
 closedFile = "Lukkede {{name}}"
 couldNotSave = "Kunne ikke gemme {{name}}"
-filesAdded_one = "Tilføjede {{count}} fil"
-filesAdded_other = "Tilføjede {{count}} filer"
 filesReordered_one = "Fil omarrangeret"
 filesReordered_other = "{{count}} filer omarrangeret"
 loadedFromStorage_one = "Indlæste {{count}} fil fra lager"
 loadedFromStorage_other = "Indlæste {{count}} filer fra lager"
 loadFromStorageFailed = "Kunne ikke indlæse nogle filer fra lager"
 pinnedFile = "Fastgjorde {{name}}"
-processFilesFailed = "Kunne ikke behandle filer"
 savedAndClosed = "Gemte og lukkede {{name}}"
 saveFailed = "Gemning mislykkedes"
 unpinnedFile = "Frigjorde {{name}}"
 unzipping = "Udpakker {{name}}"
+
+[fileEditor.addCard]
+dropHint = "or drop files anywhere"
+fromComputer = "Upload from computer"
+moreOptions = "More upload options"
 
 [fileEditor.unzip]
 error = "Fejl ved udpakning af {{name}}"
@@ -4729,7 +4721,6 @@ dataLostBody = "Denne browser mistede denne fils indhold. Upload den igen for at
 dataLostTitle = "Fildata er utilgængelige"
 downloadFailed = "Download mislykkedes"
 dropHint = "Åbn filer for at komme i gang"
-dropToAdd = "Slip filer for at tilføje"
 duplicateFailed = "Kunne ikke duplikere fil"
 expand = "Udvid sidepanel"
 googleDrive = "Google Drive"
@@ -5733,11 +5724,6 @@ desc = "Flet flere sider af et PDF-dokument til en enkelt side"
 tags = "layout,arranger,kombiner,N-up,2-up,4-up,flere pr. side,sider pr. ark,layout sider,flise,gitterlayout,flersidet layout,kombiner på side,handout"
 title = "Multi-Side Layout"
 
-[home.pdfCommentAgent]
-desc = "Bed AI om at annotere en PDF med klisternote-kommentarer baseret på din prompt"
-tags = "AI,agent,kommentar,annoter,klisternote,gennemgang,feedback,noter"
-title = "Tilføj AI-kommentarer"
-
 [home.pdfOrganiser]
 tags = "organiser,omarranger,omorganiser,arranger sider,sorter,flyt sider,slet sider,fjern sider,sideadministration,sideorganisator,omsekvenser"
 title = "Organisér"
@@ -6595,63 +6581,6 @@ yourCloudAccess = "Du bliver teammedlem og mister ejeradgang."
 deselectAll = "Ingen"
 selectAll = "Marker alle"
 
-[pageEditor]
-dragPreviewAlt = "Trækker"
-filePosition = "Position {{position}}"
-pageLabel = "Side {{page}}"
-title = "Sideeditor"
-
-[pageEditor.actions]
-deletePage = "Slet side"
-insertFileAfter = "Indsæt fil efter"
-moveLeft = "Flyt til venstre"
-moveRight = "Flyt til højre"
-rotateLeft = "Roter til venstre"
-rotateRight = "Roter til højre"
-splitAfter = "Opdel efter"
-
-[pageEditor.commands]
-addSplitAt = "Tilføj opdeling ved position {{position}}"
-addSplits_one = "Tilføj {{count}} opdeling"
-addSplits_other = "Tilføj {{count}} opdelinger"
-deletePages_one = "Slet {{count}} side"
-deletePages_other = "Slet {{count}} sider"
-insertFiles_one = "Indsæt {{count}} fil efter side {{page}}"
-insertFiles_other = "Indsæt {{count}} filer efter side {{page}}"
-insertPageBreaks_one = "Indsæt {{count}} sideskift"
-insertPageBreaks_other = "Indsæt {{count}} sideskift"
-insertPageBreaksAll = "Indsæt sideskift efter alle sider"
-removeAllSplits = "Fjern alle opdelinger"
-removeSplitAt = "Fjern opdeling ved position {{position}}"
-removeSplits_one = "Fjern {{count}} opdeling"
-removeSplits_other = "Fjern {{count}} opdelinger"
-reorderPages = "Omarranger sider"
-rotatePageLeft = "Roter side til venstre"
-rotatePageRight = "Roter side til højre"
-rotatePagesLeft_one = "Roter {{count}} side til venstre"
-rotatePagesLeft_other = "Roter {{count}} sider til venstre"
-rotatePagesRight_one = "Roter {{count}} side til højre"
-rotatePagesRight_other = "Roter {{count}} sider til højre"
-splitAllPages = "Opdel alle sider"
-toggleSplits_one = "Slå {{count}} opdelingsposition til/fra"
-toggleSplits_other = "Slå {{count}} opdelingspositioner til/fra"
-
-[pageEditor.emptyState]
-body = "Tilføj filer for at begynde at redigere sider"
-title = "Ingen PDF-filer indlæst"
-
-[pageEditor.fileDropdown]
-addFile = "Tilføj fil"
-selectedCount = "{{selected}}/{{total}} filer valgt"
-untitled = "Uden titel"
-
-[pageEditor.toolbar]
-delete = "Slet valgte"
-redo = "Gentag"
-rotateLeft = "Rotér valgte til venstre"
-rotateRight = "Rotér valgte til højre"
-undo = "Fortryd"
-
 [pageExtracter]
 title = "Udtræk Sider"
 
@@ -6815,6 +6744,76 @@ title = "Sideintervaller"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → vælger alle sider"
 title = "Særlige nøgleord"
+
+[pageTracks]
+blankPage = "Blank page"
+deleteSelected = "Delete selected pages"
+downloadAsOneFile = "Download as one file"
+downloadEachPage = "Download each page individually"
+downloadSelectedPages = "Download selected pages"
+dragging_one = "{{count}} page"
+dragging_other = "{{count}} pages"
+duplicateSelected = "Duplicate selected pages"
+edited = "edited"
+emptyTrack = "No pages left. Drag pages here, or save to close this file."
+insertBlank = "Insert blank page"
+insertBlankAfterSelected = "Insert blank pages after selected pages"
+moveLeft = "Move left"
+moveRight = "Move right"
+nextPage = "Next page"
+page = "Page {{number}}"
+pageCount_one = "{{count}} page"
+pageCount_other = "{{count}} pages"
+pagePosition = "Page {{number}} of {{total}}"
+prevPage = "Previous page"
+readingPages = "Reading pages..."
+redo = "Redo"
+rotateLeft = "Rotate left"
+rotateRight = "Rotate right"
+rotateSelectedLeft = "Rotate selected pages left"
+rotateSelectedRight = "Rotate selected pages right"
+saveAsOneFile = "Save as one file"
+saveChanges = "Save changes to all files"
+saveEachPage = "Save each page individually"
+saveSelectedPages = "Save selected pages"
+saving = "Saving..."
+savingProgress = "Saving {{done}} of {{total}}"
+selectPage = "Select page {{number}}"
+splitAfterSelected = "Split after selected pages"
+splitHere = "Split here"
+undo = "Undo"
+viewError = "Couldn't render this page"
+viewPage = "View page"
+zoomIn = "Zoom in"
+zoomOut = "Zoom out"
+
+[pageTracks.close]
+message = "Are you sure you want to close all files?"
+unsaved = "These files have unsaved changes."
+
+[pageTracks.delete]
+page = "Delete page"
+
+[pageTracks.empty]
+body = "Add PDFs to expand them into editable page tracks"
+title = "No PDF files loaded"
+
+[pageTracks.exportFailed]
+body = "The edited files couldn't be prepared. Try again."
+title = "Couldn't download"
+
+[pageTracks.saveFailed]
+body = "Your edits haven't been lost. Try saving again."
+title = "Couldn't save changes"
+
+[pageTracks.track]
+close = "Close file"
+collapse = "Collapse"
+expand = "Expand"
+rename = "Rename file"
+
+[pageTracks.wrap]
+label = "Wrap pages"
 
 [payg.activity]
 docs = "dokumenter"
@@ -7143,24 +7142,6 @@ totalSeats_other = "I alt ({{count}} pladser)"
 
 [payment.upgradeTeam]
 title = "Opgrader til Team"
-
-[pdfCommentAgent]
-submit = "Generér kommentarer"
-
-[pdfCommentAgent.error]
-emptyPrompt = "Beskriv venligst, hvad AI'en skal kommentere på"
-failed = "Kunne ikke generere kommentarer"
-tooLong = "Prompten er for lang (maks. {{max}} tegn)"
-
-[pdfCommentAgent.prompt]
-label = "Hvad skal AI'en kommentere på?"
-placeholder = "fx Markér uklare datoer og foreslå præciseringer"
-
-[pdfCommentAgent.results]
-title = "Kommenteret PDF"
-
-[pdfCommentAgent.settings]
-title = "Kommentarinstruktioner"
 
 [pdfOrganiser]
 placeholder = "(f.eks. 1,3,2 eller 4-8,2,10-12 eller 2n-1)"
@@ -7994,6 +7975,7 @@ before = "Indstil"
 title = "Stirling-forbindelse ikke konfigureret"
 
 [portal.accountLink.notice]
+loadFailed = "The account linking dialog could not be loaded."
 openFailed = "Kunne ikke åbne din browser. Åbn Forbrug og fakturering på din forbundne server for at linke en konto."
 
 [portal.accountLink.panel]
@@ -8117,9 +8099,6 @@ limit = "Månedlig forbrugsgrænse {{amount}}/md. Behandling sættes på pause v
 limitNoCap = "Ingen forbrugsgrænse. Behandling sættes ikke på pause. Fakturaer udsendes månedligt."
 
 [portal.billing.chip]
-invoices = "Fakturaer"
-nav = "Sektioner"
-payment = "Betaling"
 plan = "Plan"
 procurement = "Indkøb"
 usage = "Forbrug"
@@ -12054,6 +12033,7 @@ title = "Arbejdsområde"
 loginIncomplete = "Kunne ikke fuldføre login"
 noSaasServer = "Ingen SaaS-server konfigureret"
 noServer = "Ingen server konfigureret"
+policyUnavailable = "Unable to load your organisation's sign-in settings."
 saasLoginFailed = "SaaS-login mislykkedes"
 saasLoginIncomplete = "Kunne ikke fuldføre SaaS-login"
 selfHostedLoginFailed = "Selvhostet login mislykkedes"
@@ -13905,6 +13885,11 @@ title = "Vandmærketekst"
 image = "Billede"
 text = "Tekst"
 
+[workbench]
+dropFailedSingle = "Your file couldn't be added"
+dropFailedSome = "{{failed}} of your files couldn't be added"
+dropOverlay = "Drop files to add them to the workbench"
+
 [workbench.sessionRestore]
 none = "Dine tidligere filer er ikke længere gemt på denne enhed."
 partial = "Gendannede {{restored}} af {{total}} filer. Resten er ikke længere gemt på denne enhed."
@@ -13915,16 +13900,13 @@ annotations = "Anmærkninger"
 applyRedactionsFirst = "Anvend maskeringer først"
 closeAll = "Luk alle filer"
 closePdf = "Luk PDF"
-deleteSelected = "Slet valgte sider"
 deselectAll = "Fravælg alle"
 downloadAll = "Download alle"
 exitRedaction = "Afslut maskeringstilstand"
-exportAll = "Eksporter PDF"
-exportSelected = "Eksporter valgte sider"
 formFill = "Formulareditor"
 hideToolbar = "Skjul værktøjslinje"
 moreActions = "Flere handlinger"
-multiTool = "Multiværktøj"
+pageEditor = "Page Editor"
 panMode = "Panoreringstilstand"
 print = "Udskriv PDF"
 readAloud = "Oplæsning"
@@ -13938,7 +13920,6 @@ rulerSettings = "Målestoksindstillinger"
 save = "Gem"
 saveAll = "Gem alle"
 saveAs = "Gem som"
-saveChanges = "Gem ændringer"
 search = "Søg i PDF"
 selectAll = "Vælg alle"
 selectByNumber = "Vælg efter sidetal"

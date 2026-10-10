@@ -55,7 +55,9 @@ keepWorking = "Munka folytatása"
 loading = "Betöltés..."
 loginAgreementAccept = "Elfogadom"
 loginAgreementDecline = "Elutasítom"
+loginAgreementLoadFailed = "The login agreement could not be loaded."
 loginAgreementProvider = "Ezt a közleményt az Ön rendszergazdája biztosítja, nem a Stirling PDF Inc."
+loginAgreementRetry = "Retry"
 loginAgreementTitle = "Bejelentkezési megállapodás"
 logOut = "Kijelentkezés"
 marginTooltip = "A lapszám és az oldal széle közötti távolság."
@@ -1939,9 +1941,6 @@ wrapUp = "Ezzel véget ért az admin bemutató! Látta az enterprise funkciókat
 admin = "Rendszergazda"
 title = "Felhasználókezelés"
 
-[agents]
-stirling_name = "Stirling"
-
 [alphabetOptions]
 arabic = "Arab"
 chinese = "Kínai (egyszerűsített)"
@@ -3219,21 +3218,16 @@ text = "Ezeket a jogosultságokat tegye megváltoztathatatlanná a \"Jelszó hoz
 [chat.actions]
 copy = "Üzenet másolása"
 
-[chat.emptyState]
-text = "Tegyen fel kérdést a dokumentumairól, vagy kérjen segítséget a PDF-eszközökkel kapcsolatban."
-
-[chat.fab]
-close = "Chat bezárása"
-open = "Stirling AI asszisztens megnyitása"
+[chat.dock]
+collapse = "Collapse chat"
+placeholder = "Ask Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Stirling ügynök beállításai"
-assistant = "AI asszisztens"
 clearChat = "Csevegés törlése"
 
 [chat.input]
 disclaimer = "Az AI hibázhat. Megosztás előtt mindenképpen ellenőrizze a kimenetet."
-placeholder = "Mit szeretne tenni?"
 send = "Üzenet küldése"
 
 [chat.progress]
@@ -3264,9 +3258,7 @@ convertMany = "Ezeknek a dokumentumoknak az átalakítása PDF-be"
 convertOne = "E dokumentum átalakítása PDF-be"
 heading = "Kezdés"
 mergeMany = "E {{count}} dokumentum egyesítése egy dokumentummá"
-moreFiles = "+{{count}} további"
 openFromComputer = "Megnyitás a számítógépről"
-removeFile = "{{name}} eltávolítása"
 splitOne = "E dokumentum felosztása"
 
 [chat.responses]
@@ -3278,11 +3270,6 @@ not_found = "A kért információ nem található."
 processing = "Feldolgozás ({{outcome}})..."
 unsupported_capability = "Nem támogatott képesség: {{capability}}"
 usage_limit_reached = "Elérte a használati korlátot. Tekintse meg csomaglehetőségeit a folytatáshoz."
-
-[chat.toolsUsed]
-summary_one = "1 eszköz futtatva"
-summary_other = "{{count}} eszköz futtatva"
-unknownTool = "Ismeretlen eszköz"
 
 [classification.families]
 correspondence = "Levelezés"
@@ -4364,6 +4351,10 @@ title = "Frissítve a lemezről"
 body = "A(z) „{{name}}” módosult a lemezen. Elég nagy ahhoz, hogy az újratöltése eltartson egy ideig, ezért az itt lévő verzió változatlan maradt."
 title = "A fájl módosult a lemezen"
 
+[desktopPrivacy]
+blocked = "Your administrator requires documents to stay on this device. This feature is unavailable."
+localFiles = "Local files"
+
 [desktopUpdate]
 downloading = "Frissítés letöltése..."
 installing = "Frissítés telepítése..."
@@ -4597,22 +4588,23 @@ viewInViewer = "Megtekintés a megjelenítőben"
 closeFile = "Fájl bezárása"
 
 [fileEditor]
-addFiles = "Fájlok hozzáadása"
 closedFile = "{{name}} bezárva"
 couldNotSave = "Nem sikerült menteni: {{name}}"
-filesAdded_one = "{{count}} fájl hozzáadva"
-filesAdded_other = "{{count}} fájl hozzáadva"
 filesReordered_one = "Fájl átrendezve"
 filesReordered_other = "{{count}} fájl átrendezve"
 loadedFromStorage_one = "{{count}} fájl betöltve a tárhelyről"
 loadedFromStorage_other = "{{count}} fájl betöltve a tárhelyről"
 loadFromStorageFailed = "Nem sikerült néhány fájlt betölteni a tárhelyről"
 pinnedFile = "{{name}} rögzítve"
-processFilesFailed = "Nem sikerült feldolgozni a fájlokat"
 savedAndClosed = "{{name}} mentve és bezárva"
 saveFailed = "A mentés sikertelen"
 unpinnedFile = "{{name}} rögzítése feloldva"
 unzipping = "{{name}} kicsomagolása"
+
+[fileEditor.addCard]
+dropHint = "or drop files anywhere"
+fromComputer = "Upload from computer"
+moreOptions = "More upload options"
 
 [fileEditor.unzip]
 error = "Hiba {{name}} kicsomagolásakor"
@@ -4729,7 +4721,6 @@ dataLostBody = "Ez a böngésző elvesztette ennek a fájlnak a tartalmát. Töl
 dataLostTitle = "A fájladatok nem érhetők el"
 downloadFailed = "A letöltés sikertelen"
 dropHint = "A kezdéshez nyisson meg fájlokat"
-dropToAdd = "Húzza ide a fájlokat a hozzáadáshoz"
 duplicateFailed = "Nem sikerült duplikálni a fájlt"
 expand = "Oldalsáv kinyitása"
 googleDrive = "Google Drive"
@@ -5733,11 +5724,6 @@ desc = "PDF dokumentum több oldalának egyesítése egyetlen oldalra"
 tags = "elrendezés,rendezés,egyesítés,N-up,2-up,4-up,több oldal laponként,oldalak laponként,oldalak elrendezése,csempézés,rácselrendezés,többoldalas elrendezés,egyesítés oldalon,kiosztmány"
 title = "Többoldalas elrendezés"
 
-[home.pdfCommentAgent]
-desc = "Kérje meg az AI-t, hogy az utasítása alapján ragadós jegyzetekkel lássa el a PDF-et"
-tags = "AI,ügynök,megjegyzés,annotálás,ragadós jegyzet,áttekintés,visszajelzés,jegyzetek"
-title = "AI-megjegyzések hozzáadása"
-
 [home.pdfOrganiser]
 tags = "rendezés,átrendezés,újrasorrendezés,oldalak rendezése,sorrendezés,oldalak mozgatása,oldalak törlése,oldalak eltávolítása,oldalkezelés,oldalrendező,újrasorrendezés"
 title = "Rendszerezés"
@@ -6595,63 +6581,6 @@ yourCloudAccess = "Csapattaggá válik, és elveszíti a tulajdonosi hozzáfér�
 deselectAll = "Nincs"
 selectAll = "Összes kijelölése"
 
-[pageEditor]
-dragPreviewAlt = "Húzás"
-filePosition = "Pozíció: {{position}}"
-pageLabel = "{{page}}. oldal"
-title = "Oldalszerkesztő"
-
-[pageEditor.actions]
-deletePage = "Oldal törlése"
-insertFileAfter = "Fájl beszúrása utána"
-moveLeft = "Mozgatás balra"
-moveRight = "Mozgatás jobbra"
-rotateLeft = "Forgatás balra"
-rotateRight = "Forgatás jobbra"
-splitAfter = "Felosztás utána"
-
-[pageEditor.commands]
-addSplitAt = "Felosztás hozzáadása a(z) {{position}} pozíciónál"
-addSplits_one = "{{count}} felosztás hozzáadása"
-addSplits_other = "{{count}} felosztás hozzáadása"
-deletePages_one = "{{count}} oldal törlése"
-deletePages_other = "{{count}} oldal törlése"
-insertFiles_one = "{{count}} fájl beszúrása a(z) {{page}}. oldal után"
-insertFiles_other = "{{count}} fájl beszúrása a(z) {{page}}. oldal után"
-insertPageBreaks_one = "{{count}} oldaltörés beszúrása"
-insertPageBreaks_other = "{{count}} oldaltörés beszúrása"
-insertPageBreaksAll = "Oldaltörések beszúrása minden oldal után"
-removeAllSplits = "Összes felosztás eltávolítása"
-removeSplitAt = "Felosztás eltávolítása a(z) {{position}} pozíciónál"
-removeSplits_one = "{{count}} felosztás eltávolítása"
-removeSplits_other = "{{count}} felosztás eltávolítása"
-reorderPages = "Oldalak újrarendezése"
-rotatePageLeft = "Oldal forgatása balra"
-rotatePageRight = "Oldal forgatása jobbra"
-rotatePagesLeft_one = "{{count}} oldal forgatása balra"
-rotatePagesLeft_other = "{{count}} oldal forgatása balra"
-rotatePagesRight_one = "{{count}} oldal forgatása jobbra"
-rotatePagesRight_other = "{{count}} oldal forgatása jobbra"
-splitAllPages = "Összes oldal felosztása"
-toggleSplits_one = "{{count}} felosztási pozíció átváltása"
-toggleSplits_other = "{{count}} felosztási pozíció átváltása"
-
-[pageEditor.emptyState]
-body = "Adjon hozzá fájlokat az oldalak szerkesztésének megkezdéséhez"
-title = "Nincsenek betöltve PDF-fájlok"
-
-[pageEditor.fileDropdown]
-addFile = "Fájl hozzáadása"
-selectedCount = "{{selected}}/{{total}} fájl kiválasztva"
-untitled = "Névtelen"
-
-[pageEditor.toolbar]
-delete = "Kijelöltek törlése"
-redo = "Újra"
-rotateLeft = "Kijelöltek forgatása balra"
-rotateRight = "Kijelöltek forgatása jobbra"
-undo = "Visszavonás"
-
 [pageExtracter]
 title = "Oldalak kinyerése"
 
@@ -6815,6 +6744,76 @@ title = "Oldaltartományok"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → az összes oldal kijelölése"
 title = "Speciális kulcsszavak"
+
+[pageTracks]
+blankPage = "Blank page"
+deleteSelected = "Delete selected pages"
+downloadAsOneFile = "Download as one file"
+downloadEachPage = "Download each page individually"
+downloadSelectedPages = "Download selected pages"
+dragging_one = "{{count}} page"
+dragging_other = "{{count}} pages"
+duplicateSelected = "Duplicate selected pages"
+edited = "edited"
+emptyTrack = "No pages left. Drag pages here, or save to close this file."
+insertBlank = "Insert blank page"
+insertBlankAfterSelected = "Insert blank pages after selected pages"
+moveLeft = "Move left"
+moveRight = "Move right"
+nextPage = "Next page"
+page = "Page {{number}}"
+pageCount_one = "{{count}} page"
+pageCount_other = "{{count}} pages"
+pagePosition = "Page {{number}} of {{total}}"
+prevPage = "Previous page"
+readingPages = "Reading pages..."
+redo = "Redo"
+rotateLeft = "Rotate left"
+rotateRight = "Rotate right"
+rotateSelectedLeft = "Rotate selected pages left"
+rotateSelectedRight = "Rotate selected pages right"
+saveAsOneFile = "Save as one file"
+saveChanges = "Save changes to all files"
+saveEachPage = "Save each page individually"
+saveSelectedPages = "Save selected pages"
+saving = "Saving..."
+savingProgress = "Saving {{done}} of {{total}}"
+selectPage = "Select page {{number}}"
+splitAfterSelected = "Split after selected pages"
+splitHere = "Split here"
+undo = "Undo"
+viewError = "Couldn't render this page"
+viewPage = "View page"
+zoomIn = "Zoom in"
+zoomOut = "Zoom out"
+
+[pageTracks.close]
+message = "Are you sure you want to close all files?"
+unsaved = "These files have unsaved changes."
+
+[pageTracks.delete]
+page = "Delete page"
+
+[pageTracks.empty]
+body = "Add PDFs to expand them into editable page tracks"
+title = "No PDF files loaded"
+
+[pageTracks.exportFailed]
+body = "The edited files couldn't be prepared. Try again."
+title = "Couldn't download"
+
+[pageTracks.saveFailed]
+body = "Your edits haven't been lost. Try saving again."
+title = "Couldn't save changes"
+
+[pageTracks.track]
+close = "Close file"
+collapse = "Collapse"
+expand = "Expand"
+rename = "Rename file"
+
+[pageTracks.wrap]
+label = "Wrap pages"
 
 [payg.activity]
 docs = "dokumentumok"
@@ -7143,24 +7142,6 @@ totalSeats_other = "Összesen ({{count}} hely)"
 
 [payment.upgradeTeam]
 title = "Frissítés Team csomagra"
-
-[pdfCommentAgent]
-submit = "Megjegyzések létrehozása"
-
-[pdfCommentAgent.error]
-emptyPrompt = "Kérjük, írja le, mire tegyen megjegyzést az AI"
-failed = "Nem sikerült megjegyzéseket létrehozni"
-tooLong = "Az utasítás túl hosszú (legfeljebb {{max}} karakter)"
-
-[pdfCommentAgent.prompt]
-label = "Mire tegyen megjegyzést az AI?"
-placeholder = "pl. Jelölje meg a kétértelmű dátumokat, és javasoljon pontosításokat"
-
-[pdfCommentAgent.results]
-title = "Megjegyzésekkel ellátott PDF"
-
-[pdfCommentAgent.settings]
-title = "Megjegyzési utasítások"
 
 [pdfOrganiser]
 placeholder = "(pl. 1,3,2 vagy 4-8,2,10-12 vagy 2n-1)"
@@ -7994,6 +7975,7 @@ before = "Állítsa be:"
 title = "A Stirling-kapcsolat nincs konfigurálva"
 
 [portal.accountLink.notice]
+loadFailed = "The account linking dialog could not be loaded."
 openFailed = "Nem sikerült megnyitni a böngészőt. Nyissa meg a Használat és számlázás részt a csatlakoztatott szerverén egy fiók összekapcsolásához."
 
 [portal.accountLink.panel]
@@ -8117,9 +8099,6 @@ limit = "Havi költési korlát: {{amount}}/hó. A feldolgozás a korlátnál sz
 limitNoCap = "Nincs költési korlát. A feldolgozás nem szünetel. A számlák havonta készülnek."
 
 [portal.billing.chip]
-invoices = "Számlák"
-nav = "Szakaszok"
-payment = "Fizetés"
 plan = "Csomag"
 procurement = "Beszerzés"
 usage = "Használat"
@@ -12054,6 +12033,7 @@ title = "Munkaterület"
 loginIncomplete = "Nem sikerült befejezni a bejelentkezést"
 noSaasServer = "Nincs konfigurálva SaaS szerver"
 noServer = "Nincs konfigurálva szerver"
+policyUnavailable = "Unable to load your organisation's sign-in settings."
 saasLoginFailed = "SaaS bejelentkezés sikertelen"
 saasLoginIncomplete = "Nem sikerült befejezni a SaaS bejelentkezést"
 selfHostedLoginFailed = "Saját üzemeltetésű bejelentkezés sikertelen"
@@ -13905,6 +13885,11 @@ title = "Vízjel szövege"
 image = "Kép"
 text = "Szöveg"
 
+[workbench]
+dropFailedSingle = "Your file couldn't be added"
+dropFailedSome = "{{failed}} of your files couldn't be added"
+dropOverlay = "Drop files to add them to the workbench"
+
 [workbench.sessionRestore]
 none = "Az előző fájljai már nincsenek tárolva ezen az eszközön."
 partial = "{{restored}} / {{total}} fájl visszaállítva. A többi már nincs tárolva ezen az eszközön."
@@ -13915,16 +13900,13 @@ annotations = "Annotációk"
 applyRedactionsFirst = "Először alkalmazza a kitakarásokat"
 closeAll = "Összes fájl bezárása"
 closePdf = "PDF bezárása"
-deleteSelected = "Kijelölt oldalak törlése"
 deselectAll = "Összes kijelölés megszüntetése"
 downloadAll = "Összes letöltése"
 exitRedaction = "Kilépés a kitakarási módból"
-exportAll = "PDF exportálása"
-exportSelected = "Kijelölt oldalak exportálása"
 formFill = "Űrlapszerkesztő"
 hideToolbar = "Eszköztár elrejtése"
 moreActions = "További műveletek"
-multiTool = "Többfunkciós eszköz"
+pageEditor = "Page Editor"
 panMode = "Mozgatás mód"
 print = "PDF nyomtatása"
 readAloud = "Felolvasás"
@@ -13938,7 +13920,6 @@ rulerSettings = "Méretarány beállításai"
 save = "Mentés"
 saveAll = "Összes mentése"
 saveAs = "Mentés másként"
-saveChanges = "Változtatások mentése"
 search = "PDF keresése"
 selectAll = "Összes kijelölése"
 selectByNumber = "Kiválasztás oldalszámok szerint"

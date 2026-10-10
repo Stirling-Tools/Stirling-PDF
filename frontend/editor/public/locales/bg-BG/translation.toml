@@ -55,7 +55,9 @@ keepWorking = "Продължи работа"
 loading = "Зареждане на..."
 loginAgreementAccept = "Приеми"
 loginAgreementDecline = "Откажи"
+loginAgreementLoadFailed = "The login agreement could not be loaded."
 loginAgreementProvider = "Това уведомление е предоставено от вашия администратор, а не от Stirling PDF Inc."
+loginAgreementRetry = "Retry"
 loginAgreementTitle = "Споразумение за влизане"
 logOut = "Изход"
 marginTooltip = "Разстоянието между номера на страницата и ръба на страницата."
@@ -1939,9 +1941,6 @@ wrapUp = "Това беше администраторската обиколк�
 admin = "Администратор"
 title = "Настройки за потребителски контрол"
 
-[agents]
-stirling_name = "Stirling"
-
 [alphabetOptions]
 arabic = "Арабски"
 chinese = "Китайски (опростен)"
@@ -3219,21 +3218,16 @@ text = "За да направите тези разрешения непром�
 [chat.actions]
 copy = "Копирайте съобщение"
 
-[chat.emptyState]
-text = "Задайте въпрос за вашите документи или получете помощ с PDF инструменти."
-
-[chat.fab]
-close = "Затваряне на чата"
-open = "Отваряне на Stirling AI асистента"
+[chat.dock]
+collapse = "Collapse chat"
+placeholder = "Ask Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Опции на агента Stirling"
-assistant = "AI асистент"
 clearChat = "Изчистете чата"
 
 [chat.input]
 disclaimer = "AI може да допуска грешки. Не забравяйте да проверите резултата, преди да го споделите."
-placeholder = "Какво искате да направите?"
 send = "Изпратете съобщение"
 
 [chat.progress]
@@ -3264,9 +3258,7 @@ convertMany = "Преобразувайте тези документи в PDF"
 convertOne = "Преобразувайте този документ в PDF"
 heading = "Първи стъпки"
 mergeMany = "Слейте тези {{count}} документа в 1"
-moreFiles = "+{{count}} още"
 openFromComputer = "Отворете от компютър"
-removeFile = "Премахнете {{name}}"
 splitOne = "Разделете този документ"
 
 [chat.responses]
@@ -3278,11 +3270,6 @@ not_found = "Не успях да намеря исканата информац
 processing = "Обработка ({{outcome}})..."
 unsupported_capability = "Неподдържана възможност: {{capability}}"
 usage_limit_reached = "Достигнахте лимита си за използване. Проверете опциите на плана си, за да продължите."
-
-[chat.toolsUsed]
-summary_one = "Изпълнен е 1 инструмент"
-summary_other = "Изпълнени са {{count}} инструмента"
-unknownTool = "Неизвестен инструмент"
 
 [classification.families]
 correspondence = "Кореспонденция"
@@ -4364,6 +4351,10 @@ title = "Актуализирано от диска"
 body = "\"{{name}}\" е променен на диска. Достатъчно голям е, че презареждането му ще отнеме време, затова версията тук е оставена непроменена."
 title = "Файлът е променен на диска"
 
+[desktopPrivacy]
+blocked = "Your administrator requires documents to stay on this device. This feature is unavailable."
+localFiles = "Local files"
+
 [desktopUpdate]
 downloading = "Изтегляне на актуализация..."
 installing = "Инсталиране на актуализация..."
@@ -4597,22 +4588,23 @@ viewInViewer = "Преглед във визуализатора"
 closeFile = "Затворете файла"
 
 [fileEditor]
-addFiles = "Добави файлове"
 closedFile = "Затворен {{name}}"
 couldNotSave = "Неуспешно записване на {{name}}"
-filesAdded_one = "Добавен {{count}} файл"
-filesAdded_other = "Добавени {{count}} файла"
 filesReordered_one = "Файлът е пренареден"
 filesReordered_other = "{{count}} файла са пренаредени"
 loadedFromStorage_one = "Зареден {{count}} файл от хранилището"
 loadedFromStorage_other = "Заредени {{count}} файла от хранилището"
 loadFromStorageFailed = "Неуспешно зареждане на някои файлове от хранилището"
 pinnedFile = "Закачен {{name}}"
-processFilesFailed = "Неуспешна обработка на файловете"
 savedAndClosed = "Записан и затворен {{name}}"
 saveFailed = "Записването е неуспешно"
 unpinnedFile = "Откачен {{name}}"
 unzipping = "Разархивиране на {{name}}"
+
+[fileEditor.addCard]
+dropHint = "or drop files anywhere"
+fromComputer = "Upload from computer"
+moreOptions = "More upload options"
 
 [fileEditor.unzip]
 error = "Грешка при разархивиране на {{name}}"
@@ -4729,7 +4721,6 @@ dataLostBody = "Този браузър изгуби съдържанието н
 dataLostTitle = "Данните на файла не са налични"
 downloadFailed = "Изтеглянето не бе успешно"
 dropHint = "Отворете файлове, за да започнете"
-dropToAdd = "Пуснете файлове за добавяне"
 duplicateFailed = "Файлът не можа да бъде дублиран"
 expand = "Разгъване на страничната лента"
 googleDrive = "Google Drive"
@@ -5733,11 +5724,6 @@ desc = "Слейте няколко страници от PDF документ �
 tags = "оформление,подреждане,комбиниране,N-up,2-up,4-up,няколко на страница,страници на лист,оформяне на страници,плочка,мрежово оформление,многостранично оформление,комбиниране на страница,раздавателен материал"
 title = "Оформление с няколко страници"
 
-[home.pdfCommentAgent]
-desc = "Помолете AI да анотира PDF с коментари тип лепящи бележки въз основа на вашата заявка"
-tags = "AI,агент,коментар,анотиране,лепяща бележка,преглед,обратна връзка,бележки"
-title = "Добавяне на AI коментари"
-
 [home.pdfOrganiser]
 tags = "организиране,пренареждане,преподреждане,подреждане на страници,сортиране,преместване на страници,изтриване на страници,премахване на страници,управление на страници,организатор на страници,преномериране на последователност"
 title = "Организиране"
@@ -6595,63 +6581,6 @@ yourCloudAccess = "Ще станете член на екипа и ще загу
 deselectAll = "Нито един"
 selectAll = "Маркиране на всички"
 
-[pageEditor]
-dragPreviewAlt = "Плъзгане"
-filePosition = "Позиция {{position}}"
-pageLabel = "Страница {{page}}"
-title = "Редактор на страници"
-
-[pageEditor.actions]
-deletePage = "Изтриване на страница"
-insertFileAfter = "Вмъкване на файл след"
-moveLeft = "Преместване наляво"
-moveRight = "Преместване надясно"
-rotateLeft = "Завъртане наляво"
-rotateRight = "Завъртане надясно"
-splitAfter = "Разделяне след"
-
-[pageEditor.commands]
-addSplitAt = "Добави разделяне на позиция {{position}}"
-addSplits_one = "Добави {{count}} разделяне"
-addSplits_other = "Добави {{count}} разделяния"
-deletePages_one = "Изтрий {{count}} страница"
-deletePages_other = "Изтрий {{count}} страници"
-insertFiles_one = "Вмъкни {{count}} файл след страница {{page}}"
-insertFiles_other = "Вмъкни {{count}} файла след страница {{page}}"
-insertPageBreaks_one = "Вмъкни {{count}} прекъсване на страница"
-insertPageBreaks_other = "Вмъкни {{count}} прекъсвания на страница"
-insertPageBreaksAll = "Вмъкни прекъсвания на страница след всички страници"
-removeAllSplits = "Премахни всички разделяния"
-removeSplitAt = "Премахни разделянето на позиция {{position}}"
-removeSplits_one = "Премахни {{count}} разделяне"
-removeSplits_other = "Премахни {{count}} разделяния"
-reorderPages = "Пренареди страниците"
-rotatePageLeft = "Завърти страницата наляво"
-rotatePageRight = "Завърти страницата надясно"
-rotatePagesLeft_one = "Завърти {{count}} страница наляво"
-rotatePagesLeft_other = "Завърти {{count}} страници наляво"
-rotatePagesRight_one = "Завърти {{count}} страница надясно"
-rotatePagesRight_other = "Завърти {{count}} страници надясно"
-splitAllPages = "Раздели всички страници"
-toggleSplits_one = "Превключи {{count}} позиция за разделяне"
-toggleSplits_other = "Превключи {{count}} позиции за разделяне"
-
-[pageEditor.emptyState]
-body = "Добавете файлове, за да започнете редактиране на страници"
-title = "Няма заредени PDF файлове"
-
-[pageEditor.fileDropdown]
-addFile = "Добавяне на файл"
-selectedCount = "Избрани {{selected}}/{{total}} файла"
-untitled = "Без заглавие"
-
-[pageEditor.toolbar]
-delete = "Изтрийте избраните"
-redo = "Повторете"
-rotateLeft = "Завъртете избраните наляво"
-rotateRight = "Завъртете избраните надясно"
-undo = "Отменете"
-
 [pageExtracter]
 title = "Извличане на страници"
 
@@ -6815,6 +6744,76 @@ title = "Диапазони от страници"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → избира всички страници"
 title = "Специални ключови думи"
+
+[pageTracks]
+blankPage = "Blank page"
+deleteSelected = "Delete selected pages"
+downloadAsOneFile = "Download as one file"
+downloadEachPage = "Download each page individually"
+downloadSelectedPages = "Download selected pages"
+dragging_one = "{{count}} page"
+dragging_other = "{{count}} pages"
+duplicateSelected = "Duplicate selected pages"
+edited = "edited"
+emptyTrack = "No pages left. Drag pages here, or save to close this file."
+insertBlank = "Insert blank page"
+insertBlankAfterSelected = "Insert blank pages after selected pages"
+moveLeft = "Move left"
+moveRight = "Move right"
+nextPage = "Next page"
+page = "Page {{number}}"
+pageCount_one = "{{count}} page"
+pageCount_other = "{{count}} pages"
+pagePosition = "Page {{number}} of {{total}}"
+prevPage = "Previous page"
+readingPages = "Reading pages..."
+redo = "Redo"
+rotateLeft = "Rotate left"
+rotateRight = "Rotate right"
+rotateSelectedLeft = "Rotate selected pages left"
+rotateSelectedRight = "Rotate selected pages right"
+saveAsOneFile = "Save as one file"
+saveChanges = "Save changes to all files"
+saveEachPage = "Save each page individually"
+saveSelectedPages = "Save selected pages"
+saving = "Saving..."
+savingProgress = "Saving {{done}} of {{total}}"
+selectPage = "Select page {{number}}"
+splitAfterSelected = "Split after selected pages"
+splitHere = "Split here"
+undo = "Undo"
+viewError = "Couldn't render this page"
+viewPage = "View page"
+zoomIn = "Zoom in"
+zoomOut = "Zoom out"
+
+[pageTracks.close]
+message = "Are you sure you want to close all files?"
+unsaved = "These files have unsaved changes."
+
+[pageTracks.delete]
+page = "Delete page"
+
+[pageTracks.empty]
+body = "Add PDFs to expand them into editable page tracks"
+title = "No PDF files loaded"
+
+[pageTracks.exportFailed]
+body = "The edited files couldn't be prepared. Try again."
+title = "Couldn't download"
+
+[pageTracks.saveFailed]
+body = "Your edits haven't been lost. Try saving again."
+title = "Couldn't save changes"
+
+[pageTracks.track]
+close = "Close file"
+collapse = "Collapse"
+expand = "Expand"
+rename = "Rename file"
+
+[pageTracks.wrap]
+label = "Wrap pages"
 
 [payg.activity]
 docs = "документи"
@@ -7143,24 +7142,6 @@ totalSeats_other = "Общо ({{count}} места)"
 
 [payment.upgradeTeam]
 title = "Надграждане до Team"
-
-[pdfCommentAgent]
-submit = "Генериране на коментари"
-
-[pdfCommentAgent.error]
-emptyPrompt = "Моля, опишете върху какво да коментира AI"
-failed = "Неуспешно генериране на коментари"
-tooLong = "Заявката е твърде дълга (максимум {{max}} знака)"
-
-[pdfCommentAgent.prompt]
-label = "Върху какво да коментира AI?"
-placeholder = "напр. Отбележете всички двусмислени дати и предложете уточнения"
-
-[pdfCommentAgent.results]
-title = "PDF с коментари"
-
-[pdfCommentAgent.settings]
-title = "Инструкции за коментиране"
 
 [pdfOrganiser]
 placeholder = "(напр. 1,3,2 или 4-8,2,10-12 или 2n-1)"
@@ -7994,6 +7975,7 @@ before = "Задайте"
 title = "Stirling връзката не е конфигурирана"
 
 [portal.accountLink.notice]
+loadFailed = "The account linking dialog could not be loaded."
 openFailed = "Браузърът ви не можа да бъде отворен. Отворете Употреба и фактуриране на свързания си сървър, за да свържете акаунт."
 
 [portal.accountLink.panel]
@@ -8117,9 +8099,6 @@ limit = "Месечен лимит за разходи {{amount}}/мес. Обр
 limitNoCap = "Без лимит за разходи. Обработката няма да спира на пауза. Фактурите се издават месечно."
 
 [portal.billing.chip]
-invoices = "Фактури"
-nav = "Раздели"
-payment = "Плащане"
 plan = "План"
 procurement = "Снабдяване"
 usage = "Употреба"
@@ -12054,6 +12033,7 @@ title = "Работно пространство"
 loginIncomplete = "Неуспешно завършване на входа"
 noSaasServer = "Няма конфигуриран SaaS сървър"
 noServer = "Няма конфигуриран сървър"
+policyUnavailable = "Unable to load your organisation's sign-in settings."
 saasLoginFailed = "Неуспешен вход в SaaS"
 saasLoginIncomplete = "Неуспешно завършване на входа в SaaS"
 selfHostedLoginFailed = "Неуспешен вход в самостоятелно хостван сървър"
@@ -13905,6 +13885,11 @@ title = "Текст на водния знак"
 image = "Изображение"
 text = "Текст"
 
+[workbench]
+dropFailedSingle = "Your file couldn't be added"
+dropFailedSome = "{{failed}} of your files couldn't be added"
+dropOverlay = "Drop files to add them to the workbench"
+
 [workbench.sessionRestore]
 none = "Предишните ви файлове вече не се съхраняват на това устройство."
 partial = "Възстановени са {{restored}} от {{total}} файла. Останалите вече не се съхраняват на това устройство."
@@ -13915,16 +13900,13 @@ annotations = "Анотации"
 applyRedactionsFirst = "Първо приложете заличаванията"
 closeAll = "Затваряне на всички файлове"
 closePdf = "Затваряне на PDF"
-deleteSelected = "Изтриване на избраните страници"
 deselectAll = "Премахване на избора от всички"
 downloadAll = "Изтегляне на всички"
 exitRedaction = "Изход от режим на заличаване"
-exportAll = "Експортиране на PDF"
-exportSelected = "Експортиране на избраните страници"
 formFill = "Редактор на формуляри"
 hideToolbar = "Скриване на лентата с инструменти"
 moreActions = "Още действия"
-multiTool = "Мултиинструмент"
+pageEditor = "Page Editor"
 panMode = "Режим на преместване"
 print = "Печат на PDF"
 readAloud = "Четене на глас"
@@ -13938,7 +13920,6 @@ rulerSettings = "Настройки на мащаба"
 save = "Запазване"
 saveAll = "Запазване на всички"
 saveAs = "Запазване като"
-saveChanges = "Запазване на промените"
 search = "Търсене в PDF"
 selectAll = "Избиране на всички"
 selectByNumber = "Избор по номера на страници"

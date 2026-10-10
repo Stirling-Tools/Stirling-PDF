@@ -55,7 +55,9 @@ keepWorking = "Lanjutkan"
 loading = "Mengambil data..."
 loginAgreementAccept = "Setuju"
 loginAgreementDecline = "Tolak"
+loginAgreementLoadFailed = "The login agreement could not be loaded."
 loginAgreementProvider = "Pemberitahuan ini disediakan oleh administrator Anda, bukan Stirling PDF Inc."
+loginAgreementRetry = "Retry"
 loginAgreementTitle = "Perjanjian Login"
 logOut = "Keluar"
 marginTooltip = "Jarak antara nomor halaman dan tepi halaman."
@@ -1939,9 +1941,6 @@ wrapUp = "Itu tadi tur admin! Anda telah melihat fitur enterprise yang menjadika
 admin = "Administrator"
 title = "Pengaturan Kontrol Pengguna"
 
-[agents]
-stirling_name = "Stirling"
-
 [alphabetOptions]
 arabic = "Arab"
 chinese = "Tionghoa (Sederhana)"
@@ -3219,21 +3218,16 @@ text = "Agar izin ini tidak dapat diubah, gunakan alat Tambah Kata Sandi untuk m
 [chat.actions]
 copy = "Salin pesan"
 
-[chat.emptyState]
-text = "Ajukan pertanyaan tentang dokumen Anda atau dapatkan bantuan dengan alat PDF."
-
-[chat.fab]
-close = "Tutup chat"
-open = "Buka asisten AI Stirling"
+[chat.dock]
+collapse = "Collapse chat"
+placeholder = "Ask Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Opsi agen Stirling"
-assistant = "Asisten AI"
 clearChat = "Hapus obrolan"
 
 [chat.input]
 disclaimer = "AI dapat membuat kesalahan. Pastikan untuk memverifikasi output sebelum membagikannya."
-placeholder = "Apa yang ingin Anda lakukan?"
 send = "Kirim pesan"
 
 [chat.progress]
@@ -3264,9 +3258,7 @@ convertMany = "Konversi dokumen ini ke PDF"
 convertOne = "Konversi dokumen ini ke PDF"
 heading = "Mulai"
 mergeMany = "Gabungkan {{count}} dokumen ini menjadi 1"
-moreFiles = "+{{count}} lainnya"
 openFromComputer = "Buka dari komputer"
-removeFile = "Hapus {{name}}"
 splitOne = "Pisahkan dokumen ini"
 
 [chat.responses]
@@ -3278,11 +3270,6 @@ not_found = "Saya tidak dapat menemukan informasi yang diminta."
 processing = "Memproses ({{outcome}})..."
 unsupported_capability = "Kemampuan tidak didukung: {{capability}}"
 usage_limit_reached = "Anda telah mencapai batas penggunaan. Periksa opsi paket Anda untuk melanjutkan."
-
-[chat.toolsUsed]
-summary_one = "Menjalankan 1 alat"
-summary_other = "Menjalankan {{count}} alat"
-unknownTool = "Alat tidak dikenal"
 
 [classification.families]
 correspondence = "Korespondensi"
@@ -4364,6 +4351,10 @@ title = "Diperbarui dari disk"
 body = "\"{{name}}\" berubah di disk. Ukurannya cukup besar sehingga memuat ulang akan memakan waktu, jadi versi di sini dibiarkan apa adanya."
 title = "File berubah di disk"
 
+[desktopPrivacy]
+blocked = "Your administrator requires documents to stay on this device. This feature is unavailable."
+localFiles = "Local files"
+
 [desktopUpdate]
 downloading = "Mengunduh pembaruan..."
 installing = "Memasang pembaruan..."
@@ -4597,22 +4588,23 @@ viewInViewer = "Lihat di Penampil"
 closeFile = "Tutup file"
 
 [fileEditor]
-addFiles = "Tambahkan File"
 closedFile = "Menutup {{name}}"
 couldNotSave = "Tidak dapat menyimpan {{name}}"
-filesAdded_one = "Menambahkan {{count}} file"
-filesAdded_other = "Menambahkan {{count}} file"
 filesReordered_one = "File diurutkan ulang"
 filesReordered_other = "{{count}} file diurutkan ulang"
 loadedFromStorage_one = "Memuat {{count}} file dari penyimpanan"
 loadedFromStorage_other = "Memuat {{count}} file dari penyimpanan"
 loadFromStorageFailed = "Gagal memuat beberapa file dari penyimpanan"
 pinnedFile = "Menyematkan {{name}}"
-processFilesFailed = "Gagal memproses file"
 savedAndClosed = "Menyimpan dan menutup {{name}}"
 saveFailed = "Penyimpanan gagal"
 unpinnedFile = "Melepas sematan {{name}}"
 unzipping = "Mengekstrak ZIP {{name}}"
+
+[fileEditor.addCard]
+dropHint = "or drop files anywhere"
+fromComputer = "Upload from computer"
+moreOptions = "More upload options"
 
 [fileEditor.unzip]
 error = "Kesalahan saat mengekstrak ZIP {{name}}"
@@ -4729,7 +4721,6 @@ dataLostBody = "Browser ini kehilangan isi file ini. Unggah lagi untuk terus men
 dataLostTitle = "Data file tidak tersedia"
 downloadFailed = "Unduhan gagal"
 dropHint = "Buka file untuk memulai"
-dropToAdd = "Jatuhkan file untuk menambahkan"
 duplicateFailed = "Tidak dapat menggandakan file"
 expand = "Perluas bilah samping"
 googleDrive = "Google Drive"
@@ -5733,11 +5724,6 @@ desc = "Menggabungkan beberapa halaman dokumen PDF menjadi satu halaman"
 tags = "tata letak,susun,gabungkan,N-up,2-up,4-up,banyak per halaman,halaman per lembar,tata letak halaman,ubin,tata letak grid,tata letak multi-halaman,gabungkan di halaman,handout"
 title = "Tata Letak Multi-Halaman"
 
-[home.pdfCommentAgent]
-desc = "Minta AI memberi anotasi pada PDF dengan komentar catatan tempel berdasarkan prompt Anda"
-tags = "AI,agen,komentar,anotasi,catatan tempel,ulasan,umpan balik,catatan"
-title = "Tambahkan komentar AI"
-
 [home.pdfOrganiser]
 tags = "atur,susun ulang,urut ulang,susun halaman,sortir,pindahkan halaman,hapus halaman,hapus halaman,manajemen halaman,pengatur halaman,urutkan ulang"
 title = "Mengatur"
@@ -6595,63 +6581,6 @@ yourCloudAccess = "Anda akan menjadi anggota tim dan kehilangan akses pemilik."
 deselectAll = "Tidak ada"
 selectAll = "Centang Semua"
 
-[pageEditor]
-dragPreviewAlt = "Menyeret"
-filePosition = "Posisi {{position}}"
-pageLabel = "Halaman {{page}}"
-title = "Editor Halaman"
-
-[pageEditor.actions]
-deletePage = "Hapus Halaman"
-insertFileAfter = "Sisipkan File Setelahnya"
-moveLeft = "Pindahkan ke Kiri"
-moveRight = "Pindahkan ke Kanan"
-rotateLeft = "Putar ke Kiri"
-rotateRight = "Putar ke Kanan"
-splitAfter = "Pisahkan Setelahnya"
-
-[pageEditor.commands]
-addSplitAt = "Tambahkan pemisahan di posisi {{position}}"
-addSplits_one = "Tambahkan {{count}} pemisahan"
-addSplits_other = "Tambahkan {{count}} pemisahan"
-deletePages_one = "Hapus {{count}} halaman"
-deletePages_other = "Hapus {{count}} halaman"
-insertFiles_one = "Sisipkan {{count}} file setelah halaman {{page}}"
-insertFiles_other = "Sisipkan {{count}} file setelah halaman {{page}}"
-insertPageBreaks_one = "Sisipkan {{count}} pemisah halaman"
-insertPageBreaks_other = "Sisipkan {{count}} pemisah halaman"
-insertPageBreaksAll = "Sisipkan pemisah halaman setelah semua halaman"
-removeAllSplits = "Hapus semua pemisahan"
-removeSplitAt = "Hapus pemisahan di posisi {{position}}"
-removeSplits_one = "Hapus {{count}} pemisahan"
-removeSplits_other = "Hapus {{count}} pemisahan"
-reorderPages = "Urutkan ulang halaman"
-rotatePageLeft = "Putar halaman ke kiri"
-rotatePageRight = "Putar halaman ke kanan"
-rotatePagesLeft_one = "Putar {{count}} halaman ke kiri"
-rotatePagesLeft_other = "Putar {{count}} halaman ke kiri"
-rotatePagesRight_one = "Putar {{count}} halaman ke kanan"
-rotatePagesRight_other = "Putar {{count}} halaman ke kanan"
-splitAllPages = "Pisahkan semua halaman"
-toggleSplits_one = "Alihkan {{count}} posisi pemisahan"
-toggleSplits_other = "Alihkan {{count}} posisi pemisahan"
-
-[pageEditor.emptyState]
-body = "Tambahkan file untuk mulai mengedit halaman"
-title = "Tidak ada file PDF dimuat"
-
-[pageEditor.fileDropdown]
-addFile = "Tambah File"
-selectedCount = "{{selected}}/{{total}} file dipilih"
-untitled = "Tanpa judul"
-
-[pageEditor.toolbar]
-delete = "Hapus yang dipilih"
-redo = "Ulangi"
-rotateLeft = "Putar yang dipilih ke kiri"
-rotateRight = "Putar yang dipilih ke kanan"
-undo = "Urungkan"
-
 [pageExtracter]
 title = "Ekstrak Halaman"
 
@@ -6815,6 +6744,76 @@ title = "Rentang Halaman"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → memilih semua halaman"
 title = "Kata Kunci Khusus"
+
+[pageTracks]
+blankPage = "Blank page"
+deleteSelected = "Delete selected pages"
+downloadAsOneFile = "Download as one file"
+downloadEachPage = "Download each page individually"
+downloadSelectedPages = "Download selected pages"
+dragging_one = "{{count}} page"
+dragging_other = "{{count}} pages"
+duplicateSelected = "Duplicate selected pages"
+edited = "edited"
+emptyTrack = "No pages left. Drag pages here, or save to close this file."
+insertBlank = "Insert blank page"
+insertBlankAfterSelected = "Insert blank pages after selected pages"
+moveLeft = "Move left"
+moveRight = "Move right"
+nextPage = "Next page"
+page = "Page {{number}}"
+pageCount_one = "{{count}} page"
+pageCount_other = "{{count}} pages"
+pagePosition = "Page {{number}} of {{total}}"
+prevPage = "Previous page"
+readingPages = "Reading pages..."
+redo = "Redo"
+rotateLeft = "Rotate left"
+rotateRight = "Rotate right"
+rotateSelectedLeft = "Rotate selected pages left"
+rotateSelectedRight = "Rotate selected pages right"
+saveAsOneFile = "Save as one file"
+saveChanges = "Save changes to all files"
+saveEachPage = "Save each page individually"
+saveSelectedPages = "Save selected pages"
+saving = "Saving..."
+savingProgress = "Saving {{done}} of {{total}}"
+selectPage = "Select page {{number}}"
+splitAfterSelected = "Split after selected pages"
+splitHere = "Split here"
+undo = "Undo"
+viewError = "Couldn't render this page"
+viewPage = "View page"
+zoomIn = "Zoom in"
+zoomOut = "Zoom out"
+
+[pageTracks.close]
+message = "Are you sure you want to close all files?"
+unsaved = "These files have unsaved changes."
+
+[pageTracks.delete]
+page = "Delete page"
+
+[pageTracks.empty]
+body = "Add PDFs to expand them into editable page tracks"
+title = "No PDF files loaded"
+
+[pageTracks.exportFailed]
+body = "The edited files couldn't be prepared. Try again."
+title = "Couldn't download"
+
+[pageTracks.saveFailed]
+body = "Your edits haven't been lost. Try saving again."
+title = "Couldn't save changes"
+
+[pageTracks.track]
+close = "Close file"
+collapse = "Collapse"
+expand = "Expand"
+rename = "Rename file"
+
+[pageTracks.wrap]
+label = "Wrap pages"
 
 [payg.activity]
 docs = "dokumen"
@@ -7143,24 +7142,6 @@ totalSeats_other = "Total ({{count}} kursi)"
 
 [payment.upgradeTeam]
 title = "Upgrade ke Team"
-
-[pdfCommentAgent]
-submit = "Hasilkan komentar"
-
-[pdfCommentAgent.error]
-emptyPrompt = "Jelaskan hal yang harus dikomentari AI"
-failed = "Gagal menghasilkan komentar"
-tooLong = "Prompt terlalu panjang (maksimum {{max}} karakter)"
-
-[pdfCommentAgent.prompt]
-label = "Apa yang harus dikomentari AI?"
-placeholder = "mis. Tandai tanggal yang ambigu dan sarankan klarifikasi"
-
-[pdfCommentAgent.results]
-title = "PDF dengan komentar"
-
-[pdfCommentAgent.settings]
-title = "Instruksi komentar"
 
 [pdfOrganiser]
 placeholder = "(misalnya 1,3,2 atau 4-8,2,10-12 atau 2n-1)"
@@ -7994,6 +7975,7 @@ before = "Atur"
 title = "Koneksi Stirling belum dikonfigurasi"
 
 [portal.accountLink.notice]
+loadFailed = "The account linking dialog could not be loaded."
 openFailed = "Tidak dapat membuka browser Anda. Buka Penggunaan & penagihan di server terhubung Anda untuk menautkan akun."
 
 [portal.accountLink.panel]
@@ -8117,9 +8099,6 @@ limit = "Batas pengeluaran bulanan {{amount}}/bln. Pemrosesan dijeda saat mencap
 limitNoCap = "Tanpa batas pengeluaran. Pemrosesan tidak akan dijeda. Faktur diterbitkan bulanan."
 
 [portal.billing.chip]
-invoices = "Faktur"
-nav = "Bagian"
-payment = "Pembayaran"
 plan = "Paket"
 procurement = "Pengadaan"
 usage = "Penggunaan"
@@ -12054,6 +12033,7 @@ title = "Ruang kerja"
 loginIncomplete = "Gagal menyelesaikan login"
 noSaasServer = "Tidak ada server SaaS yang dikonfigurasi"
 noServer = "Tidak ada server yang dikonfigurasi"
+policyUnavailable = "Unable to load your organisation's sign-in settings."
 saasLoginFailed = "Login SaaS gagal"
 saasLoginIncomplete = "Gagal menyelesaikan login SaaS"
 selfHostedLoginFailed = "Login self-hosted gagal"
@@ -13905,6 +13885,11 @@ title = "Teks Tanda Air"
 image = "Gambar"
 text = "Teks"
 
+[workbench]
+dropFailedSingle = "Your file couldn't be added"
+dropFailedSome = "{{failed}} of your files couldn't be added"
+dropOverlay = "Drop files to add them to the workbench"
+
 [workbench.sessionRestore]
 none = "File Anda sebelumnya tidak lagi disimpan di perangkat ini."
 partial = "Memulihkan {{restored}} dari {{total}} file. Sisanya tidak lagi disimpan di perangkat ini."
@@ -13915,16 +13900,13 @@ annotations = "Anotasi"
 applyRedactionsFirst = "Terapkan redaksi terlebih dahulu"
 closeAll = "Tutup semua file"
 closePdf = "Tutup PDF"
-deleteSelected = "Hapus Halaman yang Dipilih"
 deselectAll = "Batalkan semua pilihan"
 downloadAll = "Unduh Semua"
 exitRedaction = "Keluar dari Mode Redaksi"
-exportAll = "Ekspor PDF"
-exportSelected = "Ekspor Halaman yang Dipilih"
 formFill = "Editor Formulir"
 hideToolbar = "Sembunyikan bilah alat"
 moreActions = "Tindakan lainnya"
-multiTool = "Multi-Alat"
+pageEditor = "Page Editor"
 panMode = "Mode Geser"
 print = "Cetak PDF"
 readAloud = "Baca Nyaring"
@@ -13938,7 +13920,6 @@ rulerSettings = "Pengaturan Skala"
 save = "Simpan"
 saveAll = "Simpan Semua"
 saveAs = "Simpan Sebagai"
-saveChanges = "Simpan Perubahan"
 search = "Cari PDF"
 selectAll = "Pilih Semua"
 selectByNumber = "Pilih berdasarkan Nomor Halaman"

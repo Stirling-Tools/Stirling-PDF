@@ -55,7 +55,9 @@ keepWorking = "തുടർന്നു പ്രവർത്തിക്കു�
 loading = "ലോഡ് ചെയ്യുന്നു..."
 loginAgreementAccept = "അംഗീകരിക്കുക"
 loginAgreementDecline = "നിരസിക്കുക"
+loginAgreementLoadFailed = "The login agreement could not be loaded."
 loginAgreementProvider = "ഈ അറിയിപ്പ് നിങ്ങളുടെ അഡ്മിനിസ്ട്രേറ്റർ നൽകുന്നതാണ്, Stirling PDF Inc. അല്ല."
+loginAgreementRetry = "Retry"
 loginAgreementTitle = "ലോഗിൻ കരാർ"
 logOut = "ലോഗൗട്ട് ചെയ്യുക"
 marginTooltip = "പേജ് നമ്പറും പേജിന്റെ അരവുമുള്ള ദൂരം."
@@ -1939,9 +1941,6 @@ wrapUp = "അഡ്മിൻ tour ഇതോടെ കഴിഞ്ഞു! Stirlin
 admin = "അഡ്മിൻ"
 title = "ഉപയോക്തൃ നിയന്ത്രണ ക്രമീകരണങ്ങൾ"
 
-[agents]
-stirling_name = "Stirling"
-
 [alphabetOptions]
 arabic = "അറബിക്"
 chinese = "ചൈനീസ് (ലളിതമാക്കിയ)"
@@ -3219,21 +3218,16 @@ text = "ഈ അനുമതികൾ മാറ്റാൻ പറ്റാത്
 [chat.actions]
 copy = "സന്ദേശം പകർത്തുക"
 
-[chat.emptyState]
-text = "നിങ്ങളുടെ documents-നെക്കുറിച്ച് ചോദ്യം ചോദിക്കുകയോ PDF tools സംബന്ധിച്ച സഹായം നേടുകയോ ചെയ്യുക."
-
-[chat.fab]
-close = "Chat അടയ്ക്കുക"
-open = "Stirling AI assistant തുറക്കുക"
+[chat.dock]
+collapse = "Collapse chat"
+placeholder = "Ask Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Stirling ഏജന്റ് ഓപ്ഷനുകൾ"
-assistant = "AI അസിസ്റ്റന്റ്"
 clearChat = "ചാറ്റ് മായ്ക്കുക"
 
 [chat.input]
 disclaimer = "AI-ക്ക് തെറ്റുകൾ സംഭവിക്കാം. പങ്കിടുന്നതിന് മുമ്പ് output പരിശോധിക്കുക."
-placeholder = "താങ്കൾക്ക് എന്ത് ചെയ്യണമെന്നുണ്ട്?"
 send = "സന്ദേശം അയക്കുക"
 
 [chat.progress]
@@ -3264,9 +3258,7 @@ convertMany = "ഈ ഡോക്യുമെന്റുകൾ PDF ആക്ക�
 convertOne = "ഈ ഡോക്യുമെന്റ് PDF ആക്കി മാറ്റുക"
 heading = "തുടങ്ങാം"
 mergeMany = "ഈ {{count}} ഡോക്യുമെന്റുകൾ 1 ആയി സംയോജിപ്പിക്കുക"
-moreFiles = "+{{count}} കൂടി"
 openFromComputer = "കമ്പ്യൂട്ടറിൽ നിന്ന് തുറക്കുക"
-removeFile = "{{name}} നീക്കുക"
 splitOne = "ഈ ഡോക്യുമെന്റിനെ വിഭജിക്കുക"
 
 [chat.responses]
@@ -3278,11 +3270,6 @@ not_found = "ആവശ്യപ്പെട്ട വിവരങ്ങൾ ക�
 processing = "പ്രോസസ്സ് ചെയ്യുന്നു ({{outcome}})..."
 unsupported_capability = "പിന്തുണയില്ലാത്ത ശേഷി: {{capability}}"
 usage_limit_reached = "നിങ്ങളുടെ usage limit എത്തി. തുടരണെങ്കിൽ plan options പരിശോധിക്കുക."
-
-[chat.toolsUsed]
-summary_one = "1 ടൂൾ പ്രവർത്തിപ്പിച്ചു"
-summary_other = "{{count}} ടൂളുകൾ പ്രവർത്തിപ്പിച്ചു"
-unknownTool = "അപരിചിത ടൂൾ"
 
 [classification.families]
 correspondence = "കത്തിടപാട്"
@@ -4364,6 +4351,10 @@ title = "ഡിസ്കിൽ നിന്ന് അപ്ഡേറ്റ് �
 body = "\"{{name}}\" ഡിസ്കിൽ മാറ്റി. വീണ്ടും ലോഡ് ചെയ്യാൻ കുറച്ച് സമയം എടുക്കുംവിധം ഇത് വലുതാണ്, അതിനാൽ ഇവിടെയുള്ള പതിപ്പ് അതേപടി വിട്ടിരിക്കുന്നു."
 title = "ഫയൽ ഡിസ്കിൽ മാറ്റി"
 
+[desktopPrivacy]
+blocked = "Your administrator requires documents to stay on this device. This feature is unavailable."
+localFiles = "Local files"
+
 [desktopUpdate]
 downloading = "അപ്ഡേറ്റ് ഡൗൺലോഡ് ചെയ്യുന്നു..."
 installing = "അപ്ഡേറ്റ് ഇൻസ്റ്റാൾ ചെയ്യുന്നു..."
@@ -4597,22 +4588,23 @@ viewInViewer = "വ്യൂവറിൽ കാണുക"
 closeFile = "ഫയൽ അടയ്ക്കുക"
 
 [fileEditor]
-addFiles = "ഫയലുകൾ ചേർക്കുക"
 closedFile = "{{name}} അടച്ചു"
 couldNotSave = "{{name}} സംരക്ഷിക്കാനായില്ല"
-filesAdded_one = "{{count}} ഫയൽ ചേർത്തു"
-filesAdded_other = "{{count}} ഫയലുകൾ ചേർത്തു"
 filesReordered_one = "ഫയൽ പുനഃക്രമീകരിച്ചു"
 filesReordered_other = "{{count}} ഫയലുകൾ പുനഃക്രമീകരിച്ചു"
 loadedFromStorage_one = "സ്റ്റോറേജിൽ നിന്ന് {{count}} ഫയൽ ലോഡ് ചെയ്തു"
 loadedFromStorage_other = "സ്റ്റോറേജിൽ നിന്ന് {{count}} ഫയലുകൾ ലോഡ് ചെയ്തു"
 loadFromStorageFailed = "സ്റ്റോറേജിൽ നിന്ന് ചില ഫയലുകൾ ലോഡ് ചെയ്യാൻ പരാജയപ്പെട്ടു"
 pinnedFile = "{{name}} പിൻ ചെയ്തു"
-processFilesFailed = "ഫയലുകൾ പ്രോസസ്സ് ചെയ്യാൻ പരാജയപ്പെട്ടു"
 savedAndClosed = "{{name}} സംരക്ഷിച്ച് അടച്ചു"
 saveFailed = "സംരക്ഷണം പരാജയപ്പെട്ടു"
 unpinnedFile = "{{name}} പിൻ ഒഴിവാക്കി"
 unzipping = "{{name}} അൺസിപ്പ് ചെയ്യുന്നു"
+
+[fileEditor.addCard]
+dropHint = "or drop files anywhere"
+fromComputer = "Upload from computer"
+moreOptions = "More upload options"
 
 [fileEditor.unzip]
 error = "{{name}} അൺസിപ്പ് ചെയ്യുന്നതിൽ പിശക്"
@@ -4729,7 +4721,6 @@ dataLostBody = "ഈ browser ഈ file-ന്റെ contents നഷ്ടപ്പ
 dataLostTitle = "File data ലഭ്യമല്ല"
 downloadFailed = "ഡൗൺലോഡ് പരാജയപ്പെട്ടു"
 dropHint = "തുടങ്ങാൻ ഫയലുകൾ തുറക്കുക"
-dropToAdd = "ചേർക്കാൻ files drop ചെയ്യുക"
 duplicateFailed = "File duplicate ചെയ്യാനായില്ല"
 expand = "സൈഡ്ബാർ വിപുലീകരിക്കുക"
 googleDrive = "Google Drive"
@@ -5733,11 +5724,6 @@ desc = "ഒരു PDF പ്രമാണത്തിന്റെ ഒന്നി
 tags = "layout,arrange,combine,N-up,2-up,4-up,multiple per page,pages per sheet,പേജുകൾ layout ചെയ്യുക,tile,grid layout,multi-page layout,combine on page,handout"
 title = "മൾട്ടി-പേജ് ലേഔട്ട്"
 
-[home.pdfCommentAgent]
-desc = "നിങ്ങളുടെ പ്രോമ്പ്റ്റ് അടിസ്ഥാനമാക്കി സ്റ്റിക്കി-നോട്ട് കമന്റുകളോടെ PDF ആനോട്ടേറ്റ് ചെയ്യാൻ AIയോട് ചോദിക്കുക"
-tags = "AI,ഏജന്റ്,കമന്റ്,ആനോട്ടേറ്റ്,സ്റ്റിക്കി നോട്ട്,റിവ്യൂ,ഫീഡ്‌ബാക്ക്,കുറിപ്പുകൾ"
-title = "AI കമന്റുകൾ ചേർക്കുക"
-
 [home.pdfOrganiser]
 tags = "organize,rearrange,reorder,പേജുകൾ arrange ചെയ്യുക,sort,പേജുകൾ move ചെയ്യുക,പേജുകൾ delete ചെയ്യുക,പേജുകൾ remove ചെയ്യുക,page management,page organizer,resequence"
 title = "ക്രമീകരിക്കുക"
@@ -6595,63 +6581,6 @@ yourCloudAccess = "നിങ്ങൾ ടീം അംഗമാകും, ഉട
 deselectAll = "ഒന്നുമില്ല"
 selectAll = "എല്ലാം തിരഞ്ഞെടുക്കുക"
 
-[pageEditor]
-dragPreviewAlt = "വലിച്ചിടുന്നു"
-filePosition = "സ്ഥാനം {{position}}"
-pageLabel = "പേജ് {{page}}"
-title = "പേജ് എഡിറ്റർ"
-
-[pageEditor.actions]
-deletePage = "പേജ് ഇല്ലാതാക്കുക"
-insertFileAfter = "ശേഷം ഫയൽ ചേർക്കുക"
-moveLeft = "ഇടത്തേക്ക് നീക്കുക"
-moveRight = "വലത്തേക്ക് നീക്കുക"
-rotateLeft = "ഇടത്തേക്ക് തിരിക്കുക"
-rotateRight = "വലത്തേക്ക് തിരിക്കുക"
-splitAfter = "ശേഷം വിഭജിക്കുക"
-
-[pageEditor.commands]
-addSplitAt = "സ്ഥാനം {{position}}-ൽ split ചേർക്കുക"
-addSplits_one = "{{count}} split ചേർക്കുക"
-addSplits_other = "{{count}} splits ചേർക്കുക"
-deletePages_one = "{{count}} പേജ് ഇല്ലാതാക്കുക"
-deletePages_other = "{{count}} പേജുകൾ ഇല്ലാതാക്കുക"
-insertFiles_one = "പേജ് {{page}}-ന് ശേഷം {{count}} ഫയൽ insert ചെയ്യുക"
-insertFiles_other = "പേജ് {{page}}-ന് ശേഷം {{count}} ഫയലുകൾ insert ചെയ്യുക"
-insertPageBreaks_one = "{{count}} page break insert ചെയ്യുക"
-insertPageBreaks_other = "{{count}} page breaks insert ചെയ്യുക"
-insertPageBreaksAll = "എല്ലാ പേജുകൾക്കും ശേഷം page breaks insert ചെയ്യുക"
-removeAllSplits = "എല്ലാ splits-ഉം നീക്കം ചെയ്യുക"
-removeSplitAt = "സ്ഥാനം {{position}}-ലെ split നീക്കം ചെയ്യുക"
-removeSplits_one = "{{count}} split നീക്കം ചെയ്യുക"
-removeSplits_other = "{{count}} splits നീക്കം ചെയ്യുക"
-reorderPages = "പേജുകൾ പുനഃക്രമീകരിക്കുക"
-rotatePageLeft = "പേജ് ഇടത്തേക്ക് rotate ചെയ്യുക"
-rotatePageRight = "പേജ് വലത്തേക്ക് rotate ചെയ്യുക"
-rotatePagesLeft_one = "{{count}} പേജ് ഇടത്തേക്ക് rotate ചെയ്യുക"
-rotatePagesLeft_other = "{{count}} പേജുകൾ ഇടത്തേക്ക് rotate ചെയ്യുക"
-rotatePagesRight_one = "{{count}} പേജ് വലത്തേക്ക് rotate ചെയ്യുക"
-rotatePagesRight_other = "{{count}} പേജുകൾ വലത്തേക്ക് rotate ചെയ്യുക"
-splitAllPages = "എല്ലാ പേജുകളും split ചെയ്യുക"
-toggleSplits_one = "{{count}} split position toggle ചെയ്യുക"
-toggleSplits_other = "{{count}} split positions toggle ചെയ്യുക"
-
-[pageEditor.emptyState]
-body = "പേജുകൾ എഡിറ്റ് ചെയ്യാൻ ഫയലുകൾ ചേർക്കുക"
-title = "PDF ഫയലുകൾ ലോഡ് ചെയ്തിട്ടില്ല"
-
-[pageEditor.fileDropdown]
-addFile = "ഫയൽ ചേർക്കുക"
-selectedCount = "{{selected}}/{{total}} ഫയലുകൾ തിരഞ്ഞെടുത്തു"
-untitled = "ശീർഷകമില്ലാത്തത്"
-
-[pageEditor.toolbar]
-delete = "തെരഞ്ഞെടുത്തത് ഇല്ലാതാക്കുക"
-redo = "റീഡോ"
-rotateLeft = "തെരഞ്ഞെടുത്തത് ഇടത്തോട്ട് തിരിക്കുക"
-rotateRight = "തെരഞ്ഞെടുത്തത് വലത്തോട്ട് തിരിക്കുക"
-undo = "അൺഡോ"
-
 [pageExtracter]
 title = "പേജുകൾ വേർതിരിച്ചെടുക്കുക"
 
@@ -6815,6 +6744,76 @@ title = "പേജ് പരിധികൾ"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → എല്ലാ പേജുകളും തിരഞ്ഞെടുക്കുന്നു"
 title = "പ്രത്യേക കീവേഡുകൾ"
+
+[pageTracks]
+blankPage = "Blank page"
+deleteSelected = "Delete selected pages"
+downloadAsOneFile = "Download as one file"
+downloadEachPage = "Download each page individually"
+downloadSelectedPages = "Download selected pages"
+dragging_one = "{{count}} page"
+dragging_other = "{{count}} pages"
+duplicateSelected = "Duplicate selected pages"
+edited = "edited"
+emptyTrack = "No pages left. Drag pages here, or save to close this file."
+insertBlank = "Insert blank page"
+insertBlankAfterSelected = "Insert blank pages after selected pages"
+moveLeft = "Move left"
+moveRight = "Move right"
+nextPage = "Next page"
+page = "Page {{number}}"
+pageCount_one = "{{count}} page"
+pageCount_other = "{{count}} pages"
+pagePosition = "Page {{number}} of {{total}}"
+prevPage = "Previous page"
+readingPages = "Reading pages..."
+redo = "Redo"
+rotateLeft = "Rotate left"
+rotateRight = "Rotate right"
+rotateSelectedLeft = "Rotate selected pages left"
+rotateSelectedRight = "Rotate selected pages right"
+saveAsOneFile = "Save as one file"
+saveChanges = "Save changes to all files"
+saveEachPage = "Save each page individually"
+saveSelectedPages = "Save selected pages"
+saving = "Saving..."
+savingProgress = "Saving {{done}} of {{total}}"
+selectPage = "Select page {{number}}"
+splitAfterSelected = "Split after selected pages"
+splitHere = "Split here"
+undo = "Undo"
+viewError = "Couldn't render this page"
+viewPage = "View page"
+zoomIn = "Zoom in"
+zoomOut = "Zoom out"
+
+[pageTracks.close]
+message = "Are you sure you want to close all files?"
+unsaved = "These files have unsaved changes."
+
+[pageTracks.delete]
+page = "Delete page"
+
+[pageTracks.empty]
+body = "Add PDFs to expand them into editable page tracks"
+title = "No PDF files loaded"
+
+[pageTracks.exportFailed]
+body = "The edited files couldn't be prepared. Try again."
+title = "Couldn't download"
+
+[pageTracks.saveFailed]
+body = "Your edits haven't been lost. Try saving again."
+title = "Couldn't save changes"
+
+[pageTracks.track]
+close = "Close file"
+collapse = "Collapse"
+expand = "Expand"
+rename = "Rename file"
+
+[pageTracks.wrap]
+label = "Wrap pages"
 
 [payg.activity]
 docs = "ഡോക്യുമെന്റുകൾ"
@@ -7143,24 +7142,6 @@ totalSeats_other = "ആകെ ({{count}} സീറ്റുകൾ)"
 
 [payment.upgradeTeam]
 title = "Teamലേക്ക് അപ്‌ഗ്രേഡ് ചെയ്യുക"
-
-[pdfCommentAgent]
-submit = "കമന്റുകൾ സൃഷ്ടിക്കുക"
-
-[pdfCommentAgent.error]
-emptyPrompt = "AI എന്തിനെക്കുറിച്ച് കമന്റ് ചെയ്യണമെന്ന് ദയവായി വിവരിക്കുക"
-failed = "കമന്റുകൾ സൃഷ്ടിക്കൽ പരാജയപ്പെട്ടു"
-tooLong = "പ്രോമ്പ്റ്റ് വളരെ നീളമാണ് (പരമാവധി {{max}} അക്ഷരങ്ങൾ)"
-
-[pdfCommentAgent.prompt]
-label = "AI എന്തിനെക്കുറിച്ച് കമന്റ് ചെയ്യണം?"
-placeholder = "ഉദാ. ദ്വയാർഥമുള്ള തീയതികളെ ഫ്ലാഗ് ചെയ്ത് വ്യക്തതകൾ നിർദ്ദേശിക്കുക"
-
-[pdfCommentAgent.results]
-title = "കമന്റ് ചെയ്ത PDF"
-
-[pdfCommentAgent.settings]
-title = "കമന്റ് നിർദേശങ്ങൾ"
 
 [pdfOrganiser]
 placeholder = "(ഉദാ. 1,3,2 അല്ലെങ്കിൽ 4-8,2,10-12 അല്ലെങ്കിൽ 2n-1)"
@@ -7994,6 +7975,7 @@ before = "സജ്ജമാക്കുക"
 title = "Stirling കണക്ഷൻ കോൺഫിഗർ ചെയ്തിട്ടില്ല"
 
 [portal.accountLink.notice]
+loadFailed = "The account linking dialog could not be loaded."
 openFailed = "നിങ്ങളുടെ ബ്രൗസർ തുറക്കാനായില്ല. അക്കൗണ്ട് ലിങ്ക് ചെയ്യാൻ നിങ്ങളുടെ ബന്ധിപ്പിച്ച സർവറിൽ Usage & billing തുറക്കുക."
 
 [portal.accountLink.panel]
@@ -8117,9 +8099,6 @@ limit = "Monthly spend limit {{amount}}/mo. limit-ൽ processing pause ചെയ
 limitNoCap = "Spend limit ഇല്ല. Processing pause ചെയ്യില്ല. Invoices monthly post ചെയ്യും."
 
 [portal.billing.chip]
-invoices = "ഇൻവോയിസുകൾ"
-nav = "വിഭാഗങ്ങൾ"
-payment = "പേയ്മെന്റ്"
 plan = "പ്ലാൻ"
 procurement = "പ്രൊക്യൂർമെന്റ്"
 usage = "ഉപയോഗം"
@@ -12054,6 +12033,7 @@ title = "വർക്ക്‌സ്പേസ്"
 loginIncomplete = "ലോഗിൻ പൂർത്തിയാക്കാൻ പരാജയപ്പെട്ടു"
 noSaasServer = "SaaS സെർവർ ക്രമീകരിച്ചിട്ടില്ല"
 noServer = "സെർവർ ക്രമീകരിച്ചിട്ടില്ല"
+policyUnavailable = "Unable to load your organisation's sign-in settings."
 saasLoginFailed = "SaaS ലോഗിൻ പരാജയപ്പെട്ടു"
 saasLoginIncomplete = "SaaS ലോഗിൻ പൂർത്തിയാക്കാൻ പരാജയപ്പെട്ടു"
 selfHostedLoginFailed = "സ്വയം-ഹോസ്റ്റ് ചെയ്ത ലോഗിൻ പരാജയപ്പെട്ടു"
@@ -13905,6 +13885,11 @@ title = "വാട്ടർമാർക്ക് ടെക്സ്റ്റ്"
 image = "ഇമേജ്"
 text = "ടെക്സ്റ്റ്"
 
+[workbench]
+dropFailedSingle = "Your file couldn't be added"
+dropFailedSome = "{{failed}} of your files couldn't be added"
+dropOverlay = "Drop files to add them to the workbench"
+
 [workbench.sessionRestore]
 none = "നിങ്ങളുടെ മുൻ ഫയലുകൾ ഈ device-ൽ ഇനി സംഭരിച്ചിട്ടില്ല."
 partial = "{{total}} ഫയലുകളിൽ {{restored}} പുനഃസ്ഥാപിച്ചു. ബാക്കിയുള്ളവ ഈ device-ൽ ഇനി സംഭരിച്ചിട്ടില്ല."
@@ -13915,16 +13900,13 @@ annotations = "അനോട്ടേഷനുകൾ"
 applyRedactionsFirst = "ആദ്യം റെഡാക്ഷനുകൾ പ്രയോഗിക്കുക"
 closeAll = "എല്ലാ ഫയലുകളും അടയ്ക്കുക"
 closePdf = "PDF അടയ്ക്കുക"
-deleteSelected = "തിരഞ്ഞെടുത്ത പേജുകൾ ഇല്ലാതാക്കുക"
 deselectAll = "എല്ലാം തിരഞ്ഞെടുക്കൽ ഒഴിവാക്കുക"
 downloadAll = "എല്ലാം ഡൗൺലോഡ് ചെയ്യുക"
 exitRedaction = "റെഡാക്ഷൻ മോഡിൽ നിന്ന് പുറത്തിറങ്ങുക"
-exportAll = "PDF എക്സ്പോർട്ട് ചെയ്യുക"
-exportSelected = "തിരഞ്ഞെടുത്ത പേജുകൾ എക്സ്പോർട്ട് ചെയ്യുക"
 formFill = "ഫോം എഡിറ്റർ"
 hideToolbar = "toolbar മറയ്ക്കുക"
 moreActions = "കൂടുതൽ പ്രവർത്തനങ്ങൾ"
-multiTool = "മൾട്ടി-ടൂൾ"
+pageEditor = "Page Editor"
 panMode = "പാൻ മോഡ്"
 print = "PDF അച്ചടിക്കുക"
 readAloud = "വായിച്ച് കേൾപ്പിക്കുക"
@@ -13938,7 +13920,6 @@ rulerSettings = "സ്കെയിൽ ക്രമീകരണങ്ങൾ"
 save = "സേവ്"
 saveAll = "എല്ലാം സേവ് ചെയ്യുക"
 saveAs = "പുതിയ പേരിൽ സേവ് ചെയ്യുക"
-saveChanges = "മാറ്റങ്ങൾ സേവ് ചെയ്യുക"
 search = "PDF തിരയുക"
 selectAll = "എല്ലാം തിരഞ്ഞെടുക്കുക"
 selectByNumber = "പേജ് നമ്പർ പ്രകാരം തിരഞ്ഞെടുക്കുക"

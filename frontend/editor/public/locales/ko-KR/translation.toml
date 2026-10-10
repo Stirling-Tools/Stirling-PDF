@@ -55,7 +55,9 @@ keepWorking = "계속 작업"
 loading = "로딩 중..."
 loginAgreementAccept = "동의"
 loginAgreementDecline = "거부"
+loginAgreementLoadFailed = "The login agreement could not be loaded."
 loginAgreementProvider = "이 안내는 Stirling PDF Inc.가 아닌 귀하의 관리자에 의해 제공되었습니다."
+loginAgreementRetry = "Retry"
 loginAgreementTitle = "로그인 동의"
 logOut = "로그아웃"
 marginTooltip = "페이지 번호와 페이지 가장자리 사이의 거리입니다."
@@ -1939,9 +1941,6 @@ wrapUp = "관리자 투어가 끝났습니다! Stirling PDF를 조직을 위한 
 admin = "관리자"
 title = "사용자 제어 설정"
 
-[agents]
-stirling_name = "Stirling"
-
 [alphabetOptions]
 arabic = "아랍어"
 chinese = "중국어(간체)"
@@ -3219,21 +3218,16 @@ text = "이 권한을 변경할 수 없도록 하려면, 비밀번호 추가 도
 [chat.actions]
 copy = "메시지 복사"
 
-[chat.emptyState]
-text = "문서에 대해 질문하거나 PDF 도구에 대한 도움을 받아보세요."
-
-[chat.fab]
-close = "채팅 닫기"
-open = "Stirling AI assistant 열기"
+[chat.dock]
+collapse = "Collapse chat"
+placeholder = "Ask Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Stirling 에이전트 옵션"
-assistant = "AI 어시스턴트"
 clearChat = "채팅 지우기"
 
 [chat.input]
 disclaimer = "AI는 실수할 수 있습니다. 공유하기 전에 출력을 반드시 확인하세요."
-placeholder = "무엇을 하시겠습니까?"
 send = "메시지 보내기"
 
 [chat.progress]
@@ -3264,9 +3258,7 @@ convertMany = "이 문서를 PDF로 변환"
 convertOne = "이 문서를 PDF로 변환"
 heading = "시작하기"
 mergeMany = "이 문서 {{count}}개를 1개로 병합"
-moreFiles = "+{{count}}개 더"
 openFromComputer = "컴퓨터에서 열기"
-removeFile = "{{name}} 제거"
 splitOne = "이 문서 분할"
 
 [chat.responses]
@@ -3278,11 +3270,6 @@ not_found = "요청한 정보를 찾을 수 없습니다."
 processing = "처리 중({{outcome}})..."
 unsupported_capability = "지원되지 않는 기능: {{capability}}"
 usage_limit_reached = "사용 한도에 도달했습니다. 계속하려면 플랜 옵션을 확인하세요."
-
-[chat.toolsUsed]
-summary_one = "도구 1개 실행함"
-summary_other = "도구 {{count}}개 실행함"
-unknownTool = "알 수 없는 도구"
 
 [classification.families]
 correspondence = "서신"
@@ -4364,6 +4351,10 @@ title = "디스크에서 업데이트됨"
 body = "\"{{name}}\"이(가) 디스크에서 변경되었습니다. 다시 로드하는 데 시간이 걸릴 만큼 크기 때문에 여기의 버전은 그대로 두었습니다."
 title = "디스크에서 파일 변경됨"
 
+[desktopPrivacy]
+blocked = "Your administrator requires documents to stay on this device. This feature is unavailable."
+localFiles = "Local files"
+
 [desktopUpdate]
 downloading = "업데이트 다운로드 중..."
 installing = "업데이트 설치 중..."
@@ -4597,22 +4588,23 @@ viewInViewer = "뷰어에서 보기"
 closeFile = "파일 닫기"
 
 [fileEditor]
-addFiles = "파일 추가"
 closedFile = "{{name}} 닫힘"
 couldNotSave = "{{name}}을(를) 저장할 수 없습니다"
-filesAdded_one = "파일 {{count}}개 추가됨"
-filesAdded_other = "파일 {{count}}개 추가됨"
 filesReordered_one = "파일 순서가 변경됨"
 filesReordered_other = "파일 {{count}}개의 순서가 변경됨"
 loadedFromStorage_one = "저장소에서 파일 {{count}}개를 불러왔습니다"
 loadedFromStorage_other = "저장소에서 파일 {{count}}개를 불러왔습니다"
 loadFromStorageFailed = "저장소에서 일부 파일을 불러오지 못했습니다"
 pinnedFile = "{{name}} 고정됨"
-processFilesFailed = "파일을 처리하지 못했습니다"
 savedAndClosed = "{{name}} 저장 후 닫힘"
 saveFailed = "저장 실패"
 unpinnedFile = "{{name}} 고정 해제됨"
 unzipping = "{{name}} 압축 해제 중"
+
+[fileEditor.addCard]
+dropHint = "or drop files anywhere"
+fromComputer = "Upload from computer"
+moreOptions = "More upload options"
 
 [fileEditor.unzip]
 error = "{{name}} 압축 해제 중 오류"
@@ -4729,7 +4721,6 @@ dataLostBody = "이 브라우저에서 이 파일의 내용을 잃었습니다. 
 dataLostTitle = "파일 데이터를 사용할 수 없습니다"
 downloadFailed = "다운로드 실패"
 dropHint = "시작하려면 파일을 여세요"
-dropToAdd = "추가하려면 파일을 놓으세요"
 duplicateFailed = "파일을 복제할 수 없습니다"
 expand = "사이드바 펼치기"
 googleDrive = "Google Drive"
@@ -5733,11 +5724,6 @@ desc = "PDF 문서의 여러 페이지를 하나의 페이지로 병합"
 tags = "레이아웃,배치,결합,N-up,2-up,4-up,페이지당 여러 개,시트당 페이지,페이지 레이아웃,타일,그리드 레이아웃,다중 페이지 레이아웃,페이지에 결합,핸드아웃"
 title = "다중 페이지 레이아웃"
 
-[home.pdfCommentAgent]
-desc = "프롬프트를 바탕으로 AI가 PDF에 스티키 노트 댓글로 주석을 달도록 요청하세요"
-tags = "AI,에이전트,댓글,주석,스티키 노트,검토,피드백,노트"
-title = "AI 댓글 추가"
-
 [home.pdfOrganiser]
 tags = "정리,재배열,순서 변경,페이지 배치,정렬,페이지 이동,페이지 삭제,페이지 제거,페이지 관리,페이지 정리 도구,순서 재지정"
 title = "정리"
@@ -6595,63 +6581,6 @@ yourCloudAccess = "팀 멤버가 되며 소유자 권한을 잃게 됩니다."
 deselectAll = "없음"
 selectAll = "모두 선택"
 
-[pageEditor]
-dragPreviewAlt = "드래그 중"
-filePosition = "위치 {{position}}"
-pageLabel = "{{page}}페이지"
-title = "페이지 편집기"
-
-[pageEditor.actions]
-deletePage = "페이지 삭제"
-insertFileAfter = "뒤에 파일 삽입"
-moveLeft = "왼쪽으로 이동"
-moveRight = "오른쪽으로 이동"
-rotateLeft = "왼쪽으로 회전"
-rotateRight = "오른쪽으로 회전"
-splitAfter = "뒤에서 분할"
-
-[pageEditor.commands]
-addSplitAt = "위치 {{position}}에 분할 추가"
-addSplits_one = "{{count}}개 분할 추가"
-addSplits_other = "{{count}}개 분할 추가"
-deletePages_one = "{{count}}개 페이지 삭제"
-deletePages_other = "{{count}}개 페이지 삭제"
-insertFiles_one = "{{page}}페이지 뒤에 {{count}}개 파일 삽입"
-insertFiles_other = "{{page}}페이지 뒤에 {{count}}개 파일 삽입"
-insertPageBreaks_one = "{{count}}개 페이지 나누기 삽입"
-insertPageBreaks_other = "{{count}}개 페이지 나누기 삽입"
-insertPageBreaksAll = "모든 페이지 뒤에 페이지 나누기 삽입"
-removeAllSplits = "모든 분할 제거"
-removeSplitAt = "위치 {{position}}의 분할 제거"
-removeSplits_one = "{{count}}개 분할 제거"
-removeSplits_other = "{{count}}개 분할 제거"
-reorderPages = "페이지 순서 변경"
-rotatePageLeft = "페이지 왼쪽으로 회전"
-rotatePageRight = "페이지 오른쪽으로 회전"
-rotatePagesLeft_one = "{{count}}개 페이지 왼쪽으로 회전"
-rotatePagesLeft_other = "{{count}}개 페이지 왼쪽으로 회전"
-rotatePagesRight_one = "{{count}}개 페이지 오른쪽으로 회전"
-rotatePagesRight_other = "{{count}}개 페이지 오른쪽으로 회전"
-splitAllPages = "모든 페이지 분할"
-toggleSplits_one = "{{count}}개 분할 위치 전환"
-toggleSplits_other = "{{count}}개 분할 위치 전환"
-
-[pageEditor.emptyState]
-body = "파일을 추가하여 페이지 편집을 시작하세요"
-title = "로드된 PDF 파일 없음"
-
-[pageEditor.fileDropdown]
-addFile = "파일 추가"
-selectedCount = "{{selected}}/{{total}}개 파일 선택됨"
-untitled = "제목 없음"
-
-[pageEditor.toolbar]
-delete = "선택 항목 삭제"
-redo = "다시 실행"
-rotateLeft = "선택 항목 왼쪽으로 회전"
-rotateRight = "선택 항목 오른쪽으로 회전"
-undo = "실행 취소"
-
 [pageExtracter]
 title = "페이지 추출"
 
@@ -6815,6 +6744,76 @@ title = "페이지 범위"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → 모든 페이지 선택"
 title = "특수 키워드"
+
+[pageTracks]
+blankPage = "Blank page"
+deleteSelected = "Delete selected pages"
+downloadAsOneFile = "Download as one file"
+downloadEachPage = "Download each page individually"
+downloadSelectedPages = "Download selected pages"
+dragging_one = "{{count}} page"
+dragging_other = "{{count}} pages"
+duplicateSelected = "Duplicate selected pages"
+edited = "edited"
+emptyTrack = "No pages left. Drag pages here, or save to close this file."
+insertBlank = "Insert blank page"
+insertBlankAfterSelected = "Insert blank pages after selected pages"
+moveLeft = "Move left"
+moveRight = "Move right"
+nextPage = "Next page"
+page = "Page {{number}}"
+pageCount_one = "{{count}} page"
+pageCount_other = "{{count}} pages"
+pagePosition = "Page {{number}} of {{total}}"
+prevPage = "Previous page"
+readingPages = "Reading pages..."
+redo = "Redo"
+rotateLeft = "Rotate left"
+rotateRight = "Rotate right"
+rotateSelectedLeft = "Rotate selected pages left"
+rotateSelectedRight = "Rotate selected pages right"
+saveAsOneFile = "Save as one file"
+saveChanges = "Save changes to all files"
+saveEachPage = "Save each page individually"
+saveSelectedPages = "Save selected pages"
+saving = "Saving..."
+savingProgress = "Saving {{done}} of {{total}}"
+selectPage = "Select page {{number}}"
+splitAfterSelected = "Split after selected pages"
+splitHere = "Split here"
+undo = "Undo"
+viewError = "Couldn't render this page"
+viewPage = "View page"
+zoomIn = "Zoom in"
+zoomOut = "Zoom out"
+
+[pageTracks.close]
+message = "Are you sure you want to close all files?"
+unsaved = "These files have unsaved changes."
+
+[pageTracks.delete]
+page = "Delete page"
+
+[pageTracks.empty]
+body = "Add PDFs to expand them into editable page tracks"
+title = "No PDF files loaded"
+
+[pageTracks.exportFailed]
+body = "The edited files couldn't be prepared. Try again."
+title = "Couldn't download"
+
+[pageTracks.saveFailed]
+body = "Your edits haven't been lost. Try saving again."
+title = "Couldn't save changes"
+
+[pageTracks.track]
+close = "Close file"
+collapse = "Collapse"
+expand = "Expand"
+rename = "Rename file"
+
+[pageTracks.wrap]
+label = "Wrap pages"
 
 [payg.activity]
 docs = "문서"
@@ -7143,24 +7142,6 @@ totalSeats_other = "총계 ({{count}}개 시트)"
 
 [payment.upgradeTeam]
 title = "Team으로 업그레이드"
-
-[pdfCommentAgent]
-submit = "댓글 생성"
-
-[pdfCommentAgent.error]
-emptyPrompt = "AI가 댓글을 달 내용을 입력하세요"
-failed = "댓글 생성에 실패했습니다"
-tooLong = "프롬프트가 너무 깁니다(최대 {{max}}자)"
-
-[pdfCommentAgent.prompt]
-label = "AI가 무엇에 대해 댓글을 달아야 하나요?"
-placeholder = "예: 모호한 날짜를 표시하고 명확한 표현을 제안해 주세요"
-
-[pdfCommentAgent.results]
-title = "댓글이 추가된 PDF"
-
-[pdfCommentAgent.settings]
-title = "댓글 지침"
 
 [pdfOrganiser]
 placeholder = "(예: 1,3,2 또는 4-8,2,10-12 또는 2n-1)"
@@ -7994,6 +7975,7 @@ before = "설정"
 title = "Stirling 연결이 구성되지 않음"
 
 [portal.accountLink.notice]
+loadFailed = "The account linking dialog could not be loaded."
 openFailed = "브라우저를 열 수 없습니다. 계정을 연결하려면 연결된 서버에서 사용량 및 결제를 여세요."
 
 [portal.accountLink.panel]
@@ -8117,9 +8099,6 @@ limit = "월간 지출 한도 {{amount}}/월. 한도에 도달하면 처리가 �
 limitNoCap = "지출 한도 없음. 처리가 일시 중지되지 않습니다. 청구서는 매월 발행됩니다."
 
 [portal.billing.chip]
-invoices = "청구서"
-nav = "섹션"
-payment = "결제"
 plan = "요금제"
 procurement = "구매"
 usage = "사용량"
@@ -12054,6 +12033,7 @@ title = "워크스페이스"
 loginIncomplete = "로그인을 완료하지 못했습니다"
 noSaasServer = "구성된 SaaS 서버가 없습니다"
 noServer = "구성된 서버가 없습니다"
+policyUnavailable = "Unable to load your organisation's sign-in settings."
 saasLoginFailed = "SaaS 로그인 실패"
 saasLoginIncomplete = "SaaS 로그인을 완료하지 못했습니다"
 selfHostedLoginFailed = "셀프 호스팅 로그인 실패"
@@ -13905,6 +13885,11 @@ title = "워터마크 텍스트"
 image = "이미지"
 text = "텍스트"
 
+[workbench]
+dropFailedSingle = "Your file couldn't be added"
+dropFailedSome = "{{failed}} of your files couldn't be added"
+dropOverlay = "Drop files to add them to the workbench"
+
 [workbench.sessionRestore]
 none = "이전 파일이 더 이상 이 장치에 저장되어 있지 않습니다."
 partial = "{{total}}개 파일 중 {{restored}}개를 복원했습니다. 나머지는 더 이상 이 장치에 저장되어 있지 않습니다."
@@ -13915,16 +13900,13 @@ annotations = "주석"
 applyRedactionsFirst = "먼저 가리기 적용"
 closeAll = "모든 파일 닫기"
 closePdf = "PDF 닫기"
-deleteSelected = "선택한 페이지 삭제"
 deselectAll = "모두 선택 해제"
 downloadAll = "모두 다운로드"
 exitRedaction = "가리기 모드 종료"
-exportAll = "PDF 내보내기"
-exportSelected = "선택한 페이지 내보내기"
 formFill = "양식 편집기"
 hideToolbar = "도구 모음 숨기기"
 moreActions = "추가 작업"
-multiTool = "멀티 도구"
+pageEditor = "Page Editor"
 panMode = "이동 모드"
 print = "PDF 인쇄"
 readAloud = "읽어주기"
@@ -13938,7 +13920,6 @@ rulerSettings = "축척 설정"
 save = "저장"
 saveAll = "모두 저장"
 saveAs = "다른 이름으로 저장"
-saveChanges = "변경 사항 저장"
 search = "PDF 검색"
 selectAll = "모두 선택"
 selectByNumber = "페이지 번호로 선택"

@@ -55,7 +55,9 @@ keepWorking = "继续工作"
 loading = "加载中..."
 loginAgreementAccept = "接受"
 loginAgreementDecline = "拒绝"
+loginAgreementLoadFailed = "The login agreement could not be loaded."
 loginAgreementProvider = "此通知由您的管理员提供，而非 Stirling PDF Inc."
+loginAgreementRetry = "Retry"
 loginAgreementTitle = "登录协议"
 logOut = "退出登录"
 marginTooltip = "页码与页面边缘的距离。"
@@ -1939,9 +1941,6 @@ wrapUp = "管理员导览到此结束！你已经了解了让 Stirling PDF 成�
 admin = "管理员"
 title = "用户控制设置"
 
-[agents]
-stirling_name = "Stirling"
-
 [alphabetOptions]
 arabic = "阿拉伯语"
 chinese = "中文（简体）"
@@ -3219,21 +3218,16 @@ text = "要使这些权限不可更改，请使用“添加密码”工具设置
 [chat.actions]
 copy = "复制消息"
 
-[chat.emptyState]
-text = "询问关于你的文档的问题，或获取 PDF 工具帮助。"
-
-[chat.fab]
-close = "关闭聊天"
-open = "打开 Stirling AI 助手"
+[chat.dock]
+collapse = "Collapse chat"
+placeholder = "Ask Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Stirling 代理选项"
-assistant = "AI 助手"
 clearChat = "清空聊天"
 
 [chat.input]
 disclaimer = "AI 可能会出错。分享前请务必验证输出。"
-placeholder = "您想做什么？"
 send = "发送消息"
 
 [chat.progress]
@@ -3264,9 +3258,7 @@ convertMany = "将这些文档转换为 PDF"
 convertOne = "将此文档转换为 PDF"
 heading = "开始使用"
 mergeMany = "将这 {{count}} 个文档合并为 1 个"
-moreFiles = "+{{count}} 更多"
 openFromComputer = "从计算机打开"
-removeFile = "移除 {{name}}"
 splitOne = "拆分此文档"
 
 [chat.responses]
@@ -3278,11 +3270,6 @@ not_found = "未找到所需信息。"
 processing = "正在处理（{{outcome}}）…"
 unsupported_capability = "不支持的功能：{{capability}}"
 usage_limit_reached = "你已达到使用限制。查看你的套餐选项以继续使用。"
-
-[chat.toolsUsed]
-summary_one = "已运行 1 个工具"
-summary_other = "已运行 {{count}} 个工具"
-unknownTool = "未知工具"
 
 [classification.families]
 correspondence = "通信"
@@ -4364,6 +4351,10 @@ title = "已从磁盘更新"
 body = "\"{{name}}\" 已在磁盘上更改。它足够大，重新加载需要一些时间，因此此处的版本保持不变。"
 title = "文件已在磁盘上更改"
 
+[desktopPrivacy]
+blocked = "Your administrator requires documents to stay on this device. This feature is unavailable."
+localFiles = "Local files"
+
 [desktopUpdate]
 downloading = "正在下载更新…"
 installing = "正在安装更新…"
@@ -4597,22 +4588,23 @@ viewInViewer = "在查看器中查看"
 closeFile = "关闭文件"
 
 [fileEditor]
-addFiles = "添加文件"
 closedFile = "已关闭 {{name}}"
 couldNotSave = "无法保存 {{name}}"
-filesAdded_one = "已添加 {{count}} 个文件"
-filesAdded_other = "已添加 {{count}} 个文件"
 filesReordered_one = "文件已重新排序"
 filesReordered_other = "{{count}} 个文件已重新排序"
 loadedFromStorage_one = "已从存储加载 {{count}} 个文件"
 loadedFromStorage_other = "已从存储加载 {{count}} 个文件"
 loadFromStorageFailed = "未能从存储加载部分文件"
 pinnedFile = "已固定 {{name}}"
-processFilesFailed = "未能处理文件"
 savedAndClosed = "已保存并关闭 {{name}}"
 saveFailed = "保存失败"
 unpinnedFile = "已取消固定 {{name}}"
 unzipping = "正在解压 {{name}}"
+
+[fileEditor.addCard]
+dropHint = "or drop files anywhere"
+fromComputer = "Upload from computer"
+moreOptions = "More upload options"
 
 [fileEditor.unzip]
 error = "解压 {{name}} 时出错"
@@ -4729,7 +4721,6 @@ dataLostBody = "此浏览器已丢失该文件的内容。请重新上传以继�
 dataLostTitle = "文件数据不可用"
 downloadFailed = "下载失败"
 dropHint = "打开文件以开始"
-dropToAdd = "拖放文件以添加"
 duplicateFailed = "无法复制文件"
 expand = "展开侧边栏"
 googleDrive = "Google Drive"
@@ -5733,11 +5724,6 @@ desc = "将 PDF 文档的多个页面合并成一页"
 tags = "布局,排列,组合,N-up,2-up,4-up,每页多个,每张纸页数,布局页面,平铺,网格布局,多页布局,合并到页面,讲义"
 title = "多页布局"
 
-[home.pdfCommentAgent]
-desc = "根据您的提示，让 AI 在 PDF 上添加便签评论"
-tags = "AI,代理,评论,注释,便签,审阅,反馈,笔记"
-title = "添加 AI 评论"
-
 [home.pdfOrganiser]
 tags = "整理,重新排列,重新排序,排列页面,排序,移动页面,删除页面,移除页面,页面管理,页面整理器,重新排序"
 title = "整理"
@@ -6595,63 +6581,6 @@ yourCloudAccess = "您将成为团队成员，并失去所有者访问权限。"
 deselectAll = "全不选"
 selectAll = "全选"
 
-[pageEditor]
-dragPreviewAlt = "正在拖动"
-filePosition = "位置 {{position}}"
-pageLabel = "第 {{page}} 页"
-title = "页面编辑器"
-
-[pageEditor.actions]
-deletePage = "删除页面"
-insertFileAfter = "在后面插入文件"
-moveLeft = "向左移动"
-moveRight = "向右移动"
-rotateLeft = "向左旋转"
-rotateRight = "向右旋转"
-splitAfter = "在后面拆分"
-
-[pageEditor.commands]
-addSplitAt = "在位置 {{position}} 添加拆分"
-addSplits_one = "添加 {{count}} 个拆分"
-addSplits_other = "添加 {{count}} 个拆分"
-deletePages_one = "删除 {{count}} 页"
-deletePages_other = "删除 {{count}} 页"
-insertFiles_one = "在第 {{page}} 页后插入 {{count}} 个文件"
-insertFiles_other = "在第 {{page}} 页后插入 {{count}} 个文件"
-insertPageBreaks_one = "插入 {{count}} 个分页符"
-insertPageBreaks_other = "插入 {{count}} 个分页符"
-insertPageBreaksAll = "在所有页面后插入分页符"
-removeAllSplits = "移除所有拆分"
-removeSplitAt = "移除位置 {{position}} 的拆分"
-removeSplits_one = "移除 {{count}} 个拆分"
-removeSplits_other = "移除 {{count}} 个拆分"
-reorderPages = "重新排序页面"
-rotatePageLeft = "向左旋转页面"
-rotatePageRight = "向右旋转页面"
-rotatePagesLeft_one = "向左旋转 {{count}} 页"
-rotatePagesLeft_other = "向左旋转 {{count}} 页"
-rotatePagesRight_one = "向右旋转 {{count}} 页"
-rotatePagesRight_other = "向右旋转 {{count}} 页"
-splitAllPages = "拆分所有页面"
-toggleSplits_one = "切换 {{count}} 个拆分位置"
-toggleSplits_other = "切换 {{count}} 个拆分位置"
-
-[pageEditor.emptyState]
-body = "添加文件以开始编辑页面"
-title = "未加载 PDF 文件"
-
-[pageEditor.fileDropdown]
-addFile = "添加文件"
-selectedCount = "已选择 {{selected}}/{{total}} 个文件"
-untitled = "未命名"
-
-[pageEditor.toolbar]
-delete = "删除所选"
-redo = "重做"
-rotateLeft = "向左旋转所选"
-rotateRight = "向右旋转所选"
-undo = "撤销"
-
 [pageExtracter]
 title = "提取页面"
 
@@ -6815,6 +6744,76 @@ title = "页面范围"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → 选择所有页面"
 title = "特殊关键字"
+
+[pageTracks]
+blankPage = "Blank page"
+deleteSelected = "Delete selected pages"
+downloadAsOneFile = "Download as one file"
+downloadEachPage = "Download each page individually"
+downloadSelectedPages = "Download selected pages"
+dragging_one = "{{count}} page"
+dragging_other = "{{count}} pages"
+duplicateSelected = "Duplicate selected pages"
+edited = "edited"
+emptyTrack = "No pages left. Drag pages here, or save to close this file."
+insertBlank = "Insert blank page"
+insertBlankAfterSelected = "Insert blank pages after selected pages"
+moveLeft = "Move left"
+moveRight = "Move right"
+nextPage = "Next page"
+page = "Page {{number}}"
+pageCount_one = "{{count}} page"
+pageCount_other = "{{count}} pages"
+pagePosition = "Page {{number}} of {{total}}"
+prevPage = "Previous page"
+readingPages = "Reading pages..."
+redo = "Redo"
+rotateLeft = "Rotate left"
+rotateRight = "Rotate right"
+rotateSelectedLeft = "Rotate selected pages left"
+rotateSelectedRight = "Rotate selected pages right"
+saveAsOneFile = "Save as one file"
+saveChanges = "Save changes to all files"
+saveEachPage = "Save each page individually"
+saveSelectedPages = "Save selected pages"
+saving = "Saving..."
+savingProgress = "Saving {{done}} of {{total}}"
+selectPage = "Select page {{number}}"
+splitAfterSelected = "Split after selected pages"
+splitHere = "Split here"
+undo = "Undo"
+viewError = "Couldn't render this page"
+viewPage = "View page"
+zoomIn = "Zoom in"
+zoomOut = "Zoom out"
+
+[pageTracks.close]
+message = "Are you sure you want to close all files?"
+unsaved = "These files have unsaved changes."
+
+[pageTracks.delete]
+page = "Delete page"
+
+[pageTracks.empty]
+body = "Add PDFs to expand them into editable page tracks"
+title = "No PDF files loaded"
+
+[pageTracks.exportFailed]
+body = "The edited files couldn't be prepared. Try again."
+title = "Couldn't download"
+
+[pageTracks.saveFailed]
+body = "Your edits haven't been lost. Try saving again."
+title = "Couldn't save changes"
+
+[pageTracks.track]
+close = "Close file"
+collapse = "Collapse"
+expand = "Expand"
+rename = "Rename file"
+
+[pageTracks.wrap]
+label = "Wrap pages"
 
 [payg.activity]
 docs = "文档"
@@ -7143,24 +7142,6 @@ totalSeats_other = "总计（{{count}} 个席位）"
 
 [payment.upgradeTeam]
 title = "升级到 Team"
-
-[pdfCommentAgent]
-submit = "生成评论"
-
-[pdfCommentAgent.error]
-emptyPrompt = "请描述 AI 应该评论的内容"
-failed = "生成评论失败"
-tooLong = "提示过长（最多 {{max}} 个字符）"
-
-[pdfCommentAgent.prompt]
-label = "AI 应该评论什么？"
-placeholder = "例如：标记任何含糊的日期并提出澄清建议"
-
-[pdfCommentAgent.results]
-title = "带评论的 PDF"
-
-[pdfCommentAgent.settings]
-title = "评论指令"
 
 [pdfOrganiser]
 placeholder = "（例如：1,3,2 或 4-8,2,10-12 或 2n-1）"
@@ -7994,6 +7975,7 @@ before = "设置"
 title = "Stirling 连接未配置"
 
 [portal.accountLink.notice]
+loadFailed = "The account linking dialog could not be loaded."
 openFailed = "无法打开你的浏览器。请在已连接服务器上打开用量和账单以关联账户。"
 
 [portal.accountLink.panel]
@@ -8117,9 +8099,6 @@ limit = "月度支出限额 {{amount}}/月。达到限额时处理会暂停。"
 limitNoCap = "无支出限额。处理不会暂停。发票按月生成。"
 
 [portal.billing.chip]
-invoices = "发票"
-nav = "部分"
-payment = "付款"
 plan = "方案"
 procurement = "采购"
 usage = "用量"
@@ -12054,6 +12033,7 @@ title = "工作区"
 loginIncomplete = "未能完成登录"
 noSaasServer = "未配置 SaaS 服务器"
 noServer = "未配置服务器"
+policyUnavailable = "Unable to load your organisation's sign-in settings."
 saasLoginFailed = "SaaS 登录失败"
 saasLoginIncomplete = "未能完成 SaaS 登录"
 selfHostedLoginFailed = "自托管登录失败"
@@ -13905,6 +13885,11 @@ title = "水印文本"
 image = "图像"
 text = "文本"
 
+[workbench]
+dropFailedSingle = "Your file couldn't be added"
+dropFailedSome = "{{failed}} of your files couldn't be added"
+dropOverlay = "Drop files to add them to the workbench"
+
 [workbench.sessionRestore]
 none = "你之前的文件不再存储在此设备上。"
 partial = "已恢复 {{total}} 个文件中的 {{restored}} 个。其余文件不再存储在此设备上。"
@@ -13915,16 +13900,13 @@ annotations = "注释"
 applyRedactionsFirst = "先应用涂黑"
 closeAll = "关闭所有文件"
 closePdf = "关闭 PDF"
-deleteSelected = "删除所选页面"
 deselectAll = "取消全选"
 downloadAll = "全部下载"
 exitRedaction = "退出涂黑模式"
-exportAll = "导出 PDF"
-exportSelected = "导出所选页面"
 formFill = "表单编辑器"
 hideToolbar = "隐藏工具栏"
 moreActions = "更多操作"
-multiTool = "多功能工具"
+pageEditor = "Page Editor"
 panMode = "平移模式"
 print = "打印 PDF"
 readAloud = "朗读"
@@ -13938,7 +13920,6 @@ rulerSettings = "比例设置"
 save = "保存"
 saveAll = "全部保存"
 saveAs = "另存为"
-saveChanges = "保存更改"
 search = "搜索 PDF"
 selectAll = "全选"
 selectByNumber = "按页码选择"

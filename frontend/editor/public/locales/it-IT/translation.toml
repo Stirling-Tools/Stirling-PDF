@@ -55,7 +55,9 @@ keepWorking = "Continua a lavorare"
 loading = "Caricamento..."
 loginAgreementAccept = "Accetta"
 loginAgreementDecline = "Rifiuta"
+loginAgreementLoadFailed = "The login agreement could not be loaded."
 loginAgreementProvider = "Questo avviso è fornito dal tuo amministratore, non da Stirling PDF Inc."
+loginAgreementRetry = "Retry"
 loginAgreementTitle = "Accordo di accesso"
 logOut = "Esci"
 marginTooltip = "Distanza tra il numero di pagina e il bordo della pagina."
@@ -1939,9 +1941,6 @@ wrapUp = "Questo è il tour amministratore! Hai visto le funzionalità enterpris
 admin = "Amministratore"
 title = "Impostazioni di controllo utente"
 
-[agents]
-stirling_name = "Stirling"
-
 [alphabetOptions]
 arabic = "Arabo"
 chinese = "Cinese (semplificato)"
@@ -3219,21 +3218,16 @@ text = "Per rendere questi permessi immodificabili, usa lo strumento Aggiungi pa
 [chat.actions]
 copy = "Copia messaggio"
 
-[chat.emptyState]
-text = "Fai una domanda sui tuoi documenti o chiedi aiuto con gli strumenti PDF."
-
-[chat.fab]
-close = "Chiudi chat"
-open = "Apri Stirling assistente IA"
+[chat.dock]
+collapse = "Collapse chat"
+placeholder = "Ask Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Opzioni agente Stirling"
-assistant = "Assistente AI"
 clearChat = "Cancella chat"
 
 [chat.input]
 disclaimer = "L'IA può commettere errori. Assicurati di verificare il risultato prima di condividerlo."
-placeholder = "Cosa vuoi fare?"
 send = "Invia messaggio"
 
 [chat.progress]
@@ -3264,9 +3258,7 @@ convertMany = "Converti questi documenti in PDF"
 convertOne = "Converti questo documento in PDF"
 heading = "Per cominciare"
 mergeMany = "Unisci questi {{count}} documenti in 1"
-moreFiles = "+{{count}} altri"
 openFromComputer = "Apri dal computer"
-removeFile = "Rimuovi {{name}}"
 splitOne = "Dividi questo documento"
 
 [chat.responses]
@@ -3278,11 +3270,6 @@ not_found = "Non ho trovato le informazioni richieste."
 processing = "Elaborazione ({{outcome}})..."
 unsupported_capability = "Funzionalità non supportata: {{capability}}"
 usage_limit_reached = "Hai raggiunto il tuo limite d'uso. Controlla le opzioni del tuo piano per continuare."
-
-[chat.toolsUsed]
-summary_one = "Eseguito 1 strumento"
-summary_other = "Eseguiti {{count}} strumenti"
-unknownTool = "Strumento sconosciuto"
 
 [classification.families]
 correspondence = "Corrispondenza"
@@ -4364,6 +4351,10 @@ title = "Aggiornato da disco"
 body = "\"{{name}}\" è stato modificato su disco. È abbastanza grande da richiedere tempo per ricaricarlo, quindi la versione qui è stata lasciata invariata."
 title = "File modificato su disco"
 
+[desktopPrivacy]
+blocked = "Your administrator requires documents to stay on this device. This feature is unavailable."
+localFiles = "Local files"
+
 [desktopUpdate]
 downloading = "Download dell'aggiornamento..."
 installing = "Installazione dell'aggiornamento..."
@@ -4597,22 +4588,23 @@ viewInViewer = "Visualizza nel visualizzatore"
 closeFile = "Chiudi file"
 
 [fileEditor]
-addFiles = "Aggiungi file"
 closedFile = "Chiuso {{name}}"
 couldNotSave = "Impossibile salvare {{name}}"
-filesAdded_one = "Aggiunto {{count}} file"
-filesAdded_other = "Aggiunti {{count}} file"
 filesReordered_one = "File riordinato"
 filesReordered_other = "{{count}} file riordinati"
 loadedFromStorage_one = "Caricato {{count}} file dall'archiviazione"
 loadedFromStorage_other = "Caricati {{count}} file dall'archiviazione"
 loadFromStorageFailed = "Impossibile caricare alcuni file dall'archiviazione"
 pinnedFile = "{{name}} fissato"
-processFilesFailed = "Impossibile elaborare i file"
 savedAndClosed = "Salvato e chiuso {{name}}"
 saveFailed = "Salvataggio non riuscito"
 unpinnedFile = "{{name}} sbloccato"
 unzipping = "Estrazione di {{name}}"
+
+[fileEditor.addCard]
+dropHint = "or drop files anywhere"
+fromComputer = "Upload from computer"
+moreOptions = "More upload options"
 
 [fileEditor.unzip]
 error = "Errore durante l'estrazione di {{name}}"
@@ -4729,7 +4721,6 @@ dataLostBody = "Il browser ha perso il contenuto di questo file. Caricalo di nuo
 dataLostTitle = "I dati del file non sono disponibili"
 downloadFailed = "Download fallito"
 dropHint = "Apri file per iniziare"
-dropToAdd = "Rilascia i file per aggiungerli"
 duplicateFailed = "Impossibile duplicare il file"
 expand = "Espandi barra laterale"
 googleDrive = "Google Drive"
@@ -5733,11 +5724,6 @@ desc = "Unisci più pagine di un documento PDF in un'unica pagina"
 tags = "layout,disponi,combina,N-up,2-up,4-up,più per pagina,pagine per foglio,layout pagine,affianca,layout griglia,layout multipagina,combina su pagina,dispensa"
 title = "Layout multipagina"
 
-[home.pdfCommentAgent]
-desc = "Chiedi all'IA di annotare un PDF con commenti in stile nota adesiva in base al tuo prompt"
-tags = "IA,agente,commento,annotazione,nota adesiva,revisione,feedback,note"
-title = "Aggiungi commenti IA"
-
 [home.pdfOrganiser]
 tags = "organizza,riordina,riordina,disponi pagine,ordina,sposta pagine,elimina pagine,rimuovi pagine,gestione pagine,organizzatore pagine,ri-sequenzia"
 title = "Organizza"
@@ -6595,63 +6581,6 @@ yourCloudAccess = "Diventerai membro del team e perderai l'accesso da proprietar
 deselectAll = "Nessuno"
 selectAll = "Seleziona tutto"
 
-[pageEditor]
-dragPreviewAlt = "Trascinamento"
-filePosition = "Posizione {{position}}"
-pageLabel = "Pagina {{page}}"
-title = "Editor pagine"
-
-[pageEditor.actions]
-deletePage = "Elimina pagina"
-insertFileAfter = "Inserisci file dopo"
-moveLeft = "Sposta a sinistra"
-moveRight = "Sposta a destra"
-rotateLeft = "Ruota a sinistra"
-rotateRight = "Ruota a destra"
-splitAfter = "Dividi dopo"
-
-[pageEditor.commands]
-addSplitAt = "Aggiungi divisione alla posizione {{position}}"
-addSplits_one = "Aggiungi {{count}} divisione"
-addSplits_other = "Aggiungi {{count}} divisioni"
-deletePages_one = "Elimina {{count}} pagina"
-deletePages_other = "Elimina {{count}} pagine"
-insertFiles_one = "Inserisci {{count}} file dopo la pagina {{page}}"
-insertFiles_other = "Inserisci {{count}} file dopo la pagina {{page}}"
-insertPageBreaks_one = "Inserisci {{count}} interruzione di pagina"
-insertPageBreaks_other = "Inserisci {{count}} interruzioni di pagina"
-insertPageBreaksAll = "Inserisci interruzioni di pagina dopo tutte le pagine"
-removeAllSplits = "Rimuovi tutte le divisioni"
-removeSplitAt = "Rimuovi divisione alla posizione {{position}}"
-removeSplits_one = "Rimuovi {{count}} divisione"
-removeSplits_other = "Rimuovi {{count}} divisioni"
-reorderPages = "Riordina pagine"
-rotatePageLeft = "Ruota pagina a sinistra"
-rotatePageRight = "Ruota pagina a destra"
-rotatePagesLeft_one = "Ruota {{count}} pagina a sinistra"
-rotatePagesLeft_other = "Ruota {{count}} pagine a sinistra"
-rotatePagesRight_one = "Ruota {{count}} pagina a destra"
-rotatePagesRight_other = "Ruota {{count}} pagine a destra"
-splitAllPages = "Dividi tutte le pagine"
-toggleSplits_one = "Attiva/disattiva {{count}} posizione di divisione"
-toggleSplits_other = "Attiva/disattiva {{count}} posizioni di divisione"
-
-[pageEditor.emptyState]
-body = "Aggiungi file per iniziare a modificare le pagine"
-title = "Nessun file PDF caricato"
-
-[pageEditor.fileDropdown]
-addFile = "Aggiungi file"
-selectedCount = "{{selected}}/{{total}} file selezionati"
-untitled = "Senza titolo"
-
-[pageEditor.toolbar]
-delete = "Elimina selezionati"
-redo = "Ripeti"
-rotateLeft = "Ruota selezionati a sinistra"
-rotateRight = "Ruota selezionati a destra"
-undo = "Annulla"
-
 [pageExtracter]
 title = "Estrai pagine"
 
@@ -6815,6 +6744,76 @@ title = "Intervalli di pagine"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → seleziona tutte le pagine"
 title = "Parole chiave speciali"
+
+[pageTracks]
+blankPage = "Blank page"
+deleteSelected = "Delete selected pages"
+downloadAsOneFile = "Download as one file"
+downloadEachPage = "Download each page individually"
+downloadSelectedPages = "Download selected pages"
+dragging_one = "{{count}} page"
+dragging_other = "{{count}} pages"
+duplicateSelected = "Duplicate selected pages"
+edited = "edited"
+emptyTrack = "No pages left. Drag pages here, or save to close this file."
+insertBlank = "Insert blank page"
+insertBlankAfterSelected = "Insert blank pages after selected pages"
+moveLeft = "Move left"
+moveRight = "Move right"
+nextPage = "Next page"
+page = "Page {{number}}"
+pageCount_one = "{{count}} page"
+pageCount_other = "{{count}} pages"
+pagePosition = "Page {{number}} of {{total}}"
+prevPage = "Previous page"
+readingPages = "Reading pages..."
+redo = "Redo"
+rotateLeft = "Rotate left"
+rotateRight = "Rotate right"
+rotateSelectedLeft = "Rotate selected pages left"
+rotateSelectedRight = "Rotate selected pages right"
+saveAsOneFile = "Save as one file"
+saveChanges = "Save changes to all files"
+saveEachPage = "Save each page individually"
+saveSelectedPages = "Save selected pages"
+saving = "Saving..."
+savingProgress = "Saving {{done}} of {{total}}"
+selectPage = "Select page {{number}}"
+splitAfterSelected = "Split after selected pages"
+splitHere = "Split here"
+undo = "Undo"
+viewError = "Couldn't render this page"
+viewPage = "View page"
+zoomIn = "Zoom in"
+zoomOut = "Zoom out"
+
+[pageTracks.close]
+message = "Are you sure you want to close all files?"
+unsaved = "These files have unsaved changes."
+
+[pageTracks.delete]
+page = "Delete page"
+
+[pageTracks.empty]
+body = "Add PDFs to expand them into editable page tracks"
+title = "No PDF files loaded"
+
+[pageTracks.exportFailed]
+body = "The edited files couldn't be prepared. Try again."
+title = "Couldn't download"
+
+[pageTracks.saveFailed]
+body = "Your edits haven't been lost. Try saving again."
+title = "Couldn't save changes"
+
+[pageTracks.track]
+close = "Close file"
+collapse = "Collapse"
+expand = "Expand"
+rename = "Rename file"
+
+[pageTracks.wrap]
+label = "Wrap pages"
 
 [payg.activity]
 docs = "documenti"
@@ -7143,24 +7142,6 @@ totalSeats_other = "Totale ({{count}} posti)"
 
 [payment.upgradeTeam]
 title = "Passa a Team"
-
-[pdfCommentAgent]
-submit = "Genera commenti"
-
-[pdfCommentAgent.error]
-emptyPrompt = "Descrivi su cosa dovrebbe commentare l'AI"
-failed = "Impossibile generare i commenti"
-tooLong = "Il prompt è troppo lungo (massimo {{max}} caratteri)"
-
-[pdfCommentAgent.prompt]
-label = "Su cosa dovrebbe commentare l'AI?"
-placeholder = "es. Segnala eventuali date ambigue e suggerisci chiarimenti"
-
-[pdfCommentAgent.results]
-title = "PDF commentato"
-
-[pdfCommentAgent.settings]
-title = "Istruzioni per i commenti"
 
 [pdfOrganiser]
 placeholder = "(ad es. 1,3,2 o 4-8,2,10-12 o 2n-1)"
@@ -7994,6 +7975,7 @@ before = "Imposta"
 title = "Connessione Stirling non configurata"
 
 [portal.accountLink.notice]
+loadFailed = "The account linking dialog could not be loaded."
 openFailed = "Impossibile aprire il browser. Apri Utilizzo e fatturazione sul server connesso per collegare un account."
 
 [portal.accountLink.panel]
@@ -8117,9 +8099,6 @@ limit = "Limite di spesa mensile {{amount}}/mese. L'elaborazione si sospende al 
 limitNoCap = "Nessun limite di spesa. L'elaborazione non si sospenderà. Le fatture vengono emesse mensilmente."
 
 [portal.billing.chip]
-invoices = "Fatture"
-nav = "Sezioni"
-payment = "Pagamento"
 plan = "Piano"
 procurement = "Acquisti"
 usage = "Utilizzo"
@@ -12054,6 +12033,7 @@ title = "Area di lavoro"
 loginIncomplete = "Impossibile completare il login"
 noSaasServer = "Nessun server SaaS configurato"
 noServer = "Nessun server configurato"
+policyUnavailable = "Unable to load your organisation's sign-in settings."
 saasLoginFailed = "Login SaaS non riuscito"
 saasLoginIncomplete = "Impossibile completare il login SaaS"
 selfHostedLoginFailed = "Login self-hosted non riuscito"
@@ -13905,6 +13885,11 @@ title = "Testo filigrana"
 image = "Immagine"
 text = "Testo"
 
+[workbench]
+dropFailedSingle = "Your file couldn't be added"
+dropFailedSome = "{{failed}} of your files couldn't be added"
+dropOverlay = "Drop files to add them to the workbench"
+
 [workbench.sessionRestore]
 none = "I tuoi file precedenti non sono più archiviati su questo dispositivo."
 partial = "Ripristinati {{restored}} di {{total}} file. Gli altri non sono più archiviati su questo dispositivo."
@@ -13915,16 +13900,13 @@ annotations = "Annotazioni"
 applyRedactionsFirst = "Applica prima gli oscuramenti"
 closeAll = "Chiudi tutti i file"
 closePdf = "Chiudi PDF"
-deleteSelected = "Elimina le pagine selezionate"
 deselectAll = "Deseleziona tutto"
 downloadAll = "Scarica tutto"
 exitRedaction = "Esci dalla modalità di oscuramento"
-exportAll = "Esporta PDF"
-exportSelected = "Esporta pagine selezionate"
 formFill = "Editor moduli"
 hideToolbar = "Nascondi barra degli strumenti"
 moreActions = "Altre azioni"
-multiTool = "Strumento multiplo"
+pageEditor = "Page Editor"
 panMode = "Modalità mano"
 print = "Stampa PDF"
 readAloud = "Lettura ad alta voce"
@@ -13938,7 +13920,6 @@ rulerSettings = "Impostazioni scala"
 save = "Salva"
 saveAll = "Salva tutto"
 saveAs = "Salva con nome"
-saveChanges = "Salva modifiche"
 search = "Cerca nel PDF"
 selectAll = "Seleziona tutto"
 selectByNumber = "Seleziona per numeri di pagina"

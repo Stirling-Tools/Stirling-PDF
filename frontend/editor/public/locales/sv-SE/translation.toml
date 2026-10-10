@@ -55,7 +55,9 @@ keepWorking = "Fortsätt arbeta"
 loading = "Laddar..."
 loginAgreementAccept = "Godkänn"
 loginAgreementDecline = "Avböj"
+loginAgreementLoadFailed = "The login agreement could not be loaded."
 loginAgreementProvider = "Detta meddelande tillhandahålls av din administratör, inte av Stirling PDF Inc."
+loginAgreementRetry = "Retry"
 loginAgreementTitle = "Inloggningsavtal"
 logOut = "Logga ut"
 marginTooltip = "Avstånd mellan sidnumret och sidans kant."
@@ -1939,9 +1941,6 @@ wrapUp = "Det var administratörsturen! Du har sett enterprise-funktionerna som 
 admin = "Admin"
 title = "Användarhanteringsinställningar"
 
-[agents]
-stirling_name = "Stirling"
-
 [alphabetOptions]
 arabic = "Arabiska"
 chinese = "Kinesiska (förenklad)"
@@ -3219,21 +3218,16 @@ text = "För att göra dessa behörigheter oföränderliga, använd verktyget L�
 [chat.actions]
 copy = "Kopiera meddelande"
 
-[chat.emptyState]
-text = "Ställ en fråga om dina dokument eller få hjälp med PDF-verktyg."
-
-[chat.fab]
-close = "Stäng chatten"
-open = "Öppna Stirling AI-assistent"
+[chat.dock]
+collapse = "Collapse chat"
+placeholder = "Ask Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Alternativ för Stirling-agent"
-assistant = "AI-assistent"
 clearChat = "Rensa chatt"
 
 [chat.input]
 disclaimer = "AI kan göra misstag. Kontrollera resultatet innan du delar det."
-placeholder = "Vad vill du göra?"
 send = "Skicka meddelande"
 
 [chat.progress]
@@ -3264,9 +3258,7 @@ convertMany = "Konvertera dessa dokument till PDF"
 convertOne = "Konvertera detta dokument till PDF"
 heading = "Kom igång"
 mergeMany = "Slå samman dessa {{count}} dokument till 1"
-moreFiles = "+{{count}} fler"
 openFromComputer = "Öppna från dator"
-removeFile = "Ta bort {{name}}"
 splitOne = "Dela upp det här dokumentet"
 
 [chat.responses]
@@ -3278,11 +3270,6 @@ not_found = "Jag kunde inte hitta den begärda informationen."
 processing = "Bearbetar ({{outcome}})..."
 unsupported_capability = "Funktionen stöds inte: {{capability}}"
 usage_limit_reached = "Du har nått din användningsgräns. Kontrollera dina planalternativ för att fortsätta."
-
-[chat.toolsUsed]
-summary_one = "Körde 1 verktyg"
-summary_other = "Körde {{count}} verktyg"
-unknownTool = "Okänt verktyg"
 
 [classification.families]
 correspondence = "Korrespondens"
@@ -4364,6 +4351,10 @@ title = "Uppdaterad från disk"
 body = "\"{{name}}\" ändrades på disk. Den är tillräckligt stor för att en omladdning ska ta ett tag, så versionen här har lämnats oförändrad."
 title = "Filen ändrades på disk"
 
+[desktopPrivacy]
+blocked = "Your administrator requires documents to stay on this device. This feature is unavailable."
+localFiles = "Local files"
+
 [desktopUpdate]
 downloading = "Laddar ner uppdatering..."
 installing = "Installerar uppdatering..."
@@ -4597,22 +4588,23 @@ viewInViewer = "Visa i visaren"
 closeFile = "Stäng fil"
 
 [fileEditor]
-addFiles = "Lägg till filer"
 closedFile = "Stängde {{name}}"
 couldNotSave = "Det gick inte att spara {{name}}"
-filesAdded_one = "Lade till {{count}} fil"
-filesAdded_other = "Lade till {{count}} filer"
 filesReordered_one = "Filens ordning ändrades"
 filesReordered_other = "Ordningen för {{count}} filer ändrades"
 loadedFromStorage_one = "Läste in {{count}} fil från lagring"
 loadedFromStorage_other = "Läste in {{count}} filer från lagring"
 loadFromStorageFailed = "Det gick inte att läsa in vissa filer från lagring"
 pinnedFile = "Fäste {{name}}"
-processFilesFailed = "Det gick inte att bearbeta filer"
 savedAndClosed = "Sparade och stängde {{name}}"
 saveFailed = "Sparning misslyckades"
 unpinnedFile = "Lossade {{name}}"
 unzipping = "Packar upp {{name}}"
+
+[fileEditor.addCard]
+dropHint = "or drop files anywhere"
+fromComputer = "Upload from computer"
+moreOptions = "More upload options"
 
 [fileEditor.unzip]
 error = "Fel vid uppackning av {{name}}"
@@ -4729,7 +4721,6 @@ dataLostBody = "Den här webbläsaren har förlorat innehållet i denna fil. Lad
 dataLostTitle = "Fildata är otillgängliga"
 downloadFailed = "Nedladdning misslyckades"
 dropHint = "Öppna filer för att komma igång"
-dropToAdd = "Släpp filer för att lägga till"
 duplicateFailed = "Kunde inte duplicera filen"
 expand = "Expandera sidofält"
 googleDrive = "Google Drive"
@@ -5733,11 +5724,6 @@ desc = "Slå samman flera sidor av ett PDF-dokument till en enda sida"
 tags = "layout,ordna,kombinera,N-up,2-up,4-up,flera per sida,sidor per ark,layouta sidor,bricka,rutnätslayout,flersideslayout,kombinera på sida,handout"
 title = "Flersidig layout"
 
-[home.pdfCommentAgent]
-desc = "Be AI att kommentera en PDF med klisterlappskommentarer utifrån din prompt"
-tags = "AI,agent,kommentar,annotera,klisterlapp,granskning,feedback,anteckningar"
-title = "Lägg till AI-kommentarer"
-
 [home.pdfOrganiser]
 tags = "organisera,ordna om,ändra ordning,ordna sidor,sortera,flytta sidor,ta bort sidor,ta bort sidor,sidhantering,sidorganisatör,ändra sekvens"
 title = "Ordna"
@@ -6595,63 +6581,6 @@ yourCloudAccess = "Du blir teammedlem och förlorar ägaråtkomst."
 deselectAll = "Ingen"
 selectAll = "Markera alla"
 
-[pageEditor]
-dragPreviewAlt = "Drar"
-filePosition = "Position {{position}}"
-pageLabel = "Sida {{page}}"
-title = "Sidredigerare"
-
-[pageEditor.actions]
-deletePage = "Ta bort sida"
-insertFileAfter = "Infoga fil efter"
-moveLeft = "Flytta åt vänster"
-moveRight = "Flytta åt höger"
-rotateLeft = "Rotera åt vänster"
-rotateRight = "Rotera åt höger"
-splitAfter = "Dela efter"
-
-[pageEditor.commands]
-addSplitAt = "Lägg till delning vid position {{position}}"
-addSplits_one = "Lägg till {{count}} delning"
-addSplits_other = "Lägg till {{count}} delningar"
-deletePages_one = "Ta bort {{count}} sida"
-deletePages_other = "Ta bort {{count}} sidor"
-insertFiles_one = "Infoga {{count}} fil efter sida {{page}}"
-insertFiles_other = "Infoga {{count}} filer efter sida {{page}}"
-insertPageBreaks_one = "Infoga {{count}} sidbrytning"
-insertPageBreaks_other = "Infoga {{count}} sidbrytningar"
-insertPageBreaksAll = "Infoga sidbrytningar efter alla sidor"
-removeAllSplits = "Ta bort alla delningar"
-removeSplitAt = "Ta bort delning vid position {{position}}"
-removeSplits_one = "Ta bort {{count}} delning"
-removeSplits_other = "Ta bort {{count}} delningar"
-reorderPages = "Ändra ordning på sidor"
-rotatePageLeft = "Rotera sida åt vänster"
-rotatePageRight = "Rotera sida åt höger"
-rotatePagesLeft_one = "Rotera {{count}} sida åt vänster"
-rotatePagesLeft_other = "Rotera {{count}} sidor åt vänster"
-rotatePagesRight_one = "Rotera {{count}} sida åt höger"
-rotatePagesRight_other = "Rotera {{count}} sidor åt höger"
-splitAllPages = "Dela alla sidor"
-toggleSplits_one = "Växla {{count}} delningsposition"
-toggleSplits_other = "Växla {{count}} delningspositioner"
-
-[pageEditor.emptyState]
-body = "Lägg till filer för att börja redigera sidor"
-title = "Inga PDF-filer inlästa"
-
-[pageEditor.fileDropdown]
-addFile = "Lägg till fil"
-selectedCount = "{{selected}}/{{total}} filer valda"
-untitled = "Namnlös"
-
-[pageEditor.toolbar]
-delete = "Ta bort markerade"
-redo = "Gör om"
-rotateLeft = "Rotera markerade åt vänster"
-rotateRight = "Rotera markerade åt höger"
-undo = "Ångra"
-
 [pageExtracter]
 title = "Extrahera sidor"
 
@@ -6815,6 +6744,76 @@ title = "Sidintervall"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → väljer alla sidor"
 title = "Särskilda nyckelord"
+
+[pageTracks]
+blankPage = "Blank page"
+deleteSelected = "Delete selected pages"
+downloadAsOneFile = "Download as one file"
+downloadEachPage = "Download each page individually"
+downloadSelectedPages = "Download selected pages"
+dragging_one = "{{count}} page"
+dragging_other = "{{count}} pages"
+duplicateSelected = "Duplicate selected pages"
+edited = "edited"
+emptyTrack = "No pages left. Drag pages here, or save to close this file."
+insertBlank = "Insert blank page"
+insertBlankAfterSelected = "Insert blank pages after selected pages"
+moveLeft = "Move left"
+moveRight = "Move right"
+nextPage = "Next page"
+page = "Page {{number}}"
+pageCount_one = "{{count}} page"
+pageCount_other = "{{count}} pages"
+pagePosition = "Page {{number}} of {{total}}"
+prevPage = "Previous page"
+readingPages = "Reading pages..."
+redo = "Redo"
+rotateLeft = "Rotate left"
+rotateRight = "Rotate right"
+rotateSelectedLeft = "Rotate selected pages left"
+rotateSelectedRight = "Rotate selected pages right"
+saveAsOneFile = "Save as one file"
+saveChanges = "Save changes to all files"
+saveEachPage = "Save each page individually"
+saveSelectedPages = "Save selected pages"
+saving = "Saving..."
+savingProgress = "Saving {{done}} of {{total}}"
+selectPage = "Select page {{number}}"
+splitAfterSelected = "Split after selected pages"
+splitHere = "Split here"
+undo = "Undo"
+viewError = "Couldn't render this page"
+viewPage = "View page"
+zoomIn = "Zoom in"
+zoomOut = "Zoom out"
+
+[pageTracks.close]
+message = "Are you sure you want to close all files?"
+unsaved = "These files have unsaved changes."
+
+[pageTracks.delete]
+page = "Delete page"
+
+[pageTracks.empty]
+body = "Add PDFs to expand them into editable page tracks"
+title = "No PDF files loaded"
+
+[pageTracks.exportFailed]
+body = "The edited files couldn't be prepared. Try again."
+title = "Couldn't download"
+
+[pageTracks.saveFailed]
+body = "Your edits haven't been lost. Try saving again."
+title = "Couldn't save changes"
+
+[pageTracks.track]
+close = "Close file"
+collapse = "Collapse"
+expand = "Expand"
+rename = "Rename file"
+
+[pageTracks.wrap]
+label = "Wrap pages"
 
 [payg.activity]
 docs = "dokument"
@@ -7143,24 +7142,6 @@ totalSeats_other = "Totalt ({{count}} platser)"
 
 [payment.upgradeTeam]
 title = "Uppgradera till Team"
-
-[pdfCommentAgent]
-submit = "Generera kommentarer"
-
-[pdfCommentAgent.error]
-emptyPrompt = "Beskriv vad AI ska kommentera"
-failed = "Misslyckades med att generera kommentarer"
-tooLong = "Prompten är för lång (högst {{max}} tecken)"
-
-[pdfCommentAgent.prompt]
-label = "Vad ska AI kommentera?"
-placeholder = "t.ex. Flagga alla otydliga datum och föreslå förtydliganden"
-
-[pdfCommentAgent.results]
-title = "Kommenterad PDF"
-
-[pdfCommentAgent.settings]
-title = "Instruktioner för kommentarer"
 
 [pdfOrganiser]
 placeholder = "(t.ex. 1,3,2 eller 4-8,2,10-12 eller 2n-1)"
@@ -7994,6 +7975,7 @@ before = "Ange"
 title = "Stirling-anslutningen är inte konfigurerad"
 
 [portal.accountLink.notice]
+loadFailed = "The account linking dialog could not be loaded."
 openFailed = "Kunde inte öppna din webbläsare. Öppna Användning och fakturering på din anslutna server för att länka ett konto."
 
 [portal.accountLink.panel]
@@ -8117,9 +8099,6 @@ limit = "Månatlig utgiftsgräns {{amount}}/mån. Bearbetningen pausas vid grän
 limitNoCap = "Ingen utgiftsgräns. Bearbetningen pausas inte. Fakturor skickas månadsvis."
 
 [portal.billing.chip]
-invoices = "Fakturor"
-nav = "Avsnitt"
-payment = "Betalning"
 plan = "Abonnemang"
 procurement = "Inköp"
 usage = "Användning"
@@ -12054,6 +12033,7 @@ title = "Arbetsyta"
 loginIncomplete = "Det gick inte att slutföra inloggningen"
 noSaasServer = "Ingen SaaS-server konfigurerad"
 noServer = "Ingen server konfigurerad"
+policyUnavailable = "Unable to load your organisation's sign-in settings."
 saasLoginFailed = "SaaS-inloggning misslyckades"
 saasLoginIncomplete = "Det gick inte att slutföra SaaS-inloggningen"
 selfHostedLoginFailed = "Självhostad inloggning misslyckades"
@@ -13905,6 +13885,11 @@ title = "Vattenstämpeltext"
 image = "Bild"
 text = "Text"
 
+[workbench]
+dropFailedSingle = "Your file couldn't be added"
+dropFailedSome = "{{failed}} of your files couldn't be added"
+dropOverlay = "Drop files to add them to the workbench"
+
 [workbench.sessionRestore]
 none = "Dina tidigare filer lagras inte längre på den här enheten."
 partial = "Återställde {{restored}} av {{total}} filer. Resten lagras inte längre på den här enheten."
@@ -13915,16 +13900,13 @@ annotations = "Anteckningar"
 applyRedactionsFirst = "Tillämpa maskeringar först"
 closeAll = "Stäng alla filer"
 closePdf = "Stäng PDF"
-deleteSelected = "Ta bort valda sidor"
 deselectAll = "Avmarkera alla"
 downloadAll = "Ladda ner alla"
 exitRedaction = "Avsluta maskeringsläge"
-exportAll = "Exportera PDF"
-exportSelected = "Exportera valda sidor"
 formFill = "Formulärredigerare"
 hideToolbar = "Dölj verktygsfält"
 moreActions = "Fler åtgärder"
-multiTool = "Multiverktyg"
+pageEditor = "Page Editor"
 panMode = "Panoreringsläge"
 print = "Skriv ut PDF"
 readAloud = "Läs upp"
@@ -13938,7 +13920,6 @@ rulerSettings = "Skalinställningar"
 save = "Spara"
 saveAll = "Spara alla"
 saveAs = "Spara som"
-saveChanges = "Spara ändringar"
 search = "Sök i PDF"
 selectAll = "Markera alla"
 selectByNumber = "Markera efter sidnummer"

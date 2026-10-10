@@ -55,7 +55,9 @@ keepWorking = "ทำงานต่อ"
 loading = "กำลังโหลด..."
 loginAgreementAccept = "ยอมรับ"
 loginAgreementDecline = "ปฏิเสธ"
+loginAgreementLoadFailed = "The login agreement could not be loaded."
 loginAgreementProvider = "ประกาศนี้จัดทำโดยผู้ดูแลระบบของคุณ ไม่ใช่ Stirling PDF Inc."
+loginAgreementRetry = "Retry"
 loginAgreementTitle = "ข้อตกลงการเข้าสู่ระบบ"
 logOut = "ออกจากระบบ"
 marginTooltip = "ระยะห่างระหว่างหมายเลขหน้ากับขอบกระดาษ"
@@ -1939,9 +1941,6 @@ wrapUp = "นี่คือทัวร์ผู้ดูแลระบบ! �
 admin = "ผู้ดูแลระบบ"
 title = "การควบคุมผู้ใช้"
 
-[agents]
-stirling_name = "Stirling"
-
 [alphabetOptions]
 arabic = "อาหรับ"
 chinese = "จีน (ตัวย่อ)"
@@ -3219,21 +3218,16 @@ text = "เพื่อให้สิทธิ์เหล่านี้ไม
 [chat.actions]
 copy = "คัดลอกข้อความ"
 
-[chat.emptyState]
-text = "ถามคำถามเกี่ยวกับเอกสารของคุณหรือขอความช่วยเหลือเกี่ยวกับเครื่องมือ PDF"
-
-[chat.fab]
-close = "ปิดแชท"
-open = "เปิดผู้ช่วย Stirling AI"
+[chat.dock]
+collapse = "Collapse chat"
+placeholder = "Ask Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "ตัวเลือกเอเจนต์ของ Stirling"
-assistant = "ผู้ช่วย AI"
 clearChat = "ล้างแชต"
 
 [chat.input]
 disclaimer = "AI อาจผิดพลาดได้ โปรดตรวจสอบผลลัพธ์ก่อนแชร์"
-placeholder = "คุณต้องการทำอะไร?"
 send = "ส่งข้อความ"
 
 [chat.progress]
@@ -3264,9 +3258,7 @@ convertMany = "แปลงเอกสารเหล่านี้เป็�
 convertOne = "แปลงเอกสารนี้เป็น PDF"
 heading = "เริ่มต้นใช้งาน"
 mergeMany = "ผสานเอกสาร {{count}} ฉบับให้เป็น 1"
-moreFiles = "+{{count}} เพิ่มเติม"
 openFromComputer = "เปิดจากคอมพิวเตอร์"
-removeFile = "เอา {{name}} ออก"
 splitOne = "แยกเอกสารนี้"
 
 [chat.responses]
@@ -3278,11 +3270,6 @@ not_found = "ฉันไม่พบข้อมูลที่ร้องข�
 processing = "กำลังประมวลผล ({{outcome}})..."
 unsupported_capability = "ไม่รองรับความสามารถ: {{capability}}"
 usage_limit_reached = "คุณถึงขีดจำกัดการใช้งานแล้ว ตรวจสอบตัวเลือกแผนของคุณเพื่อใช้งานต่อ"
-
-[chat.toolsUsed]
-summary_one = "เรียกใช้เครื่องมือ 1 รายการ"
-summary_other = "เรียกใช้เครื่องมือ {{count}} รายการ"
-unknownTool = "เครื่องมือที่ไม่รู้จัก"
 
 [classification.families]
 correspondence = "จดหมายโต้ตอบ"
@@ -4364,6 +4351,10 @@ title = "อัปเดตจากดิสก์แล้ว"
 body = "\"{{name}}\" เปลี่ยนแปลงบนดิสก์ ไฟล์มีขนาดใหญ่พอที่การโหลดใหม่จะใช้เวลาสักครู่ ดังนั้นเวอร์ชันที่นี่จึงถูกปล่อยไว้ตามเดิม"
 title = "ไฟล์เปลี่ยนแปลงบนดิสก์"
 
+[desktopPrivacy]
+blocked = "Your administrator requires documents to stay on this device. This feature is unavailable."
+localFiles = "Local files"
+
 [desktopUpdate]
 downloading = "กำลังดาวน์โหลดอัปเดต..."
 installing = "กำลังติดตั้งอัปเดต..."
@@ -4597,22 +4588,23 @@ viewInViewer = "ดูในตัวแสดงผล"
 closeFile = "ปิดไฟล์"
 
 [fileEditor]
-addFiles = "เพิ่มไฟล์"
 closedFile = "ปิด {{name}} แล้ว"
 couldNotSave = "ไม่สามารถบันทึก {{name}} ได้"
-filesAdded_one = "เพิ่ม {{count}} ไฟล์แล้ว"
-filesAdded_other = "เพิ่ม {{count}} ไฟล์แล้ว"
 filesReordered_one = "จัดลำดับไฟล์ใหม่แล้ว"
 filesReordered_other = "จัดลำดับไฟล์ใหม่ {{count}} ไฟล์แล้ว"
 loadedFromStorage_one = "โหลด {{count}} ไฟล์จากที่เก็บข้อมูลแล้ว"
 loadedFromStorage_other = "โหลด {{count}} ไฟล์จากที่เก็บข้อมูลแล้ว"
 loadFromStorageFailed = "โหลดบางไฟล์จากที่เก็บข้อมูลไม่สำเร็จ"
 pinnedFile = "ปักหมุด {{name}} แล้ว"
-processFilesFailed = "ประมวลผลไฟล์ไม่สำเร็จ"
 savedAndClosed = "บันทึกและปิด {{name}} แล้ว"
 saveFailed = "บันทึกไม่สำเร็จ"
 unpinnedFile = "เลิกปักหมุด {{name}} แล้ว"
 unzipping = "กำลังแตกไฟล์ {{name}}"
+
+[fileEditor.addCard]
+dropHint = "or drop files anywhere"
+fromComputer = "Upload from computer"
+moreOptions = "More upload options"
 
 [fileEditor.unzip]
 error = "เกิดข้อผิดพลาดในการแตกไฟล์ {{name}}"
@@ -4729,7 +4721,6 @@ dataLostBody = "เบราว์เซอร์นี้สูญเสีย�
 dataLostTitle = "ข้อมูลไฟล์ไม่พร้อมใช้งาน"
 downloadFailed = "ดาวน์โหลดล้มเหลว"
 dropHint = "เปิดไฟล์เพื่อเริ่มต้น"
-dropToAdd = "วางไฟล์เพื่อเพิ่ม"
 duplicateFailed = "ไม่สามารถทำสำเนาไฟล์ได้"
 expand = "ขยายแถบข้าง"
 googleDrive = "Google Drive"
@@ -5733,11 +5724,6 @@ desc = "รวมหน้าหลายหน้าของเอกสาร
 tags = "เค้าโครง,จัดเรียง,รวม,N-up,2-up,4-up,หลายหน้าต่อหน้า,หน้าต่อแผ่น,จัดหน้า,tile,เค้าโครงตาราง,เค้าโครงหลายหน้า,รวมบนหน้า,handout"
 title = "เลย์เอาต์หลายหน้า"
 
-[home.pdfCommentAgent]
-desc = "ขอให้ AI ใส่คำอธิบายประกอบใน PDF ด้วยโน้ตแปะตามพรอมต์ของคุณ"
-tags = "AI,ตัวช่วย,ความคิดเห็น,คำอธิบายประกอบ,โน้ตแปะ,ตรวจทาน,ข้อเสนอแนะ,บันทึก"
-title = "เพิ่มความคิดเห็นด้วย AI"
-
 [home.pdfOrganiser]
 tags = "จัดระเบียบ,จัดเรียงใหม่,เรียงลำดับใหม่,จัดเรียงหน้า,เรียงลำดับ,ย้ายหน้า,ลบหน้า,ลบหน้า,การจัดการหน้า,ตัวจัดระเบียบหน้า,เรียงลำดับใหม่"
 title = "จัดระเบียบ"
@@ -6595,63 +6581,6 @@ yourCloudAccess = "คุณจะกลายเป็นสมาชิกท�
 deselectAll = "ไม่มี"
 selectAll = "เลือกทั้งหมด"
 
-[pageEditor]
-dragPreviewAlt = "กำลังลาก"
-filePosition = "ตำแหน่ง {{position}}"
-pageLabel = "หน้า {{page}}"
-title = "ตัวแก้ไขหน้า"
-
-[pageEditor.actions]
-deletePage = "ลบหน้า"
-insertFileAfter = "แทรกไฟล์หลังจากนี้"
-moveLeft = "ย้ายไปซ้าย"
-moveRight = "ย้ายไปขวา"
-rotateLeft = "หมุนซ้าย"
-rotateRight = "หมุนขวา"
-splitAfter = "แยกหลังจากนี้"
-
-[pageEditor.commands]
-addSplitAt = "เพิ่มจุดแยกที่ตำแหน่ง {{position}}"
-addSplits_one = "เพิ่มจุดแยก {{count}} จุด"
-addSplits_other = "เพิ่มจุดแยก {{count}} จุด"
-deletePages_one = "ลบหน้า {{count}} หน้า"
-deletePages_other = "ลบหน้า {{count}} หน้า"
-insertFiles_one = "แทรกไฟล์ {{count}} ไฟล์หลังหน้า {{page}}"
-insertFiles_other = "แทรกไฟล์ {{count}} ไฟล์หลังหน้า {{page}}"
-insertPageBreaks_one = "แทรกตัวแบ่งหน้า {{count}} รายการ"
-insertPageBreaks_other = "แทรกตัวแบ่งหน้า {{count}} รายการ"
-insertPageBreaksAll = "แทรกตัวแบ่งหน้าหลังทุกหน้า"
-removeAllSplits = "ลบจุดแยกทั้งหมด"
-removeSplitAt = "ลบจุดแยกที่ตำแหน่ง {{position}}"
-removeSplits_one = "ลบจุดแยก {{count}} จุด"
-removeSplits_other = "ลบจุดแยก {{count}} จุด"
-reorderPages = "จัดลำดับหน้าใหม่"
-rotatePageLeft = "หมุนหน้าไปทางซ้าย"
-rotatePageRight = "หมุนหน้าไปทางขวา"
-rotatePagesLeft_one = "หมุนหน้า {{count}} หน้าไปทางซ้าย"
-rotatePagesLeft_other = "หมุนหน้า {{count}} หน้าไปทางซ้าย"
-rotatePagesRight_one = "หมุนหน้า {{count}} หน้าไปทางขวา"
-rotatePagesRight_other = "หมุนหน้า {{count}} หน้าไปทางขวา"
-splitAllPages = "แยกทุกหน้า"
-toggleSplits_one = "สลับตำแหน่งจุดแยก {{count}} จุด"
-toggleSplits_other = "สลับตำแหน่งจุดแยก {{count}} จุด"
-
-[pageEditor.emptyState]
-body = "เพิ่มไฟล์เพื่อเริ่มแก้ไขหน้า"
-title = "ยังไม่ได้โหลดไฟล์ PDF"
-
-[pageEditor.fileDropdown]
-addFile = "เพิ่มไฟล์"
-selectedCount = "เลือกไฟล์ {{selected}}/{{total}} แล้ว"
-untitled = "ไม่มีชื่อ"
-
-[pageEditor.toolbar]
-delete = "ลบที่เลือก"
-redo = "ทำซ้ำ"
-rotateLeft = "หมุนที่เลือกไปทางซ้าย"
-rotateRight = "หมุนที่เลือกไปทางขวา"
-undo = "เลิกทำ"
-
 [pageExtracter]
 title = "แยกหน้า"
 
@@ -6815,6 +6744,76 @@ title = "ช่วงหน้า"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → เลือกทุกหน้า"
 title = "คีย์เวิร์ดพิเศษ"
+
+[pageTracks]
+blankPage = "Blank page"
+deleteSelected = "Delete selected pages"
+downloadAsOneFile = "Download as one file"
+downloadEachPage = "Download each page individually"
+downloadSelectedPages = "Download selected pages"
+dragging_one = "{{count}} page"
+dragging_other = "{{count}} pages"
+duplicateSelected = "Duplicate selected pages"
+edited = "edited"
+emptyTrack = "No pages left. Drag pages here, or save to close this file."
+insertBlank = "Insert blank page"
+insertBlankAfterSelected = "Insert blank pages after selected pages"
+moveLeft = "Move left"
+moveRight = "Move right"
+nextPage = "Next page"
+page = "Page {{number}}"
+pageCount_one = "{{count}} page"
+pageCount_other = "{{count}} pages"
+pagePosition = "Page {{number}} of {{total}}"
+prevPage = "Previous page"
+readingPages = "Reading pages..."
+redo = "Redo"
+rotateLeft = "Rotate left"
+rotateRight = "Rotate right"
+rotateSelectedLeft = "Rotate selected pages left"
+rotateSelectedRight = "Rotate selected pages right"
+saveAsOneFile = "Save as one file"
+saveChanges = "Save changes to all files"
+saveEachPage = "Save each page individually"
+saveSelectedPages = "Save selected pages"
+saving = "Saving..."
+savingProgress = "Saving {{done}} of {{total}}"
+selectPage = "Select page {{number}}"
+splitAfterSelected = "Split after selected pages"
+splitHere = "Split here"
+undo = "Undo"
+viewError = "Couldn't render this page"
+viewPage = "View page"
+zoomIn = "Zoom in"
+zoomOut = "Zoom out"
+
+[pageTracks.close]
+message = "Are you sure you want to close all files?"
+unsaved = "These files have unsaved changes."
+
+[pageTracks.delete]
+page = "Delete page"
+
+[pageTracks.empty]
+body = "Add PDFs to expand them into editable page tracks"
+title = "No PDF files loaded"
+
+[pageTracks.exportFailed]
+body = "The edited files couldn't be prepared. Try again."
+title = "Couldn't download"
+
+[pageTracks.saveFailed]
+body = "Your edits haven't been lost. Try saving again."
+title = "Couldn't save changes"
+
+[pageTracks.track]
+close = "Close file"
+collapse = "Collapse"
+expand = "Expand"
+rename = "Rename file"
+
+[pageTracks.wrap]
+label = "Wrap pages"
 
 [payg.activity]
 docs = "เอกสาร"
@@ -7143,24 +7142,6 @@ totalSeats_other = "รวม ({{count}} ที่นั่ง)"
 
 [payment.upgradeTeam]
 title = "อัปเกรดเป็น Team"
-
-[pdfCommentAgent]
-submit = "สร้างความคิดเห็น"
-
-[pdfCommentAgent.error]
-emptyPrompt = "โปรดอธิบายว่าให้ AI แสดงความคิดเห็นเกี่ยวกับอะไร"
-failed = "สร้างความคิดเห็นไม่สำเร็จ"
-tooLong = "พรอมต์ยาวเกินไป (สูงสุด {{max}} อักขระ)"
-
-[pdfCommentAgent.prompt]
-label = "ให้ AI แสดงความคิดเห็นเกี่ยวกับอะไร?"
-placeholder = "เช่น ทำเครื่องหมายวันที่ที่คลุมเครือและแนะนำคำชี้แจง"
-
-[pdfCommentAgent.results]
-title = "PDF ที่มีความคิดเห็น"
-
-[pdfCommentAgent.settings]
-title = "คำแนะนำสำหรับความคิดเห็น"
 
 [pdfOrganiser]
 placeholder = "(เช่น 1,3,2 หรือ 4-8,2,10-12 หรือ 2n-1)"
@@ -7994,6 +7975,7 @@ before = "ตั้งค่า"
 title = "ยังไม่ได้กำหนดค่าการเชื่อมต่อ Stirling"
 
 [portal.accountLink.notice]
+loadFailed = "The account linking dialog could not be loaded."
 openFailed = "ไม่สามารถเปิดเบราว์เซอร์ของคุณได้ เปิดการใช้งานและการเรียกเก็บเงินบนเซิร์ฟเวอร์ที่เชื่อมต่อของคุณเพื่อเชื่อมโยงบัญชี"
 
 [portal.accountLink.panel]
@@ -8117,9 +8099,6 @@ limit = "ขีดจำกัดค่าใช้จ่ายรายเด�
 limitNoCap = "ไม่มีขีดจำกัดค่าใช้จ่าย การประมวลผลจะไม่หยุดชั่วคราว ออกใบแจ้งหนี้รายเดือน"
 
 [portal.billing.chip]
-invoices = "ใบแจ้งหนี้"
-nav = "ส่วนต่าง ๆ"
-payment = "การชำระเงิน"
 plan = "แผน"
 procurement = "การจัดซื้อ"
 usage = "การใช้งาน"
@@ -12054,6 +12033,7 @@ title = "พื้นที่ทำงาน"
 loginIncomplete = "เข้าสู่ระบบให้เสร็จสมบูรณ์ไม่สำเร็จ"
 noSaasServer = "ไม่ได้กำหนดค่าเซิร์ฟเวอร์ SaaS"
 noServer = "ไม่ได้กำหนดค่าเซิร์ฟเวอร์"
+policyUnavailable = "Unable to load your organisation's sign-in settings."
 saasLoginFailed = "เข้าสู่ระบบ SaaS ไม่สำเร็จ"
 saasLoginIncomplete = "เข้าสู่ระบบ SaaS ให้เสร็จสมบูรณ์ไม่สำเร็จ"
 selfHostedLoginFailed = "เข้าสู่ระบบ self-hosted ไม่สำเร็จ"
@@ -13905,6 +13885,11 @@ title = "ข้อความลายน้ำ"
 image = "รูปภาพ"
 text = "ข้อความ"
 
+[workbench]
+dropFailedSingle = "Your file couldn't be added"
+dropFailedSome = "{{failed}} of your files couldn't be added"
+dropOverlay = "Drop files to add them to the workbench"
+
 [workbench.sessionRestore]
 none = "ไฟล์ก่อนหน้าของคุณไม่ได้ถูกจัดเก็บไว้บนอุปกรณ์นี้อีกต่อไป"
 partial = "กู้คืนไฟล์ {{restored}} จาก {{total}} ไฟล์แล้ว ที่เหลือไม่ได้ถูกจัดเก็บไว้บนอุปกรณ์นี้อีกต่อไป"
@@ -13915,16 +13900,13 @@ annotations = "คำอธิบายประกอบ"
 applyRedactionsFirst = "ใช้การปกปิดข้อมูลก่อน"
 closeAll = "ปิดไฟล์ทั้งหมด"
 closePdf = "ปิด PDF"
-deleteSelected = "ลบหน้าที่เลือก"
 deselectAll = "ยกเลิกการเลือกทั้งหมด"
 downloadAll = "ดาวน์โหลดทั้งหมด"
 exitRedaction = "ออกจากโหมดปกปิดข้อมูล"
-exportAll = "ส่งออก PDF"
-exportSelected = "ส่งออกหน้าที่เลือก"
 formFill = "ตัวแก้ไขฟอร์ม"
 hideToolbar = "ซ่อนแถบเครื่องมือ"
 moreActions = "การดำเนินการเพิ่มเติม"
-multiTool = "เครื่องมือหลายฟังก์ชัน"
+pageEditor = "Page Editor"
 panMode = "โหมดเลื่อน"
 print = "พิมพ์ PDF"
 readAloud = "อ่านออกเสียง"
@@ -13938,7 +13920,6 @@ rulerSettings = "การตั้งค่ามาตราส่วน"
 save = "บันทึก"
 saveAll = "บันทึกทั้งหมด"
 saveAs = "บันทึกเป็น"
-saveChanges = "บันทึกการเปลี่ยนแปลง"
 search = "ค้นหาใน PDF"
 selectAll = "เลือกทั้งหมด"
 selectByNumber = "เลือกตามหมายเลขหน้า"

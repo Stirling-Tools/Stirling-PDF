@@ -55,7 +55,9 @@ keepWorking = "Pokračovať v práci"
 loading = "Načítava sa..."
 loginAgreementAccept = "Prijať"
 loginAgreementDecline = "Odmietnuť"
+loginAgreementLoadFailed = "The login agreement could not be loaded."
 loginAgreementProvider = "Toto oznámenie poskytol váš administrátor, nie Stirling PDF Inc."
+loginAgreementRetry = "Retry"
 loginAgreementTitle = "Dohoda pri prihlásení"
 logOut = "Odhlásiť sa"
 marginTooltip = "Vzdialenosť medzi číslom strany a okrajom strany."
@@ -1939,9 +1941,6 @@ wrapUp = "To je koniec prehliadky administrátora! Videli ste enterprise funkcie
 admin = "Admin"
 title = "Nastavenia kontroly používateľov"
 
-[agents]
-stirling_name = "Stirling"
-
 [alphabetOptions]
 arabic = "Arabské"
 chinese = "Čínske (zjednodušené)"
@@ -3219,21 +3218,16 @@ text = "Aby boli tieto povolenia nezmeniteľné, použite nástroj Add Password 
 [chat.actions]
 copy = "Kopírovať správu"
 
-[chat.emptyState]
-text = "Opýtajte sa na svoje dokumenty alebo získajte pomoc s PDF nástrojmi."
-
-[chat.fab]
-close = "Zavrieť chat"
-open = "Otvoriť asistenta Stirling AI"
+[chat.dock]
+collapse = "Collapse chat"
+placeholder = "Ask Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Možnosti agenta Stirling"
-assistant = "AI asistent"
 clearChat = "Vyčistiť chat"
 
 [chat.input]
 disclaimer = "AI môže robiť chyby. Pred zdieľaním si výstup určite overte."
-placeholder = "Čo chcete urobiť?"
 send = "Odoslať správu"
 
 [chat.progress]
@@ -3264,9 +3258,7 @@ convertMany = "Konvertovať tieto dokumenty do PDF"
 convertOne = "Konvertovať tento dokument do PDF"
 heading = "Začíname"
 mergeMany = "Zlúčiť týchto {{count}} dokumentov do jedného"
-moreFiles = "+{{count}} viac"
 openFromComputer = "Otvoriť z počítača"
-removeFile = "Odstrániť {{name}}"
 splitOne = "Rozdeliť tento dokument"
 
 [chat.responses]
@@ -3278,11 +3270,6 @@ not_found = "Nepodarilo sa nájsť požadované informácie."
 processing = "Spracúvam ({{outcome}})..."
 unsupported_capability = "Nepodporovaná schopnosť: {{capability}}"
 usage_limit_reached = "Dosiahli ste svoj limit používania. Skontrolujte možnosti svojho plánu, aby ste mohli pokračovať."
-
-[chat.toolsUsed]
-summary_one = "Spustený 1 nástroj"
-summary_other = "Spustených {{count}} nástrojov"
-unknownTool = "Neznámy nástroj"
 
 [classification.families]
 correspondence = "Korešpondencia"
@@ -4364,6 +4351,10 @@ title = "Aktualizované z disku"
 body = "„{{name}}“ sa na disku zmenil. Je dosť veľký na to, aby jeho opätovné načítanie chvíľu trvalo, takže verzia tu zostala bez zmeny."
 title = "Súbor zmenený na disku"
 
+[desktopPrivacy]
+blocked = "Your administrator requires documents to stay on this device. This feature is unavailable."
+localFiles = "Local files"
+
 [desktopUpdate]
 downloading = "Preberanie aktualizácie..."
 installing = "Inštalácia aktualizácie..."
@@ -4597,22 +4588,23 @@ viewInViewer = "Zobraziť v prehliadači"
 closeFile = "Zavrieť súbor"
 
 [fileEditor]
-addFiles = "Pridať súbory"
 closedFile = "Zatvorené {{name}}"
 couldNotSave = "Nepodarilo sa uložiť {{name}}"
-filesAdded_one = "Pridaný {{count}} súbor"
-filesAdded_other = "Pridaných {{count}} súborov"
 filesReordered_one = "Súbor bol presunutý"
 filesReordered_other = "Presunutých {{count}} súborov"
 loadedFromStorage_one = "Načítaný {{count}} súbor z úložiska"
 loadedFromStorage_other = "Načítaných {{count}} súborov z úložiska"
 loadFromStorageFailed = "Niektoré súbory sa nepodarilo načítať z úložiska"
 pinnedFile = "Pripnuté {{name}}"
-processFilesFailed = "Nepodarilo sa spracovať súbory"
 savedAndClosed = "Uložené a zatvorené {{name}}"
 saveFailed = "Uloženie zlyhalo"
 unpinnedFile = "Odopnuté {{name}}"
 unzipping = "Rozbaľuje sa {{name}}"
+
+[fileEditor.addCard]
+dropHint = "or drop files anywhere"
+fromComputer = "Upload from computer"
+moreOptions = "More upload options"
 
 [fileEditor.unzip]
 error = "Chyba pri rozbaľovaní {{name}}"
@@ -4729,7 +4721,6 @@ dataLostBody = "Tento prehliadač stratil obsah tohto súboru. Nahrajte ho znova
 dataLostTitle = "Údaje súboru nie sú dostupné"
 downloadFailed = "Sťahovanie zlyhalo"
 dropHint = "Ak chcete začať, otvorte súbory"
-dropToAdd = "Presuňte súbory na pridanie"
 duplicateFailed = "Súbor sa nepodarilo duplikovať"
 expand = "Rozbaliť bočný panel"
 googleDrive = "Google Drive"
@@ -5733,11 +5724,6 @@ desc = "Zlúčte viacero stránok PDF dokumentu do jednej stránky"
 tags = "rozloženie,usporiadať,kombinovať,N-up,2-up,4-up,viac na stránku,stránky na hárok,rozloženie strán,dlaždice,mriežkové rozloženie,viacstránkové rozloženie,kombinovať na stránke,handout"
 title = "Viacstranové usporiadanie"
 
-[home.pdfCommentAgent]
-desc = "Požiadajte AI, aby anotovala PDF pomocou lepiacich poznámok na základe vášho zadania"
-tags = "AI,agent,komentár,anotácia,lepiaca poznámka,kontrola,spätná väzba,poznámky"
-title = "Pridať komentáre AI"
-
 [home.pdfOrganiser]
 tags = "organizovať,preskupiť,zmeniť poradie,usporiadať stránky,triediť,presunúť stránky,odstrániť stránky,odstrániť stránky,správa strán,organizátor strán,zmeniť sekvenciu"
 title = "Organizovať"
@@ -6595,63 +6581,6 @@ yourCloudAccess = "Stanete sa členom tímu a stratíte prístup vlastníka."
 deselectAll = "Žiadne"
 selectAll = "Zaškrtnúť všetko"
 
-[pageEditor]
-dragPreviewAlt = "Presúvanie"
-filePosition = "Pozícia {{position}}"
-pageLabel = "Strana {{page}}"
-title = "Editor strán"
-
-[pageEditor.actions]
-deletePage = "Odstrániť stranu"
-insertFileAfter = "Vložiť súbor za"
-moveLeft = "Presunúť doľava"
-moveRight = "Presunúť doprava"
-rotateLeft = "Otočiť doľava"
-rotateRight = "Otočiť doprava"
-splitAfter = "Rozdeliť za"
-
-[pageEditor.commands]
-addSplitAt = "Pridať rozdelenie na pozícii {{position}}"
-addSplits_one = "Pridať {{count}} rozdelenie"
-addSplits_other = "Pridať {{count}} rozdelení"
-deletePages_one = "Odstrániť {{count}} stránku"
-deletePages_other = "Odstrániť {{count}} strán"
-insertFiles_one = "Vložiť {{count}} súbor za stránku {{page}}"
-insertFiles_other = "Vložiť {{count}} súborov za stránku {{page}}"
-insertPageBreaks_one = "Vložiť {{count}} zlom stránky"
-insertPageBreaks_other = "Vložiť {{count}} zlomov strán"
-insertPageBreaksAll = "Vložiť zlomy strán za všetky stránky"
-removeAllSplits = "Odstrániť všetky rozdelenia"
-removeSplitAt = "Odstrániť rozdelenie na pozícii {{position}}"
-removeSplits_one = "Odstrániť {{count}} rozdelenie"
-removeSplits_other = "Odstrániť {{count}} rozdelení"
-reorderPages = "Zmeniť poradie strán"
-rotatePageLeft = "Otočiť stránku doľava"
-rotatePageRight = "Otočiť stránku doprava"
-rotatePagesLeft_one = "Otočiť {{count}} stránku doľava"
-rotatePagesLeft_other = "Otočiť {{count}} strán doľava"
-rotatePagesRight_one = "Otočiť {{count}} stránku doprava"
-rotatePagesRight_other = "Otočiť {{count}} strán doprava"
-splitAllPages = "Rozdeliť všetky stránky"
-toggleSplits_one = "Prepnúť {{count}} pozíciu rozdelenia"
-toggleSplits_other = "Prepnúť {{count}} pozícií rozdelenia"
-
-[pageEditor.emptyState]
-body = "Pridajte súbory na začatie úprav strán"
-title = "Nie sú načítané žiadne PDF súbory"
-
-[pageEditor.fileDropdown]
-addFile = "Pridať súbor"
-selectedCount = "Vybraté súbory: {{selected}}/{{total}}"
-untitled = "Bez názvu"
-
-[pageEditor.toolbar]
-delete = "Odstrániť vybrané"
-redo = "Znova"
-rotateLeft = "Otočiť vybrané doľava"
-rotateRight = "Otočiť vybrané doprava"
-undo = "Späť"
-
 [pageExtracter]
 title = "Extrahovať stránky"
 
@@ -6815,6 +6744,76 @@ title = "Rozsahy strán"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → vyberá všetky strany"
 title = "Špeciálne kľúčové slová"
+
+[pageTracks]
+blankPage = "Blank page"
+deleteSelected = "Delete selected pages"
+downloadAsOneFile = "Download as one file"
+downloadEachPage = "Download each page individually"
+downloadSelectedPages = "Download selected pages"
+dragging_one = "{{count}} page"
+dragging_other = "{{count}} pages"
+duplicateSelected = "Duplicate selected pages"
+edited = "edited"
+emptyTrack = "No pages left. Drag pages here, or save to close this file."
+insertBlank = "Insert blank page"
+insertBlankAfterSelected = "Insert blank pages after selected pages"
+moveLeft = "Move left"
+moveRight = "Move right"
+nextPage = "Next page"
+page = "Page {{number}}"
+pageCount_one = "{{count}} page"
+pageCount_other = "{{count}} pages"
+pagePosition = "Page {{number}} of {{total}}"
+prevPage = "Previous page"
+readingPages = "Reading pages..."
+redo = "Redo"
+rotateLeft = "Rotate left"
+rotateRight = "Rotate right"
+rotateSelectedLeft = "Rotate selected pages left"
+rotateSelectedRight = "Rotate selected pages right"
+saveAsOneFile = "Save as one file"
+saveChanges = "Save changes to all files"
+saveEachPage = "Save each page individually"
+saveSelectedPages = "Save selected pages"
+saving = "Saving..."
+savingProgress = "Saving {{done}} of {{total}}"
+selectPage = "Select page {{number}}"
+splitAfterSelected = "Split after selected pages"
+splitHere = "Split here"
+undo = "Undo"
+viewError = "Couldn't render this page"
+viewPage = "View page"
+zoomIn = "Zoom in"
+zoomOut = "Zoom out"
+
+[pageTracks.close]
+message = "Are you sure you want to close all files?"
+unsaved = "These files have unsaved changes."
+
+[pageTracks.delete]
+page = "Delete page"
+
+[pageTracks.empty]
+body = "Add PDFs to expand them into editable page tracks"
+title = "No PDF files loaded"
+
+[pageTracks.exportFailed]
+body = "The edited files couldn't be prepared. Try again."
+title = "Couldn't download"
+
+[pageTracks.saveFailed]
+body = "Your edits haven't been lost. Try saving again."
+title = "Couldn't save changes"
+
+[pageTracks.track]
+close = "Close file"
+collapse = "Collapse"
+expand = "Expand"
+rename = "Rename file"
+
+[pageTracks.wrap]
+label = "Wrap pages"
 
 [payg.activity]
 docs = "dokumenty"
@@ -7143,24 +7142,6 @@ totalSeats_other = "Celkom ({{count}} miest)"
 
 [payment.upgradeTeam]
 title = "Prejsť na Team"
-
-[pdfCommentAgent]
-submit = "Vygenerovať komentáre"
-
-[pdfCommentAgent.error]
-emptyPrompt = "Popíšte, k čomu má AI pridať komentáre"
-failed = "Nepodarilo sa vygenerovať komentáre"
-tooLong = "Zadanie je príliš dlhé (maximum {{max}} znakov)"
-
-[pdfCommentAgent.prompt]
-label = "Na čo má AI komentovať?"
-placeholder = "napr. Označte všetky nejednoznačné dátumy a navrhnite upresnenia"
-
-[pdfCommentAgent.results]
-title = "PDF s komentármi"
-
-[pdfCommentAgent.settings]
-title = "Pokyny ku komentárom"
 
 [pdfOrganiser]
 placeholder = "(napr. 1,3,2 alebo 4-8,2,10-12 alebo 2n-1)"
@@ -7994,6 +7975,7 @@ before = "Nastavte"
 title = "Pripojenie Stirling nie je nakonfigurované"
 
 [portal.accountLink.notice]
+loadFailed = "The account linking dialog could not be loaded."
 openFailed = "Nepodarilo sa otvoriť váš prehliadač. Otvorte Používanie a fakturáciu na pripojenom serveri, aby ste prepojili účet."
 
 [portal.accountLink.panel]
@@ -8117,9 +8099,6 @@ limit = "Mesačný limit výdavkov {{amount}}/mes. Spracovanie sa pri limite poz
 limitNoCap = "Bez limitu výdavkov. Spracovanie sa nepozastaví. Faktúry sa vystavujú mesačne."
 
 [portal.billing.chip]
-invoices = "Faktúry"
-nav = "Sekcie"
-payment = "Platba"
 plan = "Plán"
 procurement = "Nákup"
 usage = "Používanie"
@@ -12054,6 +12033,7 @@ title = "Pracovný priestor"
 loginIncomplete = "Nepodarilo sa dokončiť prihlásenie"
 noSaasServer = "Nie je nakonfigurovaný žiadny SaaS server"
 noServer = "Nie je nakonfigurovaný žiadny server"
+policyUnavailable = "Unable to load your organisation's sign-in settings."
 saasLoginFailed = "Prihlásenie do SaaS zlyhalo"
 saasLoginIncomplete = "Nepodarilo sa dokončiť prihlásenie do SaaS"
 selfHostedLoginFailed = "Prihlásenie do self-hosted inštancie zlyhalo"
@@ -13905,6 +13885,11 @@ title = "Text vodoznaku"
 image = "Obrázok"
 text = "Text"
 
+[workbench]
+dropFailedSingle = "Your file couldn't be added"
+dropFailedSome = "{{failed}} of your files couldn't be added"
+dropOverlay = "Drop files to add them to the workbench"
+
 [workbench.sessionRestore]
 none = "Vaše predchádzajúce súbory už nie sú uložené v tomto zariadení."
 partial = "Obnovených {{restored}} z {{total}} súborov. Zvyšok už nie je uložený v tomto zariadení."
@@ -13915,16 +13900,13 @@ annotations = "Anotácie"
 applyRedactionsFirst = "Najprv použiť začiernenia"
 closeAll = "Zavrieť všetky súbory"
 closePdf = "Zavrieť PDF"
-deleteSelected = "Odstrániť vybrané strany"
 deselectAll = "Zrušiť výber všetkých"
 downloadAll = "Stiahnuť všetko"
 exitRedaction = "Ukončiť režim začiernenia"
-exportAll = "Exportovať PDF"
-exportSelected = "Exportovať vybrané strany"
 formFill = "Editor formulárov"
 hideToolbar = "Skryť panel nástrojov"
 moreActions = "Ďalšie akcie"
-multiTool = "Multinástroj"
+pageEditor = "Page Editor"
 panMode = "Režim posunu"
 print = "Tlačiť PDF"
 readAloud = "Čítať nahlas"
@@ -13938,7 +13920,6 @@ rulerSettings = "Nastavenia mierky"
 save = "Uložiť"
 saveAll = "Uložiť všetko"
 saveAs = "Uložiť ako"
-saveChanges = "Uložiť zmeny"
 search = "Hľadať v PDF"
 selectAll = "Vybrať všetko"
 selectByNumber = "Vybrať podľa čísel strán"

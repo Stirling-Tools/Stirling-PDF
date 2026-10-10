@@ -55,7 +55,9 @@ keepWorking = "काम जारी रखें"
 loading = "लोड हो रहा है..."
 loginAgreementAccept = "स्वीकार करें"
 loginAgreementDecline = "अस्वीकार करें"
+loginAgreementLoadFailed = "The login agreement could not be loaded."
 loginAgreementProvider = "यह सूचना आपके व्यवस्थापक द्वारा प्रदान की गई है, Stirling PDF Inc. द्वारा नहीं।"
+loginAgreementRetry = "Retry"
 loginAgreementTitle = "लॉगिन समझौता"
 logOut = "लॉग आउट"
 marginTooltip = "पृष्ठ संख्या और पृष्ठ की किनारी के बीच की दूरी।"
@@ -1939,9 +1941,6 @@ wrapUp = "यह admin tour था! आपने enterprise features देख �
 admin = "व्यवस्थापक"
 title = "उपयोगकर्ता नियंत्रण सेटिंग्स"
 
-[agents]
-stirling_name = "Stirling"
-
 [alphabetOptions]
 arabic = "अरबी"
 chinese = "चीनी (सरलीकृत)"
@@ -3219,21 +3218,16 @@ text = "इन अनुमतियों को अपरिवर्तनी
 [chat.actions]
 copy = "संदेश कॉपी करें"
 
-[chat.emptyState]
-text = "अपने documents के बारे में सवाल पूछें या PDF tools के साथ मदद पाएँ।"
-
-[chat.fab]
-close = "Chat बंद करें"
-open = "Stirling AI assistant खोलें"
+[chat.dock]
+collapse = "Collapse chat"
+placeholder = "Ask Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Stirling एजेंट विकल्प"
-assistant = "AI सहायक"
 clearChat = "चैट साफ़ करें"
 
 [chat.input]
 disclaimer = "AI गलतियाँ कर सकता है। साझा करने से पहले output सत्यापित करना सुनिश्चित करें।"
-placeholder = "आप क्या करना चाहते हैं?"
 send = "संदेश भेजें"
 
 [chat.progress]
@@ -3264,9 +3258,7 @@ convertMany = "इन दस्तावेज़ों को PDF में ब
 convertOne = "इस दस्तावेज़ को PDF में बदलें"
 heading = "शुरू करें"
 mergeMany = "इन {{count}} दस्तावेज़ों को 1 में मिलाएँ"
-moreFiles = "+{{count}} और"
 openFromComputer = "कंप्यूटर से खोलें"
-removeFile = "{{name}} हटाएं"
 splitOne = "इस दस्तावेज़ को विभाजित करें"
 
 [chat.responses]
@@ -3278,11 +3270,6 @@ not_found = "मुझे अनुरोधित जानकारी नह�
 processing = "प्रक्रिया जारी ({{outcome}})..."
 unsupported_capability = "असमर्थित क्षमता: {{capability}}"
 usage_limit_reached = "आप अपनी usage limit तक पहुँच गए हैं। जारी रखने के लिए अपने plan options देखें।"
-
-[chat.toolsUsed]
-summary_one = "1 उपकरण चलाया"
-summary_other = "{{count}} उपकरण चलाए"
-unknownTool = "अज्ञात उपकरण"
 
 [classification.families]
 correspondence = "पत्राचार"
@@ -4364,6 +4351,10 @@ title = "डिस्क से अपडेट किया गया"
 body = "\"{{name}}\" डिस्क पर बदली गई। यह इतनी बड़ी है कि इसे फिर से लोड करने में समय लगेगा, इसलिए यहां का संस्करण वैसा ही रखा गया है।"
 title = "डिस्क पर फ़ाइल बदली गई"
 
+[desktopPrivacy]
+blocked = "Your administrator requires documents to stay on this device. This feature is unavailable."
+localFiles = "Local files"
+
 [desktopUpdate]
 downloading = "अपडेट डाउनलोड हो रहा है..."
 installing = "अपडेट इंस्टॉल हो रहा है..."
@@ -4597,22 +4588,23 @@ viewInViewer = "व्यूअर में देखें"
 closeFile = "फ़ाइल बंद करें"
 
 [fileEditor]
-addFiles = "फ़ाइलें जोड़ें"
 closedFile = "{{name}} बंद किया गया"
 couldNotSave = "{{name}} सहेजा नहीं जा सका"
-filesAdded_one = "{{count}} फ़ाइल जोड़ी गई"
-filesAdded_other = "{{count}} फ़ाइलें जोड़ी गईं"
 filesReordered_one = "फ़ाइल का क्रम बदला गया"
 filesReordered_other = "{{count}} फ़ाइलों का क्रम बदला गया"
 loadedFromStorage_one = "स्टोरेज से {{count}} फ़ाइल लोड की गई"
 loadedFromStorage_other = "स्टोरेज से {{count}} फ़ाइलें लोड की गईं"
 loadFromStorageFailed = "स्टोरेज से कुछ फ़ाइलें लोड करने में विफल"
 pinnedFile = "{{name}} पिन किया गया"
-processFilesFailed = "फ़ाइलें प्रोसेस करने में विफल"
 savedAndClosed = "{{name}} सहेजा और बंद किया गया"
 saveFailed = "सहेजना विफल"
 unpinnedFile = "{{name}} अनपिन किया गया"
 unzipping = "{{name}} अनज़िप किया जा रहा है"
+
+[fileEditor.addCard]
+dropHint = "or drop files anywhere"
+fromComputer = "Upload from computer"
+moreOptions = "More upload options"
 
 [fileEditor.unzip]
 error = "{{name}} अनज़िप करने में त्रुटि"
@@ -4729,7 +4721,6 @@ dataLostBody = "इस browser ने इस file की contents खो दी 
 dataLostTitle = "File data उपलब्ध नहीं है"
 downloadFailed = "डाउनलोड विफल"
 dropHint = "शुरू करने के लिए फ़ाइलें खोलें"
-dropToAdd = "जोड़ने के लिए files drop करें"
 duplicateFailed = "File duplicate नहीं की जा सकी"
 expand = "साइडबार फैलाएँ"
 googleDrive = "Google Drive"
@@ -5733,11 +5724,6 @@ desc = "PDF दस्तावेज के कई पृष्ठों को 
 tags = "layout,arrange,combine,N-up,2-up,4-up,multiple per page,pages per sheet,pages layout करें,tile,grid layout,multi-page layout,page पर combine करें,handout"
 title = "मल्टी-पेज लेआउट"
 
-[home.pdfCommentAgent]
-desc = "AI से आपके प्रॉम्प्ट के आधार पर PDF पर स्टिकी-नोट टिप्पणियाँ जोड़ने के लिए कहें"
-tags = "AI,एजेंट,टिप्पणी,एनोटेट,स्टिकी नोट,समीक्षा,प्रतिक्रिया,नोट्स"
-title = "AI टिप्पणियाँ जोड़ें"
-
 [home.pdfOrganiser]
 tags = "organize,rearrange,reorder,pages arrange करें,sort,pages move करें,pages delete करें,pages remove करें,page management,page organizer,resequence"
 title = "व्यवस्थित करें"
@@ -6595,63 +6581,6 @@ yourCloudAccess = "आप टीम सदस्य बन जाएँगे �
 deselectAll = "कोई नहीं"
 selectAll = "सभी चेक करें"
 
-[pageEditor]
-dragPreviewAlt = "खींचा जा रहा है"
-filePosition = "स्थिति {{position}}"
-pageLabel = "पृष्ठ {{page}}"
-title = "पृष्ठ संपादक"
-
-[pageEditor.actions]
-deletePage = "पृष्ठ हटाएँ"
-insertFileAfter = "इसके बाद फ़ाइल डालें"
-moveLeft = "बाएँ ले जाएँ"
-moveRight = "दाएँ ले जाएँ"
-rotateLeft = "बाएँ घुमाएँ"
-rotateRight = "दाएँ घुमाएँ"
-splitAfter = "इसके बाद विभाजित करें"
-
-[pageEditor.commands]
-addSplitAt = "Position {{position}} पर split जोड़ें"
-addSplits_one = "{{count}} split जोड़ें"
-addSplits_other = "{{count}} splits जोड़ें"
-deletePages_one = "{{count}} page हटाएँ"
-deletePages_other = "{{count}} pages हटाएँ"
-insertFiles_one = "Page {{page}} के बाद {{count}} फ़ाइल insert करें"
-insertFiles_other = "Page {{page}} के बाद {{count}} फ़ाइलें insert करें"
-insertPageBreaks_one = "{{count}} page break insert करें"
-insertPageBreaks_other = "{{count}} page breaks insert करें"
-insertPageBreaksAll = "सभी pages के बाद page breaks insert करें"
-removeAllSplits = "सभी splits हटाएँ"
-removeSplitAt = "Position {{position}} पर split हटाएँ"
-removeSplits_one = "{{count}} split हटाएँ"
-removeSplits_other = "{{count}} splits हटाएँ"
-reorderPages = "Pages reorder करें"
-rotatePageLeft = "Page को बाएँ rotate करें"
-rotatePageRight = "Page को दाएँ rotate करें"
-rotatePagesLeft_one = "{{count}} page को बाएँ rotate करें"
-rotatePagesLeft_other = "{{count}} pages को बाएँ rotate करें"
-rotatePagesRight_one = "{{count}} page को दाएँ rotate करें"
-rotatePagesRight_other = "{{count}} pages को दाएँ rotate करें"
-splitAllPages = "सभी pages split करें"
-toggleSplits_one = "{{count}} split position toggle करें"
-toggleSplits_other = "{{count}} split positions toggle करें"
-
-[pageEditor.emptyState]
-body = "पृष्ठ संपादित करना शुरू करने के लिए फ़ाइलें जोड़ें"
-title = "कोई PDF फ़ाइलें लोड नहीं"
-
-[pageEditor.fileDropdown]
-addFile = "फ़ाइल जोड़ें"
-selectedCount = "{{selected}}/{{total}} फ़ाइलें चयनित"
-untitled = "शीर्षकहीन"
-
-[pageEditor.toolbar]
-delete = "चयनित हटाएं"
-redo = "दोहराएँ"
-rotateLeft = "चयनित को बाएँ घुमाएँ"
-rotateRight = "चयनित को दाएँ घुमाएँ"
-undo = "पूर्ववत करें"
-
 [pageExtracter]
 title = "पृष्ठ निकालें"
 
@@ -6815,6 +6744,76 @@ title = "पृष्ठ रेंज"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → सभी पृष्ठ चुनता है"
 title = "विशेष कीवर्ड"
+
+[pageTracks]
+blankPage = "Blank page"
+deleteSelected = "Delete selected pages"
+downloadAsOneFile = "Download as one file"
+downloadEachPage = "Download each page individually"
+downloadSelectedPages = "Download selected pages"
+dragging_one = "{{count}} page"
+dragging_other = "{{count}} pages"
+duplicateSelected = "Duplicate selected pages"
+edited = "edited"
+emptyTrack = "No pages left. Drag pages here, or save to close this file."
+insertBlank = "Insert blank page"
+insertBlankAfterSelected = "Insert blank pages after selected pages"
+moveLeft = "Move left"
+moveRight = "Move right"
+nextPage = "Next page"
+page = "Page {{number}}"
+pageCount_one = "{{count}} page"
+pageCount_other = "{{count}} pages"
+pagePosition = "Page {{number}} of {{total}}"
+prevPage = "Previous page"
+readingPages = "Reading pages..."
+redo = "Redo"
+rotateLeft = "Rotate left"
+rotateRight = "Rotate right"
+rotateSelectedLeft = "Rotate selected pages left"
+rotateSelectedRight = "Rotate selected pages right"
+saveAsOneFile = "Save as one file"
+saveChanges = "Save changes to all files"
+saveEachPage = "Save each page individually"
+saveSelectedPages = "Save selected pages"
+saving = "Saving..."
+savingProgress = "Saving {{done}} of {{total}}"
+selectPage = "Select page {{number}}"
+splitAfterSelected = "Split after selected pages"
+splitHere = "Split here"
+undo = "Undo"
+viewError = "Couldn't render this page"
+viewPage = "View page"
+zoomIn = "Zoom in"
+zoomOut = "Zoom out"
+
+[pageTracks.close]
+message = "Are you sure you want to close all files?"
+unsaved = "These files have unsaved changes."
+
+[pageTracks.delete]
+page = "Delete page"
+
+[pageTracks.empty]
+body = "Add PDFs to expand them into editable page tracks"
+title = "No PDF files loaded"
+
+[pageTracks.exportFailed]
+body = "The edited files couldn't be prepared. Try again."
+title = "Couldn't download"
+
+[pageTracks.saveFailed]
+body = "Your edits haven't been lost. Try saving again."
+title = "Couldn't save changes"
+
+[pageTracks.track]
+close = "Close file"
+collapse = "Collapse"
+expand = "Expand"
+rename = "Rename file"
+
+[pageTracks.wrap]
+label = "Wrap pages"
 
 [payg.activity]
 docs = "docs"
@@ -7143,24 +7142,6 @@ totalSeats_other = "कुल ({{count}} सीटें)"
 
 [payment.upgradeTeam]
 title = "टीम में अपग्रेड करें"
-
-[pdfCommentAgent]
-submit = "टिप्पणियाँ उत्पन्न करें"
-
-[pdfCommentAgent.error]
-emptyPrompt = "कृपया बताएँ कि AI को किस पर टिप्पणी करनी है"
-failed = "टिप्पणियाँ उत्पन्न करने में विफल"
-tooLong = "प्रॉम्प्ट बहुत लंबा है (अधिकतम {{max}} वर्ण)"
-
-[pdfCommentAgent.prompt]
-label = "AI को किस पर टिप्पणी करनी चाहिए?"
-placeholder = "उदा. किसी भी संदिग्ध तारीख़ों को फ़्लैग करें और स्पष्टीकरण सुझाएँ"
-
-[pdfCommentAgent.results]
-title = "टिप्पणीयुक्त PDF"
-
-[pdfCommentAgent.settings]
-title = "टिप्पणी निर्देश"
 
 [pdfOrganiser]
 placeholder = "(जैसे 1,3,2 या 4-8,2,10-12 या 2n-1)"
@@ -7994,6 +7975,7 @@ before = "सेट करें"
 title = "Stirling connection configured नहीं है"
 
 [portal.accountLink.notice]
+loadFailed = "The account linking dialog could not be loaded."
 openFailed = "आपका browser नहीं खोल सके। खाता लिंक करने के लिए अपने कनेक्टेड सर्वर पर Usage & billing खोलें।"
 
 [portal.accountLink.panel]
@@ -8117,9 +8099,6 @@ limit = "Monthly spend limit {{amount}}/mo। Processing limit पर pause ह�
 limitNoCap = "कोई spend limit नहीं। Processing pause नहीं होगी। Invoices monthly post होते हैं।"
 
 [portal.billing.chip]
-invoices = "चालान"
-nav = "अनुभाग"
-payment = "भुगतान"
 plan = "प्लान"
 procurement = "खरीद"
 usage = "उपयोग"
@@ -12054,6 +12033,7 @@ title = "वर्कस्पेस"
 loginIncomplete = "लॉगिन पूरा करने में विफल"
 noSaasServer = "कोई SaaS सर्वर कॉन्फ़िगर नहीं है"
 noServer = "कोई सर्वर कॉन्फ़िगर नहीं है"
+policyUnavailable = "Unable to load your organisation's sign-in settings."
 saasLoginFailed = "SaaS लॉगिन विफल"
 saasLoginIncomplete = "SaaS लॉगिन पूरा करने में विफल"
 selfHostedLoginFailed = "Self-hosted लॉगिन विफल"
@@ -13905,6 +13885,11 @@ title = "वॉटरमार्क टेक्स्ट"
 image = "इमेज"
 text = "टेक्स्ट"
 
+[workbench]
+dropFailedSingle = "Your file couldn't be added"
+dropFailedSome = "{{failed}} of your files couldn't be added"
+dropOverlay = "Drop files to add them to the workbench"
+
 [workbench.sessionRestore]
 none = "आपकी पिछली फ़ाइलें अब इस device पर stored नहीं हैं।"
 partial = "{{total}} में से {{restored}} फ़ाइलें restore की गईं। बाकी अब इस device पर stored नहीं हैं।"
@@ -13915,16 +13900,13 @@ annotations = "एनोटेशन"
 applyRedactionsFirst = "पहले रिडैक्शन लागू करें"
 closeAll = "सभी फ़ाइलें बंद करें"
 closePdf = "PDF बंद करें"
-deleteSelected = "चयनित पृष्ठ हटाएँ"
 deselectAll = "सभी चयन हटाएँ"
 downloadAll = "सभी डाउनलोड करें"
 exitRedaction = "रिडैक्शन मोड से बाहर निकलें"
-exportAll = "PDF निर्यात करें"
-exportSelected = "चयनित पृष्ठ निर्यात करें"
 formFill = "फ़ॉर्म एडिटर"
 hideToolbar = "टूलबार छिपाएँ"
 moreActions = "अधिक कार्रवाइयाँ"
-multiTool = "मल्टी-टूल"
+pageEditor = "Page Editor"
 panMode = "पैन मोड"
 print = "PDF प्रिंट करें"
 readAloud = "जोर से पढ़ें"
@@ -13938,7 +13920,6 @@ rulerSettings = "पैमाना सेटिंग्स"
 save = "सहेजें"
 saveAll = "सभी सहेजें"
 saveAs = "इस रूप में सहेजें"
-saveChanges = "परिवर्तन सहेजें"
 search = "PDF खोजें"
 selectAll = "सभी चुनें"
 selectByNumber = "पृष्ठ संख्याओं से चुनें"

@@ -55,7 +55,9 @@ keepWorking = "Nadaljuj z delom"
 loading = "Nalaganje..."
 loginAgreementAccept = "Sprejmi"
 loginAgreementDecline = "Zavrni"
+loginAgreementLoadFailed = "The login agreement could not be loaded."
 loginAgreementProvider = "To obvestilo je zagotovil vaš skrbnik, ne Stirling PDF Inc."
+loginAgreementRetry = "Retry"
 loginAgreementTitle = "Sporazum ob prijavi"
 logOut = "Odjava"
 marginTooltip = "Razdalja med številko strani in robom strani."
@@ -1939,9 +1941,6 @@ wrapUp = "To je konec skrbniškega ogleda! Videli ste enterprise funkcije, zarad
 admin = "Skrbnik"
 title = "Nastavitve uporabniškega nadzora"
 
-[agents]
-stirling_name = "Stirling"
-
 [alphabetOptions]
 arabic = "Arabska"
 chinese = "Kitajska (poenostavljena)"
@@ -3219,21 +3218,16 @@ text = "Da bodo ta dovoljenja nespremenljiva, uporabite orodje Dodaj geslo za na
 [chat.actions]
 copy = "Kopiraj sporočilo"
 
-[chat.emptyState]
-text = "Zastavite vprašanje o svojih dokumentih ali poiščite pomoč z orodji PDF."
-
-[chat.fab]
-close = "Zapri klepet"
-open = "Odpri pomočnika Stirling AI"
+[chat.dock]
+collapse = "Collapse chat"
+placeholder = "Ask Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Možnosti agenta Stirling"
-assistant = "AI pomočnik"
 clearChat = "Počisti klepet"
 
 [chat.input]
 disclaimer = "AI lahko naredi napake. Pred deljenjem preverite izhod."
-placeholder = "Kaj želite storiti?"
 send = "Pošlji sporočilo"
 
 [chat.progress]
@@ -3264,9 +3258,7 @@ convertMany = "Pretvori te dokumente v PDF"
 convertOne = "Pretvori ta dokument v PDF"
 heading = "Začnite"
 mergeMany = "Združi teh {{count}} dokumentov v 1"
-moreFiles = "+{{count}} več"
 openFromComputer = "Odpri iz računalnika"
-removeFile = "Odstrani {{name}}"
 splitOne = "Razdeli ta dokument"
 
 [chat.responses]
@@ -3278,11 +3270,6 @@ not_found = "Zahtevanih informacij ni bilo mogoče najti."
 processing = "Obdelava ({{outcome}})..."
 unsupported_capability = "Nepodprta zmožnost: {{capability}}"
 usage_limit_reached = "Dosegli ste omejitev uporabe. Preverite možnosti paketa, da nadaljujete."
-
-[chat.toolsUsed]
-summary_one = "Zagnano 1 orodje"
-summary_other = "Zagnanih {{count}} orodij"
-unknownTool = "Neznano orodje"
 
 [classification.families]
 correspondence = "Korespondenca"
@@ -4364,6 +4351,10 @@ title = "Posodobljeno z diska"
 body = "\"{{name}}\" je bila spremenjena na disku. Je dovolj velika, da bi ponovno nalaganje trajalo nekaj časa, zato je različica tukaj ostala nespremenjena."
 title = "Datoteka spremenjena na disku"
 
+[desktopPrivacy]
+blocked = "Your administrator requires documents to stay on this device. This feature is unavailable."
+localFiles = "Local files"
+
 [desktopUpdate]
 downloading = "Prenašanje posodobitve..."
 installing = "Nameščanje posodobitve..."
@@ -4597,22 +4588,23 @@ viewInViewer = "Odpri v pregledovalniku"
 closeFile = "Zapri datoteko"
 
 [fileEditor]
-addFiles = "Dodaj datoteke"
 closedFile = "Zaprto: {{name}}"
 couldNotSave = "Ni bilo mogoče shraniti {{name}}"
-filesAdded_one = "Dodana {{count}} datoteka"
-filesAdded_other = "Dodane {{count}} datoteke"
 filesReordered_one = "Datoteka prerazporejena"
 filesReordered_other = "{{count}} datotek prerazporejenih"
 loadedFromStorage_one = "Naložena {{count}} datoteka iz shrambe"
 loadedFromStorage_other = "Naloženih {{count}} datotek iz shrambe"
 loadFromStorageFailed = "Nalaganje nekaterih datotek iz shrambe ni uspelo"
 pinnedFile = "Pripeto: {{name}}"
-processFilesFailed = "Obdelava datotek ni uspela"
 savedAndClosed = "Shranjeno in zaprto: {{name}}"
 saveFailed = "Shranjevanje ni uspelo"
 unpinnedFile = "Odpeto: {{name}}"
 unzipping = "Razširjanje {{name}}"
+
+[fileEditor.addCard]
+dropHint = "or drop files anywhere"
+fromComputer = "Upload from computer"
+moreOptions = "More upload options"
 
 [fileEditor.unzip]
 error = "Napaka pri razširjanju {{name}}"
@@ -4729,7 +4721,6 @@ dataLostBody = "Ta brskalnik je izgubil vsebino te datoteke. Znova jo naložite,
 dataLostTitle = "Podatki datoteke niso na voljo"
 downloadFailed = "Prenos ni uspel"
 dropHint = "Odprite datoteke, da začnete"
-dropToAdd = "Spustite datoteke za dodajanje"
 duplicateFailed = "Datoteke ni bilo mogoče podvojiti"
 expand = "Razširi stransko vrstico"
 googleDrive = "Google Drive"
@@ -5733,11 +5724,6 @@ desc = "Združi več strani dokumenta PDF v eno stran"
 tags = "postavitev,razporedi,združi,N-up,2-up,4-up,več na stran,strani na list,postavi strani,ploščice,mrežna postavitev,večstranska postavitev,združi na strani,izroček"
 title = "Večstranska postavitev"
 
-[home.pdfCommentAgent]
-desc = "Prosite AI, naj PDF označi s komentarji v obliki lepljivih listkov glede na vaš poziv"
-tags = "AI,agent,komentar,anotacija,lepljivi listek,pregled,povratne informacije,zapiski"
-title = "Dodaj AI komentarje"
-
 [home.pdfOrganiser]
 tags = "organiziraj,preuredi,prevrsti,razporedi strani,razvrsti,premakni strani,izbriši strani,odstrani strani,upravljanje strani,organizator strani,ponovno zaporedje"
 title = "Organiziraj"
@@ -6595,63 +6581,6 @@ yourCloudAccess = "Postali boste član ekipe in izgubili lastniški dostop."
 deselectAll = "Nič"
 selectAll = "Označi vse"
 
-[pageEditor]
-dragPreviewAlt = "Vlečenje"
-filePosition = "Položaj {{position}}"
-pageLabel = "Stran {{page}}"
-title = "Urejevalnik strani"
-
-[pageEditor.actions]
-deletePage = "Izbriši stran"
-insertFileAfter = "Vstavi datoteko za tem"
-moveLeft = "Premakni levo"
-moveRight = "Premakni desno"
-rotateLeft = "Zasukaj levo"
-rotateRight = "Zasukaj desno"
-splitAfter = "Razdeli za tem"
-
-[pageEditor.commands]
-addSplitAt = "Dodaj razdelitev na položaju {{position}}"
-addSplits_one = "Dodaj {{count}} razdelitev"
-addSplits_other = "Dodaj {{count}} razdelitev"
-deletePages_one = "Izbriši {{count}} stran"
-deletePages_other = "Izbriši {{count}} strani"
-insertFiles_one = "Vstavi {{count}} datoteko za stranjo {{page}}"
-insertFiles_other = "Vstavi {{count}} datotek za stranjo {{page}}"
-insertPageBreaks_one = "Vstavi {{count}} prelom strani"
-insertPageBreaks_other = "Vstavi {{count}} prelomov strani"
-insertPageBreaksAll = "Vstavi prelome strani za vsemi stranmi"
-removeAllSplits = "Odstrani vse razdelitve"
-removeSplitAt = "Odstrani razdelitev na položaju {{position}}"
-removeSplits_one = "Odstrani {{count}} razdelitev"
-removeSplits_other = "Odstrani {{count}} razdelitev"
-reorderPages = "Prevrsti strani"
-rotatePageLeft = "Zavrti stran levo"
-rotatePageRight = "Zavrti stran desno"
-rotatePagesLeft_one = "Zavrti {{count}} stran levo"
-rotatePagesLeft_other = "Zavrti {{count}} strani levo"
-rotatePagesRight_one = "Zavrti {{count}} stran desno"
-rotatePagesRight_other = "Zavrti {{count}} strani desno"
-splitAllPages = "Razdeli vse strani"
-toggleSplits_one = "Preklopi {{count}} položaj razdelitve"
-toggleSplits_other = "Preklopi {{count}} položajev razdelitve"
-
-[pageEditor.emptyState]
-body = "Dodajte datoteke za začetek urejanja strani"
-title = "Ni naloženih datotek PDF"
-
-[pageEditor.fileDropdown]
-addFile = "Dodaj datoteko"
-selectedCount = "Izbranih {{selected}}/{{total}} datotek"
-untitled = "Brez naslova"
-
-[pageEditor.toolbar]
-delete = "Izbriši izbrane"
-redo = "Ponovi"
-rotateLeft = "Zavrti izbrane levo"
-rotateRight = "Zavrti izbrane desno"
-undo = "Razveljavi"
-
 [pageExtracter]
 title = "Izvleči strani"
 
@@ -6815,6 +6744,76 @@ title = "Obsegi strani"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → izbere vse strani"
 title = "Posebne ključne besede"
+
+[pageTracks]
+blankPage = "Blank page"
+deleteSelected = "Delete selected pages"
+downloadAsOneFile = "Download as one file"
+downloadEachPage = "Download each page individually"
+downloadSelectedPages = "Download selected pages"
+dragging_one = "{{count}} page"
+dragging_other = "{{count}} pages"
+duplicateSelected = "Duplicate selected pages"
+edited = "edited"
+emptyTrack = "No pages left. Drag pages here, or save to close this file."
+insertBlank = "Insert blank page"
+insertBlankAfterSelected = "Insert blank pages after selected pages"
+moveLeft = "Move left"
+moveRight = "Move right"
+nextPage = "Next page"
+page = "Page {{number}}"
+pageCount_one = "{{count}} page"
+pageCount_other = "{{count}} pages"
+pagePosition = "Page {{number}} of {{total}}"
+prevPage = "Previous page"
+readingPages = "Reading pages..."
+redo = "Redo"
+rotateLeft = "Rotate left"
+rotateRight = "Rotate right"
+rotateSelectedLeft = "Rotate selected pages left"
+rotateSelectedRight = "Rotate selected pages right"
+saveAsOneFile = "Save as one file"
+saveChanges = "Save changes to all files"
+saveEachPage = "Save each page individually"
+saveSelectedPages = "Save selected pages"
+saving = "Saving..."
+savingProgress = "Saving {{done}} of {{total}}"
+selectPage = "Select page {{number}}"
+splitAfterSelected = "Split after selected pages"
+splitHere = "Split here"
+undo = "Undo"
+viewError = "Couldn't render this page"
+viewPage = "View page"
+zoomIn = "Zoom in"
+zoomOut = "Zoom out"
+
+[pageTracks.close]
+message = "Are you sure you want to close all files?"
+unsaved = "These files have unsaved changes."
+
+[pageTracks.delete]
+page = "Delete page"
+
+[pageTracks.empty]
+body = "Add PDFs to expand them into editable page tracks"
+title = "No PDF files loaded"
+
+[pageTracks.exportFailed]
+body = "The edited files couldn't be prepared. Try again."
+title = "Couldn't download"
+
+[pageTracks.saveFailed]
+body = "Your edits haven't been lost. Try saving again."
+title = "Couldn't save changes"
+
+[pageTracks.track]
+close = "Close file"
+collapse = "Collapse"
+expand = "Expand"
+rename = "Rename file"
+
+[pageTracks.wrap]
+label = "Wrap pages"
 
 [payg.activity]
 docs = "dokumenti"
@@ -7143,24 +7142,6 @@ totalSeats_other = "Skupaj ({{count}} sedežev)"
 
 [payment.upgradeTeam]
 title = "Nadgradi na Team"
-
-[pdfCommentAgent]
-submit = "Ustvari komentarje"
-
-[pdfCommentAgent.error]
-emptyPrompt = "Prosimo, opišite, kaj naj AI komentira"
-failed = "Generiranje komentarjev ni uspelo"
-tooLong = "Poziv je predolg (največ {{max}} znakov)"
-
-[pdfCommentAgent.prompt]
-label = "O čem naj AI komentira?"
-placeholder = "npr. Označi vse dvoumne datume in predlagaj pojasnila"
-
-[pdfCommentAgent.results]
-title = "PDF s komentarji"
-
-[pdfCommentAgent.settings]
-title = "Navodila za komentiranje"
 
 [pdfOrganiser]
 placeholder = "(npr. 1,3,2 ali 4-8,2,10-12 ali 2n-1)"
@@ -7994,6 +7975,7 @@ before = "Nastavite"
 title = "Povezava Stirling ni konfigurirana"
 
 [portal.accountLink.notice]
+loadFailed = "The account linking dialog could not be loaded."
 openFailed = "Brskalnika ni bilo mogoče odpreti. Odprite Uporaba in obračunavanje na povezanem strežniku, da povežete račun."
 
 [portal.accountLink.panel]
@@ -8117,9 +8099,6 @@ limit = "Mesečna omejitev porabe {{amount}}/mes. Obdelava se ustavi pri omejitv
 limitNoCap = "Brez omejitve porabe. Obdelava se ne bo ustavila. Računi se izdajajo mesečno."
 
 [portal.billing.chip]
-invoices = "Računi"
-nav = "Razdelki"
-payment = "Plačilo"
 plan = "Paket"
 procurement = "Nabava"
 usage = "Uporaba"
@@ -12054,6 +12033,7 @@ title = "Delovni prostor"
 loginIncomplete = "Dokončanje prijave ni uspelo"
 noSaasServer = "Ni konfiguriranega strežnika SaaS"
 noServer = "Ni konfiguriranega strežnika"
+policyUnavailable = "Unable to load your organisation's sign-in settings."
 saasLoginFailed = "Prijava v SaaS ni uspela"
 saasLoginIncomplete = "Dokončanje prijave v SaaS ni uspelo"
 selfHostedLoginFailed = "Prijava v samogostovani strežnik ni uspela"
@@ -13905,6 +13885,11 @@ title = "Besedilo vodnega žiga"
 image = "Slika"
 text = "Besedilo"
 
+[workbench]
+dropFailedSingle = "Your file couldn't be added"
+dropFailedSome = "{{failed}} of your files couldn't be added"
+dropOverlay = "Drop files to add them to the workbench"
+
 [workbench.sessionRestore]
 none = "Vaše prejšnje datoteke niso več shranjene na tej napravi."
 partial = "Obnovljenih {{restored}} od {{total}} datotek. Preostale niso več shranjene na tej napravi."
@@ -13915,16 +13900,13 @@ annotations = "Anotacije"
 applyRedactionsFirst = "Najprej uporabi redakcije"
 closeAll = "Zapri vse datoteke"
 closePdf = "Zapri PDF"
-deleteSelected = "Izbriši izbrane strani"
 deselectAll = "Prekliči izbor vseh"
 downloadAll = "Prenesi vse"
 exitRedaction = "Izhod iz načina redakcije"
-exportAll = "Izvozi PDF"
-exportSelected = "Izvozi izbrane strani"
 formFill = "Urejevalnik obrazcev"
 hideToolbar = "Skrij orodno vrstico"
 moreActions = "Več dejanj"
-multiTool = "Večnamensko orodje"
+pageEditor = "Page Editor"
 panMode = "Način premikanja"
 print = "Natisni PDF"
 readAloud = "Glasno branje"
@@ -13938,7 +13920,6 @@ rulerSettings = "Nastavitve merila"
 save = "Shrani"
 saveAll = "Shrani vse"
 saveAs = "Shrani kot"
-saveChanges = "Shrani spremembe"
 search = "Išči v PDF"
 selectAll = "Izberi vse"
 selectByNumber = "Izberi po številkah strani"

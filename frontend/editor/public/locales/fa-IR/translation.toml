@@ -55,7 +55,9 @@ keepWorking = "ادامه کار"
 loading = "در حال بارگذاری..."
 loginAgreementAccept = "پذیرفتن"
 loginAgreementDecline = "رد کردن"
+loginAgreementLoadFailed = "The login agreement could not be loaded."
 loginAgreementProvider = "این اطلاعیه توسط مدیر سیستم شما ارائه شده است، نه Stirling PDF Inc."
+loginAgreementRetry = "Retry"
 loginAgreementTitle = "توافق‌نامهٔ ورود"
 logOut = "خروج از حساب"
 marginTooltip = "فاصله بین شماره صفحه و لبه صفحه."
@@ -1939,9 +1941,6 @@ wrapUp = "این پایان تور ادمین بود! شما قابلیت‌ها
 admin = "ادمین"
 title = "تنظیمات کنترل کاربران"
 
-[agents]
-stirling_name = "Stirling"
-
 [alphabetOptions]
 arabic = "عربی"
 chinese = "چینی (ساده‌شده)"
@@ -3219,21 +3218,16 @@ text = "برای غیرقابل‌تغییر کردن این مجوزها، از
 [chat.actions]
 copy = "کپی پیام"
 
-[chat.emptyState]
-text = "درباره اسناد خود سؤال بپرسید یا برای ابزارهای PDF کمک بگیرید."
-
-[chat.fab]
-close = "بستن چت"
-open = "باز کردن دستیار Stirling AI"
+[chat.dock]
+collapse = "Collapse chat"
+placeholder = "Ask Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "گزینه‌های عامل Stirling"
-assistant = "دستیار AI"
 clearChat = "پاک‌کردن چت"
 
 [chat.input]
 disclaimer = "AI ممکن است اشتباه کند. قبل از اشتراک‌گذاری، حتماً خروجی را بررسی کنید."
-placeholder = "می‌خواهید چه کاری انجام دهید؟"
 send = "ارسال پیام"
 
 [chat.progress]
@@ -3264,9 +3258,7 @@ convertMany = "تبدیل این اسناد به PDF"
 convertOne = "تبدیل این سند به PDF"
 heading = "شروع کنید"
 mergeMany = "ادغام این {{count}} سند در یک سند"
-moreFiles = "+{{count}} بیشتر"
 openFromComputer = "باز کردن از رایانه"
-removeFile = "حذف {{name}}"
 splitOne = "تقسیم این سند"
 
 [chat.responses]
@@ -3278,11 +3270,6 @@ not_found = "اطلاعات درخواستی را پیدا نکردم."
 processing = "در حال پردازش ({{outcome}})..."
 unsupported_capability = "قابلیت پشتیبانی‌نشده: {{capability}}"
 usage_limit_reached = "به حد مجاز استفاده خود رسیده‌اید. برای ادامه، گزینه‌های پلن خود را بررسی کنید."
-
-[chat.toolsUsed]
-summary_one = "۱ ابزار اجرا شد"
-summary_other = "{{count}} ابزار اجرا شد"
-unknownTool = "ابزار ناشناخته"
 
 [classification.families]
 correspondence = "مکاتبات"
@@ -4364,6 +4351,10 @@ title = "از دیسک به‌روزرسانی شد"
 body = "\"{{name}}\" روی دیسک تغییر کرده است. به اندازه‌ای بزرگ است که بارگذاری دوباره آن زمان‌بر خواهد بود، بنابراین نسخه اینجا دست‌نخورده باقی مانده است."
 title = "فایل روی دیسک تغییر کرده است"
 
+[desktopPrivacy]
+blocked = "Your administrator requires documents to stay on this device. This feature is unavailable."
+localFiles = "Local files"
+
 [desktopUpdate]
 downloading = "در حال دانلود به‌روزرسانی..."
 installing = "در حال نصب به‌روزرسانی..."
@@ -4597,22 +4588,23 @@ viewInViewer = "مشاهده در نمایشگر"
 closeFile = "بستن فایل"
 
 [fileEditor]
-addFiles = "افزودن فایل‌ها"
 closedFile = "{{name}} بسته شد"
 couldNotSave = "ذخیره {{name}} ممکن نبود"
-filesAdded_one = "{{count}} فایل اضافه شد"
-filesAdded_other = "{{count}} فایل اضافه شد"
 filesReordered_one = "فایل دوباره مرتب شد"
 filesReordered_other = "{{count}} فایل دوباره مرتب شدند"
 loadedFromStorage_one = "{{count}} فایل از فضای ذخیره‌سازی بارگیری شد"
 loadedFromStorage_other = "{{count}} فایل از فضای ذخیره‌سازی بارگیری شدند"
 loadFromStorageFailed = "بارگیری برخی فایل‌ها از فضای ذخیره‌سازی ناموفق بود"
 pinnedFile = "{{name}} سنجاق شد"
-processFilesFailed = "پردازش فایل‌ها ناموفق بود"
 savedAndClosed = "{{name}} ذخیره و بسته شد"
 saveFailed = "ذخیره ناموفق بود"
 unpinnedFile = "{{name}} از حالت سنجاق خارج شد"
 unzipping = "در حال Unzip کردن {{name}}"
+
+[fileEditor.addCard]
+dropHint = "or drop files anywhere"
+fromComputer = "Upload from computer"
+moreOptions = "More upload options"
 
 [fileEditor.unzip]
 error = "خطا در Unzip کردن {{name}}"
@@ -4729,7 +4721,6 @@ dataLostBody = "این مرورگر محتوای این فایل را از دس�
 dataLostTitle = "داده‌های فایل در دسترس نیست"
 downloadFailed = "دانلود ناموفق بود"
 dropHint = "برای شروع فایل‌ها را باز کنید"
-dropToAdd = "برای افزودن، فایل‌ها را رها کنید"
 duplicateFailed = "تکرار فایل ممکن نبود"
 expand = "گسترش نوار کناری"
 googleDrive = "Google Drive"
@@ -5733,11 +5724,6 @@ desc = "ادغام چندین صفحه یک سند PDF در یک صفحه واح
 tags = "چیدمان،مرتب‌سازی،ترکیب,N-up,2-up,4-up،چند صفحه در هر صفحه،صفحات در هر برگ،چیدمان صفحات،کاشی،چیدمان شبکه‌ای،چیدمان چندصفحه‌ای،ترکیب روی صفحه،جزوه آموزشی"
 title = "طرح‌بندی چند صفحه‌ای"
 
-[home.pdfCommentAgent]
-desc = "از AI بخواهید بر اساس دستور شما یک PDF را با دیدگاه‌های یادداشت‌چسبان حاشیه‌نویسی کند"
-tags = "AI,عامل,دیدگاه,حاشیه‌نویسی,یادداشت چسبان,بازبینی,بازخورد,یادداشت‌ها"
-title = "افزودن دیدگاه‌های AI"
-
 [home.pdfOrganiser]
 tags = "سازمان‌دهی،بازچینی،تغییر ترتیب،مرتب‌سازی صفحات،مرتب کردن،جابجایی صفحات،حذف صفحات،حذف صفحات،مدیریت صفحه،سازمان‌دهنده صفحه،توالی مجدد"
 title = "سازماندهی"
@@ -6595,63 +6581,6 @@ yourCloudAccess = "شما به عضو تیم تبدیل می‌شوید و دس�
 deselectAll = "هیچ‌کدام"
 selectAll = "انتخاب همه"
 
-[pageEditor]
-dragPreviewAlt = "در حال کشیدن"
-filePosition = "موقعیت {{position}}"
-pageLabel = "صفحه {{page}}"
-title = "ویرایشگر صفحه"
-
-[pageEditor.actions]
-deletePage = "حذف صفحه"
-insertFileAfter = "درج فایل بعد از این"
-moveLeft = "انتقال به چپ"
-moveRight = "انتقال به راست"
-rotateLeft = "چرخش به چپ"
-rotateRight = "چرخش به راست"
-splitAfter = "تقسیم بعد از این"
-
-[pageEditor.commands]
-addSplitAt = "افزودن تقسیم در موقعیت {{position}}"
-addSplits_one = "افزودن {{count}} تقسیم"
-addSplits_other = "افزودن {{count}} تقسیم"
-deletePages_one = "حذف {{count}} صفحه"
-deletePages_other = "حذف {{count}} صفحه"
-insertFiles_one = "درج {{count}} فایل بعد از صفحه {{page}}"
-insertFiles_other = "درج {{count}} فایل بعد از صفحه {{page}}"
-insertPageBreaks_one = "درج {{count}} شکست صفحه"
-insertPageBreaks_other = "درج {{count}} شکست صفحه"
-insertPageBreaksAll = "درج شکست صفحه بعد از همه صفحات"
-removeAllSplits = "حذف همه تقسیم‌ها"
-removeSplitAt = "حذف تقسیم در موقعیت {{position}}"
-removeSplits_one = "حذف {{count}} تقسیم"
-removeSplits_other = "حذف {{count}} تقسیم"
-reorderPages = "تغییر ترتیب صفحات"
-rotatePageLeft = "چرخاندن صفحه به چپ"
-rotatePageRight = "چرخاندن صفحه به راست"
-rotatePagesLeft_one = "چرخاندن {{count}} صفحه به چپ"
-rotatePagesLeft_other = "چرخاندن {{count}} صفحه به چپ"
-rotatePagesRight_one = "چرخاندن {{count}} صفحه به راست"
-rotatePagesRight_other = "چرخاندن {{count}} صفحه به راست"
-splitAllPages = "تقسیم همه صفحات"
-toggleSplits_one = "تغییر وضعیت {{count}} موقعیت تقسیم"
-toggleSplits_other = "تغییر وضعیت {{count}} موقعیت تقسیم"
-
-[pageEditor.emptyState]
-body = "برای ویرایش صفحات، فایل‌ها را اضافه کنید"
-title = "هیچ فایل PDF بارگذاری نشده"
-
-[pageEditor.fileDropdown]
-addFile = "افزودن فایل"
-selectedCount = "{{selected}}/{{total}} فایل انتخاب‌شده"
-untitled = "بدون عنوان"
-
-[pageEditor.toolbar]
-delete = "حذف انتخاب‌شده‌ها"
-redo = "بازانجام"
-rotateLeft = "چرخاندن موارد انتخاب‌شده به چپ"
-rotateRight = "چرخاندن موارد انتخاب‌شده به راست"
-undo = "واگرد"
-
 [pageExtracter]
 title = "استخراج صفحات"
 
@@ -6815,6 +6744,76 @@ title = "بازه صفحات"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → همه صفحات را انتخاب می‌کند"
 title = "کلیدواژه‌های ویژه"
+
+[pageTracks]
+blankPage = "Blank page"
+deleteSelected = "Delete selected pages"
+downloadAsOneFile = "Download as one file"
+downloadEachPage = "Download each page individually"
+downloadSelectedPages = "Download selected pages"
+dragging_one = "{{count}} page"
+dragging_other = "{{count}} pages"
+duplicateSelected = "Duplicate selected pages"
+edited = "edited"
+emptyTrack = "No pages left. Drag pages here, or save to close this file."
+insertBlank = "Insert blank page"
+insertBlankAfterSelected = "Insert blank pages after selected pages"
+moveLeft = "Move left"
+moveRight = "Move right"
+nextPage = "Next page"
+page = "Page {{number}}"
+pageCount_one = "{{count}} page"
+pageCount_other = "{{count}} pages"
+pagePosition = "Page {{number}} of {{total}}"
+prevPage = "Previous page"
+readingPages = "Reading pages..."
+redo = "Redo"
+rotateLeft = "Rotate left"
+rotateRight = "Rotate right"
+rotateSelectedLeft = "Rotate selected pages left"
+rotateSelectedRight = "Rotate selected pages right"
+saveAsOneFile = "Save as one file"
+saveChanges = "Save changes to all files"
+saveEachPage = "Save each page individually"
+saveSelectedPages = "Save selected pages"
+saving = "Saving..."
+savingProgress = "Saving {{done}} of {{total}}"
+selectPage = "Select page {{number}}"
+splitAfterSelected = "Split after selected pages"
+splitHere = "Split here"
+undo = "Undo"
+viewError = "Couldn't render this page"
+viewPage = "View page"
+zoomIn = "Zoom in"
+zoomOut = "Zoom out"
+
+[pageTracks.close]
+message = "Are you sure you want to close all files?"
+unsaved = "These files have unsaved changes."
+
+[pageTracks.delete]
+page = "Delete page"
+
+[pageTracks.empty]
+body = "Add PDFs to expand them into editable page tracks"
+title = "No PDF files loaded"
+
+[pageTracks.exportFailed]
+body = "The edited files couldn't be prepared. Try again."
+title = "Couldn't download"
+
+[pageTracks.saveFailed]
+body = "Your edits haven't been lost. Try saving again."
+title = "Couldn't save changes"
+
+[pageTracks.track]
+close = "Close file"
+collapse = "Collapse"
+expand = "Expand"
+rename = "Rename file"
+
+[pageTracks.wrap]
+label = "Wrap pages"
 
 [payg.activity]
 docs = "سندها"
@@ -7143,24 +7142,6 @@ totalSeats_other = "مجموع ({{count}} صندلی)"
 
 [payment.upgradeTeam]
 title = "ارتقا به Team"
-
-[pdfCommentAgent]
-submit = "تولید دیدگاه‌ها"
-
-[pdfCommentAgent.error]
-emptyPrompt = "لطفاً توضیح دهید AI دربارهٔ چه چیزی باید نظر بدهد"
-failed = "تولید دیدگاه‌ها ناموفق بود"
-tooLong = "دستور خیلی بلند است (حداکثر {{max}} نویسه)"
-
-[pdfCommentAgent.prompt]
-label = "AI باید دربارهٔ چه چیزی نظر بدهد؟"
-placeholder = "مثلاً هر تاریخ مبهمی را علامت بزن و پیشنهاد شفاف‌سازی بده"
-
-[pdfCommentAgent.results]
-title = "PDF دارای دیدگاه‌ها"
-
-[pdfCommentAgent.settings]
-title = "دستورالعمل دیدگاه‌ها"
 
 [pdfOrganiser]
 placeholder = "(مثال: ۱,۳,۲ یا ۴-۸,۲,۱۰-۱۲ یا 2n-1)"
@@ -7994,6 +7975,7 @@ before = "تنظیم کنید"
 title = "اتصال Stirling پیکربندی نشده است"
 
 [portal.accountLink.notice]
+loadFailed = "The account linking dialog could not be loaded."
 openFailed = "مرورگر شما باز نشد. برای پیوند دادن یک حساب، Usage & billing را روی سرور متصل خود باز کنید."
 
 [portal.accountLink.panel]
@@ -8117,9 +8099,6 @@ limit = "محدودیت هزینه ماهانه {{amount}}/ماه. پردازش 
 limitNoCap = "بدون محدودیت هزینه. پردازش متوقف نمی‌شود. فاکتورها ماهانه صادر می‌شوند."
 
 [portal.billing.chip]
-invoices = "فاکتورها"
-nav = "بخش‌ها"
-payment = "پرداخت"
 plan = "طرح"
 procurement = "تدارکات"
 usage = "مصرف"
@@ -12054,6 +12033,7 @@ title = "فضای کاری"
 loginIncomplete = "تکمیل ورود ناموفق بود"
 noSaasServer = "هیچ سرور SaaS پیکربندی نشده است"
 noServer = "هیچ سروری پیکربندی نشده است"
+policyUnavailable = "Unable to load your organisation's sign-in settings."
 saasLoginFailed = "ورود SaaS ناموفق بود"
 saasLoginIncomplete = "تکمیل ورود SaaS ناموفق بود"
 selfHostedLoginFailed = "ورود self-hosted ناموفق بود"
@@ -13905,6 +13885,11 @@ title = "متن واترمارک"
 image = "تصویر"
 text = "متن"
 
+[workbench]
+dropFailedSingle = "Your file couldn't be added"
+dropFailedSome = "{{failed}} of your files couldn't be added"
+dropOverlay = "Drop files to add them to the workbench"
+
 [workbench.sessionRestore]
 none = "فایل‌های قبلی شما دیگر روی این دستگاه ذخیره نشده‌اند."
 partial = "{{restored}} از {{total}} فایل بازیابی شد. بقیه دیگر روی این دستگاه ذخیره نشده‌اند."
@@ -13915,16 +13900,13 @@ annotations = "حاشیه‌نویسی‌ها"
 applyRedactionsFirst = "ابتدا پنهان‌سازی‌ها را اعمال کنید"
 closeAll = "بستن همهٔ فایل‌ها"
 closePdf = "بستن PDF"
-deleteSelected = "حذف صفحات منتخب"
 deselectAll = "لغو انتخاب همه"
 downloadAll = "دانلود همه"
 exitRedaction = "خروج از حالت پنهان‌سازی"
-exportAll = "خروجی گرفتن از PDF"
-exportSelected = "خروجی گرفتن از صفحات منتخب"
 formFill = "ویرایشگر فرم"
 hideToolbar = "پنهان کردن نوار ابزار"
 moreActions = "اقدامات بیشتر"
-multiTool = "ابزار چندگانه"
+pageEditor = "Page Editor"
 panMode = "حالت جابه‌جایی"
 print = "چاپ PDF"
 readAloud = "خواندن با صدای بلند"
@@ -13938,7 +13920,6 @@ rulerSettings = "تنظیمات مقیاس"
 save = "ذخیره"
 saveAll = "ذخیره همه"
 saveAs = "ذخیره به‌عنوان"
-saveChanges = "ذخیره تغییرات"
 search = "جستجو در PDF"
 selectAll = "انتخاب همه"
 selectByNumber = "انتخاب بر اساس شماره‌های صفحه"

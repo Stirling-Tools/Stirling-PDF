@@ -55,7 +55,9 @@ keepWorking = "མུ་མཐུད་དུ་ལས་ཀ་བྱེད་�
 loading = "འཇུག་བཞིན་པ།"
 loginAgreementAccept = "དང་ལེན"
 loginAgreementDecline = "དང་ལེན་མེད"
+loginAgreementLoadFailed = "The login agreement could not be loaded."
 loginAgreementProvider = "བརྡ་འཕྲིན་འདི་ནི་ཁྱེད་ཀྱི་དོ་དམ་པས་སྤྲོད་པ་ཡིན་པ་ལས Stirling PDF Inc. མིན།"
+loginAgreementRetry = "Retry"
 loginAgreementTitle = "ཐོ་འགོད་གྲོས་ཆིངས"
 logOut = "ཕྱིར་ཐོན།"
 marginTooltip = "ཤོག་ངོས་ཨང་གྲངས་དང་ཤོག་ངོས་ཀྱི་མཐའ་མཚམས་བར་ཐག་རིང་།"
@@ -1939,9 +1941,6 @@ wrapUp = "འདི་ནི admin སྐོར་སྐྱོད་ཡིན།
 admin = "འཛིན་སྐྱོང་།"
 title = "སྤྱོད་མཁན་ཚོད་འཛིན་སྒྲིག་སྟངས།"
 
-[agents]
-stirling_name = "Stirling"
-
 [alphabetOptions]
 arabic = "ཨ་རབ་ཡིག"
 chinese = "རྒྱ་ཡིག (Simplified)"
@@ -3219,21 +3218,16 @@ text = "ཆོག་མཆན་འདི་དག་འགྱུར་བ་མ
 [chat.actions]
 copy = "འཕྲིན་དོན་འདྲ་བཤུས"
 
-[chat.emptyState]
-text = "ཁྱེད་ཀྱི་ཡིག་ཆ་སྐོར་དྲི་བ་དྲིས། ཡང་ན PDF ལག་ཆར་རམ་འདེགས་ལེན།"
-
-[chat.fab]
-close = "chat ཁ་རྒྱག"
-open = "Stirling AI assistant ཁ་ཕྱེ།"
+[chat.dock]
+collapse = "Collapse chat"
+placeholder = "Ask Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Stirling agent འདེམས་ཚན"
-assistant = "AI ལས་རོགས"
 clearChat = "གླེང་མོལ་བཤོལ"
 
 [chat.input]
 disclaimer = "AI ལ་ནོར་འཁྲུལ་ཡོང་སྲིད། མཉམ་སྤྱོད་མ་བྱས་གོང་འབྲས་བུ་ངེས་པར་ར་སྤྲོད་བྱོས།"
-placeholder = "གང་བྱེད་དགོས?"
 send = "འཕྲིན་དོན་གཏོང"
 
 [chat.progress]
@@ -3264,9 +3258,7 @@ convertMany = "ཡིག་ཆ་འདི་ཚོ་ PDF ལ་བསྒྱུ
 convertOne = "ཡིག་ཆ་འདི་ PDF ལ་བསྒྱུར"
 heading = "འགོ་སློང"
 mergeMany = "{{count}} ཡིག་ཆ་འདི་ཚོ་མཉམ་སྦྱོར་བྱས་ནས 1 བཟོ"
-moreFiles = "+{{count}} མང་བ"
 openFromComputer = "རྩིས་འཁོར་ནས་ཁ་ཕྱེ"
-removeFile = "{{name}} སྤོར"
 splitOne = "ཡིག་ཆ་འདི་བགར"
 
 [chat.responses]
@@ -3278,11 +3270,6 @@ not_found = "འཚོལ་བཤེར་བྱས་པ་མ་ཐོབ།"
 processing = "བཟོ་སྒྲིག་བཞིན་པ ({{outcome}})..."
 unsupported_capability = "ཁྱབ་ཚད་རྒྱབ་སྐྱོར་མེད: {{capability}}"
 usage_limit_reached = "ཁྱེད་སྤྱོད་ཚད་ལ་སླེབས་ཟིན། མུ་མཐུད་ཆེད་ཁྱེད་ཀྱི plan འདེམས་ཚན་ཞིབ་བཤེར་བྱོས།"
-
-[chat.toolsUsed]
-summary_one = "ལག་ཆ་ 1 སྒྲུབ་ཟིན"
-summary_other = "ལག་ཆ་ {{count}} སྒྲུབ་ཟིན"
-unknownTool = "མི་ཤེས་པའི་ལག་ཆ་"
 
 [classification.families]
 correspondence = "འཕྲིན་འབྲེལ།"
@@ -4364,6 +4351,10 @@ title = "disk ནས་གསར་སྒྱུར་ཟིན"
 body = "\"{{name}}\" disk ཐོག་འགྱུར་ཟིན། དེ་ཆེ་བས་བསྐྱར་འཇུག་བྱེད་རྒྱུར་དུས་ཡུན་ཅུང་འགོར་བས། འདིར་ཡོད་པའི་པར་གཞི་དེ་སོར་བཞག་ཡོད།"
 title = "ཡིག་ཆ disk ཐོག་འགྱུར་ཟིན"
 
+[desktopPrivacy]
+blocked = "Your administrator requires documents to stay on this device. This feature is unavailable."
+localFiles = "Local files"
+
 [desktopUpdate]
 downloading = "གསར་སྒྱུར་ཕབ་ལེན་བཞིན་པ..."
 installing = "གསར་སྒྱུར་འཇུག་བཞིན་པ..."
@@ -4597,22 +4588,23 @@ viewInViewer = "མཐོང་ཆས་ནང་ལྟ"
 closeFile = "ཡིག་ཆ་ཁ་རྒྱག"
 
 [fileEditor]
-addFiles = "ཡིག་ཆ་ཁ་སྣོན་བྱེད།"
 closedFile = "{{name}} སྒོ་བརྒྱབ་ཟིན"
 couldNotSave = "{{name}} ཉར་མ་ཐུབ"
-filesAdded_one = "ཡིག་ཆ {{count}} ཁ་སྣོན་བྱས"
-filesAdded_other = "ཡིག་ཆ {{count}} ཁ་སྣོན་བྱས"
 filesReordered_one = "ཡིག་ཆའི་གོ་རིམ་བསྐྱར་སྒྲིག་བྱས"
 filesReordered_other = "ཡིག་ཆ {{count}} ཡི་གོ་རིམ་བསྐྱར་སྒྲིག་བྱས"
 loadedFromStorage_one = "ཉར་སྣོད་ནས་ཡིག་ཆ {{count}} བླངས"
 loadedFromStorage_other = "ཉར་སྣོད་ནས་ཡིག་ཆ {{count}} བླངས"
 loadFromStorageFailed = "ཉར་སྣོད་ནས་ཡིག་ཆ་ཁ་ཤས་འཇུག་མ་ཐུབ"
 pinnedFile = "{{name}} གཏན་འཇགས་བྱས"
-processFilesFailed = "ཡིག་ཆ་སྒྲིག་གཅོད་མ་ཐུབ"
 savedAndClosed = "{{name}} ཉར་ནས་ཁ་བརྒྱབ"
 saveFailed = "ཉར་མ་ཐུབ"
 unpinnedFile = "{{name}} གཏན་འཇགས་ལས་བཏོན"
 unzipping = "{{name}} Unzipping བྱེད་བཞིན་པ"
+
+[fileEditor.addCard]
+dropHint = "or drop files anywhere"
+fromComputer = "Upload from computer"
+moreOptions = "More upload options"
 
 [fileEditor.unzip]
 error = "{{name}} Unzipping སྐབས་ནོར་འཁྲུལ"
@@ -4729,7 +4721,6 @@ dataLostBody = "བཤེར་ཆས་འདིས་ཡིག་ཆ་འད�
 dataLostTitle = "ཡིག་ཆའི་གཞི་གྲངས་སྤྱོད་མི་ཐུབ"
 downloadFailed = "ཕབ་ལེན་མ་ཐུབ"
 dropHint = "འགོ་རྩོམ་བྱེད་པར་ཡིག་ཆ་ཁ་ཕྱེ"
-dropToAdd = "ཡིག་ཆ་དྲུད་འཇོག་བྱས་ནས་ཁ་སྣོན"
 duplicateFailed = "ཡིག་ཆ་འདྲ་བཤུས་བྱ་མ་ཐུབ"
 expand = "ཟུར་པང་རྒྱས"
 googleDrive = "Google Drive"
@@ -5733,11 +5724,6 @@ desc = "PDFཡིག་ཆའི་ཤོག་ངོས་མང་པོ་ཤ
 tags = "layout,སྒྲིག,མཉམ་སྒྲིལ,N-up,2-up,4-up,ཤོག་ངོས་རེར་མང་པོ,ཤོག་བུ་རེར་ཤོག་ངོས,ཤོག་ངོས layout,tile,grid layout,ཤོག་ངོས་མང་པོའི layout,ཤོག་ངོས་ཐོག་མཉམ་སྒྲིལ,handout"
 title = "ཤོག་ངོས་མང་པོའི་བཀོད་སྒྲིག།"
 
-[home.pdfCommentAgent]
-desc = "AI ལ་ཞུ་བ་བྱས་ནས ཁྱེད་ཀྱི་སྙན་བཀོད་ལྟར PDF ལ་སྦྱར་མཆན་གྱི་མཆན་བཀོད་བསྣན"
-tags = "AI,agent,མཆན,མཆན་བཀོད,སྦྱར་མཆན,སྐྱར་ཞིབ,ལན་ལུང,མཆན"
-title = "AI མཆན་ཁ་སྣོན"
-
 [home.pdfOrganiser]
 tags = "སྒྲིག,བསྐྱར་སྒྲིག,གོ་རིམ་བསྐྱར་སྒྲིག,ཤོག་ངོས་སྒྲིག,རིམ་སྒྲིག,ཤོག་ངོས་སྤོ,ཤོག་ངོས་སུབ,ཤོག་ངོས་སུབ,ཤོག་ངོས་དོ་དམ,ཤོག་ངོས་སྒྲིག་ཆས,གོ་རིམ་བསྐྱར་སྒྲིག"
 title = "སྒྲིག་འཛུགས་བྱེད་པ།"
@@ -6595,63 +6581,6 @@ yourCloudAccess = "ཁྱེད་ཚོགས་ཆུང་ཚོགས་མ�
 deselectAll = "མེད"
 selectAll = "ཚང་མ་འདེམས"
 
-[pageEditor]
-dragPreviewAlt = "འདྲུད་བཞིན"
-filePosition = "གནས་ས་ {{position}}"
-pageLabel = "ཤོག་ངོས་ {{page}}"
-title = "ཤོག་ངོས་རྩོམ་སྒྲིག་པ།"
-
-[pageEditor.actions]
-deletePage = "ཤོག་ངོས་སུབ"
-insertFileAfter = "རྗེས་སུ་ཡིག་ཆ་འཇུག"
-moveLeft = "གཡོན་དུ་སྤོ"
-moveRight = "གཡས་སུ་སྤོ"
-rotateLeft = "གཡོན་དུ་སྐོར"
-rotateRight = "གཡས་སུ་སྐོར"
-splitAfter = "རྗེས་སུ་བགོ"
-
-[pageEditor.commands]
-addSplitAt = "གནས་ས་ {{position}} ལ་བགོ་ཚེག་སྣོན"
-addSplits_one = "བགོ་ཚེག་ {{count}} སྣོན"
-addSplits_other = "བགོ་ཚེག་ {{count}} སྣོན"
-deletePages_one = "ཤོག་ངོས་ {{count}} སུབ"
-deletePages_other = "ཤོག་ངོས་ {{count}} སུབ"
-insertFiles_one = "ཤོག་ངོས་ {{page}} རྗེས་སུ་ཡིག་ཆ་ {{count}} འཇུག"
-insertFiles_other = "ཤོག་ངོས་ {{page}} རྗེས་སུ་ཡིག་ཆ་ {{count}} འཇུག"
-insertPageBreaks_one = "ཤོག་ངོས་ཆད་མཚམས་ {{count}} འཇུག"
-insertPageBreaks_other = "ཤོག་ངོས་ཆད་མཚམས་ {{count}} འཇུག"
-insertPageBreaksAll = "ཤོག་ངོས་ཚང་མའི་རྗེས་སུ་ཤོག་ངོས་ཆད་མཚམས་འཇུག"
-removeAllSplits = "བགོ་ཚེག་ཚང་མ་སུབ"
-removeSplitAt = "གནས་ས་ {{position}} ནས་བགོ་ཚེག་སུབ"
-removeSplits_one = "བགོ་ཚེག་ {{count}} སུབ"
-removeSplits_other = "བགོ་ཚེག་ {{count}} སུབ"
-reorderPages = "ཤོག་ངོས་གོ་རིམ་བསྐྱར་སྒྲིག"
-rotatePageLeft = "ཤོག་ངོས་གཡོན་དུ་སྐོར"
-rotatePageRight = "ཤོག་ངོས་གཡས་སུ་སྐོར"
-rotatePagesLeft_one = "ཤོག་ངོས་ {{count}} གཡོན་དུ་སྐོར"
-rotatePagesLeft_other = "ཤོག་ངོས་ {{count}} གཡོན་དུ་སྐོར"
-rotatePagesRight_one = "ཤོག་ངོས་ {{count}} གཡས་སུ་སྐོར"
-rotatePagesRight_other = "ཤོག་ངོས་ {{count}} གཡས་སུ་སྐོར"
-splitAllPages = "ཤོག་ངོས་ཚང་མ་བགོ"
-toggleSplits_one = "བགོ་ཚེག་གནས་ས་ {{count}} སྒོ་ཕྱེ/རྒྱག"
-toggleSplits_other = "བགོ་ཚེག་གནས་ས་ {{count}} སྒོ་ཕྱེ/རྒྱག"
-
-[pageEditor.emptyState]
-body = "ཤོག་ངོས་ཞུན་དག་འགོ་འཛུགས་བྱེད་པར་ཡིག་ཆ་ཁ་སྣོན"
-title = "PDF ཡིག་ཆ་མ་ཁ་འབྱེད"
-
-[pageEditor.fileDropdown]
-addFile = "ཡིག་ཆ་སྣོན"
-selectedCount = "ཡིག་ཆ་ {{selected}}/{{total}} བདམས་ཟིན"
-untitled = "ཁ་བྱང་མེད"
-
-[pageEditor.toolbar]
-delete = "འདེམས་པ་སུབ"
-redo = "བསྐྱར་བཟོ"
-rotateLeft = "འདེམས་པ་གཡོན་ཕྱར་བསྒྱིར"
-rotateRight = "འདེམས་པ་གཡས་ཕྱར་བསྒྱིར"
-undo = "ཕྱིར་འཐེན"
-
 [pageExtracter]
 title = "ཤོག་ངོས།"
 
@@ -6815,6 +6744,76 @@ title = "ཤོག་ངོས་ཁྱབ་ཁོངས།"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → ཤོག་ངོས་ཚང་མ་འདེམས་པ།"
 title = "དམིགས་བསལ་མིང་ཚིག།"
+
+[pageTracks]
+blankPage = "Blank page"
+deleteSelected = "Delete selected pages"
+downloadAsOneFile = "Download as one file"
+downloadEachPage = "Download each page individually"
+downloadSelectedPages = "Download selected pages"
+dragging_one = "{{count}} page"
+dragging_other = "{{count}} pages"
+duplicateSelected = "Duplicate selected pages"
+edited = "edited"
+emptyTrack = "No pages left. Drag pages here, or save to close this file."
+insertBlank = "Insert blank page"
+insertBlankAfterSelected = "Insert blank pages after selected pages"
+moveLeft = "Move left"
+moveRight = "Move right"
+nextPage = "Next page"
+page = "Page {{number}}"
+pageCount_one = "{{count}} page"
+pageCount_other = "{{count}} pages"
+pagePosition = "Page {{number}} of {{total}}"
+prevPage = "Previous page"
+readingPages = "Reading pages..."
+redo = "Redo"
+rotateLeft = "Rotate left"
+rotateRight = "Rotate right"
+rotateSelectedLeft = "Rotate selected pages left"
+rotateSelectedRight = "Rotate selected pages right"
+saveAsOneFile = "Save as one file"
+saveChanges = "Save changes to all files"
+saveEachPage = "Save each page individually"
+saveSelectedPages = "Save selected pages"
+saving = "Saving..."
+savingProgress = "Saving {{done}} of {{total}}"
+selectPage = "Select page {{number}}"
+splitAfterSelected = "Split after selected pages"
+splitHere = "Split here"
+undo = "Undo"
+viewError = "Couldn't render this page"
+viewPage = "View page"
+zoomIn = "Zoom in"
+zoomOut = "Zoom out"
+
+[pageTracks.close]
+message = "Are you sure you want to close all files?"
+unsaved = "These files have unsaved changes."
+
+[pageTracks.delete]
+page = "Delete page"
+
+[pageTracks.empty]
+body = "Add PDFs to expand them into editable page tracks"
+title = "No PDF files loaded"
+
+[pageTracks.exportFailed]
+body = "The edited files couldn't be prepared. Try again."
+title = "Couldn't download"
+
+[pageTracks.saveFailed]
+body = "Your edits haven't been lost. Try saving again."
+title = "Couldn't save changes"
+
+[pageTracks.track]
+close = "Close file"
+collapse = "Collapse"
+expand = "Expand"
+rename = "Rename file"
+
+[pageTracks.wrap]
+label = "Wrap pages"
 
 [payg.activity]
 docs = "ཡིག་ཆ"
@@ -7143,24 +7142,6 @@ totalSeats_other = "ཁྱོན (ས་ཆ་ {{count}})"
 
 [payment.upgradeTeam]
 title = "Team ལ་རིམ་སྤར"
-
-[pdfCommentAgent]
-submit = "མཆན་བཟོ"
-
-[pdfCommentAgent.error]
-emptyPrompt = "AI ག་ལ་མཆན་བཀོད་དགོས་ཞེས་གསལ་བཤད་བྱོས"
-failed = "མཆན་བཟོ་ཕམ"
-tooLong = "སྙན་བཀོད་མང་དྲགས་ (མང་མཐའ {{max}} ཡིག་འབྲུ)"
-
-[pdfCommentAgent.prompt]
-label = "AI ག་ལ་མཆན་བཀོད་དགོས?"
-placeholder = "དཔེར་ན་ མི་གསལ་པའི་ཚེས་གྲངས་ཚང་མར་རྟགས་བཀོད་ནས གསལ་བཤད་བསམ་འཆར་འདོན"
-
-[pdfCommentAgent.results]
-title = "མཆན་བཀོད་ཟིན་པའི PDF"
-
-[pdfCommentAgent.settings]
-title = "མཆན་ཁ་བཀོད"
 
 [pdfOrganiser]
 placeholder = "(དཔེར་ན། 1,3,2 ཡང་ན་ 4-8,2,10-12 ཡང་ན་ 2n-1)"
@@ -7994,6 +7975,7 @@ before = "སྒྲིག"
 title = "Stirling སྦྲེལ་མཐུད་སྒྲིག་མེད"
 
 [portal.accountLink.notice]
+loadFailed = "The account linking dialog could not be loaded."
 openFailed = "ཁྱེད་ཀྱི browser ཁ་ཕྱེ་མ་ཐུབ། རྩིས་ཐོ་སྦྲེལ་ཆེད་ཁྱེད་ཀྱི་སྦྲེལ་ཡོད server སྟེང Usage & billing ཁ་ཕྱེ།"
 
 [portal.accountLink.panel]
@@ -8117,9 +8099,6 @@ limit = "ཟླ་རེའི་སྤྱོད་འགྲོ་ཚད {{amoun
 limitNoCap = "སྤྱོད་འགྲོ་ཚད་མེད། ལས་སྒྲུབ་མཚམས་མི་འཇོག འཛིན་ཤོག་ཟླ་རེར་སྤེལ་ཡོང་།"
 
 [portal.billing.chip]
-invoices = "འཛིན་ཤོག"
-nav = "སྡེ་ཚན"
-payment = "དངུལ་སྤྲོད"
 plan = "འཆར་གཞི"
 procurement = "ཉོ་སྒྲུབ"
 usage = "སྤྱོད་ཚད"
@@ -12054,6 +12033,7 @@ title = "ལས་ཀའི་ས་ཆ།"
 loginIncomplete = "login མཇུག་སྒྲིལ་མ་ཐུབ"
 noSaasServer = "SaaS server སྒྲིག་འགོད་བྱས་མེད"
 noServer = "server སྒྲིག་འགོད་བྱས་མེད"
+policyUnavailable = "Unable to load your organisation's sign-in settings."
 saasLoginFailed = "SaaS login ཕམ་པ"
 saasLoginIncomplete = "SaaS login མཇུག་སྒྲིལ་མ་ཐུབ"
 selfHostedLoginFailed = "Self-hosted login ཕམ་པ"
@@ -13905,6 +13885,11 @@ title = "ཆུའི་མཚོན་རྟགས་ཡིག་གནས།"
 image = "པར་རིས"
 text = "ཡིག་གཞི"
 
+[workbench]
+dropFailedSingle = "Your file couldn't be added"
+dropFailedSome = "{{failed}} of your files couldn't be added"
+dropOverlay = "Drop files to add them to the workbench"
+
 [workbench.sessionRestore]
 none = "ཁྱེད་ཀྱི་སྔོན་མའི་ཡིག་ཆ་རྣམས་སྒྲིག་ཆས་འདིའི་ཐོག་ད་ལྟ་ཉར་ཚགས་མེད།"
 partial = "ཡིག་ཆ་ {{total}} ནས་ {{restored}} སླར་གསོ་བྱས། ལྷག་མ་རྣམས་སྒྲིག་ཆས་འདིའི་ཐོག་ད་ལྟ་ཉར་ཚགས་མེད།"
@@ -13915,16 +13900,13 @@ annotations = "མཆན་བཀོད"
 applyRedactionsFirst = "དང་པོར སྦ་བཅོས་སྤྱོད"
 closeAll = "ཡིག་ཆ་ཚང་མ་ཁ་བསྡམས"
 closePdf = "PDF ཁ་བསྡམས"
-deleteSelected = "འདེམས་ཟིན་པའི་ཤོག་ངོས་བསུབ"
 deselectAll = "ཚང་མ་འདེམས་པ་བཤོལ"
 downloadAll = "ཚང་མ་ཕབ་ལེན"
 exitRedaction = "སྦ་བཅོས་ཐབས་ལམ་ནས་ཕྱིར་ཐོན"
-exportAll = "PDF ཕྱིར་འདྲེན"
-exportSelected = "འདེམས་ཟིན་པའི་ཤོག་ངོས་ཕྱིར་འདྲེན"
 formFill = "འགེངས་ཤོག་རྩོམ་སྒྲིག་ཆས།"
 hideToolbar = "ལག་ཆའི་སྒྲོམ་སྦས།"
 moreActions = "བྱ་སྤྱོད་མང་བ།"
-multiTool = "སྣ་ཚོགས་ལག་ཆས"
+pageEditor = "Page Editor"
 panMode = "སྤོ་བཤུད་ཐབས་ལམ"
 print = "PDF དཔར་བསྐྲུན"
 readAloud = "སྒྲ་སྐད་ཀློག"
@@ -13938,7 +13920,6 @@ rulerSettings = "བསྡུར་ཚད་སྒྲིག་འགོད"
 save = "སྲུངས"
 saveAll = "ཚང་མ་སྲུངས"
 saveAs = "མིང་གསར་པས་སྲུངས"
-saveChanges = "བསྒྱུར་བ་སྲུངས"
 search = "PDF འཚོལ"
 selectAll = "ཚང་མ་འདེམས"
 selectByNumber = "ཤོག་ངོས་གྲངས་ཀྱིས་འདེམས"
