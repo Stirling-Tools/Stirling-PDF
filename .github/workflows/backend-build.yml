@@ -105,7 +105,7 @@ jobs:
         uses: Ludy87/cache-the-planet/multi-cache@c731d1c5da95198ab5216686970b1be9da4f0e01
         with:
           cleanup-path-after-save: true
-          version: 5
+          version: 6
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
           manifest-branch: dev-cache-artifact
           manifest-path: .github/cache-data

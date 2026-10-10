@@ -316,7 +316,7 @@ jobs:
         uses: Ludy87/cache-the-planet/multi-cache@c731d1c5da95198ab5216686970b1be9da4f0e01
         with:
           cleanup-path-after-save: true
-          version: 5
+          version: 6
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
           storage: github-artifact
           artifact-retention-days: 1
@@ -357,12 +357,14 @@ jobs:
           strict: false
           exclude: |
             frontend/editor/src-tauri/target/debug/.fingerprint/**
-            frontend/editor/src-tauri/target/debug/deps/match_token*
-            frontend/editor/src-tauri/target/debug/deps/refresh_token_fallback*
+            frontend/editor/src-tauri/target/debug/deps/**
+            frontend/editor/src-tauri/target/debug/examples/**
+            frontend/editor/src-tauri/target/debug/incremental/**
             frontend/editor/src-tauri/target/debug/libs/**
             frontend/editor/src-tauri/target/release/.fingerprint/**
-            frontend/editor/src-tauri/target/release/deps/match_token*
-            frontend/editor/src-tauri/target/release/deps/refresh_token_fallback*
+            frontend/editor/src-tauri/target/release/deps/**
+            frontend/editor/src-tauri/target/release/examples/**
+            frontend/editor/src-tauri/target/release/incremental/**
             frontend/editor/src-tauri/target/release/libs/**
 
       - name: Setup Rust
@@ -949,7 +951,7 @@ jobs:
         uses: Ludy87/cache-the-planet/multi-cache@c731d1c5da95198ab5216686970b1be9da4f0e01
         with:
           cleanup-path-after-save: true
-          version: 5
+          version: 6
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
           storage: github-artifact
           artifact-retention-days: 1
