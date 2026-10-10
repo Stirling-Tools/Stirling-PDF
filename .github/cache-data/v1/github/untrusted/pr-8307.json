@@ -8135,67 +8135,6 @@
       "artifact_name": "cache-untrusted-pr-8307-tauri-target-windows-x64-f0e36d439a7933eb3d661349557456bd6af0acff608220aeff2c1e3e1995d2a6-v5--b3bc1fa3c2c4a886342aa2bcc1de9fe6f87cca146c1cae1f6f-part-000000",
       "workflow_run_id": 38054546943
     },
-    "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/gradle-wrapper/linux-x64/9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8/v6": {
-      "object": "sha256:157332f83a08dfcc06670080f92431c8687babbe1a1ea7ff5e8cf724d23341b0",
-      "storage": "github-artifact",
-      "updated_at": "2026-10-10T13:28:05.711Z",
-      "source": "Stirling-Tools/Stirling-PDF",
-      "created_by": "Ludy87",
-      "size": 150537479,
-      "parts": [
-        {
-          "index": 0,
-          "object": "sha256:854c16fcd847d72f2dd5e76bbbe12a0adf0ed157cfed9c2d43dbcd76effec122",
-          "size": 25165824,
-          "artifact_id": 11671610994,
-          "artifact_name": "cache-untrusted-pr-8307-gradle-wrapper-linux-x64-9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-v6--157332f83a08dfcc06670080f92431c8687babbe1a1ea7ff5e-part-000000",
-          "workflow_run_id": 38055559024
-        },
-        {
-          "index": 1,
-          "object": "sha256:9daed61d2210ed8b6c2b1a33bb31a02259ff5289d145aac4731236accf933707",
-          "size": 25165824,
-          "artifact_id": 11671620933,
-          "artifact_name": "cache-untrusted-pr-8307-gradle-wrapper-linux-x64-9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-v6--157332f83a08dfcc06670080f92431c8687babbe1a1ea7ff5e-part-000001",
-          "workflow_run_id": 38055559024
-        },
-        {
-          "index": 2,
-          "object": "sha256:cbe83bb38426cb38720ab4feb6bee4703bca536d8514cacdd249f9dbc62496c4",
-          "size": 25165824,
-          "artifact_id": 11671775799,
-          "artifact_name": "cache-untrusted-pr-8307-gradle-wrapper-linux-x64-9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-v6--157332f83a08dfcc06670080f92431c8687babbe1a1ea7ff5e-part-000002",
-          "workflow_run_id": 38055559024
-        },
-        {
-          "index": 3,
-          "object": "sha256:e7171bca4ec48c0173ae81a0e0bb60742756817df641fae788dfb50298e2f2ce",
-          "size": 25165824,
-          "artifact_id": 11671915756,
-          "artifact_name": "cache-untrusted-pr-8307-gradle-wrapper-linux-x64-9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-v6--157332f83a08dfcc06670080f92431c8687babbe1a1ea7ff5e-part-000003",
-          "workflow_run_id": 38055559024
-        },
-        {
-          "index": 4,
-          "object": "sha256:59c5d3583bb61046c8f70ffca04d4ee281a7d6a54c28ea8345204b8b07e41687",
-          "size": 25165824,
-          "artifact_id": 11671800799,
-          "artifact_name": "cache-untrusted-pr-8307-gradle-wrapper-linux-x64-9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-v6--157332f83a08dfcc06670080f92431c8687babbe1a1ea7ff5e-part-000004",
-          "workflow_run_id": 38055559024
-        },
-        {
-          "index": 5,
-          "object": "sha256:11fceeeabc85478d14af4c36ac46b21f43c5cee7c39f2340328a3c028142de88",
-          "size": 24708359,
-          "artifact_id": 11671356137,
-          "artifact_name": "cache-untrusted-pr-8307-gradle-wrapper-linux-x64-9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-v6--157332f83a08dfcc06670080f92431c8687babbe1a1ea7ff5e-part-000005",
-          "workflow_run_id": 38055559024
-        }
-      ],
-      "artifact_id": 11671610994,
-      "artifact_name": "cache-untrusted-pr-8307-gradle-wrapper-linux-x64-9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-v6--157332f83a08dfcc06670080f92431c8687babbe1a1ea7ff5e-part-000000",
-      "workflow_run_id": 38055559024
-    },
     "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/cargo-registry/macos-arm64/f0e36d439a7933eb3d661349557456bd6af0acff608220aeff2c1e3e1995d2a6-cache-5f903761b1e4c735/v6": {
       "object": "sha256:5662dd727fc1d47470e713002afaf707a6bc9535e084c5c86a099d599bb510b5",
       "storage": "github-artifact",
@@ -9603,10 +9542,71 @@
       "artifact_id": 11670968765,
       "artifact_name": "cache-untrusted-pr-8307-gradle-caches-linux-x64-6b29c4f083d6eec56cbb3c76beaa436b0475950beba1095f0e599778b2db278b-v6--a3844b02206a92aaa1fb9167c66cfc42ae77ee09f17fa3fee17-part-000000",
       "workflow_run_id": 38057968689
+    },
+    "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/gradle-wrapper/linux-x64/6b29c4f083d6eec56cbb3c76beaa436b0475950beba1095f0e599778b2db278b/v6": {
+      "object": "sha256:157332f83a08dfcc06670080f92431c8687babbe1a1ea7ff5e8cf724d23341b0",
+      "storage": "github-artifact",
+      "updated_at": "2026-10-10T14:04:34.940Z",
+      "source": "Stirling-Tools/Stirling-PDF",
+      "created_by": "Ludy87",
+      "size": 150537479,
+      "parts": [
+        {
+          "index": 0,
+          "object": "sha256:854c16fcd847d72f2dd5e76bbbe12a0adf0ed157cfed9c2d43dbcd76effec122",
+          "size": 25165824,
+          "artifact_id": 11671373319,
+          "artifact_name": "cache-untrusted-pr-8307-gradle-wrapper-linux-x64-6b29c4f083d6eec56cbb3c76beaa436b0475950beba1095f0e599778b2db278b-v6--157332f83a08dfcc06670080f92431c8687babbe1a1ea7ff5e-part-000000",
+          "workflow_run_id": 38057968689
+        },
+        {
+          "index": 1,
+          "object": "sha256:9daed61d2210ed8b6c2b1a33bb31a02259ff5289d145aac4731236accf933707",
+          "size": 25165824,
+          "artifact_id": 11671393281,
+          "artifact_name": "cache-untrusted-pr-8307-gradle-wrapper-linux-x64-6b29c4f083d6eec56cbb3c76beaa436b0475950beba1095f0e599778b2db278b-v6--157332f83a08dfcc06670080f92431c8687babbe1a1ea7ff5e-part-000001",
+          "workflow_run_id": 38057968689
+        },
+        {
+          "index": 2,
+          "object": "sha256:cbe83bb38426cb38720ab4feb6bee4703bca536d8514cacdd249f9dbc62496c4",
+          "size": 25165824,
+          "artifact_id": 11671443374,
+          "artifact_name": "cache-untrusted-pr-8307-gradle-wrapper-linux-x64-6b29c4f083d6eec56cbb3c76beaa436b0475950beba1095f0e599778b2db278b-v6--157332f83a08dfcc06670080f92431c8687babbe1a1ea7ff5e-part-000002",
+          "workflow_run_id": 38057968689
+        },
+        {
+          "index": 3,
+          "object": "sha256:e7171bca4ec48c0173ae81a0e0bb60742756817df641fae788dfb50298e2f2ce",
+          "size": 25165824,
+          "artifact_id": 11670938963,
+          "artifact_name": "cache-untrusted-pr-8307-gradle-wrapper-linux-x64-6b29c4f083d6eec56cbb3c76beaa436b0475950beba1095f0e599778b2db278b-v6--157332f83a08dfcc06670080f92431c8687babbe1a1ea7ff5e-part-000003",
+          "workflow_run_id": 38057968689
+        },
+        {
+          "index": 4,
+          "object": "sha256:59c5d3583bb61046c8f70ffca04d4ee281a7d6a54c28ea8345204b8b07e41687",
+          "size": 25165824,
+          "artifact_id": 11671748216,
+          "artifact_name": "cache-untrusted-pr-8307-gradle-wrapper-linux-x64-6b29c4f083d6eec56cbb3c76beaa436b0475950beba1095f0e599778b2db278b-v6--157332f83a08dfcc06670080f92431c8687babbe1a1ea7ff5e-part-000004",
+          "workflow_run_id": 38057968689
+        },
+        {
+          "index": 5,
+          "object": "sha256:11fceeeabc85478d14af4c36ac46b21f43c5cee7c39f2340328a3c028142de88",
+          "size": 24708359,
+          "artifact_id": 11671298428,
+          "artifact_name": "cache-untrusted-pr-8307-gradle-wrapper-linux-x64-6b29c4f083d6eec56cbb3c76beaa436b0475950beba1095f0e599778b2db278b-v6--157332f83a08dfcc06670080f92431c8687babbe1a1ea7ff5e-part-000005",
+          "workflow_run_id": 38057968689
+        }
+      ],
+      "artifact_id": 11671373319,
+      "artifact_name": "cache-untrusted-pr-8307-gradle-wrapper-linux-x64-6b29c4f083d6eec56cbb3c76beaa436b0475950beba1095f0e599778b2db278b-v6--157332f83a08dfcc06670080f92431c8687babbe1a1ea7ff5e-part-000000",
+      "workflow_run_id": 38057968689
     }
   },
   "monitoring": {
     "window_started_at": "2026-10-10T13:57:50.594Z",
-    "writes": 3
+    "writes": 4
   }
 }
