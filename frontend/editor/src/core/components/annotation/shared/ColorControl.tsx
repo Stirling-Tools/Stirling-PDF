@@ -1,3 +1,4 @@
+import { useEventCallback } from "@app/hooks/useEventCallback";
 import {
   Tooltip,
   Popover,
@@ -6,7 +7,7 @@ import {
   ColorPicker as MantineColorPicker,
   Group,
 } from "@mantine/core";
-import { useState, useCallback, useEffect } from "react";
+import { memo, useCallback, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
 import { ActionIcon } from "@app/ui/ActionIcon";
@@ -15,6 +16,19 @@ import { ActionIcon } from "@app/ui/ActionIcon";
 // the button is hidden in the UI if the API is not supported.
 const supportsEyeDropper =
   typeof window !== "undefined" && "EyeDropper" in window;
+
+const SWATCHES = [
+  "#000000",
+  "#ffffff",
+  "#ff0000",
+  "#00ff00",
+  "#0000ff",
+  "#ffff00",
+  "#ff00ff",
+  "#00ffff",
+  "#ffa500",
+  "transparent",
+];
 
 interface EyeDropper {
   open(): Promise<{ sRGBHex: string }>;
@@ -28,6 +42,34 @@ interface ColorControlProps {
   disabled?: boolean;
 }
 
+/**
+ * Mantine computes every swatch (and its luminance) on each render of an
+ * ancestor; the menu sits under a viewer that re-renders during layout changes,
+ * so rebuilding the palette reads as flicker. Key on colour alone: the callbacks
+ * are read through a ref so handler identity is not part of the compare.
+ */
+const Picker = memo(function Picker({
+  value,
+  onChange,
+  onChangeEnd,
+}: {
+  value: string;
+  onChange: (color: string) => void;
+  onChangeEnd: (color: string) => void;
+}) {
+  return (
+    <MantineColorPicker
+      format="hex"
+      value={value}
+      onChange={onChange}
+      onChangeEnd={onChangeEnd}
+      swatches={SWATCHES}
+      swatchesPerRow={5}
+      size="sm"
+    />
+  );
+});
+
 export function ColorControl({
   value,
   onChange,
@@ -40,6 +82,10 @@ export function ColorControl({
   // Only propagate to the parent (which triggers expensive annotation updates)
   // on onChangeEnd (mouse-up / swatch click), preventing infinite re-render loops.
   const [localColor, setLocalColor] = useState(value);
+  // Stable identities keep Picker memoised while the parent's handlers change on
+  // every viewer re-render.
+  const stableSetLocalColor = useEventCallback(setLocalColor);
+  const stableOnChange = useEventCallback(onChange);
   useEffect(() => {
     setLocalColor(value);
   }, [value]);
@@ -78,25 +124,10 @@ export function ColorControl({
       </Popover.Target>
       <Popover.Dropdown>
         <Stack gap="xs">
-          <MantineColorPicker
-            format="hex"
+          <Picker
             value={localColor}
-            onChange={setLocalColor}
-            onChangeEnd={onChange}
-            swatches={[
-              "#000000",
-              "#ffffff",
-              "#ff0000",
-              "#00ff00",
-              "#0000ff",
-              "#ffff00",
-              "#ff00ff",
-              "#00ffff",
-              "#ffa500",
-              "transparent",
-            ]}
-            swatchesPerRow={5}
-            size="sm"
+            onChange={stableSetLocalColor}
+            onChangeEnd={stableOnChange}
           />
           {supportsEyeDropper && (
             <Group justify="flex-end">

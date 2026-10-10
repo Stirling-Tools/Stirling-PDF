@@ -5,10 +5,11 @@ import {
 import { Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useRef, useCallback } from "react";
 import { Icon } from "@app/ui/Icon";
-import { useRedaction } from "@app/contexts/RedactionContext";
+import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
+import { useAnchoredOverlay } from "@app/hooks/useAnchoredOverlay";
 import "@app/components/viewer/TextSelectionMenu.css";
 
 export type { RedactionSelectionMenuProps };
@@ -39,12 +40,8 @@ function RedactionSelectionMenuInner({
   const pageIndex = context?.pageIndex;
   const { t } = useTranslation();
   const { provides } = useEmbedPdfRedaction(documentId);
-  const { setRedactionsApplied } = useRedaction();
+  const { handleToolSelect } = useToolWorkflow();
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const [menuPosition, setMenuPosition] = useState<{
-    top: number;
-    left: number;
-  } | null>(null);
 
   // Merge refs - menuWrapperProps.ref is a callback ref
   const setRef = useCallback(
@@ -62,62 +59,29 @@ function RedactionSelectionMenuInner({
     }
   }, [provides, item, pageIndex]);
 
-  const handleApply = useCallback(() => {
-    if (provides?.commitPending && item && pageIndex !== undefined) {
-      provides.commitPending(pageIndex, item.id);
-      // Mark redactions as applied (but not yet saved) so the Save Changes button stays enabled
-      // This ensures the button doesn't become disabled when pendingCount decreases
-      setRedactionsApplied(true);
-    }
-  }, [provides, item, pageIndex, setRedactionsApplied]);
+  // This menu is scoped to one pending mark, so it only offers actions that
+  // affect that mark. Applying is permanent and applies *every* pending mark, so
+  // it lives in the redaction review panel where that scope is visible.
+  const onReviewPanel = useCallback(() => {
+    handleToolSelect("redact");
+  }, [handleToolSelect]);
 
-  // Calculate position for portal based on wrapper element
-  useEffect(() => {
-    if (!selected || !isRedaction || !item || !wrapperRef.current) {
-      setMenuPosition(null);
-      return;
-    }
-
-    const updatePosition = () => {
-      const wrapper = wrapperRef.current;
-      if (!wrapper) {
-        setMenuPosition(null);
-        return;
-      }
-
-      const wrapperRect = wrapper.getBoundingClientRect();
-      // Position menu below the wrapper, centered
-      // Use getBoundingClientRect which gives viewport-relative coordinates
-      // Since we're using fixed positioning in the portal, we don't need to add scroll offsets
-      setMenuPosition({
-        top: wrapperRect.bottom + 8,
-        left: wrapperRect.left + wrapperRect.width / 2,
-      });
-    };
-
-    updatePosition();
-
-    // Update position on scroll/resize
-    window.addEventListener("scroll", updatePosition, true);
-    window.addEventListener("resize", updatePosition);
-
-    return () => {
-      window.removeEventListener("scroll", updatePosition, true);
-      window.removeEventListener("resize", updatePosition);
-    };
-  }, [selected, item]);
+  const { overlayRef, mounted } = useAnchoredOverlay({
+    anchorRef: wrapperRef,
+    enabled: Boolean(selected && isRedaction && item),
+  });
 
   // Early return AFTER all hooks have been called
   if (!selected || !isRedaction || !item) return null;
 
-  const menuContent = menuPosition ? (
+  const menuContent = mounted ? (
     <div
+      ref={overlayRef}
       data-redaction-selection-menu
       className="embedpdf-floating-menu"
       style={{
         position: "fixed",
-        top: `${menuPosition.top}px`,
-        left: `${menuPosition.left}px`,
+        // top/left are owned by useAnchoredOverlay; see the note there.
         transform: "translateX(-50%)",
         pointerEvents: "auto",
         zIndex: 10000,
@@ -141,19 +105,21 @@ function RedactionSelectionMenuInner({
 
       <Tooltip
         label={t(
-          "redact.manual.applyWarning",
-          "⚠️ Permanent application, cannot be undone and the data underneath will be deleted",
+          "viewer.redaction.reviewAll",
+          "Review and apply all redactions in the tool panel",
         )}
         withArrow
-        position="top"
       >
         <button
           type="button"
-          className="embedpdf-floating-badge-btn"
-          onClick={handleApply}
+          className="embedpdf-floating-btn"
+          onClick={onReviewPanel}
+          aria-label={t(
+            "viewer.redaction.reviewAll",
+            "Review and apply all redactions in the tool panel",
+          )}
         >
-          <Icon name="circle-check" size={16} />
-          <span>{t("redact.manual.apply", "Apply")}</span>
+          <Icon name="list" size={18} />
         </button>
       </Tooltip>
     </div>

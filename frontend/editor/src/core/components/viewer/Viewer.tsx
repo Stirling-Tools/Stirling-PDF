@@ -6,6 +6,7 @@ import {
   type ViewerProps,
 } from "@app/components/viewer/NonPdfViewer";
 import { AttachmentSidebar } from "@app/components/viewer/AttachmentSidebar";
+import { DocumentEditSessionProvider } from "@app/contexts/documentEdit/DocumentEditSessionContext";
 import { usePortfolioSession } from "@app/components/viewer/hooks/usePortfolioSession";
 import { useAllFiles } from "@app/contexts/FileContext";
 import { useViewer } from "@app/contexts/ViewerContext";
@@ -66,12 +67,19 @@ const Viewer = (props: ViewerProps & SignatureOverlayPassThrough) => {
     [session, activeMemberName],
   );
 
-  const viewer =
-    activeFile && !isPdfFile(activeFile) ? (
-      <NonPdfViewerWrapper {...props} />
-    ) : (
-      <EmbedPdfViewer {...props} portfolioPinned={portfolio !== null} />
-    );
+  const viewer = (
+    // The session resets itself on a document swap through one DOCUMENT_REPLACED
+    // transition. Deliberately not keyed: a keyed provider remounts its subtree,
+    // tearing down the live viewer on an in-place save, which is exactly what the
+    // in-place reload path exists to avoid.
+    <DocumentEditSessionProvider documentId={activeFileId}>
+      {activeFile && !isPdfFile(activeFile) ? (
+        <NonPdfViewerWrapper {...props} />
+      ) : (
+        <EmbedPdfViewer {...props} portfolioPinned={portfolio !== null} />
+      )}
+    </DocumentEditSessionProvider>
+  );
 
   if (!portfolio) return viewer;
 

@@ -11171,8 +11171,6 @@ title = "Words to Redact"
 failed = "An error occurred while redacting the PDF."
 
 [redact.manual]
-apply = "Apply"
-applyWarning = "⚠️ Permanent application, cannot be undone and the data underneath will be deleted"
 colorLabel = "Redaction Color"
 controlsTitle = "Manual Redaction Controls"
 instructions = "Select text or draw areas on the PDF to mark content for redaction."
@@ -13719,7 +13717,10 @@ title = "Portfolio"
 
 [viewer.redaction]
 applyAll = "Apply Redactions"
+commitErrorBody = "The pending redactions could not be applied. Try again."
+commitErrorTitle = "Could not apply redactions"
 removeMark = "Remove this mark"
+reviewAll = "Review and apply all redactions in the tool panel"
 
 [viewer.search]
 clear = "Clear search"

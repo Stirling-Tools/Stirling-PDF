@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useAnchoredOverlay } from "@app/hooks/useAnchoredOverlay";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { Tooltip, Popover, TextInput, Stack } from "@mantine/core";
@@ -64,10 +65,6 @@ function TextSelectionMenuInner({
   const { actions: navActions } = useNavigationActions();
 
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState<{
-    top: number;
-    left: number;
-  } | null>(null);
 
   const [linkPopoverOpen, setLinkPopoverOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
@@ -93,29 +90,11 @@ function TextSelectionMenuInner({
   );
 
   const showAbove = placement?.suggestTop ?? true;
-
-  useEffect(() => {
-    if (!selected || !wrapperRef.current) {
-      setPosition(null);
-      return;
-    }
-    const update = () => {
-      const wrapper = wrapperRef.current;
-      if (!wrapper) return;
-      const r = wrapper.getBoundingClientRect();
-      setPosition({
-        top: showAbove ? r.top - 8 : r.bottom + 8,
-        left: r.left + r.width / 2,
-      });
-    };
-    update();
-    window.addEventListener("scroll", update, true);
-    window.addEventListener("resize", update);
-    return () => {
-      window.removeEventListener("scroll", update, true);
-      window.removeEventListener("resize", update);
-    };
-  }, [selected, showAbove]);
+  const { overlayRef, mounted } = useAnchoredOverlay({
+    anchorRef: wrapperRef,
+    enabled: Boolean(selected),
+    placement: showAbove ? "above" : "below",
+  });
 
   const handleCopy = useCallback(() => {
     if (documentId) {
@@ -286,14 +265,16 @@ function TextSelectionMenuInner({
   ]);
 
   const portalContent =
-    position &&
+    mounted &&
     createPortal(
       <div
+        ref={overlayRef}
         data-text-selection-menu
         style={{
           position: "fixed",
-          top: position.top,
-          left: position.left,
+          // top/left are deliberately absent: useAnchoredOverlay writes them on
+          // the node. Declaring them here would make React re-apply this style
+          // object on every render and wipe the measured position.
           transform: `translate(-50%, ${showAbove ? "-100%" : "0"})`,
           zIndex: 10000,
           pointerEvents: "auto",
