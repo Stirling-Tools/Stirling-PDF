@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
 import type { FileId } from "@app/types/file";
@@ -36,7 +37,7 @@ const asStirlingFile = (name: string): StirlingFile =>
   Object.assign(new File(["%PDF-1.7"], name, { type: "application/pdf" }), {
     fileId: "new-id" as FileId,
     quickKey: "k",
-  }) as StirlingFile;
+  });
 
 type AddFilesOptions = {
   selectFiles?: boolean;

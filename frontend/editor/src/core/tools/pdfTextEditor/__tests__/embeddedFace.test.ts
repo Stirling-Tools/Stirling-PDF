@@ -56,21 +56,34 @@ function makeModule(
 ): PdfiumModule {
   const memory = { buffer: new ArrayBuffer(heapBytes) };
   let next = 8; // pointer 0 means "absent" to the code under test
-  let live = 0;
+  // Pooled scratch buffers outlive a free() of a neighbouring block, so free()
+  // returns the range to a list instead of resetting the bump pointer.
+  const blocks = new Map<number, number>();
+  const freeList: Array<{ ptr: number; size: number }> = [];
   const view = () => new DataView(memory.buffer);
   const fake = {
     pdfium: {
       wasmExports: {
         memory,
         malloc(n: number): number {
+          const aligned = (n + 7) & ~7;
+          const slot = freeList.findIndex((b) => b.size >= aligned);
+          if (slot !== -1) {
+            const { ptr } = freeList.splice(slot, 1)[0];
+            blocks.set(ptr, aligned);
+            return ptr;
+          }
           const ptr = next;
-          next += (n + 7) & ~7;
+          next += aligned;
           if (next > heapBytes) throw new Error("fake heap exhausted");
-          live++;
+          blocks.set(ptr, aligned);
           return ptr;
         },
-        free(): void {
-          if (--live === 0) next = 8;
+        free(ptr: number): void {
+          const size = blocks.get(ptr);
+          if (size === undefined) return;
+          blocks.delete(ptr);
+          freeList.push({ ptr, size });
         },
       },
       getValue(ptr: number): number {

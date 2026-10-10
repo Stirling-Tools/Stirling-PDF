@@ -3,11 +3,11 @@ import { type SettingsSectionEntry } from "@core/data/settingsSectionRegistry";
 export type { SettingsSectionEntry };
 
 /**
- * SaaS web settings sections. The SaaS modal is composed differently from
+ * SaaS web settings sections. The SaaS nav is composed differently from
  * self-hosted (see `saasConfigNavSections`): an Account area (Overview,
  * Passwords & Security, Team), Preferences, a Developer area (API Keys, MCP),
  * cloud Billing (Plan) and Legal. It deliberately does NOT list the self-hosted
- * admin sections, so search never deep-links to a tab the SaaS modal can't show.
+ * admin sections, so search never deep-links to a tab the SaaS nav can't show.
  *
  * The local backend's login/admin flags don't reflect SaaS auth, so entries
  * avoid `requiresLogin`/`adminArea`. Sections the SaaS nav only mounts for a
@@ -32,7 +32,7 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
     groupLabelFallback: "Account Settings",
   },
   {
-    key: "teams",
+    key: "users",
     labelKey: "config.team",
     labelFallback: "Team",
     keywords: ["team", "members", "invite", "seats"],
@@ -44,15 +44,17 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
     key: "general",
     labelKey: "settings.general.title",
     labelFallback: "General",
-    keywords: ["theme", "language", "appearance", "preferences", "startup"],
-    groupLabelKey: "settings.preferences.title",
-    groupLabelFallback: "Preferences",
-  },
-  {
-    key: "hotkeys",
-    labelKey: "settings.hotkeys.title",
-    labelFallback: "Keyboard Shortcuts",
-    keywords: ["hotkey", "shortcut", "keybinding", "keyboard"],
+    keywords: [
+      "theme",
+      "language",
+      "appearance",
+      "preferences",
+      "startup",
+      "hotkey",
+      "shortcut",
+      "keybinding",
+      "keyboard",
+    ],
     groupLabelKey: "settings.preferences.title",
     groupLabelFallback: "Preferences",
   },

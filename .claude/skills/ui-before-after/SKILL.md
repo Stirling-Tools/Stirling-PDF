@@ -35,7 +35,7 @@ page, skip cropping; default 0.6), `--base <ref|merge-base>`,
 `--threshold <fraction>` (diff sensitivity, default 0.001).
 
 Shares the capture harness with **ui-walkthrough** - read its SKILL.md for the
-stubbed-Playwright setup, worktree node_modules + `generate-icons`, the
+stubbed-Playwright setup, worktree node_modules, the
 stale-`:5173` gotcha, and the dark-mode init-script. Bundled helpers:
 [capture-spec.template.ts](capture-spec.template.ts), [diff-shots.mjs](diff-shots.mjs),
 [montage-template.html](montage-template.html), [shoot-sections.mjs](shoot-sections.mjs).
@@ -53,7 +53,7 @@ gh pr diff <pr> --name-only        # or: git diff --name-only <base>...HEAD
 Map changed frontend files to URLs generically:
 - **Tools**: a changed `components/tools/<toolDir>/…` or `hooks/tools/<tool>/…` →
   toolId → URL via the repo's own rule `getToolUrlPath` in
-  [toolsTaxonomy.ts:200](frontend/editor/src/core/data/toolsTaxonomy.ts): `/` + the
+  [toolsTaxonomy.ts:200](../../../frontend/editor/src/core/data/toolsTaxonomy.ts): `/` + the
   id kebab-cased (`addPageNumbers` → `/add-page-numbers`).
 - **Pages/routes**: changed `filesPage/*` → `/files`, etc.
 - `--all`: enumerate every tool in the registry instead of just changed ones.

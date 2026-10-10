@@ -10,7 +10,7 @@ function makeCmd(overrides: Partial<Command> = {}): Command {
     apply: vi.fn(),
     revert: vi.fn(),
     ...overrides,
-  } as unknown as Command;
+  };
 }
 
 function makeDoc(): EditorDocument {

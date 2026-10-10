@@ -16,10 +16,9 @@ test.describe("4. PDF Tool Pages - Common Patterns", () => {
       await expect(actionButton).toBeVisible({ timeout: 10000 });
       await expect(actionButton).toBeDisabled();
 
-      // Step 3: Verify the file upload area is displayed
-      // (input[type="file"] is excluded — it is hidden in the FileSidebar)
+      // Step 3: Verify the landing page's upload action is displayed
       await expect(
-        page.locator('[class*="upload"], [class*="dropzone"]').first(),
+        page.getByRole("button", { name: /^Add Files$/i }).first(),
       ).toBeVisible();
 
       // Step 4: Verify that clicking the disabled action button does nothing

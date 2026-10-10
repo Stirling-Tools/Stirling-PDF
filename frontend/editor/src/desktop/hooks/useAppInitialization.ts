@@ -12,6 +12,7 @@ import { pendingFilePathMappings } from "@app/services/pendingFilePathMappings";
 import { captureDroppedFilePaths } from "@app/services/fileImportPaths";
 import { getDiskFileState } from "@app/services/desktopFileLink";
 import { diskLastModified } from "@app/services/diskFileSync";
+import { endLoadingLaunchFiles } from "@app/services/launchFiles";
 
 /**
  * App initialization hook
@@ -118,6 +119,8 @@ export function useAppInitialization(): void {
         }
       } catch (error) {
         console.error("[Desktop] Failed to load opened files:", error);
+      } finally {
+        endLoadingLaunchFiles();
       }
     };
 
