@@ -75,12 +75,16 @@ export function Logo({
             className="sui-logo__wordmark sui-logo__wordmark--light"
             src={wordmarkLightUrl}
             alt={alt}
+            width={58}
+            height={21}
             style={{ height: textHeight }}
           />
           <img
             className="sui-logo__wordmark sui-logo__wordmark--dark"
             src={wordmarkDarkUrl}
             alt={alt}
+            width={58}
+            height={21}
             style={{ height: textHeight }}
           />
         </>

@@ -1,114 +1,81 @@
-import React, { useState } from "react";
-import ReactMarkdown from "react-markdown";
-import type { Components } from "react-markdown";
-import remarkGfm from "remark-gfm";
+import React, { Component, Suspense, lazy, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
 
-function CopyButton({ text }: { text: string }) {
+// react-markdown + remark-gfm + micromark are ~120 KB gz and only needed when a
+// markdown document is open (viewer) or a chat message arrives, so the heavy
+// module is its own chunk while callers keep the synchronous signature.
+const loadMarkdownRendererImpl = () =>
+  import("@app/components/viewer/nonpdf/MarkdownRendererImpl");
+
+function rawMarkdown(content: string): React.ReactNode {
+  return <div style={{ whiteSpace: "pre-wrap" }}>{content}</div>;
+}
+
+/** Keeps a failed chunk local: the raw text stays visible instead of the app
+ * boundary replacing the whole view. */
+class MarkdownBoundary extends Component<
+  { children: React.ReactNode; onError: () => void },
+  { failed: boolean }
+> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  componentDidCatch() {
+    this.props.onError();
+  }
+
+  render() {
+    return this.state.failed ? null : this.props.children;
+  }
+}
+
+function MarkdownBlock({ content }: { content: string }) {
   const { t } = useTranslation();
-  const [copied, setCopied] = useState(false);
+  // Held here, not in the rendered chunk: a component that suspends on its
+  // first render loses its state, so a lazy built inside it would be recreated
+  // on every retry and suspend forever. React also caches a lazy's rejected
+  // import, so the retry below swaps in a fresh one.
+  const [MarkdownRendererImpl, setMarkdownRendererImpl] = useState(() =>
+    lazy(loadMarkdownRendererImpl),
+  );
+  const [attempt, setAttempt] = useState(0);
+  const [failed, setFailed] = useState(false);
+
+  if (failed) {
+    return (
+      <div style={{ whiteSpace: "pre-wrap" }}>
+        {content}
+        <div style={{ marginTop: "var(--mantine-spacing-sm)" }}>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setMarkdownRendererImpl(lazy(loadMarkdownRendererImpl));
+              setFailed(false);
+              setAttempt((n) => n + 1);
+            }}
+          >
+            {t("errorBoundary.tryAgain", "Try Again")}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <Button
-      variant="tertiary"
-      onClick={() =>
-        navigator.clipboard.writeText(text).then(() => {
-          setCopied(true);
-          setTimeout(() => setCopied(false), 1500);
-        })
-      }
-      style={{
-        position: "absolute",
-        top: 8,
-        right: 8,
-        background: copied
-          ? "var(--mantine-color-green-0)"
-          : "var(--mantine-color-gray-0)",
-        border: "1px solid var(--mantine-color-gray-3)",
-        borderRadius: 3,
-        cursor: "pointer",
-        fontSize: "0.7em",
-        padding: "2px 8px",
-        color: copied
-          ? "var(--mantine-color-green-7)"
-          : "var(--mantine-color-gray-7)",
-      }}
-    >
-      {copied
-        ? `✓ ${t("viewer.nonPdf.copied", "Copied")}`
-        : t("common.copy", "Copy")}
-    </Button>
+    <MarkdownBoundary key={attempt} onError={() => setFailed(true)}>
+      <Suspense fallback={rawMarkdown(content)}>
+        <MarkdownRendererImpl content={content} />
+      </Suspense>
+    </MarkdownBoundary>
   );
 }
 
-const components: Components = {
-  pre: ({ children }) => {
-    const codeText = React.isValidElement(children)
-      ? String((children.props as { children?: unknown }).children ?? "")
-      : String(children ?? "");
-    return (
-      <div style={{ position: "relative", margin: "8px 0" }}>
-        <pre
-          style={{
-            background: "var(--mantine-color-gray-1)",
-            padding: "10px 52px 10px 14px",
-            borderRadius: 4,
-            overflowX: "auto",
-            fontSize: "0.85em",
-            margin: 0,
-          }}
-        >
-          {children}
-        </pre>
-        <CopyButton text={codeText} />
-      </div>
-    );
-  },
-  table: ({ children }) => (
-    <div style={{ overflowX: "auto", margin: "10px 0" }}>
-      <table
-        style={{
-          borderCollapse: "collapse",
-          width: "100%",
-          fontSize: "0.85em",
-        }}
-      >
-        {children}
-      </table>
-    </div>
-  ),
-  th: ({ children, style }) => (
-    <th
-      style={{
-        border: "1px solid var(--mantine-color-gray-3)",
-        padding: "6px 10px",
-        background: "var(--mantine-color-gray-1)",
-        textAlign: "left",
-        fontWeight: 600,
-        whiteSpace: "nowrap",
-        ...style,
-      }}
-    >
-      {children}
-    </th>
-  ),
-  td: ({ children, style }) => (
-    <td
-      style={{
-        border: "1px solid var(--mantine-color-gray-3)",
-        padding: "5px 10px",
-        ...style,
-      }}
-    >
-      {children}
-    </td>
-  ),
-};
-
+/** Renders markdown; while the chunk loads the raw text shows, and if the chunk
+ * fails the raw text stays with a retry control. */
 export function renderMarkdown(content: string): React.ReactNode[] {
-  return [
-    <ReactMarkdown key="md" remarkPlugins={[remarkGfm]} components={components}>
-      {content}
-    </ReactMarkdown>,
-  ];
+  return [<MarkdownBlock key="md" content={content} />];
 }
