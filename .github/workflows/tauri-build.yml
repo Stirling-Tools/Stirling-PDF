@@ -60,7 +60,7 @@ permissions:
   pull-requests: write
 
 env:
-  CACHE_MAX_TAR_BYTES: 17179869184
+  CACHE_MAX_TAR_BYTES: 21474836480
   JAVA_VERSION: 25
   GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-25
   GRADLE_FILES_TO_HASH: |
