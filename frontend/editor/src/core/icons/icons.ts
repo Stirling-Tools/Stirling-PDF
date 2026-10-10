@@ -8,6 +8,7 @@ import AlignEndHorizontal from "lucide-static/icons/align-end-horizontal.svg?rea
 import AlignEndVertical from "lucide-static/icons/align-end-vertical.svg?react";
 import AlignStartHorizontal from "lucide-static/icons/align-start-horizontal.svg?react";
 import AlignStartVertical from "lucide-static/icons/align-start-vertical.svg?react";
+import AppWindow from "lucide-static/icons/app-window.svg?react";
 import ArchiveRestore from "lucide-static/icons/archive-restore.svg?react";
 import ArrowDown from "lucide-static/icons/arrow-down.svg?react";
 import ArrowLeft from "lucide-static/icons/arrow-left.svg?react";
@@ -163,6 +164,7 @@ import Italic from "lucide-static/icons/italic.svg?react";
 import Key from "lucide-static/icons/key.svg?react";
 import Keyboard from "lucide-static/icons/keyboard.svg?react";
 import Landmark from "lucide-static/icons/landmark.svg?react";
+import Laptop from "lucide-static/icons/laptop.svg?react";
 import Layers from "lucide-static/icons/layers.svg?react";
 import LayersMinus from "lucide-static/icons/layers-minus.svg?react";
 import LayoutDashboard from "lucide-static/icons/layout-dashboard.svg?react";
@@ -436,6 +438,7 @@ export const ICONS = {
   "align-end-vertical": { Component: AlignEndVertical, kind: "lucide" },
   "align-start-horizontal": { Component: AlignStartHorizontal, kind: "lucide" },
   "align-start-vertical": { Component: AlignStartVertical, kind: "lucide" },
+  "app-window": { Component: AppWindow, kind: "lucide" },
   "archive-restore": { Component: ArchiveRestore, kind: "lucide" },
   "arrow-down": { Component: ArrowDown, kind: "lucide" },
   "arrow-left": { Component: ArrowLeft, kind: "lucide" },
@@ -591,6 +594,7 @@ export const ICONS = {
   key: { Component: Key, kind: "lucide" },
   keyboard: { Component: Keyboard, kind: "lucide" },
   landmark: { Component: Landmark, kind: "lucide" },
+  laptop: { Component: Laptop, kind: "lucide" },
   layers: { Component: Layers, kind: "lucide" },
   "layers-minus": { Component: LayersMinus, kind: "lucide" },
   "layout-dashboard": { Component: LayoutDashboard, kind: "lucide" },

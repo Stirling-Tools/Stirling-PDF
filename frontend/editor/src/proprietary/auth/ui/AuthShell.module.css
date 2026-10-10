@@ -23,6 +23,22 @@
   box-shadow: 0 1.25rem 3.75rem rgba(0, 0, 0, 0.12);
   overflow-y: auto;
   overflow-x: hidden;
+  transition: width var(--motion-slow);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .authCard {
+    transition: none;
+  }
+}
+
+.authCardWide {
+  width: min(36rem, 96vw);
+  padding: 2.5rem;
+}
+
+.authCardWide .authContent {
+  max-width: none;
 }
 
 .authCard::-webkit-scrollbar {
