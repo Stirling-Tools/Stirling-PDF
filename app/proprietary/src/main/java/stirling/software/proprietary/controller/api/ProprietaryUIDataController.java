@@ -621,6 +621,8 @@ public class ProprietaryUIDataController {
         summary.setPortalAccess(portalAccessUserIds.contains(user.getId()));
         summary.setUsername(user.getUsername());
         summary.setEmail(user.getEmail());
+        summary.setSupabaseId(
+                user.getSupabaseId() == null ? null : user.getSupabaseId().toString());
         summary.setRoleName(user.getRoleName());
         summary.setRolesAsString(user.getRolesAsString());
         summary.setEnabled(user.isEnabled());

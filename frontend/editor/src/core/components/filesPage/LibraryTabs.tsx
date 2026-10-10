@@ -1,5 +1,6 @@
 import { Fragment, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
 import { Button, type ButtonProps } from "@app/ui/Button";
 import type { FilesPageTab } from "@app/contexts/FilesPageContext";
 
@@ -23,10 +24,16 @@ export function LibraryTabs({
   libraryOnly?: boolean;
 }) {
   const { t } = useTranslation();
+  const localOnly = useLocalProcessingOnly();
   const tabs: { id: FilesPageTab; label: string }[] = [
     { id: "recent", label: t("filesPage.recentFiles", "Recents") },
-    { id: "all", label: t("filesPage.allFiles", "Stirling library") },
-    ...(sharingEnabled
+    {
+      id: "all",
+      label: localOnly
+        ? t("desktopPrivacy.localFiles", "Local files")
+        : t("filesPage.allFiles", "Stirling library"),
+    },
+    ...(sharingEnabled && !localOnly
       ? [
           {
             id: "shared" as const,

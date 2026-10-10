@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest";
 import { BASE_SECTION_ALIASES } from "@app/data/settingsAliases";
 import { SETTINGS_SEARCH_INDEX } from "@app/data/settingsSearchIndex";

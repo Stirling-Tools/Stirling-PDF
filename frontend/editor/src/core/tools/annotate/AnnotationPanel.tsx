@@ -305,7 +305,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
     {
       id: "replaceText",
       label: t("annotation.replaceText", "Replace Text"),
-      icon: "replace",
+      icon: "replace-text",
     },
   ];
 

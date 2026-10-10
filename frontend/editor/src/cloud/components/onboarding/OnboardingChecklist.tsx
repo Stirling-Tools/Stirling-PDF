@@ -7,10 +7,11 @@ import {
   useChecklistSetupItem,
   type ChecklistItem,
 } from "@app/components/onboarding/checklistSetupItem";
+import { useAccountCreatedAt } from "@app/components/onboarding/accountCreatedAt";
 import {
+  getFlowDismissedAt,
   getFlowProgress,
-  hasSeenFlow,
-  markFlowSeen,
+  markFlowDismissed,
   setStepDone,
 } from "@app/components/onboarding/orchestrator/onboardingStorage";
 import { openAppSettings } from "@app/utils/appSettings";
@@ -22,15 +23,29 @@ const FLOW_ID = "saas-checklist";
 const STEP_INVITE_TEAM = "invite-team";
 const STEP_TAKE_TOUR = "take-tour";
 
-/** Getting-started checklist above the sidebar footer. Ticks and the X dismissal
- * persist per browser in the shared onboarding store. */
+const DAY_MS = 24 * 60 * 60 * 1000;
+const DISMISS_SNOOZE_MS = 7 * DAY_MS;
+const NEW_ACCOUNT_MAX_AGE_MS = 14 * DAY_MS;
+
+function isSnoozed(): boolean {
+  const dismissedAt = getFlowDismissedAt(FLOW_ID);
+  return dismissedAt !== null && Date.now() - dismissedAt < DISMISS_SNOOZE_MS;
+}
+
+/** Getting-started checklist above the sidebar footer, for accounts under two weeks
+ * old. Ticks persist per browser in the shared onboarding store; the X snoozes it for
+ * a week, and it is gone for good once every applicable step is done. Steps finished
+ * before this mount are left out, so a returning user sees only what is left. */
 export function OnboardingChecklist() {
   const { t } = useTranslation();
   const { isAnonymous, loading } = useAuth();
-  const inviteTarget = useChecklistInviteTarget();
+  const account = useAccountCreatedAt();
+  const invite = useChecklistInviteTarget();
+  const inviteTarget = invite.target;
 
-  const [dismissed, setDismissed] = useState(() => hasSeenFlow(FLOW_ID));
+  const [dismissed, setDismissed] = useState(isSnoozed);
   const [done, setDone] = useState<string[]>(() => getFlowProgress(FLOW_ID));
+  const [doneBeforeMount] = useState(done);
   const [expanded, setExpanded] = useState(true);
 
   const markDone = useCallback((stepId: string) => {
@@ -78,15 +93,31 @@ export function OnboardingChecklist() {
 
   const doneCount = items.filter((item) => done.includes(item.id)).length;
   const total = items.length;
-  const allDone = total > 0 && doneCount === total;
+  const allDone = doneCount === total;
+  const visibleItems = items.filter(
+    (item) => !doneBeforeMount.includes(item.id),
+  );
 
   const handleDismiss = useCallback(() => {
-    markFlowSeen(FLOW_ID);
+    markFlowDismissed(FLOW_ID);
     setDismissed(true);
   }, []);
 
-  if (loading || isAnonymous || dismissed) {
-    return null;
+  const isEstablishedAccount =
+    account.createdAt !== null &&
+    Date.now() - account.createdAt.getTime() > NEW_ACCOUNT_MAX_AGE_MS;
+
+  if (
+    loading ||
+    account.loading ||
+    invite.loading ||
+    isAnonymous ||
+    isEstablishedAccount ||
+    dismissed ||
+    allDone
+  ) {
+    // The download slide marks its step done on close, so it must outlive the card.
+    return <>{setup.dialog}</>;
   }
 
   return (
@@ -149,15 +180,7 @@ export function OnboardingChecklist() {
                 }
               }}
             >
-              {allDone ? (
-                <Icon
-                  name="circle-check"
-                  size="1.05rem"
-                  className={styles.completeIcon}
-                />
-              ) : (
-                <Icon name="x" size="0.95rem" />
-              )}
+              <Icon name="x" size="0.95rem" />
             </span>
           </span>
         </div>
@@ -171,7 +194,7 @@ export function OnboardingChecklist() {
 
         {expanded && (
           <div className={styles.items}>
-            {items.map((item) => {
+            {visibleItems.map((item) => {
               const isDone = done.includes(item.id);
               return (
                 <div

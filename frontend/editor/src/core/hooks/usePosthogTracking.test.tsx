@@ -78,4 +78,46 @@ describe("usePosthogTracking", () => {
       expect(posthogMock.init).toHaveBeenCalledTimes(1);
     });
   });
+
+  it("retries the import after a failed load instead of replaying it", async () => {
+    vi.resetModules();
+    let attempts = 0;
+    vi.doMock("posthog-js", () => {
+      attempts += 1;
+      if (attempts === 1) throw new Error("chunk load failed");
+      return { default: posthogMock };
+    });
+
+    const [
+      { usePosthogTracking: useTracking },
+      { AppConfigProvider: Provider },
+    ] = await Promise.all([
+      import("@app/hooks/usePosthogTracking"),
+      import("@app/contexts/AppConfigContext"),
+    ]);
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <TestQueryProvider>
+        <Provider
+          initialConfig={{ enableAnalytics: true }}
+          bootstrapMode="non-blocking"
+          autoFetch={false}
+        >
+          {children}
+        </Provider>
+      </TestQueryProvider>
+    );
+
+    const first = renderHook(() => useTracking(), { wrapper });
+    await waitFor(() => {
+      expect(attempts).toBe(1);
+    });
+    expect(posthogMock.init).not.toHaveBeenCalled();
+    first.unmount();
+
+    renderHook(() => useTracking(), { wrapper });
+    await waitFor(() => {
+      expect(posthogMock.init).toHaveBeenCalledTimes(1);
+    });
+    expect(attempts).toBe(2);
+  });
 });
