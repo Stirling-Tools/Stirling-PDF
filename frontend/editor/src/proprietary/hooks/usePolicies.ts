@@ -29,12 +29,41 @@ const RECONCILE_MAX_ATTEMPTS = 15;
 const reconcileRetryDelay = (attempt: number) =>
   Math.min(500 * 2 ** attempt, 5000);
 
+// One in-flight reconcile read shared across mounts. A remount (or StrictMode
+// double-invoke) would otherwise fire an identical fetch; the entry clears on
+// settle so retries and later sessions still refetch. Keyed by session so a
+// sign-in mid-flight cannot join the outgoing session's read and reconcile its
+// team policies into the new one.
+let reconcileInFlight: {
+  sessionKey: string | null;
+  promise: ReturnType<typeof fetchPoliciesByCategory>;
+} | null = null;
+
+function fetchPoliciesShared(
+  sessionKey: string | null,
+): ReturnType<typeof fetchPoliciesByCategory> {
+  if (reconcileInFlight?.sessionKey === sessionKey) {
+    return reconcileInFlight.promise;
+  }
+  const entry = {
+    sessionKey,
+    promise: fetchPoliciesByCategory().finally(() => {
+      // Identity check: a newer session's entry must survive this settle.
+      if (reconcileInFlight === entry) reconcileInFlight = null;
+    }),
+  };
+  reconcileInFlight = entry;
+  return entry.promise;
+}
+
 export function usePolicies() {
   const [policies, setPolicies] = useState<PoliciesByKey>(loadPolicies);
   const { refetch: refetchAppConfig } = useAppConfig();
   // Reconciling only on mount leaves the cache in its unconfigured default when the fetch ran
   // before there was a session, and every consumer reads that default as "no policy".
-  const { user } = useAuth();
+  // The session is unknown until auth settles; reconciling earlier fetches for
+  // nobody and re-fires once the user resolves.
+  const { user, loading: authLoading } = useAuth();
   const sessionKey = user?.id ?? null;
 
   useEffect(() => onPoliciesChange(() => setPolicies(loadPolicies())), []);
@@ -46,6 +75,7 @@ export function usePolicies() {
   // Retry with backoff since the backend may not be up yet.
   // On recovery, also re-resolve app config in case its admin/team-leader flags settled false while down.
   useEffect(() => {
+    if (authLoading) return;
     let cancelled = false;
     let attempt = 0;
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -53,7 +83,7 @@ export function usePolicies() {
     const reconcile = async () => {
       let byCategory;
       try {
-        byCategory = await fetchPoliciesByCategory();
+        byCategory = await fetchPoliciesShared(sessionKey);
       } catch {
         if (cancelled || attempt >= RECONCILE_MAX_ATTEMPTS) return;
         timer = setTimeout(reconcile, reconcileRetryDelay(attempt++));
@@ -99,7 +129,7 @@ export function usePolicies() {
       cancelled = true;
       if (timer) clearTimeout(timer);
     };
-  }, [sessionKey]);
+  }, [sessionKey, authLoading]);
 
   return { policies };
 }
