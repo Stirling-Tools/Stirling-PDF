@@ -285,19 +285,44 @@ class SignatureAppearanceLayoutTest {
         }
 
         @Test
-        @DisplayName("A continuation line is indented under its label")
+        @DisplayName("A continuation line is indented under its label when that costs no line")
         void continuationIsIndented() throws IOException {
             SignatureAppearanceLayout.Layout layout =
                     SignatureAppearanceLayout.fit(
                             fields("Signed by", "ASSESSORIA EM NEGOCIOS LTDA SYNGULARID"),
                             FONT,
-                            140f,
-                            90f);
+                            300f,
+                            40f);
 
             assertTrue(layout.lines().size() > 1);
             assertTrue(
                     layout.lines().get(1).x() > layout.lines().get(0).x(),
                     "the continuation should sit under the value, not under the label");
+        }
+
+        @Test
+        @DisplayName("The indent gives way rather than split a word the full width keeps whole")
+        void indentNeverSplitsAWord() throws IOException {
+            // The text area a 230x110 box leaves beside a square logo.
+            SignatureAppearanceLayout.Layout layout =
+                    SignatureAppearanceLayout.fit(
+                            List.of(
+                                    new SignatureAppearanceLayout.Field(
+                                            "Signed by",
+                                            "ASSESSORIA EM NEGOCIOS LTDA:53280626000165",
+                                            true),
+                                    new SignatureAppearanceLayout.Field(
+                                            "Date", "2026-10-05 08:11:26 GMT-04:00", false),
+                                    new SignatureAppearanceLayout.Field(
+                                            "Reason", "ASSINATURA DE DOCUMENTO", false)),
+                            FONT,
+                            120f,
+                            110f);
+
+            List<String> words = List.of(joined(layout).split(" "));
+            for (String word : List.of("ASSESSORIA", "NEGOCIOS", "ASSINATURA", "DOCUMENTO")) {
+                assertTrue(words.contains(word), word + " was split: " + joined(layout));
+            }
         }
     }
 

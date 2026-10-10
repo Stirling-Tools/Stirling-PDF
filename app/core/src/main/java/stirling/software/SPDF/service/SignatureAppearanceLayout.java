@@ -116,14 +116,16 @@ public final class SignatureAppearanceLayout {
         }
     }
 
-    /** A line before its baseline is known, while only its horizontal placement is settled. */
     /**
-     * One drawn line.
+     * A line before its baseline is known, while only its horizontal placement is settled.
      *
      * @param field index of the field it came from, so a line cut short can be told from a whole
      *     one that happens to be last
      */
     private record Piece(String text, float fontSize, float x, int field) {}
+
+    /** A field broken into lines, with how many of its words had to be split across two. */
+    private record Wrapped(List<String> lines, int splitWords) {}
 
     /** How far the type reaches above and below its baseline, in multiples of the font size. */
     private record Ink(float top, float bottom) {}
@@ -233,19 +235,28 @@ public final class SignatureAppearanceLayout {
             Field field = fields.get(f);
             float fieldSize = field.headline() ? size * HEADLINE_RATIO : size;
             String head = field.label() + ": ";
+            String text = head + field.value();
             float indent = textWidth(head, font, fieldSize);
-            // An indent past the middle of the box costs more width than the alignment is worth.
-            float continuation = indent < availableWidth / 2f ? indent : 0f;
 
-            List<String> wrapped =
-                    wrap(
-                            head + field.value(),
-                            font,
-                            fieldSize,
-                            availableWidth,
-                            availableWidth - continuation);
-            for (int i = 0; i < wrapped.size(); i++) {
-                pieces.add(new Piece(wrapped.get(i), fieldSize, i == 0 ? 0f : continuation, f));
+            Wrapped wrapped = wrap(text, font, fieldSize, availableWidth, availableWidth);
+            float continuation = 0f;
+            // An indent past the middle of the box costs more width than the alignment is worth.
+            if (wrapped.lines().size() > 1 && indent < availableWidth / 2f) {
+                Wrapped hanging =
+                        wrap(text, font, fieldSize, availableWidth, availableWidth - indent);
+                // Hanging the value under itself is only worth a narrower column that costs no
+                // line and splits no word the full width keeps whole. Comparing against the
+                // full-width count also keeps the line count rising with the type size.
+                if (hanging.lines().size() == wrapped.lines().size()
+                        && hanging.splitWords() <= wrapped.splitWords()) {
+                    wrapped = hanging;
+                    continuation = indent;
+                }
+            }
+            for (int i = 0; i < wrapped.lines().size(); i++) {
+                pieces.add(
+                        new Piece(
+                                wrapped.lines().get(i), fieldSize, i == 0 ? 0f : continuation, f));
             }
         }
         return pieces;
@@ -262,10 +273,11 @@ public final class SignatureAppearanceLayout {
      * characters: a certificate serial number has no spaces to break at, and refusing to break it
      * would push the whole signature down a size for the sake of one field.
      */
-    private static List<String> wrap(
+    private static Wrapped wrap(
             String text, PDFont font, float size, float firstWidth, float restWidth)
             throws IOException {
         List<String> lines = new ArrayList<>();
+        int splitWords = 0;
         String remaining = text.trim();
         while (!remaining.isEmpty()) {
             float width = lines.isEmpty() ? firstWidth : restWidth;
@@ -281,9 +293,10 @@ public final class SignatureAppearanceLayout {
             } else {
                 lines.add(remaining.substring(0, cut));
                 remaining = remaining.substring(cut).trim();
+                splitWords++;
             }
         }
-        return lines;
+        return new Wrapped(lines, splitWords);
     }
 
     /** Length of the longest prefix that fits the width, never less than one character. */
