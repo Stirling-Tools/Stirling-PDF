@@ -10,6 +10,7 @@ import ChangePermissionsSettings from "@app/components/tools/changePermissions/C
 
 import { useAddPasswordParameters } from "@app/hooks/tools/addPassword/useAddPasswordParameters";
 import { useAddPasswordOperation } from "@app/hooks/tools/addPassword/useAddPasswordOperation";
+import { usePermissionExtraction } from "@app/hooks/tools/changePermissions/usePermissionExtraction";
 import { useAddPasswordTips } from "@app/components/tooltips/useAddPasswordTips";
 import { useAddPasswordPermissionsTips } from "@app/components/tooltips/useAddPasswordPermissionsTips";
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
@@ -24,6 +25,18 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   const addPasswordOperation = useAddPasswordOperation();
   const addPasswordTips = useAddPasswordTips();
   const addPasswordPermissionsTips = useAddPasswordPermissionsTips();
+  const hasResults =
+    addPasswordOperation.files.length > 0 ||
+    addPasswordOperation.downloadUrl !== null;
+  const permissions = usePermissionExtraction(
+    selectedFiles.length === 1 ? selectedFiles[0] : undefined,
+    addPasswordParams.permissions.setParameters,
+    !addPasswordOperation.isLoading && !hasResults,
+  );
+
+  useEffect(() => {
+    if (permissions.hasError) setCollapsedPermissions(false);
+  }, [permissions.hasError]);
 
   // Endpoint validation
   const { enabled: endpointEnabled, loading: endpointLoading } =
@@ -32,7 +45,7 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   useEffect(() => {
     addPasswordOperation.resetResults();
     onPreviewFile?.(null);
-  }, [addPasswordParams.parameters]);
+  }, [addPasswordParams.parameters, addPasswordParams.permissions.parameters]);
 
   const handleAddPassword = async () => {
     try {
@@ -70,9 +83,6 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
   };
 
   const hasFiles = selectedFiles.length > 0;
-  const hasResults =
-    addPasswordOperation.files.length > 0 ||
-    addPasswordOperation.downloadUrl !== null;
   const passwordsCollapsed = !hasFiles || hasResults;
   const permissionsCollapsed = collapsedPermissions || hasResults;
 
@@ -109,7 +119,10 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
           <ChangePermissionsSettings
             parameters={addPasswordParams.permissions.parameters}
             onParameterChange={addPasswordParams.permissions.updateParameter}
-            disabled={endpointLoading}
+            disabled={endpointLoading || addPasswordOperation.isLoading}
+            isLoading={permissions.isLoading}
+            hasReadError={permissions.hasError}
+            multipleFiles={selectedFiles.length > 1}
           />
         ),
         tooltip: addPasswordPermissionsTips,
@@ -122,6 +135,7 @@ const AddPassword = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
       onClick: handleAddPassword,
       endpointEnabled: endpointEnabled,
       paramsValid: addPasswordParams.validateParameters(),
+      disabled: permissions.isLoading,
     },
     review: {
       isVisible: hasResults,
