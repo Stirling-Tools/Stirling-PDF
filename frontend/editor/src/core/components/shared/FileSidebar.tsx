@@ -50,11 +50,13 @@ import { DeleteFilesDialog } from "@app/components/filesPage/DeleteFilesDialog";
 import { RenameFileDialog } from "@app/components/shared/RenameFileDialog";
 import { duplicateStoredFile } from "@app/utils/duplicateFile";
 import { SidebarChecklistSlot } from "@app/components/shared/SidebarChecklistSlot";
+import { SidebarChat } from "@app/components/chat/SidebarChat";
 import {
   deleteServerFile,
   type DeleteScope,
 } from "@app/services/serverStorageDelete";
 import { fileStorage, onRecordUnreadable } from "@app/services/fileStorage";
+import { renameStoredFile } from "@app/services/renameStoredFile";
 import { downloadFileWithPolicy } from "@app/services/exportWithPolicy";
 import { useOpenInNewWindow } from "@app/extensions/openInNewWindow";
 import { openSuperSearch } from "@app/components/shared/superSearch/openSuperSearch";
@@ -62,10 +64,12 @@ import { alert } from "@app/components/toast";
 import { useBulkAddProgress } from "@app/services/bulkAddProgress";
 import { useIsScrolled } from "@app/hooks/useIsScrolled";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
+import { useCoalescedCallback } from "@app/hooks/useCoalescedCallback";
 import { FolderTreeSidebar } from "@app/components/filesPage/FolderTreeSidebar";
 import { useFilesPage } from "@app/contexts/FilesPageContext";
 import type { FolderId, FolderRecord } from "@app/types/folder";
 import { useToolEligibleFileIds } from "@app/contexts/ToolFileEligibilityContext";
+import { useWorkbenchFileDrop } from "@app/components/layout/useWorkbenchFileDrop";
 import "@app/components/shared/FileSidebar.css";
 
 // Shared with the processor sidebar via tokens, so the two cannot drift.
@@ -192,19 +196,6 @@ function SidebarActionRow({ action }: { action: SidebarAction }) {
         </span>
       </div>
     </Tooltip>
-  );
-}
-
-function FileDropOverlay({ show }: { show: boolean }) {
-  const { t } = useTranslation();
-  if (!show) return null;
-  return (
-    <div className="file-sidebar-drop-overlay" aria-hidden="true">
-      <Icon name="file-up" className="file-sidebar-drop-overlay-icon" />
-      <span className="file-sidebar-drop-overlay-text">
-        {t("fileSidebar.dropToAdd", "Drop files to add")}
-      </span>
-    </div>
   );
 }
 
@@ -520,10 +511,10 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const { state } = useFileState();
     const { actions: fileActions } = useFileActions();
     const { actions: navActions } = useNavigationActions();
-    const { workbench: currentWorkbench, selectedTool } = useNavigationState();
+    const { workbench: currentWorkbench } = useNavigationState();
     const policyFileBadges = usePolicyFileBadges();
-    const isMultiTool =
-      currentWorkbench === "pageEditor" && selectedTool === "multiTool";
+    // The page editor lays out every open file, so an added file belongs there.
+    const staysOnAdd = currentWorkbench === "pageEditor";
     const { requestNavigation } = useNavigationGuard();
     const { activeFileId, setActiveFileId } = useViewer();
     const { addFiles } = useFileHandler();
@@ -564,7 +555,12 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     // the user is signed in (guests have no cloud library).
     const storageEnabled = config?.storageEnabled === true && !isAnonymous;
 
+    // Only the newest read may publish: coalesced refreshes overlap when a scan
+    // outlasts the window, and a slow one finishing last would otherwise
+    // overwrite the newer library with the state it started from.
+    const stubsGenRef = useRef(0);
     const refreshStubs = useCallback(async () => {
+      const gen = ++stubsGenRef.current;
       // `stubsLoaded` gates the spinner, so the `finally` below must set it on
       // every path - callers never await this, so a rejection goes nowhere.
       let stubs: StirlingFileStub[] = [];
@@ -575,6 +571,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         // should cost the user their history, not the file they're working on.
         console.error("Failed to read the file library from storage:", error);
       }
+      if (gen !== stubsGenRef.current) return;
 
       try {
         const idbIds = new Set(stubs.map((s) => s.id as string));
@@ -600,25 +597,20 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           ),
         );
       } finally {
-        setStubsLoaded(true);
+        if (gen === stubsGenRef.current) setStubsLoaded(true);
       }
     }, [indexedDB, state.files.ids, state.files.byId]);
 
-    // Coalesce per-file updates to avoid quadratic IDB scans during imports and processing.
     const indexedDBRevision = useIndexedDBRevision();
-    const lastRefreshAt = useRef(0);
+    useCoalescedCallback(refreshStubs, indexedDBRevision);
+
+    // The hook cancels timers but cannot cancel a started run, so unmount has to
+    // invalidate it here or a late scan would publish into a gone tree.
     useEffect(() => {
-      const REFRESH_COALESCE_MS = 300;
-      const wait = Math.max(
-        0,
-        lastRefreshAt.current + REFRESH_COALESCE_MS - Date.now(),
-      );
-      const timer = window.setTimeout(() => {
-        lastRefreshAt.current = Date.now();
-        void refreshStubs();
-      }, wait);
-      return () => window.clearTimeout(timer);
-    }, [refreshStubs, indexedDBRevision]);
+      return () => {
+        stubsGenRef.current++;
+      };
+    }, []);
 
     // Server copies require a deletion-scope choice; local-only files delete immediately.
     const handleSidebarDelete = useCallback(
@@ -767,24 +759,20 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       [allFileStubs],
     );
 
-    // Persist the rename before updating the open workspace copy.
     const handleConfirmRename = useCallback(
       async (name: string) => {
         const stub = renameTarget;
         if (!stub) return;
-        // quickKey is name|size|lastModified; a stale one would make a re-upload
-        // of the original look like a duplicate of the renamed file.
-        const quickKey = `${name}|${stub.size}|${stub.lastModified}`;
-        const saved = await fileStorage.updateFileMetadata(stub.id, {
+        const saved = await renameStoredFile(
+          stub,
           name,
-          quickKey,
-        });
+          fileActions.updateStirlingFileStub,
+        );
         if (!saved) {
           throw new Error(
             t("fileSidebar.rename.error", "Could not rename the file."),
           );
         }
-        fileActions.updateStirlingFileStub(stub.id, { name, quickKey });
         setRenameTarget(null);
         await refreshStubs();
       },
@@ -845,7 +833,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         return;
       }
       await addFiles(files);
-      if (!isMultiTool) {
+      if (!staysOnAdd) {
         navActions.setWorkbench(files.length === 1 ? "viewer" : "fileEditor");
       }
     }, [
@@ -853,7 +841,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       openGoogleDrivePicker,
       addFiles,
       navActions,
-      isMultiTool,
+      staysOnAdd,
       onPickGoogleDriveFiles,
     ]);
 
@@ -903,7 +891,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
 
           await fileActions.addStirlingFileStubs([stub]);
 
-          if (isMultiTool) {
+          if (staysOnAdd) {
             fileActions.setSelectedFiles([
               ...state.ui.selectedFileIds,
               stub.id,
@@ -928,7 +916,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         currentWorkbench,
         activeFileId,
         requestNavigation,
-        isMultiTool,
+        staysOnAdd,
       ],
     );
 
@@ -1000,14 +988,14 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           await addFiles(files);
           // A tool that pinned its own workbench surface owns it - switching to
           // the viewer here strands the upload outside the tool being used.
-          if (!isMultiTool && !currentWorkbench.startsWith("custom:")) {
+          if (!staysOnAdd && !currentWorkbench.startsWith("custom:")) {
             navActions.setWorkbench(
               files.length === 1 ? "viewer" : "fileEditor",
             );
           }
         }
       },
-      [addFiles, navActions, isMultiTool, onUploadFiles, currentWorkbench],
+      [addFiles, navActions, staysOnAdd, onUploadFiles, currentWorkbench],
     );
 
     const handleNativeFilePick = useCallback(
@@ -1046,48 +1034,9 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       return () => onRegisterOpenFromComputer(null);
     }, [onRegisterOpenFromComputer, openNativeFilePicker]);
 
-    // Internal folder drags have their own payloads and must bypass file ingestion.
-    const [isFileDragOver, setIsFileDragOver] = useState(false);
-    const dragDepth = useRef(0);
-
-    const isNativeFileDrag = (e: React.DragEvent) =>
-      Array.from(e.dataTransfer.types).includes("Files");
-
-    const handleDragEnter = useCallback((e: React.DragEvent) => {
-      if (!isNativeFileDrag(e)) return;
-      e.preventDefault();
-      dragDepth.current += 1;
-      setIsFileDragOver(true);
-    }, []);
-
-    const handleDragOver = useCallback((e: React.DragEvent) => {
-      if (!isNativeFileDrag(e)) return;
-      // Required so the browser fires `drop` rather than opening the file.
-      e.preventDefault();
-      e.dataTransfer.dropEffect = "copy";
-    }, []);
-
-    const handleDragLeave = useCallback((e: React.DragEvent) => {
-      if (!isNativeFileDrag(e)) return;
-      // dragenter/leave fire per child element; the counter keeps the overlay
-      // stable until the cursor genuinely leaves the sidebar.
-      dragDepth.current -= 1;
-      if (dragDepth.current <= 0) {
-        dragDepth.current = 0;
-        setIsFileDragOver(false);
-      }
-    }, []);
-
-    const handleDrop = useCallback(
-      async (e: React.DragEvent) => {
-        if (!isNativeFileDrag(e)) return;
-        e.preventDefault();
-        dragDepth.current = 0;
-        setIsFileDragOver(false);
-        await ingestFiles(Array.from(e.dataTransfer.files ?? []));
-      },
-      [ingestFiles],
-    );
+    // Drops here go through the workbench's target, whose overlay covers the
+    // workbench rather than this sidebar.
+    const dropHandlers = useWorkbenchFileDrop(true);
 
     const eligibleFileIds = useToolEligibleFileIds();
 
@@ -1192,13 +1141,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         }}
         data-sidebar="file-sidebar"
         data-tour="quick-access-bar"
-        data-file-drag-over={isFileDragOver || undefined}
-        onDragEnter={handleDragEnter}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
+        {...dropHandlers}
       >
-        <FileDropOverlay show={isFileDragOver} />
         <div className="file-sidebar-inner">
           <SidebarHeader />
 
@@ -1283,6 +1227,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           credits={credits}
           onOpenPlan={openPlan ?? undefined}
         />
+
+        {currentWorkbench !== "myFiles" && <SidebarChat />}
       </div>
     );
   },

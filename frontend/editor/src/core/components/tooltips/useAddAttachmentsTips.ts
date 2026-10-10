@@ -8,7 +8,7 @@ export const useAddAttachmentsTips = (): TooltipContent => {
     header: {
       title: t(
         "AddAttachmentsRequest.tooltip.header.title",
-        "About Add Attachments",
+        "About Manage Attachments",
       ),
     },
     tips: [
@@ -19,7 +19,7 @@ export const useAddAttachmentsTips = (): TooltipContent => {
         ),
         description: t(
           "AddAttachmentsRequest.info",
-          "Select files to attach to your PDF. These files will be embedded and accessible through the PDF's attachment panel.",
+          "View, add, extract, rename, or delete embedded PDF attachments. Changes are staged cleanly and saved to your document in one pass.",
         ),
       },
     ],

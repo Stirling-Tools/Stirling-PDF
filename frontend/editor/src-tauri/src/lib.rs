@@ -1,4 +1,5 @@
 use tauri::{AppHandle, Emitter, Manager, RunEvent, WindowEvent};
+use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
 use tauri_plugin_window_state::StateFlags;
 
 mod utils;
@@ -158,6 +159,20 @@ pub fn run() {
     .setup(|app| {
       add_log("🚀 Tauri app setup started".to_string());
 
+      if let Err(err) = apply_provisioning_if_present(app.handle()) {
+        add_log(format!("⚠️ Failed to apply provisioning file: {}", err));
+        let handle = app.handle().clone();
+        app.dialog()
+          .message(format!(
+            "Stirling PDF could not apply your managed settings and cannot start.\n\n{err}\n\nContact your administrator to correct the provisioning file or restore access to the settings store, then restart Stirling PDF."
+          ))
+          .title("Stirling PDF — managed settings error")
+          .kind(MessageDialogKind::Error)
+          .show(move |_| handle.exit(1));
+        // Keep the event loop alive for the dialog, without opening the workspace or backend.
+        return Ok(());
+      }
+
       // The main window is built here, not in tauri.conf.json, so its chrome
       // (decorations, macOS overlay title bar, traffic-light inset) lives with
       // the spawned-window chrome in window.rs. Created first so the deep-link
@@ -200,10 +215,6 @@ pub fn run() {
         });
       }
 
-      if let Err(err) = apply_provisioning_if_present(&app.handle()) {
-        add_log(format!("⚠️ Failed to apply provisioning file: {}", err));
-      }
-
       // Start backend immediately, non-blocking
       let app_handle = app.handle().clone();
 
@@ -227,6 +238,7 @@ pub fn run() {
       pop_opened_files,
       clear_opened_files,
       file_disk_state,
+      commands::files::publish_processing_file,
       watch_disk_paths,
       unwatch_disk_paths,
       open_in_new_window,

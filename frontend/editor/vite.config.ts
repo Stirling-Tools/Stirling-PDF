@@ -213,13 +213,7 @@ function subpathBareRedirectPlugin(subpath: string): PluginOption {
 // into the saas and desktop builds. It has no entry here and no vite tsconfig;
 // it is only typechecked standalone via editor/src/cloud/tsconfig.json
 // (task frontend:typecheck:cloud) to prove it carries no saas/desktop-only deps.
-const VALID_MODES = [
-  "core",
-  "proprietary",
-  "saas",
-  "desktop",
-  "prototypes",
-] as const;
+const VALID_MODES = ["core", "proprietary", "saas", "desktop"] as const;
 type BuildMode = (typeof VALID_MODES)[number];
 
 const TSCONFIG_MAP: Record<BuildMode, string> = {
@@ -227,7 +221,6 @@ const TSCONFIG_MAP: Record<BuildMode, string> = {
   proprietary: "./tsconfig.proprietary.vite.json",
   saas: "./tsconfig.saas.vite.json",
   desktop: "./tsconfig.desktop.vite.json",
-  prototypes: "./tsconfig.prototypes.vite.json",
 };
 
 export default defineConfig(async ({ mode, command }) => {
@@ -432,18 +425,10 @@ export default defineConfig(async ({ mode, command }) => {
       rollupOptions: {
         output: {
           manualChunks(id: string) {
-            if (id.includes("material-symbols-icons.json"))
-              return "vendor-iconset";
             if (id.includes("node_modules")) {
               if (id.includes("pdfjs-dist")) return "vendor-pdfjs";
               if (id.includes("@embedpdf")) return "vendor-embedpdf";
-              if (
-                id.includes("react") ||
-                id.includes("@mantine") ||
-                id.includes("@emotion") ||
-                id.includes("@mui") ||
-                id.includes("@iconify")
-              ) {
+              if (id.includes("react") || id.includes("@mantine")) {
                 return "vendor-ui";
               }
               if (id.includes("@supabase")) return "vendor-supabase";

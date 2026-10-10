@@ -12,6 +12,7 @@ import {
   isBoldFamily,
   isItalicFamily,
 } from "@app/tools/pdfTextEditor/util/fontFamily";
+import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
 
 // Embed the fonts installed on the user's device instead of substituting the
 // nearest standard face. Reading the file is async, so the emit uses the cache.
@@ -223,20 +224,14 @@ export function loadDeviceFontInto(
 function measureRightEdge(m: EditorDocument["module"], ptr: number): number {
   const mod = m as unknown as DeviceFontModule;
   if (typeof mod.FPDFPageObj_GetBounds !== "function") return 0;
-  const l = m.pdfium.wasmExports.malloc(4);
-  const b = m.pdfium.wasmExports.malloc(4);
-  const r = m.pdfium.wasmExports.malloc(4);
-  const t = m.pdfium.wasmExports.malloc(4);
+  const buf = scratchPtr(m, SCRATCH.editBoxA, 16);
   try {
-    if (!mod.FPDFPageObj_GetBounds(ptr, l, b, r, t)) return 0;
-    return m.pdfium.getValue(r, "float");
+    if (!mod.FPDFPageObj_GetBounds(ptr, buf, buf + 4, buf + 8, buf + 12)) {
+      return 0;
+    }
+    return m.pdfium.getValue(buf + 8, "float");
   } catch {
     return 0;
-  } finally {
-    m.pdfium.wasmExports.free(l);
-    m.pdfium.wasmExports.free(b);
-    m.pdfium.wasmExports.free(r);
-    m.pdfium.wasmExports.free(t);
   }
 }
 

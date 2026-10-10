@@ -76,7 +76,14 @@ const PasswordSecurity: React.FC = () => {
         setDidUpdate(false);
       }, 2000);
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Failed to change password");
+      setError(
+        e instanceof Error
+          ? e.message
+          : t(
+              "config.account.security.changeFailed",
+              "Failed to change password",
+            ),
+      );
     } finally {
       setIsLoading(false);
     }

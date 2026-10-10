@@ -1,5 +1,6 @@
 /* oxlint-disable typescript/no-explicit-any -- Axios-compatible API requires matching axios's `any` signatures */
 import { fetch } from "@tauri-apps/plugin-http";
+import { enforceDocumentPrivacy } from "@app/services/documentPrivacyService";
 import {
   shouldUseFastLocalTransport,
   fetchViaLocalProxy,
@@ -212,6 +213,11 @@ class TauriHttpClient {
 
     const url = this.buildUrl(finalConfig);
     const method = (finalConfig.method || "GET").toUpperCase();
+    const localProcessingOnly = await enforceDocumentPrivacy(
+      url,
+      method,
+      finalConfig.data,
+    );
 
     // Prepare request body and headers
     let body: BodyInit | undefined;
@@ -260,6 +266,7 @@ class TauriHttpClient {
       // Make the request using Tauri's native HTTP client (standard Fetch API)
       // Enable certificate bypass for HTTPS to handle missing intermediate certs and self-signed certs
       const fetchOptions: RequestInit & {
+        maxRedirections?: number;
         danger?: {
           acceptInvalidCerts: boolean;
           acceptInvalidHostnames: boolean;
@@ -272,6 +279,7 @@ class TauriHttpClient {
           ? { Origin: "tauri://localhost", ...headers }
           : headers,
         body,
+        ...(localProcessingOnly ? { maxRedirections: 0 } : {}),
         credentials,
         ...(finalConfig.signal ? { signal: finalConfig.signal } : {}),
       };

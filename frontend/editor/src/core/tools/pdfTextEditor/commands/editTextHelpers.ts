@@ -1,4 +1,4 @@
-import { readUtf16, writeUtf16 } from "@app/services/pdfiumService";
+import { readUtf16 } from "@app/services/pdfiumService";
 import type {
   ParagraphLineSlot,
   TextRun,
@@ -19,6 +19,7 @@ import { getActiveCharcodeStrategy } from "@app/tools/pdfTextEditor/charcode/Cha
 import { emitFallbackTextObject } from "@app/tools/pdfTextEditor/util/fallbackFont";
 import { emitDeviceFontTextObject } from "@app/tools/pdfTextEditor/util/deviceFontEmbed";
 import { nearestStandardFont } from "@app/tools/pdfTextEditor/util/fontFamily";
+import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
 
 // Remove a PAGE-level object and FREE its PDFium allocation.
 // `FPDFPage_RemoveObject` only detaches the object.
@@ -356,7 +357,7 @@ function charOriginPt(
   const mod = m as unknown as LooseBoxModule;
   if (!mod.FPDFText_GetCharOrigin) return null;
   // FPDFText_GetCharOrigin takes two double* out-params.
-  const buf = m.pdfium.wasmExports.malloc(16);
+  const buf = scratchPtr(m, SCRATCH.editOrigin, 16);
   try {
     if (!mod.FPDFText_GetCharOrigin(tp, idx, buf, buf + 8)) return null;
     return {
@@ -365,8 +366,6 @@ function charOriginPt(
     };
   } catch {
     return null;
-  } finally {
-    m.pdfium.wasmExports.free(buf);
   }
 }
 
@@ -377,12 +376,7 @@ function looseBoxAdvancePt(
 ): number | null {
   const mod = m as unknown as LooseBoxModule;
   if (!mod.FPDFText_GetLooseCharBox) return null;
-  const wasm = (
-    m.pdfium as unknown as {
-      wasmExports: { malloc: (n: number) => number; free: (p: number) => void };
-    }
-  ).wasmExports;
-  const buf = wasm.malloc(16); // FS_RECT = 4 floats {left, top, right, bottom}
+  const buf = scratchPtr(m, SCRATCH.editLoose, 16);
   try {
     if (!mod.FPDFText_GetLooseCharBox(tp, idx, buf)) return null;
     const heap = (m.pdfium as unknown as { HEAPU8: Uint8Array }).HEAPU8;
@@ -391,8 +385,6 @@ function looseBoxAdvancePt(
     return width > 0 ? width : null;
   } catch {
     return null;
-  } finally {
-    wasm.free(buf);
   }
 }
 
@@ -401,7 +393,7 @@ function objMatrixScale(
   m: import("@embedpdf/pdfium").WrappedPdfiumModule,
   objPtr: number,
 ): number {
-  const buf = m.pdfium.wasmExports.malloc(6 * 4);
+  const buf = scratchPtr(m, SCRATCH.editMatrix, 6 * 4);
   try {
     if (!m.FPDFPageObj_GetMatrix(objPtr, buf)) return 1;
     const a = m.pdfium.getValue(buf, "float");
@@ -410,8 +402,6 @@ function objMatrixScale(
     return s > 0 ? s : 1;
   } catch {
     return 1;
-  } finally {
-    m.pdfium.wasmExports.free(buf);
   }
 }
 
@@ -1229,13 +1219,9 @@ export function readObjTexts(
           out[i] = "";
           continue;
         }
-        const buf = m.pdfium.wasmExports.malloc(len);
-        try {
-          mod.FPDFTextObj_GetText(objPtr, tp, buf, len);
-          out[i] = readUtf16(m, buf, len);
-        } finally {
-          m.pdfium.wasmExports.free(buf);
-        }
+        const buf = scratchPtr(m, SCRATCH.editRunText, len);
+        mod.FPDFTextObj_GetText(objPtr, tp, buf, len);
+        out[i] = readUtf16(m, buf, len);
       } catch {
         out[i] = null;
       }
@@ -1268,13 +1254,9 @@ function readBackTextObj(
   try {
     const len = mod.FPDFTextObj_GetText(objPtr, tp, 0, 0);
     if (len <= 2) return "";
-    const buf = m.pdfium.wasmExports.malloc(len);
-    try {
-      mod.FPDFTextObj_GetText(objPtr, tp, buf, len);
-      return readUtf16(m, buf, len);
-    } finally {
-      m.pdfium.wasmExports.free(buf);
-    }
+    const buf = scratchPtr(m, SCRATCH.editObjText, len);
+    mod.FPDFTextObj_GetText(objPtr, tp, buf, len);
+    return readUtf16(m, buf, len);
   } catch {
     return null;
   } finally {
@@ -1290,13 +1272,45 @@ export function measureObjRightEdgePt(
   m: WrappedPdfiumModule,
   objPtr: number,
 ): number {
+  const buf = scratchPtr(m, SCRATCH.editBoxA, 16);
+  if (!m.FPDFPageObj_GetBounds(objPtr, buf, buf + 4, buf + 8, buf + 12)) {
+    return 0;
+  }
+  return m.pdfium.getValue(buf + 8, "float");
+}
+
+/**
+ * Full page-space box of an object, or null when it cannot be measured.
+ *
+ * A freshly emitted text object knows its baseline but not its ink extent, and
+ * every run READ from the page stores the ink bottom - so a run whose box was
+ * estimated instead of measured draws in the wrong place until something
+ * recaptures it.
+ */
+export function measureObjBoxPt(
+  m: WrappedPdfiumModule,
+  objPtr: number,
+): { x: number; y: number; width: number; height: number } | null {
   const l = m.pdfium.wasmExports.malloc(4);
   const b = m.pdfium.wasmExports.malloc(4);
   const r = m.pdfium.wasmExports.malloc(4);
   const t = m.pdfium.wasmExports.malloc(4);
   try {
-    if (!m.FPDFPageObj_GetBounds(objPtr, l, b, r, t)) return 0;
-    return m.pdfium.getValue(r, "float");
+    if (!m.FPDFPageObj_GetBounds(objPtr, l, b, r, t)) return null;
+    const left = m.pdfium.getValue(l, "float");
+    const bottom = m.pdfium.getValue(b, "float");
+    const right = m.pdfium.getValue(r, "float");
+    const top = m.pdfium.getValue(t, "float");
+    if (![left, bottom, right, top].every(Number.isFinite)) return null;
+    return {
+      x: Math.min(left, right),
+      y: Math.min(bottom, top),
+      width: Math.abs(right - left),
+      height: Math.abs(top - bottom),
+    };
+  } catch {
+    // Measuring is never worth failing the mutation that asked for it.
+    return null;
   } finally {
     m.pdfium.wasmExports.free(l);
     m.pdfium.wasmExports.free(b);
@@ -1316,42 +1330,33 @@ export function measureObjSpanPt(
   m: WrappedPdfiumModule,
   ptrs: number[],
 ): { left: number; right: number } | null {
-  const l = m.pdfium.wasmExports.malloc(4);
-  const b = m.pdfium.wasmExports.malloc(4);
-  const r = m.pdfium.wasmExports.malloc(4);
-  const t = m.pdfium.wasmExports.malloc(4);
-  try {
-    let left = Infinity;
-    let right = -Infinity;
-    for (const ptr of ptrs) {
-      if (!ptr) continue;
-      try {
-        if (!m.FPDFPageObj_GetBounds(ptr, l, b, r, t)) continue;
-      } catch {
+  const buf = scratchPtr(m, SCRATCH.editBoxB, 16);
+  let left = Infinity;
+  let right = -Infinity;
+  for (const ptr of ptrs) {
+    if (!ptr) continue;
+    try {
+      if (!m.FPDFPageObj_GetBounds(ptr, buf, buf + 4, buf + 8, buf + 12)) {
         continue;
       }
-      const lo = m.pdfium.getValue(l, "float");
-      const hi = m.pdfium.getValue(r, "float");
-      if (!Number.isFinite(lo) || !Number.isFinite(hi)) continue;
-      if (lo < left) left = lo;
-      if (hi > right) right = hi;
+    } catch {
+      continue;
     }
-    return right > left ? { left, right } : null;
-  } finally {
-    m.pdfium.wasmExports.free(l);
-    m.pdfium.wasmExports.free(b);
-    m.pdfium.wasmExports.free(r);
-    m.pdfium.wasmExports.free(t);
+    const lo = m.pdfium.getValue(buf, "float");
+    const hi = m.pdfium.getValue(buf + 8, "float");
+    if (!Number.isFinite(lo) || !Number.isFinite(hi)) continue;
+    if (lo < left) left = lo;
+    if (hi > right) right = hi;
   }
+  return right > left ? { left, right } : null;
 }
 
 function setTextOn(m: WrappedPdfiumModule, ptr: number, text: string): void {
-  const textPtr = writeUtf16(m, text);
-  try {
-    m.FPDFText_SetText(ptr, textPtr);
-  } finally {
-    m.pdfium.wasmExports.free(textPtr);
-  }
+  // FPDFText_SetText copies, so a pooled buffer is safe to overwrite next call.
+  const byteLen = (text.length + 1) * 2;
+  const textPtr = scratchPtr(m, SCRATCH.editSetText, byteLen);
+  m.pdfium.stringToUTF16(text, textPtr, byteLen);
+  m.FPDFText_SetText(ptr, textPtr);
 }
 
 interface InkState {

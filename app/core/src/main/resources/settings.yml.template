@@ -184,10 +184,11 @@ system:
   enableScarf: null # Enable Scarf tracking pixel: set to 'true' to enable, 'false' to disable, or 'null' to enable by default when analytics is enabled
   enableUrlToPDF: false # Set to 'true' to enable URL to PDF, INTERNAL ONLY, known security issues, should not be used externally
   disableSanitize: false # set to true to disable Sanitize HTML; (can lead to injections in HTML)
+  stirlingOfficeConversion: false # Beta: set to 'true' to convert Office files with the built-in Stirling Office Convert (better, faster conversions using less memory) instead of LibreOffice
   maxDPI: 500 # Maximum allowed DPI for PDF to image conversion
   corsAllowedOrigins: [] # List of allowed origins for CORS (e.g. ['http://localhost:5173', 'https://app.example.com']). WARNING: leaving this empty falls back to allowing ALL origins (with credentials), it does NOT disable CORS. Set explicit origins to lock it down.
   backendUrl: "" # Backend base URL for SAML/OAuth/API callbacks (e.g. 'http://localhost:8080' for dev, 'https://api.example.com' for production). REQUIRED for SSO authentication to work correctly. This is where your IdP will send SAML responses and OAuth callbacks. Leave empty to default to 'http://localhost:8080' in development.
-  frontendUrl: "" # Base URL of the web app, as a browser reaches it (e.g. 'https://app.example.com', or 'https://example.com/app' if served under a base path). Optional - if not set, will use backendUrl. Used for any link handed to a browser: invite emails, share links, mobile QR codes, and the account-link handshake.
+  frontendUrl: "" # Base URL of the web app, as a browser reaches it (e.g. 'https://app.example.com', or 'https://example.com/app' if served under a base path). Optional - if not set, will use backendUrl. Used for any link handed to a browser: invite and signing emails, share links, mobile QR codes, and the account-link handshake.
   enableMobileScanner: true # Enable mobile phone QR code upload feature. Requires frontendUrl to be configured.
   enableMobileSignature: true # Enable drawing signatures on a phone via QR code from the Sign tool. Requires frontendUrl to be configured.
   mobileScannerSettings:
@@ -246,7 +247,7 @@ system:
     cron: "0 0 0 * * ?" # Cron expression for automatic database backups "0 0 0 * * ?" daily at midnight
 
 storage:
-  enabled: false # set to 'true' to allow users to store files on the server (requires security.enableLogin) [ALPHA]
+  enabled: true # set to 'false' to disable server-side file storage (requires security.enableLogin) [ALPHA]
   provider: local # storage provider: 'local' for filesystem storage, 'database' for DB-backed storage
   local:
     basePath: './storage' # base directory for stored files
@@ -293,17 +294,16 @@ storage:
     emailEnabled: false # set to 'true' to allow sharing by email (requires mail.enabled)
     linkExpirationDays: 3 # Number of days before share links expire
   signing:
-    enabled: false # set to 'true' to enable group signing workflow (requires storage.enabled) [ALPHA]
+    enabled: true # set to 'false' to disable shared signing (requires storage.enabled and security.enableLogin) [ALPHA]
   # Encryption at rest for stored files (AES-256, per-team keys). Requires a Pro or
   # Enterprise licence. Key setup, cluster requirements, the encrypt-existing migration,
   # the revocation kill switch and master-key rotation are documented in
-  # devGuide/STORAGE_ENCRYPTION_AT_REST.md
+  # docs/developer/STORAGE_ENCRYPTION_AT_REST.md
   # WARNING: back up the master key (configs/file-encryption.key by default) - losing it
   # makes every encrypted stored file permanently unrecoverable.
   encryption:
     enabled: false # set to 'true' to encrypt stored files at rest
     auditReads: true # audit every decrypt of an encrypted file (denied decrypts and key lifecycle events are always audited). NOTE: audit events require an Enterprise licence; encryption itself works on Pro.
-    userListScope: org # Signing user-picker scope: 'org' (default) = whole instance, else caller's team only.
 autoPipeline:
   outputFolder: "" # Output folder for processed pipeline files (leave empty for default)
   fileReadiness:

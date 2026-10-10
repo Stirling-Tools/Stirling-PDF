@@ -26,7 +26,8 @@ import stirling.software.proprietary.billing.BillingStepLimit;
 @Profile("!saas")
 @ConditionalOnProperty(
         name = "stirling.billing.account-link.metering.enabled",
-        havingValue = "true")
+        havingValue = "true",
+        matchIfMissing = true)
 public class UsageMeterService {
 
     private final UsageCounterRepository repo;

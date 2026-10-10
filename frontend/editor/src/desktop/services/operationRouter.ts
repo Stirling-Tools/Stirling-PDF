@@ -1,4 +1,9 @@
 import i18n from "@app/i18n";
+import {
+  isLocalProcessingOnly,
+  requiresOffDeviceProcessing,
+  documentPrivacyError,
+} from "@app/services/documentPrivacyService";
 import { authService } from "@app/services/authService";
 import { connectionModeService } from "@app/services/connectionModeService";
 import { tauriBackendService } from "@app/services/tauriBackendService";
@@ -34,6 +39,7 @@ export class OperationRouter {
 
   /** Resolves the authenticated server; automation must never fall back to the bundled backend. */
   async getConnectedServerBaseUrl(): Promise<string> {
+    if (await isLocalProcessingOnly()) throw documentPrivacyError();
     const mode = await connectionModeService.getCurrentMode();
     await authService.awaitRefreshIfInProgress();
     if (mode === "local" || !(await authService.isAuthenticated())) {
@@ -190,6 +196,28 @@ export class OperationRouter {
       return backendUrl.replace(/\/$/, "");
     }
 
+    if (await isLocalProcessingOnly()) {
+      if (operation && requiresOffDeviceProcessing(operation))
+        throw documentPrivacyError();
+      if (!operation || !this.isSaaSBackendEndpoint(operation)) {
+        const localUrl = tauriBackendService.getBackendUrl();
+        if (!localUrl)
+          throw new Error(
+            "Backend URL not available - backend may still be starting",
+          );
+        if (
+          operation &&
+          this.isToolEndpoint(operation) &&
+          !(await endpointAvailabilityService.isEndpointSupportedLocally(
+            this.extractEndpointName(operation),
+            localUrl,
+          ))
+        ) {
+          throw documentPrivacyError();
+        }
+        return localUrl.replace(/\/$/, "");
+      }
+    }
     if (this.isServerAutomationEndpoint(operation)) {
       return this.getConnectedServerBaseUrl();
     }
@@ -390,6 +418,12 @@ export class OperationRouter {
    * @returns Promise<boolean> - true if endpoint should skip backend readiness check
    */
   async shouldSkipBackendReadyCheck(endpoint?: string): Promise<boolean> {
+    if (await isLocalProcessingOnly())
+      return Boolean(
+        endpoint &&
+        this.isSaaSBackendEndpoint(endpoint) &&
+        !requiresOffDeviceProcessing(endpoint),
+      );
     if (this.isServerAutomationEndpoint(endpoint)) return true;
     if (endpoint?.startsWith("http")) return true;
     // Team endpoints always skip (existing logic)
@@ -422,6 +456,7 @@ export class OperationRouter {
    * @returns Promise<boolean> - true if endpoint will route to SaaS
    */
   async willRouteToSaaS(endpoint: string): Promise<boolean> {
+    if (await isLocalProcessingOnly()) return false;
     const mode = await connectionModeService.getCurrentMode();
     // In local mode, show cloud badge for tools not supported locally
     // (clicking them will prompt sign-in via onUnavailableClick)
