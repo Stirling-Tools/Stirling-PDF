@@ -75,18 +75,23 @@ export function selectThumbnailEvictionIds(
 
 /**
  * Drop the data-URL thumbnails a stub retains, leaving every other field intact.
- * Applied to the record inside the reducer so a queued update cannot be
- * overwritten by a stale stub snapshot captured before it landed.
+ * Blob URLs stay: they are cheap, and lifecycle.ts revokes them by the URL still
+ * on the record. Applied to the record inside the reducer so a queued update
+ * cannot be overwritten by a stale stub snapshot captured before it landed.
  */
 export function clearStubThumbnails(stub: StirlingFileStub): StirlingFileStub {
   const processedFile = stub.processedFile;
   return {
     ...stub,
-    thumbnailUrl: undefined,
+    thumbnailUrl: isHeavyThumbnail(stub.thumbnailUrl)
+      ? undefined
+      : stub.thumbnailUrl,
     processedFile: processedFile
       ? {
           ...processedFile,
-          thumbnailUrl: undefined,
+          thumbnailUrl: isHeavyThumbnail(processedFile.thumbnailUrl)
+            ? undefined
+            : processedFile.thumbnailUrl,
           pages: processedFile.pages.map((page) =>
             isHeavyThumbnail(page.thumbnail)
               ? { ...page, thumbnail: undefined }
@@ -95,4 +100,23 @@ export function clearStubThumbnails(stub: StirlingFileStub): StirlingFileStub {
         }
       : processedFile,
   };
+}
+
+/**
+ * Enforce the retained-thumbnail byte budget on a state that just gained stubs.
+ * Reducer-side counterpart to the update path in lifecycle.ts, for insertions
+ * (ADD_FILES, CONSUME_FILES) that never route through updateStirlingFileStub.
+ */
+export function enforceThumbnailBudget(
+  state: FileContextState,
+  exemptId?: FileId,
+): FileContextState {
+  const evictIds = selectThumbnailEvictionIds(state, exemptId);
+  if (evictIds.length === 0) return state;
+  const byId = { ...state.files.byId };
+  for (const id of evictIds) {
+    const record = byId[id];
+    if (record) byId[id] = clearStubThumbnails(record);
+  }
+  return { ...state, files: { ...state.files, byId } };
 }

@@ -8,7 +8,10 @@ import {
   FileContextAction,
   StirlingFileStub,
 } from "@app/types/fileContext";
-import { clearStubThumbnails } from "@app/contexts/file/stubThumbnailBudget";
+import {
+  clearStubThumbnails,
+  enforceThumbnailBudget,
+} from "@app/contexts/file/stubThumbnailBudget";
 
 // Initial state
 export const initialFileContextState: FileContextState = {
@@ -170,13 +173,13 @@ export function fileContextReducer(
         }
       });
 
-      return {
+      return enforceThumbnailBudget({
         ...state,
         files: {
           ids: [...state.files.ids, ...newIds],
           byId: newById,
         },
-      };
+      });
     }
 
     case "REMOVE_FILES": {
@@ -438,10 +441,14 @@ export function fileContextReducer(
       // slot without auto-selecting or moving the outputs to the front, so a
       // finished policy run doesn't yank the file to the top or open it.
       if (silent) {
-        return processFileSwapInPlace(state, inputFileIds, provenancedOutputs);
+        return enforceThumbnailBudget(
+          processFileSwapInPlace(state, inputFileIds, provenancedOutputs),
+        );
       }
 
-      return processFileSwap(state, inputFileIds, provenancedOutputs);
+      return enforceThumbnailBudget(
+        processFileSwap(state, inputFileIds, provenancedOutputs),
+      );
     }
 
     case "UNDO_CONSUME_FILES": {
