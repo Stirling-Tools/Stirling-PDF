@@ -53,6 +53,33 @@ export SAL_LOG="-WARN-INFO"            # Minimal logging
 export MALLOC_ARENA_MAX=2              # Limit glibc arena fragmentation (saves 20-80 MB RSS)
 export DBUS_SESSION_BUS_ADDRESS=/dev/null  # Avoid D-Bus overhead
 
+# Enable jemalloc to minimize native heap fragmentation in JVM and C/C++ native libraries
+# (PDFBox JNI / JPDFium / Ghostscript / LibreOffice / Python C-extensions).
+if [ "${STIRLING_USE_JEMALLOC:-true}" = "true" ]; then
+  JEMALLOC_LIB=""
+  for libpath in /usr/lib/aarch64-linux-gnu/libjemalloc.so.2 /usr/lib/x86_64-linux-gnu/libjemalloc.so.2 /usr/lib/libjemalloc.so.2; do
+    if [ -f "$libpath" ]; then
+      JEMALLOC_LIB="$libpath"
+      break
+    fi
+  done
+  if [ -n "$JEMALLOC_LIB" ]; then
+    export MALLOC_CONF="${MALLOC_CONF:-background_thread:true,dirty_decay_ms:1000,muzzy_decay_ms:2000}"
+    # A preloaded jemalloc whose background thread exists cannot survive the process dropping
+    # privileges: jemalloc aborts inside setpriv. So the preload must reach only the final
+    # child, never the setpriv invocation that runs as root. When nothing drops privileges
+    # (already running as the runtime user) a plain export is correct and covers every child.
+    JEMALLOC_PRELOAD=(env "LD_PRELOAD=${JEMALLOC_LIB}${LD_PRELOAD:+:$LD_PRELOAD}")
+    if [ "$(id -u)" -ne 0 ]; then
+      export LD_PRELOAD="${JEMALLOC_LIB}${LD_PRELOAD:+:$LD_PRELOAD}"
+      JEMALLOC_PRELOAD=()
+    fi
+    log "Configured jemalloc ($JEMALLOC_LIB) with MALLOC_CONF=${MALLOC_CONF}"
+  fi
+else
+  JEMALLOC_PRELOAD=()
+fi
+
 # Python venv PATH + PYTHONPATH
 for _venv_bin in /opt/venv/bin /opt/unoserver-venv/bin; do
   PATH="$(_append_env_path "$_venv_bin" "$PATH")"
@@ -259,7 +286,7 @@ run_as_runtime_user() {
     env HOME="$(getent passwd "$RUNTIME_USER" | cut -d: -f6)" \
         USER="$RUNTIME_USER" \
         LOGNAME="$RUNTIME_USER" \
-      setpriv --reuid="$RUNTIME_USER" --regid="$(id -gn "$RUNTIME_USER")" --init-groups -- "$@"
+      setpriv --reuid="$RUNTIME_USER" --regid="$(id -gn "$RUNTIME_USER")" --init-groups -- "${JEMALLOC_PRELOAD[@]}" "$@"
   else
     warn_switch_user_once
     "$@"
@@ -307,7 +334,7 @@ run_as_office_user() {
       TEMP="$OFFICE_TMP" \
       SAL_TMP="$OFFICE_TMP" \
       XDG_RUNTIME_DIR="$OFFICE_XDG" \
-    setpriv --reuid="$OFFICE_USER" --regid="$(id -gn "$OFFICE_USER")" --init-groups -- "$@"
+    setpriv --reuid="$OFFICE_USER" --regid="$(id -gn "$OFFICE_USER")" --init-groups -- "${JEMALLOC_PRELOAD[@]}" "$@"
 }
 
 # The sandbox grants /tmp as socket-only, so LibreOffice can bind its IPC pipes there but
@@ -1104,7 +1131,7 @@ if [ -z "${JAVA_BASE_OPTS:-}" ]; then
     log "Using _JVM_OPTS (ConcGCThreads=${CONC_GC_THREADS})"
   else
     log "JAVA_BASE_OPTS and _JVM_OPTS unset; applying fallback defaults."
-    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=generational -XX:ShenandoahGCHeuristics=adaptive -XX:ShenandoahUncommitDelay=1000 -XX:ShenandoahGuaranteedYoungGCInterval=10000 -XX:ShenandoahGuaranteedOldGCInterval=30000 -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+ExplicitGCInvokesConcurrent -XX:ConcGCThreads=${CONC_GC_THREADS} -XX:ReservedCodeCacheSize=96m -XX:CICompilerCount=2 -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true"
+    JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCHeuristics=compact -XX:ShenandoahUncommitDelay=1000 -XX:ShenandoahGuaranteedGCInterval=10000 -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+ExplicitGCInvokesConcurrent -XX:ConcGCThreads=${CONC_GC_THREADS} -XX:ReservedCodeCacheSize=96m -XX:CICompilerCount=2 -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true"
   fi
 
   # Strip any hardcoded memory/CDS/AOT flags from the options (managed dynamically)
@@ -1428,7 +1455,7 @@ elif [ -x "$STIRLING_ENGINE_HOME/.venv/bin/python" ]; then
         HOME="$(getent passwd "$RUNTIME_USER" | cut -d: -f6)" \
         USER="$RUNTIME_USER" \
         LOGNAME="$RUNTIME_USER" \
-      setpriv --reuid="$RUNTIME_USER" --regid="$(id -gn "$RUNTIME_USER")" --init-groups -- "${ENGINE_CMD[@]}" &
+      setpriv --reuid="$RUNTIME_USER" --regid="$(id -gn "$RUNTIME_USER")" --init-groups -- "${JEMALLOC_PRELOAD[@]}" "${ENGINE_CMD[@]}" &
   else
     env -u PYTHONPATH "${ENGINE_CMD[@]}" &
   fi
@@ -1443,7 +1470,7 @@ elif [ "$CURRENT_UID" -eq 0 ] && command_exists setpriv; then
   env HOME="$(getent passwd "$RUNTIME_USER" | cut -d: -f6)" \
       USER="$RUNTIME_USER" \
       LOGNAME="$RUNTIME_USER" \
-    setpriv --reuid="$RUNTIME_USER" --regid="$(id -gn "$RUNTIME_USER")" --init-groups -- "${JAVA_CMD[@]}" &
+    setpriv --reuid="$RUNTIME_USER" --regid="$(id -gn "$RUNTIME_USER")" --init-groups -- "${JEMALLOC_PRELOAD[@]}" "${JAVA_CMD[@]}" &
 else
   warn_switch_user_once
   "${JAVA_CMD[@]}" &
