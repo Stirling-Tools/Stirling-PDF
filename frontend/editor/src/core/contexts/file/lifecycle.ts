@@ -20,6 +20,69 @@ import {
 
 const DEBUG = process.env.NODE_ENV === "development";
 
+// Long tool sessions accumulate one stub per file and variant, each carrying
+// full-page data-URL thumbnails (~1.5MB each, rotated + unrotated). The display
+// chain refills a stripped thumbnailUrl on demand from IndexedDB bytes, so
+// cold stubs can drop theirs once the session holds this much.
+const MAX_RETAINED_STUB_THUMBNAIL_BYTES = 64 * 1024 * 1024;
+
+const isHeavyThumbnail = (value: string | undefined): boolean =>
+  !!value && value.startsWith("data:");
+
+function stubThumbnailBytes(stub: StirlingFileStub): number {
+  let bytes = 0;
+  if (isHeavyThumbnail(stub.thumbnailUrl)) {
+    bytes += stub.thumbnailUrl!.length;
+  }
+  const pages = stub.processedFile?.pages;
+  if (pages) {
+    for (const page of pages) {
+      if (isHeavyThumbnail(page.thumbnail)) {
+        bytes += page.thumbnail!.length;
+      }
+    }
+  }
+  return bytes;
+}
+
+/**
+ * Oldest-first ids whose data-URL thumbnails must go to fit the byte budget.
+ * Pinned, selected and just-hydrated files are never candidates: stripping the
+ * file that triggered enforcement would ping-pong with its on-demand refill.
+ */
+export function selectThumbnailEvictionIds(
+  state: FileContextState,
+  exemptId?: FileId,
+  capBytes: number = MAX_RETAINED_STUB_THUMBNAIL_BYTES,
+): FileId[] {
+  let total = 0;
+  for (const id of state.files.ids) {
+    total += stubThumbnailBytes(state.files.byId[id]);
+  }
+  if (total <= capBytes) {
+    return [];
+  }
+  const evict: FileId[] = [];
+  for (const id of state.files.ids) {
+    if (total <= capBytes) {
+      break;
+    }
+    if (
+      id === exemptId ||
+      state.pinnedFiles.has(id) ||
+      state.ui.selectedFileIds.includes(id)
+    ) {
+      continue;
+    }
+    const freed = stubThumbnailBytes(state.files.byId[id]);
+    if (freed > 0) {
+      evict.push(id);
+      total -= freed;
+    }
+  }
+  return evict;
+}
+
 /**
  * Resource tracking and cleanup utilities
  */
@@ -233,6 +296,44 @@ export class FileLifecycleManager {
       type: "UPDATE_FILE_RECORD",
       payload: { id: fileId, updates },
     });
+
+    // Thumbnail hydration is the only payload that grows without bound, so it
+    // is the only one that pays for a budget check. Stripped stubs refill on
+    // demand; the triggering file is exempt to avoid a strip/refill ping-pong.
+    if (
+      stateRef?.current &&
+      (updates.thumbnailUrl !== undefined ||
+        updates.processedFile !== undefined)
+    ) {
+      for (const evictId of selectThumbnailEvictionIds(
+        stateRef.current,
+        fileId,
+      )) {
+        const stub = stateRef.current.files.byId[evictId];
+        const processedFile = stub.processedFile;
+        this.dispatch({
+          type: "UPDATE_FILE_RECORD",
+          payload: {
+            id: evictId,
+            updates: {
+              thumbnailUrl: undefined,
+              ...(processedFile
+                ? {
+                    processedFile: {
+                      ...processedFile,
+                      pages: processedFile.pages.map((page) =>
+                        isHeavyThumbnail(page.thumbnail)
+                          ? { ...page, thumbnail: undefined }
+                          : page,
+                      ),
+                    },
+                  }
+                : {}),
+            },
+          },
+        });
+      }
+    }
 
     // Fire-and-forget: the dispatch above is what the UI reads, and a storage
     // hiccup must not stall it. Worst case the link reverts to its stored value.
