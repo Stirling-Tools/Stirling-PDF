@@ -16,7 +16,7 @@ import {
   Alert,
   Group,
 } from "@mantine/core";
-import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import { Icon } from "@app/ui/Icon";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Select } from "@app/ui/Select";
@@ -365,7 +365,7 @@ const SignatureAppearanceSettings = ({
                   "Use the default position",
                 )}
               >
-                <RestartAltIcon style={{ fontSize: "1rem" }} />
+                <Icon name="rotate-ccw" size={16} />
               </ActionIcon>
             </Group>
 

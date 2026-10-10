@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Stack, Text, Box, Group, Center, Loader } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import { Icon } from "@app/ui/Icon";
 import CropAreaSelector from "@app/components/tools/crop/CropAreaSelector";
 import DocumentThumbnail from "@app/components/shared/filePreview/DocumentThumbnail";
 import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
@@ -169,7 +169,7 @@ const SignaturePlacementPicker: React.FC<SignaturePlacementPickerProps> = ({
           title={t("certSign.placement.reset", "Use the default position")}
           aria-label={t("certSign.placement.reset", "Use the default position")}
         >
-          <RestartAltIcon style={{ fontSize: "1rem" }} />
+          <Icon name="rotate-ccw" size={16} />
         </ActionIcon>
       </Group>
 
