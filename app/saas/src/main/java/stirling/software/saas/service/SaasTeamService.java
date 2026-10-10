@@ -52,6 +52,9 @@ public class SaasTeamService {
     private final LinkedInstanceRepository linkedInstanceRepository;
     private final stirling.software.proprietary.security.service.UserService userService;
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private stirling.software.saas.sso.CompanySsoPolicy companySsoPolicy;
+
     public static final String DEFAULT_TEAM_NAME = "Default";
     public static final String INTERNAL_TEAM_NAME = "Internal";
 
@@ -250,6 +253,10 @@ public class SaasTeamService {
         if (!inviterMembership.isLeader()) {
             throw new SecurityException("Only team leaders can invite members");
         }
+        if (companySsoPolicy != null && companySsoPolicy.isManaged(teamId)) {
+            throw new IllegalStateException(
+                    "Share your company's SSO sign-in link to add members.");
+        }
 
         // Auto-convert personal team to non-personal team for Pro users
         if (saasTeamExtensionService.isPersonal(team)) {
@@ -381,6 +388,18 @@ public class SaasTeamService {
                         .findByInvitationToken(invitationToken)
                         .orElseThrow(() -> new IllegalArgumentException("Invitation not found"));
 
+        if (companySsoPolicy != null) {
+            // Activation takes the same team locks; an invitation cannot race SSO enforcement.
+            java.util.stream.Stream.concat(
+                            membershipRepository.findByUserId(acceptingUser.getId()).stream()
+                                    .map(m -> m.getTeam().getId()),
+                            java.util.stream.Stream.of(invitation.getTeam().getId()))
+                    .distinct()
+                    .sorted()
+                    .forEach(id -> teamRepository.lockById(id).orElseThrow());
+            companySsoPolicy.assertCanAcceptInvitation(acceptingUser, invitation.getTeam().getId());
+        }
+
         // Force lazy-load inviter early to ensure it's in managed state
         User inviter = invitation.getInviter();
 
@@ -486,6 +505,8 @@ public class SaasTeamService {
     @Transactional
     public void removeTeamMember(Long teamId, Long memberUserId, User remover) {
         teamRepository.lockById(teamId).orElseThrow();
+        if (companySsoPolicy != null && remover.getId().equals(memberUserId))
+            companySsoPolicy.assertCanLeave(teamId);
         // Validate: remover is team leader
         TeamMembership removerMembership =
                 membershipRepository
@@ -585,6 +606,7 @@ public class SaasTeamService {
     @Transactional
     public void leaveTeam(Long teamId, User user) {
         teamRepository.lockById(teamId).orElseThrow();
+        if (companySsoPolicy != null) companySsoPolicy.assertCanLeave(teamId);
         TeamMembership membership =
                 membershipRepository
                         .findByTeamIdAndUserId(teamId, user.getId())

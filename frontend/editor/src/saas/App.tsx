@@ -28,6 +28,7 @@ import { RootGate } from "@app/routes/RootGate";
 
 const MobileScannerPage = lazy(() => import("@app/pages/MobileScannerPage"));
 const MobileSignPage = lazy(() => import("@app/pages/MobileSignPage"));
+const CompanySso = lazy(() => import("@app/routes/CompanySso"));
 
 // Import global styles
 import "@app/styles/tailwind.css";
@@ -121,6 +122,14 @@ export default function App() {
   return (
     <Suspense fallback={<LoadingFallback />}>
       <Routes>
+        <Route
+          path="/company-sso"
+          element={
+            <PublicRouteProviders>
+              <CompanySso />
+            </PublicRouteProviders>
+          }
+        />
         {/* Mobile scanner - public, no auth. Opened on a phone via the QR code,
             so it must render without a logged-in session. Kept outside
             AppProviders or it falls through to the auth-gated catch-all. */}

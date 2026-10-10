@@ -57,6 +57,7 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
   const sections = useMemo(() => {
     let own = createSaasConfigNavSections(Overview, openLogoutConfirm, {
       isAnonymous,
+      isTeamLeader,
       t,
       onRequestClose: onLeave,
     });

@@ -43,6 +43,11 @@ public class AuthenticationUtils {
      * @return The Supabase ID for JWT users, or API key for API key users
      */
     public static String extractSupabaseId(Authentication authentication) {
+        if (authentication instanceof EnhancedJwtAuthenticationToken
+                && authentication.getPrincipal() instanceof User user
+                && user.getSupabaseId() != null) {
+            return user.getSupabaseId().toString();
+        }
         if (authentication instanceof EnhancedJwtAuthenticationToken enhancedJwt) {
             return enhancedJwt.getSupabaseId();
         } else if (authentication instanceof ApiKeyAuthenticationToken) {

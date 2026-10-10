@@ -36,6 +36,7 @@ interface TeamDetailsDTO {
   isLeader: boolean;
   current?: boolean;
   currentUserId?: number;
+  companySsoRequired?: boolean;
 }
 
 interface TeamMemberDTO {
@@ -199,9 +200,9 @@ export const usersBackend: UsersBackend = {
       members,
       roles: ROLES,
       access: { tier, seatsUsed, seatLimit },
-      // SaaS always has email (Supabase); no self-hosted SMTP gate.
       mailEnabled: true,
-      emailInvitesEnabled: true,
+      emailInvitesEnabled: !team.companySsoRequired,
+      companySsoRequired: team.companySsoRequired,
       invitations,
     };
   },
