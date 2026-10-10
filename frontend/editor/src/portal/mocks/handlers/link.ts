@@ -1,5 +1,6 @@
 import { http, HttpResponse, delay } from "msw";
 import {
+  claimSync,
   getLocalStatus,
   getLocalUsage,
   linkLocal,
@@ -72,10 +73,19 @@ export const linkHandlers = [
   }),
 
   // Manual sync trigger — the real backend runs a sync + entitlement refresh and
-  // returns 204 (or 409 when metering is off). The portal fires it best-effort
-  // after a checkout completes; the mock just acknowledges.
-  http.post("/api/v1/account-link/sync-now", async () => {
+  // returns 204, 429 when a recent sync already covers the caller, or 409 when
+  // metering is off. Modelled rather than always acknowledged so a demo run shows
+  // the same "asking is cheap, reporting is throttled" shape the real one has.
+  http.post("/api/v1/account-link/sync-now", async ({ request }) => {
     await delay(120);
+    const force = new URL(request.url).searchParams.get("force") === "true";
+    const claim = claimSync(force);
+    if (!claim.ran) {
+      return new HttpResponse(null, {
+        status: 429,
+        headers: { "Retry-After": String(claim.retryAfter) },
+      });
+    }
     return new HttpResponse(null, { status: 204 });
   }),
 
