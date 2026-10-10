@@ -110,6 +110,18 @@ describe("SignatureAppearanceSettings", () => {
     expect(onParameterChange).toHaveBeenCalledWith("markAllPages", false);
   });
 
+  test("moving the signature to another page drops the box drawn on this one", () => {
+    const onParameterChange = vi.fn();
+    renderSettings(withBox, onParameterChange);
+
+    fireEvent.change(screen.getByLabelText("mock-certSign.pageNumber"), {
+      target: { value: "2" },
+    });
+
+    expect(onParameterChange).toHaveBeenCalledWith("signatureArea", undefined);
+    expect(onParameterChange).toHaveBeenCalledWith("pageNumber", 2);
+  });
+
   /** The request sends the marks only with a box, so the panel must not promise them. */
   test("without a box, repeating on every page shows as off", () => {
     renderSettings({ ...visible, markAllPages: true });

@@ -251,12 +251,14 @@ const SignatureAppearanceSettings = ({
           <NumberInput
             label={t("certSign.pageNumber", "Page Number")}
             value={parameters.pageNumber}
-            onChange={(value) =>
-              onParameterChange(
-                "pageNumber",
-                typeof value === "number" ? value : 1,
-              )
-            }
+            onChange={(value) => {
+              const next = typeof value === "number" ? value : 1;
+              // The box is in the coordinates of the page it was drawn on.
+              if (next !== parameters.pageNumber && parameters.signatureArea) {
+                clearArea();
+              }
+              onParameterChange("pageNumber", next);
+            }}
             min={1}
             disabled={disabled}
           />
