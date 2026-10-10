@@ -116,6 +116,8 @@ class PdfJsonConversionServiceGapTest {
                         fontService,
                         type3FontConversionService,
                         type3GlyphExtractor,
+                        new stirling.software.SPDF.service.pdfjson.font.PdfFontResolver(),
+                        new stirling.software.SPDF.service.pdfjson.parsing.PdfGlyphCounter(),
                         applicationProperties);
 
         // The TempFile wrapper delegates straight to the manager; back it with real temp files so
