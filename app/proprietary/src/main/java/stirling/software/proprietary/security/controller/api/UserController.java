@@ -58,6 +58,7 @@ import stirling.software.proprietary.security.service.TeamMembershipService;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
+import stirling.software.proprietary.security.util.EmailAddresses;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
 
 @UserApi
@@ -924,8 +925,7 @@ public class UserController {
     private InviteResult processEmailInvite(
             String email, Long teamId, String role, String loginUrl) {
         try {
-            // Validate email format (basic check)
-            if (!email.contains("@") || !email.contains(".")) {
+            if (!EmailAddresses.isValidAccountAddress(email)) {
                 return InviteResult.failure(email + ": Invalid email format");
             }
 
