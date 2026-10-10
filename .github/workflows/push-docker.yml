@@ -292,6 +292,8 @@ jobs:
             docker/unoserver/healthcheck.sh \
             docker/unoserver/fonts.conf \
             docker/unoserver/VERSION \
+            docker/base/security/soffice_no_network.c \
+            docker/base/security/guard_selftest.c \
             docker/base/lo-sandbox.c \
             docker/base/stirling-hardening.xcd \
             docker/base/unoserver-pipe-transport.py \
