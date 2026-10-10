@@ -1,12 +1,12 @@
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Skeleton } from "@app/ui";
+import { Button, Skeleton } from "@app/ui";
 import {
   ComparePlansModal,
   type ComparePlan,
 } from "@app/billing/ComparePlansModal";
-import { formatMinor } from "@app/billing/format";
+import { formatMinor, formatPeriodDate } from "@app/billing/format";
 import { KvRow } from "@app/billing/KvRow";
 import { TeamPlanRow } from "@app/billing/TeamPlanRow";
 import { ProcessorPlanRow } from "@app/billing/ProcessorPlanRow";
@@ -55,6 +55,11 @@ export interface BillingScreenProps {
   activateLabel?: ReactNode;
   /** Leader-only: opens the spend limit from the Processor row once it is on. */
   onGovernSpend?: () => void;
+  /** Leader-only: opens the cancel flow while a paid product still renews. */
+  onCancelSubscription?: () => void;
+  /** Leader-only: withdraws every scheduled cancel. */
+  onResumeSubscription?: () => void;
+  resuming?: boolean;
   /** Overrides the governing door's label, e.g. "Top up" for a prepaid team. */
   governLabel?: ReactNode;
   /** Banners above the card: a lapsed session, a failed wallet read. Host-owned. */
@@ -118,6 +123,9 @@ export function BillingScreen({
   activateLabel,
   onGovernSpend,
   governLabel,
+  onCancelSubscription,
+  onResumeSubscription,
+  resuming = false,
   notices,
   procurementSection,
   licenseSection,
@@ -287,6 +295,26 @@ export function BillingScreen({
     ? cycleDay(wallet.billingPeriodStart, wallet.billingPeriodEnd)
     : null;
 
+  const endings: string[] = [];
+  if (wallet?.team.held && wallet.team.endsAt)
+    endings.push(
+      t("portal.billing.ends.team", "Team plan ends {{date}}", {
+        date: formatPeriodDate(wallet.team.endsAt, { year: true }),
+      }),
+    );
+  if (wallet?.processor.active && wallet.processor.endsAt)
+    endings.push(
+      t("portal.billing.ends.processor", "Processor ends {{date}}", {
+        date: formatPeriodDate(wallet.processor.endsAt, { year: true }),
+      }),
+    );
+  const stillRenewing = Boolean(
+    (wallet?.team.held && !wallet.team.endsAt) ||
+    (wallet?.processor.active && !wallet.processor.endsAt),
+  );
+  const showSubscriptionEnd =
+    endings.length > 0 || (Boolean(onCancelSubscription) && stillRenewing);
+
   return (
     <div className="billing-page">
       <div className="billing-page__head">
@@ -400,6 +428,38 @@ export function BillingScreen({
                       />
                     )}
                   </div>
+                  {showSubscriptionEnd && (
+                    <div className="billing-plan-end">
+                      {endings.length > 0 && (
+                        <span className="billing-plan-end__dates">
+                          {endings.join(" · ")}
+                        </span>
+                      )}
+                      <span className="billing-plan-end__actions">
+                        {endings.length > 0 && onResumeSubscription && (
+                          <Button
+                            size="sm"
+                            onClick={onResumeSubscription}
+                            loading={resuming}
+                          >
+                            {t("portal.billing.ends.resume", "Resume")}
+                          </Button>
+                        )}
+                        {stillRenewing && onCancelSubscription && (
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={onCancelSubscription}
+                          >
+                            {t(
+                              "portal.billing.ends.cancel",
+                              "Cancel subscription",
+                            )}
+                          </Button>
+                        )}
+                      </span>
+                    </div>
+                  )}
                 </section>
 
                 {wallet && (

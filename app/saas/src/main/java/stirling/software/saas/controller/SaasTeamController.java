@@ -3,6 +3,7 @@ package stirling.software.saas.controller;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -33,6 +34,7 @@ import stirling.software.saas.repository.TeamInvitationRepository;
 import stirling.software.saas.security.TeamSecurityExpressions;
 import stirling.software.saas.service.SaasTeamExtensionService;
 import stirling.software.saas.service.SaasTeamService;
+import stirling.software.saas.service.TeamMemberCapacityService;
 
 /** SaaS-only team endpoints: invitations, personal teams, billing-aware lookups. */
 @TeamApi
@@ -48,6 +50,7 @@ public class SaasTeamController {
     private final stirling.software.saas.service.SaasOwnershipService ownershipService;
     private final SaasTeamExtensionService saasTeamExtensionService;
     private final TeamMembershipRepository membershipRepository;
+    private final TeamMemberCapacityService memberCapacity;
     private final TeamInvitationRepository invitationRepository;
     private final UserService userService;
     private final TeamSecurityExpressions teamSecurityExpressions;
@@ -312,7 +315,7 @@ public class SaasTeamController {
     public ResponseEntity<?> getTeamMembers(@PathVariable Long teamId) {
         try {
             List<TeamMembership> memberships = membershipRepository.findByTeamId(teamId);
-            return ResponseEntity.ok(toTeamMemberDTOs(memberships));
+            return ResponseEntity.ok(toTeamMemberDTOs(teamId, memberships));
         } catch (Exception e) {
             log.error("Error fetching team members", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -397,6 +400,39 @@ public class SaasTeamController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to remove member"));
         }
+    }
+
+    /**
+     * Gives a member the team's allowance no longer covers a place (team leader only). When the
+     * team is full, {@code replaceMemberId} names the active member who steps aside; without one
+     * the answer is 409 {@code no_place} so the caller can ask who.
+     */
+    @PostMapping("/{teamId}/members/{memberId}/activate")
+    @PreAuthorize("@teamSecurity.isTeamLeader(#teamId)")
+    public ResponseEntity<?> activateMember(
+            @PathVariable Long teamId,
+            @PathVariable Long memberId,
+            @RequestBody(required = false) ActivateMemberRequest request) {
+        Long replace = request == null ? null : request.getReplaceMemberId();
+        return switch (memberCapacity.makeActive(teamId, memberId, replace)) {
+            case ACTIVATED -> ResponseEntity.ok(Map.of("message", "Member is active"));
+            case NO_PLACE ->
+                    ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "no_place"));
+            case NOT_DISABLED ->
+                    ResponseEntity.status(HttpStatus.CONFLICT)
+                            .body(Map.of("error", "not_disabled"));
+            case REPLACE_INVALID ->
+                    ResponseEntity.badRequest().body(Map.of("error", "replace_invalid"));
+            case UNAVAILABLE ->
+                    ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                            .body(
+                                    Map.of(
+                                            "error",
+                                            "unavailable",
+                                            "message",
+                                            "Couldn't change who has a place right now. Please try"
+                                                    + " again."));
+        };
     }
 
     /** Leave team (self-removal) */
@@ -498,11 +534,14 @@ public class SaasTeamController {
                 .orElseThrow(() -> new SecurityException("User not found: " + username));
     }
 
-    private List<TeamMemberDTO> toTeamMemberDTOs(List<TeamMembership> memberships) {
-        return memberships.stream().map(this::toTeamMemberDTO).collect(Collectors.toList());
+    private List<TeamMemberDTO> toTeamMemberDTOs(Long teamId, List<TeamMembership> memberships) {
+        Set<Long> overLimit = memberCapacity.disabledUserIds(teamId);
+        return memberships.stream()
+                .map(m -> toTeamMemberDTO(m, overLimit))
+                .collect(Collectors.toList());
     }
 
-    private TeamMemberDTO toTeamMemberDTO(TeamMembership membership) {
+    private TeamMemberDTO toTeamMemberDTO(TeamMembership membership, Set<Long> overLimit) {
         User user = membership.getUser();
         UUID supabaseId = user.getSupabaseId();
         return new TeamMemberDTO(
@@ -511,7 +550,8 @@ public class SaasTeamController {
                 user.getEmail(),
                 membership.getRole().name(),
                 membership.getAcceptedAt(),
-                supabaseId == null ? null : supabaseId.toString());
+                supabaseId == null ? null : supabaseId.toString(),
+                overLimit.contains(user.getId()));
     }
 
     private TeamDetailsDTO toTeamDetailsDTO(Team team, boolean isLeader) {
@@ -559,6 +599,15 @@ public class SaasTeamController {
 
         /** Also the member's avatar storage path prefix. Null without a Supabase identity. */
         private final String supabaseId;
+
+        /** The team's user allowance no longer covers this member, so they cannot sign in. */
+        private final boolean overPlanLimit;
+    }
+
+    @Data
+    public static class ActivateMemberRequest {
+        /** The active member who gives up their place when the team is full. */
+        private Long replaceMemberId;
     }
 
     @Data
@@ -681,7 +730,7 @@ public class SaasTeamController {
                             .orElseThrow(() -> new IllegalArgumentException("Team not found"));
 
             List<TeamMembership> memberships = membershipRepository.findByTeamId(teamId);
-            List<TeamMemberDTO> members = toTeamMemberDTOs(memberships);
+            List<TeamMemberDTO> members = toTeamMemberDTOs(teamId, memberships);
 
             // Check if current user is team leader
             User currentUser = getCurrentUser();

@@ -110,3 +110,78 @@ export interface BillingDetails {
 export async function fetchBillingDetails(): Promise<BillingDetails> {
   return apiClient.saas.json<BillingDetails>("/api/v1/payg/billing-details");
 }
+
+// ────────────────────────────────────────────────────────────────────────────
+// Cancellation: /api/v1/payg/subscriptions. The team comes from the caller and
+// only billing leaders get in. Cancelling schedules the end of the paid period.
+// ────────────────────────────────────────────────────────────────────────────
+
+export type CancelProduct = "team" | "processor";
+export type CancelScope = CancelProduct | "both";
+export type CancelReason =
+  | "too_expensive"
+  | "unused"
+  | "missing_features"
+  | "not_working"
+  | "switched_service"
+  | "other";
+
+/** One live Team or Processor subscription. */
+export interface SubscriptionState {
+  product: CancelProduct;
+  subscriptionId: string;
+  status: string;
+  /** A cancel is scheduled; `endsAt` says when it takes effect. */
+  cancelling: boolean;
+  endsAt: string | null;
+  /** End of the paid period: the renewal date, or the stop date once cancelled. */
+  periodEnd: string | null;
+}
+
+interface SubscriptionsResponse {
+  subscriptions: SubscriptionState[];
+}
+
+export async function fetchSubscriptionStates(): Promise<SubscriptionState[]> {
+  const res = await apiClient.saas.json<SubscriptionsResponse>(
+    "/api/v1/payg/subscriptions",
+  );
+  return res.subscriptions;
+}
+
+export async function cancelSubscription(req: {
+  product: CancelScope;
+  reason?: CancelReason;
+  detail?: string;
+  competitor?: string;
+  offerShown?: string;
+}): Promise<SubscriptionState[]> {
+  const res = await apiClient.saas.json<SubscriptionsResponse>(
+    "/api/v1/payg/subscriptions/cancel",
+    { method: "POST", body: req },
+  );
+  return res.subscriptions;
+}
+
+export async function resumeSubscription(
+  product: CancelScope,
+): Promise<SubscriptionState[]> {
+  const res = await apiClient.saas.json<SubscriptionsResponse>(
+    "/api/v1/payg/subscriptions/resume",
+    { method: "POST", body: { product } },
+  );
+  return res.subscriptions;
+}
+
+/** Posts to the churn channel. Rejects with a 429 HttpError after three in a day. */
+export async function contactBeforeCancelling(req: {
+  product: CancelProduct;
+  reason: CancelReason | null;
+  message: string;
+  replyTo?: string;
+}): Promise<void> {
+  await apiClient.saas.json<void>("/api/v1/payg/subscriptions/contact", {
+    method: "POST",
+    body: req,
+  });
+}

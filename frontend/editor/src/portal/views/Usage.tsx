@@ -24,6 +24,8 @@ import { ProcurementFlow } from "@app/portal/components/procurement/ProcurementF
 import {
   fetchWallet,
   refreshWalletCache,
+  resumeSubscription,
+  type SubscriptionState,
   type Wallet,
 } from "@app/portal/api/billing";
 import { fetchLocalUsage, triggerLocalSync } from "@app/portal/api/link";
@@ -39,6 +41,9 @@ import { qk } from "@app/portal/queries/keys";
 import { walletQuery, WALLET_POLL_MS } from "@app/portal/queries/wallet";
 import { useCheckoutOptional } from "@app/contexts/CheckoutContext";
 import { SubscribedPlanView } from "@app/portal/components/billing/SubscribedPlanView";
+import { CancelSubscriptionModal } from "@app/portal/components/billing/CancelSubscriptionModal";
+import { useLinkedAccountEmail } from "@app/portal/hooks/useLinkedAccountEmail";
+import { trackCancellation } from "@app/services/analytics";
 import {
   HttpError,
   SaasSessionRequiredError,
@@ -195,6 +200,10 @@ export function Usage({
     "choose" | "payg" | "prepay" | null
   >(null);
   const [adjustingLimit, setAdjustingLimit] = useState(false);
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [resuming, setResuming] = useState(false);
+  const [resumeFailed, setResumeFailed] = useState(false);
+  const accountEmail = useLinkedAccountEmail();
   // Stripe customer portal — the subscribed header's "Manage Payment" action.
   const portal = useStripePortal(wallet);
   // Guards the post-checkout poll loop from setState after unmount.
@@ -246,6 +255,53 @@ export function Usage({
       });
   }, [refresh]);
   const onInvoicesEmpty = useCallback(() => setHasInvoices(false), []);
+
+  // Cancel dates reach the wallet through the Stripe mirror, which trails the edge function by a
+  // webhook. Show the function's answer now and re-read once the mirror has had time to catch up.
+  const applySubscriptionStates = useCallback(
+    (states: SubscriptionState[]) => {
+      const endOf = (product: SubscriptionState["product"]) => {
+        const state = states.find((s) => s.product === product);
+        return state ? (state.cancelling ? state.endsAt : null) : undefined;
+      };
+      queryClient.setQueryData<Wallet>(qk.wallet(true), (current) => {
+        if (!current) return current;
+        const team = endOf("team");
+        const processor = endOf("processor");
+        return {
+          ...current,
+          team:
+            team === undefined
+              ? current.team
+              : { ...current.team, endsAt: team },
+          processor:
+            processor === undefined
+              ? current.processor
+              : { ...current.processor, endsAt: processor },
+        };
+      });
+      window.setTimeout(() => {
+        void refreshWalletCache()
+          .catch(() => {})
+          .then(() => {
+            if (mounted.current) refresh();
+          });
+      }, 5000);
+    },
+    [queryClient, refresh],
+  );
+  const resume = useCallback(async () => {
+    setResuming(true);
+    setResumeFailed(false);
+    try {
+      applySubscriptionStates(await resumeSubscription("both"));
+      trackCancellation("cancel_resumed", { scope: "both", source: "page" });
+    } catch {
+      setResumeFailed(true);
+    } finally {
+      setResuming(false);
+    }
+  }, [applySubscriptionStates]);
 
   // The same flow the settings plan section uses, so there is one purchase implementation.
   // Optional on purpose: a build that mounts no provider must lose the door, not the page.
@@ -368,6 +424,9 @@ export function Usage({
 
   const enterpriseProcessor = serverPlan?.licenseType === "ENTERPRISE";
   const paying = Boolean(wallet?.processor?.active || wallet?.team?.held);
+  // Enterprise agreements and local licences end by contract, not from this page.
+  const canChangeSubscription =
+    wallet?.role === "leader" && !needsRenewal && !serverPlan && paying;
   const ownsLegacySubscription = legacyBilling.subscriptions.length > 0;
   const legacyTeamSubscription = legacyBilling.subscriptions.find(
     (subscription) => subscription.teamId === wallet?.teamId,
@@ -416,7 +475,9 @@ export function Usage({
               ownsLegacySubscription ? legacyBilling.opening : portal.opening
             }
           >
-            {t("payment.manageSubscription", "Manage subscription")}
+            {ownsLegacySubscription
+              ? t("payment.manageSubscription", "Manage subscription")
+              : t("portal.billing.paymentAndInvoices", "Payment & invoices")}
           </Button>
         ) : undefined
       }
@@ -471,6 +532,16 @@ export function Usage({
             </Banner>
           )}
 
+          {resumeFailed && (
+            <Banner
+              tone="danger"
+              title={t(
+                "portal.billing.ends.resumeError",
+                "Couldn't resume your subscription. Please try again.",
+              )}
+              onDismiss={() => setResumeFailed(false)}
+            />
+          )}
           {portal.error && (
             <Banner
               tone="danger"
@@ -521,6 +592,11 @@ export function Usage({
             ? t("portal.billing.freePlan.viewQuote", "View quote")
             : undefined
       }
+      onCancelSubscription={
+        canChangeSubscription ? () => setCancelOpen(true) : undefined
+      }
+      onResumeSubscription={canChangeSubscription ? resume : undefined}
+      resuming={resuming}
       onGovernSpend={
         !enterpriseProcessor &&
         wallet?.role === "leader" &&
@@ -598,6 +674,21 @@ export function Usage({
               onStepChange={setActivationStep}
               onSubscribed={confirmSubscription}
               onActivationClosed={bundleFlow.refresh}
+            />
+          )}
+
+          {canChangeSubscription && wallet && (
+            <CancelSubscriptionModal
+              open={cancelOpen}
+              onClose={() => setCancelOpen(false)}
+              wallet={wallet}
+              email={accountEmail}
+              onChanged={applySubscriptionStates}
+              onLowerSpendLimit={
+                wallet.processor.active
+                  ? () => setAdjustingLimit(true)
+                  : undefined
+              }
             />
           )}
 

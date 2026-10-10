@@ -94,7 +94,8 @@ public class SupabaseSecurityConfig {
     SecurityFilterChain saasSecurityFilterChain(
             HttpSecurity http,
             JwtDecoder jwtDecoder,
-            ObjectProvider<DeviceCredentialAuthenticationFilter> deviceCredentialFilterProvider)
+            ObjectProvider<DeviceCredentialAuthenticationFilter> deviceCredentialFilterProvider,
+            ObjectProvider<MemberCapacityFilter> memberCapacityFilterProvider)
             throws Exception {
         // CSRF protection intentionally disabled: this chain is bearer-token only (Supabase JWT in
         // Authorization header / X-API-KEY) with SessionCreationPolicy.STATELESS, so there is no
@@ -172,6 +173,12 @@ public class SupabaseSecurityConfig {
                 deviceCredentialFilterProvider.getIfAvailable();
         if (deviceFilter != null) {
             http.addFilterBefore(deviceFilter, BearerTokenAuthenticationFilter.class);
+        }
+
+        // After bearer auth, so the principal is the resolved User for sessions and API keys alike.
+        MemberCapacityFilter memberCapacityFilter = memberCapacityFilterProvider.getIfAvailable();
+        if (memberCapacityFilter != null) {
+            http.addFilterAfter(memberCapacityFilter, BearerTokenAuthenticationFilter.class);
         }
 
         return http.build();

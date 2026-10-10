@@ -1,0 +1,173 @@
+.portal-cancel__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.portal-cancel__group {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.portal-cancel__legend {
+  padding: 0 0 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.portal-cancel__reasons {
+  gap: 0.375rem;
+}
+
+.portal-cancel__textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-sm, 0.375rem);
+  background: var(--c-input-bg);
+  color: inherit;
+  font: inherit;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.portal-cancel__textarea:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: -1px;
+}
+
+.portal-cancel__card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-sm, 0.375rem);
+}
+
+.portal-cancel__card--row {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.portal-cancel__card--row > div {
+  flex: 1 1 16rem;
+  min-width: 0;
+}
+
+.portal-cancel__card-title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.portal-cancel__card-body {
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--c-text-muted);
+}
+
+.portal-cancel__card-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.portal-cancel__facts {
+  margin: 0;
+}
+
+.portal-cancel__fact {
+  display: grid;
+  grid-template-columns: 7.5rem minmax(0, 1fr);
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--c-border);
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.portal-cancel__fact:last-child {
+  border-bottom: 0;
+}
+
+.portal-cancel__fact dt {
+  color: var(--c-text-muted);
+}
+
+.portal-cancel__fact dd {
+  margin: 0;
+  color: var(--c-text);
+}
+
+.portal-cancel__fact-strong {
+  font-weight: 600;
+}
+
+.portal-cancel__list {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.portal-cancel__prose {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--c-text);
+}
+
+.portal-cancel__prose p {
+  margin: 0;
+}
+
+.portal-cancel__muted {
+  color: var(--c-text-muted);
+  font-size: 0.8125rem;
+}
+
+.portal-cancel__context {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.portal-cancel__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.portal-cancel__chip {
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius-sm, 0.375rem);
+  background: var(--c-surface-sunken);
+  font-size: 0.75rem;
+  color: var(--c-text);
+}
+
+@media (max-width: 30rem) {
+  .portal-cancel__card-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .portal-cancel__fact {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.25rem;
+  }
+}

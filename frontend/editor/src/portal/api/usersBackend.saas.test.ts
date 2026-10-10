@@ -227,3 +227,60 @@ it("keeps the active shared team after leadership is transferred", async () => {
   const teams = await usersBackend.fetchTeams();
   expect(teams.map((team) => team.id)).toEqual([72]);
 });
+
+describe("saas usersBackend — plan limit", () => {
+  it("shows a member the allowance no longer covers as over the limit", async () => {
+    server.use(
+      http.get("/api/v1/team/:teamId/members", () =>
+        HttpResponse.json([
+          {
+            id: 1,
+            username: "leader@acme.com",
+            email: "leader@acme.com",
+            role: "LEADER",
+          },
+          {
+            id: 2,
+            username: "priya@acme.com",
+            email: "priya@acme.com",
+            role: "MEMBER",
+            overPlanLimit: true,
+          },
+        ]),
+      ),
+    );
+    const res = await usersBackend.fetchUsers("pro");
+    expect(res.members.map((m) => [m.email, m.status])).toEqual([
+      ["leader@acme.com", "active"],
+      ["priya@acme.com", "over_limit"],
+    ]);
+  });
+
+  it("makeActive asks who steps aside when the team is full", async () => {
+    const bodies: unknown[] = [];
+    server.use(
+      http.post(
+        "/api/v1/team/:teamId/members/:memberId/activate",
+        async ({ request }) => {
+          const body = (await request.json()) as { replaceMemberId?: number };
+          bodies.push(body);
+          return body.replaceMemberId
+            ? HttpResponse.json({ message: "Member is active" })
+            : HttpResponse.json({ error: "no_place" }, { status: 409 });
+        },
+      ),
+    );
+    const member = {
+      id: "2",
+      name: "Priya",
+      email: "priya@acme.com",
+      role: "member" as const,
+      status: "over_limit" as const,
+      lastActive: "-",
+      teamId: 1,
+    };
+    expect(await usersBackend.makeActive!(member)).toBe("no_place");
+    expect(await usersBackend.makeActive!(member, "3")).toBe("activated");
+    expect(bodies).toEqual([{}, { replaceMemberId: 3 }]);
+  });
+});

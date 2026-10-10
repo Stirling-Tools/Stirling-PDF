@@ -6016,6 +6016,16 @@ header = "Markdown To PDF"
 tags = "markup,web-content,transformation,convert,md"
 title = "Markdown To PDF"
 
+[memberOverPlanLimit]
+body = "{{team}}'s plan doesn't cover your account right now. Ask a team leader to renew the plan or make your account active."
+bodyNoName = "Your team's plan doesn't cover your account right now. Ask a team leader to renew the plan or make your account active."
+kept = "Your files and settings are kept. Leaving the team takes you back to your own free workspace."
+leaders = "Team leaders"
+leave = "Leave team"
+leaveFailed = "Couldn't leave the team. Please try again."
+signOut = "Sign out"
+title = "Your account is disabled"
+
 [merge]
 goToFileEditor = "Go to file editor"
 submit = "Merge"
@@ -8054,6 +8064,7 @@ redirectingToEditor = "Redirecting to the editor..."
 
 [portal.billing]
 dataUnavailable = "Usage figures are currently unavailable."
+paymentAndInvoices = "Payment & invoices"
 
 [portal.billing.activation]
 maybeLater = "Maybe later"
@@ -8067,6 +8078,93 @@ title = "Pay as you go"
 badge = "2 months free"
 sub = "One invoice, card or bank transfer."
 title = "Prepay a year"
+
+[portal.billing.cancel]
+back = "Back"
+competitor = "Which tool are you moving to? (optional)"
+confirm = "Cancel {{name}}"
+continue = "Continue"
+continueCancelling = "Continue cancelling"
+detail = "What would have made you stay? (optional)"
+finish = "Done"
+keep = "Keep my plan"
+resume = "Resume {{name}}"
+stepLabel = "Step {{step}} of 3"
+
+[portal.billing.cancel.done]
+emailed = "We sent a confirmation to {{email}}. You can resume any time before the end date."
+ends_one = "Your {{name}} ends on {{date}}. Everything keeps working until then."
+ends_other = "Your {{name}} end on {{date}}. Everything keeps working until then."
+
+[portal.billing.cancel.error]
+cancel = "We couldn't cancel just now. Nothing has changed yet."
+cancelFallback = "Try again, or email us and we'll cancel it for you:"
+contact = "Your message didn't send. Please try again, or email support@stirlingpdf.com."
+contactLimit = "You've already sent us three messages today. We'll be in touch."
+mailBody = "Please cancel my {{name}} at the end of the current billing period. The in-app cancel didn't work."
+mailSubject = "Please cancel my {{name}}"
+resume = "We couldn't resume just now. Please try again from Usage & Billing."
+
+[portal.billing.cancel.facts]
+after = "After that"
+charges = "Charges"
+chargesMetered = "Usage until then is billed on your final invoice. Nothing is refunded."
+chargesTeam = "No further charges. The current period is not refunded."
+endsOn = "Ends on"
+kept = "Files, pipelines and settings are kept."
+nothingChanges = "Nothing changes."
+prepaid = "Your {{credits}} prepaid credits stay yours to use."
+processor = "Processing beyond your free monthly credits stops."
+teamOver = "The free plan keeps {{free}} users active: leaders first, then the most recent sign-ins. The other {{over}} can't sign in until you renew. You can choose who stays from the Users page."
+teamWithin = "Your team moves to the free plan, which covers {{free}} users."
+untilThen = "Until then"
+
+[portal.billing.cancel.message]
+context = "Sent with your message"
+label = "What's going on?"
+replyTo = "Reply to"
+send = "Send message"
+
+[portal.billing.cancel.offer]
+call = "Book a 15 minute call"
+limitAction = "Set a limit"
+limitBody = "The Processor has no standing fee. With a low limit you only pay for what runs."
+limitTitle = "Lower your spend limit"
+message = "Send a message"
+stillCancel = "You can still cancel on the next step."
+talkBody = "A person on our team reads every message. If something is wrong, we would like the chance to fix it."
+talkTitle = "Talk to us first"
+
+[portal.billing.cancel.product]
+both = "Team plan and Processor"
+processor = "Processor"
+team = "Team plan"
+
+[portal.billing.cancel.reason]
+label = "Why are you cancelling? (optional)"
+missingFeatures = "It's missing something we need"
+notWorking = "It isn't working well for us"
+other = "Something else"
+switching = "We're switching to another tool"
+tooExpensive = "It costs too much"
+unused = "We don't use it enough"
+
+[portal.billing.cancel.scope]
+both = "Both"
+label = "What do you want to cancel?"
+
+[portal.billing.cancel.sent]
+reply = "We will reply to {{email}}."
+unchanged = "Your plan has not changed. If we can't help, you can still cancel from Usage & Billing."
+
+[portal.billing.cancel.title]
+call = "Book a call"
+confirm = "Cancel {{name}}?"
+done = "{{name}} cancelled"
+message = "Send us a message"
+offer = "Before you go"
+reason = "Cancel your subscription"
+sent = "Message sent"
 
 [portal.billing.checkout]
 noClientSecret = "Edge function returned no client_secret."
@@ -8157,6 +8255,13 @@ estimated = "estimated · the meter settles at close"
 estimatedPending = "estimated · includes {{pending}} not yet synced from your instances"
 pdfs = "PDFs processed"
 users = "Users"
+
+[portal.billing.ends]
+cancel = "Cancel subscription"
+processor = "Processor ends {{date}}"
+resume = "Resume"
+resumeError = "Couldn't resume your subscription. Please try again."
+team = "Team plan ends {{date}}"
 
 [portal.billing.enterprise]
 cta = "Get an enterprise quote"
@@ -13278,6 +13383,7 @@ visits = "Visits"
 [users]
 lastActive = "Last active"
 locked = "Locked"
+overPlanLimit = "Over plan limit"
 ownerSetupRequired = "The organization owner has not completed first login. Complete setup or ask the server operator to recover ownership before transferring ownership."
 roleFor = "Role for {{name}}"
 rowActions = "Actions for {{name}}"
@@ -13292,6 +13398,7 @@ cancelInvite = "Cancel invitation"
 createFromDefault = "Create team from Default"
 deleteTeam = "Delete team"
 disableMfa = "Reset MFA"
+makeActive = "Make active"
 move = "Move to team"
 reinstate = "Reinstate"
 remove = "Remove from org"
@@ -13398,6 +13505,12 @@ invitee = "Invitee"
 description = "Something went wrong reaching the backend, or you don't have access. Try again."
 title = "Couldn't load members"
 
+[users.makeActive]
+cancel = "Cancel"
+confirm = "Swap places"
+subtitle = "Your plan has no free place. Choose who gives up theirs; they can't sign in until a place frees up."
+title = "Make {{name}} active"
+
 [users.moveTeam]
 apply = "Move"
 team = "Team"
@@ -13410,6 +13523,12 @@ name = "Team name"
 namePlaceholder = "e.g. Finance"
 nameRequired = "Team name is required"
 title = "New team"
+
+[users.overLimit]
+body = "Your team's plan no longer covers them, so they can't sign in. Renew the plan, or use Make active on a row to choose who has a place."
+renew = "Renew Team plan"
+title_one = "{{count}} user is disabled"
+title_other = "{{count}} users are disabled"
 
 [users.renameTeam]
 apply = "Rename"

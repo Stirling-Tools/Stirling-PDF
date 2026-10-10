@@ -25,6 +25,7 @@ import {
   type AuthUser,
   type AuthTranslate,
 } from "@app/auth/types";
+import { reportMemberOverPlanLimit } from "@app/services/memberOverPlanLimit";
 
 function readRole(user: SbUser): string {
   const appRole = (user.app_metadata as { role?: unknown } | undefined)?.role;
@@ -169,6 +170,15 @@ export function SupabaseAuthProvider({
         .then((res) => {
           // Must throw, not resolve null: swallowing a non-ok leaves
           // portalAccess undefined and hangs the portal gate on a spinner.
+          if (res.status === 403) {
+            // A member over their team's allowance is refused here first; the screen it raises
+            // replaces the app, so the fallback below only keeps the gates from waiting.
+            void res
+              .clone()
+              .json()
+              .then((body: unknown) => reportMemberOverPlanLimit(403, body))
+              .catch(() => {});
+          }
           if (!res.ok) throw new Error(`auth/me responded ${res.status}`);
           return res.json();
         })

@@ -1,5 +1,5 @@
 import type { UsersBackend } from "@portal/api/usersBackend";
-import { apiClient } from "@portal/api/http";
+import { apiClient, HttpError } from "@portal/api/http";
 import { tryGetPortalQueryClient } from "@portal/queryClient";
 import { qk } from "@portal/queries/keys";
 import {
@@ -45,6 +45,8 @@ interface TeamMemberDTO {
   /** "LEADER" | "MEMBER". */
   role: string;
   joinedAt?: string;
+  /** The team's allowance no longer covers this member. */
+  overPlanLimit?: boolean;
 }
 
 interface InvitationDTO {
@@ -132,7 +134,7 @@ function toMember(dto: TeamMemberDTO, team: TeamDetailsDTO): Member {
     // Leaders hold portal (processor) access via the role-based default policy;
     // members don't by default. Drives the roster's access chip.
     canAccessPortal: isLeader,
-    status: "active",
+    status: dto.overPlanLimit ? "over_limit" : "active",
     lastActive: NO_ACTIVITY,
     authority: "ROLE_USER",
   };
@@ -261,6 +263,36 @@ export const usersBackend: UsersBackend = {
       `/api/v1/team/${member.teamId}/members/${member.id}`,
       { method: "DELETE" },
     );
+  },
+
+  async makeActive(
+    member: Member,
+    replaceMemberId?: string,
+  ): Promise<"activated" | "no_place"> {
+    if (member.teamId == null) {
+      throw new Error("Member has no team");
+    }
+    try {
+      await apiClient.local.json(
+        `/api/v1/team/${member.teamId}/members/${member.id}/activate`,
+        {
+          method: "POST",
+          body: replaceMemberId
+            ? { replaceMemberId: Number(replaceMemberId) }
+            : {},
+        },
+      );
+      return "activated";
+    } catch (error) {
+      if (
+        error instanceof HttpError &&
+        error.status === 409 &&
+        (error.body as { error?: string } | null)?.error === "no_place"
+      ) {
+        return "no_place";
+      }
+      throw error;
+    }
   },
 
   async cancelInvitation(invitationId: number): Promise<void> {

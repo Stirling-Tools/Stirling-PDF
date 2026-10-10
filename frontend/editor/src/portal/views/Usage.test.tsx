@@ -25,7 +25,12 @@ import type { LegacyBillingState } from "@app/types/legacyBilling";
 import { formatPeriodDate } from "@app/billing";
 
 const fetchCheckoutPricing = vi.hoisted(() => vi.fn());
+const resumeSubscription = vi.hoisted(() => vi.fn());
 vi.mock("@app/portal/billing/stripe", () => ({ fetchCheckoutPricing }));
+vi.mock("@app/portal/components/billing/CancelSubscriptionModal", () => ({
+  CancelSubscriptionModal: ({ open }: { open: boolean }) =>
+    open ? <div role="dialog">Cancel dialog</div> : null,
+}));
 
 const legacyBilling: LegacyBillingState = {
   subscriptions: [],
@@ -139,6 +144,7 @@ vi.mock("@app/portal/api/billing", () => ({
   fetchPaymentMethod: () => Promise.resolve(null),
   fetchBillingDetails: () => Promise.resolve(null),
   fetchInvoices: () => Promise.resolve([]),
+  resumeSubscription: (product: string) => resumeSubscription(product),
 }));
 const fetchLocalUsage = vi.fn().mockResolvedValue(null);
 vi.mock("@app/portal/api/link", () => ({
@@ -530,6 +536,78 @@ describe("Usage — link-free wallet renderer", () => {
     expect(
       screen.getByRole("button", { name: "Manage subscription" }),
     ).toBeEnabled();
+  });
+
+  it("lets a leader cancel a renewing plan from the plan card", async () => {
+    fetchWallet.mockResolvedValue({
+      ...walletOf("subscribed"),
+      role: "leader",
+      team: { held: true, licensedUsers: 100, usersInUse: 7 },
+      processor: { active: true },
+    });
+    renderUsage(<Usage />);
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Cancel subscription" }),
+    );
+    expect(screen.getByRole("dialog")).toHaveTextContent("Cancel dialog");
+    expect(
+      screen.getByRole("button", { name: "Payment & invoices" }),
+    ).toBeInTheDocument();
+  });
+
+  it("members see no cancel door", async () => {
+    fetchWallet.mockResolvedValue({
+      ...walletOf("subscribed"),
+      team: { held: true, licensedUsers: 100, usersInUse: 7 },
+      processor: { active: true },
+    });
+    renderUsage(<Usage />);
+    await screen.findByText("Your plan");
+    expect(
+      screen.queryByRole("button", { name: "Cancel subscription" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows a scheduled end and resumes it in one click", async () => {
+    resumeSubscription.mockResolvedValue([
+      {
+        product: "team",
+        subscriptionId: "sub_team",
+        status: "active",
+        cancelling: false,
+        endsAt: null,
+        periodEnd: "2026-11-14T00:00:00Z",
+        interval: "month",
+        quantity: 1,
+      },
+    ]);
+    fetchWallet.mockResolvedValue({
+      ...walletOf("free"),
+      role: "leader",
+      team: {
+        held: true,
+        licensedUsers: 100,
+        usersInUse: 7,
+        endsAt: "2026-11-14T00:00:00Z",
+      },
+      processor: { active: false },
+    });
+    renderUsage(<Usage />);
+    const ends = formatPeriodDate("2026-11-14T00:00:00Z", { year: true });
+    await screen.findByText(`Team plan ends ${ends}`);
+    // Nothing is left renewing, so there is nothing more to cancel.
+    expect(
+      screen.queryByRole("button", { name: "Cancel subscription" }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Resume" }));
+    await waitFor(() =>
+      expect(resumeSubscription).toHaveBeenCalledWith("both"),
+    );
+    await waitFor(() =>
+      expect(
+        screen.queryByText(`Team plan ends ${ends}`),
+      ).not.toBeInTheDocument(),
+    );
   });
 
   it("works with no callbacks (SaaS passes none)", async () => {
