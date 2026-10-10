@@ -22,6 +22,7 @@ public class RearrangePagesRequest extends PDFWithPageNums {
                             + "DUPLEX_SORT: Sorts pages as if all fronts were scanned then all backs in reverse (1, n, 2, n-1, ...). "
                             + "BOOKLET_SORT: Arranges pages for booklet printing (last, first, second, second last, ...).\n"
                             + "ODD_EVEN_SPLIT: Splits and arranges pages into odd and even numbered pages.\n"
+                            + "ODD_EVEN_MERGE: Interleaves the two halves of the document back together (the inverse of Odd-Even Split).\n"
                             + "REMOVE_FIRST: Removes the first page.\n"
                             + "REMOVE_LAST: Removes the last page.\n"
                             + "REMOVE_FIRST_AND_LAST: Removes both the first and the last pages.\n")

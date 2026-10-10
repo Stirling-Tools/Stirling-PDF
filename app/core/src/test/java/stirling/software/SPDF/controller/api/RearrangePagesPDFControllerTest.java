@@ -49,6 +49,7 @@ class RearrangePagesPDFControllerTest {
                             File f =
                                     Files.createTempFile("test", inv.<String>getArgument(0))
                                             .toFile();
+                            f.deleteOnExit();
                             TempFile tf = mock(TempFile.class);
                             lenient().when(tf.getFile()).thenReturn(f);
                             lenient().when(tf.getPath()).thenReturn(f.toPath());
@@ -260,6 +261,168 @@ class RearrangePagesPDFControllerTest {
             assertNotNull(response);
             assertEquals(200, response.getStatusCode().value());
             assertEquals(4, realDoc.getNumberOfPages());
+        }
+    }
+
+    @Test
+    void testRearrangePages_OddEvenMerge_EvenPageCount() throws IOException {
+        MockMultipartFile file = createMockPdf();
+        RearrangePagesRequest request = new RearrangePagesRequest();
+        request.setFileInput(file);
+        request.setPageNumbers("");
+        request.setCustomMode("ODD_EVEN_MERGE");
+
+        try (PDDocument realDoc = buildRealPdf(4)) {
+            List<Object> originals = snapshotCosPages(realDoc);
+            when(pdfDocumentFactory.load(file)).thenReturn(realDoc);
+
+            ResponseEntity<Resource> response = controller.rearrangePages(request);
+
+            assertNotNull(response);
+            assertEquals(200, response.getStatusCode().value());
+            // Inverse of oddEvenSplit: [0, 2, 1, 3] for 4 pages
+            List<Object> mutated = snapshotCosPages(realDoc);
+            assertEquals(4, mutated.size());
+            assertSame(originals.get(0), mutated.get(0));
+            assertSame(originals.get(2), mutated.get(1));
+            assertSame(originals.get(1), mutated.get(2));
+            assertSame(originals.get(3), mutated.get(3));
+        }
+    }
+
+    @Test
+    void testRearrangePages_OddEvenMerge_OddPageCount() throws IOException {
+        MockMultipartFile file = createMockPdf();
+        RearrangePagesRequest request = new RearrangePagesRequest();
+        request.setFileInput(file);
+        request.setPageNumbers("");
+        request.setCustomMode("ODD_EVEN_MERGE");
+
+        try (PDDocument realDoc = buildRealPdf(5)) {
+            List<Object> originals = snapshotCosPages(realDoc);
+            when(pdfDocumentFactory.load(file)).thenReturn(realDoc);
+
+            ResponseEntity<Resource> response = controller.rearrangePages(request);
+
+            assertNotNull(response);
+            assertEquals(200, response.getStatusCode().value());
+            // Inverse of oddEvenSplit: [0, 3, 1, 4, 2] for 5 pages
+            List<Object> mutated = snapshotCosPages(realDoc);
+            assertEquals(5, mutated.size());
+            assertSame(originals.get(0), mutated.get(0));
+            assertSame(originals.get(3), mutated.get(1));
+            assertSame(originals.get(1), mutated.get(2));
+            assertSame(originals.get(4), mutated.get(3));
+            assertSame(originals.get(2), mutated.get(4));
+        }
+    }
+
+    @Test
+    void testRearrangePages_OddEvenSplitThenMerge_RestoresOrder() throws IOException {
+        MockMultipartFile file = createMockPdf();
+        RearrangePagesRequest splitRequest = new RearrangePagesRequest();
+        splitRequest.setFileInput(file);
+        splitRequest.setPageNumbers("");
+        splitRequest.setCustomMode("ODD_EVEN_SPLIT");
+
+        // Give each page a distinct MediaBox width so pages are distinguishable after a
+        // save/reload round-trip (COSDictionary identity does not survive serialization).
+        try (PDDocument realDoc = new PDDocument()) {
+            for (int i = 0; i < 5; i++) {
+                PDPage page =
+                        new PDPage(
+                                new org.apache.pdfbox.pdmodel.common.PDRectangle(
+                                        100 + i * 10, 200));
+                realDoc.addPage(page);
+            }
+            when(pdfDocumentFactory.load(file)).thenReturn(realDoc);
+
+            ResponseEntity<Resource> splitResponse = controller.rearrangePages(splitRequest);
+            assertNotNull(splitResponse);
+            assertEquals(200, splitResponse.getStatusCode().value());
+
+            // The split output is a fresh PDF (the controller closed the source doc after
+            // saving). Feed those bytes back through a second merge request and verify the
+            // original page order is restored (undo guarantee).
+            byte[] splitBytes;
+            try (var in = splitResponse.getBody().getInputStream();
+                    var baos = new ByteArrayOutputStream()) {
+                in.transferTo(baos);
+                splitBytes = baos.toByteArray();
+            }
+
+            MockMultipartFile splitFile =
+                    new MockMultipartFile(
+                            "fileInput", "split.pdf", MediaType.APPLICATION_PDF_VALUE, splitBytes);
+            RearrangePagesRequest mergeRequest = new RearrangePagesRequest();
+            mergeRequest.setFileInput(splitFile);
+            mergeRequest.setPageNumbers("");
+            mergeRequest.setCustomMode("ODD_EVEN_MERGE");
+
+            try (PDDocument splitDoc = Loader.loadPDF(splitBytes)) {
+                when(pdfDocumentFactory.load(splitFile)).thenReturn(splitDoc);
+                ResponseEntity<Resource> mergeResponse = controller.rearrangePages(mergeRequest);
+                assertNotNull(mergeResponse);
+                assertEquals(200, mergeResponse.getStatusCode().value());
+
+                // Merge restores the original order: each page's width matches its position.
+                List<Float> widths = new ArrayList<>();
+                try (var in = mergeResponse.getBody().getInputStream();
+                        var baos = new ByteArrayOutputStream()) {
+                    in.transferTo(baos);
+                    try (PDDocument merged = Loader.loadPDF(baos.toByteArray())) {
+                        for (PDPage page : merged.getPages()) {
+                            widths.add(page.getMediaBox().getWidth());
+                        }
+                    }
+                }
+                assertEquals(List.of(100f, 110f, 120f, 130f, 140f), widths);
+            }
+        }
+    }
+
+    @Test
+    void testRearrangePages_OddEvenMerge_SinglePage() throws IOException {
+        MockMultipartFile file = createMockPdf();
+        RearrangePagesRequest request = new RearrangePagesRequest();
+        request.setFileInput(file);
+        request.setPageNumbers("");
+        request.setCustomMode("ODD_EVEN_MERGE");
+
+        try (PDDocument realDoc = buildRealPdf(1)) {
+            List<Object> originals = snapshotCosPages(realDoc);
+            when(pdfDocumentFactory.load(file)).thenReturn(realDoc);
+
+            ResponseEntity<Resource> response = controller.rearrangePages(request);
+
+            assertNotNull(response);
+            assertEquals(200, response.getStatusCode().value());
+            List<Object> mutated = snapshotCosPages(realDoc);
+            assertEquals(1, mutated.size());
+            assertSame(originals.get(0), mutated.get(0));
+        }
+    }
+
+    @Test
+    void testRearrangePages_OddEvenMerge_TwoPages() throws IOException {
+        MockMultipartFile file = createMockPdf();
+        RearrangePagesRequest request = new RearrangePagesRequest();
+        request.setFileInput(file);
+        request.setPageNumbers("");
+        request.setCustomMode("ODD_EVEN_MERGE");
+
+        try (PDDocument realDoc = buildRealPdf(2)) {
+            List<Object> originals = snapshotCosPages(realDoc);
+            when(pdfDocumentFactory.load(file)).thenReturn(realDoc);
+
+            ResponseEntity<Resource> response = controller.rearrangePages(request);
+
+            assertNotNull(response);
+            assertEquals(200, response.getStatusCode().value());
+            List<Object> mutated = snapshotCosPages(realDoc);
+            assertEquals(2, mutated.size());
+            assertSame(originals.get(0), mutated.get(0));
+            assertSame(originals.get(1), mutated.get(1));
         }
     }
 
