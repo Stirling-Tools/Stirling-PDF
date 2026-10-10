@@ -449,6 +449,8 @@ jobs:
         run: |
           echo "$RELEASE_GPG_PRIVATE_KEY" | gpg --batch --import
           gpg --list-secret-keys --keyid-format=long
+          # linuxdeploy-plugin-appimage signs when SIGN is set at all (even "0"), so only set it here.
+          echo "SIGN=1" >> "$GITHUB_ENV"
 
       - name: Make libjvm discoverable for linuxdeploy (Linux AppImage)
         if: matrix.platform == 'ubuntu-22.04'
@@ -473,13 +475,8 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          # AppImage signing — three env vars work together:
-          #   SIGN=1                        tells linuxdeploy-plugin-appimage to forward --sign to appimagetool
-          #   APPIMAGETOOL_SIGN_PASSPHRASE  appimagetool uses this to unlock the GPG key non-interactively
-          #   SIGN_KEY                      appimagetool picks the key matching this fingerprint
-          # Without SIGN=1, the other two are ignored and the AppImage is built unsigned even if a key is present.
-          # Mirror the Windows/macOS gate: only sign on a real release/dispatch+sign or the release branch, when secret is present.
-          SIGN: ${{ (env.RELEASE_GPG_PRIVATE_KEY != '' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/release')) && '1' || '0' }}
+          # AppImage signing: SIGN=1 comes from the GPG import step (set only when signing),
+          # passphrase unlocks the key and SIGN_KEY picks it by fingerprint.
           APPIMAGETOOL_SIGN_PASSPHRASE: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
           SIGN_KEY: ${{ vars.RELEASE_GPG_FINGERPRINT }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
