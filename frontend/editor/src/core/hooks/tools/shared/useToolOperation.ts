@@ -187,6 +187,7 @@ export const useToolOperation = <TParams>(
           paramsMapped: apiParams !== undefined,
           fileIds,
           multiFile: config.toolType === ToolType.multiFile,
+          deviceLocal: config.requestConfig?.(params)?.deviceLocal === true,
           errorCode,
           recordedAt: Date.now(),
         }),
@@ -337,6 +338,7 @@ export const useToolOperation = <TParams>(
               filePrefix: config.filePrefix,
               responseHandler: config.responseHandler,
               preserveBackendFilename: config.preserveBackendFilename,
+              requestConfig: config.requestConfig,
             };
             console.debug("[useToolOperation] Multi-file start", {
               count: filesForAPI.length,
@@ -384,6 +386,7 @@ export const useToolOperation = <TParams>(
             }
 
             const response = await apiClient.post(endpoint, formData, {
+              ...config.requestConfig?.(params),
               responseType: "blob",
             });
 

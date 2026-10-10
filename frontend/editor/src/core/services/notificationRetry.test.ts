@@ -48,6 +48,7 @@ function payload(overrides: Partial<Record<string, unknown>> = {}) {
     params: {},
     fileIds: ["f-1"],
     multiFile: false,
+    deviceLocal: false,
     errorCode: "E004",
     recordedAt: 1_000,
     replayUnfaithful: false,
@@ -98,6 +99,7 @@ describe("the retry stash", () => {
       params: { onlyPages: "1-3" },
       fileIds: ["f-1", "f-2"],
       multiFile: false,
+      deviceLocal: false,
       errorCode: "E004",
       replayUnfaithful: false,
       recordedAt: 1_000,
@@ -232,6 +234,17 @@ describe("the retry stash", () => {
     expect((await loadRetryPayload("f-1"))?.replayUnfaithful).toBe(true);
   });
 
+  it("marks a device-local run unfaithful even with nothing dropped", async () => {
+    await stashRetryPayload(
+      stashable({ params: { level: "5" }, deviceLocal: true }),
+    );
+
+    expect(await loadRetryPayload("f-1")).toMatchObject({
+      deviceLocal: true,
+      replayUnfaithful: true,
+    });
+  });
+
   it("knows when nothing was dropped, so a faithful re-run stays on offer", async () => {
     await stashRetryPayload(stashable({ params: { level: "5" } }));
 
@@ -320,6 +333,24 @@ describe("retryWithPassword", () => {
     expect(result.ok).toBe(false);
     // The reason, not words: the component layer owns the wording, having `t`.
     expect(result.reason).toBe("fileMissing");
+    expect(post).not.toHaveBeenCalled();
+  });
+
+  it("never replays a device-local run, whose password field holds a token PIN", async () => {
+    getStirlingFiles.mockResolvedValue([
+      new File(["%PDF-1.7"], "doc.pdf", { type: "application/pdf" }),
+    ]);
+
+    const result = await retryWithPassword(
+      payload({
+        operation: "certSign",
+        endpoint: "/api/v1/security/cert-sign",
+        deviceLocal: true,
+      }),
+      "hunter2",
+    );
+
+    expect(result).toMatchObject({ ok: false, reason: "notRetryable" });
     expect(post).not.toHaveBeenCalled();
   });
 
@@ -678,6 +709,15 @@ describe("retryWithFiles", () => {
 
     expect(result.ok).toBe(false);
     expect(result.reason).toBe("fileMissing");
+    expect(post).not.toHaveBeenCalled();
+  });
+
+  it("never replays a device-local run", async () => {
+    const result = await retryWithFiles(payload({ deviceLocal: true }), [
+      new File(["%PDF-1.7"], "doc_repaired.pdf"),
+    ]);
+
+    expect(result).toMatchObject({ ok: false, reason: "notRetryable" });
     expect(post).not.toHaveBeenCalled();
   });
 });

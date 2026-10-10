@@ -26,12 +26,19 @@ export interface RetryPayload {
   fileIds: string[];
   /** Whether the endpoint takes the whole batch in one call, or one file per call. */
   multiFile: boolean;
+  /**
+   * Whether the run had to happen on this machine, as signing with a key held here does. Nothing
+   * here replays such a run: posted from here it would reach whichever backend its path routes
+   * to, and cert-sign reads the password an unlock adds as the token's PIN.
+   */
+  deviceLocal?: boolean;
   /** The failure's error code, so a stash can be matched to the row's kind. */
   errorCode: string | null;
   /**
    * Whether replaying this stash would run something other than what failed, because a secret
-   * was dropped from it or because the tool exposes no mapping to its request body. A resolution
-   * must not re-run on those terms; the plain retry, which opens the tool, still can.
+   * was dropped from it, because the tool exposes no mapping to its request body, or because the
+   * run had to happen on this machine. A resolution must not re-run on those terms; the plain
+   * retry, which opens the tool, still can.
    */
   replayUnfaithful: boolean;
   recordedAt: number;
@@ -125,7 +132,10 @@ export async function stashRetryPayload(
       ...rest,
       fileIds,
       params: withoutSecrets(payload.params),
-      replayUnfaithful: !paramsMapped || containsSecret(payload.params),
+      replayUnfaithful:
+        !paramsMapped ||
+        containsSecret(payload.params) ||
+        payload.deviceLocal === true,
     };
 
     await writeRecords(fileIds.map((fileId) => ({ ...record, fileId })));
@@ -156,6 +166,7 @@ export async function loadRetryPayload(
     endpoint: record.endpoint,
     params: record.params ?? {},
     fileIds: record.fileIds ?? [fileId],
+    deviceLocal: record.deviceLocal === true,
     // Older records predate these fields; every default fails closed. A record written before
     // params were mapped holds the UI shape, so assuming it unfaithful is not merely cautious:
     // it is what those records are. Only the automatic re-run is withheld, not the plain retry.
@@ -239,7 +250,7 @@ export async function retryWithPassword(
   password: string,
   forFileId: string | null = null,
 ): Promise<RetryOutcome> {
-  if (!payload.endpoint) {
+  if (!payload.endpoint || payload.deviceLocal) {
     return { ok: false, reason: "notRetryable", message: null };
   }
 
@@ -307,7 +318,7 @@ export async function retryWithFiles(
   payload: RetryPayload,
   files: File[],
 ): Promise<RetryOutcome> {
-  if (!payload.endpoint) {
+  if (!payload.endpoint || payload.deviceLocal) {
     return { ok: false, reason: "notRetryable", message: null };
   }
   if (files.length === 0) {
