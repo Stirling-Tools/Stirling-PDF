@@ -49,7 +49,11 @@ pub fn build_main_window(app: &AppHandle) -> Result<WebviewWindow, String> {
 
     #[cfg(target_os = "windows")]
     let builder = builder
-        .additional_browser_args("--enable-features=CertVerifierBuiltinFeature")
+        // --disable-pinch keeps WebView2 from consuming a trackpad pinch as its
+        // own page zoom, so the gesture reaches the viewer's handler instead.
+        // Must stay byte-identical to build_window's args (they share one
+        // user-data folder).
+        .additional_browser_args("--enable-features=CertVerifierBuiltinFeature --disable-pinch")
         .decorations(false);
 
     #[cfg(target_os = "macos")]
@@ -86,7 +90,7 @@ fn build_window(app: &AppHandle, label: &str, url: &str) -> Result<WebviewWindow
     // Linux (WebKitGTK) don't have this constraint, so the arg is Windows-only.
     #[cfg(target_os = "windows")]
     let builder = builder
-        .additional_browser_args("--enable-features=CertVerifierBuiltinFeature")
+        .additional_browser_args("--enable-features=CertVerifierBuiltinFeature --disable-pinch")
         // Windows: no native title bar; the frontend draws its own controls in
         // the title-bar strip (TitleBarStrip). macOS uses the overlay style below.
         .decorations(false);
