@@ -109,6 +109,19 @@ A catalogue served over https may name https addresses only. A local one - a
 `file:` address on a disk or a share - may also name files on that same disk or
 share, which is how an offline mirror is laid out.
 
+That setting governs the downloads the application makes later. The Windows
+installer fetches OCR during setup and reads its own property instead, so an
+offline deployment sets both:
+
+| Who downloads | Where the address comes from |
+|---|---|
+| The MSI, during setup | `STIRLING_OCR_MANIFEST` (with `STIRLING_OCR=1` and `STIRLING_OCR_LANGS`) |
+| The application, afterwards | `system.ocr.manifestUrl` |
+
+```
+msiexec /i Stirling-PDF.msi /qn STIRLING_OCR=1 STIRLING_OCR_LANGS=spa,eng STIRLING_OCR_MANIFEST=<catalogue address>
+```
+
 The runtime lands next to the application's own data, so adding a language never
 needs administrator rights.
 
