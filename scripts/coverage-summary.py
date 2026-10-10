@@ -80,7 +80,7 @@ def _parse_jacoco_xml(path: Path) -> dict[str, CounterTotals]:
 
 def _bar(pct: float, width: int = 20) -> str:
     """Render a fixed-width ASCII progress bar. Markdown-safe on all consoles."""
-    filled = int(round(pct / 100.0 * width))
+    filled = round(pct / 100.0 * width)
     return "[" + "#" * filled + "-" * (width - filled) + "]"
 
 

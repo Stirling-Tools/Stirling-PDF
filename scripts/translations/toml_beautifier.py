@@ -28,7 +28,7 @@ class TOMLBeautifier:
         except FileNotFoundError:
             print(f"Error: File not found: {file_path}")
             sys.exit(1)
-        except Exception as e:
+        except (OSError, tomllib.TOMLDecodeError) as e:
             print(f"Error: Invalid TOML in {file_path}: {e}")
             sys.exit(1)
 
@@ -172,11 +172,11 @@ class TOMLBeautifier:
 
         def get_key_order(obj: dict, path: str = "") -> list[str]:
             keys = []
-            for key in obj.keys():
+            for key, value in obj.items():
                 new_path = f"{path}.{key}" if path else key
                 keys.append(new_path)
-                if isinstance(obj[key], dict):
-                    keys.extend(get_key_order(obj[key], new_path))
+                if isinstance(value, dict):
+                    keys.extend(get_key_order(value, new_path))
             return keys
 
         golden_order = get_key_order(self.golden_structure)
