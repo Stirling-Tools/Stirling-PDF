@@ -13,15 +13,20 @@ import { NavSurface } from "@app/ui/NavSurface";
 import { Button } from "@app/ui/Button";
 import { Icon, type IconName } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
-import { useFileState, useFileActions } from "@app/contexts/file/fileHooks";
+import {
+  useFileStore,
+  useFileSelector,
+  useFileActions,
+  shallowEqual,
+} from "@app/contexts/file/fileHooks";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useGoogleDrivePicker } from "@app/hooks/useGoogleDrivePicker";
 import {
-  useNavigationState,
+  useNavigationWorkbench,
   useNavigationActions,
   useNavigationGuard,
 } from "@app/contexts/NavigationContext";
-import { useViewer } from "@app/contexts/ViewerContext";
+import { useViewerActiveFile } from "@app/contexts/ViewerContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import { openFilesFromDisk } from "@app/services/openFilesFromDisk";
 import { useAccountIdentity } from "@app/hooks/useAccountIdentity";
@@ -36,6 +41,7 @@ import { SidebarHeader } from "@app/components/shared/SidebarHeader";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import type { FileId } from "@app/types/file";
 import { FileItem } from "@app/components/shared/FileSidebarFileItem";
+import type { FileItemPolicyRef } from "@app/components/shared/PolicyBadges";
 import { useLabelName } from "@app/data/labelDisplay";
 import { useClassificationEnabled } from "@app/hooks/useClassificationEnabled";
 import {
@@ -480,6 +486,94 @@ function FileLibrarySection({
   );
 }
 
+interface FileSidebarRowProps {
+  stub: StirlingFileStub;
+  isViewedInViewer: boolean;
+  dataUnavailable: boolean;
+  policies?: FileItemPolicyRef[];
+  primaryLabel?: string;
+  canSaveToCloud: boolean;
+  isUploadedToCloud: boolean;
+  hasVersionHistory: boolean;
+  isToolSkipped?: boolean;
+  canOpenInNewWindow?: boolean;
+  onFileClick: (fileId: FileId) => void;
+  onEyeClick: (fileId: FileId, e: React.MouseEvent) => void;
+  onDelete: (fileId: FileId) => void;
+  onDownload: (fileId: FileId) => void;
+  onRename: (fileId: FileId) => void;
+  onDuplicate: (fileId: FileId) => void;
+  onOpenInNewWindow?: (fileId: FileId) => void;
+  onSaveToCloud: (fileId: FileId) => void;
+  onVersionHistory: (fileId: FileId) => void;
+}
+
+const FileSidebarRow = React.memo(function FileSidebarRow({
+  stub,
+  isViewedInViewer,
+  dataUnavailable,
+  policies = NO_POLICIES,
+  primaryLabel,
+  canSaveToCloud,
+  isUploadedToCloud,
+  hasVersionHistory,
+  isToolSkipped,
+  canOpenInNewWindow = false,
+  onFileClick,
+  onEyeClick,
+  onDelete,
+  onDownload,
+  onRename,
+  onDuplicate,
+  onOpenInNewWindow,
+  onSaveToCloud,
+  onVersionHistory,
+}: FileSidebarRowProps) {
+  const isInWorkbench = useFileSelector((s) => Boolean(s.files.byId[stub.id]));
+  const workbenchThumbnail = useFileSelector(
+    (s) => s.files.byId[stub.id]?.thumbnailUrl,
+  );
+  const isEncryptedFile = stub.processedFile?.isEncrypted === true;
+  const thumbnailUrl = isEncryptedFile
+    ? undefined
+    : (isInWorkbench ? workbenchThumbnail : undefined) || stub.thumbnailUrl;
+
+  const handleOpenWindow = useMemo(
+    () =>
+      canOpenInNewWindow && onOpenInNewWindow ? onOpenInNewWindow : undefined,
+    [canOpenInNewWindow, onOpenInNewWindow],
+  );
+
+  return (
+    <FileItem
+      fileId={stub.id}
+      name={stub.name}
+      size={stub.size}
+      lastModified={stub.lastModified}
+      isSelected={isInWorkbench}
+      isActive={isViewedInViewer}
+      isViewedInViewer={isViewedInViewer}
+      isToolSkipped={isInWorkbench && isToolSkipped}
+      thumbnailUrl={thumbnailUrl}
+      onClick={onFileClick}
+      onEyeClick={onEyeClick}
+      dataUnavailable={dataUnavailable}
+      policies={policies}
+      onDelete={onDelete}
+      onDownload={onDownload}
+      onRename={onRename}
+      onDuplicate={onDuplicate}
+      onOpenInNewWindow={handleOpenWindow}
+      onSaveToCloud={onSaveToCloud}
+      canSaveToCloud={canSaveToCloud}
+      isUploadedToCloud={isUploadedToCloud}
+      onVersionHistory={onVersionHistory}
+      hasVersionHistory={hasVersionHistory}
+      primaryLabel={primaryLabel}
+    />
+  );
+});
+
 const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
   function FileSidebar(
     {
@@ -508,15 +602,20 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       isEnabled: isGoogleDriveEnabled,
       openPicker: openGoogleDrivePicker,
     } = useGoogleDrivePicker();
-    const { state } = useFileState();
+    const store = useFileStore();
+    const workbenchFileIds = useFileSelector((s) => s.files.ids, shallowEqual);
+    const workbenchIds = useMemo(
+      () => new Set(workbenchFileIds.map((id) => id as string)),
+      [workbenchFileIds],
+    );
     const { actions: fileActions } = useFileActions();
     const { actions: navActions } = useNavigationActions();
-    const { workbench: currentWorkbench } = useNavigationState();
+    const currentWorkbench = useNavigationWorkbench();
     const policyFileBadges = usePolicyFileBadges();
     // The page editor lays out every open file, so an added file belongs there.
     const staysOnAdd = currentWorkbench === "pageEditor";
     const { requestNavigation } = useNavigationGuard();
-    const { activeFileId, setActiveFileId } = useViewer();
+    const { activeFileId, setActiveFileId } = useViewerActiveFile();
     const { addFiles } = useFileHandler();
     const indexedDB = useIndexedDB();
 
@@ -575,9 +674,10 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
 
       try {
         const idbIds = new Set(stubs.map((s) => s.id as string));
+        const { files: liveFiles } = store.getState();
 
-        const pendingStubs = state.files.ids
-          .map((id) => state.files.byId[id])
+        const pendingStubs = liveFiles.ids
+          .map((id) => liveFiles.byId[id])
           .filter(
             (stub): stub is NonNullable<typeof stub> =>
               !!stub && stub.isLeaf !== false && !idbIds.has(stub.id as string),
@@ -599,7 +699,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       } finally {
         if (gen === stubsGenRef.current) setStubsLoaded(true);
       }
-    }, [indexedDB, state.files.ids, state.files.byId]);
+    }, [indexedDB, store]);
 
     const indexedDBRevision = useIndexedDBRevision();
     useCoalescedCallback(refreshStubs, indexedDBRevision);
@@ -791,22 +891,16 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
 
     useEffect(() => {
       if (!pendingViewFileId) return;
-      const isInWorkbench = state.files.ids.some(
-        (id) => (id as string) === pendingViewFileId,
-      );
+      const isInWorkbench = workbenchIds.has(pendingViewFileId);
       if (isInWorkbench) {
         setPendingViewFileId(null);
         setActiveFileId(pendingViewFileId);
         navActions.setWorkbench("viewer");
       }
-    }, [pendingViewFileId, state.files.ids, setActiveFileId, navActions]);
+    }, [pendingViewFileId, workbenchIds, setActiveFileId, navActions]);
 
     // SaaS groups by classification label; core returns null → one flat, recency-sorted list.
     const fileGroups = useFileSidebarGroups(allFileStubs);
-    const workbenchIds = useMemo(
-      () => new Set(state.files.ids.map((id) => id as string)),
-      [state.files.ids],
-    );
     // How many rendered stubs share each lineage — >1 means split siblings, which
     // must key by their unique leaf id rather than the shared lineage (see renderFileRow).
     const lineageCounts = useMemo(() => {
@@ -845,6 +939,10 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       onPickGoogleDriveFiles,
     ]);
 
+    // Which file is currently open in the viewer - stable ID, never index-derived.
+    const viewedWorkbenchId =
+      currentWorkbench === "viewer" ? activeFileId : null;
+
     const handleFileClick = useCallback(
       async (fileId: FileId) => {
         const stub = allFileStubs.find((s) => s.id === fileId);
@@ -866,7 +964,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           return;
         }
 
-        const workbenchFileId = state.files.ids.find(
+        const { files: liveFiles, ui: liveUi } = store.getState();
+        const workbenchFileId = liveFiles.ids.find(
           (id) => (id as string) === (stub.id as string),
         );
 
@@ -883,7 +982,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           await fileActions.removeFiles([workbenchFileId], false);
         } else {
           // Re-add by stub to preserve its ID - addFiles() would create a new UUID + IDB entry.
-          const workbenchCount = state.files.ids.length;
+          const workbenchCount = liveFiles.ids.length;
 
           if (workbenchCount > 0 && currentWorkbench === "viewer") {
             navActions.setWorkbench("fileEditor");
@@ -892,10 +991,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           await fileActions.addStirlingFileStubs([stub]);
 
           if (staysOnAdd) {
-            fileActions.setSelectedFiles([
-              ...state.ui.selectedFileIds,
-              stub.id,
-            ]);
+            fileActions.setSelectedFiles([...liveUi.selectedFileIds, stub.id]);
           } else {
             if (workbenchCount === 0) {
               navActions.setWorkbench("viewer");
@@ -909,20 +1005,15 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         allFileStubs,
         lostFileIds,
         t,
-        state.files.ids,
-        state.ui.selectedFileIds,
+        store,
+        viewedWorkbenchId,
         fileActions,
         navActions,
         currentWorkbench,
-        activeFileId,
         requestNavigation,
         staysOnAdd,
       ],
     );
-
-    // Which file is currently open in the viewer - stable ID, never index-derived.
-    const viewedWorkbenchId =
-      currentWorkbench === "viewer" ? activeFileId : null;
 
     const handleEyeClick = useCallback(
       async (fileId: FileId, _e: React.MouseEvent) => {
@@ -941,13 +1032,14 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
 
         // Switching to a different file while viewer is open - guard against unsaved changes.
         const performSwitch = async () => {
-          const alreadyInWorkbench = state.files.ids.some(
+          const { files: liveFiles } = store.getState();
+          const alreadyInWorkbench = liveFiles.ids.some(
             (id) => (id as string) === (stub.id as string),
           );
 
           if (!alreadyInWorkbench) {
             // Leave viewer before mutating workbench (prevents PSPDFKit crash).
-            if (state.files.ids.length > 0 && currentWorkbench === "viewer") {
+            if (liveFiles.ids.length > 0 && currentWorkbench === "viewer") {
               navActions.setWorkbench("fileEditor");
             }
             await fileActions.addStirlingFileStubs([stub]);
@@ -968,7 +1060,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       [
         allFileStubs,
         viewedWorkbenchId,
-        state.files.ids,
+        store,
         fileActions,
         navActions,
         currentWorkbench,
@@ -1040,68 +1132,73 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
 
     const eligibleFileIds = useToolEligibleFileIds();
 
-    const renderFileRow = (stub: StirlingFileStub) => {
-      const isInWorkbench = workbenchIds.has(stub.id);
-      const workbenchFileId = isInWorkbench ? stub.id : undefined;
-      const isViewedInViewer = !!(
-        viewedWorkbenchId && viewedWorkbenchId === (stub.id as string)
-      );
-      const isActive = isViewedInViewer;
-      const isEncryptedFile = stub.processedFile?.isEncrypted === true;
-      const thumbnailUrl = isEncryptedFile
-        ? undefined
-        : (workbenchFileId
-            ? state.files.byId[workbenchFileId]?.thumbnailUrl
-            : undefined) || stub.thumbnailUrl;
-      const fileOrigin = getFileOrigin(stub);
-      const dataUnavailable =
-        stub.dataUnavailable === true || lostFileIds.has(stub.id);
-      // Lineage keys preserve rows across version changes; split siblings need unique leaf IDs.
-      const lineageKey = stub.originalFileId ?? stub.id;
-      const rowKey =
-        (lineageCounts.get(lineageKey) ?? 0) > 1
-          ? (stub.id as string)
-          : lineageKey;
-      return (
-        <FileItem
-          isToolSkipped={
-            isInWorkbench &&
-            eligibleFileIds !== null &&
-            !eligibleFileIds.has(stub.id)
-          }
-          key={rowKey}
-          fileId={stub.id}
-          name={stub.name}
-          size={stub.size}
-          lastModified={stub.lastModified}
-          isSelected={isInWorkbench}
-          isActive={isActive}
-          isViewedInViewer={isViewedInViewer}
-          thumbnailUrl={thumbnailUrl}
-          onClick={handleFileClick}
-          onEyeClick={handleEyeClick}
-          dataUnavailable={dataUnavailable}
-          policies={policyFileBadges.get(stub.id) ?? NO_POLICIES}
-          onDelete={handleSidebarDelete}
-          onDownload={handleDownload}
-          onRename={handleRename}
-          onDuplicate={handleDuplicate}
-          onOpenInNewWindow={
-            canOpenInNewWindow(stub) ? handleOpenInNewWindow : undefined
-          }
-          onSaveToCloud={handleSaveToCloud}
-          canSaveToCloud={storageEnabled && fileOrigin !== "shared-with-me"}
-          isUploadedToCloud={fileOrigin === "cloud"}
-          onVersionHistory={handleVersionHistory}
-          hasVersionHistory={(stub.versionNumber ?? 1) > 1}
-          primaryLabel={
-            classificationEnabled && stub.classificationLabels?.[0]
-              ? labelName(stub.classificationLabels[0])
-              : undefined
-          }
-        />
-      );
-    };
+    const renderFileRow = useCallback(
+      (stub: StirlingFileStub) => {
+        const isViewedInViewer = !!(
+          viewedWorkbenchId && viewedWorkbenchId === (stub.id as string)
+        );
+        const fileOrigin = getFileOrigin(stub);
+        const dataUnavailable =
+          stub.dataUnavailable === true || lostFileIds.has(stub.id);
+        // Lineage keys preserve rows across version changes; split siblings need unique leaf IDs.
+        const lineageKey = stub.originalFileId ?? stub.id;
+        const rowKey =
+          (lineageCounts.get(lineageKey) ?? 0) > 1
+            ? (stub.id as string)
+            : lineageKey;
+        const isToolSkipped =
+          eligibleFileIds !== null && !eligibleFileIds.has(stub.id);
+
+        return (
+          <FileSidebarRow
+            key={rowKey}
+            stub={stub}
+            isViewedInViewer={isViewedInViewer}
+            dataUnavailable={dataUnavailable}
+            policies={policyFileBadges.get(stub.id) ?? NO_POLICIES}
+            primaryLabel={
+              classificationEnabled && stub.classificationLabels?.[0]
+                ? labelName(stub.classificationLabels[0])
+                : undefined
+            }
+            canSaveToCloud={storageEnabled && fileOrigin !== "shared-with-me"}
+            isUploadedToCloud={fileOrigin === "cloud"}
+            hasVersionHistory={(stub.versionNumber ?? 1) > 1}
+            isToolSkipped={isToolSkipped}
+            canOpenInNewWindow={canOpenInNewWindow(stub)}
+            onFileClick={handleFileClick}
+            onEyeClick={handleEyeClick}
+            onDelete={handleSidebarDelete}
+            onDownload={handleDownload}
+            onRename={handleRename}
+            onDuplicate={handleDuplicate}
+            onOpenInNewWindow={handleOpenInNewWindow}
+            onSaveToCloud={handleSaveToCloud}
+            onVersionHistory={handleVersionHistory}
+          />
+        );
+      },
+      [
+        viewedWorkbenchId,
+        lostFileIds,
+        lineageCounts,
+        eligibleFileIds,
+        policyFileBadges,
+        classificationEnabled,
+        labelName,
+        storageEnabled,
+        canOpenInNewWindow,
+        handleFileClick,
+        handleEyeClick,
+        handleSidebarDelete,
+        handleDownload,
+        handleRename,
+        handleDuplicate,
+        handleOpenInNewWindow,
+        handleSaveToCloud,
+        handleVersionHistory,
+      ],
+    );
 
     const sidebarActions: NonNullable<FileSidebarProps["extraActions"]> = [
       ...(currentWorkbench === "myFiles"

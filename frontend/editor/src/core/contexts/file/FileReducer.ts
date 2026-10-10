@@ -223,6 +223,14 @@ export function fileContextReducer(
         return state; // File doesn't exist, no-op
       }
 
+      const keys = Object.keys(updates) as (keyof StirlingFileStub)[];
+      if (keys.length === 0) return state;
+
+      const hasChange = keys.some(
+        (key) => existingRecord[key] !== updates[key],
+      );
+      if (!hasChange) return state;
+
       const updatedRecord = {
         ...existingRecord,
         ...updates,
