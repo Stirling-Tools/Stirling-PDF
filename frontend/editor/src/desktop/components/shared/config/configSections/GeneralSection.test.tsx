@@ -84,7 +84,7 @@ describe("desktop GeneralSection update policy", () => {
     });
   });
 
-  it("does not mount update controls or check updates before managed-disabled policy loads", async () => {
+  it("shows the version but checks nothing when updates are managed-disabled", async () => {
     let resolvePolicy!: (info: UpdateModeInfo) => void;
     vi.mocked(desktopUpdateService.getUpdateModeInfo).mockReturnValue(
       new Promise<UpdateModeInfo>((resolve) => {
@@ -104,10 +104,12 @@ describe("desktop GeneralSection update policy", () => {
       resolvePolicy({ mode: "disabled", locked: true });
     });
 
+    // An administrator who turned updates off still needs to see what is installed.
+    expect(await screen.findByText("3.0.1")).toBeInTheDocument();
+    expect(screen.getByLabelText("Update behavior")).toBeDisabled();
     expect(
       screen.queryByRole("button", { name: "Check for Updates" }),
     ).not.toBeInTheDocument();
-    expect(screen.queryByLabelText("Update behavior")).not.toBeInTheDocument();
     expect(updateService.getUpdateSummary).not.toHaveBeenCalled();
     expect(checkTauriUpdate).not.toHaveBeenCalled();
   });
