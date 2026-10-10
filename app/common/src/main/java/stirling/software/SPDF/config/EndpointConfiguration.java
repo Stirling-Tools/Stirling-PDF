@@ -325,7 +325,7 @@ public class EndpointConfiguration {
                 disabledGroups.stream().filter(group -> !isToolGroup(group)).sorted().toList();
 
         if (!disabledToolGroups.isEmpty()) {
-            log.info(
+            log.debug(
                     "Disabled tool groups: {} (endpoints may have alternative implementations)",
                     String.join(", ", disabledToolGroups));
         }

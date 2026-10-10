@@ -576,10 +576,6 @@ public class UserService implements UserServiceInterface {
         } else {
             settings.remove(MFA_LAST_USED_STEP_KEY);
         }
-        log.info(
-                "MFA required set to true for user {} {}",
-                request.getUsername(),
-                user.getSettings().toString());
 
         // Set role (authority)
         user.addAuthority(new Authority(request.getRole(), user));
