@@ -13,6 +13,8 @@
  * never have to deal with raw pointers or Tasks.
  */
 import type { WrappedPdfiumModule, PdfiumModule } from "@embedpdf/pdfium";
+
+export type { WrappedPdfiumModule };
 import {
   pdfiumWasmModulePromise,
   startEagerWasmCompilation,
