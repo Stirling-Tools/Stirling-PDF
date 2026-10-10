@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * Unit tests for automationConverter import/export round-tripping.
  */

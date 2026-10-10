@@ -101,6 +101,9 @@ export function splitFileName(name: string): [string, string] {
   return dot > 0 ? [name.slice(0, dot), name.slice(dot)] : [name, ""];
 }
 
+/** Characters Windows/macOS reject in a filename, which is also what a download saves as. */
+export const ILLEGAL_FILE_NAME_CHARS = /[\\/:*?"<>|]/;
+
 /**
  * Checks if a file is a PDF based on extension and MIME type
  * @param file - File or file-like object with name and type properties
@@ -136,9 +139,10 @@ export function getFileFormats(
   if (file.processedFile?.isEncrypted) return ["PDF_ENCRYPTED"];
   if (isPdfFile(file)) return ["PDF"];
   const extension = detectFileExtension(file.name);
-  return TOOL_FORMATS.filter((format) =>
-    TOOL_FORMAT_EXTENSIONS[format].includes(extension),
-  );
+  return TOOL_FORMATS.filter((format) => {
+    const extensions: readonly string[] = TOOL_FORMAT_EXTENSIONS[format];
+    return extensions.includes(extension);
+  });
 }
 
 export type NonPdfFileType =

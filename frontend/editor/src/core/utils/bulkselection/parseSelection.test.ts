@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect } from "vitest";
 import { parseSelection } from "@app/utils/bulkselection/parseSelection";
 

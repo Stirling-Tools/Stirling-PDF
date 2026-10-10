@@ -11,8 +11,8 @@ import org.springframework.stereotype.Component;
  * currentTool} would open its own cached aggregate over the stats table.
  *
  * <p>Hand-maintained mirror of {@code frontend/editor/src/core/types/toolId.ts} and the proprietary
- * and prototype overrides beside it. {@code ToolKeyRegistryTest} parses those files and fails when
- * the two drift, so adding a tool to the frontend fails the build until it is added here.
+ * override beside it. {@code ToolKeyRegistryTest} parses those files and fails when the two drift,
+ * so adding a tool to the frontend fails the build until it is added here.
  */
 @Component
 public class ToolKeyRegistry {
@@ -83,9 +83,8 @@ public class ToolKeyRegistry {
                     "devFolderScanning",
                     "devSsoGuide",
                     "devAirgapped",
-                    // Build-specific overrides: proprietary and prototype super tools
-                    "ai-workflow",
-                    "pdfCommentAgent");
+                    // PROPRIETARY_SUPER_TOOL_IDS
+                    "ai-workflow");
 
     /** Longest key the set can hold, so storage can be sized from the data rather than a guess. */
     public static final int MAX_KEY_LENGTH =

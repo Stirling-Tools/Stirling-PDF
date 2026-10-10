@@ -66,7 +66,7 @@ export const TOOL_FORMATS = [
 ] as const satisfies readonly ToolFormat[];
 
 /** Filename extensions from the backend ToolFormat declarations. */
-export const TOOL_FORMAT_EXTENSIONS: Record<ToolFormat, readonly string[]> = {
+export const TOOL_FORMAT_EXTENSIONS = {
   PDF: ["pdf"],
   PDF_ENCRYPTED: ["pdf"],
   IMAGE: [
@@ -104,7 +104,11 @@ export const TOOL_FORMAT_EXTENSIONS: Record<ToolFormat, readonly string[]> = {
   CBR: ["cbr"],
   ANY: [],
   NONE: [],
-};
+} as const satisfies Record<ToolFormat, readonly string[]>;
+
+/** The filename extensions of one format, as literals. */
+export type ToolFormatExtension<F extends ToolFormat> =
+  (typeof TOOL_FORMAT_EXTENSIONS)[F][number];
 
 /** How many files go in and come out. A multi-output tool returns its results zipped, and the caller unpacks them. */
 export type ToolArity = "SISO" | "SIMO" | "MISO" | "MIMO";
