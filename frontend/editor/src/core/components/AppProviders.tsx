@@ -86,11 +86,14 @@ export interface AppProvidersProps {
 
 // Component to sync server defaults to preferences when AppConfig loads
 function ServerDefaultsSync() {
-  const { config } = useAppConfig();
+  const { config, configFromServer } = useAppConfig();
   const { updateServerDefaults } = usePreferences();
 
   useEffect(() => {
-    if (config) {
+    // A stand-in (401 default, auth-page fallback, desktop startup config)
+    // must not count as the server's answer. Installing it marks defaults as
+    // loaded and the launch then locks in "tools".
+    if (config && configFromServer) {
       // Only known values. An absent or unexpected field must not clobber the
       // hardcoded default via an explicit `undefined` in the merge.
       const serverDefaults: Partial<UserPreferences> = {
@@ -113,7 +116,7 @@ function ServerDefaultsSync() {
       }
       updateServerDefaults(serverDefaults);
     }
-  }, [config, updateServerDefaults]);
+  }, [config, configFromServer, updateServerDefaults]);
 
   return null;
 }

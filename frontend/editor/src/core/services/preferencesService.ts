@@ -59,8 +59,10 @@ const STORAGE_KEY = "stirlingpdf_preferences";
 
 class PreferencesService {
   private serverDefaults: Partial<UserPreferences> = {};
-  // False until /app-config has been applied, so a launch can tell "not loaded
-  // yet" apart from "loaded, and the server's choice is the hardcoded one".
+  // False until a real /app-config has been applied, so a launch can tell "not
+  // loaded yet" apart from "loaded, and the server's choice is the hardcoded
+  // one". Callers must not set this for a stand-in config: the launch treats
+  // the flag as "the server has answered" and would lock in "tools".
   private serverDefaultsInstalled = false;
 
   setServerDefaults(defaults: Partial<UserPreferences>): void {

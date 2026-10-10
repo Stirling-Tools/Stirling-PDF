@@ -12,6 +12,7 @@ import React, {
   useEffect,
   useRef,
 } from "react";
+import { useLocation } from "react-router-dom";
 import {
   useToolManagement,
   type ToolAvailabilityMap,
@@ -28,7 +29,7 @@ import {
   isBaseWorkbench,
 } from "@app/types/workbench";
 import { useNavigationUrlSync } from "@app/hooks/useUrlSync";
-import { stripBasePath } from "@app/constants/app";
+import { isAuthRoute } from "@app/constants/routes";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import { filterToolRegistryByQuery } from "@app/utils/toolSearch";
 import { useToolHistory } from "@app/hooks/tools/useUserToolActivity";
@@ -39,6 +40,7 @@ import {
   toolWorkflowReducer,
 } from "@app/contexts/toolWorkflow/toolWorkflowState";
 import type { ToolPanelMode } from "@app/constants/toolPanel";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { usePreferences } from "@app/contexts/PreferencesContext";
 import { preferencesService } from "@app/services/preferencesService";
 import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
@@ -176,6 +178,28 @@ const ToolWorkflowDataContext = createContext<
   ToolWorkflowDataValue | undefined
 >(undefined);
 
+// Login, signup, invite, share, and the account-link page all sit inside these
+// providers and then navigate into the editor without remounting. Spending the
+// launch there would drop the admin default. A tool URL is not one of these:
+// that address wins.
+function defersStartupView(pathname: string): boolean {
+  if (isAuthRoute(pathname)) return true;
+  return (
+    pathname === "/link" ||
+    pathname.startsWith("/link/") ||
+    pathname === "/share" ||
+    pathname.startsWith("/share/")
+  );
+}
+
+function isEditorHome(pathname: string): boolean {
+  const path =
+    pathname.length > 1 && pathname.endsWith("/")
+      ? pathname.slice(0, -1)
+      : pathname;
+  return path === "/" || path === EDITOR_BASENAME;
+}
+
 // Provider component
 interface ToolWorkflowProviderProps {
   children: React.ReactNode;
@@ -188,6 +212,8 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     createInitialState,
   );
   const { preferences, updatePreference } = usePreferences();
+  const { pathname } = useLocation();
+  const { configFromServer } = useAppConfig();
 
   // Store reset functions for tools
   const [toolResetFunctions, setToolResetFunctions] = React.useState<
@@ -383,34 +409,36 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     }
   }, [preferences.defaultToolPanelMode, state.toolPanelMode]);
 
-  // Apply the startup view once per launch. /app-config arrives after mount, so
-  // the hardcoded "tools" value must not count as that launch: a server default
-  // of "read" or "automate" would never show. A stored choice still wins, and
-  // is applied without waiting.
+  // One launch decision. A stored choice wins without waiting. Otherwise wait
+  // for a real /app-config: a stand-in looks loaded and would lock this in as
+  // "tools". Auth routes must not spend the launch, because sign-in navigates
+  // here without remounting; a deep link does, because the URL wins. A reload
+  // keeps the open view, unless that reload was the login page.
   const hasAppliedStartupView = React.useRef(false);
+  // True once an auth route was showing, so its document reload does not count
+  // as the launch after sign-in moves to the editor.
+  const deferredStartupForAuth = React.useRef(false);
   // Set when the startup view picks the tool, so the URL sync knows this
   // selection came from a preference and must not be written to the address.
   const startupSelectedToolRef = React.useRef<ToolId | null>(null);
   useEffect(() => {
     if (hasAppliedStartupView.current) return;
-    // The URL wins: the startup view decides what you see when you arrive at the
-    // editor's home, never what a deep link to a tool shows. Without this, a
-    // "Reader" preference rewrote every /<tool> link to /read.
-    const path = stripBasePath(window.location.pathname);
-    // A reload is not a launch: it keeps whichever view the user had open.
+    if (defersStartupView(pathname)) {
+      deferredStartupForAuth.current = true;
+      return;
+    }
     const navigation = performance.getEntriesByType?.("navigation")[0] as
       | PerformanceNavigationTiming
       | undefined;
-    if (
-      navigation?.type === "reload" ||
-      (path !== "/" && path !== EDITOR_BASENAME)
-    ) {
+    const reloaded =
+      !deferredStartupForAuth.current && navigation?.type === "reload";
+    if (reloaded || !isEditorHome(pathname)) {
       hasAppliedStartupView.current = true;
       return;
     }
     if (
       !preferencesService.hasStoredPreference("defaultStartupView") &&
-      !preferencesService.hasServerDefaults()
+      (!configFromServer || !preferencesService.hasServerDefaults())
     ) {
       return;
     }
@@ -437,7 +465,14 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     if (startupView === "tools") {
       hasAppliedStartupView.current = true;
     }
-  }, [preferences, actions, setReaderMode, setLeftPanelView]);
+  }, [
+    pathname,
+    preferences,
+    configFromServer,
+    actions,
+    setReaderMode,
+    setLeftPanelView,
+  ]);
 
   // Tool reset methods
   const registerToolReset = useCallback(

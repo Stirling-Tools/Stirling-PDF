@@ -24,6 +24,13 @@ export type { AppConfig, AppConfigBootstrapMode };
 
 interface AppConfigContextValue {
   config: AppConfig | null;
+  /**
+   * True only for a real /app-config payload, or a caller-supplied seed with
+   * fetching disabled. The 401 stand-in (the DEFAULT_APP_CONFIG singleton) and
+   * the auth-page fallback are not the server's answer; the desktop hook also
+   * clears this for its startup placeholder.
+   */
+  configFromServer: boolean;
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
@@ -31,6 +38,7 @@ interface AppConfigContextValue {
 
 const AppConfigContext = createContext<AppConfigContextValue | undefined>({
   config: null,
+  configFromServer: false,
   loading: true,
   error: null,
   refetch: async () => {},
@@ -116,12 +124,19 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
     if (data) onConfigLoadedRef.current?.(data);
   }, [data]);
 
-  const value = useMemo<AppConfigContextValue>(
-    () => ({
+  const value = useMemo<AppConfigContextValue>(() => {
+    // fetchAppConfig turns a 401 into the DEFAULT_APP_CONFIG singleton instead
+    // of failing the query, so a resolved `data` can still be a stand-in.
+    // Identity is what separates that cached default from a server payload.
+    const configFromServer =
+      (data != null && data !== DEFAULT_APP_CONFIG) ||
+      (data == null && !autoFetch && initialConfig != null);
+    return {
       config:
         data ??
         initialConfig ??
         (isAuthPage || error ? DEFAULT_APP_CONFIG : null),
+      configFromServer,
       // "Config not settled yet": in flight, or never going to be fetched at
       // all. isFetching rather than isPending because a pre-login 401 resolves
       // to the default config, so isPending is already false by the time the
@@ -135,19 +150,18 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
             : false,
       error: error ? errorMessage(error) : null,
       refetch,
-    }),
-    [
-      data,
-      error,
-      isFetching,
-      initialConfig,
-      isAuthPage,
-      seeded,
-      autoFetch,
-      fetching,
-      refetch,
-    ],
-  );
+    };
+  }, [
+    data,
+    error,
+    isFetching,
+    initialConfig,
+    isAuthPage,
+    seeded,
+    autoFetch,
+    fetching,
+    refetch,
+  ]);
 
   return (
     <AppConfigContext.Provider value={value}>
