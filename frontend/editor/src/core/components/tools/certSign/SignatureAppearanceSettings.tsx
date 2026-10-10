@@ -225,6 +225,10 @@ const SignatureAppearanceSettings = ({
           />
           <TextInput
             label={t("certSign.name", "Name")}
+            description={t(
+              "certSign.nameDescription",
+              "Saved in the signature's details. The visible signature shows the name on the certificate.",
+            )}
             value={parameters.name}
             onChange={(event) =>
               onParameterChange("name", event.currentTarget.value)
