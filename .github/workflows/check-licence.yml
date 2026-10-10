@@ -53,12 +53,12 @@ jobs:
               path: .cache/gradle-java-${{ inputs.java-version }}/caches
             gradle-wrapper:
               path: .cache/gradle-java-${{ inputs.java-version }}/wrapper
-          save-scope: shared
+          # save-scope: shared
           key: |
             gradle-caches=${{ inputs.gradle-hash }}
             gradle-wrapper=${{ inputs.gradle-hash }}
           token: ${{ github.token }}
-          allow-shared-restore: true
+          # allow-shared-restore: true
           strict: false
 
       - name: Set up JDK 25

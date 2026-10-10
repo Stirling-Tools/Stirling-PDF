@@ -112,10 +112,10 @@ jobs:
           artifact-retention-days: 1
           storage: github-artifact
           multi-cache: ${{ steps.cache-config.outputs.multi_cache }}
-          save-scope: shared
+          # save-scope: shared
           token: ${{ github.token }}
           key: ${{ steps.cache-config.outputs.cache_key }}
-          allow-shared-restore: true
+          # allow-shared-restore: true
           strict: false
 
       - name: Set up JDK ${{ matrix.jdk-version }}

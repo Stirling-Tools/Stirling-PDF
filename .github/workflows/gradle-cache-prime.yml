@@ -79,12 +79,12 @@ jobs:
               path: .cache/gradle-java-${{ inputs.java-version }}/caches
             gradle-wrapper:
               path: .cache/gradle-java-${{ inputs.java-version }}/wrapper
-          save-scope: shared
+          # save-scope: shared
           token: ${{ github.token }}
           key: |
             gradle-caches=${{ inputs.gradle-hash }}
             gradle-wrapper=${{ inputs.gradle-hash  }}
-          allow-shared-restore: true
+          # allow-shared-restore: true
           strict: false
 
       - name: Display cache information
