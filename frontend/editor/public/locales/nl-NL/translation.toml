@@ -55,7 +55,9 @@ keepWorking = "Doorgaan met werken"
 loading = "Laden..."
 loginAgreementAccept = "Accepteren"
 loginAgreementDecline = "Weigeren"
+loginAgreementLoadFailed = "The login agreement could not be loaded."
 loginAgreementProvider = "Deze melding is afkomstig van uw beheerder, niet van Stirling PDF Inc."
+loginAgreementRetry = "Retry"
 loginAgreementTitle = "Inlogovereenkomst"
 logOut = "Uitloggen"
 marginTooltip = "Afstand tussen het paginanummer en de rand van de pagina."
@@ -1939,9 +1941,6 @@ wrapUp = "Dat was de beheerdersrondleiding! Je hebt de enterprise-functies gezie
 admin = "Beheerder"
 title = "Gebruikersbeheer"
 
-[agents]
-stirling_name = "Stirling"
-
 [alphabetOptions]
 arabic = "Arabisch"
 chinese = "Chinees (vereenvoudigd)"
@@ -3219,21 +3218,16 @@ text = "Om deze machtigingen niet wijzigbaar te maken, gebruik de tool Wachtwoor
 [chat.actions]
 copy = "Bericht kopiëren"
 
-[chat.emptyState]
-text = "Stel een vraag over je documenten of krijg hulp met PDF-tools."
-
-[chat.fab]
-close = "Chat sluiten"
-open = "Stirling AI-assistent openen"
+[chat.dock]
+collapse = "Collapse chat"
+placeholder = "Ask Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Stirling-agentopties"
-assistant = "AI-assistent"
 clearChat = "Chat wissen"
 
 [chat.input]
 disclaimer = "AI kan fouten maken. Controleer de uitvoer voordat je deze deelt."
-placeholder = "Wat wilt u doen?"
 send = "Bericht verzenden"
 
 [chat.progress]
@@ -3264,9 +3258,7 @@ convertMany = "Deze documenten naar PDF converteren"
 convertOne = "Dit document naar PDF converteren"
 heading = "Aan de slag"
 mergeMany = "Deze {{count}} documenten samenvoegen tot 1"
-moreFiles = "+{{count}} meer"
 openFromComputer = "Openen vanaf computer"
-removeFile = "{{name}} verwijderen"
 splitOne = "Dit document splitsen"
 
 [chat.responses]
@@ -3278,11 +3270,6 @@ not_found = "Ik kon de gevraagde informatie niet vinden."
 processing = "Bezig met verwerken ({{outcome}})..."
 unsupported_capability = "Niet-ondersteunde mogelijkheid: {{capability}}"
 usage_limit_reached = "Je hebt je gebruikslimiet bereikt. Bekijk je planopties om door te gaan."
-
-[chat.toolsUsed]
-summary_one = "1 tool uitgevoerd"
-summary_other = "{{count}} tools uitgevoerd"
-unknownTool = "Onbekende tool"
 
 [classification.families]
 correspondence = "Correspondentie"
@@ -4364,6 +4351,10 @@ title = "Bijgewerkt vanaf schijf"
 body = "\"{{name}}\" is op schijf gewijzigd. Het is groot genoeg dat opnieuw laden even duurt, dus de versie hier is met rust gelaten."
 title = "Bestand gewijzigd op schijf"
 
+[desktopPrivacy]
+blocked = "Your administrator requires documents to stay on this device. This feature is unavailable."
+localFiles = "Local files"
+
 [desktopUpdate]
 downloading = "Update downloaden..."
 installing = "Update installeren..."
@@ -4597,22 +4588,23 @@ viewInViewer = "Bekijken in viewer"
 closeFile = "Bestand sluiten"
 
 [fileEditor]
-addFiles = "Bestanden toevoegen"
 closedFile = "{{name}} gesloten"
 couldNotSave = "Kon {{name}} niet opslaan"
-filesAdded_one = "{{count}} bestand toegevoegd"
-filesAdded_other = "{{count}} bestanden toegevoegd"
 filesReordered_one = "Bestand opnieuw geordend"
 filesReordered_other = "{{count}} bestanden opnieuw geordend"
 loadedFromStorage_one = "{{count}} bestand uit opslag geladen"
 loadedFromStorage_other = "{{count}} bestanden uit opslag geladen"
 loadFromStorageFailed = "Sommige bestanden laden uit opslag mislukt"
 pinnedFile = "{{name}} vastgezet"
-processFilesFailed = "Bestanden verwerken mislukt"
 savedAndClosed = "{{name}} opgeslagen en gesloten"
 saveFailed = "Opslaan mislukt"
 unpinnedFile = "{{name}} losgemaakt"
 unzipping = "{{name}} uitpakken"
+
+[fileEditor.addCard]
+dropHint = "or drop files anywhere"
+fromComputer = "Upload from computer"
+moreOptions = "More upload options"
 
 [fileEditor.unzip]
 error = "Fout bij uitpakken van {{name}}"
@@ -4729,7 +4721,6 @@ dataLostBody = "Deze browser is de inhoud van dit bestand kwijtgeraakt. Upload h
 dataLostTitle = "Bestandsgegevens zijn niet beschikbaar"
 downloadFailed = "Downloaden mislukt"
 dropHint = "Open bestanden om te beginnen"
-dropToAdd = "Sleep bestanden hierheen om toe te voegen"
 duplicateFailed = "Kon bestand niet dupliceren"
 expand = "Zijbalk uitvouwen"
 googleDrive = "Google Drive"
@@ -5733,11 +5724,6 @@ desc = "Voeg meerdere pagina's van een PDF-document samen op één pagina"
 tags = "lay-out,rangschikken,combineren,N-up,2-up,4-up,meerdere per pagina,pagina's per vel,pagina's lay-outen,tegelen,rasterlay-out,meerpagina-lay-out,combineren op pagina,hand-out"
 title = "Multi-pagina indeling"
 
-[home.pdfCommentAgent]
-desc = "Vraag AI om een PDF te annoteren met plaknotitie-opmerkingen op basis van je prompt"
-tags = "AI,agent,commentaar,annoteren,plaknotitie,review,feedback,notities"
-title = "AI-opmerkingen toevoegen"
-
 [home.pdfOrganiser]
 tags = "organiseren,herschikken,herordenen,pagina's rangschikken,sorteren,pagina's verplaatsen,pagina's verwijderen,pagina's weghalen,paginabeheer,pagina-organizer,opnieuw rangschikken"
 title = "Organiseren"
@@ -6595,63 +6581,6 @@ yourCloudAccess = "Je wordt teamlid en verliest eigenaarstoegang."
 deselectAll = "Geen"
 selectAll = "Alles aanvinken"
 
-[pageEditor]
-dragPreviewAlt = "Slepen"
-filePosition = "Positie {{position}}"
-pageLabel = "Pagina {{page}}"
-title = "Pagina-editor"
-
-[pageEditor.actions]
-deletePage = "Pagina verwijderen"
-insertFileAfter = "Bestand hierna invoegen"
-moveLeft = "Naar links verplaatsen"
-moveRight = "Naar rechts verplaatsen"
-rotateLeft = "Linksom draaien"
-rotateRight = "Rechtsom draaien"
-splitAfter = "Hierna splitsen"
-
-[pageEditor.commands]
-addSplitAt = "Splitsing toevoegen op positie {{position}}"
-addSplits_one = "{{count}} splitsing toevoegen"
-addSplits_other = "{{count}} splitsingen toevoegen"
-deletePages_one = "{{count}} pagina verwijderen"
-deletePages_other = "{{count}} pagina's verwijderen"
-insertFiles_one = "{{count}} bestand invoegen na pagina {{page}}"
-insertFiles_other = "{{count}} bestanden invoegen na pagina {{page}}"
-insertPageBreaks_one = "{{count}} pagina-einde invoegen"
-insertPageBreaks_other = "{{count}} pagina-einden invoegen"
-insertPageBreaksAll = "Pagina-einden invoegen na alle pagina's"
-removeAllSplits = "Alle splitsingen verwijderen"
-removeSplitAt = "Splitsing verwijderen op positie {{position}}"
-removeSplits_one = "{{count}} splitsing verwijderen"
-removeSplits_other = "{{count}} splitsingen verwijderen"
-reorderPages = "Pagina's herordenen"
-rotatePageLeft = "Pagina naar links roteren"
-rotatePageRight = "Pagina naar rechts roteren"
-rotatePagesLeft_one = "{{count}} pagina naar links roteren"
-rotatePagesLeft_other = "{{count}} pagina's naar links roteren"
-rotatePagesRight_one = "{{count}} pagina naar rechts roteren"
-rotatePagesRight_other = "{{count}} pagina's naar rechts roteren"
-splitAllPages = "Alle pagina's splitsen"
-toggleSplits_one = "{{count}} splitspositie omschakelen"
-toggleSplits_other = "{{count}} splitsposities omschakelen"
-
-[pageEditor.emptyState]
-body = "Voeg bestanden toe om met het bewerken van pagina's te beginnen"
-title = "Geen PDF-bestanden geladen"
-
-[pageEditor.fileDropdown]
-addFile = "Bestand toevoegen"
-selectedCount = "{{selected}}/{{total}} bestanden geselecteerd"
-untitled = "Naamloos"
-
-[pageEditor.toolbar]
-delete = "Geselecteerde verwijderen"
-redo = "Opnieuw"
-rotateLeft = "Geselecteerde links roteren"
-rotateRight = "Geselecteerde rechts roteren"
-undo = "Ongedaan maken"
-
 [pageExtracter]
 title = "Pagina's extraheren"
 
@@ -6815,6 +6744,76 @@ title = "Paginareeksen"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → selecteert alle pagina's"
 title = "Speciale sleutelwoorden"
+
+[pageTracks]
+blankPage = "Blank page"
+deleteSelected = "Delete selected pages"
+downloadAsOneFile = "Download as one file"
+downloadEachPage = "Download each page individually"
+downloadSelectedPages = "Download selected pages"
+dragging_one = "{{count}} page"
+dragging_other = "{{count}} pages"
+duplicateSelected = "Duplicate selected pages"
+edited = "edited"
+emptyTrack = "No pages left. Drag pages here, or save to close this file."
+insertBlank = "Insert blank page"
+insertBlankAfterSelected = "Insert blank pages after selected pages"
+moveLeft = "Move left"
+moveRight = "Move right"
+nextPage = "Next page"
+page = "Page {{number}}"
+pageCount_one = "{{count}} page"
+pageCount_other = "{{count}} pages"
+pagePosition = "Page {{number}} of {{total}}"
+prevPage = "Previous page"
+readingPages = "Reading pages..."
+redo = "Redo"
+rotateLeft = "Rotate left"
+rotateRight = "Rotate right"
+rotateSelectedLeft = "Rotate selected pages left"
+rotateSelectedRight = "Rotate selected pages right"
+saveAsOneFile = "Save as one file"
+saveChanges = "Save changes to all files"
+saveEachPage = "Save each page individually"
+saveSelectedPages = "Save selected pages"
+saving = "Saving..."
+savingProgress = "Saving {{done}} of {{total}}"
+selectPage = "Select page {{number}}"
+splitAfterSelected = "Split after selected pages"
+splitHere = "Split here"
+undo = "Undo"
+viewError = "Couldn't render this page"
+viewPage = "View page"
+zoomIn = "Zoom in"
+zoomOut = "Zoom out"
+
+[pageTracks.close]
+message = "Are you sure you want to close all files?"
+unsaved = "These files have unsaved changes."
+
+[pageTracks.delete]
+page = "Delete page"
+
+[pageTracks.empty]
+body = "Add PDFs to expand them into editable page tracks"
+title = "No PDF files loaded"
+
+[pageTracks.exportFailed]
+body = "The edited files couldn't be prepared. Try again."
+title = "Couldn't download"
+
+[pageTracks.saveFailed]
+body = "Your edits haven't been lost. Try saving again."
+title = "Couldn't save changes"
+
+[pageTracks.track]
+close = "Close file"
+collapse = "Collapse"
+expand = "Expand"
+rename = "Rename file"
+
+[pageTracks.wrap]
+label = "Wrap pages"
 
 [payg.activity]
 docs = "documenten"
@@ -7143,24 +7142,6 @@ totalSeats_other = "Totaal ({{count}} licentieplekken)"
 
 [payment.upgradeTeam]
 title = "Upgraden naar Team"
-
-[pdfCommentAgent]
-submit = "Opmerkingen genereren"
-
-[pdfCommentAgent.error]
-emptyPrompt = "Beschrijf waarover de AI opmerkingen moet geven"
-failed = "Opmerkingen genereren mislukt"
-tooLong = "Prompt is te lang (maximaal {{max}} tekens)"
-
-[pdfCommentAgent.prompt]
-label = "Waarover moet de AI opmerkingen geven?"
-placeholder = "bijv. Markeer onduidelijke datums en stel verduidelijkingen voor"
-
-[pdfCommentAgent.results]
-title = "PDF met opmerkingen"
-
-[pdfCommentAgent.settings]
-title = "Instructies voor opmerkingen"
 
 [pdfOrganiser]
 placeholder = "(bijv. 1,3,2 of 4-8,2,10-12 of 2n-1)"
@@ -7994,6 +7975,7 @@ before = "Stel"
 title = "Stirling-verbinding niet geconfigureerd"
 
 [portal.accountLink.notice]
+loadFailed = "The account linking dialog could not be loaded."
 openFailed = "Kon je browser niet openen. Open Gebruik & facturering op je verbonden server om een account te koppelen."
 
 [portal.accountLink.panel]
@@ -8117,9 +8099,6 @@ limit = "Maandelijkse bestedingslimiet {{amount}}/mnd. Verwerking pauzeert bij d
 limitNoCap = "Geen bestedingslimiet. Verwerking pauzeert niet. Facturen worden maandelijks verstuurd."
 
 [portal.billing.chip]
-invoices = "Facturen"
-nav = "Secties"
-payment = "Betaling"
 plan = "Abonnement"
 procurement = "Inkoop"
 usage = "Gebruik"
@@ -12054,6 +12033,7 @@ title = "Werkruimte"
 loginIncomplete = "Aanmelding voltooien mislukt"
 noSaasServer = "Geen SaaS-server geconfigureerd"
 noServer = "Geen server geconfigureerd"
+policyUnavailable = "Unable to load your organisation's sign-in settings."
 saasLoginFailed = "SaaS-aanmelding mislukt"
 saasLoginIncomplete = "SaaS-aanmelding voltooien mislukt"
 selfHostedLoginFailed = "Self-hosted aanmelding mislukt"
@@ -13905,6 +13885,11 @@ title = "Watermerktekst"
 image = "Afbeelding"
 text = "Tekst"
 
+[workbench]
+dropFailedSingle = "Your file couldn't be added"
+dropFailedSome = "{{failed}} of your files couldn't be added"
+dropOverlay = "Drop files to add them to the workbench"
+
 [workbench.sessionRestore]
 none = "Je vorige bestanden zijn niet meer op dit apparaat opgeslagen."
 partial = "{{restored}} van {{total}} bestanden hersteld. De rest is niet meer op dit apparaat opgeslagen."
@@ -13915,16 +13900,13 @@ annotations = "Annotaties"
 applyRedactionsFirst = "Eerst zwartlakken toepassen"
 closeAll = "Alle bestanden sluiten"
 closePdf = "PDF sluiten"
-deleteSelected = "Geselecteerde pagina's verwijderen"
 deselectAll = "Alles deselecteren"
 downloadAll = "Alles downloaden"
 exitRedaction = "Zwartlakmodus afsluiten"
-exportAll = "PDF exporteren"
-exportSelected = "Geselecteerde pagina's exporteren"
 formFill = "Formuliereditor"
 hideToolbar = "Toolbar verbergen"
 moreActions = "Meer acties"
-multiTool = "Multi-tool"
+pageEditor = "Page Editor"
 panMode = "Pan-modus"
 print = "PDF afdrukken"
 readAloud = "Voorlezen"
@@ -13938,7 +13920,6 @@ rulerSettings = "Schaalinstellingen"
 save = "Opslaan"
 saveAll = "Alles opslaan"
 saveAs = "Opslaan als"
-saveChanges = "Wijzigingen opslaan"
 search = "PDF doorzoeken"
 selectAll = "Alles selecteren"
 selectByNumber = "Selecteren op paginanummers"

@@ -55,7 +55,9 @@ keepWorking = "Continuați lucrul"
 loading = "Se încarcă..."
 loginAgreementAccept = "Acceptați"
 loginAgreementDecline = "Refuzați"
+loginAgreementLoadFailed = "The login agreement could not be loaded."
 loginAgreementProvider = "Această notificare este furnizată de administratorul dvs., nu de Stirling PDF Inc."
+loginAgreementRetry = "Retry"
 loginAgreementTitle = "Acord de autentificare"
 logOut = "Deconectare"
 marginTooltip = "Distanța dintre numărul paginii și marginea paginii."
@@ -1939,9 +1941,6 @@ wrapUp = "Acesta a fost turul de administrare! Ați văzut funcțiile enterprise
 admin = "Administrator"
 title = "Setări Control Utilizator"
 
-[agents]
-stirling_name = "Stirling"
-
 [alphabetOptions]
 arabic = "Arabă"
 chinese = "Chineză (simplificată)"
@@ -3219,21 +3218,16 @@ text = "Pentru ca aceste permisiuni să nu poată fi schimbate, utilizați instr
 [chat.actions]
 copy = "Copiați mesajul"
 
-[chat.emptyState]
-text = "Puneți o întrebare despre documentele dvs. sau obțineți ajutor cu instrumentele PDF."
-
-[chat.fab]
-close = "Închide chatul"
-open = "Deschide asistentul Stirling AI"
+[chat.dock]
+collapse = "Collapse chat"
+placeholder = "Ask Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Opțiuni agent Stirling"
-assistant = "Asistent AI"
 clearChat = "Goliți chatul"
 
 [chat.input]
 disclaimer = "AI poate face greșeli. Verificați rezultatul înainte de a-l partaja."
-placeholder = "Ce doriți să faceți?"
 send = "Trimiteți mesaj"
 
 [chat.progress]
@@ -3264,9 +3258,7 @@ convertMany = "Convertiți aceste documente în PDF"
 convertOne = "Convertiți acest document în PDF"
 heading = "Pentru început"
 mergeMany = "Îmbinați aceste {{count}} documente într-unul"
-moreFiles = "+{{count}} în plus"
 openFromComputer = "Deschideți de pe computer"
-removeFile = "Eliminați {{name}}"
 splitOne = "Împărțiți acest document"
 
 [chat.responses]
@@ -3278,11 +3270,6 @@ not_found = "Nu am putut găsi informațiile solicitate."
 processing = "Se procesează ({{outcome}})..."
 unsupported_capability = "Capacitate neacceptată: {{capability}}"
 usage_limit_reached = "Ați atins limita de utilizare. Verificați opțiunile planului pentru a continua."
-
-[chat.toolsUsed]
-summary_one = "S-a rulat 1 instrument"
-summary_other = "S-au rulat {{count}} instrumente"
-unknownTool = "Instrument necunoscut"
 
 [classification.families]
 correspondence = "Corespondență"
@@ -4364,6 +4351,10 @@ title = "Actualizat de pe disc"
 body = "\"{{name}}\" s-a modificat pe disc. Este suficient de mare încât reîncărcarea va dura, așa că versiunea de aici a fost lăsată neschimbată."
 title = "Fișier modificat pe disc"
 
+[desktopPrivacy]
+blocked = "Your administrator requires documents to stay on this device. This feature is unavailable."
+localFiles = "Local files"
+
 [desktopUpdate]
 downloading = "Se descarcă actualizarea..."
 installing = "Se instalează actualizarea..."
@@ -4597,22 +4588,23 @@ viewInViewer = "Vizualizați în Vizualizator"
 closeFile = "Închideți fișierul"
 
 [fileEditor]
-addFiles = "Adăugați fișiere"
 closedFile = "{{name}} închis"
 couldNotSave = "Nu s-a putut salva {{name}}"
-filesAdded_one = "S-a adăugat {{count}} fișier"
-filesAdded_other = "S-au adăugat {{count}} fișiere"
 filesReordered_one = "Fișier reordonat"
 filesReordered_other = "{{count}} fișiere reordonate"
 loadedFromStorage_one = "S-a încărcat {{count}} fișier din stocare"
 loadedFromStorage_other = "S-au încărcat {{count}} fișiere din stocare"
 loadFromStorageFailed = "Nu s-au putut încărca unele fișiere din stocare"
 pinnedFile = "{{name}} fixat"
-processFilesFailed = "Nu s-au putut procesa fișierele"
 savedAndClosed = "{{name}} salvat și închis"
 saveFailed = "Salvarea a eșuat"
 unpinnedFile = "{{name}} nefixat"
 unzipping = "Se dezarhivează {{name}}"
+
+[fileEditor.addCard]
+dropHint = "or drop files anywhere"
+fromComputer = "Upload from computer"
+moreOptions = "More upload options"
 
 [fileEditor.unzip]
 error = "Eroare la dezarhivarea {{name}}"
@@ -4729,7 +4721,6 @@ dataLostBody = "Acest browser a pierdut conținutul acestui fișier. Încărcaț
 dataLostTitle = "Datele fișierului nu sunt disponibile"
 downloadFailed = "Descărcarea a eșuat"
 dropHint = "Deschide fișiere pentru a începe"
-dropToAdd = "Plasați fișiere pentru a le adăuga"
 duplicateFailed = "Fișierul nu a putut fi duplicat"
 expand = "Extinde bara laterală"
 googleDrive = "Google Drive"
@@ -5733,11 +5724,6 @@ desc = "Îmbină mai multe pagini ale unui document PDF într-o singură pagină
 tags = "aspect,aranjare,combinare,N-up,2-up,4-up,mai multe pe pagină,pagini pe coală,aspect pagini,mozaic,aspect grilă,aspect multipagină,combină pe pagină,material distribuit"
 title = "Aspect Multi-Pagină"
 
-[home.pdfCommentAgent]
-desc = "Cere AI să adnoteze un PDF cu comentarii tip notițe adezive pe baza solicitării tale"
-tags = "AI,agent,comentariu,adnotare,notiță adezivă,revizuire,feedback,note"
-title = "Adaugă comentarii AI"
-
 [home.pdfOrganiser]
 tags = "organizare,rearanjare,reordonare,aranjare pagini,sortare,mutare pagini,ștergere pagini,eliminare pagini,gestionare pagini,organizator pagini,resecvențiere"
 title = "Organizează"
@@ -6595,63 +6581,6 @@ yourCloudAccess = "Veți deveni membru al echipei și veți pierde accesul de pr
 deselectAll = "Niciunul"
 selectAll = "Bifează tot"
 
-[pageEditor]
-dragPreviewAlt = "Se trage"
-filePosition = "Poziția {{position}}"
-pageLabel = "Pagina {{page}}"
-title = "Editor de pagini"
-
-[pageEditor.actions]
-deletePage = "Șterge pagina"
-insertFileAfter = "Inserează fișier după"
-moveLeft = "Mută la stânga"
-moveRight = "Mută la dreapta"
-rotateLeft = "Rotește la stânga"
-rotateRight = "Rotește la dreapta"
-splitAfter = "Împarte după"
-
-[pageEditor.commands]
-addSplitAt = "Adaugă împărțire la poziția {{position}}"
-addSplits_one = "Adaugă {{count}} împărțire"
-addSplits_other = "Adaugă {{count}} împărțiri"
-deletePages_one = "Șterge {{count}} pagină"
-deletePages_other = "Șterge {{count}} pagini"
-insertFiles_one = "Inserează {{count}} fișier după pagina {{page}}"
-insertFiles_other = "Inserează {{count}} fișiere după pagina {{page}}"
-insertPageBreaks_one = "Inserează {{count}} sfârșit de pagină"
-insertPageBreaks_other = "Inserează {{count}} sfârșituri de pagină"
-insertPageBreaksAll = "Inserează sfârșituri de pagină după toate paginile"
-removeAllSplits = "Elimină toate împărțirile"
-removeSplitAt = "Elimină împărțirea de la poziția {{position}}"
-removeSplits_one = "Elimină {{count}} împărțire"
-removeSplits_other = "Elimină {{count}} împărțiri"
-reorderPages = "Reordonează paginile"
-rotatePageLeft = "Rotește pagina la stânga"
-rotatePageRight = "Rotește pagina la dreapta"
-rotatePagesLeft_one = "Rotește {{count}} pagină la stânga"
-rotatePagesLeft_other = "Rotește {{count}} pagini la stânga"
-rotatePagesRight_one = "Rotește {{count}} pagină la dreapta"
-rotatePagesRight_other = "Rotește {{count}} pagini la dreapta"
-splitAllPages = "Împarte toate paginile"
-toggleSplits_one = "Comută {{count}} poziție de împărțire"
-toggleSplits_other = "Comută {{count}} poziții de împărțire"
-
-[pageEditor.emptyState]
-body = "Adăugați fișiere pentru a începe editarea paginilor"
-title = "Nu au fost încărcate fișiere PDF"
-
-[pageEditor.fileDropdown]
-addFile = "Adaugă fișier"
-selectedCount = "{{selected}}/{{total}} fișiere selectate"
-untitled = "Fără titlu"
-
-[pageEditor.toolbar]
-delete = "Ștergeți selecția"
-redo = "Refaceți"
-rotateLeft = "Rotiți selecția la stânga"
-rotateRight = "Rotiți selecția la dreapta"
-undo = "Anulați"
-
 [pageExtracter]
 title = "Extrage Pagini"
 
@@ -6815,6 +6744,76 @@ title = "Intervale de pagini"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → selectează toate paginile"
 title = "Cuvinte cheie speciale"
+
+[pageTracks]
+blankPage = "Blank page"
+deleteSelected = "Delete selected pages"
+downloadAsOneFile = "Download as one file"
+downloadEachPage = "Download each page individually"
+downloadSelectedPages = "Download selected pages"
+dragging_one = "{{count}} page"
+dragging_other = "{{count}} pages"
+duplicateSelected = "Duplicate selected pages"
+edited = "edited"
+emptyTrack = "No pages left. Drag pages here, or save to close this file."
+insertBlank = "Insert blank page"
+insertBlankAfterSelected = "Insert blank pages after selected pages"
+moveLeft = "Move left"
+moveRight = "Move right"
+nextPage = "Next page"
+page = "Page {{number}}"
+pageCount_one = "{{count}} page"
+pageCount_other = "{{count}} pages"
+pagePosition = "Page {{number}} of {{total}}"
+prevPage = "Previous page"
+readingPages = "Reading pages..."
+redo = "Redo"
+rotateLeft = "Rotate left"
+rotateRight = "Rotate right"
+rotateSelectedLeft = "Rotate selected pages left"
+rotateSelectedRight = "Rotate selected pages right"
+saveAsOneFile = "Save as one file"
+saveChanges = "Save changes to all files"
+saveEachPage = "Save each page individually"
+saveSelectedPages = "Save selected pages"
+saving = "Saving..."
+savingProgress = "Saving {{done}} of {{total}}"
+selectPage = "Select page {{number}}"
+splitAfterSelected = "Split after selected pages"
+splitHere = "Split here"
+undo = "Undo"
+viewError = "Couldn't render this page"
+viewPage = "View page"
+zoomIn = "Zoom in"
+zoomOut = "Zoom out"
+
+[pageTracks.close]
+message = "Are you sure you want to close all files?"
+unsaved = "These files have unsaved changes."
+
+[pageTracks.delete]
+page = "Delete page"
+
+[pageTracks.empty]
+body = "Add PDFs to expand them into editable page tracks"
+title = "No PDF files loaded"
+
+[pageTracks.exportFailed]
+body = "The edited files couldn't be prepared. Try again."
+title = "Couldn't download"
+
+[pageTracks.saveFailed]
+body = "Your edits haven't been lost. Try saving again."
+title = "Couldn't save changes"
+
+[pageTracks.track]
+close = "Close file"
+collapse = "Collapse"
+expand = "Expand"
+rename = "Rename file"
+
+[pageTracks.wrap]
+label = "Wrap pages"
 
 [payg.activity]
 docs = "documente"
@@ -7143,24 +7142,6 @@ totalSeats_other = "Total ({{count}} locuri)"
 
 [payment.upgradeTeam]
 title = "Fă upgrade la Team"
-
-[pdfCommentAgent]
-submit = "Generează comentarii"
-
-[pdfCommentAgent.error]
-emptyPrompt = "Te rugăm să descrii ce ar trebui să comenteze AI"
-failed = "Generarea comentariilor a eșuat"
-tooLong = "Promptul este prea lung (maximum {{max}} caractere)"
-
-[pdfCommentAgent.prompt]
-label = "Asupra a ce ar trebui să comenteze AI?"
-placeholder = "ex.: Marchează orice date ambigue și sugerează clarificări"
-
-[pdfCommentAgent.results]
-title = "PDF comentat"
-
-[pdfCommentAgent.settings]
-title = "Instrucțiuni pentru comentarii"
 
 [pdfOrganiser]
 placeholder = "(ex. 1,3,2 sau 4-8,2,10-12 sau 2n-1)"
@@ -7994,6 +7975,7 @@ before = "Setează"
 title = "Conexiunea Stirling nu este configurată"
 
 [portal.accountLink.notice]
+loadFailed = "The account linking dialog could not be loaded."
 openFailed = "Nu s-a putut deschide browserul. Deschideți Utilizare și facturare pe serverul conectat pentru a asocia un cont."
 
 [portal.accountLink.panel]
@@ -8117,9 +8099,6 @@ limit = "Limită lunară de cheltuieli {{amount}}/lună. Procesarea se întrerup
 limitNoCap = "Fără limită de cheltuieli. Procesarea nu se va întrerupe. Facturile se emit lunar."
 
 [portal.billing.chip]
-invoices = "Facturi"
-nav = "Secțiuni"
-payment = "Plată"
 plan = "Plan"
 procurement = "Achiziții"
 usage = "Utilizare"
@@ -12054,6 +12033,7 @@ title = "Spațiu de lucru"
 loginIncomplete = "Nu s-a putut finaliza autentificarea"
 noSaasServer = "Nu este configurat niciun server SaaS"
 noServer = "Nu este configurat niciun server"
+policyUnavailable = "Unable to load your organisation's sign-in settings."
 saasLoginFailed = "Autentificarea SaaS a eșuat"
 saasLoginIncomplete = "Nu s-a putut finaliza autentificarea SaaS"
 selfHostedLoginFailed = "Autentificarea self-hosted a eșuat"
@@ -13905,6 +13885,11 @@ title = "Text filigran"
 image = "Imagine"
 text = "Text"
 
+[workbench]
+dropFailedSingle = "Your file couldn't be added"
+dropFailedSome = "{{failed}} of your files couldn't be added"
+dropOverlay = "Drop files to add them to the workbench"
+
 [workbench.sessionRestore]
 none = "Fișierele dvs. anterioare nu mai sunt stocate pe acest dispozitiv."
 partial = "S-au restaurat {{restored}} din {{total}} fișiere. Restul nu mai sunt stocate pe acest dispozitiv."
@@ -13915,16 +13900,13 @@ annotations = "Adnotări"
 applyRedactionsFirst = "Aplică mai întâi redactările"
 closeAll = "Închide toate fișierele"
 closePdf = "Închide PDF"
-deleteSelected = "Șterge paginile selectate"
 deselectAll = "Deselectează tot"
 downloadAll = "Descarcă tot"
 exitRedaction = "Ieși din modul de redactare"
-exportAll = "Exportă PDF"
-exportSelected = "Exportă paginile selectate"
 formFill = "Editor de formulare"
 hideToolbar = "Ascunde bara de instrumente"
 moreActions = "Mai multe acțiuni"
-multiTool = "Instrument multiplu"
+pageEditor = "Page Editor"
 panMode = "Mod panoramare"
 print = "Tipărește PDF"
 readAloud = "Citește cu voce tare"
@@ -13938,7 +13920,6 @@ rulerSettings = "Setări scară"
 save = "Salvează"
 saveAll = "Salvează tot"
 saveAs = "Salvează ca"
-saveChanges = "Salvează modificările"
 search = "Caută în PDF"
 selectAll = "Selectează tot"
 selectByNumber = "Selectează după numerele paginilor"

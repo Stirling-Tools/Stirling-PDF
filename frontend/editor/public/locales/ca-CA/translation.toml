@@ -55,7 +55,9 @@ keepWorking = "Continua treballant"
 loading = "Carregant..."
 loginAgreementAccept = "Accepta"
 loginAgreementDecline = "Rebutja"
+loginAgreementLoadFailed = "The login agreement could not be loaded."
 loginAgreementProvider = "Aquest avís és proporcionat pel vostre administrador, no per Stirling PDF Inc."
+loginAgreementRetry = "Retry"
 loginAgreementTitle = "Acord d'inici de sessió"
 logOut = "Tanca la sessió"
 marginTooltip = "Distància entre el número de pàgina i la vora de la pàgina."
@@ -1939,9 +1941,6 @@ wrapUp = "Això és tot per al recorregut d'administració! Has vist les funcion
 admin = "Administrador"
 title = "Opcions de Control d'Usuari"
 
-[agents]
-stirling_name = "Stirling"
-
 [alphabetOptions]
 arabic = "Àrab"
 chinese = "Xinès (simplificat)"
@@ -3219,21 +3218,16 @@ text = "Per fer que aquests permisos no es puguin canviar, utilitzeu l’eina Af
 [chat.actions]
 copy = "Copia el missatge"
 
-[chat.emptyState]
-text = "Fes una pregunta sobre els teus documents o obtén ajuda amb les eines PDF."
-
-[chat.fab]
-close = "Tanca el xat"
-open = "Obre l'assistent AI de Stirling"
+[chat.dock]
+collapse = "Collapse chat"
+placeholder = "Ask Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Opcions de l'agent Stirling"
-assistant = "Assistent AI"
 clearChat = "Neteja el xat"
 
 [chat.input]
 disclaimer = "La AI pot cometre errors. Assegura't de verificar el resultat abans de compartir-lo."
-placeholder = "Què vols fer?"
 send = "Envia el missatge"
 
 [chat.progress]
@@ -3264,9 +3258,7 @@ convertMany = "Converteix aquests documents a PDF"
 convertOne = "Converteix aquest document a PDF"
 heading = "Comença"
 mergeMany = "Fusiona aquests {{count}} documents en 1"
-moreFiles = "+{{count}} més"
 openFromComputer = "Obre des de l'ordinador"
-removeFile = "Elimina {{name}}"
 splitOne = "Divideix aquest document"
 
 [chat.responses]
@@ -3278,11 +3270,6 @@ not_found = "No he pogut trobar la informació sol·licitada."
 processing = "Processant ({{outcome}})..."
 unsupported_capability = "Capacitat no admesa: {{capability}}"
 usage_limit_reached = "Has assolit el teu límit d'ús. Consulta les opcions del teu pla per continuar."
-
-[chat.toolsUsed]
-summary_one = "S'ha executat 1 eina"
-summary_other = "S'han executat {{count}} eines"
-unknownTool = "Eina desconeguda"
 
 [classification.families]
 correspondence = "Correspondència"
@@ -4364,6 +4351,10 @@ title = "Actualitzat des del disc"
 body = "\"{{name}}\" ha canviat al disc. És prou gran perquè tornar-lo a carregar trigui una estona, així que la versió d'aquí s'ha deixat intacta."
 title = "El fitxer ha canviat al disc"
 
+[desktopPrivacy]
+blocked = "Your administrator requires documents to stay on this device. This feature is unavailable."
+localFiles = "Local files"
+
 [desktopUpdate]
 downloading = "Descarregant l'actualització..."
 installing = "Instal·lant l'actualització..."
@@ -4597,22 +4588,23 @@ viewInViewer = "Obre al visor"
 closeFile = "Tanca el fitxer"
 
 [fileEditor]
-addFiles = "Afegeix fitxers"
 closedFile = "S'ha tancat {{name}}"
 couldNotSave = "No s'ha pogut desar {{name}}"
-filesAdded_one = "S'ha afegit {{count}} fitxer"
-filesAdded_other = "S'han afegit {{count}} fitxers"
 filesReordered_one = "Fitxer reordenat"
 filesReordered_other = "{{count}} fitxers reordenats"
 loadedFromStorage_one = "S'ha carregat {{count}} fitxer de l'emmagatzematge"
 loadedFromStorage_other = "S'han carregat {{count}} fitxers de l'emmagatzematge"
 loadFromStorageFailed = "No s'han pogut carregar alguns fitxers de l'emmagatzematge"
 pinnedFile = "S'ha fixat {{name}}"
-processFilesFailed = "No s'han pogut processar els fitxers"
 savedAndClosed = "S'ha desat i tancat {{name}}"
 saveFailed = "Ha fallat el desament"
 unpinnedFile = "S'ha deixat de fixar {{name}}"
 unzipping = "Descomprimint {{name}}"
+
+[fileEditor.addCard]
+dropHint = "or drop files anywhere"
+fromComputer = "Upload from computer"
+moreOptions = "More upload options"
 
 [fileEditor.unzip]
 error = "Error en descomprimir {{name}}"
@@ -4729,7 +4721,6 @@ dataLostBody = "Aquest navegador ha perdut el contingut d'aquest fitxer. Torna'l
 dataLostTitle = "Les dades del fitxer no estan disponibles"
 downloadFailed = "La baixada ha fallat"
 dropHint = "Obre fitxers per començar"
-dropToAdd = "Deixa anar fitxers per afegir-los"
 duplicateFailed = "No s'ha pogut duplicar el fitxer"
 expand = "Amplia la barra lateral"
 googleDrive = "Google Drive"
@@ -5733,11 +5724,6 @@ desc = "Fusiona diverses pàgines d'un document PDF en una sola pàgina"
 tags = "disseny,organitzar,combinar,N-up,2-up,4-up,múltiples per pàgina,pàgines per full,dissenyar pàgines,mosaic,disposició en quadrícula,disseny multipàgina,combinar en pàgina,fulletó"
 title = "Disposició Multi-Pàgina"
 
-[home.pdfCommentAgent]
-desc = "Demana a la IA que anoti un PDF amb comentaris en notes adhesives segons la indicació"
-tags = "IA,agent,comentari,anotar,nota adhesiva,revisió,comentaris,notes"
-title = "Afegeix comentaris amb IA"
-
 [home.pdfOrganiser]
 tags = "organitzar,reordenar,canviar ordre,organitzar pàgines,ordenar,moure pàgines,suprimir pàgines,eliminar pàgines,gestió de pàgines,organitzador de pàgines,resequenciar"
 title = "Organitza"
@@ -6595,63 +6581,6 @@ yourCloudAccess = "Passareu a ser membre de l'equip i perdreu l'accés de propie
 deselectAll = "Cap"
 selectAll = "Marca-ho tot"
 
-[pageEditor]
-dragPreviewAlt = "Arrossegant"
-filePosition = "Posició {{position}}"
-pageLabel = "Pàgina {{page}}"
-title = "Editor de pàgines"
-
-[pageEditor.actions]
-deletePage = "Suprimeix la pàgina"
-insertFileAfter = "Insereix un fitxer després"
-moveLeft = "Mou a l'esquerra"
-moveRight = "Mou a la dreta"
-rotateLeft = "Gira a l'esquerra"
-rotateRight = "Gira a la dreta"
-splitAfter = "Divideix després"
-
-[pageEditor.commands]
-addSplitAt = "Afegeix una divisió a la posició {{position}}"
-addSplits_one = "Afegeix {{count}} divisió"
-addSplits_other = "Afegeix {{count}} divisions"
-deletePages_one = "Suprimeix {{count}} pàgina"
-deletePages_other = "Suprimeix {{count}} pàgines"
-insertFiles_one = "Insereix {{count}} fitxer després de la pàgina {{page}}"
-insertFiles_other = "Insereix {{count}} fitxers després de la pàgina {{page}}"
-insertPageBreaks_one = "Insereix {{count}} salt de pàgina"
-insertPageBreaks_other = "Insereix {{count}} salts de pàgina"
-insertPageBreaksAll = "Insereix salts de pàgina després de totes les pàgines"
-removeAllSplits = "Elimina totes les divisions"
-removeSplitAt = "Elimina la divisió a la posició {{position}}"
-removeSplits_one = "Elimina {{count}} divisió"
-removeSplits_other = "Elimina {{count}} divisions"
-reorderPages = "Reordena les pàgines"
-rotatePageLeft = "Gira la pàgina a l'esquerra"
-rotatePageRight = "Gira la pàgina a la dreta"
-rotatePagesLeft_one = "Gira {{count}} pàgina a l'esquerra"
-rotatePagesLeft_other = "Gira {{count}} pàgines a l'esquerra"
-rotatePagesRight_one = "Gira {{count}} pàgina a la dreta"
-rotatePagesRight_other = "Gira {{count}} pàgines a la dreta"
-splitAllPages = "Divideix totes les pàgines"
-toggleSplits_one = "Commuta {{count}} posició de divisió"
-toggleSplits_other = "Commuta {{count}} posicions de divisió"
-
-[pageEditor.emptyState]
-body = "Afegeix fitxers per començar a editar pàgines"
-title = "No s'han carregat fitxers PDF"
-
-[pageEditor.fileDropdown]
-addFile = "Afegeix un fitxer"
-selectedCount = "{{selected}}/{{total}} fitxers seleccionats"
-untitled = "Sense títol"
-
-[pageEditor.toolbar]
-delete = "Suprimeix els seleccionats"
-redo = "Refés"
-rotateLeft = "Gira a l'esquerra els seleccionats"
-rotateRight = "Gira a la dreta els seleccionats"
-undo = "Desfés"
-
 [pageExtracter]
 title = "Extreu Pàgines"
 
@@ -6815,6 +6744,76 @@ title = "Intervals de pàgines"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → selecciona totes les pàgines"
 title = "Paraules clau especials"
+
+[pageTracks]
+blankPage = "Blank page"
+deleteSelected = "Delete selected pages"
+downloadAsOneFile = "Download as one file"
+downloadEachPage = "Download each page individually"
+downloadSelectedPages = "Download selected pages"
+dragging_one = "{{count}} page"
+dragging_other = "{{count}} pages"
+duplicateSelected = "Duplicate selected pages"
+edited = "edited"
+emptyTrack = "No pages left. Drag pages here, or save to close this file."
+insertBlank = "Insert blank page"
+insertBlankAfterSelected = "Insert blank pages after selected pages"
+moveLeft = "Move left"
+moveRight = "Move right"
+nextPage = "Next page"
+page = "Page {{number}}"
+pageCount_one = "{{count}} page"
+pageCount_other = "{{count}} pages"
+pagePosition = "Page {{number}} of {{total}}"
+prevPage = "Previous page"
+readingPages = "Reading pages..."
+redo = "Redo"
+rotateLeft = "Rotate left"
+rotateRight = "Rotate right"
+rotateSelectedLeft = "Rotate selected pages left"
+rotateSelectedRight = "Rotate selected pages right"
+saveAsOneFile = "Save as one file"
+saveChanges = "Save changes to all files"
+saveEachPage = "Save each page individually"
+saveSelectedPages = "Save selected pages"
+saving = "Saving..."
+savingProgress = "Saving {{done}} of {{total}}"
+selectPage = "Select page {{number}}"
+splitAfterSelected = "Split after selected pages"
+splitHere = "Split here"
+undo = "Undo"
+viewError = "Couldn't render this page"
+viewPage = "View page"
+zoomIn = "Zoom in"
+zoomOut = "Zoom out"
+
+[pageTracks.close]
+message = "Are you sure you want to close all files?"
+unsaved = "These files have unsaved changes."
+
+[pageTracks.delete]
+page = "Delete page"
+
+[pageTracks.empty]
+body = "Add PDFs to expand them into editable page tracks"
+title = "No PDF files loaded"
+
+[pageTracks.exportFailed]
+body = "The edited files couldn't be prepared. Try again."
+title = "Couldn't download"
+
+[pageTracks.saveFailed]
+body = "Your edits haven't been lost. Try saving again."
+title = "Couldn't save changes"
+
+[pageTracks.track]
+close = "Close file"
+collapse = "Collapse"
+expand = "Expand"
+rename = "Rename file"
+
+[pageTracks.wrap]
+label = "Wrap pages"
 
 [payg.activity]
 docs = "docs"
@@ -7143,24 +7142,6 @@ totalSeats_other = "Total ({{count}} seients)"
 
 [payment.upgradeTeam]
 title = "Actualitza a Team"
-
-[pdfCommentAgent]
-submit = "Genera comentaris"
-
-[pdfCommentAgent.error]
-emptyPrompt = "Descriu sobre què hauria de comentar la IA"
-failed = "No s’han pogut generar els comentaris"
-tooLong = "La instrucció és massa llarga (màxim {{max}} caràcters)"
-
-[pdfCommentAgent.prompt]
-label = "Sobre què hauria de comentar la IA?"
-placeholder = "p. ex., marca qualsevol data ambigua i suggereix aclariments"
-
-[pdfCommentAgent.results]
-title = "PDF amb comentaris"
-
-[pdfCommentAgent.settings]
-title = "Instruccions dels comentaris"
 
 [pdfOrganiser]
 placeholder = "(p. ex. 1,3,2 o 4-8,2,10-12 o 2n-1)"
@@ -7994,6 +7975,7 @@ before = "Defineix"
 title = "La connexió de Stirling no està configurada"
 
 [portal.accountLink.notice]
+loadFailed = "The account linking dialog could not be loaded."
 openFailed = "No s'ha pogut obrir el navegador. Obre Ús i facturació al servidor connectat per enllaçar un compte."
 
 [portal.accountLink.panel]
@@ -8117,9 +8099,6 @@ limit = "Límit de despesa mensual {{amount}}/mes. El processament es pausa en a
 limitNoCap = "Sense límit de despesa. El processament no es pausarà. Les factures s'emeten mensualment."
 
 [portal.billing.chip]
-invoices = "Factures"
-nav = "Seccions"
-payment = "Pagament"
 plan = "Pla"
 procurement = "Compres"
 usage = "Ús"
@@ -12054,6 +12033,7 @@ title = "Espai de treball"
 loginIncomplete = "No s'ha pogut completar l'inici de sessió"
 noSaasServer = "No hi ha cap servidor SaaS configurat"
 noServer = "No hi ha cap servidor configurat"
+policyUnavailable = "Unable to load your organisation's sign-in settings."
 saasLoginFailed = "Ha fallat l'inici de sessió SaaS"
 saasLoginIncomplete = "No s'ha pogut completar l'inici de sessió SaaS"
 selfHostedLoginFailed = "Ha fallat l'inici de sessió al servidor allotjat pel vostre compte"
@@ -13905,6 +13885,11 @@ title = "Text de la marca d'aigua"
 image = "Imatge"
 text = "Text"
 
+[workbench]
+dropFailedSingle = "Your file couldn't be added"
+dropFailedSome = "{{failed}} of your files couldn't be added"
+dropOverlay = "Drop files to add them to the workbench"
+
 [workbench.sessionRestore]
 none = "Els teus fitxers anteriors ja no s’emmagatzemen en aquest dispositiu."
 partial = "S’han restaurat {{restored}} de {{total}} fitxers. La resta ja no s’emmagatzemen en aquest dispositiu."
@@ -13915,16 +13900,13 @@ annotations = "Anotacions"
 applyRedactionsFirst = "Aplica primer les censures"
 closeAll = "Tanca tots els fitxers"
 closePdf = "Tanca el PDF"
-deleteSelected = "Suprimeix les pàgines seleccionades"
 deselectAll = "Desselecciona-ho tot"
 downloadAll = "Descarrega-ho tot"
 exitRedaction = "Surt del mode de censura"
-exportAll = "Exporta el PDF"
-exportSelected = "Exporta les pàgines seleccionades"
 formFill = "Editor de formularis"
 hideToolbar = "Amaga la barra d'eines"
 moreActions = "Més accions"
-multiTool = "Eina múltiple"
+pageEditor = "Page Editor"
 panMode = "Mode de desplaçament"
 print = "Imprimeix el PDF"
 readAloud = "Llegeix en veu alta"
@@ -13938,7 +13920,6 @@ rulerSettings = "Configuració de l'escala"
 save = "Desa"
 saveAll = "Desa-ho tot"
 saveAs = "Desa com a"
-saveChanges = "Desa els canvis"
 search = "Cerca al PDF"
 selectAll = "Selecciona-ho tot"
 selectByNumber = "Selecciona per números de pàgina"

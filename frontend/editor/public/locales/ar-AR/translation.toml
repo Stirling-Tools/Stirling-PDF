@@ -55,7 +55,9 @@ keepWorking = "واصل العمل"
 loading = "جارٍ التحميل..."
 loginAgreementAccept = "قبول"
 loginAgreementDecline = "رفض"
+loginAgreementLoadFailed = "The login agreement could not be loaded."
 loginAgreementProvider = "يتم توفير هذا الإشعار من قِبل المسؤول لديك، وليس من قِبل Stirling PDF Inc."
+loginAgreementRetry = "Retry"
 loginAgreementTitle = "اتفاقية تسجيل الدخول"
 logOut = "تسجيل الخروج"
 marginTooltip = "المسافة بين رقم الصفحة وحافة الصفحة."
@@ -1939,9 +1941,6 @@ wrapUp = "هذه هي جولة المسؤول! لقد شاهدت ميزات ente
 admin = "مسؤول"
 title = "إعدادات التحكم في المستخدم"
 
-[agents]
-stirling_name = "Stirling"
-
 [alphabetOptions]
 arabic = "العربية"
 chinese = "الصينية (المبسطة)"
@@ -3219,21 +3218,16 @@ text = "لجعل هذه الأذونات غير قابلة للتغيير، اس
 [chat.actions]
 copy = "نسخ الرسالة"
 
-[chat.emptyState]
-text = "اطرح سؤالًا حول مستنداتك أو احصل على مساعدة في أدوات PDF."
-
-[chat.fab]
-close = "إغلاق الدردشة"
-open = "فتح مساعد Stirling AI"
+[chat.dock]
+collapse = "Collapse chat"
+placeholder = "Ask Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "خيارات وكيل Stirling"
-assistant = "مساعد AI"
 clearChat = "مسح الدردشة"
 
 [chat.input]
 disclaimer = "قد يرتكب AI أخطاء. تأكد من التحقق من الناتج قبل مشاركته."
-placeholder = "ما الذي تريد فعله؟"
 send = "إرسال الرسالة"
 
 [chat.progress]
@@ -3264,9 +3258,7 @@ convertMany = "حوّل هذه المستندات إلى PDF"
 convertOne = "حوّل هذا المستند إلى PDF"
 heading = "ابدأ"
 mergeMany = "ادمج هذه {{count}} المستندات في واحد"
-moreFiles = "+{{count}} المزيد"
 openFromComputer = "افتح من الكمبيوتر"
-removeFile = "إزالة {{name}}"
 splitOne = "قسّم هذا المستند"
 
 [chat.responses]
@@ -3278,11 +3270,6 @@ not_found = "تعذّر العثور على المعلومات المطلوبة.
 processing = "جارٍ المعالجة ({{outcome}})..."
 unsupported_capability = "إمكانية غير مدعومة: {{capability}}"
 usage_limit_reached = "لقد وصلت إلى حد الاستخدام. تحقق من خيارات خطتك للمتابعة."
-
-[chat.toolsUsed]
-summary_one = "تم تشغيل أداة واحدة"
-summary_other = "تم تشغيل عدد {{count}} من الأدوات"
-unknownTool = "أداة غير معروفة"
 
 [classification.families]
 correspondence = "المراسلات"
@@ -4364,6 +4351,10 @@ title = "تم التحديث من القرص"
 body = "تغير \"{{name}}\" على القرص. حجمه كبير بما يكفي بحيث ستستغرق إعادة تحميله بعض الوقت، لذلك تُركت النسخة هنا كما هي."
 title = "تغير الملف على القرص"
 
+[desktopPrivacy]
+blocked = "Your administrator requires documents to stay on this device. This feature is unavailable."
+localFiles = "Local files"
+
 [desktopUpdate]
 downloading = "جارٍ تنزيل التحديث..."
 installing = "جارٍ تثبيت التحديث..."
@@ -4597,22 +4588,23 @@ viewInViewer = "عرض في العارض"
 closeFile = "إغلاق الملف"
 
 [fileEditor]
-addFiles = "إضافة ملفات"
 closedFile = "تم إغلاق {{name}}"
 couldNotSave = "تعذر حفظ {{name}}"
-filesAdded_one = "تمت إضافة {{count}} ملف"
-filesAdded_other = "تمت إضافة {{count}} ملفات"
 filesReordered_one = "تمت إعادة ترتيب الملف"
 filesReordered_other = "تمت إعادة ترتيب {{count}} ملفات"
 loadedFromStorage_one = "تم تحميل {{count}} ملف من التخزين"
 loadedFromStorage_other = "تم تحميل {{count}} ملفات من التخزين"
 loadFromStorageFailed = "فشل تحميل بعض الملفات من التخزين"
 pinnedFile = "تم تثبيت {{name}}"
-processFilesFailed = "فشل معالجة الملفات"
 savedAndClosed = "تم حفظ وإغلاق {{name}}"
 saveFailed = "فشل الحفظ"
 unpinnedFile = "تم إلغاء تثبيت {{name}}"
 unzipping = "جارٍ فك ضغط {{name}}"
+
+[fileEditor.addCard]
+dropHint = "or drop files anywhere"
+fromComputer = "Upload from computer"
+moreOptions = "More upload options"
 
 [fileEditor.unzip]
 error = "خطأ أثناء فك ضغط {{name}}"
@@ -4729,7 +4721,6 @@ dataLostBody = "فقد هذا المتصفح محتويات هذا الملف. �
 dataLostTitle = "بيانات الملف غير متاحة"
 downloadFailed = "فشل التنزيل"
 dropHint = "افتح ملفات للبدء"
-dropToAdd = "أسقط الملفات للإضافة"
 duplicateFailed = "تعذّر تكرار الملف"
 expand = "توسيع الشريط الجانبي"
 googleDrive = "Google Drive"
@@ -5733,11 +5724,6 @@ desc = "دمج صفحات متعددة من مستند PDF في صفحة واح�
 tags = "تخطيط,ترتيب,دمج,N-up,2-up,4-up,متعدد لكل صفحة,صفحات لكل ورقة,تخطيط الصفحات,تبليط,تخطيط شبكي,تخطيط متعدد الصفحات,دمج على الصفحة,نشرة"
 title = "تخطيط متعدد الصفحات"
 
-[home.pdfCommentAgent]
-desc = "اطلب من AI إضافة تعليقات على ملف PDF كملاحظات لاصقة بناءً على مطالبتك"
-tags = "AI,وكيل,تعليق,إضافة شروح,ملاحظة لاصقة,مراجعة,تعقيبات,ملاحظات"
-title = "أضف تعليقات بواسطة AI"
-
 [home.pdfOrganiser]
 tags = "تنظيم,إعادة ترتيب,إعادة ترتيب,ترتيب الصفحات,فرز,نقل الصفحات,حذف الصفحات,إزالة الصفحات,إدارة الصفحات,منظم الصفحات,إعادة التسلسل"
 title = "منظم"
@@ -6595,63 +6581,6 @@ yourCloudAccess = "ستصبح عضوًا في الفريق وستفقد وصول
 deselectAll = "لا شيء"
 selectAll = "تحديد الكل"
 
-[pageEditor]
-dragPreviewAlt = "جارٍ السحب"
-filePosition = "الموضع {{position}}"
-pageLabel = "الصفحة {{page}}"
-title = "محرر الصفحات"
-
-[pageEditor.actions]
-deletePage = "حذف الصفحة"
-insertFileAfter = "إدراج ملف بعد"
-moveLeft = "نقل لليسار"
-moveRight = "نقل لليمين"
-rotateLeft = "تدوير لليسار"
-rotateRight = "تدوير لليمين"
-splitAfter = "تقسيم بعد"
-
-[pageEditor.commands]
-addSplitAt = "إضافة تقسيم عند الموضع {{position}}"
-addSplits_one = "إضافة {{count}} تقسيم"
-addSplits_other = "إضافة {{count}} تقسيمات"
-deletePages_one = "حذف {{count}} صفحة"
-deletePages_other = "حذف {{count}} صفحات"
-insertFiles_one = "إدراج {{count}} ملف بعد الصفحة {{page}}"
-insertFiles_other = "إدراج {{count}} ملفات بعد الصفحة {{page}}"
-insertPageBreaks_one = "إدراج {{count}} فاصل صفحة"
-insertPageBreaks_other = "إدراج {{count}} فواصل صفحات"
-insertPageBreaksAll = "إدراج فواصل صفحات بعد كل الصفحات"
-removeAllSplits = "إزالة كل التقسيمات"
-removeSplitAt = "إزالة التقسيم عند الموضع {{position}}"
-removeSplits_one = "إزالة {{count}} تقسيم"
-removeSplits_other = "إزالة {{count}} تقسيمات"
-reorderPages = "إعادة ترتيب الصفحات"
-rotatePageLeft = "تدوير الصفحة لليسار"
-rotatePageRight = "تدوير الصفحة لليمين"
-rotatePagesLeft_one = "تدوير {{count}} صفحة لليسار"
-rotatePagesLeft_other = "تدوير {{count}} صفحات لليسار"
-rotatePagesRight_one = "تدوير {{count}} صفحة لليمين"
-rotatePagesRight_other = "تدوير {{count}} صفحات لليمين"
-splitAllPages = "تقسيم كل الصفحات"
-toggleSplits_one = "تبديل موضع {{count}} تقسيم"
-toggleSplits_other = "تبديل مواضع {{count}} تقسيمات"
-
-[pageEditor.emptyState]
-body = "أضف ملفات للبدء في تحرير الصفحات"
-title = "لم يتم تحميل ملفات PDF"
-
-[pageEditor.fileDropdown]
-addFile = "إضافة ملف"
-selectedCount = "تم تحديد {{selected}}/{{total}} من الملفات"
-untitled = "بدون عنوان"
-
-[pageEditor.toolbar]
-delete = "حذف المحدد"
-redo = "إعادة"
-rotateLeft = "تدوير المحدد لليسار"
-rotateRight = "تدوير المحدد لليمين"
-undo = "تراجع"
-
 [pageExtracter]
 title = "استخراج الصفحات"
 
@@ -6815,6 +6744,76 @@ title = "نطاقات الصفحات"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → يحدد كل الصفحات"
 title = "كلمات مفتاحية خاصة"
+
+[pageTracks]
+blankPage = "Blank page"
+deleteSelected = "Delete selected pages"
+downloadAsOneFile = "Download as one file"
+downloadEachPage = "Download each page individually"
+downloadSelectedPages = "Download selected pages"
+dragging_one = "{{count}} page"
+dragging_other = "{{count}} pages"
+duplicateSelected = "Duplicate selected pages"
+edited = "edited"
+emptyTrack = "No pages left. Drag pages here, or save to close this file."
+insertBlank = "Insert blank page"
+insertBlankAfterSelected = "Insert blank pages after selected pages"
+moveLeft = "Move left"
+moveRight = "Move right"
+nextPage = "Next page"
+page = "Page {{number}}"
+pageCount_one = "{{count}} page"
+pageCount_other = "{{count}} pages"
+pagePosition = "Page {{number}} of {{total}}"
+prevPage = "Previous page"
+readingPages = "Reading pages..."
+redo = "Redo"
+rotateLeft = "Rotate left"
+rotateRight = "Rotate right"
+rotateSelectedLeft = "Rotate selected pages left"
+rotateSelectedRight = "Rotate selected pages right"
+saveAsOneFile = "Save as one file"
+saveChanges = "Save changes to all files"
+saveEachPage = "Save each page individually"
+saveSelectedPages = "Save selected pages"
+saving = "Saving..."
+savingProgress = "Saving {{done}} of {{total}}"
+selectPage = "Select page {{number}}"
+splitAfterSelected = "Split after selected pages"
+splitHere = "Split here"
+undo = "Undo"
+viewError = "Couldn't render this page"
+viewPage = "View page"
+zoomIn = "Zoom in"
+zoomOut = "Zoom out"
+
+[pageTracks.close]
+message = "Are you sure you want to close all files?"
+unsaved = "These files have unsaved changes."
+
+[pageTracks.delete]
+page = "Delete page"
+
+[pageTracks.empty]
+body = "Add PDFs to expand them into editable page tracks"
+title = "No PDF files loaded"
+
+[pageTracks.exportFailed]
+body = "The edited files couldn't be prepared. Try again."
+title = "Couldn't download"
+
+[pageTracks.saveFailed]
+body = "Your edits haven't been lost. Try saving again."
+title = "Couldn't save changes"
+
+[pageTracks.track]
+close = "Close file"
+collapse = "Collapse"
+expand = "Expand"
+rename = "Rename file"
+
+[pageTracks.wrap]
+label = "Wrap pages"
 
 [payg.activity]
 docs = "مستندات"
@@ -7143,24 +7142,6 @@ totalSeats_other = "الإجمالي ({{count}} مقاعد)"
 
 [payment.upgradeTeam]
 title = "الترقية إلى Team"
-
-[pdfCommentAgent]
-submit = "توليد التعليقات"
-
-[pdfCommentAgent.error]
-emptyPrompt = "يرجى وصف ما يجب أن يعلّق عليه AI"
-failed = "فشل توليد التعليقات"
-tooLong = "المطالبة طويلة جدًا (الحد الأقصى {{max}} حرفًا)"
-
-[pdfCommentAgent.prompt]
-label = "على ماذا ينبغي أن يعلّق AI؟"
-placeholder = "مثال: ضع إشارة على أي تواريخ مبهمة واقترح توضيحات"
-
-[pdfCommentAgent.results]
-title = "ملف PDF مع تعليقات"
-
-[pdfCommentAgent.settings]
-title = "تعليمات التعليق"
 
 [pdfOrganiser]
 placeholder = "(مثال: 1,3,2 أو 4-8,2,10-12 أو 2n-1)"
@@ -7994,6 +7975,7 @@ before = "عيّن"
 title = "لم يتم إعداد اتصال Stirling"
 
 [portal.accountLink.notice]
+loadFailed = "The account linking dialog could not be loaded."
 openFailed = "تعذر فتح متصفحك. افتح الاستخدام والفوترة على خادمك المتصل لربط حساب."
 
 [portal.accountLink.panel]
@@ -8117,9 +8099,6 @@ limit = "حد الإنفاق الشهري {{amount}}/شهر. تتوقف المع
 limitNoCap = "لا يوجد حد للإنفاق. لن تتوقف المعالجة مؤقتًا. تُصدر الفواتير شهريًا."
 
 [portal.billing.chip]
-invoices = "الفواتير"
-nav = "الأقسام"
-payment = "الدفع"
 plan = "الخطة"
 procurement = "المشتريات"
 usage = "الاستخدام"
@@ -12054,6 +12033,7 @@ title = "مساحة العمل"
 loginIncomplete = "فشل إكمال تسجيل الدخول"
 noSaasServer = "لم يتم تكوين خادم SaaS"
 noServer = "لم يتم تكوين خادم"
+policyUnavailable = "Unable to load your organisation's sign-in settings."
 saasLoginFailed = "فشل تسجيل الدخول إلى SaaS"
 saasLoginIncomplete = "فشل إكمال تسجيل الدخول إلى SaaS"
 selfHostedLoginFailed = "فشل تسجيل الدخول المستضاف ذاتيًا"
@@ -13905,6 +13885,11 @@ title = "نص العلامة المائية"
 image = "صورة"
 text = "نص"
 
+[workbench]
+dropFailedSingle = "Your file couldn't be added"
+dropFailedSome = "{{failed}} of your files couldn't be added"
+dropOverlay = "Drop files to add them to the workbench"
+
 [workbench.sessionRestore]
 none = "لم تعد ملفاتك السابقة مخزنة على هذا الجهاز."
 partial = "تمت استعادة {{restored}} من أصل {{total}} ملفات. لم يعد الباقي مخزنًا على هذا الجهاز."
@@ -13915,16 +13900,13 @@ annotations = "الشروح"
 applyRedactionsFirst = "طبّق التنقيحات أولاً"
 closeAll = "إغلاق كل الملفات"
 closePdf = "إغلاق PDF"
-deleteSelected = "حذف الصفحات المحددة"
 deselectAll = "إلغاء تحديد الكل"
 downloadAll = "تنزيل الكل"
 exitRedaction = "إنهاء وضع التنقيح"
-exportAll = "تصدير PDF"
-exportSelected = "تصدير الصفحات المحددة"
 formFill = "محرر النماذج"
 hideToolbar = "إخفاء شريط الأدوات"
 moreActions = "مزيد من الإجراءات"
-multiTool = "الأداة المتعددة"
+pageEditor = "Page Editor"
 panMode = "وضع التحريك"
 print = "طباعة PDF"
 readAloud = "قراءة بصوت عالٍ"
@@ -13938,7 +13920,6 @@ rulerSettings = "إعدادات المقياس"
 save = "حفظ"
 saveAll = "حفظ الكل"
 saveAs = "حفظ باسم"
-saveChanges = "حفظ التغييرات"
 search = "بحث في PDF"
 selectAll = "تحديد الكل"
 selectByNumber = "تحديد حسب أرقام الصفحات"

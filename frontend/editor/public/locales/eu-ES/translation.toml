@@ -55,7 +55,9 @@ keepWorking = "Lanean jarraitu"
 loading = "Kargatzen..."
 loginAgreementAccept = "Onartu"
 loginAgreementDecline = "Ukatu"
+loginAgreementLoadFailed = "The login agreement could not be loaded."
 loginAgreementProvider = "Ohar hau zure administratzaileak eman du, ez Stirling PDF Inc.-ek."
+loginAgreementRetry = "Retry"
 loginAgreementTitle = "Saio-hasierako hitzarmena"
 logOut = "Saioa itxi"
 marginTooltip = "Orri-zenbakiaren eta orrialdearen ertzen arteko distantzia."
@@ -1939,9 +1941,6 @@ wrapUp = "Hori izan da administratzailearen ibilbidea! Stirling PDF erakundeentz
 admin = "Admin"
 title = "Erabiltzailearen Ezarpenen Kontrolak"
 
-[agents]
-stirling_name = "Stirling"
-
 [alphabetOptions]
 arabic = "Arabiera"
 chinese = "Txinera (sinplifikatua)"
@@ -3219,21 +3218,16 @@ text = "Baimen hauek aldaezinak bihurtzeko, erabili Gehitu Pasahitza tresna jabe
 [chat.actions]
 copy = "Kopiatu mezua"
 
-[chat.emptyState]
-text = "Egin galdera bat zure dokumentuei buruz edo lortu laguntza PDF tresnekin."
-
-[chat.fab]
-close = "Itxi txata"
-open = "Ireki Stirling AI laguntzailea"
+[chat.dock]
+collapse = "Collapse chat"
+placeholder = "Ask Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Stirling agentearen aukerak"
-assistant = "AI laguntzailea"
 clearChat = "Garbitu txata"
 
 [chat.input]
 disclaimer = "AI-k akatsak egin ditzake. Ziurtatu emaitza egiaztatzen duzula partekatu aurretik."
-placeholder = "Zer egin nahi duzu?"
 send = "Bidali mezua"
 
 [chat.progress]
@@ -3264,9 +3258,7 @@ convertMany = "Bihurtu dokumentu hauek PDFra"
 convertOne = "Bihurtu dokumentu hau PDFra"
 heading = "Hasi"
 mergeMany = "Batu {{count}} dokumentu hauek 1ean"
-moreFiles = "+{{count}} gehiago"
 openFromComputer = "Ireki ordenagailutik"
-removeFile = "Kendu {{name}}"
 splitOne = "Zatitu dokumentu hau"
 
 [chat.responses]
@@ -3278,11 +3270,6 @@ not_found = "Ezin izan dut eskatutako informazioa aurkitu."
 processing = "Prozesatzen ({{outcome}})..."
 unsupported_capability = "Onartzen ez den gaitasuna: {{capability}}"
 usage_limit_reached = "Zure erabilera-mugara iritsi zara. Begiratu zure plan-aukerak jarraitzeko."
-
-[chat.toolsUsed]
-summary_one = "Tresna 1 exekutatu da"
-summary_other = "{{count}} tresna exekutatu dira"
-unknownTool = "Tresna ezezaguna"
 
 [classification.families]
 correspondence = "Korrespondentzia"
@@ -4364,6 +4351,10 @@ title = "Diskotik eguneratua"
 body = "\"{{name}}\" diskoan aldatu da. Berriro kargatzeak denbora hartzeko bezain handia da; beraz, hemengo bertsioa bere horretan utzi da."
 title = "Fitxategia diskoan aldatu da"
 
+[desktopPrivacy]
+blocked = "Your administrator requires documents to stay on this device. This feature is unavailable."
+localFiles = "Local files"
+
 [desktopUpdate]
 downloading = "Eguneratzea deskargatzen..."
 installing = "Eguneratzea instalatzen..."
@@ -4597,22 +4588,23 @@ viewInViewer = "Ikusi Ikustailean"
 closeFile = "Itxi fitxategia"
 
 [fileEditor]
-addFiles = "Fitxategiak gehitu"
 closedFile = "{{name}} itxita"
 couldNotSave = "Ezin izan da {{name}} gorde"
-filesAdded_one = "Fitxategi {{count}} gehitu da"
-filesAdded_other = "{{count}} fitxategi gehitu dira"
 filesReordered_one = "Fitxategia berrordenatu da"
 filesReordered_other = "{{count}} fitxategi berrordenatu dira"
 loadedFromStorage_one = "Fitxategi {{count}} biltegiratzetik kargatu da"
 loadedFromStorage_other = "{{count}} fitxategi biltegiratzetik kargatu dira"
 loadFromStorageFailed = "Ezin izan dira fitxategi batzuk biltegiratzetik kargatu"
 pinnedFile = "{{name}} ainguratu da"
-processFilesFailed = "Ezin izan dira fitxategiak prozesatu"
 savedAndClosed = "{{name}} gorde eta itxi da"
 saveFailed = "Gordetzeak huts egin du"
 unpinnedFile = "{{name}} ainguratzetik kendu da"
 unzipping = "{{name}} deskonprimatzen"
+
+[fileEditor.addCard]
+dropHint = "or drop files anywhere"
+fromComputer = "Upload from computer"
+moreOptions = "More upload options"
 
 [fileEditor.unzip]
 error = "Errorea {{name}} deskonprimatzean"
@@ -4729,7 +4721,6 @@ dataLostBody = "Arakatzaile honek fitxategi honen edukia galdu du. Kargatu berri
 dataLostTitle = "Fitxategiaren datuak ez daude erabilgarri"
 downloadFailed = "Deskargak huts egin du"
 dropHint = "Ireki fitxategiak hasteko"
-dropToAdd = "Jaregin fitxategiak gehitzeko"
 duplicateFailed = "Ezin izan da fitxategia bikoiztu"
 expand = "Zabaldu alboko barra"
 googleDrive = "Google Drive"
@@ -5733,11 +5724,6 @@ desc = "Elkartu orri bakar batean PDF dokumentu baten zenbait orrialde"
 tags = "diseinua,antolatu,konbinatu,N-up,2-up,4-up,orri bakoitzean hainbat,orriak orri bakoitzeko,antolatu orriak,mosaikoa,sare-diseinua,orri anitzeko diseinua,konbinatu orrian,eskuorria"
 title = "Zenbait orrialderen diseinua"
 
-[home.pdfCommentAgent]
-desc = "Eskatu AIri, zure eskaeraren arabera, PDF bat ohar itsaskorren iruzkinekin anotatzeko"
-tags = "AI,agente,iruzkin,anotatu,ohar itsaskorra,berrikuspena,feedback,oharrak"
-title = "Gehitu AIren iruzkinak"
-
 [home.pdfOrganiser]
 tags = "antolatu,berrantolatu,berordenatu,antolatu orriak,ordenatu,mugitu orriak,ezabatu orriak,kendu orriak,orri-kudeaketa,orri-antolatzailea,bersekuentziatu"
 title = "Antolatzailea"
@@ -6595,63 +6581,6 @@ yourCloudAccess = "Taldeko kide bihurtuko zara eta jabe-sarbidea galduko duzu."
 deselectAll = "Bat ere ez"
 selectAll = "Markatu dena"
 
-[pageEditor]
-dragPreviewAlt = "Arrastatzen"
-filePosition = "{{position}}. posizioa"
-pageLabel = "{{page}}. orria"
-title = "Orri-editorea"
-
-[pageEditor.actions]
-deletePage = "Ezabatu orria"
-insertFileAfter = "Txertatu fitxategia ondoren"
-moveLeft = "Mugitu ezkerrera"
-moveRight = "Mugitu eskuinera"
-rotateLeft = "Biratu ezkerrera"
-rotateRight = "Biratu eskuinera"
-splitAfter = "Zatitu ondoren"
-
-[pageEditor.commands]
-addSplitAt = "Gehitu zatiketa {{position}} posizioan"
-addSplits_one = "Gehitu {{count}} zatiketa"
-addSplits_other = "Gehitu {{count}} zatiketa"
-deletePages_one = "Ezabatu {{count}} orri"
-deletePages_other = "Ezabatu {{count}} orri"
-insertFiles_one = "Txertatu {{count}} fitxategi {{page}} orriaren ondoren"
-insertFiles_other = "Txertatu {{count}} fitxategi {{page}} orriaren ondoren"
-insertPageBreaks_one = "Txertatu {{count}} orri-jauzi"
-insertPageBreaks_other = "Txertatu {{count}} orri-jauzi"
-insertPageBreaksAll = "Txertatu orri-jauziak orri guztien ondoren"
-removeAllSplits = "Kendu zatiketa guztiak"
-removeSplitAt = "Kendu zatiketa {{position}} posizioan"
-removeSplits_one = "Kendu {{count}} zatiketa"
-removeSplits_other = "Kendu {{count}} zatiketa"
-reorderPages = "Berrordenatu orriak"
-rotatePageLeft = "Biratu orria ezkerrera"
-rotatePageRight = "Biratu orria eskuinera"
-rotatePagesLeft_one = "Biratu {{count}} orri ezkerrera"
-rotatePagesLeft_other = "Biratu {{count}} orri ezkerrera"
-rotatePagesRight_one = "Biratu {{count}} orri eskuinera"
-rotatePagesRight_other = "Biratu {{count}} orri eskuinera"
-splitAllPages = "Zatitu orri guztiak"
-toggleSplits_one = "Txandakatu {{count}} zatiketa-posizio"
-toggleSplits_other = "Txandakatu {{count}} zatiketa-posizio"
-
-[pageEditor.emptyState]
-body = "Gehitu fitxategiak orrialdeak editatzen hasteko"
-title = "Ez da PDF fitxategirik kargatu"
-
-[pageEditor.fileDropdown]
-addFile = "Gehitu fitxategia"
-selectedCount = "{{selected}}/{{total}} fitxategi hautatuta"
-untitled = "Izenik gabe"
-
-[pageEditor.toolbar]
-delete = "Ezabatu hautatutakoak"
-redo = "Berregin"
-rotateLeft = "Biratu hautatutakoak ezkerrera"
-rotateRight = "Biratu hautatutakoak eskuinera"
-undo = "Desegin"
-
 [pageExtracter]
 title = "Atera orriak"
 
@@ -6815,6 +6744,76 @@ title = "Orrialde barrutiak"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → orrialde guztiak hautatzen ditu"
 title = "Gako‑hitz bereziak"
+
+[pageTracks]
+blankPage = "Blank page"
+deleteSelected = "Delete selected pages"
+downloadAsOneFile = "Download as one file"
+downloadEachPage = "Download each page individually"
+downloadSelectedPages = "Download selected pages"
+dragging_one = "{{count}} page"
+dragging_other = "{{count}} pages"
+duplicateSelected = "Duplicate selected pages"
+edited = "edited"
+emptyTrack = "No pages left. Drag pages here, or save to close this file."
+insertBlank = "Insert blank page"
+insertBlankAfterSelected = "Insert blank pages after selected pages"
+moveLeft = "Move left"
+moveRight = "Move right"
+nextPage = "Next page"
+page = "Page {{number}}"
+pageCount_one = "{{count}} page"
+pageCount_other = "{{count}} pages"
+pagePosition = "Page {{number}} of {{total}}"
+prevPage = "Previous page"
+readingPages = "Reading pages..."
+redo = "Redo"
+rotateLeft = "Rotate left"
+rotateRight = "Rotate right"
+rotateSelectedLeft = "Rotate selected pages left"
+rotateSelectedRight = "Rotate selected pages right"
+saveAsOneFile = "Save as one file"
+saveChanges = "Save changes to all files"
+saveEachPage = "Save each page individually"
+saveSelectedPages = "Save selected pages"
+saving = "Saving..."
+savingProgress = "Saving {{done}} of {{total}}"
+selectPage = "Select page {{number}}"
+splitAfterSelected = "Split after selected pages"
+splitHere = "Split here"
+undo = "Undo"
+viewError = "Couldn't render this page"
+viewPage = "View page"
+zoomIn = "Zoom in"
+zoomOut = "Zoom out"
+
+[pageTracks.close]
+message = "Are you sure you want to close all files?"
+unsaved = "These files have unsaved changes."
+
+[pageTracks.delete]
+page = "Delete page"
+
+[pageTracks.empty]
+body = "Add PDFs to expand them into editable page tracks"
+title = "No PDF files loaded"
+
+[pageTracks.exportFailed]
+body = "The edited files couldn't be prepared. Try again."
+title = "Couldn't download"
+
+[pageTracks.saveFailed]
+body = "Your edits haven't been lost. Try saving again."
+title = "Couldn't save changes"
+
+[pageTracks.track]
+close = "Close file"
+collapse = "Collapse"
+expand = "Expand"
+rename = "Rename file"
+
+[pageTracks.wrap]
+label = "Wrap pages"
 
 [payg.activity]
 docs = "dokumentuak"
@@ -7143,24 +7142,6 @@ totalSeats_other = "Guztira ({{count}} eserleku)"
 
 [payment.upgradeTeam]
 title = "Bertsio-berritu Team-era"
-
-[pdfCommentAgent]
-submit = "Sortu iruzkinak"
-
-[pdfCommentAgent.error]
-emptyPrompt = "Mesedez, azaldu AIk zertaz egin behar duen iruzkina"
-failed = "Ezin izan dira iruzkinak sortu"
-tooLong = "Eskaera luzeegia da (gehienez {{max}} karaktere)"
-
-[pdfCommentAgent.prompt]
-label = "Zertaz egin behar du iruzkina AIk?"
-placeholder = "adib. Markatu data anbiguo guztiak eta proposatu argibideak"
-
-[pdfCommentAgent.results]
-title = "Iruzkindutako PDFa"
-
-[pdfCommentAgent.settings]
-title = "Iruzkinen jarraibideak"
 
 [pdfOrganiser]
 placeholder = "(adib. 1,3,2 edo 4-8,2,10-12 edo 2n-1)"
@@ -7994,6 +7975,7 @@ before = "Ezarri"
 title = "Stirling konexioa ez dago konfiguratuta"
 
 [portal.accountLink.notice]
+loadFailed = "The account linking dialog could not be loaded."
 openFailed = "Ezin izan da zure arakatzailea ireki. Ireki Erabilera eta fakturazioa konektatutako zerbitzarian kontu bat estekatzeko."
 
 [portal.accountLink.panel]
@@ -8117,9 +8099,6 @@ limit = "Hileko gastu-muga {{amount}}/hil. Prozesamendua mugan pausatuko da."
 limitNoCap = "Gastu-mugarik ez. Prozesamendua ez da pausatuko. Fakturak hilero igortzen dira."
 
 [portal.billing.chip]
-invoices = "Fakturak"
-nav = "Atalak"
-payment = "Ordainketa"
 plan = "Plana"
 procurement = "Erosketa"
 usage = "Erabilera"
@@ -12054,6 +12033,7 @@ title = "Lan-espazioa"
 loginIncomplete = "Ezin izan da saio-hasiera osatu"
 noSaasServer = "Ez dago SaaS zerbitzaririk konfiguratuta"
 noServer = "Ez dago zerbitzaririk konfiguratuta"
+policyUnavailable = "Unable to load your organisation's sign-in settings."
 saasLoginFailed = "SaaS saio-hasierak huts egin du"
 saasLoginIncomplete = "Ezin izan da SaaS saio-hasiera osatu"
 selfHostedLoginFailed = "Autoostatutako saio-hasierak huts egin du"
@@ -13905,6 +13885,11 @@ title = "Ur‑markaren testua"
 image = "Irudia"
 text = "Testua"
 
+[workbench]
+dropFailedSingle = "Your file couldn't be added"
+dropFailedSome = "{{failed}} of your files couldn't be added"
+dropOverlay = "Drop files to add them to the workbench"
+
 [workbench.sessionRestore]
 none = "Zure aurreko fitxategiak ez daude jada gailu honetan gordeta."
 partial = "{{total}} fitxategitik {{restored}} leheneratu dira. Gainerakoak ez daude jada gailu honetan gordeta."
@@ -13915,16 +13900,13 @@ annotations = "Anotazioak"
 applyRedactionsFirst = "Aplikatu zentsurak lehenik"
 closeAll = "Itxi fitxategi guztiak"
 closePdf = "Itxi PDFa"
-deleteSelected = "Ezabatu hautatutako orriak"
 deselectAll = "Kendu hautaketa guztia"
 downloadAll = "Deskargatu dena"
 exitRedaction = "Irten zentsura modutik"
-exportAll = "Esportatu PDFa"
-exportSelected = "Esportatu hautatutako orriak"
 formFill = "Inprimaki-editorea"
 hideToolbar = "Ezkutatu tresna-barra"
 moreActions = "Ekintza gehiago"
-multiTool = "Multi-tresna"
+pageEditor = "Page Editor"
 panMode = "Pan modua"
 print = "Inprimatu PDFa"
 readAloud = "Ozen irakurri"
@@ -13938,7 +13920,6 @@ rulerSettings = "Eskala-ezarpenak"
 save = "Gorde"
 saveAll = "Gorde dena"
 saveAs = "Gorde honela"
-saveChanges = "Gorde aldaketak"
 search = "Bilatu PDFan"
 selectAll = "Hautatu dena"
 selectByNumber = "Hautatu orri-zenbakien arabera"

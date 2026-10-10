@@ -55,7 +55,9 @@ keepWorking = "Συνέχεια εργασίας"
 loading = "Φόρτωση..."
 loginAgreementAccept = "Αποδοχή"
 loginAgreementDecline = "Απόρριψη"
+loginAgreementLoadFailed = "The login agreement could not be loaded."
 loginAgreementProvider = "Αυτή η ειδοποίηση παρέχεται από τον διαχειριστή σας, όχι από την Stirling PDF Inc."
+loginAgreementRetry = "Retry"
 loginAgreementTitle = "Συμφωνία σύνδεσης"
 logOut = "Αποσύνδεση"
 marginTooltip = "Απόσταση μεταξύ του αριθμού σελίδας και του άκρου της σελίδας."
@@ -1939,9 +1941,6 @@ wrapUp = "Αυτή ήταν η περιήγηση διαχειριστή! Είδ
 admin = "Διαχειριστής"
 title = "Ρυθμίσεις ελέγχου χρήστη"
 
-[agents]
-stirling_name = "Stirling"
-
 [alphabetOptions]
 arabic = "Αραβικά"
 chinese = "Κινέζικα (Απλοποιημένα)"
@@ -3219,21 +3218,16 @@ text = "Για να καταστούν αυτά τα δικαιώματα μη �
 [chat.actions]
 copy = "Αντιγραφή μηνύματος"
 
-[chat.emptyState]
-text = "Κάντε μια ερώτηση για τα έγγραφά σας ή λάβετε βοήθεια με εργαλεία PDF."
-
-[chat.fab]
-close = "Κλείσιμο chat"
-open = "Άνοιγμα βοηθού Stirling AI"
+[chat.dock]
+collapse = "Collapse chat"
+placeholder = "Ask Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Επιλογές πράκτορα Stirling"
-assistant = "Βοηθός AI"
 clearChat = "Καθαρισμός συνομιλίας"
 
 [chat.input]
 disclaimer = "Το AI μπορεί να κάνει λάθη. Βεβαιωθείτε ότι επαληθεύετε το αποτέλεσμα πριν το κοινοποιήσετε."
-placeholder = "Τι θέλετε να κάνετε;"
 send = "Αποστολή μηνύματος"
 
 [chat.progress]
@@ -3264,9 +3258,7 @@ convertMany = "Μετατροπή αυτών των εγγράφων σε PDF"
 convertOne = "Μετατροπή αυτού του εγγράφου σε PDF"
 heading = "Ξεκινήστε"
 mergeMany = "Συγχώνευση αυτών των {{count}} εγγράφων σε 1"
-moreFiles = "+{{count}} ακόμη"
 openFromComputer = "Άνοιγμα από υπολογιστή"
-removeFile = "Αφαίρεση {{name}}"
 splitOne = "Διαχωρισμός αυτού του εγγράφου"
 
 [chat.responses]
@@ -3278,11 +3270,6 @@ not_found = "Δεν μπόρεσα να βρω τις ζητούμενες πλ�
 processing = "Επεξεργασία ({{outcome}})..."
 unsupported_capability = "Μη υποστηριζόμενη δυνατότητα: {{capability}}"
 usage_limit_reached = "Έχετε φτάσει το όριο χρήσης σας. Ελέγξτε τις επιλογές πλάνου σας για να συνεχίσετε."
-
-[chat.toolsUsed]
-summary_one = "Εκτελέστηκε 1 εργαλείο"
-summary_other = "Εκτελέστηκαν {{count}} εργαλεία"
-unknownTool = "Άγνωστο εργαλείο"
 
 [classification.families]
 correspondence = "Αλληλογραφία"
@@ -4364,6 +4351,10 @@ title = "Ενημερώθηκε από τον δίσκο"
 body = "Το \"{{name}}\" άλλαξε στον δίσκο. Είναι αρκετά μεγάλο ώστε η επαναφόρτωσή του να πάρει λίγη ώρα, οπότε η έκδοση εδώ έμεινε ως έχει."
 title = "Το αρχείο άλλαξε στον δίσκο"
 
+[desktopPrivacy]
+blocked = "Your administrator requires documents to stay on this device. This feature is unavailable."
+localFiles = "Local files"
+
 [desktopUpdate]
 downloading = "Λήψη ενημέρωσης..."
 installing = "Εγκατάσταση ενημέρωσης..."
@@ -4597,22 +4588,23 @@ viewInViewer = "Προβολή στον προβολέα"
 closeFile = "Κλείσιμο αρχείου"
 
 [fileEditor]
-addFiles = "Προσθήκη αρχείων"
 closedFile = "Έκλεισε το {{name}}"
 couldNotSave = "Δεν ήταν δυνατή η αποθήκευση του {{name}}"
-filesAdded_one = "Προστέθηκε {{count}} αρχείο"
-filesAdded_other = "Προστέθηκαν {{count}} αρχεία"
 filesReordered_one = "Το αρχείο αναδιατάχθηκε"
 filesReordered_other = "{{count}} αρχεία αναδιατάχθηκαν"
 loadedFromStorage_one = "Φορτώθηκε {{count}} αρχείο από τον χώρο αποθήκευσης"
 loadedFromStorage_other = "Φορτώθηκαν {{count}} αρχεία από τον χώρο αποθήκευσης"
 loadFromStorageFailed = "Αποτυχία φόρτωσης ορισμένων αρχείων από τον χώρο αποθήκευσης"
 pinnedFile = "Καρφιτσώθηκε το {{name}}"
-processFilesFailed = "Αποτυχία επεξεργασίας αρχείων"
 savedAndClosed = "Αποθηκεύτηκε και έκλεισε το {{name}}"
 saveFailed = "Η αποθήκευση απέτυχε"
 unpinnedFile = "Ξεκαρφιτσώθηκε το {{name}}"
 unzipping = "Αποσυμπίεση του {{name}}"
+
+[fileEditor.addCard]
+dropHint = "or drop files anywhere"
+fromComputer = "Upload from computer"
+moreOptions = "More upload options"
 
 [fileEditor.unzip]
 error = "Σφάλμα κατά την αποσυμπίεση του {{name}}"
@@ -4729,7 +4721,6 @@ dataLostBody = "Αυτός ο browser έχασε τα περιεχόμενα α�
 dataLostTitle = "Τα δεδομένα αρχείου δεν είναι διαθέσιμα"
 downloadFailed = "Η λήψη απέτυχε"
 dropHint = "Ανοίξτε αρχεία για να ξεκινήσετε"
-dropToAdd = "Αποθέστε αρχεία για προσθήκη"
 duplicateFailed = "Δεν ήταν δυνατή η δημιουργία αντιγράφου του αρχείου"
 expand = "Ανάπτυξη πλευρικής στήλης"
 googleDrive = "Google Drive"
@@ -5733,11 +5724,6 @@ desc = "Συγχώνευση πολλαπλών σελίδων ενός εγγρ
 tags = "διάταξη,τακτοποίηση,συνδυασμός,N-up,2-up,4-up,πολλαπλά ανά σελίδα,σελίδες ανά φύλλο,διάταξη σελίδων,πλακίδιο,διάταξη πλέγματος,διάταξη πολλών σελίδων,συνδυασμός σε σελίδα,handout"
 title = "Διάταξη πολλαπλών σελίδων"
 
-[home.pdfCommentAgent]
-desc = "Ζητήστε από το AI να σχολιάσει ένα PDF με σημειώσεις-αυτοκόλλητα βάσει της προτροπής σας"
-tags = "AI,agent,σχόλιο,σχολιασμός,αυτοκόλλητο σημείωμα,αξιολόγηση,ανατροφοδότηση,σημειώσεις"
-title = "Προσθήκη σχολίων AI"
-
 [home.pdfOrganiser]
 tags = "οργάνωση,αναδιάταξη,αλλαγή σειράς,τακτοποίηση σελίδων,ταξινόμηση,μετακίνηση σελίδων,διαγραφή σελίδων,αφαίρεση σελίδων,διαχείριση σελίδων,οργανωτής σελίδων,επανασειρά"
 title = "Οργάνωση"
@@ -6595,63 +6581,6 @@ yourCloudAccess = "Θα γίνετε μέλος ομάδας και θα χάσ�
 deselectAll = "Κανένα"
 selectAll = "Επιλογή όλων"
 
-[pageEditor]
-dragPreviewAlt = "Σύρσιμο"
-filePosition = "Θέση {{position}}"
-pageLabel = "Σελίδα {{page}}"
-title = "Επεξεργαστής σελίδων"
-
-[pageEditor.actions]
-deletePage = "Διαγραφή σελίδας"
-insertFileAfter = "Εισαγωγή αρχείου μετά"
-moveLeft = "Μετακίνηση αριστερά"
-moveRight = "Μετακίνηση δεξιά"
-rotateLeft = "Περιστροφή αριστερά"
-rotateRight = "Περιστροφή δεξιά"
-splitAfter = "Διαχωρισμός μετά"
-
-[pageEditor.commands]
-addSplitAt = "Προσθήκη διαχωρισμού στη θέση {{position}}"
-addSplits_one = "Προσθήκη {{count}} διαχωρισμού"
-addSplits_other = "Προσθήκη {{count}} διαχωρισμών"
-deletePages_one = "Διαγραφή {{count}} σελίδας"
-deletePages_other = "Διαγραφή {{count}} σελίδων"
-insertFiles_one = "Εισαγωγή {{count}} αρχείου μετά τη σελίδα {{page}}"
-insertFiles_other = "Εισαγωγή {{count}} αρχείων μετά τη σελίδα {{page}}"
-insertPageBreaks_one = "Εισαγωγή {{count}} αλλαγής σελίδας"
-insertPageBreaks_other = "Εισαγωγή {{count}} αλλαγών σελίδας"
-insertPageBreaksAll = "Εισαγωγή αλλαγών σελίδας μετά από όλες τις σελίδες"
-removeAllSplits = "Αφαίρεση όλων των διαχωρισμών"
-removeSplitAt = "Αφαίρεση διαχωρισμού στη θέση {{position}}"
-removeSplits_one = "Αφαίρεση {{count}} διαχωρισμού"
-removeSplits_other = "Αφαίρεση {{count}} διαχωρισμών"
-reorderPages = "Αλλαγή σειράς σελίδων"
-rotatePageLeft = "Περιστροφή σελίδας αριστερά"
-rotatePageRight = "Περιστροφή σελίδας δεξιά"
-rotatePagesLeft_one = "Περιστροφή {{count}} σελίδας αριστερά"
-rotatePagesLeft_other = "Περιστροφή {{count}} σελίδων αριστερά"
-rotatePagesRight_one = "Περιστροφή {{count}} σελίδας δεξιά"
-rotatePagesRight_other = "Περιστροφή {{count}} σελίδων δεξιά"
-splitAllPages = "Διαχωρισμός όλων των σελίδων"
-toggleSplits_one = "Εναλλαγή {{count}} θέσης διαχωρισμού"
-toggleSplits_other = "Εναλλαγή {{count}} θέσεων διαχωρισμού"
-
-[pageEditor.emptyState]
-body = "Προσθέστε αρχεία για να ξεκινήσετε την επεξεργασία σελίδων"
-title = "Δεν φορτώθηκαν αρχεία PDF"
-
-[pageEditor.fileDropdown]
-addFile = "Προσθήκη αρχείου"
-selectedCount = "Επιλέχθηκαν {{selected}}/{{total}} αρχεία"
-untitled = "Χωρίς τίτλο"
-
-[pageEditor.toolbar]
-delete = "Διαγραφή επιλεγμένων"
-redo = "Επανάληψη"
-rotateLeft = "Περιστροφή επιλεγμένων αριστερά"
-rotateRight = "Περιστροφή επιλεγμένων δεξιά"
-undo = "Αναίρεση"
-
 [pageExtracter]
 title = "Εξαγωγή σελίδων"
 
@@ -6815,6 +6744,76 @@ title = "Εύρη σελίδων"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → επιλέγει όλες τις σελίδες"
 title = "Ειδικές λέξεις-κλειδιά"
+
+[pageTracks]
+blankPage = "Blank page"
+deleteSelected = "Delete selected pages"
+downloadAsOneFile = "Download as one file"
+downloadEachPage = "Download each page individually"
+downloadSelectedPages = "Download selected pages"
+dragging_one = "{{count}} page"
+dragging_other = "{{count}} pages"
+duplicateSelected = "Duplicate selected pages"
+edited = "edited"
+emptyTrack = "No pages left. Drag pages here, or save to close this file."
+insertBlank = "Insert blank page"
+insertBlankAfterSelected = "Insert blank pages after selected pages"
+moveLeft = "Move left"
+moveRight = "Move right"
+nextPage = "Next page"
+page = "Page {{number}}"
+pageCount_one = "{{count}} page"
+pageCount_other = "{{count}} pages"
+pagePosition = "Page {{number}} of {{total}}"
+prevPage = "Previous page"
+readingPages = "Reading pages..."
+redo = "Redo"
+rotateLeft = "Rotate left"
+rotateRight = "Rotate right"
+rotateSelectedLeft = "Rotate selected pages left"
+rotateSelectedRight = "Rotate selected pages right"
+saveAsOneFile = "Save as one file"
+saveChanges = "Save changes to all files"
+saveEachPage = "Save each page individually"
+saveSelectedPages = "Save selected pages"
+saving = "Saving..."
+savingProgress = "Saving {{done}} of {{total}}"
+selectPage = "Select page {{number}}"
+splitAfterSelected = "Split after selected pages"
+splitHere = "Split here"
+undo = "Undo"
+viewError = "Couldn't render this page"
+viewPage = "View page"
+zoomIn = "Zoom in"
+zoomOut = "Zoom out"
+
+[pageTracks.close]
+message = "Are you sure you want to close all files?"
+unsaved = "These files have unsaved changes."
+
+[pageTracks.delete]
+page = "Delete page"
+
+[pageTracks.empty]
+body = "Add PDFs to expand them into editable page tracks"
+title = "No PDF files loaded"
+
+[pageTracks.exportFailed]
+body = "The edited files couldn't be prepared. Try again."
+title = "Couldn't download"
+
+[pageTracks.saveFailed]
+body = "Your edits haven't been lost. Try saving again."
+title = "Couldn't save changes"
+
+[pageTracks.track]
+close = "Close file"
+collapse = "Collapse"
+expand = "Expand"
+rename = "Rename file"
+
+[pageTracks.wrap]
+label = "Wrap pages"
 
 [payg.activity]
 docs = "έγγραφα"
@@ -7143,24 +7142,6 @@ totalSeats_other = "Σύνολο ({{count}} θέσεις)"
 
 [payment.upgradeTeam]
 title = "Αναβάθμιση σε Team"
-
-[pdfCommentAgent]
-submit = "Δημιουργία σχολίων"
-
-[pdfCommentAgent.error]
-emptyPrompt = "Περιγράψτε τι πρέπει να σχολιάσει το AI"
-failed = "Αποτυχία δημιουργίας σχολίων"
-tooLong = "Η προτροπή είναι πολύ μεγάλη (μέγιστο {{max}} χαρακτήρων)"
-
-[pdfCommentAgent.prompt]
-label = "Σε τι πρέπει να σχολιάσει το AI;"
-placeholder = "π.χ. Επισημάνετε τυχόν ασαφείς ημερομηνίες και προτείνετε διευκρινίσεις"
-
-[pdfCommentAgent.results]
-title = "PDF με σχόλια"
-
-[pdfCommentAgent.settings]
-title = "Οδηγίες σχολιασμού"
 
 [pdfOrganiser]
 placeholder = "(π.χ. 1,3,2 ή 4-8,2,10-12 ή 2n-1)"
@@ -7994,6 +7975,7 @@ before = "Ορίστε"
 title = "Η σύνδεση Stirling δεν έχει ρυθμιστεί"
 
 [portal.accountLink.notice]
+loadFailed = "The account linking dialog could not be loaded."
 openFailed = "Δεν ήταν δυνατό το άνοιγμα του προγράμματος περιήγησής σας. Ανοίξτε τη Χρήση & χρέωση στον συνδεδεμένο διακομιστή σας για να συνδέσετε έναν λογαριασμό."
 
 [portal.accountLink.panel]
@@ -8117,9 +8099,6 @@ limit = "Μηνιαίο όριο δαπανών {{amount}}/μήνα. Η επεξ
 limitNoCap = "Χωρίς όριο δαπανών. Η επεξεργασία δεν θα παύει. Τα τιμολόγια εκδίδονται μηνιαία."
 
 [portal.billing.chip]
-invoices = "Τιμολόγια"
-nav = "Ενότητες"
-payment = "Πληρωμή"
 plan = "Πλάνο"
 procurement = "Προμήθειες"
 usage = "Χρήση"
@@ -12054,6 +12033,7 @@ title = "Χώρος εργασίας"
 loginIncomplete = "Αποτυχία ολοκλήρωσης σύνδεσης"
 noSaasServer = "Δεν έχει ρυθμιστεί server SaaS"
 noServer = "Δεν έχει ρυθμιστεί server"
+policyUnavailable = "Unable to load your organisation's sign-in settings."
 saasLoginFailed = "Η σύνδεση SaaS απέτυχε"
 saasLoginIncomplete = "Αποτυχία ολοκλήρωσης σύνδεσης SaaS"
 selfHostedLoginFailed = "Η σύνδεση σε αυτο-φιλοξενούμενο server απέτυχε"
@@ -13905,6 +13885,11 @@ title = "Κείμενο υδατογραφήματος"
 image = "Εικόνα"
 text = "Κείμενο"
 
+[workbench]
+dropFailedSingle = "Your file couldn't be added"
+dropFailedSome = "{{failed}} of your files couldn't be added"
+dropOverlay = "Drop files to add them to the workbench"
+
 [workbench.sessionRestore]
 none = "Τα προηγούμενα αρχεία σας δεν αποθηκεύονται πλέον σε αυτήν τη συσκευή."
 partial = "Επαναφέρθηκαν {{restored}} από {{total}} αρχεία. Τα υπόλοιπα δεν αποθηκεύονται πλέον σε αυτήν τη συσκευή."
@@ -13915,16 +13900,13 @@ annotations = "Σχολιασμοί"
 applyRedactionsFirst = "Εφαρμόστε πρώτα τις αποκρύψεις"
 closeAll = "Κλείσιμο όλων των αρχείων"
 closePdf = "Κλείσιμο PDF"
-deleteSelected = "Διαγραφή επιλεγμένων σελίδων"
 deselectAll = "Αναίρεση επιλογής όλων"
 downloadAll = "Λήψη όλων"
 exitRedaction = "Έξοδος από λειτουργία απόκρυψης"
-exportAll = "Εξαγωγή PDF"
-exportSelected = "Εξαγωγή επιλεγμένων σελίδων"
 formFill = "Επεξεργαστής φορμών"
 hideToolbar = "Απόκρυψη toolbar"
 moreActions = "Περισσότερες ενέργειες"
-multiTool = "Πολυεργαλείο"
+pageEditor = "Page Editor"
 panMode = "Λειτουργία μετακίνησης"
 print = "Εκτύπωση PDF"
 readAloud = "Ανάγνωση δυνατά"
@@ -13938,7 +13920,6 @@ rulerSettings = "Ρυθμίσεις κλίμακας"
 save = "Αποθήκευση"
 saveAll = "Αποθήκευση όλων"
 saveAs = "Αποθήκευση ως"
-saveChanges = "Αποθήκευση αλλαγών"
 search = "Αναζήτηση στο PDF"
 selectAll = "Επιλογή όλων"
 selectByNumber = "Επιλογή βάσει αριθμών σελίδων"

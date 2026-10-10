@@ -55,7 +55,9 @@ keepWorking = "作業を続ける"
 loading = "読込中..."
 loginAgreementAccept = "同意する"
 loginAgreementDecline = "同意しない"
+loginAgreementLoadFailed = "The login agreement could not be loaded."
 loginAgreementProvider = "この通知は Stirling PDF Inc. ではなく、お使いの管理者によって提供されています。"
+loginAgreementRetry = "Retry"
 loginAgreementTitle = "ログイン同意"
 logOut = "ログアウト"
 marginTooltip = "ページ番号とページ端との距離。"
@@ -1939,9 +1941,6 @@ wrapUp = "これで管理者ツアーは終了です！組織向けに Stirling 
 admin = "管理者"
 title = "ユーザー制御設定"
 
-[agents]
-stirling_name = "Stirling"
-
 [alphabetOptions]
 arabic = "アラビア語"
 chinese = "中国語（簡体字）"
@@ -3219,21 +3218,16 @@ text = "これらの権限を変更不可にするには、パスワード追加
 [chat.actions]
 copy = "メッセージをコピー"
 
-[chat.emptyState]
-text = "ドキュメントについて質問するか、PDF ツールのヘルプを取得してください。"
-
-[chat.fab]
-close = "チャットを閉じる"
-open = "Stirling AI アシスタントを開く"
+[chat.dock]
+collapse = "Collapse chat"
+placeholder = "Ask Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Stirling エージェントのオプション"
-assistant = "AI アシスタント"
 clearChat = "チャットをクリア"
 
 [chat.input]
 disclaimer = "AI は間違えることがあります。共有する前に必ず出力を確認してください。"
-placeholder = "何をしたいですか？"
 send = "メッセージを送信"
 
 [chat.progress]
@@ -3264,9 +3258,7 @@ convertMany = "これらを PDF に変換"
 convertOne = "これを PDF に変換"
 heading = "はじめる"
 mergeMany = "これらの {{count}} 件のドキュメントを1つに結合"
-moreFiles = "+{{count}} 件"
 openFromComputer = "コンピュータから開く"
-removeFile = "{{name}} を削除"
 splitOne = "このドキュメントを分割"
 
 [chat.responses]
@@ -3278,11 +3270,6 @@ not_found = "リクエストされた情報が見つかりませんでした。"
 processing = "処理中（{{outcome}}）..."
 unsupported_capability = "未対応の機能: {{capability}}"
 usage_limit_reached = "使用上限に達しました。続行するにはプランオプションを確認してください。"
-
-[chat.toolsUsed]
-summary_one = "ツールを1件実行しました"
-summary_other = "ツールを{{count}}件実行しました"
-unknownTool = "不明なツール"
 
 [classification.families]
 correspondence = "通信文書"
@@ -4364,6 +4351,10 @@ title = "ディスクから更新されました"
 body = "\"{{name}}\" はディスク上で変更されました。再読み込みに時間がかかるほど大きいため、ここにあるバージョンはそのままにしています。"
 title = "ファイルがディスク上で変更されました"
 
+[desktopPrivacy]
+blocked = "Your administrator requires documents to stay on this device. This feature is unavailable."
+localFiles = "Local files"
+
 [desktopUpdate]
 downloading = "更新をダウンロード中..."
 installing = "更新をインストール中..."
@@ -4597,22 +4588,23 @@ viewInViewer = "ビューアで表示"
 closeFile = "ファイルを閉じる"
 
 [fileEditor]
-addFiles = "ファイルを追加"
 closedFile = "{{name}} を閉じました"
 couldNotSave = "{{name}} を保存できませんでした"
-filesAdded_one = "{{count}} 個のファイルを追加しました"
-filesAdded_other = "{{count}} 個のファイルを追加しました"
 filesReordered_one = "ファイルの順序を変更しました"
 filesReordered_other = "{{count}} 個のファイルの順序を変更しました"
 loadedFromStorage_one = "ストレージから {{count}} 個のファイルを読み込みました"
 loadedFromStorage_other = "ストレージから {{count}} 個のファイルを読み込みました"
 loadFromStorageFailed = "ストレージから一部のファイルを読み込めませんでした"
 pinnedFile = "{{name}} をピン留めしました"
-processFilesFailed = "ファイルの処理に失敗しました"
 savedAndClosed = "{{name}} を保存して閉じました"
 saveFailed = "保存に失敗しました"
 unpinnedFile = "{{name}} のピン留めを解除しました"
 unzipping = "{{name}} を解凍しています"
+
+[fileEditor.addCard]
+dropHint = "or drop files anywhere"
+fromComputer = "Upload from computer"
+moreOptions = "More upload options"
 
 [fileEditor.unzip]
 error = "{{name}} の解凍中にエラーが発生しました"
@@ -4729,7 +4721,6 @@ dataLostBody = "このブラウザーはこのファイルの内容を失いま�
 dataLostTitle = "ファイルデータを利用できません"
 downloadFailed = "ダウンロードに失敗しました"
 dropHint = "開始するにはファイルを開いてください"
-dropToAdd = "ファイルをドロップして追加"
 duplicateFailed = "ファイルを複製できませんでした"
 expand = "サイドバーを展開"
 googleDrive = "Google Drive"
@@ -5733,11 +5724,6 @@ desc = "PDFの複数のページを1ページに結合します。"
 tags = "レイアウト,配置,結合,N-up,2-up,4-up,1ページに複数,シートあたりページ数,ページレイアウト,タイル,グリッドレイアウト,複数ページレイアウト,ページ上で結合,配布資料"
 title = "マルチページレイアウト"
 
-[home.pdfCommentAgent]
-desc = "プロンプトに基づき、AI が PDF に付箋コメントで注釈を追加します"
-tags = "AI,エージェント,コメント,注釈,付箋,レビュー,フィードバック,メモ"
-title = "AI コメントを追加"
-
 [home.pdfOrganiser]
 tags = "整理,並べ替え,順序変更,ページ配置,ソート,ページ移動,ページ削除,ページ削除,ページ管理,page organizer,再シーケンス"
 title = "整理"
@@ -6595,63 +6581,6 @@ yourCloudAccess = "あなたはチームメンバーになり、所有者アク�
 deselectAll = "なし"
 selectAll = "すべてチェック"
 
-[pageEditor]
-dragPreviewAlt = "ドラッグ中"
-filePosition = "位置 {{position}}"
-pageLabel = "ページ {{page}}"
-title = "ページエディタ"
-
-[pageEditor.actions]
-deletePage = "ページを削除"
-insertFileAfter = "後にファイルを挿入"
-moveLeft = "左へ移動"
-moveRight = "右へ移動"
-rotateLeft = "左に回転"
-rotateRight = "右に回転"
-splitAfter = "後で分割"
-
-[pageEditor.commands]
-addSplitAt = "位置 {{position}} に分割を追加"
-addSplits_one = "{{count}} 個の分割を追加"
-addSplits_other = "{{count}} 個の分割を追加"
-deletePages_one = "{{count}} ページを削除"
-deletePages_other = "{{count}} ページを削除"
-insertFiles_one = "{{count}} 個のファイルをページ {{page}} の後に挿入"
-insertFiles_other = "{{count}} 個のファイルをページ {{page}} の後に挿入"
-insertPageBreaks_one = "{{count}} 個の改ページを挿入"
-insertPageBreaks_other = "{{count}} 個の改ページを挿入"
-insertPageBreaksAll = "すべてのページの後に改ページを挿入"
-removeAllSplits = "すべての分割を削除"
-removeSplitAt = "位置 {{position}} の分割を削除"
-removeSplits_one = "{{count}} 個の分割を削除"
-removeSplits_other = "{{count}} 個の分割を削除"
-reorderPages = "ページを並べ替え"
-rotatePageLeft = "ページを左に回転"
-rotatePageRight = "ページを右に回転"
-rotatePagesLeft_one = "{{count}} ページを左に回転"
-rotatePagesLeft_other = "{{count}} ページを左に回転"
-rotatePagesRight_one = "{{count}} ページを右に回転"
-rotatePagesRight_other = "{{count}} ページを右に回転"
-splitAllPages = "すべてのページを分割"
-toggleSplits_one = "{{count}} 個の分割位置を切り替え"
-toggleSplits_other = "{{count}} 個の分割位置を切り替え"
-
-[pageEditor.emptyState]
-body = "ファイルを追加してページ編集を開始"
-title = "PDF ファイルが読み込まれていません"
-
-[pageEditor.fileDropdown]
-addFile = "ファイルを追加"
-selectedCount = "{{selected}}/{{total}} 個のファイルを選択済み"
-untitled = "無題"
-
-[pageEditor.toolbar]
-delete = "選択を削除"
-redo = "やり直す"
-rotateLeft = "選択を左回転"
-rotateRight = "選択を右回転"
-undo = "元に戻す"
-
 [pageExtracter]
 title = "ページの抽出"
 
@@ -6815,6 +6744,76 @@ title = "ページ範囲"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → すべてのページを選択"
 title = "特殊キーワード"
+
+[pageTracks]
+blankPage = "Blank page"
+deleteSelected = "Delete selected pages"
+downloadAsOneFile = "Download as one file"
+downloadEachPage = "Download each page individually"
+downloadSelectedPages = "Download selected pages"
+dragging_one = "{{count}} page"
+dragging_other = "{{count}} pages"
+duplicateSelected = "Duplicate selected pages"
+edited = "edited"
+emptyTrack = "No pages left. Drag pages here, or save to close this file."
+insertBlank = "Insert blank page"
+insertBlankAfterSelected = "Insert blank pages after selected pages"
+moveLeft = "Move left"
+moveRight = "Move right"
+nextPage = "Next page"
+page = "Page {{number}}"
+pageCount_one = "{{count}} page"
+pageCount_other = "{{count}} pages"
+pagePosition = "Page {{number}} of {{total}}"
+prevPage = "Previous page"
+readingPages = "Reading pages..."
+redo = "Redo"
+rotateLeft = "Rotate left"
+rotateRight = "Rotate right"
+rotateSelectedLeft = "Rotate selected pages left"
+rotateSelectedRight = "Rotate selected pages right"
+saveAsOneFile = "Save as one file"
+saveChanges = "Save changes to all files"
+saveEachPage = "Save each page individually"
+saveSelectedPages = "Save selected pages"
+saving = "Saving..."
+savingProgress = "Saving {{done}} of {{total}}"
+selectPage = "Select page {{number}}"
+splitAfterSelected = "Split after selected pages"
+splitHere = "Split here"
+undo = "Undo"
+viewError = "Couldn't render this page"
+viewPage = "View page"
+zoomIn = "Zoom in"
+zoomOut = "Zoom out"
+
+[pageTracks.close]
+message = "Are you sure you want to close all files?"
+unsaved = "These files have unsaved changes."
+
+[pageTracks.delete]
+page = "Delete page"
+
+[pageTracks.empty]
+body = "Add PDFs to expand them into editable page tracks"
+title = "No PDF files loaded"
+
+[pageTracks.exportFailed]
+body = "The edited files couldn't be prepared. Try again."
+title = "Couldn't download"
+
+[pageTracks.saveFailed]
+body = "Your edits haven't been lost. Try saving again."
+title = "Couldn't save changes"
+
+[pageTracks.track]
+close = "Close file"
+collapse = "Collapse"
+expand = "Expand"
+rename = "Rename file"
+
+[pageTracks.wrap]
+label = "Wrap pages"
 
 [payg.activity]
 docs = "ドキュメント"
@@ -7143,24 +7142,6 @@ totalSeats_other = "合計 ({{count}} シート)"
 
 [payment.upgradeTeam]
 title = "Team にアップグレード"
-
-[pdfCommentAgent]
-submit = "コメントを生成"
-
-[pdfCommentAgent.error]
-emptyPrompt = "AI にコメントさせたい内容を記述してください"
-failed = "コメントの生成に失敗しました"
-tooLong = "プロンプトが長すぎます（最大 {{max}} 文字）"
-
-[pdfCommentAgent.prompt]
-label = "AI は何にコメントすべきですか？"
-placeholder = "例: あいまいな日付を指摘し、明確化を提案してください"
-
-[pdfCommentAgent.results]
-title = "コメント付き PDF"
-
-[pdfCommentAgent.settings]
-title = "コメントの指示"
 
 [pdfOrganiser]
 placeholder = "(例:1,3,2または4-8,2,10-12または2n-1)"
@@ -7994,6 +7975,7 @@ before = "設定"
 title = "Stirling接続が設定されていません"
 
 [portal.accountLink.notice]
+loadFailed = "The account linking dialog could not be loaded."
 openFailed = "ブラウザーを開けませんでした。アカウントをリンクするには、接続済みサーバーで使用状況と請求を開いてください。"
 
 [portal.accountLink.panel]
@@ -8117,9 +8099,6 @@ limit = "月額利用上限 {{amount}}/月。上限に達すると処理が一�
 limitNoCap = "利用上限なし。処理は一時停止しません。請求書は毎月発行されます。"
 
 [portal.billing.chip]
-invoices = "請求書"
-nav = "セクション"
-payment = "支払い"
 plan = "プラン"
 procurement = "調達"
 usage = "使用状況"
@@ -12054,6 +12033,7 @@ title = "ワークスペース"
 loginIncomplete = "ログインを完了できませんでした"
 noSaasServer = "SaaS サーバーが設定されていません"
 noServer = "サーバーが設定されていません"
+policyUnavailable = "Unable to load your organisation's sign-in settings."
 saasLoginFailed = "SaaS ログインに失敗しました"
 saasLoginIncomplete = "SaaS ログインを完了できませんでした"
 selfHostedLoginFailed = "セルフホストのログインに失敗しました"
@@ -13905,6 +13885,11 @@ title = "透かしテキスト"
 image = "画像"
 text = "テキスト"
 
+[workbench]
+dropFailedSingle = "Your file couldn't be added"
+dropFailedSome = "{{failed}} of your files couldn't be added"
+dropOverlay = "Drop files to add them to the workbench"
+
 [workbench.sessionRestore]
 none = "以前のファイルはこのデバイスに保存されていません。"
 partial = "{{total}} 件中 {{restored}} 件のファイルを復元しました。残りはこのデバイスに保存されていません。"
@@ -13915,16 +13900,13 @@ annotations = "注釈"
 applyRedactionsFirst = "先に墨消しを適用"
 closeAll = "すべてのファイルを閉じる"
 closePdf = "PDF を閉じる"
-deleteSelected = "選択したページを削除"
 deselectAll = "すべての選択を解除"
 downloadAll = "すべてダウンロード"
 exitRedaction = "墨消しモードを終了"
-exportAll = "PDF をエクスポート"
-exportSelected = "選択したページをエクスポート"
 formFill = "フォームエディター"
 hideToolbar = "ツールバーを非表示"
 moreActions = "その他のアクション"
-multiTool = "マルチツール"
+pageEditor = "Page Editor"
 panMode = "パンモード"
 print = "PDF を印刷"
 readAloud = "読み上げ"
@@ -13938,7 +13920,6 @@ rulerSettings = "縮尺設定"
 save = "保存"
 saveAll = "すべて保存"
 saveAs = "名前を付けて保存"
-saveChanges = "変更を保存"
 search = "PDF を検索"
 selectAll = "すべて選択"
 selectByNumber = "ページ番号で選択"

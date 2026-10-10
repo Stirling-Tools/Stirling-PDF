@@ -55,7 +55,9 @@ keepWorking = "Tiếp tục làm việc"
 loading = "Đang tải..."
 loginAgreementAccept = "Chấp nhận"
 loginAgreementDecline = "Từ chối"
+loginAgreementLoadFailed = "The login agreement could not be loaded."
 loginAgreementProvider = "Thông báo này do quản trị viên của bạn cung cấp, không phải Stirling PDF Inc."
+loginAgreementRetry = "Retry"
 loginAgreementTitle = "Thỏa thuận đăng nhập"
 logOut = "Đăng xuất"
 marginTooltip = "Khoảng cách giữa số trang và mép trang."
@@ -1939,9 +1941,6 @@ wrapUp = "Đó là chuyến tham quan dành cho admin! Bạn đã xem các tính
 admin = "Quản trị viên"
 title = "Cài đặt kiểm soát người dùng"
 
-[agents]
-stirling_name = "Stirling"
-
 [alphabetOptions]
 arabic = "Tiếng Ả Rập"
 chinese = "Tiếng Trung (Giản thể)"
@@ -3219,21 +3218,16 @@ text = "Để các quyền này không bị thay đổi, hãy dùng công cụ T
 [chat.actions]
 copy = "Sao chép tin nhắn"
 
-[chat.emptyState]
-text = "Đặt câu hỏi về tài liệu của bạn hoặc nhận trợ giúp với công cụ PDF."
-
-[chat.fab]
-close = "Đóng chat"
-open = "Mở trợ lý Stirling AI"
+[chat.dock]
+collapse = "Collapse chat"
+placeholder = "Ask Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Tùy chọn tác nhân Stirling"
-assistant = "Trợ lý AI"
 clearChat = "Xóa trò chuyện"
 
 [chat.input]
 disclaimer = "AI có thể mắc lỗi. Hãy xác minh kết quả trước khi chia sẻ."
-placeholder = "Bạn muốn làm gì?"
 send = "Gửi tin nhắn"
 
 [chat.progress]
@@ -3264,9 +3258,7 @@ convertMany = "Chuyển các tài liệu này sang PDF"
 convertOne = "Chuyển tài liệu này sang PDF"
 heading = "Bắt đầu"
 mergeMany = "Gộp {{count}} tài liệu này thành 1"
-moreFiles = "+{{count}} nữa"
 openFromComputer = "Mở từ máy tính"
-removeFile = "Xóa {{name}}"
 splitOne = "Tách tài liệu này"
 
 [chat.responses]
@@ -3278,11 +3270,6 @@ not_found = "Tôi không tìm thấy thông tin yêu cầu."
 processing = "Đang xử lý ({{outcome}})..."
 unsupported_capability = "Khả năng không được hỗ trợ: {{capability}}"
 usage_limit_reached = "Bạn đã đạt giới hạn sử dụng. Kiểm tra các tùy chọn gói của bạn để tiếp tục."
-
-[chat.toolsUsed]
-summary_one = "Đã chạy 1 công cụ"
-summary_other = "Đã chạy {{count}} công cụ"
-unknownTool = "Công cụ không xác định"
 
 [classification.families]
 correspondence = "Thư từ"
@@ -4364,6 +4351,10 @@ title = "Đã cập nhật từ ổ đĩa"
 body = "\"{{name}}\" đã thay đổi trên ổ đĩa. Tệp đủ lớn nên việc tải lại sẽ mất một lúc, vì vậy phiên bản tại đây được giữ nguyên."
 title = "Tệp đã thay đổi trên ổ đĩa"
 
+[desktopPrivacy]
+blocked = "Your administrator requires documents to stay on this device. This feature is unavailable."
+localFiles = "Local files"
+
 [desktopUpdate]
 downloading = "Đang tải bản cập nhật..."
 installing = "Đang cài đặt bản cập nhật..."
@@ -4597,22 +4588,23 @@ viewInViewer = "Xem trong trình xem"
 closeFile = "Đóng tệp"
 
 [fileEditor]
-addFiles = "Thêm tệp"
 closedFile = "Đã đóng {{name}}"
 couldNotSave = "Không thể lưu {{name}}"
-filesAdded_one = "Đã thêm {{count}} tệp"
-filesAdded_other = "Đã thêm {{count}} tệp"
 filesReordered_one = "Tệp đã được sắp xếp lại"
 filesReordered_other = "{{count}} tệp đã được sắp xếp lại"
 loadedFromStorage_one = "Đã tải {{count}} tệp từ bộ nhớ"
 loadedFromStorage_other = "Đã tải {{count}} tệp từ bộ nhớ"
 loadFromStorageFailed = "Không thể tải một số tệp từ bộ nhớ"
 pinnedFile = "Đã ghim {{name}}"
-processFilesFailed = "Không thể xử lý tệp"
 savedAndClosed = "Đã lưu và đóng {{name}}"
 saveFailed = "Lưu thất bại"
 unpinnedFile = "Đã bỏ ghim {{name}}"
 unzipping = "Đang giải nén {{name}}"
+
+[fileEditor.addCard]
+dropHint = "or drop files anywhere"
+fromComputer = "Upload from computer"
+moreOptions = "More upload options"
 
 [fileEditor.unzip]
 error = "Lỗi khi giải nén {{name}}"
@@ -4729,7 +4721,6 @@ dataLostBody = "Trình duyệt này đã mất nội dung của tệp này. Tả
 dataLostTitle = "Dữ liệu tệp không khả dụng"
 downloadFailed = "Tải xuống thất bại"
 dropHint = "Mở tệp để bắt đầu"
-dropToAdd = "Thả tệp để thêm"
 duplicateFailed = "Không thể nhân bản tệp"
 expand = "Mở rộng thanh bên"
 googleDrive = "Google Drive"
@@ -5733,11 +5724,6 @@ desc = "Ghép nhiều trang của tài liệu PDF thành một trang duy nhất"
 tags = "bố cục,sắp xếp,kết hợp,N-up,2-up,4-up,nhiều trang mỗi trang,trang mỗi tờ,bố cục trang,lát,lưới bố cục,bố cục nhiều trang,kết hợp trên trang,tài liệu phát tay"
 title = "Bố cục nhiều trang"
 
-[home.pdfCommentAgent]
-desc = "Yêu cầu AI chú thích PDF bằng ghi chú dán dựa trên lời nhắc của bạn"
-tags = "AI,tác nhân,bình luận,chú thích,ghi chú dán,đánh giá,phản hồi,ghi chú"
-title = "Thêm bình luận bằng AI"
-
 [home.pdfOrganiser]
 tags = "sắp xếp,sắp xếp lại,đổi thứ tự,sắp xếp trang,phân loại,di chuyển trang,xóa trang,xóa bỏ trang,quản lý trang,trình sắp xếp trang,đánh lại thứ tự"
 title = "Sắp xếp"
@@ -6595,63 +6581,6 @@ yourCloudAccess = "Bạn sẽ trở thành thành viên nhóm và mất quyền 
 deselectAll = "Không chọn"
 selectAll = "Chọn tất cả"
 
-[pageEditor]
-dragPreviewAlt = "Đang kéo"
-filePosition = "Vị trí {{position}}"
-pageLabel = "Trang {{page}}"
-title = "Trình chỉnh sửa trang"
-
-[pageEditor.actions]
-deletePage = "Xóa trang"
-insertFileAfter = "Chèn tệp sau"
-moveLeft = "Di chuyển sang trái"
-moveRight = "Di chuyển sang phải"
-rotateLeft = "Xoay trái"
-rotateRight = "Xoay phải"
-splitAfter = "Tách sau"
-
-[pageEditor.commands]
-addSplitAt = "Thêm điểm tách tại vị trí {{position}}"
-addSplits_one = "Thêm {{count}} điểm tách"
-addSplits_other = "Thêm {{count}} điểm tách"
-deletePages_one = "Xóa {{count}} trang"
-deletePages_other = "Xóa {{count}} trang"
-insertFiles_one = "Chèn {{count}} tệp sau trang {{page}}"
-insertFiles_other = "Chèn {{count}} tệp sau trang {{page}}"
-insertPageBreaks_one = "Chèn {{count}} ngắt trang"
-insertPageBreaks_other = "Chèn {{count}} ngắt trang"
-insertPageBreaksAll = "Chèn ngắt trang sau tất cả các trang"
-removeAllSplits = "Xóa tất cả điểm tách"
-removeSplitAt = "Xóa điểm tách tại vị trí {{position}}"
-removeSplits_one = "Xóa {{count}} điểm tách"
-removeSplits_other = "Xóa {{count}} điểm tách"
-reorderPages = "Đổi thứ tự trang"
-rotatePageLeft = "Xoay trang sang trái"
-rotatePageRight = "Xoay trang sang phải"
-rotatePagesLeft_one = "Xoay {{count}} trang sang trái"
-rotatePagesLeft_other = "Xoay {{count}} trang sang trái"
-rotatePagesRight_one = "Xoay {{count}} trang sang phải"
-rotatePagesRight_other = "Xoay {{count}} trang sang phải"
-splitAllPages = "Tách tất cả các trang"
-toggleSplits_one = "Bật/tắt {{count}} vị trí tách"
-toggleSplits_other = "Bật/tắt {{count}} vị trí tách"
-
-[pageEditor.emptyState]
-body = "Thêm tệp để bắt đầu chỉnh sửa trang"
-title = "Chưa tải tệp PDF nào"
-
-[pageEditor.fileDropdown]
-addFile = "Thêm tệp"
-selectedCount = "Đã chọn {{selected}}/{{total}} tệp"
-untitled = "Chưa có tiêu đề"
-
-[pageEditor.toolbar]
-delete = "Xóa mục đã chọn"
-redo = "Làm lại"
-rotateLeft = "Xoay trái mục đã chọn"
-rotateRight = "Xoay phải mục đã chọn"
-undo = "Hoàn tác"
-
 [pageExtracter]
 title = "Trích xuất trang"
 
@@ -6815,6 +6744,76 @@ title = "Khoảng trang"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → chọn mọi trang"
 title = "Từ khóa đặc biệt"
+
+[pageTracks]
+blankPage = "Blank page"
+deleteSelected = "Delete selected pages"
+downloadAsOneFile = "Download as one file"
+downloadEachPage = "Download each page individually"
+downloadSelectedPages = "Download selected pages"
+dragging_one = "{{count}} page"
+dragging_other = "{{count}} pages"
+duplicateSelected = "Duplicate selected pages"
+edited = "edited"
+emptyTrack = "No pages left. Drag pages here, or save to close this file."
+insertBlank = "Insert blank page"
+insertBlankAfterSelected = "Insert blank pages after selected pages"
+moveLeft = "Move left"
+moveRight = "Move right"
+nextPage = "Next page"
+page = "Page {{number}}"
+pageCount_one = "{{count}} page"
+pageCount_other = "{{count}} pages"
+pagePosition = "Page {{number}} of {{total}}"
+prevPage = "Previous page"
+readingPages = "Reading pages..."
+redo = "Redo"
+rotateLeft = "Rotate left"
+rotateRight = "Rotate right"
+rotateSelectedLeft = "Rotate selected pages left"
+rotateSelectedRight = "Rotate selected pages right"
+saveAsOneFile = "Save as one file"
+saveChanges = "Save changes to all files"
+saveEachPage = "Save each page individually"
+saveSelectedPages = "Save selected pages"
+saving = "Saving..."
+savingProgress = "Saving {{done}} of {{total}}"
+selectPage = "Select page {{number}}"
+splitAfterSelected = "Split after selected pages"
+splitHere = "Split here"
+undo = "Undo"
+viewError = "Couldn't render this page"
+viewPage = "View page"
+zoomIn = "Zoom in"
+zoomOut = "Zoom out"
+
+[pageTracks.close]
+message = "Are you sure you want to close all files?"
+unsaved = "These files have unsaved changes."
+
+[pageTracks.delete]
+page = "Delete page"
+
+[pageTracks.empty]
+body = "Add PDFs to expand them into editable page tracks"
+title = "No PDF files loaded"
+
+[pageTracks.exportFailed]
+body = "The edited files couldn't be prepared. Try again."
+title = "Couldn't download"
+
+[pageTracks.saveFailed]
+body = "Your edits haven't been lost. Try saving again."
+title = "Couldn't save changes"
+
+[pageTracks.track]
+close = "Close file"
+collapse = "Collapse"
+expand = "Expand"
+rename = "Rename file"
+
+[pageTracks.wrap]
+label = "Wrap pages"
 
 [payg.activity]
 docs = "tài liệu"
@@ -7143,24 +7142,6 @@ totalSeats_other = "Tổng ({{count}} chỗ)"
 
 [payment.upgradeTeam]
 title = "Nâng cấp lên Team"
-
-[pdfCommentAgent]
-submit = "Tạo bình luận"
-
-[pdfCommentAgent.error]
-emptyPrompt = "Vui lòng mô tả AI nên bình luận về điều gì"
-failed = "Không tạo được bình luận"
-tooLong = "Lời nhắc quá dài (tối đa {{max}} ký tự)"
-
-[pdfCommentAgent.prompt]
-label = "AI nên bình luận về điều gì?"
-placeholder = "ví dụ: Đánh dấu mọi ngày tháng mơ hồ và đề xuất làm rõ"
-
-[pdfCommentAgent.results]
-title = "PDF đã được bình luận"
-
-[pdfCommentAgent.settings]
-title = "Hướng dẫn bình luận"
 
 [pdfOrganiser]
 placeholder = "(ví dụ: 1,3,2 hoặc 4-8,2,10-12 hoặc 2n-1)"
@@ -7994,6 +7975,7 @@ before = "Đặt"
 title = "Chưa cấu hình kết nối Stirling"
 
 [portal.accountLink.notice]
+loadFailed = "The account linking dialog could not be loaded."
 openFailed = "Không thể mở trình duyệt của bạn. Mở Mức sử dụng & thanh toán trên server đã kết nối của bạn để liên kết tài khoản."
 
 [portal.accountLink.panel]
@@ -8117,9 +8099,6 @@ limit = "Giới hạn chi tiêu hàng tháng {{amount}}/tháng. Xử lý tạm d
 limitNoCap = "Không có giới hạn chi tiêu. Xử lý sẽ không tạm dừng. Hóa đơn được lập hàng tháng."
 
 [portal.billing.chip]
-invoices = "Hóa đơn"
-nav = "Mục"
-payment = "Thanh toán"
 plan = "Gói"
 procurement = "Mua sắm"
 usage = "Mức sử dụng"
@@ -12054,6 +12033,7 @@ title = "Không gian làm việc"
 loginIncomplete = "Không thể hoàn tất đăng nhập"
 noSaasServer = "Chưa cấu hình máy chủ SaaS"
 noServer = "Chưa cấu hình máy chủ"
+policyUnavailable = "Unable to load your organisation's sign-in settings."
 saasLoginFailed = "Đăng nhập SaaS thất bại"
 saasLoginIncomplete = "Không thể hoàn tất đăng nhập SaaS"
 selfHostedLoginFailed = "Đăng nhập tự lưu trữ thất bại"
@@ -13905,6 +13885,11 @@ title = "Văn bản hình mờ"
 image = "Hình ảnh"
 text = "Văn bản"
 
+[workbench]
+dropFailedSingle = "Your file couldn't be added"
+dropFailedSome = "{{failed}} of your files couldn't be added"
+dropOverlay = "Drop files to add them to the workbench"
+
 [workbench.sessionRestore]
 none = "Các tệp trước đây của bạn không còn được lưu trữ trên thiết bị này."
 partial = "Đã khôi phục {{restored}} trong tổng số {{total}} tệp. Phần còn lại không còn được lưu trữ trên thiết bị này."
@@ -13915,16 +13900,13 @@ annotations = "Chú thích"
 applyRedactionsFirst = "Áp dụng bôi đen trước"
 closeAll = "Đóng tất cả tệp"
 closePdf = "Đóng PDF"
-deleteSelected = "Xóa các trang đã chọn"
 deselectAll = "Bỏ chọn tất cả"
 downloadAll = "Tải xuống tất cả"
 exitRedaction = "Thoát chế độ bôi đen"
-exportAll = "Xuất PDF"
-exportSelected = "Xuất các trang đã chọn"
 formFill = "Trình chỉnh sửa biểu mẫu"
 hideToolbar = "Ẩn thanh công cụ"
 moreActions = "Thêm hành động"
-multiTool = "Công cụ đa năng"
+pageEditor = "Page Editor"
 panMode = "Chế độ di chuyển"
 print = "In PDF"
 readAloud = "Đọc to"
@@ -13938,7 +13920,6 @@ rulerSettings = "Cài đặt tỷ lệ"
 save = "Lưu"
 saveAll = "Lưu tất cả"
 saveAs = "Lưu dưới dạng"
-saveChanges = "Lưu thay đổi"
 search = "Tìm kiếm trong PDF"
 selectAll = "Chọn tất cả"
 selectByNumber = "Chọn theo số trang"

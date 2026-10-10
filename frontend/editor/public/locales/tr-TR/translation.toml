@@ -55,7 +55,9 @@ keepWorking = "Çalışmaya Devam Et"
 loading = "Yükleniyor..."
 loginAgreementAccept = "Kabul et"
 loginAgreementDecline = "Reddet"
+loginAgreementLoadFailed = "The login agreement could not be loaded."
 loginAgreementProvider = "Bu bildirim Stirling PDF Inc. tarafından değil, yöneticiniz tarafından sağlanmıştır."
+loginAgreementRetry = "Retry"
 loginAgreementTitle = "Giriş Sözleşmesi"
 logOut = "Oturumu kapat"
 marginTooltip = "Sayfa numarası ile sayfa kenarı arasındaki mesafe."
@@ -1939,9 +1941,6 @@ wrapUp = "Yönetici turu bu kadar! Stirling PDF'yi kuruluşlar için güçlü ve
 admin = "Yönetici"
 title = "Kullanıcı Kontrol Ayarları"
 
-[agents]
-stirling_name = "Stirling"
-
 [alphabetOptions]
 arabic = "Arapça"
 chinese = "Çince (Basitleştirilmiş)"
@@ -3219,21 +3218,16 @@ text = "Bu izinlerin değiştirilemez olmasını sağlamak için, sahip parolas�
 [chat.actions]
 copy = "Mesajı kopyala"
 
-[chat.emptyState]
-text = "Belgeleriniz hakkında bir soru sorun veya PDF araçlarıyla ilgili yardım alın."
-
-[chat.fab]
-close = "Sohbeti kapat"
-open = "Stirling AI asistanını aç"
+[chat.dock]
+collapse = "Collapse chat"
+placeholder = "Ask Stirling Agent"
+title = "Stirling Agent"
 
 [chat.header]
-agentMenu = "Stirling ajan seçenekleri"
-assistant = "AI Asistanı"
 clearChat = "Sohbeti temizle"
 
 [chat.input]
 disclaimer = "AI hata yapabilir. Paylaşmadan önce çıktıyı doğruladığınızdan emin olun."
-placeholder = "Ne yapmak istiyorsunuz?"
 send = "Mesaj gönder"
 
 [chat.progress]
@@ -3264,9 +3258,7 @@ convertMany = "Bu belgeleri PDF'ye dönüştür"
 convertOne = "Bu belgeyi PDF'ye dönüştür"
 heading = "Başlarken"
 mergeMany = "Bu {{count}} belgeyi tek bir dosyada birleştir"
-moreFiles = "+{{count}} daha"
 openFromComputer = "Bilgisayardan aç"
-removeFile = "{{name}} öğesini kaldır"
 splitOne = "Bu belgeyi böl"
 
 [chat.responses]
@@ -3278,11 +3270,6 @@ not_found = "İstenen bilgiyi bulamadım."
 processing = "İşleniyor ({{outcome}})..."
 unsupported_capability = "Desteklenmeyen özellik: {{capability}}"
 usage_limit_reached = "Kullanım sınırınıza ulaştınız. Devam etmek için plan seçeneklerinizi kontrol edin."
-
-[chat.toolsUsed]
-summary_one = "1 araç çalıştırıldı"
-summary_other = "{{count}} araç çalıştırıldı"
-unknownTool = "Bilinmeyen araç"
 
 [classification.families]
 correspondence = "Yazışma"
@@ -4364,6 +4351,10 @@ title = "Diskten güncellendi"
 body = "\"{{name}}\" diskte değişti. Yeniden yüklenmesi biraz zaman alacak kadar büyük, bu nedenle buradaki sürüm olduğu gibi bırakıldı."
 title = "Dosya diskte değişti"
 
+[desktopPrivacy]
+blocked = "Your administrator requires documents to stay on this device. This feature is unavailable."
+localFiles = "Local files"
+
 [desktopUpdate]
 downloading = "Güncelleme indiriliyor..."
 installing = "Güncelleme yükleniyor..."
@@ -4597,22 +4588,23 @@ viewInViewer = "Görüntüleyicide görüntüle"
 closeFile = "Dosyayı kapat"
 
 [fileEditor]
-addFiles = "Dosya Ekle"
 closedFile = "{{name}} kapatıldı"
 couldNotSave = "{{name}} kaydedilemedi"
-filesAdded_one = "{{count}} dosya eklendi"
-filesAdded_other = "{{count}} dosya eklendi"
 filesReordered_one = "Dosya yeniden sıralandı"
 filesReordered_other = "{{count}} dosya yeniden sıralandı"
 loadedFromStorage_one = "Depolamadan {{count}} dosya yüklendi"
 loadedFromStorage_other = "Depolamadan {{count}} dosya yüklendi"
 loadFromStorageFailed = "Bazı dosyalar depolamadan yüklenemedi"
 pinnedFile = "{{name}} sabitlendi"
-processFilesFailed = "Dosyalar işlenemedi"
 savedAndClosed = "{{name}} kaydedildi ve kapatıldı"
 saveFailed = "Kaydetme başarısız"
 unpinnedFile = "{{name}} sabitlemesi kaldırıldı"
 unzipping = "{{name}} ZIP'ten çıkarılıyor"
+
+[fileEditor.addCard]
+dropHint = "or drop files anywhere"
+fromComputer = "Upload from computer"
+moreOptions = "More upload options"
 
 [fileEditor.unzip]
 error = "{{name}} ZIP'ten çıkarılırken hata oluştu"
@@ -4729,7 +4721,6 @@ dataLostBody = "Bu tarayıcı bu dosyanın içeriğini kaybetti. Üzerinde çal�
 dataLostTitle = "Dosya verisi kullanılamıyor"
 downloadFailed = "İndirme başarısız oldu"
 dropHint = "Başlamak için dosya açın"
-dropToAdd = "Eklemek için dosyaları bırakın"
 duplicateFailed = "Dosya çoğaltılamadı"
 expand = "Kenar çubuğunu genişlet"
 googleDrive = "Google Drive"
@@ -5733,11 +5724,6 @@ desc = "Bir PDF belgesinin çoklu sayfalarını tek bir sayfada birleştirir"
 tags = "düzen,yerleştir,birleştir,N-up,2-up,4-up,sayfa başına birden çok,yaprak başına sayfa,sayfaları düzenle,döşe,ızgara düzeni,çok sayfalı düzen,sayfada birleştir,el ilanı"
 title = "Çoklu-Sayfa Düzeni"
 
-[home.pdfCommentAgent]
-desc = "İsteminize göre bir PDF'yi yapışkan not yorumlarıyla açıklaması için AI'dan isteyin"
-tags = "AI,aracı,yorum,açıklama,yapışkan not,inceleme,geri bildirim,notlar"
-title = "AI yorumları ekle"
-
 [home.pdfOrganiser]
 tags = "düzenle,yeniden düzenle,sırala,sayfaları düzenle,sayfaları sırala,sayfaları taşı,sayfaları sil,sayfaları kaldır,sayfa yönetimi,sayfa düzenleyici,yeniden sırala"
 title = "Düzenle"
@@ -6595,63 +6581,6 @@ yourCloudAccess = "Ekip üyesi olacaksınız ve sahip erişimini kaybedeceksiniz
 deselectAll = "Hiçbiri"
 selectAll = "Tümünü İşaretle"
 
-[pageEditor]
-dragPreviewAlt = "Sürükleniyor"
-filePosition = "Konum {{position}}"
-pageLabel = "Sayfa {{page}}"
-title = "Sayfa Düzenleyici"
-
-[pageEditor.actions]
-deletePage = "Sayfayı Sil"
-insertFileAfter = "Sonrasına Dosya Ekle"
-moveLeft = "Sola Taşı"
-moveRight = "Sağa Taşı"
-rotateLeft = "Sola Döndür"
-rotateRight = "Sağa Döndür"
-splitAfter = "Sonrasından Böl"
-
-[pageEditor.commands]
-addSplitAt = "{{position}} konumuna bölme ekle"
-addSplits_one = "{{count}} bölme ekle"
-addSplits_other = "{{count}} bölme ekle"
-deletePages_one = "{{count}} sayfayı sil"
-deletePages_other = "{{count}} sayfayı sil"
-insertFiles_one = "{{page}} sayfasından sonra {{count}} dosya ekle"
-insertFiles_other = "{{page}} sayfasından sonra {{count}} dosya ekle"
-insertPageBreaks_one = "{{count}} sayfa sonu ekle"
-insertPageBreaks_other = "{{count}} sayfa sonu ekle"
-insertPageBreaksAll = "Tüm sayfalardan sonra sayfa sonları ekle"
-removeAllSplits = "Tüm bölmeleri kaldır"
-removeSplitAt = "{{position}} konumundaki bölmeyi kaldır"
-removeSplits_one = "{{count}} bölmeyi kaldır"
-removeSplits_other = "{{count}} bölmeyi kaldır"
-reorderPages = "Sayfaları yeniden sırala"
-rotatePageLeft = "Sayfayı sola döndür"
-rotatePageRight = "Sayfayı sağa döndür"
-rotatePagesLeft_one = "{{count}} sayfayı sola döndür"
-rotatePagesLeft_other = "{{count}} sayfayı sola döndür"
-rotatePagesRight_one = "{{count}} sayfayı sağa döndür"
-rotatePagesRight_other = "{{count}} sayfayı sağa döndür"
-splitAllPages = "Tüm sayfaları böl"
-toggleSplits_one = "{{count}} bölme konumunu değiştir"
-toggleSplits_other = "{{count}} bölme konumunu değiştir"
-
-[pageEditor.emptyState]
-body = "Sayfaları düzenlemeye başlamak için dosya ekleyin"
-title = "Yüklü PDF dosyası yok"
-
-[pageEditor.fileDropdown]
-addFile = "Dosya Ekle"
-selectedCount = "{{selected}}/{{total}} dosya seçildi"
-untitled = "Adsız"
-
-[pageEditor.toolbar]
-delete = "Seçileni Sil"
-redo = "Yinele"
-rotateLeft = "Seçileni Sola Döndür"
-rotateRight = "Seçileni Sağa Döndür"
-undo = "Geri Al"
-
 [pageExtracter]
 title = "Sayfaları Çıkar"
 
@@ -6815,6 +6744,76 @@ title = "Sayfa Aralıkları"
 [pageSelection.tooltip.special]
 bullet1 = "<strong>all</strong> → tüm sayfaları seçer"
 title = "Özel Anahtar Kelimeler"
+
+[pageTracks]
+blankPage = "Blank page"
+deleteSelected = "Delete selected pages"
+downloadAsOneFile = "Download as one file"
+downloadEachPage = "Download each page individually"
+downloadSelectedPages = "Download selected pages"
+dragging_one = "{{count}} page"
+dragging_other = "{{count}} pages"
+duplicateSelected = "Duplicate selected pages"
+edited = "edited"
+emptyTrack = "No pages left. Drag pages here, or save to close this file."
+insertBlank = "Insert blank page"
+insertBlankAfterSelected = "Insert blank pages after selected pages"
+moveLeft = "Move left"
+moveRight = "Move right"
+nextPage = "Next page"
+page = "Page {{number}}"
+pageCount_one = "{{count}} page"
+pageCount_other = "{{count}} pages"
+pagePosition = "Page {{number}} of {{total}}"
+prevPage = "Previous page"
+readingPages = "Reading pages..."
+redo = "Redo"
+rotateLeft = "Rotate left"
+rotateRight = "Rotate right"
+rotateSelectedLeft = "Rotate selected pages left"
+rotateSelectedRight = "Rotate selected pages right"
+saveAsOneFile = "Save as one file"
+saveChanges = "Save changes to all files"
+saveEachPage = "Save each page individually"
+saveSelectedPages = "Save selected pages"
+saving = "Saving..."
+savingProgress = "Saving {{done}} of {{total}}"
+selectPage = "Select page {{number}}"
+splitAfterSelected = "Split after selected pages"
+splitHere = "Split here"
+undo = "Undo"
+viewError = "Couldn't render this page"
+viewPage = "View page"
+zoomIn = "Zoom in"
+zoomOut = "Zoom out"
+
+[pageTracks.close]
+message = "Are you sure you want to close all files?"
+unsaved = "These files have unsaved changes."
+
+[pageTracks.delete]
+page = "Delete page"
+
+[pageTracks.empty]
+body = "Add PDFs to expand them into editable page tracks"
+title = "No PDF files loaded"
+
+[pageTracks.exportFailed]
+body = "The edited files couldn't be prepared. Try again."
+title = "Couldn't download"
+
+[pageTracks.saveFailed]
+body = "Your edits haven't been lost. Try saving again."
+title = "Couldn't save changes"
+
+[pageTracks.track]
+close = "Close file"
+collapse = "Collapse"
+expand = "Expand"
+rename = "Rename file"
+
+[pageTracks.wrap]
+label = "Wrap pages"
 
 [payg.activity]
 docs = "belgeler"
@@ -7143,24 +7142,6 @@ totalSeats_other = "Toplam ({{count}} koltuk)"
 
 [payment.upgradeTeam]
 title = "Team'e yükselt"
-
-[pdfCommentAgent]
-submit = "Yorumları oluştur"
-
-[pdfCommentAgent.error]
-emptyPrompt = "Lütfen AI'nin neye yorum yapması gerektiğini açıklayın"
-failed = "Yorumlar oluşturulamadı"
-tooLong = "İstem çok uzun (en fazla {{max}} karakter)"
-
-[pdfCommentAgent.prompt]
-label = "AI neye yorum yapmalı?"
-placeholder = "örn. Belirsiz tarihleri işaretleyin ve netleştirme önerin"
-
-[pdfCommentAgent.results]
-title = "Yorumlanmış PDF"
-
-[pdfCommentAgent.settings]
-title = "Yorum talimatları"
 
 [pdfOrganiser]
 placeholder = "(örn. 1,3,2 veya 4-8,2,10-12 veya 2n-1)"
@@ -7994,6 +7975,7 @@ before = "Ayarla"
 title = "Stirling bağlantısı yapılandırılmamış"
 
 [portal.accountLink.notice]
+loadFailed = "The account linking dialog could not be loaded."
 openFailed = "Tarayıcınız açılamadı. Bir hesap bağlamak için bağlı sunucunuzda Kullanım ve faturalandırma'yı açın."
 
 [portal.accountLink.panel]
@@ -8117,9 +8099,6 @@ limit = "Aylık harcama limiti {{amount}}/ay. Limitte işleme duraklar."
 limitNoCap = "Harcama limiti yok. İşleme duraklamaz. Faturalar aylık olarak düzenlenir."
 
 [portal.billing.chip]
-invoices = "Faturalar"
-nav = "Bölümler"
-payment = "Ödeme"
 plan = "Plan"
 procurement = "Satın alma"
 usage = "Kullanım"
@@ -12054,6 +12033,7 @@ title = "Çalışma Alanı"
 loginIncomplete = "Oturum açma tamamlanamadı"
 noSaasServer = "SaaS sunucusu yapılandırılmamış"
 noServer = "Sunucu yapılandırılmamış"
+policyUnavailable = "Unable to load your organisation's sign-in settings."
 saasLoginFailed = "SaaS oturum açma başarısız"
 saasLoginIncomplete = "SaaS oturum açma tamamlanamadı"
 selfHostedLoginFailed = "Self-hosted oturum açma başarısız"
@@ -13905,6 +13885,11 @@ title = "Filigran Metni"
 image = "Resim"
 text = "Metin"
 
+[workbench]
+dropFailedSingle = "Your file couldn't be added"
+dropFailedSome = "{{failed}} of your files couldn't be added"
+dropOverlay = "Drop files to add them to the workbench"
+
 [workbench.sessionRestore]
 none = "Önceki dosyalarınız artık bu cihazda saklanmıyor."
 partial = "{{total}} dosyadan {{restored}} tanesi geri yüklendi. Geri kalanı artık bu cihazda saklanmıyor."
@@ -13915,16 +13900,13 @@ annotations = "Ek açıklamalar"
 applyRedactionsFirst = "Önce karartmaları uygula"
 closeAll = "Tüm dosyaları kapat"
 closePdf = "PDF'yi kapat"
-deleteSelected = "Seçili sayfaları sil"
 deselectAll = "Tümünün seçimini kaldır"
 downloadAll = "Tümünü indir"
 exitRedaction = "Karartma modundan çık"
-exportAll = "PDF'yi dışa aktar"
-exportSelected = "Seçili sayfaları dışa aktar"
 formFill = "Form Düzenleyici"
 hideToolbar = "Araç çubuğunu gizle"
 moreActions = "Daha fazla eylem"
-multiTool = "Çoklu araç"
+pageEditor = "Page Editor"
 panMode = "Kaydırma modu"
 print = "PDF'yi yazdır"
 readAloud = "Sesli oku"
@@ -13938,7 +13920,6 @@ rulerSettings = "Ölçek Ayarları"
 save = "Kaydet"
 saveAll = "Tümünü kaydet"
 saveAs = "Farklı kaydet"
-saveChanges = "Değişiklikleri kaydet"
 search = "PDF'de ara"
 selectAll = "Tümünü seç"
 selectByNumber = "Sayfa numaralarına göre seç"
