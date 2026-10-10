@@ -245,7 +245,7 @@ sharedHeading = "Delade signaturer"
 [addImage.saved.type]
 canvas = "Ritning"
 image = "Uppladdning"
-text = "Text"
+text = "Textsignatur"
 
 [addImage.step]
 createDesc = "Ladda upp bilden du vill lägga till"
@@ -256,14 +256,14 @@ placeDesc = "Klicka på PDF:en för att lägga till bilden"
 configure = "Konfigurera bild"
 
 [addImage.text]
-colorLabel = "Text colour"
+colorLabel = "Textfärg"
 fontLabel = "Teckensnitt"
 fontSizeLabel = "Teckenstorlek"
-name = "Text"
+name = "Textinnehåll"
 placeholder = "Ange text"
 
 [addImage.type]
-canvas = "Canvas"
+canvas = "Rityta"
 image = "Bild"
 saved = "Sparad"
 text = "Text"
@@ -465,7 +465,7 @@ sharedHeading = "Delade signaturer"
 [addText.saved.type]
 canvas = "Ritning"
 image = "Uppladdning"
-text = "Text"
+text = "Textsignatur"
 
 [addText.step]
 createDesc = "Ange texten du vill lägga till"
@@ -484,7 +484,7 @@ name = "Textinnehåll"
 placeholder = "Ange texten du vill lägga till"
 
 [addText.type]
-canvas = "Canvas"
+canvas = "Rityta"
 image = "Bild"
 saved = "Sparad"
 text = "Text"
@@ -776,7 +776,7 @@ reindexNote = "Om du ändrade inbäddningsmodellen, indexera om befintliga dokum
 
 [admin.settings.ai.documents.topK]
 description = "Antal mest relevanta segment som hämtas per sökning."
-label = "Top K"
+label = "Antal segment (K)"
 
 [admin.settings.ai.general]
 connection = "Anslutning"
@@ -1016,9 +1016,9 @@ mobileScannerPageFormat = "Sidformat"
 mobileScannerPageFormatDesc = "PDF-sidstorlek för konverterade bilder. \"Behåll\" använder bildens ursprungliga dimensioner."
 mobileScannerStretchToFit = "Sträck för att passa"
 mobileScannerStretchToFitDesc = "Sträck bilder för att fylla hela sidan. Om inaktiverat centreras bilder med bibehållen proportion."
-pageFormatA4 = "A4 (210×297mm)"
+pageFormatA4 = "A4 (210 × 297 mm)"
 pageFormatKeep = "Behåll (ursprungliga dimensioner)"
-pageFormatLetter = "Letter (8.5×11in)"
+pageFormatLetter = "Letter (8,5 × 11 tum)"
 title = "Anslutningar"
 unlinkedServices = "Ej länkade tjänster"
 
@@ -1038,12 +1038,12 @@ mobileScannerPageFormatDesc = "PDF-sidstorlek för konverterade bilder. \"Behål
 mobileScannerStretchToFit = "Sträck för att passa"
 mobileScannerStretchToFitDesc = "Sträck bilder för att fylla hela sidan. Om inaktiverat centreras bilder med bibehållen proportion."
 note = "Obs! Kräver att Frontend-URL är konfigurerad. "
-pageFormatA4 = "A4 (210×297mm)"
+pageFormatA4 = "A4 (210 × 297 mm)"
 pageFormatKeep = "Behåll (ursprungliga dimensioner)"
-pageFormatLetter = "Letter (8.5×11in)"
+pageFormatLetter = "Letter (8,5 × 11 tum)"
 
 [admin.settings.connections.oauth2]
-label = "OAuth2"
+label = "OAuth 2"
 
 [admin.settings.connections.oauth2.autoCreateUser]
 description = "Skapa automatiskt användarkonton vid första OAuth2-inloggningen"
@@ -1082,7 +1082,7 @@ description = "Det OAuth2-anspråk som ska användas som användarnamn (t.ex. em
 label = "Använd som användarnamn"
 
 [admin.settings.connections.saml2]
-label = "SAML2"
+label = "SAML 2"
 
 [admin.settings.connections.saml2.autoCreateUser]
 description = "Skapa automatiskt användarkonton vid första SAML2-inloggningen"
@@ -1180,7 +1180,7 @@ placeholder = "Ange databaslösenord"
 
 [admin.settings.database.port]
 description = "Databasserverns port (används inte om anpassad URL anges)"
-label = "Port"
+label = "Databasport"
 
 [admin.settings.database.type]
 description = "Typ av databas (används inte om anpassad URL anges)"
@@ -1936,7 +1936,7 @@ welcome = "Välkommen till <strong>Admin-rundturen</strong>! Låt oss utforska d
 wrapUp = "Det var administratörsturen! Du har sett enterprise-funktionerna som gör Stirling PDF till en kraftfull, anpassningsbar lösning för organisationer. Du kan spela upp den igen när som helst – öppna bara <strong>Inställningar</strong> och hitta den här i avsnittet <strong>Turer</strong> under Hjälp."
 
 [adminUserSettings]
-admin = "Admin"
+admin = "Administratör"
 title = "Användarhanteringsinställningar"
 
 [agents]
@@ -2623,7 +2623,7 @@ title = "Så skriver du ut och sätter ihop"
 balls = "Bollar"
 best = "Bästa"
 close = "Stäng spel"
-effectTimer = "{{label}} {{seconds}}s"
+effectTimer = "{{label}} {{seconds}} s"
 hint = "Flytta med pekaren eller piltangenterna. Klicka för att fånga pekaren, Esc för att återgå till arbetet."
 hintPointerLocked = "Pekaren fångad. Esc släpper den, sedan Esc igen för att återgå till arbetet."
 score = "Poäng"
@@ -3431,7 +3431,7 @@ license-agreement = "Licensavtal"
 loan-agreement = "Låneavtal"
 loan-document = "Lånedokument"
 maintenance-log = "Underhållslogg"
-manual = "Manual"
+manual = "Handbok"
 market-research = "Marknadsundersökning"
 marketing-plan = "Marknadsföringsplan"
 media-kit = "Mediekit"
@@ -3441,10 +3441,10 @@ meeting-agenda = "Mötesagenda"
 meeting-minutes = "Mötesprotokoll"
 meeting-notes = "Mötesanteckningar"
 membership-document = "Medlemskapsdokument"
-memo = "Memo"
+memo = "Promemoria"
 memorandum-of-understanding = "Samförståndsavtal"
 mortgage-document = "Bolånedokument"
-nda = "NDA"
+nda = "Sekretessavtal"
 newsletter = "Nyhetsbrev"
 non-compete-agreement = "Konkurrensklausulsavtal"
 notice = "Meddelande"
@@ -3463,7 +3463,7 @@ payslip = "Lönebesked"
 performance-review = "Utvecklingssamtal"
 permit = "Tillstånd"
 petition = "Framställan"
-pitch-deck = "Pitch deck"
+pitch-deck = "Pitchpresentation"
 power-of-attorney = "Fullmakt"
 prescription = "Recept"
 presentation = "Presentation"
@@ -4189,7 +4189,7 @@ title = "Hur vi använder cookies"
 
 [cookieBanner.popUp.description]
 1 = "Vi använder cookies och andra tekniker för att få Stirling PDF att fungera bättre för dig – hjälpa oss att förbättra våra verktyg och fortsätta bygga funktioner du kommer att uppskatta."
-2 = "Om du hellre avstår aktiverar ett klick på 'Nej tack' endast de nödvändiga cookies som behövs för att allt ska fungera smidigt."
+2 = "Om du väljer ”Nej tack” används bara de kakor som behövs för att webbplatsen ska fungera."
 
 [cookieBanner.preferencesModal]
 acceptAllBtn = "Acceptera alla"
@@ -4210,7 +4210,7 @@ title = "Analys"
 3 = "Din integritet och ditt förtroende är kärnan i det vi gör."
 
 [cookieBanner.preferencesModal.necessary]
-description = "Dessa cookies är nödvändiga för att webbplatsen ska fungera korrekt. De möjliggör kärnfunktioner som att ställa in dina integritetsinställningar, logga in och fylla i formulär – därför kan de inte stängas av."
+description = "De här kakorna behövs för att webbplatsen ska fungera. De gör det möjligt att spara dina integritetsval, logga in och fylla i formulär. Därför kan de inte stängas av."
 
 [cookieBanner.preferencesModal.necessary.title]
 1 = "Absolut nödvändiga cookies"
@@ -5381,10 +5381,10 @@ fileSizeBytes = "({{size}} byte)"
 javaScript = "JavaScript"
 layers = "Lager"
 modified = "Ändrad: {{date}}"
-structureTree = "StructureTree"
+structureTree = "Strukturträd"
 unnamedAttachment = "Namnlös bilaga"
 unnamedFile = "Namnlös fil"
-xmp = "XMPMetadata"
+xmp = "XMP-metadata"
 
 [getPdfInfo.perPage]
 annotations = "Anteckningar"
@@ -6423,19 +6423,19 @@ title = "Kolla in Stirling Processor"
 
 [onboarding.saas.freeEditor]
 freeLine = "Editorn är nu <free>helt gratis</free>."
-premium = "Vi har lagt till massor av nya funktioner, inklusive <strong>Policyer</strong> och <strong>Agent Chat</strong>."
+premium = "Vi har lagt till många nya funktioner, bland annat <strong>policyer</strong> och <strong>agentchatt</strong>."
 title = "Välkommen till Stirling"
 
 [onboarding.saas.team]
 addButton = "Lägg till"
 createBody = "Arbeta med dokument tillsammans: teammedlemmar delar filer, automationer och ditt abonnemang. Lägg till den första medlemmen via e-post för att skapa ditt team."
 createTitle = "Skapa ditt team"
-inviteBody = "Everyone on your team shares files, automations and your plan. Add teammates by email and they'll get an invitation."
+inviteBody = "Alla i teamet delar filer, automationer och abonnemang. Lägg till teammedlemmar via e-post så får de en inbjudan."
 inviteTitle = "Bjud in medlemmar till ditt team"
 
 [onboarding.saas.usage]
-body = "Automationer, AI och API-förfrågningar använder din gratis tilldelning. Manuell redigering räknas aldrig mot den."
-title = "Din kostnadsfria Processor-tilldelning"
+body = "Automationer, AI och API-anrop använder din kostnadsfria kvot. Manuell redigering räknas aldrig mot den."
+title = "Din kostnadsfria Processor-kvot"
 
 [onboarding.securityCheck]
 message = "Applikationen har nyligen genomgått stora förändringar. Din serveradmins uppmärksamhet kan krävas. Bekräfta din roll för att fortsätta."
@@ -7431,7 +7431,7 @@ clickPageToAddTable = "Klicka på sidan för att lägga till en tabell"
 clickPageToAddText = "Klicka på sidan för att lägga till text"
 document = "Dokument"
 group = "Gruppera"
-groupingAuto = "Auto"
+groupingAuto = "Automatiskt"
 groupingAutoHint = "Grupperar rader med lika avstånd till stycken. Om du ändrar detta läses dokumentet om och ångrahistoriken rensas."
 groupingLine = "Rad"
 groupTooltip = "Slå ihop markerade textsekvenser till ett stycke ({{shortcut}})"
@@ -8660,7 +8660,7 @@ helperText = "Matcha Authentication som är inställd på n8n Webhook-noden."
 label = "Webhook-autentisering"
 
 [portal.connections.types.n8n.fields.authType.options.basic]
-label = "Basic auth"
+label = "Grundläggande autentisering"
 
 [portal.connections.types.n8n.fields.authType.options.header]
 label = "Header-auth"
@@ -8695,14 +8695,14 @@ label = "Microsoft Purview"
 
 [portal.connections.types.purview.fields.clientId]
 helperText = "Valfritt. Behövs bara för att välja etiketter efter namn; etikettering fungerar utan det."
-label = "Application (client) ID"
+label = "Program-ID (klient)"
 
 [portal.connections.types.purview.fields.clientSecret]
 label = "Klienthemlighet"
 
 [portal.connections.types.purview.fields.tenantId]
 helperText = "Stämplas på varje etikett som dess SiteId, så Purview-medvetna verktyg vet vilken organisation som tillämpade den."
-label = "Directory (tenant) ID"
+label = "Katalog-ID (klientorganisation)"
 placeholder = "cb46c030-1825-4e81-a295-151c039dbf02"
 
 [portal.connections.types.s3]
@@ -8717,7 +8717,7 @@ label = "Bucket"
 
 [portal.connections.types.s3.fields.endpoint]
 helperText = "Lämna tomt för AWS. Ange detta för MinIO eller en annan S3-kompatibel lagring."
-label = "Endpoint"
+label = "Slutpunkt"
 
 [portal.connections.types.s3.fields.region]
 label = "Region"
@@ -8865,7 +8865,7 @@ codeCaption = "200 OK"
 title = "Läs det strukturerade resultatet"
 
 [portal.docs.rateLimits]
-burst = "Burst"
+burst = "Tillfällig topp"
 codeCaption = "429 Too Many Requests"
 concurrency = "Samtidighet"
 eyebrow = "KOM IGÅNG"
@@ -9825,7 +9825,7 @@ label = "Lagringstid"
 
 [portal.policies.categories.routing]
 desc = "Dirigera dokument automatiskt till rätt team, mapp eller system."
-label = "Routing"
+label = "Dirigering"
 
 [portal.policies.categories.security]
 desc = "Upptäck PII, maskera, ta bort aktivt innehåll och vattenmärk dokument."
@@ -11040,8 +11040,8 @@ description = "Fält att använda som användarnamn (email, name, given_name, fa
 label = "Använd som användarnamn"
 
 [provider.saml2]
-name = "SAML2"
-scope = "SSO (SAML)"
+name = "SAML 2"
+scope = "Enkel inloggning (SAML)"
 
 [provider.saml2.autoCreateUser]
 description = "Skapa automatiskt användarkonton vid första SAML2-inloggningen"
@@ -11065,15 +11065,15 @@ label = "IDP-utfärdare"
 
 [provider.saml2.idpMetadataUri]
 description = "URI till din leverantörs metadata"
-label = "IDP Metadata URI"
+label = "IDP-metadata-URI"
 
 [provider.saml2.idpSingleLoginUrl]
 description = "URL för att initiera SSO"
-label = "IDP Single Login URL"
+label = "IDP-URL för enkel inloggning"
 
 [provider.saml2.idpSingleLogoutUrl]
 description = "URL för att initiera SLO"
-label = "IDP Single Logout URL"
+label = "IDP-URL för enkel utloggning"
 
 [provider.saml2.privateKey]
 description = "Sökväg till din privata nyckel"
@@ -11811,7 +11811,7 @@ themeDark = "Mörkt"
 themeDescription = "Välj ljust, mörkt eller följ ditt system så att det växlar automatiskt."
 themeLight = "Ljust"
 themeReset = "Återställ temat till standard"
-themeSystem = "System"
+themeSystem = "Följ systemet"
 title = "Allmänt"
 user = "Användare"
 
@@ -11861,7 +11861,7 @@ server = "Serverversion"
 title = "Versionsinformation"
 
 [settings.general.zoomLevel]
-auto = "Auto"
+auto = "Automatiskt"
 fitPage = "Anpassa till sida"
 fitWidth = "Anpassa till bredd"
 
@@ -11904,7 +11904,7 @@ label = "Juridiskt"
 title = "Juridiskt"
 
 [settings.legal.cookiePreferences]
-description = "Granska eller ändra dina val för cookie-samtycke."
+description = "Granska eller ändra vilka kakor du har godkänt."
 manage = "Hantera"
 
 [settings.legal.documents]
@@ -11924,7 +11924,7 @@ listDescription = "Listan visas direkt i UI från releasepaketet eller backend-e
 listTitle = "Paketerade beroenden"
 loadError = "Det gick inte att läsa in tredjepartslicenser"
 module = "Modul"
-version = "Version"
+version = "Versionsnummer"
 
 [settings.licensingAnalytics]
 audit = "Granskningslogg"
@@ -12064,7 +12064,7 @@ connectingTo = "Ansluter till:"
 oauthPending = "Öppnar webbläsaren för autentisering..."
 orContinueWith = "Eller fortsätt med e-post"
 skipSignIn = "Fortsätt utan att logga in"
-sso = "Single Sign-On"
+sso = "Enkel inloggning"
 submit = "Logga in"
 
 [setup.login.error]
@@ -12268,7 +12268,7 @@ saved = "Sparad"
 [sign.saved.type]
 canvas = "Ritning"
 image = "Uppladdning"
-text = "Text"
+text = "Textsignatur"
 
 [sign.step]
 createDesc = "Välj hur du vill skapa signaturen"
@@ -12287,11 +12287,11 @@ name = "Text"
 placeholder = "Ange text"
 
 [sign.type]
-canvas = "Canvas"
+canvas = "Rityta"
 draw = "Rita"
 image = "Bild"
 saved = "Sparad"
-text = "Text"
+text = "Textsignatur"
 title = "Signaturtyp"
 
 [sign.wallet]
@@ -13333,7 +13333,7 @@ capabilities = "Funktioner"
 email = "E-post"
 person = "Person"
 role = "Roll"
-status = "Status"
+status = "Kontostatus"
 team = "Team"
 
 [users.confirm]
@@ -13361,7 +13361,7 @@ addToTeam = "Lägg till i team"
 [users.invite]
 access = "Åtkomst"
 action = "Bjud in personer"
-authOauth = "OAuth2 / SSO"
+authOauth = "OAuth 2 / SSO"
 authSaml = "SAML 2.0"
 authType = "Inloggningsmetod"
 authWeb = "Lösenord"
@@ -13384,7 +13384,7 @@ processorDesc = "Styrningsytan, kör pipelines, agenter och API."
 role = "Roll"
 send2 = "Skicka inbjudan"
 subtitle2 = "De får ett e-postmeddelande för att gå med i din Stirling-arbetsyta."
-team = "Team"
+team = "Tilldela team"
 title = "Bjud in personer"
 username = "Användarnamn"
 usernameError = "Ange ett giltigt användarnamn (3-50 tecken) eller en email-adress"
@@ -13408,7 +13408,7 @@ title = "Kunde inte läsa in medlemmar"
 
 [users.moveTeam]
 apply = "Flytta"
-team = "Team"
+team = "Målteam"
 title = "Flytta till team"
 
 [users.newTeam]
@@ -13961,7 +13961,7 @@ certificateFile = "Certifikatfil"
 certificateFilePlaceholder = "Välj certifikatfil"
 certificatePassword = "Certifikatlösenord"
 certificateType = "Certifikattyp"
-certTypeJks = "JKS Keystore"
+certTypeJks = "JKS-nyckellager"
 certTypeP12 = "P12/PKCS12-certifikat"
 certTypeServer = "Servercertifikat (om tillgängligt)"
 completedDeclined = "Du har avböjt detta dokument."
