@@ -44,6 +44,7 @@ import org.springframework.web.servlet.resource.ResourceResolverChain;
 
 import jakarta.servlet.http.HttpServletRequest;
 
+import stirling.software.common.configuration.CorsPaths;
 import stirling.software.common.model.ApplicationProperties;
 
 @ExtendWith(MockitoExtension.class)
@@ -185,8 +186,14 @@ class WebMvcConfigTest {
             when(registry.addMapping(anyString())).thenReturn(registration);
         }
 
+        private List<String> capturedMappings() {
+            ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+            verify(registry, atLeastOnce()).addMapping(captor.capture());
+            return captor.getAllValues();
+        }
+
         @Test
-        @DisplayName("Tauri mode adds a mapping with Tauri origin patterns")
+        @DisplayName("Tauri mode registers CORS for API paths with Tauri origin patterns")
         void tauriModeBranch() {
             System.setProperty(TAURI_PROP, "true");
             // hasConfiguredOrigins is evaluated before the Tauri check, so getSystem() is
@@ -196,7 +203,7 @@ class WebMvcConfigTest {
 
             config.addCorsMappings(registry);
 
-            verify(registry).addMapping("/**");
+            assertThat(capturedMappings()).containsExactly(CorsPaths.CROSS_ORIGIN_PATTERNS);
         }
 
         @Test
@@ -208,7 +215,7 @@ class WebMvcConfigTest {
 
             config.addCorsMappings(registry);
 
-            verify(registry).addMapping("/**");
+            assertThat(capturedMappings()).containsExactly(CorsPaths.CROSS_ORIGIN_PATTERNS);
             // origins consulted twice (presence check + value use)
             verify(system, atLeastOnce()).getCorsAllowedOrigins();
         }
@@ -227,7 +234,7 @@ class WebMvcConfigTest {
 
             config.addCorsMappings(registry);
 
-            verify(registry).addMapping("/**");
+            assertThat(capturedMappings()).containsExactly(CorsPaths.CROSS_ORIGIN_PATTERNS);
         }
 
         @Test
@@ -238,7 +245,7 @@ class WebMvcConfigTest {
 
             config.addCorsMappings(registry);
 
-            verify(registry).addMapping("/**");
+            assertThat(capturedMappings()).containsExactly(CorsPaths.CROSS_ORIGIN_PATTERNS);
         }
 
         @Test
@@ -248,7 +255,7 @@ class WebMvcConfigTest {
 
             config.addCorsMappings(registry);
 
-            verify(registry).addMapping("/**");
+            assertThat(capturedMappings()).containsExactly(CorsPaths.CROSS_ORIGIN_PATTERNS);
         }
     }
 
