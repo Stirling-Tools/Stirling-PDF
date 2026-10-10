@@ -9,6 +9,8 @@ const flowSeenKey = (flowId: string) =>
   `${STORAGE_PREFIX}::flow::${flowId}::seen`;
 const flowProgressKey = (flowId: string) =>
   `${STORAGE_PREFIX}::flow::${flowId}::progress`;
+const flowDismissedAtKey = (flowId: string) =>
+  `${STORAGE_PREFIX}::flow::${flowId}::dismissedAt`;
 
 function readJson<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
@@ -49,6 +51,17 @@ export function markFlowSeen(flowId: string): void {
   }
 }
 
+/** When a snoozable flow was last dismissed, in epoch milliseconds, or null if never. */
+export function getFlowDismissedAt(flowId: string): number | null {
+  const value = readJson<unknown>(flowDismissedAtKey(flowId), null);
+  return typeof value === "number" ? value : null;
+}
+
+/** Records that a snoozable flow was dismissed now. */
+export function markFlowDismissed(flowId: string): void {
+  writeJson(flowDismissedAtKey(flowId), Date.now());
+}
+
 /** Completed step ids for a checklist-style flow, in completion order. */
 export function getFlowProgress(flowId: string): string[] {
   const value = readJson<string[]>(flowProgressKey(flowId), []);
@@ -67,12 +80,13 @@ export function setStepDone(flowId: string, stepId: string): void {
   writeJson(flowProgressKey(flowId), [...progress, stepId]);
 }
 
-/** Clears both the seen flag and step progress for a flow. */
+/** Clears every stored flag, timestamp and step for a flow. */
 export function resetFlow(flowId: string): void {
   if (typeof window === "undefined") return;
   try {
     localStorage.removeItem(flowSeenKey(flowId));
     localStorage.removeItem(flowProgressKey(flowId));
+    localStorage.removeItem(flowDismissedAtKey(flowId));
   } catch (error) {
     console.error(
       `[onboardingStorage] Error resetting flow "${flowId}":`,

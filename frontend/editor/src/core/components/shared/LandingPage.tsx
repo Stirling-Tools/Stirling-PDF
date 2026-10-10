@@ -1,25 +1,16 @@
 import React, { useState } from "react";
 import { Container } from "@mantine/core";
-import { Dropzone } from "@mantine/dropzone";
 import { useFileHandler } from "@app/hooks/useFileHandler";
-import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import MobileUploadModal from "@app/components/shared/MobileUploadModal";
 import { openFilesFromDisk } from "@app/services/openFilesFromDisk";
 import { Logo } from "@app/ui/Logo";
 import { LandingActions } from "@app/components/shared/LandingActions";
-import { useDropzoneFiles } from "@app/hooks/useDropzoneFiles";
 import "@app/components/shared/LandingPage.css";
 
 const LandingPage = () => {
   const { addFiles } = useFileHandler();
-  const getDropzoneFiles = useDropzoneFiles();
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
-  const terminology = useFileActionTerminology();
   const [mobileUploadModalOpen, setMobileUploadModalOpen] = useState(false);
-
-  const handleFileDrop = async (files: File[]) => {
-    await addFiles(files);
-  };
 
   const handleNativeUploadClick = async () => {
     const files = await openFilesFromDisk({
@@ -55,30 +46,7 @@ const LandingPage = () => {
       className="flex min-h-0 flex-col"
       style={{ position: "relative" }}
     >
-      <Dropzone
-        onDrop={handleFileDrop}
-        multiple
-        activateOnClick={false}
-        useFsAccessApi={false}
-        getFilesFromEvent={getDropzoneFiles}
-        enablePointerEvents
-        aria-label={terminology.dropFilesHere}
-        className="landing-dropzone flex min-h-0 flex-1 cursor-default flex-col items-center justify-center border-none bg-transparent px-4 py-8 shadow-none outline-none"
-        styles={{
-          root: {
-            border: "none !important",
-            backgroundColor: "transparent",
-            overflow: "visible",
-          },
-          inner: {
-            overflow: "visible",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            width: "100%",
-          },
-        }}
-      >
+      <div className="flex min-h-0 w-full flex-1 flex-col items-center justify-center overflow-visible px-4 py-8">
         <Logo
           variant="iconAndText"
           orientation="vertical"
@@ -97,7 +65,7 @@ const LandingPage = () => {
             onFileSelect={handleFileSelect}
           />
         </div>
-      </Dropzone>
+      </div>
 
       <MobileUploadModal
         opened={mobileUploadModalOpen}

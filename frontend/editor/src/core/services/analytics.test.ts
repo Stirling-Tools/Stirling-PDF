@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import posthog from "posthog-js";
 
 const capture = vi.fn();
 let optedIn = true;
@@ -12,6 +13,7 @@ vi.mock("posthog-js", () => ({
 }));
 
 import {
+  setActivePosthog,
   trackPdfUploaded,
   trackEditorOperation,
 } from "@app/services/analytics";
@@ -24,6 +26,7 @@ describe("analytics", () => {
   beforeEach(() => {
     capture.mockClear();
     optedIn = true;
+    setActivePosthog(posthog);
   });
 
   it("captures one event per uploaded PDF (no dedup)", () => {
@@ -53,6 +56,13 @@ describe("analytics", () => {
 
   it("does not capture when opted out", () => {
     optedIn = false;
+    trackPdfUploaded([pdf("a.pdf")]);
+    trackEditorOperation("compress", 1);
+    expect(capture).not.toHaveBeenCalled();
+  });
+
+  it("does not capture until usePosthogTracking publishes a client", () => {
+    setActivePosthog(null);
     trackPdfUploaded([pdf("a.pdf")]);
     trackEditorOperation("compress", 1);
     expect(capture).not.toHaveBeenCalled();

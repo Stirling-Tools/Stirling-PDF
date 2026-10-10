@@ -13,11 +13,16 @@ import {
   isSourcePage,
   sourcePageKey,
 } from "@app/components/pageTracks/types";
+import { isPageImage } from "@app/components/pageTracks/trackFileKind";
+import { generateImageThumbnail } from "@app/utils/thumbnailUtils";
 
 /** Pre-load a screen's worth either side so sideways scrolling stays smooth. */
 const ROOT_MARGIN = "300px";
 const MAX_IN_FLIGHT = 12;
 const NOTIFY_MS = 60;
+/** Longest side of an image page's tile, in pixels: near the 842px a PDF A4
+ *  page renders its tile at, so an image is as sharp as its neighbours. */
+const IMAGE_PAGE_THUMBNAIL_SIZE = 1024;
 
 export interface TrackThumbnailStore {
   subscribe: (listener: () => void) => () => void;
@@ -37,7 +42,8 @@ export interface TrackThumbnailStore {
  */
 export function useTrackThumbnails(): TrackThumbnailStore {
   const selectors = useFileSelectors();
-  const { requestThumbnail, getThumbnailFromCache } = useThumbnailGeneration();
+  const { requestThumbnail, getThumbnailFromCache, addThumbnailToCache } =
+    useThumbnailGeneration();
 
   const resolvedRef = useRef(new Map<string, string>());
   const listenersRef = useRef(new Set<() => void>());
@@ -78,7 +84,15 @@ export function useTrackThumbnails(): TrackThumbnailStore {
       if (!file) continue;
 
       inFlightRef.current.add(key);
-      requestThumbnail(key, file, page.sourcePageNumber)
+      const rendering = isPageImage(file)
+        ? generateImageThumbnail(file, IMAGE_PAGE_THUMBNAIL_SIZE).then(
+            (thumbnail) => {
+              addThumbnailToCache(key, thumbnail);
+              return thumbnail;
+            },
+          )
+        : requestThumbnail(key, file, page.sourcePageNumber);
+      rendering
         .then((thumbnail) => {
           if (thumbnail) {
             resolvedRef.current.set(key, thumbnail);
@@ -93,7 +107,13 @@ export function useTrackThumbnails(): TrackThumbnailStore {
           pump();
         });
     }
-  }, [getThumbnailFromCache, requestThumbnail, scheduleNotify, selectors]);
+  }, [
+    addThumbnailToCache,
+    getThumbnailFromCache,
+    requestThumbnail,
+    scheduleNotify,
+    selectors,
+  ]);
 
   const enqueue = useCallback(
     (page: SourceTrackPage) => {
