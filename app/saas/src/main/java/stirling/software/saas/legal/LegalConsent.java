@@ -3,8 +3,11 @@ package stirling.software.saas.legal;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.CreationTimestamp;
 
+import jakarta.persistence.Cacheable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -25,6 +28,8 @@ import lombok.Setter;
  */
 @Entity
 @Table(name = "legal_consent")
+@Cacheable
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "saas-legal-consents")
 @NoArgsConstructor
 @Getter
 @Setter
