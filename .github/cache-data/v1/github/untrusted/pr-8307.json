@@ -6905,139 +6905,6 @@
       "artifact_name": "cache-untrusted-pr-8307-uv-python-dir-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v5--3ca6711f3ae29bba5fca60c8e46b57f4a35010bc66892c0c02a-part-000000",
       "workflow_run_id": 38041475275
     },
-    "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/gradle-caches/macos-arm64/9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-cache-cf6e306cf7c6dce4/v5": {
-      "object": "sha256:c430eb81d445e6123275a1b94e080a833a57f9c899c4f6dd2bf9bb1ce5289c2d",
-      "storage": "github-artifact",
-      "updated_at": "2026-10-10T09:40:26.023Z",
-      "source": "Stirling-Tools/Stirling-PDF",
-      "created_by": "Ludy87",
-      "size": 375413168,
-      "parts": [
-        {
-          "index": 0,
-          "object": "sha256:71949a5fd5c882ade2e1fd8c94809227800a58d2132ea8fa7880476a258aae80",
-          "size": 25165824,
-          "artifact_id": 11665678857,
-          "artifact_name": "cache-untrusted-pr-8307-gradle-caches-macos-arm64-9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-v5--c430eb81d445e6123275a1b94e080a833a57f9c899c4f6dd2-part-000000",
-          "workflow_run_id": 38041475275
-        },
-        {
-          "index": 1,
-          "object": "sha256:9406d65abde726fbf628c0dc7b584f35bda8d3bc506ccfc80a814932c5c6ca16",
-          "size": 25165824,
-          "artifact_id": 11665453903,
-          "artifact_name": "cache-untrusted-pr-8307-gradle-caches-macos-arm64-9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-v5--c430eb81d445e6123275a1b94e080a833a57f9c899c4f6dd2-part-000001",
-          "workflow_run_id": 38041475275
-        },
-        {
-          "index": 2,
-          "object": "sha256:de0c8430a76b5463e0e658c61dc87b144d0a0ea2b92929e029c57ddbc050336e",
-          "size": 25165824,
-          "artifact_id": 11665808383,
-          "artifact_name": "cache-untrusted-pr-8307-gradle-caches-macos-arm64-9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-v5--c430eb81d445e6123275a1b94e080a833a57f9c899c4f6dd2-part-000002",
-          "workflow_run_id": 38041475275
-        },
-        {
-          "index": 3,
-          "object": "sha256:3f99d1ffa7ef3d25341e945c309d8d4e5880ab92a402338f654a48dda0b504b0",
-          "size": 25165824,
-          "artifact_id": 11665643810,
-          "artifact_name": "cache-untrusted-pr-8307-gradle-caches-macos-arm64-9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-v5--c430eb81d445e6123275a1b94e080a833a57f9c899c4f6dd2-part-000003",
-          "workflow_run_id": 38041475275
-        },
-        {
-          "index": 4,
-          "object": "sha256:a1164a5ad1b912e8d5fd19d078fd93f40a07d4f9b3892eee064f5a1eb9fa950b",
-          "size": 25165824,
-          "artifact_id": 11665324409,
-          "artifact_name": "cache-untrusted-pr-8307-gradle-caches-macos-arm64-9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-v5--c430eb81d445e6123275a1b94e080a833a57f9c899c4f6dd2-part-000004",
-          "workflow_run_id": 38041475275
-        },
-        {
-          "index": 5,
-          "object": "sha256:0265d6909d3e206fc6f068150e5b602a0cb4ea74e83dc015e1bb41d1a9ef51c7",
-          "size": 25165824,
-          "artifact_id": 11665753797,
-          "artifact_name": "cache-untrusted-pr-8307-gradle-caches-macos-arm64-9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-v5--c430eb81d445e6123275a1b94e080a833a57f9c899c4f6dd2-part-000005",
-          "workflow_run_id": 38041475275
-        },
-        {
-          "index": 6,
-          "object": "sha256:31c151e5003d12c855b2eb19fabbda47612d1a13d3432b9dbcb5f59ee7573c37",
-          "size": 25165824,
-          "artifact_id": 11665424027,
-          "artifact_name": "cache-untrusted-pr-8307-gradle-caches-macos-arm64-9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-v5--c430eb81d445e6123275a1b94e080a833a57f9c899c4f6dd2-part-000006",
-          "workflow_run_id": 38041475275
-        },
-        {
-          "index": 7,
-          "object": "sha256:9fadee70934e6a6352e9be37043ddc5dd29838bfe71a827748ab8ffcdb6488dd",
-          "size": 25165824,
-          "artifact_id": 11665289982,
-          "artifact_name": "cache-untrusted-pr-8307-gradle-caches-macos-arm64-9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-v5--c430eb81d445e6123275a1b94e080a833a57f9c899c4f6dd2-part-000007",
-          "workflow_run_id": 38041475275
-        },
-        {
-          "index": 8,
-          "object": "sha256:e4ca85fcca66ddbcdb16617f421754aa9cdf4bf79ed14ce9a3eb4203807c3b83",
-          "size": 25165824,
-          "artifact_id": 11665688749,
-          "artifact_name": "cache-untrusted-pr-8307-gradle-caches-macos-arm64-9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-v5--c430eb81d445e6123275a1b94e080a833a57f9c899c4f6dd2-part-000008",
-          "workflow_run_id": 38041475275
-        },
-        {
-          "index": 9,
-          "object": "sha256:15d3c8355ee596bef95c4c0f5086c05b48ea6f0c1d318246ffa7ffd0752d86c3",
-          "size": 25165824,
-          "artifact_id": 11665623796,
-          "artifact_name": "cache-untrusted-pr-8307-gradle-caches-macos-arm64-9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-v5--c430eb81d445e6123275a1b94e080a833a57f9c899c4f6dd2-part-000009",
-          "workflow_run_id": 38041475275
-        },
-        {
-          "index": 10,
-          "object": "sha256:a78dcfdd628670e92dc815d69907e8a818262f4c2ba8f72a75baf87675d549f7",
-          "size": 25165824,
-          "artifact_id": 11665788581,
-          "artifact_name": "cache-untrusted-pr-8307-gradle-caches-macos-arm64-9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-v5--c430eb81d445e6123275a1b94e080a833a57f9c899c4f6dd2-part-000010",
-          "workflow_run_id": 38041475275
-        },
-        {
-          "index": 11,
-          "object": "sha256:c1cbb5b18ca7ae71fdf08a39cb3fe8e1fb46a66167f823a9ad956da8912c1af6",
-          "size": 25165824,
-          "artifact_id": 11665548929,
-          "artifact_name": "cache-untrusted-pr-8307-gradle-caches-macos-arm64-9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-v5--c430eb81d445e6123275a1b94e080a833a57f9c899c4f6dd2-part-000011",
-          "workflow_run_id": 38041475275
-        },
-        {
-          "index": 12,
-          "object": "sha256:eba6331fe296df6fd0896d98b10f50c0a196fe2d7d70eb0b9b113c020bf54a64",
-          "size": 25165824,
-          "artifact_id": 11665568879,
-          "artifact_name": "cache-untrusted-pr-8307-gradle-caches-macos-arm64-9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-v5--c430eb81d445e6123275a1b94e080a833a57f9c899c4f6dd2-part-000012",
-          "workflow_run_id": 38041475275
-        },
-        {
-          "index": 13,
-          "object": "sha256:6b11e6271afe56c19154713e01607080fed4a58665af31ad6477b2c9bcbb0267",
-          "size": 25165824,
-          "artifact_id": 11665424039,
-          "artifact_name": "cache-untrusted-pr-8307-gradle-caches-macos-arm64-9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-v5--c430eb81d445e6123275a1b94e080a833a57f9c899c4f6dd2-part-000013",
-          "workflow_run_id": 38041475275
-        },
-        {
-          "index": 14,
-          "object": "sha256:6f913f3c9c019f606bf5086cbda94e4b95cdb28796920ca0c60c5b7a45cfb300",
-          "size": 23091632,
-          "artifact_id": 11665748734,
-          "artifact_name": "cache-untrusted-pr-8307-gradle-caches-macos-arm64-9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-v5--c430eb81d445e6123275a1b94e080a833a57f9c899c4f6dd2-part-000014",
-          "workflow_run_id": 38041475275
-        }
-      ],
-      "artifact_id": 11665678857,
-      "artifact_name": "cache-untrusted-pr-8307-gradle-caches-macos-arm64-9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-v5--c430eb81d445e6123275a1b94e080a833a57f9c899c4f6dd2-part-000000",
-      "workflow_run_id": 38041475275
-    },
     "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/gradle-wrapper/macos-arm64/9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-cache-cf6e306cf7c6dce4/v5": {
       "object": "sha256:157332f83a08dfcc06670080f92431c8687babbe1a1ea7ff5e8cf724d23341b0",
       "storage": "github-artifact",
@@ -8798,10 +8665,143 @@
       "artifact_id": 11670726938,
       "artifact_name": "cache-untrusted-pr-8307-gradle-caches-windows-x64-9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-v5--bd59229b7ee959b0cdb7575223c4044312d73ccfa30d4ebcf-part-000000",
       "workflow_run_id": 38052957071
+    },
+    "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/gradle-caches/macos-arm64/9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-cache-5f903761b1e4c735/v5": {
+      "object": "sha256:7514022752f4f5427cbb6f96a91357771acf300f516ec48b83e694f618cc8123",
+      "storage": "github-artifact",
+      "updated_at": "2026-10-10T12:53:11.314Z",
+      "source": "Stirling-Tools/Stirling-PDF",
+      "created_by": "Ludy87",
+      "size": 375375126,
+      "parts": [
+        {
+          "index": 0,
+          "object": "sha256:493ae83513f14028f7fb15b9ad71aa6d5660a7921451470bce537ea8811a14d8",
+          "size": 25165824,
+          "artifact_id": 11670062661,
+          "artifact_name": "cache-untrusted-pr-8307-gradle-caches-macos-arm64-9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-v5--7514022752f4f5427cbb6f96a91357771acf300f516ec48b8-part-000000",
+          "workflow_run_id": 38052957071
+        },
+        {
+          "index": 1,
+          "object": "sha256:2cd9fccb4fe522847d2ad828999d675a0b8cc436410ca95e7d5f81fa2a258a51",
+          "size": 25165824,
+          "artifact_id": 11669773144,
+          "artifact_name": "cache-untrusted-pr-8307-gradle-caches-macos-arm64-9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-v5--7514022752f4f5427cbb6f96a91357771acf300f516ec48b8-part-000001",
+          "workflow_run_id": 38052957071
+        },
+        {
+          "index": 2,
+          "object": "sha256:f687b18ef1c8cf774653329a9cf0210edac834f4309e2cc7fa18bb950a152efa",
+          "size": 25165824,
+          "artifact_id": 11670197326,
+          "artifact_name": "cache-untrusted-pr-8307-gradle-caches-macos-arm64-9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-v5--7514022752f4f5427cbb6f96a91357771acf300f516ec48b8-part-000002",
+          "workflow_run_id": 38052957071
+        },
+        {
+          "index": 3,
+          "object": "sha256:fa9e46c9dc6856cdbf229648cfebb0a18d712fb9cc551fafcc8d40abfb306a5e",
+          "size": 25165824,
+          "artifact_id": 11670087747,
+          "artifact_name": "cache-untrusted-pr-8307-gradle-caches-macos-arm64-9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-v5--7514022752f4f5427cbb6f96a91357771acf300f516ec48b8-part-000003",
+          "workflow_run_id": 38052957071
+        },
+        {
+          "index": 4,
+          "object": "sha256:94bb16b960f29d4af567d94f3d868e76d7d05002001f02dd23eed199b1e7fea0",
+          "size": 25165824,
+          "artifact_id": 11669887889,
+          "artifact_name": "cache-untrusted-pr-8307-gradle-caches-macos-arm64-9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-v5--7514022752f4f5427cbb6f96a91357771acf300f516ec48b8-part-000004",
+          "workflow_run_id": 38052957071
+        },
+        {
+          "index": 5,
+          "object": "sha256:63feccb579fc33495b36afd83da3cb702d16ee7a1b9f9328ac3f895d46327037",
+          "size": 25165824,
+          "artifact_id": 11670077652,
+          "artifact_name": "cache-untrusted-pr-8307-gradle-caches-macos-arm64-9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-v5--7514022752f4f5427cbb6f96a91357771acf300f516ec48b8-part-000005",
+          "workflow_run_id": 38052957071
+        },
+        {
+          "index": 6,
+          "object": "sha256:a21f2da7fbe8e0e9864f4e48533a12e1587e205139715a81202233ee20cd3da8",
+          "size": 25165824,
+          "artifact_id": 11670082707,
+          "artifact_name": "cache-untrusted-pr-8307-gradle-caches-macos-arm64-9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-v5--7514022752f4f5427cbb6f96a91357771acf300f516ec48b8-part-000006",
+          "workflow_run_id": 38052957071
+        },
+        {
+          "index": 7,
+          "object": "sha256:853e6ec14c2b89d37cf58ca55a7d43b14153a5b03ef34ea9e141cb7ff51822f5",
+          "size": 25165824,
+          "artifact_id": 11669977763,
+          "artifact_name": "cache-untrusted-pr-8307-gradle-caches-macos-arm64-9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-v5--7514022752f4f5427cbb6f96a91357771acf300f516ec48b8-part-000007",
+          "workflow_run_id": 38052957071
+        },
+        {
+          "index": 8,
+          "object": "sha256:5cfd74968680615b061960637000194ee4dcdbf0d47c7aa59323150f7db7bb40",
+          "size": 25165824,
+          "artifact_id": 11669922878,
+          "artifact_name": "cache-untrusted-pr-8307-gradle-caches-macos-arm64-9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-v5--7514022752f4f5427cbb6f96a91357771acf300f516ec48b8-part-000008",
+          "workflow_run_id": 38052957071
+        },
+        {
+          "index": 9,
+          "object": "sha256:dcd9ab4bff20db7386dfaea1dbbbc38bca248694ea73f882bb81fbc9d8fcc416",
+          "size": 25165824,
+          "artifact_id": 11669788055,
+          "artifact_name": "cache-untrusted-pr-8307-gradle-caches-macos-arm64-9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-v5--7514022752f4f5427cbb6f96a91357771acf300f516ec48b8-part-000009",
+          "workflow_run_id": 38052957071
+        },
+        {
+          "index": 10,
+          "object": "sha256:9b7c9f579e773697233a096c1fbd41d4a832aae22ed9cb000546fc99608751c1",
+          "size": 25165824,
+          "artifact_id": 11670147645,
+          "artifact_name": "cache-untrusted-pr-8307-gradle-caches-macos-arm64-9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-v5--7514022752f4f5427cbb6f96a91357771acf300f516ec48b8-part-000010",
+          "workflow_run_id": 38052957071
+        },
+        {
+          "index": 11,
+          "object": "sha256:456534b264e646cb36ebfd73cb6fd20b78457e7af0ad11fbd0e43783cc37ffd8",
+          "size": 25165824,
+          "artifact_id": 11670187488,
+          "artifact_name": "cache-untrusted-pr-8307-gradle-caches-macos-arm64-9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-v5--7514022752f4f5427cbb6f96a91357771acf300f516ec48b8-part-000011",
+          "workflow_run_id": 38052957071
+        },
+        {
+          "index": 12,
+          "object": "sha256:54567c53916dbedba26736899e6a01abc002850f66d4d3170bb6bf69458f0941",
+          "size": 25165824,
+          "artifact_id": 11670012796,
+          "artifact_name": "cache-untrusted-pr-8307-gradle-caches-macos-arm64-9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-v5--7514022752f4f5427cbb6f96a91357771acf300f516ec48b8-part-000012",
+          "workflow_run_id": 38052957071
+        },
+        {
+          "index": 13,
+          "object": "sha256:9ba3cd05e0cbc423c95fe8975824f8a1f400f5857f395eeb4f2843c755f8901e",
+          "size": 25165824,
+          "artifact_id": 11670157576,
+          "artifact_name": "cache-untrusted-pr-8307-gradle-caches-macos-arm64-9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-v5--7514022752f4f5427cbb6f96a91357771acf300f516ec48b8-part-000013",
+          "workflow_run_id": 38052957071
+        },
+        {
+          "index": 14,
+          "object": "sha256:c5e66109bf9df5f91a3b50ea90164c7f372fdc8256e03efa2ea0e4a0e049ea44",
+          "size": 23053590,
+          "artifact_id": 11670032839,
+          "artifact_name": "cache-untrusted-pr-8307-gradle-caches-macos-arm64-9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-v5--7514022752f4f5427cbb6f96a91357771acf300f516ec48b8-part-000014",
+          "workflow_run_id": 38052957071
+        }
+      ],
+      "artifact_id": 11670062661,
+      "artifact_name": "cache-untrusted-pr-8307-gradle-caches-macos-arm64-9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-v5--7514022752f4f5427cbb6f96a91357771acf300f516ec48b8-part-000000",
+      "workflow_run_id": 38052957071
     }
   },
   "monitoring": {
     "window_started_at": "2026-10-10T12:50:15.729Z",
-    "writes": 7
+    "writes": 8
   }
 }
