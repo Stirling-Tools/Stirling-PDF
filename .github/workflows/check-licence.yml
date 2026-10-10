@@ -39,7 +39,7 @@ jobs:
 
       - name: Restore cache artifact
         id: cache
-        uses: Ludy87/cache-the-planet/multi-cache@28a7e5215d2a951ee87efc913dcf826c38b795b4
+        uses: Ludy87/cache-the-planet/multi-cache@e6251f7d7e74d9bf97c28c007b15f11591ae8932
         with:
           cleanup-path-after-save: true
           version: 6
