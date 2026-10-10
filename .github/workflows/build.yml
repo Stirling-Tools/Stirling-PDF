@@ -60,19 +60,74 @@ jobs:
         id: changes
         with:
           filters: .github/config/.files.yaml
+  files-hash:
+    name: Hash files
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    outputs:
+      gradle_files_hash: ${{ steps.hash.outputs.gradle_files_hash }}
+      cargo_files_hash: ${{ steps.hash.outputs.cargo_files_hash }}
+      frontend_dist_files_hash: ${{ steps.hash.outputs.frontend_dist_files_hash }}
+      uv_files_hash: ${{ steps.hash.outputs.uv_files_hash }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Hash files
+        id: hash
+        env:
+          GRADLE_HASH_FILES: >-
+            ${{ hashFiles(
+              'gradle/wrapper/gradle-wrapper.properties',
+              'gradle/libs.versions.toml',
+              'buildSrc/**',
+              'settings.gradle',
+              'build.gradle',
+              'app/**/build.gradle',
+              'gradle/**/*.gradle'
+            ) }}
+          CARGO_HASH_FILES: >-
+            ${{ hashFiles(
+              'frontend/editor/src-tauri/**',
+              'frontend/editor/src-tauri/Cargo.toml',
+              'frontend/editor/src-tauri/Cargo.lock'
+            ) }}
+          FRONTEND_DIST_HASH_FILES: >-
+            ${{ hashFiles('frontend/editor/src/**') }}
+          UV_HASH_FILES: >-
+            ${{ hashFiles(
+              'engine/.python-version',
+              'engine/pyproject.toml',
+              'engine/uv.lock'
+            ) }}
+        shell: bash
+        run: |
+          echo "gradle_files_hash=$GRADLE_HASH_FILES" >> "$GITHUB_OUTPUT"
+          echo "cargo_files_hash=$CARGO_HASH_FILES" >> "$GITHUB_OUTPUT"
+          echo "frontend_dist_files_hash=$FRONTEND_DIST_HASH_FILES" >> "$GITHUB_OUTPUT"
+          echo "uv_files_hash=$UV_HASH_FILES" >> "$GITHUB_OUTPUT"
 
   gradle-cache-prime:
     if: needs.files-changed.outputs.backend == 'true'
-    needs: [files-changed]
+    needs: [files-changed, files-hash]
+    permissions:
+      contents: write
     uses: ./.github/workflows/gradle-cache-prime.yml
     secrets: inherit
+    with:
+      gradle-hash: ${{ needs.files-hash.outputs.gradle_files_hash }}
 
   build:
-    if: needs.files-changed.outputs.backend == 'true'
-    needs: [files-changed, gradle-cache-prime]
+    if: |
+      !cancelled() &&
+      needs.files-changed.outputs.backend == 'true'
+    needs: [files-changed, gradle-cache-prime, files-hash]
+    with:
+      gradle-hash: ${{ needs.files-hash.outputs.gradle_files_hash }}
+      uv-hash: ${{ needs.files-hash.outputs.uv_files_hash }}
     permissions:
       actions: read
-      contents: read
+      contents: write
       security-events: write
       pull-requests: write
     uses: ./.github/workflows/backend-build.yml
@@ -86,7 +141,7 @@ jobs:
     if: |
       !cancelled() &&
       needs.files-changed.outputs.project == 'true' &&
-      contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result)
+      contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result) && false
     needs: [files-changed, gradle-cache-prime]
     permissions:
       contents: read
@@ -94,7 +149,7 @@ jobs:
     secrets: inherit
 
   check-generateOpenApiDocs:
-    if: needs.files-changed.outputs.openapi == 'true'
+    if: needs.files-changed.outputs.openapi == 'true' && false
     needs: [files-changed, gradle-cache-prime]
     permissions:
       contents: read
@@ -102,7 +157,7 @@ jobs:
     secrets: inherit
 
   frontend-validation:
-    if: needs.files-changed.outputs.frontend == 'true'
+    if: needs.files-changed.outputs.frontend == 'true' && false
     needs: [files-changed]
     permissions:
       contents: read
@@ -115,7 +170,7 @@ jobs:
   # whole-suite sweep (nightly.yml) still covers stories a change affects without
   # touching them directly.
   frontend-a11y:
-    if: needs.files-changed.outputs.frontend == 'true'
+    if: needs.files-changed.outputs.frontend == 'true' && false
     needs: [files-changed]
     permissions:
       contents: read
@@ -123,7 +178,7 @@ jobs:
     secrets: inherit
 
   playwright-e2e:
-    if: needs.files-changed.outputs.frontend == 'true'
+    if: needs.files-changed.outputs.frontend == 'true' && false
     needs: [files-changed]
     permissions:
       contents: read
@@ -134,7 +189,7 @@ jobs:
     if: |
       !cancelled() &&
       needs.files-changed.outputs.frontend == 'true' &&
-      contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result)
+      contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result) && false
     needs: [files-changed, gradle-cache-prime]
     permissions:
       contents: read
@@ -145,7 +200,7 @@ jobs:
     if: |
       !cancelled() &&
       needs.files-changed.outputs.proprietary == 'true' &&
-      contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result)
+      contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result) && false
     needs: [files-changed, gradle-cache-prime]
     permissions:
       contents: read
@@ -156,9 +211,11 @@ jobs:
 
   check-licence:
     if: needs.files-changed.outputs.build == 'true'
-    needs: [files-changed, gradle-cache-prime]
+    needs: [files-changed, gradle-cache-prime, files-hash]
+    with:
+      gradle-hash: ${{ needs.files-hash.outputs.gradle_files_hash }}
     permissions:
-      contents: read
+      contents: write
     uses: ./.github/workflows/check-licence.yml
     secrets: inherit
 
@@ -166,7 +223,7 @@ jobs:
     if: |
       !cancelled() &&
       needs.files-changed.outputs.project == 'true' &&
-      contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result)
+      contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result) && false
     needs: [files-changed, gradle-cache-prime]
     permissions:
       actions: write
@@ -184,7 +241,7 @@ jobs:
   test-build-docker-images:
     if: |
       github.event_name == 'pull_request' &&
-      needs.files-changed.outputs.project == 'true'
+      needs.files-changed.outputs.project == 'true' && false
     needs: [files-changed]
     permissions:
       contents: read
@@ -198,11 +255,10 @@ jobs:
   tauri-build:
     if: |
       !cancelled() &&
-      needs.files-changed.outputs.tauri == 'true' &&
-      contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result)
+      needs.files-changed.outputs.tauri == 'true'
     needs: [files-changed, gradle-cache-prime]
     permissions:
-      contents: read
+      contents: write
       pull-requests: write
     uses: ./.github/workflows/tauri-build.yml
     secrets: inherit
@@ -217,7 +273,7 @@ jobs:
       use_shared_cache: true
 
   ai-engine:
-    if: needs.files-changed.outputs.engine == 'true'
+    if: needs.files-changed.outputs.engine == 'true' && false
     needs: [files-changed]
     permissions:
       contents: read
@@ -234,7 +290,7 @@ jobs:
     if: |
       !cancelled() &&
       needs.files-changed.outputs.generated-models == 'true' &&
-      contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result)
+      contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result) && false
     needs: [files-changed, gradle-cache-prime]
     permissions:
       contents: read

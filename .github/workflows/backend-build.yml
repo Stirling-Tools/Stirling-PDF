@@ -11,12 +11,26 @@ name: Backend build, format check, and coverage
 #                  never any runtime/integration testing)
 on:
   workflow_call:
+    inputs:
+      gradle-hash:
+        required: true
+        type: string
+      uv-hash:
+        required: true
+        type: string
+      java-version:
+        required: false
+        default: '25'
+        type: string
 
 permissions:
   contents: read
   actions: read
   security-events: write
   pull-requests: write
+
+env:
+  GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-${{ inputs.java-version }}
 
 jobs:
   build:
@@ -25,6 +39,11 @@ jobs:
       deployment: false
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      UV_CACHE_DIR: ${{ github.workspace }}/.cache/setup-uv-cache
+      UV_PYTHON_INSTALL_DIR: ${{ github.workspace }}/.cache/uv-python-dir
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
@@ -35,16 +54,69 @@ jobs:
         uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
           egress-policy: audit
+
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Restore cache Gradle User Home
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - name: Build multi-cache configuration
+        id: cache-config
+        shell: bash
+        run: |
+          if [[ "${{ matrix.flavor }}" == "saas" ]]; then
+            {
+              echo 'multi_cache<<EOF'
+              cat <<'CACHE'
+            gradle-caches:
+              path: .cache/gradle-java-${{ inputs.java-version }}/caches
+            gradle-wrapper:
+              path: .cache/gradle-java-${{ inputs.java-version }}/wrapper
+            setup-uv-cache:
+              path: .cache/setup-uv-cache
+            uv-python-dir:
+              path: .cache/uv-python-dir
+          CACHE
+              echo 'EOF'
+              echo 'cache_key<<EOF'
+              echo 'gradle-caches=${{ inputs.gradle-hash }}'
+              echo 'gradle-wrapper=${{ inputs.gradle-hash }}'
+              echo 'setup-uv-cache=${{ inputs.uv-hash }}'
+              echo 'uv-python-dir=${{ inputs.uv-hash }}'
+              echo 'EOF'
+            } >> "$GITHUB_OUTPUT"
+          else
+            {
+              echo 'multi_cache<<EOF'
+              cat <<'CACHE'
+            gradle-caches:
+              path: .cache/gradle-java-${{ inputs.java-version }}/caches
+            gradle-wrapper:
+              path: .cache/gradle-java-${{ inputs.java-version }}/wrapper
+          CACHE
+              echo 'EOF'
+              echo 'cache_key<<EOF'
+              echo 'gradle-caches=${{ inputs.gradle-hash }}'
+              echo 'gradle-wrapper=${{ inputs.gradle-hash }}'
+              echo 'EOF'
+            } >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Restore Gradle cache github-artifact
+        id: cache
+        uses: Ludy87/cache-the-planet/multi-cache@e6251f7d7e74d9bf97c28c007b15f11591ae8932
         with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-v1-${{ runner.os }}-${{ runner.arch }}-jdk-${{ matrix.jdk-version }}-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
+          cleanup-path-after-save: true
+          version: 6
+          encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
+          manifest-branch: dev-cache-artifact
+          manifest-path: .github/cache-data
+          artifact-retention-days: 1
+          storage: github-artifact
+          multi-cache: ${{ steps.cache-config.outputs.multi_cache }}
+          # save-scope: shared
+          token: ${{ github.token }}
+          key: ${{ steps.cache-config.outputs.cache_key }}
+          # allow-shared-restore: true
+          strict: false
 
       - name: Set up JDK ${{ matrix.jdk-version }}
         uses: ./.github/actions/java
@@ -53,6 +125,7 @@ jobs:
 
       - name: Install Task
         uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
+
       - name: Check Java formatting (Spotless)
         # Runs once per matrix combination - pick the cheapest leg
         # (core - no proprietary, no saas) so we don't wait for the
@@ -197,12 +270,13 @@ jobs:
 
       - name: Install uv
         if: always() && matrix.flavor == 'saas'
-        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
-          enable-cache: true
+          enable-cache: false
           cache-dependency-glob: |
             engine/pyproject.toml
             engine/uv.lock
+          cache-local-path: .cache/setup-uv-cache
 
       - name: JaCoCo coverage step summary
         # Only the saas leg posts the JUnit summary - it's a strict
