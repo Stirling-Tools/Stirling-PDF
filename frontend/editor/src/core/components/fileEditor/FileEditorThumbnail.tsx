@@ -52,11 +52,7 @@ interface FileEditorThumbnailProps {
   totalFiles: number;
   onCloseFile: (fileId: FileId) => void;
   onViewFile: (fileId: FileId) => void;
-  onReorderFiles?: (
-    sourceFileId: FileId,
-    targetFileId: FileId,
-    selectedFileIds: FileId[],
-  ) => void;
+  onReorderFiles?: (sourceFileId: FileId, targetFileId: FileId) => void;
   onDownloadFile: (fileId: FileId) => void;
   onUnzipFile?: (fileId: FileId) => void;
   toolMode?: boolean;
@@ -216,8 +212,7 @@ const FileEditorThumbnail = ({
           const sourceData = source.data;
           if (sourceData.type === "file" && onReorderFiles) {
             const sourceFileId = sourceData.fileId as FileId;
-            const selectedFileIds = sourceData.selectedFiles as FileId[];
-            onReorderFiles(sourceFileId, file.id, selectedFileIds);
+            onReorderFiles(sourceFileId, file.id);
           }
         },
       });

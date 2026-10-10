@@ -1,5 +1,4 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
-import { flushSync } from "react-dom";
 import { Center, Box, LoadingOverlay } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import {
@@ -15,14 +14,35 @@ import { detectFileExtension } from "@app/utils/fileUtils";
 import FileEditorThumbnail from "@app/components/fileEditor/FileEditorThumbnail";
 import AddFileCard from "@app/components/fileEditor/AddFileCard";
 import FilePickerModal from "@app/components/shared/FilePickerModal";
+import { reorderFileIds } from "@app/components/fileEditor/reorderFileIds";
 import { FileId, StirlingFile } from "@app/types/fileContext";
 import { alert } from "@app/components/toast";
 import { downloadFileWithPolicy as downloadFile } from "@app/services/exportWithPolicy";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
+import {
+  useVirtualFileRows,
+  rowHeightPx,
+} from "@app/components/filesPage/useVirtualFileRows";
 import type { FileItemPolicyRef } from "@app/components/shared/PolicyBadges";
+import styles from "@app/components/fileEditor/FileEditor.module.css";
 
 const EMPTY_POLICIES: FileItemPolicyRef[] = [];
+const DEFAULT_SUPPORTED_EXTENSIONS = ["pdf"];
+
+function normalizeMaxFiles(
+  toolMode: boolean,
+  rawMax: number | null | undefined,
+): number {
+  if (!toolMode || rawMax == null || rawMax < 0) return Infinity;
+  if (!Number.isFinite(rawMax)) return Infinity;
+  return Math.floor(rawMax);
+}
+
+function limitSelection(ids: FileId[], maxFiles: number): FileId[] {
+  if (!Number.isFinite(maxFiles) || ids.length <= maxFiles) return ids;
+  return maxFiles === 0 ? [] : ids.slice(-maxFiles);
+}
 
 interface FileEditorProps {
   onOpenPageEditor?: () => void;
@@ -33,7 +53,7 @@ interface FileEditorProps {
 
 const FileEditor = ({
   toolMode = false,
-  supportedExtensions = ["pdf"],
+  supportedExtensions = DEFAULT_SUPPORTED_EXTENSIONS,
 }: FileEditorProps) => {
   const { t } = useTranslation();
   const policyFileBadges = usePolicyFileBadges();
@@ -53,14 +73,18 @@ const FileEditor = ({
 
   const activeStirlingFileStubs = useMemo(
     () => selectors.getStirlingFileStubs(),
-    [state.files.byId, state.files.ids],
+    [selectors, state.files.byId, state.files.ids],
   );
 
-  // Stable callbacks read current stubs and selection without invalidating memoized thumbnails.
+  // Keep latest state available for async and reorder callbacks without invalidating memos.
   const stubsRef = useRef(activeStirlingFileStubs);
-  stubsRef.current = activeStirlingFileStubs;
   const selectedFileIdsRef = useRef(selectedFileIds);
-  selectedFileIdsRef.current = selectedFileIds;
+  useEffect(() => {
+    stubsRef.current = activeStirlingFileStubs;
+  }, [activeStirlingFileStubs]);
+  useEffect(() => {
+    selectedFileIdsRef.current = selectedFileIds;
+  }, [selectedFileIds]);
 
   const { actions: navActions } = useNavigationActions();
 
@@ -96,23 +120,26 @@ const FileEditor = ({
 
   const { selectedTool } = useToolWorkflow();
 
-  const maxAllowed = useMemo<number>(() => {
-    const rawMax = selectedTool?.maxFiles;
-    return !toolMode || rawMax == null || rawMax < 0 ? Infinity : rawMax;
-  }, [selectedTool?.maxFiles, toolMode]);
+  const maxAllowed = useMemo<number>(
+    () => normalizeMaxFiles(toolMode, selectedTool?.maxFiles),
+    [selectedTool?.maxFiles, toolMode],
+  );
 
   const [showFilePickerModal, setShowFilePickerModal] = useState(false);
 
   const handleFileUpload = useCallback(
     async (uploadedFiles: File[]) => {
       try {
-        await addFiles(uploadedFiles, { selectFiles: true });
-        if (Number.isFinite(maxAllowed)) {
-          const nowSelectedIds = selectors
-            .getSelectedStirlingFileStubs()
-            .map((r) => r.id);
-          if (nowSelectedIds.length > maxAllowed) {
-            setSelectedFiles(nowSelectedIds.slice(-maxAllowed));
+        if (uploadedFiles.length > 0) {
+          await addFiles(uploadedFiles, { selectFiles: true });
+          if (Number.isFinite(maxAllowed)) {
+            const nowSelectedIds = selectors
+              .getSelectedStirlingFileStubs()
+              .map((r) => r.id);
+            const limited = limitSelection(nowSelectedIds, maxAllowed);
+            if (limited.length !== nowSelectedIds.length) {
+              setSelectedFiles(limited);
+            }
           }
         }
         showStatus(
@@ -144,68 +171,28 @@ const FileEditor = ({
   );
 
   useEffect(() => {
-    if (Number.isFinite(maxAllowed) && selectedFileIds.length > maxAllowed) {
-      setSelectedFiles(selectedFileIds.slice(-maxAllowed));
+    if (Number.isFinite(maxAllowed)) {
+      const limited = limitSelection(selectedFileIds, maxAllowed);
+      if (limited.length !== selectedFileIds.length) {
+        setSelectedFiles(limited);
+      }
     }
   }, [maxAllowed, selectedFileIds, setSelectedFiles]);
 
   const handleReorderFiles = useCallback(
-    (sourceFileId: FileId, targetFileId: FileId, selectedFileIds: FileId[]) => {
+    (sourceFileId: FileId, targetFileId: FileId) => {
       const currentIds = stubsRef.current.map((r) => r.id);
+      const nextOrder = reorderFileIds(currentIds, sourceFileId, targetFileId);
 
-      const sourceIndex = currentIds.findIndex((id) => id === sourceFileId);
-      const targetIndex = currentIds.findIndex((id) => id === targetFileId);
-
-      if (sourceIndex === -1 || targetIndex === -1) {
-        console.warn("Could not find source or target file for reordering");
+      if (nextOrder === currentIds) {
         return;
       }
 
-      const filesToMove =
-        selectedFileIds.length > 1
-          ? selectedFileIds.filter((id) => currentIds.includes(id))
-          : [sourceFileId];
+      reorderFiles(nextOrder);
 
-      const newOrder = [...currentIds];
-
-      // Remove files to move from their current positions (in reverse order to maintain indices)
-      const sourceIndices = filesToMove
-        .map((id) => newOrder.findIndex((nId) => nId === id))
-        .sort((a, b) => b - a); // Sort descending
-
-      sourceIndices.forEach((index) => {
-        newOrder.splice(index, 1);
-      });
-
-      let insertIndex = newOrder.findIndex((id) => id === targetFileId);
-      if (insertIndex !== -1) {
-        const isMovingForward = sourceIndex < targetIndex;
-        if (isMovingForward) {
-          insertIndex += 1;
-        }
-      } else {
-        insertIndex = newOrder.length;
-      }
-
-      newOrder.splice(insertIndex, 0, ...filesToMove);
-
-      // flushSync commits the reorder inside the view transition so its snapshots capture both layouts.
-      const applyReorder = () => reorderFiles(newOrder);
-      const docWithViewTransition = document as Document & {
-        startViewTransition?: (cb: () => void) => unknown;
-      };
-      if (typeof docWithViewTransition.startViewTransition === "function") {
-        docWithViewTransition.startViewTransition(() => {
-          flushSync(applyReorder);
-        });
-      } else {
-        applyReorder();
-      }
-
-      const moveCount = filesToMove.length;
       showStatus(
         t("fileEditor.filesReordered", {
-          count: moveCount,
+          count: 2,
           defaultValue_one: "File reordered",
           defaultValue_other: "{{count}} files reordered",
         }),
@@ -361,8 +348,27 @@ const FileEditor = ({
     [showStatus, showError, t],
   );
 
+  const totalItems =
+    activeStirlingFileStubs.length > 0 ? activeStirlingFileStubs.length + 1 : 0;
+
+  const {
+    range,
+    padTop,
+    padBottom,
+    active: isVirtualActive,
+    setContainer,
+  } = useVirtualFileRows(totalItems, rowHeightPx(true), true);
+
+  // Before virtualization activates (before scroll container attaches and measures),
+  // avoid mounting the entire dataset on frame 0. Once active, always render the exact virtual range.
+  const effectiveEnd = !isVirtualActive && totalItems > 13 ? 13 : range.end;
+
   return (
-    <Box pos="relative" style={{ overflow: "auto" }}>
+    <Box
+      className="file-editor-content"
+      pos="relative"
+      style={{ overflow: "auto", height: "100%", width: "100%" }}
+    >
       <LoadingOverlay visible={state.ui.isProcessing} />
 
       <Box p="md">
@@ -374,6 +380,7 @@ const FileEditor = ({
           </Center>
         ) : (
           <div
+            ref={setContainer}
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(auto-fill, minmax(276px, 1fr))",
@@ -382,31 +389,54 @@ const FileEditor = ({
               pointerEvents: "auto",
             }}
           >
-            {activeStirlingFileStubs.length > 0 && (
+            {padTop > 0 && (
+              <div
+                aria-hidden="true"
+                className={styles.virtualPad}
+                style={{ height: padTop }}
+              />
+            )}
+
+            {/* Index 0 is AddFileCard when range covers it */}
+            {range.start === 0 && (
               <AddFileCard
                 key="add-file-card"
                 onFilesSelected={(files) => void handleFileUpload(files)}
               />
             )}
 
-            {activeStirlingFileStubs.map((record, index) => {
-              return (
-                <FileEditorThumbnail
-                  key={record.id}
-                  file={record}
-                  index={index}
-                  totalFiles={activeStirlingFileStubs.length}
-                  onCloseFile={handleCloseFile}
-                  onViewFile={handleViewFile}
-                  onReorderFiles={handleReorderFiles}
-                  onDownloadFile={handleDownloadFile}
-                  onUnzipFile={handleUnzipFile}
-                  toolMode={toolMode}
-                  isSupported={isFileSupported(record.name)}
-                  policies={policyFileBadges.get(record.id) ?? EMPTY_POLICIES}
-                />
-              );
-            })}
+            {activeStirlingFileStubs
+              .slice(
+                Math.max(0, range.start - 1),
+                Math.max(0, effectiveEnd - 1),
+              )
+              .map((record, sliceIdx) => {
+                const index = Math.max(0, range.start - 1) + sliceIdx;
+                return (
+                  <FileEditorThumbnail
+                    key={record.id}
+                    file={record}
+                    index={index}
+                    totalFiles={activeStirlingFileStubs.length}
+                    onCloseFile={handleCloseFile}
+                    onViewFile={handleViewFile}
+                    onReorderFiles={handleReorderFiles}
+                    onDownloadFile={handleDownloadFile}
+                    onUnzipFile={handleUnzipFile}
+                    toolMode={toolMode}
+                    isSupported={isFileSupported(record.name)}
+                    policies={policyFileBadges.get(record.id) ?? EMPTY_POLICIES}
+                  />
+                );
+              })}
+
+            {padBottom > 0 && (
+              <div
+                aria-hidden="true"
+                className={styles.virtualPad}
+                style={{ height: padBottom }}
+              />
+            )}
           </div>
         )}
       </Box>
