@@ -1,5 +1,9 @@
 import { AdjustContrastParameters } from "@app/hooks/tools/adjustContrast/useAdjustContrastParameters";
 
+/**
+ * Must stay in sync with `ColorAdjustment` in the backend's `AdjustContrastController`, which
+ * ports this maths so the `/api/v1/misc/adjust-contrast` endpoint produces the same pixels.
+ */
 export function applyAdjustmentsToCanvas(
   src: HTMLCanvasElement,
   params: AdjustContrastParameters,
