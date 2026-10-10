@@ -37,35 +37,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Use GNU tar on Windows
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          $gitUsrBin = Join-Path $env:ProgramFiles 'Git\usr\bin'
-          $gnuTar = Join-Path $gitUsrBin 'tar.exe'
-
-          if (-not (Test-Path $gnuTar)) {
-            throw "GNU tar not found at $gnuTar"
-          }
-
-          & $gnuTar --version
-          Add-Content -Path $env:GITHUB_PATH -Value $gitUsrBin
-
-      - name: Prepare cache directory
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          New-Item -ItemType Directory -Force `
-            -Path (Join-Path $env:GITHUB_WORKSPACE '.cache') | Out-Null
-
-      - name: Use GNU tar on macOS
-        if: runner.os == 'macOS'
-        shell: bash
-        run: |
-          brew install gnu-tar
-          echo "$(brew --prefix gnu-tar)/libexec/gnubin" >> "$GITHUB_PATH"
-          tar --version
-
       - name: Restore cache artifact
         id: cache
         uses: Ludy87/cache-the-planet/multi-cache@86a25184d1eb86c9481908e2582a0eed7e1f3e84
@@ -95,11 +66,10 @@ jobs:
         with:
           java-version: "25"
 
-      - name: Install Task
-        uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
       - name: Check licenses for compatibility
-        run: task backend:licenses:check
+        run: ./gradlew checkLicense --no-daemon --no-parallel
         env:
+          STIRLING_FLAVOR: saas
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
