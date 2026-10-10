@@ -7316,10 +7316,79 @@
       "artifact_id": 11665678857,
       "artifact_name": "cache-untrusted-pr-8307-gradle-caches-macos-arm64-9b532d47c68f23d6605f510c118a9ac0eaf42fb5118377c4b4bfa5ea6ae197b8-v5--c430eb81d445e6123275a1b94e080a833a57f9c899c4f6dd2-part-000000",
       "workflow_run_id": 38041475275
+    },
+    "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/cargo-registry/windows-x64/f0e36d439a7933eb3d661349557456bd6af0acff608220aeff2c1e3e1995d2a6-cache-cf6e306cf7c6dce4/v5": {
+      "object": "sha256:8dbc0eeec7d49b95db06fbd47efe5577e44d1dff94fc8797791db0d01e646a22",
+      "storage": "github-artifact",
+      "updated_at": "2026-10-10T09:40:28.059Z",
+      "source": "Stirling-Tools/Stirling-PDF",
+      "created_by": "Ludy87",
+      "size": 164568508,
+      "parts": [
+        {
+          "index": 0,
+          "object": "sha256:73e2c64c89884e1b2cf87531b04929b5294208cd6cf1de49319097ae60385063",
+          "size": 25165824,
+          "artifact_id": 11665603916,
+          "artifact_name": "cache-untrusted-pr-8307-cargo-registry-windows-x64-f0e36d439a7933eb3d661349557456bd6af0acff608220aeff2c1e3e1995d2a6-v5--8dbc0eeec7d49b95db06fbd47efe5577e44d1dff94fc8797-part-000000",
+          "workflow_run_id": 38041475275
+        },
+        {
+          "index": 1,
+          "object": "sha256:aba2ed1d03a97d495159fbd956d7e86f72c45f77640325a86fd2c11ba0d5b451",
+          "size": 25165824,
+          "artifact_id": 11665429092,
+          "artifact_name": "cache-untrusted-pr-8307-cargo-registry-windows-x64-f0e36d439a7933eb3d661349557456bd6af0acff608220aeff2c1e3e1995d2a6-v5--8dbc0eeec7d49b95db06fbd47efe5577e44d1dff94fc8797-part-000001",
+          "workflow_run_id": 38041475275
+        },
+        {
+          "index": 2,
+          "object": "sha256:7836dd2e3cc0a391d5679ab42c4f59497706b4339895d6941a8ed9869531fbb4",
+          "size": 25165824,
+          "artifact_id": 11665758658,
+          "artifact_name": "cache-untrusted-pr-8307-cargo-registry-windows-x64-f0e36d439a7933eb3d661349557456bd6af0acff608220aeff2c1e3e1995d2a6-v5--8dbc0eeec7d49b95db06fbd47efe5577e44d1dff94fc8797-part-000002",
+          "workflow_run_id": 38041475275
+        },
+        {
+          "index": 3,
+          "object": "sha256:a5ea093f8a26b748e7d5d9ba511528e56135d2e24df6b439a844bfa3be55a724",
+          "size": 25165824,
+          "artifact_id": 11665379127,
+          "artifact_name": "cache-untrusted-pr-8307-cargo-registry-windows-x64-f0e36d439a7933eb3d661349557456bd6af0acff608220aeff2c1e3e1995d2a6-v5--8dbc0eeec7d49b95db06fbd47efe5577e44d1dff94fc8797-part-000003",
+          "workflow_run_id": 38041475275
+        },
+        {
+          "index": 4,
+          "object": "sha256:97c59b131b6be14fdc99e4712acf2ec5499e31a27f02f88f4e611602ed470ba1",
+          "size": 25165824,
+          "artifact_id": 11665658801,
+          "artifact_name": "cache-untrusted-pr-8307-cargo-registry-windows-x64-f0e36d439a7933eb3d661349557456bd6af0acff608220aeff2c1e3e1995d2a6-v5--8dbc0eeec7d49b95db06fbd47efe5577e44d1dff94fc8797-part-000004",
+          "workflow_run_id": 38041475275
+        },
+        {
+          "index": 5,
+          "object": "sha256:136d7d736d68864d48c8e1e5262bc1e5d15ba22c000351600a0a5b8490b6913f",
+          "size": 25165824,
+          "artifact_id": 11665788587,
+          "artifact_name": "cache-untrusted-pr-8307-cargo-registry-windows-x64-f0e36d439a7933eb3d661349557456bd6af0acff608220aeff2c1e3e1995d2a6-v5--8dbc0eeec7d49b95db06fbd47efe5577e44d1dff94fc8797-part-000005",
+          "workflow_run_id": 38041475275
+        },
+        {
+          "index": 6,
+          "object": "sha256:94cdc23bd2a7fc9404c45367980b6a222bef653a59afb3f61b10fb317d54d4b3",
+          "size": 13573564,
+          "artifact_id": 11665713693,
+          "artifact_name": "cache-untrusted-pr-8307-cargo-registry-windows-x64-f0e36d439a7933eb3d661349557456bd6af0acff608220aeff2c1e3e1995d2a6-v5--8dbc0eeec7d49b95db06fbd47efe5577e44d1dff94fc8797-part-000006",
+          "workflow_run_id": 38041475275
+        }
+      ],
+      "artifact_id": 11665603916,
+      "artifact_name": "cache-untrusted-pr-8307-cargo-registry-windows-x64-f0e36d439a7933eb3d661349557456bd6af0acff608220aeff2c1e3e1995d2a6-v5--8dbc0eeec7d49b95db06fbd47efe5577e44d1dff94fc8797-part-000000",
+      "workflow_run_id": 38041475275
     }
   },
   "monitoring": {
     "window_started_at": "2026-10-10T09:30:32.345Z",
-    "writes": 7
+    "writes": 8
   }
 }
