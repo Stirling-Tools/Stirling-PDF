@@ -391,6 +391,15 @@ jobs:
             frontend/editor/src-tauri/target/release/incremental/**
             frontend/editor/src-tauri/target/release/libs/**
 
+      - name: Read frontend build cache status
+        id: frontend-cache
+        shell: bash
+        env:
+          FRONTEND_DIST_CACHE_HIT: ${{ fromJSON(steps.cache.outputs.cache-results)['frontend-dist']['cache-hit'] }}
+        run: |
+          echo "frontend_dist_hit=$FRONTEND_DIST_CACHE_HIT" >> "$GITHUB_OUTPUT"
+          echo "frontend-dist cache hit: $FRONTEND_DIST_CACHE_HIT"
+
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7 # stable
         with:
@@ -631,7 +640,9 @@ jobs:
           # Linux: build deb+rpm only here (deb-only on minimal smoke builds).
           # AppImage runs in its own continue-on-error step below so its
           # persistent linuxdeploy failure (#6127 onwards) does not tank uploads.
-          args: ${{ matrix.platform == 'ubuntu-22.04' && (inputs.minimal && '--bundles deb' || '--bundles deb,rpm') || matrix.args }}
+          args: >-
+            ${{ matrix.platform == 'ubuntu-22.04' && (inputs.minimal && '--bundles deb' || '--bundles deb,rpm') || matrix.args }}
+            ${{ steps.frontend-cache.outputs.frontend_dist_hit == 'true' && '--config {"build":{"beforeBuildCommand":""}}' || '' }}
 
       - name: Build Tauri app (unsigned)
         if: env.SIGN_BUNDLE != 'true'
@@ -652,6 +663,7 @@ jobs:
           args: >-
             ${{ matrix.platform == 'ubuntu-22.04' && (inputs.minimal && '--bundles deb' || '--bundles deb,rpm') || matrix.args }}
             --config '{"bundle":{"createUpdaterArtifacts":false}}'
+            ${{ steps.frontend-cache.outputs.frontend_dist_hit == 'true' && '--config {"build":{"beforeBuildCommand":""}}' || '' }}
 
       # AppImage is decoupled so its linuxdeploy run gets a fresh process
       # (rpm scratch state torn down) and its failure can't tank deb/rpm.
@@ -674,7 +686,9 @@ jobs:
         with:
           projectPath: ./frontend/editor
           tauriScript: npx tauri
-          args: --bundles appimage
+          args: >-
+            --bundles appimage
+            ${{ steps.frontend-cache.outputs.frontend_dist_hit == 'true' && '--config {"build":{"beforeBuildCommand":""}}' || '' }}
 
       # Bundled libwayland conflicts with the host's on some distros (Fedora
       # Wayland: EGL_BAD_PARAMETER, blank window - #6878). The AppImage
@@ -1048,6 +1062,15 @@ jobs:
             frontend/editor/src-tauri/target/release/examples/**
             frontend/editor/src-tauri/target/release/incremental/**
             frontend/editor/src-tauri/target/release/libs/**
+
+      - name: Read frontend build cache status
+        id: frontend-cache
+        shell: bash
+        env:
+          FRONTEND_DIST_CACHE_HIT: ${{ fromJSON(steps.cache.outputs.cache-results)['frontend-dist']['cache-hit'] }}
+        run: |
+          echo "frontend_dist_hit=$FRONTEND_DIST_CACHE_HIT" >> "$GITHUB_OUTPUT"
+          echo "frontend-dist cache hit: $FRONTEND_DIST_CACHE_HIT"
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7 # stable
