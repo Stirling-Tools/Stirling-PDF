@@ -11,6 +11,7 @@ import { createPluginRegistration, type PluginRegistry } from "@embedpdf/core";
 import type { InitialDocumentOptions } from "@embedpdf/plugin-document-manager";
 import { EmbedPDF, useDocumentState } from "@embedpdf/core/react";
 import { useLocalPdfiumEngine } from "@app/hooks/useLocalPdfiumEngine";
+import { useFocalWheelZoom } from "@app/hooks/useFocalWheelZoom";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useSignaturePreviewHistory } from "@app/hooks/signing/useSignaturePreviewHistory";
@@ -716,7 +717,8 @@ function DocumentViewport({ documentId, pageOptions }: DocumentViewportProps) {
           contain: "strict",
         }}
       >
-        <ZoomGestureWrapper documentId={documentId}>
+        <CursorWheelZoom documentId={documentId} />
+        <ZoomGestureWrapper documentId={documentId} enableWheel={false}>
           <Scroller
             documentId={documentId}
             renderPage={({ width, height, pageIndex }) => (
@@ -734,6 +736,11 @@ function DocumentViewport({ documentId, pageOptions }: DocumentViewportProps) {
       </Viewport>
     </ViewerGlobalPointerProvider>
   );
+}
+
+function CursorWheelZoom({ documentId }: { documentId: string }) {
+  useFocalWheelZoom(documentId);
+  return null;
 }
 
 interface DocumentCommentsProps {
