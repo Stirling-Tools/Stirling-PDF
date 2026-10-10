@@ -89,8 +89,20 @@ export function McpCard({
               </Group>
             }
             data={[
-              { value: "oauth", label: "OAuth 2.1 (external IdP)" },
-              { value: "apikey", label: "API key (Stirling per-user key)" },
+              {
+                value: "oauth",
+                label: t(
+                  "admin.settings.mcp.mode.oauth",
+                  "OAuth 2.1 (external IdP)",
+                ),
+              },
+              {
+                value: "apikey",
+                label: t(
+                  "admin.settings.mcp.mode.apikey",
+                  "API key (Stirling per-user key)",
+                ),
+              },
             ]}
             value={authMode}
             onChange={(v) => setAuth({ mode: v || "oauth" })}

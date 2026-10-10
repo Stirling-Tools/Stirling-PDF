@@ -16,6 +16,11 @@ import stirling.software.proprietary.workflow.model.WorkflowSession;
 
 public interface WorkflowParticipantRepository extends JpaRepository<WorkflowParticipant, Long> {
 
+    /** Resolves the session without loading stale participant state before acquiring its lock. */
+    @Query(
+            "SELECT p.workflowSession.sessionId FROM WorkflowParticipant p WHERE p.shareToken = :token")
+    Optional<String> findSessionIdByShareToken(@Param("token") String token);
+
     /** Find participant by share token */
     Optional<WorkflowParticipant> findByShareToken(String shareToken);
 

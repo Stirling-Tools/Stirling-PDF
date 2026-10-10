@@ -1339,6 +1339,7 @@ public class ApplicationProperties {
         private boolean enableEasterEggs = true;
         private Datasource datasource;
         private boolean disableSanitize;
+        private boolean stirlingOfficeConversion;
         private int maxDPI = 500;
         private boolean enableUrlToPDF;
         private Html html = new Html();
@@ -1394,7 +1395,7 @@ public class ApplicationProperties {
 
     @Data
     public static class Storage {
-        private boolean enabled = false;
+        private boolean enabled = true;
         private String provider = "local";
         private Local local = new Local();
         private S3 s3 = new S3();
@@ -1496,11 +1497,7 @@ public class ApplicationProperties {
 
         @Data
         public static class Signing {
-            private boolean enabled = false;
-
-            // Signing user-picker scope: 'org' (default) = whole instance, anything else =
-            // caller's team only (fail-closed). The saas profile pins 'team'.
-            private String userListScope = "org";
+            private boolean enabled = true;
         }
     }
 
@@ -1652,7 +1649,6 @@ public class ApplicationProperties {
 
     @Data
     public static class ToolRecommendations {
-        // Extra off-switch on top of system.enableAnalytics, which must also consent to tracking.
         private boolean enabled = true;
         // How long usage and workflow rollups are kept before the retention sweep removes them.
         private int retentionDays = 180;

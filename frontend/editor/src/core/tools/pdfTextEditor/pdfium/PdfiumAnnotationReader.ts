@@ -4,6 +4,7 @@ import {
   annotationKindFor,
 } from "@app/tools/pdfTextEditor/model/AnnotationBox";
 import type { Page } from "@app/tools/pdfTextEditor/model/Page";
+import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
 
 // The canvas renders with FPDF_ANNOT, but the editor model walks page objects
 // only - so FreeText/widget/stamp text is visible and completely uneditable.
@@ -48,44 +49,40 @@ export class PdfiumAnnotationReader {
     }
 
     const out: AnnotationBox[] = [];
-    const rectBuf = m.pdfium.wasmExports.malloc(4 * 4);
-    try {
-      for (let i = 0; i < Math.min(count, MAX_ANNOTS); i++) {
-        const annot = mod.FPDFPage_GetAnnot(page.pagePtr, i);
-        if (!annot) continue;
-        try {
-          const kind = annotationKindFor(mod.FPDFAnnot_GetSubtype(annot));
-          if (!kind) continue;
-          if (!getRect(annot, rectBuf)) continue;
-          const left = m.pdfium.getValue(rectBuf, "float");
-          const top = m.pdfium.getValue(rectBuf + 4, "float");
-          const right = m.pdfium.getValue(rectBuf + 8, "float");
-          const bottom = m.pdfium.getValue(rectBuf + 12, "float");
-          const x = Math.min(left, right);
-          const y = Math.min(top, bottom);
-          const width = Math.abs(right - left);
-          const height = Math.abs(top - bottom);
-          // Degenerate rects (hidden widgets) would draw a dot over the page.
-          if (!(width > 1 && height > 1)) continue;
-          if (
-            !Number.isFinite(x) ||
-            !Number.isFinite(y) ||
-            !Number.isFinite(width) ||
-            !Number.isFinite(height)
-          ) {
-            continue;
-          }
-          out.push({
-            id: `p${page.index}-annot-${i}`,
-            kind,
-            rect: { x, y, width, height },
-          });
-        } finally {
-          mod.FPDFPage_CloseAnnot(annot);
+    const rectBuf = scratchPtr(m, SCRATCH.annotRect, 16);
+    for (let i = 0; i < Math.min(count, MAX_ANNOTS); i++) {
+      const annot = mod.FPDFPage_GetAnnot(page.pagePtr, i);
+      if (!annot) continue;
+      try {
+        const kind = annotationKindFor(mod.FPDFAnnot_GetSubtype(annot));
+        if (!kind) continue;
+        if (!getRect(annot, rectBuf)) continue;
+        const left = m.pdfium.getValue(rectBuf, "float");
+        const top = m.pdfium.getValue(rectBuf + 4, "float");
+        const right = m.pdfium.getValue(rectBuf + 8, "float");
+        const bottom = m.pdfium.getValue(rectBuf + 12, "float");
+        const x = Math.min(left, right);
+        const y = Math.min(top, bottom);
+        const width = Math.abs(right - left);
+        const height = Math.abs(top - bottom);
+        // Degenerate rects (hidden widgets) would draw a dot over the page.
+        if (!(width > 1 && height > 1)) continue;
+        if (
+          !Number.isFinite(x) ||
+          !Number.isFinite(y) ||
+          !Number.isFinite(width) ||
+          !Number.isFinite(height)
+        ) {
+          continue;
         }
+        out.push({
+          id: `p${page.index}-annot-${i}`,
+          kind,
+          rect: { x, y, width, height },
+        });
+      } finally {
+        mod.FPDFPage_CloseAnnot(annot);
       }
-    } finally {
-      m.pdfium.wasmExports.free(rectBuf);
     }
     page.setAnnotations(out);
   }

@@ -16,6 +16,7 @@ import {
   useMultipleEndpointsEnabled,
 } from "@app/hooks/useEndpointConfig";
 import apiClient from "@app/services/apiClient";
+import { useConversionCloudStatus } from "@app/hooks/useConversionCloudStatus";
 
 /**
  * Characterisation tests for the desktop endpoint-availability hooks. They
@@ -48,14 +49,18 @@ const mockGet = apiClient.get as unknown as Mock;
 
 // --- connection mode ---
 let mode: "saas" | "selfhosted" | "local" = "saas";
+let localProcessingOnly = false;
 vi.mock("@app/services/connectionModeService", () => ({
   connectionModeService: {
+    getCachedLocalProcessingOnly: () => localProcessingOnly,
+    subscribeToModeChanges: () => () => {},
     getCurrentMode: () => Promise.resolve(mode),
     getCurrentConfig: () =>
       Promise.resolve({
         mode,
         server_config: null,
         lock_connection_mode: false,
+        local_processing_only: localProcessingOnly,
       }),
   },
 }));
@@ -127,12 +132,81 @@ function availability(map: Record<string, { enabled: boolean }>) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  localProcessingOnly = false;
   mode = "saas";
   backendStatus = "healthy";
   backendUrl = "http://127.0.0.1:8080";
   selfHostedStatus = "online";
   backendListeners.clear();
   selfHostedListeners.clear();
+});
+
+describe("managed document privacy", () => {
+  it("offers local tools immediately, then removes unsupported tools without SaaS fallback", async () => {
+    localProcessingOnly = true;
+    mockLocalSupport.mockImplementation(
+      async (endpoint: string) => endpoint === "merge",
+    );
+    const { result } = renderHook(
+      () => useMultipleEndpointsEnabled(["merge", "ocr", "timestamp-pdf"]),
+      { wrapper: TestQueryProvider },
+    );
+    expect(result.current.endpointStatus.ocr).toBe(true);
+    expect(result.current.endpointStatus["timestamp-pdf"]).toBe(false);
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.endpointStatus).toEqual({
+      merge: true,
+      ocr: false,
+      "timestamp-pdf": false,
+    });
+    expect(mockGet).not.toHaveBeenCalled();
+  });
+  it("offers local conversions while the backend is starting", () => {
+    localProcessingOnly = true;
+    backendStatus = "starting";
+    const { result } = renderHook(() => useEndpointEnabled("pdf-to-word"), {
+      wrapper: TestQueryProvider,
+    });
+    expect(result.current.enabled).toBe(true);
+    expect(mockGet).not.toHaveBeenCalled();
+  });
+
+  it.each(["saas", "selfhosted"] as const)(
+    "shows tools during %s startup and updates conversion formats without refreshing",
+    async (connectionMode) => {
+      mode = connectionMode;
+      selfHostedStatus = connectionMode === "selfhosted" ? "offline" : "online";
+      localProcessingOnly = true;
+      backendStatus = "starting";
+      mockLocalSupport.mockImplementation(
+        async (endpoint: string) =>
+          endpoint === "merge" || endpoint === "pdf-to-img",
+      );
+      const { result } = renderHook(
+        () => ({
+          tools: useMultipleEndpointsEnabled(["merge", "timestamp-pdf"]),
+          conversions: useConversionCloudStatus(),
+        }),
+        { wrapper: TestQueryProvider },
+      );
+      expect(result.current.tools.endpointStatus.merge).toBe(true);
+      expect(result.current.tools.endpointStatus["timestamp-pdf"]).toBe(false);
+      expect(result.current.conversions.availability["pdf-png"]).toBe(true);
+      await act(async () => {});
+      expect(mockLocalSupport).not.toHaveBeenCalled();
+
+      setBackendStatus("healthy");
+      await waitFor(() =>
+        expect(result.current.conversions.availability["pdf-docx"]).toBe(false),
+      );
+      expect(result.current.tools.endpointStatus.merge).toBe(true);
+      expect(result.current.conversions.availability["pdf-png"]).toBe(true);
+      expect(
+        Object.values(result.current.conversions.cloudStatus),
+      ).not.toContain(true);
+      expect(mockGet).not.toHaveBeenCalled();
+    },
+  );
 });
 
 afterEach(() => {

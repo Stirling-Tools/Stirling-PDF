@@ -7,7 +7,7 @@ import {
   generateScaleLabel,
   parsePresetRatio,
   calculateScaleFactor,
-  UNIT_OPTIONS,
+  getUnitOptions,
 } from "@app/utils/measurementUtils";
 
 // ─── Constants ─────────────────────────────────────────────────────────────
@@ -245,7 +245,7 @@ export function ScaleSettingsPanel({
           <div onMouseDown={(e) => e.stopPropagation()}>
             <Select
               label={t("scaleSettings.unit", "Unit")}
-              data={UNIT_OPTIONS}
+              data={getUnitOptions(t)}
               value={unit}
               onChange={handleUnitChange}
               size="xs"
@@ -281,7 +281,9 @@ export function ScaleSettingsPanel({
           {currentScale && currentScale.ratio
             ? generateScaleLabel(currentScale.ratio, currentScale.unit)
             : currentScale && !currentScale.ratio
-              ? `${currentScale.unit} (custom)`
+              ? t("scaleSettings.customUnit", "{{unit}} (custom)", {
+                  unit: currentScale.unit,
+                })
               : t("scaleSettings.noneSet", "No custom scale set")}
         </Text>
       </div>

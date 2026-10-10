@@ -159,7 +159,7 @@ function queryParameters(pathItem: Json): { props: Json; required: string[] } {
     )
       continue;
     if (!isObject(param.schema)) continue;
-    const schema = structuredClone(param.schema) as Json;
+    const schema = structuredClone(param.schema);
     if (!("description" in schema) && typeof param.description === "string") {
       schema.description = param.description;
     }
@@ -261,7 +261,10 @@ export type ToolFormat = ${union(formats)};
 export const TOOL_FORMATS = ${JSON.stringify(formats)} as const satisfies readonly ToolFormat[];
 
 /** Filename extensions from the backend ToolFormat declarations. */
-export const TOOL_FORMAT_EXTENSIONS: Record<ToolFormat, readonly string[]> = ${JSON.stringify(vocabulary.extensions)};
+export const TOOL_FORMAT_EXTENSIONS = ${JSON.stringify(vocabulary.extensions)} as const satisfies Record<ToolFormat, readonly string[]>;
+
+/** The filename extensions of one format, as literals. */
+export type ToolFormatExtension<F extends ToolFormat> = (typeof TOOL_FORMAT_EXTENSIONS)[F][number];
 
 /** How many files go in and come out. A multi-output tool returns its results zipped, and the caller unpacks them. */
 export type ToolArity = ${union(vocabulary.arities as string[])};
@@ -387,10 +390,10 @@ async function main(): Promise<void> {
       const component = components[refComponent];
       if (!isObject(component)) continue;
       className = refComponent;
-      modelSchema = structuredClone(component) as Json;
+      modelSchema = structuredClone(component);
     } else {
       className = pathToClassName(path);
-      modelSchema = structuredClone(bodySchema) as Json;
+      modelSchema = structuredClone(bodySchema);
     }
 
     // A component shared by several endpoints (e.g. GeneralFile) is only defined once.
@@ -398,7 +401,7 @@ async function main(): Promise<void> {
       const uniqueName = dedupe(className, usedClassNames);
       className = uniqueName;
       const bodyProps: Json = isObject(modelSchema.properties)
-        ? (structuredClone(modelSchema.properties) as Json)
+        ? structuredClone(modelSchema.properties)
         : {};
       const query = queryParameters(pathItem);
       // Body wins over query on a name collision.
@@ -468,7 +471,7 @@ async function main(): Promise<void> {
     if (name in definitions) continue;
     const component = components[name];
     if (!isObject(component)) continue;
-    const cloned = structuredClone(component) as Json;
+    const cloned = structuredClone(component);
     cloned.title = name;
     const nested = new Set<string>();
     rewriteRefs(cloned, nested);
@@ -504,7 +507,7 @@ async function compileAndWrite(
     properties: Object.fromEntries(
       uniqueClassNames.map((name) => [name, { $ref: `#/definitions/${name}` }]),
     ),
-    definitions: definitions as Record<string, JSONSchema>,
+    definitions: definitions,
   };
 
   // Canonicalize key order so a reordering in SwaggerDoc.json can never change

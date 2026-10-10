@@ -75,10 +75,6 @@
   color: var(--mantine-color-text);
 }
 
-.completeIcon {
-  color: var(--c-accent-text);
-}
-
 .progressTrack {
   margin-top: 0.5rem;
   height: 4px;

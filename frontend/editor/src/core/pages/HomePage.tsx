@@ -1,5 +1,6 @@
 import {
   forwardRef,
+  startTransition,
   useCallback,
   useEffect,
   useMemo,
@@ -48,6 +49,10 @@ import { PolicyAutoRunController } from "@app/components/policies/PolicyAutoRunC
 import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
 import { QuickNavHostBridge } from "@app/components/shared/quickNav/QuickNavHostBridge";
 import type { QuickNavToolReasons } from "@app/contexts/QuickNavHostContext";
+import { useQuickNavHost } from "@app/contexts/QuickNavHostContext";
+import { SignMenu } from "@app/components/shared/signing/SignMenu";
+import { useOpenSigning } from "@app/hooks/signing/useOpenSigning";
+import { usePreferences } from "@app/contexts/PreferencesContext";
 import {
   getToolDisabledReason,
   getDisabledLabel,
@@ -158,6 +163,9 @@ export default function HomePage() {
   const { activeFiles } = useFileContext();
   const navigationState = useNavigationState();
   const { requestNavigation } = useNavigationGuard();
+  const quickNavHost = useQuickNavHost();
+  const openSigning = useOpenSigning();
+  const [mobileSignOpen, setMobileSignOpen] = useState(false);
 
   // From the processor's Reader entry. Ref-guarded: one-shot, and StrictMode double-invokes.
   const consumedReaderRequest = useRef(false);
@@ -190,9 +198,36 @@ export default function HomePage() {
   }, [readerMode, searchInterfaceActions]);
 
   const goToDefaultState = useCallback(() => {
+    if (navigationState.workbench === "signing") navigate(EDITOR_BASENAME);
     handleBackToTools();
     actions.setWorkbench(getDefaultWorkbenchForFileCount(activeFiles.length));
-  }, [handleBackToTools, actions, activeFiles.length]);
+  }, [
+    handleBackToTools,
+    actions,
+    activeFiles.length,
+    navigationState.workbench,
+    navigate,
+  ]);
+
+  const { preferences } = usePreferences();
+  const goToStartupView = useCallback(() => {
+    // The router transitions its updates; the tool reset must see the same destination.
+    startTransition(() => {
+      goToDefaultState();
+      if (preferences.defaultStartupView === "read") {
+        if (location.pathname !== READER_PATH) navigate(READER_PATH);
+        setReaderMode(true);
+      } else if (preferences.defaultStartupView === "automate")
+        handleToolSelect("automate");
+    });
+  }, [
+    goToDefaultState,
+    preferences.defaultStartupView,
+    location.pathname,
+    navigate,
+    setReaderMode,
+    handleToolSelect,
+  ]);
 
   // Reconcile route and workspace only on transitions, or the old route can undo a view change.
   const derivedFromPath = actions.viewDerivedFromPathRef;
@@ -202,7 +237,12 @@ export default function HomePage() {
       if (navigationState.workbench !== "myFiles") {
         actions.setWorkbench("myFiles");
       }
-    } else if (navigationState.workbench === "myFiles") {
+    } else if (location.pathname === "/shared-sign") {
+      actions.setToolAndWorkbench(null, "signing");
+    } else if (
+      navigationState.workbench === "myFiles" ||
+      navigationState.workbench === "signing"
+    ) {
       // A restore is reopening a recorded view onto files still loading. Leave the
       // path unmarked so the correction runs once those files land.
       if (isApplyingRestoredView()) return;
@@ -235,10 +275,23 @@ export default function HomePage() {
   const readerDerivedFromPath = useRef<string | null>(null);
   useEffect(() => {
     if (readerDerivedFromPath.current === location.pathname) return;
+    const isMount = readerDerivedFromPath.current === null;
     readerDerivedFromPath.current = location.pathname;
     const onReadPath = location.pathname.startsWith(READER_PATH);
+    // The startup-view preference can open reading before this page mounts (the
+    // desktop shell holds the page back until its auth check settles). Reading is
+    // then the cause and the path follows it, rather than the path closing it.
+    if (
+      isMount &&
+      readerMode &&
+      !onReadPath &&
+      consumeReaderModeFromPreference()
+    ) {
+      navigate(READER_PATH, { replace: true });
+      return;
+    }
     if (onReadPath !== readerMode) setReaderMode(onReadPath);
-  }, [location.pathname, readerMode, setReaderMode]);
+  }, [location.pathname, readerMode, setReaderMode, navigate]);
 
   // The wings animate off their own edge, so the unmount waits out the leave rather
   // than happening with it. The rails' stylesheets take them out of flow while it
@@ -321,8 +374,11 @@ export default function HomePage() {
     isMobile,
   ]);
 
-  const hideToolPanel =
+  const isWorkspaceHub =
     navigationState.workbench === "myFiles" ||
+    navigationState.workbench === "signing";
+  const hideToolPanel =
+    isWorkspaceHub ||
     (customWorkbenchViews.find(
       (v) => v.workbenchId === navigationState.workbench,
     )?.hideToolPanel ??
@@ -332,7 +388,7 @@ export default function HomePage() {
 
   const quickNavToolReasons = useMemo(() => {
     const reasons: QuickNavToolReasons = {};
-    for (const id of ["automate", "sharedSign"] as const) {
+    for (const id of ["automate"] as const) {
       const tool = toolRegistry[id];
       if (!tool) continue;
       const disabledReason = getToolDisabledReason(
@@ -403,7 +459,7 @@ export default function HomePage() {
   // Mobile's bottom bar sets no view of its own, so leaving the library is the path
   // moving; the reconciliation effect takes the view with it.
   const leaveMyFiles = useCallback(() => {
-    if (navigationState.workbench === "myFiles") navigate(EDITOR_BASENAME);
+    if (isWorkspaceHub) navigate(EDITOR_BASENAME);
   }, [navigationState.workbench, navigate]);
 
   useEffect(() => {
@@ -541,6 +597,105 @@ export default function HomePage() {
         : baseUrl,
   });
 
+  const mobileNavigation = (
+    <div className="mobile-bottom-bar">
+      <SignMenu
+        opened={mobileSignOpen}
+        onClose={() => setMobileSignOpen(false)}
+        reasons={quickNavHost?.toolReasons ?? {}}
+        items={quickNavHost?.signingItems ?? []}
+        onOpenSigning={openSigning}
+        onSelect={(tool) => {
+          handleToolSelect(tool);
+          setActiveMobileView("tools");
+        }}
+      >
+        <Button
+          variant="tertiary"
+          className="mobile-bottom-button"
+          aria-label={
+            quickNavHost?.signingBadge
+              ? t(
+                  "signMenu.triggerUnreadCount",
+                  "Sign · {{count}} unread sessions",
+                  { count: quickNavHost.signingBadge },
+                )
+              : t("signMenu.title", "Sign")
+          }
+          onClick={() => setMobileSignOpen((open) => !open)}
+        >
+          <Icon name="pen-tool" size="1.5rem" />
+          {quickNavHost && quickNavHost.signingBadge > 0 && (
+            <span className="sign-menu__trigger-badge" aria-hidden>
+              {quickNavHost.signingBadge}
+            </span>
+          )}
+          <span className="mobile-bottom-button-label">
+            {t("signMenu.title", "Sign")}
+          </span>
+        </Button>
+      </SignMenu>
+      <Button
+        variant="tertiary"
+        className="mobile-bottom-button"
+        aria-label={t("quickAccess.allTools", "Tools")}
+        onClick={() => {
+          leaveMyFiles();
+          handleBackToTools();
+          if (isMobile) {
+            setActiveMobileView("tools");
+          }
+        }}
+      >
+        <Icon name="layout-grid" size={"1.5rem"} />
+        <span className="mobile-bottom-button-label">
+          {t("quickAccess.allTools", "Tools")}
+        </span>
+      </Button>
+      {toolAvailability["automate"]?.available !== false && (
+        <Button
+          variant="tertiary"
+          className="mobile-bottom-button"
+          aria-label={t("quickAccess.automate", "Automate")}
+          onClick={() => {
+            leaveMyFiles();
+            handleToolSelect("automate");
+            if (isMobile) {
+              setActiveMobileView("tools");
+            }
+          }}
+        >
+          <Icon name="automate" size="1.5rem" />
+          <span className="mobile-bottom-button-label">
+            {t("quickAccess.automate", "Automate")}
+          </span>
+        </Button>
+      )}
+      <Button
+        variant="tertiary"
+        className="mobile-bottom-button"
+        aria-label={t("home.mobile.openFiles", "Open files")}
+        onClick={() => navigate("/files")}
+      >
+        <Icon name="folder" size="1.5rem" />
+        <span className="mobile-bottom-button-label">
+          {t("quickAccess.files", "Files")}
+        </span>
+      </Button>
+      <Button
+        variant="tertiary"
+        className="mobile-bottom-button"
+        aria-label={t("quickAccess.config", "Config")}
+        onClick={openSettings}
+      >
+        <Icon name="settings" size="1.5rem" />
+        <span className="mobile-bottom-button-label">
+          {t("quickAccess.config", "Config")}
+        </span>
+      </Button>
+    </div>
+  );
+
   return (
     <div className="h-screen overflow-hidden">
       <HomePageExtensions />
@@ -552,6 +707,7 @@ export default function HomePage() {
         fileLibrary={navigationState.workbench === "myFiles"}
         onSetReaderMode={setReaderMode}
         onGoToDefaultState={goToDefaultState}
+        onGoToStartupView={goToStartupView}
         onSelectTool={handleToolSelect}
         activeTool={selectedToolKey}
         onShowFileLibrary={() => actions.setWorkbench("myFiles")}
@@ -562,15 +718,13 @@ export default function HomePage() {
         }
       />
       <FilesPageProvider>
-        {isMobile ? (
-          <div
-            className="mobile-layout"
-            data-files-mode={navigationState.workbench === "myFiles"}
-          >
+        {/* Keep signing in the same tree across breakpoints to preserve drafts and placed signatures. */}
+        {isMobile && navigationState.workbench !== "signing" ? (
+          <div className="mobile-layout" data-files-mode={isWorkspaceHub}>
             {/* The library brings its own tabs and folder path, so the
               tools/workspace toggle would only cost it vertical space. Every
               other view keeps the toggle. */}
-            {navigationState.workbench !== "myFiles" && (
+            {!isWorkspaceHub && (
               <div className="mobile-toggle">
                 <div className="mobile-brand">
                   <LogoIcon className="mobile-brand-icon" />
@@ -605,7 +759,7 @@ export default function HomePage() {
                 </div>
               </div>
             )}
-            {navigationState.workbench === "myFiles" ? (
+            {isWorkspaceHub ? (
               /* /files takes the whole viewport. Skipping the slider keeps
                 the FileManagerView from being trapped inside a 100vw
                 horizontal-scroll container (which truncated buttons and
@@ -656,79 +810,22 @@ export default function HomePage() {
                 )}
               </div>
             )}
-            <div className="mobile-bottom-bar">
-              <Button
-                variant="tertiary"
-                className="mobile-bottom-button"
-                aria-label={t("quickAccess.allTools", "Tools")}
-                onClick={() => {
-                  leaveMyFiles();
-                  handleBackToTools();
-                  if (isMobile) {
-                    setActiveMobileView("tools");
-                  }
-                }}
-              >
-                <Icon name="layout-grid" size={"1.5rem"} />
-                <span className="mobile-bottom-button-label">
-                  {t("quickAccess.allTools", "Tools")}
-                </span>
-              </Button>
-              {toolAvailability["automate"]?.available !== false && (
-                <Button
-                  variant="tertiary"
-                  className="mobile-bottom-button"
-                  aria-label={t("quickAccess.automate", "Automate")}
-                  onClick={() => {
-                    leaveMyFiles();
-                    handleToolSelect("automate");
-                    if (isMobile) {
-                      setActiveMobileView("tools");
-                    }
-                  }}
-                >
-                  <Icon name="waypoints" size="1.5rem" />
-                  <span className="mobile-bottom-button-label">
-                    {t("quickAccess.automate", "Automate")}
-                  </span>
-                </Button>
-              )}
-              <Button
-                variant="tertiary"
-                className="mobile-bottom-button"
-                aria-label={t("home.mobile.openFiles", "Open files")}
-                onClick={() => navigate("/files")}
-              >
-                <Icon name="folder" size="1.5rem" />
-                <span className="mobile-bottom-button-label">
-                  {t("quickAccess.files", "Files")}
-                </span>
-              </Button>
-              <Button
-                variant="tertiary"
-                className="mobile-bottom-button"
-                aria-label={t("quickAccess.config", "Config")}
-                onClick={openSettings}
-              >
-                <Icon name="settings" size="1.5rem" />
-                <span className="mobile-bottom-button-label">
-                  {t("quickAccess.config", "Config")}
-                </span>
-              </Button>
-            </div>
+            {mobileNavigation}
           </div>
         ) : (
           <Group
-            align="flex-start"
+            align={isMobile ? "stretch" : "flex-start"}
             gap={0}
+            wrap="nowrap"
             h="100%"
             className="flex-nowrap flex"
             bg="var(--c-bg)"
             data-wings={wingsPhase ?? undefined}
+            style={{ flexDirection: isMobile ? "column" : "row" }}
           >
             {/* Reading leaves the document and nothing beside it, so the wing goes
                 rather than shrinking to a rail. Everywhere else it is fixed open. */}
-            {wingsMounted && (
+            {wingsMounted && navigationState.workbench !== "signing" && (
               <div className="workspace-frame">
                 <MyFilesAwareFileSidebar
                   ref={quickAccessRef}
@@ -740,6 +837,7 @@ export default function HomePage() {
               </div>
             )}
             <Workbench />
+            {isMobile && mobileNavigation}
             {/* The reader's rail takes the slot the tool panel holds otherwise: the
                 panel's controls are the editor's, and reading wants the viewer's.
                 Both render together only while the panel is on its way out. */}

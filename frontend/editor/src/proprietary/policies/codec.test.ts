@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { classificationCondition } from "@app/data/classificationConditions";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";

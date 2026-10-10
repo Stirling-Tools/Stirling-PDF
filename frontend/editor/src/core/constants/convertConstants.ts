@@ -98,10 +98,35 @@ export const ENDPOINT_I18N: Record<string, [string, string]> = {
   "pdf-to-epub": ["convert.pdfToEpub", "PDF → EPUB"],
 };
 
+// Translation keys for the dropdown group names below; the English name is the default
+export const FORMAT_GROUP_LABEL_KEYS: Record<string, string> = {
+  "Multiple Files": "convert.formatGroups.multipleFiles",
+  Document: "convert.formatGroups.document",
+  Archive: "convert.formatGroups.archive",
+  Spreadsheet: "convert.formatGroups.spreadsheet",
+  Presentation: "convert.formatGroups.presentation",
+  Image: "convert.formatGroups.image",
+  Web: "convert.formatGroups.web",
+  Text: "convert.formatGroups.text",
+  Email: "convert.formatGroups.email",
+  eBook: "convert.formatGroups.ebook",
+  File: "convert.formatGroups.file",
+};
+
 // Grouped file extensions for dropdowns
 export const FROM_FORMAT_OPTIONS = [
-  { value: "any", label: "Any", group: "Multiple Files" },
-  { value: "image", label: "Images", group: "Multiple Files" },
+  {
+    value: "any",
+    label: "Any",
+    labelKey: "convert.formatOptions.any",
+    group: "Multiple Files",
+  },
+  {
+    value: "image",
+    label: "Images",
+    labelKey: "convert.formatOptions.images",
+    group: "Multiple Files",
+  },
   { value: "pdf", label: "PDF", group: "Document" },
   { value: "cbz", label: "CBZ", group: "Archive" },
   { value: "cbr", label: "CBR", group: "Archive" },
@@ -128,7 +153,12 @@ export const FROM_FORMAT_OPTIONS = [
   { value: "txt", label: "TXT", group: "Text" },
   { value: "rtf", label: "RTF", group: "Text" },
   { value: "eml", label: "EML", group: "Email" },
-  { value: "msg", label: "MSG (Outlook)", group: "Email" },
+  {
+    value: "msg",
+    label: "MSG (Outlook)",
+    labelKey: "convert.formatOptions.msgOutlook",
+    group: "Email",
+  },
   { value: "epub", label: "EPUB", group: "eBook" },
   { value: "mobi", label: "MOBI", group: "eBook" },
   { value: "azw3", label: "AZW3", group: "eBook" },
