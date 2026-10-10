@@ -8,8 +8,14 @@ import static org.mockito.Mockito.*;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Base64;
+import java.util.List;
+import java.util.Map;
 
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -23,6 +29,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
@@ -30,6 +37,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 
+import stirling.software.SPDF.service.xfa.XfaFixtures;
+import stirling.software.SPDF.service.xfa.XfaSyncService;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.FormUtils;
 import stirling.software.common.util.TempFile;
@@ -55,6 +64,7 @@ class FormFillControllerTest {
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private TempFileManager tempFileManager;
+    @Spy private XfaSyncService xfaSyncService = new XfaSyncService();
 
     private ObjectMapper realObjectMapper;
 
@@ -260,7 +270,7 @@ class FormFillControllerTest {
             when(pdfDocumentFactory.load(eq(file))).thenReturn(doc);
 
             byte[] payload = "{\"field1\":\"value1\"}".getBytes();
-            ResponseEntity<Resource> response = controller.fillForm(file, payload, false);
+            ResponseEntity<Resource> response = controller.fillForm(file, payload, false, null);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getBody()).isNotNull();
@@ -273,7 +283,7 @@ class FormFillControllerTest {
             PDDocument doc = createMinimalPdf();
             when(pdfDocumentFactory.load(eq(file))).thenReturn(doc);
 
-            ResponseEntity<Resource> response = controller.fillForm(file, null, false);
+            ResponseEntity<Resource> response = controller.fillForm(file, null, false, null);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         }
@@ -281,7 +291,7 @@ class FormFillControllerTest {
         @Test
         @DisplayName("throws for null file")
         void nullFile() {
-            assertThatThrownBy(() -> controller.fillForm(null, null, false))
+            assertThatThrownBy(() -> controller.fillForm(null, null, false, null))
                     .isInstanceOf(IllegalArgumentException.class);
         }
     }
@@ -295,14 +305,14 @@ class FormFillControllerTest {
         @Test
         @DisplayName("throws when names payload is null")
         void nullPayload() {
-            assertThatThrownBy(() -> controller.deleteFields(pdfFile(), null))
+            assertThatThrownBy(() -> controller.deleteFields(pdfFile(), null, null))
                     .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
         @DisplayName("throws when names payload is empty JSON array")
         void emptyPayload() {
-            assertThatThrownBy(() -> controller.deleteFields(pdfFile(), "[]".getBytes()))
+            assertThatThrownBy(() -> controller.deleteFields(pdfFile(), "[]".getBytes(), null))
                     .isInstanceOf(IllegalArgumentException.class);
         }
 
@@ -314,7 +324,7 @@ class FormFillControllerTest {
             when(pdfDocumentFactory.load(eq(file))).thenReturn(doc);
 
             byte[] payload = "[\"field1\"]".getBytes();
-            ResponseEntity<Resource> response = controller.deleteFields(file, payload);
+            ResponseEntity<Resource> response = controller.deleteFields(file, payload, null);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         }
@@ -329,14 +339,14 @@ class FormFillControllerTest {
         @Test
         @DisplayName("throws when updates payload is null")
         void nullPayload() {
-            assertThatThrownBy(() -> controller.modifyFields(pdfFile(), null))
+            assertThatThrownBy(() -> controller.modifyFields(pdfFile(), null, null))
                     .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
         @DisplayName("throws when updates payload is empty list")
         void emptyPayload() {
-            assertThatThrownBy(() -> controller.modifyFields(pdfFile(), "[]".getBytes()))
+            assertThatThrownBy(() -> controller.modifyFields(pdfFile(), "[]".getBytes(), null))
                     .isInstanceOf(IllegalArgumentException.class);
         }
 
@@ -350,7 +360,8 @@ class FormFillControllerTest {
             String json =
                     "[{\"targetName\":\"f1\",\"name\":null,\"label\":null,\"type\":null,"
                             + "\"required\":null,\"multiSelect\":null,\"options\":null,\"defaultValue\":\"newVal\",\"tooltip\":null}]";
-            ResponseEntity<Resource> response = controller.modifyFields(file, json.getBytes());
+            ResponseEntity<Resource> response =
+                    controller.modifyFields(file, json.getBytes(), null);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         }
@@ -365,14 +376,14 @@ class FormFillControllerTest {
         @Test
         @DisplayName("throws when fields payload is null")
         void nullPayload() {
-            assertThatThrownBy(() -> controller.addFields(pdfFile(), null))
+            assertThatThrownBy(() -> controller.addFields(pdfFile(), null, null))
                     .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
         @DisplayName("throws when fields payload is an empty list")
         void emptyPayload() {
-            assertThatThrownBy(() -> controller.addFields(pdfFile(), "[]".getBytes()))
+            assertThatThrownBy(() -> controller.addFields(pdfFile(), "[]".getBytes(), null))
                     .isInstanceOf(IllegalArgumentException.class);
         }
 
@@ -386,7 +397,7 @@ class FormFillControllerTest {
             String json =
                     "[{\"name\":\"NewField\",\"type\":\"text\",\"pageIndex\":0,"
                             + "\"x\":50,\"y\":700,\"width\":200,\"height\":20}]";
-            ResponseEntity<Resource> response = controller.addFields(file, json.getBytes());
+            ResponseEntity<Resource> response = controller.addFields(file, json.getBytes(), null);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getBody()).isNotNull();
@@ -402,7 +413,7 @@ class FormFillControllerTest {
         @Test
         @DisplayName("throws when edits payload is null")
         void nullPayload() {
-            assertThatThrownBy(() -> controller.editFields(pdfFile(), null, false))
+            assertThatThrownBy(() -> controller.editFields(pdfFile(), null, false, null))
                     .isInstanceOf(IllegalArgumentException.class);
         }
 
@@ -414,7 +425,8 @@ class FormFillControllerTest {
                                     controller.editFields(
                                             pdfFile(),
                                             "{\"add\":[],\"modify\":[],\"delete\":[]}".getBytes(),
-                                            false))
+                                            false,
+                                            null))
                     .isInstanceOf(IllegalArgumentException.class);
         }
 
@@ -429,7 +441,8 @@ class FormFillControllerTest {
                     "{\"add\":[{\"name\":\"f\",\"type\":\"text\",\"pageIndex\":0,\"x\":50,"
                             + "\"y\":700,\"width\":200,\"height\":20}],\"modify\":[],"
                             + "\"delete\":[]}";
-            ResponseEntity<Resource> response = controller.editFields(file, json.getBytes(), false);
+            ResponseEntity<Resource> response =
+                    controller.editFields(file, json.getBytes(), false, null);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getBody()).isNotNull();
@@ -442,7 +455,7 @@ class FormFillControllerTest {
                     "{\"add\":[{\"name\":\"Customer.Name\",\"type\":\"text\",\"pageIndex\":0,"
                             + "\"x\":50,\"y\":700,\"width\":200,\"height\":20}]}";
 
-            assertThatThrownBy(() -> controller.editFields(pdfFile(), json.getBytes(), false))
+            assertThatThrownBy(() -> controller.editFields(pdfFile(), json.getBytes(), false, null))
                     .hasMessageContaining("period");
             // Rejected up front, so the document is never even loaded.
             verify(pdfDocumentFactory, never()).load(any(MockMultipartFile.class));
@@ -457,7 +470,8 @@ class FormFillControllerTest {
             String json =
                     "{\"modify\":[{\"targetName\":\"Customer.Name\",\"name\":\"Customer.Name\","
                             + "\"x\":10,\"y\":10}]}";
-            ResponseEntity<Resource> response = controller.editFields(file, json.getBytes(), false);
+            ResponseEntity<Resource> response =
+                    controller.editFields(file, json.getBytes(), false, null);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             // It must get past validation into the edit loop: the only complaint should be that
@@ -479,7 +493,8 @@ class FormFillControllerTest {
             when(pdfDocumentFactory.load(eq(file))).thenReturn(createMinimalPdf());
 
             String json = "{\"delete\":[\"noSuchField\"]}";
-            ResponseEntity<Resource> response = controller.editFields(file, json.getBytes(), false);
+            ResponseEntity<Resource> response =
+                    controller.editFields(file, json.getBytes(), false, null);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             String encoded =
@@ -503,7 +518,8 @@ class FormFillControllerTest {
             String json =
                     "{\"add\":[{\"name\":\"clean\",\"type\":\"text\",\"pageIndex\":0,\"x\":50,"
                             + "\"y\":700,\"width\":200,\"height\":20}]}";
-            ResponseEntity<Resource> response = controller.editFields(file, json.getBytes(), false);
+            ResponseEntity<Resource> response =
+                    controller.editFields(file, json.getBytes(), false, null);
 
             assertThat(response.getHeaders().getFirst(FormFillController.SKIPPED_EDITS_HEADER))
                     .isNull();
@@ -598,7 +614,8 @@ class FormFillControllerTest {
         private byte[] bundleFor(MockMultipartFile file) throws Exception {
             PDDocument doc = createMinimalPdf();
             when(pdfDocumentFactory.load(eq(file))).thenReturn(doc);
-            ResponseEntity<Resource> response = controller.editFields(file, editsPayload(), true);
+            ResponseEntity<Resource> response =
+                    controller.editFields(file, editsPayload(), true, null);
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             return drainBody(response);
         }
@@ -667,7 +684,7 @@ class FormFillControllerTest {
             PDDocument doc = createMinimalPdf();
             when(pdfDocumentFactory.load(eq(file))).thenReturn(doc);
 
-            byte[] body = drainBody(controller.editFields(file, editsPayload(), false));
+            byte[] body = drainBody(controller.editFields(file, editsPayload(), false, null));
 
             assertThat(new String(body, 0, 5)).isEqualTo("%PDF-");
         }
@@ -714,6 +731,140 @@ class FormFillControllerTest {
                             response.getHeaders()
                                     .getFirst(FormFillController.SKIPPED_EDITS_TOTAL_HEADER))
                     .isEqualTo("40");
+        }
+    }
+
+    @Nested
+    @DisplayName("hybrid XFA forms")
+    class Xfa {
+
+        private MockMultipartFile hybridUpload(XfaFixtures.Builder builder) throws Exception {
+            try (PDDocument document = builder.build()) {
+                return new MockMultipartFile(
+                        "file", "form.pdf", "application/pdf", XfaFixtures.save(document));
+            }
+        }
+
+        private MockMultipartFile loadedHybrid(XfaFixtures.Builder builder) throws Exception {
+            MockMultipartFile file = hybridUpload(builder);
+            when(pdfDocumentFactory.load(file)).thenReturn(Loader.loadPDF(file.getBytes()));
+            return file;
+        }
+
+        private byte[] fillNombre(String value) {
+            return realObjectMapper.writeValueAsBytes(Map.of(XfaFixtures.NOMBRE, value));
+        }
+
+        private String summaryField(ResponseEntity<?> response, String name) {
+            String header = response.getHeaders().getFirst(FormFillController.XFA_SYNC_HEADER);
+            assertThat(header).isNotNull();
+            String json = new String(Base64.getDecoder().decode(header), StandardCharsets.UTF_8);
+            return realObjectMapper.readTree(json).get(name).asString();
+        }
+
+        private static boolean hasXfa(PDDocument document) {
+            COSDictionary form =
+                    document.getDocumentCatalog()
+                            .getCOSObject()
+                            .getCOSDictionary(COSName.ACRO_FORM);
+            return form != null && form.getDictionaryObject(COSName.XFA) != null;
+        }
+
+        @Test
+        @DisplayName("fill syncs the XFA data by default and reports it in a header")
+        void fillSyncsByDefault() throws Exception {
+            MockMultipartFile file = loadedHybrid(XfaFixtures.builder());
+
+            ResponseEntity<Resource> response =
+                    controller.fillForm(file, fillNombre("Otro nombre"), false, null);
+
+            assertThat(summaryField(response, "action")).isEqualTo("synced");
+            try (PDDocument saved = Loader.loadPDF(drainBody(response))) {
+                assertThat(XfaFixtures.dataValues(saved))
+                        .containsEntry("form1.Nombre", "Otro nombre");
+                assertThat(
+                                saved.getDocumentCatalog()
+                                        .getCOSObject()
+                                        .getCOSDictionary(COSName.PERMS)
+                                        .containsKey(COSName.getPDFName("UR3")))
+                        .isFalse();
+            }
+        }
+
+        @Test
+        @DisplayName("fill with xfaMode=strip returns a PDF without XFA")
+        void fillCanStrip() throws Exception {
+            MockMultipartFile file = loadedHybrid(XfaFixtures.builder());
+
+            ResponseEntity<Resource> response =
+                    controller.fillForm(file, fillNombre("Otro nombre"), false, "strip");
+
+            assertThat(summaryField(response, "action")).isEqualTo("stripped");
+            try (PDDocument saved = Loader.loadPDF(drainBody(response))) {
+                assertThat(hasXfa(saved)).isFalse();
+            }
+        }
+
+        @Test
+        @DisplayName("fill with xfaMode=none leaves the XFA data as it was")
+        void fillCanLeaveXfaAlone() throws Exception {
+            MockMultipartFile file = loadedHybrid(XfaFixtures.builder());
+
+            ResponseEntity<Resource> response =
+                    controller.fillForm(file, fillNombre("Otro nombre"), false, "NONE");
+
+            assertThat(summaryField(response, "action")).isEqualTo("untouched");
+            try (PDDocument saved = Loader.loadPDF(drainBody(response))) {
+                assertThat(XfaFixtures.dataValues(saved))
+                        .containsEntry("form1.Nombre", "Nombre viejo");
+            }
+        }
+
+        @Test
+        @DisplayName("rejects an unknown xfaMode before loading the PDF")
+        void rejectsUnknownMode() throws Exception {
+            MockMultipartFile file = hybridUpload(XfaFixtures.builder());
+
+            assertThatThrownBy(() -> controller.fillForm(file, fillNombre("x"), false, "merge"))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("xfaMode");
+            verifyNoInteractions(pdfDocumentFactory);
+        }
+
+        @Test
+        @DisplayName("refuses to fill a dynamic XFA form, which only Acrobat can fill")
+        void rejectsDynamicForms() throws Exception {
+            MockMultipartFile file = loadedHybrid(XfaFixtures.builder().withoutFields());
+
+            assertThatThrownBy(() -> controller.fillForm(file, fillNombre("x"), false, null))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Acrobat");
+        }
+
+        @Test
+        @DisplayName("a structural edit strips the XFA, since its template cannot follow")
+        void structuralEditStrips() throws Exception {
+            MockMultipartFile file = loadedHybrid(XfaFixtures.builder());
+            byte[] names = realObjectMapper.writeValueAsBytes(List.of(XfaFixtures.SIN_DATOS));
+
+            ResponseEntity<Resource> response = controller.deleteFields(file, names, null);
+
+            assertThat(summaryField(response, "action")).isEqualTo("stripped_structural");
+            try (PDDocument saved = Loader.loadPDF(drainBody(response))) {
+                assertThat(hasXfa(saved)).isFalse();
+            }
+        }
+
+        @Test
+        @DisplayName("sends no XFA header for a PDF without XFA")
+        void noHeaderWithoutXfa() throws Exception {
+            MockMultipartFile file = pdfFile();
+            when(pdfDocumentFactory.load(file)).thenReturn(createMinimalPdf());
+
+            ResponseEntity<Resource> response = controller.fillForm(file, null, false, null);
+
+            assertThat(response.getHeaders().containsHeader(FormFillController.XFA_SYNC_HEADER))
+                    .isFalse();
         }
     }
 }

@@ -251,6 +251,25 @@ describe("FormFillContext bundled field list", () => {
     expect(fetchFields.mock.calls.length).toBe(callsBefore + 1);
   });
 
+  it("ignores a bundle from another document of the same size", async () => {
+    const { result: hook } = renderHook(() => useFormFill(), { wrapper });
+    const edited = blob();
+    const other = blob();
+    // jsdom's Blob has no arrayBuffer, and the setup's stand-in answers the same bytes for all.
+    vi.spyOn(edited, "arrayBuffer").mockResolvedValue(new ArrayBuffer(8));
+    vi.spyOn(other, "arrayBuffer").mockResolvedValue(
+      new Uint8Array(8).fill(1).buffer,
+    );
+    await commitWith(hook, edited, bundled);
+    const callsBefore = fetchFields.mock.calls.length;
+
+    await act(async () => {
+      await hook.current.fetchFields(other, "file-B");
+    });
+
+    expect(fetchFields.mock.calls.length).toBe(callsBefore + 1);
+  });
+
   it("does not reuse the bundle for a second fetch", async () => {
     const { result: hook } = renderHook(() => useFormFill(), { wrapper });
     const edited = blob();
