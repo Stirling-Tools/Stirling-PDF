@@ -50,6 +50,7 @@ import type { FormMode } from "@app/tools/formFill/types";
 import { FormFieldCreatePanel } from "@app/tools/formFill/FormFieldCreatePanel";
 import { FormFieldModifyPanel } from "@app/tools/formFill/FormFieldModifyPanel";
 import { dispatchFormApply } from "@app/tools/formFill/formFillEvents";
+import { formFillTarget } from "@app/tools/formFill/formFillTarget";
 import styles from "@app/tools/formFill/FormFill.module.css";
 
 // ---------------------------------------------------------------------------
@@ -200,16 +201,10 @@ const FormFill = (_props: BaseToolProps) => {
   // changes, so the panel kept showing the pre-hydration (or pre-version) file.
   const { files: activeFiles } = useAllFiles();
   const selectedFileIds = fileState.ui.selectedFileIds;
-  const currentFile = useMemo(() => {
-    if (activeFiles.length === 0) return null;
-    if (selectedFileIds.length > 0) {
-      const sel = activeFiles.find(
-        (f) => isStirlingFile(f) && selectedFileIds.includes(f.fileId),
-      );
-      if (sel) return sel;
-    }
-    return activeFiles[0];
-  }, [activeFiles, selectedFileIds]);
+  const currentFile = useMemo(
+    () => formFillTarget(activeFiles, forFileId, selectedFileIds),
+    [activeFiles, forFileId, selectedFileIds],
+  );
 
   const handleExtractCsv = useCallback(async () => {
     if (!currentFile) return;
