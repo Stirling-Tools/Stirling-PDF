@@ -13,12 +13,12 @@ import { useMergedRef } from "@mantine/hooks";
 import { renderMarkdown } from "@app/components/viewer/nonpdf/MarkdownRenderer";
 import { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   Collapse,
   Group,
   Paper,
   ScrollArea,
-  Stack,
   Text,
   Textarea,
 } from "@mantine/core";
@@ -437,6 +437,18 @@ export function ChatPanel({
   // A ref (not state) so scroll events don't cause re-renders.
   const userScrolledUp = useRef(false);
 
+  // Long threads render every markdown bubble otherwise, so the message list
+  // is virtualized with dynamic measurement: assistant turns vary from one
+  // line to full tool reports. The scroll container and the follow-bottom
+  // effects below are untouched — only what mounts changes.
+  const messageVirtualizer = useVirtualizer({
+    count: messages.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => 140,
+    overscan: 5,
+    getItemKey: (index) => messages[index]?.id ?? index,
+  });
+
   // Open at the most recent message rather than wherever a collapsed, zero-height
   // viewport left the scroll position.
   useEffect(() => {
@@ -476,7 +488,9 @@ export function ChatPanel({
         if (el) el.scrollTop = el.scrollHeight;
       });
     }
-  }, [messages, progressLog]);
+    // getTotalSize changes as bubbles are measured, which re-fires the effect
+    // to keep the viewport pinned while a long message streams in.
+  }, [messages, progressLog, messageVirtualizer.getTotalSize()]);
 
   const handleSend = (override?: string) => {
     const text = (override ?? input).trim();
@@ -514,36 +528,65 @@ export function ChatPanel({
         )}
 
         <ScrollArea className="chat-panel-messages" viewportRef={viewportRef}>
-          <Stack
-            gap="sm"
-            px="xs"
-            pt="sm"
+          <div
             className="chat-panel-messages__content"
+            style={{
+              position: "relative",
+              height: messageVirtualizer.getTotalSize(),
+              paddingTop: "var(--mantine-spacing-sm)",
+            }}
           >
-            {messages.map((msg) => (
-              <ChatMessageBubble
-                key={msg.id}
-                role={msg.role}
-                content={msg.content}
-                timestamp={msg.timestamp}
-                progressLog={msg.progressLog}
-                durationMs={msg.durationMs}
+            {messageVirtualizer.getVirtualItems().map((item) => {
+              const msg = messages[item.index];
+              if (!msg) return null;
+              return (
+                <div
+                  key={item.key}
+                  data-index={item.index}
+                  ref={messageVirtualizer.measureElement}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    boxSizing: "border-box",
+                    transform: `translateY(${item.start}px)`,
+                    paddingLeft: "var(--mantine-spacing-md)",
+                    paddingRight: "var(--mantine-spacing-md)",
+                    paddingBottom: "var(--mantine-spacing-sm)",
+                  }}
+                >
+                  <ChatMessageBubble
+                    role={msg.role}
+                    content={msg.content}
+                    timestamp={msg.timestamp}
+                    progressLog={msg.progressLog}
+                    durationMs={msg.durationMs}
+                    resolveToolName={resolveToolName}
+                    resolveToolIcon={resolveToolIcon}
+                    t={t}
+                  />
+                </div>
+              );
+            })}
+          </div>
+          {isLoading && (
+            <div
+              className="chat-message chat-message-assistant"
+              style={{
+                marginTop: "var(--mantine-spacing-sm)",
+                paddingLeft: "var(--mantine-spacing-md)",
+                paddingRight: "var(--mantine-spacing-md)",
+              }}
+            >
+              <ProgressLogDisplay
+                progressLog={progressLog}
+                t={t}
                 resolveToolName={resolveToolName}
                 resolveToolIcon={resolveToolIcon}
-                t={t}
               />
-            ))}
-            {isLoading && (
-              <div className="chat-message chat-message-assistant">
-                <ProgressLogDisplay
-                  progressLog={progressLog}
-                  t={t}
-                  resolveToolName={resolveToolName}
-                  resolveToolIcon={resolveToolIcon}
-                />
-              </div>
-            )}
-          </Stack>
+            </div>
+          )}
         </ScrollArea>
 
         {showQuickActions && (

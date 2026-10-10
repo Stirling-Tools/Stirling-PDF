@@ -1,5 +1,5 @@
-import { useEffect, useState, type ReactNode } from "react";
-import { Icon, type IconName } from "@app/ui/Icon";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { Icon } from "@app/ui/Icon";
 import { isAxiosError } from "axios";
 import { useTranslation } from "react-i18next";
 import {
@@ -10,15 +10,13 @@ import {
   Group,
   TextInput,
   Badge,
-  Table,
-  Tooltip,
   FileInput,
   Alert,
   Box,
   Modal,
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
+import { column, DataTable, type DataTableColumn } from "@app/ui";
 import { alert } from "@app/components/toast";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
 import databaseManagementService, {
@@ -161,97 +159,6 @@ function UploadImportForm({
   );
 }
 
-interface BackupActionButtonProps {
-  label: string;
-  icon: IconName;
-  busy: boolean;
-  disabled: boolean;
-  danger?: boolean;
-  onClick: () => void;
-}
-
-function BackupActionButton({
-  label,
-  icon,
-  busy,
-  disabled,
-  danger = false,
-  onClick,
-}: BackupActionButtonProps) {
-  return (
-    <Tooltip label={label} withArrow>
-      <ActionIcon
-        variant="tertiary"
-        accent={danger ? "danger" : undefined}
-        onClick={onClick}
-        disabled={disabled}
-        aria-label={label}
-      >
-        {busy ? <Loader size="xs" /> : <Icon name={icon} size="1rem" />}
-      </ActionIcon>
-    </Tooltip>
-  );
-}
-
-interface BackupRowProps {
-  backup: DatabaseBackupFile;
-  disabled: boolean;
-  downloading: boolean;
-  importing: boolean;
-  deleting: boolean;
-  onDownload: () => void;
-  onImport: () => void;
-  onDelete: () => void;
-}
-
-function BackupRow({
-  backup,
-  disabled,
-  downloading,
-  importing,
-  deleting,
-  onDownload,
-  onImport,
-  onDelete,
-}: BackupRowProps) {
-  const { t } = useTranslation();
-  return (
-    <Table.Tr>
-      <Table.Td>{backup.fileName}</Table.Td>
-      <Table.Td>
-        {backup.formattedCreationDate || backup.creationDate || "-"}
-      </Table.Td>
-      <Table.Td>{backup.formattedFileSize || "-"}</Table.Td>
-      <Table.Td>
-        <Group gap="xs" justify="flex-start">
-          <BackupActionButton
-            label={t("admin.settings.database.download", "Download")}
-            icon="download"
-            busy={downloading}
-            disabled={disabled}
-            onClick={onDownload}
-          />
-          <BackupActionButton
-            label={t("admin.settings.database.import", "Import")}
-            icon="cloud-upload"
-            busy={importing}
-            disabled={disabled}
-            onClick={onImport}
-          />
-          <BackupActionButton
-            label={t("admin.settings.database.delete", "Delete")}
-            icon="trash"
-            danger
-            busy={deleting}
-            disabled={disabled}
-            onClick={onDelete}
-          />
-        </Group>
-      </Table.Td>
-    </Table.Tr>
-  );
-}
-
 interface BackupsTableProps {
   backups: DatabaseBackupFile[];
   disabled: boolean;
@@ -274,34 +181,81 @@ function BackupsTable({
   onDelete,
 }: BackupsTableProps) {
   const { t } = useTranslation();
+
+  const columns = useMemo<DataTableColumn<DatabaseBackupFile>[]>(
+    () => [
+      column.text({
+        key: "fileName",
+        header: t("admin.settings.database.fileName", "File"),
+        get: (b) => b.fileName,
+        sortable: true,
+      }),
+      column.muted({
+        key: "created",
+        header: t("admin.settings.database.created", "Created"),
+        get: (b) => b.formattedCreationDate || b.creationDate,
+        sortBy: (b) =>
+          b.creationDate ? new Date(b.creationDate).getTime() : undefined,
+        placeholder: "-",
+        sortable: true,
+      }),
+      column.muted({
+        key: "size",
+        header: t("admin.settings.database.size", "Size"),
+        get: (b) => b.formattedFileSize,
+        sortBy: (b) => b.fileSize,
+        placeholder: "-",
+        sortable: true,
+      }),
+      column.actions({
+        key: "actions",
+        header: t("admin.settings.database.actions", "Actions"),
+        get: (b) => [
+          {
+            label: t("admin.settings.database.download", "Download"),
+            glyph: undefined,
+            disabled,
+            loading: downloadingFile === b.fileName,
+            onClick: () => onDownload(b.fileName),
+          },
+          {
+            label: t("admin.settings.database.import", "Import"),
+            glyph: undefined,
+            disabled,
+            loading: importingFile === b.fileName,
+            onClick: () => onImport(b.fileName),
+          },
+          {
+            label: t("admin.settings.database.delete", "Delete"),
+            glyph: undefined,
+            tone: "danger",
+            disabled,
+            loading: deletingFile === b.fileName,
+            onClick: () => onDelete(b.fileName),
+          },
+        ],
+      }),
+    ],
+    [
+      t,
+      disabled,
+      downloadingFile,
+      importingFile,
+      deletingFile,
+      onDownload,
+      onImport,
+      onDelete,
+    ],
+  );
+
   return (
-    <Table highlightOnHover withColumnBorders verticalSpacing="sm">
-      <Table.Thead>
-        <Table.Tr>
-          <Table.Th>{t("admin.settings.database.fileName", "File")}</Table.Th>
-          <Table.Th>{t("admin.settings.database.created", "Created")}</Table.Th>
-          <Table.Th>{t("admin.settings.database.size", "Size")}</Table.Th>
-          <Table.Th w={150}>
-            {t("admin.settings.database.actions", "Actions")}
-          </Table.Th>
-        </Table.Tr>
-      </Table.Thead>
-      <Table.Tbody>
-        {backups.map((backup) => (
-          <BackupRow
-            key={backup.fileName}
-            backup={backup}
-            disabled={disabled}
-            downloading={downloadingFile === backup.fileName}
-            importing={importingFile === backup.fileName}
-            deleting={deletingFile === backup.fileName}
-            onDownload={() => onDownload(backup.fileName)}
-            onImport={() => onImport(backup.fileName)}
-            onDelete={() => onDelete(backup.fileName)}
-          />
-        ))}
-      </Table.Tbody>
-    </Table>
+    <DataTable
+      columns={columns}
+      rows={backups}
+      rowKey={(b) => b.fileName}
+      empty={t("admin.settings.database.noBackups", "No backups found yet.")}
+      defaultSort={{ key: "created", direction: "desc" }}
+    />
   );
 }
 
