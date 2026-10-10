@@ -169,7 +169,11 @@ export async function storedCopiesForNewFiles(
         const [newest] = (await fileStorage.getLeafStubsNamed(file.name))
           .filter((stub) => isStoredCopyOf(stub, path, state))
           .sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
-        if (newest) copies.set(file, newest);
+        // Hydration drops a stub whose bytes it cannot serve, and by then the
+        // caller has let go of the disk file: only offer a copy servable now.
+        if (newest && (await fileStorage.getStirlingFile(newest.id))) {
+          copies.set(file, newest);
+        }
       } catch (error) {
         console.warn(
           `[storedCopiesForNewFiles] lookup failed for ${file.name}; storing it again`,

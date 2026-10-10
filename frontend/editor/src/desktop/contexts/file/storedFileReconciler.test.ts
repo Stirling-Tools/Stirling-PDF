@@ -7,6 +7,7 @@ import type { FileId } from "@app/types/file";
 
 const getDiskFileState = vi.hoisted(() => vi.fn());
 const getLeafStubsNamed = vi.hoisted(() => vi.fn());
+const getStirlingFile = vi.hoisted(() => vi.fn());
 vi.mock("@app/services/desktopFileLink", () => ({
   desktopFileLinkingSupported: true,
   getDiskFileState,
@@ -14,7 +15,7 @@ vi.mock("@app/services/desktopFileLink", () => ({
 }));
 vi.mock("@app/services/fileStorage", () => ({
   fileStorage: {
-    getStirlingFile: vi.fn(),
+    getStirlingFile,
     deleteStirlingFile: vi.fn(),
     updateFileMetadata: vi.fn(async () => true),
     getLeafStubsNamed,
@@ -150,6 +151,7 @@ describe("storedCopiesForNewFiles", () => {
       size: 3,
       modifiedMs: 5000,
     });
+    getStirlingFile.mockResolvedValue({});
   });
 
   it("finds the stored copy of a file reopened from the same path", async () => {
@@ -181,6 +183,12 @@ describe("storedCopiesForNewFiles", () => {
     ["lives on the server", { id: "server-12" as FileId }],
   ])("stores the file again when the record %s", async (_, over) => {
     getLeafStubsNamed.mockResolvedValue([copy(over)]);
+    expect((await storedCopiesForNewFiles([file])).size).toBe(0);
+  });
+
+  it("stores the file again when the stored copy cannot be served", async () => {
+    getLeafStubsNamed.mockResolvedValue([copy()]);
+    getStirlingFile.mockResolvedValue(null);
     expect((await storedCopiesForNewFiles([file])).size).toBe(0);
   });
 
