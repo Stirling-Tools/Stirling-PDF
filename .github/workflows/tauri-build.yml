@@ -61,6 +61,7 @@ permissions:
 
 env:
   CACHE_MAX_TAR_BYTES: 21474836480
+  CACHE_MAX_COMPRESSED_BYTES: 4294967296
   JAVA_VERSION: 25
   GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-25
   GRADLE_FILES_TO_HASH: |
@@ -337,7 +338,7 @@ jobs:
 
       - name: Restore cache artifact
         id: cache
-        uses: Ludy87/cache-the-planet/multi-cache@b14793349bd4c50cbbffaadf36bc572e7577eed7
+        uses: Ludy87/cache-the-planet/multi-cache@2425d74817e68f7d210b90143b0faee788a1e649
         with:
           cleanup-path-after-save: true
           version: 6
@@ -379,6 +380,8 @@ jobs:
           token: ${{ github.token }}
           # allow-shared-restore: true
           strict: false
+          exclude:
+            frontend/editor/src-tauri/target/debug/**
 
       - name: Read frontend build cache status
         id: frontend-cache
@@ -998,7 +1001,7 @@ jobs:
 
       - name: Restore cache artifact
         id: cache
-        uses: Ludy87/cache-the-planet/multi-cache@b14793349bd4c50cbbffaadf36bc572e7577eed7
+        uses: Ludy87/cache-the-planet/multi-cache@2425d74817e68f7d210b90143b0faee788a1e649
         with:
           cleanup-path-after-save: true
           version: 6
@@ -1040,6 +1043,8 @@ jobs:
           token: ${{ github.token }}
           # allow-shared-restore: true
           strict: false
+          exclude:
+            frontend/editor/src-tauri/target/debug/**
 
       - name: Read frontend build cache status
         id: frontend-cache
