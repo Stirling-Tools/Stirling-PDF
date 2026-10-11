@@ -204,9 +204,6 @@ export function ThumbnailSidebar({
   }, []);
 
   const currentPageRef = useRef(scrollState.currentPage - 1);
-  useEffect(() => {
-    currentPageRef.current = scrollState.currentPage - 1;
-  }, [scrollState.currentPage]);
 
   // Visible sidebar window. Workers only render inside it (plus overscan)
   // and park otherwise, so opening a huge document no longer queues every
@@ -224,6 +221,15 @@ export function ThumbnailSidebar({
     wakeResolversRef.current.clear();
     resolvers.forEach((resolve) => resolve());
   }, []);
+
+  useEffect(() => {
+    currentPageRef.current = scrollState.currentPage - 1;
+    // Without an observer the render window follows the current page, so a
+    // page turn must wake parked workers; with one, the observer wakes them.
+    if (visibleRangeRef.current === null) {
+      wakeThumbnailWorkers();
+    }
+  }, [scrollState.currentPage, wakeThumbnailWorkers]);
 
   useEffect(() => {
     if (!visible) return;

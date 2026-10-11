@@ -167,6 +167,58 @@ describe("ThumbnailSidebar", () => {
     expect(requestedPages[3]).toBe(9);
   });
 
+  it("wakes parked workers when current page changes in fallback mode", async () => {
+    scrollState.currentPage = 1;
+    scrollState.totalPages = 20;
+
+    const requestedPages: number[] = [];
+    renderThumbMock.mockImplementation((pageIndex: number) => {
+      requestedPages.push(pageIndex);
+      return {
+        toPromise: () =>
+          Promise.resolve(
+            new Blob([`page-${pageIndex}`], { type: "image/png" }),
+          ),
+      };
+    });
+
+    const { rerender } = render(
+      <MantineProvider>
+        <ThumbnailSidebar
+          visible={true}
+          onToggle={vi.fn()}
+          activeFileId="test-file-1"
+        />
+      </MantineProvider>,
+    );
+
+    // jsdom has no IntersectionObserver, so the window falls back to the
+    // current page plus overscan: pages 0..6 render, then workers park.
+    await waitFor(() => {
+      expect(requestedPages.length).toBe(7);
+    });
+
+    // Move far away without resolving anything by hand: only a wake lets
+    // the parked workers pick up the new window (pages 13..19).
+    scrollState.currentPage = 20;
+    rerender(
+      <MantineProvider>
+        <ThumbnailSidebar
+          visible={true}
+          onToggle={vi.fn()}
+          activeFileId="test-file-1"
+        />
+      </MantineProvider>,
+    );
+
+    await waitFor(() => {
+      expect(requestedPages.length).toBe(14);
+    });
+    expect(requestedPages.slice(7).sort((a, b) => a - b)).toEqual([
+      13, 14, 15, 16, 17, 18, 19,
+    ]);
+  });
+
   it("revokes blob URLs when sidebar closes", async () => {
     const { rerender } = render(
       <MantineProvider>
