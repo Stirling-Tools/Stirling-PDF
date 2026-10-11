@@ -83,7 +83,7 @@ jobs:
           token: ${{ github.token }}
           key: |
             gradle-caches=${{ inputs.gradle-hash }}
-            gradle-wrapper=${{ inputs.gradle-hash  }}
+            gradle-wrapper=${{ inputs.gradle-hash }}
           # allow-shared-restore: true
           strict: false
 

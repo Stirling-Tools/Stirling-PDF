@@ -327,11 +327,14 @@ jobs:
       - playwright-e2e-live
       - docker-compose-tests
       - frontend-validation
+      - files-hash
     permissions:
-      contents: read
+      contents: write
     uses: ./.github/workflows/coverage-aggregate.yml
     secrets: inherit
     with:
+      gradle-hash: ${{ needs.files-hash.outputs.gradle_files_hash }}
+      uv-hash: ${{ needs.files-hash.outputs.uv_files_hash }}
       frontend-validation-result: ${{ needs.frontend-validation.result }}
       playwright-e2e-live-result: ${{ needs.playwright-e2e-live.result }}
 
