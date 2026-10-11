@@ -22,6 +22,7 @@ const { renderThumbMock, viewer } = vi.hoisted(() => {
     getScrollState: () => scrollState,
     scrollActions,
     getThumbnailAPI: () => thumbnailAPI,
+    registerImmediateScrollUpdate: () => () => {},
   };
   return { renderThumbMock, viewer };
 });
