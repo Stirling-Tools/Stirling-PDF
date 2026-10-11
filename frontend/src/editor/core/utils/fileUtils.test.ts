@@ -5,9 +5,30 @@ import {
   formatFileSize,
   detectNonPdfFileType,
   getFileFormats,
+  mimeTypeToExtension,
 } from "@editor/utils/fileUtils";
 
 describe("fileUtils", () => {
+  describe("mimeTypeToExtension", () => {
+    it("maps common MIME types to extensions", () => {
+      expect(mimeTypeToExtension("application/pdf")).toBe("pdf");
+      expect(mimeTypeToExtension("image/jpeg")).toBe("jpg");
+      expect(mimeTypeToExtension("image/png")).toBe("png");
+      expect(mimeTypeToExtension("application/zip")).toBe("zip");
+    });
+
+    it("ignores parameters and casing", () => {
+      expect(mimeTypeToExtension("Application/PDF; charset=binary")).toBe(
+        "pdf",
+      );
+    });
+
+    it("returns empty string for unknown or empty input", () => {
+      expect(mimeTypeToExtension("application/x-unknown")).toBe("");
+      expect(mimeTypeToExtension("")).toBe("");
+    });
+  });
+
   it("classifies using existing PDF detection, stored protection and overlapping backend categories", () => {
     expect(
       getFileFormats({ name: "download", type: "application/pdf" }),
