@@ -94,6 +94,9 @@ test.describe("Merge output filename (#8404)", () => {
     const review = page.locator('[data-testid="review-panel-container"]');
     await expect(review).toBeVisible();
     await expect(review.getByText(/merged_sample\.pdf/i).first()).toBeVisible();
+    await expect(
+      review.getByText("application/pdf", { exact: true }),
+    ).toBeVisible();
     await expect(review.getByText(/merged_sample\.jpe?g/i)).toHaveCount(0);
   });
 });
