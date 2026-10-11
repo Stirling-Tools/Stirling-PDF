@@ -8375,33 +8375,33 @@
       "workflow_run_id": 38158634633
     },
     "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/setup-uv-cache/linux-x64/c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17/v6": {
-      "object": "sha256:7b018b7b72cff3a2246e7e6e2f88a53a6e972a6e72a61d0cb9920e21dc3aad40",
+      "object": "sha256:fead02fa5971bea970893c4037d7d1e537c17105cc702f53fb22b5d6d55fb643",
       "storage": "github-artifact",
-      "updated_at": "2026-10-10T14:57:35.297Z",
+      "updated_at": "2026-10-11T17:25:12.756Z",
       "source": "Stirling-Tools/Stirling-PDF",
       "created_by": "Ludy87",
-      "size": 44024885,
+      "size": 43934115,
       "parts": [
         {
           "index": 0,
-          "object": "sha256:64751afd828017fae43e0ae6f7ce0770f775238f1b5d053c4d32aac207e2a942",
+          "object": "sha256:e7912e2860eaf1eff0ee58afde18fdb9c9eae2236ade3a3a60e8c4203097ed7b",
           "size": 25165824,
-          "artifact_id": 11673825672,
-          "artifact_name": "cache-untrusted-pr-8307-setup-uv-cache-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--7b018b7b72cff3a2246e7e6e2f88a53a6e972a6e72a61d0cb9-part-000000",
-          "workflow_run_id": 38061032870
+          "artifact_id": 11709063521,
+          "artifact_name": "cache-untrusted-pr-8307-setup-uv-cache-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--fead02fa5971bea970893c4037d7d1e537c17105cc702f53fb-part-000000",
+          "workflow_run_id": 38158634633
         },
         {
           "index": 1,
-          "object": "sha256:4bb53ae261f9d7e44e3182937b492517560651cb01da7eb4eac17810060f69fa",
-          "size": 18859061,
-          "artifact_id": 11673416319,
-          "artifact_name": "cache-untrusted-pr-8307-setup-uv-cache-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--7b018b7b72cff3a2246e7e6e2f88a53a6e972a6e72a61d0cb9-part-000001",
-          "workflow_run_id": 38061032870
+          "object": "sha256:9104fadbe13e8a9a3b0445cd292cf60ca758321e5ab637f5968539e121d48553",
+          "size": 18768291,
+          "artifact_id": 11709043722,
+          "artifact_name": "cache-untrusted-pr-8307-setup-uv-cache-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--fead02fa5971bea970893c4037d7d1e537c17105cc702f53fb-part-000001",
+          "workflow_run_id": 38158634633
         }
       ],
-      "artifact_id": 11673825672,
-      "artifact_name": "cache-untrusted-pr-8307-setup-uv-cache-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--7b018b7b72cff3a2246e7e6e2f88a53a6e972a6e72a61d0cb9-part-000000",
-      "workflow_run_id": 38061032870
+      "artifact_id": 11709063521,
+      "artifact_name": "cache-untrusted-pr-8307-setup-uv-cache-linux-x64-c8d5ec2ce64eb0d083f1ef6ad54d741be29a7599baf4f6fee005b9e4aa04fd17-v6--fead02fa5971bea970893c4037d7d1e537c17105cc702f53fb-part-000000",
+      "workflow_run_id": 38158634633
     },
     "untrusted/Stirling-Tools/Stirling-PDF/pr-8307/cargo-registry/macos-arm64/56d3711a0d0730ef537a7a0ad4b54cda0b23b4f94a000877eff6c84bc450c052-cache-e1b7946154cca207/v6": {
       "object": "sha256:9a0b8d9d566414fa51ce1e6a0fdcd0880c85b78426cabde5b8054164e1881116",
@@ -9889,6 +9889,6 @@
   },
   "monitoring": {
     "window_started_at": "2026-10-11T17:17:12.903Z",
-    "writes": 3
+    "writes": 4
   }
 }
