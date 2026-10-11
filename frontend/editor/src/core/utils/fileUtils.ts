@@ -68,6 +68,34 @@ export function detectFileExtension(filename: string): string {
 }
 
 /**
+ * Common MIME type to file extension mapping, used to name tool outputs from
+ * the response content type so the filename always matches the actual content.
+ */
+const MIME_TYPE_TO_EXTENSION: Record<string, string> = {
+  "application/pdf": "pdf",
+  "application/zip": "zip",
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/tiff": "tif",
+  "image/bmp": "bmp",
+  "text/plain": "txt",
+  "text/csv": "csv",
+  "application/json": "json",
+};
+
+/**
+ * Maps a MIME type to a file extension (without the leading dot).
+ * Parameters (e.g. "application/pdf; charset=binary") and casing are ignored.
+ * Returns "" when the MIME type is not mapped.
+ */
+export function mimeTypeToExtension(mimeType: string): string {
+  if (!mimeType || typeof mimeType !== "string") return "";
+  const base = mimeType.split(";")[0].trim().toLowerCase();
+  return MIME_TYPE_TO_EXTENSION[base] ?? "";
+}
+
+/**
  * Removes the file extension from a filename
  * @param filename - The filename to process
  * @param options - Options for processing
