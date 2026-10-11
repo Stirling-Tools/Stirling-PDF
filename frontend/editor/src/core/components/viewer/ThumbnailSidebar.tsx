@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback, memo } from "react";
 import { Box, ScrollArea, Text } from "@mantine/core";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Skeleton } from "@app/ui/Skeleton";
 import { useTranslation } from "react-i18next";
@@ -10,6 +11,9 @@ import "@app/components/viewer/SidebarBase.css";
 
 // Pages rendered beyond the visible window while scrolling the sidebar.
 const OVERSCAN_PAGES = 6;
+// Measured per row once mounted; the estimate only sizes the scrollbar
+// before the first measurement lands.
+const THUMB_CARD_ESTIMATE_PX = 282;
 // Sidebar cards are small, so two device pixels per CSS pixel is plenty;
 // anything higher only grows blobs without visible gain.
 const THUMBNAIL_DPR_CAP = 2;
@@ -32,7 +36,6 @@ interface ThumbnailCardProps {
   thumbAlt: string;
   failedLabel: string;
   onSelect: (pageIndex: number) => void;
-  registerCard: (pageIndex: number, el: HTMLDivElement | null) => void;
 }
 
 // One sidebar row. Memoized so a completed thumbnail re-renders its own row
@@ -45,12 +48,10 @@ const ThumbnailCard = memo(function ThumbnailCard({
   thumbAlt,
   failedLabel,
   onSelect,
-  registerCard,
 }: ThumbnailCardProps) {
   return (
     <Box
       data-page-index={pageIndex}
-      ref={(el) => registerCard(pageIndex, el)}
       onClick={() => onSelect(pageIndex)}
       style={{
         cursor: "pointer",
@@ -209,14 +210,10 @@ export function ThumbnailSidebar({
 
   const currentPageRef = useRef(scrollState.currentPage - 1);
 
-  // Visible sidebar window. Workers only render inside it (plus overscan)
-  // and park otherwise, so opening a huge document no longer queues every
-  // page up front. Stays null until the observer reports, or when the
-  // observer is unavailable, and then the window falls back to the current
+  // Render window for the worker queue. The virtual list reports it; without
+  // layout (tests) it stays null and generation falls back to the current
   // page plus overscan.
-  const visibleRangeRef = useRef<{ min: number; max: number } | null>(null);
-  const visibleSetRef = useRef<Set<number>>(new Set());
-  const cardElsRef = useRef(new Map<number, HTMLDivElement>());
+  const renderRangeRef = useRef<{ min: number; max: number } | null>(null);
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const wakeResolversRef = useRef<Set<() => void>>(new Set());
 
@@ -226,55 +223,53 @@ export function ThumbnailSidebar({
     resolvers.forEach((resolve) => resolve());
   }, []);
 
+  // The virtualizer only measures once the scroll viewport exists and has
+  // height, which is never true without layout, so tests keep the full list.
+  const [viewportMounted, setViewportMounted] = useState(false);
   useEffect(() => {
-    currentPageRef.current = scrollState.currentPage - 1;
-    // Without an observer the render window follows the current page, so a
-    // page turn must wake parked workers; with one, the observer wakes them.
-    if (visibleRangeRef.current === null) {
-      wakeThumbnailWorkers();
-    }
-  }, [scrollState.currentPage, wakeThumbnailWorkers]);
+    setViewportMounted(viewportRef.current !== null);
+  }, [visible]);
+
+  const scrollViewport =
+    viewportMounted && (viewportRef.current?.clientHeight ?? 0) > 0
+      ? viewportRef.current
+      : null;
+
+  const rowVirtualizer = useVirtualizer({
+    count: scrollState.totalPages,
+    getScrollElement: () => viewportRef.current,
+    estimateSize: () => THUMB_CARD_ESTIMATE_PX,
+    overscan: OVERSCAN_PAGES,
+    gap: 12,
+  });
+
+  const virtualItems = scrollViewport ? rowVirtualizer.getVirtualItems() : [];
+  const rangeMin = virtualItems.length > 0 ? virtualItems[0].index : -1;
+  const rangeMax =
+    virtualItems.length > 0 ? virtualItems[virtualItems.length - 1].index : -1;
 
   useEffect(() => {
     if (!visible) return;
-    if (typeof IntersectionObserver === "undefined") {
-      visibleRangeRef.current = null;
+    const next =
+      rangeMin >= 0 && rangeMax >= 0 ? { min: rangeMin, max: rangeMax } : null;
+    const prev = renderRangeRef.current;
+    renderRangeRef.current = next;
+    if (
+      (next === null) !== (prev === null) ||
+      (next && prev && (next.min !== prev.min || next.max !== prev.max))
+    ) {
       wakeThumbnailWorkers();
-      return;
     }
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          const index = Number((entry.target as HTMLElement).dataset.pageIndex);
-          if (Number.isNaN(index)) continue;
-          if (entry.isIntersecting) {
-            visibleSetRef.current.add(index);
-          } else {
-            visibleSetRef.current.delete(index);
-          }
-        }
-        let min = Infinity;
-        let max = -Infinity;
-        visibleSetRef.current.forEach((i) => {
-          if (i < min) min = i;
-          if (i > max) max = i;
-        });
-        const next = visibleSetRef.current.size > 0 ? { min, max } : null;
-        const prev = visibleRangeRef.current;
-        if (
-          (next === null) !== (prev === null) ||
-          (next && prev && (next.min !== prev.min || next.max !== prev.max))
-        ) {
-          visibleRangeRef.current = next;
-          wakeThumbnailWorkers();
-        }
-      },
-      { root: viewportRef.current, threshold: 0 },
-    );
-    cardElsRef.current.forEach((el) => observer.observe(el));
-    wakeThumbnailWorkers();
-    return () => observer.disconnect();
-  }, [visible, scrollState.totalPages, wakeThumbnailWorkers]);
+  }, [visible, rangeMin, rangeMax, wakeThumbnailWorkers]);
+
+  useEffect(() => {
+    currentPageRef.current = scrollState.currentPage - 1;
+    // Without a render window the queue follows the current page, so a page
+    // turn must wake parked workers; with one, range changes wake them.
+    if (renderRangeRef.current === null) {
+      wakeThumbnailWorkers();
+    }
+  }, [scrollState.currentPage, wakeThumbnailWorkers]);
 
   // Generate thumbnails when sidebar becomes visible
   useEffect(() => {
@@ -345,12 +340,12 @@ export function ThumbnailSidebar({
           0,
           Math.min(totalPages - 1, currentPageRef.current),
         );
-        const range = visibleRangeRef.current;
-        const lo = range
-          ? Math.max(0, range.min - OVERSCAN_PAGES)
-          : Math.max(0, current - OVERSCAN_PAGES);
+        const range = renderRangeRef.current;
+        // The virtual window already includes overscan; the fallback window
+        // is the current page plus overscan.
+        const lo = range ? range.min : Math.max(0, current - OVERSCAN_PAGES);
         const hi = range
-          ? Math.min(totalPages - 1, range.max + OVERSCAN_PAGES)
+          ? range.max
           : Math.min(totalPages - 1, current + OVERSCAN_PAGES);
 
         // Outward expansion from the current page, clamped to the visible
@@ -443,15 +438,28 @@ export function ThumbnailSidebar({
     [scrollActions],
   );
 
-  const registerCard = useCallback(
-    (pageIndex: number, el: HTMLDivElement | null) => {
-      if (el) {
-        cardElsRef.current.set(pageIndex, el);
-      } else {
-        cardElsRef.current.delete(pageIndex);
-      }
-    },
-    [],
+  // One renderer for both list modes so the virtual and fallback lists
+  // cannot drift apart.
+  const renderCard = useCallback(
+    (pageIndex: number) => (
+      <ThumbnailCard
+        key={pageIndex}
+        pageIndex={pageIndex}
+        thumbUrl={thumbnails[pageIndex]}
+        isCurrent={highlightPage === pageIndex + 1}
+        pageLabel={t("viewer.thumbnails.pageNumber", "Page {{page}}", {
+          page: pageIndex + 1,
+        })}
+        thumbAlt={t(
+          "viewer.thumbnails.thumbnailAlt",
+          "Page {{page}} thumbnail",
+          { page: pageIndex + 1 },
+        )}
+        failedLabel={t("viewer.thumbnails.failed", "Failed")}
+        onSelect={handlePageClick}
+      />
+    ),
+    [thumbnails, highlightPage, t, handlePageClick],
   );
 
   return (
@@ -504,40 +512,48 @@ export function ThumbnailSidebar({
           {/* Thumbnails Container */}
           <ScrollArea viewportRef={viewportRef} style={{ flex: 1 }}>
             <Box p="sm">
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "12px",
-                }}
-              >
-                {Array.from(
-                  { length: scrollState.totalPages },
-                  (_, pageIndex) => (
-                    <ThumbnailCard
-                      key={pageIndex}
-                      pageIndex={pageIndex}
-                      thumbUrl={thumbnails[pageIndex]}
-                      isCurrent={highlightPage === pageIndex + 1}
-                      pageLabel={t(
-                        "viewer.thumbnails.pageNumber",
-                        "Page {{page}}",
-                        {
-                          page: pageIndex + 1,
-                        },
-                      )}
-                      thumbAlt={t(
-                        "viewer.thumbnails.thumbnailAlt",
-                        "Page {{page}} thumbnail",
-                        { page: pageIndex + 1 },
-                      )}
-                      failedLabel={t("viewer.thumbnails.failed", "Failed")}
-                      onSelect={handlePageClick}
-                      registerCard={registerCard}
-                    />
-                  ),
-                )}
-              </div>
+              {scrollViewport ? (
+                // Virtualized: only the visible window plus overscan mounts,
+                // so a huge document costs a dozen cards instead of thousands.
+                <div
+                  style={{
+                    position: "relative",
+                    height: `${rowVirtualizer.getTotalSize()}px`,
+                  }}
+                >
+                  {virtualItems.map((item) => (
+                    <div
+                      key={item.key}
+                      data-page-index={item.index}
+                      ref={rowVirtualizer.measureElement}
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        width: "100%",
+                        transform: `translateY(${item.start}px)`,
+                      }}
+                    >
+                      {renderCard(item.index)}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                // No layout (tests): the virtualizer cannot measure, so every
+                // card mounts exactly as before.
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "12px",
+                  }}
+                >
+                  {Array.from(
+                    { length: scrollState.totalPages },
+                    (_, pageIndex) => renderCard(pageIndex),
+                  )}
+                </div>
+              )}
             </Box>
           </ScrollArea>
         </Box>
