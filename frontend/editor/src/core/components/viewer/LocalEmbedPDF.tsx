@@ -1213,7 +1213,7 @@ export function LocalEmbedPDF({
 
       // Register tiling plugin (depends on Render, Scroll, Viewport)
       createPluginRegistration(TilingPluginPackage, {
-        tileSize: 768,
+        tileSize: 1024,
         overlapPx: 5,
         extraRings: 2,
       }),
