@@ -37,7 +37,11 @@ import { refreshNotificationsNow } from "@app/hooks/useNotifications";
 import { useResolutionContinuation } from "@app/hooks/tools/shared/useResolutionContinuation";
 import { useNotificationsAvailable } from "@app/components/notifications/useNotificationsAvailable";
 import { zipFileService } from "@app/services/zipFileService";
-import { getFilenameWithoutExtension } from "@app/utils/fileUtils";
+import {
+  detectFileExtension,
+  getFilenameWithoutExtension,
+  mimeTypeToExtension,
+} from "@app/utils/fileUtils";
 import {
   createChildStub,
   generateProcessedFileMetadata,
@@ -406,14 +410,24 @@ export const useToolOperation = <TParams>(
               processedFiles = await extractZipFiles(responseBlob);
             } else {
               const inputName = filesForAPI[0]?.name || "document.pdf";
-              // This branch always produces a PDF (see hardcoded type below),
-              // so strip the input extension instead of keeping e.g. ".jpeg".
+              // Name the output from the response MIME type so the extension
+              // always matches the actual content (#8404: merged images were
+              // named "merged_sample.jpeg" for PDF content, which broke
+              // downstream tool selection).
+              const rawType =
+                typeof contentTypeHeader === "string" ? contentTypeHeader : "";
+              const outputType =
+                rawType.split(";")[0].trim() || "application/pdf";
               const baseName =
                 getFilenameWithoutExtension(inputName, { preserveCase: true }) ||
                 "document";
-              const filename = `${config.filePrefix}${baseName}.pdf`;
+              const extension =
+                mimeTypeToExtension(outputType) ||
+                detectFileExtension(inputName) ||
+                "pdf";
+              const filename = `${config.filePrefix}${baseName}.${extension}`;
               processedFiles = [
-                new File([responseBlob], filename, { type: "application/pdf" }),
+                new File([responseBlob], filename, { type: outputType }),
               ];
             }
 
