@@ -405,7 +405,13 @@ export const useToolOperation = <TParams>(
             ) {
               processedFiles = await extractZipFiles(responseBlob);
             } else {
-              const filename = `${config.filePrefix}${filesForAPI[0]?.name || "document.pdf"}`;
+              const inputName = filesForAPI[0]?.name || "document.pdf";
+              // This branch always produces a PDF (see hardcoded type below),
+              // so strip the input extension instead of keeping e.g. ".jpeg".
+              const baseName =
+                getFilenameWithoutExtension(inputName, { preserveCase: true }) ||
+                "document";
+              const filename = `${config.filePrefix}${baseName}.pdf`;
               processedFiles = [
                 new File([responseBlob], filename, { type: "application/pdf" }),
               ];
