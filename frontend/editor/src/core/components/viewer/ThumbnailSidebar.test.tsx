@@ -13,10 +13,15 @@ const scrollActions = vi.hoisted(() => ({
   scrollToPage: vi.fn(),
 }));
 
-const { renderThumbMock, viewer } = vi.hoisted(() => {
+const { renderThumbMock, thumbnailAPI, viewer, pluginDoc } = vi.hoisted(() => {
   const renderThumbMock = vi.fn();
+  const pluginDoc = {
+    id: "doc-1" as string | null,
+    ready: true,
+  };
   const thumbnailAPI = {
     renderThumb: renderThumbMock,
+    forDocument: (_docId: string) => ({ renderThumb: renderThumbMock }),
   };
   const viewer = {
     getScrollState: () => scrollState,
@@ -24,11 +29,16 @@ const { renderThumbMock, viewer } = vi.hoisted(() => {
     getThumbnailAPI: () => thumbnailAPI,
     registerImmediateScrollUpdate: () => () => {},
   };
-  return { renderThumbMock, viewer };
+  return { renderThumbMock, thumbnailAPI, viewer, pluginDoc };
 });
 
 vi.mock("@app/contexts/ViewerContext", () => ({
   useViewer: () => viewer,
+}));
+
+vi.mock("@app/components/viewer/useActiveDocumentId", () => ({
+  useActiveDocumentId: () => pluginDoc.id,
+  useDocumentReady: () => pluginDoc.ready,
 }));
 
 vi.mock("react-i18next", () => ({
@@ -50,6 +60,8 @@ describe("ThumbnailSidebar", () => {
     vi.clearAllMocks();
     scrollState.currentPage = 1;
     scrollState.totalPages = 3;
+    pluginDoc.id = "doc-1";
+    pluginDoc.ready = true;
     global.URL.createObjectURL = vi.fn(
       () => "blob:http://localhost/test-thumb-blob",
     );
@@ -266,6 +278,96 @@ describe("ThumbnailSidebar", () => {
 
       expect(screen.queryByAltText("Page 1 thumbnail")).not.toBeInTheDocument();
     } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("binds thumbnail generation to the newly loaded document on file switch", async () => {
+    vi.useFakeTimers();
+    try {
+      scrollState.currentPage = 1;
+      scrollState.totalPages = 10;
+      pluginDoc.id = "doc-A";
+      pluginDoc.ready = true;
+
+      // Distinct scoped APIs per plugin document: stale workers for doc-A
+      // must never commit into file-B's state.
+      const resolversA: Array<(blob: Blob) => void> = [];
+      const resolversB: Array<(blob: Blob) => void> = [];
+      const requestedA: number[] = [];
+      const requestedB: number[] = [];
+      const forDocumentMock = vi.fn((docId: string) => ({
+        renderThumb: (pageIndex: number) => ({
+          toPromise: () =>
+            new Promise<Blob>((resolve) => {
+              if (docId === "doc-A") {
+                requestedA.push(pageIndex);
+                resolversA.push(resolve);
+              } else {
+                requestedB.push(pageIndex);
+                resolversB.push(resolve);
+              }
+            }),
+        }),
+      }));
+      thumbnailAPI.forDocument =
+        forDocumentMock as unknown as typeof thumbnailAPI.forDocument;
+
+      const { rerender } = render(
+        <MantineProvider>
+          <ThumbnailSidebar
+            visible={true}
+            onToggle={vi.fn()}
+            activeFileId="file-A"
+          />
+        </MantineProvider>,
+      );
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0);
+      });
+
+      // Workers claimed the first window of doc-A and parked on it.
+      expect([...requestedA].sort((a, b) => a - b)).toEqual([0, 1, 2]);
+
+      // Switching files restarts generation scoped to the new document.
+      pluginDoc.id = "doc-B";
+      rerender(
+        <MantineProvider>
+          <ThumbnailSidebar
+            visible={true}
+            onToggle={vi.fn()}
+            activeFileId="file-B"
+          />
+        </MantineProvider>,
+      );
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0);
+      });
+
+      expect(forDocumentMock).toHaveBeenCalledWith("doc-B");
+      expect([...requestedB].sort((a, b) => a - b)).toEqual([0, 1, 2]);
+
+      // Stale doc-A workers resolve after the switch: nothing may commit.
+      resolversA.forEach((resolve) =>
+        resolve(new Blob(["stale"], { type: "image/png" })),
+      );
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1000);
+      });
+      expect(screen.queryByAltText("Page 1 thumbnail")).not.toBeInTheDocument();
+
+      // The new document's workers still land their thumbnails.
+      resolversB.forEach((resolve) =>
+        resolve(new Blob(["fresh"], { type: "image/png" })),
+      );
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1000);
+      });
+      expect(screen.getByAltText("Page 1 thumbnail")).toBeInTheDocument();
+    } finally {
+      thumbnailAPI.forDocument = (_docId: string) => ({
+        renderThumb: renderThumbMock,
+      });
       vi.useRealTimers();
     }
   });

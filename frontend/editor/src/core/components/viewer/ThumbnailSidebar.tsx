@@ -5,6 +5,10 @@ import { ActionIcon } from "@app/ui/ActionIcon";
 import { Skeleton } from "@app/ui/Skeleton";
 import { useTranslation } from "react-i18next";
 import { useViewer } from "@app/contexts/ViewerContext";
+import {
+  useActiveDocumentId,
+  useDocumentReady,
+} from "@app/components/viewer/useActiveDocumentId";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import { Icon } from "@app/ui/Icon";
 import "@app/components/viewer/SidebarBase.css";
@@ -153,6 +157,8 @@ export function ThumbnailSidebar({
 
   const scrollState = getScrollState();
   const thumbnailAPI = getThumbnailAPI();
+  const pluginDocumentId = useActiveDocumentId();
+  const documentReady = useDocumentReady();
 
   // Highlight follows page turns through the immediate notifier, not through
   // parent re-renders, so batching thumbnail commits cannot leave it stale.
@@ -275,8 +281,17 @@ export function ThumbnailSidebar({
   useEffect(() => {
     if (!visible || scrollState.totalPages === 0) return;
     if (!thumbnailAPI) return;
+    // Bind this generation run to the plugin document that is actually
+    // loaded. The viewer tree persists across file switches without
+    // remounting, so without this gate stale workers would commit the old
+    // document's blobs into the new file's state (or never restart and leave
+    // skeletons). The scoped API pins every render to that document instead
+    // of the plugin's mutable active-document fallback.
+    if (!pluginDocumentId || !documentReady) return;
 
     let isCancelled = false;
+    const genDocId = pluginDocumentId;
+    const scopedAPI = thumbnailAPI.forDocument(genDocId);
     // Sidebar cards are small; render at device pixels (capped) instead of
     // CSS pixels so thumbnails stay crisp on retina displays.
     const thumbDpr = Math.min(window.devicePixelRatio || 1, THUMBNAIL_DPR_CAP);
@@ -387,7 +402,7 @@ export function ThumbnailSidebar({
         }
 
         try {
-          const thumbTask = thumbnailAPI.renderThumb(pageIndex, thumbDpr);
+          const thumbTask = scopedAPI.renderThumb(pageIndex, thumbDpr);
           const thumbBlob = await thumbTask.toPromise();
           if (isCancelled) {
             return;
@@ -428,7 +443,15 @@ export function ThumbnailSidebar({
       commitBuffer.clear();
       wakeThumbnailWorkers();
     };
-  }, [visible, scrollState.totalPages, thumbnailAPI, wakeThumbnailWorkers]);
+  }, [
+    visible,
+    scrollState.totalPages,
+    thumbnailAPI,
+    wakeThumbnailWorkers,
+    activeFileId,
+    pluginDocumentId,
+    documentReady,
+  ]);
 
   const handlePageClick = useCallback(
     (pageIndex: number) => {
