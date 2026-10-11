@@ -3,7 +3,6 @@ import { SpreadMode } from "@embedpdf/plugin-spread/react";
 import {
   ViewerBridgeRegistry,
   ScrollState,
-  ZoomState,
 } from "@app/contexts/viewer/viewerBridges";
 import { PdfBookmarkObject, PdfAttachmentObject } from "@embedpdf/models";
 import { ZoomLevel, Point } from "@embedpdf/plugin-zoom";
@@ -103,15 +102,11 @@ export interface ViewerActionsBundle {
 interface ViewerActionDependencies {
   registry: MutableRefObject<ViewerBridgeRegistry>;
   getScrollState: () => ScrollState;
-  getZoomState: () => ZoomState;
-  triggerImmediateZoomUpdate: (percent: number) => void;
 }
 
 export function createViewerActions({
   registry,
   getScrollState,
-  getZoomState,
-  triggerImmediateZoomUpdate,
 }: ViewerActionDependencies): ViewerActionsBundle {
   const scrollActions: ScrollActions = {
     scrollToPage: (page: number, behavior?: "smooth" | "instant") => {
@@ -185,27 +180,17 @@ export function createViewerActions({
   };
 
   const zoomActions: ZoomActions = {
+    // No optimistic readout here: the plugin tick is the single publisher,
+    // so the UI shows the zoom the engine actually applied.
     zoomIn: () => {
       const api = registry.current.zoom?.api;
       if (api?.zoomIn) {
-        const currentState = getZoomState();
-        const newPercent = Math.min(
-          Math.round(currentState.zoomPercent * 1.2),
-          300,
-        );
-        triggerImmediateZoomUpdate(newPercent);
         api.zoomIn();
       }
     },
     zoomOut: () => {
       const api = registry.current.zoom?.api;
       if (api?.zoomOut) {
-        const currentState = getZoomState();
-        const newPercent = Math.max(
-          Math.round(currentState.zoomPercent / 1.2),
-          20,
-        );
-        triggerImmediateZoomUpdate(newPercent);
         api.zoomOut();
       }
     },
@@ -224,7 +209,6 @@ export function createViewerActions({
     setZoomLevel: (factor: number) => {
       const api = registry.current.zoom?.api;
       if (api?.requestZoom) {
-        triggerImmediateZoomUpdate(Math.round(factor * 100));
         api.requestZoom(factor);
       }
     },

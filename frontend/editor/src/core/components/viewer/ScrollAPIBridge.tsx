@@ -38,6 +38,9 @@ function ScrollAPIBridgeInner({ documentId }: { documentId: string }) {
   const currentPage = scrollState?.currentPage;
   const totalPages = scrollState?.totalPages;
 
+  // State publishing rides page changes, but the registration itself never
+  // flaps: the null cleanup below runs on unmount only, so state readers
+  // never observe the empty fallback between page turns.
   useLayoutEffect(() => {
     const currentScroll = scrollRef.current;
     if (
@@ -45,24 +48,24 @@ function ScrollAPIBridgeInner({ documentId }: { documentId: string }) {
       currentPage !== undefined &&
       totalPages !== undefined
     ) {
-      const newState = {
-        currentPage,
-        totalPages,
-      };
-
       // Trigger immediate update for responsive UI
-      triggerImmediateScrollUpdate(newState.currentPage, newState.totalPages);
+      triggerImmediateScrollUpdate(currentPage, totalPages);
 
       registerBridge("scroll", {
-        state: newState,
+        state: {
+          currentPage,
+          totalPages,
+        },
         api: currentScroll,
       });
     }
+  }, [currentPage, totalPages, registerBridge, triggerImmediateScrollUpdate]);
 
+  useLayoutEffect(() => {
     return () => {
       registerBridge("scroll", null);
     };
-  }, [currentPage, totalPages, registerBridge, triggerImmediateScrollUpdate]);
+  }, [registerBridge]);
 
   return null;
 }

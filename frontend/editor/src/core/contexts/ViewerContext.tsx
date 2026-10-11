@@ -423,10 +423,8 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
       createViewerActions({
         registry: bridgeRefs,
         getScrollState,
-        getZoomState,
-        triggerImmediateZoomUpdate,
       }),
-    [getScrollState, getZoomState, triggerImmediateZoomUpdate],
+    [getScrollState],
   );
 
   // Printing is an exit path, so a "run on export" policy must enforce here too.
