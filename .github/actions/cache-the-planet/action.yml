@@ -1,0 +1,118 @@
+name: Cache the Planet
+description: Restore and save repository caches through cache-the-planet
+
+inputs:
+  encryption-key:
+    description: Encryption key used for cache artifacts
+    required: false
+    default: ''
+  multi-cache:
+    description: Cache definitions passed to cache-the-planet
+    required: true
+  key:
+    description: Cache keys passed to cache-the-planet
+    required: false
+    default: ''
+  disable-download:
+    description: Skip downloading existing caches
+    required: false
+    default: 'false'
+  token:
+    description: GitHub token used by cache-the-planet
+    required: false
+    default: ''
+  exclude:
+    description: Paths excluded from cache processing
+    required: false
+    default: ''
+  strict:
+    required: false
+    default: 'false'
+  cleanup-path-after-save:
+    required: false
+    default: 'true'
+
+outputs:
+  is-fork:
+    value: ${{ steps.cache.outputs.is-fork }}
+  read-only:
+    value: ${{ steps.cache.outputs.read-only }}
+  cache-hit:
+    value: ${{ steps.cache.outputs.cache-hit }}
+  error:
+    value: ${{ steps.cache.outputs.error }}
+  cache-results:
+    value: ${{ steps.cache.outputs.cache-results }}
+
+runs:
+  using: composite
+  steps:
+    - name: Use runner temp directory for cache archives
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        $temp = $env:RUNNER_TEMP
+
+        if (-not $temp -or -not (Test-Path -LiteralPath $temp)) {
+          throw "RUNNER_TEMP is not available: $temp"
+        }
+
+        Write-Host "Using temporary directory: $temp"
+
+        "TEMP=$temp" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        "TMP=$temp" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+        $env:TEMP = $temp
+        $env:TMP = $temp
+
+        Get-Volume |
+          Where-Object { $_.DriveLetter -in @('C', 'D') } |
+          Sort-Object DriveLetter |
+          Select-Object DriveLetter, SizeRemaining, Size
+
+    - name: Use GNU tar on Windows
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        $gitUsrBin = Join-Path $env:ProgramFiles 'Git\usr\bin'
+        $gnuTar = Join-Path $gitUsrBin 'tar.exe'
+
+        if (-not (Test-Path $gnuTar)) {
+          throw "GNU tar not found at $gnuTar"
+        }
+
+        & $gnuTar --version
+        Add-Content -Path $env:GITHUB_PATH -Value $gitUsrBin
+
+    - name: Prepare cache directory
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        New-Item -ItemType Directory -Force `
+          -Path (Join-Path $env:GITHUB_WORKSPACE '.cache') | Out-Null
+
+    - name: Use GNU tar on macOS
+      if: runner.os == 'macOS'
+      shell: bash
+      run: |
+        brew install gnu-tar
+        echo "$(brew --prefix gnu-tar)/libexec/gnubin" >> "$GITHUB_PATH"
+        tar --version
+
+    - name: Restore cache artifact
+      id: cache
+      uses: Ludy87/cache-the-planet/multi-cache@2425d74817e68f7d210b90143b0faee788a1e649
+      with:
+        cleanup-path-after-save: ${{ inputs.cleanup-path-after-save }}
+        version: 6
+        encryption-key: ${{ inputs.encryption-key }}
+        manifest-branch: dev-cache-artifact
+        manifest-path: .github/cache-data
+        artifact-retention-days: 1
+        storage: github-artifact
+        disable-download: ${{ inputs.disable-download }}
+        multi-cache: ${{ inputs.multi-cache }}
+        token: ${{ inputs.token || github.token }}
+        key: ${{ inputs.key }}
+        strict: ${{ inputs.strict }}
+        exclude: ${{ inputs.exclude }}

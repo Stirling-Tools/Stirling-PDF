@@ -39,27 +39,18 @@ jobs:
 
       - name: Restore cache artifact
         id: cache
-        uses: Ludy87/cache-the-planet/multi-cache@2425d74817e68f7d210b90143b0faee788a1e649
+        uses: ./.github/actions/cache-the-planet
         with:
-          cleanup-path-after-save: true
-          version: 6
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
-          storage: github-artifact
-          artifact-retention-days: 1
-          manifest-branch: dev-cache-artifact
-          manifest-path: .github/cache-data
           multi-cache: |
             gradle-caches:
               path: .cache/gradle-java-${{ inputs.java-version }}/caches
             gradle-wrapper:
               path: .cache/gradle-java-${{ inputs.java-version }}/wrapper
-          # save-scope: shared
           key: |
             gradle-caches=${{ inputs.gradle-hash }}
             gradle-wrapper=${{ inputs.gradle-hash }}
           token: ${{ github.token }}
-          # allow-shared-restore: true
-          strict: false
 
       - name: Set up JDK 25
         uses: ./.github/actions/java
