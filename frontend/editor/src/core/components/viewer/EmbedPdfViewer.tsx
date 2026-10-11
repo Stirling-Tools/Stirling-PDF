@@ -128,7 +128,9 @@ const EmbedPdfViewerContent = ({
   const { t } = useTranslation();
   const viewerRef = React.useRef<HTMLDivElement>(null);
   const pdfContainerRef = useRef<HTMLDivElement>(null);
-  const [isViewerHovered, setIsViewerHovered] = React.useState(false);
+  // Hover gates keyboard shortcuts without a re-render: it is read only
+  // inside the keydown listener, so a ref keeps boundary crossings free.
+  const isViewerHoveredRef = React.useRef(false);
 
   const {
     isThumbnailSidebarVisible,
@@ -793,7 +795,7 @@ const EmbedPdfViewerContent = ({
       // All remaining shortcuts require the viewer to be hovered so they
       // don't conflict with the rest of the UI when the viewer is mounted
       // but not the active focus target.
-      if (!isViewerHovered) return;
+      if (!isViewerHoveredRef.current) return;
 
       // Modifier key shortcuts (Ctrl/Cmd + key)
       if (mod) {
@@ -870,7 +872,6 @@ const EmbedPdfViewerContent = ({
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [
-    isViewerHovered,
     isSearchInterfaceVisible,
     zoomActions,
     searchInterfaceActions,
@@ -1751,8 +1752,12 @@ const EmbedPdfViewerContent = ({
   return (
     <Box
       ref={viewerRef}
-      onMouseEnter={() => setIsViewerHovered(true)}
-      onMouseLeave={() => setIsViewerHovered(false)}
+      onMouseEnter={() => {
+        isViewerHoveredRef.current = true;
+      }}
+      onMouseLeave={() => {
+        isViewerHoveredRef.current = false;
+      }}
       style={{
         position: "relative",
         height: "100%",
