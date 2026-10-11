@@ -13,6 +13,10 @@ const OVERSCAN_PAGES = 6;
 // Sidebar cards are small, so two device pixels per CSS pixel is plenty;
 // anything higher only grows blobs without visible gain.
 const THUMBNAIL_DPR_CAP = 2;
+// Finished renders wait here instead of committing one parent-list render
+// per thumbnail; the buffer flushes on a short timer or when full.
+const THUMB_COMMIT_BATCH_SIZE = 8;
+const THUMB_COMMIT_FLUSH_MS = 120;
 
 interface ThumbnailSidebarProps {
   visible: boolean;
@@ -282,6 +286,50 @@ export function ThumbnailSidebar({
     // CSS pixels so thumbnails stay crisp on retina displays.
     const thumbDpr = Math.min(window.devicePixelRatio || 1, THUMBNAIL_DPR_CAP);
 
+    // Finished renders wait in this buffer and flush into state together, so
+    // rapid completions cost one list reconciliation instead of one each.
+    // Everything here is generation-local: cancel clears the buffer and the
+    // timer, so a stale flush can never commit after unmount or file change.
+    const commitBuffer = new Map<number, string>();
+    let commitTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const flushCommits = () => {
+      commitTimer = null;
+      if (isCancelled || commitBuffer.size === 0) return;
+      const batch = [...commitBuffer];
+      commitBuffer.clear();
+      setThumbnails((prev) => {
+        const next = { ...prev };
+        for (const [pageIndex, thumbUrl] of batch) {
+          next[pageIndex] = thumbUrl;
+        }
+        return next;
+      });
+    };
+
+    const stageCommit = (pageIndex: number, thumbUrl: string) => {
+      commitBuffer.set(pageIndex, thumbUrl);
+      if (commitBuffer.size >= THUMB_COMMIT_BATCH_SIZE) {
+        if (commitTimer !== null) {
+          clearTimeout(commitTimer);
+        }
+        flushCommits();
+      } else if (commitTimer === null) {
+        commitTimer = setTimeout(flushCommits, THUMB_COMMIT_FLUSH_MS);
+      }
+    };
+
+    // One paint opportunity between renders so thumbnail work never holds
+    // the main thread across frames while the user scrolls the document.
+    const yieldToPaint = () =>
+      new Promise<void>((resolve) => {
+        if (typeof requestAnimationFrame === "function") {
+          requestAnimationFrame(() => resolve());
+        } else {
+          setTimeout(resolve, 0);
+        }
+      });
+
     const waitForVisibleWork = () =>
       new Promise<void>((resolve) => {
         wakeResolversRef.current.add(resolve);
@@ -338,7 +386,7 @@ export function ThumbnailSidebar({
         }
         if (isCancelled || pageIndex === null) return;
 
-        if (thumbnailsRef.current[pageIndex]) {
+        if (thumbnailsRef.current[pageIndex] || commitBuffer.has(pageIndex)) {
           await processNext();
           return;
         }
@@ -351,10 +399,7 @@ export function ThumbnailSidebar({
           }
           const thumbUrl = URL.createObjectURL(thumbBlob);
 
-          setThumbnails((prev) => ({
-            ...prev,
-            [pageIndex]: thumbUrl,
-          }));
+          stageCommit(pageIndex, thumbUrl);
         } catch (error) {
           console.error(
             "Failed to generate thumbnail for page",
@@ -362,13 +407,11 @@ export function ThumbnailSidebar({
             error,
           );
           if (!isCancelled) {
-            setThumbnails((prev) => ({
-              ...prev,
-              [pageIndex]: "error",
-            }));
+            stageCommit(pageIndex, "error");
           }
         }
 
+        await yieldToPaint();
         await processNext();
       };
 
@@ -383,6 +426,11 @@ export function ThumbnailSidebar({
 
     return () => {
       isCancelled = true;
+      if (commitTimer !== null) {
+        clearTimeout(commitTimer);
+        commitTimer = null;
+      }
+      commitBuffer.clear();
       wakeThumbnailWorkers();
     };
   }, [visible, scrollState.totalPages, thumbnailAPI, wakeThumbnailWorkers]);

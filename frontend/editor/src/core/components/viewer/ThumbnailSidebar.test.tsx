@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -217,6 +217,57 @@ describe("ThumbnailSidebar", () => {
     expect(requestedPages.slice(7).sort((a, b) => a - b)).toEqual([
       13, 14, 15, 16, 17, 18, 19,
     ]);
+  });
+
+  it("discards buffered thumbnails when the file changes before flush", async () => {
+    vi.useFakeTimers();
+    try {
+      scrollState.currentPage = 1;
+      scrollState.totalPages = 3;
+      let resolveThumb!: (blob: Blob) => void;
+      renderThumbMock.mockImplementation(() => ({
+        toPromise: () =>
+          new Promise<Blob>((resolve) => {
+            resolveThumb = resolve;
+          }),
+      }));
+
+      const { rerender } = render(
+        <MantineProvider>
+          <ThumbnailSidebar
+            visible={true}
+            onToggle={vi.fn()}
+            activeFileId="test-file-1"
+          />
+        </MantineProvider>,
+      );
+
+      // One worker finishes; the commit sits in the buffer with the flush
+      // timer still pending.
+      resolveThumb(new Blob(["page-0"], { type: "image/png" }));
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0);
+      });
+
+      // Switching files cancels the generation: the pending flush must die
+      // with it instead of committing a stale thumbnail.
+      rerender(
+        <MantineProvider>
+          <ThumbnailSidebar
+            visible={true}
+            onToggle={vi.fn()}
+            activeFileId="test-file-2"
+          />
+        </MantineProvider>,
+      );
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1000);
+      });
+
+      expect(screen.queryByAltText("Page 1 thumbnail")).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("revokes blob URLs when sidebar closes", async () => {
