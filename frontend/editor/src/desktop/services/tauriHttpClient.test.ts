@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, test, vi, beforeEach, afterEach } from "vitest";
 
 // Regression: a caller-set "Content-Type: multipart/form-data" (no boundary) on a
@@ -7,6 +8,9 @@ import { describe, expect, test, vi, beforeEach, afterEach } from "vitest";
 
 const { fetchMock } = vi.hoisted(() => ({ fetchMock: vi.fn() }));
 vi.mock("@tauri-apps/plugin-http", () => ({ fetch: fetchMock }));
+vi.mock("@app/services/documentPrivacyService", () => ({
+  enforceDocumentPrivacy: vi.fn().mockResolvedValue(false),
+}));
 
 import { create } from "@app/services/tauriHttpClient";
 

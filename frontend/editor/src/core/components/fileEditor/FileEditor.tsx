@@ -1,7 +1,6 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { flushSync } from "react-dom";
 import { Center, Box, LoadingOverlay } from "@mantine/core";
-import { Dropzone } from "@mantine/dropzone";
 import { useTranslation } from "react-i18next";
 import {
   useFileSelection,
@@ -21,7 +20,6 @@ import { alert } from "@app/components/toast";
 import { downloadFileWithPolicy as downloadFile } from "@app/services/exportWithPolicy";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
-import { useDropzoneFiles } from "@app/hooks/useDropzoneFiles";
 import type { FileItemPolicyRef } from "@app/components/shared/PolicyBadges";
 
 const EMPTY_POLICIES: FileItemPolicyRef[] = [];
@@ -69,7 +67,6 @@ const FileEditor = ({
   const { setActiveFileIndex, setActiveFileId } = useViewer();
 
   const [_status, _setStatus] = useState<string | null>(null);
-  const [_error, _setError] = useState<string | null>(null);
 
   const showStatus = useCallback(
     (
@@ -104,33 +101,28 @@ const FileEditor = ({
     return !toolMode || rawMax == null || rawMax < 0 ? Infinity : rawMax;
   }, [selectedTool?.maxFiles, toolMode]);
 
-  const getDropzoneFiles = useDropzoneFiles();
   const [showFilePickerModal, setShowFilePickerModal] = useState(false);
 
   const handleFileUpload = useCallback(
     async (uploadedFiles: File[]) => {
-      _setError(null);
-
       try {
-        if (uploadedFiles.length > 0) {
-          await addFiles(uploadedFiles, { selectFiles: true });
-          if (Number.isFinite(maxAllowed)) {
-            const nowSelectedIds = selectors
-              .getSelectedStirlingFileStubs()
-              .map((r) => r.id);
-            if (nowSelectedIds.length > maxAllowed) {
-              setSelectedFiles(nowSelectedIds.slice(-maxAllowed));
-            }
+        await addFiles(uploadedFiles, { selectFiles: true });
+        if (Number.isFinite(maxAllowed)) {
+          const nowSelectedIds = selectors
+            .getSelectedStirlingFileStubs()
+            .map((r) => r.id);
+          if (nowSelectedIds.length > maxAllowed) {
+            setSelectedFiles(nowSelectedIds.slice(-maxAllowed));
           }
-          showStatus(
-            t("fileEditor.filesAdded", {
-              count: uploadedFiles.length,
-              defaultValue_one: "Added {{count}} file",
-              defaultValue_other: "Added {{count}} files",
-            }),
-            "success",
-          );
         }
+        showStatus(
+          t("fileEditor.filesAdded", {
+            count: uploadedFiles.length,
+            defaultValue_one: "Added {{count}} file",
+            defaultValue_other: "Added {{count}} files",
+          }),
+          "success",
+        );
       } catch (err) {
         const errorMessage =
           err instanceof Error
@@ -370,72 +362,62 @@ const FileEditor = ({
   );
 
   return (
-    <Dropzone
-      onDrop={handleFileUpload}
-      useFsAccessApi={false}
-      getFilesFromEvent={getDropzoneFiles}
-      multiple={true}
-      maxSize={2 * 1024 * 1024 * 1024}
-      style={{
-        border: "none",
-        borderRadius: 0,
-        backgroundColor: "transparent",
-      }}
-      activateOnClick={false}
-      activateOnDrag={true}
-    >
-      <Box pos="relative" style={{ overflow: "auto" }}>
-        <LoadingOverlay visible={state.ui.isProcessing} />
+    <Box pos="relative" style={{ overflow: "auto" }}>
+      <LoadingOverlay visible={state.ui.isProcessing} />
 
-        <Box p="md">
-          {activeStirlingFileStubs.length === 0 ? (
-            <Center h="60vh">
-              <AddFileCard />
-            </Center>
-          ) : (
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(276px, 1fr))",
-                rowGap: "1.5rem",
-                padding: "1rem",
-                pointerEvents: "auto",
-              }}
-            >
-              {activeStirlingFileStubs.length > 0 && (
-                <AddFileCard key="add-file-card" />
-              )}
+      <Box p="md">
+        {activeStirlingFileStubs.length === 0 ? (
+          <Center h="60vh">
+            <AddFileCard
+              onFilesSelected={(files) => void handleFileUpload(files)}
+            />
+          </Center>
+        ) : (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(276px, 1fr))",
+              rowGap: "1.5rem",
+              padding: "1rem",
+              pointerEvents: "auto",
+            }}
+          >
+            {activeStirlingFileStubs.length > 0 && (
+              <AddFileCard
+                key="add-file-card"
+                onFilesSelected={(files) => void handleFileUpload(files)}
+              />
+            )}
 
-              {activeStirlingFileStubs.map((record, index) => {
-                return (
-                  <FileEditorThumbnail
-                    key={record.id}
-                    file={record}
-                    index={index}
-                    totalFiles={activeStirlingFileStubs.length}
-                    onCloseFile={handleCloseFile}
-                    onViewFile={handleViewFile}
-                    onReorderFiles={handleReorderFiles}
-                    onDownloadFile={handleDownloadFile}
-                    onUnzipFile={handleUnzipFile}
-                    toolMode={toolMode}
-                    isSupported={isFileSupported(record.name)}
-                    policies={policyFileBadges.get(record.id) ?? EMPTY_POLICIES}
-                  />
-                );
-              })}
-            </div>
-          )}
-        </Box>
-
-        <FilePickerModal
-          opened={showFilePickerModal}
-          onClose={() => setShowFilePickerModal(false)}
-          storedFiles={[]} // FileEditor doesn't have access to stored files, needs to be passed from parent
-          onSelectFiles={handleLoadFromStorage}
-        />
+            {activeStirlingFileStubs.map((record, index) => {
+              return (
+                <FileEditorThumbnail
+                  key={record.id}
+                  file={record}
+                  index={index}
+                  totalFiles={activeStirlingFileStubs.length}
+                  onCloseFile={handleCloseFile}
+                  onViewFile={handleViewFile}
+                  onReorderFiles={handleReorderFiles}
+                  onDownloadFile={handleDownloadFile}
+                  onUnzipFile={handleUnzipFile}
+                  toolMode={toolMode}
+                  isSupported={isFileSupported(record.name)}
+                  policies={policyFileBadges.get(record.id) ?? EMPTY_POLICIES}
+                />
+              );
+            })}
+          </div>
+        )}
       </Box>
-    </Dropzone>
+
+      <FilePickerModal
+        opened={showFilePickerModal}
+        onClose={() => setShowFilePickerModal(false)}
+        storedFiles={[]} // FileEditor doesn't have access to stored files, needs to be passed from parent
+        onSelectFiles={handleLoadFromStorage}
+      />
+    </Box>
   );
 };
 

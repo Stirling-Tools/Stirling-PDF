@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { connectionModeService } from "@app/services/connectionModeService";
 import { endpointAvailabilityService } from "@app/services/endpointAvailabilityService";
 import { tauriBackendService } from "@app/services/tauriBackendService";
+import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
 
 /**
  * Desktop hook to check if a tool endpoint will use cloud backend
@@ -9,11 +10,12 @@ import { tauriBackendService } from "@app/services/tauriBackendService";
  * @returns true if the tool will use cloud credits, false otherwise
  */
 export function useToolCloudStatus(endpointName?: string): boolean {
+  const localOnly = useLocalProcessingOnly();
   const [usesCloud, setUsesCloud] = useState(false);
 
   useEffect(() => {
     const checkCloudRouting = async () => {
-      if (!endpointName) {
+      if (localOnly || !endpointName) {
         setUsesCloud(false);
         return;
       }
@@ -69,7 +71,7 @@ export function useToolCloudStatus(endpointName?: string): boolean {
     });
 
     return unsubscribe;
-  }, [endpointName]);
+  }, [endpointName, localOnly]);
 
-  return usesCloud;
+  return !localOnly && usesCloud;
 }
