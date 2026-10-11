@@ -119,6 +119,17 @@ export function PdfViewerToolbar({
     setPageInput(page);
   };
 
+  // The input holds draft digits while typing; navigation commits on Enter
+  // or blur so typing "120" scrolls once instead of to 1, then 12, then 120.
+  const commitPageInput = () => {
+    const page = Number(pageInput);
+    if (!isNaN(page) && page >= 1 && page <= scrollState.totalPages) {
+      handlePageNavigation(page);
+    } else {
+      setPageInput(scrollState.currentPage);
+    }
+  };
+
   const handleDualPageToggle = () => {
     spreadActions.toggleSpreadMode();
   };
@@ -198,12 +209,14 @@ export function PdfViewerToolbar({
       <NumberInput
         value={pageInput}
         onChange={(value) => {
-          const page = Number(value);
-          setPageInput(page);
-          if (!isNaN(page) && page >= 1 && page <= scrollState.totalPages) {
-            handlePageNavigation(page);
+          setPageInput(Number(value));
+        }}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            commitPageInput();
           }
         }}
+        onBlur={commitPageInput}
         min={1}
         max={scrollState.totalPages}
         hideControls
