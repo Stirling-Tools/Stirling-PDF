@@ -337,7 +337,7 @@ jobs:
 
       - name: Restore cache artifact
         id: cache
-        uses: Ludy87/cache-the-planet/multi-cache@e6251f7d7e74d9bf97c28c007b15f11591ae8932
+        uses: Ludy87/cache-the-planet/multi-cache@b14793349bd4c50cbbffaadf36bc572e7577eed7
         with:
           cleanup-path-after-save: true
           version: 6
@@ -363,6 +363,8 @@ jobs:
               path: .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
             gradle-wrapper:
               path: .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
+            tauri-target:
+              path: frontend/editor/src-tauri/target
           # save-scope: shared
           key: |
             gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
@@ -373,11 +375,10 @@ jobs:
             npm-cache=${{ hashFiles('frontend/package-lock.json') }}
             frontend-dist=${{ needs.hash_pr.outputs.frontend_dist_files_hash }}
             frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
+            tauri-target=${{ needs.hash_pr.outputs.frontend_tauri_files_hash }}
           token: ${{ github.token }}
           # allow-shared-restore: true
           strict: false
-          exclude: |
-            frontend/editor/coverage/**
 
       - name: Read frontend build cache status
         id: frontend-cache
@@ -997,7 +998,7 @@ jobs:
 
       - name: Restore cache artifact
         id: cache
-        uses: Ludy87/cache-the-planet/multi-cache@e6251f7d7e74d9bf97c28c007b15f11591ae8932
+        uses: Ludy87/cache-the-planet/multi-cache@b14793349bd4c50cbbffaadf36bc572e7577eed7
         with:
           cleanup-path-after-save: true
           version: 6
@@ -1023,6 +1024,8 @@ jobs:
               path: .cache/gradle-java-${{ env.JAVA_VERSION }}/caches
             gradle-wrapper:
               path: .cache/gradle-java-${{ env.JAVA_VERSION }}/wrapper
+            tauri-target:
+              path: frontend/editor/src-tauri/target
           # save-scope: shared
           key: |
             gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
@@ -1033,11 +1036,10 @@ jobs:
             npm-cache=${{ hashFiles('frontend/package-lock.json') }}
             frontend-dist=${{ needs.hash_pr.outputs.frontend_dist_files_hash }}
             frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
+            tauri-target=${{ needs.hash_pr.outputs.frontend_tauri_files_hash }}-${{ runner.os }}-${{ runner.arch }}-${{ matrix.platform }}
           token: ${{ github.token }}
           # allow-shared-restore: true
           strict: false
-          exclude: |
-            frontend/editor/coverage/**
 
       - name: Read frontend build cache status
         id: frontend-cache
