@@ -1215,7 +1215,7 @@ export function LocalEmbedPDF({
       createPluginRegistration(TilingPluginPackage, {
         tileSize: 768,
         overlapPx: 5,
-        extraRings: 1,
+        extraRings: 2,
       }),
 
       // Register search plugin for text search
