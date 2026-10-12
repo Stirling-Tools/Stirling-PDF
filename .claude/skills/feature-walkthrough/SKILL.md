@@ -32,7 +32,7 @@ vs `main`. Flags: `--html` (also emit a rendered HTML twin), `--no-screens`.
 - Read the PR description / commit messages for stated intent. Do **not** invent
   history or motivation that isn't evidenced (state current behavior in present tense).
 - Classify touched files by layer:
-  - **Frontend**: tools (`frontend/editor/src/core/components/tools/*` or `.../core/tools/*`),
+  - **Frontend**: tools (`frontend/src/editor/core/components/tools/*` or `.../core/tools/*`),
     hooks (`core/hooks/tools/*`, `useToolOperation`), contexts, routes, i18n
     (`public/locales/en-US`).
   - **Java backend**: controllers (`.../controller/api/...`), services, models, config.

@@ -13,7 +13,7 @@ the English value.
 
 Usage:
     python check_language_toml.py check --base-dir <dir> --head-dir <dir> --main-dir <dir> [--actor <login>]
-    python check_language_toml.py sync --reference-file frontend/editor/public/locales/en-US/translation.toml
+    python check_language_toml.py sync --reference-file frontend/public/locales/en-US/translation.toml
 """
 
 import argparse

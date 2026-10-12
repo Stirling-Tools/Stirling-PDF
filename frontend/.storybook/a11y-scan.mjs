@@ -59,19 +59,14 @@ if (args.length > 0) {
   // checked before it is added to the index.
   files = [
     ...new Set([
-      ...git(
-        "ls-files",
-        "--",
-        "editor/src/**/*.stories.ts",
-        "editor/src/**/*.stories.tsx",
-      ),
+      ...git("ls-files", "--", "src/**/*.stories.ts", "src/**/*.stories.tsx"),
       ...git(
         "ls-files",
         "--others",
         "--exclude-standard",
         "--",
-        "editor/src/**/*.stories.ts",
-        "editor/src/**/*.stories.tsx",
+        "src/**/*.stories.ts",
+        "src/**/*.stories.tsx",
       ),
     ]),
   ].sort();
