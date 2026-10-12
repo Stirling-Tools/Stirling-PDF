@@ -142,8 +142,8 @@ tasks:
     dotenv:
       - 'app/.env.saas.local'
       - 'app/.env.saas'
-      - 'frontend/editor/.env.saas.local'
-      - 'frontend/editor/.env.saas'
+      - 'frontend/.env.saas.local'
+      - 'frontend/.env.saas'
     ignore_error: true
     vars:
       PORT: '{{.PORT | default "8080"}}'

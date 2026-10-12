@@ -139,6 +139,6 @@ tasks.register('type3SignatureTool', JavaExec) {
 tasks.named('test', Test).configure {
     inputs.files(
         rootProject.file('testing/failure-kind-codes.json'),
-        rootProject.file('frontend/editor/public/locales/en-US/translation.toml')
+        rootProject.file('frontend/public/locales/en-US/translation.toml')
     ).withPropertyName('sharedConformanceFixtures').optional()
 }

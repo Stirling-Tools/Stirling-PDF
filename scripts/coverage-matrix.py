@@ -22,10 +22,10 @@ Bucketing rules:
     stirling/software/saas/**          -> saas
     *desktop*                          -> desktop (no real backend match today)
   Frontend (source path -> area):
-    frontend/editor/src/core/**        -> core
-    frontend/editor/src/proprietary/** -> proprietary
-    frontend/editor/src/saas/**        -> saas
-    frontend/editor/src/desktop/**     -> desktop
+    frontend/src/editor/core/**        -> core
+    frontend/src/editor/proprietary/** -> proprietary
+    frontend/src/editor/saas/**        -> saas
+    frontend/src/editor/desktop/**     -> desktop
 
 Cells render as `pct% (covered/total)` where the metric is:
   - Backend: JaCoCo METHOD counter (most directly comparable to JS funcs)

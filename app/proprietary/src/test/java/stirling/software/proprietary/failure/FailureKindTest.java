@@ -226,7 +226,7 @@ class FailureKindTest {
         private static List<String> readTranslations() {
             try {
                 return Files.readAllLines(
-                        repoFile("frontend/editor/public/locales/en-US/translation.toml"),
+                        repoFile("frontend/public/locales/en-US/translation.toml"),
                         StandardCharsets.UTF_8);
             } catch (IOException e) {
                 throw new UncheckedIOException(e);

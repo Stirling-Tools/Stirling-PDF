@@ -6,7 +6,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 KEYS_DIR="$SCRIPT_DIR/.keys"
 FRONTEND_DIR="$SCRIPT_DIR/../.."
-TAURI_CONF_OVERRIDE="$FRONTEND_DIR/editor/src-tauri/tauri.conf.dev-update.json"
+TAURI_CONF_OVERRIDE="$FRONTEND_DIR/src-tauri/tauri.conf.dev-update.json"
 
 mkdir -p "$KEYS_DIR"
 
@@ -36,7 +36,7 @@ cat > "$TAURI_CONF_OVERRIDE" << EOF
 }
 EOF
 
-echo "Created: editor/src-tauri/tauri.conf.dev-update.json"
+echo "Created: src-tauri/tauri.conf.dev-update.json"
 echo ""
 echo "Next steps:"
 echo "  1. In a separate terminal: npm run tauri:serve-dev-update"
