@@ -39,6 +39,8 @@ jobs:
     env:
       UV_CACHE_DIR: ${{ github.workspace }}/.cache/setup-uv-cache
       UV_PYTHON_INSTALL_DIR: ${{ github.workspace }}/.cache/uv-python-dir
+      NPM_CONFIG_CACHE: ${{ github.workspace }}/.cache/npm
+      CARGO_HOME: ${{ github.workspace }}/.cache/cargo
     permissions:
       contents: write
     steps:
