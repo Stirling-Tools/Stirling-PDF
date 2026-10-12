@@ -82,8 +82,8 @@ jobs:
             gradle-caches=${{ inputs.gradle-hash }}
             gradle-wrapper=${{ inputs.gradle-hash }}
             cargo-registry=${{ inputs.cargo-hash }}
-            cargo-registry=${{ inputs.cargo-hash }}
-            cargo-registry=${{ inputs.cargo-hash }}
+            cargo-git=${{ inputs.cargo-hash }}
+            cargo-bin=${{ inputs.cargo-hash }}
             npm-cache=${{ hashFiles('frontend/package-lock.json') }}
             frontend-dist=${{ inputs.frontend-dist-hash }}
             frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
