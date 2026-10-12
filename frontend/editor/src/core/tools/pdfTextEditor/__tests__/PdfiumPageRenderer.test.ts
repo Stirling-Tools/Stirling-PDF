@@ -113,6 +113,41 @@ describe("PdfiumPageRenderer.rasterBudget", () => {
     expect(width / height).toBeCloseTo(A4_W / A4_H, 1);
   });
 
+  it("stays inside both limits when one requested axis overflows", () => {
+    for (const [requestedW, requestedH] of [
+      [Number.MAX_VALUE, A4_W],
+      [A4_W, Number.MAX_VALUE],
+    ]) {
+      // scale * dimension overflows to Infinity before any cap can divide it,
+      // so the bound has to land on the scale instead.
+      const size = PdfiumPageRenderer.rasterBudget(requestedW, requestedH, 2);
+      expect(Number.isInteger(size.width)).toBe(true);
+      expect(Number.isInteger(size.height)).toBe(true);
+      expect(size.width).toBeGreaterThanOrEqual(1);
+      expect(size.height).toBeGreaterThanOrEqual(1);
+      expect(size.width).toBeLessThanOrEqual(32_768);
+      expect(size.height).toBeLessThanOrEqual(32_768);
+      expect(size.width * size.height).toBeLessThanOrEqual(32_000_000);
+    }
+  });
+
+  it("stays inside both limits when both requested axes overflow", () => {
+    const { width, height } = PdfiumPageRenderer.rasterBudget(
+      Number.MAX_VALUE,
+      Number.MAX_VALUE,
+      2,
+    );
+
+    expect(Number.isInteger(width)).toBe(true);
+    expect(Number.isInteger(height)).toBe(true);
+    expect(width).toBeGreaterThanOrEqual(1);
+    expect(height).toBeGreaterThanOrEqual(1);
+    expect(width).toBeLessThanOrEqual(32_768);
+    expect(height).toBeLessThanOrEqual(32_768);
+    expect(width * height).toBeLessThanOrEqual(32_000_000);
+    expect(width).toBe(height);
+  });
+
   it("falls back to 1x when the scale is not a positive finite number", () => {
     const plain = PdfiumPageRenderer.rasterBudget(A4_W, A4_H, 1);
     expect(PdfiumPageRenderer.rasterBudget(A4_W, A4_H, Number.NaN)).toEqual(
@@ -175,7 +210,12 @@ function makeRenderFake(options: RenderFakeOptions = {}) {
   let nextHandle = 1;
   const module = {
     FPDFBitmap_CreateEx: vi.fn(
-      (width: number, height: number, _format: number, ptr: number, stride) => {
+      (width: number, height: number, format: number, ptr: number, stride) => {
+        if (format !== 4) {
+          // 1 would be FPDFBitmap_Gray, whose pixels are one byte wide, so a
+          // fake that painted four bytes for any format would hide the bug.
+          throw new Error(`unsupported bitmap format ${format}`);
+        }
         const handle = nextHandle++;
         bitmaps.set(handle, { ptr, stride: stride + pad, width, height });
         return handle;
@@ -246,6 +286,22 @@ describe("PdfiumPageRenderer.render", () => {
     expect(image.height).toBe(PAGE_H);
     expect(Array.from(image.data)).toEqual(new Array(PAGE_BYTES).fill(PAINTED));
     expect(module.FPDFBitmap_Destroy).toHaveBeenCalledTimes(1);
+  });
+
+  it("creates the bitmap as BGRA, the format the copy-out reads", async () => {
+    const { module, editor } = makeRenderFake();
+
+    await PdfiumPageRenderer.render(editor, fakePage(), 1);
+
+    // 4 is FPDFBitmap_BGRA; 1 would be FPDFBitmap_Gray, a single byte per
+    // pixel read back as four.
+    expect(module.FPDFBitmap_CreateEx).toHaveBeenCalledWith(
+      PAGE_W,
+      PAGE_H,
+      4,
+      expect.any(Number),
+      PAGE_W * 4,
+    );
   });
 
   it("drops the padding rows when the stride is wider than the row", async () => {

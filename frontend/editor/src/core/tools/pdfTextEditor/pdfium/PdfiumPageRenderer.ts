@@ -60,35 +60,33 @@ export class PdfiumPageRenderer {
     scale: number,
   ): { width: number; height: number } {
     const safeScale = Number.isFinite(scale) && scale > 0 ? scale : 1;
-    const requested = PdfiumPageRenderer.rasterSize(
-      Number.isFinite(pageWidth) && pageWidth > 0 ? pageWidth : 1,
-      Number.isFinite(pageHeight) && pageHeight > 0 ? pageHeight : 1,
-      safeScale,
-    );
+    const width = Number.isFinite(pageWidth) && pageWidth > 0 ? pageWidth : 1;
+    const height =
+      Number.isFinite(pageHeight) && pageHeight > 0 ? pageHeight : 1;
     // One factor for both axes: PDFium takes the two display sizes separately,
     // so capping each axis on its own would rasterise one of them coarser than
     // the budget asks for and inflate the pixel count of the other.
     //
-    // The pixel term is three square roots rather than MAX / (width * height)
-    // because the requested size is unbounded: a finite page whose product
-    // overflows to Infinity would then shrink to nothing instead of to the
-    // budget.
-    const shrink = Math.min(
-      1,
-      MAX_RASTER_DIMENSION / requested.width,
-      MAX_RASTER_DIMENSION / requested.height,
-      Math.sqrt(MAX_RASTER_PIXELS) /
-        Math.sqrt(requested.width) /
-        Math.sqrt(requested.height),
+    // The bound applies to the scale, before the page is multiplied by it: a
+    // finite page at a huge scale overflows to Infinity, and any dimension
+    // derived from that product collapses through Infinity * 0 to NaN, which
+    // neither Math.min nor Math.max sanitises. Each term here stays finite on
+    // its own, and the square roots keep the pixel term finite when
+    // `width * height` overflows.
+    const effective = Math.min(
+      safeScale,
+      MAX_RASTER_DIMENSION / width,
+      MAX_RASTER_DIMENSION / height,
+      Math.sqrt(MAX_RASTER_PIXELS) / Math.sqrt(width) / Math.sqrt(height),
     );
     return {
       width: Math.max(
         1,
-        Math.min(MAX_RASTER_DIMENSION, Math.floor(requested.width * shrink)),
+        Math.min(MAX_RASTER_DIMENSION, Math.floor(width * effective)),
       ),
       height: Math.max(
         1,
-        Math.min(MAX_RASTER_DIMENSION, Math.floor(requested.height * shrink)),
+        Math.min(MAX_RASTER_DIMENSION, Math.floor(height * effective)),
       ),
     };
   }
@@ -107,8 +105,8 @@ export class PdfiumPageRenderer {
       scale,
     );
 
-    // BGRA bitmap = format 1, fill white, then render with REVERSE_BYTE_ORDER
-    // so the pixel buffer is RGBA-ordered for ImageData.
+    // BGRA bitmap (see RASTER_FORMAT_BGRA), fill white, then render with
+    // REVERSE_BYTE_ORDER so the pixel buffer is RGBA-ordered for ImageData.
     const bitmapPtr = acquireRaster(m, w, h);
     if (!bitmapPtr) {
       throw new Error(`could not allocate a ${w}x${h} page bitmap`);
