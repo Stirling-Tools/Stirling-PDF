@@ -49,6 +49,7 @@ function pullRequest({
     labels: [],
     timeline: [],
     lastActivityAt: daysAgo(activeDaysAgo),
+    comments: [],
   };
 }
 
@@ -61,6 +62,11 @@ function label(pr: PullRequest, name: string, daysAgoAdded: number, actor = BOT)
 function unlabel(pr: PullRequest, name: string, daysAgoRemoved: number, actor = BOT) {
   pr.labels = pr.labels.filter((existing) => existing !== name);
   pr.timeline.push({ __typename: "UnlabeledEvent", createdAt: daysAgo(daysAgoRemoved), label: { name }, actor });
+  return pr;
+}
+
+function commented(pr: PullRequest, author: string, daysAgoPosted: number, fromTeam = false) {
+  pr.comments.push({ createdAt: daysAgo(daysAgoPosted), author, fromTeam });
   return pr;
 }
 
@@ -208,6 +214,26 @@ describe("too-large PRs", () => {
   it("finish a size close that stopped partway", () => {
     assert.deepEqual(decision(label(tooLarge(8), LABELS.backlogCleanup, 1)), { action: "resume", reasons: [] });
   });
+
+  it("get a fresh week when reopened after the size close", () => {
+    const pr = label(tooLarge(10), LABELS.backlogCleanup, 3);
+    assert.equal(actionFor(happened(pr, "ReopenedEvent", 2)), "pending");
+  });
+
+  it("are not closed while the author's explanation waits for the team", () => {
+    assert.deepEqual(decision(commented(tooLarge(10), "contributor", 9)), { action: "pending", reasons: ["tooLarge"] });
+    assert.equal(actionFor(commented(commented(tooLarge(20), "contributor", 15), "passer-by", 9)), "pending");
+  });
+
+  it("restart the week from the team's reply", () => {
+    const replied = (daysAgoReplied: number) => commented(commented(tooLarge(20), "contributor", 15), "maintainer", daysAgoReplied, true);
+    assert.equal(actionFor(replied(3)), "pending");
+    assert.equal(actionFor(replied(8)), "close");
+  });
+
+  it("ignore what the author said before the warning", () => {
+    assert.equal(actionFor(commented(tooLarge(10), "contributor", 11)), "close");
+  });
 });
 
 describe("drafts", () => {
@@ -291,7 +317,12 @@ describe("latest activity", () => {
     commits: { nodes: [{ commit: { committedDate: daysAgo(committedDaysAgo) } }] },
     activity: { nodes: activity },
   });
-  const commentBy = (author: Actor, ago: number) => ({ __typename: "IssueComment" as const, createdAt: daysAgo(ago), author });
+  const commentBy = (author: Actor, ago: number) => ({
+    __typename: "IssueComment" as const,
+    createdAt: daysAgo(ago),
+    authorAssociation: "CONTRIBUTOR",
+    author,
+  });
 
   it("counts people, not bots", () => {
     assert.equal(latestActivity(node([commentBy(PERSON, 40), commentBy(BOT, 1)]), []), daysAgo(40));
@@ -309,7 +340,7 @@ describe("latest activity", () => {
   });
 
   it("skips a review still pending", () => {
-    const pending = { __typename: "PullRequestReview" as const, submittedAt: null, author: PERSON };
+    const pending = { __typename: "PullRequestReview" as const, submittedAt: null, authorAssociation: "MEMBER", author: PERSON };
     assert.equal(latestActivity(node([pending]), []), daysAgo(50));
   });
 });
@@ -331,7 +362,14 @@ function toNode(pr: PullRequest, pageSize: number, before: string | null): PullR
     author: pr.author,
     labels: { nodes: pr.labels.map((name) => ({ name })) },
     commits: { nodes: [] },
-    activity: { nodes: [] },
+    activity: {
+      nodes: pr.comments.map((comment) => ({
+        __typename: "IssueComment" as const,
+        createdAt: comment.createdAt,
+        authorAssociation: comment.fromTeam ? "MEMBER" : "CONTRIBUTOR",
+        author: { login: comment.author, __typename: "User" },
+      })),
+    },
     timelineItems: {
       pageInfo: { hasPreviousPage: start > 0, startCursor: String(start) },
       nodes: pr.timeline.slice(start, end) satisfies TimelineEvent[],
@@ -579,6 +617,14 @@ describe("triage run", () => {
       const { github, calls } = fakeGitHub([pr], { files: javaFile(1500), comments });
       await triage(github);
       assert.deepEqual(calls, ["comment #1", "label #1 backlog-cleanup", "close #1"]);
+    });
+
+    it("does not close a PR whose author explained why it can't be split", async () => {
+      const pr = commented(label(pullRequest({ additions: 1500 }), LABELS.tooLarge, 30), "contributor", 20);
+      const comments = [{ id: 9, body: oversizedComment("contributor", 1500), user: { login: "github-actions[bot]", type: "Bot" } }];
+      const { github, calls } = fakeGitHub([pr], { files: javaFile(1500), comments });
+      await triage(github);
+      assert.deepEqual(calls, []);
     });
 
     it("lifts the warning once the PR is split down", async () => {

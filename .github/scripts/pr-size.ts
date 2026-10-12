@@ -9,7 +9,7 @@ import { CLOSE_AFTER_WARNING_DAYS, type Core, type GitHubClient, type IssueRef, 
 
 export const MAX_LINES = 1000;
 
-const TEAM_ASSOCIATIONS = ["OWNER", "MEMBER", "COLLABORATOR"];
+export const TEAM_ASSOCIATIONS = ["OWNER", "MEMBER", "COLLABORATOR"];
 
 // Translations arrive from the community in bulk, and lockfiles are generated.
 const UNCOUNTED = [/\/locales\//, /(^|\/)messages_[\w-]+\.properties$/, /(^|\/)package-lock\.json$/, /\.lock$/, /\.lockfile$/];

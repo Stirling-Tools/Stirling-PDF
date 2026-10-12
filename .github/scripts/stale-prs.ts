@@ -11,7 +11,7 @@ import {
   type Repo,
   removeLabel,
 } from "./github.ts";
-import { enforceSizeLimit, MAX_LINES, type SizedPullRequest } from "./pr-size.ts";
+import { enforceSizeLimit, MAX_LINES, type SizedPullRequest, TEAM_ASSOCIATIONS } from "./pr-size.ts";
 import { clearStaleTurnLabel } from "./pr-turn.ts";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -84,8 +84,8 @@ const PULL_REQUEST_QUERY = `
         activity: timelineItems(last: 100, itemTypes: [ISSUE_COMMENT, PULL_REQUEST_REVIEW, HEAD_REF_FORCE_PUSHED_EVENT]) {
           nodes {
             __typename
-            ... on IssueComment { createdAt author { login __typename } }
-            ... on PullRequestReview { submittedAt author { login __typename } }
+            ... on IssueComment { createdAt authorAssociation author { login __typename } }
+            ... on PullRequestReview { submittedAt authorAssociation author { login __typename } }
             ... on HeadRefForcePushedEvent { createdAt actor { login __typename } }
           }
         }
@@ -115,8 +115,8 @@ export type TimelineEvent =
   | { __typename: "ReopenedEvent" | "ReadyForReviewEvent" | "ConvertToDraftEvent"; createdAt: string; actor: Actor | null };
 
 export type ActivityItem =
-  | { __typename: "IssueComment"; createdAt: string; author: Actor | null }
-  | { __typename: "PullRequestReview"; submittedAt: string | null; author: Actor | null }
+  | { __typename: "IssueComment"; createdAt: string; authorAssociation: string; author: Actor | null }
+  | { __typename: "PullRequestReview"; submittedAt: string | null; authorAssociation: string; author: Actor | null }
   | { __typename: "HeadRefForcePushedEvent"; createdAt: string; actor: Actor | null };
 
 interface TimelinePage {
@@ -156,6 +156,14 @@ export interface PullRequest {
   timeline: TimelineEvent[];
   /** When a person last did anything on it; see latestActivity. */
   lastActivityAt: string;
+  /** The newest comments and reviews by people, oldest first. */
+  comments: Comment[];
+}
+
+export interface Comment {
+  createdAt: string;
+  author: string;
+  fromTeam: boolean;
 }
 
 export type Action = "none" | "warn" | "pending" | "close" | "resume" | "clear";
@@ -223,6 +231,25 @@ function lastWarningEndedAt(pr: PullRequest) {
   return endedAt;
 }
 
+// The size close runs from the warning or a reopen. The author explaining why the PR
+// can't be split pauses it, and a reply from the team after that restarts it. Null
+// while paused.
+function sizeClockStart(pr: PullRequest, warnedAt: number) {
+  let since = Math.max(warnedAt, latestEvent(pr, reopened) ?? 0);
+  let paused = false;
+  for (const comment of pr.comments) {
+    const at = time(comment.createdAt);
+    if (at <= since) continue;
+    if (comment.author === pr.author?.login) {
+      paused = true;
+    } else if (paused && comment.fromTeam) {
+      paused = false;
+      since = at;
+    }
+  }
+  return paused ? null : since;
+}
+
 // A close labels the PR backlog-cleanup before closing it, so one still open with that
 // label added since the warning, and not reopened since, stopped partway.
 function closeInterrupted(pr: PullRequest, warnedAt: number) {
@@ -280,8 +307,9 @@ function decideDraft(pr: PullRequest, now: number, warnedAt: number | null): Dec
  * - "clear": warned, but something has changed since; remove the label.
  *
  * A too-large PR was warned when the label went on, by pr-size.ts's comment, so it is
- * "pending" until CLOSE_AFTER_WARNING_DAYS later and then "close". Conflicts still need
- * confirming with GitHub before acting; see confirmConflicts.
+ * "pending" until CLOSE_AFTER_WARNING_DAYS later and then "close"; see sizeClockStart
+ * for what pauses and restarts that. Conflicts still need confirming with GitHub before
+ * acting; see confirmConflicts.
  */
 export function decide(pr: PullRequest, now: number): Decision {
   const stale = hasLabel(pr, LABELS.stale);
@@ -290,7 +318,9 @@ export function decide(pr: PullRequest, now: number): Decision {
   const sizeWarnedAt = hasLabel(pr, LABELS.tooLarge) ? (latestEvent(pr, labelled(LABELS.tooLarge)) ?? now) : null;
   const warnings = [warnedAt, sizeWarnedAt].filter((at) => at !== null);
   if (warnings.length > 0 && closeInterrupted(pr, Math.min(...warnings))) return { action: "resume", reasons: [] };
-  const size = sizeWarnedAt === null ? null : closeOrPending(now, sizeWarnedAt, ["tooLarge"]);
+  const sizeSince = sizeWarnedAt === null ? null : sizeClockStart(pr, sizeWarnedAt);
+  const size: Decision | null =
+    sizeWarnedAt === null ? null : sizeSince === null ? { action: "pending", reasons: ["tooLarge"] } : closeOrPending(now, sizeSince, ["tooLarge"]);
   if (size?.action === "close") return size;
   const decision = pr.isDraft ? decideDraft(pr, now, warnedAt) : decideReady(pr, now, warnedAt);
   // A Stale PR label someone else added warned nobody: replace it with a warning when one
@@ -356,6 +386,13 @@ export function closingComment(pr: PullRequest, reasons: Reason[], now: number) 
     "",
     "Thanks for the contribution! If you pick this up again, please feel free to open a new PR and fix the above issues.",
   ].join("\n");
+}
+
+function commentOf(item: ActivityItem): Comment | null {
+  if (item.__typename === "HeadRefForcePushedEvent" || item.author === null || !byPerson(item.author)) return null;
+  const createdAt = item.__typename === "IssueComment" ? item.createdAt : item.submittedAt;
+  if (createdAt === null) return null;
+  return { createdAt, author: item.author.login, fromTeam: TEAM_ASSOCIATIONS.includes(item.authorAssociation) };
 }
 
 function activityTime(item: ActivityItem) {
@@ -433,6 +470,9 @@ async function fetchPullRequest(github: GitHubClient, repo: Repo, number: number
     labels: node.labels.nodes.map((label) => label.name),
     timeline,
     lastActivityAt: latestActivity(node, timeline),
+    comments: node.activity.nodes
+      .flatMap((item) => commentOf(item) ?? [])
+      .sort((a, b) => time(a.createdAt) - time(b.createdAt)),
   };
 }
 
