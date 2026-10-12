@@ -1,7 +1,7 @@
 import { act, render, waitFor } from "@testing-library/react";
 import type { ComponentProps, ReactElement } from "react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import { PermissionFlag } from "pdfjs-dist/legacy/build/pdf.mjs";
+import { PdfPermissionFlag } from "@embedpdf/models";
 import type AddPasswordSettings from "@app/components/tools/addPassword/AddPasswordSettings";
 import type ChangePermissionsSettings from "@app/components/tools/changePermissions/ChangePermissionsSettings";
 import type { ToolFlowConfig } from "@app/components/tools/shared/createToolFlow";
@@ -10,7 +10,7 @@ import { defaultParameters } from "@app/hooks/tools/changePermissions/useChangeP
 import AddPassword from "@app/tools/AddPassword";
 import { createStirlingFile, type StirlingFile } from "@app/types/fileContext";
 
-const { selection, operation, flow, createDocument, destroyDocument } =
+const { selection, operation, flow, openRawDocument, getUserPermissions } =
   vi.hoisted(() => ({
     selection: { files: [] as StirlingFile[] },
     operation: {
@@ -24,8 +24,8 @@ const { selection, operation, flow, createDocument, destroyDocument } =
     flow: vi.fn<(config: ToolFlowConfig<AddPasswordFullParameters>) => null>(
       () => null,
     ),
-    createDocument: vi.fn(),
-    destroyDocument: vi.fn().mockResolvedValue(undefined),
+    openRawDocument: vi.fn(),
+    getUserPermissions: vi.fn(),
   }));
 
 vi.mock("@app/components/tools/shared/createToolFlow", () => ({
@@ -46,8 +46,15 @@ vi.mock("@app/components/tooltips/useAddPasswordTips", () => ({
 vi.mock("@app/components/tooltips/useAddPasswordPermissionsTips", () => ({
   useAddPasswordPermissionsTips: () => ({}),
 }));
-vi.mock("@app/services/pdfWorkerManager", () => ({
-  pdfWorkerManager: { createDocument, destroyDocument },
+vi.mock("@app/services/documentBytesCache", () => ({
+  getDocumentBytes: vi.fn().mockResolvedValue(new ArrayBuffer(0)),
+}));
+vi.mock("@app/services/pdfiumService", () => ({
+  getPdfiumModule: vi
+    .fn()
+    .mockResolvedValue({ FPDF_GetDocUserPermissions: getUserPermissions }),
+  openRawDocument,
+  closeDocAndFreeBuffer: vi.fn(),
 }));
 
 function currentFlow() {
@@ -72,7 +79,8 @@ function permissionSettings() {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  createDocument.mockReset();
+  openRawDocument.mockReset().mockResolvedValue(1);
+  getUserPermissions.mockReset().mockReturnValue(PdfPermissionFlag.AllowAll);
   selection.files = [createStirlingFile(new File([], "input.pdf"))];
   operation.files = [];
   operation.isLoading = false;
@@ -80,13 +88,14 @@ beforeEach(() => {
 
 describe("Add Password permission detection", () => {
   test("loads existing restrictions before encryption and preserves password settings", async () => {
-    let resolvePermissions!: (permissions: number[]) => void;
-    const pending = new Promise<number[]>((resolve) => {
-      resolvePermissions = resolve;
+    let resolveDocument!: (document: number) => void;
+    const pending = new Promise<number>((resolve) => {
+      resolveDocument = resolve;
     });
-    createDocument.mockResolvedValueOnce({
-      getPermissions: () => pending,
-    });
+    openRawDocument.mockReturnValueOnce(pending);
+    getUserPermissions.mockReturnValueOnce(
+      PdfPermissionFlag.AllowAll & ~PdfPermissionFlag.Print,
+    );
     render(<AddPassword />);
 
     expect(currentFlow().executeButton?.disabled).toBe(true);
@@ -97,13 +106,7 @@ describe("Add Password permission detection", () => {
       passwordSettings().onParameterChange("keyLength", 256);
     });
 
-    await act(async () =>
-      resolvePermissions(
-        Object.values(PermissionFlag).filter(
-          (flag) => flag !== PermissionFlag.PRINT,
-        ),
-      ),
-    );
+    await act(async () => resolveDocument(1));
     expect(permissionSettings().parameters).toEqual({
       ...defaultParameters,
       preventPrinting: true,
@@ -125,14 +128,14 @@ describe("Add Password permission detection", () => {
       },
       selection.files,
     );
-    expect(createDocument).toHaveBeenCalledTimes(1);
+    expect(openRawDocument).toHaveBeenCalledTimes(1);
   });
 
   test("keeps batch permissions manual", async () => {
     selection.files.push(createStirlingFile(new File([], "second.pdf")));
     render(<AddPassword />);
 
-    expect(createDocument).not.toHaveBeenCalled();
+    expect(openRawDocument).not.toHaveBeenCalled();
     expect(permissionSettings().multipleFiles).toBe(true);
     expect(currentFlow().executeButton?.disabled).toBe(false);
 
@@ -149,7 +152,6 @@ describe("Add Password permission detection", () => {
   });
 
   test("applies existing manual restrictions after expanding a single selection to a batch", async () => {
-    createDocument.mockResolvedValueOnce({ getPermissions: async () => null });
     const { rerender } = render(<AddPassword />);
     await waitFor(() => expect(permissionSettings().isLoading).toBe(false));
     act(() => {
@@ -181,11 +183,10 @@ describe("Add Password permission detection", () => {
       }),
       selection.files,
     );
-    expect(createDocument).toHaveBeenCalledTimes(1);
+    expect(openRawDocument).toHaveBeenCalledTimes(1);
   });
 
   test("does not read encrypted outputs or reset results during processing and review", async () => {
-    createDocument.mockResolvedValueOnce({ getPermissions: async () => null });
     const { rerender } = render(<AddPassword />);
     await waitFor(() => expect(permissionSettings().isLoading).toBe(false));
     operation.resetResults.mockClear();
@@ -200,12 +201,12 @@ describe("Add Password permission detection", () => {
     rerender(<AddPassword />);
 
     expect(currentFlow().review.isVisible).toBe(true);
-    expect(createDocument).toHaveBeenCalledTimes(1);
+    expect(openRawDocument).toHaveBeenCalledTimes(1);
     expect(operation.resetResults).not.toHaveBeenCalled();
   });
 
   test("expands the permission step to show read failures", async () => {
-    createDocument.mockRejectedValueOnce(new Error("Cannot read PDF"));
+    openRawDocument.mockRejectedValueOnce(new Error("Cannot read PDF"));
     render(<AddPassword />);
     expect(currentFlow().steps[1].isCollapsed).toBe(true);
 

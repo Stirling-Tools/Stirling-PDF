@@ -1,19 +1,33 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import { PermissionFlag } from "pdfjs-dist/legacy/build/pdf.mjs";
+import { PdfPermissionFlag } from "@embedpdf/models";
 import {
   defaultParameters,
   useChangePermissionsParameters,
 } from "@app/hooks/tools/changePermissions/useChangePermissionsParameters";
 import { usePermissionExtraction } from "@app/hooks/tools/changePermissions/usePermissionExtraction";
+import { runPdfiumScan } from "@app/services/pdfiumScanQueue";
+import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
 
-const { createDocument, destroyDocument } = vi.hoisted(() => ({
-  createDocument: vi.fn(),
-  destroyDocument: vi.fn().mockResolvedValue(undefined),
+const {
+  getDocumentBytes,
+  getPdfiumModule,
+  openRawDocument,
+  closeDocAndFreeBuffer,
+  pdfiumModule,
+} = vi.hoisted(() => ({
+  getDocumentBytes: vi.fn(),
+  getPdfiumModule: vi.fn(),
+  openRawDocument: vi.fn(),
+  closeDocAndFreeBuffer: vi.fn(),
+  pdfiumModule: { FPDF_GetDocUserPermissions: vi.fn() },
 }));
 
-vi.mock("@app/services/pdfWorkerManager", () => ({
-  pdfWorkerManager: { createDocument, destroyDocument },
+vi.mock("@app/services/documentBytesCache", () => ({ getDocumentBytes }));
+vi.mock("@app/services/pdfiumService", () => ({
+  getPdfiumModule,
+  openRawDocument,
+  closeDocAndFreeBuffer,
 }));
 
 function renderExtraction(file: File | undefined, enabled = true) {
@@ -31,10 +45,8 @@ function renderExtraction(file: File | undefined, enabled = true) {
   );
 }
 
-function mockPermissions(permissions: number[] | null) {
-  const document = { getPermissions: vi.fn().mockResolvedValue(permissions) };
-  createDocument.mockResolvedValueOnce(document);
-  return document;
+function mockPermissions(permissions: number) {
+  pdfiumModule.FPDF_GetDocUserPermissions.mockReturnValueOnce(permissions);
 }
 
 function deferred<T>() {
@@ -46,24 +58,32 @@ function deferred<T>() {
 }
 
 beforeEach(() => {
-  vi.clearAllMocks();
-  createDocument.mockReset();
+  vi.resetAllMocks();
+  getDocumentBytes.mockResolvedValue(new ArrayBuffer(0));
+  getPdfiumModule.mockResolvedValue(pdfiumModule);
+  openRawDocument.mockResolvedValue(1);
+  pdfiumModule.FPDF_GetDocUserPermissions.mockReturnValue(
+    PdfPermissionFlag.AllowAll,
+  );
 });
 
 describe("usePermissionExtraction", () => {
   test.each([
-    [PermissionFlag.ASSEMBLE, "preventAssembly"],
-    [PermissionFlag.COPY, "preventExtractContent"],
-    [PermissionFlag.COPY_FOR_ACCESSIBILITY, "preventExtractForAccessibility"],
-    [PermissionFlag.FILL_INTERACTIVE_FORMS, "preventFillInForm"],
-    [PermissionFlag.MODIFY_CONTENTS, "preventModify"],
-    [PermissionFlag.MODIFY_ANNOTATIONS, "preventModifyAnnotations"],
-    [PermissionFlag.PRINT, "preventPrinting"],
-    [PermissionFlag.PRINT_HIGH_QUALITY, "preventPrintingFaithful"],
+    [PdfPermissionFlag.AssembleDocument, "preventAssembly"],
+    [PdfPermissionFlag.CopyContents, "preventExtractContent"],
+    [
+      PdfPermissionFlag.ExtractForAccessibility,
+      "preventExtractForAccessibility",
+    ],
+    [PdfPermissionFlag.FillForms, "preventFillInForm"],
+    [PdfPermissionFlag.ModifyContents, "preventModify"],
+    [PdfPermissionFlag.ModifyAnnotations, "preventModifyAnnotations"],
+    [PdfPermissionFlag.Print, "preventPrinting"],
+    [PdfPermissionFlag.PrintHighQuality, "preventPrintingFaithful"],
   ] as const)("maps missing permission %s to %s", async (flag, restriction) => {
-    const document = mockPermissions(
-      Object.values(PermissionFlag).filter((value) => value !== flag),
-    );
+    mockPermissions(PdfPermissionFlag.AllowAll & ~flag);
+    const bytes = new ArrayBuffer(8);
+    getDocumentBytes.mockResolvedValueOnce(bytes);
     const file = new File([], "restricted.pdf");
     const { result } = renderExtraction(file);
 
@@ -74,16 +94,16 @@ describe("usePermissionExtraction", () => {
       ...defaultParameters,
       [restriction]: true,
     });
-    expect(URL.createObjectURL).toHaveBeenCalledWith(file);
-    expect(createDocument).toHaveBeenCalledWith(
-      "mocked-url",
-      expect.objectContaining({ openTimeoutMs: 30_000 }),
+    expect(getDocumentBytes).toHaveBeenCalledWith(file);
+    expect(openRawDocument).toHaveBeenCalledWith(bytes);
+    expect(pdfiumModule.FPDF_GetDocUserPermissions).toHaveBeenCalledWith(1);
+    expect(closeDocAndFreeBuffer).toHaveBeenCalledExactlyOnceWith(
+      pdfiumModule,
+      1,
     );
-    expect(destroyDocument).toHaveBeenCalledWith(document);
-    expect(URL.revokeObjectURL).toHaveBeenCalledWith("mocked-url");
   });
 
-  test.each([null, Object.values(PermissionFlag)])(
+  test.each([0xffffffff, -1, PdfPermissionFlag.AllowAll])(
     "allows everything when no restrictions are present (%s)",
     async (permissions) => {
       mockPermissions(permissions);
@@ -95,7 +115,7 @@ describe("usePermissionExtraction", () => {
   );
 
   test("refreshes for a different document without overwriting edits on rerender", async () => {
-    mockPermissions([]);
+    mockPermissions(0);
     const file = new File([], "first.pdf");
     const { result, rerender } = renderExtraction(file);
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -103,26 +123,21 @@ describe("usePermissionExtraction", () => {
     act(() => result.current.updateParameter("preventPrinting", false));
     rerender({ file, enabled: true });
     expect(result.current.parameters.preventPrinting).toBe(false);
-    expect(createDocument).toHaveBeenCalledTimes(1);
+    expect(openRawDocument).toHaveBeenCalledTimes(1);
 
-    mockPermissions(null);
     rerender({ file: new File([], "second.pdf"), enabled: true });
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.parameters).toEqual(defaultParameters);
-    expect(createDocument).toHaveBeenCalledTimes(2);
+    expect(openRawDocument).toHaveBeenCalledTimes(2);
   });
 
   test("preserves batch settings and refreshes when returning to one PDF", async () => {
     const { result, rerender } = renderExtraction(undefined);
-    expect(createDocument).not.toHaveBeenCalled();
+    expect(getDocumentBytes).not.toHaveBeenCalled();
     expect(result.current.isLoading).toBe(false);
 
     const file = new File([], "single.pdf");
-    mockPermissions(
-      Object.values(PermissionFlag).filter(
-        (flag) => flag !== PermissionFlag.PRINT,
-      ),
-    );
+    mockPermissions(PdfPermissionFlag.AllowAll & ~PdfPermissionFlag.Print);
     rerender({ file, enabled: true });
     await waitFor(() =>
       expect(result.current.parameters.preventPrinting).toBe(true),
@@ -146,87 +161,120 @@ describe("usePermissionExtraction", () => {
       ...batchParameters,
       preventExtractContent: true,
     });
-    expect(createDocument).toHaveBeenCalledTimes(1);
+    expect(openRawDocument).toHaveBeenCalledTimes(1);
 
-    mockPermissions(null);
     rerender({ file, enabled: true });
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.parameters).toEqual(defaultParameters);
-    expect(createDocument).toHaveBeenCalledTimes(2);
+    expect(openRawDocument).toHaveBeenCalledTimes(2);
   });
 
-  test("ignores late permissions from a previous selection", async () => {
-    const stale = deferred<number[]>();
-    const oldDocument = {
-      getPermissions: vi.fn().mockReturnValue(stale.promise),
-    };
-    createDocument.mockResolvedValueOnce(oldDocument);
+  test("serializes file switches and ignores a cancelled document", async () => {
+    const pending = deferred<number>();
+    openRawDocument.mockReturnValueOnce(pending.promise);
     const { result, rerender } = renderExtraction(new File([], "old.pdf"));
-    await waitFor(() => expect(oldDocument.getPermissions).toHaveBeenCalled());
+    await waitFor(() => expect(openRawDocument).toHaveBeenCalledTimes(1));
 
-    mockPermissions(null);
     rerender({ file: new File([], "new.pdf"), enabled: true });
+    expect(getDocumentBytes).toHaveBeenCalledTimes(1);
+    await act(async () => pending.resolve(2));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    await act(async () => stale.resolve([]));
 
     expect(result.current.parameters).toEqual(defaultParameters);
     expect(result.current.hasError).toBe(false);
-    expect(destroyDocument).toHaveBeenCalledWith(oldDocument);
+    expect(
+      pdfiumModule.FPDF_GetDocUserPermissions,
+    ).toHaveBeenCalledExactlyOnceWith(1);
+    expect(closeDocAndFreeBuffer).toHaveBeenCalledWith(pdfiumModule, 2);
+    expect(closeDocAndFreeBuffer).toHaveBeenCalledWith(pdfiumModule, 1);
   });
 
   test("reloads a previous document when returning before the next one opens", async () => {
-    mockPermissions([]);
+    mockPermissions(0);
     const first = new File([], "first.pdf");
     const { result, rerender } = renderExtraction(first);
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-    const pending = deferred<{
-      getPermissions: () => Promise<null>;
-    }>();
-    createDocument.mockReturnValueOnce(pending.promise);
+    const pending = deferred<number>();
+    openRawDocument.mockReturnValueOnce(pending.promise);
     rerender({ file: new File([], "second.pdf"), enabled: true });
+    await waitFor(() => expect(openRawDocument).toHaveBeenCalledTimes(2));
 
-    mockPermissions([]);
+    mockPermissions(0);
     rerender({ file: first, enabled: true });
+    await act(async () => pending.resolve(2));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.parameters.preventPrinting).toBe(true);
-
-    await act(async () =>
-      pending.resolve({ getPermissions: async () => null }),
-    );
-    expect(result.current.parameters.preventPrinting).toBe(true);
+    expect(openRawDocument).toHaveBeenCalledTimes(3);
+    expect(closeDocAndFreeBuffer).toHaveBeenCalledWith(pdfiumModule, 2);
   });
 
-  test("releases documents that finish opening after unmount", async () => {
-    const document = { getPermissions: vi.fn() };
-    const pending = deferred<typeof document>();
-    createDocument.mockReturnValueOnce(pending.promise);
+  test("releases a document that finishes opening after unmount", async () => {
+    const pending = deferred<number>();
+    openRawDocument.mockReturnValueOnce(pending.promise);
     const { unmount } = renderExtraction(new File([], "pending.pdf"));
+    await waitFor(() => expect(openRawDocument).toHaveBeenCalled());
     unmount();
-    await act(async () => pending.resolve(document));
+    await act(async () => pending.resolve(2));
 
-    expect(document.getPermissions).not.toHaveBeenCalled();
-    expect(destroyDocument).toHaveBeenCalledWith(document);
-    expect(URL.revokeObjectURL).toHaveBeenCalledWith("mocked-url");
+    expect(pdfiumModule.FPDF_GetDocUserPermissions).not.toHaveBeenCalled();
+    expect(closeDocAndFreeBuffer).toHaveBeenCalledExactlyOnceWith(
+      pdfiumModule,
+      2,
+    );
   });
 
-  test.each(["open", "read"])(
+  test("skips cancelled scans before they read file bytes", async () => {
+    const pending = deferred<void>();
+    const previousScan = runPdfiumScan(() => pending.promise);
+    const { unmount } = renderExtraction(new File([], "queued.pdf"));
+    unmount();
+    await act(async () => {
+      pending.resolve();
+      await previousScan;
+    });
+    expect(getDocumentBytes).not.toHaveBeenCalled();
+    expect(openRawDocument).not.toHaveBeenCalled();
+  });
+
+  test.each(["bytes", "initialize"])(
+    "does not open a cancelled document after %s finishes",
+    async (stage) => {
+      const pending = deferred<void>();
+      const read = stage === "bytes" ? getDocumentBytes : getPdfiumModule;
+      const value = stage === "bytes" ? new ArrayBuffer(0) : pdfiumModule;
+      read.mockReturnValueOnce(pending.promise.then(() => value));
+      const { unmount } = renderExtraction(new File([], "cancelled.pdf"));
+      await waitFor(() => expect(read).toHaveBeenCalled());
+      unmount();
+      await act(async () => pending.resolve());
+      expect(openRawDocument).not.toHaveBeenCalled();
+    },
+  );
+
+  test.each(["bytes", "initialize", "open", "read"])(
     "preserves manual settings after %s failures when detection resumes",
     async (stage) => {
-      const document = {
-        getPermissions: vi.fn().mockRejectedValue(new Error("Unreadable PDF")),
-      };
-      if (stage === "open")
-        createDocument.mockRejectedValueOnce(new Error("Password required"));
-      else createDocument.mockResolvedValueOnce(document);
+      const failure = new Error("Unreadable PDF");
+      if (stage === "bytes") getDocumentBytes.mockRejectedValueOnce(failure);
+      else if (stage === "initialize")
+        getPdfiumModule.mockRejectedValueOnce(failure);
+      else if (stage === "open") openRawDocument.mockRejectedValueOnce(failure);
+      else
+        pdfiumModule.FPDF_GetDocUserPermissions.mockImplementationOnce(() => {
+          throw failure;
+        });
       const file = new File([], "broken.pdf");
       const { result, rerender } = renderExtraction(file);
       await waitFor(() => expect(result.current.hasError).toBe(true));
 
       expect(result.current.isLoading).toBe(false);
-      expect(URL.revokeObjectURL).toHaveBeenCalledWith("mocked-url");
       if (stage === "read")
-        expect(destroyDocument).toHaveBeenCalledWith(document);
+        expect(closeDocAndFreeBuffer).toHaveBeenCalledExactlyOnceWith(
+          pdfiumModule,
+          1,
+        );
+      else expect(closeDocAndFreeBuffer).not.toHaveBeenCalled();
 
       act(() => result.current.updateParameter("preventPrinting", true));
       rerender({ file, enabled: false });
@@ -235,19 +283,30 @@ describe("usePermissionExtraction", () => {
       expect(result.current.parameters.preventPrinting).toBe(true);
       expect(result.current.hasError).toBe(true);
       expect(result.current.isLoading).toBe(false);
-      expect(createDocument).toHaveBeenCalledTimes(1);
+      expect(getDocumentBytes).toHaveBeenCalledTimes(1);
 
-      mockPermissions([]);
+      mockPermissions(0);
       rerender({ file: new File([], "readable.pdf"), enabled: true });
       await waitFor(() => expect(result.current.isLoading).toBe(false));
       expect(result.current.hasError).toBe(false);
       expect(result.current.parameters.preventModify).toBe(true);
-      expect(createDocument).toHaveBeenCalledTimes(2);
+      expect(getDocumentBytes).toHaveBeenCalledTimes(2);
     },
   );
 
+  test("leaves oversized documents manual without reading them into memory", async () => {
+    const file = new File([], "large.pdf");
+    Object.defineProperty(file, "size", { value: LARGE_PDF_PARSE_LIMIT });
+    const { result } = renderExtraction(file);
+    await waitFor(() => expect(result.current.hasError).toBe(true));
+    expect(result.current.isLoading).toBe(false);
+    expect(getDocumentBytes).not.toHaveBeenCalled();
+    expect(openRawDocument).not.toHaveBeenCalled();
+    act(() => result.current.updateParameter("preventPrinting", true));
+    expect(result.current.parameters.preventPrinting).toBe(true);
+  });
+
   test("preserves settings and results while processing, then reads the output when editing resumes", async () => {
-    mockPermissions(null);
     const file = new File([], "input.pdf");
     const { result, rerender } = renderExtraction(file);
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -256,17 +315,17 @@ describe("usePermissionExtraction", () => {
     rerender({ file, enabled: false });
     rerender({ file, enabled: true });
     expect(result.current.parameters.preventPrinting).toBe(true);
-    expect(createDocument).toHaveBeenCalledTimes(1);
+    expect(openRawDocument).toHaveBeenCalledTimes(1);
 
     const output = new File([], "output.pdf");
     rerender({ file: output, enabled: false });
     expect(result.current.parameters.preventPrinting).toBe(true);
-    expect(createDocument).toHaveBeenCalledTimes(1);
+    expect(openRawDocument).toHaveBeenCalledTimes(1);
 
-    mockPermissions([]);
+    mockPermissions(0);
     rerender({ file: output, enabled: true });
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(createDocument).toHaveBeenCalledTimes(2);
+    expect(openRawDocument).toHaveBeenCalledTimes(2);
     expect(result.current.parameters.preventModify).toBe(true);
   });
 });

@@ -1,9 +1,13 @@
 import { useEffect, useRef, useState } from "react";
+import { PdfPermissionFlag } from "@embedpdf/models";
+import { getDocumentBytes } from "@app/services/documentBytesCache";
+import { runPdfiumScan } from "@app/services/pdfiumScanQueue";
 import {
-  PermissionFlag,
-  type PDFDocumentProxy,
-} from "pdfjs-dist/legacy/build/pdf.mjs";
-import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
+  closeDocAndFreeBuffer,
+  getPdfiumModule,
+  openRawDocument,
+} from "@app/services/pdfiumService";
+import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
 import {
   defaultParameters,
   type ChangePermissionsParametersHook,
@@ -16,6 +20,7 @@ type ExtractionStatus = "idle" | "loading" | "loaded" | "error";
  * Pass no file for a batch to preserve the current settings without inspecting PDFs.
  * Disable while processing or reviewing results to preserve the operation state.
  * Failed reads keep manual settings until another file is selected.
+ * Documents at the browser parsing size limit require manual settings.
  */
 export function usePermissionExtraction(
   file: File | undefined,
@@ -41,37 +46,47 @@ export function usePermissionExtraction(
     setParameters(defaultParameters);
     setState({ file, status: "loading" });
     const signal = { cancelled: false };
-    const url = URL.createObjectURL(file);
-    let document: PDFDocumentProxy | undefined;
 
     const readPermissions = async () => {
       try {
-        document = await pdfWorkerManager.createDocument(url, {
-          signal,
-          openTimeoutMs: 30_000,
+        if (file.size >= LARGE_PDF_PARSE_LIMIT) {
+          throw new Error("PDF exceeds the browser parsing size limit");
+        }
+        const permissions = await runPdfiumScan(async () => {
+          if (signal.cancelled) return;
+          const bytes = await getDocumentBytes(file);
+          if (signal.cancelled) return;
+          const module = await getPdfiumModule();
+          if (signal.cancelled) return;
+          const docPtr = await openRawDocument(bytes);
+          try {
+            if (signal.cancelled) return;
+            // Owner access must not hide the document's stored user restrictions.
+            return module.FPDF_GetDocUserPermissions(docPtr);
+          } finally {
+            closeDocAndFreeBuffer(module, docPtr);
+          }
         });
-        if (signal.cancelled) return;
+        if (signal.cancelled || permissions === undefined) return;
 
-        const permissions = await document.getPermissions();
-        if (signal.cancelled) return;
-
-        // PDF.js returns null when the document has no permission restrictions.
-        const prevented = (flag: number) =>
-          permissions !== null && !permissions.includes(flag);
+        const prevented = (flag: PdfPermissionFlag) =>
+          (permissions & flag) === 0;
 
         setParameters({
-          preventAssembly: prevented(PermissionFlag.ASSEMBLE),
-          preventExtractContent: prevented(PermissionFlag.COPY),
+          preventAssembly: prevented(PdfPermissionFlag.AssembleDocument),
+          preventExtractContent: prevented(PdfPermissionFlag.CopyContents),
           preventExtractForAccessibility: prevented(
-            PermissionFlag.COPY_FOR_ACCESSIBILITY,
+            PdfPermissionFlag.ExtractForAccessibility,
           ),
-          preventFillInForm: prevented(PermissionFlag.FILL_INTERACTIVE_FORMS),
-          preventModify: prevented(PermissionFlag.MODIFY_CONTENTS),
+          preventFillInForm: prevented(PdfPermissionFlag.FillForms),
+          preventModify: prevented(PdfPermissionFlag.ModifyContents),
           preventModifyAnnotations: prevented(
-            PermissionFlag.MODIFY_ANNOTATIONS,
+            PdfPermissionFlag.ModifyAnnotations,
           ),
-          preventPrinting: prevented(PermissionFlag.PRINT),
-          preventPrintingFaithful: prevented(PermissionFlag.PRINT_HIGH_QUALITY),
+          preventPrinting: prevented(PdfPermissionFlag.Print),
+          preventPrintingFaithful: prevented(
+            PdfPermissionFlag.PrintHighQuality,
+          ),
         });
         initializedFile.current = file;
         setState({ file, status: "loaded" });
@@ -80,9 +95,6 @@ export function usePermissionExtraction(
           initializedFile.current = file;
           setState({ file, status: "error" });
         }
-      } finally {
-        if (document) await pdfWorkerManager.destroyDocument(document);
-        URL.revokeObjectURL(url);
       }
     };
 
@@ -90,7 +102,6 @@ export function usePermissionExtraction(
 
     return () => {
       signal.cancelled = true;
-      if (document) void pdfWorkerManager.destroyDocument(document);
     };
   }, [file, setParameters, enabled]);
 
