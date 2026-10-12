@@ -260,6 +260,13 @@ jobs:
           echo "frontend_dist_hit=$FRONTEND_DIST_CACHE_HIT" >> "$GITHUB_OUTPUT"
           echo "frontend-dist cache hit: $FRONTEND_DIST_CACHE_HIT"
 
+      - name: Make cached Tauri build files writable
+        if: runner.os != 'Windows'
+        run: |
+          if [ -d frontend/editor/src-tauri/target ]; then
+            chmod -R u+w frontend/editor/src-tauri/target
+          fi
+
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@4be9e76fd7c4901c61fb841f559994984270fce7 # stable
         with:
