@@ -200,6 +200,7 @@ jobs:
       gradle-hash: ${{ needs.files-hash.outputs.gradle_files_hash }}
       cargo-hash: ${{ needs.files-hash.outputs.cargo_files_hash }}
       frontend-dist-hash: ${{ needs.files-hash.outputs.frontend_dist_files_hash }}
+      uv-hash: ${{ needs.files-hash.outputs.uv_files_hash }}
     secrets: inherit
 
   playwright-e2e-enterprise:
