@@ -143,17 +143,17 @@ test.describe("PDF text editor - encrypted PDF password prompt", () => {
     await expect(page.getByRole("dialog")).toHaveCount(0);
   });
 
-  test("cancel dismisses the prompt without loading a document", async ({
+  test("closing the unlock prompt does not load a document", async ({
     page,
   }) => {
     test.setTimeout(60_000);
     await gotoEditor(page);
     await upload(page, ENCRYPTED);
 
-    const cancel = page.getByTestId("pdf-editor-password-cancel");
-    await expect(cancel).toBeVisible({ timeout: 20_000 });
-    await cancel.click();
-    await expect(cancel).toBeHidden();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible({ timeout: 20_000 });
+    await dialog.getByRole("button", { name: "Close", exact: true }).click();
+    await expect(dialog).toBeHidden();
     expect(await page.getByTestId("pdf-editor-page-0").count()).toBe(0);
   });
 });

@@ -51,7 +51,9 @@ import { HistoryPluginPackage } from "@embedpdf/plugin-history/react";
 import {
   AnnotationLayer,
   AnnotationPluginPackage,
+  useAnnotationCapability,
 } from "@embedpdf/plugin-annotation/react";
+import { LockModeType } from "@embedpdf/plugin-annotation";
 import type { AnnotationEvent } from "@embedpdf/plugin-annotation";
 import type { BoxedAnnotationRenderer } from "@embedpdf/plugin-annotation/react";
 import {
@@ -406,6 +408,7 @@ interface PageLayerOptions {
   enableFormFill: boolean;
   formEditingActive: boolean;
   enableAnnotations: boolean;
+  annotationsReadOnly: boolean;
   enableRedaction: boolean;
   showBakedAnnotations: boolean;
   onAnnotationMenuAnchor: (anchor: AnnotationMenuAnchor | null) => void;
@@ -439,7 +442,11 @@ function PageTiles({
   );
 }
 
-function PageTextSelection({ documentId, pageIndex }: PageLayerProps) {
+function PageTextSelection({
+  documentId,
+  pageIndex,
+  readOnly,
+}: PageLayerProps & { readOnly: boolean }) {
   return (
     <>
       <div
@@ -454,7 +461,9 @@ function PageTextSelection({ documentId, pageIndex }: PageLayerProps) {
           documentId={documentId}
           pageIndex={pageIndex}
           background="var(--pdf-selection-bg)"
-          selectionMenu={(props) => <TextSelectionMenu {...props} />}
+          selectionMenu={(props) => (
+            <TextSelectionMenu {...props} readOnly={readOnly} />
+          )}
         />
       </div>
       <TextSelectionHandler documentId={documentId} pageIndex={pageIndex} />
@@ -593,6 +602,7 @@ function PageLayers({
   enableFormFill,
   formEditingActive,
   enableAnnotations,
+  annotationsReadOnly,
   enableRedaction,
   showBakedAnnotations,
   onAnnotationMenuAnchor,
@@ -608,7 +618,11 @@ function PageLayers({
         renderMode={pdfRenderMode}
       />
       <CustomSearchLayer documentId={documentId} pageIndex={pageIndex} />
-      <PageTextSelection documentId={documentId} pageIndex={pageIndex} />
+      <PageTextSelection
+        documentId={documentId}
+        pageIndex={pageIndex}
+        readOnly={annotationsReadOnly}
+      />
       <FormFillLayers
         enabled={enableFormFill}
         editing={formEditingActive}
@@ -641,7 +655,8 @@ function PageLayers({
       <LinkLayer
         documentId={documentId}
         pageIndex={pageIndex}
-        selectionActive={isAnnotationMode}
+        selectionActive={isAnnotationMode && !annotationsReadOnly}
+        readOnly={annotationsReadOnly}
       />
       {readOnlySignaturePreviews && (
         <SignaturePreviewLayer
@@ -735,6 +750,7 @@ function DocumentViewport({ documentId, pageOptions }: DocumentViewportProps) {
 
 interface DocumentCommentsProps {
   enabled: boolean;
+  readOnly: boolean;
   documentId: string;
   authorName: string;
   visible: boolean;
@@ -743,6 +759,7 @@ interface DocumentCommentsProps {
 
 function DocumentComments({
   enabled,
+  readOnly,
   documentId,
   authorName,
   visible,
@@ -752,12 +769,32 @@ function DocumentComments({
   return (
     <CommentAuthorProvider displayName={authorName}>
       <CommentsSidebar
+        key={documentId}
+        readOnly={readOnly}
         documentId={documentId}
         visible={visible}
         rightOffset={rightOffset}
       />
     </CommentAuthorProvider>
   );
+}
+
+function AnnotationInteractionLock({
+  documentId,
+  readOnly,
+}: {
+  documentId: string;
+  readOnly: boolean;
+}) {
+  const { provides } = useAnnotationCapability();
+  useLayoutEffect(() => {
+    const scope = provides?.forDocument(documentId);
+    scope?.setLocked({
+      type: readOnly ? LockModeType.All : LockModeType.None,
+    });
+    if (readOnly) scope?.setActiveTool(null);
+  }, [provides, documentId, readOnly]);
+  return null;
 }
 
 type EditingBridgesProps = Pick<
@@ -854,6 +891,8 @@ export function LocalEmbedPDF({
   const { t } = useTranslation();
   const { config } = useAppConfig();
   const pdfAccess = usePdfAccess(file ?? fileId);
+  const annotationsReadOnly = Boolean(pdfAccess?.encrypted);
+  const showAnnotations = enableAnnotations || annotationsReadOnly;
   const [pdfUrl, setPdfUrl] = useState<string | null>(() => url ?? null);
   const [, setAnnotations] = useState<
     Array<{ id: string; pageIndex: number; rect: Rect }>
@@ -1169,7 +1208,7 @@ export function LocalEmbedPDF({
       createPluginRegistration(ScrollPluginPackage),
       createPluginRegistration(RenderPluginPackage, {
         withForms: !enableFormFill,
-        withAnnotations: !enableAnnotations, // Show baked annotations only when annotation layer is OFF; live layer visibility is controlled via CSS
+        withAnnotations: !showAnnotations,
       }),
 
       // Register interaction manager (required for zoom and selection features)
@@ -1239,7 +1278,7 @@ export function LocalEmbedPDF({
 
       createPluginRegistration(PrintPluginPackage),
     ];
-  }, [initialDocument, urlPluginsSource, enableAnnotations]);
+  }, [initialDocument, urlPluginsSource, showAnnotations]);
 
   const fontFallbackConfig = useMemo(() => getLocalFontFallbackConfig(), []);
 
@@ -1355,7 +1394,7 @@ export function LocalEmbedPDF({
     if (!annotationPlugin || !annotationPlugin.provides) return;
 
     const annotationApi = annotationPlugin.provides();
-    if (!annotationApi || !enableAnnotations) return;
+    if (!annotationApi) return;
 
     registerAnnotationTools(annotationApi);
 
@@ -1429,7 +1468,8 @@ export function LocalEmbedPDF({
     pdfRenderMode,
     enableFormFill,
     formEditingActive,
-    enableAnnotations,
+    enableAnnotations: showAnnotations,
+    annotationsReadOnly,
     enableRedaction,
     showBakedAnnotations,
     onAnnotationMenuAnchor: handleAnnotationMenuAnchor,
@@ -1494,7 +1534,9 @@ export function LocalEmbedPDF({
           <EditingBridges
             enableAnnotations={enableAnnotations}
             enableRedaction={enableRedaction}
-            isManualRedactionMode={isManualRedactionMode}
+            isManualRedactionMode={
+              isManualRedactionMode && !annotationsReadOnly
+            }
             isSignMode={isSignMode}
             historyApiRef={historyApiRef}
             signatureApiRef={signatureApiRef}
@@ -1527,12 +1569,17 @@ export function LocalEmbedPDF({
           >
             {(documentId) => (
               <>
+                <AnnotationInteractionLock
+                  documentId={documentId}
+                  readOnly={annotationsReadOnly}
+                />
                 <DocumentViewport
                   documentId={documentId}
                   pageOptions={pageOptions}
                 />
                 <DocumentComments
-                  enabled={enableAnnotations}
+                  enabled={showAnnotations}
+                  readOnly={annotationsReadOnly}
                   documentId={documentId}
                   authorName={commentAuthorName}
                   visible={isCommentsSidebarVisible}
