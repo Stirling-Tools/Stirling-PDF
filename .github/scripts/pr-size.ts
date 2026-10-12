@@ -153,7 +153,10 @@ export async function enforceSizeLimit(
   };
 }
 
-/** pr-size-limit.yml's entry point: fails the check while the PR is over the limit. */
+/**
+ * pr-size-limit.yml's entry point: fails the check while the PR is over the limit. Until
+ * `live`, it only warns, so the check can run before the limit is enforced.
+ */
 export async function checkPullRequestSize({
   github,
   context,
@@ -162,7 +165,7 @@ export async function checkPullRequestSize({
 }: {
   github: GitHubClient;
   context: { repo: Repo; payload: { pull_request: SizedPullRequest } };
-  core: Pick<Core, "info" | "setFailed">;
+  core: Pick<Core, "info" | "warning" | "setFailed">;
   live: boolean;
 }) {
   const pr = context.payload.pull_request;
@@ -171,6 +174,7 @@ export async function checkPullRequestSize({
     return;
   }
   const verdict = await enforceSizeLimit(github, context.repo, pr, live, pushAccessChecker(github, context.repo));
-  if (verdict.held) core.setFailed(verdict.summary);
-  else core.info(verdict.summary);
+  if (!verdict.held) core.info(verdict.summary);
+  else if (live) core.setFailed(verdict.summary);
+  else core.warning(`Not enforced yet: ${verdict.summary}`);
 }

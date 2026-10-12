@@ -68,6 +68,7 @@ interface Summary {
 /** The parts of github-script's `core` (@actions/core) these scripts call. */
 export interface Core {
   info(message: string): void;
+  warning(message: string): void;
   error(message: string): void;
   setFailed(message: string): void;
   summary: Summary;

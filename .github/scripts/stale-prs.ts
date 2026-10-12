@@ -578,7 +578,8 @@ interface Result {
   failed: boolean;
 }
 
-async function writeSummary(core: Core, results: Result[], live: boolean) {
+async function writeSummary(core: Core, results: Result[], live: boolean, sizeLive: boolean) {
+  const dryRuns = [...(live ? [] : ["stale warnings and closes"]), ...(sizeLive ? [] : ["the size limit"])];
   const rows = results
     .filter(({ decision }) => decision.action !== "none")
     .sort((a, b) => ACTION_ORDER.indexOf(a.decision.action) - ACTION_ORDER.indexOf(b.decision.action))
@@ -589,7 +590,7 @@ async function writeSummary(core: Core, results: Result[], live: boolean) {
       decision.reasons.join(", "),
     ]);
   await core.summary
-    .addHeading(live ? "Stale PR triage" : "Stale PR triage (dry run: no PRs changed)")
+    .addHeading(dryRuns.length === 0 ? "Stale PR triage" : `Stale PR triage (dry run for ${dryRuns.join(" and ")})`)
     .addRaw(`${results.length} open PRs, ${rows.length} with something outstanding.`, true)
     .addTable([
       [
@@ -603,14 +604,23 @@ async function writeSummary(core: Core, results: Result[], live: boolean) {
     .write();
 }
 
+// A size close belongs to the size limit and everything else to the stale triage; a
+// resumed close could have been either's.
+function writesLive(decision: Decision, live: boolean, sizeLive: boolean) {
+  if (decision.action === "resume") return live || sizeLive;
+  return decision.reasons.includes("tooLarge") ? sizeLive : live;
+}
+
 const errorMessage = (error: unknown) => (error instanceof Error ? error.message : String(error));
 
 export interface TriageInputs {
   github: GitHubClient;
   context: { repo: Repo };
   core: Core;
-  /** false reports what would happen without commenting, labelling or closing. */
+  /** false reports what the stale triage would do without commenting, labelling or closing. */
   live: boolean;
+  /** The same for the size limit, its too-large comments, labels and closes. */
+  sizeLive: boolean;
   /** Least pause between writes. Defaults to WRITE_INTERVAL_MS. */
   writeIntervalMs?: number;
   /** Pause between mergeability checks. Defaults to MERGEABILITY_RETRY_MS. */
@@ -627,6 +637,7 @@ export default async function triageStalePullRequests({
   context,
   core,
   live,
+  sizeLive,
   writeIntervalMs = WRITE_INTERVAL_MS,
   mergeabilityRetryMs = MERGEABILITY_RETRY_MS,
 }: TriageInputs) {
@@ -646,7 +657,7 @@ export default async function triageStalePullRequests({
         core.info(`#${number}: -${LABELS.waitingOnAuthor} (the turn had already moved on)`);
         pr = withLabel(pr, LABELS.waitingOnAuthor, false, now);
       }
-      const size = await enforceSizeLimit(github, repo, sizedPullRequest(pr), live, canPush);
+      const size = await enforceSizeLimit(github, repo, sizedPullRequest(pr), sizeLive, canPush);
       if (size.held !== hasLabel(pr, LABELS.tooLarge)) {
         core.info(`#${number}: ${size.held ? "+" : "-"}${LABELS.tooLarge}`);
         pr = withLabel(pr, LABELS.tooLarge, size.held, now);
@@ -656,7 +667,7 @@ export default async function triageStalePullRequests({
       result = { pr, decision, failed: false };
 
       if (decision.action !== "none") core.info(`#${number}: ${decision.action} (${decision.reasons.join(", ")})`);
-      if (live && WRITES.includes(decision.action)) {
+      if (writesLive(decision, live, sizeLive) && WRITES.includes(decision.action)) {
         await apply(github, issue, pr, decision, now, writeIntervalMs);
         await sleep(writeIntervalMs);
       }
@@ -668,6 +679,6 @@ export default async function triageStalePullRequests({
     }
   }
 
-  await writeSummary(core, results, live);
+  await writeSummary(core, results, live, sizeLive);
   if (failures > 0) core.setFailed(`${failures} PR(s) could not be updated.`);
 }

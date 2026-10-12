@@ -484,17 +484,24 @@ function recordingCore() {
       return summary;
     },
   };
-  const core: Core = { info: () => {}, error: (message) => errors.push(message), setFailed: (message) => failed.push(message), summary };
+  const core: Core = {
+    info: () => {},
+    warning: () => {},
+    error: (message) => errors.push(message),
+    setFailed: (message) => failed.push(message),
+    summary,
+  };
   return { core, errors, failed, tables, summaries: () => summaries };
 }
 
-async function triage(github: GitHubClient, { live = true, writeIntervalMs = 0 } = {}) {
+async function triage(github: GitHubClient, { live = true, sizeLive = true, writeIntervalMs = 0 } = {}) {
   const recorded = recordingCore();
   await triageStalePullRequests({
     github,
     context: { repo: { owner: "o", repo: "r" } },
     core: recorded.core,
     live,
+    sizeLive,
     writeIntervalMs,
     mergeabilityRetryMs: 0,
   });
@@ -649,11 +656,23 @@ describe("triage run", () => {
       assert.deepEqual(calls, ["edit comment 9", "unlabel #1 too-large"]);
     });
 
-    it("only reports it in a dry run", async () => {
+    it("only reports it until the size limit is live, whatever the stale switch says", async () => {
       const { github, calls } = fakeGitHub([pullRequest({ additions: 1500 })], { files: javaFile(1500) });
-      const { tables } = await triage(github, { live: false });
+      const { tables } = await triage(github, { sizeLive: false });
       assert.deepEqual(calls, []);
       assert.deepEqual(tables[0]?.[1]?.slice(2), ["pending", "tooLarge"]);
+    });
+
+    it("closes for size on the size limit's switch alone", async () => {
+      const overdue = () => label(pullRequest({ additions: 1500 }), LABELS.tooLarge, 30);
+      const comments = [{ id: 9, body: oversizedComment("contributor", 1500), user: { login: "github-actions[bot]", type: "Bot" } }];
+      const sizeOnly = fakeGitHub([overdue()], { files: javaFile(1500), comments });
+      await triage(sizeOnly.github, { live: false });
+      assert.deepEqual(sizeOnly.calls, ["comment #1", "label #1 backlog-cleanup", "close #1"]);
+
+      const staleOnly = fakeGitHub([overdue()], { files: javaFile(1500), comments });
+      await triage(staleOnly.github, { sizeLive: false });
+      assert.deepEqual(staleOnly.calls, []);
     });
   });
 

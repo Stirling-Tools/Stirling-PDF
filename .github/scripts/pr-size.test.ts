@@ -91,9 +91,14 @@ async function check(
 ) {
   const { github, calls, pages, lookups } = fakeGitHub(files, comments, writers);
   const failures: string[] = [];
-  const core = { info: () => {}, setFailed: (message: string) => failures.push(message) };
+  const warnings: string[] = [];
+  const core = {
+    info: () => {},
+    warning: (message: string) => warnings.push(message),
+    setFailed: (message: string) => failures.push(message),
+  };
   await checkPullRequestSize({ github, context: { repo, payload: { pull_request: pr } }, core, live });
-  return { failures, calls, pages, comments, lookups };
+  return { failures, warnings, calls, pages, comments, lookups };
 }
 
 const TOO_LARGE = [{ name: "too-large" }];
@@ -181,10 +186,10 @@ describe("check PR size", () => {
     assert.deepEqual(calls, []);
   });
 
-  it("fails the check but neither comments nor labels unless live", async () => {
-    const { failures, calls } = await check(oversized(1200), codeFiles(1200), { live: false });
-    assert.match(failures[0] ?? "", /changes 1200 lines/);
-    assert.deepEqual(calls, []);
+  it("only warns until live: no failure, comment or label", async () => {
+    const { failures, warnings, calls } = await check(oversized(1200), codeFiles(1200), { live: false });
+    assert.deepEqual([failures, calls], [[], []]);
+    assert.match(warnings[0] ?? "", /Not enforced yet: .*changes 1200 lines/);
   });
 
   it("passes a PR over the limit only because of translations", async () => {

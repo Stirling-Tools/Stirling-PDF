@@ -2,8 +2,9 @@ name: PR size limit
 
 # Fails PRs from outside the team that change more than MAX_LINES lines. The rules live
 # in .github/scripts/pr-size.ts.
-# Comments and labels too-large only when STALE_PR_BOT_LIVE is "true": the comment
-# promises the close that stale-prs.yml only makes then.
+# Enforced only when the PR_SIZE_BOT_LIVE repository variable is "true": until then it
+# warns in the check's log but never fails a PR, comments or labels it, and the daily
+# triage never closes one for size.
 # pull_request_target so a first-time contributor's PR is checked without approval; it
 # reads the diff through the API and never checks out the PR's code.
 
@@ -43,7 +44,7 @@ jobs:
       - name: Check the PR size
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
-          LIVE: ${{ vars.STALE_PR_BOT_LIVE == 'true' }}
+          LIVE: ${{ vars.PR_SIZE_BOT_LIVE == 'true' }}
         with:
           github-token: ${{ github.token }}
           script: |
