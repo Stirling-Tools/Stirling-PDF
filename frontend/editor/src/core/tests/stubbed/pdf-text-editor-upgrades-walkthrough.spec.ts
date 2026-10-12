@@ -2,6 +2,7 @@ import { test, expect } from "@app/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import path from "path";
 import type { EditorTestWindow } from "@app/tests/stubbed/editorTestTypes";
+import { waitForEditorReady } from "@app/tests/stubbed/editorReady";
 
 /** Drives the real UI control by control; the screenshots are the record. */
 const SAMPLE = path.join(
@@ -25,7 +26,7 @@ async function openEditor(page: Page): Promise<void> {
   await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
     timeout: 45_000,
   });
-  await page.waitForTimeout(900);
+  await waitForEditorReady(page, 45_000);
 }
 
 /** Select the first editable run through the page, as a user would. */
@@ -37,7 +38,6 @@ async function selectFirstRun(page: Page): Promise<string> {
     return run?.id ?? "";
   });
   expect(id).toBeTruthy();
-  await page.waitForTimeout(200);
   return id;
 }
 
@@ -79,31 +79,20 @@ test("giving a run an outline changes it, and undo takes it back", async ({
   await page.getByTestId("pdf-editor-colour-advanced").click();
   await page.getByTestId("pdf-editor-outline-width").fill("2");
   await page.getByTestId("pdf-editor-outline-width").press("Enter");
-  await page.waitForTimeout(400);
 
-  const after = await page.evaluate((id: string) => {
-    const store = (window as unknown as EditorTestWindow).__editor_store;
-    const run = store.doc.page(0).runs.find((r) => r.id === id);
-    return {
-      stroke: run?.stroke ?? null,
-      width: run?.strokeWidth ?? 0,
-      renderMode: run?.renderMode ?? 0,
-    };
-  }, runId);
-  expect(after.width).toBeGreaterThan(0);
+  const outline = () =>
+    page.evaluate((id: string) => {
+      const store = (window as unknown as EditorTestWindow).__editor_store;
+      const run = store.doc.page(0).runs.find((r) => r.id === id);
+      return { width: run?.strokeWidth ?? 0, renderMode: run?.renderMode ?? 0 };
+    }, runId);
   // Width alone is invisible; the run must also move to a stroking mode.
-  expect(after.renderMode).toBe(2);
+  await expect.poll(async () => (await outline()).renderMode).toBe(2);
+  expect((await outline()).width).toBeGreaterThan(0);
   await page.screenshot({ path: path.join(SHOTS, "02-outline-applied.png") });
 
   await page.getByTestId("pdf-editor-undo").click();
-  await page.waitForTimeout(400);
-  const reverted = await page.evaluate((id: string) => {
-    const store = (window as unknown as EditorTestWindow).__editor_store;
-    const run = store.doc.page(0).runs.find((r) => r.id === id);
-    return { width: run?.strokeWidth ?? 0, renderMode: run?.renderMode ?? 0 };
-  }, runId);
-  expect(reverted.width).toBe(0);
-  expect(reverted.renderMode).toBe(0);
+  await expect.poll(outline).toEqual({ width: 0, renderMode: 0 });
 });
 
 test("rulers and guides can be switched on from the sidebar", async ({
@@ -118,7 +107,6 @@ test("rulers and guides can be switched on from the sidebar", async ({
   const toggle = page.getByTestId("pdf-editor-toggle-rulers");
   await expect(toggle).toBeVisible();
   await toggle.click();
-  await page.waitForTimeout(500);
 
   const rulers = page.getByTestId("pdf-editor-rulers-0");
   await expect(rulers).toBeVisible();
@@ -127,7 +115,6 @@ test("rulers and guides can be switched on from the sidebar", async ({
   await page.screenshot({ path: path.join(SHOTS, "03-rulers.png") });
 
   await toggle.click();
-  await page.waitForTimeout(300);
   await expect(rulers).toHaveCount(0);
 });
 
@@ -140,7 +127,6 @@ test("find offers the new matching options", async ({
   await openEditor(page);
 
   await page.keyboard.press("Control+f");
-  await page.waitForTimeout(400);
   await expect(page.getByTestId("pdf-editor-find-match-case")).toBeVisible();
   await expect(page.getByTestId("pdf-editor-find-whole-word")).toBeVisible();
   await expect(
@@ -183,7 +169,14 @@ test("a save still produces a readable PDF after the new passes run", async ({
   }, runId);
   await page.keyboard.type("X");
   await page.keyboard.press("Tab");
-  await page.waitForTimeout(600);
+  await expect
+    .poll(() =>
+      page.evaluate((id: string) => {
+        const store = (window as unknown as EditorTestWindow).__editor_store;
+        return store.doc.page(0).runs.find((r) => r.id === id)?.text ?? "";
+      }, runId),
+    )
+    .toContain("X");
 
   const download = page.waitForEvent("download", { timeout: 60_000 });
   await page.getByTestId("pdf-editor-download").click();
