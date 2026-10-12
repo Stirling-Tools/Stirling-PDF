@@ -43,8 +43,13 @@ export const SCRATCH = {
   readerFill: key(),
   readerMatrix: key(),
   readerStroke: key(),
+  readerRuleDrawMode: key(),
+  readerRuleColour: key(),
+  readerRuleStrokeWidth: key(),
+  readerSegmentPoint: key(),
   writerBbox: key(),
   editBbox: key(),
+  editMeasureBox: key(),
   reflowBbox: key(),
   reflowMatrix: key(),
   partialBbox: key(),
@@ -52,15 +57,8 @@ export const SCRATCH = {
   annotRect: key(),
   shapeDrawMode: key(),
   shapeStrokeAlpha: key(),
-  colourR: key(),
-  colourG: key(),
-  colourB: key(),
-  colourA: key(),
-  outlineR: key(),
-  outlineG: key(),
-  outlineB: key(),
-  outlineA: key(),
-  outlineW: key(),
+  colourRGBA: key(),
+  outlineRGBAW: key(),
   faceL: key(),
   faceB: key(),
   faceR: key(),
@@ -87,6 +85,7 @@ export const SCRATCH = {
   readerSize: key(),
   reflowText: key(),
   charcodes: key(),
+  scanImageSize: key(),
 } as const;
 
 /** Structural minimum: any wrapper that exposes PDFium's wasm allocator. */
@@ -116,7 +115,13 @@ export function scratchPtr(
   const arena = arenaFor(m);
   const slot = arena.slots[key.id];
   if (slot && slot.size >= bytes) return slot.ptr;
-  if (slot) arena.exports.free(slot.ptr);
+  if (slot) {
+    arena.exports.free(slot.ptr);
+    // Drop the slot together with the block it named. An allocator that throws
+    // would otherwise leave the freed pointer cached, and the next caller would
+    // hand it to PDFium as its out-param.
+    arena.slots[key.id] = undefined;
+  }
   // Double rather than fit exactly: text buffers grow a character at a time,
   // and refitting would put a malloc/free pair back on every keystroke.
   const size = Math.max(4, bytes, slot ? slot.size * 2 : 0);
@@ -124,7 +129,6 @@ export function scratchPtr(
   // malloc only returns 0 when memory.grow failed, so a retry cannot help. A
   // cached 0 would be handed to PDFium as a null out-param and never retried.
   if (!ptr) {
-    arena.slots[key.id] = undefined;
     throw new Error(`WASM scratch allocation failed (${size} bytes)`);
   }
   arena.slots[key.id] = { ptr, size };

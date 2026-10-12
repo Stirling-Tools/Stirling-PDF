@@ -379,9 +379,8 @@ function looseBoxAdvancePt(
   const buf = scratchPtr(m, SCRATCH.editLoose, 16);
   try {
     if (!mod.FPDFText_GetLooseCharBox(tp, idx, buf)) return null;
-    const heap = (m.pdfium as unknown as { HEAPU8: Uint8Array }).HEAPU8;
-    const f32 = new Float32Array(heap.buffer, buf, 4);
-    const width = f32[2] - f32[0];
+    const width =
+      m.pdfium.getValue(buf + 8, "float") - m.pdfium.getValue(buf, "float");
     return width > 0 ? width : null;
   } catch {
     return null;
@@ -1291,16 +1290,14 @@ export function measureObjBoxPt(
   m: WrappedPdfiumModule,
   objPtr: number,
 ): { x: number; y: number; width: number; height: number } | null {
-  const l = m.pdfium.wasmExports.malloc(4);
-  const b = m.pdfium.wasmExports.malloc(4);
-  const r = m.pdfium.wasmExports.malloc(4);
-  const t = m.pdfium.wasmExports.malloc(4);
+  const buf = scratchPtr(m, SCRATCH.editMeasureBox, 16);
   try {
-    if (!m.FPDFPageObj_GetBounds(objPtr, l, b, r, t)) return null;
-    const left = m.pdfium.getValue(l, "float");
-    const bottom = m.pdfium.getValue(b, "float");
-    const right = m.pdfium.getValue(r, "float");
-    const top = m.pdfium.getValue(t, "float");
+    if (!m.FPDFPageObj_GetBounds(objPtr, buf, buf + 4, buf + 8, buf + 12))
+      return null;
+    const left = m.pdfium.getValue(buf, "float");
+    const bottom = m.pdfium.getValue(buf + 4, "float");
+    const right = m.pdfium.getValue(buf + 8, "float");
+    const top = m.pdfium.getValue(buf + 12, "float");
     if (![left, bottom, right, top].every(Number.isFinite)) return null;
     return {
       x: Math.min(left, right),
@@ -1311,11 +1308,6 @@ export function measureObjBoxPt(
   } catch {
     // Measuring is never worth failing the mutation that asked for it.
     return null;
-  } finally {
-    m.pdfium.wasmExports.free(l);
-    m.pdfium.wasmExports.free(b);
-    m.pdfium.wasmExports.free(r);
-    m.pdfium.wasmExports.free(t);
   }
 }
 

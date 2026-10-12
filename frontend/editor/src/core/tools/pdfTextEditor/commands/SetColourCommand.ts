@@ -116,17 +116,16 @@ export function readObjFill(
   m: import("@embedpdf/pdfium").WrappedPdfiumModule,
   objPtr: number,
 ): RGBA | null {
-  const r = scratchPtr(m, SCRATCH.colourR, 4);
-  const g = scratchPtr(m, SCRATCH.colourG, 4);
-  const b = scratchPtr(m, SCRATCH.colourB, 4);
-  const a = scratchPtr(m, SCRATCH.colourA, 4);
+  const buf = scratchPtr(m, SCRATCH.colourRGBA, 16);
   try {
-    if (!m.FPDFPageObj_GetFillColor(objPtr, r, g, b, a)) return null;
+    if (!m.FPDFPageObj_GetFillColor(objPtr, buf, buf + 4, buf + 8, buf + 12)) {
+      return null;
+    }
     return {
-      r: m.pdfium.getValue(r, "i32"),
-      g: m.pdfium.getValue(g, "i32"),
-      b: m.pdfium.getValue(b, "i32"),
-      a: m.pdfium.getValue(a, "i32"),
+      r: m.pdfium.getValue(buf, "i32"),
+      g: m.pdfium.getValue(buf + 4, "i32"),
+      b: m.pdfium.getValue(buf + 8, "i32"),
+      a: m.pdfium.getValue(buf + 12, "i32"),
     };
   } catch {
     return null;

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import {
+  measureObjBoxPt,
   measureObjRightEdgePt,
   measureObjSpanPt,
 } from "@app/tools/pdfTextEditor/commands/editTextHelpers";
@@ -103,6 +104,28 @@ describe("edit-path wasm scratch allocations", () => {
   it("measureObjSpanPt returns null when nothing is measurable", () => {
     const stub = stubModule(new Map());
     expect(measureObjSpanPt(stub.module, [1, 2])).toBeNull();
+    expect(stub.mallocs()).toBe(1);
+    expect(stub.frees()).toBe(0);
+  });
+
+  it("measureObjBoxPt reuses one block across every object and every call", () => {
+    const stub = stubModule(
+      new Map([
+        [1, { left: 5, right: 10 }],
+        [2, { left: 2, right: 20 }],
+      ]),
+    );
+    expect(measureObjBoxPt(stub.module, 1)).not.toBeNull();
+    const afterFirst = stub.mallocs();
+    expect(measureObjBoxPt(stub.module, 2)).not.toBeNull();
+    // One slot for the whole edit path, not one block per measured object.
+    expect(stub.mallocs()).toBe(afterFirst);
+    expect(stub.frees()).toBe(0);
+  });
+
+  it("measureObjBoxPt reports null for an unreadable object without freeing", () => {
+    const stub = stubModule(new Map());
+    expect(measureObjBoxPt(stub.module, 9)).toBeNull();
     expect(stub.mallocs()).toBe(1);
     expect(stub.frees()).toBe(0);
   });

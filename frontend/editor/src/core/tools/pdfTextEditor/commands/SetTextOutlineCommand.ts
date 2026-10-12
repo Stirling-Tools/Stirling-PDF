@@ -181,24 +181,22 @@ function readMemberInk(
   } catch {
     /* keep the run-level value */
   }
-  const r = scratchPtr(m, SCRATCH.outlineR, 4);
-  const g = scratchPtr(m, SCRATCH.outlineG, 4);
-  const b = scratchPtr(m, SCRATCH.outlineB, 4);
-  const a = scratchPtr(m, SCRATCH.outlineA, 4);
-  const w = scratchPtr(m, SCRATCH.outlineW, 4);
+  const buf = scratchPtr(m, SCRATCH.outlineRGBAW, 20);
   try {
     let stroke: RGBA | null = null;
-    if (mod.FPDFPageObj_GetStrokeColor?.(ptr, r, g, b, a)) {
+    if (
+      mod.FPDFPageObj_GetStrokeColor?.(ptr, buf, buf + 4, buf + 8, buf + 12)
+    ) {
       stroke = {
-        r: m.pdfium.getValue(r, "i32") & 0xff,
-        g: m.pdfium.getValue(g, "i32") & 0xff,
-        b: m.pdfium.getValue(b, "i32") & 0xff,
-        a: m.pdfium.getValue(a, "i32") & 0xff,
+        r: m.pdfium.getValue(buf, "i32") & 0xff,
+        g: m.pdfium.getValue(buf + 4, "i32") & 0xff,
+        b: m.pdfium.getValue(buf + 8, "i32") & 0xff,
+        a: m.pdfium.getValue(buf + 12, "i32") & 0xff,
       };
     }
     let strokeWidth = 0;
-    if (mod.FPDFPageObj_GetStrokeWidth?.(ptr, w)) {
-      const raw = m.pdfium.getValue(w, "float");
+    if (mod.FPDFPageObj_GetStrokeWidth?.(ptr, buf + 16)) {
+      const raw = m.pdfium.getValue(buf + 16, "float");
       if (Number.isFinite(raw) && raw > 0) strokeWidth = raw;
     }
     return { ptr, renderMode, stroke, strokeWidth };

@@ -178,21 +178,19 @@ function collectCharGeometry(
     const objPtr = m.FPDFText_GetTextObject(textPagePtr, i);
     const run = objPtr ? (ptrToRun.get(objPtr) ?? null) : null;
     const boxed = probe.FPDFText_GetLooseCharBox(textPagePtr, i, rectBuf);
-    const heap = (m.pdfium as unknown as { HEAPU8: Uint8Array }).HEAPU8;
-    const f = new Float32Array(heap.buffer, rectBuf, 4);
+    // Scalar reads, taken before the origin call: that call can grow the wasm
+    // memory, and a Float32Array view taken across it would read undefined
+    // instead of failing loudly.
+    const left = boxed ? m.pdfium.getValue(rectBuf, "float") : Number.NaN;
+    const right = boxed ? m.pdfium.getValue(rectBuf + 8, "float") : Number.NaN;
+    const bottom = boxed
+      ? m.pdfium.getValue(rectBuf + 12, "float")
+      : Number.NaN;
     let originX = Number.NaN;
     if (probe.FPDFText_GetCharOrigin?.(textPagePtr, i, xPtr, yPtr)) {
       originX = m.pdfium.getValue(xPtr, "double");
     }
-    out.push({
-      cp,
-      run,
-      ok: boxed,
-      left: boxed ? f[0] : Number.NaN,
-      right: boxed ? f[2] : Number.NaN,
-      bottom: boxed ? f[3] : Number.NaN,
-      originX,
-    });
+    out.push({ cp, run, ok: boxed, left, right, bottom, originX });
   }
   return out;
 }
@@ -595,20 +593,16 @@ interface RulePaint {
 
 // What a path paints, or null when it paints nothing (a clip, or a leftover).
 function readPaint(m: WrappedPdfiumModule, objPtr: number): RulePaint | null {
-  const fillPtr = m.pdfium.wasmExports.malloc(4);
-  const strokePtr = m.pdfium.wasmExports.malloc(4);
+  const buf = scratchPtr(m, SCRATCH.readerRuleDrawMode, 8);
   let fillMode = 1;
   let stroked = false;
   try {
-    if (m.FPDFPath_GetDrawMode(objPtr, fillPtr, strokePtr)) {
-      fillMode = m.pdfium.getValue(fillPtr, "i32");
-      stroked = m.pdfium.getValue(strokePtr, "i32") !== 0;
+    if (m.FPDFPath_GetDrawMode(objPtr, buf, buf + 4)) {
+      fillMode = m.pdfium.getValue(buf, "i32");
+      stroked = m.pdfium.getValue(buf + 4, "i32") !== 0;
     }
   } catch {
     // Older builds without the accessor: assume it paints.
-  } finally {
-    m.pdfium.wasmExports.free(fillPtr);
-    m.pdfium.wasmExports.free(strokePtr);
   }
   if (fillMode === 0 && !stroked) return null;
   const mod = m as unknown as RulePaintModule;
@@ -642,40 +636,30 @@ function readRGBA(
   objPtr: number,
   read: ColorReader,
 ): RGBA | null {
-  const r = m.pdfium.wasmExports.malloc(4);
-  const g = m.pdfium.wasmExports.malloc(4);
-  const b = m.pdfium.wasmExports.malloc(4);
-  const a = m.pdfium.wasmExports.malloc(4);
+  const buf = scratchPtr(m, SCRATCH.readerRuleColour, 16);
   try {
-    if (!read(objPtr, r, g, b, a)) return null;
+    if (!read(objPtr, buf, buf + 4, buf + 8, buf + 12)) return null;
     return {
-      r: m.pdfium.getValue(r, "i32") & 0xff,
-      g: m.pdfium.getValue(g, "i32") & 0xff,
-      b: m.pdfium.getValue(b, "i32") & 0xff,
-      a: m.pdfium.getValue(a, "i32") & 0xff,
+      r: m.pdfium.getValue(buf, "i32") & 0xff,
+      g: m.pdfium.getValue(buf + 4, "i32") & 0xff,
+      b: m.pdfium.getValue(buf + 8, "i32") & 0xff,
+      a: m.pdfium.getValue(buf + 12, "i32") & 0xff,
     };
   } catch {
     return null;
-  } finally {
-    m.pdfium.wasmExports.free(r);
-    m.pdfium.wasmExports.free(g);
-    m.pdfium.wasmExports.free(b);
-    m.pdfium.wasmExports.free(a);
   }
 }
 
 function readStrokeWidth(m: WrappedPdfiumModule, objPtr: number): number {
   const get = (m as unknown as RulePaintModule).FPDFPageObj_GetStrokeWidth;
   if (!get) return 0;
-  const w = m.pdfium.wasmExports.malloc(4);
+  const w = scratchPtr(m, SCRATCH.readerRuleStrokeWidth, 4);
   try {
     if (!get(objPtr, w)) return 0;
     const raw = m.pdfium.getValue(w, "float");
     return Number.isFinite(raw) && raw > 0 ? raw : 0;
   } catch {
     return 0;
-  } finally {
-    m.pdfium.wasmExports.free(w);
   }
 }
 
@@ -701,8 +685,7 @@ function ruleEdgesFromPath(
   }
   // A one- or two-point path has no edge a bounding box would not already give.
   if (count < 3) return [];
-  const xPtr = m.pdfium.wasmExports.malloc(4);
-  const yPtr = m.pdfium.wasmExports.malloc(4);
+  const buf = scratchPtr(m, SCRATCH.readerSegmentPoint, 8);
   const out: PageRect[] = [];
   try {
     let prev: { x: number; y: number } | null = null;
@@ -710,10 +693,10 @@ function ruleEdgesFromPath(
     for (let i = 0; i < count; i++) {
       const seg = m.FPDFPath_GetPathSegment(objPtr, i);
       if (!seg) return [];
-      if (!m.FPDFPathSegment_GetPoint(seg, xPtr, yPtr)) return [];
+      if (!m.FPDFPathSegment_GetPoint(seg, buf, buf + 4)) return [];
       const local = {
-        x: m.pdfium.getValue(xPtr, "float"),
-        y: m.pdfium.getValue(yPtr, "float"),
+        x: m.pdfium.getValue(buf, "float"),
+        y: m.pdfium.getValue(buf + 4, "float"),
       };
       const pt = applyAffine(matrix, local.x, local.y);
       const type = m.FPDFPathSegment_GetType(seg);
@@ -730,9 +713,6 @@ function ruleEdgesFromPath(
     }
   } catch {
     return [];
-  } finally {
-    m.pdfium.wasmExports.free(xPtr);
-    m.pdfium.wasmExports.free(yPtr);
   }
   return out;
 }

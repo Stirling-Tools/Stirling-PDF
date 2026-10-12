@@ -40,3 +40,49 @@ describe("PdfiumPageRenderer.deviceScale", () => {
     expect(PdfiumPageRenderer.deviceScale(A4_W, A4_H, 4, 2)).toBeCloseTo(8, 1);
   });
 });
+
+describe("PdfiumPageRenderer.rasterBudget", () => {
+  it("renders an ordinary page at the requested scale", () => {
+    expect(PdfiumPageRenderer.rasterBudget(A4_W, A4_H, 2)).toEqual({
+      width: 1190,
+      height: 1684,
+    });
+  });
+
+  it("holds a giant page inside the pixel budget, keeping its shape", () => {
+    const { width, height } = PdfiumPageRenderer.rasterBudget(
+      100_000,
+      100_000,
+      1,
+    );
+    expect(width * height).toBeLessThanOrEqual(32_000_000);
+    expect(width / height).toBeCloseTo(1, 2);
+  });
+
+  it("caps a single axis past the dimension limit", () => {
+    const { width, height } = PdfiumPageRenderer.rasterBudget(200_000, 10, 1);
+    expect(width).toBeLessThanOrEqual(32_768);
+    expect(height).toBeGreaterThanOrEqual(1);
+  });
+
+  it("falls back to 1x when the scale is not a positive finite number", () => {
+    const plain = PdfiumPageRenderer.rasterBudget(A4_W, A4_H, 1);
+    expect(PdfiumPageRenderer.rasterBudget(A4_W, A4_H, Number.NaN)).toEqual(
+      plain,
+    );
+    expect(PdfiumPageRenderer.rasterBudget(A4_W, A4_H, 0)).toEqual(plain);
+    expect(PdfiumPageRenderer.rasterBudget(A4_W, A4_H, -3)).toEqual(plain);
+  });
+
+  it("falls back to a unit page when the dimensions are not finite", () => {
+    const { width, height } = PdfiumPageRenderer.rasterBudget(
+      Number.NaN,
+      Number.POSITIVE_INFINITY,
+      2,
+    );
+    expect(Number.isFinite(width)).toBe(true);
+    expect(Number.isFinite(height)).toBe(true);
+    expect(width).toBeGreaterThanOrEqual(1);
+    expect(height).toBeGreaterThanOrEqual(1);
+  });
+});

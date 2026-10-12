@@ -10,6 +10,9 @@ const MAX_DPR = 3;
 // otherwise ask the wasm heap for gigabytes.
 const MAX_RASTER_PIXELS = 32_000_000;
 
+// No single axis may be allocated past this, whatever the pixel product says.
+const MAX_RASTER_DIMENSION = 32_768;
+
 /** Renders pages to bitmaps for the on-screen preview. */
 export class PdfiumPageRenderer {
   static rasterSize(
@@ -41,6 +44,37 @@ export class PdfiumPageRenderer {
     return Math.max(0.25, Math.min(cssScale * ratio, cap));
   }
 
+  /**
+   * The integer bitmap `render` will ask PDFium for. `deviceScale` is only a
+   * heuristic: its 0.25 floor can exceed the budget on a giant page and a
+   * caller-supplied scale is not bounded at all, so the final dimensions are
+   * checked here, at the allocation boundary.
+   */
+  static rasterBudget(
+    pageWidth: number,
+    pageHeight: number,
+    scale: number,
+  ): { width: number; height: number } {
+    const safeScale = Number.isFinite(scale) && scale > 0 ? scale : 1;
+    const size = PdfiumPageRenderer.rasterSize(
+      Number.isFinite(pageWidth) && pageWidth > 0 ? pageWidth : 1,
+      Number.isFinite(pageHeight) && pageHeight > 0 ? pageHeight : 1,
+      safeScale,
+    );
+    const width = Math.min(size.width, MAX_RASTER_DIMENSION);
+    const height = Math.min(size.height, MAX_RASTER_DIMENSION);
+    const pixels = width * height;
+    if (!Number.isFinite(pixels) || pixels <= MAX_RASTER_PIXELS) {
+      return { width, height };
+    }
+    // Shrink both axes by the same factor, so the bitmap keeps the page shape.
+    const shrink = Math.sqrt(MAX_RASTER_PIXELS / pixels);
+    return {
+      width: Math.max(1, Math.floor(width * shrink)),
+      height: Math.max(1, Math.floor(height * shrink)),
+    };
+  }
+
   static async render(
     doc: EditorDocument,
     page: Page,
@@ -49,7 +83,7 @@ export class PdfiumPageRenderer {
     const m = doc.module;
     // No flush: FPDF_RenderPageBitmap draws from the in-memory object list, so
     // the preview is current without rewriting the content stream.
-    const { width: w, height: h } = PdfiumPageRenderer.rasterSize(
+    const { width: w, height: h } = PdfiumPageRenderer.rasterBudget(
       page.width,
       page.height,
       scale,
@@ -110,17 +144,28 @@ export class PdfiumPageRenderer {
 
       const bufferPtr = m.FPDFBitmap_GetBuffer(bitmapPtr);
       const stride = m.FPDFBitmap_GetStride(bitmapPtr);
-      const pixels = new Uint8ClampedArray(w * h * 4);
       const heap = new Uint8Array(
         (m.pdfium.wasmExports as unknown as { memory: WebAssembly.Memory })
           .memory.buffer,
         bufferPtr,
         stride * h,
       );
-      for (let y = 0; y < h; y++) {
-        const srcRow = y * stride;
-        const dstRow = y * w * 4;
-        pixels.set(heap.subarray(srcRow, srcRow + w * 4), dstRow);
+      // The ImageData outlives this call, so its pixels have to be copied out
+      // of the heap: a view would detach on the next memory.grow. A padded
+      // stride is the only case that needs the row-by-row compaction.
+      let pixels: Uint8ClampedArray<ArrayBuffer>;
+      if (stride === w * 4) {
+        pixels = new Uint8ClampedArray(
+          heap.buffer,
+          bufferPtr,
+          w * h * 4,
+        ).slice();
+      } else {
+        pixels = new Uint8ClampedArray(w * h * 4);
+        for (let y = 0; y < h; y++) {
+          const srcRow = y * stride;
+          pixels.set(heap.subarray(srcRow, srcRow + w * 4), y * w * 4);
+        }
       }
       return new ImageData(pixels, w, h);
     } finally {

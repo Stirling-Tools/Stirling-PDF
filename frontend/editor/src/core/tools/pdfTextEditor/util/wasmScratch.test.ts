@@ -108,4 +108,26 @@ describe("scratchPtr", () => {
     expect(malloc).toHaveBeenCalledTimes(2);
     expect(free).not.toHaveBeenCalled();
   });
+
+  it("does not keep a freed pointer cached when the grow throws", () => {
+    let calls = 0;
+    const malloc = vi.fn((_n: number) => {
+      calls += 1;
+      if (calls === 2) throw new Error("out of memory");
+      return calls === 1 ? 1024 : 8192;
+    });
+    const free = vi.fn();
+    const m = {
+      pdfium: { wasmExports: { malloc, free } },
+    } as unknown as WrappedPdfiumModule;
+
+    const small = scratchPtr(m, SCRATCH.readerBounds, 8);
+    expect(() => scratchPtr(m, SCRATCH.readerBounds, 64)).toThrow(
+      "out of memory",
+    );
+    // The failed grow freed `small`, so the slot must not still name it: the
+    // next caller would hand PDFium a pointer into released memory.
+    expect(scratchPtr(m, SCRATCH.readerBounds, 8)).toBe(8192);
+    expect(free).toHaveBeenCalledWith(small);
+  });
 });

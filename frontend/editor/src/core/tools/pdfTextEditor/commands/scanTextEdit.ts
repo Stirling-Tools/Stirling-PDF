@@ -11,6 +11,7 @@ import {
   type PixelPatch,
   type ScanInk,
 } from "@app/tools/pdfTextEditor/pdfium/BackgroundSampler";
+import { SCRATCH, scratchPtr } from "@app/tools/pdfTextEditor/util/wasmScratch";
 import {
   layoutScanEdit,
   type LayoutWord,
@@ -391,18 +392,14 @@ function scanPixelSpan(
         q.bounds.width * q.bounds.height - p.bounds.width * p.bounds.height,
     )[0];
   if (!under) return 0;
-  const wPtr = m.pdfium.wasmExports.malloc(4);
-  const hPtr = m.pdfium.wasmExports.malloc(4);
+  const buf = scratchPtr(m, SCRATCH.scanImageSize, 8);
   try {
-    if (!m.FPDFImageObj_GetImagePixelSize(under.pdfiumObjPtr, wPtr, hPtr))
+    if (!m.FPDFImageObj_GetImagePixelSize(under.pdfiumObjPtr, buf, buf + 4))
       return 0;
-    const pixels = m.pdfium.getValue(wPtr, "i32");
+    const pixels = m.pdfium.getValue(buf, "i32");
     return pixels > 0 ? (INK_SCALE * under.bounds.width) / pixels : 0;
   } catch {
     return 0;
-  } finally {
-    m.pdfium.wasmExports.free(wPtr);
-    m.pdfium.wasmExports.free(hPtr);
   }
 }
 

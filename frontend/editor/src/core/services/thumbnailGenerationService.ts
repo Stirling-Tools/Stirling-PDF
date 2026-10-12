@@ -67,7 +67,9 @@ export class ThumbnailGenerationService {
     }
 
     while (this.pdfDocumentCache.size >= this.maxPdfCacheSize) {
-      this.evictLeastRecentlyUsedPDF();
+      // Every entry can be pinned by an in-flight render; without this guard
+      // the synchronous loop below never terminates.
+      if (!this.evictLeastRecentlyUsedPDF()) break;
     }
 
     const docPtr = await openRawDocumentSafe(pdfArrayBuffer);
@@ -93,9 +95,10 @@ export class ThumbnailGenerationService {
   }
 
   /**
-   * Evict the least recently used PDF document
+   * Drop the least recently used unreferenced document. Returns false when
+   * every cached document is still referenced and nothing could be evicted.
    */
-  private evictLeastRecentlyUsedPDF(): void {
+  private evictLeastRecentlyUsedPDF(): boolean {
     let oldestEntry: [FileId, CachedPDFDocument] | null = null;
     let oldestTime = Date.now();
 
@@ -106,10 +109,10 @@ export class ThumbnailGenerationService {
       }
     }
 
-    if (oldestEntry) {
-      void closeRawDocument(oldestEntry[1].docPtr);
-      this.pdfDocumentCache.delete(oldestEntry[0]);
-    }
+    if (!oldestEntry) return false;
+    void closeRawDocument(oldestEntry[1].docPtr);
+    this.pdfDocumentCache.delete(oldestEntry[0]);
+    return true;
   }
 
   /**
@@ -240,6 +243,14 @@ export class ThumbnailGenerationService {
 
   addThumbnailToCache(pageId: string, thumbnail: string): void {
     const sizeBytes = thumbnail.length * 2; // Rough estimate for base64 string
+
+    // Replace rather than add: leaving the old entry in place would count its
+    // bytes twice and evict healthy thumbnails later.
+    const existing = this.thumbnailCache.get(pageId);
+    if (existing) {
+      this.thumbnailCache.delete(pageId);
+      this.currentCacheSize -= existing.sizeBytes;
+    }
 
     // Enforce cache size limits
     while (
