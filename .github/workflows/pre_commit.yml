@@ -13,6 +13,11 @@ jobs:
   pre-commit:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: write
+    env:
+      UV_CACHE_DIR: ${{ github.workspace }}/.cache/setup-uv-cache
+      UV_PYTHON_INSTALL_DIR: ${{ github.workspace }}/.cache/uv-python-dir
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
@@ -27,13 +32,29 @@ jobs:
           filter: blob:none
           persist-credentials: false
 
+      - name: Restore uv cache
+        id: cache
+        uses: ./.github/actions/cache-the-planet
+        with:
+          encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
+          multi-cache: |
+            setup-uv-cache:
+              path: .cache/setup-uv-cache
+            uv-python-dir:
+              path: .cache/uv-python-dir
+          token: ${{ github.token }}
+          key: |
+            setup-uv-cache=${{ hashFiles('engine/pyproject.toml', 'engine/uv.lock') }}
+            uv-python-dir=${{ hashFiles('engine/pyproject.toml', 'engine/uv.lock') }}
+
       - name: Install uv
         uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          enable-cache: true
+          enable-cache: false
           cache-dependency-glob: |
             engine/pyproject.toml
             engine/uv.lock
+          cache-local-path: .cache/setup-uv-cache
 
       - name: Install Task
         uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0

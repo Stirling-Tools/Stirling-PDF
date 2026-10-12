@@ -10,7 +10,7 @@ on:
         type: string
       java-version:
         required: false
-        default: '25'
+        default: "25"
         type: string
 
 permissions:
@@ -58,7 +58,7 @@ jobs:
           java-version: "25"
 
       - name: Check licenses for compatibility
-        run: ./gradlew checkLicense --no-daemon --no-parallel
+        run: task backend:licenses:check
         env:
           STIRLING_FLAVOR: saas
           MAVEN_USER: ${{ secrets.MAVEN_USER }}

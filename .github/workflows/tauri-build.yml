@@ -136,7 +136,7 @@ jobs:
     needs: determine-matrix
     name: Hash files
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 5
     permissions:
       contents: read
     outputs:
@@ -221,10 +221,6 @@ jobs:
           multi-cache: |
             cargo-registry:
               path: .cache/cargo/registry
-            cargo-git:
-              path: .cache/cargo/git
-            cargo-bin:
-              path: .cache/cargo/bin
             frontend-dist:
               path: frontend/editor/dist
             frontend-node-modules:
@@ -241,8 +237,6 @@ jobs:
             gradle-caches=${{ needs.hash_pr.outputs.gradle_files_hash }}
             gradle-wrapper=${{ needs.hash_pr.outputs.gradle_files_hash }}
             cargo-registry=${{ needs.hash_pr.outputs.cargo_files_hash }}
-            cargo-git=${{ needs.hash_pr.outputs.cargo_files_hash }}
-            cargo-bin=${{ needs.hash_pr.outputs.cargo_files_hash }}
             npm-cache=${{ hashFiles('frontend/package-lock.json') }}
             frontend-dist=${{ needs.hash_pr.outputs.frontend_dist_files_hash }}
             frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
