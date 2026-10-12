@@ -3170,7 +3170,7 @@ unknown = "Unknown"
 
 [changePermissions]
 desc = "Change document restrictions and permissions."
-loading = "Loading current permissions…"
+loading = "Loading current permissions..."
 multipleFiles = "Select a single PDF to automatically load its current permissions. These settings will apply to all selected PDFs."
 submit = "Change Permissions"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
