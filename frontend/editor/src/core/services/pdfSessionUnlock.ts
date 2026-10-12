@@ -1,4 +1,5 @@
 import apiClient from "@app/services/apiClient";
+import axios from "axios";
 import i18n from "i18next";
 import {
   getPdfAccess,
@@ -51,13 +52,67 @@ export async function unlockPdfForSession(
   const form = new FormData();
   form.append("fileInput", file);
   form.append("password", password);
-  const response = await apiClient.post<Omit<PdfAccess, "password">>(
-    "/api/v1/security/inspect-pdf-security",
-    form,
-    { suppressErrorToast: true },
-  );
-  const access = { ...response.data, password };
-  return access;
+  try {
+    const response = await apiClient.post<Omit<PdfAccess, "password">>(
+      "/api/v1/security/inspect-pdf-security",
+      form,
+      { suppressErrorToast: true },
+    );
+    return { ...response.data, password };
+  } catch (error) {
+    const sanitized = new Error(
+      error instanceof Error ? error.message : "Unable to unlock this PDF.",
+    );
+    if (axios.isAxiosError(error)) {
+      // Keep password-error classification without retaining the request or its FormData.
+      Object.assign(sanitized, {
+        isAxiosError: true,
+        response: error.response
+          ? { status: error.response.status, data: error.response.data }
+          : undefined,
+      });
+    }
+    throw sanitized;
+  }
+}
+
+/** Signed protected PDFs remain view-only until their edits can preserve signatures. */
+export function assertPdfSessionEditable(
+  access: Pick<PdfAccess, "encrypted" | "signed"> | undefined,
+): void {
+  if (access?.encrypted && access.signed)
+    throw new Error(
+      i18n.t(
+        "encryptedPdfUnlock.signedReadOnly",
+        "This PDF has digital signatures. Session unlocking supports viewing it, but processing signed PDFs is not supported yet.",
+      ),
+    );
+}
+
+/** Native exports must retain source protection before storage or download can receive them. */
+export async function verifyEditedPdfProtection(
+  output: File,
+  sourceAccess: PdfAccess | undefined,
+): Promise<void> {
+  if (!sourceAccess?.encrypted) return;
+  assertPdfSessionEditable(sourceAccess);
+  const access = await unlockPdfForSession(output, sourceAccess.password);
+  if (
+    !access.encrypted ||
+    access.permissions !== sourceAccess.permissions ||
+    access.ownerAuthenticated !== sourceAccess.ownerAuthenticated ||
+    sourceAccess.encryptionKeyLength === undefined ||
+    access.encryptionKeyLength !== sourceAccess.encryptionKeyLength ||
+    sourceAccess.encryptionRevision === undefined ||
+    access.encryptionRevision !== sourceAccess.encryptionRevision
+  )
+    throw new Error(
+      i18n.t(
+        "encryptedPdfUnlock.restoreFailed",
+        "Unable to preserve PDF protection. No unprotected result was saved.",
+      ),
+    );
+  rememberPdfAccess(output, access);
 }
 
 /** Decrypted bytes belong only to this operation. They must never enter FileContext or persistence. */

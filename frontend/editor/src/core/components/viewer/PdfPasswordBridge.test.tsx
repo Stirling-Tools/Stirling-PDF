@@ -1,4 +1,4 @@
-import { render, waitFor, cleanup } from "@testing-library/react";
+import { act, render, waitFor, cleanup } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { PdfPasswordBridge } from "@app/components/viewer/PdfPasswordBridge";
 import { PdfErrorCode } from "@embedpdf/models";
@@ -23,6 +23,7 @@ vi.mock("@app/contexts/FileContext", () => ({
 }));
 beforeEach(() => {
   vi.clearAllMocks();
+  mock.document = { id: "native-doc", status: "error", errorCode: 4 };
   mock.document.errorCode = PdfErrorCode.Password;
   mock.loaded.mockResolvedValue(undefined);
   mock.retry.mockReturnValue({
@@ -60,3 +61,24 @@ it("keeps a rejected native retry in the unlock flow", async () => {
   render(<PdfPasswordBridge fileId="file" password="password" />);
   await waitFor(() => expect(mock.prompt).toHaveBeenCalledWith("file"));
 });
+
+it.each(["switch", "unmount"])(
+  "ignores a retry failure after %s",
+  async (change) => {
+    let reject!: (error: Error) => void;
+    const retry = new Promise<void>((_resolve, rejectPromise) => {
+      reject = rejectPromise;
+    });
+    mock.loaded.mockReturnValueOnce(retry);
+    const view = render(
+      <PdfPasswordBridge fileId="old-file" password="password" />,
+    );
+    await waitFor(() => expect(mock.loaded).toHaveBeenCalledOnce());
+    if (change === "switch") {
+      mock.document = { id: "other-doc", status: "loaded", errorCode: 0 };
+      view.rerender(<PdfPasswordBridge fileId="other-file" />);
+    } else view.unmount();
+    await act(async () => reject(new Error("late password failure")));
+    expect(mock.prompt).not.toHaveBeenCalled();
+  },
+);

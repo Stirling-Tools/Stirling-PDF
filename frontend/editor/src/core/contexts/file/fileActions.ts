@@ -1029,10 +1029,8 @@ export async function addStirlingFileStubs(
           });
 
           // Admission can defer the state record; source-link persistence still belongs to these loaded bytes.
-          lifecycleManager.updateStirlingFileStub(
-            fileId,
-            decision.updates ?? {},
-          );
+          if (decision.updates && Object.keys(decision.updates).length > 0)
+            lifecycleManager.updateStirlingFileStub(fileId, decision.updates);
 
           decision.afterPublish?.();
 

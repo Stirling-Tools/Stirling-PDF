@@ -48,6 +48,8 @@ public class PdfSessionSecurityController {
             boolean signed,
             boolean ownerAuthenticated,
             int permissions,
+            int encryptionKeyLength,
+            int encryptionRevision,
             boolean canModify,
             boolean canAssemble,
             int pageCount) {}
@@ -63,7 +65,11 @@ public class PdfSessionSecurityController {
                     document.isEncrypted(),
                     !document.getSignatureDictionaries().isEmpty(),
                     permission.isOwnerPermission(),
-                    permission.getPermissionBytes(),
+                    document.isEncrypted()
+                            ? document.getEncryption().getPermissions()
+                            : permission.getPermissionBytes(),
+                    document.isEncrypted() ? document.getEncryption().getLength() : 0,
+                    document.isEncrypted() ? document.getEncryption().getRevision() : 0,
                     permission.canModify(),
                     permission.canAssembleDocument(),
                     document.getNumberOfPages());
@@ -81,11 +87,18 @@ public class PdfSessionSecurityController {
             @RequestParam MultipartFile sourceFile,
             @RequestParam String password)
             throws IOException, InterruptedException {
+        int sourcePermissions;
+        int sourceKeyLength;
+        int sourceRevision;
         try (PDDocument source = pdfDocumentFactory.load(sourceFile, password, true)) {
             if (!source.isEncrypted())
                 throw new IOException("The protection source is not encrypted");
             if (!source.getSignatureDictionaries().isEmpty())
                 throw new IOException("Protection restoration does not support signed source PDFs");
+            // Effective owner access is unrestricted even when the encryption dictionary is not.
+            sourcePermissions = source.getEncryption().getPermissions();
+            sourceKeyLength = source.getEncryption().getLength();
+            sourceRevision = source.getEncryption().getRevision();
         }
 
         TempFile output = tempFileManager.createManagedTempFile(".pdf");
@@ -114,7 +127,10 @@ public class PdfSessionSecurityController {
             try (var stream = Files.newInputStream(output.getPath());
                     PDDocument protectedDocument =
                             pdfDocumentFactory.load(stream, password, true)) {
-                if (!protectedDocument.isEncrypted())
+                if (!protectedDocument.isEncrypted()
+                        || protectedDocument.getEncryption().getPermissions() != sourcePermissions
+                        || protectedDocument.getEncryption().getLength() != sourceKeyLength
+                        || protectedDocument.getEncryption().getRevision() != sourceRevision)
                     throw new IOException("Output protection verification failed");
             }
             var response =

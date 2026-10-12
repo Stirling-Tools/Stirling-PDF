@@ -37,10 +37,11 @@ class PdfSessionSecurityControllerTest {
     private static final String OWNER = " owner password ";
     @TempDir Path directory;
     private PdfSessionSecurityController controller;
+    private CustomPDFDocumentFactory factory;
 
     @BeforeEach
     void setUp() throws Exception {
-        var factory = mock(CustomPDFDocumentFactory.class);
+        factory = mock(CustomPDFDocumentFactory.class);
         when(factory.load(any(MultipartFile.class), anyString(), eq(true)))
                 .thenAnswer(
                         inv ->
@@ -108,7 +109,11 @@ class PdfSessionSecurityControllerTest {
         assertEquals(0, info.permissions() & 4);
         assertArrayEquals(original, request.getFileInput().getBytes());
         request.setPassword(OWNER);
-        assertTrue(controller.inspect(request).ownerAuthenticated());
+        var ownerInfo = controller.inspect(request);
+        assertTrue(ownerInfo.ownerAuthenticated());
+        assertEquals(info.permissions(), ownerInfo.permissions());
+        assertEquals(256, ownerInfo.encryptionKeyLength());
+        assertEquals(6, ownerInfo.encryptionRevision());
         request.setPassword("incorrect");
         assertThrows(InvalidPasswordException.class, () -> controller.inspect(request));
     }
@@ -117,14 +122,7 @@ class PdfSessionSecurityControllerTest {
     @CsvSource({"128,false", "128,true", "256,false", "256,true"})
     void restoresBothPasswordsAndRestrictionsFromEitherCredential(int bits, boolean owner)
             throws Exception {
-        boolean qpdfAvailable;
-        try {
-            qpdfAvailable = new ProcessBuilder("qpdf", "--version").start().waitFor() == 0;
-        } catch (IOException unavailable) {
-            qpdfAvailable = false;
-        }
-        Assumptions.assumeTrue(
-                qpdfAvailable, "qpdf must be on PATH for protection integration tests");
+        assumeQpdfAvailable();
         byte[] original = pdf(true, bits);
         var response =
                 controller.restore(
@@ -147,6 +145,48 @@ class PdfSessionSecurityControllerTest {
         try (var remaining = Files.list(directory)) {
             assertEquals(0, remaining.count());
         }
+    }
+
+    @ParameterizedTest
+    @CsvSource({"permissions,false", "permissions,true", "length,true", "revision,true"})
+    void rejectsChangedOutputProtection(String changed, boolean owner) throws Exception {
+        assumeQpdfAvailable();
+        when(factory.load(any(InputStream.class), anyString(), eq(true)))
+                .thenAnswer(
+                        inv -> {
+                            var document =
+                                    Loader.loadPDF(
+                                            inv.<InputStream>getArgument(0).readAllBytes(),
+                                            inv.getArgument(1));
+                            switch (changed) {
+                                case "permissions" -> document.getEncryption().setPermissions(-4);
+                                case "length" -> document.getEncryption().setLength(128);
+                                case "revision" -> document.getEncryption().setRevision(4);
+                                default -> throw new IllegalArgumentException(changed);
+                            }
+                            return document;
+                        });
+        assertThrows(
+                IOException.class,
+                () ->
+                        controller.restore(
+                                upload(pdf(false, 256)),
+                                upload(pdf(true, 256)),
+                                owner ? OWNER : USER));
+        try (var remaining = Files.list(directory)) {
+            assertEquals(0, remaining.count());
+        }
+    }
+
+    private void assumeQpdfAvailable() throws Exception {
+        boolean qpdfAvailable;
+        try {
+            qpdfAvailable = new ProcessBuilder("qpdf", "--version").start().waitFor() == 0;
+        } catch (IOException unavailable) {
+            qpdfAvailable = false;
+        }
+        Assumptions.assumeTrue(
+                qpdfAvailable, "qpdf must be on PATH for protection integration tests");
     }
 
     @Test

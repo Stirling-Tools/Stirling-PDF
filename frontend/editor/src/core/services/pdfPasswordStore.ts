@@ -7,6 +7,9 @@ export interface PdfAccess {
   signed: boolean;
   ownerAuthenticated: boolean;
   permissions: number;
+  /** Older servers omit these; native exports must reject unverifiable protection. */
+  encryptionKeyLength?: number;
+  encryptionRevision?: number;
   canModify: boolean;
   canAssemble: boolean;
   pageCount: number;

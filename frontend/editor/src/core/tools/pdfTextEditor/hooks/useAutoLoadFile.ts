@@ -21,6 +21,8 @@ interface AutoLoad {
   openFile: (file: File) => void;
   /** Record a document the editor loaded by other means, so auto-open stands down. */
   adopt: (file: File) => void;
+  /** Keep a cancelled password request closed until another file or an explicit open. */
+  cancel: (file: File) => void;
 }
 
 /** The slice of the editor's state that decides whether it needs a file. */
@@ -85,7 +87,12 @@ export function useAutoLoadFile(
     !allFiles.some((f) => (f as WorkbenchFile).fileId === currentFileId);
 
   const lastKeyRef = useRef<string | null>(null);
+  const cancelledKeyRef = useRef<string | null>(null);
+  const cancel = useCallback((file: File) => {
+    cancelledKeyRef.current = fileKey(file);
+  }, []);
   const adopt = useCallback((file: File) => {
+    cancelledKeyRef.current = null;
     lastKeyRef.current = fileKey(file);
   }, []);
   const openFile = useCallback(
@@ -100,6 +107,9 @@ export function useAutoLoadFile(
   useEffect(() => {
     if (!autoLoadFile || hold) return;
     if (navigationState.selectedTool !== "pdfTextEditor") return;
+    const cancelled = cancelledKeyRef.current;
+    if (cancelled === fileKey(autoLoadFile)) return;
+    cancelledKeyRef.current = null;
     // A document is open: leave it, and the user's unsaved edits, alone.
     if (editor.hasDocument && !documentGone) return;
     // Restarting a pending open would reset its password prompt.
@@ -109,7 +119,7 @@ export function useAutoLoadFile(
     // Re-open THAT file, and do it quietly - no pin, no filename change. The
     // canvas can be dropped because the user went to Active Files, and pinning
     // it back would yank them out of the list they just asked for.
-    const recovering = lastKeyRef.current !== null;
+    const recovering = lastKeyRef.current !== null && cancelled === null;
     if (recovering) {
       const same = allFiles.find(
         (f) => (f as WorkbenchFile).fileId === currentFileId,
@@ -143,5 +153,8 @@ export function useAutoLoadFile(
     load,
   ]);
 
-  return useMemo(() => ({ openFile, adopt }), [openFile, adopt]);
+  return useMemo(
+    () => ({ openFile, adopt, cancel }),
+    [openFile, adopt, cancel],
+  );
 }

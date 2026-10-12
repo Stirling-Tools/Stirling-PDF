@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import apiClient from "@app/services/apiClient";
+import { handlePasswordError } from "@app/utils/toolErrorHandler";
 import { createStirlingFile } from "@app/types/fileContext";
 import {
   clearPdfAccess,
@@ -12,6 +13,8 @@ import {
   prepareUnlockedFile,
   protectUnlockedResults,
   unlockPdfForSession,
+  verifyEditedPdfProtection,
+  assertPdfSessionEditable,
 } from "@app/services/pdfSessionUnlock";
 
 vi.mock("@app/services/apiClient", () => ({ default: { post: vi.fn() } }));
@@ -22,6 +25,8 @@ const access: PdfAccess = {
   signed: false,
   ownerAuthenticated: false,
   permissions: -4,
+  encryptionKeyLength: 256,
+  encryptionRevision: 6,
   canModify: true,
   canAssemble: true,
   pageCount: 2,
@@ -55,6 +60,73 @@ describe("session PDF access", () => {
       "Incorrect password",
     );
     expect(getPdfAccess(original)).toBeUndefined();
+  });
+
+  it("strips password-bearing request objects while preserving password errors", async () => {
+    const form = new FormData();
+    form.set("password", "secret");
+    const config = { data: form };
+    const original = Object.assign(new Error("Bad request"), {
+      isAxiosError: true,
+      config,
+      request: { config },
+      response: { status: 400, data: { type: "/errors/pdf-password" }, config },
+    });
+    post.mockRejectedValueOnce(original);
+    const error = await unlockPdfForSession(
+      new File(["pdf"], "test.pdf"),
+      "secret",
+    ).catch((error: unknown) => error);
+    expect(error).not.toBe(original);
+    expect(error).not.toHaveProperty("config");
+    expect(error).not.toHaveProperty("request");
+    expect(error).not.toHaveProperty("response.config");
+    expect(error).not.toHaveProperty("cause");
+    expect(
+      await handlePasswordError(error, "Incorrect password", "Failed"),
+    ).toBe("Incorrect password");
+  });
+
+  it.each([
+    { encrypted: false },
+    { permissions: -44 },
+    { encryptionKeyLength: 128 },
+    { encryptionRevision: 4 },
+    { ownerAuthenticated: true },
+    { encryptionKeyLength: undefined },
+  ])("rejects a native export with changed protection: %j", async (changed) => {
+    const output = new File(["export"], "edited.pdf");
+    post.mockResolvedValueOnce({ data: { ...access, ...changed } });
+    await expect(verifyEditedPdfProtection(output, access)).rejects.toThrow(
+      "Unable to preserve PDF protection",
+    );
+    expect(getPdfAccess(output)).toBeUndefined();
+  });
+
+  it("adopts a verified native export and blocks signed protected edits", async () => {
+    const output = new File(["export"], "edited.pdf");
+    post.mockResolvedValueOnce({ data: access });
+    await verifyEditedPdfProtection(output, access);
+    expect(getPdfAccess(output)).toEqual(access);
+    await expect(
+      verifyEditedPdfProtection(output, { ...access, signed: true }),
+    ).rejects.toThrow("digital signatures");
+    expect(post).toHaveBeenCalledOnce();
+    expect(() =>
+      assertPdfSessionEditable({ encrypted: false, signed: true }),
+    ).not.toThrow();
+  });
+
+  it("rejects native exports when the source protection cannot be verified", async () => {
+    post.mockResolvedValueOnce({ data: access });
+    const output = new File(["export"], "edited.pdf");
+    await expect(
+      verifyEditedPdfProtection(output, {
+        ...access,
+        encryptionKeyLength: undefined,
+      }),
+    ).rejects.toThrow("Unable to preserve PDF protection");
+    expect(getPdfAccess(output)).toBeUndefined();
   });
 
   it("isolates same-name files and drops access when a document closes", () => {

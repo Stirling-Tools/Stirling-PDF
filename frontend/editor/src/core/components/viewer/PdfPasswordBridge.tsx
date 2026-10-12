@@ -22,6 +22,14 @@ export function PdfPasswordBridge({
   const prompted = useRef<string | null>(null);
 
   useEffect(() => {
+    attempted.current = null;
+    prompted.current = null;
+    return () => {
+      attempted.current = null;
+    };
+  }, [fileId, activeDocument?.id]);
+
+  useEffect(() => {
     if (
       !manager ||
       activeDocument?.errorCode !== PdfErrorCode.Password ||
@@ -33,13 +41,15 @@ export function PdfPasswordBridge({
       password !== undefined &&
       (attempted.current?.id !== id || attempted.current.password !== password)
     ) {
-      attempted.current = { id, password };
+      const attempt = { id, password };
+      attempted.current = attempt;
       void manager
         .retryDocument(id, { password })
         .toPromise()
         .then((response) => response.task.toPromise())
         .catch(() => {
-          if (fileId) actions.openEncryptedUnlockPrompt(fileId as FileId);
+          if (attempted.current === attempt && fileId)
+            actions.openEncryptedUnlockPrompt(fileId as FileId);
         });
     } else if (fileId && prompted.current !== id) {
       prompted.current = id;

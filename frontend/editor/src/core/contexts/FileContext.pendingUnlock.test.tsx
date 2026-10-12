@@ -16,8 +16,10 @@ import {
 import apiClient from "@app/services/apiClient";
 import { getPdfAccess } from "@app/services/pdfPasswordStore";
 import { fileStorage } from "@app/services/fileStorage";
+import { generateProcessedFileMetadata } from "@app/contexts/file/fileActions";
 import {
   createStirlingFile,
+  createNewStirlingFileStub,
   type FileId,
   type StirlingFileStub,
 } from "@app/types/fileContext";
@@ -27,6 +29,7 @@ import {
 } from "@app/services/pendingUnlocks";
 
 const observed = vi.hoisted(() => ({
+  isEncrypted: true,
   heldBeforeEffects: false,
   afterDispatch: undefined as (() => Promise<void>) | undefined,
 }));
@@ -99,7 +102,7 @@ vi.mock("@app/contexts/file/fileActions", async (importOriginal) => {
           isLeaf: true,
           originalFileId: id,
           versionNumber: 1,
-          processedFile: { pages: [], isEncrypted: true },
+          processedFile: { pages: [], isEncrypted: observed.isEncrypted },
         };
         filesRef.current.set(id, file);
         dispatch({ type: "ADD_FILES", payload: { stirlingFileStubs: [stub] } });
@@ -120,9 +123,163 @@ function wrapper({ children }: { children: ReactNode }) {
 }
 
 beforeEach(() => {
+  vi.mocked(generateProcessedFileMetadata).mockResolvedValue({
+    pages: [],
+    totalPages: 1,
+    isEncrypted: false,
+  });
+  observed.isEncrypted = true;
   observed.heldBeforeEffects = false;
   observed.afterDispatch = undefined;
   setPendingUnlocks([]);
+});
+
+describe("protected tool replacements", () => {
+  beforeEach(() => {
+    observed.isEncrypted = false;
+    vi.spyOn(fileStorage, "persistVersionedOutputs").mockResolvedValue();
+  });
+  afterEach(() => vi.restoreAllMocks());
+
+  it.each(["cancel", "unlock", "remove-password"])(
+    "retains inputs until %s settles the output",
+    async (decision) => {
+      const { result } = renderHook(
+        () => ({ ...useFileActions(), selectors: useFileSelectors() }),
+        { wrapper },
+      );
+      await act(() =>
+        result.current.actions.addFiles([new File(["original"], "source.pdf")]),
+      );
+      const output = createStirlingFile(
+        new File(["encrypted"], "protected.pdf"),
+      );
+      const stub = createNewStirlingFileStub(output, output.fileId, undefined, {
+        pages: [],
+        isEncrypted: true,
+      });
+      let consuming!: ReturnType<typeof result.current.actions.consumeFiles>;
+      await act(async () => {
+        consuming = result.current.actions.consumeFiles(
+          [id],
+          [output],
+          [stub],
+          { silent: true },
+        );
+      });
+      expect(result.current.selectors.getAllFileIds()).toEqual([id]);
+      expect(result.current.selectors.getFile(output.fileId)).toBeUndefined();
+      if (decision === "cancel") {
+        await act(async () => {
+          fireEvent.click(screen.getByText("Cancel opening"));
+          await consuming;
+        });
+        expect(result.current.selectors.getAllFileIds()).toEqual([id]);
+        await expect(consuming).resolves.toEqual([]);
+        return;
+      }
+      vi.mocked(apiClient.post).mockResolvedValueOnce({
+        data:
+          decision === "remove-password"
+            ? new Blob(["plain"])
+            : {
+                encrypted: true,
+                signed: false,
+                ownerAuthenticated: true,
+                permissions: -4,
+                canModify: true,
+                canAssemble: true,
+                pageCount: 1,
+              },
+      });
+      fireEvent.change(screen.getByLabelText("PDF password"), {
+        target: { value: "secret" },
+      });
+      await act(async () => {
+        fireEvent.click(
+          screen.getByText(
+            decision === "unlock" ? "Unlock" : "Remove Password",
+          ),
+        );
+        await consuming;
+      });
+      const accepted = await consuming;
+      expect(accepted).toHaveLength(1);
+      expect(result.current.selectors.getAllFileIds()).toEqual(accepted);
+      expect(
+        result.current.selectors.getStirlingFileStub(accepted[0]),
+      ).toMatchObject({
+        derivedFromTool: true,
+        sourceFileIds: [id],
+        processedFile: { isEncrypted: decision === "unlock" },
+      });
+    },
+  );
+
+  it.each(["cancel", "clear"])(
+    "handles %s after part of a protected batch is admitted",
+    async (decision) => {
+      const { result } = renderHook(
+        () => ({ ...useFileActions(), selectors: useFileSelectors() }),
+        { wrapper },
+      );
+      await act(() =>
+        result.current.actions.addFiles([new File(["original"], "source.pdf")]),
+      );
+      const outputs = ["first", "second"].map((name) =>
+        createStirlingFile(new File(["encrypted"], `${name}.pdf`)),
+      );
+      const stubs = outputs.map((file) =>
+        createNewStirlingFileStub(file, file.fileId, undefined, {
+          pages: [],
+          isEncrypted: true,
+        }),
+      );
+      let consuming!: ReturnType<typeof result.current.actions.consumeFiles>;
+      await act(async () => {
+        consuming = result.current.actions.consumeFiles([id], outputs, stubs);
+      });
+      vi.mocked(apiClient.post).mockResolvedValueOnce({
+        data: {
+          encrypted: true,
+          signed: false,
+          ownerAuthenticated: true,
+          permissions: -4,
+          canModify: true,
+          canAssemble: true,
+          pageCount: 1,
+        },
+      });
+      fireEvent.change(screen.getByLabelText("PDF password"), {
+        target: { value: "secret" },
+      });
+      await act(async () => {
+        fireEvent.click(screen.getByText("Unlock"));
+      });
+      expect(result.current.selectors.getAllFileIds()).toEqual([id]);
+      if (decision === "clear") {
+        await act(async () => {
+          await result.current.actions.clearAllFiles();
+          await consuming;
+        });
+        expect(result.current.selectors.getAllFileIds()).toEqual([]);
+        await expect(consuming).resolves.toEqual([]);
+        return;
+      }
+      await act(async () => {
+        fireEvent.click(screen.getByText("Cancel opening"));
+        await consuming;
+      });
+      expect(result.current.selectors.getAllFileIds()).toEqual(
+        expect.arrayContaining([id, outputs[0].fileId]),
+      );
+      expect(
+        result.current.selectors.getStirlingFileStub(outputs[0].fileId)
+          ?.sourceFileIds,
+      ).toEqual([id]);
+      await expect(consuming).resolves.toEqual([outputs[0].fileId]);
+    },
+  );
 });
 afterEach(() => {
   cleanup();

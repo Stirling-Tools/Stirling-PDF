@@ -8,6 +8,8 @@ import {
 import type { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
 import type { PageSnapshot } from "@app/tools/pdfTextEditor/types";
 import { getPdfAccess } from "@app/services/pdfPasswordStore";
+import { assertPdfSessionEditable } from "@app/services/pdfSessionUnlock";
+import { detectSaveRisks } from "@app/tools/pdfTextEditor/util/documentRisks";
 
 const EAGER_PAGE_LIMIT = 5;
 
@@ -29,6 +31,7 @@ export function useDocumentLoader(store: EditorStore) {
         total: 0,
       });
       try {
+        assertPdfSessionEditable(getPdfAccess(file));
         await yieldToBrowser();
         const bytes = new Uint8Array(await file.arrayBuffer());
         if (!store.isCurrentLoad(token)) return;
@@ -39,6 +42,16 @@ export function useDocumentLoader(store: EditorStore) {
         });
         await yieldToBrowser();
         const doc = await EditorDocument.open(bytes, documentPassword);
+        try {
+          const risks = detectSaveRisks(doc);
+          assertPdfSessionEditable({
+            encrypted: risks.encrypted,
+            signed: risks.signatures > 0,
+          });
+        } catch (error) {
+          doc.dispose();
+          throw error;
+        }
         if (!store.isCurrentLoad(token)) {
           // A newer load superseded us before we installed our doc - free
           // it ourselves (setDocument never took ownership).

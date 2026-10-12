@@ -142,6 +142,7 @@ function FileContextInner({
       FileId,
       {
         stub: StirlingFileStub;
+        publishOnUnlock: boolean;
         admitted: Promise<boolean | StirlingFile>;
         resolve: (admitted: boolean | StirlingFile) => void;
       }
@@ -175,13 +176,65 @@ function FileContextInner({
       const admitted = new Promise<boolean | StirlingFile>((settle) => {
         resolve = settle;
       });
-      pendingAdmissions.current.set(stub.id, { stub, admitted, resolve });
+      pendingAdmissions.current.set(stub.id, {
+        stub,
+        publishOnUnlock: action.type !== "CONSUME_FILES",
+        admitted,
+        resolve,
+      });
       admissionResults.current.set(stub.id, admitted);
       locked.push(stub.id);
     }
     if (locked.length) {
       addPendingUnlocks(locked);
       setEncryptedQueue((queue) => [...queue, ...locked]);
+    }
+    if (
+      action.type === "CONSUME_FILES" &&
+      stubs.some((stub) => pendingAdmissions.current.has(stub.id))
+    ) {
+      const sourceFileIds = Array.from(
+        new Set(
+          action.payload.inputFileIds.flatMap((id) => [
+            id,
+            ...(stateRef.current.files.byId[id]?.sourceFileIds ?? []),
+          ]),
+        ),
+      );
+      // A replacement is atomic: cancelling any output keeps the inputs available.
+      void Promise.all(
+        stubs.map(async (stub) => {
+          const pending = pendingAdmissions.current.get(stub.id);
+          const result = pending ? await pending.admitted : true;
+          const admittedStub = pending?.stub ?? stub;
+          return result !== false && filesRef.current.has(admittedStub.id)
+            ? admittedStub
+            : null;
+        }),
+      ).then((results) => {
+        const admitted = results.filter(
+          (stub): stub is StirlingFileStub =>
+            stub !== null && filesRef.current.has(stub.id),
+        );
+        if (admitted.length === results.length) {
+          dispatch({
+            ...action,
+            payload: { ...action.payload, outputStirlingFileStubs: admitted },
+          });
+        } else if (admitted.length) {
+          dispatch({
+            type: "ADD_FILES",
+            payload: {
+              stirlingFileStubs: admitted.map((stub) => ({
+                ...stub,
+                derivedFromTool: true,
+                sourceFileIds,
+              })),
+            },
+          });
+        }
+      });
+      return;
     }
     if (action.type === "UNDO_CONSUME_FILES") {
       dispatch({
@@ -209,7 +262,10 @@ function FileContextInner({
         return result === true ? file : result === false ? null : result;
       }),
     );
-    return admitted.filter((file): file is StirlingFile => file !== null);
+    return admitted.filter(
+      (file): file is StirlingFile =>
+        file !== null && filesRef.current.get(file.fileId) === file,
+    );
   }, []);
 
   const cancelPendingAdmissions = useCallback((ids: readonly FileId[]) => {
@@ -561,12 +617,6 @@ function FileContextInner({
       if (filesRef.current.get(fileId) !== file) {
         return;
       }
-      if (pending) {
-        dispatch({
-          type: "ADD_FILES",
-          payload: { stirlingFileStubs: [parentStub] },
-        });
-      }
       rememberPdfAccess(file, access);
       bindPdfAccess(file, fileId);
       const metadata = await generateProcessedFileMetadata(file);
@@ -580,10 +630,19 @@ function FileContextInner({
         },
         thumbnailUrl: metadata?.thumbnailUrl,
       };
-      dispatch({
-        type: "UPDATE_FILE_RECORD",
-        payload: { id: fileId, updates },
-      });
+      if (pending) {
+        pending.stub = { ...parentStub, ...updates };
+        if (pending.publishOnUnlock)
+          dispatch({
+            type: "ADD_FILES",
+            payload: { stirlingFileStubs: [pending.stub] },
+          });
+      } else {
+        dispatch({
+          type: "UPDATE_FILE_RECORD",
+          payload: { id: fileId, updates },
+        });
+      }
       pendingAdmissions.current.delete(fileId);
       pending?.resolve(true);
     },
@@ -648,8 +707,9 @@ function FileContextInner({
         [output],
         [stub],
         filesRef,
-        dispatchWithUnlock,
+        pending && !pending.publishOnUnlock ? () => {} : dispatchWithUnlock,
       );
+      if (pending) pending.stub = stub;
       pendingAdmissions.current.delete(fileId);
       pending?.resolve(output);
       indexedDB?.bumpRevision?.();

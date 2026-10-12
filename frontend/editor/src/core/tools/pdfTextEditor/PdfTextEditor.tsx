@@ -7,7 +7,11 @@ import { Alert, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
 import { downloadFile } from "@app/services/downloadService";
-import { unlockPdfForSession } from "@app/services/pdfSessionUnlock";
+import {
+  assertPdfSessionEditable,
+  unlockPdfForSession,
+  verifyEditedPdfProtection,
+} from "@app/services/pdfSessionUnlock";
 import {
   getPdfAccess,
   rememberPdfAccess,
@@ -130,13 +134,11 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     },
     [pinWorkbench, setSourceFile, store],
   );
-  const { openFile: openWorkbenchFile, adopt: adoptFile } = useAutoLoadFile(
-    load,
-    handleFileChosen,
-    sourceFileId,
-    applying,
-    state,
-  );
+  const {
+    openFile: openWorkbenchFile,
+    adopt: adoptFile,
+    cancel: cancelAutoLoad,
+  } = useAutoLoadFile(load, handleFileChosen, sourceFileId, applying, state);
 
   useEffect(() => store.selection.subscribe(setSelection), [store]);
 
@@ -178,12 +180,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       try {
         const sourceAccess = getPdfAccess(sourceId);
         if (toolId === "pdfTextEditor" && sourceAccess?.encrypted) {
-          // The saved bytes must authenticate before inheriting session access.
-          const access = await unlockPdfForSession(
-            edited,
-            sourceAccess.password,
-          );
-          if (access.encrypted) rememberPdfAccess(edited, access);
+          await verifyEditedPdfProtection(edited, sourceAccess);
         }
         if (sourceId && parentStub) {
           const { stirlingFiles, stubs } = await createStirlingFilesAndStubs(
@@ -248,6 +245,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       const sourceId = sourceFileIdRef.current;
       try {
         assertFilesNotBlocked([sourceId ?? undefined]);
+        assertPdfSessionEditable(getPdfAccess(sourceId));
         // Yield once so React can paint the disabled/saving state before the
         // synchronous PDFium serialize blocks the main thread.
         await new Promise((resolve) => setTimeout(resolve, 0));
@@ -261,11 +259,12 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         // Apply first and unconditionally. Gating the write-back on the browser
         // download dialog meant cancelling it silently discarded the save.
         assertFilesNotBlocked([sourceId ?? undefined]);
-        await applyToWorkbench(blob, filename);
+        const saved = await applyToWorkbench(blob, filename);
+        if (!saved) return;
         store.markSaved(exported);
         if (download) {
           assertFilesNotBlocked([sourceId ?? undefined]);
-          await downloadFile({ data: blob, filename });
+          await downloadFile({ data: saved, filename });
         }
       } catch (err) {
         // Surface the failure instead of silently dropping it - the user
@@ -705,9 +704,11 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   );
 
   const handleCancelPassword = useCallback(() => {
+    const file = store.pendingPasswordFile;
+    if (file) cancelAutoLoad(file);
     pendingDiskFileRef.current = null;
     store.clearPasswordPrompt();
-  }, [store]);
+  }, [store, cancelAutoLoad]);
 
   const sidebarProps = {
     store,
