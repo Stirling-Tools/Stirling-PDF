@@ -67,14 +67,17 @@ export class PdfiumPageRenderer {
       MAX_RASTER_DIMENSION / height,
       Math.sqrt(MAX_RASTER_PIXELS) / Math.sqrt(width) / Math.sqrt(height),
     );
+    // Nothing binding keeps rasterSize's rounding - the HiDPI specs compare
+    // against it; a bound must stay floored or the size can cross the budget.
+    const fit = effective === safeScale ? Math.round : Math.floor;
     return {
       width: Math.max(
         1,
-        Math.min(MAX_RASTER_DIMENSION, Math.floor(width * effective)),
+        Math.min(MAX_RASTER_DIMENSION, fit(width * effective)),
       ),
       height: Math.max(
         1,
-        Math.min(MAX_RASTER_DIMENSION, Math.floor(height * effective)),
+        Math.min(MAX_RASTER_DIMENSION, fit(height * effective)),
       ),
     };
   }

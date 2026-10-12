@@ -52,6 +52,15 @@ describe("PdfiumPageRenderer.rasterBudget", () => {
     });
   });
 
+  it("rounds an unbounded page to the nearest pixel like rasterSize", () => {
+    // The HiDPI specs compare the bitmap against rasterSize's rounding; a
+    // floored dimension is one pixel short on a page of 446.99 x 842 at 2x.
+    expect(PdfiumPageRenderer.rasterBudget(446.99, 842, 2)).toEqual({
+      width: Math.round(446.99 * 2),
+      height: Math.round(842 * 2),
+    });
+  });
+
   it("holds a giant page inside the pixel budget, keeping its shape", () => {
     const { width, height } = PdfiumPageRenderer.rasterBudget(
       100_000,
