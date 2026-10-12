@@ -1,6 +1,7 @@
 package stirling.software.proprietary.security.filter;
 
 import static stirling.software.common.util.RequestUriUtils.isPublicAuthEndpoint;
+import static stirling.software.common.util.RequestUriUtils.isShareLinkDownload;
 import static stirling.software.common.util.RequestUriUtils.isStaticResource;
 import static stirling.software.proprietary.security.model.AuthenticationType.OAUTH2;
 import static stirling.software.proprietary.security.model.AuthenticationType.SAML2;
@@ -78,7 +79,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // Check if this is a public endpoint BEFORE validating JWT
             // This allows public endpoints to work even with expired tokens in the request
             if (isPublicAuthEndpoint(requestURI, contextPath)) {
-                // For public auth endpoints, skip JWT validation and continue
+                // Private share links still need the signed-in user; a bad token stays anonymous.
+                if (jwtToken != null && isShareLinkDownload(requestURI, contextPath)) {
+                    tryAuthenticate(request, jwtToken);
+                }
                 filterChain.doFilter(request, response);
                 return;
             }
@@ -175,6 +179,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         return true;
+    }
+
+    private void tryAuthenticate(HttpServletRequest request, String jwtToken) {
+        try {
+            jwtService.validateToken(jwtToken);
+            authenticate(request, jwtService.extractClaims(jwtToken));
+        } catch (AuthenticationException | SQLException | UnsupportedProviderException e) {
+            log.debug("Optional JWT on a public endpoint ignored: {}", e.getMessage());
+            SecurityContextHolder.clearContext();
+        }
     }
 
     private void authenticate(HttpServletRequest request, Map<String, Object> claims)
