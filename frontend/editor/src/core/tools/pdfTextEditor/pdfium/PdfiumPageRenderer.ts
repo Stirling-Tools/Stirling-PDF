@@ -174,7 +174,7 @@ export class PdfiumPageRenderer {
       }
       return new ImageData(pixels, w, h);
     } finally {
-      releaseRaster(m, bitmapPtr, h);
+      releaseRaster(m, bitmapPtr);
     }
   }
 }

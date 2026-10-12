@@ -108,40 +108,36 @@ export function acquireRaster(
 
 /**
  * Destroys the bitmap and pools its storage at the capacity it was allocated
- * with. `height` is used only for a bitmap this module did not hand out.
+ * with. An unleased bitmap is only destroyed: its buffer is PDFium's.
  */
-export function releaseRaster(
-  m: WrappedPdfiumModule,
-  bitmapPtr: number,
-  height: number,
-): void {
+export function releaseRaster(m: WrappedPdfiumModule, bitmapPtr: number): void {
   if (!bitmapPtr) return;
   const map = leasesFor(m);
   const lease = map.get(bitmapPtr);
   map.delete(bitmapPtr);
-  const ptr = lease?.ptr ?? m.FPDFBitmap_GetBuffer(bitmapPtr);
-  const bytes = lease?.bytes ?? m.FPDFBitmap_GetStride(bitmapPtr) * height;
   // FPDFBitmap_Destroy only frees the handle; for CreateEx the scan buffer is
   // the caller's, which is the whole point of handing it back to the pool.
   m.FPDFBitmap_Destroy(bitmapPtr);
-  if (ptr && bytes >= MIN_POOLED_BYTES) {
-    const slots = poolFor(m);
-    slots.push({ ptr, bytes });
-    slots.sort((a, b) => b.bytes - a.bytes);
-    let retained = 0;
-    for (let i = 0; i < slots.length; i++) {
-      const slot = slots[i];
-      if (i < MAX_SLOTS && retained + slot.bytes <= MAX_RETAINED_BYTES) {
-        retained += slot.bytes;
-      } else {
-        m.pdfium.wasmExports.free(slot.ptr);
-        slots.splice(i, 1);
-        i--;
-      }
-    }
+  if (!lease) return;
+  const { ptr, bytes } = lease;
+  if (bytes < MIN_POOLED_BYTES) {
+    m.pdfium.wasmExports.free(ptr);
     return;
   }
-  if (ptr) m.pdfium.wasmExports.free(ptr);
+  const slots = poolFor(m);
+  slots.push({ ptr, bytes });
+  slots.sort((a, b) => b.bytes - a.bytes);
+  let retained = 0;
+  for (let i = 0; i < slots.length; i++) {
+    const slot = slots[i];
+    if (i < MAX_SLOTS && retained + slot.bytes <= MAX_RETAINED_BYTES) {
+      retained += slot.bytes;
+    } else {
+      m.pdfium.wasmExports.free(slot.ptr);
+      slots.splice(i, 1);
+      i--;
+    }
+  }
 }
 
 /** Frees every retained slot. Called when the document that owns them closes. */
