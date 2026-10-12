@@ -303,7 +303,7 @@ jobs:
   pre-commit:
     needs: [files-changed]
     permissions:
-      contents: read
+      contents: write
     uses: ./.github/workflows/pre_commit.yml
     secrets: inherit
 
