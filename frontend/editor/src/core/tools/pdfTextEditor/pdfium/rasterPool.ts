@@ -13,9 +13,9 @@ import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
  * render has grown it the growth is never returned to the OS: holding two
  * page-sized blocks sets the process high-water mark by those two blocks (a
  * page-sized pair measured +66 MB on an A4 document at DPR 2). That is the cost
- * the pool pays for removing an allocation and a page-fault sweep from every
- * re-render. The pool is keyed by module and dropped when a document closes, so
- * it cannot outlive the instance whose heap it points into.
+ * the pool pays for removing the backing-store allocation from every re-render.
+ * The pool is keyed by module and dropped when a document closes, so it cannot
+ * outlive the instance whose heap it points into.
  */
 const MAX_SLOTS = 2;
 const MAX_RETAINED_BYTES = 64 * 1024 * 1024;
@@ -25,14 +25,27 @@ const MIN_POOLED_BYTES = 256 * 1024;
 
 interface RasterSlot {
   ptr: number;
+  /**
+   * Bytes of the backing store, which is the capacity that was allocated, not
+   * the bitmap currently using it: a 4096x4096 block handed to a 512x512 page
+   * still occupies 64 MB until something else takes it.
+   */
   bytes: number;
 }
 
 const pools = new WeakMap<object, RasterSlot[]>();
+// Backing store of every bitmap this module has handed out. A bitmap's own
+// stride does not describe the allocation under it, so the lease is what
+// release hands back to the pool.
+const leases = new WeakMap<object, Map<number, RasterSlot>>();
 
 /** The module's wasm instance is what a slot's pointer is only valid within. */
+function moduleKey(m: WrappedPdfiumModule): object {
+  return m.pdfium;
+}
+
 function poolFor(m: WrappedPdfiumModule): RasterSlot[] {
-  const key = m.pdfium as unknown as object;
+  const key = moduleKey(m);
   let slots = pools.get(key);
   if (!slots) {
     slots = [];
@@ -41,7 +54,26 @@ function poolFor(m: WrappedPdfiumModule): RasterSlot[] {
   return slots;
 }
 
-export const RASTER_FORMAT_BGRA = 1;
+function leasesFor(m: WrappedPdfiumModule): Map<number, RasterSlot> {
+  const key = moduleKey(m);
+  let map = leases.get(key);
+  if (!map) {
+    map = new Map();
+    leases.set(key, map);
+  }
+  return map;
+}
+
+/**
+ * `FPDFBitmap_BGRA`, the format whose pixels are four bytes each in the order
+ * the copy-out path reads them. It is not the alpha boolean that
+ * `FPDFBitmap_Create` takes: `FPDFBitmap_CreateEx` wants the format identifier,
+ * and passing 1 there selects `FPDFBitmap_Gray`, which writes a single byte per
+ * pixel while the copy-out path reads four (verified against the shipped wasm:
+ * after a white fill the last three quarters of a `width * 4` stride are still
+ * untouched).
+ */
+export const RASTER_FORMAT_BGRA = 4;
 
 /**
  * A bitmap whose scan buffer lives in the pool (or a freshly allocated one).
@@ -74,7 +106,10 @@ export function acquireRaster(
       slot.ptr,
       stride,
     );
-    if (bitmapPtr) return bitmapPtr;
+    if (bitmapPtr) {
+      leasesFor(m).set(bitmapPtr, slot);
+      return bitmapPtr;
+    }
     // CreateEx never took the storage, so it is still ours to free.
     m.pdfium.wasmExports.free(slot.ptr);
   }
@@ -92,15 +127,16 @@ export function acquireRaster(
     m.pdfium.wasmExports.free(ptr);
     return 0;
   }
+  leasesFor(m).set(bitmapPtr, { ptr, bytes });
   return bitmapPtr;
 }
 
 /**
- * Destroys the bitmap and keeps its scan buffer for the next render.
+ * Destroys the bitmap and keeps its backing store for the next render, at the
+ * capacity it was allocated with.
  *
- * `height` must be the bitmap's own height: the retained byte count is what a
- * later best-fit checks a request against, so understating it would let a
- * buffer too small for a page be handed out.
+ * `height` is consulted only for a bitmap this module did not hand out, where
+ * the stride times the height is the best available estimate of the storage.
  */
 export function releaseRaster(
   m: WrappedPdfiumModule,
@@ -108,12 +144,14 @@ export function releaseRaster(
   height: number,
 ): void {
   if (!bitmapPtr) return;
-  const ptr = m.FPDFBitmap_GetBuffer(bitmapPtr);
-  const stride = m.FPDFBitmap_GetStride(bitmapPtr);
+  const map = leasesFor(m);
+  const lease = map.get(bitmapPtr);
+  map.delete(bitmapPtr);
+  const ptr = lease?.ptr ?? m.FPDFBitmap_GetBuffer(bitmapPtr);
+  const bytes = lease?.bytes ?? m.FPDFBitmap_GetStride(bitmapPtr) * height;
   // FPDFBitmap_Destroy only frees the handle; for CreateEx the scan buffer is
   // the caller's, which is the whole point of handing it back to the pool.
   m.FPDFBitmap_Destroy(bitmapPtr);
-  const bytes = stride * height;
   if (ptr && bytes >= MIN_POOLED_BYTES) {
     const slots = poolFor(m);
     slots.push({ ptr, bytes });
@@ -136,7 +174,7 @@ export function releaseRaster(
 
 /** Frees every retained slot. Called when the document that owns them closes. */
 export function releaseRasterPool(m: WrappedPdfiumModule): void {
-  const slots = pools.get(m.pdfium);
+  const slots = pools.get(moduleKey(m));
   if (!slots) return;
   for (const slot of slots) m.pdfium.wasmExports.free(slot.ptr);
   slots.length = 0;

@@ -26,10 +26,16 @@ function makeModule(options: FakeOptions = {}) {
     (
       width: number,
       _h: number,
-      _format: number,
+      format: number,
       firstScan: number,
       stride: number,
     ) => {
+      if (format !== 4) {
+        // Rejects what the real API reads as FPDFBitmap_Gray/BGR/BGRx instead
+        // of painting four bytes per pixel regardless, so a wrong constant
+        // cannot pass a test.
+        throw new Error(`unsupported bitmap format ${format}`);
+      }
       if (options.refuseWidths?.includes(width)) return 0;
       const bitmap = nextBitmap++;
       buffers.set(bitmap, { ptr: firstScan, stride });
@@ -52,7 +58,14 @@ function makeModule(options: FakeOptions = {}) {
     FPDFBitmap_Destroy,
     pdfium: { wasmExports: { malloc, free } },
   } as unknown as WrappedPdfiumModule;
-  return { module, malloc, free, FPDFBitmap_CreateEx, FPDFBitmap_Destroy };
+  return {
+    module,
+    malloc,
+    free,
+    FPDFBitmap_CreateEx,
+    FPDFBitmap_Destroy,
+    FPDFBitmap_GetBuffer,
+  };
 }
 
 describe("rasterPool", () => {
@@ -101,19 +114,61 @@ describe("rasterPool", () => {
     releaseRaster(module, large, 2048);
   });
 
-  it("passes BGRA so the copied pixels keep their channel order", () => {
+  it("passes the BGRA format identifier, not the Create() alpha boolean", () => {
     const { module, FPDFBitmap_CreateEx } = makeModule();
 
     const bitmap = acquireRaster(module, 512, 512);
 
+    // 4 is FPDFBitmap_BGRA. The format the pool used to pass, 1, is
+    // FPDFBitmap_Gray: the old code carried over the alpha boolean of
+    // FPDFBitmap_Create, where 1 is not a format at all.
     expect(FPDFBitmap_CreateEx).toHaveBeenCalledWith(
       512,
       512,
-      RASTER_FORMAT_BGRA,
+      4,
       expect.any(Number),
       512 * 4,
     );
+    expect(RASTER_FORMAT_BGRA).toBe(4);
     releaseRaster(module, bitmap, 512);
+  });
+
+  it("keeps a reused buffer's capacity, not the size of the bitmap in it", () => {
+    const { module, malloc } = makeModule();
+    const large = acquireRaster(module, 4096, 4096);
+    releaseRaster(module, large, 4096);
+
+    const small = acquireRaster(module, 512, 512);
+    releaseRaster(module, small, 512);
+
+    // The 64 MB block still serves the next large page: booking the small
+    // bitmap's 1 MB as the slot's size would have hidden 63 MB from the
+    // retention budget and sent this render to the allocator.
+    const again = acquireRaster(module, 4096, 4032);
+
+    expect(malloc).toHaveBeenCalledTimes(1);
+    releaseRaster(module, again, 4032);
+  });
+
+  it("never hands one live backing store to two bitmaps", () => {
+    const { module, malloc, FPDFBitmap_GetBuffer } = makeModule();
+    const first = acquireRaster(module, 512, 512);
+    const second = acquireRaster(module, 512, 512);
+
+    expect(malloc).toHaveBeenCalledTimes(2);
+    expect(FPDFBitmap_GetBuffer(first)).not.toBe(FPDFBitmap_GetBuffer(second));
+    releaseRaster(module, first, 512);
+    releaseRaster(module, second, 512);
+  });
+
+  it("does not retain a buffer larger than the whole budget", () => {
+    const { module, free } = makeModule();
+
+    // 8192 x 8192 x 4 = 256 MB, four times what the pool may keep.
+    const bitmap = acquireRaster(module, 8192, 8192);
+    releaseRaster(module, bitmap, 8192);
+
+    expect(free).toHaveBeenCalledTimes(1);
   });
 
   it("frees the scan buffer when the bitmap handle is refused", () => {
