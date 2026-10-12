@@ -44,7 +44,6 @@ function pullRequest({
     baseRefName: "main",
     additions,
     deletions: 0,
-    authorAssociation: "CONTRIBUTOR",
     author: { login: "contributor", __typename: authorType },
     labels: [],
     timeline: [],
@@ -320,7 +319,6 @@ describe("latest activity", () => {
   const commentBy = (author: Actor, ago: number) => ({
     __typename: "IssueComment" as const,
     createdAt: daysAgo(ago),
-    authorAssociation: "CONTRIBUTOR",
     author,
   });
 
@@ -340,7 +338,7 @@ describe("latest activity", () => {
   });
 
   it("skips a review still pending", () => {
-    const pending = { __typename: "PullRequestReview" as const, submittedAt: null, authorAssociation: "MEMBER", author: PERSON };
+    const pending = { __typename: "PullRequestReview" as const, submittedAt: null, author: PERSON };
     assert.equal(latestActivity(node([pending]), []), daysAgo(50));
   });
 });
@@ -358,7 +356,6 @@ function toNode(pr: PullRequest, pageSize: number, before: string | null): PullR
     baseRefName: pr.baseRefName,
     additions: pr.additions,
     deletions: pr.deletions,
-    authorAssociation: pr.authorAssociation,
     author: pr.author,
     labels: { nodes: pr.labels.map((name) => ({ name })) },
     commits: { nodes: [] },
@@ -366,7 +363,6 @@ function toNode(pr: PullRequest, pageSize: number, before: string | null): PullR
       nodes: pr.comments.map((comment) => ({
         __typename: "IssueComment" as const,
         createdAt: comment.createdAt,
-        authorAssociation: comment.fromTeam ? "MEMBER" : "CONTRIBUTOR",
         author: { login: comment.author, __typename: "User" },
       })),
     },
@@ -396,6 +392,8 @@ interface FakeOptions {
   files?: ChangedFile[];
   /** What issues.listComments returns. */
   comments?: { id: number; body: string; user: { login: string; type: string } }[];
+  /** Logins that can push to the repository. */
+  writers?: string[];
 }
 
 function fakeGitHub(
@@ -410,6 +408,7 @@ function fakeGitHub(
     turnItems = STILL_WAITING,
     files = [],
     comments = [],
+    writers = [],
   }: FakeOptions = {},
 ) {
   const calls: string[] = [];
@@ -442,6 +441,9 @@ function fakeGitHub(
   const github: GitHubClient = {
     graphql: async <T>(query: string, variables: Record<string, unknown>) => (await graphql(query, variables)) as T,
     rest: {
+      repos: {
+        getCollaboratorPermissionLevel: async ({ username }) => ({ data: { permission: writers.includes(username) ? "write" : "read" } }),
+      },
       issues: {
         createComment: async ({ issue_number }) => write(`comment #${issue_number}`),
         addLabels: async ({ issue_number, labels }) => write(`label #${issue_number} ${labels.join(",")}`),
@@ -625,6 +627,18 @@ describe("triage run", () => {
       const { github, calls } = fakeGitHub([pr], { files: javaFile(1500), comments });
       await triage(github);
       assert.deepEqual(calls, []);
+    });
+
+    it("restarts the week from a reply by someone who can push", async () => {
+      const pr = () => commented(commented(label(pullRequest({ additions: 1500 }), LABELS.tooLarge, 30), "contributor", 20), "maintainer", 10);
+      const comments = [{ id: 9, body: oversizedComment("contributor", 1500), user: { login: "github-actions[bot]", type: "Bot" } }];
+      const replied = fakeGitHub([pr()], { files: javaFile(1500), comments, writers: ["maintainer"] });
+      await triage(replied.github);
+      assert.deepEqual(replied.calls, ["comment #1", "label #1 backlog-cleanup", "close #1"]);
+
+      const passerBy = fakeGitHub([pr()], { files: javaFile(1500), comments });
+      await triage(passerBy.github);
+      assert.deepEqual(passerBy.calls, []);
     });
 
     it("lifts the warning once the PR is split down", async () => {

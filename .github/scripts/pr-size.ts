@@ -2,14 +2,22 @@
 // the PR changes, and the daily triage runs it on every open PR, then closes one that
 // has been too-large for CLOSE_AFTER_WARNING_DAYS. An oversized PR fails the check, is
 // labelled too-large and gets one comment saying why, kept up to date as the PR changes;
-// the label's age is the warning's. Members, collaborators, bots and PRs labelled
+// the label's age is the warning's. Anyone who can push, bots and PRs labelled
 // large-pr-approved are exempt. This file owns too-large and no other label.
 
-import { CLOSE_AFTER_WARNING_DAYS, type Core, type GitHubClient, type IssueRef, LABELS, type Repo, removeLabel } from "./github.ts";
+import {
+  CLOSE_AFTER_WARNING_DAYS,
+  type CanPush,
+  type Core,
+  type GitHubClient,
+  type IssueRef,
+  LABELS,
+  pushAccessChecker,
+  type Repo,
+  removeLabel,
+} from "./github.ts";
 
 export const MAX_LINES = 1000;
-
-export const TEAM_ASSOCIATIONS = ["OWNER", "MEMBER", "COLLABORATOR"];
 
 // Translations arrive from the community in bulk, and lockfiles are generated.
 const UNCOUNTED = [/\/locales\//, /(^|\/)messages_[\w-]+\.properties$/, /(^|\/)package-lock\.json$/, /\.lock$/, /\.lockfile$/];
@@ -31,7 +39,6 @@ export interface SizedPullRequest {
   state: string;
   additions: number;
   deletions: number;
-  author_association: string;
   user: { login: string; type: string };
   labels: { name: string }[];
 }
@@ -50,9 +57,9 @@ export function countedLines(files: ChangedFile[]) {
 }
 
 /** Why the limit never applies to this author, or null. */
-export function authorExemption(pr: SizedPullRequest): string | null {
-  if (TEAM_ASSOCIATIONS.includes(pr.author_association)) return `${pr.user.login} is on the team`;
-  return pr.user.type === "Bot" ? `${pr.user.login} is a bot` : null;
+export async function authorExemption(pr: SizedPullRequest, canPush: CanPush): Promise<string | null> {
+  if (pr.user.type === "Bot") return `${pr.user.login} is a bot`;
+  return (await canPush(pr.user.login)) ? `${pr.user.login} is on the team` : null;
 }
 
 /** Why a maintainer has lifted the limit for this PR, or null. */
@@ -117,27 +124,33 @@ async function lift(github: GitHubClient, issue: IssueRef, reason: string) {
  * Checks one open PR against the limit, and when `live`, warns or lifts the warning to
  * match: comments, and adds or removes too-large. Changes nothing unless `live`.
  */
-export async function enforceSizeLimit(github: GitHubClient, repo: Repo, pr: SizedPullRequest, live: boolean): Promise<SizeVerdict> {
+export async function enforceSizeLimit(
+  github: GitHubClient,
+  repo: Repo,
+  pr: SizedPullRequest,
+  live: boolean,
+  canPush: CanPush,
+): Promise<SizeVerdict> {
   const issue = { ...repo, issue_number: pr.number };
   const labelled = pr.labels.some((label) => label.name === LABELS.tooLarge);
-  const exempt = authorExemption(pr);
-  if (exempt !== null) {
-    if (live && labelled) await removeLabel(github, issue, LABELS.tooLarge);
-    return { held: false, summary: `No size limit: ${exempt}.` };
-  }
+  const total = pr.additions + pr.deletions;
+  if (!labelled && total <= MAX_LINES) return { held: false, summary: `Within the size limit: it changes ${total} lines.` };
 
-  const lines = await countLines(github, repo, pr);
-  const reason = approval(pr) ?? (lines <= MAX_LINES ? `it now changes ${lines} lines` : null);
-  if (reason === null) {
-    if (live) await warn(github, issue, pr, lines, labelled);
-    return {
-      held: true,
-      summary: `This PR changes ${lines} lines, not counting translations and lockfiles, over the ${MAX_LINES}-line limit for contributors outside the team. Please split it into smaller PRs, or add a comment explaining why it can't be split.`,
-    };
-  }
   // Only a PR that was told it is too large hears that it no longer is.
-  if (live && labelled) await lift(github, issue, reason);
-  return { held: false, summary: `Within the size limit: ${reason}.` };
+  const release = async (reason: string): Promise<SizeVerdict> => {
+    if (live && labelled) await lift(github, issue, reason);
+    return { held: false, summary: `Within the size limit: ${reason}.` };
+  };
+  const exempt = (await authorExemption(pr, canPush)) ?? approval(pr);
+  if (exempt !== null) return release(exempt);
+  const lines = await countLines(github, repo, pr);
+  if (lines <= MAX_LINES) return release(`it now changes ${lines} lines`);
+
+  if (live) await warn(github, issue, pr, lines, labelled);
+  return {
+    held: true,
+    summary: `This PR changes ${lines} lines, not counting translations and lockfiles, over the ${MAX_LINES}-line limit for contributors outside the team. Please split it into smaller PRs, or add a comment explaining why it can't be split.`,
+  };
 }
 
 /** pr-size-limit.yml's entry point: fails the check while the PR is over the limit. */
@@ -157,7 +170,7 @@ export async function checkPullRequestSize({
     core.info("The PR is closed.");
     return;
   }
-  const verdict = await enforceSizeLimit(github, context.repo, pr, live);
+  const verdict = await enforceSizeLimit(github, context.repo, pr, live, pushAccessChecker(github, context.repo));
   if (verdict.held) core.setFailed(verdict.summary);
   else core.info(verdict.summary);
 }

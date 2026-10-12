@@ -43,6 +43,9 @@ export interface GitHubClient {
       ): Promise<{ data: { id: number; body?: string; user: { login: string; type: string } | null }[] }>;
       updateComment(params: Repo & { comment_id: number; body: string }): Promise<unknown>;
     };
+    repos: {
+      getCollaboratorPermissionLevel(params: Repo & { username: string }): Promise<{ data: { permission: string } }>;
+    };
     pulls: {
       get(params: Repo & { pull_number: number }): Promise<{ data: PullData }>;
       update(params: Repo & { pull_number: number; state: "closed" }): Promise<unknown>;
@@ -72,6 +75,33 @@ export interface Core {
 
 export const isNotFound = (error: unknown) =>
   typeof error === "object" && error !== null && "status" in error && error.status === 404;
+
+// "maintain" reports as write.
+const PUSH_PERMISSIONS = ["admin", "write"];
+
+/** Whether a login can push to the repository. */
+export type CanPush = (login: string) => Promise<boolean>;
+
+/**
+ * Asks GitHub once per login whether it can push. This, not author_association, marks the
+ * team: org membership can be private, and github.token then sees a member as a CONTRIBUTOR.
+ */
+export function pushAccessChecker(github: GitHubClient, repo: Repo): CanPush {
+  const answers = new Map<string, Promise<boolean>>();
+  return (login) => {
+    const known = answers.get(login);
+    if (known) return known;
+    const answer = github.rest.repos.getCollaboratorPermissionLevel({ ...repo, username: login }).then(
+      ({ data }) => PUSH_PERMISSIONS.includes(data.permission),
+      (error: unknown) => {
+        if (isNotFound(error)) return false;
+        throw error;
+      },
+    );
+    answers.set(login, answer);
+    return answer;
+  };
+}
 
 /** Removes a label, treating one that is already gone as removed. */
 export async function removeLabel(github: GitHubClient, issue: IssueRef, name: string) {

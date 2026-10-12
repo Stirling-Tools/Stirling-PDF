@@ -2,16 +2,18 @@
 
 import {
   BOT_LOGIN,
+  type CanPush,
   CLOSE_AFTER_WARNING_DAYS,
   type Core,
   type GitHubClient,
   type IssueRef,
   LABELS,
   type PullData,
+  pushAccessChecker,
   type Repo,
   removeLabel,
 } from "./github.ts";
-import { enforceSizeLimit, MAX_LINES, type SizedPullRequest, TEAM_ASSOCIATIONS } from "./pr-size.ts";
+import { enforceSizeLimit, MAX_LINES, type SizedPullRequest } from "./pr-size.ts";
 import { clearStaleTurnLabel } from "./pr-turn.ts";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -77,15 +79,14 @@ const PULL_REQUEST_QUERY = `
         baseRefName
         additions
         deletions
-        authorAssociation
         author { login __typename }
         labels(first: 100) { nodes { name } }
         commits(last: 1) { nodes { commit { committedDate } } }
         activity: timelineItems(last: 100, itemTypes: [ISSUE_COMMENT, PULL_REQUEST_REVIEW, HEAD_REF_FORCE_PUSHED_EVENT]) {
           nodes {
             __typename
-            ... on IssueComment { createdAt authorAssociation author { login __typename } }
-            ... on PullRequestReview { submittedAt authorAssociation author { login __typename } }
+            ... on IssueComment { createdAt author { login __typename } }
+            ... on PullRequestReview { submittedAt author { login __typename } }
             ... on HeadRefForcePushedEvent { createdAt actor { login __typename } }
           }
         }
@@ -115,8 +116,8 @@ export type TimelineEvent =
   | { __typename: "ReopenedEvent" | "ReadyForReviewEvent" | "ConvertToDraftEvent"; createdAt: string; actor: Actor | null };
 
 export type ActivityItem =
-  | { __typename: "IssueComment"; createdAt: string; authorAssociation: string; author: Actor | null }
-  | { __typename: "PullRequestReview"; submittedAt: string | null; authorAssociation: string; author: Actor | null }
+  | { __typename: "IssueComment"; createdAt: string; author: Actor | null }
+  | { __typename: "PullRequestReview"; submittedAt: string | null; author: Actor | null }
   | { __typename: "HeadRefForcePushedEvent"; createdAt: string; actor: Actor | null };
 
 interface TimelinePage {
@@ -134,7 +135,6 @@ export interface PullRequestNode {
   baseRefName: string;
   additions: number;
   deletions: number;
-  authorAssociation: string;
   author: Actor | null;
   labels: { nodes: { name: string }[] };
   commits: { nodes: { commit: { committedDate: string } }[] };
@@ -150,7 +150,6 @@ export interface PullRequest {
   baseRefName: string;
   additions: number;
   deletions: number;
-  authorAssociation: string;
   author: Actor | null;
   labels: string[];
   timeline: TimelineEvent[];
@@ -163,6 +162,7 @@ export interface PullRequest {
 export interface Comment {
   createdAt: string;
   author: string;
+  /** Whether the author can push; only looked up on a too-large PR, false elsewhere. */
   fromTeam: boolean;
 }
 
@@ -362,7 +362,6 @@ const sizedPullRequest = (pr: PullRequest): SizedPullRequest => ({
   state: "open",
   additions: pr.additions,
   deletions: pr.deletions,
-  author_association: pr.authorAssociation,
   user: { login: authorLogin(pr), type: pr.author?.__typename === "Bot" ? "Bot" : "User" },
   labels: pr.labels.map((name) => ({ name })),
 });
@@ -392,7 +391,7 @@ function commentOf(item: ActivityItem): Comment | null {
   if (item.__typename === "HeadRefForcePushedEvent" || item.author === null || !byPerson(item.author)) return null;
   const createdAt = item.__typename === "IssueComment" ? item.createdAt : item.submittedAt;
   if (createdAt === null) return null;
-  return { createdAt, author: item.author.login, fromTeam: TEAM_ASSOCIATIONS.includes(item.authorAssociation) };
+  return { createdAt, author: item.author.login, fromTeam: false };
 }
 
 function activityTime(item: ActivityItem) {
@@ -465,7 +464,6 @@ async function fetchPullRequest(github: GitHubClient, repo: Repo, number: number
     baseRefName: node.baseRefName,
     additions: node.additions,
     deletions: node.deletions,
-    authorAssociation: node.authorAssociation,
     author: node.author,
     labels: node.labels.nodes.map((label) => label.name),
     timeline,
@@ -503,6 +501,15 @@ async function confirmConflicts(
   const reasons = decision.reasons.filter((reason) => reason !== "conflicts");
   if (reasons.length > 0) return { ...decision, reasons };
   return decision.action === "close" ? { action: "pending", reasons: decision.reasons } : NONE;
+}
+
+// Only a too-large PR's clock depends on who replied, so only its commenters are looked up.
+async function withTeamComments(pr: PullRequest, canPush: CanPush): Promise<PullRequest> {
+  if (!hasLabel(pr, LABELS.tooLarge)) return pr;
+  const comments = await Promise.all(
+    pr.comments.map(async (comment) => ({ ...comment, fromTeam: comment.author !== pr.author?.login && (await canPush(comment.author)) })),
+  );
+  return { ...pr, comments };
 }
 
 // Applies a label change to the PR as read, so the decision sees it even in a dry run.
@@ -626,6 +633,7 @@ export default async function triageStalePullRequests({
   const now = Date.now();
   const { repo } = context;
   const results: Result[] = [];
+  const canPush = pushAccessChecker(github, repo);
   let failures = 0;
 
   for (const number of await fetchOpenPullNumbers(github, repo)) {
@@ -638,11 +646,12 @@ export default async function triageStalePullRequests({
         core.info(`#${number}: -${LABELS.waitingOnAuthor} (the turn had already moved on)`);
         pr = withLabel(pr, LABELS.waitingOnAuthor, false, now);
       }
-      const size = await enforceSizeLimit(github, repo, sizedPullRequest(pr), live);
+      const size = await enforceSizeLimit(github, repo, sizedPullRequest(pr), live, canPush);
       if (size.held !== hasLabel(pr, LABELS.tooLarge)) {
         core.info(`#${number}: ${size.held ? "+" : "-"}${LABELS.tooLarge}`);
         pr = withLabel(pr, LABELS.tooLarge, size.held, now);
       }
+      pr = await withTeamComments(pr, canPush);
       const decision = await confirmConflicts(github, repo, pr, decide(pr, now), mergeabilityRetryMs);
       result = { pr, decision, failed: false };
 

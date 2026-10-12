@@ -22,7 +22,6 @@ function pullRequest(overrides: Partial<SizedPullRequest> = {}): SizedPullReques
     state: "open",
     additions: 10,
     deletions: 5,
-    author_association: "CONTRIBUTOR",
     user: { login: "contributor", type: "User" },
     labels: [],
     ...overrides,
@@ -41,12 +40,19 @@ interface Comment {
 
 const BOT = { login: "github-actions[bot]", type: "Bot" };
 
-function fakeGitHub(files: ChangedFile[], comments: Comment[]) {
+function fakeGitHub(files: ChangedFile[], comments: Comment[], writers: string[]) {
   const calls: string[] = [];
   const pages: number[] = [];
+  const lookups: string[] = [];
   const github: GitHubClient = {
     graphql: async () => assert.fail("no graphql"),
     rest: {
+      repos: {
+        getCollaboratorPermissionLevel: async ({ username }) => {
+          lookups.push(username);
+          return { data: { permission: writers.includes(username) ? "write" : "read" } };
+        },
+      },
       issues: {
         createComment: async ({ body }) => {
           calls.push("comment");
@@ -75,19 +81,19 @@ function fakeGitHub(files: ChangedFile[], comments: Comment[]) {
       },
     },
   };
-  return { github, calls, pages };
+  return { github, calls, pages, lookups };
 }
 
 async function check(
   pr: SizedPullRequest,
   files: ChangedFile[] = [],
-  { comments = [] as Comment[], live = true } = {},
+  { comments = [] as Comment[], live = true, writers = [] as string[] } = {},
 ) {
-  const { github, calls, pages } = fakeGitHub(files, comments);
+  const { github, calls, pages, lookups } = fakeGitHub(files, comments, writers);
   const failures: string[] = [];
   const core = { info: () => {}, setFailed: (message: string) => failures.push(message) };
   await checkPullRequestSize({ github, context: { repo, payload: { pull_request: pr } }, core, live });
-  return { failures, calls, pages, comments };
+  return { failures, calls, pages, comments, lookups };
 }
 
 const TOO_LARGE = [{ name: "too-large" }];
@@ -111,22 +117,20 @@ describe("counted lines", () => {
 });
 
 describe("exemptions", () => {
-  it("never limits the team or bots", () => {
-    for (const association of ["OWNER", "MEMBER", "COLLABORATOR"]) {
-      assert.notEqual(authorExemption(pullRequest({ author_association: association })), null);
-    }
-    assert.notEqual(authorExemption(pullRequest({ user: { login: "dependabot[bot]", type: "Bot" } })), null);
+  const canPush = (writers: string[]) => async (login: string) => writers.includes(login);
+
+  it("never limits anyone who can push, or bots", async () => {
+    assert.notEqual(await authorExemption(pullRequest(), canPush(["contributor"])), null);
+    assert.notEqual(await authorExemption(pullRequest({ user: { login: "dependabot[bot]", type: "Bot" } }), canPush([])), null);
   });
 
   it("lifts the limit for approved PRs", () => {
     assert.notEqual(approval(pullRequest({ labels: [{ name: "large-pr-approved" }] })), null);
   });
 
-  it("holds everyone else to the limit", () => {
-    for (const association of ["CONTRIBUTOR", "FIRST_TIME_CONTRIBUTOR", "FIRST_TIMER", "NONE"]) {
-      const pr = pullRequest({ author_association: association, labels: [{ name: "bug" }] });
-      assert.deepEqual([authorExemption(pr), approval(pr)], [null, null]);
-    }
+  it("holds everyone else to the limit", async () => {
+    const pr = pullRequest({ labels: [{ name: "bug" }] });
+    assert.deepEqual([await authorExemption(pr, canPush(["someone-else"])), approval(pr)], [null, null]);
   });
 });
 
@@ -195,19 +199,24 @@ describe("check PR size", () => {
     assert.match(failures[0] ?? "", /changes 1250 lines/);
   });
 
-  it("takes too-large off a PR whose author is exempt", async () => {
-    const { calls } = await check(pullRequest({ additions: 50000, author_association: "MEMBER", labels: TOO_LARGE }));
-    assert.deepEqual(calls, ["unlabel too-large"]);
+  it("takes too-large off a PR whose author can push", async () => {
+    const { calls } = await check(pullRequest({ additions: 50000, labels: TOO_LARGE }), [], { writers: ["contributor"] });
+    assert.deepEqual(calls, ["list comments", "unlabel too-large"]);
   });
 
-  it("leaves the team, bots and closed PRs alone", async () => {
-    for (const pr of [
-      pullRequest({ additions: 50000, author_association: "MEMBER" }),
-      pullRequest({ additions: 50000, user: { login: "dependabot[bot]", type: "Bot" } }),
-      pullRequest({ additions: 50000, state: "closed" }),
-    ]) {
-      const { failures, calls, pages } = await check(pr, codeFiles(50000));
+  it("leaves anyone who can push, bots and closed PRs alone", async () => {
+    for (const [pr, writers] of [
+      [pullRequest({ additions: 50000 }), ["contributor"]],
+      [pullRequest({ additions: 50000, user: { login: "dependabot[bot]", type: "Bot" } }), []],
+      [pullRequest({ additions: 50000, state: "closed" }), []],
+    ] as const) {
+      const { failures, calls, pages } = await check(pr, codeFiles(50000), { writers: [...writers] });
       assert.deepEqual([failures, calls, pages], [[], [], []]);
     }
+  });
+
+  it("asks GitHub who can push only for a PR over the limit", async () => {
+    assert.deepEqual((await check(pullRequest())).lookups, []);
+    assert.deepEqual((await check(oversized(1200), codeFiles(1200))).lookups, ["contributor"]);
   });
 });
