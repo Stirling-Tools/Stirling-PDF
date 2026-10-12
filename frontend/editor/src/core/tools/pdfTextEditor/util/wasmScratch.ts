@@ -117,9 +117,8 @@ export function scratchPtr(
   if (slot && slot.size >= bytes) return slot.ptr;
   if (slot) {
     arena.exports.free(slot.ptr);
-    // Drop the slot together with the block it named. An allocator that throws
-    // would otherwise leave the freed pointer cached, and the next caller would
-    // hand it to PDFium as its out-param.
+    // Drop the slot together with the block it named: an allocator that
+    // throws would leave the freed pointer cached for the next caller.
     arena.slots[key.id] = undefined;
   }
   // Double rather than fit exactly: text buffers grow a character at a time,

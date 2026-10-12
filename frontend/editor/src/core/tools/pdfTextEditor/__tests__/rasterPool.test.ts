@@ -31,9 +31,8 @@ function makeModule(options: FakeOptions = {}) {
       stride: number,
     ) => {
       if (format !== 4) {
-        // Rejects what the real API reads as FPDFBitmap_Gray/BGR/BGRx instead
-        // of painting four bytes per pixel regardless, so a wrong constant
-        // cannot pass a test.
+        // Rejects the formats the real API reads as Gray/BGR/BGRx, rather than
+        // painting four bytes per pixel whatever it is handed.
         throw new Error(`unsupported bitmap format ${format}`);
       }
       if (options.refuseWidths?.includes(width)) return 0;
@@ -119,9 +118,8 @@ describe("rasterPool", () => {
 
     const bitmap = acquireRaster(module, 512, 512);
 
-    // 4 is FPDFBitmap_BGRA. The format the pool used to pass, 1, is
-    // FPDFBitmap_Gray: the old code carried over the alpha boolean of
-    // FPDFBitmap_Create, where 1 is not a format at all.
+    // 4 is FPDFBitmap_BGRA; 1 selects FPDFBitmap_Gray, which writes one byte
+    // per pixel into a stride the copy-out reads as four.
     expect(FPDFBitmap_CreateEx).toHaveBeenCalledWith(
       512,
       512,
@@ -141,9 +139,8 @@ describe("rasterPool", () => {
     const small = acquireRaster(module, 512, 512);
     releaseRaster(module, small, 512);
 
-    // The 64 MB block still serves the next large page: booking the small
-    // bitmap's 1 MB as the slot's size would have hidden 63 MB from the
-    // retention budget and sent this render to the allocator.
+    // Booking the small bitmap's 1 MB would have hidden 63 MB from the
+    // retention budget and sent the next large render to the allocator.
     const again = acquireRaster(module, 4096, 4032);
 
     expect(malloc).toHaveBeenCalledTimes(1);

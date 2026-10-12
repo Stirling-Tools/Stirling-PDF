@@ -20,9 +20,8 @@ import { ThumbnailGenerationService } from "@app/services/thumbnailGenerationSer
 
 const fileId = (value: string): FileId => value as FileId;
 
-// The cache limits and the two cache methods under test are private; reaching
-// them directly is what lets a test pin a document or inspect an eviction
-// without standing up the rendering pipeline around it.
+// The cache limits and methods under test are private: reaching them keeps
+// a test from standing up the rendering pipeline around a cache.
 interface ServiceInternals {
   maxPdfCacheSize: number;
   pdfDocumentCache: Map<FileId, { docPtr: number; refCount: number }>;

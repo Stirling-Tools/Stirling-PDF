@@ -10,8 +10,7 @@ import {
 const MAX_DPR = 3;
 
 // Budget for one page's bitmap, in pixels (32M ≈ 128MB of RGBA). Zoom and
-// device ratio multiply together, and a poster-sized page at that product can
-// otherwise ask the wasm heap for gigabytes.
+// device ratio multiply, so a poster-sized page can otherwise ask for gigabytes.
 const MAX_RASTER_PIXELS = 32_000_000;
 
 // No single axis may be allocated past this, whatever the pixel product says.
@@ -31,9 +30,8 @@ export class PdfiumPageRenderer {
   }
 
   /**
-   * The scale to RENDER at for a page displayed at `cssScale`: the display's
-   * pixel ratio multiplied in, so a HiDPI screen gets real pixels instead of
-   * a browser-upscaled bitmap, then capped by the per-page pixel budget.
+   * The scale to render at for a page displayed at `cssScale`: the display's
+   * pixel ratio multiplied in, then capped by the per-page pixel budget.
    */
   static deviceScale(
     pageWidth: number,
@@ -50,9 +48,7 @@ export class PdfiumPageRenderer {
 
   /**
    * The integer bitmap `render` will ask PDFium for. `deviceScale` is only a
-   * heuristic: its 0.25 floor can exceed the budget on a giant page and a
-   * caller-supplied scale is not bounded at all, so the final dimensions are
-   * checked here, at the allocation boundary.
+   * heuristic, so the dimensions are bounded here, at the allocation boundary.
    */
   static rasterBudget(
     pageWidth: number,
@@ -63,16 +59,8 @@ export class PdfiumPageRenderer {
     const width = Number.isFinite(pageWidth) && pageWidth > 0 ? pageWidth : 1;
     const height =
       Number.isFinite(pageHeight) && pageHeight > 0 ? pageHeight : 1;
-    // One factor for both axes: PDFium takes the two display sizes separately,
-    // so capping each axis on its own would rasterise one of them coarser than
-    // the budget asks for and inflate the pixel count of the other.
-    //
-    // The bound applies to the scale, before the page is multiplied by it: a
-    // finite page at a huge scale overflows to Infinity, and any dimension
-    // derived from that product collapses through Infinity * 0 to NaN, which
-    // neither Math.min nor Math.max sanitises. Each term here stays finite on
-    // its own, and the square roots keep the pixel term finite when
-    // `width * height` overflows.
+    // One factor for both axes, applied to the scale: per-axis caps rasterise
+    // one axis coarser, and a bounded product keeps a huge scale out of NaN.
     const effective = Math.min(
       safeScale,
       MAX_RASTER_DIMENSION / width,
@@ -125,9 +113,8 @@ export class PdfiumPageRenderer {
         0x01 | 0x10,
       );
 
-      // Second pass for the form layer. A widget with no appearance stream is
-      // drawn ONLY here - FPDF_ANNOT alone leaves such fields blank, which is
-      // why they were invisible in the editor but fine in the viewer.
+      // Second pass for the form layer: FPDF_ANNOT alone leaves a widget with
+      // no appearance stream blank, which is why those fields rendered empty.
       const formEnv = doc.formEnvironment();
       if (formEnv) {
         doc.notifyFormPageLoaded(page);
@@ -169,9 +156,8 @@ export class PdfiumPageRenderer {
         bufferPtr,
         stride * h,
       );
-      // The ImageData outlives this call, so its pixels have to be copied out
-      // of the heap: a view would detach on the next memory.grow. A padded
-      // stride is the only case that needs the row-by-row compaction.
+      // The ImageData outlives this call: a heap view would detach on the next
+      // memory.grow, and a padded stride needs the row-by-row compaction.
       let pixels: Uint8ClampedArray<ArrayBuffer>;
       if (stride === w * 4) {
         pixels = new Uint8ClampedArray(

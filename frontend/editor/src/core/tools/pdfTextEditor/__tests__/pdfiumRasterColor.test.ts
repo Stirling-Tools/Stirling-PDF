@@ -13,8 +13,7 @@ import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocume
 import type { Page } from "@app/tools/pdfTextEditor/model/Page";
 
 // Renders coloured quadrants through the real wasm engine: the unit fakes
-// paint four bytes per pixel whatever format they are handed, so only this
-// catches a bitmap created in a format the copy-out does not match.
+// paint four bytes per pixel whatever format they are handed.
 const PAGE_POINTS = 200;
 const QUADRANT = PAGE_POINTS / 2;
 
@@ -122,9 +121,8 @@ describe("PdfiumPageRenderer colour output", () => {
       const image = await PdfiumPageRenderer.render(editor, page, 1);
       const stride = image.width * 4;
 
-      // Channel order, per pixel: a Gray bitmap (format 1) would put the same
-      // value in all four slots, and the alpha of the RGBA image would be the
-      // grey level rather than opaque.
+      // A Gray bitmap would put the same value in all four slots and make the
+      // alpha the grey level, so pixel order and alpha are asserted exactly.
       expect(pixelAt(image.data, stride, 50, 50)).toEqual([255, 0, 0, 255]);
       expect(pixelAt(image.data, stride, 150, 50)).toEqual([0, 255, 0, 255]);
       expect(pixelAt(image.data, stride, 50, 150)).toEqual([0, 0, 255, 255]);

@@ -63,9 +63,8 @@ describe("PdfiumPageRenderer.rasterBudget", () => {
   });
 
   it("shrinks the width alone to the dimension limit, scaling the height with it", () => {
-    // 200000x10pt page: the uniform factor is 0.16384, so the 10pt axis floors
-    // to the 1px minimum instead of being rasterised three times finer than
-    // the width is.
+    // 200000x10pt: the uniform factor floors the 10pt axis at 1px instead of
+    // rasterising it three times finer than the width.
     const { width, height } = PdfiumPageRenderer.rasterBudget(200_000, 10, 1);
     expect(width).toBe(32_768);
     expect(height).toBe(1);

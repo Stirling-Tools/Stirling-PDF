@@ -178,9 +178,8 @@ function collectCharGeometry(
     const objPtr = m.FPDFText_GetTextObject(textPagePtr, i);
     const run = objPtr ? (ptrToRun.get(objPtr) ?? null) : null;
     const boxed = probe.FPDFText_GetLooseCharBox(textPagePtr, i, rectBuf);
-    // Scalar reads, taken before the origin call: that call can grow the wasm
-    // memory, and a Float32Array view taken across it would read undefined
-    // instead of failing loudly.
+    // Scalar reads, taken before the origin call: that call can grow the
+    // wasm memory, and a view taken across it would read undefined.
     const left = boxed ? m.pdfium.getValue(rectBuf, "float") : Number.NaN;
     const right = boxed ? m.pdfium.getValue(rectBuf + 8, "float") : Number.NaN;
     const bottom = boxed
