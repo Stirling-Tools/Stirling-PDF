@@ -9,6 +9,7 @@ import { DisplayTransform } from "@app/tools/pdfTextEditor/model/DisplayTransfor
 import { FontRef } from "@app/tools/pdfTextEditor/model/FontRef";
 import { prepareForEditing } from "@app/tools/pdfTextEditor/pdfdoc/prepareForEditing";
 import { releaseScratch } from "@app/tools/pdfTextEditor/util/wasmScratch";
+import { releaseRasterPool } from "@app/tools/pdfTextEditor/pdfium/rasterPool";
 
 // Lifetime-managed PDFium document wrapper for the PDF text editor. - Opens a
 // raw PDFium document pointer from bytes.
@@ -186,5 +187,6 @@ export class EditorDocument {
     this.ownedFonts.clear();
     closeDocAndFreeBuffer(this.module, this.docPtr);
     releaseScratch(this.module);
+    releaseRasterPool(this.module);
   }
 }
