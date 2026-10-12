@@ -5,9 +5,13 @@ import {
   WorkbenchBarButtonWithAction,
 } from "@app/hooks/useWorkbenchBarButtons";
 import { Icon } from "@app/ui/Icon";
+import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
+import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import styles from "@app/components/pageTracks/PageTracks.module.css";
+import { SelectedPagesLayout } from "@app/components/pageTracks/buildTrackFile";
+import { DownloadSelectedPagesMenu } from "@app/components/pageTracks/DownloadSelectedPagesMenu";
 import {
   SelectByNumberPopover,
   SelectByNumberPopoverProps,
@@ -37,6 +41,10 @@ export interface PageTracksBarParams {
   onDelete: () => void;
   onInsertBlankAfter: () => void;
   onSplitAfter: () => void;
+  onDuplicate: () => void;
+  downloadingSelection: boolean;
+  /** Downloads the selected pages without saving the edits. */
+  onDownloadSelected: (layout: SelectedPagesLayout) => void;
   onUndo: () => void;
   onRedo: () => void;
   onSave: () => void;
@@ -62,11 +70,16 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
     onDelete,
     onInsertBlankAfter,
     onSplitAfter,
+    onDuplicate,
+    downloadingSelection,
+    onDownloadSelected,
     onUndo,
     onRedo,
     onSave,
   } = params;
   const { t } = useTranslation();
+  const terminology = useFileActionTerminology();
+  const fileActionIcons = useFileActionIcons();
 
   const labels = {
     wrap: t("pageTracks.wrap.label", "Wrap pages"),
@@ -84,6 +97,10 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
       "Rotate selected pages right",
     ),
     deleteSelected: t("pageTracks.deleteSelected", "Delete selected pages"),
+    duplicate: t("pageTracks.duplicateSelected", "Duplicate selected pages"),
+    downloadSelected: terminology.downloadSelectedPages,
+    downloadEachPage: terminology.downloadEachPage,
+    downloadAsOneFile: terminology.downloadAsOneFile,
     insertBlankAfter: t(
       "pageTracks.insertBlankAfterSelected",
       "Insert blank pages after selected pages",
@@ -99,6 +116,7 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
 
   const hasPages = totalPages > 0;
   const hasSelection = selectedCount > 0;
+  const multipleSelected = selectedCount > 1;
   const allSelected = hasPages && selectedCount === totalPages;
   const selectAllLabel = allSelected ? labels.deselectAll : labels.selectAll;
 
@@ -211,6 +229,17 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
         onClick: onSplitAfter,
       },
       {
+        id: "tracks-duplicate-selected",
+        icon: <Icon name="copy-plus" size="1.25rem" />,
+        tooltip: labels.duplicate,
+        ariaLabel: labels.duplicate,
+        section: "middle" as const,
+        order: 28,
+        disabled: !hasSelection,
+        visible: hasPages,
+        onClick: onDuplicate,
+      },
+      {
         id: "tracks-delete-selected",
         icon: <Icon name="trash" size="1.5rem" />,
         tooltip: labels.deleteSelected,
@@ -220,6 +249,31 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
         disabled: !hasSelection,
         visible: hasPages,
         onClick: onDelete,
+      },
+      {
+        id: "tracks-download-selected",
+        icon: <Icon name={fileActionIcons.download} size="1.25rem" />,
+        tooltip: labels.downloadSelected,
+        ariaLabel: labels.downloadSelected,
+        section: "middle" as const,
+        order: 29,
+        disabled: !hasSelection || downloadingSelection,
+        visible: hasPages,
+        // One page has only one way to go out, so it skips the menu.
+        onClick: () => onDownloadSelected("eachPage"),
+        // A custom render bypasses the bar's click action and tooltip wrapper.
+        render: multipleSelected
+          ? ({ disabled }) => (
+              <DownloadSelectedPagesMenu
+                label={labels.downloadSelected}
+                eachPageLabel={labels.downloadEachPage}
+                oneFileLabel={labels.downloadAsOneFile}
+                iconName={fileActionIcons.download}
+                disabled={disabled}
+                onDownload={onDownloadSelected}
+              />
+            )
+          : undefined,
       },
       {
         id: "tracks-undo",
@@ -283,6 +337,12 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
       labels.rotateLeft,
       labels.rotateRight,
       labels.deleteSelected,
+      labels.duplicate,
+      labels.downloadSelected,
+      labels.downloadEachPage,
+      labels.downloadAsOneFile,
+      multipleSelected,
+      fileActionIcons.download,
       labels.insertBlankAfter,
       labels.splitAfter,
       labels.undo,
@@ -306,6 +366,9 @@ export function usePageTracksWorkbenchBarButtons(params: PageTracksBarParams) {
       onDelete,
       onInsertBlankAfter,
       onSplitAfter,
+      onDuplicate,
+      downloadingSelection,
+      onDownloadSelected,
       onUndo,
       onRedo,
       onSave,

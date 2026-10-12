@@ -1,6 +1,5 @@
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { Tooltip } from "@app/components/shared/Tooltip";
 import { BrandMark } from "@app/components/shared/BrandMark";
 import { useQuickNavHost } from "@app/contexts/QuickNavHostContext";
 import { useSecretClicks } from "@app/components/easterEgg/useSecretClicks";
@@ -26,25 +25,20 @@ export function QuickNavBrand({ onReturnHome }: QuickNavBrandProps) {
 
   return (
     <div className="quick-nav-brand">
-      <Tooltip content={label} position="right" arrow>
-        <button
-          type="button"
-          className="quick-nav-brand-button"
-          aria-label={label}
-          onClick={(event) => {
-            // The rect comes off the event, not a ref: Tooltip clones its child
-            // to attach its own ref and reads the child's back off the element,
-            // which is what React 19 dropped.
-            const rect = event.currentTarget.getBoundingClientRect();
-            // Going home stays the button's only advertised job; the counter
-            // rides along and can only fire on the last click of a fast burst.
-            onReturnHome();
-            countClick(rect);
-          }}
-        >
-          <BrandMark height="1.6rem" />
-        </button>
-      </Tooltip>
+      <button
+        type="button"
+        className="quick-nav-brand-button"
+        aria-label={label}
+        onClick={(event) => {
+          const rect = event.currentTarget.getBoundingClientRect();
+          // Going home stays the button's only advertised job; the counter
+          // rides along and can only fire on the last click of a fast burst.
+          onReturnHome();
+          countClick(rect);
+        }}
+      >
+        <BrandMark height="1.6rem" />
+      </button>
     </div>
   );
 }

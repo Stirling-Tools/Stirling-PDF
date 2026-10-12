@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MantineProvider } from "@mantine/core";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, useLocation } from "react-router-dom";
 import { PortalTestProviders } from "@portal/test/TestQueryProvider";
 import type { ServerPlan } from "@app/billing/serverPlan";
 import { qk } from "@portal/queries/keys";
@@ -54,10 +54,25 @@ const BALANCE = {
   periodEnd: "2026-10-01T00:00:00",
 };
 
-const renderView = (serverPlan?: ServerPlan, licenseSection?: ReactNode) =>
+function Location() {
+  const location = useLocation();
+  return (
+    <output data-testid="location">
+      {location.pathname}
+      {location.search}
+    </output>
+  );
+}
+
+const renderView = (
+  serverPlan?: ServerPlan,
+  licenseSection?: ReactNode,
+  entry = "/settings/billing",
+) =>
   render(
     <PortalTestProviders>
-      <MemoryRouter>
+      <MemoryRouter initialEntries={[entry]}>
+        <Location />
         <FreeTierPlanView
           serverPlan={serverPlan}
           licenseSection={licenseSection}
@@ -159,6 +174,26 @@ describe("FreeTierPlanView", () => {
     expect(openLinkModal).not.toHaveBeenCalled();
     expect(screen.getByText("Connect a Stirling account")).toBeInTheDocument();
   });
+
+  it.each(["Get an enterprise quote", "Explore Enterprise"])(
+    "retains the Enterprise request across linking from %s",
+    async (button) => {
+      fetchFreeTier.mockResolvedValue(BALANCE);
+      renderView(undefined, undefined, "/settings/billing?source=sales");
+      await screen.findByText("120 of 500 used");
+      if (button === "Explore Enterprise") {
+        fireEvent.click(screen.getByRole("button", { name: "Compare plans" }));
+      }
+
+      fireEvent.click(screen.getByRole("button", { name: button }));
+
+      expect(openLinkModal).toHaveBeenCalledWith("link");
+      expect(screen.getByTestId("location")).toHaveTextContent(
+        "/settings/billing?source=sales&procurement=start",
+      );
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    },
+  );
 
   it("tells a non-admin the figures are not theirs to see, rather than failing", async () => {
     fetchFreeTier.mockRejectedValue(new HttpError(403, "Forbidden", null));
