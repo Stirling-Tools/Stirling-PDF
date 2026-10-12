@@ -73,7 +73,7 @@ describe("ThumbnailGenerationService", () => {
     expect(mocks.closeRawDocument).toHaveBeenCalledTimes(1);
   });
 
-  it("keeps the cache bounded when a pinned document leaves nothing to evict", async () => {
+  it("exceeds the configured limit while a pinned document has nowhere to go", async () => {
     const service = new ThumbnailGenerationService();
     const internals = internalsOf(service);
     internals.maxPdfCacheSize = 1;
