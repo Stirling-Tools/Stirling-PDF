@@ -260,8 +260,8 @@ jobs:
           echo "frontend_dist_hit=$FRONTEND_DIST_CACHE_HIT" >> "$GITHUB_OUTPUT"
           echo "frontend-dist cache hit: $FRONTEND_DIST_CACHE_HIT"
 
-      - name: Make cached macOS Tauri files writable
-        if: runner.os == 'macOS'
+      - name: Make cached POSIX Tauri files writable
+        if: runner.os != 'Windows'
         run: |
           if [ -d frontend/editor/src-tauri/target ]; then
             chmod -R u+w frontend/editor/src-tauri/target
