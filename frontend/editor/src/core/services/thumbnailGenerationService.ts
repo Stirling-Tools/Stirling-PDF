@@ -100,11 +100,14 @@ export class ThumbnailGenerationService {
    */
   private evictLeastRecentlyUsedPDF(): boolean {
     let oldestEntry: [FileId, CachedPDFDocument] | null = null;
-    let oldestTime = Date.now();
 
     for (const [key, value] of this.pdfDocumentCache.entries()) {
-      if (value.lastUsed < oldestTime && value.refCount === 0) {
-        oldestTime = value.lastUsed;
+      // Compared against the oldest candidate, not against Date.now(): entries
+      // touched in the same millisecond would all look too recent to evict.
+      if (
+        value.refCount === 0 &&
+        (!oldestEntry || value.lastUsed < oldestEntry[1].lastUsed)
+      ) {
         oldestEntry = [key, value];
       }
     }
@@ -171,62 +174,67 @@ export class ThumbnailGenerationService {
   ): Promise<ThumbnailResult[]> {
     const docPtr = await this.getCachedPDFDocument(fileId, pdfArrayBuffer);
 
-    const allResults: ThumbnailResult[] = [];
-    let completed = 0;
-    const batchSize = 3; // Smaller batches for better UI responsiveness
+    try {
+      const allResults: ThumbnailResult[] = [];
+      let completed = 0;
+      const batchSize = 3; // Smaller batches for better UI responsiveness
 
-    // Process pages in small batches
-    for (let i = 0; i < pageNumbers.length; i += batchSize) {
-      const batch = pageNumbers.slice(i, i + batchSize);
+      // Process pages in small batches
+      for (let i = 0; i < pageNumbers.length; i += batchSize) {
+        const batch = pageNumbers.slice(i, i + batchSize);
 
-      // Process batch sequentially (to avoid canvas conflicts)
-      for (const pageNumber of batch) {
-        try {
-          const thumbnail = await renderPdfiumPageDataUrl(
-            docPtr,
-            pageNumber - 1,
-            scale,
-            { applyRotation: false, format: "jpeg", quality },
-          );
-          if (!thumbnail) {
-            throw new Error(`Could not render page ${pageNumber}`);
+        // Process batch sequentially (to avoid canvas conflicts)
+        for (const pageNumber of batch) {
+          try {
+            const thumbnail = await renderPdfiumPageDataUrl(
+              docPtr,
+              pageNumber - 1,
+              scale,
+              { applyRotation: false, format: "jpeg", quality },
+            );
+            if (!thumbnail) {
+              throw new Error(`Could not render page ${pageNumber}`);
+            }
+            allResults.push({ pageNumber, thumbnail, success: true });
+          } catch (error) {
+            console.error(
+              `Failed to generate thumbnail for page ${pageNumber}:`,
+              error,
+            );
+            allResults.push({
+              pageNumber,
+              thumbnail: "",
+              success: false,
+              error: error instanceof Error ? error.message : "Unknown error",
+            });
           }
-          allResults.push({ pageNumber, thumbnail, success: true });
-        } catch (error) {
-          console.error(
-            `Failed to generate thumbnail for page ${pageNumber}:`,
-            error,
-          );
-          allResults.push({
-            pageNumber,
-            thumbnail: "",
-            success: false,
-            error: error instanceof Error ? error.message : "Unknown error",
+        }
+
+        completed += batch.length;
+
+        // Report progress
+        if (onProgress) {
+          onProgress({
+            completed,
+            total: pageNumbers.length,
+            thumbnails: allResults
+              .slice(-batch.length)
+              .filter((r) => r.success),
           });
         }
+
+        // Yield control to prevent UI blocking
+        await new Promise((resolve) => setTimeout(resolve, 1));
       }
 
-      completed += batch.length;
-
-      // Report progress
-      if (onProgress) {
-        onProgress({
-          completed,
-          total: pageNumbers.length,
-          thumbnails: allResults.slice(-batch.length).filter((r) => r.success),
-        });
-      }
-
-      // Yield control to prevent UI blocking
-      await new Promise((resolve) => setTimeout(resolve, 1));
+      return allResults;
+    } finally {
+      // Runs even when `onProgress` throws. A callback that throws used to
+      // leave the reference counted and the document open, which made the
+      // entry permanently un-evictable.
+      this.releasePDFDocument(fileId);
+      this.cleanupCompletedDocument(fileId);
     }
-
-    // Release reference to PDF document (don't destroy - keep in cache)
-    this.releasePDFDocument(fileId);
-
-    this.cleanupCompletedDocument(fileId);
-
-    return allResults;
   }
 
   /**
