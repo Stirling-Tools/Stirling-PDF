@@ -44,6 +44,11 @@ public class DescribeOperationTool implements McpTool {
     }
 
     @Override
+    public String analyticsCategory() {
+        return "catalog";
+    }
+
+    @Override
     public String description() {
         return "Return the full JSON Schema for one Stirling operation's parameters. Call this "
                 + "before invoking a category tool to learn the exact shape of `parameters`. "
@@ -80,7 +85,7 @@ public class DescribeOperationTool implements McpTool {
         }
         OperationMeta meta = catalog.findByOperationId(opId).orElse(null);
         if (meta == null) {
-            return McpResponses.error(mapper, "Unknown or disabled operation: " + opId);
+            return McpResponses.error(mapper, "Unknown or disabled operation '" + opId + "'");
         }
 
         ObjectNode payload = mapper.createObjectNode();
