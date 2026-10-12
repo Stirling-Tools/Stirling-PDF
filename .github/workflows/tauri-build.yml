@@ -218,6 +218,7 @@ jobs:
         uses: ./.github/actions/cache-the-planet
         with:
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
+          token: ${{ github.token }}
           multi-cache: |
             cargo-registry:
               path: .cache/cargo/registry
@@ -241,7 +242,6 @@ jobs:
             frontend-dist=${{ needs.hash_pr.outputs.frontend_dist_files_hash }}
             frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
             tauri-target=${{ needs.hash_pr.outputs.frontend_tauri_files_hash }}
-          token: ${{ github.token }}
           exclude: |
             frontend/editor/src-tauri/target/debug/**
 
@@ -821,6 +821,7 @@ jobs:
         uses: ./.github/actions/cache-the-planet
         with:
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
+          token: ${{ github.token }}
           multi-cache: |
             cargo-registry:
               path: .cache/cargo/registry
@@ -849,8 +850,7 @@ jobs:
             npm-cache=${{ hashFiles('frontend/package-lock.json') }}
             frontend-dist=${{ needs.hash_pr.outputs.frontend_dist_files_hash }}
             frontend-node-modules=${{ hashFiles('frontend/package-lock.json') }}
-            tauri-target=${{ needs.hash_pr.outputs.frontend_tauri_files_hash }}-${{ runner.os }}-${{ runner.arch }}-${{ matrix.platform }}
-          token: ${{ github.token }}
+            tauri-target=${{ needs.hash_pr.outputs.frontend_tauri_files_hash }}
           exclude: |
             frontend/editor/src-tauri/target/debug/**
 

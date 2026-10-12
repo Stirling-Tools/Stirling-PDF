@@ -42,6 +42,7 @@ jobs:
         uses: ./.github/actions/cache-the-planet
         with:
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
+          token: ${{ github.token }}
           multi-cache: |
             gradle-caches:
               path: .cache/gradle-java-${{ inputs.java-version }}/caches
@@ -50,7 +51,6 @@ jobs:
           key: |
             gradle-caches=${{ inputs.gradle-hash }}
             gradle-wrapper=${{ inputs.gradle-hash }}
-          token: ${{ github.token }}
 
       - name: Set up JDK 25
         uses: ./.github/actions/java

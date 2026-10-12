@@ -38,6 +38,7 @@ jobs:
         uses: ./.github/actions/cache-the-planet
         with:
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
+          token: ${{ github.token }}
           multi-cache: |
             setup-uv-cache:
               path: .cache/setup-uv-cache
@@ -45,7 +46,6 @@ jobs:
               path: .cache/uv-python-dir
             npm-cache:
               path: .cache/npm
-          token: ${{ github.token }}
           key: |
             setup-uv-cache=${{ hashFiles('engine/.python-version', 'engine/pyproject.toml', 'engine/uv.lock') }}
             uv-python-dir=${{ hashFiles('engine/.python-version', 'engine/pyproject.toml', 'engine/uv.lock') }}

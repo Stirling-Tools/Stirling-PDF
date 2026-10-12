@@ -5,9 +5,20 @@ name: Generate OpenAPI documentation
 # current code.
 on:
   workflow_call:
+    inputs:
+      gradle-hash:
+        required: true
+        type: string
+      java-version:
+        required: false
+        default: '25'
+        type: string
 
 permissions:
   contents: read
+
+env:
+  GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java-${{ inputs.java-version }}
 
 jobs:
   check-generate-openapi-docs:
@@ -16,6 +27,8 @@ jobs:
       deployment: false
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: write
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
@@ -25,21 +38,29 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Restore cache Gradle User Home
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - name: Restore Gradle cache
+        id: cache
+        uses: ./.github/actions/cache-the-planet
         with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-v1-${{ runner.os }}-${{ runner.arch }}-jdk-25-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties', 'gradle/libs.versions.toml', 'buildSrc/**', 'settings.gradle', 'build.gradle', 'app/**/build.gradle', 'gradle/**/*.gradle') }}
+          encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
+          token: ${{ github.token }}
+          multi-cache: |
+            gradle-caches:
+              path: .cache/gradle-java-${{ inputs.java-version }}/caches
+            gradle-wrapper:
+              path: .cache/gradle-java-${{ inputs.java-version }}/wrapper
+          key: |
+            gradle-caches=${{ inputs.gradle-hash }}
+            gradle-wrapper=${{ inputs.gradle-hash }}
 
-      - name: Set up JDK 25
+      - name: Set up JDK ${{ inputs.java-version }}
         uses: ./.github/actions/java
         with:
-          java-version: "25"
+          java-version: ${{ inputs.java-version }}
 
       - name: Install Task
         uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
+
       - name: Generate OpenAPI documentation
         run: task backend:swagger
         env:

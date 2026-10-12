@@ -45,13 +45,13 @@ jobs:
         uses: ./.github/actions/cache-the-planet
         with:
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
+          token: ${{ github.token }}
           disable-download: true
           multi-cache: |
             gradle-caches:
               path: .cache/gradle-java-${{ inputs.java-version }}/caches
             gradle-wrapper:
               path: .cache/gradle-java-${{ inputs.java-version }}/wrapper
-          token: ${{ github.token }}
           key: |
             gradle-caches=${{ inputs.gradle-hash }}
             gradle-wrapper=${{ inputs.gradle-hash }}

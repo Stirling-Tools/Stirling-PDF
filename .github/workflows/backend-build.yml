@@ -105,8 +105,8 @@ jobs:
         uses: ./.github/actions/cache-the-planet
         with:
           encryption-key: ${{ secrets.CACHE_SFTP_PASSWORD || '' }}
-          multi-cache: ${{ steps.cache-config.outputs.multi_cache }}
           token: ${{ github.token }}
+          multi-cache: ${{ steps.cache-config.outputs.multi_cache }}
           key: ${{ steps.cache-config.outputs.cache_key }}
 
       - name: Set up JDK ${{ matrix.jdk-version }}

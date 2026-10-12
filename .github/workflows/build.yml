@@ -149,11 +149,13 @@ jobs:
     secrets: inherit
 
   check-generateOpenApiDocs:
-    if: needs.files-changed.outputs.openapi == 'true' && false
-    needs: [files-changed, gradle-cache-prime]
+    if: needs.files-changed.outputs.openapi == 'true'
+    needs: [files-changed, gradle-cache-prime, files-hash]
     permissions:
-      contents: read
+      contents: write
     uses: ./.github/workflows/check-openapi.yml
+    with:
+      gradle-hash: ${{ needs.files-hash.outputs.gradle_files_hash }}
     secrets: inherit
 
   frontend-validation:
@@ -189,11 +191,15 @@ jobs:
     if: |
       !cancelled() &&
       needs.files-changed.outputs.frontend == 'true' &&
-      contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result) && false
-    needs: [files-changed, gradle-cache-prime]
+      contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result)
+    needs: [files-changed, gradle-cache-prime, files-hash]
     permissions:
-      contents: read
+      contents: write
     uses: ./.github/workflows/e2e-live.yml
+    with:
+      gradle-hash: ${{ needs.files-hash.outputs.gradle_files_hash }}
+      cargo-hash: ${{ needs.files-hash.outputs.cargo_files_hash }}
+      frontend-dist-hash: ${{ needs.files-hash.outputs.frontend_dist_files_hash }}
     secrets: inherit
 
   playwright-e2e-enterprise:
