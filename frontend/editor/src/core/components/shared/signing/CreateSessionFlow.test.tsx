@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, expect, it, vi } from "vitest";
 import { CreateSessionFlow } from "@app/components/shared/signing/CreateSessionFlow";
+import type { SignatureSettings } from "@app/components/tools/certSign/SignatureSettingsInput";
 import UserSelector from "@app/components/shared/UserSelector";
 import { qk } from "@app/query/keys";
 
@@ -69,7 +70,7 @@ function Harness({
   initialIds = [],
   initialFileSelected = true,
 }: {
-  onSubmit: ReturnType<typeof vi.fn>;
+  onSubmit: (signatureSettings: SignatureSettings) => void;
   creating?: boolean;
   initialIds?: number[];
   initialFileSelected?: boolean;
@@ -117,7 +118,7 @@ function show({
     defaultOptions: { queries: { retry: false, staleTime: Infinity } },
   });
   client.setQueryData(qk.users(), availableUsers);
-  const onSubmit = vi.fn();
+  const onSubmit = vi.fn<(signatureSettings: SignatureSettings) => void>();
   const content = () => (
     <QueryClientProvider client={client}>
       <MemoryRouter>

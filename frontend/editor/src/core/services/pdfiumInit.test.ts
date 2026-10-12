@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { describe, expect, test, vi } from "vitest";
+import { describe, expect, test, vi, afterEach } from "vitest";
 
 /**
  * A WASM instantiate that fails must reject, not hang. `instantiateWasm` reports
@@ -32,6 +32,12 @@ async function loadService() {
 }
 
 describe("pdfium bootstrap", () => {
+  // Each test spies on WebAssembly.instantiate; without cleanup the spy (and
+  // its call count) leaks into the next test.
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   test("rejects when instantiating the pre-compiled module fails", async () => {
     const failure = new Error("LinkError: import mismatch");
     vi.spyOn(WebAssembly, "instantiate").mockRejectedValue(failure);
