@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { beforeEach, expect, it, vi } from "vitest";
 const { verify, resync, info, requiresLocal } = vi.hoisted(() => ({
   verify: vi.fn(),

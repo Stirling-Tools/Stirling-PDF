@@ -179,7 +179,8 @@ for (const file of [fixture, ...corpus]) {
   }, testInfo) => {
     test.setTimeout(180_000);
     const errors: string[] = [];
-    page.on("pageerror", (error) => errors.push(error.message));
+    const onPageError = (error: Error) => errors.push(error.message);
+    page.on("pageerror", onPageError);
     await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
     await expect(page.getByTestId("pdf-editor-root")).toBeVisible();
     await page.getByTestId("pdf-editor-file-input").setInputFiles(file);

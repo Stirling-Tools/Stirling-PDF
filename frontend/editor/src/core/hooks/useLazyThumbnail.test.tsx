@@ -1,5 +1,6 @@
 import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { generateThumbnailForFile } from "@app/utils/thumbnailUtils";
 import { useLazyThumbnail } from "@app/hooks/useLazyThumbnail";
 import { createStirlingFile, type FileId } from "@app/types/fileContext";
 import {
@@ -41,7 +42,7 @@ const thumbnail = "data:image/png;base64,cached";
 afterEach(() => {
   cleanup();
   clearPdfAccess();
-  vi.clearAllMocks();
+  vi.resetAllMocks();
 });
 
 describe("protected cached thumbnails", () => {
@@ -101,5 +102,72 @@ describe("protected cached thumbnails", () => {
     expect(storage.updateThumbnail).toHaveBeenCalledWith(id, thumbnail, true);
     act(() => clearPdfAccess());
     expect(result.current).toBeUndefined();
+  });
+});
+
+describe("useLazyThumbnail gating", () => {
+  it("queues no generation while the row is disabled", async () => {
+    const { result } = renderHook(() =>
+      useLazyThumbnail(id, 2048, undefined, false, false),
+    );
+
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    expect(storage.loadFile).not.toHaveBeenCalled();
+    expect(vi.mocked(generateThumbnailForFile)).not.toHaveBeenCalled();
+    expect(result.current).toBeUndefined();
+  });
+
+  it("generates once when a disabled row becomes enabled", async () => {
+    storage.loadFile.mockResolvedValue(new File(["image"], "image.png"));
+    vi.mocked(generateThumbnailForFile).mockResolvedValue(
+      "data:image/png;base64,thumb",
+    );
+
+    const { result, rerender } = renderHook(
+      ({ enabled }: { enabled: boolean }) =>
+        useLazyThumbnail(id, 2048, undefined, false, enabled),
+      { initialProps: { enabled: false } },
+    );
+
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(storage.loadFile).not.toHaveBeenCalled();
+
+    rerender({ enabled: true });
+
+    await waitFor(() => {
+      expect(result.current).toBe("data:image/png;base64,thumb");
+    });
+    expect(storage.loadFile).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(generateThumbnailForFile)).toHaveBeenCalledTimes(1);
+    expect(storage.updateThumbnail).toHaveBeenCalledWith(
+      id,
+      "data:image/png;base64,thumb",
+      false,
+    );
+  });
+
+  it("does not regenerate after re-enabling a row that already ran", async () => {
+    storage.loadFile.mockResolvedValue(new File(["image"], "image.png"));
+    vi.mocked(generateThumbnailForFile).mockResolvedValue(
+      "data:image/png;base64,thumb",
+    );
+
+    const { result, rerender } = renderHook(
+      ({ enabled }: { enabled: boolean }) =>
+        useLazyThumbnail(id, 2048, undefined, false, enabled),
+      { initialProps: { enabled: true } },
+    );
+
+    await waitFor(() => {
+      expect(result.current).toBe("data:image/png;base64,thumb");
+    });
+
+    rerender({ enabled: false });
+    rerender({ enabled: true });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    expect(storage.loadFile).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(generateThumbnailForFile)).toHaveBeenCalledTimes(1);
   });
 });

@@ -64,12 +64,16 @@ function queueStubThumbUpdate(
  * Show the stub's thumbnail if present; otherwise pull bytes from IndexedDB,
  * generate one, persist it, and update the stub. Server-only files with no
  * cached bytes silently stay placeholder-only.
+ *
+ * Generation waits for `enabled` — callers pass the row's in-viewport state so
+ * a long list only queues work for rows the user can actually reach.
  */
 export function useLazyThumbnail(
   fileId: FileId,
   size: number,
   thumbnailUrl?: string,
   isEncrypted = false,
+  enabled = true,
 ): string | undefined {
   const access = usePdfAccess(fileId);
   const locked = isEncrypted && !access;
@@ -88,6 +92,7 @@ export function useLazyThumbnail(
       return;
     }
     if (
+      !enabled ||
       thumbnailUrl ||
       size >= THUMBNAIL_SIZE_LIMIT ||
       attempted.current === fileId
@@ -133,6 +138,7 @@ export function useLazyThumbnail(
     size,
     thumbnailUrl,
     locked,
+    enabled,
     indexedDB,
     updateStirlingFileStub,
     selectors,

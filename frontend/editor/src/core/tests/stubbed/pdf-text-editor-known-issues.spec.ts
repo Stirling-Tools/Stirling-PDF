@@ -2,6 +2,7 @@ import { test, expect } from "@app/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import path from "path";
 import type { EditorTestWindow } from "@app/tests/stubbed/editorTestTypes";
+import { waitForEditorReady } from "@app/tests/stubbed/editorReady";
 import { downloadBytes, saveAndDownload } from "@app/tests/stubbed/saveHelpers";
 
 // REGRESSION suite for the 12 issues found by the QA sweep of the PDF text
@@ -26,7 +27,7 @@ async function open(page: Page, file: string, firstPage = 0): Promise<void> {
   await expect(page.getByTestId(`pdf-editor-page-${firstPage}`)).toBeVisible({
     timeout: 30_000,
   });
-  await page.waitForTimeout(900);
+  await waitForEditorReady(page);
 }
 async function findId(
   page: Page,
@@ -368,11 +369,11 @@ test.describe("PDF text editor - fixed-issue regressions", () => {
       mimeType: "image/png",
       buffer: png,
     });
-    await page.waitForTimeout(1800);
-    const after = await countImages();
-    expect(after, "image insert must add an image to the page").toBeGreaterThan(
-      before,
-    );
+    await expect
+      .poll(countImages, {
+        message: "image insert must add an image to the page",
+      })
+      .toBeGreaterThan(before);
   });
 
   // ISSUE: injecting several consecutive spaces into a multi-line paragraph
@@ -502,14 +503,14 @@ test.describe("PDF text editor - fixed-issue regressions", () => {
       .setInputFiles(
         path.join(import.meta.dirname, "../test-fixtures/encrypted.pdf"),
       );
-    await page.waitForTimeout(2500);
-    const loaded = await page.getByTestId("pdf-editor-page-0").count();
-    const error = await page.getByTestId("pdf-editor-error").count();
-    const prompt = await page.getByTestId("pdf-editor-password-modal").count();
-    expect(
-      loaded > 0 || error > 0 || prompt > 0,
+    await expect(
+      page
+        .getByTestId("pdf-editor-page-0")
+        .or(page.getByTestId("pdf-editor-error"))
+        .or(page.getByTestId("pdf-editor-password-modal"))
+        .first(),
       "an encrypted PDF must either open or tell the user why it can't",
-    ).toBe(true);
+    ).toBeAttached();
   });
 
   // ISSUE: opening a CORRUPTED PDF fails silently - same "No document loaded"
@@ -524,12 +525,12 @@ test.describe("PDF text editor - fixed-issue regressions", () => {
       .setInputFiles(
         path.join(import.meta.dirname, "../test-fixtures/corrupted.pdf"),
       );
-    await page.waitForTimeout(2500);
-    const loaded = await page.getByTestId("pdf-editor-page-0").count();
-    const error = await page.getByTestId("pdf-editor-error").count();
-    expect(
-      loaded > 0 || error > 0,
+    await expect(
+      page
+        .getByTestId("pdf-editor-page-0")
+        .or(page.getByTestId("pdf-editor-error"))
+        .first(),
       "a corrupted PDF must surface an error instead of failing silently",
-    ).toBe(true);
+    ).toBeAttached();
   });
 });

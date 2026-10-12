@@ -101,6 +101,9 @@ export function splitFileName(name: string): [string, string] {
   return dot > 0 ? [name.slice(0, dot), name.slice(dot)] : [name, ""];
 }
 
+/** Characters Windows/macOS reject in a filename, which is also what a download saves as. */
+export const ILLEGAL_FILE_NAME_CHARS = /[\\/:*?"<>|]/;
+
 /**
  * Checks if a file is a PDF based on extension and MIME type
  * @param file - File or file-like object with name and type properties
