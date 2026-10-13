@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, test, vi, beforeEach, afterEach } from "vitest";
 
 // Regression: a caller-set "Content-Type: multipart/form-data" (no boundary) on a
