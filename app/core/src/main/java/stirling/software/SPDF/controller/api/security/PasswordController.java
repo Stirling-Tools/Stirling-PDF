@@ -231,10 +231,18 @@ public class PasswordController {
                             produces = ToolFormat.PDF,
                             arity = ToolArity.SISO))
     @Operation(
-            summary = "Add password to a PDF file",
+            summary =
+                    "Add an open password and/or an owner password with restrictions (no printing,"
+                            + " copying, editing)",
             description =
-                    "This endpoint adds password protection to a PDF file. Users can specify a set"
-                            + " of permissions that should be applied to the file. sourcePassword authenticates an existing protected source; preserveExisting changes permissions while retaining existing credentials. Omitting these options preserves the existing add-password behaviour.")
+                    "password is needed to open the file; ownerPassword is needed to change the"
+                            + " restrictions set by the prevent* flags. The restrictions only hold"
+                            + " with an ownerPassword that differs from password: without one the"
+                            + " open password (or an empty one) is also the owner password, so"
+                            + " anyone who can open the file can lift them. With no passwords the"
+                            + " file opens freely. sourcePassword opens an already protected"
+                            + " file; preserveExisting changes its permissions and keeps its"
+                            + " existing passwords.")
     public ResponseEntity<Resource> addPassword(@ModelAttribute AddPasswordRequest request)
             throws IOException {
         boolean explicitProtection =
