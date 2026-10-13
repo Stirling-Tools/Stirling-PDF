@@ -5,6 +5,9 @@ import {
   openRawDocument,
 } from "@app/services/pdfiumService";
 import { Page } from "@app/tools/pdfTextEditor/model/Page";
+import { PageStructure } from "@app/tools/pdfTextEditor/model/PageStructure";
+import type { StructureEdit } from "@app/tools/pdfTextEditor/pdfdoc/passes/applyStructureEdits";
+import { readPageStructure } from "@app/tools/pdfTextEditor/pdfium/PdfiumStructureReader";
 import { DisplayTransform } from "@app/tools/pdfTextEditor/model/DisplayTransform";
 import { FontRef } from "@app/tools/pdfTextEditor/model/FontRef";
 import { prepareForEditing } from "@app/tools/pdfTextEditor/pdfdoc/prepareForEditing";
@@ -24,6 +27,7 @@ export class EditorDocument {
   /** Empty when the file was too large to keep a second copy of. */
   readonly openedBytes: Uint8Array;
   private readonly pageCache: Map<number, Page>;
+  private readonly structureCache = new Map<number, PageStructure>();
   private readonly ownedFonts: Map<string, FontRef>;
   private _disposed: boolean;
   // Form-fill environment. Widgets with no appearance stream are drawn ONLY by
@@ -136,6 +140,26 @@ export class EditorDocument {
     return page;
   }
 
+  /**
+   * The page's structure elements and their unsaved edits.
+   */
+  structure(pageIndex: number): PageStructure {
+    const cached = this.structureCache.get(pageIndex);
+    if (cached) return cached;
+    const structure = new PageStructure(
+      readPageStructure(this.module, this.page(pageIndex).pagePtr),
+    );
+    this.structureCache.set(pageIndex, structure);
+    return structure;
+  }
+
+  /** Every unsaved structure edit, in the form the save pass takes. */
+  structureEdits(): StructureEdit[] {
+    return [...this.structureCache].flatMap(([pageIndex, structure]) =>
+      structure.pendingEdits().map((edit) => ({ pageIndex, ...edit })),
+    );
+  }
+
   registerOwnedFont(font: FontRef): void {
     this.ownedFonts.set(font.id, font);
   }
@@ -180,6 +204,7 @@ export class EditorDocument {
       }
     }
     this.pageCache.clear();
+    this.structureCache.clear();
     for (const font of this.ownedFonts.values()) {
       font.dispose();
     }
