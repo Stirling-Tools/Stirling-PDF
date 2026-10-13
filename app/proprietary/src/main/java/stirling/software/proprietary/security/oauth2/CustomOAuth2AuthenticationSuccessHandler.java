@@ -37,6 +37,7 @@ import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.security.util.DesktopClientUtils;
+import stirling.software.proprietary.security.util.RedirectBaseUrl;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -196,11 +197,13 @@ public class CustomOAuth2AuthenticationSuccessHandler
             String jwt) {
         String redirectPath = resolveRedirectPath(request, contextPath);
         String origin =
-                resolveForwardedOrigin(request)
-                        .orElseGet(
-                                () ->
-                                        resolveOriginFromReferer(request)
-                                                .orElseGet(() -> buildOriginFromRequest(request)));
+                RedirectBaseUrl.landingBase(
+                                oauth2Properties.getRedirectBaseUrl(),
+                                applicationProperties.getSystem().getFrontendUrl())
+                        .flatMap(RedirectBaseUrl::origin)
+                        .or(() -> resolveForwardedOrigin(request))
+                        .or(() -> resolveOriginFromReferer(request))
+                        .orElseGet(() -> buildOriginFromRequest(request));
         clearRedirectCookie(response);
 
         // Extract nonce from state for CSRF validation in callback

@@ -100,6 +100,64 @@ class CustomOAuth2AuthenticationSuccessHandlerTest {
     }
 
     @ParameterizedTest
+    @CsvSource(
+            value = {
+                "'', '', http://hcrn-fs01:8080/auth/callback#access_token=jwt",
+                "'', https://app.example.com, http://hcrn-fs01:8080/auth/callback#access_token=jwt",
+                "https://pdf.example.com/, '', https://pdf.example.com/auth/callback#access_token=jwt",
+                "https://api.example.com, https://app.example.com/,"
+                        + " https://app.example.com/auth/callback#access_token=jwt"
+            },
+            emptyValue = "")
+    void postLoginRedirectUsesRedirectBaseUrlWhenSet(
+            String redirectBaseUrl, String frontendUrl, String expected) throws Exception {
+        UserService userService = mock(UserService.class);
+        JwtServiceInterface jwtService = mock(JwtServiceInterface.class);
+        ApplicationProperties applicationProperties = new ApplicationProperties();
+        ApplicationProperties.Security.OAUTH2 oauth2Props =
+                applicationProperties.getSecurity().getOauth2();
+        oauth2Props.setRedirectBaseUrl(redirectBaseUrl);
+        applicationProperties.getSystem().setFrontendUrl(frontendUrl);
+
+        CustomOAuth2AuthenticationSuccessHandler handler =
+                new CustomOAuth2AuthenticationSuccessHandler(
+                        mock(LoginAttemptService.class),
+                        oauth2Props,
+                        userService,
+                        jwtService,
+                        mock(UserLicenseSettingsService.class),
+                        applicationProperties);
+
+        when(userService.usernameExistsIgnoreCase("user")).thenReturn(false);
+        when(userService.isUserDisabled("user")).thenReturn(false);
+        when(jwtService.isJwtEnabled()).thenReturn(true);
+        when(jwtService.generateToken(
+                        any(org.springframework.security.core.Authentication.class),
+                        org.mockito.Mockito.anyMap()))
+                .thenReturn("jwt");
+
+        DefaultOAuth2User oauthUser =
+                new DefaultOAuth2User(
+                        List.of(new SimpleGrantedAuthority("ROLE_USER")),
+                        Map.of("sub", "provider-sub", "name", "user"),
+                        "name");
+        OAuth2AuthenticationToken authentication =
+                new OAuth2AuthenticationToken(oauthUser, oauthUser.getAuthorities(), "Microsoft");
+
+        // What Stirling sees behind a TLS-terminating proxy that sends no X-Forwarded-* headers.
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setContextPath("");
+        request.setScheme("http");
+        request.setServerName("hcrn-fs01");
+        request.setServerPort(8080);
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        handler.onAuthenticationSuccess(request, response, authentication);
+
+        assertEquals(expected, response.getRedirectedUrl());
+    }
+
+    @ParameterizedTest
     @CsvSource({
         "NORMAL, 4, false, false, true",
         "NORMAL, 5, false, false, false",
