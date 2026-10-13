@@ -160,8 +160,8 @@ public class InternalApiClient {
             }
         }
 
-        // A no-file call (e.g. create-pdf-from-html-agent, url-to-pdf) holds only strings, which
-        // RestTemplate would send urlencoded; tool endpoints all expect multipart.
+        // This dispatcher sends multipart forms. Without a Resource part, RestTemplate would
+        // choose urlencoded instead, even for generators such as /api/v1/convert/url/pdf.
         boolean hasFilePart =
                 body.values().stream()
                         .flatMap(java.util.List::stream)

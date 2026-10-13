@@ -9,8 +9,10 @@ import java.util.Map;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.support.StaticWebApplicationContext;
@@ -80,6 +82,26 @@ class ToolIODiscoveryTest {
         public String getOnly() {
             return "";
         }
+
+        @PostMapping(value = "/fixture-json", consumes = MediaType.APPLICATION_JSON_VALUE)
+        public String json() {
+            return "";
+        }
+
+        @PostMapping("/fixture-request-body")
+        public String requestBody(@RequestBody Map<String, String> body) {
+            return "";
+        }
+
+        @PostMapping(value = "/fixture-generator", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+        public String generator() {
+            return "";
+        }
+
+        @PostMapping(value = "/fixture-any-content", consumes = MediaType.ALL_VALUE)
+        public String anyContent() {
+            return "";
+        }
     }
 
     private static ToolIORegistry registry;
@@ -141,6 +163,14 @@ class ToolIODiscoveryTest {
         assertFalse(registry.isKnown("/api/v1/misc/fixture-get-only"));
         // Declared, but outside InternalApiClient's allow-list.
         assertFalse(registry.isKnown("/api/v1/fixture/rotate"));
+    }
+
+    @Test
+    void onlyKnowsEndpointsThatAcceptTheDispatchersMultipartForm() {
+        assertFalse(registry.isKnown("/api/v1/misc/fixture-json"));
+        assertFalse(registry.isKnown("/api/v1/misc/fixture-request-body"));
+        assertTrue(registry.isKnown("/api/v1/misc/fixture-generator"));
+        assertTrue(registry.isKnown("/api/v1/misc/fixture-any-content"));
     }
 
     @Test

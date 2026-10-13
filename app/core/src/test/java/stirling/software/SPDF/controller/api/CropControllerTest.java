@@ -232,8 +232,8 @@ class CropControllerTest {
                             .withAutoCrop(false)
                             .build();
 
-            PDDocument mockDocument = mock(PDDocument.class);
-            PDDocument newDocument = mock(PDDocument.class);
+            PDDocument mockDocument = spy(Loader.loadPDF(testFile.getBytes()));
+            PDDocument newDocument = spy(new PDDocument());
             when(pdfDocumentFactory.load(request)).thenReturn(mockDocument);
             when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(mockDocument))
                     .thenReturn(newDocument);
@@ -269,8 +269,8 @@ class CropControllerTest {
                             .withAutoCrop(false)
                             .build();
 
-            PDDocument mockDocument = mock(PDDocument.class);
-            PDDocument newDocument = mock(PDDocument.class);
+            PDDocument mockDocument = spy(Loader.loadPDF(testFile.getBytes()));
+            PDDocument newDocument = spy(new PDDocument());
             when(pdfDocumentFactory.load(request)).thenReturn(mockDocument);
             when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(mockDocument))
                     .thenReturn(newDocument);
@@ -659,8 +659,8 @@ class CropControllerTest {
                             .withAutoCrop(false)
                             .build();
 
-            PDDocument mockDocument = mock(PDDocument.class);
-            PDDocument newDocument = mock(PDDocument.class);
+            PDDocument mockDocument = spy(Loader.loadPDF(testFile.getBytes()));
+            PDDocument newDocument = spy(new PDDocument());
             when(pdfDocumentFactory.load(request)).thenReturn(mockDocument);
             when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(mockDocument))
                     .thenReturn(newDocument);
@@ -718,8 +718,8 @@ class CropControllerTest {
                             .withAutoCrop(false)
                             .build();
 
-            PDDocument mockDocument = mock(PDDocument.class);
-            PDDocument newDocument = mock(PDDocument.class);
+            PDDocument mockDocument = spy(Loader.loadPDF(testFile.getBytes()));
+            PDDocument newDocument = spy(new PDDocument());
             when(pdfDocumentFactory.load(request)).thenReturn(mockDocument);
             when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(mockDocument))
                     .thenReturn(newDocument);
@@ -728,6 +728,12 @@ class CropControllerTest {
 
             assertThat(response).isNotNull();
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            try (PDDocument cropped = Loader.loadPDF(drainBody(response))) {
+                assertThat(cropped.getNumberOfPages()).isEqualTo(1);
+                PDRectangle box = cropped.getPage(0).getMediaBox();
+                assertThat(box.getWidth()).isEqualTo(expectedWidth);
+                assertThat(box.getHeight()).isEqualTo(expectedHeight);
+            }
         }
 
         @ParameterizedTest
@@ -746,8 +752,8 @@ class CropControllerTest {
                             .withAutoCrop(false)
                             .build();
 
-            PDDocument mockDocument = mock(PDDocument.class);
-            PDDocument newDocument = mock(PDDocument.class);
+            PDDocument mockDocument = spy(Loader.loadPDF(testFile.getBytes()));
+            PDDocument newDocument = spy(new PDDocument());
             when(pdfDocumentFactory.load(request)).thenReturn(mockDocument);
             when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(mockDocument))
                     .thenReturn(newDocument);
