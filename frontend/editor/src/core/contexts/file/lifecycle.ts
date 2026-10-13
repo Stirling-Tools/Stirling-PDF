@@ -10,6 +10,7 @@ import {
   FileContextState,
   StirlingFileStub,
   ProcessedFilePage,
+  createStirlingFile,
 } from "@app/types/fileContext";
 import {
   forgetFile,
@@ -215,6 +216,17 @@ export class FileLifecycleManager {
       if (DEBUG)
         console.warn(`🗂️ Attempted to update removed file (state): ${fileId}`);
       return;
+    }
+
+    // Tools name their output after the held File, not the stub, so a rename
+    // must replace it or the next tool run brings the old name back.
+    const held = this.filesRef.current.get(fileId);
+    if (held && updates.name !== undefined && updates.name !== held.name) {
+      const renamed = new File([held], updates.name, {
+        type: held.type,
+        lastModified: held.lastModified,
+      });
+      this.filesRef.current.set(fileId, createStirlingFile(renamed, fileId));
     }
 
     this.dispatch({
