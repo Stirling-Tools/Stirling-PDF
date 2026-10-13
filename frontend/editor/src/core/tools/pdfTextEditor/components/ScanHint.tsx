@@ -1,5 +1,7 @@
-import { Stack, Text } from "@mantine/core";
+import { useId } from "react";
+import { Stack, Text, Tooltip } from "@mantine/core";
 import { Button } from "@app/ui/Button";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import type { PageSnapshot } from "@app/tools/pdfTextEditor/types";
 
@@ -18,6 +20,8 @@ export interface ScanHintProps {
   onRunOcr: () => void;
   ocrRunning: boolean;
   ocrAvailable: boolean | null;
+  ocrBlockedReason?: string | null;
+  onRemovePassword?: () => void;
 }
 
 export function ScanHint({
@@ -25,8 +29,11 @@ export function ScanHint({
   onRunOcr,
   ocrRunning,
   ocrAvailable,
+  ocrBlockedReason,
+  onRemovePassword,
 }: ScanHintProps) {
   const { t } = useTranslation();
+  const reasonId = useId();
   const scans = pages.filter(isUnreadScan).length;
   if (scans === 0) return null;
   return (
@@ -45,11 +52,41 @@ export function ScanHint({
         variant="secondary"
         onClick={onRunOcr}
         loading={ocrRunning}
-        disabled={!ocrAvailable}
+        disabled={!ocrAvailable || !!ocrBlockedReason}
+        aria-describedby={ocrBlockedReason ? reasonId : undefined}
         data-testid="pdf-editor-scan-hint-ocr"
       >
         {t("pdfTextEditor.inspector.runOcr", "Run OCR")}
       </Button>
+      {ocrBlockedReason && (
+        <Stack gap={6} align="center">
+          <Text id={reasonId} size="xs" ta="center" role="note">
+            {ocrBlockedReason}
+          </Text>
+          {onRemovePassword && (
+            <Tooltip
+              label={t(
+                "encryptedPdfUnlock.removePasswordHelp",
+                "Open Remove Password to create an unprotected copy.",
+              )}
+              multiline
+              w={230}
+              withArrow
+              events={{ hover: true, focus: true, touch: true }}
+            >
+              <Button
+                size="sm"
+                variant="tertiary"
+                leftSection={<Icon name="lock-open" size={16} />}
+                onClick={onRemovePassword}
+                disabled={ocrRunning}
+              >
+                {t("removePassword.submit", "Remove Password")}
+              </Button>
+            </Tooltip>
+          )}
+        </Stack>
+      )}
       {ocrAvailable === false && !ocrRunning && (
         <Text size="xs" c="dimmed" ta="center">
           {t(

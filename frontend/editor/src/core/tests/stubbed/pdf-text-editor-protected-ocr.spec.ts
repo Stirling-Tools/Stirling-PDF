@@ -1,0 +1,84 @@
+import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { waitForEditorReady } from "@app/tests/stubbed/editorReady";
+import path from "path";
+
+// qpdf --encrypt scan-password scan-password 256 -- scanned-no-ocr.pdf scanned-no-ocr-encrypted.pdf
+const SCAN = path.join(
+  import.meta.dirname,
+  "../test-fixtures/scanned-no-ocr-encrypted.pdf",
+);
+
+for (const source of ["workbench", "disk"] as const) {
+  test(`unlocked ${source} scan explains OCR and offers Remove Password`, async ({
+    page,
+  }) => {
+    const ocrRequests: string[] = [];
+    page.on("request", (request) => {
+      if (request.url().includes("/api/v1/misc/ocr-pdf"))
+        ocrRequests.push(request.url());
+    });
+    await page.route("**/api/v1/security/inspect-pdf-security", (route) =>
+      route.fulfill({
+        json: {
+          encrypted: true,
+          signed: false,
+          ownerAuthenticated: true,
+          permissions: -4,
+          encryptionKeyLength: 256,
+          encryptionRevision: 6,
+          canModify: true,
+          canAssemble: true,
+          pageCount: 1,
+        },
+      }),
+    );
+    if (source === "workbench") {
+      await page.goto("/editor");
+      await page.getByTestId("file-input").setInputFiles(SCAN);
+      await page
+        .getByPlaceholder("Enter the PDF password")
+        .fill("scan-password");
+      await page.getByRole("button", { name: "Unlock", exact: true }).click();
+      await expect(page.getByRole("dialog")).toHaveCount(0);
+      await page
+        .getByRole("link", { name: "PDF Text Editor", exact: true })
+        .first()
+        .click();
+    } else {
+      await page.goto("/pdf-text-editor");
+      await page.getByTestId("pdf-editor-file-input").setInputFiles(SCAN);
+      await page
+        .getByTestId("pdf-editor-password-modal")
+        .locator("input")
+        .first()
+        .fill("scan-password");
+      await page.getByTestId("pdf-editor-password-submit").click();
+    }
+    await waitForEditorReady(page);
+    const hint = page.getByTestId("pdf-editor-scan-hint");
+    const ocr = hint.getByRole("button", { name: "Run OCR", exact: true });
+    await expect(ocr).toBeVisible();
+    await expect(ocr).toBeDisabled();
+    await expect(hint.getByRole("note")).toHaveText(
+      "OCR cannot keep this PDF's password protection. Use Remove Password to create an unprotected copy first.",
+    );
+    await expect(ocr).toHaveAccessibleDescription(/password protection/);
+    const removePassword = hint.getByRole("button", {
+      name: "Remove Password",
+      exact: true,
+    });
+    await expect(removePassword).toBeVisible();
+    await page.getByTestId("pdf-editor-root").screenshot({
+      path: test.info().outputPath("protected-ocr-sidebar.png"),
+    });
+    await removePassword.click();
+    await expect(page).toHaveURL(/\/remove-password$/);
+    await expect(
+      page.getByRole("textbox", { name: "Current Password", exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByText("✓ scanned-no-ocr-encrypted.pdf", { exact: true }),
+    ).toBeVisible();
+    expect(ocrRequests).toEqual([]);
+  });
+}

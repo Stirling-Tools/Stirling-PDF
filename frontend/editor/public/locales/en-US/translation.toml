@@ -7345,6 +7345,7 @@ nothingSelectedHint = "Click any text, image or shape on the page to edit it her
 ocrDocumentChanged = "The document changed while OCR was running. Run OCR again to include your latest changes."
 ocrInvalidResult = "OCR did not return a PDF. Please try again."
 ocrNoLanguages = "No OCR languages are installed on the server."
+ocrProtected = "OCR cannot keep this PDF's password protection. Use Remove Password to create an unprotected copy first."
 ocrRunning = "Recognizing text..."
 ocrUnavailable = "OCR is unavailable on this server."
 oneImage = "Image"

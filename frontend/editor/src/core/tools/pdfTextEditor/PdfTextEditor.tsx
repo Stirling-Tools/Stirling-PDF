@@ -18,6 +18,7 @@ import {
 } from "@app/services/pdfPasswordStore";
 import { useFileContext, useFileSelection } from "@app/contexts/FileContext";
 import { useViewer } from "@app/contexts/ViewerContext";
+import { useToolWorkflowActions } from "@app/contexts/ToolWorkflowContext";
 import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
 import type { FileId } from "@app/types/file";
 import type { ToolId } from "@app/types/toolId";
@@ -53,6 +54,7 @@ import { jpegExifOrientation } from "@app/utils/jpegOrientation";
 import { MergeRunsCommand } from "@app/tools/pdfTextEditor/commands/MergeRunsCommand";
 import { UngroupParagraphCommand } from "@app/tools/pdfTextEditor/commands/UngroupParagraphCommand";
 import { exportToBlob } from "@app/tools/pdfTextEditor/util/exportPdf";
+import { assertEditorOcrAllowed } from "@app/tools/pdfTextEditor/util/ocrProtection";
 import { clampRenderScale } from "@app/tools/pdfTextEditor/util/fitToWidth";
 import {
   detectSaveRisks,
@@ -103,6 +105,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   }, []);
   const { addFiles, consumeFiles, selectors } = useFileContext();
   const { setSelectedFiles } = useFileSelection();
+  const { handleToolSelect } = useToolWorkflowActions();
   // Saving replaces the workbench file, so for a moment the selection points at
   // a file the editor has not adopted yet. Auto-load must sit that out.
   const [applying, setApplying] = useState(false);
@@ -178,6 +181,8 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       assertFilesNotBlocked(policyIds);
       setApplying(true);
       try {
+        if (toolId === "ocr")
+          assertEditorOcrAllowed(store.document, sourceId, t);
         const sourceAccess = getPdfAccess(sourceId);
         if (toolId === "pdfTextEditor" && sourceAccess?.encrypted) {
           await verifyEditedPdfProtection(edited, sourceAccess);
@@ -190,6 +195,8 @@ export default function PdfTextEditor(_props: BaseToolProps) {
           );
           if (!isCurrent()) return null;
           assertFilesNotBlocked(policyIds);
+          if (toolId === "ocr")
+            assertEditorOcrAllowed(store.document, sourceId, t);
           await consumeFiles([sourceId], stirlingFiles, stubs);
           // Claim the replacement before releasing the hold, otherwise the
           // editor sees an unfamiliar selection and re-opens the file it just
@@ -214,7 +221,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         setApplying(false);
       }
     },
-    [addFiles, adoptFile, consumeFiles, selectors, setSourceFile],
+    [addFiles, adoptFile, consumeFiles, selectors, setSourceFile, store, t],
   );
 
   const applyOcrResult = useCallback(
@@ -726,6 +733,13 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     },
     ocrRunning: ocr.running,
     ocrAvailable: state.loading && !ocr.running ? null : ocr.available,
+    ocrBlockedReason: ocr.blockedReason,
+    onRemovePassword: sourceFileId
+      ? () => {
+          setSelectedFiles([sourceFileId]);
+          handleToolSelect("removePassword");
+        }
+      : undefined,
   };
 
   return (
