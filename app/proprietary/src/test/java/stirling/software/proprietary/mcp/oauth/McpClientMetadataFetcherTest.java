@@ -14,10 +14,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.net.URI;
 import java.net.http.HttpHeaders;
-import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
@@ -140,7 +138,7 @@ class McpClientMetadataFetcherTest {
 
     @Test
     void fetchesAndCachesTheDocument() {
-        HttpResponse<InputStream> ok = response(200, document(CLIENT_ID, "none"), null);
+        McpMetadataHttp.Response ok = response(200, document(CLIENT_ID, "none"), null);
         doReturn(ok).when(fetcher).send(URI.create(CLIENT_ID));
 
         assertEquals("ChatGPT", fetcher.fetch(CLIENT_ID).clientName());
@@ -151,9 +149,9 @@ class McpClientMetadataFetcherTest {
 
     @Test
     void redirectsAreFollowedOnlyToPublicHttpsHosts() {
-        HttpResponse<InputStream> toCdn =
+        McpMetadataHttp.Response toCdn =
                 response(302, "", "https://cdn.chatgpt.com/oauth/client.json");
-        HttpResponse<InputStream> ok = response(200, document(CLIENT_ID, "none"), null);
+        McpMetadataHttp.Response ok = response(200, document(CLIENT_ID, "none"), null);
         doReturn(toCdn).when(fetcher).send(URI.create(CLIENT_ID));
         doReturn(ok).when(fetcher).send(URI.create("https://cdn.chatgpt.com/oauth/client.json"));
         assertEquals(List.of(REDIRECT), fetcher.fetch(CLIENT_ID).redirectUris());
@@ -161,7 +159,7 @@ class McpClientMetadataFetcherTest {
         McpClientMetadataFetcher other = spy(new McpClientMetadataFetcher());
         doReturn(true).when(other).isPublicHost("chatgpt.com");
         doReturn(false).when(other).isPublicHost("internal.example");
-        HttpResponse<InputStream> toPrivate =
+        McpMetadataHttp.Response toPrivate =
                 response(302, "", "https://internal.example/client.json");
         doReturn(toPrivate).when(other).send(URI.create(CLIENT_ID));
         assertThrows(McpOAuthException.class, () -> other.fetch(CLIENT_ID));
@@ -169,14 +167,14 @@ class McpClientMetadataFetcherTest {
 
         McpClientMetadataFetcher plain = spy(new McpClientMetadataFetcher());
         doReturn(true).when(plain).isPublicHost("chatgpt.com");
-        HttpResponse<InputStream> toHttp = response(302, "", "http://chatgpt.com/client.json");
+        McpMetadataHttp.Response toHttp = response(302, "", "http://chatgpt.com/client.json");
         doReturn(toHttp).when(plain).send(URI.create(CLIENT_ID));
         assertThrows(McpOAuthException.class, () -> plain.fetch(CLIENT_ID));
     }
 
     @Test
     void nonSuccessStatusIsAnInvalidClient() {
-        HttpResponse<InputStream> missing = response(404, "", null);
+        McpMetadataHttp.Response missing = response(404, "", null);
         doReturn(missing).when(fetcher).send(URI.create(CLIENT_ID));
         McpOAuthException e = assertThrows(McpOAuthException.class, () -> fetcher.fetch(CLIENT_ID));
         assertEquals("invalid_client", e.getError());
@@ -197,8 +195,8 @@ class McpClientMetadataFetcherTest {
     }
 
     @SuppressWarnings("unchecked")
-    private static HttpResponse<InputStream> response(int status, String body, String location) {
-        HttpResponse<InputStream> response = mock(HttpResponse.class);
+    private static McpMetadataHttp.Response response(int status, String body, String location) {
+        McpMetadataHttp.Response response = mock(McpMetadataHttp.Response.class);
         when(response.statusCode()).thenReturn(status);
         when(response.body()).thenReturn(new ByteArrayInputStream(json(body)));
         Map<String, List<String>> headers =

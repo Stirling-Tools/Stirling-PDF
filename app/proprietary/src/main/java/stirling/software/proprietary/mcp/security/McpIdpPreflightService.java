@@ -54,7 +54,7 @@ public class McpIdpPreflightService {
     private final HttpClient httpClient =
             HttpClient.newBuilder()
                     .connectTimeout(Duration.ofSeconds(5))
-                    .followRedirects(HttpClient.Redirect.NORMAL)
+                    .followRedirects(HttpClient.Redirect.NEVER)
                     .build();
 
     public McpIdpPreflightService(

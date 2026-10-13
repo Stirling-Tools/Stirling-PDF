@@ -3,10 +3,6 @@ package stirling.software.proprietary.mcp.oauth;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -48,17 +44,8 @@ public class McpClientMetadataFetcher {
     private static final Set<String> SECRET_AUTH_METHODS =
             Set.of("client_secret_basic", "client_secret_post", "client_secret_jwt");
 
-    private final HttpClient client;
     private final Cache<String, ClientMetadata> cache =
             Caffeine.newBuilder().maximumSize(1_000).expireAfterWrite(15, TimeUnit.MINUTES).build();
-
-    public McpClientMetadataFetcher() {
-        this.client =
-                HttpClient.newBuilder()
-                        .connectTimeout(Duration.ofSeconds(5))
-                        .followRedirects(HttpClient.Redirect.NEVER)
-                        .build();
-    }
 
     /** True when the client_id has the shape of a metadata document URL. */
     public static boolean isMetadataClientId(String clientId) {
@@ -73,7 +60,7 @@ public class McpClientMetadataFetcher {
         URI uri = validateClientIdUrl(clientId);
         for (int hop = 0; hop <= MAX_REDIRECTS; hop++) {
             requirePublicHost(uri);
-            HttpResponse<InputStream> response = send(uri);
+            McpMetadataHttp.Response response = send(uri);
             int status = response.statusCode();
             if (status >= 300 && status < 400) {
                 String location = response.headers().firstValue("Location").orElse(null);
@@ -170,21 +157,12 @@ public class McpClientMetadataFetcher {
         return host != null && !GeneralUtils.isDisallowedNetworkLocation(host);
     }
 
-    HttpResponse<InputStream> send(URI uri) {
-        HttpRequest request =
-                HttpRequest.newBuilder(uri)
-                        .timeout(Duration.ofSeconds(10))
-                        .header("Accept", "application/json")
-                        .GET()
-                        .build();
+    McpMetadataHttp.Response send(URI uri) {
         try {
-            return client.send(request, HttpResponse.BodyHandlers.ofInputStream());
+            return McpMetadataHttp.get(uri);
         } catch (IOException e) {
             log.warn("MCP client metadata fetch from '{}' failed: {}", uri.getHost(), e.toString());
             throw invalidClient("Could not fetch the client metadata.");
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw invalidClient("Client metadata fetch was interrupted.");
         }
     }
 
