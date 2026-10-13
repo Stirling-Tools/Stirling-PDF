@@ -8,7 +8,7 @@ interface PendingDocument {
 
 interface DocumentSwapBridgeProps {
   pending: PendingDocument | null;
-  onSwapped: () => void;
+  onSwapped: (documentId: string) => void;
   onFailed: (error: unknown) => void;
 }
 
@@ -60,7 +60,7 @@ export function DocumentSwapBridge({
 
         try {
           documentManager.setActiveDocument(response.documentId);
-          onSwapped();
+          onSwapped(response.documentId);
           if (previousId && previousId !== response.documentId) {
             // A failed close only leaks a background document until unmount.
             void documentManager

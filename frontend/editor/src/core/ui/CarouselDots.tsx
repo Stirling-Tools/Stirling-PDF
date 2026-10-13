@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { useTranslation } from "react-i18next";
 import "@app/ui/CarouselDots.css";
 
 /** default = blue pill on light surfaces; onImage = white dots over dark photography. */
@@ -31,6 +32,7 @@ export function CarouselDots({
   className,
   style,
 }: CarouselDotsProps) {
+  const { t } = useTranslation();
   const classes = [
     "sui-carousel-dots",
     `sui-carousel-dots--${tone}`,
@@ -49,7 +51,13 @@ export function CarouselDots({
             type="button"
             className={"sui-carousel-dots__dot" + (active ? " is-active" : "")}
             aria-current={active ? "true" : undefined}
-            aria-label={dotLabel ? dotLabel(i) : `Go to slide ${i + 1}`}
+            aria-label={
+              dotLabel
+                ? dotLabel(i)
+                : t("common.goToSlide", "Go to slide {{number}}", {
+                    number: i + 1,
+                  })
+            }
             onClick={onSelect ? () => onSelect(i) : undefined}
           />
         );

@@ -520,6 +520,13 @@
   height: 26px;
 }
 
+/* The wordmark is an inline lockup, so in the label's line box it sits on the
+   text baseline, above the mark's centre. */
+.chat-panel__header .sui-panelhdr__label {
+  display: flex;
+  align-items: center;
+}
+
 .chat-progress-live__logo {
   display: inline-flex;
   align-items: center;

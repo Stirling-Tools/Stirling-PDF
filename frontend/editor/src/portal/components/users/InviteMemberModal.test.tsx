@@ -48,6 +48,39 @@ function renderModal(props: Partial<ComponentProps<typeof InviteMemberModal>>) {
 }
 
 describe("InviteMemberModal — add-user method gating", () => {
+  it.each([
+    { text: "Alex Morgan", direct: true, email: false, field: "Username" },
+    {
+      text: "alex+sign@example.com",
+      direct: true,
+      email: false,
+      field: "Username",
+    },
+    {
+      text: "alex+sign@example.com",
+      direct: true,
+      email: true,
+      field: "Email address",
+    },
+    { text: "Alex Morgan", direct: false, email: true, field: "Email address" },
+  ])(
+    "preserves search text for the available method: $text / $field",
+    async ({ text, direct, email, field }) => {
+      const user = userEvent.setup();
+      renderModal({
+        initialValue: text,
+        canDirectCreate: direct,
+        canEmailInvite: email,
+      });
+      const input = screen.getByRole("textbox", { name: new RegExp(field) });
+      expect(input).toHaveValue(text);
+      expect(createMember).not.toHaveBeenCalled();
+      await user.clear(input);
+      await user.type(input, "corrected@example.com");
+      expect(input).toHaveValue("corrected@example.com");
+    },
+  );
+
   it("SaaS (email only): no method toggle, opens to the email field", () => {
     renderModal({ canDirectCreate: false, canEmailInvite: true });
     expect(screen.queryByText("How to add them")).not.toBeInTheDocument();

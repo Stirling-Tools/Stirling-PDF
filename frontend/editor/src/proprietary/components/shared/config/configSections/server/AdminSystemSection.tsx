@@ -471,11 +471,6 @@ export default function AdminSystemSection() {
             "admin.settings.storage.description",
             "Where files are stored, and whether people can share them by link or email.",
           )}
-          badge={
-            <Badge component="span" color="orange" size="sm">
-              {t("toolPanel.alpha", "Alpha")}
-            </Badge>
-          }
         >
           <StorageSharingCard
             settings={storage}
@@ -549,21 +544,6 @@ export default function AdminSystemSection() {
             "admin.settings.features.serverCertificate.description",
             'Generate the certificate that backs the "Sign with Stirling-PDF" signing feature.',
           )}
-          badge={
-            <Badge
-              component="span"
-              color="grape"
-              size="sm"
-              style={{ cursor: "pointer" }}
-              onClick={() => navigate("/settings/adminPlan")}
-              title={t(
-                "admin.settings.badge.clickToUpgrade",
-                "Click to view plan details",
-              )}
-            >
-              PRO
-            </Badge>
-          }
         >
           <ServerCertificateCard {...generalCard} />
         </SettingsCard>

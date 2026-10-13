@@ -25,7 +25,7 @@ const Compress = (props: BaseToolProps) => {
     },
     steps: [
       {
-        title: "Settings",
+        title: t("compress.settings.title", "Settings"),
         isCollapsed: base.settingsCollapsed,
         onCollapsedClick: base.settingsCollapsed
           ? base.handleSettingsReset

@@ -1,6 +1,7 @@
 import type { StepType } from "@reactour/tour";
 import type { TFunction } from "i18next";
 import {
+  revealPickerTool,
   waitForElement,
   waitForHighlightable,
 } from "@app/components/onboarding/tourUtils";
@@ -84,6 +85,9 @@ export function createUserStepsConfig({
       ),
       position: "right",
       padding: 0,
+      action: async () => {
+        await revealPickerTool('[data-tour="tool-button-crop"]');
+      },
       actionAfter: () => selectCropTool(),
     },
     [TourStep.TOOL_INTERFACE]: {

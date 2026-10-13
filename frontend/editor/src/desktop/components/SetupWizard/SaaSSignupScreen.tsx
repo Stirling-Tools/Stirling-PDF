@@ -67,7 +67,9 @@ export const SaaSSignupScreen: React.FC<SaaSSignupScreenProps> = ({
       const message =
         err instanceof Error
           ? err.message
-          : t("signup.unexpectedError", { message: "Unknown error" });
+          : t("signup.unexpectedError", "Unexpected error: {{message}}", {
+              message: t("signup.unknownError", "Unknown error"),
+            });
       setValidationError(message);
     } finally {
       setIsSignupSubmitting(false);

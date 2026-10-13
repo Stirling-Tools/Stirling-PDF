@@ -251,6 +251,11 @@ export interface AutoSplitPdfRequest {
    */
   duplexMode?: boolean;
 }
+export interface BatchAttachmentRequest {
+  attachments?: File[];
+  convertToPdfA3b?: boolean;
+  opsJson?: string;
+}
 export interface BookletImpositionRequest {
   /**
    * Boolean for if you wish to add border around the pages
@@ -540,6 +545,12 @@ export interface ExtractImageScansRequest {
    */
   tolerance?: number;
 }
+export interface ExtractSingleAttachmentRequest {
+  /**
+   * Name of the embedded attachment to extract
+   */
+  attachmentName: string;
+}
 export interface FileSizeRequest {
   /**
    * The comparison type, accepts Greater, Equal, Less than
@@ -566,7 +577,9 @@ export interface FormFormDetectionDetectRequest {
   confThreshold?: number;
 }
 export type GeneralExtractBookmarksRequest = Record<string, never>;
-export type GeneralFile = Record<string, never>;
+export interface GeneralFile {
+  useStirlingOfficeConvert?: boolean;
+}
 export type GeneralPdfToSinglePageRequest = Record<string, never>;
 export type GeneralRemoveImagePdfRequest = Record<string, never>;
 export interface HTMLToPdfRequest {
@@ -1008,18 +1021,21 @@ export interface PdfToPresentationRequest {
    * The output Presentation format
    */
   outputFormat: "ppt" | "pptx" | "odp";
+  useStirlingOfficeConvert?: boolean;
 }
 export interface PdfToTextOrRTFRequest {
   /**
    * The output Text or RTF format
    */
   outputFormat: "rtf" | "txt";
+  useStirlingOfficeConvert?: boolean;
 }
 export interface PdfToWordRequest {
   /**
    * The output Word document format
    */
   outputFormat: "doc" | "docx" | "odt";
+  useStirlingOfficeConvert?: boolean;
 }
 export interface PdfVectorExportRequest {
   /**
@@ -1402,10 +1418,12 @@ export interface WorkflowCreationRequest {
   workflowType?: "SIGNING" | "REVIEW" | "APPROVAL";
 }
 export interface SecurityCertSignValidateCertificateRequest {
+  certFile?: File;
   certType: string;
   jksFile?: File;
   p12File?: File;
   password?: string;
+  privateKeyFile?: File;
 }
 export type SecurityGetInfoOnPdfRequest = Record<string, never>;
 export type SecurityRemoveCertSignRequest = Record<string, never>;
@@ -1623,6 +1641,7 @@ export type ToolEndpoint =
   | "/api/v1/misc/auto-rename"
   | "/api/v1/misc/auto-rotate-pdf"
   | "/api/v1/misc/auto-split-pdf"
+  | "/api/v1/misc/batch-process-attachments"
   | "/api/v1/misc/compress-pdf"
   | "/api/v1/misc/create-portfolio"
   | "/api/v1/misc/decompress-pdf"
@@ -1630,6 +1649,7 @@ export type ToolEndpoint =
   | "/api/v1/misc/extract-attachments"
   | "/api/v1/misc/extract-image-scans"
   | "/api/v1/misc/extract-images"
+  | "/api/v1/misc/extract-single-attachment"
   | "/api/v1/misc/flatten"
   | "/api/v1/misc/flatten-portfolio"
   | "/api/v1/misc/list-attachments"
@@ -1732,6 +1752,7 @@ export interface ToolApiParams {
   "/api/v1/misc/auto-rename": ExtractHeaderRequest;
   "/api/v1/misc/auto-rotate-pdf": AutoRotatePdfRequest;
   "/api/v1/misc/auto-split-pdf": AutoSplitPdfRequest;
+  "/api/v1/misc/batch-process-attachments": BatchAttachmentRequest;
   "/api/v1/misc/compress-pdf": OptimizePdfRequest;
   "/api/v1/misc/create-portfolio": CreatePortfolioRequest;
   "/api/v1/misc/decompress-pdf": MiscDecompressPdfRequest;
@@ -1739,6 +1760,7 @@ export interface ToolApiParams {
   "/api/v1/misc/extract-attachments": ExtractAttachmentsRequest;
   "/api/v1/misc/extract-image-scans": ExtractImageScansRequest;
   "/api/v1/misc/extract-images": PDFExtractImagesRequest;
+  "/api/v1/misc/extract-single-attachment": ExtractSingleAttachmentRequest;
   "/api/v1/misc/flatten": FlattenRequest;
   "/api/v1/misc/flatten-portfolio": FlattenPortfolioRequest;
   "/api/v1/misc/list-attachments": ListAttachmentsRequest;
@@ -1842,6 +1864,7 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/misc/auto-rename",
   "/api/v1/misc/auto-rotate-pdf",
   "/api/v1/misc/auto-split-pdf",
+  "/api/v1/misc/batch-process-attachments",
   "/api/v1/misc/compress-pdf",
   "/api/v1/misc/create-portfolio",
   "/api/v1/misc/decompress-pdf",
@@ -1849,6 +1872,7 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/misc/extract-attachments",
   "/api/v1/misc/extract-image-scans",
   "/api/v1/misc/extract-images",
+  "/api/v1/misc/extract-single-attachment",
   "/api/v1/misc/flatten",
   "/api/v1/misc/flatten-portfolio",
   "/api/v1/misc/list-attachments",
@@ -1887,6 +1911,7 @@ export const TOOL_FILE_FIELDS = {
   "/api/v1/misc/add-attachments": ["attachments"],
   "/api/v1/misc/add-image": ["imageFile"],
   "/api/v1/misc/add-stamp": ["stampImage"],
+  "/api/v1/misc/batch-process-attachments": ["attachments"],
   "/api/v1/misc/create-portfolio": ["files"],
   "/api/v1/security/add-watermark": ["watermarkImage"],
   "/api/v1/security/cert-sign": [
@@ -1895,7 +1920,12 @@ export const TOOL_FILE_FIELDS = {
     "p12File",
     "jksFile",
   ],
-  "/api/v1/security/cert-sign/validate-certificate": ["p12File", "jksFile"],
+  "/api/v1/security/cert-sign/validate-certificate": [
+    "p12File",
+    "privateKeyFile",
+    "certFile",
+    "jksFile",
+  ],
   "/api/v1/security/validate-signature": ["certFile"],
 } as const satisfies Partial<Record<ToolEndpoint, readonly string[]>>;
 

@@ -58,11 +58,6 @@
   min-height: 1.5rem;
 }
 
-.tooltip-pin-button .material-symbols-outlined {
-  font-size: 1rem;
-  line-height: 1;
-}
-
 .tooltip-pin-button:hover {
   background-color: var(--c-danger) !important;
   border-color: var(--c-danger) !important;

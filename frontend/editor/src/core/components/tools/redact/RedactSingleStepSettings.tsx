@@ -1,4 +1,5 @@
 import { Stack, Divider } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import { RedactParameters } from "@app/hooks/tools/redact/useRedactParameters";
 import RedactModeSelector from "@app/components/tools/redact/RedactModeSelector";
 import WordsToRedactInput from "@app/components/tools/redact/WordsToRedactInput";
@@ -18,6 +19,7 @@ const RedactSingleStepSettings = ({
   onParameterChange,
   disabled = false,
 }: RedactSingleStepSettingsProps) => {
+  const { t } = useTranslation();
   return (
     <Stack gap="md">
       {/* Mode Selection */}
@@ -62,8 +64,10 @@ const RedactSingleStepSettings = ({
                 color: "var(--c-text-muted)",
               }}
             >
-              Manual redaction interface will be available here when
-              implemented.
+              {t(
+                "redact.manual.notImplemented",
+                "Manual redaction interface will be available here when implemented.",
+              )}
             </div>
           </Stack>
         </>

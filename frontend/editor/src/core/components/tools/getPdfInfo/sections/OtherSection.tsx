@@ -1,6 +1,7 @@
 import React from "react";
 import { Accordion, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import type {
   PdfOtherInfo,
   PdfAttachmentInfo,
@@ -18,6 +19,7 @@ interface OtherSectionProps {
 const renderAttachmentsList = (
   attachments: PdfAttachmentInfo[] | undefined,
   emptyText: string,
+  t: TFunction,
 ) => {
   if (!attachments || attachments.length === 0)
     return (
@@ -33,9 +35,13 @@ const renderAttachmentsList = (
           style={{ wordBreak: "break-word", overflowWrap: "break-word" }}
         >
           <Text size="sm" c="dimmed">
-            <strong>{attachment.Name || "Unnamed attachment"}</strong>
+            <strong>
+              {attachment.Name ||
+                t("getPdfInfo.other.unnamedAttachment", "Unnamed attachment")}
+            </strong>
             {attachment.Description && ` - ${attachment.Description}`}
-            {attachment.FileSize != null && ` (${attachment.FileSize} bytes)`}
+            {attachment.FileSize != null &&
+              ` ${t("getPdfInfo.other.fileSizeBytes", "({{size}} bytes)", { size: attachment.FileSize })}`}
           </Text>
         </div>
       ))}
@@ -46,6 +52,7 @@ const renderAttachmentsList = (
 const renderEmbeddedFilesList = (
   embeddedFiles: PdfEmbeddedFileInfo[] | undefined,
   emptyText: string,
+  t: TFunction,
 ) => {
   if (!embeddedFiles || embeddedFiles.length === 0)
     return (
@@ -61,11 +68,16 @@ const renderEmbeddedFilesList = (
           style={{ wordBreak: "break-word", overflowWrap: "break-word" }}
         >
           <Text size="sm" c="dimmed">
-            <strong>{file.Name || "Unnamed file"}</strong>
-            {file.FileSize != null && ` (${file.FileSize} bytes)`}
+            <strong>
+              {file.Name || t("getPdfInfo.other.unnamedFile", "Unnamed file")}
+            </strong>
+            {file.FileSize != null &&
+              ` ${t("getPdfInfo.other.fileSizeBytes", "({{size}} bytes)", { size: file.FileSize })}`}
             {file.MimeType && ` - ${file.MimeType}`}
-            {file.CreationDate && ` - Created: ${file.CreationDate}`}
-            {file.ModificationDate && ` - Modified: ${file.ModificationDate}`}
+            {file.CreationDate &&
+              ` - ${t("getPdfInfo.other.created", "Created: {{date}}", { date: file.CreationDate })}`}
+            {file.ModificationDate &&
+              ` - ${t("getPdfInfo.other.modified", "Modified: {{date}}", { date: file.ModificationDate })}`}
           </Text>
         </div>
       ))}
@@ -115,13 +127,13 @@ const OtherSection: React.FC<OtherSectionProps> = ({ anchorId, other }) => {
           <Text fw={600} size="sm">
             {t("getPdfInfo.other.attachments", "Attachments")}
           </Text>
-          {renderAttachmentsList(other?.Attachments, noneDetected)}
+          {renderAttachmentsList(other?.Attachments, noneDetected, t)}
         </Stack>
         <Stack gap={6}>
           <Text fw={600} size="sm">
             {t("getPdfInfo.other.embeddedFiles", "Embedded Files")}
           </Text>
-          {renderEmbeddedFilesList(other?.EmbeddedFiles, noneDetected)}
+          {renderEmbeddedFilesList(other?.EmbeddedFiles, noneDetected, t)}
         </Stack>
         <Stack gap={6}>
           <Text fw={600} size="sm">

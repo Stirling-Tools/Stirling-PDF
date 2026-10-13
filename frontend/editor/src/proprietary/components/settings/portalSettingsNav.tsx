@@ -46,10 +46,11 @@ const EncryptionSection = portalSection((m) => m.PortalEncryptionSection);
 const BillingSection = portalSection((m) => m.PortalBillingSection);
 const AccountLinkSection = portalSection((m) => m.PortalAccountLinkSection);
 
-/** The processor's deployment-administration views as settings sections; empty
- *  without the portal. The include* flags only decide what is offered - the
- *  endpoints enforce the same rules server-side. includeRoster is the one that
- *  does not need the processor, being the build's only roster. */
+/**
+ * Deployment-administration sections; endpoints enforce the same access rules.
+ * The roster is shared across builds and does not require the processor.
+ * Self-hosted billing and account linking require org ownership; SaaS has no server to link.
+ */
 export function buildPortalSettingsSections(
   t: TFunction<"translation", undefined>,
   {

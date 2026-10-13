@@ -18,6 +18,7 @@ import type {
 } from "@app/components/viewer/viewerTypes";
 import type { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
 import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
+import { usePlacedSignatureTracking } from "@app/components/viewer/hooks/usePlacedSignatureTracking";
 
 // The signature tools stash the source image on stamp annotations via custom fields
 type StampAnnotation = PdfAnnotationObject & {
@@ -200,6 +201,8 @@ export const SignatureAPIBridge = forwardRef<
     placementSize,
     setPlacementSize,
     setSignaturesApplied,
+    setSignatureApiReady,
+    isApplyingSignatures,
   } = useSignature();
   const documentReady = useDocumentReady();
   const lastStampImageRef = useRef<string | null>(null);
@@ -216,6 +219,13 @@ export const SignatureAPIBridge = forwardRef<
     signatureConfig?.textColor,
     signatureConfig?.textAlign,
   ]);
+
+  // Runs after the imperative handle is attached, so callers can use it straight away.
+  const apiReady = Boolean(annotationApi && documentReady);
+  useEffect(() => {
+    setSignatureApiReady(apiReady);
+    return () => setSignatureApiReady(false);
+  }, [apiReady, setSignatureApiReady]);
 
   // When entering sign mode, deactivate any active annotation tool immediately.
   // Only signature-specific tools (signatureInk, stamp) should be usable.
@@ -291,6 +301,7 @@ export const SignatureAPIBridge = forwardRef<
       return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (isApplyingSignatures) return;
       // Skip delete/backspace while a text input/textarea is focused (e.g., editing textbox)
       const target = event.target as HTMLElement | null;
       const tag = target?.tagName?.toLowerCase();
@@ -350,7 +361,7 @@ export const SignatureAPIBridge = forwardRef<
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [annotationApi, storeImageData, isPlacementMode]);
+  }, [annotationApi, storeImageData, isPlacementMode, isApplyingSignatures]);
 
   useImperativeHandle(
     ref,
@@ -483,6 +494,10 @@ export const SignatureAPIBridge = forwardRef<
         annotationApi.deleteAnnotation(pageIndex, annotationId);
       },
 
+      selectAnnotation: (annotationId: string, pageIndex: number) => {
+        annotationApi?.selectAnnotation(pageIndex, annotationId);
+      },
+
       deactivateTools: () => {
         if (!annotationApi) return;
         annotationApi.setActiveTool(null);
@@ -532,7 +547,13 @@ export const SignatureAPIBridge = forwardRef<
         rectMove.moveAnnotation?.(pageIndex, annotationId, newRect);
       },
     }),
-    [annotationApi, signatureConfig, placementSize, applyStampDefaults],
+    [
+      annotationApi,
+      signatureConfig,
+      placementSize,
+      applyStampDefaults,
+      configureStampDefaults,
+    ],
   );
 
   useEffect(() => {
@@ -595,6 +616,8 @@ export const SignatureAPIBridge = forwardRef<
     signatureConfig,
     documentReady,
   ]);
+
+  usePlacedSignatureTracking();
 
   useEffect(() => {
     if (!isPlacementMode || !documentReady) {

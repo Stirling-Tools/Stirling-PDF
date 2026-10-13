@@ -3,7 +3,10 @@
  * setups. Pure data + string utilities — no i18next instance or app state.
  */
 
-/** Supported languages, keyed by BCP-47-ish code → native display name. */
+/**
+ * Supported languages by native display name. Keys and `public/locales` folder names must be
+ * canonical (`Intl.getCanonicalLocales`): i18next canonicalises tags, so any other casing never matches.
+ */
 export const supportedLanguages: Record<string, string> = {
   "en-US": "English (US)",
   "en-GB": "English (UK)",
@@ -37,7 +40,7 @@ export const supportedLanguages: Record<string, string> = {
   "ru-RU": "Русский",
   "sk-SK": "Slovensky",
   "sl-SI": "Slovenščina",
-  "sr-LATN-RS": "Srpski",
+  "sr-Latn-RS": "Srpski",
   "sv-SE": "Svenska",
   "th-TH": "ไทย",
   "tr-TR": "Türkçe",
@@ -77,10 +80,15 @@ export function normalizeLanguageCode(languageCode: string): string {
     return base.toLowerCase();
   }
 
-  const normalizedParts = rest.map((part) =>
-    part.length <= 3 ? part.toUpperCase() : part,
-  );
-  return [base.toLowerCase(), ...normalizedParts].join("-");
+  return [base.toLowerCase(), ...rest.map(normalizeSubtag)].join("-");
+}
+
+// BCP 47 casing: title-case script (4 letters), so legacy "sr_LATN_RS" matches "sr-Latn-RS".
+function normalizeSubtag(part: string): string {
+  if (part.length === 4) {
+    return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
+  }
+  return part.length <= 3 ? part.toUpperCase() : part;
 }
 
 /**

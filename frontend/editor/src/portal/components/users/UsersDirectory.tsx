@@ -20,6 +20,7 @@ import { type Member, type RoleId } from "@portal/api/users";
 import type { Team } from "@portal/api/teams";
 import type { UsersCapabilities } from "@portal/api/usersCapabilities";
 import { avatarToneForMember } from "@portal/components/users/format";
+import { useTeamAvatarUrls } from "@app/hooks/useTeamAvatarUrls";
 
 /** Tab key standing for "no team filter". */
 const ALL_TEAMS = "__all__";
@@ -140,6 +141,9 @@ export function UsersDirectory({
         })),
     ];
     const orphans = counts.get(UNASSIGNED) ?? 0;
+    if (teams.length === 1 && orphans === 0) {
+      tabs.shift();
+    }
     if (orphans > 0) {
       tabs.push({
         key: UNASSIGNED,
@@ -150,12 +154,16 @@ export function UsersDirectory({
     return tabs;
   }, [members, teams, tabOf, t]);
 
+  const activeTeamTab = teamTabs.some((tab) => tab.key === teamTab)
+    ? teamTab
+    : teamTabs[0].key;
+
   const teamScoped = useMemo(
     () =>
-      teamTab === ALL_TEAMS
+      activeTeamTab === ALL_TEAMS
         ? members
-        : members.filter((m) => tabOf(m) === teamTab),
-    [members, teamTab, tabOf],
+        : members.filter((m) => tabOf(m) === activeTeamTab),
+    [members, activeTeamTab, tabOf],
   );
 
   // Search is the only filter beside the team strip: a roster is looked up by
@@ -185,6 +193,17 @@ export function UsersDirectory({
     () => members.some((m) => m.status === "suspended" || m.locked),
     [members],
   );
+  const showLastActive = useMemo(
+    () =>
+      members.some(
+        (m) =>
+          m.lastActive !== t("users.activity.never", "Never") &&
+          /[^\s—–-]/.test(m.lastActive),
+      ),
+    [members, t],
+  );
+
+  const avatarUrls = useTeamAvatarUrls(members);
 
   const columns = useMemo<DataTableColumn<Member>[]>(() => {
     const isOwner = (m: Member) =>
@@ -268,7 +287,15 @@ export function UsersDirectory({
         key: "person",
         header: t("users.columns.person", "Person"),
         icon: (m) => (
-          <Avatar name={m.name} size="sm" tone={avatarToneForMember(m)} />
+          <Avatar
+            name={m.name}
+            size="sm"
+            src={
+              m.avatarUrl ??
+              (m.supabaseId ? avatarUrls[m.supabaseId] : undefined)
+            }
+            tone={avatarToneForMember(m)}
+          />
         ),
         primary: (m) => m.name,
         suffix: (m) => (m.isSelf ? t("users.you", "(you)") : undefined),
@@ -362,56 +389,77 @@ export function UsersDirectory({
           return out;
         },
       }),
-      column.muted({
-        key: "lastActive",
-        header: t("users.lastActive", "Last active"),
-        get: (m) => m.lastActive,
-      }),
     );
-
-    cols.push(
-      column.select({
-        key: "role",
-        header: t("users.columns.role", "Role"),
-        get: (m) => ({
-          value: isOwner(m) ? "org_owner" : m.role,
-          options: [
-            ...(isOwner(m) || canTransferTo(m)
-              ? [
-                  {
-                    value: "org_owner",
-                    label: t("users.role.orgOwner", "Org Owner"),
-                  },
-                ]
-              : []),
-            ...(capabilities.adminRole
-              ? roleOptions
-              : [
-                  {
-                    value: "member",
-                    label: t("users.role.member", "Member"),
-                  },
-                ]),
-          ],
-          ariaLabel: t("users.roleFor", "Role for {{name}}", {
-            name: m.name,
-          }),
-          readOnly:
-            m.isSelf ||
-            isOwner(m) ||
-            (!capabilities.changeRole && !canTransferTo(m)),
+    if (showLastActive) {
+      cols.push(
+        column.muted({
+          key: "lastActive",
+          header: t("users.lastActive", "Last active"),
+          get: (m) => m.lastActive,
         }),
-        onChange: (m, value) => {
-          // Ownership uses its atomic transfer endpoint, never the ordinary role mutation.
-          if (value === "org_owner") {
-            if (canTransferTo(m)) onTransferOwnership?.(m);
-            return;
-          }
-          if (capabilities.changeRole)
-            onChangeRole(m, (value ?? m.role) as RoleId);
-        },
-      }),
-    );
+      );
+    }
+
+    if (!capabilities.changeRole && !capabilities.transferOwnership) {
+      const labels: Record<RoleId, string> = {
+        admin: t("users.role.admin", "Admin"),
+        team_owner: t("users.role.teamOwner", "Team Lead"),
+        member: t("users.role.member", "Member"),
+        guest: t("users.role.guest", "Guest"),
+      };
+      cols.push(
+        column.text({
+          key: "role",
+          header: t("users.columns.role", "Role"),
+          get: (m) =>
+            isOwner(m) ? t("users.role.orgOwner", "Org Owner") : labels[m.role],
+        }),
+      );
+    } else {
+      cols.push(
+        column.select({
+          key: "role",
+          header: t("users.columns.role", "Role"),
+          get: (m) => ({
+            value: isOwner(m) ? "org_owner" : m.role,
+            options: [
+              ...(isOwner(m) || canTransferTo(m)
+                ? [
+                    {
+                      value: "org_owner",
+                      label: t("users.role.orgOwner", "Org Owner"),
+                    },
+                  ]
+                : []),
+              ...(capabilities.adminRole
+                ? roleOptions
+                : [
+                    {
+                      value: "member",
+                      label: t("users.role.member", "Member"),
+                    },
+                  ]),
+            ],
+            ariaLabel: t("users.roleFor", "Role for {{name}}", {
+              name: m.name,
+            }),
+            readOnly:
+              m.isSelf ||
+              isOwner(m) ||
+              (!capabilities.changeRole && !canTransferTo(m)),
+          }),
+          onChange: (m, value) => {
+            // Ownership uses its atomic transfer endpoint, never the ordinary role mutation.
+            if (value === "org_owner") {
+              if (canTransferTo(m)) onTransferOwnership?.(m);
+              return;
+            }
+            if (capabilities.changeRole)
+              onChangeRole(m, (value ?? m.role) as RoleId);
+          },
+        }),
+      );
+    }
 
     // A reader gets no kebab at all rather than an empty menu.
     cols.push(
@@ -429,10 +477,12 @@ export function UsersDirectory({
     capabilities,
     roleOptions,
     members,
+    avatarUrls,
     teams,
     showApprover,
     showEmail,
     showStatus,
+    showLastActive,
     teamNameById,
     onChangeRole,
     onGrantProcessor,
@@ -448,8 +498,8 @@ export function UsersDirectory({
 
   // Null on "All" and "No team", which are not teams to act on.
   const selectedTeam = useMemo<Team | null>(
-    () => teams.find((tm) => String(tm.id) === teamTab) ?? null,
-    [teams, teamTab],
+    () => teams.find((tm) => String(tm.id) === activeTeamTab) ?? null,
+    [teams, activeTeamTab],
   );
 
   const teamActions = useMemo<CellAction[]>(() => {
@@ -531,7 +581,7 @@ export function UsersDirectory({
       <div className="portal-users__filters">
         <Tabs
           items={teamTabs}
-          activeKey={teamTab}
+          activeKey={activeTeamTab}
           onChange={setTeamTab}
           ariaLabel={t("users.tabs.label", "Filter by team")}
           className="portal-users__teams"

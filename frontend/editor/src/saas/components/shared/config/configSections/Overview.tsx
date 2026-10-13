@@ -3,7 +3,6 @@ import {
   Alert,
   Divider,
   Group,
-  Image,
   LoadingOverlay,
   PasswordInput,
   Text,
@@ -22,7 +21,7 @@ import {
   linkOAuthIdentity,
   supabase,
 } from "@app/auth/supabase";
-import { oauthIconUrl } from "@app/auth/ui/oauthIcons";
+import { ProviderMark } from "@app/auth/ui/ProviderMark";
 import { oauthProviders } from "@app/constants/authProviders";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { absoluteWithBasePath } from "@app/constants/app";
@@ -122,7 +121,13 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
       });
 
     if (error) {
-      setProfileError(error.message || "Failed to upload profile picture");
+      setProfileError(
+        error.message ||
+          t(
+            "config.account.profilePicture.uploadFailed",
+            "Failed to upload profile picture",
+          ),
+      );
     } else {
       // Mark as manual upload in metadata
       await updateProfilePictureMetadata(user.id, {
@@ -151,7 +156,13 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
       .remove([profilePath]);
 
     if (error) {
-      setProfileError(error.message || "Failed to remove profile picture");
+      setProfileError(
+        error.message ||
+          t(
+            "config.account.profilePicture.removeFailed",
+            "Failed to remove profile picture",
+          ),
+      );
     } else {
       // Clear metadata when removing picture
       await updateProfilePictureMetadata(user.id, {
@@ -194,7 +205,10 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
       setProfileError(
         error instanceof Error
           ? error.message
-          : "Failed to switch to custom picture",
+          : t(
+              "config.account.profilePicture.switchFailed",
+              "Failed to switch to custom picture",
+            ),
       );
     } finally {
       setProfileUploading(false);
@@ -205,7 +219,7 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
     e.preventDefault();
 
     if (!email.trim()) {
-      setUpgradeError("Email is required");
+      setUpgradeError(t("signup.emailRequired", "Email is required"));
       return;
     }
 
@@ -224,13 +238,18 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
       await refreshSession();
 
       setSuccess(
-        "Account upgraded successfully! You can now sign in with your email.",
+        t(
+          "config.account.upgrade.success",
+          "Account upgraded successfully! You can now sign in with your email.",
+        ),
       );
       setEmail("");
       setPassword("");
     } catch (err: unknown) {
       setUpgradeError(
-        err instanceof Error ? err.message : "Failed to upgrade account",
+        err instanceof Error
+          ? err.message
+          : t("config.account.upgrade.failed", "Failed to upgrade account"),
       );
     } finally {
       setIsLoading(false);
@@ -261,7 +280,11 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
       const errorMessage =
         err instanceof Error
           ? err.message
-          : `Failed to upgrade account with ${provider}`;
+          : t(
+              "config.account.upgrade.failedWithProvider",
+              "Failed to upgrade account with {{provider}}",
+              { provider },
+            );
       setUpgradeError(errorMessage);
       setIsLoading(false);
       sessionStorage.removeItem("pendingUpgrade");
@@ -550,15 +573,21 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
                 .map((provider) => (
                   <Tooltip
                     key={provider.id}
-                    content={`${t("config.account.upgrade.linkWith", "Link with")} ${provider.label}`}
+                    content={t(
+                      "config.account.upgrade.linkWithProvider",
+                      "Link with {{provider}}",
+                      {
+                        provider: provider.label,
+                      },
+                    )}
                   >
                     <DSButton
                       variant="secondary"
                       size="sm"
                       leftSection={
-                        <Image
-                          src={oauthIconUrl(provider.file)}
-                          alt={provider.label}
+                        <ProviderMark
+                          file={provider.file}
+                          label={provider.label}
                           style={{ width: 16, height: 16 }}
                         />
                       }

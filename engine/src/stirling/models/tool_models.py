@@ -307,6 +307,16 @@ class AutoSplitPdfParams(ApiModel):
     )
 
 
+class BatchProcessAttachmentsParams(ApiModel):
+    """
+    This endpoint applies batch renames, deletions, and additions to PDF attachments in a single pass. Unknown rename or delete targets are skipped, so re-list attachments afterwards to reconcile. Input:PDF Output:PDF Type:SISO
+    """
+
+    attachments: list[bytes] | None = None
+    convert_to_pdf_a3b: bool | None = None
+    ops_json: str | None = None
+
+
 class DuplexPass(StrEnum):
     """
     For manual duplex: which pass to generate
@@ -628,10 +638,20 @@ class ExtractImagesParams(ApiModel):
     format: Format = Field(Format.png, description="The output image format e.g., 'png', 'jpeg', or 'gif'")
 
 
+class ExtractSingleAttachmentParams(ApiModel):
+    """
+    This endpoint extracts a single embedded attachment from a PDF by name. Input:PDF Output:ANY Type:SISO
+    """
+
+    attachment_name: str = Field(..., description="Name of the embedded attachment to extract")
+
+
 class FileToPdfParams(ApiModel):
     """
-    This endpoint converts a given file to a PDF using LibreOffice API Input:ANY Output:PDF Type:SISO
+    This endpoint converts a given file to a PDF using Stirling Office Convert or LibreOffice Input:ANY Output:PDF Type:SISO
     """
+
+    use_stirling_office_convert: bool | None = None
 
 
 class FlattenParams(ApiModel):
@@ -1062,6 +1082,7 @@ class PdfToPresentationParams(ApiModel):
     """
 
     output_format: OutputFormat2 = Field(..., description="The output Presentation format")
+    use_stirling_office_convert: bool | None = None
 
 
 class PdfToSinglePageParams(ApiModel):
@@ -1085,6 +1106,7 @@ class PdfToTextParams(ApiModel):
     """
 
     output_format: OutputFormat3 = Field(..., description="The output Text or RTF format")
+    use_stirling_office_convert: bool | None = None
 
 
 class ExistingTags(StrEnum):
@@ -1195,6 +1217,7 @@ class PdfToWordParams(ApiModel):
     """
 
     output_format: OutputFormat5 = Field(..., description="The output Word document format")
+    use_stirling_office_convert: bool | None = None
 
 
 class PdfToXlsxParams(ApiModel):
@@ -1206,6 +1229,7 @@ class PdfToXlsxParams(ApiModel):
         "all",
         description="The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')",
     )
+    use_stirling_office_convert: bool | None = None
 
 
 class PdfToXmlParams(ApiModel):
@@ -1851,12 +1875,14 @@ class Model(
         | AutoRenameParams
         | AutoRotatePdfParams
         | AutoSplitPdfParams
+        | BatchProcessAttachmentsParams
         | CompressPdfParams
         | CreatePortfolioParams
         | DeleteAttachmentParams
         | ExtractAttachmentsParams
         | ExtractImageScansParams
         | ExtractImagesParams
+        | ExtractSingleAttachmentParams
         | FlattenParams
         | FlattenPortfolioParams
         | OcrPdfParams
@@ -1930,12 +1956,14 @@ class Model(
         | AutoRenameParams
         | AutoRotatePdfParams
         | AutoSplitPdfParams
+        | BatchProcessAttachmentsParams
         | CompressPdfParams
         | CreatePortfolioParams
         | DeleteAttachmentParams
         | ExtractAttachmentsParams
         | ExtractImageScansParams
         | ExtractImagesParams
+        | ExtractSingleAttachmentParams
         | FlattenParams
         | FlattenPortfolioParams
         | OcrPdfParams
@@ -2010,12 +2038,14 @@ type ParamToolModel = (
     | AutoRenameParams
     | AutoRotatePdfParams
     | AutoSplitPdfParams
+    | BatchProcessAttachmentsParams
     | CompressPdfParams
     | CreatePortfolioParams
     | DeleteAttachmentParams
     | ExtractAttachmentsParams
     | ExtractImageScansParams
     | ExtractImagesParams
+    | ExtractSingleAttachmentParams
     | FlattenParams
     | FlattenPortfolioParams
     | OcrPdfParams
@@ -2091,12 +2121,14 @@ class ToolEndpoint(StrEnum):
     AUTO_RENAME = "/api/v1/misc/auto-rename"
     AUTO_ROTATE_PDF = "/api/v1/misc/auto-rotate-pdf"
     AUTO_SPLIT_PDF = "/api/v1/misc/auto-split-pdf"
+    BATCH_PROCESS_ATTACHMENTS = "/api/v1/misc/batch-process-attachments"
     COMPRESS_PDF = "/api/v1/misc/compress-pdf"
     CREATE_PORTFOLIO = "/api/v1/misc/create-portfolio"
     DELETE_ATTACHMENT = "/api/v1/misc/delete-attachment"
     EXTRACT_ATTACHMENTS = "/api/v1/misc/extract-attachments"
     EXTRACT_IMAGE_SCANS = "/api/v1/misc/extract-image-scans"
     EXTRACT_IMAGES = "/api/v1/misc/extract-images"
+    EXTRACT_SINGLE_ATTACHMENT = "/api/v1/misc/extract-single-attachment"
     FLATTEN = "/api/v1/misc/flatten"
     FLATTEN_PORTFOLIO = "/api/v1/misc/flatten-portfolio"
     OCR_PDF = "/api/v1/misc/ocr-pdf"
@@ -2170,12 +2202,14 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.AUTO_RENAME: AutoRenameParams,
     ToolEndpoint.AUTO_ROTATE_PDF: AutoRotatePdfParams,
     ToolEndpoint.AUTO_SPLIT_PDF: AutoSplitPdfParams,
+    ToolEndpoint.BATCH_PROCESS_ATTACHMENTS: BatchProcessAttachmentsParams,
     ToolEndpoint.COMPRESS_PDF: CompressPdfParams,
     ToolEndpoint.CREATE_PORTFOLIO: CreatePortfolioParams,
     ToolEndpoint.DELETE_ATTACHMENT: DeleteAttachmentParams,
     ToolEndpoint.EXTRACT_ATTACHMENTS: ExtractAttachmentsParams,
     ToolEndpoint.EXTRACT_IMAGE_SCANS: ExtractImageScansParams,
     ToolEndpoint.EXTRACT_IMAGES: ExtractImagesParams,
+    ToolEndpoint.EXTRACT_SINGLE_ATTACHMENT: ExtractSingleAttachmentParams,
     ToolEndpoint.FLATTEN: FlattenParams,
     ToolEndpoint.FLATTEN_PORTFOLIO: FlattenPortfolioParams,
     ToolEndpoint.OCR_PDF: OcrPdfParams,

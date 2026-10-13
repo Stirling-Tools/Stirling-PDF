@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Stack, PasswordInput, Alert, Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
+import i18n from "i18next";
 import { SlideConfig } from "@app/types/types";
 import { Icon } from "@app/ui/Icon";
 import { UNIFIED_CIRCLE_CONFIG } from "@app/components/onboarding/slides/unifiedBackgroundConfig";
@@ -225,7 +226,7 @@ export default function FirstLoginSlide({
 }: FirstLoginSlideProps): SlideConfig {
   return {
     key: "first-login",
-    title: "Set Your Password",
+    title: i18n.t("firstLogin.setPasswordTitle", "Set Your Password"),
     body: (
       <FirstLoginForm
         username={username}

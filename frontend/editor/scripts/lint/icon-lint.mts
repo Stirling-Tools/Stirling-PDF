@@ -9,9 +9,6 @@ const EDITOR = path.join(import.meta.dirname, "..", "..");
 const SRC = path.join(EDITOR, "src");
 const ICONS_DIR = path.join(SRC, "core/icons");
 
-// The four rules it gates only hold once every call site renders through <Icon>, so the last migration PR flips it.
-const MIGRATION_COMPLETE = false;
-
 const BANNED_IMPORTS = [
   "@mui/icons-material",
   "@iconify/react",
@@ -22,6 +19,7 @@ const BANNED_IMPORTS = [
 ];
 
 const ICON_SVG_DIR = path.join(ICONS_DIR, "svg");
+const REGISTRY = path.join(ICONS_DIR, "icons.ts");
 
 /** The frame every icon is drawn on, so one `size` renders them all alike. */
 const ICON_FRAME = "0 0 24 24";
@@ -34,7 +32,29 @@ const SVG_ALLOWED = [
   path.join(SRC, "core/tests"),
 ];
 
-const OPT_OUT = /icon-lint-disable/;
+/**
+ * The only exceptions icon-lint grants, each lifting the inline-svg rule alone for an `<svg`
+ * within ALLOW_REACH lines below it. Every other rule has none: a finding there is a bug in
+ * the rule, so fix the rule.
+ */
+const ALLOWANCES: Record<string, { why: string; storiesOnly: boolean }> = {
+  "runtime-generated-svg": {
+    why: "geometry computed from props or state at runtime: rulers, rings, charts",
+    storiesOnly: false,
+  },
+  "storybook-fixture": {
+    why: "svg text built into a fake image for a story, never rendered by the app",
+    storiesOnly: true,
+  },
+};
+const ALLOW =
+  /icon-lint-allow:\s*([a-z-]+)(?:\s+--\s+(\S.*?))?\s*(?:\*\/\}?)?$/;
+const ALLOW_REACH = 6;
+
+/** Inside `dir` itself, not merely a sibling that shares its prefix (`core/icons-old`). */
+function isWithin(file: string, dir: string): boolean {
+  return file === dir || file.startsWith(dir + path.sep);
+}
 
 const mode = process.argv[2];
 const problems: string[] = [];
@@ -110,32 +130,6 @@ if (lucidePath.size) {
   }
 }
 
-// Every Material Symbols name, so a leftover is caught wherever it sits, not only in `<Icon name>`.
-function legacyIconNames(): Set<string> {
-  try {
-    const set: { icons: Record<string, unknown> } = JSON.parse(
-      fs.readFileSync(
-        path.join(
-          EDITOR,
-          "../node_modules/@iconify-json/material-symbols/icons.json",
-        ),
-        "utf8",
-      ),
-    );
-    return new Set(Object.keys(set.icons));
-  } catch {
-    try {
-      const map: { materialSymbols?: Record<string, string> } = JSON.parse(
-        fs.readFileSync(path.join(ICONS_DIR, "icon-map.json"), "utf8"),
-      );
-      return new Set(Object.keys(map.materialSymbols ?? {}));
-    } catch {
-      return new Set();
-    }
-  }
-}
-const legacy = legacyIconNames();
-
 // Positions where a hyphenated literal is an identifier, not an icon name.
 const NOT_AN_ICON_POSITION =
   /(?:\b(?:id|key|type|kind|variant|mode|status|action|value|label|className|class|href|path|to|for|role)|data-[\w-]*|aria-[\w-]*|testid)\s*[:=]\s*$/i;
@@ -152,13 +146,13 @@ for (const file of files) {
   const isCode = /\.tsx?$/.test(file);
 
   if (file.endsWith(".svg")) {
-    if (!SVG_ALLOWED.some((dir) => file.startsWith(dir))) {
+    if (!SVG_ALLOWED.some((dir) => isWithin(file, dir))) {
       problems.push(
         `${rel(file)}: .svg outside src/core/icons/svg/. Icons belong there so ` +
           `icons.ts can map them; other artwork belongs under assets/.`,
       );
     }
-    if (file.startsWith(ICON_SVG_DIR)) {
+    if (isWithin(file, ICON_SVG_DIR)) {
       const viewBox = fs
         .readFileSync(file, "utf8")
         .match(/<svg\b[^>]*\bviewBox="([^"]*)"/)?.[1]
@@ -179,15 +173,11 @@ for (const file of files) {
   }
 
   // A stylesheet fill beats <Icon>'s fill="none" attribute and solidifies every stroke icon in scope.
-  if (
-    MIGRATION_COMPLETE &&
-    file.endsWith(".css") &&
-    !file.startsWith(ICONS_DIR)
-  ) {
+  if (file.endsWith(".css") && !isWithin(file, ICONS_DIR)) {
     const css = fs.readFileSync(file, "utf8");
     for (const m of css.matchAll(/([^{}]*svg[^{}]*)\{([^}]*)\}/g)) {
       const decl = /(^|[;\s])fill\s*:\s*(?!none|transparent)/.test(m[2]);
-      if (decl && !OPT_OUT.test(m[0])) {
+      if (decl) {
         const line = css.slice(0, m.index).split("\n").length;
         problems.push(
           `${rel(file)}:${line}: sets fill on an svg. Icons are strokes with ` +
@@ -202,48 +192,92 @@ for (const file of files) {
   if (!isCode) continue;
   const text = fs.readFileSync(file, "utf8");
   const lines = text.split("\n");
-  const inIconsDir = file.startsWith(ICONS_DIR);
+  const inIconsDir = isWithin(file, ICONS_DIR);
+
+  const isStory = /\.stories\.tsx?$/.test(file);
+  const svgLines = new Set<number>();
+  lines.forEach((line, i) => {
+    if (/<svg(?:[\s>]|$)/.test(line)) svgLines.add(i);
+  });
+  const allowed = new Set<number>();
+
+  lines.forEach((line, i) => {
+    if (/icon-lint-disable/.test(line)) {
+      problems.push(
+        `${rel(file)}:${i + 1}: icon-lint-disable is gone. Use "icon-lint-allow: <category> -- <reason>" ` +
+          `with one of: ${Object.keys(ALLOWANCES).join(", ")}.`,
+      );
+    }
+    if (!line.includes("icon-lint-allow")) return;
+    const m = ALLOW.exec(line);
+    const category = m?.[1];
+    const allowance = category ? ALLOWANCES[category] : undefined;
+    if (!m || !allowance) {
+      problems.push(
+        `${rel(file)}:${i + 1}: unknown icon-lint-allow. The categories are ` +
+          Object.entries(ALLOWANCES)
+            .map(([name, a]) => `${name} (${a.why})`)
+            .join("; ") +
+          ".",
+      );
+    } else if (!m[2]) {
+      problems.push(
+        `${rel(file)}:${i + 1}: icon-lint-allow: ${category} needs " -- <reason>".`,
+      );
+    } else if (allowance.storiesOnly && !isStory) {
+      problems.push(
+        `${rel(file)}:${i + 1}: icon-lint-allow: ${category} is only for .stories.tsx files.`,
+      );
+    } else {
+      const covered = [...svgLines].filter(
+        (n) => n > i && n <= i + ALLOW_REACH,
+      );
+      if (!covered.length) {
+        problems.push(
+          `${rel(file)}:${i + 1}: icon-lint-allow: ${category} has no <svg in the ${ALLOW_REACH} lines below it.`,
+        );
+      }
+      for (const n of covered) allowed.add(n);
+    }
+  });
 
   lines.forEach((line, i) => {
     // No inline svg outside core/icons
-    if (MIGRATION_COMPLETE && /<svg[\s>]/.test(line) && !inIconsDir) {
-      const context = lines.slice(Math.max(0, i - 6), i + 1).join("\n");
-      if (!OPT_OUT.test(context)) {
-        problems.push(
-          `${rel(file)}:${i + 1}: inline <svg>. Move it to src/core/icons/svg/ and render ` +
-            `via <Icon>, or add "// icon-lint-disable -- <reason>" if the geometry is ` +
-            `computed at runtime.`,
-        );
-      }
+    if (svgLines.has(i) && !inIconsDir && !allowed.has(i)) {
+      problems.push(
+        `${rel(file)}:${i + 1}: inline <svg>. Move it to src/core/icons/svg/ and render ` +
+          `via <Icon>. If the geometry is computed at runtime, or it is svg text for a story's ` +
+          `fake image, mark it "icon-lint-allow: <category> -- <reason>" with one of: ` +
+          `${Object.keys(ALLOWANCES).join(", ")}.`,
+      );
     }
 
     // Leftovers the type system cannot see: ReactNode admits any string, and an unchecked `?? fallback`.
     for (const m of line.matchAll(/"([a-z0-9]+(?:-[a-z0-9]+)+)"/g)) {
-      if (!MIGRATION_COMPLETE) break;
       const name = m[1];
-      const isLegacy =
-        /-(?:rounded|outlined|sharp|twotone)$/.test(name) || legacy.has(name);
+      const isLegacy = /-(?:rounded|outlined|sharp|twotone)$/.test(name);
       if (!isLegacy || known.has(name)) continue;
       if (NOT_AN_ICON_POSITION.test(line.slice(0, m.index))) continue;
-      if (OPT_OUT.test(line)) continue;
       problems.push(
         `${rel(file)}:${i + 1}: "${name}" is a Material Symbols name, not a registry ` +
-          `icon; <Icon> would draw the placeholder. Use the lucide equivalent, or ` +
-          `add "// icon-lint-disable -- <reason>" if it is not an icon name.`,
+          `icon; <Icon> would draw the placeholder. Use the lucide equivalent.`,
+      );
+    }
+
+    // Only the registry turns an svg into a component: one made anywhere else skips the name
+    // check, the frame and the gallery, which is how a second icon system starts. No opt-out.
+    if (/\.svg\?react\b/.test(line) && file !== REGISTRY) {
+      problems.push(
+        `${rel(file)}:${i + 1}: imports an svg as a component. Add it to ` +
+          `src/core/icons/icons.ts and render <Icon name="…" />, or import the file as a ` +
+          `URL for an <img> if it is a picture rather than an icon.`,
       );
     }
 
     // No retired icon library
-    if (
-      MIGRATION_COMPLETE &&
-      (/^\s*(import|export)\b/.test(line) || /\brequire\(/.test(line))
-    ) {
+    if (/^\s*(import|export)\b/.test(line) || /\brequire\(/.test(line)) {
       for (const banned of BANNED_IMPORTS) {
-        if (
-          line.includes(banned) &&
-          !inIconsDir &&
-          !OPT_OUT.test(lines[i - 1] ?? "")
-        ) {
+        if (line.includes(banned) && !inIconsDir) {
           problems.push(
             `${rel(file)}:${i + 1}: imports ${banned}. Use <Icon name="…" /> from @app/ui/Icon.`,
           );
@@ -289,8 +323,4 @@ if (problems.length) {
   process.exit(1);
 }
 
-console.log(
-  MIGRATION_COMPLETE
-    ? `✅ icon-lint: ${known.size} icons, one system, no inline svg`
-    : `✅ icon-lint: ${known.size} icons; migration in progress, so the retired-library, inline-svg, legacy-name and css-fill rules are still off`,
-);
+console.log(`✅ icon-lint: ${known.size} icons, one system, no inline svg`);

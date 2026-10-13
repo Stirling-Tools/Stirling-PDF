@@ -59,6 +59,10 @@ test.describe("PDF text editor - encrypted PDF password prompt", () => {
     await expect(page.getByTestId("pdf-editor-page-0")).toBeVisible({
       timeout: 30_000,
     });
+    await expect(
+      page.getByRole("button", { name: /^encrypted\.pdf/ }),
+    ).toBeVisible();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
   });
 
   test("cancel dismisses the prompt without loading a document", async ({

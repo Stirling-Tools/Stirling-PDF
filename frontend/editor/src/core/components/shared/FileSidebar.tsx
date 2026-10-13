@@ -62,6 +62,7 @@ import { alert } from "@app/components/toast";
 import { useBulkAddProgress } from "@app/services/bulkAddProgress";
 import { useIsScrolled } from "@app/hooks/useIsScrolled";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
+import { useCoalescedCallback } from "@app/hooks/useCoalescedCallback";
 import { FolderTreeSidebar } from "@app/components/filesPage/FolderTreeSidebar";
 import { useFilesPage } from "@app/contexts/FilesPageContext";
 import type { FolderId, FolderRecord } from "@app/types/folder";
@@ -520,10 +521,10 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const { state } = useFileState();
     const { actions: fileActions } = useFileActions();
     const { actions: navActions } = useNavigationActions();
-    const { workbench: currentWorkbench, selectedTool } = useNavigationState();
+    const { workbench: currentWorkbench } = useNavigationState();
     const policyFileBadges = usePolicyFileBadges();
-    const isMultiTool =
-      currentWorkbench === "pageEditor" && selectedTool === "multiTool";
+    // The page editor lays out every open file, so an added file belongs there.
+    const staysOnAdd = currentWorkbench === "pageEditor";
     const { requestNavigation } = useNavigationGuard();
     const { activeFileId, setActiveFileId } = useViewer();
     const { addFiles } = useFileHandler();
@@ -564,7 +565,12 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     // the user is signed in (guests have no cloud library).
     const storageEnabled = config?.storageEnabled === true && !isAnonymous;
 
+    // Only the newest read may publish: coalesced refreshes overlap when a scan
+    // outlasts the window, and a slow one finishing last would otherwise
+    // overwrite the newer library with the state it started from.
+    const stubsGenRef = useRef(0);
     const refreshStubs = useCallback(async () => {
+      const gen = ++stubsGenRef.current;
       // `stubsLoaded` gates the spinner, so the `finally` below must set it on
       // every path - callers never await this, so a rejection goes nowhere.
       let stubs: StirlingFileStub[] = [];
@@ -575,6 +581,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         // should cost the user their history, not the file they're working on.
         console.error("Failed to read the file library from storage:", error);
       }
+      if (gen !== stubsGenRef.current) return;
 
       try {
         const idbIds = new Set(stubs.map((s) => s.id as string));
@@ -600,25 +607,20 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           ),
         );
       } finally {
-        setStubsLoaded(true);
+        if (gen === stubsGenRef.current) setStubsLoaded(true);
       }
     }, [indexedDB, state.files.ids, state.files.byId]);
 
-    // Coalesce per-file updates to avoid quadratic IDB scans during imports and processing.
     const indexedDBRevision = useIndexedDBRevision();
-    const lastRefreshAt = useRef(0);
+    useCoalescedCallback(refreshStubs, indexedDBRevision);
+
+    // The hook cancels timers but cannot cancel a started run, so unmount has to
+    // invalidate it here or a late scan would publish into a gone tree.
     useEffect(() => {
-      const REFRESH_COALESCE_MS = 300;
-      const wait = Math.max(
-        0,
-        lastRefreshAt.current + REFRESH_COALESCE_MS - Date.now(),
-      );
-      const timer = window.setTimeout(() => {
-        lastRefreshAt.current = Date.now();
-        void refreshStubs();
-      }, wait);
-      return () => window.clearTimeout(timer);
-    }, [refreshStubs, indexedDBRevision]);
+      return () => {
+        stubsGenRef.current++;
+      };
+    }, []);
 
     // Server copies require a deletion-scope choice; local-only files delete immediately.
     const handleSidebarDelete = useCallback(
@@ -845,7 +847,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         return;
       }
       await addFiles(files);
-      if (!isMultiTool) {
+      if (!staysOnAdd) {
         navActions.setWorkbench(files.length === 1 ? "viewer" : "fileEditor");
       }
     }, [
@@ -853,7 +855,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       openGoogleDrivePicker,
       addFiles,
       navActions,
-      isMultiTool,
+      staysOnAdd,
       onPickGoogleDriveFiles,
     ]);
 
@@ -903,7 +905,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
 
           await fileActions.addStirlingFileStubs([stub]);
 
-          if (isMultiTool) {
+          if (staysOnAdd) {
             fileActions.setSelectedFiles([
               ...state.ui.selectedFileIds,
               stub.id,
@@ -928,7 +930,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         currentWorkbench,
         activeFileId,
         requestNavigation,
-        isMultiTool,
+        staysOnAdd,
       ],
     );
 
@@ -1000,14 +1002,14 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           await addFiles(files);
           // A tool that pinned its own workbench surface owns it - switching to
           // the viewer here strands the upload outside the tool being used.
-          if (!isMultiTool && !currentWorkbench.startsWith("custom:")) {
+          if (!staysOnAdd && !currentWorkbench.startsWith("custom:")) {
             navActions.setWorkbench(
               files.length === 1 ? "viewer" : "fileEditor",
             );
           }
         }
       },
-      [addFiles, navActions, isMultiTool, onUploadFiles, currentWorkbench],
+      [addFiles, navActions, staysOnAdd, onUploadFiles, currentWorkbench],
     );
 
     const handleNativeFilePick = useCallback(

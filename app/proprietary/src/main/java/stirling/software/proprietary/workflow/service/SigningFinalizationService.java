@@ -25,6 +25,7 @@ import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts.FontName;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.apache.pdfbox.util.Matrix;
 import org.bouncycastle.asn1.x500.RDN;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.style.BCStyle;
@@ -49,6 +50,7 @@ import stirling.software.proprietary.workflow.model.WorkflowSession;
 import stirling.software.proprietary.workflow.repository.WorkflowParticipantRepository;
 
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 /**
  * Service responsible for finalizing a signing session. Encapsulates all PDF manipulation logic
@@ -140,10 +142,9 @@ public class SigningFinalizationService {
 
             CertificateSubmission submission = extractCertificateSubmission(fresh);
             if (submission == null) {
-                log.warn(
-                        "No certificate submission found for participant {}, skipping",
-                        fresh.getEmail());
-                continue;
+                throw new ResponseStatusException(
+                        HttpStatus.CONFLICT,
+                        "Missing certificate submission for participant " + fresh.getId());
             }
 
             ParticipantSignatureMetadata sigMeta =
@@ -230,12 +231,9 @@ public class SigningFinalizationService {
     private void applyWetSignatureToPage(PDDocument document, WetSignatureMetadata wetSig)
             throws Exception {
         int pageIndex = wetSig.getPage();
-        if (pageIndex >= document.getNumberOfPages()) {
-            log.warn(
-                    "Wet signature page {} exceeds document pages {}, skipping",
-                    pageIndex,
-                    document.getNumberOfPages());
-            return;
+        if (pageIndex < 0 || pageIndex >= document.getNumberOfPages()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Wet signature page does not exist");
         }
 
         PDPage page = document.getPage(pageIndex);
@@ -255,18 +253,42 @@ public class SigningFinalizationService {
             PDImageXObject image =
                     PDImageXObject.createFromByteArray(document, imageBytes, "signature");
 
-            // Coordinates are stored as fractions (0–1) of the page dimensions.
-            // Multiply by page size to get absolute PDF points, then convert Y from
-            // UI top-left origin to PDF bottom-left origin.
-            float pageWidth = page.getMediaBox().getWidth();
-            float pageHeight = page.getMediaBox().getHeight();
+            // The viewer displays the rotated crop box, which can differ from the media box.
+            PDRectangle crop = page.getCropBox();
+            int rotation = Math.floorMod(page.getRotation(), 360);
+            float pageWidth = rotation % 180 == 0 ? crop.getWidth() : crop.getHeight();
+            float pageHeight = rotation % 180 == 0 ? crop.getHeight() : crop.getWidth();
+            Matrix toPage =
+                    switch (rotation) {
+                        case 90 ->
+                                new Matrix(
+                                        0, 1, -1, 0, crop.getUpperRightX(), crop.getLowerLeftY());
+                        case 180 ->
+                                new Matrix(
+                                        -1, 0, 0, -1, crop.getUpperRightX(), crop.getUpperRightY());
+                        case 270 ->
+                                new Matrix(
+                                        0, -1, 1, 0, crop.getLowerLeftX(), crop.getUpperRightY());
+                        default ->
+                                new Matrix(1, 0, 0, 1, crop.getLowerLeftX(), crop.getLowerLeftY());
+                    };
+            contentStream.transform(toPage);
             float x = wetSig.getX().floatValue() * pageWidth;
             float y = wetSig.getY().floatValue() * pageHeight;
             float width = wetSig.getWidth().floatValue() * pageWidth;
             float height = wetSig.getHeight().floatValue() * pageHeight;
             float pdfY = pageHeight - y - height;
 
-            contentStream.drawImage(image, x, pdfY, width, height);
+            // Match the preview's object-fit: contain instead of stretching the signature.
+            float scale = Math.min(width / image.getWidth(), height / image.getHeight());
+            float imageWidth = image.getWidth() * scale;
+            float imageHeight = image.getHeight() * scale;
+            contentStream.drawImage(
+                    image,
+                    x + (width - imageWidth) / 2,
+                    pdfY + (height - imageHeight) / 2,
+                    imageWidth,
+                    imageHeight);
 
             log.info(
                     "Applied wet signature at page {} coordinates ({}, {}) size {}x{}",
@@ -1021,11 +1043,13 @@ public class SigningFinalizationService {
         }
 
         try {
-            var node = objectMapper.valueToTree(metadata);
-            if (node.has("certificateSubmission")) {
+            var node = objectMapper.valueToTree(metadata.get("certificateSubmission"));
+            if (node instanceof ObjectNode certNode) {
+                // Persisted keystores are encrypted strings, not the DTO's Base64 byte arrays.
+                var p12 = certNode.remove("p12Keystore");
+                var jks = certNode.remove("jksKeystore");
                 CertificateSubmission submission =
-                        objectMapper.treeToValue(
-                                node.get("certificateSubmission"), CertificateSubmission.class);
+                        objectMapper.treeToValue(certNode, CertificateSubmission.class);
 
                 // Decrypt password (supports both legacy plaintext and encrypted values)
                 if (submission.getPassword() != null) {
@@ -1033,27 +1057,22 @@ public class SigningFinalizationService {
                             metadataEncryptionService.decrypt(submission.getPassword()));
                 }
 
-                // Decrypt + decode keystore bytes (supports both legacy plaintext base64 and
-                // encrypted values).
-                var certNode = node.get("certificateSubmission");
-                if (certNode.has("p12Keystore")) {
+                if (p12 != null && !p12.isNull()) {
                     submission.setP12Keystore(
-                            metadataEncryptionService.decryptBytes(
-                                    certNode.get("p12Keystore").asString()));
+                            metadataEncryptionService.decryptBytes(p12.asString()));
                 }
-                if (certNode.has("jksKeystore")) {
+                if (jks != null && !jks.isNull()) {
                     submission.setJksKeystore(
-                            metadataEncryptionService.decryptBytes(
-                                    certNode.get("jksKeystore").asString()));
+                            metadataEncryptionService.decryptBytes(jks.asString()));
                 }
                 return submission;
             }
         } catch (Exception e) {
-            log.error(
-                    "Failed to parse certificate submission for participant {}: {}",
-                    participant.getEmail(),
-                    e.getMessage(),
-                    e);
+            // Deserialization exceptions can contain certificate material; omit their payloads.
+            log.warn("Cannot read certificate submission for participant {}", participant.getId());
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Cannot read certificate submission for participant " + participant.getId());
         }
         return null;
     }

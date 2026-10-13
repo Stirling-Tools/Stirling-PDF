@@ -218,6 +218,9 @@ TOOL_IO: dict[ToolEndpoint, ToolIOSpec] = {
         ],
     ),
     ToolEndpoint.AUTO_SPLIT_PDF: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SIMO),
+    ToolEndpoint.BATCH_PROCESS_ATTACHMENTS: ToolIOSpec(
+        accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO
+    ),
     ToolEndpoint.COMPRESS_PDF: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.CREATE_PORTFOLIO: ToolIOSpec(accepts=[ToolFormat.ANY], produces=ToolFormat.PDF, arity=ToolArity.MISO),
     ToolEndpoint.DELETE_ATTACHMENT: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
@@ -228,6 +231,9 @@ TOOL_IO: dict[ToolEndpoint, ToolIOSpec] = {
         accepts=[ToolFormat.PDF, ToolFormat.IMAGE], produces=ToolFormat.IMAGE, arity=ToolArity.SIMO
     ),
     ToolEndpoint.EXTRACT_IMAGES: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.IMAGE, arity=ToolArity.SIMO),
+    ToolEndpoint.EXTRACT_SINGLE_ATTACHMENT: ToolIOSpec(
+        accepts=[ToolFormat.PDF], produces=ToolFormat.ANY, arity=ToolArity.SISO
+    ),
     ToolEndpoint.FLATTEN: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.FLATTEN_PORTFOLIO: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.OCR_PDF: ToolIOSpec(

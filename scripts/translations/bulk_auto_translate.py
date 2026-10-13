@@ -3,17 +3,27 @@
 Bulk Auto-Translate All Languages
 Automatically translates all languages in parallel using OpenAI API.
 Supports concurrent translation with configurable thread pool.
+
+Modes:
+  missing  keys present in en-US but absent from the language (default)
+  changed  keys whose en-US text changed after the language last translated them (git history)
+  all      both of the above
 """
 
 import argparse
+import json
 import os
+import shutil
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 import tomllib
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
+
+from stale_translations import find_stale, git
 
 # Thread-safe print lock
 print_lock = threading.Lock()
@@ -34,7 +44,8 @@ def get_all_languages(locales_dir: Path) -> list[str]:
         return []
 
     for lang_dir in sorted(locales_dir.iterdir()):
-        if lang_dir.is_dir() and lang_dir.name != "en-US":
+        # en-GB is derived from en-US by scripts/sync_en_us_spelling.py, not translated
+        if lang_dir.is_dir() and lang_dir.name not in ("en-US", "en-GB"):
             toml_file = lang_dir / "translation.toml"
             if toml_file.exists():
                 languages.append(lang_dir.name)
@@ -92,6 +103,8 @@ def translate_language(
     skip_verification: bool,
     include_existing: bool,
     model: str,
+    keys_file: Path | None = None,
+    only_keys: bool = False,
 ) -> tuple[str, bool, str]:
     """
     Translate a single language.
@@ -118,6 +131,11 @@ def translate_language(
 
     if include_existing:
         cmd.append("--include-existing")
+
+    if keys_file:
+        cmd.extend(["--keys-file", str(keys_file)])
+        if only_keys:
+            cmd.append("--only-keys")
 
     try:
         result = subprocess.run(
@@ -167,11 +185,28 @@ Examples:
   # Dry run to see what would be translated
   python3 bulk_auto_translate.py --dry-run
 
+  # Retranslate keys whose en-US text changed since they were translated
+  python3 bulk_auto_translate.py --mode changed --parallel 5
+
+  # Missing and changed keys in one pass
+  python3 bulk_auto_translate.py --mode all --parallel 5
+
 Note: Requires OPENAI_API_KEY environment variable or --api-key argument.
 """,
     )
 
     parser.add_argument("--api-key", help="OpenAI API key (or set OPENAI_API_KEY env var)")
+    parser.add_argument(
+        "--stale-report",
+        help="Use a stale_translations.py --json report instead of scanning git (e.g. when git can't run here)",
+    )
+    parser.add_argument(
+        "--mode",
+        choices=["missing", "changed", "all"],
+        default="missing",
+        help="missing: keys absent from the language (default); changed: keys whose en-US text "
+        "changed since they were translated, found via git history; all: both",
+    )
     parser.add_argument(
         "--model",
         default="gpt-5.5",
@@ -270,9 +305,28 @@ Note: Requires OPENAI_API_KEY environment variable or --api-key argument.
             print("\nNo languages below threshold!")
             sys.exit(0)
 
+    stale: dict[str, list[dict]] = {}
+    if args.mode != "missing" and args.stale_report:
+        print(f"\nLoading changed keys from {args.stale_report}...")
+        with open(args.stale_report, encoding="utf-8") as f:
+            stale = {lang: entries for lang, entries in json.load(f).items() if lang in languages}
+    elif args.mode != "missing":
+        print("\nScanning git history for en-US changes not yet reflected in translations...")
+        repo = Path(git("rev-parse", "--show-toplevel").strip())
+        stale = find_stale(repo, [lang for lang in languages if lang != "en-US"])
+    if args.mode != "missing":
+        for lang in languages:
+            print(f"  {lang}: {len(stale.get(lang, []))} changed")
+        if args.mode == "changed":
+            languages = [lang for lang in languages if stale.get(lang)]
+            if not languages:
+                print("\nNo changed translations found!")
+                sys.exit(0)
+
     print(f"\n{'=' * 60}")
     print("Bulk Translation Configuration")
     print(f"{'=' * 60}")
+    print(f"Mode: {args.mode}")
     print(f"Languages to translate: {len(languages)}")
     print(f"Model: {args.model}")
     print(f"Parallel threads: {args.parallel}")
@@ -287,11 +341,20 @@ Note: Requires OPENAI_API_KEY environment variable or --api-key argument.
         for lang in languages:
             completion = get_language_completion(locales_dir, lang)
             comp_str = f"{completion:.1f}%" if completion is not None else "Unknown"
-            print(f"  - {lang} ({comp_str})")
+            changed_str = f", {len(stale.get(lang, []))} changed" if args.mode != "missing" else ""
+            print(f"  - {lang} ({comp_str}{changed_str})")
         print(f"\nTotal: {len(languages)} languages")
         sys.exit(0)
 
     start_time = time.time()
+
+    # Stale key lists are handed to auto_translate.py as files
+    keys_dir = Path(tempfile.mkdtemp(prefix="stale_keys_"))
+    keys_files: dict[str, Path] = {}
+    for lang, entries in stale.items():
+        if entries:
+            keys_files[lang] = keys_dir / f"{lang}.json"
+            keys_files[lang].write_text(json.dumps([e["key"] for e in entries]), encoding="utf-8")
 
     # Translate in parallel
     results = {"success": [], "failed": [], "already_complete": []}
@@ -307,6 +370,8 @@ Note: Requires OPENAI_API_KEY environment variable or --api-key argument.
                 args.skip_verification,
                 args.include_existing,
                 args.model,
+                keys_files.get(lang),
+                args.mode == "changed",
             ): lang
             for lang in languages
         }
@@ -323,6 +388,7 @@ Note: Requires OPENAI_API_KEY environment variable or --api-key argument.
                 results["failed"].append((language, message))
 
     elapsed = time.time() - start_time
+    shutil.rmtree(keys_dir, ignore_errors=True)
 
     # Print summary
     print("\n" + "=" * 60)

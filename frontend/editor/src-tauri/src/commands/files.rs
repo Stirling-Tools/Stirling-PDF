@@ -162,6 +162,32 @@ pub fn file_disk_state(path: String) -> DiskFileState {
     }
 }
 
+/// Publishes a completed staging file beside its destination without replacing an existing entry.
+/// Staging is consumed on success and discarded on failure; the destination is never overwritten.
+#[tauri::command]
+pub fn publish_processing_file(temporary: String, path: String) -> Result<(), String> {
+    publish_processing_file_at(Path::new(&temporary), Path::new(&path))
+        .map_err(|error| error.to_string())
+}
+
+fn publish_processing_file_at(temporary: &Path, path: &Path) -> std::io::Result<()> {
+    let invalid =
+        || std::io::Error::new(ErrorKind::InvalidInput, "Invalid processing staging file");
+    let source_parent = temporary.parent().ok_or_else(invalid)?.canonicalize()?;
+    let target_parent = path.parent().ok_or_else(invalid)?.canonicalize()?;
+    if source_parent != target_parent
+        || temporary
+            .extension()
+            .map_or(true, |extension| extension != "tmp")
+        || !std::fs::symlink_metadata(temporary)?.file_type().is_file()
+    {
+        return Err(invalid());
+    }
+    tempfile::TempPath::try_from_path(temporary)?
+        .persist_noclobber(path)
+        .map_err(|error| error.error)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -175,6 +201,63 @@ mod tests {
 
     fn state(path: &Path) -> DiskFileState {
         file_disk_state(path.to_string_lossy().to_string())
+    }
+
+    #[test]
+    fn publication_preserves_the_first_complete_original() {
+        let dir = temp_dir("publish_original");
+        let staging = dir.join("original.tmp");
+        let original = dir.join("original.pdf");
+        std::fs::write(&staging, b"first original").unwrap();
+        publish_processing_file_at(&staging, &original).unwrap();
+        std::fs::write(&staging, b"processed bytes").unwrap();
+
+        assert_eq!(
+            publish_processing_file_at(&staging, &original)
+                .unwrap_err()
+                .kind(),
+            ErrorKind::AlreadyExists
+        );
+        assert_eq!(std::fs::read(&original).unwrap(), b"first original");
+        assert!(!staging.exists());
+        std::fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    fn publication_respects_the_filesystems_case_equivalence() {
+        let dir = temp_dir("publish_case");
+        let staging = dir.join("original.tmp");
+        let original = dir.join("Original.pdf");
+        let alias = dir.join("original.pdf");
+        std::fs::write(&original, b"first original").unwrap();
+        std::fs::write(&staging, b"later bytes").unwrap();
+        let case_insensitive = alias.exists();
+
+        let result = publish_processing_file_at(&staging, &alias);
+
+        if case_insensitive {
+            assert_eq!(result.unwrap_err().kind(), ErrorKind::AlreadyExists);
+        } else {
+            result.unwrap();
+        }
+        assert_eq!(std::fs::read(&original).unwrap(), b"first original");
+        std::fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    fn publication_rejects_a_different_destination_directory() {
+        let dir = temp_dir("publish_outside");
+        let staging = dir.join("original.tmp");
+        let subdir = dir.join("other");
+        std::fs::create_dir(&subdir).unwrap();
+        std::fs::write(&staging, b"original").unwrap();
+        assert_eq!(
+            publish_processing_file_at(&staging, &subdir.join("original.pdf"))
+                .unwrap_err()
+                .kind(),
+            ErrorKind::InvalidInput
+        );
+        std::fs::remove_dir_all(dir).unwrap();
     }
 
     #[test]

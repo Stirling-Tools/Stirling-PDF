@@ -18,6 +18,7 @@ import {
   isImageFormat,
   isWebFormat,
   isOfficeFormat,
+  usesOfficeEngine,
 } from "@app/utils/convertUtils";
 import {
   isToolEndpoint,
@@ -111,6 +112,16 @@ export const buildConvertFormData = (
   selectedFiles.forEach((file) => {
     formData.append("fileInput", file);
   });
+
+  if (
+    parameters.useStirlingOfficeConvert !== undefined &&
+    usesOfficeEngine(fromExtension, toExtension)
+  ) {
+    formData.append(
+      "useStirlingOfficeConvert",
+      String(parameters.useStirlingOfficeConvert),
+    );
+  }
 
   if (isImageFormat(toExtension)) {
     formData.append("imageFormat", toExtension);

@@ -205,9 +205,10 @@ export default function InviteAccept() {
               {inviteData.email}
             </Text>
             <Text size="xs" c="dimmed">
-              {t("invite.linkExpires", "Link expires")}:{" "}
-              {new Date(inviteData.expiresAt).toLocaleDateString()} at{" "}
-              {new Date(inviteData.expiresAt).toLocaleTimeString()}
+              {t("invite.linkExpiresAt", "Link expires: {{date}} at {{time}}", {
+                date: new Date(inviteData.expiresAt).toLocaleDateString(),
+                time: new Date(inviteData.expiresAt).toLocaleTimeString(),
+              })}
             </Text>
           </Stack>
         </Paper>

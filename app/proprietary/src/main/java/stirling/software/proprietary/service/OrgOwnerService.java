@@ -45,6 +45,9 @@ public class OrgOwnerService {
     private final ObjectProvider<DatabaseServiceInterface> database;
     private final ObjectProvider<AuditService> audit;
 
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private OwnershipHandoverService handovers;
+
     private boolean saas() {
         return environment.acceptsProfiles(Profiles.of("saas"));
     }
@@ -64,9 +67,42 @@ public class OrgOwnerService {
 
     public boolean isCurrentUser(Authentication authentication) {
         if (saas() || authentication == null || !authentication.isAuthenticated()) return false;
-        return users.findByUsernameIgnoreCase(authentication.getName())
-                .filter(u -> isOwner(u.getId()))
-                .isPresent();
+        return authenticatedUserId(authentication).filter(this::isOwner).isPresent();
+    }
+
+    /**
+     * Holds the ownership lock through the caller's mutation; stale admin sessions grant no
+     * ownership.
+     */
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.MANDATORY)
+    public OrgOwner requireCurrentOwner(Authentication authentication) {
+        OrgOwner row =
+                lockedOwner()
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.FORBIDDEN, "orgOwnerRequired"));
+        User owner =
+                validOwner(row)
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.FORBIDDEN, "orgOwnerRequired"));
+        if (saas()
+                || authentication == null
+                || !authentication.isAuthenticated()
+                || !authenticatedUserId(authentication).filter(owner.getId()::equals).isPresent()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "orgOwnerRequired");
+        }
+        return row;
+    }
+
+    private Optional<Long> authenticatedUserId(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) return Optional.empty();
+        if (authentication.getPrincipal() instanceof User principal)
+            return Optional.ofNullable(principal.getId());
+        if (authentication.getName() == null) return Optional.empty();
+        return users.findByUsername(authentication.getName()).map(User::getId);
     }
 
     private Optional<OrgOwner> lockedOwner() {
@@ -242,6 +278,7 @@ public class OrgOwnerService {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Choose an enabled user who has completed first login.");
+        if (handovers != null) handovers.validateCompletion(row, targetId);
         promote(target);
         assign(row, target, "TRANSFER", authentication.getName());
     }
@@ -264,6 +301,7 @@ public class OrgOwnerService {
         row.setOwnerUsername(target.getUsername());
         row.setAssignedAt(LocalDateTime.now());
         row.setAssignedReason(reason);
+        OwnershipHandoverService.clear(row);
         audit.getObject().audit(actor, AuditEventType.ORG_OWNERSHIP_CHANGE, data, AuditLevel.BASIC);
         log.info("Organization owner is {} ({})", target.getUsername(), reason);
         if (target.isFirstLogin())

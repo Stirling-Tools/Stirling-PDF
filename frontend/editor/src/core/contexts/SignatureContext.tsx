@@ -13,6 +13,12 @@ import type {
   AnnotationAPI,
 } from "@app/components/viewer/viewerTypes";
 
+export interface PlacedSignature {
+  id: string;
+  pageIndex: number;
+  imageSrc?: string;
+}
+
 // Signature state interface
 interface SignatureState {
   // Current signature configuration from the tool
@@ -25,6 +31,10 @@ interface SignatureState {
   placementSize: { width: number; height: number } | null;
   // Size (in screen units) used by the general annotation stamp flow
   placementPreviewSize: { width: number; height: number } | null;
+  placedSignatures: PlacedSignature[];
+  // Whether the viewer's signature API is mounted on a loaded document
+  isSignatureApiReady: boolean;
+  isApplyingSignatures: boolean;
 }
 
 // Signature actions interface
@@ -45,6 +55,9 @@ interface SignatureActions {
   setPlacementPreviewSize: (
     size: { width: number; height: number } | null,
   ) => void;
+  setPlacedSignatures: (placed: PlacedSignature[]) => void;
+  setSignatureApiReady: (ready: boolean) => void;
+  setApplyingSignatures: (applying: boolean) => void;
 }
 
 // Combined context interface
@@ -66,6 +79,9 @@ const initialState: SignatureState = {
   signaturesApplied: true, // Start as true (no signatures placed yet)
   placementSize: null,
   placementPreviewSize: null,
+  placedSignatures: [],
+  isSignatureApiReady: false,
+  isApplyingSignatures: false,
 };
 
 const hasSameSignatureAppearance = (
@@ -200,6 +216,22 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({
     [],
   );
 
+  const setPlacedSignatures = useCallback((placed: PlacedSignature[]) => {
+    setState((prev) => ({ ...prev, placedSignatures: placed }));
+  }, []);
+
+  const setSignatureApiReady = useCallback((ready: boolean) => {
+    setState((prev) =>
+      prev.isSignatureApiReady === ready
+        ? prev
+        : { ...prev, isSignatureApiReady: ready },
+    );
+  }, []);
+
+  const setApplyingSignatures = useCallback((applying: boolean) => {
+    setState((prev) => ({ ...prev, isApplyingSignatures: applying }));
+  }, []);
+
   // No auto-activation - all modes use manual buttons
 
   const contextValue: SignatureContextValue = {
@@ -221,6 +253,9 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({
     setSignaturesApplied,
     setPlacementSize,
     setPlacementPreviewSize,
+    setPlacedSignatures,
+    setSignatureApiReady,
+    setApplyingSignatures,
   };
 
   return (

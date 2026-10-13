@@ -928,6 +928,7 @@ export const RulerOverlay = React.forwardRef<
       : null;
 
   return (
+    // icon-lint-allow: runtime-generated-svg -- ruler geometry is computed from the page
     <svg
       style={{
         position: "absolute",

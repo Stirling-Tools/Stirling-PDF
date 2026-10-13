@@ -8,6 +8,7 @@ import {
   isImageFormat,
   isWebFormat,
   getAvailableToExtensions as defaultGetAvailableToExtensions,
+  usesOfficeEngine,
 } from "@app/utils/convertUtils";
 import { getConversionEndpoints } from "@app/data/toolsTaxonomy";
 import { usePreferences } from "@app/contexts/PreferencesContext";
@@ -27,6 +28,7 @@ import ConvertToCbrSettings from "@app/components/tools/convert/ConvertToCbrSett
 import ConvertFromEbookSettings from "@app/components/tools/convert/ConvertFromEbookSettings";
 import ConvertFromSvgSettings from "@app/components/tools/convert/ConvertFromSvgSettings";
 import ConvertToEpubSettings from "@app/components/tools/convert/ConvertToEpubSettings";
+import ConvertOfficeEngineSettings from "@app/components/tools/convert/ConvertOfficeEngineSettings";
 import { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
 import {
   FROM_FORMAT_OPTIONS,
@@ -522,6 +524,18 @@ const ConvertSettings = ({
             />
           </>
         )}
+
+      {/* Stirling Office Convert or LibreOffice */}
+      {usesOfficeEngine(parameters.fromExtension, parameters.toExtension) && (
+        <>
+          <Divider />
+          <ConvertOfficeEngineSettings
+            parameters={parameters}
+            onParameterChange={onParameterChange}
+            disabled={disabled}
+          />
+        </>
+      )}
 
       {/* PDF to EPUB/AZW3 options */}
       {parameters.fromExtension === "pdf" &&

@@ -1,7 +1,6 @@
 import { ReactNode } from "react";
 import { Modal, Stack, Text, Box, Alert } from "@mantine/core";
 import { QRCodeSVG } from "qrcode.react";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { Icon } from "@app/ui/Icon";
 import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@app/styles/zIndex";
 import { useMobileTransferSession } from "@app/hooks/useMobileTransferSession";
@@ -54,8 +53,6 @@ export default function MobileTransferModal({
   qrTitle = title,
   qrSize = 240,
 }: MobileTransferModalProps) {
-  const { config } = useAppConfig();
-
   const { mobileUrl, filesReceived, error, timeRemaining, showExpiryWarning } =
     useMobileTransferSession({
       active: opened,
@@ -63,13 +60,6 @@ export default function MobileTransferModal({
       onFileReceived,
       sessionCreateErrorMessage,
       pollingErrorMessage,
-      // In dev the backend-advertised frontendUrl is the backend origin, which
-      // serves no SPA — the phone must open the Vite origin this page runs on,
-      // so let the URL builder fall back to it. An explicit server_url still
-      // wins, as an escape hatch.
-      configuredUrl:
-        localStorage.getItem("server_url") ||
-        (import.meta.env.DEV ? "" : config?.frontendUrl || ""),
     });
 
   return (

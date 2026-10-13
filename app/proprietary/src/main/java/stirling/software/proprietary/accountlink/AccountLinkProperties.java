@@ -25,8 +25,11 @@ public class AccountLinkProperties {
      */
     private boolean enabled = true;
 
-    /** Base URL of the SaaS backend this instance links to (register + entitlement live there). */
-    private String saasBaseUrl = "https://stirling.com/app";
+    /**
+     * Base URL of the SaaS backend this instance links to (register + entitlement live there). The
+     * API host, not the web app: stirling.com/app answers /api/v1 with the SPA's HTML.
+     */
+    private String saasBaseUrl = "https://api2.stirling.com";
 
     /** Cached entitlement is reused for this long before a refresh is attempted. */
     private long entitlementCacheSeconds = 300;
@@ -51,8 +54,12 @@ public class AccountLinkProperties {
     @Setter
     public static class Metering {
 
-        /** Turns on usage metering, the daily sync, and cap enforcement. */
-        private boolean enabled = false;
+        /**
+         * Accrues a linked instance's billable usage for the sync to report to its team's wallet.
+         * Off leaves linked usage unbilled. {@link UsageMeterService} also treats a missing
+         * property as on, so keep the two defaults together.
+         */
+        private boolean enabled = true;
 
         /**
          * How often the instance syncs usage + refreshes entitlement (matches the licence sync).

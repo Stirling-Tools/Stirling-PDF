@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { resolveLandingPath } from "@app/utils/loginLanding";
 import { supabase } from "@app/auth/supabase";
 import { Button } from "@app/ui/Button";
@@ -21,9 +22,10 @@ interface CallbackState {
 
 export default function AuthCallback() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [state, setState] = useState<CallbackState>({
     status: "processing",
-    message: "Processing authentication...",
+    message: t("auth.callback.processing", "Processing authentication..."),
   });
 
   useEffect(() => {
@@ -58,7 +60,11 @@ export default function AuthCallback() {
 
           setState({
             status: "error",
-            message: `Authentication failed: ${errorMsg}`,
+            message: t(
+              "auth.callback.failedWithReason",
+              "Authentication failed: {{error}}",
+              { error: errorMsg },
+            ),
             details: { error, errorDescription },
           });
 
@@ -73,7 +79,10 @@ export default function AuthCallback() {
 
           setState({
             status: "processing",
-            message: "Exchanging authorization code...",
+            message: t(
+              "auth.callback.exchanging",
+              "Exchanging authorization code...",
+            ),
           });
 
           const { data, error: exchangeError } =
@@ -87,7 +96,13 @@ export default function AuthCallback() {
 
             setState({
               status: "error",
-              message: `Failed to complete sign in: ${exchangeError.message}`,
+              message: t(
+                "auth.callback.signInFailed",
+                "Failed to complete sign in: {{error}}",
+                {
+                  error: exchangeError.message,
+                },
+              ),
               details: { exchangeError },
             });
 
@@ -103,7 +118,10 @@ export default function AuthCallback() {
 
           setState({
             status: "success",
-            message: "Sign in successful! Redirecting...",
+            message: t(
+              "auth.callback.success",
+              "Sign in successful! Redirecting...",
+            ),
             details: {
               userId: data.session?.user?.id,
               email: data.session?.user?.email,
@@ -122,13 +140,19 @@ export default function AuthCallback() {
             console.log("[Auth Callback Debug] Existing session found");
             setState({
               status: "success",
-              message: "Already signed in! Redirecting...",
+              message: t(
+                "auth.callback.alreadySignedIn",
+                "Already signed in! Redirecting...",
+              ),
             });
           } else {
             console.log("[Auth Callback Debug] No session found");
             setState({
               status: "error",
-              message: "No authentication data found",
+              message: t(
+                "auth.callback.noData",
+                "No authentication data found",
+              ),
             });
             setTimeout(() => navigate("/login", { replace: true }), 2000);
             return;
@@ -156,7 +180,12 @@ export default function AuthCallback() {
 
         setState({
           status: "error",
-          message: `Unexpected error: ${err instanceof Error ? err.message : "Unknown error"}`,
+          message: t("login.unexpectedError", "Unexpected error: {{message}}", {
+            message:
+              err instanceof Error
+                ? err.message
+                : t("auth.callback.unknownError", "Unknown error"),
+          }),
           details: { error: err },
         });
 
@@ -170,13 +199,13 @@ export default function AuthCallback() {
   const getTitle = () => {
     switch (state.status) {
       case "processing":
-        return "Signing you in";
+        return t("auth.callback.title.processing", "Signing you in");
       case "success":
-        return "You're all set!";
+        return t("auth.callback.title.success", "You're all set!");
       case "error":
-        return "Authentication failed";
+        return t("oauth.error.title", "Authentication failed");
       default:
-        return "Authentication";
+        return t("auth.callback.title.default", "Authentication");
     }
   };
 
@@ -226,7 +255,7 @@ export default function AuthCallback() {
             fullWidth
             onClick={() => navigate("/login", { replace: true })}
           >
-            Back to login
+            {t("auth.callback.backToLogin", "Back to login")}
           </Button>
         </div>
       )}

@@ -64,7 +64,7 @@ export function CodeBlock({
             shape="pill"
             className="sui-code__copy"
             onClick={copy}
-            aria-label="Copy code"
+            aria-label={t("common.copyCode", "Copy code")}
           >
             {copied ? t("common.copied", "Copied!") : t("common.copy", "Copy")}
           </Button>

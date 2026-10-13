@@ -426,7 +426,7 @@ The frontend is organized with a clear separation of concerns:
   - **`core/components/`**: React components organized by feature
     - `core/components/tools/`: Individual PDF tool implementations
     - `core/components/viewer/`: PDF viewer components
-    - `core/components/pageEditor/`: Page manipulation UI
+    - `core/components/pageTracks/`: Page editor (every open PDF as a track of pages)
     - `core/components/tooltips/`: Help tooltips for tools
     - `core/components/shared/`: Reusable UI components
   - **`core/contexts/`**: React Context providers

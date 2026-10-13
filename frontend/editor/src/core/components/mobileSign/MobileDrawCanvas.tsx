@@ -5,6 +5,7 @@ import {
   useImperativeHandle,
   useRef,
 } from "react";
+import { useTranslation } from "react-i18next";
 
 /**
  * Touch-first signature canvas for the phone `/mobile-sign` page.
@@ -76,6 +77,7 @@ export const MobileDrawCanvas = forwardRef<
   MobileDrawCanvasHandle,
   MobileDrawCanvasProps
 >(function MobileDrawCanvas({ penColor, penSize, onHasInkChange }, ref) {
+  const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const strokesRef = useRef<Stroke[]>([]);
   const activeStrokeRef = useRef<Stroke | null>(null);
@@ -227,7 +229,7 @@ export const MobileDrawCanvas = forwardRef<
         touchAction: "none",
         cursor: "crosshair",
       }}
-      aria-label="Signature drawing area"
+      aria-label={t("mobileSign.drawingArea", "Signature drawing area")}
     />
   );
 });
