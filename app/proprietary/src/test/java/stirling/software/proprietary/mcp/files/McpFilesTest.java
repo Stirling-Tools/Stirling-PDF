@@ -16,6 +16,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.time.LocalDateTime;
 
@@ -67,6 +68,33 @@ class McpFilesTest {
         when(tempStore.storeInputStream(
                         any(InputStream.class), anyString(), nullable(String.class)))
                 .thenReturn(new FileStorage.StoredFile("tmp-1", PDF.length));
+    }
+
+    @Test
+    void inlineLimitRejectsStoredFileBeforeOpeningIt() throws Exception {
+        file.setSizeBytes(1000);
+        when(storage.getAccessibleFile(owner, 7L)).thenReturn(file);
+        assertThrows(McpFiles.McpFileException.class, () -> files.load(owner, "7", 10));
+        verify(storage, never()).loadFile(any());
+    }
+
+    @Test
+    void inlineLimitRejectsTempFileBeforeOpeningIt() throws Exception {
+        props.getStorage().setEnabled(false);
+        when(tempStore.fileExists("large")).thenReturn(true);
+        when(tempStore.getFileSize("large")).thenReturn(1000L);
+        assertThrows(McpFiles.McpFileException.class, () -> files.load(owner, "large", 10));
+        verify(tempStore, never()).retrieveInputStream(anyString());
+    }
+
+    @Test
+    void inlineReadStaysBoundedEvenWhenMetadataUnderstatesTheSize() throws Exception {
+        props.getStorage().setEnabled(false);
+        when(tempStore.fileExists("large")).thenReturn(true);
+        ByteArrayInputStream body = new ByteArrayInputStream(new byte[1000]);
+        when(tempStore.retrieveInputStream("large")).thenReturn(body);
+        assertThrows(McpFiles.McpFileException.class, () -> files.load(owner, "large", 10));
+        assertEquals(989, body.available());
     }
 
     @Test

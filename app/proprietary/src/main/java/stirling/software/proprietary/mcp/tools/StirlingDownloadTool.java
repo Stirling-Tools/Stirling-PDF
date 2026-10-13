@@ -83,16 +83,7 @@ public class StirlingDownloadTool implements McpTool {
         }
         long maxInline = applicationProperties.getMcp().getMaxInlineResponseBytes();
         try {
-            McpFiles.Loaded file = files.load(files.user(context), fileId);
-            if (file.bytes().length > maxInline) {
-                return McpResponses.error(
-                        mapper,
-                        "File is "
-                                + file.bytes().length
-                                + " bytes, over the inline limit of "
-                                + maxInline
-                                + " bytes. Use the result's download link instead.");
-            }
+            McpFiles.Loaded file = files.load(files.user(context), fileId, maxInline);
             String mimeType =
                     MediaTypeFactory.getMediaType(file.name())
                             .orElse(MediaType.APPLICATION_OCTET_STREAM)
