@@ -12,6 +12,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
@@ -37,6 +38,9 @@ public class ToolIORegistry implements ToolMetadataService, ToolIOSource {
     // happens-before, so no volatile (same as AiEngineEndpointResolver).
     private Map<String, ToolIOSpec> specsByPath = Map.of();
 
+    // POST endpoints InternalApiClient may dispatch to, declared or not.
+    private Set<String> dispatchablePaths = Set.of();
+
     // Keep this the only constructor: with two, Spring falls back to a no-arg one that isn't here.
     public ToolIORegistry(ApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
@@ -52,13 +56,34 @@ public class ToolIORegistry implements ToolMetadataService, ToolIOSource {
     @EventListener(ContextRefreshedEvent.class)
     public void discoverToolIO() {
         Map<String, ToolIOSpec> discovered = new TreeMap<>();
+        Set<String> dispatchable = new HashSet<>();
         for (RequestMappingHandlerMapping mapping :
                 applicationContext.getBeansOfType(RequestMappingHandlerMapping.class).values()) {
             mapping.getHandlerMethods()
-                    .forEach((info, handler) -> register(discovered, info, handler));
+                    .forEach(
+                            (info, handler) -> {
+                                register(discovered, info, handler);
+                                registerDispatchable(dispatchable, info);
+                            });
         }
         specsByPath = Map.copyOf(discovered);
-        log.debug("Discovered {} endpoints declaring @ToolIO", specsByPath.size());
+        dispatchablePaths = Set.copyOf(dispatchable);
+        log.debug(
+                "Discovered {} endpoints declaring @ToolIO, {} dispatchable",
+                specsByPath.size(),
+                dispatchablePaths.size());
+    }
+
+    private static void registerDispatchable(Set<String> target, RequestMappingInfo info) {
+        Set<RequestMethod> methods = info.getMethodsCondition().getMethods();
+        if (!methods.isEmpty() && !methods.contains(RequestMethod.POST)) {
+            return;
+        }
+        for (String pattern : extractPatterns(info)) {
+            if (InternalApiClient.isDispatchable(pattern)) {
+                target.add(pattern);
+            }
+        }
     }
 
     private static void register(
@@ -79,6 +104,13 @@ public class ToolIORegistry implements ToolMetadataService, ToolIOSource {
     @Override
     public Optional<ToolIOSpec> find(String operationPath) {
         return Optional.ofNullable(specsByPath.get(operationPath));
+    }
+
+    @Override
+    public boolean isKnown(String operationPath) {
+        // Empty only before discovery has run (or in forSpecs); rejecting every step then would
+        // block every save.
+        return dispatchablePaths.isEmpty() || dispatchablePaths.contains(operationPath);
     }
 
     @Override

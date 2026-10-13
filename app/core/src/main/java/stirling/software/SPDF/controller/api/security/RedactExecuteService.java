@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -43,7 +44,14 @@ class RedactExecuteService {
     private final ManualRedactionService manualRedactionService;
     private final TextRedactionService textRedactionService;
 
+    /** The redacted file and how many text matches it covered (text-only requests only). */
+    record Outcome(TempFile file, int textMatches, boolean textOnly) {}
+
     TempFile execute(RedactExecuteRequest request) throws IOException {
+        return executeWithOutcome(request).file();
+    }
+
+    Outcome executeWithOutcome(RedactExecuteRequest request) throws IOException {
         RedactStyle style = request.getStyle() != null ? request.getStyle() : new RedactStyle();
         List<String> textValues = orEmpty(request.getTextValues());
         List<String> regexPatterns = orEmpty(request.getRegexPatterns());
@@ -71,6 +79,13 @@ class RedactExecuteService {
         boolean convertToImage = imageFinalize || style.isConvertToImage();
 
         boolean hasTextOps = !textValues.isEmpty() || !regexPatterns.isEmpty();
+        boolean textOnly =
+                hasTextOps
+                        && wipePages.isEmpty()
+                        && ranges.isEmpty()
+                        && imageBoxes.isEmpty()
+                        && request.getRedactImagePages() == null;
+        requireValidPatterns(regexPatterns);
 
         log.info(
                 "[redact/execute] strategy={} textValues={} regexPatterns={} wipePages={} ranges={} imageBoxes={} imagePages={}",
@@ -89,6 +104,9 @@ class RedactExecuteService {
         PDDocument document = null;
         try {
             document = pdfDocumentFactory.load(request.getFileInput());
+            int pageCount = document.getNumberOfPages();
+            requirePagesExist("wipePages", wipePages, pageCount);
+            requirePagesExist("redactImagePages", request.getRedactImagePages(), pageCount);
 
             // Single-pass text scan: collect all text-based targets so we run the PDF
             // stripper only once across the entire execute() call rather than once per target.
@@ -140,14 +158,18 @@ class RedactExecuteService {
                 applyAllImagesRedaction(document, request.getRedactImagePages(), style);
             }
 
-            return manualRedactionService.finalizeRedaction(
-                    document,
-                    foundTexts,
-                    style.getColor(),
-                    style.getPadding(),
-                    convertToImage,
-                    !needsOverlayOnly);
+            TempFile out =
+                    manualRedactionService.finalizeRedaction(
+                            document,
+                            foundTexts,
+                            style.getColor(),
+                            style.getPadding(),
+                            convertToImage,
+                            !needsOverlayOnly);
+            return new Outcome(out, totalMatches, textOnly);
 
+        } catch (IllegalArgumentException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Execute redaction failed: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to perform PDF redaction: " + e.getMessage(), e);
@@ -159,6 +181,34 @@ class RedactExecuteService {
                     log.warn("Failed to close document: {}", e.getMessage());
                 }
             }
+        }
+    }
+
+    /** A malformed pattern would otherwise match nothing and the request would "succeed". */
+    private static void requireValidPatterns(List<String> patterns) {
+        for (String pattern : patterns) {
+            try {
+                Pattern.compile(pattern);
+            } catch (PatternSyntaxException e) {
+                throw ExceptionUtils.createIllegalArgumentException(
+                        "error.invalidArgument",
+                        "Invalid argument: {0}",
+                        "regexPatterns: '" + pattern + "' is not a valid regular expression");
+            }
+        }
+    }
+
+    private static void requirePagesExist(String field, List<Integer> pages, int pageCount) {
+        if (pages == null) {
+            return;
+        }
+        List<Integer> missing =
+                pages.stream().filter(p -> p == null || p < 1 || p > pageCount).toList();
+        if (!missing.isEmpty()) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidArgument",
+                    "Invalid argument: {0}",
+                    field + " " + missing + ": pages are numbered 1 to " + pageCount);
         }
     }
 

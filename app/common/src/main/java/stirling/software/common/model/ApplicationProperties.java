@@ -249,6 +249,9 @@ public class ApplicationProperties {
          */
         private int sweepConcurrency = 6;
 
+        /** Most steps one policy or ad-hoc pipeline run may chain; 0 or less = unlimited. */
+        private int maxSteps = 50;
+
         /** How often (seconds) the schedule trigger checks for policies whose schedule is due. */
         private long scheduleSweepSeconds = 60;
 

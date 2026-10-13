@@ -252,7 +252,9 @@ public class RedactController {
                                 "JPDFium auto-redact: {} matches processed into {}",
                                 result.totalMatches(),
                                 filename);
-                        return WebResponseUtils.pdfFileToWebResponse(tempOutput, filename);
+                        return withMatchCount(
+                                WebResponseUtils.pdfFileToWebResponse(tempOutput, filename),
+                                result.totalMatches());
                     } finally {
                         if (result.document() != null) {
                             result.document().close();
@@ -277,7 +279,9 @@ public class RedactController {
                                     request.getCustomPadding(),
                                     request.getConvertPDFToImage(),
                                     false);
-                    return WebResponseUtils.pdfFileToWebResponse(finalized, filename);
+                    int matches = foundTexts.values().stream().mapToInt(List::size).sum();
+                    return withMatchCount(
+                            WebResponseUtils.pdfFileToWebResponse(finalized, filename), matches);
                 }
             }
         } catch (IllegalArgumentException e) {
@@ -314,7 +318,23 @@ public class RedactController {
                                                 request.getFileInput().getOriginalFilename())))
                         + "_redacted.pdf";
 
-        TempFile out = redactExecuteService.execute(request);
-        return WebResponseUtils.pdfFileToWebResponse(out, filename);
+        RedactExecuteService.Outcome outcome = redactExecuteService.executeWithOutcome(request);
+        ResponseEntity<Resource> response =
+                WebResponseUtils.pdfFileToWebResponse(outcome.file(), filename);
+        // Only a text-only plan can be judged by its match count.
+        return outcome.textOnly() ? withMatchCount(response, outcome.textMatches()) : response;
+    }
+
+    /** How many matches were redacted; callers can tell "nothing matched" from success. */
+    static final String MATCHES_HEADER = "X-Stirling-Redaction-Matches";
+
+    private static <T> ResponseEntity<T> withMatchCount(ResponseEntity<T> response, long matches) {
+        return ResponseEntity.status(response.getStatusCode())
+                .headers(
+                        h -> {
+                            h.addAll(response.getHeaders());
+                            h.set(MATCHES_HEADER, Long.toString(matches));
+                        })
+                .body(response.getBody());
     }
 }

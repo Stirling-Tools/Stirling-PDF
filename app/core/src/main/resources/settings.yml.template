@@ -438,6 +438,7 @@ policies:
   # Stirling's own config directory is always off-limits, and folder access is always
   # disabled in SaaS mode.
   allowedFolderRoots: [] # e.g. ["/data/inbox", "/data/outbox"]
+  maxSteps: 50 # Most steps one pipeline (saved or run ad hoc) may chain; longer ones are rejected. 0 = unlimited
   scheduleSweepSeconds: 60 # How often (seconds) scheduled policies are checked for being due
   storageFolderSweepSeconds: 60 # Seconds between safety-net sweeps of server processing folders (arrivals sweep immediately)
   watchReconcileSeconds: 300 # How often (seconds) folder-watch re-syncs watches and re-runs as a safety net for missed events

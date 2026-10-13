@@ -20,6 +20,7 @@ import org.springframework.web.server.ResponseStatusException;
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
@@ -54,6 +55,11 @@ import tools.jackson.databind.ObjectMapper;
 @Tag(name = "AI Tools", description = "Dispatchable AI-backed tools.")
 public class CreatePdfAgentController {
 
+    private static final String BAD_DOCUMENT_REASON =
+            "document must be JSON, not HTML or plain text: {title, sections: [{type:"
+                    + " text|key_value|line_items|bullet_list|signature, heading?, body?, pairs?,"
+                    + " columns?, rows?, totalRow?, items?, signatories?}]}";
+
     private final TempFileManager tempFileManager;
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final RuntimePathConfig runtimePathConfig;
@@ -87,13 +93,31 @@ public class CreatePdfAgentController {
             value = "/create-pdf-from-html-agent",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
-            summary = "Convert an AI-generated document to a PDF",
+            summary =
+                    "Lay out a designed PDF (invoice, letter, report) from a JSON document; no"
+                            + " input file",
             description =
-                    "Accepts a structured document as a JSON parameter and returns a PDF. This"
-                            + " endpoint is dispatched by the AI workflow orchestrator as a plan"
-                            + " step; it is not intended for direct client use.")
+                    "Renders the structured document given as JSON in the document parameter (not"
+                            + " HTML or plain text) through a fixed template and returns a PDF."
+                            + " Dispatched by the AI workflow orchestrator as a plan step.")
     public ResponseEntity<Resource> createPdf(
-            @RequestParam("document") String document, @RequestParam("filename") String filename)
+            @Parameter(
+                            description =
+                                    "JSON text, not HTML: {title, subtitle?, referenceNumber?,"
+                                            + " style?: {primaryColor, backgroundColor,"
+                                            + " bodyTextColor}, sections: [{type, heading?,"
+                                            + " ...}]} where type is text (body), key_value"
+                                            + " (pairs: [[k,v]]), line_items (columns, rows:"
+                                            + " [[...]], totalRow?), bullet_list (items) or"
+                                            + " signature (signatories)")
+                    @RequestParam("document")
+                    String document,
+            @Parameter(
+                            description =
+                                    "Name for the PDF, e.g. invoice-1042.pdf. Must end in .pdf,"
+                                            + " otherwise generated-document.pdf is used.")
+                    @RequestParam("filename")
+                    String filename)
             throws Exception {
         if (!applicationProperties.getAiEngine().isEnabled()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
@@ -104,7 +128,7 @@ public class CreatePdfAgentController {
         try {
             model = objectMapper.readValue(document, AiDocument.class);
         } catch (JacksonException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, BAD_DOCUMENT_REASON);
         }
 
         String html = htmlRenderer.render(model);

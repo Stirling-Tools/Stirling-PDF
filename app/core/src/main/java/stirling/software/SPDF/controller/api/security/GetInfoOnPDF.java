@@ -391,23 +391,24 @@ public class GetInfoOnPDF {
             for (PDFVerificationResult result : verificationResults) {
                 if (result == null) continue;
                 if (result.isCompliant()) {
-                    String std = result.getStandard().toLowerCase();
-                    if (std.contains("pdf_a") || std.contains("pdfa")) {
+                    // The id is short ("2b", "ua1"); the name reads "PDF/A-2B", so match on that.
+                    String std = standardFamily(result);
+                    boolean notPdfa = "not-pdfa".equals(result.getStandard());
+                    if (!notPdfa && (std.contains("pdfa") || result.isDeclaredPdfa())) {
                         isPdfA = true;
                         String profile = result.getValidationProfile();
                         if (profile != null) {
-                            if (profile.contains("1b")
-                                    || profile.contains("2b")
-                                    || profile.contains("3b")) {
+                            String p = profile.toLowerCase();
+                            if (p.contains("1b") || p.contains("2b") || p.contains("3b")) {
                                 isPdfB = true;
                             }
                             // Simple extraction: remove "pdfa-" prefix
                             pdfAConformanceLevel = profile.replace("pdfa-", "");
                         }
                     }
-                    if (std.contains("pdf_ua") || std.contains("pdfua")) isPdfUA = true;
-                    if (std.contains("pdf_x") || std.contains("pdfx")) isPdfX = true;
-                    if (std.contains("pdf_e") || std.contains("pdfe")) isPdfE = true;
+                    if (std.contains("pdfua")) isPdfUA = true;
+                    if (std.contains("pdfx")) isPdfX = true;
+                    if (std.contains("pdfe")) isPdfE = true;
                 }
             }
         }
@@ -439,6 +440,21 @@ public class GetInfoOnPDF {
         }
 
         return compliancy;
+    }
+
+    /** Lower-case letters and digits of the result's readable standard name, e.g. "pdfa2b". */
+    private static String standardFamily(PDFVerificationResult result) {
+        String name = result.getStandardName();
+        if (name == null || name.isBlank()) {
+            name = result.getValidationProfileName();
+        }
+        if (name == null || name.isBlank()) {
+            name = result.getStandard();
+        }
+        String family = name == null ? "" : name.toLowerCase().replaceAll("[^a-z0-9]", "");
+        String id = result.getStandard() == null ? "" : result.getStandard().toLowerCase();
+        // Bare veraPDF ids for PDF/UA ("ua1") carry no "pdf" prefix.
+        return id.startsWith("ua") ? "pdfua" + family : family;
     }
 
     private static boolean isSECCompliant(PDDocument doc) {
