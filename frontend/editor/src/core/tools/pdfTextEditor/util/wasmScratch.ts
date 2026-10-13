@@ -86,6 +86,9 @@ export const SCRATCH = {
   reflowText: key(),
   charcodes: key(),
   scanImageSize: key(),
+  tagName: key(),
+  tagNameLen: key(),
+  tagMcid: key(),
 } as const;
 
 /** Structural minimum: any wrapper that exposes PDFium's wasm allocator. */
