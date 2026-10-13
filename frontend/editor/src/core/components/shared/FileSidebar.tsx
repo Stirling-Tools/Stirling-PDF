@@ -4,6 +4,7 @@ import React, {
   useMemo,
   useRef,
   useEffect,
+  useLayoutEffect,
   forwardRef,
   type RefCallback,
 } from "react";
@@ -944,8 +945,11 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       currentWorkbench === "viewer" ? activeFileId : null;
     // Rows are memoized on their props, so the click handlers must keep a stable
     // identity; read the viewed file through this mirror instead of depending on it.
+    // Written after commit so a discarded render cannot leak viewer state into a handler.
     const viewedWorkbenchIdRef = useRef(viewedWorkbenchId);
-    viewedWorkbenchIdRef.current = viewedWorkbenchId;
+    useLayoutEffect(() => {
+      viewedWorkbenchIdRef.current = viewedWorkbenchId;
+    }, [viewedWorkbenchId]);
 
     const handleFileClick = useCallback(
       async (fileId: FileId) => {
