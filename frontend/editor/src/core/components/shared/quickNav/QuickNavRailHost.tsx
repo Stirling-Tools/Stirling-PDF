@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
 import { useState } from "react";
 import { SignMenu } from "@app/components/shared/signing/SignMenu";
 import { requestSigningIntent } from "@app/utils/pendingSigningIntent";
@@ -32,6 +33,7 @@ const ACCOUNT_ANCHOR = "account";
 
 export function QuickNavRailHost() {
   const { t } = useTranslation();
+  const localOnly = useLocalProcessingOnly();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const host = useQuickNavHost();
@@ -160,7 +162,7 @@ export function QuickNavRailHost() {
   const surfaces: QuickNavEntry[] = [
     reader,
     editor,
-    ...(HAS_PORTAL ? [processor] : []),
+    ...(HAS_PORTAL && !localOnly ? [processor] : []),
   ];
 
   const within: QuickNavEntry[] = [
@@ -195,7 +197,7 @@ export function QuickNavRailHost() {
         else go("/files");
       },
     },
-    ...(canCreateProcessingFolders
+    ...(canCreateProcessingFolders && !localOnly
       ? [
           {
             id: "createProcessingFolder",
@@ -290,7 +292,10 @@ export function QuickNavRailHost() {
 
   return (
     <QuickNavRailContainer
-      groups={[surfaces, within]}
+      groups={[
+        surfaces,
+        localOnly ? within.filter((entry) => entry.id !== "automate") : within,
+      ]}
       onReturnHome={() => guarded(goToStartupView)}
       identity={host?.identity ?? null}
       onOpenAccount={openAccount}

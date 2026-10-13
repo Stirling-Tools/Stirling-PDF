@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest";
 // Resolves to the SaaS override (src/portal-saas) via the @portal cascade.
 import { creatableSourceTypes } from "@portal/components/sources/creatableSourceTypes";

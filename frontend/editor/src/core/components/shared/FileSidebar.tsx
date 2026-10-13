@@ -50,11 +50,13 @@ import { DeleteFilesDialog } from "@app/components/filesPage/DeleteFilesDialog";
 import { RenameFileDialog } from "@app/components/shared/RenameFileDialog";
 import { duplicateStoredFile } from "@app/utils/duplicateFile";
 import { SidebarChecklistSlot } from "@app/components/shared/SidebarChecklistSlot";
+import { SidebarChat } from "@app/components/chat/SidebarChat";
 import {
   deleteServerFile,
   type DeleteScope,
 } from "@app/services/serverStorageDelete";
 import { fileStorage, onRecordUnreadable } from "@app/services/fileStorage";
+import { renameStoredFile } from "@app/services/renameStoredFile";
 import { downloadFileWithPolicy } from "@app/services/exportWithPolicy";
 import { useOpenInNewWindow } from "@app/extensions/openInNewWindow";
 import { openSuperSearch } from "@app/components/shared/superSearch/openSuperSearch";
@@ -757,24 +759,20 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       [allFileStubs],
     );
 
-    // Persist the rename before updating the open workspace copy.
     const handleConfirmRename = useCallback(
       async (name: string) => {
         const stub = renameTarget;
         if (!stub) return;
-        // quickKey is name|size|lastModified; a stale one would make a re-upload
-        // of the original look like a duplicate of the renamed file.
-        const quickKey = `${name}|${stub.size}|${stub.lastModified}`;
-        const saved = await fileStorage.updateFileMetadata(stub.id, {
+        const saved = await renameStoredFile(
+          stub,
           name,
-          quickKey,
-        });
+          fileActions.updateStirlingFileStub,
+        );
         if (!saved) {
           throw new Error(
             t("fileSidebar.rename.error", "Could not rename the file."),
           );
         }
-        fileActions.updateStirlingFileStub(stub.id, { name, quickKey });
         setRenameTarget(null);
         await refreshStubs();
       },
@@ -1229,6 +1227,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           credits={credits}
           onOpenPlan={openPlan ?? undefined}
         />
+
+        {currentWorkbench !== "myFiles" && <SidebarChat />}
       </div>
     );
   },

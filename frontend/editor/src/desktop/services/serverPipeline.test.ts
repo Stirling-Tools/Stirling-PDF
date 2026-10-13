@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { beforeEach, expect, test, vi } from "vitest";
 const mocks = vi.hoisted(() => ({ post: vi.fn(), get: vi.fn() }));
 vi.mock("@app/services/apiClient", () => ({ default: mocks }));

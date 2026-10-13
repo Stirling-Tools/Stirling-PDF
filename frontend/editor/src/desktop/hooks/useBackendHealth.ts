@@ -4,6 +4,7 @@ import { selfHostedServerMonitor } from "@app/services/selfHostedServerMonitor";
 import { tauriBackendService } from "@app/services/tauriBackendService";
 import { connectionModeService } from "@app/services/connectionModeService";
 import type { BackendHealthState } from "@app/types/backendHealth";
+import { useLocalProcessingOnly } from "@app/hooks/useLocalProcessingOnly";
 
 /**
  * Hook to read backend health state for UI (Run button, BackendHealthIndicator).
@@ -19,6 +20,7 @@ import type { BackendHealthState } from "@app/types/backendHealth";
  * - Self-hosted mode (server offline, local port unknown): false
  */
 export function useBackendHealth() {
+  const localOnly = useLocalProcessingOnly();
   const [health, setHealth] = useState<BackendHealthState>(() =>
     backendHealthMonitor.getSnapshot(),
   );
@@ -58,7 +60,7 @@ export function useBackendHealth() {
   }, []);
 
   const isOnline =
-    connectionMode === "selfhosted"
+    !localOnly && connectionMode === "selfhosted"
       ? serverStatus !== "offline" || !!localUrl
       : health.isOnline;
 

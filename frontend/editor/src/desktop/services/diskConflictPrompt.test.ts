@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { FileId } from "@app/types/file";
 import { expectConsole } from "@app/tests/failOnConsole";
