@@ -60,10 +60,10 @@ runs:
         install_dir="${RUNNER_TEMP}/task-bin"
         mkdir -p "${install_dir}"
         case "${RUNNER_OS}-${RUNNER_ARCH}" in
-          macOS-X64) task_platform=darwin; task_arch=amd64; task_file=task_darwin_amd64.tar.gz; task_sha256=7f1a702d54a789cb818a636039a83df071f4179893133afafa4eba351a7e19ef ;;
-          macOS-ARM64) task_platform=darwin; task_arch=arm64; task_file=task_darwin_arm64.tar.gz; task_sha256=85d2d96c2380b33d7855b07b3f7a20dc7ca0eda999a26efa0fb5f6f32b366cd7 ;;
-          Windows-X64) task_platform=windows; task_arch=amd64; task_file=task_windows_amd64.zip; task_sha256=27c0cd248c12cba03d8958d954a3df981c900be885ec9ce5f6a3cdc4e9a19316 ;;
-          Windows-ARM64) task_platform=windows; task_arch=arm64; task_file=task_windows_arm64.zip; task_sha256=4f7c32c0b5a09aabfd860bcf4ff5649f0483339c1f7f90ad5ee55692da7237b6 ;;
+          macOS-X64) task_platform=darwin; task_arch=amd64; task_file=task_darwin_amd64.tar.gz; task_sha256=0543b0844a725814c0412d3f4bed12873ce9ed0da207b15775f63a97d734aac0 ;;
+          macOS-ARM64) task_platform=darwin; task_arch=arm64; task_file=task_darwin_arm64.tar.gz; task_sha256=12a69fcf37bb8d5bc9150c44f9a936775b73e59ff044c2c245232f198c135637 ;;
+          Windows-X64) task_platform=windows; task_arch=amd64; task_file=task_windows_amd64.zip; task_sha256=837f42f71899ea41d07a47acc81d4d6ea80cb41c68292345f915c656473efcb7 ;;
+          Windows-ARM64) task_platform=windows; task_arch=arm64; task_file=task_windows_arm64.zip; task_sha256=4618ea027582738a056af9a5b78086c402e93c82c1c67df0eab2d20c649608e2 ;;
           *) echo "Unsupported runner: ${RUNNER_OS}-${RUNNER_ARCH}" >&2; exit 1 ;;
         esac
         archive="${RUNNER_TEMP}/${task_file}"

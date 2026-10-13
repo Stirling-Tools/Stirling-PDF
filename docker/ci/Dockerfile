@@ -11,8 +11,8 @@ RUN set -eux; \
     apt-get install --no-install-recommends -y ca-certificates curl tar; \
     rm -rf /var/lib/apt/lists/*; \
     case "${TARGETARCH}" in \
-      amd64) task_arch=amd64; task_sha256=a54a408f6861ff921f6e87774180db31bacd8c1e7c944ca696db9fea49a82fc7 ;; \
-      arm64) task_arch=arm64; task_sha256=e3ad19101493a0112e1f22ae8ccc54bf03e533b1076a0ca1e6c782a09ad2e588 ;; \
+      amd64) task_arch=amd64; task_sha256=680859dbb4d881a9c72d4d9a8f510825450849af8567deacd7302c01124416fb ;; \
+      arm64) task_arch=arm64; task_sha256=d7189d439d4a6058e39e1b2acd7c8b27acd4856691b408f23b242e4294e1df5b ;; \
       *) echo "Unsupported Docker architecture: ${TARGETARCH}" >&2; exit 1 ;; \
     esac; \
     archive="/tmp/task_linux_${task_arch}.tar.gz"; \
