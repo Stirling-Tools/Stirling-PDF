@@ -56,10 +56,11 @@ if echo "$SUB_BODY" | grep -q "\"authorization_servers\"" && echo "$SUB_BODY" | 
 else
     fail "path-inserted metadata fell through to the Supabase chain default filter: $SUB_BODY"
 fi
+# Supabase only grants openid/email/profile/phone, so SaaS must not ask for mcp.tools.* scopes.
 if echo "$SUB_BODY" | grep -q "mcp.tools.read"; then
-    pass "path-inserted metadata advertises mcp.tools scopes"
+    fail "path-inserted metadata advertises mcp.tools scopes Supabase cannot grant"
 else
-    fail "path-inserted metadata missing mcp.tools scopes"
+    pass "path-inserted metadata asks for no mcp.tools scopes"
 fi
 echo ""
 

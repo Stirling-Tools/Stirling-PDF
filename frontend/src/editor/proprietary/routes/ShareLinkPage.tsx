@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { isAxiosError } from "axios";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   Alert,
   Badge,
@@ -38,10 +38,17 @@ export default function ShareLinkPage() {
   const { actions } = useFileActions();
   const { actions: navActions } = useNavigationActions();
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useTranslation();
   const [status, setStatus] = useState<ShareLinkStatus>("loading");
   const [metadata, setMetadata] = useState<ShareLinkMetadata | null>(null);
   const [isWorking, setIsWorking] = useState(false);
+  // ?action=download|open (e.g. from a chat app's result card) runs that button once.
+  const [autoActionDone, setAutoActionDone] = useState(false);
+  const autoAction = useMemo(
+    () => new URLSearchParams(location.search).get("action"),
+    [location.search],
+  );
 
   const normalizedToken = useMemo(() => (token || "").trim(), [token]);
   const shareRole = (metadata?.accessRole ?? "viewer").toLowerCase();
@@ -83,11 +90,18 @@ export default function ShareLinkPage() {
   }, [loadMetadata]);
 
   const handleLogin = useCallback(() => {
-    navigate("/login", {
+    // In the query as well as state: the SaaS login page only reads ?from=.
+    const back = `/share/${normalizedToken}${location.search}`;
+    navigate(`/login?from=${encodeURIComponent(back)}`, {
       replace: true,
-      state: { from: { pathname: `/share/${normalizedToken}` } },
+      state: {
+        from: {
+          pathname: `/share/${normalizedToken}`,
+          search: location.search,
+        },
+      },
     });
-  }, [navigate, normalizedToken]);
+  }, [location.search, navigate, normalizedToken]);
 
   const handleDownload = useCallback(async () => {
     if (!normalizedToken || !canDownload) return;
@@ -164,6 +178,30 @@ export default function ShareLinkPage() {
       setIsWorking(false);
     }
   }, [actions, canOpen, metadata, navActions, navigate, normalizedToken, t]);
+
+  // Signed out: go straight to the normal sign-in page; it returns here afterwards.
+  useEffect(() => {
+    if (status === "login") handleLogin();
+  }, [handleLogin, status]);
+
+  useEffect(() => {
+    if (status !== "ready" || autoActionDone) return;
+    if (autoAction === "download" && canDownload) {
+      setAutoActionDone(true);
+      void handleDownload();
+    } else if (autoAction === "open" && canOpen) {
+      setAutoActionDone(true);
+      void handleOpen();
+    }
+  }, [
+    autoAction,
+    autoActionDone,
+    canDownload,
+    canOpen,
+    handleDownload,
+    handleOpen,
+    status,
+  ]);
 
   const title =
     metadata?.fileName || t("storageShare.titleDefault", "Shared file");

@@ -91,6 +91,13 @@ x-stirling-node: &stirling-node
     # Let policy S3 sources/webhook-staging connections point at the in-cluster Silo service.
     POLICIES_ALLOWPRIVATES3ENDPOINTS: "true"
 
+    # --- MCP server (API-key mode) with private result links on the LB URL ---
+    MCP_ENABLED: "true"
+    MCP_AUTH_MODE: "apikey"
+    STORAGE_SHARING_ENABLED: "true"
+    # The LB's public URL, so every node mints the same share links.
+    SYSTEM_FRONTENDURL: "http://localhost:8080"
+
     # --- Misc features on ---
     # Off by default in the product, so the cross-node rate-limit scenario needs it turned on here.
     rateLimit: "true"

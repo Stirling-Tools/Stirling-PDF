@@ -29,7 +29,7 @@ class FileToolScopeTest {
 
     @Test
     void upload_withoutWriteScope_isRefused() {
-        StirlingUploadTool tool = new StirlingUploadTool(mapper, mock(McpFiles.class), null);
+        StirlingUploadTool tool = new StirlingUploadTool(mapper, mock(McpFiles.class), null, null);
         ObjectNode args = mapper.createObjectNode();
         args.put("file", "YWJj");
 
@@ -55,7 +55,8 @@ class FileToolScopeTest {
     @Test
     void selectFile_withoutWriteScope_isRefused() {
         ObjectNode result =
-                new StirlingSelectFileTool(mapper).call(mapper.createObjectNode(), noScopes());
+                new StirlingSelectFileTool(mapper, null, null)
+                        .call(mapper.createObjectNode(), noScopes());
 
         assertTrue(result.path("isError").asBoolean(false));
         assertTrue(text(result).contains("mcp.tools.write"));

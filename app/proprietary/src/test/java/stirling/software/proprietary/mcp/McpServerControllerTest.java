@@ -1,6 +1,7 @@
 package stirling.software.proprietary.mcp;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -13,6 +14,8 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +28,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -43,12 +47,13 @@ import stirling.software.proprietary.mcp.tools.McpOperationExecutor;
 import stirling.software.proprietary.mcp.tools.McpResponses;
 import stirling.software.proprietary.mcp.tools.StirlingAiTool;
 import stirling.software.proprietary.mcp.tools.StirlingConvertTool;
+import stirling.software.proprietary.mcp.tools.StirlingFilesTool;
+import stirling.software.proprietary.mcp.tools.StirlingMentionFilesTool;
 import stirling.software.proprietary.mcp.tools.StirlingMiscTool;
 import stirling.software.proprietary.mcp.tools.StirlingPagesTool;
 import stirling.software.proprietary.mcp.tools.StirlingSecurityTool;
 import stirling.software.proprietary.mcp.tools.StirlingSelectFileTool;
 import stirling.software.proprietary.mcp.tools.StirlingUploadTool;
-import stirling.software.proprietary.service.AiEngineClient;
 
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -70,7 +75,6 @@ class McpServerControllerTest {
         props.getSystem().setEnableAnalytics(true);
         appProps = props;
         ObjectProvider<McpToolCatalog> emptyCatalog = emptyProvider();
-        ObjectProvider<AiEngineClient> emptyEngine = emptyProvider();
         ObjectProvider<McpOperationExecutor> emptyExecutor = emptyProvider();
         List<McpTool> tools =
                 List.of(
@@ -79,7 +83,7 @@ class McpServerControllerTest {
                         new StirlingPagesTool(mapper, emptyCatalog, emptyExecutor),
                         new StirlingMiscTool(mapper, emptyCatalog, emptyExecutor),
                         new StirlingSecurityTool(mapper, emptyCatalog, emptyExecutor),
-                        new StirlingAiTool(mapper, emptyCatalog, emptyEngine));
+                        new StirlingAiTool(mapper, emptyCatalog, emptyExecutor));
         @SuppressWarnings("unchecked")
         ObjectProvider<PostHogService> postHogProvider = mock(ObjectProvider.class);
         when(postHogProvider.getIfAvailable()).thenReturn(postHog);
@@ -142,14 +146,15 @@ class McpServerControllerTest {
     }
 
     @Test
-    void toolsList_returnsExactlySixTools() throws Exception {
+    void toolsList_listsTheCategoryToolsAndHidesAiWithoutAnEngine() throws Exception {
         JsonNode body = mapper.readTree("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}");
 
-        ResponseEntity<?> response = controller.handle(body);
+        ResponseEntity<?> response = controller.handle(body, new HttpHeaders());
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         JsonNode tools = mapper.valueToTree(response.getBody()).get("result").get("tools");
-        assertEquals(6, tools.size(), "tools/list must return exactly 6 tools");
+        // No engine in this test, so stirling_ai has no capabilities and is left out.
+        assertEquals(5, tools.size());
 
         Set<String> names =
                 Set.of(
@@ -157,8 +162,7 @@ class McpServerControllerTest {
                         "stirling_convert",
                         "stirling_pages",
                         "stirling_misc",
-                        "stirling_security",
-                        "stirling_ai");
+                        "stirling_security");
         Set<String> seen = new java.util.HashSet<>();
         tools.forEach(t -> seen.add(t.get("name").asText()));
         assertEquals(names, seen);
@@ -173,20 +177,61 @@ class McpServerControllerTest {
     void initialize_returnsServerInfoAndProtocolVersion() throws Exception {
         JsonNode body = mapper.readTree("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\"}");
 
-        ResponseEntity<?> response = controller.handle(body);
+        ResponseEntity<?> response = controller.handle(body, new HttpHeaders());
 
         JsonNode result = mapper.valueToTree(response.getBody()).get("result");
         assertNotNull(result.get("protocolVersion"));
         assertEquals("stirling-pdf-mcp", result.get("serverInfo").get("name").asText());
         assertEquals("test-version", result.get("serverInfo").get("version").asText());
         assertNotNull(result.get("capabilities").get("tools"), "tools capability advertised");
+        String instructions = result.get("instructions").asText();
+        assertTrue(instructions.contains("stirling_describe_operation"));
+        assertTrue(instructions.contains("\n- Chain steps"), "one hint per line");
+        assertFalse(instructions.contains("stirling_files"), "only names tools that are listed");
+    }
+
+    @Test
+    void plainClientsAreToldToShareLinksAndAskForPasswords() throws Exception {
+        JsonNode body =
+                mapper.readTree(
+                        "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":"
+                                + "{\"protocolVersion\":\"2025-06-18\",\"capabilities\":{}}}");
+
+        String instructions =
+                mapper.valueToTree(controller.handle(body, new HttpHeaders()).getBody())
+                        .get("result")
+                        .get("instructions")
+                        .asText();
+
+        assertTrue(instructions.contains("ask the user for it"), instructions);
+        assertFalse(instructions.contains("Never ask the user"), instructions);
+        assertFalse(instructions.contains("Results appear as a card"), instructions);
+    }
+
+    @Test
+    void appClientsWithFormsKeepPasswordsAndLinksOutOfTheChat() {
+        JsonNode caps =
+                mapper.createObjectNode()
+                        .<tools.jackson.databind.node.ObjectNode>set(
+                                "elicitation", mapper.createObjectNode())
+                        .set(
+                                "extensions",
+                                mapper.createObjectNode()
+                                        .set(
+                                                "io.modelcontextprotocol/ui",
+                                                mapper.createObjectNode()));
+
+        String instructions = controller.instructions(caps, true);
+
+        assertTrue(instructions.contains("Never ask the user"), instructions);
+        assertTrue(instructions.contains("Results appear as a card"), instructions);
     }
 
     @Test
     void ping_returnsEmptyResult() throws Exception {
         JsonNode body = mapper.readTree("{\"jsonrpc\":\"2.0\",\"id\":7,\"method\":\"ping\"}");
 
-        ResponseEntity<?> response = controller.handle(body);
+        ResponseEntity<?> response = controller.handle(body, new HttpHeaders());
 
         JsonNode out = mapper.valueToTree(response.getBody());
         assertEquals(7, out.get("id").asInt());
@@ -195,14 +240,14 @@ class McpServerControllerTest {
     }
 
     @Test
-    void notification_returnsNoContentWithEmptyBody() throws Exception {
+    void notification_returnsAcceptedWithEmptyBody() throws Exception {
         // No id field: a JSON-RPC notification gets no response object.
         JsonNode body =
                 mapper.readTree("{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}");
 
-        ResponseEntity<?> response = controller.handle(body);
+        ResponseEntity<?> response = controller.handle(body, new HttpHeaders());
 
-        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+        assertEquals(HttpStatus.ACCEPTED, response.getStatusCode());
         assertNull(response.getBody());
     }
 
@@ -211,7 +256,7 @@ class McpServerControllerTest {
         JsonNode body =
                 mapper.readTree("{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"does/not/exist\"}");
 
-        ResponseEntity<?> response = controller.handle(body);
+        ResponseEntity<?> response = controller.handle(body, new HttpHeaders());
 
         JsonNode error = mapper.valueToTree(response.getBody()).get("error");
         assertEquals(-32601, error.get("code").asInt());
@@ -225,7 +270,7 @@ class McpServerControllerTest {
                         "{\"jsonrpc\":\"2.0\",\"id\":4,\"method\":\"tools/call\","
                                 + "\"params\":{\"name\":\"stirling_does_not_exist\",\"arguments\":{}}}");
 
-        ResponseEntity<?> response = controller.handle(body);
+        ResponseEntity<?> response = controller.handle(body, new HttpHeaders());
 
         JsonNode error = mapper.valueToTree(response.getBody()).get("error");
         assertEquals(-32602, error.get("code").asInt());
@@ -240,7 +285,7 @@ class McpServerControllerTest {
                                 + "\"params\":{\"name\":\"stirling_describe_operation\","
                                 + "\"arguments\":{\"operation\":\"compress-pdf\"}}}");
 
-        ResponseEntity<?> response = controller.handle(body);
+        ResponseEntity<?> response = controller.handle(body, new HttpHeaders());
 
         JsonNode result = mapper.valueToTree(response.getBody()).get("result");
         assertTrue(result.get("isError").asBoolean());
@@ -253,7 +298,7 @@ class McpServerControllerTest {
         // Valid JSON but not a JSON-RPC request object -> Invalid Request (-32600).
         JsonNode body = mapper.readTree("{\"not\":\"a json-rpc frame\"}");
 
-        ResponseEntity<?> response = controller.handle(body);
+        ResponseEntity<?> response = controller.handle(body, new HttpHeaders());
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         JsonNode error = mapper.valueToTree(response.getBody()).get("error");
@@ -268,7 +313,7 @@ class McpServerControllerTest {
                         "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\","
                                 + "\"params\":{\"protocolVersion\":\"2025-03-26\"}}");
 
-        ResponseEntity<?> response = controller.handle(body);
+        ResponseEntity<?> response = controller.handle(body, new HttpHeaders());
 
         JsonNode result = mapper.valueToTree(response.getBody()).get("result");
         assertEquals("2025-03-26", result.get("protocolVersion").asText());
@@ -281,7 +326,7 @@ class McpServerControllerTest {
                         "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\","
                                 + "\"params\":{\"protocolVersion\":\"1999-01-01\"}}");
 
-        ResponseEntity<?> response = controller.handle(body);
+        ResponseEntity<?> response = controller.handle(body, new HttpHeaders());
 
         JsonNode result = mapper.valueToTree(response.getBody()).get("result");
         assertEquals("2025-06-18", result.get("protocolVersion").asText());
@@ -292,7 +337,9 @@ class McpServerControllerTest {
         JsonNode body = mapper.readTree("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}");
 
         JsonNode tools =
-                mapper.valueToTree(controller.handle(body).getBody()).get("result").get("tools");
+                mapper.valueToTree(controller.handle(body, new HttpHeaders()).getBody())
+                        .get("result")
+                        .get("tools");
 
         for (JsonNode tool : tools) {
             String name = tool.get("name").asText();
@@ -311,7 +358,9 @@ class McpServerControllerTest {
         JsonNode body = mapper.readTree("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}");
 
         JsonNode tools =
-                mapper.valueToTree(controller.handle(body).getBody()).get("result").get("tools");
+                mapper.valueToTree(controller.handle(body, new HttpHeaders()).getBody())
+                        .get("result")
+                        .get("tools");
 
         JsonNode convert = null;
         JsonNode describe = null;
@@ -334,7 +383,7 @@ class McpServerControllerTest {
         JsonNode body = mapper.readTree("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\"}");
 
         JsonNode caps =
-                mapper.valueToTree(controller.handle(body).getBody())
+                mapper.valueToTree(controller.handle(body, new HttpHeaders()).getBody())
                         .get("result")
                         .get("capabilities");
 
@@ -357,7 +406,7 @@ class McpServerControllerTest {
                                 + "\"}}");
 
         JsonNode content =
-                mapper.valueToTree(controller.handle(body).getBody())
+                mapper.valueToTree(controller.handle(body, new HttpHeaders()).getBody())
                         .get("result")
                         .get("contents")
                         .get(0);
@@ -373,7 +422,9 @@ class McpServerControllerTest {
                 mapper.readTree(
                         "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"resources/read\",\"params\":{\"uri\":\"ui://nope\"}}");
 
-        JsonNode error = mapper.valueToTree(controller.handle(body).getBody()).get("error");
+        JsonNode error =
+                mapper.valueToTree(controller.handle(body, new HttpHeaders()).getBody())
+                        .get("error");
 
         assertEquals(-32002, error.get("code").asInt());
     }
@@ -392,6 +443,168 @@ class McpServerControllerTest {
     }
 
     @Test
+    void widgetAndAttachmentsOff_dropWidgetMetaPickerAndFileParams() throws Exception {
+        ApplicationProperties props = new ApplicationProperties();
+        props.getMcp().setWidgetEnabled(false);
+        props.getMcp().setFileUrlAllowedHosts(List.of());
+        McpServerController off =
+                new McpServerController(
+                        mapper,
+                        props,
+                        List.of(
+                                new StirlingUploadTool(mapper, null, null, null),
+                                new StirlingSelectFileTool(mapper, null, null)),
+                        new McpWidget(mapper, props),
+                        mock(McpAnalytics.class));
+
+        JsonNode tools =
+                mapper.valueToTree(
+                                off.handle(
+                                                mapper.readTree(
+                                                        "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}"),
+                                                new HttpHeaders())
+                                        .getBody())
+                        .get("result")
+                        .get("tools");
+        assertEquals(1, tools.size(), "picker is hidden without the widget");
+        assertEquals("stirling_upload", tools.get(0).get("name").asText());
+        assertNull(tools.get(0).get("_meta"));
+
+        JsonNode init =
+                mapper.valueToTree(
+                        off.handle(
+                                        mapper.readTree(
+                                                "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\"}"),
+                                        new HttpHeaders())
+                                .getBody());
+        assertNull(init.get("result").get("capabilities").get("extensions"));
+
+        JsonNode resources =
+                mapper.valueToTree(
+                        off.handle(
+                                        mapper.readTree(
+                                                "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"resources/list\"}"),
+                                        new HttpHeaders())
+                                .getBody());
+        assertEquals(0, resources.get("result").get("resources").size());
+    }
+
+    @Test
+    void widget_trustsOwnOriginsAsChatGptRedirectTargets() {
+        ApplicationProperties props = new ApplicationProperties();
+        props.getSystem().setFrontendUrl("https://pdf.example.com/app");
+        props.getSystem().setBackendUrl("https://api.example.com:8443");
+
+        JsonNode csp =
+                new McpWidget(mapper, props)
+                        .contents(McpWidget.URI)
+                        .get("_meta")
+                        .get("openai/widgetCSP");
+
+        assertEquals(
+                List.of("https://pdf.example.com", "https://api.example.com:8443"),
+                mapper.convertValue(csp.get("redirect_domains"), List.class));
+        assertEquals(0, csp.get("connect_domains").size());
+    }
+
+    @Test
+    void pickerIsAThreadEntrypointWithAMonochromeIcon() throws Exception {
+        ApplicationProperties props = new ApplicationProperties();
+        McpServerController withPicker =
+                new McpServerController(
+                        mapper,
+                        props,
+                        List.of(new StirlingSelectFileTool(mapper, null, null)),
+                        new McpWidget(mapper, props),
+                        mock(McpAnalytics.class));
+
+        JsonNode picker =
+                mapper.valueToTree(
+                                withPicker
+                                        .handle(
+                                                mapper.readTree(
+                                                        "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}"),
+                                                new HttpHeaders())
+                                        .getBody())
+                        .get("result")
+                        .get("tools")
+                        .get(0);
+        assertEquals(
+                "thread",
+                picker.get("_meta")
+                        .get("openai/ui")
+                        .get("entrypoints")
+                        .get(0)
+                        .get("type")
+                        .asText());
+        assertEquals(
+                McpWidget.PICKER_URI, picker.get("_meta").get("ui").get("resourceUri").asText());
+        String src = picker.get("icons").get(0).get("src").asText();
+        assertTrue(src.startsWith("data:image/svg+xml;base64,"));
+        String svg =
+                new String(
+                        Base64.getDecoder().decode(src.substring(src.indexOf(',') + 1)),
+                        StandardCharsets.UTF_8);
+        assertTrue(svg.contains("currentColor") && svg.contains("0 0 20 20"));
+
+        JsonNode info =
+                mapper.valueToTree(
+                                withPicker
+                                        .handle(
+                                                mapper.readTree(
+                                                        "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\"}"),
+                                                new HttpHeaders())
+                                        .getBody())
+                        .get("result")
+                        .get("serverInfo");
+        assertEquals("image/svg+xml", info.get("icons").get(0).get("mimeType").asText());
+    }
+
+    @Test
+    void resultsStayInlineAndOnlyThePickerMayGoFullscreen() {
+        ApplicationProperties props = new ApplicationProperties();
+        McpWidget widget = new McpWidget(mapper, props);
+
+        JsonNode results = widget.contents(McpWidget.URI).get("_meta").get("openai/ui");
+        JsonNode picker = widget.contents(McpWidget.PICKER_URI).get("_meta").get("openai/ui");
+
+        assertEquals("inline", results.get("preferredDisplayMode").asText());
+        assertEquals("[\"inline\"]", results.get("availableDisplayModes").toString());
+        assertEquals("[\"inline\",\"fullscreen\"]", picker.get("availableDisplayModes").toString());
+        assertEquals(2, widget.listings().size());
+    }
+
+    @Test
+    void libraryIsAGlobalEntrypointAndMentionSearchIsAppOnly() throws Exception {
+        ApplicationProperties props = new ApplicationProperties();
+        McpServerController withFiles =
+                new McpServerController(
+                        mapper,
+                        props,
+                        List.of(
+                                new StirlingFilesTool(mapper, null),
+                                new StirlingMentionFilesTool(mapper, null)),
+                        new McpWidget(mapper, props),
+                        mock(McpAnalytics.class));
+        JsonNode body = mapper.readTree("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}");
+
+        JsonNode tools =
+                mapper.valueToTree(withFiles.handle(body, new HttpHeaders()).getBody())
+                        .get("result")
+                        .get("tools");
+
+        JsonNode library = tools.get(0);
+        assertEquals("stirling_files", library.get("name").asText());
+        assertEquals("global", library.at("/_meta/openai~1ui/entrypoints/0/type").asText());
+        assertEquals(McpWidget.PICKER_URI, library.at("/_meta/ui/resourceUri").asText());
+        assertTrue(library.has("icons"));
+        JsonNode mentions = tools.get(1);
+        assertEquals("stirling_mention_files", mentions.get("name").asText());
+        assertTrue(mentions.at("/_meta/openai~1extensions/mentions~1search").isObject());
+        assertEquals("[\"app\"]", mentions.at("/_meta/ui/visibility").toString());
+    }
+
+    @Test
     void toolsList_onlyToolsTheWidgetCallsAreWidgetAccessible() throws Exception {
         ApplicationProperties props = new ApplicationProperties();
         McpServerController withUpload =
@@ -399,17 +612,23 @@ class McpServerControllerTest {
                         mapper,
                         props,
                         List.of(
-                                new StirlingUploadTool(mapper, null, null),
-                                new StirlingSelectFileTool(mapper)),
+                                new StirlingUploadTool(mapper, null, null, null),
+                                new StirlingSelectFileTool(mapper, null, null)),
                         new McpWidget(mapper, props),
-                        analytics);
+                        mock(McpAnalytics.class));
         JsonNode body = mapper.readTree("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}");
 
         JsonNode tools =
-                mapper.valueToTree(withUpload.handle(body).getBody()).get("result").get("tools");
+                mapper.valueToTree(withUpload.handle(body, new HttpHeaders()).getBody())
+                        .get("result")
+                        .get("tools");
 
         for (JsonNode t : tools) {
             boolean accessible = t.path("_meta").path("openai/widgetAccessible").asBoolean(false);
+            assertEquals(
+                    accessible,
+                    t.path("_meta").path("ui").path("visibility").toString().contains("app"),
+                    "ui.visibility mirrors widgetAccessible for " + t.get("name").asText());
             assertEquals(
                     "stirling_upload".equals(t.get("name").asText()),
                     accessible,
@@ -422,7 +641,9 @@ class McpServerControllerTest {
         JsonNode body = mapper.readTree("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}");
 
         JsonNode tools =
-                mapper.valueToTree(controller.handle(body).getBody()).get("result").get("tools");
+                mapper.valueToTree(controller.handle(body, new HttpHeaders()).getBody())
+                        .get("result")
+                        .get("tools");
 
         Set<String> openWorld = Set.of("stirling_convert", "stirling_security");
         for (JsonNode tool : tools) {
@@ -435,6 +656,26 @@ class McpServerControllerTest {
     }
 
     @Test
+    void structuredResultsCarryTheTextForHostsThatOnlyShowData() {
+        ObjectNode result = mapper.createObjectNode();
+        result.putArray("content")
+                .addObject()
+                .put("type", "text")
+                .put("text", "A file picker is shown to the user.");
+        result.putObject("structuredContent").put("kind", "picker");
+        ObjectNode plain = mapper.createObjectNode();
+        plain.putArray("content").addObject().put("type", "text").put("text", "done");
+
+        McpServerController.withMessage(result);
+        McpServerController.withMessage(plain);
+
+        assertEquals(
+                "A file picker is shown to the user.",
+                result.get("structuredContent").get("message").asText());
+        assertFalse(plain.has("structuredContent"));
+    }
+
+    @Test
     void initialize_capturesMcpInitializeEvent() throws Exception {
         JsonNode body =
                 mapper.readTree(
@@ -442,7 +683,7 @@ class McpServerControllerTest {
                                 + "\"params\":{\"protocolVersion\":\"2025-03-26\","
                                 + "\"clientInfo\":{\"name\":\"claude-ai\",\"version\":\"0.1.0\"}}}");
 
-        controller.handle(body);
+        call(controller, body);
 
         Map<String, Object> props = capturedProperties("$mcp_initialize");
         assertEquals("posthog_mcp_analytics", props.get("$mcp_source"));
@@ -461,7 +702,7 @@ class McpServerControllerTest {
                                 + "\"params\":{\"name\":\"stirling_describe_operation\","
                                 + "\"arguments\":{\"operation\":\"compress-pdf\",\"secret\":\"x\"}}}");
 
-        controller.handle(body);
+        call(controller, body);
 
         Map<String, Object> props = capturedProperties("$mcp_tool_call");
         assertEquals("stirling_describe_operation", props.get("$mcp_tool_name"));
@@ -509,7 +750,8 @@ class McpServerControllerTest {
         SecurityContextHolder.getContext()
                 .setAuthentication(
                         new UsernamePasswordAuthenticationToken(username, null, List.of()));
-        controller.handle(
+        call(
+                controller,
                 mapper.readTree("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}"));
         assertEquals(authMethod, capturedLast("$mcp_tools_list").get("stirling_auth_method"));
     }
@@ -522,7 +764,8 @@ class McpServerControllerTest {
         SecurityContextHolder.getContext()
                 .setAuthentication(
                         new UsernamePasswordAuthenticationToken("alice", null, List.of()));
-        controller.handle(
+        call(
+                controller,
                 mapper.readTree("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}"));
 
         appProps.getSystem().setEnableAnalytics(true);
@@ -536,7 +779,8 @@ class McpServerControllerTest {
         RequestContextHolder.setRequestAttributes(
                 new ServletRequestAttributes(new MockHttpServletRequest()));
         ResponseEntity<?> init =
-                controller.handle(
+                call(
+                        controller,
                         mapper.readTree(
                                 "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\","
                                         + "\"params\":{\"clientInfo\":{\"name\":\"claude-ai\","
@@ -549,7 +793,8 @@ class McpServerControllerTest {
         MockHttpServletRequest next = new MockHttpServletRequest();
         next.addHeader(McpAnalytics.SESSION_HEADER, sessionId);
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(next));
-        controller.handle(
+        call(
+                controller,
                 mapper.readTree(
                         "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\","
                                 + "\"params\":{\"name\":\"stirling_describe_operation\"}}"));
@@ -564,7 +809,8 @@ class McpServerControllerTest {
     void initialize_noSessionIdWhenAnalyticsDisabled() throws Exception {
         appProps.getSystem().setEnableAnalytics(false);
         ResponseEntity<?> init =
-                controller.handle(
+                call(
+                        controller,
                         mapper.readTree(
                                 "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\"}"));
         assertNull(init.getHeaders().getFirst(McpAnalytics.SESSION_HEADER));
@@ -575,7 +821,8 @@ class McpServerControllerTest {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader(McpAnalytics.SESSION_HEADER, "user@example.com");
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
-        controller.handle(
+        call(
+                controller,
                 mapper.readTree("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}"));
         assertNull(capturedProperties("$mcp_tools_list").get("$session_id"));
     }
@@ -585,7 +832,8 @@ class McpServerControllerTest {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader("User-Agent", "client/1.0 (alice@example.com)");
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
-        controller.handle(
+        call(
+                controller,
                 mapper.readTree("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}"));
 
         Map<String, Object> props = capturedProperties("$mcp_tools_list");
@@ -600,7 +848,7 @@ class McpServerControllerTest {
                         args ->
                                 McpResponses.error(
                                         mapper, "Cannot open /srv/data/acme-contract.pdf"));
-        single.handle(toolCall("fake_tool"));
+        call(single, toolCall("fake_tool"));
 
         Map<String, Object> props = capturedProperties("$mcp_tool_call");
         assertEquals(true, props.get("$mcp_is_error"));
@@ -612,7 +860,8 @@ class McpServerControllerTest {
 
     @Test
     void toolCall_operationOutsideCatalog_isNotSent() throws Exception {
-        controller.handle(
+        call(
+                controller,
                 mapper.readTree(
                         "{\"jsonrpc\":\"2.0\",\"id\":5,\"method\":\"tools/call\","
                                 + "\"params\":{\"name\":\"stirling_describe_operation\","
@@ -630,7 +879,7 @@ class McpServerControllerTest {
                         args -> {
                             throw new IllegalStateException("contains secret.pdf");
                         });
-        ResponseEntity<?> response = single.handle(toolCall("fake_tool"));
+        ResponseEntity<?> response = call(single, toolCall("fake_tool"));
         assertNotNull(mapper.valueToTree(response.getBody()).get("error"));
 
         Map<String, Object> call = capturedProperties("$mcp_tool_call");
@@ -688,7 +937,8 @@ class McpServerControllerTest {
 
     @Test
     void anonymousCall_reportsNoAuth() throws Exception {
-        controller.handle(
+        call(
+                controller,
                 mapper.readTree("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}"));
 
         Map<String, Object> props = capturedProperties("$mcp_tools_list");
@@ -707,5 +957,9 @@ class McpServerControllerTest {
         ArgumentCaptor<Map<String, Object>> captor = ArgumentCaptor.forClass(Map.class);
         verify(postHog).captureEvent(eq(event), captor.capture());
         return captor.getValue();
+    }
+
+    private static ResponseEntity<?> call(McpServerController target, JsonNode body) {
+        return target.handle(body, new HttpHeaders());
     }
 }

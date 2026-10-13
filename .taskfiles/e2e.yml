@@ -278,6 +278,31 @@ tasks:
     cmds:
       - bash testing/compose/validate-mcp-apikey.sh
 
+  mcp:conformance:
+    desc: "Run the MCP conformance harness (testing/mcp) against any running server"
+    summary: |
+      Drives /mcp with both official MCP clients plus raw 2026-07-28 checks.
+      Needs MCP_URL and MCP_API_KEY (or MCP_BEARER) in the environment:
+        MCP_URL=https://pdf.example.com MCP_API_KEY=<key> task e2e:mcp:conformance
+      Optional: MCP_EXPECT_LINKS=private|public|off, MCP_SAMPLE_PDF=<file>.
+    dir: testing/mcp
+    cmds:
+      - npm ci --no-fund --no-audit
+      - node run-all.mjs
+
+  mcp:correctness:
+    desc: "Check MCP operation outputs are right, not just present (testing/mcp/correctness.mjs)"
+    summary: |
+      Uploads generated fixtures, runs each operation over MCP, downloads the result and
+      inspects it (page order, rotation, redaction in raw streams, OCR text, xlsx/docx parts).
+      Needs MCP_URL and MCP_API_KEY (or MCP_BEARER) in the environment:
+        MCP_URL=http://localhost:8080/mcp MCP_API_KEY=<key> task e2e:mcp:correctness
+      Operations the server does not offer (no tesseract, LibreOffice, ...) are reported as SKIP.
+    dir: testing/mcp
+    cmds:
+      - npm ci --no-fund --no-audit
+      - node correctness.mjs
+
   mcp:down:
     desc: "Stop the MCP keycloak test environment"
     cmds:

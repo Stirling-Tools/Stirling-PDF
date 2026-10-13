@@ -25,6 +25,29 @@ class McpFileUrlFetcherTest {
     }
 
     @Test
+    void wildcardMatchesOneLabelOnly() {
+        List<String> allowed = List.of("oaisdmntpr*.blob.core.windows.net");
+        assertTrue(
+                McpFileUrlFetcher.isAllowedHost(
+                        "oaisdmntprdenmarkeast.blob.core.windows.net", allowed));
+        assertTrue(
+                McpFileUrlFetcher.isAllowedHost(
+                        "oaisdmntprnortheu.blob.core.windows.net", allowed));
+        assertFalse(McpFileUrlFetcher.isAllowedHost("attacker.blob.core.windows.net", allowed));
+        assertFalse(
+                McpFileUrlFetcher.isAllowedHost("oaisdmntpr.evil.blob.core.windows.net", allowed));
+        assertFalse(
+                McpFileUrlFetcher.isAllowedHost(
+                        "oaisdmntprx.blob.core.windows.net.evil.io", allowed));
+    }
+
+    @Test
+    void loneStarAllowsAnyHost() {
+        assertTrue(McpFileUrlFetcher.isAllowedHost("files.example.org", List.of("*")));
+        assertFalse(McpFileUrlFetcher.isAllowedHost("files.example.org", List.of("*.com")));
+    }
+
+    @Test
     void rejectsNonHttpsAndUnlistedHosts() {
         assertThrows(
                 McpFileUrlFetcher.FetchException.class,

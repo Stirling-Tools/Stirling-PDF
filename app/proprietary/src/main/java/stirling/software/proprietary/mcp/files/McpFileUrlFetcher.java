@@ -10,14 +10,18 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Pattern;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
+
+import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.GeneralUtils;
 
 /** Fetches chat-app attachments, only from allowlisted HTTPS hosts on public addresses. */
+@Slf4j
 @Component
 @ConditionalOnProperty(name = "mcp.enabled", havingValue = "true")
 public class McpFileUrlFetcher {
@@ -59,6 +63,8 @@ public class McpFileUrlFetcher {
             }
             if (status != 200) {
                 closeQuietly(response.body());
+                log.warn(
+                        "MCP attachment download from '{}' failed: HTTP {}", uri.getHost(), status);
                 throw new FetchException(
                         "Could not download the attachment (HTTP " + status + ").");
             }
@@ -72,17 +78,28 @@ public class McpFileUrlFetcher {
         try {
             uri = URI.create(url);
         } catch (IllegalArgumentException e) {
+            log.warn("MCP attachment refused: download URL is not a valid URI");
             throw new FetchException("The attachment URL is not valid.");
         }
         String host = uri.getHost();
+        // Only scheme and host are logged: download URLs carry signed tokens.
         if (!"https".equalsIgnoreCase(uri.getScheme()) || host == null) {
+            log.warn(
+                    "MCP attachment refused: scheme '{}' host '{}' is not HTTPS",
+                    uri.getScheme(),
+                    host);
             throw new FetchException("Attachment URLs must use HTTPS.");
         }
         if (!isAllowedHost(host, mcp.getFileUrlAllowedHosts())) {
+            log.warn(
+                    "MCP attachment refused: host '{}' is not in mcp.fileUrlAllowedHosts {}",
+                    host,
+                    mcp.getFileUrlAllowedHosts());
             throw new FetchException(
                     "Attachments from '" + host + "' are not accepted by this server.");
         }
         if (GeneralUtils.isDisallowedNetworkLocation(host)) {
+            log.warn("MCP attachment refused: host '{}' resolves to a private address", host);
             throw new FetchException("The attachment host resolves to a private address.");
         }
         return uri;
@@ -95,11 +112,27 @@ public class McpFileUrlFetcher {
                 continue;
             }
             String a = entry.trim().toLowerCase(Locale.ROOT);
-            if (h.equals(a) || h.endsWith("." + a)) {
+            // A lone "*" opts in to any public host; private addresses stay blocked.
+            if ("*".equals(a)) {
+                return true;
+            }
+            if (a.contains("*") ? matchesPattern(h, a) : h.equals(a) || h.endsWith("." + a)) {
                 return true;
             }
         }
         return false;
+    }
+
+    /** Whole-host match where {@code *} stands for letters, digits or hyphens within one label. */
+    private static boolean matchesPattern(String host, String pattern) {
+        StringBuilder regex = new StringBuilder();
+        for (String part : pattern.split("\\*", -1)) {
+            if (!regex.isEmpty()) {
+                regex.append("[a-z0-9-]*");
+            }
+            regex.append(Pattern.quote(part));
+        }
+        return host.matches(regex.toString());
     }
 
     private HttpResponse<InputStream> send(URI uri) throws FetchException {
@@ -108,6 +141,7 @@ public class McpFileUrlFetcher {
         try {
             return client.send(request, HttpResponse.BodyHandlers.ofInputStream());
         } catch (IOException e) {
+            log.warn("MCP attachment download from '{}' failed: {}", uri.getHost(), e.toString());
             throw new FetchException("Could not download the attachment.");
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

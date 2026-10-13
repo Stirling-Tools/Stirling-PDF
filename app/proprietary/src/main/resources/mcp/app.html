@@ -28,9 +28,11 @@
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; background: transparent; }
-  body { font: 14px/1.45 var(--font); color: var(--fg); padding: 12px; }
+  /* The card draws its own border, so no host border or outer padding (full chat width). */
+  body { font: 14px/1.45 var(--font); color: var(--fg); padding: 1px; }
   .card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
   .row { display: flex; align-items: center; gap: 12px; }
+  .thumb { flex: none; width: 40px; height: 52px; object-fit: cover; object-position: top; border-radius: 6px; border: 1px solid var(--border); background: #fff; }
   .icon { flex: none; width: 40px; height: 40px; border-radius: 10px; background: var(--bg-2); display: grid; place-items: center; color: var(--accent); }
   .meta { min-width: 0; flex: 1; }
   .name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -43,7 +45,25 @@
   .drop p { margin: 6px 0 12px; color: var(--fg-2); }
   .purpose { font-weight: 600; margin: 0 0 2px; }
   .err { color: var(--danger); margin-top: 8px; font-size: 13px; }
-  .brand { display: flex; align-items: center; gap: 6px; color: var(--fg-2); font-size: 12px; margin-top: 10px; }
+  .actions { display: flex; gap: 8px; flex: none; }
+  .actions button { white-space: nowrap; }
+  @media (max-width: 440px) {
+    .row { flex-wrap: wrap; }
+    /* Stacked full width on phones, primary on top. */
+    .actions { width: 100%; flex-direction: column-reverse; }
+  }
+  .files { margin-top: 10px; }
+  .files h2 { font-size: 12.5px; font-weight: 600; color: var(--fg-2); margin: 0 0 4px; }
+  .list { border: 1px solid var(--border); border-radius: 10px; background: var(--bg); overflow-y: auto; }
+  .list.scroll { max-height: 176px; }
+  .library .list.scroll { max-height: 60vh; }
+  .item { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-top: 1px solid var(--border); }
+  .item:first-child { border-top: 0; }
+  .item .name { flex: 1; min-width: 0; font-weight: 500; font-size: 13px; }
+  .item .sub { flex: none; }
+  .item button { padding: 4px 10px; font-size: 12.5px; }
+  .more { background: none; border: 0; padding: 6px 2px 0; color: var(--accent); font-size: 12.5px; }
+  .filter { width: 100%; font: inherit; font-size: 13px; padding: 6px 10px; margin-bottom: 6px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--fg); }
   .spin { width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: s 0.8s linear infinite; }
   @keyframes s { to { transform: rotate(360deg); } }
   .hidden { display: none; }
@@ -52,9 +72,10 @@
 </head>
 <body>
 <div id="root"><div class="card row"><div class="spin"></div><span class="sub">Working on your file...</span></div></div>
-<input id="picker" type="file" accept=".pdf,image/*,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.odt,.ods,.odp,.rtf,.txt,.html,.md,.csv,.epub">
+<input id="picker" type="file" accept=".pdf,image/*,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.odt,.ods,.odp,.rtf,.txt,.html,.md,.csv,.epub,.mobi,.azw3,.fb2,.eml,.msg,.zip,.cbz,.cbr,.ps,.eps,.svg,.p12,.pfx,.pem,.crt,.cer,.der,.key,.jks">
 <script>
 (function () {
+  var INLINE_FILES = 3;
   "use strict";
   var root = document.getElementById("root");
   var picker = document.getElementById("picker");
@@ -62,6 +83,9 @@
   var pending = {};
   var nextId = 1;
   var bridgeReady = false;
+  var displayMode = null;
+  var askedInline = false;
+  var showingFile = false;
   var toolArgs = {};
 
   // MCP Apps (SEP-1865) JSON-RPC over postMessage to the host.
@@ -105,6 +129,7 @@
 
   function applyContext(ctx) {
     if (!ctx) return;
+    if (ctx.displayMode) displayMode = ctx.displayMode;
     if (ctx.theme) document.documentElement.setAttribute("data-theme", ctx.theme);
     var vars = ctx.styles && ctx.styles.variables;
     if (vars) {
@@ -120,8 +145,10 @@
     if (openai && openai.callTool) return openai.callTool(name, args);
     return Promise.reject(new Error("This chat app cannot upload from here."));
   }
-  function sendMessage(text) {
+  function sendMessage(text, title) {
     var block = { type: "text", text: text };
+    // ChatGPT shows titled text as a removable chip; other hosts ignore _meta.
+    if (title) block._meta = { "openai/title": title };
     // The SDK schema wants an array, the spec prose a single block; try both.
     if (bridgeReady) {
       return request("ui/message", { role: "user", content: [block] }).catch(function () {
@@ -136,7 +163,8 @@
     if (bridgeReady) {
       return request("ui/open-link", { url: url }).then(function (r) { if (r && r.isError) fallback(); }, fallback);
     }
-    if (openai && openai.openExternal) return Promise.resolve(openai.openExternal({ href: url }));
+    // redirectUrl:false stops ChatGPT appending its own query to the download link.
+    if (openai && openai.openExternal) return Promise.resolve(openai.openExternal({ href: url, redirectUrl: false }));
     fallback();
     return Promise.resolve();
   }
@@ -152,8 +180,13 @@
     d.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>';
     return d;
   }
-  function brand() {
-    return el("div", "brand", "Stirling PDF");
+  // First-page preview; falls back to the file icon if the host blocks data: images.
+  function thumbnail(url) {
+    var img = el("img", "thumb");
+    img.alt = "";
+    img.onerror = function () { img.replaceWith(fileIcon()); };
+    img.src = url;
+    return img;
   }
   function size(n) {
     if (!(n >= 0)) return "";
@@ -176,35 +209,102 @@
       card.appendChild(el("div", "name", "Something went wrong"));
       card.appendChild(el("div", "err", text || "The tool did not return a result."));
       root.appendChild(card);
-    } else if (data.kind === "picker") {
+    } else if (data.kind === "pending") {
+      var waiting = el("div", "card row");
+      waiting.appendChild(el("div", "spin"));
+      waiting.appendChild(el("div", "sub", "Still working on " + label(data.operation) + "..."));
+      root.appendChild(waiting);
+    } else if (data.kind === "picker" || data.kind === "library") {
       renderPicker(data);
+    } else if (data.kind === "report") {
+      var report = el("div", "card row");
+      report.appendChild(fileIcon());
+      var info = el("div", "meta");
+      info.appendChild(el("div", "name", label(data.operation) + " report"));
+      info.appendChild(el("div", "sub", "The assistant has the details."));
+      report.appendChild(info);
+      root.appendChild(report);
     } else if (data.kind === "file") {
-      renderFile(data);
+      renderFile(data, (result._meta || {})["stirling/preview"]);
+      showingFile = true;
+      preferInline();
+    } else if (data.kind === "automation") {
+      renderAutomation(data);
+    } else if (data.kind === "files") {
+      (data.files || []).forEach(function (f) {
+        renderFile({ fileName: f.name, size: f.size, downloadUrl: f.downloadUrl }, null);
+      });
+      showingFile = true;
     }
     resize();
   }
 
-  function renderFile(data) {
+  // A real automation run: counts and where results went, plus a link to its Pipelines page.
+  function renderAutomation(data) {
     var card = el("div", "card");
     var row = el("div", "row");
     row.appendChild(fileIcon());
+    var meta = el("div", "meta");
+    meta.appendChild(el("div", "name", data.name || "Automation"));
+    var parts = [];
+    if (data.runsStarted === 0) parts.push("Nothing new to process");
+    if (data.completed > 0) parts.push(data.completed + " done");
+    if (data.failed > 0) parts.push(data.failed + " failed");
+    if (data.running > 0) parts.push(data.running + " running");
+    if ((data.destinations || []).length) parts.push("to " + data.destinations.join(", "));
+    meta.appendChild(el("div", "sub", parts.join(" · ")));
+    if (data.error) meta.appendChild(el("div", "err", data.error));
+    row.appendChild(meta);
+    if (data.pipelinesUrl) {
+      var actions = el("div", "actions");
+      actions.appendChild(action("Open in Stirling PDF", "", data.pipelinesUrl));
+      row.appendChild(actions);
+    }
+    card.appendChild(row);
+    root.appendChild(card);
+  }
+
+  // A result is a small card; if the host opened it fullscreen, ask once to sit in the chat.
+  function preferInline() {
+    if (askedInline) return;
+    var mode = displayMode || (openai && openai.displayMode);
+    if (mode !== "fullscreen") return;
+    askedInline = true;
+    if (bridgeReady) {
+      request("ui/request-display-mode", { mode: "inline" }).catch(function () {});
+    } else if (openai && openai.requestDisplayMode) {
+      Promise.resolve(openai.requestDisplayMode({ mode: "inline" })).catch(function () {});
+    }
+  }
+
+  function renderFile(data, previewUrl) {
+    var card = el("div", "card");
+    var row = el("div", "row");
+    row.appendChild(previewUrl ? thumbnail(previewUrl) : fileIcon());
     var meta = el("div", "meta");
     meta.appendChild(el("div", "name", data.fileName || "Result"));
     var parts = [];
     if (data.operation && data.operation !== "upload") parts.push(label(data.operation));
     if (data.operation === "upload") parts.push("Uploaded");
+    if (data.pageCount > 0) parts.push(data.pageCount === 1 ? "1 page" : data.pageCount + " pages");
+    if (data.partCount > 0) parts.push(data.partCount === 1 ? "1 file" : data.partCount + " files");
     if (data.size >= 0) parts.push(size(data.size));
     meta.appendChild(el("div", "sub", parts.join(" · ")));
     row.appendChild(meta);
-    if (data.downloadUrl) {
-      var btn = el("button", "primary", "Download");
-      btn.type = "button";
-      btn.addEventListener("click", function () { openLink(data.downloadUrl); });
-      row.appendChild(btn);
-    }
+    // Host guidelines: no logo (the host shows ours), at most one primary and one secondary action.
+    var actions = el("div", "actions");
+    if (data.openUrl) actions.appendChild(action("Open in Stirling PDF", "", data.openUrl));
+    if (data.downloadUrl) actions.appendChild(action("Download", "primary", data.downloadUrl));
+    if (actions.childNodes.length) row.appendChild(actions);
     card.appendChild(row);
-    card.appendChild(brand());
     root.appendChild(card);
+  }
+
+  function action(text, cls, url) {
+    var btn = el("button", cls, text);
+    btn.type = "button";
+    btn.addEventListener("click", function () { openLink(url); });
+    return btn;
   }
 
   function renderPicker(data) {
@@ -221,7 +321,11 @@
     drop.appendChild(status);
     drop.appendChild(err);
     root.appendChild(drop);
-    root.appendChild(brand());
+    if (data.problem) {
+      err.textContent = data.problem;
+      err.classList.remove("hidden");
+    }
+    renderRecent(data.files || [], purpose, data.kind === "library");
 
     function start(file) {
       if (!file) return;
@@ -241,7 +345,7 @@
         status.textContent = "Uploaded " + file.name + " (" + size(sc.size) + ").";
         var text = 'I’ve uploaded "' + file.name + '" to Stirling PDF (fileId: ' + sc.fileId + ").";
         if (purpose) text += " " + purpose;
-        return sendMessage(text).catch(function () {
+        return sendMessage(text, file.name).catch(function () {
           status.textContent = "Uploaded. Tell the assistant to continue with fileId " + sc.fileId + ".";
         });
       }).catch(function (e) {
@@ -260,6 +364,90 @@
       start(e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]);
     });
   }
+
+  // Files already in Stirling; choosing one tells the assistant its fileId.
+  // Files already in Stirling; choosing one tells the assistant its fileId. Kept compact:
+  // a few recent files inline, the rest behind "Show all" with a filter.
+  function renderRecent(files, purpose, library) {
+    if (!files.length) return;
+    var box = el("div", library ? "files library" : "files");
+    box.appendChild(el("h2", null, library ? "Your Stirling files" : "Or use a recent Stirling file"));
+    var filter = el("input", "filter");
+    filter.type = "search";
+    filter.placeholder = "Filter by name";
+    var list = el("div", "list");
+    var expanded = library;
+    function draw() {
+      list.textContent = "";
+      var q = filter.value.trim().toLowerCase();
+      var shown = files.filter(function (f) { return !q || f.name.toLowerCase().indexOf(q) >= 0; });
+      if (!expanded) shown = shown.slice(0, INLINE_FILES);
+      shown.forEach(function (f) { list.appendChild(fileRow(f, purpose)); });
+      if (!shown.length) list.appendChild(el("div", "item sub", "No matching files."));
+      list.classList.toggle("scroll", expanded);
+      resize();
+    }
+    filter.addEventListener("input", draw);
+    if (expanded) box.appendChild(filter);
+    box.appendChild(list);
+    if (!library && files.length > INLINE_FILES) {
+      var more = el("button", "more", "Browse all " + files.length + " files");
+      more.type = "button";
+      more.addEventListener("click", function () {
+        // Prefer the host's side panel; if it can't open one, expand in place.
+        openPanel().then(function (panel) {
+          box.classList.toggle("library", panel);
+          expanded = true;
+          more.remove();
+          box.insertBefore(filter, list);
+          draw();
+          filter.focus();
+        });
+      });
+      box.appendChild(more);
+    }
+    root.appendChild(box);
+    draw();
+  }
+
+  // Resolves true when the host switched to its full view (a side panel in ChatGPT).
+  function openPanel() {
+    var ask;
+    if (bridgeReady) {
+      ask = request("ui/request-display-mode", { mode: "fullscreen" });
+    } else if (openai && openai.requestDisplayMode) {
+      ask = Promise.resolve(openai.requestDisplayMode({ mode: "fullscreen" }));
+    } else {
+      ask = Promise.reject();
+    }
+    return ask.then(function (res) {
+      var mode = res && res.mode;
+      if (mode) displayMode = mode;
+      return mode ? mode === "fullscreen" : true;
+    }, function () { return false; });
+  }
+
+  function fileRow(f, purpose) {
+    var row = el("div", "item");
+    var name = el("div", "name", f.name);
+    name.title = f.name;
+    row.appendChild(name);
+    row.appendChild(el("div", "sub", size(f.size)));
+    var use = el("button", null, "Use");
+    use.type = "button";
+    use.addEventListener("click", function () {
+      use.disabled = true;
+      var text = 'Use my Stirling PDF file "' + f.name + '" (fileId: ' + f.fileId + ").";
+      if (purpose) text += " " + purpose;
+      sendMessage(text, f.name).catch(function () {
+        use.disabled = false;
+        name.textContent = "Tell the assistant to use fileId " + f.fileId + ".";
+      });
+    });
+    row.appendChild(use);
+    return row;
+  }
+
 
   function readBase64(file) {
     return new Promise(function (resolve, reject) {
@@ -282,18 +470,20 @@
     if (!openai || !openai.toolOutput) return;
     if (openai.toolInput) toolArgs = openai.toolInput;
     applyContext({ theme: openai.theme });
-    render({ structuredContent: openai.toolOutput });
+    render({ structuredContent: openai.toolOutput, _meta: openai.toolResponseMetadata });
   }
   window.addEventListener("openai:set_globals", renderFromOpenAI);
   renderFromOpenAI();
 
   request("ui/initialize", {
     appInfo: { name: "stirling-pdf", version: "1.0.0" },
-    appCapabilities: { availableDisplayModes: ["inline"] },
+    appCapabilities: { availableDisplayModes: ["inline", "fullscreen"] },
     protocolVersion: "2026-01-26"
   }).then(function (res) {
     bridgeReady = true;
     applyContext(res && res.hostContext);
+    // The result can arrive before the handshake; re-check placement once we know the mode.
+    if (showingFile) preferInline();
     notify("ui/notifications/initialized");
     resize();
   }, function () { /* No MCP Apps bridge: window.openai alone. */ });
