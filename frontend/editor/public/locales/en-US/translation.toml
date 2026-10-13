@@ -1481,6 +1481,7 @@ label = "SMTP Username"
 
 [admin.settings.mcp]
 apikeyNote = "Clients send a Stirling API key in the X-API-KEY header (or Authorization: Bearer <key>). The key maps to its owning Stirling user - only provisioned accounts get in, and actions are audited as that user. Manage keys under Account > API Keys."
+connectorUrl = "Connector URL for ChatGPT and Claude"
 description = "Expose Stirling's PDF tools and AI agents to MCP clients over an OAuth-protected endpoint."
 title = "MCP Server"
 
@@ -1496,22 +1497,45 @@ label = "Allowed tools"
 description = "Operation ids to hide from MCP (comma or space separated), e.g. add-password remove-password. Leave blank to expose all enabled tools."
 label = "Blocked tools"
 
+[admin.settings.mcp.builtin.cimd]
+description = "Lets a client such as ChatGPT identify itself with an https client_id URL. Stirling fetches that document (public hosts only) instead of requiring registration."
+label = "Allow client metadata URLs"
+
+[admin.settings.mcp.builtin.dcr]
+description = "Lets clients that cannot be pre-registered, such as Claude, register themselves (RFC 7591)."
+label = "Allow dynamic client registration"
+
+[admin.settings.mcp.downloadLinks]
+description = "Download links on tool results. Private links need the user to sign in; public links work for anyone holding them until they expire."
+label = "Result links"
+off = "Off"
+private = "Private (sign-in required)"
+public = "Public (anyone with the link)"
+
 [admin.settings.mcp.enabled]
 description = "When off (default), no /mcp endpoint, metadata, or MCP beans are loaded."
 label = "Enable MCP Server"
 
+[admin.settings.mcp.fileUrlHosts]
+description = "HTTPS hosts chat apps may pass file download URLs from (comma or space separated). Suffix match, * within one label, or * alone for any public host. Private addresses are always blocked. Empty turns attachments off."
+label = "Attachment hosts"
+
 [admin.settings.mcp.guide]
 step1 = "Enter your OAuth issuer + resource ID above, Save, and restart."
 step1ApiKey = "Create an API key under Account > API Keys (each user uses their own)."
+step1Builtin = "Set the Resource ID to this server's public /mcp URL, Save, and restart."
 step2 = "In your MCP client add a"
 step2b = "server pointing at:"
+step2Builtin = "In ChatGPT or claude.ai, add a custom connector with the connector URL:"
 step3 = "The client auto-discovers OAuth from:"
 step3ApiKey = "Send the key in an"
 step3ApiKeyb = "header (or Authorization: Bearer <key>). No OAuth or metadata discovery is used."
+step3Builtin = "Sign in with your Stirling account and approve access. Each user can revoke apps under Settings > MCP Server."
 step4 = "Approve the sign-in; the client retries with a token. Tools appear grouped: convert, pages, misc, security, ai."
 step4ApiKey = "Tools appear grouped: convert, pages, misc, security, ai - and every call is audited as the key's owner."
 tip = "Tip: register the resource ID as an allowed audience in your IdP. Tested with MCP Inspector and Claude Desktop."
 tipApiKey = "Tip: API-key mode needs no external IdP - simplest for self-host. The key maps to its owning Stirling user."
+tipBuiltin = "Tip: built-in mode needs no external IdP and works with OAuth-only clients. Use Test connection to check what they will see."
 title = "Connect an MCP client"
 
 [admin.settings.mcp.issuerUri]
@@ -1525,7 +1549,8 @@ placeholder = "Auto-discovered from issuer"
 
 [admin.settings.mcp.mode]
 apikey = "API key (Stirling per-user key)"
-description = "OAuth needs an external IdP. API key uses a Stirling per-user API key (X-API-KEY) - simplest for self-host."
+builtin = "Built-in OAuth 2.1"
+description = "Built-in runs Stirling's own OAuth server with no IdP - the mode ChatGPT and the claude.ai connector need. OAuth uses an external IdP. API key uses a Stirling per-user key (X-API-KEY) and publishes no OAuth metadata."
 label = "Authentication mode"
 oauth = "OAuth 2.1 (external IdP)"
 
@@ -1540,6 +1565,17 @@ label = "Resource ID"
 [admin.settings.mcp.scopes]
 description = "Require mcp.tools.read for read ops and mcp.tools.write for write/AI ops."
 label = "Enforce OAuth scopes"
+
+[admin.settings.mcp.status]
+off = "Disabled"
+on = "Enabled"
+
+[admin.settings.mcp.test]
+error = "Could not run the test. Save and restart if you have just changed these settings."
+notReady = "Not ready - fix the items marked below"
+ready = "Clients can connect"
+run = "Test connection"
+running = "Testing..."
 
 [admin.settings.mcp.usernameClaim]
 description = "JWT claim matched against a Stirling username (e.g. sub, email, preferred_username)."
@@ -3968,7 +4004,9 @@ title = "Refresh API Keys"
 warning = "⚠️ Warning: This action will generate new API keys and make your previous keys invalid."
 
 [config.mcp]
+apiKeyModeNotice = "This server uses API-key mode. Clients that can send a header - Claude Desktop, Claude Code, VS Code - work with the snippets below. ChatGPT and the claude.ai connector only support OAuth, so an administrator must switch the MCP auth mode to built-in for them."
 description = "Model Context Protocol (MCP) lets AI assistants like Claude use your Stirling PDF tools directly. Connect a client once and your assistant can convert, edit, secure and process documents on your behalf."
+disabled = "The MCP server is turned off on this instance. An administrator can enable it under Settings > Integrations."
 guestInfo = "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts toward your usage, just like using Stirling PDF directly."
@@ -3983,11 +4021,22 @@ tooltip = "Copy {{label}}"
 tooltipCopied = "{{label}} copied"
 
 [config.mcp.endpoint]
+connectorHint = "In ChatGPT or claude.ai, add a custom connector with this URL. You'll sign in with your Stirling account and approve access."
 label = "Your MCP endpoint"
+
+[config.mcp.grants]
+empty = "No apps connected yet. Once you approve one, it appears here and you can revoke it at any time."
+lastUsed = "Last used {{when}}"
+loading = "Loading connected apps..."
+neverUsed = "Not used yet"
+revoke = "Revoke"
+revoking = "Revoking..."
+title = "Connected apps"
 
 [config.mcp.setup]
 addTo = "Add to"
 hint = "Pick your client, paste the snippet into the file shown, then restart it. You'll sign in with your Stirling account on first use - no keys to copy."
+hintApiKey = "Create an API key under API Keys, paste the snippet into the file shown, replace YOUR_API_KEY, then restart the client."
 title = "Connect your AI assistant"
 
 [config.overview]
@@ -6201,6 +6250,9 @@ title = "Authentication Failed"
 message = "You can close this window and return to Stirling PDF."
 title = "Authentication Successful"
 
+[oauthAuthorize]
+failed = "This connection request could not be started. Try connecting again from your app."
+
 [oauthConsent]
 approve = "Allow access"
 approving = "Allowing..."
@@ -6218,6 +6270,8 @@ signInButton = "Sign in to continue"
 signInPrompt = "Sign in to your Stirling PDF account to continue connecting the app."
 title = "Authorize access"
 unknownApp = "A third-party application"
+unverifiedApp = "Unverified app name. Access goes to {{host}}, so only continue if you trust that site."
+verifiedDomain = "Published by {{domain}}"
 
 [oauthConsent.access]
 actAsYou = "Act as you - everything {{app}} does runs under your account and counts towards your usage"
@@ -6225,9 +6279,12 @@ tools = "Use your Stirling PDF tools on your behalf - convert, edit, sign, secur
 
 [oauthConsent.scope]
 email = "See your email address"
+offlineAccess = "Stay connected without asking you to sign in again"
 openid = "Confirm your identity"
 phone = "See your phone number"
 profile = "See your basic profile information"
+toolsRead = "Read your documents and run read-only tools"
+toolsWrite = "Convert, edit, sign and secure your documents"
 
 [ocr]
 desc = "Cleanup scans and detects text from images within a PDF and re-adds it as text."

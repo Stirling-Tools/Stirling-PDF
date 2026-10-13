@@ -32,6 +32,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.mcp.oauth.McpTokenMinter;
 import stirling.software.proprietary.security.model.JwtVerificationKey;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.model.exception.AuthenticationFailureException;
@@ -122,6 +123,27 @@ class JwtServiceTest {
         String token = jwtService.generateToken(authentication, new HashMap<>());
 
         assertDoesNotThrow(() -> jwtService.validateToken(token));
+    }
+
+    @Test
+    void mcpAccessTokenSignedWithTheSameKeyIsNotAnAppSession() {
+        when(keystoreService.getActiveKey()).thenReturn(testVerificationKey);
+        when(keystoreService.getKeyPair("test-key-id")).thenReturn(Optional.of(testKeyPair));
+
+        String mcpToken =
+                new McpTokenMinter(keystoreService)
+                        .mintAccessToken(
+                                "https://pdf.example.com",
+                                "testuser",
+                                "https://pdf.example.com/mcp",
+                                "mcp.tools.read",
+                                "client-1",
+                                5);
+
+        assertThrows(
+                AuthenticationFailureException.class, () -> jwtService.validateToken(mcpToken));
+        assertThrows(
+                AuthenticationFailureException.class, () -> jwtService.extractClaims(mcpToken));
     }
 
     @Test

@@ -11,6 +11,8 @@ const Login = lazy(() => import("@app/routes/Login"));
 const AuthCallback = lazy(() => import("@app/routes/AuthCallback"));
 const InviteAccept = lazy(() => import("@app/routes/InviteAccept"));
 const ShareLinkPage = lazy(() => import("@app/routes/ShareLinkPage"));
+const OAuthAuthorize = lazy(() => import("@app/routes/OAuthAuthorize"));
+const OAuthConsent = lazy(() => import("@app/routes/OAuthConsent"));
 const ParticipantView = lazy(
   () => import("@app/components/workflow/ParticipantView"),
 );
@@ -60,6 +62,9 @@ function MainRoutes() {
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/invite/:token" element={<InviteAccept />} />
         <Route path="/share/:token" element={<ShareLinkPage />} />
+        {/* Built-in MCP authorization server: sign-in and consent */}
+        <Route path="/oauth/authorize" element={<OAuthAuthorize />} />
+        <Route path="/oauth/consent" element={<OAuthConsent />} />
       </Route>
       {/* The editor and its tool routes - Landing handles auth logic */}
       <Route path="/*" element={<Landing />} />

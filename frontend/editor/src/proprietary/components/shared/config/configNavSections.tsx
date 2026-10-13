@@ -42,6 +42,7 @@ import AccountCards from "@core/components/shared/config/configSections/preferen
 import AdminAuditSection from "@app/components/shared/config/configSections/AdminAuditSection";
 import AdminUsageSection from "@app/components/shared/config/configSections/AdminUsageSection";
 import ApiKeys from "@app/components/shared/config/configSections/ApiKeys";
+import McpSection from "@app/components/shared/config/configSections/mcp/McpSection";
 
 /**
  * Self-hosted settings, grouped by who reaches for them and what they do there:
@@ -88,6 +89,16 @@ export const useConfigNavSections = (
         ),
         icon: "key",
         component: <ApiKeys />,
+      });
+      preferences.items.push({
+        key: "mcp",
+        label: t("config.mcp.navLabel", "MCP Server"),
+        description: t(
+          "config.mcp.description",
+          "Model Context Protocol (MCP) lets AI assistants like Claude use your Stirling PDF tools directly. Connect a client once and your assistant can convert, edit, secure and process documents on your behalf.",
+        ),
+        icon: "bot",
+        component: <McpSection />,
       });
     }
   }
