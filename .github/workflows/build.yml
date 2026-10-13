@@ -308,14 +308,12 @@ jobs:
       use_shared_cache: true
 
   pre-commit:
-    needs: [files-changed]
     permissions:
       contents: write
     uses: ./.github/workflows/pre_commit.yml
     secrets: inherit
 
   dependency-review:
-    needs: [files-changed]
     permissions:
       contents: read
     uses: ./.github/workflows/dependency-review.yml

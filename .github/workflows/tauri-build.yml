@@ -207,6 +207,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Checkout trusted Java action
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.event.pull_request.base.sha || github.sha }}
+          path: trusted-java-action
+          sparse-checkout: .github/actions/java
+          persist-credentials: false
+
       - name: Install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04'
         run: |
@@ -269,7 +278,7 @@ jobs:
 
       - name: Set up x86_64 JDK ${{ env.JAVA_VERSION }} (macOS universal JRE)
         if: matrix.platform == 'macos-15'
-        uses: ./.github/actions/java
+        uses: ./trusted-java-action/.github/actions/java
         with:
           java-version: ${{ env.JAVA_VERSION }}
           architecture: "x64"
@@ -280,7 +289,7 @@ jobs:
 
       - name: Set up JDK ${{ env.JAVA_VERSION }}
         if: matrix.platform != 'windows-11-arm'
-        uses: ./.github/actions/java
+        uses: ./trusted-java-action/.github/actions/java
         with:
           java-version: ${{ env.JAVA_VERSION }}
 
@@ -810,6 +819,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Checkout trusted Java action
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.event.pull_request.base.sha || github.sha }}
+          path: trusted-java-action
+          sparse-checkout: .github/actions/java
+          persist-credentials: false
+
       - name: Install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04'
         run: |
@@ -870,7 +888,7 @@ jobs:
 
       - name: Set up JDK ${{ env.JAVA_VERSION }}
         if: matrix.platform != 'windows-11-arm'
-        uses: ./.github/actions/java
+        uses: ./trusted-java-action/.github/actions/java
         with:
           java-version: ${{ env.JAVA_VERSION }}
 

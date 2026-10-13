@@ -38,6 +38,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Checkout trusted Java action
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.event.pull_request.base.sha || github.sha }}
+          path: trusted-java-action
+          sparse-checkout: .github/actions/java
+          persist-credentials: false
+
       - name: Restore Gradle cache
         id: cache
         uses: ./.github/actions/cache-the-planet
@@ -54,7 +63,7 @@ jobs:
             gradle-wrapper=${{ inputs.gradle-hash }}
 
       - name: Set up JDK ${{ inputs.java-version }}
-        uses: ./.github/actions/java
+        uses: ./trusted-java-action/.github/actions/java
         with:
           java-version: ${{ inputs.java-version }}
 
