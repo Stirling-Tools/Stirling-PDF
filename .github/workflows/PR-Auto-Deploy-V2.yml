@@ -182,12 +182,6 @@ jobs:
 
       - name: Checkout trusted Task action
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.event.pull_request.base.sha || github.sha }}
-          path: trusted-task-action
-          sparse-checkout: .github/actions/setup-task
-          persist-credentials: false
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
@@ -402,7 +396,7 @@ jobs:
 
       - name: Install Task for Storybook
         if: steps.sb-changes.outputs.storybook == 'true'
-        uses: ./trusted-task-action/.github/actions/setup-task
+        uses: ./.github/actions/setup-task
 
       - name: Build and deploy Storybook
         id: storybook

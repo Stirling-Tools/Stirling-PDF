@@ -29,12 +29,6 @@ jobs:
 
       - name: Checkout trusted Task action
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.event.pull_request.base.sha || github.sha }}
-          path: trusted-task-action
-          sparse-checkout: .github/actions/setup-task
-          persist-credentials: false
 
       - name: Install uv
         uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
@@ -45,7 +39,7 @@ jobs:
             engine/uv.lock
 
       - name: Install Task
-        uses: ./trusted-task-action/.github/actions/setup-task
+        uses: ./.github/actions/setup-task
 
       - name: Run pre-commit checks
         run: task pre-commit

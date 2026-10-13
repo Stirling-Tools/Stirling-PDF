@@ -67,12 +67,6 @@ jobs:
 
       - name: Checkout trusted Task action
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.event.pull_request.base.sha || github.sha }}
-          path: trusted-task-action
-          sparse-checkout: .github/actions/setup-task
-          persist-credentials: false
 
       - name: Setup GitHub App Bot
         if: (github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false)) && github.actor != 'dependabot[bot]'
@@ -105,7 +99,7 @@ jobs:
         run: npm ci --ignore-scripts --audit=false --fund=false
 
       - name: Install Task
-        uses: ./trusted-task-action/.github/actions/setup-task
+        uses: ./.github/actions/setup-task
 
       - name: Generate frontend license report (Push only)
         if: github.event_name == 'push'
@@ -353,12 +347,6 @@ jobs:
 
       - name: Checkout trusted Task action
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.event.pull_request.base.sha || github.sha }}
-          path: trusted-task-action
-          sparse-checkout: .github/actions/setup-task
-          persist-credentials: false
 
       - name: Setup GitHub App Bot
         if: (github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false)) && github.actor != 'dependabot[bot]'
@@ -382,7 +370,7 @@ jobs:
           java-version: "25"
 
       - name: Install Task
-        uses: ./trusted-task-action/.github/actions/setup-task
+        uses: ./.github/actions/setup-task
 
       - name: Check licenses and generate report
         id: license-check

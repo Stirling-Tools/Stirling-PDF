@@ -66,12 +66,6 @@ jobs:
 
       - name: Checkout trusted Task action
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.event.pull_request.base.sha || github.sha }}
-          path: trusted-task-action
-          sparse-checkout: .github/actions/setup-task
-          persist-credentials: false
 
       - name: Restore cache Gradle User Home
         if: inputs.use_shared_cache
@@ -103,7 +97,7 @@ jobs:
           cache: "npm"
           cache-dependency-path: frontend/package-lock.json
       - name: Install Task
-        uses: ./trusted-task-action/.github/actions/setup-task
+        uses: ./.github/actions/setup-task
       - name: Install Playwright (chromium only)
         run: task e2e:install -- chromium
       - name: Build frontend (needed for playwright's vite preview webServer)

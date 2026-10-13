@@ -27,12 +27,6 @@ jobs:
 
       - name: Checkout trusted Task action
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          repository: ${{ github.repository }}
-          ref: ${{ github.event.pull_request.base.sha || github.sha }}
-          path: trusted-task-action
-          sparse-checkout: .github/actions/setup-task
-          persist-credentials: false
 
       - name: Restore cache Gradle User Home
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -48,7 +42,7 @@ jobs:
           java-version: "25"
 
       - name: Install Task
-        uses: ./trusted-task-action/.github/actions/setup-task
+        uses: ./.github/actions/setup-task
       - name: Generate OpenAPI documentation
         run: task backend:swagger
         env:
