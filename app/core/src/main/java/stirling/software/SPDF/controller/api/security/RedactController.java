@@ -6,7 +6,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 
@@ -44,6 +43,7 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.ExceptionUtils.ToolFailedException;
 import stirling.software.common.util.PdfUtils;
+import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
@@ -179,7 +179,7 @@ public class RedactController {
         if (useRegex) {
             for (String term : terms) {
                 try {
-                    Pattern.compile(term);
+                    RegexPatternUtils.getInstance().getPattern(term);
                 } catch (PatternSyntaxException e) {
                     throw ExceptionUtils.createIllegalArgumentException(
                             "error.redaction.no.patterns", "Invalid regex pattern: " + term);
