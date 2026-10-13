@@ -24,6 +24,8 @@ import { getAdminRouteExtensions } from "@app/routes/adminRouteExtensions";
 import { AppFrame } from "@app/components/layout/AppFrame";
 import { NoAppChrome } from "@app/components/layout/NoAppChrome";
 import { RootGate } from "@app/routes/RootGate";
+import { useAuth } from "@app/auth/UseSession";
+import { StartupPrompts } from "@app/components/startup/StartupPrompts";
 
 // Import global styles
 import "@app/styles/tailwind.css";
@@ -51,6 +53,18 @@ function ParticipantViewPage() {
   return <ParticipantView token={token} />;
 }
 
+function OAuthRoutes() {
+  const { session, loading } = useAuth();
+  if (loading) return <LoadingFallback />;
+  return session ? (
+    <StartupPrompts>
+      <NoAppChrome />
+    </StartupPrompts>
+  ) : (
+    <NoAppChrome />
+  );
+}
+
 function MainRoutes() {
   return (
     <Routes>
@@ -62,7 +76,8 @@ function MainRoutes() {
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/invite/:token" element={<InviteAccept />} />
         <Route path="/share/:token" element={<ShareLinkPage />} />
-        {/* Built-in MCP authorization server: sign-in and consent */}
+      </Route>
+      <Route element={<OAuthRoutes />}>
         <Route path="/oauth/authorize" element={<OAuthAuthorize />} />
         <Route path="/oauth/consent" element={<OAuthConsent />} />
       </Route>
