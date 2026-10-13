@@ -12,7 +12,10 @@ import stirling.software.common.model.api.PDFFile;
 public class RedactPdfRequest extends PDFFile {
 
     @Schema(
-            description = "Newline-separated list of text to redact from the PDF",
+            description =
+                    "Text to redact, one term per line (newline-separated, not comma-separated)."
+                            + " Each line is matched on its own; with useRegex=true each line is a"
+                            + " regex.",
             example = "text\ntext2",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private String listOfText;
@@ -36,13 +39,17 @@ public class RedactPdfRequest extends PDFFile {
     private String redactColor = "#000000";
 
     @Schema(
-            description = "Custom padding for redaction",
+            description = "Extra space around each redaction box, in points",
             type = "number",
+            defaultValue = "0",
             requiredMode = Schema.RequiredMode.REQUIRED)
-    private float customPadding;
+    private float customPadding = 0f;
 
     @Schema(
-            description = "Convert the redacted PDF to an image",
+            description =
+                    "Turn every page into an image after redacting, so nothing under the boxes"
+                            + " can be extracted even if text removal fell back to boxes. All text"
+                            + " becomes unselectable.",
             defaultValue = "false",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private Boolean convertPDFToImage = Boolean.FALSE;

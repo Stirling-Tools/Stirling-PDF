@@ -55,10 +55,16 @@ public class FlattenController {
     @StandardPdfResponse
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
-            summary = "Flatten PDF form fields or full page",
+            summary =
+                    "Default turns every page into an image (text not selectable);"
+                            + " flattenOnlyForms=true just locks form fields",
             description =
-                    "Flattening just PDF form fields or converting each page to images to make text"
-                            + " unselectable.")
+                    "With flattenOnlyForms=false (the default) each page is rendered to an image"
+                            + " (300 DPI unless renderDpi is set, capped by the server's maximum"
+                            + " DPI), so text can no longer be selected or searched and the file"
+                            + " often grows. With flattenOnlyForms=true only the form fields are"
+                            + " merged into the page content so they can no longer be edited;"
+                            + " the rest of the PDF is left as it is.")
     public ResponseEntity<Resource> flatten(@ModelAttribute FlattenRequest request)
             throws Exception {
         MultipartFile file = request.getFileInput();

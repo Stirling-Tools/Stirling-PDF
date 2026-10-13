@@ -15,30 +15,33 @@ public class OverlayPdfsRequest extends PDFFile {
 
     @Schema(
             description =
-                    "An array of PDF files to be used as overlays on the base PDF. The order in"
-                            + " these files is applied based on the selected mode.",
+                    "PDF files drawn onto the base PDF's pages. overlayMode decides which overlay"
+                            + " page lands on which base page.",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private MultipartFile[] overlayFiles;
 
     @Schema(
             description =
-                    "The mode of overlaying: 'SequentialOverlay' for sequential application,"
-                            + " 'InterleavedOverlay' for round-robin application, 'FixedRepeatOverlay'"
-                            + " for fixed repetition based on provided counts",
+                    "SequentialOverlay: overlay pages go one per base page and start over when"
+                            + " used up, so a 1-page letterhead repeats on every page."
+                            + " InterleavedOverlay: page 1 of each overlay file in turn."
+                            + " FixedRepeatOverlay: see counts.",
             allowableValues = {"SequentialOverlay", "InterleavedOverlay", "FixedRepeatOverlay"},
             requiredMode = Schema.RequiredMode.REQUIRED)
     private String overlayMode;
 
     @Schema(
             description =
-                    "An array of integers specifying the number of times each corresponding overlay"
-                            + " file should be applied in the 'FixedRepeatOverlay' mode. This should"
-                            + " match the length of the overlayFiles array.",
+                    "Required for FixedRepeatOverlay: one count per overlay file. Each file"
+                            + " in turn covers the next count x (its page count) base pages,"
+                            + " showing its first page; later pages get no overlay.",
             requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private int[] counts;
 
     @Schema(
-            description = "Overlay position 0 is Foregound, 1 is Background",
+            description =
+                    "0 = foreground, drawn over the page content. 1 = background, drawn behind it"
+                            + " (e.g. a letterhead); an opaque page such as a scan hides it.",
             allowableValues = {"0", "1"},
             requiredMode = Schema.RequiredMode.REQUIRED,
             type = "number")

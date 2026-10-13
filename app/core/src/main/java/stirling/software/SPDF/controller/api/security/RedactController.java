@@ -96,11 +96,16 @@ public class RedactController {
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
             operationId = "redactPdfManual",
-            summary = "Redacts areas and pages in a PDF document",
+            summary =
+                    "Draw boxes over areas (redactions) and whole pages (pageNumbers); content"
+                            + " stays unless convertPDFToImage",
             description =
-                    "This endpoint redacts content from a PDF file based on manually specified"
-                            + " areas. Users can specify areas to redact and optionally convert the PDF to an"
-                            + " image.")
+                    "Draws filled boxes over the listed areas (redactions) and over every page in"
+                            + " pageNumbers. The boxes only sit on top: the text and images"
+                            + " underneath stay in the file and can still be copied or extracted"
+                            + " unless convertPDFToImage=true, which turns every page into an"
+                            + " image. To remove the text itself, use auto-redact or"
+                            + " redact-execute.")
     public ResponseEntity<Resource> redactPDF(@ModelAttribute ManualRedactPdfRequest request)
             throws IOException {
 
@@ -142,12 +147,16 @@ public class RedactController {
     @StandardPdfResponse
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
-            summary = "Redact PDF automatically",
+            summary =
+                    "Remove matching text and black it out; listOfText takes one term per line, not"
+                            + " commas",
             operationId = "redactPdfAuto",
             description =
-                    "This endpoint automatically redacts text from a PDF file based on specified"
-                            + " patterns. Users can provide text patterns to redact, with options for regex"
-                            + " and whole word matching.")
+                    "Finds every term in listOfText (one per line; each line is a regex when"
+                            + " useRegex=true) and removes the matching text from the page,"
+                            + " drawing a box where it was. If native removal fails it falls back"
+                            + " to drawing boxes only; set convertPDFToImage=true to be sure"
+                            + " nothing under the boxes can be extracted.")
     public ResponseEntity<Resource> redactPdf(@ModelAttribute RedactPdfRequest request) {
         if (request.getFileInput() == null || request.getFileInput().isEmpty()) {
             log.error("File input is null or empty");
@@ -302,8 +311,13 @@ public class RedactController {
             operationId = "redactExecute",
             summary = "Execute a unified redaction plan on a PDF",
             description =
-                    "Unified redaction endpoint that accepts exact strings, regex patterns, and"
-                            + " page numbers in a single request. Supports execution strategy hints.")
+                    "Unified redaction in one request. textValues and regexPatterns remove the"
+                            + " matched text and box it over (boxes only with"
+                            + " style.strategy=OVERLAY_ONLY or if native text removal fails);"
+                            + " wipePages clears whole pages. ranges, imageBoxes and"
+                            + " redactImagePages only draw boxes on top, leaving the content in the"
+                            + " file, unless style.convertToImage=true or"
+                            + " style.strategy=IMAGE_FINALIZE rasterizes every page.")
     public ResponseEntity<Resource> executeRedaction(@ModelAttribute RedactExecuteRequest request)
             throws IOException {
 

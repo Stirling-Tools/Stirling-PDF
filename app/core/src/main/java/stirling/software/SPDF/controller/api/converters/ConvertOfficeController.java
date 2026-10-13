@@ -274,10 +274,15 @@ public class ConvertOfficeController {
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @ToolIO(accepts = ToolFormat.ANY, produces = ToolFormat.PDF)
     @Operation(
-            summary = "Convert a file to a PDF",
+            summary =
+                    "Convert Word, Excel, PowerPoint, OpenDocument, RTF, CSV or text files to PDF",
             description =
-                    "This endpoint converts a given file to a PDF using Stirling Office Convert or"
-                            + " LibreOffice")
+                    "Converts office documents to PDF with Stirling Office Convert or LibreOffice,"
+                            + " depending on the server: Word (doc, docx), Excel (xls, xlsx),"
+                            + " PowerPoint (ppt, pptx), OpenDocument (odt, ods, odp, odg), RTF,"
+                            + " CSV/TSV and plain text. Other formats LibreOffice reads, such as"
+                            + " HTML, need LibreOffice on the server; for web pages prefer"
+                            + " html-to-pdf.")
     public ResponseEntity<Resource> processFileToPDF(
             @ModelAttribute GeneralFile generalFile,
             @RequestParam(value = "useStirlingOfficeConvert", required = false)

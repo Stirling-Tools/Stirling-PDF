@@ -14,7 +14,9 @@ import stirling.software.common.model.api.PDFFile;
 public class MetadataRequest extends PDFFile {
 
     @Schema(
-            description = "Delete all metadata if set to true",
+            description =
+                    "True removes all metadata (standard, custom and XMP) and ignores the other"
+                            + " fields",
             defaultValue = "false",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private Boolean deleteAll = false;
@@ -83,7 +85,8 @@ public class MetadataRequest extends PDFFile {
 
     @Schema(
             description =
-                    "Map list of key and value of custom parameters. Note these must start with"
-                            + " customKey and customValue if they are non-standard")
+                    "Custom metadata to add or update, e.g. {\"Department\":\"Finance\"}. Custom"
+                            + " keys already in the file and not listed are kept. Keys customKeyN"
+                            + " and customValueN (same N) in this map also work as a pair.")
     private Map<String, String> allRequestParams;
 }
