@@ -1,10 +1,5 @@
 name: Setup Task from the CI image
 description: Install the pinned Task binary from the CI image when Docker is available, or from a verified release archive
-inputs:
-  version:
-    description: Task version to install
-    required: false
-    default: 3.54.0
 runs:
   using: composite
   steps:
@@ -12,15 +7,14 @@ runs:
       if: runner.os == 'Linux'
       shell: bash
       env:
-        TASK_VERSION: ${{ inputs.version }}
+        TASK_VERSION: 3.54.0
       run: |
         set -euo pipefail
         install_dir="${RUNNER_TEMP}/task-bin"
         mkdir -p "${install_dir}"
 
-        if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
+        if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1 && docker pull "ghcr.io/stirling-tools/stirling-pdf-ci:task-${TASK_VERSION}"; then
           image="ghcr.io/stirling-tools/stirling-pdf-ci:task-${TASK_VERSION}"
-          docker pull "${image}"
           container_id="$(docker create "${image}")"
           cleanup() { docker rm "${container_id}" >/dev/null; }
           trap cleanup EXIT
@@ -54,7 +48,7 @@ runs:
       if: runner.os != 'Linux'
       shell: bash
       env:
-        TASK_VERSION: ${{ inputs.version }}
+        TASK_VERSION: 3.54.0
       run: |
         set -euo pipefail
         install_dir="${RUNNER_TEMP}/task-bin"

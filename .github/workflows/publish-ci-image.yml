@@ -2,19 +2,16 @@ name: Publish Task CI image
 
 on:
   workflow_dispatch:
-    inputs:
-      task-version:
-        description: Task version to publish
-        required: true
-        default: 3.54.0
-        type: string
   push:
+    branches:
+      - main
     paths:
       - docker/ci/Dockerfile
       - .github/workflows/publish-ci-image.yml
 
 jobs:
   publish:
+    if: github.ref == 'refs/heads/main'
     permissions:
       contents: read
       packages: write
@@ -22,13 +19,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Set Task version
-        id: version
-        shell: bash
-        env:
-          INPUT_VERSION: ${{ inputs.task-version }}
-        run: echo "value=${INPUT_VERSION:-3.54.0}" >> "${GITHUB_OUTPUT}"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
@@ -50,6 +40,6 @@ jobs:
           platforms: linux/amd64
           push: true
           build-args: |
-            TASK_VERSION=${{ steps.version.outputs.value }}
+            TASK_VERSION=3.54.0
           tags: |
-            ghcr.io/stirling-tools/stirling-pdf-ci:task-${{ steps.version.outputs.value }}
+            ghcr.io/stirling-tools/stirling-pdf-ci:task-3.54.0
