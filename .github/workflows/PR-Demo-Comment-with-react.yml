@@ -206,6 +206,7 @@ jobs:
 
       - name: Install Task
         uses: ./.github/actions/setup-task
+
       - name: Run Gradle Command
         run: |
           if [ "${{ needs.check-comment.outputs.disable_security }}" == "true" ]; then
