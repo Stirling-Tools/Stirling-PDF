@@ -71,9 +71,11 @@ public class TextFinderUtils {
                     patternString = applyWordBoundaries(term.trim(), patternString);
                 }
 
-                // Use PatternFactory for better performance with cached compilation
+                // Use PatternFactory for better performance with cached compilation.
+                // A regex keeps its own case rules; plain text matches any case.
                 Pattern pattern =
-                        RegexPatternUtils.getInstance().createSearchPattern(patternString, true);
+                        RegexPatternUtils.getInstance()
+                                .createSearchPattern(patternString, !useRegex);
                 patterns.add(pattern);
 
                 log.debug("Created search pattern: '{}' -> '{}'", term.trim(), patternString);

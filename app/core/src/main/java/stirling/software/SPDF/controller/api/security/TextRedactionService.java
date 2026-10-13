@@ -103,6 +103,7 @@ class TextRedactionService {
                     RedactOptions.builder()
                             .addWords(terms)
                             .useRegex(useRegex)
+                            .caseSensitive(useRegex)
                             .wholeWord(wholeWordSearchBool)
                             .boxColor(0)
                             .removeContent(true)

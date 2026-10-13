@@ -97,9 +97,10 @@ export const PII_PRESETS: { value: string; label: string; pattern: string }[] =
     {
       value: "account",
       label: "Account numbers (labelled)",
-      // Context-anchored: only digits preceded by Account / Acct / A/C.
+      // Context-anchored: only digits preceded by Account / Acct / A/C, in any
+      // case, since a regex matches case-sensitively.
       pattern:
-        "\\b(?:[Aa]cc(?:oun)?t|[Aa]/[Cc])(?:\\s+(?:[Nn]o\\.?|[Nn]umber|#))?\\s*[:#]?\\s*\\d{6,17}\\b",
+        "\\b(?i:acc(?:oun)?t|a/c)(?:\\s+(?i:no\\.?|number|#))?\\s*[:#]?\\s*\\d{6,17}\\b",
     },
     {
       value: "email",
@@ -117,6 +118,16 @@ export const PII_PRESETS: { value: string; label: string; pattern: string }[] =
         "\\(\\d{3}\\)[ .-]?\\d{3}[ .-]?\\d{4}\\b|\\b\\d{3}([ .-])\\d{3}\\1\\d{4}\\b|\\+\\d{1,3}[ .-]?\\d{6,12}\\b|\\+\\d{1,3}(?:[ .-]\\d{2,4}){2,5}\\b|\\b0\\d{2,4}[ -]\\d{3,4}[ -]?\\d{3,4}\\b",
     },
   ];
+
+/**
+ * Earlier forms of a preset's pattern, by preset value. Saved policies may still
+ * hold them, so they are recognised as that preset.
+ */
+export const LEGACY_PII_PATTERNS: Record<string, string[]> = {
+  account: [
+    "\\b(?:[Aa]cc(?:oun)?t|[Aa]/[Cc])(?:\\s+(?:[Nn]o\\.?|[Nn]umber|#))?\\s*[:#]?\\s*\\d{6,17}\\b",
+  ],
+};
 
 /**
  * Defaults seeded into a fresh Security policy's redact step — only the two

@@ -213,6 +213,7 @@ public class RedactController {
                         RedactOptions.builder()
                                 .addWords(terms)
                                 .useRegex(useRegex)
+                                .caseSensitive(useRegex)
                                 .wholeWord(wholeWordSearchBool)
                                 .boxColor(boxColorInt)
                                 .padding(request.getCustomPadding())

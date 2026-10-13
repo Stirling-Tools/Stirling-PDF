@@ -255,6 +255,39 @@ class RedactControllerMoreTest {
         }
 
         @Test
+        @DisplayName("a regex keeps its own case rules: [A-Z] leaves lowercase text in place")
+        void regexIsCaseSensitive() throws IOException {
+            byte[] bytes = singlePageTextPdf("ticket FS-01 and fs-02 here");
+            factoryReturns(bytes);
+
+            RedactPdfRequest request = new RedactPdfRequest();
+            request.setFileInput(pdfFile(bytes));
+            request.setListOfText("[A-Z]{2}-\\d+");
+            request.setUseRegex(true);
+            request.setRedactColor("#000000");
+
+            String text = pdfText(drainBody(controller.redactPdf(request)));
+            assertThat(text).doesNotContain("FS-01");
+            assertThat(text).contains("fs-02");
+        }
+
+        @Test
+        @DisplayName("plain-text search still matches every casing")
+        void literalIsCaseInsensitive() throws IOException {
+            byte[] bytes = singlePageTextPdf("Secret and secret and SECRET");
+            factoryReturns(bytes);
+
+            RedactPdfRequest request = new RedactPdfRequest();
+            request.setFileInput(pdfFile(bytes));
+            request.setListOfText("secret");
+            request.setUseRegex(false);
+            request.setRedactColor("#000000");
+
+            String text = pdfText(drainBody(controller.redactPdf(request)));
+            assertThat(text.toLowerCase(java.util.Locale.ROOT)).doesNotContain("secret");
+        }
+
+        @Test
         @DisplayName("convert-to-image still returns a valid 200 PDF response")
         void convertToImage() throws IOException {
             byte[] bytes = singlePageTextPdf("redact SECRET please");

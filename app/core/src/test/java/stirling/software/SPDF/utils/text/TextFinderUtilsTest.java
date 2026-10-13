@@ -88,6 +88,38 @@ class TextFinderUtilsTest {
     }
 
     @Test
+    void createOptimizedSearchPatterns_withRegex_keepsThePatternsOwnCaseRules() {
+        List<Pattern> patterns =
+                TextFinderUtils.createOptimizedSearchPatterns(Set.of("[A-Z]{2}-\\d+"), true, false);
+
+        assertTrue(patterns.get(0).matcher("FS-01").find());
+        assertFalse(patterns.get(0).matcher("fs-01").find());
+    }
+
+    @Test
+    void createOptimizedSearchPatterns_withRegex_honoursInlineCaseInsensitiveFlag() {
+        List<Pattern> patterns =
+                TextFinderUtils.createOptimizedSearchPatterns(Set.of("(?i)secret"), true, false);
+
+        assertTrue(patterns.get(0).matcher("SeCrEt").find());
+    }
+
+    @Test
+    void createOptimizedSearchPatterns_withRegex_honoursScopedCaseInsensitiveGroup() {
+        // The policy "Account numbers" PII preset, which must still catch all-caps labels.
+        String accountPreset =
+                "\\b(?i:acc(?:oun)?t|a/c)(?:\\s+(?i:no\\.?|number|#))?\\s*[:#]?\\s*\\d{6,17}\\b";
+        Pattern pattern =
+                TextFinderUtils.createOptimizedSearchPatterns(Set.of(accountPreset), true, false)
+                        .get(0);
+
+        assertTrue(pattern.matcher("ACCOUNT NUMBER: 12345678").find());
+        assertTrue(pattern.matcher("Acct # 1234567").find());
+        assertTrue(pattern.matcher("a/c 123456789").find());
+        assertFalse(pattern.matcher("discount 12345678").find());
+    }
+
+    @Test
     void createOptimizedSearchPatterns_withWholeWord_addsWordBoundaries() {
         Set<String> terms = Set.of("cat");
         List<Pattern> patterns = TextFinderUtils.createOptimizedSearchPatterns(terms, false, true);
