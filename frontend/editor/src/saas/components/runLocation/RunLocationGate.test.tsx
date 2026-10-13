@@ -22,6 +22,16 @@ vi.mock("react-i18next", () => ({
 vi.mock("@app/components/runLocation/startDownload", () => ({
   startDownload: vi.fn(),
 }));
+// Detection reads the runner's own OS, so pin it: CI runs on Linux.
+vi.mock(
+  "@app/components/runLocation/desktopTargets",
+  async (importOriginal) => ({
+    ...(await importOriginal<
+      typeof import("@app/components/runLocation/desktopTargets")
+    >()),
+    detectDesktopTarget: vi.fn(() => Promise.resolve("mac")),
+  }),
+);
 
 const SEEN_KEY = "stirling.runLocationChosen.v1";
 
