@@ -7,6 +7,7 @@
 
 # testing
 /coverage
+/editor/coverage
 
 # production
 /build

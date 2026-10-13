@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * Serialization contract of the main-thread PDFium scan queue: scans run in
  * submission order and one failing scan does not wedge the queue.

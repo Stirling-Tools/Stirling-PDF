@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect } from "vitest";
 import { ReplaceImageCommand } from "@app/tools/pdfTextEditor/commands/ReplaceImageCommand";
 import { Page } from "@app/tools/pdfTextEditor/model/Page";

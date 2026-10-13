@@ -1347,7 +1347,7 @@ class RemovePagesParams(ApiModel):
 
 class RemovePasswordParams(ApiModel):
     """
-    This endpoint removes the password from a protected PDF file. Users need to provide the existing password. Input:PDF/PDF_ENCRYPTED Output:PDF Type:SISO
+    This endpoint removes the password from a protected PDF file while preserving its document permissions. Users need to provide the existing password. Input:PDF/PDF_ENCRYPTED Output:PDF Type:SISO
     """
 
     password: SecretStr | None = Field(None, description="The password of the PDF file")
