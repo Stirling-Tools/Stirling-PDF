@@ -34,7 +34,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.MutablePropertyValues;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.SPDF.model.PDFText;
@@ -239,6 +241,15 @@ class RedactExecuteServiceMoreTest {
         }
 
         @Test
+        void blankAndNullRegexEntriesDoNotCountAsRedactionTargets() {
+            RedactExecuteRequest req = requestFor(new byte[] {1});
+            req.setRegexPatterns(java.util.Arrays.asList(null, " "));
+            assertThatThrownBy(() -> service.execute(req))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("No redaction targets");
+        }
+
+        @Test
         @DisplayName("null file input with targets throws (wrapped as RuntimeException)")
         void nullFileInputThrows() {
             RedactExecuteRequest req = new RedactExecuteRequest();
@@ -296,6 +307,22 @@ class RedactExecuteServiceMoreTest {
             try (TempFile out = service.execute(req)) {
                 String text = extractText(out);
                 assertThat(text).doesNotContain("12345");
+            }
+        }
+
+        @Test
+        void indexedFormBindingSkipsNullRegexEntriesAndStillRedacts() throws IOException {
+            byte[] pdf = singlePageTextPdf("Order 12345 confirmed");
+            factoryReturns(pdf);
+            RedactExecuteRequest req = requestFor(pdf);
+            MutablePropertyValues values = new MutablePropertyValues();
+            values.add("regexPatterns[1]", "\\d+");
+            WebDataBinder binder = new WebDataBinder(req);
+            binder.bind(values);
+            assertThat(req.getRegexPatterns()).containsExactly(null, "\\d+");
+
+            try (TempFile out = service.execute(req)) {
+                assertThat(extractText(out)).doesNotContain("12345");
             }
         }
 

@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -118,8 +119,8 @@ class CropControllerMoreTest {
             CropPdfForm request = form(file, true);
 
             when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(false);
-            PDDocument source = mock(PDDocument.class);
-            PDDocument out = mock(PDDocument.class);
+            PDDocument source = spy(Loader.loadPDF(file.getBytes()));
+            PDDocument out = spy(new PDDocument());
             when(pdfDocumentFactory.load(request)).thenReturn(source);
             when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(source)).thenReturn(out);
 
