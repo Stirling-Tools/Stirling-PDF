@@ -43,7 +43,8 @@ ext {
     bucket4jVersion = "8.19.0"
     archunitVersion = "1.5.0"
     batikVersion = "1.19"
-    jpdfiumVersion = "1.1.5"
+    // This draft requires the unpublished API from Stirling-Tools/JPDFium#156.
+    jpdfiumVersion = "1.2.1-copy-encryption-SNAPSHOT"
     jwtVersion = "0.13.0"
     awsSdkVersion = "2.54.13"
     jschVersion = "2.28.7"
