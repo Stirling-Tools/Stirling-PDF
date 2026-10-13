@@ -661,6 +661,7 @@ export class EditTextCommand implements Command {
             fontSize: rem.fontSize,
             fill: run.fill,
             ...inkFromRun(run),
+            tagMarks: run.tagMarks,
             originalFontPtr: 0,
             charSpacingPt: run.charSpacingPt,
             fallbackFamily,
@@ -883,6 +884,7 @@ export class EditTextCommand implements Command {
         // omitting this forced every restored object back to fill: undo on
         // invisible OCR text stamped visible glyphs over the scan.
         ...inkFromRun(run),
+        tagMarks: run.tagMarks,
       });
       if (ptrs.length === 0) continue;
       lineAnchorPtrs.push(ptrs[0]);
@@ -1027,6 +1029,7 @@ export class EditTextCommand implements Command {
           fontSize: run.fontSize,
           fill: run.fill,
           ...inkFromRun(run),
+          tagMarks: run.tagMarks,
           originalFontPtr: reuseFontPtr,
           originalFontSubset: run.fontSubset,
           charSpacingPt: run.charSpacingPt,
@@ -1167,6 +1170,7 @@ export class EditTextCommand implements Command {
           fontSize: run.fontSize,
           fill: run.fill,
           ...inkFromRun(run),
+          tagMarks: run.tagMarks,
           originalFontPtr: 0,
           charSpacingPt: run.charSpacingPt,
           fallbackFamily,
@@ -1264,6 +1268,7 @@ export class EditTextCommand implements Command {
             fontSize: line.fontSize,
             fill: run.fill,
             ...inkFromRun(run),
+            tagMarks: run.tagMarks,
             originalFontPtr: 0,
             charSpacingPt: run.charSpacingPt,
             fallbackFamily,
